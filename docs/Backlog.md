@@ -143,7 +143,8 @@ Spanne hier ein, bevor er pusht. **Vergeben und reserviert (24.09.2026,
 nachgesehen auf `origin/main`, höchste 292, und auf dem Konzeptzweig von
 BR):** **293** Konzept BR (Umsetzung auf `claude/br-bestandsriegel`, noch
 nicht gemergt); **294–303** der P5c-Zweig `claude/p5c-mockups-konzept-4yeomf`
-— 294 Konzept SD (Sammelpunkt), 295–303 für P5c. *(Bis zum 23.09.2026 stand hier 283; 283 bis
+— 294 Konzept SD (Sammelpunkt), 295–298 die Anlässe aus der Zuarbeit von
+Konzept BR (Konzept P5c, E-P5c-86), 299–303 frei für Funde der Umsetzung. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
 Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** PK-05 (das
@@ -1676,6 +1677,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dabei, **wie viele** Verweise er geprüft hat. Ein Lauf ohne diese zweite
     Zahl ist keiner. Zuordnung: **P6** (Review und Bereinigung, R69) oder
     früher, wenn vorher ein weiteres Konzept gelöscht wird.
+
+    **Anlass der Ankerprüfung aus 10c AP9** (Konzept P5c, F-P5c-43,
+    E-P5c-86, 24.09.2026): Die Prüfung der Sprungmarken `hilfe.php#…` gegen
+    die Handbuch-Überschriften, ein Zusatz zur `linkprobe`, führt diese
+    Nummer als Anlass. Sie misst Verweise aus der Anwendung ins Handbuch —
+    einen Teil dieses Punkts, nicht die Dokumentenprobe selbst.
 
 190. **Die Statistikseite lässt das virtuelle Gerät stehen — „Ohne Gerät"
     zählt zu niedrig.**
@@ -3766,6 +3773,43 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Schreibregeln aus SD-00 gelten seit Fassung 111). Zeitpunkt: SD-01 bis
     SD-04 nach dem Merge des 10c-PR, auf eigenem Zweig von `main`.
     **Zuordnung: SD.** Mit ihm erledigen sich Nr. 177, 193, 196 und 199.
+
+295. **Der Messstand hat keinen Schritt für die Statistik.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-40), als Anlass nach der
+    Zuarbeit von Konzept BR (E-BR-07).* `tools/messstand/` misst die Seiten,
+    die es kennt; die Statistik ist keine davon, und das Konto `messstand@…`
+    fehlt auf der örtlichen Anlage. 10c AP7 baut die Statistik auf eine
+    Zählung mit Obergrenze und einen neuen Index `missions(started_at)` um —
+    ohne Messstand-Schritt gäbe es für die Zeiten keinen Beleg, nur ein
+    `EXPLAIN` von Hand. *Weg:* Schritt `statistik` im Messstand (drei Reiter
+    und `EXPLAIN`, Sitzung der BetreiberIn; fehlt das Konto, legt AP7 es nach
+    E-PK-27 an). **Zuordnung: 10c AP7.**
+
+297. **Der Bilderlauf lässt Breiten, die Admin-Rolle und Rollbehälter aus.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-41), als Anlass nach der
+    Zuarbeit von Konzept BR (E-BR-07).* Es fehlen die Breiten 400, 1200 und
+    1366; Seiten mit `rolle: admin` meldet er als BetreiberIn an, eine reine
+    Admin-Sicht nimmt er nie auf; die Übersicht der Einstellungen steht nicht
+    in `seiten.json`; Überlauf in einem Behälter, der selbst rollt, und der
+    Vergleich mit einem früheren Stand misst er nicht. *Weg in 10c:* eigene
+    Messungen über `tools/motor.mjs`, wo eine Abnahme sie braucht (AP2
+    Zeilenhöhe bei 1440 und 390 px, AP7, AP9) — die Messungen führen diese
+    Nummer als Anlass. Der Umbau des Bilderlaufs selbst gehört nicht zu 10c.
+    **Zuordnung: 10c (Messungen); Umbau: nächste Backlog-Runde.**
+
+298. **Kein Prüfmittel liest den QR-Code, den die Anwendung zeigt.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (AP5), als Anlass des Decoders
+    nach der Zuarbeit von Konzept BR (E-BR-07).* 10c AP5 zeigt das Geheimnis
+    des Zweitfaktors als QR-Code, gezeichnet aus der Modulmatrix einer
+    vendorierten Bibliothek. Ob der Code die angezeigte otpauth-Adresse
+    trägt, sieht niemand: Ein falsch kodierter Code sähe auf jedem Bild
+    richtig aus und ließe das Einrichten am Handy scheitern. Die
+    Mockup-Runde M-P5c-02 hat ihn von Hand gelesen (2 von 2). *Weg:* der
+    Bedienweg „Zweitfaktor einrichten" in `tools/bedienprobe/` liest einen
+    Abzug des Codes mit `jsqr` (Apache-2.0, vendoriert in
+    `tools/bedienprobe/vendor/` mit Herkunft und SHA-256, `Lizenzen.md`) und
+    vergleicht ihn mit der angezeigten Adresse (E-P5c-87). **Zuordnung: 10c
+    AP5.**
 
 ## Erledigt
 
@@ -10085,3 +10129,14 @@ zutreffen.
     *Erledigt 24.09.2026:* Prüfung durch die Betreiberin erfolgt — erklärt beim
     Aufräumen der Konzeptablage (Rahmenplan Fassung 110); damit ist nichts
     mehr offen. Aus Rahmenplan Abschnitt 5 herausgenommen.
+
+296. **Eine Rundmail hätte den Seitenaufruf bis zu 200 Sekunden aufgehalten.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-29), als Anlass nach der
+    Zuarbeit von Konzept BR (E-BR-07).* `mail_einreihen()` versuchte jede
+    Nachricht sofort, bis zu fünf Sekunden je Stück; eine Rundmail an
+    vierzig Konten hätte die Seite so lange warten lassen.
+    **Erledigt mit Web 20.38.0 am 23.09.2026 (P5c/AP1):** `mail_einreihen()`
+    kann nur einreihen; die Mailprobe misst es in Abschnitt 14 gegen einen
+    schweigenden Server (6 Zeilen in 0,01 s statt bis zu 30 s). Die Nummer
+    ist der Anlass dieses Abschnitts.
+

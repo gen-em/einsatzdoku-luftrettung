@@ -14,14 +14,11 @@ Die Wege liegen in `wege/` und tragen heute noch die Namen der
 Arbeitspakete, aus denen sie stammen (`ap1`, `p5a-ap8`). **E-PK-15 will sie
 nach Seiten geordnet** — das steht aus; solange die Zuordnung fehlt, kann
 `pruefablauf.json` nicht „diese Datei berührt, also diese Wege" sagen.
-**Neue Wege heißen seit P5c/AP1 nach der Seite** (`betrieb_server.mjs`
-für `betrieb_server.php`), damit E-PK-15 sie nicht noch einmal umbenennen
-muss. `kasten.neuAnmelden()` meldet ab und wieder an — für Wege, die etwas
-über das Ende einer Sitzung hinaus prüfen.
+Neue Wege heißen nach der Seite (`betrieb_server.mjs`).
 
 ## Was es misst
 
-50 Bedienwege: klicken, tippen, aus einer Trefferliste wählen, eine
+52 Bedienwege: klicken, tippen, aus einer Trefferliste wählen, eine
 Rückfrage bestätigen — und danach nachsehen, was in der **Datenbank**
 steht. Jeder Weg nennt ein Soll und ein Ist.
 
@@ -32,9 +29,7 @@ in die Zukunft gesetzt, damit er nicht mitten hinein fällt.
 
 ## Erwartete Zahl
 
-**52 von 52 Wegen erfüllt, 0 verfehlt** (gemessen 24.09.2026 zu P5c/AP2 —
-die zwei neuen sind `admin-protokoll-reiter` und `admin-protokoll-zeilen`;
-davor 50 von 50 zu P5c/AP1 und 48 von 48 am 22.09.2026). Der Bericht
+**52 von 52 Wegen erfüllt, 0 verfehlt** (gemessen 24.09.2026). Der Bericht
 steht in `ausgabe/bericht.md`.
 
 ## Was es nicht kann

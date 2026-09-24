@@ -33,11 +33,11 @@ Umsetzung.
 > | | |
 > |---|---|
 > | Stand | **23.09.2026 — Fassung 2.** Fassung 1 (20.09.2026, gegen `862ca7f`, Web 20.25.0) freigegeben, Mockup-Runde M-P5c-01 freigegeben. Am 23.09.2026 gegen `8fd4553` (Web 20.37.1, nach Schritt 15, 16 und PK-01 bis -04) abgeglichen: 139 Rohbefunde, 16 davon in der Gegenlesung widerlegt; 21 Fragen dem Auftraggeber vorgelegt und am selben Tag beantwortet (Q-P5c-05 bis -25, 2.7). Daraus **E-P5c-31 bis -58** und **F-P5c-15 bis -58**. Nachgezogen auf `main` `8ae873c` (PK-04 gemergt, Konzept TB). **Mockup-Runde M-P5c-02** am 23.09.2026 gebaut und freigegeben: **F-P5c-59 bis -63**, **Q-P5c-26 bis -30**, **E-P5c-59 bis -66** (2.8). |
-> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -85** (2.9) — ohne eigene Frage bis auf drei aus AP2, **Q-P5c-31 bis -33**, beantwortet am 24.09.2026 (Adressen bleiben im Archiv, erstes Archiv ab dem ältesten Eintrag, aktiver Reiter in `--orange-tief`) |
+> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -85** (2.9) — ohne eigene Frage bis auf drei aus AP2, **Q-P5c-31 bis -33**, beantwortet am 24.09.2026 (Adressen bleiben im Archiv, erstes Archiv ab dem ältesten Eintrag, aktiver Reiter in `--orange-tief`). **Nachtrag zu Fassung 2 aus der Zuarbeit von Konzept BR: E-P5c-86 bis -90, Q-P5c-34 bis -37** (2.10, 24.09.2026) |
 > | Offen | Nichts. Die beiden Fehler aus der Runde M-P5c-02 außerhalb von P5c — Backlog **288** (Neueinrichtung scheiterte seit Web 20.30.0) und **289** (Anmeldeseite) — sind mit der Korrekturstufe **Web 20.37.3** behoben (23.09.2026, F-P5c-62, -63); ihre Prüfliste war abgearbeitet und stand in `Pruefdokument-Korrektur-288-289.md` (gelöscht 24.09.2026, Historie `5e501ae`) |
 > | Umsetzung | **läuft seit 23.09.2026. AP1 erledigt** (Web 20.38.0; Befunde F-P5c-64 bis -72, alle behoben oder als Prüfmittelfalle benannt). **AP2 erledigt** (Web 20.39.0, 24.09.2026; Befunde F-P5c-73 bis -88, alle behoben, eine davon als Frage vorgelegt). **Als Nächstes: AP3.** — Vorgeschichte: **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** **SD-00 eingespielt mit Fassung 111, Backlog Nr. 294** (Konzept SD, 24.09.2026 — die Nummer 293 hat Konzept BR); seither gilt `CLAUDE.md` 2 Punkt 5: im Rahmenplan keine Paketabsätze mehr. |
 > | Fable-Schritte | **keine.** M-P5c-01 ist am 20.09.2026 mit Fable gefahren; M-P5c-02 fährt Opus (Q-P5c-08) |
-> | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02 (beide erledigt mit Web 20.37.3, das **290** und **291** vergibt); der Kopf des Backlogs nennt **292** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) |
+> | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02 (beide erledigt mit Web 20.37.3, das **290** und **291** vergibt); der Kopf des Backlogs nennt **292** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) **Seit 24.09.2026: Spanne 294–303** — 294 Konzept SD, 295–298 Anlässe aus dem Nachtrag BR (E-P5c-86), 299–303 frei; 293 gehört BR. |
 >
 > **Stand der Umsetzung**
 >
@@ -756,7 +756,8 @@ Zweitfaktors, Tabelle der Codes), **AP7** (Index `missions(started_at)`) und
 **AP8** (zerstörend: `user_id NOT NULL`, `user_bases` entfällt, dazu die
 Nutzlast). Versionsstufe: **Nebenstufe**, außer **AP8: Hauptstufe**
 (Datenmodell plus Sicherungsformat; Vorbilder 14.0.0 und 18.0.0). **Jedes
-Paket mit Migration fährt den Prüfstand mit `--stufe haupt`** — die
+Paket mit Migration fährt den Prüfstand mit `--stufe haupt`** (seit dem
+Nachtrag als Regel im Prüfstand, E-P5c-88) — die
 Plattformmatrix läuft nur dort, und genau dort sind Nr. 238 und Nr. 267
 gefunden worden. Jedes solche Paket sagt ausdrücklich an: **nach dem Deploy
 `update.php`, die Kette lässt die Wartung an** (`CLAUDE.md` 3), und liest neue
@@ -1310,6 +1311,73 @@ der Auslieferung, weil die Anfrage danach endet.
 | Q-P5c-32 | *(AP2)* Das erste Archiv: ab dem ältesten Eintrag oder erst ab dem Einspielen | ab dem ältesten | **ab dem ältesten Eintrag** (24.09.2026) — E-P5c-76 |
 | Q-P5c-33 | *(AP2)* Strich des aktiven Reiters auf Rauch: `--orange-tief` (4,04 : 1), `--orange` wie im Bild (2,09 : 1, als Ausnahme) oder Orange mit heller Fläche | `--orange-tief` | **`--orange-tief`** (24.09.2026) — E-P5c-79 |
 
+### 2.10 Nachtrag zu Fassung 2: Zuarbeit aus Konzept BR (24.09.2026)
+
+*Konzept BR (Bestandsriegel, Zweig `claude/epic-mccarthy-zq08zw`,
+Umsetzung auf `claude/br-bestandsriegel`) baut einen Riegel in Stufe 1 über
+den Werkzeugbestand unter `tools/`. Ab dem Aufnehmen von `main` gilt er
+für P5c. Zwei Dinge in diesem Konzept hätten dann keine Form (Q-BR-05,
+-06); sie gehören P5c und stehen deshalb hier. BR ging davon aus, vor P5c
+AP2 zu mergen — AP2 ist am 24.09.2026 schon gebaut; der P5c-Zweig nimmt
+`main` nach dem Merge von BR über `Pruefablauf.md` 5.3 auf (örtlich mergen,
+Prüfstand, Merge-Commit mit Bericht).*
+
+**E-P5c-86 — Ein Anlass ist eine Backlog-Nummer** (E-BR-07). Vier geplante
+Prüfmittel nannten eine Befund-Kennung, die mit diesem Konzept gelöscht
+wird, der Decoder gar keine. Vergeben am 24.09.2026, nachgesehen auf
+`origin/main` (höchste 292) und auf dem BR-Zweig (293):
+
+| Prüfmittel | Paket | vorher | Anlass jetzt |
+|---|---|---|---|
+| Messstand-Schritt `statistik` | AP7 | F-P5c-40 | **Nr. 295** |
+| Ankerprüfung in `linkprobe` | AP9 | F-P5c-43 | **Nr. 188** (offen, Dokumentenprobe; Vermerk dort) |
+| Rundmail in der Mailprobe (Abschnitt 14) | AP1, gebaut | F-P5c-29 | **Nr. 296** (gleich unter *Erledigt*; im Kopfkommentar und in `pruefablauf.json` ersetzt) |
+| Motor-Messungen (`tools/motor.mjs`) | AP2, AP7, AP9 | F-P5c-41 | **Nr. 297** |
+| QR-Decoder `jsqr` | AP5 | — | **Nr. 298** |
+
+**E-P5c-87 — Der QR-Decoder liegt in `tools/bedienprobe/`** (Q-P5c-35). Der
+Bedienweg „Zweitfaktor einrichten" fährt die Seite ohnehin; er zieht einen
+Abzug des QR-Elements, liest ihn mit `jsqr` und hält ihn gegen die
+angezeigte otpauth-Adresse. Die Bibliothek liegt in
+`tools/bedienprobe/vendor/` mit Herkunft und SHA-256, dazu eine Zeile in
+`Lizenzen.md`. Kein eigener Ordner, kein zweiter Browserstart.
+
+**E-P5c-88 — Migration heißt Stufe „haupt", ausgelöst von einer neuen
+Katalogkennung** (Q-P5c-34; ersetzt den Vorschlag aus Q-BR-06). E-P5c-36
+(„jedes Paket mit Migration fährt `--stufe haupt`") stand nur im Konzept.
+Der Vorschlag `server/migrationen/**` → haupt trifft nichts: Den Ordner gibt
+es nicht, und `server/migrations/` hält drei alte SQL-Dateien vom Juli und
+August. Neue Migrationen sind Einträge im Katalog von
+`server/migration_lib.php` — ein Muster auf diese Datei löste aber auch
+ohne Migration aus (AP2 hat dort einen Protokollaufruf ergänzt, AP3 stellt
+drei `error_log` um). **Gebaut wird deshalb in AP4, mit der ersten
+Migration:** `auswahl.py` vergleicht die Kennungen des Katalogs zwischen
+Basis und Kopf; kommt eine neue hinzu, ist die Stufe mindestens „haupt".
+Selbstprobe mit echtem Dateiformat, Gegenprobe (Kennung entfernt → Stufe
+fällt zurück); `pruefablauf.json` führt es als eigene Regel, die Tabelle in
+`Pruefablauf.md` 4 wird daraus erzeugt.
+
+**E-P5c-89 — Jede Anleitung, die P5c anfasst, hält die Form aus 6.2**
+(Q-P5c-36). Fünf Abschnitte, höchstens 40 Zeilen, eine Zeile `Anlass:
+Nr. …` — für jede **neue** `LIESMICH.md` ab sofort. Die vier, die AP1 und
+AP2 über 40 Zeilen gebracht hatten, sind am 24.09.2026 zurückgekürzt
+(`bedienprobe` 44 → 39, `proben` 46 → 40, `schemaprobe` 48 → 39,
+`stilvergleich` 48 → 40), nur durch Kürzen der eigenen Zusätze; der
+Werdegang steht im Changelog und hier. `screenshots` (321 Zeilen, vor P5c
+317) bringt BR-02 auf die Form; P5c ändert dort nur noch Zahlenzeilen. Die
+Anlass-Zeilen im Altbestand setzt BR-02, nicht P5c.
+
+**E-P5c-90 — Die Nummernspanne des Zweigs ist 294–303** (Q-P5c-37). 294
+Konzept SD (SD-00), 295–298 aus E-P5c-86, 299–303 frei für Funde der
+Umsetzung. Eingetragen im Kopf von `docs/Backlog.md`; 293 gehört BR.
+
+| Nr. | Frage | Vorschlag | Entscheidung |
+|---|---|---|---|
+| Q-P5c-34 | *(Nachtrag BR)* Wie löst „Migration → Stufe haupt" aus: neue Katalogkennung, Muster auf `migration_lib.php`, oder Pfad wie vorgeschlagen | neue Katalogkennung | **neue Katalogkennung** (24.09.2026) — E-P5c-88 |
+| Q-P5c-35 | *(Nachtrag BR)* Sammelordner des QR-Decoders | `tools/bedienprobe/` | **`tools/bedienprobe/`** (24.09.2026) — E-P5c-87 |
+| Q-P5c-36 | *(Nachtrag BR)* Die vier über 40 Zeilen gewachsenen Anleitungen jetzt kürzen | ja, alle vier | **ja, alle vier** (24.09.2026) — E-P5c-89 |
+| Q-P5c-37 | *(Nachtrag BR)* Nummernvergabe 294–298 samt Spanne bis 303 | so vergeben | **so vergeben** (24.09.2026) — E-P5c-90 |
+
 ---
 
 ## 3. Arbeitspakete
@@ -1350,7 +1418,7 @@ AP11. Die Gründe:
 - **Versionsstufe, Changelog, Doku, Backlog** nach `CLAUDE.md` 2; die Spalte
   „Versionsstufe" im Statusblock ist ein Vorschlag.
 - **Prüfstand-Stufe** nach E-P5c-36; ein Paket mit Migration fährt
-  `--stufe haupt`. Was die Stufe nicht von selbst fährt, steht in der Abnahme
+  `--stufe haupt` — ab AP4 wählt der Prüfstand das selbst (E-P5c-88). Was die Stufe nicht von selbst fährt, steht in der Abnahme
   des Pakets **mit Aufruf** (Abschnitt 4).
 - **Migration** immer mit Ansage „nach dem Deploy `update.php`, die Wartung
   bleibt an" und mit dem Rückfall-SELECT für neue Spalten im Anmeldeweg.
@@ -1621,7 +1689,7 @@ E-P5c-58; die Behandler-Regel in `tools/quelltext/`; Nr. 248 berichtigt.
 
 ### AP4 — Support-Rolle (E-P5c-14, -22, -40, -62; Bild: M-P5c-02)
 
-**Inhalt.** Migration ENUM `users.role` um `support`; `ROLLEN`,
+**Inhalt.** **Zuerst die Stufenregel aus E-P5c-88** (neue Katalogkennung → Stufe „haupt", `auswahl.py`, Selbst- und Gegenprobe). Migration ENUM `users.role` um `support`; `ROLLEN`,
 `rolle_darf_support()`; die Aufzählstellen, die das Register nicht sieht
 (F-P5c-36): `schema.sql`, `auth_guard.php` (Wache „Verwaltung oder Support",
 `rollen_auswahl`), `admin_users.php` (Sortwert), `betrieb_statistik.php`
@@ -1653,7 +1721,7 @@ Prüfstand `haupt`.
 
 ### AP5 — Zweitfaktor und Bus-Faktor (E-P5c-15, -16, -41 bis -44, -53, -54, -56, -61, -63, -65; Bild: M-P5c-02)
 
-**Inhalt.** `totp_lib.php` (RFC 6238); Migration (Spalten, `totp_codes`);
+**Inhalt.** *(QR-Decoder: E-P5c-87, Anlass Nr. 298.)* `totp_lib.php` (RFC 6238); Migration (Spalten, `totp_codes`);
 QR-Bibliothek vendoriert, SVG aus der Modulmatrix; Karte „Zweitfaktor" unter
 Einstellungen → Profil (einrichten mit QR, Base32 und otpauth-Adresse, erst
 nach bestätigtem Code eingeschaltet; Codes einmalig anzeigen; Codeblatt über
@@ -1721,7 +1789,7 @@ externes Monitoring (nur `curl`).
 
 ### AP7 — Statistik mit drei Reitern (E-P5c-18, -45, -46; Bild: M-P5c-01b)
 
-**Inhalt.** Migration Index `missions(started_at)`; `idx_missions_deleted`
+**Inhalt.** *(Messstand-Schritt `statistik`: Anlass Nr. 295; Motor-Messungen: Nr. 297.)* Migration Index `missions(started_at)`; `idx_missions_deleted`
 in `schema.sql` nachtragen, damit frische und migrierte Anlagen gleich sind
 (zeigt `EXPLAIN`, dass er nicht gebraucht wird, entfernt ihn stattdessen eine
 Migration — F-P5c-39); drei Reiter; **eine** Zählung mit Obergrenze;
@@ -1787,7 +1855,7 @@ Wartung bleibt an.** **Stufe:** **Haupt**, Prüfstand `haupt`.
 
 ### AP9 — Aufräumen der Einstellungen (E-P5c-06 bis -08, -20, -28 bis -30, -37, -46, -49, -50; Bilder: M-P5c-01c, -01d, -01f, -02)
 
-**Inhalt.**
+**Inhalt.** *(Ankerprüfung: Anlass Nr. 188; Motor-Messungen: Nr. 297 — E-P5c-86.)*
 1. **Zuerst der Trenner** (E-P5c-37) — er steckt in 8 der 15 Seitendateien;
    Register Z26 nachziehen.
 2. **Zählregel** vor der Ausgangszählung festlegen (F-P5c-48): was ein Satz

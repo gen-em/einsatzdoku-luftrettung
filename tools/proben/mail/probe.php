@@ -459,7 +459,7 @@ pruef('Aber eine Kennung', (bool)preg_match('/\[[0-9A-F]{8}\]/', $log),
 /* ======================================================================== */
 abschnitt('14  Rundmail — nur einreihen, an alle erreichbaren, einmal je Tag');
 
-/* ANLASS: P5c/AP1, F-P5c-29. `mail_einreihen()` versuchte jede Nachricht
+/* ANLASS: Nr. 296 (P5c/AP1). `mail_einreihen()` versuchte jede Nachricht
  * sofort, bis zu MAIL_BUDGET_S je Stueck; eine Rundmail an vierzig Konten
  * haette den Seitenaufruf bis zu 200 s aufgehalten. Gemessen wird deshalb
  * GEGEN EINEN SCHWEIGENDEN SERVER: Versuchte die Rundmail doch sofort, hinge

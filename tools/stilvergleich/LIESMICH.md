@@ -29,18 +29,10 @@ Dateien, nicht eine laufende Anlage. `NODE_PATH` setzt `gegen.sh`, weil
 
 ## Erwartete Zahl
 
-**Genau die Abweichungen in `geplant.txt` — ohne Datei 0** (seit P5c/AP1,
-F-P5c-72; `docs/Pruefablauf.md` 6.10). Jede Abweichung wird zur Signatur
-„Probe · Element <Elternteil> : Eigenschaften"; der Lauf ist grün, wenn die
-gemessenen Signaturen und die Datei gleich sind, und nennt sonst jede
-ungeplante und jede nicht gemessene Zeile. Die Datei wird im Pull Request
-gelesen und nach dem Merge geleert.
-
-Zuletzt gemessen 23.09.2026 (P5c/AP1, gegen `origin/main`): **41 483
-Elementmessungen, 546 Abweichungen in 30 Signaturen, alle 30 geplant**
-(Chromium). Gegenproben: eine Zeile gestrichen → 1 ungeplant, rot; eine
-erfundene dazu → 1 nicht gemessen, rot. Davor, ohne gewollte Änderung:
-21.09.2026, 40 989 Elementmessungen, 0 Abweichungen.
+**Genau die Signaturen in `geplant.txt` — ohne Datei 0** (`Pruefablauf.md`
+6.10); gelesen im Pull Request, nach dem Merge geleert. Gemessen 24.09.2026
+gegen `origin/main`: **42 575 Elementmessungen, 54 Signaturen, alle
+geplant** (Chromium).
 
 ## Was es nicht kann
 

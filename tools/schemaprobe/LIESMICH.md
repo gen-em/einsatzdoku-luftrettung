@@ -10,18 +10,9 @@ php tools/schemaprobe/probe.php --datenbank nadoku_probe   # --selbstprobe
 bash tools/sandbox/plattform.sh schema                     # alle vier Fassungen
 ```
 
-**Der Prüfstand ruft die zweite Zeile** (seit P5c/AP2, F-P5c-88). Bis dahin
-stand dort die erste — ohne Zugangsdaten, also als `root` ohne Passwort, und
-das lehnt die örtliche MariaDB ab. Weil bis AP2 kein Paket
-`migration_lib.php` berührt hatte, lief der Eintrag nie; in keinem
-Prüfbericht war die Schemaprobe gemessen. `plattform.sh` kennt die
-Zugangsdaten je Fassung.
-
-**Nicht neben anderen Proben fahren.** Weil sie `config.php` für ihre
-Laufzeit auf die Probe-Datenbank stellt, sieht jede Anfrage an die Anlage in
-diesem Fenster eine Datenbank mit ausstehenden Migrationen — und der
-Torwächter schließt die Anlage (`wartung.lock`). Gemessen im Vorlauf zu
-P5c/AP2: danach 503 auf jeder Seite (F-P5c-86).
+Der Prüfstand ruft die zweite Zeile; sie kennt die Zugangsdaten je Fassung.
+**Nie neben anderen Proben fahren:** Während sie läuft, sieht die Anlage
+eine Datenbank mit offenen Migrationen, und der Torwächter schließt sie.
 
 ## Was es misst
 

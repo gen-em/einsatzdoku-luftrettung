@@ -36,11 +36,8 @@ Wartungsseiten ein `--jobs-token`. **Ohne Token bricht der Lauf ab.**
 
 ## Erwartete Zahl
 
-Voller Lauf: **520 Einzelbilder, 65 Kontaktbögen, Überlauf 0,
-Konsolenfehler 0, Knöpfe falscher Höhe 0, 167 Karten / 0 außerhalb**
-(gemessen 24.09.2026 zu P5c/AP2, Stufe „neben"; die drei neuen Seiten sind
-`44a-protokoll`, `44b-protokoll-sicherheit` und `44c-protokoll-archiv`;
-davor 496 Bilder aus 62 Seiten).
+Voller Lauf: **520 Einzelbilder, 65 Kontaktbögen, Überlauf 0, Knöpfe
+falscher Höhe 0, 167 Karten / 0 außerhalb** (24.09.2026).
 
 ## Was es nicht kann
 

@@ -14,6 +14,38 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Zuarbeit für den Bestandsriegel (P5c, Nachtrag BR)] — 2026-09-24
+
+Konzept P5c 2.10 (E-P5c-86 bis -90), Zuarbeit aus Konzept BR. Keine
+Versionsstufe: berührt sind nur `tools/` und `docs/`.
+
+### Geändert
+
+- **Ein geplantes Prüfmittel nennt als Anlass eine Backlog-Nummer, keine
+  Befund-Kennung.** Konzept BR baut einen Riegel, der jede Anleitung unter
+  `tools/` nach einer Zeile `Anlass: Nr. …` fragt; die Kennungen `F-P5c-…`
+  verschwinden mit dem Konzept, eine Backlog-Nummer bleibt. Vergeben sind
+  Nr. 295 (Messstand `statistik`), 296 (Rundmail in der Mailprobe — gleich
+  erledigt, die Probe steht seit Web 20.38.0), 297 (Motor-Messungen) und
+  298 (QR-Decoder der Bedienprobe); die Ankerprüfung der Linkprobe hängt an
+  der offenen Nr. 188. Die Mailprobe und `pruefablauf.json` nennen jetzt
+  Nr. 296.
+- **Vier Anleitungen sind wieder unter 40 Zeilen**, die AP1 und AP2
+  darübergebracht hatten: `bedienprobe` 44 → 39, `proben` 46 → 40,
+  `schemaprobe` 48 → 39, `stilvergleich` 48 → 40. Gekürzt ist nur, was
+  diese beiden Pakete hineingeschrieben hatten; die Begründungen stehen hier
+  und im Konzept, nicht zweimal. In `screenshots` sind drei Zahlenzeilen zu
+  einer geworden — die Datei selbst (321 Zeilen) bringt Konzept BR auf die
+  Form.
+
+### Bewusst so
+
+- **Die Regel „Migration heißt Stufe haupt" steht noch nicht im Prüfstand.**
+  Das Muster aus der Zuarbeit (`server/migrationen/**`) träfe nichts; den
+  Ordner gibt es nicht. Ein Muster auf `migration_lib.php` schlüge auch ohne
+  Migration an. Gebaut wird sie mit der ersten Migration von P5c (AP4) als
+  Vergleich der Katalogkennungen zwischen Basis und Kopf (E-P5c-88).
+
 ## [Web 20.39.0] — 2026-09-24
 
 **Das Protokoll lässt sich lesen, und es hat ein Archiv.** P5c/AP2 (Schritt
