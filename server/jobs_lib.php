@@ -205,6 +205,7 @@ function jobs_aufzaehlung(array $teile): string
 function jobs_katalog(): array
 {
     require_once __DIR__ . '/mail_lib.php';
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
     $katalog = [
         /* `mail` STEHT GANZ VORN, und das ist kein Zufall (P5a/AP5).
          *
@@ -309,6 +310,19 @@ function jobs_katalog(): array
             'taeglich'     => false,
             'rueckstand'   => 'job_adminbackup_rueckstand',
             'lauf'         => 'job_adminbackup',
+        ],
+        /* DAS PROTOKOLLARCHIV STEHT VOR DEM VERSAND (P5c/AP2, E-P5c-03,
+         * -57): Ein fertiges Archiv geht so noch im selben Lauf hinaus. Es
+         * ist leicht — alle sieben Tage ein Zeitraum, im Regelfall eine
+         * Abfrage auf die Marke und sonst nichts. */
+        'protokoll_archiv' => [
+            'titel'        => 'Protokoll archivieren',
+            'beschreibung' => 'Die Einträge eines abgelaufenen Zeitraums versiegelt als '
+                            . 'ZIP ablegen und Archive nach Ablauf der Aufbewahrung '
+                            . 'löschen — ohne IP-Adressen, in Häppchen',
+            'taeglich'     => false,
+            'rueckstand'   => 'protokoll_archiv_rueckstand',
+            'lauf'         => 'protokoll_archiv_job',
         ],
         /* DER VERSAND STEHT NACH DEM SICHERN UND VOR `waisen` (S2/AP7).
          * Nach dem Sichern, weil er schickt, was jenes erzeugt hat — in

@@ -522,6 +522,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'toggle') {
         db()->prepare('UPDATE devices SET active = 1 - active WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll_geraet('geraet_umgeschaltet', (int)($_POST['id'] ?? 0), $userId, 'selbst');
         $notice = 'Status geändert.';
     }
     /* ---- Kopplung: den Code vom Gerät entgegennehmen (S5, E-S5-01) -------
@@ -640,6 +642,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'delete') {
         // FK setzt device_id in Einsaetzen/Segmenten auf NULL -> Daten bleiben
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll_geraet('geraet_geloescht', (int)($_POST['id'] ?? 0), $userId, 'selbst');
         db()->prepare('DELETE FROM devices WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
         $notice = 'Gerät gelöscht. Bereits hochgeladene Daten bleiben erhalten.';

@@ -291,14 +291,14 @@ ui_seite_start(['titel' => 'Status']);
     <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
-  <?php /* ---- Betriebsprotokoll: eine Zaehlkarte, mehr nicht (P5b/AP1) ----
+  <?php /* ---- Betriebsprotokoll: eine Zaehlkarte (P5b/AP1, P5c/AP2) -------
      *
-     * WARUM HIER NUR ZAHLEN STEHEN UND KEINE EINTRAEGE. 10b baut den
-     * Schreibweg, 10c die Oberflaeche mit Reitern, Archiv und Download
-     * (V4 bis V9). Diese Karte ist der Beleg, dass geschrieben wird —
-     * nicht die Sicht auf das Geschriebene. Ohne sie wuesste niemand, ob
-     * das Protokoll laeuft, bis 10c fertig ist; mit einer halben Sicht
-     * haette 10c einen Vorgaenger, den es wegraeumen muss.
+     * WARUM HIER NUR ZAHLEN STEHEN UND KEINE EINTRAEGE. Die Eintraege stehen
+     * seit P5c/AP2 unter Verwaltung → Protokoll, mit Reitern, Suche und
+     * Archiv; jede Zeile hier fuehrt auf ihren Reiter. Diese Karte bleibt
+     * der Beleg, dass geschrieben wird — und zaehlt seither ueber dieselben
+     * Quellen wie die Seite, also auch E-Mail, Jobs und Ziele, die bis dahin
+     * auf null standen (E-P5c-38).
      *
      * DIE FEHLERZEILE IST DER EIGENTLICHE ZWECK. Ein Protokoll, dessen
      * Schreiben scheitert, laesst die Handlung weiterlaufen (V7) — richtig
@@ -324,21 +324,17 @@ ui_seite_start(['titel' => 'Status']);
                    . 'steht im Serverprotokoll unter „protokoll:".',
           'href' => null, 'plakette' => (string)$pf, 'ton' => 'rot']); ?>
     <?php endif; ?>
-    <?php foreach (PROTOKOLL_REITER as $r => $titel): ?>
+    <?php foreach (PROTOKOLL_SEITE_REITER as $r => $titel): ?>
       <?php status_zeile([
           'text'  => $titel,
           'klein' => $r === 'verwaltung'
               ? 'Das Audit — ' . protokoll_frist_verwaltung() . ' Tage, einstellbar '
-                . 'unter Servereinstellungen → Konten'
+                . 'unter Servereinstellungen → Protokoll'
               : 'verfällt nach ' . PROTOKOLL_FRIST_UEBRIGE . ' Tagen',
-          'href'  => null,
+          'href'  => 'admin_protokoll.php?r=' . $r,
           'plakette' => $pz['tag'][$r] . ' heute · ' . $pz['gesamt'][$r] . ' gesamt',
           'ton'   => $pz['gesamt'][$r] > 0 ? 'blau' : 'neutral']); ?>
     <?php endforeach; ?>
-    <p class="feld-hinweis"><strong>Lesen lässt sich das Protokoll noch
-       nicht.</strong> Die Reiter mit Filter, Archiv und Download kommen mit dem
-       nächsten Schritt; bis dahin belegt diese Karte, dass geschrieben
-       wird.</p>
   <?php ui_karte_ende(true); ?>
 
   <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',

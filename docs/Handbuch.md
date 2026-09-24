@@ -3312,7 +3312,7 @@ koppeln".
 ## 11. Verwaltung (Admin)
 
 **Was andere Konten und die Anlage nach außen betrifft.** Der Block
-**Verwaltung** unter dem Zahnrad hat vier Punkte, und dieses Kapitel folgt
+**Verwaltung** unter dem Zahnrad hat fünf Punkte, und dieses Kapitel folgt
 ihnen:
 
 | Menüpunkt | Abschnitt | wozu |
@@ -3321,12 +3321,14 @@ ihnen:
 | **Konto-Backups** | 11.4 | die Regeln, die für **alle** Konten gelten |
 | **Installation** | 11.5 | Name, Logo, Impressum, Datenschutzerklärung |
 | **Demo-Konto** | 11.6 | anlegen, zurücksetzen, entfernen |
+| **Protokoll** | 11.7 | nachlesen, wer wann was im Betrieb getan hat; für die BetreiberIn dazu das Archiv |
 
 Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
 Entscheidung dazu, was mit den Konto-Backups geschieht.
 
-Alles in diesem Kapitel können **Admin und BetreiberIn**. Was nur eine
-BetreiberIn kann — der Server selbst —, steht in Kapitel 12. Seit Web 15.0.0
+Alles in diesem Kapitel können **Admin und BetreiberIn** — beim Protokoll
+sieht der Admin vier der sieben Reiter (11.7). Was nur eine BetreiberIn
+kann — der Server selbst —, steht in Kapitel 12. Seit Web 15.0.0
 gibt es **drei Rollen**; welche was darf, steht in 11.3 unter „Drei Rollen".
 
 ### 11.1 Die Kontoseite
@@ -3340,7 +3342,7 @@ Darunter:
 
 | Karte | Was dort steht |
 |---|---|
-| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). |
+| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** auf alles, was dieses Konto getan hat oder was ihm geschah (11.7). |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
@@ -3544,7 +3546,9 @@ zutrifft:
 
 **Rollenwechsel und Löschen wirken sofort**, auch bei jemandem, der gerade
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
-Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
+Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig. Beides steht im
+Protokoll (11.7) — ein Rollenwechsel seit Web 20.39.0 mit alter und neuer
+Rolle.
 
 #### Drei Rollen
 
@@ -3555,8 +3559,14 @@ alles, was eine NutzerIn kann.
 | Rolle | Was sie kann |
 |---|---|
 | **NutzerIn** | die eigenen Diensttage und Einsätze dokumentieren, eigene Stammdaten, Geräte, Backup, Import und Export — alles unter dem Zahnrad, was mit „ich" zu tun hat |
-| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, Konto-Backups, Installation, Demo-Konto |
-| **BetreiberIn** | zusätzlich: alles, was die **Anlage** betrifft — Status, Statistik, Wartungsmodus, Migrationen, Hintergrundjobs, Speichergrenze, Komplett-Backup und Backup-Ziele (Kapitel 12) |
+| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, Konto-Backups, Installation, Demo-Konto, das Protokoll mit vier Reitern |
+| **BetreiberIn** | zusätzlich: alles, was die **Anlage** betrifft — Status, Statistik, Wartungsmodus, Migrationen, Hintergrundjobs, Speichergrenze, Komplett-Backup und Backup-Ziele (Kapitel 12), dazu alle Reiter des Protokolls und sein Archiv |
+
+**Seit Web 20.39.0 halten auch die Seiten selbst einen Admin draußen.** Bis
+dahin zeigte das Menü Komplett-Backup und Backup-Ziele nur der BetreiberIn,
+aber wer die Adresse kannte, kam als Admin hinein (Backlog Nr. 286). Jetzt
+antworten beide Seiten und jede ihrer Handlungen einem Admin mit „Kein
+Zugriff".
 
 Warum die dritte Rolle: Eine Fehlbedienung in der Verwaltung trifft **ein**
 Konto, eine im Betrieb die **ganze Installation**. Wer den Wartungsmodus
@@ -3943,8 +3953,8 @@ durch Annahme zustande; ohne sie darf er nicht weiterlaufen. Deshalb:
 
 **Was du wissen musst, bevor du ein Standdatum setzt:** Ein neues Standdatum
 bei Nutzungsbedingungen oder AVV stellt **alle Konten** beim nächsten Anmelden
-vor das Häkchen. Das ist gewollt und steht so im Protokoll (Verwaltung → das
-Betriebsprotokoll zählt es mit).
+vor das Häkchen. Das ist gewollt und steht so im Protokoll (Verwaltung →
+Protokoll, Reiter Verwaltung).
 
 **Solange kein Standdatum gesetzt ist, verlangt der Text nichts.** Du kannst
 also in Ruhe einen Entwurf hinterlegen, ihn ansehen, ihn ändern — erst das
@@ -3973,6 +3983,101 @@ dort aus Sicht dessen, der es benutzt.
 Zwei Dinge, die nur die Verwaltung betreffen: Auf der **Kontoseite** des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
+
+### 11.7 Protokoll
+
+Unter **Verwaltung → Protokoll** steht, was im Betrieb geschehen ist: Konten
+angelegt, freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert;
+Setz-Links ausgestellt; Geräte umgeschaltet oder entkoppelt; Wartung gefahren;
+Migrationen ausgeführt; Backups erzeugt, geladen, eingespielt; Post
+versandt; Jobs gelaufen.
+
+**Wer welchen Einsatz angesehen hat, steht nicht darin** — und soll nicht
+darin stehen. Wenn dich jemand fragt, ob du nachsehen kannst, wer einen
+bestimmten Einsatz geöffnet hat: Du kannst es nicht, und zwar mit Absicht.
+
+#### Die Reiter
+
+| Reiter | Was darin steht | Admin | BetreiberIn |
+|---|---|:-:|:-:|
+| **Verwaltung** | das Audit: wer wann was an Konten und Anlage getan hat | ja | ja |
+| **Sicherheit** | Sperren, Verlangsamungen, aufgehobene Sperren, blockierte Inhalte (CSP) — mit IP-Adressen | — | ja |
+| **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt) — **nie** Empfänger, Betreff oder Inhalt | ja | ja |
+| **Jobs** | jeder Lauf eines Hintergrundjobs, Fehler rot | ja | ja |
+| **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt | ja | ja |
+| **Ziele** | was auf ein Backup-Ziel ging und was dort gelöscht wurde | — | ja |
+| **System** | Fehlermeldungen der Anwendung | — | ja |
+| **Archiv** (rechts abgesetzt) | die versiegelten Archive, siehe unten | — | ja |
+
+Was du nicht sehen darfst, zeigt die Seite nicht — es gibt keinen
+ausgegrauten Reiter. **Der Reiter System ist vorbereitet, aber noch leer:**
+Fehlermeldungen der Anwendung stehen bis auf Weiteres im Fehlerprotokoll des
+Webspace.
+
+#### Eine Zeile lesen
+
+Die **Plakette** sagt die Art des Ereignisses, ihre **Farbe** das Gewicht:
+grau ein gewöhnlicher Vorgang, blau etwas Erledigtes, orange ein Eingriff
+oder eine Sperre, rot ein Fehler. Darunter stehen Zeit, wer gehandelt hat
+(„Kommandozeile" oder „job", wenn es kein Mensch war) und wen es betraf.
+**Eine Zeile mit Winkel lässt sich aufklappen** — darunter stehen die
+Angaben, die nicht in den Satz passen.
+
+#### Suchen und eingrenzen
+
+- **Ein Suchfeld** für Text, Konto (E-Mail-Adresse oder Name) und die Art
+  („Rolle" findet alle Rollenwechsel). Als BetreiberIn findest du dort auch
+  eine **achtstellige Fehlerkennung**; die Seite springt dann in den Reiter
+  System.
+- **Zeitraum:** 24 h, 7 Tage, 30 Tage — im Reiter Verwaltung zusätzlich
+  365 Tage. Ohne Auswahl siehst du alles, was noch da ist.
+- **Art:** ein Auswahlfeld, das sofort filtert.
+- **Von der Kontoseite** (11.1) führt „Im Protokoll" in den Reiter
+  Verwaltung, eingegrenzt auf dieses Konto — als Handelnde oder als
+  Betroffene. Der Filter steht als Pille mit Kreuz über der Liste; das
+  Kreuz nimmt ihn weg.
+
+#### Wie lange etwas darin steht
+
+**Löschen kann niemand**, auch die BetreiberIn nicht. Es gibt nur Fristen:
+Der Reiter **Verwaltung** hält **365 Tage** (einstellbar zwischen 90 und
+1095), alle übrigen **30 Tage**, fest. Die Frist stellt die BetreiberIn unter
+**Betrieb → Servereinstellungen → Protokoll** ein (12.5); jede Änderung steht
+selbst im Protokoll.
+
+#### Das Archiv (nur BetreiberIn)
+
+**Was:** Alle **7 Tage** (einstellbar) legt ein Hintergrundjob die Einträge
+des abgelaufenen Zeitraums **versiegelt** als Datei ab — mit dem
+Serverschlüssel, so dass sie ohne `config.php` niemand lesen kann. Die
+Archive liegen **365 Tage** (einstellbar) auf dem Server und gehen mit dem
+Versand auf das Backup-Ziel (12.7), wo sie liegen bleiben. Das erste
+Archiv beginnt beim ältesten Eintrag, den es gibt; der Job holt dann Woche
+für Woche nach.
+
+**Was nicht hineingeht:** IP-Adressen und die Adressen aus gescheiterten
+Anmeldungen. Aus dem Reiter Sicherheit gehen nur Art, Topf, Stufe und Zeit
+ins Archiv, aus dem Reiter E-Mail nur Vorlage, Zustand und Zeit. Die
+übrigen Reiter gehen so hinein, wie sie dastehen — **samt der
+E-Mail-Adressen im Text**, damit das Archiv nach einer Kontolöschung noch
+sagt, wer es war.
+
+**Jede Zeile im Reiter Archiv** ist ein Zeitraum, mit einer Plakette:
+
+| Plakette | heißt |
+|---|---|
+| **auf dem Ziel** | liegt auch auf einem Backup-Ziel |
+| **nur lokal** | liegt nur hier — der Versand ist aus, oder er ist noch nicht gelaufen |
+| **anderer Schlüssel** | wurde mit einem früheren Serverschlüssel versiegelt; öffnen lässt es sich nur mit dem Schlüssel von damals (Wiederanlaufpaket, Schlüsselblatt mit der genannten Kennung) |
+
+**Herunterladen** entsiegelt das Archiv und gibt ein gewöhnliches ZIP heraus:
+je Reiter eine Datei mit einer Zeile je Eintrag, dazu eine Übersicht. Das
+Herunterladen steht selbst im Protokoll. **Die Datei ist danach Klartext** —
+lege sie nicht dorthin, wo andere mitlesen.
+
+**Das Komplett-Backup (12.6) enthält die Sperren nicht.** Die Tabellen mit
+IP-Adressen gehen nur leer hinein; nach einem Wiederanlauf beginnt der
+Ratenschutz von vorn.
 
 ---
 
@@ -4200,19 +4305,19 @@ nicht darin und soll nicht darin stehen. Wenn dich jemand fragt, ob du
 nachsehen kannst, wer einen bestimmten Einsatz geöffnet hat: Du kannst es
 nicht, und zwar mit Absicht.
 
-**Sechs Reiter, zwei Fristen.** *Verwaltung* ist das Audit — wer wann was
+**Sieben Reiter, zwei Fristen.** *Verwaltung* ist das Audit — wer wann was
 getan hat — und bleibt **365 Tage**; die Zahl stellst du unter
-Servereinstellungen → Konten ein (zwischen 90 und 1095). E-Mail, Jobs,
-Sicherung, Ziele und System verfallen nach **30 Tagen**, und das ist keine
-Einstellung.
+Servereinstellungen → Protokoll ein (zwischen 90 und 1095). Alle übrigen
+verfallen nach **30 Tagen**, und das ist keine Einstellung.
 
-*Sperren und Angriffsversuche* stehen **nicht** hier, sondern unter
-Status → Sicherheit. Sie führen IP-Adressen und verfallen deshalb nach 30
-Tagen, ohne Ausnahme.
+**Die Karte zählt, gelesen wird unter Verwaltung → Protokoll** (11.7). Je
+Reiter stehen die Einträge der letzten 24 Stunden und insgesamt; jede Zeile
+führt auf ihren Reiter. Seit Web 20.39.0 zählt die Karte auch E-Mail, Jobs,
+Sicherheit und Ziele mit — dort stand bis dahin eine Null, obwohl es Einträge
+gab.
 
-**Lesen lässt sich das Protokoll noch nicht.** Die Karte zählt nur — Einträge
-je Reiter, heute und insgesamt. Die Ansicht mit Filter, Archiv und Download
-kommt mit dem nächsten Schritt.
+*Aktive Sperren* hebst du weiter unter Status → Sicherheit auf; der Reiter
+Sicherheit im Protokoll zeigt, was geschehen ist, auch die aufgehobenen.
 
 **Steht dort eine rote Plakette „n nicht geschrieben", sieh hin.** Die
 Handlungen selbst sind gelungen — das Protokoll lässt nie eine Handlung
@@ -4506,7 +4611,7 @@ Geheimnisse, und beide stehen in `config.php` — nicht in der Datenbank:
 
 - der **Serverschlüssel** versiegelt, was der Server ohne Browser lesen können
   muss: die Zugangsdaten der Backup-Ziele, das Komplett-Backup, die
-  Konto-Backups;
+  Konto-Backups und die Archive des Protokolls;
 - der **Server-Anteil** geht in den Datenschlüssel *jedes Kontos* ein. Der
   Server kann damit trotzdem nichts öffnen — aber ein Datenbankabzug allein
   reicht nicht mehr, um ein Passwort durchzuprobieren.
@@ -4658,8 +4763,8 @@ läuft, stellt hier wieder auf 1 Jahr.**
 
 #### Karte „Konten" (seit Web 20.16.5)
 
-Was diese Installation mit Konten tut: wer eines bekommt, was es halten darf,
-wie lange das Protokoll sie behält.
+Was diese Installation mit Konten tut: wer eines bekommt und was es halten
+darf.
 
 **Registrierung — drei Betriebsarten.**
 
@@ -4719,7 +4824,22 @@ Demo-Konto zum Vorzeigen haben.
 **Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht;** die
 Zugangsdaten stehen in diesem Handbuch und im README.
 
-**Verwaltungseinträge im Protokoll aufbewahren** — siehe 12.1.
+#### Karte „Protokoll" (seit Web 20.39.0)
+
+Wie lange Betriebsereignisse liegen — in der Datenbank und im Archiv. Bis Web
+20.38.0 stand die erste Zahl in der Karte „Konten".
+
+| Feld | Vorgabe | Bereich | was es tut |
+|---|--:|---|---|
+| **Verwaltungseinträge aufbewahren** | 365 Tage | 90–1095 | wie lange der Reiter Verwaltung in der Datenbank bleibt; alle übrigen Reiter 30 Tage, fest |
+| **Archiv alle** | 7 Tage | 1–31 | wie lang ein Zeitraum ist, den ein Archiv fasst |
+| **Archive aufbewahren** | 365 Tage | 90–1095 | wie lange ein Archiv hier liegt; auf dem Backup-Ziel bleibt es |
+| **Archive auf das Backup-Ziel schicken** | an | an / aus | ob der Versandjob die Archive mitnimmt |
+
+**Jede Änderung steht selbst im Protokoll** (Reiter Verwaltung, Art
+„Fristen") — ein kürzeres Audit ist eine Handlung, die ins Audit gehört.
+Die Plakette am Kartenkopf zählt die Archive, „Protokoll lesen" führt auf
+die Seite. Was ins Archiv geht und was nicht: 11.7.
 
 ### 12.6 Komplett-Backup
 
@@ -4754,6 +4874,12 @@ Backup-Ziel.
 
 Was von selbst auf ein Backup-Ziel geschoben wird, ist immer die
 verschlossene Fassung.
+
+**Zwei Tabellen gehen nur leer hinein** (seit Web 20.39.0): die
+Sperrereignisse und die Zähler des Ratenschutzes. Beide führen IP-Adressen
+und verfallen hier nach 30 Tagen — ein Backup, das länger liegt und außer
+Haus geht, soll sie nicht aufheben. Nach einem Wiederanlauf beginnt der
+Ratenschutz deshalb von vorn, und eine laufende Sperre ist aufgehoben.
 
 **Das Wichtigste steht nicht in der Datei.** Das Komplett-Backup enthält
 absichtlich *nicht* die Datei `config.php` des Servers. In ihr stehen die
@@ -4795,7 +4921,8 @@ wurde, ist eine Vermutung.
 
 Seit Web 12.1.0 kann die BetreiberIn unter **Betrieb →
 Backup-Ziele** eine Gegenstelle eintragen, auf die die Konto-Backups
-geschoben werden — per **SFTP oder FTPS**. Der Grund ist schlicht: Ein
+geschoben werden — per **SFTP oder FTPS**; dazu die Komplett-Stände und seit
+Web 20.39.0 die Archive des Protokolls. Der Grund ist schlicht: Ein
 Paket, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
 wenn dieser Server ausfällt.
 
@@ -4847,6 +4974,8 @@ Was dabei zu wissen ist:
 
   Was dabei entfernt wurde, steht unter **Betrieb → Status → Sicherheit** in
   der Karte *Löschungen auf Sicherungszielen* — mit Ziel, Datei und Grund.
+  **Die Archive des Protokolls** (11.7) fallen unter keine der beiden Zahlen
+  und werden drüben nie entfernt — rund 52 kleine Dateien im Jahr.
 - **Nachsehen, was dort liegt**, geht auf Knopfdruck: im Menü einer Zielzeile.
   Es zählt, was von hier stammt, und was nicht — und es löscht nichts. Die
   Zahlen kommen in dem Augenblick von der Gegenstelle und werden nicht

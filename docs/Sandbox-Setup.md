@@ -146,7 +146,7 @@ diese Tabelle mit (`Pruefablauf.md` 5).
 ### 2.2 Das Modul `plattform` — Fassungen und Wege
 
 ```
-bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|--aus]
+bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|schema|--aus]
 ```
 
 **Alle vier über Docker, gemessen am 21.09.2026 — `alles` in 29,7 s:**

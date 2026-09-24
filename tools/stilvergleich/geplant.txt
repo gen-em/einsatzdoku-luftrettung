@@ -7,10 +7,12 @@
 # „geplant, aber nicht gemessen").
 
 katalog.html  body <html>  :  height
+katalog.html  dd <div.zeile-daten>  :  font, font-family, font-size, height, line-height, min-height, min-width, overflow-wrap, width
 katalog.html  div <body>  :  height
 katalog.html  div <div>  :  height
 katalog.html  div.anmeldung <div>  :  height
 katalog.html  div.demo-hinweis <div.hinweise>  :  margin, margin-bottom, min-height, min-width
+katalog.html  div.feld-eingabe <div.filterreihe>  :  min-width, width
 katalog.html  div.hinweis-umgebung <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
 katalog.html  div.hinweise <div.anmeldung>  :  column-gap, display, flex-direction, gap, margin, margin-bottom, max-width, width
 katalog.html  div.hinweise <div>  :  column-gap, display, flex-direction, gap, margin, margin-bottom
@@ -23,16 +25,38 @@ katalog.html  div.meldung <div.hinweise>  :  margin, margin-bottom, min-height, 
 katalog.html  div.meldung-aktion <div.meldung-ankuendigung>  :  margin, margin-right, margin-top, width
 katalog.html  div.meldung-ankuendigung <div>  :  align-items
 katalog.html  div.nur-vorlesen <div>  :  bottom, inset, top
+katalog.html  div.protokoll-liste <div>  :  height
+katalog.html  div.reiter <div>  :  border, border-bottom, border-bottom-color, border-color, border-width, column-gap, display, gap, height, margin, margin-bottom, overflow, overflow-x, overflow-y, overscroll-behavior, overscroll-behavior-x, scrollbar-width
+katalog.html  div.reiter-punkt <div>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, color, display, flex, font, font-family, font-weight, height, min-height, outline, padding, padding-left, padding-right, text-wrap, white-space, width
+katalog.html  div.reiter-punkt.aktiv <div>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, color, display, flex, font, font-family, font-weight, height, min-height, outline, padding, padding-left, padding-right, text-wrap, white-space, width
+katalog.html  div.reiter-rahmen <div>  :  bottom, inset, left, position, right, top
+katalog.html  div.reiter-rahmen.rollt <div>  :  bottom, inset, left, position, right, top
+katalog.html  div.reiter-rahmen.rollt-links <div>  :  bottom, inset, left, position, right, top
 katalog.html  div.suchfeld-lupe <div>  :  bottom, inset, top
 katalog.html  div.suchfeld-x <div>  :  bottom, inset, top
 katalog.html  div.symbol <div.hinweis-umgebung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline, stroke
 katalog.html  div.vorschlaege <div>  :  bottom, inset, top
+katalog.html  div.zeile <div.protokoll-liste>  :  display, gap, grid-template-areas, grid-template-columns, grid-template-rows, height
+katalog.html  div.zeile-aktionen <div.protokoll-liste>  :  align-self, grid-area, grid-column, justify-content, width
+katalog.html  div.zeile-daten <div>  :  background, border-radius, column-gap, display, font, font-family, font-size, gap, grid-template-columns, grid-template-rows, height, line-height, margin, margin-bottom, padding, padding-bottom, padding-left, padding-right, padding-top
+katalog.html  div.zeile-mehr <div>  :  height
+katalog.html  div.zeile-plaketten <div.archiv-liste>  :  justify-content
+katalog.html  div.zeile-plaketten <div.protokoll-liste>  :  grid-area, grid-column, justify-content
+katalog.html  div.zeile-text <div.protokoll-liste>  :  grid-area, grid-column
+katalog.html  div.zeile-winkel <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline, transform, transition, transition-duration
+katalog.html  div.zeile-winkel <summary>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, list-style, outline, transition, transition-duration
+katalog.html  dt <div.zeile-daten>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-family, font-size, height, line-height, min-height, min-width, outline, width
 katalog.html  html <->  :  height
 katalog.html  input.schalter-box <div>  :  bottom, inset, top
 katalog.html  input.segment-box <div>  :  bottom, inset, top
 katalog.html  input.wahl-box <div>  :  bottom, inset, top
 katalog.html  p <div.meldung-ankuendigung>  :  flex
+katalog.html  summary <div.zeile-mehr>  :  list-style
+katalog.html  summary.zeile <div.zeile-mehr>  :  height, list-style, padding, padding-bottom
 seiten.html  div.demo-hinweis.hinweis-umgebung <aside.leisteX>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
 seiten.html  div.hinweise <h2.uebersicht-block>  :  column-gap, display, flex-direction, gap, margin, margin-bottom
+seiten.html  div.reiter-rahmen <dd>  :  position
+seiten.html  input#<button class= <nav.reiter>  :  display
+seiten.html  nav.reiter <div.reiter-rahmen>  :  border, border-bottom, border-bottom-color, border-color, border-width, column-gap, display, gap, margin, margin-bottom, overflow, overflow-x, overflow-y, overscroll-behavior, overscroll-behavior-x, scrollbar-width
 seiten.html  p <div.demo-hinweis.hinweis-umgebung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
 seiten.html  strong <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline

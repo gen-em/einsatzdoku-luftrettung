@@ -7319,5 +7319,50 @@ declare(strict_types=1);
  *   `config.example.php` nennt die Kontaktadresse unter Verwaltung →
  *   Installation, wo sie steht, und nicht mehr unter den
  *   Servereinstellungen, wo sie nie stand.
+ *
+ * 20.39.0 — DAS PROTOKOLL LAESST SICH LESEN, UND ES HAT EIN ARCHIV
+ *   (P5c/AP2, Backlog Nr. 286, R38). Nebenstufe: keine Tabelle, keine
+ *   Spalte, keine Migration — die Einstellungen des Archivs liegen in vier
+ *   `app_state`-Zeilen.
+ *
+ *   DIE SEITE. Verwaltung → Protokoll, sieben Reiter nach Rolle: die
+ *   BetreiberIn alle und das Archiv, der Admin Verwaltung, E-Mail, Jobs,
+ *   Sicherung. Vier Reiter lesen die Tabellen, die ihre Sache ohnehin
+ *   fuehren (`sicherheit_ereignisse`, `csp_berichte`, `mail_warteschlange`,
+ *   `job_laeufe`, `sicherungsziel_dateien`) — JE QUELLE EINE ABFRAGE, NIE
+ *   EIN UNION, weil zwei Tabellen verschiedener Kollation das auf dem
+ *   Hoster zum Fehler machen. Ein Suchfeld, Zeitraum als Pillen, Art als
+ *   Auswahl, eine Zeile mit Angaben klappt auf. Die E-Mail-Sicht zeigt nie
+ *   Empfaenger, Betreff oder Fehlertext: Eine offene Zeile traegt einen
+ *   Setz-Link mit gueltigem Token.
+ *
+ *   NEUE SCHREIBER. Rollenwechsel, Setz-Link, Geraet umgeschaltet oder
+ *   entkoppelt (Verwaltung und selbst), Wartung an und aus (Seite und
+ *   Kette), Demo-Reset von Hand, Migration ausgefuehrt, Fristen geaendert,
+ *   Archiv geladen; im Reiter Sicherung Komplett-Backup erzeugt, geladen,
+ *   eingespielt, geloescht und Konto-Backup eingespielt. Ein Rollenwechsel
+ *   stand bis hierher nirgends.
+ *
+ *   DAS ARCHIV. Alle 7 Tage legt der Job `protokoll_archiv` die Eintraege
+ *   eines abgelaufenen Zeitraums als ZIP nach `sicherungen/protokoll/`, je
+ *   Teil versiegelt, die Kennung des Serverschluessels im Namen und im
+ *   Siegel; in Haeppchen, weil Produktiv keinen Cron hat. OHNE IP-ADRESSEN:
+ *   Aus `sicherheit_ereignisse` gehen nur Art, Topf, Stufe und Zeit hinein —
+ *   die 30-Tage-Zusage aus E-P5a-09 haelt auch dort. Die Verwaltung geht
+ *   hinein, wie sie dasteht (E-P5c-75). 365 Tage hier, auf dem Ziel ohne
+ *   Regel. Der Download entsiegelt und steht selbst im Protokoll.
+ *
+ *   DAS ADMIN-TOR (Nr. 286). Komplett-Backup und Backup-Ziele fragten nur
+ *   `require_admin()`, obwohl R75 sie der BetreiberIn vorbehaelt — ein Admin
+ *   haette per Adresse den Klartext-Dump der ganzen Datenbank geholt. Nicht
+ *   ausnutzbar, weil es kein Admin-Konto gab; jetzt `require_betreiberin()`,
+ *   und die Rollenprobe haelt es gegen eine Matrix in `Technik.md` 4.99p.
+ *
+ *   DAZU. Das Komplett-Backup nimmt `sicherheit_ereignisse` und
+ *   `rate_limits` nur mit Schema auf, ohne Zeilen. `zip_lib.php` ist der
+ *   eine Weg zu `ZipArchive`; `ui_reiter()`, `ui_listenkopf()`,
+ *   `ui_listenfuss()` und die aufklappbare Zeile sind Bausteine, und
+ *   `admin_users.php` benutzt sie. Die Frist der Verwaltungseintraege zieht
+ *   aus der Karte „Konten" in eine eigene Karte „Protokoll".
  */
-const WEB_VERSION = '20.38.0';
+const WEB_VERSION = '20.39.0';

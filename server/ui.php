@@ -974,6 +974,12 @@ function ui_einstellungen_punkte(): array
                  * und das Zeichen lag seit P3 ungenutzt im Vorrat. */
                 ['admin_installation', 'admin_installation.php', 'Installation',  'haus'],
                 ['admin_demo',         'admin_demo.php',         'Demo-Konto',    'kolben'],
+                /* PROTOKOLL UNTER VERWALTUNG, nicht unter Betrieb (E-P5c-10,
+                 * R74 (1)): Der Admin sieht vier seiner Reiter, und ein
+                 * Admin sieht Betrieb nicht. Menueeintrag und Zeichen kommen
+                 * mit der Seite (F-P5c-47) — ohne Eintrag waere „keine
+                 * Unterpunkte in der Leiste" gruen, ohne gemessen zu haben. */
+                ['admin_protokoll',    'admin_protokoll.php',    'Protokoll',     'protokoll'],
             ],
         ];
     }
@@ -1896,11 +1902,26 @@ function ui_kartenfilter(array $o): void
  *     die Knoepfe. Er ist Zierde und traegt keinen eigenen Namen: Was die
  *     Zeile tut, sagt ihr Text.
  *
+ * DIE AUFKLAPPBARE ZEILE (`daten`, P5c/AP2, E-P5c-26, M-P5c-01a). Hat eine
+ * Zeile Angaben, die nicht in den Satz passen (die `daten` eines
+ * Protokolleintrags), wird sie ein `<details class="zeile-mehr">`, dessen
+ * `<summary>` die Zeile IST; die Angaben stehen darunter als Liste. Der
+ * Winkel steht in der Aktionsspalte. Kein „⋯"-Blatt auf dem Handy:
+ * Aufklappen ist keine Handlung, sondern Lesen. `aktionsspalte => true`
+ * haelt die leere Spalte in Zeilen OHNE Angaben, damit alle Plaketten einer
+ * Liste auf einer Kante enden (Vorgabe 17.09.2026).
+ *
  * $o: vorn (Markup), text, klein, plaketten (Markup), aktionen (Markup),
- *     href, href_ganz, klasse, attr
+ *     href, href_ganz, klasse, attr, daten (Liste von [Schluessel, Wert]),
+ *     aktionsspalte (bool)
  * ------------------------------------------------------------------------ */
 function ui_zeile(array $o): void
 {
+    $daten = (array)($o['daten'] ?? []);
+    if ($daten !== []) {
+        ui_zeile_mehr($o, $daten);
+        return;
+    }
     $ganz = trim((string)($o['href_ganz'] ?? ''));
     $k = 'zeile' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
     /* `attr` wie bei ui_knopf() und ui_aktionen(): fertige Attribute, die der
@@ -1935,8 +1956,218 @@ function ui_zeile(array $o): void
            . ui_symbol('winkel', 'symbol-rechts zeile-weiter') . "</div>\n";
     } elseif (!empty($o['aktionen'])) {
         echo '  <div class="zeile-aktionen">' . (string)$o['aktionen'] . "</div>\n";
+    } elseif (!empty($o['aktionsspalte'])) {
+        echo '  <div class="zeile-aktionen"></div>' . "\n";
     }
     echo ($ganz !== '' ? "</a>\n" : "</div>\n");
+}
+
+/**
+ * Die aufklappbare Fassung von `ui_zeile()` — siehe dort.
+ *
+ * DAS `<summary>` IST IMMER ERSTES KIND seines `<details>`. `.zeile:first-child`
+ * naehme ihm deshalb den oberen Innenabstand, und aufklappbare Zeilen waeren
+ * 13 px niedriger als die uebrigen (F-P5c-13, gemessen in M-P5c-01).
+ * `style.css` setzt die Gegenregel an `.zeile-mehr > summary.zeile`.
+ */
+function ui_zeile_mehr(array $o, array $daten): void
+{
+    $k = 'zeile' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
+    echo '<details class="zeile-mehr"' . (string)($o['attr'] ?? '') . '>'
+       . '<summary class="' . $k . '">' . "\n";
+    echo '  <div class="zeile-text">' . "\n";
+    echo '    <span class="zeile-haupt">' . ui_e((string)($o['text'] ?? '')) . "</span>\n";
+    if (!empty($o['klein'])) {
+        echo '    <span class="zeile-klein">' . ui_e((string)$o['klein']) . "</span>\n";
+    }
+    echo "  </div>\n";
+    if (!empty($o['plaketten'])) {
+        echo '  <div class="zeile-plaketten">' . (string)$o['plaketten'] . "</div>\n";
+    }
+    echo '  <div class="zeile-aktionen">' . ui_symbol('winkel', 'zeile-winkel') . "</div>\n";
+    echo "</summary>\n" . '<dl class="zeile-daten">';
+    foreach ($daten as [$schluessel, $wert]) {
+        echo '<dt>' . ui_e((string)$schluessel) . '</dt><dd>' . ui_e((string)$wert) . '</dd>';
+    }
+    echo "</dl></details>\n";
+}
+
+
+/* ---------------------------------------------------------------------------
+ * REITER  (.reiter-rahmen, .reiter, .reiter-punkt, .reiter-abgesetzt)
+ *                                          P5c/AP2, E-P5c-25, Bild M-P5c-01a
+ *
+ * Wechsel zwischen gleichrangigen Sichten EINER Seite — serverseitig, jeder
+ * Reiter ist ein Verweis. Orange unterstrichen wie der aktive Punkt der
+ * Kopfleiste: „hier stehst du". Drei Verwender sind geplant: Protokoll (hier
+ * entstanden), Statistik (AP7), Rechtstexte (AP9).
+ *
+ * WARUM NICHT DAS SEGMENT UND NICHT DIE FILTERPILLEN (M-P5c-01a, geprüft und
+ * verworfen): Das Segment ist fuer wenige kurze Moeglichkeiten, sieben Woerter
+ * passen bei 400 px nicht. Die Pillen stehen eine Zeile tiefer als
+ * Zeitraumfilter — zwei Reihen gleich aussehender Pillen mit verschiedener
+ * Bedeutung waeren die Verwechslung.
+ *
+ * UNTER 720 px ROLLT DIE REIHE IN IHREM EIGENEN BEHAELTER; die Seite laeuft
+ * nie waagerecht aus dem Bild. `assets/reiter.js` holt den aktiven Reiter ins
+ * Bild und setzt den Verlauf am Rand — ohne Skript rollt die Reihe trotzdem.
+ *
+ * SEITEN MIT REITERN TRAGEN KEINE UNTERPUNKTE IN DER LEISTE: `menue.js` baut
+ * keine, wenn `#inhalt` eine `.reiter`-Reihe enthaelt (E-P5c-25).
+ *
+ * $o: label (fuer die Vorlesesoftware), punkte [ ['text', 'href',
+ *     'aktiv' => bool, 'abgesetzt' => bool (am rechten Rand, fuer eine
+ *     Ablage wie „Archiv"), 'attr' => fertige Attribute] ]
+ * ------------------------------------------------------------------------ */
+function ui_reiter(array $o): void
+{
+    $punkte = (array)($o['punkte'] ?? []);
+    if (!$punkte) { return; }
+    echo '<div class="reiter-rahmen"><nav class="reiter" aria-label="'
+       . ui_e((string)($o['label'] ?? 'Bereiche dieser Seite')) . '">';
+    foreach ($punkte as $p) {
+        $k = 'reiter-punkt' . (!empty($p['abgesetzt']) ? ' reiter-abgesetzt' : '')
+           . (!empty($p['aktiv']) ? ' aktiv' : '');
+        echo '<a class="' . $k . '" href="' . ui_e((string)$p['href']) . '"'
+           . (!empty($p['aktiv']) ? ' aria-current="page"' : '')
+           . (string)($p['attr'] ?? '') . '>' . ui_e((string)$p['text']) . '</a>';
+    }
+    echo "</nav></div>\n";
+    echo '<script src="' . ui_e(ui_asset('assets/reiter.js')) . '" defer></script>' . "\n";
+}
+
+
+/* ---------------------------------------------------------------------------
+ * LISTENKOPF UND LISTENFUSS  (.listenkopf, .listensuche, .filterreihe,
+ * .listenfilter · .listenfuss, .listenzahl, .seitenwahl, .seitenknopf)
+ *                                                P5c/AP2, R83, F-P5c-54
+ *
+ * BIS WEB 20.38.0 STANDEN SUCHFELD, FILTERPILLEN UND SEITENWAHL NUR ALS
+ * HANDGESCHRIEBENES MARKUP IN `admin_users.php`. Die Protokollseite waere die
+ * zweite Kopie gewesen — und zwei Kopien derselben Seitenwahl laufen
+ * auseinander, sobald eine von beiden eine Ellipse mehr bekommt. Jetzt ist
+ * es EIN Weg; das Register zaehlt die Klassen ausserhalb dieser Datei und
+ * haelt die Zahl auf null.
+ *
+ * ui_listenkopf($o):
+ *   form_id    Kennung des Suchformulars (fuer `form=` am Auswahlfeld)
+ *   suche      ['name' => 'q', 'wert', 'label', 'platzhalter']
+ *   versteckt  [Name => Wert] — was die Suche mitnehmen soll (Filter,
+ *              Sortierung); leere Werte fallen weg
+ *   filter     [ ['text', 'href', 'aktiv' => bool, 'zahl' => ?int,
+ *              'kreuz' => bool] ] — `kreuz` fuer einen Filter aus der
+ *              Adresse, der sich zuruecknehmen laesst (Kontofilter der
+ *              Protokollseite): aktive Pille mit Kreuz, der Verweis nimmt
+ *              ihn weg
+ *   auswahl    optional ['name', 'label', 'wert', 'optionen' => [Wert =>
+ *              Text]] — ein Auswahlfeld in der Filterreihe; mit Skript
+ *              (`assets/listenkopf.js`) schickt es sofort ab, ohne steht
+ *              ein Knopf „Filtern" daneben
+ * ------------------------------------------------------------------------ */
+function ui_listenkopf(array $o): void
+{
+    $id = (string)($o['form_id'] ?? 'f-suche');
+    $s  = (array)($o['suche'] ?? []);
+    $name = (string)($s['name'] ?? 'q');
+    /* Die Kennung des Feldes ist sein Name, wie in `admin_users.php` bis Web
+     * 20.38.0 — eine andere Kennung braeche jeden Verweis darauf, still. */
+    $fid0 = (string)($s['id'] ?? $name);
+    echo '<div class="listenkopf">' . "\n";
+    echo '  <form method="get" class="listensuche" role="search" id="' . ui_e($id) . '">' . "\n";
+    foreach ((array)($o['versteckt'] ?? []) as $n => $v) {
+        if ((string)$v === '') { continue; }
+        echo '    <input type="hidden" name="' . ui_e((string)$n) . '" value="'
+           . ui_e((string)$v) . '">' . "\n";
+    }
+    echo '    <label class="nur-vorlesen" for="' . ui_e($fid0) . '">'
+       . ui_e((string)($s['label'] ?? 'Suchen')) . "</label>\n";
+    echo '    <div class="suchfeld">' . ui_symbol('lupe', 'suchfeld-lupe')
+       . '<input type="search" id="' . ui_e($fid0) . '" name="' . ui_e($name)
+       . '" value="' . ui_e((string)($s['wert'] ?? '')) . '" placeholder="'
+       . ui_e((string)($s['platzhalter'] ?? '')) . '" autocomplete="off"></div>' . "\n";
+    echo '    <button class="knopf knopf-neutral nur-vorlesen" type="submit">Suchen</button>' . "\n";
+    echo "  </form>\n";
+
+    $filter = (array)($o['filter'] ?? []);
+    $auswahl = $o['auswahl'] ?? null;
+    if ($filter || $auswahl) {
+        echo '  <div class="filterreihe">' . "\n";
+        foreach ($filter as $f) {
+            $aktiv = !empty($f['aktiv']);
+            echo '    <a class="listenfilter' . ($aktiv ? ' aktiv' : '') . '" href="'
+               . ui_e((string)$f['href']) . '"' . ($aktiv ? ' aria-current="true"' : '')
+               . '><span>' . ui_e((string)$f['text']) . '</span>'
+               . (isset($f['zahl']) && $f['zahl'] !== null
+                   ? '<span class="listenfilter-zahl">' . (int)$f['zahl'] . '</span>' : '')
+               . (!empty($f['kreuz']) ? ui_symbol('schliessen', '', 'Filter entfernen') : '')
+               . "</a>\n";
+        }
+        if (is_array($auswahl)) {
+            $an = (string)$auswahl['name'];
+            $fid = $id . '-' . $an;
+            echo '    <label class="nur-vorlesen" for="' . ui_e($fid) . '">'
+               . ui_e((string)($auswahl['label'] ?? '')) . "</label>\n";
+            echo '    <select id="' . ui_e($fid) . '" name="' . ui_e($an) . '" form="'
+               . ui_e($id) . '" class="feld-eingabe" data-absenden>';
+            foreach ((array)$auswahl['optionen'] as $w => $t) {
+                echo '<option value="' . ui_e((string)$w) . '"'
+                   . ((string)$w === (string)($auswahl['wert'] ?? '') ? ' selected' : '') . '>'
+                   . ui_e((string)$t) . '</option>';
+            }
+            echo "</select>\n";
+            echo '    ' . ui_knopf(['text' => 'Filtern', 'art' => 'neutral', 'typ' => 'submit',
+                                   'attr' => ' form="' . ui_e($id) . '" data-absenden-knopf'])
+               . "\n";
+            echo '    <script src="' . ui_e(ui_asset('assets/listenkopf.js')) . '" defer></script>' . "\n";
+        }
+        echo "  </div>\n";
+    }
+    echo "</div>\n";
+}
+
+/**
+ * Der Fuss einer langen Liste: die Zaehlung und, ab zwei Seiten, die
+ * Seitenwahl.
+ *
+ * ERSTE, LETZTE UND DIE NACHBARN DER AKTUELLEN SEITE; dazwischen eine
+ * Ellipse. Bei sieben Seiten stehen alle da, bei siebzig nicht — eine
+ * Leiste, die mit dem Bestand waechst, ist keine Leiste.
+ *
+ * $o: zahl (fertiger Satz, z. B. „Konten 1–50 von 312"), seite, seiten,
+ *     weg (callable: int $seite => Adresse)
+ */
+function ui_listenfuss(array $o): void
+{
+    $seite  = max(1, (int)($o['seite'] ?? 1));
+    $seiten = max(1, (int)($o['seiten'] ?? 1));
+    $weg    = $o['weg'];
+    echo '<div class="listenfuss">' . "\n";
+    echo '  <p class="listenzahl">' . ui_e((string)($o['zahl'] ?? '')) . "</p>\n";
+    if ($seiten > 1) {
+        echo '  <nav class="seitenwahl" aria-label="Seiten">' . "\n";
+        echo '    <a class="seitenknopf' . ($seite <= 1 ? ' aus' : '') . '" '
+           . ($seite > 1 ? 'href="' . ui_e($weg($seite - 1)) . '"' : 'aria-disabled="true"')
+           . ' aria-label="Vorige Seite">' . ui_symbol('winkel', 'symbol-links') . "</a>\n";
+        $zeigen = [1, $seiten, $seite, $seite - 1, $seite + 1];
+        $zeigen = array_values(array_unique(array_filter($zeigen,
+            static fn($n) => $n >= 1 && $n <= $seiten)));
+        sort($zeigen);
+        $vorher = 0;
+        foreach ($zeigen as $n) {
+            if ($vorher && $n > $vorher + 1) {
+                echo '    <span class="seitenluecke" aria-hidden="true">…</span>' . "\n";
+            }
+            $vorher = $n;
+            echo '    <a class="seitenknopf' . ($n === $seite ? ' aktiv' : '') . '" href="'
+               . ui_e($weg($n)) . '"' . ($n === $seite ? ' aria-current="page"' : '') . '>'
+               . $n . "</a>\n";
+        }
+        echo '    <a class="seitenknopf' . ($seite >= $seiten ? ' aus' : '') . '" '
+           . ($seite < $seiten ? 'href="' . ui_e($weg($seite + 1)) . '"' : 'aria-disabled="true"')
+           . ' aria-label="Nächste Seite">' . ui_symbol('winkel', 'symbol-rechts') . "</a>\n";
+        echo "  </nav>\n";
+    }
+    echo "</div>\n";
 }
 
 

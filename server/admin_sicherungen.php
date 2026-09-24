@@ -207,7 +207,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     [$okE, $grundE, $bericht] =
                         edbak_paket_zurueckspielen($kennung, $datei, (int)$ziel['id']);
-                    if ($okE) { $notice = 'Konto-Backup eingespielt in ' . $ziel['email'] . '.'; }
+                    if ($okE) {
+                        $notice = 'Konto-Backup eingespielt in ' . $ziel['email'] . '.';
+                        require_once __DIR__ . '/protokoll_lib.php';
+                        protokoll('sicherung', 'kontobackup_eingespielt',
+                            'Konto-Backup ' . $datei . ' in ' . $ziel['email'] . ' eingespielt '
+                            . '(aus dem Ordner ' . $kennung . ')',
+                            ['kennung' => $kennung, 'datei' => $datei], (int)$ziel['id']);
+                    }
                     else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
@@ -567,7 +574,9 @@ ui_seite_start(['titel' => 'Konto-Backups']);
          lädt eine NutzerIn sich im eigenen Bereich selbst herunter — es zählt
          hier nicht. Das <strong>Komplett-Backup</strong> der Installation ist
          ein Drittes und liegt unter
-         <a href="admin_komplettsicherung.php">Betrieb → Komplett-Backup</a>.</p>
+         <?= ist_betreiberin()
+             ? '<a href="admin_komplettsicherung.php">Betrieb → Komplett-Backup</a>'
+             : 'Betrieb → Komplett-Backup (BetreiberIn)' ?>.</p>
       <p class="feld-hinweis"><strong>Konto-Backups entstehen nie von selbst.</strong>
          Die geschützten Angaben bleiben mit dem Inhaltsschlüssel des Kontos
          verschlüsselt, und den hat der Server nicht — ein nächtlicher Lauf hätte
@@ -588,7 +597,9 @@ ui_seite_start(['titel' => 'Konto-Backups']);
          <strong>Wiederherstellungsschlüssel</strong>. Der liegt ausschließlich
          bei ihr — auch die Verwaltung hat ihn nicht.</p>
       <p class="feld-hinweis"><strong>Wohin die Pakete von hier aus gehen</strong>,
-         steht unter <a href="admin_sicherungsziele.php">Backup-Ziele</a> —
+         steht unter <?= ist_betreiberin()
+             ? '<a href="admin_sicherungsziele.php">Backup-Ziele</a>'
+             : 'Betrieb → Backup-Ziele (BetreiberIn)' ?> —
          FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
          Backups auf demselben Server, dessen Ausfall der Grund für ein Backup
          wäre. Die Ablage selbst ist über den Browser nicht erreichbar: eine

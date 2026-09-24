@@ -302,6 +302,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'raten
     }
 }
 
+/* ---- Protokoll: Frist und Archiv (P5c/AP2, E-P5c-02, -03, -24) ----------
+ *
+ * ALLES ODER NICHTS, wie bei den Konten darunter: vier Werte, geprüft, dann
+ * geschrieben. Was sich geändert hat, steht als EIN Eintrag im Protokoll —
+ * Fristen ändern heißt, das Audit kürzer oder länger zu machen, und das
+ * gehört selbst ins Audit (E-P5c-02: „Fristen ändern: BetreiberIn,
+ * protokolliert"). */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'protokoll') {
+    csrf_check();
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
+    $felder = [
+        'protokoll_frist'    => ['Verwaltungseinträge aufbewahren', PROTOKOLL_K_FRIST_VERWALTUNG,
+                                 PROTOKOLL_FRIST_MIN, PROTOKOLL_FRIST_MAX, protokoll_frist_verwaltung()],
+        'archiv_tage'        => ['Archiv alle', PROTOKOLL_K_ARCHIV_TAGE,
+                                 PROTOKOLL_ARCHIV_TAGE_MIN, PROTOKOLL_ARCHIV_TAGE_MAX, protokoll_archiv_tage()],
+        'archiv_behalten'    => ['Archive aufbewahren', PROTOKOLL_K_ARCHIV_BEHALTEN,
+                                 PROTOKOLL_ARCHIV_BEHALTEN_MIN, PROTOKOLL_ARCHIV_BEHALTEN_MAX,
+                                 protokoll_archiv_behalten()],
+    ];
+    $neu = []; $geaendert = [];
+    foreach ($felder as $feld => [$name, $schluessel, $min, $max, $alt]) {
+        $roh = trim((string)($_POST[$feld] ?? ''));
+        if (!ctype_digit($roh) || (int)$roh < $min || (int)$roh > $max) {
+            $error = $name . ': eine ganze Zahl zwischen ' . $min . ' und ' . $max . ' Tagen.';
+            break;
+        }
+        $neu[$schluessel] = $roh;
+        if ((int)$roh !== $alt) { $geaendert[] = $name . ' ' . $alt . ' → ' . $roh . ' Tage'; }
+    }
+    $versand = !empty($_POST['archiv_versand']);
+    if ($error === null) {
+        foreach ($neu as $k => $v) { app_state_setzen($k, $v); }
+        if ($versand !== protokoll_archiv_versand()) {
+            $geaendert[] = 'Archive auf das Backup-Ziel ' . ($versand ? 'an' : 'aus');
+        }
+        app_state_setzen(PROTOKOLL_K_ARCHIV_VERSAND, $versand ? '1' : '0');
+        if ($geaendert) {
+            protokoll('verwaltung', 'frist_geaendert',
+                      'Fristen des Protokolls geändert: ' . implode(' · ', $geaendert),
+                      ['geaendert' => $geaendert]);
+        }
+        $notice = $geaendert ? 'Protokoll: ' . implode(' · ', $geaendert) . '.'
+                             : 'Es gab nichts zu ändern.';
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geocoder') {
     csrf_check();
     $adresse = geocoder_adresse_pruefen((string)($_POST['dienst'] ?? ''));
@@ -432,18 +478,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
         $neu[KONTEN_K_DEMO_ANMELDUNG] = empty($_POST['demo_anmeldung']) ? '0' : '1';
     }
 
-    /* ---- Protokollfrist Verwaltung -------------------------------------- */
-    if ($error === null) {
-        require_once __DIR__ . '/protokoll_lib.php';
-        $roh = trim((string)($_POST['protokoll_frist'] ?? ''));
-        if (!ctype_digit($roh) || (int)$roh < PROTOKOLL_FRIST_MIN
-                               || (int)$roh > PROTOKOLL_FRIST_MAX) {
-            $error = 'Aufbewahrung der Verwaltungseinträge: eine ganze Zahl zwischen '
-                   . PROTOKOLL_FRIST_MIN . ' und ' . PROTOKOLL_FRIST_MAX . ' Tagen.';
-        } else {
-            $neu[PROTOKOLL_K_FRIST_VERWALTUNG] = $roh;
-        }
-    }
+    /* Die Protokollfrist stand bis Web 20.38.0 hier. Seit P5c/AP2 hat sie
+     * eine eigene Karte, zusammen mit dem Archiv — und wird protokolliert,
+     * was sie hier nie wurde (`konten_einstellungen()` kannte sie nicht). */
 
     if ($error === null) {
         $vorher = konten_einstellungen();
@@ -1305,7 +1342,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
          die <strong>Überschreibung je Konto</strong>: Sie steht auf der
          Kontoseite (Backlog Nr. 48).</p>
 
-      <h3 class="listen-form-titel">Demo und Protokoll</h3>
+      <h3 class="listen-form-titel">Demo</h3>
       <?php ui_schalter(['name' => 'demo_anmeldung', 'label' => 'Demo-Anmeldung zulassen',
           'an' => konten_demo_anmeldung_an(),
           'klein' => 'Ist sie aus, wird die Demo-Adresse bei der Anmeldung wie ein '
@@ -1313,16 +1350,50 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                    . 'Der Bestand bleibt und lässt sich jederzeit wieder '
                    . 'freischalten. Einen Demo-Knopf auf der Anmeldeseite gibt es '
                    . 'bewusst nicht; die Zugangsdaten stehen im Handbuch.']); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Protokoll: Frist und Archiv (P5c/AP2, E-P5c-02, -03, -24) ----
+           Die Frist der Verwaltungseinträge stand bis Web 20.38.0 in der
+           Karte „Konten". Sie gehört zu dem, was sie begrenzt: dem
+           Protokoll und seinem Archiv. Gelesen wird das Protokoll unter
+           Verwaltung → Protokoll; hier steht, wie lange es liegt. */
+        require_once __DIR__ . '/protokoll_archiv_lib.php';
+        $archive = protokoll_archive(); ?>
+  <?php ui_karte_start(['titel' => 'Protokoll', 'id' => 'k-protokoll',
+      'plakette' => ui_plakette(count($archive) . (count($archive) === 1 ? ' Archiv' : ' Archive'),
+                                ['ton' => $archive ? 'blau' : 'neutral']),
+      'aktion' => ['text' => 'Protokoll lesen', 'href' => 'admin_protokoll.php']]); ?>
+    <p class="feld-hinweis">Was hier steht, begrenzt, wie lange Betriebsereignisse
+       liegen — in der Datenbank und im versiegelten Archiv.
+       <a href="hilfe.php#11-7-protokoll">Wie das Archiv arbeitet</a></p>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="protokoll">
       <?php ui_feld(['name' => 'protokoll_frist',
-          'label' => 'Verwaltungseinträge im Protokoll aufbewahren',
+          'label' => 'Verwaltungseinträge aufbewahren',
           'art' => 'number', 'label_zusatz' => 'Tage',
           'wert' => (string)protokoll_frist_verwaltung(),
           'klein' => 'Zwischen ' . PROTOKOLL_FRIST_MIN . ' und ' . PROTOKOLL_FRIST_MAX
-                   . ' Tagen. Betrifft nur das Audit — wer wann ein Konto angelegt, '
-                   . 'freigeschaltet, gesperrt oder gelöscht hat. Alle übrigen '
-                   . 'Einträge verfallen nach ' . PROTOKOLL_FRIST_UEBRIGE
-                   . ' Tagen, und das ist keine Einstellung.']); ?>
-
+                   . ' Tagen. Alle übrigen Einträge verfallen nach '
+                   . PROTOKOLL_FRIST_UEBRIGE . ' Tagen, fest.']); ?>
+      <?php ui_feld(['name' => 'archiv_tage', 'label' => 'Archiv alle',
+          'art' => 'number', 'label_zusatz' => 'Tage',
+          'wert' => (string)protokoll_archiv_tage(),
+          'klein' => 'Zwischen ' . PROTOKOLL_ARCHIV_TAGE_MIN . ' und '
+                   . PROTOKOLL_ARCHIV_TAGE_MAX . ' Tagen.']); ?>
+      <?php ui_feld(['name' => 'archiv_behalten', 'label' => 'Archive aufbewahren',
+          'art' => 'number', 'label_zusatz' => 'Tage',
+          'wert' => (string)protokoll_archiv_behalten(),
+          'klein' => 'Zwischen ' . PROTOKOLL_ARCHIV_BEHALTEN_MIN . ' und '
+                   . PROTOKOLL_ARCHIV_BEHALTEN_MAX . ' Tagen, danach löscht der Job '
+                   . 'sie hier. Auf dem Backup-Ziel bleiben sie.']); ?>
+      <?php ui_schalter(['name' => 'archiv_versand',
+          'label' => 'Archive auf das Backup-Ziel schicken',
+          'an' => protokoll_archiv_versand(),
+          'klein' => 'Mit dem Versandjob, wie Konto-Backups und Komplett-Stände.']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>

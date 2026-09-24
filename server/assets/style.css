@@ -1159,6 +1159,31 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 .zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
 .zeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto}
+
+/* ZEILE MIT AUFKLAPPBAREN ANGABEN (.zeile-mehr) — P5c/AP2, E-P5c-26,
+ * M-P5c-01a. Ein <details>, dessen <summary> die Zeile ist; die Angaben
+ * stehen darunter als Liste, der Winkel in der Aktionsspalte.
+ *
+ * DAS <summary> IST IMMER ERSTES KIND seines <details>. `.zeile:first-child`
+ * (oben) naehme ihm den oberen Innenabstand, und aufklappbare Zeilen waeren
+ * 13 px niedriger als die uebrigen (F-P5c-13, gemessen). Die Gegenregel
+ * steht an `.zeile-mehr > summary.zeile` — Spezifitaet 0,2,1 gegen 0,2,0. */
+.zeile-mehr{border-bottom:var(--strich) solid var(--linie)}
+.zeile-mehr > summary{list-style:none;cursor:pointer;border-bottom:0}
+.zeile-mehr > summary::-webkit-details-marker{display:none}
+.zeile-mehr > summary.zeile{padding:var(--abstand-3) 0}
+.zeile-mehr:first-child > summary.zeile{padding-top:0}
+.zeile-mehr:last-child{border-bottom:0}
+.zeile-winkel{color:var(--sand);transform:rotate(-90deg);transition:transform var(--dauer) ease-out}
+.zeile-mehr[open] > summary .zeile-winkel{transform:none}
+.zeile-daten{
+  display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--abstand-1) var(--abstand-3);
+  margin:0 0 var(--abstand-3);padding:var(--abstand-2) var(--abstand-3);
+  background:var(--rauch);border-radius:var(--radius-klein);
+  font-family:var(--schrift-fest);font-size:var(--groesse-2);
+}
+.zeile-daten dt{color:var(--gedaempft)}
+.zeile-daten dd{margin:0;overflow-wrap:anywhere}
 /* Zeile hervorgehoben — die Spurliste des Diensttages (S2/AP4).
  *
  * Kein neuer Farbwert und kein neues Mass: dieselbe Rauchflaeche, die schon
@@ -3991,6 +4016,9 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * erreichbar), und er funktioniert ohne Skript. Der aktive ist orange
  * hinterlegt — dieselbe Auszeichnung wie die aktive Kennzahl. */
 .filterreihe{display:flex;flex-wrap:wrap;gap:var(--abstand-2)}
+/* Ein Auswahlfeld in der Filterreihe („Art", P5c/AP2) ist so hoch wie ein
+ * Filter und nur so breit, wie es muss. */
+.filterreihe .feld-eingabe{width:auto;min-width:12rem;flex:0 1 auto}
 /* AUCH DIESER NAME IST NICHT FREI: `.filterknopf` gehoert seit O6 dem Knopf,
  * der auf der Suchseite die Filterschublade oeffnet — und der ist 48 px hoch,
  * weil er neben dem 48-px-Suchfeld steht (die einzige benannte Ausnahme von
@@ -4420,3 +4448,68 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   overflow-wrap: normal;
   line-height: 1.9;
 }
+
+
+/* ===========================================================================
+ * 31  REITER UND PROTOKOLL                     (P5c/AP2, E-P5c-25, -26)
+ *
+ * REITER (.reiter-rahmen, .reiter, .reiter-punkt, .reiter-abgesetzt) — NEUER
+ * BAUSTEIN, freigegeben mit M-P5c-01a (20.09.2026). Wechsel zwischen
+ * gleichrangigen Sichten EINER Seite; serverseitig, jeder Reiter ist ein
+ * Verweis (`ui_reiter()`). Orange heisst wie in der Kopfleiste „hier stehst
+ * du" — hier in der tiefen Stufe, weil der Strich auf Rauch steht. Unter
+ * 720 px rollt die Reihe in ihrem EIGENEN Behaelter — die Seite selbst
+ * laeuft nie waagerecht aus dem Bild (Grundregel Kapitel 6).
+ * ======================================================================== */
+.reiter{
+  display:flex;gap:var(--abstand-1);margin:0 0 var(--abstand-4);
+  border-bottom:var(--strich) solid var(--linie);
+  overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
+}
+.reiter::-webkit-scrollbar{display:none}
+.reiter-punkt{
+  flex:0 0 auto;display:inline-flex;align-items:center;
+  min-height:var(--knopf);padding:0 var(--abstand-3);
+  font-family:var(--schrift-kopf);font-weight:600;color:var(--gedaempft);
+  text-decoration:none;white-space:nowrap;
+  border-bottom:var(--strich-stark) solid transparent;
+}
+.reiter-punkt:hover{color:var(--dunkelblau);text-decoration:none}
+/* ORANGE TIEF, NICHT ORANGE (E-P5c-79, 24.09.2026): Der Strich steht auf
+ * Rauch, und --orange haette dort 2,09 : 1 — unter den 3 : 1 fuer einen
+ * Bedienzustand. Die Schrift wechselt zwar mit, aber Gedaempft gegen
+ * Dunkelblau sind auch nur 2,35 : 1. --orange-tief: 4,04 : 1. */
+.reiter-punkt.aktiv{color:var(--dunkelblau);border-bottom-color:var(--orange-tief)}
+/* Abgesetzter Reiter am rechten Rand („Archiv"): kein Ereignis-Reiter,
+ * sondern die Ablage. */
+.reiter-abgesetzt{margin-left:auto}
+/* Der Rand verraet, dass die Reihe weiterrollt (`assets/reiter.js`). */
+.reiter-rahmen{position:relative}
+.reiter-rahmen.rollt::after,.reiter-rahmen.rollt-links::before{
+  content:"";position:absolute;top:0;bottom:var(--strich);width:var(--abstand-5);pointer-events:none;z-index:1;
+}
+.reiter-rahmen.rollt::after{right:0;background:linear-gradient(to right,transparent,var(--rauch))}
+.reiter-rahmen.rollt-links::before{left:0;background:linear-gradient(to left,transparent,var(--rauch))}
+
+/* DIE PROTOKOLLLISTE (.protokoll-liste). UNTER 720 px STEHT DIE PLAKETTE
+ * UNTER DEM TEXT. Gemessen bei 376 px (M-P5c-01a): Neben einer Plakette von
+ * 110 px bleiben dem Haupttext 170 px — „Konto …: aktiv → gesperrt (…)"
+ * bricht auf fuenf Zeilen. Der Winkel bleibt rechts, lotrecht mittig zur
+ * ganzen Zeile. */
+.protokoll-liste .zeile{
+  display:grid;grid-template-columns:minmax(0,1fr) var(--symbol-gross);
+  grid-template-areas:"text akt" "plak akt";gap:var(--abstand-1) var(--abstand-3);
+}
+.protokoll-liste .zeile-text{grid-area:text}
+.protokoll-liste .zeile-plaketten{grid-area:plak}
+.protokoll-liste .zeile-aktionen{grid-area:akt;align-self:center;justify-content:flex-end}
+/* AB 720 px EINE KANTE FUER ALLE PLAKETTEN (Vorgabe 17.09.2026, Punkt 1):
+ * Plakette und Winkel stehen in je einer Spalte am rechten Rand; die
+ * Aktionsspalte ist in JEDER Zeile gleich breit — auch dort, wo es nichts
+ * aufzuklappen gibt. */
+@media (min-width:720px){
+  .protokoll-liste .zeile{display:flex}
+  .protokoll-liste .zeile-plaketten{justify-content:flex-end}
+  .protokoll-liste .zeile-aktionen{width:var(--symbol-gross)}
+}
+.archiv-liste .zeile-plaketten{justify-content:flex-end}

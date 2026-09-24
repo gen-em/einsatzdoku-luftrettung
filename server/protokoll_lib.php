@@ -53,12 +53,12 @@ declare(strict_types=1);
  * fest — dieselbe Zahl wie bei den Sperrereignissen und aus demselben Grund
  * (E-P5a-09): Betriebsdaten sollen nicht versehentlich Jahre liegen.
  *
- * LESBAR WIRD DAS PROTOKOLL ERST MIT 10c. 10b baut den Schreibweg und
- * schreibt hinein; bis dahin zeigt Betrieb -> Status eine Zaehlkarte
- * (Eintraege je Reiter, letzte 24 Stunden) — mehr nicht. Das ist kein
- * halbfertiger Zustand, sondern die Reihenfolge: Ein Reiter mit Archiv,
- * Filter und Download ist eine eigene Oberflaeche, und die haengt an
- * Entscheidungen (V4, V5, V8, V9), die noch nicht gefallen sind.
+ * LESBAR IST DAS PROTOKOLL SEIT P5c/AP2 — Verwaltung -> Protokoll
+ * (`admin_protokoll.php`), SIEBEN Reiter. Der siebte, *Sicherheit*, liest
+ * eine andere Tabelle (E-P5c-11), und drei weitere — *E-Mail*, *Jobs*,
+ * *Ziele* — lesen die Tabellen, die ihre Sache ohnehin fuehren
+ * (E-P5c-38): Keine doppelte Ablage, und der ENUM bleibt bei sechs Werten.
+ * Wie die Reiter gefuellt werden, steht unten bei DIE QUELLEN.
  *
  * ---------------------------------------------------------------------------
  * WAS `error_log()` NICHT ERSETZT
@@ -76,13 +76,27 @@ require_once __DIR__ . '/db.php';
 /* ---- Die Reiter ---------------------------------------------------------- */
 
 /**
- * Die sechs Reiter. Die Reihenfolge ist die der Anzeige in 10c; sie steht
- * hier, damit die Zaehlkarte auf der Statusseite sie nicht selbst erfindet.
+ * Die sechs Reiter, in die `protokoll()` SCHREIBT — die Werte des ENUM.
  *
- * `sicherheit` steht bewusst NICHT dabei — siehe Kopf.
+ * `sicherheit` steht bewusst NICHT dabei — siehe Kopf. Was die Seite ZEIGT,
+ * sind sieben: `PROTOKOLL_SEITE_REITER`.
  */
 const PROTOKOLL_REITER = [
     'verwaltung' => 'Verwaltung',
+    'email'      => 'E-Mail',
+    'jobs'       => 'Jobs',
+    'sicherung'  => 'Sicherung',
+    'ziele'      => 'Ziele',
+    'system'     => 'System',
+];
+
+/**
+ * Die sieben Reiter der Seite, in der Reihenfolge der Anzeige (E-P5c-02,
+ * Bild M-P5c-01a). Jedes Ereignis hat genau einen, kein „Sonstiges".
+ */
+const PROTOKOLL_SEITE_REITER = [
+    'verwaltung' => 'Verwaltung',
+    'sicherheit' => 'Sicherheit',
     'email'      => 'E-Mail',
     'jobs'       => 'Jobs',
     'sicherung'  => 'Sicherung',
@@ -220,42 +234,619 @@ function protokoll_fehler_quittieren(): bool
     return app_state_setzen(PROTOKOLL_K_FEHLER, '0');
 }
 
-/* ---- Lesen: nur so viel, wie die Zaehlkarte braucht ----------------------- */
+/**
+ * Ein Gerät umgeschaltet oder entkoppelt (P5c/AP2, E-P5c-38) — vier Stellen,
+ * ein Satz: die Kontoseite der Verwaltung und die Einstellungen der NutzerIn,
+ * je Umschalten und Entkoppeln.
+ *
+ * BEIM ENTKOPPELN VOR DEM LÖSCHEN RUFEN — danach gibt es die Zeile nicht
+ * mehr, und der Eintrag wüsste nicht, welches Gerät es war.
+ *
+ * @param string $art `geraet_umgeschaltet` | `geraet_geloescht`
+ * @param string $weg `verwaltung` | `selbst`
+ */
+function protokoll_geraet(string $art, int $geraetId, int $userId, string $weg): void
+{
+    try {
+        $st = db()->prepare('SELECT device_id, label, active FROM devices WHERE id = ? AND user_id = ?');
+        $st->execute([$geraetId, $userId]);
+        $g = $st->fetch(PDO::FETCH_ASSOC);
+    } catch (Throwable) {
+        $g = false;
+    }
+    if (!$g) { return; }   // fremdes oder schon fort: keine Handlung, kein Eintrag
+    $name = trim((string)($g['label'] ?? '')) !== ''
+        ? '„' . $g['label'] . '"' : (string)$g['device_id'];
+    $text = $art === 'geraet_geloescht'
+        ? 'Gerät ' . $name . ' entkoppelt'
+        : 'Gerät ' . $name . ((int)$g['active'] === 1 ? ' aktiviert' : ' deaktiviert');
+    protokoll('verwaltung', $art, $text . ($weg === 'verwaltung' ? ' (durch die Verwaltung)' : ''),
+              ['geraet' => (string)$g['device_id'], 'weg' => $weg], $userId);
+}
+
+/* ---- Wer welchen Reiter sieht (E-P5c-02) ----------------------------------- */
 
 /**
- * Eintraege je Reiter der letzten 24 Stunden, plus Gesamtzahl je Reiter.
+ * Die Reiter, die die angemeldete Rolle sehen darf — in der Reihenfolge der
+ * Anzeige.
  *
- * Mehr liest 10b nicht. Die Oberflaeche mit Reitern, Archiv und Download
- * kommt mit 10c (V4 bis V9).
+ * WAS DIE ROLLE NICHT DARF, ZEIGT DIE SEITE NICHT (E-P5c-10): kein
+ * ausgegrauter Reiter, kein „dafür fehlt dir das Recht". Die BetreiberIn
+ * sieht alle sieben; der Admin die vier, die ohne IP-Adressen,
+ * Zieldaten und Systemmeldungen auskommen. Der Support kommt mit AP4 dazu
+ * (Verwaltung und E-Mail, lesend).
+ *
+ * @return list<string>
+ */
+function protokoll_reiter_sichtbar(): array
+{
+    if (function_exists('ist_betreiberin') && ist_betreiberin()) {
+        return array_keys(PROTOKOLL_SEITE_REITER);
+    }
+    if (function_exists('ist_admin') && ist_admin()) {
+        return ['verwaltung', 'email', 'jobs', 'sicherung'];
+    }
+    return [];
+}
+
+/* ---- Der Katalog: Art -> Beschriftung und Ton (E-P5c-26) ------------------- */
+
+/**
+ * Jede Art als Wort und mit einem Ton — die Ampel aus `Design.md` 9.23:
+ * neutral (ein Vorgang), blau (erledigt, gut), orange (ein Eingriff, eine
+ * Sperre), rot (ein Fehler).
+ *
+ * DIE ART BLEIBT MASCHINELL, DIE BESCHRIFTUNG IST FUER MENSCHEN. Gefiltert
+ * und gesucht wird nach dem Schluessel (`konto_status`), gezeigt wird das
+ * Wort („Kontostatus"). Eine Art, die hier fehlt, erscheint als ihr
+ * Schluessel mit Leerzeichen und neutral — sichtbar falsch, aber nicht
+ * verloren.
+ *
+ * Der Ton haengt bei drei Arten am Inhalt (`protokoll_art_ton()`): Ein
+ * Konto, das freigeschaltet wird, ist blau, eines, das gesperrt wird,
+ * orange.
+ */
+const PROTOKOLL_ARTEN = [
+    /* Verwaltung — seit P5b */
+    'konto_angelegt'            => ['Konto angelegt', 'blau'],
+    'konto_status'              => ['Kontostatus', 'neutral'],
+    'konto_geloescht'           => ['Konto gelöscht', 'neutral'],
+    'loeschung_beantragt'       => ['Löschung beantragt', 'orange'],
+    'adresse_geaendert'         => ['Adresse geändert', 'neutral'],
+    'konto_grenzen'             => ['Grenzen', 'neutral'],
+    'einwilligung'              => ['Einwilligung', 'neutral'],
+    'rechtstext_geaendert'      => ['Rechtstext geändert', 'neutral'],
+    'schluessel_erneuert'       => ['Schlüssel erneuert', 'neutral'],
+    'schluesselblatt_bestaetigt'=> ['Schlüsselblatt', 'blau'],
+    'einstellungen_konten'      => ['Einstellungen', 'neutral'],
+    'rundmail'                  => ['Rundmail', 'neutral'],
+    /* Verwaltung — neu mit P5c/AP2 (E-P5c-38) */
+    'rolle_geaendert'           => ['Rolle geändert', 'orange'],
+    'setzlink_gesendet'         => ['Setz-Link', 'neutral'],
+    'geraet_umgeschaltet'       => ['Gerät umgeschaltet', 'neutral'],
+    'geraet_geloescht'          => ['Gerät gelöscht', 'neutral'],
+    'wartung_an'                => ['Wartung an', 'orange'],
+    'wartung_aus'               => ['Wartung aus', 'blau'],
+    'demo_zurueckgesetzt'       => ['Demo zurückgesetzt', 'neutral'],
+    'migration_ausgefuehrt'     => ['Migration', 'blau'],
+    'archiv_heruntergeladen'    => ['Archiv heruntergeladen', 'orange'],
+    'frist_geaendert'           => ['Fristen', 'neutral'],
+    /* Sicherung — neu mit P5c/AP2 (E-P5c-38) */
+    'komplett_erzeugt'          => ['Komplett-Backup erzeugt', 'blau'],
+    'komplett_heruntergeladen'  => ['Komplett-Backup geladen', 'orange'],
+    'komplett_eingespielt'      => ['Komplett-Backup eingespielt', 'orange'],
+    'komplett_geloescht'        => ['Komplett-Backup gelöscht', 'neutral'],
+    'kontobackup_eingespielt'   => ['Konto-Backup eingespielt', 'orange'],
+    /* Sicherheit — Sicht auf `sicherheit_ereignisse` und `csp_berichte` */
+    'sperre'                    => ['Sperre', 'orange'],
+    'verlangsamung'             => ['Verlangsamung', 'orange'],
+    'aufgehoben'                => ['Aufgehoben', 'blau'],
+    'csp_bericht'               => ['CSP-Bericht', 'orange'],
+    /* E-Mail — Sicht auf `mail_warteschlange` */
+    'mail_offen'                => ['wartet', 'neutral'],
+    'mail_zugestellt'           => ['zugestellt', 'blau'],
+    'mail_unzustellbar'         => ['unzustellbar', 'rot'],
+    'mail_zu_spaet'             => ['verfallen', 'orange'],
+    'mail_ueberholt'            => ['ersetzt', 'neutral'],
+    /* Jobs — Sicht auf `job_laeufe` */
+    'job_lauf'                  => ['Lauf', 'neutral'],
+    'job_fehler'                => ['Fehler', 'rot'],
+    /* Ziele — Sicht auf `sicherungsziel_dateien` */
+    'ziel_gesendet'             => ['gesendet', 'blau'],
+    'ziel_geloescht'            => ['dort gelöscht', 'neutral'],
+];
+
+/** Die Beschriftung einer Art. */
+function protokoll_art_text(string $art): string
+{
+    return PROTOKOLL_ARTEN[$art][0] ?? str_replace('_', ' ', $art);
+}
+
+/** Der Ton einer Art — bei drei Arten nach dem Inhalt. */
+function protokoll_art_ton(string $art, array $daten = []): string
+{
+    if ($art === 'konto_status') {
+        $nach = (string)($daten['nach'] ?? '');
+        return match ($nach) {
+            'aktiv'    => 'blau',
+            'gesperrt' => 'orange',
+            default    => 'neutral',
+        };
+    }
+    return PROTOKOLL_ARTEN[$art][1] ?? 'neutral';
+}
+
+/* ---- Die Quellen (E-P5c-11, -38) ------------------------------------------- *
+ *
+ * JE REITER EINE ODER ZWEI QUELLEN, NIE EIN UNION. Die naheliegende Loesung —
+ * ein `UNION ALL` ueber `protokoll_ereignisse`, `mail_warteschlange` und die
+ * uebrigen — stoesst auf eine Eigenschaft des Hosters, nicht des Codes: Die
+ * Tabellen sind zu verschiedenen Zeiten entstanden, auf Produktiv unter
+ * verschiedenen Vorgabe-Kollationen, und ein UNION ueber zwei Textspalten
+ * verschiedener Kollation ist auf MySQL und MariaDB ein Fehler („Illegal mix
+ * of collations"). Auf der oertlichen Anlage sind alle gleich; der Fehler
+ * zeigte sich erst dort, wo niemand mehr hinsieht (Muster Nr. 238).
+ *
+ * Deshalb fragt jede Quelle fuer sich, mit denselben Spaltennamen, und PHP
+ * fuegt zusammen: Fuer Seite `s` holt jede Quelle ihre juengsten `s × 50`
+ * Zeilen, die Liste wird nach Zeit sortiert und zugeschnitten. Die Zahl
+ * ist die Summe der Zaehlungen. Das kostet auf Seite 7 dreihundertfuenfzig
+ * Zeilen je Quelle — bei Fristen von 30 Tagen (365 in der Verwaltung) ist das
+ * nichts, und es geht ueberall.
+ *
+ * JEDE QUELLE LIEFERT: `zeit` (UTC), `art`, `uid` (Urheber, 0 = kein
+ * Mensch), `uart` (mensch/job/cli oder leer), `bid` (Betroffener), `text`,
+ * `daten` (JSON), `id`. Wo eine Tabelle keinen Satz fuehrt, baut
+ * `protokoll_zeile_text()` ihn aus `art` und `daten` — in PHP, weil die
+ * Beschriftungen hier stehen und nicht in SQL.
+ */
+
+/**
+ * Die Quellen eines Reiters als SQL-Stuecke.
+ *
+ * @return list<array{sql:string, args:list<mixed>, suche:list<string>,
+ *                    zeit:string, art:string, konto:bool}>
+ *   `sql` ist ein vollstaendiges SELECT ohne WHERE-Teil fuer die Filter;
+ *   Filter werden als `AND …` an `wo` angehaengt. `suche` sind die Spalten,
+ *   gegen die ein Suchtext laeuft, `zeit` und `art` die Ausdruecke fuer
+ *   Zeitraum und Art.
+ */
+function protokoll_quellen(string $reiter): array
+{
+    $pe = [
+        'sql'   => 'SELECT p.id, p.zeit, p.art, p.urheber_user_id AS uid,
+                           p.urheber_art AS uart, p.betroffen_user_id AS bid,
+                           p.text, p.daten
+                      FROM protokoll_ereignisse p
+                 LEFT JOIN users u1 ON u1.id = p.urheber_user_id
+                 LEFT JOIN users u2 ON u2.id = p.betroffen_user_id
+                     WHERE p.reiter = ?',
+        'args'  => [$reiter],
+        'suche' => ['p.text', 'u1.email', 'u1.name', 'u2.email', 'u2.name'],
+        'zeit'  => 'p.zeit', 'art' => 'p.art', 'konto' => true, 'idx' => 'p.id',
+        'kennung' => "JSON_UNQUOTE(JSON_EXTRACT(p.daten, '$.kennung'))",
+    ];
+
+    switch ($reiter) {
+        case 'verwaltung':
+        case 'sicherung':
+        case 'system':
+            return [$pe];
+
+        case 'sicherheit':
+            /* KEINE `protokoll_ereignisse`: Der Reiter hat dort keinen
+             * ENUM-Wert (Kopf). */
+            return [[
+                'sql'   => "SELECT id, zeitpunkt AS zeit, art, 0 AS uid, '' AS uart,
+                                   NULL AS bid, '' AS text,
+                                   JSON_OBJECT('topf', topf, 'merkmal', merkmal,
+                                               'stufe', stufe, 'versuche', versuche,
+                                               'bis', bis, 'wer', wer) AS daten
+                              FROM sicherheit_ereignisse WHERE 1 = 1",
+                'args'  => [], 'suche' => ['topf', 'merkmal', 'wer'],
+                'zeit'  => 'zeitpunkt', 'art' => 'art', 'konto' => false, 'idx' => 'id',
+            ], [
+                'sql'   => "SELECT id, zuletzt AS zeit, 'csp_bericht' AS art, 0 AS uid,
+                                   '' AS uart, NULL AS bid, '' AS text,
+                                   JSON_OBJECT('richtlinie', richtlinie, 'quelle', quelle,
+                                               'seite', seite, 'anzahl', anzahl,
+                                               'erstellt', erstellt) AS daten
+                              FROM csp_berichte WHERE 1 = 1",
+                'args'  => [], 'suche' => ['richtlinie', 'quelle', 'seite'],
+                'zeit'  => 'zuletzt', 'art' => "'csp_bericht'", 'konto' => false, 'idx' => 'id',
+            ]];
+
+        case 'email':
+            /* NUR ART, ZUSTAND, ZEIT — nie Empfaenger, Betreff, Rumpf oder
+             * Fehlertext (E-P5c-38). Eine offene Zeile traegt einen Setz-Link
+             * mit gueltigem Token, und ein SMTP-Fehler nennt die Adresse, an
+             * der er scheiterte. Beides gehoert nicht in eine Liste, die der
+             * Admin sieht und die ins Archiv geht. */
+            return [[
+                'sql'   => "SELECT id, COALESCE(beendet, erstellt) AS zeit,
+                                   CONCAT('mail_', zustand) AS art, 0 AS uid, '' AS uart,
+                                   NULL AS bid, '' AS text,
+                                   JSON_OBJECT('vorlage', schluessel, 'art', art,
+                                               'versuche', versuche,
+                                               'erstellt', erstellt) AS daten
+                              FROM mail_warteschlange WHERE 1 = 1",
+                'args'  => [], 'suche' => ['schluessel'],
+                'zeit'  => 'COALESCE(beendet, erstellt)',
+                'art'   => "CONCAT('mail_', zustand)", 'konto' => false, 'idx' => 'id',
+            ], $pe];
+
+        case 'jobs':
+            return [[
+                'sql'   => "SELECT id, zeitpunkt AS zeit,
+                                   IF(fehler IS NULL OR fehler = '', 'job_lauf', 'job_fehler') AS art,
+                                   0 AS uid, 'job' AS uart, NULL AS bid, '' AS text,
+                                   JSON_OBJECT('job', job, 'ausloeser', ausloeser,
+                                               'erledigt', erledigt,
+                                               'fehler', LEFT(fehler, 300)) AS daten
+                              FROM job_laeufe WHERE 1 = 1",
+                'args'  => [], 'suche' => ['job', 'fehler'],
+                'zeit'  => 'zeitpunkt',
+                'art'   => "IF(fehler IS NULL OR fehler = '', 'job_lauf', 'job_fehler')",
+                'konto' => false, 'idx' => 'id',
+            ], $pe];
+
+        case 'ziele':
+            $ziel = "SELECT d.id, %s AS zeit, '%s' AS art, 0 AS uid, 'job' AS uart,
+                            NULL AS bid, '' AS text,
+                            JSON_OBJECT('ziel', t.name, 'ordner', d.ordner, 'datei', d.datei,
+                                        'bytes', d.bytes, 'grund', d.grund) AS daten
+                       FROM sicherungsziel_dateien d
+                  LEFT JOIN backup_targets t ON t.id = d.ziel_id
+                      WHERE %s";
+            return [[
+                'sql'   => sprintf($ziel, 'd.gesendet_am', 'ziel_gesendet', '1 = 1'),
+                'args'  => [], 'suche' => ['d.datei', 'd.ordner', 't.name'],
+                'zeit'  => 'd.gesendet_am', 'art' => "'ziel_gesendet'", 'konto' => false, 'idx' => 'd.id',
+            ], [
+                'sql'   => sprintf($ziel, 'd.geloescht_am', 'ziel_geloescht',
+                                   'd.geloescht_am IS NOT NULL'),
+                'args'  => [], 'suche' => ['d.datei', 'd.ordner', 't.name', 'd.grund'],
+                'zeit'  => 'd.geloescht_am', 'art' => "'ziel_geloescht'", 'konto' => false, 'idx' => 'd.id',
+            ], $pe];
+    }
+    return [];
+}
+
+/**
+ * Die Arten, die ein Reiter kennt — fuer das Auswahlfeld „Art".
+ *
+ * Aus dem Katalog, nicht aus dem Bestand: Eine Art, die gerade keine Zeile
+ * hat, ist trotzdem eine, nach der man fragen kann. Die Zuordnung steht
+ * einmal, hier.
+ *
+ * @return array<string,string> Art => Beschriftung
+ */
+function protokoll_arten_des_reiters(string $reiter): array
+{
+    $je = [
+        'verwaltung' => ['konto_angelegt', 'konto_status', 'konto_geloescht',
+                         'loeschung_beantragt', 'adresse_geaendert', 'rolle_geaendert',
+                         'konto_grenzen', 'setzlink_gesendet', 'einwilligung',
+                         'rechtstext_geaendert', 'schluessel_erneuert',
+                         'schluesselblatt_bestaetigt', 'geraet_umgeschaltet',
+                         'geraet_geloescht', 'wartung_an', 'wartung_aus',
+                         'demo_zurueckgesetzt', 'migration_ausgefuehrt',
+                         'einstellungen_konten', 'frist_geaendert', 'rundmail',
+                         'archiv_heruntergeladen'],
+        'sicherheit' => ['sperre', 'verlangsamung', 'aufgehoben', 'csp_bericht'],
+        'email'      => ['mail_offen', 'mail_zugestellt', 'mail_unzustellbar',
+                         'mail_zu_spaet', 'mail_ueberholt'],
+        'jobs'       => ['job_lauf', 'job_fehler'],
+        'sicherung'  => ['komplett_erzeugt', 'komplett_heruntergeladen',
+                         'komplett_eingespielt', 'komplett_geloescht',
+                         'kontobackup_eingespielt'],
+        'ziele'      => ['ziel_gesendet', 'ziel_geloescht'],
+        'system'     => [],
+    ];
+    $aus = [];
+    foreach ($je[$reiter] ?? [] as $a) { $aus[$a] = protokoll_art_text($a); }
+    return $aus;
+}
+
+/** Eine achtstellige Fehlerkennung (`fehler_kennung()`, AP3)? */
+function protokoll_ist_kennung(string $q): bool
+{
+    return (bool)preg_match('/^[0-9a-f]{8}$/i', trim($q));
+}
+
+/**
+ * Die Zeilen eines Reiters — gefiltert, sortiert, eine Seite.
+ *
+ * @param array{q?:string, tage?:int, art?:string, konto?:int} $filter
+ * @return array{zeilen: list<array>, gesamt: int, fehler: ?string}
+ *   Je Zeile: zeit, art, beschriftung, ton, text, wer, betrifft, daten
+ *   (Liste von [Schluessel, Wert]).
+ *
+ * FEHLT EINE TABELLE (Migration steht aus), liefert die Quelle nichts und
+ * `fehler` sagt, welche — die Seite zeigt dann eine Meldung statt einer
+ * leeren Liste, die wie ein ruhiger Monat aussaehe.
+ */
+function protokoll_liste(string $reiter, array $filter, int $seite = 1, int $je = 50): array
+{
+    $seite = max(1, $seite);
+    $bis = $seite * $je;
+    $roh = []; $gesamt = 0; $fehler = null;
+
+    foreach (protokoll_quellen($reiter) as $q) {
+        [$wo, $args] = protokoll_filter_sql($q, $filter);
+        if ($wo === null) { continue; }   // der Filter kann diese Quelle nicht treffen
+        try {
+            $st = db()->prepare('SELECT COUNT(*) FROM (' . $q['sql'] . $wo . ') n');
+            $st->execute(array_merge($q['args'], $args));
+            $gesamt += (int)$st->fetchColumn();
+
+            $st = db()->prepare($q['sql'] . $wo
+                . ' ORDER BY ' . $q['zeit'] . ' DESC LIMIT ' . $bis);
+            $st->execute(array_merge($q['args'], $args));
+            foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $z) { $roh[] = $z; }
+        } catch (Throwable $ex) {
+            $fehler = $ex->getMessage();
+        }
+    }
+
+    usort($roh, static fn(array $a, array $b): int
+        => [(string)$b['zeit'], (int)$b['id']] <=> [(string)$a['zeit'], (int)$a['id']]);
+    $roh = array_slice($roh, ($seite - 1) * $je, $je);
+
+    return ['zeilen' => protokoll_zeilen_aufbereiten($reiter, $roh),
+            'gesamt' => $gesamt, 'fehler' => $fehler];
+}
+
+/**
+ * Nur die Zahl — fuer die Zaehlkarte, ohne eine einzige Zeile zu lesen.
+ */
+function protokoll_zahl(string $reiter, array $filter = []): int
+{
+    $n = 0;
+    foreach (protokoll_quellen($reiter) as $q) {
+        [$wo, $args] = protokoll_filter_sql($q, $filter);
+        if ($wo === null) { continue; }
+        try {
+            $st = db()->prepare('SELECT COUNT(*) FROM (' . $q['sql'] . $wo . ') n');
+            $st->execute(array_merge($q['args'], $args));
+            $n += (int)$st->fetchColumn();
+        } catch (Throwable) {
+            /* Tabelle fehlt (Migration steht aus) — die Zaehlkarte zeigt dann
+             * null, und die Statusseite sagt an anderer Stelle, dass ein
+             * Update aussteht. */
+        }
+    }
+    return $n;
+}
+
+/**
+ * Den WHERE-Zusatz einer Quelle bauen. `null`, wenn der Filter diese Quelle
+ * gar nicht treffen kann (Konto-Filter auf eine Tabelle ohne Konten, eine
+ * Art aus einer anderen Quelle) — dann wird sie nicht gefragt.
+ *
+ * @return array{0:?string, 1:list<mixed>}
+ */
+function protokoll_filter_sql(array $q, array $filter): array
+{
+    $wo = ''; $args = [];
+
+    $tage = (int)($filter['tage'] ?? 0);
+    if ($tage > 0) {
+        $wo .= ' AND ' . $q['zeit'] . ' >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? DAY)';
+        $args[] = $tage;
+    }
+    /* Ein fester Zeitraum [von, bis) und eine Fortsetzungsmarke — fuer das
+     * Archiv, das in Haeppchen liest (E-P5c-57). */
+    if (!empty($filter['von'])) { $wo .= ' AND ' . $q['zeit'] . ' >= ?'; $args[] = $filter['von']; }
+    if (!empty($filter['bis'])) { $wo .= ' AND ' . $q['zeit'] . ' < ?';  $args[] = $filter['bis']; }
+    if (!empty($filter['nach']) && is_array($filter['nach'])) {
+        [$zeit, $id] = $filter['nach'];
+        $wo .= ' AND (' . $q['zeit'] . ' > ? OR (' . $q['zeit'] . ' = ? AND ' . $q['idx'] . ' > ?))';
+        array_push($args, $zeit, $zeit, (int)$id);
+    }
+
+    $art = (string)($filter['art'] ?? '');
+    if ($art !== '') {
+        $wo .= ' AND ' . $q['art'] . ' = ?';
+        $args[] = $art;
+    }
+
+    $konto = (int)($filter['konto'] ?? 0);
+    if ($konto > 0) {
+        if (empty($q['konto'])) { return [null, []]; }
+        $wo .= ' AND (p.urheber_user_id = ? OR p.betroffen_user_id = ?)';
+        $args[] = $konto; $args[] = $konto;
+    }
+
+    $such = trim((string)($filter['q'] ?? ''));
+    if ($such !== '') {
+        /* EIN SUCHFELD (E-P5c-26): Text, Konto (E-Mail oder Name von
+         * Urheber und Betroffenem), die Beschriftung einer Art — und, wo die
+         * Quelle eine hat, die Fehlerkennung. Jede Spalte fuer sich mit
+         * `LIKE ?`, nicht ueber `CONCAT_WS`: Das Verketten zweier Spalten
+         * aus zwei Tabellen scheitert an derselben Kollationsfrage wie ein
+         * UNION (siehe DIE QUELLEN). */
+        $muster = '%' . strtr($such, ['\\' => '\\\\', '%' => '\\%', '_' => '\\_']) . '%';
+        $oder = [];
+        foreach ($q['suche'] as $spalte) { $oder[] = $spalte . ' LIKE ?'; $args[] = $muster; }
+        $arten = [];
+        foreach (PROTOKOLL_ARTEN as $a => [$text, $ton]) {
+            if (mb_stripos($text, $such) !== false) { $arten[] = $a; }
+        }
+        if ($arten !== []) {
+            $oder[] = $q['art'] . ' IN (' . implode(',', array_fill(0, count($arten), '?')) . ')';
+            foreach ($arten as $a) { $args[] = $a; }
+        }
+        if (!empty($q['kennung']) && protokoll_ist_kennung($such)) {
+            $oder[] = $q['kennung'] . ' = ?';
+            $args[] = strtolower($such);
+        }
+        $wo .= ' AND (' . implode(' OR ', $oder) . ')';
+    }
+    return [$wo, $args];
+}
+
+/**
+ * Rohzeilen in die Form bringen, die die Seite zeigt und das Archiv
+ * schreibt: Wort statt Schluessel, Satz statt Spalten, Konten als Adressen.
+ */
+function protokoll_zeilen_aufbereiten(string $reiter, array $roh): array
+{
+    /* Die Konten EINMAL lesen, nicht je Zeile. */
+    $ids = [];
+    foreach ($roh as $z) {
+        foreach (['uid', 'bid'] as $k) {
+            if ((int)($z[$k] ?? 0) > 0) { $ids[(int)$z[$k]] = true; }
+        }
+    }
+    $konten = [];
+    if ($ids !== []) {
+        try {
+            $st = db()->prepare('SELECT id, email, name FROM users WHERE id IN ('
+                . implode(',', array_fill(0, count($ids), '?')) . ')');
+            $st->execute(array_keys($ids));
+            foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $u) { $konten[(int)$u['id']] = $u; }
+        } catch (Throwable) { /* dann eben mit Kennnummer */ }
+    }
+    $konto = static function (int $id) use ($konten): string {
+        if (!isset($konten[$id])) { return 'Konto ' . $id . ' (gelöscht)'; }
+        $u = $konten[$id];
+        return trim((string)$u['name']) !== ''
+            ? $u['name'] . ' (' . $u['email'] . ')' : (string)$u['email'];
+    };
+
+    $aus = [];
+    foreach ($roh as $z) {
+        $daten = [];
+        if (($z['daten'] ?? null) !== null && $z['daten'] !== '') {
+            $d = json_decode((string)$z['daten'], true);
+            if (is_array($d)) { $daten = $d; }
+        }
+        $art = (string)$z['art'];
+        $uid = (int)($z['uid'] ?? 0);
+        $wer = match (true) {
+            $uid > 0                    => 'von ' . $konto($uid),
+            ($z['uart'] ?? '') === 'cli' => 'Kommandozeile',
+            ($z['uart'] ?? '') === 'job' => 'job',
+            default                     => '',
+        };
+        $bid = (int)($z['bid'] ?? 0);
+        $aus[] = [
+            'zeit'         => (string)$z['zeit'],
+            'art'          => $art,
+            'beschriftung' => protokoll_art_text($art),
+            'ton'          => protokoll_art_ton($art, $daten),
+            'text'         => (string)$z['text'] !== ''
+                                ? (string)$z['text'] : protokoll_zeile_text($art, $daten),
+            'wer'          => $wer,
+            'betrifft'     => $bid > 0 && $bid !== $uid ? $konto($bid) : '',
+            'daten'        => protokoll_daten_zeilen($daten),
+        ];
+    }
+    return $aus;
+}
+
+/**
+ * Der Satz einer Zeile aus einer Sicht — dort gibt es keine Spalte `text`.
+ *
+ * Kurz und ohne Wertung; die Plakette traegt die Art und ihren Ton, der Satz
+ * sagt, worum es ging.
+ */
+function protokoll_zeile_text(string $art, array $d): string
+{
+    $v = static fn(string $k): string => trim((string)($d[$k] ?? ''));
+    switch ($art) {
+        case 'sperre':
+        case 'verlangsamung':
+            return ($art === 'sperre' ? 'Gesperrt' : 'Verlangsamt')
+                . ': Topf „' . $v('topf') . '", Stufe ' . (int)($d['stufe'] ?? 0)
+                . ($v('versuche') !== '' ? ', ' . $v('versuche') . ' Versuche' : '');
+        case 'aufgehoben':
+            return 'Sperre aufgehoben: Topf „' . $v('topf') . '"'
+                . ($v('wer') !== '' ? ' — von ' . $v('wer') : '');
+        case 'csp_bericht':
+            return 'Inhaltsrichtlinie: ' . $v('richtlinie') . ' blockierte „' . $v('quelle')
+                . '" auf ' . $v('seite') . ' (' . (int)($d['anzahl'] ?? 1) . '×)';
+        case 'mail_offen':
+        case 'mail_zugestellt':
+        case 'mail_unzustellbar':
+        case 'mail_zu_spaet':
+        case 'mail_ueberholt':
+            $n = (int)($d['versuche'] ?? 0);
+            $versuche = $n . ($n === 1 ? ' Versuch' : ' Versuche');
+            if ($art === 'mail_offen') {
+                return 'Nachricht „' . $v('vorlage') . '" wartet'
+                    . ($n > 0 ? ' — ' . $versuche . ' bisher' : '');
+            }
+            return 'Nachricht „' . $v('vorlage') . '" — ' . protokoll_art_text($art)
+                . ($n > 0 ? ' nach ' . $n . ($n === 1 ? ' Versuch' : ' Versuchen') : '');
+        case 'job_lauf':
+            return protokoll_job_titel($v('job')) . ': ' . (int)($d['erledigt'] ?? 0) . ' erledigt';
+        case 'job_fehler':
+            return protokoll_job_titel($v('job')) . ': Fehler';
+        case 'ziel_gesendet':
+            return $v('ordner') . '/' . $v('datei') . ' an „' . $v('ziel') . '" gesendet';
+        case 'ziel_geloescht':
+            return $v('ordner') . '/' . $v('datei') . ' auf „' . $v('ziel') . '" gelöscht'
+                . ($v('grund') !== '' ? ' — ' . $v('grund') : '');
+    }
+    return protokoll_art_text($art);
+}
+
+/** Der Titel eines Jobs aus dem Katalog — ohne den Katalog bei jeder Zeile zu bauen. */
+function protokoll_job_titel(string $job): string
+{
+    static $titel = null;
+    if ($titel === null) {
+        $titel = [];
+        try {
+            require_once __DIR__ . '/jobs_lib.php';
+            foreach (jobs_katalog() as $k => $j) { $titel[$k] = (string)$j['titel']; }
+        } catch (Throwable) { /* dann der Schluessel */ }
+    }
+    return $titel[$job] ?? $job;
+}
+
+/**
+ * `daten` als Liste zum Aufklappen: [Schluessel, Wert], Werte als Text.
+ * `null` wird zu „—", Listen und Objekte zu JSON. Leere Liste = nichts
+ * aufzuklappen, die Zeile ist dann kein `<details>`.
+ *
+ * @return list<array{0:string, 1:string}>
+ */
+function protokoll_daten_zeilen(array $daten): array
+{
+    $aus = [];
+    foreach ($daten as $k => $w) {
+        $aus[] = [(string)$k, match (true) {
+            $w === null   => '—',
+            is_bool($w)   => $w ? 'ja' : 'nein',
+            is_scalar($w) => (string)$w,
+            default       => (string)json_encode($w, JSON_UNESCAPED_UNICODE),
+        }];
+    }
+    return $aus;
+}
+
+/**
+ * Eintraege je Reiter der letzten 24 Stunden und gesamt — fuer die
+ * Zaehlkarte auf Betrieb -> Status.
+ *
+ * SEIT P5c/AP2 UEBER DIE QUELLEN DER SEITE, nicht nur ueber
+ * `protokoll_ereignisse`. Bis dahin standen E-Mail, Jobs und Ziele dort auf
+ * null, obwohl ihre Tabellen voll waren — der Schreibweg kennt sie, geschrieben
+ * wird aber woanders (E-P5c-38).
  *
  * @return array{tag: array<string,int>, gesamt: array<string,int>, alle: int}
  */
 function protokoll_zaehlkarte(): array
 {
-    $tag = []; $gesamt = [];
-    foreach (array_keys(PROTOKOLL_REITER) as $r) { $tag[$r] = 0; $gesamt[$r] = 0; }
-    $alle = 0;
-
-    try {
-        $st = db()->query(
-            'SELECT reiter,
-                    COUNT(*) AS gesamt,
-                    SUM(zeit >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 DAY)) AS tag
-               FROM protokoll_ereignisse
-              GROUP BY reiter');
-        foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $z) {
-            $r = (string)$z['reiter'];
-            if (!isset($tag[$r])) { continue; }
-            $tag[$r]    = (int)$z['tag'];
-            $gesamt[$r] = (int)$z['gesamt'];
-            $alle      += (int)$z['gesamt'];
-        }
-    } catch (Throwable $ex) {
-        /* Tabelle fehlt (Migration noch nicht gelaufen) — die Karte zeigt
-         * dann Nullen und die Statusseite sagt, dass ein Update aussteht.
-         * Das ist die richtige Antwort und kein Fehler dieser Funktion. */
+    $tag = []; $gesamt = []; $alle = 0;
+    foreach (array_keys(PROTOKOLL_SEITE_REITER) as $r) {
+        $tag[$r]    = protokoll_zahl($r, ['tage' => 1]);
+        $gesamt[$r] = protokoll_zahl($r);
+        $alle      += $gesamt[$r];
     }
-
     return ['tag' => $tag, 'gesamt' => $gesamt, 'alle' => $alle];
 }
 

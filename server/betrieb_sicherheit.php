@@ -310,8 +310,12 @@ ui_seite_start(['titel' => 'Sicherheit']);
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- 4. Ereignisse ---------------------------------------------- */ ?>
+  <?php /* DIE KURZSICHT BLEIBT, DIE GANZE LISTE STEHT IM PROTOKOLL (P5c/AP2,
+           E-P5c-10): Hier wird aufgehoben; gesucht, gefiltert und geblättert
+           wird im Reiter Sicherheit, zusammen mit den CSP-Berichten. */ ?>
   <?php ui_karte_start(['titel' => 'Ereignisse der letzten 30 Tage', 'id' => 'k-ereignisse',
-      'zahl' => $ereign['gesamt'] > 0 ? (string)$ereign['gesamt'] : null]); ?>
+      'zahl' => $ereign['gesamt'] > 0 ? (string)$ereign['gesamt'] : null,
+      'aktion' => ['text' => 'Im Protokoll', 'href' => 'admin_protokoll.php?r=sicherheit']]); ?>
     <?php /* WAS HIER NICHT STEHT, UND ZWAR AUSDRUECKLICH: Ein Sperrereignis
              entsteht nur an den fuenf Toepfen MIT LEITER — `login`,
              `login_ip`, `salt`, `ingest`, `ingest_ip`. Die uebrigen neun

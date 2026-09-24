@@ -176,8 +176,21 @@ Daten erst nach Server-Bestätigung.
 │   │                      Verbraucher woanders sitzen: registrieren.php,
 │   │                      login.php, ingest.php, der Verfalljob (R83)
 │   ├── protokoll_lib.php  Das Betriebsprotokoll — Schreibweg, sechs Reiter,
-│   │                      zwei Fristen, Bereinigung (P5b/AP1). KEIN
+│   │                      zwei Fristen, Bereinigung (P5b/AP1); seit Web
+│   │                      20.39.0 auch der Leseweg: sieben Reiter der
+│   │                      Seite, je Reiter eine bis drei Quellen (nie ein
+│   │                      UNION), Katalog Art → Wort und Ton. KEIN
 │   │                      Zugriffsprotokoll: siehe 4.99g
+│   ├── protokoll_archiv_lib.php  Das Archiv des Protokolls (P5c/AP2):
+│   │                      alle 7 Tage ein versiegeltes ZIP nach
+│   │                      sicherungen/protokoll/, in Häppchen; Aufbewahrung,
+│   │                      Download entsiegelt. Ohne IP-Adressen (4.99g)
+│   ├── admin_protokoll.php  Verwaltung → Protokoll: Reiter nach Rolle,
+│   │                      Suche, Zeitraum, Art, Seitenwahl; Reiter Archiv
+│   │                      nur für die BetreiberIn
+│   ├── zip_lib.php        Der EINE Weg zu ZipArchive (P5c/AP2, R83):
+│   │                      bauen (ungepackt oder gepackt), einen Eintrag
+│   │                      lesen, lesend öffnen. Registerzeile Z39
 │   ├── jobs_lib.php       Katalog und Ausführung der Jobs (Häppchen, Zustand,
 │   │                       Sperre)
 │   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
@@ -195,6 +208,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       · sicherungen/ die Ablage selbst
 │   │                       (entsteht nur auf dem Server, im Deploy ausgenommen)
 │   │                       · sicherungen/komplett/ die Komplett-Backups
+│   │                       · sicherungen/protokoll/ die Archive des
+│   │                         Protokolls (seit Web 20.39.0)
 │   │                       · sicherungen/eingang/ was wiederhergestellt
 │   │                         werden soll — von Hand dorthin gelegt
 │   ├── sicherungsziel_lib.php  Backup-Ziele (S2/AP7): Schnittstelle
@@ -336,6 +351,11 @@ Daten erst nach Server-Bestätigung.
 │   ├── assets/ankuendigung.js  Schließt die Ankündigung ohne Neuladen, wo die
 │   │                       Seite ein Token trägt (sonst schickt das Formular
 │   │                       selbst ab), und zählt im Formular die Byte mit
+│   ├── assets/reiter.js  Holt den aktiven Reiter ins Bild und setzt den
+│   │                       Verlauf am Rand der rollenden Reiterreihe
+│   │                       (P5c/AP2); ohne Skript rollt sie trotzdem
+│   ├── assets/listenkopf.js  Das Auswahlfeld im Listenkopf schickt sofort
+│   │                       ab und verbirgt den Knopf „Filtern“ (P5c/AP2)
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel); dazu seit
 │   │                       Web 20.28.0 flash_setzen()/flash_holen() — die
@@ -657,12 +677,15 @@ Daten erst nach Server-Bestätigung.
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
-│   ├── proben/            zwanzig Prüfungen gegen die laufende Anlage
+│   ├── proben/            zweiundzwanzig Prüfungen gegen die laufende Anlage
 │   │                      (PK-04/2, E-PK-24): ingest, spur, jobs,
 │   │                      kopplung, wartung, raten, mail, versand,
 │   │                      komplett, wiederherstellung, gpx, geraete,
 │   │                      verbindung, anteil, rechtstexte, freigabe,
-│   │                      container, frist, abmelden, csp-browser.
+│   │                      container, frist, abmelden, csp-browser —
+│   │                      seit Web 20.39.0 dazu rollen (die
+│   │                      Berechtigungsmatrix aus 4.99p) und protokoll
+│   │                      (Quellen, Archiv, Siegel).
 │   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
 │   │                      ein LIESMICH. Vorher zwanzig Ordner.
 │   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
@@ -767,7 +790,7 @@ Daten erst nach Server-Bestätigung.
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
-| `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der 10c filtert), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Siehe 4.99g |
+| `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der die Protokollseite filtert; Wort und Ton dazu im Katalog `PROTOKOLL_ARTEN`), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Die Seite Verwaltung → Protokoll (seit Web 20.39.0) liest sie zusammen mit fünf weiteren Tabellen, der Job `protokoll_archiv` archiviert sie. Siehe 4.99g |
 | `konto_einwilligungen` | Welche Fassung eines Rechtstextes dieses Konto angenommen hat (seit Web 20.19.0, P5b/AP4). `(user_id, schluessel)` als Primärschlüssel — **eine Zeile je Konto und Dokument, nicht je Annahme**; eine neue überschreibt die alte. `stand_am` ist die **angenommene** Fassung, der Vergleich gegen `rechtstexte.stand_am` ist die ganze Prüfung. Der Verlauf steht im Protokoll und überlebt dort die Kontolöschung; `ON DELETE CASCADE` ist hier richtig, weil eine Einwilligung ohne Konto keinen Gegenstand hat. Siehe 4.99j |
 | `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **fünf Töpfen mit Leiter** — die übrigen neun sperren ohne Protokollzeile |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
@@ -3451,7 +3474,8 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
-| `versand` | nein | Pakete auf die aktiven Backup-Ziele — und seit Web 20.14.0 die **Aufbewahrung dort** (4.97c) |
+| `protokoll_archiv` | nein, im Regelfall eine Abfrage auf die Marke | Die Einträge eines abgelaufenen Zeitraums (Vorgabe 7 Tage) versiegelt als ZIP nach `sicherungen/protokoll/`, in Häppchen zu 500 Zeilen; Archive nach Ablauf der Aufbewahrung (Vorgabe 365 Tage) löschen (P5c/AP2, 4.99g). Steht **vor** `versand`, damit ein fertiges Archiv im selben Lauf hinausgeht |
+| `versand` | nein | Pakete auf die aktiven Backup-Ziele — und seit Web 20.14.0 die **Aufbewahrung dort** (4.97c); seit Web 20.39.0 auch die Archive des Protokolls, **ohne** Aufbewahrungsregel dort |
 | `komplett` | nein, nach Plan | Komplett-Backup der Installation (4.97d) |
 | `nachaufloesen` | nein, nur nach einer neuen Modelltabelle | Teilenummern bestehender Geräte erneut auflösen, in Blöcken von 200 (P5a/AP11, unten) |
 | `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
@@ -4094,10 +4118,10 @@ Versand, der drüben aufräumt, trägt genau diesen Fehler mit hinüber.
 | | |
 |---|---|
 | Anzeige | `sz_bestand(Zielweg $weg, int $zielId)` — liest je Ordner mit `liste()` und zählt: eigene Dateien und Bytes, ältester und jüngster Stand (aus dem Zeitstempel im Namen), **fremde** Dateien und Bytes. **Auf Knopfdruck**, nicht bei jedem Seitenaufruf: drei Ziele mal dreißig Konten sind neunzig Anfragen. Dieselbe Überlegung wie bei `sz_versand_rueckstand()` |
-| Welche Ordner | die Kontokennungen, die **hier** liegen, plus `komplett`, plus alles, was das Versandprotokoll für dieses Ziel kennt. Der dritte Teil ist der wichtige: Ein gelöschtes Konto hat hier keinen Ordner mehr, drüben aber noch Sicherungen |
+| Welche Ordner | die Kontokennungen, die **hier** liegen, plus `komplett`, plus — seit Web 20.39.0 — `protokoll`, plus alles, was das Versandprotokoll für dieses Ziel kennt. Der letzte Teil ist der wichtige: Ein gelöschtes Konto hat hier keinen Ordner mehr, drüben aber noch Sicherungen |
 | Regel je Ziel | `backup_targets.behalten_konto` und `.behalten_komplett`. **`NULL` = aus**, nicht `0` — `0` hieße „nichts behalten" und räumte das Ziel leer |
 | Protokoll | Tabelle `sicherungsziel_dateien` (ziel_id, ordner, datei, bytes, gesendet_am, geloescht_am, grund). Sie ist **Versand- und Löschprotokoll in einem**; zwei Tabellen dafür wären zwei Fassungen derselben Zeile. `ON DELETE CASCADE` am Ziel |
-| Die drei Sicherungen | **Herkunft:** Namensmuster (`edbak_paketname_gueltig()` bzw. `komp_name_gueltig()`) **und** eine Zeile im Versandprotokoll. **Menge:** nie unter N/M, gezählt nur über die eigenen Dateien. **Lauf:** nur nach einem Versand ohne Fehler und ohne Zeitüberschreitung |
+| Die drei Sicherungen | **Herkunft:** Namensmuster (`edbak_paketname_gueltig()`, `komp_name_gueltig()` bzw. `protokoll_archiv_name_gueltig()`) **und** eine Zeile im Versandprotokoll. **Menge:** nie unter N/M, gezählt nur über die eigenen Dateien. **Lauf:** nur nach einem Versand ohne Fehler und ohne Zeitüberschreitung |
 | Anzeige der Löschungen | Betrieb → Status → **Sicherheit**, Karte „Löschungen auf Sicherungszielen" (30 Tage, mit Grund). Dazu die Zahl im Versandlauf und in der Jobzeile |
 | Statuszeile | Karte **Backups**, Zeile „Aufbewahrung am Ziel": orange, wenn ein Ziel **ohne** Regel seit über 30 Tagen beschickt wird und dort **nie** etwas entfernt wurde (`sz_waechst()`, liest das Protokoll — keine Verbindung) |
 | Prüfmittel | `tools/proben/versand/` Teil 12: fünf eigene Sicherungen, fünf fremde Dateien, Regel aus → 0 Löschungen; Regel an (N = 2) → 3 Löschungen, **alle fünf fremden bleiben**, sieben Dateien übrig, Protokollzeilen = Löschungen |
@@ -4116,6 +4140,17 @@ sie erneut weg. Ein Kreislauf, der bei jedem Job Bandbreite kostet und nie zur
 Ruhe kommt — still, denn beide Seiten tun genau das, wofür sie gebaut sind.
 Gemessen: dritter Lauf **3 gelöscht statt 0**. Der Preis, benannt: Wer die
 Zahl später **anhebt**, bekommt die alten Stände nicht zurück.
+
+**Die Archive des Protokolls sind die dritte Dateiart** (ab Web 20.39.0,
+P5c/AP2, E-P5c-39). `sz_versand_schub()` hängt den Ordner `protokoll` hinten
+an — nach Konten und Komplett-Ständen, weil die Archive klein sind und ein
+Kontopaket, das nicht hinausgeht, schwerer wiegt —, und nur, wenn die
+Einstellung „Archiv auf das Sicherungsziel" an ist (Vorgabe an).
+**Auf dem Ziel gibt es für sie keine Aufbewahrungsregel:** rund 52 kleine
+Dateien im Jahr. `sz_aufraeumen()` überspringt den Ordner
+ausdrücklich — ohne die Zeile fiele er unter die Zahl **je Konto**, und die
+Regel löschte drüben alle Archive bis auf die letzten zwei. Der Rückstand
+(`sz_versand_rueckstand()`) zählt die Archive mit, wenn sie mitgehen.
 
 **Ein Altbestand kommt trotzdem ins Protokoll.** Der Versand überspringt eine
 Datei, die drüben schon liegt (gleicher Name, gleiche Größe) — und schreibt
@@ -4147,7 +4182,30 @@ Wiederanlaufpaket (Abschnitt 7).
 
 Ebenfalls nicht drin: die Dateiablage unter `sicherungen/`. Die Kontopakete
 sichern nichts, was nicht ohnehin in der Datenbank steht, und würden die Datei
-vervielfachen.
+vervielfachen. Dasselbe gilt für die Archive des Protokolls
+(`sicherungen/protokoll/`, 4.99g).
+
+**Zwei Tabellen mit Schema, aber ohne Zeilen** (ab Web 20.39.0, P5c/AP2,
+E-P5c-57, F-P5c-20): `sicherheit_ereignisse` und `rate_limits`
+(`KOMP_OHNE_ZEILEN`). Beide führen IP-Adressen — die erste auch E-Mail-Adressen —
+und verfallen bewusst nach 30 Tagen bzw. von selbst (E-P5a-09). Ein
+Komplett-Stand liegt länger und geht außer Haus; mit Zeilen hielte er, was
+die Anwendung gerade nicht halten will. **Ganz weglassen geht nicht:** Nach
+einem Wiederanlauf aus einem Dump ohne die Tabellen scheitert
+`ratelimit_lib.php` bei der ersten Anmeldung, weil es in eine Tabelle
+schreibt, die es nicht gibt. Mit Schema und ohne Zeilen beginnt die neue
+Installation mit leeren Zählern — der Zustand, den 30 Tage später ohnehin
+jede hat. Der Dumpkopf sagt es in einer Zeile „OHNE ZEILEN: …" neben „NICHT
+ENTHALTEN: config.php", und an der Stelle der Tabelle steht ein Kommentar
+mit dem Grund. **Der Preis:** Wer aus einem Komplett-Stand wiederherstellt,
+hat die Sperren und Sperrereignisse der letzten 30 Tage nicht mehr; eine
+laufende Sperre ist aufgehoben.
+
+**Ein Komplett-Stand schreibt einen Eintrag im Reiter Sicherung** des
+Protokolls (`komplett_erzeugt`, mit Größe, Zeilen, Tabellen und den
+verdrängten Ständen in `daten`), ebenso Herunterladen, Einspielen und
+Löschen (4.99g). Es gibt keine Tabelle, die festhält, wann ein Stand
+entstand — der Dateiname sagt es, bis die Aufbewahrung ihn verdrängt.
 
 #### Warum ein eigener Dump und nicht `mysqldump`
 
@@ -5271,6 +5329,8 @@ zusammengeführt und, wichtiger, ein **Maß** dafür angelegt.
 | Meldung im Browser | `EdHtml.meldung()` | 7 Nachbauten, 3 Ton-Tabellen |
 | Karte anlegen | `EdKarte.anlegen()` | 4 Präambeln in 3 Reihenfolgen |
 | Patientenliste laden | `EdPat.listeLaden()` | 3 gleichlautende Auftakte |
+| Archiv (ZIP) bauen oder öffnen — seit Web 20.39.0 | `zip_lib.php` (`zip_bauen()`, `zip_eintrag()`, `zip_oeffnen()`, `zip_lesen()`) | 4 eigene `new ZipArchive` samt je eigener Frage, ob die Erweiterung da ist (Z39) |
+| Suche, Filterpillen, Seitenwahl, Reiter — seit Web 20.39.0 | `ui_listenkopf()`, `ui_listenfuss()`, `ui_reiter()` | 8 Stellen Markup von Hand in `admin_users.php` (Z40) |
 
 **Das Register ist `tools/zaehlung/register.php`.** Es führt je Sache eine
 Zeile mit einer **Decke** — wie viele Stellen es höchstens geben darf — und
@@ -5398,6 +5458,11 @@ Die Bausteine im Einzelnen:
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
 | Seitenhülle | `ui.php` (`ui_seite_start()`, `ui_seite_ende()`) | Ab Web 7.1.0. Doctype, `<head>`, Eröffnung und Abschluss des `<body>` — vorher 28-mal von Hand, mit zwei Schreibweisen des Viewports und zwei Titeltrennern. **Der Tab-Titel lautet seit Web 15.3.1 „&lt;Seite&gt; — Gen-EM NAdoku"** (vorher „— Einsatzdoku"); die zweite Stelle, die einen Titel selbst setzt, ist die Wartungsseite in `wartung_lib.php`. Leaflet-CSS nur auf Kartenseiten und **vor** `style.css`, damit eigene Regeln die des Kartenwerks überschreiben. **Ohne Abhängigkeit auf oberster Ebene**, damit `install.php` sie vor der Ersteinrichtung laden kann; `asset()`, `e()` und `favicon_tags()` werden über `ui_asset()`/`ui_e()`/`ui_favicon()` nur benutzt, wo es sie gibt. **`install.php` lädt sie seit Web 9.10.1 am Dateianfang** — vorher stand das `require_once` in `render_page()` selbst, und weil die Aufrufer ihr Argument mit `ui_meldung_markup()` und `ui_knopf()` bauen (PHP wertet Argumente vor dem Aufruf aus), endete jeder Zweig in „Call to undefined function". Der Einrichter war damit seit Web 9.1.0 unbenutzbar (F-P3-AR). |
 | Streifen über dem Inhalt | `ui.php` (`ui_hinweise()`), `umgebung_lib.php`, `ankuendigung_lib.php` | Ab Web 20.38.0 (P5c/AP1, E-P5c-55). **Eine Reihe, vier Streifen, feste Reihenfolge:** Umgebung → Ankündigung → Demo → Datenschutz. Sie steht an der Stelle des Demo-Hinweises (`ui_leiste_ende()`), nicht unter der Kopfleiste — dort verschob ein Streifen seit jeher die klebende Leiste (F-P3-G). Die Seiten ohne Gerüst rufen `ui_hinweise()` selbst als erstes Kind ihres `<main>`, die Anmeldeseiten über der Karte; `einwilligung.php` ohne den Datenschutz-Streifen, dessen Ziel sie ist. **Das Etikett** kommt aus `konfig('app.umgebung')` über `umgebung()` — nie abgeleitet, geschlossene Farbliste — und wirkt an drei Stellen: Titelvorsatz in `ui_seite_start()` (und in `stoerung_seite_html()` für Wartung und Überlast), Klasse `.kopf-umgebung` in `ui_kopf()`, Streifen. **Die Ankündigung** liegt in drei `app_state`-Zeilen (`ankuendigung_text`, `_ton`, `_bis`); das × ist ein Formular an `ankuendigung.php` (ohne `auth_guard`, weil der Streifen auch über der Anmeldung steht), das in der Sitzung die **Kennung** dieser Ankündigung merkt — eine neue erscheint wieder. `login.php` löscht die Marke beim Anmelden, weil `session_regenerate_id()` die Daten behält. Kein × ohne Sitzung (lesende Seiten ohne Cookie) und nicht in der eigenen Sitzung der Setzseite. `assets/ankuendigung.js` schließt ohne Neuladen, wo es `CSRF` gibt, und steht **hinter** der Reihe, damit die Reihe mit ihrem letzten Streifen verschwinden kann. |
+| Reiter | `ui.php` (`ui_reiter()`), `assets/reiter.js` | Ab Web 20.39.0 (P5c/AP2, E-P5c-25). Wechsel zwischen gleichrangigen Sichten einer Seite, serverseitig — jeder Reiter ist ein Verweis, der Parameter steht in der Adresse. `attr` je Reiter wird durchgereicht (AP9 braucht `data-cancel-form`). **Seiten mit Reitern tragen keine Unterpunkte in der Leiste:** `menue.js` baut keine, wenn `#inhalt` eine `.reiter`-Reihe enthält. Gestaltung: `Design.md` 9.37. |
+| Listenkopf und Listenfuß | `ui.php` (`ui_listenkopf()`, `ui_listenfuss()`), `assets/listenkopf.js` | Ab Web 20.39.0 (P5c/AP2, F-P5c-54). Suchfeld mit versteckten Feldern, Filterpillen (mit Zahl, eine mit Kreuz für einen Filter aus der Adresse), ein Auswahlfeld, das mit Skript sofort abschickt; darunter Zählung und Seitenwahl (erste, letzte, Nachbarn, Ellipse). Bis dahin nur als Markup in `admin_users.php`; Registerzeile Z40 hält es außerhalb von `ui.php` auf null. |
+| Aufklappbare Zeile | `ui.php` (`ui_zeile()` mit `daten`) | Ab Web 20.39.0 (P5c/AP2, E-P5c-26). Eine Zeile mit Angaben wird ein `<details class="zeile-mehr">`, dessen `<summary>` die Zeile ist; die Angaben stehen darunter als `<dl>`. `aktionsspalte => true` hält die leere Spalte in Zeilen ohne Angaben. Die Gegenregel zu `.zeile:first-child` ist Pflicht (F-P5c-13, `Design.md` 9.2). |
+| ZIP-Archive | `zip_lib.php` | Ab Web 20.39.0 (P5c/AP2, E-P5c-57, R83). `zip_verfuegbar()`, `zip_bauen($ziel, [Name => Pfad], $packen)` (ungepackt als Vorgabe, weil die Teile schon gzip und versiegelt sind), `zip_eintrag($pfad, $name)`, `zip_oeffnen($pfad)` (nur lesend), `zip_lesen($pfad, $fn)`, `zip_namen()`. Vorher öffneten vier Stellen selbst ein Archiv und fragten je selbst nach der Erweiterung; Registerzeile Z39. **Lädt selbst nichts.** |
+| Protokoll lesen | `protokoll_lib.php` (`protokoll_liste()`, `protokoll_zahl()`, `protokoll_quellen()`) | Ab Web 20.39.0 (P5c/AP2, E-P5c-38). Je Reiter ein bis drei Quellen mit derselben Zeilenform, **je Quelle eine Abfrage, nie ein UNION** (Kollationen, 4.99g). Die Seite, die Zählkarte der Statusseite und der Archivjob lesen alle darüber. |
 | Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und schreibt ins Fehlerlog**: Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
 | Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |
@@ -6676,6 +6741,13 @@ gezeichnet wird: Die Seite müsste ihre Kartentitel zweimal nennen, und die
 eine Liste liefe der anderen davon. Voraussetzung ist eine `id` an der Karte,
 mit dem Vorsatz `k-`; 27 Karten in sieben Dateien haben mit AP5 eine bekommen.
 
+**Seiten mit Reitern bekommen keine Unterpunkte** (ab Web 20.39.0, P5c/AP2,
+E-P5c-25). Enthält `#inhalt` eine `.reiter`-Reihe, baut `menue.js` nichts:
+Die Reiter sind die Gliederung der Seite, und eine zweite daneben in der
+Leiste nennte die Karten des gerade offenen Reiters und wechselte bei jedem
+Reiterwechsel ihren Inhalt. Der Bedienweg `admin-protokoll-reiter` misst
+**0** Unterpunkte.
+
 Die Markierung („welche Karte steht gerade oben") läuft über einen
 `IntersectionObserver`, dessen `rootMargin` die Kopfhöhe plus einen Saum
 abzieht. Drei Regeln, die alle aus einer Messung stammen:
@@ -6694,10 +6766,13 @@ seit Langem `scroll-padding-top: calc(var(--kopf) + var(--abstand-4))`, und
 beides addiert sich — gemessen landete die angesprungene Karte 68 px zu tief.
 Mit `scroll-padding-top` allein sitzt der Sprung bei 72 px.
 
-### 4.99g Das Betriebsprotokoll: der Schreibweg (ab Web 20.16.5, P5b/AP1)
+### 4.99g Das Betriebsprotokoll: Schreibweg, Seite, Archiv (ab Web 20.16.5, P5b/AP1; Seite und Archiv ab Web 20.39.0, P5c/AP2)
 
-*Entscheidungen: V1 (16.09.2026), V2, E-P5b-06, E-P5b-12. Code:
-`server/protokoll_lib.php`, Tabelle `protokoll_ereignisse`.*
+*Entscheidungen: V1 (16.09.2026), V2, E-P5b-06, E-P5b-12; für Seite und
+Archiv E-P5c-02, -03, -10, -11, -26, -38, -39, -57, -75, -76. Code:
+`server/protokoll_lib.php` (Schreiben und Lesen),
+`server/protokoll_archiv_lib.php` (Archiv), `server/admin_protokoll.php`
+(Seite); Tabelle `protokoll_ereignisse`.*
 
 #### Was hineingeschrieben wird — und was ausdrücklich nicht
 
@@ -6713,19 +6788,90 @@ angesehen" ergänzt, ändert eine Programmentscheidung und nicht eine Funktion.
 **Keine IP-Adressen** (V2, E-P5b-06). Sie stehen ausschließlich im Reiter
 *Sicherheit*, und der liegt in einer **anderen Tabelle**.
 
-#### Sieben Reiter, zwei Tabellen — und warum das so bleibt
+#### Sieben Reiter, sechs Tabellen — und warum das so bleibt
 
-| Reiter | Tabelle | Frist | einstellbar |
+`protokoll()` **schreibt** in sechs Reiter (die Werte des ENUM
+`protokoll_ereignisse.reiter`). Die Seite **zeigt** sieben, und vier davon
+lesen ganz oder teilweise aus Tabellen, die ihre Sache ohnehin führen
+(E-P5c-38): **keine doppelte Ablage.**
+
+| Reiter | Quelle | Frist | einstellbar |
 |---|---|---|---|
 | **Verwaltung** (das Audit) | `protokoll_ereignisse` | **365 Tage** | ja, 90–1095 |
-| E-Mail, Jobs, Sicherung, Ziele, System | `protokoll_ereignisse` | 30 Tage | **nein** |
-| **Sicherheit** (Sperren, Angriffe) | `sicherheit_ereignisse` (P5a/AP6) | 30 Tage | **nein** |
+| **Sicherheit** (Sperren, Angriffe) | `sicherheit_ereignisse` (P5a/AP6) und `csp_berichte` | 30 Tage | **nein** |
+| E-Mail | `mail_warteschlange` — **nur Vorlage, Zustand, Zeit** — und `protokoll_ereignisse` | 30 Tage (die Warteschlange ab `erstellt`) | nein |
+| Jobs | `job_laeufe` und `protokoll_ereignisse` | 30 Tage | nein |
+| Sicherung | `protokoll_ereignisse` (Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt — es gibt keine Tabelle dafür) | 30 Tage | nein |
+| Ziele | `sicherungsziel_dateien` (gesendet, dort gelöscht) und `protokoll_ereignisse` | **keine** für `sicherungsziel_dateien` — sie ist die Buchführung dessen, was drüben liegt, und bleibt; 30 Tage für die übrigen | nein |
+| System | `protokoll_ereignisse` (gefüllt ab AP3) | 30 Tage | nein |
 
-Die Trennung ist kein Übergangszustand, sondern die Frist: In
-`sicherheit_ereignisse` stehen IP- und E-Mail-Adressen im Klartext und
-verfallen nach 30 Tagen (E-P5a-09), hier steht das Audit und bleibt bis zu
-drei Jahre. **Zwei Fristen in einer Tabelle sind eine Einladung, die kürzere
-zu vergessen.** Ob die beiden später zusammenrücken, entscheidet 10c (V6).
+Die Trennung von `sicherheit_ereignisse` ist kein Übergangszustand, sondern
+die Frist: Dort stehen IP- und E-Mail-Adressen im Klartext und verfallen nach
+30 Tagen (E-P5a-09), hier steht das Audit und bleibt bis zu drei Jahre.
+**Zwei Fristen in einer Tabelle sind eine Einladung, die kürzere zu
+vergessen.** Entschieden mit E-P5c-11 (V6): Sie bleiben getrennt.
+
+**Die E-Mail-Sicht zeigt nie Empfänger, Betreff, Rumpf oder Fehlertext.**
+Eine offene Zeile trägt einen Setz-Link mit gültigem Token, und ein
+SMTP-Fehler nennt die Adresse, an der er scheiterte — beides gehört nicht in
+eine Liste, die der Admin sieht und die ins Archiv geht.
+
+#### Je Quelle eine Abfrage, nie ein UNION
+
+`protokoll_quellen($reiter)` liefert je Reiter ein bis drei SQL-Stücke mit
+**denselben Spaltennamen** (`id`, `zeit`, `art`, `uid`, `uart`, `bid`, `text`,
+`daten`). Jede Quelle fragt für sich; PHP fügt zusammen, sortiert nach Zeit
+und schneidet die Seite zu (für Seite *s* holt jede Quelle ihre jüngsten
+*s* × 50 Zeilen). Die Gesamtzahl ist die Summe der Zählungen.
+
+**Warum nicht `UNION ALL`:** Die Tabellen sind zu verschiedenen Zeiten
+entstanden, auf Produktiv unter verschiedenen Vorgabe-Kollationen, und ein
+UNION über zwei Textspalten verschiedener Kollation ist auf MySQL und
+MariaDB ein Fehler („Illegal mix of collations"). Örtlich sind alle gleich;
+der Fehler zeigte sich erst dort, wo niemand mehr hinsieht (Muster Nr. 238).
+Aus demselben Grund läuft die **Suche je Spalte** (`spalte LIKE ?`, mit `OR`
+verbunden) und nicht über `CONCAT_WS` zweier Tabellen.
+
+**Die Suche** trifft Text, E-Mail und Name von Urheber und Betroffenem, die
+**Beschriftung** einer Art („Rolle" findet `rolle_geaendert`) und — nur im
+Feld `daten.kennung` — eine achtstellige Fehlerkennung. **Eine Kennung im
+Suchfeld wechselt auf den Reiter System** (Umleitung 303), und nur die
+BetreiberIn sieht ihn. **Der Kontofilter** (`?konto=…`, von der Kontoseite)
+fragt nur Quellen mit Konten; die übrigen fallen dann weg, statt leer zu
+antworten.
+
+**Fehlt eine Tabelle** (Migration steht aus), meldet die Seite das, statt
+eine leere Liste zu zeigen, die wie ein ruhiger Monat aussähe.
+
+#### Der Katalog: Art → Wort und Ton
+
+`PROTOKOLL_ARTEN` in `protokoll_lib.php` gibt jeder Art eine Beschriftung und
+einen Ton nach der Ampel aus `Design.md` 9.23 — neutral (ein Vorgang), blau
+(erledigt), orange (ein Eingriff, eine Sperre), rot (ein Fehler). Gefiltert
+wird nach dem Schlüssel, gezeigt das Wort. **Eine Art, die im Katalog fehlt,
+erscheint als ihr Schlüssel und neutral** — sichtbar falsch, aber nicht
+verloren. Welche Arten ein Reiter kennt (für das Auswahlfeld), steht in
+`protokoll_arten_des_reiters()` — aus dem Katalog, nicht aus dem Bestand.
+
+**Neu mit Web 20.39.0** (E-P5c-38): `rolle_geaendert`, `setzlink_gesendet`,
+`geraet_umgeschaltet`, `geraet_geloescht` (je Verwaltung und Selbstbedienung;
+beim Entkoppeln **vor** dem Löschen gerufen), `wartung_an`, `wartung_aus`,
+`demo_zurueckgesetzt`, `migration_ausgefuehrt`, `archiv_heruntergeladen`,
+`frist_geaendert` in der Verwaltung; `komplett_erzeugt`,
+`komplett_heruntergeladen`, `komplett_eingespielt`, `komplett_geloescht`,
+`kontobackup_eingespielt` in der Sicherung.
+
+#### Wer welchen Reiter sieht
+
+`protokoll_reiter_sichtbar()`: **BetreiberIn alle sieben und das Archiv;
+Admin Verwaltung, E-Mail, Jobs, Sicherung.** Was die Rolle nicht darf, zeigt
+die Seite nicht — kein ausgegrauter Reiter. Ein Reiter außerhalb der Liste
+in der Adresse ist 403, ein unbekannter 404. Die Zellen stehen in der
+Berechtigungsmatrix (4.99p); Support kommt mit AP4.
+
+**Löschen kann niemand** — nur die Fristen (E-P5c-02). Fristen und Archiv
+stellt die BetreiberIn in **Betrieb → Servereinstellungen → Protokoll** ein;
+jede Änderung schreibt `frist_geaendert`.
 
 #### Kein Fremdschlüssel auf `users`, und das ist der wichtigste Satz
 
@@ -6769,12 +6915,116 @@ flächendeckend umzustellen wäre Backlog Nr. 202 Paket 3 in anderem Gewand,
 und der richtige Zeitpunkt dafür ist, wenn der Reiter „System" steht und
 jemand die Einträge auch lesen kann.
 
-#### Lesen kommt mit 10c
+#### Die Zählkarte auf Betrieb → Status
 
-10b baut den Schreibweg und schreibt hinein. **Betrieb → Status** zeigt eine
-Zählkarte (Einträge je Reiter, heute und gesamt) — mehr nicht. Die Reiter mit
-Filter, Archiv und Download hängen an Entscheidungen (V4, V5, V8, V9), die
-noch nicht gefallen sind.
+Einträge je Reiter, letzte 24 Stunden und gesamt — **seit Web 20.39.0 über
+dieselben Quellen wie die Seite** (`protokoll_zahl()`). Bis dahin zählte sie
+nur `protokoll_ereignisse`, und E-Mail, Jobs und Ziele standen auf null,
+obwohl ihre Tabellen voll waren. Jede Zahl ist ein Verweis auf ihren Reiter.
+
+#### Das Archiv (Job `protokoll_archiv`, ab Web 20.39.0)
+
+**Wofür:** Die Datenbank hält die Einträge nur so lange wie ihre Frist. Das
+Archiv hält sie länger und außer Haus (E-P5c-03).
+
+| | |
+|---|---|
+| **Zeitraum** | alle **7 Tage** (1–31), Grenzen **Mitternacht in der Zeitzone der Anlage** — über den Kalender gerechnet, damit eine Sommerzeitumstellung die Grenze nicht auf 23 oder 1 Uhr schiebt |
+| **Erstes Archiv** | beginnt beim **ältesten Eintrag** aller Quellen, auf den Tag abgerundet (E-P5c-76); der Job holt dann Zeitraum für Zeitraum nach |
+| **Ablage** | `sicherungen/protokoll/<Beginn ISO UTC>_<Kennung des Serverschlüssels>.zip` |
+| **Inhalt** | je Reiter eine JSON-Zeilen-Datei, in Teile zu höchstens **1 MB** Klartext geschnitten, jeder Teil für sich mit `sk_versiegeln()` versiegelt, dazu `manifest.json.sk`; Format: `docs/Backup-Format.md` 7 |
+| **Höchstgröße** | **32 MB** Klartext je Archiv; was darüber liegt, wird nicht archiviert, und das Manifest sagt es (`gekuerzt` je Reiter) |
+| **Arbeitsweise** | in Häppchen zu **500 Zeilen** je Abfrage mit Fortsetzungsmarke (Produktiv hat keinen Cron, huckepack gibt es 3 s); der Klartext liegt nur im Bauordner `.bau/` unter `sicherungen/` und wird nach dem Packen gelöscht |
+| **Aufbewahrung** | **365 Tage** (90–1095), gezählt ab dem Beginn des Zeitraums; dann löscht der Job |
+| **Versand** | mit dem Versandjob auf die aktiven Sicherungsziele (Einstellung, Vorgabe an), **ohne Aufbewahrungsregel dort** (4.97c) |
+| **Ohne Serverschlüssel** | kein Archiv — ein Archiv im Klartext wäre genau das, was das Siegel verhindern soll; die Statusseite sagt schon rot, dass der Schlüssel fehlt |
+
+**Was hineindarf (E-P5c-39, -75).** Sicherheit: nur Art, Topf, Stufe, Zeit —
+**`merkmal` (IP oder Adresse) und `wer` nicht**; aus den CSP-Berichten
+Richtlinie, Quelle, Seite, Anzahl. E-Mail: nur Vorlage, Art, Zeit. **Alle
+übrigen Reiter wie gespeichert — samt der Adressen im Text** (Q-P5c-31,
+entschieden 24.09.2026): Das Audit soll nach einer Kontolöschung noch sagen,
+wer es war, und die Datenbank hält dieselben Texte ohnehin 365 Tage. Die
+30-Tage-Zusage aus E-P5a-09 gilt für `sicherheit_ereignisse`, und die hält
+auch im Archiv.
+
+**Die Kennung des Serverschlüssels steht im Namen und im Siegelzweck**
+(`protokollarchiv|<Name>|<Teil>`). Ein umbenanntes Archiv lässt sich nicht
+mehr öffnen, und eines von einem anderen Schlüssel erkennt die Seite am
+Namen, ohne es zu öffnen: Der Reiter Archiv zeigt es mit der Plakette
+„anderer Schlüssel" und sperrt den Download.
+
+**Der Download** (nur BetreiberIn, POST mit Token) entsiegelt in einen
+Arbeitsordner unter dem temporären Verzeichnis, packt `manifest.json` und je
+Reiter eine `.jsonl` in ein gewöhnliches ZIP, liefert es aus und räumt auf.
+Er schreibt `archiv_heruntergeladen` — **vor** der Auslieferung, weil die
+Anfrage danach endet.
+
+**Gewicht:** Die Archive zählen gegen Sicherungsgrenze und Warnschwellen
+(`speicher_lib.php`, `protokoll_bytes`); der Speicherbalken trägt sie im
+Segment der Konto-Backups mit (E-P5c-77) — ein eigenes Segment bräuchte
+eine Farbe und eine Freigabe.
+
+### 4.99p Die Berechtigungsmatrix (ab Web 20.39.0, P5c/AP2, E-P5c-22)
+
+*Wer darf was — eine Zeile je Handlung, eine Spalte je Rolle. Die Tabelle
+zwischen den beiden Markierungen ist **keine Beschreibung, sondern die
+Vorgabe**: `tools/proben/rollen/probe.php` liest sie aus dieser Datei und
+fährt jede Zelle gegen die örtliche Anlage. Wer eine Zeile ändert, ändert, was
+die Probe verlangt; wer ein Tor im Code ändert, ohne die Zeile nachzuziehen,
+bekommt die Probe rot. Anlass: Nr. 286 (Admin erreichte Komplett-Backup und
+Backup-Ziele) und Nr. 149.*
+
+**Was die Zellen heißen.** `200`, `303`, `404`: der Statuscode einer
+GET-Anfrage. `403`: das **Rollentor** — die Seite antwortet mit „Kein
+Zugriff" oder „… vorbehalten". `durch`: nur bei POST — die Probe schickt ein
+**absichtlich falsches Formular-Token**, und die Antwort ist die
+Token-Ablehnung („Ungültiges Formular-Token"), nicht das Rollentor. So belegt
+die Zelle, dass die Rolle die Handlung erreicht, **ohne dass sie ausgeführt
+wird** — kein Komplett-Backup, keine Löschung, kein Versand. Der Preis: Dass
+die Handlung mit gültigem Token auch gelingt, zeigt die Matrix nicht; das tun
+die Bedienwege und die Proben der jeweiligen Sache.
+
+**Support fehlt noch** (kommt mit AP4 als vierte Spalte, samt allen
+Verwaltungshandlungen); der Zweitfaktor-Reset mit AP5, der Vorschau-Endpunkt
+der Rechtstexte mit AP9.
+
+<!-- rollenprobe:anfang -->
+| Handlung | Aufruf | user | admin | betreiberin |
+|---|---|---|---|---|
+| Protokoll: die Seite | `GET admin_protokoll.php` | 403 | 200 | 200 |
+| Protokoll: Reiter Verwaltung | `GET admin_protokoll.php?r=verwaltung` | 403 | 200 | 200 |
+| Protokoll: Reiter Sicherheit | `GET admin_protokoll.php?r=sicherheit` | 403 | 403 | 200 |
+| Protokoll: Reiter E-Mail | `GET admin_protokoll.php?r=email` | 403 | 200 | 200 |
+| Protokoll: Reiter Jobs | `GET admin_protokoll.php?r=jobs` | 403 | 200 | 200 |
+| Protokoll: Reiter Sicherung | `GET admin_protokoll.php?r=sicherung` | 403 | 200 | 200 |
+| Protokoll: Reiter Ziele | `GET admin_protokoll.php?r=ziele` | 403 | 403 | 200 |
+| Protokoll: Reiter System | `GET admin_protokoll.php?r=system` | 403 | 403 | 200 |
+| Protokoll: Archiv | `GET admin_protokoll.php?r=archiv` | 403 | 403 | 200 |
+| Protokoll: Archiv herunterladen | `POST admin_protokoll.php action=archiv_laden` | 403 | 403 | durch |
+| Protokoll: Fehlerkennung wechselt auf System | `GET admin_protokoll.php?q=0badc0de` | 403 | 200 | 303 |
+| Protokoll: unbekannter Reiter | `GET admin_protokoll.php?r=gibtesnicht` | 403 | 404 | 404 |
+| Protokoll: Fristen und Archiv einstellen | `POST betrieb_server.php action=protokoll` | 403 | 403 | durch |
+| Komplett-Backup: die Seite | `GET admin_komplettsicherung.php` | 403 | 403 | 200 |
+| Komplett-Backup: herunterladen | `POST admin_komplettsicherung.php action=herunterladen` | 403 | 403 | durch |
+| Komplett-Backup: jetzt sichern | `POST admin_komplettsicherung.php action=jetzt_sichern` | 403 | 403 | durch |
+| Komplett-Backup: fortsetzen | `POST admin_komplettsicherung.php action=fortsetzen` | 403 | 403 | durch |
+| Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | durch |
+| Komplett-Backup: Regeln | `POST admin_komplettsicherung.php action=regeln` | 403 | 403 | durch |
+| Komplett-Backup: Stand löschen | `POST admin_komplettsicherung.php action=stand_loeschen` | 403 | 403 | durch |
+| Backup-Ziele: die Seite | `GET admin_sicherungsziele.php` | 403 | 403 | 200 |
+| Backup-Ziele: Ziel speichern | `POST admin_sicherungsziele.php action=ziel_speichern` | 403 | 403 | durch |
+| Backup-Ziele: Ziel löschen | `POST admin_sicherungsziele.php action=ziel_loeschen` | 403 | 403 | durch |
+| Backup-Ziele: Abdruck vergessen | `POST admin_sicherungsziele.php action=abdruck_vergessen` | 403 | 403 | durch |
+| Backup-Ziele: Versand an oder aus | `POST admin_sicherungsziele.php action=versand_schalter` | 403 | 403 | durch |
+| Backup-Ziele: jetzt versenden | `POST admin_sicherungsziele.php action=jetzt_versenden` | 403 | 403 | durch |
+| Backup-Ziele: Ziel prüfen | `POST admin_sicherungsziele.php action=ziel_pruefen` | 403 | 403 | durch |
+| Backup-Ziele: Bestand ansehen | `POST admin_sicherungsziele.php action=ziel_bestand` | 403 | 403 | durch |
+<!-- rollenprobe:ende -->
+
+**Daneben prüft die Probe eine Wirkung:** Ein Rollenwechsel auf der
+Kontoseite erzeugt **genau einen** Eintrag `rolle_geaendert` im Reiter
+Verwaltung, und ein Speichern ohne Wechsel keinen (E-P5c-38, F-P5c-17).
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 

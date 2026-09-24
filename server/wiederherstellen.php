@@ -284,6 +284,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                     if (($stand['phase'] ?? '') === 'fertig') {
                         $notice = 'Eingespielt: ' . zahl_text((int)$stand['statements'], 0)
                                 . ' Anweisungen. Die Installation steht wieder.';
+                        /* IN DIE EINGESPIELTE DATENBANK (P5c/AP2, E-P5c-38).
+                         * Das Protokoll der Quelle kam mit dem Dump; dieser
+                         * Eintrag ist der erste danach und sagt, woher der
+                         * Stand stammt. */
+                        require_once __DIR__ . '/protokoll_lib.php';
+                        protokoll('sicherung', 'komplett_eingespielt',
+                            'Komplett-Backup eingespielt über „Installation wiederherstellen" ('
+                            . zahl_text((int)$stand['statements'], 0) . ' Anweisungen)',
+                            ['datei' => (string)($stand['datei'] ?? ''),
+                             'anweisungen' => (int)$stand['statements']]);
                     } else {
                         $notice = 'Durchgang zu Ende: '
                                 . zahl_text((int)$stand['statements'], 0)

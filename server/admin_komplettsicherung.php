@@ -1,7 +1,11 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-require_admin();
+/* NUR DIE BETREIBERIN (P5c/AP2, E-P5c-31, Backlog Nr. 286). Bis Web 20.38.0
+ * stand hier `require_admin()` — R75 und der Kopf der Rollen in `db.php`
+ * sagten BetreiberIn, das Tor sagte Admin. Mangels Admin-Konten war die
+ * Lücke nicht ausnutzbar; die Rollenprobe prüft sie seither je Handlung. */
+require_betreiberin();
 require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/jobs_lib.php';
 require_once __DIR__ . '/format_lib.php';  /* groesse_text(), zahl_text() — ausdruecklich, nicht ueber die Ladekette. */
@@ -60,6 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
          *
          * Der Speicher bleibt trotzdem bei einem halben Megabyte: Es wird
          * Block für Block entsiegelt und Block für Block ausgegeben. */
+        /* DER EINTRAG STEHT VOR DEM DOWNLOAD (P5c/AP2): Danach endet die
+         * Anfrage mit `exit`. Ein Komplett-Stand ist die ganze Datenbank —
+         * wer ihn wann geholt hat, gehört ins Protokoll. */
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll('sicherung', 'komplett_heruntergeladen',
+            'Komplett-Backup ' . $datei . ' heruntergeladen — '
+            . ($art === 'pw' ? 'unter einer Passphrase versiegelt' : 'als SQL, entsiegelt'),
+            ['datei' => $datei, 'art' => $art === 'pw' ? 'passphrase' : 'klar']);
         @set_time_limit(0);
         while (ob_get_level() > 0) { ob_end_clean(); }
         $name = $art === 'pw'
@@ -144,7 +156,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                              . 'Aufbewahrung: 1 bis 20.';
     } elseif ($aktion === 'stand_loeschen') {
         $datei = (string)($_POST['datei'] ?? '');
-        $notice = komp_loeschen($datei)
+        $geloescht = komp_loeschen($datei);
+        if ($geloescht) {
+            require_once __DIR__ . '/protokoll_lib.php';
+            protokoll('sicherung', 'komplett_geloescht',
+                      'Komplett-Backup ' . $datei . ' von Hand gelöscht', ['datei' => $datei]);
+        }
+        $notice = $geloescht
             /* DER SATZ IST SEIT WEB 20.14.0 GENAUER (P5a/AP10). Vorher hiess
              * er „gelöscht wird auf dem Ziel nichts" — als Zusage über die
              * Anwendung. Seit es die Aufbewahrungsregel je Ziel gibt, stimmt

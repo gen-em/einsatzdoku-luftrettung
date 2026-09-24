@@ -113,6 +113,22 @@ function datum_zeit_text(?string $utc, string $trenner = ' '): string
     return fmt_local($utc, 'd.m.Y') . $trenner . fmt_local($utc, 'H:i');
 }
 
+/**
+ * Ein Zeitraum: „13.09. – 19.09.2026", über einen Jahreswechsel
+ * „28.12.2026 – 03.01.2027" (P5c/AP2, Archiv des Protokolls). Beide Enden
+ * in Ortszeit und EINSCHLIESSLICH — wer „bis 19.09." liest, meint den
+ * ganzen 19.
+ */
+function zeitraum_text(?string $vonUtc, ?string $bisUtc): string
+{
+    $von = fmt_local($vonUtc, 'd.m.Y');
+    $bis = fmt_local($bisUtc, 'd.m.Y');
+    if ($von === $bis) { return $von; }
+    return substr($von, 6) === substr($bis, 6)
+        ? substr($von, 0, 6) . ' – ' . $bis
+        : $von . ' – ' . $bis;
+}
+
 /** Datum und volle Stunde: „22.09.2026 14". Ein Einzelfall der Statusseite. */
 function datum_stunde_text(?string $utc): string
 {

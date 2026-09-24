@@ -3733,36 +3733,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kopfabsatz, Changelog-Zeile und ein Emulatorlauf, der die
     Rechtstexte-Seite zeigt. Abnahme als **P-PK-28**.
 
-286. **Ein Admin erreicht Komplett-Backup und Backup-Ziele — samt
-    Klartext-Dump der ganzen Datenbank.**
-    *Aufgenommen 23.09.2026 im Abgleich des Konzepts P5c (F-P5c-15), von Hand
-    nachgeprüft.* R75 und der Kopf der Rollen in `db.php` behalten
-    Komplett-Backup und Backup-Ziele der BetreiberIn vor, und das Menü zeigt
-    beide Seiten nur ihr. **Die Seiten selbst fragen aber nur
-    `require_admin()`** (`admin_komplettsicherung.php` und
-    `admin_sicherungsziele.php`, je Z. 4; das Wort „betreiberin" kommt in
-    beiden Dateien nicht vor). Per Direktaufruf liefert
-    `action=herunterladen` jedem Admin über `komp_ausgeben_klar()` den
-    Klartext-Dump — mit Passwort-Hashes und versiegelten Zugängen; dazu
-    kommen die sieben Handlungen der Backup-Ziele. `admin_sicherungen.php`
-    verlinkt Admins sogar dorthin.
-
-    **Vorhergesagt und nie nachgemessen:** Das Prüfdokument S8 führt P-01
-    als „teilweise" mit der Auflage, nach AP5 zu wiederholen — „dann muss ein
-    Admin dort 403 bekommen". Die Wiederholung hat nie stattgefunden.
-
-    **Warum es heute nicht brennt:** Es gibt kein Konto mit der Rolle admin
-    (Auskunft der BetreiberIn, 23.09.2026; die Migration von S8 hat alle
-    Admins zu BetreiberInnen gemacht). **Bis zur Behebung legt niemand ein
-    Admin-Konto an.**
-
-    *Behebung:* `require_betreiberin()` an beiden Stellen, der Verweis in
-    `admin_sicherungen.php` nur für die BetreiberIn, Nachtrag in
-    `Technik.md`. *Abnahme:* die Rollenprobe (`tools/proben/rollen/`, Anlass
-    dieser Punkt) — 13 Handlungen, Admin 403, BetreiberIn 200. *Fehlschlag:*
-    ein Admin bekommt auf einer der beiden Seiten 200. **Zuordnung: 10c AP2**
-    (E-P5c-31).
-
 287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.**
     *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
     Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
@@ -10040,3 +10010,48 @@ zutreffen.
     Servereinstellungsseite; alle vier Fälle der Statuszeile; Kontraste
     **25 Paare, 0 verfehlt**. Auf Staging ist die Zeile in der `config.php`
     nachzutragen (Rahmenplan 6).
+
+286. **Ein Admin erreicht Komplett-Backup und Backup-Ziele — samt
+    Klartext-Dump der ganzen Datenbank.**
+    *Aufgenommen 23.09.2026 im Abgleich des Konzepts P5c (F-P5c-15), von Hand
+    nachgeprüft.* R75 und der Kopf der Rollen in `db.php` behalten
+    Komplett-Backup und Backup-Ziele der BetreiberIn vor, und das Menü zeigt
+    beide Seiten nur ihr. **Die Seiten selbst fragen aber nur
+    `require_admin()`** (`admin_komplettsicherung.php` und
+    `admin_sicherungsziele.php`, je Z. 4; das Wort „betreiberin" kommt in
+    beiden Dateien nicht vor). Per Direktaufruf liefert
+    `action=herunterladen` jedem Admin über `komp_ausgeben_klar()` den
+    Klartext-Dump — mit Passwort-Hashes und versiegelten Zugängen; dazu
+    kommen die sieben Handlungen der Backup-Ziele. `admin_sicherungen.php`
+    verlinkt Admins sogar dorthin.
+
+    **Vorhergesagt und nie nachgemessen:** Das Prüfdokument S8 führt P-01
+    als „teilweise" mit der Auflage, nach AP5 zu wiederholen — „dann muss ein
+    Admin dort 403 bekommen". Die Wiederholung hat nie stattgefunden.
+
+    **Warum es heute nicht brennt:** Es gibt kein Konto mit der Rolle admin
+    (Auskunft der BetreiberIn, 23.09.2026; die Migration von S8 hat alle
+    Admins zu BetreiberInnen gemacht). **Bis zur Behebung legt niemand ein
+    Admin-Konto an.**
+
+    *Behebung:* `require_betreiberin()` an beiden Stellen, der Verweis in
+    `admin_sicherungen.php` nur für die BetreiberIn, Nachtrag in
+    `Technik.md`. *Abnahme:* die Rollenprobe (`tools/proben/rollen/`, Anlass
+    dieser Punkt) — 13 Handlungen, Admin 403, BetreiberIn 200. *Fehlschlag:*
+    ein Admin bekommt auf einer der beiden Seiten 200. **Zuordnung: 10c AP2**
+    (E-P5c-31).
+
+    **Erledigt mit Web 20.39.0 am 24.09.2026 (P5c/AP2).** Beide Seiten
+    fragen jetzt `require_betreiberin()` — vor jeder Handlung, auch vor dem
+    Token; der Verweis in `admin_sicherungen.php` steht nur noch für die
+    BetreiberIn. **Gemessen mit der Rollenprobe** (`tools/proben/rollen/`,
+    die Matrix steht in `docs/Technik.md` 4.99p): **15** Zellen je Rolle für
+    die beiden Seiten — die Seite selbst und sechs Handlungen beim
+    Komplett-Backup, die Seite und sieben Handlungen bei den Zielen; hier
+    standen „13 Handlungen", gezählt ohne die beiden Seitenaufrufe. Admin
+    **403** überall, BetreiberIn **200** bzw. **durch** (die Handlung
+    erreicht, mit absichtlich falschem Token, damit nichts ausgeführt wird).
+    Probe gesamt **87 Erwartungen, 0 offen**. **Gegenprobe:** das alte Tor an
+    `admin_sicherungsziele.php` kurz zurückgesetzt → **8** Zellen der
+    Admin-Spalte rot (Seite und sieben Handlungen), danach wieder grün.
+

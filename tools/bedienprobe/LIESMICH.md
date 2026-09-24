@@ -32,9 +32,9 @@ in die Zukunft gesetzt, damit er nicht mitten hinein fällt.
 
 ## Erwartete Zahl
 
-**50 von 50 Wegen erfüllt, 0 verfehlt** (gemessen 23.09.2026 im Prüfstand
-zu P5c/AP1; davor 48 von 48 am 22.09.2026 — die zwei neuen sind
-`betrieb-server-ankuendigung` und `betrieb-server-rundmail`). Der Bericht
+**52 von 52 Wegen erfüllt, 0 verfehlt** (gemessen 24.09.2026 zu P5c/AP2 —
+die zwei neuen sind `admin-protokoll-reiter` und `admin-protokoll-zeilen`;
+davor 50 von 50 zu P5c/AP1 und 48 von 48 am 22.09.2026). Der Bericht
 steht in `ausgabe/bericht.md`.
 
 ## Was es nicht kann
