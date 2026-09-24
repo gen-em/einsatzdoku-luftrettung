@@ -14,6 +14,52 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.46.0] — 2026-09-24
+
+**Der Health-Endpunkt.** P5c/AP6 (E-P5c-17, -52; R38). Nebenstufe **ohne
+Migration**. Bis hierher erfuhr die BetreiberIn vom Zustand der Anlage nur,
+wenn sie sich anmeldete und Betrieb → Status öffnete — oder wenn jemand
+anrief. Jetzt kann ihr eigenes Monitoring fragen.
+
+### Neu
+
+- **Web: `api/health.php?token=…`** antwortet mit **200** oder **503** und
+  acht Feldern: `ok`, `web_version`, `db`, `migration_ausstehend`,
+  `jobs_alter_s`, `system_24h`, `protokoll_fehler`, `speicher_pct`. **Keine**
+  Konten, keine Mengen, nichts über den Hoster — die Antwort geht in ein
+  fremdes Werkzeug. `ok` heißt: Die Datenbank antwortet, und keine Migration
+  steht aus. Jeder Teil darf scheitern, ohne die Antwort zu kippen: Fehlt die
+  Datenbank, kommt `db: false`, keine PHP-Fehlerseite.
+- **Web: Der Token steht in `config.php`** (`betrieb.health_token`, Vorlage
+  in `config.example.php`); **leer heißt aus**. Er steht dort und nicht in der
+  Oberfläche, weil er in einem fremden Monitoring steht: Wer ihn wechselt,
+  wechselt ihn dort mit. Fehlt er, ist er falsch oder ist keiner eingerichtet,
+  kommt **dreimal dieselbe 403** — mit `hash_equals()` verglichen und mit
+  angeglichener Dauer, damit die Antwort nicht verrät, ob überhaupt einer
+  eingerichtet ist. (Fassung 1 des Konzepts sah für „keiner eingerichtet"
+  404 vor; genau dieser Unterschied hätte es verraten, F-P5c-25.)
+- **Web: Topf `health`** — 60 Anfragen je Minute und Adresse, gezählt wird
+  die Menge, **ohne Leiter**: Ein Monitoring fragt einmal je Minute, und eine
+  wachsende Sperre träfe es, nicht einen Angreifer ohne Token.
+- **Web: Der tägliche Aufräumjob merkt die drei Speicheranteile mit**
+  (Datenbank gegen ihr Kontingent, Backups gegen die Speichergrenze, alles
+  gegen den Webspace). `speicher_pct` ist der höchste davon. **Warum gemerkt
+  und nicht gerechnet:** Die Rechnung wiegt Verzeichnisse, und ein Abruf je
+  Minute darf das nicht. Bis zum ersten Lauf nach dem Deploy steht `null`.
+- **Werkzeug: Ratenprobe Abschnitt 11** (über HTTP): die drei 403 mit
+  gleicher Dauer, die 200 mit genau diesen Feldern, die 503 bei ausstehender
+  Migration, `speicher_pct` gegen die Balken der Karte „Speicher" gehalten, 60
+  Anfragen durch und die 61. mit 429. **Wartungsprobe Fall 5a:**
+  In der Wartung antwortet das Tor mit 503 `maintenance`, mit und ohne Token,
+  und der Topf zählt nichts. Keine neue Probe — die Abnahme von AP6 verlangt
+  die vorhandenen.
+
+**Was bewusst fehlt:** ein Feld `wartung`. In der Wartung antwortet das Tor
+in `db.php`, bevor der Endpunkt eine Zeile ausführt — das Feld wäre nie
+`true` gewesen. Das Handbuch (12.9) sagt, was `error: maintenance` heißt.
+**Nicht geprüft** ist ein echtes externes Monitoring; belegt ist der Endpunkt
+mit `curl`.
+
 ## [Werkzeug: Der Rückweg in drei Motoren (Konzept RW, RW-04)] — 2026-09-24
 
 Abschluss von Konzept RW (im P5c-Konzept AP5b). Keine Versionsstufe: Die

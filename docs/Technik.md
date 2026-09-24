@@ -292,6 +292,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       der interessanteste von allen. Topf `csp`,
 │   │                       zusammengefasst per UNIQUE, ohne IP und ohne
 │   │                       Abfrageteil der Adresse; Antwort immer 204
+│   ├── api/health.php    Zustand der Anlage fuer das eigene Monitoring (P5c/AP6,
+│   │                       4.99r). OHNE Anmeldung, mit Token aus config.php
+│   │                       (betrieb.health_token, leer = aus); 200/503 mit
+│   │                       acht Feldern, 403 einheitlich, Topf `health`
 │   ├── api/kopplung_stand.php  Wartet dieses Konto noch auf ein Gerät, und
 │   │                       hat es Ja gesagt? (S5, Web 13.1.0) GET, nimmt
 │   │                       KEINE Eingabe — welche Sitzung gemeint ist, steht
@@ -7486,6 +7490,75 @@ Staging, von Hand mit `--motor` auch in Firefox und WebKit (RW-04). Beide
 Teile startet `tools/proben/rueckweg/probe.sh`, seit dem Aufnehmen von
 Konzept BR die Einstiegsdatei im Läufer.
 
+### 4.99r Der Health-Endpunkt (ab Web 20.46.0, P5c/AP6)
+
+*E-P5c-17, -52; R38. Code: `server/api/health.php`; Topf `health` in
+`ratelimit_lib.php`; die gemerkten Anteile in `speicher_lib.php`.*
+
+**Wozu.** Die BetreiberIn trägt eine Adresse in ihr eigenes Monitoring ein
+und erfährt, ob die Anlage läuft — ohne sich anzumelden und ohne dass die
+Anwendung einen Fremddienst anbindet. Der Endpunkt antwortet nur, wenn er
+gefragt wird.
+
+    GET /api/health.php?token=<betrieb.health_token>
+
+**Der Token steht in `config.php`** (`'betrieb' => ['health_token' => …]`,
+Vorlage in `config.example.php`). **Leer heißt: Endpunkt aus.** Er steht
+dort und nicht in der Oberfläche, weil er in einem fremden Monitoring
+steht: Wer ihn wechselt, wechselt ihn dort mit.
+
+**Antworten.**
+
+| Lage | HTTP | Rumpf |
+|---|---|---|
+| alles in Ordnung | **200** | die Felder unten, `ok: true` |
+| Datenbank fort oder Migration ausstehend | **503** | die Felder unten, `ok: false` |
+| Token fehlt, ist falsch oder keiner eingerichtet | **403** | `{"error":"token"}` — dreimal dieselbe Antwort, mit `hash_equals()` verglichen und mit angeglichener Dauer (`rate_gleiche_dauer()`): Sie verrät nicht, **ob** ein Token eingerichtet ist |
+| mehr als 60 Anfragen je Minute und Adresse | **429** | `{"error":"zu_viele_versuche"}` |
+| Wartung | **503** | `{"error":"maintenance", …}` — **aus dem Tor in `db.php`**, bevor der Endpunkt eine Zeile ausführt, ohne Token-Prüfung |
+| Überlast | **503** | die Antwort von `ueberlast_antwort()`, ebenfalls aus dem Tor |
+| andere Methode als GET | **405** | `{"error":"method"}` (`api_methode()`) |
+
+**Die Felder** (E-P5c-52) — und nichts darüber hinaus: keine Konten, keine
+Mengen, nichts über den Hoster.
+
+| Feld | Bedeutung | Quelle |
+|---|---|---|
+| `ok` | Datenbank erreichbar **und** keine Migration ausstehend | — |
+| `web_version` | die ausgelieferte Fassung | `WEB_VERSION` |
+| `db` | die Datenbank antwortet | `SELECT 1` |
+| `migration_ausstehend` | `update.php` muss laufen | `migrationen_ausstehend()` (der gemerkte Stand des Torwächters) |
+| `jobs_alter_s` | Sekunden seit dem letzten Lauf irgendeines Jobs, `null` = nie | `MAX(jobs.letzter_lauf)` |
+| `system_24h` | Einträge im Reiter System der letzten 24 h | `protokoll_zahl('system', ['tage' => 1])` |
+| `protokoll_fehler` | gescheiterte Protokolleinträge, bis jemand quittiert | `protokoll_fehler_zahl()` |
+| `speicher_pct` | der höchste der drei Anteile, `null` = nie gemessen oder kein Bezug | `speicher_prozent_hoechster()` |
+
+**Ein Feld `wartung` gibt es nicht** — in der Wartung antwortet das Tor, es
+wäre nie `true` gewesen (F-P5c-25). Was `error: maintenance` heißt, sagt das
+Handbuch (12.9).
+
+**Kein Verzeichnislauf je Abruf.** Ein Monitoring fragt einmal je Minute.
+`speicher_pct` liest deshalb, was der tägliche Aufräumjob beim Schritt
+„Speicher messen" merkt: Datenbank gegen ihr Kontingent, Backups gegen die
+Speichergrenze, alles gegen den Webspace (`app_state.speicher_prozent`,
+abgerundet wie die Balken; ohne Bezug kein Wert). Bis zum ersten Lauf nach
+dem Deploy steht `null`. Die übrigen Felder sind vier kleine Abfragen.
+
+**Jeder Teil darf scheitern, ohne die Antwort zu kippen.** Fehlt die
+Datenbank, kommt `db: false` mit 503 — nicht eine PHP-Fehlerseite; fehlt eine
+Zahl, steht `null`, und der Grund im Reiter System (Bereich `health`).
+
+**Topf `health`**: 60 je Minute und Adresse, **zählt die Menge** (jede
+Anfrage, auch die richtige — Muster `csp`), **ohne Leiter**: Eine wachsende
+Sperre träfe das Monitoring der BetreiberIn, nicht einen Angreifer, der den
+Token nicht kennt.
+
+**Nachweis:** Ratenprobe Abschnitt 11 (über HTTP: 403 dreimal mit gleicher
+Dauer, 200 mit genau diesen Feldern, 503 bei ausstehender Migration,
+`speicher_pct` gestellt, ohne Messung und nach `speicher_messen()` gegen die
+Balken der Karte „Speicher", 60 durch und die 61. mit 429) und Wartungsprobe Fall 5a (503 `maintenance` aus dem
+Tor, mit und ohne Token, der Topf zählt nichts).
+
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 
 *E-P5b-04, -18; Backlog Nr. 37 und 48. Code: `konten_einstellungen_lib.php`
@@ -9343,7 +9416,7 @@ und seit Web 20.11.0 `ingest` und `ingest_ip`:
 | `ingest`, `ingest_ip` | **ja** (seit 20.11.0) | bei `ingest.php` läuft kein Vorgang, den die längere Sperre unterbricht — die Daten liegen in der Warteschlange des Geräts und kommen später an. Die Sperre kostet den legitimen Fall nichts als Zeit, und Zeit ist genau das, was sie den illegitimen kosten soll (E-P5a-48) |
 | `reset` | **nein** | sperrt heute 3600 s; jede Sprosse unterhalb der vierten wäre *schwächer*. Und sein Scheitern ist absichtlich still — `reset_request.php` antwortet im gesperrten Fall wortgleich wie im erlaubten |
 | `pair`, `pair_start`, `pair_code` | nein | eine längere Sperre unterbräche dort einen Vorgang, der **gerade läuft**: Jemand steht am Gerät mit einem Code, der in zehn Minuten verfällt. Eine Stunde Sperre schreckt keinen Automaten ab, sie beendet die Kopplung für den Menschen |
-| `demo`, `demog`, `testmail`, `csp` | nein | die zählen **Menge**, nicht Fehlversuche — es gibt dort niemanden, der eskaliert |
+| `demo`, `demog`, `testmail`, `csp`, `health` | nein | die zählen **Menge**, nicht Fehlversuche — es gibt dort niemanden, der eskaliert; bei `health` träfe eine wachsende Sperre das Monitoring der BetreiberIn |
 
 > **Die Trennlinie stand bis Web 20.11.0 falsch da.** Bei den Kopplungstöpfen
 > hieß es, „dahinter steht ein Gerät, das nicht lesen kann, was auf der Seite
@@ -11245,6 +11318,22 @@ wenn der Vorsatz ohne Etikett steht oder die Farbe unbekannt ist. Beide
 Schlüssel stehen auskommentiert in `config.example.php`. `config.php` wird
 zur Laufzeit nicht geschrieben; die Zeile kommt per FTP hinauf, und bis der
 OPcache des Hosters die Datei neu liest, können einige Sekunden vergehen.
+
+**Health-Endpunkt einrichten (seit Web 20.46.0, einmalig je Anlage, P5c/AP6):**
+
+1. Einen Zufallswert erzeugen: `php -r 'echo bin2hex(random_bytes(24));'`.
+2. In `config.php` eintragen:
+   `'betrieb' => ['health_token' => '<Wert>'],`
+3. Im Monitoring die Adresse
+   `https://<anlage>/api/health.php?token=<Wert>` eintragen, Abruf **einmal je
+   Minute** (mehr als 60 je Minute sperrt die Adresse eine Minute lang).
+   Auswerten: HTTP 200 = in Ordnung, 503 = nicht in Ordnung — der Rumpf sagt,
+   was (`db`, `migration_ausstehend`, oder `error: maintenance`).
+4. Probe: `curl -s https://<anlage>/api/health.php?token=<Wert>` → `"ok":true`.
+   Ohne Token oder mit falschem → 403 `token`.
+
+Ausschalten: den Eintrag leeren. Der Endpunkt antwortet dann jedem mit 403,
+wie einem falschen Token.
 
 **Code-Update mit DB-Änderung ausrollen:** pushen (Deploy läuft automatisch)
 → als BetreiberIn **Betrieb → Updates** aufrufen → nach dem Lauf muss die

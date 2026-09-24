@@ -66,6 +66,18 @@ return [
     'netz' => [
         'vertrauenswuerdige_proxys' => [],
     ],
+    // ---- Health-Endpunkt fuer das eigene Monitoring (P5c/AP6, E-P5c-17) -
+    //
+    // LEER = ENDPUNKT AUS. Gesetzt, antwortet
+    //   https://…/api/health.php?token=<dieser Wert>
+    // mit JSON (ok, web_version, db, migration_ausstehend, jobs_alter_s,
+    // system_24h, protokoll_fehler, speicher_pct) und HTTP 200 bzw. 503.
+    // Ein langer Zufallswert, z. B. `php -r 'echo bin2hex(random_bytes(24));'`.
+    // Er steht hier und nicht in der Oberflaeche, weil er in einem fremden
+    // Monitoring steht: Wer ihn wechselt, wechselt ihn dort mit.
+    'betrieb' => [
+        'health_token' => '',
+    ],
     // ---- Die zwei Geheimnisse des Servers -----------------------------
     // Beide 64 Hexzeichen. Der Installer wuerfelt sie; eine bestehende
     // Installation legt sie ueber Betrieb -> Servereinstellungen an, Karte

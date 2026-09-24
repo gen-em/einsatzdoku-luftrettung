@@ -7517,5 +7517,16 @@ declare(strict_types=1);
  *   Ein Datenbankabzug kann pruefen, nicht signieren (F-P5c-106 geschlossen).
  *   Fuer alle vier Rollen (E-RW-08) — Nr. 249 ist damit fuer den Fall
  *   geloest, dass die einzige BetreiberIn ihr Notfallblatt hat.
+ *
+ * 20.46.0 — DER HEALTH-ENDPUNKT (P5c/AP6, E-P5c-17, -52). Nebenstufe ohne
+ *   Migration. Ein fremdes Monitoring fragt `api/health.php?token=…` und
+ *   bekommt 200 oder 503 mit acht Feldern — Datenbank, ausstehende Migration,
+ *   Alter der Jobs, Reiter System der letzten 24 h, gescheiterte
+ *   Protokolleintraege, hoechster Speicheranteil —, keine Konten, keine
+ *   Mengen. Der Token steht in `config.php`, leer heisst aus; fehlt er oder
+ *   ist er falsch, kommt dreimal dieselbe 403. Wartung und Ueberlast
+ *   antworten aus dem Tor. Topf `health`, 60 je Minute, ohne Leiter. Der
+ *   Speicheranteil kommt aus dem taeglichen Aufraeumjob, der die drei Anteile
+ *   seither mitmerkt — ein Abruf je Minute wiegt keine Verzeichnisse.
  */
-const WEB_VERSION = '20.45.0';
+const WEB_VERSION = '20.46.0';

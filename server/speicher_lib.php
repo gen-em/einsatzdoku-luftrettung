@@ -50,6 +50,11 @@ const SPEICHER_K_DB_GB    = 'db_gb';
  * `adminbackup_schwellen_gemeldet`: Wer aufraeumt und wieder unter die
  * Schwelle faellt, soll beim naechsten Ueberschreiten erneut gewarnt werden. */
 const SPEICHER_K_GEMELDET = 'speicher_schwellen_gemeldet';
+/* Die drei Anteile, gemerkt bei der Messung (P5c/AP6, E-P5c-52): Datenbank
+ * gegen ihr Kontingent, Backups gegen die Speichergrenze, alles gegen den
+ * Webspace. `api/health.php` liest nur den hoechsten — ohne Verzeichnislauf
+ * je Abruf. JSON, ein Wert je Anteil, `null` wo kein Bezug angegeben ist. */
+const SPEICHER_K_PROZENT  = 'speicher_prozent';
 
 /** Vorgabe des DB-Kontingents in GB — die Zielgroesse Z2 des S2-Konzepts. */
 const SPEICHER_DB_GB_VORGABE = 10.0;
@@ -121,7 +126,36 @@ function speicher_messen(PDO $pdo): array
     edbak_marke_setzen(SPEICHER_K_DB, (string)$db);
     edbak_marke_setzen(SPEICHER_K_DATEIEN, (string)$datei);
     edbak_marke_setzen(SPEICHER_K_STAND, iso_utc());
+
+    /* DIE DREI ANTEILE GLEICH MIT (P5c/AP6). Die Ablage wird hier ohnehin
+     * gewogen — der Job darf, was ein Abruf von `api/health.php` nicht darf.
+     * Dieselbe Rechnung wie `speicher_uebersicht()` und
+     * `speicher_kontingente_melden()`: abgerundet, und ohne Bezug kein Wert. */
+    $z       = edbak_ablage_zahlen(true);
+    $backups = (int)$z['pakete_bytes'] + (int)$z['komplett_bytes'] + (int)$z['sonstige_bytes']
+             + (int)($z['protokoll_bytes'] ?? 0);
+    $anteil  = static fn(int $ist, int $bezug): ?int => $bezug > 0 ? prozent_wert($ist, $bezug, 'ab') : null;
+    edbak_marke_setzen(SPEICHER_K_PROZENT, (string)json_encode([
+        'datenbank' => $anteil($db, speicher_db_kontingent_bytes()),
+        'backups'   => $anteil($backups, edbak_grenze_bytes()),
+        'gesamt'    => $anteil($db + $datei + $backups, speicher_webspace_bytes()),
+    ]));
     return ['datenbank' => $db, 'dateien' => $datei];
+}
+
+/**
+ * Der hoechste der drei gemerkten Anteile, in Prozent — `null`, solange
+ * nichts gemessen ist oder keiner einen Bezug hat (P5c/AP6, E-P5c-52).
+ *
+ * NUR LESEN. Die Zahl entsteht im Aufraeumjob (`speicher_messen()`); ein
+ * Endpunkt, der je Minute gefragt wird, wiegt keine Verzeichnisse.
+ */
+function speicher_prozent_hoechster(): ?int
+{
+    $roh = json_decode((string)(edbak_marke_lesen(SPEICHER_K_PROZENT) ?? ''), true);
+    if (!is_array($roh)) { return null; }
+    $werte = array_filter($roh, static fn($v): bool => is_int($v));
+    return $werte === [] ? null : max($werte);
 }
 
 /**

@@ -352,6 +352,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
 | `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
 | `server/wartung_lib.php`, `server/auth_guard.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171 |
+| `server/api/health.php`, `server/speicher_lib.php` | klein | `ratenprobe`, `wartungsprobe` | E-P5c-17, -52 (Health, P5c/AP6): Token, Felder, Migration und Menge in der Ratenprobe, die Antwort aus dem Tor in der Wartungsprobe |
 | `server/db.php` | klein | `verbindungsprobe` | Nr. 210 |
 | `server/serverkrypto_lib.php`, `server/auth_salt.php`, `server/assets/unlock.js`, `server/assets/crypto.js` | klein | `anteilprobe`, `containerprobe` | S10-Kern, F-S10-AP3-03 |
 | `server/*freigabe*.php`, `server/*schluessel*.php` | klein | `freigabeprobe` | F-S2-F |

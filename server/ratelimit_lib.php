@@ -359,6 +359,16 @@ const RATE_GRENZEN = [
      * eine Zeile mit einem Zaehler. */
     'csp' => ['max' => 200, 'fenster' => 3600, 'sperre' => 3600],
 
+    /* HEALTH ZAEHLT EBENSO DIE MENGE (P5c/AP6, E-P5c-17, -52).
+     *
+     * `api/health.php` ist ohne Sitzung erreichbar; der Token schuetzt die
+     * Auskunft, nicht den Aufwand. 60 je Minute und Adresse: Ein Monitoring
+     * fragt einmal je Minute, und eine Minute Sperre ist genau ein
+     * ausgefallener Abruf. OHNE LEITER — eine wachsende Sperre traefe das
+     * Monitoring der BetreiberIn, nicht einen Angreifer, der den Token nicht
+     * kennt; der liest aus der 403 ohnehin nichts. */
+    'health' => ['max' => 60, 'fenster' => 60, 'sperre' => 60],
+
     /* DIE REGISTRIERUNG HAT DREI TOEPFE, UND JEDER SCHUETZT ETWAS ANDERES
      * (P5b/AP3, E-P5b-13, R37 (4)).
      *

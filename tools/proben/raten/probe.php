@@ -36,6 +36,14 @@ declare(strict_types=1);
  * - **Die Wirkung auf einen echten Angriff.** 200 Fehlversuche in einer
  *   Schleife sind keine 200 Anfragen aus 50 Netzen.
  *
+ * SEIT P5c/AP6 AUCH DER HEALTH-ENDPUNKT, UND DER UEBER HTTP (Abschnitt 11,
+ * Abnahme AP6: „in den vorhandenen Proben statt einer neuen"). Dort zaehlt der
+ * Topf `health` die MENGE, und die zeigt sich nur an echten Anfragen: 60
+ * gehen durch, die 61. bekommt 429. Dazu die drei 403 mit gleicher Dauer, die
+ * Felder der 200 und die 503 bei ausstehender Migration. Den Token stellt die
+ * Probe in `config.php` (`tools/sandbox/konfig_stellen.php`) und legt den
+ * vorigen Stand zurueck.
+ *
  * SIE RAEUMT HINTER SICH AUF. Angelegt werden Zeilen in `rate_limits`,
  * `sicherheit_ereignisse` und `mail_warteschlange` unter eigenen Merkmalen
  * (Praefix `probe-`); am Ende sind sie weg, und die Zahl davor und danach
@@ -79,9 +87,9 @@ $vorherM = (int)$pdo->query('SELECT COUNT(*) FROM mail_warteschlange')->fetchCol
 function aufraeumen(): void
 {
     $pdo = db();
-    $pdo->exec("DELETE FROM rate_limits WHERE merkmal LIKE '%probe-%' OR topf = 'global'");
+    $pdo->exec("DELETE FROM rate_limits WHERE merkmal LIKE '%probe-%' OR topf IN ('global', 'health')");
     $pdo->exec("DELETE FROM sicherheit_ereignisse
-                 WHERE merkmal LIKE '%probe-%' OR merkmal = 'alle'");
+                 WHERE merkmal LIKE '%probe-%' OR merkmal = 'alle' OR topf = 'health'");
     $pdo->exec("DELETE FROM mail_warteschlange WHERE schluessel = 'sicherheit_sammel'");
     foreach ([RATE_K_MAIL_MARK, RATE_K_BREMSE_ST] as $k) {
         try { app_state_setzen($k, ''); } catch (Throwable $e) {}
@@ -402,12 +410,156 @@ pruef('Der globale Zaehler sperrt nie',
       RATE_GRENZEN['global']['max'] === PHP_INT_MAX, 'max = PHP_INT_MAX');
 
 /* ======================================================================== */
+abschnitt('11  Health ueber HTTP — Token, Felder, Migration, Menge (P5c/AP6)');
+
+/* UEBER HTTP, NICHT UEBER DIE BIBLIOTHEK: Was hier zaehlt, ist, was ein
+ * Monitoring sieht — Code, Rumpf und Dauer. Gegen die oertliche Anlage
+ * (Vorgabe http://127.0.0.1:8080, sonst das erste Argument). */
+require_once $wurzel . '/tools/sandbox/konfig_stellen.php';
+require_once $wurzel . '/server/migration_lib.php';
+require_once $wurzel . '/server/speicher_lib.php';
+$basis = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
+$health = static function (?string $token) use ($basis): array {
+    $url = $basis . '/api/health.php' . ($token === null ? '' : '?token=' . rawurlencode($token));
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30, CURLOPT_PROXY => '']);
+    $t = microtime(true);
+    $rumpf = (string)curl_exec($ch);
+    $dauer = microtime(true) - $t;
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return ['code' => $code, 'json' => json_decode($rumpf, true), 'dauer' => $dauer];
+};
+/* Der OPcache des PHP-Servers prueft den Zeitstempel von `config.php`
+ * hoechstens alle ZWEI Sekunden (`opcache.revalidate_freq = 2`, F-P5c-69):
+ * nach dem Stellen drei Sekunden warten, wie der Umschalter aus AP1. Die
+ * erste Fassung wartete 1,2 s und sah beim leeren Eintrag noch den Token
+ * des Falls davor (F-P5c-123). */
+$stellen = static function (array $werte): callable { $z = konfig_stellen($werte); sleep(3); return $z; };
+$pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
+
+$TOKEN = bin2hex(random_bytes(16));
+$zurueckKonfig = $stellen(['betrieb' => ['health_token' => $TOKEN]]);
+try {
+    $ohne   = $health(null);
+    $falsch = $health(bin2hex(random_bytes(16)));
+    $gut    = $health($TOKEN);
+    pruef('ohne Token → 403 `token`', $ohne['code'] === 403 && ($ohne['json']['error'] ?? '') === 'token',
+          'HTTP ' . $ohne['code']);
+    pruef('falscher Token → 403 `token`', $falsch['code'] === 403 && ($falsch['json']['error'] ?? '') === 'token',
+          'HTTP ' . $falsch['code']);
+    $FELDER = ['ok', 'web_version', 'db', 'migration_ausstehend', 'jobs_alter_s', 'system_24h',
+               'protokoll_fehler', 'speicher_pct'];
+    $j = is_array($gut['json']) ? $gut['json'] : [];
+    pruef('richtiger Token → 200 mit genau den Feldern aus E-P5c-52',
+          $gut['code'] === 200 && array_keys($j) === $FELDER,
+          'HTTP ' . $gut['code'] . ' · ' . implode(',', array_keys($j)));
+    pruef('… ok, Datenbank da, keine Migration, Fassung stimmt',
+          ($j['ok'] ?? null) === true && ($j['db'] ?? null) === true
+          && ($j['migration_ausstehend'] ?? null) === false && ($j['web_version'] ?? '') === WEB_VERSION,
+          json_encode(array_intersect_key($j, array_flip(['ok', 'db', 'migration_ausstehend', 'web_version']))));
+    pruef('… und keine Konten-, Mengen- oder Hosterangaben (nur Zahlen, Wahrheitswerte, die Fassung)',
+          $j !== [] && !array_filter($j, static fn($v, $k): bool
+              => !(is_bool($v) || is_int($v) || $v === null || $k === 'web_version'), ARRAY_FILTER_USE_BOTH),
+          'jobs_alter_s=' . var_export($j['jobs_alter_s'] ?? null, true)
+          . ' system_24h=' . var_export($j['system_24h'] ?? null, true)
+          . ' speicher_pct=' . var_export($j['speicher_pct'] ?? null, true));
+
+    /* MIGRATION AUSSTEHEND: der gemerkte Stand des Torwaechters, gestellt —
+     * Hash des Katalogs und „offen". `api/health.php` laedt kein
+     * `auth_guard.php`, schaltet also die Wartung nicht ein; es meldet. */
+    $vorTor = [MIGRATION_TOR_HASH => _tor_lesen($pdo, MIGRATION_TOR_HASH),
+               MIGRATION_TOR_OFFEN => _tor_lesen($pdo, MIGRATION_TOR_OFFEN)];
+    migrationen_tor_merken($pdo, true);
+    try {
+        $mig = $health($TOKEN);
+    } finally {
+        foreach ($vorTor as $k => $v) {
+            if ($v === null) { $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([$k]); }
+            else { app_state_setzen($k, $v); }
+        }
+    }
+    pruef('Migration ausstehend → 503 mit ok:false und migration_ausstehend:true',
+          $mig['code'] === 503 && ($mig['json']['ok'] ?? null) === false
+          && ($mig['json']['migration_ausstehend'] ?? null) === true,
+          'HTTP ' . $mig['code']);
+
+    /* SPEICHER_PCT (E-P5c-117): Der Endpunkt liest, was `speicher_messen()`
+     * gemerkt hat, und nimmt den hoechsten Anteil. Erst gestellt (ein Wert
+     * fehlt, der hoechste ist nicht der erste; dann gar keine Marke), dann
+     * einmal gemessen und gegen die Balken von `speicher_uebersicht()`
+     * gehalten — dieselbe Rechnung, an anderer Stelle. Die Marken der
+     * Messung legt die Probe danach zurueck. */
+    $SPK = [SPEICHER_K_PROZENT, SPEICHER_K_DB, SPEICHER_K_DATEIEN, SPEICHER_K_STAND];
+    $vorSp = [];
+    foreach ($SPK as $k) { $vorSp[$k] = _tor_lesen($pdo, $k); }
+    try {
+        app_state_setzen(SPEICHER_K_PROZENT, '{"datenbank":12,"backups":null,"gesamt":47}');
+        $sp1 = $health($TOKEN)['json']['speicher_pct'] ?? 'fehlt';
+        $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([SPEICHER_K_PROZENT]);
+        $sp2 = $health($TOKEN)['json'] ?? [];
+        speicher_messen($pdo);
+        $gemerkt = json_decode((string)app_state_lesen(SPEICHER_K_PROZENT), true);
+        $u = speicher_uebersicht();
+        $sp3 = $health($TOKEN)['json']['speicher_pct'] ?? 'fehlt';
+    } finally {
+        foreach ($vorSp as $k => $v) {
+            if ($v === null) { $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([$k]); }
+            else { app_state_setzen($k, $v); }
+        }
+    }
+    pruef('speicher_pct ist der hoechste gemerkte Anteil (12 / – / 47 → 47)', $sp1 === 47, var_export($sp1, true));
+    pruef('… ohne Messung null, und die Antwort bleibt 200',
+          array_key_exists('speicher_pct', $sp2) && $sp2['speicher_pct'] === null && ($sp2['ok'] ?? null) === true,
+          array_key_exists('speicher_pct', $sp2) ? var_export($sp2['speicher_pct'], true) : 'Feld fehlt');
+    $erwB = $u['backups']['bezug'] > 0 ? $u['backups']['prozent'] : null;
+    $erwG = $u['gesamt']['bezug'] > 0 ? $u['gesamt']['prozent'] : null;
+    $werte = is_array($gemerkt) ? array_filter($gemerkt, 'is_int') : [];
+    pruef('Nach speicher_messen(): Backups und Gesamt wie die Balken der Karte Speicher, der Endpunkt nennt den hoechsten',
+          is_array($gemerkt) && array_keys($gemerkt) === ['datenbank', 'backups', 'gesamt']
+          && $gemerkt['backups'] === $erwB && $gemerkt['gesamt'] === $erwG
+          && $sp3 === ($werte === [] ? null : max($werte)),
+          json_encode($gemerkt) . ' · Balken ' . var_export($erwB, true) . '/' . var_export($erwG, true)
+          . ' · Endpunkt ' . var_export($sp3, true));
+} finally {
+    $zurueckKonfig();
+}
+
+/* ENDPUNKT AUS: leerer Eintrag. Dieselbe 403 wie ohne und mit falschem
+ * Token — die Antwort verraet nicht, ob einer eingerichtet ist. */
+$zurueckKonfig = $stellen(['betrieb' => ['health_token' => '']]);
+try { $aus = $health($TOKEN); } finally { $zurueckKonfig(); }
+pruef('Endpunkt aus (leerer Eintrag) → 403 `token`', $aus['code'] === 403 && ($aus['json']['error'] ?? '') === 'token',
+      'HTTP ' . $aus['code']);
+$dauern = [$ohne['dauer'], $falsch['dauer'], $aus['dauer']];
+pruef('… alle drei 403 mit angeglichener Dauer (je mindestens 0,35 s, Spanne unter 0,15 s)',
+      min($dauern) >= 0.35 && max($dauern) - min($dauern) < 0.15,
+      implode(' / ', array_map(static fn(float $d): string => number_format($d, 3) . ' s', $dauern)));
+
+/* DIE MENGE: 60 je Minute. Der Zaehler steht nach den Faellen oben auf
+ * einigen Anfragen — geleert, dann genau 60 richtige, dann die 61. */
+$pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
+$zurueckKonfig = $stellen(['betrieb' => ['health_token' => $TOKEN]]);
+try {
+    $codes = [];
+    for ($i = 1; $i <= 61; $i++) { $codes[$i] = $health($TOKEN)['code']; }
+} finally { $zurueckKonfig(); }
+$bis60 = array_count_values(array_slice($codes, 0, 60));
+pruef('60 Anfragen in einer Minute gehen durch, die 61. bekommt 429',
+      ($bis60[200] ?? 0) === 60 && $codes[61] === 429,
+      '1–60: ' . json_encode($bis60) . ' · 61: ' . $codes[61]);
+pruef('Der Topf `health` hat keine Leiter (60 je Minute, eine Minute Sperre)',
+      empty(RATE_GRENZEN['health']['leiter']) && RATE_GRENZEN['health']['max'] === 60
+      && RATE_GRENZEN['health']['fenster'] === 60,
+      json_encode(RATE_GRENZEN['health']));
+
+/* ======================================================================== */
 aufraeumen();
 $nachher  = (int)$pdo->query('SELECT COUNT(*) FROM rate_limits')->fetchColumn();
 $nachherE = (int)$pdo->query('SELECT COUNT(*) FROM sicherheit_ereignisse')->fetchColumn();
 $nachherM = (int)$pdo->query('SELECT COUNT(*) FROM mail_warteschlange')->fetchColumn();
 
-abschnitt('11  Die Probe hinterlaesst nichts');
+abschnitt('12  Die Probe hinterlaesst nichts');
 pruef('rate_limits unveraendert', $nachher <= $vorher, $vorher . ' -> ' . $nachher);
 pruef('sicherheit_ereignisse unveraendert', $nachherE <= $vorherE, $vorherE . ' -> ' . $nachherE);
 pruef('mail_warteschlange unveraendert', $nachherM <= $vorherM, $vorherM . ' -> ' . $nachherM);

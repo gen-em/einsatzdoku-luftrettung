@@ -376,6 +376,19 @@ pruefe($a5['code'] === 503 && ($a5['daten']['error'] ?? '') === 'maintenance'
        '5   api/… mit Sitzung -> 503 maintenance MIT meldung (E-S5W-10)',
        'HTTP ' . $a5['code'] . ' ' . substr($a5['rumpf'], 0, 60));
 
+/* HEALTH ANTWORTET IN DER WARTUNG AUS DEM TOR (P5c/AP6, E-P5c-52): 503
+ * `maintenance`, OHNE Token-Pruefung — mit falschem Token dieselbe Antwort
+ * wie ohne. Das Tor steht in `db.php`; `api/health.php` fuehrt keine Zeile
+ * aus, und deshalb zaehlt auch sein Topf nichts. */
+$pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
+$a5h = hole('api/health.php');
+$a5i = hole('api/health.php?token=falsch-und-zwar-eindeutig');
+$healthZeilen = (int)$pdo->query("SELECT COUNT(*) FROM rate_limits WHERE topf = 'health'")->fetchColumn();
+pruefe($a5h['code'] === 503 && ($a5h['daten']['error'] ?? '') === 'maintenance'
+       && $a5i['code'] === 503 && ($a5i['daten']['error'] ?? '') === 'maintenance' && $healthZeilen === 0,
+       '5a  api/health.php -> 503 maintenance aus dem Tor, ohne Token-Pruefung',
+       'HTTP ' . $a5h['code'] . ' / ' . $a5i['code'] . ', Topf health ' . $healthZeilen);
+
 /* ======================================================================
  * Teil 2 — mit Wartung: was offen bleibt (E-S5W-04)
  * ====================================================================== */

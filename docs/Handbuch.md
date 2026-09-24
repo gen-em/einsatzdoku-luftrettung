@@ -5246,6 +5246,39 @@ Postfach der Absenderadresse (`smtp.from` in der `config.php`). Die sollte
 deshalb ein echtes Postfach sein, das die BetreiberIn liest — die Anwendung
 selbst liest keines (Backlog Nr. 200, nicht umgesetzt).
 
+### 12.9 Health-Endpunkt für das eigene Monitoring
+
+Seit Web 20.46.0 kann ein Überwachungsdienst — ein Uptime-Dienst, ein
+Nagios, ein `curl` im Cron — die Anlage fragen, ob sie läuft. Die Anwendung
+selbst meldet nichts nach draußen; sie antwortet nur, wenn sie gefragt wird.
+
+**Einrichten** geht über `config.php`, nicht über die Oberfläche: Dort steht
+ein langer Zufallswert als `betrieb.health_token`, und das Monitoring fragt
+`https://…/api/health.php?token=<Wert>`. Die Schritte stehen im Runbook
+(`Technik.md` 7, „Health-Endpunkt einrichten"). Ohne Eintrag ist der
+Endpunkt aus.
+
+**Was die Antwort sagt:**
+
+- **HTTP 200** — die Anlage läuft, die Datenbank antwortet, kein Update
+  steht aus.
+- **HTTP 503** mit `"db": false` — die Datenbank antwortet nicht.
+- **HTTP 503** mit `"migration_ausstehend": true` — eine neue Fassung ist
+  eingespielt, aber `update.php` ist noch nicht gelaufen (**Betrieb →
+  Updates**).
+- **HTTP 503** mit `"error": "maintenance"` — der Wartungsmodus ist an. Das
+  ist kein Fehler, wenn du ihn selbst eingeschaltet hast oder gerade
+  ausgeliefert wird.
+- **HTTP 403** — Token fehlt oder ist falsch (oder keiner eingerichtet).
+- **HTTP 429** — mehr als 60 Abrufe je Minute; eine Minute warten.
+
+Dazu stehen Zahlen im Rumpf, die ein Monitoring mit Schwellen belegen kann:
+wie lange die Hintergrundjobs nicht mehr liefen (`jobs_alter_s`), wie viele
+Einträge der Reiter System in den letzten 24 Stunden bekam (`system_24h`),
+ob Protokolleinträge gescheitert sind (`protokoll_fehler`) und der höchste
+Speicheranteil in Prozent (`speicher_pct`, einmal täglich gemessen). Konten,
+Mengen und Angaben über den Hoster stehen **nicht** darin.
+
 ---
 
 ## 13. Eine neue Uhr einrichten (Kurzanleitung)

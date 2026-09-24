@@ -12,12 +12,17 @@ AP1; jedes Paket schreibt seinen Abschnitt fort.
 
 | Was | Warum nicht | Wann dann |
 |---|---|---|
+| **Ein echtes Monitoring gegen den Health-Endpunkt** (AP6) | Die Arbeitsumgebung hat keines und erreicht Staging nicht. Belegt ist der Endpunkt mit `curl` gegen die örtliche Anlage: 403 dreimal mit gleicher Dauer, 200 mit genau den acht Feldern, 503 bei ausstehender Migration und aus dem Tor in der Wartung, 429 ab dem 61. Abruf (1e). Ob ein Uptime-Dienst die Antwort so liest, wie das Runbook es sagt, zeigt erst ein echter. | nach dem Merge: P-P5c-29 |
+| **`speicher_pct` mit den Grenzen eines echten Hosters** (AP6) | Örtlich stehen die Kontingente, die die Sandbox einträgt; der Wert ist gegen `speicher_messen()` gerechnet (1e). Ob er zu dem passt, was der Hoster anzeigt, sieht nur, wer beide nebeneinander legt. | P-P5c-30 |
 | **Der Zweitfaktor mit einer echten Authenticator-App** (AP5) | Die Arbeitsumgebung hat kein Handy. Belegt ist, dass der QR-Code die angezeigte `otpauth://`-Adresse trägt (jsQR liest den Abzug, gleich) und dass drei eigene Rechner nach RFC 6238 dieselben Codes bilden wie der Server (6 / 6 Vektoren) — nicht, dass eine bestimmte App die Adresse annimmt, Aussteller und Konto richtig zeigt und mit der Uhr des Handys im Fenster bleibt. | P-P5c-20, -21 |
 | **`STAGING_TOTP` und Station D** (AP5) | Das Geheimnis des Prüfkontos entsteht erst auf Staging (E-P5c-105). Örtlich ist die Kette gelesen und der Riegel „fehlt → rot" gegen den YAML-Text geprüft; gelaufen ist Stufe 2 mit Zweitfaktor nicht. | P-P5c-25 |
 | **Das Codeblatt aus Firefox gedruckt** (AP5) | Playwright druckt nur aus Chromium ein PDF (eine Seite, gemessen). Firefox und WebKit haben das Blatt am Bildschirm in acht Breiten gezeigt, nicht auf Papier. | P-P5c-22 |
 | **Die Mail „Zweitfaktor zurückgesetzt" in einem echten Postfach** (AP5) | wie bei der Rundmail: gemessen bis Katalog und Warteschlange (Mailprobe Abschnitt 1). | P-P5c-24 |
 | **Die fünf Minuten des halben Stands in echter Zeit** (AP5) | Keine Probe wartet fünf Minuten. Die Wartungsprobe stellt eine halbe Sitzung mit abgelaufener Frist her (12a) und sieht das Passwortformular samt Räumen des Vormerkfachs; dass die Frist bei fünf Minuten liegt, ist gelesen (`TOTP_HALB_FRIST_S`). | P-P5c-23 (nebenbei) |
 | **Die Bedienwege des Zweitfaktors in Firefox und WebKit** (AP5) | Die Bedienprobe fährt nur Chromium (Nr. 300); von Hand gefahren ist in Firefox und WebKit der Bilderlauf der vier neuen Seiten (1d), nicht die Bedienung. | P-P5c-28 (Handy) |
+| P-P5c-29 | **Das eigene Monitoring fragt die Anlage** (AP6) | nach Merge und Deploy auf Staging (nach dem Tag auf Produktiv): Runbook `Technik.md` 7 „Health-Endpunkt einrichten" — Token erzeugen, in `config.php` eintragen, die Adresse im Monitoring eintragen, Abruf einmal je Minute | Das Monitoring meldet „oben"; `curl -s …/api/health.php?token=<Wert>` zeigt `"ok":true` und die gerade ausgelieferte `web_version`; ohne und mit falschem Token **403** `token` | 403 mit richtigem Token (Eintrag nicht unter `betrieb` oder ein Leerzeichen im Wert); 200 ohne Token; ein Feld mehr oder weniger als die acht; das Monitoring meldet nach einer Minute Dauerabfrage 429 (Abruf zu dicht eingestellt) |
+| P-P5c-30 | **Die Zahlen im Rumpf stimmen zur Anlage** (AP6) | am Tag nach P-P5c-29 (der Aufräumjob muss einmal gelaufen sein): die Antwort neben Betrieb → Status und Betrieb → Servereinstellungen, Karte „Speicher", legen | `speicher_pct` = der höchste von drei Anteilen, abgerundet: die beiden Balken der Karte (Backups, Installation gesamt) und die Datenbankgröße gegen das Kontingent der Datenbank; `jobs_alter_s` klein (Minuten, nicht Tage); `system_24h` = Zahl im Reiter System, Zeitraum 1 Tag; `protokoll_fehler` 0 | `speicher_pct` bleibt `null` nach einem Tag (Job läuft nicht, P-P5c-07 ansehen); eine Zahl weicht von der Seite ab |
+| P-P5c-31 | **Wartung und Update aus Sicht des Monitorings** (AP6) | beim nächsten Deploy mit Migration: das Monitoring beobachten | während der Kette 503 mit `"error":"maintenance"`; nach Wartung aus, aber vor `update.php`, 503 mit `"migration_ausstehend":true`; danach 200 | 200, während `update.php` aussteht; 403 in der Wartung (dann prüft der Endpunkt den Token vor dem Tor) |
 | **Staging in Rot, Produktiv in Blau** | Beides sind echte Anlagen (Station D und E). Örtlich ist das Etikett gestellt und gemessen (1), aber ob die `config.php` von Staging den Eintrag trägt, sieht nur, wer Staging aufruft. | nach dem Merge (Staging) und nach dem Tag (Produktiv): P-P5c-01, -02 |
 | **Eine Rundmail in einem echten Postfach** | Die Arbeitsumgebung erreicht keinen Mailserver; die Mailprobe spricht mit einem SMTPS-Nachbau, der annimmt und wegwirft. Gemessen ist der Weg bis „250 angenommen", nicht die Zustellung. | P-P5c-03 |
 | **Firefox und WebKit** | Bilderlauf und Bedienwege laufen im Prüfstand in Chromium — **auch in der Hauptstufe**, anders als `Pruefablauf.md` 3 versprach (F-P5c-103, Nr. 300). Die **Bedienwege** sind in Firefox und WebKit nicht gefahren. | Bilderlauf für AP4 **von Hand** in Firefox 142 und WebKit 26 (1c); die Bedienwege bleiben bei Nr. 300 |
@@ -178,6 +183,18 @@ sein soll.
 | **Erster Prüfstand — nicht als Beleg verwendet** | `hochfahren.sh --neu`, `pruefen.sh` → Stufe `haupt` (Stufenregel `migration`), 45 Proben | **44 grün, 1 rot, 2 099 s.** Rot: die GPX-Probe, „204 von 204 ohne Gegenstück" — die Zweitfaktorprobe (Teil 6) hatte vorher den Demo-Reset ausgelöst (F-P5c-117). Grün darin u. a.: Bilderlauf **868 s** (Chromium, acht Breiten), Bedienprobe **54 von 54**, **298 s**, Stilvergleich gegen `geplant.txt`, Messstand **633 s**, Schemaprobe, beide Kreisläufe, Zweitfaktorprobe |
 | **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh` | *steht in der Commit-Nachricht von `P5c-AP5`* |
 
+## 1e. Messprotokoll AP6 (24.09.2026, Web 20.46.0)
+
+| Mittel | Aufruf | Zahl |
+|---|---|---|
+| **Ratenprobe, Abschnitt 11** (neu, über HTTP) | `bash tools/proben/proben.sh raten` | **63 / 0**, davon **13** in Abschnitt 11: 403 `token` ohne, mit falschem und ohne eingerichteten Token, Dauer **0,352 / 0,352 / 0,352 s**; 200 mit genau den acht Feldern (`ok,web_version,db,migration_ausstehend,jobs_alter_s,system_24h,protokoll_fehler,speicher_pct`), `web_version` 20.46.0, nur Zahlen und Wahrheitswerte; Migration ausstehend (Torstand gestellt) → **503**, `ok:false`; `speicher_pct` gestellt 12 / – / 47 → **47**, ohne Messung **null** bei 200, nach `speicher_messen()` wie die Balken der Karte „Speicher" (Backups 0, Gesamt ohne Bezug null) → Endpunkt **1**; 60 × 200, die 61. **429**; `health` ohne Leiter |
+| **Erster Lauf der Ratenprobe — nicht als Beleg verwendet** | dasselbe | **61 / 2:** „Endpunkt aus" → **200**, und damit die Dauer 0,352 / 0,352 / **0,006 s**. Meine Probe wartete 1,2 s nach dem Schreiben von `config.php`; der OPcache prüft alle 2 s (F-P5c-123). Mit 3 s: grün |
+| **Gegenprobe** | in `api/health.php` die Fassung 1 des Konzepts: kein Token eingerichtet → **404** `aus`; danach zurück | **rot, 2 Befunde:** „Endpunkt aus" HTTP **404**, Dauer 0,352 / 0,352 / **0,004 s** — genau der Unterschied, den E-P5c-52 ausschließt. Zurück: grün |
+| Wartungsprobe | `… wartung` | **68 / 0** (vorher 67) — neu **Fall 5a**: `api/health.php` in der Wartung → **503 / 503** `maintenance` mit und ohne Token, Topf `health` **0** Zeilen |
+| Rollenprobe | `… rollen` | **296 / 0** — der neue Endpunkt steht in keiner Rolle (ohne Sitzung, nur Token) |
+| **Billige Riegel** | `bash tools/quelltext/pruefen.sh alle`; `php tools/zaehlung/zaehlen.php`; `python3 tools/quelltext/bestand.py`; `auswahl.py --abdeckung` | **12 von 12**; **40 Zeilen, 0 über der Decke**; Bestand **0**; Muster `health` löst Raten- und Wartungsprobe aus |
+| **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh` | *steht in der Commit-Nachricht von `P5c-AP6`* |
+
 ## 2. Prüfliste
 
 | Nr. | Punkt | Bedienweg | Erwartet | Scheitern erkennbar an | Stand |
@@ -212,6 +229,26 @@ sein soll.
 | P-P5c-28 | **Code-Schritt und Tor am Handy** (AP5) | auf Staging am Handy anmelden | Im Code-Schritt öffnet sich die Zifferntastatur, und das Handy bietet den Code aus der App an (`one-time-code`, wo unterstützt); im Tor steht der QR-Code über dem Text, kein Überlauf | Buchstabentastatur; eine waagerecht schiebbare Seite | offen |
 
 ## 3. Grenzen der benutzten Prüfmittel
+
+**Aus AP6:**
+
+- **Der Health-Endpunkt ist mit `curl` gegen `php -S` gemessen**, nicht mit
+  einem Monitoring und nicht hinter dem Webserver des Hosters. Ob dort ein
+  vorgeschalteter Cache eine 503 zwischenspeichert oder den Parameter
+  `token` in ein Zugriffsprotokoll schreibt, sieht die Probe nicht
+  (P-P5c-29).
+- **„Gleiche Dauer" ist die Spanne dreier Einzelmessungen** (fehlt,
+  falsch, aus) gegen eine Schwelle — keine Statistik über viele Abrufe. Sie
+  belegt, dass alle drei Wege durch `rate_gleiche_dauer()` gehen, nicht,
+  dass ein Angreifer mit tausend Messungen nichts unterscheiden könnte.
+- **`speicher_pct` ist gegen die Balken der Karte „Speicher“
+  (`speicher_uebersicht()`) gehalten** — dieselbe Rechnung an anderer Stelle, nicht unabhängig. In
+  der Sandbox ist kein Webspace eingetragen; „Gesamt" war deshalb `null`,
+  und belegt sind nur Datenbank und Backups. Die Gegenprobe gegen das, was
+  der Hoster anzeigt, ist P-P5c-30.
+- **Überlast ist nicht eigens gefahren.** Das Tor in `db.php` antwortet
+  für jeden Endpunkt gleich; die Verbindungsprobe misst es allgemein, nicht
+  an `api/health.php`.
 
 **Aus AP5:**
 

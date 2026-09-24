@@ -486,6 +486,19 @@
       "anlass": "F-S8-P-04, Nr. 171"
     },
     {
+      "id": "health",
+      "ab": "klein",
+      "pfade": [
+        "server/api/health.php",
+        "server/speicher_lib.php"
+      ],
+      "proben": [
+        "ratenprobe",
+        "wartungsprobe"
+      ],
+      "anlass": "E-P5c-17, -52 (Health, P5c/AP6): Token, Felder, Migration und Menge in der Ratenprobe, die Antwort aus dem Tor in der Wartungsprobe"
+    },
+    {
       "id": "datenbank",
       "ab": "klein",
       "pfade": [
