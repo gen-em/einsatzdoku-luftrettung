@@ -7364,5 +7364,41 @@ declare(strict_types=1);
  *   `ui_listenfuss()` und die aufklappbare Zeile sind Bausteine, und
  *   `admin_users.php` benutzt sie. Die Frist der Verwaltungseintraege zieht
  *   aus der Karte „Konten" in eine eigene Karte „Protokoll".
+ *
+ * 20.40.0 — FEHLER STEHEN IM PROTOKOLL, UND DIE FEHLERSEITE SAGT, WOHIN
+ *   (P5c/AP3, Backlog Nr. 248, R38, E-P5c-12 und -58). Nebenstufe: keine
+ *   Migration — der Reiter System schreibt in `protokoll_ereignisse`, die
+ *   es seit P5b gibt.
+ *
+ *   DER EINE WEG. 75 Stellen in 30 Dateien riefen `error_log()` und
+ *   schrieben damit in eine Datei beim Hoster, die die Anwendung nicht
+ *   zeigt. Jetzt rufen sie `system_melden()` (`systemmeldung_lib.php`): ein
+ *   Eintrag im Reiter System, mit Kennung, Datei und Zeile, die fremde
+ *   Meldung bereinigt — Werte in Anfuehrungszeichen, E-Mail- und
+ *   IP-Adressen ersetzt, der Ordner der Anlage abgeschnitten. Keine Anfrage,
+ *   keine Sitzung, keine IP. `fehler_kennung()` geht hier durch; die
+ *   Antwortform der Endpunkte und des Geraetewegs bleibt.
+ *
+ *   DREI BEHANDLER in `db.php`, genau dort: fuer eine Ausnahme, die niemand
+ *   faengt; fuer Warnungen (mit `@` unterdrueckt heisst: nicht da; dieselbe
+ *   Stelle einmal, hoechstens 20 je Anfrage); fuer den Abbruch am Ende der
+ *   Anfrage — Speicherende, Zeitende. Die Fehlerseite ist das Geruest der
+ *   Stoerungsseiten mit der Kennung und „Melde diese Kennung an …" (die
+ *   Kontaktadresse), als JSON, wo ein Skript fragt. Auf der Kommandozeile
+ *   bleibt es beim gewohnten Bild und Rueckgabewert 255.
+ *
+ *   ZWEI `error_log()` BLEIBEN, und beide mit Absicht: der Rueckfall, wenn
+ *   die Datenbank nicht antwortet (derselbe Satz, dieselbe Kennung), und
+ *   `protokoll_fehler_vermerken()`. Eine Sperre haelt den Kreis Protokoll →
+ *   Zaehler → Protokoll auf. Wo die Datenbank selbst das Problem ist —
+ *   Verbindungsgrenze, Gedraengel, Torwaechter, ausstehende Migration im
+ *   Anmeldeweg —, geht es gleich in den Rueckfall.
+ *
+ *   DAZU. Die Kennungssuche verglich klein gegen eine gross geschriebene
+ *   Kennung und haette auf Produktiv und Staging nichts gefunden — dort ist
+ *   die Kollation binaer (F-P5c-89). Siebzehn Texte, die
+ *   auf das Fehlerprotokoll des Webspace verwiesen, sagen jetzt, wo die
+ *   Ursache steht. Ein neuer Riegel in Stufe 1, `tools/quelltext/behandler.php`,
+ *   haelt die drei Behandler; Register Z38 steht auf 2.
  */
-const WEB_VERSION = '20.39.0';
+const WEB_VERSION = '20.40.0';

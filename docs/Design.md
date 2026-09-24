@@ -2781,6 +2781,15 @@ beiden Rechtstextseiten brauchen eine.
 > antwortet `betrieb_updates.php` ausdrücklich, bei einer Überlast antwortet
 > sie so wenig wie jede andere Seite — ein Verweis dorthin führte ins selbe
 > 503.
+>
+> **Seit Web 20.40.0 dreimal** (P5c/AP3, E-P5c-58): die **Fehlerseite** (500)
+> für eine Ausnahme, die niemand gefangen hat. Dasselbe Gerüst, statt
+> `.meldung-warn` eine `.meldung-fehler` mit der Kennung, darunter der
+> Meldeweg („Melde diese Kennung an …" mit der Kontaktadresse, sonst „Nenne
+> diese Kennung …") und ein Verweis zur Startseite — die antwortet hier ja.
+> Kein neuer Baustein. Ihr Markup steht in `system_fehlerseite()`
+> (`systemmeldung_lib.php`), weil sie auch dann stehen muss, wenn `ui.php`
+> selbst der Fehler ist.
 
 > **Die Druckseite ist der zweite Sonderfall — und das erste `@media print`
 > des Projekts** (Web 20.1.0, S10/AP3). Sie ist kein neuer Baustein: Sie

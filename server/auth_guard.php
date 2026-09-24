@@ -187,9 +187,11 @@ try {
                         FROM users WHERE id = ?');
     $u->execute([$userId]);
 } catch (Throwable $ex) {
-    error_log('auth_guard.php: Lebenszyklus-Spalten fehlen — Migration '
-            . '2026_09_16_konto_lebenszyklus steht aus. Die Wache laeuft '
-            . 'ohne sie weiter. (' . $ex->getMessage() . ')');
+    /* RUECKFALL (E-P5c-58): Die Migration steht aus — ein Eintrag in eine
+     * Tabelle, die es vielleicht noch nicht gibt, ist hier der falsche Weg. */
+    system_rueckfall('auth_guard', 'Lebenszyklus-Spalten fehlen — Migration '
+                   . '2026_09_16_konto_lebenszyklus steht aus. Die Wache läuft '
+                   . 'ohne sie weiter.', $ex);
     $u = db()->prepare('SELECT ' . $WACHE_SPALTEN . ' FROM users WHERE id = ?');
     $u->execute([$userId]);
 }

@@ -20,7 +20,7 @@ bash tools/proben/proben.sh <name> [zusatz…]   # alle · --liste
 `rechtstexte` Texte gegen die Quelle · `freigabe` Schlüsselweitergabe ·
 `container` Format der Sicherungsdatei · `frist` Inhaltsschlüssel ·
 `abmelden` was liegen bleibt · `csp-browser` Richtlinie zur Laufzeit ·
-`rollen` Matrix aus `Technik.md` 4.99p · `protokoll` Archiv.
+`rollen` Matrix aus `Technik.md` 4.99p · `protokoll` Archiv, Fehlerprotokoll.
 
 **Den Anlass je Probe** (Grundsatz 5) trägt der Kopfkommentar ihrer Datei.
 

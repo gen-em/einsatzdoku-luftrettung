@@ -559,7 +559,7 @@ function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [
 {
     $katalog = mail_katalog();
     if (!isset($katalog[$schluessel])) {
-        error_log('mail: unbekannter Schluessel "' . $schluessel . '"');
+        system_melden('mail', 'unbekannter Schlüssel „' . $schluessel . '"');
         return MAIL_ABGELEHNT;
     }
     $e = $katalog[$schluessel];
@@ -568,13 +568,13 @@ function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [
      * unbrauchbarer Adresse wuerde fuenfmal versucht und fuenfmal scheitern. */
     if ($empfaenger === '' || strcspn($empfaenger, "\r\n") !== strlen($empfaenger)
         || !filter_var($empfaenger, FILTER_VALIDATE_EMAIL)) {
-        error_log('mail: unzulaessige Empfaengeradresse abgewiesen (' . $schluessel . ')');
+        system_melden('mail', 'unzulässige Empfängeradresse abgewiesen (' . $schluessel . ')');
         return MAIL_ABGELEHNT;
     }
 
     foreach ($e['pflicht'] as $k) {
         if (!array_key_exists($k, $daten) || (string)$daten[$k] === '') {
-            error_log('mail: "' . $schluessel . '" ohne Pflichtwert "' . $k . '" — nicht eingereiht');
+            system_melden('mail', '„' . $schluessel . '" ohne Pflichtwert „' . $k . '" — nicht eingereiht');
             return MAIL_ABGELEHNT;
         }
     }
@@ -618,8 +618,7 @@ function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [
          * DANN WIRD TROTZDEM VERSUCHT — ohne Warteschlange, wie vor Web
          * 20.8.0. Eine Einladung, die hinausgeht, ist besser als eine, die
          * an der fehlenden Warteschlange scheitert. */
-        error_log('mail: Warteschlange nicht verfuegbar (' . $ex->getMessage()
-                . ') — es wird ohne sie versucht');
+        system_melden('mail', 'Warteschlange nicht verfügbar — es wird ohne sie versucht', $ex);
         if (!$sofort) { return MAIL_ABGELEHNT; }
         return smtp_send($empfaenger, $betreff, $text, MAIL_BUDGET_S)
             ? MAIL_ZUGESTELLT : MAIL_ABGELEHNT;

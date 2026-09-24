@@ -482,12 +482,16 @@ return [
 
 ['kennung' => 'Z38', 'paket' => '10c AP3',
  'beschreibung' => 'Uebergabe 10c: error_log( Aufrufe',
- 'grund' => 'Schritt 15 stellt KEINEN error_log()-Aufruf um (E-ZE-05); wer Code '
-          . 'verschiebt, verschiebt die Zeile unveraendert mit. Der Log-Helfer '
-          . 'kommt in 10c AP3, das die Decke dann auf 2 setzt (Nr. 248).',
+ 'grund' => 'Schritt 15 stellte keinen Aufruf um (E-ZE-05); 10c AP3 (Nr. 248, '
+          . 'E-P5c-58) hat die 75 auf system_melden() umgestellt. Es bleiben ZWEI, '
+          . 'und beide mit Absicht: der Rueckfall in systemmeldung_lib.php (die '
+          . 'Datenbank antwortet nicht) und protokoll_fehler_vermerken() (wer dort '
+          . 'system_melden() riefe, schriebe den Fehlschlag des Protokolls ins '
+          . 'Protokoll). Wer eine dritte Stelle braucht, nimmt system_melden() oder '
+          . 'system_rueckfall().',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'aufruf', 'namen' => ['error_log']],
- 'start' => 77, 'decke_jetzt' => 77, 'decke_ziel' => 77],
+ 'start' => 77, 'decke_jetzt' => 2, 'decke_ziel' => 2],
 
 /* ---- 10c AP2: zwei neue eine Stellen (R83) ------------------------------- */
 

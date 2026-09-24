@@ -38,7 +38,9 @@ declare(strict_types=1);
  *
  * Der Mittelweg hat drei Stufen, und alle drei muessen da sein:
  *   1. `error_log()` mit der Kennung `protokoll:` — fuer die Betreiberin, die
- *      ins Serverprotokoll sieht.
+ *      ins Serverprotokoll sieht. Eine der zwei Stellen, die `error_log()`
+ *      noch rufen (Register Z38): Wer hier `system_melden()` riefe, schriebe
+ *      den Fehlschlag des Protokolls ins Protokoll.
  *   2. Der Zaehler `protokoll_fehler` in `app_state` — er ueberlebt die
  *      Anfrage und laesst sich zaehlen.
  *   3. Der Hinweis auf der Statusseite — er faellt jemandem auf, der nicht
@@ -61,14 +63,14 @@ declare(strict_types=1);
  * Wie die Reiter gefuellt werden, steht unten bei DIE QUELLEN.
  *
  * ---------------------------------------------------------------------------
- * WAS `error_log()` NICHT ERSETZT
+ * DER REITER SYSTEM (P5c/AP3)
  * ---------------------------------------------------------------------------
  *
- * Die 42 `error_log()`-Aufrufe in 21 Dateien bleiben, wo sie sind. Sie
- * flaechendeckend auf `protokoll()` umzustellen waere Backlog Nr. 202 Paket 3
- * in anderem Gewand — und der richtige Zeitpunkt dafuer ist, wenn der Reiter
- * „System" steht und jemand die Eintraege auch lesen kann. Bis dahin waere es
- * ein Umbau ohne Nutzen und mit Risiko.
+ * Bis Web 20.39.0 stand hier „Die `error_log()`-Aufrufe bleiben, wo sie
+ * sind" — bis der Reiter System steht und jemand die Eintraege lesen kann.
+ * Er steht seit AP2. Seit AP3 gehen die 75 Aufrufe ueber `system_melden()`
+ * (`systemmeldung_lib.php`) hierher, mit Kennung und bereinigt; nur wenn die
+ * Datenbank nicht antwortet, bleiben sie im Fehlerprotokoll des Webspace.
  */
 
 require_once __DIR__ . '/db.php';
@@ -170,8 +172,8 @@ function protokoll(string $reiter, string $art, string $text,
          * Betriebszustand — er landet trotzdem nicht in einer Ausnahme,
          * sondern unter `system`, damit die Handlung weiterlaeuft und der
          * Eintrag nicht verlorengeht. Die Meldung sagt, wo zu suchen ist. */
-        error_log('protokoll: unbekannter Reiter "' . $reiter . '" bei "' . $art
-                . '" — der Eintrag steht unter "system".');
+        system_melden('protokoll', 'unbekannter Reiter „' . $reiter . '" bei „' . $art
+                    . '" — der Eintrag steht unter „system".');
         $reiter = 'system';
     }
 
@@ -354,6 +356,12 @@ const PROTOKOLL_ARTEN = [
     /* Ziele — Sicht auf `sicherungsziel_dateien` */
     'ziel_gesendet'             => ['gesendet', 'blau'],
     'ziel_geloescht'            => ['dort gelöscht', 'neutral'],
+    /* System — `system_melden()` und die Behandler (P5c/AP3, SYSTEM_ARTEN) */
+    'stoerung'                  => ['Störung', 'orange'],
+    'ausnahme'                  => ['Unerwarteter Fehler', 'rot'],
+    'abbruch'                   => ['Abbruch', 'rot'],
+    'php_warnung'               => ['PHP-Warnung', 'orange'],
+    'php_hinweis'               => ['PHP-Hinweis', 'neutral'],
 ];
 
 /** Die Beschriftung einer Art. */
@@ -541,7 +549,7 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'komplett_eingespielt', 'komplett_geloescht',
                          'kontobackup_eingespielt'],
         'ziele'      => ['ziel_gesendet', 'ziel_geloescht'],
-        'system'     => [],
+        'system'     => SYSTEM_ARTEN,
     ];
     $aus = [];
     foreach ($je[$reiter] ?? [] as $a) { $aus[$a] = protokoll_art_text($a); }
@@ -678,8 +686,14 @@ function protokoll_filter_sql(array $q, array $filter): array
             foreach ($arten as $a) { $args[] = $a; }
         }
         if (!empty($q['kennung']) && protokoll_ist_kennung($such)) {
+            /* GROSS, wie `system_kennung()` sie vergibt. Die Kollation von
+             * `JSON_UNQUOTE()` haengt an der Engine: gemessen 24.09.2026
+             * `utf8mb4_bin` auf MariaDB 10.11, MySQL 8.0 und 8.4 — dort
+             * traefe „a1b2c3d4" nicht „A1B2C3D4" —, `utf8mb3_general_ci`
+             * nur auf MariaDB 10.6. Bis AP3 stand hier `strtolower`, und die
+             * Suche fand auf Produktiv und Staging nichts (F-P5c-89). */
             $oder[] = $q['kennung'] . ' = ?';
-            $args[] = strtolower($such);
+            $args[] = strtoupper(trim($such));
         }
         $wo .= ' AND (' . implode(' OR ', $oder) . ')';
     }

@@ -443,18 +443,34 @@ pruef('Mit Einstellung: genau diese eine',
 /* ======================================================================== */
 abschnitt('13  Das Fehlerprotokoll nennt keinen Empfaenger');
 
-$logDatei = $tmp . '/php-fehler.log';
-@unlink($logDatei);
-ini_set('error_log', $logDatei);
+/* SEIT P5c/AP3 STEHT DIE MELDUNG IM REITER SYSTEM (`system_melden()`), nicht
+ * mehr in der Datei von `error_log`. Bis dahin las dieser Abschnitt die
+ * Datei — und waere danach blind gewesen: 0 Byte, also auch 0 Adressen,
+ * und die erste Pruefung gruen (F-P5c-96). Jetzt verlangt er einen Eintrag,
+ * bevor er ihn nach der Adresse absucht, und haelt dessen Kennung gegen die
+ * Fehlerspalte der Warteschlange — die Kennung ist der Faden zwischen
+ * Ursache und Adressat (E-P5a-37). */
+$sysVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse')->fetchColumn();
 mp_gegenstelle('ablehnen');
 $pdo->exec('DELETE FROM mail_warteschlange');
 mail_einreihen('einladung', 'geheimer.empfaenger@mailprobe.invalid',
                ['link' => $beispiel['link']]);
-$log = (string)@file_get_contents($logDatei);
-pruef('Kein "@" im erzeugten Protokoll', !str_contains($log, 'geheimer.empfaenger'),
-      strlen($log) . ' Byte Protokoll, ' . substr_count($log, "\n") . ' Zeilen');
-pruef('Aber eine Kennung', (bool)preg_match('/\[[0-9A-F]{8}\]/', $log),
-      trim(str_replace("\n", ' | ', $log)));
+$st = $pdo->prepare("SELECT id, text, daten FROM protokoll_ereignisse
+                      WHERE reiter = 'system' AND id > ? AND text LIKE 'smtp:%' ORDER BY id");
+$st->execute([$sysVorher]);
+$smtpZeilen = $st->fetchAll(PDO::FETCH_ASSOC);
+$roh = implode("\n", array_map(static fn($z) => $z['text'] . ' ' . $z['daten'], $smtpZeilen));
+$kSys = $smtpZeilen === [] ? '' : (string)(json_decode((string)$smtpZeilen[0]['daten'], true)['kennung'] ?? '');
+$fehlerSpalte = (string)$pdo->query('SELECT fehler FROM mail_warteschlange ORDER BY id DESC LIMIT 1')->fetchColumn();
+pruef('Ein Eintrag im Reiter System, mit Kennung', $smtpZeilen !== [] && preg_match('/^[0-9A-F]{8}$/', $kSys) === 1,
+      count($smtpZeilen) . ' Eintrag, Kennung ' . ($kSys ?: '—'));
+pruef('Kein Empfaenger darin', $smtpZeilen !== [] && !str_contains($roh, 'geheimer.empfaenger')
+      && !str_contains($roh, '@mailprobe'), mb_substr($roh, 0, 70));
+pruef('Dieselbe Kennung in der Warteschlange', $kSys !== '' && str_contains($fehlerSpalte, $kSys),
+      mb_substr($fehlerSpalte, 0, 70));
+foreach ($smtpZeilen as $z) {
+    $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE id = ?')->execute([(int)$z['id']]);
+}
 
 /* ======================================================================== */
 abschnitt('14  Rundmail — nur einreihen, an alle erreichbaren, einmal je Tag');

@@ -301,6 +301,6 @@ try {
     gpx_ausliefern($xml,
         gpx_dateiname($art, $id, (string)($eintrag['started_at'] ?? ''), $stand['stufe']));
 } catch (Throwable $e) {
-    error_log('gpx: ' . $e->getMessage());
+    system_melden('gpx', 'Export fehlgeschlagen', $e);
     json_out(['error' => 'server'], 500);
 }

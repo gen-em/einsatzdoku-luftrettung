@@ -202,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (ist_dublettenfehler($ex)) {
                         $error = 'Es gibt bereits ein Konto mit dieser E-Mail-Adresse.';
                     } else {
-                        error_log('user_add: ' . $ex->getMessage());
+                        system_melden('user_add', 'Zugang nicht angelegt', $ex);
                         $error = 'Der Zugang konnte nicht angelegt werden. '
                                . 'Es wurde nichts gespeichert.';
                     }
@@ -554,7 +554,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
         'Der Einladungslink konnte nicht per E-Mail zugestellt werden. Das Konto '
         . 'ist angelegt, der Link 24 Stunden gültig — bitte auf einem anderen Weg '
         . 'an die Person selbst weitergeben. Wer ihn hat, kann das Passwort des '
-        . 'neuen Kontos setzen. Die Ursache steht im Fehlerprotokoll des Webspace.') ?>
+        . 'neuen Kontos setzen. Die Ursache findet die BetreiberIn im Protokoll unter System.') ?>
     <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Der Link
              ist über hundert Zeichen lang; in der grossen Stufe stand er
              gesperrt in Plakatgrösse über drei Zeilen — und ohne Knopf,

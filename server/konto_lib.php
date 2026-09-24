@@ -284,8 +284,8 @@ function konto_status_setzen(int $userId, string $neu, ?string $grund = null): b
     $alt = (string)$zeile['status'];
     if ($alt === $neu) { return true; }          // nichts zu tun, kein Fehler
     if (!in_array($neu, KONTO_UEBERGAENGE[$alt] ?? [], true)) {
-        error_log('konto_status_setzen: Übergang ' . $alt . ' -> ' . $neu
-                . ' ist nicht vorgesehen (Konto ' . $userId . ').');
+        system_melden('konto_status_setzen', 'Übergang ' . $alt . ' -> ' . $neu
+                    . ' ist nicht vorgesehen (Konto ' . $userId . ').');
         return false;
     }
 
@@ -619,7 +619,7 @@ function konto_warten_melden(): void
                             'link' => app_url('/admin_users.php?f=wartet')]);
         }
     } catch (Throwable $ex) {
-        error_log('Wartemeldung nicht moeglich: ' . $ex->getMessage());
+        system_melden('konto', 'Wartemeldung nicht möglich', $ex);
     }
 }
 

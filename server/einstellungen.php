@@ -285,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (ist_dublettenfehler($ex)) {
                     $error = 'Diese E-Mail-Adresse wird bereits verwendet.';
                 } else {
-                    error_log('profil speichern: ' . $ex->getMessage());
+                    system_melden('profil', 'Profil nicht gespeichert', $ex);
                     $error = 'Das Profil konnte nicht gespeichert werden. '
                            . 'Es wurde nichts geändert.';
                 }

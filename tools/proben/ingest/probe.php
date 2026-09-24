@@ -23,6 +23,12 @@ declare(strict_types=1);
  * Anstieg — und ueberschrieb sie damit bis 13.0.0 mit NULL, waehrend `final`
  * auf 1 blieb. Teil 3 hat diesen Fall seit S2 gesendet, ohne hinzusehen.
  *
+ * SEIT WEB 20.40.0 (P5c/AP3, Teil 11): Scheitert die Annahme an der
+ * Datenbank, antwortet `ingest.php` wie seit M3-10 mit `{"error":"server",
+ * "kennung":…}` — und die Kennung steht jetzt im Reiter System statt im
+ * Fehlerprotokoll des Webspace. Die Antwortform ist die Zusage an die
+ * Geraete (`JSON-Vertrag.md` 5) und darf sich dabei nicht aendern.
+ *
  * Der zweite Fall darf den ersten nicht verschlucken: Wer statt der Stufe
  * pruefte, ob ueberhaupt ein Blob dasteht, wirft bei Stufe 2 genau die Punkte
  * weg, die der naechste Verdichtungslauf einarbeiten soll.
@@ -1230,7 +1236,45 @@ $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('ingest','ingest_ip')");
 $pdo->exec("DELETE FROM sicherheit_ereignisse WHERE topf IN ('ingest','ingest_ip')");
 echo "  Ergebnis der Bremse: 14 ohne Sperre, 30 mit; Retry-After 900 s; Vermerk gesetzt und geraeumt.\n";
 
+/* ---- Teil 11 — Der Fehlfall (P5c/AP3, E-P5c-58) --------------------------
+ *
+ * EIN AUSLOESER AUF `missions` macht aus dem naechsten Einfuegen einen
+ * Datenbankfehler — deterministisch, ohne eine Zeile unter `server/`. Die
+ * Meldung traegt eine Adresse in Anfuehrungszeichen: Sie darf in der
+ * Antwort gar nicht, im Protokoll nur ersetzt stehen. Weggeraeumt wird der
+ * Ausloeser gleich danach und noch einmal im `finally`. */
+echo "\nTeil 11 — Der Fehlfall: Antwortform unveraendert, Kennung im Reiter System\n";
+$pdo->exec('DROP TRIGGER IF EXISTS ingestprobe_fehlfall');
+$pdo->exec("CREATE TRIGGER ingestprobe_fehlfall BEFORE INSERT ON missions FOR EACH ROW
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Ingestprobe: Wert ''ingestprobe-geheim@probe.invalid'' abgewiesen'");
+try {
+    $fehl = senden(paket('probe-fehlfall', 0, 3, true));
 } finally {
+    $pdo->exec('DROP TRIGGER IF EXISTS ingestprobe_fehlfall');
+}
+$kf = (string)($fehl['daten']['kennung'] ?? '');
+pruefe($fehl['code'] === 500 && array_keys($fehl['daten']) === ['error', 'kennung']
+       && $fehl['daten']['error'] === 'server' && preg_match('/^[0-9A-F]{8}$/', $kf) === 1,
+       'HTTP 500 mit genau {"error":"server","kennung":…}',
+       'HTTP ' . $fehl['code'] . ', ' . json_encode($fehl['daten']));
+$st = $pdo->prepare("SELECT art, text FROM protokoll_ereignisse WHERE reiter = 'system'
+                      AND JSON_UNQUOTE(JSON_EXTRACT(daten, '$.kennung')) = ?");
+$st->execute([$kf]);
+$ze = $st->fetch(PDO::FETCH_ASSOC) ?: null;
+pruefe($ze !== null && $ze['art'] === 'ausnahme' && str_starts_with($ze['text'], 'ingest:')
+       && !str_contains($ze['text'], 'ingestprobe-geheim') && str_contains($ze['text'], "Wert '…'"),
+       'Dieselbe Kennung im Reiter System, der Wert ersetzt',
+       $ze === null ? 'kein Eintrag' : mb_substr($ze['text'], 0, 60));
+pruefe((int)$pdo->query("SELECT COUNT(*) FROM missions WHERE client_ref = 'probe-fehlfall'")->fetchColumn() === 0,
+       'Der Einsatz ist nicht angelegt — die Uhr sendet ihn erneut');
+if ($ze !== null) {
+    $pdo->prepare("DELETE FROM protokoll_ereignisse WHERE reiter = 'system'
+                    AND JSON_UNQUOTE(JSON_EXTRACT(daten, '$.kennung')) = ?")->execute([$kf]);
+}
+
+} finally {
+    $pdo->exec('DROP TRIGGER IF EXISTS ingestprobe_fehlfall');
     jobs_pause(0);
     /* Aufraeumen: das Konto und alles daran. Die Kaskade nimmt missions mit;
      * Spuren haengen an keinem Fremdschluessel und muessen ausdruecklich weg

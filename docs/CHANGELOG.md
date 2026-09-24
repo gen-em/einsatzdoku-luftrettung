@@ -14,6 +14,131 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.40.0] — 2026-09-24
+
+**Fehler stehen im Protokoll, und die Fehlerseite sagt, wohin man sie
+meldet.** P5c/AP3 (Schritt 10c), Backlog Nr. 248, R38. Nebenstufe: keine
+Migration — der Reiter System schreibt in `protokoll_ereignisse`, die es seit
+P5b gibt. `update.php` ist nicht fällig.
+
+### Neu
+
+- **Web: Der Reiter System füllt sich** (E-P5c-12, -58). Bis hierher
+  schrieben 75 Stellen in 30 Dateien mit `error_log()` in das
+  Fehlerprotokoll des Webspace — eine Datei beim Hoster, die die Anwendung
+  nicht zeigt und an die auf geteiltem Hosting nicht jede BetreiberIn
+  herankommt. Die Fehlerseite sagte der NutzerIn, dort stehe es, und ließ
+  sie mit einer Kennung allein. Jetzt geht jede dieser Meldungen über
+  **`system_melden()`** in den Reiter System, mit einer **Kennung**, Datei
+  und Zeile. **Was nicht hineingeht:** Anfrage, Kopfzeilen, Sitzungsinhalt,
+  IP. In fremden Meldungen werden Werte in Anführungszeichen, E-Mail- und
+  IPv4-Adressen ersetzt, bevor sie geschrieben werden — `Duplicate entry
+  '…' for key` trüge sonst Adressen und Gerätekennungen in ein Archiv, das
+  365 Tage liegt und außer Haus geht. Der Urheber bleibt, wie bei jedem
+  Eintrag: Wer den Fehler ausgelöst hat, gehört zur Fehlersuche, was er
+  dabei geschickt hat, nicht.
+- **Web: Drei Behandler, eingerichtet in `db.php`.** Eine Ausnahme, die
+  niemand fängt, war bis hierher eine weiße Seite mit 500; eine Warnung
+  landete im Fehlerprotokoll des Webspace oder nirgends; ein Speicherende
+  ebenso. Jetzt schreibt jeder der drei Fälle einen Eintrag, und der erste
+  und dritte zeigen eine **Fehlerseite**: das Gerüst der Wartungs- und
+  Überlastseite, eine rote Meldung mit der Kennung und darunter **„Melde
+  diese Kennung an <Kontaktadresse>"** — ohne Adresse „Nenne diese
+  Kennung, wenn du den Fehler meldest". Wo ein Skript fragt, dieselbe
+  Aussage als JSON. **Mit `@` unterdrückt heißt: nicht da** — 136 Stellen
+  rechnen mit einem Fehlschlag und fragen selbst nach. Dieselbe Stelle
+  zählt je Anfrage einmal, höchstens 20 je Anfrage; eine Warnung in einer
+  Schleife schriebe sonst tausend gleiche Zeilen. **Auf der Kommandozeile
+  bleibt es beim gewohnten Bild**: Text und Aufrufkette auf stderr,
+  Rückgabewert 255 — ein Job, der scheitert, soll das sagen und nicht eine
+  HTML-Seite ausgeben.
+
+### Geändert
+
+- **Web: Zwei `error_log()` bleiben, und beide mit Absicht.** Antwortet die
+  Datenbank nicht, kann kein Eintrag entstehen; dann steht derselbe Satz mit
+  **derselben Kennung** im Fehlerprotokoll des Webspace, und die Kennung auf
+  der Fehlerseite führt auch dorthin. Die zweite Stelle ist
+  `protokoll_fehler_vermerken()` — wer dort ins Protokoll meldete, meldete
+  den Fehlschlag des Protokolls ins Protokoll. **Keine Schleife:** Eine
+  Sperre schickt jede Meldung, die während des Meldens entsteht, in den
+  Rückfall, und fällt die Datenbank einmal aus, bleibt sie für die Anfrage
+  aus. Wo die Datenbank selbst das Problem ist — Verbindungsgrenze,
+  Gedrängel, Torwächter, eine ausstehende Migration im Anmeldeweg —, geht
+  die Meldung gleich in den Rückfall: Dort noch einen Eintrag zu versuchen
+  hieße, unter Last eine weitere Verbindung zu öffnen.
+- **Web: Die Fehlerseite verwirft, was schon im Ausgabepuffer steht**
+  (F-P5c-97). Viele Hoster puffern die ersten Kilobyte einer Seite; bricht
+  sie dort ab, sind die Kopfzeilen noch nicht gesendet, und die Fehlerseite
+  hinge sonst hinter der halben Seite.
+- **Web: Eine Meldung mitten in einer Transaktion wartet bis zum Ende der
+  Anfrage.** Sie wäre sonst Teil einer Transaktion, die gerade etwas meldet
+  und oft gleich zurückgerollt wird — und ginge mit dem Fehler unter, den
+  sie beschreibt.
+- **Web: Siebzehn Texte sagen, wo die Ursache steht** — die dreizehn aus der
+  Bestandsaufnahme (F-P5c-24), dazu drei in `admin_demo.php` und einer im
+  Handbuch 11.3. „… steht im
+  Fehlerprotokoll des Webspace" hieß für eine NutzerIn nichts und für eine
+  BetreiberIn auf geteiltem Hosting oft nur „irgendwo". Jetzt: „im Protokoll
+  unter System", auf den Seiten der Verwaltung „findet die BetreiberIn im
+  Protokoll unter System". **Eine Stelle bleibt beim Webspace, und das ist
+  richtig:** die Einrichtungsseite, wenn die Datenbank nicht antwortet — in
+  ihr liegt das Protokoll.
+- **Web: SMTP führt eine Kennung, nicht zwei.** `smtp.php` vergibt seine
+  Kennung vor dem Versuch, weil sie neben dem Empfänger in die
+  Warteschlange geht; `system_melden()` übernimmt sie, statt eine zweite
+  zu vergeben. Das Zeitende schrieb bis hierher eine eigene Zeile und dann
+  noch einmal den Schlussvermerk mit demselben Grund — zwei Einträge einer
+  Kennung sähen aus wie zwei Fehler.
+- **Werkzeug: Ein neuer Riegel in Stufe 1**, `tools/quelltext/behandler.php`:
+  genau ein Ausnahme-, ein Fehler- und ein Abschlussbehandler in `db.php`,
+  kein zweiter Ausnahme-Behandler anderswo. Ein Riegel und keine
+  Registerzeile, weil das Register Decken kennt — ein entfernter Behandler
+  stünde dort bei „0 von höchstens 1" und wäre grün. Register **Z38**
+  (`error_log(`) steht auf **2**.
+- **Werkzeug: Die Nebenstufe fährt Protokoll- und Rollenprobe** (F-P5c-90).
+  Beide kamen mit AP2 und liefen bis hierher nur, wenn ihre eigenen Dateien
+  berührt waren — AP3 ändert `db.php` und hätte die Protokollprobe nicht
+  ausgelöst. Die Tabelle in `Pruefablauf.md` 4 ist neu erzeugt; sie trug
+  noch den Anlass der Mailprobe von vor dem Nachtrag BR (F-P5c-91).
+
+### Behoben
+
+- **Web: Die Kennungssuche im Protokoll hätte auf Produktiv und Staging
+  nichts gefunden** (F-P5c-89). Sie verglich klein, die Kennung ist groß,
+  und `JSON_UNQUOTE()` liefert auf MariaDB 10.11, MySQL 8.0 und 8.4 eine
+  binäre Kollation — nachgemessen auf allen vier Fassungen der
+  Plattformmatrix; nur MariaDB 10.6 vergleicht ohne Rücksicht auf die
+  Schreibweise. Groß geschrieben trifft sie auf allen vier. Aufgefallen ist
+  es erst jetzt, weil der Reiter System bis hierher leer war.
+- **Web: Der Kommentar „EINE VON ZWEI AUFRUFSTELLEN"** der Sitzungsablage in
+  `db.php` stimmte seit Web 20.27.0 nicht mehr — es gibt einen
+  Sitzungsstart, und der richtet die Ablage selbst ein.
+
+### Nachweis
+
+**Zwei Proben lasen bis hierher, was `error_log()` schrieb** (F-P5c-96): die
+Kopplungsprobe (Fall 27, die Zeile „SMTP" im Protokoll des PHP-Servers) und
+die Mailprobe (Abschnitt 13, „kein Empfänger im Fehlerprotokoll"). Beide
+lesen jetzt den Reiter System. Die Mailprobe wäre sonst still blind
+geworden: Eine leere Datei enthält auch keine Adresse. Sie verlangt jetzt
+erst einen Eintrag und hält dessen Kennung gegen die Fehlerspalte der
+Warteschlange.
+
+**Die Verbindungsprobe stellt die Enge in bis zu drei Runden her**
+(F-P5c-98). Ob bei zwei freien Plätzen ein Paket an der Grenze abprallt, hing
+am Zeitverhalten — gemessen 0, 1, 12 und 13 in vier Läufen. Ein freier Platz
+hätte es sicher gemacht und das Gedrängel beseitigt, um das es der Probe
+geht. Wiederholt wird das Herstellen der Lage, nicht die Bewertung.
+
+Protokollprobe **Teil 7** über einen eigenen `php -S` mit
+`fehlerrouter.php` — nichts unter `server/`: ungefangene Ausnahme, JSON,
+Meldeweg mit und ohne Kontaktadresse, `@`, Warnungen, Speicherende,
+Kennungssuche, Kommandozeile, und „Datenbank weg" durch Trennen der eigenen
+Verbindung statt durch einen Tausch von `config.php`. Ingestprobe
+**Teil 11**: Ein vorübergehender Auslöser auf `missions` lässt das Einfügen
+scheitern, die Uhr bekommt unverändert `{"error":"server","kennung":…}`.
+
 ## [Werkzeug: Zuarbeit für den Bestandsriegel (P5c, Nachtrag BR)] — 2026-09-24
 
 Konzept P5c 2.10 (E-P5c-86 bis -90), Zuarbeit aus Konzept BR. Keine

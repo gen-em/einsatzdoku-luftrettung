@@ -2093,7 +2093,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     | 1 | Marke, Mail, Link, Token | **durch** — Gegenprobe in Schritt 15 AP1 |
     | 2 | Datenzugriff | Schritt 15 AP4 und AP5 |
     | 3 | API-Eingang, Sitzung, Flash | Schritt 15 AP2 und AP3 |
-    | 3 | *davon* Log-Helfer — **77 Aufrufe in 32 Dateien** | **10c AP3** |
+    | 3 | *davon* Log-Helfer — **77 Aufrufe in 32 Dateien** (Übergabe 75) | **10c AP3** — **durch** mit Web 20.40.0 (Nr. 248, `system_melden()`) |
     | 4 | JavaScript | Schritt 15 AP8 |
     | 5 | Zeit, Zahl, Migration | Schritt 15 AP7 |
     | 6 | Beifang | kein Arbeitspaket — nur mit Arbeit an der Datei |
@@ -3057,35 +3057,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Eigenes Paket mit eigener Prüfung; **nicht P5**. Bis dahin steht im
     Betreiberhandbuch: Der Schlüssel wird nicht gewechselt, das Blatt wird
     gehütet (Quartalsrückfrage E-P5b-10).
-
-248. **Das Prüftor Stufe 1 zählt die `error_log(`-Aufrufe.**
-    *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).* Zugeordnet:
-    **10c, AP3** — dort erledigt, hier als Prüfmittel-Vermerk.
-
-    Mit 10c wandern die `error_log()`-Aufrufe auf den Protokollreiter
-    System. Damit sie nicht nach und nach zurückkehren, zählt Stufe 1 sie
-    nach: **Soll ≤ 2**, und zwar ohne Kommentare und ohne Zeichenketten —
-    sonst zählt das Prüfmittel seine eigene Dokumentation mit.
-    Mitgeprüft wird der `set_exception_handler()`-Behandler.
-
-    **Berichtigt am 20.09.2026 (E-ZE-03):** Hier stand, das Zählmittel
-    entstehe mit 10c AP3. Es **besteht seit Schritt 15 AP1**
-    (`tools/zaehlung/`); 10c AP3 setzt nur die Registerzeile **Z38** auf
-    **Decke 2**. Zwei Pakete, die dasselbe Werkzeug bauen, hätten es zweimal
-    gebaut.
-
-    **Die Ausgangszahl ist gemessen:** 42 am 16.09.2026, nachgemessen am
-    20.09.2026 an `862ca7f` **77 Aufrufe in 32 Dateien**. Die Zahl ist in
-    vier Tagen um 35 gestiegen — genau deshalb braucht es einen Zähler und
-    keine Vorsatzerklärung.
-
-    **Berichtigt 23.09.2026 (Konzept P5c, E-P5c-58):** Die Übergabezahl aus
-    Schritt 15 ist **75** (Tokenizer, ohne Kommentare und Zeichenketten), die
-    Decke nach AP3 **2** (Helfer-Rückfall und `protokoll_fehler_vermerken()`).
-    **Der Behandler wird nicht von einer Registerzeile geprüft**, sondern von
-    einer Regel in `tools/quelltext/`: genau ein `set_exception_handler(` und
-    ein `set_error_handler(` in `db.php`. Das Register kennt nur Decken — ein
-    entfernter Behandler bliebe dort grün.
 
 249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes
     verliert.** *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
@@ -10140,3 +10111,42 @@ zutreffen.
     schweigenden Server (6 Zeilen in 0,01 s statt bis zu 30 s). Die Nummer
     ist der Anlass dieses Abschnitts.
 
+248. **Das Prüftor Stufe 1 zählt die `error_log(`-Aufrufe.**
+    *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).* Zugeordnet:
+    **10c, AP3** — dort erledigt, hier als Prüfmittel-Vermerk.
+
+    Mit 10c wandern die `error_log()`-Aufrufe auf den Protokollreiter
+    System. Damit sie nicht nach und nach zurückkehren, zählt Stufe 1 sie
+    nach: **Soll ≤ 2**, und zwar ohne Kommentare und ohne Zeichenketten —
+    sonst zählt das Prüfmittel seine eigene Dokumentation mit.
+    Mitgeprüft wird der `set_exception_handler()`-Behandler.
+
+    **Berichtigt am 20.09.2026 (E-ZE-03):** Hier stand, das Zählmittel
+    entstehe mit 10c AP3. Es **besteht seit Schritt 15 AP1**
+    (`tools/zaehlung/`); 10c AP3 setzt nur die Registerzeile **Z38** auf
+    **Decke 2**. Zwei Pakete, die dasselbe Werkzeug bauen, hätten es zweimal
+    gebaut.
+
+    **Die Ausgangszahl ist gemessen:** 42 am 16.09.2026, nachgemessen am
+    20.09.2026 an `862ca7f` **77 Aufrufe in 32 Dateien**. Die Zahl ist in
+    vier Tagen um 35 gestiegen — genau deshalb braucht es einen Zähler und
+    keine Vorsatzerklärung.
+
+    **Berichtigt 23.09.2026 (Konzept P5c, E-P5c-58):** Die Übergabezahl aus
+    Schritt 15 ist **75** (Tokenizer, ohne Kommentare und Zeichenketten), die
+    Decke nach AP3 **2** (Helfer-Rückfall und `protokoll_fehler_vermerken()`).
+    **Der Behandler wird nicht von einer Registerzeile geprüft**, sondern von
+    einer Regel in `tools/quelltext/`: genau ein `set_exception_handler(` und
+    ein `set_error_handler(` in `db.php`. Das Register kennt nur Decken — ein
+    entfernter Behandler bliebe dort grün.
+
+    **Erledigt mit Web 20.40.0 am 24.09.2026 (P5c/AP3, E-P5c-58).** Die 75
+    Aufrufe gehen über `system_melden()` in den Reiter System; Z38 zählt
+    **2** (der Rückfall in `systemmeldung_lib.php` und
+    `protokoll_fehler_vermerken()`), `decke_jetzt` und `decke_ziel` stehen
+    auf 2. Die Behandler prüft `tools/quelltext/behandler.php` — ein Riegel
+    in Stufe 1: genau ein `set_exception_handler()`, ein
+    `set_error_handler()` und ein `register_shutdown_function()` in `db.php`,
+    kein zweiter Ausnahme-Behandler anderswo. Gegenprobe: Behandler
+    entfernt → Rückgabewert 1. Die Wirkung misst die Protokollprobe
+    (Teil 7) und die Ingestprobe (Teil 11).

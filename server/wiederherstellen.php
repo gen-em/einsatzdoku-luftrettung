@@ -563,7 +563,8 @@ ui_kopf(['menue' => false]);
     <?php ui_karte_start(['titel' => 'Die Datenbank antwortet nicht']); ?>
       <p class="feld-hinweis">Die Verbindung nach <code>config.php</code> kam nicht
       zustande. Kennung: <code><?= ui_e($dbFehler) ?></code> — unter dieser Kennung
-      steht der vollständige Fehlertext im Fehlerprotokoll des Webspace. Auf dem
+      steht der vollständige Fehlertext im Fehlerprotokoll des Webspace, nicht im
+      Protokoll der Anwendung: Das liegt in der Datenbank, die gerade nicht antwortet. Auf dem
       Bildschirm steht er bewusst nicht: Er nennt Rechnernamen und Datenbanknutzer,
       und diese Seite ist ohne Anmeldung erreichbar.</p>
       <p class="feld-hinweis">Zu prüfen: Stimmen Rechnername, Datenbankname, Nutzer und

@@ -322,6 +322,7 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   | Meldung im Browser | `EdHtml.meldung()` | Markup von Hand |
   | Spalten von `missions` | `mf_spalten($zweck)` | eigene Spaltenliste |
   | Archiv (ZIP) bauen oder öffnen | `zip_lib.php` | `new ZipArchive` |
+  | Melden, was schiefging (Reiter System) | `system_melden()`, ohne Datenbank `system_rueckfall()` | `error_log()` |
   | Suche, Filter, Seitenwahl, Reiter einer Seite | `ui_listenkopf()`, `ui_listenfuss()`, `ui_reiter()` | Markup von Hand |
 
   **Das Register steht in `tools/zaehlung/register.php`** und führt je Sache

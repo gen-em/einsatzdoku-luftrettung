@@ -515,7 +515,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
         $fehler = get_class($ex) . ': ' . $ex->getMessage();
         // Still gegenueber der Anfrage — die Wartung darf keine Seite
         // kaputtmachen —, aber nachlesbar, und ab jetzt auch sichtbar.
-        error_log("jobs: \"$name\" fehlgeschlagen: $fehler");
+        system_melden('jobs', '„' . $name . '" fehlgeschlagen', (string)$fehler);
     }
 
     /* Rueckstand fuer die Anzeige — MIT DEM FRISCHEN ZUSTAND.
@@ -566,7 +566,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
                            VALUES (?, UTC_TIMESTAMP(), ?, ?, ?)')
                 ->execute([$name, $ausloeser, $erledigt, $fehler]);
         } catch (Throwable $ex) {
-            error_log('job_laeufe: ' . $ex->getMessage());
+            system_melden('job_laeufe', 'Lauf nicht vermerkt', $ex);
         }
     }
 
@@ -861,7 +861,7 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
                     app_state_setzen($marke, '1');
                 }
             } catch (Throwable $ex) {
-                error_log('Mengenmessung je Konto: ' . $ex->getMessage());
+                system_melden('jobs', 'Mengenmessung je Konto fehlgeschlagen', $ex);
             }
         },
         'Verwaiste Kontomarken' => function (PDO $pdo): void {
@@ -884,7 +884,7 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
                             WHERE (a.k LIKE 'mengen:%' OR a.k LIKE 'mengen_gemeldet:%')
                               AND u.id IS NULL");
             } catch (Throwable $ex) {
-                error_log('Verwaiste Kontomarken: ' . $ex->getMessage());
+                system_melden('jobs', 'Verwaiste Kontomarken nicht geräumt', $ex);
             }
         },
         'Job-Verlauf' => function (PDO $pdo): void {
@@ -985,8 +985,7 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
         try { $schritt($pdo); }
         catch (Throwable $ex) {
             $fehler[] = $name . ': ' . $ex->getMessage();
-            error_log('jobs: Aufraeumschritt "' . $name . '" fehlgeschlagen: '
-                      . $ex->getMessage());
+            system_melden('jobs', 'Aufräumschritt „' . $name . '" fehlgeschlagen', $ex);
         }
     }
     if ($fehler) {
@@ -1062,8 +1061,8 @@ function job_konto_loeschung(PDO $pdo, array $zustand, callable $zeitLinks): arr
              * loescht dann ausdruecklich NICHTS. Der naechste Lauf versucht
              * es wieder; bleibt es dabei, faellt es in der Statusliste auf,
              * weil der Rueckstand nicht sinkt. */
-            error_log('konto_loeschung: Konto ' . $k['id'] . ' nicht gelöscht — '
-                    . $r['grund']);
+            system_melden('konto_loeschung', 'Konto ' . $k['id'] . ' nicht gelöscht',
+                          (string)$r['grund']);
         }
     }
 
@@ -1123,8 +1122,8 @@ function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
         if ($r['ok']) {
             $erledigt++;
         } else {
-            error_log('konto_verfall: unbestätigtes Konto ' . $k['id']
-                    . ' nicht gelöscht — ' . $r['grund']);
+            system_melden('konto_verfall', 'unbestätigtes Konto ' . $k['id']
+                        . ' nicht gelöscht', (string)$r['grund']);
         }
     }
 
@@ -1138,8 +1137,8 @@ function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
         if ($r['ok']) {
             $erledigt++;
         } else {
-            error_log('konto_verfall: wartendes Konto ' . $k['id']
-                    . ' nicht gelöscht — ' . $r['grund']);
+            system_melden('konto_verfall', 'wartendes Konto ' . $k['id']
+                        . ' nicht gelöscht', (string)$r['grund']);
         }
     }
 
@@ -1435,7 +1434,7 @@ function job_verdichtung(PDO $pdo, array $zustand, callable $zeitLinks): array
                 else {
                     if (count($sammeln['fehler']) < JOB_LISTE_MAX) { $sammeln['fehler'][] = "$typ:$id — $meldung"; }
                     $offen++;
-                    error_log("jobs: Verdichtung $typ/$id abgelehnt: $meldung");
+                    system_melden('jobs', "Verdichtung $typ/$id abgelehnt", (string)$meldung);
                 }
             }
             $marke = (int)end($ids);
@@ -1612,7 +1611,7 @@ function job_ausduennen(PDO $pdo, array $zustand, callable $zeitLinks): array
                 else {
                     if (count($sammeln['fehler']) < JOB_LISTE_MAX) { $sammeln['fehler'][] = "$typ:$id — $meldung"; }
                     $offen++;
-                    error_log("jobs: Ausduennung $typ/$id abgelehnt: $meldung");
+                    system_melden('jobs', "Ausdünnung $typ/$id abgelehnt", (string)$meldung);
                 }
             }
             $marke = (int)end($ids);

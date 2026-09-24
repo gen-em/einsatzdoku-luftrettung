@@ -593,7 +593,7 @@ function status_erhebung(): array
             zeit_relativ($smtpLetzte) . ' · '
             . datum_zeit_text($smtpLetzte, ' · ')
             . ' Uhr'
-            . ($gut ? '' : '. Die Ursache steht im Fehlerprotokoll des Webspace — '
+            . ($gut ? '' : '. Die Ursache steht im Protokoll unter System — '
                           . 'geprüft wird der Host, nicht die Zugangsdaten'),
             $gut ? 'blau' : 'rot',
             $gut ? 'zugestellt' : 'fehlgeschlagen');
@@ -1034,7 +1034,7 @@ function status_ampel(): array
     try {
         $z = status_zaehlen(status_erhebung()['karten']);
     } catch (Throwable $ex) {
-        error_log('status_ampel: Erhebung fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('status_ampel', 'Erhebung fehlgeschlagen', $ex);
         return ['orange' => 0, 'rot' => 0];
     }
     status_ampel_merken($z);
@@ -1095,7 +1095,7 @@ function menue_zaehler_betrieb(): array
         try {
             $e = status_erhebung();
         } catch (Throwable $ex) {
-            error_log('menue_zaehler_betrieb: Erhebung fehlgeschlagen: ' . $ex->getMessage());
+            system_melden('menue_zaehler_betrieb', 'Erhebung fehlgeschlagen', $ex);
             return [];
         }
         $a = status_zaehlen($e['karten']);
@@ -1121,7 +1121,7 @@ function menue_zaehler_konto(): array
         try {
             $zahlen = edbak_stand_zaehlen();
         } catch (Throwable $ex) {
-            error_log('menue_zaehler_konto: Zählung fehlgeschlagen: ' . $ex->getMessage());
+            system_melden('menue_zaehler_konto', 'Zählung fehlgeschlagen', $ex);
             return [];
         }
         $d = ['k' => (int)$zahlen['ueberfaellig'] + (int)$zahlen['nie'], 't' => time()];

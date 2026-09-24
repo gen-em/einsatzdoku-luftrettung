@@ -244,7 +244,7 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
                      * Beide Faelle enden hier gleich: still, mit derselben
                      * Antwort. Protokolliert wird trotzdem, sonst bliebe
                      * ein echter Datenbankfehler unsichtbar. */
-                    error_log('registrieren: Anlage gescheitert — ' . $ex->getMessage());
+                    system_melden('registrieren', 'Anlage gescheitert', $ex);
                 }
             }
         }

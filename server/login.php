@@ -196,9 +196,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                                  FROM users WHERE email = ?');
             $st->execute([$email]);
         } catch (Throwable $ex) {
-            error_log('login.php: Lebenszyklus-Spalten fehlen — Migration '
-                    . '2026_09_16_konto_lebenszyklus steht aus. Anmeldung laeuft '
-                    . 'ohne sie weiter. (' . $ex->getMessage() . ')');
+            /* RUECKFALL (E-P5c-58) — wie in `auth_guard.php`. */
+            system_rueckfall('login', 'Lebenszyklus-Spalten fehlen — Migration '
+                           . '2026_09_16_konto_lebenszyklus steht aus. Anmeldung läuft '
+                           . 'ohne sie weiter.', $ex);
             $st = db()->prepare('SELECT ' . $LOGIN_SPALTEN . ' FROM users WHERE email = ?');
             $st->execute([$email]);
         }

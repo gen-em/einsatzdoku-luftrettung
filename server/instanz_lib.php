@@ -162,8 +162,8 @@ function instanz_namen_setzen(string $name, string $kurz): array
     $a = app_state_setzen('instanz_name', trim($name));
     $b = app_state_setzen('instanz_kurz', trim($kurz));
     if (!$a || !$b) {
-        return [false, 'Der Name liess sich nicht speichern. Die Einzelheiten '
-                     . 'stehen im Fehlerprotokoll des Webspace.'];
+        return [false, 'Der Name ließ sich nicht speichern. Die Einzelheiten '
+                     . 'stehen im Protokoll unter System.'];
     }
     return [true, 'Name der Installation gespeichert.'];
 }
@@ -299,8 +299,8 @@ function instanz_adressen_setzen(string $kontakt, string $betrieb): array
     $a = app_state_setzen('instanz_kontakt', trim($kontakt));
     $b = app_state_setzen('betrieb_mail', trim($betrieb));
     if (!$a || !$b) {
-        return [false, 'Die Adressen liessen sich nicht speichern. Die Einzelheiten '
-                     . 'stehen im Fehlerprotokoll des Webspace.'];
+        return [false, 'Die Adressen ließen sich nicht speichern. Die Einzelheiten '
+                     . 'stehen im Protokoll unter System.'];
     }
     return [true, 'Adressen dieser Installation gespeichert.'];
 }

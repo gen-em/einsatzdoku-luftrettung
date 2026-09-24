@@ -1211,7 +1211,7 @@ function komp_zustand_setzen(array $z): bool
             ->execute([json_encode($z), KOMP_JOB]);
         return true;
     } catch (Throwable $ex) {
-        error_log('komplett: Zustand liess sich nicht schreiben: ' . $ex->getMessage());
+        system_melden('komplett', 'Zustand ließ sich nicht schreiben', $ex);
         return false;
     }
 }
@@ -1324,8 +1324,9 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
             'geraeumt' => $geraeumt,
         ];
         komp_zustand_setzen($z);
-        error_log('komplett: Lauf gescheitert (' . $ex->getMessage() . '); Bauordner '
-                  . ($bau === '' ? 'gab es nicht' : ($geraeumt ? 'geraeumt' : 'NICHT geraeumt: ' . $bau)));
+        system_melden('komplett', 'Lauf gescheitert; Bauordner '
+                    . ($bau === '' ? 'gab es nicht' : ($geraeumt ? 'geräumt' : 'NICHT geräumt: ' . $bau)),
+                      $ex);
         throw $ex;
     }
 }

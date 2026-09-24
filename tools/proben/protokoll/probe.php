@@ -2,9 +2,11 @@
 declare(strict_types=1);
 
 /**
- * Protokollprobe — hält das Archiv, was E-P5c-39 zusagt? (P5c/AP2)
+ * Protokollprobe — hält das Archiv, was E-P5c-39 zusagt? (P5c/AP2) Und das
+ * Fehlerprotokoll, was E-P5c-12 und -58 zusagen? (P5c/AP3)
  *
- * Anlass: F-P5c-18 und F-P5c-19. `sicherheit_ereignisse` führt IP- und
+ * Anlass: F-P5c-18 und F-P5c-19; für Teil 7 F-P5c-21 bis -23 und Backlog
+ * Nr. 248. `sicherheit_ereignisse` führt IP- und
  * E-Mail-Adressen und verfällt bewusst nach 30 Tagen (E-P5a-09); das Archiv
  * liegt 365 Tage und geht außer Haus. Stünden die Adressen darin, wäre die
  * 30-Tage-Zusage mit dem ersten Archiv gebrochen — und niemand sähe es, denn
@@ -27,6 +29,16 @@ declare(strict_types=1);
  *   5. Der Download über die Seite liefert ein gewöhnliches ZIP und schreibt
  *      genau einen Eintrag `archiv_heruntergeladen`.
  *   6. Der Versand erkennt den Namen als eigene Sicherung.
+ *   7. Das Fehlerprotokoll (AP3), über einen eigenen `php -S` mit
+ *      `fehlerrouter.php`: Eine ungefangene Ausnahme steht mit Kennung im
+ *      Reiter System, und die Fehlerseite nennt dieselbe; als JSON unter
+ *      `/api/`; ohne Wert, Adresse, Anfrage-, Kopf- und Sitzungsmarke; `@`
+ *      schreibt nichts; eine Warnung schreibt einmal je Zeile und höchstens
+ *      20 je Anfrage; ein Speicherende wird ein Abbruch mit Seite; die
+ *      Kennungssuche findet den Eintrag, auch klein geschrieben; auf der
+ *      Kommandozeile Rückgabewert 255 mit Kennung; ohne Datenbank der
+ *      Rückfall, ohne Schleife; mit Ausgabepuffer verwirft die Fehlerseite
+ *      eine halb geschriebene Seite.
  *
  * WAS SIE NICHT MISST: den Versand selbst auf ein Ziel (`versandprobe`), die
  * Seite als Bild (Bilderlauf), und ob der Job auf Produktiv ohne Cron in
@@ -250,6 +262,147 @@ pruef($zaehle() === $vorDl + 1, 'Genau ein Eintrag „archiv_heruntergeladen"', 
 kopf('6 — Der Versand erkennt die dritte Dateiart');
 pruef(sz_ist_sicherungsname(PROTOKOLL_ARCHIV_ORDNER, $erstes), 'Der Name gilt als eigene Sicherung', $erstes);
 pruef(!sz_ist_sicherungsname(PROTOKOLL_ARCHIV_ORDNER, 'urlaub.zip'), 'Ein fremder Name nicht', 'urlaub.zip');
+
+/* ---- 7. Das Fehlerprotokoll (P5c/AP3) ------------------------------------------ */
+kopf('7 — Das Fehlerprotokoll');
+$router = __DIR__ . '/fehlerrouter.php';
+$sock = stream_socket_server('tcp://127.0.0.1:0');
+$anschluss = (int)substr((string)stream_socket_get_name($sock, false), strrpos((string)stream_socket_get_name($sock, false), ':') + 1);
+fclose($sock);
+/* MIT AUSGABEPUFFER, wie ihn viele Hoster setzen (F-P5c-97) — `php -S`
+ * puffert sonst nicht, und der Fall „halbe Seite" waere nicht zu sehen. */
+$srvProz = proc_open(['php', '-d', 'output_buffering=4096', '-S', '127.0.0.1:' . $anschluss, '-t', $srv, $router],
+                     [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'],
+                      2 => ['file', '/dev/null', 'w']], $rohre);
+$kennungenCli = [];
+$kontaktVorher = app_state_lesen('instanz_kontakt');
+register_shutdown_function(static function () use (&$srvProz, &$kennungenCli, $pdo, $kontaktVorher): void {
+    if (is_resource($srvProz)) { proc_terminate($srvProz); proc_close($srvProz); }
+    foreach ($kennungenCli as $k) {
+        $pdo->prepare("DELETE FROM protokoll_ereignisse WHERE reiter = 'system'
+                        AND JSON_UNQUOTE(JSON_EXTRACT(daten, '$.kennung')) = ?")->execute([$k]);
+    }
+    if ($kontaktVorher === null) { app_state_loeschen('instanz_kontakt'); }
+    else { app_state_setzen('instanz_kontakt', $kontaktVorher); }
+});
+$fr = 'http://127.0.0.1:' . $anschluss;
+for ($i = 0; $i < 50 && @fsockopen('127.0.0.1', $anschluss) === false; $i++) { usleep(100000); }
+
+$abruf = static function (string $adresse) use ($sid): array {
+    $ch = curl_init($adresse);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_PROXY => '',
+        CURLOPT_HTTPHEADER => ['Cookie: PHPSESSID=' . $sid, 'X-Probe: KOPFMARKE',
+                               'X-Forwarded-For: 203.0.113.77']]);
+    $rumpf = (string)curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $ziel = (string)curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+    curl_close($ch);
+    return [$code, $rumpf, $ziel];
+};
+$systemZahl = static function () use ($pdo): int {
+    return (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse WHERE reiter = 'system'")->fetchColumn();
+};
+$eintrag = static function (string $k) use ($pdo): ?array {
+    $st = $pdo->prepare("SELECT * FROM protokoll_ereignisse WHERE reiter = 'system'
+                          AND JSON_UNQUOTE(JSON_EXTRACT(daten, '$.kennung')) = ?");
+    $st->execute([$k]);
+    $z = $st->fetch(PDO::FETCH_ASSOC);
+    return $z === false ? null : $z;
+};
+
+app_state_loeschen('instanz_kontakt');
+[$code, $seite] = $abruf($fr . '/probe-ausnahme?x=ANFRAGEMARKE');
+preg_match('~Kennung des Fehlers ist <strong>([0-9A-F]{8})</strong>~', $seite, $m);
+$k1 = $m[1] ?? '';
+$z1 = $k1 !== '' ? $eintrag($k1) : null;
+pruef($code === 500 && $k1 !== '', 'Ungefangene Ausnahme: 500 und eine Kennung auf der Seite', "HTTP $code, Kennung $k1");
+pruef($z1 !== null && $z1['art'] === 'ausnahme' && (int)$z1['urheber_user_id'] === $uid,
+      '…dieselbe Kennung im Reiter System, Art „ausnahme", Urheber aus der Sitzung',
+      $z1 === null ? 'kein Eintrag' : $z1['art'] . ', Urheber ' . $z1['urheber_user_id']);
+$roh = $z1 === null ? '' : $z1['text'] . ' ' . $z1['daten'];
+$marken = ['protokollprobe-geheim', '@probe.invalid', '198.51.100.9', 'ANFRAGEMARKE',
+           'KOPFMARKE', '203.0.113.77', '127.0.0.1', 'SITZUNGSMARKE', $sid];
+$gefunden = array_values(array_filter($marken, static fn($mk) => str_contains($roh, $mk)));
+pruef($z1 !== null && $gefunden === [] && str_contains($z1['text'], "Wert '…'"),
+      '…ohne Wert, Adresse, Anfrage, Kopfzeilen, IP und Sitzung — der Wert ersetzt',
+      $gefunden === [] ? count($marken) . ' Marken, 0 gefunden' : 'gefunden: ' . implode(', ', $gefunden));
+pruef(str_contains($seite, 'Nenne diese Kennung'), 'Ohne Kontaktadresse: „Nenne diese Kennung"');
+
+app_state_setzen('instanz_kontakt', 'betrieb-protokollprobe@probe.invalid');
+[$code, $seite] = $abruf($fr . '/probe-ausnahme');
+preg_match('~Kennung des Fehlers ist <strong>([0-9A-F]{8})</strong>~', $seite, $m);
+pruef($code === 500 && str_contains($seite, 'Melde diese Kennung an <a href="mailto:betrieb-protokollprobe@probe.invalid">'),
+      'Mit Kontaktadresse: „Melde diese Kennung an …" mit Verweis', 'Kennung ' . ($m[1] ?? '—'));
+
+[$code, $rumpf] = $abruf($fr . '/api/probe-ausnahme');
+$j = json_decode($rumpf, true);
+$kj = is_array($j) ? (string)($j['kennung'] ?? '') : '';
+pruef($code === 500 && is_array($j) && ($j['error'] ?? '') === 'server'
+      && preg_match('/^[0-9A-F]{8}$/', $kj) === 1 && $eintrag($kj) !== null
+      && str_contains((string)($j['meldung'] ?? ''), 'betrieb-protokollprobe@probe.invalid'),
+      'Unter /api/: JSON mit error, kennung, meldung — und dem Meldeweg', "HTTP $code, " . substr($rumpf, 0, 60));
+app_state_loeschen('instanz_kontakt');
+
+[$code, $seite] = $abruf($fr . '/probe-halbseite');
+pruef($code === 500 && str_starts_with(ltrim($seite), '<!doctype html>') && !str_contains($seite, 'HALBE SEITE')
+      && str_contains($seite, 'Kennung des Fehlers ist'),
+      'Mit Ausgabepuffer: die halbe Seite ist verworfen, nur die Fehlerseite steht da',
+      "HTTP $code, " . (str_contains($seite, 'HALBE SEITE') ? 'halbe Seite davor' : 'sauber'));
+
+$vor = $systemZahl();
+[$code, $rumpf] = $abruf($fr . '/probe-at');
+pruef($code === 200 && $rumpf === 'ok' && $systemZahl() === $vor,
+      'Ein mit @ unterdrückter Fehler schreibt nichts', "HTTP $code, " . ($systemZahl() - $vor) . ' Einträge');
+
+$vor = $systemZahl();
+[$code, $rumpf] = $abruf($fr . '/probe-warnung');
+$neu = $systemZahl() - $vor;
+pruef($code === 200 && str_ends_with($rumpf, 'weiter') && $neu === SYSTEM_PHP_JE_ANFRAGE,
+      'Warnungen: die Seite läuft weiter; einmal je Zeile, höchstens ' . SYSTEM_PHP_JE_ANFRAGE . ' je Anfrage',
+      "HTTP $code, $neu Einträge aus 5 + 25 Warnungen");
+
+[$code, $seite] = $abruf($fr . '/probe-abbruch');
+preg_match('~Kennung des Fehlers ist <strong>([0-9A-F]{8})</strong>~', $seite, $m);
+$za = isset($m[1]) ? $eintrag($m[1]) : null;
+pruef($code === 500 && $za !== null && $za['art'] === 'abbruch',
+      'Speicherende: 500, Fehlerseite, Eintrag „abbruch" mit derselben Kennung',
+      "HTTP $code, " . ($za['art'] ?? 'kein Eintrag'));
+
+[$code, $seite] = $abruf($basis . '/admin_protokoll.php?r=system&q=' . strtolower($k1));
+pruef($code === 200 && $k1 !== '' && str_contains($seite, $k1) && str_contains($seite, 'unbehandelt: RuntimeException'),
+      'Die Kennungssuche findet den Eintrag — auch klein geschrieben', "HTTP $code, q=" . strtolower($k1));
+[$code, , $ziel] = $abruf($basis . '/admin_protokoll.php?r=verwaltung&q=' . $k1);
+pruef($code === 303 && str_contains($ziel, 'r=system'), '…und leitet aus einem anderen Reiter nach System', "HTTP $code");
+
+$lauf = static function (array $arg, ?string $log = null) use ($router): array {
+    $befehl = array_merge(['php'], $log !== null ? ['-d', 'error_log=' . $log] : [], [$router], $arg);
+    $p = proc_open($befehl, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $r);
+    $aus = stream_get_contents($r[1]); $err = stream_get_contents($r[2]);
+    return [proc_close($p), (string)$aus, (string)$err];
+};
+[$rc, , $err] = $lauf(['--ausnahme']);
+preg_match('/Kennung ([0-9A-F]{8})/', $err, $m);
+$kc = $m[1] ?? '';
+if ($kc !== '') { $kennungenCli[] = $kc; }
+$zc = $kc !== '' ? $eintrag($kc) : null;
+pruef($rc === 255 && str_contains($err, 'Uncaught RuntimeException') && $zc !== null && $zc['urheber_art'] === 'cli',
+      'Kommandozeile: Rückgabewert 255, Text und Kennung auf stderr, Eintrag „cli"', "rc $rc, Kennung $kc");
+
+$log = sys_get_temp_dir() . '/protokollprobe-ohne-db-' . getmypid() . '.log';
+@unlink($log);
+$t0 = microtime(true);
+[$rc, $aus] = $lauf(['--ohne-db'], $log);
+$dauer = microtime(true) - $t0;
+$e = json_decode(trim($aus), true);
+$kd = is_array($e) ? (string)($e['kennung'] ?? '') : '';
+$zeilen = is_file($log) ? file($log, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
+$logText = implode("\n", $zeilen);
+@unlink($log);
+pruef($rc === 0 && $kd !== '' && str_contains($logText, '[' . $kd . '] protokollprobe: Datenbank weg'),
+      'Datenbank weg: der Satz steht mit seiner Kennung im Rückfall', "rc $rc, Kennung $kd");
+pruef(count($zeilen) <= 6 && $dauer < 10 && !str_contains($logText, '@probe.invalid') && $eintrag($kd) === null,
+      '…ohne Schleife: wenige Zeilen, kurze Dauer, bereinigt, kein Eintrag',
+      count($zeilen) . ' Zeilen, ' . round($dauer, 1) . ' s');
 
 echo "\n-> $n Erwartungen, $offen nicht erfüllt\n";
 exit($offen === 0 ? 0 : 1);

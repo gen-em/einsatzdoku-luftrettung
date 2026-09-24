@@ -28,6 +28,11 @@
       "aufruf": "bash tools/quelltext/pruefen.sh installweiche",
       "braucht": "nichts"
     },
+    "behandler": {
+      "aufruf": "bash tools/quelltext/pruefen.sh behandler",
+      "braucht": "nichts",
+      "bemerkung": "P5c/AP3, Nr. 248: genau ein Ausnahme-, ein Fehler- und ein Abschlussbehandler in server/db.php. Ein Riegel und keine Registerzeile, weil das Register nur Decken kennt -- ein entfernter Behandler waere dort gruen."
+    },
     "sitzungshaertung": {
       "aufruf": "bash tools/quelltext/pruefen.sh sitzungshaertung",
       "braucht": "nichts"
@@ -210,6 +215,7 @@
       "kontraste",
       "linkprobe",
       "installweiche",
+      "behandler",
       "sitzungshaertung",
       "cspprobe",
       "jobregister",
@@ -356,13 +362,14 @@
         "server/protokoll_lib.php",
         "server/protokoll_archiv_lib.php",
         "server/zip_lib.php",
-        "server/admin_protokoll.php"
+        "server/admin_protokoll.php",
+        "server/systemmeldung_lib.php"
       ],
       "proben": [
         "protokollprobe",
         "versandprobe"
       ],
-      "anlass": "F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39)"
+      "anlass": "F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39); protokollprobe Teil 7 für das Fehlerprotokoll (Nr. 248)"
     },
     {
       "id": "sicherungsziel",
@@ -594,9 +601,11 @@
         "bilderlauf",
         "kreislauf-csv",
         "kreislauf-edbak",
-        "spaltenregister-wegprobe"
+        "spaltenregister-wegprobe",
+        "protokollprobe",
+        "rollenprobe"
       ],
-      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32)."
+      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90)."
     },
     {
       "id": "mengen",

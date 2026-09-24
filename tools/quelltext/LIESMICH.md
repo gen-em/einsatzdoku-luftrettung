@@ -1,6 +1,6 @@
 # Quelltextprüfungen
 
-Acht Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
+Neun Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
 ## Aufruf
 
 ```bash
@@ -16,6 +16,7 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe
 | `csp` | Kopfzeilen gegen `kopfzeilen_lib.php` | 15.09.: Meldeweg tot |
 | `jobregister` | Registerzeilen gegen `jobs_lib.php` | Nr. 208 |
 | `migrationsregister` | Migrationen gegen `schema.sql` | Nr. 238 |
+| `behandler` | die drei Behandler des Fehlerprotokolls in `db.php` | Nr. 248 |
 | `linkprobe` | jeder Verweis nennt einen Parameter, den sein Ziel liest | Nr. 148, 151 |
 | `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=` | Nr. 179, 227 |
 | `textprobe` | **fünf Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen | B-S4-06, E-PK-08 |
@@ -26,7 +27,7 @@ Nichts — kein Netz, keine Datenbank. `php` und `python3`.
 
 ## Erwartete Zahl
 
-`alle` → **8 von 8 Prüfungen grün**, `--selbstprobe` → **5 von 5**.
+`alle` → **9 von 9 Prüfungen grün**, `--selbstprobe` → **6 von 6**.
 Die Vollständigkeit misst gegen **0**, ohne Schwelle (PK-04/5e). Die
 Textprobe meldet nur **neue** Treffer — `textprobe-altbestand.json` hält je
 (Datei, Muster) den Stand vom Einführungstag; neu schreiben mit

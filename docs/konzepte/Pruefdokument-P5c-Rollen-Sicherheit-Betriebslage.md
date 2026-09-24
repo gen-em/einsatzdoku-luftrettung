@@ -18,6 +18,9 @@ AP1; jedes Paket schreibt seinen Abschnitt fort.
 | **Das Archiv in echter Zeit** (AP2) | Örtlich ist der Zeitraum gestellt: Die Protokollprobe setzt Marke und Einträge in die Vergangenheit und ruft den Job mit knappem Budget auf. Ob der Job auf einer Anlage **ohne Cron** in einer Woche drankommt und nach dem Merge die Wochen seit dem ältesten Eintrag nachholt, zeigt nur Staging. | P-P5c-07 |
 | **Die Sicht des Admins im Bild** (AP2) | Der Bilderlauf kennt keine reine Admin-Rolle (F-P5c-41) — seine Seiten mit `rolle: admin` meldet er als BetreiberIn an. Die vier Reiter des Admins belegt die Rollenprobe **als Statuscode**, nicht als Bild. | P-P5c-06 |
 | **Ein Archiv auf einem echten Ziel** (AP2) | Die Versandprobe (Teil 13) schickt Archive an einen SFTP-Nachbau und misst, dass die Aufbewahrungsregel sie nicht anfasst. Ein echter Hoster mit vsftpd oder OpenSSH ist `--echt` und in dieser Arbeitsumgebung nicht gefahren. | P-P5c-07 |
+| **Die Fehlerseite beim Hoster** (AP3) | Örtlich ist sie über einen eigenen `php -S` provoziert (Teil 7 der Protokollprobe). Auf Staging und Produktiv lässt sich eine ungefangene Ausnahme nicht auslösen, ohne eine Datei unter `server/` abzulegen — und das tut dieses Paket mit Absicht nicht (E-P5c-97). Was der Hoster davor schiebt (seine eigene 500-Seite, `display_errors`), sieht nur, wer dort einen echten Fehler erlebt. | P-P5c-11 (Bild), P-P5c-13 (Protokoll des Webspace) |
+| **Eine Datenbank, die wirklich weg ist** (AP3) | Nachgestellt ist „die eigene Verbindung ist getrennt" (`KILL CONNECTION`). Ein gestoppter Server kostet zusätzlich einen Verbindungsversuch mit Zeitgrenze — einen je Anfrage, weil `system_melden()` sich den Ausfall merkt. Gefahren ist das nicht: Es hieße, die Datenbank der Arbeitsumgebung anzuhalten, während sie niemand sonst braucht, und das Ergebnis wäre dasselbe Rückfall-Verhalten. | — (Grenze, 3) |
+| **Die Kennungssuche als Seite auf MySQL 8.4** (AP3) | Die Kollation von `JSON_UNQUOTE()` ist auf allen vier Fassungen **als Abfrage** gemessen (F-P5c-89); die Seite selbst läuft örtlich nur auf MariaDB 10.11. | P-P5c-10 |
 | **Die Ankündigung auf Staging unter Last des Huckepack-Jobs** | Örtlich gibt es kein Cron und keine fremden Aufrufe; die Rundmail wird hier mit `mail_job()` von Hand hinausgetragen. Wie lange vierzig Mails auf Staging brauchen, hängt davon ab, wer dort Seiten aufruft. | P-P5c-03 (Zeit notieren) |
 
 ## 1. Messprotokoll AP1 (23.09.2026, Web 20.38.0)
@@ -89,6 +92,26 @@ Umschalter wartet deshalb drei Sekunden, bevor er misst.
 | **Erster finaler Prüfstand** | derselbe Aufruf auf frischer Anlage | **39 grün, 1 rot, 0 nicht gemessen, 1 322 s.** Rot: die Schemaprobe — „Access denied for user 'root'@'localhost'". Ihr Eintrag rief sie seit PK-03 ohne Zugangsdaten und war nie gelaufen (F-P5c-88). Behoben: `plattform.sh schema`, einzeln **4 × 19 / 0**; Gegenprobe mit angehaltenem MySQL-8.4-Behälter → rot, „FEHLT mysql:8.4.0 (Port 3308)". Nicht committet — der Baum änderte sich |
 | **Vorlauf des Prüfstands — ungültig** | derselbe Aufruf, 24.09.2026, 05:16–05:30 UTC | **31 grün, 8 rot, 1 nicht gemessen, 831 s.** Ungültig, weil ich daneben `plattform.sh alles` gestartet hatte (F-P5c-86): Die Schemaprobe legt für ihre Laufzeit eine Wegwerf-`config.php` auf die Probedatenbank, der Torwächter sah eine ausstehende Migration und schaltete um 05:22:12 die Wartung ein. Ab da 503 — Bilderlauf ab `10b` ohne Bilder (414 Konsolenfehler), danach Bedienprobe, Ingest, GPX, Kopplung, CSP, beide Anmeldewege der Kreisläufe. **Alle Proben vor 05:22 grün**, darunter Rollen-, Protokoll-, Komplett- und Versandprobe. Nicht als Beleg verwendet |
 
+## 1b. Messprotokoll AP3 (24.09.2026, Web 20.40.0)
+
+| Mittel | Aufruf | Zahl |
+|---|---|---|
+| **Protokollprobe, Teil 7** (neu) | `bash tools/proben/proben.sh protokoll` | **36 Erwartungen, 0 offen** (vorher 21). Neu 15 — ihr `php -S` läuft mit `output_buffering=4096`, wie beim Hoster: eine halbe Seite, dann eine Ausnahme → nur die Fehlerseite steht da; **Gegenprobe:** das Verwerfen des Puffers herausgenommen → **„halbe Seite davor", rot**, zurück byte-gleich (F-P5c-97). Außerdem: ungefangene Ausnahme → **500**, Kennung auf der Seite = Kennung im Reiter System, Art `ausnahme`, Urheber aus der Sitzung; **9 Marken, 0 gefunden** (Wert, Adresse, zwei IPs, Anfrage, Kopfzeile, `X-Forwarded-For`, Sitzungsinhalt, Sitzungskennung), der Wert als `'…'`; ohne Kontaktadresse „Nenne diese Kennung", mit ihr „Melde diese Kennung an" mit Verweis; unter `/api/` JSON mit `error`, `kennung`, `meldung`; `@` → **0** Einträge; 5 + 25 Warnungen → **20** Einträge, die Seite läuft weiter; Speicherende bei 8 MB → **500** und Eintrag `abbruch`; Kennungssuche **klein geschrieben** findet den Eintrag, aus Verwaltung → **303** nach System; Kommandozeile → **Rückgabewert 255**, Kennung auf stderr, Eintrag `cli`; eigene Verbindung getrennt → Rückfall mit der Kennung, **3 Zeilen in 0,2 s**, keine Adresse, kein Eintrag. Der erste Lauf zählte 1 statt 20 Warnungen (F-P5c-92, Probe berichtigt) |
+| **Mailprobe, Abschnitt 13** (umgebaut) | `bash tools/proben/proben.sh mail` | **51 Prüfungen, 0 Befunde** (vorher 50). Liest den Reiter System statt einer `error_log`-Datei: **1** Eintrag mit Kennung, kein Empfänger darin, **dieselbe Kennung in der Fehlerspalte der Warteschlange**. Im Vorlauf rot, weil er noch die Datei las (F-P5c-96) |
+| **Kopplungsprobe, Fall 27** (umgebaut) | `bash tools/proben/proben.sh kopplung` | **76 Erwartungen, 0 offen**; der Versandweg nach der Antwort belegt über einen Eintrag „smtp: Verbindung nicht möglich" im Reiter System statt über das Protokoll des PHP-Servers (F-P5c-96) |
+| **Verbindungsprobe, Teil 2** (umgebaut) | `bash tools/proben/proben.sh verbindung` | **24 Erwartungen, 0 offen, 3 von 3 Läufen**, je in einer Runde: 11, 13, 16 Abweisungen an der Grenze, 1 bis 2 Gedrängel. Vorher gemessen: 0 (Vorlauf), 1, 12, 13 — der Nachweis hing am Zeitverhalten (F-P5c-98). **Gegenprobe:** `--frei 8` → drei Runden, **0** Abweisungen, **OFFEN**, 60 von 60 Paketen da |
+| **Was die Proben im Reiter System hinterlassen** | Abfrage nach allen Einzelläufen | **74** Einträge (Mail-, Job- und Kreislaufproben erzeugen SMTP-Fehler mit Absicht), **0** mit `@`, **0** mit einer IPv4-Adresse |
+| **Vorlauf des Prüfstands — nicht als Beleg verwendet** | `bash tools/pruefstand/pruefen.sh` auf frischer Anlage | **38 grün, 4 rot, 1 377 s.** Rot: Kopplung und Mail (lasen `error_log`, F-P5c-96), Verbindung (F-P5c-98), Textprobe (dreimal „Nutzerin" im Handbuch statt „NutzerIn"). Bilderlauf **845 s grün**, Bedienprobe grün, Stilvergleich grün, Schemaprobe grün |
+| **Ingestprobe, Teil 11** (neu) | `bash tools/proben/proben.sh ingest` | **86 Erwartungen, 0 offen** (vorher 83). Ein Auslöser auf `missions` lässt das Einfügen scheitern: **HTTP 500 mit genau `{"error":"server","kennung":…}`**, dieselbe Kennung im Reiter System, der Wert ersetzt, der Einsatz nicht angelegt |
+| **Riegel `behandler`** (neu) | `bash tools/quelltext/pruefen.sh behandler` | **145** PHP-Dateien, die drei Zeilen in `db.php` (58–60), **0 Befunde**. Selbstprobe **9 von 9** (entfernt, nur im Kommentar, doppelt, falscher Name, zweiter Ausnahme-Behandler anderswo, lokaler mit und ohne `restore`, Methode gleichen Namens). **Gegenprobe:** `set_exception_handler(…)` in `db.php` auskommentiert → **Rückgabewert 1**, zurück → 0 |
+| Quelltext | `bash tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | **6 von 6** Selbstproben, **9 von 9** Prüfungen (Textprobe 0 neue Treffer bei 17 umgeschriebenen Sätzen) |
+| Register | `php tools/zaehlung/zaehlen.php` | **40 Zeilen, 0 über der Decke**; **Z38 `error_log(` 75 → 2** (`protokoll_lib.php:216`, `systemmeldung_lib.php:155`), `decke_jetzt` und `decke_ziel` 2 |
+| Schemaprobe | `bash tools/sandbox/plattform.sh alles` | **4 × 19 Prüfungen, 0 Fehlschläge** (MariaDB 10.11.14 und 10.6.28, MySQL 8.0.46 und 8.4.0) — nötig, weil AP3 `migration_lib.php` berührt |
+| **Kollation der Kennungssuche** | eigene Abfrage auf den vier Fassungen, `JSON_UNQUOTE(JSON_EXTRACT(daten,'$.kennung')) = ?` | klein / groß: MariaDB 10.11 **0 / 1**, MariaDB 10.6 **1 / 1**, MySQL 8.0 **0 / 1**, MySQL 8.4.0 **0 / 1** — `utf8mb4_bin` außer auf 10.6 (`utf8mb3_general_ci`). Groß trifft überall (F-P5c-89) |
+| Riegelprobe der Demo-Fixture | `php tools/referenzdatensatz/fixture/riegelprobe.php` | **10 von 10**; der gescheiterte Reset meldet **1** Störung in den Reiter System, die Probe nimmt sie heraus (F-P5c-93); Fixture SHA-256 gleich |
+| Fehlerseite im Bild | eigener Lauf, Chromium, 1280 und 390 px | `konzept-p5c/ap3/fehlerseite-1280.png`, `…-390.png` — Gerüst der Störungsseiten, kein Überlauf |
+| Rauchtest vor den Proben | CLI und `php -S` von Hand | Transaktion: Eintrag nach dem Zurückrollen geschrieben; `@file_get_contents()` → 0 Einträge; Speicherende bei 4 MB → Seite mit Kennung. Die acht Zeilen des Rauchtests sind danach gelöscht |
+
 **Was die Umgebung gestört hat, und wie es zu erkennen war.** Nach einem
 Neustart des Behälters liefen die Dienste nicht, und die Statusseite zeigte
 die Zeile „E-Mail — Letzter Versand" rot: Der SMTPS-Nachbau war nicht
@@ -110,8 +133,37 @@ sein soll.
 | P-P5c-07 | **Das Archiv entsteht, geht hinaus und lässt sich laden** (AP2) | auf Staging nach dem Merge: einige Seiten aufrufen (der Job läuft huckepack), dann Verwaltung → Protokoll → Archiv; nach dem nächsten Versand wieder; ein Archiv herunterladen und `sicherheit.jsonl` öffnen | Archive für jede Woche **seit dem ältesten Eintrag** (auf Staging seit P5b, also mehrere); Kennung wie auf dem Schlüsselblatt; nach dem Versand „auf dem Ziel"; im ZIP je Reiter eine `.jsonl` und `manifest.json`; in `sicherheit.jsonl` **keine** IP-Adresse und keine E-Mail-Adresse; im Reiter Verwaltung ein Eintrag „Archiv heruntergeladen". **Die Zeit notieren**, bis das erste Archiv da war | nach einem Tag mit Seitenaufrufen kein Archiv (Jobs → „Protokoll archivieren": Rückstand? Fehler?); „nur lokal" nach einem Versand; eine IP in `sicherheit.jsonl`; „anderer Schlüssel" an einem neuen Archiv | offen |
 | P-P5c-08 | **Die Seite am Handy** (AP2) | auf Staging am Handy, als BetreiberIn: Verwaltung → Protokoll, Reiter „Archiv" (ganz rechts) antippen, dann „Verwaltung"; eine Zeile mit Winkel aufklappen | Die Reiterreihe rollt waagerecht, der aktive Reiter ist nach dem Laden im Bild, die Seite selbst rollt **nicht** waagerecht; die Plakette steht unter dem Text; aufgeklappt stehen die Angaben in fester Schrift | der aktive Reiter außerhalb des Bildes; die Seite lässt sich seitlich schieben; die Plakette neben einem fünfzeiligen Text | offen |
 | P-P5c-09 | **Ein Komplett-Backup hinterlässt einen Eintrag und keine IP** (AP2) | auf Staging: Betrieb → Komplett-Backup → Jetzt sichern, dann „Herunterladen" (unverschlüsselt), die `.sql.gz` entpacken | im Kopf eine Zeile `-- OHNE ZEILEN: sicherheit_ereignisse, rate_limits …`; zu beiden Tabellen `CREATE TABLE`, aber kein `INSERT`; im Protokoll, Reiter Sicherung, zwei Einträge (erzeugt, heruntergeladen) | ein `INSERT` für `sicherheit_ereignisse` oder `rate_limits`; kein Eintrag im Reiter Sicherung | offen |
+| P-P5c-10 | **Die Kennungssuche findet einen Eintrag** (AP3) | auf Staging nach dem Merge: Verwaltung → Protokoll → System; hat der Reiter einen Eintrag, dessen Winkel aufklappen und die Kennung abschreiben; dann in einem anderen Reiter die Kennung **klein geschrieben** ins Suchfeld | Die Seite springt nach System und zeigt genau diesen Eintrag | „Keine Einträge" — dann vergleicht Staging (MySQL 8.4) anders, als die Abfrage gemessen hat (F-P5c-89) | offen — **nur, wenn ein Eintrag da ist**; sonst bei P-P5c-12 nachholen |
+| P-P5c-11 | **Die Fehlerseite, wie sie gebaut ist** (AP3, E-P5c-96) | die beiden Bilder in `docs/konzepte/konzept-p5c/ap3/` ansehen | Gerüst wie die Wartungsseite, rote Meldung mit der Kennung, darunter der Meldeweg und „Zur Startseite"; am Handy kein Überlauf | Wortlaut oder Aufbau nicht, was du willst — dann sag es; die Seite hat kein freigegebenes Bild (E-P5c-96) | offen — **Durchsicht** |
+| P-P5c-12 | **Was im Reiter System steht** (AP3) | eine Woche nach dem Merge auf Staging (nach dem Tag auf Produktiv): Verwaltung → Protokoll → System, Zeitraum 7 Tage | Wenige Einträge; jeder mit Kennung, Datei und Zeile; **keine** IP-Adresse, keine E-Mail-Adresse außer als `[Adresse]` | viele gleiche Einträge (eine Stelle, die dauernd meldet — Befund); eine Adresse im Klartext in einer Meldung (die Bereinigung hat ein Muster nicht getroffen) | offen |
+| P-P5c-13 | **Das Fehlerprotokoll des Webspace wird still** (AP3) | wo zugänglich: das PHP-Fehlerprotokoll beim Hoster vor und eine Woche nach dem Deploy vergleichen | Danach nur noch Zeilen mit `[KENNUNG]` vorn (der Rückfall) und die Meldungen, die PHP selbst schreibt | Zeilen ohne Kennung im alten Format („app_state: …", „Ratenschutz …") — dann ruft eine Stelle noch `error_log()` (Register Z38 hätte es melden müssen) | offen — **nur, wo zugänglich** |
+| P-P5c-14 | **Die Kontaktadresse erscheint auf der Fehlerseite** (AP3) | Verwaltung → Installation: steht eine Kontaktadresse? | Wenn ja, nennt die Fehlerseite sie als Verweis; wenn nein, sagt sie „Nenne diese Kennung …" (beides örtlich gemessen) | — (Hinweis: Ohne Kontaktadresse weiß eine NutzerIn nicht, wohin mit der Kennung) | offen — **Entscheidung, ob eine eingetragen wird** |
 
 ## 3. Grenzen der benutzten Prüfmittel
+
+**Aus AP3:**
+
+- **Teil 7 läuft unter `php -S`, nicht unter dem PHP des Hosters.** Die
+  Ausgabepufferung ist dort eine andere: `php -S` puffert nicht, ein Hoster
+  oft 4 KB (`output_buffering`). Die Fehlerseite verwirft deshalb vorher
+  jeden Puffer — gemessen mit `-d output_buffering=4096` (1b). Was ein
+  Hoster sonst noch davorschaltet (eine eigene 500-Seite), misst keine
+  Probe.
+- **„Datenbank weg" ist eine getrennte Verbindung**, kein angehaltener
+  Server (0).
+- **Die Bereinigung ist eine Musterliste.** Werte in Anführungszeichen,
+  E-Mail- und IPv4-Adressen trifft sie; eine Adresse ohne `@`, einen Namen
+  ohne Anführungszeichen oder eine IPv6-Adresse nicht. Gemessen ist sie
+  gegen neun Marken, die die Probe selbst setzt — nicht gegen jede Meldung,
+  die PHP oder MySQL erzeugen können.
+- **Die Proben hinterlassen Störungen im Reiter System** — die Mail-, Job-
+  und Kreislaufproben erzeugen SMTP-Fehler mit Absicht (74 Einträge nach
+  allen Einzelläufen). Bis AP3 standen dieselben Zeilen im Protokoll des
+  PHP-Servers; es ist dieselbe Spur an anderem Ort, und sie verfällt nach
+  30 Tagen. Nur Protokoll-, Kopplungs-, Mail- (Abschnitt 13) und
+  Riegelprobe nehmen ihre eigenen Nachweise wieder heraus.
+- **Der Riegel `behandler` sieht Zeilen, nicht Wirkung.** Dass die
+  Behandler auch das Richtige tun, misst die Protokollprobe.
 
 **Aus AP2:**
 

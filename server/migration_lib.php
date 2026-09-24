@@ -3592,7 +3592,7 @@ function migrationen_tor_merken(PDO $pdo, bool $offen): void
         $st->execute([MIGRATION_TOR_HASH, migrationen_katalog_hash(),
                       MIGRATION_TOR_OFFEN, $offen ? '1' : '0']);
     } catch (Throwable $ex) {
-        error_log('Torwaechter: Zwischenspeicher nicht schreibbar: ' . $ex->getMessage());
+        system_rueckfall('torwaechter', 'Zwischenspeicher nicht schreibbar', $ex);
     }
 }
 
@@ -3611,7 +3611,7 @@ function migrationen_tor_zuruecksetzen(PDO $pdo): void
         $pdo->prepare('DELETE FROM app_state WHERE k IN (?, ?)')
             ->execute([MIGRATION_TOR_HASH, MIGRATION_TOR_OFFEN]);
     } catch (Throwable $ex) {
-        error_log('Torwaechter: Zwischenspeicher nicht loeschbar: ' . $ex->getMessage());
+        system_rueckfall('torwaechter', 'Zwischenspeicher nicht löschbar', $ex);
     }
 }
 
@@ -3639,7 +3639,7 @@ function migrationen_ausstehend(PDO $pdo): bool
         $l = migrationen_lauf($pdo, false);
         $offen = ((int)$l['offen'] + (int)$l['blockiert']) > 0;
     } catch (Throwable $ex) {
-        error_log('Torwaechter: Pruefung fehlgeschlagen: ' . $ex->getMessage());
+        system_rueckfall('torwaechter', 'Prüfung fehlgeschlagen', $ex);
         return false;
     }
     migrationen_tor_merken($pdo, $offen);

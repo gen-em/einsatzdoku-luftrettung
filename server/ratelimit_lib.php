@@ -655,7 +655,7 @@ function rate_sperre_aufheben(string $topf, string $merkmal, ?string $wer = null
         }
         return $weg;
     } catch (Throwable $ex) {
-        error_log('Ratenschutz: Aufheben gescheitert (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'Aufheben gescheitert (' . $topf . ')', $ex);
         return false;
     }
 }
@@ -732,7 +732,7 @@ function rate_erlaubt(string $topf, ?string $konto = null,
         }
         return true;
     } catch (Throwable $ex) {
-        error_log('Ratenschutz nicht verfuegbar (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'nicht verfügbar (' . $topf . ')', $ex);
         return true;   // s. Kopfkommentar: durchlassen statt selbstgebauter Ausfall
     }
 }
@@ -825,7 +825,7 @@ function rate_misserfolg(string $topf, ?string $konto = null,
             }
         }
     } catch (Throwable $ex) {
-        error_log('Ratenschutz konnte nicht zaehlen (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'konnte nicht zählen (' . $topf . ')', $ex);
     }
 }
 
@@ -995,7 +995,7 @@ function rate_erfolg(string $topf, ?string $konto = null,
             $st->execute([$topf, $merkmal]);
         }
     } catch (Throwable $ex) {
-        error_log('Ratenschutz konnte nicht zuruecksetzen (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'konnte nicht zurücksetzen (' . $topf . ')', $ex);
     }
 }
 
@@ -1101,7 +1101,7 @@ function rate_sperre(string $topf, ?string $konto = null,
         }
         return $beste;
     } catch (Throwable $ex) {
-        error_log('Ratenschutz: Sperrstand nicht lesbar (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'Sperrstand nicht lesbar (' . $topf . ')', $ex);
         return null;
     }
 }
@@ -1149,8 +1149,7 @@ function rate_sperre_paare(array $paare): ?array
     } catch (Throwable $ex) {
         /* Wie `rate_erlaubt()`: durchlassen statt selbstgebauter Ausfall.
          * Die Tabelle fehlt genau dann, wenn `update.php` noch nicht lief. */
-        error_log('Ratenschutz: Sperrstand nicht lesbar (mehrere Toepfe): '
-                  . $ex->getMessage());
+        system_melden('ratenschutz', 'Sperrstand nicht lesbar (mehrere Töpfe)', $ex);
         return null;
     }
 }
@@ -1379,7 +1378,7 @@ function sicherheit_verlangsamung_vermerken(): void
     } catch (Throwable $ex) {
         /* Wie unten: ein Protokoll, das nicht geschrieben werden kann, darf
          * die Anmeldung nicht mitreissen. */
-        error_log('Verlangsamungsstufe nicht vermerkbar: ' . $ex->getMessage());
+        system_melden('ratenschutz', 'Verlangsamungsstufe nicht vermerkbar', $ex);
     }
 }
 
@@ -1481,7 +1480,7 @@ function sicherheit_melden_pruefen(): void
         /* Die Tabelle fehlt (Migration steht aus) oder die Datenbank ist weg.
          * Eine Meldung, die nicht hinausgeht, darf die Anmeldung nicht
          * mitreissen — sie ist ein Hinweis, nicht der Vorgang. */
-        error_log('Sicherheitsmeldung nicht moeglich: ' . $ex->getMessage());
+        system_melden('ratenschutz', 'Sicherheitsmeldung nicht möglich', $ex);
     }
 }
 

@@ -77,16 +77,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   . 'auf diesem Server bereits vergeben ist — am ehesten eine '
                   . 'Gerätekennung, wenn hier auch der Bestand liegt, aus dem die '
                   . 'Fixture stammt. Es wurde nichts geändert. Einzelheiten stehen '
-                  . 'im Fehlerprotokoll unter der Kennung ' . $kennung . '.'
+                  . 'im Protokoll unter der Kennung ' . $kennung . '.'
                 : 'Der Vorgang ist an der Datenbank gescheitert; es wurde nichts '
-                  . 'geändert. Einzelheiten stehen im Fehlerprotokoll unter der '
+                  . 'geändert. Einzelheiten stehen im Protokoll unter der '
                   . 'Kennung ' . $kennung . '.';
         } elseif ($ex instanceof RuntimeException) {
             $error = $ex->getMessage();
         } else {
             $kennung = fehler_kennung($ex, 'admin_demo');
             $error = 'Der Vorgang ist fehlgeschlagen; es wurde nichts geändert. '
-                   . 'Einzelheiten stehen im Fehlerprotokoll unter der Kennung '
+                   . 'Einzelheiten stehen im Protokoll unter der Kennung '
                    . $kennung . '.';
         }
     }

@@ -118,7 +118,7 @@ function status_zeile(array $z): void
  * — seit E-P5a-37 haelt sie auch die Fehlermeldung ein, die bis dahin
  * „Versand an <Adresse> fehlgeschlagen" schrieb. Die Adresse steht in der
  * Warteschlange, solange die Zeile offen oder unzustellbar ist; das ist der
- * Ort dafuer, nicht das Fehlerprotokoll des Webspace. */
+ * Ort dafuer, nicht das Protokoll (Reiter System). */
 $mailMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'testmail') {
     csrf_check();
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'testm
             default         => ['fehler', 'Die Testmail wurde nicht eingereiht. Das '
                    . 'passiert, wenn die eigene Adresse unbrauchbar ist oder die '
                    . 'Warteschlange nicht erreichbar war; die Ursache steht im '
-                   . 'Fehlerprotokoll des Webspace.'],
+                   . 'Protokoll unter System.'],
         };
     }
 }

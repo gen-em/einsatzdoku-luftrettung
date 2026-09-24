@@ -181,6 +181,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      Seite, je Reiter eine bis drei Quellen (nie ein
 │   │                      UNION), Katalog Art → Wort und Ton. KEIN
 │   │                      Zugriffsprotokoll: siehe 4.99g
+│   ├── systemmeldung_lib.php  Das Fehlerprotokoll (P5c/AP3): system_melden()
+│   │                      für jede Stelle, die bis Web 20.39.0 error_log()
+│   │                      rief; die drei Behandler, die db.php einrichtet;
+│   │                      die Fehlerseite mit Kennung und Meldeweg. Lädt
+│   │                      nichts; ohne Datenbank der Rückfall (4.99g)
 │   ├── protokoll_archiv_lib.php  Das Archiv des Protokolls (P5c/AP2):
 │   │                      alle 7 Tage ein versiegeltes ZIP nach
 │   │                      sicherungen/protokoll/, in Häppchen; Aufbewahrung,
@@ -643,10 +648,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      steht (Grundsatz 1). `pruefen.sh` fährt sie je
 │   │                      Stufe, `auswahl.py` wählt nach Berührung aus,
 │   │                      `bericht.py` schreibt die Zahlen (s. LIESMICH.md)
-│   ├── quelltext/         acht Prüfungen, die nur Quelltext lesen und im
+│   ├── quelltext/         neun Prüfungen, die nur Quelltext lesen und im
 │   │                      Tor laufen (PK-04, E-PK-24): installweiche,
 │   │                      sitzungshaertung, csp, jobregister,
-│   │                      migrationsregister, linkprobe,
+│   │                      migrationsregister, behandler, linkprobe,
 │   │                      vollstaendigkeit, textprobe. Ein Läufer
 │   │                      (`pruefen.sh <name>|alle|--selbstprobe`), ein
 │   │                      LIESMICH. Vorher acht Ordner.
@@ -1055,7 +1060,7 @@ Auf beiden Wegen — Profil und Verwaltung (`admin_user.php`) — geht danach ei
 `email_lib.php`). Sie ist die einzige Stelle, an der die Besitzerin von einem
 unterschobenen Wechsel erfährt, und geht deshalb an die alte und nicht an die
 neue: Die neue gehört im Missbrauchsfall dem anderen. Scheitert der Versand,
-steht das im Fehlerprotokoll und der Wechsel bleibt bestehen — ihn
+steht das im Protokoll (Reiter System) und der Wechsel bleibt bestehen — ihn
 zurückzurollen, weil ein Mailserver klemmt, wäre die schlechtere Wahl. Die
 **Bestätigung der neuen** Adresse (Double-Opt-In) kommt mit R37.6 in P5.
 
@@ -2755,10 +2760,15 @@ Personenbezug im Fehlerprotokoll, und sie widersprach der Zusage im Kopf von
 `smtp.php`, die `betrieb_status.php` wiederholt. Jetzt nennt die Meldung eine
 **Kennung** und den **Grund**; die Warteschlange schreibt dieselbe Kennung in
 ihre Fehlerspalte. Wer einem Fehlschlag nachgeht, findet über die Kennung
-beides zusammen — das Protokoll allein sagt nicht, wer gemeint war.
+beides zusammen — das Protokoll allein sagt nicht, wer gemeint war. Seit
+Web 20.40.0 steht die Meldung im Reiter System (4.99g), unter derselben
+Kennung.
 
 **Nachweis:** `tools/proben/mail/` gegen eine eigene SMTPS-Gegenstelle — 41
-Prüfungen, 0 Befunde; `tools/proben/jobs/` Teil 10 — 35 von 35.
+Prüfungen, 0 Befunde (Stand P5a; die Zahl von heute nennt der Prüfbericht);
+`tools/proben/jobs/` Teil 10 — 35 von 35. Seit Web 20.40.0 liest Abschnitt 13
+den Reiter System statt einer `error_log`-Datei und hält die Kennung des
+Eintrags gegen die Fehlerspalte der Warteschlange.
 
 ### Was ein Gerät beim Koppeln über sich meldet — seit Web 12.9.0 gespeichert
 
@@ -3504,7 +3514,8 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 Jeder Aufräumschritt hat weiterhin seinen eigenen Fehlerblock: Einer, der
 scheitert, hält die anderen nicht auf (das war schon seit Web 4.5.1 so und
 bleibt). Der Unterschied ist, dass das Ergebnis jetzt in `jobs` landet und
-nicht nur im Fehlerprotokoll des Webspace.
+nicht nur in einem Protokoll — bis Web 20.39.0 dem des Webspace, seither dem
+Reiter System (4.99g).
 
 **Die Reihenfolge ist Absicht.** `jobs_lauf()` arbeitet den Katalog der Reihe
 nach ab und überspringt, was ins Restbudget nicht mehr passt. `waisen` ist ein
@@ -3687,8 +3698,10 @@ Zwei Fehler steckten hier beim ersten Anlauf, beide beim Messen aufgefallen:
 
 `betrieb_jobs.php` zeigt je Job letzten Lauf, Auslöser, Rückstand und letzten
 Fehler. `letzter_fehler` steht in der Tabelle und nicht nur im
-Fehlerprotokoll: Auf geteiltem Hosting kommt an dieses Protokoll nicht jede
-BetreiberIn heran, und ein dauerhaft scheiternder Job soll auffallen. Die
+Protokoll: An das Fehlerprotokoll des Webspace kam auf geteiltem Hosting
+nicht jede BetreiberIn heran (seit Web 20.40.0 steht der Fehler auch im
+Reiter System), und ein dauerhaft scheiternder Job soll auffallen, ohne dass
+jemand sucht. Die
 Wartung bleibt **gegenüber der Anfrage still** — sie darf keine Seite
 kaputtmachen.
 
@@ -4402,6 +4415,8 @@ nutzten das aus, ohne es zu wollen:
   to database 'gibtesnicht'` — Datenbanknutzer und -name für jeden Besucher.
   Jetzt steht dort eine **Fehlerkennung** (`fehler_kennung()`), unter der der
   volle Text im Fehlerprotokoll des Webspace liegt; die Seite sagt das auch.
+  Dort und nicht im Reiter System, auch seit Web 20.40.0: Die Datenbank, in
+  der das Protokoll liegt, ist ja die, die nicht antwortet (Rückfall, 4.99g).
 - Die Karte „Diese Installation ist in Betrieb" nannte die **Kontenzahl**,
   fett. Gemessen: `2`. Für ihre Aussage — hier passiert nichts mehr — braucht
   sie die Zahl nicht; sie ist jetzt fort.
@@ -5018,7 +5033,7 @@ Rechenzeit, keine Daten; die Vorlage ist die Datenbank selbst. Ein Häppchen,
 das nur seine Zeit aufgebraucht hat, ist **kein** Fehlschlag: Es wirft nicht,
 und der Lauf geht unverändert weiter. Gemessen: ein Bauordner mit Klartext, ein
 Aufräumlauf ohne Fälligkeit → **1 auf 0**; ein Lauf, der wirft → **1 auf 0**,
-Zustand `abgebrochen`, dazu eine Zeile im Fehlerprotokoll.
+Zustand `abgebrochen`, dazu eine Zeile im Protokoll (Reiter System).
 
 Bis Web 15.5.2 wurde der Bauordner erst geräumt, wenn das **nächste Backup
 fällig** war — bei einem wöchentlichen Plan also bis zu sieben Tage später.
@@ -5462,6 +5477,7 @@ Die Bausteine im Einzelnen:
 | Listenkopf und Listenfuß | `ui.php` (`ui_listenkopf()`, `ui_listenfuss()`), `assets/listenkopf.js` | Ab Web 20.39.0 (P5c/AP2, F-P5c-54). Suchfeld mit versteckten Feldern, Filterpillen (mit Zahl, eine mit Kreuz für einen Filter aus der Adresse), ein Auswahlfeld, das mit Skript sofort abschickt; darunter Zählung und Seitenwahl (erste, letzte, Nachbarn, Ellipse). Bis dahin nur als Markup in `admin_users.php`; Registerzeile Z40 hält es außerhalb von `ui.php` auf null. |
 | Aufklappbare Zeile | `ui.php` (`ui_zeile()` mit `daten`) | Ab Web 20.39.0 (P5c/AP2, E-P5c-26). Eine Zeile mit Angaben wird ein `<details class="zeile-mehr">`, dessen `<summary>` die Zeile ist; die Angaben stehen darunter als `<dl>`. `aktionsspalte => true` hält die leere Spalte in Zeilen ohne Angaben. Die Gegenregel zu `.zeile:first-child` ist Pflicht (F-P5c-13, `Design.md` 9.2). |
 | ZIP-Archive | `zip_lib.php` | Ab Web 20.39.0 (P5c/AP2, E-P5c-57, R83). `zip_verfuegbar()`, `zip_bauen($ziel, [Name => Pfad], $packen)` (ungepackt als Vorgabe, weil die Teile schon gzip und versiegelt sind), `zip_eintrag($pfad, $name)`, `zip_oeffnen($pfad)` (nur lesend), `zip_lesen($pfad, $fn)`, `zip_namen()`. Vorher öffneten vier Stellen selbst ein Archiv und fragten je selbst nach der Erweiterung; Registerzeile Z39. **Lädt selbst nichts.** |
+| Etwas melden, das schiefging | `systemmeldung_lib.php` (`system_melden()`, `system_rueckfall()`) | Ab Web 20.40.0 (P5c/AP3, E-P5c-58, Backlog Nr. 248). Der Reiter System statt `error_log()`: Kennung, bereinigte Meldung, Datei und Zeile; ohne Datenbank derselbe Satz mit derselben Kennung im Fehlerprotokoll des Webspace. `error_log()` bleibt an zwei Stellen (Register Z38, Decke 2). Einzelheiten 4.99g. |
 | Protokoll lesen | `protokoll_lib.php` (`protokoll_liste()`, `protokoll_zahl()`, `protokoll_quellen()`) | Ab Web 20.39.0 (P5c/AP2, E-P5c-38). Je Reiter ein bis drei Quellen mit derselben Zeilenform, **je Quelle eine Abfrage, nie ein UNION** (Kollationen, 4.99g). Die Seite, die Zählkarte der Statusseite und der Archivjob lesen alle darüber. |
 | Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und schreibt ins Fehlerlog**: Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
@@ -6766,13 +6782,14 @@ seit Langem `scroll-padding-top: calc(var(--kopf) + var(--abstand-4))`, und
 beides addiert sich — gemessen landete die angesprungene Karte 68 px zu tief.
 Mit `scroll-padding-top` allein sitzt der Sprung bei 72 px.
 
-### 4.99g Das Betriebsprotokoll: Schreibweg, Seite, Archiv (ab Web 20.16.5, P5b/AP1; Seite und Archiv ab Web 20.39.0, P5c/AP2)
+### 4.99g Das Betriebsprotokoll: Schreibweg, Seite, Archiv (ab Web 20.16.5, P5b/AP1; Seite und Archiv ab Web 20.39.0, P5c/AP2; Reiter System ab Web 20.40.0, P5c/AP3)
 
 *Entscheidungen: V1 (16.09.2026), V2, E-P5b-06, E-P5b-12; für Seite und
-Archiv E-P5c-02, -03, -10, -11, -26, -38, -39, -57, -75, -76. Code:
-`server/protokoll_lib.php` (Schreiben und Lesen),
-`server/protokoll_archiv_lib.php` (Archiv), `server/admin_protokoll.php`
-(Seite); Tabelle `protokoll_ereignisse`.*
+Archiv E-P5c-02, -03, -10, -11, -26, -38, -39, -57, -75, -76; für den Reiter
+System E-P5c-12, -58. Code: `server/protokoll_lib.php` (Schreiben und
+Lesen), `server/protokoll_archiv_lib.php` (Archiv),
+`server/admin_protokoll.php` (Seite), `server/systemmeldung_lib.php`
+(Reiter System); Tabelle `protokoll_ereignisse`.*
 
 #### Was hineingeschrieben wird — und was ausdrücklich nicht
 
@@ -6803,7 +6820,7 @@ lesen ganz oder teilweise aus Tabellen, die ihre Sache ohnehin führen
 | Jobs | `job_laeufe` und `protokoll_ereignisse` | 30 Tage | nein |
 | Sicherung | `protokoll_ereignisse` (Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt — es gibt keine Tabelle dafür) | 30 Tage | nein |
 | Ziele | `sicherungsziel_dateien` (gesendet, dort gelöscht) und `protokoll_ereignisse` | **keine** für `sicherungsziel_dateien` — sie ist die Buchführung dessen, was drüben liegt, und bleibt; 30 Tage für die übrigen | nein |
-| System | `protokoll_ereignisse` (gefüllt ab AP3) | 30 Tage | nein |
+| System | `protokoll_ereignisse` — `system_melden()` und die Behandler (ab Web 20.40.0) | 30 Tage | nein |
 
 Die Trennung von `sicherheit_ereignisse` ist kein Übergangszustand, sondern
 die Frist: Dort stehen IP- und E-Mail-Adressen im Klartext und verfallen nach
@@ -6900,7 +6917,9 @@ unbemerkt nichts schreibt, ist keines.
 Der Mittelweg hat **drei Stufen, und alle drei müssen da sein**:
 
 1. `error_log()` mit der Kennung `protokoll:` — für die BetreiberIn, die ins
-   Serverprotokoll sieht.
+   Serverprotokoll sieht. Eine der zwei Stellen, die `error_log()` seit
+   Web 20.40.0 noch rufen (Register Z38): `system_melden()` hier schriebe den
+   Fehlschlag des Protokolls ins Protokoll.
 2. Der Zähler `protokoll_fehler` in `app_state` — er überlebt die Anfrage.
 3. Der Hinweis auf **Betrieb → Status** — er fällt jemandem auf, der nicht
    sucht. Die Karte trägt dann eine rote Plakette „*n* nicht geschrieben".
@@ -6908,12 +6927,100 @@ Der Mittelweg hat **drei Stufen, und alle drei müssen da sein**:
 `protokoll()` gibt `false` zurück. **Der Rückgabewert ist ein Hinweis und kein
 Grund abzubrechen** — kein Aufrufer prüft ihn.
 
-#### Was `error_log()` nicht ersetzt
+#### Der Reiter System — das Fehlerprotokoll (ab Web 20.40.0, P5c/AP3)
 
-Die 42 `error_log()`-Aufrufe in 21 Dateien bleiben, wo sie sind. Sie
-flächendeckend umzustellen wäre Backlog Nr. 202 Paket 3 in anderem Gewand,
-und der richtige Zeitpunkt dafür ist, wenn der Reiter „System" steht und
-jemand die Einträge auch lesen kann.
+Bis Web 20.39.0 stand hier „Die `error_log()`-Aufrufe bleiben, wo sie sind",
+bis der Reiter System steht und jemand die Einträge lesen kann. Seit AP3
+gehen sie hierher. **Zwei Wege hinein, ein Ort:**
+
+- **`system_melden($bereich, $text, $grund)`** — die 75 Stellen in 30
+  Dateien, die bis dahin `error_log()` riefen (Backlog Nr. 248). `$text` sind
+  die eigenen Worte der Stelle, `$grund` die fremde Ursache: eine Ausnahme
+  (Datei, Zeile und Klasse kommen mit) oder der Text einer Gegenstelle.
+  Rückgabe ist die **Kennung**, acht Hexziffern groß, dieselbe Form wie seit
+  M3-10. `fehler_kennung()` und damit `json_fehler()` gehen seither hier
+  durch; ihre Antwortform bleibt (`JSON-Vertrag.md` 5).
+- **Drei Behandler**, eingerichtet in `db.php` gleich hinter der Prüfung auf
+  `config.php` und genau dort (`tools/quelltext/behandler.php`, ein Riegel):
+  `system_ausnahme_behandeln()` für eine Ausnahme, die niemand fängt,
+  `system_fehler_behandeln()` für Warnungen und Hinweise,
+  `system_abbruch_pruefen()` am Ende der Anfrage für den schweren Fehler —
+  Parse-Fehler, Speicherende, Zeitende —, den keiner der beiden sieht.
+
+| Art | Wort, Ton | woher |
+|---|---|---|
+| `ausnahme` | Unerwarteter Fehler, rot | Behandler; `fehler_kennung()` |
+| `abbruch` | Abbruch, rot | Abschlussbehandler |
+| `stoerung` | Störung, orange | `system_melden()` einer Stelle |
+| `php_warnung` | PHP-Warnung, orange | Fehlerbehandler (`E_WARNING` u. ä.) |
+| `php_hinweis` | PHP-Hinweis, grau | Fehlerbehandler (Hinweis, Veraltetes) |
+
+**Die Antwort.** Die Fehlerseite ist das Gerüst der Störungsseiten
+(`stoerung_seite_html()`, kein neuer Baustein): 500, eine
+`meldung-fehler` mit der Kennung und der Satz „Melde diese Kennung an
+<Kontaktadresse>" — oder, ohne Adresse oder ohne Datenbank, „Nenne diese
+Kennung, wenn du den Fehler meldest" (`system_meldesatz()`, R38). Vorher
+verwirft sie jeden Ausgabepuffer: Ein Hoster mit `output_buffering` hätte
+sonst die halbe Seite davor stehen (F-P5c-97). Wo ein
+Skript fragt (`wartung_json_gefragt()`), dieselbe Aussage als JSON
+`{"error":"server","kennung":…,"meldung":…}`. **Auf der Kommandozeile** bleibt
+es beim gewohnten Bild: Text und Aufrufkette auf stderr, Rückgabewert 255,
+dazu die Kennung — und Warnungen gehen dort **zusätzlich** wie gewohnt auf
+stderr, damit eine Probe, die sie zählt, weiter zählt. Ein Gedrängel (1205,
+1213) wird auch im Behandler 503 `ausgelastet`, wie in `json_fehler()`.
+
+**Was hineingeht und was nicht** (E-P5c-12). Satz, Kennung, Art, Datei und
+Zeile (bezogen auf `server/`, nie der Ordner beim Hoster), die Klasse einer
+Ausnahme, die ausgeführte Datei (`seite`) — und der Urheber aus der
+Sitzung, wie bei jedem Eintrag. **Nicht:** Anfrage, Kopfzeilen,
+Sitzungsinhalt, IP. In fremden Meldungen werden Werte in Anführungszeichen
+durch `'…'` ersetzt, E-Mail-Adressen durch `[Adresse]`, IPv4-Adressen durch
+`[IP]` — `Duplicate entry '…' for key` trüge sonst Adressen und
+Gerätekennungen in ein Archiv, das 365 Tage liegt und außer Haus geht. Die
+eigenen Worte einer Stelle behalten ihre Anführungszeichen (sie nennen
+Schlüssel, keine Werte), Adressen verlieren auch sie.
+
+**Mit `@` unterdrückt heißt: nicht da.** 136 Stellen in 19 Dateien rechnen
+mit einem Fehlschlag und fragen selbst nach; der Behandler gibt `false`
+zurück, PHP geht seinen gewohnten Weg, und `error_get_last()` bleibt
+gefüllt. **Dieselbe Stelle zählt je Anfrage einmal, höchstens 20 je
+Anfrage** (`SYSTEM_PHP_JE_ANFRAGE`) — eine Warnung in einer Schleife schriebe
+sonst tausend gleiche Zeilen.
+
+**Drei Eigenschaften, die bleiben müssen.** (1) `systemmeldung_lib.php` lädt
+nichts: `install.php` lädt `ui.php` ohne `db.php`, und `wartung_lib.php` darf
+keine Datenbank voraussetzen. `protokoll_lib.php` kommt erst im Rumpf von
+`system_melden()` dazu. (2) **Keine Schleife:** `protokoll()` scheitert →
+`protokoll_fehler_vermerken()` → `app_state_setzen()` scheitert →
+`system_melden()` … — die Sperre schickt jede Meldung, die während des
+Meldens entsteht, in den Rückfall; fällt die Datenbank einmal aus, bleibt sie
+für die Anfrage aus. (3) **Ein Rückfall, eine Kennung:** Geht die Datenbank
+nicht, steht der Satz mit derselben Kennung im Fehlerprotokoll des Webspace
+(`system_rueckfall()`). Das ist neben `protokoll_fehler_vermerken()` die
+zweite von **zwei** `error_log()`-Stellen, die bleiben (Register Z38,
+Decke 2).
+
+**Die benannten Rückfallstellen** rufen `system_rueckfall()` unmittelbar,
+weil dort die Datenbank das Problem ist: die Verbindungsgrenze und das
+Gedrängel (`wartung_lib.php`), der Torwächter (`migration_lib.php`) und die
+beiden Anmeldewege, die eine ausstehende Migration überbrücken
+(`auth_guard.php`, `login.php`).
+
+**Mitten in einer Transaktion** wartet ein Eintrag bis zum Ende der Anfrage
+(`system_nachtragen()`): Er wäre sonst Teil einer Transaktion, die gerade
+etwas meldet und oft gleich zurückgerollt wird. Steht sie dann noch offen,
+geht er in den Rückfall.
+
+**Die Kennungssuche** im Suchfeld (nur BetreiberIn, E-P5c-26) vergleicht
+**groß**. Die Kollation von `JSON_UNQUOTE()` hängt an der Engine — gemessen
+`utf8mb4_bin` auf MariaDB 10.11, MySQL 8.0 und 8.4, `utf8mb3_general_ci` nur
+auf MariaDB 10.6 —, und bis AP3 stand dort `strtolower`: Auf Produktiv und
+Staging hätte die Suche nichts gefunden (F-P5c-89).
+
+**Nachweis:** `tools/proben/protokoll/` Teil 7 (über einen eigenen `php -S`
+mit `fehlerrouter.php`, nichts unter `server/`), `tools/proben/ingest/`
+Teil 11 (Geräteweg, über einen vorübergehenden Auslöser auf `missions`),
+`tools/quelltext/behandler.php`.
 
 #### Die Zählkarte auf Betrieb → Status
 
@@ -9237,10 +9344,13 @@ Web 20.13.0 antworten **1213** (Deadlock) und **1205** (Lock wait timeout)
 ebenfalls mit 503 `ausgelastet`, an zwei Stellen: `json_fehler()` in `db.php`
 und der eigene Fangblock von `ingest.php`, das seine 500 selbst ausgibt.
 
-Der Vorfall steht mit **Datei und Zeile** im Fehlerprotokoll, aber **ohne**
-Fehlerkennung (`gedraengel_vermerken()`): Ein Gedrängel ist nichts, wonach
-jemand am Telefon fragt — was zählt, ist die Stelle, und die findet man durch
-Zählen gleicher Zeilen, nicht durch Nachschlagen von Kennungen. Und er zählt
+Der Vorfall steht mit **Datei und Zeile** im Fehlerprotokoll des Webspace
+und **nicht** im Reiter System (`gedraengel_vermerken()`, ein Rückfall nach
+4.99g): Die Anfrage hängt gerade an einer Sperre, und ein weiterer
+Schreibzugriff ist das Letzte, was sie braucht. Ein Gedrängel ist auch nichts,
+wonach jemand am Telefon fragt — was zählt, ist die Stelle, und die findet man
+durch Zählen gleicher Zeilen. Die Kennung, die jede Rückfallzeile seit
+Web 20.40.0 trägt, schadet nicht; nach ihr fragt nur niemand. Und er zählt
 **nicht** in `ueberlast.json`: Der Zähler beantwortet die Frage „steht
 `max_user_connections` zu eng?", und ein Gedrängel um eine Tabellenzeile
 beantwortet sie nicht.
@@ -9427,7 +9537,7 @@ Bilderzahl, die längst nicht mehr stimmte.
 |---|---|
 | Fassungen nennen (Web, Uhr, Android) | eine Auskunft — aber eine unlesbare Fassung ist rot |
 | `php -l` über `server/` und `tools/` | 0 Fehler, und mindestens eine Datei gelesen; die Zahl der versionierten `server/`-Dateien geht in die Gegenlesung (`syntax-php`) |
-| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle acht Prüfungen grün (`tools/quelltext/LIESMICH.md`) |
+| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle neun Prüfungen grün (`tools/quelltext/LIESMICH.md`) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Umgebungswert eine Ebene höher | alle sechs Namen leer (6.5, E-KH-28) |
 | `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt |

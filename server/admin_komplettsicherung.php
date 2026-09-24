@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
              * mehr. Was bleibt, ist ein ABGEBROCHENER Download — besser als
              * eine halbe Datei, die aussieht wie eine ganze. Nachlesbar ist
              * er im Fehlerprotokoll. */
-            error_log('komplett: Download „' . $datei . '" abgebrochen: ' . $ex->getMessage());
+            system_melden('komplett', 'Download „' . $datei . '" abgebrochen', $ex);
         }
         exit;
     }

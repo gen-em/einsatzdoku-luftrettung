@@ -44,6 +44,21 @@ if (!is_file(__DIR__ . '/config.php')) {
       . 'install.php anlegen und aufrufen (docs/Technik.md, Runbook).');
 }
 
+/* ---- DAS FEHLERPROTOKOLL (P5c/AP3, E-P5c-12, -58) --------------------------
+ *
+ * HIER UND GENAU EINMAL. Jede Seite, jeder Endpunkt und jeder Job laedt diese
+ * Datei; ab dieser Zeile landet jede Ausnahme, die niemand faengt, und jede
+ * Warnung im Reiter System — mit Kennung, ohne Anfragedaten. Die Fehlerseite
+ * nennt die Kennung und die Kontaktadresse. `tools/quelltext/behandler.php`
+ * zaehlt die beiden Zeilen: je eine, in dieser Datei.
+ *
+ * HINTER der Pruefung auf `config.php`: Fehlt sie, soll ihr Satz dastehen und
+ * nicht eine Fehlerseite, die eine Datenbank fragt, die es nicht gibt. */
+require_once __DIR__ . '/systemmeldung_lib.php';
+set_exception_handler('system_ausnahme_behandeln');
+set_error_handler('system_fehler_behandeln');
+register_shutdown_function('system_abbruch_pruefen');
+
 function db(): PDO {
     static $pdo = null;
     /* DER RIEGEL GEGEN DIE SCHLEIFE (P5a/AP9). Siehe den Block unten. */
@@ -684,36 +699,23 @@ require_once __DIR__ . '/instanz_lib.php';   // Name dieser Installation (P5a/AP
 require_once __DIR__ . '/wartung_lib.php';
 wartung_tor();
 
-/* DIE SITZUNGSABLAGE — EINE VON ZWEI AUFRUFSTELLEN (Schritt 16, E-SA-02,
- * Backlog Nr. 241). Die andere ist `install.php`.
+/* DIE SITZUNGSBIBLIOTHEK (Schritt 16, E-SA-02; Schritt 15/AP2, E-ZE-06).
  *
- * WARUM HIER UND NICHT AN DEN NEUN `session_start()`. Es gibt neun
- * Sitzungsstarts in neun Dateien; ACHT davon laden diese Datei vorher, die
- * neunte ist `install.php`, wo es noch keine `config.php` gibt. Eine Stelle
- * je Sitzungsstart waere neunmal dieselbe Zeile — und der zehnte Sitzungsstart
- * vergaesse sie. Vergessen heisst hier nicht „ungeschuetzt": Die Anmeldung
- * legte die Sitzung dann beim Hoster ab und das Tor suchte sie in
- * `.sitzungen/`. NIEMAND KOENNTE SICH ANMELDEN.
+ * BIS P5c/AP3 STAND HIER „EINE VON ZWEI AUFRUFSTELLEN" der Sitzungsablage,
+ * die andere sei `install.php`, und eine Begruendung, warum der Aufruf hier
+ * und nicht an den neun `session_start()` steht. Beides war seit Web 20.27.0
+ * nicht mehr wahr: Bis Web 20.26.3 stand hier `sitzung_ablage();`; seither
+ * gibt es nur noch EINEN Sitzungsstart, `sitzung_starten()`, und der richtet
+ * die Ablage selbst ein, unmittelbar bevor PHP die Sitzungsdatei anlegt —
+ * also nicht mehr bei jeder Anfrage, die `db.php` laedt, ohne eine Sitzung
+ * zu starten (Register Z01/Z02 halten beides auf eins).
  *
- * WARUM HINTER `wartung_tor()`. Dessen Sperrpfade enden mit `exit` und
- * brauchen keine Sitzung; die Wartungsseite fuehrt keine. Ein Aufruf davor
- * kostete auf jeder gesperrten Anfrage Dateisystemarbeit — ausgerechnet
- * waehrend des Schemaumbaus, fuer den es den Wartungsmodus gibt. Die Seiten,
- * die im Wartungsmodus doch eine Sitzung brauchen (`login.php`, die sieben
- * `betrieb_*.php`, `update.php`), stehen in `WARTUNG_AUSNAHMEN` und kehren
- * aus `wartung_tor()` mit `return` zurueck — sie kommen hier vorbei.
- *
- * UND HIER UND NICHT WEITER OBEN, aus demselben Grund wie die Zeile darueber:
- * Bis zu dieser Stelle ist keine Kopfzeile gesendet und keine Verbindung
- * geoeffnet. `sitzung_lib.php` laedt ihrerseits nichts. */
+ * WAS HIER BLEIBT, ist das Laden: `jobs_lib.php` braucht den Raeumteil,
+ * `plattform_lib.php` die Auskunft, und beide verlassen sich darauf, dass
+ * `db.php` die Datei mitbringt. Sie laedt ihrerseits nichts — die Zeile ist
+ * vor und hinter `wartung_tor()` gleich billig; sie steht dahinter, weil die
+ * Sperrpfade des Tors mit `exit` enden und keine Sitzung brauchen. */
 require_once __DIR__ . '/sitzung_lib.php';
-/* BIS WEB 20.26.3 STAND HIER `sitzung_ablage();`. Der Aufruf ist mit
- * Schritt 15 AP2 entfallen (E-ZE-06): `sitzung_starten()` ruft ihn jetzt
- * selbst, unmittelbar bevor PHP die Sitzungsdatei anlegt. Damit laeuft die
- * Einrichtung der Ablage genau dann, wenn sie gebraucht wird — und NICHT
- * mehr bei jeder Anfrage, die `db.php` laedt, ohne eine Sitzung zu starten.
- * Die Datei wird hier weiter geladen, weil `jobs_lib.php` den Raeumteil und
- * `plattform_lib.php` die Auskunft daraus braucht. */
 
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
@@ -771,9 +773,15 @@ function sql_in_bloecken(PDO $pdo, string $sqlVorlage, array $ids,
  * stand, stand nirgends sonst. Wer eine Woche spaeter nachsehen wollte, hatte
  * nur die Erinnerung an einen Screenshot.
  *
- * Beides loest dieselbe Aenderung: Der volle Text geht ins Fehlerprotokoll
- * des Webspace, nach aussen geht eine Kennung. Sie ist kurz genug, um sie am
- * Telefon durchzugeben, und lang genug, um im Protokoll eindeutig zu sein.
+ * Beides loest dieselbe Aenderung: Der volle Text geht ins Protokoll, nach
+ * aussen geht eine Kennung. Sie ist kurz genug, um sie am Telefon
+ * durchzugeben, und lang genug, um im Protokoll eindeutig zu sein.
+ *
+ * SEIT P5c/AP3 (E-P5c-58) steht der Text im Reiter System und nicht mehr im
+ * Fehlerprotokoll des Webspace, bereinigt wie jede fremde Meldung
+ * (`systemmeldung_lib.php`); nur wenn die Datenbank nicht antwortet, geht er
+ * mit derselben Kennung dorthin. Die ANTWORTFORM bleibt, auch auf dem
+ * Geraeteweg: `{"error": …, "kennung": …}` (`JSON-Vertrag.md` 5).
  *
  * Bewusst NICHT geaendert: install.php und update.php zeigen ihre Ausnahmen
  * weiterhin im Klartext. Beide laufen nur fuer Verwaltende, beide in Lagen
@@ -783,10 +791,7 @@ function sql_in_bloecken(PDO $pdo, string $sqlVorlage, array $ids,
  */
 function fehler_kennung(Throwable $ex, string $bereich): string
 {
-    $kennung = strtoupper(bin2hex(random_bytes(4)));
-    error_log('[' . $kennung . '] ' . $bereich . ': ' . $ex->getMessage()
-              . ' @ ' . $ex->getFile() . ':' . $ex->getLine());
-    return $kennung;
+    return system_melden($bereich, 'unerwarteter Fehler', $ex, [], 'ausnahme');
 }
 
 /**
@@ -807,7 +812,7 @@ function json_fehler(Throwable $ex, string $bereich): never
     json_out(['error'   => $bereich,
               'kennung' => $kennung,
               'meldung' => 'Es ist ein unerwarteter Fehler aufgetreten (Kennung '
-                         . $kennung . '). Er steht im Fehlerprotokoll des Webspace.'], 500);
+                         . $kennung . '). ' . system_meldesatz($kennung)], 500);
 }
 
 /**
@@ -1676,8 +1681,8 @@ function app_state_lesen(string $k): ?string {
  */
 function app_state_zu_lang(string $k, string $v): bool {
     if (strlen($v) <= APP_STATE_MAX) { return false; }
-    error_log('app_state: "' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
-            . 'erlaubt sind ' . APP_STATE_MAX . '.');
+    system_melden('app_state', '„' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
+                . 'erlaubt sind ' . APP_STATE_MAX . '.');
     return true;
 }
 
@@ -1689,8 +1694,7 @@ function app_state_setzen(string $k, string $v): bool {
                        ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
         return true;
     } catch (Throwable $ex) {
-        error_log('app_state: "' . $k . '" liess sich nicht schreiben: '
-                . $ex->getMessage());
+        system_melden('app_state', '„' . $k . '" ließ sich nicht schreiben', $ex);
         return false;
     }
 }
@@ -1762,7 +1766,7 @@ function app_state_setzen_mehrere(array $kv): bool {
         foreach ($kv as $k => $v) { $st->execute([(string)$k, $v]); }
         return true;
     } catch (Throwable $ex) {
-        error_log('app_state: Mehrfachschreiben fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('app_state', 'Mehrfachschreiben fehlgeschlagen', $ex);
         return false;
     }
 }
@@ -1781,8 +1785,8 @@ function app_state_loeschen(string ...$k): void {
         $platz = implode(',', array_fill(0, count($k), '?'));
         db()->prepare("DELETE FROM app_state WHERE k IN ($platz)")->execute($k);
     } catch (Throwable $ex) {
-        error_log('app_state: Loeschen von "' . implode('", "', $k)
-                . '" fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('app_state', 'Löschen von „' . implode('", „', $k)
+                    . '" fehlgeschlagen', $ex);
     }
 }
 
@@ -1944,7 +1948,7 @@ const RESUS_LABELS = [
  * DREI ÄNDERUNGEN
  *  1. Jeder Schritt hat seinen eigenen Fehlerblock. Einer, der scheitert,
  *     haelt die anderen sechs nicht auf.
- *  2. Fehler landen im Fehlerprotokoll des Webspace. Weiterhin still
+ *  2. Fehler landen im Protokoll (seit P5c/AP3 Reiter System). Weiterhin still
  *     GEGENUEBER DER ANFRAGE — die Wartung darf keine Seite kaputt machen —
  *     aber nicht mehr spurlos.
  *  3. Ein zweiter Zustandsschluessel haelt fest, wann zuletzt ein Lauf
@@ -1981,6 +1985,6 @@ function run_cleanup_if_due(): void {
         require_once __DIR__ . '/jobs_lib.php';
         jobs_lauf('anfrage');
     } catch (Throwable $ex) {
-        error_log('cleanup: Job-Einstieg fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('cleanup', 'Job-Einstieg fehlgeschlagen', $ex);
     }
 }

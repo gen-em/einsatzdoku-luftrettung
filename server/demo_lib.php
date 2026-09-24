@@ -282,7 +282,7 @@ function demo_reset_wenn_faellig(): bool
         demo_zuruecksetzen();
         return true;
     } catch (Throwable $ex) {
-        error_log('demo: Reset fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('demo', 'Zurücksetzen fehlgeschlagen', $ex);
         return false;
     }
 }

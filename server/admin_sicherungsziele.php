@@ -561,9 +561,10 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         ]);
         if (($z['letzter_fehler'] ?? null) !== null) {
             /* DER FEHLER STEHT DA, BIS ER WEG IST. Ein Versand, der seit drei
-               Wochen scheitert, ist sonst nur im Fehlerprotokoll des Webspace
-               zu sehen — und an das kommt auf geteiltem Hosting nicht jede
-               BetreiberIn heran. */
+               Wochen scheitert, stand bis Web 20.39.0 sonst nur im Fehlerprotokoll
+               des Webspace — und an das kommt auf geteiltem Hosting nicht jede
+               BetreiberIn heran. Seit P5c/AP3 steht er auch im Protokoll unter
+               System; hier steht er trotzdem, weil man dort suchen muss. */
             /* „GESCHEITERT" IST BEI EINEM ÜBERGANGENEN ZIEL DAS FALSCHE
                WORT (S10/AP4). Es ist nichts schiefgegangen — es wurde
                absichtlich nichts versucht. Der Vermerk steht in derselben

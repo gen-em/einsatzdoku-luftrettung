@@ -759,8 +759,9 @@ function ueberlast_vermerken(): void
     if ($f === false) {
         /* Nicht still. Wenn die Datei nicht schreibbar ist, ist der Vorfall
          * trotzdem passiert — er steht dann wenigstens im Fehlerprotokoll. */
-        error_log('Ueberlast: ' . UEBERLAST_DATEI . ' laesst sich nicht '
-                . 'schreiben; der Vorfall ist nur hier vermerkt.');
+        require_once __DIR__ . '/systemmeldung_lib.php';
+        system_rueckfall('ueberlast', UEBERLAST_DATEI . ' lässt sich nicht '
+                       . 'schreiben; der Vorfall ist nur hier vermerkt.');
         return;
     }
     try {
@@ -957,16 +958,21 @@ function gedraengel_erkannt(Throwable $ex): bool
 }
 
 /**
- * Ins Protokoll, aber OHNE Fehlerkennung.
+ * Ins Fehlerprotokoll des Webspace — und NICHT in den Reiter System.
  *
- * `fehler_kennung()` vergibt eine Nummer, damit jemand am Telefon danach
- * fragen kann. Ein Gedraengel ist nichts, wonach jemand fragt — es ist
- * behoben, bevor die Meldung gelesen wird. Was zaehlt, ist die STELLE: Haeuft
- * sich dieselbe Datei und Zeile, ist dort ein Engpass, und den findet man
- * durch Zaehlen gleicher Zeilen, nicht durch Nachschlagen von Kennungen.
+ * Ein Gedraengel ist nichts, wonach jemand fragt — es ist behoben, bevor die
+ * Meldung gelesen wird. Was zaehlt, ist die STELLE: Haeuft sich dieselbe
+ * Datei und Zeile, ist dort ein Engpass, und den findet man durch Zaehlen
+ * gleicher Zeilen, nicht durch Nachschlagen von Kennungen.
+ *
+ * RUECKFALL UND NICHT `system_melden()` (P5c/AP3, E-P5c-58): Die Anfrage
+ * haengt gerade an einer Sperre; ein weiterer Schreibzugriff in derselben
+ * Lage ist das Letzte, was sie braucht. Die Kennung, die
+ * `system_rueckfall()` seither jeder Zeile gibt, schadet nicht — nach ihr
+ * fragt nur niemand.
  */
 function gedraengel_vermerken(Throwable $ex, string $bereich): void
 {
-    error_log('Gedraengel (' . $bereich . '): ' . $ex->getMessage()
-            . ' @ ' . $ex->getFile() . ':' . $ex->getLine());
+    require_once __DIR__ . '/systemmeldung_lib.php';
+    system_rueckfall('gedraengel', $bereich, $ex);
 }

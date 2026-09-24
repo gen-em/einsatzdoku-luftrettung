@@ -101,7 +101,7 @@ function speicher_dateien_bytes(): int
             $summe += (int)@$eintrag->getSize();
         }
     } catch (Throwable $ex) {
-        error_log('speicher: Verzeichnislauf fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('speicher', 'Verzeichnislauf fehlgeschlagen', $ex);
         return 0;
     }
     return $summe;

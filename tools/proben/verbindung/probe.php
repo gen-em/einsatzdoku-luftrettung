@@ -400,62 +400,76 @@ while (count($gehalten) > max(0, $b['belegt'] - $frei2)) { array_pop($gehalten);
 echo "    " . count($gehalten) . " von " . $b['belegt'] . " belegt, "
    . ($b['belegt'] - count($gehalten)) . " frei, $arbeiter Arbeiter, "
    . "$pakete Pakete gleichzeitig\n";
-/* Der Zaehlerstand VOR Teil 2 — die Differenz sagt, wie viele der 503
+/* Der Zaehlerstand VOR jeder Runde — die Differenz sagt, wie viele der 503
  * aus der Verbindungsgrenze kamen und wie viele aus dem Gedraengel um die
  * `days`-Zeile. Zwei Ursachen, ein Statuscode; ohne diese Differenz waere
- * „12 x 503" eine Zahl, die nicht sagt, was sie gemessen hat. */
-$vorTeil2 = (int)((json_decode((string)@file_get_contents($zaehlDatei), true)
-                   ?: ['ges' => 0])['ges'] ?? 0);
-
-$mh = curl_multi_init();
-$hs = [];
-for ($i = 0; $i < $pakete; $i++) {
-    $ch = curl_init($basis . '/ingest.php');
-    curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 60,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json',
-                                   'X-Device-Id: ' . $dev, 'X-Api-Key: ' . $key],
-        CURLOPT_POSTFIELDS     => (string)json_encode(paket('vp-' . $i, 20)),
-    ]);
-    curl_multi_add_handle($mh, $ch);
-    $hs[$i] = $ch;
-}
-do {
-    $status = curl_multi_exec($mh, $laufend);
-    if ($laufend) { curl_multi_select($mh, 1.0); }
-} while ($laufend && $status === CURLM_OK);
-
+ * „12 x 503" eine Zahl, die nicht sagt, was sie gemessen hat.
+ *
+ * BIS ZU DREI RUNDEN (P5c/AP3, F-P5c-98). Ob bei zwei freien Plaetzen eine
+ * Anfrage an der Grenze abprallt, haengt daran, ob drei gleichzeitig eine
+ * Verbindung halten — gemessen am 24.09.2026: 0, 1, 12 und 13 Abweisungen
+ * in vier Laeufen. Mit EINEM freien Platz prallte es jedes Mal (16, 11, 18),
+ * aber dann gibt es kein Gedraengel mehr, und um das geht es im Anlass dieser
+ * Probe (Nr. 210). Deshalb: zwei Plaetze, und eine neue Runde mit neuen
+ * Paketen, solange noch keine Abweisung an der Grenze gemessen ist.
+ * Wiederholt wird das HERSTELLEN der Lage, nicht die Bewertung — jede Zusage
+ * unten gilt fuer alle Pakete aller Runden. */
+$ausGrenze = 0;
+$runden = 0;
 $antworten = [];
-foreach ($hs as $i => $ch) {
-    $antworten[$i] = ['code' => (int)curl_getinfo($ch, CURLINFO_HTTP_CODE),
-                      'rumpf' => (string)curl_multi_getcontent($ch)];
-    curl_multi_remove_handle($mh, $ch);
-    curl_close($ch);
-}
-curl_multi_close($mh);
+do {
+    $runden++;
+    $vorTeil2 = (int)((json_decode((string)@file_get_contents($zaehlDatei), true)
+                       ?: ['ges' => 0])['ges'] ?? 0);
+    $mh = curl_multi_init();
+    $hs = [];
+    for ($i = 0; $i < $pakete; $i++) {
+        $ref = 'vp-' . $runden . '-' . $i;
+        $ch = curl_init($basis . '/ingest.php');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json',
+                                       'X-Device-Id: ' . $dev, 'X-Api-Key: ' . $key],
+            CURLOPT_POSTFIELDS     => (string)json_encode(paket($ref, 20)),
+        ]);
+        curl_multi_add_handle($mh, $ch);
+        $hs[$ref] = $ch;
+    }
+    do {
+        $status = curl_multi_exec($mh, $laufend);
+        if ($laufend) { curl_multi_select($mh, 1.0); }
+    } while ($laufend && $status === CURLM_OK);
+    foreach ($hs as $ref => $ch) {
+        $antworten[$ref] = ['code' => (int)curl_getinfo($ch, CURLINFO_HTTP_CODE),
+                            'rumpf' => (string)curl_multi_getcontent($ch)];
+        curl_multi_remove_handle($mh, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($mh);
+    $nachTeil2 = (int)((json_decode((string)@file_get_contents($zaehlDatei), true)
+                        ?: ['ges' => 0])['ges'] ?? 0);
+    $ausGrenze += $nachTeil2 - $vorTeil2;
+} while ($ausGrenze === 0 && $runden < 3);
 
 $ok503 = $ok200 = $sonst = 0;
 $nachzuholen = [];
 $andere = [];
-foreach ($antworten as $i => $a) {
+foreach ($antworten as $ref => $a) {
     if ($a['code'] === 200)      { $ok200++; }
-    elseif ($a['code'] === 503)  { $ok503++; $nachzuholen[] = $i; }
+    elseif ($a['code'] === 503)  { $ok503++; $nachzuholen[] = $ref; }
     else {
         $sonst++;
         $andere[$a['code']] = ($andere[$a['code']] ?? 0) + 1;
         /* Auch sie werden wiederholt — sonst zaehlte der Nachweis „0
          * verlorene Uploads" nur die Faelle, die ohnehin gutgingen. */
-        $nachzuholen[] = $i;
+        $nachzuholen[] = $ref;
     }
 }
-$nachTeil2 = (int)((json_decode((string)@file_get_contents($zaehlDatei), true)
-                    ?: ['ges' => 0])['ges'] ?? 0);
-$ausGrenze = $nachTeil2 - $vorTeil2;
 $andereText = '';
 foreach ($andere as $c => $n) { $andereText .= ($andereText === '' ? '' : ', ') . $n . ' x ' . $c; }
-echo "    Ergebnis: $ok200 x 200, $ok503 x 503"
+echo "    Ergebnis in $runden Runde(n) zu $pakete: $ok200 x 200, $ok503 x 503"
    . ($sonst > 0 ? ", $sonst anderes ($andereText)" : '') . "\n";
 echo "    Davon aus der Verbindungsgrenze: $ausGrenze, aus Gedraengel um "
    . "dieselbe Zeile: " . max(0, $ok503 - $ausGrenze) . "\n";
@@ -468,8 +482,8 @@ pruefe($ausGrenze > 0,
 pruefe($sonst === 0, 'Keine Antwort ausserhalb von 200 und 503',
        $sonst === 0 ? '0' : $andereText);
 $alle503jsonOk = true;
-foreach ($nachzuholen as $i) {
-    $d = json_decode($antworten[$i]['rumpf'], true);
+foreach ($nachzuholen as $ref) {
+    $d = json_decode($antworten[$ref]['rumpf'], true);
     if (!is_array($d) || ($d['error'] ?? '') !== 'ausgelastet') { $alle503jsonOk = false; }
 }
 pruefe($alle503jsonOk, 'Jede 503 traegt error=ausgelastet',
@@ -478,11 +492,11 @@ pruefe($alle503jsonOk, 'Jede 503 traegt error=ausgelastet',
 /* ---- Nachliefern, wie die Uhr es tut -------------------------------------- */
 $gehalten = [];   // alle Plaetze freigeben
 $nachOk = 0;
-foreach ($nachzuholen as $i) {
+foreach ($nachzuholen as $ref) {
     $a = hole($basis . '/ingest.php',
               ['Content-Type: application/json', 'X-Device-Id: ' . $dev,
                'X-Api-Key: ' . $key],
-              (string)json_encode(paket('vp-' . $i, 20)));
+              (string)json_encode(paket($ref, 20)));
     if ($a['code'] === 200) { $nachOk++; }
 }
 pruefe($nachOk === count($nachzuholen),
@@ -493,16 +507,16 @@ pruefe($nachOk === count($nachzuholen),
 $q = $pdo->prepare('SELECT COUNT(*) FROM missions WHERE user_id = ? AND client_ref LIKE ?');
 $q->execute([$uid, 'vp-%']);
 $inDb = (int)$q->fetchColumn();
-pruefe($inDb === $pakete, '0 verlorene Uploads: jedes Paket steht in der Datenbank',
-       "$inDb von $pakete");
+pruefe($inDb === $pakete * $runden, '0 verlorene Uploads: jedes Paket steht in der Datenbank',
+       "$inDb von " . ($pakete * $runden));
 
 $q = $pdo->prepare('SELECT COUNT(*) FROM track_points tp
                       JOIN missions m ON m.id = tp.owner_id
                      WHERE tp.owner_type = ? AND m.user_id = ? AND m.client_ref LIKE ?');
 $q->execute(['mission', $uid, 'vp-%']);
 $punkte = (int)$q->fetchColumn();
-pruefe($punkte === $pakete * 20, '... samt aller Spurpunkte',
-       "$punkte von " . ($pakete * 20));
+pruefe($punkte === $pakete * $runden * 20, '... samt aller Spurpunkte',
+       "$punkte von " . ($pakete * $runden * 20));
 
 } finally {
     /* ---- Aufraeumen: Berechtigung, Verbindungen, Konto, Server ------------- */

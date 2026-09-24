@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Quelltextprüfungen — ein Läufer für die acht Prüfungen, die nur Quelltext
+# Quelltextprüfungen — ein Läufer für die neun Prüfungen, die nur Quelltext
 # lesen, nichts brauchen und im Tor laufen (E-PK-24).
 #
 # Aufruf:  bash tools/quelltext/pruefen.sh <name> [zusatz…]
@@ -7,7 +7,7 @@
 #          bash tools/quelltext/pruefen.sh --selbstprobe
 #
 # Namen:   installweiche sitzungshaertung csp jobregister migrationsregister
-#          linkprobe vollstaendigkeit textprobe
+#          behandler linkprobe vollstaendigkeit textprobe
 #
 # Vor PK-04 waren das acht Ordner mit acht Anleitungen und acht
 # Aufrufkonventionen; die Messungen darunter sind unverändert (Abnahme von
@@ -18,11 +18,11 @@ WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$WURZEL" || exit 1
 
 NAMEN=(installweiche sitzungshaertung csp jobregister migrationsregister
-       linkprobe vollstaendigkeit textprobe)
-# Die fünf mit eingebauter Selbstprobe. Die zwei Python-Prüfungen haben keine
+       behandler linkprobe vollstaendigkeit textprobe)
+# Die sechs mit eingebauter Selbstprobe (`behandler` seit P5c/AP3). Die zwei Python-Prüfungen haben keine
 # und hatten vor dem Umzug auch keine — das ist kein Rückschritt, sondern ein
 # Rest, den E-PK-24 mit dem gemeinsamen Rahmen erst noch einlöst.
-SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister)
+SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister behandler)
 
 starter() {   # starter <name> — womit die Datei gefahren wird
     case "$1" in

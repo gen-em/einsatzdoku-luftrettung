@@ -1374,8 +1374,8 @@ function sz_versand_vermerken(int $zielId, string $ordner, string $datei, int $b
                          geloescht_am = NULL, grund = NULL')
             ->execute([$zielId, $ordner, $datei, max(0, $bytes)]);
     } catch (Throwable $e) {
-        error_log('Sicherungsziel: Versandvermerk fuer ' . $ordner . '/' . $datei
-                . ' misslang: ' . $e->getMessage());
+        system_melden('sicherungsziel', 'Versandvermerk für ' . $ordner . '/' . $datei
+                    . ' misslang', $e);
     }
 }
 
@@ -1443,8 +1443,8 @@ function sz_loeschung_vermerken(int $zielId, string $ordner, string $datei,
                         WHERE ziel_id = ? AND ordner = ? AND datei = ?')
             ->execute([mb_substr($grund, 0, 190), $zielId, $ordner, $datei]);
     } catch (Throwable $e) {
-        error_log('Sicherungsziel: Loeschvermerk fuer ' . $ordner . '/' . $datei
-                . ' misslang: ' . $e->getMessage());
+        system_melden('sicherungsziel', 'Löschvermerk für ' . $ordner . '/' . $datei
+                    . ' misslang', $e);
     }
 }
 

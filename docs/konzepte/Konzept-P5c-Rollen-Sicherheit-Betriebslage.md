@@ -33,9 +33,9 @@ Umsetzung.
 > | | |
 > |---|---|
 > | Stand | **23.09.2026 — Fassung 2.** Fassung 1 (20.09.2026, gegen `862ca7f`, Web 20.25.0) freigegeben, Mockup-Runde M-P5c-01 freigegeben. Am 23.09.2026 gegen `8fd4553` (Web 20.37.1, nach Schritt 15, 16 und PK-01 bis -04) abgeglichen: 139 Rohbefunde, 16 davon in der Gegenlesung widerlegt; 21 Fragen dem Auftraggeber vorgelegt und am selben Tag beantwortet (Q-P5c-05 bis -25, 2.7). Daraus **E-P5c-31 bis -58** und **F-P5c-15 bis -58**. Nachgezogen auf `main` `8ae873c` (PK-04 gemergt, Konzept TB). **Mockup-Runde M-P5c-02** am 23.09.2026 gebaut und freigegeben: **F-P5c-59 bis -63**, **Q-P5c-26 bis -30**, **E-P5c-59 bis -66** (2.8). |
-> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -85** (2.9) — ohne eigene Frage bis auf drei aus AP2, **Q-P5c-31 bis -33**, beantwortet am 24.09.2026 (Adressen bleiben im Archiv, erstes Archiv ab dem ältesten Eintrag, aktiver Reiter in `--orange-tief`). **Nachtrag zu Fassung 2 aus der Zuarbeit von Konzept BR: E-P5c-86 bis -90, Q-P5c-34 bis -37** (2.10, 24.09.2026) |
+> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -85** (2.9) — ohne eigene Frage bis auf drei aus AP2, **Q-P5c-31 bis -33**, beantwortet am 24.09.2026 (Adressen bleiben im Archiv, erstes Archiv ab dem ältesten Eintrag, aktiver Reiter in `--orange-tief`). **Nachtrag zu Fassung 2 aus der Zuarbeit von Konzept BR: E-P5c-86 bis -90, Q-P5c-34 bis -37** (2.10, 24.09.2026) Aus AP3: **E-P5c-91 bis -97** (2.9), ohne Frage. |
 > | Offen | Nichts. Die beiden Fehler aus der Runde M-P5c-02 außerhalb von P5c — Backlog **288** (Neueinrichtung scheiterte seit Web 20.30.0) und **289** (Anmeldeseite) — sind mit der Korrekturstufe **Web 20.37.3** behoben (23.09.2026, F-P5c-62, -63); ihre Prüfliste war abgearbeitet und stand in `Pruefdokument-Korrektur-288-289.md` (gelöscht 24.09.2026, Historie `5e501ae`) |
-> | Umsetzung | **läuft seit 23.09.2026. AP1 erledigt** (Web 20.38.0; Befunde F-P5c-64 bis -72, alle behoben oder als Prüfmittelfalle benannt). **AP2 erledigt** (Web 20.39.0, 24.09.2026; Befunde F-P5c-73 bis -88, alle behoben, eine davon als Frage vorgelegt). **Als Nächstes: AP3.** — Vorgeschichte: **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** **SD-00 eingespielt mit Fassung 111, Backlog Nr. 294** (Konzept SD, 24.09.2026 — die Nummer 293 hat Konzept BR); seither gilt `CLAUDE.md` 2 Punkt 5: im Rahmenplan keine Paketabsätze mehr. |
+> | Umsetzung | **läuft seit 23.09.2026. AP1 erledigt** (Web 20.38.0; Befunde F-P5c-64 bis -72, alle behoben oder als Prüfmittelfalle benannt). **AP2 erledigt** (Web 20.39.0, 24.09.2026; Befunde F-P5c-73 bis -88, alle behoben, eine davon als Frage vorgelegt). **AP3 erledigt** (Web 20.40.0, 24.09.2026; Befunde F-P5c-89 bis -98, alle behoben; F-P5c-91 lässt eine Lücke im Tor offen, benannt). **Als Nächstes: AP4.** — Vorgeschichte: **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** **SD-00 eingespielt mit Fassung 111, Backlog Nr. 294** (Konzept SD, 24.09.2026 — die Nummer 293 hat Konzept BR); seither gilt `CLAUDE.md` 2 Punkt 5: im Rahmenplan keine Paketabsätze mehr. |
 > | Fable-Schritte | **keine.** M-P5c-01 ist am 20.09.2026 mit Fable gefahren; M-P5c-02 fährt Opus (Q-P5c-08) |
 > | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02 (beide erledigt mit Web 20.37.3, das **290** und **291** vergibt); der Kopf des Backlogs nennt **292** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) **Seit 24.09.2026: Spanne 294–303** — 294 Konzept SD, 295–298 Anlässe aus dem Nachtrag BR (E-P5c-86), 299–303 frei; 293 gehört BR. |
 >
@@ -46,7 +46,7 @@ Umsetzung.
 > | M-P5c-02 Mockup-Runde | **erledigt — freigegeben 23.09.2026** | — (nur `docs/`) | — | — | | Überlauf 0 in 6 Bildschirmdateien; QR 2 von 2 gelesen; Codeblatt 1 Seite (74 %); Blätter auf Staging je 1 Seite (93 %, 71 %; Härtefall 1013 von 1017 px); Kontraste 8 von 8 gleich mit `kontrast.py` |
 > | AP1 Banner und Ankündigung | **erledigt 23.09.2026** | Neben — **Web 20.38.0** | neben (Bericht im Commit `P5c-AP1`) | nein | | Mailprobe **50 / 0** (vorher 41) · Bedienwege der Seite **2 / 2**, Bedienprobe gesamt 50 · Bilderlauf mit Etikett **496 Bilder, 0/0/0/0**, Etikett 496 Titel + 424 Kopfleisten, nach F-P5c-70 **0 Abweichungen** · Kontraste **25 Paare, 0 verfehlt** (Orange hell auf Rot 4,12) · Register **38 Zeilen, 0 über der Decke** · Statuszeile „Umgebung" 4 von 4 Fällen |
 > | AP2 Protokollseite und Archiv | **erledigt 24.09.2026** | Neben — **Web 20.39.0** | neben (Bericht im Commit `P5c-AP2`) | nein | | Rollenprobe **87 / 0** (28 Zeilen × 3 Rollen + Rollenwechsel; Gegenprobe altes Tor: 8 rot) · Protokollprobe **21 / 0** (entsiegelt 0 IP, 0 Adressen in Sicherheit und E-Mail) · Komplettprobe **67 / 0**, Wiederherstellung **111 / 0** · Versandprobe **141 / 0** (Teil 13 neu; Gegenprobe 2 von 3 Archiven gelöscht) · Bilderlauf **520 Bilder aus 65 Seiten, 0/0/0/0**, 167 Karten · Bedienprobe **52 / 52**, davon die Seite **2 / 2** (Zeilenhöhe 68,4 = 68,4 px; ohne Gegenregel 12 px niedriger) · Zeilenhöhe über `motor.mjs` 1440 px 68,39 = 68,39, 390 px 110,98 = 110,98 · Register **40 Zeilen, 0 über der Decke** · Stilvergleich **54 geplant, 54 gemessen, 0 ungeplant** · Kontraste **25 Paare, 0 verfehlt** |
-> | AP3 Fehlerprotokoll | offen | Neben | neben | nein | | |
+> | AP3 Fehlerprotokoll | **erledigt 24.09.2026** | Neben — **Web 20.40.0** | neben (Bericht im Commit `P5c-AP3`) | nein | | `error_log(` **75 → 2** (Z38, Decke 2) · Protokollprobe **36 / 0** (neu Teil 7: 15, Gegenprobe Puffer rot) · Ingestprobe **86 / 0** (neu Teil 11: 3) · Mailprobe **51 / 0** · Kopplungsprobe **76 / 0** · Verbindungsprobe **24 / 0** (3 von 3; Gegenprobe rot) · Riegel `behandler` Selbstprobe **9 / 9**, Gegenprobe rot · Quelltext **9 von 9**, Selbstproben **6 von 6** · Schemaprobe **4 × 19 / 0** · Riegelprobe **10 / 0** · Kollation der Kennungssuche auf **4** Engines gemessen |
 > | AP4 Support-Rolle | offen | Neben | **haupt** | **ja** (ENUM `users.role`) | | |
 > | AP5 Zweitfaktor und Bus-Faktor | offen | Neben | **haupt** | **ja** (TOTP-Spalten, Codetabelle) | | |
 > | AP6 Health | offen | Neben | neben | nein | | |
@@ -1305,6 +1305,69 @@ die Seite einem Admin mit falschem Token „Ungültiges Formular-Token" statt
 des Rollentors — die Rollenprobe sah darin „durch". Der Eintrag steht vor
 der Auslieferung, weil die Anfrage danach endet.
 
+**E-P5c-91 — Drei Behandler, nicht zwei** (AP3, über E-P5c-12 hinaus). Ein
+Speicherende, ein Zeitende oder ein Parse-Fehler erreichen weder den
+Ausnahme- noch den Fehlerbehandler; PHP bricht ab, und bis AP3 stand dann
+eine weiße Seite mit 500. `register_shutdown_function('system_abbruch_pruefen')`
+schreibt den Eintrag (Art `abbruch`) und zeigt die Fehlerseite, wenn noch
+nichts gesendet ist — gemessen mit einem Speicherende von 8 MB. Die Regel
+in `tools/quelltext/behandler.php` verlangt alle drei Zeilen in `db.php`,
+und sie ist ein **Riegel in Stufe 1** (neunte Quelltextprüfung), nicht nur
+eine örtliche Prüfung: Wer einen Behandler entfernt, sieht es im Tor.
+
+**E-P5c-92 — Fünf Arten im Reiter System, und `seite` gehört hinein**
+(AP3). `stoerung` (eine Stelle meldet und läuft weiter), `ausnahme`
+(ungefangen oder über `fehler_kennung()`), `abbruch`, `php_warnung`,
+`php_hinweis` — mit Wort und Ton im Katalog und als Auswahl im Filter.
+Neben Kennung, Datei, Zeile und Klasse steht die **ausgeführte Datei**
+(`seite`, bezogen auf `server/`): Eine Ausnahme tief in `db.php` sagt sonst
+nicht, auf welcher Seite sie entstand. Das ist keine Anfrage — kein Pfad
+aus der Adresse, kein Parameter —, sondern der Name der Datei, die PHP
+ausführt.
+
+**E-P5c-93 — Warnungen: je Stelle einmal, höchstens 20 je Anfrage; auf der
+Kommandozeile zusätzlich wie gewohnt** (AP3). Im Web verschluckt der
+Behandler die Meldung (`true`) — sie steht im Protokoll, und eine
+PHP-Warnung im Seitentext hilft niemandem. Auf der Kommandozeile gibt er
+`false` zurück: Dort liest ein Mensch oder eine Probe stderr, und eine
+Probe, die Warnungen zählt, soll weiter zählen können.
+
+**E-P5c-94 — Eine Meldung in offener Transaktion wartet bis zum Ende der
+Anfrage** (AP3). Sonst wäre sie Teil einer Transaktion, die gerade etwas
+meldet und oft gleich zurückgerollt wird. `system_nachtragen()` schreibt
+sie, wenn die Transaktion zu ist, und sonst in den Rückfall.
+
+**E-P5c-95 — Die Rückfallstellen rufen `system_rueckfall()` unmittelbar;
+eine Kennung je SMTP-Versuch** (AP3, E-P5c-58). Benannt sind fünf Orte:
+Verbindungsgrenze und Gedrängel (`wartung_lib.php`), Torwächter (drei
+Stellen in `migration_lib.php`), die beiden Anmeldewege mit ausstehender
+Migration (`auth_guard.php`, `login.php`) — sieben Aufrufe. `smtp.php` vergibt seine Kennung
+vor dem Versuch, weil sie neben dem Empfänger in die Warteschlange geht;
+`system_melden()` übernimmt sie (Parameter `kennung`), und die eigene Zeile
+beim Zeitende entfällt (F-P5c-95). **Die Einrichtungsseite bei
+unerreichbarer Datenbank** (`wiederherstellen.php`) behält „im
+Fehlerprotokoll des Webspace" — dort ist es wahr —, mit dem Grund dazu.
+
+**E-P5c-96 — Die Fehlerseite ist das Gerüst der Störungsseiten** (AP3,
+E-P5c-58). `stoerung_seite_html()`, eine `.meldung-fehler` mit der Kennung,
+der Meldesatz aus `system_meldesatz()` (mit Kontaktadresse als Verweis,
+ohne sie „Nenne diese Kennung …") und ein Verweis zur Startseite. Kein
+neuer Baustein; ein Bild gab es dafür nicht, weil E-P5c-58 nur den Satz
+festlegte — die Aufnahmen liegen in `konzept-p5c/ap3/` und stehen im
+Prüfdokument zur Durchsicht (P-P5c-11). Ihr Markup steht in
+`system_fehlerseite()` und nicht in `ui.php`, weil sie auch dann stehen
+muss, wenn `ui.php` der Fehler ist.
+
+**E-P5c-97 — Geprüft wird ohne eine Datei unter `server/`** (AP3). Die
+Protokollprobe provoziert ihre Fehler über einen eigenen `php -S` mit
+`tools/proben/protokoll/fehlerrouter.php` als Router; eine Probeseite unter
+`server/` bliebe nach einem Abbruch liegen und ginge mit dem nächsten Push
+auf Staging. „Datenbank weg" stellt sie her, indem sie die **eigene**
+Verbindung von außen trennt (`KILL CONNECTION`) — nicht durch einen Tausch
+von `config.php`, der die ganze Anlage träfe (F-P5c-86). Die Ingestprobe
+lässt das Einfügen über einen vorübergehenden Auslöser auf `missions`
+scheitern.
+
 | Nr. | Frage | Vorschlag | Entscheidung |
 |---|---|---|---|
 | Q-P5c-31 | *(AP2)* Adressen im Text der Verwaltung: ins Archiv wie gespeichert, oder herausnehmen wie bei Sicherheit | wie gespeichert | **Adressen bleiben** (24.09.2026) — E-P5c-75 |
@@ -1687,6 +1750,64 @@ E-P5c-58; die Behandler-Regel in `tools/quelltext/`; Nr. 248 berichtigt.
   `{"error":"server","kennung":…}` (Ingestprobe).
 - Textprobe 0.
 
+**Umsetzung — erledigt am 24.09.2026, Web 20.40.0.**
+
+*Was gebaut ist.* `systemmeldung_lib.php` — `system_melden()`,
+`system_rueckfall()`, die drei Behandler und die Fehlerseite; lädt nichts.
+`db.php` richtet die Behandler gleich hinter der Prüfung auf `config.php`
+ein; `fehler_kennung()` geht über `system_melden()`, `json_fehler()` nennt
+den Meldeweg. **Von 75 Aufrufen in 30 Dateien** gehen 66 auf
+`system_melden()` (samt `fehler_kennung()`), 7 auf den benannten Rückfall
+(E-P5c-95), einer entfällt (F-P5c-95), einer bleibt mit Absicht
+(`protokoll_fehler_vermerken()`); Z38 zählt **2** — dieser und der
+Rückfall im Helfer —, Decke 2. Fünf Arten im
+Katalog (E-P5c-92), die Kennungssuche vergleicht groß (F-P5c-89).
+**17 Texte** umgetextet — die 13 aus F-P5c-24, dazu drei in
+`admin_demo.php` und einer im Handbuch 11.3; einer (die Einrichtungsseite
+ohne Datenbank) bleibt beim Webspace und sagt jetzt, warum. Der Kommentar
+„EINE VON ZWEI AUFRUFSTELLEN" in `db.php` ist berichtigt und mit dem Block
+darunter zusammengelegt. **Prüfmittel:** Riegel `behandler` (neunte
+Quelltextprüfung, in `pruefablauf.json` und in der Gegenlesung von
+`pruefung.yml`), Teil 7 der Protokollprobe mit `fehlerrouter.php`, Teil 11
+der Ingestprobe; Protokoll- und Rollenprobe fahren in der Nebenstufe
+(F-P5c-90). Backlog Nr. 248 ist erledigt, Nr. 202 vermerkt es.
+
+*Was dabei schiefging und wie es gelöst ist.* **F-P5c-89:** Die
+Kennungssuche aus AP2 hätte auf Produktiv und Staging nichts gefunden —
+gesehen, sobald Teil 7 klein geschrieben suchte, und auf allen vier Engines
+nachgemessen, weil meine erste Begründung („binär") für MariaDB 10.6 nicht
+stimmte. **F-P5c-90, -91:** zwei Lücken in der Buchführung der Prüfkette,
+eine aus AP2 und eine aus dem Nachtrag. **F-P5c-92:** eine Probe, die ihre
+eigene Decke nie erreicht hätte. **F-P5c-93:** eine Probe, die eine Spur in
+der Anlage gelassen hätte. **F-P5c-95:** eine doppelte Zeile, beim Umstellen
+gesehen. **F-P5c-96:** Der Vorlauf des Prüfstands war rot in der Kopplungs-
+und der Mailprobe — beide lasen, was `error_log()` schrieb, und meine Suche
+vor dem Umbau hatte sie nicht gefunden; die Mailprobe wäre in einer ihrer
+zwei Prüfungen still blind geworden. **F-P5c-97:** Beim Schreiben der
+Grenzen gesehen: Ein Hoster mit Ausgabepuffer hätte die Fehlerseite hinter
+die halbe Seite gehängt — jetzt in Teil 7 gemessen, mit Gegenprobe.
+**F-P5c-98:** Die Verbindungsprobe, zum ersten Mal in einem Prüfstand, war im
+Vorlauf rot, weil ihr Nachweis der Enge am Zeitverhalten hing; sie stellt
+die Enge jetzt in bis zu drei Runden her. **Der Vorlauf** (38 grün, 4 rot)
+ist nicht als Beleg verwendet — rot waren Kopplung, Mail, Verbindung und die
+Textprobe (dreimal „Nutzerin" im Handbuch statt der Hausform).
+
+*Entscheidungen.* E-P5c-91 bis -97 (2.9), ohne eigene Frage. **Über das
+Konzept hinaus:** der dritte Behandler (E-P5c-91) und die Angabe `seite`
+(E-P5c-92). Die Fehlerseite hat kein Bild aus einer Mockup-Runde; sie
+besteht aus vorhandenen Bausteinen und liegt zur Durchsicht vor (P-P5c-11).
+
+*Nicht gebaut, und warum.* Eine **Speicherreserve** für den
+Abschlussbehandler: Beim Speicherende kann auch der Eintrag scheitern —
+gemessen hat er es bei 8 MB nicht; scheitert er, steht die Meldung wie
+bisher im Fehlerprotokoll des Webspace, weil PHP sie selbst dorthin
+schreibt. **IPv6-Adressen** werden in Meldungen nicht ersetzt: Ein Muster,
+das sie sicher trifft, träfe auch `Klasse::methode` und Uhrzeiten; in
+Meldungen der Anwendung kommen sie nicht vor.
+
+*Zahlen.* Stand der Umsetzung im Statusblock; Prüfbericht in der
+Commit-Nachricht; Messprotokoll im Prüfdokument, Abschnitt 1b.
+
 ### AP4 — Support-Rolle (E-P5c-14, -22, -40, -62; Bild: M-P5c-02)
 
 **Inhalt.** **Zuerst die Stufenregel aus E-P5c-88** (neue Katalogkennung → Stufe „haupt", `auswahl.py`, Selbst- und Gegenprobe). Migration ENUM `users.role` um `support`; `ROLLEN`,
@@ -2065,6 +2186,16 @@ angegebenen Kennung (A-, B-, … = Bereich und laufende Nummer).*
 | F-P5c-86 | *(AP2, Bedienung der Prüfmittel)* **Der erste Vorlauf des Prüfstands war ungültig: 8 rot, 1 nicht gemessen.** Ich hatte während des Laufs `plattform.sh alles` gestartet, um die Schemaprobe nachzuholen — und die legt für ihre Laufzeit eine Wegwerf-`config.php` auf die Probedatenbank. Eine Anfrage des Bilderlaufs sah in diesem Fenster eine Datenbank mit ausstehenden Migrationen, der Torwächter schaltete die Wartung ein (`wartung.lock`, 05:22:12), und ab Seite `10b` antwortete alles mit 503. Kein Fehler der Anwendung — der Torwächter tat, wofür er gebaut ist. `CLAUDE.md` 7 sagt es: Prüfarbeit wird nicht gefächert, auch nicht von einer Instanz neben sich selbst | Sperrdatei entfernt, frisch eingerichtet, alles Weitere nacheinander; die Schemaprobe allein gefahren (4 × 19 / 0) |
 | F-P5c-87 | *(AP2, Prüfmittel)* **Der erste Bau von Teil 13 der Versandprobe war rot, ohne dass ein Archiv fehlte:** Er verlangte 0 Löschungen im ganzen Lauf, und die Regel „eins je Konto" räumte zu Recht Kontopakete anderer Konten auf (Kreislauf, Demo) | behoben vor dem Commit: gezählt wird im Ordner `protokoll`; danach 141 / 0. Gegenprobe ohne die Riegelzeile in `sz_aufraeumen()`: 2 von 3 Archiven drüben gelöscht, 4 Prüfsätze rot |
 | F-P5c-88 | *(AP2, Prüfkette)* **Die Schemaprobe war im Prüfstand nie messbar.** Der Eintrag in `pruefablauf.json` (seit PK-03, 21.09.2026) rief `schemaprobe/probe.php` ohne Zugangsdaten — als `root` ohne Passwort, und das lehnt die örtliche MariaDB ab. Kein Paket seit PK-03 hatte `migration_lib.php` berührt, also lief der Eintrag nie; **in keinem Prüfbericht der Historie steht `schemaprobe=`**. Gefunden vom ersten finalen Prüfstand zu AP2: 39 grün, 1 rot | behoben in AP2: `plattform.sh schema` (Zugangsdaten je Fassung, alle vier), der Prüfstand ruft es; 4 × 19 / 0. Gegenprobe mit angehaltenem MySQL-8.4-Behälter: rot, nennt die Fassung |
+| F-P5c-89 | *(AP3, aus AP2)* **Die Kennungssuche verglich klein gegen eine groß geschriebene Kennung.** Die Kollation von `JSON_UNQUOTE()` ist auf MariaDB 10.11, MySQL 8.0 und 8.4 binär — gemessen auf allen vier Fassungen der Plattformmatrix, nur MariaDB 10.6 vergleicht ohne Rücksicht auf die Schreibweise. Auf Produktiv und Staging hätte die Suche nichts gefunden; aufgefallen erst, als der Reiter System Einträge hatte | behoben in AP3: `strtoupper`; die Protokollprobe sucht klein geschrieben (Teil 7) |
+| F-P5c-90 | *(AP3, Prüfkette, aus AP2)* **`protokollprobe` und `rollenprobe` fehlten im Muster `nebenstufe`.** Sie liefen nur, wenn ihre eigenen Pfade berührt waren — AP3 ändert `db.php` und den neuen Helfer, und die Protokollprobe wäre nicht ausgewählt worden | behoben in AP3: beide in `nebenstufe`, `systemmeldung_lib.php` im Muster `protokoll` |
+| F-P5c-91 | *(Buchführung)* **Der Nachtrag BR (`f7729c2`) änderte einen Anlass in `pruefablauf.json`, ohne die Tabelle in `Pruefablauf.md` 4 neu zu erzeugen.** Kein Tor prüft, dass die erzeugte Tabelle zur Ablaufdatei passt | behoben in AP3 (neu erzeugt). Die Lücke im Tor bleibt — ein Vergleich „erzeugt = eingecheckt" wäre ein eigener Riegel und gehört in Konzept BR oder SD, nicht hierher |
+| F-P5c-92 | *(AP3, Prüfmittel)* **Der erste Lauf von Teil 7 zählte eine Warnung statt zwanzig**: Eine nackte Anweisung `$nichtDa;` warnt in PHP nicht — der Übersetzer lässt sie fallen. Die Decke je Anfrage wurde also nie erreicht, und die Probe hätte sie nicht gemessen | behoben: `echo $nichtDa;`; danach 20 von 5 + 25 |
+| F-P5c-93 | *(AP3)* **Die Riegelprobe der Demo-Fixture hätte eine Störung im Reiter System liegen lassen** — ihr absichtlich gescheiterter Reset meldet jetzt dorthin statt ins Fehlerprotokoll des Webspace | behoben: Sie zählt die Meldung (mindestens eine, sonst rot) und nimmt sie heraus; 10 / 0 |
+| F-P5c-94 | *(Bedienung der Prüfmittel)* **`pkill -f "<Muster>"` beendete die eigene Shell**, weil deren Befehlszeile das Muster enthielt; die Befehle danach liefen nicht | Weg: die Kennung über `pgrep -f "…809[7]"` suchen — das Muster in Klammern trifft die eigene Befehlszeile nicht |
+| F-P5c-95 | *(AP3)* **`smtp.php` schrieb beim Zeitende zwei Zeilen unter einer Kennung** — die eigene und danach den Schlussvermerk mit demselben Grund | behoben: nur noch der Schlussvermerk (E-P5c-95) |
+| F-P5c-96 | *(AP3, Prüfmittel)* **Zwei Proben lasen, was `error_log()` schrieb, und die Suche danach hatte sie nicht gefunden.** Die Kopplungsprobe (Fall 27) suchte „SMTP" im Protokoll des PHP-Servers und wurde im Vorlauf rot. Die Mailprobe (Abschnitt 13) leitete `error_log` in eine eigene Datei und prüfte dort „kein @" und „eine Kennung" — die zweite Prüfung wurde rot, **die erste wäre allein grün geblieben**: 0 Byte, also 0 Adressen. Meine Suche vor dem Umbau galt `error_log`, `php_errors`, `Fehlerprotokoll`; die Kopplungsprobe liest über eine Variable `$protokoll`, die auf `/tmp/php-server.log` zeigt | behoben: beide lesen den Reiter System; die Mailprobe verlangt erst einen Eintrag und hält seine Kennung gegen die Fehlerspalte der Warteschlange (3 statt 2 Prüfungen), beide nehmen ihre Einträge wieder heraus. Gesucht jetzt auch nach `.log'` und `php-server.log`: keine dritte Stelle |
+| F-P5c-97 | *(AP3)* **Bei gepufferter Ausgabe hinge die Fehlerseite hinter der halben Seite.** Viele Hoster setzen `output_buffering=4096`: Bricht eine Seite nach wenigen Kilobyte ab, sind die Kopfzeilen noch nicht gesendet, und die Fehlerseite schriebe ihr ganzes Dokument hinter das, was schon im Puffer steht. Örtlich unsichtbar — `php -S` puffert nicht | behoben: `system_fehlerseite()` verwirft vorher jeden Puffer; gemessen mit `-d output_buffering=4096` |
+| F-P5c-98 | *(AP3, Prüfmittel)* **Teil 2 der Verbindungsprobe hing am Zeitverhalten.** „Die Enge schlägt auf die Verbindungen durch" verlangt, dass bei zwei freien Plätzen von 20 gleichzeitigen Paketen mindestens eines an der Grenze abprallt. Gemessen am 24.09.2026: **0** im Vorlauf des Prüfstands, einzeln **1, 12, 13**. Ob es abprallt, hängt daran, ob drei Anfragen zugleich eine Verbindung halten. Mit einem freien Platz prallte es jedes Mal (16, 11, 18) — dann gibt es aber kein Gedrängel mehr, und um das geht es im Anlass der Probe (Nr. 210). Die Probe war vor AP3 in keinem Prüfstand ausgewählt: AP3 berührt `db.php` und damit ihr Muster | behoben: bis zu drei Runden mit neuen Paketen, bis eine Abweisung an der Grenze gemessen ist; jede Zusage gilt für alle Pakete aller Runden. Einzeln **3 von 3** grün (11, 13, 16 Abweisungen, je 1 bis 2 Gedrängel, je eine Runde). **Gegenprobe:** acht freie Plätze → drei Runden, 0 Abweisungen, **OFFEN**, 60 von 60 Paketen angekommen |
 | F-P5c-69 | *(AP1, Prüfmittel)* Wer `config.php` in einem Prozess schreibt und die Anlage **in derselben Sekunde** abfragt, sieht den alten Stand: Der OPcache des PHP-Servers prüft Zeitstempel höchstens alle zwei Sekunden. Gemessen an der Statuszeile: Der Fall „Farbe unbekannt" zeigte beim ersten Lauf den vorigen Fall | kein Anwendungsfehler; der Umschalter für Bilderlauf und Statusmessung wartet 3 s (Prüfdokument) |
 
 ---

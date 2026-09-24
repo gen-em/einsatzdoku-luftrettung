@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (ist_dublettenfehler($ex)) {
                     $error = 'Diese E-Mail-Adresse wird bereits verwendet.';
                 } else {
-                    error_log('admin_user email: ' . $ex->getMessage());
+                    system_melden('admin_user', 'E-Mail-Adresse nicht gespeichert', $ex);
                     $error = 'Die E-Mail-Adresse konnte nicht gespeichert werden.';
                 }
                 if ($teile) {
@@ -763,7 +763,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?= ui_meldung_markup('warn',
         'Der Link konnte nicht per E-Mail zugestellt werden. Er ist eine Stunde '
         . 'gültig — bitte auf einem anderen Weg an die Person selbst weitergeben. '
-        . 'Die Ursache des Fehlschlags steht im Fehlerprotokoll des Webspace.') ?>
+        . 'Die Ursache des Fehlschlags findet die BetreiberIn im Protokoll unter System.') ?>
     <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Der Link
              ist über hundert Zeichen lang; in der grossen Stufe stand er
              gesperrt in Plakatgrösse über drei Zeilen — und ohne Knopf,

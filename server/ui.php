@@ -3074,9 +3074,12 @@ function ui_krypto_bootstrap(array $o = []): void
 
     static $schon = false;
     if ($schon) {
-        error_log('ui_krypto_bootstrap() zweimal aufgerufen — der zweite Aufruf '
-                . 'wurde uebergangen. Beide Zweige einer Seite duerfen das '
-                . 'Ruestzeug nur EINMAL anfordern.');
+        /* `ui.php` laeuft auch in `install.php`, ohne `db.php` — deshalb
+         * holt die Stelle den Helfer selbst; er laedt nichts. */
+        require_once __DIR__ . '/systemmeldung_lib.php';
+        system_melden('ui', 'ui_krypto_bootstrap() zweimal aufgerufen — der zweite Aufruf '
+                    . 'wurde übergangen. Beide Zweige einer Seite dürfen das '
+                    . 'Rüstzeug nur EINMAL anfordern.');
         return;
     }
     $schon = true;

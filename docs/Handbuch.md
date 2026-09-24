@@ -435,10 +435,14 @@ eine Zeit lang keine weitere E-Mail. Die Seite antwortet dabei unverändert —
 sie verrät nie, ob es zu einer Adresse ein Konto gibt.
 
 **Wenn eine Fehlermeldung eine Kennung nennt** — acht Zeichen aus Ziffern und
-Buchstaben —, dann notiere sie. Der vollständige Fehlertext steht unter dieser
-Kennung im Fehlerprotokoll des Webspace; ohne sie ist er dort nicht
-wiederzufinden. Auf dem Bildschirm steht er bewusst nicht: Solche Texte nennen
-Interna der Datenbank, die niemanden etwas angehen.
+Buchstaben —, dann notiere sie und gib sie weiter: Die Fehlerseite sagt, an
+welche Adresse (die Kontaktadresse der Installation, 11.5); steht dort keine,
+an die Person, die NAdoku für dich betreibt. Unter dieser Kennung findet die
+BetreiberIn den Fehler im **Protokoll, Reiter System** (11.7); ohne sie ist er
+dort nicht wiederzufinden. Auf dem Bildschirm steht der Fehlertext bewusst
+nicht: Solche Texte nennen Interna der Datenbank, die niemanden etwas
+angehen. Antwortet die Datenbank selbst nicht, steht er unter derselben
+Kennung im Fehlerprotokoll des Webspace.
 
 **Groß- und Kleinschreibung der E-Mail-Adresse spielt keine Rolle.**
 `Max@Example.invalid` und `max@example.invalid` sind dasselbe Konto.
@@ -3541,8 +3545,8 @@ zutrifft:
   steht, nur der Versand scheiterte. Die Seite zeigt dann den Einladungslink
   an; er ist 24 Stunden gültig und muss auf einem anderen Weg weitergegeben
   werden. **Nur an die Person selbst** — wer den Link hat, kann das Passwort
-  des Kontos setzen. Die Ursache des Fehlschlags steht im Fehlerprotokoll des
-  Webspace.
+  des Kontos setzen. Die Ursache des Fehlschlags findet die BetreiberIn im
+  Protokoll unter System (11.7).
 
 **Rollenwechsel und Löschen wirken sofort**, auch bei jemandem, der gerade
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
@@ -3833,9 +3837,12 @@ und dort wäre ein Zeilenumbruch ein Einfallstor.
 beide dürfen leer bleiben:
 
 - **Kontaktadresse** — sie steht als Zeile „Bei Fragen wende dich an …" in
-  **jeder** E-Mail an NutzerInnen. **Bleibt sie leer, fällt die Zeile weg.**
-  Das ist Absicht: Eine Mail, die im Fehlerfall auf ein Postfach verweist, das
-  niemand liest, ist schlimmer als eine ohne Verweis.
+  **jeder** E-Mail an NutzerInnen und, seit Web 20.40.0, auf der
+  **Fehlerseite**: „Melde diese Kennung an …" (11.7, Reiter System). **Bleibt
+  sie leer, fällt die Zeile weg**; die Fehlerseite sagt dann nur, dass man
+  die Kennung nennen soll. Das ist Absicht: Eine Mail, die im Fehlerfall auf
+  ein Postfach verweist, das niemand liest, ist schlimmer als eine ohne
+  Verweis.
 - **Betreiberadresse** — dorthin gehen die Betriebsmeldungen: Speicherplatz
   wird knapp, Konto-Backups sind überfällig. **Bleibt sie leer, gehen sie
   weiterhin an alle Konten mit Verwaltungsrecht**, wie bisher.
@@ -4006,13 +4013,33 @@ bestimmten Einsatz geöffnet hat: Du kannst es nicht, und zwar mit Absicht.
 | **Jobs** | jeder Lauf eines Hintergrundjobs, Fehler rot | ja | ja |
 | **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt | ja | ja |
 | **Ziele** | was auf ein Backup-Ziel ging und was dort gelöscht wurde | — | ja |
-| **System** | Fehlermeldungen der Anwendung | — | ja |
+| **System** | Fehler und Störungen der Anwendung, je mit Kennung | — | ja |
 | **Archiv** (rechts abgesetzt) | die versiegelten Archive, siehe unten | — | ja |
 
 Was du nicht sehen darfst, zeigt die Seite nicht — es gibt keinen
-ausgegrauten Reiter. **Der Reiter System ist vorbereitet, aber noch leer:**
-Fehlermeldungen der Anwendung stehen bis auf Weiteres im Fehlerprotokoll des
-Webspace.
+ausgegrauten Reiter.
+
+**Der Reiter System** sammelt, was bis Web 20.39.0 nur im Fehlerprotokoll des
+Webspace stand. Jeder Eintrag trägt eine **Kennung**, dieselbe, die die
+Fehlerseite der NutzerIn zeigt, und fünf Arten gibt es:
+
+- **Unerwarteter Fehler** (rot) — ein Fehler, den die Anwendung nicht
+  abgefangen hat; die NutzerIn sah eine Fehlerseite mit dieser Kennung.
+- **Abbruch** (rot) — PHP hat die Anfrage beendet, etwa weil der Speicher
+  nicht reichte.
+- **Störung** (orange) — eine Stelle hat bemerkt, dass etwas nicht ging, und
+  ist weitergelaufen: eine Mail, die nicht hinausging, ein Vermerk, der sich
+  nicht schreiben ließ.
+- **PHP-Warnung** (orange) und **PHP-Hinweis** (grau) — Meldungen von PHP
+  selbst. Dieselbe Stelle steht je Aufruf nur einmal da, und höchstens 20
+  Stück je Aufruf.
+
+**Was nicht darin steht:** was die NutzerIn geschickt hat, ihre Sitzung, ihre
+IP-Adresse. Werte in Anführungszeichen, E-Mail- und IP-Adressen sind in den
+Meldungen durch „…" bzw. „[Adresse]" und „[IP]" ersetzt. Wer den Fehler
+ausgelöst hat, steht wie bei jedem Eintrag dabei. **Antwortet die Datenbank
+nicht**, kann auch kein Eintrag entstehen; dann steht die Meldung mit
+derselben Kennung im Fehlerprotokoll des Webspace.
 
 #### Eine Zeile lesen
 
