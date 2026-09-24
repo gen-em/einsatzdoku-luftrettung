@@ -11,6 +11,16 @@
  *
  * Aufruf: node demo_pruefen.mjs [basis] [schritte]
  *   schritte: Kommaliste aus anlegen,lesen,veraendern,reset,sperren
+ *
+ * „NICHT GEMESSEN" IST EIN REGULAERER AUSGANG, und die Schlusszeile nennt ihn
+ * mit Grund: Es gibt schon ein Demo-Konto (dann fehlt der Knopf „anlegen"),
+ * oder die Mengenbremse des Demo-Kontos greift (E-P1-20, zwanzig Anmeldungen
+ * je Stunde — zwei Laeufe hintereinander reichen). Wer sofort weitermessen
+ * muss, leert den Topf ueber den Weg der Anwendung: `rate_erfolg('demo')` und
+ * `rate_erfolg('demog')` mit gesetztem `$_SERVER['REMOTE_ADDR']`. Der
+ * Rueckgabewert ist 0, solange es keine Befunde gibt — auch mit nicht
+ * gemessenen Abschnitten; wer die Schlusszeile ueberliest, haelt einen halben
+ * Lauf fuer einen ganzen.
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 /* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */

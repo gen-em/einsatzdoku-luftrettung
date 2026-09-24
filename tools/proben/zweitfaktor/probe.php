@@ -5,8 +5,8 @@ declare(strict_types=1);
  * Zweitfaktorprobe — hält der Zweitfaktor, was E-P5c-15, -41, -42, -53, -54
  * zusagen? (P5c/AP5)
  *
- * Anlass: F-P5c-31 (die Code-Abfrage muss VOR der Sitzung stehen, sonst gilt
- * `user_id` schon als angemeldet), F-P5c-37 (Datenmodell, keine
+ * Anlass: Nr. 303 (F-P5c-31: die Code-Abfrage muss VOR der Sitzung stehen,
+ * sonst gilt `user_id` schon als angemeldet), F-P5c-37 (Datenmodell, keine
  * Wiederholung), E-P5c-54 (Demo-Reset). Die Abnahme von AP5 verlangt die
  * RFC-Vektoren 6/6.
  *

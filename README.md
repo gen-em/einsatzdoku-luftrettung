@@ -62,7 +62,7 @@ wird nur der Weg hinein.
 | [`docs/konzepte/erledigt/Pruefdokument-P2-Terminologie.md`](docs/konzepte/erledigt/Pruefdokument-P2-Terminologie.md) | Prüfdokument dazu |
 | [`docs/konzepte/erledigt/Pruefung-Sofortpaket-22.md`](docs/konzepte/erledigt/Pruefung-Sofortpaket-22.md) | Prüfdokument des Sofortpakets zu Backlog Nr. 22 (Web 7.2.1) |
 | [`tools/referenzdatensatz/LIESMICH.md`](tools/referenzdatensatz/LIESMICH.md) | erfundener Beispielbestand: Demo-Konto **und** Regressionsreferenz |
-| [`tools/wortliste/LIESMICH.md`](tools/wortliste/LIESMICH.md) | zählt nach, ob Oberfläche und Dokumentation neutral von Land und Luft sprechen |
+| [`tools/quelltext/LIESMICH.md`](tools/quelltext/LIESMICH.md) | elf Quelltextprüfungen im Tor — darunter die Textprobe (neutral von Land und Luft) und der Bestandsriegel |
 
 ## Schnellstart
 

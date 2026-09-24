@@ -5,7 +5,7 @@ geprüft wurde. **Referenzdokument**: Wer die Tastenbelegung oder die
 Oberflächen ändert, prüft hier, was das jeweilige Gerät überhaupt hergibt.
 
 Die Werte stammen nicht aus Datenblättern, sondern aus Messungen mit
-`tools/eingabe-probe` im Connect-IQ-Simulator. Wie ein neues Gerät ergänzt
+`tools/uhr-pruefstand/eingabe-probe/` im Connect-IQ-Simulator. Wie ein neues Gerät ergänzt
 wird, steht in Abschnitt 5.
 
 Zur **Darstellung** auf den Geräten — Schriften, runde Displays, Aufbau der
@@ -45,7 +45,7 @@ Koppeln stattdessen diese Nummer (`docs/JSON-Vertrag.md`, Abschnitt 1a). Der
 Server löst sie über `server/geraetemodelle.php` auf. Diese drei Nummern sind
 damit prüfbare Eingangswerte — und die einzigen, die im Repositorium belegt
 sind; die vollständige Zuordnung entsteht aus den Gerätedateien
-(`tools/geraetemodelle/`).
+(`tools/erzeugen/geraetemodelle.py`).
 
 Die Icon-Größen stammen aus den Compiler-Warnungen: Für `fr945` und
 `fenix6pro` erschien keine, für `venu3s` die Meldung, dass 40 × 40 nicht zur
@@ -151,7 +151,7 @@ Bewusst hingenommen.
    passendes Icon unter `watch/resources-<gerät>/drawables/` ablegen.
 5. Erst danach das Gerät in `watch/manifest.xml` aufnehmen.
 6. **Prüfen, dass die Teilenummer aufgelöst wird**: Steht sie in
-   `server/geraetemodelle.php`? Wenn nicht, `tools/geraetemodelle/erzeugen.py`
+   `server/geraetemodelle.php`? Wenn nicht, `tools/erzeugen/geraetemodelle.py`
    mit aktuellen Gerätedateien neu laufen lassen. Sonst koppelt das Gerät
    zwar, erscheint in der Geräteliste aber dauerhaft als Nummer statt als
    Name — und das fällt niemandem auf, weil nichts fehlschlägt.

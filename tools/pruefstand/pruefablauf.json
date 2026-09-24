@@ -24,6 +24,21 @@
       "aufruf": "bash tools/quelltext/pruefen.sh linkprobe",
       "braucht": "nichts"
     },
+    "bestand": {
+      "aufruf": "bash tools/quelltext/pruefen.sh bestand",
+      "braucht": "nichts",
+      "bemerkung": "Konzept BR (E-BR-08). Haelt jedes Werkzeug unter tools/ gegen Pruefablauf.md 6: fuenf Abschnitte und hoechstens 40 Zeilen in JEDER LIESMICH.md, eine Anlass-Zeile mit Backlog-Nummer je Ordner und je Probe, jeder Ordner gerufen, keine lose Datei ausser motor.mjs. Keine Decke (E-BR-01): Er steht auf null, weil der Altbestand in BR-02 bereinigt wird."
+    },
+    "syntax-py": {
+      "aufruf": "bash tools/quelltext/pruefen.sh pysyntax",
+      "braucht": "nichts",
+      "bemerkung": "Jedes Python-Werkzeug unter tools/ uebersetzt. Bis BR-03 ein Schritt nur in Stufe 1, den Station B nie fuhr (F-BR-03); Anlass Kette II/AP4, ein SyntaxError in zustand.py, der einen Lauf gegen Produktiv kostete."
+    },
+    "handbuch": {
+      "aufruf": "bash tools/quelltext/pruefen.sh handbuch",
+      "braucht": "nichts",
+      "bemerkung": "Handbuch und Was-ist-NAdoku rendern, UTF-8 streng, kein Bild aus fremder Quelle (P5b/AP8). Braucht cmark-gfm aus der Ausbaustufe web; fehlt es, rc 2 -- rot, nicht still gruen. Bis BR-03 nur in Stufe 1 (F-BR-03); die strenge UTF-8-Pruefung kam mit BR-03, weil --validate-utf8 kaputte Bytes still ersetzt (F-BR-16)."
+    },
     "installweiche": {
       "aufruf": "bash tools/quelltext/pruefen.sh installweiche",
       "braucht": "nichts"
@@ -185,8 +200,9 @@
       "braucht": "android"
     },
     "uhr-stufe1": {
-      "aufruf": "bash tools/uhr-pruefstand/pruefstand.sh reihe",
-      "braucht": "uhr"
+      "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh reihe /tmp/uhr-auswahl.txt",
+      "braucht": "uhr",
+      "bemerkung": "Stufe I ueber alle Manifest-Geraete, rund 10 min. `reihe` verlangt die Liste, die erst geraeteklassen.py schreibt; bis BR-04 stand hier nur `reihe` und brach sofort ab (F-PK-21 seit PK-03, Nr. 316). Aufgefallen ist es erst, als ein PR tools/uhr-pruefstand/ beruehrte und das Tor uhr=gebaut verlangte."
     },
     "zaehlung": {
       "aufruf": "php tools/zaehlung/zaehlen.php",
@@ -201,7 +217,7 @@
     "spaltenregister-wegprobe": {
       "aufruf": "python3 tools/spaltenregister/wegprobe.py",
       "braucht": "installation",
-      "bemerkung": "Schritt 15/AP6. Faehrt die zwei Anweisungen, die kein Kreislauf abdeckt (Schnitt, UPDATE-Zweig des Imports). Sie SCHREIBT -- schneidet einen Einsatz, ueberschreibt einen zweiten -- und gehoert deshalb an ein WEGWERFKONTO: das Umlaufkonto des edbak-Kreislaufs, das dafuer gemacht ist und Daten MIT Spur traegt (eine csv-Ausfuhr hat keine GPS-Punkte). `nach` zieht den Kreislauf mit und stellt ihn davor (RP-01, F-RP-08); Konto und Passwort liest die Probe aus kreislauf.py, nicht aus dieser Datei (CLAUDE.md 4, E-PK-27). Laeuft NICHT in Stufe 1.",
+      "bemerkung": "Schritt 15/AP6. Faehrt die zwei Anweisungen, die kein Kreislauf abdeckt (Schnitt, UPDATE-Zweig des Imports). Sie SCHREIBT -- schneidet einen Einsatz, ueberschreibt einen zweiten -- und gehoert deshalb an ein WEGWERFKONTO: das Umlaufkonto des edbak-Kreislaufs, das dafuer gemacht ist und Daten MIT Spur traegt (eine csv-Ausfuhr hat keine GPS-Punkte). `nach` zieht den Kreislauf mit und stellt ihn davor (RP-01, F-RP-08); Konto und Passwort liest die Probe aus kreislauf.py, nicht aus dieser Datei -- die eine Stelle fuer die Umlaufkonten (RP-01, E-RP-02). Bis BR-03 stand hier E-PK-27; das ist die Adressregel der Textprobe, nicht diese (F-BR-05 (c)). Laeuft NICHT in Stufe 1.",
       "nach": [
         "kreislauf-edbak"
       ]
@@ -234,6 +250,9 @@
       "vollstaendigkeit",
       "kontraste",
       "linkprobe",
+      "bestand",
+      "syntax-py",
+      "handbuch",
       "installweiche",
       "behandler",
       "sitzungshaertung",
@@ -262,7 +281,7 @@
       "pfade": [
         "server/spur_lib.php",
         "server/tag_spuren.php",
-        "server/api/spur*.php"
+        "server/api/backup_spuren*.php"
       ],
       "proben": [
         "spurprobe",
@@ -413,7 +432,7 @@
         "rollenprobe",
         "bedienprobe"
       ],
-      "anlass": "F-P5c-106 (Rueckweg pruefte gegen einen Wert aus der Datenbank), Konzept RW E-RW-03, -11, -12"
+      "anlass": "Nr. 319 (F-P5c-106: Rueckweg pruefte gegen einen Wert aus der Datenbank), Konzept RW E-RW-03, -11, -12"
     },
     {
       "id": "protokoll",

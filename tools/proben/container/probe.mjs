@@ -1,6 +1,8 @@
 /* Containerprobe — haelt Fassung 4 gegen drei unabhaengige Umsetzungen.
  * ===========================================================================
  *
+ * Anlass: Nr. 309 — der alte Base64-Wandler brach bei einem Teil von 2 MB ab
+ *
  * WOFUER (S2/AP5, E-S2-10). Fassung 4 zerlegt das Backup in versiegelte
  * Teile. Drei Dinge daran koennen schiefgehen, ohne dass es auffaellt:
  *

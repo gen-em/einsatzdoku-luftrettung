@@ -5,6 +5,8 @@ declare(strict_types=1);
  * Verbindungsprobe — was tut die Anwendung, wenn die Datenbank keine
  * Verbindung mehr annimmt? (P5a/AP9, E-P5a-18)
  *
+ * Anlass: Nr. 210 — gleichzeitige Uploads auf denselben Diensttag liefen in Deadlocks
+ *
  * WOFUER. MySQL/MariaDB weist eine Verbindung mit **1040** ab, wenn der ganze
  * Server voll ist, und mit **1203**, wenn dieses eine Datenbankkonto seine
  * `max_user_connections` ausgeschoepft hat. Auf einem geteilten Webspace ist

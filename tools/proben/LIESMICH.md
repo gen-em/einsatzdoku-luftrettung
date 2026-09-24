@@ -10,21 +10,15 @@ bash tools/proben/proben.sh <name> [zusatz…]   # alle · --liste
 
 ## Was es misst
 
-`ingest` Annahme und Prüfschicht · `spur` beide Spurablagen ·
-`jobs` Hintergrundjobs und Register · `kopplung` Handy und Uhr ·
-`wartung` Wartungsmodus und Torwächter · `raten` Ratenschutz ·
-`mail` Versand, Fehlerweg und Rundmail · `versand` Sicherungsziele ·
-`komplett` Komplettsicherung · `wiederherstellung` Rückweg ·
-`gpx` Export gegen das Schema · `geraete` Gerätevertrag ·
-`verbindung` Verbindungsgrenze · `anteil` Server-Anteil ·
-`rechtstexte` Texte gegen die Quelle · `freigabe` Schlüsselweitergabe ·
-`container` Format der Sicherungsdatei · `frist` Inhaltsschlüssel ·
-`abmelden` was liegen bleibt · `csp-browser` Richtlinie zur Laufzeit ·
-`rollen` Matrix aus `Technik.md` 4.99p · `protokoll` Archiv, Fehlerprotokoll ·
-`zweitfaktor` Code-Schritt, Einrichtungstor, RFC-Vektoren ·
-`rueckweg` Rückweg beim Zweitfaktor, zwei Teile unter einem Namen: `probe.php` (Signaturen, Selbsttest, Marke, der Prüfzweig am Code-Schritt samt Abzug-Gegenprobe) und `probe.mjs` (der Weg im Browser, NutzerIn und BetreiberIn — auch gegen Staging, mit `--basis`, `--admin`, `--admin-pw`, `--admin-totp`).
+`ingest` Annahme und Prüfschicht · `spur` beide Spurablagen · `jobs` Hintergrundjobs und Register · `kopplung` Handy und Uhr ·
+`wartung` Wartungsmodus und Torwächter · `raten` Ratenschutz · `mail` Versand, Fehlerweg und Rundmail · `versand` Sicherungsziele ·
+`komplett` Komplettsicherung · `wiederherstellung` Rückweg · `gpx` Export gegen das Schema · `geraete` Gerätevertrag ·
+`verbindung` Verbindungsgrenze · `anteil` Server-Anteil · `rechtstexte` Texte gegen die Quelle · `freigabe` Schlüsselweitergabe ·
+`container` Format der Sicherungsdatei · `frist` Inhaltsschlüssel · `abmelden` was liegen bleibt · `csp-browser` Richtlinie zur Laufzeit ·
+`rollen` Matrix aus `Technik.md` 4.99p · `protokoll` Archiv, Fehlerprotokoll · `zweitfaktor` Code-Schritt, Einrichtungstor, RFC-Vektoren ·
+`rueckweg` Rückweg beim Zweitfaktor, zwei Teile hinter `probe.sh`: `probe.php` (Signaturen, Selbsttest, Marke, der Prüfzweig am Code-Schritt samt Abzug-Gegenprobe) und `probe.mjs` (der Weg im Browser, NutzerIn und BetreiberIn — auch gegen Staging, mit `--basis`, `--admin`, `--admin-pw`, `--admin-totp`).
 
-**Den Anlass je Probe** (Grundsatz 5) trägt der Kopfkommentar ihrer Datei.
+**Anlass: Nr. 31, 130, 171, 210** — je Probe im Kopfkommentar ihrer Datei.
 
 ## Was es braucht
 

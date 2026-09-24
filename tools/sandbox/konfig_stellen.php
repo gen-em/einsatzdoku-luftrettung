@@ -5,7 +5,7 @@ declare(strict_types=1);
  * KONFIG STELLEN — eine Lage in `config.php` herstellen und wieder zuruecknehmen
  * ===========================================================================
  *
- *     require_once __DIR__ . '/../../konfig_stellen.php';   // aus tools/proben/<name>/
+ *     require_once __DIR__ . '/../../sandbox/konfig_stellen.php';   // aus tools/proben/<name>/
  *
  *     $zurueck = konfig_stellen(['kdf_anteil' => null]);   // Anteil weg
  *     … pruefen …
@@ -163,10 +163,13 @@ function konfig_stellen_bytes(string $pfad, ?string $text): void
     if (function_exists('config_gemerktes_verwerfen')) { config_gemerktes_verwerfen(); }
 }
 
-/** Wo liegt die `config.php` der Anlage? */
+/** Wo liegt die `config.php` der Anlage? ZWEI Ebenen hoch: Die Datei liegt
+ * seit Konzept BR unter tools/sandbox/ (E-BR-03 (4)). Mit einer Ebene zeigte
+ * der Pfad auf tools/server/ — und der Rueckweg oben kehrt bei fehlendem
+ * Verzeichnis STILL zurueck. */
 function konfig_stellen_pfad(): string
 {
-    return dirname(__DIR__) . '/server/config.php';
+    return dirname(__DIR__, 2) . '/server/config.php';
 }
 
 /** Den heutigen Stand lesen — ohne `konfig()`, das hier gerade umgangen wird. */

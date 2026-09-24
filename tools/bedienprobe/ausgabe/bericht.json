@@ -631,7 +631,7 @@
       "paket": "P5c-AP5",
       "punkt": "E-P5c-53",
       "soll": "eingeschaltet mit 10 Codes; danach falscher Code und derselbe Code abgewiesen, der nächste → Startseite; nach „Zurück zur Anmeldung\" Vormerkfach belegt → leer",
-      "ist": "eingeschaltet, 10 Codes · falscher Code abgewiesen · derselbe Code abgewiesen (im Fenster, Abstand 1 Schritt) · nächster Code → index.php · Vormerkfach belegt → leer",
+      "ist": "eingeschaltet, 10 Codes · falscher Code abgewiesen · derselbe Code abgewiesen (im Fenster, Abstand 0 Schritt) · nächster Code → index.php · Vormerkfach belegt → leer",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,

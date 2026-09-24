@@ -163,7 +163,7 @@ Drei Dinge, damit der Weg nicht an einer Kleinigkeit scheitert:
   Fälle in ihrem `@After` tun.
 
 Wer den ganzen Endpunkt prüfen will statt nur eine Kopplung zu bekommen,
-nimmt `php tools/kopplungsprobe/probe.php`; sie fährt alle vier Anliegen,
+nimmt `php tools/proben/kopplung/probe.php`; sie fährt alle vier Anliegen,
 Fristen, Fehlerzweige und Bremsen über echtes HTTP durch.
 
 **Warum Klartext-HTTP und nicht HTTPS:** *(Zeile 83–87 unverändert)*
@@ -828,7 +828,7 @@ einmal erzeugt und dem Auftraggeber zur Verwahrung übergeben.
 | `bildmarken.sh` | Bildmarken gegen ihre Vorlagen | 0 Abweichungen |
 | `stroeme.py` | Soll-Zahlen der Ausdünnung, mit der Referenzregel aus `tools/referenzdatensatz/` nachgerechnet | 0 Abweichungen gegen die analytischen Werte |
 
-Sie sind das Gegenstück zu `tools/vollstaendigkeit/` und
+Sie sind das Gegenstück zu `tools/quelltext/` (`vollstaendigkeit`) und
 `tools/screenshots/kontrast.py` der Weboberfläche — und sie mussten eigene
 sein, weil die App andere Paare zusammenstellt (weiße Schrift auf
 vollflächig Rot, alles auf Asphaltgrund) und ihre Werte in einer

@@ -5,6 +5,8 @@ declare(strict_types=1);
  * Kopplungsprobe — tut `pair.php` mit seinen vier Anliegen das, was der
  * JSON-Vertrag 1a/1b zusagt? (S5, Paket A; Konzept Abschnitt 10.2)
  *
+ * Anlass: Nr. 313 — die Fehlerzweige der Kopplung duerfen nicht verraten, welche Kennungen es gibt
+ *
  * WOFUER. Die Kopplung ist der eine Weg, auf dem ein Geraet OHNE Anmeldung
  * Zugangsdaten zu einem Konto bekommt. Seit Web 13.0.0 laeuft sie umgekehrt:
  * Das Geraet zeigt den Code, ein Mensch tippt ihn im Web, das Geraet sagt Ja.

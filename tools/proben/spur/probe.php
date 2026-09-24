@@ -4,6 +4,8 @@ declare(strict_types=1);
 /**
  * Spurprobe — kommt aus dem Blob genau das zurueck, was hineinging? (S2/AP1)
  *
+ * Anlass: Nr. 304 — der Rundlauf hielt int gegen float; 175 von 181 Spuren sahen veraendert aus
+ *
  * WOFUER. Die Verdichtung loescht Zeilen. Was danach fehlt, ist weg — es gibt
  * keine zweite Quelle. Die Rundlaufpruefung in `spur_lib.php` ist deshalb die
  * letzte Instanz vor einem unwiderruflichen DELETE, und dieses Werkzeug faehrt

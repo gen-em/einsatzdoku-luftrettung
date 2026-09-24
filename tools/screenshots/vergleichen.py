@@ -43,6 +43,15 @@ Liste zu, und der Vergleich meldet eine Null, die nichts mehr gemessen hat.
     python3 tools/screenshots/vergleichen.py <vorher> --nur-text
     python3 tools/screenshots/vergleichen.py --selbstprobe
 
+UEBER EINE VERSIONSSTUFE HINWEG WIRD DER BILDVERGLEICH NIE NULL, und das ist
+Arithmetik, keine Schwaeche: Die Fassung steht in der Fusszeile JEDER Seite.
+Wer ein Paket mit Versionsstufe belegen will, faehrt `--nur-text`.
+
+DER TEXTVERGLEICH IST KEIN ECHTER DIFF, mit Absicht: Eine eingefuegte Zeile
+verschiebt alles dahinter — die richtige Lautstaerke fuer einen Umbau, der
+keinen Buchstaben aendern darf. Ein weggesicherter Lauf ohne `texte/` (vor
+Schritt 15 AP7) meldet NICHT GEMESSEN, keine Null.
+
 `--erwartet` nennt Seiten, deren Abweichung in DIESEM Lauf beabsichtigt ist
 (Praefix des Dateinamens ohne Breite). Sie werden gezaehlt und benannt, aber
 nicht als Befund gewertet — anders als die Ausnahmeliste, die dauerhaft gilt.

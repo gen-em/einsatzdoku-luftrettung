@@ -313,7 +313,7 @@ Installation (`app_state`-Schlüssel `adresssuche`, Betrieb →
 Servereinstellungen), einer je Konto (`users.adresssuche`, Einstellungen →
 Profil, Karte „Datenschutz"). Beide stehen auf „an"; ist einer aus, unterbleibt
 **jede** Anfrage an den Dienst — Vorwärtssuche, Umkehrsuche und das Suchfeld im
-Kartendialog. Nachgemessen am Netzwerkprotokoll (`tools/klickprobe/`, Weg
+Kartendialog. Nachgemessen am Netzwerkprotokoll (`tools/bedienprobe/`, damals `klickprobe`, Weg
 `ap2-kontoschalter-aus-keine-anfrage`): eingeschaltet 2 Anfragen auf demselben
 Weg, ausgeschaltet 0. Damit ist dies der einzige Laufzeitdienst des Projekts,
 der sich **abschalten** lässt; die Kartenkacheln (6.1) sind die Karte selbst
@@ -473,14 +473,14 @@ Herkunft nachweisbar bleiben soll.
 
 | | |
 |---|---|
-| Datei | `tools/gpxprobe/gpx11.xsd` |
+| Datei | `tools/proben/gpx/gpx11.xsd` |
 | Herkunft | `https://topografix.com/GPX/1/1/gpx.xsd`, bezogen am 31.08.2026 |
 | Größe | 26 665 Byte, **byteweise unverändert** |
 | SHA-256 | `9e4d1988b862edbe556305b130f8f6f1b29864fefd0dc02d5dab04ccdd1f34d6` |
 | Urheber | TopoGrafix (Dan Foster), GPX 1.1 |
-| Zweck | `tools/gpxprobe/` validiert damit die erzeugten GPX-Dateien |
+| Zweck | `tools/proben/gpx/` validiert damit die erzeugten GPX-Dateien |
 
-**Die Prüfsumme steht hier und in `tools/gpxprobe/LIESMICH.md`, nicht im
+**Die Prüfsumme steht hier und in `tools/proben/gpx/probe.php` (`GPX_XSD_SHA`), nicht im
 Dateikopf.** Ein Kommentar in der Datei änderte sie, und sie ist der Punkt: Die
 Probe rechnet sie bei jedem Lauf nach. Ein Schemalauf gegen ein verändertes
 Schema belegt nichts.
@@ -488,7 +488,7 @@ Schema belegt nichts.
 **Und Git schreibt sie nicht um.** Die `.gitattributes` des Projekts setzen
 `* text=auto eol=lf`; das Schema hat 788 CRLF und wäre auf 25 877 Byte
 geschrumpft — die Arbeitskopie hier unverändert, jeder frische Klon aber mit
-falscher Prüfsumme. Die Zeile `tools/gpxprobe/gpx11.xsd -text` hält es
+falscher Prüfsumme. Die Zeile `tools/proben/gpx/gpx11.xsd -text` hält es
 byteweise so, wie es kam. **Wer die Datei austauscht, prüft beides nach:**
 Summe hier und Größe nach einem Klon.
 

@@ -45,10 +45,10 @@ declare(strict_types=1);
  * ZEILENTREU. Alle drei Sichten haben so viele Zeilen wie die Quelle: Was
  * wegfaellt, wird durch Leerzeichen ersetzt, Zeilenumbrueche bleiben stehen.
  * Nur deshalb zeigt `--stellen` auf die Stelle im Original. Uebernommen aus
- * `tools/wortliste/zerlegen.py`, wo dieselbe Regel und derselbe Grund steht.
+ * `tools/quelltext/zerlegen.py`, wo dieselbe Regel und derselbe Grund steht.
  *
  * DER JS-ZERLEGER IST EINE HEURISTIK, keine ECMAScript-Grammatik — Portierung
- * von `js_bereiche()` aus `tools/wortliste/zerlegen.py` samt deren Grenzen:
+ * von `js_bereiche()` aus `tools/quelltext/zerlegen.py` samt deren Grenzen:
  * Division und regulaerer Ausdruck werden am zuletzt gesehenen
  * bedeutungstragenden Zeichen unterschieden, verschachtelte `${…}` in
  * Template-Literalen gelten als Teil der Zeichenkette. Im Zweifel bleibt

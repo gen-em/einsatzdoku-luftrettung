@@ -5,6 +5,8 @@ declare(strict_types=1);
  * MAILPROBE — die Warteschlange, der Katalog und die Frist, gegen einen
  * echten SMTPS-Gegenpart (P5a/AP5).
  *
+ * Anlass: Nr. 204 — smtp_letzter_fehler() nannte den Grund des vorigen Versuchs
+ *
  * Aufruf:  php tools/proben/mail/probe.php
  *
  * WAS SIE MISST UND WARUM SIE NOETIG IST. Bis Web 20.7.0 rief jede der zehn

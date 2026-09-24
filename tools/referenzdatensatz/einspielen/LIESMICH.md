@@ -1,216 +1,40 @@
 # Einspiellauf des Referenzdatensatzes
 
-Spielt den erzeugten Datensatz über die **regulären Wege** in eine
-Installation ein. Kein roher SQL-Weg (R4) — jede Zeile entsteht so, wie sie
-im Betrieb entstünde.
+Spielt den erzeugten Datensatz über die **regulären Wege** ein — kein SQL (R4).
 
-## Die sechs Wege
+## Aufruf
 
-| Weg | Was darüber hereinkommt |
-|---|---|
-| `pair.php` + Geräteseite | die **Kopplung** der zwei Geräte — und damit `geraet_art` und `geraet_modell` (seit R64/AP4) |
-| `ingest.php` | Diensttage, Einsätze, Ruhe-Segmente, Phasen, Reanimationen, Spur |
-| `api/day.php` | Zuordnung der neutralen Diensttage (Standort, Rettungsmittel, Besatzung) |
-| `einsatz_form.php` | Nachtragen der Felder und der geschützten Angaben; `pat_blob` als `edk1:`-Chiffretext |
-| `api/schneiden.php` | der **eine Schnitt**: aus einem Ruhesegment ein Einsatz, mit Sperrvermerk |
-| Weboberfläche | Papierkorb und endgültiges Löschen |
-
-### Die Kopplung — vier Schritte je Gerät
-
-Bis R64/AP4 entstanden die zwei Geräte über `einstellungen.php action=add`:
-Beschriftung und sonst nichts, `geraet_art` und `geraet_modell` NULL. Weil
-`ingest.php` die **Momentaufnahme** beim Anlegen von dort kopiert, trug der
-ganze Bestand eine leere — und der edbak-Kreislauf verglich NULL gegen NULL.
-
-Jetzt geht die Stufe `geraet` den echten Weg:
-
-1. `POST pair.php {"aktion":"start","geraet":{…}}`, **ohne** Kopfzeilen.
-   Der Geräteblock kommt aus `quelldaten/geraete.json`. Die Antwort trägt
-   Code, Kennung und Schlüssel als JSON — damit fällt das Abklauben des
-   Markups weg, an dem der alte Weg zweimal zerbrochen ist (F-S2-A).
-2. Zustand sichern, **sofort**. Der Schlüssel geht genau einmal über die
-   Leitung.
-3. `POST einstellungen.php?t=geraete action=koppeln_bestaetigen` mit dem Code.
-4. `POST pair.php {"aktion":"bestaetigen","antwort":"ja"}` **mit**
-   `X-Device-Id`/`X-Api-Key`. Erst hier entsteht die Zeile in `devices`.
-
-Danach wird umbenannt: `pair.php` setzt beim Ja `label` auf „Uhr" bzw.
-„Handy"; die sprechenden Namen kommen über `action=rename`.
-
-> **Der Beleg für Schritt 3 ist Schritt 4, nicht die HTTP-Antwort.** Erfolg
-> ist dort eine 302, Misserfolg eine 200 mit Fehlertext im HTML — nach dem
-> Folgen der Umleitung sind beide 200. Bleibt Schritt 3 ohne Wirkung,
-> antwortet Schritt 4 mit `409 nicht_beansprucht`. Genau das prüft die Stufe.
-
-> **Ratenschutz:** `pair_start` lässt 20 Anfragen je 600 s und Adresse zu,
-> und **nichts** setzt den Topf zurück — es gibt kein `rate_erfolg`
-> dafür. Zwei Geräte je Lauf heißt **zehn Läufe je zehn Minuten**. Wer beim
-> Entwickeln öfter fahren muss, räumt den Topf so ab, wie es
-> `tools/proben/kopplung/probe.php` tut; hier steht dafür kein SQL (R4).
-
-> **Die Aufräumschleife darf nie nach dem Ingest laufen.** `devices` hängt an
-> `missions`, `rest_segments` und `day_refs` mit `ON DELETE SET NULL`. Ein
-> Aufräumen danach löschte nicht zwei Zeilen, sondern **trennte den ganzen
-> Bestand von seinen Geräten** — ohne Fehlermeldung, sichtbar erst als leeres
-> `days[].refs[].device_id` im Referenz-Export.
-
-### Die Schnitte — warum sie am **Ende** stehen
-
-Die Stufe `schneiden` ist die letzte, nicht — wie zuerst vorgesehen — die
-zwischen `zuordnen` und `nachtragen`. Der Grund sind die drei Stufen
-dazwischen: `nachtragen`, `papierkorb` und `sperrliste` suchen ihre Einsätze
-über `start_hhmm`. Die erste bricht bei zwei Treffern ab, die zweite nimmt
-still `treffer[0]`. Ein geschnittener Einsatz wäre ab der Stufe ein
-zusätzlicher Einsatz in derselben Liste. Am Ende gibt es diese
-Überschneidung nicht — und der geschnittene Einsatz braucht keine der drei:
-Er bleibt bewusst leer.
-
-**Wie viele es sind, steht nicht mehr fest.** Bis zum Demo-Ausbau verlangte
-die Stufe genau einen (`!= 1`); seither zählt sie die Aufträge in den
-Quelldaten und vergleicht (E-DA-11). Die Prüfung ist damit nicht gestrichen,
-sondern an die Quelle gebunden: Ein Schnitt, der still ausfällt, bliebe sonst
-unbemerkt — und mit ihm der Sperrvermerk, den Backlog Nr. 63 im Bestand haben
-will.
-
-### Der Diensttag ohne Standort
-
-Die Stufe `zuordnen` schickt `base_id: ""`, wenn der Dienst in den Quelldaten
-keinen Standort führt (`standort: null`, E-DA-08). Das ist der Weg, den auch
-das Formular geht — `dt_base_erlaubt()` macht daraus NULL. Die Kennung ganz
-**wegzulassen** täte es nicht: `api/day.php` ließe den Standort dann stehen,
-wie er ist, und ein zweiter Lauf hätte einen anderen Zustand als der erste.
-
-Der **CSV-Import** läuft bewusst nicht hier, sondern im Browser (B4).
-
-## Lokale Installation
-
-```
-sh lokal_einrichten.sh       # von Null: Datenbank, install.php, Admin, Demo-Konto
-sh lokal_starten.sh          # nur hochfahren: MariaDB, PHP-Server, TLS davor
-```
-
-**Zwei Skripte, zwei Fragen.** `lokal_starten.sh` fährt hoch, was schon da
-ist — das ist der Alltag. `lokal_einrichten.sh` baut von Null auf und ist
-für die Wegwerf-Umgebung da, in der nach jedem Sitzungsende alles fort ist:
-Es **löscht** die Datenbank und `server/config.php` und geht dann denselben
-Weg wie eine Betreiberin — dieselbe Seite `install.php`, dasselbe Formular,
-dieselben Prüfungen (Formular-Token, Nachweisdatei, Schema, Admin-Anlage).
-Den Browserschritt baut es **nicht** nach, sondern ruft `passwort_setzen.mjs`
-(E-P1-10); das Demo-Konto entsteht über `demo_anlegen()` — dieselbe Funktion,
-die der Knopf im Adminbereich ruft.
-
-Die Vorgaben sind die, die die Prüfmittel ohne Schalter erwarten:
-`admin@gen-em.org` / `pruefstandzugang2026` (`kreislauf.py`, `aufnehmen.mjs`) und
-`demo@gen-em.org` / `nadokudemo0815`.
-
-**Warum TLS.** Die Anwendung setzt ihr Sitzungs-Cookie mit `secure`
-(`login.php`, `auth_guard.php`) — richtig so, sie gehört hinter HTTPS. Über
-blankes HTTP schickt kein Client das Cookie zurück, und jede angemeldete
-Seite leitet zur Anmeldung um. Der eingebaute PHP-Server kann kein TLS;
-`socat` terminiert es davor, mit einem selbstsignierten Zertifikat für
-127.0.0.1. Die Skripte prüfen dieses Zertifikat nicht — für die eigene
-Maschine vertretbar, gegen eine echte Adresse bleibt die Prüfung an.
-
-Eingerichtet wird **einmal** über `install.php` — am Arbeitsplatz im Browser,
-in einer Wegwerf-Umgebung über `lokal_einrichten.sh` (oben). `lokal_starten.sh`
-selbst richtet nichts ein.
-
-## Ablauf
-
-```
+```bash
+sh lokal_einrichten.sh     # von Null: Datenbank, install.php, Admin, Demo-Konto
+sh lokal_starten.sh        # nur hochfahren: MariaDB, PHP-Server, TLS davor
 python3 einspielen.py --stufen konto
-php  demo_kennzeichnen.php                          # zwischen konto und Anmeldung
+php  demo_kennzeichnen.php                     # zwingend vor der ersten Anmeldung
 node passwort_setzen.mjs '<Einrichtungslink>' 'nadokudemo0815' rc.json
 python3 einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
-python3 messprotokoll.py
-node sichtpruefung.mjs
+python3 messprotokoll.py && node sichtpruefung.mjs
 ```
 
-Die Stufen sind einzeln aufrufbar und merken sich ihren Fortschritt in
-`lauf.json`. Ein abgebrochener Ingest-Lauf setzt dort fort, wo er stand.
+## Was es misst
 
-**`demo_kennzeichnen.php` steht zwischen `konto` und der ersten Anmeldung,
-und zwar zwingend** (Demo-Ausbau). Es schreibt die Kontonummer nach
-`app_state.demo_user_id` und setzt die Reset-Marke in die Zukunft. Zwei
-Dinge hängen daran:
+Sechs Wege: `pair.php`, `ingest.php`, `api/day.php`, `einsatz_form.php`,
+`api/schneiden.php` und die Oberfläche. Stand der Stufen in `lauf.json`;
+warum die Reihenfolge so ist, steht an der Stufe in `einspielen.py`.
+`messprotokoll.py` misst das Sendeverhalten einer Uhr (E-P1-14).
 
-- **Die Schlüsselhülle bleibt `edk1:`.** `api/kdf_upgrade.php` überspringt
-  das Demo-Konto (`demo_ist_demo()`); jedes andere Konto stellt beim ersten
-  Anmelden still auf `edka1:<kennung>:` um. Eine solche Hülle wäre auf der
-  Produktivinstallation nicht zu öffnen, und `fixture/erzeugen.php` hält
-  deshalb an — am Ende der dritten Runde, nach vier Minuten Einspielen.
-- **Kein Reset mitten im Aufbau.** Ein Demo-Konto ohne Marke gilt als
-  überfällig; der nächste Seitenaufruf räumt den halb aufgebauten Bestand
-  weg.
+## Was es braucht
 
-Es benutzt **kein** SQL an der Anwendung vorbei, sondern `demo_lib.php` und
-`db()` — dieselben Wege wie der Adminbereich. Was es nicht kann und nicht
-können soll: ein Demo-Konto **anlegen**. Das braucht eine Fixture, und die
-gibt es an dieser Stelle noch nicht.
+Eine Installation hinter TLS auf `127.0.0.1:8443` — das Sitzungs-Cookie
+trägt `secure`. Vorgaben: `admin@gen-em.org` / `pruefstandzugang2026`,
+`demo@gen-em.org` / `nadokudemo0815`. `lauf.json` und `rc.json` gehören
+**einer** Installation und stehen in `.gitignore`; `rc.json` öffnet ohne Passwort.
 
-**Der Browserschritt dazwischen ist keine Bequemlichkeit.** Passwort,
-Salz, Inhaltsschlüssel, beide Schlüsselhüllen und der
-Wiederherstellungsschlüssel entstehen ausschließlich mit der WebCrypto des
-Browsers (`assets/crypto.js`). Das ist die Zusage des Projekts: Der Server
-sieht das Passwort nie. Ein Skript, das diesen Schritt nachbaut, prüfte den
-Weg nicht mehr, den eine NutzerIn geht (E-P1-10).
+## Erwartete Zahl
 
-## Was das Skript **nicht** tut
+Alle Stufen ohne Abbruch, so viele Schnitte wie in den Quelldaten (E-DA-11),
+`sitzungsprobe.py` **2 von 2** (beide Hüllenfassungen) — in rund vier Minuten.
 
-- **Kein SQL.** Auch nicht zum Lesen von Kennungen: Standort- und
-  Rettungsmittel-Kennungen kommen aus den Auswahllisten von
-  `diensttag_neu.php`, Einsatz-Kennungen aus `api/day.php`.
-- **Kein Sonderendpunkt.** Die Anmeldung leitet PBKDF2 selbst ab und
-  schickt das **Token**, nicht das Passwort — wie der Browser. Den
-  Inhaltsschlüssel packt es aus `PAT_WRAP` aus, das jede angemeldete Seite
-  ohnehin mitgibt. Seit S10 kommt der Datenschlüssel dafür aus
-  `HKDF(PBKDF2-Hälfte, Konto-Anteil)`, sobald die Hülle `edka1:<kennung>:`
-  trägt; den Anteil liefert die Seite als `KONTO_ANTEILE` — dieselbe Quelle,
-  aus der auch der Browser ihn nimmt.
-- **Und es stellt NICHT um** (E-S10-15). `sitzung.py` liest, was dasteht. Ein
-  Konto, das nur über den Prüfstand angemeldet war, bleibt auf `edk1:`; die
-  stille Umstellung gehört dem Browser, und sie zu messen ist Sache von
-  `tools/proben/anteil/umstellungslauf.mjs`. Das ist die Grenze dieses
-  Prüfmittels — und der Grund, warum **beide** Fassungen für es lesbar sein
-  müssen. Gemessen wird das von `sitzungsprobe.py` (2 von 2), an je einem
-  echten Konto des Bestands.
+## Was es nicht kann
 
-## Messprotokoll (E-P1-14, Vorarbeit R19)
-
-`messprotokoll.py` wertet den Lauf aus und schreibt `messprotokoll.json`
-und `messprotokoll.md`. Gemessen wird das **Sendeverhalten einer Uhr**
-anhand der Soll-Zeitpunkte, nicht die Geschwindigkeit des Skripts — der
-Lauf schaufelt in Minuten, was im Betrieb über Tage anfällt.
-
-## `lauf.json` gehört nicht ins Repositorium
-
-Sie hält den Zustand **einer** Installation: Einrichtungslink,
-Geräteschlüssel, vergebene Kennungen, Fortschritt. Für eine andere
-Installation ist davon nichts gültig. Sie steht deshalb in `.gitignore`.
-
-`rc.json` — der Wiederherstellungsschlüssel aus `passwort_setzen.mjs` —
-steht ebenfalls in `.gitignore`, seit Web 8.0.1 unter dem Muster `*rc.json`.
-Vorher lautete es `*_rc.json` und verfehlte damit genau die Datei, die diese
-Anleitung anzulegen anweist.
-
-Im dokumentierten Ablauf ist das keine Gefahr: Die Konten dieser Ablage sind
-Wegwerfkonten mit öffentlichem Passwort, und ihr Schlüsselmaterial liegt
-ohnehin offen in `server/demo/fixture.json.gz`. Der Schlüssel ist aber
-**passwortäquivalent** — er packt den Inhaltsschlüssel ohne Passwort aus —,
-und `passwort_setzen.mjs` nimmt **jede** URL, nicht nur `127.0.0.1`. Wer das
-Skript gegen eine echte Installation richtet, hat den Schlüssel eines echten
-Kontos in der Datei.
-
-## Grenzen dieser Prüfmittel
-
-- **Kartenkacheln laden hier nicht.** Sie kommen von
-  `tile.openstreetmap.org` und Nachbarn (`assets/map_layers.js`, mit
-  Herkunft und Lizenz). In einer Umgebung ohne Netzzugang dorthin scheitern
-  sie. Geprüft ist deshalb, dass die **Spur** gezeichnet wird — nicht, dass
-  der Kartenhintergrund erscheint.
-- **Kein SMTP.** Der Einrichtungslink wird von der Seite abgelesen, nicht
-  aus einer Mail. Der Mailversand ist damit nicht geprüft.
-- Der **Sperrlisten-Prüfschritt ist einmalig je Installation**: Nach dem
-  endgültigen Löschen steht die `client_ref` auf der Sperrliste und
-  verfällt erst nach 90 Tagen. Ein zweiter Durchlauf braucht ein frisches
-  Konto.
+Den Browserschritt nachbauen (E-P1-10) oder auf `edka1:` umstellen
+(E-S10-15); Kacheln und Mail sieht es nicht, und der Sperrlistenschritt geht
+je Installation nur einmal.

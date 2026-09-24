@@ -5,6 +5,8 @@ declare(strict_types=1);
  * Anteilprobe — rechnet der Server den Server-Anteil richtig, und erkennt er
  * die fuenf Lagen aus E-S10-09? (S10, Schritt 9b)
  *
+ * Anlass: Nr. 307 — die Huellenpruefung nahm edka1: auch fuer pat_wrap_rc an (Teil A3 haette es fangen muessen)
+ *
  * WOFUER. Der Server-Anteil ist das zweite Geheimnis der Installation, und er
  * hat eine unangenehme Eigenschaft: Wenn er falsch ist, sieht das aus wie ein
  * falsches Passwort — fuer jede NutzerIn gleichzeitig. Genau dagegen steht die
@@ -46,7 +48,7 @@ $wurzel  = dirname(__DIR__, 3) . '/server';
 $schreib = in_array('--schreiben', array_slice($argv, 1), true);
 
 require_once $wurzel . '/db.php';
-require_once __DIR__ . '/../../konfig_stellen.php';
+require_once __DIR__ . '/../../sandbox/konfig_stellen.php';
 require_once $wurzel . '/serverkrypto_lib.php';
 
 /* ---- Buchfuehrung -------------------------------------------------------- */

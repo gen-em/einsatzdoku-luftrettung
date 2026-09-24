@@ -28,8 +28,8 @@ für `uhr-stufe1` `CIQ_GERAETE_URL`, für die Schemaprobe das Modul
 ## Erwartete Zahl
 
 `bericht.py lesen --selbstprobe` → **13 / 0**, `auswahl.py --selbstprobe` →
-**35 / 0**, `--abdeckung` → **0 ohne Muster**. `pruefen.sh` → 0 rot, 0 nicht
-gemessen, rc 0; klein ohne `server/` **15**, neben (P5c/AP3) **42 in 23 min**.
+**36 / 0**, `--abdeckung` → **0 ohne Muster**. `pruefen.sh` → 0 rot, 0 nicht
+gemessen, rc 0 (ohne Bericht rc 1); klein ohne `server/` **18**, neben **44** (gelaufen zuletzt 42 in 23 min, P5c/AP3).
 
 ## Was es nicht kann
 
@@ -37,4 +37,4 @@ Der Bericht ist ein **Nachweis, kein Riegel** (`docs/Pruefablauf.md` 5.2).
 Die Stufe kommt aus `server/version.php`; unlesbar ist rot, nicht „klein".
 `--gegen staging` misst **nur lesend** (E-PK-29).
 
-*Anlass: O9c, Nr. 217, Nr. 267, F-PK-30.*
+*Anlass: O9c, Nr. 217, Nr. 267, Nr. 314, F-PK-30.*

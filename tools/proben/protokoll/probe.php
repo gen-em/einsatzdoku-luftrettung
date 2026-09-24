@@ -5,9 +5,8 @@ declare(strict_types=1);
  * Protokollprobe — hält das Archiv, was E-P5c-39 zusagt? (P5c/AP2) Und das
  * Fehlerprotokoll, was E-P5c-12 und -58 zusagen? (P5c/AP3)
  *
- * Anlass: F-P5c-18 und F-P5c-19; für Teil 7 F-P5c-21 bis -23 und Backlog
- * Nr. 248. `sicherheit_ereignisse` führt IP- und
- * E-Mail-Adressen und verfällt bewusst nach 30 Tagen (E-P5a-09); das Archiv
+ * Anlass: Nr. 302 (F-P5c-18, -19); für Teil 7 Nr. 248 (F-P5c-21 bis -23).
+ * `sicherheit_ereignisse` führt IP- und E-Mail-Adressen und verfällt bewusst nach 30 Tagen (E-P5a-09); das Archiv
  * liegt 365 Tage und geht außer Haus. Stünden die Adressen darin, wäre die
  * 30-Tage-Zusage mit dem ersten Archiv gebrochen — und niemand sähe es, denn
  * das Archiv ist versiegelt.

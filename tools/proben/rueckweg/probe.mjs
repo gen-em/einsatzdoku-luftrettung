@@ -1,8 +1,8 @@
 /* Rückwegprobe, Browser-Teil — der echte Rückweg gegen die Anlage
  * (Konzept RW, RW-03; E-RW-12).
  *
- * Anlass: F-P5c-106 — der Rückweg nach E-P5c-42 prüfte gegen einen Wert,
- * den jeder Datenbankabzug enthält. Nr. 141 (Zweitfaktor).
+ * Anlass: Nr. 319 (F-P5c-106) — der Rückweg nach E-P5c-42 prüfte gegen
+ * einen Wert, den jeder Datenbankabzug enthält. Dazu Nr. 141 (Zweitfaktor).
  *
  * WAS SIE FÄHRT, zweimal — als NutzerIn und als BetreiberIn:
  *   1. ein Wegwerfkonto über den Anlegeweg des Kreislaufs (`pruefkonto.py`,

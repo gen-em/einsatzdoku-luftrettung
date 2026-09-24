@@ -314,7 +314,7 @@ archiv_holen() {
 # gruen, aber er ist nicht der vorgesehene, und wer nur auf die Farbe sieht,
 # merkt sonst nie, dass die Archive fehlen.
 rueckfall_melden() {
-    local text="$1 fehlt unter CIQ_GERAETE_URL — Rueckfall auf Einzeldateien (langsam). Packen: tools/uhr-pruefstand/LIESMICH.md, Abschnitt „Was es braucht“."
+    local text="$1 fehlt unter CIQ_GERAETE_URL — Rueckfall auf Einzeldateien (langsam). Packen: docs/Technik.md 5.2b."
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "::warning::$text"
         [ -n "${GITHUB_STEP_SUMMARY:-}" ] \

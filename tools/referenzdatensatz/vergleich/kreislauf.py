@@ -25,6 +25,26 @@ Kommandozeile. Ohne den Schalter bleibt es beim lokalen Weg.
 --frisch loescht ein bereits vorhandenes Umlaufkonto vorher ueber den
 Adminbereich. Ohne diesen Schalter bricht der Lauf ab, wenn das Konto schon
 besteht — ein Umlauf in ein GEFUELLTES Konto misst nichts.
+
+DREI LAEUFE, ZWEI REFERENZEN (seit S2/AP5, Web 11.0.0):
+
+  --art edbak      referenz/*.edbak (Containerfassung 4) — kommt derselbe
+                   Bestand nach einem Umlauf unveraendert wieder heraus?
+  --art edbak-alt  referenz/altformat/*.edbak (einteilig, Nutzlast 7) — kommt
+                   ein VORHANDENER Bestand einmal herueber (R11)? Faellt mit
+                   NaDoku 1.0 weg (Backlog Nr. 46); seine Ausnahmeliste traegt
+                   die Felder, die es in Nutzlast 7 nicht gab, und keinen
+                   einzigen Spurpunkt.
+  --art csv        referenz/*.zip
+
+Zwei Ordner statt zweier Dateien nebeneinander, weil `neueste()` die Arbeit
+verweigert, wenn ein Ordner mehr als eine Datei je Format traegt — „sortiert
+und nimmt die erste" war der Fehler aus S1/C7.
+
+HTTPS, NICHT HTTP. Das Sitzungs-Cookie traegt `Secure`. Chromium schickt es
+auch ueber http://127.0.0.1, Pythons `requests` nicht: Die Anmeldung geht
+durch, index.php wirft die Sitzung gleich wieder weg, und die Meldung lautet
+„Anmeldung gescheitert: unbekannt". Die Vorgabe ist deshalb Port 8443.
 """
 from __future__ import annotations
 

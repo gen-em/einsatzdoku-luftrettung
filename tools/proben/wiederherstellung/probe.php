@@ -4,6 +4,8 @@ declare(strict_types=1);
 /**
  * Wiederherstellungsprobe — Beleg zu E-S1-04, E-S1-19 und Backlog Nr. 31/33/34/35.
  *
+ * Anlass: Nr. 31, 33, 34, 35 — kaputte Datei kippte den Lauf, Waisenkind, Diensttag geraten
+ *
  * WOFUER. Der Papierkorb und der Rueckweg eines Backups haben Grenzfaelle,
  * die sich im Browser nur muehsam herstellen lassen und die man dem Ergebnis
  * nicht ansieht. Vier Teile:
@@ -1139,15 +1141,18 @@ $sag('Ein knapper Schub sichert wenigstens ein Konto und hoert dann auf',
  * Arithmetik der Probe.
  *
  * Mit einem Konto je Schub traegt die Pruefung ab ZWEI offenen Konten. Sind
- * es weniger, laesst sich Wiederaufnahme nicht messen — dann sagt die Probe
- * das mit einer Zahl, statt eine Erwartung zu verfehlen. */
+ * es weniger, laesst sich Wiederaufnahme nicht messen — und NICHT GEMESSEN IST
+ * ROT (E-KH-12, E-PK-46). Bis BR-03 stand im Zweig darunter `true`: Die Probe
+ * meldete eine Erwartung als erfuellt, die sie nicht geprueft hatte (F-BR-04).
+ * Seit RP-03 greift der Zweig auf frischer Anlage nicht mehr; greift er doch,
+ * sagt die Probe es mit Zahl und rot. */
 $a11 = edbak_auftrag_lesen();
 $sag('Der Zeiger steht auf dem zuletzt gesicherten Konto',
      is_array($a11) && (int)$a11['cur'] > 0, 'cur=' . ($a11['cur'] ?? '—'));
 $offen11 = is_array($a11) ? edbak_auftrag_offen($a11) : 0;
 if ($offen11 < 2) {
-    $sag('WIEDERAUFNAHME: nicht messbar — zu wenige Konten offen', true,
-         $offen11 . ' offen, gebraucht werden 2 (Bestand zu klein, kein Befund)');
+    $sag('WIEDERAUFNAHME: NICHT GEMESSEN — zu wenige Konten offen', false,
+         $offen11 . ' offen, gebraucht werden 2 — Ueberspringen ist rot (E-PK-46)');
 } else {
     $tick = 1;
     $e11 = edbak_auftrag_schub($uhr, 0.2);
@@ -1483,7 +1488,7 @@ $weg($uid11);
  * ====================================================================== */
 echo "\n  Teil 12 — Der Rueckweg, wenn der Server-Anteil weg ist (S10/AP5)\n";
 require_once $server . '/serverkrypto_lib.php';
-require_once __DIR__ . '/../../konfig_stellen.php';
+require_once __DIR__ . '/../../sandbox/konfig_stellen.php';
 
 /* BIS WEB 20.26.3 WURDE DER ANTEIL IM SPEICHER VERSTELLT (`$CFG`). Die
  * globale `$CFG` ist mit Schritt 15 AP2 entfallen; die Anwendung liest ueber

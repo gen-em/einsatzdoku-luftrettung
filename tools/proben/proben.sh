@@ -40,18 +40,6 @@ versand_mit_nachbau() {
     return "$rc"
 }
 
-# Die Rückwegprobe hat zwei Teile unter einem Namen (Konzept RW, E-RW-12):
-# `probe.php` misst Bibliothek und Server ohne Browser, `probe.mjs` den echten
-# Weg im Browser. Beide laufen, auch wenn der erste rot ist — ein Teil soll
-# den anderen nicht verdecken. Zusatzangaben gehen an den Browser-Teil (Basis
-# und Zugang des Prüfkontos, für Staging); der Server-Teil misst örtlich.
-rueckweg_beide() {
-    local rc=0
-    php tools/proben/rueckweg/probe.php || rc=1
-    node tools/proben/rueckweg/probe.mjs "$@" || rc=1
-    return "$rc"
-}
-
 # Name -> Aufruf. DIE EINE STELLE, an der steht, womit eine Probe gefahren
 # wird; `tools/pruefstand/pruefablauf.json` zeigt nur noch auf den Namen.
 declare -A RUF=(
@@ -70,7 +58,7 @@ declare -A RUF=(
   [gpx]="php tools/proben/gpx/probe.php"
   [geraete]="php tools/proben/geraete/probe.php"
   [zweitfaktor]="php tools/proben/zweitfaktor/probe.php"
-  [rueckweg]="rueckweg_beide"
+  [rueckweg]="bash tools/proben/rueckweg/probe.sh"
   [verbindung]="php tools/proben/verbindung/probe.php"
   [anteil]="php tools/proben/anteil/probe.php"
   [rechtstexte]="php tools/proben/rechtstexte/pruefen.php"

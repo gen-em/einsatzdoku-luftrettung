@@ -4,9 +4,9 @@ declare(strict_types=1);
  * Rückwegprobe, Server-Teil — hält der Rückweg beim Zweitfaktor, was
  * Konzept RW zusagt? (E-RW-03, -04, -05, -11, -12)
  *
- * Anlass: F-P5c-106 — der Rückweg nach E-P5c-42 prüfte gegen
+ * Anlass: Nr. 319 (F-P5c-106) — der Rückweg nach E-P5c-42 prüfte gegen
  * `pat_key_check`, einen Wert, den jeder Datenbankabzug enthält; wer einen
- * Abzug hatte, legte ihn vor. Nr. 141 (Zweitfaktor).
+ * Abzug hatte, legte ihn vor. Dazu Nr. 141 (Zweitfaktor).
  *
  * WAS SIE MISST, OHNE HTTP (Muster Anteilprobe).
  *   Teil A — die Bibliothek (`rueckweg_lib.php`, RW-01):

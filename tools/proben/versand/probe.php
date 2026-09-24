@@ -5,6 +5,8 @@ declare(strict_types=1);
  * VERSANDPROBE — die Adapter aus `server/sicherungsziel_lib.php` gegen echte
  * Server (S2/AP7).
  *
+ * Anlass: Nr. 139, 49 — stiller Rückfall auf Klartext-FTP; Löschen nähme Fremdes mit
+ *
  *   python3 tools/proben/versand/gegenstellen.py /tmp/vp     # in einer Schale
  *   php    tools/proben/versand/probe.php        /tmp/vp     # in der zweiten
  *
@@ -71,7 +73,7 @@ const PASSWORT = 'geheim-probe-2026';
  *
  * Ohne config.php laufen die Teile 1 bis 9 trotzdem — die Adapter brauchen
  * keine Installation. Teil 10 sagt dann, dass er ausfällt, statt zu schweigen. */
-require_once __DIR__ . '/../../konfig_stellen.php';
+require_once __DIR__ . '/../../sandbox/konfig_stellen.php';
 require_once __DIR__ . '/../../../server/sicherungsziel_lib.php';
 $zurueckSK = konfig_stellen(['server_key' => bin2hex(random_bytes(32))]);
 

@@ -11,7 +11,7 @@ bash tools/sandbox/plattform.sh  [php83|mariadb106|mysql80|mysql84|alles|--aus]
 ## Was es misst
 
 `aufbauen.sh` beschafft, was der Container nicht mitbringt, und misst nach:
-zehn Stücke, die drei Engines **einzeln**, acht Umgebungswerte mit ihrer
+elf Stücke, die drei Engines **einzeln**, acht Umgebungswerte mit ihrer
 Länge. `hochfahren.sh` richtet die örtliche Anlage ein oder startet sie.
 `plattform.sh` stellt PHP 8.3.33 und drei Datenbankfassungen bereit und
 fährt je eine Schemaprobe.
@@ -25,7 +25,7 @@ Namen und die Grenzen der Umgebung in `docs/Sandbox-Setup.md`.
 
 ## Erwartete Zahl
 
-`aufbauen.sh web` → 10 von 10 Stücken, **3 von 3 Engines**, 8 von 8 Werten,
+`aufbauen.sh web` → 11 von 11 Stücken, **3 von 3 Engines**, 8 von 8 Werten,
 Rückgabewert 0. `hochfahren.sh` → HTTP **200** auf `login.php`,
 Rückgabewert 0. `plattform.sh alles` → vier Fassungen bereit und **viermal
 „19 Prüfungen, 0 Fehlschläge"** (gemessen 21.09.2026: 29,7 s).

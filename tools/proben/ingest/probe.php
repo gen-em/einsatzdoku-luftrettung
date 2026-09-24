@@ -5,6 +5,8 @@ declare(strict_types=1);
  * Ingestprobe — nimmt die Uhr-Schnittstelle nach der Ausduennung noch das
  * Richtige an? (S2/AP3, E-S2-08)
  *
+ * Anlass: Nr. 134 — Ersetzfenster verwarf Punkte eines laufenden Einsatzes, Antwort „ok"
+ *
  * WOFUER. AP3 aendert `ingest.php` an der gefaehrlichsten Stelle, die es
  * gibt: Punkte, die die Uhr schickt, werden unter bestimmten Umstaenden
  * VERWORFEN — und dann so quittiert, dass die Uhr sie loescht. Ein Fehler

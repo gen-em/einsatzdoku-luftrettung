@@ -14,6 +14,52 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: P5c nimmt den Bestandsriegel auf (Konzept BR)] — 2026-09-24
+
+Der P5c-Zweig hat `main` aufgenommen — Konzept BR, PR #85 und #86 —, als
+eigener Schritt zwischen RW-03 und RW-04 (Konzept P5c, E-P5c-115). Keine
+Versionsstufe: Die Anwendung ist unberührt; geändert sind `tools/`, `docs/`
+und `.github/`.
+
+**Warum jetzt und nicht erst am Ende von P5c:** BR bringt in Stufe 1 einen
+Riegel über den Werkzeugbestand unter `tools/` (`bestand.py`, elf Regeln),
+und der meldete auf dem zusammengeführten Stand **14 Befunde** — alle in
+Werkzeugen, die P5c angelegt oder erweitert hat. Der Pull Request von 10c
+wäre damit rot gewesen, und jedes weitere Paket hätte Prüfmittel ohne die
+Form gebaut.
+
+### Geändert
+
+- **Werkzeug: Zwölf Quelltextprüfungen statt neun** (P5c) bzw. elf (BR):
+  `behandler` aus P5c/AP3 und `bestand`, `pysyntax`, `handbuch` aus BR
+  stehen jetzt nebeneinander — in `tools/quelltext/pruefen.sh`, im Tor und
+  in der Gegenlesung des Berichts. Zehn davon haben eine Selbstprobe.
+- **Werkzeug: Die Rückwegprobe hat eine Einstiegsdatei**
+  (`tools/proben/rueckweg/probe.sh`) statt einer Funktion in `proben.sh`.
+  Der Riegel liest den Anlass im Kopf der Einstiegsdatei; aus einer Funktion
+  mit zwei Aufrufen im Vordergrund kann er keine ermitteln. Die beiden Teile
+  laufen weiter nacheinander, auch wenn der erste rot ist.
+- **Werkzeug: Ein Anlass ist eine Backlog-Nummer** (E-BR-07). Protokoll-,
+  Zweitfaktor- und Rückwegprobe nannten eine Befund-Kennung aus dem
+  Konzept, die Rechner der Prüfkonten ebenso. Nachgetragen als Nr. 302,
+  303, 319 und 320 (E-P5c-116) — eigene Einträge unter *Erledigt*, nicht
+  umgebogen auf ein Vorhaben wie Nr. 141.
+- **Werkzeug: Fünf Anleitungen auf höchstens 40 Zeilen** (Bedienprobe,
+  Messstand, Proben, Stilvergleich, Quelltext) und die der Rechner der
+  Prüfkonten neu in die fünf Abschnitte gefasst. Gestrichen ist nichts;
+  umgebrochen ist, was vorher in kurzen Zeilen stand.
+- **Werkzeug: `stufenregeln` ist ein bekannter Schlüssel** von
+  `pruefablauf.json` (`SCHLUESSEL` in `bestand.py`) — die Stufenregel
+  `migration` aus P5c/AP4 lesen `auswahl.py` und `bericht.py`, und der
+  Riegel hielt den Schlüssel für einen, den niemand liest.
+
+### Behoben
+
+- **Die Rahmenplan-Fassung 112 gab es zweimal** (Konzept P5c, F-P5c-118):
+  BR und der P5c-Zweig hatten sie am selben Tag vergeben. `main` behält
+  sie; die Zeile des Zweigs heißt jetzt 115 — dieselbe Regel wie bei den
+  Backlog-Nummern.
+
 ## [Web 20.45.0] — 2026-09-24
 
 **Der Rückweg beim Zweitfaktor: am Code-Schritt.** Konzept RW, Paket RW-03
@@ -1072,6 +1118,266 @@ Staging braucht es eine Zeile in `config.php` (unten, und Rahmenplan 6).
   Servereinstellungen**, wo sie nie stand; sie steht unter Verwaltung →
   Installation. Neu in der Vorlage: `app.umgebung` und
   `mail.betreff_praefix`, beide auskommentiert.
+
+## [Werkzeug: Der Bestandsriegel (Konzept BR)] — 2026-09-24
+
+Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
+`docs/`, `.github/` und ein Satz in `CLAUDE.md`, wie bei RP (`CLAUDE.md` 2).
+
+### Neu
+
+- **Der Werkzeugbestand hat einen Riegel.** PK hat den Durchlauf einer
+  Änderung gebaut — Zweigschutz, Prüfbericht, fünf rote Lagen — und den
+  Bestand als Regel gelassen: Anlass-Zeile, fünf Abschnitte, höchstens 40
+  Zeilen. Kein Mittel maß das, und drei Tage nach PK-04 standen die Zahlen
+  darunter. `tools/quelltext/bestand.py` ist die neunte Quelltextprüfung und
+  misst sechs Regeln: die Form **jeder** `LIESMICH.md` unter `tools/`, auch
+  der Unteranleitungen, die PK-04 nie gezählt hat (E-BR-04); eine Anleitung
+  je Ordner; genau eine Zeile, die mit `Anlass:` beginnt und eine
+  Backlog-Nummer nennt, die es gibt (E-BR-07); dass jeder Ordner gerufen
+  wird; keine lose Datei außer `motor.mjs`; und die Anlass-Zeile jeder Probe
+  im Kopfkommentar ihrer Einstiegsdatei. Er misst gegen null, ohne Decke und
+  ohne Ausnahmeliste (E-BR-01) — der Altbestand wird im selben Konzept
+  bereinigt, nicht gestundet.
+- **Er fand beim ersten Lauf 57 Befunde, mehr als die Handzählung im
+  Konzept.** Zehn Anleitungen tragen ihren Anlass als Kürzel (`PS-2`, `B6`,
+  `P0/A3`), mitten in einem Satz oder gar nicht; `tools/erzeugen/` wird aus
+  keiner Kette und keiner Anleitung der Anlage gerufen. Und die eine Probe,
+  die laut Konzept schon eine Anlass-Zeile trug, trug keine: Die Zählung
+  hatte `grep Anlass` gefahren und einen Prüffall mit dem Wort „Anlass" im
+  Text getroffen. Das ist der Grund, warum die Zahl ein Mittel braucht.
+- **Die Selbstprobe baut je Regel einen Fehler ein** — 22 Fälle, davon drei
+  Gegenproben, die grün bleiben müssen (genau 40 Zeilen, `motor.mjs`, eine
+  ignorierte Ausgabe mit einer übergroßen Anleitung). Sie hat beim ersten
+  Lauf einen Fehler im Riegel selbst gefunden: Bei einer Probe, die über eine
+  Funktion startet, nahm er den ersten Aufruf im Rumpf — und hielt damit
+  eine Gegenstelle für die Probe, sobald sie oben stand.
+- **Der Weg für ein neues Prüfmittel steht an einer Stelle** (BR-04):
+  `Pruefablauf.md` 6.12, sieben Schritte in der Reihenfolge, in der sie zu
+  tun sind — Backlog-Nummer, Ort, Anleitung, Selbstprobe, Zeile in
+  `pruefablauf.json`, Tabelle erzeugen, Riegel grün. Bis dahin lagen die
+  Teile auf fünf Abschnitte verteilt, und wer ein Werkzeug anlegte, fand den
+  fehlenden erst, wenn Stufe 1 rot war. Der Riegel nennt die Stelle, sobald
+  er einen Befund meldet.
+- **Das Runbook ist von einer Instanz geprüft, die es nicht geschrieben
+  hat — durch Befolgen.** Sie hat zwei Attrappen eingehängt, eine
+  Quelltextprüfung als Riegel und eine Probe an einem Muster, und je einen
+  Schritt weggelassen. Die erste Fassung trug nicht: fünf Sprünge in andere
+  Abschnitte, vier weitere Dateien, und ein Muster genau nach dem Text
+  (`pfade`, `ab`, `anlass`) brachte den Prüfstand mit `KeyError: 'id'` zum
+  Absturz, während `bestand` und `kettenaufrufe` grün blieben. 6.12 nennt
+  jetzt die Form eines Backlog-Eintrags, beide JSON-Einträge vollständig,
+  die 40-Zeilen-Falle der Sammelanleitungen (beide stehen bei 40 von 40)
+  und bei jedem Schritt, welches Mittel sein Fehlen meldet.
+- **Der Riegel misst jetzt auch das Einhängen** (BR-05, Nr. 315). Bei vier
+  Schritten meldete die Gegenlesung: kein Mittel merkt das Fehlen — eine
+  Selbstprobe, die nicht in `SELBST` steht und darum nirgends läuft; eine
+  Quelltextprüfung ohne Zeile in ihrer Tabelle; eine Probe, die an keinem
+  Muster und keinem Riegel hängt und darum nie läuft; und die Tabelle in
+  `Pruefablauf.md` 4, die „erzeugt, nicht von Hand" heißt, ohne dass
+  jemand das prüfte. Vier Regeln mehr in `bestand`, elf statt sieben:
+  `selbst`, `zeile`, `ablauf`, `tabelle`. `ablauf` fängt nebenbei das
+  unvollständige Muster, an dem der Prüfstand mit `KeyError` abstürzte.
+  `tabelle` ruft den Erzeuger selbst auf, statt ihn nachzubauen — sonst
+  stünde die Tabelle an zwei Stellen. Entschieden hat es die Betreiberin
+  (Q-BR-13); BR hatte es als Erweiterung des Riegels erst herausgehalten.
+- **Die vier Regeln sind adversarial gegengeprüft** — von unabhängigen
+  Instanzen, die sie täuschen sollten, jeder Fund von einer weiteren
+  nachgestellt. Die erste Fassung hielt nicht: **29 echte Mängel**. Die
+  Anlass-Spalte wurde nach Position statt nach Überschrift gelesen; ein
+  Kommentar mit `'--selbstprobe'` galt als Auswertung; zwei Waisen, die
+  einander per `nach` nennen, galten als eingehängt; ein Kreis in `nach`,
+  an dem der Prüfstand abbricht, blieb grün; ein zweiter, veralteter
+  Tabellenblock blieb unbemerkt. Die zweite und dritte Fassung bauten
+  bessere Leser — und jede Runde fand die nächste Randschreibweise: ein
+  Heredoc, ein `?>` im Kommentar, eine Tabelle unter einem zweizeiligen
+  Listenpunkt, `NAMEN` in Anführungszeichen. **Die Nachbauten
+  konvergierten nicht** (Runde 2: 30 neue, Runde 3: 27 neue echte Mängel).
+- **Deshalb liest der Riegel jetzt mit den echten Werkzeugen** (E-BR-22):
+  Tabellen über `cmark-gfm` — wie GitHub —, PHP über `token_get_all` — wie
+  PHP —, die Listen der Läufer über `bash … --liste` — wie bash; dafür hat
+  `pruefen.sh` den Modus `--liste` —, Pfadmuster über `auswahl.passt()` —
+  wie der Prüfstand. Eine Quelltextprüfung in einer anderen Sprache als
+  Python oder PHP ist ein Befund, keine Schätzung. Und eine
+  Mutationsmessung hatte gezeigt, dass sich 23 von 67 Befundstellen
+  streichen ließen, ohne dass die Selbstprobe es merkte: Jede Befundstelle
+  trägt jetzt eine Kennung, und die Selbstprobe schlägt an, wenn eine in
+  keinem Fall fällt. Preis: `bestand` braucht `cmark-gfm` und `php` (beide
+  im Tor vor dem Schritt und in der Ausbaustufe `web`).
+- **Die vierte Runde fand keine Randschreibweise mehr, sondern Lücken im
+  Umfang** — 21 echte Mängel, sieben davon realistisch und mindestens
+  „mittel" (fünf Ursachen, zwei doppelt gemeldet). Dazu hat sie fünf
+  Mängel früherer Runden als nicht behoben nachgemessen. Zu sind die
+  sieben und vier der fünf; der fünfte — eine Endmarke unter der Tabelle
+  zählt als zweiter Block — ist rot, nicht still, und als Grenze benannt.
+  `SELBST` ist nur eine Liste: Steht
+  `pruefen.sh --selbstprobe` in keinem Workflow, läuft keine Selbstprobe,
+  und alles darunter blieb grün. Eine Fläche des Berichts, deren Bauprobe
+  das Muster für eine ihrer Dateien nicht auswählt, machte jede Berührung
+  dort zur Sackgasse — das Tor verlangt `uhr=gebaut`, und kein Lauf liefert
+  es; der Riegel fragt jetzt `auswahl.treffer()` für jede Datei der Fläche.
+  Ein `auswahl.py`, das ein Geschwistermodul einbindet, galt als fehlend.
+  Ein Byte kaputtes UTF-8 in einer PHP-Zeichenkette ließ `json_encode`
+  scheitern und leerte den Leser für alle Dateien. Die alte Riegelzeile mit
+  einer Probe weniger war nicht gleich, sondern alt, und blieb unbemerkt —
+  jetzt zählt der Anfang einer Zeile. Und ein `|` ohne `\` in einer
+  Code-Spanne verschob die Spalten der Quelltext-Tabelle; GitHub wirft den
+  Rest weg. Kleiner: `--` und ein weicher Trennstrich galten als Anlass, die
+  Kreissuche brach an tausend `nach` ab, mehrere Befundstellen teilten
+  sich eine Kennung, und die Tabellenprüfung hing an `ablauf` — ein Komma zu
+  viel in der Ablaufdatei ließ sie still ausfallen; jetzt ist sie eine
+  eigene Gruppe. Die Selbstprobe baut veraltete Tabellen mit dem echten
+  Erzeuger aus einer geänderten Ablaufdatei, statt Text im Ausgabeformat zu
+  ersetzen — eine regelgerechte Formatänderung des Erzeugers hätte die Kopie
+  sonst still der aktuellen gleich gemacht. Was die Runde sonst fand, steht
+  als benannte Grenze im Kopf von `bestand.py`, die offenen Fragen in
+  `Rahmenplan.md` 6; **eine fünfte
+  Runde gibt es nicht** (E-BR-22). Selbstprobe **140 Fälle, 85 von 85
+  Befundstellen**, rund 20 s.
+
+### Geändert
+
+- **Ein Anlass ist eine Backlog-Nummer** (E-BR-07, `Pruefablauf.md` 6.1).
+  Grundsatz 5 sagte „Nummer" und meinte die dauerhafte; im Bestand standen
+  Befund-Kennungen und Kürzel, die mit ihrem Konzept gelöscht werden. Wer ein
+  Prüfmittel anlegt, legt jetzt zuerst die Nummer an. Grundsatz 5 sagt dazu
+  nicht mehr „steht auf der Streichliste", sondern „ist Stufe 1 rot" — in
+  `Pruefablauf.md` 1 und im gleichlautenden Satz in `CLAUDE.md` 6, sonst
+  hätten die beiden Stellen einander widersprochen.
+
+- **`tools/kettenaufrufe/` kennt die Namen der Sammelläufer.** Bis dahin las
+  es die Unterbefehle eines Shell-Werkzeugs nur aus `case "$befehl"` und sah
+  bei `pruefen.sh <name>` und `proben.sh <name>` keinen einzigen Namen — 30
+  Aufrufe, von denen es nur die Schalter prüfte. Jetzt liest es `NAMEN=(…)`
+  und die Schlüssel von `RUF`; ein vertippter Probenname ist ein Befund in
+  Stufe 1 statt ein Fehlschlag im Lauf. Selbstprobe 16 von 16.
+- **Der Altbestand steht auf null** (BR-02): 57 → 0 Befunde. 25 Anleitungen
+  mit zusammen 972 Zeilen statt 24 mit 2 144. Sortiert wurde je Absatz: Was
+  Anleitung war, blieb; was ein Format beschreibt — die Archive des
+  Uhr-Prüfstands, das Verhalten des Simulators bei TLS, der Wiederaufbau des
+  Referenzbestands —, steht jetzt in `docs/Technik.md`; was Anleitung eines
+  einzelnen Skripts war, etwa die Klickstrecken von Hand, steht in dessen
+  Kopf; Geschichte steht in der Commit-Nachricht. Die meisten dieser Absätze
+  standen ohnehin schon ein zweites Mal im Skriptkopf.
+- **Jede Probe nennt ihren Anlass mit Backlog-Nummer** — 20 Zeilen, je Probe
+  von einem Agenten nachgeschlagen und danach gegengelesen. Zwölf hatten
+  eine passende Nummer. Für sieben mit belegtem Fehler, der nur als
+  Befund-Kennung oder im Changelog stand, sind die Einträge nachgetragen
+  (Nr. 304 bis 310, E-BR-17). Für drei ohne verbuchten Fund steht das Risiko
+  da, das sie hüten (Nr. 311 bis 313) — je einzeln von der Betreiberin
+  entschieden, weil Grundsatz 5 sie sonst auf die Streichliste setzte.
+- **`konfig_stellen.php` liegt unter `tools/sandbox/`** (E-BR-03 (4)). Ihr
+  Pfad zu `config.php` rechnet jetzt zwei Ebenen hoch: Mit einer hätte der
+  Umzug still auf `tools/server/` gezeigt, und der Rückweg kehrt bei einem
+  fehlenden Verzeichnis ohne Meldung zurück. Die vier Proben, die sie laden,
+  sind grün (`proben.sh alle` 20 von 20).
+- **Drei Riegel liefen nur im Tor** (BR-03, F-BR-03): „Backlog — keine
+  Nummer zweimal", „Python-Werkzeuge übersetzen" und „Handbuch rendern"
+  standen als Schritte in `pruefung.yml`, aber nicht in `pruefablauf.json` —
+  Station B fuhr sie nie, und das Tor las sie nicht gegen den Bericht. Jetzt
+  sind es Quelltextprüfungen (`bestand` mit einer siebten Regel, `pysyntax`,
+  `handbuch`), im Prüfstand und im Tor mit derselben Datei. Stufe 1 hat 15
+  statt 17 Schritte und liest **17 Riegel** gegen den Bericht statt 14.
+  `cmark-gfm` kommt mit der Ausbaustufe `web` (11 von 11 Stücken).
+- **Die Suche „grüner Lauf mit demselben Baum" steht einmal** (E-BR-09):
+  `tools/kette/baumsuche.py`, mit Selbstprobe (11 Fälle). Bis dahin stand sie
+  zweimal als Bash — in „Schon gemessen?" mit Fenster 30, im Produktionstor
+  mit 50, die eine mit, die andere ohne Selbstprobe. Das Fenster ist ein
+  Pflichtschalter geblieben, weil es die Kostengrenze des Aufrufers ist
+  (E-TB-09).
+- **Die Wiederherstellungsprobe meldet „nicht gemessen" rot** (F-BR-04). Ihr
+  Teil 11 schrieb bei zu wenigen offenen Konten `true` — eine Erwartung, die
+  sie nicht geprüft hatte. Gegenprobe ohne die Zusatzkonten aus RP-03: rc 1,
+  die Zeile rot.
+
+### Behoben
+
+- **26 Verweise auf Werkzeugpfade, die es seit PK-04 nicht mehr gibt**, in
+  zehn Dokumenten und zwei Werkzeugen, dazu drei Verweise auf Abschnitte, die
+  es nicht mehr gibt. Darunter eine Zusage ohne das genannte Mittel:
+  `Backup-Format.md` schrieb der Containerprobe eine Prüfung zu, die sie
+  nicht macht. Die Zusage trägt trotzdem — der Kreislauf `edbak` vergleicht
+  den ganzen Kern; nachgemessen mit einem eingesetzten `_spur_index`: 1
+  Meldung, ohne ihn 0.
+- **Der Prüfstand meldete grün, wenn sein Bericht nicht entstand** (BR-04,
+  Nr. 314). `pruefen.sh` wertete den Rückgabewert von `bericht.py` nicht
+  aus: Stürzte der Bericht ab, endete der Lauf mit rc 0 und „0 rot, 17
+  grün". Gefunden in einem Git-Worktree, wo `bericht.py` seinen Index unter
+  `.git/` anlegen wollte und `.git` eine Datei ist. Jetzt ist ein Lauf ohne
+  Bericht rot, und den Ort des Index nennt Git. Belegt im Worktree: vorher
+  rc 0 ohne Bericht, nachher Bericht und rc 0; mit einem absichtlich
+  scheiternden `bericht.py` rc 1. Im Tor wäre es aufgefallen — örtlich
+  hielt sich eine Instanz für fertig, und genau das soll der Prüfstand
+  verhindern.
+- **Die Uhr-Probe des Prüfstands lief seit PK-03 nie** (BR-04, Nr. 316).
+  `pruefablauf.json` rief für `uhr-stufe1` nur `pruefstand.sh reihe` auf,
+  und `reihe` bricht ohne Geräteliste nach 0 s ab. Bekannt war das seit
+  PK-03 als F-PK-21 — mit dem Vermerk, dass `kettenaufrufe`
+  Positionsargumente nicht sieht —, behoben wurde es nie. Aufgefallen ist
+  es erst, als BR `tools/uhr-pruefstand/` berührte und das Tor `uhr=gebaut`
+  verlangte. Jetzt steht dort die Kette aus der Anleitung des Werkzeugs:
+  Liste schreiben, dann übersetzen; von Hand 99 übersetzt, 0
+  fehlgeschlagen, rund 10 min.
+- **`kettenaufrufe` prüfte in einer Kette nur den ersten Befehl** (BR-04,
+  F-BR-21). Je Zeile nahm es einen Aufruf und rechnete ihm jedes Wort
+  dahinter zu — ein vertippter Unterbefehl hinter `&&` meldete 0 Befunde,
+  und die Schalter des zweiten Befehls wären dem ersten angelastet worden.
+  Jetzt zerlegt es die Zeile an `&&`, `||`, `|` und `;`. 85 statt 84
+  Aufrufe, 0 Befunde; Selbstprobe 20 von 20, darunter ein Fall, den die
+  alte Fassung still durchließ.
+- **Ein Pfad in der Zuordnung traf seit PK-03 keine Datei** (BR-05, Nr. 317,
+  der erste Treffer der Pfadprüfung). Das Muster `spur` nannte
+  `server/api/spur*.php`; die Datei gab es nie, die Spur-Endpunkte heißen
+  `server/api/backup_spuren*.php`. Die Selbstprobe von `auswahl.py` prüfte
+  den Pfad gegen eine erfundene Datei und war darum grün. Gestrichen, und
+  an seine Stelle tritt, was gemeint war: `server/api/backup_spuren*.php`
+  (entschieden von der Betreiberin, Q-BR-14). Eine Berührung der beiden
+  Spur-Endpunkte löst jetzt `spurprobe` und `containerprobe` aus; bis dahin
+  liefen für sie nur das Auffangmuster und die Oberflächenproben.
+- **Die Selbstprobe der Textprobe lief nirgends** (BR-05, gefunden von der
+  Gegenprobe des Bestandsriegels). `textprobe.py` hat seit P2 eine
+  Selbstprobe des Zerlegers (21 Fälle) — hinter `--probe`. Der Läufer ruft
+  `--selbstprobe`, und nur für die Namen in `SELBST`; `textprobe` stand
+  nicht darin. Jetzt heißt der Schalter auch `--selbstprobe`, der Name steht
+  in `SELBST`: **9 von 9** Selbstproben statt 8. Die erste Fassung der
+  Regel `selbst` hatte es übersehen, weil sie nur nach `--selbstprobe`
+  suchte — genau die Lücke, gegen die sie gebaut war.
+- **`kettenaufrufe` las `NAMEN=(…)` bis zur ersten Klammer** (BR-05). Ein
+  Kommentar mit Klammer in der Liste zerlegte sie, und ein Name aus
+  `NAMEN+=(…)` galt als unbekannt. Jetzt zeilenweise und kommentarfest, wie
+  im Bestandsriegel; Selbstprobe 21 von 21.
+- **`cmark-gfm --validate-utf8` prüft die Kodierung nicht** (F-BR-16). Es
+  ersetzt kaputte Bytes still durch U+FFFD und endet mit 0 — der Tor-Schritt
+  hätte ein Handbuch mit kaputter Kodierung grün gemeldet. Gefunden von der
+  Selbstprobe der neuen Quelltextprüfung beim Umzug; sie liest jetzt streng.
+- **`kettenaufrufe` sah Befehlsersetzungen am Zeilenende nicht** (F-BR-17).
+  Eine Zeile, die mit `)` endet, galt als `case`-Muster und wurde ganz
+  übersprungen — darunter drei Aufrufe von `tor.py` in der
+  Auslieferungskette (Fassung nach dem Abgleich, ausstehende Migration,
+  Dateiname des Backups). Dazu las es `--erster)` als Schalternamen. Jetzt
+  84 statt 81 geprüfte Aufrufe, 0 Befunde; Selbstprobe 18 von 18.
+- **Veraltete Zahlen und Schalter in den Anleitungen:** `vergleichen.py
+  --selbstprobe` fährt 14 Fälle, nicht „sieben"; die Zählung 34, nicht 29;
+  `tor.py` kennt `--token`, kein `--jobs-token`.
+
+### Bewusst so
+
+- **Der Riegel misst Form, nicht Inhalt** (E-BR-03). Ob eine Anleitung
+  stimmt und ob die Nummer in der Anlass-Zeile den richtigen Fehler nennt,
+  sieht er nicht; eine vorhandene, aber falsche Nummer ist für ihn grün. Das
+  Prüfdokument nimmt dafür eine Stichprobe von Hand.
+- **Positionsargumente sieht kein Mittel.** `kettenaufrufe` prüft Namen
+  und Schalter eines Aufrufs, `bestand` die Einträge; ob `reihe` seine
+  Liste bekommt, zeigt erst ein Lauf. Deshalb sagt 6.12, Schritt 7: den
+  Aufruf einmal von Hand fahren (Nr. 316).
+- **Tote Werkzeugpfade in Dokumenten hält kein Mittel auf.** BR hat 26
+  davon von Hand gefunden und berichtigt (F-BR-13). Eine Regel dafür hätte
+  eine andere Quelle als `tools/` — das ist eine Frage an die Betreiberin,
+  keine Entscheidung eines Pakets.
+- **Die Steuerdokumente misst BR nicht.** `Backlog.md`, `Rahmenplan.md`
+  und `CLAUDE.md` sind dieselbe Sorte Bestand wie `tools/` vor PK; ein
+  Riegel über erzählenden Text ist ein anderes Werkzeug und Sache eines
+  eigenen Konzepts (auf dem P5c-Zweig als Konzept SD angelegt).
 
 ## [Werkzeug: Die Nebenstufe ist grün (Konzept RP)] — 2026-09-23
 

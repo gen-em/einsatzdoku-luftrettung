@@ -10,6 +10,8 @@
  * Abnahme („eine Sitzung über 30 Minuten mit Bedienung bringt keinen Dialog")
  * ist VOR und NACH der Änderung grün und belegt deshalb nichts. Der
  * Unterschied ist ein anderer und lässt sich zählen.
+ *
+ * Anlass: Nr. 310 — die Frist lief ab dem Entpacken: 17 stille Neu-Entpackungen je Schicht statt einer
  */
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { spawn } from 'node:child_process';

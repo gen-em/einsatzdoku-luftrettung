@@ -78,7 +78,7 @@ nicht möglich: Es gibt genau fünf Textgrößen.
 sitzt, ist auf einem 466-Pixel-Display halb so groß wie gedacht — sie kann
 `Ui.s()` nicht folgen, egal wie das Layout gerechnet ist.
 
-Der Ausweg ist Vorrastern: `tools/uhr-bilder/erzeugen.sh` legt die Bildmarke in
+Der Ausweg ist Vorrastern: `tools/erzeugen/uhr-bilder.sh` legt die Bildmarke in
 **vier Stufen** ab (Kachel 60, 73, 101, 118), und `monkey.jungle` weist jedem
 Gerät die passende zu. Zielwert sind 27 % der Displayhöhe — das Verhältnis des
 Bezugsgeräts, 70/260. Damit liegen alle 99 Geräte zwischen 25,0 und 28,8 %.

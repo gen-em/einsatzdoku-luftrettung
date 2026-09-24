@@ -5,7 +5,7 @@ declare(strict_types=1);
  * DAS PRÜFKONTO BEKOMMT EINEN ZWEITFAKTOR MIT BEKANNTEM GEHEIMNIS
  * (P5c/AP5, E-P5c-43).
  *
- * Anlass: F-P5c-33 — das Prüfkonto `admin@gen-em.org` ist eine BetreiberIn;
+ * Anlass: Nr. 320 (F-P5c-33) — das Prüfkonto `admin@gen-em.org` ist eine BetreiberIn;
  * ohne Zweitfaktor landete jedes Werkzeug nach der Anmeldung im
  * Einrichtungstor, mit einem unbekannten nicht über den Code-Schritt.
  *

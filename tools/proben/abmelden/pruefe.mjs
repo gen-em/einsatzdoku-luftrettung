@@ -1,5 +1,8 @@
 /* Belegt, was der Abmeldeweg im sessionStorage zuruecklaesst — vor und nach
-   der Aenderung aus S22-3. Aufruf:  node pruefe.mjs  (aus diesem Verzeichnis) */
+   der Aenderung aus S22-3. Aufruf:  node pruefe.mjs  (aus diesem Verzeichnis)
+
+   Anlass: Nr. 22 — der neue Datenschluessel (edk_neu) ueberlebte das Abmelden
+*/
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';

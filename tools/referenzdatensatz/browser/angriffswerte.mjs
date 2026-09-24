@@ -27,6 +27,13 @@
  *
  * Aufruf:
  *   node angriffswerte.mjs [basis] [email] [passwort] [ausgabeordner]
+ *
+ * VON HAND (alle Werte am Diensttag 21.11.2026, dazu das Alter): Tagesuebersicht,
+ * Einsatzsuche und Zeitraum-Uebersicht — dort jeweils „Alle N anzeigen", sonst
+ * sind die Einsaetze gar nicht gerendert und „nichts passiert" sagt nichts —,
+ * dann Einsatzseite und Formular des Einsatzes 2026-0335. Ueberall: kein
+ * Dialog, keine Konsolenmeldung, der Wert steht als TEXT da. Gefunden hat die
+ * Probe F-P1-I (Web 7.2.1): Die Spalte „Alter" gab ihren Wert unmaskiert aus.
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 

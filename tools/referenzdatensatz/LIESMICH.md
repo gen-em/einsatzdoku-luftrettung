@@ -1,8 +1,8 @@
 # Referenzdatensatz
 
 Ein **erfundener** Beispielbestand, der zwei Aufgaben hat: Demo-Konto auf
-dem Produktivserver und Regressionsreferenz. **Anlass: F-P1-I, Nr. 174** —
-ohne festen Bestand misst jeder Lauf etwas anderes.
+dem Produktivserver und Regressionsreferenz.
+**Anlass: Nr. 174, 267** — ohne festen Bestand misst jeder Lauf etwas anderes.
 
 ## Aufruf
 

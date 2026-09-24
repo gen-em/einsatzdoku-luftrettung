@@ -46,6 +46,14 @@
  *   bogen/<seite>.png                 der Kontaktbogen, acht Breiten nebeneinander
  *   bericht.md, bericht.json          Zahlen und Befunde
  *
+ * SEITENLISTE seiten.json: je Zeile Name, Gruppe, Rolle (`aus` = abgemeldet,
+ *   `demo`, `admin`) und Pfad; `status` nennt einen erwarteten Code, wenn es
+ *   nicht 200 ist; `karte: true` wartet zusaetzlich auf Leaflet; `vorher`
+ *   fuehrt Bedienschritte vor der Aufnahme aus (die bekannten stehen in
+ *   `vorher()`). Platzhalter in `__GROSSBUCHSTABEN__` loest der Lauf aus dem
+ *   Bestand auf — Kennungen gehoeren zu EINER Installation und stehen in
+ *   keiner eingecheckten Datei.
+ *
  * GRENZEN. Gemessen wird Chromium. WebKit (Safari, iOS) und Gecko (Firefox)
  * stehen in dieser Umgebung nicht zur Verfügung; was nur dort auffiele, fällt
  * hier nicht auf. Bedienzustände sind nur so weit erfasst, wie die Seitenliste
