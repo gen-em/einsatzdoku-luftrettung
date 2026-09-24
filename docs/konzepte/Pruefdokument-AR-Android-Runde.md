@@ -2,7 +2,7 @@
 
 *Gehört zu `Konzept-AR-Android-Runde.md`. Beantwortet die Frage „was muss
 **ich** noch tun?"; das Protokoll im Konzept beantwortet „ist es belegt?".
-Stand: **24.09.2026, nach AR-03.** Wird je Paket fortgeschrieben.*
+Stand: **24.09.2026, nach AR-04.** Wird je Paket fortgeschrieben.*
 
 ## 1. Was nicht geprüft werden konnte — und warum
 
@@ -32,6 +32,10 @@ Stand: **24.09.2026, nach AR-03.** Wird je Paket fortgeschrieben.*
 | AR-03 | Durchsicht der 17 Verhaltensänderungen von Android 17 gegen den Quelltext (`grep` je Punkt) | 14 ohne Treffer; 3 betreffen den Netzweg (P-AR-03 bis -05) |
 | AR-03 | `werkzeuge/kontraste.py`, `farbabgleich.py` | 24 Paare, 0 unter Zielwert; 0 Abweichungen, 0 eigene Farbwerte |
 | AR-03 | `bash tools/sandbox/aufbauen.sh android` (nach der Änderung) | 3 s, rc 0, **21 von 21 Stücken**, darunter Plattform 37.0, JDK 21, Gradle-Spiegel |
+| AR-04 | `werkzeuge/kontraste.py --selbstprobe` | **5 Fälle, 0 Fehlschläge** — B-S5Z-13 und B-S5Z-15 eingebaut und rot, Farbe ohne Rolle rot, Paar unter Zielwert rot, Gegenprobe grün |
+| AR-04 | `werkzeuge/kontraste.py`, erster Lauf auf der alten Liste | **4 Befunde**: Rot als Schrift auf der Uhr (4,12 : 1, echter Fehler), Cursor Orange auf Schnee (2,23 : 1, echter Fehler), blauer Punkt und Seitengrund Rauch ungelistet |
+| AR-04 | `werkzeuge/kontraste.py` nach Behebung | **30 Paare, 0 Befunde**; 125 Farbstellen (Handy 94, Uhr 31), **0 ohne erkannte Rolle**; `linie` als Zierde begründet |
+| AR-04 | `./gradlew build` | grün in 3 min 50 s, Lint 0 / 0, 267 / 71 Fälle je Bauart; Bilder: dieselben 5 von 78 wie in AR-03 (nur Fassungszeile) — die zwei neuen Farben kommen in keinem Bild vor |
 
 ## 3. Prüfliste — was die Betreiberin noch tun kann
 
@@ -43,6 +47,9 @@ Stand: **24.09.2026, nach AR-03.** Wird je Paket fortgeschrieben.*
 | P-AR-04 | Encrypted Client Hello stört nicht | wie P-AR-03 | wie P-AR-03 | wie P-AR-03 | offen — Gerätetest |
 | P-AR-05 | Das Prüf-APK erreicht die örtliche Installation ohne die neue Berechtigung für das lokale Netz | Emulator (AR-05): `adb reverse tcp:8080 tcp:8080`, Kopplung gegen `127.0.0.1:8080` | Kopplung gelingt — 127.0.0.1 ist Loopback, nicht lokales Netz | Verbindungsfehler nur mit `targetSdk` 37 | offen — AR-05 |
 | P-AR-06 | Singular in den Zahlentexten | `MehrzahlTest`; am Gerät: Kopplung starten und die letzte Minute abwarten | „Noch 1 Minute", „Noch 1 Sekunde" | „Noch 1 Minuten" | Prüffall **belegt** (AR-03); Gerät offen |
+| P-AR-07 | Uhr: „Handy nicht erreichbar" in Rosa | Wear-Emulator (AR-05) ohne Telefon starten — er zeigt den Zustand von selbst | Zeile in Rosa, gut lesbar | Zeile in Rot | offen — AR-05 |
+| P-AR-08 | Handy: Cursor im Eingabefeld in Orange tief | ein Eingabefeld antippen (Emulator AR-05 oder Gerät) | Cursor dunkler als das Orange der Knöpfe | Cursor im hellen Orange | offen — AR-05 |
+| P-AR-09 | Das Kontrastwerkzeug fährt von Hand | `python3 android/werkzeuge/kontraste.py` und `--selbstprobe` | 0 Befunde; 5 von 5 | ein `FEHLT`, `ROLLE?` oder `!` in der Ausgabe | **belegt** (AR-04) |
 | P-PK-28 | Die Android-Zeile aus PK-04/5b hat ihre Nummer (Nr. 284) | `android/version.properties`, `docs/CHANGELOG.md`; Emulator: Einstellungen → Rechtliches | Nummer > 0.15.1, Changelog-Zeile `[Android …]`, ein Bild zeigt „von der BetreiberIn des Servers" | Nummer 0.15.1, kein Bild | Nummer und Changelog **erledigt** (0.16.0); Bild folgt in AR-05 |
 
 ## 4. Grenzen der benutzten Prüfmittel

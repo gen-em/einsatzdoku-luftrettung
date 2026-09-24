@@ -454,10 +454,16 @@ private fun Verbindungszeile(z: Uhrzustand) {
             else -> stringResource(R.string.handy_verbunden)
         },
         // Rot warnt, Blau bestätigt, Sand sagt nichts zu (E-S4-22a).
+        //
+        // ROSA, NICHT ROT (Android 0.16.0, Konzept AR). `rot` als SCHRIFT auf
+        // Asphalt traegt 4,12:1 -- unter AA; dieselbe Stelle wie B-S5Z-15,
+        // nur eine Zeile weiter, und sie stand in keiner Paarliste. Gefunden
+        // hat sie die Vollstaendigkeitspruefung von `werkzeuge/kontraste.py`
+        // (Nr. 116). Rosa ist auf der Uhr die Schrift fuer "warnt".
         color = when (z.handyErreichbar) {
             null -> Farbe.sand
             true -> Farbe.blau
-            false -> Farbe.rot
+            false -> Farbe.rosa
         },
         fontSize = 12.sp,
         textAlign = TextAlign.Center,

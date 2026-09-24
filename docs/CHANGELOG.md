@@ -117,6 +117,35 @@ nach Reihenfolge der parallelen Aufgaben. Aufgefallen ist es beim
 Bild-für-Bild-Vergleich dieser Runde, der einen festen Stand braucht. Die
 Bilder liegen jetzt unter `build/bilder/debug/` und `build/bilder/release/`.
 
+### Behoben — zwei Kontraste, die in keiner Liste standen (AR-04, Nr. 116)
+
+`werkzeuge/kontraste.py` rechnete bis hierhin nur die Paare nach, die von
+Hand in seiner Liste standen; ein fehlendes Paar war ein grünes Paar. Es
+prüft jetzt zusätzlich, ob die Liste **vollständig** ist: Jede Farbe, die im
+Quelltext eines Moduls als Schrift, Zeichen (Punkt, Cursor), Linie oder
+Fläche vorkommt, muss in der Liste dieses Moduls in dieser Rolle stehen, und
+eine Farbe, deren Rolle es nicht erkennt, ist ebenfalls ein Befund (Weg (c),
+E-AR-09). Eine Selbstprobe baut die zwei Lücken von früher ein — den orangen
+Punkt auf der Karte (B-S5Z-13) und Rot als Schrift auf der Uhr (B-S5Z-15) —
+und muss beide finden.
+
+**Der erste Lauf fand dieselbe Lücke ein zweites Mal.** Auf der Uhr stand
+„Handy nicht erreichbar" in **Rot auf Asphalt, 4,12 : 1** gegen 4,5 — eine
+Zeile neben der Stelle, die B-S5Z-15 behoben hatte, und in keiner Liste. Sie
+ist jetzt Rosa, wie dort. Und am Handy war der **Cursor im Eingabefeld Orange
+auf Schnee, 2,23 : 1** gegen 3,0; er ist jetzt Orange tief (4,32 : 1), wie
+der Rückstandspunkt. Beide Farben gab es schon — kein neuer Wert. Dazu kamen
+vier Paare, die immer bestanden, aber nie gemessen wurden (der blaue Punkt
+auf der Karte, die Fassungszeile auf dem Seitengrund, die Rahmen der
+Bedienelemente). Der Rahmen `linie` um Karten und beschriftete Auswahlzeilen
+ist als Zierde begründet, nicht gerechnet: Man erkennt diese Elemente an
+Beschriftung und Fläche.
+
+Stand: **30 Paare, 0 Befunde, 125 Farbstellen, alle mit erkannter Rolle.**
+Was das Werkzeug nicht sieht, steht in seinem Kopf: eine bekannte Schrift auf
+einem neuen Grund. Und es hängt an keinem Lauf — das Einhängen in den
+Prüfstand ist Nr. 334, nach P5c.
+
 ### Arbeitsumgebung — `aufbauen.sh android`
 
 Die Ausbaustufe holt Plattform 37.0 (und 36, an der `tools/pruefstand/`

@@ -245,7 +245,12 @@ fun Eingabefeld(
                 fontSize = 15.sp,
                 fontFamily = if (grossschreiben) androidx.compose.ui.text.font.FontFamily.Monospace else null,
             ),
-            cursorBrush = androidx.compose.ui.graphics.SolidColor(Farbe.orange),
+            /* `orangeTief` statt `orange` (Android 0.16.0, Konzept AR): Der
+             * Cursor ist ein grafisches Objekt; Orange auf Schnee traegt
+             * 2,23:1 gegen 3,0 (WCAG 1.4.11). Gefunden von der
+             * Vollstaendigkeitspruefung in `werkzeuge/kontraste.py`, Nr. 116 --
+             * derselbe Tausch wie beim Rueckstandspunkt (B-S5Z-13). */
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(Farbe.orangeTief),
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                 capitalization = if (grossschreiben) {
                     androidx.compose.ui.text.input.KeyboardCapitalization.Characters

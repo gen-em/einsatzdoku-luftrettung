@@ -866,7 +866,7 @@ einmal erzeugt und dem Auftraggeber zur Verwahrung übergeben.
 | Skript | Was es prüft | Sollstand |
 |---|---|---|
 | `farbabgleich.py` | App-Token gegen `:root` des Web | 0 Abweichungen, 0 eigene Farbwerte |
-| `kontraste.py` | Kontrast jedes Farbpaars der App | 0 Paare unter dem Zielwert |
+| `kontraste.py` | Kontrast jedes Farbpaars der App — und seit 0.16.0, ob die Liste **vollständig** ist: jede Farbe, die im Quelltext eines Moduls als Schrift, Zeichen, Linie oder Fläche vorkommt, steht in der Paarliste dieses Moduls in dieser Rolle (Nr. 116). `--selbstprobe` baut die zwei historischen Lücken ein (B-S5Z-13, -15) | 0 Befunde (Paare unter Zielwert, fehlende Paare, Farben ohne erkannte Rolle); Selbstprobe 5 von 5. **Hängt an keinem Lauf** — von Hand fahren (Nr. 334) |
 | `bildmarken.sh` | Bildmarken gegen ihre Vorlagen | 0 Abweichungen |
 | `stroeme.py` | Soll-Zahlen der Ausdünnung, mit der Referenzregel aus `tools/referenzdatensatz/` nachgerechnet | 0 Abweichungen gegen die analytischen Werte |
 

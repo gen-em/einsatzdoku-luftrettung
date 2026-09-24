@@ -16,11 +16,11 @@ entsteht mit AR-02. Zweig `claude/affectionate-newton-6pzfkc`, von `main`
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — AR-01 bis AR-03 erledigt, AR-04 in Arbeit.** Android **0.16.0**: AGP 9.4.1, Kotlin 2.4.20, API 37, Kette auf dem Stand vom 24.09.; **Lint 0 Fehler / 0 Warnungen** in beiden Modulen (vorher 14), 267/71 Prüffälle grün, 73 von 78 Bildern byteweise gleich, die übrigen fünf nur in der Fassungszeile (Protokoll 7) |
+> | Stand | **24.09.2026 — AR-01 bis AR-04 erledigt, AR-05 in Arbeit.** `kontraste.py` prüft die Vollständigkeit, fand zwei echte Kontrastfehler (behoben). Android **0.16.0**: AGP 9.4.1, Kotlin 2.4.20, API 37, Kette auf dem Stand vom 24.09.; **Lint 0 Fehler / 0 Warnungen** in beiden Modulen (vorher 14), 267/71 Prüffälle grün, 73 von 78 Bildern byteweise gleich, die übrigen fünf nur in der Fassungszeile (Protokoll 7) |
 > | Entschieden | **E-AR-01 bis -07** aus der Freigabe, **E-AR-08 bis -13** aus den Antworten auf Q-AR-01 bis -06, beide vom 24.09.2026 (Abschnitt 5) |
 > | Offen | nichts |
 > | Hakt | Maven Central drosselt diesen Container (F-AR-01); die Runde baut über Googles Spiegel (E-AR-13) |
-> | Nächstes | **AR-04** — `kontraste.py` nach Weg (c) |
+> | Nächstes | **AR-05** — Emulatorlauf (beide Module, API 37), Dokumente, Prüfstand, PR |
 
 ---
 
@@ -156,6 +156,7 @@ als `default`.
 | **F-AR-10** | **Die Vermutung in `LIESMICH.md` 2 ist widerlegt.** Dort steht als Kandidat für die Warnung, die zwischen dem 08. und dem 20.09.2026 dazukam, Robolectric 4.16.1 → 4.17. Robolectric 4.17 ist erschienen, und Lint meldet es **nicht** — der Kandidat war es nicht. Ob es die unbenutzte Zeichenkette aus F-AR-09 war, lässt sich nicht belegen: Der Bericht vom 20.09. starb mit dem Läufer | `LIESMICH.md` 2 wird berichtigt (AR-05) |
 | **F-AR-11** | **Ein Prüffall übergab seinen Rückstand nie** (gefunden in AR-02 durch Kotlin 2.4, „Expression is unused"). `KopplungRundlaufTest.dienst()` reichte `{ rueckstand }` als nachgestellte Lambda; seit Nr. 114 ist der letzte Parameter von `Kopplungsdienst` `raeumen`. Ohne Wirkung — kein Fall setzt einen Rückstand, die App übergibt benannt | **behoben in AR-02** (benanntes Argument) |
 | **F-AR-12** | **Der Bilderlauf schrieb zwei Bauarten in einen Ordner** (gefunden in AR-03). `HandyBildTest` und `UhrBildTest` laufen in `testDebugUnitTest` und `testReleaseUnitTest`, beide nach `build/bilder/`; liegen blieb, was zuletzt fertig war — „Fassung 0.16.0" oder „0.16.0-pruef", je nach Reihenfolge. Gefunden, weil ein Bild zwischen zwei Bauten ohne Grund abwich | **behoben in AR-03** (`build/bilder/<bauart>/`) |
+| **F-AR-13** | **Zwei Kontraste unter AA in der ausgelieferten App** (gefunden in AR-04 vom neuen `kontraste.py`): „Handy nicht erreichbar" auf der Uhr Rot auf Asphalt 4,12 : 1; Cursor im Eingabefeld des Handys Orange auf Schnee 2,23 : 1 | **behoben in AR-04** (Rosa, Orange tief) |
 
 ## 4. Fragen an die Betreiberin
 
@@ -395,4 +396,42 @@ App, `HttpURLConnection` zum Server) und — für das Prüf-APK — 6 lokales Ne
    Plural ist dort immer richtig") stimmte nur für den dritten Text.
 
 **Gemessen:** Prüfdokument 2.
+
+### AR-04 — Kontraste (erledigt 24.09.2026)
+
+**Was:** `werkzeuge/kontraste.py` nach Weg (c) (E-AR-09): Paarliste mit
+Spalte „Modul", Rollen Schrift / Zeichen / Linie / Fläche aus dem
+Quelltext, `ZIERDE` mit Begründung (nur `linie`, Handy), `--selbstprobe`
+mit den zwei historischen Lücken, Rückgabe 0 / 1 / 2, Anlass-Zeile
+Nr. 116. `LIESMICH.md` 6.
+
+**Wie die Rolle gelesen wird:** je Vorkommen der Aufruf und der Parameter
+(Klammerzählung rückwärts über Kommentar- und zeichenkettenfreien
+Quelltext); positionelle Argumente über die Parameternamen der eigenen
+Bausteine; `when`/`if`/`?:` über die Stelle, an die das Ergebnis geht, auch
+über eine Hilfsvariable oder -funktion derselben Datei. Sonderfälle:
+`.background(…, CircleShape)` ist ein Punkt, eine 1-dp-Box eine Linie.
+Ergebnis am heutigen Stand: **125 Stellen, 0 ohne Rolle.**
+
+**Probleme und Lösungen:**
+
+1. **Zwei echte Kontrastfehler** (F-AR-13): „Handy nicht erreichbar" auf der
+   Uhr in Rot auf Asphalt (4,12 : 1) — dieselbe Lücke wie B-S5Z-15, eine
+   Zeile daneben —, jetzt Rosa; der Cursor im Eingabefeld Orange auf Schnee
+   (2,23 : 1), jetzt Orange tief. Beide mit vorhandenen Farben, also ohne
+   neuen Wert und ohne Freigabe nach `Design.md` (kein neuer Baustein, keine
+   neue Darstellung).
+2. **Vier Paare fehlten, ohne zu versagen** (F-AR-06): blauer Punkt auf der
+   Karte, Fassungszeile und Knopfrahmen auf dem Seitengrund, Rahmen der
+   Bedienelemente auf der Karte. Eingetragen und gerechnet.
+3. **`linie` ist Zierde** — der offene Punkt aus F-AR-06 entschieden: Sie
+   rahmt Karten und beschriftete Auswahlzeilen; die Rahmen echter
+   Bedienelemente sind `gedaempft` (5,66 : 1 bzw. 5,30 : 1).
+4. **Zwei Paare hatte ich vor dem ersten Lauf eingetragen** (Rauch) — wieder
+   herausgenommen, damit der erste Lauf auf der alten Liste misst; sie kamen
+   danach mit Befund zurück.
+
+**Was es nicht sieht** (Kopf des Werkzeugs): eine bekannte Schrift auf einem
+neuen Grund, und Farben, die nicht über `Farbe.` kommen. **Und es hängt an
+keinem Lauf** (F-AR-05, Nr. 334).
 
