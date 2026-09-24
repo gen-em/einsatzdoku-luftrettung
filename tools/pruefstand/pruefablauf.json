@@ -244,7 +244,8 @@
       "ab": "klein",
       "pfade": [
         "server/spur_lib.php",
-        "server/tag_spuren.php"
+        "server/tag_spuren.php",
+        "server/api/backup_spuren*.php"
       ],
       "proben": [
         "spurprobe",

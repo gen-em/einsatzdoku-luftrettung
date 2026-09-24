@@ -205,6 +205,9 @@ def selbstprobe(a):
         # erfundene Datei gegen einen Pfad, der nie eine echte traf; die Probe
         # war grün, das Muster griff nie (Gegenprobe des Bestandsriegels).
         ('server/adminbackup_lib.php trifft „backup"',   'server/adminbackup_lib.php', 'backup', True),
+        # Die Spur-Endpunkte der Schnittstelle — seit Nr. 317 im Muster „spur";
+        # PK-03 hatte sie gemeint und server/api/spur*.php geschrieben.
+        ('server/api/backup_spuren_restore.php trifft „spur"', 'server/api/backup_spuren_restore.php', 'spur', True),
         ('jede server-Datei trifft das Auffangmuster',   'server/beliebig.php', AUFFANG, True),
     ]
     nach_id = {m['id']: m for m in a['muster']}

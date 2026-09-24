@@ -223,9 +223,11 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   der erste Treffer der Pfadprüfung). Das Muster `spur` nannte
   `server/api/spur*.php`; die Datei gab es nie, die Spur-Endpunkte heißen
   `server/api/backup_spuren*.php`. Die Selbstprobe von `auswahl.py` prüfte
-  den Pfad gegen eine erfundene Datei und war darum grün. Gestrichen — die
-  Auswahl ändert sich nicht; ob die beiden Endpunkte die Spurprobe
-  auslösen sollen, entscheidet die Betreiberin.
+  den Pfad gegen eine erfundene Datei und war darum grün. Gestrichen, und
+  an seine Stelle tritt, was gemeint war: `server/api/backup_spuren*.php`
+  (entschieden von der Betreiberin, Q-BR-14). Eine Berührung der beiden
+  Spur-Endpunkte löst jetzt `spurprobe` und `containerprobe` aus; bis dahin
+  liefen für sie nur das Auffangmuster und die Oberflächenproben.
 - **Die Selbstprobe der Textprobe lief nirgends** (BR-05, gefunden von der
   Gegenprobe des Bestandsriegels). `textprobe.py` hat seit P2 eine
   Selbstprobe des Zerlegers (21 Fälle) — hinter `--probe`. Der Läufer ruft

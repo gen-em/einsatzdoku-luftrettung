@@ -10182,6 +10182,10 @@ zutreffen.
     und blieb grün. *Behoben:* Pfad gestrichen — die Auswahl ändert sich
     nicht (`--abdeckung` vorher wie nachher); der Selbstprobenfall prüft
     einen Glob gegen eine versionierte Datei; `bestand` hält seither jeden
-    Pfad gegen den Baum (Regel `ablauf`). *Offen:* ob
-    `server/api/backup_spuren*.php` die Spurprobe auslösen soll — eine
-    Frage der Zuordnung an die Betreiberin (Konzept BR, Q-BR-14).
+    Pfad gegen den Baum (Regel `ablauf`). *Entschieden 24.09.2026 von der
+    Betreiberin (Konzept BR, Q-BR-14):* `server/api/backup_spuren*.php`
+    steht im Muster `spur` — PK-03 hatte die Endpunkte gemeint und den
+    Dateinamen verfehlt. Eine Berührung von `backup_spuren.php` oder
+    `backup_spuren_restore.php` löst seither `spurprobe` und
+    `containerprobe` aus. Die Selbstprobe von `auswahl.py` hat dafür einen
+    Fall, der ohne den Pfad fehlschlägt (28 Lagen, gegengeprobt: 1 rot).
