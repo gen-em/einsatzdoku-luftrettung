@@ -572,32 +572,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     braucht — sie macht ihn nicht schneller. **Dieser Eintrag bleibt deshalb
     offen**, und die Zeile in Rahmenplan Abschnitt 5 sagt das auch so.
 
-40. **Altklassen ohne Gegenstück — 53 (gemessen 13.09.2026), 55 bei Aufnahme.**
-    *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
-    zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
-    Klassen des alten Stylesheets entweder eine Regel im neuen oder einen
-    Eintrag auf der Streichliste. O11 hat 22 Einträge nachgetragen (die Zahl
-    fiel von 78 auf 55, seither auf 53); die übrigen stammen aus O1 bis O10 und sind dort mit
-    dem Umbau verschwunden, ohne eingetragen zu werden. Die Streichliste ist
-    damit unvollständig — sie sagt nicht zu jeder verschwundenen Klasse,
-    *warum* sie verschwunden ist, und genau das ist ihr Zweck.
-
-    **Warum nicht in O12 erledigt.** Nr. 39 daneben war Werkzeugarbeit: 29
-    Namen, jeder in wenigen Minuten am Fundort zu klären. Dieser Punkt ist
-    etwas anderes — er verlangt für 55 Klassen die Rekonstruktion, in welchem
-    von zehn Paketen sie verschwunden sind und wodurch sie ersetzt wurden.
-    Das ist Archäologie in zehn Commits, und sie **halbherzig** zu machen
-    wäre schlimmer als sie zu lassen: Eine Streichliste mit 55 Einträgen
-    „ersatzlos entfallen" sieht vollständig aus und sagt nichts. Der Zweck der
-    Liste ist die Begründung, nicht die Zeile.
-
-    **Weg dahin** (P4, vor dem ersten CSS-Umbau): Die 55 Namen gruppenweise
-    gegen die Konzeptabschnitte O2 bis O10 halten — der Umsetzungsstand nennt
-    zu jedem Paket, welcher Baustein welche alte Klasse abgelöst hat. Was sich
-    daraus nicht klären lässt, bekommt einen Eintrag „Herkunft nicht mehr
-    feststellbar" und wird als solcher gezählt; auch das ist eine ehrliche
-    Auskunft, „ersatzlos" wäre eine erfundene.
-
 43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt — und das
     Transportziel auch nicht.**
     *Ausdrücklich bestätigt 10.09.2026:* **Die Zielklinik soll
@@ -3747,6 +3721,24 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die `"\d"` enthält; `pysyntax` im Tor ohne Warnung. Klein, kein Risiko
     für die Anwendung. **Zuordnung: Backlog-Runde** (Vorschlag; oder das
     nächste Paket, das `tools/quelltext/` anfasst).
+
+329. **Zusammengesetzte Klassen der übrigen Bausteine sieht die
+    Vollständigkeitsprüfung nicht.** *Aufgenommen 24.09.2026 in Konzept BV
+    (BV-03, F-BV-11), notiert und nicht mitgemacht.* BV-02 hat die
+    Meldungstöne aufgelöst (Nr. 274): Ihre Liste ist geschlossen und steht in
+    zwei Bausteinen. Dieselbe Grenze trifft andere Klassen, die zur
+    Laufzeit entstehen — in BV-03 gefunden an `c-dc-<spalte>` aus
+    `mission_fields_lib.php`, die PK-04/1b deshalb als „ersatzlos entfallen"
+    geführt hatte. Von den 62 Hinweisen „Regel im Stylesheet, im Markup
+    nicht gefunden" (gemessen 24.09.2026) tragen **28** das Präfix eines
+    Bausteins (`symbol-` 9, `pwq-` 5, `kennzahl-` 4, `karte-` 3, `blatt-` 2,
+    `knopf-` 2, `zaehler-` 2, `plakette-` 1) — vermutlich zusammengesetzt,
+    nicht einzeln geprüft. Verschwände eine dieser Regeln, meldete es nur
+    die Tonprüfung am Aufruf — und die kennt vier Bausteine, und auch die
+    nur dort, wo der Wert als Literal übergeben wird.
+    *Weg:* je Baustein prüfen, ob sein Wertevorrat geschlossen ist; wo ja,
+    wie in BV-02 lesen, wo nein, bleibt es beim Hinweis.
+    **Zuordnung: Backlog-Runde** (Prüfmittel).
 
 ## Erledigt
 
@@ -10261,3 +10253,45 @@ zutreffen.
     viele Treffer an den Aufrufen. Für `schutz` hing das allerdings an
     **einem einzigen** Aufruf (`tag_spuren.php`). Seit BV-02 hängt es an
     keinem.
+
+40. **Altklassen ohne Gegenstück — 53 (gemessen 13.09.2026), 55 bei Aufnahme.**
+    *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
+    zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
+    Klassen des alten Stylesheets entweder eine Regel im neuen oder einen
+    Eintrag auf der Streichliste. O11 hat 22 Einträge nachgetragen (die Zahl
+    fiel von 78 auf 55, seither auf 53); die übrigen stammen aus O1 bis O10 und sind dort mit
+    dem Umbau verschwunden, ohne eingetragen zu werden. Die Streichliste ist
+    damit unvollständig — sie sagt nicht zu jeder verschwundenen Klasse,
+    *warum* sie verschwunden ist, und genau das ist ihr Zweck.
+
+    **Warum nicht in O12 erledigt.** Nr. 39 daneben war Werkzeugarbeit: 29
+    Namen, jeder in wenigen Minuten am Fundort zu klären. Dieser Punkt ist
+    etwas anderes — er verlangt für 55 Klassen die Rekonstruktion, in welchem
+    von zehn Paketen sie verschwunden sind und wodurch sie ersetzt wurden.
+    Das ist Archäologie in zehn Commits, und sie **halbherzig** zu machen
+    wäre schlimmer als sie zu lassen: Eine Streichliste mit 55 Einträgen
+    „ersatzlos entfallen" sieht vollständig aus und sagt nichts. Der Zweck der
+    Liste ist die Begründung, nicht die Zeile.
+
+    **Weg dahin** (P4, vor dem ersten CSS-Umbau): Die 55 Namen gruppenweise
+    gegen die Konzeptabschnitte O2 bis O10 halten — der Umsetzungsstand nennt
+    zu jedem Paket, welcher Baustein welche alte Klasse abgelöst hat. Was sich
+    daraus nicht klären lässt, bekommt einen Eintrag „Herkunft nicht mehr
+    feststellbar" und wird als solcher gezählt; auch das ist eine ehrliche
+    Auskunft, „ersatzlos" wäre eine erfundene.
+
+    **Erledigt 24.09.2026 mit Konzept BV (BV-03).** Die Zahl oben war
+    überholt: Seit PK-04/1b (22.09.2026) stand jede Altklasse auf der
+    Streichliste, 25 davon aber nur mit dem Grund „Ersatzlos entfallen.
+    Gemessen am 22.09.2026: Die Klasse steht in keiner … Datei mehr" —
+    genau die Zeile, vor der dieser Eintrag warnt. BV-03 hat für alle 25 in
+    der vollständigen Geschichte den Commit gesucht, in dem die letzte
+    Verwendung verschwand (dafür musste der Klon erst vertieft werden: 381 →
+    1 040 Commits), und den Ersatz am Diff gelesen: **25 von 25
+    rekonstruiert, keine „Herkunft nicht mehr feststellbar"** — O1 4, O2 2,
+    O4 1, O7 2, O8a 1, O9a 1, O9b 2, O9c 12. **Vier davon waren nicht
+    ersatzlos:** `c-dc-winch`, `c-dc-bergwacht`, `c-dc-secondary` und
+    `c-dc-false_alarm` setzt `mission_fields_lib.php` weiter als Spaltenanker
+    (`'c-dc-' . $col`) — zusammengesetzt, darum als Literal nirgends; die
+    Messung vom 22.09.2026 hat nur Literale gesucht. Sie stehen jetzt als
+    `[bleibt]`. Die Vollständigkeitsprüfung bleibt bei 0 Befunden.

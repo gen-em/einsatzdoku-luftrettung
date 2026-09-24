@@ -56,6 +56,15 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   befürchtet:** Die Tonprüfung am Aufruf hätte jede fehlende Regel schon
   gemeldet — für `schutz` allerdings nur über einen einzigen Aufruf. Seit
   BV-02 hängt die Aussage an keinem.
+- **25 Zeilen der Streichliste sagten „ersatzlos", ohne es zu wissen**
+  (Backlog Nr. 40, BV-03). PK-04/1b hatte die letzten Altklassen
+  eingetragen, damit die Prüfung auf null kam — mit dem Grund „steht in
+  keiner Datei mehr". Die Liste ist aber für das Warum da. BV-03 hat je
+  Klasse den Commit gesucht, in dem ihre letzte Verwendung verschwand, und
+  den Ersatz am Diff gelesen: 25 von 25 rekonstruiert, zwölf davon aus
+  O9c. **Vier waren gar nicht ersatzlos:** Die `c-dc-*`-Spaltenklassen
+  setzt `mission_fields_lib.php` weiter zur Laufzeit; sie stehen jetzt als
+  `[bleibt]`.
 
 ### Bewusst so
 
