@@ -94,6 +94,14 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   6.5b nennt jetzt drei Wege heraus, den schonenden zuerst, und was der
   teuerste kostet: einen vollständigen Abgleich bei eingeschalteter
   Wartung.
+- **Vier Backlog-Punkte waren erledigt und standen noch unter „Offen"**
+  (BV-05): Nr. 222 (die Kette baut die Uhr seit PK-05 nicht mehr), Nr. 270
+  (seit Web 20.34.0 wertet `EdApi.postJson()` den Status aus), Nr. 281
+  (Stufe 1 läuft auf Arbeitszweigen nur beim Pull Request — an echten Läufen
+  belegt) und Nr. 212 (seit RP-03 grün; auf frischer Anlage nachgemessen,
+  111 von 111). Alle vier mit Beleg nach *Erledigt*; der Kopfkommentar der
+  Wiederherstellungsprobe, der noch „110 von 110, zwei davon rot" sagte, ist
+  berichtigt.
 
 ### Bewusst so
 

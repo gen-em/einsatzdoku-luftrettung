@@ -2,7 +2,7 @@
 
 *Gehört zu `Konzept-BV-Backlog-Vorgriff.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
-Konzepts. Stand: BV-04 gebaut, 24.09.2026; wird mit jedem Paket
+Konzepts. Stand: BV-01 bis BV-05 gebaut, Pull Request offen, 24.09.2026; wird mit jedem Paket
 fortgeschrieben.*
 
 ---
@@ -11,6 +11,7 @@ fortgeschrieben.*
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **Stufe 1 auf GitHub für diesen Zweig** | Bis zum Pull Request lief sie nicht — Stufe 1 läuft auf Arbeitszweigen nur beim PR (Nr. 281). Örtlich sind alle 17 Riegel je Paket grün, und `bericht.py lesen` hat jeden Kopf-Commit gegengelesen („in Ordnung, 19 Zahlen"). Ob das Tor dasselbe sagt, zeigt erst der PR-Lauf. | PR-Lauf von `pruefung.yml` |
 | **Der Abtaster gegen den P5c-Stand nach dem Merge** | Gefahren ist er gegen einen Abzug von P5c `3576a97` mit von Hand zusammengeführter Ausnahmeliste (`git merge-file`, ohne Konflikt) — 0 Befunde. Was P5c bis zum Merge noch an `server/` baut (AP6 bis AP9), kann niemand vorher messen. | P-BV-01 |
 | **Eine eingebaute Selbstprobe der Vollständigkeitsprüfung** | Sie hat keine (`pruefen.sh`, Liste `SELBST`: „ein Rest, den E-PK-24 … erst noch einlöst"). Eine anzulegen hieße, `pruefen.sh` und `tools/quelltext/LIESMICH.md` zu ändern — beide hat P5c geändert. Die Abnahme von BV-01 ist deshalb von Hand gefahren und in Abschnitt 2 mit Zahl belegt, die Gegenproben sind nicht eingecheckt. | — |
 | **Ob jeder Ersatz in der Streichliste genau stimmt** (BV-03) | Der entfernende Commit ist gemessen (Anwesenheit je Commit), der **Ersatz** ist aus dem Diff und dem P3-Konzept gelesen — eine Deutung, kein Messwert. Am unsichersten sind die vier `neu-*`-Zeilen: Das Anlegeformular der Stammdaten wurde in O9c als Ganzes ersetzt, die Zuordnung Klasse → neue Klasse ist dort eine Lesart. | P-BV-02 |
@@ -46,6 +47,12 @@ fortgeschrieben.*
 | BV-04 | `git diff ba2ec57 3576a97 -- docs/Handbuch.md docs/Technik.md README.md`, Hunk-Anfänge gegen die geänderten Zeilen | trifft BV-04 eine Stelle, die P5c auch ändert? | Handbuch: P5c-Hunks ab Zeile 283, BV bis 30 und 1941–2030; Technik: nächster P5c-Hunk 3 Zeilen vor der Zeile `missions`, sonst mehr als 100 Zeilen Abstand; README: P5c **0** Hunks |
 | BV-04 | `grep` nach `php …server/jobs.php` in `docs/`, `README.md`, Anleitungen | bleibt ein Befehl mit Repositoriumspfad? | **2** Treffer, beide gewollt: die neue Erklärung in 4.97a und der Fund-Eintrag Web 15.5.2 |
 | BV-04 | `pruefen.sh handbuch`, `linkprobe`, `textprobe` | rendern die Dokumente, stimmen die Verweise, neue Wortlisten-Treffer? | **2** Dokumente / 0 Befunde; **122** Verweise / 0 Abweichungen; **0** Treffer außerhalb der Ausnahmen |
+| BV-04 | Prüfstand, Stufe klein, Baum `5dddabc` | 17 Riegel und Proben der Berührung | **17 grün, 0 rot, 0 nicht gemessen**, 37 s; Gegenlesung „in Ordnung" |
+| BV-05 | `hochfahren.sh --neu`, dann `proben.sh wiederherstellung` | Nr. 212 auf frischer Anlage | **111 Erwartungen, 0 nicht erfüllt**; Teil 10 „2 erledigt, 2 von 4 offen", Zeiger `cur=2`, Wiederaufnahme `2 -> 17` |
+| BV-05 | GitHub-Schnittstelle, Läufe von `pruefung.yml` je Zweig | Nr. 281: läuft Stufe 1 auf Arbeitszweigen nur beim Pull Request? | BR-Zweig **3** Läufe, alle `pull_request`; BV-Zweig nach 4 Pushes ohne PR **0** |
+| BV-05 | `grep` in `.github/workflows/` nach Uhr-Prüfstand, ConnectIQ, `monkeyc`, `actions/cache` | Nr. 222: baut die Kette die Uhr noch? | **0** Treffer; Kopf von `pruefung.yml`: „Android und Uhr baut Station B" |
+| BV-05 | `bestandPruefen()` in `import_ui.js` und `EdApi.postJson()` in `api.js` gelesen, `git log -S` | Nr. 270: gilt eine 500 noch als Erfolg? | nein — `ok` verlangt `antwort.ok`; seit `0bee2fb` (Web 20.34.0) |
+| BV-05 | offene Nummern im Backlog, `origin/main` gegen den Zweig; Nummern doppelt | Buchführung | **115 → 108** (8 ausgetragen: 40, 184, 212, 214, 222, 270, 274, 281; neu 329); doppelt **0** |
 
 ---
 
@@ -62,6 +69,8 @@ Nichts — BV berührt keine Datei, die der Browser lädt.
 | P-BV-03 | Handbuch lesen: Abschnitt 1 („Was ist Gen-EM NAdoku?", Absatz „Patientendaten sind geschützt") und Abschnitt 5 (erster Absatz und die Aufzählung „Verschlüsselt sind nicht alle Daten …"). | Beide nennen die **Notizen des Einsatzes** als verschlüsselt und die des **Diensttags** als Klartext; keine Stelle sagt mehr „Notizen und Freitextfelder sind davon nicht erfasst". | Eine der beiden Stellen nennt andere Felder als die andere — oder als `Technik.md` 4.98. |
 | P-BV-04 | Den Befehl aus `Technik.md` 4.97a gegen den Wertekasten auf **Betrieb → Hintergrundjobs** halten. | Die Dokumentation zeigt den Platzhalter `/pfad/zur/installation/jobs.php`, der Wertekasten den echten Pfad dieser Installation — ohne `server/`. | Der Wertekasten zeigt einen Pfad mit `server/` (dann stimmt der Befund aus Nr. 150 nicht) oder die Dokumentation noch `…/server/jobs.php`. |
 | P-BV-02 | Stichprobe Streichliste: in `tools/quelltext/vollstaendigkeit-streichliste.md` drei der mit „Herkunft BV-03" markierten Zeilen wählen (Vorschlag: `rowlink`, `neu-form`, `c-dc-winch`) und je den genannten Commit ansehen (`git show <commit> -- server/`). | Die alte Klasse verschwindet in diesem Commit, und der genannte Ersatz steht an ihrer Stelle; `c-dc-winch` setzt `mission_fields_lib.php` heute noch (`'klasse' => 'c-dc-' . $col`). | Der Commit enthält die Klasse gar nicht, oder an ihrer Stelle steht etwas anderes als genannt — dann ist die Zeile eine Deutung, die nicht trägt. |
+| P-BV-05 | Im Prüfdokument PK (`Pruefdokument-PK-Pruefkette.md`) den Punkt **P-PK-17** abhaken. | Beleg aus BV-05: drei PR-Läufe am BR-Zweig, null Läufe am BV-Zweig nach vier Pushes. | — (reines Abhaken) |
+| P-BV-06 | **Nach dem Merge von P5c:** die zwei zurückgestellten Reste nachziehen lassen — den Textbaustein in Handbuch 11.5 (Nr. 194) und den Kopfkommentar in `server/jobs.php` (Nr. 150, mit der nächsten Web-Stufe). | Danach wandern Nr. 194 und 150 nach *Erledigt*. | Einer der beiden Punkte steht Wochen nach dem Merge noch offen. |
 | P-BV-01 | Nach dem Merge von P5c und dem Aufnehmen von `main` in BV: Stufe 1 des PR von BV ansehen, Schritt „Vollständigkeit". | grün, 0 Befunde | Rot mit einem Befund unter „5 Zusagen" in einer Datei, die P5c gebaut hat — dann hat der neue Abtaster dort etwas freigelegt, das der alte verschluckte. Das ist ein echter Fund, kein Fehler von BV: Stelle ansehen und entweder berichtigen oder mit Grund in `vollstaendigkeit-zusagen.md` eintragen. |
 
 ---

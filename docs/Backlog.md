@@ -2293,29 +2293,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verbindungsprobe: Sie wollte einen `/api/`-Endpunkt unter Überlast messen
     und bekam eine 302, weil die Anfrage die Datenbank nie erreichte.*
 
-212. **Zwei Erwartungen der Wiederherstellungsprobe sind auf einer leeren
-    Installation rot — ohne dass etwas kaputt ist.** *Aufgenommen 16.09.2026
-    in P5a/AP10, nachgemessen gegen den unveränderten Stand: dieselben zwei.*
-    Teil 10 („Der Auftrag Alle sichern") gibt dem Sammelvorgang ein enges
-    Zeitbudget und erwartet, dass er **wenigstens ein Konto sichert und dann
-    aufhört** — also dass danach etwas offen bleibt und der Zeiger auf dem
-    zuletzt gesicherten Konto steht. Auf einer Installation mit zwei fast
-    leeren Konten passen beide in das Budget: `2 erledigt, 0 von 2 offen`,
-    `cur=—`.
-
-    **Das ist ein Mangel des Prüfmittels, nicht der Anwendung** — und der
-    unangenehmere von beiden Sorten: Er meldet Rot, wo nichts ist, und
-    gewöhnt damit jeden, der die Probe fährt, an zwei rote Zeilen. Genau so
-    verschwindet später ein echter Befund darin.
-
-    **Zu tun:** Die Erwartung an einen Bestand binden, statt an eine Zeit —
-    etwa, indem der Prüffall zwei Konten mit genug Inhalt herstellt, oder
-    indem das Budget aus der gemessenen Dauer des ersten Backups abgeleitet
-    wird statt fest zu stehen. Ein drittes Konto anzulegen wäre die billigste
-    Fassung und verschöbe das Problem nur auf die nächste schnellere Maschine.
-    *Abnahme:* `php tools/wiederherstellungs-probe/probe.php` meldet **110 von
-    110** auf einer frisch aufgesetzten Installation. Zuordnung: Backlog-Runde.
-
 213. **Die Zustandsdatei der Auslieferungskette lag im Webroot.**
     *Aufgenommen 16.09.2026 aus einer Durchsicht des Auftraggebers; behoben
     am selben Tag in Web 20.15.1.*
@@ -2371,29 +2348,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
     Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
 
-
-222. **Der Aufbau des Uhr-Prüfstands wird bei jedem Lauf neu geholt.**
-    *Aufgenommen 17.09.2026 bei der Selektion der Stufe-1-Schritte.*
-    Der Schritt „Uhr Stufe I" brauchte im gemessenen Lauf **34 min 46 s** und
-    ist damit mit Abstand der teuerste der ganzen Kette — der Android-Bau
-    daneben 7:15, die übrigen dreizehn Schritte zusammen 23 Sekunden. Seit
-    derselben Fassung läuft er nur noch, wenn `watch/` oder
-    `tools/uhr-pruefstand/` berührt ist. Wer an der Uhr arbeitet, wartet
-    allerdings weiterhin jedes Mal die volle Zeit ab.
-
-    **Vermutung, ausdrücklich keine Messung:** Der größere Teil davon dürfte
-    der Aufbau sein — `pruefstand.sh aufbau-uebersetzen` holt SDK und
-    Gerätedateien bei jedem Lauf neu —, nicht das Übersetzen selbst. Träfe
-    das zu, spräche ein `actions/cache` auf `~/.Garmin/ConnectIQ` den größten
-    Teil der Zeit an, und zwar auch dann, wenn tatsächlich an der Uhr
-    gearbeitet wird.
-
-    *Zu tun, in dieser Reihenfolge:* zuerst die Verteilung zwischen Holen und
-    Übersetzen im Protokoll eines Laufs **nachmessen** — ohne diese Zahl ist
-    alles Weitere Spekulation, und genau davor warnt die Hausregel; erst wenn
-    der Aufbau überwiegt, einen Cache-Schritt einziehen, dessen Schlüssel an
-    der SDK-Fassung und an `CIQ_ZIELE` hängt. **Kein eigenes Paket** —
-    Beifang, sobald jemand den Prüfstand ohnehin anfasst (R83-Muster).
 
 227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole
     mehr.**
@@ -3389,18 +3343,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     AP8c liefert im Netzfehler ein `{ ok: false, status: 0 }` statt zu
     werfen — damit ist die Stelle danach mit drei Zeilen zu heilen.
 
-270. **`assets/import_ui.js` — eine 500 mit wohlgeformtem JSON gilt als
-    Erfolg.** Gefunden bei derselben Vermessung (bei Aufnahme Zeile 258).
-    Der Bestandsabgleich vor dem Import prüft nur `d.error`, nicht `res.ok`.
-    Antwortet der Server mit Status 500 und einem JSON-Rumpf ohne
-    `error`-Schlüssel, läuft der Dublettenabgleich **wortlos** gegen einen
-    leeren Bestand weiter — und meldet keine einzige Dublette, obwohl der
-    Bestand voll ist. Der Fehler ist still: Die Vorschau sieht richtig aus.
-    **Nicht in Schritt 15 behoben.** Von den 15 JSON-Sendestellen prüfen
-    **acht** `res.ok` nicht; diese hier ist die mit der schlimmsten Folge,
-    weil ihr Ergebnis eine Entscheidung der Person trägt.
-
-
 271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr
     Ton bleibt „info", auch wenn ein Fehler darin steht.** Gefunden bei der
     AP8-Vermessung (Schritt 15, 22.09.2026) in `assets/schneiden.js`. Die
@@ -3519,27 +3461,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Rechteinhaber und Bedingungen. Das gehört nachgesehen, nicht
     abgeschrieben.
 
-
-281. **Stufe 1 lief bei jedem Push auf einem Arbeitszweig doppelt.**
-    *Aufgenommen 21.09.2026 (PK-01), erledigt mit dem Vorgriff auf PK-05.*
-    `pruefung.yml` trug `push: branches: ['**']` **und** `pull_request`;
-    jeder Push auf einen Arbeitszweig erzeugte zwei Läufe desselben Namens
-    `Stufe 1` — einen über `pull_request` (rund 1 min, vergleicht gegen den
-    gemeinsamen Vorfahren) und einen über `push` (rund 56 min, ohne
-    Vergleichsstand misst er alles). Der Zweigschutz wartet auf den Namen,
-    also auf den langsameren. Gemessen an PR #69 (Läufe 192, 193) und
-    PR #70 (Lauf 186).
-
-    **Erledigt** mit PR #71 (21.09.2026): `branches: [ main ]`. Die Abnahme
-    — nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17**
-    offen und gehört ins Prüfdokument, nicht hierher.
-
-    *Diese Nummer war zweimal in Bewegung: zuerst die 268 (Kollision mit
-    PR #72), dann die 269 (Kollision mit Schritt 15, PR #74). Beide Male
-    hatte ein paralleler Zweig die Nummer in `Backlog.md` stehen, während
-    sie hier nur im Konzept stand. Der Satz „Jeder weitere Zweig, der
-    Nummern vergibt, beginnt bei 267" beschreibt keinen Riegel, sondern eine
-    Hoffnung.*
 
 283. **Die Textprobe liest die Kommentare in `server/` nicht — und dort
     standen reale Ortsnamen.**
@@ -10325,3 +10246,114 @@ zutreffen.
     die Zustandsdatei löschen — dann überträgt der nächste Lauf alles (688
     Dateien in rund acht Minuten, gemessen 20.09.2026), und zwar bei
     eingeschalteter Wartung.
+
+222. **Der Aufbau des Uhr-Prüfstands wird bei jedem Lauf neu geholt.**
+    *Aufgenommen 17.09.2026 bei der Selektion der Stufe-1-Schritte.*
+    Der Schritt „Uhr Stufe I" brauchte im gemessenen Lauf **34 min 46 s** und
+    ist damit mit Abstand der teuerste der ganzen Kette — der Android-Bau
+    daneben 7:15, die übrigen dreizehn Schritte zusammen 23 Sekunden. Seit
+    derselben Fassung läuft er nur noch, wenn `watch/` oder
+    `tools/uhr-pruefstand/` berührt ist. Wer an der Uhr arbeitet, wartet
+    allerdings weiterhin jedes Mal die volle Zeit ab.
+
+    **Vermutung, ausdrücklich keine Messung:** Der größere Teil davon dürfte
+    der Aufbau sein — `pruefstand.sh aufbau-uebersetzen` holt SDK und
+    Gerätedateien bei jedem Lauf neu —, nicht das Übersetzen selbst. Träfe
+    das zu, spräche ein `actions/cache` auf `~/.Garmin/ConnectIQ` den größten
+    Teil der Zeit an, und zwar auch dann, wenn tatsächlich an der Uhr
+    gearbeitet wird.
+
+    *Zu tun, in dieser Reihenfolge:* zuerst die Verteilung zwischen Holen und
+    Übersetzen im Protokoll eines Laufs **nachmessen** — ohne diese Zahl ist
+    alles Weitere Spekulation, und genau davor warnt die Hausregel; erst wenn
+    der Aufbau überwiegt, einen Cache-Schritt einziehen, dessen Schlüssel an
+    der SDK-Fassung und an `CIQ_ZIELE` hängt. **Kein eigenes Paket** —
+    Beifang, sobald jemand den Prüfstand ohnehin anfasst (R83-Muster).
+    **Erledigt 24.09.2026 mit Konzept BV (BV-05) — durch Wegfall, nicht durch
+    einen Cache.** Seit PK-05/3 (`17fdd32`) baut die Kette die Uhr gar nicht
+    mehr: `pruefung.yml` sagt im Kopf „Android und Uhr baut Station B", und in
+    `.github/workflows/` steht kein Aufruf des Uhr-Prüfstands, kein ConnectIQ
+    und kein `actions/cache` (0 Treffer, nachgesehen 24.09.2026). Die Stufe I
+    läuft örtlich im Prüfstand (`uhr-stufe1`), dort auf einer einmal
+    aufgebauten Anlage — gemessen rund 10 min für 99 Geräte (Nr. 316). Die
+    Frage, ob Holen oder Übersetzen die Zeit frisst, hat damit keinen Ort
+    mehr.
+
+270. **`assets/import_ui.js` — eine 500 mit wohlgeformtem JSON gilt als
+    Erfolg.** Gefunden bei derselben Vermessung (bei Aufnahme Zeile 258).
+    Der Bestandsabgleich vor dem Import prüft nur `d.error`, nicht `res.ok`.
+    Antwortet der Server mit Status 500 und einem JSON-Rumpf ohne
+    `error`-Schlüssel, läuft der Dublettenabgleich **wortlos** gegen einen
+    leeren Bestand weiter — und meldet keine einzige Dublette, obwohl der
+    Bestand voll ist. Der Fehler ist still: Die Vorschau sieht richtig aus.
+    **Nicht in Schritt 15 behoben.** Von den 15 JSON-Sendestellen prüfen
+    **acht** `res.ok` nicht; diese hier ist die mit der schlimmsten Folge,
+    weil ihr Ergebnis eine Entscheidung der Person trägt.
+    **Erledigt 24.09.2026 mit Konzept BV (BV-05) — behoben war es schon mit
+    Web 20.34.0** (`0bee2fb`, Schritt 15 AP8b bis AP8f): `bestandPruefen()`
+    sendet über `EdApi.postJson()`, und dessen `ok` ist
+    `antwort.ok && daten !== null && daten.error == null && daten.ok !== false`.
+    Eine 500 mit wohlgeformtem JSON ergibt `ok = false`, und der Import meldet
+    „… Dubletten werden deshalb nicht erkannt." — sichtbar, nicht still. Der
+    Eintrag ist damals nicht nachgezogen worden.
+
+281. **Stufe 1 lief bei jedem Push auf einem Arbeitszweig doppelt.**
+    *Aufgenommen 21.09.2026 (PK-01), erledigt mit dem Vorgriff auf PK-05.*
+    `pruefung.yml` trug `push: branches: ['**']` **und** `pull_request`;
+    jeder Push auf einen Arbeitszweig erzeugte zwei Läufe desselben Namens
+    `Stufe 1` — einen über `pull_request` (rund 1 min, vergleicht gegen den
+    gemeinsamen Vorfahren) und einen über `push` (rund 56 min, ohne
+    Vergleichsstand misst er alles). Der Zweigschutz wartet auf den Namen,
+    also auf den langsameren. Gemessen an PR #69 (Läufe 192, 193) und
+    PR #70 (Lauf 186).
+
+    **Erledigt** mit PR #71 (21.09.2026): `branches: [ main ]`. Die Abnahme
+    — nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17**
+    offen und gehört ins Prüfdokument, nicht hierher.
+
+    *Diese Nummer war zweimal in Bewegung: zuerst die 268 (Kollision mit
+    PR #72), dann die 269 (Kollision mit Schritt 15, PR #74). Beide Male
+    hatte ein paralleler Zweig die Nummer in `Backlog.md` stehen, während
+    sie hier nur im Konzept stand. Der Satz „Jeder weitere Zweig, der
+    Nummern vergibt, beginnt bei 267" beschreibt keinen Riegel, sondern eine
+    Hoffnung.*
+    **Ausgetragen 24.09.2026 mit Konzept BV (BV-05).** Die Abnahme P-PK-17 ist
+    inzwischen belegt: Für den Zweig `claude/br-bestandsriegel` gab es drei
+    Läufe von `pruefung.yml` zu drei Köpfen, alle mit dem Ereignis
+    `pull_request`, keinen über `push` (Läufe 35983100731, 36037964804,
+    36040164523). Gegenprobe am Zweig von Konzept BV: vier Pushes ohne Pull
+    Request, **null** Läufe von `pruefung.yml` (beide über die
+    Schnittstelle abgefragt am 24.09.2026). Das Abhaken selbst gehört ins
+    Prüfdokument PK.
+
+212. **Zwei Erwartungen der Wiederherstellungsprobe sind auf einer leeren
+    Installation rot — ohne dass etwas kaputt ist.** *Aufgenommen 16.09.2026
+    in P5a/AP10, nachgemessen gegen den unveränderten Stand: dieselben zwei.*
+    Teil 10 („Der Auftrag Alle sichern") gibt dem Sammelvorgang ein enges
+    Zeitbudget und erwartet, dass er **wenigstens ein Konto sichert und dann
+    aufhört** — also dass danach etwas offen bleibt und der Zeiger auf dem
+    zuletzt gesicherten Konto steht. Auf einer Installation mit zwei fast
+    leeren Konten passen beide in das Budget: `2 erledigt, 0 von 2 offen`,
+    `cur=—`.
+
+    **Das ist ein Mangel des Prüfmittels, nicht der Anwendung** — und der
+    unangenehmere von beiden Sorten: Er meldet Rot, wo nichts ist, und
+    gewöhnt damit jeden, der die Probe fährt, an zwei rote Zeilen. Genau so
+    verschwindet später ein echter Befund darin.
+
+    **Zu tun:** Die Erwartung an einen Bestand binden, statt an eine Zeit —
+    etwa, indem der Prüffall zwei Konten mit genug Inhalt herstellt, oder
+    indem das Budget aus der gemessenen Dauer des ersten Backups abgeleitet
+    wird statt fest zu stehen. Ein drittes Konto anzulegen wäre die billigste
+    Fassung und verschöbe das Problem nur auf die nächste schnellere Maschine.
+    *Abnahme:* `php tools/wiederherstellungs-probe/probe.php` meldet **110 von
+    110** auf einer frisch aufgesetzten Installation. Zuordnung: Backlog-Runde.
+    **Erledigt 24.09.2026 mit Konzept BV (BV-05) — behoben war es mit RP-03**
+    (23.09.2026): Teil 10 legt zwei Zusatzkonten an und fährt eine gestellte
+    Uhr, die Erwartung hängt damit am Bestand, nicht an der Geschwindigkeit
+    der Maschine. Die Sorge oben, ein drittes Konto verschiebe das Problem
+    nur auf die nächste schnellere Maschine, trifft deshalb nicht. Nachgemessen
+    auf frisch eingerichteter Anlage (`hochfahren.sh --neu`): **111
+    Erwartungen, 0 nicht erfüllt**, Teil 10 „2 erledigt, 2 von 4 offen". Der
+    Kopfkommentar der Probe, der noch „110 von 110" und „zwei davon rot"
+    sagte, ist berichtigt.
