@@ -1,5 +1,7 @@
 /* Freigabeprobe — der Weg MIT Wiederherstellungsschlüssel (S2/AP6).
  *
+ * Anlass: Nr. 308 — die Freigabe war für niemanden zu sehen, der Weg mit Schlüssel tot
+ *
  * DIE FRAGE. Eine Administration darf ein Backup mit geschützten Angaben
  * nicht unmittelbar in ein neu aufgesetztes Konto spielen (E20): Die Angaben
  * sind mit einem Inhaltsschlüssel verschlüsselt, den nur der

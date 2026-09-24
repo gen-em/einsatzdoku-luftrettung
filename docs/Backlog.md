@@ -21,8 +21,9 @@ Instanz sofort, wie alt der Wert ist. Anlass war die Durchsicht
 vom 12.09.2026: Von sechs Einträgen mit Zeilennummern waren alle sechs
 verschoben, von sieben gezählten Werten alle sieben veraltet — und keiner
 davon sah falsch aus. (Nebenbei: **Keine ZEILE darf mit einer Zahl und einem
-Punkt beginnen** — der Prüfschritt „Backlog — keine Nummer zweimal" in Stufe 1
-liest dort eine Backlog-Nummer. Es geht nicht nur um Absätze: Ein
+Punkt beginnen** — der Bestandsriegel (`tools/quelltext/bestand.py`, Regel
+`backlog`; bis BR-03 der Schritt „Backlog — keine Nummer zweimal") liest dort
+eine Backlog-Nummer. Es geht nicht nur um Absätze: Ein
 **Zeilenumbruch mitten im Fließtext**, nach dem zufällig ein Datum steht,
 genügt. Am 16.09.2026 ist genau das passiert — zwanzig Zeilen unter dieser
 Warnung, im Absatz zur Nummernvergabe: „… aus der Durchsicht vom
@@ -138,12 +139,18 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **292** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **318** und trägt seine
 Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
-Tag, **290 und 291** die Korrekturstufe Web 20.37.3 — nachgesehen auf
-`origin/main` und in den offenen Pull Requests.)*
+Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** das
+Korrekturpaket RP. **293 und 304 bis 317** vergibt Konzept BR (24.09.2026,
+Zweig `claude/br-bestandsriegel`; 304 bis 313 sind die nachgetragenen Anlässe
+aus E-BR-17 und E-BR-18, 314 bis 317 Funde aus BR-04 und BR-05); die Spanne **294 bis 303** hat der P5c-Zweig
+`claude/p5c-mockups-konzept-4yeomf` am selben Tag reserviert — 294 Konzept
+SD, 295 bis 298 die Anlässe aus der Zuarbeit von BR, 299 bis 303 frei für
+Funde der Umsetzung. Nachgesehen auf `origin/main` und auf allen offenen
+Zweigen.)*
 
 **Und sieht vorher nach — auf `origin/main` UND in die offenen Pull
 Requests.** Der Satz darüber beschreibt keinen Riegel, sondern eine Hoffnung:
@@ -9954,3 +9961,227 @@ zutreffen.
     Wiederherstellungsprobe hatte zu wenige Konten. **Nebenstufe auf frischer
     Anlage: 36 grün, 0 rot, 0 nicht gemessen, 1 239 s**; das Ziel ist seither
     rund 21 min (E-RP-05). Prüfliste: `docs/konzepte/Pruefdokument-RP-Rote-Proben.md`.
+
+304. **Die Rundlaufprüfung der Spuren hielt `int` gegen `float` — 175 von
+    181 Spuren sahen verändert aus.** *Nachgetragen 24.09.2026 mit Konzept
+    BR (E-BR-17); gefunden und behoben am 31.08.2026 in S2/AP1, Web 10.0.0.*
+    PHP rechnet `7800 / 10` als `int(780)`, die Rückrechnung aus dem Blob
+    `round(780.0*10)/10` ergibt `float(780.0)`, und `!==` prüft den Typ mit.
+    Keine Koordinate war anders, und trotzdem meldete der erste Lauf 175
+    Abweichungen. Im Betrieb wäre das ein Verdichtungsjob gewesen, der nie
+    eine Zeile löscht. Fundstelle: `docs/konzepte/erledigt/
+    Konzept-S2-Mengen-Spuren-Sicherung.md`, AP1. Nachweis:
+    `tools/proben/spur/probe.php`.
+
+305. **Die Stufe der Sperrleiter wäre nie zurückgefallen.** *Nachgetragen
+    24.09.2026 mit Konzept BR (E-BR-17); gefunden und behoben am 16.09.2026
+    in P5a/AP6, Web 20.10.0 (Commit `214bc04`).* Der Verfall `stufe_bis`
+    wurde nur in dem Zweig aufgefrischt, in dem **nicht** gesperrt wurde —
+    wer einmal auf eine höhere Stufe kam, blieb dort. Dazu hätte Klopfen
+    während einer Sperre die laufende Sperre gelöscht. Gefunden von der
+    Ratenprobe beim Bau. Nachweis: `tools/proben/raten/probe.php`.
+
+306. **Der Neuanlauf des Komplett-Backups lief in ein `count(null)` — genau
+    im Zweig nach einer Wiederherstellung.** *Nachgetragen 24.09.2026 mit
+    Konzept BR (E-BR-17); gefunden und behoben am 01.09.2026 in S2/AP8, Web
+    12.2.0 (F-S2-I).* Fehlte der Baustand, lief die Erstbelegung des
+    Fortsetzungszustands in einen `TypeError`. Das ist der Zweig, der nach
+    einer Wiederherstellung greift — der Augenblick, in dem ein Backup am
+    dringendsten gebraucht wird. Gefunden von Teil 8 der Komplettprobe; der
+    Kommentar in `komplett_lib.php` sagt es. Nachweis:
+    `tools/proben/komplett/probe.php`.
+
+307. **Die Prüfung der Wiederherstellungshülle nahm auch `edka1:` an.**
+    *Nachgetragen 24.09.2026 mit Konzept BR (E-BR-17); gefunden am
+    14.09.2026 im Gegenlesen von S10/AP2, behoben mit Web 20.0.0 (Commit
+    `5a2ef0e`, dort F-2).* `WRAP_RE` prüfte beide Hüllen mit einer Regel und
+    ließ seit Web 19.7.0 das Anteil-Format auch für `pat_wrap_rc` zu. Eine
+    solche Wiederherstellungshülle hinge am Server-Anteil — der Verlust genau
+    des Rückwegs, den `CLAUDE.md` 4 zusagt, und man sähe es dem Feld nicht
+    an. Seither `WRAP_PW_RE` und `WRAP_RC_RE`. Gefunden hat es das Gegenlesen;
+    **fangen müssen** hätte es Teil A3 der Anteilprobe. Nachweis:
+    `tools/proben/anteil/probe.php`.
+
+308. **Die Freigabe eines Backups war für niemanden zu sehen.** *Nachgetragen
+    24.09.2026 mit Konzept BR (E-BR-17); gefunden und behoben am 01.09.2026
+    in S2/AP6, Web 12.0.0 (F-S2-F).* `getElementById('freigabecodelabel')`
+    lieferte `null`, weil die Kennung im Markup fehlte, und der `TypeError`
+    verschwand im leeren `catch` von `freigabeLaden()`. Damit war der einzige
+    Weg tot, ein Backup mit geschützten Angaben in ein neu aufgesetztes Konto
+    zu bringen (E20). Nachweis: `tools/proben/freigabe/probe.mjs`.
+
+309. **Der alte Base64-Wandler brach bei einem Teil von 2 MB ab.**
+    *Nachgetragen 24.09.2026 mit Konzept BR (E-BR-17); gefunden und behoben
+    am 31.08.2026 in S2/AP5, Web 11.0.0.*
+    `btoa(String.fromCharCode(...bytes))` warf ab etwa 2 MB „Maximum call stack
+    size exceeded" — ein Backup-Teil dieser Größe ließ sich nicht schreiben.
+    Die Containerprobe hält den Fall seither fest, zusammen mit der Bindung
+    jedes Teils an sein Backup (vertauschte, fremde, verfälschte Teile).
+    Nachweis: `tools/proben/container/probe.mjs`.
+
+310. **Die Frist des Inhaltsschlüssels lief ab dem Entpacken, nicht ab der
+    letzten Bedienung.** *Nachgetragen 24.09.2026 mit Konzept BR (E-BR-17);
+    behoben am 02.09.2026 in S6, Web 12.9.0 (R44, E-S6-4).* Die Frist in
+    `keyguard.js` war absolut: Wer ohne Pause bediente, bekam in acht
+    Stunden Dienst **17** stille Neu-Entpackungen statt einer. Die im
+    Rahmenplan zu R44 vorgeschriebene Abnahme war vor und nach der Änderung
+    grün und belegte deshalb nichts; die Fristprobe zählt den Unterschied
+    (17 gegen 1). Nachweis: `tools/proben/frist/pruefe.mjs`.
+
+311. **`rt_html()` ist der eine Weg, auf dem aus einer Eingabe HTML wird.**
+    *Aufgenommen 24.09.2026 mit Konzept BR (E-BR-18, Q-BR-10) — ein Risiko,
+    kein Fund.* Alles andere in der Anwendung geht durch `e()` und erscheint
+    als Text. Eine Lücke im Rechtstext-Renderer wäre ein eingeschleustes
+    Skript auf den öffentlichen Rechtstextseiten. Die Angriffsprobe ist mit
+    dem Renderer in P3/O10 entstanden (Web 9.11.0) — 81 Proben und eine
+    Positivliste erlaubter Tags — und läuft seither als Riegel in jeder
+    Stufe und im Tor. Gefangen hat sie nichts; **fangen muss sie** genau
+    diese Lücke. Nachweis: `tools/proben/rechtstexte/pruefen.php`.
+
+312. **Ein Umbau des Stylesheets ändert einen berechneten Stil, den niemand
+    ändern wollte.** *Aufgenommen 24.09.2026 mit Konzept BR (E-BR-18,
+    Q-BR-11) — ein Risiko, kein Fund.* Wer Regeln verschiebt, zusammenführt
+    oder entfernt, ändert die Kaskade; ob danach ein Element anders aussieht,
+    zeigt kein Bild zuverlässig. Der Stilvergleich (seit P0/A3, spätestens
+    Web 7.2.0) hält die berechneten Stile zweier Stylesheets an denselben
+    Elementen gegeneinander, und die Liste gegen die geplanten Änderungen
+    (`Pruefablauf.md` 6.10). Ein ungeplanter Fund ist nicht verbucht;
+    **fangen muss er** genau diesen. Nachweis: `tools/stilvergleich/`.
+
+313. **Die Fehlerzweige der Kopplung dürfen nicht verraten, welche Kennungen
+    es gibt.** *Aufgenommen 24.09.2026 mit Konzept BR (E-BR-18, Q-BR-12) —
+    ein Risiko, kein Fund.* Die Kopplung ist der eine Weg, auf dem ein Gerät
+    ohne Anmeldung Zugangsdaten zu einem Konto bekommt. Unterscheiden sich
+    ihre Fehlerzweige in Länge, Aufbau oder **Dauer**, beantwortet die
+    Antwort die Frage, welche Kennungen es gibt. Die Kopplungsprobe (S5,
+    Web 13.0.0) prüft `pair.php` gegen den JSON-Vertrag und die
+    Antwortgleichheit — beide 401-Zweige 0,351 s, Rümpfe byteweise gleich.
+    Nachweis: `tools/proben/kopplung/probe.php`.
+
+293. **Der Werkzeugbestand unter `tools/` hat keinen Riegel.**
+    *Aufgenommen 24.09.2026 mit Konzept BR, gemessen an `main` `f4fe4a0`.*
+    Konzept PK hat den Durchlauf einer Änderung als Riegel gebaut und den
+    Bestand als Regel gelassen: Grundsatz 5 (die Anlass-Zeile), die Form der
+    Anleitung mit fünf Abschnitten und höchstens 40 Zeilen
+    (`Pruefablauf.md` 6.2), die Streichliste. Kein Mittel maß eine davon,
+    und drei Tage nach PK-04 standen die Zahlen darunter: vier Anleitungen
+    über 40 Zeilen, acht Unteranleitungen mit zusammen 1 120 Zeilen, die
+    PK-04 nie gezählt hat, ein Werkzeug ohne Anleitung — und keine der
+    zwanzig Proben trägt die Anlass-Zeile, die `tools/proben/LIESMICH.md`
+    ihrem Kopfkommentar zuschreibt. Die Handzählung im Konzept fand eine;
+    sie war ein Prüffall, der das Wort „Anlass" im Text trägt. Der erste
+    Lauf des Riegels fand **57 Befunde** in sechs Regeln.
+
+    *Weg (Konzept BR):* `tools/quelltext/bestand.py` als neunte
+    Quelltextprüfung im Tor (BR-01), der Altbestand auf null im selben Pull
+    Request (BR-02; E-BR-01: keine Decke, keine Ausnahmeliste). *Abnahme:*
+    `bestand` meldet 0 Befunde, die Selbstprobe baut je Regel einen Fehler
+    ein und findet ihn. *Fehlschlag:* eine Anleitung mit 41 Zeilen oder eine
+    Probe ohne Anlass-Zeile, und Stufe 1 bleibt grün. **Zuordnung: Konzept
+    BR.**
+
+    **Erledigt 24.09.2026 mit Konzept BR** (Zweig `claude/br-bestandsriegel`,
+    ohne Versionsstufe — berührt sind nur `tools/`, `docs/`, `.github/` und
+    ein Satz in `CLAUDE.md`). BR-01: `tools/quelltext/bestand.py`, die
+    neunte Quelltextprüfung, mit Selbstprobe je Regel. BR-02: der
+    Altbestand von **57 Befunden auf 0** — zwanzig Anlass-Zeilen in den
+    Probenköpfen, 25 Anleitungen mit zusammen 972 statt 2 144 Zeilen, zehn
+    nachgetragene Anlässe (Nr. 304 bis 313), `konfig_stellen.php` nach
+    `tools/sandbox/`. BR-03: die drei Tor-Schritte, die Station B nie fuhr,
+    als Quelltextprüfungen (Regel `backlog`, `pysyntax`, `handbuch`;
+    **17 Riegel statt 14**), eine Baumsuche statt zweier
+    (`tools/kette/baumsuche.py`), der Selbstüberspringer der
+    Wiederherstellungsprobe rot. BR-04: der Weg für ein neues Prüfmittel
+    (`Pruefablauf.md` 6.12) und der Satz „Ein Anlass ist eine
+    Backlog-Nummer" (6.1); die Gegenlesung des Weges durch Befolgen fand
+    Nr. 314 und 315. Prüfliste:
+    `docs/konzepte/Pruefdokument-BR-Bestandsriegel.md`.
+
+314. **Der Prüfstand meldete grün, wenn sein Bericht nicht entstand.**
+    *Aufgenommen und behoben 24.09.2026 mit Konzept BR (BR-04, F-BR-18),
+    gefunden von der Gegenlesung des Runbooks.* `tools/pruefstand/pruefen.sh`
+    rief `bericht.py schreiben` auf und wertete den Rückgabewert nicht aus
+    (kein `set -e`). Stürzte der Bericht ab, endete der Lauf mit rc 0 und
+    „0 rot, 17 grün" — ohne Beleg. Der Absturz selbst kam aus `bericht.py`:
+    Der eigene Index lag fest unter `WURZEL/.git/`, und in einem Worktree ist
+    `.git` eine Datei. Im Tor wäre es aufgefallen (kein Bericht → rot);
+    örtlich hielt sich eine Instanz für fertig. *Behoben:* Ohne Bericht ist
+    der Lauf rot („KEIN BERICHT — bericht.py endete mit rc …"), und den Ort
+    des Index nennt Git (`rev-parse --git-path`). *Nachweis:* im Worktree
+    vorher rc 0 ohne Bericht, nachher Bericht mit Baum und rc 0; mit einem
+    absichtlich scheiternden `bericht.py` rc 1.
+
+316. **Die Uhr-Probe des Prüfstands lief seit PK-03 nie.** *Aufgenommen und
+    behoben 24.09.2026 mit Konzept BR (BR-04, F-BR-20); als F-PK-21 seit
+    PK-03 bekannt, nie behoben.* `pruefablauf.json` rief für `uhr-stufe1`
+    nur `pruefstand.sh reihe` auf; `reihe` verlangt die Geräteliste, die
+    erst `geraeteklassen.py` schreibt, und brach nach 0 s ab („Listendatei
+    fehlt"). Aufgefallen ist es erst jetzt, weil seit PK-05 kein Pull
+    Request `tools/uhr-pruefstand/` berührt hatte — das Tor verlangt dann
+    `uhr=gebaut`, und der Prüfstand konnte es nie liefern. `kettenaufrufe`
+    sah es nicht: Es prüft Namen und Schalter, keine Positionsargumente
+    (F-PK-21). *Behoben:* Der Aufruf ist die Kette aus der Anleitung des
+    Werkzeugs — Liste schreiben, dann `reihe`. *Nachweis:* von Hand
+    99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei, rc 0, rund 10 min.
+    Der Lauf im Prüfstand steht im Bericht des Kopf-Commits von BR.
+
+315. **Vier Schritte beim Einhängen eines Prüfmittels misst niemand.**
+    *Aufgenommen 24.09.2026 mit Konzept BR (BR-04, F-BR-19), gemessen von
+    der Gegenlesung des Runbooks `Pruefablauf.md` 6.12.* Eine unabhängige
+    Instanz hat zwei Attrappen eingehängt und je einen Schritt weggelassen.
+    Rot wurden fehlende Anlass-Zeile, `RUF`-Zeile, Backlog-Nummer, Name in
+    `NAMEN` oder `starter()` und das `--riegel` im Tor. **Grün blieb alles**
+    bei vier anderen: (1) eine Quelltextprüfung mit Selbstprobe, die nicht in
+    `SELBST` steht — ihre Selbstprobe läuft nirgends; (2) eine
+    Quelltextprüfung ohne Zeile in der Tabelle von
+    `tools/quelltext/LIESMICH.md` — ihr Anlass steht nirgends; (3) eine
+    Probe unter `proben` in `pruefablauf.json`, die in keinem Muster und
+    keinem Riegel steht — sie läuft nie; (4) die Tabelle in
+    `Pruefablauf.md` 4, nicht neu erzeugt — nichts vergleicht sie mit
+    `erzeugen-doku`, obwohl sie „nicht von Hand ändern" trägt.
+
+    *Weg (zu entscheiden):* die vier als Regeln in `bestand` (1, 2, 3) und
+    als Vergleich in `bericht.py` oder `bestand` (4). Jede ist eine Zeile
+    Zählung gegen eine Liste, die es schon gibt. Bis dahin nennt 6.12 sie
+    als Schritte, die man gegenliest. *Abnahme:* je Lücke ein Fall in der
+    Selbstprobe, der rot wird. **Zuordnung: Frage an die Betreiberin (Q-BR-13) —
+    entschieden am 24.09.2026: in BR mitbauen.**
+
+    **Erledigt 24.09.2026 mit Konzept BR, Paket BR-05** (Zweig
+    `claude/br-bestandsriegel`, ohne Versionsstufe). Vier Regeln mehr in
+    `tools/quelltext/bestand.py`, elf statt sieben: `selbst` (Selbstprobe im
+    Code ⇔ Name in `SELBST`; die Datei, die `starter()` startet, gibt es),
+    `zeile` (je Name genau eine Tabellenzeile mit Anlass, keine Zeile ohne
+    Namen), `ablauf` (jede Probe hängt an Muster, Riegel oder `nach`, jeder
+    genannte Name existiert, jedes Muster hat seine fünf Felder und eine
+    Stufe als `ab`) und `tabelle` (Abschnitt 4 ist die Ausgabe von
+    `erzeugen-doku`; der Riegel ruft den Erzeuger, statt ihn nachzubauen).
+    Am Bestand ein Befund, und der war echt: Die Selbstprobe der Textprobe
+    (21 Fälle hinter `--probe`) lief nirgends — jetzt `--selbstprobe`, in
+    `SELBST`, 9 von 9. Die erste Fassung der Regeln hat eine adversariale
+    Gegenprobe durch unabhängige Instanzen nicht bestanden (29 echte
+    Mängel, F-BR-22); die zweite liest Code, Tabellen, Bash-Listen und die
+    Ablaufdatei so, wie ihre Verbraucher sie lesen — seit der vierten
+    Fassung mit den echten Werkzeugen (`cmark-gfm`, `token_get_all`,
+    `bash … --liste`, `auswahl.passt()`). Die vierte Runde (21 Mängel) hat
+    den Umfang geschlossen: Wird `pruefen.sh --selbstprobe` überhaupt
+    gerufen, wählt jede Datei einer Fläche des Berichts deren Bauprobe aus,
+    steht eine veraltete Kopie der Tabelle irgendwo. Selbstprobe 140 Fälle,
+    jede der 85 Befundstellen fällt (Konzept BR, Protokoll BR-05). Nebenbei gefunden:
+    Nr. 317. `Pruefablauf.md` 6.12 nennt bei jedem
+    Schritt das Mittel, das ihn meldet — „niemand" steht dort nicht mehr.
+
+317. **Ein Pfad in der Zuordnung des Prüfstands traf seit PK-03 keine
+    Datei.** *Aufgenommen und behoben 24.09.2026 mit Konzept BR (BR-05,
+    F-BR-24), gefunden von der Gegenprobe des Bestandsriegels.* Das Muster
+    `spur` in `tools/pruefstand/pruefablauf.json` nannte
+    `server/api/spur*.php`; eine solche Datei gab es nie (`git log --all`).
+    Die Spur-Endpunkte der Schnittstelle heißen
+    `server/api/backup_spuren*.php` und lösen keine Spurprobe aus. Die
+    Selbstprobe von `auswahl.py` prüfte den Pfad gegen eine erfundene Datei
+    und blieb grün. *Behoben:* Pfad gestrichen — die Auswahl ändert sich
+    nicht (`--abdeckung` vorher wie nachher); der Selbstprobenfall prüft
+    einen Glob gegen eine versionierte Datei; `bestand` hält seither jeden
+    Pfad gegen den Baum (Regel `ablauf`). *Offen:* ob
+    `server/api/backup_spuren*.php` die Spurprobe auslösen soll — eine
+    Frage der Zuordnung an die Betreiberin (Konzept BR, Q-BR-14).

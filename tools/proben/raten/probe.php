@@ -5,6 +5,8 @@ declare(strict_types=1);
  * RATENPROBE — die Sperrleiter, die Verlangsamung und die Sammelmail
  * ===========================================================================
  *
+ * Anlass: Nr. 305 — die Stufe der Sperrleiter waere nie zurueckgefallen
+ *
  * Aufruf:  php tools/proben/raten/probe.php
  * Rueckgabe: 0 = keine Befunde · 1 = Befunde · 2 = die Probe kam nicht los
  *

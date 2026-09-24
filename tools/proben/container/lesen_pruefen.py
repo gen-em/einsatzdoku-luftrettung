@@ -25,7 +25,7 @@ import sys
 import zipfile
 
 # EINE EBENE TIEFER SEIT PK-04/2: Die Probe liegt jetzt unter
-# `tools/proben/container/`, nicht mehr unter `tools/proben/container/`.
+# `tools/proben/container/`, nicht mehr unter `tools/containerprobe/`.
 # Zweimal `dirname` landete damit in `tools/proben/` statt in `tools/`, und
 # der Leser war nicht zu finden — `ModuleNotFoundError: No module named
 # 'lesen'`, mitten im Lauf und erst nach den ersten grünen Zeilen.

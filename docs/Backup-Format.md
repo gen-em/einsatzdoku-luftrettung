@@ -212,7 +212,7 @@ Blockindex aus demselben Grund in die Zusatzdaten wandert.
 fängt dieselben Fälle wie die Zusatzdaten — aber sie sagt Verschiedenes: „Teil
 X ist nicht das, das hier stehen soll" gegen „ließ sich nicht öffnen". Für
 wen ein Backup nicht aufgeht, ist das der Unterschied zwischen zehnmal
-Passwort tippen und die richtige Datei suchen. `tools/containerprobe/` weist
+Passwort tippen und die richtige Datei suchen. `tools/proben/container/` weist
 beide **einzeln** nach.
 
 ### 1.5 Eine PBKDF2 je Vorgang
@@ -1203,8 +1203,11 @@ automatisch in jedem Backup, ohne dass das jemand entschieden hätte.
   Felder benutzt (`_pat`, `_patState`). In der Datei steht statt dessen die
   laufende `spur_ref`.
 
-  Dass es wirklich draußen bleibt, ist geprüft: `tools/containerprobe/` sieht
-  nach, ob im entsiegelten Kern noch ein Feld mit Unterstrich steht.
+  Dass es wirklich draußen bleibt, belegt der Kreislauf `edbak`
+  (`tools/referenzdatensatz/vergleich/`): Er vergleicht den ganzen Kern, und
+  ein Feld, das die Referenz nicht hat, ist eine unerklärte Abweichung —
+  nachgemessen am 24.09.2026 mit einem eingesetzten `_spur_index`: 1 Meldung,
+  ohne ihn 0. Bis dahin stand hier die Containerprobe; die prüft das nicht.
 - `other_resources` (in `missions`) — tote Altspalte. Die weiteren
   Rettungsmittel liegen seit der Migration `2026_07` als einzelne Zeilen in
   `mission_resources` und stehen in der Datei unter `resources`. Die Spalte

@@ -24,6 +24,11 @@ declare(strict_types=1);
  * (SQL und Literale) · `js_und_inline` (JavaScript). Beschrieben im Kopf von
  * `zaehlen.php`.
  *
+ * FELDER NEBEN DER REGEL: `bereich` — `php` (alle PHP-Dateien), `api` (nur
+ * `server/api/`), `js_und_inline`, `php_und_tools` (dazu `tools/`); `ausser`
+ * (Pfade, auch Verzeichnisse) und `nur` (genau eine Datei); `zaehlt` —
+ * `treffer` (Vorgabe) oder `dateien`, wenn die Sache eine Datei ist.
+ *
  * REGELARTEN: `aufruf` (echter Funktionsaufruf aus dem Tokenstrom) ·
  * `methode` (`$o->name(`) · `definition` · `muster` (PCRE ueber die Sicht) ·
  * `eigen` (benannte Funktion in `zaehlen.php`, fuer alles, was ein Muster
@@ -120,7 +125,7 @@ return [
           . 'setzten dieselbe Globale weiter. 30 ihrer Erwartungen standen '
           . 'danach still auf „nicht erfuellt" (Backlog Nr. 257).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php_und_tools',
- 'ausser' => ['tools/zaehlung/register.php', 'tools/konfig_stellen.php'],
+ 'ausser' => ['tools/zaehlung/register.php', 'tools/sandbox/konfig_stellen.php'],
  'regel' => ['art' => 'muster', 'muster' => '~\$CFG\b|\$GLOBALS\[\s*[\'"]CFG[\'"]\s*\]~'],
  'start' => 46, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 

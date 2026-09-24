@@ -88,8 +88,14 @@ def baum_hash(commit='HEAD'):
     des Laufs. Der Commit entsteht danach. `write-tree` schreibt den Baum des
     Index; damit er den Arbeitsbestand trifft, wird vorher `add -A` in einem
     EIGENEN Index gefahren, der den echten nicht anfasst.
+
+    DER ORT DES INDEX FRAGT GIT (BR-04, Nr. 314). Bis dahin stand hier
+    `WURZEL/.git/…`; in einem Worktree ist `.git` eine Datei, `add -A` brach
+    ab, und der Prüfstand meldete trotzdem grün.
     """
-    eigener = os.path.join(WURZEL, '.git', 'pruefstand-index')
+    eigener = subprocess.run(['git', '-C', WURZEL, 'rev-parse', '--path-format=absolute',
+                              '--git-path', 'pruefstand-index'],
+                             capture_output=True, text=True, check=True).stdout.strip()
     umgebung = dict(os.environ, GIT_INDEX_FILE=eigener)
     try:
         subprocess.run(['git', '-C', WURZEL, 'add', '-A'], env=umgebung,

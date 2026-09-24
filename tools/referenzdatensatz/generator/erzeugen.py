@@ -14,7 +14,33 @@ braucht:
                 Kontoschluessel (krypto.py)
   import/       einsaetze.csv im Format export_csv_v1
   gpx/          Sichtpruefformat, abgeleitet (E-P1-04)
+  fusswege.json je Fussweg Strecke, Dauer und Gehgeschwindigkeit -- pruefen.py
+                misst gegen diese Datei, nicht gegen die Spur
   kennzahlen.json  Umfang in Zahlen
+
+`ausgabe/` steht in .gitignore: rund 25 MB, vollstaendig ableitbar, ein Lauf
+dauert zwei Sekunden. Eingecheckt ist nur, was NICHT ableitbar ist -- die
+Quelldaten und die Strassengeometrie unter routen/.
+
+DREI ENTSCHEIDUNGEN, die man sehen muss:
+
+  DER RUECKWEG GEHOERT NICHT ZUM EINSATZ. Die Uhr beendet den Einsatz und
+  beginnt sofort ein Ruhe-Segment (`Model.mc`, `_endMission` ->
+  `_startRestSegment`); der Weg zurueck wird DORT aufgezeichnet. Solange er
+  zum Einsatz zaehlte, musste er zwischen Uebergabe und Endzeit passen, und
+  es entstanden Rueckfluege mit 666 km/h.
+
+  DIE PHASEN SIND DIE WAHRHEIT UEBER DEN ABLAUF, NICHT DIE SPUR. Der Track
+  wird an sie gebunden (3 -> 4 Anfahrt, 6 -> 7 Transport); umgekehrt richtet
+  sich in den Quelldaten der ORT nach der Zeit, die die Phasen vorsehen -- auf
+  der Strasse nach routen/fahrzeiten.json, nicht nach der Luftlinie.
+
+  GROEBER ALS DIE UHR, ABSICHTLICH. Die Ausduennung ist die der Uhr (>= 15 m
+  oder >= 10 s, nie oefter als 1/s, `Const.THIN_*`), abgetastet wird aber alle
+  3 s (Luft) bzw. 5 s (Boden), ein Halt alle 30 s, ein Ruhe-Segment alle
+  60 s. Sekundengenau truege der Datensatz rund 160 000 Spurpunkte, und die
+  Fixture unter server/demo/ geht mit jedem Deploy hinaus; so sind es rund
+  57 000. Die Teilstueckbildung des Uploads bleibt dieselbe.
 
 DETERMINISTISCH. Zweimal ausgefuehrt entsteht dasselbe. Der einzige
 Zufallsanteil steckt in `spur.py` und ist ueber die Einsatzkennung gesaet.

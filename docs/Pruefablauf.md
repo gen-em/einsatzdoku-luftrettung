@@ -64,14 +64,19 @@ steht; Abschnitt 2.4 nennt den heutigen Umfang mit Zahl.
    Anlage geht; eine Hauptstufe auch Mengen und die Plattformmatrix (3).
 5. **Ein Prüfmittel braucht einen Fehler.** Jedes Werkzeug nennt in einer
    Zeile, welchen Fehler es gefangen hat oder hätte fangen müssen, als
-   Verweis auf eine Nummer. Ohne diese Zeile steht es auf der Streichliste.
+   Verweis auf eine Backlog-Nummer (6.1). Ohne diese Zeile ist Stufe 1 rot
+   (seit Konzept BR; bis dahin stand es „auf der Streichliste").
 6. **Geschichte steht im Commit, nicht im Werkzeug.** Eine Anleitung sagt,
    was das Werkzeug tut; was es einmal gefunden hat, sagen Commit-Nachricht,
    Backlog und Changelog.
 7. **Kein stilles Überspringen, keine grüne Zahl ohne Gegenstand.** Ein
    Prüfschritt, der sich selbst überspringt, meldet grün, ohne gemessen zu
    haben — er bricht ab (E-KH-12). Und eine Zahl belegt erst dann etwas,
-   wenn sie benennt, was sie gezählt hat (6.5).
+   wenn sie benennt, was sie gezählt hat (6.5). **Die eine Auslassung, die
+   kein Überspringen ist,** steht in 2.3: Auf `main` misst Stufe 1 nicht
+   noch einmal, wenn ein grüner PR-Lauf denselben Baum gemessen hat — und
+   nennt dafür Lauf, Commit und Zeitpunkt. Ein Verweis mit Beleg, kein
+   stilles Grün.
 
 ---
 
@@ -183,11 +188,14 @@ steht.
 
 **Heutiger Umfang** (gezählt am 23.09.2026 am Quelltext, nach PK-05): Der
 Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt drei Jobs —
-**`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **17** und
-`Schema gegen …` mit **4**; bis PK-05 waren es in `Stufe 1` **24**. Den
-ersten brachte Konzept TB am 23.09.2026:
+**`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **15** und
+`Schema gegen …` mit **4**; bis PK-05 waren es in `Stufe 1` **24**, bis BR-03
+**17** — drei Schritte sind in die Quelltextprüfungen gewandert (`bestand`,
+`pysyntax`, `handbuch`), einer kam dazu (`cmark-gfm` bereitstellen). Den
+ersten Job brachte Konzept TB am 23.09.2026:
 Auf einem PR sagt er „messen"; beim Push auf `main` sucht er den grünen
-PR-Lauf mit demselben Baum und lässt `Stufe 1` und `Schema gegen …` dann
+PR-Lauf mit demselben Baum (`tools/kette/baumsuche.py`, dieselbe Suche wie
+im Produktionstor, E-BR-09) und lässt `Stufe 1` und `Schema gegen …` dann
 aus, mit einem Verweis auf Lauf, Commit und Zeitpunkt in der
 Zusammenfassung. Das Produktionstor zählt Stufe 1 seither nach Baum und Job,
 nicht nach Commit. **PK-05** hat dem Lauf den Bau der Apps und die
@@ -297,6 +305,11 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
   Hand eingetragenes `--format` statt `--art` ergibt **2 Befunde** mit Namen
   („kennt `--format` nicht", „verlangt `--art`"); nach der Berichtigung 0.
   Genau dieser Fehler war beim ersten Lauf drin.
+- **Eine Probe kann eine andere voraussetzen** (`nach` in
+  `pruefablauf.json`, seit RP-01): Der Prüfstand zieht die genannte Probe
+  mit in den Lauf und stellt sie davor. So fährt die Wegprobe des
+  Spaltenregisters erst, wenn der Kreislauf `edbak` ihr Umlaufkonto angelegt
+  hat; `auswahl.py --selbstprobe` belegt die Reihenfolge.
 - **Der Prüfstand meldet, wenn eine Datei unter `server/` kein Muster
   trifft.** Gemessen am 23.09.2026: **267 versionierte Dateien, 0 ohne
   Muster**; 87 treffen nur das Auffangmuster und die beiden Stufenmuster
@@ -308,7 +321,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | Berührung | ab Stufe | Proben | Anlass |
 |---|---|---|---|
 | `server/**` | klein | — (nur die Riegel) | Auffangmuster: Jede Datei unter server/ laeuft durch die billigen Riegel. Sie traegt KEINE eigene Probe -- wer hier landet und sonst nirgends, hat keine zugeordnete Probe, und der Pruefstand sagt das. |
-| `server/spur_lib.php`, `server/tag_spuren.php`, `server/api/spur*.php` | klein | `spurprobe`, `containerprobe` | int gegen float (S2) |
+| `server/spur_lib.php`, `server/tag_spuren.php` | klein | `spurprobe`, `containerprobe` | int gegen float (S2) |
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
@@ -335,7 +348,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
 
 ---
 
@@ -426,10 +439,28 @@ herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.
 ### 6.1 Ein Prüfmittel braucht einen Fehler
 
 Jedes Werkzeug nennt in einer Zeile „Anlass: Nr. …", welchen Fehler es
-gefangen hat oder hätte fangen müssen. Ohne diese Zeile steht es auf der
-Streichliste. Der Grund ist nicht Buchhaltung: Ein Prüfmittel ohne
-gefundenen Fehler misst entweder etwas, das nicht kaputtgeht, oder es misst
-daneben — und beides kostet bei jedem Lauf Zeit.
+gefangen hat oder hätte fangen müssen. Der Grund ist nicht Buchhaltung: Ein
+Prüfmittel ohne gefundenen Fehler misst entweder etwas, das nicht
+kaputtgeht, oder es misst daneben — und beides kostet bei jedem Lauf Zeit.
+
+**Ein Anlass ist eine Backlog-Nummer** (E-BR-07). Eine Befund-Kennung
+(`F-XX-NN`) und eine Entscheidung (`E-XX-NN`) stehen in einem Konzept, das
+am Ende gelöscht wird; ein Kürzel wie `PP-1` oder `O9c` sagt der nächsten
+Instanz nichts. Wer ein Prüfmittel anlegt, legt deshalb **zuerst** die
+Nummer an — auch für einen Fehler, der im selben Paket behoben wird: Der
+Eintrag wandert dann nach *Erledigt* und bleibt zitierbar. Ausgenommen ist
+die Spalte „Anlass" der Zuordnung in `pruefablauf.json` (4): Sie beschreibt
+die Berührung, nicht das Werkzeug. Und ein Erzeuger, der keinen Fehler
+fangen kann, trägt genau `Anlass: entfällt — Erzeuger (E-BR-05)`.
+
+**Seit Konzept BR misst `bestand` die Zeile** (6.2), je Ordner und je
+Probe: Ohne sie ist Stufe 1 rot. Bis dahin kam ein Werkzeug ohne Zeile
+„auf die Streichliste", und die führte niemand — vor BR trugen 0 von 20
+Proben die Zeile. Eine Quelltextprüfung hat keinen eigenen Ordner: Ihr
+Anlass steht in der Tabelle von `tools/quelltext/LIESMICH.md`. `bestand`
+verlangt dort je Prüfung genau eine Zeile mit nicht leerer Anlass-Spalte
+(Regel `zeile`, seit BR-05), liest die Spalte aber nicht als Backlog-Nummer
+(E-BR-07).
 
 ### 6.2 Die Anleitung: fünf Abschnitte, höchstens 40 Zeilen
 
@@ -448,9 +479,42 @@ Commit-Nachricht des Pakets, im Backlog als Nummer und im Changelog.
 Dieselbe Regel gilt für die Kommentare in `.github/workflows/`: ein Satz an
 jeder Stelle, die eine Falle beschreibt, die sonst jemand wieder einbaut.
 
-*Gemessen am 21.09.2026: 47 Anleitungen mit zusammen 7 206 Zeilen, dazu ein
-Werkzeug ohne Anleitung (`tools/erzeugen/ (wegwerfdomains)`). Die Form wird mit PK-04
-hergestellt.*
+**Seit Konzept BR ist die Form ein Riegel und keine Regel mehr** (E-BR-03,
+-04): `tools/quelltext/` `bestand` hält **jede** `LIESMICH.md` unter
+`tools/`, auch in Unterordnern, an die fünf Abschnitte in dieser
+Reihenfolge und an 40 Zeilen; jeden Ordner direkt unter `tools/` an seine
+eine Anlass-Zeile mit Backlog-Nummer; jede Probe an die Anlass-Zeile im
+Kopfkommentar ihrer Einstiegsdatei. Dazu misst er, dass jeder Ordner
+gerufen wird — `tools/<ordner>/` steht in `pruefablauf.json`, in einem
+Workflow, in `tools/pruefstand/pruefen.sh` oder in `Sandbox-Setup.md` — und
+dass außer `motor.mjs` keine Datei lose unter `tools/` liegt. Er misst gegen
+null, **ohne Decke und ohne Ausnahmeliste** (E-BR-01). Die Anlass-Zeile
+beginnt mit `Anlass:`; eine Zeile, in der das Wort mitten im Satz steht,
+findet man nur, wenn man sie sucht, und zählt deshalb nicht.
+
+**Seit BR-05 misst er auch das Einhängen** (Nr. 315): dass eine
+Quelltextprüfung mit Selbstprobe in `SELBST` steht und ihre Zeile in der
+Tabelle hat, dass jede Probe in `pruefablauf.json` an einem Muster, am
+Riegel oder an einem `nach` hängt und jedes Muster vollständig ist, und dass
+die Tabelle in 4 die Ausgabe ihres Erzeugers ist. Das waren die vier
+Schritte, die die Gegenlesung von 6.12 auslassen konnte, ohne dass ein Mittel
+es merkte. Dazu zwei, die erst die vierte Gegenprüfrunde fand: dass
+`pruefen.sh --selbstprobe` in einem Workflow oder einem Aufruf überhaupt
+steht, und dass jede Datei einer Fläche des Berichts (`android/`, `watch/`,
+`tools/uhr-pruefstand/`) schon in der kleinsten Stufe ihre Bauprobe
+auswählt — sonst verlangt das Tor „gebaut", und kein Lauf liefert es.
+**Gelesen wird mit den echten Werkzeugen** (E-BR-22): Tabellen über
+`cmark-gfm`, PHP über `token_get_all`, die Listen der Läufer über
+`bash … --liste`, Pfadmuster und Auswahl über `auswahl.passt()` und
+`auswahl.treffer()` — drei Gegenprüfrunden haben gezeigt, dass eigene
+Nachbauten jede Runde eine andere Randschreibweise anders lesen. Jede
+Befundstelle hat eine Kennung, und die Selbstprobe von `bestand` schlägt an,
+wenn eine in keinem Fall fällt. Was er nicht sieht, steht im Kopf von
+`bestand.py`.
+
+*Gemessen am 24.09.2026 mit `bestand`: 25 Anleitungen mit zusammen 972
+Zeilen, alle in der Form, 0 Befunde. Vor Konzept BR waren es 24 Anleitungen
+mit 2 144 Zeilen und 57 Befunde, am 21.09.2026 vor PK-04 47 mit 7 206.*
 
 ### 6.3 Selbstprobe nur, wo etwas aufgehalten wird
 
@@ -662,6 +726,8 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde — ohne Schwelle seit PK-04/5e (E-PK-16) |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt` |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen elf Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die Liste deckt sich mit der Liste der geplanten Änderungen (6.10) |
 
@@ -675,6 +741,131 @@ Kette längst mit 377 lief. Eine Schwelle hat genau einen Ort, und das ist
 der Aufruf, der sie anwendet — seit PK-03 `tools/pruefstand/pruefablauf.json`.
 In `pruefung.yml` steht seit PK-05 keine Schwelle mehr; die Zahlen dort misst
 das Tor selbst und hält sie dem Bericht entgegen.
+
+### 6.12 Ein neues Prüfmittel
+
+In dieser Reihenfolge. In Klammern steht, welches Mittel einen
+ausgelassenen Schritt meldet. **Seit BR-05 meldet jeden Schritt ein Mittel**
+(Backlog Nr. 315); was keines sehen kann, steht in Schritt 7. Die Zuordnung
+ist gemessen: Eine Instanz, die diesen Abschnitt nicht geschrieben hat, hat
+danach zwei Attrappen eingehängt und je einen Schritt weggelassen (BR-04,
+F-BR-19) — vier davon blieben damals grün.
+
+1. **Die Backlog-Nummer anlegen** (6.1). Am **Ende von *Offen*** in
+   `docs/Backlog.md`, also direkt vor `## Erledigt`, mit der nächsten
+   freien Nummer aus dem Kopf der Datei. Vorher auf `origin/main` **und**
+   auf den offenen Arbeitszweigen nachsehen; wer Nummern vergibt, trägt
+   seine Spanne im Kopf ein, bevor er pusht. Die Form — die Nummer am
+   Zeilenanfang, jede Folgezeile vier Leerzeichen eingerückt:
+
+   ```
+   NNN. **Ein Satz: der Fehler oder das Risiko.**
+       *Aufgenommen TT.MM.JJJJ mit <Paket>.* Was, wo (Funktionsname, nicht
+       Zeilennummer), wie gefunden.
+       *Weg:* … *Abnahme:* … **Zuordnung: …**
+   ```
+
+   Behebt das Paket den Fehler gleich mit, wandert der Eintrag am Ende
+   nach *Erledigt* (ans Ende der Datei) und bleibt zitierbar. `bestand`
+   meldet eine Nummer, die **zweimal** steht, und eine Anlass-Zeile, deren
+   Nummer es **nicht** gibt. Achtung: Er liest **jede** Zeile, die mit Zahl
+   und Punkt beginnt, als Nummer — auch ein umbrochenes Datum. Den Umbruch
+   davor setzen.
+2. **Den Ort wählen.** Keine Datei lose unter `tools/` (`bestand`, `lose`).
+   - **Liest es nur Quelltext** → `tools/quelltext/<name>.py` oder `.php`.
+     Den Namen in `NAMEN` von `tools/quelltext/pruefen.sh` eintragen
+     (fehlt er: `kettenaufrufe`), bei `.py` auch in `starter()` dort
+     (fehlt er: der Läufer meldet eine grüne Prüfung weniger). Dazu eine
+     Zeile in der Tabelle von `tools/quelltext/LIESMICH.md` mit Name,
+     Gegenstand und Anlass (fehlt sie oder ihr Anlass: `bestand`, `zeile`),
+     und die Nummer in die Anlass-Zeile derselben Datei.
+   - **Braucht es die laufende Anlage** → `tools/proben/<name>/`, eine
+     Zeile in `RUF` von `tools/proben/proben.sh` (fehlt sie: `bestand`,
+     `probe`). Der Kopfkommentar der Datei, die `RUF` startet, trägt eine
+     Zeile, die mit `Anlass: Nr. …` beginnt, etwa
+     ` * Anlass: Nr. NNN — …` (fehlt sie: `bestand`, `probe`).
+   - **Sonst** ein eigener Ordner `tools/<ordner>/`.
+3. **Die Anleitung in der Form** (6.2) — für einen eigenen Ordner neu:
+   `LIESMICH.md` mit genau `## Aufruf`, `## Was es misst`, `## Was es
+   braucht`, `## Erwartete Zahl`, `## Was es nicht kann` in dieser
+   Reihenfolge, **höchstens 40 Zeilen**, genau eine Zeile, die mit
+   `Anlass: Nr. …` beginnt; `**Anlass: Nr. …**` zählt auch (`bestand`:
+   `form`, `anleitung`, `anlass`). Für einen Sammelordner die Zähler
+   mitziehen: die Zahl im ersten Satz („Elf Prüfungen", „Zwanzig Proben"),
+   die Zahl unter *Erwartete Zahl* und die im Kopfkommentar von
+   `pruefen.sh` bzw. `proben.sh`. **Beide Sammelanleitungen stehen bei 40
+   von 40 Zeilen** (gemessen 24.09.2026): Wer eine Zeile ergänzt, streicht
+   eine. Geschichte gehört in die Commit-Nachricht (Grundsatz 6).
+4. **Eine Selbstprobe, wenn es aufhält** (6.3). `--selbstprobe` baut je
+   Fehlerart einen Fall mit eingebautem Fehler und eine Gegenprobe, die
+   grün bleiben muss; Ausgabe je Fall eine Zeile, am Ende „N Fälle, M
+   Fehlschläge". Rückgabewert **0** grün, **1** Befund, **2** nicht
+   gelaufen (etwas fehlt — nie still grün). Vorlage:
+   `tools/quelltext/pysyntax.py`. Eine Quelltextprüfung trägt ihren Namen
+   dann auch in `SELBST` von `tools/quelltext/pruefen.sh` (fehlt er:
+   `bestand`, `selbst` — sonst liefe die Selbstprobe nirgends; ebenso,
+   wenn `pruefen.sh --selbstprobe` aus `pruefung.yml` verschwindet).
+5. **Die Zeile in `tools/pruefstand/pruefablauf.json`.** Unter `proben` ein
+   Eintrag (fehlt er für eine Probe aus `RUF` oder einen Namen aus `NAMEN`:
+   `bestand`, `ablauf`); der Schlüssel ist der Name im Bericht und darf vom
+   Namen im Läufer abweichen (`cspprobe` ruft `pruefen.sh csp`):
+
+   ```json
+   "attrappe": {"aufruf": "bash tools/proben/proben.sh attrappe",
+                "braucht": "installation", "nach": ["kreislauf-edbak"]}
+   ```
+
+   `braucht` ist `nichts`, `installation`, `plattform`, `android` oder
+   `uhr` (ein anderer Wert: `bestand`, `ablauf` — die Vorabprüfung entfiele
+   still); `nach` nur, wenn es eine andere Probe voraussetzt (4), nie im
+   Kreis und nie an einem Riegel. Der
+   `aufruf` darf eine Kette sein (`a && b`, wie bei `uhr-stufe1`);
+   `kettenaufrufe` prüft seit BR-04 jeden Teil. Ein **neuer Schlüssel**,
+   den ein Werkzeug liest, gehört auch in `SCHLUESSEL` von
+   `tools/quelltext/bestand.py` (sonst: `bestand`, `ablauf` — „das liest
+   niemand"). Dann
+   **eines** von beiden (fehlt beides: `bestand`, `ablauf` — sonst liefe es
+   nie):
+   - ein Eintrag unter `muster`, wenn es nur bei einer Berührung laufen
+     soll. Alle fünf Felder sind Pflicht, `ab` ist eine Stufe aus
+     `auswahl.py`, jeder Pfad steht relativ zur Wurzel ohne `/` vorn und
+     hinten (sonst: `bestand`, `ablauf` — bis BR-05 stürzte erst der
+     Prüfstand daran ab oder das Muster griff nie):
+
+     ```json
+     {"id": "attrappe", "ab": "klein", "pfade": ["server/attrappe*.php"],
+      "proben": ["attrappe"], "anlass": "Nr. NNN"}
+     ```
+   - oder der Name in `riegel.proben`, wenn es in jeder Stufe laufen und
+     im Tor gegengelesen werden soll. Dann braucht
+     `.github/workflows/pruefung.yml` einen Schritt mit `id:`, der es
+     fährt, und „Prüfbericht gegenlesen" ein `--riegel`: für eine
+     Quelltextprüfung `--riegel "<name>=$q"` (der Schritt „Quelltext"
+     fährt sie schon mit — die Zahl in seinem Namen nachziehen), sonst
+     `--riegel "<name>=$(r "$X")"` mit `X: ${{ steps.<id>.outcome }}`
+     unter `env:`. Fehlt das `--riegel`, ist Stufe 1 rot (`--alle-riegel`).
+
+   Ein Ordner, der hier nicht steht, muss in einem Arbeitslauf, in
+   `tools/pruefstand/pruefen.sh` oder in `docs/Sandbox-Setup.md` genannt
+   sein (`bestand`, `inventur`).
+6. **Die Tabelle in 4 erzeugen:** `python3 tools/pruefstand/bericht.py
+   erzeugen-doku`. Die Ausgabe ersetzt in Abschnitt 4 den Block von der
+   Zeile `<!-- ERZEUGT … -->` bis einschließlich der Zeile „**Die billigen
+   Riegel laufen in jeder Stufe …**". Nie von Hand (fehlt der Schritt oder
+   ist die Tabelle von Hand geändert: `bestand`, `tabelle`).
+7. **Die Riegel grün:** `bash tools/quelltext/pruefen.sh bestand`,
+   `python3 tools/kettenaufrufe/pruefen.py` und
+   `bash tools/quelltext/pruefen.sh --selbstprobe`, alle **0 Befunde** bzw.
+   alle grün. Die Sollzahl des neuen Mittels steht in seiner Anleitung,
+   nicht hier (6.11); ein neuer Riegel bekommt in 6.11 eine Zeile dazu, was
+   grün heißt. Dann den `aufruf` **einmal von Hand fahren**: `kettenaufrufe`
+   prüft Namen und Schalter, `bestand` die Einträge — keines von beiden
+   Positionsargumente. `uhr-stufe1` stand so von PK-03 bis
+   BR-04 in der Datei und brach nach 0 s ab (Nr. 316).
+
+Danach läuft es wie jedes andere: Der Prüfstand wählt es nach der Berührung
+aus, der Bericht nennt seine Zahl, und das Tor liest den Bericht gegen (5).
+Endet `bericht.py` mit einem Fehler, ist der Lauf rot (seit BR-04, Nr. 314).
 
 ---
 
@@ -727,6 +918,9 @@ Prüfung sucht, die es nicht gibt, findet sie hier zusammen mit dem Grund.
 Konzept PK, freigegeben am 21.09.2026 (E-PK-01 bis -30). Die Zahlen dieses
 Dokuments sind am 21.09.2026 an `main` `08e032e` gemessen; wo eine Zahl aus
 dem Konzept abweicht, gilt die hier genannte, weil sie jünger ist.
+Fortgeschrieben mit Konzept RP (23.09.2026) und Konzept BR (24.09.2026:
+Riegel `bestand`, `pysyntax`, `handbuch`, 6.1 und 6.12); deren Zahlen sind
+an ihrem Tag gemessen und stehen, wo sie gelten.
 
 Der Werdegang — welches Paket was gebaut hat, welche Fehlanläufe es gab —
 steht nicht hier, sondern in den Commit-Nachrichten der PK-Pakete, im

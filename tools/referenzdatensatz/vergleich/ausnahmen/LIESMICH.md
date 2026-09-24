@@ -1,41 +1,40 @@
 # Ausnahmelisten
 
-Eine Ausnahme sagt: **Diese Abweichung ist Bauart, kein Fehler.** Sie ist kein
-Filter — das Werkzeug zählt jede getroffene Regel und führt sie im Bericht
-unter *Erwartete Abweichungen* mit Anzahl und Begründung auf.
+Eine Ausnahme sagt: **Diese Abweichung ist Bauart, kein Fehler.** Kein
+Filter — jede getroffene Regel steht mit Anzahl und Grund im Bericht.
 
-Drei Regeln für diese Dateien:
+## Aufruf
 
-1. **Ohne Begründung keine Regel.** `vergleichen.py` weist eine Regel ohne
-   `begruendung` beim Laden zurück. Das ist nicht Pedanterie: Eine Ausnahme
-   ohne Grund ist ein Filter, und ein Filter verdeckt genau das, wofür der
-   Vergleich da ist.
-2. **Vermeidbares ist keine Ausnahme.** Wenn sich eine Abweichung durch eine
-   Änderung an der Anwendung beseitigen ließe, gehört sie als Fehlerfund ins
-   Konzeptdokument und in den Backlog — nicht hierher. Sonst schreibt die
-   Ausnahmeliste einen Fehler auf Dauer fest.
-3. **Jede Regel hat eine Zahl.** Der Bericht nennt am Ende die Regeln, die
-   nicht gegriffen haben. Sie sind nicht harmlos: Entweder beschreiben sie
-   etwas, das es nicht mehr gibt, oder der Umlauf hat den Fall gar nicht
-   berührt — dann prüft der Lauf weniger als gedacht.
+Keiner von Hand: `kreislauf.py --art <art>` reicht `<art>_umlauf.json` an
+`vergleichen.py` weiter (`--ausnahmen`). Drei Listen: `csv`, `edbak`,
+`edbak-alt`.
 
-## Aufbau
+## Was es misst
+
+Die Form einer Liste:
 
 ```jsonc
-{
-  "name": "csv-umlauf",
-  "beschreibung": "…",
-  "regeln": [
-    { "bereich": "einsaetze",   // oder * für alle
-      "feld": "herkunft",       // oder * für die ganze Zeile
-      "art": "wert",            // wert | fehlt | zusaetzlich (weglassbar)
-      "von": "uhr",             // erwarteter Wert davor (weglassbar)
-      "nach": "import",         // erwarteter Wert danach (weglassbar)
-      "begruendung": "…" }      // PFLICHT
-  ]
-}
+{ "name": "csv-umlauf", "beschreibung": "…",
+  "regeln": [ { "bereich": "einsaetze",   // oder * für alle
+                "feld": "herkunft",       // oder * für die ganze Zeile
+                "art": "wert",            // wert | fehlt | zusaetzlich (weglassbar)
+                "von": "uhr", "nach": "import",   // bekannter Übergang (weglassbar)
+                "begruendung": "…" } ] }          // PFLICHT
 ```
 
-Je enger eine Regel gefasst ist, desto besser: `von`/`nach` angeben, wo der
-Übergang bekannt ist. Eine Regel `{"bereich": "*", "feld": "*"}` wäre
-gültiges JSON und trotzdem falsch — sie machte den ganzen Vergleich stumm.
+## Was es braucht
+
+Eine `begruendung` je Regel — ohne sie weist `vergleichen.py` die Regel beim
+Laden zurück: Eine Ausnahme ohne Grund ist ein Filter.
+
+## Erwartete Zahl
+
+Jede Regel greift. Eine, die nicht gegriffen hat, steht am Ende des
+Berichts: Entweder gibt es ihren Fall nicht mehr, oder der Umlauf hat ihn
+nicht berührt — dann prüft der Lauf weniger als gedacht.
+
+## Was es nicht kann
+
+Einen Fehler festschreiben: Was sich an der Anwendung beseitigen ließe,
+gehört ins Backlog, nicht hierher. Und `{"bereich": "*", "feld": "*"}` wäre
+gültig und machte den Vergleich stumm — je enger die Regel, desto besser.

@@ -382,7 +382,7 @@ dagegen eindeutig und lässt sich gegen die Gerätedateien der Uhr-Plattform
 auflösen: 325 Teilenummern führen auf 173 Modelle, samt Geräteart. Diese
 Zuordnung gehört auf den Server; eine Uhr mit 128 kB ist der falsche Ort für
 eine Modelltabelle. Sie liegt in `server/geraetemodelle.php` und ist
-**erzeugt** (`tools/geraetemodelle/`).
+**erzeugt** (`tools/erzeugen/geraetemodelle.py`).
 
 **Bei der Geräteart schlägt die Tabelle die Selbstauskunft.** Die Uhr-App
 sendet `art` fest als `"uhr"`, weil eine Connect-IQ-App nur auf Garmin-Geräten

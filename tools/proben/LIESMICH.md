@@ -21,7 +21,7 @@ bash tools/proben/proben.sh <name> [zusatz…]   # alle · --liste
 `container` Format der Sicherungsdatei · `frist` Inhaltsschlüssel ·
 `abmelden` was liegen bleibt · `csp-browser` Richtlinie zur Laufzeit.
 
-**Den Anlass je Probe** (Grundsatz 5) trägt der Kopfkommentar ihrer Datei.
+**Anlass: Nr. 31, 130, 171, 210** — je Probe im Kopfkommentar ihrer Datei.
 
 ## Was es braucht
 

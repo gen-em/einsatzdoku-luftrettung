@@ -5,6 +5,8 @@ declare(strict_types=1);
  * GPX-Probe — liefert der Abruf die richtige Spur, richtig ausgezeichnet?
  * (S2/AP4, E-S2-09, Backlog Nr. 3)
  *
+ * Anlass: Nr. 130 — die DOCTYPE-Sperre des GPX-Imports liess UTF-16 durch (Teil 8)
+ *
  * WOFUER. Der GPX-Abruf ist die erste Datei, die dieser Server ausliefert, und
  * er beantwortet drei Fragen, die alle drei schiefgehen koennen, ohne dass es
  * jemandem auffaellt:
@@ -68,7 +70,7 @@ function pruefe(bool $ok, string $was, string $wert = ''): void {
 
 /* ---- Das amtliche Schema ------------------------------------------------- */
 
-/** Das vendorierte GPX-1.1-XSD und seine Pruefsumme (Herkunft: LIESMICH.md). */
+/** Das vendorierte GPX-1.1-XSD und seine Pruefsumme (Herkunft: docs/Lizenzen.md). */
 const GPX_XSD      = __DIR__ . '/gpx11.xsd';
 const GPX_XSD_SHA  = '9e4d1988b862edbe556305b130f8f6f1b29864fefd0dc02d5dab04ccdd1f34d6';
 

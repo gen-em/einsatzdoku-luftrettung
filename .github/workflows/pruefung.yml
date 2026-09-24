@@ -56,33 +56,22 @@ jobs:
           [ -n "$baum" ] || messen "eigener Baum nicht ermittelt"
           echo "Eigener Baum: $baum"
 
-          FENSTER=30
-          gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/pruefung.yml/runs?event=pull_request&status=success&per_page=$FENSTER" \
-             --jq '.workflow_runs[] | "\(.id) \(.head_sha)"' > kandidaten.txt 2>/dev/null \
-             || messen "Liste der PR-Läufe nicht abrufbar"
-          echo "Kandidaten: $(grep -c . kandidaten.txt || true) grüne PR-Läufe"
-
-          while read -r lauf kopf; do
-            [ -n "$lauf" ] || continue
-            lb=$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$kopf" --jq '.tree.sha' 2>/dev/null || true)
-            [ "$lb" = "$baum" ] || continue
-            # Grün muss der Job „Stufe 1" sein, nicht der Lauf — ein Lauf ist auch mit übersprungenem Job grün.
-            fertig=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$lauf/jobs" \
-                       --jq '[.jobs[] | select(.name == "Stufe 1") | select(.conclusion == "success") | .completed_at][0] // empty' \
-                       2>/dev/null || true)
-            if [ -n "$fertig" ]; then
+          # DIE SUCHE STEHT IN tools/kette/baumsuche.py (E-BR-09), mit Selbstprobe in Stufe 1. Fenster 30 ist die Kostengrenze DIESES Aufrufers (E-TB-09).
+          rc=0
+          treffer=$(python3 tools/kette/baumsuche.py --baum "$baum" --fenster 30 --ereignis pull_request --erster) || rc=$?
+          case "$rc" in
+            0)
+              read -r lauf kopf fertig <<< "$treffer"
               echo "messen=nein" >> "$GITHUB_OUTPUT"
               zeile="Baum \`${baum:0:7}\` bereits gemessen: Lauf $lauf (\`pull_request\`, \`${kopf:0:7}\`), Job \`Stufe 1\` grün am ${fertig/T/ } — nicht noch einmal gemessen."
               echo "Messen: nein — $zeile"
               echo "**Schon gemessen?** Ja. $zeile Lauf: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/$lauf" >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            echo "Lauf $lauf: gleicher Baum, aber Job \`Stufe 1\` nicht grün — zählt nicht"
-          done < kandidaten.txt
+              exit 0 ;;
+            1) messen "kein grüner PR-Lauf mit Baum \`${baum:0:7}\` unter den letzten 30" ;;
+            *) messen "Liste der PR-Läufe nicht abrufbar" ;;
+          esac
 
-          messen "kein grüner PR-Lauf mit Baum \`${baum:0:7}\` unter den letzten $FENSTER"
-
-  # Jobname „Stufe 1" und Dateiname pruefung.yml sind Kupplung: Das Ruleset, das Produktionstor in ausliefern-lauf.yml und „Schon gemessen?" suchen sie wörtlich.
+  # Jobname „Stufe 1" und Dateiname pruefung.yml sind Kupplung: Das Ruleset sucht sie wörtlich, das Produktionstor und „Schon gemessen?" über tools/kette/baumsuche.py (JOB, LAUF).
   pruefung:
     name: Stufe 1
     needs: schon-gemessen
@@ -122,7 +111,10 @@ jobs:
           echo "PHP-Dateien ohne Syntaxfehler: $n (davon versioniert unter server/: $s)"
           echo "zahl=php:$s/0" >> "$GITHUB_OUTPUT"
 
-      - name: Quelltext — acht Prüfungen, ein Läufer
+      - name: cmark-gfm bereitstellen — für die Quelltextprüfungen `handbuch` und `bestand`
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq cmark-gfm
+
+      - name: Quelltext — elf Prüfungen, ein Läufer
         id: quelltext
         # Selbstprobe zuerst: Eine Prüfung, die kaputt ist und darum nichts findet, meldete sonst grün.
         # Erst ausgeben, dann scheitern: Unter -e bräche der Block vor `cat` ab, und das Protokoll bliebe leer.
@@ -174,56 +166,9 @@ jobs:
         run: node tools/referenzdatensatz/browser/download_lib.mjs --selbstprobe
 
       - name: Das Tor der grünen Läufe — geht es zu, wenn es zugehen muss?
-        run: python3 tools/kette/freigabe.py --selbstprobe
-
-      - name: Python-Werkzeuge — lassen sie sich überhaupt übersetzen?
         run: |
-          python3 - <<'PY'
-          import pathlib, sys
-          fehler = n = 0
-          for p in sorted(pathlib.Path('tools').rglob('*.py')):
-              n += 1
-              try:
-                  compile(p.read_text(encoding='utf-8'), str(p), 'exec')
-              except SyntaxError as e:
-                  fehler += 1
-                  print(f"::error file={p},line={e.lineno}::{e.msg}")
-          print(f"{n} Python-Werkzeuge geprüft, {fehler} mit Syntaxfehler")
-          sys.exit(1 if fehler else 0)
-          PY
-
-      - name: Backlog — keine Nummer zweimal
-        run: |
-          doppelt=$(grep -oE '^[0-9]+\.' docs/Backlog.md | tr -d '.' | sort -n | uniq -d)
-          if [ -n "$doppelt" ]; then
-            echo "Doppelte Backlog-Nummern: $doppelt"
-            exit 1
-          fi
-          echo "Doppelte Backlog-Nummern: 0"
-
-      - name: Handbuch und „Was ist NAdoku" — rendern sie überhaupt?
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq cmark-gfm
-          fehler=0
-          for f in docs/Handbuch.md docs/Was-ist-NAdoku.md; do
-            if [ ! -f "$f" ]; then
-              echo "::error::$f fehlt — hilfe.php bzw. ueber.php zeigen dann „Dieses Dokument fehlt”."
-              fehler=1; continue
-            fi
-            if cmark-gfm --validate-utf8 --to html "$f" > /dev/null; then
-              echo "  $f rendert ($(wc -c < "$f") Bytes)"
-            else
-              echo "::error::$f rendert nicht."
-              fehler=1
-            fi
-          done
-          fremd=$(grep -nE '!\[[^]]*\]\((https?:)?//' docs/Handbuch.md docs/Was-ist-NAdoku.md || true)
-          if [ -n "$fremd" ]; then
-            echo "::error::Bild aus fremder Quelle im Handbuch — die Anwendung zeigt es nicht an (keine fremde Quelle zur Laufzeit, CLAUDE.md 4):"
-            echo "$fremd"
-            fehler=1
-          fi
-          exit $fehler
+          python3 tools/kette/freigabe.py --selbstprobe
+          python3 tools/kette/baumsuche.py --selbstprobe
 
       - name: Spaltenregister — schema.sql gegen mf_missions_register()
         id: spaltenregister
@@ -261,7 +206,8 @@ jobs:
           rc=0
           python3 tools/pruefstand/bericht.py lesen --commit "$KOPF" --basis origin/main --alle-riegel \
             --riegel "syntax-php=${PHP_ZAHL:-nicht-gelaufen}" --riegel "wortliste=$q" --riegel "vollstaendigkeit=$q" \
-            --riegel "linkprobe=$q" --riegel "installweiche=$q" --riegel "sitzungshaertung=$q" \
+            --riegel "linkprobe=$q" --riegel "bestand=$q" --riegel "syntax-py=$q" --riegel "handbuch=$q" \
+            --riegel "installweiche=$q" --riegel "sitzungshaertung=$q" \
             --riegel "cspprobe=$q" --riegel "jobregister=$q" --riegel "migrationsregister=$q" \
             --riegel "kontraste=$(r "$KONTRASTE")" --riegel "kettenaufrufe=$(r "$KETTENAUFRUFE")" \
             --riegel "zaehlung=$(r "$ZAEHLUNG")" --riegel "spaltenregister=$(r "$SPALTENREGISTER")" \

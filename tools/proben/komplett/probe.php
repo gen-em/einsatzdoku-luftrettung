@@ -11,6 +11,8 @@ declare(strict_types=1);
  * versiegeln -> öffnen -> in eine LEERE Datenbank einspielen -> Tabelle für
  * Tabelle vergleichen -> auf ein Backup-Ziel schieben.
  *
+ * Anlass: Nr. 306 — der Neuanlauf ohne Baustand lief in count(null), im Zweig nach einer Wiederherstellung
+ *
  * SIE ARBEITET IN EINER KOPIE, NICHT IN DER INSTALLATION. `edbak_wurzel()`
  * zeigt fest auf `server/sicherungen`; eine Probe, die dort einen Stand
  * ablegt, verdrängt unter Umständen einen echten. Deshalb entsteht unter
@@ -78,7 +80,7 @@ register_shutdown_function(static function () use ($tmp): void {
 });
 
 require_once $srv . '/komplett_lib.php';
-require_once __DIR__ . '/../../konfig_stellen.php';
+require_once __DIR__ . '/../../sandbox/konfig_stellen.php';
 
 /* ---- Zählwerk ------------------------------------------------------------ */
 $n = 0; $offen = 0;

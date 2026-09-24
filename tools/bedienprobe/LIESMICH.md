@@ -1,7 +1,7 @@
 # Bedienprobe
 
 Das einzige Prüfmittel, das Elemente **bedient** statt sie anzusehen.
-**Anlass: PS-2** — bei gehaltener Maus kam der `click` nie, und auf jedem
+**Anlass: Nr. 102** — bei gehaltener Maus kam der `click` nie, und auf jedem
 Bild sah die Liste richtig aus.
 
 ## Aufruf

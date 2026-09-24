@@ -1,10 +1,12 @@
 # Quelltextprüfungen
 
-Acht Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
+Elf Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
+**Anlass: Nr. 148, 205, 208, 238, 293, 315** — je Prüfung in der Tabelle.
+
 ## Aufruf
 
 ```bash
-bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe
+bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe · --liste
 ```
 
 ## Was es misst
@@ -19,21 +21,20 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe
 | `linkprobe` | jeder Verweis nennt einen Parameter, den sein Ziel liest | Nr. 148, 151 |
 | `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=` | Nr. 179, 227 |
 | `textprobe` | **fünf Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen | B-S4-06, E-PK-08 |
+| `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6, elf Regeln: Form, Anlass, gerufen, keine lose Datei, keine Backlog-Nummer zweimal; eingehängt in `SELBST`, Tabelle, `pruefablauf.json` und die Tabelle in 4 | Nr. 293, 315 |
+| `pysyntax` | jedes Python-Werkzeug unter `tools/` übersetzt | Kette II/AP4: `zustand.py` |
+| `handbuch` | Handbuch und „Was ist NAdoku" rendern, UTF-8 streng, kein fremdes Bild | P5b/AP8 |
 
 ## Was es braucht
 
-Nichts — kein Netz, keine Datenbank. `php` und `python3`.
+`php`, `python3`, `bash`; für `handbuch` und `bestand` `cmark-gfm` (Ausbaustufe `web`) — fehlt es, ist `handbuch` rc 2 und `bestand` rot.
 
 ## Erwartete Zahl
 
-`alle` → **8 von 8 Prüfungen grün**, `--selbstprobe` → **5 von 5**.
-Die Vollständigkeit misst gegen **0**, ohne Schwelle (PK-04/5e). Die
-Textprobe meldet nur **neue** Treffer — `textprobe-altbestand.json` hält je
-(Datei, Muster) den Stand vom Einführungstag; neu schreiben mit
-`--altbestand-schreiben`, nie von Hand.
+`alle` → **11 von 11 grün**, `--selbstprobe` → **9 von 9**; ohne Schwelle.
+Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json`
+(neu schreiben mit `--altbestand-schreiben`, nie von Hand).
 
 ## Was es nicht kann
 
-Nichts, was einen Browser oder eine Anlage braucht — dafür `tools/proben/`.
-`linkprobe` und `vollstaendigkeit` haben keine Selbstprobe; vor dem Umzug
-hatten sie auch keine.
+Browser und Anlage (dafür `tools/proben/`); `linkprobe` und `vollstaendigkeit` ohne Selbstprobe.

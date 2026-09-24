@@ -407,37 +407,11 @@ jobs:
           FENSTER=50
           baum=$(git rev-parse 'HEAD^{tree}' 2>/dev/null || true)
           echo "Baum des Tag-Commits: ${baum:-— nicht ermittelt —}"
-          gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/pruefung.yml/runs?status=success&per_page=$FENSTER" \
-             --jq '[.workflow_runs[] | {id, event, head_branch, head_sha}]' > s1roh.json 2>/dev/null \
-             || echo '[]' > s1roh.json
-          : > s1.jsonl
-          geholt=0; treffer=0; gescheitert=0
-          declare -A baeume=()
-          for zeile in $(jq -r '.[] | "\(.id):\(.head_sha)"' s1roh.json); do
-            lauf="${zeile%%:*}"; kopf="${zeile#*:}"
-            geholt=$((geholt+1))
-            if [ -z "${baeume[$kopf]+x}" ]; then
-              baeume[$kopf]=$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$kopf" \
-                                --jq '.tree.sha' 2>/dev/null || true)
-              [ -n "${baeume[$kopf]}" ] || gescheitert=$((gescheitert+1))
-            fi
-            lb="${baeume[$kopf]}"
-            ok=false
-            if [ -n "$lb" ] && [ "$lb" = "$baum" ]; then
-              treffer=$((treffer+1))
-              # DER JOBNAME AUF GLEICHHEIT, wie beim Staging-Job unten. Er ist
-              # zugleich die Pflichtprüfung des Rulesets — wer ihn umbenennt,
-              # ändert diese Zeile mit, sonst zählt sie still null.
-              n=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$lauf/jobs" \
-                    --jq '[.jobs[] | select(.name == "Stufe 1") | select(.conclusion == "success")] | length' \
-                    2>/dev/null || echo 0)
-              [ "${n:-0}" -ge 1 ] && ok=true
-            fi
-            jq -c --argjson id "$lauf" --arg baum "$lb" --argjson ok "$ok" \
-               '.[] | select(.id == $id) | . + {baum: $baum, stufe1_ok: $ok}' s1roh.json >> s1.jsonl
-          done
-          jq -s '.' s1.jsonl > stufe1.json
-          echo "Stufe 1: $geholt Läufe geholt, $treffer mit Baum ${baum:0:7}, $gescheitert Baum-Abrufe gescheitert"
+          # DIE SUCHE STEHT IN tools/kette/baumsuche.py (E-BR-09): dieselbe wie in
+          # „Schon gemessen?", dort mit Fenster 30 und nur PR-Läufen. Sie schreibt
+          # stufe1.json immer — leer, wenn die Liste nicht abrufbar war, und eine
+          # leere Liste hält das Tor in freigabe.py zu.
+          python3 tools/kette/baumsuche.py --baum "${baum:-}" --fenster "$FENSTER" --ausgabe stufe1.json
 
           # STAMMT DIESER COMMIT VOM ZEIGER `produktion` AB? (AP7, E-KH-15)
           #

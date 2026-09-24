@@ -7,6 +7,14 @@
 //      die Einsatzdoku fuer Langdruecke benutzt (Const.LONG_PRESS_MS).
 //      Feuert er, erscheint "HALTE-TIMER".
 //
+// Zeilenpraefixe: `KeyPressed`/`KeyReleased` Roh-Taste mit Code · `onKey`
+//   Taste der Behavior-Ebene · `TAP`/`HOLD`/`RELEASE` Roh-Touch mit
+//   Koordinaten · `SWIPE dir=` 0 hoch, 1 rechts, 2 runter, 3 links ·
+//   `>> …` vom System abgeleitetes Behavior · `*** HALTE-TIMER` der Timer.
+//   Jedes Roh-Ereignis gibt `false` zurueck, damit BEIDE Ebenen sichtbar
+//   werden; die echte App gibt `true` und erzeugt deshalb kein zusaetzliches
+//   `onSelect`, die Probe schon.
+//
 // Entscheidende Ablesung:
 //   HALTE-TIMER steht VOR dem KeyReleased  -> Langdruecke funktionieren.
 //   HALTE-TIMER steht NACH dem KeyReleased -> KeyPressed kommt erst beim

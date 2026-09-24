@@ -1,7 +1,7 @@
 # Stilvergleich
 
 Hat sich am Erscheinungsbild etwas geändert, das niemand wollte?
-**Anlass: P0/A3** — ein Umbau des Stylesheets ohne Netz und doppelten Boden.
+**Anlass: Nr. 312** — ein Umbau des Stylesheets ohne Netz und doppelten Boden (P0/A3).
 
 ## Aufruf
 
