@@ -1578,7 +1578,9 @@ ui_seite_start(['titel' => 'Einstellungen',
              gibt es nichts einzuschalten, und eine Karte, deren einziger
              Knopf eine Fehlermeldung ausloest, ist schlechter als keine. */
           require_once __DIR__ . '/zweitfaktor_teile.php';
+          require_once __DIR__ . '/rueckweg_lib.php';
           $zf = totp_zustand($userId);
+          $rwZ = rw_zustand($userId);          // Konzept RW: Zeile, Satz, Knopf, Dialog
           $zfPflicht = rolle_braucht_zweitfaktor($userRole);
           $zfLeer = static function (int $n): string {
               return ['keiner', 'einer', 'zwei', 'drei', 'vier', 'fünf', 'sechs',
@@ -1617,6 +1619,22 @@ ui_seite_start(['titel' => 'Einstellungen',
                   'klein' => $zfLeer($zfBenutzt) . ' benutzt — neue Codes machen die alten ungültig',
                   'plaketten' => ui_plakette($zf['codes_offen'] . ' von ' . $zf['codes_alle'],
                                              ['ton' => 'blau'])]);
+        /* DER RUECKWEG (Konzept RW, E-RW-07; M-RW-01 Bild 4): die dritte
+           Zeile. Nur hier, bei eingeschaltetem Zweitfaktor — ausgeschaltet
+           hat das Paar keinen Verbraucher. Vor `update.php` ('spalten')
+           fehlt sie ganz; das Demo-Konto kommt hier nie an, sein
+           Zweitfaktor ist gesperrt. */
+        if ($rwZ['stand'] === 'da') {
+            ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
+                      'klein' => 'seit ' . datum_text($rwZ['seit']) . ' — der Schlüssel vom '
+                               . 'Notfallblatt genügt, wenn Handy und Codes fehlen',
+                      'plaketten' => ui_plakette('eingerichtet', ['ton' => 'blau'])]);
+        } elseif ($rwZ['stand'] === 'fehlt') {
+            ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
+                      'klein' => 'wird beim nächsten Anmelden eingerichtet — bis dahin setzt '
+                               . 'die Verwaltung zurück',
+                      'plaketten' => ui_plakette('ab der nächsten Anmeldung')]);
+        }
         /* DAS GEHEIMNIS IST NICHT ZU OEFFNEN, wenn die Anlage einen anderen
            Serverschluessel hat als bei der Einrichtung (Wiederanlauf,
            eingespieltes Komplett-Backup). Die Anmeldung geht dann nur noch
@@ -1630,7 +1648,8 @@ ui_seite_start(['titel' => 'Einstellungen',
         }
         if ($zfPflicht): ?>
       <p class="feld-klein">Für die Rolle <?= e(rolle_text($userRole)) ?> Pflicht — ausschalten geht nicht; zurücksetzen kann <?=
-        rolle_ist_betreiberin($userRole) ? 'eine andere BetreiberIn' : 'eine BetreiberIn' ?>.</p>
+        rolle_ist_betreiberin($userRole) ? 'eine andere BetreiberIn' : 'eine BetreiberIn' ?><?=
+        $rwZ['stand'] === 'da' ? ' oder du selbst mit dem Wiederherstellungsschlüssel' : '' ?>.</p>
 <?php endif; ?>
       <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor">
         <?= csrf_field() ?>
@@ -1638,6 +1657,10 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?= ui_knopf(['text' => 'Neue Codes erzeugen', 'art' => 'neutral', 'name' => 'action',
                         'wert' => 'zf_codes_neu',
                         'attr' => ' data-confirm="Neue Codes erzeugen? Die bisherigen gelten danach nicht mehr — auch die auf einem gedruckten Codeblatt." data-confirm-ok="Neue Codes erzeugen" data-confirm-tone="normal"']) ?>
+          <?php if ($rwZ['stand'] === 'da'): /* E-RW-06: nur, wo ein Paar zu ersetzen ist */ ?>
+          <?= ui_knopf(['text' => 'Rückweg erneuern', 'art' => 'neutral', 'typ' => 'button',
+                        'attr' => ' data-rueckweg-auf']) ?>
+          <?php endif; ?>
           <?php if (!$zfPflicht): ?>
           <?= ui_knopf(['text' => 'Ausschalten', 'art' => 'leise', 'name' => 'action',
                         'wert' => 'zf_ausschalten',
@@ -1667,6 +1690,38 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php require __DIR__ . '/schluessel_teile.php'; ?>
     </dialog>
 
+    <?php /* „RUECKWEG ERNEUERN" (Konzept RW, E-RW-06): derselbe Aufbau wie
+             der Passwortabschnitt von „Neuen Wiederherstellungsschluessel
+             erzeugen" (`schluessel_teile.php`) — Kopf, ein Passwortfeld, eine
+             Fehlerzeile, zwei Knoepfe. Kein zweiter Abschnitt: Es gibt nichts
+             aufzuschreiben, das Notfallblatt bleibt gueltig. Nach dem Erfolg
+             laedt die Seite neu; die Meldung dazu legt der Endpunkt ab. */ ?>
+    <?php if ($rwZ['stand'] === 'da'): ?>
+    <dialog class="dialog" id="dlg-rueckweg">
+      <div class="dialog-kopf">
+        <h2>Rückweg erneuern</h2>
+        <p class="feld-hinweis">Konto-Sicherheit</p>
+      </div>
+      <div class="dialog-inhalt">
+        <p>Ein neues Schlüsselpaar ersetzt das bisherige. Dein Notfallblatt
+           bleibt gültig — es öffnet auch das neue. Dafür brauchen wir einmal
+           dein Passwort.</p>
+        <?php ui_feld(['id' => 'rw-pw', 'label' => 'Passwort', 'art' => 'password',
+                       'attr' => ' autocomplete="current-password"',
+                       'klein' => 'Das Paar entsteht in deinem Browser. Der Server '
+                                . 'erhält den öffentlichen Teil und den mit deinem '
+                                . 'Schlüssel verpackten privaten.']); ?>
+        <p class="meldung meldung-fehler" data-rw-fehler role="alert" hidden></p>
+      </div>
+      <div class="dialog-fuss">
+        <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
+                      'attr' => ' data-rw-zurueck']) ?>
+        <?= ui_knopf(['text' => 'Rückweg erneuern', 'art' => 'primaer', 'typ' => 'button',
+                      'attr' => ' data-rw-erneuern']) ?>
+      </div>
+    </dialog>
+    <?php endif; ?>
+
     <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
              dazu pwquality.js: Passwortguete nach derselben Regel wie bei
              Erstvergabe und Zuruecksetzen (B9, M2-02).
@@ -1681,7 +1736,55 @@ ui_seite_start(['titel' => 'Einstellungen',
                                'einzug' => '    ']); ?>
     <script src="<?= asset('assets/schluessel.js') ?>"></script>
     <script src="<?= asset('assets/rueckfrage.js') ?>"></script>
+    <?php if ($rwZ['stand'] === 'da'): ?>
+    <script src="<?= asset('assets/rueckweg.js') ?>"></script>
+    <?php endif; ?>
     <script<?= kopf_nonce_attr() ?>>
+    /* ---- „Rückweg erneuern" (Konzept RW, E-RW-06) ----------------------
+     *
+     * Das Rechnen steht in `EdRueckweg.erneuern()` — Passwort, Inhaltsschlüssel
+     * mit der Wache gegen `pat_key_check` (`EdSchluessel.oeffnen()`), neues
+     * Paar, Senden mit `ersetzen`. Hier steht nur der Dialog. Nach dem Erfolg
+     * lädt die Seite neu: Die Zeile zeigt das neue Datum, und die Meldung hat
+     * der Endpunkt für die nächste Seite abgelegt. */
+    (() => {
+      const dlg = document.getElementById('dlg-rueckweg');
+      const knopf = document.querySelector('[data-rueckweg-auf]');
+      if (!dlg || !knopf) { return; }
+      const feldPw = dlg.querySelector('#rw-pw');
+      const fehler = dlg.querySelector('[data-rw-fehler]');
+      const los = dlg.querySelector('[data-rw-erneuern]');
+      const melde = (text) => { fehler.textContent = text; fehler.hidden = text === ''; };
+      knopf.addEventListener('click', () => {
+        melde('');
+        feldPw.value = '';
+        dlg.showModal();
+        feldPw.focus();
+      });
+      dlg.querySelector('[data-rw-zurueck]').addEventListener('click', () => dlg.close());
+      los.addEventListener('click', async () => {
+        if (feldPw.value === '') { melde('Bitte das Passwort eingeben.'); return; }
+        melde('');
+        los.disabled = true;
+        try {
+          await EdRueckweg.erneuern({
+            pw: feldPw.value, salt: KDF_SALT, iter: KDF_ITER, wrapPw: PAT_WRAP,
+            keyCheck: typeof PAT_KEY_CHECK !== 'undefined' ? PAT_KEY_CHECK : null,
+            anteile: typeof KONTO_ANTEILE !== 'undefined' ? KONTO_ANTEILE : null,
+          });
+          feldPw.value = '';
+          /* NEU LADEN PER GET, nicht `reload()`: War die Seite die Antwort
+           * auf einen POST (Profil gespeichert), schickte `reload()` ihn noch
+           * einmal. Ohne `#…`, sonst bliebe es bei gleicher Adresse ein
+           * Sprung an die Marke statt eines Ladens. */
+          location.href = 'einstellungen.php?t=profil';
+        } catch (e) {
+          melde(e && e.message ? e.message : 'Die Erneuerung des Rückwegs ist fehlgeschlagen.');
+          los.disabled = false;
+        }
+      });
+    })();
+
     /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
      * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
     (() => {

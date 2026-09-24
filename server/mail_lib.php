@@ -469,6 +469,24 @@ function mail_katalog(): array
                 . "und ändere dein Passwort."),
         ],
 
+        /* DER RÜCKWEG IST ERNEUERT (Konzept RW, RW-02, E-RW-06). Nur beim
+         * ERSETZEN, nicht beim ersten Anlegen nach der Anmeldung: Wer den
+         * Rückweg eines Kontos an sich nähme, hinterlässt damit eine Spur im
+         * Postfach. Das erste Anlegen geschieht still bei einer gewöhnlichen
+         * Anmeldung, einmal je Konto — eine Mail dazu hätte nichts zu
+         * melden, was die Person nicht gerade selbst getan hat. */
+        'rueckweg_erneuert' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
+            'betreff' => fn(array $d): string => 'Rückweg beim Zweitfaktor erneuert — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " ist der Rückweg mit dem\n"
+                . "Wiederherstellungsschlüssel erneuert worden — dafür wurde dein Passwort\n"
+                . "eingegeben. Dein Notfallblatt bleibt gültig.\n\n"
+                . $d['link'],
+                "Falls du das nicht warst, ändere bitte umgehend dein Passwort und melde dich\n"
+                . "bei der Verwaltung."),
+        ],
+
         'registrierung_verfallen' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Registrierung verfallen — ' . $n,

@@ -340,6 +340,9 @@ const PROTOKOLL_ARTEN = [
     'totp_ausgeschaltet'        => ['Zweitfaktor ausgeschaltet', 'orange'],
     'totp_zurueckgesetzt'       => ['Zweitfaktor zurückgesetzt', 'orange'],
     'totp_code_benutzt'         => ['Wiederherstellungscode', 'orange'],
+    /* Verwaltung — neu mit Konzept RW (RW-02, E-RW-14) */
+    'rueckweg_angelegt'         => ['Rückweg eingerichtet', 'neutral'],
+    'rueckweg_erneuert'         => ['Rückweg erneuert', 'neutral'],
     'geraet_umgeschaltet'       => ['Gerät umgeschaltet', 'neutral'],
     'geraet_geloescht'          => ['Gerät gelöscht', 'neutral'],
     'wartung_an'                => ['Wartung an', 'orange'],
@@ -552,6 +555,7 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'konto_grenzen', 'setzlink_gesendet', 'verifikation_gesendet', 'einwilligung',
                          'totp_eingerichtet', 'totp_codes_erneuert', 'totp_ausgeschaltet',
                          'totp_zurueckgesetzt', 'totp_code_benutzt',
+                         'rueckweg_angelegt', 'rueckweg_erneuert',
                          'rechtstext_geaendert', 'schluessel_erneuert',
                          'schluesselblatt_bestaetigt', 'geraet_umgeschaltet',
                          'geraet_geloescht', 'wartung_an', 'wartung_aus',

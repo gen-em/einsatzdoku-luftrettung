@@ -14,6 +14,106 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.44.0] — 2026-09-24
+
+**Der Rückweg beim Zweitfaktor: Das Paar entsteht.** Konzept RW, Paket RW-02
+(im P5c-Konzept AP5b); E-RW-02, -06, -07, -09, -14, -15. Nebenstufe **ohne
+Migration** — die Spalten kamen mit 20.43.0. Benutzt wird das Paar erst mit
+RW-03 am Code-Schritt; bis dahin setzt bei verlorenem Handy weiter die
+Verwaltung zurück.
+
+### Neu
+
+- **Web: Das Schlüsselpaar entsteht still nach der Anmeldung** (E-RW-02).
+  Hat ein Konto noch keins, erzeugt der Browser eines über WebCrypto (ECDSA,
+  P-256), verpackt den privaten Teil mit dem Inhaltsschlüssel (`edk1:`) und
+  schickt beides mit dem Anmelde-Token an `api/rueckweg_anlegen.php`. **Warum
+  das Token:** Wer ein Paar ablegt, bestimmt, wessen Signatur später den
+  Zweitfaktor abschaltet; ein selbst erzeugtes Paar bräuchte keinen
+  Wiederherstellungsschlüssel mehr. Also schreibt nur, wer das Passwort
+  nachweist — und das Token gibt es nur im Vormerkfach, unmittelbar nach der
+  Anmeldung. `unlock.js` merkt es sich, bevor es das Fach räumt, und gibt es
+  mit dem Inhaltsschlüssel an `assets/rueckweg.js`. Der Server prüft den
+  öffentlichen Teil auf Form und Kurve und den privaten auf `edk1:`; ob beide
+  zusammengehören, kann er nicht prüfen, weil er den privaten nie öffnet.
+  Protokoll `rueckweg_angelegt`, **keine Mail** — das Anlegen ist nichts, was
+  die Person nicht gerade selbst getan hat. Ein vorhandenes Paar lässt der
+  Weg stehen (409; die Bedingung steht im `UPDATE` selbst, damit zwei
+  Fenster nicht zwei Paare ablegen).
+- **Web: Die Zeile „Rückweg mit dem Wiederherstellungsschlüssel"** in der
+  Karte „Zweitfaktor" (E-RW-07, M-RW-01 Bild 4): blau „eingerichtet" mit
+  Datum, neutral „ab der nächsten Anmeldung", solange das Paar fehlt. Für die
+  Pflichtrollen nennt der Satz darunter den eigenen Weg mit. Nur bei
+  eingeschaltetem Zweitfaktor — ausgeschaltet hat das Paar keinen Verbraucher.
+- **Web: „Rückweg erneuern"** (E-RW-06): fragt das Passwort, öffnet den
+  Inhaltsschlüssel mit derselben Wache gegen `pat_key_check` wie „Neuen
+  Wiederherstellungsschlüssel erzeugen" und ersetzt das Paar. Protokoll
+  `rueckweg_erneuert` und die Mail `rueckweg_erneuert` an die Kontoadresse —
+  wer den Rückweg eines Kontos an sich nähme, hinterließe einen Hinweis im
+  Postfach. Das Notfallblatt bleibt gültig.
+- **Werkzeug: Bedienweg `einstellungen-profil-rueckweg`** mit einem Konto,
+  das über Einladung und `pw_handling.php` im Browser entsteht
+  (`passwortSetzen()` in `probekonto.mjs` — die Konten von
+  `probekontoAnlegen()` haben keine Schlüsselhülle, dort kann kein Paar
+  entstehen).
+
+### Geändert
+
+- **Web: `EdSchluessel.oeffnen()`** — die Schritte 1 bis 3 der
+  Schlüsselerneuerung (Passwort, Inhaltsschlüssel, Wache gegen
+  `pat_key_check`) stehen jetzt als eigene Funktion; „Neuen
+  Wiederherstellungsschlüssel erzeugen" ruft sie wie vorher, „Rückweg
+  erneuern" auch. Eine zweite Fassung wäre eine zweite Stelle gewesen, an der
+  die Wache vergessen werden kann. Am Verhalten ändert sich nichts.
+- **Web: `RW_STAND` in `ui_krypto_bootstrap()`** (`'da'`, `'fehlt'`,
+  `'spalten'`, `'demo'`), gefragt dort und nicht in `auth_guard.php` (E-RW-17):
+  Die Wache läuft bei jeder Anfrage, auch bei jedem API-Aufruf; gebraucht wird
+  der Wert nur auf Seiten mit Verschlüsselung. `assets/rueckweg.js` wird nur
+  bei `'fehlt'` ausgeliefert.
+- **Web: Der Demo-Reset leert auch das Paar** — in `demo_zweitfaktor_leeren()`,
+  mit eigener Vorabfrage auf die Spalten. Das Demo-Konto bekommt keins
+  (E-RW-15): Der Endpunkt weist es ab, die Seite fragt gar nicht erst.
+- **Werkzeug: Die Rollenprobe erkennt die Token-Ablehnung eines
+  API-Endpunkts** (`{"error":"csrf"}`) und führt `api/rueckweg_anlegen.php`
+  in der Matrix — alle vier Rollen erreichen ihn und legen mit gültigem
+  Token ab.
+
+### Behoben
+
+- **Web: Das Vormerkfach blieb auf der Startseite eines Kontos ohne
+  Diensttag liegen** (F-RW-14). Aufgelöst hat es bisher erst eine Seite, die
+  den Inhaltsschlüssel braucht — die Startseite braucht ihn nur, wenn es einen
+  Tag zu zeigen gibt. Gemessen am ersten Bedienweg: Anmeldung, `index.php`,
+  Fach belegt, **kein Paar**; erst `suche.php` legte es an. Das sind gerade
+  die Konten der BetreiberInnen, für die der Rückweg gedacht ist (E-RW-08).
+  `unlock.js` löst das Fach jetzt selbst auf, wenn ein Paar fehlt — still,
+  ohne Entsperrdialog, und über denselben einen Lauf wie
+  `ensureContentKey()`: Zwei Läufe schickten zweimal dasselbe alte Token an
+  `kdf_upgrade.php`, und der zweite setzte den alten Datenschlüssel wieder
+  ein. **Nebenwirkung, gewollt:** Die stille Anhebung der Rundenzahl läuft
+  damit für solche Konten ebenfalls gleich nach der Anmeldung.
+- **Doku: `tools/proben/LIESMICH.md` nannte „zweiundzwanzig" Proben**, es
+  sind 24 (F-RW-15; seit P5c/AP5 veraltet, in RW-01 übersehen).
+
+### Nachweis
+
+**Bedienweg 1 / 1:** Paar **0 → 1** beim Anmelden (Protokoll +1, Mails +0),
+zweite Anmeldung unverändert; ohne Token **403**, falsches Token **403**,
+vorhanden ohne `ersetzen` **409**, P-384 **400**, jeweils nichts geschrieben;
+Fehlversuch im Topf `login` gezählt, gestellte Sperre **429**; Karte
+„eingerichtet" mit Knopf; falsches Passwort im Dialog abgewiesen, ohne zu
+senden; Erneuern: neuer Wert, Protokoll +1, Mails +1, Meldung auf der Seite;
+Demo-Konto mit **gültigem** Token ohne und mit `ersetzen` **403 / 403**,
+0 Paare, kein `rueckweg.js` ausgeliefert. **Gegenproben:** vor F-RW-14 Paar
+**0 → 0** (rot); ohne die Demo-Sperre **200 / 200** und ein Paar im
+Demo-Konto (rot). **Rückwegprobe 33 / 0** (neu: `rw_zustand()` **4 / 4**
+Lagen, die Lage „spalten" gegen eine Datenbank ohne die Spalten;
+Kontopaket und Freigabe mit **0** Zeichenketten `rw_` — Gegenprobe mit einer
+eingefügten Zeichenkette 1 rot). **Zweitfaktorprobe 45 / 0** (Demo-Reset
+leert **3 / 3** Spalten; Gegenprobe 0 / 3 rot). **Rollenprobe 296 / 0**
+(Endpunkt je Rolle erreicht, 4 / 4 legen mit Token ab). Karte und Dialog bei
+1440 und 376 px: Überlauf 0, Knöpfe 36 bzw. 44 px.
+
 ## [Web 20.43.0] — 2026-09-24
 
 **Der Rückweg beim Zweitfaktor, Grundlage.** Konzept RW, Paket RW-01 (im

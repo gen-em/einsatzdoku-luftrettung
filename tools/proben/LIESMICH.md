@@ -1,6 +1,6 @@
 # Proben gegen die örtliche Installation
 
-Zweiundzwanzig Prüfungen gegen die laufende Anlage (E-PK-24).
+Vierundzwanzig Prüfungen gegen die laufende Anlage (E-PK-24).
 
 ## Aufruf
 

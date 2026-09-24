@@ -21,12 +21,20 @@ declare(strict_types=1);
  *     5. Die Statuszeile „Rückweg-Prüfung" in drei Lagen, mit gesetzten Werten.
  *     6. Die Marke: Der Selbsttest läuft einmal je Marke, ein gestellter
  *        Fehlschlag schaltet den Weg ab.
+ *     7. Der Stand des Paars (RW-02): `rw_zustand()` in allen vier Lagen —
+ *        'da' mit Datum, 'fehlt', 'demo', und 'spalten' gegen eine
+ *        Datenbank ohne die Spalten (SQLite im Speicher; die der Anlage
+ *        wird dafür nicht zurückgebaut).
+ *     8. Das Kontopaket trägt das Paar nicht (E-RW-09): kein `rw_` in den
+ *        Spaltenlisten von Konto-Backup und Freigabe.
  *
  * WAS SIE (NOCH) NICHT MISST: den Weg im Server am Code-Schritt und die
  * Abzug-Gegenprobe (Teil B, kommt mit RW-03), den Weg im Browser
- * (`probe.mjs`, RW-03).
+ * (`probe.mjs`, RW-03). Das Anlegen über den Endpunkt misst der Bedienweg
+ * `einstellungen-profil-rueckweg` — mit Sitzung, Token und Browser.
  *
- * SIE RÄUMT AUF: Die Marke in `app_state` steht danach wie vorher.
+ * SIE RÄUMT AUF: Die Marke in `app_state` steht danach wie vorher; das
+ * Probekonto aus Teil 7 ist danach weg.
  *
  * Aufruf:  php tools/proben/rueckweg/probe.php
  * Rückgabewert: 0 = alles erfüllt, 1 = mindestens eine Erwartung nicht.
@@ -170,6 +178,52 @@ pruefe(rw_selbsttest_laeufe() - $n0 === 1, 'eine fremde Marke (anderer Deploy) �
 app_state_setzen(RW_MARKE, (string)json_encode(['ok' => false, 'weg' => 'php', 'ms' => 0,
                                                  'marke' => rw_marke_schluessel()]));
 pruefe(rw_verfuegbar() === false, 'ein gemerkter Fehlschlag schaltet den Weg ab');
+
+/* ---- 7. Der Stand des Paars ------------------------------------------------- */
+echo "== A7. rw_zustand() in vier Lagen (RW-02)\n";
+$adresse = 'rueckwegprobe@probe.invalid';
+$pdo = db();
+$pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$adresse]);
+$pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
+               VALUES (?, 'Rückwegprobe', 'user', '', '', 320000)")->execute([$adresse]);
+$probeId = (int)$pdo->lastInsertId();
+register_shutdown_function(static function () use ($pdo, $probeId): void {
+    $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$probeId]);
+});
+$lagen = [];
+$lagen['fehlt'] = rw_zustand($probeId);
+$pdo->prepare('UPDATE users SET rw_oeffentlich = ?, rw_privat = ?, rw_seit = UTC_TIMESTAMP()
+               WHERE id = ?')->execute([$pub, 'edk1:' . $chiffre, $probeId]);
+$lagen['da'] = rw_zustand($probeId);
+$ohne = new PDO('sqlite::memory:');
+$ohne->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, email TEXT)');
+$lagen['spalten'] = rw_zustand($probeId, $ohne);
+require_once $wurzel . '/server/demo_lib.php';
+$demo = demo_id();
+$lagen['demo'] = $demo === null ? ['stand' => 'kein Demo-Konto vermerkt'] : rw_zustand($demo);
+$treffer = 0;
+foreach ($lagen as $soll => $z) {
+    $ok = ($z['stand'] ?? '') === $soll && ($soll !== 'da' || !empty($z['seit']));
+    $treffer += $ok ? 1 : 0;
+    pruefe($ok, "Lage $soll", ($z['stand'] ?? '?') . ($soll === 'da' ? ', seit ' . ($z['seit'] ?? '—') : ''));
+}
+pruefe($treffer === 4, "$treffer von 4 Lagen");
+
+/* ---- 8. Das Kontopaket trägt das Paar nicht ---------------------------------- */
+echo "== A8. Kontopaket und Freigabe ohne das Paar (E-RW-09)\n";
+/* GEZÄHLT IN DEN ZEICHENKETTEN DES QUELLTEXTS, nicht in Kommentaren: Die
+ * Spaltenlisten stehen als SQL in Zeichenketten, und ein Kommentar, der die
+ * Spalten nennt, ist keine Spaltenliste. */
+$treffer = [];
+foreach (['server/adminbackup_lib.php', 'server/backup_lib.php'] as $datei) {
+    foreach (token_get_all((string)file_get_contents($wurzel . '/' . $datei)) as $t) {
+        if (is_array($t) && $t[0] === T_CONSTANT_ENCAPSED_STRING && preg_match('/\brw_[a-z]/', $t[1])) {
+            $treffer[] = basename($datei) . ':' . $t[2];
+        }
+    }
+}
+pruefe($treffer === [], 'rw_ in den Zeichenketten von adminbackup_lib.php und backup_lib.php',
+       count($treffer) . ' Treffer' . ($treffer === [] ? '' : ' — ' . implode(', ', $treffer)));
 
 echo "\n$gut ok, $schlecht fehlen\n";
 exit($schlecht === 0 ? 0 : 1);

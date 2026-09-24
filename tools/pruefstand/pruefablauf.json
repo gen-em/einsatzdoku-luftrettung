@@ -401,10 +401,15 @@
         "server/rueckweg_lib.php",
         "server/status_lib.php",
         "server/vendor/phpseclib3/**",
-        "tools/proben/rueckweg/**"
+        "server/api/rueckweg_anlegen.php",
+        "server/assets/rueckweg.js",
+        "tools/proben/rueckweg/**",
+        "tools/bedienprobe/wege/einstellungen_profil_rueckweg.mjs"
       ],
       "proben": [
-        "rueckwegprobe"
+        "rueckwegprobe",
+        "rollenprobe",
+        "bedienprobe"
       ],
       "anlass": "F-P5c-106 (Rueckweg pruefte gegen einen Wert aus der Datenbank), Konzept RW E-RW-03, -11, -12"
     },

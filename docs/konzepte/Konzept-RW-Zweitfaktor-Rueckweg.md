@@ -29,9 +29,9 @@ AP5 nach (3.3) und baut nichts davon ein zweites Mal.
 > | | |
 > |---|---|
 > | Stand | **24.09.2026 — Fassung 1, freigegeben.** Vorbereitung gegen den Code geprüft (F-RW-01 bis -08, mit einer Messung des Signaturwegs in drei Browser-Motoren und vier PHP-Prüfwegen: 12 Prüfungen, 0 Abweichungen). Zehn Fragen vorgelegt und am 24.09.2026 einzeln beantwortet (Q-RW-01 bis -10, 2.1); eine Antwort weicht von der Empfehlung ab (Q-RW-07). **Mockup-Runde M-RW-01 gebaut und freigegeben am 24.09.2026** (7). |
-> | Entschieden | **E-RW-01 bis -14** (2.2). Aus der Umsetzung: **Q-RW-11** (Demo-Konto, 24.09.2026) → **E-RW-15**, ersetzt E-RW-10; **E-RW-16** (Marke des Selbsttests, ohne Frage). Keine offene Frage. |
+> | Entschieden | **E-RW-01 bis -14** (2.2). Aus der Umsetzung: **Q-RW-11** (Demo-Konto, 24.09.2026) → **E-RW-15**, ersetzt E-RW-10; **E-RW-16** (Marke des Selbsttests) und **E-RW-17** (`RW_STAND` aus `ui_krypto_bootstrap()`), beide ohne Frage. Keine offene Frage. |
 > | Offen | nichts. Die Voraussetzung ist erfüllt: AP5 ist gepusht (`262787c`), die Namen stehen in 3.3. |
-> | Umsetzung | **läuft seit 24.09.2026** auf `claude/p5c-mockups-konzept-4yeomf` (Konzept per Cherry-Pick `5fb1d2a`). **RW-01 erledigt** (Web 20.43.0, mit Migration — nach dem Deploy `update.php`, die Wartung bleibt an; Befunde F-RW-09 bis -13). **Als Nächstes: RW-02.** Reihenfolge RW-01 → RW-02 → RW-03 → RW-04 (4). |
+> | Umsetzung | **läuft seit 24.09.2026** auf `claude/p5c-mockups-konzept-4yeomf` (Konzept per Cherry-Pick `5fb1d2a`). **RW-01 erledigt** (Web 20.43.0, `aecfaee`, mit Migration — nach dem Deploy `update.php`, die Wartung bleibt an; Befunde F-RW-09 bis -13). **RW-02 erledigt** (Web 20.44.0, ohne Migration; Befunde F-RW-14 bis -16). **Als Nächstes: RW-03.** Reihenfolge RW-01 → RW-02 → RW-03 → RW-04 (4). |
 > | Fable-Schritte | **keine.** |
 > | Nummern | Backlog-Nummern vergibt die Umsetzung (Vorbereitung 8); eine Zeile ohne Nummer steht in 9.3. Rahmenplan-Zeilen in 9.2. |
 >
@@ -40,8 +40,8 @@ AP5 nach (3.3) und baut nichts davon ein zweites Mal.
 > | Paket | Stand | Versionsstufe (Vorschlag) | Prüfstand | Migration | Commit | Abnahmezahlen |
 > |---|---|---|---|---|---|---|
 > | M-RW-01 Mockup-Runde | **erledigt — freigegeben 24.09.2026** | — (nur `docs/`) | — | — | | Überlauf 0 px Seite, 0 von 11 und 0 von 4 Rahmen; Knöpfe 16 von 16 zu 36 px (Zeigergerät) und 6 von 6 ≥ 44 px (Handy); 0 fehlende Ressourcen, 0 Konsolenfehler; keine neue Klasse, kein neues Symbol, keine neue Farbe |
-> | RW-01 Grundlage: Prüfung, Migration, Statuszeile | **erledigt 24.09.2026** | Neben — **Web 20.43.0** | **haupt** (Bericht im Commit `RW-01`; Stufenregel `migration`) | **ja** (`2026_09_24_rueckweg_schluesselpaar`, drei Spalten an `users`) | | Rückwegprobe Teil A **27 / 0**: Selbsttest **2 / 2** (openssl rund 20 ms, reines PHP **185 ms**, im Sollbereich 150–400), sechs Signaturfälle **1 angenommen / 5 abgewiesen**, fremde Kurve und fremdes Verfahren **2 / 2** abgewiesen (dazu die Kurvenprüfung selbst 2 / 2, F-RW-12), Statuszeile **3 / 3** Lagen, Marke: zweimal gefragt **1** Lauf · Gegenprobe Kurvenprüfung heraus: **3 rot** · vor `update.php`: `betrieb_updates.php` 200 mit Migration, Status 200, Wartung an · **unter PHP 8.3.33 von Hand**: Migration über Betrieb → Updates, Probe **27 / 0** (reines PHP 168 ms) · Quelltext **9 von 9**, Register **40 / 0 über der Decke** · Schemaprobe, Migrationsregister: im Prüfstand |
-> | RW-02 Das Paar entsteht: Anmeldung, Karte, Demo | offen | Neben | haupt | nein | | |
+> | RW-01 Grundlage: Prüfung, Migration, Statuszeile | **erledigt 24.09.2026** | Neben — **Web 20.43.0** | **haupt** (Bericht im Commit `RW-01`; Stufenregel `migration`) | **ja** (`2026_09_24_rueckweg_schluesselpaar`, drei Spalten an `users`) | `aecfaee` | Rückwegprobe Teil A **27 / 0**: Selbsttest **2 / 2** (openssl rund 20 ms, reines PHP **185 ms**, im Sollbereich 150–400), sechs Signaturfälle **1 angenommen / 5 abgewiesen**, fremde Kurve und fremdes Verfahren **2 / 2** abgewiesen (dazu die Kurvenprüfung selbst 2 / 2, F-RW-12), Statuszeile **3 / 3** Lagen, Marke: zweimal gefragt **1** Lauf · Gegenprobe Kurvenprüfung heraus: **3 rot** · vor `update.php`: `betrieb_updates.php` 200 mit Migration, Status 200, Wartung an · **unter PHP 8.3.33 von Hand**: Migration über Betrieb → Updates, Probe **27 / 0** (reines PHP 168 ms) · Quelltext **9 von 9**, Register **40 / 0 über der Decke** · Schemaprobe, Migrationsregister: im Prüfstand |
+> | RW-02 Das Paar entsteht: Anmeldung, Karte, Demo | **erledigt 24.09.2026** | Neben — **Web 20.44.0** | **haupt** (Bericht im Commit `RW-02`) | nein | | Bedienweg **1 / 1**: Paar **0 → 1** beim Anmelden (Protokoll +1, Mails +0), zweite Anmeldung unverändert; ohne Token **403**, falsches Token **403**, vorhanden **409**, P-384 **400**, jeweils nichts geschrieben; Fehlversuch im Topf `login` gezählt, gestellte Sperre **429** (F-RW-16); Karte „eingerichtet" mit Knopf; Erneuern mit Passwort: neuer Wert, Protokoll +1, Mails +1; Demo mit gültigem Token **403 / 403**, 0 Paare · `RW_STAND` **4 / 4** (drei im Bedienweg, `'spalten'` in der Rückwegprobe gegen eine Datenbank ohne die Spalten) · Gegenproben: vor F-RW-14 **0 → 0**, ohne Demo-Sperre **200 / 200** — beide rot · Rückwegprobe **33 / 0** (Kontopaket: **0** Zeichenketten `rw_`; Gegenprobe 1 rot) · Zweitfaktorprobe **45 / 0** (Demo-Reset **3 / 3** NULL; Gegenprobe 0 / 3 rot) · Rollenprobe **296 / 0** (Endpunkt 4 × durch, 4 / 4 legen mit Token ab) · Karte und Dialog 1440 / 376 px: Überlauf 0, Knöpfe 36 / 44 px · Quelltext **9 von 9**, Register **40 / 0** · **nicht gemessen:** der Kreislauf `edbak` in ein Zielkonto mit Paar (Prüfdokument 0) |
 > | RW-03 Der Rückweg am Code-Schritt | offen | Neben | haupt | nein | | |
 > | RW-04 Abschluss: Prüfdokument, Einschübe, Kette | offen | — | haupt | — | | |
 
@@ -103,6 +103,9 @@ mehr.
 | **F-RW-11** | *(RW-01, aus AP5)* **`Lizenzen.md` 3a sagte, phpseclib werde „nur vom SFTP-Adapter" geladen**, und führte constant_time_encoding nur als Voraussetzung von phpseclib. Seit Web 20.42.0 lädt `totp_lib.php` den Lader und nutzt Base32 daraus; AP5 hatte es nicht nachgetragen. Ebenso nannte `Technik.md` 3 „zweiundzwanzig" Proben ohne die Zweitfaktorprobe | berichtigt mit RW-01: drei Verwender des Laders, 24 Proben (gezählt mit `proben.sh --liste`) |
 | **F-RW-12** | *(RW-01, Prüfmittel)* **Ein Ed25519-SPKI fällt schon an der Formregel**, nicht an der Kurvenprüfung: 60 statt 124 Zeichen, `RW_OEFFENTLICH_RE` verlangt 100 bis 200. Die Probe hätte damit die Kurvenprüfung für Ed25519 nie erreicht | die Probe ruft `rw_oeffentlich_laden()` zusätzlich ohne die Regel; Gegenprobe (Kurvenprüfung heraus) → 3 rot |
 | **F-RW-13** | *(RW-01, aus P5c/AP5)* Die Bemerkung zur Zweitfaktorprobe in `pruefablauf.json` sagte noch „setzt den Demo-Bestand einmal zurück" — seit F-P5c-117 falsch | berichtigt |
+| **F-RW-14** | *(RW-02)* **Auf der Startseite eines Kontos ohne Diensttag entstand kein Paar.** E-RW-02 setzt auf den Vormerkfach-Weg in `unlock.js`; das Fach löst aber erst eine Seite auf, die den Inhaltsschlüssel BRAUCHT, und `index.php` braucht ihn nur, wenn es einen Tag zu zeigen gibt. Gemessen mit dem ersten Lauf des Bedienwegs: Anmeldung → `index.php` → Fach belegt, Paar **0 → 0**; erst `suche.php` legte es an. Gerade die Konten der BetreiberInnen haben oft keine Einsätze — für sie ist der Rückweg gedacht (E-RW-08) | `unlock.js` löst das Fach bei `RW_STAND === 'fehlt'` nach dem Laden selbst auf, still und ohne Dialog, über denselben einen Lauf wie `ensureContentKey()` (sonst liefe die stille KDF-Anhebung zweimal mit demselben alten Token). Danach **0 → 1** auf `index.php`. Nebenwirkung, gewollt: Die KDF-Anhebung läuft für solche Konten ebenfalls gleich nach der Anmeldung |
+| **F-RW-15** | *(RW-02, aus AP5)* **`tools/proben/LIESMICH.md` nannte „Zweiundzwanzig" Proben**, es sind 24. F-RW-11 hat `Technik.md` 3 berichtigt und die LIESMICH übersehen; bemerkt während des RW-01-Prüfstands, als der Baum nicht mehr angefasst werden durfte | berichtigt mit RW-02 |
+| **F-RW-16** | *(RW-02, Prüfmittel)* **„10 falsche Token → Sperre" lässt sich am Endpunkt nicht erklopfen**, ohne die Sandbox auszusperren: `rate_misserfolg('login', $email)` zählt immer auch die ADRESSE (`rate_merkmale()`), und zehn Fehlversuche sperrten jede Anmeldung von 127.0.0.1 für 15 Minuten — den Rest des Prüfstands eingeschlossen | der Bedienweg misst, dass ein Fehlversuch unter dem Kontomerkmal zählt, setzt die Sperre dann von Hand und erwartet 429; die Zeilen des Topfs `login` stellt er danach wieder her. Die Leiter selbst misst die Ratenprobe an der Bibliothek |
 
 ---
 
@@ -319,6 +322,15 @@ Code ändert `WEB_VERSION` ohnehin, auch jeder mit Migration. Die Absicht von
 E-RW-11 bleibt: einmal je Stand, nicht je Seitenaufruf (Probe A6: zweimal
 gefragt, einmal getestet).
 
+**E-RW-17 — `RW_STAND` fragt `ui_krypto_bootstrap()`, nicht `auth_guard.php`**
+(RW-02, ohne Frage; führt E-RW-05 aus). E-RW-05 und 3.4 nennen den
+Rückfall-SELECT in `auth_guard.php`. Die Wache läuft aber bei jeder Anfrage,
+auch bei jedem API-Aufruf, und gebraucht wird der Wert nur auf den Seiten,
+die das Rüstzeug der Verschlüsselung anfordern. `rw_zustand()` in
+`rueckweg_lib.php` fragt deshalb dort, mit demselben stillen Rückfall
+(`'spalten'`), und liefert der Karte zugleich das Datum. Die Absicht von
+E-RW-05 bleibt: Fehlen die Spalten, schreibt der Browser nicht an.
+
 ---
 
 ## 3. Bauplan
@@ -521,7 +533,8 @@ RW-01 liegt im Unterschied zu `main`).
   (Zweitfaktorprobe, Teil 6).
 - Register **0 über der Decke** (der Endpunkt ruft `EdApi.postJson()`);
   Textprobe **0 neue**; Rollenprobe grün mit erweiterter Matrix (Endpunkt je
-  Rolle: alle vier 200 mit Token, Demo 403 bei `ersetzen`).
+  Rolle: alle vier 200 mit Token; das Demo-Konto misst der Bedienweg, 403 mit
+  und ohne `ersetzen` nach E-RW-15).
 
 ### RW-03 — Der Rückweg am Code-Schritt (E-RW-01, -04, -08, -12, -13, -14)
 

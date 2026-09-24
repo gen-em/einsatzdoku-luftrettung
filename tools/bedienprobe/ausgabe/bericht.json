@@ -639,6 +639,18 @@
       "bemerkung": ""
     },
     {
+      "name": "einstellungen-profil-rueckweg",
+      "paket": "RW-02",
+      "punkt": "E-RW-02",
+      "soll": "Paar 0 → 1 (angelegt +1, Mails +0), zweite Anmeldung unverändert; ohne Token 403, falsches Token 403, vorhanden 409, fremde Kurve 400, Fehlversuch zählt, Sperre 429; Karte „eingerichtet\", Erneuern mit Passwort (erneuert +1, Mails +1); Demo 403/403, kein Paar",
+      "ist": "Paar 0 → 1 (RW_STAND „fehlt\"), angelegt +1, Mails +0 · privater Teil edk1: · zweite Anmeldung unverändert (RW_STAND „da\") · ohne Token 403, falsches Token 403, vorhanden 409, fremde Kurve 400, Paar unverändert · Topf login: 2 Fehlversuch, Sperre → 429 · Karte „eingerichtet\", Knopf 1 · falsches Passwort: „Das Passwort ist nicht korrekt.\", nichts gesendet · erneuert: neuer Wert, erneuert +1, Mails +1, Meldung da · Demo: RW_STAND „demo\", rueckweg.js 0, ohne/mit ersetzen 403/403, 0 Paare",
+      "breite": 1280,
+      "eingabeart": "zeiger",
+      "bedienhoehe": 36,
+      "ok": true,
+      "bemerkung": ""
+    },
+    {
       "name": "mr-oeffner-markiert",
       "paket": "AP4",
       "punkt": "MR-01",

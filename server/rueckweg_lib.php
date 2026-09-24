@@ -38,6 +38,11 @@ declare(strict_types=1);
  * aus einem Browser (E-RW-11); `rw_verfuegbar()` merkt sich das Ergebnis je
  * Fassung und Plattform in `app_state` und schaltet den Weg. Ohne die
  * Spalten (vor `update.php`) ist der Weg stumm — `rw_spalten_da()`.
+ *
+ * DAS PAAR ENTSTEHT IM BROWSER (RW-02, E-RW-02): still nach der Anmeldung
+ * (`assets/unlock.js`, wenn `rw_zustand()` „fehlt" sagt) oder über den Knopf
+ * „Rückweg erneuern" (`assets/rueckweg.js`); abgelegt wird es über
+ * `api/rueckweg_anlegen.php`, nur mit dem Nachweis des Passworts.
  */
 
 require_once __DIR__ . '/db.php';
@@ -240,4 +245,40 @@ function rw_spalten_da(?PDO $pdo = null): bool
         $da = db_hat_spalte($pdo ?? db(), 'users', 'rw_seit');
     }
     return $da;
+}
+
+/**
+ * Der Stand des Paars eines Kontos (RW-02; E-RW-02, -05, -07, -15).
+ *
+ *   'da'       das Konto hat ein Paar; `seit` sagt, seit wann (UTC)
+ *   'fehlt'    es hat keins — der Browser legt nach der Anmeldung eins an
+ *   'spalten'  die Migration steht aus; der Browser tut nichts
+ *   'demo'     das Demo-Konto; es bekommt keins (E-RW-15)
+ *
+ * EIN SELECT MIT RÜCKFALL, KEINE VORABFRAGE. `information_schema` bei jedem
+ * Seitenaufbau zu fragen kostete einen Umlauf für einen Zustand, den es nach
+ * dem ersten `update.php` nicht mehr gibt (Muster `auth_guard.php`). Der
+ * Rückfall ist still, wie beim Tor des Zweitfaktors dort: Er meldete sonst
+ * bei jeder Seite bis zur Migration dasselbe.
+ *
+ * `$pdo` nimmt die Probe, um den Rückfall ohne zurückgebaute Spalten zu
+ * messen; die Anwendung ruft ohne.
+ *
+ * @return array{stand: string, seit: ?string}
+ */
+function rw_zustand(int $userId, ?PDO $pdo = null): array
+{
+    require_once __DIR__ . '/demo_lib.php';
+    if (demo_ist_demo($userId)) { return ['stand' => 'demo', 'seit' => null]; }
+    try {
+        $st = ($pdo ?? db())->prepare('SELECT rw_oeffentlich IS NOT NULL, rw_seit
+                                         FROM users WHERE id = ?');
+        $st->execute([$userId]);
+        $z = $st->fetch(PDO::FETCH_NUM);
+    } catch (Throwable) {
+        return ['stand' => 'spalten', 'seit' => null];
+    }
+    return $z !== false && (int)$z[0] === 1
+        ? ['stand' => 'da', 'seit' => $z[1] !== null ? (string)$z[1] : null]
+        : ['stand' => 'fehlt', 'seit' => null];
 }

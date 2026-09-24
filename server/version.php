@@ -7491,5 +7491,17 @@ declare(strict_types=1);
  *   sagt mit einem Selbsttest gegen einen festen Browser-Vektor, ob die
  *   Anlage pruefen kann. Betrieb → Status zeigt es als Zeile
  *   „Rueckweg-Pruefung".
+ *
+ * 20.44.0 — DER RUECKWEG, DAS PAAR ENTSTEHT (Konzept RW, RW-02). Nebenstufe
+ *   ohne Migration. Nach der Anmeldung legt der Browser still ein
+ *   Schluesselpaar an (WebCrypto, P-256), verpackt den privaten Teil mit dem
+ *   Inhaltsschluessel und schickt beides mit dem Anmelde-Token an
+ *   `api/rueckweg_anlegen.php` — einmal je Konto, nicht im Demo-Konto. Die
+ *   Karte „Zweitfaktor" zeigt die dritte Zeile, „Rueckweg erneuern" ersetzt
+ *   mit dem Passwort, Protokoll und Mail. `unlock.js` loest das Vormerkfach
+ *   dafuer auch dort auf, wo keine Seite den Schluessel braucht: Die
+ *   Startseite eines Kontos ohne Diensttag tat es nie, und das sind gerade die
+ *   Konten der BetreiberInnen (F-RW-14). Benutzt wird das Paar erst mit
+ *   RW-03, am Code-Schritt.
  */
-const WEB_VERSION = '20.43.0';
+const WEB_VERSION = '20.44.0';

@@ -78,8 +78,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       Wiederherstellungscodes gehasht (P5c/AP5, 4.99q)
 │   ├── rueckweg_lib.php   Der Rückweg beim Zweitfaktor über den
 │   │                       Wiederherstellungsschlüssel: ECDSA-Prüfung
-│   │                       (phpseclib), Nachricht, Selbsttest mit Marke
-│   │                       (Konzept RW, 4.99q)
+│   │                       (phpseclib), Nachricht, Selbsttest mit Marke,
+│   │                       Stand des Paars je Konto (rw_zustand(); Konzept
+│   │                       RW, 4.99q)
 │   ├── zweitfaktor.php    Das Einrichtungstor für Pflichtrollen, in der
 │   │                       Anmeldehülle (E-P5c-61)
 │   ├── zweitfaktor_teile.php  QR, Geheimnis, Codefeld und Codeliste — EIN
@@ -480,7 +481,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      adminbackup_freigabe.php (freigegebenes Backup für die NutzerIn) ·
 │   │                      kdf_upgrade.php (stille Anhebung der Rundenzahl) ·
 │   │                      pat_anheben.php (stille Anhebung des Notiz-Altbestands
-│   │                      in den verschlüsselten Block, ab Web 19.0.0 — siehe 4.98d)
+│   │                      in den verschlüsselten Block, ab Web 19.0.0 — siehe 4.98d) ·
+│   │                      rueckweg_anlegen.php (das Schlüsselpaar des Rückwegs
+│   │                      ablegen, nur mit Passwortnachweis; Konzept RW, 4.99q)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
 │   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
@@ -505,7 +508,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      dialog.js (öffnet Dialoge, die im Markup stehen, und füllt sie
 │   │                       aus `data-w-*` des öffnenden Knopfes — ein Dialog für viele Zeilen),
 │   │                      symbol.js (edSymbol() — dieselbe Zeichenkette wie ui_symbol()
-│   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code)
+│   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code),
+│   │                      rueckweg.js (EdRueckweg: das Schlüsselpaar des Rückwegs
+│   │                       erzeugen, verpacken, senden — Konzept RW, 4.99q)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
 │   │                      qrcode.js — qrcode-generator 2.0.4, MIT (nur die Modulmatrix
@@ -598,8 +603,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      Prüfwerkzeug (E-P5c-87). `probekonto.mjs` legt
 │   │                      ein Konto mit bekanntem Passwort an, für Wege,
 │   │                      die weder Prüf- noch Demo-Konto brauchen können
-│   │                      (Zweitfaktor einrichten); es liegt neben `wege/`,
-│   │                      weil der Läufer dort jede Datei als Wegdatei lädt
+│   │                      (Zweitfaktor einrichten) — seit Konzept RW auch
+│   │                      eines MIT Schlüsselhülle (`passwortSetzen()`, über
+│   │                      Einladung und `pw_handling.php` im Browser); es
+│   │                      liegt neben `wege/`, weil der Läufer dort jede
+│   │                      Datei als Wegdatei lädt
 │   ├── zweitfaktor/       das Prüfkonto mit bekanntem Geheimnis
 │   │                      (`pruefkonto.php`) und EIN Code-Rechner je Sprache
 │   │                      (`totp.php`, `totp.mjs`, `totp.py`) mit gemeinsamem
@@ -5051,6 +5059,15 @@ betreibt, sollte das wissen und den Datenbankzugang entsprechend behandeln.
 Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
 verschlüsselten Block.
 
+**Unter demselben Inhaltsschlüssel liegt seit Web 20.44.0 der private Teil
+des Rückweg-Paars** (`users.rw_privat`, `edk1:`, Konzept RW, 4.99q) — keine
+Patientenangabe, sondern Schlüsselmaterial, aber mit derselben Zusage: Der
+Server kennt den Schlüssel nicht und kann ihn nicht öffnen. Der öffentliche
+Teil (`rw_oeffentlich`) steht im Klartext, weil er öffentlich ist; aus ihm
+folgt nichts über den Block. Wie `pat_wrap_rc` hängt `rw_privat` **nicht** am
+Server-Anteil (`RW_PRIVAT_RE` weist `edka1:` ab), weil er mit dem
+Wiederherstellungsschlüssel allein aufgehen muss.
+
 #### Klartext-Reste außerhalb der Datenbank (Backlog Nr. 133, K-13)
 
 Drei Stellen, an denen geschützte oder halbgeschützte Angaben **vorübergehend
@@ -7218,6 +7235,7 @@ Seite leitet nur auf `admin_installation.php` weiter.
 | Demo-Konto: anlegen | `POST admin_demo.php action=demo_anlegen` | 403 | 403 | durch | durch |
 | Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch |
 | Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch |
+| Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch |
 <!-- rollenprobe:ende -->
 
 **Daneben prüft die Probe Wirkungen**, denn eine Zelle `durch` sagt nur,
@@ -7335,8 +7353,36 @@ Deploy oder einem neuen PHP/OpenSSL beim Hoster, nicht bei jedem Aufruf.
 Betrieb → Status zeigt es als Zeile „Rückweg-Prüfung" (blau „prüft" mit Weg
 und Dauer — über openssl rund 20 ms je Prüfung, davon 19 für das Laden des
 Schlüssels in reinem PHP; ohne openssl rund 170 ms —, orange
-„abgeschaltet", wenn der Test scheitert). **Noch fehlen** das Entstehen des
-Paars und der Weg am Code-Schritt; bis dahin: Codes und Verwaltung.
+„abgeschaltet", wenn der Test scheitert).
+
+**Seit Web 20.44.0 (RW-02) entsteht das Paar** — im Browser, still nach der
+Anmeldung, für jedes Konto mit Inhaltsschlüssel außer dem Demo-Konto
+(E-RW-02, -15). `ui_krypto_bootstrap()` liefert `RW_STAND` (`rw_zustand()`:
+`'da'`, `'fehlt'`, `'spalten'` vor `update.php`, `'demo'`) und nur bei
+`'fehlt'` die Datei `assets/rueckweg.js`. `unlock.js` merkt sich beim
+Auflösen des Vormerkfachs das Anmelde-Token (nach einer stillen Anhebung das
+neue) und gibt es, sobald der Inhaltsschlüssel da ist, mit ihm an
+`EdRueckweg.anlegen()`: WebCrypto erzeugt ein Paar auf P-256, der private
+Teil (PKCS8) wird mit `EdCrypto.encrypt(ck, …)` zu `edk1:`, beides geht an
+`api/rueckweg_anlegen.php`. **Das Vormerkfach löst `unlock.js` dafür selbst
+auf**, wenn ein Paar fehlt — auch auf einer Seite, die den Schlüssel nicht
+braucht (F-RW-14: Die Startseite eines Kontos ohne Diensttag löste es nie);
+still, ohne Entsperrdialog, und über denselben einen Lauf wie
+`ensureContentKey()`, damit die stille KDF-Anhebung nicht zweimal läuft. Der
+Endpunkt verlangt Formular-Token **und** Anmelde-Token (Topf `login`, wie
+`schluessel_erneuern.php`), prüft den öffentlichen Teil auf Form und Kurve,
+den privaten auf `RW_PRIVAT_RE`, weist das Demo-Konto ab (403) und ein
+vorhandenes Paar ohne `ersetzen` (409; die Bedingung steht im `UPDATE`
+selbst). Protokoll `rueckweg_angelegt`, ohne Mail. **„Rückweg erneuern"**
+in der Karte „Zweitfaktor" (nur mit eingeschaltetem Zweitfaktor und
+vorhandenem Paar) fragt das Passwort: `EdSchluessel.oeffnen()` — die Schritte
+1 bis 3 der Schlüsselerneuerung samt Wache gegen `pat_key_check`, seit RW-02
+als eigene Funktion — liefert Inhaltsschlüssel und Token, dann ersetzt
+`EdRueckweg.erneuern()`: Protokoll `rueckweg_erneuert`, Mail
+`rueckweg_erneuert`. Beim Ausschalten des Zweitfaktors bleibt das Paar liegen
+(E-RW-06); der Demo-Reset leert es in `demo_zweitfaktor_leeren()`.
+Konto-Backup und Freigabe tragen es nicht (E-RW-09). **Noch fehlt** der Weg am
+Code-Schritt (RW-03); bis dahin: Codes und Verwaltung.
 
 **Der Bus-Faktor** (E-P5c-16, -56): Die Zeile „Verwaltungskonten" auf Betrieb
 → Status zählt **handlungsfähige** Konten — `status = 'aktiv'` und ein
@@ -7360,7 +7406,11 @@ Bus-Faktor samt der Tabelle seiner Lagen. Dazu zwei Bedienwege
 (`tools/bedienprobe/wege/zweitfaktor.mjs`: QR-Code mit jsQR gelesen gleich
 der angezeigten Adresse; `wege/einstellungen_profil.mjs`: einschalten,
 falscher, wiederholter und richtiger Code, Vormerkfach nach dem Abbruch
-leer).
+leer). Für den Rückweg: `bash tools/proben/proben.sh rueckweg` (Signaturen,
+Selbsttest, Marke, `rw_zustand()` in vier Lagen, Kontopaket ohne `rw_`), die
+Rollenprobe (jede Rolle erreicht `api/rueckweg_anlegen.php` und legt ab) und
+der Bedienweg `wege/einstellungen_profil_rueckweg.mjs` (Paar entsteht beim
+Anmelden, Endpunkt weist ab, Karte, Erneuern, Demo-Konto ohne Paar).
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 

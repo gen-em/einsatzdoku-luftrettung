@@ -23,7 +23,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
-const WURZEL = process.env.ED_WURZEL || join(HIER, '..', '..');
+export const WURZEL = process.env.ED_WURZEL || join(HIER, '..', '..');
 
 export function php(code) {
   return execFileSync('php', ['-r', 'require "server/db.php"; ' + code],
@@ -67,4 +67,28 @@ export async function passwortSchicken(s, basis, adresse, passwort) {
   await s.fill('input[name="email"]', adresse);
   await s.fill('input[name="password"]', passwort);
   await s.click('#loginform button[type="submit"]');
+}
+
+/** Ein Konto MIT Schlüsselhülle (Konzept RW, RW-02) — über die Einladung
+ *  und `pw_handling.php`, im Browser, wie jedes echte. Wege, die einen
+ *  Inhaltsschlüssel brauchen (das Paar des Rückwegs verpackt seinen privaten
+ *  Teil damit), können `probekontoAnlegen()` nicht nehmen: Dessen Konten
+ *  haben keine Hülle. Gibt Nummer und Wiederherstellungsschlüssel zurück. */
+export async function passwortSetzen(s, basis, adresse, passwort, name = 'Bedienprobe') {
+  probekontoRaeumen(adresse);
+  const a = JSON.parse(php(`require_once "server/konto_lib.php";
+    echo json_encode(konto_anlegen(${JSON.stringify(adresse)}, ${JSON.stringify(name)},
+                                   "user", "einladung"));`));
+  await s.goto(`${basis}/pw_handling.php?token=${a.token}`, { waitUntil: 'domcontentloaded' });
+  await s.fill('#pw1', passwort);
+  await s.fill('#pw2', passwort);
+  await s.click('#gobtn');
+  await s.waitForSelector('#rcbox:not([hidden])', { timeout: 60000 });
+  const rc = ((await s.locator('#rccode').textContent()) || '').trim();
+  await s.check('#rcok');
+  await Promise.all([
+    s.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
+    s.click('#gobtn'),
+  ]);
+  return { id: Number(a.id), rc };
 }

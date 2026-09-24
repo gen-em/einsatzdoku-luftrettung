@@ -281,6 +281,20 @@ if ($demo === null) {
     demo_zweitfaktor_leeren($pdo, $demo);
     $z = $pdo->query("SELECT totp_seit IS NULL AND totp_schritt IS NULL FROM users WHERE id = $demo")->fetchColumn();
     pruefe((int)$z === 1, 'demo_zweitfaktor_leeren(): totp_seit und totp_schritt leer');
+    /* DAS PAAR DES RÜCKWEGS (Konzept RW, RW-02, E-RW-15): an derselben
+     * Stelle geleert. Gestellt mit Unsinn in allen drei Spalten — geprüft
+     * wird das Leeren, nicht die Form. Ohne die Spalten (vor `update.php`)
+     * ist der Fall nicht gemessen und rot, statt still übersprungen. */
+    if (db_hat_spalte($pdo, 'users', 'rw_seit')) {
+        $pdo->prepare("UPDATE users SET rw_oeffentlich = 'probe', rw_privat = 'edk1:probe',
+                              rw_seit = UTC_TIMESTAMP() WHERE id = ?")->execute([$demo]);
+        demo_zweitfaktor_leeren($pdo, $demo);
+        $z = $pdo->query("SELECT (rw_oeffentlich IS NULL) + (rw_privat IS NULL) + (rw_seit IS NULL)
+                            FROM users WHERE id = $demo")->fetchColumn();
+        pruefe((int)$z === 3, 'demo_zweitfaktor_leeren(): das Paar des Rückwegs leer', "$z von 3 Spalten NULL");
+    } else {
+        pruefe(false, 'demo_zweitfaktor_leeren(): das Paar des Rückwegs', 'Spalten rw_* fehlen — nicht gemessen');
+    }
 }
 $rf = new ReflectionFunction('demo_zuruecksetzen');
 $rumpf = implode('', array_slice(file((string)$rf->getFileName()), $rf->getStartLine() - 1,

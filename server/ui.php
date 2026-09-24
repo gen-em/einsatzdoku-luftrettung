@@ -3059,7 +3059,8 @@ function ui_tabellen_bootstrap(): void
  *
  * VORAUSSETZUNG: auth_guard.php ist geladen. Von dort kommen $patWrapPw,
  * $patKeyCheck, $kdfSalt, $kdfIter und — seit S10 — $kontoAnteile,
- * $anteilKennung und $anteilStand; KDF_ITER_ZIEL kommt aus db.php.
+ * $anteilKennung und $anteilStand; KDF_ITER_ZIEL kommt aus db.php. Seit
+ * RW-02 auch $userId, für RW_STAND (Konzept RW).
  *
  * DIE DREI S10-KONSTANTEN STEHEN IMMER, wie CSRF und aus demselben Grund
  * (Backlog Nr. 136, Fund F-9a-01): Ein Schalter, den drei von sieben Seiten
@@ -3101,6 +3102,22 @@ function ui_krypto_bootstrap(array $o = []): void
     $skripte = $o['skripte'] ?? ['assets/crypto.js', 'assets/keyguard.js', 'assets/unlock.js'];
     if (!empty($o['guete'])) { $skripte[] = 'assets/pwquality.js'; }
 
+    /* DER STAND DES PAARS FÜR DEN RÜCKWEG (Konzept RW, RW-02; E-RW-02, -05,
+     * -15): 'da', 'fehlt', 'spalten' oder 'demo'. Nur bei 'fehlt' legt
+     * `unlock.js` nach der Anmeldung still eins an — und nur dann kommt
+     * `rueckweg.js` mit, vor `unlock.js`.
+     *
+     * HIER GEFRAGT UND NICHT IN `auth_guard.php` (E-RW-17): Die Wache läuft
+     * bei jeder Anfrage, auch bei jedem API-Aufruf; gebraucht wird der Wert
+     * nur auf den Seiten, die dieses Rüstzeug anfordern. */
+    global $userId;
+    require_once __DIR__ . '/rueckweg_lib.php';
+    $rwStand = isset($userId) ? rw_zustand((int)$userId)['stand'] : 'spalten';
+    $unlockAn = array_search('assets/unlock.js', $skripte, true);
+    if ($rwStand === 'fehlt' && $unlockAn !== false) {
+        array_splice($skripte, (int)$unlockAn, 0, ['assets/rueckweg.js']);
+    }
+
     $zeilen = [];
     foreach ($skripte as $s) {
         $zeilen[] = '<script src="' . ui_asset((string)$s) . '"></script>';
@@ -3127,6 +3144,7 @@ function ui_krypto_bootstrap(array $o = []): void
     $zeilen[] = 'const KONTO_ANTEILE  = ' . json_js($kontoAnteile ?? null) . ';';
     $zeilen[] = 'const ANTEIL_KENNUNG = ' . json_js($anteilKennung ?? null) . ';';
     $zeilen[] = 'const ANTEIL_STAND   = ' . json_js($anteilStand ?? 'fehlt') . ';';
+    $zeilen[] = 'const RW_STAND       = ' . json_js($rwStand) . ';';
     /* CSRF IMMER, NICHT AUF ANFRAGE (Backlog Nr. 136, Fund F-9a-01).
      *
      * Bis zum Sofortpaket Sicherheit war das ein Schalter, und drei von sieben

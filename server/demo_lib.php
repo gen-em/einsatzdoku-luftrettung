@@ -364,10 +364,22 @@ function demo_anlegen(): array
  */
 function demo_zweitfaktor_leeren(PDO $pdo, int $id): void
 {
-    if (!db_hat_spalte($pdo, 'users', 'totp_seit')) { return; }
-    $pdo->prepare('UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL,
-                          totp_schritt = NULL WHERE id = ?')->execute([$id]);
-    $pdo->prepare('DELETE FROM totp_codes WHERE user_id = ?')->execute([$id]);
+    if (db_hat_spalte($pdo, 'users', 'totp_seit')) {
+        $pdo->prepare('UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL,
+                              totp_schritt = NULL WHERE id = ?')->execute([$id]);
+        $pdo->prepare('DELETE FROM totp_codes WHERE user_id = ?')->execute([$id]);
+    }
+    /* DAS PAAR DES RÜCKWEGS GEHÖRT MIT DAZU (Konzept RW, RW-02, E-RW-15):
+     * Das Demo-Konto bekommt keins — der Endpunkt weist es ab, und die Seite
+     * fragt gar nicht erst. Steht trotzdem eins da (ein Konto, das erst
+     * nachträglich zum Demo-Konto wurde), räumt es der Reset ab, an
+     * derselben Stelle wie den Zweitfaktor. EIGENE VORABFRAGE: Die Spalten
+     * kommen mit einer anderen Migration, und die eine kann fehlen, wo die
+     * andere schon gelaufen ist. */
+    if (db_hat_spalte($pdo, 'users', 'rw_seit')) {
+        $pdo->prepare('UPDATE users SET rw_oeffentlich = NULL, rw_privat = NULL,
+                              rw_seit = NULL WHERE id = ?')->execute([$id]);
+    }
 }
 
 /**

@@ -1,7 +1,7 @@
 # Klickprobe — Bericht
 
 Lauf gegen `https://127.0.0.1:8443` — 1280 px als Zeigergerät (Sollhöhe 36 px).
-**54 von 54 Wegen erfüllt**, 0 verfehlt.
+**55 von 55 Wegen erfüllt**, 0 verfehlt.
 
 | Weg | Paket | Prüfpunkt | Breite | Soll | Ist | |
 |---|---|---|--:|---|---|---|
@@ -54,6 +54,7 @@ Lauf gegen `https://127.0.0.1:8443` — 1280 px als Zeigergerät (Sollhöhe 36 p
 | `da-tag-ohne-standort` | AP3 | DA-03 | 1280 px (36) | Standortfeld leer oder fehlend · 0 Rollenfelder · Transportziel mit Koordinate, aber ohne Vorschlagsliste | **base_name null · Art „Veranstaltung, bodengebunden" · Zeile „Standort" in der Leseansicht: false (Zeilen: Rettungsmittel, Notizen) · 0 Rollenfelder · Transportziel im Einsatz gefunden: true · Karte: true** | erfüllt |
 | `da-bergwachtkarte-ohne-besatzung` | AP3 | DA-04 | 1280 px (36) | Karte „Bergwacht" vorhanden (AP0: die Fähigkeit darf dort geführt werden), Besatzungskarte ohne Anlegen-Weg (Typ Bergwacht hat keine Rollen-Vorlagen) | **Bergwacht-Karte sichtbar: true mit 3 Bereitschaften · Besatzung anlegbar: false · 1 Rettungsmittel am Standort** | erfüllt |
 | `einstellungen-profil-zweitfaktor` | P5c-AP5 | E-P5c-53 | 1280 px (36) | eingeschaltet mit 10 Codes; danach falscher Code und derselbe Code abgewiesen, der nächste → Startseite; nach „Zurück zur Anmeldung" Vormerkfach belegt → leer | **eingeschaltet, 10 Codes · falscher Code abgewiesen · derselbe Code abgewiesen (im Fenster, Abstand 1 Schritt) · nächster Code → index.php · Vormerkfach belegt → leer** | erfüllt |
+| `einstellungen-profil-rueckweg` | RW-02 | E-RW-02 | 1280 px (36) | Paar 0 → 1 (angelegt +1, Mails +0), zweite Anmeldung unverändert; ohne Token 403, falsches Token 403, vorhanden 409, fremde Kurve 400, Fehlversuch zählt, Sperre 429; Karte „eingerichtet", Erneuern mit Passwort (erneuert +1, Mails +1); Demo 403/403, kein Paar | **Paar 0 → 1 (RW_STAND „fehlt"), angelegt +1, Mails +0 · privater Teil edk1: · zweite Anmeldung unverändert (RW_STAND „da") · ohne Token 403, falsches Token 403, vorhanden 409, fremde Kurve 400, Paar unverändert · Topf login: 2 Fehlversuch, Sperre → 429 · Karte „eingerichtet", Knopf 1 · falsches Passwort: „Das Passwort ist nicht korrekt.", nichts gesendet · erneuert: neuer Wert, erneuert +1, Mails +1, Meldung da · Demo: RW_STAND „demo", rueckweg.js 0, ohne/mit ersetzen 403/403, 0 Paare** | erfüllt |
 | `mr-oeffner-markiert` | AP4 | MR-01 | 1280 px (36) | 5 von 5 Öffnern: Fläche --orange-hell, Schrift --orange-tief, aria-expanded=true; nach dem Schließen alle zurück und der Fokus wieder am Knopf | **5 von 5 Öffnern markiert und sauber zurückgestellt** | erfüllt |
 | `mr-blatt-faehrt-auf` | AP4 | MR-02 | 1280 px (36) | bei 390 px: Fahrtdauer > 0; kurz nach dem Öffnen unterwegs (nicht schon oben), danach Unterkante = Fensterunterkante; nach der Rückfahrt hidden=true | **Fahrtdauer 240 ms · unterwegs 389 px unter der Ruhelage · offen Unterkante 900/900 · während der Rückfahrt hidden=false · danach hidden=true** | erfüllt |
 | `mr-schreibtisch-ohne-fahrt` | AP4 | MR-03 | 1280 px (36) | bei 1280 px: Fahrtdauer 0 ms; nach Escape ist es binnen 60 ms hidden (nicht erst nach der Fahrtdauer) | **Fahrtdauer 0 ms · offen hidden=false, Fläche rgb(255, 235, 214) · 60 ms nach Escape hidden=true** | erfüllt |

@@ -753,9 +753,22 @@ Verwaltung zurück** (11.1) — die BetreiberIn für alle Rollen, ein Admin nur
 für NutzerInnen, und niemand am eigenen Konto. Du bekommst dann eine Mail, und
 der Schritt steht im Protokoll.
 
+**Rückweg mit dem Wiederherstellungsschlüssel** (seit Web 20.44.0). Bei
+eingeschaltetem Zweitfaktor zeigt die Karte eine dritte Zeile: **„eingerichtet"**
+mit Datum, oder **„ab der nächsten Anmeldung"**. Du musst dafür nichts tun —
+beim Anmelden legt dein Browser still ein Schlüsselpaar an und verschließt
+dessen geheime Hälfte mit deinem Schlüssel, den nur du öffnen kannst; der
+Server bekommt davon nichts, womit er etwas öffnen könnte. Mit ihm soll künftig
+der **Wiederherstellungsschlüssel vom Notfallblatt** genügen, wenn Handy und
+Codes fehlen. **„Rückweg erneuern"** legt ein neues Paar an und fragt dafür
+dein Passwort; das Notfallblatt bleibt gültig, und du bekommst eine Mail —
+erneuert ihn jemand anderes an deinem Konto, erfährst du es so. Das
+Demo-Konto hat keinen Rückweg.
+
 **Handy weg und die Codes auch?** Dann setzt die Verwaltung den Zweitfaktor
 zurück; danach meldest du dich nur mit dem Passwort an und richtest ihn neu
-ein. Einen Weg ohne die Verwaltung gibt es nicht.
+ein. Den Weg über den Wiederherstellungsschlüssel bereitet die Karte vor (die
+Zeile „Rückweg" oben); an der Anmeldung steht er noch nicht.
 
 **Nach einem Umzug der Anlage auf einen anderen Serverschlüssel** — etwa nach
 einer Wiederherstellung aus einem Komplett-Backup — lässt sich das Geheimnis
@@ -4109,7 +4122,8 @@ Unter **Verwaltung → Protokoll** steht, was im Betrieb geschehen ist: Konten
 angelegt, freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert;
 Setz-Links ausgestellt; Bestätigungen erneut gesendet; Zweitfaktor
 eingeschaltet, ausgeschaltet, zurückgesetzt, Codes erneuert und
-Anmeldungen mit einem Wiederherstellungscode; Geräte umgeschaltet
+Anmeldungen mit einem Wiederherstellungscode; der Rückweg mit dem
+Wiederherstellungsschlüssel eingerichtet oder erneuert; Geräte umgeschaltet
 oder entkoppelt; Wartung gefahren;
 Migrationen ausgeführt; Backups erzeugt, geladen, eingespielt; Post
 versandt; Jobs gelaufen.

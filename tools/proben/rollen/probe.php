@@ -62,9 +62,16 @@ declare(strict_types=1);
  * nach einem Abbruch: Konten (Geräte und Setz-Token fallen mit), Sitzungs-
  * dateien, ihre Protokolleinträge, die Mails der Probe in der Warteschlange.
  *
+ * API-ENDPUNKTE SEIT KONZEPT RW (RW-02): Ihre Token-Ablehnung ist JSON
+ * (`{"error":"csrf"}`, `csrf_check()` in `auth_guard.php`), nicht die Seite
+ * mit dem Satz — `messen()` erkennt beide. Der erste ist
+ * `api/rueckweg_anlegen.php`, den alle vier Rollen erreichen; dazu die
+ * Wirkung: Jede Rolle legt mit gültigem Formular- UND Anmelde-Token ein
+ * Paar ab.
+ *
  * WAS SIE NICHT PRÜFT: ob eine Handlung mit gültigem Token gelingt, außer
  * den Wirkungen oben (das tun Bedienwege und die Proben der Sache), und die
- * API-Endpunkte (eigene Tore, eigene Proben).
+ * übrigen API-Endpunkte (eigene Tore, eigene Proben).
  *
  * Aufruf:
  *   php tools/proben/rollen/probe.php [basisadresse]   (Vorgabe http://127.0.0.1:8080)
@@ -106,17 +113,21 @@ if ($zeilen === [] || $rollen === []) { fwrite(STDERR, "Die Matrix ist leer.\n")
 
 /* ---- HTTP und Sitzungen (Muster: tools/proben/wartung/) -------------------- */
 
-function hole(string $pfad, ?string $sid, ?array $koerper = null): array
+/** `$json`: der Rumpf als JSON mit dem Formular-Token in `X-CSRF` — so,
+ *  wie `EdApi.postJson()` es schickt. */
+function hole(string $pfad, ?string $sid, ?array $koerper = null, ?string $json = null): array
 {
     global $basis;
     $ch = curl_init("$basis/$pfad");
     $kopf = $sid !== null ? ['Cookie: PHPSESSID=' . $sid] : [];
+    if ($json !== null) { $kopf[] = 'Content-Type: application/json'; $kopf[] = 'X-CSRF: ' . $json; }
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => false,
         CURLOPT_FOLLOWLOCATION => false, CURLOPT_HTTPHEADER => $kopf,
         CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '']);
     if ($koerper !== null) {
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($koerper));
+        curl_setopt($ch, CURLOPT_POSTFIELDS,
+                    $json !== null ? (string)json_encode($koerper) : http_build_query($koerper));
     }
     $rumpf = (string)curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -258,7 +269,8 @@ function messen(string $aufruf, array $konto): string
      * „Kein Zugriff" (`ui_abbruch()`), auch die des Tokens — wer zuerst nach
      * dem Rollentor fragte, fände es in jeder Antwort (gemessen: 37 falsche
      * Befunde beim ersten Lauf). Der Satz der Token-Prüfung ist eindeutig. */
-    $token = $antwort['code'] === 403 && str_contains($antwort['rumpf'], 'Ungültiges Formular-Token');
+    $token = $antwort['code'] === 403 && (str_contains($antwort['rumpf'], 'Ungültiges Formular-Token')
+             || (json_decode($antwort['rumpf'], true)['error'] ?? null) === 'csrf');
     if ($art === 'POST') {
         if ($token) { return 'durch'; }
         return $antwort['code'] === 403 ? '403' : 'unerwartet ' . $antwort['code'];
@@ -426,6 +438,36 @@ if ($s === null || $a === null) {
     $r = $bei($zielId, $s, ['action' => 'verifikation']);
     pruef(str_contains($r['rumpf'], 'wartet auf keine Bestätigung') && $bestaetigt($zielId) === 0,
           'Bestätigung an ein aktives Konto: abgewiesen, kein Eintrag');
+}
+
+/* ---- Die Wirkung des Rückwegs: jede Rolle legt ein Paar ab (Konzept RW) ---
+ *
+ * Die Matrixzeile sagt nur, dass jede Rolle den Endpunkt ERREICHT. Hier
+ * gelingt es: gültiges Formular-Token, gültiges Anmelde-Token (die Konten
+ * der Probe bekommen dafür einen bekannten Hash), ein frisch erzeugter
+ * öffentlicher Teil auf P-256. Erwartet: 200 und ein Paar je Rolle. */
+echo "\nRückweg: Paar ablegen je Rolle (Konzept RW, RW-02)\n";
+if (!db_hat_spalte($pdo, 'users', 'rw_seit')) {
+    pruef(false, 'Rückweg je Rolle', 'Spalten rw_* fehlen — nicht gemessen');
+} else {
+    require_once $srv . '/rueckweg_lib.php';
+    $gelungen = 0;
+    foreach ($konten as $rolle => $k) {
+        $tok = bin2hex(random_bytes(32));
+        $pdo->prepare('UPDATE users SET password_hash = ?, rw_oeffentlich = NULL, rw_privat = NULL,
+                              rw_seit = NULL WHERE id = ?')
+            ->execute([password_hash($tok, PASSWORD_DEFAULT), $k['id']]);
+        $spki = (string)preg_replace('/-----[^-]+-----|\s/', '',
+            \phpseclib3\Crypt\EC::createKey(RW_KURVE)->getPublicKey()->toString('PKCS8'));
+        $r = hole('api/rueckweg_anlegen.php', $k['sid'], ['token' => $tok, 'oeffentlich' => $spki,
+                  'privat' => 'edk1:' . base64_encode(random_bytes(160))], $k['csrf']);
+        $da = (int)$pdo->query('SELECT rw_oeffentlich IS NOT NULL FROM users WHERE id = ' . (int)$k['id'])
+                       ->fetchColumn();
+        $ok = $r['code'] === 200 && $da === 1;
+        $gelungen += $ok ? 1 : 0;
+        pruef($ok, "Rückweg ablegen · $rolle", 'HTTP ' . $r['code'] . ', Paar ' . $da);
+    }
+    pruef($gelungen === count($konten), "$gelungen von " . count($konten) . ' Rollen');
 }
 
 echo "\n-> $n Erwartungen, $offen nicht erfüllt\n";
