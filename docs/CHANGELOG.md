@@ -14,6 +14,49 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Der Bestandsriegel (Konzept BR)] — 2026-09-24
+
+Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
+`docs/` und `.github/`, wie bei RP (`CLAUDE.md` 2).
+
+### Neu
+
+- **Der Werkzeugbestand hat einen Riegel.** PK hat den Durchlauf einer
+  Änderung gebaut — Zweigschutz, Prüfbericht, fünf rote Lagen — und den
+  Bestand als Regel gelassen: Anlass-Zeile, fünf Abschnitte, höchstens 40
+  Zeilen. Kein Mittel maß das, und drei Tage nach PK-04 standen die Zahlen
+  darunter. `tools/quelltext/bestand.py` ist die neunte Quelltextprüfung und
+  misst sechs Regeln: die Form **jeder** `LIESMICH.md` unter `tools/`, auch
+  der Unteranleitungen, die PK-04 nie gezählt hat (E-BR-04); eine Anleitung
+  je Ordner; genau eine Zeile, die mit `Anlass:` beginnt und eine
+  Backlog-Nummer nennt, die es gibt (E-BR-07); dass jeder Ordner gerufen
+  wird; keine lose Datei außer `motor.mjs`; und die Anlass-Zeile jeder Probe
+  im Kopfkommentar ihrer Einstiegsdatei. Er misst gegen null, ohne Decke und
+  ohne Ausnahmeliste (E-BR-01) — der Altbestand wird im selben Konzept
+  bereinigt, nicht gestundet.
+- **Er fand beim ersten Lauf 57 Befunde, mehr als die Handzählung im
+  Konzept.** Zehn Anleitungen tragen ihren Anlass als Kürzel (`PS-2`, `B6`,
+  `P0/A3`), mitten in einem Satz oder gar nicht; `tools/erzeugen/` wird aus
+  keiner Kette und keiner Anleitung der Anlage gerufen. Und die eine Probe,
+  die laut Konzept schon eine Anlass-Zeile trug, trug keine: Die Zählung
+  hatte `grep Anlass` gefahren und einen Prüffall mit dem Wort „Anlass" im
+  Text getroffen. Das ist der Grund, warum die Zahl ein Mittel braucht.
+- **Die Selbstprobe baut je Regel einen Fehler ein** — 22 Fälle, davon drei
+  Gegenproben, die grün bleiben müssen (genau 40 Zeilen, `motor.mjs`, eine
+  ignorierte Ausgabe mit einer übergroßen Anleitung). Sie hat beim ersten
+  Lauf einen Fehler im Riegel selbst gefunden: Bei einer Probe, die über eine
+  Funktion startet, nahm er den ersten Aufruf im Rumpf — und hielt damit
+  eine Gegenstelle für die Probe, sobald sie oben stand.
+
+### Geändert
+
+- **`tools/kettenaufrufe/` kennt die Namen der Sammelläufer.** Bis dahin las
+  es die Unterbefehle eines Shell-Werkzeugs nur aus `case "$befehl"` und sah
+  bei `pruefen.sh <name>` und `proben.sh <name>` keinen einzigen Namen — 30
+  Aufrufe, von denen es nur die Schalter prüfte. Jetzt liest es `NAMEN=(…)`
+  und die Schlüssel von `RUF`; ein vertippter Probenname ist ein Befund in
+  Stufe 1 statt ein Fehlschlag im Lauf. Selbstprobe 16 von 16.
+
 ## [Werkzeug: Die Nebenstufe ist grün (Konzept RP)] — 2026-09-23
 
 Konzept RP, Backlog Nr. 292. Keine Versionsstufe: berührt sind nur `tools/`

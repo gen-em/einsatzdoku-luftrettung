@@ -24,6 +24,11 @@
       "aufruf": "bash tools/quelltext/pruefen.sh linkprobe",
       "braucht": "nichts"
     },
+    "bestand": {
+      "aufruf": "bash tools/quelltext/pruefen.sh bestand",
+      "braucht": "nichts",
+      "bemerkung": "Konzept BR (E-BR-08). Haelt jedes Werkzeug unter tools/ gegen Pruefablauf.md 6: fuenf Abschnitte und hoechstens 40 Zeilen in JEDER LIESMICH.md, eine Anlass-Zeile mit Backlog-Nummer je Ordner und je Probe, jeder Ordner gerufen, keine lose Datei ausser motor.mjs. Keine Decke (E-BR-01): Er steht auf null, weil der Altbestand in BR-02 bereinigt wird."
+    },
     "installweiche": {
       "aufruf": "bash tools/quelltext/pruefen.sh installweiche",
       "braucht": "nichts"
@@ -199,6 +204,7 @@
       "vollstaendigkeit",
       "kontraste",
       "linkprobe",
+      "bestand",
       "installweiche",
       "sitzungshaertung",
       "cspprobe",

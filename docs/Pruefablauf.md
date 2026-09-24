@@ -335,7 +335,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `bestand`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
 
 ---
 
@@ -447,6 +447,19 @@ Fehlanläufe und Zahlengeschichte stehen **nicht** hier, sondern in der
 Commit-Nachricht des Pakets, im Backlog als Nummer und im Changelog.
 Dieselbe Regel gilt für die Kommentare in `.github/workflows/`: ein Satz an
 jeder Stelle, die eine Falle beschreibt, die sonst jemand wieder einbaut.
+
+**Seit Konzept BR ist die Form ein Riegel und keine Regel mehr** (E-BR-03,
+-04): `tools/quelltext/` `bestand` hält **jede** `LIESMICH.md` unter
+`tools/`, auch in Unterordnern, an die fünf Abschnitte in dieser
+Reihenfolge und an 40 Zeilen; jeden Ordner direkt unter `tools/` an seine
+eine Anlass-Zeile mit Backlog-Nummer; jede Probe an die Anlass-Zeile im
+Kopfkommentar ihrer Einstiegsdatei. Dazu misst er, dass jeder Ordner
+gerufen wird — `tools/<ordner>/` steht in `pruefablauf.json`, in einem
+Workflow, in `tools/pruefstand/pruefen.sh` oder in `Sandbox-Setup.md` — und
+dass außer `motor.mjs` keine Datei lose unter `tools/` liegt. Er misst gegen
+null, **ohne Decke und ohne Ausnahmeliste** (E-BR-01). Die Anlass-Zeile
+beginnt mit `Anlass:`; eine Zeile, in der das Wort mitten im Satz steht,
+findet man nur, wenn man sie sucht, und zählt deshalb nicht.
 
 *Gemessen am 21.09.2026: 47 Anleitungen mit zusammen 7 206 Zeilen, dazu ein
 Werkzeug ohne Anleitung (`tools/erzeugen/ (wegwerfdomains)`). Die Form wird mit PK-04
@@ -662,6 +675,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde — ohne Schwelle seit PK-04/5e (E-PK-16) |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt` |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen sechs Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die Liste deckt sich mit der Liste der geplanten Änderungen (6.10) |
 

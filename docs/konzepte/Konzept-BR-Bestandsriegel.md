@@ -19,10 +19,11 @@ entsteht mit BR-01. **Zweig der Umsetzung:** `claude/br-bestandsriegel`, von
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — Konzept bestätigt, bereit für die Umsetzung.** Kein Paket begonnen. |
-> | Entschieden | **E-BR-01 bis E-BR-10**, alle von der Betreiberin am 24.09.2026 (Abschnitt 4); Q-BR-01 bis -07 beantwortet, alle wie empfohlen (Abschnitt 5). |
-> | Offen | nichts in BR. **Zwei Zuarbeiten von P5c** (Q-BR-05, -06) — an die P5c-Instanz übergeben am 24.09.2026, Nachtrag dort noch offen. |
-> | Nächstes | **BR-01** in einer Code-Sitzung auf `claude/br-bestandsriegel` |
+> | Stand | **24.09.2026 — Umsetzung läuft** auf `claude/br-bestandsriegel` (von `main` `f4fe4a0`, Konzept per Vorspulen übernommen; der Konzeptzweig ist gelöscht). **BR-01 erledigt** — der Riegel steht und ist **rot mit 57 Befunden**, wie vorgesehen, bis BR-02 den Altbestand bereinigt (Protokoll in Abschnitt 9). |
+> | Entschieden | **E-BR-01 bis E-BR-10**, alle von der Betreiberin am 24.09.2026 (Abschnitt 4); Q-BR-01 bis -07 beantwortet, alle wie empfohlen (Abschnitt 5). **Aus der Umsetzung: E-BR-11 bis -16** (4.1, zur Kenntnis — keine ändert eine Entscheidung der Betreiberin). |
+> | Befunde der Umsetzung | **F-BR-07 bis -11** (2.1). Zwei davon verschieben den Rahmen: Die Handzählung aus Abschnitt 2 war zu grob (F-BR-07: 57 Befunde statt rund 35, **20** Anlass-Zeilen statt 19) — und **P5c ist weiter als angenommen** (F-BR-11: AP2 ist gebaut, E-BR-02 „Merge vor P5c AP2" ist damit überholt; was P5c nach dem Aufnehmen tun muss, ist gemessen). |
+> | Offen | nichts, was BR aufhält. **Zwei Zuarbeiten von P5c** (Q-BR-05, -06) — von P5c als Nachtrag zur Fassung 2 übernommen (E-P5c-86 bis -90, Backlog 295–298 auf dem P5c-Zweig). |
+> | Nächstes | **BR-02** — die 20 Anlass-Zeilen sind nachgeschlagen (Fächerung nach E-BR-10, lesend), Gegenlesung und Setzen stehen aus |
 
 ---
 
@@ -68,6 +69,16 @@ Abschnitt 6.
 **Was hält, und deshalb nicht angefasst wird:** Ausnahmelisten seit PK-05
 unverändert (+0 Zeilen in vier Dateien); keine neuen Ordner, keine neuen
 Workflow-Dateien durch TB oder RP; das Tor selbst (P-PK-29 bis -32).
+
+### 2.1 Befunde der Umsetzung
+
+| Nr. | Was | Folge |
+|---|---|---|
+| F-BR-07 | **Die Handzählung war zu grob — das Mittel findet mehr.** Abschnitt 7 hat es vorhergesagt. Der erste Lauf von `bestand.py` an `f4fe4a0`: **57 Befunde** in sechs Regeln (form 22, anleitung 1, anlass 12, inventur 1, lose 1, probe 20). Alles, was Abschnitt 2 zählt, ist darunter — die vier Anleitungen über 40, die acht Unteranleitungen mit **genau 1 120** Zeilen, `spaltenregister`, `konfig_stellen.php`. Mehr sind es an drei Stellen: (a) **0 von 20** Proben tragen die Anlass-Zeile, nicht 1 — der Treffer in `raten/probe.php` war `pruef('Der erste Anlass reiht ein', …)`, ein Prüffall; (b) **12** Anleitungen ohne gültige Anlass-Zeile, nicht 2 — `bedienprobe` (`PS-2`), `integritaetswache` (`B6`), `stilvergleich` (`P0/A3`) nennen ein Kürzel statt einer Nummer (E-BR-07), `kette`, `messstand`, `referenzdatensatz`, `screenshots`, `uhr-pruefstand` stellen sie mitten in einen Satz, `proben` und `quelltext` haben keine; (c) `tools/erzeugen/` wird aus keiner der vier Quellen gerufen (Inventur). | BR-02 setzt **20** Anlass-Zeilen statt 19; E-BR-10 gilt sinngemäß (je Datei ein Agent). Die zehn zusätzlichen Anleitungen gehören zum seriellen Teil von BR-02. |
+| F-BR-08 | **Die Selbstprobe fand einen Fehler im Riegel selbst.** Bei einer Probe, die über eine Funktion startet (die Versandprobe startet erst ihre Gegenstellen), nahm die erste Fassung den ersten Werkzeugaufruf im Funktionsrumpf — und hielt damit eine Gegenstelle für die Probe, sobald sie oben stand. Im echten `proben.sh` steht die Probe zufällig zuerst; die Selbstprobe stellt die Gegenstelle absichtlich davor. | Behoben: gezählt wird der **eine Aufruf im Vordergrund**; ein Hintergrundauftrag (`… &`) ist eine Gegenstelle. Ist es nicht genau einer, ist das ein Befund. |
+| F-BR-09 | **`kettenaufrufe` sah die Namen der Sammelläufer nicht.** Es las Unterbefehle eines Shell-Werkzeugs nur aus `case "$befehl"`; `quelltext/pruefen.sh` und `proben/proben.sh` verteilen über `case "$fall"` und eine Namensliste. Von **30** Aufrufen mit Namen (28 in `pruefablauf.json`, 2 in den Workflows) prüfte es nur die Schalter — ein vertipptes `pruefen.sh bestnd` wäre erst im Lauf gescheitert. | Behoben in BR-01 („kennt den neuen Aufruf"): liest `NAMEN=(…)`, die Schlüssel von `RUF` und die Zweige von `case "$fall"`. Selbstprobe 13 → **16** Fälle. |
+| F-BR-10 | **`Sandbox-Setup.md` 1 nennt einen Pfad, den es seit PK-04 nicht gibt:** `tools/uhr-bilder/erzeugen.sh` (heute `tools/erzeugen/uhr-bilder.sh`, der Erzeuger, für den ImageMagick und `rsvg-convert` gebraucht werden). Gefunden beim Nachsehen, warum `erzeugen` in der Inventur fehlt. | BR-02 berichtigt den Pfad. Damit steht `tools/erzeugen/` in `Sandbox-Setup.md` — mit Grund, nicht um den Riegel zu bedienen: Die Anlage braucht die zwei Pakete für genau diesen Erzeuger. |
+| F-BR-11 | **P5c ist weiter als in Abschnitt 1 und 6 angenommen.** Auf `claude/p5c-mockups-konzept-4yeomf` ist **AP2 erledigt** (Web 20.39.0, 24.09.2026) — mit der Rollenprobe und einer neuen Protokollprobe unter `tools/proben/`. E-BR-02 („Merge vor P5c AP2") ist damit überholt; der Preis aus Abschnitt 6 fällt einmal an, egal wann BR mergt. **Gemessen** (Riegel gegen den P5c-Stand, 24.09.2026): P5c hat denselben Altbestand wie `main` und darüber **genau zwei eigene Punkte** — `tools/proben/protokoll/probe.php` nennt als Anlass „F-P5c-18 und F-P5c-19" (Befund-Kennungen, E-BR-07), und `tools/screenshots/LIESMICH.md` ist dort auf 321 Zeilen gewachsen, dieselbe Datei, die BR-02 auf die Form bringt (Konflikt, zeilenweise). `tools/proben/rollen/probe.php` trägt ihre Zeile schon in der Form, die BR misst (` * Anlass: Nr. 286 …`). | Keine Änderung an BR. Die zwei Punkte gehen mit dem PR an P5c (Abschnitt 8, Nachtrag). |
 
 ## 3. Arbeitspakete
 
@@ -159,6 +170,41 @@ Abschnitt 5, alle wie empfohlen:
 - **E-BR-10 — Fächerung nur für die 19 Anlass-Zeilen in BR-02** (Q-BR-07),
   je Datei ein Agent, danach Gegenlesung durch die Instanz. Alle anderen
   Pakete und Teile seriell.
+
+### 4.1 In der Umsetzung getroffen
+
+Zur Kenntnis. Keine ändert eine Entscheidung der Betreiberin; jede legt fest,
+was eine Entscheidung offen ließ, damit ein Mittel es messen kann.
+
+- **E-BR-11 — Die Anlass-Zeile gilt je Werkzeug, nicht je Unteranleitung**
+  (BR-01). E-BR-03 (2) sagt „je Ordner direkt unter `tools/`", E-BR-04 hält
+  die Unteranleitungen an die **Form**. Ein Unterteil wie
+  `referenzdatensatz/browser/` hat keinen eigenen Fehler, sondern teilt den
+  des Werkzeugs. Preis: Eine Unteranleitung darf eine Anlass-Zeile tragen,
+  die niemand misst.
+- **E-BR-12 — „Beginnt mit `Anlass:`" heißt: nach Kommentarzeichen und
+  Hervorhebung** (`*`, `//`, `#`, `**`), außerhalb von Codeblöcken. Und die
+  Nummer muss es im Backlog **geben** — schärfer als „nennt": Eine
+  vertippte Nummer ist so wenig ein Anlass wie keine.
+- **E-BR-13 — Der Kopfkommentar einer Probe ist der erste Kommentarblock**
+  nach dem, was jede Datei ihrer Art trägt (`<?php`, `declare(…)`, `#!`,
+  Leerzeilen). Eine Anlass-Zeile weiter unten im Code zählt nicht.
+- **E-BR-14 — Die Einstiegsdatei einer Probe steht im Verteiler `RUF` von
+  `proben.sh`**; bei einer Funktion ist es der eine Aufruf im Vordergrund
+  (F-BR-08). Ein Probenordner ohne Eintrag ist ein Befund — sonst ginge der
+  Riegel still an ihm vorbei (Grundsatz 7).
+- **E-BR-15 — Gelesen wird, was `git add -A` in den Baum legte**
+  (`git ls-files -co --exclude-standard`), wie beim Baum-Hash des
+  Prüfberichts. Eine Ausgabe wie `tools/screenshots/ausgabe/` zählt nicht;
+  sonst hinge die Zahl davon ab, wer zuletzt wo gemessen hat.
+- **E-BR-16 — Buchführung.** Backlog Nr. 293 entsteht in BR-01 unter
+  *Offen*, weil die Anleitung der Quelltextprüfungen sie als Anlass nennt,
+  und wandert in BR-04 nach *Erledigt*. Der Nummernkopf von `Backlog.md`
+  zieht schon in BR-01 nach, auf **304**: P5c hat 294–303 am 24.09.2026 auf
+  seinem Zweig reserviert, und eine Zahl auf einem ungemergten Zweig ist
+  vergeben. Die Changelog-Überschrift beginnt mit `Werkzeug:` — Abschnitt 3
+  sagt „Präfix `Web` … wie RP", und RP hat `Werkzeug:` geschrieben; „wie RP"
+  ist die genauere Angabe.
 
 ## 5. Fragen an die Betreiberin
 
@@ -252,3 +298,45 @@ Dazu, weil es beim Merge sonst rot wird: Jede neue `LIESMICH.md` (etwa
 `tools/proben/rollen/`) hat die fünf Abschnitte aus `Pruefablauf.md` 6.2,
 höchstens 40 Zeilen und eine Zeile `Anlass: Nr. …`; die schon angefasste
 `tools/bedienprobe/LIESMICH.md` bleibt unter 40.
+
+## 9. Umsetzung — Protokoll
+
+### BR-01 Der Riegel — erledigt 24.09.2026
+
+**Gebaut.** `tools/quelltext/bestand.py` (neu): sechs Regeln mit Namen —
+`form`, `anleitung`, `anlass`, `inventur`, `lose`, `probe` —, eine
+Selbstprobe mit 22 Fällen und `--wurzel` für einen anderen Auscheck. Dazu:
+`tools/quelltext/pruefen.sh` (`bestand` in beiden Listen; die
+Selbstprobenschleife startet jetzt über `starter()`, bis dahin fest `php`),
+`tools/quelltext/LIESMICH.md` (neunte Zeile, 9 von 9, 6 von 6),
+`tools/pruefstand/pruefablauf.json` (Probe und Riegel `bestand`),
+`.github/workflows/pruefung.yml` („Quelltext — neun Prüfungen",
+`--riegel "bestand=$q"`), `tools/kettenaufrufe/` (F-BR-09),
+`docs/Pruefablauf.md` 4 (erzeugt), 6.2 und 6.11, `docs/Technik.md`
+(Verzeichnisbaum, Schritte von Stufe 1), `docs/Backlog.md` Nr. 293 und der
+Nummernkopf, `docs/CHANGELOG.md`.
+
+**Gemessen.**
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Selbstprobe des Riegels | `bestand.py --selbstprobe` | **22 Fälle, 0 Fehlschläge** — 19 eingebaute Fehler, jeder als Befund genau seiner Regel; 3 Gegenproben grün (genau 40 Zeilen, ohne `motor.mjs`, ignorierte Ausgabe mit 100 Zeilen); alle sechs Regeln mit mindestens einem Fehler |
+| Selbstproben des Läufers | `pruefen.sh --selbstprobe` | **6 von 6** |
+| Der Altbestand | `bestand.py` an diesem Stand | **57 Befunde, rc 1** — gewollt bis BR-02 |
+| Gegenprobe gegen die Hand | Abschnitt 2 gegen den Lauf | jede Handzahl wiedergefunden; 22 Befunde mehr, jeder einzeln nachgesehen (F-BR-07) |
+| Kettenaufrufe | `pruefen.py --probe`, dann ohne Schalter | **16 von 16**; **76** Aufrufe, 0 Befunde, 2 ungeprüft (vorher 75 / 0 / 2) |
+| Die neun zusammen | `pruefen.sh alle` | 8 von 9 grün — `bestand` rot, gewollt |
+| Doppelte Backlog-Nummern | der `grep` aus Stufe 1 | leer |
+| Der P5c-Zweig | `bestand.py --wurzel` auf einem Arbeitsbaum von `origin/claude/p5c-mockups-konzept-4yeomf` | 58 Befunde: dieselben 57 (eine Zeilenzahl anders) und einer mehr — F-BR-11 |
+
+**Probleme und wie sie gelöst wurden.** F-BR-08 (die Selbstprobe fand den
+Fehler im Riegel, bevor er je lief), F-BR-09 (`kettenaufrufe` sah die Namen
+nicht — das ist, was „kennt den neuen Aufruf" in Abschnitt 3 verlangt). Der
+Konzeptzweig ließ sich aus der Sitzung nicht löschen (die Gegenstelle wies
+das Löschen ab); die Betreiberin hat ihn selbst gelöscht.
+
+**Fächerung.** Die Anlass-Zeilen von BR-02 sind während BR-01
+nachgeschlagen worden — 20 Agenten, je Probe einer, **nur lesend**: Sie
+schlagen Nummer und Beleg vor und ändern keine Datei. Gesetzt wird in BR-02
+nach der Gegenlesung. So stand früh fest, ob eine Probe ohne Backlog-Nummer
+bleibt und eine Frage an die Betreiberin nötig wird.

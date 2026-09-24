@@ -14,8 +14,8 @@ python3 tools/kettenaufrufe/pruefen.py    # --liste · --probe
 Jede `uses:`- und `run:`-Zeile in `.github/workflows/` und jeden `aufruf`
 in `tools/pruefstand/pruefablauf.json`. Zu jedem Aufruf wird die
 Schnittstelle **aus dem Quelltext des Werkzeugs** ermittelt — `argparse`,
-`getopt`, ein `case`-Block, eine `BEKANNT`-Menge — und der Aufruf dagegen
-gehalten.
+`getopt`, ein `case`-Block, eine `BEKANNT`-Menge, die Namensliste eines
+Sammelläufers (`NAMEN=(…)`, `RUF`) — und der Aufruf dagegen gehalten.
 
 ## Was es braucht
 
@@ -26,8 +26,8 @@ Nichts. Kein Netz, keine Datenbank, keine Installation.
 **0 Befunde.** Die zweite Zahl ist „ungeprüft": Aufrufe, deren Werkzeug
 keine erkennbare Schnittstelle hat. **Sie ist kein Beiwerk** — der
 Stilvergleich stand darin und war kaputt (F-PK-20), `uhr-stufe1` stand
-nicht einmal darin und war es auch (F-PK-21). Stand 23.09.2026: **75
-Aufrufe, 0 Befunde, 2 ungeprüft**; `--probe` → **13 von 13** Fällen.
+nicht einmal darin und war es auch (F-PK-21). Stand 24.09.2026: **76
+Aufrufe, 0 Befunde, 2 ungeprüft**; `--probe` → **16 von 16** Fällen.
 
 ## Was es nicht kann
 

@@ -138,12 +138,17 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **292** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **304** und trägt seine
 Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
-Tag, **290 und 291** die Korrekturstufe Web 20.37.3 — nachgesehen auf
-`origin/main` und in den offenen Pull Requests.)*
+Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** das
+Korrekturpaket RP. **293** vergibt Konzept BR (24.09.2026, Zweig
+`claude/br-bestandsriegel`); die Spanne **294 bis 303** hat der P5c-Zweig
+`claude/p5c-mockups-konzept-4yeomf` am selben Tag reserviert — 294 Konzept
+SD, 295 bis 298 die Anlässe aus der Zuarbeit von BR, 299 bis 303 frei für
+Funde der Umsetzung. Nachgesehen auf `origin/main` und auf allen offenen
+Zweigen.)*
 
 **Und sieht vorher nach — auf `origin/main` UND in die offenen Pull
 Requests.** Der Satz darüber beschreibt keinen Riegel, sondern eine Hoffnung:
@@ -3756,6 +3761,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
     **Zuordnung: Backlog-Runde.**
+
+293. **Der Werkzeugbestand unter `tools/` hat keinen Riegel.**
+    *Aufgenommen 24.09.2026 mit Konzept BR, gemessen an `main` `f4fe4a0`.*
+    Konzept PK hat den Durchlauf einer Änderung als Riegel gebaut und den
+    Bestand als Regel gelassen: Grundsatz 5 (die Anlass-Zeile), die Form der
+    Anleitung mit fünf Abschnitten und höchstens 40 Zeilen
+    (`Pruefablauf.md` 6.2), die Streichliste. Kein Mittel maß eine davon,
+    und drei Tage nach PK-04 standen die Zahlen darunter: vier Anleitungen
+    über 40 Zeilen, acht Unteranleitungen mit zusammen 1 120 Zeilen, die
+    PK-04 nie gezählt hat, ein Werkzeug ohne Anleitung — und keine der
+    zwanzig Proben trägt die Anlass-Zeile, die `tools/proben/LIESMICH.md`
+    ihrem Kopfkommentar zuschreibt. Die Handzählung im Konzept fand eine;
+    sie war ein Prüffall, der das Wort „Anlass" im Text trägt. Der erste
+    Lauf des Riegels fand **57 Befunde** in sechs Regeln.
+
+    *Weg (Konzept BR):* `tools/quelltext/bestand.py` als neunte
+    Quelltextprüfung im Tor (BR-01), der Altbestand auf null im selben Pull
+    Request (BR-02; E-BR-01: keine Decke, keine Ausnahmeliste). *Abnahme:*
+    `bestand` meldet 0 Befunde, die Selbstprobe baut je Regel einen Fehler
+    ein und findet ihn. *Fehlschlag:* eine Anleitung mit 41 Zeilen oder eine
+    Probe ohne Anlass-Zeile, und Stufe 1 bleibt grün. **Zuordnung: Konzept
+    BR.**
 
 ## Erledigt
 

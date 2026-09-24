@@ -159,13 +159,28 @@ LESER = {'.py': schalter_py, '.mjs': schalter_mjs, '.js': schalter_mjs,
 
 
 def befehle_sh(quelle: str) -> set[str]:
-    """Unterbefehle eines Shell-Werkzeugs aus seinem case-Verteiler."""
-    m = re.search(r'case\s+"\$befehl"\s+in(.*?)esac', quelle, re.S)
-    if not m:
-        return set()
+    """Unterbefehle eines Shell-Werkzeugs: die Zweige seines case-Verteilers
+    (`case "$befehl"` oder `case "$fall"`) und bei den Sammellaeufern unter
+    tools/ die Namen aus `NAMEN=(…)` oder den Schluesseln von
+    `declare -A RUF=(…)`.
+
+    Bis BR-01 las die Pruefung nur `case "$befehl"` und sah bei
+    `pruefen.sh <name>` und `proben.sh <name>` keinen einzigen Namen: Von
+    30 solchen Aufrufen (28 in pruefablauf.json, 2 in den Workflows) prueften
+    alle nur die Schalter, und ein Tippfehler im Namen waere erst im Lauf
+    aufgefallen.
+    """
     namen: set[str] = set()
-    for zweig in re.finditer(r'^\s*([\w|-]+)\)', m.group(1), re.M):
-        namen |= {t for t in zweig.group(1).split('|') if t and t != '*'}
+    m = re.search(r'case\s+"\$(?:befehl|fall)"\s+in(.*?)esac', quelle, re.S)
+    if m:
+        for zweig in re.finditer(r'^\s*([\w|-]+)\)', m.group(1), re.M):
+            namen |= {t for t in zweig.group(1).split('|') if t and t != '*'}
+    liste = re.search(r'^NAMEN=\((.*?)\)', quelle, re.S | re.M)
+    if liste:
+        namen |= set(liste.group(1).split())
+    ruf = re.search(r'declare -A RUF=\((.*?)\n\)', quelle, re.S)
+    if ruf:
+        namen |= set(re.findall(r'\[([\w-]+)\]=', ruf.group(1)))
     return namen
 
 
@@ -392,6 +407,12 @@ def selbstprobe() -> int:
          'python3 tools/pruefstand/bericht.py pruefen --commit "$K"'),
         ('GEGENPROBE: bericht.py lesen braucht --stufe nicht (F-PK-32)', False,
          'python3 tools/pruefstand/bericht.py lesen --commit "$K" --basis origin/main'),
+        ('Quelltextlaeufer mit einem Namen, den es nicht gibt', True,
+         'bash tools/quelltext/pruefen.sh bestnd'),
+        ('Probenlaeufer mit einer Probe, die es nicht gibt', True,
+         'bash tools/proben/proben.sh wiederherstelung'),
+        ('GEGENPROBE: der neunte Name des Quelltextlaeufers (BR-01)', False,
+         'bash tools/quelltext/pruefen.sh bestand'),
         ('GEGENPROBE: eine Zeile ohne Werkzeugaufruf', False,
          'echo "nichts zu sehen" >> "$GITHUB_STEP_SUMMARY"'),
         ('GEGENPROBE: ein auskommentierter Aufruf', False,

@@ -122,7 +122,7 @@ jobs:
           echo "PHP-Dateien ohne Syntaxfehler: $n (davon versioniert unter server/: $s)"
           echo "zahl=php:$s/0" >> "$GITHUB_OUTPUT"
 
-      - name: Quelltext — acht Prüfungen, ein Läufer
+      - name: Quelltext — neun Prüfungen, ein Läufer
         id: quelltext
         # Selbstprobe zuerst: Eine Prüfung, die kaputt ist und darum nichts findet, meldete sonst grün.
         # Erst ausgeben, dann scheitern: Unter -e bräche der Block vor `cat` ab, und das Protokoll bliebe leer.
@@ -261,7 +261,7 @@ jobs:
           rc=0
           python3 tools/pruefstand/bericht.py lesen --commit "$KOPF" --basis origin/main --alle-riegel \
             --riegel "syntax-php=${PHP_ZAHL:-nicht-gelaufen}" --riegel "wortliste=$q" --riegel "vollstaendigkeit=$q" \
-            --riegel "linkprobe=$q" --riegel "installweiche=$q" --riegel "sitzungshaertung=$q" \
+            --riegel "linkprobe=$q" --riegel "bestand=$q" --riegel "installweiche=$q" --riegel "sitzungshaertung=$q" \
             --riegel "cspprobe=$q" --riegel "jobregister=$q" --riegel "migrationsregister=$q" \
             --riegel "kontraste=$(r "$KONTRASTE")" --riegel "kettenaufrufe=$(r "$KETTENAUFRUFE")" \
             --riegel "zaehlung=$(r "$ZAEHLUNG")" --riegel "spaltenregister=$(r "$SPALTENREGISTER")" \

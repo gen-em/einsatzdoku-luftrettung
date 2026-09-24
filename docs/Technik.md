@@ -608,11 +608,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      steht (Grundsatz 1). `pruefen.sh` fährt sie je
 │   │                      Stufe, `auswahl.py` wählt nach Berührung aus,
 │   │                      `bericht.py` schreibt die Zahlen (s. LIESMICH.md)
-│   ├── quelltext/         acht Prüfungen, die nur Quelltext lesen und im
+│   ├── quelltext/         neun Prüfungen, die nur Quelltext lesen und im
 │   │                      Tor laufen (PK-04, E-PK-24): installweiche,
 │   │                      sitzungshaertung, csp, jobregister,
 │   │                      migrationsregister, linkprobe,
-│   │                      vollstaendigkeit, textprobe. Ein Läufer
+│   │                      vollstaendigkeit, textprobe und — seit Konzept
+│   │                      BR — bestand, der den Werkzeugbestand unter
+│   │                      tools/ gegen Pruefablauf.md 6 hält. Ein Läufer
 │   │                      (`pruefen.sh <name>|alle|--selbstprobe`), ein
 │   │                      LIESMICH. Vorher acht Ordner.
 │   ├── referenzdatensatz/ erfundener Beispielbestand (21 Diensttage,
@@ -9150,7 +9152,7 @@ Bilderzahl, die längst nicht mehr stimmte.
 |---|---|
 | Fassungen nennen (Web, Uhr, Android) | eine Auskunft — aber eine unlesbare Fassung ist rot |
 | `php -l` über `server/` und `tools/` | 0 Fehler, und mindestens eine Datei gelesen; die Zahl der versionierten `server/`-Dateien geht in die Gegenlesung (`syntax-php`) |
-| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle acht Prüfungen grün (`tools/quelltext/LIESMICH.md`) |
+| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle neun Prüfungen grün (`tools/quelltext/LIESMICH.md`) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Umgebungswert eine Ebene höher | alle sechs Namen leer (6.5, E-KH-28) |
 | `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt |

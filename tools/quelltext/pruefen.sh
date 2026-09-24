@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Quelltextprüfungen — ein Läufer für die acht Prüfungen, die nur Quelltext
-# lesen, nichts brauchen und im Tor laufen (E-PK-24).
+# Quelltextprüfungen — ein Läufer für die neun Prüfungen, die nur Quelltext
+# lesen, nichts brauchen und im Tor laufen (E-PK-24, E-BR-08).
 #
 # Aufruf:  bash tools/quelltext/pruefen.sh <name> [zusatz…]
 #          bash tools/quelltext/pruefen.sh alle
 #          bash tools/quelltext/pruefen.sh --selbstprobe
 #
 # Namen:   installweiche sitzungshaertung csp jobregister migrationsregister
-#          linkprobe vollstaendigkeit textprobe
+#          linkprobe vollstaendigkeit textprobe bestand
 #
 # Vor PK-04 waren das acht Ordner mit acht Anleitungen und acht
 # Aufrufkonventionen; die Messungen darunter sind unverändert (Abnahme von
@@ -18,15 +18,15 @@ WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$WURZEL" || exit 1
 
 NAMEN=(installweiche sitzungshaertung csp jobregister migrationsregister
-       linkprobe vollstaendigkeit textprobe)
-# Die fünf mit eingebauter Selbstprobe. Die zwei Python-Prüfungen haben keine
-# und hatten vor dem Umzug auch keine — das ist kein Rückschritt, sondern ein
-# Rest, den E-PK-24 mit dem gemeinsamen Rahmen erst noch einlöst.
-SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister)
+       linkprobe vollstaendigkeit textprobe bestand)
+# Die sechs mit eingebauter Selbstprobe. `linkprobe` und `vollstaendigkeit`
+# haben keine und hatten vor dem Umzug auch keine — das ist kein Rückschritt,
+# sondern ein Rest, den E-PK-24 mit dem gemeinsamen Rahmen erst noch einlöst.
+SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister bestand)
 
 starter() {   # starter <name> — womit die Datei gefahren wird
     case "$1" in
-        linkprobe|vollstaendigkeit|textprobe) echo "python3 tools/quelltext/$1.py" ;;
+        linkprobe|vollstaendigkeit|textprobe|bestand) echo "python3 tools/quelltext/$1.py" ;;
         *)                                    echo "php tools/quelltext/$1.php" ;;
     esac
 }
@@ -75,7 +75,8 @@ case "$fall" in
     fehl=0
     for n in "${SELBST[@]}"; do
         printf '\033[1m==\033[0m Selbstprobe %s\n' "$n" >&2
-        php "tools/quelltext/$n.php" --selbstprobe || fehl=$((fehl+1))
+        # shellcheck disable=SC2046 — der Starter ist zwei Wörter
+        $(starter "$n") --selbstprobe || fehl=$((fehl+1))
     done
     printf '\033[1m==\033[0m %s von %s Selbstproben grün\n' \
            "$(( ${#SELBST[@]} - fehl ))" "${#SELBST[@]}" >&2
