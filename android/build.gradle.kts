@@ -10,6 +10,8 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application) apply false
+    // Nur, um die Kotlin-Fassung festzulegen: Angewandt wird das Plugin
+    // nirgends mehr, AGP 9 uebersetzt Kotlin selbst (AR-02).
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
 }

@@ -47,7 +47,7 @@ Grund, warum die Blöcke B und C parallel zu S2/S3 laufen können.
 |---|---|---|
 | JDK | 21 (im Container), mindestens 17 | `JAVA_HOME` |
 | Android SDK | Plattform 36, Build-Tools 36.0.0 | `ANDROID_HOME` |
-| Gradle | 8.14.3 | der Wrapper holt sie selbst |
+| Gradle | 9.7.1 (seit Android 0.16.0; bis dahin 8.14.3) | der Wrapper holt sie selbst |
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
@@ -645,9 +645,18 @@ ist das Abbild eine erklärte Test-Abhängigkeit — siehe 2.3.
 `gradle-wrapper.properties` führt jetzt ein `distributionSha256Sum`:
 
 ```
-SHA-256  bd71102213493060956ec229d946beee57158dbd89d0e62b91bca0fa2c5f3531
-         gradle-8.14.3-bin.zip   (137 393 837 Bytes)
+SHA-256  acd53f1edaf02f1a8ff99879f8a34b302661a057d9b063ae9e35b552f804d20a
+         gradle-9.7.1-bin.zip    (151 433 392 Bytes, seit Android 0.16.0)
 ```
+
+**Seit Android 0.16.0 (AR-02) auf demselben doppelten Weg belegt:** die Summe
+aus `https://services.gradle.org/distributions/gradle-9.7.1-bin.zip.sha256`
+und die eigene Rechnung über das frisch geladene Archiv, beide am 24.09.2026
+gleich. Warum 9.7.1 und nicht 9.8.0: 9.8.0 erschien am selben Tag; AGP 9.4.1
+verlangt Gradle ≥ 9.1, und die jüngste Fassung mit einigen Wochen Einsatz war
+9.7.1 (19.08.2026). *Bis 0.15.1 stand hier Gradle 8.14.3 mit
+`bd711022…`, 137 393 837 Bytes; der Absatz darunter erzählt, wie jene Zahl
+entstand.*
 
 Der Wrapper prüft die Summe **beim Herunterladen** der Verteilung — einmal je
 Rechner, danach liegt sie unter `~/.gradle/wrapper/dists/`. Ein Container,
@@ -672,9 +681,13 @@ Die Wrapper-JAR selbst liegt im Repositorium (das ist bei Gradle so
 vorgesehen). Ihre Prüfsumme, für den Fall, dass jemand sie nachrechnen will:
 
 ```
-SHA-256  7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172
-         gradle/wrapper/gradle-wrapper.jar   (aus Gradle 8.14.3)
+SHA-256  7a9ce74cff467ca1bf60a4fcd9f05185acceda4d0f382434d393e17864262c5d
+         gradle/wrapper/gradle-wrapper.jar   (47 505 Bytes, aus Gradle 9.7.1)
 ```
+
+Sie ist **byteweise** die JAR, die in der geprüften Verteilung liegt
+(`lib/plugins/gradle-wrapper-main-9.7.1.jar`, Eintrag `gradle-wrapper.jar`) —
+nachgerechnet am 24.09.2026. Bis 0.15.1: `7d3a4ac4…` aus Gradle 8.14.3.
 
 **R8 bleibt aus** (`isMinifyEnabled = false` in beiden Modulen; AN-5 nennt
 es mit). Die Begründung steht dort, wo die Ausnahmen hingehörten, wenn es je
@@ -752,9 +765,13 @@ Entscheidung, die das Konzept nicht getroffen hat. Stattdessen wird
 `gemeinsam/` in **beide** Module **eingebunden**:
 
 ```kotlin
-sourceSets["main"].java.srcDir("../gemeinsam/quelle")
-sourceSets["main"].res.srcDir("../gemeinsam/res")
+sourceSets["main"].kotlin.directories += "../gemeinsam/quelle"
+sourceSets["main"].res.directories += "../gemeinsam/res"
 ```
+
+**Seit Android 0.16.0 über `kotlin`, nicht über `java`.** Bis dahin stand
+hier `java.srcDir(…)`; das eingebaute Kotlin von AGP 9 nimmt Kotlin-Dateien
+aus einem Java-Verzeichnis nicht mehr an (Konzept AR, F-AR-08).
 
 Der gemeinsame Teil wird damit zweimal übersetzt. Das kostet Bauzeit und
 sonst nichts — und es spart eine Modulgrenze mit eigenem Manifest, eigener
@@ -774,8 +791,8 @@ Nachricht von der Uhr an — und zwar ohne Fehlermeldung.
 | `minSdk` Handy | **26** (Android 8.0) | E-S4-03, mit F-S4-A am 31.08.2026 bestätigt |
 | `minSdk` Uhr | **30** (Wear OS 3) | Galaxy Watch4 aufwärts; ältere Tizen-Modelle führen gar keine Android-Apps aus |
 | Sprachstand | **17** | E-S4-02 |
-| AGP | **8.13.2** | siehe unten |
-| Kotlin | **2.1.21** | Compose-Compiler ist seit 2.0 Teil von Kotlin |
+| AGP | **9.4.1** (seit 0.16.0) | siehe unten |
+| Kotlin | **2.4.20** (seit 0.16.0) | eingebaut in AGP 9; die Fassung legt die Wurzel fest, der Compose-Compiler wandert mit |
 
 **Warum `targetSdk` 36 und nicht 37.** Das SDK-Verzeichnis führt inzwischen
 `android-37.0`, `-37.1` und `-37.2` — API 37 gibt es nur mit
@@ -786,12 +803,15 @@ das, wofür E-S4-03 „`targetSdk` aktuell" verlangt: Ab API 34 gelten die
 strengen Regeln für Vordergrunddienste, und die App deklariert
 `FOREGROUND_SERVICE_LOCATION` (ab B3).
 
-**Warum AGP 8.13.2 und nicht 9.x.** AGP 9 ist ein Umbau der Bau-Sprache
-(eingebautes Kotlin-Plugin, verschobene DSL). Ihn blind einzuführen, um eine
-API-Stufe zu gewinnen, die die App nicht braucht, wäre der teure Weg zum
-kleinen Gewinn. 8.13.2 ist die letzte Fassung der 8er-Reihe. Der Wechsel auf
-AGP 9 samt API 37 ist eine eigene, absichtliche Runde — nicht ein Nebeneffekt
-von B1.
+**AGP 9 seit Android 0.16.0 (Konzept AR, Backlog Nr. 65).** Bis 0.15.1
+stand hier „Warum AGP 8.13.2 und nicht 9.x" — AGP 9 sei ein Umbau der
+Bau-Sprache und gehöre in eine eigene, absichtliche Runde. Das war die Runde.
+Was der Umbau hier bedeutete: Das Plugin `kotlin-android` ist aus den Modulen
+ausgetragen (AGP übersetzt Kotlin selbst), `gemeinsam/` hängt an
+`kotlin.directories` (Abschnitt 3), und `gradle.properties` hält
+`android.onlyEnableUnitTestForTheTestedBuildType=false` — sonst entfielen die
+Release-Prüffälle still, darunter der Release-Fall von `ServeradresseTest`
+(Nr. 142).
 
 **JDK 21 baut, JDK 17 ist der Sprachstand.** Das ist kein Widerspruch:
 `sourceCompatibility`/`jvmTarget` legen fest, welchen Bytecode die App

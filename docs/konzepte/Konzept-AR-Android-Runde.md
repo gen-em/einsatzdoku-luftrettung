@@ -16,11 +16,11 @@ entsteht mit AR-02. Zweig `claude/affectionate-newton-6pzfkc`, von `main`
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — Fragen beantwortet (E-AR-08 bis -13), wartet auf das Startzeichen für AR-02.** AR-01 (Ausgangsmaß) ist gemessen, ohne eine Zeile Code: Abschnitt 2. Die Spanne 334–338 steht im Kopf von `Backlog.md` |
+> | Stand | **24.09.2026 — AR-01 und AR-02 erledigt, AR-03 in Arbeit.** Android **0.16.0** gesetzt (E-AR-04). AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20: Baulauf grün, Prüffälle wie vorher, 78 von 78 Bildern byteweise gleich (Protokoll 7) |
 > | Entschieden | **E-AR-01 bis -07** aus der Freigabe, **E-AR-08 bis -13** aus den Antworten auf Q-AR-01 bis -06, beide vom 24.09.2026 (Abschnitt 5) |
 > | Offen | nichts |
 > | Hakt | Maven Central drosselt diesen Container (F-AR-01); die Runde baut über Googles Spiegel (E-AR-13) |
-> | Nächstes | **AR-02**, nach dem Startzeichen |
+> | Nächstes | **AR-03** — `compileSdk`/`targetSdk` 37 und die Bibliotheken |
 
 ---
 
@@ -154,6 +154,7 @@ als `default`.
 | **F-AR-08** | **AGP 9 lässt zwei Dinge still wegfallen, an denen dieses Projekt hängt** (aus den Versionshinweisen, in AR-02 nachzumessen): (1) `android.onlyEnableUnitTestForTheTestedBuildType` steht auf `true` — `testReleaseUnitTest` entfiele, und mit ihm der Release-Fall von `ServeradresseTest` (Nr. 142, „nur im Release"). (2) Eingebautes Kotlin **unterstützt `sourceSets["main"].java.srcDir(…)` mit Kotlin-Dateien nicht** — genau so bindet das Projekt `gemeinsam/quelle` in beide Module ein (E-S4-02) | AR-02 stellt (1) ausdrücklich auf `false` und zieht (2) auf `kotlin.directories` um; beides mit Zahl belegt |
 | **F-AR-09** | **Eine unbenutzte Zeichenkette im Handy-Modul.** `sync_fehlt_kopplung` („Koppel die App mit deinem Konto.") steht in `strings.xml` zwischen zwei benutzten Nachbarn der Sync-Anzeige (Nr. 11); keine Kotlin-Zeile ruft sie. `LIESMICH.md` nennt sie in keiner Zählung. Wann ihr Verbraucher wegfiel, gibt die Historie nicht her — die Android-Dateien tragen seit PK-M1 (`5e9333f`) einen umgeschriebenen Werdegang | Q-AR-03 |
 | **F-AR-10** | **Die Vermutung in `LIESMICH.md` 2 ist widerlegt.** Dort steht als Kandidat für die Warnung, die zwischen dem 08. und dem 20.09.2026 dazukam, Robolectric 4.16.1 → 4.17. Robolectric 4.17 ist erschienen, und Lint meldet es **nicht** — der Kandidat war es nicht. Ob es die unbenutzte Zeichenkette aus F-AR-09 war, lässt sich nicht belegen: Der Bericht vom 20.09. starb mit dem Läufer | `LIESMICH.md` 2 wird berichtigt (AR-05) |
+| **F-AR-11** | **Ein Prüffall übergab seinen Rückstand nie** (gefunden in AR-02 durch Kotlin 2.4, „Expression is unused"). `KopplungRundlaufTest.dienst()` reichte `{ rueckstand }` als nachgestellte Lambda; seit Nr. 114 ist der letzte Parameter von `Kopplungsdienst` `raeumen`. Ohne Wirkung — kein Fall setzt einen Rückstand, die App übergibt benannt | **behoben in AR-02** (benanntes Argument) |
 
 ## 4. Fragen an die Betreiberin
 
@@ -308,5 +309,44 @@ Sie laufen **zuletzt** in jedem Paket (`Pruefablauf.md` 6.7).
 
 ## 7. Protokoll
 
-*(wird je Paket fortgeschrieben: was erledigt ist, welche Probleme
-auftraten, wie sie gelöst wurden, welche Entscheidungen dabei fielen)*
+### AR-01 — Ausgangsmaß (erledigt 24.09.2026)
+
+Abschnitt 2. Problem: Maven Central drosselte den Container; der
+unveränderte Stand wurde erst im fünften Anlauf grün (F-AR-01). Gelöst für
+die Runde durch E-AR-13.
+
+### AR-02 — Bau-Sprache (erledigt 24.09.2026)
+
+**Was:** Gradle 8.14.3 → 9.7.1 (Prüfsumme zweifach, Wrapper-JAR aus der
+geprüften Verteilung), AGP 8.13.2 → 9.4.1, Kotlin und Compose-Compiler
+2.1.21 → 2.4.20; `kotlin-android` aus beiden Modulen, in der Wurzel nur noch
+zur Festlegung der Fassung; `gemeinsam/` über `kotlin.directories`;
+`android.onlyEnableUnitTestForTheTestedBuildType=false`;
+`kotlin { compilerOptions }` entfällt (`jvmTarget` folgt
+`targetCompatibility`). Android **0.16.0**, Kopfabsatz, Changelog-Eintrag,
+`LIESMICH.md` 2, 2.1, 3 und 4.
+
+**Probleme und Lösungen:**
+
+1. **Zwölf Veraltungen in den Bauskripten** — die drei Berichtsschalter von
+   Lint und `by configurations.creating`, je Modul. Umgestellt statt
+   unterdrückt; `--warning-mode all` meldet 0.
+2. **Vier neue Kotlin-Warnungen** (Ausgangsmaß 0). Drei Kleinigkeiten
+   (`else` in `Uhrbedienung`, zweimal `.toInt()` in `HandyBildTest`) — und
+   **ein Fehler im Prüffall (F-AR-11):** `KopplungRundlaufTest` übergab den
+   Rückstand als nachgestellte Lambda; die ging seit Nr. 114 an `raeumen`.
+   Ohne Wirkung, weil kein Fall einen Rückstand setzt; die App übergibt
+   benannt. Behoben mit benanntem Argument; 0 Kotlin-Warnungen.
+3. **Die Wahl der Nummer.** 0.16.0 und nicht 0.15.2, weil `targetSdk` 37
+   (E-AR-08) der App neue Plattformregeln gibt — gesetzt jetzt, weil AR-02
+   das erste Paket ist, das das APK ändert (E-AR-04).
+
+**Gemessen:** Prüfdokument 2. Kern: 264 (15 übersprungen) und 71 Fälle je
+Bauart wie vorher, **78 von 78 Bildern byteweise gleich**, Manifest und
+Ressourcen beider APKs gleich; Lint danach Handy 13 (8× `GradleDependency`
+einschließlich `compileSdk` 37, 1× `OldTargetApi`, 3× `PluralsCandidate`,
+1× `UnusedResources`), Uhr 1 (`compileSdk` 37). Die drei AGP-/Kotlin-Hinweise
+sind weg; dazugekommen sind die drei, die AR-03 auflöst.
+
+**Neuer Befund F-AR-11** (oben beschrieben) — trägt keine eigene
+Backlog-Nummer, weil er im selben Paket behoben ist und im Changelog steht.

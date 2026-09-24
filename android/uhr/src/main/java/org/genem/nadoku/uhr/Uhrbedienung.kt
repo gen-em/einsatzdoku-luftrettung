@@ -79,7 +79,11 @@ class Uhrbedienung(
             is Uhrereignis.Dienstknopf -> dienstknopf(wach)
             is Uhrereignis.Bestaetigt -> bestaetigt(wach)
             is Uhrereignis.Verworfen -> Ergebnis(wach.copy(ansicht = grundansicht(wach)))
-            else -> Ergebnis(wach)
+            /* KEIN `else` MEHR (Android-Runde AR-02). Hier stand
+             * `else -> Ergebnis(wach)` fuer `Halten`, das oben schon
+             * zurueckgekehrt ist. Kotlin 2.4 erkennt das und meldet den Zweig
+             * als ueberfluessig. Ohne ihn bricht ein kuenftiges Ereignis, das
+             * hier niemand behandelt, den Bau -- statt still nichts zu tun. */
         }
     }
 

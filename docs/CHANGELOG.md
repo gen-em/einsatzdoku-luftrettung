@@ -14,6 +14,84 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.16.0] — 2026-09-24 (in Arbeit, Android-Runde AR)
+
+Konzept AR, Backlog Nr. 65, 116 (Android-Hälfte) und 284. **Eine Nummer für
+die ganze Runde** (E-AR-04); dieser Eintrag wächst mit jedem Paket.
+**Nebennummer**, weil `targetSdk` auf 37 steigt und damit die
+Verhaltensregeln von Android 17 für die App gelten — Datenmodell, Sendeweg
+und Vertrag bleiben unberührt.
+
+### Nachgezogen — die Hausform-Zeile bekommt ihre Nummer (Nr. 284)
+
+PK-04/5b hat `recht_hinweis` in `strings.xml` auf die Hausform gebracht („von
+der BetreiberIn des Servers"), ohne die Android-Fassung anzuheben. Bis hier
+liefen damit zwei verschiedene Stände des Handy-Moduls unter `0.15.1`, und
+ein APK aus dem einen war von einem aus dem anderen an der Nummer nicht zu
+unterscheiden. Eine eigene Korrekturnummer für eine Zeile sollte es nicht
+geben (E-PK-40); die Zeile reist in 0.16.0 mit. Der Emulatorlauf, der sie auf
+der Seite Einstellungen → Rechtliches zeigt, folgt am Ende der Runde
+(P-PK-28).
+
+### Geändert — die Bau-Sprache: Gradle 9, AGP 9, Kotlin 2.4 (AR-02)
+
+Gradle 8.14.3 → **9.7.1** (Prüfsumme auf zwei Wegen: offizielle Datei und
+eigene Rechnung über das Archiv, beide `acd53f1e…`; die Wrapper-JAR ist
+byteweise die aus dieser Verteilung), AGP 8.13.2 → **9.4.1**, Kotlin und
+Compose-Compiler 2.1.21 → **2.4.20**. Bis hierhin standen die Bibliotheken
+**absichtlich still** — ein Fehler dieses Schritts sollte der Bau-Sprache
+gehören und nicht einer Bibliothek.
+
+AGP 9 übersetzt Kotlin selbst; das Plugin `kotlin-android` ist aus beiden
+Modulen ausgetragen und steht nur noch in der Wurzel, um die Fassung
+festzulegen. **Zwei Dinge hätte der Umstieg still weggenommen**, und beide
+sind festgehalten, statt es zu merken, wenn sie fehlen:
+
+- **Die Release-Prüffälle.** AGP 9 legt Prüffälle nur noch für die geprüfte
+  Bauart an. `testReleaseUnitTest` wäre entfallen — und mit ihm der Fall von
+  `ServeradresseTest`, der nur im Release laufen kann (Nr. 142). Er bleibt
+  über `android.onlyEnableUnitTestForTheTestedBuildType=false` an; gezählt:
+  264 Fälle je Bauart wie vorher.
+- **Der gemeinsame Quelltext.** Beide Module binden `gemeinsam/quelle` ein
+  (E-S4-02), und zwar bis hierhin über `java.srcDir`. Das eingebaute Kotlin
+  nimmt Kotlin-Dateien aus einem Java-Verzeichnis nicht mehr an; der Weg ist
+  jetzt `kotlin.directories`.
+
+Die Bauskripte meldeten danach zwölf Veraltungen (die drei
+Berichtsschalter von Lint — AGP 9 erzeugt alle Berichte immer — und
+`by configurations.creating`); sie sind **umgestellt, nicht unterdrückt**,
+und `--warning-mode all` meldet nichts mehr.
+
+**Gemessen, was das allein am APK ändert** — mit der alten Nummer gebaut,
+damit der Versionsstempel nicht mitzählt: Manifest, Ressourcen und 161 von
+175 Einträgen des Handy-APK (Uhr: 176 von 190) byteweise gleich, alle
+**78 Bilder** des Bilderlaufs byteweise gleich. Verschieden sind DEX,
+Kotlin-Builtins und Baseline-Profil, weil die Standardbibliothek von 2.1.21
+auf 2.4.20 geht; `kotlin-tooling-metadata.json` fällt weg.
+
+### Behoben — ein Prüffall, der seinen Rückstand nie übergab
+
+Kotlin 2.4 meldete vier neue Warnungen; drei waren Kleinigkeiten (ein
+überflüssiges `else` in `Uhrbedienung`, zweimal `.toInt()` auf einem Wert,
+der schon eine Ganzzahl ist). **Die vierte war ein Fehler:**
+`KopplungRundlaufTest` übergab den Rückstand als nachgestellte Lambda —
+`Kopplungsdienst(…, basis) { rueckstand }`. Seit Nr. 114 ist der **letzte**
+Parameter aber `raeumen`, nicht `rueckstand`; die Lambda ging dorthin, und
+der Rückstand kam nie an. Gewirkt hat es nicht, weil kein Fall einen
+Rückstand setzt — aber der erste, der es täte, hätte etwas anderes geprüft
+als gedacht. Die App selbst übergibt beide Werte mit Namen und war nie
+betroffen. Das `else` in `Uhrbedienung` ist nicht bloß ausgetragen: Ohne es
+bricht ein künftiges Ereignis, das dort niemand behandelt, den Bau, statt
+still nichts zu tun.
+
+### Arbeitsumgebung
+
+Maven Central drosselt den Container (`429`, 13 von 20 Abrufen); der
+unveränderte Stand baute erst im fünften Anlauf. Die Arbeitsumgebung holt
+deshalb über Googles Maven-Central-Spiegel mit Maven Central als Rückfall
+(E-AR-13) — **nur dort**, die Bauskripte im Repositorium nennen keine neue
+Quelle.
+
 ## [Werkzeug: Der Bestandsriegel (Konzept BR)] — 2026-09-24
 
 Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,

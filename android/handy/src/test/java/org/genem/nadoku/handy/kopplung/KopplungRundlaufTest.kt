@@ -66,8 +66,14 @@ class KopplungRundlaufTest {
         fw = "16", sdk = 36, app = "0.2.0",
     )
 
+    /* BENANNT, NICHT ALS NACHGESTELLTE LAMBDA (Android-Runde AR-02). Hier
+     * stand `Kopplungsdienst(…, basis) { rueckstand }`. Seit Nr. 114 ist der
+     * LETZTE Parameter aber `raeumen`, nicht `rueckstand` -- die Lambda ging
+     * dorthin, und der Rueckstand kam nie an. Gewirkt hat es nicht, weil kein
+     * Fall hier einen Rueckstand setzt; gefunden hat es Kotlin 2.4
+     * ("Expression is unused"). */
     private fun dienst(rueckstand: Int = 0) =
-        Kopplungsdienst(HttpNetzweg(), tresor, basis) { rueckstand }
+        Kopplungsdienst(HttpNetzweg(), tresor, basis, rueckstand = { rueckstand })
 
     /**
      * JEDER FALL RÄUMT HINTER SICH AUF.

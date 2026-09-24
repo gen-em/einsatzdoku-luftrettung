@@ -26,8 +26,14 @@
 # ---------------------------------------------------------------------------
 
 [versions]
-agp = "8.13.2"
-kotlin = "2.1.21"
+agp = "9.4.1"
+# KOTLIN IST SEIT AGP 9 EINGEBAUT (AR-02, Backlog Nr. 65). AGP bringt ein
+# Kotlin-Gradle-Plugin als Laufzeitabhaengigkeit mit (bei 9.4.1: 2.2.10);
+# die Zahl hier hebt es an. Sie gilt fuer ZWEI Plugins, die zusammen wandern
+# muessen: das Kotlin-Plugin selbst (nur noch in der Wurzel, `apply false`,
+# um die Fassung festzulegen) und den Compose-Compiler, der an genau diese
+# Kotlin-Fassung gebunden ist.
+kotlin = "2.4.20"
 
 # --- AndroidX (Apache-2.0) ---
 coreKtx = "1.16.0"

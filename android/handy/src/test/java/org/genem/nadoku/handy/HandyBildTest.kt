@@ -591,10 +591,10 @@ class HandyBildTest {
             breiteDp = breiteDp,
             knopfDp = if (band == null) 0.0 else (band.last - band.first + 1) / dichte.toDouble(),
             knopfUnterkanteDp =
-                if (band == null) 0 else Math.round((band.last + 1) / dichte).toInt(),
+                if (band == null) 0 else Math.round((band.last + 1) / dichte),
             amRand = knopfAmRand(punkte, breitePx, hoehePx),
             unterDerFaltkante = band != null && band.last == hoehePx - 1,
-            inhaltDp = Math.round((letzteZeile + 1) / dichte).toInt(),
+            inhaltDp = Math.round((letzteZeile + 1) / dichte),
             knoepfeGesamt = alleBaender.size,
             knoepfeSichtbar = alleBaender.count { it.last < hoehePx },
             farben = punkte.toHashSet().size,
