@@ -19,10 +19,10 @@ entsteht mit BR-01. **Zweig der Umsetzung:** `claude/br-bestandsriegel`, von
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — Konzept zur Bestätigung.** Kein Paket begonnen. |
-> | Entschieden | **E-BR-01** (Riegel steht auf null, Altbestand wird im selben Konzept bereinigt) und **E-BR-02** (parallel zu P5c, Merge vor P5c AP2) — von der Betreiberin am 24.09.2026. Alle weiteren E-BR sind **Vorschläge** (Abschnitt 4) und gelten erst mit Antwort auf die Q-BR. |
-> | Offen | Q-BR-01 bis Q-BR-06 (Abschnitt 5) |
-> | Nächstes | Antworten auf die Q-BR, dann **BR-01** in einer Code-Sitzung |
+> | Stand | **24.09.2026 — Konzept bestätigt, bereit für die Umsetzung.** Kein Paket begonnen. |
+> | Entschieden | **E-BR-01 bis E-BR-10**, alle von der Betreiberin am 24.09.2026 (Abschnitt 4); Q-BR-01 bis -07 beantwortet, alle wie empfohlen (Abschnitt 5). |
+> | Offen | nichts in BR. **Zwei Zuarbeiten von P5c** (Q-BR-05, -06) — an die P5c-Instanz übergeben am 24.09.2026, Nachtrag dort noch offen. |
+> | Nächstes | **BR-01** in einer Code-Sitzung auf `claude/br-bestandsriegel` |
 
 ---
 
@@ -74,8 +74,8 @@ Workflow-Dateien durch TB oder RP; das Tor selbst (P-PK-29 bis -32).
 | Paket | Was | Berührt | Abnahme |
 |---|---|---|---|
 | **BR-01 Der Riegel** | `tools/quelltext/bestand.py` — die **neunte** Quelltextprüfung, mit Selbstprobe (6.3: sie hält einen Merge auf). Sie liest den Baum unter `tools/` und misst die Regeln aus Abschnitt 4 (E-BR-03 bis -06). Eintrag als Riegel in `pruefablauf.json` (das Tor übergibt ihn dann mit `--alle-riegel`, Lage 4), Aufruf in `pruefen.sh`, Schritt in `pruefung.yml` („Quelltext — neun Prüfungen"). **Bis BR-02 gemergt ist, ist der Riegel rot** — das ist gewollt, und der Prüfbericht des Pakets sagt es; die Selbstprobe belegt, dass jede der Regeln einen eingebauten Fehler findet. Beide Pakete gehen in **einem** PR (E-BR-01: kein Zwischenstand mit Decke). | `tools/quelltext/`, `tools/pruefstand/pruefablauf.json`, `.github/workflows/pruefung.yml`, `tools/kettenaufrufe/` (kennt den neuen Aufruf) | Selbstprobe: je Regel ein eingebauter Fehler → Befund mit Namen, danach 0; `kettenaufrufe` 0 Befunde; die Zahl des Riegels am Altbestand = die Zahl aus Abschnitt 2 (Gegenprobe: das Mittel findet, was von Hand gezählt wurde) |
-| **BR-02 Der Altbestand** | F-BR-01 und F-BR-02 auf null: **19 Anlass-Zeilen** in den Probenköpfen (die Nummer aus Backlog, Changelog oder der Zuordnungstabelle in `Pruefablauf.md` 4, die je Probe schon einen Anlass nennt); `screenshots`, `zaehlung`, `uhr-pruefstand`, `kette` auf die Form — was Geschichte ist, geht in die Commit-Nachricht (Grundsatz 6), was Anleitung eines Unter-Skripts ist, in dessen Kopf; `erzeugen` bekommt seine Zeile (E-BR-05); `spaltenregister` eine Anleitung; die acht Unteranleitungen und die zwei losen Dateien nach Q-BR-02 und Q-BR-03. | die genannten Ordner unter `tools/` | `bestand.py` **0 Befunde**; jede gestrichene Zeile hat ihren Platz (Commit, Kopf) oder war Geschichte; `proben.sh alle` 20 von 20 unverändert grün |
-| **BR-03 Die Reste aus PK, TB und RP** | F-BR-03: die drei Tor-Schritte bekommen je eine Zeile in `pruefablauf.json` (`riegel`) und einen Aufruf in Station B — der Backlog-Schritt als Teil von `bestand.py` (er zählt Bestand), die zwei anderen als `pruefen.sh`-Namen oder als Zeile in `pruefstand/pruefen.sh`; jeder mit Anlass. F-BR-04: der `true`-Zweig wird **rot** („nicht gemessen"), wie E-PK-46 es verlangt. F-BR-05 (b), (c), (d): je ein Satz an der richtigen Stelle. F-BR-05 (a) nach Q-BR-04. | `tools/proben/wiederherstellung/`, `tools/pruefstand/`, `docs/Pruefablauf.md` 1, 3, 4; je nach Q-BR-04 `tools/kette/` und beide Workflows | Stufe 1 auf dem PR grün mit **17** Riegeln im Bericht statt 14; die Wiederherstellungsprobe auf einer Anlage mit weniger als zwei offenen Konten **rot**, nicht grün |
+| **BR-02 Der Altbestand** | F-BR-01 und F-BR-02 auf null: **19 Anlass-Zeilen** in den Probenköpfen (die Nummer aus Backlog, Changelog oder der Zuordnungstabelle in `Pruefablauf.md` 4, die je Probe schon einen Anlass nennt); `screenshots`, `zaehlung`, `uhr-pruefstand`, `kette` auf die Form — was Geschichte ist, geht in die Commit-Nachricht (Grundsatz 6), was Anleitung eines Unter-Skripts ist, in dessen Kopf; `erzeugen` bekommt seine Zeile (E-BR-05); `spaltenregister` eine Anleitung; die acht Unteranleitungen (E-BR-04) und die zwei losen Dateien (E-BR-03 (4)). | die genannten Ordner unter `tools/` | `bestand.py` **0 Befunde**; jede gestrichene Zeile hat ihren Platz (Commit, Kopf) oder war Geschichte; `proben.sh alle` 20 von 20 unverändert grün |
+| **BR-03 Die Reste aus PK, TB und RP** | F-BR-03: die drei Tor-Schritte bekommen je eine Zeile in `pruefablauf.json` (`riegel`) und einen Aufruf in Station B — der Backlog-Schritt als Teil von `bestand.py` (er zählt Bestand), die zwei anderen als `pruefen.sh`-Namen oder als Zeile in `pruefstand/pruefen.sh`; jeder mit Anlass. F-BR-04: der `true`-Zweig wird **rot** („nicht gemessen"), wie E-PK-46 es verlangt. F-BR-05 (b), (c), (d): je ein Satz an der richtigen Stelle. F-BR-05 (a) nach E-BR-09. | `tools/proben/wiederherstellung/`, `tools/pruefstand/`, `docs/Pruefablauf.md` 1, 3, 4; `tools/kette/` und beide Workflows (E-BR-09) | Stufe 1 auf dem PR grün mit **17** Riegeln im Bericht statt 14; die Wiederherstellungsprobe auf einer Anlage mit weniger als zwei offenen Konten **rot**, nicht grün |
 | **BR-04 Das Runbook und der Abschluss** | `Pruefablauf.md` **6.12 „Ein neues Prüfmittel"**: fünf Zeilen, in der Reihenfolge, in der sie zu tun sind (Backlog-Nummer → Ordner oder Sammelordner → Anleitung in der Form → Zeile in `pruefablauf.json` → Tabelle 4 erzeugen → Riegel grün). Dazu in 6.1 der Satz **„Ein Anlass ist eine Backlog-Nummer"** (E-BR-07). `CLAUDE.md` 6 bekommt keinen neuen Absatz — nur der Verweis „Regeln für Prüfmittel: `Pruefablauf.md` 6" steht dort schon. Backlog Nr. 293 nach Erledigt, die Nummernregel im Kopf von `Backlog.md` auf die nächste freie Zahl, Changelog (Präfix `Web`, ohne Versionsstufe — wie RP), Prüfdokument, PR. Die zwei Fragen an P5c (Q-BR-05, -06) mit Antwort ins P5c-Konzept übertragen — das tut P5c selbst, BR schreibt nicht in ein fremdes Konzept. | `docs/Pruefablauf.md` 6, `docs/Backlog.md`, `docs/CHANGELOG.md`, `docs/Rahmenplan.md` 10 | Stufe 1 grün; `bestand.py` 0; Runbook von einer Instanz gegengelesen, die es nicht geschrieben hat: Kann sie daraus ein Prüfmittel anlegen, ohne eine zweite Stelle zu lesen? |
 
 **Reihenfolge:** BR-01 → BR-02 → BR-03 → BR-04, je ein Commit mit
@@ -83,7 +83,7 @@ Paketpräfix, Push nach jedem Paket (`CLAUDE.md` 7, 8). BR-01 zuerst, weil erst
 das Mittel sagt, ob die Zahl aus Abschnitt 2 vollständig war — und weil BR-02
 gegen das Mittel misst, nicht gegen eine Liste im Konzept.
 
-**Fächerung** (je Paket, `CLAUDE.md` 7, Vorschlag Q-BR-06):
+**Fächerung** (je Paket, `CLAUDE.md` 7, E-BR-10):
 
 | Paket | gefächert | seriell |
 |---|---|---|
@@ -106,7 +106,8 @@ Getroffen von der Betreiberin am 24.09.2026:
 - **E-BR-02 — Parallel zu P5c, auf eigenem Zweig, Merge vor P5c AP2.**
   Begründung in Abschnitt 1, Preis in Abschnitt 6.
 
-Vorschläge, die mit den Antworten auf Abschnitt 5 gelten:
+Getroffen von der Betreiberin am 24.09.2026 mit den Antworten auf
+Abschnitt 5, alle wie empfohlen:
 
 - **E-BR-03 — Was der Riegel misst, je Ordner direkt unter `tools/`:**
   (1) eine `LIESMICH.md` mit **genau** den fünf Abschnitten aus 6.2 in dieser
@@ -117,7 +118,10 @@ Vorschläge, die mit den Antworten auf Abschnitt 5 gelten:
   `tools/pruefstand/pruefen.sh` oder in `Sandbox-Setup.md` vor (die Inventur:
   ein Werkzeug, das niemand ruft, ist ein Kandidat für die Streichliste — der
   Riegel sagt das, mit Namen); (4) keine lose Datei direkt unter `tools/`
-  (Q-BR-03). Was der Riegel **nicht** misst: den Inhalt einer Anleitung, ob
+  **außer `motor.mjs`** — der eine geteilte Browser-Motor von fünf
+  Werkzeugen, beim Namen erlaubt; jede zweite lose Datei ist rot
+  (Q-BR-03; `konfig_stellen.php` geht nach `tools/sandbox/`).
+  Was der Riegel **nicht** misst: den Inhalt einer Anleitung, ob
   der Anlass zur Probe passt, ob ein Werkzeug überflüssig ist — das bleibt
   Lesearbeit, und das Runbook sagt es.
 - **E-BR-04 — Unteranleitungen zählen** (Q-BR-02). Der Riegel liest jede
@@ -145,6 +149,16 @@ Vorschläge, die mit den Antworten auf Abschnitt 5 gelten:
   `pruefablauf.json` steht, wird in BR-02 **nicht** umgeschrieben — das ist
   die Spalte „Anlass" der Zuordnung, nicht die Zeile des Werkzeugs; der
   Riegel misst die Zeile.
+- **E-BR-08 — Der Riegel ist die neunte Quelltextprüfung** (Q-BR-01):
+  `tools/quelltext/bestand.py`, im Läufer `pruefen.sh`, mit Selbstprobe, im
+  Tor unter „Quelltext — neun Prüfungen". Kein eigener Ordner.
+- **E-BR-09 — Die Baumsuche bekommt eine Stelle** (Q-BR-04): Python in
+  `tools/kette/` mit Selbstprobe, das Fenster als Parameter (30 im Tor, 50
+  in der Auslieferung, E-TB-09 bleibt); beide Workflows rufen sie, und
+  `kettenaufrufe` prüft den Aufruf mit. Umgesetzt in BR-03.
+- **E-BR-10 — Fächerung nur für die 19 Anlass-Zeilen in BR-02** (Q-BR-07),
+  je Datei ein Agent, danach Gegenlesung durch die Instanz. Alle anderen
+  Pakete und Teile seriell.
 
 ## 5. Fragen an die Betreiberin
 
@@ -157,6 +171,20 @@ Vorschläge, die mit den Antworten auf Abschnitt 5 gelten:
 | **Q-BR-05** | **An P5c:** Die vier Anlässe mit Befund-Kennung (`statistik` F-P5c-40, Ankerprüfung F-P5c-43, Mailprobe F-P5c-29, Motor-Messungen F-P5c-41) und der QR-Decoder ohne Anlass und Ort — legt P5c dafür Backlog-Nummern an und nennt für den Decoder den Sammelordner, bevor AP5 beginnt? | **Ja, in P5c selbst**, als Nachtrag zur Fassung 2 — BR schreibt nicht in ein fremdes Konzept. Mit E-BR-07 wäre der Riegel sonst beim Merge von P5c rot, und zwar zu Recht. |
 | **Q-BR-06** | **An P5c:** E-P5c-36 („jedes Paket mit Migration fährt `--stufe haupt`") ist eine Auslöseregel, die nur im Konzept steht — soll sie als Muster in `pruefablauf.json` (`server/migrationen/**` → `haupt`) oder als Satz in `Pruefablauf.md` 3 stehen, bevor das Konzept gelöscht wird? | **Als Muster in `pruefablauf.json`.** Dann bestimmt der Prüfstand die Stufe selbst und sagt sie, wie bei der Versionsstufe; und die Tabelle in 4 wird erzeugt. Ein Satz in 3 wäre eine Regel im Gedächtnis (Grundsatz 1). Das kann P5c in dem Paket tun, das die erste Migration bringt; BR fasst `pruefablauf.json` nur für den Riegel an. |
 | **Q-BR-07** | Fächerung wie in Abschnitt 3 vorgeschlagen (nur die 19 Anlass-Zeilen in BR-02)? | **Ja.** Die Zeilen sind Nachschlagearbeit in getrennten Dateien; alles andere ist Text oder eine Datei. |
+
+**Beantwortet am 24.09.2026, alle wie empfohlen:**
+
+- **E-BR-08** (Q-BR-01): neunte Quelltextprüfung, kein eigener Ordner.
+- **E-BR-04** (Q-BR-02): die acht Unteranleitungen kommen auf die Form;
+  Format-Beschreibung nach `Technik.md` oder in den Dateikopf, Geschichte in
+  den Commit.
+- **E-BR-03 (4)** (Q-BR-03): `konfig_stellen.php` nach `tools/sandbox/`;
+  `motor.mjs` bleibt als die eine beim Namen erlaubte lose Datei.
+- **E-BR-09** (Q-BR-04): eine Baumsuche in `tools/kette/`, Fenster als
+  Parameter.
+- **Q-BR-05 und Q-BR-06** gehen als Zuarbeit an die P5c-Instanz — Wortlaut
+  in Abschnitt 8; P5c trägt den Nachtrag selbst in sein Konzept ein.
+- **E-BR-10** (Q-BR-07): Fächerung nur für die Anlass-Zeilen.
 
 ## 6. Der Preis der Parallelität — und was P5c davon merkt
 
@@ -197,3 +225,30 @@ Vorschläge, die mit den Antworten auf Abschnitt 5 gelten:
   BR misst es nicht — ein Riegel über erzählenden Text ist ein anderes
   Werkzeug, und ob es eines braucht, ist eine Frage an die Betreiberin, nicht
   an ein Paket.
+
+## 8. Zuarbeit an P5c — Wortlaut der Übergabe (24.09.2026)
+
+Konzept BR (`docs/konzepte/Konzept-BR-Bestandsriegel.md`, Zweig
+`claude/epic-mccarthy-zq08zw`, danach `claude/br-bestandsriegel`) baut einen
+Riegel in Stufe 1 über den Werkzeugbestand unter `tools/` und mergt **vor
+P5c AP2**. Ab dem Aufnehmen von `main` gilt er für P5c. Zwei Dinge im
+P5c-Konzept hätten dann keine Form, und beide gehören P5c, nicht BR:
+
+1. **Anlass ist eine Backlog-Nummer (E-BR-07).** Vier geplante Prüfmittel
+   nennen als Anlass eine Befund-Kennung, die mit dem Konzept gelöscht wird:
+   Messstand-Schritt `statistik` (F-P5c-40), Ankerprüfung in `linkprobe`
+   (F-P5c-43), Rundmail in der Mailprobe (F-P5c-29), Motor-Messungen
+   (F-P5c-41). Der QR-Decoder (`jsqr`) hat weder Anlass noch Ordner. Bitte
+   je eine Backlog-Nummer anlegen (**ab 294** — BR hat 293; nachsehen auf
+   `origin/main` und auf dem BR-Zweig) und für den Decoder den Sammelordner
+   nennen, bevor AP5 beginnt. Für F-P5c-43 passt der offene Punkt Nr. 188.
+2. **E-P5c-36 als Muster in `pruefablauf.json` (Q-BR-06).** „Jedes Paket
+   mit Migration fährt `--stufe haupt`" steht nur im Konzept. Bitte als
+   Muster `server/migrationen/**` → Stufe `haupt` eintragen, in dem Paket,
+   das die erste Migration bringt; die Tabelle in `Pruefablauf.md` 4 wird
+   daraus erzeugt.
+
+Dazu, weil es beim Merge sonst rot wird: Jede neue `LIESMICH.md` (etwa
+`tools/proben/rollen/`) hat die fünf Abschnitte aus `Pruefablauf.md` 6.2,
+höchstens 40 Zeilen und eine Zeile `Anlass: Nr. …`; die schon angefasste
+`tools/bedienprobe/LIESMICH.md` bleibt unter 40.
