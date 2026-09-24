@@ -188,7 +188,8 @@ Fassung 21, 84 bis 88 mit Fassung 22; alle stehen unten; die Zuordnung aller off
 **Zu den Nummern 98 bis 113 (Rahmenplan Fassung 26, 03.09.2026).** 98–100
 kommen aus der vorgezogenen Planung v1.0 (R65–R67), 101–113 sind die
 Problemsammlung für Schritt 8 (S9, R73); ihre Kennungen PS-1 bis PS-10 stehen
-in `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+in `docs/konzepte/Vorbereitung-S9-Problemsammlung.md` (gelöscht 24.09.2026,
+Historie `5e501ae`).
 
 **Zu den Nummern 147 bis 149 (Rahmenplan Fassung 32, 06.09.2026).** 147 ist
 die aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung (S9, als
@@ -200,7 +201,7 @@ Beschluss ist mit Fassung 31 umnummeriert worden, diese Datei nicht) und
 Nr. 115 in Nr. 95 aufgehen lassen — beide beschrieben denselben Fund.
 
 **Zu Nr. 152 und den Vermerken „Konzept S9" (Rahmenplan Fassung 34, 07.09.2026).**
-Das Konzept S9 liegt vor (`docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`,
+Das Konzept S9 lag vor (`docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`, gelöscht 24.09.2026, Historie `5e501ae`;
 E-S9-01 bis -19). Die Einträge 101–113, 147, 44, 68, 69, 70 und 72 tragen
 jetzt den Beschluss, der sie erledigt; 152 ist der einzige neue Punkt — die
 Standortseiten, aufgekommen bei der Mockup-Freigabe. 132 und 137 (9a) tragen
@@ -224,7 +225,7 @@ wird in P5 und P6 wieder aufgerufen.
 **Zu den Nummern 87, 81, 88 und 175 (Backlog-Durchsicht vom 12.09.2026,
 eingearbeitet 13.09.2026).** Die Durchsicht hat alle 61 offenen Punkte gegen
 Web 19.3.0 · Uhr 3.1.0 · Android 0.15.0 gehalten und sechzehn Entscheidungen
-protokolliert (`docs/konzepte/Backlog-Durchsicht-2026-09-12.md`). Kein Punkt
+protokolliert (`docs/konzepte/Backlog-Durchsicht-2026-09-12.md`, gelöscht 24.09.2026, Historie `5e501ae`). Kein Punkt
 hatte sich unbemerkt selbst erledigt; gealtert waren Zahlen, Zeilennummern
 und sechs Aussagen — alle berichtigt. Drei Punkte verlassen *Offen*: **87**
 ist als Erhebung mit R70 beantwortet und stünde sonst neben P7 ein zweites
@@ -552,7 +553,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Die Zeitraumübersicht wächst weiter linear und ungedeckelt, der Suchindex
     überträgt weiter den gesamten Bestand, die sechs stillen Kappungen sagen
     weiter nichts, und **`post_max_size` der Zielanlage bleibt ungemessen**
-    (Prüfpunkt P29 in `docs/konzepte/Pruefdokument-P5a-Kette-und-Fundament.md`).
+    (Prüfpunkt P29 des P5a-Prüfdokuments, gelöscht 24.09.2026, Historie `5e501ae`).
     Eine Grenze bei 5000 Einsätzen verhindert nur, dass jemand in den
     gemessenen Bereich hineinläuft, in dem die Zeitraumübersicht 42,61 s
     braucht — sie macht ihn nicht schneller. **Dieser Eintrag bleibt deshalb
@@ -1659,6 +1660,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md` ist die Löschung in
     Abschnitt 6 des Rahmenplans bereits angekündigt. Ohne die Probe wiederholt
     sich der Vorgang zweimal.
+    **Und so ist es gekommen (24.09.2026, Rahmenplan Fassung 109):** Beide sind
+    gelöscht, mit 34 weiteren Dokumenten und drei Ordnern; die Verweise sind
+    von Hand nachgezogen — mit `grep` über das Repositorium, ohne Probe. Der
+    zweite Fall dieses Punkts.
 
     *Abnahme:* Der Lauf meldet **0 Treffer außerhalb der Ausnahmeliste und 0
     ungenutzte Ausnahmen** — dieselbe Form wie die Wortliste — und nennt
@@ -2879,45 +2884,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     sparen sollte — und es hat versprochen, sie zu sparen. Wer es beheben
     will, nimmt den Fall aus Nr. 221 als Prüffall: Eine Mailadresse in einem
     Rechtstext, 360 px, der Finder muss das `<p>` nennen.
-
-238. **`missions.manual` bricht die Einrichtung auf MySQL 8.4.0–8.4.10.**
-    *Aufgenommen 20.09.2026 aus dem Fehlversuch auf dem neuen
-    Staging-Webspace.* **Umgesetzt in Web 20.25.0**, Zweig
-    `claude/festive-fermi-el0avv`. Offen ist allein die Prüfung durch die
-    Betreiberin — Liste in `docs/konzepte/Pruefdokument-uhr_gesperrt.md`;
-    im Browser ist noch nichts bedient worden.
-
-    `SQLSTATE[42000] … 1064 … near 'manual TINYINT(1) NOT NULL DEFAULT 0` —
-    MySQL führt **MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort**, ab
-    8.4.11 wieder nicht. `schema.sql` legte die Spalte ungequotet an; die
-    Staging-Datenbank ist 8.4.x.
-
-    **Gemessen:** 788 Bezeichner-Vorkommen in elf DDL-führenden Dateien gegen
-    284 reservierte Wörter → **zehn betroffene Stellen**, nicht eine. Neben
-    der Einrichtung der Uhr-Eingang, GPX- und Datei-Import, der Schnitt,
-    beide Zweige des Einsatzformulars und beide Richtungen der Sicherung.
-    `PARALLEL`, `QUALIFY`, `TABLESAMPLE` (in 8.4 ebenfalls neu reserviert)
-    kommen nicht vor.
-
-    **Entscheidung (Philipp, 20.09.2026): umbenennen in `uhr_gesperrt`, nicht
-    quoten.** Eine übersehene Stelle scheitert dann auf jeder Version sofort
-    statt nur auf elf im Betrieb. Der Dateischlüssel in Sicherung und Export
-    bleibt `manual`.
-
-    **Dahinter lag ein zweiter Blocker, und er war der größere:**
-    `DEFAULT UTC_TIMESTAMP()` ohne Klammern wird von MySQL auf **jeder**
-    Fassung abgewiesen (vier Stellen). Die Anwendung ließ sich damit **seit
-    Web 20.16.5 auf MySQL überhaupt nicht einrichten**; gemerkt hat es
-    niemand, weil der Fehler am reservierten Wort schon vorher kam. Beides
-    hatte dieselbe Ursache — entwickelt und geprüft wird gegen MariaDB,
-    ausgeliefert wird gegen MySQL. Dagegen steht jetzt
-    `tools/schemaprobe/` in Stufe 1, mit einer **Matrix** über MySQL 8.4.0
-    und MariaDB 10.6.
-
-    **Nachtrag 21.09.2026 (Web 20.26.3):** Der bewahrte Alias `AS manual`
-    war selbst betroffen — MySQL 8.4.0 bis 8.4.10 reserviert das Wort auch
-    als Alias. Export und Sicherung scheiterten auf Staging (MySQL 8.4.10)
-    mit 1064. Behoben mit Backticks um den Alias, Nr. 267.
 
 239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php`
     mit.**
@@ -10040,3 +10006,46 @@ zutreffen.
     Servereinstellungsseite; alle vier Fälle der Statuszeile; Kontraste
     **25 Paare, 0 verfehlt**. Auf Staging ist die Zeile in der `config.php`
     nachzutragen (Rahmenplan 6).
+
+238. **`missions.manual` bricht die Einrichtung auf MySQL 8.4.0–8.4.10.**
+    *Aufgenommen 20.09.2026 aus dem Fehlversuch auf dem neuen
+    Staging-Webspace.* **Umgesetzt in Web 20.25.0**, Zweig
+    `claude/festive-fermi-el0avv`. Offen war allein die Prüfung durch die
+    Betreiberin — Liste im Prüfdokument `Pruefdokument-uhr_gesperrt.md`
+    (gelöscht 24.09.2026, Historie `5e501ae`).
+
+    `SQLSTATE[42000] … 1064 … near 'manual TINYINT(1) NOT NULL DEFAULT 0` —
+    MySQL führt **MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort**, ab
+    8.4.11 wieder nicht. `schema.sql` legte die Spalte ungequotet an; die
+    Staging-Datenbank ist 8.4.x.
+
+    **Gemessen:** 788 Bezeichner-Vorkommen in elf DDL-führenden Dateien gegen
+    284 reservierte Wörter → **zehn betroffene Stellen**, nicht eine. Neben
+    der Einrichtung der Uhr-Eingang, GPX- und Datei-Import, der Schnitt,
+    beide Zweige des Einsatzformulars und beide Richtungen der Sicherung.
+    `PARALLEL`, `QUALIFY`, `TABLESAMPLE` (in 8.4 ebenfalls neu reserviert)
+    kommen nicht vor.
+
+    **Entscheidung (Philipp, 20.09.2026): umbenennen in `uhr_gesperrt`, nicht
+    quoten.** Eine übersehene Stelle scheitert dann auf jeder Version sofort
+    statt nur auf elf im Betrieb. Der Dateischlüssel in Sicherung und Export
+    bleibt `manual`.
+
+    **Dahinter lag ein zweiter Blocker, und er war der größere:**
+    `DEFAULT UTC_TIMESTAMP()` ohne Klammern wird von MySQL auf **jeder**
+    Fassung abgewiesen (vier Stellen). Die Anwendung ließ sich damit **seit
+    Web 20.16.5 auf MySQL überhaupt nicht einrichten**; gemerkt hat es
+    niemand, weil der Fehler am reservierten Wort schon vorher kam. Beides
+    hatte dieselbe Ursache — entwickelt und geprüft wird gegen MariaDB,
+    ausgeliefert wird gegen MySQL. Dagegen steht jetzt
+    `tools/schemaprobe/` in Stufe 1, mit einer **Matrix** über MySQL 8.4.0
+    und MariaDB 10.6.
+
+    **Nachtrag 21.09.2026 (Web 20.26.3):** Der bewahrte Alias `AS manual`
+    war selbst betroffen — MySQL 8.4.0 bis 8.4.10 reserviert das Wort auch
+    als Alias. Export und Sicherung scheiterten auf Staging (MySQL 8.4.10)
+    mit 1064. Behoben mit Backticks um den Alias, Nr. 267.
+
+    *Erledigt 24.09.2026:* Prüfung durch die Betreiberin erfolgt — erklärt beim
+    Aufräumen der Konzeptablage (Rahmenplan Fassung 109); damit ist nichts
+    mehr offen. Aus Rahmenplan Abschnitt 5 herausgenommen.

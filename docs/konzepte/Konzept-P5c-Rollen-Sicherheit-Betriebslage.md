@@ -15,7 +15,7 @@ R74, R75, R78, R81, R83; Einschub vom 20.09.2026 (Abschnitt D).
 (E-P5c-51, AP10 entfällt).
 **Vorbereitung:** `Vorbereitung-P5c-Protokollierung.md` (V1–V9 entschieden,
 16./20.09.2026); Gestaltungsvorgaben des Auftraggebers vom 17. und 20.09.2026
-(Konzept P5b Abschnitt 6; Erklärtext-Regel); **Abgleich vom 23.09.2026**
+(Konzept P5b Abschnitt 6 — gelöscht 24.09.2026, Historie `5e501ae`; Erklärtext-Regel); **Abgleich vom 23.09.2026**
 gegen `8fd4553` (`konzept-p5c/Abgleich-2026-09-23.md`, 0a).
 **Modell:** Konzept Fable (R14), Umsetzung Opus (K2). **Kein Fable-Schritt**
 in der Umsetzung. Die Mockup-Runde **M-P5c-02** fährt Opus, **aus dem
@@ -34,7 +34,7 @@ Umsetzung.
 > |---|---|
 > | Stand | **23.09.2026 — Fassung 2.** Fassung 1 (20.09.2026, gegen `862ca7f`, Web 20.25.0) freigegeben, Mockup-Runde M-P5c-01 freigegeben. Am 23.09.2026 gegen `8fd4553` (Web 20.37.1, nach Schritt 15, 16 und PK-01 bis -04) abgeglichen: 139 Rohbefunde, 16 davon in der Gegenlesung widerlegt; 21 Fragen dem Auftraggeber vorgelegt und am selben Tag beantwortet (Q-P5c-05 bis -25, 2.7). Daraus **E-P5c-31 bis -58** und **F-P5c-15 bis -58**. Nachgezogen auf `main` `8ae873c` (PK-04 gemergt, Konzept TB). **Mockup-Runde M-P5c-02** am 23.09.2026 gebaut und freigegeben: **F-P5c-59 bis -63**, **Q-P5c-26 bis -30**, **E-P5c-59 bis -66** (2.8). |
 > | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -74** (2.9, ohne eigene Frage — wer eine davon anders will, sagt es) |
-> | Offen | Nichts. Die beiden Fehler aus der Runde M-P5c-02 außerhalb von P5c — Backlog **288** (Neueinrichtung scheiterte seit Web 20.30.0) und **289** (Anmeldeseite) — sind mit der Korrekturstufe **Web 20.37.3** behoben (23.09.2026, F-P5c-62, -63); ihre Prüfliste steht in `Pruefdokument-Korrektur-288-289.md` |
+> | Offen | Nichts. Die beiden Fehler aus der Runde M-P5c-02 außerhalb von P5c — Backlog **288** (Neueinrichtung scheiterte seit Web 20.30.0) und **289** (Anmeldeseite) — sind mit der Korrekturstufe **Web 20.37.3** behoben (23.09.2026, F-P5c-62, -63); ihre Prüfliste war abgearbeitet und stand in `Pruefdokument-Korrektur-288-289.md` (gelöscht 24.09.2026, Historie `5e501ae`) |
 > | Umsetzung | **läuft seit 23.09.2026. AP1 erledigt** (Web 20.38.0; Befunde F-P5c-64 bis -72, alle behoben oder als Prüfmittelfalle benannt). **Als Nächstes: AP2.** — Vorgeschichte: **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** |
 > | Fable-Schritte | **keine.** M-P5c-01 ist am 20.09.2026 mit Fable gefahren; M-P5c-02 fährt Opus (Q-P5c-08) |
 > | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02 (beide erledigt mit Web 20.37.3, das **290** und **291** vergibt); der Kopf des Backlogs nennt **292** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) |
