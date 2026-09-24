@@ -126,7 +126,14 @@ melde "Bericht"
 args=(schreiben --stufe "$STUFE" --basis "$BASIS"
       --konfiguration "$([ "$STUFE" = haupt ] && echo alles || echo web)")
 for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
-python3 "$HIER/bericht.py" "${args[@]}"
+# Ohne Bericht ist der Lauf rot, wie grün die Proben auch waren (BR-04,
+# Nr. 314): Bis dahin endete er hier mit rc 0 und „0 rot", auch wenn
+# bericht.py abgestürzt war — ein Lauf ohne Beleg, der sich als Beleg meldete.
+rcb=0; python3 "$HIER/bericht.py" "${args[@]}" || rcb=$?
+if [ "$rcb" -ne 0 ]; then
+    melde "KEIN BERICHT — bericht.py endete mit rc $rcb. Der Lauf ist rot."
+    exit 1
+fi
 
 melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün · $SECONDS s"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."

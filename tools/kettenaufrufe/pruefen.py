@@ -80,6 +80,9 @@ PFAD    = r'((?:tools|server|android)/[\w./-]+\.(?:py|mjs|js|php|sh)|\./gradlew)
 # einem Anfuehrungszeichen, das einen Code-Text eroeffnet.
 AUFRUF_RE = re.compile(r'(?:' + STARTER + r'\s+)?(?<![\w/\'"$-])' + PFAD)
 CODE_MODUS_RE = re.compile(r'\b(?:php\s+-r|python3?\s+-c|node\s+-e)\b')
+# Wo eine Zeile in mehrere Befehle zerfaellt (BR-04). Nur mit Leerraum
+# davor und danach -- ein `|` in einem Muster ("a|b") trennt nichts.
+KETTE_RE = re.compile(r'\s+(?:&&|\|\||\|)\s+|;\s+')
 
 
 def melde(t: str = '') -> None:
@@ -239,95 +242,103 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
             continue
         if CODE_MODUS_RE.search(zeile):
             continue          # `php -r "…"` ist Programmtext, kein Aufruf
-        # Eine Zeile, die AUSGIBT, ruft nicht auf. Die Fehlermeldungen der
-        # Kette nennen Werkzeuge beim Namen ("die Datei server/install.php
-        # EINMAL von Hand hochladen") -- das ist Prosa, kein Aufruf. Ebenso
-        # ein case-Muster (`*install.php*)`).
-        # EIN CASE-MUSTER HAT VOR SEINEM `)` KEINE OEFFNENDE KLAMMER. Bis BR-03
-        # stand hier `[^|;&]*\)`, und das traf auch `x=$(werkzeug --schalter)`:
-        # Jede Befehlsersetzung am Zeilenende ging ungeprueft durch.
-        if re.match(r'(?:echo|printf)\b', zeile) or re.match(r'[^|;&(]*\)\s*$', zeile):
-            continue
-        m = AUFRUF_RE.search(zeile)
-        if not m:
-            continue
-        rel = m.group(1)
-        datei = WURZEL / rel
-        n += 1
-
-        # `./gradlew` liegt nicht an der Wurzel, sondern in `android/` --
-        # der Schritt setzt `working-directory: android`. Diese Pruefung liest
-        # kein YAML und kennt das Arbeitsverzeichnis nicht; sie sucht die Datei
-        # deshalb auch dort. Schalter hat gradle genug, aber es ist kein
-        # Werkzeug DIESES Projekts -- seine Schnittstelle steht nicht hier.
-        if rel == './gradlew':
-            if not (WURZEL / 'android' / 'gradlew').exists():
-                ab.append(f'{lauf} · {schritt}: android/gradlew fehlt')
-            continue
-        if not datei.exists():
-            ab.append(f'{lauf} · {schritt}: aufgerufene Datei fehlt: {rel}')
-            continue
-
-        # Die Argumente hinter dem Pfad zerlegen. Was sich nicht zerlegen
-        # laesst (Fortsetzungszeilen, Anfuehrungszeichen ueber Zeilen), wird
-        # als UNGEPRUEFT gemeldet und nicht stillschweigend gutgeheissen.
-        rest = zeile[m.end():]
-        rest = rest.replace('\\', ' ')
-        try:
-            teile = shlex.split(rest, posix=True)
-        except ValueError:
-            hin.append(f'{lauf} · {schritt}: {rel} — Argumente nicht zerlegbar, UNGEPRUEFT')
-            continue
-
-        endung = datei.suffix
-        leser = LESER.get(endung)
-        if leser is None:
-            hin.append(f'{lauf} · {schritt}: {rel} — Art unbekannt, UNGEPRUEFT')
-            continue
-        quelle = datei.read_text(encoding='utf-8', errors='replace')
-        bekannt, pflicht, lesbar = leser(quelle)
-        if not lesbar:
-            hin.append(f'{lauf} · {schritt}: {rel} — keine Schnittstelle im '
-                       f'Quelltext gefunden, UNGEPRUEFT')
-            continue
-
-        benutzt = set()
-        for t in teile:
-            if not t.startswith('--'):
+        # EINE ZEILE KANN MEHRERE AUFRUFE TRAGEN (BR-04). `a && b`, `a || b`,
+        # `a | b`, `a; b`: Bis BR-04 nahm die Pruefung je Zeile den ERSTEN
+        # Aufruf und rechnete ihm jedes Wort dahinter zu. Der zweite Befehl
+        # einer Kette blieb ungeprueft -- ein vertippter Unterbefehl von
+        # `pruefstand.sh` hinter `geraeteklassen.py &&` meldete 0 Befunde --,
+        # und seine Schalter waeren dem ersten angelastet worden.
+        for zeile in KETTE_RE.split(zeile):
+            zeile = zeile.strip()
+            # Eine Zeile, die AUSGIBT, ruft nicht auf. Die Fehlermeldungen der
+            # Kette nennen Werkzeuge beim Namen ("die Datei server/install.php
+            # EINMAL von Hand hochladen") -- das ist Prosa, kein Aufruf. Ebenso
+            # ein case-Muster (`*install.php*)`).
+            # EIN CASE-MUSTER HAT VOR SEINEM `)` KEINE OEFFNENDE KLAMMER. Bis BR-03
+            # stand hier `[^|;&]*\)`, und das traf auch `x=$(werkzeug --schalter)`:
+            # Jede Befehlsersetzung am Zeilenende ging ungeprueft durch.
+            if re.match(r'(?:echo|printf)\b', zeile) or re.match(r'[^|;&(]*\)\s*$', zeile):
                 continue
-            # `x=$(werkzeug --schalter)`: Die schliessende Klammer der
-            # Befehlsersetzung haengt am letzten Wort. Bis BR-03 las die
-            # Pruefung `--erster)` als Schalternamen (baumsuche.py).
-            name = t.split('=', 1)[0].rstrip(')')
-            if '$' in name:          # ein Schalter aus einer Variablen
-                hin.append(f'{lauf} · {schritt}: {rel} — Schalter aus Variable '
-                           f'({name}), UNGEPRUEFT')
+            m = AUFRUF_RE.search(zeile)
+            if not m:
                 continue
-            benutzt.add(name)
-            if name not in bekannt:
-                ab.append(f'{lauf} · {schritt}: {rel} kennt {name} nicht — '
-                          f'bekannt: {" ".join(sorted(bekannt)) or "(keine)"}')
+            rel = m.group(1)
+            datei = WURZEL / rel
+            n += 1
 
-        if endung == '.py':
-            je = pflicht_je_befehl_py(quelle)
-            if je:
+            # `./gradlew` liegt nicht an der Wurzel, sondern in `android/` --
+            # der Schritt setzt `working-directory: android`. Diese Pruefung liest
+            # kein YAML und kennt das Arbeitsverzeichnis nicht; sie sucht die Datei
+            # deshalb auch dort. Schalter hat gradle genug, aber es ist kein
+            # Werkzeug DIESES Projekts -- seine Schnittstelle steht nicht hier.
+            if rel == './gradlew':
+                if not (WURZEL / 'android' / 'gradlew').exists():
+                    ab.append(f'{lauf} · {schritt}: android/gradlew fehlt')
+                continue
+            if not datei.exists():
+                ab.append(f'{lauf} · {schritt}: aufgerufene Datei fehlt: {rel}')
+                continue
+
+            # Die Argumente hinter dem Pfad zerlegen. Was sich nicht zerlegen
+            # laesst (Fortsetzungszeilen, Anfuehrungszeichen ueber Zeilen), wird
+            # als UNGEPRUEFT gemeldet und nicht stillschweigend gutgeheissen.
+            rest = zeile[m.end():]
+            rest = rest.replace('\\', ' ')
+            try:
+                teile = shlex.split(rest, posix=True)
+            except ValueError:
+                hin.append(f'{lauf} · {schritt}: {rel} — Argumente nicht zerlegbar, UNGEPRUEFT')
+                continue
+
+            endung = datei.suffix
+            leser = LESER.get(endung)
+            if leser is None:
+                hin.append(f'{lauf} · {schritt}: {rel} — Art unbekannt, UNGEPRUEFT')
+                continue
+            quelle = datei.read_text(encoding='utf-8', errors='replace')
+            bekannt, pflicht, lesbar = leser(quelle)
+            if not lesbar:
+                hin.append(f'{lauf} · {schritt}: {rel} — keine Schnittstelle im '
+                           f'Quelltext gefunden, UNGEPRUEFT')
+                continue
+
+            benutzt = set()
+            for t in teile:
+                if not t.startswith('--'):
+                    continue
+                # `x=$(werkzeug --schalter)`: Die schliessende Klammer der
+                # Befehlsersetzung haengt am letzten Wort. Bis BR-03 las die
+                # Pruefung `--erster)` als Schalternamen (baumsuche.py).
+                name = t.split('=', 1)[0].rstrip(')')
+                if '$' in name:          # ein Schalter aus einer Variablen
+                    hin.append(f'{lauf} · {schritt}: {rel} — Schalter aus Variable '
+                               f'({name}), UNGEPRUEFT')
+                    continue
+                benutzt.add(name)
+                if name not in bekannt:
+                    ab.append(f'{lauf} · {schritt}: {rel} kennt {name} nicht — '
+                              f'bekannt: {" ".join(sorted(bekannt)) or "(keine)"}')
+
+            if endung == '.py':
+                je = pflicht_je_befehl_py(quelle)
+                if je:
+                    wort = next((t for t in teile if not t.startswith('-')), None)
+                    if wort not in je:
+                        ab.append(f'{lauf} · {schritt}: {rel} kennt den Befehl '
+                                  f'"{wort}" nicht — bekannt: {" ".join(sorted(je))}')
+                    else:
+                        pflicht = pflicht | je[wort]
+            for p in sorted(pflicht - benutzt):
+                ab.append(f'{lauf} · {schritt}: {rel} verlangt {p}, der Aufruf '
+                          f'uebergibt es nicht')
+
+            # Unterbefehle eines Shell-Werkzeugs
+            if endung == '.sh':
+                namen = befehle_sh(quelle)
                 wort = next((t for t in teile if not t.startswith('-')), None)
-                if wort not in je:
+                if namen and wort and wort not in namen:
                     ab.append(f'{lauf} · {schritt}: {rel} kennt den Befehl '
-                              f'"{wort}" nicht — bekannt: {" ".join(sorted(je))}')
-                else:
-                    pflicht = pflicht | je[wort]
-        for p in sorted(pflicht - benutzt):
-            ab.append(f'{lauf} · {schritt}: {rel} verlangt {p}, der Aufruf '
-                      f'uebergibt es nicht')
-
-        # Unterbefehle eines Shell-Werkzeugs
-        if endung == '.sh':
-            namen = befehle_sh(quelle)
-            wort = next((t for t in teile if not t.startswith('-')), None)
-            if namen and wort and wort not in namen:
-                ab.append(f'{lauf} · {schritt}: {rel} kennt den Befehl '
-                          f'"{wort}" nicht — bekannt: {" ".join(sorted(namen))}')
+                              f'"{wort}" nicht — bekannt: {" ".join(sorted(namen))}')
     return ab, hin, n
 
 
@@ -423,6 +434,10 @@ def selbstprobe() -> int:
          'treffer=$(python3 tools/kette/baumsuche.py --baum "$B" --fenster 30 --erster) || rc=$?'),
         ('ein unbekannter Schalter in einer Befehlsersetzung', True,
          'treffer=$(python3 tools/kette/baumsuche.py --baum "$B" --fenster 30 --zuerst)'),
+        ('ein unbekannter Befehl HINTER `&&` (BR-04)', True,
+         'python3 tools/kette/tor.py --selbstprobe && bash tools/quelltext/pruefen.sh bestnd'),
+        ('GEGENPROBE: zwei richtige Aufrufe in einer Kette (BR-04)', False,
+         'python3 tools/kette/tor.py --selbstprobe && bash tools/quelltext/pruefen.sh bestand'),
         ('GEGENPROBE: eine Zeile ohne Werkzeugaufruf', False,
          'echo "nichts zu sehen" >> "$GITHUB_STEP_SUMMARY"'),
         ('GEGENPROBE: ein auskommentierter Aufruf', False,

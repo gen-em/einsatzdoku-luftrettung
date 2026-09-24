@@ -139,14 +139,14 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **314** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **317** und trägt seine
 Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
 Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** das
-Korrekturpaket RP. **293 und 304 bis 313** vergibt Konzept BR (24.09.2026,
+Korrekturpaket RP. **293 und 304 bis 316** vergibt Konzept BR (24.09.2026,
 Zweig `claude/br-bestandsriegel`; 304 bis 313 sind die nachgetragenen Anlässe
-aus E-BR-17 und E-BR-18); die Spanne **294 bis 303** hat der P5c-Zweig
+aus E-BR-17 und E-BR-18, 314 bis 316 Funde aus BR-04); die Spanne **294 bis 303** hat der P5c-Zweig
 `claude/p5c-mockups-konzept-4yeomf` am selben Tag reserviert — 294 Konzept
 SD, 295 bis 298 die Anlässe aus der Zuarbeit von BR, 299 bis 303 frei für
 Funde der Umsetzung. Nachgesehen auf `origin/main` und auf allen offenen
@@ -3763,6 +3763,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
     **Zuordnung: Backlog-Runde.**
+
+315. **Vier Schritte beim Einhängen eines Prüfmittels misst niemand.**
+    *Aufgenommen 24.09.2026 mit Konzept BR (BR-04, F-BR-19), gemessen von
+    der Gegenlesung des Runbooks `Pruefablauf.md` 6.12.* Eine unabhängige
+    Instanz hat zwei Attrappen eingehängt und je einen Schritt weggelassen.
+    Rot wurden fehlende Anlass-Zeile, `RUF`-Zeile, Backlog-Nummer, Name in
+    `NAMEN` oder `starter()` und das `--riegel` im Tor. **Grün blieb alles**
+    bei vier anderen: (1) eine Quelltextprüfung mit Selbstprobe, die nicht in
+    `SELBST` steht — ihre Selbstprobe läuft nirgends; (2) eine
+    Quelltextprüfung ohne Zeile in der Tabelle von
+    `tools/quelltext/LIESMICH.md` — ihr Anlass steht nirgends; (3) eine
+    Probe unter `proben` in `pruefablauf.json`, die in keinem Muster und
+    keinem Riegel steht — sie läuft nie; (4) die Tabelle in
+    `Pruefablauf.md` 4, nicht neu erzeugt — nichts vergleicht sie mit
+    `erzeugen-doku`, obwohl sie „nicht von Hand ändern" trägt.
+
+    *Weg (zu entscheiden):* die vier als Regeln in `bestand` (1, 2, 3) und
+    als Vergleich in `bericht.py` oder `bestand` (4). Jede ist eine Zeile
+    Zählung gegen eine Liste, die es schon gibt. Bis dahin nennt 6.12 sie
+    als Schritte, die man gegenliest. *Abnahme:* je Lücke ein Fall in der
+    Selbstprobe, der rot wird. **Zuordnung: Frage an die Betreiberin — eine
+    Erweiterung des Riegels, keine Fehlerbehebung; nicht in BR.**
 
 ## Erledigt
 
@@ -10093,5 +10115,34 @@ zutreffen.
     (`tools/kette/baumsuche.py`), der Selbstüberspringer der
     Wiederherstellungsprobe rot. BR-04: der Weg für ein neues Prüfmittel
     (`Pruefablauf.md` 6.12) und der Satz „Ein Anlass ist eine
-    Backlog-Nummer" (6.1). Prüfliste:
+    Backlog-Nummer" (6.1); die Gegenlesung des Weges durch Befolgen fand
+    Nr. 314 und 315. Prüfliste:
     `docs/konzepte/Pruefdokument-BR-Bestandsriegel.md`.
+
+314. **Der Prüfstand meldete grün, wenn sein Bericht nicht entstand.**
+    *Aufgenommen und behoben 24.09.2026 mit Konzept BR (BR-04, F-BR-18),
+    gefunden von der Gegenlesung des Runbooks.* `tools/pruefstand/pruefen.sh`
+    rief `bericht.py schreiben` auf und wertete den Rückgabewert nicht aus
+    (kein `set -e`). Stürzte der Bericht ab, endete der Lauf mit rc 0 und
+    „0 rot, 17 grün" — ohne Beleg. Der Absturz selbst kam aus `bericht.py`:
+    Der eigene Index lag fest unter `WURZEL/.git/`, und in einem Worktree ist
+    `.git` eine Datei. Im Tor wäre es aufgefallen (kein Bericht → rot);
+    örtlich hielt sich eine Instanz für fertig. *Behoben:* Ohne Bericht ist
+    der Lauf rot („KEIN BERICHT — bericht.py endete mit rc …"), und den Ort
+    des Index nennt Git (`rev-parse --git-path`). *Nachweis:* im Worktree
+    vorher rc 0 ohne Bericht, nachher Bericht mit Baum und rc 0; mit einem
+    absichtlich scheiternden `bericht.py` rc 1.
+
+316. **Die Uhr-Probe des Prüfstands lief seit PK-03 nie.** *Aufgenommen und
+    behoben 24.09.2026 mit Konzept BR (BR-04, F-BR-20); als F-PK-21 seit
+    PK-03 bekannt, nie behoben.* `pruefablauf.json` rief für `uhr-stufe1`
+    nur `pruefstand.sh reihe` auf; `reihe` verlangt die Geräteliste, die
+    erst `geraeteklassen.py` schreibt, und brach nach 0 s ab („Listendatei
+    fehlt"). Aufgefallen ist es erst jetzt, weil seit PK-05 kein Pull
+    Request `tools/uhr-pruefstand/` berührt hatte — das Tor verlangt dann
+    `uhr=gebaut`, und der Prüfstand konnte es nie liefern. `kettenaufrufe`
+    sah es nicht: Es prüft Namen und Schalter, keine Positionsargumente
+    (F-PK-21). *Behoben:* Der Aufruf ist die Kette aus der Anleitung des
+    Werkzeugs — Liste schreiben, dann `reihe`. *Nachweis:* von Hand
+    99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei, rc 0, rund 10 min.
+    Der Lauf im Prüfstand steht im Bericht des Kopf-Commits von BR.

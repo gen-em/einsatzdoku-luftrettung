@@ -13,6 +13,8 @@ Stand: BR-01 bis BR-04 erledigt, 24.09.2026 — Merge offen.*
 | **Der Riegel in Stufe 1 auf GitHub** | Stufe 1 läuft erst beim Pull Request. Örtlich gefahren sind derselbe Läufer, dieselbe Selbstprobe und dieselbe Gegenlesung (`bericht.py lesen`); ob der Schritt im Tor mit dem Bericht übereinstimmt, zeigt erst der PR. | P-BR-01 |
 | **Ob jede Anlass-Zeile den richtigen Fehler nennt** | Der Riegel misst die Zeile, nicht ihren Inhalt (E-BR-03). Zwölf Nummern sind von Agenten mit Beleg vorgeschlagen und von der Instanz gegengelesen, fünf davon einzeln nachgelesen; zehn Einträge (304–313) sind neu geschrieben. Eine zweite, unabhängige Lesung hat es nicht gegeben. | P-BR-05 |
 | **Uhr-Prüfstand nach der Kürzung seiner Anleitung** | Die Befehle sind unverändert übernommen; gefahren wird `uhr-stufe1` mit dem Prüfstand vor dem PR (BR-04), weil `tools/uhr-pruefstand/` berührt ist. | P-BR-02 |
+| **Die zweite Fassung des Runbooks 6.12** (BR-04) | Die Gegenlesung durch Befolgen hat die **erste** Fassung geprüft und fünf Lücken und drei falsche Aussagen gefunden (F-BR-19). Die zweite Fassung beantwortet jede davon, ist aber nicht noch einmal von einer unabhängigen Instanz befolgt worden. | P-BR-09 |
+| **Vier Schritte beim Einhängen meldet kein Mittel** (BR-04) | Kein Mangel der Prüfung, sondern ihr Ergebnis: `SELBST`, Tabellenzeile der Quelltextprüfung, Probe ohne Muster und Riegel, Tabelle in `Pruefablauf.md` 4. Bis Q-BR-13 entschieden ist, fängt sie nur Gegenlesen. | Nr. 315, Q-BR-13 |
 | **Die Baumsuche gegen die echte GitHub-Schnittstelle** (BR-03) | In dieser Umgebung gibt es kein `gh`. Belegt ist die Logik über die Selbstprobe mit nachgebauten Antworten (11 / 0) und die Aufrufe über `kettenaufrufe` (0 Befunde); nicht belegt ist, dass die echte Antwort die Form hat, die die Selbstprobe annimmt. Die Felder sind dieselben, die die Bash-Schleife vorher las. | P-BR-07, P-BR-08 |
 | **Ein roter Riegel hält wirklich einen Merge auf** | Das hieße, einen PR mit einem eingebauten Fehler zu öffnen. Belegt ist es an zwei Stellen, die zusammen tragen: Die Selbstprobe baut je Regel einen Fehler ein (24 / 0), und das Tor liest jeden Riegel aus `pruefablauf.json` gegen den Bericht (`--alle-riegel`, P-PK-29 bis -32). | P-BR-03 (freiwillig) |
 
@@ -38,6 +40,10 @@ Stand: BR-01 bis BR-04 erledigt, 24.09.2026 — Merge offen.*
 | BR-03 | `kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | nach F-BR-17 auch Befehlsersetzungen am Zeilenende | **18 von 18**; **84** Aufrufe, 0 Befunde, 2 ungeprüft |
 | BR-03 | `proben.sh wiederherstellung` normal / ohne Zusatzkonten | Teil 11 meldet „nicht gemessen" rot (F-BR-04) | **111 / 0**, rc 0 / **rc 1** |
 | BR-03 | `aufbauen.sh web` | `cmark-gfm` in der Ausbaustufe | **11 von 11** Stücken |
+| BR-04 | Gegenlesung von 6.12 durch Befolgen, eigene Instanz im Worktree | zwei Attrappen (Quelltextprüfung als Riegel, Probe am Muster), je ein Schritt weggelassen | erste Fassung: **5** Sprünge, **4** weitere Dateien, **3** falsche Aussagen; eingehängt grün: `bestand` 0, `kettenaufrufe` 86/0, Selbstproben 9/9, `alle` 12/12; **4** Auslassungen meldet niemand |
+| BR-04 | `pruefstand/pruefen.sh --stufe klein` in einem Git-Worktree, vor und nach der Behebung, dazu `bericht.py` durch `sys.exit(3)` ersetzt | ob ein Lauf ohne Bericht grün sein kann (F-BR-18) | vorher **rc 0** ohne Bericht; nachher Bericht mit Baum, rc 0; Gegenprobe **rc 1** |
+| BR-04 | erster voller Prüfstand, dann der neue Aufruf von `uhr-stufe1` von Hand | ob die Uhr-Probe überhaupt läuft (F-BR-20, seit PK-03 als F-PK-21 bekannt) | vorher **rot nach 0 s**; von Hand **99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei**, rc 0, 9 min 56 s |
+| BR-04 | `kettenaufrufe` alt gegen neu, `--probe` | Ketten mit `&&` (F-BR-21) | alt 1 Aufruf / 0 Befunde, neu 2 / 1; **20 von 20**; **85** Aufrufe, 0 Befunde, 2 ungeprüft |
 | BR-04 | `git merge-tree` gegen den P5c-Zweig (`f7729c2`), dann `bestand.py --wurzel` über den zusammengeführten Baum | was P5c nach dem Aufnehmen tun muss (Konzept 8.1) | **4** Dateien mit Konflikt; danach **1** Befund (Anlass der Protokollprobe); Zählung 40 Zeilen / 0 über der Decke; `kettenaufrufe` 86 / 0 |
 
 Im Browser ist nichts zu prüfen: BR berührt weder `server/` noch eine
@@ -61,8 +67,9 @@ Android- oder Uhr-Oberfläche.
 - [ ] **P-BR-02 — Der Bericht im Kopf-Commit nennt `bestand=0`.**
   *Weg:* `git log -1` auf dem PR-Kopf.
   *Erwartet:* ein Block `Prüfstand: …` mit `bestand=0`, `syntax-py=0` und
-  `handbuch=0` unter den Riegeln und `uhr=gebaut` (BR-02 berührt
-  `tools/uhr-pruefstand/`).
+  `handbuch=0` unter den Riegeln, `uhr-stufe1=0` und `uhr=gebaut` (BR-02
+  berührt `tools/uhr-pruefstand/`), `android-bau=0` und `handy=gebaut`
+  (BR-02 berührt `android/LIESMICH.md`).
   *Scheitern erkennbar an:* eine der drei mit 1 oder 2, eine fehlt im
   Block, oder `uhr=nicht-gemessen`.
 - [ ] **P-BR-03 (freiwillig) — Ein eingebauter Fehler macht Stufe 1 rot.**
@@ -108,11 +115,21 @@ Android- oder Uhr-Oberfläche.
   *Scheitern erkennbar an:* „Kein grüner Stufe-1-Lauf auf diesem Baum" bei
   einem Stand, dessen PR grün war — das Tor schließt dann (sicher), aber
   die Suche liest falsch.
-- [ ] **P-BR-09 — Das Runbook trägt.** *Weg:* beim nächsten neuen
-  Prüfmittel (etwa auf P5c) nur `Pruefablauf.md` 6.12 befolgen.
-  *Erwartet:* `bestand` und `kettenaufrufe` beim ersten Lauf 0 Befunde.
+- [ ] **P-BR-09 — Die zweite Fassung des Runbooks trägt.** *Weg:* beim
+  nächsten neuen Prüfmittel (etwa auf P5c) nur `Pruefablauf.md` 6.12
+  befolgen, einschließlich der vier Schritte mit „niemand".
+  *Erwartet:* `bestand`, `kettenaufrufe` und `pruefen.sh --selbstprobe`
+  beim ersten Lauf grün, und der Prüfstand wählt das Mittel aus.
   *Scheitern erkennbar an:* ein Schritt, den 6.12 nicht nennt und den erst
-  Stufe 1 meldet — dann gehört er in 6.12.
+  Stufe 1 oder der Prüfstand meldet (etwa `KeyError` in der Auswahl) —
+  dann gehört er in 6.12.
+- [ ] **P-BR-10 — Der Prüfstand ohne Bericht ist rot.** *Weg:* freiwillig;
+  `git worktree add` eines beliebigen Stands **außerhalb** des
+  Repositoriums, dort `bash tools/pruefstand/pruefen.sh --stufe klein
+  --datei docs/Backlog.md`.
+  *Erwartet:* ein Block `Prüfstand: klein · Baum …` und rc 0.
+  *Scheitern erkennbar an:* `CalledProcessError` im Abschnitt „Bericht"
+  und trotzdem rc 0 — dann ist F-BR-18 zurück.
 ---
 
 ## 4. Grenzen der Prüfmittel
@@ -130,3 +147,8 @@ Android- oder Uhr-Oberfläche.
 - **Die Einstiegsdatei einer Probe kommt aus `proben.sh`.** Wer eine Probe
   an `RUF` vorbei startet, entzieht sie dem Riegel — der Ordner ohne Eintrag
   ist dann aber ein Befund.
+- **„Die Nummer gibt es" heißt „eine Zeile beginnt mit ihr".** `bestand`
+  liest jede Zeile in `Backlog.md`, die mit Zahl und Punkt beginnt, als
+  Nummer — auch ein umbrochenes Datum oder eine Aufzählung. Eine
+  Anlass-Nummer, die es nur als solche Zeile gibt, ist für ihn belegt
+  (gemessen von der Gegenlesung, BR-04).

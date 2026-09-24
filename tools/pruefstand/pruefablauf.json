@@ -184,8 +184,9 @@
       "braucht": "android"
     },
     "uhr-stufe1": {
-      "aufruf": "bash tools/uhr-pruefstand/pruefstand.sh reihe",
-      "braucht": "uhr"
+      "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh reihe /tmp/uhr-auswahl.txt",
+      "braucht": "uhr",
+      "bemerkung": "Stufe I ueber alle Manifest-Geraete, rund 10 min. `reihe` verlangt die Liste, die erst geraeteklassen.py schreibt; bis BR-04 stand hier nur `reihe` und brach sofort ab (F-PK-21 seit PK-03, Nr. 316). Aufgefallen ist es erst, als ein PR tools/uhr-pruefstand/ beruehrte und das Tor uhr=gebaut verlangte."
     },
     "zaehlung": {
       "aufruf": "php tools/zaehlung/zaehlen.php",

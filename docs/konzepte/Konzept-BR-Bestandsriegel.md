@@ -19,11 +19,11 @@ entsteht mit BR-01. **Zweig der Umsetzung:** `claude/br-bestandsriegel`, von
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — Umsetzung läuft** auf `claude/br-bestandsriegel` (von `main` `f4fe4a0`, Konzept per Vorspulen übernommen; der Konzeptzweig ist gelöscht). **BR-01 bis BR-03 erledigt** — der Riegel steht, der Altbestand ist bereinigt (**57 → 0 Befunde**, `proben.sh alle` 20 von 20), und die Reste aus PK, TB und RP sind aufgeräumt: 17 Riegel statt 14, eine Baumsuche statt zweier (Protokoll in Abschnitt 9). |
+> | Stand | **24.09.2026 — gebaut, Pull Request offen** auf `claude/br-bestandsriegel` (von `main` `f4fe4a0`, Konzept per Vorspulen übernommen; der Konzeptzweig ist gelöscht). **BR-01 bis BR-04 erledigt** — der Riegel steht, der Altbestand ist bereinigt (**57 → 0 Befunde**, `proben.sh alle` 20 von 20), die Reste aus PK, TB und RP sind aufgeräumt (17 Riegel statt 14, eine Baumsuche statt zweier), und der Weg für ein neues Prüfmittel steht in `Pruefablauf.md` 6.12 — **gegengelesen durch Befolgen** (Protokoll in Abschnitt 9). |
 > | Entschieden | **E-BR-01 bis E-BR-10**, alle von der Betreiberin am 24.09.2026 (Abschnitt 4); Q-BR-01 bis -07 beantwortet, alle wie empfohlen (Abschnitt 5). **Aus der Umsetzung: E-BR-11 bis -16** (4.1, zur Kenntnis — keine ändert eine Entscheidung der Betreiberin). **E-BR-17 und -18** von der Betreiberin am 24.09.2026 auf Q-BR-08 bis -12 (5.1). |
-> | Befunde der Umsetzung | **F-BR-07 bis -17** (2.1). Zwei davon verschieben den Rahmen: Die Handzählung aus Abschnitt 2 war zu grob (F-BR-07: 57 Befunde statt rund 35, **20** Anlass-Zeilen statt 19) — und **P5c ist weiter als angenommen** (F-BR-11: AP2 ist gebaut, E-BR-02 „Merge vor P5c AP2" ist damit überholt; was P5c nach dem Aufnehmen tun muss, ist gemessen). |
-> | Offen | nichts, was BR aufhält. **Zwei Zuarbeiten von P5c** (Q-BR-05, -06) — von P5c als Nachtrag zur Fassung 2 übernommen (E-P5c-86 bis -90, Backlog 295–298 auf dem P5c-Zweig). |
-> | Nächstes | **BR-04** — Runbook `Pruefablauf.md` 6.12, der Satz in 6.1, Backlog Nr. 293 nach *Erledigt*, Prüfstand mit Uhr-Bau, Gegenlesung des Runbooks, Pull Request |
+> | Befunde der Umsetzung | **F-BR-07 bis -21** (2.1). Zwei davon verschieben den Rahmen: Die Handzählung aus Abschnitt 2 war zu grob (F-BR-07: 57 Befunde statt rund 35, **20** Anlass-Zeilen statt 19) — und **P5c ist weiter als angenommen** (F-BR-11: AP2 ist gebaut, E-BR-02 „Merge vor P5c AP2" ist damit überholt; was P5c nach dem Aufnehmen tun muss, ist gemessen). |
+> | Offen | nichts, was BR aufhält. **Q-BR-13** an die Betreiberin (die vier stillen Schritte beim Einhängen, Nr. 315). Die Zuarbeiten an P5c (Q-BR-05, -06) hat P5c übernommen; was P5c nach dem Aufnehmen tun muss, ist **gemessen** (8.1: vier Dateien mit Konflikt, danach ein Befund). |
+> | Nächstes | **Freigabe des Abschlusses** durch die Betreiberin, dann Erledigt-Zeile in `Rahmenplan.md` 8, Konzept löschen; das Prüfdokument bleibt bis zum Abhaken. |
 
 ---
 
@@ -85,6 +85,10 @@ Workflow-Dateien durch TB oder RP; das Tor selbst (P-PK-29 bis -32).
 | F-BR-15 | **Die Anleitungen trugen Zahlen und Schalter, die nicht mehr stimmten:** `vergleichen.py --selbstprobe` 14 Fälle statt „sieben", die Zählung 34 statt 29, `tor.py` ohne das genannte `--jobs-token`; `zaehlen.php` verwies auf `tools/wortliste/zerlegen.py`. Genau das, was E-BR-03 nicht misst — der Inhalt einer Anleitung — und was beim Kürzen ohnehin gelesen wird. | Berichtigt beim Kürzen. |
 | F-BR-16 | **`cmark-gfm --validate-utf8` prüft die Kodierung nicht** (BR-03). Es ersetzt kaputte Bytes still durch U+FFFD und endet mit 0 — belegt mit einer Datei aus `\xff\xfe`: Ausgabe zweimal `357 277 275`, rc 0. Der Tor-Schritt „rendern sie überhaupt?" hätte ein Handbuch mit kaputter Kodierung grün gemeldet. Gefunden von der Selbstprobe der neuen Quelltextprüfung `handbuch` beim Umzug. | `handbuch.py` liest die Datei zusätzlich streng als UTF-8; Selbstprobe 5 von 5, darunter genau dieser Fall. |
 | F-BR-17 | **`kettenaufrufe` sah Befehlsersetzungen am Zeilenende nicht** (BR-03). Eine Zeile, die mit `)` endet, galt als `case`-Muster und wurde übersprungen; eine Zeile wie `x=$(werkzeug --schalter)` war damit unsichtbar. Drei Aufrufe von `tor.py` in `ausliefern-lauf.yml` und `auslieferung.yml` gingen so nie durch die Prüfung. Dazu las es `--erster)` als Schalternamen. Gefunden, als der neue Aufruf von `baumsuche.py` einen falschen Befund bekam. | Ein `case`-Muster hat vor seinem `)` keine öffnende Klammer; die Klammer am letzten Wort wird abgelöst. 84 statt 81 Aufrufe, 0 Befunde; Selbstprobe 16 → 18. |
+| F-BR-18 | **Der Prüfstand meldete grün, wenn sein Bericht nicht entstand** (BR-04). `tools/pruefstand/pruefen.sh` wertete den Rückgabewert von `bericht.py schreiben` nicht aus (kein `set -e`); `bericht.py` legte seinen Index fest unter `WURZEL/.git/` an. In einem Git-Worktree ist `.git` eine Datei: `add -A` brach ab (`CalledProcessError`), und der Lauf endete mit **rc 0** und „0 rot, 17 grün", ohne Bericht. Gefunden von der Gegenlesung des Runbooks, nachgestellt in einem eigenen Worktree. Im Tor wäre es aufgefallen (kein Bericht → rot); örtlich hält sich eine Instanz für fertig. Dazu stand in der Anleitung des Prüfstands noch „klein ohne `server/` **14**" — seit BR-03 sind es 17. | Behoben in BR-04, **Backlog Nr. 314** (unter *Erledigt*): ohne Bericht rc 1 mit „KEIN BERICHT", den Index-Ort nennt Git (`rev-parse --git-path`). Gegenprobe mit einem absichtlich scheiternden `bericht.py`: rc 1. Anleitung auf 17. |
+| F-BR-19 | **Das Runbook trug in der ersten Fassung nicht** (BR-04, Abnahme laut Abschnitt 3). Die unabhängige Instanz brauchte **5** Sprünge in andere Abschnitte und **4** weitere Dateien (`Backlog.md`, `pysyntax.py`, `pruefablauf.json`, `pruefung.yml`). Drei Aussagen waren falsch: Die Klammer zur Regel `backlog` (sie misst Dopplungen, nicht „keine Zeile mit Zahl und Punkt"); das Muster mit nur `pfade`, `ab`, `anlass` (`auswahl.py` liest `id` und `proben` — `KeyError`, während `bestand` und `kettenaufrufe` grün bleiben); `nach` beim Muster statt beim Proben-Eintrag. Und **vier Schritte meldet kein Mittel**: Name fehlt in `SELBST`, Tabellenzeile der Quelltextprüfung fehlt, Probe an keinem Muster und keinem Riegel, Tabelle in 4 nicht neu erzeugt. | 6.12 neu geschrieben: Form eines Backlog-Eintrags, beide JSON-Einträge vollständig, die 40-Zeilen-Falle, Rückgabewerte, das Ende des erzeugten Blocks, und je Schritt das Mittel, das sein Fehlen meldet — oder „niemand". Die vier Lücken als **Backlog Nr. 315** (offen) und **Q-BR-13**. |
+| F-BR-20 | **Die Uhr-Probe des Prüfstands lief seit PK-03 nie** (BR-04). Der erste volle Prüfstand vor dem PR: `uhr-stufe1` **rot nach 0 s**, „Listendatei fehlt". `pruefablauf.json` rief `pruefstand.sh reihe` ohne die Geräteliste auf, die erst `geraeteklassen.py` schreibt. Bekannt seit PK-03 als **F-PK-21** („ob `kettenaufrufe` Pflichtargumente lernen soll: PK-04"), behoben nie. Unsichtbar, weil seit PK-05 kein PR `tools/uhr-pruefstand/` berührt hatte — BR-02 tut es, und das Tor verlangt dann `uhr=gebaut`. **Ohne Behebung wäre der PR von BR rot.** | Behoben in BR-04, **Backlog Nr. 316**: der Aufruf ist die Kette aus der Anleitung des Werkzeugs. Von Hand gemessen: 99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei, rc 0, 9 min 56 s. Runbook 6.12, Schritt 7: den Aufruf einmal von Hand fahren. |
+| F-BR-21 | **`kettenaufrufe` prüfte in einer Kette nur den ersten Befehl** (BR-04). Gegenprobe am neuen Aufruf von `uhr-stufe1`: `geraeteklassen.py --alle-listee` → 1 Befund, `pruefstand.sh reihee` hinter `&&` → **0**. Je Zeile ein Aufruf, jedes Wort dahinter ihm zugerechnet — die Schalter des zweiten Befehls wären dem ersten angelastet worden. | Die Zeile wird an `&&`, `\|\|`, `\|`, `;` zerlegt. Selbstprobe 18 → 20 (ein roter Fall, eine Gegenprobe); gegen die alte Fassung gefahren: sie zählte je Kette 1 Aufruf und übersah beide Tippfehler. 85 statt 84 Aufrufe, 0 Befunde. |
 
 ## 3. Arbeitspakete
 
@@ -263,7 +267,7 @@ was eine Entscheidung offen ließ, damit ein Mittel es messen kann.
   in Abschnitt 8; P5c trägt den Nachtrag selbst in sein Konzept ein.
 - **E-BR-10** (Q-BR-07): Fächerung nur für die Anlass-Zeilen.
 
-### 5.1 Fragen aus der Umsetzung (BR-02)
+### 5.1 Fragen aus der Umsetzung (BR-02, BR-04)
 
 Die Nachschlagearbeit für die Anlass-Zeilen (E-BR-10, 20 Agenten, Gegenlesung
 durch die Instanz) hat ergeben: **12 Proben** haben eine Backlog-Nummer, die
@@ -277,6 +281,7 @@ vorausgesetzt, dass die Nummer „schon da" ist.
 | **Q-BR-10** | **Rechtstexte-Probe** (`tools/proben/rechtstexte/pruefen.php`). Vorsorglich mit `rt_html()` gebaut (P3/O10, R32): 81 Angriffsproben und eine Positivliste der Tags. Ein Fund ist nicht verbucht. Sie ist ein **Riegel** — sie läuft in jeder Stufe und im Tor. | **Behalten, neue Nummer** → Nr. 311, E-BR-18. Vorschlag war ein Erledigt-Eintrag für das Risiko, das sie hütet: „`rt_html()` ist der eine Weg, auf dem aus einer Eingabe HTML wird — eine Lücke dort wäre ein eingeschleustes Skript auf den öffentlichen Rechtstextseiten". Streichen hieße, den einzigen Nachweis dieses Wegs aus dem Tor zu nehmen. |
 | **Q-BR-11** | **Stilvergleich** (`tools/stilvergleich/`). Anlass „P0/A3 — ein Umbau des Stylesheets ohne Netz und doppelten Boden". In Gebrauch (P5c AP2: 54 geplant, 54 gemessen, 0 ungeplant; `Pruefablauf.md` 6.10 regelt ihn), aber kein verbuchter Fund einer **ungeplanten** Änderung. | **Behalten, neue Nummer** → Nr. 312, E-BR-18. Vorschlag war ein Erledigt-Eintrag „Ein Umbau des Stylesheets ändert einen berechneten Stil, den niemand ändern wollte". Er ist das einzige Mittel für diese Frage; der Bilderlauf beantwortet sie nicht (6.10). |
 | **Q-BR-12** | **Kopplungsprobe** (`tools/proben/kopplung/probe.php`). Prüft `pair.php` gegen den JSON-Vertrag, dazu die **Antwortgleichheit** der Fehlerzweige (beide 401 in 0,351 s, Rümpfe byteweise gleich). Die einzige Nummer im Umfeld, Nr. 178, beschreibt einen Fehler der Probe selbst, und zwar in `rundlauf.mjs`. | **Behalten, neue Nummer** → Nr. 313, E-BR-18. Vorschlag war ein Erledigt-Eintrag „Die Fehlerzweige der Kopplung dürfen nicht verraten, welche Kennungen es gibt". Die Kopplung ist der eine Weg, auf dem ein Gerät ohne Anmeldung zu Zugangsdaten kommt. |
+| **Q-BR-13** | *(aus BR-04, offen — hält BR nicht auf)* Vier Schritte beim Einhängen eines Prüfmittels meldet **kein** Mittel (F-BR-19, Nr. 315): Name nicht in `SELBST`, keine Tabellenzeile der Quelltextprüfung, Probe an keinem Muster und keinem Riegel, Tabelle in `Pruefablauf.md` 4 nicht neu erzeugt. (a) als Regeln in `bestand` bzw. als Vergleich mit `erzeugen-doku` bauen — in einem eigenen kleinen Paket nach BR; oder (b) gegenlesen lassen, wie 6.12 es jetzt sagt? | **offen.** Empfehlung (a): Jede ist eine Zählung gegen eine Liste, die es schon gibt, und die Gegenlesung hat gezeigt, dass eine Instanz genau diese vier auslässt. Nicht in BR, weil es den Riegel erweitert, statt einen Fehler zu beheben. |
 
 ## 6. Der Preis der Parallelität — und was P5c davon merkt
 
@@ -303,6 +308,9 @@ vorausgesetzt, dass die Nummer „schon da" ist.
 
 ## 7. Was dieses Konzept nicht klärt
 
+- **Ob der Riegel die vier stillen Schritte beim Einhängen messen soll**
+  (F-BR-19, Q-BR-13, Nr. 315). Die Gegenlesung von 6.12 hat sie gefunden;
+  bis zur Antwort nennt 6.12 sie beim Namen.
 - **Ob der Riegel auch tote Werkzeugpfade in Dokumenten zählen soll**
   (F-BR-13). BR hat 26 davon von Hand gefunden und berichtigt; kein Mittel
   hält neue auf. Das wäre eine siebte Regel mit eigener Quelle — den
@@ -542,4 +550,86 @@ das Tor schließt, nicht öffnet.
 einer Selbstprobe bzw. einem Befund gefunden, die es ohne BR-03 nicht
 gegeben hätte. Die neue Anleitung der Quelltextprüfungen hatte zuerst 43
 Zeilen; der Riegel hat sie gemeldet.
+
+### BR-04 Das Runbook und der Abschluss — erledigt 24.09.2026
+
+**Gebaut.**
+
+- `Pruefablauf.md` **6.12 „Ein neues Prüfmittel"**, sieben Schritte. In
+  **6.1** der Satz „Ein Anlass ist eine Backlog-Nummer" (E-BR-07), dazu,
+  dass die Zeile je Ordner und je Probe gemessen wird und die Tabelle der
+  Quelltextprüfungen nicht. **Grundsatz 5** in `Pruefablauf.md` 1 und in
+  `CLAUDE.md` 6: „ist Stufe 1 rot" statt „steht auf der Streichliste"
+  (E-BR-19). 9 „Herkunft" nennt RP und BR.
+- **Backlog:** Nr. 293 nach *Erledigt*; **Nr. 314** (F-BR-18) und
+  **Nr. 316** (F-BR-20) behoben unter *Erledigt*, **Nr. 315** (F-BR-19)
+  offen; der Nummernkopf auf **317**. Nachgesehen auf allen sechs Zweigen
+  der Gegenstelle: keiner vergibt 314 bis 316.
+- **Rahmenplan** Fassung **112** (E-BR-20), eine Zeile in Abschnitt 10.
+  Die Erledigt-Zeile in Abschnitt 8 folgt nach der Freigabe.
+- **Prüfstand:** Ohne Bericht ist der Lauf rot; den Ort des eigenen Index
+  nennt Git (F-BR-18). Die Anleitung des Prüfstands nennt 17 statt 14.
+  `uhr-stufe1` ist verdrahtet (F-BR-20, Nr. 316); `kettenaufrufe` prüft
+  jeden Teil einer Kette (F-BR-21).
+- **Übergabe an P5c gemessen** (8.1).
+- **Veraltete Zahlen**, die BR-03 übersehen hatte: „neun" Prüfungen in
+  `Technik.md` und `README.md`, „sechs Regeln" im Kopf von `bestand.py`,
+  „14" in der Anleitung des Prüfstands.
+
+**Die Gegenlesung — die Abnahme aus Abschnitt 3.** Eine Instanz, die 6.12
+nicht geschrieben hat, hat in einem eigenen Worktree nur danach zwei
+Attrappen eingehängt — eine Quelltextprüfung als Riegel, eine Probe an
+einem Muster — und je einen Schritt weggelassen. **Ergebnis der ersten
+Fassung: Nein**, sie trug nicht allein (F-BR-19). Mit dem, was sie
+nachschlagen musste, waren beide Attrappen vollständig grün: `bestand`
+0 Befunde bei 21 Proben, `kettenaufrufe` 86 Aufrufe / 0, `pruefen.sh
+--selbstprobe` 9 von 9, `alle` 12 von 12, der Prüfstand wählte die
+Attrappe über ihr Muster. Die Gegenproben:
+
+| Weggelassen | gemeldet von |
+|---|---|
+| Anlass-Zeile der Probe, `RUF`-Zeile, Backlog-Eintrag, Kürzel statt Nummer | `bestand` rc 1 |
+| Name in `NAMEN` | `kettenaufrufe` rc 1 |
+| Name in `starter()` | Läufer: eine Prüfung weniger grün |
+| `--riegel` im Tor | Gegenlesung: „steht in pruefablauf.json, läuft aber nicht im Tor" |
+| Name in `SELBST`, Tabellenzeile, Muster/Riegel, Tabelle in 4 | **niemand** (Nr. 315) |
+
+Die zweite Fassung von 6.12 beantwortet jede Lücke an Ort und Stelle und
+sagt bei jedem Schritt, wer ihn meldet. **Nicht noch einmal gegengelesen**
+— eine zweite unabhängige Lesung hätte eine zweite Instanz gebraucht, die
+die erste Fassung nicht kennt; der Prüfpunkt P-BR-09 holt das beim
+nächsten echten Prüfmittel nach.
+
+**Gemessen** (örtlich, vor dem Prüfstand):
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| F-BR-18 vorher | `pruefstand/pruefen.sh --stufe klein --datei docs/Backlog.md` in einem Worktree | `CalledProcessError`, **rc 0**, „0 rot, 17 grün" |
+| F-BR-18 nachher | derselbe Lauf | Bericht mit Baum, rc 0 |
+| F-BR-18 Gegenprobe | `bericht.py` ersetzt durch `sys.exit(3)` | „KEIN BERICHT", **rc 1** |
+| Selbstproben | `bericht.py lesen`, `auswahl.py` | 13 / 0, 27 / 0 |
+| Probemerge gegen P5c | `git merge-tree`, `bestand.py --wurzel` | 4 Konflikte, 1 Befund (8.1) |
+| F-BR-20 | erster voller Prüfstand; dann der neue Aufruf von Hand | `uhr-stufe1` **rot nach 0 s**; von Hand **99 / 0 / 0**, rc 0, 9 min 56 s |
+| F-BR-21 | `kettenaufrufe` alt gegen neu, je zwei Ketten mit Tippfehler hinter `&&` | alt 1 Aufruf, 0 Befunde; neu 2 Aufrufe, 1 Befund; Selbstprobe **20 von 20**, **85** Aufrufe / 0 |
+
+**Der Prüfstand mit Uhr-Bau läuft zuletzt**, nach dieser Zeile; sein
+Bericht steht in der Nachricht des Kopf-Commits, nicht hier — ein Protokoll,
+das ihn nennt, hätte den Baum verändert, den er belegt.
+
+**Probleme und wie sie gelöst wurden.** F-BR-18 und F-BR-19, beide von der
+Gegenlesung gefunden; F-BR-20 und F-BR-21 vom ersten vollen Prüfstand.
+Der erste Anlauf des Prüfstands kam gar nicht bis zu den Proben: Die
+Anlage antwortete mit 404, weil der PHP-Server noch aus dem Wegwerf-Worktree
+der F-BR-18-Messung lief, dessen Verzeichnis gelöscht war. `hochfahren.sh`
+fand den Port belegt und meldete den 404 als Befund mit Zahl, rot — nicht
+still. Server beendet, neu gefahren. Der zweite Anlauf: `android-bau`
+„nicht gemessen", weil `ANDROID_HOME` nicht gesetzt war (die Probe prüft
+ihre Umgebungswerte vorab, der Vorgabewert im Aufruf greift darum nie;
+`android/LIESMICH.md` verlangt das `export`), und `uhr-stufe1` rot
+(F-BR-20). Der Worktree des Agenten lag unter
+`.claude/worktrees/` im Repositorium und ist dort nicht ignoriert; er hätte
+im Baum-Hash des Prüfstands gestanden. Örtlich über `.git/info/exclude`
+ausgeschlossen und nach der Gegenlesung entfernt. Der Hook der Sitzung
+verlangte vor dem Ende der Gegenlesung einen Commit — daher der
+Zwischenstand `c5fc807`.
 

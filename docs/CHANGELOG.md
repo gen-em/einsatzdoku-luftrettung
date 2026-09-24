@@ -54,6 +54,17 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   Teile auf fünf Abschnitte verteilt, und wer ein Werkzeug anlegte, fand den
   fehlenden erst, wenn Stufe 1 rot war. Der Riegel nennt die Stelle, sobald
   er einen Befund meldet.
+- **Das Runbook ist von einer Instanz geprüft, die es nicht geschrieben
+  hat — durch Befolgen.** Sie hat zwei Attrappen eingehängt, eine
+  Quelltextprüfung als Riegel und eine Probe an einem Muster, und je einen
+  Schritt weggelassen. Die erste Fassung trug nicht: fünf Sprünge in andere
+  Abschnitte, vier weitere Dateien, und ein Muster genau nach dem Text
+  (`pfade`, `ab`, `anlass`) brachte den Prüfstand mit `KeyError: 'id'` zum
+  Absturz, während `bestand` und `kettenaufrufe` grün blieben. 6.12 nennt
+  jetzt die Form eines Backlog-Eintrags, beide JSON-Einträge vollständig,
+  die 40-Zeilen-Falle der Sammelanleitungen (beide stehen bei 40 von 40)
+  und bei jedem Schritt, welches Mittel sein Fehlen meldet — und bei vier
+  Schritten, dass es **keines** tut (Backlog Nr. 315).
 
 ### Geändert
 
@@ -119,6 +130,32 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   nicht macht. Die Zusage trägt trotzdem — der Kreislauf `edbak` vergleicht
   den ganzen Kern; nachgemessen mit einem eingesetzten `_spur_index`: 1
   Meldung, ohne ihn 0.
+- **Der Prüfstand meldete grün, wenn sein Bericht nicht entstand** (BR-04,
+  Nr. 314). `pruefen.sh` wertete den Rückgabewert von `bericht.py` nicht
+  aus: Stürzte der Bericht ab, endete der Lauf mit rc 0 und „0 rot, 17
+  grün". Gefunden in einem Git-Worktree, wo `bericht.py` seinen Index unter
+  `.git/` anlegen wollte und `.git` eine Datei ist. Jetzt ist ein Lauf ohne
+  Bericht rot, und den Ort des Index nennt Git. Belegt im Worktree: vorher
+  rc 0 ohne Bericht, nachher Bericht und rc 0; mit einem absichtlich
+  scheiternden `bericht.py` rc 1. Im Tor wäre es aufgefallen — örtlich
+  hielt sich eine Instanz für fertig, und genau das soll der Prüfstand
+  verhindern.
+- **Die Uhr-Probe des Prüfstands lief seit PK-03 nie** (BR-04, Nr. 316).
+  `pruefablauf.json` rief für `uhr-stufe1` nur `pruefstand.sh reihe` auf,
+  und `reihe` bricht ohne Geräteliste nach 0 s ab. Bekannt war das seit
+  PK-03 als F-PK-21 — mit dem Vermerk, dass `kettenaufrufe`
+  Positionsargumente nicht sieht —, behoben wurde es nie. Aufgefallen ist
+  es erst, als BR `tools/uhr-pruefstand/` berührte und das Tor `uhr=gebaut`
+  verlangte. Jetzt steht dort die Kette aus der Anleitung des Werkzeugs:
+  Liste schreiben, dann übersetzen; von Hand 99 übersetzt, 0
+  fehlgeschlagen, rund 10 min.
+- **`kettenaufrufe` prüfte in einer Kette nur den ersten Befehl** (BR-04,
+  F-BR-21). Je Zeile nahm es einen Aufruf und rechnete ihm jedes Wort
+  dahinter zu — ein vertippter Unterbefehl hinter `&&` meldete 0 Befunde,
+  und die Schalter des zweiten Befehls wären dem ersten angelastet worden.
+  Jetzt zerlegt es die Zeile an `&&`, `||`, `|` und `;`. 85 statt 84
+  Aufrufe, 0 Befunde; Selbstprobe 20 von 20, darunter ein Fall, den die
+  alte Fassung still durchließ.
 - **`cmark-gfm --validate-utf8` prüft die Kodierung nicht** (F-BR-16). Es
   ersetzt kaputte Bytes still durch U+FFFD und endet mit 0 — der Tor-Schritt
   hätte ein Handbuch mit kaputter Kodierung grün gemeldet. Gefunden von der
@@ -139,6 +176,12 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   stimmt und ob die Nummer in der Anlass-Zeile den richtigen Fehler nennt,
   sieht er nicht; eine vorhandene, aber falsche Nummer ist für ihn grün. Das
   Prüfdokument nimmt dafür eine Stichprobe von Hand.
+- **Vier Schritte beim Einhängen misst niemand** (Nr. 315): eine
+  Selbstprobe, die nicht in `SELBST` steht, eine Quelltextprüfung ohne
+  Tabellenzeile, eine Probe an keinem Muster und keinem Riegel, und die
+  Tabelle in `Pruefablauf.md` 4, wenn sie nicht neu erzeugt wird. Sie als
+  Regeln zu bauen, wäre eine Erweiterung des Riegels und keine Behebung —
+  das entscheidet die Betreiberin. Bis dahin nennt 6.12 sie beim Namen.
 - **Tote Werkzeugpfade in Dokumenten hält kein Mittel auf.** BR hat 26
   davon von Hand gefunden und berichtigt (F-BR-13). Eine Regel dafür hätte
   eine andere Quelle als `tools/` — das ist eine Frage an die Betreiberin,
