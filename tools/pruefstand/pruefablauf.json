@@ -153,7 +153,7 @@
     "bilderlauf": {
       "aufruf": "node tools/screenshots/aufnehmen.mjs --stufe {stufe}",
       "braucht": "installation",
-      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920), Chromium; neben = acht Breiten; haupt = acht Breiten, alle drei Engines. pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05) -- bis dahin stand hier fest --stufe klein, und jede Stufe bekam drei Breiten."
+      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920), Chromium; neben = acht Breiten; haupt = acht Breiten, alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM: aufnehmen.mjs nimmt einen Motor aus --motor, die Stufe waehlt nur die Breiten (F-P5c-103, Backlog Nr. 300; P5c/AP4 hat Firefox und WebKit von Hand gefahren). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05) -- bis dahin stand hier fest --stufe klein, und jede Stufe bekam drei Breiten."
     },
     "stilvergleich": {
       "aufruf": "bash tools/stilvergleich/gegen.sh",
@@ -161,8 +161,9 @@
       "bemerkung": "proben.py allein baut nur die vier Proben und gibt ohne Argumente seine Anleitung aus; der Vergleich ist stilvergleich.js und braucht den alten Stand (F-PK-20). braucht=nichts, weil der Vergleich gegen zwei Stylesheets laeuft, nicht gegen die Anlage."
     },
     "messstand": {
-      "aufruf": "node tools/messstand/browserprobe.mjs",
-      "braucht": "installation"
+      "aufruf": "python3 tools/messstand/messen.py --frisch",
+      "braucht": "installation",
+      "bemerkung": "Seit P5c/AP4 die ganze Kette (F-P5c-104): Konto, Bestand von 5050 Einsaetzen, Einspielen, Browser, Server — rund zehn Minuten. Bis dahin stand hier nur browserprobe.mjs, und die meldet sich mit einem Konto an, das auf einer frischen Anlage niemand angelegt hatte: Im ersten Lauf der Hauptstufe seit PK-05 scheiterte die Anmeldung, und die Probe wartete 1086 s auf Elemente, die nie kamen. Das Konto legt messen.py selbst an (Schritt konto, ueber das Pruefkonto der Anlage); die Zuarbeit aus F-PK-22 ist damit nicht noetig."
     },
     "kreislauf-csv": {
       "aufruf": "python3 tools/referenzdatensatz/vergleich/kreislauf.py --art csv --frisch",
@@ -206,6 +207,15 @@
       ]
     }
   },
+  "stufenregeln": [
+    {
+      "id": "migration",
+      "datei": "server/migration_lib.php",
+      "muster": "^\\s*'id'\\s*=>\\s*'(\\d{4}_\\d{2}_\\d{2}_[A-Za-z0-9_]+)'",
+      "stufe": "haupt",
+      "anlass": "E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3)."
+    }
+  ],
   "riegel": {
     "beschreibung": "Die billigen Riegel. Sie laufen in JEDER Stufe und werden im Tor gegengelesen (docs/Pruefablauf.md 5.1). Kein Muster, keine Bedingung -- sie kosten zusammen rund 25 s.",
     "proben": [

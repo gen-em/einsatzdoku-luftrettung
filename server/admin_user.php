@@ -5,7 +5,9 @@ require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/spur_lib.php';   // Spuren loeschen (F-S2-B)
 // Eine Rollenpruefung fuer alle Seiten (M1-15). Hier stand als einziger Stelle
 // eine handgeschriebene Fassung mit eigenem Wortlaut ("Nur fuer Admins.").
-require_admin();
+// Seit P5c/AP4 betritt auch der Support die Seite; was er darf, fragt jede
+// Handlung fuer sich (`handlung_erlaubt()`, unten).
+require_support();
 // Loeschen entscheidet seit Web 5.8.0 auch ueber die Admin-Backups (E25);
 // seit Web 9.8.0 liegen die Backups des Kontos ganz hier (E-P3-41).
 require_once __DIR__ . '/adminbackup_lib.php';
@@ -55,6 +57,20 @@ $st->execute([$uid]);
 $u = $st->fetch();
 if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_users.php', 'zurueck_text' => 'Zu den NutzerInnen']); }
 
+/* DER SUPPORT SIEHT NUR KONTEN OHNE EIGENE RECHTE (P5c/AP4, E-P5c-40). Die
+ * Kontoseite eines Admins, einer BetreiberIn oder eines anderen Supports ist
+ * fuer ihn 403 — und zwar HIER, vor jeder Handlung: Mit einem angezeigten
+ * Setz-Link koennte er ein frisch angelegtes Konto uebernehmen, auch eines
+ * mit Rechten. Die Liste zeigt ihm solche Konten gar nicht erst. */
+if (ist_support() && rolle_darf_support($u['role'] ?? null)) {
+    ui_abbruch(403, 'Kein Zugriff — der Support betreut nur Konten von NutzerInnen.');
+}
+
+/* WAS DER SUPPORT HIER DARF (E-P5c-14): Setz-Link senden, ohne ihn zu sehen;
+ * die Bestaetigung einer Registrierung neu senden; ein Geraet abschalten,
+ * nicht wieder an. Alles andere fragt `ist_admin()`. */
+const SUPPORT_HANDLUNGEN = ['pw_reset', 'verifikation', 'device_aus'];
+
 /* DAS DEMO-KONTO WIRD ZENTRAL VERWALTET (S3/AP10, E-S3-07).
  *
  * Es entsteht, setzt sich zurueck und verschwindet ueber den Reiter
@@ -77,8 +93,12 @@ const DEMO_GESPERRT = ['konto', 'sichern', 'einspielen', 'freigeben',
                        'widerrufen', 'paket_loeschen', 'user_delete'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_check();
     $action  = (string)($_POST['action'] ?? '');
+    /* ERST DIE ROLLE, DANN DAS TOKEN (E-P5c-85). Umgekehrt beantwortete die
+     * Seite einem Support mit falschem Token jede Handlung gleich — und die
+     * Rollenprobe koennte nicht sehen, welche er ueberhaupt erreicht. */
+    handlung_erlaubt($action, SUPPORT_HANDLUNGEN);
+    csrf_check();
     if (demo_ist_demo($uid) && in_array($action, DEMO_GESPERRT, true)) {
         $error = 'Das Demo-Konto wird über den Reiter „Demo-Konto“ verwaltet — '
                . 'Anlegen, Zurücksetzen und Entfernen. Hier lässt es sich weder '
@@ -377,6 +397,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * landet, WEIL die Einladung nicht angekommen ist. */
             if ($zustellung === MAIL_ZUGESTELLT) {
                 $notice = 'Setz-Link an ' . $u['email'] . ' verschickt — eine Stunde gültig.';
+            } elseif (ist_support()) {
+                /* DER SUPPORT SIEHT DEN LINK NIE (E-P5c-40) — auch nicht, wenn
+                 * die Mail nicht hinausging. Wer ihn saehe, koennte das Konto
+                 * uebernehmen; der Weg fuer diesen Fall fuehrt ueber jemanden,
+                 * der verwalten darf. */
+                $error = 'Der Setz-Link ist NICHT zugestellt worden'
+                       . ($zustellung === MAIL_WARTET ? ' und steht in der Warteschlange' : '')
+                       . ' — bitte an einen Admin oder die BetreiberIn wenden.';
             } elseif ($zustellung === MAIL_WARTET) {
                 $notice = 'Der Setz-Link ist beim ersten Versuch NICHT hinausgegangen '
                         . 'und steht in der Warteschlange. Er gilt eine Stunde — '
@@ -386,6 +414,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $notice = 'Der Setz-Link konnte NICHT verschickt werden.';
                 $setzLink = $link;
             }
+        }
+    }
+
+    /* ---- Bestaetigung erneut senden (P5c/AP4, E-P5c-14) ------------------
+     *
+     * Nur fuer Registrierungen im Status `unbestaetigt`; der Link geht nur per
+     * Mail hinaus und gilt nicht laenger als die Registrierung selbst
+     * (`konto_verifikation_erneut()`). */
+    if ($action === 'verifikation') {
+        require_once __DIR__ . '/konto_lib.php';
+        $r = konto_verifikation_erneut($uid);
+        if ($r['ok']) {
+            $notice = $r['zustellung'] === MAIL_ZUGESTELLT
+                ? 'Bestätigung an ' . $u['email'] . ' erneut verschickt.'
+                : 'Die Bestätigung steht in der Warteschlange und geht beim nächsten Versuch hinaus.';
+        } elseif ($r['grund'] === 'status') {
+            $error = 'Dieses Konto wartet auf keine Bestätigung — es ist nicht „unbestätigt".';
+        } elseif ($r['grund'] === 'abgelaufen') {
+            $error = 'Die Frist dieser Registrierung ist abgelaufen; sie wird gleich '
+                   . 'gelöscht. Die Person kann sich neu registrieren.';
+        } else {
+            $error = 'Die Bestätigung konnte NICHT verschickt werden'
+                   . (ist_support() ? ' — bitte an einen Admin oder die BetreiberIn wenden.' : '.');
         }
     }
 
@@ -580,6 +631,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * Ortsdatum und faellt unter genau die Handlung, die hier
                  * gerade vollzogen wird. */
                 schnitte_loeschen($pdoDel, 'konto', [$uid]);
+                /* IM PROTOKOLL, WIE BEI `konto_loeschen()` (P5c/AP4,
+                 * F-P5c-99). Diese Seite loescht selbst und ging bis Web
+                 * 20.40.0 am Eintrag vorbei — die Loeschung durch die
+                 * Verwaltung war die eine, die das Audit nicht kannte. Vor
+                 * dem DELETE, damit die Zeile noch weiss, wen es betraf. */
+                require_once __DIR__ . '/protokoll_lib.php';
+                protokoll('verwaltung', 'konto_geloescht',
+                          'Konto ' . $u['email'] . ' endgültig gelöscht'
+                        . ($mitSicherungen ? ' (samt Konto-Backups)' : ' — Konto-Backups bleiben'),
+                          ['sicherungen' => $mitSicherungen, 'weg' => 'verwaltung'], $uid);
                 // Der Rest kaskadiert wie bisher.
                 $pdoDel->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
                 header('Location: admin_users.php');
@@ -593,6 +654,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         require_once __DIR__ . '/protokoll_lib.php';
         protokoll_geraet('geraet_umgeschaltet', (int)($_POST['dev'] ?? 0), $uid, 'verwaltung');
         $notice = 'Gerätestatus geändert.';
+    }
+    /* NUR AUS, NIE AN (P5c/AP4, E-P5c-14). Die Handlung des Supports: ein
+     * verlorenes Geraet stillegen. Wieder einschalten ist eine Entscheidung
+     * ueber das Konto und bleibt der Verwaltung — `device_toggle` oben
+     * schaltet in beide Richtungen und steht dem Support nicht offen. */
+    if ($action === 'device_aus') {
+        $aus = db()->prepare('UPDATE devices SET active = 0 WHERE id = ? AND user_id = ? AND active = 1');
+        $aus->execute([(int)($_POST['dev'] ?? 0), $uid]);
+        if ($aus->rowCount() === 1) {
+            require_once __DIR__ . '/protokoll_lib.php';
+            protokoll_geraet('geraet_umgeschaltet', (int)($_POST['dev'] ?? 0), $uid, 'verwaltung');
+            $notice = 'Gerät deaktiviert. Es kann erst wieder senden, wenn die Verwaltung es einschaltet.';
+        } else {
+            $error = 'Das Gerät war schon deaktiviert — es wurde nichts geändert.';
+        }
     }
     if ($action === 'device_delete') {
         // Daten bleiben erhalten: FK setzt device_id in Einsaetzen/Segmenten auf NULL
@@ -621,6 +697,12 @@ $pakete  = $stand['pakete'];
 $freigabe = $stand['freigabe'];
 [$standText, $standTon] = edbak_stand_plakette($stand);
 $istIch  = $uid === $userId;
+/* DER SUPPORT SIEHT DIE SEITE, BEDIENT ABER NUR SEINE DREI HANDLUNGEN
+ * (P5c/AP4, E-P5c-14). Was er nicht darf, steht nicht da — keine
+ * ausgegrauten Knoepfe fuer Handlungen, die ihm 403 antworten; nur die
+ * Kontodaten stehen gesperrt, wie beim Demo-Konto, damit er sie lesen kann. */
+$nurSupport = ist_support();
+$kStatusKopf = (string)($u['status'] ?? 'aktiv');
 
 /* Zielkonten der Freigabe: die uebrigen Konten. Eine Abfrage, kein
  * Dateizugriff — und ohne das eigene Konto, denn „an sich selbst freigeben"
@@ -682,10 +764,20 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
            sie. Ein <form> um einen Knopf im Blatt ginge nicht — das Blatt
            steht selbst in einem Block, und verschachtelte Formulare gibt es
            in HTML nicht. */ ?>
+  <?php if (!$nurSupport): ?>
   <form method="post" id="f-sichern" hidden>
     <?= csrf_field() ?><input type="hidden" name="action" value="sichern">
     <input type="hidden" name="id" value="<?= $uid ?>">
   </form>
+  <?php endif; ?>
+  <?php if ($kStatusKopf === 'unbestaetigt'): ?>
+  <form method="post" id="f-verifikation" hidden
+        data-confirm="Die Bestätigung an <?= e((string)$u['email']) ?> noch einmal schicken? Ein zuvor verschickter Link wird damit ungültig; der neue gilt nicht länger als die Registrierung."
+        data-confirm-ok="Bestätigung schicken" data-confirm-tone="normal">
+    <?= csrf_field() ?><input type="hidden" name="action" value="verifikation">
+    <input type="hidden" name="id" value="<?= $uid ?>">
+  </form>
+  <?php endif; ?>
   <form method="post" id="f-pwreset" hidden
         data-confirm="Setz-Link an <?= e((string)$u['email']) ?> schicken? Ein zuvor verschickter Link wird damit ungültig."
         data-confirm-ok="Link schicken" data-confirm-tone="normal">
@@ -701,6 +793,18 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     </form>
   <?php endif; ?>
   <?php foreach ($devices as $d): ?>
+    <?php if ($nurSupport): ?>
+      <?php if ((int)$d['active']): ?>
+      <form method="post" id="f-dev-a-<?= (int)$d['id'] ?>" hidden
+            data-confirm="Gerät deaktivieren? Einschalten kann es danach nur die Verwaltung."
+            data-confirm-ok="Deaktivieren">
+        <?= csrf_field() ?><input type="hidden" name="action" value="device_aus">
+        <input type="hidden" name="id" value="<?= $uid ?>">
+        <input type="hidden" name="dev" value="<?= (int)$d['id'] ?>">
+      </form>
+      <?php endif; ?>
+      <?php continue; ?>
+    <?php endif; ?>
     <form method="post" id="f-dev-t-<?= (int)$d['id'] ?>" hidden>
       <?= csrf_field() ?><input type="hidden" name="action" value="device_toggle">
       <input type="hidden" name="id" value="<?= $uid ?>">
@@ -718,16 +822,26 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   <?php
   /* BEIM DEMO-KONTO BLEIBT NUR DER WEG ZUM REITER (S3/AP10). Ein Aktionsmenü
      voller Einträge, die alle abgewiesen würden, wäre eine Einladung ins
-     Leere — und „Passwort zurücksetzen" hat dort seit E-P1-19 ohnehin keinen
-     Sinn: Das Passwort des Demo-Kontos ist öffentlich und steht im Handbuch. */
+     Leere — und „Setz-Link senden" (bis Web 20.40.0 „Passwort zurücksetzen")
+     hat dort seit E-P1-19 ohnehin keinen Sinn: Das Passwort des Demo-Kontos
+     ist öffentlich und steht im Handbuch. */
   $istDemoKopf = demo_ist_demo($uid);
   $aktionen = $istDemoKopf
-      ? ui_knopf(['text' => 'Zum Demo-Konto', 'symbol' => 'kolben',
-                  'art' => 'neutral', 'href' => 'admin_demo.php'])
-      : ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
-                  'art' => 'neutral', 'attr' => ' form="f-sichern"']);
+      ? ($nurSupport ? '' : ui_knopf(['text' => 'Zum Demo-Konto', 'symbol' => 'kolben',
+                  'art' => 'neutral', 'href' => 'admin_demo.php']))
+      : ($nurSupport ? '' : ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
+                  'art' => 'neutral', 'attr' => ' form="f-sichern"']));
   $eintraege = [];
-  if (!$istDemoKopf) {
+  if (!$istDemoKopf && $nurSupport) {
+      /* „SETZ-LINK SENDEN" (E-P5c-62) — gesetzt wird kein Passwort, sondern
+       * ein Link verschickt. Fuer den Support ohne Anzeige des Links. */
+      $eintraege[] = ['text' => 'Setz-Link senden', 'symbol' => 'schloss-offen',
+                      'form' => 'f-pwreset'];
+      if ($kStatusKopf === 'unbestaetigt') {
+          $eintraege[] = ['text' => 'Bestätigung erneut senden', 'symbol' => 'mail',
+                          'form' => 'f-verifikation'];
+      }
+  } elseif (!$istDemoKopf) {
       if ($pakete) {
           $eintraege[] = ['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
                           'href' => '#', 'attr' => 'data-dialog="dlg-freigeben"'];
@@ -736,8 +850,12 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           $eintraege[] = ['text' => 'Freigabe widerrufen', 'symbol' => 'schliessen',
                           'form' => 'f-widerrufen'];
       }
-      $eintraege[] = ['text' => 'Passwort zurücksetzen', 'symbol' => 'schloss-offen',
+      $eintraege[] = ['text' => 'Setz-Link senden', 'symbol' => 'schloss-offen',
                       'form' => 'f-pwreset'];
+      if ($kStatusKopf === 'unbestaetigt') {
+          $eintraege[] = ['text' => 'Bestätigung erneut senden', 'symbol' => 'mail',
+                          'form' => 'f-verifikation'];
+      }
       if (!$istIch) {
           $eintraege[] = ['text' => 'Konto löschen', 'symbol' => 'korb',
                           'href' => '#karte-loeschen', 'gefahr' => true];
@@ -791,7 +909,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                   'href' => 'admin_demo.php'])) ?>
   <?php endif; ?>
 
-  <div class="form-raster">
+  <?php /* EINSPALTIG FUER DEN SUPPORT (M-P5c-02c, E-P5c-66): Die rechte
+           Spalte — Konto-Backups und Gefahrenzone — entfaellt fuer ihn ganz. */ ?>
+  <div class="form-raster<?= $nurSupport ? ' form-raster-einspaltig' : '' ?>">
   <div class="form-spalte">
 
     <?php /* ---- Konto: ein Formular, ein Speichern ------------------------ */ ?>
@@ -808,7 +928,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="konto">
         <input type="hidden" name="id" value="<?= $uid ?>">
-        <fieldset class="feldsatz-gesperrt" <?= $istDemo ? 'disabled' : '' ?>>
+        <fieldset class="feldsatz-gesperrt" <?= ($istDemo || $nurSupport) ? 'disabled' : '' ?>>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'name', 'label' => 'Name', 'wert' => (string)($u['name'] ?? ''),
                          'attr' => 'maxlength="120" placeholder="z. B. Vorname Nachname"']); ?>
@@ -870,16 +990,24 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <?php endif; ?>
         <?php ui_feld(['name' => 'email', 'label' => 'E-Mail (Anmeldung)', 'art' => 'email',
                        'wert' => (string)$u['email'], 'pflicht' => true]); ?>
+        <?php /* KNÖPFE WEG STATT AUSGEGRAUT beim Support (E-P5c-66): Ein
+                 grauer „Speichern" fragte, warum er nicht geht. */ ?>
+        <?php if (!$nurSupport): ?>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
+        <?php endif; ?>
         </fieldset>
       </form>
+      <?php if ($nurSupport): ?>
+      <p class="feld-klein">Ändern kann die Verwaltung. Den Setz-Link schickt „Aktionen".</p>
+      <?php else: ?>
       <p class="feld-hinweis">Ein Passwort lässt sich hier nicht setzen: Die Daten sind mit
-         dem Passwort der Person Ende-zu-Ende-verschlüsselt. „Passwort zurücksetzen"
+         dem Passwort der Person Ende-zu-Ende-verschlüsselt. „Setz-Link senden"
          im Aktionsmenü verschickt denselben Link wie „Passwort vergessen" auf der
          Anmeldeseite; entsperrt wird danach mit dem Wiederherstellungsschlüssel
          der Person.</p>
+      <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
     <?php /* ---- Status (P5b/AP2, E-P5b-12) ---------------------------------
@@ -913,7 +1041,11 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                 : '']); ?>
       <?php endif; ?>
 
-      <?php if ($istDemo): ?>
+      <?php if ($nurSupport): ?>
+        <p class="feld-hinweis"><?= e(in_array($kStatus, ['wartet', 'unbestaetigt'], true)
+            ? konto_status_text($kStatus) . ' ' : '') ?>Sperren, Entsperren und
+           Freischalten sind der Verwaltung vorbehalten.</p>
+      <?php elseif ($istDemo): ?>
         <p class="feld-hinweis">Das Demo-Konto lässt sich hier nicht sperren. Ob die
            Anmeldung daran zugelassen ist, steht unter Betrieb →
            Servereinstellungen → Konten.</p>
@@ -967,7 +1099,11 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Was das Konto halten darf (P5b/AP6, Nr. 37, 48) ---------- */ ?>
+    <?php /* ---- Was das Konto halten darf (P5b/AP6, Nr. 37, 48) ----------
+             DER SUPPORT SIEHT DIE MENGEN, NICHT DAS FORMULAR (M-P5c-02c):
+             „Mein Upload geht nicht" hat oft eine volle Grenze als Grund, und
+             das soll er sagen können. Die Grenzen zu aendern ist eine
+             Entscheidung ueber das Konto und bleibt der Verwaltung. */ ?>
     <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
           $fuell = konto_fuellstand($uid);
           $gr    = konto_grenzen($uid);
@@ -983,6 +1119,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt',
           'plaketten' => ui_plakette(groesse_paar_text($fuell['bytes'], $fuell['grenze_bytes']),
                        ['ton' => 'neutral'])]); ?>
+      <?php if (!$nurSupport): ?>
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="konto_grenzen">
         <input type="hidden" name="id" value="<?= $uid ?>">
@@ -1013,6 +1150,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
       </form>
+      <?php endif; /* !$nurSupport */ ?>
     <?php ui_karte_ende(); ?>
 
     <?php /* ---- Geräte ---------------------------------------------------- */ ?>
@@ -1047,17 +1185,23 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           'plaketten' => (int)$d['active']
               ? ui_plakette('aktiv', ['ton' => 'blau'])
               : ui_plakette('deaktiviert', ['ton' => 'neutral']),
-          'aktionen' => ui_zeilenaktionen(['titel' => 'Gerät', 'eintraege' => [
-              ['text' => (int)$d['active'] ? 'Deaktivieren' : 'Aktivieren',
-               'form' => 'f-dev-t-' . (int)$d['id']],
-              ['text' => 'Entkoppeln', 'art' => 'gefahr',
-               'form' => 'f-dev-d-' . (int)$d['id']],
-          ]]),
+          'aktionen' => $nurSupport
+              ? ((int)$d['active']
+                  ? ui_zeilenaktionen(['titel' => 'Gerät', 'eintraege' => [
+                        ['text' => 'Deaktivieren', 'form' => 'f-dev-a-' . (int)$d['id']]]])
+                  : '')
+              : ui_zeilenaktionen(['titel' => 'Gerät', 'eintraege' => [
+                    ['text' => (int)$d['active'] ? 'Deaktivieren' : 'Aktivieren',
+                     'form' => 'f-dev-t-' . (int)$d['id']],
+                    ['text' => 'Entkoppeln', 'art' => 'gefahr',
+                     'form' => 'f-dev-d-' . (int)$d['id']],
+                ]]),
         ]);
       endforeach; ?>
     <?php ui_karte_ende(); ?>
 
   </div><?php /* .form-spalte (links) */ ?>
+  <?php if (!$nurSupport): ?>
   <div class="form-spalte">
 
     <?php /* ---- Backups -----------------------------------------------
@@ -1228,6 +1372,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php ui_karte_ende(); ?>
 
   </div><?php /* .form-spalte (rechts) */ ?>
+  <?php endif; /* !$nurSupport — die rechte Spalte */ ?>
   </div><?php /* .form-raster */ ?>
 
   <?php /* ---- Dialoge (assets/dialog.js) ---------------------------------- */ ?>

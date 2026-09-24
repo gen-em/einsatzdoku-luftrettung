@@ -268,6 +268,11 @@ function protokoll_geraet(string $art, int $geraetId, int $userId, string $weg):
 
 /* ---- Wer welchen Reiter sieht (E-P5c-02) ----------------------------------- */
 
+/** Die Reiter, die jede verwaltende Rolle sieht — der Admin genau diese. Als
+ *  Konstante, weil die Seite sie auch fuer die Meldung an den Support braucht
+ *  („der Verwaltung vorbehalten" statt „der BetreiberIn", F-P5c-100). */
+const PROTOKOLL_REITER_VERWALTUNG = ['verwaltung', 'email', 'jobs', 'sicherung'];
+
 /**
  * Die Reiter, die die angemeldete Rolle sehen darf — in der Reihenfolge der
  * Anzeige.
@@ -275,8 +280,9 @@ function protokoll_geraet(string $art, int $geraetId, int $userId, string $weg):
  * WAS DIE ROLLE NICHT DARF, ZEIGT DIE SEITE NICHT (E-P5c-10): kein
  * ausgegrauter Reiter, kein „dafür fehlt dir das Recht". Die BetreiberIn
  * sieht alle sieben; der Admin die vier, die ohne IP-Adressen,
- * Zieldaten und Systemmeldungen auskommen. Der Support kommt mit AP4 dazu
- * (Verwaltung und E-Mail, lesend).
+ * Zieldaten und Systemmeldungen auskommen. Der Support (seit P5c/AP4,
+ * E-P5c-14) Verwaltung und E-Mail — lesend; eine Handlung gibt es auf der
+ * Seite fuer ihn nicht, das Archiv bleibt der BetreiberIn.
  *
  * @return list<string>
  */
@@ -286,7 +292,10 @@ function protokoll_reiter_sichtbar(): array
         return array_keys(PROTOKOLL_SEITE_REITER);
     }
     if (function_exists('ist_admin') && ist_admin()) {
-        return ['verwaltung', 'email', 'jobs', 'sicherung'];
+        return PROTOKOLL_REITER_VERWALTUNG;
+    }
+    if (function_exists('ist_support') && ist_support()) {
+        return ['verwaltung', 'email'];
     }
     return [];
 }
@@ -325,6 +334,7 @@ const PROTOKOLL_ARTEN = [
     /* Verwaltung — neu mit P5c/AP2 (E-P5c-38) */
     'rolle_geaendert'           => ['Rolle geändert', 'orange'],
     'setzlink_gesendet'         => ['Setz-Link', 'neutral'],
+    'verifikation_gesendet'     => ['Bestätigung erneut', 'neutral'],
     'geraet_umgeschaltet'       => ['Gerät umgeschaltet', 'neutral'],
     'geraet_geloescht'          => ['Gerät gelöscht', 'neutral'],
     'wartung_an'                => ['Wartung an', 'orange'],
@@ -534,7 +544,7 @@ function protokoll_arten_des_reiters(string $reiter): array
     $je = [
         'verwaltung' => ['konto_angelegt', 'konto_status', 'konto_geloescht',
                          'loeschung_beantragt', 'adresse_geaendert', 'rolle_geaendert',
-                         'konto_grenzen', 'setzlink_gesendet', 'einwilligung',
+                         'konto_grenzen', 'setzlink_gesendet', 'verifikation_gesendet', 'einwilligung',
                          'rechtstext_geaendert', 'schluessel_erneuert',
                          'schluesselblatt_bestaetigt', 'geraet_umgeschaltet',
                          'geraet_geloescht', 'wartung_an', 'wartung_aus',

@@ -133,13 +133,61 @@ def fassung_arbeitsbestand():
         return None
 
 
-def stufe_aus_version(basis, commit=None):
+# ---- Stufenregeln (P5c/AP4, E-P5c-88) -------------------------------------
+#
+# EINE MIGRATION HEISST STUFE „haupt", AUCH BEI EINER NEBENNUMMER. E-P5c-36
+# stand bis AP4 nur im Konzept: Die Plattformmatrix läuft nur in haupt, und
+# dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgelöst wird von einer
+# NEUEN KENNUNG im Katalog — nicht von einer Änderung an der Datei, die
+# ändert sich auch ohne Migration (AP2 hat dort einen Protokollaufruf
+# ergänzt, AP3 drei Meldungen umgestellt). Die Regel steht als Daten in
+# `pruefablauf.json` (`stufenregeln`), damit sie in `Pruefablauf.md` 4
+# erzeugt dasteht und nicht nur hier.
+
+def kennungen_aus_text(text, muster):
+    return set(re.findall(muster, text or '', re.M))
+
+
+def kennungen(ref, regel):
+    """Die Kennungen einer Regel in `ref`; None heißt Arbeitsbestand."""
+    if ref is None:
+        try:
+            with open(os.path.join(WURZEL, regel['datei']), encoding='utf-8') as f:
+                text = f.read()
+        except OSError:
+            text = ''
+    else:
+        text = git('show', f"{ref}:{regel['datei']}")
+    return kennungen_aus_text(text, regel['muster'])
+
+
+def stufe_mit_regeln(stufe, grund, neu_je_regel, regeln):
+    """Hebt die Stufe, wenn eine Regel neue Kennungen sieht. Senkt nie.
+    `neu_je_regel`: {regel-id: Menge der neuen Kennungen}."""
+    if stufe == UNLESBAR:
+        return stufe, grund
+    for r in regeln:
+        neu = sorted(neu_je_regel.get(r['id'], ()))
+        if not neu:
+            continue
+        zusatz = f"neu in {r['datei']}: {', '.join(neu)} (Regel {r['id']})"
+        if STUFEN.index(stufe) < STUFEN.index(r['stufe']):
+            stufe, grund = r['stufe'], f"{grund}; {zusatz} -> {r['stufe']}"
+        else:
+            grund = f'{grund}; {zusatz}'
+    return stufe, grund
+
+
+def stufe_aus_version(basis, commit=None, a=None):
     """commit=None heißt: der ARBEITSBESTAND, wie beim Baum-Hash. Gemessen wird
     vor dem Commit; wer die Fassung aus HEAD liest, sieht den Sprung nicht, der
     erst mit dem Bericht committet wird — und das Tor meldet „Stufe zu klein"
-    (F-PK-33)."""
+    (F-PK-33). Danach die Stufenregeln (E-P5c-88)."""
     neu = fassung_arbeitsbestand() if commit is None else fassung(commit)
-    return stufe_aus_fassungen(fassung(basis), neu)
+    stufe, grund = stufe_aus_fassungen(fassung(basis), neu)
+    regeln = (a if a is not None else lade()).get('stufenregeln', [])
+    neu_je_regel = {r['id']: kennungen(commit, r) - kennungen(basis, r) for r in regeln}
+    return stufe_mit_regeln(stufe, grund, neu_je_regel, regeln)
 
 
 def beruehrte(basis):
@@ -246,6 +294,32 @@ def selbstprobe(a):
         ('gleiche Fassung heißt klein',          stufe_aus_fassungen((1, 2, 3), (1, 2, 3))[0] == 'klein'),
         ('unlesbar heißt unlesbar, nicht klein', stufe_aus_fassungen(None, (1, 2, 3))[0] == UNLESBAR),
     ]
+
+    # Die Stufenregel „migration" (E-P5c-88) — gegen den ECHTEN Katalog und
+    # gegen die Formen, die sie nicht treffen darf.
+    regel = {r['id']: r for r in a.get('stufenregeln', [])}.get('migration')
+    if regel is None:
+        grenzen.append(('die Stufenregel „migration" steht in pruefablauf.json', False))
+    else:
+        echt_m = open(os.path.join(WURZEL, regel['datei']), encoding='utf-8').read()
+        k = kennungen_aus_text(echt_m, regel['muster'])
+        neu1 = {'migration': {'2099_01_01_neu'}}
+        grenzen += [
+            ('der Katalog hat mindestens 60 Kennungen',    len(k) >= 60),
+            ('jede Kennung beginnt mit einem Datum',       all(re.match(r'\d{4}_\d{2}_\d{2}_', x) for x in k)),
+            ('eine Kennung im Kommentar zählt nicht',
+             kennungen_aus_text("// 'id' => '2026_01_01_x'\n * 'id' => '2026_01_02_y'", regel['muster']) == set()),
+            ("der Protokollaufruf ['id' => $m['id']] zählt nicht",
+             kennungen_aus_text("    ['id' => $m['id'], 'x' => 1]", regel['muster']) == set()),
+            ('neue Kennung: neben -> haupt',
+             stufe_mit_regeln('neben', 'x', neu1, [regel])[0] == 'haupt'),
+            ('neue Kennung: klein -> haupt',
+             stufe_mit_regeln('klein', 'x', neu1, [regel])[0] == 'haupt'),
+            ('keine neue Kennung: neben bleibt neben',
+             stufe_mit_regeln('neben', 'x', {'migration': set()}, [regel])[0] == 'neben'),
+            ('unlesbar bleibt unlesbar',
+             stufe_mit_regeln(UNLESBAR, 'x', neu1, [regel])[0] == UNLESBAR),
+        ]
     for name, bed in grenzen:
         melde(f"  [{'ok  ' if bed else 'FEHL'}] {name}")
         fehl += 0 if bed else 1
@@ -278,13 +352,13 @@ def main():
     if args.abdeckung:
         return abdeckung(a)
     if args.stufe_ermitteln:
-        stufe, grund = stufe_aus_version(args.basis)
+        stufe, grund = stufe_aus_version(args.basis, a=a)
         melde(f'{stufe}\t{grund}')
         return 2 if stufe == UNLESBAR else 0
 
     stufe = args.stufe
     if not stufe:
-        stufe, grund = stufe_aus_version(args.basis)
+        stufe, grund = stufe_aus_version(args.basis, a=a)
         if stufe == UNLESBAR:
             melde(f'Die Stufe lässt sich nicht bestimmen: {grund}.')
             return 2

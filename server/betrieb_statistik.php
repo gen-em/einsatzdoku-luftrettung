@@ -75,7 +75,10 @@ $st->execute([$demoId]);
 $konten = $st->fetchAll();
 $kontenZahl = count($konten);
 
-$nachRolle = ['betreiberin' => 0, 'admin' => 0, 'user' => 0];
+/* AUS DEM KATALOG, NICHT VON HAND (P5c/AP4, F-P5c-36): Bis Web 20.40.0
+ * standen hier drei feste Schluessel — eine vierte Rolle waere beim Zaehlen
+ * ins Leere gegangen. */
+$nachRolle = array_fill_keys(array_keys(ROLLEN), 0);
 foreach ($konten as $k) { $nachRolle[rolle_normieren($k['role'])]++; }
 
 $st = $pdo->prepare('SELECT COUNT(*) FROM users u WHERE u.id <> ?
@@ -294,8 +297,9 @@ ui_seite_start(['titel' => 'Statistik']);
                           'zahl' => 'von ' . $kontenZahl,
                           'aktion' => ['text' => 'NutzerInnen', 'href' => 'admin_users.php',
                                        'symbol' => 'gruppe']]); ?>
-      <?php foreach (['betreiberin' => 'BetreiberInnen', 'admin' => 'Admins',
-                      'user' => 'NutzerInnen'] as $r => $t): ?>
+      <?php /* Oben, wer am meisten darf — die Reihenfolge von `ROLLEN`
+               rueckwaerts. */ ?>
+      <?php foreach (array_reverse(ROLLEN_MEHRZAHL, true) as $r => $t): ?>
         <?php ui_zeile(['text' => $t,
                         'klein' => prozent_text($nachRolle[$r], $kontenZahl),
                         'plaketten' => ui_plakette((string)$nachRolle[$r])]); ?>

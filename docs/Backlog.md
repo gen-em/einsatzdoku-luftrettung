@@ -144,7 +144,8 @@ nachgesehen auf `origin/main`, höchste 292, und auf dem Konzeptzweig von
 BR):** **293** Konzept BR (Umsetzung auf `claude/br-bestandsriegel`, noch
 nicht gemergt); **294–303** der P5c-Zweig `claude/p5c-mockups-konzept-4yeomf`
 — 294 Konzept SD (Sammelpunkt), 295–298 die Anlässe aus der Zuarbeit von
-Konzept BR (Konzept P5c, E-P5c-86), 299–303 frei für Funde der Umsetzung. *(Bis zum 23.09.2026 stand hier 283; 283 bis
+Konzept BR (Konzept P5c, E-P5c-86), 299 und 300 Funde aus AP4, 301–303 frei
+für Funde der Umsetzung. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
 Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** PK-05 (das
@@ -3749,7 +3750,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-40), als Anlass nach der
     Zuarbeit von Konzept BR (E-BR-07).* `tools/messstand/` misst die Seiten,
     die es kennt; die Statistik ist keine davon, und das Konto `messstand@…`
-    fehlt auf der örtlichen Anlage. 10c AP7 baut die Statistik auf eine
+    fehlte auf der örtlichen Anlage (seit AP4 legt der Prüfstand es über
+    `messen.py --frisch` selbst an, F-P5c-104). 10c AP7 baut die Statistik auf eine
     Zählung mit Obergrenze und einen neuen Index `missions(started_at)` um —
     ohne Messstand-Schritt gäbe es für die Zeiten keinen Beleg, nur ein
     `EXPLAIN` von Hand. *Weg:* Schritt `statistik` im Messstand (drei Reiter
@@ -3766,6 +3768,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Messungen über `tools/motor.mjs`, wo eine Abnahme sie braucht (AP2
     Zeilenhöhe bei 1440 und 390 px, AP7, AP9) — die Messungen führen diese
     Nummer als Anlass. Der Umbau des Bilderlaufs selbst gehört nicht zu 10c.
+    **Seit Web 20.41.0 gilt dasselbe für die Rolle Support** (P5c/AP4): Ihre
+    Sicht — Liste ohne Kennzahlen, ausgegraute Kontoseite, zwei
+    Protokollreiter — nimmt der Bilderlauf nicht auf; belegt ist sie nur
+    über die Rollenprobe (Menü, Liste, Reiter) und im Prüfdokument von Hand.
     **Zuordnung: 10c (Messungen); Umbau: nächste Backlog-Runde.**
 
 298. **Kein Prüfmittel liest den QR-Code, den die Anwendung zeigt.**
@@ -3781,6 +3787,51 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `tools/bedienprobe/vendor/` mit Herkunft und SHA-256, `Lizenzen.md`) und
     vergleicht ihn mit der angezeigten Adresse (E-P5c-87). **Zuordnung: 10c
     AP5.**
+
+299. **Die Kontoseite löscht ein Konto an `konto_loeschen()` vorbei.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-99).* Es gibt zwei
+    Wege, ein Konto zu löschen: `konto_loeschen()` in `konto_lib.php` (die
+    Selbstlöschung und der Verfall gehen darüber) und den Zweig
+    `user_delete` in `admin_user.php`. Beide räumen dasselbe ab — die
+    Konto-Backups nach der Wahl, die Spuren ausdrücklich vor der Kaskade,
+    die Sperrvermerke — und jeder schreibt es selbst. Dass es zwei sind, hat
+    schon einmal geschadet: Die Löschung durch die Verwaltung schrieb bis
+    Web 20.40.0 keinen Eintrag `konto_geloescht`, weil nur der eine Weg ihn
+    kannte. AP4 hat den Eintrag nachgetragen und den Weg stehen lassen — ein
+    Umbau des Löschens gehört nicht in das Paket einer Rolle. *Weg:* Der
+    Zweig ruft `konto_loeschen($uid, $mitSicherungen)`; was die Seite zusätzlich
+    prüft (eigenes Konto, letzte BetreiberIn, abgetippte Adresse), bleibt
+    davor. Nachweis: Rollenprobe (Konto löschen 403 beim Support) und ein
+    Löschfall mit Spuren gegen `spur_zahlen()`. **Zuordnung: Backlog-Runde.**
+
+300. **Die Hauptstufe des Prüfstands fährt die Plattformmatrix nur zur Hälfte.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-103).*
+    `Pruefablauf.md` 3 verspricht für `haupt` PHP 8.3.33 und 8.4, je Paar mit
+    den vier Datenbanken eine Schemaprobe und einen Kreislauf `edbak` —
+    ausdrücklich auch gegen MySQL 8.4.0, weil dort Nr. 267 lag — und den
+    Uhr-Prüfstand Stufe II. `pruefablauf.json` gibt `haupt` davon die
+    Schemaprobe über vier Datenbanken unter dem PHP des Containers (8.4);
+    `kreislauf.py` kennt keine zweite Datenbank, PHP 8.3 fährt keine Probe,
+    die Uhr-Stufe II steht nirgends — und **der Bilderlauf läuft auch in
+    `haupt` nur in Chromium**: `aufnehmen.mjs` nimmt einen Motor aus
+    `--motor`, `--stufe haupt` wählt nur die Breiten. Der erste Lauf meldete
+    `bilderlauf=0` nach 840 s mit 520 Bildern — so viele wie in `neben`.
+    **Eine Falle für den Bau** (F-P5c-105): In WebKit setzt
+    `page.screenshot()` ein eigenes Stylesheet ein, die CSP meldet es an
+    `api/csp_bericht.php`, und auf den Wartungsseiten antwortet der
+    Endpunkt 503 — 16 „Konsolenfehler", die der Lauf selbst verursacht. Gemerkt hat es erst das erste Paket, das
+    seit PK-05 in `haupt` lief: Ein Bericht „haupt, grün" sagt über PHP 8.3
+    und MySQL 8.4 im Kreislauf nichts. AP4 hat die Rollenprobe und die
+    Migration über Betrieb → Updates unter PHP 8.3 von Hand gefahren, dazu
+    den Bilderlauf in Firefox und WebKit.
+    *Weg:* `pruefen.sh` fährt den Bilderlauf bei `haupt` je Motor (drei
+    Zahlen im Bericht), dazu einen zweiten Durchgang unter
+    `hochfahren.sh --php 8.3` (mindestens Rollen-, Wartungs- und
+    Schemaprobe, ein Kreislauf), `kreislauf.py` bekommt eine Datenbankwahl
+    für die Behälter aus `plattform.sh`, und der Bericht nennt je Paar eine
+    Zahl — **oder** die Zeile in `Pruefablauf.md` 3 wird auf das Gebaute
+    zurückgenommen, mit Begründung. Nicht beides offen lassen. **Zuordnung:
+    Prüfkette (PK-06 ff.); bis dahin je Paket von Hand.**
 
 ## Erledigt
 
@@ -7991,6 +8042,11 @@ zutreffen.
     Betrieb → Updates öffnen und „Ausstehende ausführen" drücken, damit
     `2026_09_05_rolle_betreiberin` im Register steht (Rahmenplan
     Abschnitt 6).
+    **Die Regel angewandt mit Web 20.41.0 (P5c/AP4):** Die Support-Rolle
+    hängt einen Wert an, den zum Ausführen niemand braucht; nachgestellt mit
+    dem neuen Code auf dem alten Schema — Anmeldung und
+    `betrieb_updates.php` antworten, `update.php` läuft durch (`Technik.md`
+    7, Notweg).
 
 115. **Die Rundlaufprüffälle räumen ihren hochgeladenen Bestand nicht ab.**
     *Aufgenommen 03.09.2026 aus S5 (Vorbereitung 8.2).* `android/LIESMICH.md`

@@ -1115,19 +1115,30 @@ function email_maskieren(string $email): string
     return mb_substr($lokal, 0, 2) . '***' . ($domain !== '' ? '@' . $domain : '');
 }
 
-/* ---- Die drei Rollen (Web 15.0.0, S8/AP1; Rahmenplan R75) ----------------
+/* ---- Die Rollen (Web 15.0.0, S8/AP1; Rahmenplan R75; Support seit
+ *      Web 20.41.0, P5c/AP4, R38) ---------------------------------------------
  *
- * DREI ROLLEN, ZWEI STUFEN VON RECHTEN, EINE HIERARCHIE:
+ * VIER ROLLEN, und jede kann alles, was die vorige kann:
  *
  *   user          dokumentiert eigene Einsaetze
+ *   support       hilft NutzerInnen: sieht Konten der Rolle `user` und ihre
+ *                 Geraete, sendet Setz-Link und Bestaetigung neu, schaltet
+ *                 ein Geraet ab — und sonst nichts (E-P5c-14, -40)
  *   admin         verwaltet Konten, Konto-Backups, Rechtstexte, Demo
  *   betreiberin   dazu der Bereich BETRIEB: Server, Speicher, Updates, Jobs,
  *                 Komplett-Backup, Backup-Ziele
  *
- * BetreiberIn ⊇ Admin ⊇ NutzerIn: Wer betreibt, kann alles, was ein Admin
- * kann. Deshalb liefert ist_admin() (auth_guard.php) auch fuer eine
+ * BetreiberIn ⊇ Admin ⊇ Support ⊇ NutzerIn: Wer betreibt, kann alles, was ein
+ * Admin kann. Deshalb liefert ist_admin() (auth_guard.php) auch fuer eine
  * BetreiberIn wahr — es gibt genau EINE Rollenpruefung je Frage, und die
  * Frage "darf verwalten?" hat zwei richtige Antworten.
+ *
+ * DER SUPPORT IST KEINE EIGENE VERWALTUNG, sondern ihr schmaler Ausschnitt:
+ * Was er darf, darf auch ein Admin (`rolle_darf_support()` ist fuer alle drei
+ * wahr); was ein Admin darf, darf er fast alles NICHT. Die Seiten fragen deshalb
+ * je Handlung, nicht je Seite — der POST-Verteiler ist nicht zentralisiert
+ * (E-ZE-07), und eine Seitenwache haette den Support entweder ganz
+ * ausgesperrt oder ganz hereingelassen.
  *
  * WARUM HIER UND NICHT IN auth_guard.php. Die Wachen dort haengen an der
  * angemeldeten Sitzung. Zwei Stellen brauchen die Frage aber OHNE Sitzung:
@@ -1144,8 +1155,19 @@ function email_maskieren(string $email): string
  */
 const ROLLEN = [
     'user'        => 'NutzerIn',
+    'support'     => 'Support',
     'admin'       => 'Admin',
     'betreiberin' => 'BetreiberIn',
+];
+
+/** Dieselben Rollen in der Mehrzahl, fuer Zaehlungen (Statistik). Hier und
+ *  nicht an der Stelle, die zaehlt: Eine fuenfte Rolle fehlte sonst dort,
+ *  wo niemand an sie denkt (F-P5c-36). */
+const ROLLEN_MEHRZAHL = [
+    'user'        => 'NutzerInnen',
+    'support'     => 'Support',
+    'admin'       => 'Admins',
+    'betreiberin' => 'BetreiberInnen',
 ];
 
 /** Ist das ein gueltiger Rollenwert? Alles andere wird zu 'user'. */
@@ -1175,6 +1197,23 @@ function rolle_darf_verwalten(?string $rolle): bool
     return $r === 'admin' || $r === 'betreiberin';
 }
 
+/**
+ * Darf diese Rolle die Handlungen des Supports (E-P5c-14)? Support, Admin und
+ * BetreiberIn — die EINE Andockstelle neben `rolle_darf_verwalten()`.
+ */
+function rolle_darf_support(?string $rolle): bool
+{
+    $r = rolle_normieren($rolle);
+    return $r === 'support' || rolle_darf_verwalten($r);
+}
+
+/** Ist diese Rolle genau der Support — und damit auf Konten der Rolle `user`
+ *  und die schmalen Handlungen beschraenkt (E-P5c-40)? */
+function rolle_ist_support(?string $rolle): bool
+{
+    return rolle_normieren($rolle) === 'support';
+}
+
 /** Darf diese Rolle den Bereich Betrieb sehen und bedienen? */
 function rolle_ist_betreiberin(?string $rolle): bool
 {
@@ -1195,6 +1234,16 @@ function rolle_text(?string $rolle): string
  * Rollenzuwachs (Support-Rolle, R38) genau diese eine.
  */
 const ROLLEN_VERWALTUNG_SQL = "role IN ('admin','betreiberin')";
+
+/**
+ * SQL-Bedingung fuer „Konto ohne eigene Rechte" — das, was der Support sieht
+ * und betreut (P5c/AP4, E-P5c-40). Aus demselben Grund eine Konstante wie die
+ * darueber. `alias` ist der Tabellenname davor, oder leer.
+ */
+function rollen_ohne_rechte_sql(string $alias = ''): string
+{
+    return ($alias !== '' ? $alias . '.' : '') . "role = 'user'";
+}
 
 /**
  * Zahl der BetreiberInnen-Konten.
@@ -1881,6 +1930,25 @@ function db_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool {
                           AND table_name = ? AND column_name = ?');
     $q->execute([$tabelle, $spalte]);
     return (int)$q->fetchColumn() > 0;
+}
+
+/**
+ * Der Typ einer Spalte, wie die Datenbank ihn nennt (`enum('user',…)`,
+ * `varchar(190)`) — oder null, wenn es sie nicht gibt.
+ *
+ * DER VIERTE HELFER (P5c/AP4). Eine Migration, die ein ENUM erweitert, muss
+ * fragen koennen, ob der neue Wert schon drinsteht; die drei `db_hat_*`
+ * sagen nur, OB es die Spalte gibt. Frueher stand dafuer `information_schema`
+ * von Hand in der Migration (`2026_09_03_rolle_betreiberin`); neue
+ * Migrationen fragen hierueber (Register Z15).
+ */
+function db_spalte_typ(PDO $pdo, string $tabelle, string $spalte): ?string {
+    $q = $pdo->prepare('SELECT column_type FROM information_schema.columns
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND column_name = ?');
+    $q->execute([$tabelle, $spalte]);
+    $typ = $q->fetchColumn();
+    return $typ === false || $typ === null ? null : (string)$typ;
 }
 
 /** Gibt es den Index? */

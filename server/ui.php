@@ -982,6 +982,19 @@ function ui_einstellungen_punkte(): array
                 ['admin_protokoll',    'admin_protokoll.php',    'Protokoll',     'protokoll'],
             ],
         ];
+    } elseif (function_exists('ist_support') && ist_support()) {
+        /* DER SUPPORT (P5c/AP4, E-P5c-14): unter Verwaltung genau die zwei
+         * Seiten, die er betritt — NutzerInnen (nur Konten der Rolle `user`)
+         * und Protokoll (Verwaltung und E-Mail). Keine Zaehler: Sie zaehlen
+         * Konto-Backups, und die sind nicht seine Sache. */
+        $bloecke[] = [
+            'schluessel' => 'verwaltung',
+            'titel'      => 'Verwaltung',
+            'punkte'     => [
+                ['admin',           'admin_users.php',     'NutzerInnen', 'gruppe'],
+                ['admin_protokoll', 'admin_protokoll.php', 'Protokoll',   'protokoll'],
+            ],
+        ];
     }
 
     if (function_exists('ist_betreiberin') && ist_betreiberin()) {
@@ -2244,7 +2257,7 @@ function ui_aktionen(array $o): string
                 . '<span>' . ui_e((string)($e['text'] ?? '')) . '</span>';
         $attr = !empty($e['attr']) ? ' ' . (string)$e['attr'] : '';
         /* EIN EINTRAG KANN AUCH EINE HANDLUNG SEIN, nicht nur ein Weg (O9).
-         * „Passwort zurücksetzen" auf der Kontoseite ist ein POST — als
+         * „Setz-Link senden" auf der Kontoseite ist ein POST — als
          * <a href> wäre es entweder wirkungslos oder ein Zustandswechsel auf
          * einen GET hin, und genau das ist an anderer Stelle schon einmal
          * teuer geworden (update.php, Kopf „Zweistufiger Ablauf").

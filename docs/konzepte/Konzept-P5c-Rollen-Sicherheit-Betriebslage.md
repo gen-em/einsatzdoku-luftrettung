@@ -33,11 +33,11 @@ Umsetzung.
 > | | |
 > |---|---|
 > | Stand | **23.09.2026 — Fassung 2.** Fassung 1 (20.09.2026, gegen `862ca7f`, Web 20.25.0) freigegeben, Mockup-Runde M-P5c-01 freigegeben. Am 23.09.2026 gegen `8fd4553` (Web 20.37.1, nach Schritt 15, 16 und PK-01 bis -04) abgeglichen: 139 Rohbefunde, 16 davon in der Gegenlesung widerlegt; 21 Fragen dem Auftraggeber vorgelegt und am selben Tag beantwortet (Q-P5c-05 bis -25, 2.7). Daraus **E-P5c-31 bis -58** und **F-P5c-15 bis -58**. Nachgezogen auf `main` `8ae873c` (PK-04 gemergt, Konzept TB). **Mockup-Runde M-P5c-02** am 23.09.2026 gebaut und freigegeben: **F-P5c-59 bis -63**, **Q-P5c-26 bis -30**, **E-P5c-59 bis -66** (2.8). |
-> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -85** (2.9) — ohne eigene Frage bis auf drei aus AP2, **Q-P5c-31 bis -33**, beantwortet am 24.09.2026 (Adressen bleiben im Archiv, erstes Archiv ab dem ältesten Eintrag, aktiver Reiter in `--orange-tief`). **Nachtrag zu Fassung 2 aus der Zuarbeit von Konzept BR: E-P5c-86 bis -90, Q-P5c-34 bis -37** (2.10, 24.09.2026) Aus AP3: **E-P5c-91 bis -97** (2.9), ohne Frage. |
+> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -85** (2.9) — ohne eigene Frage bis auf drei aus AP2, **Q-P5c-31 bis -33**, beantwortet am 24.09.2026 (Adressen bleiben im Archiv, erstes Archiv ab dem ältesten Eintrag, aktiver Reiter in `--orange-tief`). **Nachtrag zu Fassung 2 aus der Zuarbeit von Konzept BR: E-P5c-86 bis -90, Q-P5c-34 bis -37** (2.10, 24.09.2026) Aus AP3: **E-P5c-91 bis -97** (2.9), ohne Frage. Aus AP4: **E-P5c-98 bis -103** (2.9), ohne Frage. |
 > | Offen | Nichts. Die beiden Fehler aus der Runde M-P5c-02 außerhalb von P5c — Backlog **288** (Neueinrichtung scheiterte seit Web 20.30.0) und **289** (Anmeldeseite) — sind mit der Korrekturstufe **Web 20.37.3** behoben (23.09.2026, F-P5c-62, -63); ihre Prüfliste war abgearbeitet und stand in `Pruefdokument-Korrektur-288-289.md` (gelöscht 24.09.2026, Historie `5e501ae`) |
-> | Umsetzung | **läuft seit 23.09.2026. AP1 erledigt** (Web 20.38.0; Befunde F-P5c-64 bis -72, alle behoben oder als Prüfmittelfalle benannt). **AP2 erledigt** (Web 20.39.0, 24.09.2026; Befunde F-P5c-73 bis -88, alle behoben, eine davon als Frage vorgelegt). **AP3 erledigt** (Web 20.40.0, 24.09.2026; Befunde F-P5c-89 bis -98, alle behoben; F-P5c-91 lässt eine Lücke im Tor offen, benannt). **Als Nächstes: AP4.** — Vorgeschichte: **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** **SD-00 eingespielt mit Fassung 111, Backlog Nr. 294** (Konzept SD, 24.09.2026 — die Nummer 293 hat Konzept BR); seither gilt `CLAUDE.md` 2 Punkt 5: im Rahmenplan keine Paketabsätze mehr. |
+> | Umsetzung | **läuft seit 23.09.2026. AP1 erledigt** (Web 20.38.0; Befunde F-P5c-64 bis -72, alle behoben oder als Prüfmittelfalle benannt). **AP2 erledigt** (Web 20.39.0, 24.09.2026; Befunde F-P5c-73 bis -88, alle behoben, eine davon als Frage vorgelegt). **AP3 erledigt** (Web 20.40.0, 24.09.2026; Befunde F-P5c-89 bis -98, alle behoben; F-P5c-91 lässt eine Lücke im Tor offen, benannt). **AP4 erledigt** (Web 20.41.0, 24.09.2026, **mit Migration** — nach dem Deploy `update.php`, die Wartung bleibt an; Befunde F-P5c-99 bis -105; -99 bis -102 und -104 behoben, der doppelte Löschweg hinter -99 steht als Backlog Nr. 299, **-103 ist eine Lücke der Prüfkette** — die Hauptstufe fährt weder PHP 8.3 noch den Kreislauf je Datenbank noch Firefox und WebKit, Nr. 300; für AP4 von Hand gefahren). **Als Nächstes: AP5.** — Vorgeschichte: **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** **SD-00 eingespielt mit Fassung 111, Backlog Nr. 294** (Konzept SD, 24.09.2026 — die Nummer 293 hat Konzept BR); seither gilt `CLAUDE.md` 2 Punkt 5: im Rahmenplan keine Paketabsätze mehr. |
 > | Fable-Schritte | **keine.** M-P5c-01 ist am 20.09.2026 mit Fable gefahren; M-P5c-02 fährt Opus (Q-P5c-08) |
-> | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02 (beide erledigt mit Web 20.37.3, das **290** und **291** vergibt); der Kopf des Backlogs nennt **292** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) **Seit 24.09.2026: Spanne 294–303** — 294 Konzept SD, 295–298 Anlässe aus dem Nachtrag BR (E-P5c-86), 299–303 frei; 293 gehört BR. |
+> | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02 (beide erledigt mit Web 20.37.3, das **290** und **291** vergibt); der Kopf des Backlogs nennt **292** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) **Seit 24.09.2026: Spanne 294–303** — 294 Konzept SD, 295–298 Anlässe aus dem Nachtrag BR (E-P5c-86), **299** und **300** aus AP4 (zwei Löschwege; die halbe Plattformmatrix), 301–303 frei; 293 gehört BR. |
 >
 > **Stand der Umsetzung**
 >
@@ -47,7 +47,7 @@ Umsetzung.
 > | AP1 Banner und Ankündigung | **erledigt 23.09.2026** | Neben — **Web 20.38.0** | neben (Bericht im Commit `P5c-AP1`) | nein | | Mailprobe **50 / 0** (vorher 41) · Bedienwege der Seite **2 / 2**, Bedienprobe gesamt 50 · Bilderlauf mit Etikett **496 Bilder, 0/0/0/0**, Etikett 496 Titel + 424 Kopfleisten, nach F-P5c-70 **0 Abweichungen** · Kontraste **25 Paare, 0 verfehlt** (Orange hell auf Rot 4,12) · Register **38 Zeilen, 0 über der Decke** · Statuszeile „Umgebung" 4 von 4 Fällen |
 > | AP2 Protokollseite und Archiv | **erledigt 24.09.2026** | Neben — **Web 20.39.0** | neben (Bericht im Commit `P5c-AP2`) | nein | | Rollenprobe **87 / 0** (28 Zeilen × 3 Rollen + Rollenwechsel; Gegenprobe altes Tor: 8 rot) · Protokollprobe **21 / 0** (entsiegelt 0 IP, 0 Adressen in Sicherheit und E-Mail) · Komplettprobe **67 / 0**, Wiederherstellung **111 / 0** · Versandprobe **141 / 0** (Teil 13 neu; Gegenprobe 2 von 3 Archiven gelöscht) · Bilderlauf **520 Bilder aus 65 Seiten, 0/0/0/0**, 167 Karten · Bedienprobe **52 / 52**, davon die Seite **2 / 2** (Zeilenhöhe 68,4 = 68,4 px; ohne Gegenregel 12 px niedriger) · Zeilenhöhe über `motor.mjs` 1440 px 68,39 = 68,39, 390 px 110,98 = 110,98 · Register **40 Zeilen, 0 über der Decke** · Stilvergleich **54 geplant, 54 gemessen, 0 ungeplant** · Kontraste **25 Paare, 0 verfehlt** |
 > | AP3 Fehlerprotokoll | **erledigt 24.09.2026** | Neben — **Web 20.40.0** | neben (Bericht im Commit `P5c-AP3`) | nein | | `error_log(` **75 → 2** (Z38, Decke 2) · Protokollprobe **36 / 0** (neu Teil 7: 15, Gegenprobe Puffer rot) · Ingestprobe **86 / 0** (neu Teil 11: 3) · Mailprobe **51 / 0** · Kopplungsprobe **76 / 0** · Verbindungsprobe **24 / 0** (3 von 3; Gegenprobe rot) · Riegel `behandler` Selbstprobe **9 / 9**, Gegenprobe rot · Quelltext **9 von 9**, Selbstproben **6 von 6** · Schemaprobe **4 × 19 / 0** · Riegelprobe **10 / 0** · Kollation der Kennungssuche auf **4** Engines gemessen |
-> | AP4 Support-Rolle | offen | Neben | **haupt** | **ja** (ENUM `users.role`) | | |
+> | AP4 Support-Rolle | **erledigt 24.09.2026** | Neben — **Web 20.41.0** | **haupt** (Bericht im Commit `P5c-AP4`; Stufenregel `migration`) | **ja** (ENUM `users.role`) | | Rollenprobe **279 / 0** (65 Zeilen × 4 Rollen = 260 Zellen, Rollenwechsel 3, Support 16; Gegenprobe `device_toggle` für den Support und Link-Sperre aus: **4 rot**) · Protokollprobe **36 / 0** · Wartungsprobe **67 / 0** · Mailprobe **51 / 0** · Schemaprobe **4 × 19 / 0** · Migrationsregister **0 Befunde** · Stufenregel Selbstprobe **35 / 0**, gegen den Stand → `haupt` · Register **40 Zeilen, 0 über der Decke** · Quelltext **9 von 9** · vor `update.php`: Anmeldung 200 mit Wartungshinweis, `betrieb_updates.php` 200 mit der Migration, danach ENUM mit 4 Werten, Wartung an · **unter PHP 8.3.33 von Hand** (F-P5c-103): Rollenprobe **279 / 0**, Migration über Betrieb → Updates angewendet, Wartung an · **Bilderlauf von Hand in Firefox 142 und WebKit 26**: je **520 Bilder**, Überlauf 0, Knöpfe 0, Karten 167/167; Konsolenfehler 1 und 16 ohne Befund an einer Seite (F-P5c-105) · **Messstand** (F-P5c-104) von Hand **9 min 38 s**, 5050 Einsätze, 0 Fehler · Stilvergleich **55 geplant** (eine Zeile für `.form-raster-einspaltig`) |
 > | AP5 Zweitfaktor und Bus-Faktor | offen | Neben | **haupt** | **ja** (TOTP-Spalten, Codetabelle) | | |
 > | AP6 Health | offen | Neben | neben | nein | | |
 > | AP7 Statistik mit drei Reitern | offen | Neben | **haupt** | **ja** (Index) | | |
@@ -1368,6 +1368,61 @@ von `config.php`, der die ganze Anlage träfe (F-P5c-86). Die Ingestprobe
 lässt das Einfügen über einen vorübergehenden Auslöser auf `missions`
 scheitern.
 
+**E-P5c-98 — Ein Rollentor je Handlung, die Liste steht auf der Seite**
+(AP4, über E-P5c-14 hinaus). `handlung_erlaubt($handlung, $fuerSupport)` in
+`auth_guard.php` lässt jede verwaltende Rolle durch, den Support nur mit
+einer Handlung aus der Liste, und antwortet sonst 403 — **vor**
+`csrf_check()` (Muster E-P5c-85). Die Liste steht als Konstante auf der
+Seite (`SUPPORT_HANDLUNGEN` in `admin_user.php`: `pw_reset`,
+`verifikation`, `device_aus`); `admin_users.php` gibt ihm keine. **Warum
+nicht eine zentrale Tabelle Seite → Handlungen:** Der POST-Verteiler ist
+nicht zentralisiert (E-ZE-07), und eine zweite Liste neben der Matrix in
+`Technik.md` 4.99p liefe auseinander; die Matrix prüft, was die Seite sagt.
+
+**E-P5c-99 — Das Zieltor der Kontoseite fragt die Rolle des Kontos, und
+zwar zuerst** (AP4, E-P5c-40 ausgeführt). Ist das Konto eines mit eigenen
+Rechten (`rolle_darf_support()` ist wahr — Support, Admin, BetreiberIn),
+antwortet die Seite dem Support 403, bevor sie irgendeine Handlung
+ansieht. Das gilt auch für **andere Support-Konten und das eigene**: E-P5c-40
+sagt „nur Konten der Rolle user", und ein Support, der einen anderen
+stilllegen könnte, hätte eine Handlung über Konten mit Rechten. Die Liste
+filtert mit `rollen_ohne_rechte_sql()` (`db.php`, neben
+`ROLLEN_VERWALTUNG_SQL`), damit sie nicht zeigt, was die Seite dann abweist.
+
+**E-P5c-100 — „Bestätigung erneut senden": eigene Vorlage, die Frist der
+Registrierung ist die Frist des Links** (AP4, E-P5c-14 ausgeführt). Nur bei
+Status `unbestaetigt`; für alle drei verwaltenden Rollen, nicht nur den
+Support. Die Mail ist `registrierung_erneut` im Katalog (Pflicht `link`,
+`zeitpunkt`) und nicht die der Registrierung: Sie sagt, dass es ein zweiter
+Link ist und bis wann er gilt. Das Token kommt aus `reset_token_ausstellen()`
+— die eine Stelle, die frühere entwertet —, seine Laufzeit ist der **Rest**
+bis `created_at + KONTEN_UNBESTAETIGT_H`; unter 60 s Rest heißt es
+„abgelaufen", weil der Verfalljob das Konto räumt, bevor die Mail gelesen
+ist. Im Protokoll `verifikation_gesendet` mit der Zustellung, ohne Link.
+
+**E-P5c-101 — Der Fehlfall des Setz-Links ist beim Support ein Fehler, keine
+Auskunft** (AP4, E-P5c-40 ausgeführt). Geht die Mail nicht sofort hinaus,
+sieht der Admin weiter den Link (E-P5a-54); der Support bekommt eine
+Fehlermeldung — „NICHT zugestellt … bitte an einen Admin oder die
+BetreiberIn wenden" — und keinen Link, auch nicht in der Warteschlange. Der
+Eintrag im Protokoll bleibt derselbe (`setzlink_gesendet` mit Zustellung).
+
+**E-P5c-102 — Die Sicht des Supports ist die aus M-P5c-02c** (AP4,
+E-P5c-66). In der Liste drei Kacheln (ohne „Admins"), kein Filter
+„Admins", kein Anlegen, keine Sammelaktionen, den Stand der Konto-Backups
+sieht er. Die Kontoseite `.form-raster-einspaltig`: Konto gesperrt und ohne
+„Speichern" mit dem Satz aus dem Bild, Status mit Hinweis, Mengen ohne das
+Formular der Grenzen, Geräte mit „Deaktivieren" nur an aktiven Geräten; keine
+Konto-Backups, kein „Konto löschen". Zuerst anders gebaut und vor dem Commit
+berichtigt (F-P5c-102).
+
+**E-P5c-103 — Die Löschung durch die Verwaltung schreibt ihren Eintrag
+selbst; der zweite Löschweg bleibt** (AP4, F-P5c-99). `admin_user.php`
+löscht nicht über `konto_loeschen()`, und das ist der Grund, warum der
+Eintrag fehlte. Nachgetragen ist der Eintrag, nicht der Umbau: Den Zweig
+auf `konto_loeschen()` umzustellen ändert den Löschweg der Verwaltung, und
+das gehört nicht in das Paket einer Rolle. Backlog Nr. 299.
+
 | Nr. | Frage | Vorschlag | Entscheidung |
 |---|---|---|---|
 | Q-P5c-31 | *(AP2)* Adressen im Text der Verwaltung: ins Archiv wie gespeichert, oder herausnehmen wie bei Sicherheit | wie gespeichert | **Adressen bleiben** (24.09.2026) — E-P5c-75 |
@@ -1840,6 +1895,77 @@ Prüfstand `haupt`.
 - Anmeldung und `betrieb_updates.php` **vor** `update.php` mit dem neuen Code
   (Rückfall-SELECT).
 
+**Bericht AP4 (24.09.2026).**
+
+*Was gebaut ist.* **Zuerst die Stufenregel** (E-P5c-88): `auswahl.py` liest
+die Kennungen des Katalogs in `migration_lib.php` an Basis und Kopf, und eine
+neue hebt die Stufe auf `haupt` (`stufenregeln` in `pruefablauf.json`,
+`stufe_mit_regeln()`, `stufe_aus_version()` liefert Stufe und Grund);
+`bericht.py` nimmt die Stufe von dort, und `Pruefablauf.md` 4 nennt die
+Regel. Selbstprobe **35 Lagen** (acht neu), gegen den echten Stand:
+„Nebenstufe 20.37.3 → 20.41.0; neu … `2026_09_24_rolle_support` (Regel
+migration) → haupt". **Die Rolle:** Migration `2026_09_24_rolle_support`
+(ENUM hinten angehängt, Vorbedingung über das neue `db_spalte_typ()`),
+`schema.sql` samt vorgemerktem Eintrag, `ROLLEN` und `ROLLEN_MEHRZAHL` mit
+`support` an zweiter Stelle, `rolle_darf_support()`, `rolle_ist_support()`,
+`rollen_ohne_rechte_sql()`; in `auth_guard.php` `darf_support()`,
+`ist_support()`, `require_support()`, `handlung_erlaubt()` (E-P5c-98) und
+`rollen_auswahl()` mit Support. Die Aufzählstellen aus F-P5c-36: Sortwert
+und Statistik ziehen aus `ROLLEN`, das Menü hat einen Block für den
+Support, Z13 kennt `support`. **Die Seiten:** `admin_users.php`,
+`admin_user.php`, `admin_protokoll.php` hinter `require_support()`; das
+Zieltor (E-P5c-99); `device_aus` (nur 1 → 0, Eintrag nur bei Wirkung);
+„Bestätigung erneut senden" mit `konto_verifikation_erneut()` und der
+Vorlage `registrierung_erneut` (E-P5c-100); der Setz-Link ohne Anzeige
+(E-P5c-101); „Setz-Link senden" für alle (E-P5c-62); die Sicht aus dem
+Bild (E-P5c-102) mit `.form-raster-einspaltig`; `verifikation_gesendet` im
+Katalog des Protokolls, der Support sieht Verwaltung und E-Mail.
+**Prüfmittel:** Die Matrix in `Technik.md` 4.99p hat die Spalte `support`,
+**37 neue Zeilen** (65 insgesamt) und zwei Platzhalter; die Rollenprobe
+legt je Rolle ein Konto, drei Zielkonten und ein Gerät an (E-P5c-78 — das
+„Sandbox-Konto für Support" ist damit die Probe selbst) und prüft **16
+Wirkungen** des Supports.
+
+*Was dabei schiefging und wie es gelöst ist.* **F-P5c-99:** Beim Durchgehen
+der Handlungen für die Matrix gesehen — die Verwaltung löschte ohne
+Eintrag. **F-P5c-100:** eine Meldung aus AP2, die mit einer vierten Rolle
+falsch wurde. **F-P5c-101:** ein Versprechen im Kopf der Probe, das der
+Code nicht hielt. **F-P5c-102:** Meine erste Fassung der Support-Sicht war
+nicht die freigegebene — ich hatte „was die Rolle nicht darf, zeigt die
+Seite nicht" (E-P5c-10) weiter ausgelegt als das Bild und Kacheln, Filter
+und Mengen weggenommen, die der Support **sehen** darf. Gesehen beim
+Gegenlesen von M-P5c-02c für diesen Bericht, vor dem Commit; berichtigt,
+und die Probe hält die Sicht jetzt fest. **Beim Nachstellen „vor
+`update.php`"** schaltete der Torwächter zunächst nicht: Er merkt sich
+seine Antwort je Katalog-Hash, und ein von Hand gelöschter Registereintrag
+ändert den Hash nicht. Das ist Absicht (`migration_lib.php`, Kopf des
+Torwächters); nachgestellt ist deshalb, was der Deploy tut — der gemerkte
+Hash wird verworfen. **F-P5c-103:** Vor dem Prüfstand nachgelesen, was
+`haupt` fährt — weniger, als `Pruefablauf.md` 3 verspricht. PHP 8.3 und den
+Kreislauf je Datenbank baut keine Probe; ich habe den Teil, den AP4
+berührt, von Hand unter PHP 8.3.33 gefahren (Rollenprobe, Migration über
+die Seite) und die Lücke als Nr. 300 der Prüfkette übergeben. **Der erste Prüfstand** war
+in zwei Proben rot und zeigte eine dritte Lücke: Der Stilvergleich kannte
+die neue Regel `.form-raster-einspaltig` nicht (eine Zeile in `geplant.txt`),
+der Messstand meldete sich mit einem Konto an, das niemand angelegt hatte
+(**F-P5c-104**, behoben), und der Bilderlauf lief auch in `haupt` nur in
+Chromium (zu F-P5c-103; Firefox und WebKit von Hand — WebKit meldete dabei
+16 „Konsolenfehler", die der Bilderlauf selbst auslöst, **F-P5c-105**).
+Nicht als Beleg verwendet.
+
+*Entscheidungen.* E-P5c-98 bis -103 (2.9), ohne eigene Frage. **Über das
+Konzept hinaus:** das Zieltor auch für Support-Konten (E-P5c-99) und die
+eigene Vorlage der Bestätigung (E-P5c-100).
+
+*Nicht gebaut, und warum.* **Der Bilderlauf nimmt die Sicht des Supports
+nicht auf** — er meldet sich nur als BetreiberIn an (Nr. 297, dort
+ergänzt); die Sicht belegen Rollenprobe und Prüfdokument. **Der doppelte
+Löschweg** bleibt (E-P5c-103, Nr. 299). **Umleiten nach POST** bleibt
+Nr. 250 (Schritt 17); die Meldungen stehen in derselben Antwort.
+
+*Zahlen.* Stand der Umsetzung im Statusblock; Prüfbericht in der
+Commit-Nachricht; Messprotokoll im Prüfdokument, Abschnitt 1c.
+
 ### AP5 — Zweitfaktor und Bus-Faktor (E-P5c-15, -16, -41 bis -44, -53, -54, -56, -61, -63, -65; Bild: M-P5c-02)
 
 **Inhalt.** *(QR-Decoder: E-P5c-87, Anlass Nr. 298.)* `totp_lib.php` (RFC 6238); Migration (Spalten, `totp_codes`);
@@ -2196,6 +2322,14 @@ angegebenen Kennung (A-, B-, … = Bereich und laufende Nummer).*
 | F-P5c-96 | *(AP3, Prüfmittel)* **Zwei Proben lasen, was `error_log()` schrieb, und die Suche danach hatte sie nicht gefunden.** Die Kopplungsprobe (Fall 27) suchte „SMTP" im Protokoll des PHP-Servers und wurde im Vorlauf rot. Die Mailprobe (Abschnitt 13) leitete `error_log` in eine eigene Datei und prüfte dort „kein @" und „eine Kennung" — die zweite Prüfung wurde rot, **die erste wäre allein grün geblieben**: 0 Byte, also 0 Adressen. Meine Suche vor dem Umbau galt `error_log`, `php_errors`, `Fehlerprotokoll`; die Kopplungsprobe liest über eine Variable `$protokoll`, die auf `/tmp/php-server.log` zeigt | behoben: beide lesen den Reiter System; die Mailprobe verlangt erst einen Eintrag und hält seine Kennung gegen die Fehlerspalte der Warteschlange (3 statt 2 Prüfungen), beide nehmen ihre Einträge wieder heraus. Gesucht jetzt auch nach `.log'` und `php-server.log`: keine dritte Stelle |
 | F-P5c-97 | *(AP3)* **Bei gepufferter Ausgabe hinge die Fehlerseite hinter der halben Seite.** Viele Hoster setzen `output_buffering=4096`: Bricht eine Seite nach wenigen Kilobyte ab, sind die Kopfzeilen noch nicht gesendet, und die Fehlerseite schriebe ihr ganzes Dokument hinter das, was schon im Puffer steht. Örtlich unsichtbar — `php -S` puffert nicht | behoben: `system_fehlerseite()` verwirft vorher jeden Puffer; gemessen mit `-d output_buffering=4096` |
 | F-P5c-98 | *(AP3, Prüfmittel)* **Teil 2 der Verbindungsprobe hing am Zeitverhalten.** „Die Enge schlägt auf die Verbindungen durch" verlangt, dass bei zwei freien Plätzen von 20 gleichzeitigen Paketen mindestens eines an der Grenze abprallt. Gemessen am 24.09.2026: **0** im Vorlauf des Prüfstands, einzeln **1, 12, 13**. Ob es abprallt, hängt daran, ob drei Anfragen zugleich eine Verbindung halten. Mit einem freien Platz prallte es jedes Mal (16, 11, 18) — dann gibt es aber kein Gedrängel mehr, und um das geht es im Anlass der Probe (Nr. 210). Die Probe war vor AP3 in keinem Prüfstand ausgewählt: AP3 berührt `db.php` und damit ihr Muster | behoben: bis zu drei Runden mit neuen Paketen, bis eine Abweisung an der Grenze gemessen ist; jede Zusage gilt für alle Pakete aller Runden. Einzeln **3 von 3** grün (11, 13, 16 Abweisungen, je 1 bis 2 Gedrängel, je eine Runde). **Gegenprobe:** acht freie Plätze → drei Runden, 0 Abweisungen, **OFFEN**, 60 von 60 Paketen angekommen |
+| F-P5c-99 | *(AP4)* **Die Löschung eines Kontos durch die Verwaltung stand nicht im Protokoll.** `admin_user.php` löscht selbst, nicht über `konto_loeschen()`; nur dort steht `protokoll('verwaltung', 'konto_geloescht', …)`. Selbstlöschung und Verfall schrieben den Eintrag, die Verwaltung als einzige nicht — gefunden beim Durchgehen der Handlungen für die Matrix | behoben: Eintrag vor dem `DELETE`, mit `weg: verwaltung`; der doppelte Löschweg als Backlog Nr. 299 (E-P5c-103) |
+| F-P5c-100 | *(AP4)* **Die Protokollseite sagte dem Support „der BetreiberIn vorbehalten" auch über Jobs und Sicherung** — die sieht jeder Admin. Der Satz stammt aus AP2, als es unter der BetreiberIn nur den Admin gab | behoben: die Reiter der Verwaltung als Konstante `PROTOKOLL_REITER_VERWALTUNG`, die Meldung nennt Verwaltung oder BetreiberIn |
+| F-P5c-101 | *(AP4, Prüfmittel)* **Der Kopf der Rollenprobe versprach seit AP2, bei GET-403 den Text des Rollentors zu prüfen; `messen()` las nur den Statuscode** | behoben: ein 403 ohne „Kein Zugriff" oder „vorbehalten" heißt jetzt „403 ohne Rollentor" und ist rot |
+| F-P5c-102 | *(AP4)* **Die Sicht des Supports wich vom freigegebenen Bild ab.** Gebaut war: keine Kacheln, keine Backup-Filter in der Liste, keine Karte „Mengen und Grenzen", die Kontoseite zweispaltig mit ausgegrautem „Speichern". M-P5c-02c zeigt drei Kacheln, die Backup-Filter, Mengen ohne Formular, **einspaltig** und Knöpfe weg statt ausgegraut — und E-P5c-66 hat genau das freigegeben. Gefunden beim Gegenlesen des Bilds für den Paketbericht, vor dem Commit | behoben (E-P5c-102); `.form-raster-einspaltig` im Stylesheet und in `Design.md` 9.26. Die Rollenprobe hält die Sicht jetzt fest (Kontoseite „wie im Bild", Gegenprobe beim Admin, drei Kacheln) |
+| F-P5c-103 | *(AP4, Prüfmittel)* **Die Hauptstufe des Prüfstands fährt die Plattformmatrix nur zur Hälfte.** `Pruefablauf.md` 3 verspricht PHP 8.3.33 und 8.4 mit je einer Schemaprobe und einem Kreislauf `edbak` je Datenbank, den Kreislauf ausdrücklich gegen MySQL 8.4.0, und den Uhr-Prüfstand Stufe II. `pruefablauf.json` gibt `haupt` davon die Schemaprobe über vier Datenbanken unter PHP 8.4; `kreislauf.py` kennt keine zweite Datenbank. AP4 ist das erste Paket, das seit PK-05 in `haupt` läuft — gesehen beim Nachlesen, was die Stufe fährt, bevor der Prüfstand eine Stunde lief. **Und der erste Lauf zeigte ein Drittes:** Der Bilderlauf meldete `bilderlauf=0` nach 840 s mit 520 Bildern — so viele wie in `neben`; `aufnehmen.mjs` fährt einen Motor aus `--motor`, `--stufe haupt` wählt nur die Breiten | **benannt, nicht behoben** — es gehört der Prüfkette: Backlog Nr. 300, `Pruefablauf.md` 3 sagt jetzt unter der Tabelle, was davon läuft, und die Bemerkung in `pruefablauf.json` sagt es auch. Für AP4 von Hand: unter PHP 8.3.33 Rollenprobe **279 / 0**, Migration über Betrieb → Updates angewendet, Wartung blieb an; Bilderlauf in Firefox und WebKit (1c) |
+| F-P5c-104 | *(AP4, Prüfmittel)* **Der Messstand scheiterte im Prüfstand an einem Konto, das niemand angelegt hatte.** `pruefablauf.json` rief `browserprobe.mjs` allein auf; sie meldet sich als `messstand@gen-em.org` an, und das legt nur `messen.py` im Schritt `konto` an. Im ersten Lauf der Hauptstufe: Anmeldung gescheitert, danach **1086 s** in sieben Zeitgrenzen, `messstand=1`. Die Anmerkung „Zuarbeit der Betreiberin" (F-PK-22) war für die örtliche Anlage überholt — gemessen: `messen.py --frisch` legt Konto und Bestand selbst an | behoben: Aufruf `python3 tools/messstand/messen.py --frisch`; von Hand **9 min 38 s, 5050 Einsätze, sieben Messungen ohne Fehler, Rückgabewert 0**; `tools/messstand/LIESMICH.md` und Nr. 295 berichtigt |
+| F-P5c-105 | *(AP4, Prüfmittel)* **In WebKit löst jedes Bild des Bilderlaufs einen CSP-Bericht aus, und auf den Wartungsseiten wird daraus ein „Konsolenfehler".** `page.screenshot()` von Playwright setzt ein eigenes Stylesheet ein (Cursor verbergen); Chromium umgeht dabei die Richtlinie, WebKit nicht. Die CSP (nur berichtend) meldet `style-src-elem` an `api/csp_bericht.php` — auf gewöhnlichen Seiten geht das durch, während der Wartung antwortet der Endpunkt 503. Gemessen: 16 Konsolenfehler, alle auf `46a-betrieb-updates-wartung` und `07-wartungsseite`, je Breite einer; nachgestellt mit einem Einzelbild — WebKit 1 Bericht, Chromium und Firefox 0. Nebenwirkung: Ein Bilderlauf in WebKit füllt die Tabelle der CSP-Berichte mit Einträgen, die keine Seite verursacht hat | **benannt, nicht behoben** — kein Fehler der Anwendung; gehört zu Nr. 300, wo der Bilderlauf in drei Engines gebaut wird (Weg dort: `caret: 'initial'` in WebKit oder die Berichte des Laufs herausfiltern). Für AP4 gezählt als 0 echte Befunde |
+
 | F-P5c-69 | *(AP1, Prüfmittel)* Wer `config.php` in einem Prozess schreibt und die Anlage **in derselben Sekunde** abfragt, sieht den alten Stand: Der OPcache des PHP-Servers prüft Zeitstempel höchstens alle zwei Sekunden. Gemessen an der Statuszeile: Der Fall „Farbe unbekannt" zeigte beim ersten Lauf den vorigen Fall | kein Anwendungsfehler; der Umschalter für Bilderlauf und Statusmessung wartet 3 s (Prüfdokument) |
 
 ---

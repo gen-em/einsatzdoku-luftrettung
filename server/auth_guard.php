@@ -337,6 +337,48 @@ function require_admin(): void {
 }
 
 /**
+ * Darf die Angemeldete die Handlungen des Supports (P5c/AP4, E-P5c-14)?
+ *
+ * Wahr fuer Support, Admin und BetreiberIn. Die Seitenwache der
+ * Kontoverwaltung und des Protokolls ist seit AP4 `require_support()`; was
+ * darueber hinausgeht, fragt JE HANDLUNG `ist_admin()` — und zwar VOR dem
+ * Token (Muster E-P5c-85), damit die Rollenprobe das Rollentor von der
+ * Token-Ablehnung unterscheiden kann.
+ */
+function darf_support(): bool {
+    global $userRole;
+    return rolle_darf_support($userRole);
+}
+
+/** Ist die Angemeldete genau der Support — also auf Konten der Rolle `user`
+ *  und die schmalen Handlungen beschraenkt (E-P5c-40)? */
+function ist_support(): bool {
+    global $userRole;
+    return rolle_ist_support($userRole);
+}
+
+function require_support(): void {
+    if (!darf_support()) {
+        if (ist_api_aufruf()) { json_out(['error' => 'forbidden'], 403); }
+        ui_abbruch(403, 'Kein Zugriff.');
+    }
+}
+
+/**
+ * Das Rollentor fuer EINE Handlung auf einer Seite, die der Support betritt:
+ * wer nicht verwalten darf, bekommt 403 — ausser, die Handlung steht in
+ * `$fuerSupport`. VOR `csrf_check()` rufen (E-P5c-85).
+ *
+ * @param list<string> $fuerSupport die Handlungen, die auch der Support darf
+ */
+function handlung_erlaubt(string $handlung, array $fuerSupport = []): void {
+    if (ist_admin()) { return; }
+    if (ist_support() && in_array($handlung, $fuerSupport, true)) { return; }
+    if (ist_api_aufruf()) { json_out(['error' => 'forbidden'], 403); }
+    ui_abbruch(403, 'Kein Zugriff — diese Handlung ist der Verwaltung vorbehalten.');
+}
+
+/**
  * Darf die Angemeldete den Bereich BETRIEB sehen und bedienen?
  *
  * Betrieb ist alles, was die INSTALLATION betrifft und nicht ihren Inhalt:
@@ -357,7 +399,7 @@ function require_betreiberin(): void {
     }
 }
 
-/** Die Rolle der Angemeldeten als Wert ('user' | 'admin' | 'betreiberin'). */
+/** Die Rolle der Angemeldeten als Wert ('user' | 'support' | 'admin' | 'betreiberin'). */
 function eigene_rolle(): string {
     global $userRole;
     return $userRole;
@@ -376,7 +418,9 @@ function eigene_rolle(): string {
  */
 function rollen_auswahl(): array
 {
-    $o = ['user' => ROLLEN['user'], 'admin' => ROLLEN['admin']];
+    /* DEN SUPPORT VERGEBEN ADMIN UND BETREIBERIN (P5c/AP4). Er hat weniger
+     * Rechte als ein Admin; wer Admins anlegen darf, darf auch ihn anlegen. */
+    $o = ['user' => ROLLEN['user'], 'support' => ROLLEN['support'], 'admin' => ROLLEN['admin']];
     if (ist_betreiberin()) { $o['betreiberin'] = ROLLEN['betreiberin']; }
     return $o;
 }

@@ -421,6 +421,27 @@ function mail_katalog(): array
          * Warteschlange schlecht macht: Man wartet, und irgendwann merkt
          * man, dass nichts mehr kommt. Der Satz „du kannst sie neu stellen"
          * ist der Zweck der Mail — nicht die Absage. */
+        /* DIESELBE BESTAETIGUNG, NOCH EINMAL (P5c/AP4, E-P5c-14). Verwaltung
+         * oder Support haben sie angestossen, weil die erste nicht ankam oder
+         * untergegangen ist. Eigener Eintrag, weil die Frist eine andere ist:
+         * Der Link gilt nicht 48 Stunden ab jetzt, sondern bis zu dem
+         * Zeitpunkt, an dem die Registrierung ohnehin verfaellt — und der
+         * Text muss das sagen, sonst verspricht er Zeit, die es nicht gibt. */
+        'registrierung_erneut' => [
+            'art' => 'konto', 'frist' => 172800, 'pflicht' => ['link', 'zeitpunkt'],
+            'betreff' => fn(array $d): string => 'Adresse bestätigen — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "hier ist noch einmal der Link, mit dem du deine Adresse bei der " . $n . "\n"
+                . "bestätigst und dein Passwort festlegst. Er gilt bis " . $d['zeitpunkt'] . ";\n"
+                . "ein früher verschickter Link gilt nicht mehr:\n\n"
+                . $d['link'],
+                "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
+                . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
+                . "Passwort-Reset von niemandem mehr öffnen.\n\n"
+                . "Falls du dich nicht registriert hast, ignoriere diese E-Mail einfach. Ohne den\n"
+                . "Link passiert nichts, und zum genannten Zeitpunkt wird die Anfrage gelöscht."),
+        ],
+
         'registrierung_verfallen' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Registrierung verfallen — ' . $n,

@@ -3062,6 +3062,15 @@ body.map-fs-lock{overflow:hidden}
     align-items:start;
   }
 }
+/* EINE SPALTE, WENN DIE ZWEITE LEER BLIEBE (P5c/AP4, M-P5c-02c, E-P5c-66):
+ * Der Support sieht auf der Kontoseite keine Konto-Backups und keine
+ * Gefahrenzone — die rechte Spalte entfiele, und die linke stuende halb so
+ * breit neben einer Leere. Hinter der Regel oben, damit sie ab 1200 px
+ * gewinnt; die Breite ist die der Lesespalte samt einem Abstand. */
+.form-raster-einspaltig{
+  grid-template-columns:minmax(0,1fr);
+  max-width:calc(var(--lesespalte) + var(--abstand-5));
+}
 
 /* Zwei kurze Felder in einer Zeile (Nachname/Vorname, Geburtsdatum/Alter) —
  * auch mobil, wie im Mockup. */

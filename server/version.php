@@ -7400,5 +7400,42 @@ declare(strict_types=1);
  *   auf das Fehlerprotokoll des Webspace verwiesen, sagen jetzt, wo die
  *   Ursache steht. Ein neuer Riegel in Stufe 1, `tools/quelltext/behandler.php`,
  *   haelt die drei Behandler; Register Z38 steht auf 2.
+ *
+ * 20.41.0 — DIE VIERTE ROLLE: SUPPORT (P5c/AP4, R38, E-P5c-14, -40, -62).
+ *   Nebenstufe MIT MIGRATION: `users.role` bekommt den Wert `support`,
+ *   hinten angehaengt. Nach dem Deploy `update.php`; die Wartung bleibt an,
+ *   bis es gelaufen ist. Aelterer Code liest `support` als `user`
+ *   (`rolle_normieren()`), ein Zuruecksetzen ist also unkritisch.
+ *
+ *   WAS DER SUPPORT DARF, UND NUR DAS. Konten der Rolle `user` sehen — die
+ *   Liste und die Kontoseite, einspaltig, die Felder gesperrt, ohne einen
+ *   Knopf, hinter dem ein 403 staende (M-P5c-02c); einen Setz-Link senden,
+ *   ohne ihn je zu sehen, auch dann nicht, wenn die Mail nicht hinausging;
+ *   die Bestaetigung einer Registrierung erneut senden; ein Geraet
+ *   abschalten, nicht wieder an und nicht weg. Im Protokoll die Reiter
+ *   Verwaltung und E-Mail. Die Kontoseite eines Kontos mit eigenen Rechten
+ *   ist ihm 403, VOR jeder Handlung: Mit einem Setz-Link liesse sich ein
+ *   frisch angelegtes Konto uebernehmen, auch eines mit Rechten.
+ *
+ *   JE HANDLUNG, NICHT JE SEITE. Die drei Seiten, die er betritt, stehen
+ *   hinter `require_support()`; jede Handlung dort fragt
+ *   `handlung_erlaubt()` vor dem Token. Eine Seitenwache haette ihn ganz
+ *   ausgesperrt oder ganz hereingelassen. Die Berechtigungsmatrix in
+ *   `Technik.md` 4.99p hat eine vierte Spalte und alle Verwaltungshandlungen,
+ *   65 Zeilen; die Rollenprobe faehrt 260 Zellen und sechzehn Wirkungen.
+ *
+ *   NEU FUER ALLE. „Bestaetigung erneut senden" auf der Kontoseite einer
+ *   unbestaetigten Registrierung — der Link gilt nicht laenger als die
+ *   Registrierung selbst. „Passwort zuruecksetzen" heisst jetzt „Setz-Link
+ *   senden": Gesetzt wird kein Passwort, sondern ein Link verschickt.
+ *   Die Loeschung eines Kontos durch die Verwaltung steht im Protokoll; bis
+ *   hierher schrieben nur Selbstloeschung und Verfall einen Eintrag
+ *   (F-P5c-99).
+ *
+ *   DAZU. Die Rollen stehen an keiner Stelle mehr von Hand aufgezaehlt:
+ *   Sortierung, Statistik und Auswahl ziehen aus `ROLLEN`, Register Z13
+ *   kennt `support`. `db_spalte_typ()` fragt den vollen Typ einer Spalte.
+ *   Eine neue Migration hebt den Pruefstand von selbst auf die Hauptstufe
+ *   (Stufenregel, E-P5c-88).
  */
-const WEB_VERSION = '20.40.0';
+const WEB_VERSION = '20.41.0';

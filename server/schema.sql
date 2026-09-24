@@ -24,7 +24,7 @@ CREATE TABLE users (
   pat_wrap_pw   TEXT NULL,                           -- Inhaltsschluessel, passwortverpackt (Pflicht-Verschlüsselung)
   pat_wrap_rc   TEXT NULL,                           -- Inhaltsschluessel, mit Wiederherstellungsschluessel verpackt
   pat_key_check CHAR(32) NULL,                       -- Pruefsumme des Inhaltsschluessels (im Browser gerechnet); NULL = Altbestand
-  role          ENUM('user','admin','betreiberin') NOT NULL DEFAULT 'user',  -- BetreiberIn ⊇ Admin ⊇ NutzerIn (R75)
+  role          ENUM('user','admin','betreiberin','support') NOT NULL DEFAULT 'user',  -- BetreiberIn ⊇ Admin ⊇ NutzerIn (R75); Support daneben, enger (E-P5c-14)
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
@@ -1042,4 +1042,5 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- missions.uhr_gesperrt heisst oben schon so (Web 20.25.0, Nr. 238). Eine
   -- frische Anlage hat nichts umzubenennen; die Migration ist ausschliesslich
   -- fuer Bestandsdatenbanken da, die die Spalte noch als `manual` fuehren.
-  ('2026_09_20_uhr_gesperrt', 'skipped');
+  ('2026_09_20_uhr_gesperrt', 'skipped'),
+  ('2026_09_24_rolle_support', 'skipped');

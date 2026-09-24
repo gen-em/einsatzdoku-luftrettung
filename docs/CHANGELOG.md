@@ -14,6 +14,142 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.41.0] — 2026-09-24
+
+**Die vierte Rolle: Support.** P5c/AP4 (Schritt 10c), R38, E-P5c-14, -40,
+-62. Nebenstufe **mit Migration**: `users.role` bekommt den Wert `support`.
+**Nach dem Deploy muss eine BetreiberIn `update.php` ausführen** (Betrieb →
+Updates); bis dahin schließt der Torwächter die Anlage, und **die Wartung
+bleibt danach an**, bis sie jemand ausschaltet. Älterer Code liest `support`
+als `user` — ein Zurücksetzen über diese Fassung hinweg sperrt niemanden
+aus.
+
+### Neu
+
+- **Web: Die Rolle Support** (E-P5c-14, -40). Wer NutzerInnen hilft, brauchte
+  bis hierher die Rolle Admin — und konnte damit Konten löschen, Backups
+  einspielen, Rollen vergeben. Der Support kann genau das, was eine
+  Anfrage „ich komme nicht mehr hinein" braucht, und nur für Konten der
+  Rolle NutzerIn: Liste und Kontoseite **ansehen**, einen **Setz-Link
+  senden**, eine **Bestätigung erneut senden**, ein **Gerät deaktivieren**.
+  Im Protokoll sieht er Verwaltung und E-Mail. **Den Setz-Link sieht er nie**
+  — auch dann nicht, wenn die Mail nicht hinausging; er bekommt den Hinweis,
+  sich an einen Admin oder die BetreiberIn zu wenden. Wer den Link sähe,
+  könnte das Konto übernehmen. **Aus demselben Grund ist ihm die Kontoseite
+  eines Kontos mit eigenen Rechten 403**, und die Liste zeigt ihm solche
+  Konten gar nicht: Mit einem Setz-Link ließe sich ein frisch angelegtes
+  Konto übernehmen, auch eines mit Rechten. Ein Gerät schaltet er aus, aber
+  **nicht wieder an** — ein verlorenes Gerät stillzulegen ist Hilfe, ihm
+  wieder zu trauen ist eine Entscheidung über das Konto. Vergeben wird die
+  Rolle von Admins und BetreiberInnen. **Die Sicht ist die freigegebene aus
+  M-P5c-02c:** in der Liste drei Kacheln statt vier (ohne „Admins"), kein
+  Anlegen, keine Sammelaktionen; die Kontoseite **einspaltig**
+  (`.form-raster-einspaltig`, `Design.md` 9.26), die Kontodaten gesperrt
+  und **ohne** „Speichern", Mengen ohne das Formular der Grenzen, keine
+  Konto-Backups, kein „Konto löschen". Was er nicht tun darf, steht nicht als
+  grauer Knopf da, sondern gar nicht (E-P5c-66).
+- **Web: „Bestätigung erneut senden"** auf der Kontoseite einer
+  unbestätigten Registrierung, für Support, Admin und BetreiberIn. Kam die
+  Mail mit dem Bestätigungslink nicht an, blieb bis hierher nur, die
+  Registrierung verfallen zu lassen und die Person neu anfangen zu lassen.
+  Der neue Link geht **nur per Mail** hinaus (eigene Vorlage
+  `registrierung_erneut`), macht einen früheren ungültig und gilt **nicht
+  länger als die Registrierung selbst** — sonst überlebte ein Link das
+  Konto, auf das er zeigt. Ist deren Frist fast um, sagt die Seite, dass
+  sich die Person neu registrieren muss. Im Protokoll steht
+  `verifikation_gesendet`, ohne den Link.
+
+### Geändert
+
+- **Web: „Passwort zurücksetzen" heißt „Setz-Link senden"** (E-P5c-62), für
+  alle Rollen. Gesetzt wird kein Passwort, sondern ein Link verschickt —
+  und der alte Name ließ Admins glauben, sie hätten danach ein Passwort in
+  der Hand.
+- **Web: Die Verwaltungsseiten fragen je Handlung, nicht je Seite.**
+  `admin_users.php`, `admin_user.php` und `admin_protokoll.php` lässt
+  `require_support()` betreten; jede Handlung dort fragt `handlung_erlaubt()`
+  **vor** dem Formular-Token (Muster E-P5c-85), sonst bekäme ein Support mit
+  abgelaufenem Formular dieselbe Antwort wie einer, der die Handlung gar
+  nicht darf, und die Rollenprobe könnte beides nicht unterscheiden. Eine
+  Seitenwache hätte den Support ganz ausgesperrt oder ganz hereingelassen.
+  **Was bleibt:** Die übrigen Verwaltungsseiten — Konto-Backups,
+  Installation, Demo-Konto — stehen unverändert hinter `require_admin()`.
+- **Web: Die Rollen stehen an keiner Stelle mehr von Hand aufgezählt**
+  (F-P5c-36). Sortierung der Liste, Statistik und Auswahlfeld ziehen aus
+  `ROLLEN`; `schema.sql` und die Migration nennen das ENUM, und Register
+  **Z13** kennt `support` — ein Vergleich wie `=== 'support'` außerhalb von
+  `db.php` färbt Stufe 1 rot.
+- **Web: `db_spalte_typ()`** neben `db_hat_tabelle()`, `-spalte()` und
+  `-index()`: der volle Typ einer Spalte, etwa die Werte eines ENUM. Die
+  Migration fragt damit, ob `support` schon da ist, statt
+  `information_schema` von Hand zu lesen.
+- **Werkzeug: Eine neue Migration hebt den Prüfstand auf die Hauptstufe**
+  (E-P5c-88). `auswahl.py` erkennt eine neue Kennung im Katalog von
+  `migration_lib.php` und wählt `haupt` — mit der Plattformmatrix über vier
+  Datenbankfassungen —, auch wenn die Version nur die Nebenstufe hebt. Bis
+  hierher hing das an der Versionsnummer, und eine Nebenstufe mit Migration
+  (wie diese) wäre ohne Plattformmatrix durchgegangen.
+
+### Behoben
+
+- **Web: Die Löschung eines Kontos durch die Verwaltung stand nicht im
+  Protokoll** (F-P5c-99). Die Kontoseite löscht selbst, nicht über
+  `konto_loeschen()`, und ging damit am Eintrag `konto_geloescht` vorbei —
+  Selbstlöschung und Verfall schrieben ihn, die Verwaltung als einzige
+  nicht. Jetzt schreibt sie ihn vor dem `DELETE`, samt der Entscheidung über
+  die Konto-Backups. **Was bleibt:** zwei Löschwege, die dasselbe abräumen —
+  zusammengelegt werden sie nicht im Paket einer Rolle, sondern mit Backlog
+  Nr. 299.
+- **Web: „Dieser Reiter ist der BetreiberIn vorbehalten"** stand beim
+  Support auch über Jobs und Sicherung (F-P5c-100) — die sieht jeder Admin.
+  Die Meldung nennt jetzt, wem der Reiter vorbehalten ist.
+- **Handbuch 3.1a** verwies für das Ändern der Rolle auf 11.5
+  (Installation); richtig ist 11.3.
+
+### Nachweis
+
+**Die Berechtigungsmatrix** (`Technik.md` 4.99p) hat eine Spalte `support`
+und alle Verwaltungshandlungen: **65 Zeilen × 4 Rollen = 260 Zellen**, dazu
+zwei Platzhalter, `{ziel}` (ein Konto der Rolle `user`) und `{admin}`. Die
+Rollenprobe prüft außerdem **sechzehn Wirkungen des Supports** mit gültigem
+Token — Menü, Liste, die Sicht aus dem Bild samt Gegenprobe beim Admin,
+Reiter, Setz-Link mit Gegenprobe beim Admin, Gerät aus/an/weg, Konto
+löschen, Bestätigung — und steht bei **279 Erwartungen, 0 nicht erfüllt**. Gegenprobe: `device_toggle` in die Liste des Supports
+genommen und die Link-Sperre abgeschaltet → **4 rot**.
+
+**Der Kopf der Rollenprobe versprach seit AP2, bei GET-403 den Text des
+Rollentors zu prüfen**, und `messen()` tat es nicht (F-P5c-101). Jetzt tut
+es das.
+
+**Vor `update.php`** nachgestellt: ENUM auf drei Werte zurück, Eintrag der
+Migration entfernt, gemerkter Katalog-Hash verworfen (das tut sonst der
+Deploy). Die erste angemeldete Anfrage schaltet die Wartung ein; die
+Anmeldung antwortet 200 mit Wartungshinweis, `betrieb_updates.php` 200 und
+nennt die Migration, die Statistik 200. `php server/update.php` wendet sie
+an, das ENUM hat vier Werte, und die Wartung bleibt an. **Dasselbe unter
+PHP 8.3.33** über Betrieb → Updates, und dort die Rollenprobe mit 279 / 0.
+
+**Die Hauptstufe fährt die Plattformmatrix nur zur Hälfte** (F-P5c-103):
+`Pruefablauf.md` 3 versprach PHP 8.3 und einen Kreislauf je Datenbank,
+`pruefablauf.json` gibt der Stufe die Schemaprobe über vier Datenbanken.
+Dieses Paket ist das erste seit PK-05, das in `haupt` lief — und der erste
+Lauf zeigte, dass auch der Bilderlauf dort nur Chromium fährt. Den Teil, der
+dieses Paket betrifft, hat es von Hand gefahren (oben, dazu der Bilderlauf
+in Firefox und WebKit: je 520 Bilder, kein Überlauf, keine falsche
+Knopfhöhe; die Konsolenfehler — einer in Firefox, 16 in WebKit — stammen
+nicht von den Seiten: ein abgebrochener Schrift-Download beim Seitenwechsel
+und in WebKit ein CSP-Bericht, den das Bildschirmfoto selbst auslöst,
+F-P5c-105); die Lücke steht als Backlog Nr. 300, und
+`Pruefablauf.md` 3 sagt jetzt, was die Stufe wirklich fährt.
+
+**Werkzeug: Der Messstand legt sein Konto im Prüfstand selbst an**
+(F-P5c-104). Der Prüfstand rief nur die Browserprobe auf, und die meldete
+sich mit einem Konto an, das auf einer frischen Anlage niemand angelegt
+hatte — 1086 s Zeitgrenzen und eine rote Zeile im Bericht. Jetzt ruft er
+`messen.py --frisch`: Konto, 5050 Einsätze, Einspielen, Messen, rund zehn
+Minuten. Und `tools/stilvergleich/geplant.txt` kennt die neue Regel
+`.form-raster-einspaltig`.
+
 ## [Web 20.40.0] — 2026-09-24
 
 **Fehler stehen im Protokoll, und die Fehlerseite sagt, wohin man sie

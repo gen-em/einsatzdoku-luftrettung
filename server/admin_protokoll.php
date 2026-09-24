@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-require_admin();
+/* SEIT P5c/AP4 AUCH DER SUPPORT — mit zwei Reitern, lesend
+ * (`protokoll_reiter_sichtbar()`). Die eine Handlung der Seite, das Laden
+ * eines Archivs, fragt weiterhin die BetreiberIn. */
+require_support();
 require_once __DIR__ . '/protokoll_archiv_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text(), datum_text(), zahl_text(), groesse_text()
 
@@ -60,9 +63,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $reiter = (string)($_GET['r'] ?? ($sichtbar[0] ?? 'verwaltung'));
 $istArchiv = $reiter === 'archiv';
 if ($istArchiv ? !$betreiberin : !in_array($reiter, $sichtbar, true)) {
+    /* Jobs und Sicherung sieht auch der Admin — dem Support stuende dort
+     * sonst „der BetreiberIn vorbehalten", und das stimmte nicht (F-P5c-100). */
     ui_abbruch(isset(PROTOKOLL_SEITE_REITER[$reiter]) || $istArchiv ? 403 : 404,
         isset(PROTOKOLL_SEITE_REITER[$reiter]) || $istArchiv
-            ? 'Dieser Reiter des Protokolls ist der BetreiberIn vorbehalten.'
+            ? 'Dieser Reiter des Protokolls ist der '
+              . (in_array($reiter, PROTOKOLL_REITER_VERWALTUNG, true) ? 'Verwaltung' : 'BetreiberIn')
+              . ' vorbehalten.'
             : 'Diesen Reiter gibt es nicht.');
 }
 

@@ -1336,7 +1336,8 @@ ui_seite_start(['titel' => 'Einstellungen',
         <p class="feld-hinweis">Rolle: <strong><?= e(rolle_text(eigene_rolle())) ?></strong><?php
           if (ist_betreiberin()): ?> — du siehst zusätzlich den Bereich
           <em>Betrieb</em>.<?php elseif (ist_admin()): ?> — du siehst zusätzlich den
-          Bereich <em>Verwaltung</em>.<?php endif; ?> Geändert wird sie in der
+          Bereich <em>Verwaltung</em>.<?php elseif (ist_support()): ?> — du siehst unter
+          <em>Verwaltung</em> die Konten der NutzerInnen und das Protokoll.<?php endif; ?> Geändert wird sie in der
           Verwaltung, nicht hier.</p>
       <?php ui_karte_ende(); ?>
 

@@ -5459,7 +5459,7 @@ Die Bausteine im Einzelnen:
 | Formatierer im Browser | `assets/format.js` (`EdFormat`) | **Zahl und Größe** (`zahl()`, `groesse()`) — dieselben Regeln wie `format_lib.php`, über 2 014 Byte-Werte Zeichen für Zeichen geprüft. **Tag, Dauer und Strecke** seit Web 20.34.0 (`tag()`, `tagKurz()`, `spanne()`, `dauer()`, `dauerUhr()`, `minuten()`, `km()`, `kmSumme()`) — dafür gibt es **keine** PHP-Entsprechung: Dort geht es um UTC-Zeitstempel mit Zonenumrechnung, hier um einen nackten Tagesstring und um Dauern, die serverseitig nicht entstehen. **Der Leerwert ist überall ein Parameter**, kein fester Wert — die Lehre aus AP7, wo ein fester Frühausstieg aus „– um –“ ein „–“ machte. Sechs verschiedene Leer-Antworten waren im Bestand gemessen worden. **Die Datei steht im `<head>`** (`ui_seite_start()`), damit die Ladereihenfolge keine Frage mehr ist. **Fünf dünne Weiterleitungen bleiben** (Z34), jede bindet einen anderen Leerwert. |
 | Spalten von `missions` | `mission_fields_lib.php` | `mf_missions_register()` führt jede der 41 Spalten **genau einmal** und sagt je Zweck, ob sie dabei ist und an welcher **Position**; `mf_spalten($zweck, $präfix, $alias)` erzeugt die Liste, `mf_spalten_sql()` den SQL-Text. Neun Zwecke: `export` · `backup` · `backup_restore` · `import_neu` · `import_aendern` · `ingest_neu` · `schnitt_neu` · `suchindex` · `range`. Die Position wird mitgeführt, weil die Listen in Menge **und** Reihenfolge eingefroren sind — eine andere Reihenfolge ändert die Spaltenfolge im CSV-Export. `mf_spalten()` verlangt je Zweck eine lückenlose Folge ab 0. Fehlt eine Spalte in einem Zweck, steht der Grund in `mf_missions_gruende()`. Ab Web 20.31.0. |
 | Feste Werte in einer erzeugten Anweisung | (Aufrufseite) | Wo Werte fest im Satz stehen, hängt die Wertform an der **Spalte**, nicht an ihrer Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]`, `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer ein Feld unter die Schranke nimmt, trägt es an **einer** Stelle ein. |
-| Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()` — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
+| Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, seit Web 20.41.0 `db_spalte_typ()` (der volle Spaltentyp, etwa die Werte eines ENUM — P5c/AP4) — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
 | Anfrage an den Server | `assets/api.js` (`EdApi`) | `EdApi.postJson(url, daten, o)` und `EdApi.postForm(url, felder, o)`, seit Web 20.34.0. Beide liefern `{ ok, status, daten, meldung }` und **werfen nie** — ein Netzfehler kommt als `status: 0`. Sie hängen das CSRF-Token selbst an (Kopfzeile bzw. Feld) und bauen den **einen** Satzbau `<Vorgang> ist fehlgeschlagen: <Grund>`. Vorrangkette des Grundes: `meldung` → `text` → `hinweis` → Ersatzsatz mit Kennung. **`error` steht nicht in der Kette** — es trägt Maschinenwörter, keine Sätze, und erscheint nur als Kennung in der Klammer. **`ok` ist ein Transport-Urteil**: Es prüft `daten.ok !== false`, nicht `=== true`, weil die lesenden Endpunkte gar kein `ok` schicken — wer ein fachliches `ok` braucht, prüft `a.daten.ok` mit. **Die Array-Regel von `postForm` ist sicherheitsrelevant**: Ein Feldwert, der ein Array ist, geht als `name[]` hinaus; ohne die Klammern liest PHP eine Zeichenkette, `is_array()` schlägt fehl, und die Schlüsselblatt-Rückfrage zählt einen Fehlversuch. **Die Datei steht im `<head>`** — nicht in der Immer-Liste, weil `ui_geruest_ende()` auf `einstellungen.php` und `import.php` **nach** den Seitenskripten steht und `unlock.js` dort zur Ladezeit sendet. |
 | Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Die Tonklasse wird zusammengesetzt** — `tools/vollstaendigkeit/` sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. |
 | Auftakt der Patientenanzeige | `assets/patient.js` (`EdPat.listeLaden`) | `EdPat.listeLaden(liste, o)`, seit Web 20.34.0: Schlüssel holen, Sperrbanner nach der Regel setzen (sichtbar genau dann, wenn kein Schlüssel da ist **und** die Liste überhaupt einen `pat_blob` enthält), entschlüsseln, zählen. Gibt `{ ck, zahl }` zurück und **entscheidet nicht**: Tagesansicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und dabei den Altersfilter sperren. `zeigeUnlesbar()` ruft der Aufrufer **nach** seiner Schleife. **`einstellungen.php` bleibt draußen** (Z36 endet bei 1): Es teilt nur den Aufruf, arbeitet mit Fenstern zu 250 aus einem Bestand von tausenden, und `hinweisUnlesbar()` wertet die **ganze** Liste aus — über ein Fenster gesagt wäre der Satz falsch. |
@@ -6878,13 +6878,22 @@ beim Entkoppeln **vor** dem Löschen gerufen), `wartung_an`, `wartung_aus`,
 `komplett_heruntergeladen`, `komplett_eingespielt`, `komplett_geloescht`,
 `kontobackup_eingespielt` in der Sicherung.
 
+**Neu mit Web 20.41.0** (AP4): `verifikation_gesendet` — die Bestätigung
+einer Registrierung erneut verschickt, mit dem Zustand der Zustellung, nie
+mit dem Link. Und `konto_geloescht` schreibt jetzt auch die Löschung durch
+die Verwaltung auf der Kontoseite, **vor** dem `DELETE` (F-P5c-99); bis
+dahin schrieben ihn nur die Selbstlöschung und der Verfall.
+
 #### Wer welchen Reiter sieht
 
 `protokoll_reiter_sichtbar()`: **BetreiberIn alle sieben und das Archiv;
-Admin Verwaltung, E-Mail, Jobs, Sicherung.** Was die Rolle nicht darf, zeigt
-die Seite nicht — kein ausgegrauter Reiter. Ein Reiter außerhalb der Liste
-in der Adresse ist 403, ein unbekannter 404. Die Zellen stehen in der
-Berechtigungsmatrix (4.99p); Support kommt mit AP4.
+Admin Verwaltung, E-Mail, Jobs, Sicherung (`PROTOKOLL_REITER_VERWALTUNG`);
+Support Verwaltung und E-Mail** (seit Web 20.41.0, AP4). Was die Rolle nicht
+darf, zeigt die Seite nicht — kein ausgegrauter Reiter. Ein Reiter außerhalb
+der Liste in der Adresse ist 403, ein unbekannter 404; die Meldung nennt,
+wem er vorbehalten ist — Jobs und Sicherung der Verwaltung, die übrigen der
+BetreiberIn (F-P5c-100). Die Zellen stehen in der Berechtigungsmatrix
+(4.99p).
 
 **Löschen kann niemand** — nur die Fristen (E-P5c-02). Fristen und Archiv
 stellt die BetreiberIn in **Betrieb → Servereinstellungen → Protokoll** ein;
@@ -7092,46 +7101,104 @@ wird** — kein Komplett-Backup, keine Löschung, kein Versand. Der Preis: Dass
 die Handlung mit gültigem Token auch gelingt, zeigt die Matrix nicht; das tun
 die Bedienwege und die Proben der jeweiligen Sache.
 
-**Support fehlt noch** (kommt mit AP4 als vierte Spalte, samt allen
-Verwaltungshandlungen); der Zweitfaktor-Reset mit AP5, der Vorschau-Endpunkt
-der Rechtstexte mit AP9.
+**Zwei Platzhalter** (seit Web 20.41.0, AP4): `{ziel}` ist ein Konto der
+Rolle `user`, `{admin}` eines der Rolle `admin` — beide legt die Probe an und
+räumt sie ab. Die Kontoseite fragt die Rolle **zweimal**: erst, ob die
+Angemeldete das Zielkonto überhaupt betreuen darf (der Support nur Konten
+von NutzerInnen, E-P5c-40), dann je Handlung (`handlung_erlaubt()`). Beide
+Tore stehen in der Matrix.
+
+**Was noch kommt:** der Zweitfaktor-Reset mit AP5, der Vorschau-Endpunkt
+der Rechtstexte mit AP9. `admin_rechtstexte.php` fehlt mit Absicht — die
+Seite leitet nur auf `admin_installation.php` weiter.
 
 <!-- rollenprobe:anfang -->
-| Handlung | Aufruf | user | admin | betreiberin |
-|---|---|---|---|---|
-| Protokoll: die Seite | `GET admin_protokoll.php` | 403 | 200 | 200 |
-| Protokoll: Reiter Verwaltung | `GET admin_protokoll.php?r=verwaltung` | 403 | 200 | 200 |
-| Protokoll: Reiter Sicherheit | `GET admin_protokoll.php?r=sicherheit` | 403 | 403 | 200 |
-| Protokoll: Reiter E-Mail | `GET admin_protokoll.php?r=email` | 403 | 200 | 200 |
-| Protokoll: Reiter Jobs | `GET admin_protokoll.php?r=jobs` | 403 | 200 | 200 |
-| Protokoll: Reiter Sicherung | `GET admin_protokoll.php?r=sicherung` | 403 | 200 | 200 |
-| Protokoll: Reiter Ziele | `GET admin_protokoll.php?r=ziele` | 403 | 403 | 200 |
-| Protokoll: Reiter System | `GET admin_protokoll.php?r=system` | 403 | 403 | 200 |
-| Protokoll: Archiv | `GET admin_protokoll.php?r=archiv` | 403 | 403 | 200 |
-| Protokoll: Archiv herunterladen | `POST admin_protokoll.php action=archiv_laden` | 403 | 403 | durch |
-| Protokoll: Fehlerkennung wechselt auf System | `GET admin_protokoll.php?q=0badc0de` | 403 | 200 | 303 |
-| Protokoll: unbekannter Reiter | `GET admin_protokoll.php?r=gibtesnicht` | 403 | 404 | 404 |
-| Protokoll: Fristen und Archiv einstellen | `POST betrieb_server.php action=protokoll` | 403 | 403 | durch |
-| Komplett-Backup: die Seite | `GET admin_komplettsicherung.php` | 403 | 403 | 200 |
-| Komplett-Backup: herunterladen | `POST admin_komplettsicherung.php action=herunterladen` | 403 | 403 | durch |
-| Komplett-Backup: jetzt sichern | `POST admin_komplettsicherung.php action=jetzt_sichern` | 403 | 403 | durch |
-| Komplett-Backup: fortsetzen | `POST admin_komplettsicherung.php action=fortsetzen` | 403 | 403 | durch |
-| Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | durch |
-| Komplett-Backup: Regeln | `POST admin_komplettsicherung.php action=regeln` | 403 | 403 | durch |
-| Komplett-Backup: Stand löschen | `POST admin_komplettsicherung.php action=stand_loeschen` | 403 | 403 | durch |
-| Backup-Ziele: die Seite | `GET admin_sicherungsziele.php` | 403 | 403 | 200 |
-| Backup-Ziele: Ziel speichern | `POST admin_sicherungsziele.php action=ziel_speichern` | 403 | 403 | durch |
-| Backup-Ziele: Ziel löschen | `POST admin_sicherungsziele.php action=ziel_loeschen` | 403 | 403 | durch |
-| Backup-Ziele: Abdruck vergessen | `POST admin_sicherungsziele.php action=abdruck_vergessen` | 403 | 403 | durch |
-| Backup-Ziele: Versand an oder aus | `POST admin_sicherungsziele.php action=versand_schalter` | 403 | 403 | durch |
-| Backup-Ziele: jetzt versenden | `POST admin_sicherungsziele.php action=jetzt_versenden` | 403 | 403 | durch |
-| Backup-Ziele: Ziel prüfen | `POST admin_sicherungsziele.php action=ziel_pruefen` | 403 | 403 | durch |
-| Backup-Ziele: Bestand ansehen | `POST admin_sicherungsziele.php action=ziel_bestand` | 403 | 403 | durch |
+| Handlung | Aufruf | user | support | admin | betreiberin |
+|---|---|---|---|---|---|
+| Protokoll: die Seite | `GET admin_protokoll.php` | 403 | 200 | 200 | 200 |
+| Protokoll: Reiter Verwaltung | `GET admin_protokoll.php?r=verwaltung` | 403 | 200 | 200 | 200 |
+| Protokoll: Reiter Sicherheit | `GET admin_protokoll.php?r=sicherheit` | 403 | 403 | 403 | 200 |
+| Protokoll: Reiter E-Mail | `GET admin_protokoll.php?r=email` | 403 | 200 | 200 | 200 |
+| Protokoll: Reiter Jobs | `GET admin_protokoll.php?r=jobs` | 403 | 403 | 200 | 200 |
+| Protokoll: Reiter Sicherung | `GET admin_protokoll.php?r=sicherung` | 403 | 403 | 200 | 200 |
+| Protokoll: Reiter Ziele | `GET admin_protokoll.php?r=ziele` | 403 | 403 | 403 | 200 |
+| Protokoll: Reiter System | `GET admin_protokoll.php?r=system` | 403 | 403 | 403 | 200 |
+| Protokoll: Archiv | `GET admin_protokoll.php?r=archiv` | 403 | 403 | 403 | 200 |
+| Protokoll: Archiv herunterladen | `POST admin_protokoll.php action=archiv_laden` | 403 | 403 | 403 | durch |
+| Protokoll: Fehlerkennung wechselt auf System | `GET admin_protokoll.php?q=0badc0de` | 403 | 200 | 200 | 303 |
+| Protokoll: unbekannter Reiter | `GET admin_protokoll.php?r=gibtesnicht` | 403 | 404 | 404 | 404 |
+| Protokoll: Fristen und Archiv einstellen | `POST betrieb_server.php action=protokoll` | 403 | 403 | 403 | durch |
+| Komplett-Backup: die Seite | `GET admin_komplettsicherung.php` | 403 | 403 | 403 | 200 |
+| Komplett-Backup: herunterladen | `POST admin_komplettsicherung.php action=herunterladen` | 403 | 403 | 403 | durch |
+| Komplett-Backup: jetzt sichern | `POST admin_komplettsicherung.php action=jetzt_sichern` | 403 | 403 | 403 | durch |
+| Komplett-Backup: fortsetzen | `POST admin_komplettsicherung.php action=fortsetzen` | 403 | 403 | 403 | durch |
+| Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | 403 | durch |
+| Komplett-Backup: Regeln | `POST admin_komplettsicherung.php action=regeln` | 403 | 403 | 403 | durch |
+| Komplett-Backup: Stand löschen | `POST admin_komplettsicherung.php action=stand_loeschen` | 403 | 403 | 403 | durch |
+| Backup-Ziele: die Seite | `GET admin_sicherungsziele.php` | 403 | 403 | 403 | 200 |
+| Backup-Ziele: Ziel speichern | `POST admin_sicherungsziele.php action=ziel_speichern` | 403 | 403 | 403 | durch |
+| Backup-Ziele: Ziel löschen | `POST admin_sicherungsziele.php action=ziel_loeschen` | 403 | 403 | 403 | durch |
+| Backup-Ziele: Abdruck vergessen | `POST admin_sicherungsziele.php action=abdruck_vergessen` | 403 | 403 | 403 | durch |
+| Backup-Ziele: Versand an oder aus | `POST admin_sicherungsziele.php action=versand_schalter` | 403 | 403 | 403 | durch |
+| Backup-Ziele: jetzt versenden | `POST admin_sicherungsziele.php action=jetzt_versenden` | 403 | 403 | 403 | durch |
+| Backup-Ziele: Ziel prüfen | `POST admin_sicherungsziele.php action=ziel_pruefen` | 403 | 403 | 403 | durch |
+| Backup-Ziele: Bestand ansehen | `POST admin_sicherungsziele.php action=ziel_bestand` | 403 | 403 | 403 | durch |
+| NutzerInnen: die Liste | `GET admin_users.php` | 403 | 200 | 200 | 200 |
+| NutzerInnen: Konto anlegen | `POST admin_users.php action=user_add` | 403 | 403 | durch | durch |
+| NutzerInnen: Auswahl sichern | `POST admin_users.php action=sichern_auswahl` | 403 | 403 | durch | durch |
+| Kontoseite: Konto einer NutzerIn | `GET admin_user.php?id={ziel}` | 403 | 200 | 200 | 200 |
+| Kontoseite: Konto eines Admins | `GET admin_user.php?id={admin}` | 403 | 403 | 200 | 200 |
+| Kontoseite: Rolle, Name, Adresse | `POST admin_user.php?id={ziel} action=konto` | 403 | 403 | durch | durch |
+| Kontoseite: Mengengrenzen | `POST admin_user.php?id={ziel} action=konto_grenzen` | 403 | 403 | durch | durch |
+| Kontoseite: Status | `POST admin_user.php?id={ziel} action=konto_status` | 403 | 403 | durch | durch |
+| Kontoseite: Setz-Link senden | `POST admin_user.php?id={ziel} action=pw_reset` | 403 | durch | durch | durch |
+| Kontoseite: Bestätigung erneut senden | `POST admin_user.php?id={ziel} action=verifikation` | 403 | durch | durch | durch |
+| Kontoseite: Konto-Backup erzeugen | `POST admin_user.php?id={ziel} action=sichern` | 403 | 403 | durch | durch |
+| Kontoseite: Konto-Backup einspielen | `POST admin_user.php?id={ziel} action=einspielen` | 403 | 403 | durch | durch |
+| Kontoseite: Backup freigeben | `POST admin_user.php?id={ziel} action=freigeben` | 403 | 403 | durch | durch |
+| Kontoseite: Freigabe widerrufen | `POST admin_user.php?id={ziel} action=widerrufen` | 403 | 403 | durch | durch |
+| Kontoseite: Backup löschen | `POST admin_user.php?id={ziel} action=paket_loeschen` | 403 | 403 | durch | durch |
+| Kontoseite: Konto löschen | `POST admin_user.php?id={ziel} action=user_delete` | 403 | 403 | durch | durch |
+| Kontoseite: Gerät an oder aus | `POST admin_user.php?id={ziel} action=device_toggle` | 403 | 403 | durch | durch |
+| Kontoseite: Gerät deaktivieren | `POST admin_user.php?id={ziel} action=device_aus` | 403 | durch | durch | durch |
+| Kontoseite: Gerät entkoppeln | `POST admin_user.php?id={ziel} action=device_delete` | 403 | 403 | durch | durch |
+| Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch |
+| Konto-Backups: die Seite | `GET admin_sicherungen.php` | 403 | 403 | 200 | 200 |
+| Konto-Backups: Regeln | `POST admin_sicherungen.php action=regeln` | 403 | 403 | durch | durch |
+| Konto-Backups: alle sichern | `POST admin_sicherungen.php action=sichern_alle` | 403 | 403 | durch | durch |
+| Konto-Backups: einspielen | `POST admin_sicherungen.php action=einspielen` | 403 | 403 | durch | durch |
+| Konto-Backups: freigeben | `POST admin_sicherungen.php action=freigeben` | 403 | 403 | durch | durch |
+| Konto-Backups: Freigabe widerrufen | `POST admin_sicherungen.php action=widerrufen` | 403 | 403 | durch | durch |
+| Konto-Backups: Paket löschen | `POST admin_sicherungen.php action=paket_loeschen` | 403 | 403 | durch | durch |
+| Konto-Backups: Ordner löschen | `POST admin_sicherungen.php action=ordner_loeschen` | 403 | 403 | durch | durch |
+| Installation: die Seite | `GET admin_installation.php` | 403 | 403 | 200 | 200 |
+| Installation: Name | `POST admin_installation.php action=instanz_name` | 403 | 403 | durch | durch |
+| Installation: Adressen | `POST admin_installation.php action=instanz_adressen` | 403 | 403 | durch | durch |
+| Installation: Logo | `POST admin_installation.php action=logo_standard` | 403 | 403 | durch | durch |
+| Installation: Rechtstexte speichern | `POST admin_installation.php` | 403 | 403 | durch | durch |
+| Demo-Konto: die Seite | `GET admin_demo.php` | 403 | 403 | 200 | 200 |
+| Demo-Konto: anlegen | `POST admin_demo.php action=demo_anlegen` | 403 | 403 | durch | durch |
+| Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch |
+| Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch |
 <!-- rollenprobe:ende -->
 
-**Daneben prüft die Probe eine Wirkung:** Ein Rollenwechsel auf der
-Kontoseite erzeugt **genau einen** Eintrag `rolle_geaendert` im Reiter
-Verwaltung, und ein Speichern ohne Wechsel keinen (E-P5c-38, F-P5c-17).
+**Daneben prüft die Probe Wirkungen**, denn eine Zelle `durch` sagt nur,
+dass die Rolle die Handlung erreicht, nicht, was sie dort tut:
+
+- Ein Rollenwechsel auf der Kontoseite erzeugt **genau einen** Eintrag
+  `rolle_geaendert` im Reiter Verwaltung, und ein Speichern ohne Wechsel
+  keinen (E-P5c-38, F-P5c-17).
+- **Der Support** (AP4, E-P5c-14, -40), mit gültigem Token: Das Menü zeigt
+  unter Verwaltung genau NutzerInnen und Protokoll, die Liste kein Konto mit
+  eigenen Rechten (die Gegenprobe beim Admin findet es) und drei Kacheln,
+  die Kontoseite die Sicht aus M-P5c-02c — einspaltig, Mengen ohne Formular,
+  keine Konto-Backups, kein Löschen, kein Speichern; beim Admin stehen die
+  Marken da —, die Protokollseite genau zwei Reiter. Der Setz-Link steht **nicht** in seiner Antwort — auch nicht,
+  wenn die Mail nicht hinausging; die Gegenprobe mit einem Admin zeigt ihn im
+  selben Fall. Ein Gerät schaltet er aus (1 → 0), aber nicht wieder an und
+  nicht ab (403, das Gerät bleibt); ein Konto löscht er nicht (403, das Konto
+  bleibt). Die Bestätigung einer Registrierung geht erneut hinaus und
+  schreibt `verifikation_gesendet`, ohne den Link zu zeigen.
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 
@@ -10921,6 +10988,13 @@ gibt es auf einfachem Webspace nicht. **So kommt man heraus:**
 > Migration, nicht nur den danach. Die nächste Rollenmigration ist die
 > Support-Rolle in P5 (R38); dort gilt die Regel, und sie gehört ins
 > Bedrohungsmodell (P6, R69).
+>
+> **Für die Support-Rolle (Web 20.41.0) ist die Regel erfüllt, und
+> nachgemessen:** Die Migration hängt einen Wert an, den zum Ausführen
+> niemand braucht — sie läuft über Betrieb → Updates mit der vorhandenen
+> BetreiberIn. Nachgestellt in P5c/AP4 mit dem neuen Code auf dem alten
+> Schema: Anmeldung 200, `betrieb_updates.php` 200 mit der Migration in der
+> Liste, danach `update.php` durch.
 
 **Neue Zusatzfelder für Einsätze:** 1) Migration in `migration_lib.php`
 (`migrationen_katalog()`) ergänzen
@@ -11172,15 +11246,30 @@ Installation ohne Zugang zu ihrem eigenen Betriebsbereich da: Serverschlüssel,
 Wartungsmodus, Migrationen, Speichergrenze. Der Weg zurück führte über die
 Datenbank.
 
-**Drei Rollen, eine Hierarchie** (R75): `user` ⊂ `admin` ⊂ `betreiberin`. Die
-Prüfung steht an zwei Stellen und nirgends sonst — `rolle_darf_verwalten()`
-und `rolle_ist_betreiberin()` in `db.php` als reine Prädikate (auch ohne
+**Vier Rollen, eine Hierarchie** (R75; Support seit Web 20.41.0, P5c/AP4,
+R38): `user` ⊂ `support` ⊂ `admin` ⊂ `betreiberin` — der Support als
+schmaler Ausschnitt der Verwaltung, nicht als eigene Stufe mit eigenen
+Rechten. Die Prüfung steht an zwei Stellen und nirgends sonst —
+`rolle_darf_verwalten()`, `rolle_darf_support()`, `rolle_ist_support()` und
+`rolle_ist_betreiberin()` in `db.php` als reine Prädikate (auch ohne
 Sitzung benutzbar: `login.php` prüft vor dem Anmelden, ob der Wartungsmodus
 jemanden durchlässt, `rechtstext_seite.php` liest eine fremde Zeile),
-`ist_admin()`, `ist_betreiberin()`, `require_admin()` und
-`require_betreiberin()` in `auth_guard.php` für die angemeldete Sitzung.
+`ist_admin()`, `darf_support()`, `ist_support()`, `ist_betreiberin()`,
+`require_admin()`, `require_support()`, `require_betreiberin()` und
+`handlung_erlaubt()` in `auth_guard.php` für die angemeldete Sitzung.
 `ist_admin()` heißt „darf verwalten" und ist für eine BetreiberIn ebenfalls
-wahr. Zwei Zusagen sitzen serverseitig und sind nicht umgehbar: Nur eine
+wahr; `darf_support()` ist für Support, Admin und BetreiberIn wahr.
+
+**Der Support fragt je Handlung, nicht je Seite** (E-P5c-14, -40).
+`admin_users.php`, `admin_user.php` und `admin_protokoll.php` stehen hinter
+`require_support()`; jede POST-Handlung dort ruft `handlung_erlaubt($action,
+[…])` **vor** `csrf_check()` (E-P5c-85) — die Liste nennt, was der Support
+darf: auf der Kontoseite `pw_reset`, `verifikation`, `device_aus`, auf der
+Liste nichts. Die Kontoseite eines Kontos mit eigenen Rechten ist für ihn
+403 **vor** jeder Handlung, und die Liste zeigt ihm nur
+`rollen_ohne_rechte_sql()`. Den Setz-Link sieht er nie, auch nicht, wenn die
+Mail nicht hinausging. `device_aus` schaltet nur 1 → 0; `device_toggle`
+bleibt der Verwaltung. Die Zellen stehen in der Berechtigungsmatrix (4.99p). Zwei Zusagen sitzen serverseitig und sind nicht umgehbar: Nur eine
 BetreiberIn vergibt oder entzieht die Rolle, und das **letzte**
 BetreiberIn-Konto lässt sich weder zurückstufen noch löschen
 (`ist_letzte_betreiberin()`).

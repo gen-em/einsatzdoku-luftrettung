@@ -283,7 +283,7 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 | Block | wer sieht ihn | was darin steht |
 |---|---|---|
 | **Einstellungen** | alle | Profil, Geräte, **Standorte**, Backup, Import / Export — Kapitel 3 bis 10 |
-| **Verwaltung** | Admins | NutzerInnen, **Konto-Backups**, **Installation**, Demo-Konto — **Kapitel 11** |
+| **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation**, Demo-Konto, Protokoll — **Kapitel 11** |
 | **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
 
 Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen Geräten
@@ -506,10 +506,10 @@ Adresse eines Kontos ändert (11.1).
 **Ist die neue Adresse inzwischen von einem anderen Konto belegt**, sagt die
 Seite das beim Klick, und deine bisherige Adresse bleibt unverändert.
 
-Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Admin oder
-BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
+Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Support, Admin
+oder BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
 Zahnrad verschieden viel sehen; geändert wird sie in der Verwaltung
-(11.5), nicht hier.
+(11.3), nicht hier.
 
 Die Anwendung bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug.
 Welches du siehst, entscheidest du selbst:
@@ -3331,16 +3331,19 @@ Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
 Entscheidung dazu, was mit den Konto-Backups geschieht.
 
 Alles in diesem Kapitel können **Admin und BetreiberIn** — beim Protokoll
-sieht der Admin vier der sieben Reiter (11.7). Was nur eine BetreiberIn
-kann — der Server selbst —, steht in Kapitel 12. Seit Web 15.0.0
-gibt es **drei Rollen**; welche was darf, steht in 11.3 unter „Drei Rollen".
+sieht der Admin vier der sieben Reiter (11.7). Der **Support** (seit Web
+20.41.0) sieht davon die NutzerInnen und das Protokoll, und dort nur einen
+schmalen Ausschnitt. Was nur eine BetreiberIn kann — der Server selbst —,
+steht in Kapitel 12. Seit Web 20.41.0 gibt es **vier Rollen**; welche was
+darf, steht in 11.3 unter „Vier Rollen".
 
 ### 11.1 Die Kontoseite
 
 Seit Web 9.8.0 liegt **alles zu einem Konto auf dessen Seite**. Der Titel ist
 der Name, darunter Adresse, Rolle, seit wann es das Konto gibt und wann sich
 die Person zuletzt angemeldet hat. Oben rechts stehen **„Jetzt sichern"** und
-ein Aktionsmenü (Freigeben, Passwort zurücksetzen, Konto löschen).
+ein Aktionsmenü (Freigeben, Setz-Link senden, Konto löschen; bei einer
+unbestätigten Registrierung dazu „Bestätigung erneut senden").
 
 Darunter:
 
@@ -3361,12 +3364,24 @@ untereinander; dort öffnet ein **„⋯"** je Zeile dieselben Handlungen.
 
 **Ein Passwort lässt sich hier nicht setzen.** Die Daten sind mit dem Passwort
 der Person Ende-zu-Ende-verschlüsselt — niemand außer ihr kann sie öffnen.
-**„Passwort zurücksetzen"** im Aktionsmenü verschickt denselben Link wie
-„Passwort vergessen" auf der Anmeldeseite; die Person setzt ihr Passwort selbst
-und entsperrt danach mit ihrem Wiederherstellungsschlüssel. Ein zuvor
-verschickter Link wird dabei ungültig — es gilt immer nur der zuletzt
-verschickte. Kommt die E-Mail nicht weg, **zeigt die Seite den Link an**; er ist
-eine Stunde gültig und darf nur an die Person selbst weitergegeben werden.
+**„Setz-Link senden"** im Aktionsmenü (bis Web 20.40.0 hieß der Eintrag
+„Passwort zurücksetzen" — gesetzt wird aber kein Passwort, sondern ein Link
+verschickt) schickt denselben Link wie „Passwort vergessen" auf der
+Anmeldeseite; die Person setzt ihr Passwort selbst und entsperrt danach mit
+ihrem Wiederherstellungsschlüssel. Ein zuvor verschickter Link wird dabei
+ungültig — es gilt immer nur der zuletzt verschickte. Kommt die E-Mail nicht
+weg, **zeigt die Seite den Link an**; er ist eine Stunde gültig und darf nur an
+die Person selbst weitergegeben werden. **Dem Support zeigt sie ihn nie** —
+auch dann nicht; er bekommt den Hinweis, sich an einen Admin oder die
+BetreiberIn zu wenden. Wer den Link sähe, könnte das Konto übernehmen.
+
+**„Bestätigung erneut senden"** (seit Web 20.41.0) steht nur bei einem Konto
+im Status *unbestätigt* — jemand hat sich registriert, und die Mail mit dem
+Bestätigungslink ist nicht angekommen oder verlegt. Der neue Link geht nur per
+Mail hinaus, macht einen früheren ungültig und gilt **nicht länger als die
+Registrierung selbst**: Ist deren Frist fast um, sagt die Seite, dass sich die
+Person neu registrieren muss. Beides — Setz-Link und Bestätigung — steht im
+Protokoll (11.7), ohne den Link.
 
 **Die Konto-Backups dieses Kontos.** Im Kartenkopf steht der Zustand als
 Plakette — *aktuell*, *überfällig · n Tage* oder *nie gesichert* — und rechts
@@ -3554,15 +3569,18 @@ Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig. Beides steht im
 Protokoll (11.7) — ein Rollenwechsel seit Web 20.39.0 mit alter und neuer
 Rolle.
 
-#### Drei Rollen
+#### Vier Rollen
 
-Seit Web 15.0.0 gibt es drei Rollen. Sie stehen nicht nebeneinander, sondern
-**ineinander**: Wer betreibt, kann alles, was ein Admin kann, und wer verwaltet,
-alles, was eine NutzerIn kann.
+Seit Web 15.0.0 gab es drei Rollen, seit Web 20.41.0 sind es vier. Sie stehen
+nicht nebeneinander, sondern **ineinander**: Wer betreibt, kann alles, was ein
+Admin kann, und wer verwaltet, alles, was eine NutzerIn kann. Der **Support**
+ist dabei keine eigene Stufe mit eigenen Rechten, sondern ein schmaler
+Ausschnitt der Verwaltung — alles, was er kann, kann auch ein Admin.
 
 | Rolle | Was sie kann |
 |---|---|
 | **NutzerIn** | die eigenen Diensttage und Einsätze dokumentieren, eigene Stammdaten, Geräte, Backup, Import und Export — alles unter dem Zahnrad, was mit „ich" zu tun hat |
+| **Support** | zusätzlich, und nur für Konten der Rolle NutzerIn: die Liste und die Kontoseite **ansehen**, einen **Setz-Link senden** (ohne ihn zu sehen), eine **Bestätigung erneut senden**, ein **Gerät deaktivieren** — nicht wieder einschalten, nicht entkoppeln; dazu im Protokoll die Reiter Verwaltung und E-Mail |
 | **Admin** | zusätzlich: Konten anlegen, ändern und löschen, Konto-Backups, Installation, Demo-Konto, das Protokoll mit vier Reitern |
 | **BetreiberIn** | zusätzlich: alles, was die **Anlage** betrifft — Status, Statistik, Wartungsmodus, Migrationen, Hintergrundjobs, Speichergrenze, Komplett-Backup und Backup-Ziele (Kapitel 12), dazu alle Reiter des Protokolls und sein Archiv |
 
@@ -3572,16 +3590,33 @@ aber wer die Adresse kannte, kam als Admin hinein (Backlog Nr. 286). Jetzt
 antworten beide Seiten und jede ihrer Handlungen einem Admin mit „Kein
 Zugriff".
 
-Warum die dritte Rolle: Eine Fehlbedienung in der Verwaltung trifft **ein**
-Konto, eine im Betrieb die **ganze Installation**. Wer den Wartungsmodus
+**Was der Support nicht sieht.** Konten mit eigenen Rechten — Support,
+Admin, BetreiberIn — stehen nicht in seiner Liste, und ihre Kontoseite
+antwortet ihm mit „Kein Zugriff". Mit einem Setz-Link ließe sich ein frisch
+angelegtes Konto übernehmen, auch eines mit Rechten; deshalb betreut der
+Support nur NutzerInnen. In der Liste fehlen ihm die Kachel und der Filter
+„Admins", das Anlegen und die Sammelaktionen; den Stand der Konto-Backups
+sieht er. Die Kontoseite steht bei ihm **einspaltig**: Konto (die Felder
+gesperrt, ohne „Speichern"), Status, Mengen und Grenzen (ohne das Formular
+der Grenzen) und Geräte — Konto-Backups und „Konto löschen" gibt es für ihn
+nicht. Was er nicht tun darf, steht nicht als grauer Knopf da, sondern gar
+nicht. Ein deaktiviertes Gerät schaltet nur die Verwaltung wieder ein — der
+Support stellt ein verlorenes Gerät still, die Entscheidung, ihm wieder zu
+trauen, trifft jemand anderes.
+
+**Wer den Support vergibt:** jeder Admin und jede BetreiberIn — er hat weniger
+Rechte als ein Admin.
+
+Warum die BetreiberIn eine eigene Rolle ist: Eine Fehlbedienung in der
+Verwaltung trifft **ein** Konto, eine im Betrieb die **ganze Installation**. Wer den Wartungsmodus
 einschaltet, schließt alle aus; wer eine Migration ausführt, ändert das
 Datenmodell. Das ist eine andere Art von Verantwortung als „ein Konto anlegen",
 und sie hat deshalb eine eigene Rolle.
 
 **Wer welche Rolle vergibt.** Die Rolle „BetreiberIn" vergibt und entzieht
 **nur eine BetreiberIn**. Ein Admin sieht die Option im Auswahlfeld gar nicht —
-sonst könnte er sich selbst hochstufen. Alles andere (NutzerIn ↔ Admin) darf
-jede Person mit Verwaltungsrechten.
+sonst könnte er sich selbst hochstufen. Alles andere (NutzerIn, Support,
+Admin) darf jede Person mit Verwaltungsrechten.
 
 **Was geschützt ist.** Das **letzte** Konto mit der Rolle BetreiberIn lässt
 sich weder zurückstufen noch löschen. Beide Stellen sagen es, bevor man es
@@ -3995,7 +4030,8 @@ abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
 
 Unter **Verwaltung → Protokoll** steht, was im Betrieb geschehen ist: Konten
 angelegt, freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert;
-Setz-Links ausgestellt; Geräte umgeschaltet oder entkoppelt; Wartung gefahren;
+Setz-Links ausgestellt; Bestätigungen erneut gesendet; Geräte umgeschaltet
+oder entkoppelt; Wartung gefahren;
 Migrationen ausgeführt; Backups erzeugt, geladen, eingespielt; Post
 versandt; Jobs gelaufen.
 
@@ -4005,16 +4041,16 @@ bestimmten Einsatz geöffnet hat: Du kannst es nicht, und zwar mit Absicht.
 
 #### Die Reiter
 
-| Reiter | Was darin steht | Admin | BetreiberIn |
-|---|---|:-:|:-:|
-| **Verwaltung** | das Audit: wer wann was an Konten und Anlage getan hat | ja | ja |
-| **Sicherheit** | Sperren, Verlangsamungen, aufgehobene Sperren, blockierte Inhalte (CSP) — mit IP-Adressen | — | ja |
-| **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt) — **nie** Empfänger, Betreff oder Inhalt | ja | ja |
-| **Jobs** | jeder Lauf eines Hintergrundjobs, Fehler rot | ja | ja |
-| **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt | ja | ja |
-| **Ziele** | was auf ein Backup-Ziel ging und was dort gelöscht wurde | — | ja |
-| **System** | Fehler und Störungen der Anwendung, je mit Kennung | — | ja |
-| **Archiv** (rechts abgesetzt) | die versiegelten Archive, siehe unten | — | ja |
+| Reiter | Was darin steht | Support | Admin | BetreiberIn |
+|---|---|:-:|:-:|:-:|
+| **Verwaltung** | das Audit: wer wann was an Konten und Anlage getan hat | ja | ja | ja |
+| **Sicherheit** | Sperren, Verlangsamungen, aufgehobene Sperren, blockierte Inhalte (CSP) — mit IP-Adressen | — | — | ja |
+| **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt) — **nie** Empfänger, Betreff oder Inhalt | ja | ja | ja |
+| **Jobs** | jeder Lauf eines Hintergrundjobs, Fehler rot | — | ja | ja |
+| **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt | — | ja | ja |
+| **Ziele** | was auf ein Backup-Ziel ging und was dort gelöscht wurde | — | — | ja |
+| **System** | Fehler und Störungen der Anwendung, je mit Kennung | — | — | ja |
+| **Archiv** (rechts abgesetzt) | die versiegelten Archive, siehe unten | — | — | ja |
 
 Was du nicht sehen darfst, zeigt die Seite nicht — es gibt keinen
 ausgegrauten Reiter.

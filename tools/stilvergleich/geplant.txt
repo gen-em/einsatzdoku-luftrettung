@@ -13,6 +13,7 @@ katalog.html  div <div>  :  height
 katalog.html  div.anmeldung <div>  :  height
 katalog.html  div.demo-hinweis <div.hinweise>  :  margin, margin-bottom, min-height, min-width
 katalog.html  div.feld-eingabe <div.filterreihe>  :  min-width, width
+katalog.html  div.form-raster-einspaltig <div>  :  grid-template-columns, max-width, width
 katalog.html  div.hinweis-umgebung <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
 katalog.html  div.hinweise <div.anmeldung>  :  column-gap, display, flex-direction, gap, margin, margin-bottom, max-width, width
 katalog.html  div.hinweise <div>  :  column-gap, display, flex-direction, gap, margin, margin-bottom

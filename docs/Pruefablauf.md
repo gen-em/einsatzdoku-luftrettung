@@ -267,7 +267,7 @@ nichts gelesen wird, misst gegen nichts.
 |---|---|---|
 | **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten, Chromium; Bedienprobe der berührten Seiten |
 | **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in acht Breiten, Chromium, Bedienprobe aller Seiten; Handy- und Uhr-Bau, wenn berührt |
-| **haupt** | Hauptstufe `X.a.a`, oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Bilderlauf mit allen drei Engines über alle Seiten, Messstand, Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
+| **haupt** | Hauptstufe `X.a.a`, **eine neue Migration** (Stufenregel `migration`, 4; seit P5c/AP4) oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Bilderlauf mit allen drei Engines über alle Seiten, Messstand, Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
 
 **Warum die Matrix in die Hauptstufe gehört und nicht in die Kette:** Der
 Export scheiterte am 21.09.2026 nicht an der Anwendung, sondern an einem
@@ -276,6 +276,19 @@ Drei Kreisläufe zu je vier Minuten örtlich fanden ihn; drei Läufe zu je
 fünfzehn Minuten in der Kette hatten es nicht getan. Der Kreislauf `edbak`
 läuft bei `haupt` und bei `--gegen staging` deshalb **gegen MySQL 8.4.0**,
 nicht nur gegen MariaDB.
+
+**Was davon heute läuft, und was nicht** (nachgesehen in P5c/AP4,
+F-P5c-103). `pruefablauf.json` gibt `haupt` über `neben` hinaus: Messstand,
+Anteil-, Verbindungs- und Schemaprobe (`plattform.sh schema`, vier
+Datenbanken, PHP des Containers) und den Bilderlauf. **Nicht gebaut
+sind:** PHP 8.3.33 als zweite Fassung, der Kreislauf `edbak` je Paar — auch
+der gegen MySQL 8.4.0 aus dem Absatz darüber; `kreislauf.py` kennt keine
+zweite Datenbank —, der Uhr-Prüfstand Stufe II und **Firefox und WebKit im
+Bilderlauf**: `aufnehmen.mjs` fährt einen Motor aus `--motor` (Vorgabe
+Chromium), und `--stufe haupt` ändert daran nichts. Die Zeile „haupt" oben ist damit **das Ziel, nicht der Stand**
+(Backlog Nr. 300). Bis dahin fährt ein Paket in `haupt` die Teile, die es
+berühren, von Hand (`hochfahren.sh --php 8.3`) und nennt im Prüfdokument,
+was fehlt.
 
 **Eine Hauptstufe, die mit `--stufe klein` gefahren wurde, fällt im Tor
 auf** — das ist eine der fünf roten Lagen in 5.1.
@@ -338,6 +351,8 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 
 **Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
+
+**Stufenregel `migration`:** eine neue Kennung in `server/migration_lib.php` heißt mindestens **haupt** — E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3).
 
 ---
 

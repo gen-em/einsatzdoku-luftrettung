@@ -327,8 +327,8 @@ function demo_anlegen(): array
                 $k['pat_wrap_pw'] ?? null, $k['pat_wrap_rc'] ?? null,
                 $k['pat_key_check'] ?? null,
                 /* NIEMALS eine Rolle mit Rechten (E-P1-09). Seit Web 15.0.0
-                 * gibt es drei Rollen (R75) — der Satz gilt fuer beide oberen
-                 * unveraendert. Der Reset unten schreibt denselben Wert
+                 * gibt es drei Rollen (R75), seit Web 20.41.0 vier (Support,
+                 * R38) — der Satz gilt fuer alle mit Rechten unveraendert. Der Reset unten schreibt denselben Wert
                  * zurueck, damit ein waehrend der Sitzung erhoehtes Konto
                  * spaetestens nach dreissig Minuten wieder eine NutzerIn ist. */
                 'user',

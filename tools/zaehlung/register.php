@@ -213,12 +213,13 @@ return [
 ['kennung' => 'Z13', 'paket' => 'AP4',
  'beschreibung' => 'Rollenvergleich von Hand ausserhalb db.php',
  'grund' => 'rolle_darf_verwalten()/rolle_ist_betreiberin() bestehen; 10c AP4 '
-          . 'setzt rolle_darf_support() daneben. Kein Handvergleich mehr.',
+          . 'hat rolle_darf_support() und rolle_ist_support() daneben gesetzt und '
+          . 'das Muster um `support` erweitert (F-P5c-36). Kein Handvergleich mehr.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/db.php'],
  'regel' => ['art' => 'muster', 'muster' =>
-    '~(===|!==|==|!=)\s*[\'"](admin|betreiberin|user)[\'"]'
-  . '|[\'"](admin|betreiberin|user)[\'"]\s*(===|!==|==|!=)~'],
+    '~(===|!==|==|!=)\s*[\'"](admin|betreiberin|user|support)[\'"]'
+  . '|[\'"](admin|betreiberin|user|support)[\'"]\s*(===|!==|==|!=)~'],
  'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z14', 'paket' => 'AP4',

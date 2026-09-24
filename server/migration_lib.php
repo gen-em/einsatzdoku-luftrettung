@@ -3167,6 +3167,38 @@ function migrationen_katalog(): array
             'ALTER TABLE missions CHANGE `manual` uhr_gesperrt TINYINT(1) NOT NULL DEFAULT 0',
         ],
     ],
+    [
+        'id'    => '2026_09_24_rolle_support',
+        'web'   => '20.41',
+        'label' => 'Vierte Rolle: Support (P5c/AP4, R38)',
+        /* DER SUPPORT (E-P5c-14, -40). Er sieht Konten der Rolle `user` und
+         * ihre Geraete, sendet Setz-Link und Verifikationsmail neu, ohne den
+         * Link je zu sehen, und schaltet ein Geraet ab, aber nicht wieder an.
+         * Mehr nicht: kein Einspielen, kein Loeschen, keine Rollen, keine
+         * Stammdaten, keine Konten anderer Rollen. Die Rechte stehen im
+         * Code (`rolle_darf_support()`); hier steht nur, dass die Datenbank
+         * den Wert kennt — dieselbe Begruendung wie beim ENUM der dritten
+         * Rolle: Rollen werden bewusst und selten vergeben, und die Datenbank
+         * soll ausschliessen, was der Code nicht kennt.
+         *
+         * HINTEN ANGEHAENGT, NICHT NACH DER RANGFOLGE EINGEREIHT. Ein Wert am
+         * Ende eines ENUM ist eine Aenderung der Metadaten; ein Wert in der
+         * Mitte zwingt MySQL, die Tabelle umzukopieren, und verschiebt die
+         * Ordnungszahlen aller Zeilen, nach denen `ORDER BY role` sortiert.
+         * Die Rangfolge fuer die Anzeige steht in `ROLLEN`, nicht im ENUM.
+         *
+         * KEIN `zerstoert`: Es faellt nichts weg. Aelterer Code, der auf eine
+         * Zeile mit `support` trifft, macht ueber `rolle_normieren()` einen
+         * `user` daraus — ein Ruecksetzen ueber AP4 hinweg sperrt niemanden
+         * aus und erweitert keine Rechte. */
+        'skip'  => function (PDO $pdo): bool {
+            return str_contains((string)db_spalte_typ($pdo, 'users', 'role'), "'support'");
+        },
+        'sql'   => [
+            "ALTER TABLE users
+               MODIFY role ENUM('user','admin','betreiberin','support') NOT NULL DEFAULT 'user'",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }
