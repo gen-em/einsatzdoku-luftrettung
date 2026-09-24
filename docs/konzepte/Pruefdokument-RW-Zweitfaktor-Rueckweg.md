@@ -18,7 +18,10 @@ schließt es ab.
 | **Das Paar in Firefox und WebKit** (RW-02) | Der Bedienweg läuft in Chromium 141. Dass Firefox und WebKit ein P-256-Paar erzeugen, PKCS8 ausführen und im IEEE-Format signieren, hat F-RW-02 in der Vorbereitung gemessen (drei Motoren, 12 / 0) — nicht mit `rueckweg.js` selbst. | RW-03 (`probe.mjs`), P-RW-03 auf Staging |
 | **Ein Kreislauf `edbak` in ein Zielkonto mit Paar** (RW-02, Abnahme „Paar unverändert") | Gemessen ist die Konstruktion: Kontopaket und Freigabe haben **0** Zeichenketten mit `rw_` (Rückwegprobe A8, Gegenprobe rot), `edbak_restore()` schreibt `users` nur mit benannten Spalten. Der Kreislauf im Prüfstand legt sein Konto frisch an; ob dessen Paar vor dem Einspielen schon entstanden ist, sagt er nicht, und ihn dafür umzubauen gehört nicht in RW. | Kreislauf-Umbau, wenn er je ansteht |
 | **Die Sperre nach zehn Fehlversuchen am Endpunkt** (RW-02) | Zehn falsche Token sperrten die Adresse der Sandbox für jede Anmeldung (F-RW-16). Gemessen: Ein Fehlversuch zählt unter dem Kontomerkmal im Topf `login`, eine gesetzte Sperre dort hält auch das richtige Token auf (429). Die Leiter misst die Ratenprobe. | — |
-| **Der Weg am Code-Schritt** | Kommt mit RW-03. | dort |
+| **Die Rückwegprobe gegen Staging** (RW-03, Stufe 2) | Der Schritt steht in `auslieferung.yml`, `kettenaufrufe` hält den Aufruf gegen die Schnittstelle (0 ungeprüft) — gelaufen ist er nicht: Stufe 2 fährt erst nach dem Merge, und `STAGING_TOTP` muss dann stehen. Welchen Prüfweg phpseclib beim Hoster nimmt, sagt erst dieser Lauf. | P-RW-02 |
+| **Der Rückweg in Firefox und WebKit** (RW-03) | `probe.mjs` fährt Chromium 141. F-RW-02 hat Paar und Signatur in allen drei Motoren gemessen, nicht `signieren()` in `rueckweg.js`. | P-RW-03 auf Staging mit dem Browser der Betreiberin |
+| **Ein einmaliger Fehlschlag des Bedienwegs `einstellungen-profil-rueckweg`** (RW-03) | Einmal rot in sieben Läufen, im selben Lauf mit den beiden Zweitfaktor-Wegen; die Stelle ist verloren. In sechs Läufen danach — allein, zu zweit, zu dritt — nicht wieder aufgetreten. Kein Befund mit Ursache, aber auch kein Grund, ihn wegzulassen. | Prüfstand dieses Pakets; tritt er dort auf, steht der Schritt im Bericht |
+| **Die Sperre von „10 falschen Signaturen" über HTTP** (RW-03) | Gemessen an der Bibliothek (`probe.php` B4): nach **5** falschen die Sperre im Topf `totp` — der Topf erlaubt fünf, nicht zehn; das Konzept nannte zehn aus dem Topf `login`. Über HTTP geht der Browser nie mit einer falschen Signatur, weil er vorher im Browser scheitert; handgebaute POSTs misst B8 für „nicht angeboten" (400), die echte Signatur und das gesperrte Konto — die Sperre nicht. | — |
 
 ## 1. Messprotokoll RW-01 (24.09.2026, Web 20.43.0)
 
@@ -51,14 +54,49 @@ schließt es ab.
 | Stufenregel | `auswahl.py --selbstprobe`, `--abdeckung` | **35 Lagen, 0 Fehlschläge**; 0 Dateien ohne Muster |
 | **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh` | *steht in der Commit-Nachricht von `RW-02`* |
 
+## 1b. Messprotokoll RW-03 (24.09.2026, Web 20.45.0)
+
+| Mittel | Aufruf | Zahl |
+|---|---|---|
+| **Rückwegprobe, Browser** (neu, `probe.mjs`) | `node tools/proben/rueckweg/probe.mjs` (örtlich) | **23 / 0.** NutzerIn: Schlüssel von der Seite gelesen (24 Zeichen), Paar entsteht beim Anmelden (`RW_STAND` da), Zweitfaktor über die Profilkarte, Code-Schritt mit Verweis, Tippfehler („O") benannt, **fremder Zettel 0 Anfragen**, richtiger Zettel → Erfolgskarte (200), Startseite 200, `suche.php` löst das Vormerkfach und hat den Datenschlüssel (F-RW-20), Profil „Einrichten"; Datenbank: Codes 0, Protokoll `totp_zurueckgesetzt` mit `weg=schluessel` +1, Mail +1. BetreiberIn: nach dem Anmelden ins Tor, nach dem Tor Paar da, Rückweg → **302** auf `zweitfaktor.php` mit „Zweitfaktor zurückgesetzt." oben; Datenbank wie oben (das Tor legt sofort ein neues Geheimnis an, ohne `totp_seit`). 0 Skriptfehler |
+| **Rückwegprobe, Server** | `php tools/proben/rueckweg/probe.php` | **49 / 0** (Teil A 33, Teil B 16). B1 echt → angenommen, Herausforderung verbraucht — und der Zweitfaktor **noch an**, Protokoll 0: Die Bibliothek schaltet nichts ab (F-RW-21). B2 dieselbe Signatur → abgewiesen. B3 abgelaufen → abgewiesen, **nicht gezählt**, nächste Herausforderung neu. B4 fremd, verändert, zweckfremd → je **+1** im Topf `totp`; weiter bis zur Sperre (**5** falsche), danach **auch die echte** abgewiesen, Zweitfaktor bleibt. B5 `pat_key_check` (roh, Base64, Hex→Base64) und leer → **4 / 4** abgewiesen. B6 ohne Paar, Selbsttest gescheitert → **2 / 2** nicht angeboten. **B7 Abzug-Gegenprobe: 73 Versuche, 0 Erfolge**; der Inhaltsschlüssel selbst öffnet `rw_privat` (Gegenprobe des Öffners). B8 über HTTP: Verweis mit Paar **1**, ohne **0**; POST mit Signatur an ein Konto ohne Paar **400**; **echte Signatur → 200, Erfolgskarte, Zweitfaktor aus, Codes 0, Protokoll +1, Mail +1**; **dieselbe an einem gesperrten Konto → die Seite des Tors, Zweitfaktor an, Codes 2, Protokoll 0, Mail 0** (F-RW-21) |
+| **Gegenprobe alte Fassung** | Prüfzweig nimmt `pat_key_check` an | **rot:** B5 FEHLT (48 / 1); zurück 49 / 0 |
+| **Gegenprobe Verbrauch** | Herausforderung nicht verbraucht | **rot:** B1 (verbraucht) und B2 FEHLEN (47 / 2); zurück 49 / 0 |
+| **Gegenprobe F-RW-21** | `totp_abschalten()` in `login.php` wieder VOR das Tor gestellt | **rot:** B8 gesperrtes Konto FEHLT — an=0, 0 Codes, Protokoll **1**, Mail **0**: der stille Rücksetzer (48 / 1); zurück 49 / 0 |
+| **Wartungsprobe** | `bash tools/proben/proben.sh wartung` | **67 / 0.** Fall 18: „Aufruf Z. 406 hinter totp; Aufruf Z. 487 hinter totp; Aufruf Z. 730 hinter login/salt/login_ip". Im ersten Prüfstand dieses Pakets **rot** — „Aufruf Z. 478 hinter nichts" (F-RW-21) |
+| **Handlauf mit Bildern** | Chromium, Konto NutzerIn und BetreiberIn | Schlüsselschritt, „passt nicht", Erfolgskarte und Tor mit Meldung **gegen M-RW-01 Bild 1–3 abgeglichen**; zuerst rot (F-RW-19), danach wie im Bild |
+| **Integritätswache** | `wache.py --selbstprobe`; `wache.py http://127.0.0.1:8080` | **43 / 0**; gegen die Sandbox: 138 Dateien gleich, **4** Inline-Blöcke und **4** Skripte gleich, 1 Formular gleich — kein Unterschied |
+| **Mail der Verwaltung** | Text aus `totp_zurueckgesetzt` ohne `weg`, gegen die Fassung aus `f82e277` (Arbeitsbaum daneben) | **byteweise gleich** (`cmp`) |
+| Kettenaufrufe | `python3 tools/kettenaufrufe/pruefen.py`, `--probe` | **0 Befunde, 0 ungeprüft**; 13 / 13 |
+| Quelltext, Register | `pruefen.sh alle`, `zaehlen.php` | **9 von 9** (die Textprobe fand „basis" in einer neuen Technik-Zeile — umformuliert), **40 / 0 über der Decke** |
+| Berührte Proben | `proben.sh zweitfaktor`, `rollen`, `mail`, `raten` | **45 / 0**, **296 / 0**, **51 / 0**, **50 / 0** (Zweitfaktor und Raten nach F-RW-21 noch einmal; `probe.mjs` danach wieder **23 / 0**) |
+| Berührte Bedienwege | `probe.mjs --nur zweitfaktor-einrichten,einstellungen-profil-zweitfaktor,einstellungen-profil-rueckweg` | **6 Läufe grün**; **ein** Lauf davor war im Weg `einstellungen-profil-rueckweg` rot — welcher Schritt, ist nicht festgehalten (die Ausgabe war beim Kürzen abgeschnitten). Siehe 0 |
+| **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh` | *steht in der Commit-Nachricht von `RW-03`* |
+
 ## 2. Prüfliste
 
 | Nr. | Punkt | Bedienweg | Erwartet | Scheitern erkennbar an | Stand |
 |---|---|---|---|---|---|
 | P-RW-01 | **Die Rückweg-Prüfung auf Produktiv** (RW-01) | nach dem Tag und `update.php`: Betrieb → Status, Karte „Server" | Zeile „Rückweg-Prüfung", blau „prüft", mit Weg (openssl oder reines PHP) und Dauer | orange „abgeschaltet" (Runbook `Technik.md` 7); oder die Zeile fehlt (Fassung nicht ausgeliefert) | offen |
+| P-RW-02 | **Die Rückwegprobe in Stufe 2** (RW-03) | nach dem Merge: Actions → „Auslieferung" → Job „Prüfung Stufe 2", Schritt „Rückwegprobe gegen Staging" | grün, am Ende „23 ok, 0 fehlen" (auf Staging ohne die Datenbankzeilen: **21**) | Schritt rot; oder „NICHT GEMESSEN" (fehlt `STAGING_TOTP` oder das Prüfkonto) | offen |
+| P-RW-03 | **Der Rückweg mit dem eigenen Konto auf Staging** (RW-03) | eigenes Konto auf Staging, einmal angemeldet (das Paar entsteht), Zweitfaktor einschalten, die Codes **nicht** benutzen; abmelden, anmelden, „Gerät und Codes verloren? Wiederherstellungsschlüssel verwenden", den Schlüssel vom Notfallblatt eingeben, „Zweitfaktor zurücksetzen" | Erfolgskarte „Zweitfaktor zurückgesetzt" (Rolle user) bzw. das Tor mit der Meldung oben (Pflichtrolle); Mail „Zweitfaktor zurückgesetzt" mit dem Satz vom Wiederherstellungsschlüssel; im Protokoll „Zweitfaktor zurückgesetzt" | keine Erfolgskarte; der Verweis fehlt (dann Betrieb → Status, „Rückweg-Prüfung", und Profil → Karte „Zweitfaktor"); keine Mail | offen |
+| P-RW-04 | **Dasselbe mit einem falschen Zettel** (RW-03) | wie P-RW-03, aber den Wiederherstellungsschlüssel eines ANDEREN Kontos eingeben | „passt aber nicht zu diesem Konto", der Zweitfaktor bleibt an | eine andere Meldung; oder der Zweitfaktor ist danach aus | offen |
 | P-RW-05 | **Das Demo-Konto bleibt ohne Paar** (RW-02, E-RW-15) | nach dem Merge auf Staging: Demo → „Auf Standard zurücksetzen"; danach im Demo anmelden, eine Seite mit Einsätzen öffnen; dann als BetreiberIn Verwaltung → Protokoll, Reiter Verwaltung, nach „Rückweg" suchen | der Reset läuft ohne Fehler; im Protokoll **kein** „Rückweg eingerichtet" für das Demo-Konto | eine Fehlermeldung beim Reset; oder ein Eintrag „Rückweg eingerichtet" mit dem Demo-Konto | offen |
 
 ## 3. Grenzen der benutzten Prüfmittel
+
+**Aus RW-03:**
+
+- **„Ein Abzug genügt nicht" ist Konstruktion plus Messung** (Konzept RW
+  5.2). B7 zeigt, dass kein Wert des Abzugs `rw_privat` öffnet — 73 Versuche,
+  als Hex und als Rohbytes. Dass es keine ANDERE Art gibt, aus dem Abzug zu
+  signieren, sagt die Konstruktion: Signieren braucht den privaten Teil, und
+  der liegt nur unter dem Inhaltsschlüssel. Die Tabelle dazu steht im Konzept.
+- **Die Probe baut ihr Konto für Teil B selbst**, mit derselben Verpackung
+  wie `crypto.js`. Dass die Verpackung der Anwendung dieselbe ist, zeigt der
+  Browser-Teil (`probe.mjs`), der mit der echten Krypto der Seite durchgeht.
+- **`probe.mjs` gegen Staging hat keine Datenbank** — dort stehen nur die
+  Aussagen der Seiten (Profilkarte „Einrichten", Erfolgskarte, 302).
 
 **Aus RW-02:**
 

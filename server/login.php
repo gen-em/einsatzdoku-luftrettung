@@ -7,6 +7,7 @@ require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/totp_lib.php';
+require_once __DIR__ . '/rueckweg_lib.php';
 
 /* HTTPS ZUERST (P5a/AP4, E-P5a-16). Diese Seite ist die, auf der es
  * auffaellt: Ihr Sitzungscookie traegt `secure`, und ueber HTTP sendet der
@@ -80,6 +81,11 @@ $abgelaufen = 'Die Anmeldung ist abgelaufen: Der Code muss innerhalb von fünf '
 $halb = is_array($_SESSION['totp_halb'] ?? null) ? $_SESSION['totp_halb'] : null;
 $vergessen = false;
 $fehlerAuftakt = '';
+/* DER DRITTE WEG (Konzept RW, RW-03): `?weg=schluessel` wählt den
+ * Schlüsselschritt, `$rwErfolg` die Erfolgskarte nach dem Rückweg. */
+$rwWeg = ($_GET['weg'] ?? '') === 'schluessel';
+$rwErfolg = false;
+$rwZustellung = null;
 if ($halb !== null && (isset($_GET['abbrechen']) || (int)($halb['bis'] ?? 0) < time())) {
     if (!isset($_GET['abbrechen'])) { $hinweis = $abgelaufen; }
     unset($_SESSION['totp_halb']);
@@ -443,6 +449,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $error = 'Anmeldung fehlgeschlagen. E-Mail oder Passwort prüfen.';
         }
     }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['schritt'] ?? '') === 'schluessel') {
+    /* ---- DER RÜCKWEG MIT DEM WIEDERHERSTELLUNGSSCHLÜSSEL (Konzept RW, RW-03;
+     * E-RW-01, -04, -08, -14; M-RW-01 Bild 2 und 3) ----------------------
+     *
+     * AUS DEM RUMPF KOMMT NUR DIE SIGNATUR. Den Zettel hat der Browser
+     * behalten; die Nachricht baut `rw_rueckweg_pruefen()` selbst aus der
+     * Herausforderung dieser halben Sitzung und dem Konto. Dort steht auch,
+     * was schiefgehen kann — Herausforderung verbrauchen, Topf `totp`,
+     * Prüfung, Fehlversuch zählen —, damit die Rückwegprobe es ohne HTTP
+     * messen kann.
+     *
+     * DAS JA STEHT HIER, in der Reihenfolge des Code-Schritts: Erfolg zählen,
+     * das Tor, die Sitzung — und ERST DAHINTER den Zweitfaktor abschalten
+     * (F-RW-21). Das Tor weist ein gesperrtes Konto ab und während der
+     * Wartung jedes ohne Verwaltungsrecht; stünde das Abschalten davor, verlöre
+     * ein solches Konto seinen Zweitfaktor ohne Anmeldung und ohne Mail. Nach
+     * `anmeldung_vollenden()` trägt der Protokolleintrag das Konto als
+     * Urheber, wie der Eintrag zum Wiederherstellungscode oben.
+     *
+     * NACH DEM ERFOLG ZWEI WEGE (M-RW-01 Bild 3): Die Rolle user bekommt die
+     * Erfolgskarte in dieser Antwort; eine Pflichtrolle geht unmittelbar ins
+     * Einrichtungstor (E-P5c-61), mit der Meldung oben — keine Seite ohne
+     * Zweitfaktor. */
+    $rwWeg = true;
+    if ($halb === null) {
+        $hinweis = $abgelaufen;
+        $rwWeg = false;
+    } else {
+        $kontoId  = (int)$halb['konto'];
+        $merkmale = [rate_merkmal_kennung((string)$halb['email'])];
+        $r = rw_rueckweg_pruefen($_SESSION['totp_halb'], (string)($_POST['signatur'] ?? ''));
+        if ($r['ok']) {
+            rate_erfolg('totp', null, $merkmale);
+            $u = login_zeile('id', $kontoId);
+            if ($u) {
+                login_zugang($u, $t0, true);
+                unset($_SESSION['totp_halb']);
+                anmeldung_vollenden($u, !empty($halb['demo']));
+                totp_abschalten($kontoId, 'schluessel');
+                require_once __DIR__ . '/mail_lib.php';
+                /* Die Adresse aus dem halben Stand: `login_zeile()` liest sie
+                 * nicht mit, und es ist dieselbe, mit der angemeldet wurde. */
+                $rwZustellung = mail_einreihen('totp_zurueckgesetzt', (string)$halb['email'],
+                                               ['link' => app_url('/login.php'), 'weg' => 'schluessel']);
+                if (rolle_braucht_zweitfaktor($u['role'] ?? null)) {
+                    /* Die Meldung liest das Tor einmal und nimmt sie weg. */
+                    $_SESSION['zf_nach_rueckweg'] = true;
+                    header('Location: zweitfaktor.php');
+                    exit;
+                }
+                $rwErfolg = true;
+            } else {
+                unset($_SESSION['totp_halb']);
+                $halb = null;
+                $vergessen = true;
+                $rwWeg = false;
+                $error = 'Anmeldung fehlgeschlagen. E-Mail oder Passwort prüfen.';
+            }
+        } elseif ($r['grund'] === 'gesperrt') {
+            [$error, $sperreRest] = login_code_sperre($merkmale);
+            unset($_SESSION['totp_halb']);
+            $halb = null;
+            $vergessen = true;
+            $rwWeg = false;
+        } elseif ($r['grund'] === 'nicht_angeboten') {
+            /* Ein handgebauter POST an einem Konto ohne Paar, oder die Anlage
+             * kann gerade nicht prüfen (E-RW-11). Kein Zählen: Hier wurde
+             * nichts geprüft. */
+            http_response_code(400);
+            $rwWeg = false;
+            $fehlerAuftakt = 'Dieser Weg steht nicht bereit.';
+            $error = 'Für dieses Konto ist kein Rückweg eingerichtet — ohne Handy und Codes '
+                   . 'setzt die Verwaltung den Zweitfaktor zurück.';
+        } elseif ($r['grund'] === 'abgelaufen') {
+            $fehlerAuftakt = 'Die Anfrage ist abgelaufen.';
+            $error = 'Bitte den Schlüssel noch einmal eingeben.';
+        } else {
+            $fehlerAuftakt = 'Der Schlüssel ließ sich nicht bestätigen.';
+            $error = 'Bitte noch einmal eingeben. Hilft das nicht, setzt die Verwaltung '
+                   . 'den Zweitfaktor zurück.';
+        }
+        $halb = is_array($_SESSION['totp_halb'] ?? null) ? $_SESSION['totp_halb'] : null;
+    }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* Eine Schreibweise fuer alle Stellen (M1-13, email_lib.php). Hier stand
      * bisher nur trim(): Dass die Anmeldung trotzdem funktionierte, lag allein
@@ -678,6 +767,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         }
     }
 }
+/* WIRD DER RÜCKWEG ANGEBOTEN? (E-RW-01, -11) Nur, wenn die Anlage prüfen
+ * kann und das Konto Paar und Wiederherstellungs-Hülle hat — sonst steht am
+ * Code-Schritt kein Verweis. Der Schlüsselschritt bekommt, was der Browser
+ * zum Signieren braucht, und nur er: die Wiederherstellungs-Hülle, den
+ * privaten Teil und die Nachricht mit einer FRISCHEN Herausforderung. Jede
+ * Anzeige stellt eine neue; die vorige ist damit verbraucht (E-RW-04).
+ *
+ * DIE NACHRICHT KOMMT FERTIG VOM SERVER (E-RW-18), aus `rw_nachricht()` —
+ * das Format steht damit an einer Stelle. Zurück kommt nur die Signatur,
+ * und geprüft wird gegen die Nachricht, die der Server selbst baut. */
+$rwAngeboten = $halb !== null && rw_angeboten((int)$halb['konto']);
+$rwDaten = null;
+if ($halb !== null && $rwWeg && $rwAngeboten) {
+    $st = db()->prepare('SELECT pat_wrap_rc, rw_privat FROM users WHERE id = ?');
+    $st->execute([(int)$halb['konto']]);
+    $z = $st->fetch(PDO::FETCH_ASSOC) ?: [];
+    $rwDaten = ['wrap_rc'   => (string)($z['pat_wrap_rc'] ?? ''),
+                'privat'    => (string)($z['rw_privat'] ?? ''),
+                'nachricht' => rw_nachricht((int)$halb['konto'],
+                                            rw_herausforderung_stellen($_SESSION['totp_halb']))];
+    $halb = $_SESSION['totp_halb'];
+} else {
+    $rwWeg = false;
+}
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
 ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
 ?>
@@ -693,7 +806,57 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
            BEVOR er sein Passwort eintippt. Anmelden kann er sich trotzdem —
            was danach geschieht, entscheidet die Rolle (E-S5W-09). */ ?>
   <?= wartung_balken() ?>
-  <?php if ($halb !== null):
+  <?php if ($rwErfolg):
+    /* NACH DEM RÜCKWEG, ROLLE user (M-RW-01 Bild 3). Die Sitzung steht; der
+       Zweitfaktor ist aus. Eine Pflichtrolle kommt hier nie an — sie geht
+       unmittelbar ins Einrichtungstor. */ ?>
+  <h2 class="anmeldung-schritt">Zweitfaktor zurückgesetzt</h2>
+  <?php ui_meldung('Der Zweitfaktor ist ausgeschaltet; '
+        . (in_array($rwZustellung, [MAIL_ZUGESTELLT, MAIL_WARTET], true)
+            ? 'eine Nachricht ist an deine Adresse unterwegs.'
+            : 'die Nachricht an deine Adresse ließ sich nicht verschicken.'), null, 'ok', '  ',
+        ['auftakt' => 'Du bist angemeldet.']); ?>
+  <p class="feld-hinweis">Richte ihn unter <strong>Einstellungen → Profil</strong> mit einem neuen Gerät wieder ein — dort entstehen auch zehn neue Wiederherstellungscodes.</p>
+  <div class="listen-form-fuss">
+    <?= ui_knopf(['text' => 'Weiter zur Startseite', 'art' => 'primaer', 'breit' => true,
+                  'href' => 'index.php']) ?>
+  </div>
+  <p class="anmeldung-neben"><a href="einstellungen.php?t=profil">Gleich zum Profil</a></p>
+  <?php elseif ($rwWeg):
+    /* DER SCHLÜSSELSCHRITT (M-RW-01 Bild 2): die Schwester der
+       Passwort-Reset-Seite in der Anmeldekarte — dasselbe Feld, dieselbe
+       Sofortprüfung (M2-06).
+
+       DAS FELD HAT KEINEN NAMEN. Der Zettel verlässt den Browser nie; ein
+       Feld ohne Namen schickt kein Formular mit, auch nicht ohne Skript.
+       Gesendet wird allein `signatur`, gefüllt vom Seitenskript unten.
+       Die drei Werte zum Signieren stehen in unbenannten versteckten
+       Feldern, nicht in einem Skriptblock: Die Integritätswache vergleicht
+       die Skripte dieser Seite ohne Sitzung, und ein Block, der nur im
+       halben Stand dasteht, fehlte ihr (Kopf von `tools/integritaetswache/`,
+       `BEDINGTE_FORMULARE`). */ ?>
+  <form method="post" id="schluesselform">
+    <?= csrf_field() ?>
+    <input type="hidden" name="schritt" value="schluessel">
+    <input type="hidden" name="signatur" value="">
+    <input type="hidden" id="rw-wrap-rc" value="<?= e($rwDaten['wrap_rc']) ?>">
+    <input type="hidden" id="rw-privat" value="<?= e($rwDaten['privat']) ?>">
+    <input type="hidden" id="rw-nachricht" value="<?= e($rwDaten['nachricht']) ?>">
+    <h2 class="anmeldung-schritt">Gerät und Codes verloren</h2>
+    <p class="feld-hinweis">Angemeldet als <strong><?= e((string)$halb['email']) ?></strong>. Der <strong>Wiederherstellungsschlüssel</strong> vom Notfallblatt schaltet den Zweitfaktor aus — danach richtest du ihn mit einem neuen Gerät wieder ein.</p>
+    <?php ui_meldung(null, $error, 'info', '    ', ['auftakt_fehler' => $fehlerAuftakt]); ?>
+    <?php ui_feld(['id' => 'f-rs', 'label' => 'Wiederherstellungsschlüssel', 'pflicht' => true,
+                   'platzhalter' => 'ABCD-EFGH-JKMN-PQRS-TVWX',
+                   'attr' => ' autocomplete="off" autocapitalize="characters" spellcheck="false" autofocus',
+                   'klein' => '20 Zeichen in fünf Gruppen; Bindestriche und Leerzeichen zählen nicht.']); ?>
+    <p class="zustandszeile" id="rcstate"></p>
+    <div class="listen-form-fuss">
+      <?= ui_knopf(['text' => 'Zweitfaktor zurücksetzen', 'art' => 'primaer', 'breit' => true]) ?>
+    </div>
+  </form>
+  <p class="anmeldung-neben"><a href="login.php">Code aus der App verwenden</a><br><a
+      href="login.php?abbrechen=1">Zurück zur Anmeldung</a></p>
+  <?php elseif ($halb !== null):
     /* DER CODE-SCHRITT (P5c/AP5, M-P5c-02b Bild 3). Ein Knopf, zwei
        Rueckwege: der andere Code und der Anfang. Beide als Verweis und nicht
        als Skript — `art=rc` waehlt das Feld, `abbrechen=1` beendet den halben
@@ -724,8 +887,17 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
       <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
     </div>
   </form>
+  <?php /* DER DRITTE VERWEIS (Konzept RW, E-RW-01; M-RW-01 Bild 1) — auch
+           aus dem Schritt „Wiederherstellungscode", weil dort steht, wer
+           die Codes nicht mehr hat. Nur, wenn der Weg angeboten wird; sonst
+           sagt der Schritt „Wiederherstellungscode", wer dann hilft. */ ?>
   <p class="anmeldung-neben"><a href="<?= $rc ? 'login.php' : 'login.php?art=rc' ?>"><?=
-      $rc ? 'Code aus der App verwenden' : 'Wiederherstellungscode verwenden' ?></a><br><a
+      $rc ? 'Code aus der App verwenden' : 'Wiederherstellungscode verwenden' ?></a><br><?php
+      if ($rwAngeboten): ?><a href="login.php?weg=schluessel"><?= $rc
+        ? 'Auch die Codes verloren? Wiederherstellungsschlüssel verwenden'
+        : 'Gerät und Codes verloren? Wiederherstellungsschlüssel verwenden' ?></a><br><?php
+      elseif ($rc): ?>Auch die Codes verloren? Dann setzt die Verwaltung den Zweitfaktor zurück.<br><?php
+      endif; ?><a
       href="login.php?abbrechen=1">Zurück zur Anmeldung</a></p>
   <?php else: ?>
   <?php /* Beide schliessen einander aus: Steht ein Fehler an, tritt der
@@ -785,8 +957,59 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
    <a href="datenschutz.php">Datenschutz</a>
  </nav>
 </main>
-<?php if ($halb === null): ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<?php /* DER SCHLÜSSELSCHRITT (Konzept RW, RW-03). `crypto.js` und `rueckweg.js`
+         STEHEN IMMER DA, und der Block darunter auch — aus demselben Grund
+         wie der Block zum Vormerkfach weiter unten: Die Integritätswache
+         fragt ohne Sitzung und vergleicht Zeichen für Zeichen; was nur im
+         halben Stand in der Seite stünde, fehlte ihr. Ob der Block etwas
+         tut, sagt das Formular `#schluesselform`; ohne es kehrt er sofort
+         zurück. Bis Web 20.44 lud `crypto.js` nur das Passwortformular.
+
+         WAS ER TUT: beim Tippen die Sofortprüfung (M2-06, dieselben Sätze
+         wie `pw_handling.php`); beim Absenden die Signatur über die
+         Nachricht des Servers — passt der Zettel nicht, geht NICHTS hinaus.
+         Gesendet wird nur `signatur`; das Schlüsselfeld hat keinen Namen. */ ?>
+<script src="<?= asset('assets/rueckweg.js') ?>"></script>
+<script<?= kopf_nonce_attr() ?>>
+(function () {
+  var f = document.getElementById('schluesselform');
+  if (!f) { return; }
+  var feld = document.getElementById('f-rs');
+  var zeile = document.getElementById('rcstate');
+  function pruefen() {
+    var wert = feld.value.trim();
+    if (wert === '') { zeile.textContent = ''; return; }
+    var p = EdCrypto.pruefeRecoveryCode(wert);
+    zeile.textContent = p.ok ? 'Schlüssel vollständig.' : EdCrypto.recoveryCodeMeldung(p);
+  }
+  feld.addEventListener('input', pruefen);
+  feld.addEventListener('blur', pruefen);
+  f.addEventListener('submit', async function (ev) {
+    if (f.dataset.bereit === '1') { return; }
+    ev.preventDefault();
+    try {
+      zeile.textContent = 'Wiederherstellungsschlüssel wird geprüft …';
+      f.elements.signatur.value = await EdRueckweg.signieren({
+        schluessel: feld.value,
+        wrapRc:     document.getElementById('rw-wrap-rc').value,
+        privat:     document.getElementById('rw-privat').value,
+        nachricht:  document.getElementById('rw-nachricht').value
+      });
+    } catch (e) {
+      zeile.textContent = e && e.grund === 'form' ? e.message
+        : 'Der Schlüssel ist formal korrekt, passt aber nicht zu diesem Konto. Kein '
+        + 'Tippfehler — vermutlich der Schlüssel eines anderen Kontos oder aus einer '
+        + 'früheren Einrichtung.';
+      return;
+    }
+    feld.value = '';
+    f.dataset.bereit = '1';
+    f.submit();
+  });
+})();
+</script>
+<?php if ($halb === null && !$rwErfolg): ?>
 <?php /* DAS VORMERKFACH RAEUMEN, WENN DER HALBE STAND OHNE ANMELDUNG ENDETE
          (P5c/AP5, E-P5c-53: abgebrochen, abgelaufen, gesperrt).
 

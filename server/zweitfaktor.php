@@ -34,6 +34,12 @@ require_once __DIR__ . '/zweitfaktor_teile.php';
 
 $zustand = totp_zustand($userId);
 $codes   = null;
+/* NACH DEM RÜCKWEG (Konzept RW, RW-03; M-RW-01 Bild 3): `login.php` schickt
+ * eine Pflichtrolle unmittelbar hierher und legt diese Marke ab. Sie gilt
+ * EINMAL — gelesen und weggenommen —, damit die Meldung nicht bei jedem
+ * Neuladen des Tors wiederkommt. */
+$nachRueckweg = !empty($_SESSION['zf_nach_rueckweg']);
+unset($_SESSION['zf_nach_rueckweg']);
 $fehler  = null;
 $fehlerAuftakt = '';
 
@@ -101,7 +107,13 @@ ui_seite_start(['titel' => 'Zweitfaktor einrichten', 'klasse' => 'anmeldung-body
   <form method="post">
     <?= csrf_field() ?>
     <h2 class="anmeldung-schritt">Zweitfaktor einrichten</h2>
+    <?php if ($nachRueckweg): ?>
+    <?php ui_meldung('Für die Rolle ' . rolle_text($userRole) . ' ist er Pflicht — richte ihn jetzt '
+                   . 'mit dem neuen Gerät ein.', null, 'ok', '    ',
+                   ['auftakt' => 'Zweitfaktor zurückgesetzt.']); ?>
+    <?php else: ?>
     <p class="feld-hinweis">Für die Rolle <strong><?= e(rolle_text($userRole)) ?></strong> ist er Pflicht — danach geht es weiter.</p>
+    <?php endif; ?>
     <?php ui_meldung(null, $fehler, 'info', '    ', ['auftakt_fehler' => $fehlerAuftakt]); ?>
     <?php zf_einrichtung($roh, (string)($row['email'] ?? '')); ?>
     <div class="listen-form-fuss">

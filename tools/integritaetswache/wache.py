@@ -209,7 +209,14 @@ SEITEN = ['login.php']
 # schon gesendet, und zwar ueber das Formular, das die Wache weiter
 # vollstaendig vergleicht. Die Selbstprobe haelt jeden Eintrag gegen die
 # Quelle: Eine Ausnahme ohne Gegenstand ist rot.
-BEDINGTE_FORMULARE = {'login.php': ['<form method="post" id="codeform">']}
+#
+# SEIT WEB 20.45.0 (Konzept RW, RW-03) steht der Schluesselschritt daneben:
+# `?weg=schluessel` im selben halben Stand. Er nimmt den
+# Wiederherstellungsschluessel NICHT entgegen -- sein Feld hat keinen Namen,
+# gesendet wird eine Signatur --, und seine Skripte stehen immer in der
+# Seite, damit die Wache sie vergleicht.
+BEDINGTE_FORMULARE = {'login.php': ['<form method="post" id="codeform">',
+                                    '<form method="post" id="schluesselform">']}
 
 # Ein Attributname beginnt nach Leerraum, nicht nach einem Bindestrich: `\bsrc`
 # traf auch `data-src` -- die Wortgrenze liegt am Bindestrich --, und ein

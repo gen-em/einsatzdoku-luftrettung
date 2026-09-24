@@ -403,6 +403,8 @@
         "server/vendor/phpseclib3/**",
         "server/api/rueckweg_anlegen.php",
         "server/assets/rueckweg.js",
+        "server/login.php",
+        "server/zweitfaktor.php",
         "tools/proben/rueckweg/**",
         "tools/bedienprobe/wege/einstellungen_profil_rueckweg.mjs"
       ],

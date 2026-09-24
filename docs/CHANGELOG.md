@@ -14,6 +14,119 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.45.0] — 2026-09-24
+
+**Der Rückweg beim Zweitfaktor: am Code-Schritt.** Konzept RW, Paket RW-03
+(im P5c-Konzept AP5b); E-RW-01, -04, -08, -12, -13, -14. Nebenstufe **ohne
+Migration**. Wer Handy **und** Wiederherstellungscodes verloren hat, braucht
+dafür nicht mehr die Verwaltung: Passwort und das Notfallblatt genügen — für
+alle vier Rollen, auch für die einzige BetreiberIn (Nr. 249, soweit sie ihr
+Blatt hat).
+
+**Warum eine Signatur und nicht der Vergleich mit einem Wert** (F-P5c-106): Die
+erste Fassung dieses Wegs (E-P5c-42) prüfte gegen `pat_key_check`, und der
+steht in der Datenbank — wer einen Abzug hatte, legte ihn vor und schaltete den
+Zweitfaktor ab. Jetzt stellt der Server eine Herausforderung, und der Browser
+signiert sie mit dem privaten Teil des Paars aus 20.44.0. Den öffnet nur der
+Inhaltsschlüssel, und den nur das Passwort oder der Zettel. In der Datenbank
+steht, womit man **prüft**, nicht womit man **signiert**.
+
+### Neu
+
+- **Web: „Gerät und Codes verloren? Wiederherstellungsschlüssel verwenden"**
+  im Code-Schritt der Anmeldung — auch aus „Wiederherstellungscode verwenden"
+  heraus („Auch die Codes verloren? …"), weil dort steht, wer die Codes nicht
+  mehr hat (M-RW-01 Bild 1). Nur, wenn der Weg angeboten wird: Die Anlage
+  kann prüfen (Zeile „Rückweg-Prüfung" blau), und das Konto hat Paar und
+  Wiederherstellungs-Hülle. Sonst sagt der Schritt „Wiederherstellungscode",
+  dass die Verwaltung hilft.
+- **Web: Der Schlüsselschritt** (Bild 2) — die Schwester der
+  Passwort-Reset-Seite: dasselbe Feld, dieselbe Sofortprüfung (ein
+  Tippfehler wird mit dem Zeichen benannt). Der Zettel **verlässt den Browser
+  nicht**: Er öffnet dort die Wiederherstellungs-Hülle und damit den privaten
+  Teil, der die Nachricht des Servers signiert. Passt er nicht, sagt die Seite
+  „passt nicht zu diesem Konto", und es geht **nichts** hinaus. Das Feld hat
+  keinen Namen; gesendet wird nur die Signatur.
+- **Web: Die Prüfung auf dem Server** (`rw_rueckweg_pruefen()`):
+  Herausforderung **sofort** verbrauchen, gleich welcher Ausgang; die
+  Nachricht **selbst** bauen, aus Konto und Herausforderung dieser halben
+  Sitzung; zählen im Topf `totp`, mit denselben Merkmalen wie ein Code — ein
+  Browser sendet nur, wenn die Hülle aufging, also ist ein Fehlschlag hier
+  eine Fälschung oder ein Fehler. Das Ja vollzieht `login.php` in der
+  Reihenfolge des Code-Schritts: Erfolg zählen, das Tor (Kontostatus,
+  Wartung), die Sitzung — und **erst dahinter** schaltet dieselbe Funktion
+  ab, mit der die Verwaltung zurücksetzt (`totp_abschalten($id,
+  'schluessel')`, Protokoll `totp_zurueckgesetzt` mit `weg = schluessel`);
+  die Mail `totp_zurueckgesetzt` beginnt mit dem Satz dieses Wegs. **Warum
+  dahinter:** In der ersten Fassung schaltete die Prüfung selbst ab, also vor
+  dem Tor. Ein gesperrtes Konto — oder jedes ohne Verwaltungsrecht während der
+  Wartung — verlor dann seinen Zweitfaktor, ohne angemeldet zu werden und
+  ohne Mail, denn die kommt erst hinter dem Tor. Gefunden hat es die
+  Wartungsprobe, die für jeden Aufruf des Tors das `rate_erfolg` davor sucht
+  und hier keines fand; die Rückwegprobe misst es seither über HTTP an einem
+  gesperrten Konto (der Zweitfaktor bleibt an), und die alte Reihenfolge
+  färbt sie rot.
+- **Web: Nach dem Erfolg zwei Wege** (Bild 3): Die Rolle user ist angemeldet
+  und sieht die Erfolgskarte; Support, Admin und BetreiberIn landen
+  unmittelbar im Einrichtungstor, mit der Meldung „Zweitfaktor
+  zurückgesetzt." oben — keine Seite ohne Zweitfaktor (E-P5c-61).
+- **Werkzeug: Rückwegprobe in zwei Teilen** (E-RW-12). `probe.php` Teil B
+  misst den Prüfzweig ohne HTTP — echt, wiederholt, abgelaufen, drei falsche
+  Signaturen bis zur Sperre, die alte Fassung mit `pat_key_check`, nicht
+  angeboten, die Abzug-Gegenprobe — und über HTTP den Verweis, die 400, den
+  ganzen Weg mit echter Signatur und dieselbe an einem gesperrten Konto.
+  `probe.mjs` fährt den Weg im Browser als NutzerIn und als BetreiberIn,
+  örtlich und **in Stufe 2 gegen Staging** (neuer Schritt nach dem
+  Kreislauf). `pruefkonto.py` kann dafür eine Rolle setzen und den
+  Wiederherstellungsschlüssel des Wegwerfkontos in eine Datei schreiben.
+
+### Geändert
+
+- **Web: `login.php` lädt `crypto.js`, `rueckweg.js` und ein kleines
+  Seitenskript immer**, nicht nur zum Passwortformular. Die Integritätswache
+  vergleicht die Seite ohne Sitzung, Zeichen für Zeichen; ein Skript, das nur
+  im halben Stand dastünde, fehlte ihr, und sie wäre rot. Das Seitenskript
+  kehrt ohne `#schluesselform` sofort zurück; die Werte zum Signieren stehen
+  in unbenannten versteckten Feldern. Das neue Formular steht in
+  `BEDINGTE_FORMULARE`.
+- **Web: Die Seite liefert die fertige Nachricht** (`RW_NACHRICHT` aus
+  `rw_nachricht()`), nicht Konto und Herausforderung einzeln (E-RW-18): Das
+  Format steht damit an einer Stelle. Geprüft wird trotzdem gegen die
+  Nachricht, die der Server beim Prüfen selbst baut.
+- **Doku: Der Notweg der einzigen BetreiberIn** im Runbook (`Technik.md` 7)
+  nennt zuerst den Rückweg; der SQL-Weg bleibt für den Fall ohne
+  Notfallblatt.
+
+### Behoben (vor der Auslieferung, gefunden beim Messen)
+
+- **Ein POST an ein Konto ohne Paar hieß „abgelaufen"** statt 400 (F-RW-18):
+  Die Prüfung fragte zuerst nach der Herausforderung, und die hat ein
+  solches Konto nie. Jetzt zuerst „wird er angeboten?". Gefunden mit der
+  Rückwegprobe (B8).
+- **Die Erfolgskarte endete im ersten Handlauf in „Unerwarteter Fehler"**
+  (F-RW-19): Die Mail las eine Adresse, die `login_zeile()` nicht liefert,
+  und die Meldung eine Mail-Konstante, die es nicht gibt. Gefunden über die
+  Kennung im Fehlerprotokoll (Reiter System).
+
+### Nachweis
+
+**Rückwegprobe 48 / 0** (Teil A 33, Teil B 15): echte Signatur → Zweitfaktor
+aus, Codes 0, Protokoll +1; dieselbe noch einmal abgewiesen; abgelaufen
+abgewiesen und nicht gezählt, die nächste Herausforderung eine neue; fremd,
+verändert, zweckfremd je gezählt, nach **5** falschen die Sperre — danach auch
+die echte abgewiesen; `pat_key_check` statt Signatur **4 / 4** abgewiesen;
+nicht angeboten **2 / 2**; **Abzug-Gegenprobe 71 Versuche, 0 Erfolge**, der
+Inhaltsschlüssel selbst öffnet (Gegenprobe des Öffners); Verweis 1 / 0,
+POST ohne Paar **400**. **Gegenproben rot:** eine Prüfung, die
+`pat_key_check` annimmt → B5 rot; eine nicht verbrauchte Herausforderung →
+B1 und B2 rot. **Browser 23 / 0:** NutzerIn — Tippfehler benannt, fremder
+Zettel **0 Anfragen**, Erfolgskarte, Startseite 200, die Suche hat den
+Datenschlüssel, Profil zeigt „Einrichten", Datenbank: Codes 0, Protokoll +1,
+Mail +1; BetreiberIn — ins Tor nach dem Anmelden, Paar danach da, Rückweg →
+**302** auf `zweitfaktor.php` mit der Meldung. Integritätswache gegen die
+Sandbox: 4 Inline-Blöcke und 4 Skripte gleich, kein Unterschied;
+Selbstprobe 43 / 0. Die Mail der Verwaltung ist byteweise unverändert.
+
 ## [Web 20.44.0] — 2026-09-24
 
 **Der Rückweg beim Zweitfaktor: Das Paar entsteht.** Konzept RW, Paket RW-02

@@ -22,7 +22,7 @@ bash tools/proben/proben.sh <name> [zusatz…]   # alle · --liste
 `abmelden` was liegen bleibt · `csp-browser` Richtlinie zur Laufzeit ·
 `rollen` Matrix aus `Technik.md` 4.99p · `protokoll` Archiv, Fehlerprotokoll ·
 `zweitfaktor` Code-Schritt, Einrichtungstor, RFC-Vektoren ·
-`rueckweg` Rückweg beim Zweitfaktor: Signaturen, Selbsttest, Marke.
+`rueckweg` Rückweg beim Zweitfaktor, zwei Teile unter einem Namen: `probe.php` (Signaturen, Selbsttest, Marke, der Prüfzweig am Code-Schritt samt Abzug-Gegenprobe) und `probe.mjs` (der Weg im Browser, NutzerIn und BetreiberIn — auch gegen Staging, mit `--basis`, `--admin`, `--admin-pw`, `--admin-totp`).
 
 **Den Anlass je Probe** (Grundsatz 5) trägt der Kopfkommentar ihrer Datei.
 

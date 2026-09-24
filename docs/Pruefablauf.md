@@ -207,6 +207,9 @@ antwortet `login.php` wie eine eingerichtete Installation, sind Punktdateien
 gesperrt und ist `.well-known` offen (beides Apache des Hosters), und läuft
 **ein** Kreislauf `edbak` durch — als Plattformprobe auf PHP 8.3 beim
 Hoster. Dazu ein benannter leerer Platz für Backlog Nr. 234 (8).
+**Seit Web 20.45.0 kommt die Rückwegprobe dazu** (Konzept RW, E-RW-11): Ob
+die Anlage die Signatur des Rückwegs prüft — über `openssl` oder in reinem
+PHP —, zeigt nur der Hoster. Sie läuft nach dem Kreislauf, im selben Job.
 
 **Heutiger Umfang:** Der Job heißt „Prüfung Stufe 2", hat **6** Schritte und
 eine Zeitgrenze von 45 Minuten; gemessen 16 min je Lauf. Bilderlauf und
@@ -331,7 +334,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |
 | `server/auth_guard.php`, `server/admin_*.php`, `server/betrieb_*.php`, `docs/Technik.md` | klein | `rollenprobe` | Nr. 286, Nr. 149 |
 | `server/login.php`, `server/auth_guard.php`, `server/totp_lib.php`, `server/zweitfaktor.php`, `server/zweitfaktor_teile.php`, `server/codeblatt.php`, `server/status_lib.php`, `server/demo_lib.php`, `tools/zweitfaktor/**` | klein | `zweitfaktorprobe` | F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset) |
-| `server/rueckweg_lib.php`, `server/status_lib.php`, `server/vendor/phpseclib3/**`, `server/api/rueckweg_anlegen.php`, `server/assets/rueckweg.js`, `tools/proben/rueckweg/**`, `tools/bedienprobe/wege/einstellungen_profil_rueckweg.mjs` | klein | `rueckwegprobe`, `rollenprobe`, `bedienprobe` | F-P5c-106 (Rueckweg pruefte gegen einen Wert aus der Datenbank), Konzept RW E-RW-03, -11, -12 |
+| `server/rueckweg_lib.php`, `server/status_lib.php`, `server/vendor/phpseclib3/**`, `server/api/rueckweg_anlegen.php`, `server/assets/rueckweg.js`, `server/login.php`, `server/zweitfaktor.php`, `tools/proben/rueckweg/**`, `tools/bedienprobe/wege/einstellungen_profil_rueckweg.mjs` | klein | `rueckwegprobe`, `rollenprobe`, `bedienprobe` | F-P5c-106 (Rueckweg pruefte gegen einen Wert aus der Datenbank), Konzept RW E-RW-03, -11, -12 |
 | `server/protokoll_lib.php`, `server/protokoll_archiv_lib.php`, `server/zip_lib.php`, `server/admin_protokoll.php`, `server/systemmeldung_lib.php` | klein | `protokollprobe`, `versandprobe` | F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39); protokollprobe Teil 7 für das Fehlerprotokoll (Nr. 248) |
 | `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
 | `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |

@@ -74,11 +74,12 @@ export async function passwortSchicken(s, basis, adresse, passwort) {
  *  Inhaltsschlüssel brauchen (das Paar des Rückwegs verpackt seinen privaten
  *  Teil damit), können `probekontoAnlegen()` nicht nehmen: Dessen Konten
  *  haben keine Hülle. Gibt Nummer und Wiederherstellungsschlüssel zurück. */
-export async function passwortSetzen(s, basis, adresse, passwort, name = 'Bedienprobe') {
+export async function passwortSetzen(s, basis, adresse, passwort, name = 'Bedienprobe',
+                                     rolle = 'user') {
   probekontoRaeumen(adresse);
   const a = JSON.parse(php(`require_once "server/konto_lib.php";
     echo json_encode(konto_anlegen(${JSON.stringify(adresse)}, ${JSON.stringify(name)},
-                                   "user", "einladung"));`));
+                                   ${JSON.stringify(rolle)}, "einladung"));`));
   await s.goto(`${basis}/pw_handling.php?token=${a.token}`, { waitUntil: 'domcontentloaded' });
   await s.fill('#pw1', passwort);
   await s.fill('#pw2', passwort);

@@ -473,6 +473,36 @@ jobs:
               || { echo "::error::Kreislauf $art gegen Staging gescheitert."; exit 1; }
           done
 
+      - name: Rückwegprobe gegen Staging
+        # DER RÜCKWEG BEIM ZWEITFAKTOR AUF DER ECHTEN ANLAGE (Konzept RW,
+        # RW-03; E-RW-11, -12). Die Signatur prüft phpseclib über `openssl`
+        # oder in reinem PHP — welcher Weg es beim Hoster wird, zeigt nur der
+        # Hoster. Der Browser-Teil der Rückwegprobe legt zwei Wegwerfkonten
+        # an (NutzerIn und BetreiberIn, Präfix `umlauf-`), schaltet ihren
+        # Zweitfaktor ein und setzt ihn mit dem Wiederherstellungsschlüssel
+        # wieder zurück; danach löscht er sie.
+        #
+        # LÄUFT NACH DEM KREISLAUF, UND DAS IST EINE ABHÄNGIGKEIT: Dort sind
+        # Playwright (unter `node_modules/`), Chromium und `cryptography`
+        # installiert worden. Ein eigener Schritt holt nur den Pfad des
+        # Moduls neu — Umgebungswerte überleben einen Schritt nicht. Ist der
+        # Kreislauf rot, läuft dieser Schritt ohnehin nicht.
+        #
+        # ÜBERSPRINGEN IST ROT (E-KH-12): Ohne Prüfkonto oder Geheimnis bricht
+        # er ab, statt grün zu melden.
+        run: |
+          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ] || [ -z "${STAGING_TOTP:-}" ]; then
+            echo "::error::Prüfkonto, Passwort oder STAGING_TOTP fehlt — die Rückwegprobe kann nicht messen, und ÜBERSPRINGEN IST ROT (E-KH-12)."
+            echo '**Rückwegprobe: NICHT GEMESSEN** — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
+          [ -f "$PLAYWRIGHT_MODUL" ] \
+            || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
+          node tools/proben/rueckweg/probe.mjs --basis "$STAGING_URL" --admin "$STAGING_KONTO" \
+               --admin-pw "$STAGING_PASS" --admin-totp "$STAGING_TOTP" \
+            || { echo "::error::Rückwegprobe gegen Staging gescheitert."; exit 1; }
+
       # BILDERLAUF UND MESSSTAND-HINWEIS STANDEN HIER BIS ZUM 21.09.2026
       # (Konzept PK, E-PK-01/E-PK-17, Vorgriff auf PK-06). Der Bilderlauf
       # misst Markup und CSS, nicht die Anlage, und laeuft in der Sandbox;

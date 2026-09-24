@@ -7381,8 +7381,39 @@ als eigene Funktion — liefert Inhaltsschlüssel und Token, dann ersetzt
 `EdRueckweg.erneuern()`: Protokoll `rueckweg_erneuert`, Mail
 `rueckweg_erneuert`. Beim Ausschalten des Zweitfaktors bleibt das Paar liegen
 (E-RW-06); der Demo-Reset leert es in `demo_zweitfaktor_leeren()`.
-Konto-Backup und Freigabe tragen es nicht (E-RW-09). **Noch fehlt** der Weg am
-Code-Schritt (RW-03); bis dahin: Codes und Verwaltung.
+Konto-Backup und Freigabe tragen es nicht (E-RW-09).
+
+**Seit Web 20.45.0 (RW-03) steht der Weg am Code-Schritt.** `login.php` bietet
+ihn an, wenn `rw_angeboten()` es sagt (Selbsttest grün, Paar und
+Wiederherstellungs-Hülle da) — als dritten Verweis im Code-Schritt und im
+Schritt „Wiederherstellungscode"; sonst sagt der zweite, dass die Verwaltung
+hilft. `?weg=schluessel` zeigt den **Schlüsselschritt**: Jede Anzeige stellt
+mit `rw_herausforderung_stellen()` eine neue Herausforderung in die halbe
+Sitzung (`totp_halb.rw_herausforderung`, `rw_bis`, fünf Minuten) und liefert
+in unbenannten versteckten Feldern die Wiederherstellungs-Hülle, den privaten
+Teil und die fertige Nachricht aus `rw_nachricht()` (E-RW-18 — das Format
+steht einmal). Im Browser öffnet `EdRueckweg.signieren()` mit dem Zettel die
+Hülle, damit den privaten Teil, und signiert; passt der Zettel nicht, geht
+**nichts** hinaus. Das Schlüsselfeld hat **keinen Namen** — gesendet wird nur
+`signatur`. Auf dem Server prüft `rw_rueckweg_pruefen()`, was schiefgehen
+kann: Herausforderung **sofort** verbrauchen, „wird angeboten?" (sonst 400),
+Frist, Topf `totp` mit den Merkmalen des Code-Schritts, `rw_pruefen()` gegen
+die **selbst gebaute** Nachricht; ein Fehlversuch zählt dort. **Das Ja
+vollzieht `login.php`, in der Reihenfolge des Code-Schritts:** Erfolg zählen,
+das Tor `login_zugang()`, die Sitzung — und erst **dahinter**
+`totp_abschalten($id, 'schluessel')` (Protokoll `totp_zurueckgesetzt`,
+`daten.weg = schluessel`, das Konto als Urheber) und die Mail
+`totp_zurueckgesetzt` mit dem Satz des Wegs. Stünde das Abschalten vor dem
+Tor, verlöre ein gesperrtes Konto oder eines während der Wartung seinen
+Zweitfaktor ohne Anmeldung und ohne Mail (F-RW-21, Rückwegprobe B8). Die
+Rolle user bekommt die Erfolgskarte, eine Pflichtrolle geht unmittelbar nach
+`zweitfaktor.php` (Marke `zf_nach_rueckweg`, die Meldung oben, einmal). **`crypto.js`,
+`rueckweg.js` und das Seitenskript stehen auf `login.php` immer da**,
+PHP-frei: Die Integritätswache vergleicht die Seite ohne Sitzung, und ein
+Skript nur im halben Stand fehlte ihr; das Formular `#schluesselform` steht
+in `BEDINGTE_FORMULARE`. **Was ein Datenbankabzug kann:** prüfen, nicht
+signieren — der private Teil liegt unter dem Inhaltsschlüssel, den nur Passwort
+(samt Server-Anteil) oder Zettel öffnen (Konzept RW 5.2; Rückwegprobe B7).
 
 **Der Bus-Faktor** (E-P5c-16, -56): Die Zeile „Verwaltungskonten" auf Betrieb
 → Status zählt **handlungsfähige** Konten — `status = 'aktiv'` und ein
@@ -7410,7 +7441,15 @@ leer). Für den Rückweg: `bash tools/proben/proben.sh rueckweg` (Signaturen,
 Selbsttest, Marke, `rw_zustand()` in vier Lagen, Kontopaket ohne `rw_`), die
 Rollenprobe (jede Rolle erreicht `api/rueckweg_anlegen.php` und legt ab) und
 der Bedienweg `wege/einstellungen_profil_rueckweg.mjs` (Paar entsteht beim
-Anmelden, Endpunkt weist ab, Karte, Erneuern, Demo-Konto ohne Paar).
+Anmelden, Endpunkt weist ab, Karte, Erneuern, Demo-Konto ohne Paar). Seit
+RW-03 hat die Rückwegprobe zwei Teile unter einem Namen: `probe.php` Teil B
+misst `rw_rueckweg_pruefen()` ohne HTTP (echt, wiederholt, abgelaufen,
+fremd/verändert/zweckfremd bis zur Sperre im Topf `totp`, die alte Fassung mit
+`pat_key_check`, nicht angeboten, die Abzug-Gegenprobe) und über HTTP den
+Verweis, die 400, den ganzen Weg mit echter Signatur und dieselbe Signatur an
+einem gesperrten Konto (Zweitfaktor bleibt an); `probe.mjs` fährt den Weg im
+Browser als NutzerIn und als BetreiberIn — örtlich und in Stufe 2 gegen
+Staging.
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 
@@ -9893,6 +9932,17 @@ Staging** (Umgebungsgeheimnisse `STAGING_KONTO`, `STAGING_PASS`, Variable
 Jobs 20 Minuten; gemessen sind 1:56 für alles zusammen (Lauf 35639445224,
 Versuch 2, damals noch mit dem csv-Kreislauf).
 
+**Seit Web 20.45.0 ein vierter Schritt: die Rückwegprobe gegen Staging**
+(Konzept RW, E-RW-11, -12; `tools/proben/rueckweg/probe.mjs` mit der Adresse
+von Staging und dem Zugang des Prüfkontos samt Geheimnis). Ob phpseclib beim Hoster über `openssl` oder
+in reinem PHP prüft und ob der Weg durchgeht, zeigt nur der Hoster. Die Probe
+legt zwei Wegwerfkonten `umlauf-rueckweg…` an (NutzerIn und BetreiberIn,
+über `pruefkonto.py`), schaltet deren Zweitfaktor ein, setzt ihn mit dem
+Wiederherstellungsschlüssel zurück und löscht die Konten wieder. Sie läuft
+**nach** dem Kreislauf und benutzt dessen Installationen (Playwright,
+Chromium, `cryptography`); fehlt `STAGING_TOTP` oder das Prüfkonto, ist der
+Schritt rot. **Gemessen ist er erst nach dem Merge** (P-RW-02).
+
 **Bis zum 21.09.2026 liefen hier auch der csv-Kreislauf und der Bilderlauf**
 (62 Seiten in acht Breiten). Beide messen die Anwendung, nicht die Anlage,
 und laufen seither in der Sandbox (Konzept PK). Der Bilderlauf war auf der
@@ -11214,9 +11264,15 @@ gibt es auf einfachem Webspace nicht. **So kommt man heraus:**
 > BetreiberIn kommt also ohne Zweitfaktor an Betrieb → Updates.
 
 **Notweg: Die einzige BetreiberIn hat Handy und Codes verloren** (seit Web
-20.42.0, E-P5c-42). Zurücksetzen kann nur eine **andere** BetreiberIn — gibt
-es keine, führt kein Weg über die Oberfläche hinein. Im Datenbankwerkzeug des
-Hosters, mit der Kennung des Kontos:
+20.42.0, E-P5c-42). **Seit Web 20.45.0 zuerst den Rückweg nehmen** (Konzept
+RW, E-RW-08): Mit Passwort und Notfallblatt setzt sie ihn am Code-Schritt
+selbst zurück („Gerät und Codes verloren?") und landet im Einrichtungstor —
+mit Protokoll und Mail. Das geht, wenn Betrieb → Status „Rückweg-Prüfung"
+blau zeigt und das Konto ein Paar hat (die Karte „Zweitfaktor" im Profil sagt
+„eingerichtet"). **Fehlt eines davon oder das Notfallblatt**, kann nur eine
+**andere** BetreiberIn zurücksetzen — gibt es keine, führt kein Weg über die
+Oberfläche hinein. Im Datenbankwerkzeug des Hosters, mit der Kennung des
+Kontos:
 
 ```sql
 UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL, totp_schritt = NULL
@@ -11228,14 +11284,16 @@ Danach mit dem Passwort anmelden; das Einrichtungstor verlangt sofort einen
 neuen Zweitfaktor. **Im Protokoll steht dieser Weg nicht** — er geht an der
 Anwendung vorbei. Wer ihn benutzt, trägt es in die Betriebsakte ein. Der
 Fall, dass die einzige BetreiberIn **auch** den Datenbankzugang verloren hat,
-ist Backlog Nr. 249 (Schritt 18). Die Bus-Faktor-Zeile auf Betrieb → Status
+ist Backlog Nr. 249 (Schritt 18) — seit RW-03 nur noch, wenn sie zugleich ihr
+Notfallblatt verloren hat. Die Bus-Faktor-Zeile auf Betrieb → Status
 steht genau deshalb orange, bis es eine zweite BetreiberIn gibt.
 
 **Notweg: Nach einem Wiederanlauf mit anderem Serverschlüssel** lässt sich
 kein Zweitfaktor-Geheimnis mehr öffnen (es ist mit dem alten versiegelt). Die
 Anmeldung nimmt dann nur noch Wiederherstellungscodes — sie hängen nicht am
-Schlüssel (E-P5c-42). Wer keine mehr hat, wird von einer BetreiberIn
-zurückgesetzt, die einzige BetreiberIn über den SQL-Weg oben.
+Schlüssel (E-P5c-42). Wer keine mehr hat, nimmt den Rückweg mit dem
+Notfallblatt — er hängt ebenfalls nicht am Serverschlüssel —, sonst setzt
+eine BetreiberIn zurück, die einzige BetreiberIn über den SQL-Weg oben.
 
 **Die Zeile „Rückweg-Prüfung" auf Betrieb → Status steht orange** (seit Web
 20.43.0, Konzept RW): Der Selbsttest hat den festen Vektor nicht bestanden,

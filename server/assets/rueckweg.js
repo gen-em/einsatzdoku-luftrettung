@@ -25,7 +25,7 @@
  * weist `edka1:` hier ab (`RW_PRIVAT_RE`, E-RW-05).
  *
  * ===========================================================================
- * ZWEI AUFRUFER
+ * DREI AUFRUFER
  * ===========================================================================
  *
  *   anlegen()   still, nach der Anmeldung — `unlock.js` ruft es, wenn das
@@ -38,6 +38,12 @@
  *               Inhaltsschlüssel über `EdSchluessel.oeffnen()` — dieselbe
  *               Wache gegen `pat_key_check` wie „Neuen
  *               Wiederherstellungsschlüssel erzeugen" — und ersetzt.
+ *   signieren() der Rückweg selbst, am Code-Schritt der Anmeldung (RW-03,
+ *               `login.php?weg=schluessel`): Zettel → Wiederherstellungs-
+ *               Hülle → Inhaltsschlüssel → privater Teil → Signatur über die
+ *               Nachricht, die der SERVER gebaut hat (`RW_NACHRICHT`,
+ *               E-RW-04, -18). Der Zettel verlässt den Browser nie; passt er
+ *               nicht, wird NICHTS gesendet.
  *
  * Erwartet: EdCrypto (crypto.js), EdApi (api.js, im Kopf jeder Seite); für
  * erneuern() zusätzlich EdSchluessel (schluessel.js). Alle werden zur
@@ -104,6 +110,52 @@
     if (!antw.ok) { throw new Error(antw.meldung); }
   }
 
+  /**
+   * Den Rückweg gehen: die Nachricht des Servers signieren (RW-03).
+   *
+   * @param {object} o
+   *   schluessel  der Wiederherstellungsschlüssel, wie getippt
+   *   wrapRc      `pat_wrap_rc` — der Inhaltsschlüssel unter dem Zettel
+   *   privat      `rw_privat` — der private Teil unter dem Inhaltsschlüssel
+   *   nachricht   `RW_NACHRICHT`, gebaut von `rw_nachricht()` auf dem Server
+   * @returns {Promise<string>} die Signatur, 64 Byte `r‖s`, Base64
+   * @throws {Error} `grund` 'form' (Tippfehler — die Meldung sagt welcher),
+   *   'passt' (der Zettel öffnet die Hülle nicht) oder 'paar' (die Hülle
+   *   geht auf, der private Teil nicht — ein Paar aus einer früheren
+   *   Einrichtung)
+   */
+  async function signieren(o) {
+    const p = EdCrypto.pruefeRecoveryCode(o.schluessel);
+    if (!p.ok) {
+      const f = new Error(EdCrypto.recoveryCodeMeldung(p));
+      f.grund = 'form';
+      throw f;
+    }
+    const rk = await EdCrypto.recoveryKeyHex(o.schluessel);
+    let ck;
+    try {
+      ck = await EdCrypto.decrypt(rk, o.wrapRc);
+    } catch (e) {
+      const f = new Error('passt');
+      f.grund = 'passt';
+      throw f;
+    }
+    let pkcs8;
+    try {
+      pkcs8 = await EdCrypto.decrypt(ck, o.privat);
+    } catch (e) {
+      const f = new Error('paar');
+      f.grund = 'paar';
+      throw f;
+    }
+    const der = Uint8Array.from(atob(pkcs8), c => c.charCodeAt(0));
+    const schluessel = await crypto.subtle.importKey('pkcs8', der,
+      { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+    const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, schluessel,
+                                         new TextEncoder().encode(o.nachricht));
+    return base64(sig);
+  }
+
   window.EdRueckweg = { paarErzeugen: paarErzeugen, paarSenden: paarSenden,
-                        anlegen: anlegen, erneuern: erneuern };
+                        anlegen: anlegen, erneuern: erneuern, signieren: signieren };
 })();

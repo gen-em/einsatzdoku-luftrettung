@@ -2781,6 +2781,19 @@ stand das Formular im Mockup verschachtelt in einem anderen, und der Parser
 hat es verworfen; die Karte (b) desselben Mockups zeigt die richtige
 Darstellung (F-P5c-107).
 
+**Der Rückweg mit dem Wiederherstellungsschlüssel — ohne neuen Baustein**
+(Konzept RW, M-RW-01, freigegeben 24.09.2026, E-RW-13; seit Web 20.44.0 bzw.
+20.45.0). Der **Schlüsselschritt** in `login.php` ist `.anmeldung-schritt`
+über einem gewöhnlichen `ui_feld` und der `.zustandszeile` für die
+Sofortprüfung — dieselbe Form wie das Schlüsselfeld der Passwort-Reset-Seite.
+Die **Erfolgskarte** ist `.anmeldung-schritt`, eine Meldung im Ton `ok` und ein
+Knopf. Die Zeile **„Rückweg mit dem Wiederherstellungsschlüssel"** in der
+Karte „Zweitfaktor" ist eine `.zeile` (9.2) mit Plakette (9.23: blau
+„eingerichtet", neutral „ab der nächsten Anmeldung"); **„Rückweg erneuern"**
+öffnet den Dialog mit dem Aufbau des Passwortabschnitts von „Neuen
+Wiederherstellungsschlüssel erzeugen". Keine neue Klasse, kein neues Symbol,
+keine neue Farbe.
+
 ### 9.39 Druckblatt (`.blatt-druck`)
 
 *Seit Web 20.42.0 (P5c/AP5, E-P5c-08). **Neuer Baustein**, freigegeben mit

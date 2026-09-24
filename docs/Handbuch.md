@@ -428,7 +428,9 @@ still nachgezogen, danach ist es wieder eine Rechnung. Zu tun ist nichts.
 **Mit Zweitfaktor kommt nach dem Passwort ein zweiter Schritt** (seit Web
 20.42.0): Die Seite fragt nach dem sechsstelligen Code aus der App auf deinem
 Handy. Für Support, Admin und BetreiberIn ist er Pflicht, für alle anderen ein
-Angebot — alles dazu in 3.1f.
+Angebot — alles dazu in 3.1f. **Handy und Codes verloren?** Seit Web 20.45.0
+genügt am Code-Schritt der Wiederherstellungsschlüssel vom Notfallblatt
+(„Gerät und Codes verloren?", ebenfalls 3.1f).
 
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
@@ -758,17 +760,33 @@ eingeschaltetem Zweitfaktor zeigt die Karte eine dritte Zeile: **„eingerichtet
 mit Datum, oder **„ab der nächsten Anmeldung"**. Du musst dafür nichts tun —
 beim Anmelden legt dein Browser still ein Schlüsselpaar an und verschließt
 dessen geheime Hälfte mit deinem Schlüssel, den nur du öffnen kannst; der
-Server bekommt davon nichts, womit er etwas öffnen könnte. Mit ihm soll künftig
-der **Wiederherstellungsschlüssel vom Notfallblatt** genügen, wenn Handy und
-Codes fehlen. **„Rückweg erneuern"** legt ein neues Paar an und fragt dafür
+Server bekommt davon nichts, womit er etwas öffnen könnte. Mit ihm genügt der
+**Wiederherstellungsschlüssel vom Notfallblatt**, wenn Handy und Codes fehlen
+(unten). **„Rückweg erneuern"** legt ein neues Paar an und fragt dafür
 dein Passwort; das Notfallblatt bleibt gültig, und du bekommst eine Mail —
 erneuert ihn jemand anderes an deinem Konto, erfährst du es so. Das
 Demo-Konto hat keinen Rückweg.
 
-**Handy weg und die Codes auch?** Dann setzt die Verwaltung den Zweitfaktor
-zurück; danach meldest du dich nur mit dem Passwort an und richtest ihn neu
-ein. Den Weg über den Wiederherstellungsschlüssel bereitet die Karte vor (die
-Zeile „Rückweg" oben); an der Anmeldung steht er noch nicht.
+**Handy weg und die Codes auch?** Seit Web 20.45.0 geht es ohne die
+Verwaltung: Nach dem Passwort im Code-Schritt **„Gerät und Codes verloren?
+Wiederherstellungsschlüssel verwenden"** (auch aus „Wiederherstellungscode
+verwenden" heraus) und den **Wiederherstellungsschlüssel vom Notfallblatt**
+eintippen — Bindestriche und Leerzeichen zählen nicht. Ein Tippfehler wird
+beim Tippen benannt; ein Schlüssel, der nicht zu deinem Konto passt, auch —
+dann geht nichts an den Server. **„Zweitfaktor zurücksetzen"** schaltet ihn
+aus, und du bist angemeldet; eine Mail geht an deine Adresse, der Schritt
+steht im Protokoll. Richte ihn danach unter Einstellungen → Profil mit dem
+neuen Gerät wieder ein — für Support, Admin und BetreiberIn geschieht das
+sofort, du landest unmittelbar auf „Zweitfaktor einrichten".
+
+Der Schlüssel verlässt dabei deinen Browser nicht: Er öffnet dort dein
+Schlüsselpaar (Zeile „Rückweg" oben), und der Server prüft nur eine
+Unterschrift damit. **Ohne Passwort hilft der Zettel nicht**, und eine
+gestohlene Datenbank allein genügt nicht, um den Zweitfaktor abzuschalten.
+Fehlt der Verweis — das Konto hat noch kein Paar, oder die Anlage kann die
+Unterschrift gerade nicht prüfen (Betrieb → Status, „Rückweg-Prüfung") —,
+setzt die Verwaltung zurück, wie bisher. Dasselbe gilt, wenn auch das
+Notfallblatt fehlt.
 
 **Nach einem Umzug der Anlage auf einen anderen Serverschlüssel** — etwa nach
 einer Wiederherstellung aus einem Komplett-Backup — lässt sich das Geheimnis
@@ -3435,7 +3453,7 @@ Darunter:
 | Karte | Was dort steht |
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** auf alles, was dieses Konto getan hat oder was ihm geschah (11.7). |
-| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg; die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich bei der nächsten Anmeldung. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine andere BetreiberIn zurück. Der Support sieht die Karte nicht. |
+| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg; die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich bei der nächsten Anmeldung. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine andere BetreiberIn zurück. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |

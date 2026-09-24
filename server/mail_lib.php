@@ -450,22 +450,23 @@ function mail_katalog(): array
         'totp_zurueckgesetzt' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Zweitfaktor zurückgesetzt — ' . $n,
+            /* DER ERSTE SATZ HÄNGT AM WEG (Konzept RW, RW-03, E-RW-14): Die
+             * Verwaltung (E-P5c-42) oder der Wiederherstellungsschlüssel am
+             * Code-Schritt. `weg` ist kein Pflichtwert — fehlt er, bleibt der
+             * Satz der Verwaltung stehen, wörtlich wie seit Web 20.42.0. */
             'text' => fn(array $d): string => mail_rahmen('Hallo,',
-                "die Verwaltung der " . $n . " hat den Zweitfaktor deines Kontos
-"
-                . "zurückgesetzt. Die Anmeldung fragt ab jetzt nur nach dem Passwort; deine
-"
-                . "Wiederherstellungscodes und ein gedrucktes Codeblatt gelten nicht mehr.
-
-"
-                . "Richte ihn nach der nächsten Anmeldung unter Einstellungen → Profil neu ein —
-"
-                . "für Support, Admin und BetreiberIn geschieht das beim Anmelden von selbst:
-
-"
+                (($d['weg'] ?? '') === 'schluessel'
+                    ? "der Zweitfaktor deines Kontos bei der " . $n . " ist mit dem\n"
+                    . "Wiederherstellungsschlüssel vom Notfallblatt zurückgesetzt worden. Die Anmeldung\n"
+                    . "fragt ab jetzt nur nach dem Passwort; deine\n"
+                    : "die Verwaltung der " . $n . " hat den Zweitfaktor deines Kontos\n"
+                    . "zurückgesetzt. Die Anmeldung fragt ab jetzt nur nach dem Passwort; deine\n")
+                . "Wiederherstellungscodes und ein gedrucktes Codeblatt gelten nicht mehr.\n\n"
+                . "Richte ihn nach der nächsten Anmeldung unter Einstellungen → Profil neu ein —\n"
+                . "für Support, Admin und BetreiberIn geschieht das beim Anmelden von selbst:\n\n"
                 . $d['link'],
-                "Falls du darum nicht gebeten hast, melde dich bitte umgehend bei der Verwaltung
-"
+                (($d['weg'] ?? '') === 'schluessel' ? "Falls du das nicht warst" : "Falls du darum nicht gebeten hast")
+                . ", melde dich bitte umgehend bei der Verwaltung\n"
                 . "und ändere dein Passwort."),
         ],
 

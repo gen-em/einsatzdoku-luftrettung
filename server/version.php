@@ -7503,5 +7503,19 @@ declare(strict_types=1);
  *   Startseite eines Kontos ohne Diensttag tat es nie, und das sind gerade die
  *   Konten der BetreiberInnen (F-RW-14). Benutzt wird das Paar erst mit
  *   RW-03, am Code-Schritt.
+ *
+ * 20.45.0 — DER RUECKWEG AM CODE-SCHRITT (Konzept RW, RW-03). Nebenstufe
+ *   ohne Migration. Wer Handy und Codes verloren hat, setzt den Zweitfaktor
+ *   mit dem Wiederherstellungsschluessel vom Notfallblatt selbst zurueck:
+ *   „Geraet und Codes verloren?" im Code-Schritt, der Zettel oeffnet im
+ *   Browser das Paar, und der Server prueft eine Signatur ueber eine
+ *   Herausforderung, die er selbst gestellt hat — einmal, fuenf Minuten, im
+ *   Topf `totp`. Danach ist der Zweitfaktor aus — abgeschaltet erst hinter
+ *   dem Tor, sonst verloere ihn ein gesperrtes Konto ohne Anmeldung und ohne
+ *   Mail (F-RW-21): die Rolle user bekommt eine Erfolgskarte, eine
+ *   Pflichtrolle geht unmittelbar ins Einrichtungstor.
+ *   Ein Datenbankabzug kann pruefen, nicht signieren (F-P5c-106 geschlossen).
+ *   Fuer alle vier Rollen (E-RW-08) — Nr. 249 ist damit fuer den Fall
+ *   geloest, dass die einzige BetreiberIn ihr Notfallblatt hat.
  */
-const WEB_VERSION = '20.44.0';
+const WEB_VERSION = '20.45.0';

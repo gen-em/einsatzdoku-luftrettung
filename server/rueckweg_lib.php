@@ -282,3 +282,107 @@ function rw_zustand(int $userId, ?PDO $pdo = null): array
         ? ['stand' => 'da', 'seit' => $z[1] !== null ? (string)$z[1] : null]
         : ['stand' => 'fehlt', 'seit' => null];
 }
+
+/* ===========================================================================
+ * DER WEG AM CODE-SCHRITT (RW-03; E-RW-01, -04, -08, -14)
+ * ===========================================================================
+ *
+ * Die Prüfung steht HIER und nicht in `login.php`, damit die Rückwegprobe
+ * sie ohne HTTP messen kann (Konzept RW 5.3, Teil B): Sie bekommt die halbe
+ * Sitzung als Feld und die Signatur als Text, und sie tut alles außer der
+ * Sitzung selbst — Herausforderung verbrauchen, Topf `totp`, Signatur
+ * prüfen, Zweitfaktor abschalten. Sitzung, Mail und Weiterleitung bleiben
+ * beim Aufrufer, wie beim Code und bei der Verwaltung (`totp_abschalten()`
+ * schickt keine Mail).
+ */
+
+/**
+ * Wird der Weg diesem Konto angeboten? Nur, wenn die Anlage prüfen kann
+ * (`rw_verfuegbar()`), das Konto ein Paar hat und eine
+ * Wiederherstellungs-Hülle — ohne sie öffnet der Zettel im Browser nichts
+ * (E-RW-01, -11). Sonst steht am Code-Schritt kein Verweis, und ein POST
+ * dorthin wird abgewiesen.
+ */
+function rw_angeboten(int $kontoId): bool
+{
+    if (!rw_spalten_da() || !rw_verfuegbar()) { return false; }
+    $st = db()->prepare('SELECT rw_oeffentlich IS NOT NULL AND rw_privat IS NOT NULL
+                                AND pat_wrap_rc IS NOT NULL AND pat_wrap_rc <> \'\'
+                           FROM users WHERE id = ?');
+    $st->execute([$kontoId]);
+    return (int)$st->fetchColumn() === 1;
+}
+
+/**
+ * Eine neue Herausforderung in die halbe Sitzung (E-RW-04): 32 Zufallsbytes,
+ * fünf Minuten gültig, einmal. Jede Anzeige des Schlüsselschritts stellt
+ * eine neue; die vorige ist damit verbraucht.
+ */
+function rw_herausforderung_stellen(array &$halb): string
+{
+    $h = rw_herausforderung();
+    $halb['rw_herausforderung'] = $h;
+    $halb['rw_bis'] = time() + RW_HERAUSFORDERUNG_S;
+    return $h;
+}
+
+/**
+ * Den Rückweg prüfen: Signatur gegen die Herausforderung der halben Sitzung.
+ *
+ * DIE HERAUSFORDERUNG WIRD SOFORT VERBRAUCHT, gleich welcher Ausgang
+ * (E-RW-04): Eine zweite Einsendung derselben Signatur findet keine mehr.
+ * DIE NACHRICHT BAUT DIESE FUNKTION aus Konto und Herausforderung der
+ * Sitzung — aus dem Rumpf kommt nur die Signatur.
+ *
+ * DER TOPF IST `totp`, mit denselben Merkmalen wie der Code (E-RW-14, 3.3):
+ * Der Browser sendet nur, wenn die Hülle aufging; was hier scheitert, ist
+ * eine Fälschung oder ein Programmfehler, und beides wird gezählt. Eine
+ * abgelaufene oder fehlende Herausforderung zählt nicht — wer nach der
+ * Mittagspause kommt, hat nichts versucht.
+ *
+ * DAS JA ZÄHLT UND VOLLZIEHT DER AUFRUFER (F-RW-21). Diese Funktion schaltet
+ * nichts ab und zählt keinen Erfolg: `login.php` ruft `rate_erfolg()`, dann
+ * das Tor `login_zugang()` — Kontostatus, Wartung —, und erst dahinter
+ * `totp_abschalten()`. In der ersten Fassung stand das Abschalten hier, also
+ * VOR dem Tor: Ein gesperrtes Konto oder ein Konto während der Wartung verlor
+ * seinen Zweitfaktor, ohne angemeldet zu werden und ohne Mail — die kommt
+ * erst hinter dem Tor. So steht es wie beim Code-Schritt, wo
+ * `totp_anmeldung_pruefen()` prüft und `login.php` zählt.
+ *
+ * @param array $halb  `$_SESSION['totp_halb']` (konto, email, bis, …)
+ * @return array{ok: bool, grund?: string}  grund: 'abgelaufen',
+ *   'nicht_angeboten', 'gesperrt', 'signatur'
+ */
+function rw_rueckweg_pruefen(array &$halb, string $signaturB64): array
+{
+    $herausforderung = (string)($halb['rw_herausforderung'] ?? '');
+    $bis = (int)($halb['rw_bis'] ?? 0);
+    unset($halb['rw_herausforderung'], $halb['rw_bis']);
+
+    $kontoId = (int)($halb['konto'] ?? 0);
+    if ($kontoId <= 0) { return ['ok' => false, 'grund' => 'abgelaufen']; }
+    /* ERST „WIRD ER ANGEBOTEN?", DANN DIE HERAUSFORDERUNG. Einem Konto ohne
+     * Paar wurde der Schlüsselschritt nie gezeigt, also hat es nie eine
+     * Herausforderung — in der anderen Reihenfolge hieße ein handgebauter
+     * POST dorthin „abgelaufen", und die Seite böte an, es noch einmal zu
+     * versuchen (gefunden mit der Rückwegprobe, B8). */
+    if (!rw_angeboten($kontoId)) { return ['ok' => false, 'grund' => 'nicht_angeboten']; }
+    if (!preg_match('/^[0-9a-f]{64}$/', $herausforderung) || $bis < time()) {
+        return ['ok' => false, 'grund' => 'abgelaufen'];
+    }
+
+    require_once __DIR__ . '/ratelimit_lib.php';
+    $merkmale = [rate_merkmal_kennung((string)($halb['email'] ?? ''))];
+    if (!rate_erlaubt('totp', null, $merkmale)) { return ['ok' => false, 'grund' => 'gesperrt']; }
+
+    $st = db()->prepare('SELECT rw_oeffentlich FROM users WHERE id = ?');
+    $st->execute([$kontoId]);
+    $oeffentlich = (string)$st->fetchColumn();
+    $signatur = base64_decode($signaturB64, true);
+    if ($signatur === false
+        || !rw_pruefen($oeffentlich, rw_nachricht($kontoId, $herausforderung), $signatur)) {
+        rate_misserfolg('totp', null, $merkmale);
+        return ['ok' => false, 'grund' => rate_erlaubt('totp', null, $merkmale) ? 'signatur' : 'gesperrt'];
+    }
+    return ['ok' => true];
+}

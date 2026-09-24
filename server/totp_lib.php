@@ -355,9 +355,13 @@ function totp_anmeldung_pruefen(int $userId, string $eingabe, ?string $nur = nul
 /**
  * Den Zweitfaktor eines Kontos abschalten: Geheimnis, Zeitschritt, Codes weg.
  *
- * `$weg` sagt, wer es tat: 'selbst' (Profil, nur ohne Pflicht) oder
- * 'verwaltung' (Kontoseite, E-P5c-42). Das Protokoll unterscheidet beides
- * mit der Art, die Mail an die Kontoadresse verschickt der Aufrufer.
+ * `$weg` sagt, wer es tat: 'selbst' (Profil, nur ohne Pflicht),
+ * 'verwaltung' (Kontoseite, E-P5c-42) oder — seit Konzept RW, RW-03 —
+ * 'schluessel' (der Rückweg am Code-Schritt, `login.php` hinter dem Tor).
+ * Verwaltung und Schlüssel sind beide ein ZURÜCKSETZEN und schreiben
+ * `totp_zurueckgesetzt`; `daten.weg` unterscheidet sie (E-RW-14). Die Mail
+ * an die Kontoadresse verschickt der Aufrufer. EINE Funktion, drei
+ * Aufrufer — RW baut das Zurücksetzen nicht ein zweites Mal (3.3).
  */
 function totp_abschalten(int $userId, string $weg): bool
 {
@@ -370,9 +374,12 @@ function totp_abschalten(int $userId, string $weg): bool
     });
     if ($vorher['an']) {
         require_once __DIR__ . '/protokoll_lib.php';
-        protokoll('verwaltung', $weg === 'verwaltung' ? 'totp_zurueckgesetzt' : 'totp_ausgeschaltet',
-                  $weg === 'verwaltung' ? 'Zweitfaktor durch die Verwaltung zurückgesetzt'
-                                        : 'Zweitfaktor ausgeschaltet',
+        protokoll('verwaltung', $weg === 'selbst' ? 'totp_ausgeschaltet' : 'totp_zurueckgesetzt',
+                  match ($weg) {
+                      'verwaltung' => 'Zweitfaktor durch die Verwaltung zurückgesetzt',
+                      'schluessel' => 'Zweitfaktor mit dem Wiederherstellungsschlüssel zurückgesetzt',
+                      default      => 'Zweitfaktor ausgeschaltet',
+                  },
                   ['weg' => $weg], $userId);
     }
     return true;

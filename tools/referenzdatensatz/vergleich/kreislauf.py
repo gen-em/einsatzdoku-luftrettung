@@ -182,19 +182,26 @@ def konto_loeschen(basis: str, admin: AdminZugang, konto: str,
 
 
 def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
-                  passwort: str) -> None:
-    """Konto ueber den Einladungsweg anlegen und das Passwort im Browser setzen."""
+                  passwort: str, rolle: str = "user", rc_datei: str | None = None) -> None:
+    """Konto ueber den Einladungsweg anlegen und das Passwort im Browser setzen.
+
+    `rolle` und `rc_datei` seit Konzept RW (RW-03): Die Rueckwegprobe braucht
+    auch eine BetreiberIn, und sie braucht den Wiederherstellungsschluessel,
+    den `passwort_setzen.mjs` von der Seite liest — ohne ihn gibt es den
+    Rueckweg nicht zu gehen. `rc_datei` ist die Ausgabedatei dieses
+    Skripts (JSON, Feld `recovery_code`)."""
     s = sitzungsmodul.Sitzung(basis).anmelden(*admin)
     s.csrf_auffrischen("admin_users.php")
     antwort = s.post("admin_users.php", {"csrf": s.csrf, "action": "user_add",
-                                         "email": konto, "role": "user"})
+                                         "email": konto, "role": rolle})
     m = re.search(r"pw_handling\.php\?token=([0-9a-f]{64})", antwort.text)
     if not m:
         raise RuntimeError("Kontoanlage ohne Einrichtungslink: "
                            + (sitzungsmodul.fehlertext(antwort.text) or "unbekannt"))
     link = f"{basis}/pw_handling.php?token={m.group(1)}"
     melde(f"  Konto {konto} angelegt.")
-    lauf(["node", str(WURZEL / "einspielen" / "passwort_setzen.mjs"), link, passwort],
+    lauf(["node", str(WURZEL / "einspielen" / "passwort_setzen.mjs"), link, passwort]
+         + ([rc_datei] if rc_datei else []),
          env={**os.environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT})
     melde("  Passwort im Browser gesetzt (dort entsteht das Schlüsselmaterial).")
 
