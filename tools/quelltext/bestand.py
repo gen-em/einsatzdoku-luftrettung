@@ -30,6 +30,8 @@ WAS ER MISST — sechs Regeln, jede mit Namen im Befund:
   probe      jede Probe in tools/proben/proben.sh hat eine Einstiegsdatei,
              und deren Kopfkommentar trägt genau eine Anlass-Zeile mit
              Backlog-Nummer; kein Probenordner ohne Eintrag im Läufer
+  backlog    keine Nummer in docs/Backlog.md zweimal — bis BR-03 ein eigener
+             Schritt in Stufe 1, den Station B nie fuhr (F-BR-03)
 
 WAS ER NICHT MISST, und das ist die benannte Grenze: den Inhalt einer
 Anleitung, ob der Anlass zur Probe passt, ob ein Werkzeug überflüssig ist.
@@ -64,7 +66,7 @@ LOSE_ERLAUBT = {'motor.mjs'}                 # E-BR-03 (4), beim Namen — kein 
 # Wo ein Ordner gerufen sein kann (E-BR-03 (3)). Workflows kommen als Muster dazu.
 RUFER = ['tools/pruefstand/pruefablauf.json', 'tools/pruefstand/pruefen.sh',
          'docs/Sandbox-Setup.md']
-REGELN = ['form', 'anleitung', 'anlass', 'inventur', 'lose', 'probe']
+REGELN = ['form', 'anleitung', 'anlass', 'inventur', 'lose', 'probe', 'backlog']
 
 ZAUN_RE = re.compile(r'^\s*(```|~~~)')
 ABSCHNITT_RE = re.compile(r'^##(?!#)\s*(.+?)\s*$')
@@ -132,10 +134,25 @@ def anlass_zeilen(zeilen):
     return aus
 
 
-def backlog_nummern(wurzel):
+def backlog_zeilen(wurzel):
+    """{Nummer: [Zeilen]} — jede Zeile, die mit „Zahl und Punkt" beginnt.
+
+    DIESELBE LESART WIE DER SCHRITT, DEN DIESE REGEL ABLÖST (`grep -oE
+    '^[0-9]+\.'`): Auch ein Datum am Zeilenanfang zählt als Nummer. Das ist
+    Absicht und steht im Kopf von Backlog.md — wer dort umbricht, setzt den
+    Umbruch vor das Datum."""
     pfad = os.path.join(wurzel, 'docs', 'Backlog.md')
+    aus = {}
     with open(pfad, encoding='utf-8') as f:
-        return {int(m.group(1)) for m in map(BACKLOG_RE.match, f) if m}
+        for i, z in enumerate(f, 1):
+            m = BACKLOG_RE.match(z)
+            if m:
+                aus.setdefault(int(m.group(1)), []).append(i)
+    return aus
+
+
+def backlog_nummern(wurzel):
+    return set(backlog_zeilen(wurzel))
 
 
 def anlass_pruefen(text, backlog, erzeuger_erlaubt):
@@ -350,6 +367,12 @@ def messen(wurzel):
             if u not in belegt:
                 befunde.append(('probe', f'tools/proben/{u}/ hat keinen Eintrag im Läufer — '
                                          f'ihr Anlass ist nicht messbar'))
+    # backlog — keine Nummer zweimal
+    for nr, zeilen in sorted(backlog_zeilen(wurzel).items()):
+        if len(zeilen) > 1:
+            befunde.append(('backlog', f'docs/Backlog.md: Nr. {nr} steht {len(zeilen)}-mal '
+                                       f'(Zeilen {", ".join(map(str, zeilen))})'))
+
     befunde.sort(key=lambda b: REGELN.index(b[0]))     # stabil: je Regel in Fundreihenfolge
     return befunde, zahlen
 
@@ -549,6 +572,10 @@ FAELLE = [
      _setze('tools/proben/drei/probe.php', '<?php\n/* Anlass: Nr. 1 — x. */\n')),
     ('probe — Einstiegsdatei aus einer Funktion fehlt', 'probe',
      _weg('tools/proben/zwei/probe.mjs')),
+    ('backlog — eine Nummer zweimal', 'backlog',
+     _mehr('docs/Backlog.md', '2. **Zwei.**\n', '2. **Zwei.**\n\n2. **Noch einmal zwei.**\n')),
+    ('backlog — ein Datum am Zeilenanfang zählt wie eine Nummer', 'backlog',
+     _mehr('docs/Backlog.md', '2. **Zwei.**\n', '2. **Zwei.** Aus der Durchsicht vom\n1.09.2026.\n')),
 ]
 
 

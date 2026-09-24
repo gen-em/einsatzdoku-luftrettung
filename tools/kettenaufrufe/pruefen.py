@@ -243,7 +243,10 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
         # Kette nennen Werkzeuge beim Namen ("die Datei server/install.php
         # EINMAL von Hand hochladen") -- das ist Prosa, kein Aufruf. Ebenso
         # ein case-Muster (`*install.php*)`).
-        if re.match(r'(?:echo|printf)\b', zeile) or re.match(r'[^|;&]*\)\s*$', zeile):
+        # EIN CASE-MUSTER HAT VOR SEINEM `)` KEINE OEFFNENDE KLAMMER. Bis BR-03
+        # stand hier `[^|;&]*\)`, und das traf auch `x=$(werkzeug --schalter)`:
+        # Jede Befehlsersetzung am Zeilenende ging ungeprueft durch.
+        if re.match(r'(?:echo|printf)\b', zeile) or re.match(r'[^|;&(]*\)\s*$', zeile):
             continue
         m = AUFRUF_RE.search(zeile)
         if not m:
@@ -292,7 +295,10 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
         for t in teile:
             if not t.startswith('--'):
                 continue
-            name = t.split('=', 1)[0]
+            # `x=$(werkzeug --schalter)`: Die schliessende Klammer der
+            # Befehlsersetzung haengt am letzten Wort. Bis BR-03 las die
+            # Pruefung `--erster)` als Schalternamen (baumsuche.py).
+            name = t.split('=', 1)[0].rstrip(')')
             if '$' in name:          # ein Schalter aus einer Variablen
                 hin.append(f'{lauf} · {schritt}: {rel} — Schalter aus Variable '
                            f'({name}), UNGEPRUEFT')
@@ -413,6 +419,10 @@ def selbstprobe() -> int:
          'bash tools/proben/proben.sh wiederherstelung'),
         ('GEGENPROBE: der neunte Name des Quelltextlaeufers (BR-01)', False,
          'bash tools/quelltext/pruefen.sh bestand'),
+        ('GEGENPROBE: der letzte Schalter in einer Befehlsersetzung (BR-03)', False,
+         'treffer=$(python3 tools/kette/baumsuche.py --baum "$B" --fenster 30 --erster) || rc=$?'),
+        ('ein unbekannter Schalter in einer Befehlsersetzung', True,
+         'treffer=$(python3 tools/kette/baumsuche.py --baum "$B" --fenster 30 --zuerst)'),
         ('GEGENPROBE: eine Zeile ohne Werkzeugaufruf', False,
          'echo "nichts zu sehen" >> "$GITHUB_STEP_SUMMARY"'),
         ('GEGENPROBE: ein auskommentierter Aufruf', False,

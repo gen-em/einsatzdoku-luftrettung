@@ -52,6 +52,7 @@ Speicher.
 | **MariaDB** | jede Browserprobe, beide Kreisläufe, Bedienprobe, Wartungsprobe, `lokal_einrichten.sh` |
 | **ImageMagick** (`convert`, `compare`) | der Erzeuger `tools/erzeugen/uhr-bilder.sh` und jeder Bildvergleich |
 | **rsvg-convert** (`librsvg2-bin`) | dieselbe Kette: SVG nach PNG |
+| **cmark-gfm** | die Quelltextprüfung `handbuch` — rendern Handbuch und „Was ist NAdoku"? (seit BR-03) |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
 | **Systembibliotheken für Firefox und WebKit** | jede Aussage über die Oberfläche, die für mehr als Chromium gelten soll (Backlog Nr. 183) |

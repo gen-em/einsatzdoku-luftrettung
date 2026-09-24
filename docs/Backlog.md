@@ -21,8 +21,9 @@ Instanz sofort, wie alt der Wert ist. Anlass war die Durchsicht
 vom 12.09.2026: Von sechs Einträgen mit Zeilennummern waren alle sechs
 verschoben, von sieben gezählten Werten alle sieben veraltet — und keiner
 davon sah falsch aus. (Nebenbei: **Keine ZEILE darf mit einer Zahl und einem
-Punkt beginnen** — der Prüfschritt „Backlog — keine Nummer zweimal" in Stufe 1
-liest dort eine Backlog-Nummer. Es geht nicht nur um Absätze: Ein
+Punkt beginnen** — der Bestandsriegel (`tools/quelltext/bestand.py`, Regel
+`backlog`; bis BR-03 der Schritt „Backlog — keine Nummer zweimal") liest dort
+eine Backlog-Nummer. Es geht nicht nur um Absätze: Ein
 **Zeilenumbruch mitten im Fließtext**, nach dem zufällig ein Datum steht,
 genügt. Am 16.09.2026 ist genau das passiert — zwanzig Zeilen unter dieser
 Warnung, im Absatz zur Nummernvergabe: „… aus der Durchsicht vom

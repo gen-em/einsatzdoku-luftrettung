@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Quelltextprüfungen — ein Läufer für die neun Prüfungen, die nur Quelltext
-# lesen, nichts brauchen und im Tor laufen (E-PK-24, E-BR-08).
+# Quelltextprüfungen — ein Läufer für die elf Prüfungen, die nur Quelltext
+# lesen und im Tor laufen (E-PK-24, E-BR-08). `handbuch` braucht dazu
+# `cmark-gfm` (Ausbaustufe web); fehlt es, endet sie mit rc 2, nicht grün.
 #
 # Aufruf:  bash tools/quelltext/pruefen.sh <name> [zusatz…]
 #          bash tools/quelltext/pruefen.sh alle
 #          bash tools/quelltext/pruefen.sh --selbstprobe
 #
 # Namen:   installweiche sitzungshaertung csp jobregister migrationsregister
-#          linkprobe vollstaendigkeit textprobe bestand
+#          linkprobe vollstaendigkeit textprobe bestand pysyntax handbuch
 #
 # Vor PK-04 waren das acht Ordner mit acht Anleitungen und acht
 # Aufrufkonventionen; die Messungen darunter sind unverändert (Abnahme von
@@ -18,15 +19,17 @@ WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$WURZEL" || exit 1
 
 NAMEN=(installweiche sitzungshaertung csp jobregister migrationsregister
-       linkprobe vollstaendigkeit textprobe bestand)
-# Die sechs mit eingebauter Selbstprobe. `linkprobe` und `vollstaendigkeit`
+       linkprobe vollstaendigkeit textprobe bestand pysyntax handbuch)
+# Die acht mit eingebauter Selbstprobe. `linkprobe` und `vollstaendigkeit`
 # haben keine und hatten vor dem Umzug auch keine — das ist kein Rückschritt,
 # sondern ein Rest, den E-PK-24 mit dem gemeinsamen Rahmen erst noch einlöst.
-SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister bestand)
+SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister bestand
+        pysyntax handbuch)
 
 starter() {   # starter <name> — womit die Datei gefahren wird
     case "$1" in
-        linkprobe|vollstaendigkeit|textprobe|bestand) echo "python3 tools/quelltext/$1.py" ;;
+        linkprobe|vollstaendigkeit|textprobe|bestand|pysyntax|handbuch)
+                                              echo "python3 tools/quelltext/$1.py" ;;
         *)                                    echo "php tools/quelltext/$1.php" ;;
     esac
 }

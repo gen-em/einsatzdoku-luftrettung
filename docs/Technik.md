@@ -566,17 +566,21 @@ Daten erst nach Server-Bestätigung.
 │   │                      Laufbeginn; `--selbstprobe` weist an ELF Lagen
 │   │                      nach, dass es auch zugeht — fuenf fuer das Tor,
 │   │                      sechs fuer `pause` und die Fehlerantwort. Sie
-│   │                      laeuft in Stufe 1 UND vor dem Tor
-│   ├── kettenaufrufe/     haelt JEDEN Werkzeugaufruf der drei Arbeitslaeufe
-│   │                      gegen die tatsaechliche Schnittstelle des
-│   │                      aufgerufenen Werkzeugs — `add_argument`, die
-│   │                      Handparser (`wert('--x'`, `flag('--x'`),
-│   │                      `BEKANNT`-Mengen, `case`-Zweige, `$argv`. FUEHRT
+│   │                      laeuft in Stufe 1 UND vor dem Tor. Dazu seit
+│   │                      BR-03 baumsuche.py: die EINE Suche nach gruenen
+│   │                      Stufe-1-Laeufen mit demselben Baum, fuer
+│   │                      „Schon gemessen?" und das Produktionstor (E-BR-09)
+│   ├── kettenaufrufe/     haelt JEDEN Werkzeugaufruf der Arbeitslaeufe und
+│   │                      von pruefablauf.json gegen die tatsaechliche
+│   │                      Schnittstelle des aufgerufenen Werkzeugs —
+│   │                      `add_argument`, die Handparser (`wert('--x'`,
+│   │                      `flag('--x'`), `BEKANNT`-Mengen, `case`-Zweige,
+│   │                      Namenslisten der Sammellaeufer, `$argv`. FUEHRT
 │   │                      KEIN WERKZEUG AUS, deshalb Stufe 1 (Nr. 217).
 │   │                      Werkzeuge, deren Schnittstelle nicht aus dem
 │   │                      Quelltext lesbar ist, zaehlt es als UNGEPRUEFT und
-│   │                      nennt die Zahl. Mit `--probe` (10 Faelle, davon 5
-│   │                      die NICHT anschlagen duerfen)
+│   │                      nennt die Zahl. Mit `--probe` (Zahl in seiner
+│   │                      LIESMICH)
 │   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit dem
 │   │                      ZEIGER `produktion` (`--stand`, 6.6a): jede Datei
 │   │                      unter `server/assets/`
@@ -9178,14 +9182,12 @@ Bilderzahl, die längst nicht mehr stimmte.
 |---|---|
 | Fassungen nennen (Web, Uhr, Android) | eine Auskunft — aber eine unlesbare Fassung ist rot |
 | `php -l` über `server/` und `tools/` | 0 Fehler, und mindestens eine Datei gelesen; die Zahl der versionierten `server/`-Dateien geht in die Gegenlesung (`syntax-php`) |
-| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle neun Prüfungen grün (`tools/quelltext/LIESMICH.md`) |
+| `cmark-gfm` bereitstellen | für die Quelltextprüfung `handbuch` |
+| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle elf Prüfungen grün (`tools/quelltext/LIESMICH.md`) — darunter seit BR-03 Backlog-Nummern (`bestand`), Python übersetzen (`pysyntax`) und Handbuch rendern (`handbuch`), bis dahin drei eigene Schritte |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Umgebungswert eine Ebene höher | alle sechs Namen leer (6.5, E-KH-28) |
 | `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt |
-| `tools/kette/tor.py`, `download_lib.mjs`, `tools/kette/freigabe.py`, je `--selbstprobe` | jede Lage erfüllt |
-| Python-Werkzeuge übersetzen | 0 Syntaxfehler |
-| Backlog-Nummern (`grep … uniq -d`) | leer |
-| Handbuch und „Was ist NAdoku" rendern | beide rendern, 0 Bilder aus fremder Quelle |
+| `tools/kette/tor.py`, `download_lib.mjs`, `tools/kette/freigabe.py`, `tools/kette/baumsuche.py`, je `--selbstprobe` | jede Lage erfüllt |
 | `tools/spaltenregister/pruefen.php`, `tools/zaehlung/zaehlen.php`, je mit Selbstprobe | 0 Befunde, 0 Zeilen über der Decke |
 | `tools/proben/proben.sh rechtstexte` | 0 Fehlschläge |
 | **Prüfbericht gegenlesen** (überall außer auf `main`) | `bericht.py lesen` rc 0: Baum, Stufe, Flächen, alle Riegel, keine rote und keine nicht gemessene Probe |
@@ -9236,10 +9238,11 @@ Zweigschutz auf `main`. **Seine Pflichtprüfung heißt `Stufe 1`**, nach dem
 Namen des **Jobs**, nicht nach dem des Arbeitslaufs („Prüfung") und nicht
 nach dem Dateinamen; wer sie anders einträgt, hängt sie an nichts
 (Rahmenplan 6b). Er ist seit dem **21.09.2026** gesetzt — bis dahin war der
-Lauf eine Auskunft und keine Schranke. Denselben Namen suchen das
-Produktionstor in `ausliefern-lauf.yml` (es liefert `tools/kette/freigabe.py`
-die Zahl der grünen `Stufe 1`-Jobs) und der Job `Schon gemessen?`; ein
-umbenannter Job hängt alle drei still ab.
+Lauf eine Auskunft und keine Schranke. Denselben Namen sucht
+`tools/kette/baumsuche.py` (`JOB`) — für das Produktionstor in
+`ausliefern-lauf.yml`, das die Liste an `tools/kette/freigabe.py` gibt, und
+für den Job `Schon gemessen?`; seit BR-03 eine Suche statt zweier (E-BR-09).
+Ein umbenannter Job hängt alle drei still ab.
 
 ### 6.3 Stufe 2 — was eine Installation braucht
 

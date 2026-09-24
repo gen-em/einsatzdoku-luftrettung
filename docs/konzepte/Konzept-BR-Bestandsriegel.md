@@ -19,11 +19,11 @@ entsteht mit BR-01. **Zweig der Umsetzung:** `claude/br-bestandsriegel`, von
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — Umsetzung läuft** auf `claude/br-bestandsriegel` (von `main` `f4fe4a0`, Konzept per Vorspulen übernommen; der Konzeptzweig ist gelöscht). **BR-01 und BR-02 erledigt** — der Riegel steht, und der Altbestand ist bereinigt: **57 → 0 Befunde**, `proben.sh alle` 20 von 20 grün (Protokoll in Abschnitt 9). |
+> | Stand | **24.09.2026 — Umsetzung läuft** auf `claude/br-bestandsriegel` (von `main` `f4fe4a0`, Konzept per Vorspulen übernommen; der Konzeptzweig ist gelöscht). **BR-01 bis BR-03 erledigt** — der Riegel steht, der Altbestand ist bereinigt (**57 → 0 Befunde**, `proben.sh alle` 20 von 20), und die Reste aus PK, TB und RP sind aufgeräumt: 17 Riegel statt 14, eine Baumsuche statt zweier (Protokoll in Abschnitt 9). |
 > | Entschieden | **E-BR-01 bis E-BR-10**, alle von der Betreiberin am 24.09.2026 (Abschnitt 4); Q-BR-01 bis -07 beantwortet, alle wie empfohlen (Abschnitt 5). **Aus der Umsetzung: E-BR-11 bis -16** (4.1, zur Kenntnis — keine ändert eine Entscheidung der Betreiberin). **E-BR-17 und -18** von der Betreiberin am 24.09.2026 auf Q-BR-08 bis -12 (5.1). |
-> | Befunde der Umsetzung | **F-BR-07 bis -15** (2.1). Zwei davon verschieben den Rahmen: Die Handzählung aus Abschnitt 2 war zu grob (F-BR-07: 57 Befunde statt rund 35, **20** Anlass-Zeilen statt 19) — und **P5c ist weiter als angenommen** (F-BR-11: AP2 ist gebaut, E-BR-02 „Merge vor P5c AP2" ist damit überholt; was P5c nach dem Aufnehmen tun muss, ist gemessen). |
+> | Befunde der Umsetzung | **F-BR-07 bis -17** (2.1). Zwei davon verschieben den Rahmen: Die Handzählung aus Abschnitt 2 war zu grob (F-BR-07: 57 Befunde statt rund 35, **20** Anlass-Zeilen statt 19) — und **P5c ist weiter als angenommen** (F-BR-11: AP2 ist gebaut, E-BR-02 „Merge vor P5c AP2" ist damit überholt; was P5c nach dem Aufnehmen tun muss, ist gemessen). |
 > | Offen | nichts, was BR aufhält. **Zwei Zuarbeiten von P5c** (Q-BR-05, -06) — von P5c als Nachtrag zur Fassung 2 übernommen (E-P5c-86 bis -90, Backlog 295–298 auf dem P5c-Zweig). |
-> | Nächstes | **BR-03** — die drei Tor-Schritte nach `pruefablauf.json`, der Selbstüberspringer der Wiederherstellungsprobe, die Baumsuche in `tools/kette/` (E-BR-09) |
+> | Nächstes | **BR-04** — Runbook `Pruefablauf.md` 6.12, der Satz in 6.1, Backlog Nr. 293 nach *Erledigt*, Prüfstand mit Uhr-Bau, Gegenlesung des Runbooks, Pull Request |
 
 ---
 
@@ -83,6 +83,8 @@ Workflow-Dateien durch TB oder RP; das Tor selbst (P-PK-29 bis -32).
 | F-BR-13 | **26 Verweise auf Werkzeugpfade, die es seit PK-04 nicht mehr gibt**, in zehn Dokumenten (`README`, `android/LIESMICH`, `Backup-Format`, `Design`, `Geraete-Eingabe`, `JSON-Vertrag`, `Lizenzen`, `Technik`, `Uhr-Layout_Regeln`, `Sandbox-Setup`) und zwei Werkzeugen (`zaehlen.php`, `proben/gpx/probe.php`); dazu drei Verweise auf Abschnitte, die es nicht mehr gibt (`Technik.md` „Die drei Läufe", `pruefstand.sh`, `Technik.md` → Kette). **Eine davon war eine Zusage ohne das genannte Mittel:** `Backup-Format.md` sagte, die Containerprobe sehe nach, ob `_spur_index` vor dem Versiegeln entfernt wird. Sie tut es nicht. | Alle berichtigt. Die Zusage trägt trotzdem — vom Kreislauf `edbak`, nachgemessen: eingesetztes `_spur_index` → 1 unerklärte Meldung, ohne 0. Den Riegel auf tote Pfade in Dokumenten auszudehnen, ist eine neue Regel und keine Entscheidung dieses Konzepts (Abschnitt 7). |
 | F-BR-14 | **Der Umzug von `konfig_stellen.php` wäre still falsch geworden.** Die Datei rechnete ihren Pfad als `dirname(__DIR__) . '/server/config.php'`; unter `tools/sandbox/` zeigt das auf `tools/server/`, und der Rückweg kehrt bei fehlendem Verzeichnis **ohne Meldung** zurück — dieselbe Art Fehler wie F-PK-24. | `dirname(__DIR__, 2)`, mit Kommentar. Die vier Proben, die sie laden, laufen grün. |
 | F-BR-15 | **Die Anleitungen trugen Zahlen und Schalter, die nicht mehr stimmten:** `vergleichen.py --selbstprobe` 14 Fälle statt „sieben", die Zählung 34 statt 29, `tor.py` ohne das genannte `--jobs-token`; `zaehlen.php` verwies auf `tools/wortliste/zerlegen.py`. Genau das, was E-BR-03 nicht misst — der Inhalt einer Anleitung — und was beim Kürzen ohnehin gelesen wird. | Berichtigt beim Kürzen. |
+| F-BR-16 | **`cmark-gfm --validate-utf8` prüft die Kodierung nicht** (BR-03). Es ersetzt kaputte Bytes still durch U+FFFD und endet mit 0 — belegt mit einer Datei aus `\xff\xfe`: Ausgabe zweimal `357 277 275`, rc 0. Der Tor-Schritt „rendern sie überhaupt?" hätte ein Handbuch mit kaputter Kodierung grün gemeldet. Gefunden von der Selbstprobe der neuen Quelltextprüfung `handbuch` beim Umzug. | `handbuch.py` liest die Datei zusätzlich streng als UTF-8; Selbstprobe 5 von 5, darunter genau dieser Fall. |
+| F-BR-17 | **`kettenaufrufe` sah Befehlsersetzungen am Zeilenende nicht** (BR-03). Eine Zeile, die mit `)` endet, galt als `case`-Muster und wurde übersprungen; eine Zeile wie `x=$(werkzeug --schalter)` war damit unsichtbar. Drei Aufrufe von `tor.py` in `ausliefern-lauf.yml` und `auslieferung.yml` gingen so nie durch die Prüfung. Dazu las es `--erster)` als Schalternamen. Gefunden, als der neue Aufruf von `baumsuche.py` einen falschen Befund bekam. | Ein `case`-Muster hat vor seinem `)` keine öffnende Klammer; die Klammer am letzten Wort wird abgelöst. 84 statt 81 Aufrufe, 0 Befunde; Selbstprobe 16 → 18. |
 
 ## 3. Arbeitspakete
 
@@ -443,4 +445,54 @@ Einzelfragen (Q-BR-10 bis -12). Beim Wiederaufbau-Weg im Runbook habe ich
 zuerst `lokal_starten.sh` durch `lokal_einrichten.sh` ersetzt — ungeprüft;
 zurückgenommen, weil `lokal_einrichten.sh` selbst schon ein Demo-Konto
 anlegt.
+
+### BR-03 Die Reste aus PK, TB und RP — erledigt 24.09.2026
+
+**Gebaut.**
+
+- **F-BR-03, drei Tor-Riegel.** Der Backlog-Schritt ist die siebte Regel von
+  `bestand.py` (`backlog`, dieselbe Lesart wie der `grep` vorher, zwei Fälle
+  in der Selbstprobe); „Python-Werkzeuge übersetzen" ist
+  `tools/quelltext/pysyntax.py`, „Handbuch rendern" `tools/quelltext/handbuch.py`
+  — die zehnte und elfte Quelltextprüfung, je mit Selbstprobe. In
+  `pruefablauf.json` die Riegel `syntax-py` und `handbuch`; in `pruefung.yml`
+  entfallen drei Schritte, einer kommt dazu (`cmark-gfm` bereitstellen), und
+  die Gegenlesung übergibt `bestand`, `syntax-py`, `handbuch`. `cmark-gfm`
+  steht in der Ausbaustufe `web` samt Nachweis. **Der Anlass der zwei neuen
+  Namen steht in der Tabelle der Quelltextprüfungen** („Kette II/AP4",
+  „P5b/AP8") wie bei den acht anderen — E-BR-07 nimmt diese Spalte
+  ausdrücklich aus; die Anlass-Zeile des Ordners bleibt eine.
+- **F-BR-04.** Teil 11 der Wiederherstellungsprobe schreibt „NICHT
+  GEMESSEN" mit `false`.
+- **F-BR-05 (a), E-BR-09.** `tools/kette/baumsuche.py` mit Selbstprobe;
+  `pruefung.yml` ruft es mit `--fenster 30 --ereignis pull_request --erster`,
+  `ausliefern-lauf.yml` mit `--fenster "$FENSTER" --ausgabe stufe1.json`
+  (50). Die Selbstprobe fährt Stufe 1 neben der von `freigabe.py`.
+  `kettenaufrufe` prüft beide Aufrufe (F-BR-17).
+- **F-BR-05 (b)** `nach` steht in `Pruefablauf.md` 4; **(c)** die Bemerkung
+  der Wegprobe nennt RP-01 statt E-PK-27; **(d)** Grundsatz 7 nennt seine
+  eine Auslassung mit Beleg.
+
+**Gemessen.**
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Selbstproben der Quelltextprüfungen | `pruefen.sh --selbstprobe` | **8 von 8** (neu: `pysyntax` 3/0, `handbuch` 5/0; `bestand` 24/0 mit 7 Regeln) |
+| Alle Quelltextprüfungen | `pruefen.sh alle` | **11 von 11** — 56 Python-Werkzeuge ohne Syntaxfehler, 2 Dokumente rendern |
+| Die Baumsuche | `baumsuche.py --selbstprobe` | **11 von 11** |
+| Kettenaufrufe | `--probe`, dann ohne Schalter | **18 von 18**; **84** Aufrufe (vorher 81), 0 Befunde, 2 ungeprüft |
+| Die Wiederherstellungsprobe | `proben.sh wiederherstellung` auf der örtlichen Anlage | normal **111 / 0**, rc 0; Gegenprobe ohne die Zusatzkonten: **rc 1**, „NICHT GEMESSEN" rot (vorher grün) |
+| Ausbaustufe `web` | `aufbauen.sh web` | **11 von 11** Stücken (neu `cmark-gfm`), 3 von 3 Engines, 8 von 8 Werten, rc 0 |
+| Prüfstand-Selbstproben | `auswahl.py`, `bericht.py lesen` | 27 / 0, 13 / 0 |
+
+**Nicht gemessen:** die Baumsuche gegen die echte GitHub-Schnittstelle — in
+dieser Umgebung gibt es kein `gh`. Sie zeigt sich beim ersten Push auf
+`main` nach dem Merge („Schon gemessen?") und beim nächsten Tag
+(Produktionstor). Beide Wege sind so gebaut, dass ein Fehlschlag misst bzw.
+das Tor schließt, nicht öffnet.
+
+**Probleme und wie sie gelöst wurden.** F-BR-16 und F-BR-17 — beide von
+einer Selbstprobe bzw. einem Befund gefunden, die es ohne BR-03 nicht
+gegeben hätte. Die neue Anleitung der Quelltextprüfungen hatte zuerst 43
+Zeilen; der Riegel hat sie gemeldet.
 

@@ -71,7 +71,11 @@ steht; Abschnitt 2.4 nennt den heutigen Umfang mit Zahl.
 7. **Kein stilles Überspringen, keine grüne Zahl ohne Gegenstand.** Ein
    Prüfschritt, der sich selbst überspringt, meldet grün, ohne gemessen zu
    haben — er bricht ab (E-KH-12). Und eine Zahl belegt erst dann etwas,
-   wenn sie benennt, was sie gezählt hat (6.5).
+   wenn sie benennt, was sie gezählt hat (6.5). **Die eine Auslassung, die
+   kein Überspringen ist,** steht in 2.3: Auf `main` misst Stufe 1 nicht
+   noch einmal, wenn ein grüner PR-Lauf denselben Baum gemessen hat — und
+   nennt dafür Lauf, Commit und Zeitpunkt. Ein Verweis mit Beleg, kein
+   stilles Grün.
 
 ---
 
@@ -183,11 +187,14 @@ steht.
 
 **Heutiger Umfang** (gezählt am 23.09.2026 am Quelltext, nach PK-05): Der
 Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt drei Jobs —
-**`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **17** und
-`Schema gegen …` mit **4**; bis PK-05 waren es in `Stufe 1` **24**. Den
-ersten brachte Konzept TB am 23.09.2026:
+**`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **15** und
+`Schema gegen …` mit **4**; bis PK-05 waren es in `Stufe 1` **24**, bis BR-03
+**17** — drei Schritte sind in die Quelltextprüfungen gewandert (`bestand`,
+`pysyntax`, `handbuch`), einer kam dazu (`cmark-gfm` bereitstellen). Den
+ersten Job brachte Konzept TB am 23.09.2026:
 Auf einem PR sagt er „messen"; beim Push auf `main` sucht er den grünen
-PR-Lauf mit demselben Baum und lässt `Stufe 1` und `Schema gegen …` dann
+PR-Lauf mit demselben Baum (`tools/kette/baumsuche.py`, dieselbe Suche wie
+im Produktionstor, E-BR-09) und lässt `Stufe 1` und `Schema gegen …` dann
 aus, mit einem Verweis auf Lauf, Commit und Zeitpunkt in der
 Zusammenfassung. Das Produktionstor zählt Stufe 1 seither nach Baum und Job,
 nicht nach Commit. **PK-05** hat dem Lauf den Bau der Apps und die
@@ -297,6 +304,11 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
   Hand eingetragenes `--format` statt `--art` ergibt **2 Befunde** mit Namen
   („kennt `--format` nicht", „verlangt `--art`"); nach der Berichtigung 0.
   Genau dieser Fehler war beim ersten Lauf drin.
+- **Eine Probe kann eine andere voraussetzen** (`nach` in
+  `pruefablauf.json`, seit RP-01): Der Prüfstand zieht die genannte Probe
+  mit in den Lauf und stellt sie davor. So fährt die Wegprobe des
+  Spaltenregisters erst, wenn der Kreislauf `edbak` ihr Umlaufkonto angelegt
+  hat; `auswahl.py --selbstprobe` belegt die Reihenfolge.
 - **Der Prüfstand meldet, wenn eine Datei unter `server/` kein Muster
   trifft.** Gemessen am 23.09.2026: **267 versionierte Dateien, 0 ohne
   Muster**; 87 treffen nur das Auffangmuster und die beiden Stufenmuster
@@ -335,7 +347,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `bestand`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
 
 ---
 
@@ -675,7 +687,8 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde — ohne Schwelle seit PK-04/5e (E-PK-16) |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt` |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen sechs Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen sieben Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die Liste deckt sich mit der Liste der geplanten Änderungen (6.10) |
 

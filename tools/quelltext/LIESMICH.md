@@ -1,6 +1,6 @@
 # Quelltextprüfungen
 
-Neun Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
+Elf Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
 **Anlass: Nr. 148, 205, 208, 238, 293** — je Prüfung in der Tabelle.
 
 ## Aufruf
@@ -21,20 +21,20 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe
 | `linkprobe` | jeder Verweis nennt einen Parameter, den sein Ziel liest | Nr. 148, 151 |
 | `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=` | Nr. 179, 227 |
 | `textprobe` | **fünf Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen | B-S4-06, E-PK-08 |
-| `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6: Form, Anlass, gerufen, keine lose Datei | Nr. 293 |
+| `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6: Form, Anlass, gerufen, keine lose Datei; keine Backlog-Nummer zweimal | Nr. 293 |
+| `pysyntax` | jedes Python-Werkzeug unter `tools/` übersetzt | Kette II/AP4: `zustand.py` |
+| `handbuch` | Handbuch und „Was ist NAdoku" rendern, UTF-8 streng, kein fremdes Bild | P5b/AP8 |
 
 ## Was es braucht
 
-Nichts — kein Netz, keine Datenbank. `php` und `python3`.
+`php`, `python3`; für `handbuch` `cmark-gfm` (Ausbaustufe `web`), sonst rc 2.
 
 ## Erwartete Zahl
 
-`alle` → **9 von 9 Prüfungen grün**, `--selbstprobe` → **6 von 6**.
-Vollständigkeit und Bestand messen gegen **0**, ohne Schwelle. Die Textprobe
-meldet nur **neue** Treffer gegen `textprobe-altbestand.json` — neu
-schreiben mit `--altbestand-schreiben`, nie von Hand.
+`alle` → **11 von 11 grün**, `--selbstprobe` → **8 von 8**; ohne Schwelle.
+Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json`
+(neu schreiben mit `--altbestand-schreiben`, nie von Hand).
 
 ## Was es nicht kann
 
-Nichts, was einen Browser oder eine Anlage braucht — dafür `tools/proben/`.
-`linkprobe` und `vollstaendigkeit` haben keine Selbstprobe.
+Browser und Anlage (dafür `tools/proben/`); `linkprobe` und `vollstaendigkeit` ohne Selbstprobe.

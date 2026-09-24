@@ -76,6 +76,24 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   Umzug still auf `tools/server/` gezeigt, und der Rückweg kehrt bei einem
   fehlenden Verzeichnis ohne Meldung zurück. Die vier Proben, die sie laden,
   sind grün (`proben.sh alle` 20 von 20).
+- **Drei Riegel liefen nur im Tor** (BR-03, F-BR-03): „Backlog — keine
+  Nummer zweimal", „Python-Werkzeuge übersetzen" und „Handbuch rendern"
+  standen als Schritte in `pruefung.yml`, aber nicht in `pruefablauf.json` —
+  Station B fuhr sie nie, und das Tor las sie nicht gegen den Bericht. Jetzt
+  sind es Quelltextprüfungen (`bestand` mit einer siebten Regel, `pysyntax`,
+  `handbuch`), im Prüfstand und im Tor mit derselben Datei. Stufe 1 hat 15
+  statt 17 Schritte und liest **17 Riegel** gegen den Bericht statt 14.
+  `cmark-gfm` kommt mit der Ausbaustufe `web` (11 von 11 Stücken).
+- **Die Suche „grüner Lauf mit demselben Baum" steht einmal** (E-BR-09):
+  `tools/kette/baumsuche.py`, mit Selbstprobe (11 Fälle). Bis dahin stand sie
+  zweimal als Bash — in „Schon gemessen?" mit Fenster 30, im Produktionstor
+  mit 50, die eine mit, die andere ohne Selbstprobe. Das Fenster ist ein
+  Pflichtschalter geblieben, weil es die Kostengrenze des Aufrufers ist
+  (E-TB-09).
+- **Die Wiederherstellungsprobe meldet „nicht gemessen" rot** (F-BR-04). Ihr
+  Teil 11 schrieb bei zu wenigen offenen Konten `true` — eine Erwartung, die
+  sie nicht geprüft hatte. Gegenprobe ohne die Zusatzkonten aus RP-03: rc 1,
+  die Zeile rot.
 
 ### Behoben
 
@@ -86,6 +104,16 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   nicht macht. Die Zusage trägt trotzdem — der Kreislauf `edbak` vergleicht
   den ganzen Kern; nachgemessen mit einem eingesetzten `_spur_index`: 1
   Meldung, ohne ihn 0.
+- **`cmark-gfm --validate-utf8` prüft die Kodierung nicht** (F-BR-16). Es
+  ersetzt kaputte Bytes still durch U+FFFD und endet mit 0 — der Tor-Schritt
+  hätte ein Handbuch mit kaputter Kodierung grün gemeldet. Gefunden von der
+  Selbstprobe der neuen Quelltextprüfung beim Umzug; sie liest jetzt streng.
+- **`kettenaufrufe` sah Befehlsersetzungen am Zeilenende nicht** (F-BR-17).
+  Eine Zeile, die mit `)` endet, galt als `case`-Muster und wurde ganz
+  übersprungen — darunter drei Aufrufe von `tor.py` in der
+  Auslieferungskette (Fassung nach dem Abgleich, ausstehende Migration,
+  Dateiname des Backups). Dazu las es `--erster)` als Schalternamen. Jetzt
+  84 statt 81 geprüfte Aufrufe, 0 Befunde; Selbstprobe 18 von 18.
 - **Veraltete Zahlen und Schalter in den Anleitungen:** `vergleichen.py
   --selbstprobe` fährt 14 Fälle, nicht „sieben"; die Zählung 34, nicht 29;
   `tor.py` kennt `--token`, kein `--jobs-token`.

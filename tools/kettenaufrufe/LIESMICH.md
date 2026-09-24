@@ -26,8 +26,8 @@ Nichts. Kein Netz, keine Datenbank, keine Installation.
 **0 Befunde.** Die zweite Zahl ist „ungeprüft": Aufrufe, deren Werkzeug
 keine erkennbare Schnittstelle hat. **Sie ist kein Beiwerk** — der
 Stilvergleich stand darin und war kaputt (F-PK-20), `uhr-stufe1` stand
-nicht einmal darin und war es auch (F-PK-21). Stand 24.09.2026: **76
-Aufrufe, 0 Befunde, 2 ungeprüft**; `--probe` → **16 von 16** Fällen.
+nicht einmal darin und war es auch (F-PK-21). Stand 24.09.2026: **84
+Aufrufe, 0 Befunde, 2 ungeprüft**; `--probe` → **18 von 18** Fällen.
 
 ## Was es nicht kann
 
