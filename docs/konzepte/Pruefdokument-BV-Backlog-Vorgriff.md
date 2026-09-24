@@ -2,7 +2,7 @@
 
 *Gehört zu `Konzept-BV-Backlog-Vorgriff.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
-Konzepts. Stand: BV-03 gebaut, 24.09.2026; wird mit jedem Paket
+Konzepts. Stand: BV-04 gebaut, 24.09.2026; wird mit jedem Paket
 fortgeschrieben.*
 
 ---
@@ -42,6 +42,10 @@ fortgeschrieben.*
 | BV-03 | Anwesenheit je Klasse über 162 Commits von `main` (erste Eltern) und 25 Commits des P3-Zweigs, getrennt nach Stylesheet und Markup (`git grep -P`, Skript im Scratchpad) | wann verschwand die letzte Verwendung? | Stylesheet: alle 25 in O1 (`ecd5ff98`); Markup: je Klasse ein Commit aus O2 bis O9c, `c-dc-*` nie als Literal |
 | BV-03 | Diff des entfernenden Commits, je Klasse gelesen, dazu die Abschnitte O4, O7, O9a bis O9c im P3-Konzept | wodurch ersetzt? | **25 von 25** rekonstruiert, **0** „nicht feststellbar"; **4** berichtigt auf `[bleibt]` (`c-dc-*`, zur Laufzeit gesetzt) |
 | BV-03 | `vollstaendigkeit.py` | Streichliste nach dem Umbau | Platzhalter „Ersatzlos entfallen … Gemessen am 22.09.2026" **25 → 0**; **0** Befunde; `[bleibt]` maschinell erkannt (4 neue Zeilen beginnen mit dem Vermerk) |
+| BV-03 | Prüfstand, Stufe klein, Baum `46856cc` | 17 Riegel und Proben der Berührung | **17 grün, 0 rot, 0 nicht gemessen**, 36 s; Gegenlesung „in Ordnung" |
+| BV-04 | `git diff ba2ec57 3576a97 -- docs/Handbuch.md docs/Technik.md README.md`, Hunk-Anfänge gegen die geänderten Zeilen | trifft BV-04 eine Stelle, die P5c auch ändert? | Handbuch: P5c-Hunks ab Zeile 283, BV bis 30 und 1941–2030; Technik: nächster P5c-Hunk 3 Zeilen vor der Zeile `missions`, sonst mehr als 100 Zeilen Abstand; README: P5c **0** Hunks |
+| BV-04 | `grep` nach `php …server/jobs.php` in `docs/`, `README.md`, Anleitungen | bleibt ein Befehl mit Repositoriumspfad? | **2** Treffer, beide gewollt: die neue Erklärung in 4.97a und der Fund-Eintrag Web 15.5.2 |
+| BV-04 | `pruefen.sh handbuch`, `linkprobe`, `textprobe` | rendern die Dokumente, stimmen die Verweise, neue Wortlisten-Treffer? | **2** Dokumente / 0 Befunde; **122** Verweise / 0 Abweichungen; **0** Treffer außerhalb der Ausnahmen |
 
 ---
 
@@ -55,6 +59,8 @@ Nichts — BV berührt keine Datei, die der Browser lädt.
 
 | Nr. | Bedienweg | Erwartet | Woran ein Scheitern zu erkennen ist |
 |---|---|---|---|
+| P-BV-03 | Handbuch lesen: Abschnitt 1 („Was ist Gen-EM NAdoku?", Absatz „Patientendaten sind geschützt") und Abschnitt 5 (erster Absatz und die Aufzählung „Verschlüsselt sind nicht alle Daten …"). | Beide nennen die **Notizen des Einsatzes** als verschlüsselt und die des **Diensttags** als Klartext; keine Stelle sagt mehr „Notizen und Freitextfelder sind davon nicht erfasst". | Eine der beiden Stellen nennt andere Felder als die andere — oder als `Technik.md` 4.98. |
+| P-BV-04 | Den Befehl aus `Technik.md` 4.97a gegen den Wertekasten auf **Betrieb → Hintergrundjobs** halten. | Die Dokumentation zeigt den Platzhalter `/pfad/zur/installation/jobs.php`, der Wertekasten den echten Pfad dieser Installation — ohne `server/`. | Der Wertekasten zeigt einen Pfad mit `server/` (dann stimmt der Befund aus Nr. 150 nicht) oder die Dokumentation noch `…/server/jobs.php`. |
 | P-BV-02 | Stichprobe Streichliste: in `tools/quelltext/vollstaendigkeit-streichliste.md` drei der mit „Herkunft BV-03" markierten Zeilen wählen (Vorschlag: `rowlink`, `neu-form`, `c-dc-winch`) und je den genannten Commit ansehen (`git show <commit> -- server/`). | Die alte Klasse verschwindet in diesem Commit, und der genannte Ersatz steht an ihrer Stelle; `c-dc-winch` setzt `mission_fields_lib.php` heute noch (`'klasse' => 'c-dc-' . $col`). | Der Commit enthält die Klasse gar nicht, oder an ihrer Stelle steht etwas anderes als genannt — dann ist die Zeile eine Deutung, die nicht trägt. |
 | P-BV-01 | Nach dem Merge von P5c und dem Aufnehmen von `main` in BV: Stufe 1 des PR von BV ansehen, Schritt „Vollständigkeit". | grün, 0 Befunde | Rot mit einem Befund unter „5 Zusagen" in einer Datei, die P5c gebaut hat — dann hat der neue Abtaster dort etwas freigelegt, das der alte verschluckte. Das ist ein echter Fund, kein Fehler von BV: Stelle ansehen und entweder berichtigen oder mit Grund in `vollstaendigkeit-zusagen.md` eintragen. |
 

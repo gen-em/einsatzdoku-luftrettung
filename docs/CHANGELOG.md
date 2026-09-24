@@ -66,6 +66,35 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   setzt `mission_fields_lib.php` weiter zur Laufzeit; sie stehen jetzt als
   `[bleibt]`.
 
+### Dokumentation
+
+- **Das Handbuch nannte den Verschlüsselungsumfang ohne die Notizen des
+  Einsatzes — und der Einstieg sagte das Gegenteil** (Backlog Nr. 194,
+  BV-04). Seit Web 19.0.0 liegen die Notizen des Einsatzes im
+  verschlüsselten Block; der Einstieg sagte „Notizen und Freitextfelder sind
+  davon nicht erfasst". Einstieg, beide Stellen in Kapitel 5, `README.md`
+  und die Zeile `missions` in `Technik.md` nennen jetzt dieselben Felder
+  wie `CLAUDE.md` 4 und `Technik.md` 4.98; die Klartextliste ist um die
+  Notizen des Diensttags, die Höhe des Einsatzorts und die Koordinate des
+  Transportziels ergänzt. **Der Textbaustein für die Datenschutzerklärung
+  (Handbuch 11.5) ist noch nicht berichtigt** — den überarbeitet P5c mit den
+  übrigen Texten in Verwaltung und Betrieb; der Punkt bleibt deshalb offen.
+- **Der Cron-Befehl stand mit dem Pfad des Repositoriums in der
+  Dokumentation** (Backlog Nr. 150, BV-04). Auf einer Installation gibt es
+  kein `server/`, und wer `php …/server/jobs.php` abtippte, bekam „Could not
+  open input file". `Technik.md` 4.97a und Runbook 7 tragen jetzt
+  `php /pfad/zur/installation/jobs.php` und verweisen auf den Kopier-Knopf,
+  der den Pfad der Installation kennt; der Eintrag Web 10.1.0 unten ist
+  rückwirkend berichtigt, wie am 12.09.2026 entschieden. **Der Kopfkommentar
+  in `server/jobs.php` trägt den alten Pfad noch** — eine Zeile unter
+  `server/` braucht eine Web-Stufe, und die vergibt bis zu seinem Merge P5c.
+- **Eine auf dem Server von Hand gelöschte Datei kommt nicht zurück — das
+  stand nirgends** (Backlog Nr. 214, BV-04). Die Auslieferungsaktion
+  vergleicht gegen ihre Zustandsdatei, nie gegen den Server. `Technik.md`
+  6.5b nennt jetzt drei Wege heraus, den schonenden zuerst, und was der
+  teuerste kostet: einen vollständigen Abgleich bei eingeschalteter
+  Wartung.
+
 ### Bewusst so
 
 - **Der Abtaster kennt weiter kein Heredoc und keine Regex-Literale mit
@@ -16796,7 +16825,7 @@ eingerichtet werden muss keiner:
 
 | Weg | Aufruf | Budget je Lauf |
 |---|---|---|
-| Kommandozeile (empfohlen) | `* * * * * php …/server/jobs.php` | 300 s |
+| Kommandozeile (empfohlen) | `* * * * * php /pfad/zur/installation/jobs.php` *(berichtigt 24.09.2026, Backlog Nr. 150 — hier stand der Pfad des Repositoriums mit `server/`)* | 300 s |
 | Adresse mit Token | `https://…/jobs.php?token=…` | 20 s |
 | Huckepack auf einer Anfrage (Rückfall) | wie bisher, automatisch | 3 s |
 

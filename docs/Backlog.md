@@ -1255,6 +1255,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kopier-Knopf auf Betrieb → Hintergrundjobs der verlässliche Weg ist.
     **Zu tun:** die vier Stellen angleichen; keine Codeänderung an der
     Mechanik. Zuordnung: **Backlog-Runde**.
+    **Zum Teil erledigt 24.09.2026 mit Konzept BV (BV-04).** `Technik.md`
+    4.97a („Die drei Auslöser") und Runbook 7 („Hintergrundjobs
+    einrichten") tragen den Platzhalter `php /pfad/zur/installation/jobs.php`
+    und den Satz zum Kopier-Knopf; der Eintrag Web 10.1.0 im Changelog ist
+    rückwirkend berichtigt und sagt es. Eine fünfte Stelle, die der Eintrag
+    nicht zählte, ist mitgezogen (`Technik.md`, Tabelle zum übergangenen
+    Sicherungsziel: `php jobs.php versand`). **Offen bleibt der
+    Kopfkommentar von `server/jobs.php`:** Eine Zeile unter `server/`
+    verlangt eine Web-Stufe, und die vergibt bis zu seinem Merge P5c
+    (Konzept BV, E-BV-05). Nach dem Merge mit der nächsten Stufe nachziehen.
 
 154. **Handy-App liest `kept_points` und `kept_meta` nicht.**
     *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
@@ -1759,6 +1769,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Felder; der Satz „Notizen und Freitextfelder sind davon nicht erfasst"
     ist auf die Notizen des Diensttags eingegrenzt. Zuordnung: **vor 1.0** — es ist ein Rechtstext,
     kein Feinschliff; spätestens mit der Doku-Neufassung in P7 (R72).
+    **Zum Teil erledigt 24.09.2026 mit Konzept BV (BV-04).** Der Einstieg
+    und beide Stellen in Kapitel 5 nennen jetzt dieselben Felder wie
+    `CLAUDE.md` 4 und `Technik.md` 4.98 — die Notizen des Einsatzes
+    verschlüsselt, die des Diensttags im Klartext; die Klartextliste in
+    Kapitel 5 ist um die Notizen des Diensttags, die Höhe des Einsatzorts
+    und die Koordinate des Transportziels ergänzt. Mitgezogen: `README.md`
+    (Einleitung und Kasten) und die Zeile `missions` im Datenmodell von
+    `Technik.md`. **Offen bleibt der Textbaustein in 11.5** — den überarbeitet
+    P5c/AP9 mit allen Texten in Verwaltung und Betrieb, und ein Absatz, der
+    in eine Rechtserklärung kopiert wird, bekommt nicht zwei Hände
+    gleichzeitig (Konzept BV, E-BV-06). Nach dem Merge von P5c dort
+    nachziehen, dann ist der Punkt erledigt.
 
 196. **68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
     *Aufgenommen 15.09.2026 beim Gegenlesen der Punkte 190–195.*
@@ -2341,41 +2363,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Dateien, die es nicht gibt) — und als Gegenprobe **404 und nicht 403** für
     `.well-known/acme-challenge/`, weil eine zu breite Sperre die
     Zertifikatserneuerung lautlos umbringt.
-
-214. **`install.php` wurde bei jedem Lauf wieder ausgeliefert.**
-    *Angewiesen von der Betreiberin am 16.09.2026, umgesetzt am selben Tag in
-    Web 20.15.2.*
-    `docs/Technik.md` sagt zur Neuinstallation seit jeher: „Nach Erfolg sperrt
-    `install.lock`; `install.php` danach löschen." Die Auslieferungskette hat
-    das bei jedem Lauf rückgängig gemacht — die Datei stand nicht in der
-    Ausnahmeliste (dort steht `install.lock`, nicht `install.php`) und wurde
-    mitgeschickt. Wer sie von Hand entfernte, fand sie nach dem nächsten Lauf
-    wieder vor.
-
-    **Es war nie eine Lücke.** `install.php:136` verweigert sich selbst,
-    solange `config.php` **oder** `install.lock` existiert. Der Punkt ist, dass
-    zwei Anweisungen desselben Projekts einander widersprachen.
-
-    **Der Preis, und er bleibt bestehen:** Eine leere Anlage lässt sich nicht
-    mehr allein über die Kette einrichten — `server/install.php` muss einmal
-    von Hand hinauf, dann einrichten, dann wieder löschen. Ein Fehler **im**
-    Einrichter erreicht über die Kette ebenfalls keinen Server mehr. Stufe 2
-    fängt den Fall ab und nennt ihn beim Namen, damit niemand den
-    `FTP_ZIELPFAD` verdächtigt.
-
-    **Wie es aufgefallen ist, und was daran lehrreich bleibt.** Gemeldet wurde
-    zuerst „install.php wird nicht gesynct". Die Ursache war eine andere und
-    liegt weiter offen: Die Aktion vergleicht die lokalen Dateien gegen ihre
-    **State-Datei**, nie gegen den Server (`deploy.ts:84`, `:150`, `:155`).
-    Wer auf dem Server von Hand löscht, bekommt die Datei **nie** zurück —
-    gemessen an der Live-State-Datei von Staging, die `install.php` mit Hash
-    führte, während der Lauf 14 Sekunden später belegte, dass sie dort fehlte.
-    Für `install.php` ist das jetzt gegenstandslos, weil sie ausgenommen ist.
-    **Für jede andere Datei gilt es weiter** — siehe den nächsten Absatz.
-
-    *Offen daraus:* Ein Hinweis im Runbook, dass eine von Hand auf dem Server
-    gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
-    nicht geschrieben.
 
 216. **Zwei Trennlinien hintereinander an vier Stellen des P5a-Prüfdokuments.**
     *Aufgenommen 16.09.2026, gleiche Durchsicht.*
@@ -10295,3 +10282,46 @@ zutreffen.
     (`'c-dc-' . $col`) — zusammengesetzt, darum als Literal nirgends; die
     Messung vom 22.09.2026 hat nur Literale gesucht. Sie stehen jetzt als
     `[bleibt]`. Die Vollständigkeitsprüfung bleibt bei 0 Befunden.
+
+214. **`install.php` wurde bei jedem Lauf wieder ausgeliefert.**
+    *Angewiesen von der Betreiberin am 16.09.2026, umgesetzt am selben Tag in
+    Web 20.15.2.*
+    `docs/Technik.md` sagt zur Neuinstallation seit jeher: „Nach Erfolg sperrt
+    `install.lock`; `install.php` danach löschen." Die Auslieferungskette hat
+    das bei jedem Lauf rückgängig gemacht — die Datei stand nicht in der
+    Ausnahmeliste (dort steht `install.lock`, nicht `install.php`) und wurde
+    mitgeschickt. Wer sie von Hand entfernte, fand sie nach dem nächsten Lauf
+    wieder vor.
+
+    **Es war nie eine Lücke.** `install.php:136` verweigert sich selbst,
+    solange `config.php` **oder** `install.lock` existiert. Der Punkt ist, dass
+    zwei Anweisungen desselben Projekts einander widersprachen.
+
+    **Der Preis, und er bleibt bestehen:** Eine leere Anlage lässt sich nicht
+    mehr allein über die Kette einrichten — `server/install.php` muss einmal
+    von Hand hinauf, dann einrichten, dann wieder löschen. Ein Fehler **im**
+    Einrichter erreicht über die Kette ebenfalls keinen Server mehr. Stufe 2
+    fängt den Fall ab und nennt ihn beim Namen, damit niemand den
+    `FTP_ZIELPFAD` verdächtigt.
+
+    **Wie es aufgefallen ist, und was daran lehrreich bleibt.** Gemeldet wurde
+    zuerst „install.php wird nicht gesynct". Die Ursache war eine andere und
+    liegt weiter offen: Die Aktion vergleicht die lokalen Dateien gegen ihre
+    **State-Datei**, nie gegen den Server (`deploy.ts:84`, `:150`, `:155`).
+    Wer auf dem Server von Hand löscht, bekommt die Datei **nie** zurück —
+    gemessen an der Live-State-Datei von Staging, die `install.php` mit Hash
+    führte, während der Lauf 14 Sekunden später belegte, dass sie dort fehlte.
+    Für `install.php` ist das jetzt gegenstandslos, weil sie ausgenommen ist.
+    **Für jede andere Datei gilt es weiter** — siehe den nächsten Absatz.
+
+    *Offen daraus:* Ein Hinweis im Runbook, dass eine von Hand auf dem Server
+    gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
+    nicht geschrieben.
+
+    **Erledigt 24.09.2026 mit Konzept BV (BV-04):** Der Hinweis steht in
+    `Technik.md` 6.5b, am Ende — nicht in Abschnitt 7, weil er zur
+    Zustandsdatei gehört. Er nennt drei Wege, den schonenden zuerst: die eine
+    Datei von Hand per FTPS hinauflegen; die Datei im Repositorium ändern;
+    die Zustandsdatei löschen — dann überträgt der nächste Lauf alles (688
+    Dateien in rund acht Minuten, gemessen 20.09.2026), und zwar bei
+    eingeschalteter Wartung.

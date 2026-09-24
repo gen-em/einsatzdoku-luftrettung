@@ -20,12 +20,15 @@ Die Web-Oberfläche zeigt Diensttage mit Karte, Einsatz-Details
 und Reanimations-Protokollen — und erlaubt Nachtragen und Bearbeiten von Hand.
 
 **Patientendaten sind geschützt.** Nachname, Vorname, Geburtsdatum, Alter,
-Diagnose, der Einsatzort und seine Beschreibung werden
+Diagnose, die Einsatznummer, der Einsatzort (Adresse und Koordinate) und
+seine Beschreibung sowie die **Notizen des Einsatzes** werden
 **Ende-zu-Ende-verschlüsselt** gespeichert:
 Der Browser ver- und entschlüsselt sie mit einem Schlüssel aus deinem
-Login-Passwort, der Server sieht nur Chiffretext (Abschnitt 5). Notizen und
-Freitextfelder sind davon **nicht** erfasst — dort gehören keine
-Patientendaten hinein.
+Login-Passwort, der Server sieht nur Chiffretext (Abschnitt 5). Die Notizen
+des **Diensttags** und die übrigen Freitextfelder sind davon **nicht**
+erfasst — dort gehören keine Patientendaten hinein; sie tragen die Kleinzeile
+„Klartext — keine Patientendaten". Was sonst im Klartext liegt und warum,
+steht in Abschnitt 5.
 
 ---
 
@@ -1941,7 +1944,7 @@ gar nicht darin suchen.
 ## 5. Verschlüsselung der Patientendaten (Pflicht)
 
 Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Einsatzort, die Beschreibung
-des Einsatzortes und die Einsatznummer sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
+des Einsatzortes, die Einsatznummer und die Notizen des Einsatzes sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
 entschlüsselt mit einem Schlüssel aus deinem Login-Passwort; der Server
 speichert nur Chiffretext. Es
 gibt kein zweites Passwort und keinen Schalter — die Verschlüsselung ist
@@ -2020,11 +2023,12 @@ damit ungültig.
   wurde erneuert"*, hilft der **Wiederherstellungsschlüssel**: Damit setzt du
   dein Passwort neu, und alles ist wieder da.
 - **Verschlüsselt sind nicht alle Daten, sondern diese:** Name, Geburtsdatum,
-  Alter, Diagnose, Einsatznummer sowie Adresse, Koordinate und Beschreibung des
-  Einsatzorts. **Im Klartext liegen dagegen:** die GPS-Daten, die Koordinate
-  jeder Einsatzphase, das Transportziel, alle Zeiten, der Verlauf einer
-  Reanimation und die Namen der Besatzung — sie werden für Auswertung und
-  Statistik gebraucht, die der Server rechnet.
+  Alter, Diagnose, Einsatznummer, Adresse, Koordinate und Beschreibung des
+  Einsatzorts und die Notizen des Einsatzes. **Im Klartext liegen dagegen:**
+  die Notizen des Diensttags, die GPS-Daten, die Koordinate jeder
+  Einsatzphase, die Höhe des Einsatzorts, das Transportziel samt Koordinate,
+  alle Zeiten, der Verlauf einer Reanimation und die Namen der Besatzung —
+  sie werden für Auswertung und Statistik gebraucht, die der Server rechnet.
   **Der Einsatzort lässt sich damit aus den GPS-Daten ableiten**, auch wenn die
   Adresse verschlüsselt ist. Das ist keine Lücke, sondern die Grenze dieser
   Bauform, und sie steht hier, damit niemand mehr erwartet, als sie hält. Wer

@@ -5,14 +5,16 @@ Dokumentation von Notarzteinsätzen — **luftgebunden wie bodengebunden**
 Forerunner 945, Venu 3s) erfasst Einsatzphasen, GPS-Tracks und
 Reanimations-Ereignisse und lädt sie auf einen eigenen Server; die Web-App
 (PHP/MySQL) zeigt **Diensttage**, Einsätze und Rea-Protokolle und erlaubt
-Nachtragen/Bearbeiten. Name, Geburtsdatum, Diagnose und die Adresse des
-Einsatzorts sind **Ende-zu-Ende-verschlüsselt** (Schlüssel aus dem
+Nachtragen/Bearbeiten. Name, Geburtsdatum, Alter, Diagnose, Einsatznummer,
+Adresse, Koordinate und Beschreibung des Einsatzorts und die Notizen des
+Einsatzes sind **Ende-zu-Ende-verschlüsselt** (Schlüssel aus dem
 Login-Passwort, Wiederherstellungsschlüssel als Rettungsanker); ein
 verschlüsseltes **Backup** (.edbak) sichert alle Daten in eine Datei.
 
-> **Was die Verschlüsselung nicht abdeckt.** Die GPS-Daten, die Koordinate
-> jeder Einsatzphase, Transportziel, Zeiten und Reanimationsverlauf liegen im
-> Klartext in der Datenbank — sie werden für Auswertung und Sortierung
+> **Was die Verschlüsselung nicht abdeckt.** Die Notizen des Diensttags, die
+> GPS-Daten, die Koordinate jeder Einsatzphase, die Höhe des Einsatzorts, das
+> Transportziel samt Koordinate, Zeiten, Reanimationsverlauf und die Namen der
+> Besatzung liegen im Klartext in der Datenbank — sie werden für Auswertung und Sortierung
 > gebraucht, die der Server leisten muss. **Aus den GPS-Daten und den
 > Phasenkoordinaten lässt sich der Einsatzort rekonstruieren**, auch wenn die
 > Adresse verschlüsselt ist. Wer eine Installation betreibt, sollte das wissen und den
