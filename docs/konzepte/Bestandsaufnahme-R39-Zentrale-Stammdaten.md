@@ -12,6 +12,11 @@ Es überlebt den Abschluss von S9 und **bleibt liegen, bis der Rückbau in P5
 gelaufen ist** (Backlog **Nr. 168**, Rahmenplan R39). Erst dann wird es
 gelöscht — die Git-Historie behält es.
 
+**Nachtrag 24.09.2026.** Das Konzept S9 und die Prüfdokumente S9, S8 und
+Sofortpaket, die Abschnitt 5 mit Zeilennummern zitiert, sind gelöscht
+(Rahmenplan Fassung 110). Die Fundstellen gelten für den Stand `5e501ae`:
+`git show 5e501ae:docs/konzepte/<Datei>`.
+
 **Anlass.** Am 09.09.2026 kam auf die Rückfrage nach dem Umgang mit
 systemweiten Standorten die Auskunft: *„es gibt keine systemweiten Standorte
 mehr, alle gelöscht"* und *„die wollten wir doch ganz abschaffen"*. Der
