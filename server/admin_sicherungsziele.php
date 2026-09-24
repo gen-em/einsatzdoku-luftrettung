@@ -1,7 +1,11 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-require_admin();
+/* NUR DIE BETREIBERIN (P5c/AP2, E-P5c-31, Backlog Nr. 286). Bis Web 20.38.0
+ * stand hier `require_admin()` — R75 und der Kopf der Rollen in `db.php`
+ * sagten BetreiberIn, das Tor sagte Admin. Mangels Admin-Konten war die
+ * Lücke nicht ausnutzbar; die Rollenprobe prüft sie seither je Handlung. */
+require_betreiberin();
 require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/format_lib.php';        // groesse_text(), datum_text(), datum_zeit_text()
 

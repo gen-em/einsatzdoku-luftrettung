@@ -61,6 +61,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
                        . 'Der Wartungsmodus steht damit WEITERHIN — bitte die '
                        . 'Rechte prüfen oder die Datei von Hand entfernen.'];
     }
+    /* NUR WAS GESCHAH, STEHT IM PROTOKOLL (P5c/AP2, E-P5c-38): Ein Schalter,
+     * der nicht umlegte, ist keine Wartung. Der Eintrag steht hier und nicht
+     * in `wartung_lib.php` — die läuft im Torwächter vor jeder Datenbank. */
+    if ($wartungMeldung[0] === 'ok') {
+        require_once __DIR__ . '/protokoll_lib.php';
+        $an = ($_POST['action'] ?? '') === 'wartung_an';
+        protokoll('verwaltung', $an ? 'wartung_an' : 'wartung_aus',
+                  $an ? 'Wartungsmodus eingeschaltet' : 'Wartungsmodus ausgeschaltet',
+                  ['weg' => 'betrieb_updates']);
+    }
 }
 
 /* ---- Migrationen: Vorschau oder Lauf --------------------------------------

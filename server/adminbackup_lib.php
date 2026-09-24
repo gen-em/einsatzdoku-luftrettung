@@ -44,6 +44,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/backup_lib.php';
 require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/serverkrypto_lib.php';   // Siegel der Fassung 3 (S10/AP4)
+require_once __DIR__ . '/zip_lib.php';            // Archive bauen und öffnen (P5c/AP2, R83)
 require_once __DIR__ . '/format_lib.php';   // groesse_text(), zahl_text(), iso_utc(),
                                             // datum_zeit_text(), prozent_wert() (Schritt 15/AP7)
 
@@ -260,7 +261,7 @@ function edbak_ablage_bereit(): array
      * ohnehin sagt, ob gesichert werden kann —, und nicht mitten im ersten
      * Lauf als „liess sich nicht schreiben". `install.php` prüft sie seit
      * demselben Paket schon vor der Einrichtung. */
-    if (!class_exists('ZipArchive')) {
+    if (!zip_verfuegbar()) {
         return [false, 'Der PHP-Erweiterung „zip" fehlt (ext/zip, Klasse '
                      . 'ZipArchive). Backups sind ZIP-Dateien; ohne sie '
                      . 'lässt sich keine erzeugen. Bitte beim Hoster '
@@ -795,33 +796,15 @@ function edbak_sicherung_erzeugen(int $userId): array
     /* ---- Und alles in ein Archiv --------------------------------------- */
     $name = $paketName;          // steht seit S10/AP4 schon oben fest
     $tmp  = $ordner . '/' . $name . '.tmp';
-    $zip  = new ZipArchive();
-    if ($zip->open($tmp, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-        return $abbruch('Die Backup-Datei lässt sich nicht anlegen.');
-    }
-    foreach ($teile as $t) {
-        /* UNGEPACKT SEIT FASSUNG 3 (S10/AP4).
-         *
-         * Hier stand: „GEPACKT, anders als beim Nutzerformat: Dort sind die
-         * Teile bereits gzip UND verschlüsselt, hier ist es blankes JSON."
-         * Das galt für Fassung 2. Seit Fassung 3 ist es genau wie beim
-         * Nutzerformat — die Teile sind gzip UND versiegelt, und ein Siegel
-         * ist Zufallsrauschen. Ein Packlauf darüber kostet Zeit und bringt
-         * nichts; er machte das Paket sogar minimal größer. */
-        if (!$zip->addFile($t['datei'], $t['name'])) {
-            @$zip->close();
-            @unlink($tmp);
-            return $abbruch('Ein Teil liess sich nicht in das Backup legen.');
-        }
-        /* ERST HINZUFÜGEN, DANN DAS VERFAHREN SETZEN: `setCompressionName()`
-         * greift auf einen Eintrag, den es schon gibt. Umgekehrt tut der
-         * Aufruf nichts und meldet auch nichts — das Paket wäre wieder
-         * gepackt, und die Zahl im Prüfprotokoll stimmte nicht. */
-        $zip->setCompressionName($t['name'], ZipArchive::CM_STORE);
-    }
-    if (!$zip->close()) {
-        @unlink($tmp);
-        return $abbruch('Das Backup liess sich nicht abschliessen.');
+    /* UNGEPACKT SEIT FASSUNG 3 (S10/AP4): Die Teile sind gzip UND
+     * versiegelt, und ein Siegel ist Zufallsrauschen — ein Packlauf darüber
+     * kostet Zeit und bringt nichts. `zip_bauen()` speichert deshalb ohne
+     * Kompression, und seit P5c/AP2 steht das dort (E-P5c-57, R83). */
+    $teilePfade = [];
+    foreach ($teile as $t) { $teilePfade[$t['name']] = $t['datei']; }
+    $gebaut = zip_bauen($tmp, $teilePfade);
+    if ($gebaut !== true) {
+        return $abbruch('Das Backup ließ sich nicht packen: ' . $gebaut);
     }
     edbak_ordner_leeren($bau);
     @rmdir($bau);
@@ -1051,12 +1034,8 @@ function edbak_paket_kopf_lesen(string $kennung, string $datei): ?array
     if (!is_file($pfad)) { return null; }
 
     if (edbak_paket_fassung($datei) === 2) {
-        if (!class_exists('ZipArchive')) { return null; }
-        $zip = new ZipArchive();
-        if ($zip->open($pfad) !== true) { return null; }
-        $roh = $zip->getFromName('manifest.json');
-        $zip->close();
-        if ($roh === false) { return null; }
+        $roh = zip_eintrag($pfad, 'manifest.json');
+        if ($roh === null) { return null; }
         /* DIE FASSUNG STEHT IM MANIFEST, NICHT AM DATEINAMEN (S10/AP4, F-8).
          *
          * `edbak_paket_fassung()` liest die ENDUNG und liefert für jedes ZIP
@@ -1763,7 +1742,7 @@ function edbak_ablage_zahlen(bool $frisch = false): array
     $wurzel = edbak_wurzel();
     $z = ['ordner' => 0, 'pakete' => 0, 'bytes' => 0,
           'pakete_bytes' => 0, 'sonstige_bytes' => 0, 'reste' => 0,
-          'komplett' => 0, 'komplett_bytes' => 0];
+          'komplett' => 0, 'komplett_bytes' => 0, 'protokoll_bytes' => 0];
     if (!is_dir($wurzel)) { return $letzte = $z; }
 
     /* DAS GANZE VERZEICHNIS, NICHT NUR DIE PAKETE (S2/AP6).
@@ -1837,8 +1816,16 @@ function edbak_ablage_zahlen(bool $frisch = false): array
      * Konto-Backups und Komplett-Backups als getrennte Segmente, und dafuer
      * braucht er die erste Zahl. Sie fiel hier ohnehin an — sie hiess nur
      * `$inPaketen` und blieb in der Funktion. */
+    /* DIE ARCHIVE DES PROTOKOLLS (P5c/AP2, E-P5c-57) aus demselben Grund
+     * wie die Komplett-Backups darüber: Gewogen und gegen die Grenze
+     * gezählt waren sie ohnehin, aber als „auffälliger Rest". Eine eigene
+     * Zahl — der Balken trägt sie im Segment der Konto-Backups mit, ein
+     * eigenes Segment bräuchte eine Farbe und eine Freigabe. */
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
+    foreach (protokoll_archive() as $a) { $z['protokoll_bytes'] += (int)$a['bytes']; }
     $z['pakete_bytes']   = $inPaketen;
-    $z['sonstige_bytes'] = max(0, $z['bytes'] - $inPaketen - $z['komplett_bytes']);
+    $z['sonstige_bytes'] = max(0, $z['bytes'] - $inPaketen - $z['komplett_bytes']
+                                  - $z['protokoll_bytes']);
     return $letzte = $z;
 }
 
@@ -2247,14 +2234,14 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     if (!edbak_kennung_gueltig($kennung) || edbak_paket_fassung($datei) !== 2) {
         return [false, 'Das ist kein mehrteiliges Backup-Paket.', null];
     }
-    if (!class_exists('ZipArchive')) {
+    if (!zip_verfuegbar()) {
         return [false, 'Der PHP-Erweiterung „zip" fehlt (ext/zip).', null];
     }
     $pfad = edbak_ordner($kennung) . '/' . $datei;
     if (!is_file($pfad)) { return [false, 'Das Backup ist nicht auffindbar.', null]; }
 
-    $zip = new ZipArchive();
-    if ($zip->open($pfad) !== true) {
+    $zip = zip_oeffnen($pfad);
+    if ($zip === null) {
         return [false, 'Das Backup liess sich nicht öffnen.', null];
     }
     /* JEDER TEIL GEHT DURCH DAS SIEGEL (S10/AP4). `edbak_teil_oeffnen()`
@@ -2444,11 +2431,8 @@ function edbak_paket_zurueckspielen(string $kennung, string $datei, int $zielUse
 function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?string
 {
     if (!edbak_kennung_gueltig($kennung) || edbak_paket_fassung($datei) !== 2) { return null; }
-    if (!class_exists('ZipArchive')) { return null; }
-    $pfad = edbak_ordner($kennung) . '/' . $datei;
-    if (!is_file($pfad)) { return null; }
-    $zip = new ZipArchive();
-    if ($zip->open($pfad) !== true) { return null; }
+    $zip = zip_oeffnen(edbak_ordner($kennung) . '/' . $datei);
+    if ($zip === null) { return null; }
     /* Das Manifest erst öffnen, dann lesen (S10/AP4). Es ist der Eintrag,
      * der sagt, welche Teile es überhaupt gibt — ein Paket, dessen Manifest
      * sich nicht öffnen lässt, gibt auch keinen Teil heraus. */

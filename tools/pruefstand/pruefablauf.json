@@ -72,6 +72,15 @@
       "aufruf": "bash tools/proben/proben.sh komplett",
       "braucht": "installation"
     },
+    "rollenprobe": {
+      "aufruf": "bash tools/proben/proben.sh rollen",
+      "braucht": "installation",
+      "bemerkung": "Die Matrix steht in docs/Technik.md 4.99p zwischen den Markierungen rollenprobe:anfang und rollenprobe:ende; die Probe liest sie von dort (E-P5c-22)."
+    },
+    "protokollprobe": {
+      "aufruf": "bash tools/proben/proben.sh protokoll",
+      "braucht": "installation"
+    },
     "wiederherstellung": {
       "aufruf": "bash tools/proben/proben.sh wiederherstellung",
       "braucht": "installation"
@@ -161,8 +170,9 @@
       "bemerkung": "--frisch seit RP-01: Ohne den Schalter bricht der zweite Lauf auf einer nicht frischen Anlage ab, weil das Umlaufkonto schon besteht (F-RP-11)."
     },
     "schemaprobe": {
-      "aufruf": "php tools/schemaprobe/probe.php --datenbank nadoku_probe",
-      "braucht": "plattform"
+      "aufruf": "bash tools/sandbox/plattform.sh schema",
+      "braucht": "plattform",
+      "bemerkung": "Bis P5c/AP2 stand hier der Aufruf ohne Zugangsdaten (root ohne Passwort) und scheiterte an der örtlichen MariaDB; in keinem Prüfbericht war die Schemaprobe gemessen (F-P5c-88). plattform.sh kennt die Zugangsdaten je Fassung und fährt alle vier."
     },
     "android-bau": {
       "aufruf": "cd android && ANDROID_HOME=${ANDROID_HOME:-/opt/android-sdk} ./gradlew build",
@@ -324,6 +334,35 @@
         "mailprobe"
       ],
       "anlass": "smtp_letzter_fehler(); Rundmail F-P5c-29"
+    },
+    {
+      "id": "rollen",
+      "ab": "klein",
+      "pfade": [
+        "server/auth_guard.php",
+        "server/admin_*.php",
+        "server/betrieb_*.php",
+        "docs/Technik.md"
+      ],
+      "proben": [
+        "rollenprobe"
+      ],
+      "anlass": "Nr. 286, Nr. 149"
+    },
+    {
+      "id": "protokoll",
+      "ab": "klein",
+      "pfade": [
+        "server/protokoll_lib.php",
+        "server/protokoll_archiv_lib.php",
+        "server/zip_lib.php",
+        "server/admin_protokoll.php"
+      ],
+      "proben": [
+        "protokollprobe",
+        "versandprobe"
+      ],
+      "anlass": "F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39)"
     },
     {
       "id": "sicherungsziel",

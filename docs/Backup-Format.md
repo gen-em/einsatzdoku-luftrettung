@@ -36,6 +36,11 @@ Format, Ablage, Freigabeweg.
 **Das Komplett-Backup hilft gegen „der Webspace ist weg"**, nicht gegen
 „jemand hat sich vertan". Backup und Konto-Backup können beides.
 
+**Das Archiv des Protokolls ist keines davon** (seit Web 20.39.0): Es sichert
+keine Daten, die man zurückspielen könnte, sondern hält Protokolleinträge
+über ihre Frist hinaus. Sein Format steht trotzdem hier, in Abschnitt 7, weil
+es denselben Siegel und dieselbe Ablage benutzt.
+
 ---
 
 ## 1. Container, Fassung 4 (seit Web 11.1.0)
@@ -1670,7 +1675,8 @@ Angabe im Kopf. Dadurch fällt jedes Abschneiden auf, egal wo.
 * **Tabellen in einspielbarer Reihenfolge** (topologisch nach
   Fremdschlüsseln); `SET FOREIGN_KEY_CHECKS = 0` steht daneben als Gürtel.
 * **Kopfkommentare** mit Web-Version, Migrationsstand, Zeitpunkt,
-  Datenbankserver und Tabellenzahl.
+  Datenbankserver und Tabellenzahl — dazu die Zeilen „NICHT ENTHALTEN:
+  config.php" und seit Web 20.39.0 „OHNE ZEILEN: …" (6.9).
 * **Eine Endmarke** am Schluss: `-- EDKOMP-ENDE <n> Zeilen in <m> Tabellen`.
   Sie ist der Beleg, dass die Datei nicht mitten im Erzeugen abgebrochen ist.
   Ein `mysqldump` hat sie nicht; der Rückweg verlangt sie deshalb nur bei
@@ -1763,3 +1769,134 @@ selbst herunterlädt, noch das Konto-Backup der Verwaltung. Es ist die Datei
 *einer* NutzerIn und sagt nichts darüber, was sie darf. Wer es in ein anderes
 Konto einspielt, ändert dessen Rolle nicht; das ist Absicht und war nie
 anders.
+
+### 6.9 Zwei Tabellen ohne Zeilen (seit Web 20.39.0)
+
+`sicherheit_ereignisse` und `rate_limits` stehen mit **Schema, aber ohne
+Zeilen** im Dump (P5c/AP2, E-P5c-57, F-P5c-20). Beide führen IP-Adressen —
+die erste auch E-Mail-Adressen — und verfallen bewusst nach 30 Tagen bzw.
+von selbst (E-P5a-09); ein Komplett-Stand liegt länger und geht außer Haus.
+
+Im Dump steht an der Stelle der Zeilen ein Kommentar mit dem Grund:
+
+```
+-- `sicherheit_ereignisse`: ohne Zeilen — IP- und E-Mail-Adressen, verfallen nach 30 Tagen (E-P5a-09).
+```
+
+und im Kopf eine Zeile `-- OHNE ZEILEN: sicherheit_ereignisse, rate_limits — …`.
+
+**Ganz weglassen ginge nicht:** Nach einem Wiederanlauf aus einem Dump ohne
+die Tabellen scheiterte `ratelimit_lib.php` bei der ersten Anmeldung. Mit
+Schema und ohne Zeilen beginnt die Installation mit leeren Zählern.
+**Der Preis:** Sperren und Sperrereignisse der letzten 30 Tage kommen nicht
+zurück; eine laufende Sperre ist nach dem Einspielen aufgehoben.
+
+**Ältere Stände** (vor Web 20.39.0) tragen die Zeilen noch und werden
+unverändert eingespielt — die Tabellen verfallen danach wie gewohnt.
+
+---
+
+## 7. Archiv des Protokolls (seit Web 20.39.0)
+
+*Code: `server/protokoll_archiv_lib.php`; Betrieb und Entscheidungen:
+`docs/Technik.md` 4.99g.*
+
+Alle 7 Tage (einstellbar 1–31) schreibt der Job `protokoll_archiv` die
+Einträge eines abgelaufenen Zeitraums aus allen sieben Reitern der
+Protokollseite in ein Archiv. Es liegt 365 Tage (90–1095) auf dem Server und
+geht mit dem Versandjob auf die Sicherungsziele.
+
+### 7.1 Name und Ablage
+
+```
+sicherungen/protokoll/2026-09-13T22-00-00Z_1a2b3c4d.zip
+                      └──── Beginn (UTC) ───┘ └Kennung┘
+```
+
+Der **Beginn** ist Mitternacht in der Zeitzone der Anlage, als UTC
+geschrieben — dasselbe Zeitstempelmuster wie Kontopakete und Komplett-Stände,
+damit `sz_zeit_aus_dateiname()` es liest und der Name zeitlich sortiert. Die
+**Kennung** ist die Kennung des Serverschlüssels
+(`serverschluessel_kennung()`: die ersten acht Hexzeichen von SHA-256 über
+den Schlüssel — dieselbe, die das Schlüsselblatt zeigt). Ein Archiv eines anderen Schlüssels erkennt
+die Seite am Namen, ohne es zu öffnen.
+
+### 7.2 Aufbau
+
+Ein ZIP, **ungepackt** (die Teile sind versiegelt, und ein Siegel ist
+Zufallsrauschen):
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.json.sk` | das Manifest (7.3), versiegelt |
+| `<reiter>.<nnnn>.jsonl.sk` | je Reiter ein oder mehr Teile, fortlaufend ab `0001`, je höchstens **1 MB** Klartext, versiegelt |
+
+**Versiegelt** heißt: `sk_versiegeln($klartext, $zweck)` — AES-256-GCM mit
+dem Serverschlüssel, Format `edsk1:` (`docs/Technik.md`, Serverschlüssel).
+Der **Zweck** ist
+
+```
+protokollarchiv|<Name des Archivs>|<Name des Teils ohne .sk>
+```
+
+und steht, mit `edsk1|` davor, in den Zusatzdaten von AES-GCM.
+
+Ein umbenanntes Archiv oder ein vertauschter Teil lässt sich deshalb nicht
+öffnen. **Warum Teile:** AES-GCM verlangt den Klartext am Stück, und ein Guss
+über ein Jahr Sicherheitsereignisse sprengte das Speicherlimit von PHP.
+
+### 7.3 Das Manifest
+
+```json
+{
+  "format": "einsatzdoku-protokollarchiv",
+  "fassung": 1,
+  "von": "2026-09-13 22:00:00",
+  "bis": "2026-09-20 22:00:00",
+  "kennung": "1a2b3c4d",
+  "erzeugt": "2026-09-21T03:12:44Z",
+  "web": "20.39.0",
+  "zeilen": { "verwaltung": 41, "sicherheit": 7, "jobs": 318 },
+  "teile": ["jobs.0001.jsonl", "sicherheit.0001.jsonl", "verwaltung.0001.jsonl"],
+  "gekuerzt": {},
+  "hinweis": "Sicherheit ohne merkmal und wer, E-Mail nur Vorlage, Zustand, Zeit (E-P5c-39)."
+}
+```
+
+`von` und `bis` sind UTC, `bis` ausschließlich. `teile` nennt die Teile
+**ohne** `.sk` — so, wie sie im Zweck stehen. **`gekuerzt`** nennt je Reiter
+die Zeilen, die nicht mehr hineinpassten: Ein Archiv hält höchstens
+**32 MB** Klartext, und was darüber liegt — praktisch nur ein Angriff, der
+Zehntausende Sperren schreibt —, wird nicht archiviert. Ein Reiter ohne
+Zeilen im Zeitraum hat keinen Teil.
+
+### 7.4 Eine Zeile
+
+Je Zeile ein JSON-Objekt. **Was hineindarf, hängt am Reiter** (E-P5c-39, -75):
+
+| Reiter | Felder |
+|---|---|
+| Sicherheit — Sperrereignis | `zeit`, `art`, `topf`, `stufe` — **nicht** `merkmal` (IP oder Adresse) und `wer` |
+| Sicherheit — CSP-Bericht | `zeit`, `art` (`csp_bericht`), `richtlinie`, `quelle`, `seite`, `anzahl` |
+| E-Mail — aus der Warteschlange | `zeit`, `art` (`mail_…`), `vorlage` |
+| alle übrigen (auch Protokolleinträge in E-Mail, Jobs, Ziele) | `zeit`, `art`, `urheber` (Kontonummer, 0 = kein Mensch), `urheber_art`, `betroffen`, `text`, `daten` — **wie gespeichert, samt Adressen im Text** |
+
+`zeit` ist UTC (`JJJJ-MM-TT hh:mm:ss`). Die Zeilen eines Reiters stehen nach
+Quelle und darin nach Zeit.
+
+### 7.5 Der Download
+
+Die Seite (Verwaltung → Protokoll → Archiv, nur BetreiberIn) liefert **kein**
+versiegeltes Archiv aus, sondern entsiegelt es: ein gewöhnliches, gepacktes
+ZIP mit `manifest.json` und je Reiter **einer** `<reiter>.jsonl` (die Teile
+hintereinander), Name `protokoll-<JJJJ-MM-TT>.zip`. Das geht nur mit dem
+Serverschlüssel, der das Archiv versiegelt hat; ein Archiv eines anderen
+Schlüssels lässt sich hier nicht öffnen — dafür ist das Wiederanlaufpaket
+mit dem alten `config.php` da.
+
+**Von Hand öffnen:** Jeder Teil ist `edsk1:` gefolgt von Base64 über
+Nonce (12 Byte), Tag (16 Byte) und Chiffretext; Schlüssel ist `server_key`
+aus `config.php` (32 Byte, hexadezimal), Zusatzdaten
+`edsk1|protokollarchiv|<Name>|<Teil>`. Anders als bei den Konto-Backups ist
+der Klartext **nicht** gzip-gepackt.
+

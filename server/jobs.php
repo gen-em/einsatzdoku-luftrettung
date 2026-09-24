@@ -265,9 +265,20 @@ if ($aktion === 'wartung_an' || $aktion === 'wartung_aus') {
     /* `wartung_einschalten()` ist idempotent und überschreibt Zeitpunkt und
      * Urheber NICHT — ein zweiter Aufruf der Kette nimmt einer von Hand
      * eingeschalteten Wartung also nicht ihre Herkunft. */
+    $vorher = wartung_aktiv();
     $ok = $aktion === 'wartung_an'
         ? wartung_einschalten('kette')
         : wartung_ausschalten();
+    /* Ein Eintrag nur, wenn der Schalter wirklich umlegte (P5c/AP2): Die
+     * Kette ruft `wartung_an` auch, wenn die Wartung schon steht, und ein
+     * zweites „eingeschaltet" wäre eine falsche Auskunft. */
+    if ($ok && $vorher !== wartung_aktiv()) {
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll('verwaltung', $aktion,
+                  $aktion === 'wartung_an' ? 'Wartungsmodus eingeschaltet (Auslieferungskette)'
+                                           : 'Wartungsmodus ausgeschaltet (Auslieferungskette)',
+                  ['weg' => 'kette']);
+    }
     kette_antwort([
         'ok'      => $ok,
         'aktion'  => $aktion,

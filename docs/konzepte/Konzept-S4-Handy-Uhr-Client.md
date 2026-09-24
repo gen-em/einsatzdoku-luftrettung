@@ -24,7 +24,7 @@ Web **14.2.0** · Android **0.13.0** · Fahrplan **Schritt 6 „S4 Rest"**
 > **Nachtrag 24.09.2026.** Das Konzept `Konzept-R64-Herkunft-Geraet.md` und die
 > Prüfdokumente `Pruefdokument-S4-Handy-Uhr-Client.md` und
 > `Pruefdokument-R64-Herkunft-Geraet.md`, die dieser Statusblock nennt, sind
-> mit der Freigabe des S4-Rest-Abschlusses gelöscht (Rahmenplan Fassung 109,
+> mit der Freigabe des S4-Rest-Abschlusses gelöscht (Rahmenplan Fassung 110,
 > Historie `5e501ae`). Dieses Konzept bleibt, weil Teil C (Play Console,
 > Android 1.0.0) offen ist und `android/LIESMICH.md` es als Grundlage nennt.
 

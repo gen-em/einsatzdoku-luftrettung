@@ -297,7 +297,7 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/proben/spur/probe.php`.
 
 - **Eine Stelle je Sache — und ein Register, das es nachzählt** (R83,
-  Schritt 15). Fünf Wege haben seither genau einen Eingang, und wer daneben
+  Schritt 15). Diese Wege haben seither genau einen Eingang, und wer daneben
   einen zweiten baut, färbt Stufe 1 rot:
 
   | Sache | Der eine Weg | Nicht |
@@ -310,6 +310,8 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   | Anfrage an den Server (Browser) | `EdApi.postJson()` / `.postForm()` | `fetch` mit eigenem `X-CSRF` |
   | Meldung im Browser | `EdHtml.meldung()` | Markup von Hand |
   | Spalten von `missions` | `mf_spalten($zweck)` | eigene Spaltenliste |
+  | Archiv (ZIP) bauen oder öffnen | `zip_lib.php` | `new ZipArchive` |
+  | Suche, Filter, Seitenwahl, Reiter einer Seite | `ui_listenkopf()`, `ui_listenfuss()`, `ui_reiter()` | Markup von Hand |
 
   **Das Register steht in `tools/zaehlung/register.php`** und führt je Sache
   EINE Zeile mit einer Decke. Der Stufe-1-Schritt „Zentralisierung — hält

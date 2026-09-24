@@ -602,33 +602,23 @@ ui_seite_start(['titel' => 'NutzerInnen']);
                    'href' => '#', 'attr' => 'data-dialog="dlg-anlegen"'],
   ]); ?>
 
-    <?php /* ---- Suche und Filter ---------------------------------------- */ ?>
-    <div class="listenkopf">
-      <form method="get" class="listensuche" role="search">
-        <?php foreach (['f' => $filter] as $n => $v): if ($v !== '' && $v !== 'alle'): ?>
-          <input type="hidden" name="<?= e($n) ?>" value="<?= e($v) ?>">
-        <?php endif; endforeach; ?>
-        <?php if ($sort !== 'konto'): ?>
-          <input type="hidden" name="sort" value="<?= e($sort) ?>">
-        <?php endif; ?>
-        <?php if ($ab): ?><input type="hidden" name="dir" value="ab"><?php endif; ?>
-        <label class="nur-vorlesen" for="q">Name oder E-Mail suchen</label>
-        <div class="suchfeld">
-          <?= ui_symbol('lupe', 'suchfeld-lupe') ?>
-          <input type="search" id="q" name="q" value="<?= e($q) ?>"
-                 placeholder="Name oder E-Mail" autocomplete="off">
-        </div>
-        <button class="knopf knopf-neutral nur-vorlesen" type="submit">Suchen</button>
-      </form>
-      <div class="filterreihe">
-        <?php foreach (KONTEN_FILTER as $key => $text): ?>
-          <a class="listenfilter<?= $filter === $key ? ' aktiv' : '' ?>"
-             href="<?= e(konten_weg(['f' => $key === 'alle' ? '' : $key, 's' => ''])) ?>"
-             <?= $filter === $key ? 'aria-current="true"' : '' ?>><span><?= e($text) ?></span>
-            <span class="listenfilter-zahl"><?= (int)$zahlen[$key] ?></span></a>
-        <?php endforeach; ?>
-      </div>
-    </div>
+    <?php /* ---- Suche und Filter ----------------------------------------
+         Seit P5c/AP2 ein Baustein (`ui_listenkopf()`, R83): Die
+         Protokollseite ist der zweite Verbraucher. */
+    $pillen = [];
+    foreach (KONTEN_FILTER as $key => $text) {
+        $pillen[] = ['text' => $text, 'aktiv' => $filter === $key, 'zahl' => (int)$zahlen[$key],
+                     'href' => konten_weg(['f' => $key === 'alle' ? '' : $key, 's' => ''])];
+    }
+    ui_listenkopf([
+        'form_id' => 'f-kontensuche',
+        'suche' => ['name' => 'q', 'wert' => $q, 'label' => 'Name oder E-Mail suchen',
+                    'platzhalter' => 'Name oder E-Mail'],
+        'versteckt' => ['f' => $filter !== 'alle' ? $filter : '',
+                        'sort' => $sort !== 'konto' ? $sort : '',
+                        'dir' => $ab ? 'ab' : ''],
+        'filter' => $pillen,
+    ]); ?>
 
     <?php if (!$zeilen): ?>
       <p class="feld-hinweis"><?= $q !== '' || $filter !== 'alle'
@@ -711,38 +701,11 @@ ui_seite_start(['titel' => 'NutzerInnen']);
       endforeach; ?>
     </div>
 
-    <?php /* ---- Fuss: Zaehlung und Seitenwechsel -------------------------- */ ?>
-    <div class="listenfuss">
-      <p class="listenzahl">Konten <?= $von ?>–<?= $bis ?> von
-         <?= zahl_text($treffer) ?></p>
-      <?php if ($seiten > 1): ?>
-        <nav class="seitenwahl" aria-label="Seiten">
-          <a class="seitenknopf<?= $seite <= 1 ? ' aus' : '' ?>"
-             <?= $seite > 1 ? 'href="' . e(konten_weg(['s' => (string)($seite - 1)])) . '"' : 'aria-disabled="true"' ?>
-             aria-label="Vorige Seite"><?= ui_symbol('winkel', 'symbol-links') ?></a>
-          <?php
-          /* Erste, letzte und die Nachbarn der aktuellen Seite; dazwischen
-             eine Ellipse. Bei sieben Seiten stehen alle da, bei siebzig nicht
-             — eine Leiste, die mit dem Bestand waechst, ist keine Leiste. */
-          $zeigen = [1, $seiten, $seite, $seite - 1, $seite + 1];
-          $zeigen = array_values(array_unique(array_filter($zeigen,
-              static fn($n) => $n >= 1 && $n <= $seiten)));
-          sort($zeigen);
-          $vorher = 0;
-          foreach ($zeigen as $n):
-            if ($vorher && $n > $vorher + 1): ?>
-              <span class="seitenluecke" aria-hidden="true">…</span>
-            <?php endif; $vorher = $n; ?>
-            <a class="seitenknopf<?= $n === $seite ? ' aktiv' : '' ?>"
-               href="<?= e(konten_weg(['s' => $n === 1 ? '' : (string)$n])) ?>"
-               <?= $n === $seite ? 'aria-current="page"' : '' ?>><?= $n ?></a>
-          <?php endforeach; ?>
-          <a class="seitenknopf<?= $seite >= $seiten ? ' aus' : '' ?>"
-             <?= $seite < $seiten ? 'href="' . e(konten_weg(['s' => (string)($seite + 1)])) . '"' : 'aria-disabled="true"' ?>
-             aria-label="Nächste Seite"><?= ui_symbol('winkel', 'symbol-rechts') ?></a>
-        </nav>
-      <?php endif; ?>
-    </div>
+    <?php /* ---- Fuss: Zaehlung und Seitenwechsel -------------------------- */
+    ui_listenfuss(['zahl' => 'Konten ' . $von . '–' . $bis . ' von ' . zahl_text($treffer),
+                   'seite' => $seite, 'seiten' => $seiten,
+                   'weg' => static fn(int $n): string
+                       => konten_weg(['s' => $n === 1 ? '' : (string)$n])]); ?>
     <?php endif; ?>
 
   <?php ui_karte_ende(); ?>

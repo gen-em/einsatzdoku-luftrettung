@@ -153,6 +153,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($rollenwechsel) {
             db()->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $uid]);
             $teile[] = 'Rolle';
+            /* EIN ROLLENWECHSEL IST EIN EINTRAG (P5c/AP2, E-P5c-38, F-P5c-17).
+             * Bis hierher stand er nirgends — ausgerechnet die Handlung, die
+             * einem Konto Rechte gibt oder nimmt. Die Rollenprobe prüft, dass
+             * genau einer entsteht. */
+            require_once __DIR__ . '/protokoll_lib.php';
+            protokoll('verwaltung', 'rolle_geaendert',
+                'Rolle von ' . $u['email'] . ': ' . rolle_text($rolleAlt) . ' → ' . rolle_text($role),
+                ['von' => $rolleAlt, 'nach' => $role], $uid);
         }
         if ($name !== (string)($u['name'] ?? '')) {
             db()->prepare('UPDATE users SET name = ? WHERE id = ?')
@@ -177,6 +185,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    ist die einzige Stelle, an der die Besitzerin davon erfaehrt;
                    sie geht deshalb dorthin und nicht an die neue. */
                 profil_adresswechsel_melden((string)$u['email'], $email, 'verwaltung');
+                /* OHNE ADRESSEN IM TEXT (E-P5b-16) — derselbe Satz wie beim
+                 * Wechsel durch die NutzerIn selbst, nur mit dem Weg. */
+                require_once __DIR__ . '/protokoll_lib.php';
+                protokoll('verwaltung', 'adresse_geaendert',
+                    'Anmeldeadresse durch die Verwaltung geändert (Hinweis an die alte Adresse)',
+                    ['weg' => 'verwaltung'], $uid);
             } catch (PDOException $ex) {
                 /* NUR der Schluesselkonflikt heisst "bereits verwendet" (M1-16).
                  * Vorher wurde JEDER Datenbankfehler so gemeldet — eine volle
@@ -348,6 +362,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * hast…" — wer die Verwaltung darum gebeten hat, hat es
              * angefordert. Der Unterschied steht im Katalog. */
             $zustellung = mail_einreihen('passwort_neu', (string)$u['email'], ['link' => $link]);
+            /* Der Link selbst gehört NICHT ins Protokoll — er trägt ein
+             * gültiges Token (E-P5c-38). Das Protokoll hält, DASS einer
+             * ausgestellt wurde, und ob er hinausging. */
+            require_once __DIR__ . '/protokoll_lib.php';
+            protokoll('verwaltung', 'setzlink_gesendet',
+                'Setz-Link für ' . $u['email'] . ' ausgestellt — '
+                . ($zustellung === MAIL_ZUGESTELLT ? 'zugestellt'
+                   : ($zustellung === MAIL_WARTET ? 'wartet in der Warteschlange' : 'nicht verschickt')),
+                ['zustellung' => $zustellung], $uid);
             /* `wartet` zeigt den Link MIT — die Begruendung steht in
              * `admin_users.php` bei derselben Stelle (E-P5a-54). Hier waere
              * sie sogar noch dringender: Dies ist die Seite, auf der jemand
@@ -413,7 +436,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     [$okE, $grundE, $bericht] =
                         edbak_paket_zurueckspielen($kennung, $datei, $uid);
-                    if ($okE) { $notice = 'Konto-Backup eingespielt.'; }
+                    if ($okE) {
+                        $notice = 'Konto-Backup eingespielt.';
+                        require_once __DIR__ . '/protokoll_lib.php';
+                        protokoll('sicherung', 'kontobackup_eingespielt',
+                            'Konto-Backup ' . $datei . ' in ' . $u['email'] . ' eingespielt',
+                            ['kennung' => $kennung, 'datei' => $datei], $uid);
+                    }
                     else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
@@ -561,10 +590,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'device_toggle') {
         db()->prepare('UPDATE devices SET active = 1 - active WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['dev'] ?? 0), $uid]);
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll_geraet('geraet_umgeschaltet', (int)($_POST['dev'] ?? 0), $uid, 'verwaltung');
         $notice = 'Gerätestatus geändert.';
     }
     if ($action === 'device_delete') {
         // Daten bleiben erhalten: FK setzt device_id in Einsaetzen/Segmenten auf NULL
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll_geraet('geraet_geloescht', (int)($_POST['dev'] ?? 0), $uid, 'verwaltung');
         db()->prepare('DELETE FROM devices WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['dev'] ?? 0), $uid]);
         $notice = 'Gerät entkoppelt. Hochgeladene Daten bleiben erhalten.';
@@ -762,7 +795,12 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   <div class="form-spalte">
 
     <?php /* ---- Konto: ein Formular, ein Speichern ------------------------ */ ?>
-    <?php ui_karte_start(['titel' => 'Konto']); ?>
+    <?php /* „IM PROTOKOLL" führt auf den Reiter Verwaltung, gefiltert auf
+             dieses Konto — als Urheber oder als Betroffenes (P5c/AP2,
+             E-P5c-26). Der Filter steht dort als Pille mit Kreuz. */ ?>
+    <?php ui_karte_start(['titel' => 'Konto',
+        'aktion' => ['text' => 'Im Protokoll',
+                     'href' => 'admin_protokoll.php?r=verwaltung&konto=' . $uid]]); ?>
       <?php /* AUSGEGRAUT BEIM DEMO-KONTO (S3/AP10). Das `disabled` ist die
                ANZEIGE der Sperre, nicht die Sperre selbst — die sitzt oben im
                Schreibweg. Beides zusammen: Man sieht es, bevor man es

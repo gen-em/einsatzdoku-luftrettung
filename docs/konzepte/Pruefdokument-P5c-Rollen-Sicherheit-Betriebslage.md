@@ -15,6 +15,9 @@ AP1; jedes Paket schreibt seinen Abschnitt fort.
 | **Staging in Rot, Produktiv in Blau** | Beides sind echte Anlagen (Station D und E). Örtlich ist das Etikett gestellt und gemessen (1), aber ob die `config.php` von Staging den Eintrag trägt, sieht nur, wer Staging aufruft. | nach dem Merge (Staging) und nach dem Tag (Produktiv): P-P5c-01, -02 |
 | **Eine Rundmail in einem echten Postfach** | Die Arbeitsumgebung erreicht keinen Mailserver; die Mailprobe spricht mit einem SMTPS-Nachbau, der annimmt und wegwirft. Gemessen ist der Weg bis „250 angenommen", nicht die Zustellung. | P-P5c-03 |
 | **Firefox und WebKit** | Bilderlauf und Bedienwege sind in Chromium gefahren (Stufe „neben"); die drei Engines fährt erst die Hauptstufe. | mit dem ersten Paket in Stufe „haupt" (AP4) |
+| **Das Archiv in echter Zeit** (AP2) | Örtlich ist der Zeitraum gestellt: Die Protokollprobe setzt Marke und Einträge in die Vergangenheit und ruft den Job mit knappem Budget auf. Ob der Job auf einer Anlage **ohne Cron** in einer Woche drankommt und nach dem Merge die Wochen seit dem ältesten Eintrag nachholt, zeigt nur Staging. | P-P5c-07 |
+| **Die Sicht des Admins im Bild** (AP2) | Der Bilderlauf kennt keine reine Admin-Rolle (F-P5c-41) — seine Seiten mit `rolle: admin` meldet er als BetreiberIn an. Die vier Reiter des Admins belegt die Rollenprobe **als Statuscode**, nicht als Bild. | P-P5c-06 |
+| **Ein Archiv auf einem echten Ziel** (AP2) | Die Versandprobe (Teil 13) schickt Archive an einen SFTP-Nachbau und misst, dass die Aufbewahrungsregel sie nicht anfasst. Ein echter Hoster mit vsftpd oder OpenSSH ist `--echt` und in dieser Arbeitsumgebung nicht gefahren. | P-P5c-07 |
 | **Die Ankündigung auf Staging unter Last des Huckepack-Jobs** | Örtlich gibt es kein Cron und keine fremden Aufrufe; die Rundmail wird hier mit `mail_job()` von Hand hinausgetragen. Wie lange vierzig Mails auf Staging brauchen, hängt davon ab, wer dort Seiten aufruft. | P-P5c-03 (Zeit notieren) |
 
 ## 1. Messprotokoll AP1 (23.09.2026, Web 20.38.0)
@@ -64,6 +67,36 @@ halten will, nur als Satz gab. Gebaut als `tools/stilvergleich/geplant.txt`
 alten Stand — der OPcache prüft Zeitstempel höchstens alle zwei Sekunden. Der
 Umschalter wartet deshalb drei Sekunden, bevor er misst.
 
+## 1a. Messprotokoll AP2 (24.09.2026, Web 20.39.0)
+
+| Mittel | Aufruf | Zahl |
+|---|---|---|
+| **Rollenprobe** (neu) | `bash tools/proben/proben.sh rollen` | **87 Erwartungen, 0 offen**: 28 Zeilen der Matrix aus `Technik.md` 4.99p × 3 Rollen (13 Protokoll, 7 Komplett-Backup, 8 Backup-Ziele), dazu die Wirkung: ein Rollenwechsel → **genau 1** Eintrag `rolle_geaendert`, ein Speichern ohne Wechsel → 0. **Gegenprobe:** das alte Tor `require_admin()` an `admin_sicherungsziele.php` kurz zurück → **8** Zellen der Admin-Spalte rot (Seite und sieben Handlungen), danach wieder 87 / 0. **Erster Lauf 37 Abweichungen**, alle Fehlanzeigen der Probe (F-P5c-73); danach eine echte: Token vor Rolle beim Archiv-Download (F-P5c-74, behoben) |
+| **Protokollprobe** (neu) | `bash tools/proben/proben.sh protokoll` | **21 Erwartungen, 0 offen**: Häppchen (mehrere Aufrufe bei knappem Budget), entsiegelt **0** Treffer für `"ip:`, IPv4, IPv6 und Adressen in Sicherheit und E-Mail — gegen eine eigens angelegte Sperre **mit** IP und Adresse und eine Mail **mit** Empfänger und Fehlertext; fremde Kennung erkannt und nicht geöffnet; umbenanntes Archiv lässt sich nicht öffnen; Archiv 366 Tage alt → gelöscht, junges bleibt; Download: gewöhnliches ZIP, **genau 1** Eintrag `archiv_heruntergeladen`; der Versand erkennt den Namen. Verwaltung trägt Adressen — gezählt, nicht bewertet (E-P5c-75). **Gegenprobe:** `merkmal` in die Archivzeile zurück → rot |
+| **Versandprobe, Teil 13** (neu) | `bash tools/proben/proben.sh versand` | **141 Erwartungen, 0 offen.** Drei Archive gehen an den SFTP-Nachbau und liegen drüben im Ordner `protokoll`; **die Regel „eins je Konto" entfernt keines**, auch nicht im zweiten Lauf (im selben Lauf räumt sie 3 Kontopakete anderer Konten auf — zu Recht); mit Versand aus bleibt ein viertes hier. **Gegenprobe:** die Riegelzeile in `sz_aufraeumen()` herausgenommen → **2 von 3** Archiven drüben gelöscht, **4** Prüfsätze rot; Zeile zurück, Datei byte-gleich. Der erste Bau war rot, ohne dass ein Archiv fehlte (F-P5c-87) |
+| **Komplettprobe**, erweitert | `bash tools/proben/proben.sh komplett` | **67 Erwartungen, 0 offen** — neu: Kopfzeile „OHNE ZEILEN" steht, kein `INSERT` für `sicherheit_ereignisse` und `rate_limits`, **IP und Adresse eines eigens angelegten Sperrereignisses stehen nicht im Dump**; eingespielt kommen beide Tabellen leer und mit gleichem Schema an |
+| Wiederherstellung | `bash tools/proben/proben.sh wiederherstellung` | **111 Erwartungen, 0 offen** (Schreiber `komplett_eingespielt` auf dem Weg) |
+| **Bedienwege der Seite** (neu) | `node tools/bedienprobe/probe.mjs --nur admin-protokoll` | **2 von 2**: Reiter „Jobs" aktiv und in der Adresse, **0** Unterpunkte in der Leiste, der Menüpunkt „Protokoll" aktiv; eine Fehlerkennung im Suchfeld landet auf „System". Aufgeklappt stehen die Angaben da; **Höhe mit Angaben 68,4 px = fest 68,4 px**; die Art-Auswahl schickt ab, „Filtern" ist verborgen. **Gegenprobe:** Gegenregel `.zeile-mehr > summary.zeile` entfernt → **56,4 gegen 68,4 px**, rot (12 px — das Konzept schätzte 13) |
+| **Bilderlauf** (Stufe „neben", 8 Breiten, einzeln nach dem ungültigen Vorlauf) | `node tools/screenshots/aufnehmen.mjs --stufe neben` | **520 Einzelbilder aus 65 Seiten** (neu `44a-protokoll`, `44b-protokoll-sicherheit`, `44c-protokoll-archiv`): **Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0 · 167 Karten, 0 außerhalb von `main.inhalt` · 0 gleiche Bilder über Breiten**; Etikett (keins erwartet): 520 Titel und 448 Kopfleisten, 0 Abweichungen. **Die drei Seiten zeigt er als BetreiberIn** — die Admin-Sicht nicht (0) |
+| **Bedienprobe** (einzeln) | `node tools/bedienprobe/probe.mjs` | **52 von 52 Wegen erfüllt**, 0 verfehlt (vorher 50) |
+| Zeilenhöhe über den Motor | eigener Lauf über `tools/motor.mjs`, Chromium | **1440 px: 68,39 = 68,39 px · 390 px: 110,98 = 110,98 px** (mit Angaben gegen fest, mittlere Zeilen) |
+| Register | `php tools/zaehlung/zaehlen.php` | **40 Zeilen, 0 über der Decke**; neu Z39 (`new ZipArchive` außerhalb `zip_lib.php`: 4 → **0**) und Z40 (Listen- und Reiter-Markup außerhalb `ui.php`: 8 → **0**). Beim Bauen zweimal rot gesehen (F-P5c-77, -78). Z39 gegengeprobt: mit und ohne Rückstrich je **1** Treffer (F-P5c-84) |
+| Stilvergleich mit Liste | `bash tools/stilvergleich/gegen.sh` | **42 575 Elementmessungen, 1 087 Abweichungen, 54 Signaturen geplant, 54 gemessen, 0 ungeplant, 0 nicht gemessen** — 30 aus AP1, 24 aus AP2 (Reiter, Protokollliste, aufklappbare Zeile, Auswahlfeld in der Filterreihe). Eine Signatur stand zuerst über zwei Zeilen (F-P5c-85, behoben) |
+| Kontraste | `python3 tools/screenshots/kontrast.py` | **25 Paare, 0 verfehlt**; „Orange tief auf Rauch" 4,04 trägt jetzt den aktiven Reiter (F-P5c-81) |
+| Schemaprobe | `bash tools/sandbox/plattform.sh alles` | **4 × 19 Prüfungen, 0 Fehlschläge** (MariaDB 10.11.14 und 10.6.28, MySQL 8.0.46 und 8.4.0) — nötig, weil AP2 `migration_lib.php` berührt (Muster „migration") |
+| Design-Tabellen | `python3 tools/erzeugen/design.py alle` | Bausteine **48** Funktionen (44 + 4), Symbole **58**, Medienblöcke **25**; eingesetzt bis zur nächsten Überschrift, wobei eine veraltete zweite Summenzeile gefallen ist (F-P5c-82) |
+| **Prüfstand** | `bash tools/pruefstand/pruefen.sh` auf frischer Anlage, Stufe „neben" (20.37.3 → 20.39.0) | im Prüfbericht des Commits `P5c-AP2` |
+| **Erster finaler Prüfstand** | derselbe Aufruf auf frischer Anlage | **39 grün, 1 rot, 0 nicht gemessen, 1 322 s.** Rot: die Schemaprobe — „Access denied for user 'root'@'localhost'". Ihr Eintrag rief sie seit PK-03 ohne Zugangsdaten und war nie gelaufen (F-P5c-88). Behoben: `plattform.sh schema`, einzeln **4 × 19 / 0**; Gegenprobe mit angehaltenem MySQL-8.4-Behälter → rot, „FEHLT mysql:8.4.0 (Port 3308)". Nicht committet — der Baum änderte sich |
+| **Vorlauf des Prüfstands — ungültig** | derselbe Aufruf, 24.09.2026, 05:16–05:30 UTC | **31 grün, 8 rot, 1 nicht gemessen, 831 s.** Ungültig, weil ich daneben `plattform.sh alles` gestartet hatte (F-P5c-86): Die Schemaprobe legt für ihre Laufzeit eine Wegwerf-`config.php` auf die Probedatenbank, der Torwächter sah eine ausstehende Migration und schaltete um 05:22:12 die Wartung ein. Ab da 503 — Bilderlauf ab `10b` ohne Bilder (414 Konsolenfehler), danach Bedienprobe, Ingest, GPX, Kopplung, CSP, beide Anmeldewege der Kreisläufe. **Alle Proben vor 05:22 grün**, darunter Rollen-, Protokoll-, Komplett- und Versandprobe. Nicht als Beleg verwendet |
+
+**Was die Umgebung gestört hat, und wie es zu erkennen war.** Nach einem
+Neustart des Behälters liefen die Dienste nicht, und die Statusseite zeigte
+die Zeile „E-Mail — Letzter Versand" rot: Der SMTPS-Nachbau war nicht
+gestartet. Kein Fehler der Anwendung — nach `hochfahren.sh` grün. Und das
+Modul `plattform` stand nach dem Neustart nicht; der Vorlauf des Prüfstands
+meldete die Schemaprobe deshalb als **nicht gemessen** statt grün, wie es
+sein soll.
+
 ## 2. Prüfliste
 
 | Nr. | Punkt | Bedienweg | Erwartet | Scheitern erkennbar an | Stand |
@@ -72,9 +105,31 @@ Umschalter wartet deshalb drei Sekunden, bevor er misst.
 | P-P5c-02 | **Produktiv bleibt blau** | nach dem Tag: Produktiv aufrufen, Betrieb → Status | Kopfleiste dunkelblau, kein Streifen, kein „[…]" im Titel; Statuszeile blau „Produktiv" | irgendein Etikett auf Produktiv — dann steht `app.umgebung` in der falschen `config.php` | offen |
 | P-P5c-03 | **Eine Rundmail kommt an** | auf Staging: Servereinstellungen → Ankündigung setzen (Ende morgen) → „Als Rundmail senden …" → Rückfrage lesen → senden; danach einige Seiten aufrufen (der Job läuft huckepack) und das Postfach eines eigenen Kontos ansehen | Die Rückfrage nennt die Zahl der erreichbaren Konten; Meldung „Rundmail an N Konten eingereiht"; im Postfach eine Mail „[Staging] Ankündigung — …" mit dem Text; Betrieb → Status, Karte E-Mail, zeigt die Zeilen als zugestellt; ein zweiter Versuch am selben Tag ist gesperrt | keine Mail nach einer Stunde mit Seitenaufrufen (Warteschlange ansehen: offen? unzustellbar?); zwei Mails; ein Betreff ohne „[Staging]" | offen — **Zeit bis zur Zustellung notieren** |
 | P-P5c-04 | **Die Ankündigung auf dem Handy** | auf Staging am Handy: eine zweizeilige Ankündigung setzen, Startseite und Anmeldung ansehen, das × tippen | Das × steht oben rechts und bricht nicht in eine eigene Zeile; nach dem Tippen ist der Streifen fort; nach Ab- und Anmelden wieder da | das × unten links allein in einer Zeile; oder der Streifen bleibt nach dem Tippen | offen |
-| P-P5c-05 | **Bis 10c ausgeliefert ist, entsteht kein Konto mit der Rolle admin** (E-P5c-31) | Verwaltung → NutzerInnen, Filter Rolle | 0 Konten mit der Rolle admin, bis der 10c-PR gemergt und ausgeliefert ist | ein Admin-Konto — es erreicht heute Komplett-Backup und Backup-Ziele (Nr. 286, behoben mit AP2) | offen, **laufend** |
+| P-P5c-05 | **Bis 10c ausgeliefert ist, entsteht kein Konto mit der Rolle admin** (E-P5c-31) | Verwaltung → NutzerInnen, Filter Rolle | 0 Konten mit der Rolle admin, bis der 10c-PR gemergt und ausgeliefert ist | ein Admin-Konto — es erreicht heute Komplett-Backup und Backup-Ziele (Nr. 286, behoben mit AP2) | offen, **laufend** — **auf Staging** darf nach dem Merge ein Admin-Konto zum Prüfen entstehen (P-P5c-06); dort ist die Behebung dann schon ausgeliefert |
+| P-P5c-06 | **Der Admin sieht vier Reiter und kommt nicht an die Backups** (AP2) | auf Staging nach dem Merge: ein Konto mit der Rolle admin anlegen, damit anmelden; Verwaltung → Protokoll; dann `admin_komplettsicherung.php` und `admin_sicherungsziele.php` von Hand in die Adresszeile | Reiter Verwaltung, E-Mail, Jobs, Sicherung — **kein** Sicherheit, Ziele, System, Archiv; das Suchfeld sagt „Text oder Konto"; beide Backup-Seiten „Kein Zugriff"; in der Leiste unter Protokoll keine Unterpunkte | ein fünfter Reiter; eine Backup-Seite öffnet sich; `?r=sicherheit` in der Adresse zeigt Einträge statt „Kein Zugriff" | offen |
+| P-P5c-07 | **Das Archiv entsteht, geht hinaus und lässt sich laden** (AP2) | auf Staging nach dem Merge: einige Seiten aufrufen (der Job läuft huckepack), dann Verwaltung → Protokoll → Archiv; nach dem nächsten Versand wieder; ein Archiv herunterladen und `sicherheit.jsonl` öffnen | Archive für jede Woche **seit dem ältesten Eintrag** (auf Staging seit P5b, also mehrere); Kennung wie auf dem Schlüsselblatt; nach dem Versand „auf dem Ziel"; im ZIP je Reiter eine `.jsonl` und `manifest.json`; in `sicherheit.jsonl` **keine** IP-Adresse und keine E-Mail-Adresse; im Reiter Verwaltung ein Eintrag „Archiv heruntergeladen". **Die Zeit notieren**, bis das erste Archiv da war | nach einem Tag mit Seitenaufrufen kein Archiv (Jobs → „Protokoll archivieren": Rückstand? Fehler?); „nur lokal" nach einem Versand; eine IP in `sicherheit.jsonl`; „anderer Schlüssel" an einem neuen Archiv | offen |
+| P-P5c-08 | **Die Seite am Handy** (AP2) | auf Staging am Handy, als BetreiberIn: Verwaltung → Protokoll, Reiter „Archiv" (ganz rechts) antippen, dann „Verwaltung"; eine Zeile mit Winkel aufklappen | Die Reiterreihe rollt waagerecht, der aktive Reiter ist nach dem Laden im Bild, die Seite selbst rollt **nicht** waagerecht; die Plakette steht unter dem Text; aufgeklappt stehen die Angaben in fester Schrift | der aktive Reiter außerhalb des Bildes; die Seite lässt sich seitlich schieben; die Plakette neben einem fünfzeiligen Text | offen |
+| P-P5c-09 | **Ein Komplett-Backup hinterlässt einen Eintrag und keine IP** (AP2) | auf Staging: Betrieb → Komplett-Backup → Jetzt sichern, dann „Herunterladen" (unverschlüsselt), die `.sql.gz` entpacken | im Kopf eine Zeile `-- OHNE ZEILEN: sicherheit_ereignisse, rate_limits …`; zu beiden Tabellen `CREATE TABLE`, aber kein `INSERT`; im Protokoll, Reiter Sicherung, zwei Einträge (erzeugt, heruntergeladen) | ein `INSERT` für `sicherheit_ereignisse` oder `rate_limits`; kein Eintrag im Reiter Sicherung | offen |
 
 ## 3. Grenzen der benutzten Prüfmittel
+
+**Aus AP2:**
+
+- **Die Rollenprobe belegt, dass eine Rolle eine Handlung erreicht, nicht,
+  dass sie gelingt.** Eine POST-Zelle „durch" heißt: Die Seite antwortet mit
+  der Token-Ablehnung statt mit dem Rollentor. Ob die Handlung mit gültigem
+  Token das Richtige tut, messen die Proben der Sache (Komplett, Versand)
+  und die Bedienwege.
+- **Die Matrix sieht nur, was in ihr steht.** Eine neue Seite ohne Zeile in
+  `Technik.md` 4.99p prüft niemand — dieselbe Grenze wie beim Register
+  (`CLAUDE.md` 4).
+- **Die Protokollprobe stellt die Zeit.** Sie verschiebt Marke und
+  Einträge; die Grenzen um eine Sommerzeitumstellung sind gelesen
+  (`DateTimeImmutable` in Ortszeit) und nicht gefahren.
+- **Die Zeilenhöhe ist in Chromium gemessen**, in zwei Breiten.
+  Firefox und WebKit fährt die Hauptstufe (AP4).
+
+**Aus AP1:**
 
 - **Die Mailprobe misst bis „250 angenommen".** Ob eine Mail ankommt, sagt
   nur ein Postfach (P-P5c-03).

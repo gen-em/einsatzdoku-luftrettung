@@ -316,6 +316,8 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/gpx_lib.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130 |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
 | `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail F-P5c-29 |
+| `server/auth_guard.php`, `server/admin_*.php`, `server/betrieb_*.php`, `docs/Technik.md` | klein | `rollenprobe` | Nr. 286, Nr. 149 |
+| `server/protokoll_lib.php`, `server/protokoll_archiv_lib.php`, `server/zip_lib.php`, `server/admin_protokoll.php` | klein | `protokollprobe`, `versandprobe` | F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39) |
 | `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
 | `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
 | `server/wartung_lib.php`, `server/auth_guard.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171 |

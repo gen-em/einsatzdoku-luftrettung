@@ -489,4 +489,28 @@ return [
  'regel' => ['art' => 'aufruf', 'namen' => ['error_log']],
  'start' => 77, 'decke_jetzt' => 77, 'decke_ziel' => 77],
 
+/* ---- 10c AP2: zwei neue eine Stellen (R83) ------------------------------- */
+
+['kennung' => 'Z39', 'paket' => '10c AP2',
+ 'beschreibung' => 'new ZipArchive ausserhalb zip_lib.php',
+ 'grund' => 'P5c AP2 (E-P5c-57, F-P5c-55): Das Archiv des Protokolls waere die '
+          . 'fuenfte Stelle gewesen, die ein Archiv selbst oeffnet und selbst '
+          . 'prueft, ob die Erweiterung da ist. Art MUSTER, weil die Art aufruf '
+          . 'ein new X( nicht sieht.',
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/zip_lib.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~\bnew\s+\\\\?ZipArchive\b~'],
+ 'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
+['kennung' => 'Z40', 'paket' => '10c AP2',
+ 'beschreibung' => 'Listen- und Reiter-Markup von Hand ausserhalb ui.php',
+ 'grund' => 'P5c AP2 (F-P5c-54): Suchfeld, Filterpillen und Seitenwahl standen '
+          . 'nur als handgeschriebenes Markup in admin_users.php; die '
+          . 'Protokollseite waere die zweite Kopie gewesen. Seither '
+          . 'ui_listenkopf(), ui_listenfuss() und ui_reiter().',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/ui.php', 'server/version.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~class=\\\\?["\'][^"\']*\b(listensuche|listenfilter|filterreihe|seitenwahl|seitenknopf|seitenluecke|listenfuss|listenzahl|reiter-punkt|reiter-rahmen)\b~'],
+ 'start' => 8, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 ];

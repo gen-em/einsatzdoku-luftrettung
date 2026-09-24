@@ -349,6 +349,24 @@
       "pfad": "admin_demo.php"
     },
     {
+      "name": "44a-protokoll",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_protokoll.php"
+    },
+    {
+      "name": "44b-protokoll-sicherheit",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_protokoll.php?r=sicherheit"
+    },
+    {
+      "name": "44c-protokoll-archiv",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_protokoll.php?r=archiv"
+    },
+    {
       "name": "45-betrieb-status",
       "gruppe": "Betrieb",
       "rolle": "admin",

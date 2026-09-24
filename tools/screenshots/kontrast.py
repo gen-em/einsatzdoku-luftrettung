@@ -79,7 +79,7 @@ PAARE = [
     ('Dunkelblau auf Orange (Primaerknopf)', 'knopf-primaer-schrift', 'knopf-primaer-flaeche', 4.5, 'Primaerknopf'),
     ('Weiss auf Dunkelblau (Kopfleiste)', 'auf-dunkel', 'dunkelblau',  4.5, 'Kopfleiste'),
     ('Orange tief auf Schnee',            'orange-tief', 'schnee',     3.0, 'nur gross oder fett'),
-    ('Orange tief auf Rauch',             'orange-tief', 'rauch',      3.0, 'nur gross oder fett'),
+    ('Orange tief auf Rauch',             'orange-tief', 'rauch',      3.0, 'nur gross oder fett; Strich des aktiven Reiters'),
     ('Orange tief auf Orange hell',       'orange-tief', 'orange-hell', 3.0, 'Warnung, Auftakt fett'),
     # Der Zielzustand: aktive Kennzahl, aktiver Listenfilter, aktives
     # Sprungziel. Die Kombination steht seit O6 in der Anwendung

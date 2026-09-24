@@ -108,6 +108,11 @@
   var aktiv = document.querySelector('.leiste-liste a.eintrag.aktiv');
   var inhalt = document.getElementById('inhalt');
   if (!aktiv || !inhalt) { return; }
+  /* SEITEN MIT REITERN BEKOMMEN KEINE UNTERPUNKTE (P5c/AP2, E-P5c-25). Die
+   * Reiter SIND die Gliederung der Seite; eine zweite daneben in der Leiste
+   * nennte die Karten des gerade offenen Reiters und wechselte bei jedem
+   * Reiterwechsel ihren Inhalt. */
+  if (inhalt.querySelector('.reiter')) { return; }
 
   var karten = [];
   Array.prototype.forEach.call(inhalt.querySelectorAll('.karte[id]'), function (k) {

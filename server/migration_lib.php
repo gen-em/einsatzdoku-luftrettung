@@ -3436,6 +3436,17 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
             $results[] = [$m['id'], $m['label'], 'ok', $detail, $m['zerstoert'] ?? null, null,
                           $m['web'] ?? null];
             $gelaufen = true;
+            /* EIN EINTRAG JE AUSGEFÜHRTER MIGRATION (P5c/AP2, E-P5c-38). NUR,
+             * WENN ES DIE TABELLE SCHON GIBT: Die Migration, die sie anlegt,
+             * läuft in diesem Lauf mit, und ein Eintrag davor scheiterte und
+             * stünde als „nicht geschrieben" rot auf der Statusseite — ein
+             * Fehler, der keiner ist. */
+            if (db_hat_tabelle($pdo, 'protokoll_ereignisse')) {
+                require_once __DIR__ . '/protokoll_lib.php';
+                protokoll('verwaltung', 'migration_ausgefuehrt',
+                    'Migration ' . $m['id'] . ' ausgeführt — ' . $detail,
+                    ['id' => $m['id'], 'freigegeben' => (bool)$freigegeben]);
+            }
         } catch (Throwable $ex) {
             // Nicht verbuchen -> naechster Aufruf versucht es erneut
             $results[] = [$m['id'], $m['label'], 'fail',

@@ -14,6 +14,171 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.39.0] — 2026-09-24
+
+**Das Protokoll lässt sich lesen, und es hat ein Archiv.** P5c/AP2 (Schritt
+10c), Backlog Nr. 286, R38. Nebenstufe: keine Tabelle, keine Spalte, keine
+Migration — `update.php` ist nicht fällig. Die Einstellungen des Archivs
+liegen in vier `app_state`-Zeilen mit Vorgaben; ohne sie arbeitet es mit
+7 und 365 Tagen und schickt auf das Ziel.
+
+### Neu
+
+- **Web: Verwaltung → Protokoll** (E-P5c-02, -10, -25, -26, -38; Bild
+  M-P5c-01a). Seit P5b schrieb die Anwendung Betriebsereignisse, und lesen
+  ließ sich davon nur eine Zählkarte. Jetzt eine Seite mit sieben Reitern —
+  Verwaltung, Sicherheit, E-Mail, Jobs, Sicherung, Ziele, System — und
+  einem Archiv. **Was die Rolle nicht darf, zeigt die Seite nicht:** Die
+  BetreiberIn sieht alle, der Admin vier, und ein ausgegrauter Reiter wäre
+  nur eine Einladung, an der Adresse zu drehen (die Antwort darauf ist 403).
+  **Vier Reiter lesen fremde Tabellen** — `sicherheit_ereignisse`,
+  `csp_berichte`, `mail_warteschlange`, `job_laeufe`,
+  `sicherungsziel_dateien` —, statt dieselben Ereignisse ein zweites Mal
+  abzulegen. **Je Quelle eine Abfrage und nie ein UNION:** Die Tabellen
+  sind zu verschiedenen Zeiten entstanden, auf dem Hoster unter
+  verschiedenen Kollationen, und ein UNION über zwei davon ist dort ein
+  Fehler, den die örtliche Anlage nie zeigt. PHP fügt zusammen. **Die
+  E-Mail-Sicht zeigt nie Empfänger, Betreff oder Fehlertext**, nur Vorlage
+  und Zustand: Eine offene Zeile trägt einen Setz-Link mit gültigem Token.
+  Ein Suchfeld für Text, Konto und Art — die BetreiberIn findet dort auch
+  eine achtstellige Fehlerkennung und landet im Reiter System —, Zeitraum als
+  Pillen, Art als Auswahl, die sofort filtert. Jede Art hat ein Wort und
+  einen Ton; eine Zeile mit Angaben klappt auf. Die Kontoseite führt mit
+  „Im Protokoll" auf das, was ein Konto getan hat oder was ihm geschah, als
+  Pille mit Kreuz.
+- **Web: Das Archiv** (E-P5c-03, -39, -57, -75, -76). Die Datenbank hält
+  die Einträge nur so lange wie ihre Frist. Alle 7 Tage legt der Job
+  `protokoll_archiv` die Einträge eines abgelaufenen Zeitraums aus allen
+  Reitern als ZIP nach `sicherungen/protokoll/` — **je Teil mit dem
+  Serverschlüssel versiegelt, die Kennung des Schlüssels im Namen und im
+  Siegel**, so dass ein umbenanntes Archiv sich nicht öffnen lässt und eines
+  von einem früheren Schlüssel schon am Namen erkannt wird. **In Häppchen
+  zu 500 Zeilen**, weil Produktiv keinen Cron hat und huckepack drei
+  Sekunden bleiben; höchstens 32 MB Klartext je Archiv, der Rest steht als
+  gekürzt im Manifest. Die Grenzen sind **Mitternacht in der Zeitzone der
+  Anlage**, über den Kalender gerechnet — der erste Bau rechnete in UTC und
+  zeigte „23.09. – 24.09." für einen einzigen Tag. Das erste Archiv beginnt
+  beim ältesten Eintrag, damit keine Lücke bleibt. **Ohne IP-Adressen:** Aus
+  `sicherheit_ereignisse` gehen nur Art, Topf, Stufe und Zeit hinein, aus
+  der Warteschlange nur Vorlage und Zustand — die 30-Tage-Zusage aus
+  E-P5a-09 hält auch in einer Datei, die ein Jahr liegt und außer Haus geht.
+  **Die Verwaltung geht hinein, wie sie dasteht, samt Adressen im Text**
+  (entschieden 24.09.2026): Das Audit soll nach einer Kontolöschung noch
+  sagen, wer es war. 365 Tage hier, auf dem Backup-Ziel ohne Regel. Der
+  Download entsiegelt, gibt ein gewöhnliches ZIP heraus und steht selbst im
+  Protokoll.
+- **Web: Einträge, die bis hierher fehlten** (E-P5c-38). Rollenwechsel —
+  ausgerechnet die Handlung, die einem Konto Rechte gibt, stand nirgends —,
+  Setz-Link ausgestellt (ohne den Link), Adresse durch die Verwaltung
+  geändert, Gerät umgeschaltet oder entkoppelt (durch die Verwaltung und
+  selbst; beim Entkoppeln vor dem Löschen geschrieben, sonst wüsste der
+  Eintrag nicht, welches Gerät), Wartung an und aus (von der Seite und aus
+  der Kette), Demo-Konto von Hand zurückgesetzt, Migration ausgeführt,
+  Fristen geändert, Archiv heruntergeladen. Im Reiter Sicherung:
+  Komplett-Backup erzeugt, heruntergeladen, eingespielt, gelöscht und
+  Konto-Backup eingespielt — es gibt keine Tabelle, die das sonst hielte.
+- **Web: Karte „Protokoll" in den Servereinstellungen** (E-P5c-02, -03).
+  Frist der Verwaltungseinträge, Archivzeitraum, Aufbewahrung der Archive,
+  Versand auf das Ziel — und jede Änderung ist selbst ein Eintrag, weil ein
+  kürzeres Audit eine Handlung ist, die ins Audit gehört.
+- **Web: Baustein „Reiter"** (E-P5c-25, `Design.md` 9.37), freigegeben mit
+  M-P5c-01a. Serverseitig, jeder Reiter ein Verweis; schmal rollt die Reihe
+  in ihrem eigenen Behälter. Seiten mit Reitern tragen keine Unterpunkte in
+  der Leiste. **Der Strich des aktiven Reiters steht in `--orange-tief`**,
+  nicht im `--orange` des Mockups (entschieden 24.09.2026): Auf Rauch hätte
+  Orange 2,09 : 1, unter den 3 : 1 für einen Bedienzustand.
+- **Web: Die aufklappbare Zeile** (`ui_zeile()` mit `daten`, `Design.md`
+  9.2) — ein `<details>`, dessen `<summary>` die Zeile ist. **Mit einer
+  Gegenregel zu `.zeile:first-child`:** Das `<summary>` ist immer erstes
+  Kind, und ohne sie wären aufklappbare Zeilen 12 px niedriger als feste
+  (gemessen).
+- **Werkzeug: Die Rollenprobe** (`tools/proben/rollen/`, E-P5c-22). Sie
+  liest die Berechtigungsmatrix aus `docs/Technik.md` 4.99p und fährt jede
+  Zelle — die Tabelle ist damit keine Beschreibung mehr, sondern die
+  Vorgabe. Eine POST-Zelle prüft sie mit **absichtlich falschem Token**:
+  Antwortet die Seite mit der Token-Ablehnung statt mit dem Rollentor, hat
+  die Rolle die Handlung erreicht, ohne dass sie ausgeführt wurde. **Die
+  Probe legt ihre Konten selbst an und räumt sie ab**, statt feste
+  Prüfkonten der Sandbox zu verlangen — eine Probe, die ohne Zuarbeit nicht
+  läuft, ist auf der nächsten frischen Anlage rot. 87 Erwartungen.
+- **Werkzeug: Die Protokollprobe** (`tools/proben/protokoll/`): Häppchen,
+  0 Treffer für IP-Muster und Adressen in Sicherheit und E-Mail des
+  **entsiegelten** Archivs, fremde Kennung, umbenanntes Archiv,
+  Aufbewahrung, Download mit genau einem Eintrag. 21 Erwartungen.
+  **Warum eine eigene:** Das Archiv ist versiegelt — stünde eine
+  IP-Adresse darin, sähe es niemand.
+- **Werkzeug: Die Versandprobe misst die Archive auf dem Ziel** (Teil 13).
+  Dass sie hinausgehen und drüben unter keine Aufbewahrungsregel fallen,
+  stand in E-P5c-39 und hatte keinen Gegenstand — die Protokollprobe
+  prüft nur, dass der Name erkannt wird. Mit einer Regel „eins je Konto"
+  bleiben drei Archive drüben liegen; ohne die eine Zeile in
+  `sz_aufraeumen()` wären es eins (gegengeprobt).
+
+### Geändert
+
+- **Web: Das Komplett-Backup nimmt `sicherheit_ereignisse` und
+  `rate_limits` ohne Zeilen auf** (E-P5c-57, F-P5c-20). Beide führen
+  IP-Adressen und verfallen nach 30 Tagen; ein Stand, der länger liegt und
+  außer Haus geht, hielte, was die Anwendung gerade nicht halten will.
+  **Mit Schema**, nicht ganz weggelassen: Nach einem Wiederanlauf aus einem
+  Dump ohne die Tabellen scheiterte der Ratenschutz bei der ersten Anmeldung.
+  Der Dumpkopf sagt es in einer Zeile „OHNE ZEILEN". Der Preis: Nach einem
+  Wiederanlauf ist eine laufende Sperre aufgehoben.
+- **Web: Die Zählkarte auf Betrieb → Status zählt über dieselben Quellen wie
+  die Seite**, und jede Zeile führt auf ihren Reiter. Bis hierher standen
+  E-Mail, Jobs und Ziele auf null, obwohl ihre Tabellen voll waren.
+- **Web: Die Frist der Verwaltungseinträge zieht aus der Karte „Konten" in
+  die Karte „Protokoll"** — zu dem, was sie begrenzt. In „Konten" wurde
+  ihre Änderung nie protokolliert.
+- **Web: Versand, Speicher und Aufbewahrung kennen die Archive als dritte
+  Dateiart.** Sie gehen hinter Konten und Komplett-Ständen hinaus, zählen
+  gegen Sicherungsgrenze und Warnschwellen (im Segment der Konto-Backups;
+  ein eigenes Segment bräuchte eine Farbe und eine Freigabe), und die
+  Aufbewahrung am Ziel **überspringt** sie ausdrücklich — sonst fielen sie
+  unter die Zahl je Konto, und drüben blieben die letzten zwei.
+- **Web: Suchfeld, Filterpillen und Seitenwahl sind Bausteine**
+  (`ui_listenkopf()`, `ui_listenfuss()`; F-P5c-54). Sie standen nur als
+  Markup in `admin_users.php`, und die Protokollseite wäre die zweite Kopie
+  gewesen. Die Kontenliste benutzt sie jetzt; Registerzeile Z40 hält das
+  Markup außerhalb von `ui.php` auf null.
+- **Web: `zip_lib.php` ist der eine Weg zu `ZipArchive`** (R83, E-P5c-57).
+  Vier Stellen öffneten selbst ein Archiv und fragten je selbst, ob die
+  Erweiterung da ist; das Archiv wäre die fünfte gewesen. Registerzeile Z39.
+- **Web: Betrieb → Status → Sicherheit bleibt die Kurzsicht zum Aufheben**;
+  „Im Protokoll" führt auf den Reiter Sicherheit, wo gesucht und geblättert
+  wird.
+
+### Sicherheit
+
+- **Web: Ein Admin erreichte Komplett-Backup und Backup-Ziele** (Nr. 286,
+  E-P5c-31). Menü und R75 behielten beide Seiten der BetreiberIn vor, die
+  Seiten selbst fragten nur `require_admin()` — per Adresse hätte ein Admin
+  den Klartext-Dump der ganzen Datenbank geholt, mit Passwort-Hashes und
+  versiegelten Zugängen. **Nicht ausgenutzt und nicht ausnutzbar**, weil es
+  kein Konto mit der Rolle Admin gab. Jetzt `require_betreiberin()` vor
+  jeder Handlung; die Rollenprobe hält 15 Zellen je Rolle dagegen, und mit
+  dem alten Tor an einer der beiden Seiten werden 8 davon rot.
+
+### Behoben
+
+- **Werkzeug: Eine Signatur des Stilvergleichs konnte über zwei Zeilen
+  reichen.** Die Seitenprobe setzt Markup aus PHP-Zeichenketten zusammen,
+  und eine Kennung trug dabei einen Zeilenumbruch; in `geplant.txt` stand
+  die Signatur dann auf zwei Zeilen und passte nie. Weißraum in der
+  Kennung ist jetzt ein Leerzeichen — die übrigen Signaturen bleiben
+  zeichengleich.
+- **Werkzeug: Der Prüfstand konnte die Schemaprobe nie messen.** Sein
+  Eintrag rief sie seit PK-03 ohne Zugangsdaten — als `root` ohne
+  Passwort, und das lehnt die örtliche MariaDB ab. Aufgefallen ist es erst
+  jetzt, weil AP2 als erstes Paket seither `migration_lib.php` berührt; in
+  keinem Prüfbericht steht die Schemaprobe. Der Prüfstand ruft jetzt
+  `plattform.sh schema`, das die Zugangsdaten je Fassung kennt und alle
+  vier fährt.
+- **Doku: Zwei Zahlen standen neben ihrem Gegenstand.** `Lizenzen.md`
+  nannte 56 Symbole, als es 57 waren; `Design.md` Kapitel 7 trug unter der
+  erzeugten Schwellentabelle eine zweite, veraltete Summenzeile. Beide sind
+  mit dem Neuerzeugen gefallen.
+
 ## [Web 20.38.0] — 2026-09-23
 
 **Staging sieht nicht mehr aus wie Produktiv, und eine Wartung lässt sich

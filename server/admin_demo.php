@@ -37,6 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($aktion === 'demo_reset') {
             $bericht = demo_zuruecksetzen();
             $notice = 'Demo-Konto auf den Standardzustand zurückgesetzt.';
+            /* NUR DER RESET VON HAND (P5c/AP2, E-P5c-38). Der selbsttätige
+             * alle 30 Minuten schriebe rund 17 500 Einträge im Jahr in den
+             * Reiter mit der langen Frist — und verdeckte jeden anderen. */
+            require_once __DIR__ . '/protokoll_lib.php';
+            protokoll('verwaltung', 'demo_zurueckgesetzt',
+                      'Demo-Konto von Hand auf den Standardzustand zurückgesetzt');
         } elseif ($aktion === 'demo_entfernen' && ($_POST['confirm'] ?? '') === 'ja') {
             demo_entfernen();
             $notice = 'Demo-Konto entfernt.';

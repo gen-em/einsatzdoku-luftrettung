@@ -191,6 +191,9 @@ function speicher_uebersicht(): array
      * die Grenze (das tun sie seit Web 11.2.0) und gehoeren deshalb in den
      * Balken — als Teil der Konto-Backups, denn dort liegen sie. */
     $konto  += (int)$z['sonstige_bytes'];
+    /* Die Archive des Protokolls ebenso (P5c/AP2): Sie liegen in der Ablage
+     * und zählen auf ihre Grenze; ein eigenes Segment gibt es nicht. */
+    $konto  += (int)($z['protokoll_bytes'] ?? 0);
     $backups = $konto + $komp;
 
     $db       = (int)(edbak_marke_lesen(SPEICHER_K_DB) ?? 0);
@@ -293,7 +296,8 @@ function speicher_kontingente_melden(): array
     if ($db === 0 && $dateien === 0) { return $aus; }   // noch nie gemessen
 
     $z       = edbak_ablage_zahlen();
-    $backups = (int)$z['pakete_bytes'] + (int)$z['komplett_bytes'] + (int)$z['sonstige_bytes'];
+    $backups = (int)$z['pakete_bytes'] + (int)$z['komplett_bytes'] + (int)$z['sonstige_bytes']
+             + (int)($z['protokoll_bytes'] ?? 0);
 
     $kontingente = [
         'db' => ['titel' => 'Datenbank', 'ist' => $db,

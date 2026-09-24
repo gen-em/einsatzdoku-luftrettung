@@ -146,7 +146,11 @@ function eigenschaften(css) {
       }
       return { werte: out, gruppe: [...alle].map(el => {
         const g = el.closest('[data-paar]'); return g ? g.getAttribute('data-paar') : ''; }), wer: [...alle].map(el =>
-        el.tagName.toLowerCase() + (el.id ? '#' + el.id : '')
+        /* WEISSRAUM IN DER KENNUNG WIRD EIN LEERZEICHEN (P5c/AP2, F-P5c-85):
+         * Die Seitenprobe setzt Markup aus PHP-Zeichenketten zusammen, und
+         * eine Kennung kann dabei einen Zeilenumbruch tragen. Die Signatur
+         * stand dann ueber zwei Zeilen in `geplant.txt` und passte nie. */
+        el.tagName.toLowerCase() + (el.id ? '#' + String(el.id).replace(/\s+/g, ' ').trim() : '')
         + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : '')
         + ' <' + (el.parentElement ? el.parentElement.tagName.toLowerCase()
                   + (el.parentElement.className && typeof el.parentElement.className === 'string'

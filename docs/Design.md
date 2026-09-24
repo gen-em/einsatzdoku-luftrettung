@@ -307,7 +307,7 @@ Schnee oder Rauch, nicht Weiß.
 | **Dunkelblau auf Orange** | **5,97:1** | 4,5 | **Primärknopf** |
 | Weiß auf Dunkelblau | 13,62:1 | 4,5 | Kopfleiste |
 | Orange tief auf Schnee | 4,32:1 | 3,0 | nur groß oder fett |
-| Orange tief auf Rauch | 4,04:1 | 3,0 | nur groß oder fett |
+| Orange tief auf Rauch | 4,04:1 | 3,0 | nur groß oder fett; Strich des aktiven Reiters (9.37) |
 | Orange tief auf Orange hell | 3,81:1 | 3,0 | Warnung, Auftakt fett |
 | Rot auf Schnee | 4,68:1 | 3,0 | Gefahrknopf: Rand und Schrift ab 18 px |
 | Blau als Fokusring | 3,77:1 | 3,0 | Rand |
@@ -365,23 +365,23 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--schnee` | `#FFFCFA` | 35 |  |
-| `--rauch` | `#F7F5ED` | 34 |  |
-| `--sand` | `#D4C7AD` | 14 |  |
+| `--rauch` | `#F7F5ED` | 37 |  |
+| `--sand` | `#D4C7AD` | 15 |  |
 
 **Schrift**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 23 |  |
-| `--dunkelblau` | `#1A2E4D` | 55 |  |
-| `--gedaempft` | `#6E6459` | 64 |  |
+| `--dunkelblau` | `#1A2E4D` | 57 |  |
+| `--gedaempft` | `#6E6459` | 66 |  |
 | `--auf-dunkel` | `#FFFFFF` | 9 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 36 |  |
+| `--linie` | `#E3DAC6` | 38 |  |
 | `--linie-stark` | `var(--gedaempft)` | 11 |  |
 
 **Orange — Handeln**
@@ -389,7 +389,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--orange` | `#FF8F1F` | 30 |  |
-| `--orange-tief` | `#C25A00` | 17 |  |
+| `--orange-tief` | `#C25A00` | 18 |  |
 | `--orange-hell` | `#FFEBD6` | 23 |  |
 
 **Blau — Auswählen und Erklären**
@@ -420,7 +420,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 8 |  |
-| `--groesse-2` | `13px` | 50 |  |
+| `--groesse-2` | `13px` | 51 |  |
 | `--groesse-3` | `15px` | 13 |  |
 | `--groesse-4` | `16px` | 13 |  |
 | `--groesse-5` | `19px` | 7 |  |
@@ -434,17 +434,17 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 73 |  |
-| `--abstand-2` | `8px` | 106 |  |
-| `--abstand-3` | `12px` | 140 |  |
-| `--abstand-4` | `16px` | 60 |  |
-| `--abstand-5` | `24px` | 30 |  |
+| `--abstand-1` | `4px` | 76 |  |
+| `--abstand-2` | `8px` | 107 |  |
+| `--abstand-3` | `12px` | 146 |  |
+| `--abstand-4` | `16px` | 61 |  |
+| `--abstand-5` | `24px` | 31 |  |
 
 **Radien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--radius-klein` | `6px` | 26 | Plakette, Kästchen, Eingabefeld |
+| `--radius-klein` | `6px` | 27 | Plakette, Kästchen, Eingabefeld |
 | `--radius` | `10px` | 20 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
 
@@ -453,7 +453,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--kopf` | `56px` | 12 |  |
-| `--knopf` | `44px` | 42 |  |
+| `--knopf` | `44px` | 43 |  |
 | `--leiste` | `260px` | 2 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 2 | Seitenleiste 1024–1199 |
 | `--leiste-filter` | `280px` | 1 | Filterleiste der Suche ab 1200 |
@@ -471,9 +471,9 @@ auseinanderlaufen kann.
 | `--ziel-chip` | `calc(var(--symbol-gross) + var(--abstand-1))` | 2 | 28 px, Treffziel |
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
-| `--symbol-gross` | `24px` | 12 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 48 | Haarlinie |
-| `--strich-stark` | `2px` | 32 | Aktivstrich, Randstrich, Fokus |
+| `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
+| `--strich` | `1px` | 51 | Haarlinie |
+| `--strich-stark` | `2px` | 33 | Aktivstrich, Randstrich, Fokus |
 | `--radius-rund` | `999px` | 19 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
@@ -528,7 +528,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--dauer` | `.24s` | 8 |  |
+| `--dauer` | `.24s` | 9 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
 | `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
@@ -764,12 +764,10 @@ neben „Standard der Installation" sprengt sonst jede Zeile.
 | `@media (min-width:1200px)` | 4 |
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px)` | 3 |
-| `@media (min-width:720px)` | 12 |
+| `@media (min-width:720px)` | 13 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 24 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
-
-Zusammen 22 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 25 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -851,10 +849,10 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 35 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 36 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 3 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 36 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 37 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
 | `karte-breit.svg` | Tabler Icons „arrows-horizontal" (MIT) | 1 |
@@ -873,14 +871,15 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `plus.svg` | Tabler Icons „plus" (MIT) | 22 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 16 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 26 |
+| `protokoll.svg` | Tabler Icons „list" (MIT) | 27 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 28 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 13 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 14 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 20 |
 | `server.svg` | Tabler Icons „server" (MIT) | 7 |
-| `sicherung.svg` | Tabler Icons „archive" (MIT) | 11 |
+| `sicherung.svg` | Tabler Icons „archive" (MIT) | 21 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
@@ -894,12 +893,12 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 29 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
-| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
+| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 32 |
 
-57 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+58 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine
@@ -952,6 +951,9 @@ für eine Rückfrage — nicht für ein neues Element.
 | eine **lange Liste durchsuchen** | `ui_kartenfilter()` — ab sechs Einträgen, filtert im Browser (9.32) | ein zweites `.suchfeld` (das ist 48 px hoch und gehört der Seitensuche) |
 | an das **Ende eines langen Abschnitts** einen Rückweg | `ui_nach_oben()` (9.33) | einen gedämpften Textverweis ohne `.knopf` |
 | einen **Streifen über dem Inhalt**, der auf jeder Seite gilt (Umgebung, Ankündigung, Demo, Datenschutz) | `ui_hinweise()` — die eine Reihe mit fester Reihenfolge (9.36) | einen weiteren Streifen unter der Kopfleiste oder einen eigenen Aufruf in der Seite |
+| zwischen **gleichrangigen Sichten einer Seite** wechseln | `ui_reiter()` — serverseitig, jeder Reiter ein Verweis (9.37) | ein Segment mit sieben Wörtern oder eine zweite Reihe Filterpillen |
+| **Angaben zu einem Listeneintrag**, die nicht in den Satz passen | `ui_zeile(['daten' => [[Schlüssel, Wert], …]])` — die Zeile klappt auf (9.2) | ein Blatt mit „⋯“ oder eine zweite Zeile darunter |
+| **Suche, Filter und Seitenwahl** einer langen Liste | `ui_listenkopf()` und `ui_listenfuss()` (9.18a) | dasselbe Markup ein zweites Mal von Hand |
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
@@ -968,41 +970,45 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_geruest_ende()` | `.inhalt` | ja | 636 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 686 |
 | `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 915 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1045 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 1116 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1200 |
-| `ui_hinweise()` | `.hinweise` | ja | 1248 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1276 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1311 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1364 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1406 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1473 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1520 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1573 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1599 |
-| `ui_karte_start()` | `.karte` | ja (+36 Unterklassen) | 1635 |
-| `ui_karte_ende()` | `.karte` | ja (+36 Unterklassen) | 1715 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1750 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1792 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1840 |
-| `ui_zeile()` | `.zeile` | ja (+16 Unterklassen) | 1894 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1942 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1984 |
-| `ui_feld()` | `.feld` | ja (+22 Unterklassen) | 2053 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2118 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2162 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2215 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2259 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2358 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2420 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2461 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2561 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2591 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2603 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 2753 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2831 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1051 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 1122 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1206 |
+| `ui_hinweise()` | `.hinweise` | ja | 1254 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1282 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1317 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1370 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1420 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1487 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1534 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1587 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1613 |
+| `ui_karte_start()` | `.karte` | ja (+36 Unterklassen) | 1649 |
+| `ui_karte_ende()` | `.karte` | ja (+36 Unterklassen) | 1729 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1764 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1806 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1854 |
+| `ui_zeile()` | `.zeile` | ja (+34 Unterklassen) | 1918 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 1973 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2022 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2067 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2139 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2181 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2223 |
+| `ui_feld()` | `.feld` | ja (+23 Unterklassen) | 2292 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2357 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2401 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2454 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2498 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2597 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2659 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2700 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2800 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2830 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2842 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 2992 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3070 |
 
-44 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+48 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
@@ -1092,6 +1098,44 @@ anderes auf sie zeigt — Rauchfläche plus ein orangener Balken links in
 > **Nur für eine Verknüpfung, nicht für einen Zustand.** „Hervorgehoben" heißt
 > *worauf gerade gezeigt wird*, nicht *was ausgewählt ist* und nicht *was
 > wichtig ist*. Für einen Zustand ist die Plakette da (9.6).
+
+**Die aufklappbare Zeile `.zeile-mehr` (seit Web 20.39.0, P5c/AP2,
+E-P5c-26, Bild M-P5c-01a).** Hat ein Eintrag Angaben, die nicht in den Satz
+passen — die `daten` eines Protokolleintrags —, bekommt `ui_zeile()` den
+Schlüssel `daten` (eine Liste von Schlüssel-Wert-Paaren) und gibt statt des
+`<div>` ein `<details class="zeile-mehr">` aus, dessen `<summary>` die Zeile
+**ist**. Die Angaben stehen aufgeklappt darunter als `<dl class="zeile-daten">`
+auf Rauch, in der festen Schrift, `--groesse-2`. Der Winkel steht in der
+Aktionsspalte und dreht sich beim Öffnen (`--dauer`).
+
+```html
+<details class="zeile-mehr">
+  <summary class="zeile">
+    <div class="zeile-text">…</div>
+    <div class="zeile-plaketten">…</div>
+    <div class="zeile-aktionen"><svg class="symbol zeile-winkel">…</svg></div>
+  </summary>
+  <dl class="zeile-daten"><dt>weg</dt><dd>probe</dd></dl>
+</details>
+```
+
+**Kein „⋯"-Blatt auf dem Handy:** Aufklappen ist keine Handlung, sondern
+Lesen, und gehört deshalb nicht zu den Zeilenaktionen (9.3).
+
+**Die Gegenregel ist Pflicht, nicht Zierde.** Das `<summary>` ist immer
+erstes Kind seines `<details>`; `.zeile:first-child` nähme ihm den oberen
+Innenabstand, und aufklappbare Zeilen wären **13 px niedriger** als feste
+(F-P5c-13, gemessen in M-P5c-01). Die Gegenregel steht an
+`.zeile-mehr > summary.zeile` (Spezifität 0,2,1 gegen 0,2,0); erste und
+letzte Zeile der Liste behandelt `.zeile-mehr:first-child` bzw.
+`:last-child`. Die Trennlinie trägt das `<details>`, nicht das `<summary>` —
+sonst stünde sie aufgeklappt zwischen Zeile und Angaben. Der Bedienweg
+`admin-protokoll-zeilen` misst beide Fassungen gleich hoch.
+
+**`aktionsspalte => true`** hält die leere Aktionsspalte auch in Zeilen
+**ohne** Angaben, damit alle Plaketten einer Liste auf einer Kante enden
+(Vorgabe 17.09.2026). Ohne den Schlüssel bleibt eine Zeile ohne Aktionen,
+wie sie war.
 
 ### 9.3 Zeilenaktionen — dieselben Handlungen, zwei Formen
 
@@ -1801,6 +1845,28 @@ lesbar, sondern nur breiter.
 
 **Die Regel gilt für jede Liste mit Suche und Filtern**, nicht für die eine
 Seite, auf der sie aufgefallen ist.
+
+**Seit Web 20.39.0 ein Weg: `ui_listenkopf()` und `ui_listenfuss()`** (P5c/AP2,
+R83, F-P5c-54). Bis dahin standen Suchfeld, Filterpillen und Seitenwahl nur
+als handgeschriebenes Markup in `admin_users.php`; die Protokollseite wäre
+die zweite Kopie gewesen. Beide Seiten benutzen jetzt die Helfer, und das
+Register (`tools/zaehlung/register.php`, Zeile „Listenkopf und Reiter")
+hält die Klassen außerhalb von `ui.php` auf **null**.
+
+- **`ui_listenkopf()`** — Suchfeld (Kennung = Name des Feldes, wie bisher),
+  versteckte Felder für das, was die Suche mitnehmen soll, Filterpillen mit
+  optionaler Zahl und optional ein **Auswahlfeld** in der Filterreihe
+  (`.filterreihe .feld-eingabe`: so hoch wie ein Filter, nur so breit, wie
+  es muss). Mit Skript (`assets/listenkopf.js`) schickt das Auswahlfeld
+  sofort ab und der Knopf „Filtern" ist verborgen; ohne Skript steht er da.
+- **Eine Pille mit Kreuz** (`kreuz => true`) ist ein Filter aus der Adresse,
+  der sich zurücknehmen lässt — der Kontofilter der Protokollseite: aktiv,
+  mit `schliessen`-Zeichen, der Verweis nimmt ihn weg. **Keine neue
+  Darstellung:** Es ist die aktive `.listenfilter`-Pille mit einem Symbol
+  aus dem Vorrat.
+- **`ui_listenfuss()`** — die Zählung und ab zwei Seiten die Seitenwahl:
+  erste, letzte und die Nachbarn der aktuellen Seite, dazwischen eine
+  Ellipse.
 
 
 ### 9.19 Speicherbalken (`.speicher-balken`)
@@ -2597,6 +2663,70 @@ drei Paare in `kontrast.py` und eine Freigabe mit Mockup.
 `schliessen` und `mail` lagen im Vorrat.
 
 
+### 9.37 Reiter (`.reiter`, `.reiter-punkt`, `.reiter-abgesetzt`, `.reiter-rahmen`)
+
+*Seit Web 20.39.0 (P5c/AP2, E-P5c-25). **Neuer Baustein**, freigegeben mit
+der Mockup-Runde M-P5c-01a (20.09.2026).*
+
+**Zweck:** Wechsel zwischen gleichrangigen Sichten **einer** Seite — heute
+die Reiter der Protokollseite (Verwaltung, Sicherheit, Jobs, E-Mail, System,
+Fehler, dazu Archiv). Serverseitig: Jeder Reiter ist ein Verweis, der
+Parameter steht in der Adresse, und ohne Skript funktioniert alles. **Drei
+Verwender sind geplant:** Protokoll (AP2, hier entstanden), Statistik
+(AP7), Rechtstexte (AP9).
+
+```php
+ui_reiter(['label' => 'Bereiche des Protokolls', 'punkte' => [
+    ['text' => 'Verwaltung', 'href' => '?r=verwaltung', 'aktiv' => true],
+    ['text' => 'Jobs',       'href' => '?r=jobs'],
+    ['text' => 'Archiv',     'href' => '?r=archiv', 'abgesetzt' => true],
+]]);
+```
+
+| Teil | Darstellung |
+|---|---|
+| `.reiter` | Reihe mit Grundlinie `--strich` in `--linie`, `--abstand-4` darunter |
+| `.reiter-punkt` | Kopfschrift 600, `--gedaempft`, `min-height: var(--knopf)` (44/36 px), nie umbrechend |
+| `.reiter-punkt.aktiv` | `--dunkelblau`, Unterstrich `--strich-stark` in `--orange-tief`, `aria-current="page"` |
+| `.reiter-abgesetzt` | am rechten Rand (`margin-left:auto`) — die Ablage („Archiv"), kein Ereignisreiter |
+| `.reiter-rahmen` | Behälter für den Verlauf am Rand; `.rollt` / `.rollt-links` setzt `assets/reiter.js` |
+
+**Orange heißt „hier stehst du"** — dieselbe Auszeichnung wie der aktive
+Punkt der Kopfleiste, **aber in der tiefen Stufe** (E-P5c-79). Der Strich
+steht auf Rauch, und `--orange` hätte dort **2,09 : 1**, unter den 3 : 1 für
+einen Bedienzustand (WCAG 1.4.11). Die Schrift wechselt zwar mit, von
+Gedämpft nach Dunkelblau, aber auch diese beiden liegen nur **2,35 : 1**
+auseinander — zusammen tragen zwei schwache Zeichen kein starkes.
+`--orange-tief` auf Rauch hat **4,04 : 1** (3.4). Das ist die Regel aus der
+Ausnahme „Orange als Fläche": Wo ein oranger Strich allein steht, tritt
+`--orange-tief` an seine Stelle. Das Mockup M-P5c-01a zeigte `--orange`;
+entschieden am 24.09.2026.
+
+**Warum nicht das Segment und nicht die Filterpillen** (M-P5c-01a, geprüft
+und verworfen): Das Segment ist für wenige kurze Möglichkeiten; sieben
+Wörter passen bei 400 px nicht. Die Pillen stehen eine Zeile tiefer als
+Zeitraumfilter — zwei Reihen gleich aussehender Pillen mit verschiedener
+Bedeutung wären die Verwechslung.
+
+**Schmal rollt die Reihe in ihrem eigenen Behälter** (`overflow-x:auto`,
+Rollbalken verborgen); die Seite selbst läuft nie waagerecht aus dem Bild
+(Grundregel Kapitel 6). `assets/reiter.js` holt den aktiven Reiter beim
+Laden ins Bild und setzt den Verlauf (`--abstand-5` breit, nach `--rauch`)
+an den Rand, hinter dem noch etwas liegt. Ohne Skript rollt die Reihe
+trotzdem, nur ohne Verlauf.
+
+**Seiten mit Reitern tragen keine Unterpunkte in der Leiste:** `menue.js`
+baut keine, wenn `#inhalt` eine `.reiter`-Reihe enthält. Zwei Wege zu
+denselben Sichten wären einer zu viel.
+
+**Attribute je Reiter** (`attr`) reicht der Baustein durch — gebraucht für
+die Rückfrage bei ungespeichertem Text in den Rechtstexten (AP9,
+`data-cancel-form`, F-P5c-57).
+
+**Kein neues Token, kein neuer Farbwert.** Neues Symbol dieses Pakets ist
+`protokoll.svg` (Kapitel 8) — für den Menüpunkt, nicht für den Reiter; ein
+Reiter trägt kein Zeichen.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Sechs Typen
@@ -2782,6 +2912,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 20.39.0 (P5c/AP2)** | **9.37 neu — Reiter**, freigegeben mit M-P5c-01a (E-P5c-25): Wechsel zwischen gleichrangigen Sichten einer Seite, serverseitig, schmal rollend im eigenen Behälter; Seiten mit Reitern tragen keine Unterpunkte in der Leiste. Der Strich des aktiven Reiters steht in `--orange-tief` statt im `--orange` des Mockups (2,09 → 4,04 : 1 auf Rauch, E-P5c-79); Kapitel 3.4 nennt die Rolle beim Paar „Orange tief auf Rauch". **9.2 um die aufklappbare Zeile `.zeile-mehr` ergänzt** (E-P5c-26) samt Gegenregel zu `.zeile:first-child` (F-P5c-13) und dem Schlüssel `aktionsspalte`. **9.18a um die Helfer `ui_listenkopf()` und `ui_listenfuss()`** — Suche, Filterpillen (eine mit Kreuz), Auswahlfeld und Seitenwahl sind ein Weg; `admin_users.php` ist umgezogen, das Register hält die Klassen außerhalb von `ui.php` auf null (F-P5c-54). Kapitel 9.0 um drei Zeilen. **Ein neues Symbol** — `protokoll.svg`, Tabler „list" (Vorrat 57 → 58), für den Menüpunkt Verwaltung → Protokoll. **Kein neues Token, kein neuer Farbwert.** Die erzeugten Tabellen neu erzeugt: Bausteine **44 → 48** Funktionen (`ui_zeile_mehr()`, `ui_reiter()`, `ui_listenkopf()`, `ui_listenfuss()`), Medienblöcke **24 → 25** (die Protokollliste ab 720 px), Symbole **57 → 58**. In Kapitel 7 stand unter der erzeugten Schwellentabelle eine **zweite, veraltete Summenzeile** („22 Medienblöcke") — ein Rest eines früheren Einsetzens von Hand; beim Ersetzen bis zur nächsten Überschrift ist sie gefallen. |
 | **Web 20.38.0 (P5c/AP1)** | **9.36 neu — Streifen über dem Inhalt und Kopfleiste mit Etikett**, freigegeben mit M-P5c-02 (a). Ein Behälter `.hinweise` für bis zu vier Streifen in fester Reihenfolge (Umgebung → Ankündigung → Demo → Datenschutz), zwei Varianten vorhandener Bausteine (`.hinweis-umgebung` am Hinweisstreifen, `.meldung-ankuendigung` an der Meldung) und eine Variante der Kopfleiste (`.kopf-umgebung`, aktiver Punkt in `--orange-hell`, Variante A, E-P5c-59). Kapitel **3.4** um die drei Paare auf Rot ergänzt und um das Paar „Dunkelblau auf Orange hell", das seit Web 16.3.0 im Werkzeug stand und hier fehlte — **25 Paare, 0 verfehlt**. Kapitel 9.0 um eine Zeile. **Die vier erzeugten Tabellen neu erzeugt** — sie standen auf einem älteren Stand: Bausteine **40 → 44** Funktionen (drei aus diesem Paket, dazu `ui_tabellen_bootstrap()` aus Schritt 15, das bis dahin fehlte), Verwendungszahlen der Token und Symbole nachgezogen; `tools/erzeugen/design.py` kennt die beiden neuen Funktionen in seiner Liste der abweichenden Namen. **Kein neues Token, kein neuer Farbwert, kein neues Symbol.** |
 | **Web 20.1.0 (S10/AP3)** | **10.1 um einen sechsten Seitentyp ergänzt: die Druckseite** — und mit ihr das **erste `@media print` des Projekts** (Stylesheet, Abschnitt 26, drei Regeln). Kein neuer Baustein: Das Schlüsselblatt benutzt Lesespalte, Meldung, Wertekasten, Feldhinweis und Knopf; was es zum eigenen Typ macht, ist sein Zweck. Eine neue Klasse mit Regel — `.blatt-wert`, `.codeblock-wert` mit zwei Änderungen (darf umbrechen, bricht **nur zwischen** den Vierergruppen). **Kein neues Token, kein neuer Farbwert, kein neues Symbol:** Die Flächenregel im Druck setzt `background: none` statt eines weißen Hexwerts, weil die Skala geschlossen ist und es keinen Token für Weiß gibt. Kapitel **9.6** um den dritten durchgerutschten Plakettenton ergänzt (`ok`, zwei Altstellen ohne Regel, Backlog Nr. 36). Gemessen: Vollständigkeit **Hexfarben außerhalb `:root` 0**, Befunde 329 → 335 (die sechs sind das `→` der Pfadschreibweise *Betrieb → Servereinstellungen*); Bilderlauf `43b`, `45`, `48`, `48a` in acht Breiten, **beide Bedienhöhen**, je **0 Überlauf / 0 Knöpfe falscher Höhe**; Kontraste **22 Paare, 0 verfehlt**; Druckansicht bei 718 px (210 mm) **16 Gruppen, 0 zerschnitten, 0 Überlauf**. |
 | **Web 19.6.0 (Mockup-Runde 9c / AP4)** | **9.12 um zwei Absätze ergänzt** (E-P3-27 fortgeschrieben): Das Blatt **fährt auf** (`translateY(100%)` → `.blatt-auf`, `--dauer`, am Schreibtisch ausdrücklich nicht), und der **Öffner bleibt markiert**, solange sein Blatt offen ist. Kapitel **3.1** sagt dazu, dass Orange seither auch „hier ist gerade etwas offen" heißt — als Fortsetzung von „hier wird gehandelt", nicht als zweite Bedeutung. Die Markierung steht **am Attribut** `[data-blatt][aria-expanded="true"]` und erreicht damit alle vier Bauarten von Öffnern (6 × `ui_aktionen()`, 9 × `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds, 3 handgeschriebene Sortierblatt-Knöpfe) — E-MR-25. **`--dauer` von .18 s auf .24 s** für die ganze Anwendung (E-MR-22, F-MR-12); der Grundsatz in Kapitel 6 nennt den neuen Wert. **Kein neues Token** — die Fassung D4 benutzt `--orange-hell` und `--orange-tief`, das Kontrastpaar „Orange tief auf Orange hell" war schon gerechnet. **Kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren, fünf Öffner, mit und ohne abbestellte Bewegung: Fläche und Schrift überall richtig, nach `Escape` `hidden=true`, `aria-expanded=false`, Fokus zurück am Knopf; mit abbestellter Bewegung 0,01 ms und kein Zwischenbild. |

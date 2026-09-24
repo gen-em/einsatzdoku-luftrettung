@@ -1090,6 +1090,15 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
     require_once __DIR__ . '/komplett_lib.php';
     if (is_dir(komp_wurzel())) { array_unshift($ordner, KOMP_ORDNER); }
 
+    /* DIE ARCHIVE DES PROTOKOLLS SIND DIE DRITTE DATEIART (P5c/AP2,
+     * E-P5c-39) — hinten angehängt, weil sie klein sind und weil ein
+     * Kontopaket, das nicht hinausgeht, schwerer wiegt. Nur mit der
+     * Einstellung (Vorgabe an). */
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
+    if (protokoll_archiv_versand() && is_dir(protokoll_archiv_wurzel())) {
+        $ordner[] = PROTOKOLL_ARCHIV_ORDNER;
+    }
+
     foreach ($ziele as $z) {
         if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
 
@@ -1134,11 +1143,15 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
                  * der mitten in einer Übertragung von der Zeit eingeholt
                  * wird, hinterlässt am Ziel eine halbe Datei. */
                 if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
-                $pakete = $kennung === KOMP_ORDNER
-                    ? array_map(fn(array $s): array => ['datei' => $s['datei'],
-                                                        'groesse' => $s['groesse']],
-                                komp_staende())
-                    : edbak_pakete($kennung);
+                $pakete = match ($kennung) {
+                    KOMP_ORDNER => array_map(fn(array $s): array => ['datei' => $s['datei'],
+                                                                     'groesse' => $s['groesse']],
+                                             komp_staende()),
+                    PROTOKOLL_ARCHIV_ORDNER => array_map(fn(array $a): array => [
+                                                   'datei' => $a['datei'], 'groesse' => $a['bytes']],
+                                               protokoll_archive()),
+                    default => edbak_pakete($kennung),
+                };
                 if ($pakete === []) { continue; }
                 $weg->ordner($kennung);
                 $dort = $weg->liste($kennung);
@@ -1178,9 +1191,11 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
                         sz_versand_vermerken((int)$z['id'], $kennung, $name, $bytes);
                         continue;
                     }
-                    $hier = $kennung === KOMP_ORDNER
-                        ? komp_wurzel() . '/' . $name
-                        : edbak_ordner($kennung) . '/' . $name;
+                    $hier = match ($kennung) {
+                        KOMP_ORDNER             => komp_wurzel() . '/' . $name,
+                        PROTOKOLL_ARCHIV_ORDNER => protokoll_archiv_wurzel() . '/' . $name,
+                        default                 => edbak_ordner($kennung) . '/' . $name,
+                    };
                     $weg->senden($hier, $kennung . '/' . $name);
                     /* DAS PROTOKOLL STEHT DIREKT HINTER DEM VERSAND
                      * (P5a/AP10). Es ist die zweite der drei Sicherungen der
@@ -1271,6 +1286,13 @@ function sz_versand_rueckstand(): ?int
     require_once __DIR__ . '/komplett_lib.php';
     foreach (komp_staende() as $st) {
         if ((int)@filemtime(komp_wurzel() . '/' . $st['datei']) > $grenze) { $n++; }
+    }
+    /* Und die Archive des Protokolls (P5c/AP2), wenn sie mitgehen. */
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
+    if (protokoll_archiv_versand()) {
+        foreach (protokoll_archive() as $a) {
+            if ((int)@filemtime(protokoll_archiv_wurzel() . '/' . $a['datei']) > $grenze) { $n++; }
+        }
     }
     return $n;
 }
@@ -1448,9 +1470,12 @@ function sz_ist_sicherungsname(string $ordner, string $name): bool
 {
     require_once __DIR__ . '/komplett_lib.php';
     require_once __DIR__ . '/adminbackup_lib.php';
-    return $ordner === KOMP_ORDNER
-        ? komp_name_gueltig($name)
-        : edbak_paketname_gueltig($name);
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
+    return match ($ordner) {
+        KOMP_ORDNER             => komp_name_gueltig($name),
+        PROTOKOLL_ARCHIV_ORDNER => protokoll_archiv_name_gueltig($name),
+        default                 => edbak_paketname_gueltig($name),
+    };
 }
 
 /**
@@ -1595,9 +1620,15 @@ function sz_aufraeumen(array $ziel, Zielweg $weg, callable $zeitLinks,
     }
     $ordner = array_values(array_unique(array_filter($ordner, static fn($o) => $o !== '')));
     sort($ordner);
+    require_once __DIR__ . '/protokoll_archiv_lib.php';   // PROTOKOLL_ARCHIV_ORDNER
 
     foreach ($ordner as $o) {
         if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
+        /* DIE ARCHIVE DES PROTOKOLLS HABEN DORT KEINE REGEL (E-P5c-39):
+         * rund 52 kleine Dateien im Jahr. Ohne diese Zeile fiele der Ordner
+         * unter die Zahl je KONTO — und die Regel löschte drüben alle bis
+         * auf die letzten zwei Wochen. */
+        if ($o === PROTOKOLL_ARCHIV_ORDNER) { continue; }
         $behalten = $o === KOMP_ORDNER ? $bm : $bk;
         if ($behalten === null) { continue; }   // nur eine der beiden Zahlen gesetzt
 
