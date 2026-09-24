@@ -139,8 +139,15 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **319** und trägt seine
-Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **339** und trägt seine
+Spanne hier ein, bevor er pusht. **Vergeben und reserviert (24.09.2026,
+nachgesehen auf `origin/main` `ba2ec57`, höchste 318, und auf dem P5c-Zweig
+`3576a97`):** **319 bis 328** der P5c-Zweig `claude/p5c-mockups-konzept-4yeomf`
+(zweite Spanne, dort eingetragen beim Aufnehmen von BR); **329 bis 333**
+Konzept BV, der Vorgriff auf Backlog-Runde 4 (Zweig
+`claude/intelligent-carson-q8f7ag`); **334 bis 338** die Android-Runde AR
+(eigene Instanz, Zweig bei der Vergabe noch nicht angelegt). *(Bis
+zum 24.09.2026 stand hier 319. Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
 Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** das
