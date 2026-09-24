@@ -37,7 +37,7 @@
  *
  * Aufruf:
  *   node tools/proben/rueckweg/probe.mjs [--basis URL] [--admin E-MAIL]
- *        [--admin-pw PASSWORT] [--admin-totp GEHEIMNIS]
+ *        [--admin-pw PASSWORT] [--admin-totp GEHEIMNIS] [--motor chromium|firefox|webkit]
  *   (Vorgabe: die Sandbox, admin@gen-em.org, ihr Passwort und ihr Geheimnis.
  *   BENANNTE SCHALTER und eine Menge `BEKANNT`, damit `tools/kettenaufrufe/`
  *   den Aufruf in Stufe 2 gegen die Schnittstelle halten kann.)
@@ -55,7 +55,7 @@ import { naechsterCode } from '../../zweitfaktor/totp.mjs';
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
 const ARG = process.argv.slice(2);
-const BEKANNT = new Set(['--basis', '--admin', '--admin-pw', '--admin-totp']);
+const BEKANNT = new Set(['--basis', '--admin', '--admin-pw', '--admin-totp', '--motor']);
 for (let i = 0; i < ARG.length; i += 2) {
   if (!BEKANNT.has(ARG[i])) { console.error(`Unbekannter Schalter: ${ARG[i]}`); process.exit(2); }
 }
@@ -66,10 +66,18 @@ const ADMIN  = [wert('--admin', 'admin@gen-em.org'), wert('--admin-pw', 'pruefst
 const KONTO  = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const PASSWORT = 'umlaufpruefung2026-rueckweg';
 const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
+/* Der Motor (RW-04, Backlog Nr. 300): Vorgabe Chromium, wie in der Kette.
+ * Firefox und WebKit fährt man von Hand — sie starten in diesem Container
+ * (F-RW-02, Nr. 301); die Kontoanlage bleibt in Chromium, gemessen wird der
+ * Rückweg selbst im gewählten Motor. */
+const MOTOR = wert('--motor', 'chromium');
+if (!['chromium', 'firefox', 'webkit'].includes(MOTOR)) {
+  console.error(`Unbekannter Motor: ${MOTOR} (chromium, firefox, webkit)`); process.exit(2);
+}
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import('file://' + MODUL);
+const motor = (await import('file://' + MODUL))[MOTOR];
 
 let gesamt = 0, offen = 0;
 const pruefe = (ok, was, wert = '') => {
@@ -101,8 +109,17 @@ async function anmelden(s, adresse) {
 }
 const seite = s => new URL(s.url()).pathname.split('/').pop();
 
-/** Bis das Paar da ist: `RW_STAND` einer Seite mit Rüstzeug, neu geladen. */
-async function paarAbwarten(s) {
+/** Bis das Paar da ist: `RW_STAND` einer Seite mit Rüstzeug, neu geladen.
+ *
+ * ERST DIE ANTWORT DES ENDPUNKTS ABWARTEN, DANN NEU LADEN (RW-04, F-RW-22).
+ * Das Paar entsteht im Browser nach der Schlüsselableitung, und die läuft
+ * ohne Netzverkehr — `networkidle` meldet sich mitten darin. Wer dann neu
+ * lädt, bricht sie ab. In Chromium war sie schneller als das Fenster, in
+ * Firefox und WebKit nicht: jeder Neuladevorgang fing von vorn an, und das
+ * Paar entstand nie. `anlage` ist die Antwort auf `api/rueckweg_anlegen.php`,
+ * erwartet VOR der Navigation, die das Entsperren auslöst. */
+async function paarAbwarten(s, anlage) {
+  await anlage;
   for (let i = 0; i < 20; i++) {
     await s.goto(`${BASIS}/index.php`, { waitUntil: 'networkidle' });
     const st = await s.evaluate(() => typeof RW_STAND === 'undefined' ? null : RW_STAND);
@@ -136,11 +153,15 @@ async function weg(browser, rolle) {
   s.on('pageerror', e => fehler.push(e.message));
   let mailVorher = 0;
   if (lokal) { mailVorher = Number(php('echo (int)db()->query("SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange")->fetchColumn();')); }
+  /* Die Anlage des Paars kommt auf der ersten Seite mit Rüstzeug nach dem
+   * Anmelden (NutzerIn) bzw. nach dem Tor (BetreiberIn) — erwartet ab jetzt. */
+  const anlage = s.waitForResponse(r => r.url().includes('/api/rueckweg_anlegen.php'),
+                                   { timeout: 120000 }).catch(() => null);
   try {
     /* 2 + 3: anmelden, Paar, Zweitfaktor */
     await anmelden(s, adresse);
     if (rolle === 'user') {
-      const st = await paarAbwarten(s);
+      const st = await paarAbwarten(s, anlage);
       pruefe(st === 'da', 'anmelden: das Paar entsteht still', `RW_STAND ${st}`);
       await s.goto(`${BASIS}/einstellungen.php?t=profil`, { waitUntil: 'domcontentloaded' });
       await Promise.all([s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
@@ -151,7 +172,7 @@ async function weg(browser, rolle) {
       await einschalten(s, 'form button[type="submit"]');
       await s.check('[data-zf-gesichert]');
       await Promise.all([s.waitForNavigation({ waitUntil: 'domcontentloaded' }), s.click('[data-zf-weiter]')]);
-      const st = await paarAbwarten(s);
+      const st = await paarAbwarten(s, anlage);
       pruefe(st === 'da', 'nach dem Tor: das Paar entsteht still', `RW_STAND ${st}`);
     }
     const codes = await s.goto(`${BASIS}/einstellungen.php?t=profil`, { waitUntil: 'domcontentloaded' })
@@ -244,8 +265,8 @@ async function weg(browser, rolle) {
   }
 }
 
-console.log(`Rückwegprobe (Browser) gegen ${BASIS}${lokal ? ' — örtlich, mit Datenbank' : ''}`);
-const browser = await chromium.launch();
+console.log(`Rückwegprobe (Browser, ${MOTOR}) gegen ${BASIS}${lokal ? ' — örtlich, mit Datenbank' : ''}`);
+const browser = await motor.launch();
 try {
   await weg(browser, 'user');
   await weg(browser, 'betreiberin');

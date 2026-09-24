@@ -5,7 +5,8 @@ Gehört zu `Konzept-RW-Zweitfaktor-Rueckweg.md` (im P5c-Konzept AP5b). Nach
 Browser, was nicht und warum, und eine abhakbare Prüfliste — je Punkt der
 Bedienweg, das erwartete Ergebnis und woran ein Scheitern zu erkennen ist.
 Angelegt mit RW-01; jedes Paket schreibt seinen Abschnitt fort, RW-04
-schließt es ab.
+schließt es ab (24.09.2026). **Stand: AP5b gebaut; offen sind die fünf
+Prüfpunkte in 2 und das, was 0 nennt.**
 
 ## 0. Was nicht geprüft werden konnte
 
@@ -14,13 +15,14 @@ schließt es ab.
 | Was | Warum nicht | Wann dann |
 |---|---|---|
 | **Die Rückweg-Prüfung beim Hoster** (RW-01) | Örtlich gemessen unter PHP 8.4.19 und — von Hand — 8.3.33, beide mit OpenSSL 3.x. Welchen Weg der Hoster nimmt (`openssl` oder reines PHP) und wie lange er braucht, sagt nur die Statuszeile auf der Anlage. | P-RW-01 (Produktiv), Staging nach dem Merge |
-| **Die Plattformmatrix der Hauptstufe** (RW-01, Nr. 300) | Der Prüfstand fährt in `haupt` die Schemaprobe über vier Datenbanken unter PHP 8.4, aber kein PHP 8.3 und keinen Kreislauf je Datenbank. Von Hand gefahren: die Migration über Betrieb → Updates und die Rückwegprobe unter PHP 8.3.33 (1). **Nicht gefahren:** ein Kreislauf `edbak` gegen MariaDB 10.6, MySQL 8.0 und 8.4.0 — RW-01 legt drei leere Spalten an, die kein Konto-Backup trägt (E-RW-09). | Backlog Nr. 300 |
-| **Das Paar in Firefox und WebKit** (RW-02) | Der Bedienweg läuft in Chromium 141. Dass Firefox und WebKit ein P-256-Paar erzeugen, PKCS8 ausführen und im IEEE-Format signieren, hat F-RW-02 in der Vorbereitung gemessen (drei Motoren, 12 / 0) — nicht mit `rueckweg.js` selbst. | RW-03 (`probe.mjs`), P-RW-03 auf Staging |
+| **Die Plattformmatrix der Hauptstufe** (RW-01, Nr. 300) | Der Prüfstand fährt in `haupt` die Schemaprobe über vier Datenbanken unter PHP 8.4, aber kein PHP 8.3 und keinen Kreislauf je Datenbank. Von Hand gefahren: die Migration über Betrieb → Updates und die Rückwegprobe unter PHP 8.3.33 (1); in RW-04 dazu Rückweg (beide Teile), Wartungs-, Zweitfaktor- und Rollenprobe unter 8.3.33 (1c). **Nicht gefahren:** ein Kreislauf `edbak` gegen MariaDB 10.6, MySQL 8.0 und 8.4.0 — RW-01 legt drei leere Spalten an, die kein Konto-Backup trägt (E-RW-09). | Backlog Nr. 300 |
+| ~~**Das Paar in Firefox und WebKit** (RW-02)~~ | **Seit RW-04 gemessen:** `probe.mjs --motor firefox` und `--motor webkit` legen das Paar mit `rueckweg.js` an und signieren damit, je **23 / 0** (1c). Es bleiben die Motoren von Playwright (Firefox 142, WebKit 26) — nicht das Safari eines iPhones | P-RW-03 mit dem Browser der Betreiberin |
 | **Ein Kreislauf `edbak` in ein Zielkonto mit Paar** (RW-02, Abnahme „Paar unverändert") | Gemessen ist die Konstruktion: Kontopaket und Freigabe haben **0** Zeichenketten mit `rw_` (Rückwegprobe A8, Gegenprobe rot), `edbak_restore()` schreibt `users` nur mit benannten Spalten. Der Kreislauf im Prüfstand legt sein Konto frisch an; ob dessen Paar vor dem Einspielen schon entstanden ist, sagt er nicht, und ihn dafür umzubauen gehört nicht in RW. | Kreislauf-Umbau, wenn er je ansteht |
 | **Die Sperre nach zehn Fehlversuchen am Endpunkt** (RW-02) | Zehn falsche Token sperrten die Adresse der Sandbox für jede Anmeldung (F-RW-16). Gemessen: Ein Fehlversuch zählt unter dem Kontomerkmal im Topf `login`, eine gesetzte Sperre dort hält auch das richtige Token auf (429). Die Leiter misst die Ratenprobe. | — |
 | **Die Rückwegprobe gegen Staging** (RW-03, Stufe 2) | Der Schritt steht in `auslieferung.yml`, `kettenaufrufe` hält den Aufruf gegen die Schnittstelle (0 ungeprüft) — gelaufen ist er nicht: Stufe 2 fährt erst nach dem Merge, und `STAGING_TOTP` muss dann stehen. Welchen Prüfweg phpseclib beim Hoster nimmt, sagt erst dieser Lauf. | P-RW-02 |
-| **Der Rückweg in Firefox und WebKit** (RW-03) | `probe.mjs` fährt Chromium 141. F-RW-02 hat Paar und Signatur in allen drei Motoren gemessen, nicht `signieren()` in `rueckweg.js`. | P-RW-03 auf Staging mit dem Browser der Betreiberin |
-| **Ein einmaliger Fehlschlag des Bedienwegs `einstellungen-profil-rueckweg`** (RW-03) | Einmal rot in sieben Läufen, im selben Lauf mit den beiden Zweitfaktor-Wegen; die Stelle ist verloren. In sechs Läufen danach — allein, zu zweit, zu dritt — nicht wieder aufgetreten. Kein Befund mit Ursache, aber auch kein Grund, ihn wegzulassen. | Prüfstand dieses Pakets; tritt er dort auf, steht der Schritt im Bericht |
+| **Der Rückweg in Firefox und WebKit — im Tor** (RW-03, RW-04) | Von Hand in RW-04 gemessen (1c: Firefox 23 / 0, WebKit 23 / 0); die Kette und der Prüfstand fahren weiter nur Chromium. **WebKit braucht dafür einen `php -S` mit mehreren Arbeitern** — mit einem blieb es in 2 von 4 Läufen beim zweiten Anmelden hängen (F-RW-23) | Nr. 300, Nr. 301; P-RW-03 |
+| **Zwei Verbindungsabbrüche der Bedienprobe im ersten Prüfstand von RW-04** | `admin-protokoll-reiter` und `-zeilen` kamen nicht an die Seite (`ERR_TOO_MANY_RETRIES`), obwohl der Server mit 200 antwortete; einzeln 3 von 3 grün. Die Verbindungsschicht der Sandbox (TLS-Vorschaltung vor einem einfädigen `php -S`) ist die naheliegende Stelle — belegt ist das nicht, anders als bei WebKit (F-RW-23) | tritt es wieder auf: `php -S` mit mehreren Arbeitern, wie bei F-RW-23 (Backlog Nr. 301) |
+| **Ein einmaliger Fehlschlag des Bedienwegs `einstellungen-profil-rueckweg`** (RW-03) | Einmal rot in sieben Läufen, im selben Lauf mit den beiden Zweitfaktor-Wegen; die Stelle ist verloren. Danach nicht wieder aufgetreten: sechs Läufe von Hand und **drei Prüfstände** (RW-03 zweimal, das Aufnehmen von BR; Bedienprobe je **55 / 55**). Kein Befund mit Ursache, aber auch kein Grund, ihn wegzulassen. | — (tritt er wieder auf, steht der Schritt im Bericht) |
 | **Die Sperre von „10 falschen Signaturen" über HTTP** (RW-03) | Gemessen an der Bibliothek (`probe.php` B4): nach **5** falschen die Sperre im Topf `totp` — der Topf erlaubt fünf, nicht zehn; das Konzept nannte zehn aus dem Topf `login`. Über HTTP geht der Browser nie mit einer falschen Signatur, weil er vorher im Browser scheitert; handgebaute POSTs misst B8 für „nicht angeboten" (400), die echte Signatur und das gesperrte Konto — die Sperre nicht. | — |
 
 ## 1. Messprotokoll RW-01 (24.09.2026, Web 20.43.0)
@@ -73,6 +75,22 @@ schließt es ab.
 | Berührte Bedienwege | `probe.mjs --nur zweitfaktor-einrichten,einstellungen-profil-zweitfaktor,einstellungen-profil-rueckweg` | **6 Läufe grün**; **ein** Lauf davor war im Weg `einstellungen-profil-rueckweg` rot — welcher Schritt, ist nicht festgehalten (die Ausgabe war beim Kürzen abgeschnitten). Siehe 0 |
 | **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh` | *steht in der Commit-Nachricht von `RW-03`* |
 
+## 1c. Messprotokoll RW-04 (24.09.2026, ohne Versionsstufe)
+
+*Nach dem Aufnehmen von `main` (Konzept BR, `3576a97`). Was `haupt` nicht selbst fährt (Nr. 300), von Hand — vorn in 0 genannt.*
+
+| Mittel | Aufruf | Zahl |
+|---|---|---|
+| **Rückweg in Firefox** (neu: `--motor`) | `node tools/proben/rueckweg/probe.mjs --motor firefox` | zuerst **rot** — „RW_STAND fehlt" (F-RW-22, ein Fehler der Probe); danach **23 / 0** |
+| **Rückweg in WebKit** | `… --motor webkit` | gegen `php -S` mit einem Arbeiter **2 von 4** Läufen grün, zwei mit 90 s ohne Navigation beim zweiten Anmelden; mit `PHP_CLI_SERVER_WORKERS=4` **3 von 3**, je **23 / 0** (F-RW-23) |
+| Rückweg in Chromium, nach F-RW-22 | `… --motor chromium` | **23 / 0** |
+| **Gegenprobe F-RW-22** | dasselbe Konto in Firefox angemeldet, fünf Sekunden gewartet, ohne Probe | `api/rueckweg_anlegen.php` **200**, `RW_STAND` „da" — die Anwendung legt an, die alte Probe lud zu früh neu |
+| **Unter PHP 8.3.33** (Nr. 300) | `hochfahren.sh --php 8.3`; die Proben im Abbild `nadoku-php83` mit eingehängtem Repositorium | Kopfzeile `X-Powered-By: PHP/8.3.33`; Rückweg `probe.php` **49 / 0** (reines PHP **168 ms**, openssl 12 ms), `probe.mjs` gegen die 8.3-Anlage **23 / 0**, Wartung **67 / 0**, Zweitfaktor **45 / 0**, Rollen **296 / 0**; im Protokoll des Behälters **0** Zeilen mit Fatal, Warning, Deprecated oder Notice. Zurück: Behälter entfernt |
+| Einschübe | Skript über die Anker aus Konzept RW 8 und 9 | P5c-Konzept 15 Stellen, Rahmenplan 4, Backlog 4 — jeder Anker genau einmal gefunden; Backlog **0** doppelte Nummern |
+| Nummer 301 | gegen `origin/main` `ba2ec57` (höchste 318) und die Spannen im Kopf von `Backlog.md` | frei; aus der Spanne des P5c-Zweigs (294–303) |
+| **Erster Prüfstand RW-04** | `hochfahren.sh --neu`, `pruefen.sh` | **rot, 48 / 1:** die Bedienprobe 53 / 55 — `admin-protokoll-reiter` und `admin-protokoll-zeilen` „nicht gefahren": `net::ERR_TOO_MANY_RETRIES` bzw. eine Navigation, die in `chrome-error://` endete. Im Protokoll des PHP-Servers steht dieselbe Anfrage mit **200**; die Anwendung hat geantwortet, die Verbindung davor ist gerissen. RW-04 ändert nur `docs/` und `tools/`, und derselbe Anwendungsstand lief im Prüfstand des Merge **55 / 55**. Danach einzeln **3 von 3** grün (je 2 / 2). **Ursache nicht gefunden** — siehe 0 |
+| **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh`, zweiter Lauf | *steht in der Commit-Nachricht von `RW-04`* |
+
 ## 2. Prüfliste
 
 | Nr. | Punkt | Bedienweg | Erwartet | Scheitern erkennbar an | Stand |
@@ -123,3 +141,25 @@ schließt es ab.
 - **„Abgewiesen" ist Konstruktion plus Messung.** Die Probe zeigt, dass fünf
   Arten falscher Signaturen scheitern — nicht, dass es keine sechste gibt,
   die durchginge. Die Konstruktion dazu steht im Konzept (5.2).
+
+## 4. Soll gegen Ist (Konzept RW 5.1)
+
+| Prüfung | Soll | Ist | Mittel, Paket |
+|---|---|---|---|
+| Selbsttest beide Engines | 2 / 2, Dauer je Weg | **2 / 2** — openssl rund 20 ms, reines PHP **185 ms** (8.4) und **168 ms** (8.3) | `probe.php` A1, RW-01, RW-04 |
+| Sechs Signaturfälle | 1 angenommen, 5 abgewiesen | **1 / 5** | A2, RW-01 |
+| Fremde Kurve, fremdes Verfahren | 2 / 2 abgewiesen | **2 / 2** (P-384, Ed25519) | A3, RW-01 |
+| Statuszeile drei Lagen | 3 / 3 | **3 / 3** | A5, RW-01 |
+| Schemaprobe, Migrationsregister | 4 × 0, 0 | **4 × 19 / 0**, **0** | Prüfstand, zuletzt nach dem Aufnehmen von BR |
+| Anlegeweg | 8 / 8 | **8 / 8** in einem Weg: richtiges Token, ohne 403, falsches 403, 409, 400, Demo 403 / 403, Erneuern, Mail +1 | Bedienweg, RW-02 |
+| `RW_STAND` vier Lagen | 4 / 4 (Rollenprobe, Markup) | **4 / 4** — gemessen in `probe.php` A7 (`rw_zustand()`) und im Markup des Bedienwegs, **nicht** in der Rollenprobe: Die liest Zugänge, keine Seitenwerte | A7, Bedienweg |
+| Kontopaket ohne die Spalten; Kreislauf lässt Paar stehen | 0-mal, unverändert | **0** Zeichenketten mit `rw_` (Gegenprobe rot); der Kreislauf ist **nicht** gemessen — siehe 0 | A8, RW-02 |
+| Demo: kein Paar, Reset leert | 3 / 3 NULL, Endpunkt 403 | **3 / 3**, **403 / 403** mit gültigem Token | Zweitfaktorprobe Teil 6, Bedienweg |
+| Der echte Rückweg im Browser | 4 / 4 | **4 / 4** (NutzerIn, BetreiberIn, fremder Zettel mit 0 Anfragen, Tippfehler benannt) — `probe.mjs` **23 / 0** in Chromium, Firefox und WebKit | RW-03, RW-04 |
+| Teil B gegen den Login-Weg | 1 / 5, N / 0, rot | **1 / 5**; **73 / 0**; alte Fassung **rot** (48 / 1) | `probe.php` B, RW-03 |
+| Ratenschutz, Ablauf, Wiederholung | 1 / 1, 1 / 1, 1 / 1 | **1 / 1** (Sperre nach **5**, nicht 10 — der Topf `totp` erlaubt fünf; siehe 0), **1 / 1**, **1 / 1** | B2–B4 |
+| Weg nicht angeboten | 2 / 2 | **2 / 2**, dazu über HTTP: Verweis 0, POST **400** | B6, B8 |
+| Bilderlauf, Bedienprobe, Textprobe, Register, Kontraste | 0 Code-Schritt-Bilder, grün, 0 neue, 0 über der Decke, 0 verfehlt | **544** Bilder, **0** mit Code- oder Schlüsselschritt; **55 / 55**; **0** neue; **40 / 0**; **25 / 0** | Prüfstand |
+| Rückweg gegen Staging | grün | **nicht gemessen** — Stufe 2 läuft erst nach dem Merge und braucht `STAGING_TOTP` | P-RW-02 |
+
+Dazu, **ohne Soll in 5.1**, gemessen: das Abschalten erst hinter dem Tor — ein gesperrtes Konto behält seinen Zweitfaktor, 0 Protokoll, 0 Mail; die alte Reihenfolge rot (F-RW-21, B8).

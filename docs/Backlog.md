@@ -85,7 +85,7 @@ arbeiten, nicht erneut kollidieren:
 | 246 | Schlüsselblatt und Notfallblatt: Druckseite | 10c AP9 |
 | 247 | Serverschlüssel wechseln — als Vorgang | Schritt 18 |
 | 248 | Prüftor Stufe 1 zählt die `error_log(`-Aufrufe | 10c AP3 |
-| 249 | TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert | Schritt 18 |
+| 249 | TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert | Schritt 18 (der Rest; teilweise gelöst mit Konzept RW) |
 
 > **Warum die Spanne bei 241 beginnt und nicht bei 240.** Das Paket sah 240
 > für die Sitzungsablage vor; am selben Tag hat Kette II 240 für den
@@ -3042,6 +3042,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Wiederanlaufpaket. Hier nur benannt, damit er nicht erst auffällt, wenn
     er eintritt.
 
+    **Teilweise gelöst mit Konzept RW (E-RW-08, 24.09.2026; gebaut als 10c
+    AP5b, Web 20.43.0 bis 20.45.0):** Hat die einzige BetreiberIn Passwort
+    und Notfallblatt, setzt sie den Zweitfaktor am Code-Schritt selbst
+    zurück. Der Wiederanlauf-Fall bleibt für den Rest: ohne Zettel, ohne
+    Passwort, oder wenn der Rückweg ausgeschaltet ist (Statuszeile
+    „Rückweg-Prüfung" orange).
+
 250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.**
     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
     `post_ende()`).* Zugeordnet: **Schritt 17**.
@@ -3788,6 +3795,22 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zahl — **oder** die Zeile in `Pruefablauf.md` 3 wird auf das Gebaute
     zurückgenommen, mit Begründung. Nicht beides offen lassen. **Zuordnung:
     Prüfkette (PK-06 ff.); bis dahin je Paket von Hand.**
+
+301. **`Sandbox-Setup.md` 1 sagt, Firefox und WebKit starten im Container
+    nicht — sie starten.** *Aufgenommen 24.09.2026 aus Konzept RW
+    (F-RW-02).* Gemessen mit Playwright 1.56: Firefox 142 und WebKit 26
+    starten, laden eine Seite über `localhost` und rechnen WebCrypto; RW-04
+    hat die Rückwegprobe `probe.mjs` in beiden gefahren (`--motor`). Die
+    Tabelle „Nicht im Abbild" nennt die Systembibliotheken beider Motoren
+    als fehlend (Nr. 183); das gilt für dieses Abbild nicht mehr. *Weg:* die
+    Zeile berichtigen und mit einem Datum versehen, Nr. 183 nachsehen; ob der
+    Bilderlauf in `haupt` damit alle drei Motoren fahren kann, gehört zu
+    Nr. 300. **Dabei gemessen (Konzept RW, F-RW-23):** Gegen den örtlichen
+    `php -S` mit einem Arbeiter blieb WebKit in 2 von 4 Läufen beim zweiten
+    Anmelden 90 s ohne Navigation; mit `PHP_CLI_SERVER_WORKERS=4` waren es
+    3 von 3 grün. Wer WebKit in eine Stufe einhängt, startet den Server mit
+    mehreren Arbeitern (`hochfahren.sh`), sonst misst er die Sandbox statt
+    der Anwendung. **Zuordnung: Backlog-Runde.**
 
 318. **`pysyntax` sieht ungültige Escape-Folgen nicht, und zwei Werkzeuge
     tragen welche.** *Aufgenommen 24.09.2026 mit dem Abschluss von Konzept BR,
@@ -10216,7 +10239,9 @@ zutreffen.
     Wiederherstellungsschlüssel kommt mit dem Einschubkonzept RW
     (E-P5c-104) — die Fassung gegen `pat_key_check` war fälschbar
     (F-P5c-106) —, und „Gerät 30 Tage merken" mit dem Cookie-Token aus
-    Nr. 242 in Schritt 18.
+    Nr. 242 in Schritt 18. **Nachtrag 24.09.2026:** Rückweg über den
+    Wiederherstellungsschlüssel → Konzept RW, 10c AP5b — gebaut mit
+    Web 20.43.0 bis 20.45.0.
 
 211. **Ein `/api/`-Aufruf ohne Sitzung bekommt eine Weiterleitung statt
     einer JSON-Antwort.** `auth_guard.php` prüft in Zeile 33

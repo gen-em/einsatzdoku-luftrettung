@@ -14,6 +14,37 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Der Rückweg in drei Motoren (Konzept RW, RW-04)] — 2026-09-24
+
+Abschluss von Konzept RW (im P5c-Konzept AP5b). Keine Versionsstufe: Die
+Anwendung ist seit Web 20.45.0 fertig; RW-04 misst nach, was die Hauptstufe
+nicht selbst fährt (Backlog Nr. 300), und schreibt die Einschübe in
+P5c-Konzept, Rahmenplan und Backlog.
+
+### Neu
+
+- **Werkzeug: `probe.mjs --motor chromium|firefox|webkit`.** Die Rückwegprobe
+  fährt den Weg im Browser auch in Firefox und WebKit — beide starten in
+  diesem Container (Backlog Nr. 301). Vorgabe bleibt Chromium, wie in der
+  Kette. Gemessen: je **23 / 0** in allen drei Motoren, dazu unter PHP
+  8.3.33 in Chromium.
+
+### Behoben
+
+- **Werkzeug: In Firefox und WebKit entstand in der Probe nie ein Paar**
+  (Konzept RW, F-RW-22). Die Anwendung legte es an — die Probe verhinderte
+  es: Sie lud die Startseite neu, sobald das Netz ruhte, und das tut es
+  mitten in der Schlüsselableitung. In Chromium war die Ableitung schneller
+  als das Fenster, in den beiden anderen Motoren brach jeder Neuladevorgang
+  sie ab. Jetzt wartet die Probe auf die Antwort von
+  `api/rueckweg_anlegen.php` und lädt erst dann neu.
+
+**Was bewusst stehen bleibt:** WebKit gegen den örtlichen `php -S` mit einem
+Arbeiter blieb in 2 von 4 Läufen beim zweiten Anmelden 90 Sekunden ohne
+Navigation; mit vier Arbeitern waren es 3 von 3 grün (F-RW-23). Das ist die
+Sandbox, nicht die Anwendung — der Weg dafür steht bei Backlog Nr. 301, und
+die Kette fährt weiter nur Chromium.
+
 ## [Werkzeug: P5c nimmt den Bestandsriegel auf (Konzept BR)] — 2026-09-24
 
 Der P5c-Zweig hat `main` aufgenommen — Konzept BR, PR #85 und #86 —, als

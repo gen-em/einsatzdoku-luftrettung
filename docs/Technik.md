@@ -7482,7 +7482,9 @@ fremd/verändert/zweckfremd bis zur Sperre im Topf `totp`, die alte Fassung mit
 Verweis, die 400, den ganzen Weg mit echter Signatur und dieselbe Signatur an
 einem gesperrten Konto (Zweitfaktor bleibt an); `probe.mjs` fährt den Weg im
 Browser als NutzerIn und als BetreiberIn — örtlich und in Stufe 2 gegen
-Staging.
+Staging, von Hand mit `--motor` auch in Firefox und WebKit (RW-04). Beide
+Teile startet `tools/proben/rueckweg/probe.sh`, seit dem Aufnehmen von
+Konzept BR die Einstiegsdatei im Läufer.
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 
