@@ -313,7 +313,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
              Rueckfallweg OHNE Protokollzeile. Ohne diesen Satz liest sich
              eine kurze Liste als „es war fast nichts", obwohl neun Toepfe gar
              nicht berichten. */ ?>
-    <p class="feld-hinweis">Vermerkt werden nur die fünf Töpfe mit Sperrleiter,
+    <p class="feld-hinweis">Vermerkt werden nur die sieben Töpfe mit Sperrleiter,
        nicht jede Sperre.
        <a href="hilfe.php#11-4b-sicherheit-wer-ausgesperrt-ist-und-wie-man-ihn-wieder-hereinlaesst">Handbuch: welche Töpfe</a></p>
     <?php if ($ereign['zeilen'] === []): ?>

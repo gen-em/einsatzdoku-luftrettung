@@ -355,10 +355,12 @@ ui_seite_start(['titel' => 'Updates']);
     <?php endforeach; ?>
     <?php /* BIS WEB 21.0.0 STAND HIER „Diese Liste steht hier bis P5. Danach
              führt das Audit-Protokoll die ausgeführten Kennungen (R66), und die
-             Karte entfällt." (F-P5c-146). Das Protokoll gibt es seit P5c/AP2;
-             Migrationen schreibt es nicht, und die Karte ist die einzige Stelle,
-             die sie nennt. Ein Versprechen ohne Termin steht nicht auf der
-             Seite, sondern im Backlog. */ ?>
+             Karte entfällt." (F-P5c-146). Gestrichen, weil ein Versprechen ohne
+             Termin nicht auf die Seite gehört. Die Begründung dazu war falsch
+             (Gegenlesung AP11): Das Protokoll führt jede ausgeführte Migration
+             seit P5c/AP2 im Reiter Verwaltung (`migration_ausgefuehrt` in
+             `migrationen_lauf()`). Ob die Karte trotzdem bleibt, steht in
+             Backlog Nr. 326. */ ?>
   <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Fassung ------------------------------------------------------

@@ -391,6 +391,7 @@
       "ab": "klein",
       "pfade": [
         "server/auth_guard.php",
+        "server/db.php",
         "server/admin_*.php",
         "server/betrieb_*.php",
         "server/api/rechtstext_vorschau.php",

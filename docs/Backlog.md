@@ -84,7 +84,7 @@ arbeiten, nicht erneut kollidieren:
 | 245 | Erklärtext-Regel und Überarbeitung aller Texte in Verwaltung und Betrieb | erledigt 25.09.2026 (Web 21.1.0) |
 | 246 | Schlüsselblatt und Notfallblatt: Druckseite | erledigt 25.09.2026 (Web 21.1.0) |
 | 247 | Serverschlüssel wechseln — als Vorgang | Schritt 18 |
-| 248 | Prüftor Stufe 1 zählt die `error_log(`-Aufrufe | 10c AP3 |
+| 248 | Prüftor Stufe 1 zählt die `error_log(`-Aufrufe | erledigt 24.09.2026 (Web 20.40.0) |
 | 249 | TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert | Schritt 18 (der Rest; teilweise gelöst mit Konzept RW) |
 
 > **Warum die Spanne bei 241 beginnt und nicht bei 240.** Das Paket sah 240
@@ -3465,8 +3465,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zeilenhöhe bei 1440 und 390 px, AP7, AP9) — die Messungen führen diese
     Nummer als Anlass. Der Umbau des Bilderlaufs selbst gehört nicht zu 10c.
     **Seit Web 20.41.0 gilt dasselbe für die Rolle Support** (P5c/AP4): Ihre
-    Sicht — Liste ohne Kennzahlen, ausgegraute Kontoseite, zwei
-    Protokollreiter — nimmt der Bilderlauf nicht auf; belegt ist sie nur
+    Sicht — drei Kacheln über der Liste, eine einspaltige Kontoseite ohne
+    die Knöpfe, die der Support nicht darf, zwei Protokollreiter — nimmt der
+    Bilderlauf nicht auf (hier stand bis Web 21.1.0 „Liste ohne Kennzahlen,
+    ausgegraute Kontoseite", die Fassung vor F-P5c-102); belegt ist sie nur
     über die Rollenprobe (Menü, Liste, Reiter) und im Prüfdokument von Hand.
     **Zuordnung: 10c (Messungen); Umbau: nächste Backlog-Runde.**
 
@@ -3637,25 +3639,43 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     über den gewöhnlichen Weg der 1.0. Das entscheidet das Konzept, das es
     baut.
 
-    *Zuordnung:* P8 Schnitt (Neuaufsetzen), zusammen mit Nr. 46 und
-    Nr. 187 — beide können damit ohne Übergangsweg fallen. *Abnahme:* Der
+    *Zuordnung:* P8 Schnitt (Neuaufsetzen). Nr. 46 (Altformat, P7) und
+    Nr. 187 können damit ohne Übergangsweg fallen — das Skript liest eine
+    Konto-Sicherung der letzten Fassung vor 1.0, nicht das Altformat (hier
+    stand bis Web 21.1.0 „zusammen mit Nr. 46", was nach einer zweiten
+    Zuordnung klang; Nr. 46 bleibt bei P7). *Abnahme:* Der
     Bestand der Betreiberin steht in der frischen 1.0-Anlage; das Skript
     ist danach aus dem Repositorium entfernt; die 1.0 liest keine Nutzlast
     von vor 1.0.
 
-326. **Ausgeführte Migrationen stehen nur auf der Seite Updates, nicht im
-    Protokoll.** *Aufgenommen 25.09.2026 in P5c/AP9 (F-P5c-146).* Die Karte
-    „Ausgeführt" auf Betrieb → Updates versprach, sie stehe „bis P5" dort,
-    danach führe das Audit-Protokoll die ausgeführten Kennungen (R66), und
-    sie entfalle. Das Protokoll gibt es seit Web 20.39.0 — Migrationen
-    schreibt es nicht. Der Satz ist gestrichen; die Karte ist damit die
-    einzige Stelle, an der steht, wann welche Kennung lief, und das Handbuch
-    (12.3) sagt es so. **Zu tun:** `update.php` und der Torwächter schreiben
-    je gelaufener Kennung einen Eintrag `migration_gelaufen` in den Reiter
-    Verwaltung (wer, wann, Kennung, Dauer, Ergebnis); danach entscheiden, ob
-    die Karte bleibt. *Abnahme:* ein `update.php`-Lauf mit zwei Kennungen
-    schreibt zwei Einträge, einer ohne neue Kennung keinen. *Zuordnung:*
-    Backlog-Runde (Schritt 17) oder P6.
+326. **Bleibt die Karte „Ausgeführt" auf Betrieb → Updates?** *Aufgenommen
+    25.09.2026 in P5c/AP9 (F-P5c-146), berichtigt in P5c/AP11.* Die Karte
+    versprach, sie stehe „bis P5" dort, danach führe das Audit-Protokoll die
+    ausgeführten Kennungen (R66), und sie entfalle. AP9 hat den Satz
+    gestrichen und diesen Eintrag mit der Begründung angelegt, das Protokoll
+    schreibe keine Migrationen. **Das war falsch** (Gegenlesung AP11): Seit
+    P5c/AP2 schreibt `migrationen_lauf()` je ausgeführter Kennung einen
+    Eintrag `migration_ausgefuehrt` in den Reiter Verwaltung (E-P5c-38) —
+    für `update.php` wie für die Seite. Offen ist damit nur noch die Frage,
+    die R66 schon beantwortet hatte: **Entfällt die Karte jetzt, oder bleibt
+    sie**, weil sie als Einzige die Fassung („Web") je Kennung nennt? Die
+    Dauer eines Laufs steht an keiner der beiden Stellen. *Zuordnung:* die
+    Entscheidung der Betreiberin im Abschluss von P5c.
+
+327. **Die Rollenmatrix führt die Handlungen der BetreiberIn-Seiten nicht
+    einzeln.** *Aufgenommen 25.09.2026 in P5c/AP11 (Gegenlesung AP4).*
+    `docs/Technik.md` 4.99p hat eine Zeile je Handlung auf den Seiten, die
+    mehr als eine Rolle erreicht; die 25 POST-Handlungen und 7
+    Seitenaufrufe hinter `require_betreiberin()` (`betrieb_server.php`,
+    `betrieb_jobs.php`, `betrieb_updates.php`, `betrieb_status.php`,
+    `betrieb_sicherheit.php`, `api/schluesselblatt_pruefen.php`) misst die
+    Probe nur über das Tor der Seite. Eine Handlung, die dort **vor** dem
+    Tor stünde, fände sie nicht. Dazu fehlt ein Platzhalter `{support}`: dass
+    der Support andere Support-Konten nicht betreut (E-P5c-99), steht im
+    Code, gemessen ist es nicht. *Zu tun:* die Zeilen nachtragen (Admin und
+    Support 403, BetreiberIn `durch`) und den Platzhalter anlegen. *Abnahme:*
+    Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
+    Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
 
 ## Erledigt
 
@@ -10601,7 +10621,8 @@ zutreffen.
     docs/` ist ohne Geschichtsfälschung nicht 0 — CHANGELOG, Backlog,
     Konzepte und die zwei gelaufenen Migrationen nennen die Tabelle zu Recht.
     Gemessen wurde die engere Fassung aus dem Konzept: in `server/` ohne
-    `version.php` und die gelaufenen Migrationen **15 → 0** (außer der neuen
+    `version.php` und die gelaufenen Migrationen **13 → 0** (hier stand
+    bis Web 21.1.0 „15", F-P5c-129; außer der neuen
     Löschmigration), in `docs/` ohne Changelog, Backlog und `konzepte/`
     **3 → 0**. Kreisläufe und Schemaprobe siehe Rahmenplan 8.
     **Eine Lehre, damit sie nicht nur in der gelöschten Bestandsaufnahme

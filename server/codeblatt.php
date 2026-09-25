@@ -21,7 +21,7 @@ declare(strict_types=1);
  * alles andere fällt weg. Kein freier Text aus der Eingabe, kein Markup.
  *
  * DER BAUSTEIN IST `.blatt-druck` (E-P5c-08, M-P5c-01f) — dieses Blatt ist
- * sein erster Verwender; Schlüssel- und Notfallblatt ziehen in AP9 nach.
+ * sein erster Verwender; Schlüssel- und Notfallblatt sind mit AP9 nachgezogen.
  * Genau eine A4-Seite (`@page`), auf Staging mit der Umgebungszeile
  * (E-P5c-50).
  */
@@ -108,7 +108,7 @@ kopfzeilen_seite();
 <h2>So benutzt du es</h2>
 <ol><li>Anmelden wie immer, mit E-Mail und Passwort.</li><li>Beim Code-Schritt „Wiederherstellungscode verwenden" wählen und einen Code von diesem Blatt eintippen.</li><li>Danach unter Einstellungen → Profil den Zweitfaktor mit dem neuen Handy neu einrichten.</li></ol>
 <h2>Wann es ungültig wird</h2>
-<p>Sobald du neue Codes erzeugst oder die Verwaltung deinen Zweitfaktor zurücksetzt. Mehr im Handbuch, Abschnitt „Zweitfaktor": <?= $h($ohneSchema) ?>/hilfe.php#3-1f-zweitfaktor</p>
+<p>Sobald du neue Codes erzeugst, den Zweitfaktor ausschaltest oder er zurückgesetzt wird — von der Verwaltung oder von dir mit dem Wiederherstellungsschlüssel. Mehr im Handbuch, Abschnitt „Zweitfaktor": <?= $h($ohneSchema) ?>/hilfe.php#3-1f-zweitfaktor</p>
 <?php endif; ?>
 <footer class="blatt-fuss"><span>Wiederherstellungscodes · <?= $h(instanz_kurz()) ?> · Web <?= $h(WEB_VERSION) ?> · freie Software (AGPL v3)</span><span>Seite 1 von 1</span></footer>
 <?php /* NUR AM BILDSCHIRM: Druckknopf und Rueckweg — derselbe Knopf und

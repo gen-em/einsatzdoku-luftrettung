@@ -101,7 +101,7 @@ ui_seite_start(['titel' => 'Zweitfaktor einrichten', 'klasse' => 'anmeldung-body
   <h2 class="anmeldung-schritt">Zweitfaktor einrichten</h2>
   <?php ui_meldung(null, $grund === 'serverschluessel'
         ? 'Auf dieser Anlage ist kein Serverschlüssel eingetragen. Ohne ihn lässt sich das '
-          . 'Geheimnis nicht sicher speichern — die BetreiberIn trägt ihn unter Betrieb → Server nach.'
+          . 'Geheimnis nicht sicher speichern — die BetreiberIn trägt ihn unter Betrieb → Servereinstellungen nach.'
         : 'Die Einrichtung ist gerade nicht möglich. Bitte später erneut versuchen.'); ?>
 <?php else: ?>
   <form method="post">

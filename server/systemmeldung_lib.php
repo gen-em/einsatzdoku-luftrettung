@@ -137,8 +137,10 @@ function system_eintrag(string $bereich, string $text, Throwable|string|null $gr
  *
  * FUER DIE STELLEN, AN DENEN DIE DATENBANK DAS PROBLEM IST (E-P5c-58): die
  * Verbindungsgrenze und das Gedraengel (`wartung_lib.php`), der
- * Torwaechter (`migration_lib.php`) und die beiden Anmeldewege, die eine
- * ausstehende Migration ueberbruecken (`auth_guard.php`, `login.php`). Dort
+ * Torwaechter (`migration_lib.php`), die beiden Anmeldewege, die eine
+ * ausstehende Migration ueberbruecken (`auth_guard.php`, `login.php`), und
+ * seit P5c/AP6 der Health-Endpunkt, wenn die Datenbank nicht antwortet
+ * (`api/health.php`). Dort
  * noch einen Protokolleintrag zu versuchen hiesse, unter Last eine weitere
  * Verbindung zu oeffnen oder in eine Tabelle zu schreiben, die es vielleicht
  * noch nicht gibt.

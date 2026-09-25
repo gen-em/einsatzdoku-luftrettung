@@ -303,7 +303,7 @@ function demo_anlegen(): array
 
     if (demo_id() !== null) {
         throw new RuntimeException('Es gibt bereits ein Demo-Konto. '
-            . 'Zum Erneuern „Auf Standard zurücksetzen" verwenden.');
+            . 'Zum Erneuern „Zurücksetzen" verwenden.');
     }
     $k = $fx['konto'];
     $st = $pdo->prepare('SELECT id FROM users WHERE email = ?');

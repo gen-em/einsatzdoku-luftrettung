@@ -170,7 +170,7 @@
    *    sich die Antwort aendert.
    *
    * 2  Eine Karte ausserhalb der Spalten ist keine dritte Spalte. Auf der
-   *    Statusseite steht „Was hier gilt" unter beiden Spalten; als eigener
+   *    Statusseite stand bis Web 21.1.0 „Was hier gilt" unter beiden Spalten; als eigener
    *    Topf war sie immer die oberste ihres Topfes und damit dauerhaft fett —
    *    drei Markierungen auf einmal. Hat die Seite Spalten, markieren nur
    *    Karten in einer Spalte; hat sie keine, ist die Seite der eine Topf.

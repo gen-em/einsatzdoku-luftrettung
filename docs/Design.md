@@ -2188,8 +2188,9 @@ sie ist die Karte kein Sprungziel und erscheint nicht.
 **Variante `.form-raster-einspaltig`** (seit Web 20.41.0, P5c/AP4, freigegeben
 mit M-P5c-02c, E-P5c-66): eine Spalte, höchstens Lesespalte plus
 `--abstand-5` breit. Für eine Seite, deren zweite Spalte **für diese Rolle**
-leer bliebe — heute die Kontoseite des Supports, der weder Konto-Backups noch
-die Gefahrenzone sieht. Ohne sie stünde die linke Spalte ab 1200 px halb so
+leer bliebe — die Kontoseite des Supports, der weder Konto-Backups noch
+die Gefahrenzone sieht, und seit Web 21.1.0 die Installation, für alle
+Rollen. Ohne sie stünde die linke Spalte ab 1200 px halb so
 breit neben einer Leere. Sie steht im Stylesheet **hinter** der Regel von
 `.form-raster` und gewinnt deshalb bei gleicher Spezifität; die eine
 `.form-spalte` darin bleibt, `menue.js` liest sie.
@@ -2199,7 +2200,8 @@ freigegeben mit M-P5c-01b, E-P5c-18): zwei Spalten im Verhältnis **3 : 2**
 statt gleich. Gleich geteilt läuft die Tabelle mit fünf Fenstern über und
 rollt in ihrer `.tabelle-scroll` — gemessen: 40 px bei 1200, 20 px bei 1240,
 ab 1280 px nicht mehr. Mit 3 : 2 passt sie bei 1200, 1280, 1366 und 1440 px
-ohne Rollen, in allen drei Motoren (Prüfdokument P5c, 1f). Wie die einspaltige
+ohne Rollen, in allen drei Motoren (36 Messungen, 0 Überläufe; P5c/AP7,
+Commit `d519fac`). Wie die einspaltige
 Variante steht sie im Stylesheet hinter `.form-raster` und gewinnt bei
 gleicher Spezifität; die zwei `.form-spalte` bleiben.
 
@@ -2805,9 +2807,10 @@ drei Paare in `kontrast.py` und eine Freigabe mit Mockup.
 *Seit Web 20.39.0 (P5c/AP2, E-P5c-25). **Neuer Baustein**, freigegeben mit
 der Mockup-Runde M-P5c-01a (20.09.2026).*
 
-**Zweck:** Wechsel zwischen gleichrangigen Sichten **einer** Seite — heute
-die Reiter der Protokollseite (Verwaltung, Sicherheit, Jobs, E-Mail, System,
-Fehler, dazu Archiv). Serverseitig: Jeder Reiter ist ein Verweis, der
+**Zweck:** Wechsel zwischen gleichrangigen Sichten **einer** Seite — etwa
+die Reiter der Protokollseite (Verwaltung, Sicherheit, E-Mail, Jobs,
+Sicherung, Ziele, System, dazu Archiv; hier stand bis Web 21.1.0 ein Reiter
+„Fehler", den es nie gab). Serverseitig: Jeder Reiter ist ein Verweis, der
 Parameter steht in der Adresse, und ohne Skript funktioniert alles. **Drei
 Verwender:** Protokoll (AP2, hier entstanden), Statistik (AP7), Rechtstexte
 (AP9, seit Web 21.1.0 — der einzige, dessen Reiter ein Formular schützen).

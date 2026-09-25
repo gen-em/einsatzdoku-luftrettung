@@ -17,6 +17,7 @@ require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
 // Groesse, Datum und Fuellstand kommen aus der einen Stelle (AP7, R83) — und
 // zwar ausdruecklich hier eingebunden, nicht ueber eine Ladekette geerbt.
 require_once __DIR__ . '/format_lib.php';
+require_once __DIR__ . '/rueckweg_lib.php'; // rw_zustand(): Satz zum eigenen Zweitfaktor
 
 /**
  * KONTOSEITE — die Drehscheibe eines Kontos (E-P3-41, P3/O9).
@@ -1044,7 +1045,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?php if ($istDemoKopf): ?>
       <p class="feld-hinweis">Das Passwort des Demo-Kontos ist öffentlich und wird
          nicht über einen Link gesetzt.
-         <a href="hilfe.php#11-6-demo-konto">Handbuch: Demo-Konto</a></p>
+         <a href="hilfe.php#3-2-demo-konto-ausprobieren-ohne-etwas-kaputtzumachen">Handbuch: Demo-Konto</a></p>
       <?php elseif ($nurSupport): ?>
       <p class="feld-klein">Ändern kann die Verwaltung, den Setz-Link schickt „Aktionen".</p>
       <?php else: ?>
@@ -1184,12 +1185,15 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         </form>
         <?php endif; ?>
         <p class="feld-klein"><?= $uid === $userId
-            ? 'Dein eigenes Konto — den Zweitfaktor verwaltest du unter Einstellungen → Profil; zurücksetzen kann ihn eine andere BetreiberIn.'
+            ? 'Dein eigenes Konto — den Zweitfaktor verwaltest du unter Einstellungen → Profil; zurücksetzen kann ihn '
+              . (rolle_ist_betreiberin($userRole) ? 'eine andere BetreiberIn' : 'eine BetreiberIn')
+              . (rw_zustand($uid)['stand'] === 'da'
+                  ? ' oder du selbst mit dem Wiederherstellungsschlüssel' : '') . '.'
             : 'Für Konten der Rolle user auch Admins; für Admin, Support und BetreiberIn nur die BetreiberIn.' ?></p>
       <?php else: ?>
         <?php ui_zeile(['text' => 'Nicht eingeschaltet',
             'klein' => rolle_braucht_zweitfaktor($u['role'] ?? null)
-                ? 'Für diese Rolle Pflicht — eingerichtet wird er bei der nächsten Anmeldung.'
+                ? 'Für diese Rolle Pflicht — eingerichtet wird er beim nächsten Seitenaufruf der Person.'
                 : 'Ein Angebot — die Person schaltet ihn selbst unter Einstellungen → Profil ein.']); ?>
       <?php endif; ?>
     <?php ui_karte_ende(); ?>

@@ -16,6 +16,12 @@ declare(strict_types=1);
  *      gegen dieselben Werte.
  *   2. Kein Code gilt zweimal (`totp_code_passt()` mit dem letzten Schritt), und
  *      ein Wiederherstellungscode wird normiert (Leerzeichen, Bindestrich, klein).
+ *   2b. Ein Fehler der Datenbank schaltet den Zweitfaktor nicht stumm
+ *      (F-P5c-166): `totp_spalten_da()` bricht mit einer gestörten
+ *      Verbindung ab. `rw_zustand()` misst die Rückwegprobe (A7). Das Tor in
+ *      `auth_guard.php` hat dieselbe Unterscheidung, gemessen ist es nicht
+ *      (es läuft nur über HTTP, und dort lässt sich die Datenbank nicht
+ *      gezielt stören).
  *   3. Über HTTP, gegen die Anlage, mit einem eigenen Konto der Rolle admin:
  *      Passwort → 303 auf `login.php`, KEINE Sitzung (API 401); falscher Code
  *      → Meldung; richtiger Code → 302 auf `index.php`; derselbe Code noch
@@ -94,6 +100,30 @@ pruefe(totp_code_passt($g, $c, $jetzt, $s) === null, 'derselbe Code mit seinem S
 pruefe(totp_code_passt($g, substr($c, 0, 3) . ' ' . substr($c, 3), $jetzt, null) !== null, '„123 456" mit Leerzeichen passt');
 pruefe(totp_code_normieren(' k7qf-2mxd ') === 'K7QF2MXD', 'Wiederherstellungscode: klein, Bindestrich, Rand → normiert');
 pruefe(totp_code_normieren('K7QF2MX0') === null, 'eine Null ist kein Zeichen der Codes');
+
+/* ---- 2b. Ein Datenbankfehler schaltet den Zweitfaktor nicht stumm ----------
+ *
+ * F-P5c-166: `totp_spalten_da()` fing jeden Fehler und sagte dann „keine
+ * Spalten" — und `login.php` meldete darauf ohne Code-Schritt an. Stumm sein
+ * darf der Zweitfaktor nur, wenn die Spalte wirklich fehlt (SQLSTATE 42S22
+ * bzw. `db_hat_spalte()` = nein); jeder andere Fehler bricht ab. Gemessen mit
+ * einer Verbindung, deren `prepare()` wirft — eine echte Datenbank lässt sich
+ * so gezielt nicht stören. */
+echo "== 2b. Datenbankfehler: abbrechen statt stumm (F-P5c-166)\n";
+final class ProbeKaputtePdo extends PDO
+{
+    public function __construct() {}
+    public function prepare(string $query, array $options = []): PDOStatement|false
+    {
+        throw new PDOException('SQLSTATE[HY000]: General error: 2006 MySQL server has gone away');
+    }
+}
+$wirft = static function (callable $f): string {
+    try { $f(); return 'kein Fehler'; } catch (Throwable $e) { return 'wirft'; }
+};
+pruefe($wirft(static fn() => totp_spalten_da(new ProbeKaputtePdo())) === 'wirft',
+       'totp_spalten_da() mit gestörter Verbindung: bricht ab, sagt nicht „keine Spalten"');
+pruefe(totp_spalten_da($pdo) === true, '... und mit der echten Verbindung: Spalten da');
 
 /* ---- HTTP mit einem eigenen Konto ------------------------------------------- */
 

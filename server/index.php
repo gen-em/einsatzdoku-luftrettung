@@ -1164,7 +1164,9 @@ function renderCrewFields(meta){
     /* DER SATZ HAT EINMAL ZU VIEL VERSPROCHEN (Web 18.1.1). Er verwies auf
        die abweichende Besatzung am einzelnen Einsatz — dort greift aber
        DASSELBE Tor: Das Einsatzformular fragt den Rollensatz des Diensttags
-       (`role_gate`), und der ist an einem Tagesrettungsmittel leer. Wer dem
+       (`role_gate`), und der war an einem Tagesrettungsmittel bis Web 20.47.0
+       leer; seit 21.0.0 trägt der Tag die Rollen seiner Art, leer ist er nur
+       ohne gewählte Art. Wer dem
        Satz folgte, fand die Felder nicht. Jetzt sagt er, was gilt. */
     hint.textContent = (meta && meta.adhoc)
       ? 'Die Besatzungsrollen folgen der Betriebsart — bitte oben luft- oder '

@@ -29,11 +29,14 @@ declare(strict_types=1);
  * HTTP 200 bei `ok`, sonst 503 — ein Monitoring, das nur den Code liest,
  * sieht damit schon das Wesentliche.
  *
- * WAS NICHT HIER ANTWORTET (E-P5c-52): In der Wartung und bei Überlast
- * antwortet das Tor in `db.php`, bevor diese Datei eine Zeile ausführt —
- * 503 mit `{"error":"maintenance"}` bzw. die Antwort von
- * `ueberlast_antwort()`, ohne Token-Prüfung. Ein Feld `wartung` gäbe es
- * deshalb nie mit `true`; es entfällt. Fassung und Wartungszustand sind
+ * WAS NICHT HIER ANTWORTET (E-P5c-52): In der Wartung antwortet das Tor in
+ * `db.php`, bevor diese Datei eine Zeile ausführt — 503 mit
+ * `{"error":"maintenance"}`, ohne Token-Prüfung. Bei Überlast antwortet
+ * `db()` beim ersten Zugriff, und das ist der Ratenschutz unten, noch vor dem
+ * Token: 503 mit `{"error":"ausgelastet"}` aus `ueberlast_antwort()`. Bis
+ * Web 21.1.0 stand hier, auch das komme „aus dem Tor" (Gegenlesung AP11); ein
+ * POST bekommt deshalb bei Überlast 405, nicht 503. Ein Feld `wartung` gäbe
+ * es nie mit `true`; es entfällt. Fassung und Wartungszustand sind
  * ohnehin öffentlich (Fußzeile, Wartungsseite).
  *
  * DER TOKEN WIE BEI `jobs.php`: fehlt er, ist er falsch oder ist keiner

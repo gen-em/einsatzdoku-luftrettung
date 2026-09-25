@@ -7518,6 +7518,17 @@ declare(strict_types=1);
  *   Fuer alle vier Rollen (E-RW-08) — Nr. 249 ist damit fuer den Fall
  *   geloest, dass die einzige BetreiberIn ihr Notfallblatt hat.
  *
+ * 20.46.0 — DER HEALTH-ENDPUNKT (P5c/AP6, E-P5c-17, -52). Nebenstufe ohne
+ *   Migration. Ein fremdes Monitoring fragt `api/health.php?token=…` und
+ *   bekommt 200 oder 503 mit acht Feldern — Datenbank, ausstehende Migration,
+ *   Alter der Jobs, Reiter System der letzten 24 h, gescheiterte
+ *   Protokolleintraege, hoechster Speicheranteil —, keine Konten, keine
+ *   Mengen. Der Token steht in `config.php`, leer heisst aus; fehlt er oder
+ *   ist er falsch, kommt dreimal dieselbe 403. Die Wartung antwortet aus
+ *   dem Tor, die Ueberlast aus `db()` beim ersten Zugriff. Topf `health`, 60 je Minute, ohne Leiter. Der
+ *   Speicheranteil kommt aus dem taeglichen Aufraeumjob, der die drei Anteile
+ *   seither mitmerkt — ein Abruf je Minute wiegt keine Verzeichnisse.
+ *
  * 20.47.0 — DIE STATISTIK MIT DREI REITERN (P5c/AP7, E-P5c-18, -45, -46;
  *   R38). Nebenstufe MIT MIGRATION: ein Index auf `missions(started_at)`
  *   (Nr. 191) und `idx_missions_deleted`, wo er fehlt (F-P5c-124) — nach
@@ -7529,19 +7540,8 @@ declare(strict_types=1);
  *   Herkunft der Einsaetze aus einem Katalog `HERKUNFT_TEXTE`. Die Zaehlung
  *   nach Diensttag ist auf dieser Seite entfallen (Nr. 192).
  *
- * 20.46.0 — DER HEALTH-ENDPUNKT (P5c/AP6, E-P5c-17, -52). Nebenstufe ohne
- *   Migration. Ein fremdes Monitoring fragt `api/health.php?token=…` und
- *   bekommt 200 oder 503 mit acht Feldern — Datenbank, ausstehende Migration,
- *   Alter der Jobs, Reiter System der letzten 24 h, gescheiterte
- *   Protokolleintraege, hoechster Speicheranteil —, keine Konten, keine
- *   Mengen. Der Token steht in `config.php`, leer heisst aus; fehlt er oder
- *   ist er falsch, kommt dreimal dieselbe 403. Wartung und Ueberlast
- *   antworten aus dem Tor. Topf `health`, 60 je Minute, ohne Leiter. Der
- *   Speicheranteil kommt aus dem taeglichen Aufraeumjob, der die drei Anteile
- *   seither mitmerkt — ein Abruf je Minute wiegt keine Verzeichnisse.
- *
  * 21.0.0 IST DIE HAUPTNUMMER DES RUECKBAUS VON R39 (P5c/AP8, E-P5c-19, -47,
- * -48, -122 bis -125; Backlog Nr. 168, 169, 46). ZERSTOEREND, MIT
+ * -48, -122 bis -127; Backlog Nr. 168, 169, 46, 324). ZERSTOEREND, MIT
  * VORBEDINGUNG — nach dem Deploy `update.php`, die Wartung bleibt an.
  *
  * WARUM DIE HAUPTNUMMER. Das Datenmodell aendert sich, und zwar in eine
@@ -7579,6 +7579,10 @@ declare(strict_types=1);
  * (E-P5c-123). Eine Wiederherstellung legt weiter an, was in der Datei
  * steht (E8).
  *
+ * UND KEIN WEG ZURUECK NACH 1.0 (E-P5c-127). Eine Anlage liest keine
+ * Sicherung von vor 1.0 mehr ein; den eigenen Bestand bringt ein
+ * Einmal-Skript aus einer Konto-Sicherung hinueber (Nr. 324, mit P8).
+ *
  * 21.1.0 — WENIGER TEXT AUF DEN SEITEN, MEHR IM HANDBUCH (P5c/AP9, E-P5c-06,
  *   -28, -29, -37, -49, -50, -128 bis -134; Backlog Nr. 121, 244, 245, 246,
  *   253, 269). Nebenstufe ohne Migration.
@@ -7602,5 +7606,20 @@ declare(strict_types=1);
  *   Komplett-Backup und Backup-Ziele im Wartungsmodus — genau dann braucht
  *   man sie (E-P5c-134) —, und rund zwei Dutzend Saetze, die nicht mehr
  *   stimmten (F-P5c-138 bis -164).
+ *
+ * 21.1.1 — DER ABSCHLUSS VON P5c (AP11). Korrekturstufe ohne Migration.
+ *   EIN TOR, DAS BEI EINEM FEHLER AUFGING (F-P5c-166): `totp_spalten_da()`
+ *   fing jeden Fehler der Datenbank und sagte dann „keine Spalten" — und
+ *   `login.php` meldete darauf ohne Code-Schritt an. Stumm ist der
+ *   Zweitfaktor jetzt nur, wenn die Spalte wirklich fehlt (das Fenster
+ *   zwischen Deploy und `update.php`); jeder andere Fehler bricht ab. Dieselbe
+ *   Unterscheidung im Einrichtungstor (`auth_guard.php`) und in
+ *   `rw_zustand()`. Gefunden hat es die Gegenlesung der Phase, nicht ein
+ *   Test.
+ *   Dazu, was dieselbe Gegenlesung an Saetzen gefunden hat: der Satz zum
+ *   eigenen Zweitfaktor auf der Kontoseite nennt den Rueckweg, das Codeblatt
+ *   alle Wege, auf denen es ungueltig wird, die Karte Sicherheit sieben
+ *   Toepfe mit Sperrleiter statt fuenf, zwei Verweise zeigen ins richtige
+ *   Kapitel.
  */
-const WEB_VERSION = '21.1.0';
+const WEB_VERSION = '21.1.1';

@@ -1321,7 +1321,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'aktion' => ['text' => 'Protokoll lesen', 'href' => 'admin_protokoll.php']]); ?>
     <p class="feld-hinweis">Was hier steht, begrenzt, wie lange Betriebsereignisse
        liegen — in der Datenbank und im versiegelten Archiv.
-       <a href="hilfe.php#11-7-protokoll">Wie das Archiv arbeitet</a></p>
+       <a href="hilfe.php#das-archiv-nur-betreiberin">Wie das Archiv arbeitet</a></p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="protokoll">
       <?php ui_feld(['name' => 'protokoll_frist',

@@ -275,7 +275,10 @@ function rw_zustand(int $userId, ?PDO $pdo = null): array
                                          FROM users WHERE id = ?');
         $st->execute([$userId]);
         $z = $st->fetch(PDO::FETCH_NUM);
-    } catch (Throwable) {
+    } catch (PDOException $ex) {
+        /* NUR DIE FEHLENDE SPALTE IST „spalten" (F-P5c-166). Jeder andere
+         * Fehler der Datenbank bricht ab, statt als Deploy-Fenster zu gelten. */
+        if ((string)$ex->getCode() !== '42S22') { throw $ex; }
         return ['stand' => 'spalten', 'seit' => null];
     }
     return $z !== false && (int)$z[0] === 1
@@ -288,7 +291,7 @@ function rw_zustand(int $userId, ?PDO $pdo = null): array
  * ===========================================================================
  *
  * Die Prüfung steht HIER und nicht in `login.php`, damit die Rückwegprobe
- * sie ohne HTTP messen kann (Konzept RW 5.3, Teil B): Sie bekommt die halbe
+ * sie ohne HTTP messen kann (Teil B der Probe): Sie bekommt die halbe
  * Sitzung als Feld und die Signatur als Text, und sie tut alles außer der
  * Sitzung selbst — Herausforderung verbrauchen, Topf `totp`, Signatur
  * prüfen, Zweitfaktor abschalten. Sitzung, Mail und Weiterleitung bleiben

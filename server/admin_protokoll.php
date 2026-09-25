@@ -14,7 +14,7 @@ require_once __DIR__ . '/format_lib.php';   // datum_zeit_text(), datum_text(), 
  *
  * EINE SEITE, EIN ORT. Was die Rolle nicht darf, zeigt die Seite nicht:
  * Oben die Reiter, die sie sehen darf (`protokoll_reiter_sichtbar()`) —
- * BetreiberIn sieben, Admin vier —, darunter die Liste mit einem Suchfeld,
+ * BetreiberIn sieben, Admin vier, Support zwei —, darunter die Liste mit einem Suchfeld,
  * dem Zeitraum als Pillen und der Art als Auswahl, 50 Zeilen je Seite. Nur
  * die BetreiberIn sieht den abgesetzten Reiter „Archiv" am rechten Rand.
  *

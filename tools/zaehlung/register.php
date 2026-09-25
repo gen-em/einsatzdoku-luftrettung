@@ -357,7 +357,7 @@ return [
 ['kennung' => 'Z24', 'paket' => 'AP7',
  'beschreibung' => "gmdate('Y-m-d\\TH:i:s\\Z' — ISO-UTC-Marke schreiben",
  'grund' => 'iso_utc() in format_lib.php (E-ZE-23). Die eine erlaubte Stelle ist die '
-          . 'Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php 215. Deren '
+          . 'Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php, wartung_einschalten(). Deren '
           . 'Dateikopf sagt als Eigenschaft 2 zu, NICHTS zu laden — sie traegt den '
           . 'Wartungsmodus gerade dann, wenn der Rest ersetzt wird.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
@@ -367,7 +367,7 @@ return [
 ['kennung' => 'Z25', 'paket' => 'AP7',
  'beschreibung' => "str_replace(['T','Z'] … — ISO-UTC-Marke lesen",
  'grund' => 'iso_utc_lesen() in format_lib.php (E-ZE-23). Die eine erlaubte Stelle ist '
-          . 'die Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php 559, '
+          . 'die Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php, wartung_balken(), '
           . 'dieselbe Ladezusage wie bei Z24.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~str_replace\s*\(\s*\[\s*[\'"]T[\'"]\s*,\s*[\'"]Z[\'"]~'],
@@ -382,7 +382,7 @@ return [
           . 'DREI NAMENTLICH (AP7): admin_rechtstexte.php 85 (bis Web 21.0.0 '
           . 'admin_installation.php) und rechtstexte_lib.php '
           . '482 formatieren einen Unix-Zeitstempel bewusst OHNE Zonenumrechnung — eine '
-          . 'Umstellung waere eine weitere sichtbare Ausnahme; wartung_lib.php 561 '
+          . 'Umstellung waere eine weitere sichtbare Ausnahme; wartung_lib.php, wartung_balken(), '
           . 'darf nichts laden (siehe Z24).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]d\.m\.[^\'"]*[\'"]~'],

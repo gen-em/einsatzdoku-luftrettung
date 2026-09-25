@@ -99,17 +99,17 @@ Prüfpunkte in 2 und das, was 0 nennt.**
 | P-RW-02 | **Die Rückwegprobe in Stufe 2** (RW-03) | nach dem Merge: Actions → „Auslieferung" → Job „Prüfung Stufe 2", Schritt „Rückwegprobe gegen Staging" | grün, am Ende „23 ok, 0 fehlen" (auf Staging ohne die Datenbankzeilen: **21**) | Schritt rot; oder „NICHT GEMESSEN" (fehlt `STAGING_TOTP` oder das Prüfkonto) | offen |
 | P-RW-03 | **Der Rückweg mit dem eigenen Konto auf Staging** (RW-03) | eigenes Konto auf Staging, einmal angemeldet (das Paar entsteht), Zweitfaktor einschalten, die Codes **nicht** benutzen; abmelden, anmelden, „Gerät und Codes verloren? Wiederherstellungsschlüssel verwenden", den Schlüssel vom Notfallblatt eingeben, „Zweitfaktor zurücksetzen" | Erfolgskarte „Zweitfaktor zurückgesetzt" (Rolle user) bzw. das Tor mit der Meldung oben (Pflichtrolle); Mail „Zweitfaktor zurückgesetzt" mit dem Satz vom Wiederherstellungsschlüssel; im Protokoll „Zweitfaktor zurückgesetzt" | keine Erfolgskarte; der Verweis fehlt (dann Betrieb → Status, „Rückweg-Prüfung", und Profil → Karte „Zweitfaktor"); keine Mail | offen |
 | P-RW-04 | **Dasselbe mit einem falschen Zettel** (RW-03) | wie P-RW-03, aber den Wiederherstellungsschlüssel eines ANDEREN Kontos eingeben | „passt aber nicht zu diesem Konto", der Zweitfaktor bleibt an | eine andere Meldung; oder der Zweitfaktor ist danach aus | offen |
-| P-RW-05 | **Das Demo-Konto bleibt ohne Paar** (RW-02, E-RW-15) | nach dem Merge auf Staging: Demo → „Auf Standard zurücksetzen"; danach im Demo anmelden, eine Seite mit Einsätzen öffnen; dann als BetreiberIn Verwaltung → Protokoll, Reiter Verwaltung, nach „Rückweg" suchen | der Reset läuft ohne Fehler; im Protokoll **kein** „Rückweg eingerichtet" für das Demo-Konto | eine Fehlermeldung beim Reset; oder ein Eintrag „Rückweg eingerichtet" mit dem Demo-Konto | offen |
+| P-RW-05 | **Das Demo-Konto bleibt ohne Paar** (RW-02, E-RW-15) | nach dem Merge auf Staging: Verwaltung → Demo-Konto → „Zurücksetzen" (hier stand bis P5c/AP11 „Demo → Auf Standard zurücksetzen"); danach im Demo anmelden, eine Seite mit Einsätzen öffnen; dann als BetreiberIn Verwaltung → Protokoll, Reiter Verwaltung, nach „Rückweg" suchen | der Reset läuft ohne Fehler; im Protokoll **kein** „Rückweg eingerichtet" für das Demo-Konto | eine Fehlermeldung beim Reset; oder ein Eintrag „Rückweg eingerichtet" mit dem Demo-Konto | offen |
 
 ## 3. Grenzen der benutzten Prüfmittel
 
 **Aus RW-03:**
 
 - **„Ein Abzug genügt nicht" ist Konstruktion plus Messung** (Konzept RW
-  5.2). B7 zeigt, dass kein Wert des Abzugs `rw_privat` öffnet — 73 Versuche,
+  5.2, seit dem Abschluss von P5c in `Technik.md` 4.99q). B7 zeigt, dass kein Wert des Abzugs `rw_privat` öffnet — 73 Versuche,
   als Hex und als Rohbytes. Dass es keine ANDERE Art gibt, aus dem Abzug zu
   signieren, sagt die Konstruktion: Signieren braucht den privaten Teil, und
-  der liegt nur unter dem Inhaltsschlüssel. Die Tabelle dazu steht im Konzept.
+  der liegt nur unter dem Inhaltsschlüssel. Die Tabelle dazu steht in `Technik.md` 4.99q („Was ein Abzug enthält“).
 - **Die Probe baut ihr Konto für Teil B selbst**, mit derselben Verpackung
   wie `crypto.js`. Dass die Verpackung der Anwendung dieselbe ist, zeigt der
   Browser-Teil (`probe.mjs`), der mit der echten Krypto der Seite durchgeht.
@@ -119,8 +119,10 @@ Prüfpunkte in 2 und das, was 0 nennt.**
 **Aus RW-02:**
 
 - **Der Bedienweg belegt Chromium.** Die Kette von `rueckweg.js` —
-  `generateKey`, `exportKey('pkcs8')`, `encrypt` — läuft dort. Für Firefox
-  und WebKit steht die Messung der Vorbereitung (F-RW-02), nicht dieser Weg.
+  `generateKey`, `exportKey('pkcs8')`, `encrypt` — läuft dort. Firefox und
+  WebKit hat RW-04 nachgeholt: `probe.mjs --motor` legt das Paar dort mit
+  `rueckweg.js` an, je 23 / 0 (Abschnitt 1). Der Bedienweg selbst läuft
+  weiter nur in Chromium (Nr. 300).
 - **„Kein Paar im Demo" ist Konstruktion plus Messung.** Gemessen sind der
   Endpunkt (403 mit gültigem Token) und die Seite (`RW_STAND` „demo", kein
   `rueckweg.js`); dass keine DRITTE Stelle je ein Paar für das Demo-Konto
@@ -140,7 +142,7 @@ Prüfpunkte in 2 und das, was 0 nennt.**
   langsamer Hoster zeigt seine Zahl in der Statuszeile.
 - **„Abgewiesen" ist Konstruktion plus Messung.** Die Probe zeigt, dass fünf
   Arten falscher Signaturen scheitern — nicht, dass es keine sechste gibt,
-  die durchginge. Die Konstruktion dazu steht im Konzept (5.2).
+  die durchginge. Die Konstruktion dazu steht in `Technik.md` 4.99q.
 
 ## 4. Soll gegen Ist (Konzept RW 5.1)
 

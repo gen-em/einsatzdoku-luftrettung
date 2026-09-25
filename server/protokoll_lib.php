@@ -404,7 +404,7 @@ function protokoll_art_ton(string $art, array $daten = []): string
 
 /* ---- Die Quellen (E-P5c-11, -38) ------------------------------------------- *
  *
- * JE REITER EINE ODER ZWEI QUELLEN, NIE EIN UNION. Die naheliegende Loesung —
+ * JE REITER EINE BIS DREI QUELLEN, NIE EIN UNION. Die naheliegende Loesung —
  * ein `UNION ALL` ueber `protokoll_ereignisse`, `mail_warteschlange` und die
  * uebrigen — stoesst auf eine Eigenschaft des Hosters, nicht des Codes: Die
  * Tabellen sind zu verschiedenen Zeiten entstanden, auf Produktiv unter

@@ -356,9 +356,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Einmal-Anzeige.
      *
      * AUSSCHALTEN NUR OHNE PFLICHT (E-P5c-15). Fuer Support, Admin und
-     * BetreiberIn setzt ihn allein die Verwaltung zurueck (E-P5c-42); der
-     * Knopf fehlt dort, und diese Pruefung haelt auch den handgebauten POST
-     * ab.
+     * BetreiberIn setzt ihn die Verwaltung zurueck (E-P5c-42) oder, seit
+     * Konzept RW, die Person selbst mit dem Wiederherstellungsschluessel am
+     * Code-Schritt; der Knopf fehlt hier, und diese Pruefung haelt auch den
+     * handgebauten POST ab.
      *
      * ABBRECHEN RAEUMT NUR EINE ANGEFANGENE EINRICHTUNG. Derselbe Aufruf an
      * einem eingeschalteten Zweitfaktor schaltete ihn ab — ein Knopf

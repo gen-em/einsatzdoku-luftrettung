@@ -312,7 +312,10 @@ if (rolle_braucht_zweitfaktor($row['role'] ?? null) && !wartung_aktiv()
         $zf = db()->prepare('SELECT totp_seit IS NOT NULL FROM users WHERE id = ?');
         $zf->execute([$userId]);
         $zweitfaktorFehlt = (int)$zf->fetchColumn() === 0;
-    } catch (Throwable) {
+    } catch (PDOException $ex) {
+        /* Nur die fehlende Spalte (42S22) ist das Deploy-Fenster; jeder andere
+         * Fehler bricht ab, statt das Tor zu öffnen (F-P5c-166). */
+        if ((string)$ex->getCode() !== '42S22') { throw $ex; }
         $zweitfaktorFehlt = false;           // Spalten fehlen: stumm (s. o.)
     }
     if ($zweitfaktorFehlt) {

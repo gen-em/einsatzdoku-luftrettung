@@ -31,8 +31,9 @@ declare(strict_types=1);
  *
  * WAS HIER NICHT STEHT: der Rückweg über den Wiederherstellungsschlüssel.
  * E-P5c-42 sah ihn vor, geprüft gegen `pat_key_check` — einen Wert, den jeder
- * Datenbankabzug enthält (F-P5c-106). Er kommt fälschungssicher mit dem
- * Einschubkonzept RW (Q-P5c-38, E-P5c-104). Bis dahin: Codes und Verwaltung.
+ * Datenbankabzug enthält (F-P5c-106). Er steht fälschungssicher in
+ * `rueckweg_lib.php` (Konzept RW, seit Web 20.45.0); hier bleibt davon nur
+ * `totp_abschalten(…, 'schluessel')`.
  *
  * OHNE DIE SPALTEN IST ALLES STUMM (E-P5c-36, -53). Zwischen Deploy und
  * `update.php` gibt es `totp_*` nicht; dann fragt die Anmeldung keinen Code,
@@ -162,17 +163,20 @@ function totp_code_normieren(string $eingabe): ?string
 /* ---- Datenbank --------------------------------------------------------------- */
 
 /** Gibt es die Spalten und die Codetabelle? Ohne sie ist der Zweitfaktor
- *  stumm (E-P5c-36, -53). Einmal je Anfrage gefragt. */
+ *  stumm (E-P5c-36, -53). Einmal je Anfrage gefragt.
+ *
+ *  EIN FEHLER DER DATENBANK IST KEIN „NEIN" (F-P5c-166). Bis Web 21.1.0 fing
+ *  hier ein `catch (Throwable)` jeden Fehler und gab `false` — und
+ *  `login.php` meldete darauf ohne Code-Schritt an. Ein Tor, das bei einem
+ *  Fehler aufgeht, ist keines. `db_hat_spalte()` und `db_hat_tabelle()` sagen
+ *  „nein", wenn es die Spalte nicht gibt; werfen tun sie nur, wenn die
+ *  Datenbank selbst nicht antwortet, und dann bricht die Anfrage ab. */
 function totp_spalten_da(?PDO $pdo = null): bool
 {
     static $da = null;
     if ($da !== null && $pdo === null) { return $da; }
-    try {
-        $p = $pdo ?? db();
-        $ergebnis = db_hat_spalte($p, 'users', 'totp_seit') && db_hat_tabelle($p, 'totp_codes');
-    } catch (Throwable) {
-        $ergebnis = false;
-    }
+    $p = $pdo ?? db();
+    $ergebnis = db_hat_spalte($p, 'users', 'totp_seit') && db_hat_tabelle($p, 'totp_codes');
     if ($pdo === null) { $da = $ergebnis; }
     return $ergebnis;
 }

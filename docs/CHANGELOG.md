@@ -14,6 +14,71 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.1] — 2026-09-25
+
+**Der Abschluss von P5c: ein Tor, das bei einem Fehler aufging, und was die
+Gegenlesung der Phase sonst fand.** P5c/AP11. **Korrekturstufe ohne
+Migration.** Zehn lesende Agenten haben je ein Paket von P5c gegen seinen
+Soll-Abschnitt und gegen den Code von heute gehalten — nicht gegen den
+Stand, an dem das Paket endete, sondern gegen alles, was die späteren Pakete
+daran geändert haben. Gefunden haben sie rund hundertzehn Stellen. Fast alle
+sind Sätze, die ein späteres Paket überholt hat; eine ist ein Fehler, der
+nicht auf dem Papier stand.
+
+### Behoben
+
+- **Web: Ein Fehler der Datenbank schaltete den Zweitfaktor stumm**
+  (F-P5c-166). Zwischen Deploy und `update.php` gibt es die Spalten des
+  Zweitfaktors nicht, und dann soll die Anmeldung keinen Code fragen — sonst
+  käme niemand mehr an Betrieb → Updates (E-P5c-36, -53). Gefragt hat das
+  `totp_spalten_da()`, und es fing dafür **jeden** Fehler ab: Scheiterte die
+  Abfrage an `information_schema` aus einem anderen Grund, sagte es „keine
+  Spalten", und `login.php` meldete nach dem Passwort **ohne Code-Schritt**
+  an. Ein Tor, das bei einem Fehler aufgeht, ist keines. Jetzt gilt nur die
+  wirklich fehlende Spalte als dieses Fenster; jeder andere Fehler bricht die
+  Anfrage ab. Dieselbe Unterscheidung (SQLSTATE 42S22) im Einrichtungstor
+  von `auth_guard.php` und in `rw_zustand()`. **Gefunden hat es die
+  Gegenlesung, nicht ein Test** — die Proben fuhren nie eine gestörte
+  Verbindung. **Was bleibt:** Das Einrichtungstor ist mit der Probe nicht
+  gemessen, nur gelesen; es läuft über HTTP, und dort lässt sich die
+  Datenbank nicht gezielt stören.
+- **Web: Sätze, die ein späteres Paket überholt hatte.** Die Kontoseite
+  sagte zum eigenen Zweitfaktor, zurücksetzen könne ihn „eine andere
+  BetreiberIn" — auch einem Admin, und ohne den Rückweg über den
+  Wiederherstellungsschlüssel. Das Codeblatt nannte nur zwei der vier Wege,
+  auf denen es ungültig wird. Die Karte Sicherheit zählte fünf Töpfe mit
+  Sperrleiter; es sind seit 20.42.0 sieben. Das Einrichtungstor schickte die
+  BetreiberIn nach „Betrieb → Server", eine Meldung des Demo-Kontos auf
+  „Auf Standard zurücksetzen" — beides gibt es so nicht mehr. Zwei Verweise
+  ins Handbuch landeten neben ihrem Abschnitt.
+
+### Geändert
+
+- **Doku: Handbuch, Technik, Design, Backlog, Prüfdokumente.** Das Kapitel
+  Protokoll nennt jetzt Blättern, Reiterwechsel, „Unvollständig" und was ein
+  Archiv mit anderem Schlüssel zeigt; die Statistik jede Zahl ihrer Seite
+  samt Bezugsgröße; der Zweitfaktor die drei Fälle, in denen das
+  Einrichtungstor durchlässt, und den Haken vor „Weiter"; Updates die
+  Sperre wegen einer Vorbedingung. Die Berechtigungsmatrix sagt, was sie
+  **nicht** führt (Backlog Nr. 327). Was das Konzept RW als Einziges trug —
+  die Tabelle „Was ein Abzug enthält" und die Grenzen des Rückwegs —, steht
+  jetzt in `Technik.md` 4.99q, damit es das Löschen des Konzepts übersteht.
+- **Doku: Backlog Nr. 326 berichtigt.** AP9 hatte ihn mit der Begründung
+  angelegt, das Protokoll führe keine Migrationen. Es führt sie seit
+  20.39.0 (`migration_ausgefuehrt`); offen ist nur, ob die Karte
+  „Ausgeführt" bleibt.
+- **Werkzeug: Zweitfaktorprobe Teil 2b und Rückwegprobe A7** (F-P5c-166):
+  `totp_spalten_da()` und `rw_zustand()` mit einer Verbindung, deren
+  `prepare()` wirft — beide müssen abbrechen; mit fehlender Spalte (42S22)
+  bleibt `rw_zustand()` stumm. **Die Rückwegprobe hatte den Fehler selbst
+  festgeschrieben:** Ihre Lage „spalten" stellte eine SQLite-Datenbank ohne
+  die Spalten nach, und die meldet HY000 statt 42S22 — grün war die Lage
+  nur, weil `rw_zustand()` jeden Fehler schluckte. Jetzt steht sie so da,
+  wie MySQL sie meldet. Gegenproben mit dem Code von 21.1.0: Zweitfaktorprobe
+  rot, Rückwegprobe 49 / 1; danach 47 / 0 und 50 / 0.
+- **Werkzeug: Die Rollenprobe läuft auch bei einer Änderung an `db.php`**,
+  wo die Prädikate `rolle_*` stehen (Gegenlesung AP4).
+
 ## [Web 21.1.0] — 2026-09-25
 
 **Weniger Text auf den Seiten, mehr im Handbuch.** P5c/AP9 (E-P5c-06, -08,
@@ -39,8 +104,8 @@ was hier passiert, dazu ein Verweis ins Handbuch, wo der Rest steht.
   Soll, und beide Zähler fanden sie:** die Karte „Wartungsmodus" (ein Satz
   und eine Ablaufliste, siehe unten) und eine Kleinzeile mit zwei Sätzen auf
   den Servereinstellungen. Ein Verweis im Seitenkopf gilt für die Karten
-  seiner Seite (E-P5c-133); die eine Seite ohne Kopf, Updates, trägt ihn in
-  den Karten. **Was bewusst bleibt:** Meldungen, Leerzustände,
+  seiner Seite (E-P5c-133); die drei Seiten ohne Kopf — Updates, Jobs und
+  Servereinstellungen — tragen ihn in jeder Karte. **Was bewusst bleibt:** Meldungen, Leerzustände,
   Befundzeilen und Dialoge zählen nicht mit; sie sind Inhalt, nicht
   Erklärung.
 - **Web: Die Leiste trägt ihre Blöcke als Überschriften** (Option 1
@@ -140,8 +205,10 @@ was hier passiert, dazu ein Verweis ins Handbuch, wo der Rest steht.
   Kontoseite zeigte die Aufbewahrung der Installation statt der des Kontos
   und sprach im Status die NutzerIn an statt der Verwaltung; auf der
   Statusseite schloss eine Karte mit `</details>`, die keines war; Updates
-  versprach ein Audit-Protokoll der Migrationen, das es nicht gibt (Backlog
-  Nr. 326); die Einwilligungsseite nannte einen Reiter „Konto"; Codeblatt
+  versprach, die Karte „Ausgeführt" entfalle mit dem Audit-Protokoll —
+  ohne Termin, und der Satz ist gestrichen (Backlog Nr. 326; die Begründung,
+  das Protokoll führe keine Migrationen, war falsch — es führt sie seit
+  20.39.0, berichtigt in 21.1.1); die Einwilligungsseite nannte einen Reiter „Konto"; Codeblatt
   und Notfallblatt fielen still auf das Hubschrauber-Logo zurück.
 - **Web: Was die Endzählung nebenbei gefunden hat** (F-P5c-160 bis -163):
   Die Kontoseite des Demo-Kontos verwies auf ein Aktionsmenü, das es dort
@@ -176,7 +243,7 @@ was hier passiert, dazu ein Verweis ins Handbuch, wo der Rest steht.
 ## [Web 21.0.0] — 2026-09-25
 
 **Der Rückbau von R39: Jeder Stammdatensatz gehört einem Konto.** P5c/AP8
-(E-P5c-19, -47, -48, -122 bis -126; Backlog Nr. 168, 169, 46).
+(E-P5c-19, -47, -48, -122 bis -127; Backlog Nr. 168, 169, 46, 324).
 **Hauptstufe mit zerstörender Migration. Nach dem Deploy `update.php`, die
 Wartung bleibt an.** Zentrale Stammdaten gibt es in der Oberfläche seit
 Web 18.0.0 nicht mehr. Stehen geblieben war das Modell, das sie zuließ: In
@@ -189,6 +256,11 @@ in 16 Dateien.
 **Warum Hauptstufe:** Das Schema ändert sich in eine Richtung, aus der kein
 Weg zurückführt. Code vor 21.0.0 läuft darauf nicht. **Ein Rücksetzen über
 diese Fassung hinweg braucht den Rückfallstand aus dem Komplett-Backup.**
+
+**Und nach 1.0 kein Weg zurück** (E-P5c-127): Eine Anlage liest dann keine
+Sicherung aus der Zeit vor 1.0 mehr ein. Den eigenen Bestand bringt einmal
+ein Skript aus einer Konto-Sicherung hinüber (Backlog Nr. 324, mit P8) —
+deshalb trägt diese Fassung keinen Übergangsweg für Altdaten mit.
 
 ### Geändert
 
@@ -424,7 +496,7 @@ anrief. Jetzt kann ihr eigenes Monitoring fragen.
   gleicher Dauer, die 200 mit genau diesen Feldern, die 503 bei ausstehender
   Migration, `speicher_pct` gegen die Balken der Karte „Speicher" gehalten, 60
   Anfragen durch und die 61. mit 429. **Wartungsprobe Fall 5a:**
-  In der Wartung antwortet das Tor mit 503 `maintenance`, mit und ohne Token,
+  In der Wartung antwortet das Tor mit 503 `maintenance`, mit falschem und ohne Token,
   und der Topf zählt nichts. Keine neue Probe — die Abnahme von AP6 verlangt
   die vorhandenen.
 
@@ -1076,8 +1148,9 @@ aus.
   der Hand.
 - **Web: Die Verwaltungsseiten fragen je Handlung, nicht je Seite.**
   `admin_users.php`, `admin_user.php` und `admin_protokoll.php` lässt
-  `require_support()` betreten; jede Handlung dort fragt `handlung_erlaubt()`
-  **vor** dem Formular-Token (Muster E-P5c-85), sonst bekäme ein Support mit
+  `require_support()` betreten; jede Handlung der beiden Kontoseiten fragt
+  `handlung_erlaubt()` — die Protokollseite fragt einmal, ob die BetreiberIn
+  fragt — **vor** dem Formular-Token (Muster E-P5c-85), sonst bekäme ein Support mit
   abgelaufenem Formular dieselbe Antwort wie einer, der die Handlung gar
   nicht darf, und die Rollenprobe könnte beides nicht unterscheiden. Eine
   Seitenwache hätte den Support ganz ausgesperrt oder ganz hereingelassen.

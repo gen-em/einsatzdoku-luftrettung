@@ -12,7 +12,7 @@ declare(strict_types=1);
  *   Teil A — die Bibliothek (`rueckweg_lib.php`, RW-01):
  *     1. Der Selbsttest mit erzwungener Engine, OpenSSL und reines PHP —
  *        beide müssen den festen Browser-Vektor annehmen; die Dauer steht da.
- *     2. Sechs Signaturfälle nach Konzept RW 5.3: echt → angenommen; fremd,
+ *     2. Sechs Signaturfälle (Konzept RW 5.3, in der Git-Historie): echt → angenommen; fremd,
  *        verändert, zweckfremd, fremdes Konto, verstümmelt → abgewiesen.
  *     3. Fremde Schlüssel: P-384 und Ed25519 weist `rw_oeffentlich_pruefen()`
  *        ab, und eine gültige Signatur mit ihnen nimmt `rw_pruefen()` nicht an.
@@ -39,7 +39,7 @@ declare(strict_types=1);
  *         `totp`; weiter bis zur Sperre, danach auch die echte abgewiesen
  *     B5. die alte Fassung: `pat_key_check` statt einer Signatur → abgewiesen
  *     B6. nicht angeboten (kein Paar; Selbsttest gescheitert) → abgewiesen
- *     B7. die Abzug-Gegenprobe (Konzept RW 5.2): jeder Wert der Kontozeile,
+ *     B7. die Abzug-Gegenprobe (die Konstruktion dazu: Technik.md 4.99q, „Was ein Abzug enthält“): jeder Wert der Kontozeile,
  *         jeder aus `app_state`, `server_key`, `kdf_anteil` und der Anteil
  *         des Kontos — als Hex und als Rohbytes — als Schlüssel für
  *         `rw_privat`: 0 Erfolge. Der richtige Inhaltsschlüssel öffnet ihn
@@ -120,7 +120,7 @@ pruefe($a['ok'] && $a['weg'] === 'openssl', 'ohne Zwang: derselbe Weg wie rw_pru
        $a['weg'] . sprintf(', %.1f ms', $a['ms']));
 
 /* ---- 2. Sechs Signaturfälle -------------------------------------------------- */
-echo "== A2. Sechs Signaturfälle (Konzept RW 5.3)\n";
+echo "== A2. Sechs Signaturfälle\n";
 $paar  = EC::createKey(RW_KURVE);
 $fremd = EC::createKey(RW_KURVE);
 $konto = 4711;
@@ -223,9 +223,22 @@ $lagen['fehlt'] = rw_zustand($probeId);
 $pdo->prepare('UPDATE users SET rw_oeffentlich = ?, rw_privat = ?, rw_seit = UTC_TIMESTAMP()
                WHERE id = ?')->execute([$pub, 'edk1:' . $chiffre, $probeId]);
 $lagen['da'] = rw_zustand($probeId);
-$ohne = new PDO('sqlite::memory:');
-$ohne->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, email TEXT)');
-$lagen['spalten'] = rw_zustand($probeId, $ohne);
+/* DIE LAGE „spalten" SO, WIE MYSQL SIE MELDET (F-P5c-166): SQLSTATE 42S22.
+ * Bis Web 21.1.0 stand hier eine SQLite-Datenbank ohne die Spalten — sie
+ * meldet HY000, und die Lage war nur grün, weil `rw_zustand()` jeden Fehler
+ * für „spalten" hielt. Genau das war der Fehler. */
+final class ProbeFehltSpalte extends PDOException { protected $code = '42S22'; }
+final class ProbeGestoertePdo extends PDO
+{
+    public function __construct(private bool $nurSpalteFehlt) {}
+    public function prepare(string $query, array $options = []): PDOStatement|false
+    {
+        throw $this->nurSpalteFehlt
+            ? new ProbeFehltSpalte('SQLSTATE[42S22]: Column not found: 1054 Unknown column')
+            : new PDOException('SQLSTATE[HY000]: General error: 2006 MySQL server has gone away');
+    }
+}
+$lagen['spalten'] = rw_zustand($probeId, new ProbeGestoertePdo(true));
 require_once $wurzel . '/server/demo_lib.php';
 $demo = demo_id();
 $lagen['demo'] = $demo === null ? ['stand' => 'kein Demo-Konto vermerkt'] : rw_zustand($demo);
@@ -236,6 +249,13 @@ foreach ($lagen as $soll => $z) {
     pruefe($ok, "Lage $soll", ($z['stand'] ?? '?') . ($soll === 'da' ? ', seit ' . ($z['seit'] ?? '—') : ''));
 }
 pruefe($treffer === 4, "$treffer von 4 Lagen");
+try {
+    rw_zustand($probeId, new ProbeGestoertePdo(false));
+    $abbruch = 'kein Fehler — die Lage hieße „spalten"';
+} catch (PDOException $e) {
+    $abbruch = 'wirft';
+}
+pruefe($abbruch === 'wirft', 'ein anderer Datenbankfehler bricht ab, statt als „spalten" zu gelten (F-P5c-166)', $abbruch);
 
 /* ---- 8. Das Kontopaket trägt das Paar nicht ---------------------------------- */
 echo "== A8. Kontopaket und Freigabe ohne das Paar (E-RW-09)\n";
@@ -417,7 +437,7 @@ pruefe(($r1['grund'] ?? '') === 'nicht_angeboten' && ($r2['grund'] ?? '') === 'n
        ($r1['grund'] ?? 'ok') . ' / ' . ($r2['grund'] ?? 'ok'));
 
 /* ---- B7. Die Abzug-Gegenprobe ---- */
-echo "== B7. Abzug-Gegenprobe (Konzept RW 5.2)\n";
+echo "== B7. Abzug-Gegenprobe\n";
 $zeile = $pdo->query("SELECT * FROM users WHERE id = $idB")->fetch(PDO::FETCH_ASSOC);
 $werte = array_values(array_filter(array_map('strval', $zeile), static fn($v) => $v !== ''));
 foreach ($pdo->query('SELECT v FROM app_state')->fetchAll(PDO::FETCH_COLUMN) as $v) {

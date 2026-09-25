@@ -283,7 +283,7 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 | Block | wer sieht ihn | was darin steht |
 |---|---|---|
 | **Einstellungen** | alle | Profil, Geräte, **Standorte**, Backup, Import / Export — Kapitel 3 bis 10 |
-| **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation**, Demo-Konto, Protokoll — **Kapitel 11** |
+| **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation**, **Rechtstexte**, Demo-Konto, Protokoll — **Kapitel 11** |
 | **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
 
 Jeder Block ist eine eigene Karte; im Kopf stehen ein rundes Zeichen, sein
@@ -724,6 +724,12 @@ ein Angebot. Im Demo-Konto lässt er sich nicht einschalten — dessen
 Zugangsdaten sind öffentlich. Wer eine der drei Rollen hat und noch keinen
 Zweitfaktor, landet nach der Anmeldung auf der Seite **„Zweitfaktor
 einrichten"**: Bis er steht, geht keine andere Seite auf, nur Abmelden.
+Drei Ausnahmen, alle für die BetreiberIn gedacht: Zwischen einem Update und
+`update.php`, im Wartungsmodus und solange die Anlage keinen
+Serverschlüssel hat, lässt die Seite durch — sonst käme niemand mehr an
+Betrieb → Updates oder an die Servereinstellungen. Fehlt der
+Serverschlüssel, sagt die Seite es, und die BetreiberIn trägt ihn unter
+Betrieb → Servereinstellungen nach.
 
 **Einrichten.** Unter **Einstellungen → Profil**, Karte **„Zweitfaktor"** →
 **„Einrichten"**. Drei Wege in die App, nimm den, der passt:
@@ -743,7 +749,9 @@ abbricht, sperrt sich nicht aus. Ein Neuladen der Seite behält das Geheimnis;
 dem Einschalten. Drucke sie mit **„Codeblatt drucken"** (eine A4-Seite, mit
 Kästchen zum Abhaken) oder schreib sie ab. Jeder Code gilt **einmal**, wenn
 das Handy fehlt. Gespeichert ist nur ein Prüfwert je Code — das Blatt lässt
-sich **nicht nachdrucken**. Bewahre es getrennt vom Handy auf. **„Neue Codes
+sich **nicht nachdrucken**. Bewahre es getrennt vom Handy auf. Auf der Seite
+„Zweitfaktor einrichten" wird **„Weiter"** erst frei, wenn du **„Ich habe die
+Codes gesichert."** angehakt hast. **„Neue Codes
 erzeugen"** gibt dir zehn neue; die alten und ein gedrucktes Blatt gelten dann
 nicht mehr. Die Karte zeigt, wie viele noch offen sind („8 von 10").
 
@@ -3473,8 +3481,8 @@ Darunter:
 
 | Karte | Was dort steht |
 |---|---|
-| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** auf alles, was dieses Konto getan hat oder was ihm geschah (11.7). |
-| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg; die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich bei der nächsten Anmeldung. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine andere BetreiberIn zurück. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
+| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** in den Reiter Verwaltung, eingegrenzt auf dieses Konto — als Handelnde oder als Betroffene (11.7); was andere Reiter über das Konto führen, etwa ein eingespieltes Konto-Backup im Reiter Sicherung, zeigt dieser Filter nicht. |
+| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg; die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
@@ -3706,7 +3714,7 @@ Ausschnitt der Verwaltung — alles, was er kann, kann auch ein Admin.
 |---|---|
 | **NutzerIn** | die eigenen Diensttage und Einsätze dokumentieren, eigene Stammdaten, Geräte, Backup, Import und Export — alles unter dem Zahnrad, was mit „ich" zu tun hat |
 | **Support** | zusätzlich, und nur für Konten der Rolle NutzerIn: die Liste und die Kontoseite **ansehen**, einen **Setz-Link senden** (ohne ihn zu sehen), eine **Bestätigung erneut senden**, ein **Gerät deaktivieren** — nicht wieder einschalten, nicht entkoppeln; dazu im Protokoll die Reiter Verwaltung und E-Mail |
-| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, Konto-Backups, Installation, Demo-Konto, das Protokoll mit vier Reitern |
+| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, den Zweitfaktor von NutzerInnen zurücksetzen, Konto-Backups, Installation, Rechtstexte, Demo-Konto, das Protokoll mit vier Reitern |
 | **BetreiberIn** | zusätzlich: alles, was die **Anlage** betrifft — Status, Statistik, Wartungsmodus, Migrationen, Hintergrundjobs, Speichergrenze, Komplett-Backup und Backup-Ziele (Kapitel 12), dazu alle Reiter des Protokolls und sein Archiv |
 
 **Seit Web 20.39.0 halten auch die Seiten selbst einen Admin draußen.** Bis
@@ -3734,7 +3742,7 @@ Rechte als ein Admin.
 
 **Für Support, Admin und BetreiberIn ist der Zweitfaktor Pflicht** (seit Web
 20.42.0, 3.1f). Wer eine dieser Rollen bekommt und noch keinen hat, richtet
-ihn bei der nächsten Anmeldung ein — vorher geht keine andere Seite auf.
+ihn beim nächsten Seitenaufruf ein — vorher geht keine andere Seite auf.
 
 Warum die BetreiberIn eine eigene Rolle ist: Eine Fehlbedienung in der
 Verwaltung trifft **ein** Konto, eine im Betrieb die **ganze Installation**. Wer den Wartungsmodus
@@ -3979,9 +3987,10 @@ Sperre läuft von selbst ab, und wer sein Passwort neu setzt, ist danach
 ohnehin nicht mehr gesperrt. Es kommt eine Rückfrage, und der Vorgang wird
 **mit deinem Namen** vermerkt — er steht danach in den Ereignissen.
 
-> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die fünf
-> Töpfe mit Sperrleiter: Anmeldung, Anschluss, Schlüsselableitung und die
-> beiden der Mengenbremse. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
+> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die sieben
+> Töpfe mit Sperrleiter: Anmeldung, Anschluss, Schlüsselableitung, die
+> beiden der Mengenbremse, das Prüfen des Schlüsselblatts und der Code des
+> Zweitfaktors. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
 > CSP-Berichte sperren ebenfalls, schreiben aber keine Zeile — dort eskaliert
 > nichts, und ein Protokoll jedes Tippfehlers würde die Liste zudecken.
 
@@ -4372,6 +4381,14 @@ Angaben, die nicht in den Satz passen.
 - **Zeitraum:** 24 h, 7 Tage, 30 Tage — im Reiter Verwaltung zusätzlich
   365 Tage. Ohne Auswahl siehst du alles, was noch da ist.
 - **Art:** ein Auswahlfeld, das sofort filtert.
+- **Ein zweiter Klick auf die aktive Pille** nimmt den Zeitraum zurück.
+- **50 Einträge je Seite**; darunter die Seitenwahl.
+- **Ein Wechsel des Reiters beginnt neu:** Suche, Zeitraum, Art und
+  Kontofilter gelten nur im Reiter, in dem sie gesetzt wurden.
+- Im Reiter **Sicherheit** führt **„Aktive Sperren"** im Kartenkopf zu
+  Betrieb → Status → Sicherheit, wo sich eine Sperre aufheben lässt.
+- **„Unvollständig."** über der Liste heißt: Eine Quelle dieses Reiters ließ
+  sich nicht lesen — meist steht ein Update aus (Betrieb → Updates).
 - **Von der Kontoseite** (11.1) führt „Im Protokoll" in den Reiter
   Verwaltung, eingegrenzt auf dieses Konto — als Handelnde oder als
   Betroffene. Der Filter steht als Pille mit Kreuz über der Liste; das
@@ -4409,6 +4426,16 @@ sagt, wer es war.
 | **auf dem Ziel** | liegt auch auf einem Backup-Ziel |
 | **nur lokal** | liegt nur hier — der Versand ist aus, oder er ist noch nicht gelaufen |
 | **anderer Schlüssel** | wurde mit einem früheren Serverschlüssel versiegelt; öffnen lässt es sich nur mit dem Schlüssel von damals (Wiederanlaufpaket, Schlüsselblatt mit der genannten Kennung) |
+
+Unter jeder Zeile stehen die **Kennung des Schlüssels** (acht Zeichen am
+Stück, so wie auf dem Schlüsselblatt — leg es zum Vergleichen daneben), die
+Zahl der Einträge und die Größe. Trägt ein Archiv einen **anderen
+Schlüssel**, steht über der Liste eine Warnung mit der Kennung, und die Zeile
+hat keinen Knopf „Herunterladen" — hier ließe sich nichts öffnen. Ein Archiv
+fasst höchstens **32 MB** Text; was darüber hinausginge — praktisch nur bei
+einem Angriff, der Zehntausende Sperren schreibt —, wird nicht archiviert.
+Das steht dann in der Übersicht im ZIP, nicht auf der Seite. Der
+Hintergrundjob heißt **„Protokoll archivieren"** (12.4).
 
 **Herunterladen** entsiegelt das Archiv und gibt ein gewöhnliches ZIP heraus:
 je Reiter eine Datei mit einer Zeile je Eintrag, dazu eine Übersicht. Das
@@ -4514,8 +4541,10 @@ mit Rolle Admin oder BetreiberIn: aktiv und mit eingerichtetem Zweitfaktor
 Sie ist **orange**, solange **weniger als zwei BetreiberInnen** handlungsfähig
 sind, und der Satz sagt, woran es liegt: nur ein Konto überhaupt („Fällt es
 aus, kommt niemand mehr an Verwaltung und Betrieb"), ein Admin als
-Vertretung der Verwaltung, aber nicht des Betriebs, oder eine zweite
-BetreiberIn ohne Zweitfaktor. Blau „vertreten" ab zwei handlungsfähigen
+Vertretung der Verwaltung, aber nicht des Betriebs, eine zweite
+BetreiberIn ohne Zweitfaktor — oder **„keine BetreiberIn"**: Keine ist
+handlungsfähig. Das siehst du nach einem Update, solange du deinen eigenen
+Zweitfaktor noch nicht eingerichtet hast. Blau „vertreten" ab zwei handlungsfähigen
 BetreiberInnen. **Orange und nicht rot**, weil jede neue Anlage mit genau
 einer BetreiberIn beginnt — es arbeitet ja. Der Zähler am Menüpunkt „Status"
 zählt die Zeile mit und steht deshalb auf einer Anlage mit einer BetreiberIn
@@ -4707,13 +4736,20 @@ die Zeile „Letzter Versand", ob sie angenommen wurde.
 
 ### 12.2 Statistik
 
-**Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend,
-keine Ampel: Der Status bewertet, die Statistik zählt.
+**Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend
+und ohne Ampel: Der Status bewertet, die Statistik zählt. Eine Farbe gibt es
+trotzdem: **Deaktiviert** unter Geräte steht orange, sobald ein Gerät
+gesperrt ist.
 
 > **Ohne Demo-Konto**, und zwar in jeder Zahl. Sein Bestand ist erfunden und
 > wird alle dreißig Minuten neu aus einer Vorlage hergestellt; ihn
 > mitzuzählen hieße, erfundene Einsätze als Nutzung auszugeben. „Von 11"
-> meint elf echte Konten.
+> meint elf echte Konten — in jedem Zustand: Unbestätigte, wartende und
+> gesperrte zählen mit.
+
+> **Nur echte Geräte**, auf der ganzen Seite. Was im Browser entsteht —
+> Formular, Import, eingelesene GPX-Datei —, läuft über ein unsichtbares
+> Gerät je Konto; es zählt in keiner Gerätezahl.
 
 Oben stehen vier Kennzahlen — Konten, Geräte, Einsätze gesamt, Einsätze in
 30 Tagen —, jede führt in ihren Reiter. Darunter **drei Reiter** *(seit Web
@@ -4725,22 +4761,29 @@ rechts eine Karte mit dem, was es gibt.
   angemeldet **oder** eines der Geräte des Kontos hat sich gemeldet. Wer nur
   mit der Uhr arbeitet und sich nie im Browser anmeldet, ist aktiv, aber
   nicht angemeldet. Rechts die **Konten nach Rolle** und wie viele **ohne
-  Gerät** sind — gezählt werden dort nur echte Geräte: Wer ausschließlich
-  von Hand dokumentiert, zählt dazu, auch wenn er schon eine GPX-Datei
-  eingelesen hat.
+  Gerät** sind: Wer ausschließlich von Hand dokumentiert, zählt dazu, auch
+  wenn er schon eine GPX-Datei eingelesen hat.
 - **Einsätze:** *Einsätze je Zeitraum* über 24 Stunden, 7 Tage, 30 Tage,
   6 Monate und 1 Jahr — die Zahl, wie viele NutzerInnen einen Einsatz
   hatten, und der Durchschnitt je NutzerIn mit Einsatz. Rechts die
   **Herkunft der Einsätze** der letzten 30 Tage: Garmin-Uhr, Android-Handy,
   Wear-OS-Uhr (an der Uhr begonnen, vom Handy gesendet), Formular, Import
-  und Schnitt — alle sechs, auch mit 0.
+  und Schnitt — alle sechs, auch mit 0; dazu **Andere**, wenn ein Wert
+  dasteht, den diese Fassung nicht kennt.
 - **Geräte:** *Geräte je Zeitraum* — zuletzt gemeldet, gekoppelt — über
   7 Tage, 30 Tage und 6 Monate; rechts die Geräte nach Art (Garmin-Uhren,
-  Android-Handys, ohne Angabe, deaktiviert). Darunter die **Gerätemodelle**
-  als Tabelle: Gerät, Hersteller, Art, Zahl und Anteil. Ein Klick auf einen
+  Android-Handys; Sonstige und ohne Angabe, wenn es welche gibt;
+  deaktiviert). Darunter die **Gerätemodelle** als Tabelle: Gerät,
+  Hersteller, Art, die Zahl der Geräte und ihr Anteil an allen Geräten, die
+  Zahl der NutzerInnen mit diesem Modell und ihr Anteil an allen Konten.
+  Ein Klick auf einen
   Spaltenkopf sortiert und bleibt im Reiter; **„Als CSV"** im Kartenkopf
   lädt dieselben Spalten als Datei herunter, für Excel gemacht (Semikolon,
   Umlaute richtig).
+
+**Die Prozentzahl unter einer Zeile** bezieht sich auf ihre Karte: bei den
+Konten auf alle Konten, bei den Geräten auf alle Geräte, bei der Herkunft
+auf die Einsätze der letzten 30 Tage.
 
 **Wie die Einsätze gezählt werden.** Ab dem **Beginn des Einsatzes** — ohne
 Demo-Konto, ohne Papierkorb. Jedes Fenster reicht bis *jetzt*: Ein Einsatz
@@ -4766,8 +4809,9 @@ beginnt, gehört zum Dienst des Vortags — hier zum Tag seines Beginns.
 
 ### 12.3 Updates
 
-Zwei Karten, ein Vorgang. Oben der **Wartungsmodus** mit dem fünfstufigen
-Ablauf als Kurzform, darunter die **ausstehenden Updates**.
+Ein Vorgang, zwei Karten dafür. Oben der **Wartungsmodus** mit einem Satz —
+der Ablauf steht unten unter „Der Wartungsmodus" —, darunter die
+**ausstehenden Updates**.
 
 Das bloße Öffnen der Seite ändert nichts — sie zeigt erst an, was anstünde,
 und wartet auf den Knopf **„Ausstehende ausführen"**.
@@ -4789,9 +4833,12 @@ allein die Anzeige.
 
 Jede Zeile trägt ihren Stand als Plakette: **steht aus** (orange), **nicht
 nötig** (grau), **blockiert** (rot) oder **Fehler** (rot). Eine *blockierte*
-Migration würde eine Spalte löschen, in der noch Daten stehen; sie läuft nur,
-wenn du das Kästchen vor ihrer Zeile setzt — und dieses Kästchen heißt: **Die
-Daten sind gesichert.**
+Migration hat einen von zwei Gründen, und die Zeile nennt ihn. Entweder würde
+sie eine Spalte löschen, in der noch Daten stehen; dann läuft sie nur, wenn du
+das Kästchen vor ihrer Zeile setzt — und dieses Kästchen heißt: **Die Daten
+sind gesichert.** Oder ihr fehlt eine **Vorbedingung** (seit Web 21.0.0, etwa
+ein Backup-Ziel, das noch auf FTP steht); dann gibt es **kein Kästchen**: Du
+stellst her, was die Zeile verlangt, und führst danach erneut aus.
 
 **„nicht nötig" heißt: Am Datenbankstand ist nichts zu tun, es fehlt nur der
 Vermerk.** *Seit Web 15.5.2.* Das kommt vor, wenn eine Änderung auf anderem
@@ -4821,8 +4868,9 @@ Gibt es keines, ist die Meldung eine Warnung: Migrationen können Spalten und
 Daten unwiderruflich entfernen, und dagegen schützt nur das Komplett-Backup der
 Installation — nicht das Backup eines einzelnen Kontos.
 
-Die Karte **„Ausgeführt"** ist die einzige Stelle, die ausgeführte
-Migrationen nennt — das Protokoll (11.7) führt sie nicht.
+Jede ausgeführte Migration steht außerdem im **Protokoll** (11.7), Reiter
+Verwaltung, als „Migration" — mit wem und wann; die Karte „Ausgeführt" nennt
+dazu die Fassung.
 
 Die Karte **„Fassung"** nennt zuunterst Web-Version, Datenbankstand und den
 Stand der Apps. Für die **Uhr-App gibt es keinen Mindeststand**: Der Server
@@ -5599,11 +5647,14 @@ Endpunkt aus.
   steht aus.
 - **HTTP 503** mit `"db": false` — die Datenbank antwortet nicht.
 - **HTTP 503** mit `"migration_ausstehend": true` — eine neue Fassung ist
-  eingespielt, aber `update.php` ist noch nicht gelaufen (**Betrieb →
-  Updates**).
+  eingespielt, aber `update.php` ist noch nicht gelaufen, oder eine Migration
+  ist blockiert und läuft nicht von selbst (**Betrieb → Updates** zeigt,
+  welche und warum).
 - **HTTP 503** mit `"error": "maintenance"` — der Wartungsmodus ist an. Das
   ist kein Fehler, wenn du ihn selbst eingeschaltet hast oder gerade
   ausgeliefert wird.
+- **HTTP 503** mit `"error": "ausgelastet"` — die Datenbank hat gerade keine
+  Verbindung frei. Hält das an, siehe 12.1 zur Verbindungsgrenze.
 - **HTTP 403** — Token fehlt oder ist falsch (oder keiner eingerichtet).
 - **HTTP 429** — mehr als 60 Abrufe je Minute; eine Minute warten.
 
