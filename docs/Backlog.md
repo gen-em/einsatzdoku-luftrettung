@@ -10323,8 +10323,9 @@ zutreffen.
     `pull_request`, keinen über `push` (Läufe 35983100731, 36037964804,
     36040164523). Gegenprobe am Zweig von Konzept BV: vier Pushes ohne Pull
     Request, **null** Läufe von `pruefung.yml` (beide über die
-    Schnittstelle abgefragt am 24.09.2026). Das Abhaken selbst gehört ins
-    Prüfdokument PK.
+    Schnittstelle abgefragt am 24.09.2026). **P-PK-17 ist am 25.09.2026 im
+    Prüfdokument PK als belegt eingetragen** (5.6): Der Bedienweg im Wortlaut
+    — Push bei offenem PR — ist Lauf 281 (`7f4106a`, PR #85).
 
 212. **Zwei Erwartungen der Wiederherstellungsprobe sind auf einer leeren
     Installation rot — ohne dass etwas kaputt ist.** *Aufgenommen 16.09.2026
