@@ -28,6 +28,7 @@ steht seither ein Verweis hierher.
 | `tools/sandbox/aufbauen.sh`, `hochfahren.sh`, `plattform.sh` | **gebaut und gemessen mit PK-02** |
 | Die Ausbaustufen `web` und `plattform` (2) | **gebaut und gemessen** |
 | Die Ausbaustufe `android` (2) | **gemessen 24.09.2026** (Konzept AR): 22 s, rc 0, 18 von 18 Stücken; seit AR-03 mit Plattform 37.0, JDK-Prüfung und Gradle-Spiegel |
+| Die Ausbaustufe `emulator` (2) | **gemessen 25.09.2026** (Konzept AR, F-AR-18) — Zahlen in 2 |
 | Die Ausbaustufe `uhr` (2) | gebaut, **noch nicht gemessen** — siehe Prüfdokument PK |
 | Die Route nach draußen (5.2) | **gebaut und gemessen** in `tools/motor.mjs` |
 | Der Schlüsselblatt-Dialog (5.3) | **gebaut und gemessen**, örtlich und gegen die Prüfanlage |
@@ -57,7 +58,8 @@ Speicher.
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
 | **Systembibliotheken für Firefox und WebKit** | jede Aussage über die Oberfläche, die für mehr als Chromium gelten soll (Backlog Nr. 183) |
-| **Android-SDK** (Plattformen 37.0 und 36, Build-Tools 36.0.0) | `./gradlew build` im Ordner `android/` |
+| **Android-SDK** (Plattformen 37.0 und 36, Build-Tools 36.0.0, `cmdline-tools` 23.0) | `./gradlew build` im Ordner `android/`; `cmdline-tools` unter 23.0 legt AVDs mit API 37 falsch an (F-AR-18) |
+| **Emulator, Abbilder API 37, `lz4`, `cpio`, `libpulse0`** | `android/werkzeuge/emulator.sh` — der Emulatorlauf nach `Pruefablauf.md` 6.9 |
 | **Uhr-SDK und Gerätedateien** | `tools/uhr-pruefstand/` |
 
 ### 1.1 Warum alle drei Engines dazugehören
@@ -121,9 +123,9 @@ Meldung von Playwright aus — sie nennt die Namen und altert nicht mit.
 
 ---
 
-## 2. Die vier Ausbaustufen und das Modul
+## 2. Die fünf Ausbaustufen und das Modul
 
-`tools/sandbox/aufbauen.sh <web|android|uhr|plattform|alles>` stellt eine
+`tools/sandbox/aufbauen.sh <web|android|emulator|uhr|plattform|alles>` stellt eine
 fest beschriebene Ausbaustufe her, idempotent, und **misst nach, was
 steht**.
 
@@ -131,8 +133,9 @@ steht**.
 |---|---|---|
 | `web` | MariaDB 10.11, PHP 8.4, **drei** Engines (nachgemessen, nicht angenommen), Python-Pakete, die acht Umgebungswerte geprüft | jede Änderung unter `server/`, `docs/`, `tools/` |
 | `android` | `web` plus Android-SDK (Plattform 37.0 für den Bau, 36 für die Erkennung im Prüfstand), JDK 21 geprüft, Gradle über Googles Spiegel mit mehr Wiederholungen (5.1). **Kein Emulator-Abbild** — das holt `android/werkzeuge/emulator.sh aufbauen`, mehrere GB, nur für den Emulatorlauf. *Bis zum 24.09.2026 stand hier „Emulator-Abbild"; das Skript hat es nie geholt (Konzept AR, F-AR-02).* | Änderungen unter `android/` |
+| `emulator` | `android` plus Emulator, die Abbilder mit API 37 (Handy `google_apis`, Uhr `android-wear-signed`), die AVDs `handy37` und `uhr37` mit berichtigtem `target` und die Debug-Ramdisk der Uhr; `lz4`, `cpio`, `libpulse0`. Rund 9 GB, und der Start einer AVD verlangt **weitere 7,4 GB frei** für die Datenpartition — der Emulator bricht sonst sofort ab. Nicht in `alles` | den Emulatorlauf (`android/LIESMICH.md`, „Wear OS 7 ohne Root“) |
 | `uhr` | `web` plus Uhr-SDK, Gerätedateien, Simulator-Bibliotheken | Änderungen unter `watch/` |
-| `alles` | alle drei plus das Modul `plattform` | Hauptstufe, Abnahmen |
+| `alles` | `web`, `android`, `uhr` plus das Modul `plattform` — **ohne** `emulator` | Hauptstufe, Abnahmen |
 | Modul `plattform` | PHP 8.3.33, MariaDB 10.6, MySQL 8.0, MySQL 8.4.0 | Hauptstufe; einzeln nachladbar |
 
 Der Hook ruft `web`. Wer mehr braucht, ruft nach.
@@ -411,6 +414,14 @@ abschreibt, wird `-accel off` versucht** — am 03.09.2026 stand in
 `android/LIESMICH.md`, das x86_64-Abbild brauche KVM; es braucht es nicht.
 Der Satz verwechselte „startet nicht ohne Weiteres" mit „geht nicht" und
 kostete ein ganzes Arbeitspaket ohne Simulatorprüfung.
+
+**Und bevor man ein Abbild abschreibt, wird die AVD angesehen.** Am
+25.09.2026 galt das Wear-Abbild mit API 37 als unbrauchbar, weil es ein
+`user`-Build ist; tatsächlich lag es an `target=android-0`, das ein
+veraltetes `cmdline-tools` in die AVD schrieb (F-AR-18). Die Stufe
+`emulator` holt deshalb `cmdline-tools` 23.0, `emulator.sh` berichtigt den
+Eintrag, und für `user`-Builds setzt es den Watchdog-Faktor über die
+Debug-Ramdisk von AOSP statt über `adb root`.
 
 ---
 

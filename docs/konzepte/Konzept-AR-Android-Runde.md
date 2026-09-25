@@ -18,7 +18,7 @@ entsteht mit AR-02. Zweig `claude/affectionate-newton-6pzfkc`, von `main`
 > |---|---|
 > | Stand | **25.09.2026 — AR-01 bis AR-05 erledigt, PR offen.** `kontraste.py` prüft die Vollständigkeit, fand zwei echte Kontrastfehler (behoben). Emulator auf API 37: Kopplung, Rechtliches (P-PK-28), Vordergrunddienst und Dienstende belegt; **die Uhr auf Wear OS 7 (API 37) nachgeholt** (F-AR-18). Android **0.16.0**: AGP 9.4.1, Kotlin 2.4.20, API 37, Kette auf dem Stand vom 24.09.; **Lint 0 Fehler / 0 Warnungen** in beiden Modulen (vorher 14), 267/71 Prüffälle grün, 73 von 78 Bildern byteweise gleich, die übrigen fünf nur in der Fassungszeile (Protokoll 7) |
 > | Entschieden | **E-AR-01 bis -07** aus der Freigabe, **E-AR-08 bis -13** aus den Antworten auf Q-AR-01 bis -06, beide vom 24.09.2026; **E-AR-14** vom 25.09.2026 (Abschnitt 5) |
-> | Offen | ob die drei Handgriffe für Wear OS 7 in `emulator.sh` und `cmdline-tools` neuer in `aufbauen.sh` kommen (F-AR-18) |
+> | Offen | nichts — die Handgriffe für Wear OS 7 stehen seit dem Nachtrag im Werkzeug (Stufe `aufbauen.sh emulator`, `emulator.sh`) |
 > | Hakt | Maven Central drosselt diesen Container (F-AR-01); die Runde baut über Googles Spiegel (E-AR-13) |
 > | Nächstes | **Merge erst nach P5c** (E-AR-01); vorher `main` nach `Pruefablauf.md` 5.3 aufnehmen. Danach die Gerätetests des Prüfdokuments und Nr. 334/335 |
 
@@ -161,7 +161,7 @@ als `default`.
 | **F-AR-15** | **`Eingabefeld` hat keinen Aufrufer** (AR-05): seit R63 tot; den Cursor aus AR-04 zeigt kein Bildschirm | Nr. 336 |
 | **F-AR-16** | **Wear OS 5 zeigt ohne Telefon „Handy verbunden"** (AR-05) — anders als Wear OS 3 am 02.09.2026; die Anzeige folgt einer zugestellten Nachricht, woran sie zugestellt wurde, ist ungeklärt. Dazu: Das einzige Wear-Abbild mit API 37 ist ein `user`-Build — **bootet seit F-AR-18 doch**; Wear OS 7 zeigt auf der Startseite ebenfalls „Handy verbunden“, nach „Dienst beginnen“ aber „Handy nicht erreichbar“ | Gerätetest (P-AR-12, -13); der Zustand „nicht erreichbar" als Bildfall |
 | **F-AR-17** | **Emulator und Gradle-Daemon zusammen blockieren den Container** (AR-05): 6 GB plus rund 5 GB in 15 GB ohne Swap — Last 60, `ps`, `uptime` und `adb` hingen | `emulator.sh start` warnt; `LIESMICH.md` |
-| **F-AR-18** | **Wear OS 7 bootet ohne Root — die Hürde war nicht der Watchdog allein** (AR-05, Nachtrag 25.09.2026). (1) Der Watchdog-Faktor lässt sich über die Debug-Ramdisk von AOSP setzen (`force_debuggable`, `adb_debug.prop`), wenn der Emulator `androidboot.verifiedbootstate=orange` übergibt — 37.1.11 tut es nicht von selbst. (2) Danach starb `system_server` alle 60 bis 80 s an `!hasReadColorBufferDma`; Ursache: `avdmanager` aus `cmdline-tools` 12.0 schreibt `target=android-0`. **Wahrscheinlich dieselbe Ursache wie F-AR-14 beim Handy** — nicht nachgemessen. (3) Mit `target=android-37.0` verlangt die Datenpartition 7,2 GB frei. Boot 1 141 s | `LIESMICH.md` („Wear OS 7 ohne Root“); Übernahme in `emulator.sh` und `aufbauen.sh` offen |
+| **F-AR-18** | **Wear OS 7 bootet ohne Root — die Hürde war nicht der Watchdog allein** (AR-05, Nachtrag 25.09.2026). (1) Der Watchdog-Faktor lässt sich über die Debug-Ramdisk von AOSP setzen (`force_debuggable`, `adb_debug.prop`), wenn der Emulator `androidboot.verifiedbootstate=orange` übergibt — 37.1.11 tut es nicht von selbst. (2) Danach starb `system_server` alle 60 bis 80 s an `!hasReadColorBufferDma`; Ursache: `avdmanager` aus `cmdline-tools` 12.0 schreibt `target=android-0`. **Wahrscheinlich dieselbe Ursache wie F-AR-14 beim Handy** — nicht nachgemessen. (3) Mit `target=android-37.0` verlangt die Datenpartition 7,2 GB frei. Boot 1 141 s | `aufbauen.sh` (`cmdline-tools` 23.0, Stufe `emulator`), `emulator.sh` (API 37, `target`, Debug-Ramdisk, Platzwarnung); `LIESMICH.md` („Wear OS 7 ohne Root“) |
 
 ## 4. Fragen an die Betreiberin
 
@@ -502,6 +502,30 @@ Anläufe, protokolliert im Prüfdokument 2. Die Probleme und ihre Lösung:
    die Datenpartition; das Handy-Abbild API 37 (4,4 GB) wurde dafür
    gelöscht — es lässt sich neu laden.
 
-**Nicht geändert:** `emulator.sh` und `aufbauen.sh`. Die Handgriffe stehen
-in `LIESMICH.md`; ob sie ins Werkzeug kommen, ist offen (Statusblock).
+**Ins Werkzeug übernommen** auf Anweisung der Betreiberin vom selben Tag
+(„damit das nächste Mal nicht so viel Arbeit notwendig ist“) — siehe den
+folgenden Nachtrag.
 
+**Nachtrag 25.09.2026 — die Handgriffe im Werkzeug.** `tools/sandbox/aufbauen.sh`
+holt `cmdline-tools` 23.0 mit der SHA-1 aus Googles Paketliste und ersetzt
+auch ein veraltetes; die neue Stufe `emulator` (nicht in `alles`, rund 9 GB)
+holt `lz4`, `cpio`, `libpulse0` und ruft `emulator.sh aufbauen`; der Nachweis
+prüft sieben Stücke mehr. `android/werkzeuge/emulator.sh` fährt als Vorgabe
+API 37 für beide Geräte (AVDs `handy37`, `uhr37`), berichtigt `target`, baut
+für `user`-Abbilder die Debug-Ramdisk, startet sie mit
+`verifiedbootstate=orange` ohne `adb root`, wartet auch auf
+`sys.user.0.ce_available`, bricht ab, wenn der Emulator stirbt, und warnt
+unter 7,4 GB freiem Platz. Faktor 50 statt 10.
+
+**Probleme und Lösungen:**
+
+1. **`sdkmanager` 23.0 ist eine Hülle um die „Android CLI“** und scheiterte
+   im ersten Lauf der Stufe an mehreren Paketen in einem Aufruf („Package
+   path is not valid“). Der Nachweis hat es gefangen — rc 1, vier Stücke
+   `FEHLT` —, nicht still grün. Gelöst: Pakete einzeln, jedes nachgeprüft.
+2. **Der Austausch eines veralteten `cmdline-tools` war zu belegen**, ohne
+   einen alten Container zu haben: die Fassung in `source.properties`
+   vorübergehend auf 12.0 gesetzt; die Stufe hat 23.0 geholt, die Prüfsumme
+   geprüft und ersetzt.
+
+**Gemessen:** Prüfdokument 2 (Nachtrag Werkzeug).

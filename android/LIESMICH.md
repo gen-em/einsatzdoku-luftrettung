@@ -283,8 +283,8 @@ Rückfrage, am Server ein `POST /ingest.php` mit 200, der Diensttag mit
 |---|---|
 | **SurfaceFlinger bricht auf API 37 ab** — `Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma` (`mapper.ranchu.so`, Faden `RegionSampling`), die ganze Oberfläche startet neu: drei Abstürze in 13 Minuten | `emulator.sh start` schaltet seither auf Drei-Tasten-Navigation um; das Sampling der Gestenleiste bleibt dann aus, danach über neun Minuten kein Absturz. Ein Fehler des Emulators 37.1.11, nicht der App (Backlog Nr. 337) |
 | **`screencap` liefert auf API 37 72 Bytes Fehlertext** statt PNG — dieselbe Assertion | `emulator.sh bild` zieht dann von der Wirtsseite ab (`adb emu screenrecord screenshot`) |
-| **Das einzige Wear-Abbild mit API 37 ist ein `user`-Build** (`android-wear-signed`: `ro.adb.secure=1`, `ro.debuggable=0`) — kein `adb root`, also kein Watchdog-Faktor über `setprop`; `adb` blieb 45 Minuten `offline` | **Nachgeholt am 25.09.2026, die Uhr bootet auf Wear OS 7** — mit drei Handgriffen, die `emulator.sh` noch nicht kann (siehe unten, „Wear OS 7 ohne Root") |
-| **`avdmanager` aus `cmdline-tools` 12.0 schreibt `target=android-0`** in die AVD, weil er das Abbild mit API „37.0" nicht lesen kann (`sdkmanager` warnt: „SDK XML versions up to 3") — gfxstream wird dann falsch eingerichtet, und der Gast bricht mit `!hasReadColorBufferDma` ab: auf der Uhr `system_server` in `EmulatorDisplayOverlay`, 44 Neustarts in einer Stunde | In `~/.android/avd/<name>.ini` `target=android-37.0` setzen. **Vermutlich auch die Ursache des SurfaceFlinger-Absturzes beim Handy** (erste Zeile der Tabelle, Backlog Nr. 337) — dort nicht nachgemessen |
+| **Das einzige Wear-Abbild mit API 37 ist ein `user`-Build** (`android-wear-signed`: `ro.adb.secure=1`, `ro.debuggable=0`) — kein `adb root`, also kein Watchdog-Faktor über `setprop`; `adb` blieb 45 Minuten `offline` | **Nachgeholt am 25.09.2026, die Uhr bootet auf Wear OS 7** — `emulator.sh` setzt den Faktor dort über die Debug-Ramdisk (siehe unten, „Wear OS 7 ohne Root") |
+| **`avdmanager` aus `cmdline-tools` 12.0 schreibt `target=android-0`** in die AVD, weil er das Abbild mit API „37.0" nicht lesen kann (`sdkmanager` warnt: „SDK XML versions up to 3") — gfxstream wird dann falsch eingerichtet, und der Gast bricht mit `!hasReadColorBufferDma` ab: auf der Uhr `system_server` in `EmulatorDisplayOverlay`, 44 Neustarts in einer Stunde | `aufbauen.sh android` holt `cmdline-tools` 23.0; `emulator.sh` berichtigt den Eintrag in `~/.android/avd/<name>.ini` bei `aufbauen` und bei `start`. **Vermutlich auch die Ursache des SurfaceFlinger-Absturzes beim Handy** (erste Zeile der Tabelle, Backlog Nr. 337) — dort nicht nachgemessen |
 | **Emulator und Gradle-Daemon zusammen blockieren den Container** — 6 GB plus rund 5 GB in 15 GB ohne Swap: Last 60, `ps`, `uptime` und `adb` hingen | vor dem Emulator `./gradlew --stop`; `emulator.sh start` warnt seither, wenn ein Daemon läuft |
 | **Nach einem Neustart der Oberfläche sagt `sys.boot_completed` weiter 1**, aber der Nutzerspeicher ist noch gesperrt — `am start` meldet „Activity class … does not exist" | auf `sys.user.0.ce_available=true` warten |
 | **Wear OS 5 zeigt ohne Telefon „Handy verbunden"** — anders als Wear OS 3 am 02.09.2026 (B-S4-09). Die Anzeige folgt einer zugestellten Nachricht, nicht einem Vorgabewert; woran sie hier zugestellt wurde, ist ungeklärt. Wear OS 7 zeigt auf der Startseite dasselbe, nach „Dienst beginnen" aber „Handy nicht erreichbar" | Gerätetest; den Zustand „nicht erreichbar" zeichnet seither der Bilderlauf (`uhr-handy-fehlt-192dp`) |
@@ -295,8 +295,9 @@ Rückfrage, am Server ein `POST /ingest.php` mit 200, der Diensttag mit
 Start 55 s, Startseite auf rundem Glas, „Dienst beginnen" führt auf die
 Sperrfläche „wartet aufs Handy · keine Aufzeichnung" mit „Handy nicht
 erreichbar"; kein Absturz der App (im Absturzpuffer nur der Bluetooth-Stapel
-des Systems, HCI-Zeitüberschreitung unter TCG). Drei Handgriffe waren nötig,
-**von Hand, nicht in `emulator.sh`**:
+des Systems, HCI-Zeitüberschreitung unter TCG). Drei Handgriffe waren nötig;
+**seit demselben Tag stehen sie im Werkzeug** — `tools/sandbox/aufbauen.sh
+emulator` richtet alles ein, `emulator.sh start uhr37` startet:
 
 1. **Der Watchdog-Faktor über die Debug-Ramdisk** — der Weg, den AOSP für
    `adb root` auf `user`-Builds zu Prüfzwecken vorsieht: `force_debuggable`
@@ -312,9 +313,20 @@ des Systems, HCI-Zeitüberschreitung unter TCG). Drei Handgriffe waren nötig,
    Emulator 37.1.11 übergibt den Zustand nicht, und ohne „entsperrt"
    verwirft init die Debug-Ramdisk. Belegt durch die Zeile
    `init: Loading /debug_ramdisk/adb_debug.prop` im Kernelprotokoll.
-3. **`target=android-37.0`** (Zeile oben) — und dann **7,2 GB freier
+3. **`target=android-37.0`** (Zeile oben) — und dann **7,4 GB freier
    Platz** für die Datenpartition; bei 6,4 GB bricht der Emulator mit
-   „Not enough space to create userdata partition" sofort ab.
+   „Not enough space to create userdata partition" sofort ab. `start`
+   warnt seither.
+
+**Was das Werkzeug seither tut:** `emulator.sh aufbauen` lädt Emulator und
+die Abbilder mit API 37 **einzeln** (die `sdkmanager`-Hülle aus
+`cmdline-tools` 23.0 scheitert an mehreren Paketen in einem Aufruf), legt
+`handy37` und `uhr37` an, berichtigt `target` und baut für jedes `user`-Abbild
+`ramdisk-debug.img` in den AVD-Ordner. `start` erkennt den `user`-Build an
+`build.prop`, übergibt Ramdisk und `verifiedbootstate`, lässt `adb root` weg,
+wartet außer auf `sys.boot_completed` auch auf `sys.user.0.ce_available` und
+bricht ab, statt zu warten, wenn der Emulator stirbt. Der Faktor ist für
+beide Arten 50 (vorher 10), einstellbar über `FAKTOR`.
 
 Nicht geprüft: ob die Uhr nach der Berichtigung von `target` auch **ohne**
 die Debug-Ramdisk bootet — der Watchdog-Abbruch war unter dem falschen
@@ -1012,7 +1024,7 @@ Räumteil von 114) dazugelegt hat:
 | Nicht prüfbar | Warum | Wo es geprüft wird |
 |---|---|---|
 | **Ob eine echte Uhr nach der Absenderprüfung noch ankommt** (Nr. 144) | Kein Data Layer mit Telefonseite im Container. Geprüft ist die Entscheidung (`Uhrannahme`, 19 Fälle gegen echtes SQLite), nicht, was `connectedNodes` auf Hardware liefert | Gerätetest mit Uhr: Dienst an der Uhr beginnen, die Quittung muss kommen; `adb logcat -s NAdoku` darf kein „unbekanntem Knoten" zeigen |
-| **Das Klartextverbot auf Android 8.0/8.1** (Nr. 142) | Kein Gerät mit API 26/27; der Emulator läuft mit API 34, wo Android Klartext ohnehin verbietet | Gerätetest, falls ein altes Gerät greifbar ist; ersatzweise die Manifest-Zusammenführung (`build/intermediates/merged_manifest/release/`, Eintrag `networkSecurityConfig`) |
+| **Das Klartextverbot auf Android 8.0/8.1** (Nr. 142) | Kein Gerät mit API 26/27; der Emulator läuft mit API 37 (bis 0.15.x: 34), wo Android Klartext ohnehin verbietet | Gerätetest, falls ein altes Gerät greifbar ist; ersatzweise die Manifest-Zusammenführung (`build/intermediates/merged_manifest/release/`, Eintrag `networkSecurityConfig`) |
 | **Der Räumlauf nach 30 Tagen im Feld** (Nr. 114) | Die Frist lässt sich nur im Prüfstand stellen (`jetzt`) | Robolectric: `AbgewieseneTest` und `SenderTest`; am Gerät nur über das Trennen |
 
 ### Der Emulator — er läuft, und er ist ab 03.09.2026 Pflicht
@@ -1139,7 +1151,7 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   Schleife. Die Läufe von 0.7.2 bis 0.13.0 haben diese Klippe offenbar
   knapp umschifft — 621 s Boot war kein schlechter Tag, sondern Glück.
 
-  **Gegenmittel, jetzt in `emulator.sh start`:** `ro.hw_timeout_multiplier=10`
+  **Gegenmittel, jetzt in `emulator.sh start`:** `ro.hw_timeout_multiplier=10` (seit 0.16.0 50; bei `user`-Builds über die Debug-Ramdisk, siehe „Wear OS 7 ohne Root")
   streckt jede Watchdog-Frist (Cuttlefish nutzt dieselbe Eigenschaft für
   langsame Geräte). `-prop` kann sie nicht setzen (nur `qemu.*`) — aber das
   Abbild ist `userdebug`: Sobald `adbd` da ist (120 s), `adb root`, `setprop`

@@ -161,8 +161,16 @@ beginnen" bis zur Sperrfläche, ohne Absturz der App. Nicht der fehlende Root
 war das Haupthindernis, sondern eine falsch angelegte AVD
 (`target=android-0` aus `cmdline-tools` 12.0), an der `system_server` im
 Minutentakt abbrach; den Watchdog-Faktor setzt die Debug-Ramdisk, die AOSP
-für genau solche Prüfläufe vorsieht. Die Handgriffe stehen in
-`android/LIESMICH.md`; im Werkzeug stehen sie noch nicht.
+für genau solche Prüfläufe vorsieht. **Das Werkzeug kann es seither
+selbst**, damit der nächste Lauf nicht wieder neun Anläufe braucht: Die neue
+Ausbaustufe `tools/sandbox/aufbauen.sh emulator` holt `cmdline-tools` 23.0
+(auch über ein veraltetes hinweg), Emulator, beide Abbilder mit API 37 und
+legt die AVDs `handy37` und `uhr37` an; `android/werkzeuge/emulator.sh`
+berichtigt `target`, baut für `user`-Abbilder die Debug-Ramdisk und startet
+sie damit, und es warnt, wenn die 7,4 GB für die Datenpartition fehlen. Die
+Vorgabe des Werkzeugs ist damit API 37 für beide Geräte; bis dahin stand
+dort API 34 für das Handy und Wear OS 3 für die Uhr, und wer auf 37 fahren
+wollte, setzte es von außen.
 
 **Drei Hindernisse lagen im Emulator, nicht in der App**, und
 `android/werkzeuge/emulator.sh` umgeht sie seither: SurfaceFlinger bricht

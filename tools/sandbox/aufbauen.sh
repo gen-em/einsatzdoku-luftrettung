@@ -1,7 +1,7 @@
 #!/bin/bash
 # Die Arbeitsumgebung herstellen — eine Beschaffung, ein Nachweis.
 #
-# Aufruf:  bash tools/sandbox/aufbauen.sh [web|android|uhr|plattform|alles]
+# Aufruf:  bash tools/sandbox/aufbauen.sh [web|android|emulator|uhr|plattform|alles]
 #          ohne Argument: web
 #
 # Anlass: Nr. 183 (WebKit fehlte still), 13.09.2026 (Container ohne MariaDB).
@@ -13,7 +13,15 @@ set -uo pipefail
 
 WURZEL=${WURZEL:-$(cd "$(dirname "$0")/../.." && pwd)}
 ANDROID_SDK="${ANDROID_HOME:-/opt/android-sdk}"
-CMDTOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+# CMDLINE-TOOLS 23.0 (Konzept AR, F-AR-18). Bis zum 25.09.2026 stand hier
+# 12.0 — und dessen `avdmanager` kann Abbilder mit API „37.0" nicht lesen: Er
+# schreibt `target=android-0` in die AVD, gfxstream wird falsch eingerichtet,
+# und der Gast bricht mit `!hasReadColorBufferDma` ab (auf der Uhr
+# `system_server` im Minutentakt). Die Prüfsumme ist die aus Googles
+# Paketliste (`repository2-3.xml`, SHA-1), nicht eine selbst gerechnete.
+CMDTOOLS_FASSUNG="23.0"
+CMDTOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-16111833_latest.zip"
+CMDTOOLS_SHA1="e025545c62a8e64c7559119566a569fb1dec5f60"
 PW=${PLAYWRIGHT_BROWSERS_PATH:-/opt/pw-browsers}
 PW_MODUL=${PLAYWRIGHT_MODUL:-/opt/node22/lib/node_modules/playwright/index.mjs}
 export DEBIAN_FRONTEND=noninteractive
@@ -73,27 +81,54 @@ teil_web() {
 
 teil_android() {
     gradle_bezug
+    cmdtools_holen || return 1
+    local sdkm="$ANDROID_SDK/cmdline-tools/latest/bin/sdkmanager"
     if [ -d "$ANDROID_SDK/platforms/android-37.0" ] && [ -d "$ANDROID_SDK/platforms/android-36" ]; then
         melde "Android-SDK liegt bereits"; return 0
     fi
     melde "Android-SDK beschaffen (Plattformen 37.0 und 36, Build-Tools 36.0.0)"
-    mkdir -p "$ANDROID_SDK/cmdline-tools"
-    curl -sS -L -o /tmp/cmdtools.zip "$CMDTOOLS_URL" || { zeile "Download fehlgeschlagen"; return 1; }
-    unzip -q -o /tmp/cmdtools.zip -d "$ANDROID_SDK/cmdline-tools"
-    rm -f /tmp/cmdtools.zip
-    # Das Archiv entpackt nach cmdline-tools/; der sdkmanager verlangt eine
-    # benannte Fassung darunter, sonst findet er das SDK nicht.
-    [ -d "$ANDROID_SDK/cmdline-tools/cmdline-tools" ] \
-        && mv "$ANDROID_SDK/cmdline-tools/cmdline-tools" "$ANDROID_SDK/cmdline-tools/latest"
-    local sdkm="$ANDROID_SDK/cmdline-tools/latest/bin/sdkmanager"
     yes | "$sdkm" --licenses >/dev/null 2>&1 || true
     # ZWEI PLATTFORMEN (Konzept AR, AR-03). Gebaut wird seit Android 0.16.0
     # gegen 37.0 (`compileSdk`); 36 bleibt, weil `tools/pruefstand/pruefen.sh`
     # die Ausbaustufe noch an `platforms/android-36` erkennt (Backlog Nr. 335).
-    # Den Emulator und seine Abbilder holt `android/werkzeuge/emulator.sh
-    # aufbauen` — mehrere GB, die nur der Emulatorlauf braucht (F-AR-02).
+    # Den Emulator und seine Abbilder holt die Stufe `emulator` — mehrere GB,
+    # die nur der Emulatorlauf braucht (F-AR-02).
     "$sdkm" "platform-tools" "platforms;android-37.0" "platforms;android-36" \
         "build-tools;36.0.0" >/dev/null 2>&1
+}
+
+cmdtools_holen() {
+    # AUCH IN EINEM SCHON EINGERICHTETEN CONTAINER. Bis zum 25.09.2026 prüfte
+    # die Stufe nur, ob die Plattformen da sind, und ließ ein veraltetes
+    # `cmdline-tools` stehen — genau das hat F-AR-18 verursacht. Maßgeblich
+    # ist die Fassung in `source.properties`, nicht das Dasein des Ordners.
+    local ziel="$ANDROID_SDK/cmdline-tools/latest" ist
+    ist=$(sed -n 's/^Pkg.Revision=//p' "$ziel/source.properties" 2>/dev/null)
+    [ "$ist" = "$CMDTOOLS_FASSUNG" ] && return 0
+    melde "cmdline-tools $CMDTOOLS_FASSUNG beschaffen (vorhanden: ${ist:-keine})"
+    curl -sS -L -o /tmp/cmdtools.zip "$CMDTOOLS_URL" || { zeile "Download fehlgeschlagen"; return 1; }
+    if [ "$(sha1sum /tmp/cmdtools.zip | cut -d' ' -f1)" != "$CMDTOOLS_SHA1" ]; then
+        zeile "Prüfsumme weicht ab — nicht entpackt"; rm -f /tmp/cmdtools.zip; return 1
+    fi
+    # Das Archiv entpackt nach cmdline-tools/; der sdkmanager verlangt eine
+    # benannte Fassung darunter, sonst findet er das SDK nicht.
+    rm -rf "$ANDROID_SDK/cmdline-tools/neu" "$ziel"
+    mkdir -p "$ANDROID_SDK/cmdline-tools/neu"
+    unzip -q -o /tmp/cmdtools.zip -d "$ANDROID_SDK/cmdline-tools/neu"
+    mv "$ANDROID_SDK/cmdline-tools/neu/cmdline-tools" "$ziel"
+    rmdir "$ANDROID_SDK/cmdline-tools/neu"
+    rm -f /tmp/cmdtools.zip
+}
+
+teil_emulator() {
+    # DIE STUFE FÜR DEN EMULATORLAUF (Konzept AR, F-AR-18). `lz4` und `cpio`
+    # braucht die Debug-Ramdisk der Wear-Abbilder ab API 36, die nur als
+    # `user`-Build erscheinen; `libpulse0` bindet die QEMU-Binärdatei hart.
+    # Abbilder, AVDs und Ramdisk legt `emulator.sh aufbauen` an — dort steht,
+    # warum, und dort wird es bei jedem Start wieder gebraucht.
+    melde "Emulator: Werkzeuge, Abbilder mit API 37, AVDs"
+    apt_holen lz4 cpio libpulse0 || return 1
+    ANDROID_HOME="$ANDROID_SDK" bash "$WURZEL/android/werkzeuge/emulator.sh" aufbauen
 }
 
 gradle_bezug() {
@@ -231,6 +266,22 @@ nachweis() {
         pruefe "jdk             $(java -version 2>&1 | grep -oE 'version "[0-9]+' | tr -d 'version "')" \
             "java -version 2>&1 | grep -qE 'version \"(17|2[0-9])'"
         pruefe "gradle-spiegel  init.d/spiegel.gradle" "[ -s \"$HOME/.gradle/init.d/spiegel.gradle\" ]"
+        pruefe "cmdline-tools   $CMDTOOLS_FASSUNG" \
+            "grep -qx 'Pkg.Revision=$CMDTOOLS_FASSUNG' \"$ANDROID_SDK/cmdline-tools/latest/source.properties\""
+    fi
+    if [ -n "${STUFE_EMULATOR:-}" ]; then
+        pruefe "lz4 / cpio"     "command -v lz4 && command -v cpio"
+        pruefe "emulator        $("$ANDROID_SDK/emulator/emulator" -version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" \
+            "[ -x \"$ANDROID_SDK/emulator/emulator\" ]"
+        pruefe "abbild handy    android-37.0 google_apis" \
+            "[ -f \"$ANDROID_SDK/system-images/android-37.0/google_apis/x86_64/system.img\" ]"
+        pruefe "abbild uhr      android-37.0 android-wear-signed" \
+            "[ -f \"$ANDROID_SDK/system-images/android-37.0/android-wear-signed/x86_64/system.img\" ]"
+        pruefe "avd handy37     target android-37.0" \
+            "grep -qx 'target=android-37.0' \"$HOME/.android/avd/handy37.ini\""
+        pruefe "avd uhr37       target android-37.0" \
+            "grep -qx 'target=android-37.0' \"$HOME/.android/avd/uhr37.ini\""
+        pruefe "uhr37           Debug-Ramdisk" "[ -s \"$HOME/.android/avd/uhr37.avd/ramdisk-debug.img\" ]"
     fi
     if [ -n "${STUFE_UHR:-}" ]; then
         pruefe "ciq-sdk         monkeyc" "[ -x \"$CIQ_BASIS_PFAD/sdk/bin/monkeyc\" ]"
@@ -252,12 +303,15 @@ for stufe in "$@"; do
     case "$stufe" in
         web)       teil_web || fehler=$((fehler+1)) ;;
         android)   STUFE_ANDROID=1; teil_web || fehler=$((fehler+1)); teil_android || fehler=$((fehler+1)) ;;
+        emulator)  STUFE_ANDROID=1; STUFE_EMULATOR=1
+                   teil_web || fehler=$((fehler+1)); teil_android || fehler=$((fehler+1))
+                   teil_emulator || fehler=$((fehler+1)) ;;
         uhr)       STUFE_UHR=1; teil_web || fehler=$((fehler+1)); teil_uhr || fehler=$((fehler+1)) ;;
         plattform) teil_plattform || fehler=$((fehler+1)) ;;
         alles)     STUFE_ANDROID=1; STUFE_UHR=1
                    teil_web || fehler=$((fehler+1)); teil_android || fehler=$((fehler+1))
                    teil_uhr || fehler=$((fehler+1)); teil_plattform || fehler=$((fehler+1)) ;;
-        *) echo "Unbekannte Stufe: $stufe (web, android, uhr, plattform, alles)" >&2; exit 2 ;;
+        *) echo "Unbekannte Stufe: $stufe (web, android, emulator, uhr, plattform, alles)" >&2; exit 2 ;;
     esac
 done
 

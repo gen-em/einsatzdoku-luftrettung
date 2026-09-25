@@ -65,6 +65,17 @@ ohne Root“):
 | Prüf-APK | `targetSdk=37`, `versionName 0.16.0-pruef`, Start 55 s; Startseite auf rundem Glas, „Handy verbunden“ |
 | „Dienst beginnen“ | Sperrfläche „wartet aufs Handy · keine Aufzeichnung“, „Handy nicht erreichbar“; App-PID unverändert, kein Absturz der App (im Absturzpuffer nur der Bluetooth-Stapel, HCI-Zeitüberschreitung) |
 
+**Nachtrag Werkzeug** (25.09.2026) — dieselben Handgriffe, jetzt in
+`aufbauen.sh emulator` und `emulator.sh`:
+
+| Was | Ergebnis |
+|---|---|
+| `aufbauen.sh emulator`, erster Lauf (`cmdline-tools` künstlich auf 12.0 gestellt) | 23.0 geholt und Prüfsumme bestätigt; dann **rc 1, 31 ok, 4 FEHLT** — `sdkmanager` 23.0 nimmt nicht mehrere Pakete in einem Aufruf. Der Nachweis hat angeschlagen |
+| `aufbauen.sh emulator` nach der Berichtigung | **rc 0, 35 ok, 0 FEHLT**, 5 s; `handy37` und `uhr37` mit `target=android-37.0`, Debug-Ramdisk 36 Einträge, darunter `first_stage_ramdisk/fstab.ranchu` und die vier Zusatzdateien |
+| `emulator.sh start uhr37` | `adbd` nach 130 s, **Boot 1 111 s**, Faktor 50, 0 Einträge „Abort message“ im Absturzpuffer |
+| `emulator.sh legen`, `am start`, `emulator.sh bild` | 151 s, Start 44 s; Bild **byteweise gleich** dem Handlauf (23 708 B) |
+| Nicht gefahren | `emulator.sh start handy37` — der Handy-Weg ist bis auf Faktor 50 und `target` unverändert; ob die Drei-Tasten-Umgehung (Nr. 337) mit richtigem `target` entfallen kann, bleibt offen |
+
 ## 3. Prüfliste
 
 | Nr. | Was | Bedienweg | Erwartet | Scheitern erkennbar an | Stand |

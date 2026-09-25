@@ -41,9 +41,20 @@
 # braucht die Verschachtelung nicht. Der Satz war eine Verwechslung von
 # "startet nicht ohne Weiteres" mit "geht nicht".
 #
+# UND DIE VIERTE: target=android-0. `avdmanager` aus cmdline-tools 12.0 kann
+# Abbilder mit API "37.0" nicht lesen und schreibt das in die AVD; gfxstream
+# wird dann falsch eingerichtet, und der Gast bricht mit "Assertion failed:
+# !rcEnc->featureInfo()->hasReadColorBufferDma" ab -- auf der Uhr stirbt
+# system_server im Minutentakt. Am 25.09.2026 neun Anlaeufe lang gesucht
+# (Konzept AR, F-AR-18). `aufbauen` und `start` berichtigen den Eintrag;
+# `tools/sandbox/aufbauen.sh android` holt seither cmdline-tools 23.0.
+#
 # AUFRUFE
-#   emulator.sh aufbauen        SDK-Teile und AVDs anlegen (einmal je Container)
-#   emulator.sh start [handy]   starten und auf sys.boot_completed warten
+#   emulator.sh aufbauen        Emulator, Abbilder, AVDs, Debug-Ramdisk anlegen
+#                               (einmal je Container; ueblicher Weg:
+#                               `tools/sandbox/aufbauen.sh emulator`)
+#   emulator.sh start [AVD]     starten und auf sys.boot_completed warten
+#                               (AVD: handy37 oder uhr37, Vorgabe handy37)
 #   emulator.sh legen APK       APK aufspielen
 #   emulator.sh bild NAME       Bildschirm abziehen nach $ZIEL/NAME.png
 #   emulator.sh aus             beenden
@@ -62,15 +73,19 @@ ZIEL="${ZIEL:-$(pwd)/emulator-bilder}"
 # Einmal fuer alle Unterbefehle: sonst legt `aufbauen` die AVDs woanders ab,
 # als `start` sie sucht, und der Fehler lautet "Unknown AVD name".
 export ANDROID_AVD_HOME="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
-# WELCHES ABBILD. `default` statt `google_apis`: Der Erstboot des
-# google_apis-Abbilds entpackt die Chrome-, WebView- und Trichrome-Stubs und
-# uebersetzt anschliessend die Play-Dienste mit dex2oat vor -- unter TCG sind
-# das viele Minuten fuer etwas, das dieses Projekt nicht braucht. Der Data
-# Layer laesst sich ohnehin nicht pruefen, solange keine Companion-App da ist
-# (LIESMICH.md, Abschnitt 7); Ortung, JobScheduler und Meldungen brauchen die
-# Play-Dienste nicht. Wer sie doch braucht, setzt ABBILD von aussen.
-ABBILD="${ABBILD:-system-images;android-34;default;x86_64}"
-ABBILD_UHR="${ABBILD_UHR:-system-images;android-30;android-wear;x86}"
+# WELCHES ABBILD. API 37, weil die Apps seit 0.16.0 dagegen bauen und
+# `targetSdk` 37 setzen (Konzept AR, E-AR-08, E-AR-14). Bis dahin stand hier
+# `android-34;default` -- `default` war schneller, weil der Erstboot von
+# `google_apis` die Play-Dienste vorübersetzt; fuer API 37 gibt es aber nur
+# `google_apis` (Boot 1 420 s gegen 502-715 s). Die Uhr gibt es ab API 36 nur
+# als `android-wear-signed`, einen `user`-Build ohne `adb root` -- `start`
+# setzt den Watchdog-Faktor dort ueber die Debug-Ramdisk (siehe unten).
+# Wer eine andere Stufe braucht, setzt ABBILD / ABBILD_UHR von aussen.
+ABBILD="${ABBILD:-system-images;android-37.0;google_apis;x86_64}"
+ABBILD_UHR="${ABBILD_UHR:-system-images;android-37.0;android-wear-signed;x86_64}"
+# Watchdog-Faktor. 10 genuegte auf den userdebug-Abbildern mit API 34; die Uhr
+# auf API 37 lief mit 50, dem Wert, den Cuttlefish fuer Laeufe ohne KVM setzt.
+FAKTOR="${FAKTOR:-50}"
 
 sag() { printf '\033[1m%s\033[0m\n' "$*"; }
 
@@ -81,20 +96,108 @@ aufbauen() {
     sag "libpulse0 fehlt, wird nachinstalliert"
     apt-get install -y libpulse0 >/dev/null
   fi
-  local sdkm; sdkm=$(ls "$SDK"/cmdline-tools/*/bin/sdkmanager | head -1)
+  local sdkm="$SDK/cmdline-tools/latest/bin/sdkmanager"
   yes | "$sdkm" --licenses >/dev/null 2>&1 || true
   sag "Emulator und Abbilder laden (mehrere GB, dauert)"
-  "$sdkm" emulator "$ABBILD" "$ABBILD_UHR" 2>&1 | tail -1
+  # EINZELN. `sdkmanager` ist seit cmdline-tools 23.0 eine Huelle um die
+  # "Android CLI" und scheitert, wenn mehrere Pakete in einem Aufruf stehen
+  # ("Package path is not valid", gemessen am 25.09.2026).
+  local paket
+  for paket in emulator "$ABBILD" "$ABBILD_UHR"; do
+    [ -f "$SDK/$(echo "$paket" | tr ';' '/')/source.properties" ] && continue
+    yes | "$sdkm" "$paket" >/dev/null 2>&1 || true
+    [ -f "$SDK/$(echo "$paket" | tr ';' '/')/source.properties" ] \
+      || { sag "nicht geladen: $paket"; return 1; }
+  done
   mkdir -p "$ANDROID_AVD_HOME"
-  echo no | "$SDK"/cmdline-tools/*/bin/avdmanager create avd \
-      -n handy34 -k "$ABBILD" -d pixel_5 --force >/dev/null
-  echo no | "$SDK"/cmdline-tools/*/bin/avdmanager create avd \
-      -n uhr30 -k "$ABBILD_UHR" -d wearos_small_round --force >/dev/null
+  avd_anlegen handy37 "$ABBILD" pixel_5
+  avd_anlegen uhr37 "$ABBILD_UHR" wearos_small_round
   sag "AVDs angelegt: $("$EMU" -list-avds | tr '\n' ' ')"
 }
 
+avd_anlegen() {  # avd_anlegen NAME ABBILD GERAET
+  echo no | "$SDK"/cmdline-tools/latest/bin/avdmanager create avd \
+      -n "$1" -k "$2" -d "$3" --force >/dev/null
+  target_berichtigen "$1"
+  if ist_user "$1"; then debug_ramdisk "$1"; fi
+}
+
+abbild_von() {   # Verzeichnis des Abbilds einer AVD, aus ihrer config.ini
+  echo "$SDK/$(sed -n 's/^image.sysdir.1=//p' "$ANDROID_AVD_HOME/$1.avd/config.ini" | tr -d ' ')"
+}
+
+ist_user() { grep -qx 'ro.build.type=user' "$(abbild_von "$1")/build.prop"; }
+
+target_berichtigen() {
+  # target=android-0 (siehe Kopf). Die richtige Stufe steht im Pfad des
+  # Abbilds (`system-images/android-37.0/...`); cmdline-tools 23.0 schreibt
+  # sie selbst -- die Berichtigung bleibt fuer AVDs aus einem aelteren Werkzeug.
+  local ini="$ANDROID_AVD_HOME/$1.ini" stufe
+  stufe=$(abbild_von "$1" | grep -oE 'system-images/android-[0-9.a-z-]+' | cut -d/ -f2)
+  if [ -n "$stufe" ] && ! grep -qx "target=$stufe" "$ini"; then
+    sag "$1: $(grep '^target=' "$ini") berichtigt zu target=$stufe"
+    sed -i "s/^target=.*/target=$stufe/" "$ini"
+  fi
+}
+
+# DIE DEBUG-RAMDISK (Konzept AR, F-AR-18). Ein `user`-Build laesst weder
+# `adb root` noch `setprop ro.*` zu, also keinen Watchdog-Faktor -- und ohne
+# den bootet unter TCG nichts. AOSP sieht fuer Pruefzwecke einen Weg vor: Liegt
+# `/force_debuggable` in der Ramdisk, laedt init zuletzt `/adb_debug.prop` --
+# aber NUR auf einem "entsperrten" Geraet, also mit
+# androidboot.verifiedbootstate=orange (das `start` uebergibt; Emulator
+# 37.1.11 tut es nicht von selbst). System- und Vendor-Abbild bleiben
+# unberuehrt, keine Signatur wird veraendert. Darin stehen der Faktor und
+# `persist.sys.usb.config=adb` -- sonst startet adbd im user-Build gar nicht.
+#
+# ZWEI FALLEN, BEIDE AM 25.09.2026 GEMESSEN:
+# 1. Die ramdisk.img besteht aus MEHREREN aneinandergehaengten cpio-Archiven.
+#    `cpio -i` liest nur das erste; wer auspackt und neu packt, verliert den
+#    Vendor-Teil samt fstab -- Kernel-Panik, 34 Neustarts. Deshalb wird der
+#    ganze entpackte Strom behalten und ein Archiv angehaengt.
+# 2. Die Dateien muessen AUCH unter first_stage_ramdisk/ liegen: init wechselt
+#    beim normalen Boot dorthin, bevor es nach force_debuggable sieht.
+debug_ramdisk() {
+  local rd; rd="$(abbild_von "$1")/ramdisk.img"
+  local ziel="$ANDROID_AVD_HOME/$1.avd/ramdisk-debug.img" t auspacken packen
+  case "$(head -c 4 "$rd" | od -An -tx1 | tr -d ' \n')" in
+    02214c18) auspacken="lz4 -dc"; packen="lz4 -l -12 -c" ;;
+    1f8b*)    auspacken="gzip -dc"; packen="gzip -9 -c" ;;
+    *) sag "$1: Kompression von $rd unbekannt -- keine Debug-Ramdisk"; return 1 ;;
+  esac
+  t=$(mktemp -d)
+  mkdir -p "$t/first_stage_ramdisk"
+  : > "$t/force_debuggable"
+  printf 'ro.hw_timeout_multiplier=%s\npersist.sys.usb.config=adb\n' "$FAKTOR" > "$t/adb_debug.prop"
+  cp "$t/force_debuggable" "$t/adb_debug.prop" "$t/first_stage_ramdisk/"
+  chmod 644 "$t/force_debuggable" "$t/adb_debug.prop" "$t"/first_stage_ramdisk/*
+  { $auspacken "$rd"
+    ( cd "$t" && printf '%s\n' force_debuggable adb_debug.prop \
+        first_stage_ramdisk/force_debuggable first_stage_ramdisk/adb_debug.prop \
+        | cpio -o -H newc -R 0:0 --quiet )
+  } | $packen > "$ziel"
+  rm -rf "$t"
+  sag "$1: Debug-Ramdisk angelegt (Faktor $FAKTOR): $ziel"
+}
+
 start() {
-  local avd="${1:-handy34}" beginn; beginn=$(date +%s)
+  local avd="${1:-handy37}" beginn user="" frei; beginn=$(date +%s)
+  local zusatz=()
+  target_berichtigen "$avd"
+  if ist_user "$avd"; then
+    user=1
+    local rd="$ANDROID_AVD_HOME/$avd.avd/ramdisk-debug.img"
+    [ -s "$rd" ] || { sag "$avd ist ein user-Build, die Debug-Ramdisk fehlt -- erst: emulator.sh aufbauen"; return 1; }
+    zusatz=(-ramdisk "$rd" -append-userspace-opt androidboot.verifiedbootstate=orange)
+  fi
+  # PLATZ (F-AR-18): Fuer die Datenpartition verlangt der Emulator auf den
+  # Abbildern mit API 37 7 373 MB frei und bricht sonst SOFORT ab ("Not
+  # enough space to create userdata partition") -- ein Warten auf adb liefe
+  # dann ins Leere.
+  frei=$(df -Pm "$ANDROID_AVD_HOME" | awk 'NR==2 {print $4}')
+  if [ "$frei" -lt 7400 ]; then
+    sag "WARNUNG: nur $frei MB frei -- API 37 verlangt 7 373 MB fuer die Datenpartition"
+  fi
   # SPEICHER (Android 0.16.0, Konzept AR): Ein Gradle-Daemon belegt nach
   # einem Bau rund 5 GB, der Emulator 6 GB -- in 15 GB ohne Swap blieb am
   # 24.09.2026 der ganze Container stehen (Last 60, `ps` und `uptime` hingen).
@@ -112,7 +215,7 @@ start() {
   # mit -- am 07.09.2026 kostete das einen Boot von 14 Minuten (0.14.0).
   setsid nohup "$EMU" -avd "$avd" -no-window -no-audio -no-boot-anim \
       -accel off -gpu swiftshader_indirect -memory 6144 -partition-size 4096 \
-      -cores 4 \
+      -cores 4 "${zusatz[@]}" \
       >"${TMPDIR:-/tmp}/emu-$avd.log" 2>&1 < /dev/null &
   sag "gestartet: $avd (Protokoll ${TMPDIR:-/tmp}/emu-$avd.log)"
   "$ADB" start-server >/dev/null 2>&1 || true
@@ -127,13 +230,28 @@ start() {
   # ro-Eigenschaft laesst sich setzen, solange sie noch nicht gesetzt ist)
   # und das Framework neu starten, damit der naechste system_server sie
   # liest. Gemessen: adbd nach 120 s, Boot 553 s danach, 715 s gesamt.
-  until [ "$("$ADB" get-state 2>/dev/null | tr -d '\r')" = "device" ]; do sleep 10; done
-  sag "adbd da nach $(( $(date +%s) - beginn )) s -- Watchdog-Faktor setzen, Framework neu starten"
-  "$ADB" root >/dev/null 2>&1 || true; sleep 5
-  "$ADB" shell setprop ro.hw_timeout_multiplier 10 >/dev/null 2>&1 || true
-  "$ADB" shell "stop; sleep 3; start" >/dev/null 2>&1 || true
+  # Im user-Build steht der Faktor schon ab init in der Debug-Ramdisk; dort
+  # gibt es weder `adb root` noch einen Neustart des Frameworks.
+  until [ "$("$ADB" get-state 2>/dev/null | tr -d '\r')" = "device" ]; do
+    ps -eo comm | grep -q qemu-system || { sag "Emulator beendet -- Protokoll lesen"; return 1; }
+    sleep 10
+  done
+  if [ -z "$user" ]; then
+    sag "adbd da nach $(( $(date +%s) - beginn )) s -- Watchdog-Faktor setzen, Framework neu starten"
+    "$ADB" root >/dev/null 2>&1 || true; sleep 5
+    "$ADB" shell setprop ro.hw_timeout_multiplier "$FAKTOR" >/dev/null 2>&1 || true
+    "$ADB" shell "stop; sleep 3; start" >/dev/null 2>&1 || true
+  else
+    sag "adbd da nach $(( $(date +%s) - beginn )) s (user-Build, Faktor aus der Debug-Ramdisk)"
+  fi
   until [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
     sleep 15
+  done
+  # Nach einem Neustart der Oberflaeche sagt sys.boot_completed weiter 1,
+  # der Nutzerspeicher ist aber noch gesperrt -- `am start` meldet dann
+  # "Activity class ... does not exist" (Konzept AR, AR-05).
+  until [ "$("$ADB" shell getprop sys.user.0.ce_available 2>/dev/null | tr -d '\r')" = "true" ]; do
+    sleep 10
   done
   # ANR-Dialoge ("System UI isn't responding") legen sich unter TCG
   # zuverlaessig ueber die App und nehmen ihr den Fokus -- `bild` verweigert
@@ -146,7 +264,9 @@ start() {
   # hasReadColorBufferDma", mapper.ranchu.so), und die ganze Oberflaeche
   # startet neu -- am 24.09.2026 alle fuenf bis sieben Minuten. Das Sampling
   # braucht die Gestenleiste; ohne sie blieb es stehen. Auf aelteren Abbildern
-  # schadet die Umstellung nicht. Backlog Nr. 337.
+  # schadet die Umstellung nicht. Backlog Nr. 337 -- dessen Ursache ist
+  # vermutlich target=android-0 (siehe Kopf); bis das nachgemessen ist,
+  # bleibt die Umgehung stehen.
   "$ADB" shell cmd overlay enable-exclusive --category \
       com.android.internal.systemui.navbar.threebutton >/dev/null 2>&1 || true
   sag "Boot fertig nach $(( $(date +%s) - beginn )) s (Watchdog-Faktor $("$ADB" shell getprop ro.hw_timeout_multiplier 2>/dev/null | tr -d '\r'))"
@@ -201,9 +321,9 @@ aus() { "$ADB" emu kill >/dev/null 2>&1 || true; sag "beendet"; }
 
 case "${1:-}" in
   aufbauen) aufbauen ;;
-  start)    start "${2:-handy34}" ;;
+  start)    start "${2:-handy37}" ;;
   legen)    legen "$2" ;;
   bild)     bild "$2" ;;
   aus)      aus ;;
-  *) sed -n '2,40p' "$0"; exit 1 ;;
+  *) sed -n '2,/^set -eu/p' "$0" | sed '$d'; exit 1 ;;
 esac
