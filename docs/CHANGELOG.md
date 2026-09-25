@@ -54,6 +54,14 @@ Prüfstand. **Korrekturstufe ohne Migration.**
   die Anlage eingerichtet. Die Seiten laden `db.php` selbst
   (`doku_seite.php`), für sie ändert sich nichts. **Was bleibt:** Die
   Lücke zwischen Prüfstand und Tor steht als Nr. 329 im Backlog.
+- **Werkzeug: Das Tor übergibt `anker` an die Gegenlesung** (F-P5c-172).
+  AP9 hat die Ankerprüfung als Riegel eingetragen und im Quelltextläufer
+  verdrahtet, aber im Schritt „Prüfbericht gegenlesen" von `pruefung.yml`
+  fehlte `--riegel "anker=$q"` — das Runbook in `Pruefablauf.md` 6 verlangt
+  es ausdrücklich. Mit `--alle-riegel` war der zweite Lauf von Stufe 1
+  deshalb rot, obwohl jeder Prüfschritt grün war. Örtlich mit denselben
+  Argumenten nachgestellt: ohne die Zeile „Riegel ‚anker' … läuft aber
+  nicht im Tor", mit ihr „Prüfbericht in Ordnung".
 
 ### Geändert
 

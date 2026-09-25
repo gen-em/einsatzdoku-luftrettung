@@ -3681,11 +3681,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfstands. Behoben ist die eine Stelle (`doku_lib.php` braucht `db.php`
     nicht, Web 21.1.2); **offen ist die Lücke**: Jedes künftige
     Quelltextwerkzeug, das eine Serverbibliothek mit `db.php` lädt, ist
-    örtlich grün und im Tor rot. *Weg:* Der Prüfstand fährt `quelltext
-    pruefen.sh --selbstprobe` und `alle` mit beiseitegelegter `config.php`
-    — so, wie das Tor sie sieht. *Abnahme:* mit dem Stand vor 21.1.2 im
-    Prüfstand rot an `anker`; mit dem heutigen grün. *Zuordnung:*
-    Backlog-Runde.
+    örtlich grün und im Tor rot. **Der zweite Lauf fand einen zweiten Fall
+    derselben Lücke (F-P5c-172):** AP9 hat `anker` als Riegel in
+    `pruefablauf.json` eingetragen, aber nicht als `--riegel` in den
+    Schritt „Prüfbericht gegenlesen" von `pruefung.yml` — obwohl das
+    Runbook (`Pruefablauf.md` 6) genau das verlangt. `--alle-riegel` war
+    im Tor rot; örtlich fährt diesen Schritt niemand. *Weg:* Der Prüfstand
+    fährt `quelltext pruefen.sh --selbstprobe` und `alle` mit
+    beiseitegelegter `config.php` — so, wie das Tor sie sieht —, und
+    `bericht.py lesen --alle-riegel` mit genau den `--riegel`, die
+    `pruefung.yml` übergibt. *Abnahme:* mit dem Stand vor 21.1.2 im
+    Prüfstand zweimal rot, an `anker` und an der fehlenden Übergabe; mit
+    dem heutigen grün. *Zuordnung:* Backlog-Runde.
 
 ## Erledigt
 

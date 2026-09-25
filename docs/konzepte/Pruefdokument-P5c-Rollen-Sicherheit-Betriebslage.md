@@ -332,7 +332,9 @@ Updates ohne „(R12)", „(R65)", „(R66)" · Handbuch 12.1 (Serverschlüssel)
 | **Vier Arbeiter für den örtlichen PHP-Server** | `PHP_CLI_SERVER_WORKERS=4` in `lokal_starten.sh` und `lokal_einrichten.sh` (Backlog Nr. 301), dann `hochfahren.sh --neu` und die volle Bedienprobe zweimal | der Weg, den das Prüfdokument RW für den Wiederholungsfall vorgezeichnet hatte. Die Anwendung zählt nichts im Prozessspeicher (0 Treffer für `apcu_`). Anlage mit **1 + 4 Prozessen**, `login.php` 200, Fassung 21.1.2; Bedienprobe **58 von 58** und **58 von 58** |
 | **Prüfstand, sechster Lauf — grün, aber nicht das Ende** | frische Anlage | **50 grün, 0 rot, 0 nicht gemessen, 2 564 s**, im Commit `d33d1bb` |
 | **Stufe 1 auf dem Pull Request #89 — rot** (F-P5c-171) | Lauf 36193373154 | die Selbstprobe von `anker` brach ab: `server/config.php fehlt` aus `db.php`, eingebunden über `doku_lib.php`. In Stufe 1 gibt es keine `config.php`, im Prüfstand schon — dort war `anker` in jedem Lauf grün. Örtlich nachgestellt mit beiseitegelegter `config.php`: Selbstproben **10 von 11**, Prüfungen **12 von 13**, alle übrigen Schritte von Stufe 1 rc 0. `doku_lib.php` braucht aus `db.php` nichts (Tokenzählung: 0 fremde Funktionen); die Zeile ist fort. Danach ohne `config.php` **11 von 11** und **13 von 13**, `anker` 50 Verweise auf 102 Marken, 0 ohne Ziel; mit Anlage `hilfe.php` und `ueber.php` 200. Die Lücke dahinter: Nr. 329 |
-| **Prüfstand, Abschluss** | derselbe Aufruf, frische Anlage, nach den vier Behebungen | *steht in der Commit-Nachricht des Kopf-Commits* |
+| **Prüfstand, siebter Lauf** | frische Anlage, nach F-P5c-171 | **50 grün, 0 rot, 0 nicht gemessen, 2 569 s**, im Commit `bb2a87f` |
+| **Stufe 1, zweiter Lauf — rot** (F-P5c-172) | Lauf 36197604881, Kopf `bb2a87f` | **jeder Prüfschritt grün**, rot nur die Gegenlesung: „Riegel ‚anker' steht in pruefablauf.json, läuft aber nicht im Tor." AP9 hatte `--riegel "anker=$q"` in `pruefung.yml` vergessen, das Runbook (`Pruefablauf.md` 6) verlangt es. Örtlich mit genau den Argumenten des Workflows nachgestellt: ohne die Zeile dieselbe Meldung, mit ihr „Prüfbericht in Ordnung … 52 Zahlen". Danach YAML lädt, `kettenaufrufe` 0/0, `uses:` 10 von 10 mit SHA |
+| **Prüfstand, Abschluss** | derselbe Aufruf, frische Anlage, nach den fünf Behebungen | *steht in der Commit-Nachricht des Kopf-Commits* |
 
 **Liste der berichtigten Stellen** steht im CHANGELOG unter Web 21.1.1 und
 im Konzept, Abschnitt 5, F-P5c-166 bis -169. **F-P5c-170** entstand nach dem
@@ -397,9 +399,12 @@ Backlog Nr. 328.
   laufen im Prüfstand neben einer eingerichteten Anlage mit `config.php`,
   in Stufe 1 ohne. Ein Werkzeug, das über eine Serverbibliothek `db.php`
   lädt, ist deshalb örtlich grün und im Tor rot — so ging es `anker`
-  (F-P5c-171). Bis Nr. 329 gebaut ist, fährt man bei einer Änderung an
-  `tools/quelltext/` die Prüfungen einmal von Hand mit beiseitegelegter
-  `config.php`.
+  (F-P5c-171). Und der Prüfstand fährt die Gegenlesung des Tors nicht: Ein
+  Riegel, den `pruefung.yml` nicht übergibt, fällt erst dort auf
+  (F-P5c-172). Bis Nr. 329 gebaut ist, fährt man bei einer Änderung an
+  `tools/quelltext/` oder an den Riegeln die Prüfungen einmal von Hand mit
+  beiseitegelegter `config.php` und `bericht.py lesen --alle-riegel` mit
+  den Argumenten aus `pruefung.yml`.
 
 **Aus AP9:**
 
