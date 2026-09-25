@@ -551,9 +551,9 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin']); ?>
 
   <?php ui_titelzeile(['titel' => 'NutzerInnen']); ?>
-  <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite mit allen
-     Verwaltungsaufgaben: Kontodaten, Geräte und Konto-Backups.
-     Ein Klick auf eine Zeile öffnet sie.</p>
+  <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite mit Kontodaten,
+     Geräten und Konto-Backups — ein Klick auf eine Zeile öffnet sie.
+     <a href="hilfe.php#11-2-die-liste-der-nutzerinnen">Handbuch: NutzerInnen</a></p>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 

@@ -1039,13 +1039,11 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         </fieldset>
       </form>
       <?php if ($nurSupport): ?>
-      <p class="feld-klein">Ändern kann die Verwaltung. Den Setz-Link schickt „Aktionen".</p>
+      <p class="feld-klein">Ändern kann die Verwaltung, den Setz-Link schickt „Aktionen".</p>
       <?php else: ?>
-      <p class="feld-hinweis">Ein Passwort lässt sich hier nicht setzen: Die Daten sind mit
-         dem Passwort der Person Ende-zu-Ende-verschlüsselt. „Setz-Link senden"
-         im Aktionsmenü verschickt denselben Link wie „Passwort vergessen" auf der
-         Anmeldeseite; entsperrt wird danach mit dem Wiederherstellungsschlüssel
-         der Person.</p>
+      <p class="feld-hinweis">Ein Passwort lässt sich hier nicht setzen — „Setz-Link
+         senden" im Aktionsmenü verschickt den Link aus „Passwort vergessen".
+         <a href="hilfe.php#11-1-die-kontoseite">Handbuch: Kontoseite</a></p>
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
@@ -1058,7 +1056,20 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
        * mitspeichern.
        * ------------------------------------------------------------------ */ ?>
     <?php require_once __DIR__ . '/konto_lib.php';
-          $kStatus = (string)($u['status'] ?? 'aktiv'); ?>
+          require_once __DIR__ . '/konten_einstellungen_lib.php';   // KONTEN_UNBESTAETIGT_H
+          $kStatus = (string)($u['status'] ?? 'aktiv');
+          /* EIN SATZ AN DIE VERWALTUNG, NICHT `konto_status_text()` (F-P5c-144).
+             Bis Web 21.0.0 stand hier der Text, den die NutzerIn beim Anmelden
+             liest — „Sieh in deinem Postfach nach", „Du bekommst eine
+             Nachricht" —, auf der Seite der Verwaltung. */
+          $statusSatz = match ($kStatus) {
+              'unbestaetigt' => 'Die Adresse ist noch nicht bestätigt; ohne Bestätigung '
+                              . 'verfällt die Registrierung nach '
+                              . KONTEN_UNBESTAETIGT_H . ' Stunden.',
+              'wartet'       => 'Die Adresse ist bestätigt, und das Konto wartet auf die '
+                              . 'Freischaltung.',
+              default        => '',
+          }; ?>
     <?php ui_karte_start(['titel' => 'Status', 'id' => 'karte-status',
         'plakette' => ui_plakette(KONTO_STATUS[$kStatus] ?? $kStatus,
             ['ton' => match ($kStatus) {
@@ -1081,19 +1092,17 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?php endif; ?>
 
       <?php if ($nurSupport): ?>
-        <p class="feld-hinweis"><?= e(in_array($kStatus, ['wartet', 'unbestaetigt'], true)
-            ? konto_status_text($kStatus) . ' ' : '') ?>Sperren, Entsperren und
-           Freischalten sind der Verwaltung vorbehalten.</p>
+        <p class="feld-hinweis">Sperren, Entsperren und Freischalten sind der
+           Verwaltung vorbehalten.</p>
       <?php elseif ($istDemo): ?>
-        <p class="feld-hinweis">Das Demo-Konto lässt sich hier nicht sperren. Ob die
-           Anmeldung daran zugelassen ist, steht unter Betrieb →
-           Servereinstellungen → Konten.</p>
+        <p class="feld-hinweis">Das Demo-Konto lässt sich nicht sperren; seine
+           Anmeldung schaltet Betrieb → Servereinstellungen → Konten.</p>
       <?php elseif ($uid === $userId): ?>
         <p class="feld-hinweis">Das eigene Konto lässt sich hier nicht sperren — die
            Sperre ließe sich danach nur von einem anderen Konto aus lösen.</p>
       <?php else: ?>
         <?php if ($kStatus === 'wartet' || $kStatus === 'unbestaetigt'): ?>
-          <p class="feld-hinweis"><?= e(konto_status_text($kStatus)) ?></p>
+          <p class="feld-hinweis"><?= e($statusSatz) ?></p>
           <form method="post">
             <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
             <input type="hidden" name="id" value="<?= $uid ?>">
@@ -1103,10 +1112,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
             </div>
           </form>
         <?php elseif ($kStatus === 'gesperrt'): ?>
-          <p class="feld-hinweis">Beim Entsperren verschwindet auch ein
-             <strong>beantragter Löschtermin</strong> — das Konto bleibt dann
-             bestehen. Gepufferte Gerätedaten kommen beim nächsten Versuch
-             vollständig an; es ist nichts verlorengegangen.</p>
+          <p class="feld-hinweis">Entsperren nimmt auch einen <strong>beantragten
+             Löschtermin</strong> zurück.
+             <a href="hilfe.php#status-sperren-entsperren-freischalten-seit-web-20-17-0">Handbuch: Status</a></p>
           <form method="post">
             <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
             <input type="hidden" name="id" value="<?= $uid ?>">
@@ -1116,10 +1124,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
             </div>
           </form>
         <?php else: ?>
-          <p class="feld-hinweis">Eine Sperre beendet laufende Sitzungen beim nächsten
-             Seitenaufruf. <strong>Geräte verlieren nichts:</strong> Sie bekommen eine
-             Absage, behalten ihre Warteschlange und senden nach dem Entsperren
-             alles nach. Der Bestand bleibt unberührt — gelöscht wird nichts.</p>
+          <p class="feld-hinweis">Eine Sperre beendet laufende Sitzungen und löscht
+             nichts — Geräte behalten ihre Warteschlange und senden danach nach.
+             <a href="hilfe.php#status-sperren-entsperren-freischalten-seit-web-20-17-0">Handbuch: Status</a></p>
           <form method="post">
             <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
             <input type="hidden" name="id" value="<?= $uid ?>">
@@ -1127,9 +1134,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
             <?php ui_feld(['name' => 'grund', 'label' => 'Grund',
                 'label_zusatz' => 'erscheint im Protokoll, nicht bei der NutzerIn',
                 'attr' => 'maxlength="64" placeholder="z. B. auf eigenen Wunsch"',
-                'klein' => 'Die NutzerIn sieht nur, dass das Konto gesperrt ist, und den '
-                         . 'Hinweis, sich an die Verwaltung zu wenden. Den Grund '
-                         . 'hier liest die Verwaltung.']); ?>
+                'klein' => 'Die NutzerIn sieht nur, dass das Konto gesperrt ist.']); ?>
             <div class="listen-form-fuss">
               <?= ui_knopf(['text' => 'Sperren', 'symbol' => 'schloss', 'art' => 'neutral']) ?>
             </div>
@@ -1209,8 +1214,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <input type="hidden" name="id" value="<?= $uid ?>">
         <p class="feld-hinweis"><strong>Leer heißt: die Vorgabe der Installation
            gilt</strong> (<?= (int)konten_grenze_einsaetze() ?> Einsätze,
-           <?= (int)konten_grenze_mb() ?> MB). Trägt hier eine Zahl, gilt sie
-           <em>statt</em> der Vorgabe — auch wenn die Vorgabe später steigt.</p>
+           <?= (int)konten_grenze_mb() ?> MB); eine Zahl gilt <em>statt</em> ihrer,
+           auch wenn sie später steigt.
+           <a href="hilfe.php#mengen-und-grenzen-je-konto-seit-web-20-21-0">Handbuch: Mengen und Grenzen</a></p>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'grenze_einsaetze', 'label' => 'Einsätze',
               'art' => 'number',
@@ -1226,10 +1232,8 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
             'art' => 'number', 'label_zusatz' => 'Pakete',
             'wert' => $u['backup_pakete'] !== null ? (string)$u['backup_pakete'] : '',
             'platzhalter' => 'Vorgabe: ' . edbak_aufbewahrung(),
-            'klein' => 'Wie viele Sicherungsstände dieses Kontos aufgehoben werden, '
-                     . 'bevor der älteste verdrängt wird. Leer lassen für die Zahl der '
-                     . 'Installation. Für ein Konto, dessen Bestand besonders wertvoll '
-                     . 'ist, ohne die Zahl für alle anzuheben.']); ?>
+            'klein' => 'Leer für die Zahl der Installation — mehr nur für ein Konto, '
+                     . 'dessen Bestand besonders wertvoll ist.']); ?>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
@@ -1386,10 +1390,14 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
               ]]),
         ]);
       endforeach; ?>
-      <p class="feld-hinweis">Aufbewahrung: die letzten <?= edbak_aufbewahrung() ?> Pakete je
-         Konto (Einstellung unter <a href="admin_sicherungen.php">Konto-Backups</a>).
-         Das jüngste und ein freigegebenes bleiben immer. Einspielen ergänzt,
-         ersetzt nicht; die Verwaltung sieht keinen Klartext.</p>
+      <?php /* DIE ZAHL DIESES KONTOS, NICHT DIE DER INSTALLATION (F-P5c-145).
+               Bis Web 21.0.0 stand hier `edbak_aufbewahrung()` — seit Web
+               20.21.0 kann die Karte „Mengen und Grenzen" daneben sie je Konto
+               überschreiben, und dann stimmte die Zahl nicht mehr. */ ?>
+      <p class="feld-hinweis">Aufbewahrt werden die letzten
+         <?= edbak_aufbewahrung_konto($kennung) ?> Pakete, das jüngste und ein
+         freigegebenes immer.
+         <a href="hilfe.php#11-1-die-kontoseite">Handbuch: Kontoseite</a></p>
       <?php if ($pakete): ?>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
@@ -1412,29 +1420,21 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php ui_karte_start(['titel' => 'Konto löschen', 'klasse' => 'karte-gefahr',
                           'id' => 'karte-loeschen']); ?>
       <?php if ($istDemo): ?>
-        <p class="feld-hinweis">Das Demo-Konto wird über den Reiter
-           <a href="admin_demo.php">Demo-Konto</a> entfernt — dort steht
-           „Demo-Konto entfernen“. Hier ginge derselbe Weg an der Buchführung
-           vorbei, die sich merkt, welches Konto das Demo-Konto ist.</p>
+        <p class="feld-hinweis">Das Demo-Konto entfernt der Reiter
+           <a href="admin_demo.php">Demo-Konto</a>, damit dessen Buchführung stimmt.</p>
       <?php elseif ($istIch): ?>
         <p class="feld-hinweis">Das eigene Konto lässt sich hier nicht löschen.</p>
       <?php elseif ($istLetzteBetreiberin): ?>
         <?php /* Dieselbe Zusage wie am Rollenfeld (R75) — hier gesagt, wo man
                  die Handlung versucht, und nicht erst als Fehlermeldung
                  danach. Der Schreibweg faengt es trotzdem noch einmal. */ ?>
-        <p class="feld-hinweis">Das ist das letzte Konto mit der Rolle
-           <strong>BetreiberIn</strong>. Es lässt sich nicht löschen — sonst hätte
-           diese Installation niemanden mehr, der ihren Bereich <em>Betrieb</em>
-           öffnen kann: Serverbetrieb, Updates, Hintergrundjobs, Speicher,
-           Komplett-Backup und Backup-Ziele. Lege zuerst eine zweite BetreiberIn
-           an; danach lässt sich dieses Konto löschen.</p>
+        <p class="feld-hinweis">Das letzte Konto mit der Rolle
+           <strong>BetreiberIn</strong> lässt sich nicht löschen — lege zuerst eine
+           zweite an.</p>
       <?php else: ?>
-        <p class="feld-hinweis">Entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
-           und Geräte <strong>endgültig</strong> — ohne Papierkorb, nicht rückgängig zu
-           machen. Ob danach nichts mehr lesbar ist, hängt von der Wahl unten ab:
-           Bleiben die Pakete erhalten, überleben sie die Löschung und erscheinen
-           unter <a href="admin_sicherungen.php">Konto-Backups</a> als „Backup ohne
-           Konto".</p>
+        <p class="feld-hinweis">Entfernt Konto, Diensttage, Einsätze, Tracks,
+           Reanimationen und Geräte <strong>endgültig</strong>, ohne Papierkorb.
+           <a href="hilfe.php#11-1-die-kontoseite">Handbuch: Kontoseite</a></p>
         <form method="post" data-confirm="Konto endgültig löschen?"
               data-confirm-ok="Endgültig löschen">
           <?= csrf_field() ?><input type="hidden" name="action" value="user_delete">

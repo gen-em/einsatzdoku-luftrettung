@@ -178,11 +178,8 @@ ui_seite_start(['titel' => 'Updates']);
           $wartungVon === 'torwaechter' ? 'Vom Torwächter geschlossen' : 'Von der Kette geschaltet') ?>
     <?php endif; ?>
     <p class="feld-hinweis">Schließt die Installation vorübergehend für alle außer
-       Verwaltung und Betrieb: Jede andere Anfrage bekommt <strong>503</strong> mit
-       <code>Retry-After: <?= WARTUNG_RETRY_S ?></code> statt eines Fehlers aus einer
-       halb umgebauten Datenbank. Uhr und Handy puffern und liefern nach — es geht
-       nichts verloren. Wer sich anmeldet und nicht verwaltet, wird sofort wieder
-       abgemeldet und sieht die Wartungsseite.</p>
+       Verwaltung und Betrieb, und Uhr und Handy liefern danach nach.
+       <a href="hilfe.php#der-wartungsmodus">Handbuch: Wartungsmodus</a></p>
     <?php /* DER ABLAUF STEHT IN DER KARTE (Mockup 05) und nicht nur im Runbook:
              Er ist der Grund, warum der Schalter hierher gezogen ist. Fünf
              Zeilen, und die Reihenfolge IST die Sache — deshalb eine
@@ -308,9 +305,8 @@ ui_seite_start(['titel' => 'Updates']);
         <?= ui_knopf(['text' => 'Ausstehende ausführen', 'art' => 'primaer',
                       'symbol' => 'datenbank', 'attr' => ' form="migform"']) ?>
       </div>
-      <p class="feld-klein">Führt der Reihe nach aus, was oben steht; blockierte
-         Einträge nur mit gesetztem Häkchen. Der Aufruf dieser Seite ändert
-         nichts — erst dieser Knopf.</p>
+      <p class="feld-klein">Führt der Reihe nach aus, was oben steht, blockierte
+         Einträge nur mit gesetztem Häkchen.</p>
     <?php endif; ?>
 
     <?php /* „WARTUNG BEENDEN" STEHT HIER UND NICHT NUR OBEN (P5a/AP3,
@@ -345,7 +341,7 @@ ui_seite_start(['titel' => 'Updates']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Ausgeführt: zugeklappt, bis P5 das Audit-Protokoll bringt -- */ ?>
+  <?php /* ---- Ausgeführt: zugeklappt ---------------------------------- */ ?>
   <?php ui_karte_start(['titel' => 'Ausgeführt', 'id' => 'k-ausgefuehrt',
       'zahl' => (string)count($erledigt),
       'vorschau' => $stand['letzte'] !== null
@@ -361,9 +357,12 @@ ui_seite_start(['titel' => 'Updates']);
                   'plaketten' => $plaketten]);
       ?>
     <?php endforeach; ?>
-    <p class="feld-hinweis">Diese Liste steht hier bis P5. Danach führt das
-       Audit-Protokoll die ausgeführten Kennungen (R66), und die Karte
-       entfällt.</p>
+    <?php /* BIS WEB 21.0.0 STAND HIER „Diese Liste steht hier bis P5. Danach
+             führt das Audit-Protokoll die ausgeführten Kennungen (R66), und die
+             Karte entfällt." (F-P5c-146). Das Protokoll gibt es seit P5c/AP2;
+             Migrationen schreibt es nicht, und die Karte ist die einzige Stelle,
+             die sie nennt. Ein Versprechen ohne Termin steht nicht auf der
+             Seite, sondern im Backlog. */ ?>
   <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Fassung ------------------------------------------------------
@@ -388,8 +387,7 @@ ui_seite_start(['titel' => 'Updates']);
          abwärtskompatibel (R12). Eine Zahl hier zu erfinden wäre schlimmer als
          keine — sie sähe aus wie eine Zusage, die niemand einlöst. */
       ui_zeile(['text' => 'Uhr-App',
-                'klein' => 'Der Server verlangt keinen Mindeststand — der '
-                         . 'JSON-Vertrag ist abwärtskompatibel (R12). Welche '
+                'klein' => 'Der JSON-Vertrag ist abwärtskompatibel (R12); welche '
                          . 'Fassung ein Gerät fährt, steht auf der Sync-Seite '
                          . 'der Uhr.',
                 'plaketten' => ui_plakette('ohne Mindeststand', ['ton' => 'neutral'])]);

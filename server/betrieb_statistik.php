@@ -510,11 +510,9 @@ ui_seite_start(['titel' => 'Statistik']);
                           ['ton' => $deaktiviert > 0 ? 'orange' : 'neutral'])]); ?>
 
       <?php /* DER SATZ STATT EINER ZEILE (Z-02). Siehe Kopfkommentar. */ ?>
-      <p class="feld-klein"><strong>Wear-OS-Uhren erscheinen hier nicht</strong>, und
-         zwar bauartbedingt: Die Uhr-App kennt weder Serveradresse noch Schlüssel.
-         Sie schickt ihre Ereignisse an das Handy, und das Handy sendet — gekoppelt
-         ist also das Handy. Eine verlorene Uhr gibt keinen Zugang preis; das ist der
-         Zweck dieser Bauform.</p>
+      <p class="feld-klein"><strong>Wear-OS-Uhren erscheinen hier nicht</strong>, weil
+         sie über das gekoppelte Handy senden.
+         <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
     <?php ui_karte_ende(); ?>
   </div><?php /* .form-spalte (rechts) */ ?>
 <?php endif; ?>
@@ -555,13 +553,9 @@ ui_seite_start(['titel' => 'Statistik']);
           </tbody>
         </table>
       </div>
-      <p class="feld-klein">Anteil <em>Geräte</em> bezogen auf alle <?= $geraeteZahl ?>
-         Geräte, Anteil <em>NutzerInnen</em> auf alle <?= $kontenZahl ?> Konten — ein
-         Modell kann bei mehreren Konten stehen. <strong>Der Hersteller ist
-         abgeleitet</strong>, nicht gespeichert: Eine Uhr, die koppelt, ist eine
-         Garmin-Uhr; bei einem Handy gilt das erste Wort des Modellnamens, weil
-         der Name aus Hersteller und Modell zusammengezogen ist. Das ist eine
-         Faustregel und keine Zusage.</p>
+      <p class="feld-klein">Anteile bezogen auf alle <?= $geraeteZahl ?> Geräte
+         bzw. <?= $kontenZahl ?> Konten, der Hersteller abgeleitet und nicht
+         gespeichert. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 <?php endif; ?>

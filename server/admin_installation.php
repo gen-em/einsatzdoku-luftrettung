@@ -183,7 +183,8 @@ ui_seite_start(['titel' => 'Installation']);
                         'menue' => 'admin_installation']); ?>
 
   <?php ui_titelzeile(['titel' => 'Installation',
-                       'unter' => 'Wie diese Installation nach außen auftritt']); ?>
+                       'unter' => 'Wie diese Installation nach außen auftritt — '
+                                . '<a href="hilfe.php#11-5-installation">Handbuch: Installation</a>']); ?>
 
   <?php ui_meldung($notice, $error, 'ok', '  '); ?>
 
@@ -221,12 +222,9 @@ ui_seite_start(['titel' => 'Installation']);
           <?= ui_meldung_markup($nameMeldung[0], $nameMeldung[1]) ?>
         <?php endif; ?>
 
-        <p class="feld-hinweis">Bis Web 20.7.0 stand der Name an
-          <strong>38 Stellen</strong> fest im Programm, in drei verschiedenen
-          Schreibweisen. Hier steht er einmal — und gilt für Browsertab,
-          Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt
-          <strong>und jede E-Mail</strong>, die diese Installation
-          verschickt.</p>
+        <p class="feld-hinweis">Der Name gilt für Browsertab, Kopfleiste,
+          Anmeldeseite, Wartungsseite, Schlüsselblatt <strong>und jede
+          E-Mail</strong> dieser Installation.</p>
 
         <form method="post" class="listen-form">
           <?= csrf_field() ?>
@@ -234,16 +232,13 @@ ui_seite_start(['titel' => 'Installation']);
           <?php ui_feld(['name' => 'instanz_name', 'label' => 'Name',
                          'label_zusatz' => 'in E-Mails und auf dem Schlüsselblatt',
                          'wert' => instanz_name(),
-                         'platzhalter' => INSTANZ_NAME_VORGABE]); ?>
+                         'platzhalter' => INSTANZ_NAME_VORGABE,
+                         'klein' => 'Höchstens ' . INSTANZ_MAX . ' Zeichen ohne '
+                                  . 'Zeilenumbruch; leer heißt Vorgabe.']); ?>
           <?php ui_feld(['name' => 'instanz_kurz', 'label' => 'Kurzname',
                          'label_zusatz' => 'im Browsertab und in der Kopfleiste',
                          'wert' => instanz_kurz(),
                          'platzhalter' => INSTANZ_KURZ_VORGABE]); ?>
-          <p class="feld-hinweis">Leer lassen setzt auf die Vorgabe zurück
-            („<?= e(INSTANZ_NAME_VORGABE) ?>" bzw.
-            „<?= e(INSTANZ_KURZ_VORGABE) ?>“). Höchstens
-            <?= INSTANZ_MAX ?> Zeichen, keine Zeilenumbrüche — der Name steht
-            in Mailbetreffs.</p>
           <?= ui_knopf(['text' => 'Namen speichern', 'art' => 'primaer']) ?>
         </form>
       <?php ui_karte_ende(); ?>
@@ -257,11 +252,10 @@ ui_seite_start(['titel' => 'Installation']);
           <?= ui_meldung_markup($adrMeldung[0], $adrMeldung[1]) ?>
         <?php endif; ?>
 
-        <p class="feld-hinweis">Bis Web 20.7.0 stand in <strong>sieben
-          Mailtexten</strong> dieselbe fest eingebaute Adresse. Hier steht sie
-          einmal — und sie darf auch leer bleiben: Dann fällt die Zeile
-          „Bei Fragen wende dich an …“ aus den Mails weg, statt auf ein
-          Postfach zu verweisen, das niemand liest.</p>
+        <p class="feld-hinweis">Beide dürfen leer bleiben — dann fällt die
+          Kontaktzeile aus den Mails, und Betriebspost geht an alle mit
+          Verwaltungsrecht.
+          <a href="hilfe.php#11-5-installation">Handbuch: Installation</a></p>
 
         <form method="post" class="listen-form">
           <?= csrf_field() ?>
@@ -270,19 +264,14 @@ ui_seite_start(['titel' => 'Installation']);
                          'art' => 'email',
                          'label_zusatz' => 'steht in jeder E-Mail an NutzerInnen',
                          'wert' => instanz_kontakt(),
-                         'platzhalter' => 'leer = keine Kontaktzeile']); ?>
+                         'platzhalter' => 'leer = keine Kontaktzeile',
+                         'klein' => 'Nicht der Absender — der steht als smtp.from '
+                                  . 'in der config.php.']); ?>
           <?php ui_feld(['name' => 'betrieb_mail', 'label' => 'Betreiberadresse',
                          'art' => 'email',
                          'label_zusatz' => 'Warnungen zu Speicher und Sicherungen',
                          'wert' => betrieb_mail(),
                          'platzhalter' => 'leer = an alle mit Verwaltungsrecht']); ?>
-          <p class="feld-hinweis">Die <strong>Kontaktadresse</strong> ist nicht
-            der Absender — der steht als <code>smtp.from</code> in der
-            <code>config.php</code> und ist auf einer gut eingerichteten Anlage
-            ein <code>noreply@</code>. Die <strong>Betreiberadresse</strong>
-            lenkt Betriebspost (Speicherkontingent, überfällige Sicherungen) an
-            eine Stelle; bleibt sie leer, geht sie weiterhin an alle Konten mit
-            Verwaltungsrecht.</p>
           <?= ui_knopf(['text' => 'Adressen speichern', 'art' => 'primaer']) ?>
         </form>
       <?php ui_karte_ende(); ?>
@@ -306,9 +295,8 @@ ui_seite_start(['titel' => 'Installation']);
                  width="<?= (int)$masse['breite'] ?>" height="<?= (int)$masse['hoehe'] ?>"
                  alt="">
           </div>
-          <p class="feld-hinweis">Kopfleiste, Browser-Symbol und Anmeldeseite.
-             NutzerInnen können im Profil für sich davon abweichen; die
-             Anmeldeseite zeigt immer den Standard.</p>
+          <p class="feld-hinweis">Kopfleiste, Browser-Symbol und Anmeldeseite —
+             im Profil kann jede NutzerIn für sich abweichen.</p>
         </div>
 
         <form method="post">
@@ -316,20 +304,15 @@ ui_seite_start(['titel' => 'Installation']);
           <?php ui_segment(['name' => 'logo', 'id' => 'logo-standard',
                             'wert' => logo_standard(),
                             'optionen' => INSTALLATION_LOGOS]); ?>
-          <p class="feld-hinweis">Die Änderung wirkt <strong>sofort</strong>, auch für
-             bereits angemeldete Konten; eine im Profil getroffene Wahl bleibt
-             unberührt. <strong>Wechselnd</strong> würfelt je Anmeldung neu —
-             innerhalb einer Sitzung bleibt das Logo stehen, damit es beim
-             Blättern nicht springt.</p>
           <?php $platzhalter = logo_platzhalter_liegt(); ?>
           <?php if ($platzhalter): ?>
-            <p class="feld-klein">Das Fahrzeug-Logo (NEF) ist ein
-               <strong>Platzhalter</strong> — es steht hier, damit die Logo-Wahl
-               vollständig gebaut und geprüft werden kann, bevor die echte Datei
-               vorliegt. Sie ersetzt ihn 1:1: gleicher Name, gleiche Maße, kein
-               Eingriff im Code. Betroffen: <?= e(implode(', ', $platzhalter)) ?>.
-               Dieser Hinweis verschwindet von selbst, sobald die echten Dateien
-               liegen.</p>
+            <?php /* EINE MELDUNG, KEIN KARTENTEXT (P5c/AP9): Der Hinweis nennt
+                     einen Zustand, der von selbst verschwindet, sobald die
+                     echten Dateien liegen — das ist, was `.meldung` sagt. */ ?>
+            <?= ui_meldung_markup('info', 'Die echte Datei ersetzt ihn 1:1 — '
+                . 'gleicher Name, gleiche Maße. Betroffen: '
+                . implode(', ', $platzhalter) . '.',
+                'Das Fahrzeug-Logo ist ein Platzhalter.') ?>
           <?php endif; ?>
           <div class="listen-form-fuss">
             <?= ui_knopf(['text' => 'Standard speichern', 'symbol' => 'haken',

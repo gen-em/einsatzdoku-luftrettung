@@ -147,9 +147,9 @@ ui_seite_start(['titel' => 'Protokoll']);
               : count($fremd) . ' Archive tragen einen anderen Serverschlüssel.']); ?>
     <?php endif; ?>
     <?php if (!$archive): ?>
-      <p class="feld-hinweis">Noch kein Archiv. Das erste entsteht, sobald ein
-         Zeitraum von <?= protokoll_archiv_tage() ?> Tagen abgelaufen ist und
-         der Hintergrundjob gelaufen ist.</p>
+      <p class="feld-hinweis">Noch kein Archiv — das erste entsteht, sobald ein
+         Zeitraum von <?= protokoll_archiv_tage() ?> Tagen abgelaufen und der
+         Hintergrundjob gelaufen ist.</p>
     <?php else: ?>
       <div class="archiv-liste">
       <?php foreach ($archive as $i => $a):

@@ -4110,15 +4110,16 @@ Speichern-Leiste, und die nennt, **was** ungespeichert ist.
 > ```
 > ## Welche Daten verschlüsselt gespeichert werden — und welche nicht
 >
-> Name, Geburtsdatum, Alter, Diagnose, Einsatznummer sowie Adresse,
-> Koordinate und Beschreibung des Einsatzorts werden bereits im Browser
-> verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
+> Name, Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse, Koordinate
+> und Beschreibung des Einsatzorts sowie die Notizen eines Einsatzes werden
+> bereits im Browser verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
 > kann sie nicht lesen; der Schlüssel wird aus dem Passwort des Kontos
 > abgeleitet.
 >
 > Nicht verschlüsselt gespeichert werden: die aufgezeichnete GPS-Spur, die
 > Koordinaten der einzelnen Einsatzphasen, das Transportziel, alle Zeiten,
-> der Verlauf einer Reanimation und die Namen der Besatzung. Diese Angaben
+> der Verlauf einer Reanimation, die Namen der Besatzung und die Notizen
+> eines Diensttags. Diese Angaben
 > werden für Auswertungen und Statistiken benötigt, die der Server selbst
 > berechnet.
 >
@@ -4759,6 +4760,9 @@ Gibt es keines, ist die Meldung eine Warnung: Migrationen können Spalten und
 Daten unwiderruflich entfernen, und dagegen schützt nur das Komplett-Backup der
 Installation — nicht das Backup eines einzelnen Kontos.
 
+Die Karte **„Ausgeführt"** ist die einzige Stelle, die ausgeführte
+Migrationen nennt — das Protokoll (11.7) führt sie nicht.
+
 Die Karte **„Fassung"** nennt zuunterst Web-Version, Datenbankstand und den
 Stand der Apps. Für die **Uhr-App gibt es keinen Mindeststand**: Der Server
 nimmt jede Fassung an, weil der Datenvertrag abwärtskompatibel gehalten ist.
@@ -4778,7 +4782,9 @@ sendet, bekommt einen Fehler, mit dem sie nichts anfangen kann. Mit dem
 Wartungsmodus bekommen alle stattdessen eine **Wartungsseite**, und die Geräte
 bekommen eine Antwort, die sie kennen: *später noch einmal*. **Sie behalten
 ihre Daten und liefern von selbst nach, sobald du wieder ausschaltest.** Es
-geht nichts verloren.
+geht nichts verloren. Technisch bekommt jede Anfrage außer denen von
+Verwaltung und Betrieb **503** mit `Retry-After: 300`; wer sich anmeldet und
+nicht verwaltet, wird sofort wieder abgemeldet und sieht die Wartungsseite.
 
 **So läuft ein Update mit Wartungsmodus:**
 
