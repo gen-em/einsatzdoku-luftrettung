@@ -14,6 +14,93 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.47.0] — 2026-09-24
+
+**Die Statistik mit drei Reitern.** P5c/AP7 (E-P5c-18, -45, -46; R38;
+Bild M-P5c-01b). Nebenstufe **mit Migration** — zwei Indizes. **Nach dem
+Deploy `update.php`, die Wartung bleibt an.** Bis hierher zählte Betrieb →
+Statistik anders, als R38 es verlangt: „aktiv" gab es nicht, die Fenster
+begannen bei sieben Tagen und hatten keine Obergrenze, und die Einsätze
+liefen nach Diensttag, während R38 den Beginn des Einsatzes bestellt hatte
+(Nr. 192). Jetzt gibt es eine Zählung, und die Seite sagt, welche.
+
+### Geändert
+
+- **Web: Drei Reiter — NutzerInnen · Einsätze · Geräte** (`?r=…`), ein
+  Menüeintrag. Betrieb behält seine sieben Einträge, die Seite heißt weiter
+  „Statistik". Über den Reitern die vier Kennzahlen, jede führt in ihren
+  Reiter; jeder Reiter hat dieselbe Form — links die Tabelle „… je
+  Zeitraum", rechts die Karte „was es gibt". **Warum Reiter und kein
+  Dashboard daneben:** Eine zweite Seite mit fast denselben Zahlen wären
+  zwei Wahrheiten gewesen (E-P5c-18).
+- **Web: Einsätze zählen ab ihrem Beginn** (`missions.started_at`), ohne
+  Demo-Konto, ohne Papierkorb, in fünf Fenstern von 24 Stunden bis zu einem
+  Jahr — **mit Obergrenze**: Ein Einsatz mit einem Beginn in der Zukunft
+  zählt nur unter „gesamt" (F-P5c-39). **Preis:** Ein Einsatz nach
+  Mitternacht gehört hier zum Tag seines Beginns, in der Statistik der
+  NutzerIn zum Dienst des Vortags; die Summen können um einzelne Einsätze
+  auseinanderliegen. Das Handbuch (12.2) sagt es.
+- **Web: „Aktiv"** heißt angemeldet **oder** ein echtes Gerät des Kontos hat
+  sich gemeldet (R38). Wer nur mit der Uhr arbeitet und sich nie im Browser
+  anmeldet, erschien bisher nur als „nicht angemeldet".
+- **Web: „Ohne Gerät" zählt nur echte Geräte** (Nr. 190). Das virtuelle
+  Gerät der Handeinträge entsteht beim ersten Formular, beim Import, beim
+  Schneiden und beim GPX-Import — wer ausschließlich von Hand dokumentierte,
+  fiel aus genau der Gruppe heraus, die die Kleinzeile meint.
+- **Web: Sortieren und „Als CSV" bleiben im Reiter Geräte** — die Verweise
+  tragen `r` (F-P5c-39).
+
+### Neu
+
+- **Web: Karte „Herkunft der Einsätze"** (letzte 30 Tage): Garmin-Uhr,
+  Android-Handy, Wear-OS-Uhr, Formular, Import, Schnitt — alle sechs, auch
+  mit 0 (Nr. 80, E-P5c-45). Summen einer vorhandenen Spalte, nur für die
+  BetreiberIn; die Datenschutz-Vorbedingung aus Nr. 80 gilt dafür nicht.
+- **Web: `HERKUNFT_TEXTE`** neben `HERKUNFT_WERTE` (`geraete_lib.php`), je
+  Herkunft eine kurze und eine lange Beschriftung. Die Plakette am Einsatz
+  liest die kurze — dieselben Wörter wie bisher —, die Statistik die lange.
+  **Nicht** daraus: die Werte des Exports; sie sind ein Dateiformat.
+- **Web: `statistik_lib.php`** — die Fenster und die eine Abfrage der
+  Einsätze. **Warum eine eigene Datei für eine Abfrage:** Der Messstand soll
+  genau die Abfrage der Seite erklären lassen, nicht eine nachgeschriebene.
+- **Web: Layoutregel `.form-raster-links-breit`** (3 : 2 ab 1200 px,
+  freigegeben mit M-P5c-01b; `Design.md` 9.26). Gleich geteilt lief die
+  Tabelle mit fünf Fenstern über — 40 px bei 1200, 20 px bei 1240; mit 3 : 2
+  bei 1200 bis 1440 px in drei Motoren 0 px.
+- **Web: Migration `2026_09_24_statistik_beginn`** — Index
+  `idx_missions_started (started_at)` (Nr. 191) und `idx_missions_deleted`,
+  **wo er fehlt**. Den zweiten legte bisher nur eine Migration aus Web 2.0.0
+  an; jede frisch eingerichtete Anlage hat sie als „übersprungen" verbucht und
+  den Index nie bekommen (gemessen an der Sandbox, F-P5c-124). Ihn nur in
+  `schema.sql` nachzutragen, wie geplant, hätte künftige Anlagen gleich
+  gemacht und jede bisherige frische ohne ihn gelassen. `schema.sql` führt
+  jetzt beide.
+- **Werkzeug: Messstand-Schritt `statistik`** (Anlass Nr. 295): drei Reiter
+  bei vollem Bestand, jeder unter einer Sekunde, und `EXPLAIN` der Abfragen
+  aus `statistik_lib.php` — rot, wenn eines verfehlt. Bilderlauf mit zwei
+  Seiten mehr (`?r=einsaetze`, `?r=geraete`); Geräteprobe Teil 7 hält
+  `HERKUNFT_TEXTE` gegen `HERKUNFT_WERTE`.
+- **Werkzeug: `geplant.txt` des Stilvergleichs neu geschrieben** (139
+  Signaturen). Dabei gefunden: Die Signatur eines Elements hängt an seiner
+  Nachbarschaft in der Probe — die längere Statistikseite verschob 23
+  Signaturen der Druckblätter aus AP5, die AP7 nicht anfasst (Backlog
+  **Nr. 321**). Aus demselben Grund steht das geschützte Leerzeichen vor „%"
+  in der Statistiktabelle im Markup und nicht als erbende Regel im
+  Stylesheet: Die hätte 116 fremde Signaturen verschoben.
+- **Werkzeug: Muster `statistik` in `pruefablauf.json`** (Betrieb →
+  Statistik und `statistik_lib.php` → Messstand und Bilderlauf) — **am Ende
+  der Muster**. Weiter vorn schob es die demo-empfindlichen Proben hinter den
+  Demo-Reset, und der erste Prüfstand war rot (Backlog **Nr. 322**).
+
+### Entfernt
+
+- **Web: die Zählung nach Diensttag auf dieser Seite** und die Zeile „Ø je
+  NutzerIn gesamt" (nicht im Bild M-P5c-01b). Die Statistik der NutzerIn
+  zählt weiter nach Diensttag — dort gehört ein Nachtdienst zu seinem Tag.
+
+**Was bewusst bleibt:** der Satz, dass Wear-OS-Uhren unter Geräte nicht
+erscheinen (Z-02) — das Bild zeigt ihn nicht, die Bauform verlangt ihn.
+
 ## [Web 20.46.0] — 2026-09-24
 
 **Der Health-Endpunkt.** P5c/AP6 (E-P5c-17, -52; R38). Nebenstufe **ohne

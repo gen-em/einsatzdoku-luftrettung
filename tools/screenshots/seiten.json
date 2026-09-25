@@ -406,7 +406,19 @@
       "name": "45a-betrieb-statistik",
       "gruppe": "Betrieb",
       "rolle": "admin",
-      "pfad": "betrieb_statistik.php"
+      "pfad": "betrieb_statistik.php?r=nutzer"
+    },
+    {
+      "name": "45a2-betrieb-statistik-einsaetze",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_statistik.php?r=einsaetze"
+    },
+    {
+      "name": "45a3-betrieb-statistik-geraete",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_statistik.php?r=geraete"
     },
     {
       "name": "46-betrieb-updates",

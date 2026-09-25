@@ -7518,6 +7518,17 @@ declare(strict_types=1);
  *   Fuer alle vier Rollen (E-RW-08) — Nr. 249 ist damit fuer den Fall
  *   geloest, dass die einzige BetreiberIn ihr Notfallblatt hat.
  *
+ * 20.47.0 — DIE STATISTIK MIT DREI REITERN (P5c/AP7, E-P5c-18, -45, -46;
+ *   R38). Nebenstufe MIT MIGRATION: ein Index auf `missions(started_at)`
+ *   (Nr. 191) und `idx_missions_deleted`, wo er fehlt (F-P5c-124) — nach
+ *   dem Deploy `update.php`, die Wartung bleibt an.
+ *   Betrieb -> Statistik zaehlt jetzt, wie R38 es bestellt hat: NutzerInnen,
+ *   Einsaetze und Geraete als Reiter, „aktiv" als angemeldet ODER ein echtes
+ *   Geraet hat sich gemeldet, Einsaetze ab ihrem Beginn in Fenstern mit
+ *   Obergrenze, „Ohne Geraet" nur ueber echte Geraete (Nr. 190) und die
+ *   Herkunft der Einsaetze aus einem Katalog `HERKUNFT_TEXTE`. Die Zaehlung
+ *   nach Diensttag ist auf dieser Seite entfallen (Nr. 192).
+ *
  * 20.46.0 — DER HEALTH-ENDPUNKT (P5c/AP6, E-P5c-17, -52). Nebenstufe ohne
  *   Migration. Ein fremdes Monitoring fragt `api/health.php?token=…` und
  *   bekommt 200 oder 503 mit acht Feldern — Datenbank, ausstehende Migration,
@@ -7529,4 +7540,4 @@ declare(strict_types=1);
  *   Speicheranteil kommt aus dem taeglichen Aufraeumjob, der die drei Anteile
  *   seither mitmerkt — ein Abruf je Minute wiegt keine Verzeichnisse.
  */
-const WEB_VERSION = '20.46.0';
+const WEB_VERSION = '20.47.0';

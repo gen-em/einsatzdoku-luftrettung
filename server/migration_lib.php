@@ -3267,6 +3267,43 @@ function migrationen_katalog(): array
                ADD COLUMN rw_seit        DATETIME NULL",
         ],
     ],
+    [
+        'id'    => '2026_09_24_statistik_beginn',
+        'web'   => '20.47',
+        'label' => 'Statistik: Indizes auf Beginn und Papierkorb der Einsätze (P5c/AP7, Nr. 191)',
+        /* EINE ZAEHLUNG AB BEGINN DES EINSATZES (E-P5c-18, R38). Die
+         * Statistik der BetreiberIn zaehlt seit Web 20.47.0 ueber alle Konten
+         * nach `missions.started_at`, in fuenf Fenstern mit Unter- UND
+         * Obergrenze. Der vorhandene Index `idx_user_started` fuehrt mit
+         * `user_id` und hilft einer Abfrage ueber alle Konten nicht; dieser
+         * fuehrt mit dem Beginn. Nr. 191 hat ihn seit S8 verlangt.
+         *
+         * UND DER PAPIERKORB-INDEX, WO ER FEHLT (F-P5c-39, F-P5c-124).
+         * `idx_missions_deleted` legte bis Web 20.46.0 nur die Migration
+         * `2026_07_22_papierkorb` an; `schema.sql` kannte ihn nicht, und jede
+         * FRISCH eingerichtete Anlage hat die Migration als 'skipped' ohne
+         * ihn. Ihn nur in `schema.sql` nachzutragen machte kuenftige Anlagen
+         * gleich und liesse jede bisherige frische ohne ihn — gemessen an der
+         * Sandbox. Deshalb legt diese Migration ihn dort nach, wo er fehlt.
+         *
+         * `run` statt `sql`, weil jeder Index nur angelegt wird, wenn er
+         * fehlt: Eine migrierte Anlage hat den zweiten schon, und ein
+         * doppeltes `ADD INDEX` bricht mit „Duplicate key name" ab. `skip`
+         * fragt nach beiden. Nicht zerstoerend — ein Index kostet Platz,
+         * keine Daten. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_index($pdo, 'missions', 'idx_missions_started')
+                && db_hat_index($pdo, 'missions', 'idx_missions_deleted');
+        },
+        'run'   => function (PDO $pdo): void {
+            if (!db_hat_index($pdo, 'missions', 'idx_missions_started')) {
+                $pdo->exec("ALTER TABLE missions ADD INDEX idx_missions_started (started_at)");
+            }
+            if (!db_hat_index($pdo, 'missions', 'idx_missions_deleted')) {
+                $pdo->exec("ALTER TABLE missions ADD INDEX idx_missions_deleted (user_id, deleted_at)");
+            }
+        },
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

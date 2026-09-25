@@ -10,13 +10,15 @@ gegen die Zielzahlen aus E-S2-24 gehalten.
 cd tools/messstand && python3 messen.py --frisch   # --schritte · --einsaetze
 ```
 
-Sechs Schritte: `konto` `einspielen` `vervielfaeltigen` `server` `browser`
-`edbak`. `--schritte server` fährt einen einzelnen.
+Sieben Schritte: `konto` `bestand` `einspielen` `browser` `server`
+`statistik` `protokoll`. `--schritte server` fährt einen einzelnen.
 
 ## Was es misst
 
 Antwortzeiten und Speicher der Serverwege, dieselben im Browser (Halde,
-JSON, PBKDF2), und den `.edbak`-Umlauf bei voller Größe. Der Bestand
+JSON, PBKDF2), und den `.edbak`-Umlauf bei voller Größe. `statistik`
+(**Anlass: Nr. 295**): Betrieb → Statistik, drei Reiter unter 1 s, und
+`EXPLAIN` der Abfragen aus `statistik_lib.php` — **rot**, wenn eines verfehlt. Der Bestand
 entsteht aus dem Referenzdatensatz und wird vervielfältigt — **nicht
 erfunden**, damit die Verteilung der Daten stimmt.
 

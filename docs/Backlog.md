@@ -148,8 +148,8 @@ des Abschlusses); **294 bis 303 und 319 bis 328** der P5c-Zweig
 `claude/p5c-mockups-konzept-4yeomf` — 294 Konzept SD (Sammelpunkt), 295 bis
 298 die Anlässe aus der Zuarbeit von Konzept BR (Konzept P5c, E-P5c-86), 299
 und 300 Funde aus AP4, 302, 303, 319 und 320 die nachgetragenen Anlässe aus
-dem Aufnehmen von BR (E-P5c-116), 301 für AP5b (Konzept RW), der Rest frei
-für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
+dem Aufnehmen von BR (E-P5c-116), 301 für AP5b (Konzept RW), 321 ein Fund
+und 322 Funde aus AP7 (Stilvergleich, Reihenfolge des Prüfstands), der Rest frei für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
 dazu: Die erste reichte nicht mehr, und 304 bis 318 hatte BR inzwischen
 vergeben. *(Bis zum 23.09.2026
 stand hier 283; 283 bis 285 sind seither auf `main`, **286 und 287** vergibt
@@ -1025,6 +1025,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Zuordnung (20.09.2026): 10c, AP7** — die Auswertung wird Teil der Betriebslage (Konzept P5c, E-P5c-18).
 
+    **Vermerk 24.09.2026 (Web 20.47.0, P5c/AP7):** Die **Herkunft je
+    Einsatz** wird gezählt — Betrieb → Statistik, Reiter *Einsätze*, Karte
+    „Herkunft der Einsätze" (letzte 30 Tage, alle sechs Werte, auch mit 0),
+    ohne die Vorbedingung (E-P5c-45). Das „Betriebslage-Dashboard" ist diese
+    Seite mit drei Reitern; einen eigenen Namen oder Menüeintrag bekommt es
+    nicht (E-P5c-18). **Die User-Agent-Hälfte bleibt gestrichen**
+    (Vermerk 23.09.2026). Nicht ausgewertet wird weiterhin die Momentaufnahme
+    am Einsatz (`missions.geraet_art`) — für sie gilt die Vorbedingung oben
+    unverändert, bestellt ist sie nicht.
+
 90. **Der Simulator kann keinen Verbindungsabriss herstellen.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
     Der Rundlauf der Uhr-Kopplung sollte sechs Fälle belegen; der sechste —
@@ -1671,106 +1681,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nummer als Anlass. Sie misst Verweise aus der Anwendung ins Handbuch —
     einen Teil dieses Punkts, nicht die Dokumentenprobe selbst.
 
-190. **Die Statistikseite lässt das virtuelle Gerät stehen — „Ohne Gerät"
-    zählt zu niedrig.**
-    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
-    `server/db.php` führt die Konstante `GERAETE_ECHT_SQL`
-    (`device_id NOT LIKE 'manual-%'`), damit das virtuelle Gerät der
-    Handeinträge an **einer** Stelle beschrieben ist. Fünf Abfragen benutzen
-    sie — zweimal `db.php`, dazu `einstellungen.php`, `admin_demo.php` und
-    `tools/referenzdatensatz/fixture/erzeugen.php`. Drei schreiben das `LIKE`
-    von Hand (`admin_users.php`, `admin_user.php` und die Geräteabfrage in
-    `betrieb_statistik.php`), und **eine hat gar keine Bedingung**: die
-    Kontenabfrage derselben Datei, aus der die Zeile „Ohne Gerät" kommt. Sie
-    fragt schlicht `NOT EXISTS (SELECT 1 FROM devices …)`.
-
-    **Das ist eine falsche Zahl, kein Schönheitsfehler.** Das virtuelle Gerät
-    ist eine echte `devices`-Zeile (Bezeichnung „Manuelle Einträge",
-    `active = 0`) und entsteht an **vier** Stellen: beim ersten Handeintrag
-    (`einsatz_form.php`), beim CSV-Import (`api/import_commit.php`), beim
-    Schneiden (`api/schneiden.php`) und beim GPX-Import
-    (`api/gpx_import.php`) — viermal derselbe `$devKey`. (`db.php` sagt es
-    **nicht**: Der Kopf der Konstanten ist eine Zeile, und der Kopf von
-    `geraete_des_kontos()` nennt zwei Anlässe — „von Hand anlegt oder
-    importiert" —, das Schneiden gar nicht.)
-    Wer ausschließlich von Hand dokumentiert oder auch nur einmal eine
-    GPX-Datei einliest, hat damit eine Gerätezeile und fällt aus „Ohne Gerät"
-    heraus. Ausgerechnet aus der Gruppe, deren Kleinzeile „sie tragen von
-    Hand nach" genau diese Menschen meint.
-
-    **Weg:** `GERAETE_ECHT_SQL` in beide Abfragen der Statistikseite; die
-    beiden handgeschriebenen Zwillinge in `admin_users.php` und
-    `admin_user.php` filtern zwar richtig, gehören aber in denselben Griff.
-
-    **Zuordnung (23.09.2026): 10c AP7** — als Beifang, weil AP7 die
-    Statistikseite ohnehin umbaut (E-P5c-46).
-    Danach steht das Muster an einer Stelle statt an vieren. *Abnahme:* Ein
-    Konto ohne gekoppeltes Gerät, aber mit einem Handeintrag steht in „Ohne
-    Gerät"; die Kachel „Geräte" ändert sich dabei nicht. Zuordnung:
-    **Backlog-Runde.**
-
-191. **Der von R38 bestellte Index auf `missions(started_at)` ist nie gelegt
-    worden.**
-    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
-    R38 bestellt für die Einsatzzählung des Betriebslage-Dashboards wörtlich
-    einen Index auf `missions(started_at)` und begründet ihn: „der vorhandene
-    führt mit `user_id` und trägt die kontenübergreifende Zählung nicht"
-    (`docs/Rahmenplan-Archiv.md`, R38). `server/schema.sql` führt an
-    `missions` genau `uq_dev_ref`, `idx_user_started (user_id, started_at)`
-    und `idx_day` — mehr nicht.
-
-    **Warum das bis heute niemandem auffiel:** Die Statistikseite aus S8
-    zählt nach **Diensttag** (`days.day`) und kommt ohne ihn aus. Das
-    Dashboard nach R38 zählt nach `started_at` und braucht ihn — er ist die
-    einzige Schemaarbeit, die der Minimalumfang überhaupt vorschreibt.
-    Vorziehen muss man ihn nicht: Ohne die Zählung, für die er da ist, kostet
-    er nur Schreiblast. Er hängt außerdem an **Nr. 192** — nötig ist er nur,
-    wenn dort `started_at` gewinnt. *Abnahme:* Die Migration liegt, und
-    `EXPLAIN` zeigt den Index an einer kontenübergreifenden Zeitraumzählung.
-    Zuordnung: **P5**, mit dem Dashboard.
-
-    **Zuordnung (20.09.2026): 10c, AP7** — der Index wird mit der Betriebslage gelegt (E-P5c-18).
-
-192. **R38 und die Statistikseite aus S8 zählen Verschiedenes — „aktiv", die
-    Fenster und die Zählgröße.**
-    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
-    Der feste Minimalumfang des Betriebslage-Dashboards (R38) legt drei Dinge
-    fest, und die gebaute Seite macht alle drei anders. Das ist zunächst kein
-    Fehler: Die Seite **setzt R38 nicht um** — sie ist der nach E-S8-05
-    vorgezogene Teil von Nr. 80 und beantwortet eine andere Frage („was trägt
-    diese Installation"). Entsteht das Dashboard aber, stehen zwei Zählweisen
-    nebeneinander, und das wären zwei Wahrheiten.
-
-    | R38 verlangt | Die Seite tut |
-    |---|---|
-    | „aktiv" = `users.last_login` **oder** `devices.last_seen` im Fenster | zwei getrennte Zeilen in zwei Karten, nie verodert |
-    | Konten in **24 h / 7 T / 30 T**, Einsätze in **24 h / 7 T / 30 T / 6 M / 1 J** | drei Fenster, **7 / 30 / 180 Tage** (`STAT_ZEITRAEUME`) |
-    | Einsätze nach `started_at`, **nicht** `created_at` — „ein Alt-Import verzerrte sonst die Aktivität" | nach **Diensttag** (`days.day`), im Kopfkommentar ausdrücklich begründet |
-
-    Die dritte Zeile ist die unangenehmste: Hier stehen sich **zwei
-    ausformulierte Begründungen** gegenüber, nicht eine Vorgabe und ein
-    Versehen. Und die erste hat eine Wirkung, die R38 ausdrücklich verhindern
-    wollte — wer nur mit der Uhr arbeitet und sich nie anmeldet, erscheint
-    unter „Zuletzt angemeldet" als tot.
-
-    **Nr. 122 berührt dieselben drei Fenster** („Freie Zeiträume und
-    Diagramme in der Statistik") — verlangt aber etwas anderes, nämlich frei
-    wählbare Zeiträume, und nennt den Widerspruch zu R38 nicht. Zu
-    entscheiden, **bevor** das Dashboard gebaut wird: ob die Seite nachzieht
-    oder R38 berichtigt wird. Beides ist vertretbar, beides nebeneinander
-    stehen zu lassen nicht. *Abnahme:* Die Entscheidung steht im Rahmenplan,
-    und R38 und die Seite beschreiben dieselbe Zählung. Zuordnung:
-    **Entscheidung in einer Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
-
-    **Zuordnung (20.09.2026): 10c, AP7** — die Zählung heißt dort sichtbar „Bestand" (E-P5c-18).
-    *(Überholt, vermerkt 23.09.2026: Die Zählung heißt nicht „Bestand" — der
-    Absatz darunter gilt.)*
-
-
-    **Zuordnung (20.09.2026): erledigt sich mit 10c AP7.** Dort entsteht
-    eine **Zählung ab Beginn des Einsatzes** (E-P5c-18) — damit ist die
-    Zählgröße entschieden, und die beiden Zählweisen stehen nicht mehr
-    nebeneinander.
 193. **Register und Doku führen die R42-Auswertung als offen, obwohl sie
     seit Web 15.3.0 läuft.**
     *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
@@ -3832,6 +3742,50 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die `"\d"` enthält; `pysyntax` im Tor ohne Warnung. Klein, kein Risiko
     für die Anwendung. **Zuordnung: Backlog-Runde** (Vorschlag; oder das
     nächste Paket, das `tools/quelltext/` anfasst).
+
+321. **Der Stilvergleich meldet unveränderte Stile als ungeplant, sobald eine
+    andere Seite Elemente dazubekommt.** *Aufgenommen 24.09.2026 in P5c/AP7
+    (F-P5c-126), gemessen.* AP7 baut die Statistikseite um und ergänzt eine
+    CSS-Regel. `gegen.sh` meldete danach **38 ungeplante** Signaturen und
+    **31 geplante, aber nicht gemessene** — 23 davon an den Druckblättern aus
+    AP5, deren Stile AP7 nicht anfasst. Gegenproben: mit der neuen Regel, aber
+    der **alten** Statistikseite genau **eine** ungeplante (die neue Regel);
+    auf dem sauberen Stand davor **0 / 0**. Die Signaturen hängen also nicht nur
+    an den beiden Stylesheets, sondern an der **Nachbarschaft** eines Elements
+    in der Probe `seiten.html`: Eine Seite, die wächst, verschiebt die
+    Stückelung (`chunks.py`), und dasselbe Element bekommt eine andere
+    Eigenschaftsliste. Gelöst ist AP7 auf dem vorgesehenen Weg
+    (`--schreiben`, 139 / 139); die Ursache nicht. **Folge:** Jede künftige
+    Seite mit mehr Markup kann `geplant.txt` für Stellen umwerfen, die sie nicht
+    berührt, und wer die Meldung liest, sucht an der falschen Stelle.
+
+    *Weg:* die Probe so bauen, dass jede Seite ein eigenes Stück bekommt
+    (oder die Signatur ohne geerbte Eigenschaften bilden, die aus dem
+    Stückkontext kommen); dazu ein Fall in der Selbstprobe: eine Seite um
+    hundert Elemente verlängert, die übrigen Signaturen unverändert.
+    *Abnahme:* die Gegenprobe oben — eine fremde Seite wächst, der Vergleich
+    bleibt 0 / 0. **Zuordnung: Backlog-Runde** (Prüfmittel, Anlass für
+    `tools/stilvergleich/`).
+
+322. **Welche Probe der Demo-Reset trifft, entscheidet die Reihenfolge der
+    Muster.** *Aufgenommen 24.09.2026 in P5c/AP7 (F-P5c-127), gemessen.* Der
+    Demo-Bestand wird alle 30 Minuten neu eingespielt, und seine Einsätze
+    bekommen neue Kennungen. Ein Prüfstand der Hauptstufe dauert rund 39
+    Minuten; der Reset fällt also in jeden Lauf. Wen er trifft, hängt davon
+    ab, welche Probe um diese Zeit läuft — und die Reihenfolge der Proben ist
+    die ihres ersten Auftretens in den Mustern von `pruefablauf.json`. Ein
+    neues Muster weit vorn mit Messstand und Bilderlauf (AP7) schob die
+    Bedienprobe (51 / 55) und die GPX-Probe (204 von 204 ohne Gegenstück)
+    hinter die Marke; am Ende eingereiht, liefen beide grün. **Die
+    Reihenfolge ist damit eine Voraussetzung, die nirgends steht**, und wer
+    ein Muster ergänzt, verschiebt sie, ohne es zu merken.
+
+    *Weg:* entweder der Prüfstand hält den Demo-Reset für die Dauer des
+    Laufs an (eine Marke, die der Job liest, wie die Sperre des Demo-Resets
+    in F-P5c-117), oder `pruefablauf.json` bekommt eine ausdrückliche
+    Reihenfolge der demo-empfindlichen Proben (`nach`), und `auswahl.py
+    --selbstprobe` prüft sie. *Abnahme:* ein Muster mit Messstand ganz vorn,
+    der Prüfstand bleibt grün. **Zuordnung: Backlog-Runde** (Prüfmittel).
 
 ## Erledigt
 
@@ -10579,3 +10533,127 @@ zutreffen.
     Das Prüfkonto hat einen echten Zweitfaktor mit einem Geheimnis, das ein
     Rechner je Sprache kennt (E-P5c-43). Nachweis: jeder Lauf, der sich
     anmeldet; die Rechner gegen den RFC-Vektor in der Zweitfaktorprobe.
+
+190. **Die Statistikseite lässt das virtuelle Gerät stehen — „Ohne Gerät"
+    zählt zu niedrig.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    `server/db.php` führt die Konstante `GERAETE_ECHT_SQL`
+    (`device_id NOT LIKE 'manual-%'`), damit das virtuelle Gerät der
+    Handeinträge an **einer** Stelle beschrieben ist. Fünf Abfragen benutzen
+    sie — zweimal `db.php`, dazu `einstellungen.php`, `admin_demo.php` und
+    `tools/referenzdatensatz/fixture/erzeugen.php`. Drei schreiben das `LIKE`
+    von Hand (`admin_users.php`, `admin_user.php` und die Geräteabfrage in
+    `betrieb_statistik.php`), und **eine hat gar keine Bedingung**: die
+    Kontenabfrage derselben Datei, aus der die Zeile „Ohne Gerät" kommt. Sie
+    fragt schlicht `NOT EXISTS (SELECT 1 FROM devices …)`.
+
+    **Das ist eine falsche Zahl, kein Schönheitsfehler.** Das virtuelle Gerät
+    ist eine echte `devices`-Zeile (Bezeichnung „Manuelle Einträge",
+    `active = 0`) und entsteht an **vier** Stellen: beim ersten Handeintrag
+    (`einsatz_form.php`), beim CSV-Import (`api/import_commit.php`), beim
+    Schneiden (`api/schneiden.php`) und beim GPX-Import
+    (`api/gpx_import.php`) — viermal derselbe `$devKey`. (`db.php` sagt es
+    **nicht**: Der Kopf der Konstanten ist eine Zeile, und der Kopf von
+    `geraete_des_kontos()` nennt zwei Anlässe — „von Hand anlegt oder
+    importiert" —, das Schneiden gar nicht.)
+    Wer ausschließlich von Hand dokumentiert oder auch nur einmal eine
+    GPX-Datei einliest, hat damit eine Gerätezeile und fällt aus „Ohne Gerät"
+    heraus. Ausgerechnet aus der Gruppe, deren Kleinzeile „sie tragen von
+    Hand nach" genau diese Menschen meint.
+
+    **Weg:** `GERAETE_ECHT_SQL` in beide Abfragen der Statistikseite; die
+    beiden handgeschriebenen Zwillinge in `admin_users.php` und
+    `admin_user.php` filtern zwar richtig, gehören aber in denselben Griff.
+
+    **Zuordnung (23.09.2026): 10c AP7** — als Beifang, weil AP7 die
+    Statistikseite ohnehin umbaut (E-P5c-46).
+    Danach steht das Muster an einer Stelle statt an vieren. *Abnahme:* Ein
+    Konto ohne gekoppeltes Gerät, aber mit einem Handeintrag steht in „Ohne
+    Gerät"; die Kachel „Geräte" ändert sich dabei nicht. Zuordnung:
+    **Backlog-Runde.**
+
+    **Erledigt mit Web 20.47.0 (P5c/AP7, 24.09.2026).** „Ohne Gerät" zählt
+    nur noch echte Geräte (`geraete_echt_sql('d')`); die Geräteabfrage der
+    Seite benutzt denselben Helfer statt des handgeschriebenen `LIKE`. Die
+    beiden Zwillinge in `admin_users.php` und `admin_user.php` bleiben — sie
+    filtern richtig, und AP7 baut sie nicht um. Nachweis im Prüfdokument P5c,
+    Abschnitt 1f (ein Konto mit Handeintrag, aber ohne Gerät, steht unter
+    „Ohne Gerät"; die Kachel „Geräte" bleibt).
+
+191. **Der von R38 bestellte Index auf `missions(started_at)` ist nie gelegt
+    worden.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    R38 bestellt für die Einsatzzählung des Betriebslage-Dashboards wörtlich
+    einen Index auf `missions(started_at)` und begründet ihn: „der vorhandene
+    führt mit `user_id` und trägt die kontenübergreifende Zählung nicht"
+    (`docs/Rahmenplan-Archiv.md`, R38). `server/schema.sql` führt an
+    `missions` genau `uq_dev_ref`, `idx_user_started (user_id, started_at)`
+    und `idx_day` — mehr nicht.
+
+    **Warum das bis heute niemandem auffiel:** Die Statistikseite aus S8
+    zählt nach **Diensttag** (`days.day`) und kommt ohne ihn aus. Das
+    Dashboard nach R38 zählt nach `started_at` und braucht ihn — er ist die
+    einzige Schemaarbeit, die der Minimalumfang überhaupt vorschreibt.
+    Vorziehen muss man ihn nicht: Ohne die Zählung, für die er da ist, kostet
+    er nur Schreiblast. Er hängt außerdem an **Nr. 192** — nötig ist er nur,
+    wenn dort `started_at` gewinnt. *Abnahme:* Die Migration liegt, und
+    `EXPLAIN` zeigt den Index an einer kontenübergreifenden Zeitraumzählung.
+    Zuordnung: **P5**, mit dem Dashboard.
+
+    **Zuordnung (20.09.2026): 10c, AP7** — der Index wird mit der Betriebslage gelegt (E-P5c-18).
+
+    **Erledigt mit Web 20.47.0 (P5c/AP7, 24.09.2026).** Migration
+    `2026_09_24_statistik_beginn` legt `idx_missions_started (started_at)`
+    und `idx_missions_deleted`, wo er fehlt — den hatten bis dahin nur
+    migrierte Anlagen (F-P5c-39, -124); `schema.sql` führt beide für frische
+    Anlagen. `EXPLAIN` der Abfrage aus `statistik_lib.php` misst der
+    Messstand (Schritt `statistik`). **Nach dem Deploy `update.php`, die
+    Wartung bleibt an.**
+
+192. **R38 und die Statistikseite aus S8 zählen Verschiedenes — „aktiv", die
+    Fenster und die Zählgröße.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    Der feste Minimalumfang des Betriebslage-Dashboards (R38) legt drei Dinge
+    fest, und die gebaute Seite macht alle drei anders. Das ist zunächst kein
+    Fehler: Die Seite **setzt R38 nicht um** — sie ist der nach E-S8-05
+    vorgezogene Teil von Nr. 80 und beantwortet eine andere Frage („was trägt
+    diese Installation"). Entsteht das Dashboard aber, stehen zwei Zählweisen
+    nebeneinander, und das wären zwei Wahrheiten.
+
+    | R38 verlangt | Die Seite tut |
+    |---|---|
+    | „aktiv" = `users.last_login` **oder** `devices.last_seen` im Fenster | zwei getrennte Zeilen in zwei Karten, nie verodert |
+    | Konten in **24 h / 7 T / 30 T**, Einsätze in **24 h / 7 T / 30 T / 6 M / 1 J** | drei Fenster, **7 / 30 / 180 Tage** (`STAT_ZEITRAEUME`) |
+    | Einsätze nach `started_at`, **nicht** `created_at` — „ein Alt-Import verzerrte sonst die Aktivität" | nach **Diensttag** (`days.day`), im Kopfkommentar ausdrücklich begründet |
+
+    Die dritte Zeile ist die unangenehmste: Hier stehen sich **zwei
+    ausformulierte Begründungen** gegenüber, nicht eine Vorgabe und ein
+    Versehen. Und die erste hat eine Wirkung, die R38 ausdrücklich verhindern
+    wollte — wer nur mit der Uhr arbeitet und sich nie anmeldet, erscheint
+    unter „Zuletzt angemeldet" als tot.
+
+    **Nr. 122 berührt dieselben drei Fenster** („Freie Zeiträume und
+    Diagramme in der Statistik") — verlangt aber etwas anderes, nämlich frei
+    wählbare Zeiträume, und nennt den Widerspruch zu R38 nicht. Zu
+    entscheiden, **bevor** das Dashboard gebaut wird: ob die Seite nachzieht
+    oder R38 berichtigt wird. Beides ist vertretbar, beides nebeneinander
+    stehen zu lassen nicht. *Abnahme:* Die Entscheidung steht im Rahmenplan,
+    und R38 und die Seite beschreiben dieselbe Zählung. Zuordnung:
+    **Entscheidung in einer Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
+
+    **Zuordnung (20.09.2026): 10c, AP7** — die Zählung heißt dort sichtbar „Bestand" (E-P5c-18).
+    *(Überholt, vermerkt 23.09.2026: Die Zählung heißt nicht „Bestand" — der
+    Absatz darunter gilt.)*
+
+
+    **Zuordnung (20.09.2026): erledigt sich mit 10c AP7.** Dort entsteht
+    eine **Zählung ab Beginn des Einsatzes** (E-P5c-18) — damit ist die
+    Zählgröße entschieden, und die beiden Zählweisen stehen nicht mehr
+    nebeneinander.
+
+    **Erledigt mit Web 20.47.0 (P5c/AP7, 24.09.2026).** Die Seite zählt jetzt
+    so, wie R38 es verlangt: „aktiv" als `last_login` **oder**
+    `devices.last_seen` eines echten Geräts, Fenster 24 h / 7 T / 30 T (Konten)
+    und 24 h / 7 T / 30 T / 6 M / 1 J (Einsätze), Einsätze ab `started_at` —
+    mit Obergrenze. Die Zählung nach Diensttag ist auf dieser Seite entfallen;
+    es gibt keine zwei Zählweisen mehr nebeneinander (E-P5c-18).

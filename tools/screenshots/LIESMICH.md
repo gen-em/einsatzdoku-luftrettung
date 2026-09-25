@@ -26,8 +26,8 @@ Wartungsseiten `--jobs-token`. **Ohne Token bricht der Lauf ab.**
 
 ## Erwartete Zahl
 
-Voller Lauf: **544 Einzelbilder, 68 Kontaktbögen, Überlauf 0, Knöpfe
-falscher Höhe 0, 177 Karten / 0 außerhalb** (24.09.2026, nach dem Aufnehmen von BR). Selbstproben offline:
+Voller Lauf: **560 Einzelbilder, 70 Kontaktbögen, Überlauf 0, Knöpfe
+falscher Höhe 0, 180 Karten / 0 außerhalb** (24.09.2026, P5c/AP7: drei Reiter der Statistik). Selbstproben offline:
 `aufnehmen.mjs` **15 von 15**, `vergleichen.py` **14 von 14**.
 
 ## Was es nicht kann

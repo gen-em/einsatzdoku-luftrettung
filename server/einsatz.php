@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/mission_fields_lib.php';   // mf_pat_felder() (S9/AP7)
 require_once __DIR__ . '/einsatz_lib.php';
+require_once __DIR__ . '/geraete_lib.php';     // HERKUNFT_TEXTE (P5c/AP7)
 
 // Einsatz-ID einlesen und Eigentum pruefen (liefert auch den Diensttag fuer die
 // Seitenleiste). Ohne Treffer: sauberes 404.
@@ -577,9 +578,10 @@ async function init(){
      Client, den diese Fassung noch nicht kennt. Ihn als „Uhr" auszuweisen
      waere falsch und nicht als falsch zu erkennen — der Rohwert ist unschoen
      und sagt der Leserin, dass hier eine Beschriftung fehlt. */
-  const ORIGIN_LABEL = { watch: 'Uhr', android: 'Handy', wear: 'Wear',
-                         manual: 'manuell', import: 'importiert',
-                         schnitt: 'Schnitt' };
+  /* Die Woerter stehen seit Web 20.47.0 im Katalog `HERKUNFT_TEXTE`
+     (`geraete_lib.php`, P5c/AP7) — dieselben, die hier standen; die Statistik
+     liest dort die lange Form. */
+  const ORIGIN_LABEL = <?= json_js(array_map(static fn(array $t): string => $t['kurz'], HERKUNFT_TEXTE)) ?>;
   /* `hat_ende`, nicht `has_p9` (Web 14.2.2, F-R64-05): Ob eine Endzeit
      dasteht, entscheidet das ENDE des Einsatzes und nicht, ob jemand die
      Phase 9 gesetzt hat. Ein geschnittener Einsatz hat keine Phase 9 und

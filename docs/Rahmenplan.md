@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 118 (24.09.2026)** — dieses Dokument steuert das Programm:
+**Fassung 119 (24.09.2026)** — dieses Dokument steuert das Programm:
 Reihenfolge, Status, programmweite Entscheidungen. Es hält nur, was für die
 nächsten Schritte gebraucht wird. Der eingefrorene Altbestand — die
 Fassungsvermerke, die Phasentexte mit ihren Umsetzungsblöcken und die 50
@@ -1990,6 +1990,7 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | **Nach dem Merge des 10c-PR: `update.php` aufrufen** — Migrationen aus AP4, AP5, AP5b, AP7 und AP8; die Wartung bleibt bis dahin an. **Bis 10c ausgeliefert ist, legt niemand ein Konto mit der Rolle admin an** (E-P5c-31, Nr. 286) | 10c | nach dem Merge |
 | **Prüfliste P5c/AP1** (`docs/konzepte/Pruefdokument-P5c-Rollen-Sicherheit-Betriebslage.md`): Staging rot nach dem Merge, Produktiv blau nach dem Tag, eine Rundmail in einem echten Postfach | 10c AP1 | nach Merge und Tag |
 | **Prüfliste P5c/AP2** (dasselbe Prüfdokument): auf Staging nach sieben Tagen das erste Archiv unter Verwaltung → Protokoll → Archiv, Plakette „auf dem Ziel" nach dem nächsten Versand, einmal herunterladen und in die `.jsonl` schauen (keine IP-Adresse im Reiter Sicherheit) — **ob der Job ohne Cron in einer Woche drankommt**, zeigt nur die Anlage | 10c AP2 | nach dem Merge, eine Woche danach |
+| **Prüfliste P5c/AP7** (dasselbe Prüfdokument, P-P5c-32 bis -34): nach `update.php` auf Staging `SHOW INDEX FROM missions` und ein `EXPLAIN` in phpMyAdmin (beide Indizes da, die Herkunftsabfrage über `idx_missions_started`); die drei Reiter der Statistik an echten Zahlen, Sortieren bleibt im Reiter Geräte; die Seite am Handy | 10c AP7 | nach Merge und `update.php`, Produktiv nach dem Tag |
 | **`tools/stilvergleich/geplant.txt` leeren** — die Liste der geplanten Stilabweichungen gilt gegen den Vergleichsstand vor dem Merge (E-P5c-74). Die erste Instanz nach dem Merge des 10c-PR, die `style.css` berührt, bekommt ihre Zeilen sonst als „geplant, aber nicht gemessen" rot genannt. Keine Zuarbeit der Betreiberin, sondern der nächste Arbeitszweig | 10c AP1 | nach dem Merge des 10c-PR |
 
 ### 6a. Staging einrichten — die Reihenfolge, in der es geht
@@ -3700,6 +3701,7 @@ P5c.
 
 | Fassung | Datum | Was |
 |---|---|---|
+| **119** | **24.09.2026** | Abschnitt 6: neu die Zuarbeit **Prüfliste P5c/AP7** (P-P5c-32 bis -34) — Migration und Index auf Staging, die drei Reiter der Statistik an echten Zahlen, die Seite am Handy. Anlass: P5c/AP7 (Web 20.47.0, mit Migration; `update.php` steht in der Zeile „Nach dem Merge des 10c-PR" schon mit AP7). |
 | **118** | **24.09.2026** | Abschnitt 6, **Berichtigung:** Die Zuarbeit `betrieb.health_token` stand auf „vor 10c AP6" — AP6 wird ohne sie gebaut und geprüft (die Ratenprobe stellt ihren eigenen Token), wirksam wird der Eintrag erst mit der ausgelieferten Fassung. Die Zeile nennt jetzt „nach dem Merge (Staging) und nach dem Tag (Produktiv)", das Runbook und die Prüfpunkte P-P5c-29 bis -31. Anlass: P5c/AP6 (Web 20.46.0, Health-Endpunkt). |
 | **117** | **24.09.2026** | **Konzept RW liegt vor (24.09.2026, Zweig `claude/nice-lovelace-snlo8m`), Zuarbeit erledigt — und AP5b ist gebaut:** der Rückweg beim Zweitfaktor über den Wiederherstellungsschlüssel, RW-01 bis RW-04, Web 20.43.0 bis 20.45.0, **mit Migration** (drei Spalten an `users`). Abschnitt 6: die Zuarbeit „Einschubkonzept RW" erledigt; die Zeile „Demo-Fixture neu erzeugen", die Konzept RW ankündigte, **entfällt** (E-RW-15 — das Demo-Konto bekommt kein Paar); neu die **Prüfpunkte P-RW-01 bis -05**; `update.php` nach dem Merge nennt die Migration aus AP5b mit. |
 | **116** | **24.09.2026** | **Der P5c-Zweig hat `main` aufgenommen (Konzept BR, PR #85 und #86)** — auf dem Weg aus `Pruefablauf.md` 5.3, als eigener Schritt vor RW-04 (E-P5c-115). Abschnitt 6 trägt jetzt die Prüfliste BR und die offenen Fragen aus Konzept BR neben den Zeilen von P5c. **Berichtigung:** Die Fassung 112 des P5c-Zweigs (Zuarbeit „Einschubkonzept RW", Zeile oben) heißt jetzt **115** — `main` hatte 112 für BR vergeben (E-BR-20), und dieselbe Regel wie bei den Backlog-Nummern gilt: `main` behält seine Nummer, der Zweig weicht. Wer einen Commit des Zweigs vor dem Aufnehmen liest, liest dort die alte Zählung; die Fassung 113 (P5c/AP5) bleibt, weil BR sie ausgelassen hat. |

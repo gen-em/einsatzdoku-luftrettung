@@ -12,6 +12,9 @@ AP1; jedes Paket schreibt seinen Abschnitt fort.
 
 | Was | Warum nicht | Wann dann |
 |---|---|---|
+| **`EXPLAIN` und die Migration auf Staging** (AP7) | Örtlich gemessen: Migration über Betrieb → Updates, beide Indizes angelegt, Wartung an (1f); `EXPLAIN` der Herkunftsabfrage über `idx_missions_started`. Ob MySQL auf Staging denselben Plan wählt, hängt an Fassung und Bestand. | nach Merge und `update.php`: P-P5c-32 |
+| **Die Zahlen an einem echten Bestand** (AP7) | Nachgerechnet ist die Seite gegen unabhängiges SQL an einem gestellten Bestand (Messstand, Referenzbestand, Demo, Papierkorb, künftige Einsätze). Ob die Zahlen auf Produktiv zur Erfahrung der BetreiberIn passen, sieht nur sie. | P-P5c-33 |
+| **Die drei Reiter in Firefox und WebKit als Bild** (AP7, Nr. 300) | Der Bilderlauf fährt Chromium. Von Hand gemessen ist in allen drei Motoren der Überlauf bei 1200 bis 1440 px (36 Messungen, 0), nicht das Bild in acht Breiten. | P-P5c-34 (Handy) |
 | **Ein echtes Monitoring gegen den Health-Endpunkt** (AP6) | Die Arbeitsumgebung hat keines und erreicht Staging nicht. Belegt ist der Endpunkt mit `curl` gegen die örtliche Anlage: 403 dreimal mit gleicher Dauer, 200 mit genau den acht Feldern, 503 bei ausstehender Migration und aus dem Tor in der Wartung, 429 ab dem 61. Abruf (1e). Ob ein Uptime-Dienst die Antwort so liest, wie das Runbook es sagt, zeigt erst ein echter. | nach dem Merge: P-P5c-29 |
 | **`speicher_pct` mit den Grenzen eines echten Hosters** (AP6) | Örtlich stehen die Kontingente, die die Sandbox einträgt; der Wert ist gegen `speicher_messen()` gerechnet (1e). Ob er zu dem passt, was der Hoster anzeigt, sieht nur, wer beide nebeneinander legt. | P-P5c-30 |
 | **Der Zweitfaktor mit einer echten Authenticator-App** (AP5) | Die Arbeitsumgebung hat kein Handy. Belegt ist, dass der QR-Code die angezeigte `otpauth://`-Adresse trägt (jsQR liest den Abzug, gleich) und dass drei eigene Rechner nach RFC 6238 dieselben Codes bilden wie der Server (6 / 6 Vektoren) — nicht, dass eine bestimmte App die Adresse annimmt, Aussteller und Konto richtig zeigt und mit der Uhr des Handys im Fenster bleibt. | P-P5c-20, -21 |
@@ -23,6 +26,9 @@ AP1; jedes Paket schreibt seinen Abschnitt fort.
 | P-P5c-29 | **Das eigene Monitoring fragt die Anlage** (AP6) | nach Merge und Deploy auf Staging (nach dem Tag auf Produktiv): Runbook `Technik.md` 7 „Health-Endpunkt einrichten" — Token erzeugen, in `config.php` eintragen, die Adresse im Monitoring eintragen, Abruf einmal je Minute | Das Monitoring meldet „oben"; `curl -s …/api/health.php?token=<Wert>` zeigt `"ok":true` und die gerade ausgelieferte `web_version`; ohne und mit falschem Token **403** `token` | 403 mit richtigem Token (Eintrag nicht unter `betrieb` oder ein Leerzeichen im Wert); 200 ohne Token; ein Feld mehr oder weniger als die acht; das Monitoring meldet nach einer Minute Dauerabfrage 429 (Abruf zu dicht eingestellt) |
 | P-P5c-30 | **Die Zahlen im Rumpf stimmen zur Anlage** (AP6) | am Tag nach P-P5c-29 (der Aufräumjob muss einmal gelaufen sein): die Antwort neben Betrieb → Status und Betrieb → Servereinstellungen, Karte „Speicher", legen | `speicher_pct` = der höchste von drei Anteilen, abgerundet: die beiden Balken der Karte (Backups, Installation gesamt) und die Datenbankgröße gegen das Kontingent der Datenbank; `jobs_alter_s` klein (Minuten, nicht Tage); `system_24h` = Zahl im Reiter System, Zeitraum 1 Tag; `protokoll_fehler` 0 | `speicher_pct` bleibt `null` nach einem Tag (Job läuft nicht, P-P5c-07 ansehen); eine Zahl weicht von der Seite ab |
 | P-P5c-31 | **Wartung und Update aus Sicht des Monitorings** (AP6) | beim nächsten Deploy mit Migration: das Monitoring beobachten | während der Kette 503 mit `"error":"maintenance"`; nach Wartung aus, aber vor `update.php`, 503 mit `"migration_ausstehend":true`; danach 200 | 200, während `update.php` aussteht; 403 in der Wartung (dann prüft der Endpunkt den Token vor dem Tor) |
+| P-P5c-32 | **Die Migration und der Index auf Staging** (AP7) | nach Merge: Betrieb → Updates → `update.php`, Wartung aus; dann in phpMyAdmin (Staging): `SHOW INDEX FROM missions` und `EXPLAIN SELECT m.origin, COUNT(*) FROM missions m WHERE m.user_id <> 0 AND m.deleted_at IS NULL AND m.started_at >= UTC_TIMESTAMP() - INTERVAL 30 DAY AND m.started_at <= UTC_TIMESTAMP() GROUP BY m.origin` | `2026_09_24_statistik_beginn` unter *Angewendet*; `idx_missions_started` **und** `idx_missions_deleted` in der Indexliste; `EXPLAIN` mit `key = idx_missions_started` | ein Index fehlt (dann ist die Migration nicht gelaufen oder abgebrochen — Betrieb → Updates, Protokoll); `key` leer bei sehr kleinem Bestand ist kein Fehler, dann `possible_keys` ansehen |
+| P-P5c-33 | **Die drei Reiter an echten Zahlen** (AP7) | auf Staging nach dem Merge, auf Produktiv nach dem Tag: Betrieb → Statistik, alle drei Reiter, eine Spalte mit Sortieren und „Als CSV" im Reiter Geräte | Kennzahlen oben führen in ihren Reiter; „Einsätze in 30 Tagen" ist dieselbe Zahl wie in der Tabelle; die Herkunft summiert sich zu dieser Zahl; nach einem Klick auf einen Spaltenkopf bleibt der Reiter Geräte offen | Sortieren springt auf NutzerInnen (fehlendes `r`); „Aktiv" kleiner als „Angemeldet"; eine Herkunft fehlt; die Zahl weicht grob von der Summe der eigenen Statistiken ab (einzelne Einsätze sind erklärt, Handbuch 12.2) |
+| P-P5c-34 | **Die Statistik am Handy** (AP7) | am Handy: Betrieb → Statistik, die Reiter wechseln | die Reiterreihe passt oder rollt in sich; je Reiter steht die Tabelle **vor** der Karte; die Tabelle mit fünf Fenstern rollt in ihrer Karte, die Seite nicht | die Seite läuft waagerecht aus dem Bild; die Karte steht vor der Tabelle |
 | **Staging in Rot, Produktiv in Blau** | Beides sind echte Anlagen (Station D und E). Örtlich ist das Etikett gestellt und gemessen (1), aber ob die `config.php` von Staging den Eintrag trägt, sieht nur, wer Staging aufruft. | nach dem Merge (Staging) und nach dem Tag (Produktiv): P-P5c-01, -02 |
 | **Eine Rundmail in einem echten Postfach** | Die Arbeitsumgebung erreicht keinen Mailserver; die Mailprobe spricht mit einem SMTPS-Nachbau, der annimmt und wegwirft. Gemessen ist der Weg bis „250 angenommen", nicht die Zustellung. | P-P5c-03 |
 | **Firefox und WebKit** | Bilderlauf und Bedienwege laufen im Prüfstand in Chromium — **auch in der Hauptstufe**, anders als `Pruefablauf.md` 3 versprach (F-P5c-103, Nr. 300). Die **Bedienwege** sind in Firefox und WebKit nicht gefahren. | Bilderlauf für AP4 **von Hand** in Firefox 142 und WebKit 26 (1c); die Bedienwege bleiben bei Nr. 300 |
@@ -195,6 +201,25 @@ sein soll.
 | **Billige Riegel** | `bash tools/quelltext/pruefen.sh alle`; `php tools/zaehlung/zaehlen.php`; `python3 tools/quelltext/bestand.py`; `auswahl.py --abdeckung` | **12 von 12**; **40 Zeilen, 0 über der Decke**; Bestand **0**; Muster `health` löst Raten- und Wartungsprobe aus |
 | **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh` | *steht in der Commit-Nachricht von `P5c-AP6`* |
 
+## 1f. Messprotokoll AP7 (24.09.2026, Web 20.47.0)
+
+| Mittel | Aufruf | Zahl |
+|---|---|---|
+| **Vor und nach `update.php`** | Sandbox auf dem Stand von AP6 (frische Anlage, Web 20.46.0), dann der Code von AP7; `betrieb_statistik.php` je Reiter, Betrieb → Updates, `action=migrate` | vorher: drei Reiter **200** in je rund 0,08 s (ohne den Index), Wartungsbalken da, die Migration unter *Ausstehend*; `migrate` → `applied`, **Wartung an**. Beim ersten Lauf fehlte danach `idx_missions_deleted` (F-P5c-124); nach der Berichtigung zurückgesetzt und neu: **2 von 2** Indizes |
+| **Zahlen gegen eine unabhängige Rechnung** | Seite geparst gegen SQL mit Fenstergrenzen aus PHP (`gmdate`, nicht `UTC_TIMESTAMP`), alle Konten außer Demo — Messstand (5 050), `umlauf-edbak` (Referenzbestand, 107, davon 5 im Papierkorb, 23 künftig), `umlauf-csv` (101) | **10 Vergleiche, 0 Abweichungen:** Einsätze je Fenster **10 · 56 · 230 · 2 265 · 4 744**, NutzerInnen mit Einsatz 1 · 1 · 1 · 4 · 4, Ø je NutzerIn (kaufmännisch, „1.186,0"), gesamt **5 255**, Herkunft 30 Tage 30 / 150 / 0 / 10 / 40 / 0, Aktiv, Angemeldet, Neu angelegt, „Ohne Gerät" **5**, Konten 5 |
+| **Die Ausschlüsse als Differenz** | dieselbe Rechnung ohne je einen Ausschluss, Fenster 1 · 7 · 30 · 180 · 365 | mit Demo **… · 2 314 · 4 822** (Demo: 49 im 180-Tage-Fenster, 0 in 30 Tagen); mit Papierkorb **… · 2 266 · 4 749** (die 5); ohne Obergrenze **425 · 471 · 645 · 2 680 · 5 159** (415 künftige — in keinem Fenster, nur in „gesamt"); die **alte Zählung nach Diensttag** **425 · 471 · 655 · 2 734 · 5 159**: Der Unterschied kommt zum größten Teil aus der fehlenden Obergrenze (415), der Rest aus Diensttag gegen Beginn (im 30-Tage-Fenster 10) |
+| **„Aktiv" nach R38, gestellt** | `umlauf-csv`: Anmeldung auf −400 Tage, dann ein echtes Gerät mit `last_seen` jetzt, dann −10 Tage; danach zurück | Aktiv / Angemeldet (24 h · 7 T · 30 T · 6 M): **3/3** → mit Gerät **4 / 3** → Gerät vor 10 Tagen **3·3·4·4 / 3**; „Ohne Gerät" 5 → **4**, Kachel Geräte 0 → **1**; zurück: wie vorher |
+| **Messstand-Schritt `statistik`** (neu) | `python3 messen.py --schritte statistik` | Reiter **0,077 / 0,087 / 0,076 s** (Median aus 3, Ziel unter 1 s) bei **5 366** Einsätzen; `EXPLAIN` Herkunft `key=idx_missions_started`, 230 Zeilen; Fenster Tabellenscan, `possible_keys` mit dem Index, **4 832 von 5 366 (90 %)** im längsten Fenster. Die erste Fassung verlangte den Index auch dort und war rot (F-P5c-125) |
+| **Gegenprobe Messstand** | Index `idx_missions_started` entfernt, Schritt gefahren, Index zurück | **rot:** Fenster „nicht in possible_keys", Herkunft „nicht in key" |
+| **Überlauf in `.tabelle-scroll`** | eigenes Messskript über `tools/motor.mjs` (nicht im Repositorium): drei Reiter × 1200 / 1280 / 1366 / 1440 px × Chromium, Firefox, WebKit | **36 Messungen, 0 px** in der Tabelle und 0 px an der Seite; Spalten 535 : 357 (1200) bis 679 : 453 (1440) |
+| **Gegenprobe Raster** | dieselbe Messung, `.form-raster-links-breit` im Browser entfernt (1 : 1), Reiter Einsätze | Überlauf **40 px** bei 1200, **20 px** bei 1240, 0 ab 1280 — die Regel ist nötig, das Bild sagte „bis 1300" |
+| Geräteprobe | `php tools/proben/geraete/probe.php` | **66 / 0** — neu Teil 7: Schlüssel von `HERKUNFT_TEXTE` = `HERKUNFT_WERTE`, je `kurz` und `lang` |
+| **Stilvergleich** | `gegen.sh` gegen `origin/main` | zuerst **38 ungeplant, 31 nicht gemessen** — 23 an den Druckblättern (F-P5c-126); Gegenproben: neue Regel mit alter Seite **1** ungeplant, sauberer AP6-Stand **0 / 0**; nach `--schreiben` **139 / 139**, 44 590 Elementmessungen |
+| **Billige Riegel** | `pruefen.sh alle`, `zaehlen.php`, `bestand.py`, Migrationsregister | Textprobe zuerst **1 Treffer** („Garmin-Uhr" im Katalog) → Ausnahme `herkunft-texte-garmin` → 0; **12 von 12**; **40 / 0**; Bestand **0**; Migrationsregister **0** |
+| **Bilderlauf** | `aufnehmen.mjs --stufe haupt` | **560 Einzelbilder, 70 Kontaktbögen**, Überlauf 0, Konsolenfehler 0, Knöpfe falscher Höhe 0, Karten 180 / 0 außerhalb, Etikett 560 Titel / 472 Kopfleisten 0 Abweichungen. Nach dem geschützten Leerzeichen die drei Seiten noch einmal: 24 Bilder, 0 / 0. Bei 360 px stand zuerst „100 |
+| **Erster Prüfstand — nicht als Beleg verwendet** | `hochfahren.sh --neu`, `pruefen.sh` → Stufe `haupt` | **rot, 47 / 2, 2 353 s:** Bedienprobe **51 / 55** („Der Demo-Reset lief um 23:30:38 UTC mitten in diesem Lauf"), GPX-Probe „204 von 204 ohne Gegenstück". Grün darin u. a.: Messstand mit Schritt `statistik`, Bilderlauf **876 s**, Stilvergleich, Schemaprobe, Migrationsregister, beide Kreisläufe. Ursache: die Reihenfolge der Muster (F-P5c-127) |
+| **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh`, zweiter Lauf | *steht in der Commit-Nachricht von `P5c-AP7`* |
+
 ## 2. Prüfliste
 
 | Nr. | Punkt | Bedienweg | Erwartet | Scheitern erkennbar an | Stand |
@@ -229,6 +254,24 @@ sein soll.
 | P-P5c-28 | **Code-Schritt und Tor am Handy** (AP5) | auf Staging am Handy anmelden | Im Code-Schritt öffnet sich die Zifferntastatur, und das Handy bietet den Code aus der App an (`one-time-code`, wo unterstützt); im Tor steht der QR-Code über dem Text, kein Überlauf | Buchstabentastatur; eine waagerecht schiebbare Seite | offen |
 
 ## 3. Grenzen der benutzten Prüfmittel
+
+**Aus AP7:**
+
+- **Die Nachrechnung ist SQL gegen Seite, nicht zwei unabhängige Wahrheiten.**
+  Die Fenstergrenzen rechnet sie in PHP statt mit `UTC_TIMESTAMP`, die
+  Bedingungen (Demo, Papierkorb, Obergrenze) sind dieselben, weil sie die
+  Entscheidung sind. Belegt ist, dass die Seite rechnet, was E-P5c-18 sagt —
+  nicht, dass E-P5c-18 die richtige Zählung ist.
+- **„Aktiv" ist an einem gestellten Gerät belegt.** Echte Geräte hat in der
+  Sandbox nur das Demo-Konto, und das zählt nie; die Lage ist deshalb
+  gestellt und danach zurückgelegt.
+- **Die Überlaufmessung ist ein Skript im Arbeitsordner**, kein Werkzeug des
+  Repositoriums; es misst `scrollWidth − clientWidth` an `.tabelle-scroll`
+  und am Dokument. Der Bilderlauf misst nur die Seite, und 1200 / 1366 px
+  kennt er nicht (F-P5c-41).
+- **Die Gerätemodelle-Tabelle war leer** — außer dem Demo-Konto koppelt in
+  der Sandbox kein echtes Gerät. Ihr Überlauf ist deshalb nicht gemessen;
+  sie ist unverändert seit S8.
 
 **Aus AP6:**
 

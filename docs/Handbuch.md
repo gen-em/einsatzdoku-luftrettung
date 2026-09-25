@@ -4530,30 +4530,52 @@ keine Ampel: Der Status bewertet, die Statistik zählt.
 
 > **Ohne Demo-Konto**, und zwar in jeder Zahl. Sein Bestand ist erfunden und
 > wird alle dreißig Minuten neu aus einer Vorlage hergestellt; ihn
-> mitzuzählen hieße, erfundene Einsätze als Nutzung auszugeben. „Von 11
-> Konten" meint elf echte.
+> mitzuzählen hieße, erfundene Einsätze als Nutzung auszugeben. „Von 11"
+> meint elf echte Konten.
 
-- **Konten** nach Rolle, dazu wie viele ohne Gerät sind, und eine Tabelle
-  *zuletzt angemeldet / neu angelegt* über 7 Tage, 30 Tage und 6 Monate.
-- **Geräte** nach Art — Garmin-Uhren, Android-Handys, deaktivierte —, dazu
-  *zuletzt gemeldet / gekoppelt* über dieselben Zeiträume.
-- **Einsätze**: Zahl, wie viele NutzerInnen einen Einsatz hatten, und zwei
-  Durchschnitte — je aktiver NutzerIn und je NutzerIn gesamt.
-- **Gerätemodelle** als Tabelle: Gerät, Hersteller, Art, Zahl und Anteil.
-  Ein Klick auf einen Spaltenkopf sortiert; **„Als CSV"** im Kartenkopf lädt
-  dieselben Spalten als Datei herunter, für Excel gemacht (Semikolon,
+Oben stehen vier Kennzahlen — Konten, Geräte, Einsätze gesamt, Einsätze in
+30 Tagen —, jede führt in ihren Reiter. Darunter **drei Reiter** *(seit Web
+20.47.0)*; jeder hat dieselbe Form: links die Tabelle „… je Zeitraum",
+rechts eine Karte mit dem, was es gibt.
+
+- **NutzerInnen:** *Konten je Zeitraum* über 24 Stunden, 7 Tage, 30 Tage und
+  6 Monate — **Aktiv**, **Angemeldet**, **Neu angelegt**. *Aktiv* heißt:
+  angemeldet **oder** eines der Geräte des Kontos hat sich gemeldet. Wer nur
+  mit der Uhr arbeitet und sich nie im Browser anmeldet, ist aktiv, aber
+  nicht angemeldet. Rechts die **Konten nach Rolle** und wie viele **ohne
+  Gerät** sind — gezählt werden dort nur echte Geräte: Wer ausschließlich
+  von Hand dokumentiert, zählt dazu, auch wenn er schon eine GPX-Datei
+  eingelesen hat.
+- **Einsätze:** *Einsätze je Zeitraum* über 24 Stunden, 7 Tage, 30 Tage,
+  6 Monate und 1 Jahr — die Zahl, wie viele NutzerInnen einen Einsatz
+  hatten, und der Durchschnitt je NutzerIn mit Einsatz. Rechts die
+  **Herkunft der Einsätze** der letzten 30 Tage: Garmin-Uhr, Android-Handy,
+  Wear-OS-Uhr (an der Uhr begonnen, vom Handy gesendet), Formular, Import
+  und Schnitt — alle sechs, auch mit 0.
+- **Geräte:** *Geräte je Zeitraum* — zuletzt gemeldet, gekoppelt — über
+  7 Tage, 30 Tage und 6 Monate; rechts die Geräte nach Art (Garmin-Uhren,
+  Android-Handys, ohne Angabe, deaktiviert). Darunter die **Gerätemodelle**
+  als Tabelle: Gerät, Hersteller, Art, Zahl und Anteil. Ein Klick auf einen
+  Spaltenkopf sortiert und bleibt im Reiter; **„Als CSV"** im Kartenkopf
+  lädt dieselben Spalten als Datei herunter, für Excel gemacht (Semikolon,
   Umlaute richtig).
 
-**Gezählt wird nach Diensttag**, wie in der eigenen Statistik — nicht nach
-dem Beginn des Einsatzes. Sonst fiele ein Einsatz von 23:50 bis 00:20 in
-einen anderen Zeitraum als der Dienst, zu dem er gehört. Der Papierkorb zählt
-nicht mit. „6 Monate" sind 180 Tage.
+**Wie die Einsätze gezählt werden.** Ab dem **Beginn des Einsatzes** — ohne
+Demo-Konto, ohne Papierkorb. Jedes Fenster reicht bis *jetzt*: Ein Einsatz
+mit einem Beginn in der Zukunft (vorausgeplant, oder eine Uhr mit falscher
+Zeit) steht nur unter „gesamt". „6 Monate" sind 180 Tage, „1 Jahr" 365.
+*Bis Web 20.46.0 zählte diese Seite nach Diensttag.* Die Zahlen hier können
+deshalb um einzelne Einsätze von der Summe der eigenen Statistiken
+abweichen: Dort zählt der Diensttag, und ein Einsatz, der nach Mitternacht
+beginnt, gehört zum Dienst des Vortags — hier zum Tag seines Beginns.
 
-> **Wear-OS-Uhren erscheinen hier nicht**, und das ist kein Fehler: Die
-> Uhr-App kennt weder Serveradresse noch Schlüssel. Sie schickt ihre
+> **Wear-OS-Uhren erscheinen unter Geräte nicht**, und das ist kein Fehler:
+> Die Uhr-App kennt weder Serveradresse noch Schlüssel. Sie schickt ihre
 > Ereignisse an das Handy, und das Handy sendet — gekoppelt ist also das
 > Handy. Eine verlorene Uhr gibt keinen Zugang preis; das ist der Zweck
-> dieser Bauform.
+> dieser Bauform. Unter *Herkunft der Einsätze* steht die Wear-OS-Uhr sehr
+> wohl: Dort geht es darum, wo ein Einsatz begonnen wurde, nicht darum,
+> welches Gerät gekoppelt ist.
 
 > **Der Hersteller steht nirgends gespeichert**, er wird abgeleitet: Eine
 > Uhr, die koppelt, ist eine Garmin-Uhr; bei einem Handy gilt das erste Wort

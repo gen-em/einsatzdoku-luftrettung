@@ -476,6 +476,11 @@ CREATE TABLE missions (
   UNIQUE KEY uq_dev_ref (device_id, client_ref),
   INDEX idx_user_started (user_id, started_at),
   INDEX idx_day (day_id),
+  -- Beginn ueber alle Konten: die Statistik der BetreiberIn (P5c/AP7, Nr. 191).
+  INDEX idx_missions_started (started_at),
+  -- Papierkorb je Konto. Bis Web 20.47.0 legte ihn nur die Migration
+  -- 2026_07_22_papierkorb an; eine frische Anlage hatte ihn nicht (F-P5c-39).
+  INDEX idx_missions_deleted (user_id, deleted_at),
   FOREIGN KEY (user_id)   REFERENCES users(id)   ON DELETE CASCADE,
   FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE SET NULL,
   FOREIGN KEY (day_id)    REFERENCES days(id)    ON DELETE SET NULL
@@ -1072,4 +1077,7 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_24_rolle_support', 'skipped'),
   ('2026_09_24_zweitfaktor', 'skipped'),
   -- users.rw_* stehen oben schon im Schema (Konzept RW, RW-01).
-  ('2026_09_24_rueckweg_schluesselpaar', 'skipped');
+  ('2026_09_24_rueckweg_schluesselpaar', 'skipped'),
+  -- missions.idx_missions_started und idx_missions_deleted stehen oben schon
+  -- im Schema (P5c/AP7).
+  ('2026_09_24_statistik_beginn', 'skipped');

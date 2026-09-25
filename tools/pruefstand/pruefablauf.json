@@ -702,6 +702,19 @@
       "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01."
     },
     {
+      "id": "statistik",
+      "ab": "klein",
+      "pfade": [
+        "server/betrieb_statistik.php",
+        "server/statistik_lib.php"
+      ],
+      "proben": [
+        "messstand",
+        "bilderlauf"
+      ],
+      "anlass": "Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Steht am ENDE der Muster: Die Reihenfolge der Proben ist die ihres ersten Auftretens, und Messstand und Bilderlauf weiter vorn schoben die demo-empfindlichen Proben hinter den Demo-Reset (F-P5c-127, Nr. 322)"
+    },
+    {
       "id": "mengen",
       "ab": "haupt",
       "pfade": [

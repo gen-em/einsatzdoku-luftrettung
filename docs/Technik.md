@@ -334,8 +334,11 @@ Daten erst nach Server-Bestätigung.
 │   ├── betrieb_status.php  Betrieb → Status: die Karten aus status_lib.php
 │   ├── logout.php         Abmelden (die Räumung steht in session_lib.php)
 │   ├── betrieb_statistik.php
-│   │                       Betrieb → Statistik: Gerätemodelle und Nutzung
-│   │                       (S8/AP4, Backlog Nr. 80)
+│   │                       Betrieb → Statistik: drei Reiter NutzerInnen ·
+│   │                       Einsätze · Geräte (S8/AP4; P5c/AP7, Nr. 80, 191)
+│   ├── statistik_lib.php  die Fenster der Statistik und ihre eine Zählung
+│   │                      der Einsätze — Seite und Messstand lesen dieselbe
+│   │                      Abfrage (P5c/AP7)
 │   ├── status_lib.php     die Karten der Statusseite an einer Stelle —
 │   │                      Server, Backups, Plattform, Sicherheit. In P5a
 │   │                      viermal erweitert (AP2, AP9, AP10, AP11)
@@ -6667,7 +6670,7 @@ sicherer Kontext), markiert das Skript den Text und meldet „markiert — Strg+
 Die Rückmeldung steht **im Knopf**, nicht daneben — eine Zeile, die auftaucht
 und wieder verschwindet, verschiebt sonst das Layout.
 
-### 4.99e Status und Statistik: bewerten und zählen (ab Web 15.3.0, S8/AP4)
+### 4.99e Status und Statistik: bewerten und zählen (ab Web 15.3.0, S8/AP4; drei Reiter ab Web 20.47.0, P5c/AP7)
 
 **Zwei Seiten, zwei Fragen — und die Trennung ist die Sache.**
 `betrieb_status.php` beantwortet „ist hier etwas zu tun?", `betrieb_statistik.php`
@@ -6713,9 +6716,12 @@ Marke `demo_user_id`, ist der Wert 0 und die Bedingung wahr für alle —
 dieselbe Abfrage, ein Sonderfall weniger.
 
 **Den Papierkorb.** Ein gelöschter Einsatz ist keine Nutzung, und er käme beim
-Wiederherstellen zurück. Geprüft wird `deleted_at IS NULL` an `missions`
-**und** an `days`: Ein Einsatz kann für sich gelöscht sein oder mit seinem
-Diensttag.
+Wiederherstellen zurück. Geprüft wird `missions.deleted_at IS NULL` — und nur
+das: Wer einen Diensttag löscht, setzt `deleted_at` auch an jedem seiner
+Einsätze (`deleted_with_day = 1`, `trash_lib.php`). Bis Web 20.46.0 stand
+hier zusätzlich ein Verbund mit `days`; er schloss nebenbei jeden Einsatz
+ohne Diensttag aus (`day_id` darf leer sein) und fällt mit der Zählung ab
+Beginn weg.
 
 **Wear-OS-Uhren** — sie erscheinen in keiner Zahl, weil sie in `devices` nie
 eine Zeile bekommen. Die Wear-OS-App hat weder Serveradresse noch Schlüssel
@@ -6726,15 +6732,65 @@ eine Zeile bekommen. Die Wear-OS-App hat weder Serveradresse noch Schlüssel
 bauartbedingt nie etwas zählt, sagt nicht „null" — sie verschweigt, dass es
 hier nichts zu zählen gibt.** An ihrer Stelle steht ein Satz.
 
-#### Gezählt wird nach Diensttag
+#### Drei Reiter, eine Zählung (ab Web 20.47.0, P5c/AP7)
 
-`missions` JOIN `days` über `day_id`, gefiltert auf `days.day`. Nicht auf
-`missions.started_at`: Ein Einsatz von 23:50 bis 00:20 fiele sonst in einen
-anderen Zeitraum als der Dienst, zu dem er gehört — und die Statistik der
-NutzerIn zählt ebenso. Zwei Zählweisen für dieselbe Zahl wären zwei
-Wahrheiten.
+**Ein Menüeintrag, drei Reiter** (E-P5c-18, Bild M-P5c-01b):
+`?r=nutzer|einsaetze|geraete`, Vorgabe `nutzer`, gebaut mit `ui_reiter()`.
+Betrieb behält seine sieben Einträge, und die Seite heißt weiter „Statistik"
+— kein Name „Betriebslage". Über den Reitern die vier Kennzahlen, jede ein
+Verweis in ihren Reiter. **Jeder Reiter hat dieselbe Form:** links die
+Tabelle „… je Zeitraum", rechts die Karte „was es gibt", im Raster
+`.form-raster-links-breit` (3 : 2 ab 1200 px, `Design.md` 9.26). Jede Sicht
+rechnet nur ihre eigenen Abfragen; die Kennzahlen laufen auf jedem Reiter.
 
-**„6 Monate" sind 180 Tage.** Ein Monat ist keine feste Länge; drei
+| Reiter | links | rechts |
+|---|---|---|
+| NutzerInnen | Konten je Zeitraum (24 h · 7 T · 30 T · 6 M): **Aktiv**, Angemeldet, Neu angelegt | Konten nach Rolle (alle aus `ROLLEN`), **Ohne Gerät** |
+| Einsätze | Einsätze je Zeitraum (24 h · 7 T · 30 T · 6 M · 1 J): Einsätze, NutzerInnen mit Einsatz, Ø je NutzerIn mit Einsatz | **Herkunft der Einsätze**, 30 Tage, alle sechs Werte |
+| Geräte | Geräte je Zeitraum (7 T · 30 T · 6 M): zuletzt gemeldet, gekoppelt | Geräte nach Art, der Wear-Satz; darunter Gerätemodelle über die ganze Breite |
+
+**„Aktiv" nach R38:** `last_login` **oder** `devices.last_seen` eines
+**echten** Geräts (`geraete_echt_sql('d')`) im Fenster. **„Ohne Gerät"**
+zählt ebenso nur echte Geräte (Nr. 190): Das virtuelle Gerät der
+Handeinträge entsteht beim ersten Formular, beim Import, beim Schneiden und
+beim GPX-Import — wer ausschließlich von Hand dokumentierte, fiel bis Web
+20.46.0 aus genau der Gruppe heraus, die die Kleinzeile meint.
+
+**Herkunft:** Summen von `missions.origin` über die letzten 30 Tage, alle
+sechs Werte aus `HERKUNFT_WERTE`, auch mit 0, beschriftet aus
+`HERKUNFT_TEXTE` (`geraete_lib.php` — die lange Form; die Plakette am Einsatz
+liest die kurze). Ein Wert, den die Fassung nicht kennt, steht als „Andere".
+Keine Datenschutz-Vorbedingung (E-P5c-45): Summen einer vorhandenen Spalte,
+nur für die BetreiberIn — schwächer identifizierend als das Gerätemodell.
+Browser-Zugriffe werden nicht gezählt (R36).
+
+**Sortierung und CSV bleiben im Reiter:** Jeder Spaltenkopf und „Als CSV"
+tragen `r=geraete` (F-P5c-39).
+
+#### Gezählt wird ab Beginn des Einsatzes (seit Web 20.47.0)
+
+`missions.started_at` (UTC, Pflichtfeld), ohne Demo-Konto, ohne Papierkorb,
+**in Fenstern mit Unter- und Obergrenze**: „7 Tage" heißt zwischen jetzt
+minus sieben Tagen und jetzt. Ein Beginn in der Zukunft liegt in keinem
+Fenster und zählt nur unter „gesamt" (F-P5c-39 — vorher hatten die Fenster nur
+eine Untergrenze). Die Abfrage steht **einmal**, in `statistik_lib.php`
+(`statistik_einsaetze_sql()`, `statistik_herkunft_sql()`): eine Abfrage für
+alle fünf Fenster über das längste, gelesen über den Index
+`idx_missions_started` (Migration `2026_09_24_statistik_beginn`, Nr. 191 —
+sie legt außerdem `idx_missions_deleted` an, wo er fehlt: Jede frisch
+eingerichtete Anlage hatte ihn bis Web 20.47.0 nicht, F-P5c-124).
+Der Messstand lässt **dieselbe** Abfrage erklären (Schritt `statistik`).
+
+**Bis Web 20.46.0 zählte die Seite nach Diensttag** (`missions` JOIN `days`,
+gefiltert auf `days.day`) — wie die Statistik der NutzerIn. Entschieden am
+20.09.2026 (E-P5c-18): ab Beginn, mit eigenem Index, und damit entfällt der
+Name „Bestand" für die eine Zählweise neben der anderen (Nr. 192). **Preis:**
+Ein Einsatz nach Mitternacht gehört hier zum Tag seines Beginns, in der
+Statistik der NutzerIn zum Dienst des Vortags — die Summen können um
+einzelne Einsätze auseinanderliegen. Der Satz unter der Einsatzkarte sagt,
+wie gezählt wird; das Handbuch (12.2) sagt, warum die Zahlen abweichen.
+
+**„6 Monate" sind 180 Tage, „1 Jahr" 365.** Ein Monat ist keine feste Länge;
 verschieden lange Monate in einer Spalte wären eine stille Ungenauigkeit.
 
 #### Der Hersteller ist abgeleitet, nicht gespeichert

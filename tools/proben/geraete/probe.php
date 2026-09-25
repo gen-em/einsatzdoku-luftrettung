@@ -427,6 +427,25 @@ if ($pdo === null) {
     $dbTeil = "gelaufen (Konto und app_state wiederhergestellt)";
 }
 
+/* ---- 7. Der Katalog der Herkuenfte (P5c/AP7, F-P5c-39) ------------------
+ *
+ * `HERKUNFT_TEXTE` beschriftet dieselben Werte wie `HERKUNFT_WERTE` —
+ * die Plakette am Einsatz liest die kurze Form, die Statistik die lange. Ein
+ * siebter Client, der nur in einer der beiden Listen steht, erschiene in der
+ * Statistik als Rohwert oder gar nicht. */
+
+$geprueft++;
+if (array_keys(HERKUNFT_TEXTE) !== HERKUNFT_WERTE) {
+    $fehler[] = sprintf("HERKUNFT_TEXTE hat nicht die Schluessel von HERKUNFT_WERTE\n      erwartet: %s\n      bekommen: %s",
+        implode(',', HERKUNFT_WERTE), implode(',', array_keys(HERKUNFT_TEXTE)));
+}
+foreach (HERKUNFT_TEXTE as $wert => $t) {
+    $geprueft++;
+    if (trim((string)($t['kurz'] ?? '')) === '' || trim((string)($t['lang'] ?? '')) === '') {
+        $fehler[] = "HERKUNFT_TEXTE['$wert']: kurz oder lang fehlt";
+    }
+}
+
 /* ---- Ergebnis ----------------------------------------------------------- */
 
 echo "Geräteprobe — Block `geraet` der Kopplung (JSON-Vertrag 1a, R42)\n";

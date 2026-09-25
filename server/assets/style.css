@@ -3071,6 +3071,16 @@ body.map-fs-lock{overflow:hidden}
   grid-template-columns:minmax(0,1fr);
   max-width:calc(var(--lesespalte) + var(--abstand-5));
 }
+/* LINKS BREIT, 3 : 2 (P5c/AP7, M-P5c-01b, E-P5c-18): links eine Tabelle
+ * „… je Zeitraum" mit bis zu fuenf Zahlenspalten, rechts eine Karte mit
+ * Zeilen und Zaehlplakette. Gleich geteilt laeuft die Fuenf-Fenster-Tabelle
+ * ueber und rollt — gemessen in AP7: 40 px bei 1200, 20 px bei 1240, ab
+ * 1280 px nicht mehr. Mit 3 : 2 passt sie bei 1200, 1280, 1366 und 1440 px
+ * ohne Rollen, in Chromium, Firefox und WebKit. Hinter der Regel von
+ * `.form-raster`, gleiche Spezifitaet. */
+@media (min-width:1200px){
+  .form-raster-links-breit{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+}
 
 /* Zwei kurze Felder in einer Zeile (Nachname/Vorname, Geburtsdatum/Alter) —
  * auch mobil, wie im Mockup. */

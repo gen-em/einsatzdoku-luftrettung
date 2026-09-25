@@ -2079,6 +2079,7 @@ sie ist die Karte kein Sprungziel und erscheint nicht.
 |---|---|---|---|
 | `.form-raster` + `.form-spalte` | 1200 | die Seite, im Markup | Karten mit thematischer Ordnung: links Server und E-Mail, rechts Jobs und Backups |
 | `.karten-raster` | 1200 | der Browser (Mehrspaltensatz) | eine Reihe gleichrangiger Karten ohne Ordnung |
+| `.form-raster` + `.form-raster-links-breit` | 1200 | die Seite, im Markup, **3 : 2** | links eine Tabelle „… je Zeitraum" mit bis zu fünf Zahlenspalten, rechts eine Karte mit Zeilen — heute die Statistik |
 
 **Variante `.form-raster-einspaltig`** (seit Web 20.41.0, P5c/AP4, freigegeben
 mit M-P5c-02c, E-P5c-66): eine Spalte, höchstens Lesespalte plus
@@ -2088,6 +2089,15 @@ die Gefahrenzone sieht. Ohne sie stünde die linke Spalte ab 1200 px halb so
 breit neben einer Leere. Sie steht im Stylesheet **hinter** der Regel von
 `.form-raster` und gewinnt deshalb bei gleicher Spezifität; die eine
 `.form-spalte` darin bleibt, `menue.js` liest sie.
+
+**Variante `.form-raster-links-breit`** (seit Web 20.47.0, P5c/AP7,
+freigegeben mit M-P5c-01b, E-P5c-18): zwei Spalten im Verhältnis **3 : 2**
+statt gleich. Gleich geteilt läuft die Tabelle mit fünf Fenstern über und
+rollt in ihrer `.tabelle-scroll` — gemessen: 40 px bei 1200, 20 px bei 1240,
+ab 1280 px nicht mehr. Mit 3 : 2 passt sie bei 1200, 1280, 1366 und 1440 px
+ohne Rollen, in allen drei Motoren (Prüfdokument P5c, 1f). Wie die einspaltige
+Variante steht sie im Stylesheet hinter `.form-raster` und gewinnt bei
+gleicher Spezifität; die zwei `.form-spalte` bleiben.
 
 `.karten-raster` nimmt die Karten **direkt** als Kinder und lässt sie
 fließen; `break-inside:avoid` hält jede zusammen. Eine Karte, die dazukommt,
