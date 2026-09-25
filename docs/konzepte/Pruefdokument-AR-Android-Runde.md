@@ -2,14 +2,14 @@
 
 *Gehört zu `Konzept-AR-Android-Runde.md`. Beantwortet die Frage „was muss
 **ich** noch tun?"; das Protokoll im Konzept beantwortet „ist es belegt?".
-Stand: **25.09.2026, nach AR-05 — Endfassung für den Pull Request.**
+Stand: **25.09.2026, nach AR-05 — Endfassung für den Pull Request; Nachtrag Wear OS 7 vom selben Tag.**
 Android 0.16.0.*
 
 ## 1. Was nicht geprüft werden konnte — und warum
 
 | Was | Warum nicht | Wo es stattdessen hingehört |
 |---|---|---|
-| **Die Uhr auf Android 17** | Das einzige Wear-OS-Abbild mit API 37 (`android-wear-signed`) ist ein `user`-Build: `ro.adb.secure=1`, `ro.debuggable=0`. Ohne Root lässt sich der Watchdog-Faktor nicht setzen, ohne den unter reiner Software-Emulation kein Abbild bootet; `adb` blieb über zehn Minuten `offline`. Gefahren wurde Wear OS 5 (API 34) | Gerätetest (P-AR-12) |
+| **Die Uhr auf Android 17 — nur zum Teil** | **Nachgeholt:** Wear OS 7 (API 37, `user`-Build) bootet im Emulator, Startseite und „Dienst beginnen“ belegt (Abschnitt 2, F-AR-18). **Nicht belegt:** die Bedienung über die Sperrfläche hinaus — ohne gekoppeltes Handy endet der Weg dort —, das echte Gerät und ob der Weg ohne die Debug-Ramdisk geht | Gerätetest (P-AR-12) |
 | **„Handy nicht erreichbar" auf dem Emulator** | Wear OS 5 meldet ohne Telefon „Handy verbunden" — die Anzeige folgt einer zugestellten Nachricht (B-S4-09); woran sie dort zugestellt wurde, ist ungeklärt (F-AR-16). Den Zustand „nicht erreichbar" zeichnet deshalb der Bilderlauf | Bilderlauf belegt (P-AR-07); Gerätetest für F-AR-16 (P-AR-13) |
 | **Die Netzweg-Punkte von Android 17** — Encrypted Client Hello, Certificate Transparency als Vorgabe | Der Emulator sprach nur mit der örtlichen Installation über Klartext-HTTP (Prüf-APK); beide Punkte wirken nur gegen einen echten Server mit Zertifikat | Gerätetest mit dem Release-APK gegen den Produktivserver (P-AR-03, -04) |
 | **Die Datenschutzseite im Browser** | Der Knopf übergab an Chrome — der stand auf seiner Ersteinrichtung; `datenschutz.php` kam am Server nicht an (0 Abrufe) | Gerätetest (P-AR-14) |
@@ -50,6 +50,21 @@ auf Wear OS 5:
 | Dienstende | Rückfrage, `POST /ingest.php` 200, Diensttag `ended_at` gesetzt, Segment `final = 1` |
 | Boot Uhr | 864 s (Wear OS 5); Startseite auf rundem Glas |
 
+**Nachtrag Uhr auf API 37** (25.09.2026, F-AR-18, E-AR-14) —
+`android-wear-signed`, von Hand gestartet (`android/LIESMICH.md`, „Wear OS 7
+ohne Root“):
+
+| Was | Ergebnis |
+|---|---|
+| Erster Versuch, unverändertes Abbild | 45 min `adb offline`, abgebrochen |
+| Debug-Ramdisk, erster Bau | Kernel-Panik, 34 Neustarts — der Vendor-Teil der Ramdisk war beim Neupacken verloren (eigener Fehler) |
+| Debug-Ramdisk mit `verifiedbootstate=orange` | `init: Loading /debug_ramdisk/adb_debug.prop`; `getprop ro.hw_timeout_multiplier` → 50; `adb` nach 107 s |
+| Ursache der Neustarts (Logcat) | `system_server` bricht in `EmulatorDisplayOverlay` mit `!hasReadColorBufferDma` ab — 44 Neustarts in einer Stunde; Ursache `target=android-0` in der AVD |
+| Ohne Wirkung | `ro.emulator.circular=false`, `-gpu guest`, `-feature -GLDMA`, Emulator 37.3.1 |
+| Boot mit `target=android-37.0` | **1 141 s**, `sys.boot_completed=1`; Android 17, SDK 37, `user` |
+| Prüf-APK | `targetSdk=37`, `versionName 0.16.0-pruef`, Start 55 s; Startseite auf rundem Glas, „Handy verbunden“ |
+| „Dienst beginnen“ | Sperrfläche „wartet aufs Handy · keine Aufzeichnung“, „Handy nicht erreichbar“; App-PID unverändert, kein Absturz der App (im Absturzpuffer nur der Bluetooth-Stapel, HCI-Zeitüberschreitung) |
+
 ## 3. Prüfliste
 
 | Nr. | Was | Bedienweg | Erwartet | Scheitern erkennbar an | Stand |
@@ -64,7 +79,7 @@ auf Wear OS 5:
 | P-AR-09 | Das Kontrastwerkzeug fährt | `python3 android/werkzeuge/kontraste.py` und `--selbstprobe` | 0 Befunde; 5 von 5 | `FEHLT`, `ROLLE?` oder `!` | **belegt** |
 | P-AR-10 | Der Vordergrunddienst unter `targetSdk` 37 | Dienst beginnen und beenden | Dauermeldung, Aufzeichnung, Dienstende kommt am Server an | Absturz, keine Meldung, `ended_at` leer | Emulator **belegt**; Gerät offen (zwölf Stunden, Akku) |
 | P-AR-11 | Die Uhr-APK ist 3,2 MB größer | Installation auf einer Galaxy Watch | installiert und startet | Speichermangel, langsamer Start | offen — Gerätetest |
-| P-AR-12 | Die Uhr unter Wear OS mit API 37 | Uhr-APK auf einer Uhr mit Wear OS 7 | Startseite, Knöpfe, Sperre wie auf Wear OS 5 | Absturz, abgeschnittener Knopf | offen — Gerätetest |
+| P-AR-12 | Die Uhr unter Wear OS mit API 37 | Uhr-APK auf einer Uhr mit Wear OS 7 | Startseite, Knöpfe, Sperre wie auf Wear OS 5 | Absturz, abgeschnittener Knopf | Emulator **belegt** (Startseite, Sperrfläche); Gerät offen |
 | P-AR-13 | Woher meldet Wear OS 5 „Handy verbunden" ohne Telefon? (F-AR-16) | Uhr ohne gekoppeltes Telefon, Dienst beginnen | „Handy nicht erreichbar" | „Handy verbunden" | offen — Gerätetest |
 | P-AR-14 | Die Rechtstexte öffnen im Browser | Einstellungen → Rechtliches → Datenschutzerklärung | die Seite des Servers lädt | leerer Browser, Fehlerseite | offen — Gerätetest |
 | P-AR-15 | Die Rundlauffälle | `./gradlew :handy:testDebugUnitTest --rerun-tasks -Pnadoku.rundlauf=http://127.0.0.1:8080/` mit örtlicher Installation | 0 übersprungen, 0 Fehlschläge | Fehlschlag in `KopplungRundlaufTest` | offen |

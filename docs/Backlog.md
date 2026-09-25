@@ -3803,7 +3803,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     statt PNG). *Umgangen* in `android/werkzeuge/emulator.sh`: Drei-Tasten-
     statt Gestennavigation (danach über neun Minuten kein Absturz mehr) und
     Abzug von der Wirtsseite (`adb emu screenrecord screenshot`). Das ist ein
-    Fehler des Emulators, nicht der App. *Weg:* mit einer neueren Fassung des
+    Fehler des Emulators, nicht der App. **Nachtrag 25.09.2026 (F-AR-18):**
+    Auf dem Wear-Abbild mit API 37 kam derselbe Abbruch aus `system_server`,
+    und die Ursache war nicht der Emulator, sondern die AVD — `avdmanager`
+    aus `cmdline-tools` 12.0 schreibt `target=android-0`; mit
+    `target=android-37.0` blieb er aus. **Vermutlich gilt das auch hier;
+    nicht nachgemessen.** Emulator 37.3.1 änderte am Abbruch nichts.
+    *Weg:* zuerst die AVD mit richtigem `target` nachmessen, dann mit einer neueren Fassung des
     Emulators nachmessen und die Umgehung austragen, sobald sie nicht mehr
     nötig ist. *Abnahme:* ein Boot auf API 37 mit Gestennavigation, 15
     Minuten ohne Eintrag im Absturzpuffer. **Zuordnung: nächste

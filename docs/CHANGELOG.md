@@ -154,9 +154,15 @@ des Servers" und „Fassung 0.16.0-pruef" — damit ist P-PK-28 auf dem
 gelaufenen Gerät belegt. **Und der Weg, an dem `targetSdk` 37 am meisten
 hängt, lief durch:** Dienst beginnen, der Vordergrunddienst mit Standort
 läuft, „GPS empfängt", 27 Punkte; Dienst beenden, am Server ein
-`ingest.php` mit 200 und der Diensttag geschlossen. Die Uhr lief auf Wear OS 5, weil das einzige
-Wear-Abbild mit API 37 ein `user`-Build ist, auf dem kein Root und damit
-kein Start unter reiner Software-Emulation geht.
+`ingest.php` mit 200 und der Diensttag geschlossen. Die Uhr lief zuerst auf
+Wear OS 5, weil das einzige Wear-Abbild mit API 37 ein `user`-Build ohne Root
+ist — und im Nachtrag doch auf **Wear OS 7**: Startseite und „Dienst
+beginnen" bis zur Sperrfläche, ohne Absturz der App. Nicht der fehlende Root
+war das Haupthindernis, sondern eine falsch angelegte AVD
+(`target=android-0` aus `cmdline-tools` 12.0), an der `system_server` im
+Minutentakt abbrach; den Watchdog-Faktor setzt die Debug-Ramdisk, die AOSP
+für genau solche Prüfläufe vorsieht. Die Handgriffe stehen in
+`android/LIESMICH.md`; im Werkzeug stehen sie noch nicht.
 
 **Drei Hindernisse lagen im Emulator, nicht in der App**, und
 `android/werkzeuge/emulator.sh` umgeht sie seither: SurfaceFlinger bricht

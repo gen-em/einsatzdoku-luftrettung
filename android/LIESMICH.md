@@ -283,10 +283,45 @@ Rückfrage, am Server ein `POST /ingest.php` mit 200, der Diensttag mit
 |---|---|
 | **SurfaceFlinger bricht auf API 37 ab** — `Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma` (`mapper.ranchu.so`, Faden `RegionSampling`), die ganze Oberfläche startet neu: drei Abstürze in 13 Minuten | `emulator.sh start` schaltet seither auf Drei-Tasten-Navigation um; das Sampling der Gestenleiste bleibt dann aus, danach über neun Minuten kein Absturz. Ein Fehler des Emulators 37.1.11, nicht der App (Backlog Nr. 337) |
 | **`screencap` liefert auf API 37 72 Bytes Fehlertext** statt PNG — dieselbe Assertion | `emulator.sh bild` zieht dann von der Wirtsseite ab (`adb emu screenrecord screenshot`) |
-| **Das einzige Wear-Abbild mit API 37 ist ein `user`-Build** (`android-wear-signed`: `ro.adb.secure=1`, `ro.debuggable=0`) — kein Root, also kein Watchdog-Faktor, `adb` blieb über zehn Minuten `offline` | Wear OS 5 (API 34, `userdebug`) nehmen; die Prüfpunkte der Uhr hängen nicht an der API-Stufe |
+| **Das einzige Wear-Abbild mit API 37 ist ein `user`-Build** (`android-wear-signed`: `ro.adb.secure=1`, `ro.debuggable=0`) — kein `adb root`, also kein Watchdog-Faktor über `setprop`; `adb` blieb 45 Minuten `offline` | **Nachgeholt am 25.09.2026, die Uhr bootet auf Wear OS 7** — mit drei Handgriffen, die `emulator.sh` noch nicht kann (siehe unten, „Wear OS 7 ohne Root") |
+| **`avdmanager` aus `cmdline-tools` 12.0 schreibt `target=android-0`** in die AVD, weil er das Abbild mit API „37.0" nicht lesen kann (`sdkmanager` warnt: „SDK XML versions up to 3") — gfxstream wird dann falsch eingerichtet, und der Gast bricht mit `!hasReadColorBufferDma` ab: auf der Uhr `system_server` in `EmulatorDisplayOverlay`, 44 Neustarts in einer Stunde | In `~/.android/avd/<name>.ini` `target=android-37.0` setzen. **Vermutlich auch die Ursache des SurfaceFlinger-Absturzes beim Handy** (erste Zeile der Tabelle, Backlog Nr. 337) — dort nicht nachgemessen |
 | **Emulator und Gradle-Daemon zusammen blockieren den Container** — 6 GB plus rund 5 GB in 15 GB ohne Swap: Last 60, `ps`, `uptime` und `adb` hingen | vor dem Emulator `./gradlew --stop`; `emulator.sh start` warnt seither, wenn ein Daemon läuft |
 | **Nach einem Neustart der Oberfläche sagt `sys.boot_completed` weiter 1**, aber der Nutzerspeicher ist noch gesperrt — `am start` meldet „Activity class … does not exist" | auf `sys.user.0.ce_available=true` warten |
-| **Wear OS 5 zeigt ohne Telefon „Handy verbunden"** — anders als Wear OS 3 am 02.09.2026 (B-S4-09). Die Anzeige folgt einer zugestellten Nachricht, nicht einem Vorgabewert; woran sie hier zugestellt wurde, ist ungeklärt | Gerätetest; den Zustand „nicht erreichbar" zeichnet seither der Bilderlauf (`uhr-handy-fehlt-192dp`) |
+| **Wear OS 5 zeigt ohne Telefon „Handy verbunden"** — anders als Wear OS 3 am 02.09.2026 (B-S4-09). Die Anzeige folgt einer zugestellten Nachricht, nicht einem Vorgabewert; woran sie hier zugestellt wurde, ist ungeklärt. Wear OS 7 zeigt auf der Startseite dasselbe, nach „Dienst beginnen" aber „Handy nicht erreichbar" | Gerätetest; den Zustand „nicht erreichbar" zeichnet seither der Bilderlauf (`uhr-handy-fehlt-192dp`) |
+
+**Wear OS 7 ohne Root (25.09.2026, nachgeholt).** Die Uhr lief auf
+`system-images;android-37.0;android-wear-signed;x86_64` — Android 17, SDK 37,
+`user`-Build —, Boot **1 141 s**, Prüf-APK mit `targetSdk` 37 aufgespielt,
+Start 55 s, Startseite auf rundem Glas, „Dienst beginnen" führt auf die
+Sperrfläche „wartet aufs Handy · keine Aufzeichnung" mit „Handy nicht
+erreichbar"; kein Absturz der App (im Absturzpuffer nur der Bluetooth-Stapel
+des Systems, HCI-Zeitüberschreitung unter TCG). Drei Handgriffe waren nötig,
+**von Hand, nicht in `emulator.sh`**:
+
+1. **Der Watchdog-Faktor über die Debug-Ramdisk** — der Weg, den AOSP für
+   `adb root` auf `user`-Builds zu Prüfzwecken vorsieht: `force_debuggable`
+   und eine `adb_debug.prop` (`ro.hw_timeout_multiplier=50`,
+   `persist.sys.usb.config=adb`) als zusätzliches cpio-Archiv an die
+   entpackte `ramdisk.img` gehängt, **auch unter `first_stage_ramdisk/`**,
+   neu gepackt mit `lz4 -l`, gestartet mit `-ramdisk`. System- und
+   Vendor-Abbild bleiben unberührt, keine Signatur wird verändert. **Die
+   Ramdisk besteht aus mehreren aneinandergehängten Archiven** — wer sie mit
+   `cpio -i` auspackt und neu packt, verliert den Vendor-Teil samt fstab,
+   und der Kernel gerät in eine Panik-Schleife (34 Neustarts).
+2. **`-append-userspace-opt androidboot.verifiedbootstate=orange`** — der
+   Emulator 37.1.11 übergibt den Zustand nicht, und ohne „entsperrt"
+   verwirft init die Debug-Ramdisk. Belegt durch die Zeile
+   `init: Loading /debug_ramdisk/adb_debug.prop` im Kernelprotokoll.
+3. **`target=android-37.0`** (Zeile oben) — und dann **7,2 GB freier
+   Platz** für die Datenpartition; bei 6,4 GB bricht der Emulator mit
+   „Not enough space to create userdata partition" sofort ab.
+
+Nicht geprüft: ob die Uhr nach der Berichtigung von `target` auch **ohne**
+die Debug-Ramdisk bootet — der Watchdog-Abbruch war unter dem falschen
+`target` nie zu sehen, weil `system_server` vorher starb. Ohne Wirkung
+blieben `ro.emulator.circular=false`, `-gpu guest` (wird auf
+`lavapipe`/`swangle` umgesetzt), `-feature -GLDMA` und Emulator 37.3.1 aus
+dem Canary-Kanal (liegt seither im Container).
 
 **Kein siebter Emulatorlauf für 0.15.1 — und das ist zu sagen, nicht zu
 verschweigen** (`CLAUDE.md` 6 macht den Emulator bei jeder Änderung an einem

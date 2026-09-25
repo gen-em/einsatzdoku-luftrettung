@@ -16,9 +16,9 @@ entsteht mit AR-02. Zweig `claude/affectionate-newton-6pzfkc`, von `main`
 >
 > | | |
 > |---|---|
-> | Stand | **25.09.2026 — AR-01 bis AR-05 erledigt, PR offen.** `kontraste.py` prüft die Vollständigkeit, fand zwei echte Kontrastfehler (behoben). Emulator auf API 37: Kopplung, Rechtliches (P-PK-28), Vordergrunddienst und Dienstende belegt. Android **0.16.0**: AGP 9.4.1, Kotlin 2.4.20, API 37, Kette auf dem Stand vom 24.09.; **Lint 0 Fehler / 0 Warnungen** in beiden Modulen (vorher 14), 267/71 Prüffälle grün, 73 von 78 Bildern byteweise gleich, die übrigen fünf nur in der Fassungszeile (Protokoll 7) |
-> | Entschieden | **E-AR-01 bis -07** aus der Freigabe, **E-AR-08 bis -13** aus den Antworten auf Q-AR-01 bis -06, beide vom 24.09.2026 (Abschnitt 5) |
-> | Offen | nichts |
+> | Stand | **25.09.2026 — AR-01 bis AR-05 erledigt, PR offen.** `kontraste.py` prüft die Vollständigkeit, fand zwei echte Kontrastfehler (behoben). Emulator auf API 37: Kopplung, Rechtliches (P-PK-28), Vordergrunddienst und Dienstende belegt; **die Uhr auf Wear OS 7 (API 37) nachgeholt** (F-AR-18). Android **0.16.0**: AGP 9.4.1, Kotlin 2.4.20, API 37, Kette auf dem Stand vom 24.09.; **Lint 0 Fehler / 0 Warnungen** in beiden Modulen (vorher 14), 267/71 Prüffälle grün, 73 von 78 Bildern byteweise gleich, die übrigen fünf nur in der Fassungszeile (Protokoll 7) |
+> | Entschieden | **E-AR-01 bis -07** aus der Freigabe, **E-AR-08 bis -13** aus den Antworten auf Q-AR-01 bis -06, beide vom 24.09.2026; **E-AR-14** vom 25.09.2026 (Abschnitt 5) |
+> | Offen | ob die drei Handgriffe für Wear OS 7 in `emulator.sh` und `cmdline-tools` neuer in `aufbauen.sh` kommen (F-AR-18) |
 > | Hakt | Maven Central drosselt diesen Container (F-AR-01); die Runde baut über Googles Spiegel (E-AR-13) |
 > | Nächstes | **Merge erst nach P5c** (E-AR-01); vorher `main` nach `Pruefablauf.md` 5.3 aufnehmen. Danach die Gerätetests des Prüfdokuments und Nr. 334/335 |
 
@@ -159,8 +159,9 @@ als `default`.
 | **F-AR-13** | **Zwei Kontraste unter AA in der ausgelieferten App** (gefunden in AR-04 vom neuen `kontraste.py`): „Handy nicht erreichbar" auf der Uhr Rot auf Asphalt 4,12 : 1; Cursor im Eingabefeld des Handys Orange auf Schnee 2,23 : 1 | **behoben in AR-04** (Rosa, Orange tief) |
 | **F-AR-14** | **SurfaceFlinger bricht auf den Abbildern mit API 37 ab** (AR-05): `Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma` in `mapper.ranchu.so`, Faden `RegionSampling`; die Oberfläche startete dreimal in 13 Minuten neu, `screencap` scheitert an derselben Stelle. Emulator 37.1.11 und Abbild passen nicht zusammen — nicht die App | umgangen in `emulator.sh` (Drei-Tasten-Navigation, Abzug von der Wirtsseite); Nr. 337 |
 | **F-AR-15** | **`Eingabefeld` hat keinen Aufrufer** (AR-05): seit R63 tot; den Cursor aus AR-04 zeigt kein Bildschirm | Nr. 336 |
-| **F-AR-16** | **Wear OS 5 zeigt ohne Telefon „Handy verbunden"** (AR-05) — anders als Wear OS 3 am 02.09.2026; die Anzeige folgt einer zugestellten Nachricht, woran sie zugestellt wurde, ist ungeklärt. Dazu: Das einzige Wear-Abbild mit API 37 ist ein `user`-Build und bootet ohne Root nicht | Gerätetest (P-AR-12, -13); der Zustand „nicht erreichbar" als Bildfall |
+| **F-AR-16** | **Wear OS 5 zeigt ohne Telefon „Handy verbunden"** (AR-05) — anders als Wear OS 3 am 02.09.2026; die Anzeige folgt einer zugestellten Nachricht, woran sie zugestellt wurde, ist ungeklärt. Dazu: Das einzige Wear-Abbild mit API 37 ist ein `user`-Build — **bootet seit F-AR-18 doch**; Wear OS 7 zeigt auf der Startseite ebenfalls „Handy verbunden“, nach „Dienst beginnen“ aber „Handy nicht erreichbar“ | Gerätetest (P-AR-12, -13); der Zustand „nicht erreichbar" als Bildfall |
 | **F-AR-17** | **Emulator und Gradle-Daemon zusammen blockieren den Container** (AR-05): 6 GB plus rund 5 GB in 15 GB ohne Swap — Last 60, `ps`, `uptime` und `adb` hingen | `emulator.sh start` warnt; `LIESMICH.md` |
+| **F-AR-18** | **Wear OS 7 bootet ohne Root — die Hürde war nicht der Watchdog allein** (AR-05, Nachtrag 25.09.2026). (1) Der Watchdog-Faktor lässt sich über die Debug-Ramdisk von AOSP setzen (`force_debuggable`, `adb_debug.prop`), wenn der Emulator `androidboot.verifiedbootstate=orange` übergibt — 37.1.11 tut es nicht von selbst. (2) Danach starb `system_server` alle 60 bis 80 s an `!hasReadColorBufferDma`; Ursache: `avdmanager` aus `cmdline-tools` 12.0 schreibt `target=android-0`. **Wahrscheinlich dieselbe Ursache wie F-AR-14 beim Handy** — nicht nachgemessen. (3) Mit `target=android-37.0` verlangt die Datenpartition 7,2 GB frei. Boot 1 141 s | `LIESMICH.md` („Wear OS 7 ohne Root“); Übernahme in `emulator.sh` und `aufbauen.sh` offen |
 
 ## 4. Fragen an die Betreiberin
 
@@ -291,6 +292,12 @@ Aus den Antworten auf Abschnitt 4, 24.09.2026:
 | **E-AR-11** | Q-AR-04 | **Emulator einmal, in AR-05, beide Module**, am auszuliefernden Stand. AR-02 und AR-03 belegen sich mit Baulauf und Bild-für-Bild-Vergleich gegen den Satz „vorher" |
 | **E-AR-12** | Q-AR-05 | **Zwei Backlog-Nummern**: **334** die Android-Werkzeuge in den Prüfstand (F-AR-05), **335** die Erkennung der Ausbaustufe an Plattform 37 (F-AR-07); umzusetzen nach dem P5c-Merge |
 | **E-AR-13** | Q-AR-06 | **Googles Maven-Central-Spiegel zuerst, Central dahinter**, dazu die erhöhten Wiederholungen — nur in der Arbeitsumgebung, eingerichtet von `aufbauen.sh android`; die Bauskripte im Repositorium bleiben unberührt |
+
+Vom 25.09.2026, nach AR-05:
+
+| Nr. | Anlass | Entscheidung |
+|---|---|---|
+| **E-AR-14** | Die Uhr lief nur auf Wear OS 5 (F-AR-16) | **Die Uhr soll auf API 37 laufen; Reihenfolge der Wege: KVM, dann das signierte Abbild ohne Root, zuletzt Wear OS 5.1** (Betreiberin). KVM gibt es im Container nicht (`/dev/kvm` fehlt, `vmx`/`svm` 0); der zweite Weg trug nach einer Recherche der Betreiberin (Debug-Ramdisk) und F-AR-18. Der Weg über GitHub Actions mit KVM aus derselben Recherche fasst `.github/` an und liegt außerhalb dieser Runde |
 
 ## 6. Arbeitspakete
 
@@ -470,4 +477,31 @@ Changelog; Prüfdokument Endfassung; Prüfstand; PR.
 
 **Gemessen:** Prüfdokument 2. Endstand: Lint 0 / 0, 267 / 72 Fälle je
 Bauart, 0 Fehlschläge, 0 Kotlin-Warnungen.
+
+**Nachtrag 25.09.2026 — die Uhr auf Wear OS 7** (E-AR-14, F-AR-18). Neun
+Anläufe, protokolliert im Prüfdokument 2. Die Probleme und ihre Lösung:
+
+1. **Der Watchdog-Faktor ohne Root.** Die Debug-Ramdisk von AOSP greift nur
+   auf einem „entsperrten“ Gerät; der Emulator übergibt den Zustand nicht —
+   `-append-userspace-opt androidboot.verifiedbootstate=orange` holt ihn
+   nach. Beleg: die Ladezeile im Kernelprotokoll und `getprop` → 50.
+2. **Die eigene Ramdisk war kaputt.** `cpio -i` liest nur das erste von
+   mehreren aneinandergehängten Archiven; der Vendor-Teil mit der fstab fiel
+   weg, der Kernel lief in eine Panik-Schleife. Gelöst: den ganzen
+   entpackten Strom behalten und das Zusatzarchiv anhängen.
+3. **`system_server` starb weiter**, ohne dass der Grund zu sehen war — das
+   Logcat ist im `user`-Build für den Emulator gesperrt. `adb` über
+   `persist.sys.usb.config=adb` in derselben Datei eingeschaltet; danach
+   stand die Ursache im Absturzpuffer.
+4. **Vier Gegenmittel ohne Wirkung**, weil sie am Symptom ansetzten
+   (runde Maske, Grafikmodus, `GLDMA`, neuerer Emulator). Dabei die
+   Bedingung `!hasReadColorBufferDma` zeitweise falsch herum gelesen und
+   den Irrtum am nächsten Lauf berichtigt. Die Ursache fand eine Suche nach
+   dem Meldungstext: `target=android-0` aus `cmdline-tools` 12.0.
+5. **Der Platz.** Mit richtigem `target` verlangt der Emulator 7,2 GB für
+   die Datenpartition; das Handy-Abbild API 37 (4,4 GB) wurde dafür
+   gelöscht — es lässt sich neu laden.
+
+**Nicht geändert:** `emulator.sh` und `aufbauen.sh`. Die Handgriffe stehen
+in `LIESMICH.md`; ob sie ins Werkzeug kommen, ist offen (Statusblock).
 
