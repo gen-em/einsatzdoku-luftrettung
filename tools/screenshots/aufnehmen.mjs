@@ -940,7 +940,9 @@ async function vorher(seite, schritte, fehlerSammler) {
         }),
       ]);
       await seite.waitForLoadState('networkidle');
-      if (!(await seite.locator('.codeblock-wert').count())) {
+      /* SEIT P5c/AP9 steht der Schluessel in fuenf `.blatt-druck-gruppe`
+         (Druckblatt, M-P5c-01f); bis dahin in einem `.codeblock-wert`. */
+      if ((await seite.locator('.blatt-druck-gruppe').count()) !== 5) {
         fehlerSammler.push('Notfallblatt ohne Schlüsselblock — der Code wurde '
                          + 'abgewiesen (Format?) oder die Seite hat den '
                          + 'Ohne-Code-Zweig gezeigt.');

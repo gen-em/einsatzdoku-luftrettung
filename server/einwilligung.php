@@ -167,7 +167,7 @@ ui_seite_start(['titel' => 'Zustimmung nötig']);
           'klein' => 'Alles als CSV oder als versiegeltes Paket — dasselbe wie sonst',
           'href'  => 'import.php']); ?>
       <?php ui_zeile(['text' => 'Konto löschen',
-          'klein' => 'Unter Einstellungen → Konto. 30 Tage Karenz; in der Zeit '
+          'klein' => 'Unter Einstellungen → Profil. 30 Tage Karenz; in der Zeit '
                    . 'nimmt eine Anmeldung die Löschung zurück',
           'href'  => 'einstellungen.php#karte-konto']); ?>
       <?php ui_zeile(['text' => 'Abmelden',

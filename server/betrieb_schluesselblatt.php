@@ -6,6 +6,11 @@ require_once __DIR__ . '/umgebung_lib.php';   // Vorsatz im Titel (P5c/AP1, E-P5
 require_betreiberin();
 require_once __DIR__ . '/serverkrypto_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitmarke des Blatts
+/* `ui.php` SEIT P5c/AP9 — nicht für das Gerüst (es gibt keins), sondern für
+ * die Meldung: Das Blatt nimmt denselben Baustein wie Code- und Notfallblatt
+ * (`ui_meldung_markup()`, mit Symbol, M-P5c-01f). Bis dahin stand die Warnung
+ * von Hand gebaut da, ohne Symbol. */
+require_once __DIR__ . '/ui.php';
 
 /**
  * DAS SCHLÜSSELBLATT — die einzige Seite, die die Geheimnisse ZEIGT
@@ -69,42 +74,37 @@ if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
                      * der App mehr — es bleiben die Wiederherstellungscodes, die
                      * NICHT an ihm hängen, und das Zurücksetzen durch die
                      * Verwaltung. */
-                    'wozu' => 'Versiegelt die Zugangsdaten der Backup-Ziele, das '
-                            . 'Komplett-Backup, die Konto-Backups und die Geheimnisse '
-                            . 'des Zweitfaktors. Ohne ihn lässt sich keine versiegelte '
-                            . 'Sicherung mehr öffnen, und die Anmeldung nimmt nur noch '
-                            . 'Wiederherstellungscodes.'];
+                    'wozu' => 'Öffnet alles Versiegelte: Komplett-Backup, Konto-Backups, '
+                            . 'Zugänge der Backup-Ziele, Archive des Protokolls und die '
+                            . 'Geheimnisse des Zweitfaktors.'];
 }
 if (preg_match('/^[0-9a-f]{64}$/i', $anHex)) {
     $eintraege[] = ['name' => 'Server-Anteil',
                     'eintrag' => 'kdf_anteil',
                     'hex' => $anHex,
-                    'wozu' => 'Geht in den Datenschlüssel JEDES Kontos ein. Ohne '
-                            . 'ihn kommt niemand mehr an die geschützten Angaben — '
-                            . 'bis jede NutzerIn ihr Passwort über den '
-                            . 'Wiederherstellungsschlüssel neu gesetzt hat. Die '
-                            . 'Daten selbst sind davon nicht betroffen.'];
+                    'wozu' => 'Geht in den Datenschlüssel jedes Kontos ein; ohne ihn setzt '
+                            . 'jede NutzerIn ihr Passwort über den '
+                            . 'Wiederherstellungsschlüssel neu. Kein Datenverlust.'];
 }
 if (preg_match('/^[0-9a-f]{64}$/i', $anAlt)) {
     $eintraege[] = ['name' => 'Server-Anteil (bisheriger)',
                     'eintrag' => 'kdf_anteil_alt',
                     'hex' => $anAlt,
-                    'wozu' => 'Eine Rotation läuft. Dieser Wert öffnet die Hüllen '
-                            . 'der Konten, die sich seit dem Wechsel noch nicht '
-                            . 'angemeldet haben. Er verschwindet, sobald kein '
-                            . 'Konto mehr auf ihm steht.'];
+                    'wozu' => 'Nur während einer Rotation: öffnet die Konten, die sich '
+                            . 'seit dem Wechsel noch nicht angemeldet haben.'];
 }
 
 $adresse = app_url();
+$ohneSchema = preg_replace('#^https?://#', '', rtrim($adresse, '/')) ?? '';
 $jetzt   = datum_zeit_text(gmdate('Y-m-d H:i:s'));
+$umg     = umgebung();
 
-/* Erkennungswert wie `asset()`, aber diese Seite lädt db.php ohnehin — der
- * Aufruf steht hier trotzdem ausgeschrieben, damit sie ohne `ui.php` auskommt
- * (kein Gerüst heisst auch: keine Gerüst-Bibliothek). */
-$v = static function (string $rel): string {
-    $t = @filemtime(__DIR__ . '/' . $rel);
-    return $rel . ($t !== false ? '?v=' . $t : '');
-};
+/* DAS LOGO IST DER STANDARD DER INSTALLATION, nicht die Wahl des Kontos
+ * (E-P5c-30): Das Blatt gehört der Anlage, nicht der Person, die es druckt.
+ * Dieselbe Auflösung wie die Kachel unter Verwaltung → Installation. */
+$logoStamm = logo_standard_aufgeloest() === 'fahrzeug'
+           ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
+
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
 /* DIE KOPFZEILEN VON HAND (P5a/AP4, E-P5a-15).
@@ -125,83 +125,70 @@ kopfzeilen_seite();
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title><?= e(umgebung_praefix()) ?>Schlüsselblatt — <?= e(instanz_kurz()) ?></title>
-<link rel="stylesheet" href="<?= $h($v('assets/style.css')) ?>">
+<link rel="stylesheet" href="<?= $h(asset('assets/style.css')) ?>">
 </head>
 <body class="blatt-seite">
-<div class="rahmen rahmen-lesespalte">
-  <main class="inhalt">
-    <div class="text">
+<?php /* DER BAUSTEIN IST `.blatt-druck` (P5c/AP9, E-P5c-08, -30, M-P5c-01f) —
+         wie Code- und Notfallblatt. Bis Web 21.0.0 stand das Blatt in der
+         Lesespalte des Gerüsts (`.rahmen-lesespalte` + `.text`), mit dem Wert
+         als `.codeblock-wert.blatt-wert` und vier Absätzen „Was damit zu tun
+         ist". Jetzt genau eine A4-Seite: Kopf mit Marke und Kurzname, je Wert
+         eine Kachel mit sechzehn nummerierten Gruppen, drei Zeilen darunter.
 
-      <h1>Schlüsselblatt</h1>
-      <p class="feld-hinweis">
-        <strong><?= $h($adresse !== '' ? $adresse : 'Diese Installation') ?></strong>
-        · gedruckt am <?= $h($jetzt) ?>
-      </p>
-
-      <?php if (!$eintraege): ?>
-        <div class="meldung meldung-warn" role="status">
-          <p><strong>Es steht noch kein Schlüssel in <code>config.php</code>.</strong>
-             Unter Betrieb → Servereinstellungen, Karte „Schlüssel des Servers",
-             lassen sie sich anlegen. Danach dieses Blatt erneut drucken.</p>
-        </div>
-      <?php else: ?>
-
-        <div class="meldung meldung-warn" role="status">
-          <p><strong>Dieses Blatt trägt die Geheimnisse dieser Installation im
-             Klartext.</strong> Es gehört nicht in die Ablage neben den Server
-             und nicht in dasselbe Backup — sondern an <strong>zwei getrennte
-             Orte</strong>: in die Betriebsakte und in den Passwortmanager der
-             BetreiberIn. Einer allein ist kein zweiter Ort.</p>
-        </div>
-
-        <?php foreach ($eintraege as $e): ?>
-          <h2><?= $h($e['name']) ?></h2>
-          <p class="feld-hinweis"><?= $h($e['wozu']) ?></p>
-          <p class="feld-hinweis">Eintrag in <code>config.php</code>:
-             <code><?= $h($e['eintrag']) ?></code> · Kennung
-             <strong><?= $h((string)schluessel_kennung($e['hex'])) ?></strong></p>
-          <?php /* VIERERGRUPPEN, WEIL ES ABGETIPPT WIRD — im Ernstfall, unter
-                   Zeitdruck, von Papier. 64 Zeichen am Stück verliert das
-                   Auge; sechzehn Gruppen zu vier hält es. Beim Nachtragen
-                   werden Leerzeichen und Gross-/Kleinschreibung wieder
-                   entfernt, die Lesehilfe kostet also nichts. */ ?>
-          <p class="codeblock-wert blatt-wert"><?= $h(schluessel_gruppen($e['hex'])) ?></p>
-        <?php endforeach; ?>
-
-        <h2>Was damit zu tun ist</h2>
-        <p class="feld-hinweis"><strong>Wozu.</strong> Geht
-           <code>config.php</code> verloren, sind beide Werte weg. Der
-           Serverschlüssel nimmt jede versiegelte Sicherung mit; der
-           Server-Anteil sperrt jede NutzerIn von ihren geschützten Angaben aus,
-           bis sie ihr Passwort über den Wiederherstellungsschlüssel neu setzt.
-           <strong>Kein Datenverlust</strong> — aber ein Vorgang für alle.</p>
-        <p class="feld-hinweis"><strong>Wohin.</strong> Zwei Ausdrucke, zwei
-           Orte: Betriebsakte und Passwortmanager der BetreiberIn. Nicht in den
-           Serverordner, nicht in dasselbe Backup — das Blatt soll genau das
-           überleben, was die Datei nicht überlebt.</p>
-        <p class="feld-hinweis"><strong>Wann neu.</strong> Nach jeder
-           <em>Rotation</em> des Server-Anteils und nach jedem
-           <em>Neuanfang</em>. Ein altes Blatt ist dann nicht nur überflüssig,
-           sondern irreführend — es zeigt einen Wert, der nichts mehr öffnet.
-           Alte Ausdrucke vernichten.</p>
-        <p class="feld-hinweis"><strong>Zurücktragen</strong> lässt sich ein
-           Wert unter Betrieb → Servereinstellungen, <em>Nachtragen vom Blatt</em>.
-           Die Seite rechnet die Kennung und schreibt nur bei Übereinstimmung —
-           ein Tippfehler landet nicht in <code>config.php</code>.</p>
-
-      <?php endif; ?>
-
-      <?php /* NUR AM BILDSCHIRM. Zwei Knoepfe auf einem Ausdruck sind zwei
-               Kaesten, die nichts tun — `.nur-bildschirm` blendet sie im
-               Druck aus (Abschnitt „Druck" im Stylesheet). */ ?>
-      <p class="feld-hinweis nur-bildschirm">
-        <button type="button" class="knopf knopf-primaer" data-drucken hidden><span>Drucken</span></button>
-        <a class="knopf knopf-leise" href="betrieb_server.php"><span>Zurück zu den Servereinstellungen</span></a>
-      </p>
-
-    </div>
-  </main>
-</div>
-<script src="<?= $h($v('assets/blatt-drucken.js')) ?>"></script>
+         DIE ERKLÄRTEXT-REGEL HAT HIER EINE GRENZE (E-P5c-30): Dieses Blatt wird
+         gebraucht, wenn `config.php` weg ist — dann ist auch `hilfe.php` nicht
+         sicher erreichbar. „Wozu" steht deshalb an der Kachel, „Wohin" in der
+         Warnung, und der Verweis nennt zusätzlich den Weg ohne Server. */ ?>
+<main class="blatt-druck">
+<header class="blatt-kopf"><img src="<?= $h(asset('assets/images/' . $logoStamm . '.svg')) ?>" alt="" width="70" height="44"><span class="blatt-marke"><?= $h(instanz_kurz()) ?></span><span class="blatt-kopf-rechts"><?= $h($adresse !== '' ? $adresse : 'Diese Installation') ?><br>gedruckt am <?= $h($jetzt) ?></span></header>
+<?php if ($umg !== null): ?>
+<p class="blatt-umgebung"><strong><?= $h($umg['name']) ?></strong> — Testdaten, kein Echtbetrieb. Dieses Blatt gilt nur für diese Anlage.</p>
+<?php endif; ?>
+<h1>Schlüsselblatt</h1>
+<?php if (!$eintraege): ?>
+<?= ui_meldung_markup('warn', 'Unter Betrieb → Servereinstellungen, Karte „Schlüssel des '
+      . 'Servers", lassen sie sich anlegen; danach dieses Blatt erneut drucken.',
+      'Es steht noch kein Schlüssel in config.php.') ?>
+<?php else: ?>
+<?= ui_meldung_markup('warn', 'Es gehört an zwei getrennte Orte — Betriebsakte und '
+      . 'Passwortmanager der BetreiberIn —, nicht neben den Server und nicht in dasselbe Backup.',
+      'Dieses Blatt trägt die Geheimnisse dieser Installation im Klartext.') ?>
+<?php foreach ($eintraege as $e): ?>
+<?php /* SECHZEHN NUMMERIERTE GRUPPEN, WEIL ES ABGETIPPT WIRD — im Ernstfall,
+         unter Zeitdruck, von Papier. 64 Zeichen am Stück verliert das Auge;
+         und die Quartalsrückfrage (E-P5b-10) fragt „Serverschlüssel ·
+         Gruppe 11" — bis elf zählt auf Papier niemand gern. Beim Nachtragen
+         werden Leerzeichen und Groß-/Kleinschreibung wieder entfernt, die
+         Lesehilfe kostet also nichts. */ ?>
+<section class="blatt-kachel"><div class="blatt-kachel-kopf"><span class="blatt-kachel-name"><?= $h($e['name']) ?></span><span class="blatt-kachel-neben"><code><?= $h($e['eintrag']) ?></code> · Kennung <strong><?= $h((string)schluessel_kennung($e['hex'])) ?></strong></span></div>
+<div class="blatt-druck-gruppen"><?php foreach (explode(' ', schluessel_gruppen($e['hex'])) as $nr => $g): ?><span class="blatt-druck-gruppe" data-nr="<?= $nr + 1 ?>"><?= $h($g) ?></span><?php endforeach; ?></div>
+<p><?= $h($e['wozu']) ?></p></section>
+<?php endforeach; ?>
+<h2>Was damit zu tun ist</h2>
+<p><strong>Wann neu.</strong> Nach jeder Rotation des Server-Anteils und nach jedem Neuanfang — alte Blätter vernichten.</p>
+<p><strong>Zurücktragen.</strong> Betrieb → Servereinstellungen, „Nachtragen vom Blatt"; geschrieben wird nur, wenn die Kennung stimmt. Leerzeichen und Groß/Klein sind egal.</p>
+<?php /* KNAPP, WEIL ES SONST NICHT AUF EINE SEITE PASST (gemessen, P5c/AP9):
+         Im Härtefall — drei Werte, Kurzname 83 Zeichen, Adresse 62, dazu die
+         Umgebungszeile — lief diese Zeile mit der langen Sprungmarke
+         „#karte-schluessel-des-servers-seit-web-20-1-0" auf drei Zeilen und
+         das Blatt auf zwei Seiten (1032 von 1017 px). Mit der Marke
+         „#das-schluesselblatt" und ohne „Abschnitt …" sind es 1013 von 1017.
+         Der Rückfall aus M-P5c-02 — die Umgebungszeile in den Kopf — half
+         dort nicht: Neben einem langen Kurznamen wird die rechte Kopfspalte
+         dadurch höher, nicht kürzer (1051 px). */ ?>
+<p><strong>Mehr.</strong> Handbuch: <?= $h($ohneSchema !== '' ? $ohneSchema : '…') ?>/hilfe.php#das-schluesselblatt — ohne Server: <code>docs/Handbuch.md</code> auf github.com/gen-em/einsatzdoku-luftrettung.</p>
+<?php endif; ?>
+<footer class="blatt-fuss"><span>Schlüsselblatt · <?= $h(instanz_kurz()) ?> · Web <?= $h(WEB_VERSION) ?></span><span>Seite 1 von 1</span></footer>
+<?php /* NUR AM BILDSCHIRM. Zwei Knöpfe auf einem Ausdruck sind zwei Kästen,
+         die nichts tun — `.nur-bildschirm` nimmt sie aus dem Druck. Im Blatt
+         und nicht darunter, wie beim Codeblatt. */ ?>
+<p class="nur-bildschirm">
+  <?php if ($eintraege): ?>
+  <button type="button" class="knopf knopf-primaer" data-drucken hidden><span>Drucken</span></button>
+  <?php endif; ?>
+  <a class="knopf knopf-leise" href="betrieb_server.php"><span>Zurück zu den Servereinstellungen</span></a>
+</p>
+</main>
+<script src="<?= $h(asset('assets/blatt-drucken.js')) ?>"></script>
 </body>
 </html>

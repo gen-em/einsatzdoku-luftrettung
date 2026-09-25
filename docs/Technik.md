@@ -353,7 +353,8 @@ Daten erst nach Server-Bestätigung.
 │   ├── betrieb_server.php  Betrieb → Servereinstellungen (S8/AP2): Speicher
 │   │                       der Installation als Balken, Grenze und Schwellen
 │   │                       der Konto-Backups, Webspace-Angabe; seit S10/AP3
-│   │                       zuoberst die Karte „Schlüssel des Servers"
+│   │                       die Karte „Schlüssel des Servers" (seit P5c/AP1
+│   │                       unter der Ankündigung)
 │   │                       (Serverschlüssel und Server-Anteil: anlegen,
 │   │                       wechseln, alten entfernen, nachtragen, Neuanfang
 │   │                       — genannt wird nur die Kennung, nie der Wert)
@@ -361,7 +362,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       Das Schlüsselblatt (S10/AP3): die EINE Seite,
 │   │                       deren Zweck der Ausdruck ist. Ohne Gerüst, ohne
 │   │                       Zwischenspeicher (`no-store`, `no-referrer`,
-│   │                       `noindex`), Werte in Vierergruppen. Sie trägt
+│   │                       `noindex`), Werte in nummerierten Vierergruppen,
+│   │                       eine A4-Seite (`.blatt-druck`, P5c/AP9). Sie trägt
 │   │                       beide Geheimnisse im Klartext — der zweite Ort,
 │   │                       der überleben soll, was `config.php` nicht
 │   │                       überlebt
@@ -1047,8 +1049,12 @@ Anwendung ohne Gerüst, deren Zweck der Ausdruck ist. `Cache-Control: no-store`,
 `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`; Werte in
 Vierergruppen (`hex_vierergruppen()` in `db.php`). Sie steht in
 `WARTUNG_AUSNAHMEN` — die Lage, in der man sie braucht, ist eine Wartungslage.
-Das zugehörige `@media print` in `assets/style.css` (Abschnitt 26) ist das
-**erste und einzige** des Projekts und umfasst drei Regeln.
+Das zugehörige `@media print` in `assets/style.css` (Abschnitt 26) war das
+**erste** des Projekts. Seit Web 21.1.0 (P5c/AP9) baut das Blatt auf dem
+Druckblatt `.blatt-druck` wie Code- und Notfallblatt (`Design.md` 9.39):
+genau eine A4-Seite, je Wert eine Kachel mit sechzehn nummerierten Gruppen,
+das Logo als Standard der Installation, auf einer Anlage mit Etikett die
+Umgebungszeile; `.blatt-wert` ist entfallen.
 
 **Formatkennung (seit Web 5.1.0, M2-10).** Jeder von `EdCrypto.encrypt()`
 erzeugte Chiffretext beginnt mit `edk1:` — sowohl `pat_blob` als auch die
@@ -11374,7 +11380,9 @@ unter `app` das Etikett, und daneben den Betreff-Vorsatz der Mails:
 
 Danach trägt jede Seite „[Staging]" im Titel, eine rote Kopfleiste und den
 Streifen „Staging — Testdaten, kein Echtbetrieb"; die Wartungs- und die
-Überlastseite sowie Notfall- und Schlüsselblatt nur den Titel. `farbe` ist eine geschlossene Liste
+Überlastseite nur den Titel. Notfall-, Schlüssel- und Codeblatt tragen den
+Titel und — seit Web 21.1.0 bzw. beim Codeblatt seit 20.42.0 — eine rot
+umrandete Umgebungszeile unter dem Blattkopf (E-P5c-50). `farbe` ist eine geschlossene Liste
 (`UMGEBUNG_FARBEN` in `server/umgebung_lib.php`, heute nur `rot`). **Nie
 abgeleitet** — kein Blick auf Domain oder Zweig; ohne Eintrag verhält sich
 die Anlage wie die Produktivanlage. **Prüfen:** Betrieb → Status, Karte

@@ -2100,11 +2100,15 @@ wird gespeichert. Eine getrennte Einrichtungsseite nach dem ersten Anmelden gibt
 es nicht mehr.
 
 **Das Notfallblatt (seit Web 20.24.0).** Neben dem Schlüssel steht ein Knopf
-**„Notfallblatt drucken"**. Er öffnet eine Druckseite mit deinem Schlüssel in
-Vierergruppen, deiner Kontoadresse, der Adresse dieser Installation und dem
-Datum — dazu die drei Sätze, die daraufgehören: wofür er da ist, was ohne ihn
-verloren ist, und wo er hingehört (nicht in die Schublade neben dem Rechner
-und nicht in dieselbe Tasche wie das Handy).
+**„Notfallblatt drucken"**. Er öffnet eine Druckseite — genau **eine
+A4-Seite** — mit deinem Schlüssel in **fünf nummerierten Vierergruppen**,
+deiner Kontoadresse, der Adresse dieser Installation und Datum und Uhrzeit;
+dazu, wofür er da ist, was ohne ihn verloren ist, wie du ihn benutzt und wo
+er hingehört: dort, wo du ihn in fünf Jahren noch findest und niemand sonst
+(Dokumentenordner zu Hause, Bankschließfach, Passwortmanager). Auf einer
+Anlage mit Etikett — etwa *Staging* — trägt das Blatt eine rot umrandete Zeile,
+dass es nur für diese Anlage gilt. Seit Web 21.1.0 sieht es aus wie das
+Schlüsselblatt der BetreiberIn und das Codeblatt des Zweitfaktors (3.1f).
 
 **Dieses Blatt lässt sich später nicht erneut drucken.** Der Schlüssel entsteht
 in deinem Browser und wird nirgends gespeichert — auch nicht bei der BetreiberIn.
@@ -5256,6 +5260,32 @@ Wie lange Betriebsereignisse liegen — in der Datenbank und im Archiv. Bis Web
 „Fristen") — ein kürzeres Audit ist eine Handlung, die ins Audit gehört.
 Die Plakette am Kartenkopf zählt die Archive, „Protokoll lesen" führt auf
 die Seite. Was ins Archiv geht und was nicht: 11.7.
+
+#### Das Schlüsselblatt
+
+Die Karte „Schlüssel des Servers" druckt es mit **„Schlüsselblatt drucken"**.
+Es ist die einzige Seite, die die Werte selbst zeigt, und es passt auf genau
+**eine A4-Seite** (seit Web 21.1.0 auch mit drei Werten während einer
+Rotation). Oben stehen Bildmarke und Kurzname der Installation, rechts
+Adresse und Druckzeit; auf einer Anlage mit Etikett — etwa *Staging* — steht
+darunter eine rot umrandete Zeile, die auch schwarzweiß sagt, dass das Blatt
+nicht zur Produktivanlage gehört.
+
+Je Wert eine **Kachel**: Name, Eintrag in `config.php`, Kennung und der Wert
+in **sechzehn nummerierten Vierergruppen**, darunter ein Satz, wozu er da ist.
+Die Nummern sind für die Rückfrage da (unten) — „Gruppe 11" liest man ab,
+statt bis elf zu zählen. Auf das Blatt gehört auch, **wohin** es gehört:
+zweimal gedruckt, in die Betriebsakte und in den Passwortmanager der
+BetreiberIn, nicht neben den Server und nicht in dasselbe Backup.
+
+**Die Rückfrage.** Alle **drei Monate** fragt die Anwendung eine BetreiberIn
+beim Anmelden nach vier zufällig gewählten Gruppen vom Blatt. Stimmen sie,
+ist die Frage für alle BetreiberInnen der Installation für drei Monate
+beantwortet. **„Später"** schiebt sie bis zur nächsten Anmeldung — nur für
+diese Sitzung, damit eine andere BetreiberIn sie nicht mit weggeschoben
+bekommt. Nach **drei** falschen Antworten ist der Weg für eine Weile gesperrt
+(die erste Sprosse der Sperrleiter, 11.4a). Ist das Blatt verlegt, druckt
+man es neu — das ändert keinen Schlüssel.
 
 ### 12.6 Komplett-Backup
 

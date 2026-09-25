@@ -34,6 +34,10 @@ require_once __DIR__ . '/totp_lib.php';
 require_once __DIR__ . '/instanz_lib.php';
 require_once __DIR__ . '/umgebung_lib.php';
 require_once __DIR__ . '/ui.php';
+/* `logo_src()` fragt `logo_stamm()`, und die steht in `session_lib.php`. Ohne
+ * sie fiel das Blatt bis Web 21.0.0 still auf den Hubschrauber zurück, statt
+ * der Wahl des Kontos zu folgen (F-P5c-149, E-P5c-30). */
+require_once __DIR__ . '/session_lib.php';
 
 /* Diese Seite zeigt Geheimnisse: in keinen Zwischenspeicher, in keine fremde
  * Adresszeile — wie Schlüssel- und Notfallblatt. */

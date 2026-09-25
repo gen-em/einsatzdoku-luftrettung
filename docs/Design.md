@@ -374,7 +374,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 24 |  |
 | `--dunkelblau` | `#1A2E4D` | 64 |  |
-| `--gedaempft` | `#6E6459` | 70 |  |
+| `--gedaempft` | `#6E6459` | 71 |  |
 | `--auf-dunkel` | `#FFFFFF` | 10 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
@@ -419,12 +419,12 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-1` | `12px` | 8 |  |
+| `--groesse-1` | `12px` | 9 |  |
 | `--groesse-2` | `13px` | 56 |  |
 | `--groesse-3` | `15px` | 14 |  |
 | `--groesse-4` | `16px` | 16 |  |
-| `--groesse-5` | `19px` | 11 |  |
-| `--groesse-6` | `24px` | 4 |  |
+| `--groesse-5` | `19px` | 12 |  |
+| `--groesse-6` | `24px` | 5 |  |
 | `--groesse-titel` | `28px` | 2 |  |
 | `--zeile-eng` | `1.3` | 5 | Titel, Kacheln |
 | `--zeile` | `1.55` | 2 | Oberfläche |
@@ -434,8 +434,8 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 79 |  |
-| `--abstand-2` | `8px` | 117 |  |
+| `--abstand-1` | `4px` | 81 |  |
+| `--abstand-2` | `8px` | 118 |  |
 | `--abstand-3` | `12px` | 159 |  |
 | `--abstand-4` | `16px` | 66 |  |
 | `--abstand-5` | `24px` | 34 |  |
@@ -881,7 +881,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `datenbank.svg` | Tabler Icons „database" (MIT) | 11 |
 | `drucken.svg` | Tabler Icons „printer" (MIT) | 3 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
-| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
+| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 38 |
@@ -918,7 +918,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 53 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 49 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 12 |
@@ -1827,7 +1827,7 @@ Werts**:
 
 | Stufe | Klasse | Wofür | Schrift |
 |---|---|---|---|
-| groß | `.codeblock-wert` | Werte, die jemand **abschreibt**: Kopplungscode, Wiederherstellungsschlüssel, Schlüsselblatt (`+ .blatt-wert`) | `--groesse-5`, 600, gesperrt (`.06em`) |
+| groß | `.codeblock-wert` | Werte, die jemand **abschreibt**: Kopplungscode, Wiederherstellungsschlüssel | `--groesse-5`, 600, gesperrt (`.06em`) |
 | klein | `.codeblock-wert-lang` | sechzig bis hundert Zeichen, die jemand **kopiert**: Cron-Zeile, Token-Adresse, Setz-Link, Einladungslink, Geräte-ID, API-Schlüssel, APK-Prüfsumme | `--groesse-2`, 400, ohne Sperrung, `word-break:break-all` |
 
 ```
@@ -1871,6 +1871,12 @@ der aufklappt, den Rest der Seite verschiebt.
 > *Dieser Absatz stand bis Web 16.3.0 am Ende von 9.18a und handelte dort vom
 > Kopieren-Knopf, den 9.18a gar nicht kennt. Zurückgeschoben, als 9.18a beim
 > Anlegen des Kartenfilters gegengelesen wurde.*
+
+> *Seit Web 21.1.0 stehen die Werte von Schlüssel- und Notfallblatt nicht
+> mehr im Wertekasten, sondern als nummerierte Gruppen im Druckblatt (9.39);
+> `.blatt-wert` ist entfallen. Der folgende Absatz beschreibt den Stand bis
+> Web 21.0.0 — die Begründung für „groß und gesperrt" gilt für die Gruppen
+> unverändert.*
 
 > **Und seit Web 20.1.0 gibt es eine dritte Stelle für die große Stufe — das
 > Schlüsselblatt** (S10/AP3). 64 Hexzeichen sind ein langer Wert, und nach
@@ -2898,10 +2904,14 @@ keine neue Farbe.
 M-P5c-01f (20.09.2026), die Codeliste mit M-P5c-02 (b), die Umgebungszeile
 mit M-P5c-02 (e).*
 
-**Zweck:** eine Seite, die gedruckt wird — **genau eine A4-Seite**. Erster
-Verwender ist das **Codeblatt** des Zweitfaktors (`codeblatt.php`);
-Schlüssel- und Notfallblatt ziehen in AP9 nach. Die Seite baut ihre Hülle
-selbst (kein Gerüst), `<body class="blatt-seite">`, darin `<main class="blatt-druck">`.
+**Zweck:** eine Seite, die gedruckt wird — **genau eine A4-Seite**. Drei
+Verwender: das **Codeblatt** des Zweitfaktors (`codeblatt.php`, seit AP5), das
+**Schlüsselblatt** (`betrieb_schluesselblatt.php`) und das **Notfallblatt**
+(`notfallblatt.php`), beide seit Web 21.1.0 (P5c/AP9). Die Seite baut ihre
+Hülle selbst (kein Gerüst), `<body class="blatt-seite">`, darin
+`<main class="blatt-druck">`. Das **Logo** ist beim Schlüsselblatt der
+Standard der Installation — das Blatt gehört der Anlage —, bei Code- und
+Notfallblatt die Wahl des Kontos, ohne Sitzung der Standard (E-P5c-30).
 
 | Teil | Darstellung |
 |---|---|
@@ -2911,6 +2921,7 @@ selbst (kein Gerüst), `<body class="blatt-seite">`, darin `<main class="blatt-d
 | `.blatt-druck .meldung` | die vorhandene Meldung, auf Papier mit Rand `--strich` in `--linie-stark` |
 | `.blatt-kachel` | Rahmen `--strich-stark` in `--dunkelblau`, Fläche `--rauch` (im Druck ohne), nicht umbrechend; Kopf mit `.blatt-kachel-name` und `.blatt-kachel-neben` |
 | `.blatt-codes` | zehn Einmalcodes in zwei Spalten, feste Schrift `--groesse-5`, Sperrung `.08em`; davor die Nummer, **davor das Kästchen** zum Abhaken (E-P5c-65) |
+| `.blatt-druck-gruppen` + `.blatt-druck-gruppe` | ein Schlüssel in **nummerierten Vierergruppen**: acht je Zeile (Schlüsselblatt, 16 Gruppen), mit `.blatt-druck-gruppen-5` fünf in einer Zeile und eine Stufe größer (Notfallblatt). Feste Schrift `--groesse-5`, Sperrung `.08em`; die Nummer (`data-nr`) steht **darüber**, `--groesse-1`, gedämpft — die Rückfrage zum Schlüsselblatt fragt „Gruppe 11". Der Name trägt `-druck-`, weil `.blatt-gruppen` schon vergeben ist (F-P5c-44) |
 | `.blatt-fuss` | Blattname · Installation · Webversion · Lizenz, rechts „Seite 1 von 1" |
 
 **`@page` gilt für jede gedruckte Seite** (A4, 14 mm / 18 mm): Eine
@@ -2919,8 +2930,24 @@ Seitentyp trägt nicht in jedem Browser. Bis Web 20.41 gab es keine Vorgabe.
 Am Bildschirm sieht das Blatt ab 720 px aus wie das Blatt — 210 mm breit,
 mit denselben Rändern.
 
-**Gemessen:** Codeblatt als PDF aus Chromium ohne Hintergrundgrafiken:
-**1 Seite**.
+**Gemessen** — PDF aus Chromium ohne Hintergrundgrafiken, belegte Höhe bei
+658 px Satzbreite von 1017 px: Codeblatt **1 Seite**; Schlüsselblatt mit zwei
+Werten **1 Seite, 742 px**; Notfallblatt **1 Seite, 711 px**; **Härtefall**
+des Schlüsselblatts (drei Werte, Kurzname 83 Zeichen, Adresse 62) **1 Seite,
+978 px**, auf Staging mit Umgebungszeile **1013 px** — 4 px Luft.
+
+> **Die Zeile „Mehr" des Schlüsselblatts ist knapp, und das ist gemessen**
+> (Web 21.1.0). Mit der langen Sprungmarke `#karte-schluessel-des-servers-…`
+> lief sie im Härtefall auf drei Zeilen und das Blatt auf zwei Seiten
+> (1032 px). Der Rückfall aus M-P5c-02 — die Umgebungszeile in den Kopf —
+> half nicht: Neben einem langen Kurznamen wird die rechte Kopfspalte dadurch
+> höher (1051 px). Geholfen hat die kurze Marke `#das-schluesselblatt`. Wer
+> dem Blatt eine Zeile hinzufügt, misst den Härtefall neu.
+>
+> **Eine Falle beim Messen:** `page.pdf()` druckt mit der Medienart, die
+> zuletzt per `emulateMedia` gesetzt wurde. Wer vorher `screen` gesetzt hat,
+> bekommt die Bildschirmfassung — mit A4-Mindesthöhe und Rand — und misst
+> zwei Seiten, wo eine ist.
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
@@ -2985,6 +3012,11 @@ beiden Rechtstextseiten brauchen eine.
 > Kein neuer Baustein. Ihr Markup steht in `system_fehlerseite()`
 > (`systemmeldung_lib.php`), weil sie auch dann stehen muss, wenn `ui.php`
 > selbst der Fehler ist.
+
+> *Seit Web 21.1.0 bauen alle drei Blätter auf dem Druckblatt `.blatt-druck`
+> (9.39) statt auf der Lesespalte; `.blatt-wert` ist entfallen, und den
+> Seitenumbruch mitten im Wert verhindert jetzt `.blatt-kachel`. Der folgende
+> Absatz beschreibt den Stand bis Web 21.0.0.*
 
 > **Die Druckseite ist der zweite Sonderfall — und das erste `@media print`
 > des Projekts** (Web 20.1.0, S10/AP3). Sie ist kein neuer Baustein: Sie

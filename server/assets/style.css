@@ -4466,25 +4466,12 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   .blatt-seite .rahmen,
   .blatt-seite .inhalt { background: none; }
 
-  /* KEIN SEITENUMBRUCH MITTEN IM WERT. Ein Schlüssel, der über zwei Blätter
-   * läuft, ist beim Abtippen die eine Stelle, an der eine Gruppe verlorengeht
-   * — und ein halb abgetippter Schlüssel sieht aus wie ein falscher. */
-  .blatt-wert { break-inside: avoid; page-break-inside: avoid; }
+  /* KEIN UMBRUCH NACH EINER ÜBERSCHRIFT. Den Umbruch MITTEN im Wert hielt
+   * bis Web 21.0.0 hier `.blatt-wert`; das tut seither `.blatt-kachel`
+   * (Druckblatt, P5c/AP9). */
   h2 { break-after: avoid; page-break-after: avoid; }
 }
 
-/* Der Wert auf dem Blatt: 64 Hexzeichen in sechzehn Vierergruppen.
- *
- * ER BENUTZT `.codeblock-wert` als Grundlage und ändert genau zwei Dinge: Er
- * darf umbrechen (sechzehn Gruppen passen in keine Zeile von 210 mm), und er
- * bricht NUR ZWISCHEN den Gruppen um — `word-break:break-all` zerschnitte eine
- * Gruppe mitten durch, und dann zählt beim Abtippen niemand mehr nach. */
-.blatt-wert {
-  white-space: normal;
-  word-break: keep-all;
-  overflow-wrap: normal;
-  line-height: 1.9;
-}
 
 
 /* ===========================================================================
@@ -4593,9 +4580,9 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .anmeldung-schritt{font-size:var(--groesse-5);margin:0 0 var(--abstand-2)}
 
 /* DRUCKBLATT (.blatt-druck) — EIN Baustein für Codeblatt, Schlüsselblatt und
- * Notfallblatt (E-P5c-08, Nr. 246). Das Codeblatt ist sein erster Verwender;
- * die beiden anderen Blätter ziehen in AP9 nach. `.blatt-wert` bleibt für den
- * Bildschirm-Dialog.
+ * Notfallblatt (E-P5c-08, Nr. 246). Das Codeblatt war sein erster Verwender
+ * (AP5); Schlüssel- und Notfallblatt sind mit AP9 nachgezogen, und mit ihnen
+ * ist `.blatt-wert` entfallen — der Wert am Stück in der Lesespalte.
  *
  * `@page` GILT FÜR JEDE GEDRUCKTE SEITE, nicht nur für das Blatt — eine
  * Seitenregel lässt sich nicht an eine Klasse binden, und ein benannter
@@ -4632,6 +4619,22 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .blatt-kachel-name{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);color:var(--dunkelblau)}
 .blatt-kachel-neben{font-size:var(--groesse-2);color:var(--gedaempft)}
 .blatt-kachel > p{font-size:var(--groesse-2);margin:0}
+.blatt-kachel-neben code{font-size:inherit}
+/* DIE NUMMERIERTEN GRUPPEN (.blatt-druck-gruppen, P5c/AP9, M-P5c-01f) —
+ * sechzehn Vierergruppen je Wert beim Schlüsselblatt, fünf beim Notfallblatt.
+ * Jede Gruppe trägt ihre NUMMER darüber: Die Quartalsrückfrage (E-P5b-10)
+ * fragt „Serverschlüssel · Gruppe 11", und bis elf zählt auf Papier niemand
+ * gern. DER NAME TRÄGT `-druck-`, weil `.blatt-gruppen` und `.blatt-gruppe`
+ * schon vergeben sind (Betreiber-Rückfrage, P5b/AP9; F-P5c-44). Die Kachel
+ * bricht nicht über zwei Seiten (`.blatt-kachel`); eine halb abgetippte
+ * Gruppe sieht aus wie eine falsche. */
+.blatt-druck-gruppen{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:var(--abstand-1) 0;margin:var(--abstand-1) 0 var(--abstand-2)}
+.blatt-druck-gruppen-5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:30rem}
+.blatt-druck-gruppe{display:flex;flex-direction:column;align-items:center;
+  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:600;letter-spacing:.08em;line-height:1.25}
+.blatt-druck-gruppen-5 .blatt-druck-gruppe{font-size:var(--groesse-6)}
+.blatt-druck-gruppe::before{content:attr(data-nr);font-family:var(--schrift-text);font-weight:400;
+  font-size:var(--groesse-1);letter-spacing:0;color:var(--gedaempft)}
 .blatt-fuss{margin-top:var(--abstand-3);padding-top:var(--abstand-2);border-top:var(--strich) solid var(--linie);
   font-size:var(--groesse-1);color:var(--gedaempft);display:flex;justify-content:space-between;gap:var(--abstand-3)}
 /* AM BILDSCHIRM sieht das Blatt aus wie das Blatt: A4 mit den Rändern aus @page.
