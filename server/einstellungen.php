@@ -62,7 +62,7 @@ if (!in_array($tab, ['profil', 'geraete', 'standorte', 'standort', 'backup'], tr
  * und die sind fort, sobald das Geruest die erste Zeile geschrieben hat; ein
  * `header()` weiter unten scheiterte still, und die Seite stuende halb da.
  * `dt_base_erlaubt()` ist dieselbe Pruefung, die auch der Diensttag benutzt —
- * eigener Standort oder ausgewaehlter zentraler. */
+ * der Standort gehoert dem Konto. */
 $seiteBase = 0;
 if ($tab === 'standort') {
     $seiteBase = (int)dt_base_erlaubt(db(), $userId, (int)($_GET['s'] ?? 0));
@@ -72,6 +72,9 @@ if ($tab === 'standort') {
     }
 }
 $notice = null; $error = null; $pwGewechselt = false; $newKey = null;
+/* Zweitfaktor (P5c/AP5): die Codes, einmal in der Antwort auf den POST, der
+ * sie erzeugt hat, und die Meldungen der Karte — [Auftakt, Text]. */
+$zfCodes = null; $zfMeldung = null; $zfFehler = null;
 
 /* DER TON DER HINWEISZEILE (S5 Paket B). Bis hierher war er fest 'info'. Die
  * abgeschlossene Kopplung ist aber ein Vollzug und kein Hinweis — sie bekommt
@@ -285,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (ist_dublettenfehler($ex)) {
                     $error = 'Diese E-Mail-Adresse wird bereits verwendet.';
                 } else {
-                    error_log('profil speichern: ' . $ex->getMessage());
+                    system_melden('profil', 'Profil nicht gespeichert', $ex);
                     $error = 'Das Profil konnte nicht gespeichert werden. '
                            . 'Es wurde nichts geändert.';
                 }
@@ -338,6 +341,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * aussieht statt nach der Folge des eigenen Klicks. */
                 session_beenden('gesperrt');
             }
+        }
+    }
+
+    /* ---- Zweitfaktor (P5c/AP5, E-P5c-15, -41, -54; M-P5c-02b Bild 2) ----
+     *
+     * FUENF HANDLUNGEN, EINE KARTE: einrichten beginnen, einschalten (mit
+     * einem bestaetigten Code), abbrechen, neue Codes, ausschalten.
+     *
+     * DIE CODES ERSCHEINEN GENAU EINMAL — in der Antwort auf den POST, der sie
+     * erzeugt hat. „Einschalten" und „Neue Codes" leiten deshalb NICHT um;
+     * nach einer Umleitung gaebe es sie nicht mehr, gespeichert ist nur ihr
+     * Pruefwert. Die drei anderen leiten um, wie jede Handlung ohne
+     * Einmal-Anzeige.
+     *
+     * AUSSCHALTEN NUR OHNE PFLICHT (E-P5c-15). Fuer Support, Admin und
+     * BetreiberIn setzt ihn die Verwaltung zurueck (E-P5c-42) oder, seit
+     * Konzept RW, die Person selbst mit dem Wiederherstellungsschluessel am
+     * Code-Schritt; der Knopf fehlt hier, und diese Pruefung haelt auch den
+     * handgebauten POST ab.
+     *
+     * ABBRECHEN RAEUMT NUR EINE ANGEFANGENE EINRICHTUNG. Derselbe Aufruf an
+     * einem eingeschalteten Zweitfaktor schaltete ihn ab — ein Knopf
+     * „Abbrechen" darf das nie. */
+    if (str_starts_with((string)$action, 'zf_')) {
+        require_once __DIR__ . '/totp_lib.php';
+        $zfZustand = totp_zustand($userId);
+        $zfPflicht = rolle_braucht_zweitfaktor($userRole);
+        $zfZurueck = null;                       // [ton, text] fuer die Umleitung
+        if ($action === 'zf_beginnen') {
+            $b = totp_einrichtung_beginnen($userId);
+            $zfZurueck = $b['ok'] ? ['', ''] : ['error', match ($b['grund'] ?? '') {
+                'demo'             => 'Im Demo-Konto lässt sich der Zweitfaktor nicht '
+                                    . 'einschalten — die Zugangsdaten sind öffentlich.',
+                'an'               => 'Der Zweitfaktor ist schon eingeschaltet.',
+                'serverschluessel' => 'Auf dieser Anlage ist kein Serverschlüssel '
+                                    . 'eingetragen; ohne ihn lässt sich das Geheimnis '
+                                    . 'nicht sicher speichern.',
+                default            => 'Die Einrichtung ist gerade nicht möglich — '
+                                    . 'eine AdministratorIn muss update.php aufrufen.',
+            }];
+        } elseif ($action === 'zf_einschalten') {
+            $r = totp_einrichtung_abschliessen($userId, (string)($_POST['code'] ?? ''));
+            if ($r['ok']) {
+                $zfCodes = $r['codes'];
+                $zfMeldung = ['Eingeschaltet.', 'Ab der nächsten Anmeldung fragt die '
+                            . 'Anwendung nach dem Code.'];
+            } elseif (($r['grund'] ?? '') === 'code') {
+                $zfFehler = ['Der Code passt nicht.', 'Er gilt 30 Sekunden — den '
+                           . 'nächsten aus der App nehmen. Passt keiner, stimmt oft die '
+                           . 'Uhrzeit des Handys nicht.'];
+            } else {
+                $zfZurueck = ['error', 'Es gibt keine angefangene Einrichtung — bitte neu beginnen.'];
+            }
+        } elseif ($action === 'zf_abbrechen') {
+            if ($zfZustand['angefangen']) { totp_abschalten($userId, 'selbst'); }
+            $zfZurueck = ['', ''];
+        } elseif ($action === 'zf_codes_neu') {
+            $zfCodes = totp_codes_erneuern($userId);
+            if ($zfCodes !== null) {
+                $zfMeldung = ['Neue Codes erzeugt.', 'Die alten gelten ab jetzt nicht mehr.'];
+            } else {
+                $zfZurueck = ['error', 'Der Zweitfaktor ist nicht eingeschaltet.'];
+            }
+        } elseif ($action === 'zf_ausschalten') {
+            if ($zfPflicht) {
+                $zfZurueck = ['error', 'Für deine Rolle ist der Zweitfaktor Pflicht — '
+                            . 'ausschalten geht nicht.'];
+            } else {
+                totp_abschalten($userId, 'selbst');
+                $zfZurueck = ['notice', 'Zweitfaktor ausgeschaltet. Die Anmeldung fragt '
+                            . 'wieder nur nach dem Passwort.'];
+            }
+        }
+        if ($zfZurueck !== null) {
+            if ($zfZurueck[0] !== '') { flash_setzen($zfZurueck[0], $zfZurueck[1]); }
+            header('Location: einstellungen.php?t=profil#k-zweitfaktor');
+            exit;
         }
     }
 
@@ -522,6 +602,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'toggle') {
         db()->prepare('UPDATE devices SET active = 1 - active WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll_geraet('geraet_umgeschaltet', (int)($_POST['id'] ?? 0), $userId, 'selbst');
         $notice = 'Status geändert.';
     }
     /* ---- Kopplung: den Code vom Gerät entgegennehmen (S5, E-S5-01) -------
@@ -640,6 +722,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'delete') {
         // FK setzt device_id in Einsaetzen/Segmenten auf NULL -> Daten bleiben
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll_geraet('geraet_geloescht', (int)($_POST['id'] ?? 0), $userId, 'selbst');
         db()->prepare('DELETE FROM devices WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
         $notice = 'Gerät gelöscht. Bereits hochgeladene Daten bleiben erhalten.';
@@ -654,8 +738,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Doppelpflege, der Gewinn ein Modell mit einer Regel statt mit zwei.
      *
      * Jede der Speicheraktionen unten prueft deshalb zuerst den Standort, und
-     * zwar mit dt_base_erlaubt(): Zulaessig sind die eigenen und die
-     * AUSGEWAEHLTEN zentralen (E16). Dieselbe Pruefung entscheidet in
+     * zwar mit dt_base_erlaubt(): Zulaessig sind die eigenen (bis Web
+     * 20.47.0 auch ausgewaehlte zentrale, E16/R39). Dieselbe Pruefung entscheidet in
      * api/day.php, welche Zuordnung ein Diensttag annehmen darf — zwei
      * verschiedene Fassungen davon waeren die Stelle, an der beide
      * auseinanderlaufen.
@@ -724,8 +808,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Regelfall ab; es ist keine Pruefung, sondern eine Bequemlichkeit. */
         if ($n === '') {
             $error = 'Bitte einen Namen eintragen.';
-        } elseif (stammdaten_dup_global('bases', 'name', $n)) {
-            $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
         } elseif ($bid > 0) {
             db()->prepare('UPDATE bases SET name = ?, lat = ?, lon = ? WHERE id = ? AND user_id = ?')
                 ->execute([$n, $lat, $lon, $bid, $userId]);
@@ -765,15 +847,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $notice = 'Standard-Rettungsmittel gesetzt.';
         }
     }
-    /* `ub_toggle` STAND HIER BIS S9/AP5b (R39). Der Schreibweg waehlte einen
-     * zentralen Standort fuer dieses Konto aus oder ab (E16) und war die
-     * einzige Stelle, die in `user_bases` schrieb und loeschte. Zentrale
-     * Standorte kann seit der Streichung von `admin_stammdaten.php` niemand
-     * mehr anlegen; die Karte, die diesen Weg ausloeste, ist mit ihm entfallen.
-     * Die Tabelle `user_bases` selbst bleibt bis zum Rueckbau in P5 (Backlog
-     * Nr. 168) — sie ist in einer Anlage ohne zentrale Standorte leer, und
-     * `dt_bases()` wertet ihren Zweig ohnehin nur fuer `b.user_id IS NULL`
-     * aus. */
+    /* `ub_toggle` STAND HIER BIS S9/AP5b (R39): die Auswahl zentraler
+     * Standorte fuer dieses Konto, der einzige Schreibweg in ihre Tabelle.
+     * Die Tabelle ist mit P5c/AP8 gefallen. */
     if ($action === 'base_del') {
         /* DAS LOESCHEN NIMMT DIE STAMMDATEN DES STANDORTS MIT (E15,
          * ON DELETE CASCADE) — MIT EINER AUSNAHME SEIT WEB 17.1.0 (M-S9-10,
@@ -796,11 +872,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* ZUERST PRUEFEN, OB ES EIN EIGENER STANDORT IST — und erst dann
          * irgendetwas anfassen (Fund beim Gegenlesen von AP5-5). Das `DELETE`
          * unten schuetzt sich selbst mit `AND user_id = ?` und tut bei einer
-         * fremden oder zentralen Kennung nichts. Das UPDATE davor tat es
-         * nicht: Ein abgeschicktes `base_del` mit der Kennung eines
-         * ZENTRALEN Standorts haette den eigenen Rettungsmitteln dort den
-         * Standort abgenommen, ohne dass ein Standort geloescht worden waere
-         * — eine Datenaenderung ohne sichtbaren Anlass. */
+         * fremden Kennung nichts. Das UPDATE davor tat es nicht: Ein
+         * abgeschicktes `base_del` mit einer fremden Kennung haette den
+         * eigenen Rettungsmitteln dort den Standort abgenommen, ohne dass ein
+         * Standort geloescht worden waere — eine Datenaenderung ohne
+         * sichtbaren Anlass. (Bis Web 20.47.0 war der Fall ein zentraler
+         * Standort, R39.) */
         $q = db()->prepare('SELECT id FROM bases WHERE id = ? AND user_id = ?');
         $q->execute([$bid, $userId]);
         if ($q->fetchColumn() === false) {
@@ -905,8 +982,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rm = $geprueft['daten'];
         if ($rm === null) {
             $error = reset($geprueft['fehler']) ?: 'Das Rettungsmittel konnte nicht gespeichert werden.';
-        } elseif (stammdaten_dup_global('vehicles', 'name', $rm['name'])) {
-            $error = '„' . $rm['name'] . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
         } else {
             $rollen = $rm['roles'];
             $caps   = $rm['caps'];
@@ -970,10 +1045,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         if ($g['daten'] === null) {
             $error = reset($g['fehler']);
-        } elseif (stammdaten_dup_global('crew_presets', 'name', $g['daten']['name'],
-                                        'role_code', $g['daten']['rolle'])) {
-            $error = '„' . $g['daten']['name'] . '“ ist für diese Rolle bereits systemweit '
-                   . 'hinterlegt und steht dir automatisch zur Verfügung.';
         } elseif ($cid > 0) {
             /* DIE ROLLE WIRD MITGESCHRIEBEN (S9/AP5-4). Bis Web 16.3.0 stand
              * hier nur `SET name = ?` — richtig, solange die Rolle eine
@@ -1013,9 +1084,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               ['name' => $_POST['name'] ?? null, 'base_id' => $sdBase()]);
         if ($g['daten'] === null) {
             $error = reset($g['fehler']);
-        } elseif (stammdaten_dup_global('resources', 'name', $g['daten']['name'])) {
-            $error = '„' . $g['daten']['name'] . '“ ist bereits systemweit hinterlegt und '
-                   . 'steht dir automatisch zur Verfügung.';
         } elseif ($wid > 0) {
             $zielId = $sdAendern('resources', 'name = ?', [$g['daten']['name']], $wid,
                 'Dieses Rettungsmittel gibt es an diesem Standort schon.');
@@ -1038,9 +1106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               ['name' => $_POST['name'] ?? null, 'base_id' => $sdBase()]);
         if ($g['daten'] === null) {
             $error = reset($g['fehler']);
-        } elseif (stammdaten_dup_global('bw_units', 'name', $g['daten']['name'])) {
-            $error = '„' . $g['daten']['name'] . '“ ist bereits systemweit hinterlegt und '
-                   . 'steht dir automatisch zur Verfügung.';
         } elseif ($wid > 0) {
             $zielId = $sdAendern('bw_units', 'name = ?', [$g['daten']['name']], $wid,
                 'Diese Bereitschaft gibt es an diesem Standort schon.');
@@ -1063,9 +1128,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               ['name' => $_POST['name'] ?? null, 'base_id' => $sdBase()]);
         if ($g['daten'] === null) {
             $error = reset($g['fehler']);
-        } elseif (stammdaten_dup_global('transport_dests', 'name', $g['daten']['name'])) {
-            $error = '„' . $g['daten']['name'] . '“ ist bereits systemweit hinterlegt und '
-                   . 'steht dir automatisch zur Verfügung.';
         } elseif ($tid > 0) {
             $zielId = $sdAendern('transport_dests', 'name = ?, lat = ?, lon = ?',
                 [$g['daten']['name'], $lat, $lon], $tid,
@@ -1101,8 +1163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      *
      * Die Anker sind seit der Gliederung nach Standort (Konzept 3.8)
      * STANDORTBEZOGEN: `sd-<Standortkennung>` oeffnet den Block dieses
-     * Standorts. Nur die Standortliste selbst und die Auswahl der zentralen
-     * Standorte haben feste Anker. */
+     * Standorts. Nur die Standortliste selbst hat einen festen Anker. */
     /* ZWEI ZIELE (Web 7.0.0, neu gefasst S9/AP5). Die Standortaktionen fuehren
      * auf die LISTE zurueck, alles Uebrige auf die SEITE DES STANDORTS, an dem
      * es haengt.
@@ -1332,7 +1393,8 @@ ui_seite_start(['titel' => 'Einstellungen',
         <p class="feld-hinweis">Rolle: <strong><?= e(rolle_text(eigene_rolle())) ?></strong><?php
           if (ist_betreiberin()): ?> — du siehst zusätzlich den Bereich
           <em>Betrieb</em>.<?php elseif (ist_admin()): ?> — du siehst zusätzlich den
-          Bereich <em>Verwaltung</em>.<?php endif; ?> Geändert wird sie in der
+          Bereich <em>Verwaltung</em>.<?php elseif (ist_support()): ?> — du siehst unter
+          <em>Verwaltung</em> die Konten der NutzerInnen und das Protokoll.<?php endif; ?> Geändert wird sie in der
           Verwaltung, nicht hier.</p>
       <?php ui_karte_ende(); ?>
 
@@ -1484,9 +1546,159 @@ ui_seite_start(['titel' => 'Einstellungen',
       </div>
     <?php ui_karte_ende(); ?>
 
+    <?php /* ---- DIE KARTE „ZWEITFAKTOR" (P5c/AP5, M-P5c-02b Bild 1 und 2) --
+             Nach „Wiederherstellungsschlüssel", wie im Mockup (E-P5c-66).
+             Vier Zustände: aus → wird eingerichtet → an (die Codes einmal
+             sichtbar) → an. Die Teile, die das Einrichtungstor mit ihr
+             teilt, stehen in `zweitfaktor_teile.php`.
+
+             OHNE DIE SPALTEN KEINE KARTE: Zwischen Deploy und `update.php`
+             gibt es nichts einzuschalten, und eine Karte, deren einziger
+             Knopf eine Fehlermeldung ausloest, ist schlechter als keine. */
+          require_once __DIR__ . '/zweitfaktor_teile.php';
+          require_once __DIR__ . '/rueckweg_lib.php';
+          $zf = totp_zustand($userId);
+          $rwZ = rw_zustand($userId);          // Konzept RW: Zeile, Satz, Knopf, Dialog
+          $zfPflicht = rolle_braucht_zweitfaktor($userRole);
+          $zfLeer = static function (int $n): string {
+              return ['keiner', 'einer', 'zwei', 'drei', 'vier', 'fünf', 'sechs',
+                      'sieben', 'acht', 'neun', 'zehn'][$n] ?? (string)$n;
+          };
+          if (!$zf['fehlt']):
+            $zfRoh = $zf['angefangen'] && $zfCodes === null ? totp_geheimnis($userId) : null;
+            $zfPlakette = $zf['an'] ? ui_plakette('an', ['ton' => 'blau'])
+                        : ($zfRoh !== null ? ui_plakette('wird eingerichtet', ['ton' => 'orange'])
+                                           : ui_plakette('aus'));
+            ui_karte_start(['titel' => 'Zweitfaktor', 'id' => 'k-zweitfaktor',
+                            'plakette' => $zfPlakette]); ?>
+<?php if ($zfCodes !== null): ?>
+      <?php ui_meldung($zfMeldung[1], null, 'ok', '      ', ['auftakt' => $zfMeldung[0]]); ?>
+      <?php zf_codes($zfCodes); ?>
+<?php elseif ($zfRoh !== null): ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor">
+        <?= csrf_field() ?>
+        <?php if ($zfFehler !== null): ?>
+        <?php ui_meldung(null, $zfFehler[1], 'info', '        ', ['auftakt_fehler' => $zfFehler[0]]); ?>
+        <?php endif; ?>
+        <?php zf_einrichtung($zfRoh, (string)($row['email'] ?? '')); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Einschalten', 'art' => 'primaer', 'symbol' => 'haken',
+                        'name' => 'action', 'wert' => 'zf_einschalten']) ?>
+          <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'name' => 'action',
+                        'wert' => 'zf_abbrechen', 'attr' => ' formnovalidate']) ?>
+        </div>
+      </form>
+<?php else: ?>
+      <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy. <a href="hilfe.php#3-1f-zweitfaktor">Wie das geht</a></p>
+<?php if ($zf['an']):
+        $zfBenutzt = max(0, $zf['codes_alle'] - $zf['codes_offen']);
+        ui_zeile(['text' => 'Eingeschaltet', 'klein' => 'seit ' . datum_zeit_text($zf['seit'])]);
+        ui_zeile(['text' => 'Wiederherstellungscodes',
+                  'klein' => $zfLeer($zfBenutzt) . ' benutzt — neue Codes machen die alten ungültig',
+                  'plaketten' => ui_plakette($zf['codes_offen'] . ' von ' . $zf['codes_alle'],
+                                             ['ton' => 'blau'])]);
+        /* DER RUECKWEG (Konzept RW, E-RW-07; M-RW-01 Bild 4): die dritte
+           Zeile. Nur hier, bei eingeschaltetem Zweitfaktor — ausgeschaltet
+           hat das Paar keinen Verbraucher. Vor `update.php` ('spalten')
+           fehlt sie ganz; das Demo-Konto kommt hier nie an, sein
+           Zweitfaktor ist gesperrt. */
+        if ($rwZ['stand'] === 'da') {
+            ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
+                      'klein' => 'seit ' . datum_text($rwZ['seit']) . ' — der Schlüssel vom '
+                               . 'Notfallblatt genügt, wenn Handy und Codes fehlen',
+                      'plaketten' => ui_plakette('eingerichtet', ['ton' => 'blau'])]);
+        } elseif ($rwZ['stand'] === 'fehlt') {
+            ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
+                      'klein' => 'wird beim nächsten Anmelden eingerichtet — bis dahin setzt '
+                               . 'die Verwaltung zurück',
+                      'plaketten' => ui_plakette('ab der nächsten Anmeldung')]);
+        }
+        /* DAS GEHEIMNIS IST NICHT ZU OEFFNEN, wenn die Anlage einen anderen
+           Serverschluessel hat als bei der Einrichtung (Wiederanlauf,
+           eingespieltes Komplett-Backup). Die Anmeldung geht dann nur noch
+           mit Wiederherstellungscodes; das soll hier stehen und nicht erst
+           beim naechsten Anmelden auffallen. */
+        if (totp_geheimnis($userId) === null) {
+            ui_meldung(null, $zfPflicht
+                ? 'Die Verwaltung muss ihn zurücksetzen; danach richtest du ihn neu ein.'
+                : 'Schalte ihn aus und richte ihn neu ein.', 'info', '      ',
+                ['auftakt_fehler' => 'Das Geheimnis lässt sich auf dieser Anlage nicht öffnen.']);
+        }
+        if ($zfPflicht): ?>
+      <p class="feld-klein">Für die Rolle <?= e(rolle_text($userRole)) ?> Pflicht — ausschalten geht nicht; zurücksetzen kann <?=
+        rolle_ist_betreiberin($userRole) ? 'eine andere BetreiberIn' : 'eine BetreiberIn' ?><?=
+        $rwZ['stand'] === 'da' ? ' oder du selbst mit dem Wiederherstellungsschlüssel' : '' ?>.</p>
+<?php endif; ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor">
+        <?= csrf_field() ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Neue Codes erzeugen', 'art' => 'neutral', 'name' => 'action',
+                        'wert' => 'zf_codes_neu',
+                        'attr' => ' data-confirm="Neue Codes erzeugen? Die bisherigen gelten danach nicht mehr — auch die auf einem gedruckten Codeblatt." data-confirm-ok="Neue Codes erzeugen" data-confirm-tone="normal"']) ?>
+          <?php if ($rwZ['stand'] === 'da'): /* E-RW-06: nur, wo ein Paar zu ersetzen ist */ ?>
+          <?= ui_knopf(['text' => 'Rückweg erneuern', 'art' => 'neutral', 'typ' => 'button',
+                        'attr' => ' data-rueckweg-auf']) ?>
+          <?php endif; ?>
+          <?php if (!$zfPflicht): ?>
+          <?= ui_knopf(['text' => 'Ausschalten', 'art' => 'leise', 'name' => 'action',
+                        'wert' => 'zf_ausschalten',
+                        'attr' => ' data-confirm="Zweitfaktor ausschalten? Die Anmeldung fragt danach wieder nur nach dem Passwort; die Codes werden ungültig." data-confirm-ok="Ausschalten"']) ?>
+          <?php endif; ?>
+        </div>
+      </form>
+<?php elseif (demo_ist_demo($userId)): ?>
+      <p class="feld-hinweis">Im Demo-Konto lässt sich der Zweitfaktor nicht einschalten — die Zugangsdaten sind öffentlich und müssen es bleiben.</p>
+<?php else: ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor">
+        <?= csrf_field() ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Einrichten', 'art' => 'primaer', 'name' => 'action',
+                        'wert' => 'zf_beginnen']) ?>
+        </div>
+      </form>
+<?php endif; ?>
+<?php endif; ?>
+    <?php ui_karte_ende(); ?>
+    <?php foreach (ZF_SKRIPTE as $zfSkript): ?>
+    <script src="<?= asset($zfSkript) ?>"></script>
+    <?php endforeach; ?>
+<?php endif; ?>
+
     <dialog class="dialog" id="dlg-schluessel" data-schluessel>
       <?php require __DIR__ . '/schluessel_teile.php'; ?>
     </dialog>
+
+    <?php /* „RUECKWEG ERNEUERN" (Konzept RW, E-RW-06): derselbe Aufbau wie
+             der Passwortabschnitt von „Neuen Wiederherstellungsschluessel
+             erzeugen" (`schluessel_teile.php`) — Kopf, ein Passwortfeld, eine
+             Fehlerzeile, zwei Knoepfe. Kein zweiter Abschnitt: Es gibt nichts
+             aufzuschreiben, das Notfallblatt bleibt gueltig. Nach dem Erfolg
+             laedt die Seite neu; die Meldung dazu legt der Endpunkt ab. */ ?>
+    <?php if ($rwZ['stand'] === 'da'): ?>
+    <dialog class="dialog" id="dlg-rueckweg">
+      <div class="dialog-kopf">
+        <h2>Rückweg erneuern</h2>
+        <p class="feld-hinweis">Konto-Sicherheit</p>
+      </div>
+      <div class="dialog-inhalt">
+        <p>Ein neues Schlüsselpaar ersetzt das bisherige. Dein Notfallblatt
+           bleibt gültig — es öffnet auch das neue. Dafür brauchen wir einmal
+           dein Passwort.</p>
+        <?php ui_feld(['id' => 'rw-pw', 'label' => 'Passwort', 'art' => 'password',
+                       'attr' => ' autocomplete="current-password"',
+                       'klein' => 'Das Paar entsteht in deinem Browser. Der Server '
+                                . 'erhält den öffentlichen Teil und den mit deinem '
+                                . 'Schlüssel verpackten privaten.']); ?>
+        <p class="meldung meldung-fehler" data-rw-fehler role="alert" hidden></p>
+      </div>
+      <div class="dialog-fuss">
+        <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
+                      'attr' => ' data-rw-zurueck']) ?>
+        <?= ui_knopf(['text' => 'Rückweg erneuern', 'art' => 'primaer', 'typ' => 'button',
+                      'attr' => ' data-rw-erneuern']) ?>
+      </div>
+    </dialog>
+    <?php endif; ?>
 
     <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
              dazu pwquality.js: Passwortguete nach derselben Regel wie bei
@@ -1502,7 +1714,55 @@ ui_seite_start(['titel' => 'Einstellungen',
                                'einzug' => '    ']); ?>
     <script src="<?= asset('assets/schluessel.js') ?>"></script>
     <script src="<?= asset('assets/rueckfrage.js') ?>"></script>
+    <?php if ($rwZ['stand'] === 'da'): ?>
+    <script src="<?= asset('assets/rueckweg.js') ?>"></script>
+    <?php endif; ?>
     <script<?= kopf_nonce_attr() ?>>
+    /* ---- „Rückweg erneuern" (Konzept RW, E-RW-06) ----------------------
+     *
+     * Das Rechnen steht in `EdRueckweg.erneuern()` — Passwort, Inhaltsschlüssel
+     * mit der Wache gegen `pat_key_check` (`EdSchluessel.oeffnen()`), neues
+     * Paar, Senden mit `ersetzen`. Hier steht nur der Dialog. Nach dem Erfolg
+     * lädt die Seite neu: Die Zeile zeigt das neue Datum, und die Meldung hat
+     * der Endpunkt für die nächste Seite abgelegt. */
+    (() => {
+      const dlg = document.getElementById('dlg-rueckweg');
+      const knopf = document.querySelector('[data-rueckweg-auf]');
+      if (!dlg || !knopf) { return; }
+      const feldPw = dlg.querySelector('#rw-pw');
+      const fehler = dlg.querySelector('[data-rw-fehler]');
+      const los = dlg.querySelector('[data-rw-erneuern]');
+      const melde = (text) => { fehler.textContent = text; fehler.hidden = text === ''; };
+      knopf.addEventListener('click', () => {
+        melde('');
+        feldPw.value = '';
+        dlg.showModal();
+        feldPw.focus();
+      });
+      dlg.querySelector('[data-rw-zurueck]').addEventListener('click', () => dlg.close());
+      los.addEventListener('click', async () => {
+        if (feldPw.value === '') { melde('Bitte das Passwort eingeben.'); return; }
+        melde('');
+        los.disabled = true;
+        try {
+          await EdRueckweg.erneuern({
+            pw: feldPw.value, salt: KDF_SALT, iter: KDF_ITER, wrapPw: PAT_WRAP,
+            keyCheck: typeof PAT_KEY_CHECK !== 'undefined' ? PAT_KEY_CHECK : null,
+            anteile: typeof KONTO_ANTEILE !== 'undefined' ? KONTO_ANTEILE : null,
+          });
+          feldPw.value = '';
+          /* NEU LADEN PER GET, nicht `reload()`: War die Seite die Antwort
+           * auf einen POST (Profil gespeichert), schickte `reload()` ihn noch
+           * einmal. Ohne `#…`, sonst bliebe es bei gleicher Adresse ein
+           * Sprung an die Marke statt eines Ladens. */
+          location.href = 'einstellungen.php?t=profil';
+        } catch (e) {
+          melde(e && e.message ? e.message : 'Die Erneuerung des Rückwegs ist fehlgeschlagen.');
+          los.disabled = false;
+        }
+      });
+    })();
+
     /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
      * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
     (() => {
@@ -1752,15 +2012,9 @@ ui_seite_start(['titel' => 'Einstellungen',
        * Bestand — der Block hier läuft für beide, gerendert wird danach je
        * Reiter.
        *
-       * ZENTRALE EINTRÄGE bleiben sichtbar und unveränderlich und tragen hier
-       * das Kennzeichen „systemweit". Bis S9/AP5b pflegte sie eine
-       * AdministratorIn (`admin_stammdaten.php`); die Seite ist mit dem Modell
-       * gestrichen (Rahmenplan R39). **Niemand pflegt sie mehr.** Steht in
-       * einer Anlage noch ein zentraler Eintrag, dann ist er von hier aus
-       * sichtbar, aber weder änderbar noch löschbar — er braucht einen Eingriff
-       * in der Datenbank oder den Rückbau in P5 (Backlog Nr. 168). Die Abfragen
-       * darunter behalten ihren Zweig `user_id IS NULL` genau dafür; wer ihn
-       * streicht, blendet den Altbestand aus, statt ihn loszuwerden.
+       * ZENTRALE EINTRÄGE standen hier bis Web 20.47.0 mit dem Kennzeichen
+       * „systemweit", sichtbar und unveränderlich (R39). Seit P5c/AP8 trägt
+       * jeder Eintrag ein Konto, und die Abfragen fragen nur noch `user_id = ?`.
        */
       /* Präfixe der Ortsfelder dieses Reiters. Sie entstehen beim Rendern — je
        * Standort eines für die Zielklinik —, und die Belebung im Browser
@@ -1768,7 +2022,7 @@ ui_seite_start(['titel' => 'Einstellungen',
        * Aufzählung im Skript liefe beim nächsten Standort auseinander. */
       $ORTSFELDER = [];
 
-      $sdBases = dt_bases($userId);           // eigene + ausgewaehlte zentrale
+      $sdBases = dt_bases($userId);           // die eigenen
       $sdBaseIds = array_map(static fn($b) => (int)$b['id'], $sdBases);
       /* [Kennung => Name] fuer die Standortauswahl im Rettungsmittel-Dialog
          (S9/AP5-4). Sie entsteht HIER und nicht auf der Standortseite: Dort
@@ -1779,11 +2033,10 @@ ui_seite_start(['titel' => 'Einstellungen',
       $sdBaseNamen = [];
       foreach ($sdBases as $b) { $sdBaseNamen[(int)$b['id']] = (string)$b['name']; }
 
-      // Eigene Standorte getrennt: nur sie sind hier bearbeitbar.
-      $eigene = db()->prepare('SELECT id, name, lat, lon FROM bases
-                               WHERE user_id = ? ORDER BY name');
-      $eigene->execute([$userId]);
-      $eigene = $eigene->fetchAll();
+      /* Bis Web 20.47.0 eine eigene Abfrage — die Standortliste zeigte nur die
+       * eigenen, `dt_bases()` auch ausgewaehlte zentrale (R39). Seither
+       * dieselbe Menge. */
+      $eigene = $sdBases;
 
       /* Die Stammdaten aller verfuegbaren Standorte in EINER Abfrage je Art,
        * danach nach Standort gebuendelt. Je Standort einzeln zu fragen ergaebe
@@ -1796,8 +2049,8 @@ ui_seite_start(['titel' => 'Einstellungen',
            * uebergebenen Vorlaufparameter. Ein Platzhalter dahinter bekaeme den
            * falschen Wert. */
           foreach (sql_in_bloecken(db(),
-                  "SELECT $spalten, base_id, user_id FROM `$tabelle`
-                   WHERE (user_id = ? OR user_id IS NULL) AND base_id IN ({IDS})
+                  "SELECT $spalten, base_id FROM `$tabelle`
+                   WHERE user_id = ? AND base_id IN ({IDS})
                    ORDER BY name", $sdBaseIds, [$userId]) as $z) {
               $nach[(int)$z['base_id']][] = $z;
           }
@@ -1811,10 +2064,10 @@ ui_seite_start(['titel' => 'Einstellungen',
        * eigene Karte am Ende ist die kleinste Fassung dessen, was E-S9-18 als
        * letzten Eintrag der Standortliste vorsieht; ihre Form bekommt sie in AP5. */
       $sdVehOhne = [];
-      foreach (db()->query('SELECT id, name, kurz, kind, typ, base_id, user_id
+      foreach (db()->query('SELECT id, name, kurz, kind, typ, base_id
                               FROM vehicles
-                             WHERE base_id IS NULL AND (user_id = ' . (int)$userId
-                          . ' OR user_id IS NULL) ORDER BY name') as $z) {
+                             WHERE base_id IS NULL AND user_id = ' . (int)$userId
+                          . ' ORDER BY name') as $z) {
           $sdVehOhne[] = $z;
       }
       $sdCrew = $sdLade('crew_presets', 'id, name, role_code');
@@ -1892,21 +2145,18 @@ ui_seite_start(['titel' => 'Einstellungen',
 
       /* Zahl der Stammdatensaetze eines Standorts — fuer die Rueckfrage vor dem
        * Loeschen (Konzept 4.2): Das Loeschen nimmt sie mit. */
-      $sdAnzahl = function (int $bid) use ($sdVeh, $sdCrew, $sdTd, $sdRes, $sdBw, $userId): int {
+      $sdAnzahl = function (int $bid) use ($sdVeh, $sdCrew, $sdTd, $sdRes, $sdBw): int {
           $n = 0;
           foreach ([$sdVeh, $sdCrew, $sdTd, $sdRes, $sdBw] as $art) {
-              foreach (($art[$bid] ?? []) as $z) {
-                  if ((int)$z['user_id'] === $userId) { $n++; }
-              }
+              $n += count($art[$bid] ?? []);
           }
           return $n;
       };
       /* DIE DREI ZAHLEN EINER STANDORTZEILE (M-S9-06). Sie zaehlen, was
        * jemand an diesem Standort sucht — Rettungsmittel, Besatzung,
-       * Zielkliniken —, und zwar EIGENE UND SYSTEMWEITE zusammen: Wer die
-       * Liste liest, will wissen, wie viel dort steht, nicht wem es gehoert.
-       * `$sdAnzahl()` daneben zaehlt etwas anderes und wird weiter gebraucht:
-       * nur die EIGENEN, ueber alle fuenf Arten, fuer die Loeschrueckfrage. */
+       * Zielkliniken. `$sdAnzahl()` daneben zaehlt ueber alle fuenf Arten,
+       * fuer die Loeschrueckfrage. (Bis Web 20.47.0 zaehlte sie nur die
+       * eigenen und diese auch die systemweiten, R39.) */
       $sdZahlen = function (int $bid) use ($sdVeh, $sdCrew, $sdTd): string {
           $n = static fn(array $art): int => count($art[$bid] ?? []);
           $eins = static fn(int $z, string $ein, string $viele): string
@@ -1915,9 +2165,6 @@ ui_seite_start(['titel' => 'Einstellungen',
                . $eins($n($sdCrew), 'Besatzung', 'Besatzung') . ' · '
                . $eins($n($sdTd), 'Zielklinik', 'Zielkliniken');
       };
-
-      // Kennzeichen einer Zeile: eigen oder systemweit?
-      $istZentral = static fn(array $z): bool => $z['user_id'] === null;
 
       /* ---- WELCHE ROLLEN GIBT ES AN DIESEM STANDORT? (Web 7.0.0) ----------
        *
@@ -1974,7 +2221,6 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php endif; ?>
       <?php foreach ($eigene as $b):
             $bid = (int)$b['id'];
-            $dup = stammdaten_dup_global('bases', 'name', $b['name']);
             $istDef = $bid === $DEF_BASE_ID;
             /* Die POST-Formulare stehen EINMAL und versteckt; die Knöpfe der
                Zeile und die des Aktionsblatts zeigen beide über `form` darauf
@@ -1990,7 +2236,6 @@ ui_seite_start(['titel' => 'Einstellungen',
         } else {
             $klein[] = 'ohne Lage';
         }
-        if ($dup) { $klein[] = 'identisch mit einem systemweiten Eintrag'; }
         /* DIE GANZE ZEILE FUEHRT AUF DIE SEITE DES STANDORTS (M-S9-06).
            Damit fallen die Zeilenaktionen hier weg: Sie waeren Knoepfe IN
            einem Link, und das ist kein gueltiges Markup. Loeschen und „Als
@@ -2003,8 +2248,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             'href_ganz' => sd_seite($bid),
             'vorn'  => ui_symbol('standort'),
             'text'  => (string)$b['name'],
-            'klein' => $sdZahlen($bid)
-                     . ($dup ? ' · identisch mit einem systemweiten Eintrag' : ''),
+            'klein' => $sdZahlen($bid),
             'plaketten' => $istDef ? ui_symbol('stern', 'zeile-stern', 'Vorbelegung neuer Diensttage') : '',
         ]);
       endforeach; ?>
@@ -2058,19 +2302,9 @@ ui_seite_start(['titel' => 'Einstellungen',
       </div>
     <?php ui_karte_ende(); ?>
 
-    <?php /* DIE KARTE „VORDEFINIERTE STANDORTE" STAND HIER BIS S9/AP5b.
-             Sie zeigte die zentralen (systemweiten) Standorte und liess sie
-             fuer dieses Konto aus- und abwaehlen (E16); ein ausgewaehlter
-             liess sich auch als Vorbelegung neuer Diensttage setzen
-             (Web 7.0.0 — der Regelfall an einer Station, die ausschliesslich
-             mit vordefinierten Standorten arbeitete). Beides gibt es nicht
-             mehr: Rahmenplan R39 schafft die zentralen Stammdaten ab, die
-             Verwaltungsseite ist gestrichen, und niemand kann noch einen
-             zentralen Standort anlegen. Ohne Bestand zeigte die Karte in
-             JEDEM Konto „0 · 0 ausgewählt" und den Satz „Keine
-             vordefinierten Standorte hinterlegt." — ein leeres Versprechen
-             auf einer Seite, die sonst nichts Leeres zeigt. Der Rueckbau von
-             Tabelle und Schema folgt in P5 (Backlog Nr. 168). */ ?>
+    <?php /* DIE KARTE „VORDEFINIERTE STANDORTE" STAND HIER BIS S9/AP5b:
+             die zentralen Standorte zum Aus- und Abwaehlen (E16). Mit R39
+             gestrichen; Tabelle und Schema folgten mit P5c/AP8. */ ?>
 
     <?php if (!$sdBases): ?>
       <?= ui_meldung_markup('info', 'Noch kein Standort verfügbar. Lege oben '
@@ -2114,7 +2348,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'name' => (string)$v['name'], 'klein' => $klein,
                     'anker' => 'sd-ohne-veh', 'praefix' => 'veh', 'id' => $vid,
                     'zeilen_id' => true,
-                    'base_id' => 0, 'zentral' => $istZentral($v),
+                    'base_id' => 0,
                     'seite' => 'einstellungen.php?t=standorte',
                     'plaketten' => ui_artzeichen((string)$v['kind'], '', (string)$v['typ']),
                     'bearbeiten_attr' => sd_oeffner('dlg-veh', $vehKette(
@@ -2171,11 +2405,7 @@ ui_seite_start(['titel' => 'Einstellungen',
          bessere Ort — wer einen Standort loescht, hat vorher gesehen, was
          daran haengt. Die Formulare stehen EINMAL und versteckt, das
          Aktionsmenue zeigt ueber `form` darauf (ui_zeilenaktionen). */
-      /* `dt_bases()` liefert `zentral`, nicht `user_id` — ein zentraler
-         Standort wird von einer AdministratorIn gepflegt und traegt hier
-         die Plakette „systemweit" statt eines Aktionsmenues. */
       $sBid     = (int)$seiteB['id'];
-      $sZentral = (bool)($seiteB['zentral'] ?? false);
       $sAnz     = $sdAnzahl($sBid);
       $sDef   = $sBid === $DEF_BASE_ID;
       $sAkt   = [];
@@ -2199,11 +2429,11 @@ ui_seite_start(['titel' => 'Einstellungen',
              mitgelöscht, 1 bleibt", und das eine mit NAMEN: Ein
              Rettungsmittel, das einen Standort verlässt, ist eine Nachricht
              und keine Statistik. Der Satz steht in
-             `stammdaten_loeschfrage()`, weil ihn zwei Seiten brauchen. */
+             `stammdaten_loeschfrage()`, neben den Helfern, die ihn zaehlen. */
           $sBleiben = stammdaten_ohne_standortpflicht($sBid, $userId); ?>
     <form method="post" id="f-bdel-<?= $sBid ?>" class="nur-vorlesen"
           action="einstellungen.php?t=standorte#standorte"
-          data-confirm="<?= e(stammdaten_loeschfrage((string)$seiteB['name'], $sAnz, $sBleiben, false)) ?>">
+          data-confirm="<?= e(stammdaten_loeschfrage((string)$seiteB['name'], $sAnz, $sBleiben)) ?>">
       <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
       <input type="hidden" name="id" value="<?= $sBid ?>">
     </form>
@@ -2211,14 +2441,11 @@ ui_seite_start(['titel' => 'Einstellungen',
         'zurueck'  => ['href' => 'einstellungen.php?t=standorte', 'text' => 'Standorte'],
         'titel'    => (string)$seiteB['name'],
         'unter'    => e($sdZahlen($sBid)),
-        'aktionen' => $sZentral ? ui_plakette('systemweit')
-                    : ui_zeilenaktionen(['titel' => (string)$seiteB['name'], 'eintraege' => $sAkt]),
+        'aktionen' => ui_zeilenaktionen(['titel' => (string)$seiteB['name'], 'eintraege' => $sAkt]),
     ]); ?>
     <?php /* DREI ZEILEN (E-P3-35). Der Bestand hatte hier zwei Absätze zu je
              sechs Zeilen; was wegfällt, steht an der Handlung selbst — die
-             Löschrückfrage sagt, dass dokumentierte Diensttage bleiben, und
-             die Plakette „systemweit" sagt, warum eine Zeile keine Knöpfe
-             hat. */ ?>
+             Löschrückfrage sagt, dass dokumentierte Diensttage bleiben. */ ?>
     <p class="seiten-erklaerung">Was an den ausgewählten
        <a href="einstellungen.php?t=standorte">Standorten</a> hängt:
        Rettungsmittel und ihre Rollen, Besatzungs-Vorbelegungen, Zielkliniken,
@@ -2289,18 +2516,14 @@ ui_seite_start(['titel' => 'Einstellungen',
                jede Karte bekommt eine Kennung, an der die Kennzahlen und die
                Unterpunkte der Leiste haengen. */
              ui_karte_start(['titel' => 'Standort', 'id' => 'k-standort']); ?>
-        <?php if (!empty($b['zentral'])): ?>
-          <p class="feld-hinweis"><?= ui_plakette('systemweit') ?> Dieser Standort wird
-             von der Verwaltung gepflegt.</p>
-        <?php endif; ?>
         <?php ui_zeile([
             'text'  => (string)$b['name'],
             'klein' => ($b['lat'] !== null && $b['lon'] !== null)
                      ? $b['lat'] . ', ' . $b['lon'] . ' — Abfahrtsort neuer Diensttage'
                      : 'ohne Lage — ohne sie gibt es keinen Abfahrtsort',
-            'aktionen' => empty($b['zentral']) ? ui_knopf([
+            'aktionen' => ui_knopf([
                 'text' => 'Bearbeiten', 'symbol' => 'stift', 'art' => 'leise',
-                'href' => 'einstellungen.php?t=standorte&eb=' . $bid . '#standorte']) : '',
+                'href' => 'einstellungen.php?t=standorte&eb=' . $bid . '#standorte']),
         ]); ?>
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
@@ -2361,7 +2584,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'zeilen_id' => true,
                     'seite' => sd_seite($bid),
                     'anker' => $anker . '-veh', 'praefix' => 'veh', 'id' => $vid,
-                    'base_id' => $bid, 'zentral' => $istZentral($v),
+                    'base_id' => $bid,
                     'stern' => $vid === $DEF_VEH_ID,
                     'def_action' => 'veh_default', 'del_action' => 'veh_del',
                     'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ löschen? '
@@ -2419,15 +2642,14 @@ ui_seite_start(['titel' => 'Einstellungen',
             <?php $any = false;
                   foreach (($sdCrew[$bid] ?? []) as $c):
                       if ($c['role_code'] !== $rk) { continue; }
-                      $any = true; $cz = $istZentral($c);
-                      $dup = !$cz && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role_code', $rk);
+                      $any = true;
                       sd_zeile([
                           'name' => (string)$c['name'],
-                          'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
+                          'klein' => '',
                           'seite' => sd_seite($bid),
                           'zeilen_id' => true,
                     'anker' => $anker . '-crew', 'praefix' => 'crew', 'id' => (int)$c['id'],
-                          'base_id' => $bid, 'zentral' => $cz,
+                          'base_id' => $bid,
                           'del_action' => 'crew_del',
                           'del_frage' => 'Eintrag „' . $c['name'] . '“ löschen?',
                           'bearbeiten_attr' => sd_oeffner('dlg-crew', [
@@ -2466,17 +2688,14 @@ ui_seite_start(['titel' => 'Einstellungen',
             <p class="feld-hinweis">Noch keine Zielkliniken.</p>
           <?php endif; ?>
           <?php foreach (($sdTd[$bid] ?? []) as $t):
-                $tz = $istZentral($t);
-                $dup = !$tz && stammdaten_dup_global('transport_dests', 'name', $t['name']);
                 $klein = ($t['lat'] !== null && $t['lon'] !== null)
                     ? $t['lat'] . ', ' . $t['lon'] : 'ohne Lage';
-                if ($dup) { $klein .= ' · identisch mit einem systemweiten Eintrag'; }
                 sd_zeile([
                     'name' => (string)$t['name'], 'klein' => $klein,
                     'seite' => sd_seite($bid),
                     'zeilen_id' => true,
                     'anker' => $anker . '-td', 'praefix' => 'td', 'id' => (int)$t['id'],
-                    'base_id' => $bid, 'zentral' => $tz,
+                    'base_id' => $bid,
                     'del_action' => 'td_del',
                     'del_frage' => 'Zielklinik „' . $t['name'] . '“ löschen?',
                     'bearbeiten_attr' => sd_oeffner('dlg-td', [
@@ -2516,15 +2735,13 @@ ui_seite_start(['titel' => 'Einstellungen',
             <p class="feld-hinweis">Noch keine Einträge.</p>
           <?php endif; ?>
           <?php foreach (($sdRes[$bid] ?? []) as $r):
-                $rz = $istZentral($r);
-                $dup = !$rz && stammdaten_dup_global('resources', 'name', $r['name']);
                 sd_zeile([
                     'name' => (string)$r['name'],
-                    'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
+                    'klein' => '',
                     'seite' => sd_seite($bid),
                     'zeilen_id' => true,
                     'anker' => $anker . '-res', 'praefix' => 'res', 'id' => (int)$r['id'],
-                    'base_id' => $bid, 'zentral' => $rz,
+                    'base_id' => $bid,
                     'del_action' => 'res_del',
                     'del_frage' => 'Eintrag „' . $r['name'] . '“ löschen?',
                     'bearbeiten_attr' => sd_oeffner('dlg-res', [
@@ -2562,15 +2779,13 @@ ui_seite_start(['titel' => 'Einstellungen',
               <p class="feld-hinweis">Noch keine Bereitschaften.</p>
             <?php endif; ?>
             <?php foreach (($sdBw[$bid] ?? []) as $w):
-                  $wz = $istZentral($w);
-                  $dup = !$wz && stammdaten_dup_global('bw_units', 'name', $w['name']);
                   sd_zeile([
                       'name' => (string)$w['name'],
-                      'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
+                      'klein' => '',
                       'seite' => sd_seite($bid),
                       'zeilen_id' => true,
                     'anker' => $anker . '-bw', 'praefix' => 'bw', 'id' => (int)$w['id'],
-                      'base_id' => $bid, 'zentral' => $wz,
+                      'base_id' => $bid,
                       'del_action' => 'bw_del',
                       'del_frage' => 'Bereitschaft „' . $w['name'] . '“ löschen?',
                       'bearbeiten_attr' => sd_oeffner('dlg-bw', [
@@ -3552,7 +3767,11 @@ ui_seite_start(['titel' => 'Einstellungen',
         + `${zahlwort(s.days, 'Diensttag', 'Diensttage')}, `
         + `${zahlwort(s.stammdaten, 'Standortdaten-Eintrag', 'Standortdaten-Einträge')}`
         + (s.stammdaten_skipped
-            ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '')
+            /* Zwei Ursachen bleiben (P5c/AP8): Der Standort liess sich nicht
+               auflösen, oder die Prüfung eines Rettungsmittels schlug an.
+               „Bereits systemweit vorhanden" war bis Web 20.47.0 die dritte
+               und die einzige, die dieser Satz nannte (R39). */
+            ? ` (${s.stammdaten_skipped} übersprungen: ohne passenden Standort oder unvollständig)` : '')
         + '.' + uebersprungen + schnitte + papierkorb + (zusatz || '')
         /* Die Höhenberechnung läuft seit Web 4.6.0 NACH dem Einspielen und
          * kann einzeln scheitern, ohne die Wiederherstellung zu gefährden

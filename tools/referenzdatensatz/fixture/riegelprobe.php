@@ -141,8 +141,9 @@ pruef('2  ... die Meldung nennt `edka1:` und schreibt KEINE Datei',
  *   1. Die Datei ist VERSIONIERT (`git ls-files server/demo/`). Geht etwas
  *      schief, stellt `git checkout -- server/demo/fixture.json.gz` sie her.
  *   2. Der Schaden waere ohnehin begrenzt: `demo_reset_wenn_faellig()` faengt
- *      jede Ausnahme ab und schreibt ins `error_log`. Das Demo-Konto hoerte
- *      auf, sich zuruecksetzen — es ginge nichts verloren.
+ *      jede Ausnahme ab und meldet sie (seit Web 20.40.0 in den Reiter
+ *      System, `system_melden()`). Das Demo-Konto hoerte auf, sich
+ *      zuruecksetzen — es ginge nichts verloren.
  *   3. Das `finally` legt zurueck, auch bei einem Abbruch, und die letzte
  *      Zeile dieses Teils nennt die Pruefsumme vorher/nachher.
  */
@@ -212,7 +213,10 @@ try {
      * Demo-Kontos (`auth_guard.php`, `ingest.php`). Wuerde die Ausnahme von
      * dort nach oben durchschlagen, machte eine verbogene Fixture die
      * oeffentliche Demo unbenutzbar — aus einem Riegel wuerde ein Ausfall.
-     * Die Funktion faengt deshalb `Throwable` und schreibt ins `error_log`.
+     * Die Funktion faengt deshalb `Throwable` und meldet es — seit
+     * Web 20.40.0 in den Reiter System. Die Probe zaehlt diese Meldung und
+     * nimmt sie wieder heraus: Sie ist ein Nachweis und keine Stoerung der
+     * Anlage, und der Bilderlauf danach soll einen leeren Reiter sehen.
      *
      * Gemessen statt gelesen: Der Reset wird faellig gemacht, gerufen, und es
      * wird nachgesehen, dass er `false` liefert und das Konto UNVERAENDERT
@@ -226,21 +230,26 @@ try {
           . '  ->fetchColumn();'
           . '$n = (int)db()->query("SELECT COUNT(*) FROM missions WHERE user_id = "'
           . '  . (int)demo_id())->fetchColumn();'
+          . '$vor = (int)db()->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")'
+          . '  ->fetchColumn();'
           . 'demo_reset_marke_setzen(time() - 4000);'
           . '$ok = demo_reset_wenn_faellig();'
+          . '$sys = db()->prepare("DELETE FROM protokoll_ereignisse WHERE reiter = \'system\'"'
+          . '  . " AND id > ? AND text LIKE \'demo:%\'");'
+          . '$sys->execute([$vor]);'
           . '$n2 = (int)db()->query("SELECT COUNT(*) FROM missions WHERE user_id = "'
           . '  . (int)demo_id())->fetchColumn();'
           . 'if ($m > 0) { demo_reset_marke_setzen($m); }'
-          . 'echo ($ok ? "RESET" : "ABGEFANGEN") . "|" . $n . "|" . $n2;'], $d, $rohr);
+          . 'echo ($ok ? "RESET" : "ABGEFANGEN") . "|" . $n . "|" . $n2 . "|" . $sys->rowCount();'], $d, $rohr);
         $aus = stream_get_contents($rohr[1]); fclose($rohr[1]);
         fclose($rohr[2]); proc_close($p);
         return (string)$aus;
     })();
-    [$lage, $vorN, $nachN] = array_pad(explode('|', trim($r3)), 3, '');
+    [$lage, $vorN, $nachN, $meldungen] = array_pad(explode('|', trim($r3)), 4, '');
     pruef('5  Ein Reset mit verbogener Fixture wird ABGEFANGEN, nicht durchgereicht',
-          $lage === 'ABGEFANGEN' && $vorN !== '' && $vorN === $nachN,
+          $lage === 'ABGEFANGEN' && $vorN !== '' && $vorN === $nachN && (int)$meldungen >= 1,
           $lage . ', Einsaetze ' . $vorN . ' -> ' . $nachN
-          . ' (der Grund steht im error_log)');
+          . ', ' . (int)$meldungen . ' Stoerung(en) im Reiter System (geprueft und entfernt)');
 } finally {
     copy($fxSicher, $fxPfad);
     @unlink($fxSicher);

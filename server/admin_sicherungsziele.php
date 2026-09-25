@@ -1,9 +1,14 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-require_admin();
+/* NUR DIE BETREIBERIN (P5c/AP2, E-P5c-31, Backlog Nr. 286). Bis Web 20.38.0
+ * stand hier `require_admin()` — R75 und der Kopf der Rollen in `db.php`
+ * sagten BetreiberIn, das Tor sagte Admin. Mangels Admin-Konten war die
+ * Lücke nicht ausnutzbar; die Rollenprobe prüft sie seither je Handlung. */
+require_betreiberin();
 require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/format_lib.php';        // groesse_text(), datum_text(), datum_zeit_text()
+require_once __DIR__ . '/adminbackup_lib.php';    // edbak_aufbewahrung()
 
 /**
  * BACKUP-ZIELE — wohin die Backups geschoben werden (E-S2-22, S2/AP7).
@@ -109,18 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $satz = $e['gesendet'] . ($e['gesendet'] === 1 ? ' Datei' : ' Dateien')
               . ' an ' . $e['ziele'] . ($e['ziele'] === 1 ? ' Ziel' : ' Ziele')
               . ' gesendet (' . groesse_text($e['bytes']) . ').'
-              /* DER VERMERK STEHT IM ERFOLGSSATZ, nicht im Fehlerkasten
-               * (S10/AP4, E-S10-U-09): Ein übergangenes Ziel ist keine
-               * Störung, sondern eine Ansage. Er nennt die Namen, weil „1
-               * übersprungen" ohne Namen niemanden zum richtigen Ziel
-               * führt. */
-              . ((int)($e['uebersprungen'] ?? 0) > 0
-                  ? ' Übersprungen: ' . (int)$e['uebersprungen'] . ' ('
-                    . implode(', ', array_slice(
-                        (array)($e['uebersprungen_namen'] ?? []), 0, 3))
-                    . (count((array)($e['uebersprungen_namen'] ?? [])) > 3 ? ' …' : '')
-                    . ') — unverschlüsseltes Protokoll, bitte umstellen.'
-                  : '')
               /* WAS DORT ENTFERNT WURDE, STEHT IM ERFOLGSSATZ (P5a/AP10).
                * Eine Löschung auf einer fremden Maschine ist die Sorte
                * Handlung, die man nicht erst auf einer anderen Seite
@@ -182,9 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $z = sz_lesen($id);
         if ($z === null) {
             $error = 'Dieses Ziel gibt es nicht (mehr).';
-        } elseif (!sz_protokoll_erlaubt((string)$z['protokoll'])) {
-            $error = 'Dieses Ziel wird nicht mehr beschickt — sein Protokoll '
-                   . 'überträgt im Klartext. Erst umstellen, dann nachsehen.';
         } else {
             $weg = null;
             try {
@@ -241,9 +231,10 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
 
   <?php ui_titelzeile([
       'titel' => 'Backup-Ziele',
-      'unter' => 'FTPS- und SFTP-Gegenstellen, auf die Backups geschoben '
-               . 'werden. Nicht zu verwechseln mit den Transportzielen unter '
-               . '<a href="einstellungen.php?t=standorte">Standorte</a> — das sind Zielkliniken.',
+      'unter' => 'SFTP- und FTPS-Gegenstellen für die Backups, nicht zu verwechseln '
+               . 'mit den Zielkliniken unter '
+               . '<a href="einstellungen.php?t=standorte">Standorte</a>. '
+               . '<a href="hilfe.php#12-7-backup-ziele">Handbuch: Backup-Ziele</a>',
       'aktionen' => $schluesselDa && $tabelleDa
           ? (($aktiveZiele > 0
               ? ui_knopf(['text' => 'Jetzt versenden', 'symbol' => 'tausch',
@@ -253,6 +244,9 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                          'href' => '?neu=1']))
           : '',
   ]); ?>
+  <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — seit
+           P5c/AP9 steht diese Seite in WARTUNG_AUSNAHMEN (E-P5c-134). */ ?>
+  <?= wartung_balken() ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
@@ -283,10 +277,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                           'plaketten' => ui_plakette('abgebrochen', ['ton' => 'rot'])]); ?>
         <?php endif; ?>
         <?php if (!empty($ergebnis['uebernommen'])): ?>
-          <p class="feld-hinweis"><strong>Der Hostschlüssel wurde übernommen.</strong>
-             Ab jetzt wird er bei jeder Verbindung verglichen; meldet sich der
-             Server einmal mit einem anderen, bricht die Verbindung ab, bevor
-             ein Passwort gesendet wird.</p>
+          <p class="feld-hinweis"><strong>Der Hostschlüssel wurde übernommen</strong>
+             und wird ab jetzt bei jeder Verbindung verglichen.</p>
         <?php endif; ?>
       <?php ui_karte_ende(); ?>
     <?php endif; ?>
@@ -318,7 +310,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       if ($bestand['aeltester'] !== null) {
           ui_zeile(['text' => 'Ältester Stand',
                     'klein' => 'Der jüngste ist von '
-                             . datum_zeit_text((string)$bestand['juengster'], ' · ') . ' Uhr',
+                             . datum_zeit_text((string)$bestand['juengster']) . ' Uhr',
                     'plaketten' => ui_plakette(
                         datum_text((string)$bestand['aeltester']), ['ton' => 'neutral'])]);
       }
@@ -331,9 +323,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                 'plaketten' => ui_plakette((string)(int)$bestand['fremd'],
                     ['ton' => (int)$bestand['fremd'] > 0 ? 'orange' : 'blau'])]);
       ?>
-      <p class="feld-hinweis">Eine Momentaufnahme, gelesen in diesem Augenblick —
-         sie wird nicht gespeichert. Gezählt wird, was dem Namensmuster einer
-         Sicherung entspricht; alles andere steht unter „Fremde Dateien".</p>
+      <p class="feld-hinweis">Eine Momentaufnahme, die nicht gespeichert wird;
+         was nicht dem Namensmuster einer Sicherung entspricht, zählt als fremd.</p>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
@@ -352,23 +343,14 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
        BetreiberIn auf die Suche. */ ?>
   <?php if (!$schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
-      <p class="feld-hinweis">Die Zugangsdaten der Ziele werden verschlüsselt in
-         der Datenbank abgelegt. Der Schlüssel dazu steht in
-         <code>config.php</code> und damit <strong>nicht</strong> im
-         Datenbankdump: Wer die Datenbank hat, hat die Passwörter nicht.
-         Solange kein Schlüssel eingetragen ist, lässt sich kein Ziel anlegen —
-         ein Passwort im Klartext zu speichern kommt nicht in Frage.</p>
+      <p class="feld-hinweis">Die Zugangsdaten der Ziele werden mit dem
+         Serverschlüssel verschlüsselt, und ohne ihn lässt sich kein Ziel anlegen.
+         <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: Schlüssel des Servers</a></p>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Zu den Servereinstellungen', 'symbol' => 'schloss',
                       'art' => 'primaer',
                       'href' => 'betrieb_server.php#k-schluessel']) ?>
       </div>
-      <p class="feld-hinweis">Dort steht die Karte <strong>„Schlüssel des
-         Servers"</strong> — sie legt ihn an, zeigt seine Kennung und druckt das
-         Schlüsselblatt. Beides gehört ins Wiederanlaufpaket: Geht der Schlüssel
-         verloren, sind die Zugangsdaten der Ziele neu einzutragen
-         (verschmerzbar) und ein versiegeltes Komplett-Backup nicht mehr zu
-         öffnen (nicht verschmerzbar).</p>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
@@ -389,9 +371,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                             * Zusage, die neben einer Option steht, die sie
                             * aufhebt, ist schlimmer als keine. */
                            'klein' => 'Der Aufräumjob schiebt neue Pakete auf die '
-                                    . 'aktiven Ziele. Es wird nur ergänzt — gelöscht '
-                                    . 'wird dort nur, wo die Aufbewahrungsregel des '
-                                    . 'Ziels ausdrücklich eingeschaltet ist.']); ?>
+                                    . 'aktiven Ziele und löscht dort nur, wo die '
+                                    . 'Aufbewahrungsregel des Ziels eingeschaltet ist.']); ?>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
@@ -405,20 +386,27 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                     ? ui_plakette('keines', ['ton' => 'orange'])
                     : ui_plakette((string)$aktiveZiele, ['ton' => 'blau'])]);
       $rueck = $autoAn ? sz_versand_rueckstand() : null;
+      /* DREI GRÜNDE FÜR „KEINE ZAHL", UND JEDER SAGT SEINEN (Endzählung AP9,
+         B-1). Bis Web 21.1.0 stand in allen dreien „solange ein Ziel nie
+         erfolgreich lief" — auch bei abgeschaltetem Versand und ohne aktives
+         Ziel. Gezählt werden Konto-Backups, Komplett-Stände und Archive des
+         Protokolls; das Wort dafür ist „Sicherungen", nicht „Pakete" (B-2). */
+      $rueckKlein = !$autoAn ? 'keine Aussage — der Versand ist aus'
+          : ($aktiveZiele === 0 ? 'keine Aussage — es gibt kein aktives Ziel'
+          : ($rueck === null
+              ? 'noch keine Aussage — ein Ziel lief noch nie erfolgreich'
+              : ($rueck === 1 ? '1 Sicherung ist' : $rueck . ' Sicherungen sind')
+                . ' neuer als der letzte erfolgreiche Versand (Schätzung; '
+                . 'gezählt wird hier, nicht am Ziel)'));
       ui_zeile(['text' => 'Wartet auf den nächsten Lauf',
-                'klein' => $rueck === null
-                    ? 'noch keine Aussage — solange ein Ziel nie erfolgreich lief, '
-                    . 'ist jede Zahl geraten'
-                    : $rueck . ($rueck === 1 ? ' Paket' : ' Pakete')
-                    . ' sind neuer als der letzte erfolgreiche Versand (Schätzung; '
-                    . 'gezählt wird hier, nicht am Ziel)',
+                'klein' => $rueckKlein,
                 'plaketten' => $rueck === null
                     ? ui_plakette('unbekannt', ['ton' => 'neutral'])
                     : ui_plakette((string)$rueck, ['ton' => $rueck > 0 ? 'orange' : 'blau'])]);
       ?>
-      <p class="feld-hinweis">Der Versand schickt, was am Ziel FEHLT — verglichen
-         werden Name und Größe. Eine abgebrochene Übertragung wird deshalb beim
-         nächsten Lauf wiederholt und gilt nicht als erledigt.</p>
+      <p class="feld-hinweis">Der Versand schickt, was am Ziel nach Name und Größe
+         fehlt, und wiederholt deshalb eine abgebrochene Übertragung.
+         <a href="hilfe.php#12-7-backup-ziele">Handbuch: Backup-Ziele</a></p>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
@@ -426,26 +414,19 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php if ($tabelleDa): ?>
     <?php ui_karte_start(['titel' => 'Ziele', 'id' => 'k-ziele', 'zahl' => count($ziele)]); ?>
       <?php if (!$ziele): ?>
-        <p class="feld-hinweis">Es ist noch kein Ziel eingetragen. Ohne Ziel bleiben
-           die Backups dort, wo sie entstehen — auf demselben Server, dessen
-           Ausfall der Grund für ein Backup wäre.</p>
+        <p class="feld-hinweis">Es ist noch kein Ziel eingetragen — bis dahin
+           bleiben die Backups auf diesem Server.</p>
       <?php endif; ?>
       <?php foreach ($ziele as $z): ?>
         <?php
         $prot = strtoupper((string)$z['protokoll']);
-        /* DAS ABGESCHAFFTE PROTOKOLL ZUERST (S10/AP4, E-S10-14). Es ist die
-         * Auskunft, die hier zählt — „aktiv" daneben wäre irreführend, denn
-         * beschickt wird dieses Ziel nicht mehr. */
-        $tot = !sz_protokoll_erlaubt((string)$z['protokoll']);
-        $plaketten = $tot ? ui_plakette('wird übergangen', ['ton' => 'rot']) : '';
-        $plaketten .= (int)$z['aktiv'] === 1
+        /* Bis Web 20.47.0 stand vorn die rote Plakette „wird übergangen" fuer
+         * ein Ziel mit dem abgeschafften Protokoll FTP (S10/AP4); das ENUM
+         * kennt den Wert seit P5c/AP8 nicht mehr (E-P5c-124). */
+        $plaketten = (int)$z['aktiv'] === 1
             ? ui_plakette('aktiv', ['ton' => 'blau'])
             : ui_plakette('abgeschaltet', ['ton' => 'neutral']);
-        if ($tot) {
-            /* Kein „zuletzt gescheitert" daneben: Der Vermerk im Lauf IST die
-             * Übergehung, und zwei rote Plaketten für eine Sache sagen nicht
-             * mehr als eine. */
-        } elseif (($z['letzter_fehler'] ?? null) !== null) {
+        if (($z['letzter_fehler'] ?? null) !== null) {
             $plaketten .= ui_plakette('zuletzt gescheitert', ['ton' => 'rot']);
         } elseif (($z['letzter_erfolg'] ?? null) !== null) {
             $plaketten .= ui_plakette('zuletzt in Ordnung', ['ton' => 'blau']);
@@ -457,11 +438,6 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         }
         $klein = $prot . ' · ' . (string)$z['nutzer'] . '@' . (string)$z['host']
                . ':' . (int)$z['port'] . ' · ' . (string)$z['pfad'];
-        if ($tot) {
-            $klein = $prot . ' überträgt im Klartext und wird seit Web 20.2.0 '
-                   . 'nicht mehr beschickt — auf SFTP oder FTPS umstellen '
-                   . '(Protokoll, Port und Zugangsdaten). · ' . $klein;
-        }
         if (($z['schluessel'] ?? null) !== null) { $klein .= ' · mit privatem Schlüssel'; }
         /* DIE AUFBEWAHRUNG STEHT AN DER ZEILE, nicht nur im Formular
          * (P5a/AP10). Eine Regel, die drüben löscht, gehört dorthin, wo man
@@ -481,7 +457,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
             /* NICHT noch einmal „zuletzt in Ordnung" — das steht schon als
                Plakette daneben. Bei 390 px umfliesst die Kleinzeile die
                Plaketten, und jedes doppelte Wort kostet dort eine Zeile. */
-            $klein .= ' · ' . datum_zeit_text((string)$z['letzter_erfolg'], ' · ') . ' Uhr';
+            $klein .= ' · ' . datum_zeit_text((string)$z['letzter_erfolg']) . ' Uhr';
         }
         ?>
         <form method="post" id="zp-<?= (int)$z['id'] ?>" hidden>
@@ -557,19 +533,15 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         ]);
         if (($z['letzter_fehler'] ?? null) !== null) {
             /* DER FEHLER STEHT DA, BIS ER WEG IST. Ein Versand, der seit drei
-               Wochen scheitert, ist sonst nur im Fehlerprotokoll des Webspace
-               zu sehen — und an das kommt auf geteiltem Hosting nicht jede
-               BetreiberIn heran. */
-            /* „GESCHEITERT" IST BEI EINEM ÜBERGANGENEN ZIEL DAS FALSCHE
-               WORT (S10/AP4). Es ist nichts schiefgegangen — es wurde
-               absichtlich nichts versucht. Der Vermerk steht in derselben
-               Spalte, weil es dieselbe Spalte ist; die Überschrift sagt,
-               was er bedeutet. */
-            ui_zeile(['text' => $tot ? 'Zuletzt übergangen' : 'Zuletzt gescheitert',
+               Wochen scheitert, stand bis Web 20.39.0 sonst nur im Fehlerprotokoll
+               des Webspace — und an das kommt auf geteiltem Hosting nicht jede
+               BetreiberIn heran. Seit P5c/AP3 steht er auch im Protokoll unter
+               System; hier steht er trotzdem, weil man dort suchen muss. */
+            ui_zeile(['text' => 'Zuletzt gescheitert',
                       'klein' => (string)$z['letzter_fehler'],
                       'plaketten' => ui_plakette(
-                          datum_zeit_text((string)$z['letzter_lauf'], ' · '),
-                          ['ton' => $tot ? 'orange' : 'rot'])]);
+                          datum_zeit_text((string)$z['letzter_lauf']),
+                          ['ton' => 'rot'])]);
         }
         ?>
       <?php endforeach; ?>
@@ -579,33 +551,12 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php /* ---- Anlegen und Ändern ------------------------------------- */ ?>
   <?php if ($bearbeiten !== null && $schluesselDa && $tabelleDa): ?>
     <?php $neu = $bearbeiten === 0; ?>
-    <?php /* EIN ALTZIEL WIRD NICHT DURCH BLOSSES SPEICHERN UMGESTELLT
-             (S10/AP4, E-S10-U-13, Fund F-D).
-
-             `ui_feld()` setzt `selected` nur bei Übereinstimmung. Fällt das
-             Protokoll aus dem Katalog, wählt der Browser die ERSTE Option —
-             `sftp` —, während Port 21 und die versiegelten Zugangsdaten
-             stehenbleiben. Ein Druck auf „Speichern" ergäbe ein Ziel, das
-             plausibel aussieht und beim nächsten Versand scheitert; die rote
-             Plakette wäre dabei verschwunden, weil das Protokoll ja nicht
-             mehr `ftp` ist. Also: Der Satz sagt, was zu tun ist, und das
-             Protokollfeld beginnt LEER statt mit einer geratenen Wahl. */ ?>
-    <?php $altziel = !$neu && isset($form['protokoll'])
-                     && !sz_protokoll_erlaubt((string)$form['protokoll']); ?>
+    <?php /* Bis Web 20.47.0 stand hier der Zweig fuer ein ALTZIEL mit FTP: ein
+             Hinweis und ein leeres Protokollfeld statt einer geratenen Wahl
+             (S10/AP4, E-S10-U-13). Seit P5c/AP8 kennt die Datenbank den Wert
+             nicht mehr (E-P5c-124). */ ?>
     <?php ui_karte_start(['titel' => $neu ? 'Neues Ziel' : 'Ziel bearbeiten',
                           'id' => 'zielform']); ?>
-      <?php if ($altziel): ?>
-        <?php ui_meldung(
-            'Es überträgt im Klartext und wird seit Web 20.2.0 nicht mehr '
-            . 'beschickt. Zum Weiterbenutzen sind drei Angaben neu zu setzen: '
-            . 'Protokoll, Port und die Zugangsdaten. Die bisherigen '
-            . 'Zugangsdaten werden nicht übernommen — sie gelten nicht '
-            . 'notwendig auch für den verschlüsselten Weg, und geraten wird '
-            . 'hier nichts.',
-            null, 'warn', '',
-            ['auftakt' => 'Dieses Ziel benutzt '
-                        . strtoupper((string)$form['protokoll']) . '.']); ?>
-      <?php endif; ?>
       <form method="post">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="ziel_speichern">
@@ -616,13 +567,10 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                          'klein' => 'Frei wählbar — er steht in Meldungen und im '
                                   . 'Versandprotokoll.']); ?>
           <?php ui_feld(['name' => 'protokoll', 'label' => 'Protokoll', 'art' => 'select',
-                         'optionen' => $altziel
-                             ? ['' => '— bitte wählen —'] + SZ_PROTOKOLLE
-                             : SZ_PROTOKOLLE,
-                         'wert' => $altziel ? '' : (string)($form['protokoll'] ?? 'sftp'),
-                         'klein' => 'SFTP erkennt den Server am Hostschlüssel wieder. '
-                                  . 'FTPS verschlüsselt nur die Leitung — das Zertifikat '
-                                  . 'wird von PHP nicht geprüft.']); ?>
+                         'optionen' => SZ_PROTOKOLLE,
+                         'wert' => (string)($form['protokoll'] ?? 'sftp'),
+                         'klein' => 'SFTP erkennt den Server am Hostschlüssel wieder, '
+                                  . 'FTPS verschlüsselt nur die Leitung.']); ?>
         </div>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'host', 'label' => 'Rechnername', 'pflicht' => true,
@@ -638,27 +586,26 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                          'wert' => (string)($form['nutzer'] ?? '')]); ?>
           <?php ui_feld(['name' => 'pfad', 'label' => 'Pfad auf dem Ziel',
                          'wert' => (string)($form['pfad'] ?? '/'),
-                         'klein' => 'Der Ordner, in dem die Backups landen. Je Konto '
-                                  . 'entsteht darunter ein Unterordner.']); ?>
+                         'klein' => 'Der Ordner für die Backups, mit einem '
+                                  . 'Unterordner je Konto.']); ?>
         </div>
         <?php ui_feld(['name' => 'geheim', 'label' => 'Passwort', 'art' => 'password',
                        'wert' => '',
                        'klein' => $neu
                            ? 'Bei Anmeldung mit privatem Schlüssel: dessen Passphrase '
                            . '(leer lassen, wenn er keine hat).'
-                           : 'Leer lassen heisst: unverändert. Was gespeichert ist, '
-                           . 'wird nie zurück in dieses Feld geschrieben.']); ?>
+                           : 'Leer lassen heißt unverändert; Gespeichertes wird nie '
+                           . 'in dieses Feld zurückgeschrieben.']); ?>
         <?php ui_feld(['name' => 'schluessel', 'label' => 'Privater Schlüssel (nur SFTP)',
                        'art' => 'textarea', 'zeilen' => 4, 'wert' => '',
                        'platzhalter' => "-----BEGIN OPENSSH PRIVATE KEY-----\n"
                                       . "(der ganze Schlüssel)\n"
                                       . "-----END OPENSSH PRIVATE KEY-----",
-                       'klein' => 'Vollständig einfügen, mit den BEGIN- und END-Zeilen. '
-                                . 'Ist hier etwas eingetragen, wird damit angemeldet und '
-                                . 'das Feld „Passwort" ist die Passphrase.'
+                       'klein' => 'Vollständig mit BEGIN- und END-Zeile; das Feld '
+                                . '„Passwort" ist dann seine Passphrase'
                                 . (($form['schluessel'] ?? null) !== null
-                                   ? ' Zurzeit ist ein Schlüssel hinterlegt; leer lassen '
-                                   . 'heisst unverändert.' : '')]); ?>
+                                   ? ', und leer lassen heißt, der hinterlegte bleibt.'
+                                   : '.')]); ?>
         <?php if (($form['schluessel'] ?? null) !== null): ?>
           <?php ui_schalter(['name' => 'schluessel_weg',
                              'label' => 'Hinterlegten Schlüssel entfernen',
@@ -667,8 +614,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         <?php endif; ?>
         <?php ui_schalter(['name' => 'passiv', 'label' => 'Passiver Modus (nur FTPS)',
                            'an' => (int)($form['passiv'] ?? 1) === 1,
-                           'klein' => 'Fast immer richtig. Aus nur, wenn die Gegenstelle '
-                                    . 'ausdrücklich aktives FTP verlangt.']); ?>
+                           'klein' => 'Fast immer richtig, aus nur für eine Gegenstelle, '
+                                    . 'die aktives FTP verlangt.']); ?>
         <?php ui_schalter(['name' => 'aktiv', 'label' => 'Ziel benutzen',
                            'an' => (int)($form['aktiv'] ?? 1) === 1,
                            'klein' => 'Aus heisst: Es bleibt eingetragen, der Versand '
@@ -698,22 +645,22 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         <?php ui_schalter(['name' => 'aufraeumen',
                            'label' => 'Auf dem Ziel aufräumen',
                            'an' => $aufAn,
-                           'klein' => 'Aus ist die Vorgabe: Der Versand ergänzt nur, '
-                                    . 'gelöscht wird dort nie. An heisst, dass alte '
-                                    . 'Sicherungen dieser Installation dort entfernt '
-                                    . 'werden, sobald mehr liegen als unten steht. '
-                                    . 'Fremde Dateien bleiben immer; gelöscht wird nur, '
-                                    . 'was dem Namensmuster entspricht UND im '
-                                    . 'Versandprotokoll steht, nie unter der Zahl, und '
-                                    . 'nie in einem Lauf, dessen eigener Versand '
-                                    . 'gescheitert ist.']); ?>
+                           'klein' => 'An entfernt dort alte Sicherungen dieser '
+                                    . 'Installation über der Zahl darunter, nie fremde '
+                                    . 'Dateien.']); ?>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'behalten_konto', 'label' => 'Je Konto behalten',
                          'art' => 'number', 'attr' => 'min="1" max="999"',
                          'wert' => (string)($form['behalten_konto'] ?? 6),
-                         'klein' => 'Wie viele Konto-Sicherungen je Konto dort bleiben. '
-                                  . 'Hier auf dem Server sind es zwei — dort darf es '
-                                  . 'mehr sein, das ist der Sinn der Sache.']); ?>
+                         /* BIS WEB 21.0.0 STAND HIER FEST „zwei" (F-P5c-139) —
+                            die Vorgabe, nicht die Einstellung unter
+                            Verwaltung → Konto-Backups. Und es ist die VORGABE:
+                            Ein Konto kann eine eigene Zahl haben (seit P5b/AP6,
+                            `edbak_aufbewahrung_konto()`) — „sind es N" stimmte
+                            für solche Konten nicht (Endzählung AP9, B-3). */
+                         'klein' => 'Hier auf dem Server gilt als Vorgabe '
+                                  . edbak_aufbewahrung() . ' je Konto, am Ziel darf es '
+                                  . 'mehr sein.']); ?>
           <?php ui_feld(['name' => 'behalten_komplett', 'label' => 'Komplett-Stände behalten',
                          'art' => 'number', 'attr' => 'min="1" max="999"',
                          'wert' => (string)($form['behalten_komplett'] ?? 12),
@@ -730,38 +677,6 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       </form>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
-
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt', 'vorschau' => 'zwei Protokolle']); ?>
-    <p class="feld-hinweis"><strong>SFTP ist die Empfehlung.</strong> Es verschlüsselt
-       nicht nur, es erkennt den Server auch wieder: Beim ersten Prüfen wird der
-       Fingerabdruck des Hostschlüssels übernommen, danach bei jeder Verbindung
-       verglichen. Passt er nicht, bricht die Verbindung ab, <em>bevor</em> ein
-       Passwort gesendet wird.</p>
-    <p class="feld-hinweis"><strong>FTPS verschlüsselt, prüft aber nichts.</strong> Die
-       PHP-Erweiterung <code>ftp</code> nimmt jedes Zertifikat an, auch ein selbst
-       ausgestelltes ohne Vertrauenskette (nachgemessen in
-       <code>tools/proben/versand/</code>). Schutz gegen Mitlesen: ja. Schutz gegen
-       einen untergeschobenen Server: nein.</p>
-    <?php /* NICHT GESTRICHEN, SONDERN UMGESCHRIEBEN (S10/AP4, E-S10-U-16).
-             Dieser Absatz rechtfertigte FTP („es steht hier, weil es auf
-             einfachem Webspace oft das Einzige ist"). Seit AP4 ist er der
-             EINZIGE Ort, an dem die rote Plakette an einem Altziel erklaert
-             wird — ihn zu streichen hiesse, die Plakette unerklaert zu
-             lassen. Die Streichung ist fuer den ENUM-Rueckbau vorgemerkt
-             (Backlog Nr. 168 / Nr. 46). */ ?>
-    <p class="feld-hinweis"><strong>FTP wird nicht mehr angeboten.</strong> Es überträgt
-       alles im Klartext, auch den Nutzernamen und das Passwort — und eine
-       Backup-Datei ist genau das, was man dabei nicht mitlesen lassen will. Seit
-       Web 20.2.0 ist es weder wählbar noch wird es beschickt. Ein Ziel, das noch
-       darauf steht, trägt in der Liste oben die Plakette <em>wird übergangen</em>
-       und wird beim Versand übersprungen, statt im Klartext beliefert zu werden.
-       Zum Umstellen sind drei Angaben neu zu setzen: Protokoll, Port und die
-       Zugangsdaten.</p>
-    <p class="feld-hinweis">Die Zugangsdaten liegen verschlüsselt in der Datenbank;
-       der Schlüssel steht in <code>config.php</code>. Ein Datenbankdump enthält
-       die Passwörter deshalb nicht — und ein Backup der Installation, in das der
-       Schlüssel hineingeriete, wäre nur scheinbar versiegelt.</p>
-  <?php ui_karte_ende(true); ?>
 
 <?php ui_geruest_ende(); ?>
 <?php /* `assets/kopieren.js` ist mit S10 entfallen: Es hing am

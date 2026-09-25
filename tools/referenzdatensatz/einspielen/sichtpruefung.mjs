@@ -47,7 +47,7 @@ await seite.fill('input[name="email"]', email);
 await seite.fill('input[name="password"]', passwort);
 await Promise.all([
   seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-  seite.click('button[type="submit"]'),
+  seite.click('#loginform button[type="submit"]'),
 ]);
 pruefe(!seite.url().includes('login.php'), 'Anmeldung im Browser gescheitert');
 

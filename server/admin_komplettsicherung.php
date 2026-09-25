@@ -1,7 +1,11 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-require_admin();
+/* NUR DIE BETREIBERIN (P5c/AP2, E-P5c-31, Backlog Nr. 286). Bis Web 20.38.0
+ * stand hier `require_admin()` — R75 und der Kopf der Rollen in `db.php`
+ * sagten BetreiberIn, das Tor sagte Admin. Mangels Admin-Konten war die
+ * Lücke nicht ausnutzbar; die Rollenprobe prüft sie seither je Handlung. */
+require_betreiberin();
 require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/jobs_lib.php';
 require_once __DIR__ . '/format_lib.php';  /* groesse_text(), zahl_text() — ausdruecklich, nicht ueber die Ladekette. */
@@ -60,6 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
          *
          * Der Speicher bleibt trotzdem bei einem halben Megabyte: Es wird
          * Block für Block entsiegelt und Block für Block ausgegeben. */
+        /* DER EINTRAG STEHT VOR DEM DOWNLOAD (P5c/AP2): Danach endet die
+         * Anfrage mit `exit`. Ein Komplett-Stand ist die ganze Datenbank —
+         * wer ihn wann geholt hat, gehört ins Protokoll. */
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll('sicherung', 'komplett_heruntergeladen',
+            'Komplett-Backup ' . $datei . ' heruntergeladen — '
+            . ($art === 'pw' ? 'unter einer Passphrase versiegelt' : 'als SQL, entsiegelt'),
+            ['datei' => $datei, 'art' => $art === 'pw' ? 'passphrase' : 'klar']);
         @set_time_limit(0);
         while (ob_get_level() > 0) { ob_end_clean(); }
         $name = $art === 'pw'
@@ -78,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
              * mehr. Was bleibt, ist ein ABGEBROCHENER Download — besser als
              * eine halbe Datei, die aussieht wie eine ganze. Nachlesbar ist
              * er im Fehlerprotokoll. */
-            error_log('komplett: Download „' . $datei . '" abgebrochen: ' . $ex->getMessage());
+            system_melden('komplett', 'Download „' . $datei . '" abgebrochen', $ex);
         }
         exit;
     }
@@ -144,7 +156,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                              . 'Aufbewahrung: 1 bis 20.';
     } elseif ($aktion === 'stand_loeschen') {
         $datei = (string)($_POST['datei'] ?? '');
-        $notice = komp_loeschen($datei)
+        $geloescht = komp_loeschen($datei);
+        if ($geloescht) {
+            require_once __DIR__ . '/protokoll_lib.php';
+            protokoll('sicherung', 'komplett_geloescht',
+                      'Komplett-Backup ' . $datei . ' von Hand gelöscht', ['datei' => $datei]);
+        }
+        $notice = $geloescht
             /* DER SATZ IST SEIT WEB 20.14.0 GENAUER (P5a/AP10). Vorher hiess
              * er „gelöscht wird auf dem Ziel nichts" — als Zusage über die
              * Anwendung. Seit es die Aufbewahrungsregel je Ziel gibt, stimmt
@@ -190,9 +208,9 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
 
   <?php ui_titelzeile([
       'titel' => 'Komplett-Backup',
-      'unter' => 'Die ganze Installation als versiegelter SQL-Dump: alle Konten, '
-               . 'Stammdaten, Geräte, Schlüsselhüllen und GPS-Daten. Nicht enthalten '
-               . 'ist <code>config.php</code> — sie gehört ins Wiederanlaufpaket.',
+      'unter' => 'Die ganze Installation als versiegelter SQL-Dump, ohne '
+               . '<code>config.php</code> — sie gehört ins Wiederanlaufpaket. '
+               . '<a href="hilfe.php#12-6-komplett-backup">Handbuch: Komplett-Backup</a>',
       'aktionen' => $schluesselDa
           ? ($laeuft
               ? ui_knopf(['text' => 'Fortsetzen', 'symbol' => 'sicherung',
@@ -203,20 +221,27 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                           'art' => 'primaer', 'attr' => ' form="f-sichern"']))
           : '',
   ]); ?>
+  <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — seit
+           P5c/AP9 steht diese Seite in WARTUNG_AUSNAHMEN (E-P5c-134). */ ?>
+  <?= wartung_balken() ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if (!$schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
-      <p class="feld-hinweis">Ein Komplett-Backup enthält jede Tabelle dieser
-      Datenbank. Sie wird deshalb <strong>immer versiegelt</strong> abgelegt —
-      und dafür braucht es den Serverschlüssel aus <code>config.php</code>.
-      Ohne ihn wird hier nichts erzeugt; unversiegelt wird eine solche Datei
-      nicht abgelegt.</p>
-      <p class="feld-hinweis">Der Schlüssel wird auf der Seite
-      <a href="admin_sicherungsziele.php">Backup-Ziele</a> erzeugt und
-      eingetragen. Er gehört danach ins Wiederanlaufpaket: Geht er verloren,
-      lässt sich kein versiegeltes Backup mehr öffnen.</p>
+      <?php /* BIS WEB 21.0.0 STAND HIER „Backup-Ziele" als der Ort, an dem der
+               Schlüssel entsteht (F-P5c-138). Das stimmte bis Web 20.1.0; seither
+               legt ihn die Karte „Schlüssel des Servers" unter
+               Betrieb → Servereinstellungen an, und Backup-Ziele verweist selbst
+               nur noch dorthin. */ ?>
+      <p class="feld-hinweis">Ein Komplett-Backup wird immer versiegelt, und dafür
+      fehlt der Serverschlüssel aus <code>config.php</code>.
+      <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: Schlüssel des Servers</a></p>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Zu den Servereinstellungen', 'symbol' => 'schloss',
+                      'art' => 'primaer',
+                      'href' => 'betrieb_server.php#k-schluessel']) ?>
+      </div>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
@@ -281,10 +306,8 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
       <div class="fld-reihe">
         <?php ui_feld(['name' => 'plan', 'label' => 'Von selbst sichern',
                        'art' => 'select', 'optionen' => KOMP_PLAENE, 'wert' => $plan,
-                       'klein' => 'Der Plan sagt nicht WANN, sondern OB: Er legt fest, '
-                                . 'wie alt der jüngste Stand höchstens sein darf. Wann '
-                                . 'tatsächlich gearbeitet wird, entscheidet der '
-                                . 'eingerichtete Auslöser — nachzusehen unter '
+                       'klein' => 'Wie alt der jüngste Stand höchstens sein darf — '
+                                . 'wann gearbeitet wird, entscheidet der Auslöser unter '
                                 . 'Betrieb → Hintergrundjobs.']); ?>
         <?php ui_feld(['name' => 'aufbewahrung', 'label' => 'Stände aufbewahren',
                        'art' => 'number', 'attr' => 'min="1" max="20"',
@@ -305,9 +328,8 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                   : ui_plakette(edbak_zeitpunkt_text((string)$staende[0]['zeit']),
                                 ['ton' => 'blau'])]);
     ui_zeile(['text' => 'Belegt von Komplett-Backups',
-              'klein' => 'Zählt auf die Speichergrenze mit — sie steht seit '
-                       . 'Web 15.1.0 unter Betrieb → Servereinstellungen, '
-                       . 'zusammen mit der Belegung nach Art.',
+              'klein' => 'Zählt auf die Speichergrenze unter '
+                       . 'Betrieb → Servereinstellungen mit.',
               'href' => 'betrieb_server.php',
               'plaketten' => ui_plakette(groesse_text((int)$zahlen['komplett_bytes']),
                                          ['ton' => 'neutral'])]);
@@ -369,11 +391,8 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
           <div class="fld-reihe">
             <?php ui_feld(['name' => 'passphrase', 'label' => 'Mit Passphrase herunterladen',
                            'art' => 'password', 'wert' => '',
-                           'klein' => 'Mindestens 8 Zeichen. Die Datei wird dann unter '
-                                    . 'dieser Passphrase versiegelt statt unter dem '
-                                    . 'Serverschlüssel — zum Weitergeben. Sie wird '
-                                    . 'nirgends gespeichert; wer sie verliert, hat die '
-                                    . 'Datei verloren.']); ?>
+                           'klein' => 'Mindestens 8 Zeichen, zum Weitergeben — sie wird '
+                                    . 'nirgends gespeichert.']); ?>
           </div>
           <?php /* DER KNOPF STEHT NEBEN DER REIHE UND NICHT DARIN.
                  * In `.fld-reihe` liegen FELDER nebeneinander; ein Knopf
@@ -390,35 +409,6 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
       <?php endforeach; ?>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
-
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt', 'vorschau' => 'Wiederanlauf']); ?>
-    <p class="feld-hinweis"><strong>Zwei Wege heraus.</strong> „Herunterladen"
-    liefert den Dump <em>unverschlüsselt</em> als <code>.sql.gz</code> — genau
-    das, was <code>mysql</code> und phpMyAdmin einspielen können. „Versiegelt
-    herunterladen" liefert dieselbe Datei unter einer Passphrase; die braucht
-    es, wenn die Datei aus dem Haus geht. Was von selbst auf ein
-    <a href="admin_sicherungsziele.php">Backup-Ziel</a> geschoben wird, ist
-    immer die versiegelte Fassung.</p>
-
-    <p class="feld-hinweis"><strong>Das Wiederanlaufpaket.</strong> Diese Datei
-    allein reicht nicht. Wer nach einem Totalausfall neu aufsetzt, braucht
-    <em>drei</em> Dinge, und zwei davon stehen nicht hier drin:
-    <code>config.php</code> (Datenbankzugang und <strong>Serverschlüssel</strong>),
-    den Zugang zum Backup-Ziel und diese Datei. Ohne den Serverschlüssel
-    lässt sich die versiegelte Fassung nicht öffnen — er gehört an einen Ort,
-    der den Server überlebt. Das Vorgehen steht im Runbook
-    (<code>docs/Technik.md</code>, Abschnitt 7).</p>
-
-    <p class="feld-hinweis"><strong>Der Schnappschuss ist nicht scharf.</strong>
-    Der Dump entsteht über mehrere Läufe hinweg; eine Zeile, die währenddessen
-    entsteht, kann enthalten sein oder nicht. Übersprungen wird nichts, was
-    schon dastand. Wer es genauer braucht, lässt nachts sichern.</p>
-
-    <p class="feld-hinweis"><strong>Ein Konto einzeln</strong> holt man sich
-    nicht hier, sondern unter <a href="admin_sicherungen.php">Konto-Backups</a>.
-    Diese Seite ist für den Fall „der Server ist weg", nicht für „jemand hat
-    sich vertan".</p>
-  <?php ui_karte_ende(true); ?>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

@@ -7,7 +7,12 @@ Läuft `schema.sql` auf der Datenbank, gegen die es laufen soll?
 
 ```bash
 php tools/schemaprobe/probe.php --datenbank nadoku_probe   # --selbstprobe
+bash tools/sandbox/plattform.sh schema                     # alle vier Fassungen
 ```
+
+Der Prüfstand ruft die zweite Zeile; sie kennt die Zugangsdaten je Fassung.
+**Nie neben anderen Proben fahren:** Während sie läuft, sieht die Anlage
+eine Datenbank mit offenen Migrationen, und der Torwächter schließt sie.
 
 ## Was es misst
 
@@ -25,8 +30,9 @@ legt den Urstand bytegleich zurück, auch bei Abbruch.
 
 ## Erwartete Zahl
 
-**19 Prüfungen, 0 Fehlschläge** je Fassung. Die Matrix aus vier Fassungen
-meldet folglich **4 × 19/0** (gemessen 21.09.2026, 29,7 s).
+**30 Prüfungen, 0 Fehlschläge** je Fassung. Die Matrix aus vier Fassungen
+meldet folglich **4 × 30/0** (gemessen 25.09.2026, P5c/AP8: Fall 5 mit elf
+Prüfungen zum Rückbau von R39 und FTP; bis dahin 19).
 
 ## Was es nicht kann
 

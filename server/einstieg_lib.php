@@ -211,7 +211,7 @@ function erststart_erledigt(int $userId, int $bit): void
         /* Die Spalte fehlt (Migration steht aus). Kein Grund, den Aufrufer
          * scheitern zu lassen — er hat gerade etwas ANDERES getan, und das
          * ist gelungen. */
-        error_log('erststart_erledigt: ' . $ex->getMessage());
+        system_melden('erststart_erledigt', 'Vermerk nicht geschrieben', $ex);
     }
 }
 
@@ -266,7 +266,7 @@ function rueckfrage_anstossen(int $userId): void
             ->execute([$userId]);
         einstieg_vergessen($userId);
     } catch (Throwable $ex) {
-        error_log('rueckfrage_anstossen: ' . $ex->getMessage());
+        system_melden('rueckfrage_anstossen', 'Rückfrage nicht angestoßen', $ex);
     }
 }
 

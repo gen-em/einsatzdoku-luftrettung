@@ -30,7 +30,9 @@ declare(strict_types=1);
  * WAS SIE NICHT PRUEFT, und warum:
  *   - den TEXT der Kopplungsmail — es gibt keinen Mailserver im Pruefstand.
  *     Belegt wird nur, dass der Versandweg NACH der Antwort betreten wird
- *     (Protokollzeile des PHP-Servers, Fall 27). Der Text steht im
+ *     (Fall 27: der gescheiterte Versuch steht im Reiter System — bis
+ *     Web 20.39.0 war es eine Zeile im Protokoll des PHP-Servers, seit
+ *     P5c/AP3 geht `smtp.php` ueber `system_melden()`). Der Text steht im
  *     Pruefdokument zur Sichtpruefung.
  *   - die Code-Eingabe im Web (Fall 24, Topf pair_code am Formular) — die
  *     entsteht in Paket B; hier laeuft nur der Topf selbst (Fall 23).
@@ -38,8 +40,8 @@ declare(strict_types=1);
  *     Umsetzungsstand); hier wird nur der Zustand danach gelesen (Fall 29).
  *
  * Aufruf:
- *   php tools/proben/kopplung/probe.php [basisadresse] [protokoll]
- *   (Vorgabe: http://127.0.0.1:8080 und /tmp/php-server.log)
+ *   php tools/proben/kopplung/probe.php [basisadresse]
+ *   (Vorgabe: http://127.0.0.1:8080)
  *
  * Rueckgabewert: 0 = alles erfuellt, 1 = mindestens eine Erwartung nicht.
  */
@@ -53,7 +55,6 @@ require_once $wurzel . '/spur_lib.php';
 require_once $wurzel . '/jobs_lib.php';
 
 $basis     = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
-$protokoll = $argv[2] ?? '/tmp/php-server.log';
 $pdo       = db();
 
 $erwartungen = 0; $offen = 0; $uebergangen = 0;
@@ -270,7 +271,9 @@ $paket = ['kind' => 'mission', 'client_ref' => 'kopplungsprobe-1', 'day' => '202
 $i1 = anfrage($paket, $dev, $key, 'POST', 'ingest.php');
 pruefe($i1['code'] === 401, '14a ingest.php mit schwebenden Zugangsdaten -> 401', "HTTP {$i1['code']}");
 
-$logVorher = is_file($protokoll) ? filesize($protokoll) : null;
+/* FALL 27 LIEST DEN REITER SYSTEM (seit P5c/AP3). Die Marke ist die
+ * hoechste Zeile davor; gezaehlt wird, was danach mit „smtp:" beginnt. */
+$sysVorher = (int)$pdo->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")->fetchColumn();
 $j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $dev, $key);
 pruefe($j['code'] === 200 && ($j['daten']['ok'] ?? false) === true,
        '11  ja beansprucht -> 200 ok', $j['roh']);
@@ -282,14 +285,17 @@ pruefe($gz !== null && (int)$gz['user_id'] === $uid && $gz['api_key_hash'] === h
        $gz ? "label {$gz['label']}, art {$gz['geraet_art']}, modell {$gz['geraet_modell']}" : 'keine Zeile');
 pruefe(sitzung($pdo, $dev) === null, '11  Sitzung ist weg');
 
-if ($logVorher !== null) {
-    usleep(300000);
-    $neu = (string)file_get_contents($protokoll, false, null, $logVorher);
-    pruefe(str_contains($neu, 'SMTP'),
-           '27  Versandweg nach der Antwort betreten (Protokollzeile SMTP)',
-           trim(substr($neu, 0, 90)));
-} else {
-    uebergehe('27  Versandweg (Protokollzeile)', "kein Protokoll unter $protokoll");
+usleep(300000);
+$smtp = $pdo->prepare("SELECT id, text FROM protokoll_ereignisse WHERE reiter = 'system'
+                        AND id > ? AND text LIKE 'smtp:%' ORDER BY id");
+$smtp->execute([$sysVorher]);
+$smtpZeilen = $smtp->fetchAll(PDO::FETCH_ASSOC);
+pruefe($smtpZeilen !== [],
+       '27  Versandweg nach der Antwort betreten (Eintrag „smtp:" im Reiter System)',
+       $smtpZeilen === [] ? 'kein Eintrag' : mb_substr((string)$smtpZeilen[0]['text'], 0, 70));
+/* Der Eintrag ist ein Nachweis, keine Stoerung der Anlage — heraus damit. */
+foreach ($smtpZeilen as $z) {
+    $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE id = ?')->execute([(int)$z['id']]);
 }
 
 $j2 = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $dev, $key);

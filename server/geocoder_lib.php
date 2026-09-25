@@ -175,7 +175,7 @@ function geocoder_konto_setzen(int $userId, bool $an): bool
         db()->prepare('UPDATE users SET adresssuche = ? WHERE id = ?')
             ->execute([$an ? 1 : 0, $userId]);
     } catch (PDOException $e) {
-        error_log('adresssuche speichern: ' . $e->getMessage());
+        system_melden('adresssuche', 'Einstellung nicht gespeichert', $e);
         return false;
     }
     geocoder_konto_an($userId, true);

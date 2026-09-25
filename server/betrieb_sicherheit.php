@@ -41,24 +41,22 @@ require_once __DIR__ . '/format_lib.php';
  * E-P5a-46). Ohne sie waere die Liste „irgendwo war irgendwer gesperrt" und
  * damit wertlos: Man kann eine Sperre nicht aufheben, ohne zu wissen, welche.
  *
- * DIE FOLGE WIRD BENANNT, NICHT UEBERGANGEN: `sicherheit_ereignisse` faehrt
- * in jeder Komplettsicherung mit (`komp_tabellen()` hat keine Ausnahmeliste),
- * und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im
- * versiegelten Abzug. Der Datenschutztext der Installation gehoert deshalb
- * nachgezogen; einen Textbaustein dafuer schlaegt
- * `admin_installation.php` vor (die Anwendung liefert keinen Rechtstext mit,
- * R32 — sie kann nur vorschlagen).
+ * DIE FOLGE WIRD BENANNT, NICHT UEBERGANGEN: Die Liste fuehrt IP- und
+ * E-Mail-Adressen, und der Datenschutztext der Installation gehoert deshalb
+ * nachgezogen; einen Textbaustein dafuer schlaegt `admin_rechtstexte.php`
+ * (Reiter Datenschutzerklärung) vor — die Anwendung liefert keinen
+ * Rechtstext mit, R32, sie kann nur vorschlagen. BIS WEB 20.38.0 stand hier
+ * auch, `sicherheit_ereignisse` fahre in jeder Komplettsicherung mit; seit
+ * P5c/AP2 geht die Tabelle OHNE ZEILEN hinein (`KOMP_OHNE_ZEILEN`).
  *
  * -------------------------------------------------------------------------
- * FUENF KARTEN, NICHT SECHS — UND DAS IST EINE BENANNTE ABWEICHUNG
+ * SECHS KARTEN, WIE E-P5a-08 SIE NENNT
  * -------------------------------------------------------------------------
  *
- * E-P5a-08 nennt sechs. Die sechste, „Loeschungen auf Sicherungszielen",
- * haette heute nichts zu zeigen: Die Loeschregel je Ziel entsteht erst in
- * AP10 (E-P5a-03), und es gibt weder Tabelle noch Schreibweg noch einen
- * `app_state`-Schluessel dafuer. Eine Karte, die sagt „hier steht noch
- * nichts, weil es die Sache noch nicht gibt", ist keine Auskunft, sondern
- * Laerm. Sie kommt mit AP10 und gehoert dort in den Umfang.
+ * Bis P5a/AP10 waren es fuenf — „Loeschungen auf Sicherungszielen" kam erst
+ * mit der Loeschregel je Ziel (E-P5a-03), denn eine Karte, die sagt „hier
+ * steht noch nichts, weil es die Sache noch nicht gibt", ist keine Auskunft,
+ * sondern Laerm. Hier stand bis Web 21.1.0 noch „fuenf, nicht sechs".
  *
  * -------------------------------------------------------------------------
  * NUR VORHANDENE BAUSTEINE (Konzept 2.5)
@@ -185,13 +183,11 @@ ui_seite_start(['titel' => 'Sicherheit']);
   <?php ui_karte_start(['titel' => 'Aktive Sperren', 'id' => 'k-sperren',
       'zahl' => count($sperren) > 0 ? (string)count($sperren) : null]); ?>
     <?php if ($sperren === []): ?>
-      <p class="feld-hinweis">Zurzeit ist nichts gesperrt. <strong>Das ist der
-         Normalfall</strong> — eine Sperre ist ein Ereignis und kein Zustand.</p>
+      <p class="feld-hinweis">Zurzeit ist nichts gesperrt — der Normalfall.</p>
     <?php else: ?>
-      <p class="feld-hinweis"><strong>Eine Sperre läuft von selbst ab.</strong>
-         Aufheben ist für den Fall gedacht, dass jemand jetzt hereinmuss —
-         nicht als Regelweg. Wer sein Passwort neu setzt, ist danach ohnehin
-         nicht mehr gesperrt.</p>
+      <p class="feld-hinweis">Eine Sperre läuft von selbst ab; aufheben nur, wenn
+         jemand jetzt hereinmuss.
+         <a href="hilfe.php#11-4b-sicherheit-wer-ausgesperrt-ist-und-wie-man-ihn-wieder-hereinlaesst">Handbuch: Sicherheit</a></p>
       <?php foreach ($sperren as $i => $sp): ?>
         <form method="post" action="betrieb_sicherheit.php" id="f-auf-<?= $i ?>" hidden>
           <?= csrf_field() ?><input type="hidden" name="action" value="aufheben">
@@ -239,10 +235,9 @@ ui_seite_start(['titel' => 'Sicherheit']);
           . 'ohne Verzögerung durch</strong>, und wer schon gesperrt ist, wird gar '
           . 'nicht erst verlangsamt.', 'Die Bremse läuft.') ?>
     <?php else: ?>
-      <p class="feld-hinweis">Die Anmeldung antwortet normal. Die Bremse greift
-         ab <?= (int)(rate_bremse_schwellen()[0] ?? 200) ?> Fehlversuchen je
-         15 Minuten <strong>über die ganze Installation</strong> — ein Wert, den
-         ein gewöhnlicher Dienstbetrieb nicht erreicht.</p>
+      <p class="feld-hinweis">Die Anmeldung antwortet normal; die Bremse greift
+         erst ab <?= (int)(rate_bremse_schwellen()[0] ?? 200) ?> Fehlversuchen je
+         15 Minuten über die ganze Installation.</p>
     <?php endif; ?>
 
     <?php /* DIE PHASEN SIND ANSTIEGE, KEINE ZEITRAEUME — und das steht hier,
@@ -263,22 +258,17 @@ ui_seite_start(['titel' => 'Sicherheit']);
             'plaketten' => ui_plakette('Stufe ' . $p['stufe'], ['ton' => 'orange']),
         ]); ?>
       <?php endforeach; ?>
-      <p class="feld-klein">Vermerkt wird jeder <strong>Anstieg</strong> der
-         Stufe, nicht jeder Fehlversuch — sonst stünde hier nach einer Stunde
-         Angriff ein Eintrag je Versuch. Ein <em>Ende</em> der Bremse hat kein
-         eigenes Ereignis; sie fällt von selbst, sobald das 15-Minuten-Fenster
-         leerläuft.</p>
     <?php endif; ?>
+    <p class="feld-klein"><a href="hilfe.php#sicherheit-schwellen-aufraeumen-mailregel">Handbuch: wann die Bremse greift und was vermerkt wird</a></p>
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- 3. Mengenbremse -------------------------------------------- */ ?>
   <?php ui_karte_start(['titel' => 'Mengenbremse der Geräte', 'id' => 'k-bremse',
       'zahl' => count($geraete) > 0 ? (string)count($geraete) : null]); ?>
-    <p class="feld-hinweis"><strong>30 fehlgeschlagene Geräteanmeldungen je
-       Viertelstunde</strong>, danach dieselbe Leiter wie oben. Der einzige
-       Fall, in dem es ein echtes Gerät trifft, ist ein <strong>veralteter
-       Schlüssel</strong> — es verliert dabei nichts und sendet später; die
-       Abhilfe ist neu koppeln.</p>
+    <p class="feld-hinweis">Ab 30 fehlgeschlagenen Geräteanmeldungen je
+       Viertelstunde greift dieselbe Leiter wie bei der Anmeldung — trifft es ein echtes
+       Gerät, hilft neu koppeln.
+       <a href="hilfe.php#sicherheit-schwellen-aufraeumen-mailregel">Handbuch: Mengenbremse</a></p>
     <?php if ($geraete === []): ?>
       <p class="feld-hinweis">Kein Gerät hat abgewiesene Anmeldungen.</p>
     <?php else: ?>
@@ -310,8 +300,12 @@ ui_seite_start(['titel' => 'Sicherheit']);
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- 4. Ereignisse ---------------------------------------------- */ ?>
+  <?php /* DIE KURZSICHT BLEIBT, DIE GANZE LISTE STEHT IM PROTOKOLL (P5c/AP2,
+           E-P5c-10): Hier wird aufgehoben; gesucht, gefiltert und geblättert
+           wird im Reiter Sicherheit, zusammen mit den CSP-Berichten. */ ?>
   <?php ui_karte_start(['titel' => 'Ereignisse der letzten 30 Tage', 'id' => 'k-ereignisse',
-      'zahl' => $ereign['gesamt'] > 0 ? (string)$ereign['gesamt'] : null]); ?>
+      'zahl' => $ereign['gesamt'] > 0 ? (string)$ereign['gesamt'] : null,
+      'aktion' => ['text' => 'Im Protokoll', 'href' => 'admin_protokoll.php?r=sicherheit']]); ?>
     <?php /* WAS HIER NICHT STEHT, UND ZWAR AUSDRUECKLICH: Ein Sperrereignis
              entsteht nur an den fuenf Toepfen MIT LEITER — `login`,
              `login_ip`, `salt`, `ingest`, `ingest_ip`. Die uebrigen neun
@@ -319,12 +313,9 @@ ui_seite_start(['titel' => 'Sicherheit']);
              Rueckfallweg OHNE Protokollzeile. Ohne diesen Satz liest sich
              eine kurze Liste als „es war fast nichts", obwohl neun Toepfe gar
              nicht berichten. */ ?>
-    <p class="feld-hinweis"><strong>Nicht jede Sperre steht hier.</strong>
-       Vermerkt werden die fünf Töpfe mit Sperrleiter: Anmeldung, Anschluss,
-       Schlüsselableitung und die beiden der Mengenbremse. Kopplung,
-       Passwort-Reset, Demo-Konto, Testmail und CSP-Berichte sperren ebenfalls,
-       schreiben aber keine Zeile — dort eskaliert nichts, und ein Protokoll
-       jedes Tippfehlers würde diese Liste zudecken.</p>
+    <p class="feld-hinweis">Vermerkt werden nur die sieben Töpfe mit Sperrleiter,
+       nicht jede Sperre.
+       <a href="hilfe.php#11-4b-sicherheit-wer-ausgesperrt-ist-und-wie-man-ihn-wieder-hereinlaesst">Handbuch: welche Töpfe</a></p>
     <?php if ($ereign['zeilen'] === []): ?>
       <p class="feld-hinweis">Keine Ereignisse in den letzten 30 Tagen.</p>
     <?php else: ?>
@@ -354,10 +345,8 @@ ui_seite_start(['titel' => 'Sicherheit']);
         ]); ?>
       <?php endforeach; ?>
       <?php if ($ereign['gesamt'] > count($ereign['zeilen'])): ?>
-        <p class="feld-klein">Gezeigt sind die jüngsten
-           <strong><?= count($ereign['zeilen']) ?></strong> von
-           <strong><?= $ereign['gesamt'] ?></strong>. Der Aufräumjob entsorgt
-           alles, was älter als 30 Tage ist.</p>
+        <p class="feld-klein">die jüngsten <?= count($ereign['zeilen']) ?> von
+           <?= $ereign['gesamt'] ?></p>
       <?php endif; ?>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
@@ -376,13 +365,10 @@ ui_seite_start(['titel' => 'Sicherheit']);
   <?php ui_karte_start(['titel' => 'Löschungen auf Sicherungszielen',
       'id' => 'k-ziele',
       'zahl' => $loeschungen['gesamt'] > 0 ? (string)$loeschungen['gesamt'] : null]); ?>
-    <p class="feld-hinweis"><strong>Gelöscht wird dort nur, wo es ausdrücklich
-       eingeschaltet ist.</strong> Der Versand ergänzt sonst nur — der Zweck
-       eines auswärtigen Ziels ist, den Ausfall dieses Servers zu überleben,
-       samt eines Fehlers, der hier zu viel löscht. Wo die Aufbewahrungsregel
-       an ist, entfernt sie nur, was dem Namensmuster einer Sicherung
-       entspricht <em>und</em> im Versandprotokoll dieser Installation steht;
-       fremde Dateien bleiben.</p>
+    <p class="feld-hinweis">Auf einem Ziel gelöscht wird nur, wo die
+       Aufbewahrungsregel eingeschaltet ist, und nur, was diese Installation
+       selbst dorthin geschickt hat.
+       <a href="hilfe.php#12-7-backup-ziele">Handbuch: Backup-Ziele</a></p>
     <?php if ($loeschungen['zeilen'] === []): ?>
       <p class="feld-hinweis">In den letzten 30 Tagen ist auf keinem Ziel etwas
          entfernt worden.</p>
@@ -399,9 +385,8 @@ ui_seite_start(['titel' => 'Sicherheit']);
         ]); ?>
       <?php endforeach; ?>
       <?php if ($loeschungen['gesamt'] > count($loeschungen['zeilen'])): ?>
-        <p class="feld-klein">Gezeigt sind die jüngsten
-           <strong><?= count($loeschungen['zeilen']) ?></strong> von
-           <strong><?= $loeschungen['gesamt'] ?></strong> der letzten 30 Tage.</p>
+        <p class="feld-klein">die jüngsten <?= count($loeschungen['zeilen']) ?> von
+           <?= $loeschungen['gesamt'] ?></p>
       <?php endif; ?>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
@@ -411,11 +396,10 @@ ui_seite_start(['titel' => 'Sicherheit']);
       'plakette' => $mailregel['an']
           ? ui_plakette('an', ['ton' => 'blau'])
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
-    <p class="feld-hinweis">Erreicht eine Sperre die <strong>letzte Sprosse</strong>
-       (Stufe <?= (int)$mailregel['stufe'] ?>) oder die Verlangsamung ihre vierte
-       Stufe, geht <strong>eine</strong> Sammelmeldung hinaus — höchstens eine je
-       Stunde. Sie sagt nicht, dass jemand hereingekommen ist, sondern dass es
-       jemand <em>versucht</em>.</p>
+    <p class="feld-hinweis">Erreicht eine Sperre die letzte Sprosse (Stufe
+       <?= (int)$mailregel['stufe'] ?>) oder die Verlangsamung ihre vierte Stufe,
+       geht höchstens eine Sammelmeldung je Stunde hinaus.
+       <a href="hilfe.php#sicherheit-schwellen-aufraeumen-mailregel">Handbuch: Meldung per Mail</a></p>
     <?php ui_zeile([
         'text'  => $mailregel['an'] ? 'Meldung ist eingeschaltet' : 'Meldung ist abgeschaltet',
         'klein' => 'Umstellen unter Betrieb → Servereinstellungen, Karte „Ratenschutz"',
@@ -434,31 +418,9 @@ ui_seite_start(['titel' => 'Sicherheit']);
     ]); ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Was hier gilt ---------------------------------------------- */ ?>
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
-                        'vorschau' => 'Klartext · 30 Tage · eine Handlung']); ?>
-    <p class="feld-hinweis"><strong>Hier stehen IP-Adressen und
-       E-Mail-Adressen im Klartext.</strong> Ohne sie wäre die Liste „irgendwo
-       war irgendwer gesperrt" und damit wertlos — man kann eine Sperre nicht
-       aufheben, ohne zu wissen, welche. Die Folge gehört dazu: Diese Angaben
-       fahren in <strong>jeder Komplettsicherung</strong> mit, und die
-       30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten
-       Abzug.</p>
-    <p class="feld-hinweis"><strong>30 Tage, und das ist keine
-       Einstellung.</strong> Der Aufräumjob löscht jede Nacht, was älter ist —
-       Ereignisse, Gerätevermerke, CSP-Berichte, erledigte Warteschlangenzeilen
-       und den Job-Verlauf. Sicherheitsdaten sollen nicht versehentlich Jahre
-       liegen.</p>
-    <p class="feld-hinweis"><strong>Eine einzige Handlung ändert etwas:
-       „Aufheben".</strong> Alles andere auf dieser Seite wird nur gelesen. Die
-       Zahlen selbst — Grenzen, Sprossen, Schwellen — stehen unter
-       <a href="betrieb_server.php#k-ratenschutz">Betrieb → Servereinstellungen</a>.</p>
-    <p class="feld-hinweis"><strong>Der Datenschutztext der Installation
-       gehört nachgezogen.</strong> Die Anwendung liefert keinen Rechtstext mit
-       (R32) — sie kann nur vorschlagen. Ein Baustein zum Übernehmen steht unter
-       <a href="admin_installation.php">Verwaltung → Installation</a> beim
-       Datenschutztext.</p>
-  <?php ui_karte_ende(true); ?>
+  <?php /* DIE KARTE „WAS HIER GILT" IST MIT P5c/AP9 ENTFALLEN (E-P5c-49): Klartext,
+           30 Tage, die eine Handlung und der Datenschutztext stehen im
+           Handbuch 11.4b. */ ?>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

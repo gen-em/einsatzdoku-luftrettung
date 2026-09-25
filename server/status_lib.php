@@ -57,6 +57,105 @@ function status_z(string $text, string $klein, string $ton, string $plakette,
 }
 
 /**
+ * Die handlungsfähigen Verwaltungskonten — die Zählung hinter der Zeile
+ * „Verwaltungskonten" (P5c/AP5, E-P5c-56). Handlungsfähig: `status =
+ * 'aktiv'` und ein eingeschalteter Zweitfaktor; ohne dessen Spalten (vor
+ * `update.php`) zählt jedes aktive Konto. Eigene Funktion, damit die
+ * Zweitfaktorprobe die Zählung selbst prüfen kann und nicht den Satz, der
+ * vom Bestand der Anlage abhängt.
+ *
+ * @return array{verwaltung:int, betreiberinnen:int, betreiberinnen_aktiv:int}
+ */
+function status_verwaltungskonten(PDO $pdo): array
+{
+    require_once __DIR__ . '/totp_lib.php';
+    $zf = totp_spalten_da($pdo) ? 'totp_seit IS NOT NULL' : '1';
+    $zeilen = $pdo->query("SELECT role, status = 'aktiv' AS aktiv, $zf AS zf
+                             FROM users WHERE " . ROLLEN_VERWALTUNG_SQL)->fetchAll(PDO::FETCH_ASSOC);
+    $n = ['verwaltung' => 0, 'betreiberinnen' => 0, 'betreiberinnen_aktiv' => 0];
+    foreach ($zeilen as $z) {
+        $hf = (int)$z['aktiv'] === 1 && (int)$z['zf'] === 1;
+        $n['verwaltung'] += $hf ? 1 : 0;
+        if (rolle_ist_betreiberin($z['role'])) {
+            $n['betreiberinnen'] += $hf ? 1 : 0;
+            $n['betreiberinnen_aktiv'] += (int)$z['aktiv'] === 1 ? 1 : 0;
+        }
+    }
+    return $n;
+}
+
+/**
+ * Die Zeile „Verwaltungskonten" aus der Zählung — Text, Ton und Plakette,
+ * ohne Datenbank. Eigene Funktion, damit die Zweitfaktorprobe die Tabelle
+ * der Fälle (Konzept P5c, AP5) mit gesetzten Zahlen prüfen kann statt nur
+ * mit dem Bestand, den die Anlage gerade hat.
+ *
+ * @param array{verwaltung:int, betreiberinnen:int, betreiberinnen_aktiv:int} $n
+ */
+function status_verwaltungszeile(array $n): array
+{
+    ['verwaltung' => $bfVerw, 'betreiberinnen' => $bfBetr,
+     'betreiberinnen_aktiv' => $bfBetrAktiv] = $n;
+    if ($bfBetr >= 2) {
+        return status_z('Verwaltungskonten',
+            $bfVerw . ' handlungsfähig, davon ' . $bfBetr . ' BetreiberInnen',
+            'blau', 'vertreten', 'admin_users.php');
+    }
+    if ($bfBetr === 0) {
+        return status_z('Verwaltungskonten',
+            'Keine BetreiberIn ist handlungsfähig'
+            . ($bfBetrAktiv > 0 ? ' — ' . $bfBetrAktiv . ' ohne Zweitfaktor' : ''),
+            'orange', 'keine BetreiberIn', 'admin_users.php');
+    }
+    if ($bfBetrAktiv > 1) {
+        return status_z('Verwaltungskonten',
+            $bfBetrAktiv . ' BetreiberInnen, handlungsfähig ist 1 — '
+            . ($bfBetrAktiv === 2 ? 'die andere hat' : 'die anderen haben')
+            . ' noch keinen Zweitfaktor',
+            'orange', '1 BetreiberIn', 'admin_users.php');
+    }
+    if ($bfVerw >= 2) {
+        return status_z('Verwaltungskonten',
+            $bfVerw . ' handlungsfähig, davon 1 BetreiberIn. Die Verwaltung ist '
+            . 'vertreten, der Betrieb nicht',
+            'orange', '1 BetreiberIn', 'admin_users.php');
+    }
+    return status_z('Verwaltungskonten',
+        'Ein handlungsfähiges Konto, und es ist das einer BetreiberIn. Fällt es '
+        . 'aus, kommt niemand mehr an Verwaltung und Betrieb',
+        'orange', 'nur 1', 'admin_users.php');
+}
+
+/**
+ * Die Zeile „Rückweg-Prüfung" aus dem Ergebnis des Selbsttests (Konzept RW,
+ * E-RW-11) — ohne Datenbank, damit die Probe die drei Lagen mit gesetzten
+ * Werten prüfen kann.
+ *
+ * BLAU MIT DEM WEG, weil der Weg etwas sagt: `openssl` prüft in Millisekunden,
+ * reines PHP in rund 200 — beides trägt einen Rückweg, den ein Konto einmal
+ * im Jahr geht, aber wer die Zahl sieht, soll nicht raten müssen, warum.
+ * ORANGE, NICHT ROT, wenn der Selbsttest scheitert: Die Anwendung arbeitet,
+ * nur der dritte Weg am Code-Schritt ist aus; Codes und Verwaltung tragen
+ * weiter (E-RW-01, Alternative B als Boden).
+ *
+ * @param array{ok:bool, weg:string, ms:float} $t
+ */
+function status_rueckwegzeile(array $t): array
+{
+    if (!$t['ok']) {
+        return status_z('Rückweg-Prüfung',
+            'Selbsttest fehlgeschlagen — der Rückweg mit dem Wiederherstellungsschlüssel '
+            . 'ist abgeschaltet; Codes und Verwaltung gehen weiter',
+            'orange', 'abgeschaltet');
+    }
+    $weg = $t['weg'] === 'openssl' ? 'openssl' : 'reines PHP';
+    return status_z('Rückweg-Prüfung',
+        'Signaturen des Rückwegs beim Zweitfaktor: ' . $weg . ', '
+        . zahl_text(max(1, (int)round($t['ms']))) . ' ms je Prüfung',
+        'blau', 'prüft');
+}
+
+/**
  * Alles, was die Statusseite zeigt — als Liste von Karten mit Zeilen.
  *
  * Rückgabe unter 'karten': je Karte ['titel', 'id', 'zeilen'], und jede
@@ -167,7 +266,7 @@ function status_erhebung(): array
         $wAktiv
             ? 'Wartungsmodus seit '
               . ($wartung['seit'] !== null
-                  ? datum_zeit_text($wartung['seit'], ' · ') . ' Uhr'
+                  ? datum_zeit_text($wartung['seit']) . ' Uhr'
                   : 'unbekannt')
               . ($wartung['von'] !== null ? ' von ' . $wartung['von'] : '')
               . ' — alle anderen Anfragen bekommen 503'
@@ -175,6 +274,77 @@ function status_erhebung(): array
         $wAktiv ? 'orange' : 'blau',
         $wAktiv ? 'Wartung' : 'offen',
         'betrieb_updates.php');
+
+    /* ---- Umgebung (P5c/AP1, E-P5c-05, -55, -64) -------------------------
+     *
+     * STEHT IMMER DA, in beiden Richtungen gleichwertig. Die Plakette nennt
+     * die Umgebung — den Namen aus `app.umgebung`, sonst „Produktiv" —, der
+     * Satz sagt, wofuer sie da ist. Wer die Zeile nur im Fehlerfall zeigt,
+     * laesst nicht sehen, dass ein leeres Etikett RICHTIG leer ist.
+     *
+     * „PRODUKTIV" IST DIE LESART EINES LEEREN ETIKETTS, keine Ableitung aus
+     * Domain oder Zweig: Ohne `app.umgebung` verhaelt sich die Anlage wie
+     * die Produktivanlage, und genau das sagt die Zeile.
+     *
+     * ZWEI WARNFAELLE, beide orange: Der Betreff-Praefix ist gesetzt und das
+     * Etikett nicht (die Mails sagen „Staging", die Oberflaeche nicht), und
+     * eine Farbe ausserhalb der geschlossenen Liste. */
+    require_once __DIR__ . '/umgebung_lib.php';
+    require_once __DIR__ . '/mail_lib.php';
+    $umgebung = umgebung();
+    $praefix  = trim(mail_praefix());
+    $mailSatz = $praefix !== '' ? 'Mails mit „' . $praefix . '" im Betreff' : 'Mails ohne Präfix';
+    if ($umgebung === null && $praefix !== '') {
+        $server[] = status_z('Umgebung',
+            'Mails tragen den Betreff-Präfix „' . $praefix . '", die Oberfläche trägt '
+            . 'kein Etikett. app.umgebung fehlt in der config.php',
+            'orange', 'Präfix ohne Etikett');
+    } elseif ($umgebung !== null && !$umgebung['farbe_bekannt']) {
+        $server[] = status_z('Umgebung',
+            'Etikett „' . $umgebung['name'] . '" mit der Farbe „' . $umgebung['farbe_roh']
+            . '" — bekannt ist nur „' . implode('", „', UMGEBUNG_FARBEN) . '". Die '
+            . 'Kopfleiste steht deshalb ' . $umgebung['farbe'],
+            'orange', 'Farbe unbekannt');
+    } elseif ($umgebung !== null) {
+        $server[] = status_z('Umgebung',
+            $umgebung['name'] . '-Umgebung zum Testen, nicht für den Echtbetrieb. '
+            . 'Kopfleiste ' . $umgebung['farbe'] . ', ' . $mailSatz,
+            'blau', $umgebung['name']);
+    } else {
+        $server[] = status_z('Umgebung',
+            'Produktivumgebung für den Echtbetrieb. Kopfleiste blau, ' . $mailSatz,
+            'blau', 'Produktiv');
+    }
+
+    /* ---- Verwaltungskonten: der Bus-Faktor (P5c/AP5, E-P5c-16, -44, -56,
+     *      -63; M-P5c-02d Bild 2) ------------------------------------------
+     *
+     * HANDLUNGSFAEHIG heisst: `status = 'aktiv'` und — Admin und BetreiberIn
+     * sind Pflichtrollen — ein eingeschalteter Zweitfaktor (E-P5c-56). Ein
+     * Konto ohne ihn landet nach der Anmeldung im Einrichtungstor und kann
+     * bis dahin nichts; `betreiberinnen_zahl()` zaehlt dagegen jedes Konto
+     * der Rolle, auch gesperrte, und bleibt fuer seinen Zweck (die letzte
+     * BetreiberIn schuetzen) unveraendert.
+     *
+     * DIE AMPEL HAENGT ALLEIN AN DEN BETREIBERINNEN (F-P5c-60): Wer weniger
+     * als zwei handlungsfaehige Verwaltungskonten hat, hat auch weniger als
+     * zwei handlungsfaehige BetreiberInnen. Die Zahl der Verwaltungskonten
+     * waehlt nur den Text. ORANGE, NICHT ROT (E-P5c-44, -63): Rot hiesse
+     * „es arbeitet nicht", und jede frisch eingerichtete Anlage stuende
+     * dauerhaft rot. Der Menuezaehler zaehlt Orange mit, und das ist gewollt.
+     *
+     * OHNE DIE SPALTEN DES ZWEITFAKTORS (vor `update.php`) zaehlt jedes
+     * aktive Konto als handlungsfaehig — das Einrichtungstor schweigt dann
+     * ebenfalls. */
+    $server[] = status_verwaltungszeile(status_verwaltungskonten($pdo));
+
+    /* ---- Rückweg-Prüfung (Konzept RW, E-RW-11) --------------------------
+     *
+     * Kann diese Anlage die Signaturen des Rückwegs prüfen? Das Ergebnis
+     * kommt aus der Marke in `app_state` — der Selbsttest läuft einmal je
+     * Fassung und Plattform, nicht bei jedem Aufbau dieser Seite. */
+    require_once __DIR__ . '/rueckweg_lib.php';
+    $server[] = status_rueckwegzeile(rw_selbsttest_stand());
 
     $offen = (int)$lauf['offen'];
     $server[] = status_z('Updates',
@@ -550,9 +720,9 @@ function status_erhebung(): array
         $gut = $smtpOk === '1';
         $mail[] = status_z('Letzter Versand',
             zeit_relativ($smtpLetzte) . ' · '
-            . datum_zeit_text($smtpLetzte, ' · ')
+            . datum_zeit_text($smtpLetzte)
             . ' Uhr'
-            . ($gut ? '' : '. Die Ursache steht im Fehlerprotokoll des Webspace — '
+            . ($gut ? '' : '. Die Ursache steht im Protokoll unter System — '
                           . 'geprüft wird der Host, nicht die Zugangsdaten'),
             $gut ? 'blau' : 'rot',
             $gut ? 'zugestellt' : 'fehlgeschlagen');
@@ -620,7 +790,7 @@ function status_erhebung(): array
         if ($jobPause !== null) {
             $jobZeilen[] = status_z('Pause',
                 'Die Hintergrundarbeit ist angehalten bis '
-                . datum_zeit_text($jobPause, ' · ')
+                . datum_zeit_text($jobPause)
                 . ' Uhr. Aufheben über Betrieb → Hintergrundjobs '
                 . '(oder php jobs.php --pause 0)',
                 'orange', 'angehalten', 'betrieb_jobs.php');
@@ -733,37 +903,15 @@ function status_erhebung(): array
             . 'Server, dessen Ausfall der Grund für ein Backup wäre',
             'neutral', 'keines', 'admin_sicherungsziele.php');
     } else {
-        /* ÜBERGANGENE ZIELE SIND EINE EIGENE SCHUBLADE (S10/AP4, E-S10-U-15).
-         *
-         * Ein Ziel mit abgeschafftem Protokoll trägt einen Vermerk in
-         * `letzter_fehler` und hätte damit in `$mitFehler` gestanden: rot,
-         * dauerhaft, und mit dem Text „Übergangen …" in der Zeile
-         * „Letzter Fehler". Das ist die falsche Auskunft — es ist nichts
-         * kaputt, es ist etwas umzustellen. Sortiert wird deshalb am
-         * PROTOKOLL und nicht am Text der Meldung: Das ist die Wahrheit,
-         * der Text ist nur ihre Beschreibung.
-         *
-         * Ton ORANGE und nicht rot (`Design.md` 9.23): „braucht
-         * Aufmerksamkeit", nicht „ist kaputt". Es geht deswegen kein Backup
-         * verloren — die Pakete liegen weiter da. */
-        $umzustellen = array_values(array_filter($aktiv,
-            static fn($z) => !sz_protokoll_erlaubt((string)$z['protokoll'])));
-        $aktiv = array_values(array_filter($aktiv,
-            static fn($z) => sz_protokoll_erlaubt((string)$z['protokoll'])));
+        /* Bis Web 20.47.0 stand davor eine eigene Schublade fuer Ziele mit dem
+         * abgeschafften Protokoll FTP, orange „umzustellen" (S10/AP4,
+         * E-S10-U-15). Die Datenbank nimmt den Wert seit P5c/AP8 nicht mehr an
+         * (E-P5c-124). */
         $nieVersandt = array_values(array_filter($aktiv,
             static fn($z) => empty($z['letzter_lauf'])));
         $mitFehler = array_values(array_filter($aktiv,
             static fn($z) => !empty($z['letzter_fehler'])));
-        if ($umzustellen !== []) {
-            $ton = 'orange';
-            $pl  = count($umzustellen) . ' umzustellen';
-            $klein = count($umzustellen) . ' aktives Ziel überträgt '
-                   . 'unverschlüsselt und wird nicht mehr beschickt ('
-                   . implode(', ', array_map(
-                        static fn($z) => (string)$z['name'],
-                        array_slice($umzustellen, 0, 2)))
-                   . ') — auf SFTP oder FTPS umstellen';
-        } elseif ($mitFehler !== []) {
+        if ($mitFehler !== []) {
             $ton = 'rot'; $pl = count($mitFehler) . ' mit Fehler';
             $klein = 'Letzter Fehler: ' . (string)$mitFehler[0]['letzter_fehler'];
         } elseif ($nieVersandt !== []) {
@@ -993,7 +1141,7 @@ function status_ampel(): array
     try {
         $z = status_zaehlen(status_erhebung()['karten']);
     } catch (Throwable $ex) {
-        error_log('status_ampel: Erhebung fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('status_ampel', 'Erhebung fehlgeschlagen', $ex);
         return ['orange' => 0, 'rot' => 0];
     }
     status_ampel_merken($z);
@@ -1054,7 +1202,7 @@ function menue_zaehler_betrieb(): array
         try {
             $e = status_erhebung();
         } catch (Throwable $ex) {
-            error_log('menue_zaehler_betrieb: Erhebung fehlgeschlagen: ' . $ex->getMessage());
+            system_melden('menue_zaehler_betrieb', 'Erhebung fehlgeschlagen', $ex);
             return [];
         }
         $a = status_zaehlen($e['karten']);
@@ -1080,7 +1228,7 @@ function menue_zaehler_konto(): array
         try {
             $zahlen = edbak_stand_zaehlen();
         } catch (Throwable $ex) {
-            error_log('menue_zaehler_konto: Zählung fehlgeschlagen: ' . $ex->getMessage());
+            system_melden('menue_zaehler_konto', 'Zählung fehlgeschlagen', $ex);
             return [];
         }
         $d = ['k' => (int)$zahlen['ueberfaellig'] + (int)$zahlen['nie'], 't' => time()];

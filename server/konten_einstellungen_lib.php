@@ -228,7 +228,7 @@ function wegwerf_trifft(string $email): bool
                 $liste[$z] = true;
             }
         } else {
-            error_log('wegwerf_trifft: ' . WEGWERF_DATEI . ' fehlt oder ist nicht lesbar');
+            system_melden('wegwerf_trifft', WEGWERF_DATEI . ' fehlt oder ist nicht lesbar');
         }
     }
 
@@ -354,7 +354,7 @@ function konto_mengen(int $userId, bool $frisch = false): array
             if ($liste) { $bytes += spur_bytes($pdo, $typ, $liste); }
         }
     } catch (Throwable $ex) {
-        error_log('konto_mengen: ' . $ex->getMessage());
+        system_melden('konto_mengen', 'Mengen nicht gelesen', $ex);
     }
 
     $jetzt = time();

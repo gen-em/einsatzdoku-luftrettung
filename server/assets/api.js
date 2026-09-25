@@ -70,7 +70,8 @@
   'use strict';
 
   /* Das Token steht seit Backlog Nr. 136 bedingungslos auf jeder Seite, die
-   * `ui_krypto_bootstrap()` zieht (`const CSRF = ...`). Die Wache ist
+   * `ui_krypto_bootstrap()` zieht (`const CSRF = ...`), und seit P5c/AP9 auf
+   * jeder, die `ui_csrf_bootstrap()` ruft (ohne Schluesselmaterial). Die Wache ist
    * trotzdem da: Zwei Stellen im Bestand trugen sie, und eine Datei, die
    * einmal ohne Bootstrap eingebunden wird, soll keinen ReferenceError
    * werfen, sondern eine 403 bekommen -- die ist lesbar. */

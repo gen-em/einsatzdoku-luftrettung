@@ -143,6 +143,16 @@ const WARTUNG_AUSNAHMEN = [
     'betrieb_jobs.php',
     'betrieb_server.php',
     'betrieb_schluesselblatt.php',
+    /* SEIT P5c/AP9 (E-P5c-134): Komplett-Backup und Backup-Ziele. Bis dahin
+     * antworteten beide im Wartungsmodus mit 503 — und genau dann braucht man
+     * sie: Schliesst der Torwaechter, weil eine Migration aussteht, sagt die
+     * Seite Updates „vorher sichern" und bot einen Knopf zum Komplett-Backup
+     * an, der in die Sperre fuehrte. Ebenso nannte die Vorbedingung der
+     * FTP-Migration die Backup-Ziele als Weg, und die waren zu. Beide Seiten
+     * erreicht nur die BetreiberIn (`require_betreiberin()`), und beide
+     * zeigen den Balken. */
+    'admin_komplettsicherung.php',
+    'admin_sicherungsziele.php',
     'update.php',
     'wiederherstellen.php',
     'jobs.php',
@@ -414,11 +424,18 @@ function stoerung_seite_html(string $titel, string $innen): string
     };
     $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
+    /* NUR DER VORSATZ „[Staging] ", keine Farbe und kein Streifen (P5c/AP1,
+     * E-P5c-55): Diese Seiten haben keine Kopfleiste, die rot werden
+     * koennte, und sie sollen so wenig wie moeglich voraussetzen. Das
+     * Etikett kommt aus `config.php` allein — `umgebung_lib.php` laedt nur
+     * `konfig_lib.php`, keine Datenbank. */
+    require_once __DIR__ . '/umgebung_lib.php';
+
     return '<!doctype html>' . "\n"
       . '<html lang="de">' . "\n"
       . '<head>' . "\n"
       . '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' . "\n"
-      . '<title>' . $h($titel) . '</title>' . "\n"
+      . '<title>' . $h(umgebung_praefix() . $titel) . '</title>' . "\n"
       . '<link rel="stylesheet" href="' . $h($v('assets/style.css')) . '">' . "\n"
       . '</head>' . "\n"
       . '<body>' . "\n"
@@ -545,13 +562,13 @@ function wartung_balken(): string
          * das geschieht — zwei Umrechnungen waeren die sicherste Art, sich
          * eine Stunde Versatz einzuhandeln. Sie steht hier ueber
          * `function_exists()` und nicht ueber `require`, weil diese Datei
-         * nichts laden darf (siehe Kopf): Der Balken laeuft nur auf
-         * `update.php` und `login.php`, und dort ist `db.php` laengst
-         * geladen. Faellt sie doch einmal aus, bleibt die Rohzeit stehen —
+         * nichts laden darf (siehe Kopf): Der Balken laeuft auf den
+         * Ausnahmeseiten mit Geruest und auf `login.php`, und dort ist
+         * `db.php` laengst geladen. Faellt sie doch einmal aus, bleibt die Rohzeit stehen —
          * eine Stunde daneben ist besser als eine leere Zeile. */
         $utc = str_replace(['T', 'Z'], [' ', ''], $d['seit']);
         $seit = 'seit ' . (function_exists('fmt_local')
-            ? fmt_local($utc, 'd.m.Y H:i')
+            ? fmt_local($utc, 'd.m.Y, H:i')   // derselbe Trenner wie datum_zeit_text() (E-P5c-37)
             : $utc . ' UTC');
     }
     $von = $d['von'] !== null ? ' von ' . $h($d['von']) : '';
@@ -752,8 +769,9 @@ function ueberlast_vermerken(): void
     if ($f === false) {
         /* Nicht still. Wenn die Datei nicht schreibbar ist, ist der Vorfall
          * trotzdem passiert — er steht dann wenigstens im Fehlerprotokoll. */
-        error_log('Ueberlast: ' . UEBERLAST_DATEI . ' laesst sich nicht '
-                . 'schreiben; der Vorfall ist nur hier vermerkt.');
+        require_once __DIR__ . '/systemmeldung_lib.php';
+        system_rueckfall('ueberlast', UEBERLAST_DATEI . ' lässt sich nicht '
+                       . 'schreiben; der Vorfall ist nur hier vermerkt.');
         return;
     }
     try {
@@ -950,16 +968,21 @@ function gedraengel_erkannt(Throwable $ex): bool
 }
 
 /**
- * Ins Protokoll, aber OHNE Fehlerkennung.
+ * Ins Fehlerprotokoll des Webspace — und NICHT in den Reiter System.
  *
- * `fehler_kennung()` vergibt eine Nummer, damit jemand am Telefon danach
- * fragen kann. Ein Gedraengel ist nichts, wonach jemand fragt — es ist
- * behoben, bevor die Meldung gelesen wird. Was zaehlt, ist die STELLE: Haeuft
- * sich dieselbe Datei und Zeile, ist dort ein Engpass, und den findet man
- * durch Zaehlen gleicher Zeilen, nicht durch Nachschlagen von Kennungen.
+ * Ein Gedraengel ist nichts, wonach jemand fragt — es ist behoben, bevor die
+ * Meldung gelesen wird. Was zaehlt, ist die STELLE: Haeuft sich dieselbe
+ * Datei und Zeile, ist dort ein Engpass, und den findet man durch Zaehlen
+ * gleicher Zeilen, nicht durch Nachschlagen von Kennungen.
+ *
+ * RUECKFALL UND NICHT `system_melden()` (P5c/AP3, E-P5c-58): Die Anfrage
+ * haengt gerade an einer Sperre; ein weiterer Schreibzugriff in derselben
+ * Lage ist das Letzte, was sie braucht. Die Kennung, die
+ * `system_rueckfall()` seither jeder Zeile gibt, schadet nicht — nach ihr
+ * fragt nur niemand.
  */
 function gedraengel_vermerken(Throwable $ex, string $bereich): void
 {
-    error_log('Gedraengel (' . $bereich . '): ' . $ex->getMessage()
-            . ' @ ' . $ex->getFile() . ':' . $ex->getLine());
+    require_once __DIR__ . '/systemmeldung_lib.php';
+    system_rueckfall('gedraengel', $bereich, $ex);
 }

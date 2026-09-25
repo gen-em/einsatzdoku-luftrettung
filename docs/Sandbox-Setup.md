@@ -147,7 +147,7 @@ diese Tabelle mit (`Pruefablauf.md` 5).
 ### 2.2 Das Modul `plattform` — Fassungen und Wege
 
 ```
-bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|--aus]
+bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|schema|--aus]
 ```
 
 **Alle vier über Docker, gemessen am 21.09.2026 — `alles` in 29,7 s:**
@@ -159,7 +159,7 @@ bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|--aus]
 | MySQL 8.0 | `mysql:8.0`, Port 3307 | bereit nach **8 s**, 8.0.46 |
 | MySQL 8.4.0 | `mysql:8.4.0`, Port 3308 | bereit nach **10 s**, 8.4.0 |
 | MariaDB 10.11 | die örtliche, Port 3306 | 10.11.14 |
-| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „19 Prüfungen, 0 Fehlschläge"** |
+| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „30 Prüfungen, 0 Fehlschläge"** (seit P5c/AP8; bis dahin 19) |
 
 **Drei Dinge, die erst die Messung ergeben hat** — und die alle drei gegen die
 erste Planung stehen:
@@ -204,6 +204,19 @@ Anwendung einrichten oder starten, TLS davor. **Ein Rückgabewert**, und am
 Ende eine Zeile, die den Gegenstand nennt — Adresse, HTTP-Code, gemeldete
 Fassung, nicht bloß „läuft".
 
+**Der PHP-Server läuft mit vier Arbeitern** (`PHP_CLI_SERVER_WORKERS`, seit
+dem Abschluss von P5c; `PHP_ARBEITER` stellt die Zahl, in
+`lokal_starten.sh` und `lokal_einrichten.sh`). Mit einem Arbeiter bediente
+er eine Anfrage zur Zeit, hinter socat, für einen Browser, der sechs
+Verbindungen gleichzeitig und weitere auf Vorrat öffnet. Das hat dreimal
+einen Prüfstand rot gefärbt, ohne dass die Anwendung etwas falsch machte:
+WebKit hing beim zweiten Anmelden (F-RW-23, Backlog Nr. 301), und zweimal
+kam die Bedienprobe nach der Anmeldung nicht an ihre erste Seite
+(`net::ERR_TOO_MANY_RETRIES`, RW-04 und der Abschluss von P5c) — die
+Anfrage erreichte den Server nie. Die Anwendung zählt nichts im
+Prozessspeicher; Sitzungen und Ratenbremsen liegen in Dateien und in der
+Datenbank, und Produktiv bedient ohnehin viele Anfragen zugleich.
+
 **Ohne `--neu` wird nicht neu eingerichtet.** `lokal_einrichten.sh` löscht die
 Datenbank und `config.php`; das soll niemand aus Versehen auslösen. Steht
 eine Installation, wird sie nur gestartet.
@@ -241,6 +254,17 @@ in der Dokumentation steht, ist keiner mehr.
 | `_MAIL_USER` | Postfach dort | gesetzt, 18 Zeichen |
 | `_MAIL_PASS` | dessen Passwort | gesetzt, 20 Zeichen |
 | `CIQ_GERAETE_URL` | Gerätedateien des Uhr-SDK | gesetzt, 33 Zeichen |
+
+> **Der Zweitfaktor des Prüfkontos (seit Web 20.42.0) ist kein Wert dieser
+> Tabelle.** In der Sandbox rechnen die Werkzeuge mit dem Geheimnis der
+> Sandbox, das `tools/zweitfaktor/pruefkonto.php` beim Einrichten einträgt
+> (`lokal_einrichten.sh`, Schritt 6b). **`NADOKU_TOTP` muss hier leer
+> bleiben** — ist es gesetzt, rechnen die Rechner mit diesem Geheimnis, und
+> die Anmeldung an der Sandbox scheitert am Code-Schritt; die Meldung nennt
+> die Quelle. Gegen Staging reicht die Kette das Secret `STAGING_TOTP`
+> durch (`tools/zweitfaktor/LIESMICH.md`); aus der Arbeitsumgebung heraus
+> gibt es dafür keinen Wert, und die Staging-Werkzeuge nehmen es als
+> Schalter (`--admin-totp`).
 
 > **Die drei Mailwerte tragen einen führenden Unterstrich und kein Präfix.**
 > Sie heißen `_MAIL_URL`, `_MAIL_USER`, `_MAIL_PASS` — nicht

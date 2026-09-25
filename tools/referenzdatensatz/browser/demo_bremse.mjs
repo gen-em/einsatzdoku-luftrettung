@@ -7,6 +7,9 @@
  * Die Gegenprobe gehört dazu: Ein anderes Konto darf von der Sperre NICHT
  * betroffen sein. Ohne sie hieße „gesperrt" nur „irgendetwas ist kaputt".
  */
+/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
+import { codeSchritt } from '../../motor.mjs';
+
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
@@ -25,10 +28,18 @@ async function versuch(mail, pw) {
   await seite.fill('input[name="password"]', pw);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
-  const drin = !seite.url().includes('login.php');
-  const text = drin ? '' : (await seite.locator('body').innerText()).replace(/\s+/g, ' ');
+  /* DER ZWEITFAKTOR (P5c/AP5, E-P5c-43). Die Gegenprobe meldet sich als
+   * BetreiberIn an, und die hat einen: Ohne diesen Schritt stünde sie nach
+   * dem Passwort im Code-Schritt unter `login.php`, und der Lauf meldete
+   * „Die Demo-Sperre trifft auch ein anderes Konto" — einen Befund, der
+   * keiner ist. Das Demo-Konto kostet `codeSchritt()` nichts: Ohne
+   * `#codeform` bleibt es bei einem Blick auf die Adresse. */
+  const zf = await codeSchritt(seite);
+  const drin = zf.ok && !seite.url().includes('login.php');
+  const text = drin ? '' : (zf.meldung
+    || (await seite.locator('body').innerText()).replace(/\s+/g, ' '));
   return { drin, text };
 }
 
@@ -53,7 +64,11 @@ else if (ersteSperre !== grenze + 1) {
 
 // Gegenprobe: ein anderes Konto bleibt unberührt.
 const andere = await versuch('admin@gen-em.org', 'pruefstandzugang2026');
-console.log(`Gegenprobe admin@gen-em.org: ${andere.drin ? 'kommt herein' : 'ABGEWIESEN'}`);
+/* Mit Grund, seit es den Zweitfaktor gibt (P5c/AP5): Ein Code-Schritt oder
+ * Einrichtungstor, das scheitert, ist etwas anderes als die Demo-Sperre —
+ * der Befund darunter nennt nur die eine Deutung. */
+console.log(`Gegenprobe admin@gen-em.org: ${andere.drin ? 'kommt herein'
+  : 'ABGEWIESEN — ' + andere.text.slice(0, 160)}`);
 if (!andere.drin) { befunde.push('Die Demo-Sperre trifft auch ein anderes Konto'); }
 
 console.log(befunde.length ? `\nBEFUNDE (${befunde.length})\n  ` + befunde.join('\n  ')

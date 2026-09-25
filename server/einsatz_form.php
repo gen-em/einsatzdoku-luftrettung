@@ -40,16 +40,20 @@ $dayBaseId = $tag['base_id'] !== null ? (int)$tag['base_id'] : null;
  * neutraler Diensttag hat keine Rollen (E26) — dann sind alle verborgen ausser
  * den bereits belegten.
  *
- * EIN TAG MIT RETTUNGSMITTEL NUR FUER DEN TAG FUEHRT KEINE ROLLEN (E-S9-10,
- * F19, Frage 11). Der Rollensatz waere hier trotzdem nicht zwingend leer:
- * `dt_rollensatz_einfrieren()` loescht beim Wechsel nur LEERE Rollen, damit
- * ein versehentlicher Wechsel keine Eingabe kostet — benannte Zeilen bleiben
- * stehen. Ohne diese Abfrage haetten zwei Adhoc-Tage verschiedene Rollen: ein
- * frisch angelegter keine, ein umgestellter die des frueheren Rettungsmittels.
- * Gefragt ist der DIENST, und der fuehrt keine. Die Namen selbst bleiben
+ * EIN TAG MIT RETTUNGSMITTEL NUR FUER DEN TAG FUEHRT DIE ROLLEN SEINER
+ * BETRIEBSART (Nr. 169, E-P5c-47, seit Web 21.0.0; bis dahin keine, E-S9-10,
+ * F19). Genau DIESE, nicht die ganze Zeilenmenge: `dt_rollensatz_einfrieren()`
+ * loescht beim Wechsel nur LEERE Rollen, damit ein versehentlicher Wechsel
+ * keine Eingabe kostet — benannte Zeilen eines frueheren Rettungsmittels
+ * bleiben stehen. Ohne den Filter haetten zwei Adhoc-Tage derselben Art
+ * verschiedene Rollen. Gefragt ist der DIENST. Die Namen selbst bleiben
  * unangetastet in `day_crew` und in der Leseansicht des Tages sichtbar; was
  * an einem Einsatz bereits eingetragen ist, bleibt es ebenfalls ($belegt). */
-$dayRoles = dt_ist_tagesrettungsmittel($tag) ? [] : dt_crew($dayId);
+$dayRoles = dt_crew($dayId);
+if (dt_ist_tagesrettungsmittel($tag)) {
+    $dayRoles = array_intersect_key($dayRoles, array_flip(
+        $tag['kind'] !== null ? dt_tagesrettungsmittel_rollen((string)$tag['kind']) : []));
+}
 /* Art und Faehigkeiten desselben Diensttags, beide EINGEFROREN (E8). Sie
  * steuern 'kind_gate' und 'cap_gate' genauso, wie `day_crew` 'role_gate'
  * steuert — gefragt wird immer der Dienst, nie das heutige Rettungsmittel.
@@ -76,7 +80,7 @@ if ($editing) {
 $rmVorlagen = [];
 if ($dayBaseId !== null) {
     $q = db()->prepare('SELECT DISTINCT name FROM resources
-                        WHERE base_id = ? AND (user_id = ? OR user_id IS NULL) ORDER BY name');
+                        WHERE base_id = ? AND user_id = ? ORDER BY name');
     $q->execute([$dayBaseId, $userId]);
     $rmVorlagen = $q->fetchAll(PDO::FETCH_COLUMN);
 }
@@ -784,7 +788,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       /* Optionslisten aus Stammdaten aufloesen (options_src).
        *
        * STANDORTBEZOGEN (E15): Gezeigt werden die Eintraege des Standorts, der
-       * am Diensttag hinterlegt ist — persoenliche UND zentrale. Eine
+       * am Diensttag hinterlegt ist, die eigenen des Kontos. Eine
        * standortuebergreifende Ebene gibt es nicht; ohne Standort am Diensttag
        * bleibt die Liste leer, und Freitext bleibt uneingeschraenkt moeglich. */
       $optSrc = function (array $f) use ($userId, $dayBaseId): array {
@@ -792,7 +796,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           if ($src === 'bw_units') {
               if ($dayBaseId === null) { return []; }
               $q = db()->prepare('SELECT DISTINCT name FROM bw_units
-                                  WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                  WHERE base_id = ? AND user_id = ?
                                   ORDER BY name');
               $q->execute([$dayBaseId, $userId]);
               return $q->fetchAll(PDO::FETCH_COLUMN);
@@ -803,7 +807,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               $role = substr($src, 5);
               if (!array_key_exists($role, CREW_ROLES) || $dayBaseId === null) { return []; }
               $q = db()->prepare('SELECT DISTINCT name FROM crew_presets
-                                  WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                  WHERE base_id = ? AND user_id = ?
                                     AND role_code = ? ORDER BY name');
               $q->execute([$dayBaseId, $userId, $role]);
               return $q->fetchAll(PDO::FETCH_COLUMN);
@@ -811,7 +815,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           return $f['options'] ?? [];
       };
       // Vorschlagslisten fuer Text-Felder mit suggest_src (Konzept Abschnitt 6.4):
-      // persoenlich + zentral, dedupliziert, alphabetisch; Freitext bleibt
+      // die eigenen des Standorts, dedupliziert, alphabetisch; Freitext bleibt
       // uneingeschraenkt moeglich.
       //
       // SEIT S9/AP1 (E-S9-07) GEHT DIE LISTE NICHT MEHR ALS <datalist> IN DAS
@@ -850,7 +854,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           if ($src === 'transport_dests' && $dayBaseId !== null) {
               $q = db()->prepare('SELECT name, MAX(lat) AS lat, MAX(lon) AS lon
                                     FROM transport_dests
-                                   WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                   WHERE base_id = ? AND user_id = ?
                                    GROUP BY name ORDER BY name');
               $q->execute([$dayBaseId, $userId]);
               foreach ($q->fetchAll() as $z) {
@@ -862,7 +866,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               $role = substr($src, 5);
               if (array_key_exists($role, CREW_ROLES)) {
                   $q = db()->prepare('SELECT DISTINCT name FROM crew_presets
-                                      WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                      WHERE base_id = ? AND user_id = ?
                                         AND role_code = ? ORDER BY name');
                   $q->execute([$dayBaseId, $userId, $role]);
                   foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $n) {

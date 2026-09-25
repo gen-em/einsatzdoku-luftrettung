@@ -59,6 +59,7 @@ ui_seite_start(['titel' => 'Konto anlegen', 'klasse' => 'anmeldung-body']);
 $fristTage = konten_reg_frist_tage();
 ?>
 <main class="anmeldung">
+ <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
   <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
   <h1 class="anmeldung-titel">Konto anlegen</h1>

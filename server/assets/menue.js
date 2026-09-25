@@ -108,6 +108,11 @@
   var aktiv = document.querySelector('.leiste-liste a.eintrag.aktiv');
   var inhalt = document.getElementById('inhalt');
   if (!aktiv || !inhalt) { return; }
+  /* SEITEN MIT REITERN BEKOMMEN KEINE UNTERPUNKTE (P5c/AP2, E-P5c-25). Die
+   * Reiter SIND die Gliederung der Seite; eine zweite daneben in der Leiste
+   * nennte die Karten des gerade offenen Reiters und wechselte bei jedem
+   * Reiterwechsel ihren Inhalt. */
+  if (inhalt.querySelector('.reiter')) { return; }
 
   var karten = [];
   Array.prototype.forEach.call(inhalt.querySelectorAll('.karte[id]'), function (k) {
@@ -165,7 +170,7 @@
    *    sich die Antwort aendert.
    *
    * 2  Eine Karte ausserhalb der Spalten ist keine dritte Spalte. Auf der
-   *    Statusseite steht „Was hier gilt" unter beiden Spalten; als eigener
+   *    Statusseite stand bis Web 21.1.0 „Was hier gilt" unter beiden Spalten; als eigener
    *    Topf war sie immer die oberste ihres Topfes und damit dauerhaft fett —
    *    drei Markierungen auf einmal. Hat die Seite Spalten, markieren nur
    *    Karten in einer Spalte; hat sie keine, ist die Seite der eine Topf.

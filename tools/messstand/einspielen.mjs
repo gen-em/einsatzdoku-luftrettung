@@ -93,7 +93,7 @@ async function anmelden(mail, pw) {
   await seite.fill('input[name="password"]', pw);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
   return !seite.url().includes('login.php');
 }

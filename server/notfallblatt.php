@@ -118,14 +118,27 @@ if ($konto === '') {
  * wie ich zuerst geschrieben hatte. Die Seite laedt sonst ohne Fehler
  * und bricht erst an der Zeile darunter ab. */
 require_once __DIR__ . '/instanz_lib.php';
+/* Der Vorsatz „[Staging] " im Titel (P5c/AP1, E-P5c-70): Das Blatt baut
+ * seine Huelle selbst und laeuft nicht durch `ui_seite_start()`. */
+require_once __DIR__ . '/umgebung_lib.php';
 $adresse = app_url();
-$jetzt   = datum_text(gmdate('Y-m-d H:i:s'));
+$ohneSchema = preg_replace('#^https?://#', '', rtrim($adresse, '/')) ?? '';
+/* MIT UHRZEIT seit P5c/AP9 — wie Code- und Schlüsselblatt (M-P5c-01f). Bis
+ * dahin stand hier nur das Datum; wer am selben Tag zweimal einen neuen
+ * Schlüssel erzeugt, hielt zwei Blätter in der Hand, die sich nur im Wert
+ * unterschieden. */
+$jetzt   = datum_zeit_text(gmdate('Y-m-d H:i:s'));
+$umg     = umgebung();
+/* DAS LOGO IST DIE WAHL DES KONTOS, ohne Sitzung der Standard der
+ * Installation (E-P5c-30). `logo_src()` fragt `logo_stamm()` — und die steht
+ * in `session_lib.php`; ohne sie fiel das Blatt still auf den Hubschrauber
+ * zurück (F-P5c-149). */
+require_once __DIR__ . '/session_lib.php';
+/* `ui.php` für die Meldung (`ui_meldung_markup()`, mit Symbol) — derselbe
+ * Baustein wie auf Code- und Schlüsselblatt (P5c/AP9). */
+require_once __DIR__ . '/ui.php';
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
-$v = static function (string $rel): string {
-    $t = @filemtime(__DIR__ . '/' . $rel);
-    return $rel . ($t !== false ? '?v=' . $t : '');
-};
 
 /* Kopfzeilen von Hand — diese Seite baut ihre Huelle selbst und laeuft nicht
  * durch `ui_seite_start()`. Dieselbe Ueberlegung wie beim Schluesselblatt. */
@@ -136,112 +149,65 @@ kopfzeilen_seite();
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Notfallblatt<?= $adresse !== '' ? ' — ' . $h($adresse) : '' ?></title>
-<link rel="stylesheet" href="<?= $h($v('assets/style.css')) ?>">
+<title><?= $h(umgebung_praefix()) ?>Notfallblatt<?= $adresse !== '' ? ' — ' . $h($adresse) : '' ?></title>
+<link rel="stylesheet" href="<?= $h(asset('assets/style.css')) ?>">
 </head>
 <body class="blatt-seite">
-<div class="rahmen rahmen-lesespalte">
-  <main class="inhalt">
-    <div class="text">
-
-      <h1>Notfallblatt</h1>
-      <p class="feld-hinweis">
-        <strong>NAdoku</strong>
-        <?php if ($adresse !== ''): ?> · <?= $h($adresse) ?><?php endif; ?>
-        <?php if ($konto !== ''): ?> · Konto <strong><?= $h($konto) ?></strong><?php endif; ?>
-        · gedruckt am <?= $h($jetzt) ?>
-      </p>
-
-<?php if ($code === null): ?>
-
-      <?php /* OHNE CODE KEIN BLATT — und der Grund steht da, statt einer
-               leeren Seite. Hierher kommt, wer die Adresse aus dem Verlauf
-               aufruft: Das Blatt entsteht nur in dem Augenblick, in dem der
-               Schluessel gezeigt wird, denn danach kennt ihn niemand mehr —
-               auch der Server nicht. */ ?>
-      <div class="meldung meldung-warn" role="status">
-        <p><strong>Dieses Blatt lässt sich nicht nachträglich drucken.</strong>
-           Der Wiederherstellungsschlüssel entsteht in deinem Browser und wird
-           nirgends gespeichert — auch nicht bei uns. Es gibt ihn nur in dem
-           Moment, in dem er angezeigt wird.</p>
-      </div>
-      <p>Du brauchst ein neues Blatt? Dann erzeuge unter
-         <strong>Einstellungen → Konto</strong> einen <strong>neuen</strong>
-         Wiederherstellungsschlüssel. Das alte Blatt wird damit ungültig.</p>
-
-<?php else: ?>
-
-      <div class="meldung meldung-warn" role="status">
-        <p><strong>Dieses Blatt öffnet deine Patientendaten.</strong> Es gehört
-           nicht in die Schreibtischschublade neben dem Rechner und nicht in
-           dieselbe Tasche wie das Handy — sondern an einen Ort, den du in fünf
-           Jahren noch findest und niemand sonst: Dokumentenordner zu Hause,
-           Bankschließfach, Passwortmanager.</p>
-      </div>
-
-      <h2>Wiederherstellungsschlüssel</h2>
-      <p class="feld-hinweis">20 Zeichen in fünf Vierergruppen — beim Eintippen
-         sind Leerzeichen, Bindestriche und Groß/Klein egal.</p>
-      <?php /* `.blatt-wert` ist der Baustein des Schluesselblatts (S10): Er
-               haelt den Wert vom Zeilenumbruch frei und verbietet den
-               Seitenumbruch mitten darin. Ein halb abgetippter Schluessel
-               sieht aus wie ein falscher. */ ?>
-      <p class="codeblock-wert blatt-wert"><?= $h($code) ?></p>
-
-      <h2>Was dieses Blatt kann — und was ohne es verloren ist</h2>
-      <p>Deine Patientendaten verschlüsselt der Browser mit einem Schlüssel,
-         der aus deinem Passwort entsteht. Die BetreiberIn hat diesen Schlüssel
-         nicht. Vergisst du dein Passwort, ist dieses Blatt der
-         <strong>einzige</strong> Weg zurück: Mit dem
-         Wiederherstellungsschlüssel setzt du ein neues Passwort und behältst
-         alle Daten.</p>
-      <p>Ohne Blatt und ohne Passwort kann niemand die verschlüsselten
-         Einsätze öffnen — die Zeiten, Orte und Rettungsmittel bleiben, die
-         Patientendaten sind weg.</p>
-
-      <h2>So benutzt du es</h2>
-      <ol>
-        <li>Anmeldeseite → <em>Passwort vergessen?</em> → Adresse eintragen.</li>
-        <li>Den Link aus der Mail öffnen und den Schlüssel von diesem Blatt
-            eintippen.</li>
-        <li>Neues Passwort setzen. Danach bekommst du einen
-            <strong>neuen</strong> Schlüssel und ein neues Blatt — dieses hier
-            ist dann ungültig.</li>
-      </ol>
-
-      <h2>Wann es ungültig wird</h2>
-      <p>Sobald du unter <strong>Einstellungen → Konto</strong> den Schlüssel
-         erneuerst, oder nach einer Wiederherstellung. NAdoku fragt dich nach
-         30 Tagen, nach 6 Monaten und dann jährlich, ob du dieses Blatt noch
-         hast.</p>
-
+<?php /* DER BAUSTEIN IST `.blatt-druck` (P5c/AP9, E-P5c-08, -30, M-P5c-01f,
+         M-P5c-02e) — wie Code- und Schlüsselblatt. Bis Web 21.0.0 stand das
+         Blatt in der Lesespalte des Gerüsts, mit dem Wert als
+         `.codeblock-wert.blatt-wert` am Stück; jetzt fünf nummerierte Gruppen
+         in einer Kachel und genau eine A4-Seite. */ ?>
+<main class="blatt-druck">
+<header class="blatt-kopf"><img src="<?= $h(logo_src()) ?>" alt="" width="70" height="44"><span class="blatt-marke"><?= $h(instanz_kurz()) ?></span><span class="blatt-kopf-rechts"><?= $h($adresse) ?><?php
+  if ($konto !== ''): ?><br>Konto <strong><?= $h($konto) ?></strong><?php endif; ?><br>gedruckt am <?= $h($jetzt) ?></span></header>
+<?php if ($umg !== null): ?>
+<p class="blatt-umgebung"><strong><?= $h($umg['name']) ?></strong> — Testdaten, kein Echtbetrieb. Dieses Blatt gilt nur für diese Anlage.</p>
 <?php endif; ?>
+<h1>Notfallblatt</h1>
+<?php if ($code === null): ?>
+<?php /* OHNE CODE KEIN BLATT — und der Grund steht da, statt einer leeren
+         Seite. Hierher kommt, wer die Adresse aus dem Verlauf aufruft: Das
+         Blatt entsteht nur in dem Augenblick, in dem der Schluessel gezeigt
+         wird, denn danach kennt ihn niemand mehr — auch der Server nicht.
 
-      <?php /* NUR AM BILDSCHIRM. Dieses Blatt ist zum Drucken da — der Weg
-               ueber das Browsermenue ist vorhanden, aber nicht der, den
-               jemand geht, der die Seite zum ersten Mal sieht. Derselbe
-               Knopf und dasselbe Skript wie beim Schluesselblatt (S10);
-               `.nur-bildschirm` nimmt beides aus dem Ausdruck.
+         „EINSTELLUNGEN → PROFIL", NICHT „→ KONTO" (F-P5c-53, F-P5c-61): Einen
+         Reiter „Konto" gibt es nicht; bis Web 21.0.0 stand der falsche Weg
+         hier und unter „Wann es ungültig wird". */ ?>
+<?= ui_meldung_markup('warn', 'Der Wiederherstellungsschlüssel entsteht in deinem Browser und '
+      . 'wird nirgends gespeichert — auch nicht bei uns. Brauchst du ein neues Blatt, erzeuge unter '
+      . 'Einstellungen → Profil einen neuen Schlüssel; das alte Blatt wird damit ungültig.',
+      'Dieses Blatt lässt sich nicht nachträglich drucken.') ?>
+<?php else: ?>
+<?= ui_meldung_markup('warn', 'Bewahre es dort auf, wo du es in fünf Jahren noch findest und '
+      . 'niemand sonst: Dokumentenordner zu Hause, Bankschließfach, Passwortmanager.',
+      'Dieses Blatt öffnet deine Patientendaten.') ?>
+<section class="blatt-kachel"><div class="blatt-kachel-kopf"><span class="blatt-kachel-name">Wiederherstellungsschlüssel</span><span class="blatt-kachel-neben">20 Zeichen · Leerzeichen, Bindestriche und Groß/Klein sind egal</span></div>
+<div class="blatt-druck-gruppen blatt-druck-gruppen-5"><?php foreach (explode('-', $code) as $nr => $g): ?><span class="blatt-druck-gruppe" data-nr="<?= $nr + 1 ?>"><?= $h($g) ?></span><?php endforeach; ?></div>
+<p>Der Schlüssel entsteht in deinem Browser und wird nirgends gespeichert — dieses Blatt lässt sich nicht nachdrucken.</p></section>
+<h2>Was dieses Blatt kann</h2>
+<p>Deine Patientendaten verschlüsselt der Browser mit einem Schlüssel aus deinem Passwort; die BetreiberIn hat ihn nicht. Vergisst du das Passwort, ist dieses Blatt der <strong>einzige</strong> Weg zurück. Ohne Blatt und ohne Passwort bleiben Zeiten, Orte und Rettungsmittel — die Patientendaten sind weg.</p>
+<h2>So benutzt du es</h2>
+<ol><li>Anmeldeseite → „Passwort vergessen?" → Adresse eintragen.</li><li>Den Link aus der Mail öffnen und den Schlüssel von diesem Blatt eintippen.</li><li>Neues Passwort setzen. Du bekommst einen <strong>neuen</strong> Schlüssel und ein neues Blatt — dieses ist dann ungültig.</li></ol>
+<h2>Wann es ungültig wird</h2>
+<p>Sobald du unter Einstellungen → Profil den Schlüssel erneuerst, oder nach einer Wiederherstellung. Mehr im Handbuch, Kapitel „Verschlüsselung der Patientendaten": <?= $h($ohneSchema !== '' ? $ohneSchema : '…') ?>/hilfe.php#5-verschluesselung-der-patientendaten-pflicht</p>
+<?php endif; ?>
+<footer class="blatt-fuss"><span>Notfallblatt · <?= $h(instanz_kurz()) ?> · Web <?= $h(WEB_VERSION) ?> · freie Software (AGPL v3)</span><span>Seite 1 von 1</span></footer>
+<?php /* NUR AM BILDSCHIRM: Druckknopf und Rückweg — derselbe Knopf und
+         dasselbe Skript wie bei Schlüssel- und Codeblatt. KEIN DRUCKKNOPF OHNE
+         SCHLÜSSEL: Im Ohne-Code-Zweig gibt es nichts zu drucken (aufgefallen
+         am Bild `02g-notfallblatt-ohne`).
 
-               DER RUECKWEG HAENGT DARAN, OB JEMAND ANGEMELDET IST. Beim
-               ERSTEN Setzen des Passworts ist er es nicht — dann fuehrt der
-               Knopf zur Anmeldung, und das ist genau der naechste Schritt:
-               Blatt drucken, dann anmelden. */ ?>
-      <p class="feld-hinweis nur-bildschirm">
-        <?php if ($code !== null): ?><?php /* KEIN DRUCKKNOPF OHNE SCHLUESSEL.
-             Im Ohne-Code-Zweig gibt es nichts zu drucken; der Knopf stuende
-             da und truege einen leeren Zettel aus dem Drucker. Aufgefallen
-             am Bild `02g-notfallblatt-ohne`. */ ?>
-        <button type="button" class="knopf knopf-primaer" data-drucken hidden><span>Drucken</span></button>
-        <?php endif; ?>
-        <a class="knopf knopf-leise" href="<?= $angemeldet ? 'index.php' : 'login.php' ?>"><span><?= $angemeldet ? 'Zur Startseite' : 'Zur Anmeldung' ?></span></a>
-      </p>
-
-      <p class="text-stand">Notfallblatt · NAdoku ist freie Software (AGPL v3)</p>
-
-    </div>
-  </main>
-</div>
-<script src="<?= $h($v('assets/blatt-drucken.js')) ?>"></script>
+         DER RÜCKWEG HÄNGT DARAN, OB JEMAND ANGEMELDET IST. Beim ERSTEN Setzen
+         des Passworts ist er es nicht — dann führt der Knopf zur Anmeldung,
+         und das ist genau der nächste Schritt: Blatt drucken, dann anmelden. */ ?>
+<p class="nur-bildschirm">
+  <?php if ($code !== null): ?>
+  <button type="button" class="knopf knopf-primaer" data-drucken hidden><span>Drucken</span></button>
+  <?php endif; ?>
+  <a class="knopf knopf-leise" href="<?= $angemeldet ? 'index.php' : 'login.php' ?>"><span><?= $angemeldet ? 'Zur Startseite' : 'Zur Anmeldung' ?></span></a>
+</p>
+</main>
+<script src="<?= $h(asset('assets/blatt-drucken.js')) ?>"></script>
 </body>
 </html>

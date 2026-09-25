@@ -81,8 +81,8 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
-const { motorWahl, starten } = await import(
-  new URL('../motor.mjs', import.meta.url).href);
+const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG } =
+  await import(new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..');
@@ -104,6 +104,17 @@ const MOTOR  = motorWahl(argv);
  * `wartungAn()`. Ohne Token bleibt es beim lokalen Weg. */
 const JOBS_TOKEN = wert('--jobs-token', '');
 
+/* DAS UMGEBUNGSETIKETT (P5c/AP1, E-P5c-05). Mit `--etikett Staging` misst
+ * der Lauf auf JEDER Seite, ob der Titel mit „[Staging] " beginnt und ob die
+ * Kopfleiste — wo es eine gibt — `kopf-umgebung` traegt. Ohne den Schalter
+ * misst er die Gegenrichtung: kein Vorsatz, keine rote Leiste. Anlass: Die
+ * Abnahme von AP1 verlangt „Praefix auf allen Seiten, Kopfleiste rot auf
+ * allen Seiten mit Kopfleiste" — ein Bild zeigt die Farbe, aber keines den
+ * Seitentitel, und 58 Seiten von Hand aufzurufen ist keine Messung.
+ * Die Lage selbst stellt der Aufrufer her (`app.umgebung` in `config.php`);
+ * dieser Lauf schreibt nichts. */
+const ETIKETT = wert('--etikett', '');
+
 /* UNBEKANNTE SCHALTER SIND EIN FEHLER, KEIN SCHWEIGEN (16.09.2026).
  *
  * `wert()` sucht sich seine Kennzeichnung aus argv und laesst alles andere
@@ -119,9 +130,9 @@ const JOBS_TOKEN = wert('--jobs-token', '');
  * Liste, weil motorWahl() sie aus demselben argv liest. */
 const BEKANNT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
                          '--klein', '--finger', '--nur', '--stufe', '--selbstprobe',
-                         '--motor', '--jobs-token']);
+                         '--motor', '--jobs-token', '--etikett']);
 const MIT_WERT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
-                          '--nur', '--motor', '--jobs-token', '--stufe']);
+                          '--nur', '--motor', '--jobs-token', '--stufe', '--etikett']);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (!a.startsWith('--')) continue;
@@ -466,18 +477,40 @@ const KACHELMUSTER = [
  * Also: anmelden, die Seite behalten, fuer jede Breite nur die Fenstergroesse
  * aendern. Das haelt den Schluessel und ist nebenbei erheblich schneller. */
 /* Die eigentliche Anmeldung — als eigener Schritt, weil sie MITTEN IM LAUF
- * wiederholt werden muss (siehe `sitzungHalten`). */
+ * wiederholt werden muss (siehe `sitzungHalten`).
+ *
+ * Rueckgabe `{ ok, grund }` und nicht mehr nur ein Wahrheitswert (P5c/AP5):
+ * Scheitert der Zweitfaktor, steht der Grund nicht auf der Seite, die danach
+ * zu lesen ist — im Einrichtungstor steht gar keiner. `grund` ist leer, wenn
+ * die Seite selbst ihn traegt; `anmelden()` liest ihn dann wie bisher dort. */
 async function anmeldenAuf(seite, rolle) {
-  if (rolle === 'aus') { return true; }
+  if (rolle === 'aus') { return { ok: true }; }
   const konto = rolle === 'admin' ? ADMIN : DEMO;
   await seite.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
   await seite.fill('input[name="email"]', konto.email);
   await seite.fill('input[name="password"]', konto.pw);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
-  if (seite.url().includes('login.php')) { return false; }
+
+  /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43, F-P5c-33).
+   *
+   * Das Pruefkonto `admin@gen-em.org` ist eine BetreiberIn und hat einen
+   * Zweitfaktor. Nach dem Passwort steht die Seite deshalb WIEDER unter
+   * `login.php` und fragt nach dem Code; die Adresspruefung darunter hielte
+   * das zu Recht fuer gescheitert, und der Lauf kaeme ohne Admin-Bilder
+   * zurueck. `codeSchritt()` (motor.mjs) rechnet den Code und schickt ihn ab.
+   *
+   * DAS EINRICHTUNGSTOR MELDET ER ALS SCHEITERN, und das ist hier der
+   * wichtigere Teil. Eine Pflichtrolle ohne Zweitfaktor landet auf
+   * `zweitfaktor.php` — eine Adresse OHNE `login.php`. Die Pruefung darunter
+   * liesse sie durch, und der Lauf fotografierte das Tor unter dem Namen
+   * jeder Admin-Seite: die Falle aus F-P3-AQ, diesmal mit einem Tor statt
+   * der Anmeldeseite. */
+  const zf = await codeSchritt(seite);
+  if (!zf.ok) { return { ok: false, grund: zf.meldung }; }
+  if (seite.url().includes('login.php')) { return { ok: false, grund: '' }; }
 
   /* DAS EINWILLIGUNGSTOR DURCHKLICKEN (P5b/AP4, Web 20.19.0).
    *
@@ -514,11 +547,11 @@ async function anmeldenAuf(seite, rolle) {
     }
     await Promise.all([
       seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),
-      seite.click('button[type="submit"]'),
+      seite.click('form:not([data-ankuendigung-weg]) button[type="submit"]'),
     ]);
-    if (seite.url().includes('einwilligung.php')) { return false; }
+    if (seite.url().includes('einwilligung.php')) { return { ok: false, grund: '' }; }
   }
-  return true;
+  return { ok: true };
 }
 
 async function anmelden(rolle) {
@@ -529,14 +562,22 @@ async function anmelden(rolle) {
   });
   for (const muster of KACHELMUSTER) await kontext.route(muster, kachelAntwort);
   const seite = await kontext.newPage();
-  if (!await anmeldenAuf(seite, rolle)) {
+  const drin = await anmeldenAuf(seite, rolle);
+  if (!drin.ok) {
     const konto = rolle === 'admin' ? ADMIN : DEMO;
     /* DIE MELDUNG DER SEITE MITNEHMEN. „Anmeldung gescheitert" allein laesst
      * raten; der haeufigste Grund ist kein falsches Passwort, sondern der
      * Ratenschutz: Wer den Lauf mehrmals hintereinander startet, stolpert
      * ueber den Demo-Topf („vorübergehend gesperrt — wieder ab HH:MM").
      * Das ist richtiges Verhalten der Anwendung und kein Fehler des
-     * Pruefstands — man muss es nur lesen koennen. */
+     * Pruefstands — man muss es nur lesen koennen.
+     *
+     * DER GRUND DES ZWEITFAKTORS GEHT VOR (P5c/AP5): Im Einrichtungstor
+     * steht keine Meldung, und „zweimal abgewiesen" steht nirgends auf der
+     * Seite. */
+    if (drin.grund) {
+      throw new Error(`Anmeldung als ${konto.email} gescheitert — ${drin.grund}`);
+    }
     const grund = await seite.locator('.meldung, .hinweis, .warnung')
       .allTextContents().then(t => t.join(' · ').replace(/\s+/g, ' ').trim())
       .catch(() => '');
@@ -818,7 +859,7 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 
 async function vorher(seite, schritte, fehlerSammler) {
   const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
-                   'notfallblatt'];
+                   'notfallblatt', 'code-schritt', 'codeblatt'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
@@ -899,10 +940,66 @@ async function vorher(seite, schritte, fehlerSammler) {
         }),
       ]);
       await seite.waitForLoadState('networkidle');
-      if (!(await seite.locator('.codeblock-wert').count())) {
+      /* SEIT P5c/AP9 steht der Schluessel in fuenf `.blatt-druck-gruppe`
+         (Druckblatt, M-P5c-01f); bis dahin in einem `.codeblock-wert`. */
+      if ((await seite.locator('.blatt-druck-gruppe').count()) !== 5) {
         fehlerSammler.push('Notfallblatt ohne Schlüsselblock — der Code wurde '
                          + 'abgewiesen (Format?) oder die Seite hat den '
                          + 'Ohne-Code-Zweig gezeigt.');
+      }
+      continue;
+    }
+    if (schritt === 'code-schritt') {
+      /* DER CODE-SCHRITT DER ANMELDUNG (P5c/AP5, M-P5c-02b Bild 3). Er steht
+         nur nach einem richtigen Passwort da, und zwar fuer ein Konto MIT
+         Zweitfaktor — also das Pruefkonto. Der Schritt meldet es bis zum
+         Code an und haelt dort an; den Code gibt er nicht ein.
+
+         DER HALBE STAND LEBT FUENF MINUTEN in der Sitzung der Rolle „aus".
+         Steht der Code-Schritt schon da (die vorige Breite hat ihn
+         hergestellt), ist nichts zu tun. Die Seiten dieser Rolle danach
+         zeigen keine Anmeldemaske, und `01-anmeldung` steht in der Liste
+         davor — der halbe Stand faerbt kein anderes Bild. */
+      if (await seite.locator('#codeform').count()) { continue; }
+      await seite.fill('input[name="email"]', ADMIN.email);
+      await seite.fill('input[name="password"]', ADMIN.pw);
+      await seite.click('#loginform button[type="submit"]');
+      try {
+        await seite.waitForSelector('#codeform', { timeout: 90000 });
+        await seite.waitForLoadState('networkidle');
+      } catch {
+        fehlerSammler.push('Kein Code-Schritt nach dem Passwort des Pruefkontos — hat '
+                         + 'es keinen Zweitfaktor? `php tools/zweitfaktor/pruefkonto.php`');
+      }
+      continue;
+    }
+    if (schritt === 'codeblatt') {
+      /* DAS CODEBLATT (P5c/AP5). `codeblatt.php` bekommt die Codes per POST
+         und speichert sie nicht — wie beim Notfallblatt baut der Schritt das
+         Formular nach, das Tor und Profilkarte abschicken. Die Codes sind
+         die festen des Pruefkontos (`tools/zweitfaktor/pruefkonto.php`); die
+         Seite prueft nur ihr Format, und die Adresse auf dem Blatt kommt aus
+         der Sitzung. */
+      await Promise.all([
+        seite.waitForNavigation({ timeout: 30000 }),
+        seite.evaluate(() => {
+          const f = document.createElement('form');
+          f.method = 'post';
+          f.action = 'codeblatt.php';
+          for (const c of ['PRFA2345', 'PRFB2345', 'PRFC2345', 'PRFD2345', 'PRFE2345',
+                           'PRFF2345', 'PRFG2345', 'PRFH2345', 'PRFJ2345', 'PRFK2345']) {
+            const i = document.createElement('input');
+            i.type = 'hidden'; i.name = 'codes[]'; i.value = c;
+            f.appendChild(i);
+          }
+          document.body.appendChild(f);
+          f.submit();
+        }),
+      ]);
+      await seite.waitForLoadState('networkidle');
+      if ((await seite.locator('.blatt-codes li').count()) !== 10) {
+        fehlerSammler.push('Codeblatt ohne zehn Codes — nicht angemeldet, oder das '
+                         + 'Format wurde abgewiesen.');
       }
       continue;
     }
@@ -951,15 +1048,21 @@ async function vorher(seite, schritte, fehlerSammler) {
  * Hilft auch das nicht, wird NICHT fotografiert, sondern ein Fehler
  * vermerkt. Ein fehlendes Bild ist eine Auskunft; ein falsches ist eine
  * Luege, die durch jede weitere Pruefung durchmarschiert.
+ *
+ * DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5) steht ebenfalls unter
+ * `login.php` und faellt damit unter diese Pruefung, ohne dass sie etwas
+ * dazulernen muesste. DAS EINRICHTUNGSTOR (`zweitfaktor.php`) nicht — es
+ * hat seine eigene Pruefung in `gehZu()`.
  */
 function istAnmeldung(seite) {
   return seite.url().includes('login.php');
 }
 
 /* Bringt die Seite auf `adresse` und stellt sicher, dass sie auch dort ist.
- * Rueckgabe: { status, verloren } — `verloren` sagt, dass die Sitzung neu
- * aufgebaut werden musste (fuer den Bericht). Wirft nicht; Fehler landen in
- * `rolle.fehler`. */
+ * Rueckgabe: { status, verloren, abbruch?, grund? } — `verloren` sagt, dass
+ * die Sitzung neu aufgebaut werden musste (fuer den Bericht), `grund`, warum
+ * eine Aufnahme ausfiel, wenn es nicht die Anmeldeseite war. Wirft nicht;
+ * Fehler landen in `rolle.fehler`. */
 async function gehZu(rolle, adresse, zielPfad) {
   const seite = rolle.seite;
   let status = 0, verloren = false;
@@ -971,6 +1074,18 @@ async function gehZu(rolle, adresse, zielPfad) {
       rolle.fehler.push('laden: ' + e.message);
       return { status, verloren };
     }
+    /* DAS EINRICHTUNGSTOR DES ZWEITFAKTORS (P5c/AP5, F-P5c-33). Eine
+       Pflichtrolle ohne Zweitfaktor kommt auf keine andere Seite, und die
+       Adresse enthaelt `login.php` nicht — `istAnmeldung()` sieht es also
+       nicht, und ohne diese Zeilen hiesse jedes Bild der Rolle nach seiner
+       Seite und zeigte das Tor. Eine Neuanmeldung hilft nicht (sie fuehrt
+       genau hierher zurueck), deshalb sofort ab. Gemeint sein kann das Tor
+       nur, wenn die Seitenliste es selbst nennt. */
+    if (istEinrichtungstor(seite) && !zielPfad.startsWith('zweitfaktor.php')) {
+      rolle.fehler.push(`${EINRICHTUNGSTOR_MELDUNG} — kein Bild aufgenommen`);
+      return { status, verloren, abbruch: true,
+               grund: 'Seite leitete auf das Einrichtungstor des Zweitfaktors um' };
+    }
     /* Die Anmeldeseite ist nur dann die richtige Antwort, wenn sie auch
        gemeint war (01-anmeldung, Rolle „aus"). */
     if (!istAnmeldung(seite) || zielPfad.startsWith('login.php')) {
@@ -978,9 +1093,17 @@ async function gehZu(rolle, adresse, zielPfad) {
     }
     if (versuch === 1) { break; }
     verloren = true;
-    if (!await anmeldenAuf(seite, rolle.rolle)) {
-      rolle.fehler.push('Sitzung verloren und Neuanmeldung gescheitert');
-      return { status, verloren };
+    const neu = await anmeldenAuf(seite, rolle.rolle);
+    if (!neu.ok) {
+      /* ABBRUCH, NICHT NUR EIN VERMERK (P5c/AP5). Bis dahin kehrte dieser
+         Zweig ohne `abbruch` zurueck; die Seite stand dann auf der Anmeldung,
+         lieferte 200, und der Lauf fotografierte sie unter dem Namen der
+         gemeinten Seite — mit dem Fehler nur als Konsolenzeile daneben. Mit
+         dem Code-Schritt kann eine Neuanmeldung des Admin-Kontos auch am
+         Code scheitern; das darf erst recht kein Bild ergeben. */
+      rolle.fehler.push('Sitzung verloren und Neuanmeldung gescheitert'
+                      + (neu.grund ? ` — ${neu.grund}` : '') + ' — kein Bild aufgenommen');
+      return { status, verloren, abbruch: true };
     }
   }
   rolle.fehler.push('Sitzung verloren: die Seite leitet auf die Anmeldung um '
@@ -989,7 +1112,8 @@ async function gehZu(rolle, adresse, zielPfad) {
 }
 
 /* ---- Eine Aufnahme --------------------------------------------------------- */
-const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], stand: new Date().toISOString() };
+const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], etikett: [],
+                  etikettGeprueft: { titel: 0, kopf: 0 }, stand: new Date().toISOString() };
 /* Aufnahmen, bei denen die Sitzung mitten im Lauf neu aufgebaut werden
  * musste (Demo-Reset), und solche, die deshalb GAR NICHT entstanden. */
 const verlorene = [];
@@ -1000,7 +1124,8 @@ const verlorene = [];
    Platzhalter, der sich nicht aufloesen laesst, heisst „diese Seite gibt es
    im Bestand nicht" — nicht „die Sitzung ging verloren". Beim Lauf zu AP5-4
    meldete der Bericht acht verlorene Sitzungen, wo in Wahrheit acht Bilder
-   einer Seite fehlten, die es ohne systemweiten Standort gar nicht gibt.
+   einer Seite fehlten, die es ohne systemweiten Standort gar nicht gab (die
+   Seite ist mit S9/AP5b gefallen, R39).
    Ein Pruefmittel, das den falschen Grund nennt, schickt die naechste Suche
    in die falsche Richtung. */
 const ausgefallen = [];
@@ -1332,6 +1457,8 @@ for (const eintrag of liste) {
          nichts ueber, es liegt nur falsch), die Konsole bleibt still, die
          Knopfhoehen stimmen. Die Profilseite meldete zehn Tage lang drei
          Nullen und war kaputt; gefunden wurde es beim ANSEHEN eines Bildes. */
+      titel: document.title,
+      kopf: (document.querySelector('header.kopf') || {}).className || null,
       ausbruch: Array.from(document.querySelectorAll('section.karte, details.karte'))
         .filter(el => !el.closest('main.inhalt'))
         .map(el => ((el.querySelector('h2, h3') || {}).textContent || '(ohne Titel)')
@@ -1356,9 +1483,11 @@ for (const eintrag of liste) {
     const datei = join(AUSGABE, 'einzeln', `${eintrag.name}-${b}.png`);
     if (hin.abbruch) {
       /* KEIN BILD. Ein Bild der Anmeldeseite unter dem Namen einer anderen
-         Seite ist schlimmer als gar keines: Es sieht wie ein Beleg aus. */
+         Seite ist schlimmer als gar keines: Es sieht wie ein Beleg aus.
+         Das Einrichtungstor bringt seinen eigenen Grund mit (P5c/AP5) —
+         „Anmeldung" waere dort die falsche Spur. */
       ausgefallen.push({ was: `${eintrag.name} @ ${b}`,
-                         grund: 'Seite leitete auf die Anmeldung um' });
+                         grund: hin.grund || 'Seite leitete auf die Anmeldung um' });
       rmSync(datei, { force: true });
     } else {
       /* GANZSEITIG IST DIE REGEL UND NICHT DAS GESETZ (P5b/AP8).
@@ -1425,6 +1554,24 @@ for (const eintrag of liste) {
       karten: mass.karten || 0,
       konsole: rolle.fehler.slice(),
     });
+    /* DAS ETIKETT — je Seite und Breite, in beiden Richtungen (s. `ETIKETT`).
+     * Eine Seite, die auf die Anmeldung umleitete, hat kein Bild und zaehlt
+     * hier auch nicht: Ihr Titel waere der der Anmeldeseite. */
+    if (!hin.abbruch && typeof mass.titel === 'string') {
+      const vorsatz = ETIKETT ? `[${ETIKETT}] ` : '';
+      bericht.etikettGeprueft.titel++;
+      const titelOk = ETIKETT ? mass.titel.startsWith(vorsatz) : !mass.titel.startsWith('[');
+      if (!titelOk) {
+        bericht.etikett.push({ seite: eintrag.name, breite: b, was: 'Titel', ist: mass.titel });
+      }
+      if (mass.kopf !== null) {
+        bericht.etikettGeprueft.kopf++;
+        const rot = /\bkopf-umgebung\b/.test(mass.kopf);
+        if (rot !== !!ETIKETT) {
+          bericht.etikett.push({ seite: eintrag.name, breite: b, was: 'Kopfleiste', ist: mass.kopf });
+        }
+      }
+    }
     for (const k of mass.knoepfe) {
       /* ZWEI SOLLWERTE (E-S8-09). 36 px gilt nur, wo beides zutrifft:
        * Zeigergeraet UND mindestens 1024 px — dieselbe Bedingung wie im
@@ -1491,7 +1638,9 @@ md += `| Breiten | ${BREITEN.map(x => x.b).join(', ')} |\n`;
 md += `| Einzelbilder | ${bilderZahl} |\n`;
 md += `| Waagerechter Überlauf | **${gesamtUeberlauf}** von ${bilderZahl} |\n`;
 md += `| Konsolenfehler | **${gesamtKonsole}** |\n`;
-md += `| Knöpfe mit falscher Höhe | **${bericht.knopf.length}** |\n\n`;
+md += `| Knöpfe mit falscher Höhe | **${bericht.knopf.length}** |\n`;
+md += `| Etikett ${ETIKETT ? '„' + ETIKETT + '“' : '(keins erwartet)'} | **${bericht.etikett.length}** Abweichungen `
+   + `(${bericht.etikettGeprueft.titel} Titel, ${bericht.etikettGeprueft.kopf} Kopfleisten geprüft) |\n\n`;
 md += `## Je Seite\n\n| Seite | Gruppe | Überlauf bei | Verursacher | Konsole |\n|---|---|---|---|---|\n`;
 for (const s of bericht.seiten) {
   const breit = s.breiten.filter(x => x.ueberlauf);
@@ -1599,6 +1748,14 @@ if (gelesen === 0 && bilderZahl > 0) {
 }
 for (const d of doppelte) console.log(`  ${d}`);
 
+console.log(`Etikett ${ETIKETT ? '„' + ETIKETT + '“' : '(keins erwartet)'}: `
+  + `${bericht.etikettGeprueft.titel} Titel und ${bericht.etikettGeprueft.kopf} Kopfleisten geprüft · `
+  + `${bericht.etikett.length} Abweichungen`);
+for (const e of bericht.etikett.slice(0, 20)) {
+  console.log(`  ${e.seite} @ ${e.breite}: ${e.was} „${e.ist}“`);
+}
+if (bericht.etikett.length > 20) console.log(`  … und ${bericht.etikett.length - 20} weitere`);
+
 console.log(`Bericht: ${join(AUSGABE, 'bericht.md')}`);
 
 await browser.close();
@@ -1610,4 +1767,5 @@ if (wartungHaengt) {
 }
 process.exit(gesamtUeberlauf === 0 && gesamtKonsole === 0
              && bericht.knopf.length === 0 && ausgefallen.length === 0
+             && bericht.etikett.length === 0
              && !wartungHaengt ? 0 : 1);

@@ -36,7 +36,7 @@ function ingest_abweisung_vermerken(array $dev, bool $hatSpalten): void
                               abgewiesen_seit   = COALESCE(abgewiesen_seit, UTC_TIMESTAMP())
                         WHERE id = ?')->execute([(int)$dev['id']]);
     } catch (Throwable $ex) {
-        error_log('Geraetevermerk nicht schreibbar: ' . $ex->getMessage());
+        system_melden('ingest', 'Gerätevermerk nicht schreibbar', $ex);
     }
 }
 
@@ -348,7 +348,7 @@ if ($devVermerk
         db()->prepare('UPDATE devices SET abgewiesen_seit = NULL, abgewiesen_anzahl = 0
                         WHERE id = ?')->execute([(int)$dev['id']]);
     } catch (Throwable $ex) {
-        error_log('Geraetevermerk nicht zuruecksetzbar: ' . $ex->getMessage());
+        system_melden('ingest', 'Gerätevermerk nicht zurücksetzbar', $ex);
     }
 }
 
@@ -1168,7 +1168,7 @@ try {
     } catch (Throwable $ex) {
         /* Der Zaehler ist eine Schaetzung; ihn nicht fortzuschreiben kostet
          * Genauigkeit bis zum naechsten Job, aber keinen Upload. */
-        error_log('Mengenzaehler nicht fortgeschrieben: ' . $ex->getMessage());
+        system_melden('ingest', 'Mengenzähler nicht fortgeschrieben', $ex);
     }
     /* Verworfene Punkte NENNEN, aber nicht in 'rejected' (S2/AP3, E-S2-08).
      *
@@ -1225,8 +1225,10 @@ try {
     /* Kennung statt Schweigen (M3-10/M4-06).
      *
      * Die Uhr zeigt nur, DASS der Upload scheiterte — mehr braucht sie auch
-     * nicht. Wer der Ursache nachgehen will, hat jetzt aber eine: Der volle
-     * Text steht im Fehlerprotokoll des Webspace unter dieser Kennung.
+     * nicht. Wer der Ursache nachgehen will, hat jetzt aber eine: Der Text
+     * steht unter dieser Kennung im Protokoll, Reiter System (seit P5c/AP3;
+     * bis dahin im Fehlerprotokoll des Webspace). Die Antwortform bleibt —
+     * `JSON-Vertrag.md` 5.
      *
      * Seit M4-06 landet hier auch ein gescheitertes Einfuegen von Spurpunkten.
      * Der Rollback ist dabei wesentlich: Die Fortsetzungsmarke bleibt, wo sie

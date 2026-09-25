@@ -283,12 +283,13 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 | Block | wer sieht ihn | was darin steht |
 |---|---|---|
 | **Einstellungen** | alle | Profil, Geräte, **Standorte**, Backup, Import / Export — Kapitel 3 bis 10 |
-| **Verwaltung** | Admins | NutzerInnen, **Konto-Backups**, **Installation**, Demo-Konto — **Kapitel 11** |
+| **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation**, **Rechtstexte**, Demo-Konto, Protokoll — **Kapitel 11** |
 | **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
 
-Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen Geräten
-untereinander. Abmelden steht getrennt am Ende und fragt sicherheitshalber
-nach.
+Jeder Block ist eine eigene Karte; im Kopf stehen ein rundes Zeichen, sein
+Name und die Zahl der Einträge. Am Schreibtisch stehen die Blöcke
+nebeneinander, auf schmalen Geräten untereinander. Abmelden steht getrennt
+am Ende und fragt sicherheitshalber nach.
 
 Der Punkt für die Stammdaten hat zweimal den Namen gewechselt, und beide alten
 Links funktionieren weiter. Bis Web 6.3.0 hieß er „Standortdaten" und trug
@@ -299,13 +300,16 @@ dessen eigener Seite. Der Grund war, dass beide Reiter denselben Bestand
 luden und man zwischen ihnen hin und her ging, um einen einzigen Standort
 einzurichten.
 
-**In der Leiste klappen dieselben drei Blöcke auf und zu.** Offen sind
+**In der Leiste klappen dieselben drei Blöcke auf und zu.** Ihre Namen
+stehen eine Stufe größer in Dunkelblau, der Winkel zum Aufklappen rechts, und
+eine Linie trennt die Blöcke voneinander (seit Web 21.1.0 — bis dahin stand
+der Winkel links, dort, wo die Einträge ihr Symbol tragen). Offen sind
 „Einstellungen" und der Block, in dem die gerade geöffnete Seite steht; die
 übrigen zeigen nur ihren Namen und die Zahl der Einträge dahinter
 („Betrieb · 7"). Ein Klick auf die Zeile klappt sie auf. Was man dabei
 umstellt, gilt für diese Sitzung — beim nächsten Anmelden steht das Menü
 wieder in der Vorgabe. Der Grund für das Klappen ist Platz: Eine BetreiberIn
-hat siebzehn Menüpunkte, und die passen untereinander in kein übliches
+hat achtzehn Menüpunkte, und die passen untereinander in kein übliches
 Browserfenster.
 
 **Eine Zahl am Menüpunkt heißt: hier ist etwas zu tun.** Sie steht an vier
@@ -318,14 +322,36 @@ höchstens eine Minute alt.
 **Unter dem geöffneten Menüpunkt stehen die Karten der Seite** als
 Sprungmarken — kleiner und ohne Symbol, damit sie nicht wie eigene Seiten
 aussehen. Ein Klick springt zur Karte; während man liest, ist die Marke der
-Karte fett, die gerade oben steht. Am Handy stehen die Sprungmarken auch, dort
-ohne Markierung: Die Schublade liegt vor dem Inhalt, und wer sie geöffnet hat,
-sieht die Karten nicht. Ein Sprung schließt sie.
+Karte fett, die gerade oben steht. **Ist das Fenster niedriger als 800 px**
+(seit Web 21.1.0), fallen die Sprungmarken in der festen Leiste weg: Sonst
+schieben sie auf einem Laptop die Einträge darunter aus dem Bild, und die
+Einträge sind die Wege durch die Anwendung. Am Handy stehen die Sprungmarken
+immer, dort ohne Markierung: Die Schublade liegt vor dem Inhalt, und wer sie
+geöffnet hat, sieht die Karten nicht. Ein Sprung schließt sie.
 
 ![Dieselbe Seite bei 390 px und die geöffnete Schublade](bilder/schublade-mobil.png)
 
 Die **Diensttage-Leiste** begleitet alle Inhaltsseiten — auch Einsatzansicht
 und Formular. Sie ist nach Jahr und Monat gruppiert (Abschnitt 4.4).
+
+**Streifen über dem Inhalt** (seit Web 20.38.0 in einer Reihe). Bis zu vier
+stehen dort, immer in derselben Reihenfolge:
+
+1. **Die Umgebung** — nur auf einer Testanlage: „Staging — Testdaten, kein
+   Echtbetrieb". Dazu ist dort die **Kopfleiste rot** statt dunkelblau, und
+   vor jedem Seitentitel im Browser steht „[Staging]". Auf der Anlage für den
+   Echtbetrieb gibt es nichts davon. Wer eine rote Leiste sieht, trägt dort
+   keine echten Einsätze ein.
+2. **Eine Ankündigung** der BetreiberIn, etwa eine Wartung. Sie steht auch
+   über der Anmeldung. Das **×** rechts blendet sie aus, bis du dich abmeldest;
+   beim nächsten Anmelden steht sie wieder da, bis sie abläuft (Abschnitt
+   **12.8**).
+3. **Der Demo-Hinweis** — nur im Demo-Konto (Abschnitt 3.2).
+4. **Der Hinweis auf eine neue Datenschutzerklärung**, bis du sie
+   angesehen hast.
+
+Umgebung, Demo-Hinweis und Datenschutz lassen sich nicht wegklicken: Sie
+sagen etwas, das beim nächsten Besuch noch genauso gilt.
 
 **Handlungen an einer Zeile** — bearbeiten, verschieben, löschen — stehen am
 Schreibtisch als Knöpfe am rechten Zeilenrand. Auf schmalen Geräten steht dort
@@ -343,7 +369,7 @@ orange Markierung bleibt.
 **Ganz unten auf jeder Seite** steht die Fußzeile — auch vor der Anmeldung.
 Sie ist zweizeilig: oben Lizenz und Versionsnummer, darunter die Verweise auf
 **Impressum** und **Datenschutz**. Beide Seiten sind ohne Anmeldung erreichbar;
-was darin steht, hinterlegt die Verwaltung (Abschnitt 11.5).
+was darin steht, hinterlegt die Verwaltung (Abschnitt 11.5a).
 
 Die einzige Seite ohne diese Verweise ist der **Einrichter**: Er läuft, bevor
 die Anwendung eine Datenbank hat, und die beiden Rechtstextseiten brauchen
@@ -406,6 +432,13 @@ alten Zahl steht, rechnet die Anmeldung beides durch und braucht dafür etwa die
 doppelte Zeit. Das hört von selbst auf: Beim ersten Anmelden wird das Konto
 still nachgezogen, danach ist es wieder eine Rechnung. Zu tun ist nichts.
 
+**Mit Zweitfaktor kommt nach dem Passwort ein zweiter Schritt** (seit Web
+20.42.0): Die Seite fragt nach dem sechsstelligen Code aus der App auf deinem
+Handy. Für Support, Admin und BetreiberIn ist er Pflicht, für alle anderen ein
+Angebot — alles dazu in 3.1f. **Handy und Codes verloren?** Seit Web 20.45.0
+genügt am Code-Schritt der Wiederherstellungsschlüssel vom Notfallblatt
+(„Gerät und Codes verloren?", ebenfalls 3.1f).
+
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
 den Browser: Ein anderes Gerät oder ein neues Fenster hilft nicht. Sobald die
@@ -416,10 +449,14 @@ eine Zeit lang keine weitere E-Mail. Die Seite antwortet dabei unverändert —
 sie verrät nie, ob es zu einer Adresse ein Konto gibt.
 
 **Wenn eine Fehlermeldung eine Kennung nennt** — acht Zeichen aus Ziffern und
-Buchstaben —, dann notiere sie. Der vollständige Fehlertext steht unter dieser
-Kennung im Fehlerprotokoll des Webspace; ohne sie ist er dort nicht
-wiederzufinden. Auf dem Bildschirm steht er bewusst nicht: Solche Texte nennen
-Interna der Datenbank, die niemanden etwas angehen.
+Buchstaben —, dann notiere sie und gib sie weiter: Die Fehlerseite sagt, an
+welche Adresse (die Kontaktadresse der Installation, 11.5); steht dort keine,
+an die Person, die NAdoku für dich betreibt. Unter dieser Kennung findet die
+BetreiberIn den Fehler im **Protokoll, Reiter System** (11.7); ohne sie ist er
+dort nicht wiederzufinden. Auf dem Bildschirm steht der Fehlertext bewusst
+nicht: Solche Texte nennen Interna der Datenbank, die niemanden etwas
+angehen. Antwortet die Datenbank selbst nicht, steht er unter derselben
+Kennung im Fehlerprotokoll des Webspace.
 
 **Groß- und Kleinschreibung der E-Mail-Adresse spielt keine Rolle.**
 `Max@Example.invalid` und `max@example.invalid` sind dasselbe Konto.
@@ -483,10 +520,10 @@ Adresse eines Kontos ändert (11.1).
 **Ist die neue Adresse inzwischen von einem anderen Konto belegt**, sagt die
 Seite das beim Klick, und deine bisherige Adresse bleibt unverändert.
 
-Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Admin oder
-BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
+Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Support, Admin
+oder BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
 Zahnrad verschieden viel sehen; geändert wird sie in der Verwaltung
-(11.5), nicht hier.
+(11.3), nicht hier.
 
 Die Anwendung bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug.
 Welches du siehst, entscheidest du selbst:
@@ -651,8 +688,9 @@ Unter dem Zahnrad → **Profil**, ganz unten. **Du brauchst niemanden zu fragen.
 
 **Was passiert:** Dein Konto wird sofort gesperrt und nach **30 Tagen**
 endgültig gelöscht. In dieser Zeit genügt eine **Anmeldung**, und die Löschung
-ist zurückgenommen — einen Knopf dafür brauchst du nicht. Eine Nachricht mit
-dem Termin geht an deine Adresse.
+ist zurückgenommen — einen Knopf dafür brauchst du nicht. Mit Zweitfaktor
+zählt die Anmeldung erst mit dem Code (3.1f); das Passwort allein nimmt
+nichts zurück. Eine Nachricht mit dem Termin geht an deine Adresse.
 
 **Warum die Anmeldung und kein Link:** Ein Link, der ohne Passwort wirkt, wäre
 genau das, was jemand bräuchte, der deine Löschung verhindern will, um weiter
@@ -672,6 +710,109 @@ alles nach. Lässt du es laufen, ist es mit dem Konto fort.
 
 **Das Demo-Konto lässt sich nicht löschen** — es setzt sich ohnehin alle 30
 Minuten selbst zurück.
+
+### 3.1f Zweitfaktor
+
+*Seit Web 20.42.0.* Zusätzlich zum Passwort ein **sechsstelliger Code aus
+einer App auf deinem Handy** — einer Authenticator-App, wie es sie von vielen
+Anbietern gibt, oft auch im Passwortverwalter. Der Code wechselt alle 30
+Sekunden. Wer dein Passwort abgefischt hat, kommt damit allein nicht mehr
+herein.
+
+**Für wen.** Für **Support, Admin und BetreiberIn Pflicht**, für alle anderen
+ein Angebot. Im Demo-Konto lässt er sich nicht einschalten — dessen
+Zugangsdaten sind öffentlich. Wer eine der drei Rollen hat und noch keinen
+Zweitfaktor, landet nach der Anmeldung auf der Seite **„Zweitfaktor
+einrichten"**: Bis er steht, geht keine andere Seite auf, nur Abmelden.
+Drei Ausnahmen, alle für die BetreiberIn gedacht: Zwischen einem Update und
+`update.php`, im Wartungsmodus und solange die Anlage keinen
+Serverschlüssel hat, lässt die Seite durch — sonst käme niemand mehr an
+Betrieb → Updates oder an die Servereinstellungen. Fehlt der
+Serverschlüssel, sagt die Seite es, und die BetreiberIn trägt ihn unter
+Betrieb → Servereinstellungen nach.
+
+**Einrichten.** Unter **Einstellungen → Profil**, Karte **„Zweitfaktor"** →
+**„Einrichten"**. Drei Wege in die App, nimm den, der passt:
+
+1. den **QR-Code scannen** — am Rechner, die App auf dem Handy,
+2. **„In der Authenticator-App öffnen"** — am Handy, wenn du die Seite dort
+   geöffnet hast,
+3. das **Geheimnis von Hand eintragen** — die Vierergruppen unter „Oder von
+   Hand eintragen", zeitbasiert, sechs Ziffern, 30 Sekunden.
+
+Dann den Code aus der App ins Feld **„Code aus der App"** und **„Einschalten"**.
+**Eingeschaltet wird erst mit einem richtigen Code** — wer das Scannen
+abbricht, sperrt sich nicht aus. Ein Neuladen der Seite behält das Geheimnis;
+„Abbrechen" verwirft es.
+
+**Die zehn Wiederherstellungscodes** erscheinen **genau einmal**, direkt nach
+dem Einschalten. Drucke sie mit **„Codeblatt drucken"** (eine A4-Seite, mit
+Kästchen zum Abhaken) oder schreib sie ab. Jeder Code gilt **einmal**, wenn
+das Handy fehlt. Gespeichert ist nur ein Prüfwert je Code — das Blatt lässt
+sich **nicht nachdrucken**. Bewahre es getrennt vom Handy auf. Auf der Seite
+„Zweitfaktor einrichten" wird **„Weiter"** erst frei, wenn du **„Ich habe die
+Codes gesichert."** angehakt hast. **„Neue Codes
+erzeugen"** gibt dir zehn neue; die alten und ein gedrucktes Blatt gelten dann
+nicht mehr. Die Karte zeigt, wie viele noch offen sind („8 von 10").
+
+**Anmelden.** Nach dem Passwort fragt die Seite nach dem **Code aus der App**;
+Leerzeichen sind egal. Du hast dafür **fünf Minuten**, danach beginnt die
+Anmeldung von vorn. **Jeder Code gilt einmal:** Meldest du dich zweimal kurz
+hintereinander an, nimm beim zweiten Mal den nächsten Code der App.
+**Kein Handy zur Hand?** „Wiederherstellungscode verwenden" und einen Code vom
+Blatt eintippen. **„Zurück zur Anmeldung"** bricht ab. Nach **fünf falschen
+Codes** ist die Anmeldung dieses Kontos eine Viertelstunde gesperrt, bei
+Wiederholung länger; die Meldung nennt, ab wann es wieder geht.
+
+**Ausschalten** geht nur, wo er kein Muss ist: Karte → **„Ausschalten"**.
+Für Support, Admin und BetreiberIn gibt es den Knopf nicht; dort **setzt die
+Verwaltung zurück** (11.1) — die BetreiberIn für alle Rollen, ein Admin nur
+für NutzerInnen, und niemand am eigenen Konto. Du bekommst dann eine Mail, und
+der Schritt steht im Protokoll.
+
+**Rückweg mit dem Wiederherstellungsschlüssel** (seit Web 20.44.0). Bei
+eingeschaltetem Zweitfaktor zeigt die Karte eine dritte Zeile: **„eingerichtet"**
+mit Datum, oder **„ab der nächsten Anmeldung"**. Du musst dafür nichts tun —
+beim Anmelden legt dein Browser still ein Schlüsselpaar an und verschließt
+dessen geheime Hälfte mit deinem Schlüssel, den nur du öffnen kannst; der
+Server bekommt davon nichts, womit er etwas öffnen könnte. Mit ihm genügt der
+**Wiederherstellungsschlüssel vom Notfallblatt**, wenn Handy und Codes fehlen
+(unten). **„Rückweg erneuern"** legt ein neues Paar an und fragt dafür
+dein Passwort; das Notfallblatt bleibt gültig, und du bekommst eine Mail —
+erneuert ihn jemand anderes an deinem Konto, erfährst du es so. Das
+Demo-Konto hat keinen Rückweg.
+
+**Handy weg und die Codes auch?** Seit Web 20.45.0 geht es ohne die
+Verwaltung: Nach dem Passwort im Code-Schritt **„Gerät und Codes verloren?
+Wiederherstellungsschlüssel verwenden"** (auch aus „Wiederherstellungscode
+verwenden" heraus) und den **Wiederherstellungsschlüssel vom Notfallblatt**
+eintippen — Bindestriche und Leerzeichen zählen nicht. Ein Tippfehler wird
+beim Tippen benannt; ein Schlüssel, der nicht zu deinem Konto passt, auch —
+dann geht nichts an den Server. **„Zweitfaktor zurücksetzen"** schaltet ihn
+aus, und du bist angemeldet; eine Mail geht an deine Adresse, der Schritt
+steht im Protokoll. Richte ihn danach unter Einstellungen → Profil mit dem
+neuen Gerät wieder ein — für Support, Admin und BetreiberIn geschieht das
+sofort, du landest unmittelbar auf „Zweitfaktor einrichten".
+
+Der Schlüssel verlässt dabei deinen Browser nicht: Er öffnet dort dein
+Schlüsselpaar (Zeile „Rückweg" oben), und der Server prüft nur eine
+Unterschrift damit. **Ohne Passwort hilft der Zettel nicht**, und eine
+gestohlene Datenbank allein genügt nicht, um den Zweitfaktor abzuschalten.
+Fehlt der Verweis — das Konto hat noch kein Paar, oder die Anlage kann die
+Unterschrift gerade nicht prüfen (Betrieb → Status, „Rückweg-Prüfung") —,
+setzt die Verwaltung zurück, wie bisher. Dasselbe gilt, wenn auch das
+Notfallblatt fehlt.
+
+**Nach einem Umzug der Anlage auf einen anderen Serverschlüssel** — etwa nach
+einer Wiederherstellung aus einem Komplett-Backup — lässt sich das Geheimnis
+nicht mehr öffnen. Die Anmeldung sagt es und nimmt dann nur noch
+Wiederherstellungscodes; die Karte im Profil sagt es auch. Richte ihn danach
+neu ein (bei Pflichtrollen: erst zurücksetzen lassen).
+
+**Was er schützt und was nicht.** Er schützt die **Anmeldung** gegen ein
+gestohlenes Passwort. Gegen den Angriff auf eine gestohlene Datenbank hilft
+er nicht — dagegen steht der Server-Anteil (Abschnitt 5). Ein „Gerät 30 Tage
+merken" gibt es nicht; der Code wird bei jeder Anmeldung gefragt.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -811,12 +952,21 @@ Pro Tag:
   diesem einen Diensttag und taucht in keiner Auswahlliste wieder auf; in
   Suche, Filter und Diensttage-Leiste findest du es trotzdem. Wenn du es
   öfter brauchst, leg es unter *Einstellungen → Standorte* an.
-  **Besatzungsrollen gibt es dafür nicht** — und zwar auch nicht am einzelnen
-  Einsatz: Das Einsatzformular zeigt dieselben Rollen wie der Diensttag, und
-  der führt hier keine. An einem solchen Tag lässt sich die Besatzung also
-  nicht festhalten. Wer sie braucht, legt das Rettungsmittel unter
-  *Einstellungen → Standorte* an und ordnet es zu; dann stehen seine Rollen
-  am Tag und am Einsatz zur Verfügung.
+  **Die Besatzungsrollen folgen der Betriebsart** (seit Web 21.0.0):
+  luftgebunden sind es Pilot 1, Pilot 2, HEMS-TC, Flugretter und Sonstige,
+  bodengebunden Fahrer, Praktikant und Sonstige — **gleich welcher Typ**.
+  Ein „Anderes Rettungsmittel" vom Typ Bergwacht oder Sonstiges führt also
+  die Rollen seiner Art, obwohl ein Rettungsmittel desselben Typs aus den
+  Stammdaten keine Rollen-Vorlagen hat (9.1a). Das ist gewollt: In den
+  Stammdaten wählst du die Rollen per Haken aus, hier gibt es keine Haken,
+  aus denen man wählen könnte. Die Felder erscheinen,
+  sobald du die Betriebsart wählst; vorher steht dort ein Satz, der sagt,
+  was fehlt. Am einzelnen Einsatz gilt dasselbe, denn das Einsatzformular
+  zeigt die Rollen des Diensttags. Vorschläge für die Namen gibt es, wenn
+  du den Standort aus der Liste gewählt hast. Einen frei getippten Ort kennt
+  die Anwendung nicht, also auch keine Namen dazu. Bis Web 20.47.0 führte
+  ein solcher Tag gar keine Rollen; Tage von damals haben sie mit dem Update
+  bekommen.
 
   > Bis Web 18.1.0 stand hier, Namen ließen sich am einzelnen Einsatz
   > nachtragen. Das stimmte nicht: Ein frisch angelegter Tag dieser Art bot
@@ -1961,11 +2111,15 @@ wird gespeichert. Eine getrennte Einrichtungsseite nach dem ersten Anmelden gibt
 es nicht mehr.
 
 **Das Notfallblatt (seit Web 20.24.0).** Neben dem Schlüssel steht ein Knopf
-**„Notfallblatt drucken"**. Er öffnet eine Druckseite mit deinem Schlüssel in
-Vierergruppen, deiner Kontoadresse, der Adresse dieser Installation und dem
-Datum — dazu die drei Sätze, die daraufgehören: wofür er da ist, was ohne ihn
-verloren ist, und wo er hingehört (nicht in die Schublade neben dem Rechner
-und nicht in dieselbe Tasche wie das Handy).
+**„Notfallblatt drucken"**. Er öffnet eine Druckseite — genau **eine
+A4-Seite** — mit deinem Schlüssel in **fünf nummerierten Vierergruppen**,
+deiner Kontoadresse, der Adresse dieser Installation und Datum und Uhrzeit;
+dazu, wofür er da ist, was ohne ihn verloren ist, wie du ihn benutzt und wo
+er hingehört: dort, wo du ihn in fünf Jahren noch findest und niemand sonst
+(Dokumentenordner zu Hause, Bankschließfach, Passwortmanager). Auf einer
+Anlage mit Etikett — etwa *Staging* — trägt das Blatt eine rot umrandete Zeile,
+dass es nur für diese Anlage gilt. Seit Web 21.1.0 sieht es aus wie das
+Schlüsselblatt der BetreiberIn und das Codeblatt des Zweitfaktors (3.1f).
 
 **Dieses Blatt lässt sich später nicht erneut drucken.** Der Schlüssel entsteht
 in deinem Browser und wird nirgends gespeichert — auch nicht bei der BetreiberIn.
@@ -3293,35 +3447,42 @@ koppeln".
 ## 11. Verwaltung (Admin)
 
 **Was andere Konten und die Anlage nach außen betrifft.** Der Block
-**Verwaltung** unter dem Zahnrad hat vier Punkte, und dieses Kapitel folgt
+**Verwaltung** unter dem Zahnrad hat sechs Punkte, und dieses Kapitel folgt
 ihnen:
 
 | Menüpunkt | Abschnitt | wozu |
 |---|---|---|
 | **NutzerInnen** | 11.2, 11.3 | Konten sehen, anlegen, ändern, löschen; je Konto die Kontoseite (11.1) |
 | **Konto-Backups** | 11.4 | die Regeln, die für **alle** Konten gelten |
-| **Installation** | 11.5 | Name, Logo, Impressum, Datenschutzerklärung |
+| **Installation** | 11.5 | Name, Adressen, Logo |
+| **Rechtstexte** | 11.5a | Impressum, Datenschutzerklärung, Nutzungsbedingungen, AVV — mit Vorschau beim Tippen |
 | **Demo-Konto** | 11.6 | anlegen, zurücksetzen, entfernen |
+| **Protokoll** | 11.7 | nachlesen, wer wann was im Betrieb getan hat; für die BetreiberIn dazu das Archiv |
 
 Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
 Entscheidung dazu, was mit den Konto-Backups geschieht.
 
-Alles in diesem Kapitel können **Admin und BetreiberIn**. Was nur eine
-BetreiberIn kann — der Server selbst —, steht in Kapitel 12. Seit Web 15.0.0
-gibt es **drei Rollen**; welche was darf, steht in 11.3 unter „Drei Rollen".
+Alles in diesem Kapitel können **Admin und BetreiberIn** — beim Protokoll
+sieht der Admin vier der sieben Reiter (11.7). Der **Support** (seit Web
+20.41.0) sieht davon die NutzerInnen und das Protokoll, und dort nur einen
+schmalen Ausschnitt. Was nur eine BetreiberIn kann — der Server selbst —,
+steht in Kapitel 12. Seit Web 20.41.0 gibt es **vier Rollen**; welche was
+darf, steht in 11.3 unter „Vier Rollen".
 
 ### 11.1 Die Kontoseite
 
 Seit Web 9.8.0 liegt **alles zu einem Konto auf dessen Seite**. Der Titel ist
 der Name, darunter Adresse, Rolle, seit wann es das Konto gibt und wann sich
 die Person zuletzt angemeldet hat. Oben rechts stehen **„Jetzt sichern"** und
-ein Aktionsmenü (Freigeben, Passwort zurücksetzen, Konto löschen).
+ein Aktionsmenü (Freigeben, Setz-Link senden, Konto löschen; bei einer
+unbestätigten Registrierung dazu „Bestätigung erneut senden").
 
 Darunter:
 
 | Karte | Was dort steht |
 |---|---|
-| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). |
+| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** in den Reiter Verwaltung, eingegrenzt auf dieses Konto — als Handelnde oder als Betroffene (11.7); was andere Reiter über das Konto führen, etwa ein eingespieltes Konto-Backup im Reiter Sicherung, zeigt dieser Filter nicht. |
+| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg; die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
@@ -3336,12 +3497,24 @@ untereinander; dort öffnet ein **„⋯"** je Zeile dieselben Handlungen.
 
 **Ein Passwort lässt sich hier nicht setzen.** Die Daten sind mit dem Passwort
 der Person Ende-zu-Ende-verschlüsselt — niemand außer ihr kann sie öffnen.
-**„Passwort zurücksetzen"** im Aktionsmenü verschickt denselben Link wie
-„Passwort vergessen" auf der Anmeldeseite; die Person setzt ihr Passwort selbst
-und entsperrt danach mit ihrem Wiederherstellungsschlüssel. Ein zuvor
-verschickter Link wird dabei ungültig — es gilt immer nur der zuletzt
-verschickte. Kommt die E-Mail nicht weg, **zeigt die Seite den Link an**; er ist
-eine Stunde gültig und darf nur an die Person selbst weitergegeben werden.
+**„Setz-Link senden"** im Aktionsmenü (bis Web 20.40.0 hieß der Eintrag
+„Passwort zurücksetzen" — gesetzt wird aber kein Passwort, sondern ein Link
+verschickt) schickt denselben Link wie „Passwort vergessen" auf der
+Anmeldeseite; die Person setzt ihr Passwort selbst und entsperrt danach mit
+ihrem Wiederherstellungsschlüssel. Ein zuvor verschickter Link wird dabei
+ungültig — es gilt immer nur der zuletzt verschickte. Kommt die E-Mail nicht
+weg, **zeigt die Seite den Link an**; er ist eine Stunde gültig und darf nur an
+die Person selbst weitergegeben werden. **Dem Support zeigt sie ihn nie** —
+auch dann nicht; er bekommt den Hinweis, sich an einen Admin oder die
+BetreiberIn zu wenden. Wer den Link sähe, könnte das Konto übernehmen.
+
+**„Bestätigung erneut senden"** (seit Web 20.41.0) steht nur bei einem Konto
+im Status *unbestätigt* — jemand hat sich registriert, und die Mail mit dem
+Bestätigungslink ist nicht angekommen oder verlegt. Der neue Link geht nur per
+Mail hinaus, macht einen früheren ungültig und gilt **nicht länger als die
+Registrierung selbst**: Ist deren Frist fast um, sagt die Seite, dass sich die
+Person neu registrieren muss. Beides — Setz-Link und Bestätigung — steht im
+Protokoll (11.7), ohne den Link.
 
 **Die Konto-Backups dieses Kontos.** Im Kartenkopf steht der Zustand als
 Plakette — *aktuell*, *überfällig · n Tage* oder *nie gesichert* — und rechts
@@ -3520,35 +3693,67 @@ zutrifft:
   steht, nur der Versand scheiterte. Die Seite zeigt dann den Einladungslink
   an; er ist 24 Stunden gültig und muss auf einem anderen Weg weitergegeben
   werden. **Nur an die Person selbst** — wer den Link hat, kann das Passwort
-  des Kontos setzen. Die Ursache des Fehlschlags steht im Fehlerprotokoll des
-  Webspace.
+  des Kontos setzen. Die Ursache des Fehlschlags findet die BetreiberIn im
+  Protokoll unter System (11.7).
 
 **Rollenwechsel und Löschen wirken sofort**, auch bei jemandem, der gerade
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
-Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
+Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig. Beides steht im
+Protokoll (11.7) — ein Rollenwechsel seit Web 20.39.0 mit alter und neuer
+Rolle.
 
-#### Drei Rollen
+#### Vier Rollen
 
-Seit Web 15.0.0 gibt es drei Rollen. Sie stehen nicht nebeneinander, sondern
-**ineinander**: Wer betreibt, kann alles, was ein Admin kann, und wer verwaltet,
-alles, was eine NutzerIn kann.
+Seit Web 15.0.0 gab es drei Rollen, seit Web 20.41.0 sind es vier. Sie stehen
+nicht nebeneinander, sondern **ineinander**: Wer betreibt, kann alles, was ein
+Admin kann, und wer verwaltet, alles, was eine NutzerIn kann. Der **Support**
+ist dabei keine eigene Stufe mit eigenen Rechten, sondern ein schmaler
+Ausschnitt der Verwaltung — alles, was er kann, kann auch ein Admin.
 
 | Rolle | Was sie kann |
 |---|---|
 | **NutzerIn** | die eigenen Diensttage und Einsätze dokumentieren, eigene Stammdaten, Geräte, Backup, Import und Export — alles unter dem Zahnrad, was mit „ich" zu tun hat |
-| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, Konto-Backups, Installation, Demo-Konto |
-| **BetreiberIn** | zusätzlich: alles, was die **Anlage** betrifft — Status, Statistik, Wartungsmodus, Migrationen, Hintergrundjobs, Speichergrenze, Komplett-Backup und Backup-Ziele (Kapitel 12) |
+| **Support** | zusätzlich, und nur für Konten der Rolle NutzerIn: die Liste und die Kontoseite **ansehen**, einen **Setz-Link senden** (ohne ihn zu sehen), eine **Bestätigung erneut senden**, ein **Gerät deaktivieren** — nicht wieder einschalten, nicht entkoppeln; dazu im Protokoll die Reiter Verwaltung und E-Mail |
+| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, den Zweitfaktor von NutzerInnen zurücksetzen, Konto-Backups, Installation, Rechtstexte, Demo-Konto, das Protokoll mit vier Reitern |
+| **BetreiberIn** | zusätzlich: alles, was die **Anlage** betrifft — Status, Statistik, Wartungsmodus, Migrationen, Hintergrundjobs, Speichergrenze, Komplett-Backup und Backup-Ziele (Kapitel 12), dazu alle Reiter des Protokolls und sein Archiv |
 
-Warum die dritte Rolle: Eine Fehlbedienung in der Verwaltung trifft **ein**
-Konto, eine im Betrieb die **ganze Installation**. Wer den Wartungsmodus
+**Seit Web 20.39.0 halten auch die Seiten selbst einen Admin draußen.** Bis
+dahin zeigte das Menü Komplett-Backup und Backup-Ziele nur der BetreiberIn,
+aber wer die Adresse kannte, kam als Admin hinein (Backlog Nr. 286). Jetzt
+antworten beide Seiten und jede ihrer Handlungen einem Admin mit „Kein
+Zugriff".
+
+**Was der Support nicht sieht.** Konten mit eigenen Rechten — Support,
+Admin, BetreiberIn — stehen nicht in seiner Liste, und ihre Kontoseite
+antwortet ihm mit „Kein Zugriff". Mit einem Setz-Link ließe sich ein frisch
+angelegtes Konto übernehmen, auch eines mit Rechten; deshalb betreut der
+Support nur NutzerInnen. In der Liste fehlen ihm die Kachel und der Filter
+„Admins", das Anlegen und die Sammelaktionen; den Stand der Konto-Backups
+sieht er. Die Kontoseite steht bei ihm **einspaltig**: Konto (die Felder
+gesperrt, ohne „Speichern"), Status, Mengen und Grenzen (ohne das Formular
+der Grenzen) und Geräte — Konto-Backups und „Konto löschen" gibt es für ihn
+nicht. Was er nicht tun darf, steht nicht als grauer Knopf da, sondern gar
+nicht. Ein deaktiviertes Gerät schaltet nur die Verwaltung wieder ein — der
+Support stellt ein verlorenes Gerät still, die Entscheidung, ihm wieder zu
+trauen, trifft jemand anderes.
+
+**Wer den Support vergibt:** jeder Admin und jede BetreiberIn — er hat weniger
+Rechte als ein Admin.
+
+**Für Support, Admin und BetreiberIn ist der Zweitfaktor Pflicht** (seit Web
+20.42.0, 3.1f). Wer eine dieser Rollen bekommt und noch keinen hat, richtet
+ihn beim nächsten Seitenaufruf ein — vorher geht keine andere Seite auf.
+
+Warum die BetreiberIn eine eigene Rolle ist: Eine Fehlbedienung in der
+Verwaltung trifft **ein** Konto, eine im Betrieb die **ganze Installation**. Wer den Wartungsmodus
 einschaltet, schließt alle aus; wer eine Migration ausführt, ändert das
 Datenmodell. Das ist eine andere Art von Verantwortung als „ein Konto anlegen",
 und sie hat deshalb eine eigene Rolle.
 
 **Wer welche Rolle vergibt.** Die Rolle „BetreiberIn" vergibt und entzieht
 **nur eine BetreiberIn**. Ein Admin sieht die Option im Auswahlfeld gar nicht —
-sonst könnte er sich selbst hochstufen. Alles andere (NutzerIn ↔ Admin) darf
-jede Person mit Verwaltungsrechten.
+sonst könnte er sich selbst hochstufen. Alles andere (NutzerIn, Support,
+Admin) darf jede Person mit Verwaltungsrechten.
 
 **Was geschützt ist.** Das **letzte** Konto mit der Rolle BetreiberIn lässt
 sich weder zurückstufen noch löschen. Beide Stellen sagen es, bevor man es
@@ -3648,7 +3853,9 @@ auch die Grenze steht, gegen die sie gemessen werden. Ist die Ablage nicht
 beschreibbar, sagt das eine Meldung oben auf der Seite; ohne beschreibbare
 Ablage entsteht kein Konto-Backup.
 
-**Backups ohne Konto** steht zugeklappt am Rand: Ordner, zu deren Konto es
+#### Backups ohne Konto und die Freigabe
+
+Die Karte steht zugeklappt am Rand: Ordner, zu deren Konto es
 keine Zeile mehr gibt — der Fall „Konto gelöscht und neu aufgesetzt". Sie
 überleben die Löschung mit Absicht; genau dafür sind sie da. Seit Web 15.2.0
 steht dort **eine Zeile je Ordner** statt je Paket, mit der Kontokennung als
@@ -3658,9 +3865,36 @@ löschen* und *Ganzen Ordner löschen*. Welches Paket gemeint ist, wird im Dialo
 gewählt; jüngstes zuerst. An den Rückfragen ändert sich nichts: Vor dem
 Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
 
-**„Was hier gilt"** am Ende der Seite fasst zusammen, was die drei Backups
-unterscheidet, warum Konto-Backups nie von selbst entstehen, wie die Freigabe
-funktioniert und wohin die Pakete von hier aus gehen.
+**Die Freigabe** ist der Weg, wenn die Kontokennung nicht passt. Unmittelbar
+einspielen lässt sich ein Paket nur in ein bestehendes Konto mit derselben
+Kennung; weicht sie ab und enthält das Paket geschützte Angaben, ist das
+gesperrt — nach „Konto gelöscht und neu aufgesetzt" ist das der Regelfall,
+denn das neue Konto hat eine andere Kennung. Dann gibt die Verwaltung
+ein Paket für ein Konto frei, und einspielen kann es nur die NutzerIn selbst,
+in ihrem Backup-Bereich, mit ihrem **Wiederherstellungsschlüssel**. Der liegt
+ausschließlich bei ihr — auch die Verwaltung hat ihn nicht, und ohne ihn
+öffnen sich die geschützten Angaben des Pakets nicht.
+
+#### Drei Backups, drei Namen
+
+*Bis Web 21.0.0 stand das in der zugeklappten Karte „Was hier gilt" am Ende
+der Seite (P5c/AP9).*
+
+Ein **Konto-Backup** legt die Verwaltung an; es liegt auf dem Server,
+adressiert über die Kontokennung. Ein **Backup** lädt eine NutzerIn sich im
+eigenen Bereich selbst herunter — es zählt hier nicht. Das
+**Komplett-Backup** der Installation ist ein Drittes und liegt unter
+Betrieb → Komplett-Backup (12.6).
+
+**Was angestoßen ist, arbeitet der Aufräumjob in Schüben ab**; die
+Warteschlange überlebt einen Abbruch. Wie oft er läuft, hängt vom
+eingerichteten Auslöser ab (12.4).
+
+**Wohin die Pakete von hier aus gehen**, steht unter Betrieb → Backup-Ziele
+(12.7) — FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
+Backups auf demselben Server, dessen Ausfall der Grund für ein Backup wäre.
+Die Ablage selbst ist über den Browser nicht erreichbar: Eine `.htaccess`
+sperrt sie, und der Ordnername je Konto ist nicht zu erraten.
 
 ### 11.4a Ratenschutz — was jemanden aufhält, der es von außen versucht
 
@@ -3677,10 +3911,15 @@ eine Viertelstunde draußen; wer es am selben Tag noch einmal tut, länger:
 | 3 | 30 Minuten |
 | 4 | 60 Minuten |
 
-Nach **24 Stunden ohne Fehlversuch** fängt die Leiter wieder von vorn an. Alle
-vier Dauern lassen sich ändern — **aber nicht unter 15 setzen, ohne es zu
-wollen:** Bis Web 20.9.1 sperrte die Anmeldung fest 15 Minuten, eine kürzere
-erste Sprosse macht den ersten Verstoß milder als vorher.
+Die vierte Stufe gilt für jede weitere Sperre. Nach **24 Stunden ohne
+Fehlversuch** fängt die Leiter wieder von vorn an. Alle vier Dauern lassen
+sich ändern — **aber nicht unter 15 setzen, ohne es zu wollen:** Bis Web
+20.9.1 sperrte die Anmeldung fest 15 Minuten, eine kürzere erste Sprosse macht
+den ersten Verstoß milder als vorher.
+
+**Gezählt wird am eingetippten Namen, nicht am Konto.** Deshalb verrät eine
+Sperre nicht, ob es das Konto gibt: Ein Name, den niemand trägt, wird genauso
+gesperrt wie einer, den es gibt.
 
 **Zwei Zahlen, und die zweite ist die größere.** Zehn Fehlversuche je *Konto*,
 fünfzig je *Anschluss*. Hinter einem Klinik-Anschluss teilen sich viele eine
@@ -3721,7 +3960,7 @@ Dienst nachliefert, sendet beliebig viele Stücke.
 >
 > **Woran du es siehst:** In **Einstellungen → Geräte** trägt die Zeile des
 > Geräts eine orange Plakette „abgewiesen" und in der Kleinzeile die Zahl mit
-> Zeitpunkt — „30 abgewiesen seit 16.09.2026 11:01". Beides verschwindet von
+> Zeitpunkt — „30 abgewiesen seit 16.09.2026, 11:01". Beides verschwindet von
 > selbst, sobald wieder ein Upload durchkommt.
 
 **Auf Betrieb → Status** stehen dazu bis zu drei Zeilen, sobald es etwas zu
@@ -3732,7 +3971,7 @@ steht auch der Knopf zum Aufheben.
 ### 11.4b Sicherheit — wer ausgesperrt ist, und wie man ihn wieder hereinlässt
 
 Unter **Betrieb → Status**, Knopf **„Sicherheit"** neben dem Titel *(seit
-Web 20.12.0)*. Fünf Karten:
+Web 20.12.0)*. Sechs Karten:
 
 | Karte | Was dort steht |
 |---|---|
@@ -3740,6 +3979,7 @@ Web 20.12.0)*. Fünf Karten:
 | **Verlangsamung** | Ob die Bremse gerade läuft, und jeder **Anstieg** der Stufe in den letzten 30 Tagen |
 | **Mengenbremse der Geräte** | Geräte mit abgewiesenen Anmeldungen, dazu gesperrte Gerätekennungen und Anschlüsse |
 | **Ereignisse der letzten 30 Tage** | Alles zusammen, das Jüngste zuerst |
+| **Löschungen auf Sicherungszielen** | Was die Aufbewahrungsregel auf einem Backup-Ziel entfernt hat, mit Datei, Größe und Zeitpunkt *(seit Web 20.14.0)* |
 | **Meldung per Mail** | Ob die Sammelmeldung eingeschaltet ist, wann zuletzt eine hinausging, an wen |
 
 **Der Knopf „Aufheben" ist für den Anruf gedacht**, nicht als Regelweg: Eine
@@ -3747,33 +3987,71 @@ Sperre läuft von selbst ab, und wer sein Passwort neu setzt, ist danach
 ohnehin nicht mehr gesperrt. Es kommt eine Rückfrage, und der Vorgang wird
 **mit deinem Namen** vermerkt — er steht danach in den Ereignissen.
 
-> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die fünf
-> Töpfe mit Sperrleiter: Anmeldung, Anschluss, Schlüsselableitung und die
-> beiden der Mengenbremse. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
+> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die sieben
+> Töpfe mit Sperrleiter: Anmeldung, Anschluss, Schlüsselableitung, die
+> beiden der Mengenbremse, das Prüfen des Schlüsselblatts und der Code des
+> Zweitfaktors. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
 > CSP-Berichte sperren ebenfalls, schreiben aber keine Zeile — dort eskaliert
 > nichts, und ein Protokoll jedes Tippfehlers würde die Liste zudecken.
 
 > **Hier stehen IP-Adressen und E-Mail-Adressen im Klartext.** Ohne sie wäre
 > die Liste „irgendwo war irgendwer gesperrt" und damit wertlos — man kann
 > eine Sperre nicht aufheben, ohne zu wissen, welche. Alles verfällt nach
-> **30 Tagen**, und das ist keine Einstellung. Die Angaben fahren allerdings
-> in **jeder Komplettsicherung** mit, solange die Sicherung aufbewahrt wird.
-> **Der Datenschutztext deiner Installation gehört deshalb nachgezogen** —
-> einen Baustein zum Übernehmen findest du unter *Verwaltung → Installation*
-> beim Datenschutztext.
+> **30 Tagen**, und das ist keine Einstellung. In die Komplettsicherung
+> gehen sie seit Web 20.39.0 **nicht** mit — die Tabelle fährt dort ohne
+> Zeilen mit; bis dahin stand sie darin, solange die Sicherung aufbewahrt
+> wurde. **Die Datenschutzerklärung deiner Installation nennt das am
+> besten** — einen Baustein zum Übernehmen findest du unter *Verwaltung →
+> Rechtstexte*, Reiter Datenschutzerklärung (11.5a).
 
 Die Seite ist auch im **Wartungsmodus** erreichbar. Das ist Absicht: Wer
 jemanden wieder hereinlassen muss, während die Anwendung zu ist, braucht
 genau sie.
 
+#### Sicherheit: Schwellen, Aufräumen, Mailregel
+
+*Bis Web 21.0.0 stand das als Absätze in den Karten und in der zugeklappten
+Karte „Was hier gilt" (P5c/AP9).*
+
+**Eine einzige Handlung ändert etwas: „Aufheben".** Alles andere auf der
+Seite wird nur gelesen. Die Zahlen selbst — Grenzen, Sprossen, Schwellen —
+stellst du unter *Betrieb → Servereinstellungen*, Karte „Ratenschutz", ein.
+
+**Verlangsamung.** Die Bremse greift erst ab 200 Fehlversuchen je 15 Minuten
+über die ganze Installation — ein Wert, den ein gewöhnlicher Dienstbetrieb
+nicht erreicht. Während sie läuft, wartet jede **fehlgeschlagene** Anmeldung;
+wer das richtige Passwort hat, kommt ohne Verzögerung durch. Vermerkt wird
+jeder **Anstieg** der Stufe, nicht jeder Fehlversuch — sonst stünde nach einer
+Stunde Angriff ein Eintrag je Versuch. Ein Ende hat kein eigenes Ereignis; die
+Bremse fällt von selbst, sobald das 15-Minuten-Fenster leerläuft.
+
+**Mengenbremse der Geräte.** 30 fehlgeschlagene Geräteanmeldungen je
+Viertelstunde, danach dieselbe Leiter wie bei der Anmeldung. Der einzige Fall,
+in dem es ein echtes Gerät trifft, ist ein veralteter Schlüssel — es verliert
+dabei nichts und sendet später; die Abhilfe ist neu koppeln (Abschnitt 10).
+
+**Löschungen auf Sicherungszielen.** Der Versand ergänzt sonst nur: Der Zweck
+eines auswärtigen Ziels ist, den Ausfall dieses Servers zu überleben — samt
+eines Fehlers, der hier zu viel löscht. Wo die Aufbewahrungsregel an ist,
+entfernt sie nur, was dem Namensmuster einer Sicherung entspricht **und** im
+Versandprotokoll dieser Installation steht; fremde Dateien bleiben.
+
+**Meldung per Mail.** Erreicht eine Sperre die letzte Sprosse oder die
+Verlangsamung ihre vierte Stufe, geht **eine** Sammelmeldung hinaus —
+höchstens eine je Stunde. Sie sagt nicht, dass jemand hereingekommen ist,
+sondern dass es jemand versucht.
+
+**Aufräumen.** Der Aufräumjob löscht jede Nacht, was älter als 30 Tage ist —
+Ereignisse, Gerätevermerke, CSP-Berichte, erledigte Warteschlangenzeilen und
+den Job-Verlauf. Die Frist gilt in der laufenden Datenbank, nicht im
+versiegelten Abzug eines Komplett-Backups.
+
 ### 11.5 Installation
 
 Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der
-**Name**, die **Adressen**, das **Logo** und die **vier Rechtstexte** —
-Impressum, Datenschutzerklärung, Nutzungsbedingungen und die Vereinbarung zur
-Auftragsverarbeitung. Bis Web 15.1.0
-hieß die Seite „Rechtstexte", und das Logo lag auf der alten Seite „Wartung"; die alte
-Adresse führt weiterhin hierher.
+**Name**, die **Adressen** und das **Logo**, untereinander in einer Spalte. Die
+vier Rechtstexte stehen seit Web 21.1.0 auf einer eigenen Seite
+(11.5a); bis dahin standen sie hier in der rechten Spalte.
 
 **Der Name** (seit Web 20.8.0) steht zuoberst und gilt für **alles**:
 Browsertab, Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt — und
@@ -3804,9 +4082,12 @@ und dort wäre ein Zeilenumbruch ein Einfallstor.
 beide dürfen leer bleiben:
 
 - **Kontaktadresse** — sie steht als Zeile „Bei Fragen wende dich an …" in
-  **jeder** E-Mail an NutzerInnen. **Bleibt sie leer, fällt die Zeile weg.**
-  Das ist Absicht: Eine Mail, die im Fehlerfall auf ein Postfach verweist, das
-  niemand liest, ist schlimmer als eine ohne Verweis.
+  **jeder** E-Mail an NutzerInnen und, seit Web 20.40.0, auf der
+  **Fehlerseite**: „Melde diese Kennung an …" (11.7, Reiter System). **Bleibt
+  sie leer, fällt die Zeile weg**; die Fehlerseite sagt dann nur, dass man
+  die Kennung nennen soll. Das ist Absicht: Eine Mail, die im Fehlerfall auf
+  ein Postfach verweist, das niemand liest, ist schlimmer als eine ohne
+  Verweis.
 - **Betreiberadresse** — dorthin gehen die Betriebsmeldungen: Speicherplatz
   wird knapp, Konto-Backups sind überfällig. **Bleibt sie leer, gehen sie
   weiterhin an alle Konten mit Verwaltungsrecht**, wie bisher.
@@ -3827,12 +4108,50 @@ hat; eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch f�
 bereits angemeldete Konten. *Wechselnd* würfelt je Anmeldung neu; innerhalb
 einer Sitzung bleibt das Logo stehen, damit es beim Blättern nicht springt. Die
 Kachel daneben zeigt, was gerade gilt. Das Logo hat einen **eigenen** Knopf —
-es soll nicht auf einen halbfertigen Rechtstext warten.
+es soll nicht auf eine halbfertige Adresse warten.
 
-**Impressum und Datenschutzerklärung** stehen rechts, mit **„Ansehen"** im
-Kartenkopf: Der Link öffnet die öffentliche Seite. Beide sind **ohne
-Anmeldung** erreichbar und in jeder Fußzeile verlinkt. Sie teilen sich eine
-Speichern-Leiste, und die nennt, **was** ungespeichert ist.
+### 11.5a Rechtstexte
+
+**Die vier Texte, die diese Anlage nach außen zeigt:** Impressum,
+Datenschutzerklärung, Nutzungsbedingungen und die Vereinbarung zur
+Auftragsverarbeitung (AVV). Seit Web 21.1.0 haben sie eine eigene Seite unter
+**Verwaltung → Rechtstexte**; von Web 15.1.0 bis 21.0.0 standen sie auf der
+Seite „Installation" (11.5). Wer die alte Adresse `admin_rechtstexte.php` als
+Lesezeichen hat, landet wieder hier.
+
+**Oben steht je Text ein Reiter.** Ein Klick öffnet den Text; hast du im
+offenen etwas geändert und nicht gespeichert, fragt die Seite vorher nach.
+Unter 720 px rollt die Reihe der Reiter seitwärts.
+
+**Links steht das Feld, rechts die Vorschau** — ab 1200 px Fensterbreite
+nebeneinander, darunter untereinander. Die Karte des Felds trägt im Kopf das
+Standdatum und **„Ansehen"**: Der Link öffnet die öffentliche Seite. Unter dem
+Feld sagt eine Plakette, ob die öffentliche Seite gerade etwas zeigt
+(„öffentlich") oder nur ihren Leertext („leer"). Alle vier Seiten sind **ohne
+Anmeldung** erreichbar; Impressum und Datenschutz sind in jeder Fußzeile
+verlinkt.
+
+**Die Vorschau läuft beim Tippen mit** (seit Web 21.1.0). Einen Augenblick
+nach dem letzten Tastendruck steht dort, was du getippt hast — gerendert auf
+dem Server, mit demselben Renderer wie die öffentliche Seite, also genau so,
+wie es dort erscheinen wird. Gespeichert wird dabei nichts. Die Plakette im
+Kopf der Vorschau sagt, was dasteht:
+
+| Plakette | heißt |
+|---|---|
+| „gespeicherter Stand" | nichts getippt — die Vorschau zeigt, was gespeichert ist |
+| „wird aktualisiert …" | du hast getippt, die Vorschau kommt gleich |
+| „ungespeichert" | die Vorschau zeigt das Getippte; gespeichert ist es erst mit dem Knopf |
+| „nicht aktuell" | die Vorschau ließ sich gerade nicht holen; darüber steht, warum |
+
+Rollst du im Feld, rollt die Vorschau an ungefähr dieselbe Stelle mit. Kommt
+die Vorschau nicht (keine Verbindung, zu viele Abrufe in kurzer Zeit), bleibt
+die letzte stehen, und der Text im Feld ist davon nicht betroffen. Ohne
+JavaScript zeigt die Vorschau den gespeicherten Stand.
+
+**Gespeichert wird der Text des offenen Reiters**, mit dem Knopf in der
+Leiste unten. Jede Änderung steht im Protokoll (Verwaltung → Protokoll, Reiter
+Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 
 > **Die Anwendung liefert keinen Text mit.** Was in Impressum und
 > Datenschutzerklärung steht, ist Sache der BetreiberIn — eine mitgelieferte
@@ -3849,15 +4168,16 @@ Speichern-Leiste, und die nennt, **was** ungespeichert ist.
 > ```
 > ## Welche Daten verschlüsselt gespeichert werden — und welche nicht
 >
-> Name, Geburtsdatum, Alter, Diagnose, Einsatznummer sowie Adresse,
-> Koordinate und Beschreibung des Einsatzorts werden bereits im Browser
-> verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
+> Name, Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse, Koordinate
+> und Beschreibung des Einsatzorts sowie die Notizen eines Einsatzes werden
+> bereits im Browser verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
 > kann sie nicht lesen; der Schlüssel wird aus dem Passwort des Kontos
 > abgeleitet.
 >
 > Nicht verschlüsselt gespeichert werden: die aufgezeichnete GPS-Spur, die
 > Koordinaten der einzelnen Einsatzphasen, das Transportziel, alle Zeiten,
-> der Verlauf einer Reanimation und die Namen der Besatzung. Diese Angaben
+> der Verlauf einer Reanimation, die Namen der Besatzung und die Notizen
+> eines Diensttags. Diese Angaben
 > werden für Auswertungen und Statistiken benötigt, die der Server selbst
 > berechnet.
 >
@@ -3880,7 +4200,7 @@ Speichern-Leiste, und die nennt, **was** ungespeichert ist.
 | `[Text](https://…)` | ein Link. Auch `mailto:` und eigene Seiten wie `datenschutz.php` |
 
 **HTML wird nicht ausgeführt, sondern angezeigt.** Wer `<b>fett</b>` schreibt,
-sieht `<b>fett</b>` auf der Seite stehen. Das ist Absicht: Diese beiden Seiten
+sieht `<b>fett</b>` auf der Seite stehen. Das ist Absicht: Diese vier Seiten
 sind die einzigen, auf denen fremder Text zu Struktur wird, und die einzige
 sichere Regel dafür ist, gar kein HTML durchzulassen. Aus demselben Grund gibt
 es keine Bilder — sie würden von einem fremden Server geladen, und die Anwendung
@@ -3891,21 +4211,31 @@ Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
 bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
 Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
 
-**Die Vorschau zeigt den zuletzt gespeicherten Stand**, nicht das gerade
-Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
-öffentliche Seite.
+**Das Standdatum setzt du selbst.** Es erscheint als „Stand: …" am Ende der
+Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
+bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
+Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
 
-**Textbaustein „Adresssuche"** (seit Web 15.8.0). Weil die Anwendung keinen
-Rechtstext mitliefert, kann sie den Absatz zur Adresssuche nicht selbst
-einsetzen — sie legt ihn aber bereit: Unter dem Feld für die
-Datenschutzerklärung steht ein fertiger Abschnitt zum **Kopieren**, in dem
-die tatsächlich eingetragene Dienstadresse (12.5) schon eingesetzt ist. Er
-nennt, was übertragen wird — der getippte Text und die Koordinate — und was
-nicht. Einfügen und an die eigene Erklärung anpassen musst du ihn selbst.
+#### Textbausteine
 
-Der Baustein erscheint nur, solange die Adresssuche eingeschaltet ist. Wer sie
-abschaltet, braucht den Absatz nicht — und ein Absatz über eine Übertragung,
-die nicht stattfindet, wäre falsch.
+**Unter der Datenschutzerklärung steht eine zugeklappte Karte
+„Textbausteine"** mit fertigen Abschnitten zum **Kopieren**. Weil die
+Anwendung keinen Rechtstext mitliefert, setzt sie diese Absätze nicht selbst
+ein — sie legt sie bereit, mit den Angaben, die auf dieser Anlage tatsächlich
+gelten. Einfügen und an die eigene Erklärung anpassen musst du sie selbst.
+
+- **„Adresssuche"** (seit Web 15.8.0) nennt den eingetragenen Dienst (12.5),
+  was übertragen wird — der getippte Text und die Koordinate — und was nicht.
+  Er erscheint nur, solange die Adresssuche eingeschaltet ist: Ein Absatz über
+  eine Übertragung, die nicht stattfindet, wäre falsch.
+- **„Schutz vor unbefugten Anmeldeversuchen"** beschreibt den Ratenschutz
+  (11.4a): was gespeichert wird, wozu, und dass es nach 30 Tagen gelöscht
+  wird. Er steht immer, weil es den Ratenschutz in jeder Installation gibt.
+  Sein letzter Satz lautet seit Web 21.1.0 „Sicherungskopien der Datenbank
+  enthalten diese Angaben nicht." — bis dahin hieß es, sie **könnten** sie
+  enthalten, und das stimmt seit Web 20.39.0 nicht mehr: Das Komplett-Backup
+  nimmt die Sicherheitsereignisse ohne Zeilen mit. **Wer den alten Satz
+  übernommen hat, ersetzt ihn.**
 
 #### Nutzungsbedingungen und Auftragsverarbeitung (seit Web 20.19.0)
 
@@ -3924,8 +4254,8 @@ durch Annahme zustande; ohne sie darf er nicht weiterlaufen. Deshalb:
 
 **Was du wissen musst, bevor du ein Standdatum setzt:** Ein neues Standdatum
 bei Nutzungsbedingungen oder AVV stellt **alle Konten** beim nächsten Anmelden
-vor das Häkchen. Das ist gewollt und steht so im Protokoll (Verwaltung → das
-Betriebsprotokoll zählt es mit).
+vor das Häkchen. Das ist gewollt und steht so im Protokoll (Verwaltung →
+Protokoll, Reiter Verwaltung).
 
 **Solange kein Standdatum gesetzt ist, verlangt der Text nichts.** Du kannst
 also in Ruhe einen Entwurf hinterlegen, ihn ansehen, ihn ändern — erst das
@@ -3954,6 +4284,167 @@ dort aus Sicht dessen, der es benutzt.
 Zwei Dinge, die nur die Verwaltung betreffen: Auf der **Kontoseite** des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
+
+Auf der Seite stehen der Zustand (Konto, letzter und nächster Reset), die
+drei **Papierkorbzahlen** und — sobald es einen gibt — der **Bericht des
+letzten Laufs**, zugeklappt. Die Papierkorbzahlen sind die Kontrolle des
+Resets: Der Papierkorb kommt **aus der Fixture** zurück, nicht aus einem
+Nachlauf. Stehen sie auf null, ist beim Einspielen etwas übersprungen worden.
+Ausgelöst wird der Reset von der nächsten Anfrage nach Ablauf der dreißig
+Minuten, nicht von einem Zeitdienst.
+
+#### Was der Reset umfasst
+
+*Bis Web 21.0.0 stand das in der zugeklappten Karte „Was hier gilt" der Seite
+(P5c/AP9).*
+
+- Diensttage, Einsätze, Ruhesegmente, GPS-Daten, Stammdaten — vollständig
+  ersetzt.
+- Geräte, offene Kopplungssitzungen, Papierkorb und Sperrliste — auch das,
+  was Besucher angelegt haben.
+- Konto- und Schlüsselmaterial: E-Mail, Passwort, Salz und beide
+  Schlüsselhüllen werden aus der Fixture überschrieben. Selbst eine
+  unerwartet gelungene Änderung der Konto-Identität bliebe damit folgenlos.
+- Der Papierkorb kommt aus der Fixture zurück — als Papierkorb, mit frischer
+  90-Tage-Frist. Der Reset ist damit *ein* Vorgang in *einer* Transaktion:
+  Entweder er gelingt ganz, oder er ändert nichts.
+
+### 11.7 Protokoll
+
+Unter **Verwaltung → Protokoll** steht, was im Betrieb geschehen ist: Konten
+angelegt, freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert;
+Setz-Links ausgestellt; Bestätigungen erneut gesendet; Zweitfaktor
+eingeschaltet, ausgeschaltet, zurückgesetzt, Codes erneuert und
+Anmeldungen mit einem Wiederherstellungscode; der Rückweg mit dem
+Wiederherstellungsschlüssel eingerichtet oder erneuert; Geräte umgeschaltet
+oder entkoppelt; Wartung gefahren;
+Migrationen ausgeführt; Backups erzeugt, geladen, eingespielt; Post
+versandt; Jobs gelaufen.
+
+**Wer welchen Einsatz angesehen hat, steht nicht darin** — und soll nicht
+darin stehen. Wenn dich jemand fragt, ob du nachsehen kannst, wer einen
+bestimmten Einsatz geöffnet hat: Du kannst es nicht, und zwar mit Absicht.
+
+#### Die Reiter
+
+| Reiter | Was darin steht | Support | Admin | BetreiberIn |
+|---|---|:-:|:-:|:-:|
+| **Verwaltung** | das Audit: wer wann was an Konten und Anlage getan hat | ja | ja | ja |
+| **Sicherheit** | Sperren, Verlangsamungen, aufgehobene Sperren, blockierte Inhalte (CSP) — mit IP-Adressen | — | — | ja |
+| **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt) — **nie** Empfänger, Betreff oder Inhalt | ja | ja | ja |
+| **Jobs** | jeder Lauf eines Hintergrundjobs, Fehler rot | — | ja | ja |
+| **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt | — | ja | ja |
+| **Ziele** | was auf ein Backup-Ziel ging und was dort gelöscht wurde | — | — | ja |
+| **System** | Fehler und Störungen der Anwendung, je mit Kennung | — | — | ja |
+| **Archiv** (rechts abgesetzt) | die versiegelten Archive, siehe unten | — | — | ja |
+
+Was du nicht sehen darfst, zeigt die Seite nicht — es gibt keinen
+ausgegrauten Reiter.
+
+**Der Reiter System** sammelt, was bis Web 20.39.0 nur im Fehlerprotokoll des
+Webspace stand. Jeder Eintrag trägt eine **Kennung**, dieselbe, die die
+Fehlerseite der NutzerIn zeigt, und fünf Arten gibt es:
+
+- **Unerwarteter Fehler** (rot) — ein Fehler, den die Anwendung nicht
+  abgefangen hat; die NutzerIn sah eine Fehlerseite mit dieser Kennung.
+- **Abbruch** (rot) — PHP hat die Anfrage beendet, etwa weil der Speicher
+  nicht reichte.
+- **Störung** (orange) — eine Stelle hat bemerkt, dass etwas nicht ging, und
+  ist weitergelaufen: eine Mail, die nicht hinausging, ein Vermerk, der sich
+  nicht schreiben ließ.
+- **PHP-Warnung** (orange) und **PHP-Hinweis** (grau) — Meldungen von PHP
+  selbst. Dieselbe Stelle steht je Aufruf nur einmal da, und höchstens 20
+  Stück je Aufruf.
+
+**Was nicht darin steht:** was die NutzerIn geschickt hat, ihre Sitzung, ihre
+IP-Adresse. Werte in Anführungszeichen, E-Mail- und IP-Adressen sind in den
+Meldungen durch „…" bzw. „[Adresse]" und „[IP]" ersetzt. Wer den Fehler
+ausgelöst hat, steht wie bei jedem Eintrag dabei. **Antwortet die Datenbank
+nicht**, kann auch kein Eintrag entstehen; dann steht die Meldung mit
+derselben Kennung im Fehlerprotokoll des Webspace.
+
+#### Eine Zeile lesen
+
+Die **Plakette** sagt die Art des Ereignisses, ihre **Farbe** das Gewicht:
+grau ein gewöhnlicher Vorgang, blau etwas Erledigtes, orange ein Eingriff
+oder eine Sperre, rot ein Fehler. Darunter stehen Zeit, wer gehandelt hat
+(„Kommandozeile" oder „job", wenn es kein Mensch war) und wen es betraf.
+**Eine Zeile mit Winkel lässt sich aufklappen** — darunter stehen die
+Angaben, die nicht in den Satz passen.
+
+#### Suchen und eingrenzen
+
+- **Ein Suchfeld** für Text, Konto (E-Mail-Adresse oder Name) und die Art
+  („Rolle" findet alle Rollenwechsel). Als BetreiberIn findest du dort auch
+  eine **achtstellige Fehlerkennung**; die Seite springt dann in den Reiter
+  System.
+- **Zeitraum:** 24 h, 7 Tage, 30 Tage — im Reiter Verwaltung zusätzlich
+  365 Tage. Ohne Auswahl siehst du alles, was noch da ist.
+- **Art:** ein Auswahlfeld, das sofort filtert.
+- **Ein zweiter Klick auf die aktive Pille** nimmt den Zeitraum zurück.
+- **50 Einträge je Seite**; darunter die Seitenwahl.
+- **Ein Wechsel des Reiters beginnt neu:** Suche, Zeitraum, Art und
+  Kontofilter gelten nur im Reiter, in dem sie gesetzt wurden.
+- Im Reiter **Sicherheit** führt **„Aktive Sperren"** im Kartenkopf zu
+  Betrieb → Status → Sicherheit, wo sich eine Sperre aufheben lässt.
+- **„Unvollständig."** über der Liste heißt: Eine Quelle dieses Reiters ließ
+  sich nicht lesen — meist steht ein Update aus (Betrieb → Updates).
+- **Von der Kontoseite** (11.1) führt „Im Protokoll" in den Reiter
+  Verwaltung, eingegrenzt auf dieses Konto — als Handelnde oder als
+  Betroffene. Der Filter steht als Pille mit Kreuz über der Liste; das
+  Kreuz nimmt ihn weg.
+
+#### Wie lange etwas darin steht
+
+**Löschen kann niemand**, auch die BetreiberIn nicht. Es gibt nur Fristen:
+Der Reiter **Verwaltung** hält **365 Tage** (einstellbar zwischen 90 und
+1095), alle übrigen **30 Tage**, fest. Die Frist stellt die BetreiberIn unter
+**Betrieb → Servereinstellungen → Protokoll** ein (12.5); jede Änderung steht
+selbst im Protokoll.
+
+#### Das Archiv (nur BetreiberIn)
+
+**Was:** Alle **7 Tage** (einstellbar) legt ein Hintergrundjob die Einträge
+des abgelaufenen Zeitraums **versiegelt** als Datei ab — mit dem
+Serverschlüssel, so dass sie ohne `config.php` niemand lesen kann. Die
+Archive liegen **365 Tage** (einstellbar) auf dem Server und gehen mit dem
+Versand auf das Backup-Ziel (12.7), wo sie liegen bleiben. Das erste
+Archiv beginnt beim ältesten Eintrag, den es gibt; der Job holt dann Woche
+für Woche nach.
+
+**Was nicht hineingeht:** IP-Adressen und die Adressen aus gescheiterten
+Anmeldungen. Aus dem Reiter Sicherheit gehen nur Art, Topf, Stufe und Zeit
+ins Archiv, aus dem Reiter E-Mail nur Vorlage, Zustand und Zeit. Die
+übrigen Reiter gehen so hinein, wie sie dastehen — **samt der
+E-Mail-Adressen im Text**, damit das Archiv nach einer Kontolöschung noch
+sagt, wer es war.
+
+**Jede Zeile im Reiter Archiv** ist ein Zeitraum, mit einer Plakette:
+
+| Plakette | heißt |
+|---|---|
+| **auf dem Ziel** | liegt auch auf einem Backup-Ziel |
+| **nur lokal** | liegt nur hier — der Versand ist aus, oder er ist noch nicht gelaufen |
+| **anderer Schlüssel** | wurde mit einem früheren Serverschlüssel versiegelt; öffnen lässt es sich nur mit dem Schlüssel von damals (Wiederanlaufpaket, Schlüsselblatt mit der genannten Kennung) |
+
+Unter jeder Zeile stehen die **Kennung des Schlüssels** (acht Zeichen am
+Stück, so wie auf dem Schlüsselblatt — leg es zum Vergleichen daneben), die
+Zahl der Einträge und die Größe. Trägt ein Archiv einen **anderen
+Schlüssel**, steht über der Liste eine Warnung mit der Kennung, und die Zeile
+hat keinen Knopf „Herunterladen" — hier ließe sich nichts öffnen. Ein Archiv
+fasst höchstens **32 MB** Text; was darüber hinausginge — praktisch nur bei
+einem Angriff, der Zehntausende Sperren schreibt —, wird nicht archiviert.
+Das steht dann in der Übersicht im ZIP, nicht auf der Seite. Der
+Hintergrundjob heißt **„Protokoll archivieren"** (12.4).
+
+**Herunterladen** entsiegelt das Archiv und gibt ein gewöhnliches ZIP heraus:
+je Reiter eine Datei mit einer Zeile je Eintrag, dazu eine Übersicht. Das
+Herunterladen steht selbst im Protokoll. **Die Datei ist danach Klartext** —
+lege sie nicht dorthin, wo andere mitlesen.
+
+**Das Komplett-Backup (12.6) enthält die Sperren nicht.** Die Tabellen mit
+IP-Adressen gehen nur leer hinein; nach einem Wiederanlauf beginnt der
+Ratenschutz von vorn.
 
 ---
 
@@ -4031,6 +4522,43 @@ solange, rechnet jede Anmeldung zweimal). Das Demo-Konto zählt dort nicht
 mit: Es bleibt auf der Rundenzahl seiner Fixture, und der Altwert bleibt
 deshalb in der Liste, bis der Referenzbestand neu gebaut ist.
 
+**Die Zeile „Umgebung"** (seit Web 20.38.0) steht oben in der Karte
+**Server**, und zwar immer. Ihre Plakette nennt die Anlage: den Namen aus dem
+Eintrag `app.umgebung` in der `config.php` — auf der Testanlage „Staging" —
+oder **„Produktiv"**, wenn dort keiner steht. Das ist keine Vermutung über die
+Adresse, sondern die Lesart eines leeren Eintrags: Ohne Etikett verhält sich
+die Anlage wie die für den Echtbetrieb, und genau das sagt die Zeile. Sie
+wird **orange** in zwei Fällen: Die Mails tragen den Betreff-Präfix
+„[Staging]", die Oberfläche aber kein Etikett — dann fehlt `app.umgebung` in
+der `config.php`. Oder das Etikett nennt eine Farbe, die die Anwendung nicht
+kennt; die Kopfleiste steht dann trotzdem rot. Einstellen lässt sich beides
+nur in der `config.php` (`docs/Technik.md`, Runbook).
+
+**Die Zeile „Verwaltungskonten"** (seit Web 20.42.0) steht darunter und sagt,
+ob die Anlage **vertreten** ist. Gezählt werden **handlungsfähige** Konten
+mit Rolle Admin oder BetreiberIn: aktiv und mit eingerichtetem Zweitfaktor
+(3.1f) — ein Konto ohne ihn kann nach der Anmeldung nichts, bevor er steht.
+Sie ist **orange**, solange **weniger als zwei BetreiberInnen** handlungsfähig
+sind, und der Satz sagt, woran es liegt: nur ein Konto überhaupt („Fällt es
+aus, kommt niemand mehr an Verwaltung und Betrieb"), ein Admin als
+Vertretung der Verwaltung, aber nicht des Betriebs, eine zweite
+BetreiberIn ohne Zweitfaktor — oder **„keine BetreiberIn"**: Keine ist
+handlungsfähig. Das siehst du nach einem Update, solange du deinen eigenen
+Zweitfaktor noch nicht eingerichtet hast. Blau „vertreten" ab zwei handlungsfähigen
+BetreiberInnen. **Orange und nicht rot**, weil jede neue Anlage mit genau
+einer BetreiberIn beginnt — es arbeitet ja. Der Zähler am Menüpunkt „Status"
+zählt die Zeile mit und steht deshalb auf einer Anlage mit einer BetreiberIn
+dauerhaft auf mindestens 1; das ist gewollt, bis eine Vertretung da ist.
+
+**Die Zeile „Rückweg-Prüfung"** (seit Web 20.43.0) sagt, ob diese Anlage den
+Rückweg beim Zweitfaktor prüfen kann — den Weg, auf dem jemand mit dem
+Wiederherstellungsschlüssel vom Notfallblatt den eigenen Zweitfaktor
+zurücksetzt, wenn Handy und Codes fehlen. Blau „prüft" mit Weg und Dauer:
+„openssl" ist der schnelle, „reines PHP" der langsamere, beide tragen. Orange
+„abgeschaltet": Der Selbsttest ist gescheitert, der Rückweg wird bei der
+Anmeldung nicht angeboten; Codes und das Zurücksetzen durch die Verwaltung
+gehen weiter. Was dann zu tun ist, steht im Runbook (`docs/Technik.md` 7).
+
 **Eine Testmail an dich selbst.** Im Kopf der Karte **E-Mail** steht seit
 Web 19.3.0 der Knopf **„Testmail an mich"**. Er schickt eine kurze Nachricht
 über den regulären Versandweg an die Adresse, mit der du angemeldet bist —
@@ -4093,11 +4621,13 @@ Die Karte ist **eingeklappt**. Wer sie braucht, braucht sie einmal nach einem
 Update oder wenn oben etwas rot steht.
 
 **Die Seite ändert nichts am Bestand.** Jede Zeile führt auf die Seite, auf
-der sich etwas ändern lässt. **Zwei Ausnahmen** führen nicht weg, sondern
-prüfen an Ort und Stelle: der fehlende **Serverschlüssel** — ohne ihn gibt es
-weder Komplett-Backup noch Versand auf ein Backup-Ziel, und der Weg dorthin
-ist ein Knopf — und die **Testmail**. Für SMTP gibt es überhaupt keine
-zuständige Seite: Der Zugang steht allein in der `config.php`.
+der sich etwas ändern lässt — ein fehlender **Serverschlüssel** etwa auf die
+Karte „Schlüssel des Servers" unter Servereinstellungen. **Eine Ausnahme**
+führt nicht weg, sondern prüft an Ort und Stelle: die **Testmail**. Für SMTP
+gibt es überhaupt keine zuständige Seite: Der Zugang steht allein in der
+`config.php`. *Bis Web 21.1.0 stand hier, auch der Serverschlüssel lasse sich
+an Ort und Stelle per Knopf anlegen — die Zeile verweist seit Web 20.0.0 auf
+die Servereinstellungen.*
 
 **Die Zahlen sind nicht alle gleich alt.** Wartungsmodus, Migrationen, Jobs,
 Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
@@ -4169,19 +4699,19 @@ nicht darin und soll nicht darin stehen. Wenn dich jemand fragt, ob du
 nachsehen kannst, wer einen bestimmten Einsatz geöffnet hat: Du kannst es
 nicht, und zwar mit Absicht.
 
-**Sechs Reiter, zwei Fristen.** *Verwaltung* ist das Audit — wer wann was
+**Sieben Reiter, zwei Fristen.** *Verwaltung* ist das Audit — wer wann was
 getan hat — und bleibt **365 Tage**; die Zahl stellst du unter
-Servereinstellungen → Konten ein (zwischen 90 und 1095). E-Mail, Jobs,
-Sicherung, Ziele und System verfallen nach **30 Tagen**, und das ist keine
-Einstellung.
+Servereinstellungen → Protokoll ein (zwischen 90 und 1095). Alle übrigen
+verfallen nach **30 Tagen**, und das ist keine Einstellung.
 
-*Sperren und Angriffsversuche* stehen **nicht** hier, sondern unter
-Status → Sicherheit. Sie führen IP-Adressen und verfallen deshalb nach 30
-Tagen, ohne Ausnahme.
+**Die Karte zählt, gelesen wird unter Verwaltung → Protokoll** (11.7). Je
+Reiter stehen die Einträge der letzten 24 Stunden und insgesamt; jede Zeile
+führt auf ihren Reiter. Seit Web 20.39.0 zählt die Karte auch E-Mail, Jobs,
+Sicherheit und Ziele mit — dort stand bis dahin eine Null, obwohl es Einträge
+gab.
 
-**Lesen lässt sich das Protokoll noch nicht.** Die Karte zählt nur — Einträge
-je Reiter, heute und insgesamt. Die Ansicht mit Filter, Archiv und Download
-kommt mit dem nächsten Schritt.
+*Aktive Sperren* hebst du weiter unter Status → Sicherheit auf; der Reiter
+Sicherheit im Protokoll zeigt, was geschehen ist, auch die aufgehobenen.
 
 **Steht dort eine rote Plakette „n nicht geschrieben", sieh hin.** Die
 Handlungen selbst sind gelungen — das Protokoll lässt nie eine Handlung
@@ -4190,37 +4720,87 @@ festgehalten, und der Grund steht im Serverprotokoll deines Hosters unter der
 Kennung `protokoll:`. Der häufigste Grund: Ein Update ist eingespielt, aber
 `update.php` ist noch nicht gelaufen.
 
+#### Die Ampel der Statusseite
+
+*Bis Web 21.0.0 stand das in der zugeklappten Karte „Was hier gilt" am Ende
+der Seite (P5c/AP9).* Die Ampel hat **vier Töne**, und sie bedeuten auf der
+ganzen Seite dasselbe: **Blau** — es ist in Ordnung. **Orange** — es braucht
+Aufmerksamkeit, arbeitet aber. **Rot** — es arbeitet nicht, oder es geht dabei
+etwas verloren. **Neutral** — nicht eingerichtet, oder eine reine Zahl ohne
+Wertung. Die Meldung oben zählt die roten und orangen Zeilen.
+
+Einen **Zwischenspeicher** über die ganze Seite gibt es bewusst nicht: Eine
+Statusseite, die einen Zustand zeigt, den es nicht mehr gibt, ist schlechter
+als keine. Die Testmail geht höchstens dreimal je Stunde hinaus; danach sagt
+die Zeile „Letzter Versand", ob sie angenommen wurde.
+
 ### 12.2 Statistik
 
-**Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend,
-keine Ampel: Der Status bewertet, die Statistik zählt.
+**Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend
+und ohne Ampel: Der Status bewertet, die Statistik zählt. Eine Farbe gibt es
+trotzdem: **Deaktiviert** unter Geräte steht orange, sobald ein Gerät
+gesperrt ist.
 
 > **Ohne Demo-Konto**, und zwar in jeder Zahl. Sein Bestand ist erfunden und
 > wird alle dreißig Minuten neu aus einer Vorlage hergestellt; ihn
-> mitzuzählen hieße, erfundene Einsätze als Nutzung auszugeben. „Von 11
-> Konten" meint elf echte.
+> mitzuzählen hieße, erfundene Einsätze als Nutzung auszugeben. „Von 11"
+> meint elf echte Konten — in jedem Zustand: Unbestätigte, wartende und
+> gesperrte zählen mit.
 
-- **Konten** nach Rolle, dazu wie viele ohne Gerät sind, und eine Tabelle
-  *zuletzt angemeldet / neu angelegt* über 7 Tage, 30 Tage und 6 Monate.
-- **Geräte** nach Art — Garmin-Uhren, Android-Handys, deaktivierte —, dazu
-  *zuletzt gemeldet / gekoppelt* über dieselben Zeiträume.
-- **Einsätze**: Zahl, wie viele NutzerInnen einen Einsatz hatten, und zwei
-  Durchschnitte — je aktiver NutzerIn und je NutzerIn gesamt.
-- **Gerätemodelle** als Tabelle: Gerät, Hersteller, Art, Zahl und Anteil.
-  Ein Klick auf einen Spaltenkopf sortiert; **„Als CSV"** im Kartenkopf lädt
-  dieselben Spalten als Datei herunter, für Excel gemacht (Semikolon,
+> **Nur echte Geräte**, auf der ganzen Seite. Was im Browser entsteht —
+> Formular, Import, eingelesene GPX-Datei —, läuft über ein unsichtbares
+> Gerät je Konto; es zählt in keiner Gerätezahl.
+
+Oben stehen vier Kennzahlen — Konten, Geräte, Einsätze gesamt, Einsätze in
+30 Tagen —, jede führt in ihren Reiter. Darunter **drei Reiter** *(seit Web
+20.47.0)*; jeder hat dieselbe Form: links die Tabelle „… je Zeitraum",
+rechts eine Karte mit dem, was es gibt.
+
+- **NutzerInnen:** *Konten je Zeitraum* über 24 Stunden, 7 Tage, 30 Tage und
+  6 Monate — **Aktiv**, **Angemeldet**, **Neu angelegt**. *Aktiv* heißt:
+  angemeldet **oder** eines der Geräte des Kontos hat sich gemeldet. Wer nur
+  mit der Uhr arbeitet und sich nie im Browser anmeldet, ist aktiv, aber
+  nicht angemeldet. Rechts die **Konten nach Rolle** und wie viele **ohne
+  Gerät** sind: Wer ausschließlich von Hand dokumentiert, zählt dazu, auch
+  wenn er schon eine GPX-Datei eingelesen hat.
+- **Einsätze:** *Einsätze je Zeitraum* über 24 Stunden, 7 Tage, 30 Tage,
+  6 Monate und 1 Jahr — die Zahl, wie viele NutzerInnen einen Einsatz
+  hatten, und der Durchschnitt je NutzerIn mit Einsatz. Rechts die
+  **Herkunft der Einsätze** der letzten 30 Tage: Garmin-Uhr, Android-Handy,
+  Wear-OS-Uhr (an der Uhr begonnen, vom Handy gesendet), Formular, Import
+  und Schnitt — alle sechs, auch mit 0; dazu **Andere**, wenn ein Wert
+  dasteht, den diese Fassung nicht kennt.
+- **Geräte:** *Geräte je Zeitraum* — zuletzt gemeldet, gekoppelt — über
+  7 Tage, 30 Tage und 6 Monate; rechts die Geräte nach Art (Garmin-Uhren,
+  Android-Handys; Sonstige und ohne Angabe, wenn es welche gibt;
+  deaktiviert). Darunter die **Gerätemodelle** als Tabelle: Gerät,
+  Hersteller, Art, die Zahl der Geräte und ihr Anteil an allen Geräten, die
+  Zahl der NutzerInnen mit diesem Modell und ihr Anteil an allen Konten.
+  Ein Klick auf einen
+  Spaltenkopf sortiert und bleibt im Reiter; **„Als CSV"** im Kartenkopf
+  lädt dieselben Spalten als Datei herunter, für Excel gemacht (Semikolon,
   Umlaute richtig).
 
-**Gezählt wird nach Diensttag**, wie in der eigenen Statistik — nicht nach
-dem Beginn des Einsatzes. Sonst fiele ein Einsatz von 23:50 bis 00:20 in
-einen anderen Zeitraum als der Dienst, zu dem er gehört. Der Papierkorb zählt
-nicht mit. „6 Monate" sind 180 Tage.
+**Die Prozentzahl unter einer Zeile** bezieht sich auf ihre Karte: bei den
+Konten auf alle Konten, bei den Geräten auf alle Geräte, bei der Herkunft
+auf die Einsätze der letzten 30 Tage.
 
-> **Wear-OS-Uhren erscheinen hier nicht**, und das ist kein Fehler: Die
-> Uhr-App kennt weder Serveradresse noch Schlüssel. Sie schickt ihre
+**Wie die Einsätze gezählt werden.** Ab dem **Beginn des Einsatzes** — ohne
+Demo-Konto, ohne Papierkorb. Jedes Fenster reicht bis *jetzt*: Ein Einsatz
+mit einem Beginn in der Zukunft (vorausgeplant, oder eine Uhr mit falscher
+Zeit) steht nur unter „gesamt". „6 Monate" sind 180 Tage, „1 Jahr" 365.
+*Bis Web 20.46.0 zählte diese Seite nach Diensttag.* Die Zahlen hier können
+deshalb um einzelne Einsätze von der Summe der eigenen Statistiken
+abweichen: Dort zählt der Diensttag, und ein Einsatz, der nach Mitternacht
+beginnt, gehört zum Dienst des Vortags — hier zum Tag seines Beginns.
+
+> **Wear-OS-Uhren erscheinen unter Geräte nicht**, und das ist kein Fehler:
+> Die Uhr-App kennt weder Serveradresse noch Schlüssel. Sie schickt ihre
 > Ereignisse an das Handy, und das Handy sendet — gekoppelt ist also das
 > Handy. Eine verlorene Uhr gibt keinen Zugang preis; das ist der Zweck
-> dieser Bauform.
+> dieser Bauform. Unter *Herkunft der Einsätze* steht die Wear-OS-Uhr sehr
+> wohl: Dort geht es darum, wo ein Einsatz begonnen wurde, nicht darum,
+> welches Gerät gekoppelt ist.
 
 > **Der Hersteller steht nirgends gespeichert**, er wird abgeleitet: Eine
 > Uhr, die koppelt, ist eine Garmin-Uhr; bei einem Handy gilt das erste Wort
@@ -4229,8 +4809,9 @@ nicht mit. „6 Monate" sind 180 Tage.
 
 ### 12.3 Updates
 
-Zwei Karten, ein Vorgang. Oben der **Wartungsmodus** mit dem fünfstufigen
-Ablauf als Kurzform, darunter die **ausstehenden Updates**.
+Ein Vorgang, zwei Karten dafür. Oben der **Wartungsmodus** mit einem Satz —
+der Ablauf steht unten unter „Der Wartungsmodus" —, darunter die
+**ausstehenden Updates**.
 
 Das bloße Öffnen der Seite ändert nichts — sie zeigt erst an, was anstünde,
 und wartet auf den Knopf **„Ausstehende ausführen"**.
@@ -4252,9 +4833,12 @@ allein die Anzeige.
 
 Jede Zeile trägt ihren Stand als Plakette: **steht aus** (orange), **nicht
 nötig** (grau), **blockiert** (rot) oder **Fehler** (rot). Eine *blockierte*
-Migration würde eine Spalte löschen, in der noch Daten stehen; sie läuft nur,
-wenn du das Kästchen vor ihrer Zeile setzt — und dieses Kästchen heißt: **Die
-Daten sind gesichert.**
+Migration hat einen von zwei Gründen, und die Zeile nennt ihn. Entweder würde
+sie eine Spalte löschen, in der noch Daten stehen; dann läuft sie nur, wenn du
+das Kästchen vor ihrer Zeile setzt — und dieses Kästchen heißt: **Die Daten
+sind gesichert.** Oder ihr fehlt eine **Vorbedingung** (seit Web 21.0.0, etwa
+ein Backup-Ziel, das noch auf FTP steht); dann gibt es **kein Kästchen**: Du
+stellst her, was die Zeile verlangt, und führst danach erneut aus.
 
 **„nicht nötig" heißt: Am Datenbankstand ist nichts zu tun, es fehlt nur der
 Vermerk.** *Seit Web 15.5.2.* Das kommt vor, wenn eine Änderung auf anderem
@@ -4284,6 +4868,10 @@ Gibt es keines, ist die Meldung eine Warnung: Migrationen können Spalten und
 Daten unwiderruflich entfernen, und dagegen schützt nur das Komplett-Backup der
 Installation — nicht das Backup eines einzelnen Kontos.
 
+Jede ausgeführte Migration steht außerdem im **Protokoll** (11.7), Reiter
+Verwaltung, als „Migration" — mit wem und wann; die Karte „Ausgeführt" nennt
+dazu die Fassung.
+
 Die Karte **„Fassung"** nennt zuunterst Web-Version, Datenbankstand und den
 Stand der Apps. Für die **Uhr-App gibt es keinen Mindeststand**: Der Server
 nimmt jede Fassung an, weil der Datenvertrag abwärtskompatibel gehalten ist.
@@ -4293,8 +4881,10 @@ nimmt jede Fassung an, weil der Datenvertrag abwärtskompatibel gehalten ist.
 Ganz oben unter **Betrieb → Updates** steht die Karte **„Wartungsmodus"** mit
 einem Schalter. Sie steht dort und nicht auf einer eigenen Seite, weil sie zum
 selben Vorgang gehört wie die Migrationen darunter: Man schaltet vor dem
-Deploy ein und nach der Migration aus. Er schließt die Installation vorübergehend für alle außer der
-Verwaltung.
+Deploy ein und nach der Migration aus. Er schließt die Anwendung vorübergehend
+für alle; offen bleiben nur die Seiten unter Betrieb. Die Karte selbst trägt
+seit Web 21.1.0 nur noch einen Satz — der Ablauf eines Updates steht hier und
+nicht mehr als Liste in der Karte.
 
 **Wofür.** Während eines Updates werden die Dateien auf dem Server nach und
 nach ersetzt, und danach muss noch die Datenbank angepasst werden. Wer in
@@ -4303,15 +4893,25 @@ sendet, bekommt einen Fehler, mit dem sie nichts anfangen kann. Mit dem
 Wartungsmodus bekommen alle stattdessen eine **Wartungsseite**, und die Geräte
 bekommen eine Antwort, die sie kennen: *später noch einmal*. **Sie behalten
 ihre Daten und liefern von selbst nach, sobald du wieder ausschaltest.** Es
-geht nichts verloren.
+geht nichts verloren. **Technisch entscheidet die Seite, nicht die Rolle:**
+Offen bleiben die Anmeldung, die Seiten unter Betrieb — seit Web 21.1.0
+einschließlich Komplett-Backup und Backup-Ziele — und das Schlüsselblatt; jede
+andere Anfrage bekommt **503** mit `Retry-After: 300`, auch jede Seite unter
+Verwaltung. Anmelden kann sich nur, wer verwaltet (Admin und BetreiberIn);
+alle anderen werden sofort wieder abgemeldet und sehen die Wartungsseite. Die
+Seiten unter Betrieb erreicht nur die BetreiberIn. *Bis Web 21.1.0 stand hier
+und in der Karte „außer Verwaltung und Betrieb" — das Tor hat aber nie nach
+Rollen gefragt.*
 
 **So läuft ein Update mit Wartungsmodus:**
 
 1. **Vorher** das **Komplett-Backup** machen — nicht danach. Betrieb →
    Komplett-Backup, „Jetzt sichern". Die Seite Updates nennt darüber das
    jüngste Paket mit Alter; ist es alt, ist jetzt der Zeitpunkt. Warum vorher:
-   Sobald der Wartungsmodus steht, ist die Seite Komplett-Backup selbst
-   gesperrt (gemessen: HTTP 503).
+   Das Backup soll den Stand **vor** dem Update festhalten. Seit Web 21.1.0 ist
+   die Seite Komplett-Backup auch im Wartungsmodus erreichbar — schließt der
+   Torwächter, bevor du gesichert hast, geht es trotzdem; bis dahin stand sie
+   hinter der Sperre (HTTP 503).
 2. **„Wartungsmodus einschalten"** klicken.
 3. Das Update einspielen lassen (das macht die Entwicklung).
 4. Die Seite **„Updates"** neu laden und die anstehenden Migrationen
@@ -4344,28 +4944,34 @@ freundlichen 503. **Verloren geht dabei nichts:** Beides ist ein Serverfehler,
 und beide Geräte puffern und liefern nach. Wer über die Auslieferungskette
 ausliefert, hat das Fenster gar nicht — die schaltet vorher.
 
-**Was währenddessen weiter geht.** Die **fünf Betriebsseiten** (Status,
-Statistik, Updates, Hintergrundjobs, Servereinstellungen), die Anmeldung, das
-Abmelden und der Abruf der Hintergrundjobs. **Sonst nichts** — auch nicht die
-Verwaltung, das Komplett-Backup und die Backup-Ziele. Gemessen mit
-eingeschaltetem Wartungsmodus: fünf Seiten antworten mit 200, die neun
-übrigen mit 503. Das ist Absicht: Wer umbaut, soll den Zustand der Anlage
-sehen können und sonst nichts anfassen.
+**Was währenddessen weiter geht.** Alle Seiten unter **Betrieb** — Status,
+Sicherheit, Statistik, Updates, Hintergrundjobs, Servereinstellungen und seit
+Web 21.1.0 auch **Komplett-Backup** und **Backup-Ziele** —, das
+Schlüsselblatt, die Anmeldung, das Abmelden und der Abruf der
+Hintergrundjobs. **Sonst nichts** — auch keine Seite unter Verwaltung. Das
+ist Absicht: Wer umbaut, soll den Zustand der Anlage sehen und sichern
+können und sonst nichts anfassen. Nachgemessen wird das mit jeder
+Auslieferung (`tools/proben/wartung/`).
 
-**Ein laufendes Komplett-Backup läuft weiter.** Gesperrt ist die *Seite*, nicht
-die Arbeit: Der Abruf der Hintergrundjobs bleibt offen, und das
-Komplett-Backup arbeitet in Portionen darüber. Genau dann ist sein Stand
-sogar am saubersten — weil sonst niemand schreibt. Anstoßen lässt es sich
-während der Wartung nur nicht mehr; deshalb steht es in Schritt 1.
+**Warum Komplett-Backup und Backup-Ziele dazugekommen sind:** Schließt der
+Torwächter, weil eine Migration aussteht, sagt die Seite Updates „vorher
+sichern" — und bis Web 21.0.0 führte ihr Knopf zum Komplett-Backup in die
+Sperre. Ebenso schickte die Vorbedingung einer Migration auf die
+Backup-Ziele, die gesperrt waren.
+
+**Ein laufendes Komplett-Backup läuft weiter.** Es arbeitet in Portionen über
+den Abruf der Hintergrundjobs, und der bleibt offen. Genau dann ist sein
+Stand sogar am saubersten — weil sonst niemand schreibt.
 
 **Wer sich anmeldet, aber nicht verwaltet**, wird gleich wieder abgemeldet und
 sieht die Wartungsseite. Auch das ist Absicht — während umgebaut wird, soll
 niemand mitten in einer Eingabe stehen.
 
 > **Der Wartungsmodus schaltet sich nicht von selbst ab.** Es gibt keine
-> Zeitsteuerung. Solange er steht, trägt **jede der fünf Betriebsseiten** und
-> die **Anmeldeseite** oben einen **orangen Balken** mit Zeitpunkt und Konto —
-> das sind die sechs einzigen Seiten, auf denen er überhaupt zu sehen ist.
+> Zeitsteuerung. Solange er steht, trägt **jede Seite unter Betrieb** und die
+> **Anmeldeseite** oben einen **orangen Balken** mit Zeitpunkt und Konto —
+> das sind die einzigen Seiten, auf denen er überhaupt zu sehen ist (seit
+> Web 21.1.0 neun; das Schlüsselblatt trägt ihn nicht, es wird gedruckt).
 > Alle anderen zeigen die Wartungsseite, und die sagt nicht, seit wann.
 > (Bis Web 15.5.1 fehlte er auf der **Statistik**: die eine Betriebsseite, auf
 > der man länger liest als anderswo.)
@@ -4399,15 +5005,17 @@ Mehr als diese Datei ist der Schalter nicht.
 Unter **Betrieb → Hintergrundjobs** steht in der Karte **„Zustand"**, ob die
 regelmäßige Arbeit noch läuft: je Job wann er zuletzt lief, wer ihn angestoßen
 hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
-**„scheitert"**, wird unter anderem der Papierkorb nicht mehr geleert; die
+**„Fehler"**, wird unter anderem der Papierkorb nicht mehr geleert; die
 Ursache steht in derselben Karte im Klartext.
 
 Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Aufzeichnungen",
-sondern welche. Vier Gründe kommen vor: eine **Lücke in der Nummernfolge**
+sondern welche. Fünf Gründe kommen vor: eine **Lücke in der Nummernfolge**
 (eine Uhr hat ein Teilstück nie nachgeliefert; die Aufzeichnung bleibt dann so stehen,
 wie sie ist), **zu viele Punkte** (über 50 000 in einer Aufzeichnung), **Punkte auf
-ausgedünnten GPS-Daten** (hier sollte immer null stehen) und eine **nicht
-bestandene Prüfung** (dabei wurde nichts gelöscht und nichts ersetzt). Ein
+ausgedünnten GPS-Daten** (hier sollte immer null stehen), **„Wartet auf die
+Verdichtung"** (es sind noch Punkte nachgekommen; sie werden erst verdichtet,
+dann ausgedünnt) und eine **nicht bestandene Prüfung** (dabei wurde nichts
+gelöscht und nichts ersetzt). Ein
 Rückstand ohne solche Listen ist normal: Er zählt auch mit, was einfach noch zu
 frisch ist.
 
@@ -4457,16 +5065,60 @@ geht, sagt der Hoster. Die Adresse enthält ein **Geheimnis** — sie gehört ni
 in eine Mail und nicht in ein Ticket. „Neues Token erzeugen" macht die alte
 Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
+#### Die drei Auslöser, Budget und Reihenfolge
+
+*Bis Web 21.0.0 stand das auf der Seite selbst, als Absätze in der Karte
+„Auslöser" und in einer zugeklappten Karte „Was hier gilt" (P5c/AP9).*
+
+**1. Kommandozeile** (empfohlen) — ein Eintrag im Cron des Webspace. Jede
+Minute ist unbedenklich: Ein Lauf ohne Arbeit kostet zwei Abfragen.
+**2. Abruf über die Adresse** — wo es keinen Cron auf der Kommandozeile gibt,
+aber einen zeitgesteuerten Abruf („Cronjob per URL"). **3. Huckepack auf einer
+Anfrage** — der Rückfall, immer eingeschaltet. Er trägt höchstens 3 Sekunden
+je Anfrage und wiederholt sich frühestens nach 5 Minuten: genug, damit eine
+Installation ohne jede Einrichtung nicht stillsteht, zu wenig für einen großen
+Rückstand. Wer 1. oder 2. eingerichtet hat, merkt ihn nicht.
+
+**Budget.** Ein Lauf arbeitet, bis seine Zeit um ist, und hört dann auf — er
+bricht nichts ab, sondern merkt sich, wo er war. Die Kommandozeile bekommt
+300 Sekunden, der Abruf über die Adresse 20, die Anfrage 3.
+
+**Reihenfolge.** Die Jobs laufen in der Reihenfolge der Liste in der Karte
+„Zustand", und was ins Restbudget nicht mehr passt, kommt beim nächsten Mal.
+Deshalb steht die eigentliche Arbeit vorn und das Sicherheitsnetz („Verwaiste
+GPS-Daten") hinten.
+
+**Ein Rückstand ist kein Fehler.** Er zählt auch mit, was einfach noch zu
+frisch ist: GPS-Daten werden erst zwei Wochen nach dem Einsatz verdichtet und
+sechs Monate danach ausgedünnt.
+
+**Was liegenbleibt und warum.** Eine **Lücke in der Nummernfolge** hält die
+Verdichtung an, weil die Position im Paket die Nummer des Punkts ist — eine
+Lücke verschöbe jeden Punkt dahinter. **Zu viele Punkte** (über 50 000 je
+Aufzeichnung) bleiben als Zeilen stehen, weil ein Backup so große GPS-Daten
+nicht wiederherstellen könnte. Steht bei **Punkte auf ausgedünnten GPS-Daten**
+eine Zahl, nimmt die Uhr-Schnittstelle Punkte an, die sie nach der Ausdünnung
+verwerfen sollte.
+
 ### 12.5 Servereinstellungen
+
+#### Karte „Ankündigung" (seit Web 20.38.0)
+
+Ganz oben: Hier setzt du den Streifen, der über jeder Seite steht, und
+verschickst ihn auf Wunsch als Rundmail. Beschrieben in Abschnitt **12.8**.
 
 #### Karte „Schlüssel des Servers" (seit Web 20.1.0)
 
-**Zuoberst auf der Seite, und das ist Absicht.** Diese Installation hat zwei
+**Gleich unter der Ankündigung, und das ist Absicht.** Bis Web 20.37.3
+stand sie zuoberst; die Ankündigung ist darüber gerückt, weil sie die Karte
+ist, für die man diese Seite am häufigsten aufschlägt, und weil sie kurz ist.
+Eine rote Lage der Schlüssel steht zusätzlich auf der Statusseite und am
+Menüzähler. Diese Installation hat zwei
 Geheimnisse, und beide stehen in `config.php` — nicht in der Datenbank:
 
 - der **Serverschlüssel** versiegelt, was der Server ohne Browser lesen können
   muss: die Zugangsdaten der Backup-Ziele, das Komplett-Backup, die
-  Konto-Backups;
+  Konto-Backups und die Archive des Protokolls;
 - der **Server-Anteil** geht in den Datenschlüssel *jedes Kontos* ein. Der
   Server kann damit trotzdem nichts öffnen — aber ein Datenbankabzug allein
   reicht nicht mehr, um ein Passwort durchzuprobieren.
@@ -4475,7 +5127,8 @@ Geheimnisse, und beide stehen in `config.php` — nicht in der Datenbank:
 acht Zeichen. Damit lässt sich vergleichen, ohne vorzulesen: Stimmt die
 Kennung auf dem Ausdruck in der Betriebsakte mit der auf dem Bildschirm
 überein, ist es derselbe Wert. Ein Wert, der vollständig auf dem Bildschirm
-steht, landet früher oder später in einem Screenshot.
+steht, landet früher oder später in einem Screenshot. Die einzige Seite, die
+den Wert zeigt, ist das Schlüsselblatt.
 
 **Drucke das Schlüsselblatt, sobald du einen Anteil angelegt oder gewechselt
 hast.** Der Knopf steht auf der Karte. Was darauf steht und wohin es gehört,
@@ -4521,15 +5174,34 @@ Hier steht, wie viel Platz belegt ist — als **zwei Balken**:
 - **Installation gesamt** gegen den **Webspace laut Hosting**: Datenbank,
   Dateien und beide Backup-Arten.
 
+*Bis Web 21.0.0 stand ein Teil des Folgenden in der zugeklappten Karte „Was
+hier gilt" am Ende der Seite (P5c/AP9).*
+
+**Die Grenze gilt nur für Backups.** Die Datenbank wächst mit jedem Einsatz
+und wird nie angehalten — eine Grenze darauf hieße, die Anwendung anzuhalten.
+
 **Der Webspace ist eine Angabe, keine Messung.** Er steht in deinem
 Hosting-Tarif und lässt sich von der Anwendung aus nicht ermitteln — was ein
 Server über den freien Platz meldet, ist auf geteiltem Hosting der Datenträger
 des Hosts und nicht dein Kontingent. Ohne die Angabe zeigt der zweite Balken
 nur die Zusammensetzung, ohne Füllstand.
 
+**Was gezählt wird.** Die Datenbank mit Daten und Indizes, wie sie selbst es
+meldet; die Dateien über das ganze Anwendungsverzeichnis — Code, Symbole,
+Logos, APK —, aber ohne die Ablage der Backups, die im ersten Balken stehen.
+Pakete, die auf ein **Backup-Ziel** versendet sind, zählen nirgends mit: Sie
+liegen außerhalb dieses Webspace.
+
 Gemessen wird **einmal täglich** im Aufräumjob; der Stand steht im Kartenkopf.
+Die Backups werden dagegen bei jedem Aufruf gewogen — ihr Verzeichnis ist
+klein genug dafür, und ihre Zahl entscheidet, ob noch gesichert werden darf.
 Darunter Speichergrenze, Warnschwellen, die beiden **Kontingente**, Ablage und
 Reste abgebrochener Läufe.
+
+**Warnschwellen** melden einmal je Schwelle, für beide Balken; mit
+eingerichtetem SMTP geht die Meldung zusätzlich an alle mit Verwaltungsrecht.
+**Wer Grenze oder Schwellen ändert, setzt die Meldungen zurück:** Dieselben
+Bytes sind bei einer anderen Grenze eine andere Aussage.
 
 **Zwei Kontingente, zwei Vorgaben** (seit Web 20.5.0). Neben *Webspace laut
 Hosting* steht jetzt *Kontingent der Datenbank*. Beides sind Angaben aus deinem
@@ -4548,11 +5220,14 @@ Warnschwellen** wie die Speichergrenze (Vorgabe 70 und 90 %) — je Schwelle
 einmal. Wer aufräumt und wieder darunter fällt, wird beim nächsten
 Überschreiten erneut gewarnt.
 
-**Karte „Adresssuche"** (seit Web 15.8.0). Beim Tippen in einem Ortsfeld und
+#### Karte „Adresssuche" (seit Web 15.8.0)
+
+Beim Tippen in einem Ortsfeld und
 nach jeder Wahl auf der Karte fragt die Anwendung einen **Adressdienst** —
 vorwärts nach Vorschlägen zum getippten Text, rückwärts nach der Adresse zu
 einer Koordinate. Der getippte Text und die Koordinate verlassen dabei das
-Gerät; alles Übrige bleibt hier. Zwei Einstellungen:
+Gerät; alles Übrige bleibt hier — Koordinaten, Plus Codes, „Meine Position"
+und die Karte selbst brauchen den Dienst nicht. Zwei Einstellungen:
 
 - **Adresssuche im Internet** — der Schalter für die **ganze Installation**.
   Aus heißt: keine Vorschläge, keine Umkehrsuche, kein Suchfeld im
@@ -4569,10 +5244,13 @@ Die Karte hat ihr eigenes „Speichern": Ein Tippfehler in der Speichergrenze
 soll die Dienstadresse nicht mit abweisen und umgekehrt. Welcher Dienst
 eingetragen ist, erscheint anschließend im Hinweis unter dem Ortsfeld, in der
 Karte „Datenschutz" jedes Profils und im Textbaustein für die
-Datenschutzerklärung (11.5).
+Datenschutzerklärung (11.5a). **Wer den Dienst wechselt, übernimmt den
+Baustein neu in die Datenschutzerklärung** — die einmal eingefügte Fassung
+nennt den alten Dienst, bis jemand sie ersetzt.
 
-**Karte „Sicherheitskopfzeilen"** (seit Web 20.7.0). Zwei Einstellungen, die
-den Browser betreffen, nicht die Daten.
+#### Karte „Sicherheitskopfzeilen" (seit Web 20.7.0)
+
+Zwei Einstellungen, die den Browser betreffen, nicht die Daten.
 
 **„CSP scharf schalten".** Die Anwendung schickt jeder Seite eine Regel mit,
 welche Skripte, Bilder und Schriften geladen werden dürfen — eine
@@ -4610,6 +5288,10 @@ Stufen: **aus / 1 Tag / 7 Tage / 1 Jahr**.
 - **Gerade erst aufgesetzt, Adresse steht noch nicht fest?** 1 Tag lassen.
 - **Läuft seit Jahren unter dieser Domain?** 1 Jahr.
 
+**Warum klein anfangen:** Ein zu lang gesetzter Wert sperrt die Domain aus,
+wenn das Zertifikat wegfällt — und zwar für die ganze Dauer, auch auf Klick
+auf einen `http://`-Link.
+
 **Nach dem Update auf Web 20.7.0 steht die Einstellung auf 1 Tag** — auch dann,
 wenn deine Installation vorher über die Serverkonfiguration ein Jahr gebunden
 hat. Das ist kein Versehen: Die Dauer wird jetzt von der Anwendung bestimmt,
@@ -4618,8 +5300,8 @@ läuft, stellt hier wieder auf 1 Jahr.**
 
 #### Karte „Konten" (seit Web 20.16.5)
 
-Was diese Installation mit Konten tut: wer eines bekommt, was es halten darf,
-wie lange das Protokoll sie behält.
+Was diese Installation mit Konten tut: wer eines bekommt und was es halten
+darf.
 
 **Registrierung — drei Betriebsarten.**
 
@@ -4638,7 +5320,9 @@ bestätigte, die auf deine Freischaltung warten — verfallen nach der Zahl, die
 du hier einträgst (Vorgabe 30 Tage). Davon getrennt: Wer seine Adresse gar
 nicht erst bestätigt, verfällt nach **48 Stunden**, und das ist keine
 Einstellung. Ein unbestätigtes Konto ist eine Adresse, die jemand eingetippt
-hat — möglicherweise nicht die eigene.
+hat — möglicherweise nicht die eigene. Die einstellbare Frist steht auf der
+Registrierungsseite und in der Bestätigungsmail; beim Verfall geht eine
+letzte Nachricht heraus.
 
 **Wegwerfadressen.** Die Liste bekannter Anbieter kommt mit jeder
 Auslieferung mit und liegt in der Anwendung; **es wird nichts bei Dritten
@@ -4656,9 +5340,9 @@ Kontoverwaltung überschreibbar: Zahl der Einsätze und Speicher in Megabyte
   bricht mit einer Erklärung ab. **Bearbeiten und Löschen bleiben frei** —
   sonst säße jemand in der eigenen Grenze fest und käme nicht heraus.
 
-**Einsätze aufbewahren** ist leer, solange nichts von selbst verschwinden
-soll. Eine **0 gibt es hier nicht**: Sie hieße „nichts aufbewahren", und das
-ist bei Einsatzdaten die eine Antwort, die niemand aus Versehen geben soll.
+**Wie viele Konto-Backups aufgehoben werden**, steht nicht hier, sondern
+unter Verwaltung → Konto-Backups (11.4); die Überschreibung je Konto steht
+auf der Kontoseite.
 
 **Demo-Anmeldung zulassen.** Ist sie aus, wird die Demo-Adresse bei der
 Anmeldung **wie eine unbekannte Adresse** behandelt — dieselbe Meldung,
@@ -4679,7 +5363,48 @@ Demo-Konto zum Vorzeigen haben.
 **Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht;** die
 Zugangsdaten stehen in diesem Handbuch und im README.
 
-**Verwaltungseinträge im Protokoll aufbewahren** — siehe 12.1.
+#### Karte „Protokoll" (seit Web 20.39.0)
+
+Wie lange Betriebsereignisse liegen — in der Datenbank und im Archiv. Bis Web
+20.38.0 stand die erste Zahl in der Karte „Konten".
+
+| Feld | Vorgabe | Bereich | was es tut |
+|---|--:|---|---|
+| **Verwaltungseinträge aufbewahren** | 365 Tage | 90–1095 | wie lange der Reiter Verwaltung in der Datenbank bleibt; alle übrigen Reiter 30 Tage, fest |
+| **Archiv alle** | 7 Tage | 1–31 | wie lang ein Zeitraum ist, den ein Archiv fasst |
+| **Archive aufbewahren** | 365 Tage | 90–1095 | wie lange ein Archiv hier liegt; auf dem Backup-Ziel bleibt es |
+| **Archive auf das Backup-Ziel schicken** | an | an / aus | ob der Versandjob die Archive mitnimmt |
+
+**Jede Änderung steht selbst im Protokoll** (Reiter Verwaltung, Art
+„Fristen") — ein kürzeres Audit ist eine Handlung, die ins Audit gehört.
+Die Plakette am Kartenkopf zählt die Archive, „Protokoll lesen" führt auf
+die Seite. Was ins Archiv geht und was nicht: 11.7.
+
+#### Das Schlüsselblatt
+
+Die Karte „Schlüssel des Servers" druckt es mit **„Schlüsselblatt drucken"**.
+Es ist die einzige Seite, die die Werte selbst zeigt, und es passt auf genau
+**eine A4-Seite** (seit Web 21.1.0 auch mit drei Werten während einer
+Rotation). Oben stehen Bildmarke und Kurzname der Installation, rechts
+Adresse und Druckzeit; auf einer Anlage mit Etikett — etwa *Staging* — steht
+darunter eine rot umrandete Zeile, die auch schwarzweiß sagt, dass das Blatt
+nicht zur Produktivanlage gehört.
+
+Je Wert eine **Kachel**: Name, Eintrag in `config.php`, Kennung und der Wert
+in **sechzehn nummerierten Vierergruppen**, darunter ein Satz, wozu er da ist.
+Die Nummern sind für die Rückfrage da (unten) — „Gruppe 11" liest man ab,
+statt bis elf zu zählen. Auf das Blatt gehört auch, **wohin** es gehört:
+zweimal gedruckt, in die Betriebsakte und in den Passwortmanager der
+BetreiberIn, nicht neben den Server und nicht in dasselbe Backup.
+
+**Die Rückfrage.** Alle **drei Monate** fragt die Anwendung eine BetreiberIn
+beim Anmelden nach vier zufällig gewählten Gruppen vom Blatt. Stimmen sie,
+ist die Frage für alle BetreiberInnen der Installation für drei Monate
+beantwortet. **„Später"** schiebt sie bis zur nächsten Anmeldung — nur für
+diese Sitzung, damit eine andere BetreiberIn sie nicht mit weggeschoben
+bekommt. Nach **drei** falschen Antworten ist der Weg für eine Weile gesperrt
+(die erste Sprosse der Sperrleiter, 11.4a). Ist das Blatt verlegt, druckt
+man es neu — das ändert keinen Schlüssel.
 
 ### 12.6 Komplett-Backup
 
@@ -4715,6 +5440,12 @@ Backup-Ziel.
 Was von selbst auf ein Backup-Ziel geschoben wird, ist immer die
 verschlossene Fassung.
 
+**Zwei Tabellen gehen nur leer hinein** (seit Web 20.39.0): die
+Sperrereignisse und die Zähler des Ratenschutzes. Beide führen IP-Adressen
+und verfallen hier nach 30 Tagen — ein Backup, das länger liegt und außer
+Haus geht, soll sie nicht aufheben. Nach einem Wiederanlauf beginnt der
+Ratenschutz deshalb von vorn, und eine laufende Sperre ist aufgehoben.
+
 **Das Wichtigste steht nicht in der Datei.** Das Komplett-Backup enthält
 absichtlich *nicht* die Datei `config.php` des Servers. In ihr stehen die
 Schlüssel — beides zusammen aufzubewahren wäre, als klebte der Schlüssel am
@@ -4740,6 +5471,13 @@ Passwort. Lästig für alle, aber kein Datenverlust.
 Beide stehen auf dem **Schlüsselblatt** (12.5) — drucken, sobald ein Anteil
 angelegt oder gewechselt wurde, zweimal und an zwei Orten.
 
+**Der Schnappschuss ist nicht scharf.** Der Dump entsteht über mehrere Läufe
+hinweg; eine Zeile, die währenddessen entsteht, kann enthalten sein oder
+nicht. Übersprungen wird nichts, was schon dastand. Wer es genauer braucht,
+lässt nachts sichern. *(Bis Web 21.0.0 stand das mit den beiden Wegen heraus
+und dem Wiederanlaufpaket in der zugeklappten Karte „Was hier gilt" der
+Seite; P5c/AP9.)*
+
 **Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
 gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank
 und verlangt einen Nachweis, dass man Zugriff auf das Verzeichnis der
@@ -4755,37 +5493,46 @@ wurde, ist eine Vermutung.
 
 Seit Web 12.1.0 kann die BetreiberIn unter **Betrieb →
 Backup-Ziele** eine Gegenstelle eintragen, auf die die Konto-Backups
-geschoben werden — per **SFTP oder FTPS**. Der Grund ist schlicht: Ein
+geschoben werden — per **SFTP oder FTPS**; dazu die Komplett-Stände und seit
+Web 20.39.0 die Archive des Protokolls. Der Grund ist schlicht: Ein
 Paket, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
 wenn dieser Server ausfällt.
 
 Nicht zu verwechseln mit dem **Transportziel** eines Einsatzes — das ist die
-Zielklinik und steht unter Stammdaten.
+Zielklinik und steht unter Einstellungen → Standorte.
 
 Was dabei zu wissen ist:
 
 - **SFTP ist die Empfehlung.** Es ist das einzige der beiden Protokolle, das
-  den Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
-  anderer, bricht die Verbindung ab, bevor ein Passwort hinausgeht.
-- **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht.** Das
-  schützt gegen Mitlesen, nicht gegen einen untergeschobenen Server.
+  den Server beim nächsten Mal wiedererkennt: Beim ersten Prüfen wird der
+  Fingerabdruck des Hostschlüssels übernommen, danach bei jeder Verbindung
+  verglichen. Meldet sich dort plötzlich ein anderer, bricht die Verbindung
+  ab, bevor ein Passwort hinausgeht. Nach einem Schlüsselwechsel der
+  Gegenstelle ist *Hostschlüssel vergessen* im Menü der Zielzeile der Weg.
+- **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht** — die
+  PHP-Erweiterung nimmt jedes an, auch ein selbst ausgestelltes ohne
+  Vertrauenskette. Das schützt gegen Mitlesen, nicht gegen einen
+  untergeschobenen Server.
 - **FTP wird seit Web 20.2.0 nicht mehr angeboten.** Es überträgt alles im
   Klartext, auch das Passwort — und seit derselben Fassung tragen die Pakete
-  Geheimnisse, die dort nicht mitlesbar sein dürfen. Es stand vorher zur
-  Auswahl, weil einfacher Webspace oft nichts anderes anbietet.
-  **Steht noch ein Ziel darauf**, passiert Folgendes: Es trägt in der Liste
-  die rote Plakette *wird übergangen*, es wird beim Versand **übersprungen**
-  statt im Klartext beliefert, und der Versandlauf sagt es („Übersprungen: 1").
-  Zum Umstellen sind **drei** Angaben neu zu setzen: Protokoll, Port und die
-  Zugangsdaten — die alten gelten nicht notwendig auch für den
-  verschlüsselten Weg, und geraten wird nichts.
+  Geheimnisse, die dort nicht mitlesbar sein dürfen. Seit Web 21.0.0 nimmt
+  auch die Datenbank kein FTP-Ziel mehr an. Stand beim Update noch eines
+  da, blieb das Update stehen und nannte es: Dann stellst du das Ziel hier
+  auf SFTP oder FTPS um (Protokoll, Port und Zugangsdaten neu) oder löschst
+  es und führst das Update danach erneut aus.
 - Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
-  dazu steht in einer Datei, die nicht mitgesichert wird — wer den
-  Datenbankdump hat, hat die Passwörter nicht.
+  dazu — der Serverschlüssel aus 12.5 — steht in einer Datei, die nicht
+  mitgesichert wird: Wer den Datenbankdump hat, hat die Passwörter nicht.
+  Ohne Serverschlüssel lässt sich kein Ziel anlegen; geht er verloren, sind
+  die Zugangsdaten neu einzutragen.
+- **Der Versand schickt, was am Ziel fehlt** — verglichen werden Name und
+  Größe. Eine abgebrochene Übertragung wird deshalb beim nächsten Lauf
+  wiederholt und gilt nicht als erledigt. Wann er läuft, entscheidet der
+  Auslöser (12.4); der Schalter *Backups automatisch versenden* sagt nur, ob.
 - **Auf dem Ziel wird nur gelöscht, wo es ausdrücklich eingeschaltet ist**
-  (seit Web 20.14.0). Ohne diese Option ergänzt der Versand nur: Die Regel
-  „höchstens zwei je Konto" gilt für die Ablage auf dem eigenen Server,
-  drüben sammelt sich alles an, bis dort jemand aufräumt. Das ist die
+  (seit Web 20.14.0). Ohne diese Option ergänzt der Versand nur: Die
+  *Aufbewahrung je Konto* (11.4, Vorgabe zwei) gilt für die Ablage auf dem
+  eigenen Server, drüben sammelt sich alles an, bis dort jemand aufräumt. Das ist die
   Voreinstellung und der Grund dafür ist ernst — der Zweck eines auswärtigen
   Ziels ist, den Ausfall dieses Servers zu überleben, **samt eines Fehlers,
   der hier zu viel löscht**. Ein Versand, der drüben aufräumt, trägt diesen
@@ -4807,6 +5554,8 @@ Was dabei zu wissen ist:
 
   Was dabei entfernt wurde, steht unter **Betrieb → Status → Sicherheit** in
   der Karte *Löschungen auf Sicherungszielen* — mit Ziel, Datei und Grund.
+  **Die Archive des Protokolls** (11.7) fallen unter keine der beiden Zahlen
+  und werden drüben nie entfernt — rund 52 kleine Dateien im Jahr.
 - **Nachsehen, was dort liegt**, geht auf Knopfdruck: im Menü einer Zielzeile.
   Es zählt, was von hier stammt, und was nicht — und es löscht nichts. Die
   Zahlen kommen in dem Augenblick von der Gegenstelle und werden nicht
@@ -4819,6 +5568,102 @@ Was dabei zu wissen ist:
 Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt
 verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort
 nicht zu öffnen.
+
+### 12.8 Ankündigung und Rundmail
+
+Seit Web 20.38.0 kann die BetreiberIn unter **Betrieb →
+Servereinstellungen**, Karte **Ankündigung**, einen Satz über jede Seite
+stellen — eine Wartung, einen Umzug, eine Frist. Bis dahin erfuhr davon nur,
+wer fragte.
+
+**Was die Karte will:**
+
+- **Text** — höchstens **190 Byte**. Das Feld zählt mit. Byte und nicht
+  Zeichen, weil der Speicher so bemessen ist: Ein „ü" sind zwei. Für einen
+  Streifen über jeder Seite ist das die richtige Länge; was länger ist,
+  gehört in eine Mail oder ins Handbuch. Zeilenumbrüche werden zu
+  Leerzeichen, der Streifen ist ein Absatz. Hat der Text mehr als einen
+  Satz, steht der erste fett — er ist der, den man beim Vorbeiscrollen liest.
+- **Ton** — *Hinweis* (blau) oder *Warnung* (orange).
+- **Sichtbar bis** — Datum und Uhrzeit (HH:MM). Danach verschwindet der
+  Streifen von selbst; ein Ende in der Vergangenheit wird abgewiesen, weil
+  die Ankündigung sonst nie erschiene.
+
+**Wo sie steht:** über dem Inhalt jeder Seite, in der Reihe der Streifen
+(Abschnitt 3), und **auch über der Anmeldung** — wer sich gerade anmelden
+will, ist von einer Wartung am meisten betroffen. Die Plakette im Kopf der
+Karte sagt, bis wann sie sichtbar ist, oder „abgelaufen", oder „keine".
+
+**Wegklicken:** Das **×** blendet sie aus — **für diese Sitzung**. Wer sich
+abmeldet und wieder anmeldet, sieht sie wieder, bis sie abläuft. Eine
+**neue** Ankündigung (anderer Text, anderer Ton oder anderes Ende) erscheint
+auch bei denen, die die alte geschlossen haben. Ruft jemand das Handbuch
+oder einen Rechtstext direkt auf, ohne vorher auf der Anmeldeseite gewesen zu
+sein, steht sie dort ohne × — es gibt dann keine Sitzung, in der das
+Ausblenden gemerkt werden könnte.
+
+**Entfernen** nimmt sie sofort von allen Seiten.
+
+**Als Rundmail senden …** schickt den Text zusätzlich per Mail — an alle
+**erreichbaren** Konten: aktiv, mit gesetztem Passwort, ohne das
+Demo-Konto. Ein Konto, das seine Einladung nie angenommen hat, bekommt keine
+Ankündigung für eine Anwendung, die es nicht benutzt. Vorher kommt eine
+Rückfrage mit der Zahl der Empfänger. Drei Dinge gelten:
+
+1. **Der Knopf speichert zuerst.** Was im Feld steht, geht hinaus — auch wenn
+   du den Text eben erst geändert hast.
+2. **Die Mails laufen über die Warteschlange**, zehn je Durchgang der
+   Hintergrundjobs. Auf einer Anlage ohne Cron laufen die Jobs nur, wenn
+   jemand eine Seite aufruft; bis alle hinaus sind, können einige Minuten
+   vergehen. Der Stand steht unter **Betrieb → Status**, Karte *E-Mail*.
+3. **Höchstens eine Rundmail je Tag** (Kalendertag der Anlage). Danach ist der
+   Knopf bis Mitternacht gesperrt, und die Zeile darunter sagt es.
+
+Im Protokoll steht **ein** Eintrag je Rundmail — wer sie wann an wie viele
+Konten geschickt hat, nicht an wen.
+
+**Rückläufer sieht die Anwendung nicht.** „Zugestellt" heißt: Der
+Mailserver des Hosters hat die Nachricht angenommen. Kommt sie später
+zurück, weil es die Adresse nicht mehr gibt, landet der Rückläufer im
+Postfach der Absenderadresse (`smtp.from` in der `config.php`). Die sollte
+deshalb ein echtes Postfach sein, das die BetreiberIn liest — die Anwendung
+selbst liest keines (Backlog Nr. 200, nicht umgesetzt).
+
+### 12.9 Health-Endpunkt für das eigene Monitoring
+
+Seit Web 20.46.0 kann ein Überwachungsdienst — ein Uptime-Dienst, ein
+Nagios, ein `curl` im Cron — die Anlage fragen, ob sie läuft. Die Anwendung
+selbst meldet nichts nach draußen; sie antwortet nur, wenn sie gefragt wird.
+
+**Einrichten** geht über `config.php`, nicht über die Oberfläche: Dort steht
+ein langer Zufallswert als `betrieb.health_token`, und das Monitoring fragt
+`https://…/api/health.php?token=<Wert>`. Die Schritte stehen im Runbook
+(`Technik.md` 7, „Health-Endpunkt einrichten"). Ohne Eintrag ist der
+Endpunkt aus.
+
+**Was die Antwort sagt:**
+
+- **HTTP 200** — die Anlage läuft, die Datenbank antwortet, kein Update
+  steht aus.
+- **HTTP 503** mit `"db": false` — die Datenbank antwortet nicht.
+- **HTTP 503** mit `"migration_ausstehend": true` — eine neue Fassung ist
+  eingespielt, aber `update.php` ist noch nicht gelaufen, oder eine Migration
+  ist blockiert und läuft nicht von selbst (**Betrieb → Updates** zeigt,
+  welche und warum).
+- **HTTP 503** mit `"error": "maintenance"` — der Wartungsmodus ist an. Das
+  ist kein Fehler, wenn du ihn selbst eingeschaltet hast oder gerade
+  ausgeliefert wird.
+- **HTTP 503** mit `"error": "ausgelastet"` — die Datenbank hat gerade keine
+  Verbindung frei. Hält das an, siehe 12.1 zur Verbindungsgrenze.
+- **HTTP 403** — Token fehlt oder ist falsch (oder keiner eingerichtet).
+- **HTTP 429** — mehr als 60 Abrufe je Minute; eine Minute warten.
+
+Dazu stehen Zahlen im Rumpf, die ein Monitoring mit Schwellen belegen kann:
+wie lange die Hintergrundjobs nicht mehr liefen (`jobs_alter_s`), wie viele
+Einträge der Reiter System in den letzten 24 Stunden bekam (`system_24h`),
+ob Protokolleinträge gescheitert sind (`protokoll_fehler`) und der höchste
+Speicheranteil in Prozent (`speicher_pct`, einmal täglich gemessen). Konten,
+Mengen und Angaben über den Hoster stehen **nicht** darin.
 
 ---
 

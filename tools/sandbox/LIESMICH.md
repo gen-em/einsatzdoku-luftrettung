@@ -28,7 +28,7 @@ Namen und die Grenzen der Umgebung in `docs/Sandbox-Setup.md`.
 `aufbauen.sh web` → 11 von 11 Stücken, **3 von 3 Engines**, 8 von 8 Werten,
 Rückgabewert 0. `hochfahren.sh` → HTTP **200** auf `login.php`,
 Rückgabewert 0. `plattform.sh alles` → vier Fassungen bereit und **viermal
-„19 Prüfungen, 0 Fehlschläge"** (gemessen 21.09.2026: 29,7 s).
+„30 Prüfungen, 0 Fehlschläge"** (19 bis P5c/AP8; 29,7 s am 21.09.2026).
 
 ## Was es nicht kann
 

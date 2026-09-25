@@ -117,12 +117,21 @@ UMLAUF_PRAEFIX = "umlauf-"
 UMLAUF_PASSWORT = "umlaufpruefung2026"
 ADMIN_VORGABE = ("admin@gen-em.org", "pruefstandzugang2026")
 
+# DER ADMIN-ZUGANG IST SEIT P5c/AP5 EIN TUPEL AUS ZWEI ODER DREI STUECKEN:
+# Adresse, Passwort und -- wahlweise -- das Geheimnis des Zweitfaktors in
+# Base32 (E-P5c-43). Er wird unveraendert an `Sitzung.anmelden(*admin)`
+# weitergereicht; fehlt das dritte Stueck oder ist es leer, rechnet der
+# Code-Rechner mit `NADOKU_TOTP` oder dem Geheimnis der Sandbox. So bleibt
+# ein Aufrufer, der nur Adresse und Passwort kennt, gueltig, und es entsteht
+# keine zweite Signatur neben der ersten.
+AdminZugang = tuple[str, ...]
+
 
 def umlauf_konto(art: str) -> str:
     return f"{UMLAUF_PRAEFIX}{art}@gen-em.org"
 
 
-def konto_loeschen(basis: str, admin: tuple[str, str], konto: str,
+def konto_loeschen(basis: str, admin: AdminZugang, konto: str,
                    praefix: str = UMLAUF_PRAEFIX) -> bool:
     """Loescht ein PRUEFKONTO ueber den Adminbereich, falls es besteht.
 
@@ -192,20 +201,27 @@ def konto_loeschen(basis: str, admin: tuple[str, str], konto: str,
     return True
 
 
-def konto_anlegen(basis: str, admin: tuple[str, str], konto: str,
-                  passwort: str) -> None:
-    """Konto ueber den Einladungsweg anlegen und das Passwort im Browser setzen."""
+def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
+                  passwort: str, rolle: str = "user", rc_datei: str | None = None) -> None:
+    """Konto ueber den Einladungsweg anlegen und das Passwort im Browser setzen.
+
+    `rolle` und `rc_datei` seit Konzept RW (RW-03): Die Rueckwegprobe braucht
+    auch eine BetreiberIn, und sie braucht den Wiederherstellungsschluessel,
+    den `passwort_setzen.mjs` von der Seite liest — ohne ihn gibt es den
+    Rueckweg nicht zu gehen. `rc_datei` ist die Ausgabedatei dieses
+    Skripts (JSON, Feld `recovery_code`)."""
     s = sitzungsmodul.Sitzung(basis).anmelden(*admin)
     s.csrf_auffrischen("admin_users.php")
     antwort = s.post("admin_users.php", {"csrf": s.csrf, "action": "user_add",
-                                         "email": konto, "role": "user"})
+                                         "email": konto, "role": rolle})
     m = re.search(r"pw_handling\.php\?token=([0-9a-f]{64})", antwort.text)
     if not m:
         raise RuntimeError("Kontoanlage ohne Einrichtungslink: "
                            + (sitzungsmodul.fehlertext(antwort.text) or "unbekannt"))
     link = f"{basis}/pw_handling.php?token={m.group(1)}"
     melde(f"  Konto {konto} angelegt.")
-    lauf(["node", str(WURZEL / "einspielen" / "passwort_setzen.mjs"), link, passwort],
+    lauf(["node", str(WURZEL / "einspielen" / "passwort_setzen.mjs"), link, passwort]
+         + ([rc_datei] if rc_datei else []),
          env={**os.environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT})
     melde("  Passwort im Browser gesetzt (dort entsteht das Schlüsselmaterial).")
 
@@ -329,6 +345,22 @@ def main() -> int:
     p.add_argument("--backup-passwort", default="nadokudemo0815")
     p.add_argument("--admin-email", default=ADMIN_VORGABE[0])
     p.add_argument("--admin-passwort", default=ADMIN_VORGABE[1])
+    # DAS GEHEIMNIS DES ZWEITFAKTORS (P5c/AP5, E-P5c-43, F-P5c-33). Das
+    # Pruefkonto ist eine BetreiberIn, und fuer sie ist der Zweitfaktor
+    # Pflicht; ohne Code kaeme der Kreislauf nicht ueber die Anmeldung. Die
+    # Kette gibt `STAGING_TOTP` hierher.
+    #
+    # ANDERS ALS BEIM JOB-TOKEN (unten) DARF HIER DIE UMGEBUNG EINSPRINGEN,
+    # und das ist Absicht, keine Nachlaessigkeit: Das Token schickte den Lauf
+    # still an eine andere Installation. Ein Geheimnis der falschen Anlage
+    # dagegen scheitert laut -- der Server weist den Code ab, und
+    # `sitzung.py` sagt, mit welchem Geheimnis gerechnet wurde. Die Wahl
+    # zwischen `NADOKU_TOTP` und der Sandbox trifft der Code-Rechner
+    # (`tools/zweitfaktor/totp.py`), nicht jedes Werkzeug fuer sich.
+    p.add_argument("--admin-totp", default="",
+                   help="Geheimnis des Zweitfaktors des Admin-Kontos (Base32). "
+                        "Ohne den Schalter oder leer: NADOKU_TOTP, sonst das "
+                        "der Sandbox.")
     p.add_argument("--ausnahmen", default=None)
     p.add_argument("--frisch", action="store_true",
                    help="vorhandenes Umlaufkonto vorher löschen")
@@ -346,7 +378,10 @@ def main() -> int:
     a = p.parse_args()
     a.konto = a.konto or umlauf_konto(a.art)
     a.ausnahmen = a.ausnahmen or str(HIER / "ausnahmen" / f"{a.art}_umlauf.json")
-    admin = (a.admin_email, a.admin_passwort)
+    # LEER HEISST „KEIN SCHALTER". Die Kette reicht `"$STAGING_TOTP"` in
+    # Anfuehrungszeichen durch; fehlt das Secret, kommt eine leere
+    # Zeichenkette an, und `Sitzung.anmelden()` behandelt sie wie `None`.
+    admin = (a.admin_email, a.admin_passwort, a.admin_totp)
 
     melde(f"Kreislauf {a.art} — Zielkonto {a.konto}")
 

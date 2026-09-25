@@ -35,7 +35,7 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import('file://' + MODUL);
 const pw = PW.default ?? PW;
-const { motorWahl, starten } = await import(
+const { motorWahl, starten, nachDemPasswort } = await import(
   'file:///home/user/einsatzdoku-luftrettung/tools/motor.mjs');
 
 const BASIS = 'https://127.0.0.1:8443';
@@ -152,22 +152,27 @@ async function anmelden(mail, pass) {
   await seite.goto(BASIS + '/login.php', { waitUntil: 'domcontentloaded' });
   await seite.fill('input[name="email"]', mail);
   await seite.fill('input[name="password"]', pass);
-  await seite.click('button[type="submit"], input[type="submit"]');
-  try {
-    /* `waitUntil: 'commit'` — die Anmeldung ist vorbei, sobald die Antwort
-     * da ist. Die Vorgabe `'load'` wartet auf JEDE Unterressource, und dazu
-     * gehoeren die Kartenkacheln von `tile.openstreetmap.org`, die hinter dem
-     * Egress-Filter nie ankommen. Gemessen: Der Lauf blieb damit an der
-     * Demo-Anmeldung stehen, obwohl die Seite laengst da war. */
-    await seite.waitForURL(u => !String(u).includes('login.php'),
-                           { timeout: 120000, waitUntil: 'commit' });
-    return null;
-  } catch (e) {
-    const text = await seite.evaluate(() =>
-      (document.querySelector('.meldung-fehler p, .meldung p, [data-msg]')
-        || {}).textContent || '').catch(() => '');
-    return (text || '').trim() || 'Anmeldung ohne Meldung fehlgeschlagen';
-  }
+  await seite.click('#loginform button[type="submit"]');
+  /* NICHT MEHR `waitForURL(… !login.php)` (P5c/AP5, E-P5c-43). Ein Konto
+   * mit Zweitfaktor steht nach dem Passwort WIEDER unter `login.php` und
+   * wird nach dem Code gefragt; `nachDemPasswort()` (motor.mjs) geht diesen
+   * Schritt und meldet das Einrichtungstor als Scheitern. Die beiden Konten
+   * dieses Laufs (`umlauf-csv@…`, Demo) haben keinen Zweitfaktor — der
+   * Schritt steht hier, damit ein anderes Konto nicht 120 Sekunden ins
+   * Leere wartet.
+   *
+   * Auf `'load'` wartet auch dieser Weg nicht: Er sieht auf das Dokument,
+   * nicht auf die Kartenkacheln von `tile.openstreetmap.org`, die hinter dem
+   * Egress-Filter nie ankommen (daran blieb die Demo-Anmeldung einmal
+   * stehen, obwohl die Seite laengst da war). */
+  const a = await nachDemPasswort(seite, { frist: 120000 });
+  if (a.angemeldet) { return null; }
+  /* Die Meldung der Seite zuerst — sie traegt die Mengenbremse des
+   * Demo-Kontos im Wortlaut; die des Motors, wo die Seite keine hat. */
+  const text = await seite.evaluate(() =>
+    (document.querySelector('.meldung-fehler p, .meldung p, [data-msg]')
+      || {}).textContent || '').catch(() => '');
+  return (text || '').trim() || a.meldung || 'Anmeldung ohne Meldung fehlgeschlagen';
 }
 
 console.log(`Umstellungslauf — Motor ${motor}`);
@@ -288,8 +293,9 @@ if (await dlg.count()) {
   pruefe('nach richtigem Passwort ist der Dialog zu',
          await tab.locator('dialog.dialog[open]').count(), 0);
 }
-/* DEN ZWEITEN TAB SCHLIESSEN, UND ZWAR SOFORT. Der Prüfstand fährt gegen
- * `php -S`, und der bedient EINE Anfrage zur Zeit. Ein zweiter offener Tab
+/* DEN ZWEITEN TAB SCHLIESSEN, UND ZWAR SOFORT. Der Prüfstand fuhr gegen
+ * `php -S`, und der bediente bis zum Abschluss von P5c EINE Anfrage zur Zeit
+ * (seither vier Arbeiter, `lokal_starten.sh`). Ein zweiter offener Tab
  * mit einer Karte hält die Leitung besetzt; der nächste Schritt wartete
  * daraufhin minutenlang auf eine Seite, die einzeln in 1,7 Sekunden da ist
  * (gemessen 14.09.2026). Das sah aus wie ein Fehler der Anmeldung und war

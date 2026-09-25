@@ -161,6 +161,18 @@ pruef('Leere Binärdaten werden zur leeren Zeichenkette',
  * Teil 3 — Der Dump in Häppchen
  * ====================================================================== */
 kopf('Teil 3 — Der Dump entsteht in Häppchen');
+/* EIN SPERREREIGNIS MIT IP UND ADRESSE, damit Teil 6 einen Gegenstand hat
+ * (P5c/AP2, E-P5c-57): Ohne Zeile in `sicherheit_ereignisse` wäre „ohne
+ * Zeilen im Dump" grün, ohne dass es etwas wegzulassen gab. Aufgeräumt wird
+ * am Ende, auch wenn die Probe abbricht. */
+$ohneMerkmal = '203.0.113.' . random_int(10, 250);
+$ohneWer = 'komplettprobe-' . bin2hex(random_bytes(3)) . '@probe.invalid';
+$pdo->prepare("INSERT INTO sicherheit_ereignisse (art, topf, merkmal, stufe, zeitpunkt, wer)
+               VALUES ('sperre', 'login', ?, 1, UTC_TIMESTAMP(), ?)")->execute([$ohneMerkmal, $ohneWer]);
+$ohneId = (int)$pdo->lastInsertId();
+register_shutdown_function(static function () use ($pdo, $ohneId): void {
+    $pdo->prepare('DELETE FROM sicherheit_ereignisse WHERE id = ?')->execute([$ohneId]);
+});
 $z = ['stand' => 'dump', 'bau' => KOMP_BAU_PRAEFIX . bin2hex(random_bytes(4)),
       'name' => komp_dateiname(), 'begonnen' => gmdate('Y-m-d\TH:i:s\Z'), 'roh_bytes' => 0];
 [$bOk, $bMeldung] = komp_bereit();
@@ -262,6 +274,46 @@ pruef('Ein veränderter Dateikopf macht die Datei unlesbar',
       $fehler(fn() => komp_oeffnen($verdreht, (string)serverschluessel(), fn() => null)) !== '',
       'der Kopf hängt über die Zusatzdaten an jedem Block');
 
+/* VERSIEGELN ÜBER MEHRERE HÄPPCHEN — erzwungen, nicht dem Zufall überlassen
+ * (Nr. 328, F-P5c-170). Oben entscheidet die Laufzeit, ob die Häppchengrenze
+ * ins Siegeln fällt; im Abschluss von P5c tat sie es einmal, und die Datei
+ * liess sich nicht öffnen. Hier schreibt jedes Häppchen genau einen Block,
+ * aus einem Klartext von drei Blöcken — und am Ende muss derselbe Inhalt
+ * herauskommen. Danach dasselbe mit einer Zieldatei, die zwischen zwei
+ * Häppchen verschwindet: Dann beginnt das Siegeln von vorn. */
+$mhQuelle = $tmp . '/mehrhaeppchen.gz';
+file_put_contents($mhQuelle, random_bytes(KOMP_BLOCK * 2 + 12345));
+$mhKopf = komp_kopf_bauen(['migration' => 'probe', 'tabellen' => 1, 'zeilen' => 1,
+                           'roh' => (int)filesize($mhQuelle)], null) . "\n";
+$mhSiegeln = static function (?callable $zwischen) use ($mhQuelle, $mhKopf, $tmp): array {
+    $ziel = $tmp . '/mehrhaeppchen.edk';
+    @unlink($ziel);
+    $zs = ['siegel_i' => 0, 'siegel_bytes' => 0];
+    $runden = 0;
+    do {
+        $runden++;
+        $einer = 1;
+        $e = komp_siegel_schub($mhQuelle, $ziel, (string)serverschluessel(), $mhKopf, $zs,
+                               static function () use (&$einer): float { return $einer-- > 0 ? 60.0 : 0.0; },
+                               1.0);
+        if ($zwischen !== null && $runden === 2) { $zwischen($ziel); }
+    } while (!$e['fertig'] && $runden < 20);
+    $klar = '';
+    $fehlerText = '';
+    try {
+        komp_oeffnen($ziel, (string)serverschluessel(),
+                     static function (string $s) use (&$klar): void { $klar .= $s; });
+    } catch (Throwable $t) { $fehlerText = $t->getMessage(); }
+    return [$runden, $klar === (string)file_get_contents($mhQuelle), $fehlerText];
+};
+[$mhRunden, $mhGleich, $mhFehler] = $mhSiegeln(null);
+pruef('Über drei Häppchen versiegelt, öffnet die Datei mit demselben Inhalt',
+      $mhRunden === 3 && $mhGleich,
+      $mhRunden . ' Häppchen' . ($mhFehler !== '' ? ' — ' . $mhFehler : ''));
+[$mhRunden, $mhGleich, $mhFehler] = $mhSiegeln(static function (string $ziel): void { @unlink($ziel); });
+pruef('Verschwindet die Zieldatei zwischen zwei Häppchen, beginnt das Siegeln von vorn',
+      $mhGleich, $mhRunden . ' Häppchen' . ($mhFehler !== '' ? ' — ' . $mhFehler : ''));
+
 /* =========================================================================
  * Teil 5 — Die Passphrase-Fassung
  * ====================================================================== */
@@ -331,6 +383,22 @@ foreach (array_keys($tabellen) as $t) {
 }
 pruef('Jede Tabelle hat ein CREATE TABLE', $fehlt === [],
       $fehlt === [] ? count($tabellen) . ' Tabellen' : implode(', ', $fehlt));
+
+/* OHNE ZEILEN (P5c/AP2, E-P5c-57): Schema ja, Zeilen nein, und der Kopf
+ * sagt es. Die Gegenprobe ist das Sperrereignis aus Teil 3 — seine IP und
+ * seine Adresse dürfen nirgends im Dump stehen. */
+pruef('Der Kopf nennt die Tabellen ohne Zeilen',
+      str_contains($inhalt, '-- OHNE ZEILEN: ' . implode(', ', array_keys(KOMP_OHNE_ZEILEN))),
+      implode(', ', array_keys(KOMP_OHNE_ZEILEN)));
+$mitZeilen = [];
+foreach (array_keys(KOMP_OHNE_ZEILEN) as $t) {
+    if (str_contains($inhalt, 'INSERT INTO `' . $t . '`')) { $mitZeilen[] = $t; }
+}
+pruef('Für sie steht kein INSERT im Dump', $mitZeilen === [],
+      $mitZeilen === [] ? 'keines' : implode(', ', $mitZeilen));
+pruef('Die IP und die Adresse des Sperrereignisses stehen nicht im Dump',
+      !str_contains($inhalt, $ohneMerkmal) && !str_contains($inhalt, $ohneWer),
+      $ohneMerkmal . ' · ' . $ohneWer);
 unset($inhalt);
 
 /* =========================================================================
@@ -397,8 +465,17 @@ if ($pruefPdo !== null) {
 
     $schemaGleich = 0; $summeGleich = 0; $zeilenGleich = 0; $abweichung = [];
     $gesamtZeilen = 0;
+    $ohneLeer = 0;
     foreach (array_intersect($a, $b) as $t) {
         $q = '`' . str_replace('`', '``', $t) . '`';
+        if (isset(KOMP_OHNE_ZEILEN[$t])) {
+            /* Schema ja, Zeilen nein (E-P5c-57) — hier leer, drüben nicht. */
+            $ohneLeer += (int)$pruefPdo->query("SELECT COUNT(*) FROM $q")->fetchColumn() === 0 ? 1 : 0;
+            $cA = (string)($pdo->query("SHOW CREATE TABLE $q")->fetch(PDO::FETCH_NUM)[1] ?? '');
+            $cB = (string)($pruefPdo->query("SHOW CREATE TABLE $q")->fetch(PDO::FETCH_NUM)[1] ?? '');
+            if ($cA === $cB) { $schemaGleich++; }
+            continue;
+        }
         $nA = (int)$pdo->query("SELECT COUNT(*) FROM $q")->fetchColumn();
         $nB = (int)$pruefPdo->query("SELECT COUNT(*) FROM $q")->fetchColumn();
         $gesamtZeilen += $nA;
@@ -411,8 +488,11 @@ if ($pruefPdo !== null) {
         if ($sA === $sB) { $summeGleich++; } else { $abweichung[] = $t; }
     }
     $alle = count(array_intersect($a, $b));
-    pruef('Jede Tabelle hat dieselbe Zeilenzahl', $zeilenGleich === $alle,
-          $zeilenGleich . ' von ' . $alle . ', zusammen '
+    $mitZeilenAlle = $alle - count(KOMP_OHNE_ZEILEN);
+    pruef('Die Tabellen ohne Zeilen kommen leer an', $ohneLeer === count(KOMP_OHNE_ZEILEN),
+          $ohneLeer . ' von ' . count(KOMP_OHNE_ZEILEN));
+    pruef('Jede Tabelle hat dieselbe Zeilenzahl', $zeilenGleich === $mitZeilenAlle,
+          $zeilenGleich . ' von ' . $mitZeilenAlle . ', zusammen '
           . number_format($gesamtZeilen, 0, ',', '.') . ' Zeilen');
     pruef('Jedes Schema ist zeichengleich (SHOW CREATE TABLE)', $schemaGleich === $alle,
           $schemaGleich . ' von ' . $alle

@@ -21,6 +21,17 @@ https_tor();
 sitzung_starten('app');
 
 if (empty($_SESSION['user_id'])) {
+    /* EIN DATENABRUF OHNE ANMELDUNG BEKOMMT 401 ALS JSON (P5c/AP5,
+     * E-P5c-53), keine Weiterleitung. Bis Web 20.41 folgte `fetch()` der
+     * Umleitung auf `login.php` und bekam HTML, wo es JSON erwartet — der
+     * Aufrufer sah einen Syntaxfehler statt „nicht angemeldet". Mit dem
+     * Code-Schritt ist das der Normalfall einer halben Anmeldung: Es gibt
+     * eine Sitzung, aber keine `user_id`. */
+    if (ist_api_aufruf()) {
+        json_out(['error'   => 'session_ende',
+                  'grund'   => 'nicht_angemeldet',
+                  'meldung' => 'Nicht angemeldet. Bitte neu anmelden.'], 401);
+    }
     header('Location: login.php');
     exit;
 }
@@ -187,9 +198,11 @@ try {
                         FROM users WHERE id = ?');
     $u->execute([$userId]);
 } catch (Throwable $ex) {
-    error_log('auth_guard.php: Lebenszyklus-Spalten fehlen — Migration '
-            . '2026_09_16_konto_lebenszyklus steht aus. Die Wache laeuft '
-            . 'ohne sie weiter. (' . $ex->getMessage() . ')');
+    /* RUECKFALL (E-P5c-58): Die Migration steht aus — ein Eintrag in eine
+     * Tabelle, die es vielleicht noch nicht gibt, ist hier der falsche Weg. */
+    system_rueckfall('auth_guard', 'Lebenszyklus-Spalten fehlen — Migration '
+                   . '2026_09_16_konto_lebenszyklus steht aus. Die Wache läuft '
+                   . 'ohne sie weiter.', $ex);
     $u = db()->prepare('SELECT ' . $WACHE_SPALTEN . ' FROM users WHERE id = ?');
     $u->execute([$userId]);
 }
@@ -262,6 +275,63 @@ if ($kontoStatus === 'unbestaetigt' || $kontoStatus === 'wartet') {
     sitzung_beenden_passend('gesperrt');
 }
 
+/* ---- Das Einrichtungstor des Zweitfaktors (P5c/AP5, E-P5c-53, -61) -------
+ *
+ * WER: Support, Admin und BetreiberIn (`rolle_braucht_zweitfaktor()`) ohne
+ * eingeschalteten Zweitfaktor. Sie landen auf `zweitfaktor.php`, bis er
+ * steht — keine andere Seite ist erreichbar, die API antwortet 403 als JSON.
+ * Offen bleiben nur die Einrichtung selbst und das Abmelden.
+ *
+ * DIE CODE-ABFRAGE STEHT NICHT HIER, sondern in `login.php`, VOR der
+ * Sitzung. Dieses Tor betrifft nur die Einrichtung: Wer eine Sitzung hat,
+ * hat den Code schon gegeben oder hat noch keinen Zweitfaktor.
+ *
+ * STUMM IN DREI FAELLEN, und jeder ist ein Riegel, kein Entgegenkommen:
+ *   - Die Spalten fehlen (Deploy vor `update.php`, E-P5c-36). Ohne Anmeldung
+ *     kein `betrieb_updates.php`, ohne das keine Migration.
+ *   - Die Wartung ist an (E-P5c-53). Die BetreiberIn muss
+ *     `betrieb_updates.php` immer erreichen.
+ *   - Es gibt keinen Serverschluessel. Die Einrichtung verweigert ohne ihn
+ *     (E-P5c-54); ein Tor, dessen einzige Tuer verschlossen ist, sperrte
+ *     genau die BetreiberIn aus, die den Schluessel nachtragen soll.
+ *
+ * EINE ABFRAGE, NUR FUER DIE PFLICHTROLLEN, und nicht in `$WACHE_SPALTEN`:
+ * Dort risse eine fehlende Spalte den Rueckfall fuer die Lebenszyklus-
+ * Spalten mit, und die NutzerInnen — die meisten Anfragen — zahlten fuer
+ * eine Frage, die sie nicht betrifft.
+ *
+ * VOR DEM EINWILLIGUNGSTOR, und jenes laesst `zweitfaktor.php` durch. Sonst
+ * schickte das eine Tor auf die Seite des anderen und umgekehrt, und die
+ * Anfrage liefe im Kreis. Erst der Zweitfaktor, dann die Zustimmung: Die
+ * Zustimmung einer Sitzung, die nicht sicher der Kontoinhaberin gehoert,
+ * ist nichts wert. */
+if (rolle_braucht_zweitfaktor($row['role'] ?? null) && !wartung_aktiv()
+    && !in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')),
+                 ['zweitfaktor.php', 'logout.php'], true)) {
+    try {
+        $zf = db()->prepare('SELECT totp_seit IS NOT NULL FROM users WHERE id = ?');
+        $zf->execute([$userId]);
+        $zweitfaktorFehlt = (int)$zf->fetchColumn() === 0;
+    } catch (PDOException $ex) {
+        /* Nur die fehlende Spalte (42S22) ist das Deploy-Fenster; jeder andere
+         * Fehler bricht ab, statt das Tor zu öffnen (F-P5c-166). */
+        if ((string)$ex->getCode() !== '42S22') { throw $ex; }
+        $zweitfaktorFehlt = false;           // Spalten fehlen: stumm (s. o.)
+    }
+    if ($zweitfaktorFehlt) {
+        require_once __DIR__ . '/serverkrypto_lib.php';
+        if (serverschluessel_da()) {
+            if (ist_api_aufruf()) {
+                json_out(['error'   => 'zweitfaktor',
+                          'meldung' => 'Für deine Rolle ist der Zweitfaktor Pflicht. '
+                                     . 'Richte ihn zuerst ein.'], 403);
+            }
+            header('Location: zweitfaktor.php');
+            exit;
+        }
+    }
+}
+
 /* ---- Das Einwilligungstor (P5b/AP4, E-P5b-05, -15) -----------------------
  *
  * WAS ES SPERRT UND WAS NICHT. Fehlt die Annahme der aktuellen Fassung von
@@ -295,7 +365,7 @@ if (!ist_api_aufruf()) {
         /* Die Ausnahmeliste ist kurz und steht hier, nicht in einer
          * Konstante: Sie gehoert zum Tor und wird mit ihm gelesen. */
         $offen = ['einwilligung.php', 'logout.php', 'import.php',
-                  'export.php', 'einstellungen.php'];
+                  'export.php', 'einstellungen.php', 'zweitfaktor.php'];
         if (!in_array($hier, $offen, true)) {
             header('Location: einwilligung.php');
             exit;
@@ -335,6 +405,48 @@ function require_admin(): void {
 }
 
 /**
+ * Darf die Angemeldete die Handlungen des Supports (P5c/AP4, E-P5c-14)?
+ *
+ * Wahr fuer Support, Admin und BetreiberIn. Die Seitenwache der
+ * Kontoverwaltung und des Protokolls ist seit AP4 `require_support()`; was
+ * darueber hinausgeht, fragt JE HANDLUNG `ist_admin()` — und zwar VOR dem
+ * Token (Muster E-P5c-85), damit die Rollenprobe das Rollentor von der
+ * Token-Ablehnung unterscheiden kann.
+ */
+function darf_support(): bool {
+    global $userRole;
+    return rolle_darf_support($userRole);
+}
+
+/** Ist die Angemeldete genau der Support — also auf Konten der Rolle `user`
+ *  und die schmalen Handlungen beschraenkt (E-P5c-40)? */
+function ist_support(): bool {
+    global $userRole;
+    return rolle_ist_support($userRole);
+}
+
+function require_support(): void {
+    if (!darf_support()) {
+        if (ist_api_aufruf()) { json_out(['error' => 'forbidden'], 403); }
+        ui_abbruch(403, 'Kein Zugriff.');
+    }
+}
+
+/**
+ * Das Rollentor fuer EINE Handlung auf einer Seite, die der Support betritt:
+ * wer nicht verwalten darf, bekommt 403 — ausser, die Handlung steht in
+ * `$fuerSupport`. VOR `csrf_check()` rufen (E-P5c-85).
+ *
+ * @param list<string> $fuerSupport die Handlungen, die auch der Support darf
+ */
+function handlung_erlaubt(string $handlung, array $fuerSupport = []): void {
+    if (ist_admin()) { return; }
+    if (ist_support() && in_array($handlung, $fuerSupport, true)) { return; }
+    if (ist_api_aufruf()) { json_out(['error' => 'forbidden'], 403); }
+    ui_abbruch(403, 'Kein Zugriff — diese Handlung ist der Verwaltung vorbehalten.');
+}
+
+/**
  * Darf die Angemeldete den Bereich BETRIEB sehen und bedienen?
  *
  * Betrieb ist alles, was die INSTALLATION betrifft und nicht ihren Inhalt:
@@ -355,7 +467,7 @@ function require_betreiberin(): void {
     }
 }
 
-/** Die Rolle der Angemeldeten als Wert ('user' | 'admin' | 'betreiberin'). */
+/** Die Rolle der Angemeldeten als Wert ('user' | 'support' | 'admin' | 'betreiberin'). */
 function eigene_rolle(): string {
     global $userRole;
     return $userRole;
@@ -374,7 +486,9 @@ function eigene_rolle(): string {
  */
 function rollen_auswahl(): array
 {
-    $o = ['user' => ROLLEN['user'], 'admin' => ROLLEN['admin']];
+    /* DEN SUPPORT VERGEBEN ADMIN UND BETREIBERIN (P5c/AP4). Er hat weniger
+     * Rechte als ein Admin; wer Admins anlegen darf, darf auch ihn anlegen. */
+    $o = ['user' => ROLLEN['user'], 'support' => ROLLEN['support'], 'admin' => ROLLEN['admin']];
     if (ist_betreiberin()) { $o['betreiberin'] = ROLLEN['betreiberin']; }
     return $o;
 }

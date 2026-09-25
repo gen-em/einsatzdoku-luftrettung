@@ -91,7 +91,7 @@ def melde(text: str) -> None:
 
 
 # ---------------------------------------------------------------- 1. Konto
-def stufe_konto(lauf: Lauf, admin: tuple[str, str]) -> None:
+def stufe_konto(lauf: Lauf, admin: tuple[str, ...]) -> None:
     """Demo-Konto ueber den REGULAEREN Einladungsweg anlegen (E-P1-10).
 
     Nicht per SQL und nicht mit einem Sonderendpunkt: Das Konto entsteht so,
@@ -204,8 +204,7 @@ def kennungen(s) -> dict:
     """Kennungen von Standort und Rettungsmittel aus den Auswahllisten lesen.
 
     Ueber `diensttag_neu.php` und nicht ueber die Datenbank: Die Seite listet
-    genau das, was die Anwendung dem Konto anbietet — einschliesslich
-    zentraler Eintraege und der Standortbindung.
+    genau das, was die Anwendung dem Konto anbietet, samt Standortbindung.
     """
     html = s.get("diensttag_neu.php").text
 
@@ -237,8 +236,10 @@ def kennungen(s) -> dict:
             gefunden[aufbereiten(re.sub(r"\s+", " ", roh).strip())] = int(wert)
         return gefunden
 
-    # Der Standort steht schlicht da (evtl. mit „ (zentral)").
-    standorte = lesen("base_id", lambda x: x.replace(" (zentral)", "").strip())
+    # Der Standort steht schlicht da. Bis Web 20.47.0 konnte „ (zentral)"
+    # dahinter stehen; das schrieb diensttag_neu.php fuer zentrale Standorte
+    # (R39, mit P5c/AP8 gefallen).
+    standorte = lesen("base_id", lambda x: x.strip())
     # Das Rettungsmittel traegt ein Artzeichen davor und den Standort dahinter:
     # „🚁 Alpenfalke 1 · Luftrettungsstation Hochkreuth". Beides gehoert zur
     # ANZEIGE und nicht zum Namen.
@@ -853,6 +854,13 @@ def main() -> int:
     p.add_argument("--stufen", default=",".join(ALLE_STUFEN))
     p.add_argument("--admin-email", default="admin@gen-em.org")
     p.add_argument("--admin-passwort", default="pruefstandzugang2026")
+    # Das Geheimnis des Zweitfaktors (P5c/AP5, E-P5c-43): Das Admin-Konto ist
+    # eine Pflichtrolle. Leer heisst `NADOKU_TOTP`, sonst das der Sandbox --
+    # gegen eine andere Anlage (`--basis`) gehoert deren Geheimnis hierher.
+    # Das Demo-Konto braucht keines; nur die Stufe `konto` meldet sich als
+    # Admin an.
+    p.add_argument("--admin-totp", default="",
+                   help="Geheimnis des Zweitfaktors des Admin-Kontos (Base32)")
     p.add_argument("--zustand", default=str(HIER / "lauf.json"))
     p.add_argument("--konto", default=None,
                    help="abweichendes Zielkonto (Kreislaufpruefung B5)")
@@ -871,7 +879,8 @@ def main() -> int:
         p.error(f"Unbekannte Stufe(n): {', '.join(unbekannt)}")
 
     funktionen = {
-        "konto": lambda: stufe_konto(lauf, (a.admin_email, a.admin_passwort)),
+        "konto": lambda: stufe_konto(lauf, (a.admin_email, a.admin_passwort,
+                                             a.admin_totp)),
         "stammdaten": lambda: stufe_stammdaten(lauf),
         "geraet": lambda: stufe_geraet(lauf),
         "ingest": lambda: stufe_ingest(lauf),

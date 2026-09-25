@@ -306,6 +306,7 @@ ui_seite_start([
          und `flex:1 1 auto` greift — die Fusszeile sitzt jetzt unten am Rand
          statt dicht unter der Karte. Sichtbare Aenderung, beabsichtigt. */ ?>
 <main class="anmeldung">
+ <?php ui_hinweise(); ?>
  <?php /* DIESELBE BREITE WIE DIE ANMELDUNG (O10). Die Karte war 760 px
           breit (`.anmeldung-breit`), die Anmeldung daneben 400 — zwei
           Seiten derselben Familie, die man unmittelbar nacheinander

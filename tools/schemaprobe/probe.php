@@ -26,6 +26,8 @@ declare(strict_types=1);
  *           Migrationen — ohne einen einzigen Wert zu verlieren?
  *   FALL 3  Was tut eine Datenbank, deren Migrationsregister fehlt?
  *   FALL 4  Und eine, auf der die Umbenennung schon gelaufen ist?
+ *   FALL 5  Sperrt der Rueckbau von R39 und FTP, solange Daten ihn verbieten,
+ *           und laeuft er danach ohne Verlust und wiederholbar? (P5c/AP8)
  *
  * Fall 2 ist der wichtigste: Er legt Bestand an, migriert und vergleicht
  * Zeile fuer Zeile. Eine Migration, die Werte verliert, faellt hier auf.
@@ -413,6 +415,135 @@ $pdo->exec('ALTER TABLE missions DROP COLUMN uhr_gesperrt');
 pruefe('die Umbenennung wird uebersprungen — BEIDE Spalten fehlen',
        ($neu['skip'])($pdo) === true,
        'ohne die zweite Bedingung braeche 1054 den ganzen Lauf');
+sag();
+
+/* ---- Fall 5: der Rueckbau von R39 und FTP (P5c/AP8, Nr. 168) --------------
+ *
+ * DIE ERSTE ZERSTOERENDE MIGRATION MIT VORBEDINGUNG. Sie zieht `user_id` in
+ * sechs Tabellen auf NOT NULL, wirft die Auswahltabelle der zentralen
+ * Standorte weg und nimmt `ftp` aus dem ENUM der Sicherungsziele. Ob ein
+ * `MODIFY` ueber einer Spalte mit Fremdschluessel auf jeder Fassung
+ * durchgeht, ist genau die Sorte Frage, fuer die es diese Probe gibt
+ * (Nr. 238) — die Sandbox kennt nur MariaDB.
+ *
+ * DREI LAEUFE UEBER DENSELBEN BESTAND:
+ *   1. mit einer zentralen Zeile und einem FTP-Ziel — beide Migrationen
+ *      sperren, nichts aendert sich, und eine Freigabe hilft nicht;
+ *   2. nach dem Herstellen der Vorbedingung — beide laufen, der eigene
+ *      Bestand bleibt Wert fuer Wert;
+ *   3. ein zweites Mal, mit leerem Register — nichts geschieht, nichts wirft.
+ * Dazu der Tag mit Tagesrettungsmittel (Nr. 169): Er bekommt im ersten Lauf
+ * die Rollen seiner Art, auch waehrend die anderen beiden sperren.
+ */
+sag('FALL 5 — Rueckbau zentraler Stammdaten und FTP (P5c/AP8)');
+$pdo = frisch();
+schema_oder_raus('Fall 5');
+
+$R39 = ['bases', 'vehicles', 'crew_presets', 'resources', 'bw_units', 'transport_dests'];
+$ID5 = ['2026_09_25_zentrale_stammdaten', '2026_09_25_ftp_entfernen',
+        '2026_09_25_tagesrettungsmittel_rollen'];
+/* Den Stand VOR Web 21.0.0 herstellen: Spalten wieder NULL-faehig, die
+ * Auswahltabelle wieder da, `ftp` wieder im ENUM, die drei Kennungen aus dem
+ * Register. */
+foreach ($R39 as $t) { $pdo->exec("ALTER TABLE `$t` MODIFY user_id INT UNSIGNED NULL"); }
+$pdo->exec('CREATE TABLE user_bases (
+              user_id INT UNSIGNED NOT NULL, base_id INT UNSIGNED NOT NULL,
+              PRIMARY KEY (user_id, base_id),
+              FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+              FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+$pdo->exec("ALTER TABLE backup_targets MODIFY protokoll ENUM('ftp','ftps','sftp') NOT NULL");
+$pdo->exec("DELETE FROM schema_migrations WHERE id IN ('" . implode("','", $ID5) . "')");
+
+$pdo->exec("INSERT INTO users (id, email, password_hash, role)
+            VALUES (1, 'probe@example.invalid', 'x', 'user')");
+$pdo->exec("INSERT INTO bases (id, user_id, name) VALUES
+            (1, 1, 'Eigene Station'), (2, NULL, 'Zentrale Station')");
+$pdo->exec("INSERT INTO vehicles (id, user_id, base_id, name, kind) VALUES
+            (1, 1, 1, 'Eigenes RM', 'air'), (2, 1, 2, 'Eigenes RM am zentralen Standort', 'ground')");
+$pdo->exec("INSERT INTO crew_presets (user_id, base_id, role_code, name) VALUES (1, 1, 'p1', 'Probe P1')");
+$pdo->exec('INSERT INTO user_bases (user_id, base_id) VALUES (1, 2)');
+$pdo->exec("INSERT INTO backup_targets (name, protokoll, host, port, nutzer, erstellt_am)
+            VALUES ('Altziel', 'ftp', 'h', 21, 'u', '2026-09-01 00:00:00')");
+$pdo->exec("INSERT INTO days (id, user_id, day, kind, vehicle_name, vehicle_typ)
+            VALUES (1, 1, '2026-09-01', 'air', 'Aushilfe', 'sonstiges')");
+
+$zeile5 = static function (array $lauf, string $id): array {
+    foreach ($lauf['results'] as $r) { if ($r[0] === $id) { return $r; } }
+    return [];
+};
+$nullbar5 = static function (PDO $pdo) use ($R39): int {
+    $n = 0;
+    foreach ($R39 as $t) { if (db_spalte_nullbar($pdo, $t, 'user_id') === true) { $n++; } }
+    return $n;
+};
+
+/* ---- Lauf 1: die Vorbedingung fehlt --------------------------------------- */
+$lauf = migrationen_lauf($pdo, true);
+$z1 = $zeile5($lauf, $ID5[0]);
+$f1 = $zeile5($lauf, $ID5[1]);
+pruefe('Lauf 1: die Stammdaten-Migration sperrt, OHNE Freigabe-Kennung',
+       ($z1[2] ?? '') === 'stopp' && array_key_exists(5, $z1) && $z1[5] === null,
+       mb_substr((string)($z1[3] ?? '?'), 0, 90));
+pruefe('... und nennt die zentrale Zeile und den eigenen Eintrag daran',
+       str_contains((string)($z1[3] ?? ''), 'bases.user_id: 1 Zeile')
+       && str_contains((string)($z1[3] ?? ''), 'base_id: 1 Zeile'));
+pruefe('Lauf 1: die FTP-Migration sperrt ebenso',
+       ($f1[2] ?? '') === 'stopp' && array_key_exists(5, $f1) && $f1[5] === null
+       && str_contains((string)($f1[3] ?? ''), 'backup_targets.protokoll: 1 Zeile'));
+pruefe('Lauf 1: zwei gesperrt, und es hat sich nichts geaendert',
+       $lauf['blockiert'] === 2 && $nullbar5($pdo) === 6 && db_hat_tabelle($pdo, 'user_bases')
+       && str_contains((string)db_spalte_typ($pdo, 'backup_targets', 'protokoll'), "'ftp'"),
+       'gesperrt ' . $lauf['blockiert'] . ', nullbar ' . $nullbar5($pdo) . ' von 6');
+$c5 = $pdo->query('SELECT role_code FROM day_crew WHERE day_id = 1 ORDER BY role_code')
+          ->fetchAll(PDO::FETCH_COLUMN);
+pruefe('Lauf 1: der Tag mit Tagesrettungsmittel hat die Rollen der Luft (Nr. 169)',
+       $c5 === ['fr', 'hems', 'other', 'p1', 'p2'], implode(', ', $c5));
+
+$frei = migrationen_lauf($pdo, true, [$ID5[0] => true, $ID5[1] => true]);
+pruefe('Eine Freigabe hilft nicht — die Vorbedingung ist keine Inhaltssperre',
+       ($zeile5($frei, $ID5[0])[2] ?? '') === 'stopp' && $nullbar5($pdo) === 6);
+
+/* ---- Lauf 2: die Vorbedingung hergestellt ---------------------------------- */
+$pdo->exec('DELETE FROM vehicles WHERE id = 2');
+$pdo->exec('DELETE FROM bases WHERE id = 2');
+$pdo->exec("UPDATE backup_targets SET protokoll = 'ftps'");
+$vorher5 = [
+    $pdo->query('SELECT id, user_id, name FROM bases ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+    $pdo->query('SELECT id, user_id, base_id, name FROM vehicles ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+    $pdo->query('SELECT user_id, base_id, role_code, name FROM crew_presets')->fetchAll(PDO::FETCH_ASSOC),
+];
+$lauf = migrationen_lauf($pdo, true);
+pruefe('Lauf 2: beide laufen',
+       ($zeile5($lauf, $ID5[0])[2] ?? '') === 'ok' && ($zeile5($lauf, $ID5[1])[2] ?? '') === 'ok'
+       && $lauf['blockiert'] === 0,
+       mb_substr((string)($zeile5($lauf, $ID5[0])[3] ?? '?'), 0, 60));
+pruefe('Lauf 2: sechs Spalten NOT NULL, die Auswahltabelle ist fort, ftp ebenso',
+       $nullbar5($pdo) === 0 && !db_hat_tabelle($pdo, 'user_bases')
+       && !str_contains((string)db_spalte_typ($pdo, 'backup_targets', 'protokoll'), "'ftp'"),
+       'nullbar ' . $nullbar5($pdo) . ', Typ ' . db_spalte_typ($pdo, 'backup_targets', 'protokoll'));
+$nachher5 = [
+    $pdo->query('SELECT id, user_id, name FROM bases ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+    $pdo->query('SELECT id, user_id, base_id, name FROM vehicles ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+    $pdo->query('SELECT user_id, base_id, role_code, name FROM crew_presets')->fetchAll(PDO::FETCH_ASSOC),
+];
+pruefe('Lauf 2: KEIN Datenverlust am eigenen Bestand — Wert fuer Wert gleich',
+       $vorher5 === $nachher5, json_encode(array_map('count', $nachher5)));
+$fk5 = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.referential_constraints
+                          WHERE constraint_schema = DATABASE()
+                            AND table_name IN ('" . implode("','", $R39) . "')
+                            AND referenced_table_name = 'users'")->fetchColumn();
+pruefe('Lauf 2: die sechs Fremdschluessel auf users stehen noch', $fk5 === 6, $fk5 . ' von 6');
+
+/* ---- Lauf 3: wiederholbar ------------------------------------------------- */
+$pdo->exec("DELETE FROM schema_migrations WHERE id IN ('" . implode("','", $ID5) . "')");
+$zweiter5 = true;
+try { $lauf = migrationen_lauf($pdo, true); } catch (Throwable $e) { $zweiter5 = false; }
+pruefe('Lauf 3: mit leerem Register folgenlos — alle drei nur verbucht',
+       $zweiter5 && ($zeile5($lauf, $ID5[0])[3] ?? '') !== ''
+       && str_contains((string)($zeile5($lauf, $ID5[0])[3] ?? ''), 'Nicht nötig')
+       && str_contains((string)($zeile5($lauf, $ID5[1])[3] ?? ''), 'Nicht nötig')
+       && str_contains((string)($zeile5($lauf, $ID5[2])[3] ?? ''), 'Nicht nötig'));
 sag();
 
 /* ---- Schluss -------------------------------------------------------------- */

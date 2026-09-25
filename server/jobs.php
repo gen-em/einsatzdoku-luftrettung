@@ -134,13 +134,9 @@ if ($aufKommandozeile) {
             continue;
         }
         if (!empty($b['fehler'])) { $fehler++; }
-        /* `uebergangen` hängt an die Zeile an, statt sie zu ersetzen —
-         * anders als `uebersprungen` weiter oben, das „dieser Job lief gar
-         * nicht" heisst (S10/AP4, E-S10-U-09). */
-        fwrite(STDOUT, sprintf("%-14s %s · erledigt %d%s%s%s%s%s\n", $name,
+        fwrite(STDOUT, sprintf("%-14s %s · erledigt %d%s%s%s%s\n", $name,
             $b['fertig'] ? 'fertig' : 'Rest offen',
             $b['erledigt'],
-            !empty($b['uebergangen']) ? ' · ' . (int)$b['uebergangen'] . ' übergangen' : '',
             !empty($b['geloescht']) ? ' · ' . (int)$b['geloescht'] . ' am Ziel entfernt' : '',
             /* „gelöscht" OHNE ZUSATZ heisst: hier, im eigenen Dateisystem.
              * Die Zeile darueber sagt „am Ziel entfernt" und meint eine
@@ -265,9 +261,20 @@ if ($aktion === 'wartung_an' || $aktion === 'wartung_aus') {
     /* `wartung_einschalten()` ist idempotent und überschreibt Zeitpunkt und
      * Urheber NICHT — ein zweiter Aufruf der Kette nimmt einer von Hand
      * eingeschalteten Wartung also nicht ihre Herkunft. */
+    $vorher = wartung_aktiv();
     $ok = $aktion === 'wartung_an'
         ? wartung_einschalten('kette')
         : wartung_ausschalten();
+    /* Ein Eintrag nur, wenn der Schalter wirklich umlegte (P5c/AP2): Die
+     * Kette ruft `wartung_an` auch, wenn die Wartung schon steht, und ein
+     * zweites „eingeschaltet" wäre eine falsche Auskunft. */
+    if ($ok && $vorher !== wartung_aktiv()) {
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll('verwaltung', $aktion,
+                  $aktion === 'wartung_an' ? 'Wartungsmodus eingeschaltet (Auslieferungskette)'
+                                           : 'Wartungsmodus ausgeschaltet (Auslieferungskette)',
+                  ['weg' => 'kette']);
+    }
     kette_antwort([
         'ok'      => $ok,
         'aktion'  => $aktion,

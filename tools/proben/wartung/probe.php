@@ -50,6 +50,15 @@ declare(strict_types=1);
  * angemeldet", also aussehend wie ein Fehler der ANWENDUNG statt wie einer
  * der Probe.
  *
+ * SEIT P5c/AP5 TRAEGT DIE BETREIBERIN `totp_seit` (E-P5c-43, F-P5c-33).
+ * Ohne Zweitfaktor fuehrte `auth_guard.php` sie auf `zweitfaktor.php` —
+ * ausserhalb der Wartung, denn in ihr schweigt das Tor. Das trifft genau die
+ * Faelle, in denen die Wartung aus ist: das Einschalten (13) und die offene
+ * Installation danach (31). Und eine dritte Sitzung kommt dazu, eine
+ * abgelaufene HALBE Anmeldung, fuer Erwartung 12a (Begruendung dort). Die
+ * Anmeldung mit Code bleibt draussen wie die mit Passwort: Die Sitzungen
+ * entstehen hinter ihr, und den Code-Schritt misst die Zweitfaktorprobe.
+ *
  * WAS SIE NICHT PRUEFT, und warum:
  *   - Das VERHALTEN DES DEPLOYS gegenueber `wartung.lock` (Konzept 6.3).
  *     Die Ausnahme in `auslieferung.yml` ist eine Zusage; bewiesen wird sie beim
@@ -61,7 +70,9 @@ declare(strict_types=1);
  *     geschieht — Admin weiter, alles andere sofort wieder abgemeldet
  *     (E-S5W-09) —, steht in Fall 18, und zwar am Code gelesen: `login.php` ist
  *     ueber HTTP nur mit abgeleitetem Token zu erreichen. Drei Erwartungen,
- *     jede mit genannter Fundstelle.
+ *     jede mit genannter Fundstelle. Seit P5c/AP5 steht das Tor in
+ *     `login_zugang()` und wird zweimal gefragt — nach dem Passwort und nach
+ *     dem Code; Fall 18 liest beide Aufrufe.
  *
  * Aufruf:
  *   php tools/proben/wartung/probe.php [basisadresse]
@@ -164,18 +175,62 @@ function sitzung_ort(): string {
  * bricht, wenn jemand `session.serialize_handler` umstellt.
  */
 function sitzung_anlegen(int $uid, int $epoch): array {
-    $sid  = 'wartungsprobe' . bin2hex(random_bytes(10));
     $csrf = bin2hex(random_bytes(16));
+    $sid  = sitzung_schreiben(['user_id' => $uid, 'epoch' => $epoch,
+                               'last_seen' => time(), 'csrf' => $csrf]);
+    return ['sid' => $sid, 'csrf' => $csrf];
+}
+
+/**
+ * Eine HALBE Anmeldung, und zwar eine abgelaufene (P5c/AP5, E-P5c-53):
+ * `totp_halb` mit einer Frist in der Vergangenheit und KEIN `user_id`. So
+ * steht die Sitzung da, wenn nach dem Passwort binnen fuenf Minuten kein
+ * Code kam. `login.php` zeigt dann wieder das Passwortformular und schaltet
+ * den Block ein, der das Vormerkfach des Browsers raeumt
+ * (`data-vergessen="1"`). Gebraucht fuer Erwartung 12a.
+ */
+function sitzung_halb_anlegen(int $uid, string $email): string {
+    return sitzung_schreiben(['totp_halb' => ['konto' => $uid, 'email' => $email,
+                                              'bis' => time() - 60, 'demo' => false]]);
+}
+
+/** Eine Sitzungsdatei mit genau diesem Inhalt schreiben; liefert die Kennung. */
+function sitzung_schreiben(array $inhalt): string {
+    $sid = 'wartungsprobe' . bin2hex(random_bytes(10));
     if (session_status() === PHP_SESSION_ACTIVE) { session_write_close(); }
     /* VOR `session_start()`, sonst schreibt die Probe woanders hin als der
      * Server liest. Siehe den Kopf der Datei. */
     session_save_path(sitzung_ort());
     session_id($sid);
     session_start();
-    $_SESSION = ['user_id' => $uid, 'epoch' => $epoch,
-                 'last_seen' => time(), 'csrf' => $csrf];
+    $_SESSION = $inhalt;
     session_write_close();
-    return ['sid' => $sid, 'csrf' => $csrf];
+    return $sid;
+}
+
+/**
+ * Der PHP-Code einer Quelle — ohne Kommentare und ohne HTML (P5c/AP5).
+ *
+ * Beides wird durch Leerzeichen ERSETZT, nicht entfernt: Versatz und
+ * Zeilennummer bleiben die der Quelle, und die Probe kann sagen, wo sie
+ * etwas gefunden hat. Ein Zeilenumbruch bleibt ein Zeilenumbruch; jedes
+ * andere Byte wird ein Leerzeichen (ohne `/u`, also byteweise — ein Umlaut
+ * im Kommentar verschiebt nichts).
+ *
+ * WARUM FALL 18 DAS BRAUCHT: `login.php` nennt `login_zugang()` und
+ * `rate_erfolg('salt', …)` auch in Kommentaren. Ein Muster ueber den
+ * Rohtext traefe dort und maesse den Kommentar statt des Ablaufs.
+ */
+function nur_php_code(string $quelle): string {
+    $aus = '';
+    foreach (token_get_all($quelle) as $t) {
+        if (is_array($t) && in_array($t[0], [T_COMMENT, T_DOC_COMMENT, T_INLINE_HTML], true)) {
+            $aus .= (string)preg_replace('/[^\n]/', ' ', $t[1]);
+        } else {
+            $aus .= is_array($t) ? $t[1] : $t;
+        }
+    }
+    return $aus;
 }
 
 /**
@@ -217,6 +272,12 @@ $pdo->prepare('DELETE FROM users WHERE email IN (?, ?)')->execute([$emailAdmin, 
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Wartungsprobe BetreiberIn', 'betreiberin', '', '', 320000)")->execute([$emailAdmin]);
 $uidAdmin = (int)$pdo->lastInsertId();
+/* Der Zweitfaktor der BetreiberIn gilt als eingerichtet (P5c/AP5, Kopf der
+ * Datei). Das Tor fragt allein `totp_seit`; ein Geheimnis braucht keine Seite
+ * dieser Probe. Ohne die Spalte (vor `update.php`) schweigt das Tor ohnehin. */
+if (db_hat_spalte($pdo, 'users', 'totp_seit')) {
+    $pdo->prepare('UPDATE users SET totp_seit = UTC_TIMESTAMP() WHERE id = ?')->execute([$uidAdmin]);
+}
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Wartungsprobe Nutzer', 'user', '', '', 320000)")->execute([$emailUser]);
 $uidUser = (int)$pdo->lastInsertId();
@@ -225,6 +286,7 @@ $epochAdmin = (int)$pdo->query("SELECT session_epoch FROM users WHERE id = $uidA
 $epochUser  = (int)$pdo->query("SELECT session_epoch FROM users WHERE id = $uidUser")->fetchColumn();
 ['sid' => $sidAdmin, 'csrf' => $csrfAdmin] = sitzung_anlegen($uidAdmin, $epochAdmin);
 ['sid' => $sidUser]                            = sitzung_anlegen($uidUser,  $epochUser);
+$sidHalb = sitzung_halb_anlegen($uidUser, $emailUser);
 
 echo "Wartungsprobe gegen $basis\n";
 echo "  Konten $emailAdmin (uid $uidAdmin, admin), $emailUser (uid $uidUser)\n";
@@ -314,6 +376,19 @@ pruefe($a5['code'] === 503 && ($a5['daten']['error'] ?? '') === 'maintenance'
        '5   api/… mit Sitzung -> 503 maintenance MIT meldung (E-S5W-10)',
        'HTTP ' . $a5['code'] . ' ' . substr($a5['rumpf'], 0, 60));
 
+/* HEALTH ANTWORTET IN DER WARTUNG AUS DEM TOR (P5c/AP6, E-P5c-52): 503
+ * `maintenance`, OHNE Token-Pruefung — mit falschem Token dieselbe Antwort
+ * wie ohne. Das Tor steht in `db.php`; `api/health.php` fuehrt keine Zeile
+ * aus, und deshalb zaehlt auch sein Topf nichts. */
+$pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
+$a5h = hole('api/health.php');
+$a5i = hole('api/health.php?token=falsch-und-zwar-eindeutig');
+$healthZeilen = (int)$pdo->query("SELECT COUNT(*) FROM rate_limits WHERE topf = 'health'")->fetchColumn();
+pruefe($a5h['code'] === 503 && ($a5h['daten']['error'] ?? '') === 'maintenance'
+       && $a5i['code'] === 503 && ($a5i['daten']['error'] ?? '') === 'maintenance' && $healthZeilen === 0,
+       '5a  api/health.php -> 503 maintenance aus dem Tor, ohne Token-Pruefung',
+       'HTTP ' . $a5h['code'] . ' / ' . $a5i['code'] . ', Topf health ' . $healthZeilen);
+
 /* ======================================================================
  * Teil 2 — mit Wartung: was offen bleibt (E-S5W-04)
  * ====================================================================== */
@@ -366,6 +441,21 @@ foreach (['betrieb_updates.php' => $a6, 'betrieb_jobs.php' => $a6b,
 pruefe($ohneBalken === [],
        '6   ... und ALLE FUENF tragen den Balken „Wartungsmodus seit"',
        'ohne Balken: ' . implode(', ', $ohneBalken));
+
+/* KOMPLETT-BACKUP UND BACKUP-ZIELE SEIT P5c/AP9 (E-P5c-134).
+ *
+ * Bis Web 21.0.0 antworteten beide im Wartungsmodus mit 503 — und die Seite
+ * Updates bot, wenn der Torwaechter geschlossen hatte, einen Knopf zum
+ * Komplett-Backup an, der genau dort hineinfuehrte. Gemessen wird hier, dass
+ * beide antworten UND den Balken tragen: Ein Statuscode allein sagt nicht,
+ * was die Seite zeigt (siehe oben, Web 15.5.1). */
+$a6g = hole('admin_komplettsicherung.php', $sidAdmin);
+$a6h = hole('admin_sicherungsziele.php', $sidAdmin);
+pruefe($a6g['code'] === 200 && $a6h['code'] === 200
+       && str_contains($a6g['rumpf'], 'Wartungsmodus seit')
+       && str_contains($a6h['rumpf'], 'Wartungsmodus seit'),
+       '6b  Komplett-Backup und Backup-Ziele offen, mit Balken (P5c/AP9)',
+       'komplett ' . $a6g['code'] . ', ziele ' . $a6h['code']);
 
 /* DAS SCHLUESSELBLATT TRAEGT IHN NICHT — UND ZWAR ABSICHTLICH.
  *
@@ -465,20 +555,45 @@ pruefe($a12['code'] === 200, '12  assets/style.css -> 200 (statisch, ungetort)',
  * Pruefsumme mehr. Dieselbe Falle traf die Integritaetswache (Fund 23);
  * `$tagRest` ist ihre Antwort, hier in PCRE: erst ein PHP-Stueck am Stueck,
  * sonst ein einzelnes Zeichen, das kein `>` ist. */
+/* SEIT P5c/AP5 KENNT DIE SEITE EINEN HALBEN STAND (Passwort ja, Code nein).
+ * Endet er ohne Anmeldung, raeumt ein Block das Vormerkfach
+ * (`EdCrypto.vergissAbleitungen()`). Dieser Block steht IMMER in der
+ * Passwortseite und schaltet ueber `data-vergessen` — sonst saehe die
+ * Integritaetswache, die ohne Sitzung fragt, ihn nie. Gemessen wird trotzdem
+ * an zwei Abrufen, je einer Richtung, damit ein spaeterer bedingter Block
+ * hier auffaellt statt still an der Wache vorbei:
+ *
+ *   - MIT ABGELAUFENER HALBER ANMELDUNG: Jeder PHP-freie Block der Quelle
+ *     steht so da — dieselbe Aussage wie bis Web 20.41.
+ *   - OHNE SITZUNG, also die Seite, die die Integritaetswache abruft, steht
+ *     kein Block, den die Quelle nicht hat. Ein Balken IM Skript fiele hier
+ *     auf. Nachsicht nur fuer so viele, wie die Quelle Bloecke MIT PHP darin
+ *     hat — dieselbe Rechnung wie `zusatz` in `wache.py`.
+ *
+ * Welcher Zustand welchen Block zuschaltet, liest die Probe NICHT aus dem
+ * Quelltext. Sie verlangt nur: Keiner fehlt, wenn alle geschaltet sind, und
+ * keiner ist fremd, wenn nicht. */
 $tagRest = '(?:<\?(?:php\b|=).*?\?>|[^>])*';
 $blockRe = '/<script(?!' . $tagRest . '\bsrc=)' . $tagRest . '>(.*?)<\/script>/s';
 preg_match_all($blockRe, (string)file_get_contents(dirname(__DIR__, 3) . '/server/login.php'), $mQ);
+$a10h = hole('login.php', $sidHalb);
+preg_match_all($blockRe, (string)$a10h['rumpf'], $mH);
 preg_match_all($blockRe, (string)$a10['rumpf'], $mA);
+$summe        = static fn(string $b): string => hash('sha256', $b);
 $quellBloecke = array_values(array_filter($mQ[1] ?? [], static fn($b) => !str_contains($b, '<?')));
-$istSummen    = array_map(static fn($b) => hash('sha256', $b), $mA[1] ?? []);
-$gefunden = 0;
-foreach ($quellBloecke as $b) {
-    if (in_array(hash('sha256', $b), $istSummen, true)) { $gefunden++; }
-}
-pruefe($quellBloecke !== [] && $gefunden === count($quellBloecke),
+$quellSummen  = array_map($summe, $quellBloecke);
+$mitPhp       = count($mQ[1] ?? []) - count($quellBloecke);
+$halbSummen   = array_map($summe, $mH[1] ?? []);
+$ohneSummen   = array_map($summe, $mA[1] ?? []);
+$gefunden = count(array_filter($quellSummen, static fn($h) => in_array($h, $halbSummen, true)));
+$fremd    = count(array_filter($ohneSummen, static fn($h) => !in_array($h, $quellSummen, true)));
+pruefe($quellBloecke !== [] && $gefunden === count($quellBloecke)
+       && $ohneSummen !== [] && $fremd <= $mitPhp,
        '12a Der Inline-Block der Anmeldeseite ist im Wartungsmodus unveraendert',
        $gefunden . ' von ' . count($quellBloecke) . ' PHP-freien Bloecken der Quelle '
-       . 'stehen so in der Auslieferung — sonst ginge die Integritaetswache '
+       . 'stehen so in der Auslieferung (abgelaufene halbe Anmeldung, HTTP '
+       . $a10h['code'] . '); ohne Sitzung ' . count($ohneSummen) . ' Bloecke, '
+       . $fremd . ' davon fremd — sonst ginge die Integritaetswache '
        . 'bei jedem Update rot (Nr. 140)');
 
 /* ======================================================================
@@ -512,12 +627,25 @@ pruefe(str_contains($a14b['rumpf'], 'seit unbekannt'),
 /* Fall 15: Das Tor greift VOR Datenbank und Ratenschutz. Gemessen an
  * ingest.php, weil der Weg dort am laengsten ist — Zugangsdaten pruefen,
  * Ratenschutz zaehlen, Nutzlast lesen. Der Vergleich ist der Lauf aus
- * Teil 0 ohne Wartung. */
-$a15 = hole('ingest.php', null, ['mission' => ['x' => 1]],
-            ['Content-Type: application/json', 'X-Device-Id: ' . $devId, 'X-Api-Key: ' . $apiKey]);
-pruefe($a15['dauer'] < $dauerOhne,
+ * Teil 0 ohne Wartung.
+ *
+ * DER MEDIAN AUS FUENF, NICHT EIN ABRUF (F-P5c-165). Die 503 braucht hier
+ * 1,4 bis 1,9 ms, der Vergleich 3,3 bis 5,8 ms — aber ein einzelner Abruf
+ * sprang in einem von zwoelf Laeufen auf 4,4 ms, und ein Vergleich zweier
+ * Einzelwerte im Millisekundenbereich faerbt den Pruefstand dann rot, ohne
+ * dass das Tor sich geaendert haette. Die 503 hat keine Nebenwirkung (das Tor
+ * greift vor jedem Zaehler), deshalb darf sie fuenfmal kommen; der Vergleich
+ * aus Teil 0 bleibt EIN Abruf, weil jeder weitere den Adresstopf zaehlte. */
+$dauern15 = [];
+for ($i = 0; $i < 5; $i++) {
+    $a15 = hole('ingest.php', null, ['mission' => ['x' => 1]],
+                ['Content-Type: application/json', 'X-Device-Id: ' . $devId, 'X-Api-Key: ' . $apiKey]);
+    $dauern15[] = $a15['code'] === 503 ? $a15['dauer'] : INF;
+}
+sort($dauern15);
+pruefe($dauern15[2] < $dauerOhne,
        '15  503 kommt schneller als die Antwort ohne Wartung',
-       sprintf('%.1f ms statt %.1f ms', $a15['dauer'] * 1000, $dauerOhne * 1000));
+       sprintf('Median %.1f ms aus 5 statt %.1f ms', $dauern15[2] * 1000, $dauerOhne * 1000));
 
 /* ======================================================================
  * Teil 4 — Kommandozeile und die Regeln am Code
@@ -550,13 +678,14 @@ $sollAusnahmen = ['betrieb_status.php', 'betrieb_sicherheit.php',
                   'betrieb_statistik.php',
                   'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
                   'betrieb_schluesselblatt.php',
+                  'admin_komplettsicherung.php', 'admin_sicherungsziele.php',
                   'update.php', 'wiederherstellen.php', 'jobs.php',
                   'login.php', 'auth_salt.php', 'logout.php', 'install.php'];
 sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8 + P5c/AP9',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer
@@ -566,21 +695,97 @@ pruefe($istAusnahmen === $sollAusnahmen,
 $loginQuelle = (string)file_get_contents($wurzel . '/login.php');
 pruefe(str_contains($loginQuelle, 'kdf_iter, logo_wahl, role'),
        '18  login.php liest `role` in seiner Nutzerabfrage (E-S5W-09 c)');
+/* SEIT P5c/AP5 STEHT DAS TOR IN EINER FUNKTION, und die Reihenfolge im Text
+ * sagt nichts mehr. `login_zugang()` steht am Kopf der Datei, also VOR jedem
+ * `rate_erfolg()`: Die alte Pruefung „Tor nach rate_erfolg im Text" war rot,
+ * obwohl der Ablauf stimmt — und waere gruen, wenn jemand den AUFRUF vor das
+ * rate_erfolg zoege. Gelesen wird deshalb der Ablauf: wo das Tor steht, wo
+ * es aufgerufen wird und was davor steht. Es gibt zwei Aufrufe, weil es zwei
+ * Schritte gibt — nach dem Passwort und nach dem Code; in den fuenf Minuten
+ * dazwischen kann die Wartung eingeschaltet worden sein (E-P5c-53).
+ *
+ * Am PHP-Code ohne Kommentare (`nur_php_code()`), mit den Zeilennummern der
+ * Quelle in der Ausgabe. */
+$loginCode = nur_php_code($loginQuelle);
+$zeileVon  = static fn(int $pos): string => 'Z. ' . (substr_count($loginCode, "\n", 0, $pos) + 1);
+/* Die Funktionen am Kopf: Name => [von, bis]. In `login.php` beginnen sie in
+ * Spalte 0 und enden mit `}` in Spalte 0. */
+$funktionen = [];
+preg_match_all('/^function\s+(\w+)\s*\(/m', $loginCode, $mF, PREG_OFFSET_CAPTURE);
+foreach ($mF[0] as $i => [, $von]) {
+    $ende = strpos($loginCode, "\n}", $von);
+    $funktionen[$mF[1][$i][0]] = [$von, $ende === false ? strlen($loginCode) : $ende + 2];
+}
+/** Treffer im HAUPTABLAUF, nicht in einer Funktion am Kopf: [[Versatz, Gruppe 1], …]. */
+$imAblauf = static function (string $muster) use ($loginCode, $funktionen): array {
+    preg_match_all($muster, $loginCode, $m, PREG_OFFSET_CAPTURE);
+    $aus = [];
+    foreach ($m[0] as $i => [, $pos]) {
+        foreach ($funktionen as [$von, $bis]) {
+            if ($pos >= $von && $pos < $bis) { continue 2; }
+        }
+        $aus[] = [$pos, $m[1][$i][0] ?? ''];
+    }
+    return $aus;
+};
+[$zVon, $zBis] = $funktionen['login_zugang'] ?? [0, 0];
+$zugangKoerper = substr($loginCode, $zVon, $zBis - $zVon);
+$zugang    = $imAblauf('/\blogin_zugang\s*\(/');
+$vollenden = $imAblauf('/\banmeldung_vollenden\s*\(/');
+$erfolge   = $imAblauf("/\\brate_erfolg\\s*\\(\\s*'(\\w+)'/");
+
 /* Seit S8/AP1 fragt login.php nicht mehr `!== 'admin'`, sondern das Praedikat
  * `rolle_darf_verwalten()` — sonst haette die neue Rolle `betreiberin` als
- * Nicht-Admin gegolten und sich waehrend der Wartung selbst ausgesperrt. */
-pruefe(preg_match('/wartung_aktiv\(\)\s*&&\s*!rolle_darf_verwalten\(/s', $loginQuelle) === 1
-       && str_contains($loginQuelle, 'session_verwerfen();')
-       /* `(false)` seit Web 19.1.3 (Backlog Nr. 126): An DIESER Stelle ist die
-        * Rolle bekannt und reicht nicht — ein Rueckweg-Knopf fuehrte garantiert
-        * auf ein 403. Die Probe prueft den Parameter mit, sonst faellt er beim
-        * naechsten Umbau still weg. */
-       && str_contains($loginQuelle, 'wartung_antwort_seite(false);'),
-       '18  ... und verwirft im Wartungsmodus die Sitzung ohne Verwaltungsrecht (ohne Rueckweg)');
-$posErfolg = strpos($loginQuelle, "rate_erfolg('login'");
-$posTor    = strpos($loginQuelle, 'wartung_aktiv() &&');
-pruefe($posErfolg !== false && $posTor !== false && $posErfolg < $posTor,
-       '18  ... aber ERST nach rate_erfolg — richtiges Passwort sperrt nicht (E-S5W-09 b)');
+ * Nicht-Admin gegolten und sich waehrend der Wartung selbst ausgesperrt.
+ *
+ * `(false)` seit Web 19.1.3 (Backlog Nr. 126): An DIESER Stelle ist die
+ * Rolle bekannt und reicht nicht — ein Rueckweg-Knopf fuehrte garantiert
+ * auf ein 403. Die Probe prueft den Parameter mit, sonst faellt er beim
+ * naechsten Umbau still weg.
+ *
+ * SEIT P5c/AP5 IN EINEM MUSTER, im Rumpf von `login_zugang()`: Bedingung,
+ * `session_verwerfen()` und die Seite ohne Rueckweg in DEMSELBEN Zweig. Bis
+ * dahin durfte `session_verwerfen();` irgendwo stehen — es steht auch im
+ * Zweig des Kontostatus darueber, und der haette die Erwartung allein
+ * erfuellt. Am Code ohne Kommentare, weil ein `}` in einem Kommentar
+ * zwischen den drei Stellen das Muster sonst still abbraeche.
+ *
+ * DAZU DER ABLAUF: Kein Aufruf von `anmeldung_vollenden()` — der Stelle, die
+ * `user_id` setzt — ohne das Tor davor. Das ist E-S5W-09 im Ablauf mit
+ * Code-Schritt: Wer die Sitzung bekommt, ist vorher gefragt worden. */
+$ohneTor = [];
+$vorher  = 0;
+foreach ($vollenden as [$pos]) {
+    $tor = array_filter($zugang, static fn(array $z): bool => $z[0] > $vorher && $z[0] < $pos);
+    if ($tor === []) { $ohneTor[] = $zeileVon($pos); }
+    $vorher = $pos;
+}
+pruefe(preg_match('/wartung_aktiv\(\)\s*&&\s*!rolle_darf_verwalten\([^{]*\{\s*session_verwerfen\(\);'
+                  . '[^}]*wartung_antwort_seite\(false\);/', $zugangKoerper) === 1
+       && $vollenden !== [] && $ohneTor === [],
+       '18  ... und verwirft im Wartungsmodus die Sitzung ohne Verwaltungsrecht (ohne Rueckweg)',
+       'Tor in login_zugang() ' . ($zugangKoerper !== '' ? $zeileVon($zVon) : 'nicht gefunden')
+       . ', ' . count($vollenden) . ' Sitzungsanlage(n) '
+       . ($ohneTor === [] ? 'je dahinter' : '— ohne Tor davor: ' . implode(', ', $ohneTor)));
+
+/* Und jeder Aufruf des Tors steht HINTER dem rate_erfolg seines Schritts:
+ * nach dem Passwort hinter `rate_erfolg('login')`, nach dem Code hinter
+ * `rate_erfolg('totp')`. Wer waehrend der Wartung richtig tippt, darf sich
+ * danach nicht ausgesperrt finden (E-S5W-09 b) — fuer beide Toepfe. */
+$stellen = []; $ohneErfolg = 0; $toepfe = [];
+$vorher  = 0;
+foreach ($zugang as [$pos]) {
+    $namen = array_column(array_filter($erfolge,
+        static fn(array $e): bool => $e[0] > $vorher && $e[0] < $pos), 1);
+    $toepfe    = array_merge($toepfe, $namen);
+    $stellen[] = 'Aufruf ' . $zeileVon($pos) . ' hinter ' . ($namen === [] ? 'nichts' : implode('/', $namen));
+    if ($namen === []) { $ohneErfolg++; }
+    $vorher = $pos;
+}
+pruefe(count($zugang) >= 2 && $ohneErfolg === 0
+       && in_array('login', $toepfe, true) && in_array('totp', $toepfe, true),
+       '18  ... aber ERST nach rate_erfolg — richtiges Passwort sperrt nicht (E-S5W-09 b)',
+       $stellen === [] ? 'kein Aufruf von login_zugang()' : implode('; ', $stellen));
 
 /* ======================================================================
  * Teil 5 — die Wartungsseite selbst
@@ -890,6 +1095,7 @@ if ($torBereit) {
     if ($warVorher) { wartung_setzen($inhaltVorher ?? ''); } else { wartung_weg(); }
     sitzung_weg($sidAdmin);
     sitzung_weg($sidUser);
+    sitzung_weg($sidHalb);
     if ($geraet !== null) {
         $pdo->prepare('DELETE FROM devices WHERE device_id = ?')->execute([$geraet]);
     }

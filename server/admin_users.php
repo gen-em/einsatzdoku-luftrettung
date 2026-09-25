@@ -3,7 +3,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/smtp.php';
-require_admin();
+/* SEIT P5c/AP4 BETRITT AUCH DER SUPPORT DIESE SEITE (E-P5c-14): Er sieht die
+ * Konten der Rolle `user` und nichts sonst, und er legt nichts an und sichert
+ * nichts — beide Handlungen fragen `ist_admin()` vor dem Token. */
+require_support();
+$nurSupport = ist_support();
 require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/format_lib.php';   // zahl_text(), datum_text() (AP7)
 
@@ -125,8 +129,9 @@ function konten_param(string $name, string $vorgabe = ''): string
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = (string)($_POST['action'] ?? '');
+    handlung_erlaubt($action);   // der Support hat hier keine (E-P5c-85: Rolle vor Token)
     csrf_check();
-    $action = $_POST['action'] ?? '';
 
     /* ---- NutzerIn anlegen (M1-10) --------------------------------------
      *
@@ -202,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (ist_dublettenfehler($ex)) {
                         $error = 'Es gibt bereits ein Konto mit dieser E-Mail-Adresse.';
                     } else {
-                        error_log('user_add: ' . $ex->getMessage());
+                        system_melden('user_add', 'Zugang nicht angelegt', $ex);
                         $error = 'Der Zugang konnte nicht angelegt werden. '
                                . 'Es wurde nichts gespeichert.';
                     }
@@ -326,6 +331,7 @@ $alle = db()->query(
             COUNT(d.id) AS geraete
        FROM users u
        LEFT JOIN devices d ON d.user_id = u.id AND ' . geraete_echt_sql('d') . '
+      ' . ($nurSupport ? 'WHERE ' . rollen_ohne_rechte_sql('u') : '') . '
       GROUP BY u.id, u.email, u.name, u.role, u.created_at, u.last_login, u.account_key,
                u.status, u.bestaetigt_am'
 )->fetchAll();
@@ -484,11 +490,13 @@ function konten_sortschluessel(string $text): string
 function konten_sortwert(array $k, string $sort): string
 {
     return match ($sort) {
-        /* Drei Stufen, absteigend nach Rechten: BetreiberIn, Admin,
-         * NutzerIn. Aufsteigend steht damit oben, wer am meisten darf. */
-        'rolle'      => match (rolle_normieren($k['role'])) {
-            'betreiberin' => '0', 'admin' => '1', default => '2',
-        },
+        /* Vier Stufen, absteigend nach Rechten: BetreiberIn, Admin,
+         * Support, NutzerIn. Aufsteigend steht damit oben, wer am meisten
+         * darf. Die Reihenfolge ist die von `ROLLEN`, rueckwaerts — aus dem
+         * Katalog gelesen, damit eine fuenfte Rolle hier nicht vergessen wird
+         * (F-P5c-36). */
+        'rolle'      => (string)(count(ROLLEN) - 1
+                        - (int)array_search(rolle_normieren($k['role']), array_keys(ROLLEN), true)),
         'seit'       => (string)($k['created_at'] ?? ''),
         /* Nie angemeldet sortiert ans ENDE der aufsteigenden Reihenfolge und
          * nicht an den Anfang: Ein leerer Wert ist kein frueher Zeitpunkt. */
@@ -543,9 +551,13 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin']); ?>
 
   <?php ui_titelzeile(['titel' => 'NutzerInnen']); ?>
-  <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite mit allen
-     Verwaltungsaufgaben: Kontodaten, Geräte und Konto-Backups.
-     Ein Klick auf eine Zeile öffnet sie.</p>
+  <?php /* „MIT KONTODATEN, GERÄTEN UND KONTO-BACKUPS" STAND HIER BIS WEB 21.1.0 —
+           der Support und das Demo-Konto haben keine Karte Konto-Backups
+           (Endzählung AP9, A-4). Welche Karten eine Kontoseite trägt, sagt
+           das Handbuch. */ ?>
+  <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite — ein Klick auf
+     eine Zeile öffnet sie.
+     <a href="hilfe.php#11-2-die-liste-der-nutzerinnen">Handbuch: NutzerInnen</a></p>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
@@ -554,7 +566,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
         'Der Einladungslink konnte nicht per E-Mail zugestellt werden. Das Konto '
         . 'ist angelegt, der Link 24 Stunden gültig — bitte auf einem anderen Weg '
         . 'an die Person selbst weitergeben. Wer ihn hat, kann das Passwort des '
-        . 'neuen Kontos setzen. Die Ursache steht im Fehlerprotokoll des Webspace.') ?>
+        . 'neuen Kontos setzen. Die Ursache findet die BetreiberIn im Protokoll unter System.') ?>
     <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Der Link
              ist über hundert Zeichen lang; in der grossen Stufe stand er
              gesperrt in Plakatgrösse über drei Zeilen — und ohne Knopf,
@@ -580,12 +592,19 @@ ui_seite_start(['titel' => 'NutzerInnen']);
            „7 Admins" auf eine Liste mit dreien, und die Kachel hätte gelogen.
            Die Filterplaketten darunter machen es umgekehrt richtig: Sie
            zählen innerhalb der Suche und behalten sie deshalb. */ ?>
-  <div class="kennzahl-raster kennzahl-raster-4">
+  <?php /* DER SUPPORT SIEHT DREI KACHELN, NICHT VIER (M-P5c-02c): Admins
+           stehen nicht in seiner Liste, eine Kachel „Admins" zaehlte Konten,
+           die er nicht oeffnen darf. Die Zahlen kommen aus derselben
+           gefilterten Liste — „Konten" heisst bei ihm: Konten von
+           NutzerInnen. */ ?>
+  <div class="kennzahl-raster <?= $nurSupport ? 'kennzahl-raster-3' : 'kennzahl-raster-4' ?>">
     <?= ui_kennzahl(['wert' => zahl_text($gesamt['konten']),
                      'label' => 'Konten',
                      'href' => konten_weg(['f' => '', 'q' => '', 's' => ''])]) ?>
+    <?php if (!$nurSupport): ?>
     <?= ui_kennzahl(['wert' => (string)$gesamt['admins'], 'label' => 'Admins',
                      'href' => konten_weg(['f' => 'admins', 'q' => '', 's' => ''])]) ?>
+    <?php endif; ?>
     <?= ui_kennzahl(['wert' => (string)$gesamt['ueberfaellig'],
                      'label' => 'Konto-Backup überfällig',
                      'ton' => $gesamt['ueberfaellig'] > 0 ? 'orange' : '',
@@ -598,37 +617,32 @@ ui_seite_start(['titel' => 'NutzerInnen']);
   <?php ui_karte_start([
       'titel' => 'Konten', 'id' => 'k-konten',
       'zahl' => zahl_text($treffer),
-      'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus', 'art' => 'orange',
+      'aktion' => $nurSupport ? null
+                : ['text' => 'Anlegen', 'symbol' => 'plus', 'art' => 'orange',
                    'href' => '#', 'attr' => 'data-dialog="dlg-anlegen"'],
   ]); ?>
 
-    <?php /* ---- Suche und Filter ---------------------------------------- */ ?>
-    <div class="listenkopf">
-      <form method="get" class="listensuche" role="search">
-        <?php foreach (['f' => $filter] as $n => $v): if ($v !== '' && $v !== 'alle'): ?>
-          <input type="hidden" name="<?= e($n) ?>" value="<?= e($v) ?>">
-        <?php endif; endforeach; ?>
-        <?php if ($sort !== 'konto'): ?>
-          <input type="hidden" name="sort" value="<?= e($sort) ?>">
-        <?php endif; ?>
-        <?php if ($ab): ?><input type="hidden" name="dir" value="ab"><?php endif; ?>
-        <label class="nur-vorlesen" for="q">Name oder E-Mail suchen</label>
-        <div class="suchfeld">
-          <?= ui_symbol('lupe', 'suchfeld-lupe') ?>
-          <input type="search" id="q" name="q" value="<?= e($q) ?>"
-                 placeholder="Name oder E-Mail" autocomplete="off">
-        </div>
-        <button class="knopf knopf-neutral nur-vorlesen" type="submit">Suchen</button>
-      </form>
-      <div class="filterreihe">
-        <?php foreach (KONTEN_FILTER as $key => $text): ?>
-          <a class="listenfilter<?= $filter === $key ? ' aktiv' : '' ?>"
-             href="<?= e(konten_weg(['f' => $key === 'alle' ? '' : $key, 's' => ''])) ?>"
-             <?= $filter === $key ? 'aria-current="true"' : '' ?>><span><?= e($text) ?></span>
-            <span class="listenfilter-zahl"><?= (int)$zahlen[$key] ?></span></a>
-        <?php endforeach; ?>
-      </div>
-    </div>
+    <?php /* ---- Suche und Filter ----------------------------------------
+         Seit P5c/AP2 ein Baustein (`ui_listenkopf()`, R83): Die
+         Protokollseite ist der zweite Verbraucher. */
+    $pillen = [];
+    foreach (KONTEN_FILTER as $key => $text) {
+        /* Der Support sieht nur Konten der Rolle `user` — ein Filter
+         * „Admins" fuehrte ihn auf eine leere Liste (M-P5c-02c). Die Filter
+         * nach Konto-Backups bleiben: Sehen darf er den Stand. */
+        if ($nurSupport && $key === 'admins') { continue; }
+        $pillen[] = ['text' => $text, 'aktiv' => $filter === $key, 'zahl' => (int)$zahlen[$key],
+                     'href' => konten_weg(['f' => $key === 'alle' ? '' : $key, 's' => ''])];
+    }
+    ui_listenkopf([
+        'form_id' => 'f-kontensuche',
+        'suche' => ['name' => 'q', 'wert' => $q, 'label' => 'Name oder E-Mail suchen',
+                    'platzhalter' => 'Name oder E-Mail'],
+        'versteckt' => ['f' => $filter !== 'alle' ? $filter : '',
+                        'sort' => $sort !== 'konto' ? $sort : '',
+                        'dir' => $ab ? 'ab' : ''],
+        'filter' => $pillen,
+    ]); ?>
 
     <?php if (!$zeilen): ?>
       <p class="feld-hinweis"><?= $q !== '' || $filter !== 'alle'
@@ -660,9 +674,9 @@ ui_seite_start(['titel' => 'NutzerInnen']);
           [$standText, $standTon] = edbak_stand_plakette($k['stand']);
           $ziel = 'admin_user.php?id=' . (int)$k['id']; ?>
           <tr class="clickable" data-ziel="<?= e($ziel) ?>">
-            <td class="wahl-spalte"><input type="checkbox" data-kontowahl
+            <td class="wahl-spalte"><?php if (!$nurSupport): ?><input type="checkbox" data-kontowahl
                 value="<?= (int)$k['id'] ?>"
-                aria-label="<?= e((string)($k['name'] ?: $k['email'])) ?> auswählen"></td>
+                aria-label="<?= e((string)($k['name'] ?: $k['email'])) ?> auswählen"><?php endif; ?></td>
             <td>
               <span class="konto-name"><?= e((string)($k['name'] ?: '—')) ?></span>
               <span class="konto-mail"><?= e((string)$k['email']) ?>
@@ -700,7 +714,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
         $klein[] = (int)$k['geraete'] . ($k['geraete'] === 1 ? ' Gerät' : ' Geräte');
         $klein[] = 'zuletzt ' . ($k['last_login'] ? datum_text($k['last_login']) : '—');
         ui_zeile([
-          'vorn'  => '<input type="checkbox" data-kontowahl value="' . (int)$k['id']
+          'vorn'  => $nurSupport ? '' : '<input type="checkbox" data-kontowahl value="' . (int)$k['id']
                    . '" aria-label="' . e((string)($k['name'] ?: $k['email'])) . ' auswählen">',
           'text'  => (string)($k['name'] ?: $k['email']),
           'klein' => ($k['name'] ? $k['email'] . ' · ' : '') . implode(' · ', $klein),
@@ -711,43 +725,17 @@ ui_seite_start(['titel' => 'NutzerInnen']);
       endforeach; ?>
     </div>
 
-    <?php /* ---- Fuss: Zaehlung und Seitenwechsel -------------------------- */ ?>
-    <div class="listenfuss">
-      <p class="listenzahl">Konten <?= $von ?>–<?= $bis ?> von
-         <?= zahl_text($treffer) ?></p>
-      <?php if ($seiten > 1): ?>
-        <nav class="seitenwahl" aria-label="Seiten">
-          <a class="seitenknopf<?= $seite <= 1 ? ' aus' : '' ?>"
-             <?= $seite > 1 ? 'href="' . e(konten_weg(['s' => (string)($seite - 1)])) . '"' : 'aria-disabled="true"' ?>
-             aria-label="Vorige Seite"><?= ui_symbol('winkel', 'symbol-links') ?></a>
-          <?php
-          /* Erste, letzte und die Nachbarn der aktuellen Seite; dazwischen
-             eine Ellipse. Bei sieben Seiten stehen alle da, bei siebzig nicht
-             — eine Leiste, die mit dem Bestand waechst, ist keine Leiste. */
-          $zeigen = [1, $seiten, $seite, $seite - 1, $seite + 1];
-          $zeigen = array_values(array_unique(array_filter($zeigen,
-              static fn($n) => $n >= 1 && $n <= $seiten)));
-          sort($zeigen);
-          $vorher = 0;
-          foreach ($zeigen as $n):
-            if ($vorher && $n > $vorher + 1): ?>
-              <span class="seitenluecke" aria-hidden="true">…</span>
-            <?php endif; $vorher = $n; ?>
-            <a class="seitenknopf<?= $n === $seite ? ' aktiv' : '' ?>"
-               href="<?= e(konten_weg(['s' => $n === 1 ? '' : (string)$n])) ?>"
-               <?= $n === $seite ? 'aria-current="page"' : '' ?>><?= $n ?></a>
-          <?php endforeach; ?>
-          <a class="seitenknopf<?= $seite >= $seiten ? ' aus' : '' ?>"
-             <?= $seite < $seiten ? 'href="' . e(konten_weg(['s' => (string)($seite + 1)])) . '"' : 'aria-disabled="true"' ?>
-             aria-label="Nächste Seite"><?= ui_symbol('winkel', 'symbol-rechts') ?></a>
-        </nav>
-      <?php endif; ?>
-    </div>
+    <?php /* ---- Fuss: Zaehlung und Seitenwechsel -------------------------- */
+    ui_listenfuss(['zahl' => 'Konten ' . $von . '–' . $bis . ' von ' . zahl_text($treffer),
+                   'seite' => $seite, 'seiten' => $seiten,
+                   'weg' => static fn(int $n): string
+                       => konten_weg(['s' => $n === 1 ? '' : (string)$n])]); ?>
     <?php endif; ?>
 
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- Sammelleiste: gilt ueber alle Seiten ----------------------- */ ?>
+  <?php if (!$nurSupport): ?>
   <form method="post" id="f-auswahl" hidden>
     <?= csrf_field() ?><input type="hidden" name="action" value="sichern_auswahl">
     <input type="hidden" name="auswahl" id="auswahlfeld" value="">
@@ -757,7 +745,9 @@ ui_seite_start(['titel' => 'NutzerInnen']);
       'text' => 'Auswahl sichern', 'symbol' => 'sicherung',
       'zahl' => 'auswahlzahl', 'hinweis' => '0 ausgewählt',
   ]); ?>
+  <?php endif; ?>
 
+<?php if (!$nurSupport): ?>
   <?php /* ---- Anlegen als Dialog (assets/dialog.js) ---------------------- */ ?>
   <dialog class="dialog" id="dlg-anlegen">
     <form method="post">
@@ -790,6 +780,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
       </div>
     </form>
   </dialog>
+  <?php endif; ?>
 
 <?php ui_geruest_ende(); ?>
 <script<?= kopf_nonce_attr() ?>>

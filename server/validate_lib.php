@@ -164,6 +164,22 @@ const WRAP_RC_RE = '#^' . CHIFFRE_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
 const WRAP_RE    = WRAP_PW_RE;
 
 /**
+ * Das Schlüsselpaar des Rückwegs (Konzept RW, E-RW-05).
+ *
+ * `RW_OEFFENTLICH_RE`: der öffentliche Teil als SPKI in Base64 — für P-256
+ * genau 124 Zeichen; der Spielraum 100 bis 200 lässt einen Kodierer mit
+ * anderer Auffüllung durch, keinen Aufsatz. Ob es wirklich ein P-256-Schlüssel
+ * ist, prüft `rw_oeffentlich_pruefen()`; die Regel hier hält nur die Form.
+ *
+ * `RW_PRIVAT_RE` IST `WRAP_RC_RE`, mit Absicht: Der private Teil liegt unter
+ * dem INHALTSSCHLÜSSEL (`edk1:`) und muss mit dem Wiederherstellungsschlüssel
+ * allein aufgehen — wie `pat_wrap_rc`. Eine `edka1:`-Fassung hinge am
+ * Server-Anteil, und der Rückweg ginge mit dem Anteil verloren.
+ */
+const RW_OEFFENTLICH_RE = '#^[A-Za-z0-9+/]{100,200}={0,2}$#';
+const RW_PRIVAT_RE      = WRAP_RC_RE;
+
+/**
  * Mengenbegrenzungen je Einsatz.
  *
  * Zur Phasenzahl: Mehrfache Eintraege derselben Phasennummer sind
@@ -1012,15 +1028,17 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
  *   - KEIN KURZNAME. Er ist eine Eigenschaft des Bestands (Nr. 69) und dient
  *     der Wiedererkennung in Listen. Was einen Tag lang existiert, wird nicht
  *     wiedererkannt.
- *   - KEINE ROLLEN, KEINE FAEHIGKEITEN (F19). Der Tag bekommt keinen
- *     Rollensatz und keine Fluglisten; `day_crew` und `day_capabilities`
- *     bleiben leer.
+ *   - DIE ROLLEN DER BETRIEBSART, KEINE FAEHIGKEITEN. Der Tag bekommt alle
+ *     Rollen der gewaehlten Art (Nr. 169, E-P5c-47, seit Web 21.0.0 — bis
+ *     dahin keine, F19) und keine Fluglisten; `day_capabilities` bleibt
+ *     leer. Angehakt ist hier nichts, also gibt es nichts auszuwaehlen:
+ *     Die Art ist die einzige Angabe, aus der sich ein Satz ergibt.
  *   - DER STANDORT IST FREIWILLIG — auch beim Typ „Standard". Am
  *     Stammdatensatz ist er dort Pflicht, weil die Vorschlagslisten an ihm
  *     haengen (E15) und ein Standard-Rettungsmittel ohne Standort eine leere
- *     Tagesuebersicht hinterliesse. Hier gibt es keine Vorschlagslisten, weil
- *     es keine Rollen gibt: Die Begruendung traegt nicht, also gilt die Regel
- *     nicht.
+ *     Tagesuebersicht hinterliesse. Hier bleiben die Besatzungsfelder ohne
+ *     Standort aus der Liste Freitext ohne Vorschlaege — ein Preis, den ein
+ *     Dienst von einem Tag tragen kann, und keine Regel wert.
  *   - DER STANDORT DARF FREITEXT SEIN. `base_id` nennt einen Standort aus der
  *     Liste, `base_name` einen Ort, den es als Stammdatensatz nicht gibt. Wo
  *     eine Kennung steht, holt der Aufrufer Namen UND Koordinate aus den

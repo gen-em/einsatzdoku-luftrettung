@@ -239,7 +239,7 @@ messungen.push(await messen('Anmelden', async () => {
   await seite.fill('input[name="password"]', kontoPw);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 120000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
   if (seite.url().includes('login.php')) { throw new Error('Anmeldung gescheitert'); }
   return {};

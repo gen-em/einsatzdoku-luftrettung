@@ -80,7 +80,7 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
-const { motorWahl, starten } = await import(
+const { motorWahl, starten, codeSchritt } = await import(
   new URL('../motor.mjs', import.meta.url).href);
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -204,8 +204,18 @@ async function anmelden(rolle) {
   await seite.fill('input[name="password"]', konto.pw);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
+  /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43). Das Pruefkonto
+   * `admin@gen-em.org` ist eine BetreiberIn mit Zweitfaktor; nach dem
+   * Passwort fragt `login.php` nach dem Code. `codeSchritt()` (motor.mjs)
+   * geht ihn — und meldet das Einrichtungstor als Scheitern: Dessen Adresse
+   * enthaelt `login.php` nicht, und ohne diese Pruefung liefe jeder Admin-Weg
+   * auf `zweitfaktor.php` statt auf seiner Seite (F-P5c-33). */
+  const zf = await codeSchritt(seite);
+  if (!zf.ok) {
+    throw new Error(`Anmeldung als ${konto.email} gescheitert — ${zf.meldung}`);
+  }
   if (seite.url().includes('login.php')) {
     throw new Error(`Anmeldung als ${konto.email} gescheitert. Läuft die lokale `
       + 'Installation (sh tools/referenzdatensatz/einspielen/lokal_starten.sh)? '
@@ -293,8 +303,15 @@ async function neuAnmelden(r) {
   await r.seite.fill('input[name="password"]', konto.pw);
   await Promise.all([
     r.seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-    r.seite.click('button[type="submit"]'),
+    r.seite.click('#loginform button[type="submit"]'),
   ]);
+  /* Derselbe Code-Schritt wie in `anmelden()`. Ein gescheiterter wirft
+   * hier, statt dem Aufrufer eine Seite zu hinterlassen, die er nach der
+   * Adresse fuer angemeldet hielte (das Einrichtungstor). */
+  const zf = await codeSchritt(r.seite);
+  if (!zf.ok) {
+    throw new Error(`Neuanmeldung als ${konto.email} gescheitert — ${zf.meldung}`);
+  }
 }
 
 async function kasten(rolle, weg, breite) {
@@ -392,14 +409,28 @@ async function kasten(rolle, weg, breite) {
     /**
      * Werkzeugkasten fuer eine ANDERE Rolle, bei derselben Breite.
      *
-     * AP2 braucht das, weil DERSELBE Kartendialog an fuenf Stellen sitzt und
-     * die fuenfte — die systemweiten Standorte — nur der Verwaltung
-     * offensteht. Ein Weg, der nur die vier des Demo-Kontos faehrt, meldet
-     * „4 von 4" und hat den fuenften nie gesehen. Die Rolle wird faul geholt
-     * wie sonst auch: Wer sie nie verlangt, meldet sie nie an und zieht
-     * nichts aus der Mengenbremse.
+     * Geschrieben fuer AP2: DERSELBE Kartendialog sass an fuenf Stellen, und
+     * die fuenfte — die systemweiten Standorte — stand nur der Verwaltung
+     * offen. Die ist mit S9/AP5b gefallen (R39); die Einbauorte stehen seither
+     * alle in einer Rolle (`wege/ap2.mjs`), der Werkzeugkasten bleibt fuer
+     * den naechsten Weg in einer anderen. Die Rolle wird faul geholt wie
+     * sonst auch: Wer sie nie verlangt, meldet sie nie an und zieht nichts
+     * aus der Mengenbremse.
      */
     async rolle(name) { return kasten(name, weg, breite); },
+
+    /**
+     * ABMELDEN UND NEU ANMELDEN, in derselben Rolle und demselben Kontext
+     * (P5c/AP1). Die Ankuendigung laesst sich je SITZUNG wegklicken und
+     * kommt beim naechsten Anmelden wieder (E-P5c-13) — belegen laesst sich
+     * das nur mit einer neuen Sitzung im selben Browser. Ein zweiter
+     * Kontext waere eine zweite Sitzung, aber keine NEU-Anmeldung: Er haette
+     * die alte nie gesehen.
+     */
+    async neuAnmelden() {
+      await r.seite.goto(`${BASIS}/logout.php`, { waitUntil: 'domcontentloaded' });
+      await neuAnmelden(r);
+    },
 
     /**
      * Den KONTOSCHALTER der Adresssuche stellen (Profil → Datenschutz).

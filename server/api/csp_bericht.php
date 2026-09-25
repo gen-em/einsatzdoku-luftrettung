@@ -137,7 +137,7 @@ try {
     /* Still. Die Tabelle fehlt (Migration noch nicht gelaufen) oder die
      * Datenbank ist weg — beides ist kein Grund, dem Browser etwas zu
      * antworten. Nachlesbar bleibt es trotzdem. */
-    error_log('csp_bericht: ' . $ex->getMessage());
+    system_melden('csp_bericht', 'Bericht nicht gespeichert', $ex);
 }
 
 csp_ende();
