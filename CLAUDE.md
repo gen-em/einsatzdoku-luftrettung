@@ -210,9 +210,12 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
 
 - **Ende-zu-Ende-Verschlüsselung — und zwar genau dieser Felder.** Name,
   Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse und Koordinate des
-  Einsatzorts, dessen Beschreibung und — seit Web 19.0.0 — die **Notizen des
+  Einsatzorts, dessen Beschreibung, der **manuelle Abfahrtort** (Adresse und
+  Koordinate, seit Web 6.2.0) und — seit Web 19.0.0 — die **Notizen des
   Einsatzes** werden im Browser ver- und entschlüsselt (der Katalog steht in
-  `docs/Technik.md` 4.98). Klartext dieser Felder geht nie an den Server, in
+  `docs/Technik.md` 4.98). *(Der Abfahrtort fehlte in diesem Satz bis zum
+  25.09.2026, obwohl er seit Web 6.2.0 im Block liegt — gefunden von der
+  Gegenprüfung in Konzept BV, F-BV-13.)* Klartext dieser Felder geht nie an den Server, in
   ein Log oder in eine API-Antwort.
   **Im Klartext liegen dagegen:** die **Notizen des Diensttags**
   (`days.notes` — Betriebsnotizen, nicht die des Einsatzes), die GPS-Spur, die

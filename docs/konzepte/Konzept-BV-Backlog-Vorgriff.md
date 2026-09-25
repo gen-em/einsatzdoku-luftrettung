@@ -29,8 +29,8 @@ von `origin/main` `ba2ec57`.
 > | | |
 > |---|---|
 > | Stand | **24.09.2026 — gebaut, Pull Request offen.** Fassung 1 freigegeben (E-BV-01 bis -04); BV-01 bis BV-05 erledigt. **Gemergt wird nach P5c** (Empfehlung, Q-BV-01); danach Abschluss nach `CLAUDE.md` 7 (Erledigt-Zeile im Rahmenplan, Konzept löschen). |
-> | Entschieden | **E-BV-01 bis -08** (Abschnitt 3). Aus der Umsetzung: **E-BV-09** (BV-01, zur Kenntnis — weicht vom Konzepttext ab). |
-> | Offen | **Q-BV-01** (Merge-Zeitpunkt) — Empfehlung „nach P5c", Begründung in 3.1. **Q-BV-02** (Abfahrtort in `CLAUDE.md` 4) und **Q-BV-03** (zwölf weitere Aufzählungen), beide aus der Gegenprüfung P-BV-03 (3.2). |
+> | Entschieden | **E-BV-01 bis -08** (Abschnitt 3). Aus der Umsetzung: **E-BV-09** (BV-01, zur Kenntnis — weicht vom Konzepttext ab). Von der Betreiberin am 25.09.2026: **E-BV-10, -11** (Q-BV-02, -03). |
+> | Offen | **Q-BV-01** (Merge-Zeitpunkt) — Empfehlung „nach P5c", Begründung in 3.1. Q-BV-02 und Q-BV-03 beantwortet (E-BV-10, -11), umgesetzt in BV-06. |
 > | Umsetzung | **BV-00 erledigt** (Konzept, Backlog-Spanne). **BV-01 erledigt** (Nr. 184, `b712aca`; Befunde F-BV-07 bis -09). **BV-02 erledigt** (Nr. 274, `65c5348`; Befund F-BV-10). **BV-03 erledigt** (Nr. 40, `121ee81`; Befund F-BV-11, Nr. 329 notiert). **BV-04 erledigt** (`e4a1931`; Nr. 214 ganz, Nr. 194 und 150 zum Teil). **BV-05 erledigt** (Nr. 222, 270, 281, 212 ausgetragen; Pull Request geöffnet). **Als Nächstes:** nach dem Merge von P5c `main` aufnehmen (`Pruefablauf.md` 5.3), dann Freigabe und Abschluss. |
 > | Fable-Schritte | keine. |
 >
@@ -44,6 +44,7 @@ von `origin/main` `ba2ec57`.
 > | BV-03 Herkunft der Altklassen | **erledigt 24.09.2026** | 40 | `tools/quelltext/vollstaendigkeit-streichliste.md`, `docs/Backlog.md`, `docs/CHANGELOG.md` | klein | `121ee81` | **25 von 25** Herkünften rekonstruiert (O1 4, O2 2, O4 1, O7 2, O8a 1, O9a 1, O9b 2, O9c 12), **0** „nicht feststellbar"; ~~**4** Zeilen von „ersatzlos" auf `[bleibt]` berichtigt (F-BV-11)~~ — widerlegt; **Gegenprüfung P-BV-02: 12 trugen, 12 teilweise, 1 nicht; 15 Zeilen berichtigt** (F-BV-12); Platzhalter **25 → 0**; Prüfung **0** Befunde |
 > | BV-04 Drei Doku-Punkte | **erledigt 24.09.2026** | 214 (erledigt), 194 und 150 (zum Teil, mit Vermerk offen) | `docs/Technik.md` (6.5b, 4.97a, Runbook 7, Datenmodell, Tabelle Sicherungsziel), `docs/Handbuch.md` (Einstieg, Kapitel 5 zweimal), `README.md`, `docs/CHANGELOG.md` (Eintrag Web 10.1.0 rückwirkend), `docs/Backlog.md` | klein | `e4a1931` | Nr. 214: **1** Absatz mit **3** Wegen; Nr. 194: **3** Handbuchstellen + README **2** + Technik **1**, 11.5 bleibt (E-BV-06); Nr. 150: **4** Stellen (3 im Eintrag gezählte + 1 neue), `server/jobs.php` bleibt (E-BV-05); `grep` auf Repositoriumspfad in Befehlen: **0** außer Erklärung und Fund-Eintrag 15.5.2; `handbuch` 2 Dokumente / **0**, `linkprobe` 122 Verweise / **0**, `textprobe` **0** neu; P5c-Hunks an den Stellen: **0** |
 > | BV-05 Austragen und Abschluss | **erledigt 24.09.2026** | 222, 270, 281, 212 | `docs/Backlog.md`, `docs/CHANGELOG.md`, `tools/proben/wiederherstellung/probe.php` (Kopfkommentar), Prüfdokument | klein | | Wiederherstellungsprobe auf frischer Anlage **111 / 0** (Teil 10 „2 erledigt, 2 von 4 offen"); Läufe `pruefung.yml`: BR-Zweig **3**, alle `pull_request`; BV-Zweig nach 4 Pushes **0**; Workflows: **0** Treffer für Uhr-Aufbau oder Cache; `bestandPruefen()` über `EdApi.postJson()` seit `0bee2fb`; offene Backlog-Punkte **115 → 108** (−8 ausgetragen, +1 Nr. 329); keine Nummer doppelt |
+> | BV-06 Verschlüsselungsumfang nachgezogen | **erledigt 25.09.2026** | 194 (erweitert, weiter offen) | `CLAUDE.md` (4), `docs/Technik.md` (4.98, Schlüsselliste, Suche, Import, Wiederherstellung, Endpunkt, Datenmodell), `docs/Handbuch.md` (Einstieg, Einsatzansicht, Suche, 5 zweimal, Entsperren, Import), `README.md`, `docs/Lizenzen.md`, `docs/Was-ist-NAdoku.md`, Buchführung | klein | | **18** Stellen geändert; Code-Belege: `start` in `einsatz_form.php` und `import_ui.js`, Schloss an Alter und Notizen (`einsatz.php`, `dtGeschuetzt`), Notizen in der Suche erst nach dem Entsperren (`suche.php`); P5c-Hunks an den Stellen **0** (`f747bf7`); offen: 11.5, Handbuch 3, zwei Rechtstexte |
 
 ---
 
@@ -103,6 +104,8 @@ gewählten Punkten sind gegen diesen Stand nachgemessen (F-BV-02).
 | E-BV-07 | **BV schreibt den Rahmenplan nicht.** Fahrplanzeile und Erledigt-Eintrag entstehen beim Aufnehmen von `main` nach dem P5c-Merge. | Umsetzung | P5c vergibt laufend Fassungsnummern; die 112 steht dort schon doppelt. Eine dritte Hand am Verlauf macht es schlimmer. |
 | E-BV-08 | **Backlog-Spanne 329 bis 333 für BV, 334 bis 338 für AR.** | Umsetzung | 319 bis 328 hat P5c beim Aufnehmen von BR reserviert (Kopf des Backlogs auf `3576a97`). |
 | E-BV-09 | **Die Symbolprüfung blendet Kommentare jetzt aus — gegen den Text von BV-01 in Abschnitt 4**, der das ausdrücklich ausschloss. | Umsetzung (BV-01) | F-BV-09: Der Ausschluss beruhte auf einer falschen Annahme. Gemessen: Unicode 14 → 5, Emoji 8 → 0, alle 17 weggefallenen in Kommentaren; die Prüfung bleibt Hinweis, kein Befund, und die Zahl steht in keinem anderen Dokument. Die Verweise auf Symboldateien liest sie weiter aus dem ganzen Quelltext. |
+| E-BV-10 | **Der manuelle Abfahrtort kommt in die Zusage** (Q-BV-02): `CLAUDE.md` 4 und `Technik.md` 4.98, dazu alle Aufzählungen des verschlüsselten Umfangs. | Betreiberin, 25.09.2026 („wie empfohlen") | Er ist seit Web 6.2.0 verschlüsselt; die Zusage beschrieb weniger, als der Code tut. Nichts wird aufgeweicht. |
+| E-BV-11 | **Die weiteren Aufzählungen werden in BV nachgezogen** (Q-BV-03) — ohne die zwei Rechtstexte und ohne Handbuch Abschnitt 3 (Nachbarschaft eines P5c-Hunks). | Betreiberin, 25.09.2026 („wie empfohlen") | Nur `docs/` und `README.md`; keine der Stellen liegt in einem Hunk von P5c (`f747bf7`, nachgesehen). |
 
 ### 3.1 Q-BV-01 — Merge-Zeitpunkt (offen)
 
@@ -116,7 +119,7 @@ auf: Konflikte nur in der Buchführung, Prüfstand in der kleinen Stufe, und
 die neuen Prüfungen aus BV-01 und BV-02 messen dabei gleich den neuen
 P5c-Code. **Preis:** Die erledigten Punkte stehen ein paar Tage länger offen.
 
-### 3.2 Q-BV-02 und Q-BV-03 — aus der Gegenprüfung P-BV-03 (offen)
+### 3.2 Q-BV-02 und Q-BV-03 — aus der Gegenprüfung P-BV-03 (beantwortet 25.09.2026: beide wie empfohlen, E-BV-10 und -11)
 
 **Q-BV-02: Der Abfahrtort in der Zusage.** Soll der manuelle Abfahrtort
 (`start`) in `CLAUDE.md` 4 und in die Tabelle von `Technik.md` 4.98

@@ -1781,6 +1781,22 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     in eine Rechtserklärung kopiert wird, bekommt nicht zwei Hände
     gleichzeitig (Konzept BV, E-BV-06). Nach dem Merge von P5c dort
     nachziehen, dann ist der Punkt erledigt.
+    **Erweitert am 25.09.2026 (Konzept BV, BV-06, nach der Gegenprüfung
+    P-BV-03).** Der **manuelle Abfahrtort** (`start`) liegt seit Web 6.2.0 im
+    verschlüsselten Block und fehlte in `CLAUDE.md` 4 und in der Tabelle von
+    `Technik.md` 4.98 — nachgetragen auf Weisung der Betreiberin, dazu in allen
+    oben genannten Aufzählungen. Zwölf weitere Stellen, die den Umfang ohne die
+    Notizen des Einsatzes nannten oder als vollständige Liste lasen, sind
+    nachgezogen (Technik: Schlüsselliste, Suche, Import, Wiederherstellung,
+    Endpunkt; Handbuch: Einsatzansicht, Suche, Entsperren, Import; README,
+    `Lizenzen.md`, `Was-ist-NAdoku.md` mit der Höhe des Einsatzorts). **Offen
+    bleiben** außer 11.5 noch Handbuch Abschnitt 3 (die Zeile „den Schlüssel
+    ab, mit dem Diagnose, Alter und Einsatzort verschlüsselt werden" — sie
+    liegt direkt neben einer Stelle, die P5c ändert) und **zwei Rechtstexte,
+    die der Betreiberin gehören:** `AVV.md` nennt in der Klartextliste die
+    Höhe des Einsatzorts nicht (Anlage II Nr. 2 führt sie), und
+    `Nutzungsbedingungen.md` 2.6 zählt die freiwilligen Angaben ohne die
+    Notizen des Einsatzes und ohne den Abfahrtort auf.
 
 196. **68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
     *Aufgenommen 15.09.2026 beim Gegenlesen der Punkte 190–195.*

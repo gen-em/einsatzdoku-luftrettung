@@ -2,7 +2,7 @@
 
 *Gehört zu `Konzept-BV-Backlog-Vorgriff.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
-Konzepts. Stand: BV-01 bis BV-05 gebaut, P-BV-02 und -03 gegengeprüft, P-BV-05 erledigt, Pull Request offen, 25.09.2026; wird mit jedem Paket
+Konzepts. Stand: BV-01 bis BV-06 gebaut, P-BV-02 und -03 gegengeprüft, P-BV-05 erledigt, Pull Request offen, 25.09.2026; wird mit jedem Paket
 fortgeschrieben.*
 
 ---
@@ -57,6 +57,8 @@ fortgeschrieben.*
 | P-BV-02 | eigene Nachmessung der schwersten Angaben | `c-dc-*` im Markup, `.geo` in O1, `geo-hoch`, `btn-yellow`, `.listen-form`, `tr.clickable`, `settings-form`, `sd-zahl` | alle **bestätigt** (z. B. `.geo` im O1-Stylesheet **0**, in O2 **3**; `btn-yellow` **6** Stellen; `false_alarm` ohne `day_col`) |
 | P-BV-02 | `vollstaendigkeit.py` nach der Berichtigung | Streichliste | **0** Befunde; 25 Zeilen: 15 „berichtigt nach der Gegenprüfung", 10 „bestätigt" |
 | P-BV-03 | Gegenprüfung durch eine unabhängige Instanz gegen `CLAUDE.md` 4, `Technik.md` 4.98 und den Code (`mission_fields.php`, `einsatz_form.php`) | fünf Stellen (Handbuch 1, Handbuch 5 zweimal, README, Technik-Datenmodell) | **4 stimmen, 1 ungenau** (berichtigt); Befund: `start` im `pat_blob`, im Code selbst nachgesehen; zwölf weitere Aufzählungen ohne Notizen des Einsatzes |
+| BV-06 | Code gelesen: `einsatz_form.php` (Block „MANUELLER ABFAHRTORT"), `import_ui.js` (`pat.start`, `pat.notes`, `pat.age`, `pat.site_desc`), `einsatz.php` (`dtGeschuetzt`), `suche.php` (Suchtext) | stimmen die neuen Aufzählungen mit dem Code? | `start` seit Web 6.2.0 (`7432ea2`) im Block; Schloss an **8** Zeilen + Katalogfelder; Notizen im Suchtext nach dem Entsperren; Import verschlüsselt Alter, Beschreibung, Notizen, Abfahrtort |
+| BV-06 | `git diff ba2ec57 f747bf7` je geänderter Datei, Hunk-Anfänge | Konflikt mit P5c? | **0** Stellen in oder direkt neben einem P5c-Hunk (Handbuch Abschnitt 3 deshalb ausgelassen) |
 
 ---
 
@@ -74,6 +76,7 @@ Nichts — BV berührt keine Datei, die der Browser lädt.
 | P-BV-04 | Den Befehl aus `Technik.md` 4.97a gegen den Wertekasten auf **Betrieb → Hintergrundjobs** halten. | Die Dokumentation zeigt den Platzhalter `/pfad/zur/installation/jobs.php`, der Wertekasten den echten Pfad dieser Installation — ohne `server/`. | Der Wertekasten zeigt einen Pfad mit `server/` (dann stimmt der Befund aus Nr. 150 nicht) oder die Dokumentation noch `…/server/jobs.php`. |
 | ~~P-BV-02~~ | **Gegengeprüft am 25.09.2026** von einer unabhängigen Instanz, alle 25 Zeilen (nicht nur drei), auf Weisung der Betreiberin. Ergebnis: **12 trugen, 12 nur teilweise, 1 nicht** — Commit und Paket stimmten überall, der Ersatz nicht. Jede schwere Angabe des Gegenprüfers vor der Übernahme nachgemessen; **15 Zeilen berichtigt**, 10 als bestätigt vermerkt (F-BV-12). | Dein eigener Blick bleibt möglich: eine der als „berichtigt nach der Gegenprüfung P-BV-02" markierten Zeilen gegen ihren Commit halten, Vorschlag `c-dc-winch` (heute `missiontable.js`, `spaltenSatz()`). | Der Commit enthält die Klasse nicht, oder der Ersatz steht dort nicht. |
 | ~~P-BV-05~~ | ~~Im Prüfdokument PK den Punkt **P-PK-17** abhaken.~~ **Erledigt 25.09.2026** auf Weisung der Betreiberin: eingetragen in `Pruefdokument-PK-Pruefkette.md` (Zeile P-PK-17 und 5.6) und im Konzept PK. | Beleg: Lauf 281 — Push auf den Zweig von PR #85 bei offenem PR, genau ein Lauf, `pull_request`, kein `push`-Lauf. Gegenprobe: BV-Zweig, vier Pushes ohne PR, null Läufe; Öffnen von PR #87 ein Lauf. | — |
+| P-BV-07 | Die zwei Rechtstexte selbst ansehen: `docs/rechtstexte/AVV.md` (Klartextliste bei den Datenkategorien) und `docs/rechtstexte/Nutzungsbedingungen.md` 2.6 (freiwillige Angaben). | Entscheiden, ob die Höhe des Einsatzorts (AVV) sowie die Notizen des Einsatzes und der Abfahrtort (Nutzungsbedingungen) ergänzt werden. Beide nennen Anlage II bzw. andere Stellen schon richtig. | — (deine Entscheidung; BV fasst Rechtstexte nicht an) |
 | P-BV-06 | **Nach dem Merge von P5c:** die zwei zurückgestellten Reste nachziehen lassen — den Textbaustein in Handbuch 11.5 (Nr. 194) und den Kopfkommentar in `server/jobs.php` (Nr. 150, mit der nächsten Web-Stufe). | Danach wandern Nr. 194 und 150 nach *Erledigt*. | Einer der beiden Punkte steht Wochen nach dem Merge noch offen. |
 | P-BV-01 | Nach dem Merge von P5c und dem Aufnehmen von `main` in BV: Stufe 1 des PR von BV ansehen, Schritt „Vollständigkeit". | grün, 0 Befunde | Rot mit einem Befund unter „5 Zusagen" in einer Datei, die P5c gebaut hat — dann hat der neue Abtaster dort etwas freigelegt, das der alte verschluckte. Das ist ein echter Fund, kein Fehler von BV: Stelle ansehen und entweder berichtigen oder mit Grund in `vollstaendigkeit-zusagen.md` eintragen. |
 

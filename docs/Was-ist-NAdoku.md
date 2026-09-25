@@ -26,7 +26,8 @@ kannst sie jederzeit ausleiten und weitergeben, an wen du willst.
 
 **Verschlüsselt — nur du kannst sie lesen, wir nicht:** Nachname, Vorname,
 Geburtsdatum, Alter, Diagnose, Einsatznummer, die Adresse und Koordinate des
-Einsatzorts, seine Beschreibung und die Notizen des Einsatzes. Dein Browser
+Einsatzorts, seine Beschreibung, der manuelle Abfahrtort und die Notizen des
+Einsatzes. Dein Browser
 ver- und entschlüsselt sie; der Schlüssel entsteht aus deinem Passwort und
 verlässt den Browser nicht.
 
@@ -42,8 +43,9 @@ später, ob du ihn noch hast.
 
 **Im Klartext — für uns lesbar, weil die Anwendung damit rechnet:** Zeiten und
 Phasen, die Koordinate jeder Einsatzphase, die GPS-Aufzeichnung der Fahrt,
-Rettungsmittel und Standort, die Namen deiner Besatzung, das Transportziel,
-der Verlauf einer Reanimation und die Notizen des Diensttags.
+Rettungsmittel und Standort, die Namen deiner Besatzung, das Transportziel
+samt Koordinate, die Höhe des Einsatzorts, der Verlauf einer Reanimation und
+die Notizen des Diensttags.
 
 Der wichtigste Satz auf dieser Seite ist der nächste. Zwei der Einsatzphasen
 sind die Ankunft am Einsatzort und die Ankunft bei der PatientIn: **Aus den

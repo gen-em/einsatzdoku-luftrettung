@@ -84,6 +84,18 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   Transportziels ergänzt. **Der Textbaustein für die Datenschutzerklärung
   (Handbuch 11.5) ist noch nicht berichtigt** — den überarbeitet P5c mit den
   übrigen Texten in Verwaltung und Betrieb; der Punkt bleibt deshalb offen.
+- **Der manuelle Abfahrtort ist verschlüsselt — die Zusage nannte ihn nicht**
+  (Konzept BV, BV-06, Backlog Nr. 194). Seit Web 6.2.0 liegt er als Schlüssel
+  `start` im verschlüsselten Block; `CLAUDE.md` 4 und die Tabelle in
+  `Technik.md` 4.98 kannten ihn nicht, andere Stellen (Handbuch 4.3,
+  Rechtstexte) schon. Gefunden von einer unabhängigen Gegenprüfung, auf
+  Weisung der Betreiberin in beiden nachgetragen und in allen Aufzählungen
+  des Umfangs. Die Änderung weicht nichts auf — sie beschreibt, was der Code
+  seit August tut. Mitgezogen: zwölf weitere Stellen, die den Umfang ohne die
+  Notizen des Einsatzes nannten (Technik, Handbuch, README, `Lizenzen.md`,
+  `Was-ist-NAdoku.md`). **Nicht berichtigt:** zwei Rechtstexte (`AVV.md`,
+  `Nutzungsbedingungen.md` 2.6) — sie gehören der Betreiberin — und eine
+  Zeile in Handbuch 3 neben einer Stelle, die P5c ändert.
 - **Der Cron-Befehl stand mit dem Pfad des Repositoriums in der
   Dokumentation** (Backlog Nr. 150, BV-04). Auf einer Installation gibt es
   kein `server/`, und wer `php …/server/jobs.php` abtippte, bekam „Could not
