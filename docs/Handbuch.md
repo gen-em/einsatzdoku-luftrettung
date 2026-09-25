@@ -1943,8 +1943,9 @@ gar nicht darin suchen.
 
 ## 5. Verschlüsselung der Patientendaten (Pflicht)
 
-Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Einsatzort, die Beschreibung
-des Einsatzortes, die Einsatznummer und die Notizen des Einsatzes sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
+Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Adresse und Koordinate des
+Einsatzorts, die Beschreibung des Einsatzortes, die Einsatznummer und die
+Notizen des Einsatzes sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
 entschlüsselt mit einem Schlüssel aus deinem Login-Passwort; der Server
 speichert nur Chiffretext. Es
 gibt kein zweites Passwort und keinen Schalter — die Verschlüsselung ist

@@ -3635,9 +3635,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (BV-03, F-BV-11), notiert und nicht mitgemacht.* BV-02 hat die
     Meldungstöne aufgelöst (Nr. 274): Ihre Liste ist geschlossen und steht in
     zwei Bausteinen. Dieselbe Grenze trifft andere Klassen, die zur
-    Laufzeit entstehen — in BV-03 gefunden an `c-dc-<spalte>` aus
-    `mission_fields_lib.php`, die PK-04/1b deshalb als „ersatzlos entfallen"
-    geführt hatte. Von den 62 Hinweisen „Regel im Stylesheet, im Markup
+    Laufzeit entstehen. *(Hier stand als Beispiel `c-dc-<spalte>` — die
+    Gegenprüfung P-BV-02 hat gezeigt, dass diese Klasse zwar erzeugt, aber an
+    kein Element gesetzt wird; ein Mittel müsste genau das unterscheiden.)*
+    Von den 62 Hinweisen „Regel im Stylesheet, im Markup
     nicht gefunden" (gemessen 24.09.2026) tragen **28** das Präfix eines
     Bausteins (`symbol-` 9, `pwq-` 5, `kennzahl-` 4, `karte-` 3, `blatt-` 2,
     `knopf-` 2, `zaehler-` 2, `plakette-` 1) — vermutlich zusammengesetzt,
@@ -3647,6 +3648,17 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Weg:* je Baustein prüfen, ob sein Wertevorrat geschlossen ist; wo ja,
     wie in BV-02 lesen, wo nein, bleibt es beim Hinweis.
     **Zuordnung: Backlog-Runde** (Prüfmittel).
+
+330. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo`
+    das falsche Paket.** *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
+    der Gegenprüfung P-BV-02.* Der Kommentar über `.geo.map-fs` sagt „Der
+    Kartenbehaelter wurde in O1 umbenannt". Gemessen: Das Stylesheet aus O1
+    (`ecd5ff98`) enthält weder `.map` noch `.geo`; `.geo` kommt mit O2
+    (`5436e854`), zugleich mit dem Markup der drei Karten. Harmlos, aber ein
+    Satz, der eine Herkunft falsch nennt, schickt die nächste Suche in das
+    falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
+    `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
+    braucht eine Web-Stufe).
 
 ## Erledigt
 
@@ -10197,12 +10209,21 @@ zutreffen.
     Verwendung verschwand (dafür musste der Klon erst vertieft werden: 381 →
     1 040 Commits), und den Ersatz am Diff gelesen: **25 von 25
     rekonstruiert, keine „Herkunft nicht mehr feststellbar"** — O1 4, O2 2,
-    O4 1, O7 2, O8a 1, O9a 1, O9b 2, O9c 12. **Vier davon waren nicht
-    ersatzlos:** `c-dc-winch`, `c-dc-bergwacht`, `c-dc-secondary` und
-    `c-dc-false_alarm` setzt `mission_fields_lib.php` weiter als Spaltenanker
-    (`'c-dc-' . $col`) — zusammengesetzt, darum als Literal nirgends; die
-    Messung vom 22.09.2026 hat nur Literale gesucht. Sie stehen jetzt als
-    `[bleibt]`. Die Vollständigkeitsprüfung bleibt bei 0 Befunden.
+    O4 1, O7 2, O8a 1, O9a 1, O9b 2, O9c 12. Die Vollständigkeitsprüfung
+    bleibt bei 0 Befunden.
+    **Gegengeprüft am 25.09.2026 (P-BV-02), von einer Instanz, die die
+    Zeilen nicht geschrieben hat: 12 trugen, 12 nur teilweise, 1 nicht.**
+    Die Commits und Pakete stimmten in allen 25; ungenau war der **Ersatz** —
+    Stellenzahlen (`btn-yellow` sechs, nicht vier), Bausteine, die es an der
+    Stelle nicht gab (`ui_feld()`, `stammdaten_ui.php` bei `neu-*`), Farben
+    (`pwquality`: drei, kein Gelb) und ein Paket (`map`: O2, nicht O1). Alle
+    15 Zeilen sind nach den belegten Angaben berichtigt, die zehn übrigen als
+    bestätigt vermerkt. **Hier stand bis dahin, vier `c-dc-*`-Klassen seien
+    nicht ersatzlos, weil `mission_fields_lib.php` sie weiter erzeuge — das war
+    falsch:** `c-dc-false_alarm` hat seit Web 6.3.0 keine Spalte mehr, und die
+    drei übrigen erreichen seit Schritt 15 AP9b kein Element, weil
+    `missiontable.js` diese Spalten selbst führt. PK-04/1b lag mit „ersatzlos"
+    richtig. Nebenfund: Nr. 330.
 
 214. **`install.php` wurde bei jedem Lauf wieder ausgeliefert.**
     *Angewiesen von der Betreiberin am 16.09.2026, umgesetzt am selben Tag in

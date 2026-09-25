@@ -62,9 +62,14 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   keiner Datei mehr". Die Liste ist aber für das Warum da. BV-03 hat je
   Klasse den Commit gesucht, in dem ihre letzte Verwendung verschwand, und
   den Ersatz am Diff gelesen: 25 von 25 rekonstruiert, zwölf davon aus
-  O9c. **Vier waren gar nicht ersatzlos:** Die `c-dc-*`-Spaltenklassen
-  setzt `mission_fields_lib.php` weiter zur Laufzeit; sie stehen jetzt als
-  `[bleibt]`.
+  O9c. **Eine unabhängige Gegenprüfung (P-BV-02) hat 13 davon verworfen
+  oder eingeschränkt**, in allen Fällen beim Ersatz, nie beim Commit —
+  berichtigt, mit Belegen. Darunter die Behauptung, vier `c-dc-*`-Klassen
+  seien nicht ersatzlos: Sie erreichen seit Schritt 15 kein Element mehr,
+  `c-dc-false_alarm` schon seit Web 6.3.0 nicht. Eine Rekonstruktion aus
+  Diffs ist eine Deutung; ohne Gegenlesung hätte die Liste 13 ungenaue
+  Gründe getragen, die genauso vollständig aussahen wie die 25 Platzhalter
+  davor.
 
 ### Dokumentation
 

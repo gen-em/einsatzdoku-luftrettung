@@ -22,7 +22,7 @@ Prüfarbeit auf der einen örtlichen Anlage.
 daneben, entsteht mit BV-01. **Zweig:** `claude/intelligent-carson-q8f7ag`,
 von `origin/main` `ba2ec57`.
 **Backlog:** Spanne **329 bis 333** (E-BV-08), eingetragen im Kopf von
-`docs/Backlog.md` vor dem ersten Push. Vergeben: **329** (BV-03).
+`docs/Backlog.md` vor dem ersten Push. Vergeben: **329** (BV-03), **330** (Gegenprüfung P-BV-02).
 
 > **Statusblock**
 >
@@ -30,7 +30,7 @@ von `origin/main` `ba2ec57`.
 > |---|---|
 > | Stand | **24.09.2026 — gebaut, Pull Request offen.** Fassung 1 freigegeben (E-BV-01 bis -04); BV-01 bis BV-05 erledigt. **Gemergt wird nach P5c** (Empfehlung, Q-BV-01); danach Abschluss nach `CLAUDE.md` 7 (Erledigt-Zeile im Rahmenplan, Konzept löschen). |
 > | Entschieden | **E-BV-01 bis -08** (Abschnitt 3). Aus der Umsetzung: **E-BV-09** (BV-01, zur Kenntnis — weicht vom Konzepttext ab). |
-> | Offen | **Q-BV-01** (Merge-Zeitpunkt) — Empfehlung „nach P5c", Begründung in 3.1; die Betreiberin hat nach dem Vorteil gefragt, die Antwort steht dort. |
+> | Offen | **Q-BV-01** (Merge-Zeitpunkt) — Empfehlung „nach P5c", Begründung in 3.1. **Q-BV-02** (Abfahrtort in `CLAUDE.md` 4) und **Q-BV-03** (zwölf weitere Aufzählungen), beide aus der Gegenprüfung P-BV-03 (3.2). |
 > | Umsetzung | **BV-00 erledigt** (Konzept, Backlog-Spanne). **BV-01 erledigt** (Nr. 184, `b712aca`; Befunde F-BV-07 bis -09). **BV-02 erledigt** (Nr. 274, `65c5348`; Befund F-BV-10). **BV-03 erledigt** (Nr. 40, `121ee81`; Befund F-BV-11, Nr. 329 notiert). **BV-04 erledigt** (`e4a1931`; Nr. 214 ganz, Nr. 194 und 150 zum Teil). **BV-05 erledigt** (Nr. 222, 270, 281, 212 ausgetragen; Pull Request geöffnet). **Als Nächstes:** nach dem Merge von P5c `main` aufnehmen (`Pruefablauf.md` 5.3), dann Freigabe und Abschluss. |
 > | Fable-Schritte | keine. |
 >
@@ -41,7 +41,7 @@ von `origin/main` `ba2ec57`.
 > | BV-00 Konzept | **erledigt 24.09.2026** | — | dieses Konzept, `docs/Backlog.md` (Kopf) | klein | | — |
 > | BV-01 Kommentar-Abtaster | **erledigt 24.09.2026** | 184 | `tools/quelltext/vollstaendigkeit.py`, `vollstaendigkeit-zusagen.md` (+1 Ausnahme), `docs/Backlog.md`, `docs/CHANGELOG.md` | klein | `b712aca` | Zusagen **0** Befunde (nach 1 echtem Fund, F-BV-08); geleerte Zeilen **47 555 → 47 856** in 179 Dateien, `einsatz_form.php` **851 → 877**; nur-alt **7** Zeilen, alle Fehlgriffe; Gegenprobe `confirm(` alt **3**, neu **4**; P5c-Abzug `3576a97` **0**; Symbole Unicode **14 → 5**, Emoji **8 → 0**; Textprobe 0 neu |
 > | BV-02 Zusammengesetzte Tonklassen | **erledigt 24.09.2026** | 274 | `tools/quelltext/vollstaendigkeit.py`, `docs/Backlog.md`, `docs/CHANGELOG.md` | klein | `65c5348` | Hinweis „im Markup nicht gefunden" **64 → 62** (P5c-Abzug 74 → 72), **0** Befunde; Tonlisten PHP = JS, **5** Töne; Gegenprobe (Regel weg + Ton nur in JS) **3** neue Befunde; alte gegen neue Fassung je Ton mit entfernter Regel: Aufrufprüfung meldet in **beiden** (F-BV-10) |
-> | BV-03 Herkunft der Altklassen | **erledigt 24.09.2026** | 40 | `tools/quelltext/vollstaendigkeit-streichliste.md`, `docs/Backlog.md`, `docs/CHANGELOG.md` | klein | `121ee81` | **25 von 25** Herkünften rekonstruiert (O1 4, O2 2, O4 1, O7 2, O8a 1, O9a 1, O9b 2, O9c 12), **0** „nicht feststellbar"; **4** Zeilen von „ersatzlos" auf `[bleibt]` berichtigt (F-BV-11); Platzhalter **25 → 0**; Prüfung **0** Befunde |
+> | BV-03 Herkunft der Altklassen | **erledigt 24.09.2026** | 40 | `tools/quelltext/vollstaendigkeit-streichliste.md`, `docs/Backlog.md`, `docs/CHANGELOG.md` | klein | `121ee81` | **25 von 25** Herkünften rekonstruiert (O1 4, O2 2, O4 1, O7 2, O8a 1, O9a 1, O9b 2, O9c 12), **0** „nicht feststellbar"; ~~**4** Zeilen von „ersatzlos" auf `[bleibt]` berichtigt (F-BV-11)~~ — widerlegt; **Gegenprüfung P-BV-02: 12 trugen, 12 teilweise, 1 nicht; 15 Zeilen berichtigt** (F-BV-12); Platzhalter **25 → 0**; Prüfung **0** Befunde |
 > | BV-04 Drei Doku-Punkte | **erledigt 24.09.2026** | 214 (erledigt), 194 und 150 (zum Teil, mit Vermerk offen) | `docs/Technik.md` (6.5b, 4.97a, Runbook 7, Datenmodell, Tabelle Sicherungsziel), `docs/Handbuch.md` (Einstieg, Kapitel 5 zweimal), `README.md`, `docs/CHANGELOG.md` (Eintrag Web 10.1.0 rückwirkend), `docs/Backlog.md` | klein | `e4a1931` | Nr. 214: **1** Absatz mit **3** Wegen; Nr. 194: **3** Handbuchstellen + README **2** + Technik **1**, 11.5 bleibt (E-BV-06); Nr. 150: **4** Stellen (3 im Eintrag gezählte + 1 neue), `server/jobs.php` bleibt (E-BV-05); `grep` auf Repositoriumspfad in Befehlen: **0** außer Erklärung und Fund-Eintrag 15.5.2; `handbuch` 2 Dokumente / **0**, `linkprobe` 122 Verweise / **0**, `textprobe` **0** neu; P5c-Hunks an den Stellen: **0** |
 > | BV-05 Austragen und Abschluss | **erledigt 24.09.2026** | 222, 270, 281, 212 | `docs/Backlog.md`, `docs/CHANGELOG.md`, `tools/proben/wiederherstellung/probe.php` (Kopfkommentar), Prüfdokument | klein | | Wiederherstellungsprobe auf frischer Anlage **111 / 0** (Teil 10 „2 erledigt, 2 von 4 offen"); Läufe `pruefung.yml`: BR-Zweig **3**, alle `pull_request`; BV-Zweig nach 4 Pushes **0**; Workflows: **0** Treffer für Uhr-Aufbau oder Cache; `bestandPruefen()` über `EdApi.postJson()` seit `0bee2fb`; offene Backlog-Punkte **115 → 108** (−8 ausgetragen, +1 Nr. 329); keine Nummer doppelt |
 
@@ -86,7 +86,9 @@ gewählten Punkten sind gegen diesen Stand nachgemessen (F-BV-02).
 | F-BV-08 | **Der erste Lauf fand, was verschluckt war:** die GPX-Namensraumadresse in `export.js` (`http://www.topografix.com/GPX/1/1`), eine Kennung, die nie abgerufen wird — dieselbe, die für `gpx_lib.php` längst mit Grund in der Ausnahmeliste steht. | Eingetragen in `vollstaendigkeit-zusagen.md` (18 → 19). Eine Datei, die P5c +1 Zeile an anderer Stelle hat; `git merge-file` ohne Konflikt. |
 | F-BV-09 | **Nr. 279, auf die das Konzept für die Symbolprüfung verwies, ist erledigt** (PK-04/5, 23.09.2026). Der einzige Grund, den Abtaster dort nicht zu benutzen, war Nr. 184 selbst — so steht es im Kommentar der Prüfung. | E-BV-09. |
 | F-BV-10 | **Nr. 274 übertrieb die Lücke** (BV-02). „Verschwände eine der beiden Regeln, meldete es niemand" stimmte nicht: Die Tonprüfung am Aufruf hätte jede der fünf Regeln gemeldet, weil jeder Ton mindestens einmal als Literal übergeben wird — gemessen je Ton mit entfernter Regel (ok 17, info 23, warn 21, fehler 21, schutz **1** Treffer an Aufrufen). Für `schutz` hing es an einem einzigen Aufruf (`tag_spuren.php`). | Gebaut wie geplant; der Gewinn ist die Unabhängigkeit vom Aufruf, nicht eine geschlossene Lücke. So steht es im Backlog und im Changelog. |
-| F-BV-11 | **Vier „ersatzlos entfallene" Klassen gibt es noch** (BV-03). `c-dc-winch`, `c-dc-bergwacht`, `c-dc-secondary`, `c-dc-false_alarm`: `mission_fields_lib.php` setzt `'c-dc-' . $col` an jede Katalogspalte, als Anker ohne Regel. Die Messung vom 22.09.2026 (PK-04/1b) hat nur Literale gesucht — dieselbe Grenze, die Nr. 274 für die Meldungstöne beschreibt. | Als `[bleibt]` eingetragen. Ein Mittel, das zusammengesetzte Klassen aller Bausteine auflöst, gibt es nicht; BV-02 hat es nur für die Meldung gebaut (geschlossene Tonliste). Notiert als **Backlog Nr. 329** (28 von 62 Hinweisen tragen das Präfix eines Bausteins), nicht mitgemacht. |
+| F-BV-11 | ~~**Vier „ersatzlos entfallene" Klassen gibt es noch**~~ **— widerlegt von F-BV-12.** (BV-03) `c-dc-winch`, `c-dc-bergwacht`, `c-dc-secondary`, `c-dc-false_alarm`: `mission_fields_lib.php` setzt `'c-dc-' . $col` an jede Katalogspalte, als Anker ohne Regel. Die Messung vom 22.09.2026 (PK-04/1b) hat nur Literale gesucht — dieselbe Grenze, die Nr. 274 für die Meldungstöne beschreibt. | Als `[bleibt]` eingetragen. Ein Mittel, das zusammengesetzte Klassen aller Bausteine auflöst, gibt es nicht; BV-02 hat es nur für die Meldung gebaut (geschlossene Tonliste). Notiert als **Backlog Nr. 329** (28 von 62 Hinweisen tragen das Präfix eines Bausteins), nicht mitgemacht. |
+| F-BV-12 | **Die Gegenprüfung P-BV-02 hat 13 von 25 Streichlisten-Zeilen eingeschränkt oder verworfen** (25.09.2026, eine Instanz, die sie nicht geschrieben hat, alle 25 gelesen). Commit und Paket stimmten in allen 25; der **Ersatz** trug in 12 nur teilweise und in 1 nicht: falsche Stellenzahl (`btn-yellow`), Bausteine, die es dort nicht gab (`ui_feld()` und `stammdaten_ui.php` bei `neu-form`/`neu-feld`), falsche Farben (`pwquality`), falsches Paket (`map`: O2, nicht O1), unvollständige Aufzählungen (`settings-form`, `stammblock`, `rowlink`). Und **F-BV-11 war falsch:** `c-dc-false_alarm` hat seit Web 6.3.0 keine Spalte; die drei übrigen `c-dc-*` erzeugt `mission_fields_lib.php` zwar, aber `missiontable.js` setzt sie seit Schritt 15 AP9b an kein Element, weil es diese Spalten selbst führt. PK-04/1b lag mit „ersatzlos" richtig. Jede Angabe des Gegenprüfers ist vor der Übernahme nachgemessen (Stichproben: `c-dc-*`, `.geo` in O1 = 0, `geo-hoch` ohne Regel, `btn-yellow` 6, `.listen-form` in `admin_stammdaten.php`, `tr.clickable`, fünf `settings-form`, `sd-zahl` bis `fdcc6c5f`). | 15 Zeilen berichtigt (12 teilweise, 1 nicht, 2 Nachträge), 10 als bestätigt vermerkt; `[bleibt]` bei `c-dc-*` zurückgenommen; Backlog Nr. 40, Nr. 329 und Changelog berichtigt; Nebenfund **Nr. 330** (Kommentar in `style.css` nennt O1 statt O2). **Lehre:** Eine Rekonstruktion aus Diffs ist eine Deutung; E-BV-02 hatte BV-03 ohne Gegenlesung geplant, und die Zahl „25 von 25" sah belegt aus. |
+| F-BV-13 | **Die Gegenprüfung P-BV-03 bestätigt die fünf geänderten Stellen und findet ein elftes verschlüsseltes Feld, das die Zusage nicht nennt.** Der manuelle **Abfahrtort** (`start`: `addr`, `lat`, `lon`) liegt im `pat_blob` (`einsatz_form.php`, Block „MANUELLER ABFAHRTORT"; `import_ui.js`). `CLAUDE.md` 4 und die Tabelle in `Technik.md` 4.98 nennen ihn nicht; `Technik.md` 4.98c (Z. 4977), Handbuch 4.3 und die Rechtstexte (AVV, Datenschutz-Ergänzung) nennen ihn. Dazu **eine Stelle ungenau**, von BV-04 selbst geschrieben: Handbuch 5 nannte „Einsatzort" ohne „Adresse und Koordinate" — berichtigt. Und **zwölf weitere Stellen** zählen den verschlüsselten Umfang ohne die Notizen des Einsatzes auf (u. a. die Schlüsselliste in `Technik.md` 4.x, Z. 809; Handbuch Einsatzansicht, Suche, Entsperren, Import); zwei Klartextlisten ohne die Höhe des Einsatzorts (`Was-ist-NAdoku.md`, `AVV.md`). | Handbuch 5 berichtigt. **Q-BV-02** und **Q-BV-03** an die Betreiberin — `CLAUDE.md` 4 ist eine feste Zusage und wird nicht nebenbei geändert, und die Rechtstexte gehören ihr. |
 
 ## 3. Entscheidungen
 
@@ -113,6 +115,22 @@ Changelog und Rahmenplan beim großen Zweig. Mergt P5c zuerst, nimmt BV `main`
 auf: Konflikte nur in der Buchführung, Prüfstand in der kleinen Stufe, und
 die neuen Prüfungen aus BV-01 und BV-02 messen dabei gleich den neuen
 P5c-Code. **Preis:** Die erledigten Punkte stehen ein paar Tage länger offen.
+
+### 3.2 Q-BV-02 und Q-BV-03 — aus der Gegenprüfung P-BV-03 (offen)
+
+**Q-BV-02: Der Abfahrtort in der Zusage.** Soll der manuelle Abfahrtort
+(`start`) in `CLAUDE.md` 4 und in die Tabelle von `Technik.md` 4.98
+aufgenommen werden? Er **ist** verschlüsselt; die Zusage nennt ihn nur nicht.
+Die Änderung weicht nichts auf, sie beschreibt, was der Code tut.
+*Empfehlung: ja, in BV, als eigener kleiner Schritt mit Verweis auf F-BV-13.*
+
+**Q-BV-03: Die zwölf weiteren Aufzählungen.** Sollen die Stellen, die den
+verschlüsselten Umfang ohne die Notizen des Einsatzes nennen, jetzt in BV
+nachgezogen werden (nur `docs/` außerhalb der Rechtstexte; keine davon liegt in
+einem Hunk von P5c, außer Handbuch Z. 403 in der Nähe eines solchen), oder als
+Erweiterung von Nr. 194 nach dem P5c-Merge? Die zwei Rechtstexte (`AVV.md`,
+`Nutzungsbedingungen.md` 2.6) gehören in jedem Fall der Betreiberin.
+*Empfehlung: jetzt in BV, ohne Rechtstexte und ohne Handbuch Z. 403.*
 
 ## 4. Arbeitspakete
 
