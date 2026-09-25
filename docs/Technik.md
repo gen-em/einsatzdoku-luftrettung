@@ -237,8 +237,8 @@ Daten erst nach Server-Bestätigung.
 │   ├── sicherungsziel_lib.php  Backup-Ziele (S2/AP7): Schnittstelle
 │   │                       `Zielweg` und zwei Adapter — FTPS über ext/ftp,
 │   │                       SFTP über phpseclib. `ftp` ist seit Web 20.2.0
-│   │                       abgeschafft (S10/AP4); ein bestehendes Ziel wird
-│   │                       übergangen, nicht gelöscht. Dazu Pflege in der
+│   │                       abgeschafft (S10/AP4), seit Web 21.0.0 auch im
+│   │                       Schema (P5c/AP8). Dazu Pflege in der
 │   │                       Tabelle backup_targets, „Verbindung prüfen" und
 │   │                       der Versandschub
 │   ├── admin_sicherungsziele.php  Adminseite dazu: Ziele anlegen und prüfen,
@@ -832,15 +832,14 @@ Daten erst nach Server-Bestätigung.
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → der Job `waisen` entfernt Waisen (4.97a). **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
 | `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Job `waisen` ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
-| `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Welches Rettungsmittel Fähigkeiten führen darf, entscheidet seit Web 20.3.0 `veh_caps_erlaubt()` (`db.php`) aus Typ UND Betriebsart** — `kind = 'air'` bei `standard`/`veranstaltung`/`sonstiges` (E29), beide Betriebsarten beim Typ `bergwacht`. Die Spalte `faehigkeiten` in `VEHICLE_TYPEN` ist die Quelle; das Schema führt die Regel nicht. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` NULL = **zentral**, sonst persönlich — siehe den Hinweis unter der Tabelle |
+| `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Welches Rettungsmittel Fähigkeiten führen darf, entscheidet seit Web 20.3.0 `veh_caps_erlaubt()` (`db.php`) aus Typ UND Betriebsart** — `kind = 'air'` bei `standard`/`veranstaltung`/`sonstiges` (E29), beide Betriebsarten beim Typ `bergwacht`. Die Spalte `faehigkeiten` in `VEHICLE_TYPEN` ist die Quelle; das Schema führt die Regel nicht. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` = das Konto, seit Web 21.0.0 `NOT NULL` — siehe den Hinweis unter der Tabelle |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
-| `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile. **Seit Web 18.0.0 ohne Oberfläche** — die Karte, die aus- und abwählte, ist mit den zentralen Stammdaten entfallen; geschrieben wird die Tabelle nur noch beim Einspielen einer Kontosicherung |
-| `resources` | Vorbelegung „Andere Rettungsmittel" ; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
+| `resources` | Vorbelegung „Andere Rettungsmittel"; `user_id` = das Konto |
 | `mission_resources` | Rettungsmittel-Zuordnung je Einsatz (eigene Zeilen, einzeln entfernbar) |
-| `bw_units` | Bergwacht-Bereitschaften; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
-| `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
-| `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id`, persönlich oder zentral — ohne FK, weil es zwei Zieltabellen sind); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
-| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb; `day_crew` und `day_capabilities` bekommen dafür keinen Satz |
+| `bw_units` | Bergwacht-Bereitschaften; `user_id` = das Konto |
+| `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` = das Konto |
+| `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id` des Kontos — ohne FK, weil es zwei Zieltabellen sind); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
+| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb. `day_capabilities` bekommt dafür keinen Satz; `day_crew` seit Web 21.0.0 **die Rollen der gewählten Betriebsart** (Nr. 169, E-P5c-47 — bis dahin keinen, F19) |
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
@@ -858,20 +857,20 @@ Daten erst nach Server-Bestätigung.
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
-| `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTPS- oder SFTP-Gegenstelle je Zeile. **`ftp` ist seit Web 20.2.0 abgeschafft** (S10/AP4, E-S10-14): nicht mehr wählbar, nicht mehr speicherbar, nicht mehr beschickt. Das `ENUM` behält den Wert, damit ein bestehendes Ziel lesbar, sichtbar und umstellbar bleibt — es trägt dann die rote Plakette *wird übergangen* und wird beim Versand übersprungen statt im Klartext beliefert. Der Rückbau der Spalte gehört zum ENUM-Aufräumen (Backlog Nr. 168/46). `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
+| `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTPS- oder SFTP-Gegenstelle je Zeile. **`ftp` ist seit Web 20.2.0 abgeschafft** (S10/AP4, E-S10-14) und **seit Web 21.0.0 auch aus dem `ENUM`** (Migration `2026_09_25_ftp_entfernen`, P5c/AP8, E-P5c-124). Bis dahin behielt das Schema den Wert, und ein solches Ziel trug die rote Plakette *wird übergangen*; der Weg dafür ist mit dem Wert gefallen. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
-**Zum Wert `user_id IS NULL`.** Er bezeichnet einen **zentralen
-(systemweiten)** Stammdatensatz — einen, der keinem Konto gehört und allen
-angeboten wird. Das Schema trägt ihn weiter, **aber seit Web 18.0.0 gibt es
-keine Oberfläche mehr, die solche Zeilen anlegt, ändert oder löscht**: Die
-Verwaltungsseite `admin_stammdaten.php` ist ersatzlos gestrichen (Rahmenplan
-R39). Vorhandene Zeilen bleiben sichtbar und unveränderlich — in der
-Kontoansicht mit der Plakette „systemweit" —, und die Abfragen behalten ihren
-Zweig `user_id IS NULL` genau dafür. Der Rückbau des Modells (Spalten auf
-`NOT NULL`, `user_bases` weg, Feld aus der Nutzlast der Kontosicherung) steht
-in P5 und ist als **Backlog Nr. 168** aufgenommen; die Vorarbeit dazu liegt
-in `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`.
+**Jeder Stammdatensatz gehört einem Konto** (`user_id NOT NULL` in den
+sechs Stammdatentabellen, seit Web 21.0.0). Bis dahin hieß `user_id IS NULL`
+„zentral": ein Eintrag, der keinem Konto gehörte und allen angeboten wurde,
+samt einer Tabelle, die zentrale Standorte den Konten zuordnete (E16). Die
+Oberfläche dafür ist mit Web 18.0.0 gefallen (Rahmenplan R39), das Modell mit
+P5c/AP8 (Backlog Nr. 168): Migration `2026_09_25_zentrale_stammdaten`, die
+Abfragen fragen nur noch `user_id = ?`, die Nutzlast der Kontosicherung steigt
+auf 12. **Die Migration hat eine Vorbedingung** (4.x, „Vorbedingung"): Steht
+noch eine Zeile ohne Konto da, sperrt sie, nennt Tabelle und Zahl und lässt
+sich nicht freigeben. Die Fundliste des Rückbaus liegt in der Historie
+(`git log -- docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`).
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
 Punkte-PK tragen das auf Jahre problemlos (~1 Mio. Punkte/Jahr).
@@ -1787,8 +1786,8 @@ Haken = 0 auf NULL gesetzt).
 
 **Freitext statt Auswahl (ab Web 5.5.0, Block A4.2).** Die fünf Felder sind
 `'type' => 'text'` mit `suggest_src => 'crew:<rolle>'`: ein `<datalist>` mit
-den Vorbelegungen der Rolle aus `crew_presets`, wie überall mit
-`(user_id = ? OR user_id IS NULL)`, aber ohne Schranke. Fachlicher Grund: Wer
+den Vorbelegungen der Rolle aus `crew_presets` des Kontos, aber ohne
+Schranke. Fachlicher Grund: Wer
 aushilft, steht typischerweise **nicht** in den Stammdaten — genau der Anlass,
 aus dem eine abweichende Besatzung überhaupt eingetragen wird.
 
@@ -1814,17 +1813,21 @@ sie beim Zuordnen galten. Deklariert wird das je Feld über `role_gate` in
 `mission_fields.php`; `einsatz_form.php` lädt die Rollen einmal über
 `dt_crew()` und setzt beim Rendern nur das `hidden`-Attribut.
 
-**Ein Diensttag mit einem Rettungsmittel nur für den Tag führt keine Rollen**
-(E-S9-10, seit Web 18.1.1): `einsatz_form.php` fragt vorher
-`dt_ist_tagesrettungsmittel()` und übergibt dann einen leeren Satz. Ohne diese
-Abfrage hingen die angebotenen Rollen davon ab, was dem Tag *vorher* zugeordnet
-war — `dt_rollensatz_einfrieren()` löscht beim Wechsel nur **leere** Rollen, ein
-benannter Name überlebt und brachte seine Rolle mit. Zwei Tage derselben Art
-boten damit Verschiedenes an. Die Namen bleiben davon unberührt: Sie stehen
-weiter in `day_crew` und in der Leseansicht des Tages, unerreichbar nur für das
-Einsatzformular, bis wieder ein Rettungsmittel mit dieser Rolle zugeordnet ist.
-**Die Folge ist eine bekannte Lücke** — an einem solchen Tag lässt sich
-Besatzung überhaupt nicht erfassen (Backlog Nr. 169).
+**Ein Diensttag mit einem Rettungsmittel nur für den Tag führt die Rollen
+seiner Betriebsart** (Nr. 169, E-P5c-47, seit Web 21.0.0): bei `kind = 'air'`
+`p1`, `p2`, `hems`, `fr`, `other`, bei `ground` `driver`, `trainee`, `other`
+(`crew_roles_fuer_art()`) — `dt_tagesrettungsmittel_rollen()` in `diensttag_lib.php`, eine
+Stelle für Zuordnen, Vorschau und Einsatzformular. `einsatz_form.php` fragt
+`dt_ist_tagesrettungsmittel()` und schneidet `dt_crew()` auf **genau diesen
+Satz** zu. Ohne den Zuschnitt hingen die angebotenen Rollen davon ab, was dem
+Tag *vorher* zugeordnet war — `dt_rollensatz_einfrieren()` löscht beim Wechsel
+nur **leere** Rollen, ein benannter Name überlebt und brachte seine Rolle mit.
+Die Namen bleiben davon unberührt: Sie stehen weiter in `day_crew` und in der
+Leseansicht des Tages. **Bis Web 20.47.0 führte ein solcher Tag gar keine
+Rollen** (E-S9-10, seit 18.1.1), und Besatzung ließ sich an ihm nicht erfassen;
+die Migration `2026_09_25_tagesrettungsmittel_rollen` trägt den Satz für den
+Bestand nach (E-P5c-123). Eine Wiederherstellung tut es nicht: Sie legt an, was
+in der Datei steht (E8).
 
 Dieselbe Mechanik tragen zwei weitere Filter: **`cap_gate`** prüft die
 eingefrorenen Fähigkeiten (`day_capabilities`) und steuert damit Winde und
@@ -1856,7 +1859,9 @@ clientseitig (`index.php`, `renderCrewFields()` aus der Antwort von
 kann. Im Einsatzformular steht es fest, daher serverseitig.
 
 **Seit Web 18.1.0 zeichnet es sie beim Wechsel sofort neu** (E-S9-11). Dafür
-gibt es `api/day.php?vorschau=<vehicle_id>[&base=<base_id>]`: einen **lesenden**
+gibt es `api/day.php?vorschau=<vehicle_id>[&base=<base_id>]` — und seit
+Web 21.0.0 `?vorschau=adhoc&art=air|ground[&base=<base_id>]` für ein
+Rettungsmittel nur für den Tag (Nr. 169): einen **lesenden**
 Aufruf, der Rollensatz (`vehicle_roles`) und Vorlagen (`crew_presets` des
 Standorts) zu einer **noch nicht gespeicherten** Wahl liefert und nichts
 schreibt. Eingefroren wird weiterhin erst beim Speichern durch `dt_zuordnen()`
@@ -4011,28 +4016,19 @@ benannten Zweig (`sftp`), und alles Übrige fiel in `ZielFtp`, wo
 `$prot === 'ftps'` über TLS entscheidet. FTPS war damit geschützt, ein
 **unbekanntes oder leeres** Protokoll aber fiel still auf Klartext-FTP zurück.
 
-**Ein bestehendes Ziel wird übergangen, nicht gelöscht.** Es bleibt lesbar,
-sichtbar und umstellbar:
-
-| Wo | Was geschieht |
-|---|---|
-| Liste der Backup-Ziele | rote Plakette **„wird übergangen"**; die Zeile „Zuletzt gescheitert" heisst dort „Zuletzt übergangen" und steht orange |
-| Formular | gesperrt mit Erklärung; die Protokollauswahl öffnet **ohne Vorauswahl** (`['' => '— bitte wählen —']`), ein Speichern stellt also zwangsläufig um |
-| „Verbindung prüfen" | gesperrt |
-| Versandschub | `sz_versand_schub()` überspringt es **vor** `sz_weg()` und zählt es als `uebersprungen`; im Lauf steht „Übergangen: …" |
-| Rückstand | `sz_versand_rueckstand()` filtert es heraus |
-| Cron | `php server/jobs.php versand` hängt `· N übergangen` an die Ergebniszeile |
-| Betrieb → Status | eigener Eimer, Ton **orange** (Design.md 9.23: etwas braucht Zuwendung, nichts ist kaputt) — sortiert nach **Protokoll**, nicht nach dem Text von `letzter_fehler` |
-
-**Kein `fehler`-Eintrag**, und das ist Absicht: `jobs_lib.php` wirft darauf,
-und der Versandjob stünde dauerhaft rot. Auf der Jobebene heisst die Zahl
-deshalb `uebergangen` und **nicht** `uebersprungen` — Letzteres ist im Bericht
-schon belegt („der Job lief gar nicht"), und `jobs.php` überspränge bei diesem
-Schlüssel die **ganze** Ergebniszeile.
-
-**Keine Schemaänderung.** Das `ENUM` von `backup_targets.protokoll` behält den
-Wert `ftp`; der Rückbau der Spalte gehört zum ENUM-Aufräumen (Backlog Nr. 168
-bzw. Nr. 46). Eine Migration braucht S10 nicht.
+**Seit Web 21.0.0 kennt auch das Schema den Wert nicht mehr** (Migration
+`2026_09_25_ftp_entfernen`, P5c/AP8, E-P5c-124). Sie sperrt mit
+Vorbedingung, solange ein FTP-Ziel dasteht, und nennt den Weg: unter
+Verwaltung → Sicherungsziele umstellen oder löschen. **Mit dem Wert ist der
+Weg gefallen, der ein solches Ziel von 20.2.0 bis 20.47.0 umschiffte:** die
+rote Plakette „wird übergangen" samt „Zuletzt übergangen", das gesperrte
+Altziel-Formular ohne Vorauswahl, das Überspringen im Versandschub
+(`uebersprungen`) und im Rückstand, die Zahl `uebergangen` im Bericht des
+Versandjobs und in der Cron-Zeile, der orange Eimer „umzustellen" auf
+Betrieb → Status. Was die Datenbank nicht annimmt, muss die Anwendung nicht
+umschiffen. **Es bleibt der allgemeine Riegel in `sz_weg()`**: Ein
+Protokoll, das diese Fassung nicht kennt, bekommt keine Verbindung — das
+landet jetzt, wie jeder andere Wurf, in `fehler`.
 
 #### Was die beiden taugen
 
@@ -5525,13 +5521,13 @@ Die Bausteine im Einzelnen:
 | Formatierer im Browser | `assets/format.js` (`EdFormat`) | **Zahl und Größe** (`zahl()`, `groesse()`) — dieselben Regeln wie `format_lib.php`, über 2 014 Byte-Werte Zeichen für Zeichen geprüft. **Tag, Dauer und Strecke** seit Web 20.34.0 (`tag()`, `tagKurz()`, `spanne()`, `dauer()`, `dauerUhr()`, `minuten()`, `km()`, `kmSumme()`) — dafür gibt es **keine** PHP-Entsprechung: Dort geht es um UTC-Zeitstempel mit Zonenumrechnung, hier um einen nackten Tagesstring und um Dauern, die serverseitig nicht entstehen. **Der Leerwert ist überall ein Parameter**, kein fester Wert — die Lehre aus AP7, wo ein fester Frühausstieg aus „– um –“ ein „–“ machte. Sechs verschiedene Leer-Antworten waren im Bestand gemessen worden. **Die Datei steht im `<head>`** (`ui_seite_start()`), damit die Ladereihenfolge keine Frage mehr ist. **Fünf dünne Weiterleitungen bleiben** (Z34), jede bindet einen anderen Leerwert. |
 | Spalten von `missions` | `mission_fields_lib.php` | `mf_missions_register()` führt jede der 41 Spalten **genau einmal** und sagt je Zweck, ob sie dabei ist und an welcher **Position**; `mf_spalten($zweck, $präfix, $alias)` erzeugt die Liste, `mf_spalten_sql()` den SQL-Text. Neun Zwecke: `export` · `backup` · `backup_restore` · `import_neu` · `import_aendern` · `ingest_neu` · `schnitt_neu` · `suchindex` · `range`. Die Position wird mitgeführt, weil die Listen in Menge **und** Reihenfolge eingefroren sind — eine andere Reihenfolge ändert die Spaltenfolge im CSV-Export. `mf_spalten()` verlangt je Zweck eine lückenlose Folge ab 0. Fehlt eine Spalte in einem Zweck, steht der Grund in `mf_missions_gruende()`. Ab Web 20.31.0. |
 | Feste Werte in einer erzeugten Anweisung | (Aufrufseite) | Wo Werte fest im Satz stehen, hängt die Wertform an der **Spalte**, nicht an ihrer Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]`, `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer ein Feld unter die Schranke nimmt, trägt es an **einer** Stelle ein. |
-| Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, seit Web 20.41.0 `db_spalte_typ()` (der volle Spaltentyp, etwa die Werte eines ENUM — P5c/AP4) — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
+| Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, seit Web 20.41.0 `db_spalte_typ()` (der volle Spaltentyp, etwa die Werte eines ENUM — P5c/AP4), seit Web 21.0.0 `db_spalte_nullbar()` (ob die Spalte NULL zulässt — P5c/AP8) — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
 | Anfrage an den Server | `assets/api.js` (`EdApi`) | `EdApi.postJson(url, daten, o)` und `EdApi.postForm(url, felder, o)`, seit Web 20.34.0. Beide liefern `{ ok, status, daten, meldung }` und **werfen nie** — ein Netzfehler kommt als `status: 0`. Sie hängen das CSRF-Token selbst an (Kopfzeile bzw. Feld) und bauen den **einen** Satzbau `<Vorgang> ist fehlgeschlagen: <Grund>`. Vorrangkette des Grundes: `meldung` → `text` → `hinweis` → Ersatzsatz mit Kennung. **`error` steht nicht in der Kette** — es trägt Maschinenwörter, keine Sätze, und erscheint nur als Kennung in der Klammer. **`ok` ist ein Transport-Urteil**: Es prüft `daten.ok !== false`, nicht `=== true`, weil die lesenden Endpunkte gar kein `ok` schicken — wer ein fachliches `ok` braucht, prüft `a.daten.ok` mit. **Die Array-Regel von `postForm` ist sicherheitsrelevant**: Ein Feldwert, der ein Array ist, geht als `name[]` hinaus; ohne die Klammern liest PHP eine Zeichenkette, `is_array()` schlägt fehl, und die Schlüsselblatt-Rückfrage zählt einen Fehlversuch. **Die Datei steht im `<head>`** — nicht in der Immer-Liste, weil `ui_geruest_ende()` auf `einstellungen.php` und `import.php` **nach** den Seitenskripten steht und `unlock.js` dort zur Ladezeit sendet. |
 | Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Die Tonklasse wird zusammengesetzt** — `tools/quelltext/` (`vollstaendigkeit`) sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. |
 | Auftakt der Patientenanzeige | `assets/patient.js` (`EdPat.listeLaden`) | `EdPat.listeLaden(liste, o)`, seit Web 20.34.0: Schlüssel holen, Sperrbanner nach der Regel setzen (sichtbar genau dann, wenn kein Schlüssel da ist **und** die Liste überhaupt einen `pat_blob` enthält), entschlüsseln, zählen. Gibt `{ ck, zahl }` zurück und **entscheidet nicht**: Tagesansicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und dabei den Altersfilter sperren. `zeigeUnlesbar()` ruft der Aufrufer **nach** seiner Schleife. **`einstellungen.php` bleibt draußen** (Z36 endet bei 1): Es teilt nur den Aufruf, arbeitet mit Fenstern zu 250 aus einem Bestand von tausenden, und `hinweisUnlesbar()` wertet die **ganze** Liste aus — über ein Fenster gesagt wäre der Satz falsch. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
-| Migrationsschutz | `migration_lib.php` (`migrationen_inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert). Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
+| Migrationsschutz | `migration_lib.php` (`migrationen_inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert — einzeln freigebbar, wenn die Daten gesichert sind). **Seit Web 21.0.0 dazu `vorbedingung`** (P5c/AP8, E-P5c-125): eine Funktion, die zählt, was die Migration unmöglich machte, und `vorbedingung_weg`, der eine Satz, wie man es herstellt. Sie sperrt **ohne Freigabe-Kennung** — kein Häkchen auf Betrieb → Updates, ein eigener Hinweis in `php update.php` —, weil ein `MODIFY … NOT NULL` über einer NULL-Zeile nichts freizugeben hätte. Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
 | Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Backup. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
 | Formatkennung des Chiffretexts | `assets/crypto.js` (`CHIFFRE_PRAEFIX`), `validate_lib.php` (`PAT_BLOB_RE`, `WRAP_RE`) | `edk1:` vor jedem Chiffretext. Schreiben immer, Lesen großzügig (keine Kennung = erste Fassung), unbekannte Kennung wird als solche gemeldet. Betrifft `pat_blob` **und** beide Schlüsselhüllen — sie kommen aus derselben Funktion. |
 | Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Zeile „Schlüsselableitung" auf Betrieb → Status meldet diesen Zustand (rot, „Anmeldung blockiert"). |
@@ -10753,6 +10749,14 @@ Stand kommen, der draußen läuft, sonst lässt das Tor ihn nicht durch.
 legt der Job `Rückfallstand (Staging)` ein Komplett-Backup **auf Staging** an
 und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
 (E-KH-16). Diesen Namen braucht Schritt 2.
+
+**Über Web 21.0.0 zurück geht es nur mit dem Rückfallstand** (P5c/AP8). Die
+Migration `2026_09_25_zentrale_stammdaten` wirft die Tabelle der Auswahl
+zentraler Standorte weg, und der Code davor liest sie in jeder
+Diensttag-Auswahl. Ein älterer Stand, ohne die Datenbank dazu ausgeliefert,
+läuft auf eine fehlende Tabelle. Erst den Komplett-Stand einspielen
+(Schritt 2), dann ausliefern — dasselbe gilt für jeden Hotfix, dessen Tag vor
+21.0.0 liegt.
 
 ---
 

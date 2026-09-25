@@ -7,11 +7,10 @@ require_once __DIR__ . '/mission_fields_lib.php';   // Spalten der Tagestabelle
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/format_lib.php';         // datum_zeit_text() fuer die Geraetezeile
 
-/* Stammdaten fuer die Auswahlfelder des Diensttags. Es sind die eigenen und die
- * AUSGEWAEHLTEN zentralen Standorte samt ihren Rettungsmitteln (E16) — dieselbe
- * Menge, die dt_zuordnen() beim Speichern akzeptiert. Weicht das eine vom
- * anderen ab, wird ein zentraler Eintrag beim Speichern stillschweigend auf
- * NULL zurueckgesetzt. */
+/* Stammdaten fuer die Auswahlfelder des Diensttags: die eigenen Standorte und
+ * Rettungsmittel — dieselbe Menge, die dt_zuordnen() beim Speichern
+ * akzeptiert. Weicht das eine vom anderen ab, wird ein angebotener Eintrag
+ * beim Speichern stillschweigend auf NULL zurueckgesetzt. */
 $SD_BASES    = dt_bases($userId);
 $SD_VEHICLES = dt_vehicles($userId);
 $SD_DEFAULTS = dt_standardwerte($userId);
@@ -340,12 +339,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
           <select name="base_id" id="basesel">
             <option value="">–</option>
             <?php foreach ($SD_BASES as $b): ?>
-              <option value="<?= (int)$b['id'] ?>"><?= e($b['name']) ?><?php
-                /* Zentrale Standorte kenntlich machen: Sie werden von einer
-                   Administratorin gepflegt, eigene Änderungen sind dort nicht
-                   möglich. Ohne die Kennzeichnung stünden zwei gleichnamige
-                   Einträge ohne Unterschied nebeneinander. */
-                echo !empty($b['zentral']) ? ' (zentral)' : ''; ?></option>
+              <option value="<?= (int)$b['id'] ?>"><?= e($b['name']) ?></option>
             <?php endforeach; ?>
           </select>
         </label>
@@ -408,8 +402,8 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
                    autocomplete="off" placeholder="Auswahl oder freier Text">
             <input type="hidden" name="adhoc_base_id" id="adhoc-base-id" value=""></label>
           <p class="feld-hinweis">Dieses Rettungsmittel wird nur an diesem Diensttag
-            gespeichert — es entsteht kein Stammdatensatz, und es gibt keine
-            Besatzungsrollen.</p>
+            gespeichert — es entsteht kein Stammdatensatz. Die Besatzung hat die
+            Rollen der gewählten Betriebsart.</p>
         </div>
         <?php /* Die Besatzungsfelder entstehen im Browser aus dem EINGEFRORENEN
                  Rollensatz des Diensttags (`day_crew`, E8), den api/day.php
@@ -936,19 +930,25 @@ async function loadDay(dayId){
   f.elements['adhoc_base_id'].value   = (istAdhoc && d.meta.base_id) ? String(d.meta.base_id) : '';
   adhocAnpassen();
   f.elements['notes'].value = (d.meta && d.meta.notes) ? d.meta.notes : '';
-  /* EIN ADHOC-TAG ZEIGT KEINE ROLLENFELDER (E-S9-10, F19) — auch dann nicht,
-     wenn in `day_crew` noch Namen aus einer frueheren Zuordnung stehen. Die
-     Zeilen bleiben in der Tabelle: Ein Name, den jemand eingetragen hat, wird
-     nicht geloescht, weil das Rettungsmittel gewechselt hat, und er steht
-     wieder da, sobald die Rolle zurueckkommt. Dasselbe geschieht heute schon
-     beim Wechsel auf ein Rettungsmittel mit weniger Rollen. */
   /* Die Merkliste kommt aus DER ANTWORT, nicht aus den Feldern: Sie soll auch
      die Rollen kennen, die das Formular gerade nicht zeichnet. */
   GESPEICHERTE_CREW = {};
   ((d.meta && d.meta.crew) || []).forEach(c => {
     if (c.name) { GESPEICHERTE_CREW[c.role] = c.name; }
   });
-  renderCrewFields(istAdhoc ? Object.assign({}, d.meta, { adhoc: true, crew: [] }) : d.meta);
+  /* EIN ADHOC-TAG ZEIGT DIE ROLLEN SEINER BETRIEBSART (Nr. 169, E-P5c-47,
+     seit Web 21.0.0) — genau diese, auch wenn in `day_crew` noch Namen aus
+     einer frueheren Zuordnung stehen. Die Zeilen bleiben in der Tabelle und
+     in der Merkliste: Ein Name, den jemand eingetragen hat, wird nicht
+     geloescht, weil das Rettungsmittel gewechselt hat. Die Menge liefert die
+     Vorschau, dieselbe Frage wie beim Waehlen; vorher werden die Felder des
+     vorigen Tags geleert, sonst nahme sie deren Namen mit. */
+  if (istAdhoc) {
+    renderCrewFields({ vehicle_id: null, adhoc: true, crew: [], presets: {} });
+    rollenVorschau();
+  } else {
+    renderCrewFields(d.meta);
+  }
   zeigeTagLese(d.meta);
   document.getElementById('savestate').textContent = '';
   document.getElementById('addmission').href = 'einsatz_form.php?d=' + d.day_id;
@@ -1167,9 +1167,8 @@ function renderCrewFields(meta){
        (`role_gate`), und der ist an einem Tagesrettungsmittel leer. Wer dem
        Satz folgte, fand die Felder nicht. Jetzt sagt er, was gilt. */
     hint.textContent = (meta && meta.adhoc)
-      ? 'Ein Rettungsmittel nur für diesen Tag führt keine Besatzungsrollen — '
-        + 'auch nicht am einzelnen Einsatz. Wer die Besatzung festhalten will, '
-        + 'legt das Rettungsmittel unter Einstellungen → Standorte an.'
+      ? 'Die Besatzungsrollen folgen der Betriebsart — bitte oben luft- oder '
+        + 'bodengebunden wählen.'
       : (meta && meta.vehicle_id)
       ? 'Für dieses Rettungsmittel sind keine Besatzungsrollen angehakt — '
         + 'nachzutragen unter Einstellungen → Rettungsmittel.'
@@ -1310,20 +1309,30 @@ async function rollenVorschau(){
      Was im Formular steht, gilt; was dort nicht steht, kommt aus `day_crew`. */
   const behalten = Object.assign({}, GESPEICHERTE_CREW, crewWerte());
 
+  let p;
   if (veh.value === 'adhoc') {
-    /* Ein Rettungsmittel nur für den Tag führt keinen Rollensatz (E-S9-10,
-       F19). Kein Feld, ein Satz — und der sagt, wo Namen trotzdem hingehören. */
-    vorschauLauf++;
-    renderCrewFields({ vehicle_id: null, adhoc: true, crew: [], presets: {} });
-    return;
-  }
-  if (veh.value === '') {
+    /* Ein Rettungsmittel nur für den Tag führt die Rollen seiner Betriebsart
+       (Nr. 169, E-P5c-47). Ohne gewählte Art gibt es keinen Satz — dann kein
+       Feld, sondern der Satz, was fehlt. Die Vorlagen hängen am Standort, und
+       der ist hier das Feld des Tagesfahrzeugs: nur ein Treffer aus der Liste
+       trägt eine Kennung, Freitext bekommt keine Vorschläge. */
+    const art = document.querySelector('#adhocfelder .vehkind-radio:checked');
+    if (!art) {
+      vorschauLauf++;
+      renderCrewFields({ vehicle_id: null, adhoc: true, crew: [], presets: {} });
+      return;
+    }
+    p = new URLSearchParams({ vorschau: 'adhoc', art: art.value });
+    const adhocBase = document.getElementById('adhoc-base-id').value;
+    if (adhocBase !== '') { p.set('base', adhocBase); }
+  } else if (veh.value === '') {
     renderCrewFields({ vehicle_id: null, crew: [], presets: {} });
     return;
+  } else {
+    p = new URLSearchParams({ vorschau: veh.value });
+    if (base.value !== '') { p.set('base', base.value); }
   }
   const lauf = ++vorschauLauf;
-  const p = new URLSearchParams({ vorschau: veh.value });
-  if (base.value !== '') { p.set('base', base.value); }
   try {
     const res = await fetch('api/day.php?' + p.toString());
     if (!res.ok) { return; }
@@ -1397,13 +1406,18 @@ function adhocStandortListe(){
       feld.dispatchEvent(new Event('input', { bubbles: true }));
       kennung.value = e.kennung || '';
       feld.focus();
+      /* Die Vorlagen der Besatzung hängen am Standort (E15, Nr. 169). */
+      rollenVorschau();
     }
   });
   if (!steuer) { return; }
   feld.addEventListener('input', () => {
     /* Getippt heisst Freitext — die Kennung von vorhin gilt nicht mehr. Sie
        wird gleich wieder gesetzt, wenn jemand einen Treffer wählt. */
+    const hatte = kennung.value !== '';
     kennung.value = '';
+    /* Ohne Kennung keine Vorlagen mehr — die Vorschau sagt es den Feldern. */
+    if (hatte) { rollenVorschau(); }
     const q = feld.value.trim().toLowerCase();
     if (q === '') { steuer.verstecke(); return; }
     const treffer = BASIS_LISTE
@@ -1480,7 +1494,15 @@ async function init(){
     adhocAnpassen();
     rollenVorschau();
   });
-  document.getElementById('adhoc-typ').addEventListener('change', adhocAnpassen);
+  /* Der Typ kann die Betriebsart festlegen — und die Art bestimmt die Rollen
+     (Nr. 169). Deshalb erst anpassen, dann fragen. */
+  document.getElementById('adhoc-typ').addEventListener('change', () => {
+    adhocAnpassen();
+    rollenVorschau();
+  });
+  document.querySelectorAll('#adhocfelder .vehkind-radio').forEach(r => {
+    r.addEventListener('change', rollenVorschau);
+  });
   adhocStandortListe();
   /* Auch am Standort: Die VORLAGEN haengen an ihm (E15), nicht am
      Rettungsmittel. Wer den Standort von Hand wechselt, bekommt die Namen des

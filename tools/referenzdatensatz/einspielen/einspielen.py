@@ -204,8 +204,7 @@ def kennungen(s) -> dict:
     """Kennungen von Standort und Rettungsmittel aus den Auswahllisten lesen.
 
     Ueber `diensttag_neu.php` und nicht ueber die Datenbank: Die Seite listet
-    genau das, was die Anwendung dem Konto anbietet — einschliesslich
-    zentraler Eintraege und der Standortbindung.
+    genau das, was die Anwendung dem Konto anbietet, samt Standortbindung.
     """
     html = s.get("diensttag_neu.php").text
 
@@ -237,8 +236,10 @@ def kennungen(s) -> dict:
             gefunden[aufbereiten(re.sub(r"\s+", " ", roh).strip())] = int(wert)
         return gefunden
 
-    # Der Standort steht schlicht da (evtl. mit „ (zentral)").
-    standorte = lesen("base_id", lambda x: x.replace(" (zentral)", "").strip())
+    # Der Standort steht schlicht da. Bis Web 20.47.0 konnte „ (zentral)"
+    # dahinter stehen; das schrieb diensttag_neu.php fuer zentrale Standorte
+    # (R39, mit P5c/AP8 gefallen).
+    standorte = lesen("base_id", lambda x: x.strip())
     # Das Rettungsmittel traegt ein Artzeichen davor und den Standort dahinter:
     # „🚁 Alpenfalke 1 · Luftrettungsstation Hochkreuth". Beides gehoert zur
     # ANZEIGE und nicht zum Namen.

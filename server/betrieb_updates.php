@@ -261,11 +261,11 @@ ui_seite_start(['titel' => 'Updates']);
                         'href' => 'admin_komplettsicherung.php'])) ?>
       <?php if ($blockiert > 0): ?>
         <?= ui_meldung_markup('fehler', $blockiert . ' Migration(en) werden NICHT '
-            . 'ausgeführt, weil sie Spalten löschen würden, in denen noch Daten '
-            . 'stehen. Unten ist je Eintrag genannt, um welche Spalte und wie '
-            . 'viele Zeilen es geht. Wer sie behalten will, trägt sie vorher von '
-            . 'Hand ein (oder sichert sie außerhalb) und gibt die Migration '
-            . 'danach einzeln frei.') ?>
+            . 'ausgeführt. Unten steht je Eintrag, warum. Löscht eine davon Spalten, '
+            . 'in denen noch Daten stehen, sichert man sie vorher und gibt die '
+            . 'Migration danach einzeln frei. Fehlt eine Vorbedingung, gibt es '
+            . 'kein Häkchen: Sie wird hergestellt, wie es in der Zeile steht, '
+            . 'dann erneut ausführen.') ?>
       <?php endif; ?>
       <form method="post" action="betrieb_updates.php" id="migform">
         <?= csrf_field() ?><input type="hidden" name="action" value="migrate">

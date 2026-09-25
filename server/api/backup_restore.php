@@ -89,8 +89,14 @@ if ($nutzlast < 6) {
  * arbeitet die Schranke besonders deutlich: Ohne sie legte ein aelterer Stand
  * ein Bergwacht-Rettungsmittel als STANDARD-Rettungsmittel an — mit
  * Standortpflicht und Rollenvorlagen, und ohne dass man dem Datensatz den
- * Verlust ansaehe. */
-const NUTZLAST_HOECHSTENS = 11;
+ * Verlust ansaehe.
+ *
+ * FASSUNG 12 (Web 21.0.0, P5c/AP8): ohne die Auswahl zentraler Standorte
+ * (R39). Der Rueckweg ist darauf vorbereitet — er ueberliest das Feld in
+ * aelteren Dateien und fragt es in neueren nicht. Eine 11er-Datei bleibt
+ * hier lesbar; ein Stand vor Web 21.0.0 weist eine 12er-Datei ab, und das
+ * ist richtig: Sein Code laeuft auf diesem Schema ohnehin nicht. */
+const NUTZLAST_HOECHSTENS = 12;
 if ($nutzlast > NUTZLAST_HOECHSTENS) {
     json_out(['error' => 'version_neu',
               'meldung' => 'Dieses Backup hat das Format ' . $nutzlast

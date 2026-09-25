@@ -2249,7 +2249,9 @@ Bausteintabelle steht er deshalb nicht.
 
 **Zweck:** Einen Punkt auf der Karte wählen. **Ein** Dialog für fünf
 Einbauorte: Einsatzort, manueller Abfahrtort, Transportziel und die
-Lagefelder der Standorte in Konto- und Systemverwaltung.
+Lagefelder von Standort und Zielklinik in den Einstellungen. Bis Web 18.0.0
+war der fünfte der Standort der Systemverwaltung (R39); die Bedienprobe misst
+seither vier davon (`wege/ap2.mjs`), die Zielklinik nicht.
 
 ```html
 <dialog class="dialog dialog-karte">

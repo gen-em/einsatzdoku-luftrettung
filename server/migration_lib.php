@@ -149,6 +149,23 @@ function _fk_name(PDO $pdo, string $tabelle, string $spalte): ?string
  * andere Frage, naemlich ob die Aenderung ueberhaupt noch aussteht. Eine
  * bereits geloeschte Spalte hat keinen Inhalt mehr — ohne 'skip' waere sie
  * damit von einer vollen nicht zu unterscheiden.
+ *
+ * ---- Eine dritte Angabe: die Vorbedingung (P5c/AP8, E-P5c-125) -------------
+ *
+ * 'vorbedingung'     : Funktion (PDO) -> Liste [was, Zahl, Beschreibung] wie
+ *                      `migrationen_inhalt_zaehlen()`. Leer heisst: Die
+ *                      Migration darf laufen.
+ * 'vorbedingung_weg' : EIN Satz, wie man die Vorbedingung herstellt.
+ *
+ * WARUM NICHT 'inhalt'. 'inhalt' zaehlt Zeilen MIT Inhalt, und seine Sperre
+ * laesst sich einzeln freigeben — richtig dort, wo die Migration ihren Zweck
+ * auch ueber Daten hinweg erfuellt, die jemand gesichert hat. Eine
+ * Vorbedingung ist das Gegenteil: Die Migration KANN nicht laufen, solange
+ * sie nicht erfuellt ist (`MODIFY … NOT NULL` ueber einer NULL-Zeile bricht
+ * ab oder macht, je nach `sql_mode`, still eine 0 daraus, und die zeigt auf
+ * kein Konto). Eine Freigabe haette hier nichts freizugeben. Deshalb steht
+ * die Zeile als `stopp` OHNE Freigabe-Kennung da, und `betrieb_updates.php`
+ * zeichnet kein Haekchen.
  */
 /**
  * Der Katalog. Eine Funktion und keine Variable, damit ihn zwei Aufrufer
@@ -3304,9 +3321,137 @@ function migrationen_katalog(): array
             }
         },
     ],
+    [
+        'id'    => '2026_09_25_zentrale_stammdaten',
+        'web'   => '21.0',
+        'label' => 'Stammdaten: jeder Eintrag gehört einem Konto, die Tabelle user_bases entfällt (P5c/AP8, R39, Nr. 168)',
+        'zerstoert' => 'die Tabelle user_bases (Auswahl zentraler Standorte je Konto)',
+        /* DER RUECKBAU VON R39 (E-P5c-19, -48). Zentrale Stammdaten
+         * (`user_id IS NULL`) gibt es in der Oberflaeche seit Web 18.0.0 nicht
+         * mehr, die Verwaltung dafuer ist mit S9/AP5b gefallen. Stehen blieben
+         * das Schema, das sie zuliess, und die Tabelle, die sie einem Konto
+         * zuordnete — und damit in jeder Abfrage ein „eigen ODER zentral".
+         * Ab hier traegt jede der sechs Tabellen ein Konto, und die Datenbank
+         * haelt das fest.
+         *
+         * ZUERST GEZAEHLT, NICHT FREIGEBBAR (E-P5c-125). Steht irgendwo noch
+         * eine Zeile ohne Konto, laeuft nichts, und die Zeile nennt, wo. Nach
+         * Auskunft der BetreiberIn tritt das nicht auf (E-P5c-48); die
+         * Zaehlung schuetzt eine Anlage, in die jemand ein altes
+         * Komplett-Backup einspielt — das bringt das alte Schema mit, und
+         * diese Migration steht danach wieder aus.
+         *
+         * `run` STATT `sql`: Jede Spalte wird nur gezogen, wo sie noch NULL
+         * zulaesst, und `user_bases` faellt zuletzt. Die Fehlertoleranz des
+         * `sql`-Wegs kennt 1051 („unknown table") nicht; `IF EXISTS` und die
+         * Frage vorher machen den Lauf wiederholbar, auch nach einem Abbruch
+         * in der Mitte. `MODIFY` behaelt Fremdschluessel und Indizes — geaendert
+         * wird nur, ob NULL erlaubt ist (gemessen an MariaDB 10.11; die
+         * Schemaprobe faehrt Fall 5 auf allen vier Fassungen). */
+        'skip'  => function (PDO $pdo): bool {
+            foreach (MIG_STAMMDATEN_TABELLEN as $t) {
+                if (db_spalte_nullbar($pdo, $t, 'user_id') === true) { return false; }
+            }
+            return !db_hat_tabelle($pdo, 'user_bases');
+        },
+        'vorbedingung' => function (PDO $pdo): array {
+            $fehlt = [];
+            foreach (MIG_STAMMDATEN_TABELLEN as $t) {
+                if (db_spalte_nullbar($pdo, $t, 'user_id') !== true) { continue; }
+                /* Der Tabellenname steht fest in MIG_STAMMDATEN_TABELLEN. */
+                $n = (int)$pdo->query("SELECT COUNT(*) FROM `$t` WHERE user_id IS NULL")->fetchColumn();
+                if ($n > 0) { $fehlt[] = [$t . '.user_id', $n, 'Einträge ohne Konto']; }
+            }
+            /* DIE ZWEITE ZAHL, DIE DER WEG BRAUCHT: Eigene Eintraege anderer
+             * Konten koennen an einem zentralen Standort haengen. Loescht man
+             * ihn, gehen sie per Kaskade mit; ordnet man ihn einem Konto zu,
+             * zeigen sie auf einen fremden Standort. Sie werden nur genannt,
+             * wenn es zentrale Standorte ueberhaupt gibt. */
+            if ($fehlt && db_spalte_nullbar($pdo, 'bases', 'user_id') === true) {
+                $haengen = 0;
+                foreach (array_diff(MIG_STAMMDATEN_TABELLEN, ['bases']) as $t) {
+                    $haengen += (int)$pdo->query(
+                        "SELECT COUNT(*) FROM `$t` x JOIN bases b ON b.id = x.base_id
+                          WHERE b.user_id IS NULL AND x.user_id IS NOT NULL")->fetchColumn();
+                }
+                if ($haengen > 0) {
+                    $fehlt[] = ['base_id', $haengen, 'eigene Einträge an einem Standort ohne Konto'];
+                }
+            }
+            return $fehlt;
+        },
+        'vorbedingung_weg' => 'Einträge ohne Konto lassen sich seit Web 18.0.0 nur noch '
+            . 'von Hand in der Datenbank bearbeiten: einem Konto zuordnen oder löschen '
+            . '(ein gelöschter Standort nimmt die Einträge mit, die an ihm hängen).',
+        'run'   => function (PDO $pdo): void {
+            foreach (MIG_STAMMDATEN_TABELLEN as $t) {
+                if (db_spalte_nullbar($pdo, $t, 'user_id') === true) {
+                    $pdo->exec("ALTER TABLE `$t` MODIFY user_id INT UNSIGNED NOT NULL");
+                }
+            }
+            $pdo->exec('DROP TABLE IF EXISTS user_bases');
+        },
+    ],
+    [
+        'id'    => '2026_09_25_ftp_entfernen',
+        'web'   => '21.0',
+        'label' => 'Sicherungsziele: das Protokoll FTP fällt aus dem Schema (P5c/AP8, Nr. 46)',
+        /* DER REST AUS S10 (E-S10-14, E-P5c-124). Seit Web 20.2.0 ist FTP
+         * weder waehlbar noch wird es beschickt; das ENUM behielt den Wert,
+         * und ein Ziel, das noch darauf stand, wurde uebergangen. Mit dem Wert
+         * faellt der ganze Weg dafuer — was die Datenbank nicht mehr annimmt,
+         * muss die Anwendung nicht mehr umschiffen.
+         *
+         * ZUERST GEZAEHLT, NICHT FREIGEBBAR: Ein `MODIFY` ueber einer Zeile
+         * mit `ftp` bricht ab oder macht, je nach `sql_mode`, still einen
+         * Leerstring daraus. Umstellen oder loeschen geht in der Oberflaeche. */
+        'skip'  => function (PDO $pdo): bool {
+            $typ = db_spalte_typ($pdo, 'backup_targets', 'protokoll');
+            return $typ === null || !str_contains($typ, "'ftp'");
+        },
+        'vorbedingung' => function (PDO $pdo): array {
+            $n = (int)$pdo->query("SELECT COUNT(*) FROM backup_targets WHERE protokoll = 'ftp'")
+                          ->fetchColumn();
+            return $n > 0 ? [['backup_targets.protokoll', $n, 'Sicherungsziele mit FTP']] : [];
+        },
+        'vorbedingung_weg' => 'Unter Verwaltung → Sicherungsziele auf SFTP oder FTPS '
+            . 'umstellen oder löschen.',
+        'sql'   => [
+            "ALTER TABLE backup_targets MODIFY protokoll ENUM('ftps','sftp') NOT NULL",
+        ],
+    ],
+    [
+        'id'    => '2026_09_25_tagesrettungsmittel_rollen',
+        'web'   => '21.0',
+        'label' => 'Diensttage mit anderem Rettungsmittel: Rollen der Betriebsart nachtragen (P5c/AP8, Nr. 169)',
+        /* NR. 169 FUER DEN BESTAND (E-P5c-47, E-P5c-123). Ein Tag mit einem
+         * Rettungsmittel NUR FUER DIESEN TAG bekommt seit Web 21.0.0 beim
+         * Zuordnen die Rollen seiner Betriebsart. Tage von vorher haben
+         * keinen Rollensatz und damit kein Besatzungsfeld; diese Migration
+         * traegt ihn nach — leere Zeilen, geloescht wird nichts.
+         *
+         * EIN RANDFALL, BENANNT: Ein Tag, dessen Rettungsmittel spaeter
+         * geloescht wurde, traegt ebenfalls `vehicle_id IS NULL` und einen
+         * eingefrorenen Namen. Hatte dieses Rettungsmittel Rollen, stehen sie
+         * im Tag, und er wird uebergangen; hatte es keine, bekommt er jetzt
+         * die seiner Betriebsart. Unterscheiden laesst sich das nicht — die
+         * Momentaufnahme sagt nicht, woher sie kam. */
+        'skip'  => function (PDO $pdo): bool {
+            require_once __DIR__ . '/diensttag_lib.php';
+            return dt_tagesrettungsmittel_ohne_rollen($pdo) === [];
+        },
+        'run'   => function (PDO $pdo): void {
+            require_once __DIR__ . '/diensttag_lib.php';
+            dt_tagesrettungsmittel_rollen_nachziehen($pdo);
+        },
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }
+
+/** Die sechs Stammdatentabellen mit `user_id` (P5c/AP8, Nr. 168). */
+const MIG_STAMMDATEN_TABELLEN = ['bases', 'vehicles', 'crew_presets', 'resources',
+                                 'bw_units', 'transport_dests'];
 
 /* ---- Inhaltspruefung vor destruktiven Migrationen (M6-01) ------------------
  *
@@ -3490,6 +3635,25 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
                               null, null, $m['web'] ?? null];
                 $offen++;
             }
+            continue;
+        }
+
+        /* ---- Vorbedingung: kann sie ueberhaupt laufen? (P5c/AP8) --------
+         *
+         * VOR der Inhaltspruefung und OHNE Freigabe-Kennung (Element 6 bleibt
+         * null): Was hier sperrt, laesst sich nicht wegklicken, nur herstellen
+         * (E-P5c-125). Die Kette laeuft weiter wie bei 'inhalt' — nichts ist
+         * geschehen, und die spaeteren Migrationen sollen nicht mit warten. */
+        $fehlt = isset($m['vorbedingung']) ? ($m['vorbedingung'])($pdo) : [];
+        if ($fehlt) {
+            $results[] = [$m['id'], $m['label'], 'stopp',
+                          ($ausfuehren ? 'NICHT AUSGEFÜHRT' : 'WIRD NICHT AUSGEFÜHRT')
+                          . ' — Vorbedingung nicht erfüllt: '
+                          . migrationen_inhalt_text($fehlt) . '. '
+                          . ($m['vorbedingung_weg'] ?? '')
+                          . ($ausfuehren ? ' Es wurde nichts geändert.' : ''),
+                          $m['zerstoert'] ?? null, null, $m['web'] ?? null];
+            $blockiert++;
             continue;
         }
 

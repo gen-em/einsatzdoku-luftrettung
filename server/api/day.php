@@ -106,7 +106,7 @@ try {
              * Rollensatz und Faehigkeiten. Die Pruefung, ob die Kennungen der
              * NutzerIn ueberhaupt zur Verfuegung stehen, steckt in
              * dt_zuordnen(); sie muss zu der Liste passen, aus der index.php
-             * die Auswahlfelder baut, sonst wird ein zentraler Eintrag beim
+             * die Auswahlfelder baut, sonst wird ein angebotener Eintrag beim
              * Speichern stillschweigend auf NULL zurueckgesetzt. */
             /* ZWEITER WEG: EIN RETTUNGSMITTEL NUR FUER DIESEN TAG (S9/AP6,
              * E-S9-10). Der Body traegt dann `adhoc: {name, typ, kind,
@@ -149,6 +149,7 @@ try {
     /* ---- VORSCHAU AUF DEN ROLLENSATZ (S9/AP6, E-S9-11) ----------------
      *
      * GET api/day.php?vorschau=<vehicle_id>[&base=<base_id>]
+     * GET api/day.php?vorschau=adhoc&art=air|ground[&base=<base_id>]
      *   -> { vehicle_id, crew: [{role,label,name:null}, …], presets: {…} }
      *
      * WOZU. Bis Web 18.0.0 entstanden die Besatzungsfelder AUSSCHLIESSLICH
@@ -178,14 +179,25 @@ try {
      * Rettungsmittels — und im Formular sind das zwei Auswahlfelder, die
      * auseinanderfallen koennen. Ohne `base` faellt die Vorschau auf den
      * Standort des Rettungsmittels zurueck; das ist der Regelfall und
-     * zugleich das, was `dt_zuordnen()` speichern wuerde. */
+     * zugleich das, was `dt_zuordnen()` speichern wuerde.
+     *
+     * UND FUER EIN RETTUNGSMITTEL NUR FUER DIESEN TAG (Nr. 169, E-P5c-47,
+     * seit Web 21.0.0): `vorschau=adhoc` mit der gewaehlten Betriebsart.
+     * Die Rollen sind die dieser Art — dieselbe Funktion, mit der
+     * `dt_zuordnen()` sie beim Speichern einfriert. Eine andere Art als Luft
+     * oder Boden liefert keine; der Standort kommt, wenn einer aus der
+     * Liste gewaehlt ist, als `base` wie oben. */
     if (isset($_GET['vorschau'])) {
-        $vid = dt_vehicle_erlaubt(db(), $userId, (int)$_GET['vorschau']);
+        $adhoc = $_GET['vorschau'] === 'adhoc';
+        $vid = $adhoc ? null : dt_vehicle_erlaubt(db(), $userId, (int)$_GET['vorschau']);
         $bid = isset($_GET['base']) && $_GET['base'] !== ''
              ? dt_base_erlaubt(db(), $userId, (int)$_GET['base'])
              : null;
 
-        $rollen = $vid !== null ? dt_vehicle_rollen(db(), $vid) : [];
+        $art = (string)($_GET['art'] ?? '');
+        $rollen = $vid !== null ? dt_vehicle_rollen(db(), $vid)
+                : ($adhoc && in_array($art, ['air', 'ground'], true)
+                    ? dt_tagesrettungsmittel_rollen($art) : []);
         $crew = [];
         foreach ($rollen as $code) {
             $crew[] = ['role' => $code, 'label' => crew_role_label($code), 'name' => null];
@@ -201,7 +213,7 @@ try {
         $presets = [];
         if ($bid !== null && $crew) {
             $pq = db()->prepare('SELECT DISTINCT role_code, name FROM crew_presets
-                                  WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                  WHERE base_id = ? AND user_id = ?
                                   ORDER BY name');
             $pq->execute([$bid, $userId]);
             foreach ($pq->fetchAll() as $z) {
@@ -320,7 +332,7 @@ try {
     $presets = [];
     if ($tag['base_id'] !== null && $crew) {
         $pq = db()->prepare('SELECT DISTINCT role_code, name FROM crew_presets
-                              WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                              WHERE base_id = ? AND user_id = ?
                               ORDER BY name');
         $pq->execute([(int)$tag['base_id'], $userId]);
         foreach ($pq->fetchAll() as $z) {

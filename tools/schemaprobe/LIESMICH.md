@@ -30,8 +30,9 @@ legt den Urstand bytegleich zurück, auch bei Abbruch.
 
 ## Erwartete Zahl
 
-**19 Prüfungen, 0 Fehlschläge** je Fassung. Die Matrix aus vier Fassungen
-meldet folglich **4 × 19/0** (gemessen 21.09.2026, 29,7 s).
+**30 Prüfungen, 0 Fehlschläge** je Fassung. Die Matrix aus vier Fassungen
+meldet folglich **4 × 30/0** (gemessen 25.09.2026, P5c/AP8: Fall 5 mit elf
+Prüfungen zum Rückbau von R39 und FTP; bis dahin 19).
 
 ## Was es nicht kann
 

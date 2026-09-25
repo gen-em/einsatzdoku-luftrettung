@@ -57,7 +57,10 @@ declare(strict_types=1);
  *     cp server/config.php /tmp/vorher/
  *     php tools/proben/wiederherstellung/probe.php /tmp/vorher
  *
- * Erwartet: **110 von 110** mit dem heutigen Stand, Rueckgabe 0.
+ * Erwartet: **115 von 115** mit dem heutigen Stand, Rueckgabe 0 (gemessen
+ * 25.09.2026, P5c/AP8: vier aus Teil 13; davor 111 — die 110 hier war seit
+ * P5c/AP2 um eine zu klein und stand ohne Spur, derselbe Fehler wie am
+ * 16.09.).
  * (94 bis S10/AP4 — Teil 8 hat mit der Fassung 3 vier Erwartungen dazu
  *  bekommen, Teil 12 acht. Am 16.09.2026 stand hier 106 und gemessen wurden
  *  105: eine Erwartung Unterschied, entstanden ohne Spur. Mit den fuenf
@@ -75,6 +78,10 @@ declare(strict_types=1);
  * Probe ist auf elf Teile gewachsen. Sie ist ausserdem seit einiger Zeit
  * MITTEN IN TEIL 9 abgestuerzt, an einem fehlenden `require` fuer
  * `smtp.php`; alles dahinter lief nie. Beides ist mit R64/AP2 behoben.)
+ *
+ *   TEIL 13 — EINE 11er-DATEI MIT DER STANDORTAUSWAHL (P5c/AP8, Nr. 168):
+ *   Das Feld der gefallenen Tabelle wird still ueberlesen, und die Sicherung
+ *   danach traegt Nutzlast 12. Vier Erwartungen.
  *
  *   TEIL 11 — NUTZLAST 9: MOMENTAUFNAHME UND SPERRVERMERKE (R64, Nr. 63).
  *   Der Regelfall — ein Vermerk faehrt hin und kommt zurueck — steht im
@@ -1627,6 +1634,75 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
         if (isset($kennung12)) { @edbak_ordner_loeschen($kennung12); }
         if (isset($uid12)) { $weg($uid12); }
     }
+}
+
+/* ==========================================================================
+ * TEIL 13 — EINE ALTE DATEI MIT DER STANDORTAUSWAHL (P5c/AP8, R39, Nr. 168)
+ *
+ * DIE LAGE. Bis Nutzlast 11 trug jede Sicherung unter `stammdaten` die
+ * Auswahl zentraler Standorte (E16), `user_bases`. Die Tabelle dazu ist mit
+ * der Migration `2026_09_25_zentrale_stammdaten` gefallen. Stuende die
+ * Schleife noch im Rueckweg, die das Feld las, braeche JEDE Wiederherstellung
+ * einer alten Datei mit 42S02 ab — auch die Kontosicherung und der
+ * Demo-Reset. Das Feld wird deshalb still ueberlesen; diese Probe haelt das
+ * fest, mit einem Namen darin, den es nirgends gibt.
+ *
+ * DAZU DER TAG MIT TAGESRETTUNGSMITTEL (E-P5c-123). Die Migration zieht fuer
+ * den BESTAND die Rollen der Betriebsart nach; die Wiederherstellung tut es
+ * nicht — sie legt an, was in der Datei steht (E8). Ein Tag ohne `crew` aus
+ * einer alten Datei kommt also ohne Rollensatz zurueck, und das ist die
+ * Entscheidung, nicht ein Versehen.
+ *
+ * UND DER RUECKWEG DER ZAHL: Die Sicherung desselben Kontos traegt danach
+ * Nutzlast 12 und das Feld nicht mehr.
+ * ====================================================================== */
+echo "\n  Teil 13 — Eine 11er-Datei mit der Standortauswahl (P5c/AP8, Nr. 168)\n";
+$uid13 = $konto('probe-standortauswahl@example.invalid');
+try {
+    $ausnahme13 = null; $s13 = [];
+    try {
+        $s13 = edbak_restore($uid13, [
+            'version' => 11,
+            'stammdaten' => [
+                'bases'      => [['name' => 'Probenstation 13', 'lat' => null, 'lon' => null,
+                                  'is_default' => 0]],
+                'vehicles'   => [['name' => 'Probe 13', 'kind' => 'air', 'typ' => 'standard',
+                                  'base_ref' => 'Probenstation 13',
+                                  'roles' => ['p1', 'hems'], 'capabilities' => []]],
+                'user_bases' => ['Zentrale Station, die es nirgends gibt'],
+            ],
+            'days' => [[
+                'id' => 1300, 'day' => '2026-07-13',
+                'started_at' => '2026-07-13 06:00:00', 'ended_at' => '2026-07-13 18:00:00',
+                'kind' => 'ground', 'vehicle_name' => 'Aushilfe 13',
+                'vehicle_typ' => 'sonstiges', 'base_name' => 'Irgendwo',
+            ]],
+            'missions' => [], 'rest_segments' => [],
+        ]);
+    } catch (Throwable $e) { $ausnahme13 = $e; }
+    $sag('(1) Eine 11er-Datei MIT der Standortauswahl spielt ein (kein 42S02)',
+         $ausnahme13 === null,
+         $ausnahme13 === null ? 'ohne Ausnahme'
+             : get_class($ausnahme13) . ': ' . mb_substr($ausnahme13->getMessage(), 0, 60));
+    $sag('(2) ...Standort und Rettungsmittel stehen da, nichts uebersprungen',
+         (int)($s13['stammdaten'] ?? -1) === 2 && (int)($s13['stammdaten_skipped'] ?? -1) === 0,
+         'angelegt ' . (int)($s13['stammdaten'] ?? -1) . ', uebersprungen '
+         . (int)($s13['stammdaten_skipped'] ?? -1));
+    $c13 = $pdo->prepare('SELECT COUNT(*) FROM day_crew c JOIN days d ON d.id = c.day_id
+                           WHERE d.user_id = ?');
+    $c13->execute([$uid13]);
+    $crew13 = (int)$c13->fetchColumn();
+    $sag('(3) Der Tag mit Tagesrettungsmittel kommt wie in der Datei zurueck (E8, E-P5c-123)',
+         $crew13 === 0, $crew13 . ' Rollenzeilen');
+    $j13 = json_decode(edbak_build($uid13, true), true);
+    $sag('(4) Die Sicherung dieses Kontos traegt Nutzlast 12 und die Auswahl nicht mehr',
+         is_array($j13) && (int)($j13['version'] ?? 0) === 12
+           && is_array($j13['stammdaten'] ?? null)
+           && !array_key_exists('user_bases', $j13['stammdaten']),
+         'Nutzlast ' . (int)($j13['version'] ?? 0) . ', Schluessel '
+         . implode(', ', array_keys((array)($j13['stammdaten'] ?? []))));
+} finally {
+    $weg($uid13);
 }
 
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);

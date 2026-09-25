@@ -778,7 +778,7 @@ function edbak_sicherung_erzeugen(int $userId): array
             'pat_key_check' => $u['pat_key_check'],
         ],
         'umfang'        => $umfang,
-        'nutzlast'      => 10,
+        'nutzlast'      => EDBAK_NUTZLAST,
         'eintraege'     => $gesamtEintraege,
         'eintragsteile' => $eintragsteile,
         'spurteile'     => $spurteile,
@@ -2337,12 +2337,12 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
              * Eintragsweg gibt es erst ab Nutzlast 8, und das soll dastehen
              * statt sich daraus zu ergeben, dass niemand anders ihn ruft.
              *
-             * DIE ZAHL FOLGT DER JEWEILS GESCHRIEBENEN NUTZLAST (seit
-             * Web 16.0.0: 10). Sie zu setzen ist unbedenklich, weil alle
-             * Fassungen ab 8 denselben Weg nehmen — den mit Spurverweisen —
-             * und die Felder der spaeteren Fassungen samt und sonders
-             * optional sind. */
-            $f['version'] = 10;
+             * DIE ZAHL FOLGT DER GESCHRIEBENEN NUTZLAST (`EDBAK_NUTZLAST`,
+             * seit P5c/AP8; bis dahin stand hier 10, F-P5c-128). Sie zu
+             * setzen ist unbedenklich, weil alle Fassungen ab 8 denselben Weg
+             * nehmen — den mit Spurverweisen — und die Felder der spaeteren
+             * Fassungen samt und sonders optional sind. */
+            $f['version'] = EDBAK_NUTZLAST;
             $s2 = edbak_restore($zielUserId, $f, $dayMap);
             foreach ((array)($s2['spur_karte'] ?? []) as $ref => $ziel) {
                 $karte[(int)$ref] = $ziel;

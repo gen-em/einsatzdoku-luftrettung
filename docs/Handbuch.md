@@ -937,12 +937,16 @@ Pro Tag:
   diesem einen Diensttag und taucht in keiner Auswahlliste wieder auf; in
   Suche, Filter und Diensttage-Leiste findest du es trotzdem. Wenn du es
   öfter brauchst, leg es unter *Einstellungen → Standorte* an.
-  **Besatzungsrollen gibt es dafür nicht** — und zwar auch nicht am einzelnen
-  Einsatz: Das Einsatzformular zeigt dieselben Rollen wie der Diensttag, und
-  der führt hier keine. An einem solchen Tag lässt sich die Besatzung also
-  nicht festhalten. Wer sie braucht, legt das Rettungsmittel unter
-  *Einstellungen → Standorte* an und ordnet es zu; dann stehen seine Rollen
-  am Tag und am Einsatz zur Verfügung.
+  **Die Besatzungsrollen folgen der Betriebsart** (seit Web 21.0.0):
+  luftgebunden sind es Pilot 1, Pilot 2, HEMS-TC, Flugretter und Sonstige,
+  bodengebunden Fahrer, Praktikant und Sonstige. Die Felder erscheinen,
+  sobald du die Betriebsart wählst; vorher steht dort ein Satz, der sagt,
+  was fehlt. Am einzelnen Einsatz gilt dasselbe, denn das Einsatzformular
+  zeigt die Rollen des Diensttags. Vorschläge für die Namen gibt es, wenn
+  du den Standort aus der Liste gewählt hast. Einen frei getippten Ort kennt
+  die Anwendung nicht, also auch keine Namen dazu. Bis Web 20.47.0 führte
+  ein solcher Tag gar keine Rollen; Tage von damals haben sie mit dem Update
+  bekommen.
 
   > Bis Web 18.1.0 stand hier, Namen ließen sich am einzelnen Einsatz
   > nachtragen. Das stimmte nicht: Ein frisch angelegter Tag dieser Art bot
@@ -5157,14 +5161,11 @@ Was dabei zu wissen ist:
   schützt gegen Mitlesen, nicht gegen einen untergeschobenen Server.
 - **FTP wird seit Web 20.2.0 nicht mehr angeboten.** Es überträgt alles im
   Klartext, auch das Passwort — und seit derselben Fassung tragen die Pakete
-  Geheimnisse, die dort nicht mitlesbar sein dürfen. Es stand vorher zur
-  Auswahl, weil einfacher Webspace oft nichts anderes anbietet.
-  **Steht noch ein Ziel darauf**, passiert Folgendes: Es trägt in der Liste
-  die rote Plakette *wird übergangen*, es wird beim Versand **übersprungen**
-  statt im Klartext beliefert, und der Versandlauf sagt es („Übersprungen: 1").
-  Zum Umstellen sind **drei** Angaben neu zu setzen: Protokoll, Port und die
-  Zugangsdaten — die alten gelten nicht notwendig auch für den
-  verschlüsselten Weg, und geraten wird nichts.
+  Geheimnisse, die dort nicht mitlesbar sein dürfen. Seit Web 21.0.0 nimmt
+  auch die Datenbank kein FTP-Ziel mehr an. Stand beim Update noch eines
+  da, blieb das Update stehen und nannte es: Dann stellst du das Ziel hier
+  auf SFTP oder FTPS um (Protokoll, Port und Zugangsdaten neu) oder löschst
+  es und führst das Update danach erneut aus.
 - Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
   dazu steht in einer Datei, die nicht mitgesichert wird — wer den
   Datenbankdump hat, hat die Passwörter nicht.

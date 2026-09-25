@@ -114,7 +114,7 @@ Das Manifest im Klartext:
   "kennung": "9f3c…",              // 16 Byte Zufall, hex — bindet die Teile
   "erzeugt_am": "2026-08-31T12:00:00.000Z",
   "web_version": "11.1.0",
-  "nutzlast": 9,                   // Fassung der Nutzlast, s. Abschnitt 2
+  "nutzlast": 12,                  // Fassung der Nutzlast, s. Abschnitt 2
   "teile": [
     { "name": "kopf.edbak",          "art": "kopf",      "sha256": "…" },
     { "name": "eintraege/0001.edbak","art": "eintraege", "sha256": "…" },
@@ -375,7 +375,31 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
-**Nutzlastversion 11 (seit Web 19.0.0).** Wie 10, mit einer Verschiebung: Die
+**Nutzlastversion 12 (seit Web 21.0.0, P5c/AP8).** Wie 11, mit zwei
+Unterschieden. **Die Auswahl zentraler Standorte fehlt unter `stammdaten`.**
+Das Feld war seit Web 18.0.0 immer leer. Mit der Migration
+`2026_09_25_zentrale_stammdaten` gibt es die Tabelle dazu nicht mehr (R39,
+Backlog Nr. 168), und jeder Stammdatensatz gehört einem Konto. **Und ein
+Diensttag mit einem Rettungsmittel nur für diesen Tag trägt in `crew` die
+Rollen seiner Betriebsart** (Nr. 169). Bis Nutzlast 11 hatte er dort keine.
+
+*Rückwärts:* Nutzlast 6 bis 11 bleiben lesbar. Die Standortauswahl darin wird
+**still überlesen** — eine Toleranz, die mit NaDoku 1.0 fällt (Backlog
+Nr. 46). Ein Diensttag aus einer älteren Datei kommt so zurück, wie er dort
+steht: ohne Rollensatz. Die Wiederherstellung legt an, was in der Datei steht
+(E8), und leitet nichts neu ab. Einmal die Zuordnung speichern trägt den Satz
+nach.
+
+*Warum die Zahl trotzdem steigt:* Eine ältere Installation läse eine 12er-Datei
+ohne Schaden. Ihr fehlte ein Feld, das sie überliest, und die Rollen blendete
+sie aus. Die Nummer sagt aber, was in der Datei stehen **kann**. Und hinter
+Web 21.0.0 führt ohnehin kein Weg zurück, denn Code davor läuft auf diesem
+Schema nicht. `NUTZLAST_HOECHSTENS` steht auf 12. Die geschriebene Zahl steht
+seit Web 21.0.0 an **einer** Stelle, `EDBAK_NUTZLAST` in `backup_lib.php`.
+Bis dahin stand sie viermal, und drei davon — das Manifest der
+Admin-Sicherung und die zwei Wege, die Eintragsteile einspielen — sagten 10.
+
+**Nutzlastversion 11 (Web 19.0.0 bis 20.47.0).** Wie 10, mit einer Verschiebung: Die
 **Notizen des Einsatzes** stehen nicht mehr als Klartextspalte `notes` im
 `missions`-Datensatz, sondern als Schlüssel `notes` im verschlüsselten
 `pat`-Block daneben. Die Spalte `notes` bleibt im Format bestehen und ist in
@@ -510,7 +534,7 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 11,                        // 8/9/10/11 = Verweise, 6/7 = Punktlisten
+  "version": 12,                        // 8 bis 12 = Verweise, 6/7 = Punktlisten
   "app": "einsatzdoku-notarzt",         // Kennung der Anwendung
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
@@ -562,14 +586,9 @@ seit Web 4.1.2 auch:
                         "capabilities": [],
                         "is_default": 0 } ],
 
-    // Auswahl ZENTRALER Standorte dieser NutzerIn, als Namensliste. Zentrale
-    // Standorte selbst gehören dem Konto nicht und werden nicht exportiert —
-    // die Auswahl schon, sonst stünden nach dem Einspielen leere Listen da.
-    // SEIT WEB 18.0.0 IN DER REGEL LEER: Es gibt keine Oberfläche mehr, die
-    // zentrale Standorte anlegt oder auswählt (Rahmenplan R39). Das Feld
-    // bleibt im Format, damit ältere Sicherungen unverändert einspielen; es
-    // fällt mit dem Rückbau in P5 (Backlog Nr. 168).
-    "user_bases":   [ "Zentrale Wache Süd" ],
+    // Bis Nutzlast 11 stand hier die Auswahl ZENTRALER Standorte als
+    // Namensliste (E16), seit Web 18.0.0 immer leer. Seit Nutzlast 12 fehlt
+    // sie; in älteren Dateien wird sie still überlesen (R39, Backlog Nr. 168).
 
     // Alle übrigen Stammdaten tragen ihren Standort (base_ref). Ohne ihn ließe
     // sich nach dem Einspielen nicht entscheiden, zu welchem Standort eine
@@ -892,12 +911,13 @@ in Abschnitt 3.
   `aircraft`): intern seit Version 3 in einer
   nutzerbezogenen Tabelle (`user_defaults`) abgelegt, im Exportformat aber
   weiterhin als Flag je Zeile abgebildet (Abwärtskompatibilität).
-- **Zentrale (globale) Stammdaten** gehören nicht dem Konto und werden
-  **nicht** exportiert. Beim Import werden Einträge, die zentral bereits
-  (case-insensitiv) vorhanden sind, still übersprungen und in der
-  Ergebnismeldung gezählt — diese Regel gilt unverändert. Gepflegt wurden sie
-  von einer AdministratorIn (seit Version 3); **seit Web 18.0.0 gibt es dafür
-  keine Seite mehr** (Rahmenplan R39), es kann also nur noch Altbestand sein.
+- **Übersprungene Stammdaten** zählt die Ergebnismeldung
+  (`stammdaten_skipped`). Seit Web 21.0.0 gibt es dafür zwei Gründe: Der
+  Standort lässt sich nicht auflösen, oder die Prüfung eines Rettungsmittels
+  schlägt an. Bis dahin kam ein dritter hinzu: Ein gleichnamiger **zentraler**
+  Eintrag war schon vorhanden. Zentrale Stammdaten gibt es seit Web 18.0.0
+  nicht mehr in der Oberfläche und seit Web 21.0.0 nicht mehr im Schema
+  (R39).
 - **`origin`** (seit Version 4): Herkunft des Einsatzes, wird beim Anlegen
   einmalig gesetzt und nie wieder geändert. **Sechs Werte seit Web 14.0.0**
   (vorher drei), einer je Client-App:
@@ -1406,7 +1426,7 @@ Ruhesegmente).
   "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…" },
   "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3,
               "papierkorb": { "einsaetze": 5, "diensttage": 1, "ruhezeiten": 5 } },
-  "nutzlast":      9,          // Fassung des Kerns, s. Abschnitt 2
+  "nutzlast":      12,         // Fassung des Kerns, s. Abschnitt 2 (EDBAK_NUTZLAST)
   "eintraege":     45,         // Einsätze und Ruhesegmente zusammen
   "eintragsteile": 1,
   "spurteile":     1,

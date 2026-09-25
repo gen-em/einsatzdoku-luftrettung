@@ -490,7 +490,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
     $zustand = json_decode((string)($z->fetchColumn() ?: '{}'), true);
     if (!is_array($zustand)) { $zustand = []; }
 
-    $erledigt = 0; $fertig = false; $fehler = null; $uebergangen = 0;
+    $erledigt = 0; $fertig = false; $fehler = null;
     $geloescht = 0; $geloeschtDateien = 0;
     try {
         $e = ($job['lauf'])($pdo, $zustand, $zeitLinks);
@@ -498,14 +498,13 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
         $erledigt = (int)($e['erledigt'] ?? 0);
         $fertig   = (bool)($e['fertig'] ?? false);
         /* DER BERICHT WIRD MIT FESTEN SCHLÜSSELN NEU GEBAUT, und was hier
-         * nicht steht, fällt heraus. `uebergangen` (S10/AP4) wäre sonst im
+         * nicht steht, fällt heraus. `geloescht` (P5a/AP10) wäre sonst im
          * Versandjob entstanden und auf dem Weg zur Ausgabe verschwunden —
-         * eine Zahl, die es gibt und die niemand sieht. */
-        $uebergangen = (int)($e['uebergangen'] ?? 0);
-        /* Dieselbe Ueberlegung fuer `geloescht` (P5a/AP10): Was die
+         * eine Zahl, die es gibt und die niemand sieht: Was die
          * Aufbewahrungsregel auf einem Ziel entfernt hat, ist eine Handlung
          * auf einer FREMDEN Maschine. Sie gehoert in den Lauf, nicht nur in
-         * die Karte, die man dafuer aufrufen muss. */
+         * die Karte, die man dafuer aufrufen muss. (Bis Web 20.47.0 nahm
+         * denselben Weg `uebergangen`, die Zahl der FTP-Ziele, S10/AP4.) */
         $geloescht = (int)($e['geloescht'] ?? 0);
         /* UND DIE DATEIEN (Schritt 16, E-SA-06). Derselbe Grund wie bei den
          * beiden Zeilen darueber: Was hier nicht abgeholt wird, entsteht im
@@ -572,7 +571,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
 
     return ['erledigt' => $erledigt, 'fertig' => $fertig,
             'rueckstand' => $rueckstand, 'fehler' => $fehler,
-            'uebergangen' => $uebergangen, 'geloescht' => $geloescht,
+            'geloescht' => $geloescht,
             'geloescht_dateien' => $geloeschtDateien];
 }
 
@@ -1750,17 +1749,13 @@ function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
     if ($e['fehler'] !== []) {
         throw new RuntimeException(implode(' | ', array_slice($e['fehler'], 0, 3)));
     }
-    /* „uebergangen" UND NICHT „uebersprungen" (S10/AP4, E-S10-U-09).
-     *
-     * Der Name `uebersprungen` ist auf DIESER Ebene bereits belegt, und zwar
-     * schärfer als es aussieht: `jobs_lauf()` setzt ihn, wenn ein Job wegen
-     * einer Pause gar nicht gelaufen ist, und `jobs.php` prüft ihn mit
-     * `isset()` und überspringt dann die GANZE Ergebniszeile (`continue`).
-     * Ein gleichnamiger Schlüssel hätte das Ergebnis des Versandjobs also
-     * nicht ergänzt, sondern ersetzt: „versand übersprungen (1)" statt
-     * „versand fertig · erledigt 3 · 1 übergangen". */
+    /* KEIN SCHLÜSSEL `uebersprungen` HIER: Der Name ist auf DIESER Ebene
+     * belegt, und zwar schärfer als es aussieht — `jobs_lauf()` setzt ihn,
+     * wenn ein Job wegen einer Pause gar nicht gelaufen ist, und `jobs.php`
+     * prüft ihn mit `isset()` und überspringt dann die GANZE Ergebniszeile.
+     * Deshalb hiess die Zahl der FTP-Ziele bis Web 20.47.0 `uebergangen`
+     * (S10/AP4, E-S10-U-09); sie ist mit P5c/AP8 gefallen. */
     return ['zustand' => [], 'erledigt' => $e['gesendet'], 'fertig' => $e['fertig'],
-            'uebergangen' => (int)($e['uebersprungen'] ?? 0),
             'geloescht'   => (int)($e['geloescht'] ?? 0)];
 }
 

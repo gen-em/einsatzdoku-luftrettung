@@ -315,7 +315,7 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   |---|---|---|
   | Konfiguration lesen | `konfig('schluessel')` | `$CFG`, `global $CFG`, `config.php` einbinden |
   | Sitzung starten | `sitzung_starten()` | `session_start()` |
-  | Schema fragen (auch in neuen Migrationen) | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, `db_spalte_typ()` | `information_schema` von Hand |
+  | Schema fragen (auch in neuen Migrationen) | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, `db_spalte_typ()`, `db_spalte_nullbar()` | `information_schema` von Hand |
   | Transaktion | `db_transaktion()` | `beginTransaction()` |
   | Aus Zahl oder Zeitpunkt Text machen | `format_lib.php` (PHP), `EdFormat` (Browser) | eigene Rechnung |
   | Anfrage an den Server (Browser) | `EdApi.postJson()` / `.postForm()` | `fetch` mit eigenem `X-CSRF` |

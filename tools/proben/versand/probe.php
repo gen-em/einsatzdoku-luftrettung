@@ -451,6 +451,25 @@ if ($db === null) {
           !in_array('ftp', array_column(sz_alle(), 'protokoll'), true),
           implode(', ', array_unique(array_column(sz_alle(), 'protokoll'))) ?: '(keine)');
 
+    /* UND DIE DATENBANK SELBST NIMMT ES NICHT MEHR AN (P5c/AP8, E-P5c-124).
+     * Bis Web 20.47.0 kannte das ENUM den Wert noch, und die Anwendung
+     * umschiffte ein solches Ziel (Plakette „wird übergangen"). Seither steht
+     * er nicht mehr im Schema — gemessen am Typ der Spalte UND an einem
+     * Schreibversuch an der Anwendung vorbei: Je nach `sql_mode` bricht er
+     * ab oder macht einen Leerstring daraus, ein `ftp` steht danach nie da. */
+    $typ = db_spalte_typ($db, 'backup_targets', 'protokoll');
+    pruef('Das Schema kennt ftp nicht mehr (Migration 2026_09_25_ftp_entfernen)',
+          $typ !== null && !str_contains($typ, "'ftp'"), (string)$typ);
+    try {
+        $db->exec("INSERT INTO backup_targets (name, protokoll, host, port, nutzer, erstellt_am)
+                   VALUES ('Versandprobe FTP-Schema', 'ftp', 'x', 21, 'x', UTC_TIMESTAMP())");
+    } catch (PDOException $e) { /* der Regelfall: STRICT_TRANS_TABLES */ }
+    $nachFtp = (int)$db->query("SELECT COUNT(*) FROM backup_targets WHERE protokoll = 'ftp'")
+                       ->fetchColumn();
+    pruef('...und ein Schreibversuch an der Anwendung vorbei hinterlaesst kein ftp',
+          $nachFtp === 0, $nachFtp . ' Zeilen');
+    $db->exec("DELETE FROM backup_targets WHERE name = 'Versandprobe FTP-Schema'");
+
     [$ok3, $f3] = sz_speichern(null, [
         'name' => 'Versandprobe Murks', 'protokoll' => 'gopher', 'host' => '',
         'port' => 99999, 'nutzer' => '', 'pfad' => '/', 'passiv' => 1, 'aktiv' => 1,

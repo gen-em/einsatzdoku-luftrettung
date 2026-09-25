@@ -7539,5 +7539,44 @@ declare(strict_types=1);
  *   antworten aus dem Tor. Topf `health`, 60 je Minute, ohne Leiter. Der
  *   Speicheranteil kommt aus dem taeglichen Aufraeumjob, der die drei Anteile
  *   seither mitmerkt — ein Abruf je Minute wiegt keine Verzeichnisse.
+ *
+ * 21.0.0 IST DIE HAUPTNUMMER DES RUECKBAUS VON R39 (P5c/AP8, E-P5c-19, -47,
+ * -48, -122 bis -125; Backlog Nr. 168, 169, 46). ZERSTOEREND, MIT
+ * VORBEDINGUNG — nach dem Deploy `update.php`, die Wartung bleibt an.
+ *
+ * WARUM DIE HAUPTNUMMER. Das Datenmodell aendert sich, und zwar in eine
+ * Richtung, aus der kein Weg zurueckfuehrt: In sechs Tabellen traegt jeder
+ * Stammdatensatz ab jetzt ein Konto (`user_id NOT NULL`), die Tabelle der
+ * Auswahl zentraler Standorte ist fort, `backup_targets.protokoll` kennt
+ * `ftp` nicht mehr, und die Nutzlast der Sicherung steigt auf 12. Code vor
+ * 21.0.0 laeuft auf diesem Schema nicht; ein Ruecksetzen darueber hinweg
+ * braucht den Rueckfallstand aus dem Komplett-Backup.
+ *
+ * WAS DAS GELD WERT IST. Zentrale Stammdaten gibt es seit 18.0.0 in der
+ * Oberflaeche nicht mehr (S9/AP5b). Stehen geblieben war das Modell, das
+ * sie zuliess — in jeder Abfrage ein „eigen ODER zentral", in jeder
+ * Speicheraktion eine Dublettenpruefung gegen einen Bestand, den niemand mehr
+ * anlegen konnte, und in jeder Sicherung ein Feld, das immer leer war. Die
+ * Bestandsaufnahme R39 zaehlte 208 Befunde; die Nachmessung vor dem Umbau
+ * rund hundert Stellen in 16 Dateien.
+ *
+ * DIE VORBEDINGUNG IST NEU UND NICHT FREIGEBBAR (E-P5c-125). Die Migration
+ * zaehlt vorher, ob noch eine Zeile ohne Konto oder ein FTP-Ziel dasteht,
+ * und sperrt dann mit Namen und Zahl — ohne das Haekchen, mit dem man eine
+ * Inhaltssperre freigibt. Ein `MODIFY … NOT NULL` ueber einer NULL-Zeile
+ * haette nichts freizugeben. Nach Auskunft der BetreiberIn tritt der Fall
+ * nicht auf (E-P5c-48); die Zaehlung schuetzt eine Anlage, in die jemand
+ * ein altes Komplett-Backup einspielt.
+ *
+ * FTP GEHT MIT (E-P5c-124). Der ENUM-Wert sollte „mit Nr. 168 fallen, wer
+ * zuerst kommt"; mit ihm faellt der Weg, der ein solches Ziel seit 20.2.0
+ * umschiffte — Plakette „wird uebergangen", Altziel-Formular, Zahl
+ * `uebergangen` im Versandjob, Statuszeile „umzustellen".
+ *
+ * UND NR. 169. Ein Diensttag mit „Anderem Rettungsmittel" bekommt die Rollen
+ * seiner Betriebsart (E-P5c-47) — beim Zuordnen, in der Vorschau, im
+ * Einsatzformular; eine dritte Migration zieht sie fuer den Bestand nach
+ * (E-P5c-123). Eine Wiederherstellung legt weiter an, was in der Datei
+ * steht (E8).
  */
-const WEB_VERSION = '20.47.0';
+const WEB_VERSION = '21.0.0';

@@ -159,7 +159,7 @@ bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|schema|-
 | MySQL 8.0 | `mysql:8.0`, Port 3307 | bereit nach **8 s**, 8.0.46 |
 | MySQL 8.4.0 | `mysql:8.4.0`, Port 3308 | bereit nach **10 s**, 8.4.0 |
 | MariaDB 10.11 | die örtliche, Port 3306 | 10.11.14 |
-| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „19 Prüfungen, 0 Fehlschläge"** |
+| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „30 Prüfungen, 0 Fehlschläge"** (seit P5c/AP8; bis dahin 19) |
 
 **Drei Dinge, die erst die Messung ergeben hat** — und die alle drei gegen die
 erste Planung stehen:

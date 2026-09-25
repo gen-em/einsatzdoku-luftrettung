@@ -158,11 +158,15 @@ CREATE TABLE devices (
 -- jede Bergwacht-Bereitschaft gehoert GENAU EINEM Standort. Eine zweite,
 -- standortuebergreifende Ebene gibt es bewusst nicht — der Preis dafuer ist
 -- Doppelpflege, der Gewinn ein Modell mit einer Regel statt mit zwei.
+--
+-- Jeder Eintrag gehoert einem Konto (`user_id NOT NULL`, seit Web 21.0.0).
+-- Bis dahin hiess NULL „zentral", und eine eigene Tabelle ordnete zentrale
+-- Standorte den Konten zu (R39); beides ist mit P5c/AP8 gefallen.
 -- ===========================================================================
 
 CREATE TABLE bases (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   name VARCHAR(120) NOT NULL,
   -- Optionale Koordinaten, Quelle des Abfahrtorts 'base' (Konzept 3.5.1).
   -- Freiwillig: ein Standort ohne Koordinaten steht als Abfahrtort schlicht
@@ -175,28 +179,19 @@ CREATE TABLE bases (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Auswahl zentraler Standorte je NutzerIn (E16). Nur ausgewaehlte zentrale
--- Standorte erscheinen in den Auswahllisten. EIGENE Standorte brauchen hier
--- keinen Eintrag — sie gelten immer als ausgewaehlt.
-CREATE TABLE user_bases (
-  user_id INT UNSIGNED NOT NULL,
-  base_id INT UNSIGNED NOT NULL,
-  PRIMARY KEY (user_id, base_id),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- Rettungsmittel (bis Web 5.10.0: `aircraft`). Die Art ist binaer (E3) und
 -- entscheidet ueber Besatzungsrollen und sichtbare Einsatzfelder.
 CREATE TABLE vehicles (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   -- Seit Web 16.0.0 NULL-faehig: Die Typen ausser 'standard' brauchen keinen
   -- Standort (E-S9-09). Die Pflicht bei 'standard' steht in validate_lib.php,
   -- nicht hier — die Datenbank kann sie nicht auf eine zweite Spalte beziehen,
   -- ohne den Fehler an der Pruefschicht vorbei als SQL-Fehler zu melden.
   -- ON DELETE CASCADE bleibt: Loeschen eines Standorts nimmt seine
-  -- Rettungsmittel mit (E15), es macht sie nicht standortlos.
+  -- Standard-Rettungsmittel mit (E15). Den Typen ohne Standortpflicht nimmt
+  -- die Anwendung vorher den Standort ab (`stammdaten_standort_loesen()`,
+  -- seit Web 17.1.0) — sie bleiben ohne Standort bestehen.
   base_id INT UNSIGNED NULL,
   name VARCHAR(64) NOT NULL,                       -- bis Web 5.10.0: `registration`
   kurz VARCHAR(16) NULL,                           -- Kurzname fuer Leiste, Kacheln, Plaketten (Nr. 69)
@@ -238,7 +233,7 @@ CREATE TABLE vehicle_capabilities (
 
 CREATE TABLE crew_presets (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   base_id INT UNSIGNED NOT NULL,
   -- Bis Web 5.10.0 ein ENUM('p1','p2','hems','fr','other'). Jetzt VARCHAR,
   -- damit neue Rollen ohne Schemaaenderung moeglich sind (Katalog: db.php).
@@ -252,7 +247,7 @@ CREATE TABLE crew_presets (
 -- Vorbelegung: weitere Rettungsmittel (RTW, NEF, weitere Hubschrauber ...)
 CREATE TABLE resources (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_base_res (user_id, base_id, name),
@@ -262,7 +257,7 @@ CREATE TABLE resources (
 
 CREATE TABLE bw_units (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_base_name (user_id, base_id, name),
@@ -274,7 +269,7 @@ CREATE TABLE bw_units (
 -- dieses Feld selbst bleibt Freitext ohne FK-Referenz).
 CREATE TABLE transport_dests (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(190) NOT NULL,
   -- Optionale Koordinaten (E37). Werden AM EINSATZ eingefroren
@@ -288,8 +283,8 @@ CREATE TABLE transport_dests (
   FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Nutzerbezogene Standard-Vorbelegung fuer Diensttage (Standort/Rettungsmittel);
--- funktioniert fuer persoenliche UND zentrale Eintraege (item_id verweist je
+-- Nutzerbezogene Standard-Vorbelegung fuer Diensttage (Standort/Rettungsmittel)
+-- aus den eigenen Eintraegen (item_id verweist je
 -- nach kind auf bases.id bzw. vehicles.id, kein FK moeglich wegen zwei
 -- Zieltabellen). Beim Speichern ist zu pruefen, dass das Standard-Rettungsmittel
 -- zum Standard-Standort gehoert.
@@ -702,7 +697,7 @@ CREATE TABLE protokoll_ereignisse (
 -- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden (S2/AP7, E-S2-22).
 --
 -- Der Name ist nicht `transport_dests` -- das sind die Zielkliniken. Hier geht
--- es um FTP-, FTPS- und SFTP-Gegenstellen. Begruendung in update.php bei der
+-- es um FTPS- und SFTP-Gegenstellen (FTP bis Web 20.47.0). Begruendung in update.php bei der
 -- Migration 2026_09_01_sicherungsziele und in
 -- docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md unter F-S2-G.
 --
@@ -712,7 +707,7 @@ CREATE TABLE protokoll_ereignisse (
 CREATE TABLE backup_targets (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name           VARCHAR(190) NOT NULL,
-  protokoll      ENUM('ftp','ftps','sftp') NOT NULL,
+  protokoll      ENUM('ftps','sftp') NOT NULL,
   host           VARCHAR(190) NOT NULL,
   port           SMALLINT UNSIGNED NOT NULL,
   nutzer         VARCHAR(190) NOT NULL,
@@ -1080,4 +1075,10 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_24_rueckweg_schluesselpaar', 'skipped'),
   -- missions.idx_missions_started und idx_missions_deleted stehen oben schon
   -- im Schema (P5c/AP7).
-  ('2026_09_24_statistik_beginn', 'skipped');
+  ('2026_09_24_statistik_beginn', 'skipped'),
+  -- Die Stammdaten tragen oben schon `user_id NOT NULL`, die Auswahltabelle
+  -- gibt es nicht, und `backup_targets.protokoll` kennt kein 'ftp' (P5c/AP8). Einen
+  -- Tag mit Tagesrettungsmittel hat eine frische Anlage nicht.
+  ('2026_09_25_zentrale_stammdaten', 'skipped'),
+  ('2026_09_25_ftp_entfernen', 'skipped'),
+  ('2026_09_25_tagesrettungsmittel_rollen', 'skipped');

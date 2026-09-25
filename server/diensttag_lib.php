@@ -377,75 +377,50 @@ function dt_standardwerte(int $userId): array
 }
 
 /**
- * Gehoert diese Kennung der NutzerIn oder ist sie zentral UND ausgewaehlt?
+ * Gehoert diese Kennung der NutzerIn? Sonst null.
  *
  * Muss zu den Listen passen, aus denen die Oberflaeche ihre Auswahlfelder baut
- * (dt_bases(), dt_vehicles()) — sonst wird ein zentraler Standort beim
- * Speichern stillschweigend auf NULL zurueckgesetzt.
- *
- * Zentrale Eintraege gelten erst als verfuegbar, wenn die NutzerIn den Standort
- * ausgewaehlt hat (E16). Bei `vehicles` haengt das am Standort des
- * Rettungsmittels, nicht am Rettungsmittel selbst.
+ * (dt_bases(), dt_vehicles()) — sonst wird ein angebotener Eintrag beim
+ * Speichern stillschweigend auf NULL zurueckgesetzt. Beide Seiten fragen
+ * seit Web 21.0.0 dasselbe: `user_id = ?`. Bis dahin kam „oder zentral und
+ * ausgewaehlt" dazu, ueber die Auswahltabelle (E16, R39; gefallen mit P5c/AP8).
  */
 function dt_base_erlaubt(PDO $pdo, int $userId, ?int $baseId): ?int
 {
     if ($baseId === null || $baseId <= 0) { return null; }
-    $q = $pdo->prepare('SELECT b.id FROM bases b
-                         LEFT JOIN user_bases ub ON ub.base_id = b.id AND ub.user_id = ?
-                        WHERE b.id = ? AND (b.user_id = ? OR (b.user_id IS NULL AND ub.base_id IS NOT NULL))');
-    $q->execute([$userId, $baseId, $userId]);
+    $q = $pdo->prepare('SELECT id FROM bases WHERE id = ? AND user_id = ?');
+    $q->execute([$baseId, $userId]);
     return $q->fetchColumn() !== false ? $baseId : null;
 }
 
 /**
- * Wie dt_base_erlaubt(), fuer Rettungsmittel; prueft den Standort mit.
+ * Wie dt_base_erlaubt(), fuer Rettungsmittel.
  *
- * EIN ZENTRALES RETTUNGSMITTEL OHNE STANDORT GILT ALS VERFUEGBAR (Web 16.0.0).
- * Der Zweig `v.base_id IS NULL` steht hier, weil `dt_vehicles()` ihn schon
- * immer hatte — und die beiden Fassungen mussten uebereinstimmen. Solange
- * `vehicles.base_id` NOT NULL trug, war die Abweichung folgenlos; mit E-S9-09
- * waere sie zum STILLEN DATENVERLUST geworden: Das Rettungsmittel stuende im
- * Auswahlfeld des Diensttags, und `dt_zuordnen()` setzte es beim Speichern
- * wortlos auf NULL zurueck — der Tag saehe danach neutral aus, ohne dass
- * irgendwo eine Meldung stuende.
- *
- * Die Auswahlbedingung fuer zentrale Eintraege bleibt sonst dieselbe (E16):
- * Wer den Standort nicht ausgewaehlt hat, sieht dessen Rettungsmittel nicht.
- * Ein zentrales Rettungsmittel OHNE Standort hat diese Huerde nicht — es
- * haengt an keinem Standort, den man auswaehlen koennte.
+ * EIN RETTUNGSMITTEL OHNE STANDORT IST VERFUEGBAR (Web 16.0.0, E-S9-09) —
+ * es gehoert der NutzerIn, und mehr fragt diese Pruefung nicht. Die Fassung
+ * bis Web 20.47.0 hatte dafuer einen eigenen Zweig fuer zentrale Eintraege;
+ * weicht sie von `dt_vehicles()` ab, stuende ein Rettungsmittel im
+ * Auswahlfeld, und `dt_zuordnen()` setzte es beim Speichern wortlos auf NULL.
  */
 function dt_vehicle_erlaubt(PDO $pdo, int $userId, ?int $vehicleId): ?int
 {
     if ($vehicleId === null || $vehicleId <= 0) { return null; }
-    $q = $pdo->prepare('SELECT v.id FROM vehicles v
-                         LEFT JOIN user_bases ub ON ub.base_id = v.base_id AND ub.user_id = ?
-                        WHERE v.id = ? AND (v.user_id = ?
-                              OR (v.user_id IS NULL AND (ub.base_id IS NOT NULL OR v.base_id IS NULL)))');
-    $q->execute([$userId, $vehicleId, $userId]);
+    $q = $pdo->prepare('SELECT id FROM vehicles WHERE id = ? AND user_id = ?');
+    $q->execute([$vehicleId, $userId]);
     return $q->fetchColumn() !== false ? $vehicleId : null;
 }
 
-/**
- * Standorte, die dieser NutzerIn zur Verfuegung stehen: die eigenen und die
- * ausgewaehlten zentralen (E16).
- *
- * Eigene Standorte brauchen keinen Eintrag in `user_bases` — sie gelten immer
- * als ausgewaehlt.
- */
+/** Die Standorte der NutzerIn. */
 function dt_bases(int $userId): array
 {
-    $q = db()->prepare('SELECT b.id, b.name, b.lat, b.lon, b.user_id IS NULL AS zentral
-                          FROM bases b
-                          LEFT JOIN user_bases ub ON ub.base_id = b.id AND ub.user_id = ?
-                         WHERE b.user_id = ? OR (b.user_id IS NULL AND ub.base_id IS NOT NULL)
-                         ORDER BY b.name');
-    $q->execute([$userId, $userId]);
+    $q = db()->prepare('SELECT id, name, lat, lon FROM bases WHERE user_id = ? ORDER BY name');
+    $q->execute([$userId]);
     return $q->fetchAll();
 }
 
 /**
- * Rettungsmittel der verfuegbaren Standorte, mit Betriebsart, Typ, Kurznamen
- * und Standortnamen.
+ * Die Rettungsmittel der NutzerIn, mit Betriebsart, Typ, Kurznamen und
+ * Standortnamen.
  *
  * Ein Rettungsmittel OHNE Standort erscheint bewusst mit. Bis Web 15.9.0 galt
  * das den Bestandsdaten vor der Nachbearbeitung (Problem P6): Sonst
@@ -460,11 +435,9 @@ function dt_vehicles(int $userId): array
                                 b.name AS base_name
                           FROM vehicles v
                           LEFT JOIN bases b ON b.id = v.base_id
-                          LEFT JOIN user_bases ub ON ub.base_id = v.base_id AND ub.user_id = ?
                          WHERE v.user_id = ?
-                            OR (v.user_id IS NULL AND (ub.base_id IS NOT NULL OR v.base_id IS NULL))
                          ORDER BY v.name');
-    $q->execute([$userId, $userId]);
+    $q->execute([$userId]);
     return $q->fetchAll();
 }
 
@@ -573,6 +546,71 @@ function dt_rollensatz_einfrieren(PDO $pdo, int $dayId, array $soll): void
     }
 }
 
+/**
+ * Die Rollen eines Tags mit einem Rettungsmittel NUR FUER DIESEN TAG
+ * (P5c/AP8, Nr. 169, E-P5c-47): alle Rollen der gewaehlten Betriebsart.
+ *
+ * Das Tagesrettungsmittel hat keine `vehicle_roles`, aus denen sich ein Satz
+ * ergaebe. Bis Web 20.47.0 bekam der Tag deshalb KEINEN, und die Besatzung
+ * liess sich nicht erfassen (Weg c). Die Betriebsart ist dagegen
+ * ausdruecklich gewaehlt — geraten wird nichts.
+ *
+ * @return list<string>
+ */
+function dt_tagesrettungsmittel_rollen(string $kind): array
+{
+    return array_keys(crew_roles_fuer_art($kind));
+}
+
+/**
+ * Tage mit einem Tagesrettungsmittel, die noch keinen Rollensatz tragen
+ * (P5c/AP8, E-P5c-123) — id => Betriebsart.
+ *
+ * Erkannt wird der Tag an seiner Momentaufnahme: kein Verweis auf ein
+ * Rettungsmittel, aber ein eingefrorener Name und eine Art. Dieselbe Form hat
+ * ein Tag, dessen Rettungsmittel spaeter geloescht wurde (`ON DELETE SET
+ * NULL`); traegt er Rollen, faellt er hier heraus, traegt er keine, ist er
+ * nicht zu unterscheiden (Migration `2026_09_25_tagesrettungsmittel_rollen`).
+ * Auch Tage im Papierkorb zaehlen — sie kommen sonst ohne Rollensatz zurueck.
+ *
+ * @return array<int,string>
+ */
+function dt_tagesrettungsmittel_ohne_rollen(PDO $pdo, ?int $userId = null): array
+{
+    $sql = "SELECT d.id, d.kind FROM days d
+             WHERE d.vehicle_id IS NULL AND d.vehicle_name IS NOT NULL
+               AND d.kind IN ('air','ground')
+               AND NOT EXISTS (SELECT 1 FROM day_crew c WHERE c.day_id = d.id)";
+    $werte = [];
+    if ($userId !== null) { $sql .= ' AND d.user_id = ?'; $werte[] = $userId; }
+    $q = $pdo->prepare($sql . ' ORDER BY d.id');
+    $q->execute($werte);
+    $raus = [];
+    foreach ($q->fetchAll() as $z) { $raus[(int)$z['id']] = (string)$z['kind']; }
+    return $raus;
+}
+
+/**
+ * Den Rollensatz dort nachtragen, wo er fehlt (P5c/AP8, E-P5c-123).
+ *
+ * Fuer die Migration `2026_09_25_tagesrettungsmittel_rollen`; geschrieben
+ * werden nur leere Zeilen. NICHT fuer die Wiederherstellung: Die legt einen
+ * Tag mit den eingefrorenen Angaben der Datei an, nicht neu abgeleitet (E8,
+ * `edbak_restore()`) — ein Paket von vor Web 21.0.0 bringt einen solchen Tag
+ * deshalb ohne Rollensatz zurueck. Die Zuordnung einmal neu zu speichern
+ * traegt ihn nach.
+ *
+ * @return int Zahl der Tage, die einen Rollensatz bekommen haben
+ */
+function dt_tagesrettungsmittel_rollen_nachziehen(PDO $pdo, ?int $userId = null): int
+{
+    $tage = dt_tagesrettungsmittel_ohne_rollen($pdo, $userId);
+    foreach ($tage as $dayId => $kind) {
+        dt_rollensatz_einfrieren($pdo, $dayId, dt_tagesrettungsmittel_rollen($kind));
+    }
+    return count($tage);
+}
+
 function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $baseId,
                      ?array $adhoc = null): void
 {
@@ -591,9 +629,10 @@ function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $b
      * Funktionen hiessen zwei Fassungen der Einfrierregel, und die liefen
      * beim naechsten Feld auseinander.
      *
-     * `$vehicleId` bleibt NULL. Damit greifen die Rollen- und
-     * Faehigkeitsbloecke unten von selbst richtig: kein Rollensatz, keine
-     * Faehigkeiten (F19). */
+     * `$vehicleId` bleibt NULL, und der Weg kehrt vor den Bloecken unten
+     * zurueck: Der Rollensatz ist der der gewaehlten Betriebsart (Nr. 169,
+     * E-P5c-47 — bis Web 20.47.0 war er leer), Faehigkeiten gibt es keine
+     * (F19). */
     if ($adhoc !== null) {
         /* Die Kennung gewinnt, wenn sie der NutzerIn gehoert; sonst bleibt der
          * getippte Name stehen (Rueckfall, siehe `pruef_tagesrettungsmittel()`)
@@ -618,7 +657,7 @@ function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $b
             ->execute([$bid, $adhoc['kind'], $bName, $bLat, $bLon,
                        $adhoc['name'], $adhoc['typ'], $dayId, $userId]);
         $vehicleId = null;
-        dt_rollensatz_einfrieren($pdo, $dayId, []);
+        dt_rollensatz_einfrieren($pdo, $dayId, dt_tagesrettungsmittel_rollen((string)$adhoc['kind']));
         $pdo->prepare('DELETE FROM day_capabilities WHERE day_id = ?')->execute([$dayId]);
         return;
     }

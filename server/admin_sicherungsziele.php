@@ -113,18 +113,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $satz = $e['gesendet'] . ($e['gesendet'] === 1 ? ' Datei' : ' Dateien')
               . ' an ' . $e['ziele'] . ($e['ziele'] === 1 ? ' Ziel' : ' Ziele')
               . ' gesendet (' . groesse_text($e['bytes']) . ').'
-              /* DER VERMERK STEHT IM ERFOLGSSATZ, nicht im Fehlerkasten
-               * (S10/AP4, E-S10-U-09): Ein übergangenes Ziel ist keine
-               * Störung, sondern eine Ansage. Er nennt die Namen, weil „1
-               * übersprungen" ohne Namen niemanden zum richtigen Ziel
-               * führt. */
-              . ((int)($e['uebersprungen'] ?? 0) > 0
-                  ? ' Übersprungen: ' . (int)$e['uebersprungen'] . ' ('
-                    . implode(', ', array_slice(
-                        (array)($e['uebersprungen_namen'] ?? []), 0, 3))
-                    . (count((array)($e['uebersprungen_namen'] ?? [])) > 3 ? ' …' : '')
-                    . ') — unverschlüsseltes Protokoll, bitte umstellen.'
-                  : '')
               /* WAS DORT ENTFERNT WURDE, STEHT IM ERFOLGSSATZ (P5a/AP10).
                * Eine Löschung auf einer fremden Maschine ist die Sorte
                * Handlung, die man nicht erst auf einer anderen Seite
@@ -186,9 +174,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $z = sz_lesen($id);
         if ($z === null) {
             $error = 'Dieses Ziel gibt es nicht (mehr).';
-        } elseif (!sz_protokoll_erlaubt((string)$z['protokoll'])) {
-            $error = 'Dieses Ziel wird nicht mehr beschickt — sein Protokoll '
-                   . 'überträgt im Klartext. Erst umstellen, dann nachsehen.';
         } else {
             $weg = null;
             try {
@@ -437,19 +422,13 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       <?php foreach ($ziele as $z): ?>
         <?php
         $prot = strtoupper((string)$z['protokoll']);
-        /* DAS ABGESCHAFFTE PROTOKOLL ZUERST (S10/AP4, E-S10-14). Es ist die
-         * Auskunft, die hier zählt — „aktiv" daneben wäre irreführend, denn
-         * beschickt wird dieses Ziel nicht mehr. */
-        $tot = !sz_protokoll_erlaubt((string)$z['protokoll']);
-        $plaketten = $tot ? ui_plakette('wird übergangen', ['ton' => 'rot']) : '';
-        $plaketten .= (int)$z['aktiv'] === 1
+        /* Bis Web 20.47.0 stand vorn die rote Plakette „wird übergangen" fuer
+         * ein Ziel mit dem abgeschafften Protokoll FTP (S10/AP4); das ENUM
+         * kennt den Wert seit P5c/AP8 nicht mehr (E-P5c-124). */
+        $plaketten = (int)$z['aktiv'] === 1
             ? ui_plakette('aktiv', ['ton' => 'blau'])
             : ui_plakette('abgeschaltet', ['ton' => 'neutral']);
-        if ($tot) {
-            /* Kein „zuletzt gescheitert" daneben: Der Vermerk im Lauf IST die
-             * Übergehung, und zwei rote Plaketten für eine Sache sagen nicht
-             * mehr als eine. */
-        } elseif (($z['letzter_fehler'] ?? null) !== null) {
+        if (($z['letzter_fehler'] ?? null) !== null) {
             $plaketten .= ui_plakette('zuletzt gescheitert', ['ton' => 'rot']);
         } elseif (($z['letzter_erfolg'] ?? null) !== null) {
             $plaketten .= ui_plakette('zuletzt in Ordnung', ['ton' => 'blau']);
@@ -461,11 +440,6 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         }
         $klein = $prot . ' · ' . (string)$z['nutzer'] . '@' . (string)$z['host']
                . ':' . (int)$z['port'] . ' · ' . (string)$z['pfad'];
-        if ($tot) {
-            $klein = $prot . ' überträgt im Klartext und wird seit Web 20.2.0 '
-                   . 'nicht mehr beschickt — auf SFTP oder FTPS umstellen '
-                   . '(Protokoll, Port und Zugangsdaten). · ' . $klein;
-        }
         if (($z['schluessel'] ?? null) !== null) { $klein .= ' · mit privatem Schlüssel'; }
         /* DIE AUFBEWAHRUNG STEHT AN DER ZEILE, nicht nur im Formular
          * (P5a/AP10). Eine Regel, die drüben löscht, gehört dorthin, wo man
@@ -565,16 +539,11 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                des Webspace — und an das kommt auf geteiltem Hosting nicht jede
                BetreiberIn heran. Seit P5c/AP3 steht er auch im Protokoll unter
                System; hier steht er trotzdem, weil man dort suchen muss. */
-            /* „GESCHEITERT" IST BEI EINEM ÜBERGANGENEN ZIEL DAS FALSCHE
-               WORT (S10/AP4). Es ist nichts schiefgegangen — es wurde
-               absichtlich nichts versucht. Der Vermerk steht in derselben
-               Spalte, weil es dieselbe Spalte ist; die Überschrift sagt,
-               was er bedeutet. */
-            ui_zeile(['text' => $tot ? 'Zuletzt übergangen' : 'Zuletzt gescheitert',
+            ui_zeile(['text' => 'Zuletzt gescheitert',
                       'klein' => (string)$z['letzter_fehler'],
                       'plaketten' => ui_plakette(
                           datum_zeit_text((string)$z['letzter_lauf'], ' · '),
-                          ['ton' => $tot ? 'orange' : 'rot'])]);
+                          ['ton' => 'rot'])]);
         }
         ?>
       <?php endforeach; ?>
@@ -584,33 +553,12 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php /* ---- Anlegen und Ändern ------------------------------------- */ ?>
   <?php if ($bearbeiten !== null && $schluesselDa && $tabelleDa): ?>
     <?php $neu = $bearbeiten === 0; ?>
-    <?php /* EIN ALTZIEL WIRD NICHT DURCH BLOSSES SPEICHERN UMGESTELLT
-             (S10/AP4, E-S10-U-13, Fund F-D).
-
-             `ui_feld()` setzt `selected` nur bei Übereinstimmung. Fällt das
-             Protokoll aus dem Katalog, wählt der Browser die ERSTE Option —
-             `sftp` —, während Port 21 und die versiegelten Zugangsdaten
-             stehenbleiben. Ein Druck auf „Speichern" ergäbe ein Ziel, das
-             plausibel aussieht und beim nächsten Versand scheitert; die rote
-             Plakette wäre dabei verschwunden, weil das Protokoll ja nicht
-             mehr `ftp` ist. Also: Der Satz sagt, was zu tun ist, und das
-             Protokollfeld beginnt LEER statt mit einer geratenen Wahl. */ ?>
-    <?php $altziel = !$neu && isset($form['protokoll'])
-                     && !sz_protokoll_erlaubt((string)$form['protokoll']); ?>
+    <?php /* Bis Web 20.47.0 stand hier der Zweig fuer ein ALTZIEL mit FTP: ein
+             Hinweis und ein leeres Protokollfeld statt einer geratenen Wahl
+             (S10/AP4, E-S10-U-13). Seit P5c/AP8 kennt die Datenbank den Wert
+             nicht mehr (E-P5c-124). */ ?>
     <?php ui_karte_start(['titel' => $neu ? 'Neues Ziel' : 'Ziel bearbeiten',
                           'id' => 'zielform']); ?>
-      <?php if ($altziel): ?>
-        <?php ui_meldung(
-            'Es überträgt im Klartext und wird seit Web 20.2.0 nicht mehr '
-            . 'beschickt. Zum Weiterbenutzen sind drei Angaben neu zu setzen: '
-            . 'Protokoll, Port und die Zugangsdaten. Die bisherigen '
-            . 'Zugangsdaten werden nicht übernommen — sie gelten nicht '
-            . 'notwendig auch für den verschlüsselten Weg, und geraten wird '
-            . 'hier nichts.',
-            null, 'warn', '',
-            ['auftakt' => 'Dieses Ziel benutzt '
-                        . strtoupper((string)$form['protokoll']) . '.']); ?>
-      <?php endif; ?>
       <form method="post">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="ziel_speichern">
@@ -621,10 +569,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                          'klein' => 'Frei wählbar — er steht in Meldungen und im '
                                   . 'Versandprotokoll.']); ?>
           <?php ui_feld(['name' => 'protokoll', 'label' => 'Protokoll', 'art' => 'select',
-                         'optionen' => $altziel
-                             ? ['' => '— bitte wählen —'] + SZ_PROTOKOLLE
-                             : SZ_PROTOKOLLE,
-                         'wert' => $altziel ? '' : (string)($form['protokoll'] ?? 'sftp'),
+                         'optionen' => SZ_PROTOKOLLE,
+                         'wert' => (string)($form['protokoll'] ?? 'sftp'),
                          'klein' => 'SFTP erkennt den Server am Hostschlüssel wieder. '
                                   . 'FTPS verschlüsselt nur die Leitung — das Zertifikat '
                                   . 'wird von PHP nicht geprüft.']); ?>
@@ -747,21 +693,12 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
        ausgestelltes ohne Vertrauenskette (nachgemessen in
        <code>tools/proben/versand/</code>). Schutz gegen Mitlesen: ja. Schutz gegen
        einen untergeschobenen Server: nein.</p>
-    <?php /* NICHT GESTRICHEN, SONDERN UMGESCHRIEBEN (S10/AP4, E-S10-U-16).
-             Dieser Absatz rechtfertigte FTP („es steht hier, weil es auf
-             einfachem Webspace oft das Einzige ist"). Seit AP4 ist er der
-             EINZIGE Ort, an dem die rote Plakette an einem Altziel erklaert
-             wird — ihn zu streichen hiesse, die Plakette unerklaert zu
-             lassen. Die Streichung ist fuer den ENUM-Rueckbau vorgemerkt
-             (Backlog Nr. 168 / Nr. 46). */ ?>
-    <p class="feld-hinweis"><strong>FTP wird nicht mehr angeboten.</strong> Es überträgt
+    <?php /* GEKUERZT MIT P5c/AP8 (E-P5c-124). Seit S10/AP4 erklaerte dieser
+             Absatz auch die Plakette „wird übergangen" an einem Altziel; die
+             gibt es nicht mehr. Stehen bleibt, warum es FTP nicht gibt. */ ?>
+    <p class="feld-hinweis"><strong>FTP wird nicht angeboten.</strong> Es überträgt
        alles im Klartext, auch den Nutzernamen und das Passwort — und eine
-       Backup-Datei ist genau das, was man dabei nicht mitlesen lassen will. Seit
-       Web 20.2.0 ist es weder wählbar noch wird es beschickt. Ein Ziel, das noch
-       darauf steht, trägt in der Liste oben die Plakette <em>wird übergangen</em>
-       und wird beim Versand übersprungen, statt im Klartext beliefert zu werden.
-       Zum Umstellen sind drei Angaben neu zu setzen: Protokoll, Port und die
-       Zugangsdaten.</p>
+       Backup-Datei ist genau das, was man dabei nicht mitlesen lassen will.</p>
     <p class="feld-hinweis">Die Zugangsdaten liegen verschlüsselt in der Datenbank;
        der Schlüssel steht in <code>config.php</code>. Ein Datenbankdump enthält
        die Passwörter deshalb nicht — und ein Backup der Installation, in das der

@@ -1028,15 +1028,17 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
  *   - KEIN KURZNAME. Er ist eine Eigenschaft des Bestands (Nr. 69) und dient
  *     der Wiedererkennung in Listen. Was einen Tag lang existiert, wird nicht
  *     wiedererkannt.
- *   - KEINE ROLLEN, KEINE FAEHIGKEITEN (F19). Der Tag bekommt keinen
- *     Rollensatz und keine Fluglisten; `day_crew` und `day_capabilities`
- *     bleiben leer.
+ *   - DIE ROLLEN DER BETRIEBSART, KEINE FAEHIGKEITEN. Der Tag bekommt alle
+ *     Rollen der gewaehlten Art (Nr. 169, E-P5c-47, seit Web 21.0.0 — bis
+ *     dahin keine, F19) und keine Fluglisten; `day_capabilities` bleibt
+ *     leer. Angehakt ist hier nichts, also gibt es nichts auszuwaehlen:
+ *     Die Art ist die einzige Angabe, aus der sich ein Satz ergibt.
  *   - DER STANDORT IST FREIWILLIG — auch beim Typ „Standard". Am
  *     Stammdatensatz ist er dort Pflicht, weil die Vorschlagslisten an ihm
  *     haengen (E15) und ein Standard-Rettungsmittel ohne Standort eine leere
- *     Tagesuebersicht hinterliesse. Hier gibt es keine Vorschlagslisten, weil
- *     es keine Rollen gibt: Die Begruendung traegt nicht, also gilt die Regel
- *     nicht.
+ *     Tagesuebersicht hinterliesse. Hier bleiben die Besatzungsfelder ohne
+ *     Standort aus der Liste Freitext ohne Vorschlaege — ein Preis, den ein
+ *     Dienst von einem Tag tragen kann, und keine Regel wert.
  *   - DER STANDORT DARF FREITEXT SEIN. `base_id` nennt einen Standort aus der
  *     Liste, `base_name` einen Ort, den es als Stammdatensatz nicht gibt. Wo
  *     eine Kennung steht, holt der Aufrufer Namen UND Koordinate aus den

@@ -49,9 +49,13 @@ if (php_sapi_name() === 'cli') {
     foreach ($lauf['results'] as [$id, $label, $status, $detail, $zerstoert, $blockId, $web]) {
         printf("%-6s %-9s %-46s %s\n", strtoupper($status),
                $web !== null ? ('Web ' . $web) : '', $id, $detail);
+        /* Ohne Freigabe-Kennung ist es eine Vorbedingung (P5c/AP8): Sie wird
+         * hergestellt, nicht freigegeben — der Weg steht in der Zeile. */
         if ($status === 'stopp') {
             printf("%-6s %-46s %s\n", '', '',
-                   '-> Daten sichern, dann unter Betrieb → Updates einzeln freigeben.');
+                   $blockId !== null
+                       ? '-> Daten sichern, dann unter Betrieb → Updates einzeln freigeben.'
+                       : '-> Nicht freigebbar: erst die Vorbedingung herstellen, dann erneut ausführen.');
         }
     }
     exit(0);

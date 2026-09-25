@@ -149,7 +149,7 @@ des Abschlusses); **294 bis 303 und 319 bis 328** der P5c-Zweig
 298 die Anlässe aus der Zuarbeit von Konzept BR (Konzept P5c, E-P5c-86), 299
 und 300 Funde aus AP4, 302, 303, 319 und 320 die nachgetragenen Anlässe aus
 dem Aufnehmen von BR (E-P5c-116), 301 für AP5b (Konzept RW), 321 ein Fund
-und 322 Funde aus AP7 (Stilvergleich, Reihenfolge des Prüfstands), der Rest frei für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
+und 322 Funde aus AP7 (Stilvergleich, Reihenfolge des Prüfstands), 323 ein Fund aus AP8 (Referenz und Fixture auf Nutzlast 11), der Rest frei für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
 dazu: Die erste reichte nicht mehr, und 304 bis 318 hatte BR inzwischen
 vergeben. *(Bis zum 23.09.2026
 stand hier 283; 283 bis 285 sind seither auf `main`, **286 und 287** vergibt
@@ -711,6 +711,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mehr wählen kann, wäre Aufwand ohne Gegenwert). Der Wert kann
     alternativ mit dem P5-Schemarückbau (Nr. 168) fallen; wer zuerst kommt,
     nimmt ihn mit.
+    **Der `ENUM`-Wert ist mit Nr. 168 gefallen** (Web 21.0.0, P5c/AP8,
+    E-P5c-124; Migration `2026_09_25_ftp_entfernen`), und mit ihm der Weg,
+    der ein solches Ziel umschiffte. Von den zwei Resten bleibt der
+    Lesezweig für unversiegelte Adminpakete.
+
+    **Und eine vierte Toleranz kommt mit Web 21.0.0 dazu** (P5c/AP8, Nr. 168):
+    Nutzlast 6 bis 11 tragen unter `stammdaten` die Auswahl zentraler
+    Standorte. Der Rückweg **überliest** das Feld still; die Tabelle, in die
+    es gehörte, gibt es nicht mehr. Zum Stichtag fällt das mit dem übrigen
+    Altformat — ein Paket ab Nutzlast 12 trägt das Feld nicht.
 50. **Der Versand liest je Konto ein Verzeichnis.**
     `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
     Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
@@ -1346,102 +1356,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zu betrachten.
 
 
-168. **Zentrale Stammdaten vollständig zurückbauen — damit kein
-    Überbleibsel bleibt.** *Aufgenommen 09.09.2026, zugeordnet **P5**
-    (Rahmenplan R39, Beschluss vom 30.08.2026).* **Die Tür ist zu seit
-    Web 18.0.0** (S9/AP5b): `admin_stammdaten.php` ist ersatzlos gestrichen,
-    die Karte „Vordefinierte Standorte" und der Schreibweg `ub_toggle` mit
-    ihr — **kein Schema, keine Migration**. Damit kann keine neue Zeile mit
-    `user_id IS NULL` mehr entstehen, und die Vorbedingung unten hält von
-    selbst. Der eigentliche
-    Rückbau steht aus, und ohne ihn bleibt das Modell im Schema, in den
-    Sicherungsformaten und in der Dokumentation stehen, obwohl es keine Daten
-    mehr trägt. Die Fundstellen sind aufgenommen:
-    `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`, **208
-    Befunde** auf sechs Flächen (23 Schema, 71 Code, 83 Dokumentation, 22
-    Prüfmittel, 9 Daten) — das Dokument bleibt bis P5 liegen und wird
-    danach gelöscht wie ein Konzept.
-
-    *Was der Rückbau umfasst:* **(1)** `user_id` in `bases`, `vehicles`,
-    `crew_presets`, `resources`, `bw_units` und `transport_dests` auf
-    `NOT NULL` ziehen; **(2)** `user_bases` samt Auswahlweg entfernen (E16);
-    **(3)** das Feld `stammdaten.user_bases` aus der Nutzlast der
-    Kontosicherung nehmen, Nutzlastversion heben, den Import ältere Pakete
-    still darüber hinweglesen lassen; **(4)** `admin_stammdaten.php` samt
-    Menüeintrag entfernen; **(5)** die Abfragen entschlacken, die heute
-    „eigen ODER zentral" fragen (`dt_base_erlaubt()`, `dt_bases()`,
-    `dt_vehicles()`, die Dublettenprüfung, der Einspielweg); **(6)**
-    Dokumentation austragen (`docs/Technik.md` Datenmodell,
-    `docs/Backup-Format.md`, `docs/Handbuch.md`); **(7)** die Prüfmittel
-    nachziehen (Platzhalter `__ADMIN_STANDORT__` des Bilderlaufs, der
-    Klickprobenweg zu Nr. 163, die Umlaufausnahmen des Referenzbestands).
-
-    *Vorbedingung, die vor dem `ALTER TABLE` zu messen ist:* **0 Zeilen mit
-    `user_id IS NULL`** in allen sechs Tabellen. Steht auch nur eine da,
-    bricht die Änderung ab, und MySQL kennt kein Zurückrollen von
-    Schemaänderungen — die Installation bliebe auf halbem Weg stehen. Die
-    geschlossene Tür aus S9 sorgt dafür, dass diese Null von da an hält;
-    ~~vorhandene Einträge lassen sich über die Verwaltung noch löschen.~~
-    **Berichtigt 23.09.2026 (E-P5c-48):** Das stimmt seit S9/AP5b nicht mehr —
-    die Seite dafür ist gestrichen. Der Fall **tritt aber nicht auf**: Auf der
-    einen laufenden Anlage sind alle zentralen Einträge gelöscht (Auskunft des
-    Auftraggebers). Die Migration **zählt trotzdem vorher** und blockiert mit
-    Torwächter-Meldung, wenn sie etwas findet — das schützt eine Anlage, in
-    die jemand eine alte Sicherung einspielt. Die Vorzählung ist eine eigene
-    Vorbedingung auf `user_id IS NULL`; `migrationen_inhalt_zaehlen()` zählt
-    das Gegenteil. Ein eigener Runbook-Abschnitt entfällt.
-
-    *Abnahme („keine Überbleibsel"):* `grep -rn "zentral" server/` nennt
-    keine Stammdatenstelle mehr; `grep -rn "user_bases" server/ docs/` ist
-    **0**; Register und `SHOW CREATE TABLE` sind zwischen frischer
-    Installation und migrierter Datenbank strukturgleich; die Kreisläufe
-    `edbak`, `edbak-alt` und `csv` laufen mit **0 unerklärten** Abweichungen;
-    eine Sicherung im alten Format spielt weiterhin ein.
-
-    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
-
-169. **Ein Diensttag mit „Anderem Rettungsmittel" kann keine Besatzung
-    festhalten.** *Aufgenommen 09.09.2026 beim Beantworten von Frage 11
-    (S9/AP6, Web 18.1.1).* Ein Rettungsmittel nur für den Tag führt keine
-    Besatzungsrollen (E-S9-10, F19). Das gilt seit Web 18.1.1
-    **gleichmäßig** — vorher bot ein aus einer früheren Zuordnung
-    umgestellter Tag die alten Rollen an, ein frisch angelegter keine. Die
-    Gleichmäßigkeit legt die Lücke frei: Es gibt an einem solchen Tag
-    **keinen** Weg, einen Besatzungsnamen einzutragen, weder am Tag noch am
-    einzelnen Einsatz — beide fragen denselben Rollensatz.
-
-    *Warum das nicht nebenbei zu schließen ist:* Der Rollensatz kommt aus
-    `vehicle_roles` des Stammdatensatzes, und einen solchen gibt es hier
-    gerade nicht. Drei Wege sind denkbar, und sie unterscheiden sich in dem,
-    was sie versprechen:
-    **(a)** Der Adhoc-Dialog bekommt Rollenhaken wie das
-    Stammdatenformular — ehrlich, aber er wächst um sieben Felder und wird
-    damit zu dem Formular, das er nicht sein wollte.
-    **(b)** Der Tag bietet die Rollen an, die zu seiner **Betriebsart**
-    passen (luft/boden) — billig, aber es ist geraten, und E26 sagt
-    ausdrücklich: geraten wird nicht.
-    **(c)** So lassen und im Text sagen (heutiger Stand): Wer die Besatzung
-    braucht, legt das Rettungsmittel an. Kostet einen Stammdatensatz, den
-    F17 gerade ersparen wollte.
-
-    *Bis zur Entscheidung gilt (c).* Hinweis im Tagesformular und Handbuch
-    sagen es seit Web 18.1.1 zutreffend; vorher verwiesen beide auf die
-    abweichende Besatzung am Einsatz, wo dieselbe Sperre greift.
-    **Am 12.09.2026 vertagt auf P5** — dort wird über die Rettungsmittel
-    ohnehin entschieden. Bis dahin gilt (c), und Hinweis und Handbuch sagen
-    es zutreffend; kein dritter Zustand. Zuordnung: **P5**.
-    *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
-    Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
-    tut. Kein dritter Zustand.
-
-    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
-
-    **Entschieden 23.09.2026 (E-P5c-47): Weg (b)** — der Tag bietet alle
-    Rollen der gewählten Betriebsart an. Geraten ist das nicht: Die
-    Betriebsart wird im Dialog ausdrücklich gewählt (`adhoc_kind` in
-    `index.php`), und `CREW_ROLES` trägt `kind` air/ground/both. Abnahme etwa:
-    „Tag Luft zeigt p1, p2, hems, fr, other". Zuordnung bleibt **10c AP8**.
-
 170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.**
     *Aufgenommen 10.09.2026 nach zwei Rückmeldungen zu Web 19.1.0 (behoben
     mit 19.1.1).* AP7 hat gezählt, **wie viele** Schlösser und Kleinzeilen
@@ -1539,6 +1453,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     vergeben. Wer der Spur folgt, findet zwei Zeilen und muss aus dem
     Zusammenhang wählen — lästig, aber nicht irreführend. **Der Fund ist
     älter als diese Runde:** `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`
+    (gelöscht mit P5c/AP8, Historie: `git log --
+    docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`)
     hat ihn am 09.09.2026 schon verzeichnet (dort für 35, 36 und 37) und
     nennt zusätzlich eine **fehlende** Zeile für den 09.09.2026. **Keine
     Wirkung auf Code, Daten oder Oberfläche** — deshalb bleibt der Punkt offen
@@ -3786,6 +3702,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Reihenfolge der demo-empfindlichen Proben (`nach`), und `auswahl.py
     --selbstprobe` prüft sie. *Abnahme:* ein Muster mit Messstand ganz vorn,
     der Prüfstand bleibt grün. **Zuordnung: Backlog-Runde** (Prüfmittel).
+
+323. **Referenzbestand und Demo-Fixture tragen noch Nutzlast 11.**
+    *Aufgenommen 25.09.2026 (P5c/AP8).* Die Referenz
+    `referenz/einsatzdoku-backup-2026-09-15.edbak` und
+    `server/demo/fixture.json.gz` stammen aus der Zeit vor Nutzlast 12; beide
+    führen das leere Feld der Standortauswahl. Das ist **kein Fehler** — der
+    Rückweg überliest es, und genau das zeigt der Kreislauf. Es kostet aber
+    **zwei Übergangsregeln** in `vergleich/ausnahmen/edbak_umlauf.json`
+    (`kopf.version` 11 → 12, das fehlende Feld), und die Fixture trägt eine
+    Angabe, die keine Fassung mehr schreibt. *Zu tun:* Referenz und Fixture
+    neu erzeugen, wie mit Nr. 173; danach werden die beiden Regeln
+    ungenutzt und fallen, mit einem Satz im Änderungsverlauf. Die Regeln in
+    `edbak-alt_umlauf.json` bleiben — die Altformat-Referenz ist eingefroren
+    (Nr. 46). *Abnahme:* edbak-Kreislauf mit 0 unerklärten Abweichungen **und**
+    0 ungenutzten Regeln.
 
 ## Erledigt
 
@@ -6220,7 +6151,8 @@ zutreffen.
     **Aber die Vorlage passt dann nicht mehr auf das Haus, und das gehört
     dazugesagt.** Die R39-Bestandsaufnahme hat es aufgeschrieben und
     ausdrücklich verlangt, dass es *im Punkt* steht
-    (`docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`): Nr. 71
+    (`docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`, gelöscht
+    mit P5c/AP8, Historie in Git): Nr. 71
     ist der **einzige** Backlog-Punkt, der das **zurückgebaute** Modell
     fachlich voraussetzt. Regionen hängen laut R39-Text „am zentralen
     Standort und vererben über E15" — zentrale Stammdaten also. Die gibt es
@@ -10657,3 +10589,140 @@ zutreffen.
     und 24 h / 7 T / 30 T / 6 M / 1 J (Einsätze), Einsätze ab `started_at` —
     mit Obergrenze. Die Zählung nach Diensttag ist auf dieser Seite entfallen;
     es gibt keine zwei Zählweisen mehr nebeneinander (E-P5c-18).
+
+168. **Zentrale Stammdaten vollständig zurückbauen — damit kein
+    Überbleibsel bleibt.** *Aufgenommen 09.09.2026, zugeordnet **P5**
+    (Rahmenplan R39, Beschluss vom 30.08.2026).* **Die Tür ist zu seit
+    Web 18.0.0** (S9/AP5b): `admin_stammdaten.php` ist ersatzlos gestrichen,
+    die Karte „Vordefinierte Standorte" und der Schreibweg `ub_toggle` mit
+    ihr — **kein Schema, keine Migration**. Damit kann keine neue Zeile mit
+    `user_id IS NULL` mehr entstehen, und die Vorbedingung unten hält von
+    selbst. Der eigentliche
+    Rückbau steht aus, und ohne ihn bleibt das Modell im Schema, in den
+    Sicherungsformaten und in der Dokumentation stehen, obwohl es keine Daten
+    mehr trägt. Die Fundstellen sind aufgenommen:
+    `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`, **208
+    Befunde** auf sechs Flächen (23 Schema, 71 Code, 83 Dokumentation, 22
+    Prüfmittel, 9 Daten) — das Dokument bleibt bis P5 liegen und wird
+    danach gelöscht wie ein Konzept.
+
+    *Was der Rückbau umfasst:* **(1)** `user_id` in `bases`, `vehicles`,
+    `crew_presets`, `resources`, `bw_units` und `transport_dests` auf
+    `NOT NULL` ziehen; **(2)** `user_bases` samt Auswahlweg entfernen (E16);
+    **(3)** das Feld `stammdaten.user_bases` aus der Nutzlast der
+    Kontosicherung nehmen, Nutzlastversion heben, den Import ältere Pakete
+    still darüber hinweglesen lassen; **(4)** `admin_stammdaten.php` samt
+    Menüeintrag entfernen; **(5)** die Abfragen entschlacken, die heute
+    „eigen ODER zentral" fragen (`dt_base_erlaubt()`, `dt_bases()`,
+    `dt_vehicles()`, die Dublettenprüfung, der Einspielweg); **(6)**
+    Dokumentation austragen (`docs/Technik.md` Datenmodell,
+    `docs/Backup-Format.md`, `docs/Handbuch.md`); **(7)** die Prüfmittel
+    nachziehen (Platzhalter `__ADMIN_STANDORT__` des Bilderlaufs, der
+    Klickprobenweg zu Nr. 163, die Umlaufausnahmen des Referenzbestands).
+
+    *Vorbedingung, die vor dem `ALTER TABLE` zu messen ist:* **0 Zeilen mit
+    `user_id IS NULL`** in allen sechs Tabellen. Steht auch nur eine da,
+    bricht die Änderung ab, und MySQL kennt kein Zurückrollen von
+    Schemaänderungen — die Installation bliebe auf halbem Weg stehen. Die
+    geschlossene Tür aus S9 sorgt dafür, dass diese Null von da an hält;
+    ~~vorhandene Einträge lassen sich über die Verwaltung noch löschen.~~
+    **Berichtigt 23.09.2026 (E-P5c-48):** Das stimmt seit S9/AP5b nicht mehr —
+    die Seite dafür ist gestrichen. Der Fall **tritt aber nicht auf**: Auf der
+    einen laufenden Anlage sind alle zentralen Einträge gelöscht (Auskunft des
+    Auftraggebers). Die Migration **zählt trotzdem vorher** und blockiert mit
+    Torwächter-Meldung, wenn sie etwas findet — das schützt eine Anlage, in
+    die jemand eine alte Sicherung einspielt. Die Vorzählung ist eine eigene
+    Vorbedingung auf `user_id IS NULL`; `migrationen_inhalt_zaehlen()` zählt
+    das Gegenteil. Ein eigener Runbook-Abschnitt entfällt.
+
+    *Abnahme („keine Überbleibsel"):* `grep -rn "zentral" server/` nennt
+    keine Stammdatenstelle mehr; `grep -rn "user_bases" server/ docs/` ist
+    **0**; Register und `SHOW CREATE TABLE` sind zwischen frischer
+    Installation und migrierter Datenbank strukturgleich; die Kreisläufe
+    `edbak`, `edbak-alt` und `csv` laufen mit **0 unerklärten** Abweichungen;
+    eine Sicherung im alten Format spielt weiterhin ein.
+
+    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
+
+    **Erledigt mit Web 21.0.0 (P5c/AP8, 25.09.2026).** Die sieben Punkte:
+    **(1)** `user_id NOT NULL` in allen sechs Tabellen — Migration
+    `2026_09_25_zentrale_stammdaten`, mit einer **Vorbedingung**, die vorher
+    zählt und ohne Freigabe sperrt (E-P5c-125); **(2)** die Auswahltabelle
+    ist in derselben Migration gefallen, der Auswahlweg schon mit S9/AP5b;
+    **(3)** Nutzlast 12 ohne das Feld, ältere Pakete überlesen es still
+    (`EDBAK_NUTZLAST`; die neue Toleranz steht in Nr. 46); **(4)** schon mit
+    S9/AP5b (Web 18.0.0); **(5)** `dt_base_erlaubt()`, `dt_vehicle_erlaubt()`,
+    `dt_bases()`, `dt_vehicles()`, die Vorlagen in Einsatzformular und
+    `api/day.php`, Standortseiten, Nachbearbeitung und Einspielweg fragen
+    `user_id = ?`, `stammdaten_dup_global()` ist mit ihren dreizehn Aufrufen
+    fort; **(6)** `Technik.md`, `Backup-Format.md`, `Handbuch.md`, `Design.md`;
+    **(7)** der Platzhalter und der Klickprobenweg schon mit S9/AP5b, die
+    Umlaufausnahmen jetzt (je zwei Übergangsregeln, siehe Nr. 323).
+    **Die Abnahme ist berichtigt** (F-P5c-38): `grep -rn user_bases server/
+    docs/` ist ohne Geschichtsfälschung nicht 0 — CHANGELOG, Backlog,
+    Konzepte und die zwei gelaufenen Migrationen nennen die Tabelle zu Recht.
+    Gemessen wurde die engere Fassung aus dem Konzept: in `server/` ohne
+    `version.php` und die gelaufenen Migrationen **15 → 0** (außer der neuen
+    Löschmigration), in `docs/` ohne Changelog, Backlog und `konzepte/`
+    **3 → 0**. Kreisläufe und Schemaprobe siehe Rahmenplan 8.
+    **Eine Lehre, damit sie nicht nur in der gelöschten Bestandsaufnahme
+    steht:** Das S9-Konzept hat R39 nie aufgenommen (`grep -c R39` über
+    `docs/konzepte/` ergab am 09.09.2026 **0**), und in S9/AP5-4 ist deshalb
+    `admin_stammdaten.php` neu gebaut worden — eine Seite für ein Modell, das
+    seit dem 30.08.2026 abgeschafft werden sollte; S9/AP5b hat sie wieder
+    gestrichen. Ein Programmbeschluss, der nicht im Konzept des Schritts
+    steht, der ihn berührt, wird dort nicht umgesetzt, sondern umgangen.
+
+169. **Ein Diensttag mit „Anderem Rettungsmittel" kann keine Besatzung
+    festhalten.** *Aufgenommen 09.09.2026 beim Beantworten von Frage 11
+    (S9/AP6, Web 18.1.1).* Ein Rettungsmittel nur für den Tag führt keine
+    Besatzungsrollen (E-S9-10, F19). Das gilt seit Web 18.1.1
+    **gleichmäßig** — vorher bot ein aus einer früheren Zuordnung
+    umgestellter Tag die alten Rollen an, ein frisch angelegter keine. Die
+    Gleichmäßigkeit legt die Lücke frei: Es gibt an einem solchen Tag
+    **keinen** Weg, einen Besatzungsnamen einzutragen, weder am Tag noch am
+    einzelnen Einsatz — beide fragen denselben Rollensatz.
+
+    *Warum das nicht nebenbei zu schließen ist:* Der Rollensatz kommt aus
+    `vehicle_roles` des Stammdatensatzes, und einen solchen gibt es hier
+    gerade nicht. Drei Wege sind denkbar, und sie unterscheiden sich in dem,
+    was sie versprechen:
+    **(a)** Der Adhoc-Dialog bekommt Rollenhaken wie das
+    Stammdatenformular — ehrlich, aber er wächst um sieben Felder und wird
+    damit zu dem Formular, das er nicht sein wollte.
+    **(b)** Der Tag bietet die Rollen an, die zu seiner **Betriebsart**
+    passen (luft/boden) — billig, aber es ist geraten, und E26 sagt
+    ausdrücklich: geraten wird nicht.
+    **(c)** So lassen und im Text sagen (heutiger Stand): Wer die Besatzung
+    braucht, legt das Rettungsmittel an. Kostet einen Stammdatensatz, den
+    F17 gerade ersparen wollte.
+
+    *Bis zur Entscheidung gilt (c).* Hinweis im Tagesformular und Handbuch
+    sagen es seit Web 18.1.1 zutreffend; vorher verwiesen beide auf die
+    abweichende Besatzung am Einsatz, wo dieselbe Sperre greift.
+    **Am 12.09.2026 vertagt auf P5** — dort wird über die Rettungsmittel
+    ohnehin entschieden. Bis dahin gilt (c), und Hinweis und Handbuch sagen
+    es zutreffend; kein dritter Zustand. Zuordnung: **P5**.
+    *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
+    Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
+    tut. Kein dritter Zustand.
+
+    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
+
+    **Entschieden 23.09.2026 (E-P5c-47): Weg (b)** — der Tag bietet alle
+    Rollen der gewählten Betriebsart an. Geraten ist das nicht: Die
+    Betriebsart wird im Dialog ausdrücklich gewählt (`adhoc_kind` in
+    `index.php`), und `CREW_ROLES` trägt `kind` air/ground/both. Abnahme etwa:
+    „Tag Luft zeigt p1, p2, hems, fr, other". Zuordnung bleibt **10c AP8**.
+
+    **Erledigt mit Web 21.0.0 (P5c/AP8, 25.09.2026), Weg (b).** Der Tag
+    bietet die Rollen seiner Betriebsart an — in der Luft p1, p2, hems, fr,
+    other; am Boden driver, trainee, other — beim Zuordnen
+    (`dt_zuordnen()`), in der Vorschau (`api/day.php?vorschau=adhoc`) und im
+    Einsatzformular, über **eine** Funktion (`dt_tagesrettungsmittel_rollen()`).
+    Tage von vorher bekommen den Satz per Migration
+    (`2026_09_25_tagesrettungsmittel_rollen`, E-P5c-123); eine
+    Wiederherstellung legt weiter an, was in der Datei steht (E8). Gemessen
+    von der Bedienprobe: `p5c-ap8-adhoc-tag-in-der-luft` (dreimal
+    p1, p2, hems, fr, other) und vier umgedrehte Wege aus S9/AP6. Die
+    Abnahme „erlaubt einen Besatzungsnamen" ist erfüllt; kein dritter Zustand.

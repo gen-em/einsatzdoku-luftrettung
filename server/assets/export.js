@@ -634,9 +634,8 @@
      *    denn das Quoting gehört zum CSV-Format und nicht zum Zellinhalt. Ein
      *    fremder Text der Form =HYPERLINK(...) oder =cmd|... wird damit beim
      *    bloßen Öffnen der Datei ausgeführt oder verschickt Daten. Fremder
-     *    Text gelangt über zentrale Stammdaten und über eingespielte Daten in
-     *    die Textspalten, und Exportdateien sind ausdrücklich zum Weitergeben
-     *    gedacht.
+     *    Text gelangt über eingespielte Daten in die Textspalten, und
+     *    Exportdateien sind ausdrücklich zum Weitergeben gedacht.
      *
      *    Neutralisiert wird mit einem vorangestellten Apostroph, dem
      *    üblichen Textkennzeichen von Tabellenprogrammen.

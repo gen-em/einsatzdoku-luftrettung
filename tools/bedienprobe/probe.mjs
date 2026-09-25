@@ -409,12 +409,13 @@ async function kasten(rolle, weg, breite) {
     /**
      * Werkzeugkasten fuer eine ANDERE Rolle, bei derselben Breite.
      *
-     * AP2 braucht das, weil DERSELBE Kartendialog an fuenf Stellen sitzt und
-     * die fuenfte — die systemweiten Standorte — nur der Verwaltung
-     * offensteht. Ein Weg, der nur die vier des Demo-Kontos faehrt, meldet
-     * „4 von 4" und hat den fuenften nie gesehen. Die Rolle wird faul geholt
-     * wie sonst auch: Wer sie nie verlangt, meldet sie nie an und zieht
-     * nichts aus der Mengenbremse.
+     * Geschrieben fuer AP2: DERSELBE Kartendialog sass an fuenf Stellen, und
+     * die fuenfte — die systemweiten Standorte — stand nur der Verwaltung
+     * offen. Die ist mit S9/AP5b gefallen (R39); die Einbauorte stehen seither
+     * alle in einer Rolle (`wege/ap2.mjs`), der Werkzeugkasten bleibt fuer
+     * den naechsten Weg in einer anderen. Die Rolle wird faul geholt wie
+     * sonst auch: Wer sie nie verlangt, meldet sie nie an und zieht nichts
+     * aus der Mengenbremse.
      */
     async rolle(name) { return kasten(name, weg, breite); },
 

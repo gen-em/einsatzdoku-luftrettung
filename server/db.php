@@ -156,34 +156,12 @@ function db(): PDO {
     return $pdo;
 }
 
-/**
- * Zentrale Stammdaten (Konzept: Zentrale Stammdaten & Transportziele):
- * user_id IS NULL kennzeichnet globale (Admin-)Eintraege. Die UNIQUE-Keys
- * (user_id, name) greifen bei NULL nicht (MySQL erlaubt mehrere NULLs),
- * daher muss die Duplikatpruefung in der Anwendung erfolgen.
- */
-
-/** True, wenn bereits ein GLOBALER Eintrag mit gleichem (Vergleichs-)Namen
- *  existiert (case-insensitiv, optional zusaetzliches Gleichheitskriterium
- *  wie role/registration). $excludeId blendet den eigenen Datensatz beim
- *  Umbenennen aus. */
-function stammdaten_dup_global(string $table, string $col, string $val,
-                                ?string $extraCol = null, ?string $extraVal = null,
-                                int $excludeId = 0): bool {
-    $sql = "SELECT COUNT(*) FROM $table WHERE user_id IS NULL AND LOWER($col) = LOWER(?)";
-    $params = [$val];
-    if ($extraCol !== null) { $sql .= " AND $extraCol = ?"; $params[] = $extraVal; }
-    if ($excludeId > 0) { $sql .= " AND id != ?"; $params[] = $excludeId; }
-    $st = db()->prepare($sql);
-    $st->execute($params);
-    return (bool)$st->fetchColumn();
-}
-
-/* `stammdaten_dup_personal_count()` STAND HIER BIS S9/AP5b. Sie zaehlte, wie
- * viele Konten denselben Namen selbst fuehren, und beantwortete damit den
- * Admin-Hinweis „N NutzerInnen haben ..." auf der systemweiten
- * Stammdatenpflege. Ihre sechs Aufrufer standen ausnahmslos in
- * `admin_stammdaten.php`; mit der Seite verliert die Frage ihre Stelle. */
+/* DIE HILFEN FUER ZENTRALE STAMMDATEN STANDEN HIER BIS WEB 20.47.0 (R39).
+ * `stammdaten_dup_global()` pruefte, ob ein eigener Name schon systemweit
+ * vergeben war — die UNIQUE-Schluessel (user_id, name) greifen bei NULL nicht.
+ * Seit P5c/AP8 traegt jeder Eintrag ein Konto, und der Schluessel haelt die
+ * Dubletten selbst ab. `stammdaten_dup_personal_count()` fiel schon mit
+ * `admin_stammdaten.php` (S9/AP5b). */
 
 /* ---------------------------------------------------------------------------
  * EIN STANDORT WIRD GELOESCHT — WAS ES UEBERLEBT      S9/AP5-5, M-S9-10 (b)
@@ -208,21 +186,14 @@ function stammdaten_dup_global(string $table, string $col, string $val,
  * naechsten Typ auseinander, und zwar still: Ein Rettungsmittel wuerde
  * geloescht, das man haette anlegen duerfen.
  *
- * EINE AUFRUFSTELLE SEIT S9/AP5b: `einstellungen.php` (eigene Standorte).
- * Bis dahin waren es zwei — `admin_stammdaten.php` pflegte den systemweiten
- * Bestand und uebergab dafuer `$userId === null`. Die Seite ist gestrichen
- * (R39), der Zweig `$userId === null` bleibt: Er ist billig, er trifft in
- * einer Anlage ohne zentrale Eintraege nie, und der Rueckbau in P5 (Backlog
- * Nr. 168) will genau hier nachsehen. Dieselbe Unterscheidung fuehrt
- * `stammdaten_dup_global()` darueber.
+ * EINE AUFRUFSTELLE: `einstellungen.php` (eigene Standorte). Bis S9/AP5b
+ * pflegte `admin_stammdaten.php` auch den systemweiten Bestand und uebergab
+ * dafuer `$userId === null`; der Zweig ist mit P5c/AP8 gefallen (R39).
  *
  * WARUM HIER UND NICHT IN `validate_lib.php`. Das Konzept schreibt „eine
  * Funktion neben `pruef_rettungsmittel()`" — gemeint ist: EINE Fassung fuer
  * beide Seiten. Die Datei selbst sagt in ihrem Kopf „Diese Datei aendert von
  * sich aus nichts"; ein `UPDATE` darin waere der erste Verstoss dagegen.
- * `db.php` fuehrt mit `stammdaten_dup_global()` bereits genau diese Sorte
- * Helfer: eine Abfrage ueber den Stammdatenbestand, die mehrere Schreibwege
- * brauchen.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -234,18 +205,16 @@ function stammdaten_dup_global(string $table, string $col, string $val,
  *
  * @return list<array{id:int,name:string}>
  */
-function stammdaten_ohne_standortpflicht(int $baseId, ?int $userId): array
+function stammdaten_ohne_standortpflicht(int $baseId, int $userId): array
 {
     $typen = array_keys(array_filter(VEHICLE_TYPEN,
         static fn(array $t): bool => $t['standort'] === false));
     if ($typen === []) { return []; }
     $platz = implode(',', array_fill(0, count($typen), '?'));
     $sql = 'SELECT id, name FROM vehicles
-             WHERE base_id = ? AND typ IN (' . $platz . ')
-               AND user_id ' . ($userId === null ? 'IS NULL' : '= ?') . '
+             WHERE base_id = ? AND typ IN (' . $platz . ') AND user_id = ?
              ORDER BY name';
-    $werte = array_merge([$baseId], $typen);
-    if ($userId !== null) { $werte[] = $userId; }
+    $werte = array_merge([$baseId], $typen, [$userId]);
     $q = db()->prepare($sql);
     $q->execute($werte);
     $raus = [];
@@ -262,17 +231,15 @@ function stammdaten_ohne_standortpflicht(int $baseId, ?int $userId): array
  *
  * @return int wie viele
  */
-function stammdaten_standort_loesen(int $baseId, ?int $userId): int
+function stammdaten_standort_loesen(int $baseId, int $userId): int
 {
     $typen = array_keys(array_filter(VEHICLE_TYPEN,
         static fn(array $t): bool => $t['standort'] === false));
     if ($typen === []) { return 0; }
     $platz = implode(',', array_fill(0, count($typen), '?'));
     $sql = 'UPDATE vehicles SET base_id = NULL
-             WHERE base_id = ? AND typ IN (' . $platz . ')
-               AND user_id ' . ($userId === null ? 'IS NULL' : '= ?');
-    $werte = array_merge([$baseId], $typen);
-    if ($userId !== null) { $werte[] = $userId; }
+             WHERE base_id = ? AND typ IN (' . $platz . ') AND user_id = ?';
+    $werte = array_merge([$baseId], $typen, [$userId]);
     $q = db()->prepare($sql);
     $q->execute($werte);
     return $q->rowCount();
@@ -281,45 +248,29 @@ function stammdaten_standort_loesen(int $baseId, ?int $userId): int
 /**
  * Der Satz der Rueckfrage vor dem Loeschen eines Standorts (M-S9-10 b).
  *
- * Er stand an EINER Stelle, weil er an zwei gebraucht wurde, und er steht dort
- * weiter, weil er drei
- * Zahlen zusammenbringt, die leicht auseinanderlaufen: die Zahl der
- * mitgeloeschten Saetze, die Zahl der ueberlebenden Rettungsmittel und deren
- * Namen. Bis Web 17.0.0 zaehlte die Rueckfrage ALLES mit — sie sagte „6
- * werden mitgeloescht", und eines davon blieb dann doch nicht.
+ * Er steht an EINER Stelle, weil er drei Zahlen zusammenbringt, die leicht
+ * auseinanderlaufen: die Zahl der mitgeloeschten Saetze, die Zahl der
+ * ueberlebenden Rettungsmittel und deren Namen. Bis Web 17.0.0 zaehlte die
+ * Rueckfrage ALLES mit — sie sagte „6 werden mitgeloescht", und eines davon
+ * blieb dann doch nicht.
  *
- * $zusatz haengt hinten an (die Verwaltung nannte zusaetzlich, wie viele
- * Konten den Standort gewaehlt haben).
- *
- * SEIT S9/AP5b HAT DIESE FUNKTION EINEN AUFRUFER, NICHT ZWEI. Mit
- * `admin_stammdaten.php` (R39) faellt der Aufrufer weg, der `$systemweit =
- * true` und `$zusatz` uebergab: Beide sind seither unerreichbar. Sie bleiben
- * trotzdem stehen — die vier ausgeschriebenen Beugungsformen unten sind
- * sichtbarer Text, und den baut man nicht als Nebenwirkung eines
- * Streichpakets um. Sie fallen mit dem Modell in P5 (Backlog Nr. 168).
+ * BIS WEB 20.47.0 KANNTE SIE ZWEI FASSUNGEN, „eigene" und „systemweite"
+ * (`$systemweit`, dazu `$zusatz` fuer die Zahl der Konten, die den Standort
+ * gewaehlt hatten). Der Aufrufer dafuer ist mit S9/AP5b gefallen, die beiden
+ * Angaben mit P5c/AP8 (R39).
  */
-function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben,
-                                bool $systemweit, string $zusatz = ''): string
+function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben): string
 {
     $bleibt = count($bleiben);
     $mit    = max(0, $anzahlGesamt - $bleibt);
-    /* DIE BEUGUNG STEHT AUSGESCHRIEBEN, sie wird nicht gerechnet. Der erste
-       Entwurf schnitt das „e" von „eigene" ab und hängte ein „r" an — daraus
-       wurde „Ein eigenr Stammdatensatz" (und „systemweitr"). Deutsche
-       Adjektivendungen aus einer Zeichenkette abzuleiten geht schief, sobald
-       jemand ein zweites Wort einsetzt; vier Formen hinzuschreiben kostet
-       vier Zeilen und hält. Gefunden von der Klickprobe. */
-    $einer = $systemweit ? 'Ein systemweiter Stammdatensatz' : 'Ein eigener Stammdatensatz';
-    $viele = $systemweit ? ' systemweite Stammdatensätze'    : ' eigene Stammdatensätze';
-    $keine = $systemweit ? 'systemweiten' : 'eigenen';
-    $satz = 'Standort „' . $name . '“ ' . ($systemweit ? 'systemweit ' : '') . 'löschen? ';
+    $satz = 'Standort „' . $name . '“ löschen? ';
     if ($mit > 0) {
-        $satz .= ($mit === 1 ? $einer : $mit . $viele)
+        $satz .= ($mit === 1 ? 'Ein eigener Stammdatensatz' : $mit . ' eigene Stammdatensätze')
                . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere '
                . 'Rettungsmittel, Bergwacht) '
                . ($mit === 1 ? 'wird' : 'werden') . ' mitgelöscht. ';
     } else {
-        $satz .= 'Es hängen keine ' . $keine . ' Stammdaten daran, die mitgelöscht würden. ';
+        $satz .= 'Es hängen keine eigenen Stammdaten daran, die mitgelöscht würden. ';
     }
     if ($bleibt > 0) {
         /* MIT NAMEN, NICHT MIT ZAHL (M-S9-10, Anmerkung 3). Bei mehr als
@@ -335,7 +286,6 @@ function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben,
                 : $bleibt . ' Rettungsmittel ohne Standortpflicht (' . $liste . ') bleiben bestehen und stehen')
                . ' danach unter „Ohne Standort“. ';
     }
-    if ($zusatz !== '') { $satz .= $zusatz . ' '; }
     return $satz . 'Bereits dokumentierte Diensttage bleiben unverändert.';
 }
 
@@ -1976,6 +1926,24 @@ function db_spalte_typ(PDO $pdo, string $tabelle, string $spalte): ?string {
     $q->execute([$tabelle, $spalte]);
     $typ = $q->fetchColumn();
     return $typ === false || $typ === null ? null : (string)$typ;
+}
+
+/**
+ * Darf die Spalte NULL tragen? Null, wenn es sie nicht gibt.
+ *
+ * DER FUENFTE HELFER (P5c/AP8). Eine Migration, die eine Spalte auf
+ * `NOT NULL` zieht, muss fragen koennen, ob sie es schon ist — der Typ
+ * (`db_spalte_typ()`) sagt das nicht, `int(10) unsigned` steht in beiden
+ * Faellen da. Die Frage stand bis dahin von Hand in einer Migration
+ * (`2026_09_07_rest_segments_created_at`, `is_nullable`).
+ */
+function db_spalte_nullbar(PDO $pdo, string $tabelle, string $spalte): ?bool {
+    $q = $pdo->prepare('SELECT is_nullable FROM information_schema.columns
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND column_name = ?');
+    $q->execute([$tabelle, $spalte]);
+    $n = $q->fetchColumn();
+    return $n === false || $n === null ? null : strtoupper((string)$n) === 'YES';
 }
 
 /** Gibt es den Index? */

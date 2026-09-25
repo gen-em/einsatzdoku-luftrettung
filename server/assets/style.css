@@ -3814,9 +3814,10 @@ h1 + .seiten-erklaerung{margin-top:0}
  * keine eigenen Karten: Zwei Rahmen um dieselbe Sache trennen, was
  * zusammengehört — die zweite Ebene ordnet nur. */
 /* ABSTAND AUCH VOR DER ERSTEN LISTE (F-N1-M). Die Regel setzte den Abstand
- * nur ZWISCHEN zwei Listen. Steht davor etwas anderes — der Hinweis
- * „[systemweit] Dieser Standort wird von der Administration gepflegt" —,
- * klebte die Überschrift „Rettungsmittel" unmittelbar daran. */
+ * nur ZWISCHEN zwei Listen. Steht davor etwas anderes — gemessen am Hinweis
+ * „[systemweit] Dieser Standort wird von der Administration gepflegt", den
+ * es bis Web 20.47.0 gab (R39) —, klebte die Überschrift „Rettungsmittel"
+ * unmittelbar daran. */
 .sd-liste{margin-top:var(--abstand-4)}
 .sd-liste:first-child{margin-top:0}
 .sd-liste + .sd-liste{

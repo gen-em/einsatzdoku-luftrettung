@@ -507,7 +507,7 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
 
     foreach (['missions', 'rest_segments', 'days', 'devices', 'pair_sessions',
               'password_resets', 'crew_presets', 'bw_units', 'resources',
-              'transport_dests', 'vehicles', 'user_bases', 'user_defaults',
+              'transport_dests', 'vehicles', 'user_defaults',
               'bases'] as $t) {
         $pdo->prepare("DELETE FROM `$t` WHERE user_id = ?")->execute([$id]);
     }

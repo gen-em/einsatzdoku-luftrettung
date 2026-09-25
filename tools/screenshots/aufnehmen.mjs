@@ -1122,7 +1122,8 @@ const verlorene = [];
    Platzhalter, der sich nicht aufloesen laesst, heisst „diese Seite gibt es
    im Bestand nicht" — nicht „die Sitzung ging verloren". Beim Lauf zu AP5-4
    meldete der Bericht acht verlorene Sitzungen, wo in Wahrheit acht Bilder
-   einer Seite fehlten, die es ohne systemweiten Standort gar nicht gibt.
+   einer Seite fehlten, die es ohne systemweiten Standort gar nicht gab (die
+   Seite ist mit S9/AP5b gefallen, R39).
    Ein Pruefmittel, das den falschen Grund nennt, schickt die naechste Suche
    in die falsche Richtung. */
 const ausgefallen = [];

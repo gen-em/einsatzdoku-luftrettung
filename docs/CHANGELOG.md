@@ -14,6 +14,120 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.0.0] — 2026-09-25
+
+**Der Rückbau von R39: Jeder Stammdatensatz gehört einem Konto.** P5c/AP8
+(E-P5c-19, -47, -48, -122 bis -125; Backlog Nr. 168, 169, 46).
+**Hauptstufe mit zerstörender Migration. Nach dem Deploy `update.php`, die
+Wartung bleibt an.** Zentrale Stammdaten gibt es in der Oberfläche seit
+Web 18.0.0 nicht mehr. Stehen geblieben war das Modell, das sie zuließ: In
+jeder Abfrage stand „eigen **oder** zentral", jede Speicheraktion prüfte
+gegen einen systemweiten Bestand, den niemand mehr anlegen konnte, und jede
+Sicherung trug ein Feld, das immer leer war. Die Bestandsaufnahme R39 hatte
+208 Befunde gezählt. Die Nachmessung vor dem Umbau fand rund hundert Stellen
+in 16 Dateien.
+
+**Warum Hauptstufe:** Das Schema ändert sich in eine Richtung, aus der kein
+Weg zurückführt. Code vor 21.0.0 läuft darauf nicht. **Ein Rücksetzen über
+diese Fassung hinweg braucht den Rückfallstand aus dem Komplett-Backup.**
+
+### Geändert
+
+- **Web: `user_id NOT NULL` in sechs Tabellen** — Standorte,
+  Rettungsmittel, Besatzungs-Vorbelegungen, weitere Rettungsmittel,
+  Bergwacht-Bereitschaften und Zielkliniken (Migration
+  `2026_09_25_zentrale_stammdaten`). Die Abfragen fragen nur noch
+  `user_id = ?`: `dt_base_erlaubt()`, `dt_vehicle_erlaubt()`, `dt_bases()`,
+  `dt_vehicles()`, die Vorlagen im Einsatzformular und in `api/day.php`,
+  die Standortseiten, die Nachbearbeitung und der Rückweg der Sicherung.
+- **Web: Die Migration zählt vorher und sperrt, ohne dass man es
+  freigeben kann** (E-P5c-125). Steht noch eine Zeile ohne Konto da, läuft
+  nichts. Die Zeile nennt Tabelle und Zahl, dazu die eigenen Einträge, die
+  an einem solchen Standort hängen: Ein gelöschter Standort nähme sie mit.
+  **Warum nicht wie bei einer Inhaltssperre ein Häkchen:** Ein
+  `MODIFY … NOT NULL` über einer NULL-Zeile bricht ab oder macht, je nach
+  `sql_mode`, still eine 0 daraus, und die zeigt auf kein Konto. Eine
+  Freigabe hätte nichts freizugeben. Nach Auskunft der BetreiberIn tritt der
+  Fall nicht auf (E-P5c-48). Die Zählung schützt eine Anlage, in die jemand
+  ein altes Komplett-Backup einspielt. Die Migrationsseite und
+  `php update.php` sagen den Unterschied.
+- **Web: Ein Diensttag mit „Anderem Rettungsmittel" führt die Rollen seiner
+  Betriebsart** (Nr. 169, E-P5c-47). In der Luft sind das Pilot 1, Pilot 2,
+  HEMS-TC, Flugretter und Sonstige, am Boden Fahrer, Praktikant und
+  Sonstige. Das gilt beim Zuordnen, in der Vorschau und im Einsatzformular.
+  Bis hierher führte ein solcher Tag keine Rollen, und der Hinweis schickte
+  einen in die Stammdaten. **Warum alle Rollen der Art:** Das
+  Tagesrettungsmittel hat keine angehakten Rollen, aber seine Art ist
+  ausdrücklich gewählt, also wird nichts geraten. Ohne gewählte Art sagt
+  ein Satz, was fehlt.
+- **Web: Tage von vorher bekommen den Satz nachgetragen** (Migration
+  `2026_09_25_tagesrettungsmittel_rollen`, E-P5c-123). Es werden nur leere
+  Zeilen ergänzt, gelöscht wird nichts. **Ein Randfall, benannt:** Ein Tag,
+  dessen Rettungsmittel später gelöscht wurde und das keine Rollen hatte,
+  sieht genauso aus und bekommt die Rollen seiner Art ebenfalls. **Was
+  bewusst bleibt:** Eine Wiederherstellung legt weiter an, was in der Datei
+  steht (E8). Ein Paket von vorher bringt einen solchen Tag ohne Rollensatz
+  zurück; einmal die Zuordnung speichern trägt ihn nach.
+- **Web: Nutzlast 12** (`EDBAK_NUTZLAST`). Die Sicherung trägt die Auswahl
+  zentraler Standorte nicht mehr. Nutzlast 6 bis 11 bleiben lesbar, und das
+  Feld darin wird still überlesen: Die Schleife, die es las, liefe gegen die
+  gefallene Tabelle und bräche jede Wiederherstellung, jede Kontosicherung
+  und jeden Demo-Reset mit 42S02 ab. Diese Toleranz fällt mit NaDoku 1.0
+  (Nr. 46). **Die Zahl steht jetzt an einer Stelle.** Bis hierher stand sie
+  viermal, und drei davon sagten 10, obwohl seit S9/AP7 11 geschrieben
+  wurde (F-P5c-128). Das blieb folgenlos, weil der Rückweg nur `>= 8`
+  fragt. `NUTZLAST_HOECHSTENS` bleibt bewusst eine eigene Zahl (12).
+- **Web: Der Einspielbericht nennt die zwei Gründe, die bleiben**, wenn
+  Stammdaten übersprungen werden: kein passender Standort oder unvollständig.
+  Er sagte bis hierher „bereits systemweit vorhanden", und das war der
+  einzige Grund, den es nicht mehr gibt.
+
+### Entfernt
+
+- **Web: das ENUM `ftp` an `backup_targets.protokoll`** (Migration
+  `2026_09_25_ftp_entfernen`, Nr. 46, E-P5c-124). Auch diese Migration
+  sperrt mit Vorbedingung, wenn ein FTP-Ziel dasteht, und nennt den Weg: in
+  der Oberfläche umstellen oder löschen. **Mit dem Wert fällt der Weg, der
+  ein solches Ziel seit Web 20.2.0 umschiffte:** die Plakette „wird
+  übergangen", das Altziel-Formular, die Zahl `uebergangen` im Versandjob
+  und in der Cron-Zeile und die Statuszeile „umzustellen". Nach Auskunft
+  der BetreiberIn stehen auf den Anlagen nur SFTP- und FTPS-Ziele. Was die
+  Datenbank nicht mehr annimmt, muss die Anwendung nicht mehr umschiffen.
+  Es bleibt der allgemeine Riegel in `sz_weg()`: Ein Protokoll, das diese
+  Fassung nicht kennt, bekommt keine Verbindung.
+- **Web: die Tabelle der Auswahl zentraler Standorte** (E16) und
+  `stammdaten_dup_global()` samt ihren dreizehn Aufrufen. Den Doppelnamen
+  hält der eindeutige Schlüssel `(user_id, name)` ab, seit `user_id` nicht
+  mehr NULL sein kann. **Damit fällt die Meldung „… ist bereits systemweit
+  hinterlegt"**, dazu die Kleinzeile „identisch mit einem systemweiten
+  Eintrag", die Plakette „systemweit", die Karte „Zentrale Einträge ohne
+  Standort" in der Nachbearbeitung und der Zusatz „(zentral)" in den
+  Standortlisten.
+- **Web: die Fassung „systemweit" der Löschrückfrage** und die Option
+  `zentral` der Stammdatenzeile.
+
+### Neu
+
+- **Web: `db_spalte_nullbar()`** neben `db_spalte_typ()`. Eine neue
+  Migration fragt darüber, ob eine Spalte NULL zulässt, statt
+  `information_schema` von Hand zu lesen (E-ZE-04).
+- **Web: der Katalogschlüssel `vorbedingung`** in `migration_lib.php`, samt
+  `vorbedingung_weg`, dem einen Satz, wie man sie herstellt.
+- **Werkzeug: Schemaprobe Fall 5** (Anlass Nr. 168): Rückbau auf allen vier
+  Fassungen. Er sperrt mit Meldung, keine Freigabe hilft, er läuft danach
+  ohne Verlust am eigenen Bestand, und ein zweiter Lauf mit leerem Register
+  bleibt folgenlos. **4 × 30 / 0**, bis hierher 19. Die
+  Wiederherstellungsprobe hat Teil 13 (eine 11er-Datei mit der
+  Standortauswahl). Die Bedienprobe misst Nr. 169 an fünf Wegen: vier
+  bestehende sind umgedreht, einer ist neu und misst den Tag in der Luft.
+  Die Versandprobe misst, dass die Datenbank `ftp` abweist. Die Jobprobe
+  misst die Zahl `geloescht` statt der gefallenen `uebergangen`: Die Falle
+  im festen Schlüsselsatz von `jobs_lauf()` bleibt dieselbe.
+
+**Was bewusst bleibt:** Die zwei gelaufenen Migrationen, die die Tabelle
+einst anlegten und füllten, stehen unverändert im Katalog. Gelaufene
+Migrationen werden nicht umgebaut (E-ZE-04).
+
 ## [Web 20.47.0] — 2026-09-24
 
 **Die Statistik mit drei Reitern.** P5c/AP7 (E-P5c-18, -45, -46; R38;

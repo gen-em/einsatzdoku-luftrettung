@@ -232,11 +232,13 @@ return [
  'grund' => 'db_hat_tabelle()/-spalte()/-index() sind seit AP4 oeffentlich (E-ZE-04). '
           . 'Was bleibt, fragt KEINE Existenz: komplett_lib.php 2 (Spaltenliste mit '
           . 'Typen, Fremdschluessel), speicher_lib.php 1 (Groesse in Bytes) und '
-          . 'nachbearbeitung_lib.php 2 (is_nullable). Fuer is_nullable entsteht KEIN '
-          . 'vierter Helfer: Beide Stellen liegen in EINER Datei, und nb_moeglich() '
+          . 'nachbearbeitung_lib.php 2 (is_nullable). Fuer diese beiden entsteht KEIN '
+          . 'Helfer: Sie liegen in EINER Datei, und nb_moeglich() '
           . 'fragt bewusst vier Tabellen in einer Abfrage (1,071 ms gegen 0,355 ms je '
           . 'Seitenaufbau) — ein Einzelhelfer naehme das wieder auseinander. '
-          . 'Auftraggeber, 21.09.2026.',
+          . 'Auftraggeber, 21.09.2026. Seit P5c/AP8 gibt es trotzdem '
+          . 'db_spalte_nullbar(): fuer eine NEUE Migration, die sonst Z15 hoebe; '
+          . 'die beiden Stellen hier bleiben, wie entschieden.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/migration_lib.php', 'server/db.php'],
  'regel' => ['art' => 'muster', 'muster' => '~information_schema~i'],
