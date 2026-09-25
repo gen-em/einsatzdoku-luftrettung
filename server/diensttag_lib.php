@@ -555,6 +555,12 @@ function dt_rollensatz_einfrieren(PDO $pdo, int $dayId, array $soll): void
  * liess sich nicht erfassen (Weg c). Die Betriebsart ist dagegen
  * ausdruecklich gewaehlt — geraten wird nichts.
  *
+ * DER TYP ZAEHLT NICHT (E-P5c-126). `VEHICLE_TYPEN[…]['rollen']` sagt, ob ein
+ * GESPEICHERTES Rettungsmittel Rollen-Vorlagen fuehrt; bei Bergwacht,
+ * Veranstaltung und Sonstiges fuehrt es keine. Das Tagesrettungsmittel hat
+ * keine Vorlage, aus der sich waehlen liesse, und bekommt deshalb bei jedem
+ * Typ die Rollen seiner Art — so entschieden, nicht vergessen.
+ *
  * @return list<string>
  */
 function dt_tagesrettungsmittel_rollen(string $kind): array

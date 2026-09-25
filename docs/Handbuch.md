@@ -939,7 +939,12 @@ Pro Tag:
   öfter brauchst, leg es unter *Einstellungen → Standorte* an.
   **Die Besatzungsrollen folgen der Betriebsart** (seit Web 21.0.0):
   luftgebunden sind es Pilot 1, Pilot 2, HEMS-TC, Flugretter und Sonstige,
-  bodengebunden Fahrer, Praktikant und Sonstige. Die Felder erscheinen,
+  bodengebunden Fahrer, Praktikant und Sonstige — **gleich welcher Typ**.
+  Ein „Anderes Rettungsmittel" vom Typ Bergwacht oder Sonstiges führt also
+  die Rollen seiner Art, obwohl ein Rettungsmittel desselben Typs aus den
+  Stammdaten keine Rollen-Vorlagen hat (9.1a). Das ist gewollt: In den
+  Stammdaten wählst du die Rollen per Haken aus, hier gibt es keine Haken,
+  aus denen man wählen könnte. Die Felder erscheinen,
   sobald du die Betriebsart wählst; vorher steht dort ein Satz, der sagt,
   was fehlt. Am einzelnen Einsatz gilt dasselbe, denn das Einsatzformular
   zeigt die Rollen des Diensttags. Vorschläge für die Namen gibt es, wenn

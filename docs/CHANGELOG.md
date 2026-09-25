@@ -17,7 +17,7 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 ## [Web 21.0.0] — 2026-09-25
 
 **Der Rückbau von R39: Jeder Stammdatensatz gehört einem Konto.** P5c/AP8
-(E-P5c-19, -47, -48, -122 bis -125; Backlog Nr. 168, 169, 46).
+(E-P5c-19, -47, -48, -122 bis -126; Backlog Nr. 168, 169, 46).
 **Hauptstufe mit zerstörender Migration. Nach dem Deploy `update.php`, die
 Wartung bleibt an.** Zentrale Stammdaten gibt es in der Oberfläche seit
 Web 18.0.0 nicht mehr. Stehen geblieben war das Modell, das sie zuließ: In
@@ -54,7 +54,12 @@ diese Fassung hinweg braucht den Rückfallstand aus dem Komplett-Backup.**
 - **Web: Ein Diensttag mit „Anderem Rettungsmittel" führt die Rollen seiner
   Betriebsart** (Nr. 169, E-P5c-47). In der Luft sind das Pilot 1, Pilot 2,
   HEMS-TC, Flugretter und Sonstige, am Boden Fahrer, Praktikant und
-  Sonstige. Das gilt beim Zuordnen, in der Vorschau und im Einsatzformular.
+  Sonstige. Das gilt beim Zuordnen, in der Vorschau und im Einsatzformular,
+  und es gilt **gleich welcher Typ** (E-P5c-126): Ein gespeichertes
+  Rettungsmittel vom Typ Bergwacht, Veranstaltung oder Sonstiges hat keine
+  Rollen-Vorlagen, das Tagesrettungsmittel desselben Typs hat die Rollen
+  seiner Art. Das ist entschieden und kein Versehen — dort wählt man Rollen
+  per Haken aus, hier gibt es keine.
   Bis hierher führte ein solcher Tag keine Rollen, und der Hinweis schickte
   einen in die Stammdaten. **Warum alle Rollen der Art:** Das
   Tagesrettungsmittel hat keine angehakten Rollen, aber seine Art ist

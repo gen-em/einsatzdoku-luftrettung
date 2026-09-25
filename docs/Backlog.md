@@ -149,7 +149,7 @@ des Abschlusses); **294 bis 303 und 319 bis 328** der P5c-Zweig
 298 die Anlässe aus der Zuarbeit von Konzept BR (Konzept P5c, E-P5c-86), 299
 und 300 Funde aus AP4, 302, 303, 319 und 320 die nachgetragenen Anlässe aus
 dem Aufnehmen von BR (E-P5c-116), 301 für AP5b (Konzept RW), 321 ein Fund
-und 322 Funde aus AP7 (Stilvergleich, Reihenfolge des Prüfstands), 323 ein Fund aus AP8 (Referenz und Fixture auf Nutzlast 11), der Rest frei für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
+und 322 Funde aus AP7 (Stilvergleich, Reihenfolge des Prüfstands), 323 ein Fund aus AP8 (Referenz und Fixture auf Nutzlast 11), 324 ein Auftrag aus AP8 (Einmal-Skript für den Bestand zu 1.0), 325 ein Fund aus AP8 (GPX-Probe auf frischer Anlage), der Rest frei für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
 dazu: Die erste reichte nicht mehr, und 304 bis 318 hatte BR inzwischen
 vergeben. *(Bis zum 23.09.2026
 stand hier 283; 283 bis 285 sind seither auf `main`, **286 und 287** vergibt
@@ -721,6 +721,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Standorte. Der Rückweg **überliest** das Feld still; die Tabelle, in die
     es gehörte, gibt es nicht mehr. Zum Stichtag fällt das mit dem übrigen
     Altformat — ein Paket ab Nutzlast 12 trägt das Feld nicht.
+
+    **Wie der eine Bestand herüberkommt, steht seit dem 25.09.2026 fest**
+    (E-P5c-127, Nr. 324): nicht über einen Lesepfad der 1.0, sondern einmal
+    über ein Einmal-Skript aus der Konto-Sicherung der letzten Fassung vor
+    1.0. Eine Komplett-Sicherung aus Altdaten wird nie eingespielt. Die 1.0
+    muss damit **keine** Nutzlast von vorher lesen — auch nicht die letzte.
 50. **Der Versand liest je Konto ein Verzeichnis.**
     `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
     Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
@@ -3717,6 +3723,69 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `edbak-alt_umlauf.json` bleiben — die Altformat-Referenz ist eingefroren
     (Nr. 46). *Abnahme:* edbak-Kreislauf mit 0 unerklärten Abweichungen **und**
     0 ungenutzten Regeln.
+
+324. **Der eigene Bestand kommt einmal über ein Einmal-Skript in die 1.0.**
+    *Aufgenommen 25.09.2026 (P5c/AP8) auf Auskunft der Betreiberin
+    (E-P5c-127).* Nach 1.0 gibt es keine alten Daten, die Probleme machen:
+    Die frische Anlage bekommt **einen** Altbestand — den der Betreiberin —
+    aus der **Konto-Sicherung** der letzten Fassung vor 1.0, einmal, und
+    danach nie wieder. Eine **Komplett-Sicherung** aus Altdaten wird nie
+    eingespielt. Rückwärtskompatibilität braucht die 1.0 deshalb weder für
+    Konto- noch für Komplett-Sicherungen.
+
+    *Zu bauen:* eine einzelne PHP-Datei, die genau diesen einen Weg geht und
+    nach dem Einspielen **aus dem Repositorium gelöscht** wird (die Historie
+    behält sie). Kein Teil der Anwendung, kein Prüfmittel, kein Menüpunkt.
+    Nachbearbeitet wird von Hand; nach Auskunft der Betreiberin trägt ihr
+    Bestand weder Tagesrettungsmittel noch Rettungsmittel außer Typ
+    Standard.
+
+    *Eine Randbedingung, die den Weg vorgibt:* Die Konto-Sicherung trägt
+    die geschützten Angaben im Klartext, und in die Datenbank dürfen sie nur
+    verschlüsselt — **mit dem Datenschlüssel, und den hat nur der Browser**
+    (`CLAUDE.md` 4). Ein PHP-Skript, das unmittelbar in die Tabellen
+    schreibt, kann diese Felder also nicht füllen. Naheliegend ist deshalb
+    ein **Umsetzer von Datei zu Datei** — alte Sicherung hinein, Sicherung
+    im Format der 1.0 heraus, mit demselben Passwort — und eingespielt wird
+    über den gewöhnlichen Weg der 1.0. Das entscheidet das Konzept, das es
+    baut.
+
+    *Zuordnung:* P8 Schnitt (Neuaufsetzen), zusammen mit Nr. 46 und
+    Nr. 187 — beide können damit ohne Übergangsweg fallen. *Abnahme:* Der
+    Bestand der Betreiberin steht in der frischen 1.0-Anlage; das Skript
+    ist danach aus dem Repositorium entfernt; die 1.0 liest keine Nutzlast
+    von vor 1.0.
+
+325. **Die GPX-Probe vergleicht auf frischer Anlage nichts, bis der
+    Nachlauf gelaufen ist.** *Aufgenommen 25.09.2026 in P5c/AP8
+    (F-P5c-137), gemessen.* Teil 2 hält die serverseitig gebauten GPX-Dateien
+    des Demo-Kontos gegen den Referenzexport aus dem Browser und überspringt
+    jede Spur, die `spur_stand()` nicht als Stufe 2 meldet. Nach
+    `hochfahren.sh --neu` liegen aber **alle** Demo-Spuren als Zeilen vor
+    (Stufe 1, 0 Blobs), und keine der Proben davor fährt den Nachlauf — der
+    Huckepack-Weg kommt höchstens alle 300 s. Ergebnis im Prüfstand:
+    „0 von 204 Dateien verglichen; übersprungen: 204 verdichtet", rot.
+    **Mit dem Code von AP7 (`d519fac`) dasselbe**, auf frischer Anlage in
+    derselben Abfolge nachgestellt — kein Fehler der Anwendung. Allein
+    gefahren, nachdem der Nachlauf gepackt hat: 95 / 0, 115 von 204
+    Dateien, 137 860 Einzelvergleiche, 0 Abweichungen.
+
+    *Warum nicht einfach Stufe 1 mitvergleichen:* Versucht und
+    zurückgenommen — **42 Abweichungen**. Der Referenzexport trägt ältere
+    Spuren **ausgedünnt** (`mission_000001`: 113 Punkte gegen 443 roh); ob
+    eine Spur vergleichbar ist, hängt am Nachlauf, nicht an der Stufe
+    allein.
+
+    *Weg:* Die Probe stellt ihre Lage selbst her (R84: die Lage herstellen,
+    nicht auf sie hoffen) — vor Teil 2 `verdichtung` und `ausduennen` bis
+    zum Rückstand 0, über `jobs_lib.php`, wie es der Nachlauf täte. Danach
+    ist die Zahl der Vergleiche fest und kann als Untergrenze dastehen.
+    Verwandt mit Nr. 322 (Reihenfolge gegen den Demo-Reset): beide Male hängt
+    eine Probe am Zustand des Demo-Kontos, den sie nicht selbst herstellt.
+    *Zuordnung:* **vor dem Pull Request von P5c** — dessen Bericht muss
+    grün sein. *Abnahme:* Prüfstand auf frischer Anlage, GPX-Probe grün
+    mit mindestens 100 verglichenen Dateien; Gegenprobe ohne den
+    Vorlauf rot.
 
 ## Erledigt
 
@@ -10717,7 +10786,10 @@ zutreffen.
 
     **Erledigt mit Web 21.0.0 (P5c/AP8, 25.09.2026), Weg (b).** Der Tag
     bietet die Rollen seiner Betriebsart an — in der Luft p1, p2, hems, fr,
-    other; am Boden driver, trainee, other — beim Zuordnen
+    other; am Boden driver, trainee, other, **gleich welcher Typ**
+    (E-P5c-126: ein gespeichertes Rettungsmittel vom Typ Bergwacht,
+    Veranstaltung oder Sonstiges hat keine Rollen-Vorlagen, das
+    Tagesrettungsmittel hat keine Vorlage, aus der man wählen könnte) — beim Zuordnen
     (`dt_zuordnen()`), in der Vorschau (`api/day.php?vorschau=adhoc`) und im
     Einsatzformular, über **eine** Funktion (`dt_tagesrettungsmittel_rollen()`).
     Tage von vorher bekommen den Satz per Migration

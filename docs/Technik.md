@@ -1817,7 +1817,10 @@ sie beim Zuordnen galten. Deklariert wird das je Feld über `role_gate` in
 seiner Betriebsart** (Nr. 169, E-P5c-47, seit Web 21.0.0): bei `kind = 'air'`
 `p1`, `p2`, `hems`, `fr`, `other`, bei `ground` `driver`, `trainee`, `other`
 (`crew_roles_fuer_art()`) — `dt_tagesrettungsmittel_rollen()` in `diensttag_lib.php`, eine
-Stelle für Zuordnen, Vorschau und Einsatzformular. `einsatz_form.php` fragt
+Stelle für Zuordnen, Vorschau und Einsatzformular. **Der Typ zählt dabei
+nicht** (E-P5c-126): `VEHICLE_TYPEN[…]['rollen']` steuert nur die
+Rollen-Vorlagen gespeicherter Rettungsmittel, das Tagesrettungsmittel hat
+keine Vorlage, aus der man wählen könnte. `einsatz_form.php` fragt
 `dt_ist_tagesrettungsmittel()` und schneidet `dt_crew()` auf **genau diesen
 Satz** zu. Ohne den Zuschnitt hingen die angebotenen Rollen davon ab, was dem
 Tag *vorher* zugeordnet war — `dt_rollensatz_einfrieren()` löscht beim Wechsel
