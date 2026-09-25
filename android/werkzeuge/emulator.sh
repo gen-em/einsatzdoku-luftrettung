@@ -46,7 +46,8 @@
 # wird dann falsch eingerichtet, und der Gast bricht mit "Assertion failed:
 # !rcEnc->featureInfo()->hasReadColorBufferDma" ab -- auf der Uhr stirbt
 # system_server im Minutentakt. Am 25.09.2026 neun Anlaeufe lang gesucht
-# (Konzept AR, F-AR-18). `aufbauen` und `start` berichtigen den Eintrag;
+# (Konzept AR, F-AR-18); dieselbe Ursache hatte der SurfaceFlinger-Abbruch
+# des Handys (Nr. 337). `aufbauen` und `start` berichtigen den Eintrag;
 # `tools/sandbox/aufbauen.sh android` holt seither cmdline-tools 23.0.
 #
 # AUFRUFE
@@ -123,7 +124,14 @@ avd_anlegen() {  # avd_anlegen NAME ABBILD GERAET
 }
 
 abbild_von() {   # Verzeichnis des Abbilds einer AVD, aus ihrer config.ini
-  echo "$SDK/$(sed -n 's/^image.sysdir.1=//p' "$ANDROID_AVD_HOME/$1.avd/config.ini" | tr -d ' ')"
+  # `avdmanager` schreibt `image.sysdir.1=...`, der Emulator schreibt die Datei
+  # beim ersten Start um zu `image.sysdir.1 = ...` -- beide Formen lesen. Die
+  # erste Fassung las nur die eine; ein ZWEITER Start der Uhr haette den
+  # user-Build nicht mehr erkannt und ohne Debug-Ramdisk gebootet (25.09.2026).
+  local d
+  d=$(sed -n 's/^image\.sysdir\.1[[:space:]]*=[[:space:]]*//p' "$ANDROID_AVD_HOME/$1.avd/config.ini" | tr -d ' \r')
+  [ -n "$d" ] || { sag "$1: kein image.sysdir.1 in config.ini"; return 1; }
+  echo "$SDK/$d"
 }
 
 ist_user() { grep -qx 'ro.build.type=user' "$(abbild_von "$1")/build.prop"; }
@@ -233,7 +241,12 @@ start() {
   # Im user-Build steht der Faktor schon ab init in der Debug-Ramdisk; dort
   # gibt es weder `adb root` noch einen Neustart des Frameworks.
   until [ "$("$ADB" get-state 2>/dev/null | tr -d '\r')" = "device" ]; do
-    ps -eo comm | grep -q qemu-system || { sag "Emulator beendet -- Protokoll lesen"; return 1; }
+    # Ueber die Befehlszeile der AVD, nicht ueber `qemu-system`: Das
+    # Startprogramm legt den QEMU-Prozess erst nach Sekunden an, und die
+    # erste Fassung dieser Pruefung meldete am 25.09.2026 nach 9 s
+    # "beendet", waehrend der Emulator anlief. `pgrep` schliesst sich selbst
+    # aus; die eigene Befehlszeile (`start handy37`) enthaelt kein `-avd`.
+    pgrep -f -- "-avd $avd( |\$)" >/dev/null || { sag "Emulator beendet -- Protokoll lesen"; return 1; }
     sleep 10
   done
   if [ -z "$user" ]; then
@@ -258,17 +271,11 @@ start() {
   # dann zu Recht den Abzug. Ausblenden ist ehrlicher, als vor jedem Abzug
   # "Wait" zu tippen: Der ANR ist eine Eigenschaft der Emulation, nicht der App.
   "$ADB" shell settings put global hide_error_dialogs 1 >/dev/null 2>&1 || true
-  # DREI-TASTEN-NAVIGATION (Android 0.16.0, Konzept AR). Auf den Abbildern mit
-  # API 37 bricht SurfaceFlinger unter Emulator 37.1.11 im Faden
-  # `RegionSampling` ab ("Assertion failed: !rcEnc->featureInfo()->
-  # hasReadColorBufferDma", mapper.ranchu.so), und die ganze Oberflaeche
-  # startet neu -- am 24.09.2026 alle fuenf bis sieben Minuten. Das Sampling
-  # braucht die Gestenleiste; ohne sie blieb es stehen. Auf aelteren Abbildern
-  # schadet die Umstellung nicht. Backlog Nr. 337 -- dessen Ursache ist
-  # vermutlich target=android-0 (siehe Kopf); bis das nachgemessen ist,
-  # bleibt die Umgehung stehen.
-  "$ADB" shell cmd overlay enable-exclusive --category \
-      com.android.internal.systemui.navbar.threebutton >/dev/null 2>&1 || true
+  # KEINE DREI-TASTEN-NAVIGATION MEHR (Backlog Nr. 337, erledigt 25.09.2026).
+  # Vom 24. bis 25.09.2026 schaltete `start` hier auf Drei-Tasten um, weil
+  # SurfaceFlinger auf API 37 mit `!hasReadColorBufferDma` abbrach. Die
+  # Ursache war target=android-0 (siehe Kopf); mit richtigem target lief das
+  # Handy 15 Minuten mit Gestennavigation ohne einen Eintrag im Absturzpuffer.
   sag "Boot fertig nach $(( $(date +%s) - beginn )) s (Watchdog-Faktor $("$ADB" shell getprop ro.hw_timeout_multiplier 2>/dev/null | tr -d '\r'))"
 }
 
@@ -301,13 +308,14 @@ bild() {
        return 1 ;;
   esac
   "$ADB" exec-out screencap -p > "$ZIEL/$1.png"
-  # KEIN PNG? Dann von der Wirtsseite abziehen (Android 0.16.0). Auf API 37
-  # scheitert `screencap` an derselben Assertion wie SurfaceFlinger (Nr. 337)
-  # und liefert 72 Bytes Fehlertext; der Emulator selbst liest den
-  # Bildpuffer ohne den Gast.
+  # KEIN PNG? Dann ist das ein Befund, kein Anlass zum Ausweichen. Bis zum
+  # 25.09.2026 zog `bild` hier von der Wirtsseite ab, weil `screencap` auf
+  # API 37 an derselben Assertion scheiterte wie SurfaceFlinger (Nr. 337,
+  # target=android-0). Ein stilles Ausweichen haette den naechsten solchen
+  # Fehler verdeckt.
   if ! head -c 8 "$ZIEL/$1.png" | grep -q PNG; then
-    rm -f "$ZIEL/$1.png"
-    "$ADB" emu screenrecord screenshot "$ZIEL/$1.png" >/dev/null
+    sag "KEIN PNG fuer '$1': $(head -c 120 "$ZIEL/$1.png" | tr -d '\0')"
+    rm -f "$ZIEL/$1.png"; return 1
   fi
   sag "abgezogen: $ZIEL/$1.png ($(stat -c%s "$ZIEL/$1.png") Bytes)"
 }

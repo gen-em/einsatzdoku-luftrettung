@@ -18,7 +18,7 @@ entsteht mit AR-02. Zweig `claude/affectionate-newton-6pzfkc`, von `main`
 > |---|---|
 > | Stand | **25.09.2026 — AR-01 bis AR-05 erledigt, PR offen.** `kontraste.py` prüft die Vollständigkeit, fand zwei echte Kontrastfehler (behoben). Emulator auf API 37: Kopplung, Rechtliches (P-PK-28), Vordergrunddienst und Dienstende belegt; **die Uhr auf Wear OS 7 (API 37) nachgeholt** (F-AR-18). Android **0.16.0**: AGP 9.4.1, Kotlin 2.4.20, API 37, Kette auf dem Stand vom 24.09.; **Lint 0 Fehler / 0 Warnungen** in beiden Modulen (vorher 14), 267/71 Prüffälle grün, 73 von 78 Bildern byteweise gleich, die übrigen fünf nur in der Fassungszeile (Protokoll 7) |
 > | Entschieden | **E-AR-01 bis -07** aus der Freigabe, **E-AR-08 bis -13** aus den Antworten auf Q-AR-01 bis -06, beide vom 24.09.2026; **E-AR-14** vom 25.09.2026 (Abschnitt 5) |
-> | Offen | nichts — die Handgriffe für Wear OS 7 stehen seit dem Nachtrag im Werkzeug (Stufe `aufbauen.sh emulator`, `emulator.sh`) |
+> | Offen | nichts — die Handgriffe für Wear OS 7 stehen seit dem Nachtrag im Werkzeug (Stufe `aufbauen.sh emulator`, `emulator.sh`); Nr. 337 erledigt |
 > | Hakt | Maven Central drosselt diesen Container (F-AR-01); die Runde baut über Googles Spiegel (E-AR-13) |
 > | Nächstes | **Merge erst nach P5c** (E-AR-01); vorher `main` nach `Pruefablauf.md` 5.3 aufnehmen. Danach die Gerätetests des Prüfdokuments und Nr. 334/335 |
 
@@ -157,7 +157,7 @@ als `default`.
 | **F-AR-11** | **Ein Prüffall übergab seinen Rückstand nie** (gefunden in AR-02 durch Kotlin 2.4, „Expression is unused"). `KopplungRundlaufTest.dienst()` reichte `{ rueckstand }` als nachgestellte Lambda; seit Nr. 114 ist der letzte Parameter von `Kopplungsdienst` `raeumen`. Ohne Wirkung — kein Fall setzt einen Rückstand, die App übergibt benannt | **behoben in AR-02** (benanntes Argument) |
 | **F-AR-12** | **Der Bilderlauf schrieb zwei Bauarten in einen Ordner** (gefunden in AR-03). `HandyBildTest` und `UhrBildTest` laufen in `testDebugUnitTest` und `testReleaseUnitTest`, beide nach `build/bilder/`; liegen blieb, was zuletzt fertig war — „Fassung 0.16.0" oder „0.16.0-pruef", je nach Reihenfolge. Gefunden, weil ein Bild zwischen zwei Bauten ohne Grund abwich | **behoben in AR-03** (`build/bilder/<bauart>/`) |
 | **F-AR-13** | **Zwei Kontraste unter AA in der ausgelieferten App** (gefunden in AR-04 vom neuen `kontraste.py`): „Handy nicht erreichbar" auf der Uhr Rot auf Asphalt 4,12 : 1; Cursor im Eingabefeld des Handys Orange auf Schnee 2,23 : 1 | **behoben in AR-04** (Rosa, Orange tief) |
-| **F-AR-14** | **SurfaceFlinger bricht auf den Abbildern mit API 37 ab** (AR-05): `Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma` in `mapper.ranchu.so`, Faden `RegionSampling`; die Oberfläche startete dreimal in 13 Minuten neu, `screencap` scheitert an derselben Stelle. Emulator 37.1.11 und Abbild passen nicht zusammen — nicht die App | umgangen in `emulator.sh` (Drei-Tasten-Navigation, Abzug von der Wirtsseite); Nr. 337 |
+| **F-AR-14** | **SurfaceFlinger bricht auf den Abbildern mit API 37 ab** (AR-05): `Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma` in `mapper.ranchu.so`, Faden `RegionSampling`; die Oberfläche startete dreimal in 13 Minuten neu, `screencap` scheitert an derselben Stelle. Emulator 37.1.11 und Abbild passen nicht zusammen — nicht die App | ~~umgangen in `emulator.sh` (Drei-Tasten-Navigation, Abzug von der Wirtsseite)~~ — **Ursache war `target=android-0` (F-AR-18); Umgehungen ausgetragen, Nr. 337 erledigt** |
 | **F-AR-15** | **`Eingabefeld` hat keinen Aufrufer** (AR-05): seit R63 tot; den Cursor aus AR-04 zeigt kein Bildschirm | Nr. 336 |
 | **F-AR-16** | **Wear OS 5 zeigt ohne Telefon „Handy verbunden"** (AR-05) — anders als Wear OS 3 am 02.09.2026; die Anzeige folgt einer zugestellten Nachricht, woran sie zugestellt wurde, ist ungeklärt. Dazu: Das einzige Wear-Abbild mit API 37 ist ein `user`-Build — **bootet seit F-AR-18 doch**; Wear OS 7 zeigt auf der Startseite ebenfalls „Handy verbunden“, nach „Dienst beginnen“ aber „Handy nicht erreichbar“ | Gerätetest (P-AR-12, -13); der Zustand „nicht erreichbar" als Bildfall |
 | **F-AR-17** | **Emulator und Gradle-Daemon zusammen blockieren den Container** (AR-05): 6 GB plus rund 5 GB in 15 GB ohne Swap — Last 60, `ps`, `uptime` und `adb` hingen | `emulator.sh start` warnt; `LIESMICH.md` |
@@ -527,5 +527,19 @@ unter 7,4 GB freiem Platz. Faktor 50 statt 10.
    einen alten Container zu haben: die Fassung in `source.properties`
    vorübergehend auf 12.0 gesetzt; die Stufe hat 23.0 geholt, die Prüfsumme
    geprüft und ersetzt.
+3. **Zwei Fehler im neuen Code, gefunden im Lauf mit `handy37`** (auf
+   Anweisung der Betreiberin nachgeholt): Die Abbruchprüfung suchte
+   `qemu-system`, bevor das Startprogramm des Emulators es angelegt hatte,
+   und meldete nach 9 s „beendet“ — jetzt über die Befehlszeile der AVD.
+   Und der Emulator schreibt die `config.ini` beim ersten Start um
+   (`image.sysdir.1 = …`); `abbild_von` las nur die Form ohne Leerzeichen.
+   Beim Handy fiel das nicht auf, beim **zweiten** Start der Uhr hätte das
+   Skript den `user`-Build nicht erkannt und ohne Debug-Ramdisk gebootet.
+   Beides berichtigt, der zweite Start der Uhr nachgefahren.
+4. **Nr. 337 erledigt.** Mit richtigem `target` lief das Handy 15 Minuten mit
+   Gestennavigation ohne Absturz; `screencap` liefert PNG. Beide Umgehungen
+   aus `emulator.sh` ausgetragen, `bild` meldet ein fehlendes PNG als Fehler.
+   `Pruefablauf.md` 1 nennt fünf Ausbaustufen (auf Anweisung, außerhalb der
+   Liste aus der Freigabe).
 
 **Gemessen:** Prüfdokument 2 (Nachtrag Werkzeug).

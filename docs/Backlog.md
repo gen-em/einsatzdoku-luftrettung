@@ -3792,29 +3792,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Abnahme:* kein unbenutzter öffentlicher Baustein in `Bausteine.kt`.
     **Zuordnung: nächste Android-Runde.**
 
-337. **Emulator 37.1.11 und die Abbilder mit API 37: SurfaceFlinger bricht ab.**
-    *Aufgenommen 24.09.2026 mit Konzept AR (AR-05, F-AR-14).* Auf
-    `system-images;android-37.0;google_apis;x86_64` (ohne KVM, `-accel off
-    -gpu swiftshader_indirect`) bricht SurfaceFlinger im Faden
-    `RegionSampling` ab — `Assertion failed:
-    !rcEnc->featureInfo()->hasReadColorBufferDma` in `mapper.ranchu.so` —,
-    und die Oberfläche startet neu: drei Abstürze in 13 Minuten nach dem
-    Boot. `screencap` scheitert an derselben Stelle (72 Bytes Fehlertext
-    statt PNG). *Umgangen* in `android/werkzeuge/emulator.sh`: Drei-Tasten-
-    statt Gestennavigation (danach über neun Minuten kein Absturz mehr) und
-    Abzug von der Wirtsseite (`adb emu screenrecord screenshot`). Das ist ein
-    Fehler des Emulators, nicht der App. **Nachtrag 25.09.2026 (F-AR-18):**
-    Auf dem Wear-Abbild mit API 37 kam derselbe Abbruch aus `system_server`,
-    und die Ursache war nicht der Emulator, sondern die AVD — `avdmanager`
-    aus `cmdline-tools` 12.0 schreibt `target=android-0`; mit
-    `target=android-37.0` blieb er aus. **Vermutlich gilt das auch hier;
-    nicht nachgemessen.** Emulator 37.3.1 änderte am Abbruch nichts.
-    *Weg:* zuerst die AVD mit richtigem `target` nachmessen, dann mit einer neueren Fassung des
-    Emulators nachmessen und die Umgehung austragen, sobald sie nicht mehr
-    nötig ist. *Abnahme:* ein Boot auf API 37 mit Gestennavigation, 15
-    Minuten ohne Eintrag im Absturzpuffer. **Zuordnung: nächste
-    Android-Runde, sobald `sdkmanager` einen neueren Emulator führt.**
-
 ## Erledigt
 
 
@@ -10320,3 +10297,35 @@ zutreffen.
     `docs/konzepte/Pruefdokument-AR-Android-Runde.md` (P-PK-28). Der Eintrag
     P-PK-28 in `Pruefdokument-PK-Pruefkette.md` ist dort noch abzuhaken
     (E-AR-02: AR fasst das PK-Dokument nicht an).
+
+337. **Emulator 37.1.11 und die Abbilder mit API 37: SurfaceFlinger bricht ab.**
+    *Aufgenommen 24.09.2026 mit Konzept AR (AR-05, F-AR-14).* Auf
+    `system-images;android-37.0;google_apis;x86_64` (ohne KVM, `-accel off
+    -gpu swiftshader_indirect`) bricht SurfaceFlinger im Faden
+    `RegionSampling` ab — `Assertion failed:
+    !rcEnc->featureInfo()->hasReadColorBufferDma` in `mapper.ranchu.so` —,
+    und die Oberfläche startet neu: drei Abstürze in 13 Minuten nach dem
+    Boot. `screencap` scheitert an derselben Stelle (72 Bytes Fehlertext
+    statt PNG). *Umgangen* in `android/werkzeuge/emulator.sh`: Drei-Tasten-
+    statt Gestennavigation (danach über neun Minuten kein Absturz mehr) und
+    Abzug von der Wirtsseite (`adb emu screenrecord screenshot`). Das ist ein
+    Fehler des Emulators, nicht der App. **Nachtrag 25.09.2026 (F-AR-18):**
+    Auf dem Wear-Abbild mit API 37 kam derselbe Abbruch aus `system_server`,
+    und die Ursache war nicht der Emulator, sondern die AVD — `avdmanager`
+    aus `cmdline-tools` 12.0 schreibt `target=android-0`; mit
+    `target=android-37.0` blieb er aus. **Vermutlich gilt das auch hier;
+    nicht nachgemessen.** Emulator 37.3.1 änderte am Abbruch nichts.
+    *Weg:* zuerst die AVD mit richtigem `target` nachmessen, dann mit einer neueren Fassung des
+    Emulators nachmessen und die Umgehung austragen, sobald sie nicht mehr
+    nötig ist. *Abnahme:* ein Boot auf API 37 mit Gestennavigation, 15
+    Minuten ohne Eintrag im Absturzpuffer. ~~**Zuordnung: nächste
+    Android-Runde, sobald `sdkmanager` einen neueren Emulator führt.**~~
+    **Erledigt 25.09.2026 mit Konzept AR (Nachtrag AR-05).** Ursache war
+    `target=android-0`, nicht der Emulator: `handy37`, angelegt mit
+    `cmdline-tools` 23.0 (`target=android-37.0`), nach dem Boot auf
+    Gestennavigation gestellt — **15 Minuten, 0 Einträge im
+    Absturzpuffer**, SurfaceFlinger 44 Minuten ohne Neustart, `screencap`
+    liefert PNG. Abweichung von der Abnahme: gebootet mit Drei-Tasten, erst
+    danach auf Gesten umgestellt (die Umgehung stand beim Boot noch im
+    Werkzeug). Beide Umgehungen sind aus `emulator.sh` ausgetragen; `bild`
+    meldet ein fehlendes PNG seither als Fehler, statt auszuweichen.

@@ -74,7 +74,10 @@ ohne Root“):
 | `aufbauen.sh emulator` nach der Berichtigung | **rc 0, 35 ok, 0 FEHLT**, 5 s; `handy37` und `uhr37` mit `target=android-37.0`, Debug-Ramdisk 36 Einträge, darunter `first_stage_ramdisk/fstab.ranchu` und die vier Zusatzdateien |
 | `emulator.sh start uhr37` | `adbd` nach 130 s, **Boot 1 111 s**, Faktor 50, 0 Einträge „Abort message“ im Absturzpuffer |
 | `emulator.sh legen`, `am start`, `emulator.sh bild` | 151 s, Start 44 s; Bild **byteweise gleich** dem Handlauf (23 708 B) |
-| Nicht gefahren | `emulator.sh start handy37` — der Handy-Weg ist bis auf Faktor 50 und `target` unverändert; ob die Drei-Tasten-Umgehung (Nr. 337) mit richtigem `target` entfallen kann, bleibt offen |
+| `emulator.sh start handy37` | erster Versuch: Abbruchprüfung meldete nach 9 s „beendet“, weil sie `qemu-system` suchte, bevor das Startprogramm es angelegt hatte — berichtigt (Befehlszeile der AVD); danach `adbd` nach 120 s, **Boot 1 299 s**, Faktor 50, `userdebug` |
+| Prüf-APK Handy | `legen` 163 s, Start 184 s, Kopplungsseite; `screencap` liefert **PNG** (vorher 72 B Fehlertext) |
+| Nr. 337 | nach dem Boot auf Gestennavigation: **15 min, 0 Einträge** `hasReadColorBufferDma` im Absturzpuffer, SurfaceFlinger 44 min ohne Neustart; im Puffer nur der Bluetooth-Stapel (HCI-Zeitüberschreitung, TCG) |
+| Zweiter Start der Uhr | `config.ini` vom Emulator umgeschrieben (`image.sysdir.1 = …`); die erste Fassung von `abbild_von` las nur die Form ohne Leerzeichen und hätte den `user`-Build nicht erkannt — berichtigt; danach `adbd` nach 100 s, **Boot 340 s**, Faktor 50, 0 Einträge „Abort message“ |
 
 ## 3. Prüfliste
 
@@ -105,10 +108,10 @@ kein Bildschirm, F-AR-15.)*
   (`sdk=34`), nicht das gelaufene. „73 von 78 gleich" heißt: Die neuen
   Bibliotheken verschieben nichts an dem, was Compose rechnet — nicht, dass
   die App auf einem Gerät gleich aussieht. Das zeigen die Emulator-Bilder.
-- **Der Emulator** läuft ohne Beschleunigung und auf einem Abbild, dessen
-  Grafik mit dem Emulator 37.1.11 nicht zusammenpasst (Nr. 337). Die
-  Drei-Tasten-Navigation ist eine Umgehung; ein echtes Gerät nutzt meist
-  Gestennavigation.
+- **Der Emulator** läuft ohne Beschleunigung; alles, was von Zeitgrenzen
+  abhängt, ist dort langsamer als auf einem Gerät. Der Grafikfehler aus
+  Nr. 337 war eine falsch angelegte AVD, kein Grenzfall des Emulators — mit
+  `target=android-37.0` läuft auch die Gestennavigation.
 - **Die Lint-Zählung** zählt, was Lint meldet — Robolectric 4.17 meldet es
   nicht (F-AR-10). Und „0 Warnungen" hält nur, bis draußen eine neuere
   Fassung erscheint.

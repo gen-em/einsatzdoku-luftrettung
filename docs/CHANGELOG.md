@@ -179,9 +179,13 @@ auf den Abbildern mit API 37 unter Emulator 37.1.11 in seinem
 Minuten) — mit Drei-Tasten- statt Gestennavigation bleibt das Sampling aus;
 `screencap` scheitert an derselben Stelle, und `bild` zieht dann von der
 Wirtsseite ab; und Emulator und Gradle-Daemon zusammen brachten den
-Container zum Stehen, weshalb `start` jetzt warnt. Die Umgehung des
-Absturzes ist Backlog Nr. 337: auszutragen, sobald ein neuerer Emulator
-erscheint.
+Container zum Stehen, weshalb `start` jetzt warnt. **Die ersten beiden
+Umgehungen sind im Nachtrag wieder ausgetragen:** Der Abbruch lag nicht am
+Emulator, sondern an `target=android-0` in der AVD (unten); mit richtigem
+`target` lief das Handy 15 Minuten mit Gestennavigation ohne einen Eintrag
+im Absturzpuffer, und `screencap` liefert wieder ein PNG (Backlog Nr. 337,
+erledigt). `bild` meldet ein fehlendes PNG seither als Fehler, statt still
+auf die Wirtsseite auszuweichen.
 
 **„Handy nicht erreichbar" in Rosa zeigt der Bilderlauf, nicht der
 Emulator.** Das Wear-OS-5-Abbild meldet ohne Telefon „Handy verbunden" —
