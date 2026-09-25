@@ -204,6 +204,19 @@ Anwendung einrichten oder starten, TLS davor. **Ein Rückgabewert**, und am
 Ende eine Zeile, die den Gegenstand nennt — Adresse, HTTP-Code, gemeldete
 Fassung, nicht bloß „läuft".
 
+**Der PHP-Server läuft mit vier Arbeitern** (`PHP_CLI_SERVER_WORKERS`, seit
+dem Abschluss von P5c; `PHP_ARBEITER` stellt die Zahl, in
+`lokal_starten.sh` und `lokal_einrichten.sh`). Mit einem Arbeiter bediente
+er eine Anfrage zur Zeit, hinter socat, für einen Browser, der sechs
+Verbindungen gleichzeitig und weitere auf Vorrat öffnet. Das hat dreimal
+einen Prüfstand rot gefärbt, ohne dass die Anwendung etwas falsch machte:
+WebKit hing beim zweiten Anmelden (F-RW-23, Backlog Nr. 301), und zweimal
+kam die Bedienprobe nach der Anmeldung nicht an ihre erste Seite
+(`net::ERR_TOO_MANY_RETRIES`, RW-04 und der Abschluss von P5c) — die
+Anfrage erreichte den Server nie. Die Anwendung zählt nichts im
+Prozessspeicher; Sitzungen und Ratenbremsen liegen in Dateien und in der
+Datenbank, und Produktiv bedient ohnehin viele Anfragen zugleich.
+
 **Ohne `--neu` wird nicht neu eingerichtet.** `lokal_einrichten.sh` löscht die
 Datenbank und `config.php`; das soll niemand aus Versehen auslösen. Steht
 eine Installation, wird sie nur gestartet.

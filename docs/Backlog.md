@@ -3534,6 +3534,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mehreren Arbeitern (`hochfahren.sh`), sonst misst er die Sandbox statt
     der Anwendung. **Zuordnung: Backlog-Runde.**
 
+    **Der Server-Teil ist erledigt (P5c/AP11, 25.09.2026):** `hochfahren.sh`
+    startet den Server seither mit vier Arbeitern (`lokal_starten.sh`,
+    `lokal_einrichten.sh`, auch im Behälter für PHP 8.3). Anlass war nicht
+    WebKit, sondern die Bedienprobe: Zum zweiten Mal nach RW-04 kamen ihre
+    ersten zwei Wege nach der Anmeldung nicht an die Seite
+    (`net::ERR_TOO_MANY_RETRIES`), und die Anfrage erreichte den Server nie.
+    **Offen bleibt** die Zeile in `Sandbox-Setup.md` 1 und Nr. 183.
+
 318. **`pysyntax` sieht ungültige Escape-Folgen nicht, und zwei Werkzeuge
     tragen welche.** *Aufgenommen 24.09.2026 mit dem Abschluss von Konzept BR,
     gefunden beim Belegen von P-BR-01 im Log des PR-Laufs 36037964804.* Im Tor

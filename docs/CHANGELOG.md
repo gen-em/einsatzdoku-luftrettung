@@ -65,6 +65,16 @@ Prüfstand. **Korrekturstufe ohne Migration.**
   wäre das Rettungsmittel mitgelöscht worden. Mit 250 ms lässt sich genau
   dieses Bild von Hand herstellen. Jetzt wartet er wie alle übrigen Wege
   auf die Navigation.
+- **Werkzeug: Der örtliche PHP-Server läuft mit vier Arbeitern**
+  (`PHP_CLI_SERVER_WORKERS` in `lokal_starten.sh` und
+  `lokal_einrichten.sh`, Backlog Nr. 301). Im nächsten Prüfstand kamen die
+  ersten zwei Wege der Bedienprobe nach der Anmeldung nicht an ihre Seite
+  (`net::ERR_TOO_MANY_RETRIES`) — dasselbe Bild wie im ersten Prüfstand von
+  RW-04, und wie dort erreichte die Anfrage den Server nie. Ein Arbeiter
+  bediente eine Anfrage zur Zeit, hinter socat, für einen Browser, der
+  sechs Verbindungen gleichzeitig öffnet; mit vier Arbeitern war WebKit
+  schon in RW (F-RW-23) 3 von 3 grün. Die Anwendung zählt nichts im
+  Prozessspeicher, und Produktiv bedient ohnehin viele Anfragen zugleich.
 - **Doku:** `docs/Technik.md` 4 (der Siegelzustand sind zwei Zahlen, nicht
   eine, und warum die zweite gezählt wird), Backlog Nr. 328, Prüfdokument
   P5c (F-P5c-170, P-P5c-45), Rahmenplan (Erledigt-Zeile P5c, Abschnitt 6).
