@@ -969,10 +969,12 @@ function ui_einstellungen_punkte(): array
                 ['admin',              'admin_users.php',        'NutzerInnen',   'gruppe'],
                 ['admin_sicherungen',  'admin_sicherungen.php',  'Konto-Backups', 'sicherung',
                                                                   $z('admin_sicherungen')],
-                /* `haus` statt `rechtstexte` (Mockup 13, freigegeben
-                 * 05.09.2026): Die Seite heisst nicht mehr „Rechtstexte",
-                 * und das Zeichen lag seit P3 ungenutzt im Vorrat. */
+                /* `haus` fuer „Installation" (Mockup 13, freigegeben
+                 * 05.09.2026), und seit P5c/AP9 wieder eine eigene Seite
+                 * „Rechtstexte" mit dem Zeichen, das seit P3 im Vorrat lag
+                 * (E-P5c-28): zwischen Installation und Demo-Konto. */
                 ['admin_installation', 'admin_installation.php', 'Installation',  'haus'],
+                ['admin_rechtstexte',  'admin_rechtstexte.php',  'Rechtstexte',   'rechtstexte'],
                 ['admin_demo',         'admin_demo.php',         'Demo-Konto',    'kolben'],
                 /* PROTOKOLL UNTER VERWALTUNG, nicht unter Betrieb (E-P5c-10,
                  * R74 (1)): Der Admin sieht vier seiner Reiter, und ein
@@ -1061,7 +1063,15 @@ function ui_einstellungen_punkte(): array
  * OFFEN IST: „Einstellungen" und der Block der aktiven Seite — in JEDER
  * Breite. Das Konzept sah ab 1024 px alle Blöcke offen vor; damit blieb es
  * bei 1280 × 900 bei 14 von 17 erreichbaren Einträgen, also bei genau dem
- * Zustand, gegen den das Akkordeon gebaut wurde. So sind es 17 von 17.
+ * Zustand, gegen den das Akkordeon gebaut wurde. So waren es 17 von 17.
+ *
+ * NACHGEMESSEN IN P5c/AP9 (F-P5c-157), mit 18 Einträgen: bei 1280 × 900 auf
+ * 13 von 14 Seiten alle erreichbar (die Servereinstellungen mit acht
+ * Sprungmarken 16), bei 1280 × 720 auf 6 von 14. Seither fallen die
+ * Sprungmarken unter 800 px Fensterhöhe weg (E-P5c-131, style.css) — dann
+ * 14 von 14. Gezählt wird ein Eintrag, wenn er im Bild steht oder der Kopf
+ * seiner zugeklappten Gruppe; nach der Box allein zu fragen zählt die Einträge
+ * zugeklappter Gruppen mit, denn Chromium gibt ihnen eine.
  */
 function ui_leiste_einstellungen(string $aktiv): void
 {
@@ -1078,7 +1088,8 @@ function ui_leiste_einstellungen(string $aktiv): void
          * Bloecke offen vor; gemessen loest das den Grund fuer das Akkordeon
          * nicht: Bei 1280 x 900 blieben mit allen offenen Bloecken 14 von 17
          * Eintraegen erreichbar — genau der Zustand, gegen den das Akkordeon
-         * gebaut wurde. Mit dieser Vorgabe sind es 17 von 17. Entschieden am
+         * gebaut wurde. Mit dieser Vorgabe waren es 17 von 17 (bei 17 Einträgen;
+         * nachgemessen P5c/AP9, siehe Kopf). Entschieden am
          * 05.09.2026 auf Nachfrage; die Abweichung steht im Konzept.
          *
          * WARUM PHP UND NICHT DAS SKRIPT. Der Serverzustand ist damit schon
@@ -2796,6 +2807,41 @@ function ui_abbruch(int $code, string $text, array $o = []): never
  * dem Skript (`EdOrtsfeld.init({vorschlaege: […]})`), nicht dem Markup.
  */
 /**
+ * DAS TOKEN FUER `EdApi` AUF SEITEN OHNE VERSCHLUESSELUNG (P5c/AP9, E-P5c-130).
+ *
+ * `EdApi.postJson()` und `.postForm()` lesen die Konstante `CSRF`. Bis Web
+ * 21.1.0 schrieb sie nur `ui_krypto_bootstrap()` — und der bringt Salz,
+ * Rundenzahl und den Server-Anteil des Kontos mit. Die Seite „Rechtstexte"
+ * braucht nichts davon, aber `EdApi` fuer ihre Vorschau; das ganze Ruestzeug
+ * dafuer zu laden hiesse, einer Verwaltungsseite Schluesselmaterial zu geben,
+ * nur um ein Token zu bekommen.
+ *
+ * EINE STELLE, ZWEI EINGAENGE: `ui_csrf_zeile()` baut die Zeile, und zwar
+ * EINMAL je Seitenaufbau; der Krypto-Baustein und `ui_csrf_bootstrap()` holen
+ * sie beide dort. Ein zweites `const CSRF` auf derselben Seite waere ein
+ * SyntaxError im zweiten Skript — und der fiele erst auf, wenn eine Seite
+ * beide Wege nimmt. Deshalb liefert der zweite Abruf eine leere Zeile.
+ *
+ * NICHT von Hand ein verstecktes Feld an `EdApi` vorbei reichen (Register
+ * Z29): Das waere ein zweiter Transport.
+ */
+function ui_csrf_zeile(): string
+{
+    static $schon = false;
+    if ($schon) { return ''; }
+    $schon = true;
+    return 'const CSRF = ' . json_js(csrf_token()) . ';';
+}
+
+function ui_csrf_bootstrap(): void
+{
+    $zeile = ui_csrf_zeile();
+    if ($zeile !== '') {
+        echo '<script' . kopf_nonce_attr() . '>' . $zeile . "</script>\n";
+    }
+}
+
+/**
  * Die Einstellungen der Adresssuche fuer den Browser (S9/AP2, E-S9-05).
  *
  * WARUM NICHT IM KRYPTO-BOOTSTRAP, wie das Konzept es vorsah. Dort stehen
@@ -3182,7 +3228,8 @@ function ui_krypto_bootstrap(array $o = []): void
      * Zeile Markup. Das Feld `csrf` wird weiterhin angenommen und ignoriert;
      * die Aufrufer nennen es teils noch.
      */
-    $zeilen[] = 'const CSRF = ' . json_js(csrf_token()) . ';';
+    $csrf = ui_csrf_zeile();
+    if ($csrf !== '') { $zeilen[] = $csrf; }
     $zeilen[] = '</script>';
 
     echo $ein, implode("\n" . $ein, $zeilen), "\n";

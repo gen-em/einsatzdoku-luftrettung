@@ -1038,7 +1038,14 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <?php endif; ?>
         </fieldset>
       </form>
-      <?php if ($nurSupport): ?>
+      <?php /* BEIM DEMO-KONTO GIBT ES KEIN AKTIONSMENÜ (siehe `$istDemoKopf`),
+               und `pw_reset` wird dort abgewiesen — der Satz darunter
+               verwies bis Web 21.1.0 trotzdem darauf (Endzählung AP9, A-1). */ ?>
+      <?php if ($istDemoKopf): ?>
+      <p class="feld-hinweis">Das Passwort des Demo-Kontos ist öffentlich und wird
+         nicht über einen Link gesetzt.
+         <a href="hilfe.php#11-6-demo-konto">Handbuch: Demo-Konto</a></p>
+      <?php elseif ($nurSupport): ?>
       <p class="feld-klein">Ändern kann die Verwaltung, den Setz-Link schickt „Aktionen".</p>
       <?php else: ?>
       <p class="feld-hinweis">Ein Passwort lässt sich hier nicht setzen — „Setz-Link

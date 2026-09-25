@@ -922,6 +922,25 @@ img,svg,video{max-width:100%;height:auto}
 .eintrag-unter:hover{background:var(--rauch);color:var(--asphalt);text-decoration:none}
 .eintrag-unter.hier{color:var(--dunkelblau);font-weight:600}
 
+/* SPRUNGMARKEN ERST AB 800 PX FENSTERHÖHE — in der festen Leiste (P5c/AP9,
+ * E-P5c-131). Bei 1280 × 720 schoben sie auf acht von vierzehn Seiten
+ * Einträge unter den Rand, auf der Seite Servereinstellungen acht Stück; die
+ * Leiste war dort nur mit Rollen vollständig, und das Akkordeon wurde gegen
+ * genau diesen Zustand gebaut (E-S8-07). Die Einträge sind die Wege durch die
+ * Anwendung, die Sprungmarken nur Wege durch eine Seite — wenn einer weichen
+ * muss, dann sie. Gemessen bei 1280 × 720: 18 von 18 Einträgen auf allen 14
+ * Seiten statt auf 6.
+ * NUR AB 1024 PX: Darunter ist die Leiste eine Schublade, und dort sind die
+ * Sprungmarken der einzige Weg zu den Karten, den man sieht, ohne zu rollen.
+ * 800 IST ENTSCHIEDEN, NICHT ERRECHNET, und die Lücke darüber ist benannt:
+ * Zwischen 800 und 946 px Höhe stehen die Sprungmarken, und drei Listen passen
+ * trotzdem nicht — Servereinstellungen (acht Marken) braucht 947 px, Status
+ * 891, Updates 835. Dort rollt die Leiste in sich. Keine Stufe der
+ * Breitenskala (Design.md Kapitel 7), sondern die eine Höhenschwelle. */
+@media (min-width:1024px) and (max-height:799px){
+  .leiste-gruppe .eintrag-unterliste{display:none}
+}
+
 /* KEINE `scroll-margin-top` AN DER KARTE. Das Konzept sah eine vor — „gibt es
  * im Stylesheet noch nicht" — und das stimmte für den Namen, nicht für die
  * Sache: `html` trägt seit Langem `scroll-padding-top: --kopf + --abstand-4`
@@ -4175,21 +4194,20 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * Baustein aus. */
 .feld-fest .feld-eingabe{font-family:var(--schrift-fest)}
 
-/* Der Vorschaukasten (Mockup 35). GESTRICHELT, und das ist der ganze Zweck:
- * Er sagt „das hier ist nicht die Seite, sondern ein Blick darauf". Ein
- * durchgezogener Rahmen sähe aus wie eine zweite Karte. `dashed` kommt
- * sonst nirgends im Stylesheet vor — deshalb steht es hier und nicht als
- * Zusatz an `.karte`. */
-.vorschau{
-  border:var(--strich) dashed var(--linie-stark);
-  border-radius:var(--radius);
-  padding:var(--abstand-4);
-  margin-top:var(--abstand-3);
-}
-.vorschau > h4{margin-bottom:var(--abstand-2)}
-/* Der Fließtext darin ist `.text` — aber ohne dessen Lesebreite: Der Kasten
- * IST schon schmal, und eine zweite Begrenzung darin ließe ihn links kleben. */
-.vorschau .text{max-width:none}
+/* DIE VORSCHAU, DIE MITLÄUFT (P5c/AP9, E-P5c-28, Mockup M-P5c-01d Variante 2).
+ * Seit Web 21.1.0 ist die Vorschau eine eigene Karte neben dem Feld (Seite
+ * „Rechtstexte"); der Zustand steht als Plakette im Kartenkopf. Bis dahin war
+ * sie ein gestrichelter Kasten `.vorschau` unter jedem Feld auf
+ * „Installation" (Mockup 35) — zwei Rahmen ineinander sagten nichts, und die
+ * Klasse ist mit ihrem einzigen Verwender entfallen.
+ *
+ * DER KASTEN ROLLT IN SICH, damit er in Sichtweite des Feldes bleibt. Die
+ * Höhe ist die des Textfelds (18 Zeilen) — kein neues Maß, sondern dasselbe
+ * wie nebenan. Der Fließtext darin ist `.text`, aber ohne dessen Lesebreite:
+ * Die Spalte IST schon schmal. */
+.vorschau-rollt{max-height:calc(18 * var(--zeile) * var(--groesse-3) + var(--abstand-5));
+  overflow:auto;overscroll-behavior:contain}
+.vorschau-rollt .text{max-width:none}
 
 /* Die Fußzeile einer Editorkarte: Plakette und Pfad nebeneinander. */
 .rechtstext-fuss{

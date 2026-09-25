@@ -31,6 +31,30 @@
       "bemerkung": ""
     },
     {
+      "name": "admin-rechtstexte-vorschau",
+      "paket": "P5c-AP9",
+      "punkt": "E-P5c-28",
+      "soll": "Plakette „gespeicherter Stand\" → „ungespeichert\"; die Vorschau zeigt die neue Überschrift als h2 und „<b>\" als Text; keine Fehlermeldung",
+      "ist": "Plakette „gespeicherter Stand\" → „ungespeichert\" · h2 da · <b> maskiert · Meldung „\" · gespeichert unverändert",
+      "breite": 1280,
+      "eingabeart": "zeiger",
+      "bedienhoehe": 36,
+      "ok": true,
+      "bemerkung": ""
+    },
+    {
+      "name": "admin-rechtstexte-rueckfrage",
+      "paket": "P5c-AP9",
+      "punkt": "F-P5c-57",
+      "soll": "Reiter „Impressum\" mit ungespeichertem Text: Dialog; „Abbrechen\" bleibt mit Text, „Verwerfen\" wechselt auf t=impressum; nichts gespeichert",
+      "ist": "Dialog „Der geänderte Text ist nicht gespeichert. Trotzdem wechseln?\" · Abbrechen → ?t=nutzungsbedingungen, Text steht · Verwerfen → ?t=impressum · gespeichert unverändert",
+      "breite": 1280,
+      "eingabeart": "zeiger",
+      "bedienhoehe": 36,
+      "ok": true,
+      "bemerkung": ""
+    },
+    {
       "name": "ap1-ps2-gehaltene-maus",
       "paket": "AP1",
       "punkt": "P-01",

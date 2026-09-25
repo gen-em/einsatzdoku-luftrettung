@@ -382,6 +382,10 @@ Daten erst nach Server-Bestätigung.
 │   ├── assets/ankuendigung.js  Schließt die Ankündigung ohne Neuladen, wo die
 │   │                       Seite ein Token trägt (sonst schickt das Formular
 │   │                       selbst ab), und zählt im Formular die Byte mit
+│   ├── assets/rechtstext_vorschau.js  Vorschau beim Tippen auf der Seite
+│   │                       Rechtstexte: 0,4 s Ruhe, dann EdApi an den
+│   │                       Endpunkt; nur die jüngste Antwort zählt; Plakette
+│   │                       sagt, was dasteht (P5c/AP9)
 │   ├── assets/reiter.js  Holt den aktiven Reiter ins Bild und setzt den
 │   │                       Verlauf am Rand der rollenden Reiterreihe
 │   │                       (P5c/AP2); ohne Skript rollt sie trotzdem
@@ -454,9 +458,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      SPEICHERT NICHTS und kann nichts speichern —
 │   │                      deshalb spaeter nicht erneut druckbar
 │   ├── admin_installation.php  Wie diese Installation nach aussen auftritt
-│   │                       (S8/AP3): Logo der Installation, Impressum,
-│   │                       Datenschutz. `admin_rechtstexte.php` leitet
-│   │                       hierher weiter (302, Lesezeichen)
+│   │                       (S8/AP3): Name, Adressen, Logo — eine Spalte;
+│   │                       die Rechtstexte standen hier bis Web 21.0.0
+│   ├── admin_rechtstexte.php  Die vier Rechtstexte, ein Reiter je Text, Feld
+│   │                       links, Vorschau rechts (P5c/AP9, E-P5c-28); von
+│   │                       Web 15.2.0 bis 21.0.0 eine Weiterleitung
 │   ├── apk_lib.php        Was in server/apk/ liegt — Name, Größe, Fassung,
 │   │                       Datum, SHA-256 (S4/A1, siehe 4.97g)
 │   │                       · apk.php liefert die Datei aus
@@ -492,7 +498,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      pat_anheben.php (stille Anhebung des Notiz-Altbestands
 │   │                      in den verschlüsselten Block, ab Web 19.0.0 — siehe 4.98d) ·
 │   │                      rueckweg_anlegen.php (das Schlüsselpaar des Rückwegs
-│   │                      ablegen, nur mit Passwortnachweis; Konzept RW, 4.99q)
+│   │                      ablegen, nur mit Passwortnachweis; Konzept RW, 4.99q) ·
+│   │                      rechtstext_vorschau.php (rendert das Getippte mit
+│   │                      rt_html(), speichert nichts; Admin und BetreiberIn,
+│   │                      Topf rt_vorschau — P5c/AP9)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
 │   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
@@ -850,14 +859,14 @@ Daten erst nach Server-Bestätigung.
 | `pair_sessions` | Kopplungssitzungen (seit Web 13.0.0, S5): Das **Gerät** holt sich mit `start` eine Sitzung und zeigt den Code, ein Mensch gibt ihn im Web ein (`user_id` wird gesetzt: beansprucht), das Gerät bestätigt mit Ja — erst dann entsteht die `devices`-Zeile; bis dahin sind Kennung und Schlüssel **schwebend**. Code **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **eine Frist von 10 Minuten ab `erstellt_am` für alles**; Schlüssel als SHA-256; die Datenbank ist der Schiedsrichter (Beanspruchen per `UPDATE … WHERE user_id IS NULL`, gültig bei `rowCount() = 1`); keine Endzustände — bestätigt und verworfen werden gelöscht, verfallen entsorgt der Job `aufraeumen`; Obergrenze `PAIR_SITZUNGEN_MAX` (1000) über unverfallene Zeilen. Löste `pair_codes` ab (Code im Web erzeugt, an der Uhr getippt); Ratenschutz über `rate_limits` mit drei Töpfen |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` und `merkmal` (`ip:…`, `id:…` oder `alle`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. **Die Töpfe stehen in `RATE_GRENZEN` und nirgends sonst** — und hier steht ihre Zahl absichtlich **nicht** mehr: Bis Web 20.10.0 stand „alle vier“ (falsch seit sechs Töpfen), bis 20.11.0 „es sind zwölf“ (falsch mit den beiden Ingest-Töpfen). Eine Zahl in einem Fließtext altert genauso still wie eine Aufzählung. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand. Seit Web 20.10.0 dazu **`stufe`** (0 = nie gesperrt, 1–4 = Sprosse der Sperrleiter) und **`stufe_bis`** (letzter Fehlversuch + 24 h; danach gilt die Stufe als 0, auch wenn die Zeile noch dasteht) sowie ein Index auf `gesperrt_bis` |
-| `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
+| `rechtstexte` | Die Rechtstexte dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, seit Web 20.19.0 auch `nutzungsbedingungen` / `avv`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 5d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der die Protokollseite filtert; Wort und Ton dazu im Katalog `PROTOKOLL_ARTEN`), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Die Seite Verwaltung → Protokoll (seit Web 20.39.0) liest sie zusammen mit fünf weiteren Tabellen, der Job `protokoll_archiv` archiviert sie. Siehe 4.99g |
 | `konto_einwilligungen` | Welche Fassung eines Rechtstextes dieses Konto angenommen hat (seit Web 20.19.0, P5b/AP4). `(user_id, schluessel)` als Primärschlüssel — **eine Zeile je Konto und Dokument, nicht je Annahme**; eine neue überschreibt die alte. `stand_am` ist die **angenommene** Fassung, der Vergleich gegen `rechtstexte.stand_am` ist die ganze Prüfung. Der Verlauf steht im Protokoll und überlebt dort die Kontolöschung; `ON DELETE CASCADE` ist hier richtig, weil eine Einwilligung ohne Konto keinen Gegenstand hat. Siehe 4.99j |
-| `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **Töpfen mit Leiter** (`'leiter' => true` in `RATE_GRENZEN`; seit Web 20.42.0 sieben, mit `totp`) — die übrigen sperren ohne Protokollzeile. *Hier stand „fünf" und „neun"; seit Web 20.11.0 waren es sechs mit Leiter, gezählt am 24.09.2026* |
+| `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **In die Komplettsicherung geht sie seit Web 20.39.0 ohne Zeilen** (`KOMP_OHNE_ZEILEN` in `komplett_lib.php`, P5c/AP2): nur das Schema, damit ein Einspielen die Tabelle anlegt. Die 30-Tage-Frist gilt damit auch für jeden Abzug. *Hier stand bis Web 21.1.0, sie liege in **jeder** Komplettsicherung, weil `komp_tabellen()` keine Ausnahmeliste habe — das stimmte bis Web 20.38.x.* Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **Töpfen mit Leiter** (`'leiter' => true` in `RATE_GRENZEN`; seit Web 20.42.0 sieben, mit `totp`) — die übrigen sperren ohne Protokollzeile. *Hier stand „fünf" und „neun"; seit Web 20.11.0 waren es sechs mit Leiter, gezählt am 24.09.2026* |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
@@ -4030,7 +4039,9 @@ benannten Zweig (`sftp`), und alles Übrige fiel in `ZielFtp`, wo
 **Seit Web 21.0.0 kennt auch das Schema den Wert nicht mehr** (Migration
 `2026_09_25_ftp_entfernen`, P5c/AP8, E-P5c-124). Sie sperrt mit
 Vorbedingung, solange ein FTP-Ziel dasteht, und nennt den Weg: unter
-Verwaltung → Sicherungsziele umstellen oder löschen. **Mit dem Wert ist der
+Betrieb → Backup-Ziele umstellen oder löschen (seit Web 21.1.0 auch im
+Wartungsmodus offen, E-P5c-134; bis dahin nannte der Satz „Verwaltung →
+Sicherungsziele", F-P5c-159). **Mit dem Wert ist der
 Weg gefallen, der ein solches Ziel von 20.2.0 bis 20.47.0 umschiffte:** die
 rote Plakette „wird übergangen" samt „Zuletzt übergangen", das gesperrte
 Altziel-Formular ohne Vorauswahl, das Überspringen im Versandschub
@@ -6178,7 +6189,7 @@ geändert** (E-S5W-08).
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript in `JSON_SKRIPTE_AUSSERHALB_API` steht — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php`. Die vier liegen nicht unter `/api/` und brauchen trotzdem JSON. **Für den Wartungsmodus zählen nur die ersten beiden**, weil die anderen zwei in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt; die Liste ist in P5a/AP9 für die **Überlast** gewachsen, die keine Ausnahmen kennt (Abschnitt 5e) |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
-| Ausnahmen | **vierzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Ausnahmen | **sechzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `admin_komplettsicherung.php`, `admin_sicherungsziele.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Komplett-Backup und Backup-Ziele seit Web 21.1.0** (P5c/AP9, E-P5c-134): Schloss der Torwächter, führte der Knopf „Komplett-Backup" der Seite Updates in die Sperre, und die Vorbedingung der FTP-Migration nannte die gesperrten Backup-Ziele als Weg. **Das Tor fragt nie nach der Rolle** — bis Web 21.1.0 sagten Karte und Handbuch „für alle außer Verwaltung und Betrieb" (F-P5c-158); jede Seite unter Verwaltung antwortet 503. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
@@ -6258,7 +6269,7 @@ es darf nichts mehr ausstehen, und die Wartung muss noch stehen.
 **Nicht Umfang:** eine eigene Wartungsmeldung auf Uhr und Handy ist
 Backlog-Kandidat.
 
-**Nachweis:** `php tools/proben/wartung/probe.php` — **67 Erwartungen**, beide
+**Nachweis:** `php tools/proben/wartung/probe.php` — **69 Erwartungen** (gezählt 25.09.2026, Web 21.1.0), beide
 Richtungen (zu wenig gesperrt / zu viel gesperrt), einschließlich der drei
 Regeln aus E-S5W-09 am Code und seit Web 20.6.0 **Teil 7**: der Torwächter
 schließt, nennt den Grund, gibt `ingest.php` sein JSON-503, lässt Betrieb →
@@ -6917,6 +6928,15 @@ Leiste nennte die Karten des gerade offenen Reiters und wechselte bei jedem
 Reiterwechsel ihren Inhalt. Der Bedienweg `admin-protokoll-reiter` misst
 **0** Unterpunkte.
 
+**Unter 800 px Fensterhöhe blendet das Stylesheet sie in der festen Leiste
+aus** (ab Web 21.1.0, P5c/AP9, E-P5c-131): `@media (min-width:1024px) and
+(max-height:799px)` setzt `.leiste-gruppe .eintrag-unterliste` auf
+`display:none`. `menue.js` baut sie weiter — die Entscheidung steht an einer
+Stelle, im Stylesheet, und die Schublade unter 1024 px behält sie. Anlass:
+bei 1280 × 720 waren auf 8 von 14 Seiten nicht alle 18 Einträge ohne Rollen
+erreichbar. Die Lücke zwischen 800 und 946 px ist benannt (`Design.md` 9.25,
+F-P5c-164).
+
 Die Markierung („welche Karte steht gerade oben") läuft über einen
 `IntersectionObserver`, dessen `rootMargin` die Kopfhöhe plus einen Saum
 abzieht. Drei Regeln, die alle aus einer Messung stammen:
@@ -7261,9 +7281,9 @@ Angemeldete das Zielkonto überhaupt betreuen darf (der Support nur Konten
 von NutzerInnen, E-P5c-40), dann je Handlung (`handlung_erlaubt()`). Beide
 Tore stehen in der Matrix.
 
-**Was noch kommt:** der Zweitfaktor-Reset mit AP5, der Vorschau-Endpunkt
-der Rechtstexte mit AP9. `admin_rechtstexte.php` fehlt mit Absicht — die
-Seite leitet nur auf `admin_installation.php` weiter.
+**Seit Web 21.1.0 (AP9) stehen die Seite Rechtstexte und ihr
+Vorschau-Endpunkt darin.** Die Zeile „Installation: Rechtstexte speichern"
+ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 
 <!-- rollenprobe:anfang -->
 | Handlung | Aufruf | user | support | admin | betreiberin |
@@ -7330,7 +7350,9 @@ Seite leitet nur auf `admin_installation.php` weiter.
 | Installation: Name | `POST admin_installation.php action=instanz_name` | 403 | 403 | durch | durch |
 | Installation: Adressen | `POST admin_installation.php action=instanz_adressen` | 403 | 403 | durch | durch |
 | Installation: Logo | `POST admin_installation.php action=logo_standard` | 403 | 403 | durch | durch |
-| Installation: Rechtstexte speichern | `POST admin_installation.php` | 403 | 403 | durch | durch |
+| Rechtstexte: die Seite | `GET admin_rechtstexte.php` | 403 | 403 | 200 | 200 |
+| Rechtstexte: speichern | `POST admin_rechtstexte.php` | 403 | 403 | durch | durch |
+| Rechtstexte: Vorschau beim Tippen | `POST api/rechtstext_vorschau.php` | 403 | 403 | durch | durch |
 | Demo-Konto: die Seite | `GET admin_demo.php` | 403 | 403 | 200 | 200 |
 | Demo-Konto: anlegen | `POST admin_demo.php action=demo_anlegen` | 403 | 403 | durch | durch |
 | Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch |
@@ -9268,8 +9290,8 @@ Logo, Impressum und Datenschutztext sind längst je Installation einstellbar
 | `instanz_name()` | `Gen-EM Einsatzdokumentation Notarzt` | Mailbetreff, Grußformel |
 
 Beide liegen in `app_state` (`instanz_name`, `instanz_kurz`) und werden unter
-**Verwaltung → Installation**, Karte „Name" gepflegt — dort, wo Logo und
-Rechtstexte schon stehen. Leer heißt „zurück auf die Vorgabe"; höchstens 80
+**Verwaltung → Installation**, Karte „Name" gepflegt — dort, wo auch das
+Logo steht. Leer heißt „zurück auf die Vorgabe"; höchstens 80
 Zeichen.
 
 ### 5d.2 Die Datei lädt nichts — und das ist der Kniff
@@ -9479,7 +9501,7 @@ und seit Web 20.11.0 `ingest` und `ingest_ip`:
 | `ingest`, `ingest_ip` | **ja** (seit 20.11.0) | bei `ingest.php` läuft kein Vorgang, den die längere Sperre unterbricht — die Daten liegen in der Warteschlange des Geräts und kommen später an. Die Sperre kostet den legitimen Fall nichts als Zeit, und Zeit ist genau das, was sie den illegitimen kosten soll (E-P5a-48) |
 | `reset` | **nein** | sperrt heute 3600 s; jede Sprosse unterhalb der vierten wäre *schwächer*. Und sein Scheitern ist absichtlich still — `reset_request.php` antwortet im gesperrten Fall wortgleich wie im erlaubten |
 | `pair`, `pair_start`, `pair_code` | nein | eine längere Sperre unterbräche dort einen Vorgang, der **gerade läuft**: Jemand steht am Gerät mit einem Code, der in zehn Minuten verfällt. Eine Stunde Sperre schreckt keinen Automaten ab, sie beendet die Kopplung für den Menschen |
-| `demo`, `demog`, `testmail`, `csp`, `health` | nein | die zählen **Menge**, nicht Fehlversuche — es gibt dort niemanden, der eskaliert; bei `health` träfe eine wachsende Sperre das Monitoring der BetreiberIn |
+| `demo`, `demog`, `testmail`, `csp`, `health`, `rt_vorschau` | nein | die zählen **Menge**, nicht Fehlversuche — es gibt dort niemanden, der eskaliert; bei `health` träfe eine wachsende Sperre das Monitoring der BetreiberIn, bei `rt_vorschau` (seit Web 21.1.0) eine angemeldete Verwaltung, die gerade einen Rechtstext schreibt |
 
 > **Die Trennlinie stand bis Web 20.11.0 falsch da.** Bei den Kopplungstöpfen
 > hieß es, „dahinter steht ein Gerät, das nicht lesen kann, was auf der Seite
@@ -9748,8 +9770,9 @@ ist. Der Aufräumjob hat dafür jetzt den Schritt **`Geraetevermerke`**
 
 Die Seite zeigt IP- und E-Mail-Adressen im Klartext. Die Anwendung liefert
 **keinen Rechtstext mit** (R32); sie kann nur **vorschlagen**. Unter
-*Verwaltung → Installation* steht deshalb ein zweiter Textbaustein neben dem
-zur Adresssuche aus S9/AP2 — und anders als jener **ohne Bedingung**: Den
+*Verwaltung → Rechtstexte* (Reiter Datenschutzerklärung, Karte
+„Textbausteine"; bis Web 21.0.0 unter *Installation*) steht deshalb ein
+zweiter Textbaustein neben dem zur Adresssuche aus S9/AP2 — und anders als jener **ohne Bedingung**: Den
 Ratenschutz gibt es in jeder Installation, und er lässt sich nicht abschalten.
 
 **Nachweis:** `node tools/bedienprobe/probe.mjs --nur P5a-AP8` — 1 von 1 Weg
@@ -10949,9 +10972,9 @@ Satz daneben, was zu tun ist — er rät nicht mehr:
 
 | Satz in der Kleinzeile | Handgriff |
 |---|---|
-| „Das eigene Verzeichnis liess sich nicht anlegen" | Schreibrecht der Anwendungswurzel prüfen |
+| „Das eigene Verzeichnis ließ sich nicht anlegen" | Schreibrecht der Anwendungswurzel prüfen |
 | „Das eigene Verzeichnis ist nicht beschreibbar" | Rechte von `server/.sitzungen/` prüfen |
-| **„die Anlage uebernimmt den gesetzten Pfad aber nicht"** | **`.user.ini` anlegen, siehe unten** |
+| **„die Anlage übernimmt den gesetzten Pfad aber nicht"** | **`.user.ini` anlegen, siehe unten** |
 | „lief bereits eine Sitzung" | `session.auto_start` oder `auto_prepend_file` der Anlage; dann tragen die Sitzungscookies auch **kein** `secure`/`SameSite` — beim Hoster abstellen lassen |
 
 **Der Handgriff `.user.ini`** (gemessen auf Staging am 20.09.2026, 5b.2a).
@@ -11034,14 +11057,15 @@ für das sie da ist.
 
 **Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
 (1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
-(neben `db.php`)? (2) Ist die aufgerufene Seite eine der **dreizehn** Ausnahmen?
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der Ausnahmen (`WARTUNG_AUSNAHMEN`, seit Web 21.1.0 sechzehn; hier stand bis dahin „dreizehn", es waren vierzehn)?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/proben/wartung/probe.php` (**57 Erwartungen**; seit Web 15.5.2 misst
+`php tools/proben/wartung/probe.php` (**69 Erwartungen**, gezählt 25.09.2026; seit Web 15.5.2 misst
 ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, seit
 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot wird,
-Nr. 140, und seit S10 mit 6a, dass das **Schluesselblatt** erreichbar bleibt —
-die Lage, in der man es braucht, ist eine Wartungslage).
+Nr. 140, seit S10 mit 6a, dass das **Schluesselblatt** erreichbar bleibt —
+die Lage, in der man es braucht, ist eine Wartungslage —, und seit Web 21.1.0
+mit 6b Komplett-Backup und Backup-Ziele samt Balken).
 
 **Die Integritaetswache ist rot:** `tools/integritaetswache/LIESMICH.md`,
 Abschnitt „Wenn sie rot wird" — in dieser Reihenfolge: Wurde gerade deployt?
@@ -12189,12 +12213,13 @@ im Kopfkommentar. Er verschwindet damit von selbst, sobald die echten Dateien
 liegen — sie ersetzen den Platzhalter 1:1 (gleicher Name, gleicher `viewBox`).
 
 
-### Installation: Logo, Impressum und Datenschutz (R32, seit Web 9.11.0;
-Seite seit Web 15.2.0)
+### Installation und Rechtstexte (R32, seit Web 9.11.0; Installation seit Web
+15.2.0, Rechtstexte wieder eigene Seite seit Web 21.1.0)
 
 **Die Anwendung liefert keinen Rechtstext mit.** Was darin steht, ist Sache der
-BetreiberIn; die Anwendung stellt zwei öffentliche Seiten, einen Editor und die
-Verweise in jeder Fußzeile. Der Leerzustand ist die Auslieferung.
+BetreiberIn; die Anwendung stellt die öffentlichen Seiten (seit Web 20.19.0
+vier), einen Editor und die Verweise in jeder Fußzeile. Der Leerzustand ist
+die Auslieferung.
 
 **Aus „Rechtstexte" ist mit Web 15.2.0 „Installation" geworden** (E-S8-05).
 Impressum, Datenschutz und das **Logo der Installation** beantworten dieselbe
@@ -12205,13 +12230,52 @@ Speicherwege: Die beiden Texte teilen sich die Speichern-Leiste, das Logo hat
 einen eigenen Knopf — es wirkt sofort und soll nicht auf einen halbfertigen
 Rechtstext warten.
 
+**Seit Web 21.1.0 sind die Rechtstexte wieder eine eigene Seite**
+(`admin_rechtstexte.php`, P5c/AP9, E-P5c-28, Backlog Nr. 121). Auf
+„Installation" standen die vier Texte untereinander in der rechten Spalte,
+jeder mit einer Vorschau des **gespeicherten** Stands darunter — bei 720 px
+Fensterhöhe tippte man oben und sah unten nichts. Jetzt: ein Reiter je Text
+(`ui_reiter()`, beschriftet aus `RT_TEXTE`), ein Formular je Reiter, ab 1200 px
+Feld links und Vorschau rechts. Ein Reiterwechsel mit ungespeichertem Text
+fragt über `data-cancel-form` nach (`assets/forms.js`). Installation behält
+Name, Adressen und Logo, einspaltig.
+
+**Die Vorschau beim Tippen rendert auf dem Server.**
+`assets/rechtstext_vorschau.js` schickt Text und Standdatum 0,4 s nach dem
+letzten Tastendruck an `api/rechtstext_vorschau.php`, und der gibt zurück, was
+`rt_html()` und `rt_stand_markup()` daraus machen. Ein zweiter Renderer im
+Browser läse eines Tages anders als der, der die öffentliche Seite baut. Der
+Endpunkt hält die Reihenfolge des Hauses — Methode, **Rolle**
+(`require_admin()`: Admin und BetreiberIn), Token, Ratenschutz, Rumpf — und
+speichert nichts. Der Rumpf darf viermal `RT_MAX_ZEICHEN` Bytes groß sein
+(UTF-8 plus JSON-Maskierung); ein zu langer **Text** ist ein Befund von
+`rt_pruefen()` (422 mit Satz), ein zu großer **Rumpf** kein Text mehr (413).
+**Topf `rt_vorschau`**: 120 Abrufe in 5 Minuten je Konto (nur das Konto,
+nicht die Adresse — F-P5c-155), dann 60 s Pause —
+er fängt ein Skript ab, das den Renderer als Rechenknecht benutzt, nicht
+jemanden, der einen langen Text schreibt. Laufende Abrufe verwirft das Skript
+über eine laufende Nummer: Nur die Antwort auf die jüngste Anfrage wird
+gezeigt.
+
+**Das Token für `EdApi` ohne das Krypto-Rüstzeug** (E-P5c-130). `EdApi` liest
+die Konstante `CSRF`, und die schrieb bis dahin nur `ui_krypto_bootstrap()` —
+zusammen mit Salz, Rundenzahl und dem Server-Anteil des Kontos. Die Seite
+braucht nichts davon; `ui_csrf_bootstrap()` schreibt nur das Token. Beide
+holen die Zeile aus `ui_csrf_zeile()`, die sie **einmal** je Seitenaufbau
+liefert: Ein zweites `const CSRF` wäre ein SyntaxError im zweiten Skript. Der
+erste Browserlauf hatte genau diese Lücke — der Endpunkt antwortete 403, die
+Plakette stand auf „nicht aktuell" (F-P5c-154); der Bedienweg
+`admin-rechtstexte-vorschau` fällt ohne den Aufruf rot aus.
+
 | Datei | Aufgabe |
 |---|---|
 | `rechtstexte_lib.php` | Ablage (`rt_lesen`, `rt_speichern`, `rt_pruefen`) und der Renderer `rt_html()` |
 | `rechtstext_seite.php` | Die öffentliche Seite — beide Dokumente teilen sie sich |
-| `impressum.php`, `datenschutz.php` | Zwei Zeilen: Schlüssel setzen, Seite laden |
-| `admin_installation.php` | Editor, ein Formular für beide Texte — und daneben das Logo der Installation (S8/AP3, E-S8-05) |
-| `admin_rechtstexte.php` | Weiterleitung (302) auf `admin_installation.php`; die Adresse steht in Lesezeichen |
+| `impressum.php`, `datenschutz.php`, `nutzungsbedingungen.php`, `avv.php` | Zwei Zeilen: Schlüssel setzen, Seite laden |
+| `admin_rechtstexte.php` | Editor, ein Reiter je Text, Vorschau daneben (seit Web 21.1.0; von 15.2.0 bis 21.0.0 eine Weiterleitung auf `admin_installation.php`) |
+| `api/rechtstext_vorschau.php` | Vorschau beim Tippen: `rt_html()` auf dem Server, speichert nichts, Topf `rt_vorschau` |
+| `assets/rechtstext_vorschau.js` | Entprellung, jüngste Antwort, Plakette, anteiliges Mitrollen |
+| `admin_installation.php` | Name, Adressen, Logo der Installation (S8/AP3, E-S8-05); bis Web 21.0.0 auch der Editor der Rechtstexte |
 | `tools/proben/rechtstexte/` | Angriffsprobe für `rt_html()` |
 
 #### `rt_html()` — erst maskieren, dann Struktur erkennen
@@ -12276,9 +12340,11 @@ darf keinen weißen Fehler zeigen.
 
 #### Grenzen
 
-- **Keine Content-Security-Policy.** Backlog Nr. 8 bleibt offen; sie wäre die
-  zweite Verteidigungslinie hinter dem Renderer.
+- **Die Content-Security-Policy ist die zweite Verteidigungslinie** hinter dem
+  Renderer (seit Web 20.7.0, 5c). Hier stand bis Web 21.1.0 „keine
+  Content-Security-Policy".
 - **Kein Versionsstand der Texte.** Wer den Text überschreibt, überschreibt ihn;
   eine Historie gibt es nicht. Für ein Dokument, dessen alte Fassung
   rechtlich zählen kann, ist das eine bewusst offene Stelle.
-- **Die Vorschau zeigt den gespeicherten Stand**, nicht das Getippte.
+- **Die Vorschau zeigt seit Web 21.1.0 das Getippte** (Endpunkt oben); ohne
+  JavaScript den gespeicherten Stand.

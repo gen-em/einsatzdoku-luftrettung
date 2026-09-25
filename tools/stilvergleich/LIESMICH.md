@@ -28,7 +28,7 @@ Dateien, nicht eine laufende Anlage. `NODE_PATH` setzt `gegen.sh`, weil
 ## Erwartete Zahl
 
 **Genau die Signaturen in `geplant.txt` — ohne Datei 0** (`Pruefablauf.md` 6.10); gelesen im Pull Request, nach dem Merge geleert.
-Gemessen 24.09.2026 gegen `origin/main` (P5c/AP5): **44 954 Elementmessungen, 128 Signaturen** (Chromium). Die 74 neuen sind die Bausteine des Zweitfaktors und das Druckblatt; außerhalb davon ändern sich nur Dokumenthöhe und die Lage absolut gesetzter Elemente darunter (Konzept P5c, Bericht AP5).
+Gemessen 25.09.2026 gegen `origin/main` (P5c/AP9): **42 276 Elementmessungen, 170 Signaturen** (Chromium). Neu gegenüber AP8 sind 57: Einstellungsleiste (Option 1), Bereichskarten, Schlüssel- und Notfallblatt auf dem Druckblatt, die Vorschau der Rechtstexte und die einspaltige Installation; 26 aus AP8 sind entfallen (die alten Blätter, `.uebersicht-block`). Die Diensttage-Leiste ist davon nicht betroffen — eigens gemessen, 156 Werte, 0 Abweichungen (Konzept P5c, Prüfdokument 1i). Davor, 24.09.2026 (AP5): 44 954 Elementmessungen, 128 Signaturen.
 
 ## Was es nicht kann
 

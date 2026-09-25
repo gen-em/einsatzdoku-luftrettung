@@ -221,6 +221,9 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                           'art' => 'primaer', 'attr' => ' form="f-sichern"']))
           : '',
   ]); ?>
+  <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — seit
+           P5c/AP9 steht diese Seite in WARTUNG_AUSNAHMEN (E-P5c-134). */ ?>
+  <?= wartung_balken() ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 

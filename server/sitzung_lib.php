@@ -168,23 +168,23 @@ function sitzung_ablage_satz(array $stand): string
 {
     $saetze = [
         'eigen' => 'Die Anwendung legt ihre Sitzungen selbst ab.',
-        'nicht_gelaufen' => 'RUECKFALL: Die Einrichtung der Ablage ist nicht gelaufen. '
+        'nicht_gelaufen' => 'RÜCKFALL: Die Einrichtung der Ablage ist nicht gelaufen. '
             . 'Das sollte nicht vorkommen - `db.php` ruft sie bei jeder Anfrage.',
         'kommandozeile' => 'Auf der Kommandozeile richtet die Anwendung die Ablage '
             . 'absichtlich nicht ein.',
-        'sitzung_lief' => 'RUECKFALL: Beim Laden von `db.php` lief bereits eine Sitzung, '
-            . 'deshalb liess sich der Ort nicht mehr setzen. Das deutet auf '
+        'sitzung_lief' => 'RÜCKFALL: Beim Laden von `db.php` lief bereits eine Sitzung, '
+            . 'deshalb ließ sich der Ort nicht mehr setzen. Das deutet auf '
             . '`session.auto_start` oder ein `auto_prepend_file` der Anlage - dann '
             . 'greifen auch `secure`, `SameSite` und `use_strict_mode` des '
             . 'Sitzungscookies nicht.',
-        'nicht_anlegbar' => 'RUECKFALL: Das eigene Verzeichnis liess sich nicht anlegen.',
-        'nicht_beschreibbar' => 'RUECKFALL: Das eigene Verzeichnis ist nicht beschreibbar.',
-        'nicht_uebernommen' => 'RUECKFALL: Das eigene Verzeichnis ist angelegt und '
-            . 'beschreibbar - die Anlage uebernimmt den gesetzten Pfad aber nicht. '
-            . 'Das heisst in aller Regel, dass der Hoster `session.save_path` '
-            . 'festgeschrieben hat; die Anwendung kann daran nichts aendern.',
+        'nicht_anlegbar' => 'RÜCKFALL: Das eigene Verzeichnis ließ sich nicht anlegen.',
+        'nicht_beschreibbar' => 'RÜCKFALL: Das eigene Verzeichnis ist nicht beschreibbar.',
+        'nicht_uebernommen' => 'RÜCKFALL: Das eigene Verzeichnis ist angelegt und '
+            . 'beschreibbar - die Anlage übernimmt den gesetzten Pfad aber nicht. '
+            . 'Das heißt in aller Regel, dass der Hoster `session.save_path` '
+            . 'festgeschrieben hat; die Anwendung kann daran nichts ändern.',
     ];
-    $satz = $saetze[$stand['lage']] ?? 'RUECKFALL: Grund nicht festgehalten.';
+    $satz = $saetze[$stand['lage']] ?? 'RÜCKFALL: Grund nicht festgehalten.';
     return $stand['grund'] !== null ? $satz . ' ' . $stand['grund'] : $satz;
 }
 

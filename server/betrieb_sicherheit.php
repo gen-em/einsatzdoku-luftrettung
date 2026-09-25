@@ -41,24 +41,22 @@ require_once __DIR__ . '/format_lib.php';
  * E-P5a-46). Ohne sie waere die Liste „irgendwo war irgendwer gesperrt" und
  * damit wertlos: Man kann eine Sperre nicht aufheben, ohne zu wissen, welche.
  *
- * DIE FOLGE WIRD BENANNT, NICHT UEBERGANGEN: `sicherheit_ereignisse` faehrt
- * in jeder Komplettsicherung mit (`komp_tabellen()` hat keine Ausnahmeliste),
- * und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im
- * versiegelten Abzug. Der Datenschutztext der Installation gehoert deshalb
- * nachgezogen; einen Textbaustein dafuer schlaegt
- * `admin_installation.php` vor (die Anwendung liefert keinen Rechtstext mit,
- * R32 — sie kann nur vorschlagen).
+ * DIE FOLGE WIRD BENANNT, NICHT UEBERGANGEN: Die Liste fuehrt IP- und
+ * E-Mail-Adressen, und der Datenschutztext der Installation gehoert deshalb
+ * nachgezogen; einen Textbaustein dafuer schlaegt `admin_rechtstexte.php`
+ * (Reiter Datenschutzerklärung) vor — die Anwendung liefert keinen
+ * Rechtstext mit, R32, sie kann nur vorschlagen. BIS WEB 20.38.0 stand hier
+ * auch, `sicherheit_ereignisse` fahre in jeder Komplettsicherung mit; seit
+ * P5c/AP2 geht die Tabelle OHNE ZEILEN hinein (`KOMP_OHNE_ZEILEN`).
  *
  * -------------------------------------------------------------------------
- * FUENF KARTEN, NICHT SECHS — UND DAS IST EINE BENANNTE ABWEICHUNG
+ * SECHS KARTEN, WIE E-P5a-08 SIE NENNT
  * -------------------------------------------------------------------------
  *
- * E-P5a-08 nennt sechs. Die sechste, „Loeschungen auf Sicherungszielen",
- * haette heute nichts zu zeigen: Die Loeschregel je Ziel entsteht erst in
- * AP10 (E-P5a-03), und es gibt weder Tabelle noch Schreibweg noch einen
- * `app_state`-Schluessel dafuer. Eine Karte, die sagt „hier steht noch
- * nichts, weil es die Sache noch nicht gibt", ist keine Auskunft, sondern
- * Laerm. Sie kommt mit AP10 und gehoert dort in den Umfang.
+ * Bis P5a/AP10 waren es fuenf — „Loeschungen auf Sicherungszielen" kam erst
+ * mit der Loeschregel je Ziel (E-P5a-03), denn eine Karte, die sagt „hier
+ * steht noch nichts, weil es die Sache noch nicht gibt", ist keine Auskunft,
+ * sondern Laerm. Hier stand bis Web 21.1.0 noch „fuenf, nicht sechs".
  *
  * -------------------------------------------------------------------------
  * NUR VORHANDENE BAUSTEINE (Konzept 2.5)
@@ -268,7 +266,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
   <?php ui_karte_start(['titel' => 'Mengenbremse der Geräte', 'id' => 'k-bremse',
       'zahl' => count($geraete) > 0 ? (string)count($geraete) : null]); ?>
     <p class="feld-hinweis">Ab 30 fehlgeschlagenen Geräteanmeldungen je
-       Viertelstunde greift dieselbe Leiter wie oben — trifft es ein echtes
+       Viertelstunde greift dieselbe Leiter wie bei der Anmeldung — trifft es ein echtes
        Gerät, hilft neu koppeln.
        <a href="hilfe.php#sicherheit-schwellen-aufraeumen-mailregel">Handbuch: Mengenbremse</a></p>
     <?php if ($geraete === []): ?>

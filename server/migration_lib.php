@@ -3414,7 +3414,11 @@ function migrationen_katalog(): array
                           ->fetchColumn();
             return $n > 0 ? [['backup_targets.protokoll', $n, 'Sicherungsziele mit FTP']] : [];
         },
-        'vorbedingung_weg' => 'Unter Verwaltung → Sicherungsziele auf SFTP oder FTPS '
+        /* DER ORT STAND BIS WEB 21.1.0 FALSCH („Verwaltung → Sicherungsziele",
+         * F-P5c-159): Die Seite heisst Backup-Ziele und steht unter Betrieb —
+         * und sie war im Wartungsmodus gesperrt, in dem dieser Satz erscheint.
+         * Seit E-P5c-134 ist sie offen. */
+        'vorbedingung_weg' => 'Unter Betrieb → Backup-Ziele auf SFTP oder FTPS '
             . 'umstellen oder löschen.',
         'sql'   => [
             "ALTER TABLE backup_targets MODIFY protokoll ENUM('ftps','sftp') NOT NULL",

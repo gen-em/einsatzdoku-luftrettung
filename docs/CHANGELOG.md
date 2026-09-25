@@ -14,6 +14,165 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.0] — 2026-09-25
+
+**Weniger Text auf den Seiten, mehr im Handbuch.** P5c/AP9 (E-P5c-06, -08,
+-28, -29, -30, -37, -49, -50, -128 bis -130; Backlog Nr. 121, 244, 245, 246,
+253, 269). **Nebenstufe ohne Migration.** Die Seiten unter Verwaltung und
+Betrieb waren über die Jahre zu Handbüchern im Kleinformat geworden: Karten
+„Was hier gilt" mit sieben Sätzen, Kleinzeilen mit drei, Seitenköpfe mit
+Absätzen. Gelesen wurde davon wenig, und veraltet ist viel — die Durchsicht
+hat ein gutes Dutzend Sätze gefunden, die nicht mehr stimmten (F-P5c-138 bis
+-156). Jetzt gilt die Ein-Satz-Regel: je Karte höchstens ein Satz, der sagt,
+was hier passiert, dazu ein Verweis ins Handbuch, wo der Rest steht.
+
+### Geändert
+
+- **Web: Die Ein-Satz-Regel auf allen Seiten unter Verwaltung und Betrieb**
+  (E-P5c-06, -49). Die Karten „Was hier gilt" sind fort; ihr Inhalt steht im
+  Handbuch unter eigenen Sprungmarken (neu u. a. „Backups ohne Konto und die
+  Freigabe", „Drei Backups, drei Namen", „Was der Reset umfasst", „Das
+  Schlüsselblatt"). **Gezählt, nicht geschätzt:** vier Zähler je
+  Seitengruppe und eine unabhängige Gegenprobe über alle 16 Seiten nach der
+  Zählregel Fassung 2 (E-P5c-128): 66 Karten, 11 Seitenköpfe, keiner über
+  einem Satz, keine Karte „Was hier gilt". **Zwei Stellen lagen über dem
+  Soll, und beide Zähler fanden sie:** die Karte „Wartungsmodus" (ein Satz
+  und eine Ablaufliste, siehe unten) und eine Kleinzeile mit zwei Sätzen auf
+  den Servereinstellungen. Ein Verweis im Seitenkopf gilt für die Karten
+  seiner Seite (E-P5c-133); die eine Seite ohne Kopf, Updates, trägt ihn in
+  den Karten. **Was bewusst bleibt:** Meldungen, Leerzustände,
+  Befundzeilen und Dialoge zählen nicht mit; sie sind Inhalt, nicht
+  Erklärung.
+- **Web: Die Leiste trägt ihre Blöcke als Überschriften** (Option 1
+  „Linie", E-P5c-29, Nr. 244): eine Stufe größer in Dunkelblau, der Winkel
+  rechts, eine Linie und Luft vor jedem weiteren Block. Bis hierher stand
+  der Winkel links — genau dort, wo die Einträge ihr Symbol tragen —, und
+  eine Überschrift las sich wie ein Eintrag. **Die Übersicht der
+  Einstellungen zeigt jeden Bereich als Karte** mit Zeichen und Zahl im
+  Kopf. **Unter 800 px Fensterhöhe fallen die Sprungmarken in der festen
+  Leiste weg** (E-P5c-131): Gemessen mit der BetreiberIn (18 Einträge) waren
+  bei 1280 × 720 auf 6 von 14 Seiten alle Einträge ohne Rollen erreichbar,
+  jetzt auf 14 von 14. **Was bleibt, benannt:** Zwischen 800 und 946 px Höhe
+  stehen die Marken, und drei Listen passen nicht ganz — Servereinstellungen
+  (acht Marken, bei 1280 × 900 16 von 18), Status und Updates; dort rollt die
+  Leiste in sich. **Und eine Messung von vorher war falsch** (F-P5c-157):
+  Einträge einer zugeklappten Gruppe haben in Chromium eine Box, und wer nur
+  nach der Box fragt, zählt sie als sichtbar.
+- **Web: Schlüssel- und Notfallblatt stehen auf dem Druckblatt des
+  Codeblatts** (`.blatt-druck`, E-P5c-08, -30, -50, Nr. 246): Kopf mit Logo
+  und Adresse, nummerierte Vierergruppen, auf Staging die Umgebungszeile,
+  genau eine A4-Seite. **Der Härtefall ist gemessen** — drei Werte, langer
+  Kurzname, lange Adresse, Staging: 1013 von 1017 px Satzhöhe. Die lange
+  Sprungmarke hätte ihn auf zwei Seiten gekippt (1032 px), und der Rückfall
+  aus dem Mockup, die Umgebungszeile in den Kopf zu ziehen, machte es
+  schlimmer (1051 px, F-P5c-152). Geholfen hat eine kurze Marke
+  (`#das-schluesselblatt`) und eine knappe Zeile. Das Notfallblatt nennt
+  „Einstellungen → Profil" statt eines Reiters „Konto", den es nicht gibt.
+- **Web: Datum und Uhrzeit trennt überall ein Komma** (E-P5c-37, Nr. 253).
+  Zwei Stellen übergeben bewusst einen anderen Trenner: die Mailtexte
+  („ um ") und der GPX-Spurname, den `Export-Format.md` festlegt
+  (E-P5c-129).
+- **Web: Die Rechtstexte sind wieder eine eigene Seite** (E-P5c-28,
+  Nr. 121): Verwaltung → Rechtstexte, ein Reiter je Text, ab 1200 px die
+  Vorschau neben dem Feld. **Die Vorschau läuft beim Tippen mit** — 0,4 s
+  nach dem letzten Tastendruck, gerendert auf dem Server mit demselben
+  `rt_html()` wie die öffentliche Seite. **Warum kein Renderer im Browser:**
+  Er müsste dieselbe Positivliste für Verweise, dieselbe Maskierreihenfolge
+  und dieselben Zeichenfilter führen, und beim nächsten Fund würde einer von
+  beiden vergessen (E-P3-38). Ein Reiterwechsel mit ungespeichertem Text
+  fragt nach. Ohne Skript zeigt die Vorschau den gespeicherten Stand.
+  „Installation" behält Name, Adressen und Logo, einspaltig.
+- **Web: Im Wartungsmodus sind Komplett-Backup und Backup-Ziele offen**
+  (E-P5c-134), für die BetreiberIn und mit dem Balken. **Das war eine
+  Sackgasse:** Schloss der Torwächter, weil eine Migration aussteht, sagte
+  die Seite Updates „vorher sichern", und ihr Knopf „Komplett-Backup" führte
+  in die 503. Ebenso nannte die Vorbedingung der FTP-Migration die
+  Backup-Ziele als Weg — gesperrt, und dazu unter falschem Namen
+  („Verwaltung → Sicherungsziele", F-P5c-159). **Und ein Satz stimmte nie:**
+  Karte und Handbuch sagten, der Wartungsmodus schließe „für alle außer
+  Verwaltung und Betrieb". Das Tor fragt aber nach der Seite, nicht nach der
+  Rolle — jede Seite unter Verwaltung antwortet 503 (F-P5c-158). Die Karte
+  „Wartungsmodus" trägt jetzt einen richtigen Satz; der Ablauf eines Updates
+  steht nur noch im Handbuch und nicht mehr als zweite, kürzere Fassung in
+  der Karte (E-P5c-132).
+- **Web: Der Textbaustein zum Ratenschutz sagt jetzt „Sicherungskopien der
+  Datenbank enthalten diese Angaben nicht."** (F-P5c-153). Bis hierher hieß
+  es, sie **könnten** sie enthalten — seit Web 20.39.0 geht
+  `sicherheit_ereignisse` ohne Zeilen ins Komplett-Backup. **Wer den
+  Baustein in die eigene Datenschutzerklärung übernommen hat, ersetzt den
+  letzten Satz.** Dasselbe gilt für den Absatz „Welche Daten verschlüsselt
+  gespeichert werden" im Handbuch: Er nannte die Notizen des Einsatzes nicht
+  (verschlüsselt seit Web 19.0.0) und die des Diensttags nicht unter
+  Klartext (F-P5c-147).
+
+### Neu
+
+- **Web: `api/rechtstext_vorschau.php`** — Admin und BetreiberIn, Token,
+  eigener Topf `rt_vorschau` (120 je 5 Minuten und Konto, 60 s Pause, ohne
+  Leiter). Er speichert nichts und schreibt kein Protokoll. **Gezählt wird
+  nur das Konto** (F-P5c-155): Im ersten Wurf zählte er die Adresse mit, und
+  zwei Verwaltungskonten im selben Haus hätten sich den Topf geteilt.
+- **Web: `ui_csrf_bootstrap()`** (E-P5c-130). `EdApi` liest die Konstante
+  `CSRF`, und die schrieb bis hierher nur `ui_krypto_bootstrap()` — samt
+  Salz, Rundenzahl und Server-Anteil des Kontos. Eine Verwaltungsseite, die
+  nur ein Token braucht, bekommt jetzt nur das Token. Beide holen die Zeile
+  aus `ui_csrf_zeile()`, einmal je Seitenaufbau; ein zweites `const CSRF`
+  wäre ein Syntaxfehler im zweiten Skript. **Gefunden hat es der erste
+  Browserlauf** (F-P5c-154): Der Endpunkt antwortete 403, die Plakette stand
+  auf „nicht aktuell".
+- **Werkzeug: die Ankerprüfung** (`tools/quelltext/anker.php`, im Tor unter
+  `pruefen.sh anker`; Anlass Nr. 188). Jeder Verweis `hilfe.php#…` in
+  `server/` wird gegen die Sprungmarken des gerenderten Handbuchs gehalten.
+- **Werkzeug: Bedienwege `admin-rechtstexte-vorschau` und
+  `-rueckfrage`**; die Rollenprobe kennt Seite und Endpunkt (drei Zeilen in
+  `Technik.md` 4.99p, 304 / 0); die Wartungsprobe misst mit 6b, dass
+  Komplett-Backup und Backup-Ziele offen sind und den Balken tragen (69 / 0,
+  ohne den Eintrag rot).
+
+### Behoben
+
+- **Web: Das Schlüsselblatt-Prüfen behandelt einen Netzfehler nicht mehr
+  wie eine falsche Eingabe** (Nr. 269). Bei `status: 0` bleiben die vier
+  Felder stehen, und der Knopf wird wieder frei.
+- **Web: Kleinigkeiten, die die Durchsicht gefunden hat** (F-P5c-138 bis
+  -150): Komplett-Backup nannte Backup-Ziele als Ort des Serverschlüssels;
+  Backup-Ziele sagte fest „zwei" statt der eingestellten Aufbewahrung; die
+  Kontoseite zeigte die Aufbewahrung der Installation statt der des Kontos
+  und sprach im Status die NutzerIn an statt der Verwaltung; auf der
+  Statusseite schloss eine Karte mit `</details>`, die keines war; Updates
+  versprach ein Audit-Protokoll der Migrationen, das es nicht gibt (Backlog
+  Nr. 326); die Einwilligungsseite nannte einen Reiter „Konto"; Codeblatt
+  und Notfallblatt fielen still auf das Hubschrauber-Logo zurück.
+- **Web: Was die Endzählung nebenbei gefunden hat** (F-P5c-160 bis -163):
+  Die Kontoseite des Demo-Kontos verwies auf ein Aktionsmenü, das es dort
+  nicht gibt; der Verweis „Archiv des Protokolls" sprang an den Anfang von
+  11.7; „Wartet auf den nächsten Lauf" nannte bei abgeschaltetem Versand den
+  falschen Grund und zählte „1 Paket sind"; die Aufbewahrung am Ziel nannte
+  die Zahl der Installation als die jedes Kontos; „ein freigegebenes nie" war
+  zu weit; der Ordner-Dialog sprach von „einem Paket"; die Statusseite
+  versprach einen Knopf zum Serverschlüssel, den sie nie hatte; „wie vor
+  S10" und „(R12)" standen im sichtbaren Text; der Befundtext der
+  Plattformprüfung schrieb „fuer" und „RUECKFALL"; zwei Meldungen wurden
+  doppelt maskiert; zwei Zahlen der Statistik kamen ohne Tausenderpunkt.
+
+- **Werkzeug: Fall 15 der Wartungsprobe misst den Median aus fünf**
+  (F-P5c-165). Er verglich einen 503-Abruf mit einem Abruf ohne Wartung,
+  und das färbte den zweiten Prüfstand dieses Pakets rot: 4,6 gegen
+  4,0 ms. Einzeln nachgefahren liegt die 503 bei 1,4 bis 1,9 ms, der
+  Vergleich bei 3,3 bis 5,8 ms — nur ein Abruf von zwölf sprang auf
+  4,4 ms. Das Tor war nie langsam, die Messung hielt einem Ausreißer
+  nicht stand. Die 503 darf fünfmal kommen, weil das Tor vor jedem Zähler
+  greift; der Vergleich bleibt ein Abruf, weil jeder weitere den
+  Adresstopf zählte. Mit 6 ms Verzögerung im Tor ist der Fall rot.
+
+### Entfernt
+
+- **Web: die Ablaufliste in der Karte „Wartungsmodus"** — sie steht im
+  Handbuch unter „Der Wartungsmodus".
+- **Web: die Karten „Was hier gilt"** unter Verwaltung und Betrieb, die
+  Klassen `.uebersicht-block*`, `.vorschau` und `.blatt-wert`, der
+  Rechtstext-Teil von `admin_installation.php`.
+
 ## [Web 21.0.0] — 2026-09-25
 
 **Der Rückbau von R39: Jeder Stammdatensatz gehört einem Konto.** P5c/AP8

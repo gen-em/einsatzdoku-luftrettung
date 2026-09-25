@@ -32,18 +32,17 @@ require_once __DIR__ . '/mail_lib.php';
  * SIE AENDERT NICHTS AM BESTAND. Die Seite fasst zusammen und verweist;
  * geaendert wird auf der zustaendigen Seite.
  *
- * ZWEI AUSNAHMEN, und beide fuehren nicht weg, sondern pruefen an Ort und
- * Stelle:
- *   - Der fehlende Serverschluessel. Ihn dort zu erzeugen, wo das Problem
- *     gemeldet wird, ist kuerzer als ein Umweg auf eine Seite mit demselben
- *     Knopf.
- *   - „Testmail an mich" (Backlog Nr. 120, Web 19.3.0, freigegeben am
- *     12.09.2026). Sie aendert keinen Bestand, sie prueft — und es GIBT
- *     keine zustaendige Seite, auf die man verweisen koennte: SMTP steht
- *     allein in der `config.php` und hat keine Oberflaeche. Bis dahin
- *     stand hier „genau eine Ausnahme"; wer eine zweite hinzufuegt, ohne
- *     den Satz mitzuschreiben, hinterlaesst eine Beschreibung, die die
- *     Seite nicht mehr trifft.
+ * EINE AUSNAHME fuehrt nicht weg, sondern prueft an Ort und Stelle:
+ * „Testmail an mich" (Backlog Nr. 120, Web 19.3.0, freigegeben am
+ * 12.09.2026). Sie aendert keinen Bestand, sie prueft — und es GIBT keine
+ * zustaendige Seite, auf die man verweisen koennte: SMTP steht allein in der
+ * `config.php` und hat keine Oberflaeche.
+ * HIER STANDEN BIS WEB 21.1.0 „ZWEI AUSNAHMEN", die zweite der fehlende
+ * Serverschluessel „mit demselben Knopf" — die Zeile verweist seit S10 aber
+ * auf die Karte „Schluessel des Servers" (`betrieb_server.php#k-schluessel`,
+ * status_lib.php), erzeugt wird hier nichts (Endzaehlung AP9, C-3). Wer eine
+ * Ausnahme hinzufuegt oder wegnimmt, schreibt diesen Satz mit; sonst
+ * beschreibt er eine Seite, die es nicht mehr gibt.
  *
  * WELCHE KARTE IN WELCHER SPALTE STEHT, entscheidet DIESE Datei: Das ist
  * Anordnung, keine Auskunft. Links Server und E-Mail, rechts Hintergrundjobs
@@ -64,13 +63,13 @@ function status_zeile(array $z): void
 
 /* DIE TESTMAIL (Backlog Nr. 120).
  *
- * DIE EINZIGE AUSNAHME VON „REIN LESEND" IST JETZT DIE ZWEITE. Freigegeben
- * am 12.09.2026: Beide Ausnahmen fuehren nicht weg, sondern pruefen an Ort
- * und Stelle. Fuer SMTP gibt es ausserdem gar keine Seite, auf die man
- * verweisen koennte — es steht nur in der `config.php` und hat keine
- * Oberflaeche. Der Satz in der Karte „Was hier gilt", der Kopf dieser Datei,
- * die Unterzeile und das Handbuch sind mitgeschrieben; eine Zusage, die die
- * Seite nicht mehr beschreibt, waere schlimmer als keine.
+ * DIE TESTMAIL IST DIE AUSNAHME VON „REIN LESEND". Freigegeben am
+ * 12.09.2026: Sie fuehrt nicht weg, sondern prueft an Ort und Stelle. Fuer
+ * SMTP gibt es ausserdem gar keine Seite, auf die man verweisen koennte — es
+ * steht nur in der `config.php` und hat keine Oberflaeche. Der Kopf dieser
+ * Datei und das Handbuch (12.1) sagen es; eine Zusage, die die Seite nicht
+ * mehr beschreibt, waere schlimmer als keine. (Hier stand bis Web 21.1.0
+ * „die zweite Ausnahme" und die Karte „Was hier gilt" — beide sind fort.)
  *
  * DER ZWEIG STEHT VOR `status_karten()`. Sonst zeigt die Zeile „Letzter
  * Versand" den Stand von VOR dem Versand: `smtp_send()` vermerkt ihn selbst
@@ -275,14 +274,15 @@ ui_seite_start(['titel' => 'Status']);
            ausserdem das, was sie ist: die Auskunft UNTER der Anwendung, nicht
            eine vierte gleichrangige Sache.
 
-           EINGEKLAPPT (`vorschau`), wie „Was hier gilt". Wer sie braucht,
+           EINGEKLAPPT (`vorschau`). Wer sie braucht,
            braucht sie einmal nach dem Deploy oder wenn oben etwas rot steht;
            wer sie nicht braucht, soll nicht an zwanzig Zeilen vorbeiscrollen. */ ?>
   <?php $kp = $nach('k-plattform'); ?>
   <?php ui_karte_start(['titel' => $kp['titel'], 'id' => $kp['id'],
                         'vorschau' => 'Muss · Empfohlen · gemessen']); ?>
     <p class="feld-hinweis">Dieselbe Liste, die <code>install.php</code> vor
-       der Einrichtung prüft — nur ein fehlendes <em>Muss</em> färbt die Ampel.
+       der Einrichtung prüft — ein fehlendes <em>Muss</em> färbt die Ampel rot,
+       ein knappes orange, ein <em>Empfohlen</em> gar nicht.
        <a href="hilfe.php#12-1-status">Handbuch: Muss und Empfohlen</a></p>
     <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>

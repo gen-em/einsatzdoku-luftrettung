@@ -137,7 +137,7 @@ ui_seite_start(['titel' => 'Protokoll']);
          : 'Alle ' . protokoll_archiv_tage() . ' Tage' ?> versiegelt der
        Server die Einträge des Zeitraums als ZIP — ohne IP-Adressen,
        aufbewahrt <?= protokoll_archiv_behalten() ?> Tage.
-       <a href="hilfe.php#11-7-protokoll">Handbuch: Archiv des Protokolls</a></p>
+       <a href="hilfe.php#das-archiv-nur-betreiberin">Handbuch: Archiv des Protokolls</a></p>
     <?php if ($fremd): ?>
       <?php ui_meldung('Öffnen lässt es sich nur mit dem Schlüssel von damals — er steht '
           . 'im Wiederanlaufpaket und auf dem Schlüsselblatt mit der Kennung '

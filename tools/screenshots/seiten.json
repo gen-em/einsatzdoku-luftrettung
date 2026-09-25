@@ -262,6 +262,12 @@
       "pfad": "__LOESCHEN__"
     },
     {
+      "name": "29-einstellungen-uebersicht",
+      "gruppe": "Einstellungen",
+      "rolle": "admin",
+      "pfad": "einstellungen.php"
+    },
+    {
       "name": "30-einstellungen-profil",
       "gruppe": "Einstellungen",
       "rolle": "demo",
@@ -365,6 +371,12 @@
       "gruppe": "Administration",
       "rolle": "admin",
       "pfad": "admin_installation.php"
+    },
+    {
+      "name": "43d-rechtstexte",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_rechtstexte.php?t=datenschutz"
     },
     {
       "name": "44-demo-konto",

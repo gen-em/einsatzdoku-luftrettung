@@ -369,6 +369,18 @@ const RATE_GRENZEN = [
      * kennt; der liest aus der 403 ohnehin nichts. */
     'health' => ['max' => 60, 'fenster' => 60, 'sperre' => 60],
 
+    /* DIE VORSCHAU DER RECHTSTEXTE ZAEHLT DIE MENGE (P5c/AP9, E-P5c-28).
+     *
+     * `api/rechtstext_vorschau.php` rendert, was im Feld steht — ohne zu
+     * speichern. Das Skript fragt 0,4 s nach dem letzten Tastendruck; wer
+     * tippt, macht Pausen, und daraus werden ein paar Abrufe je Minute.
+     * 120 je fuenf Minuten und Konto liegen weit darueber und fangen ein
+     * Skript ab, das den Renderer als Rechenknecht benutzt. EINE MINUTE
+     * SPERRE, OHNE LEITER: Getroffen wuerde eine angemeldete Verwaltung, und
+     * die soll nicht laenger warten als noetig — der Text selbst ist nie
+     * betroffen, nur die Vorschau. Merkmal ist das Konto, nicht die Adresse. */
+    'rt_vorschau' => ['max' => 120, 'fenster' => 300, 'sperre' => 60],
+
     /* DIE REGISTRIERUNG HAT DREI TOEPFE, UND JEDER SCHUETZT ETWAS ANDERES
      * (P5b/AP3, E-P5b-13, R37 (4)).
      *

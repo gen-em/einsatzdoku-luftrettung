@@ -309,7 +309,7 @@ der Winkel links, dort, wo die Einträge ihr Symbol tragen). Offen sind
 („Betrieb · 7"). Ein Klick auf die Zeile klappt sie auf. Was man dabei
 umstellt, gilt für diese Sitzung — beim nächsten Anmelden steht das Menü
 wieder in der Vorgabe. Der Grund für das Klappen ist Platz: Eine BetreiberIn
-hat siebzehn Menüpunkte, und die passen untereinander in kein übliches
+hat achtzehn Menüpunkte, und die passen untereinander in kein übliches
 Browserfenster.
 
 **Eine Zahl am Menüpunkt heißt: hier ist etwas zu tun.** Sie steht an vier
@@ -322,9 +322,12 @@ höchstens eine Minute alt.
 **Unter dem geöffneten Menüpunkt stehen die Karten der Seite** als
 Sprungmarken — kleiner und ohne Symbol, damit sie nicht wie eigene Seiten
 aussehen. Ein Klick springt zur Karte; während man liest, ist die Marke der
-Karte fett, die gerade oben steht. Am Handy stehen die Sprungmarken auch, dort
-ohne Markierung: Die Schublade liegt vor dem Inhalt, und wer sie geöffnet hat,
-sieht die Karten nicht. Ein Sprung schließt sie.
+Karte fett, die gerade oben steht. **Ist das Fenster niedriger als 800 px**
+(seit Web 21.1.0), fallen die Sprungmarken in der festen Leiste weg: Sonst
+schieben sie auf einem Laptop die Einträge darunter aus dem Bild, und die
+Einträge sind die Wege durch die Anwendung. Am Handy stehen die Sprungmarken
+immer, dort ohne Markierung: Die Schublade liegt vor dem Inhalt, und wer sie
+geöffnet hat, sieht die Karten nicht. Ein Sprung schließt sie.
 
 ![Dieselbe Seite bei 390 px und die geöffnete Schublade](bilder/schublade-mobil.png)
 
@@ -366,7 +369,7 @@ orange Markierung bleibt.
 **Ganz unten auf jeder Seite** steht die Fußzeile — auch vor der Anmeldung.
 Sie ist zweizeilig: oben Lizenz und Versionsnummer, darunter die Verweise auf
 **Impressum** und **Datenschutz**. Beide Seiten sind ohne Anmeldung erreichbar;
-was darin steht, hinterlegt die Verwaltung (Abschnitt 11.5).
+was darin steht, hinterlegt die Verwaltung (Abschnitt 11.5a).
 
 Die einzige Seite ohne diese Verweise ist der **Einrichter**: Er läuft, bevor
 die Anwendung eine Datenbank hat, und die beiden Rechtstextseiten brauchen
@@ -3436,14 +3439,15 @@ koppeln".
 ## 11. Verwaltung (Admin)
 
 **Was andere Konten und die Anlage nach außen betrifft.** Der Block
-**Verwaltung** unter dem Zahnrad hat fünf Punkte, und dieses Kapitel folgt
+**Verwaltung** unter dem Zahnrad hat sechs Punkte, und dieses Kapitel folgt
 ihnen:
 
 | Menüpunkt | Abschnitt | wozu |
 |---|---|---|
 | **NutzerInnen** | 11.2, 11.3 | Konten sehen, anlegen, ändern, löschen; je Konto die Kontoseite (11.1) |
 | **Konto-Backups** | 11.4 | die Regeln, die für **alle** Konten gelten |
-| **Installation** | 11.5 | Name, Logo, Impressum, Datenschutzerklärung |
+| **Installation** | 11.5 | Name, Adressen, Logo |
+| **Rechtstexte** | 11.5a | Impressum, Datenschutzerklärung, Nutzungsbedingungen, AVV — mit Vorschau beim Tippen |
 | **Demo-Konto** | 11.6 | anlegen, zurücksetzen, entfernen |
 | **Protokoll** | 11.7 | nachlesen, wer wann was im Betrieb getan hat; für die BetreiberIn dazu das Archiv |
 
@@ -3984,11 +3988,12 @@ ohnehin nicht mehr gesperrt. Es kommt eine Rückfrage, und der Vorgang wird
 > **Hier stehen IP-Adressen und E-Mail-Adressen im Klartext.** Ohne sie wäre
 > die Liste „irgendwo war irgendwer gesperrt" und damit wertlos — man kann
 > eine Sperre nicht aufheben, ohne zu wissen, welche. Alles verfällt nach
-> **30 Tagen**, und das ist keine Einstellung. Die Angaben fahren allerdings
-> in **jeder Komplettsicherung** mit, solange die Sicherung aufbewahrt wird.
-> **Der Datenschutztext deiner Installation gehört deshalb nachgezogen** —
-> einen Baustein zum Übernehmen findest du unter *Verwaltung → Installation*
-> beim Datenschutztext.
+> **30 Tagen**, und das ist keine Einstellung. In die Komplettsicherung
+> gehen sie seit Web 20.39.0 **nicht** mit — die Tabelle fährt dort ohne
+> Zeilen mit; bis dahin stand sie darin, solange die Sicherung aufbewahrt
+> wurde. **Die Datenschutzerklärung deiner Installation nennt das am
+> besten** — einen Baustein zum Übernehmen findest du unter *Verwaltung →
+> Rechtstexte*, Reiter Datenschutzerklärung (11.5a).
 
 Die Seite ist auch im **Wartungsmodus** erreichbar. Das ist Absicht: Wer
 jemanden wieder hereinlassen muss, während die Anwendung zu ist, braucht
@@ -4035,11 +4040,9 @@ versiegelten Abzug eines Komplett-Backups.
 ### 11.5 Installation
 
 Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der
-**Name**, die **Adressen**, das **Logo** und die **vier Rechtstexte** —
-Impressum, Datenschutzerklärung, Nutzungsbedingungen und die Vereinbarung zur
-Auftragsverarbeitung. Bis Web 15.1.0
-hieß die Seite „Rechtstexte", und das Logo lag auf der alten Seite „Wartung"; die alte
-Adresse führt weiterhin hierher.
+**Name**, die **Adressen** und das **Logo**, untereinander in einer Spalte. Die
+vier Rechtstexte stehen seit Web 21.1.0 auf einer eigenen Seite
+(11.5a); bis dahin standen sie hier in der rechten Spalte.
 
 **Der Name** (seit Web 20.8.0) steht zuoberst und gilt für **alles**:
 Browsertab, Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt — und
@@ -4096,12 +4099,50 @@ hat; eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch f�
 bereits angemeldete Konten. *Wechselnd* würfelt je Anmeldung neu; innerhalb
 einer Sitzung bleibt das Logo stehen, damit es beim Blättern nicht springt. Die
 Kachel daneben zeigt, was gerade gilt. Das Logo hat einen **eigenen** Knopf —
-es soll nicht auf einen halbfertigen Rechtstext warten.
+es soll nicht auf eine halbfertige Adresse warten.
 
-**Impressum und Datenschutzerklärung** stehen rechts, mit **„Ansehen"** im
-Kartenkopf: Der Link öffnet die öffentliche Seite. Beide sind **ohne
-Anmeldung** erreichbar und in jeder Fußzeile verlinkt. Sie teilen sich eine
-Speichern-Leiste, und die nennt, **was** ungespeichert ist.
+### 11.5a Rechtstexte
+
+**Die vier Texte, die diese Anlage nach außen zeigt:** Impressum,
+Datenschutzerklärung, Nutzungsbedingungen und die Vereinbarung zur
+Auftragsverarbeitung (AVV). Seit Web 21.1.0 haben sie eine eigene Seite unter
+**Verwaltung → Rechtstexte**; von Web 15.1.0 bis 21.0.0 standen sie auf der
+Seite „Installation" (11.5). Wer die alte Adresse `admin_rechtstexte.php` als
+Lesezeichen hat, landet wieder hier.
+
+**Oben steht je Text ein Reiter.** Ein Klick öffnet den Text; hast du im
+offenen etwas geändert und nicht gespeichert, fragt die Seite vorher nach.
+Unter 720 px rollt die Reihe der Reiter seitwärts.
+
+**Links steht das Feld, rechts die Vorschau** — ab 1200 px Fensterbreite
+nebeneinander, darunter untereinander. Die Karte des Felds trägt im Kopf das
+Standdatum und **„Ansehen"**: Der Link öffnet die öffentliche Seite. Unter dem
+Feld sagt eine Plakette, ob die öffentliche Seite gerade etwas zeigt
+(„öffentlich") oder nur ihren Leertext („leer"). Alle vier Seiten sind **ohne
+Anmeldung** erreichbar; Impressum und Datenschutz sind in jeder Fußzeile
+verlinkt.
+
+**Die Vorschau läuft beim Tippen mit** (seit Web 21.1.0). Einen Augenblick
+nach dem letzten Tastendruck steht dort, was du getippt hast — gerendert auf
+dem Server, mit demselben Renderer wie die öffentliche Seite, also genau so,
+wie es dort erscheinen wird. Gespeichert wird dabei nichts. Die Plakette im
+Kopf der Vorschau sagt, was dasteht:
+
+| Plakette | heißt |
+|---|---|
+| „gespeicherter Stand" | nichts getippt — die Vorschau zeigt, was gespeichert ist |
+| „wird aktualisiert …" | du hast getippt, die Vorschau kommt gleich |
+| „ungespeichert" | die Vorschau zeigt das Getippte; gespeichert ist es erst mit dem Knopf |
+| „nicht aktuell" | die Vorschau ließ sich gerade nicht holen; darüber steht, warum |
+
+Rollst du im Feld, rollt die Vorschau an ungefähr dieselbe Stelle mit. Kommt
+die Vorschau nicht (keine Verbindung, zu viele Abrufe in kurzer Zeit), bleibt
+die letzte stehen, und der Text im Feld ist davon nicht betroffen. Ohne
+JavaScript zeigt die Vorschau den gespeicherten Stand.
+
+**Gespeichert wird der Text des offenen Reiters**, mit dem Knopf in der
+Leiste unten. Jede Änderung steht im Protokoll (Verwaltung → Protokoll, Reiter
+Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 
 > **Die Anwendung liefert keinen Text mit.** Was in Impressum und
 > Datenschutzerklärung steht, ist Sache der BetreiberIn — eine mitgelieferte
@@ -4150,7 +4191,7 @@ Speichern-Leiste, und die nennt, **was** ungespeichert ist.
 | `[Text](https://…)` | ein Link. Auch `mailto:` und eigene Seiten wie `datenschutz.php` |
 
 **HTML wird nicht ausgeführt, sondern angezeigt.** Wer `<b>fett</b>` schreibt,
-sieht `<b>fett</b>` auf der Seite stehen. Das ist Absicht: Diese beiden Seiten
+sieht `<b>fett</b>` auf der Seite stehen. Das ist Absicht: Diese vier Seiten
 sind die einzigen, auf denen fremder Text zu Struktur wird, und die einzige
 sichere Regel dafür ist, gar kein HTML durchzulassen. Aus demselben Grund gibt
 es keine Bilder — sie würden von einem fremden Server geladen, und die Anwendung
@@ -4161,21 +4202,31 @@ Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
 bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
 Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
 
-**Die Vorschau zeigt den zuletzt gespeicherten Stand**, nicht das gerade
-Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
-öffentliche Seite.
+**Das Standdatum setzt du selbst.** Es erscheint als „Stand: …" am Ende der
+Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
+bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
+Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
 
-**Textbaustein „Adresssuche"** (seit Web 15.8.0). Weil die Anwendung keinen
-Rechtstext mitliefert, kann sie den Absatz zur Adresssuche nicht selbst
-einsetzen — sie legt ihn aber bereit: Unter dem Feld für die
-Datenschutzerklärung steht ein fertiger Abschnitt zum **Kopieren**, in dem
-die tatsächlich eingetragene Dienstadresse (12.5) schon eingesetzt ist. Er
-nennt, was übertragen wird — der getippte Text und die Koordinate — und was
-nicht. Einfügen und an die eigene Erklärung anpassen musst du ihn selbst.
+#### Textbausteine
 
-Der Baustein erscheint nur, solange die Adresssuche eingeschaltet ist. Wer sie
-abschaltet, braucht den Absatz nicht — und ein Absatz über eine Übertragung,
-die nicht stattfindet, wäre falsch.
+**Unter der Datenschutzerklärung steht eine zugeklappte Karte
+„Textbausteine"** mit fertigen Abschnitten zum **Kopieren**. Weil die
+Anwendung keinen Rechtstext mitliefert, setzt sie diese Absätze nicht selbst
+ein — sie legt sie bereit, mit den Angaben, die auf dieser Anlage tatsächlich
+gelten. Einfügen und an die eigene Erklärung anpassen musst du sie selbst.
+
+- **„Adresssuche"** (seit Web 15.8.0) nennt den eingetragenen Dienst (12.5),
+  was übertragen wird — der getippte Text und die Koordinate — und was nicht.
+  Er erscheint nur, solange die Adresssuche eingeschaltet ist: Ein Absatz über
+  eine Übertragung, die nicht stattfindet, wäre falsch.
+- **„Schutz vor unbefugten Anmeldeversuchen"** beschreibt den Ratenschutz
+  (11.4a): was gespeichert wird, wozu, und dass es nach 30 Tagen gelöscht
+  wird. Er steht immer, weil es den Ratenschutz in jeder Installation gibt.
+  Sein letzter Satz lautet seit Web 21.1.0 „Sicherungskopien der Datenbank
+  enthalten diese Angaben nicht." — bis dahin hieß es, sie **könnten** sie
+  enthalten, und das stimmt seit Web 20.39.0 nicht mehr: Das Komplett-Backup
+  nimmt die Sicherheitsereignisse ohne Zeilen mit. **Wer den alten Satz
+  übernommen hat, ersetzt ihn.**
 
 #### Nutzungsbedingungen und Auftragsverarbeitung (seit Web 20.19.0)
 
@@ -4541,11 +4592,13 @@ Die Karte ist **eingeklappt**. Wer sie braucht, braucht sie einmal nach einem
 Update oder wenn oben etwas rot steht.
 
 **Die Seite ändert nichts am Bestand.** Jede Zeile führt auf die Seite, auf
-der sich etwas ändern lässt. **Zwei Ausnahmen** führen nicht weg, sondern
-prüfen an Ort und Stelle: der fehlende **Serverschlüssel** — ohne ihn gibt es
-weder Komplett-Backup noch Versand auf ein Backup-Ziel, und der Weg dorthin
-ist ein Knopf — und die **Testmail**. Für SMTP gibt es überhaupt keine
-zuständige Seite: Der Zugang steht allein in der `config.php`.
+der sich etwas ändern lässt — ein fehlender **Serverschlüssel** etwa auf die
+Karte „Schlüssel des Servers" unter Servereinstellungen. **Eine Ausnahme**
+führt nicht weg, sondern prüft an Ort und Stelle: die **Testmail**. Für SMTP
+gibt es überhaupt keine zuständige Seite: Der Zugang steht allein in der
+`config.php`. *Bis Web 21.1.0 stand hier, auch der Serverschlüssel lasse sich
+an Ort und Stelle per Knopf anlegen — die Zeile verweist seit Web 20.0.0 auf
+die Servereinstellungen.*
 
 **Die Zahlen sind nicht alle gleich alt.** Wartungsmodus, Migrationen, Jobs,
 Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
@@ -4780,8 +4833,10 @@ nimmt jede Fassung an, weil der Datenvertrag abwärtskompatibel gehalten ist.
 Ganz oben unter **Betrieb → Updates** steht die Karte **„Wartungsmodus"** mit
 einem Schalter. Sie steht dort und nicht auf einer eigenen Seite, weil sie zum
 selben Vorgang gehört wie die Migrationen darunter: Man schaltet vor dem
-Deploy ein und nach der Migration aus. Er schließt die Installation vorübergehend für alle außer der
-Verwaltung.
+Deploy ein und nach der Migration aus. Er schließt die Anwendung vorübergehend
+für alle; offen bleiben nur die Seiten unter Betrieb. Die Karte selbst trägt
+seit Web 21.1.0 nur noch einen Satz — der Ablauf eines Updates steht hier und
+nicht mehr als Liste in der Karte.
 
 **Wofür.** Während eines Updates werden die Dateien auf dem Server nach und
 nach ersetzt, und danach muss noch die Datenbank angepasst werden. Wer in
@@ -4790,17 +4845,25 @@ sendet, bekommt einen Fehler, mit dem sie nichts anfangen kann. Mit dem
 Wartungsmodus bekommen alle stattdessen eine **Wartungsseite**, und die Geräte
 bekommen eine Antwort, die sie kennen: *später noch einmal*. **Sie behalten
 ihre Daten und liefern von selbst nach, sobald du wieder ausschaltest.** Es
-geht nichts verloren. Technisch bekommt jede Anfrage außer denen von
-Verwaltung und Betrieb **503** mit `Retry-After: 300`; wer sich anmeldet und
-nicht verwaltet, wird sofort wieder abgemeldet und sieht die Wartungsseite.
+geht nichts verloren. **Technisch entscheidet die Seite, nicht die Rolle:**
+Offen bleiben die Anmeldung, die Seiten unter Betrieb — seit Web 21.1.0
+einschließlich Komplett-Backup und Backup-Ziele — und das Schlüsselblatt; jede
+andere Anfrage bekommt **503** mit `Retry-After: 300`, auch jede Seite unter
+Verwaltung. Anmelden kann sich nur, wer verwaltet (Admin und BetreiberIn);
+alle anderen werden sofort wieder abgemeldet und sehen die Wartungsseite. Die
+Seiten unter Betrieb erreicht nur die BetreiberIn. *Bis Web 21.1.0 stand hier
+und in der Karte „außer Verwaltung und Betrieb" — das Tor hat aber nie nach
+Rollen gefragt.*
 
 **So läuft ein Update mit Wartungsmodus:**
 
 1. **Vorher** das **Komplett-Backup** machen — nicht danach. Betrieb →
    Komplett-Backup, „Jetzt sichern". Die Seite Updates nennt darüber das
    jüngste Paket mit Alter; ist es alt, ist jetzt der Zeitpunkt. Warum vorher:
-   Sobald der Wartungsmodus steht, ist die Seite Komplett-Backup selbst
-   gesperrt (gemessen: HTTP 503).
+   Das Backup soll den Stand **vor** dem Update festhalten. Seit Web 21.1.0 ist
+   die Seite Komplett-Backup auch im Wartungsmodus erreichbar — schließt der
+   Torwächter, bevor du gesichert hast, geht es trotzdem; bis dahin stand sie
+   hinter der Sperre (HTTP 503).
 2. **„Wartungsmodus einschalten"** klicken.
 3. Das Update einspielen lassen (das macht die Entwicklung).
 4. Die Seite **„Updates"** neu laden und die anstehenden Migrationen
@@ -4833,28 +4896,34 @@ freundlichen 503. **Verloren geht dabei nichts:** Beides ist ein Serverfehler,
 und beide Geräte puffern und liefern nach. Wer über die Auslieferungskette
 ausliefert, hat das Fenster gar nicht — die schaltet vorher.
 
-**Was währenddessen weiter geht.** Die **fünf Betriebsseiten** (Status,
-Statistik, Updates, Hintergrundjobs, Servereinstellungen), die Anmeldung, das
-Abmelden und der Abruf der Hintergrundjobs. **Sonst nichts** — auch nicht die
-Verwaltung, das Komplett-Backup und die Backup-Ziele. Gemessen mit
-eingeschaltetem Wartungsmodus: fünf Seiten antworten mit 200, die neun
-übrigen mit 503. Das ist Absicht: Wer umbaut, soll den Zustand der Anlage
-sehen können und sonst nichts anfassen.
+**Was währenddessen weiter geht.** Alle Seiten unter **Betrieb** — Status,
+Sicherheit, Statistik, Updates, Hintergrundjobs, Servereinstellungen und seit
+Web 21.1.0 auch **Komplett-Backup** und **Backup-Ziele** —, das
+Schlüsselblatt, die Anmeldung, das Abmelden und der Abruf der
+Hintergrundjobs. **Sonst nichts** — auch keine Seite unter Verwaltung. Das
+ist Absicht: Wer umbaut, soll den Zustand der Anlage sehen und sichern
+können und sonst nichts anfassen. Nachgemessen wird das mit jeder
+Auslieferung (`tools/proben/wartung/`).
 
-**Ein laufendes Komplett-Backup läuft weiter.** Gesperrt ist die *Seite*, nicht
-die Arbeit: Der Abruf der Hintergrundjobs bleibt offen, und das
-Komplett-Backup arbeitet in Portionen darüber. Genau dann ist sein Stand
-sogar am saubersten — weil sonst niemand schreibt. Anstoßen lässt es sich
-während der Wartung nur nicht mehr; deshalb steht es in Schritt 1.
+**Warum Komplett-Backup und Backup-Ziele dazugekommen sind:** Schließt der
+Torwächter, weil eine Migration aussteht, sagt die Seite Updates „vorher
+sichern" — und bis Web 21.0.0 führte ihr Knopf zum Komplett-Backup in die
+Sperre. Ebenso schickte die Vorbedingung einer Migration auf die
+Backup-Ziele, die gesperrt waren.
+
+**Ein laufendes Komplett-Backup läuft weiter.** Es arbeitet in Portionen über
+den Abruf der Hintergrundjobs, und der bleibt offen. Genau dann ist sein
+Stand sogar am saubersten — weil sonst niemand schreibt.
 
 **Wer sich anmeldet, aber nicht verwaltet**, wird gleich wieder abgemeldet und
 sieht die Wartungsseite. Auch das ist Absicht — während umgebaut wird, soll
 niemand mitten in einer Eingabe stehen.
 
 > **Der Wartungsmodus schaltet sich nicht von selbst ab.** Es gibt keine
-> Zeitsteuerung. Solange er steht, trägt **jede der fünf Betriebsseiten** und
-> die **Anmeldeseite** oben einen **orangen Balken** mit Zeitpunkt und Konto —
-> das sind die sechs einzigen Seiten, auf denen er überhaupt zu sehen ist.
+> Zeitsteuerung. Solange er steht, trägt **jede Seite unter Betrieb** und die
+> **Anmeldeseite** oben einen **orangen Balken** mit Zeitpunkt und Konto —
+> das sind die einzigen Seiten, auf denen er überhaupt zu sehen ist (seit
+> Web 21.1.0 neun; das Schlüsselblatt trägt ihn nicht, es wird gedruckt).
 > Alle anderen zeigen die Wartungsseite, und die sagt nicht, seit wann.
 > (Bis Web 15.5.1 fehlte er auf der **Statistik**: die eine Betriebsseite, auf
 > der man länger liest als anderswo.)
@@ -4888,15 +4957,17 @@ Mehr als diese Datei ist der Schalter nicht.
 Unter **Betrieb → Hintergrundjobs** steht in der Karte **„Zustand"**, ob die
 regelmäßige Arbeit noch läuft: je Job wann er zuletzt lief, wer ihn angestoßen
 hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
-**„scheitert"**, wird unter anderem der Papierkorb nicht mehr geleert; die
+**„Fehler"**, wird unter anderem der Papierkorb nicht mehr geleert; die
 Ursache steht in derselben Karte im Klartext.
 
 Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Aufzeichnungen",
-sondern welche. Vier Gründe kommen vor: eine **Lücke in der Nummernfolge**
+sondern welche. Fünf Gründe kommen vor: eine **Lücke in der Nummernfolge**
 (eine Uhr hat ein Teilstück nie nachgeliefert; die Aufzeichnung bleibt dann so stehen,
 wie sie ist), **zu viele Punkte** (über 50 000 in einer Aufzeichnung), **Punkte auf
-ausgedünnten GPS-Daten** (hier sollte immer null stehen) und eine **nicht
-bestandene Prüfung** (dabei wurde nichts gelöscht und nichts ersetzt). Ein
+ausgedünnten GPS-Daten** (hier sollte immer null stehen), **„Wartet auf die
+Verdichtung"** (es sind noch Punkte nachgekommen; sie werden erst verdichtet,
+dann ausgedünnt) und eine **nicht bestandene Prüfung** (dabei wurde nichts
+gelöscht und nichts ersetzt). Ein
 Rückstand ohne solche Listen ist normal: Er zählt auch mit, was einfach noch zu
 frisch ist.
 
@@ -5125,7 +5196,7 @@ Die Karte hat ihr eigenes „Speichern": Ein Tippfehler in der Speichergrenze
 soll die Dienstadresse nicht mit abweisen und umgekehrt. Welcher Dienst
 eingetragen ist, erscheint anschließend im Hinweis unter dem Ortsfeld, in der
 Karte „Datenschutz" jedes Profils und im Textbaustein für die
-Datenschutzerklärung (11.5). **Wer den Dienst wechselt, übernimmt den
+Datenschutzerklärung (11.5a). **Wer den Dienst wechselt, übernimmt den
 Baustein neu in die Datenschutzerklärung** — die einmal eingefügte Fassung
 nennt den alten Dienst, bis jemand sie ersetzt.
 
@@ -5380,7 +5451,7 @@ Paket, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
 wenn dieser Server ausfällt.
 
 Nicht zu verwechseln mit dem **Transportziel** eines Einsatzes — das ist die
-Zielklinik und steht unter Stammdaten.
+Zielklinik und steht unter Einstellungen → Standorte.
 
 Was dabei zu wissen ist:
 

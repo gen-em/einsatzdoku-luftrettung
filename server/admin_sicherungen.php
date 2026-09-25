@@ -39,9 +39,8 @@ require_once __DIR__ . '/format_lib.php';  // groesse_text(), zahl_text(), datum
  *   „OHNE KONTO"     Ordner, zu denen es keine Kontozeile mehr gibt — der
  *                    Fall „Konto geloescht und neu aufgesetzt" (A8.2). Sie
  *                    haben keine Kontoseite; ihr Weg ist nur hier.
- *   „WAS HIER GILT"  die drei Backups, die Freigabe, die Schluessel — eine
- *                    zugeklappte Karte am Ende, wie auf jeder Seite der drei
- *                    Bloecke (Regel 5 aus E-S8-01).
+ *   (Die Karte „WAS HIER GILT" ist mit P5c/AP9 fort, E-P5c-49 — die drei
+ *   Backups, die Freigabe und die Schluessel stehen im Handbuch 11.4.)
  *
  * Die Seite liest damit EIN Verzeichnis fuer die Zahlen (edbak_ablage_zahlen)
  * und EIN weiteres fuer die verwaisten Ordner. Die Kontenschleife ist fort.
@@ -443,8 +442,12 @@ ui_seite_start(['titel' => 'Konto-Backups']);
           <?php ui_feld(['name' => 'pakete', 'label' => 'Aufbewahrung je Konto',
                          'art' => 'number', 'wert' => (string)edbak_aufbewahrung(),
                          'attr' => 'min="1" max="100"',
+                         /* „ein freigegebenes nie" war zu weit (Endzählung AP9,
+                            B-4): `edbak_verdraengen()` schont nur eine Freigabe,
+                            die noch nicht eingelöst ist. */
                          'klein' => 'Pakete; ältere löscht das nächste Sichern, das '
-                                  . 'jüngste und ein freigegebenes nie.']); ?>
+                                  . 'jüngste und ein noch nicht eingelöst '
+                                  . 'freigegebenes nie.']); ?>
         </div>
         <?php ui_schalter(['name' => 'mail', 'label' => 'Erinnerung an Admins per E-Mail',
                            'an' => edbak_admin_mail_an(),
@@ -690,8 +693,10 @@ ui_seite_start(['titel' => 'Konto-Backups']);
                        'attr' => ' autocomplete="off"',
                        'klein' => 'Zur Bestätigung abtippen. Ist die Begleitdatei nicht '
                                 . 'lesbar, gibt es keine Adresse — dann genügt der Haken.']); ?>
+        <?php /* Hier stand bis Web 21.1.0 derselbe Haken wie beim einzelnen
+                 Paket — gelöscht wird aber der ganze Ordner (B-5). */ ?>
         <label><input type="checkbox" name="confirm_unlesbar" value="ja">
-          Ich entferne ein Paket, das sich keinem Konto mehr zuordnen lässt.</label>
+          Ich entferne Pakete, die sich keinem Konto mehr zuordnen lassen.</label>
       </div>
       <div class="dialog-fuss">
         <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',

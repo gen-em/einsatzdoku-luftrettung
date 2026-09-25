@@ -12,6 +12,11 @@ AP1; jedes Paket schreibt seinen Abschnitt fort.
 
 | Was | Warum nicht | Wann dann |
 |---|---|---|
+| **Die Leiste zwischen 800 und 946 px Fensterhöhe** (AP9, F-P5c-164) | **Gemessen, nicht behoben:** Die Sprungmarken fallen erst unter 800 px weg (E-P5c-131). Darüber passen drei Listen nicht ganz — Servereinstellungen braucht 947 px, Status 891, Updates 835; bei 1280 × 800 sind es 16, 15 und 17 von 18. Die Vorlage an die Betreiberin nannte nur 720 und 900 px. | P-P5c-43 — ob das stört, sieht, wer so ein Fenster hat |
+| **Die Vorschau der Rechtstexte in Firefox, WebKit und am Handy** (AP9) | Die Bedienwege laufen in Chromium am Schreibtischfenster (2 von 2); am Handy ist die Seite bei 390 px als Bild gemessen (Reihe rollt, kein Überlauf), getippt wurde dort nicht. | P-P5c-39 |
+| **Schlüssel- und Notfallblatt aus Firefox auf Papier** (AP9) | Playwright druckt nur aus Chromium ein PDF — der Härtefall 1013 von 1017 px ist Chromium. Firefox setzt Schrift und Ränder anders; 4 px Luft können dort fehlen. | P-P5c-41 |
+| **Der Wartungsmodus mit Torwächter auf Staging** (AP9, E-P5c-134) | Örtlich misst die Wartungsprobe, dass Komplett-Backup und Backup-Ziele im Wartungsmodus antworten und den Balken tragen (6b, Gegenprobe rot). Den Weg „Torwächter schließt → vorher sichern → Ausstehende ausführen" gibt es nur nach einem echten Deploy. | P-P5c-42 |
+| **Die Datenschutzerklärung der eigenen Installation** (AP9, F-P5c-147, -153) | Was in ihr steht, ist Sache der BetreiberIn. Zwei Bausteine, die sie vielleicht übernommen hat, haben sich geändert. | P-P5c-40 |
 | **`update.php` mit der zerstörenden Migration an einem echten Bestand** (AP8) | Örtlich gemessen: Schemaprobe auf vier Fassungen (Fall 5: Sperre, keine Freigabe hilft, danach ohne Verlust), der Sandbox-Bestand migriert, die gesperrte Lage in Betrieb → Updates und auf der Kommandozeile gestellt (1g). Ob Staging oder Produktiv eine Zeile ohne Konto oder ein FTP-Ziel tragen, sagt erst der Lauf dort — und über 21.0.0 zurück geht es nur mit dem Rückfallstand. | nach dem Merge (Staging), nach dem Tag (Produktiv): P-P5c-35 |
 | **Eine echte Sicherung von vor 21.0.0 einspielen** (AP8) | **Mit Absicht nicht** (E-P5c-127): Nach 1.0 gibt es keine alten Daten, eine Komplett-Sicherung aus Altdaten wird nie eingespielt, und der eigene Bestand kommt über ein Einmal-Skript (Nr. 324). Gemessen bleibt der Lesepfad maschinell: der Kreislauf `edbak-alt` gegen eine Altsicherung (Nutzlast 7) und Teil 13 der Wiederherstellungsprobe mit einer gestellten Nutzlast 11 samt Standortauswahl. | entfällt — P-P5c-37 gestrichen |
 | **Der Punktvergleich der GPX-Probe auf frischer Anlage** (AP8, F-P5c-137) | Im Prüfstand vergleicht Teil 2 nichts, solange der Nachlauf die Demo-Spuren nicht gepackt hat — mit dem Code von AP7 ebenso. Belegt ist der Vergleich allein nach dem Nachlauf (95 / 0, 137 860 Einzelvergleiche). | **erledigt** mit Nr. 325 (1h) — der Bericht von `P5c-AP8` bleibt rot, der nächste Prüfstand misst den Vorlauf mit |
@@ -258,6 +263,42 @@ unverändert.
 | **Gegenprobe** | dieselbe Abfolge, Vorlauf auf 0 Runden gestellt, danach zurück | **rot, 96 / 2** — „nach 0 Runden noch nicht fertig", 0 von 204 verglichen |
 | **Billige Riegel** | `pruefen.sh alle`, `bestand.py`, Textprobe | *im Commit `P5c-325`* |
 
+## 1i. Messprotokoll AP9 (25.09.2026, Web 21.1.0)
+
+| Mittel | Aufruf | Zahl |
+|---|---|---|
+| **Ausgangszählung** (AP9b) | vier lesende Agenten je Seitengruppe und eine grep-geführte Gegenprobe, Zählregel Fassung 1, vor jeder Änderung | S 230, Sb 101, K 81 / 153 Sätze, 36 Karten über dem Soll, 8 Karten „Was hier gilt"; die Abweichung in K führte zu Fassung 2 (E-P5c-128) |
+| **Endzählung** (AP9h) | dieselben 4 + 1 Agenten, lesend, Zählregel Fassung 2, 16 Seiten | **66 Karten, 11 Seitenköpfe (keiner über 1 Satz), 0 Karten „Was hier gilt"**; über dem Soll **2**, von Gruppe und Gegenprobe gleich gefunden: Karte „Wartungsmodus" (Satz + Ablaufliste) und eine Kleinzeile mit zwei Sätzen (Servereinstellungen) → beide behoben. Abweichungen zwischen Gruppen und Gegenprobe nur in Kn (je Fassung gegen je Stelle gezählt, erklärt). Nebenbefunde: rund 25, daraus F-P5c-158 bis -163 |
+| **Ankerprüfung** (AP9d) | `php tools/quelltext/anker.php`; Gegenprobe mit einem eingebauten falschen Anker | **50 Verweise auf 102 Marken, 0 ohne Ziel, 0 dynamisch**; die Gegenprobe rot |
+| **Leiste ohne Rollen erreichbar** | Playwright, BetreiberIn, 14 Seiten; gezählt: Eintrag im Bild **oder** Kopf seiner zugeklappten Gruppe (F-P5c-157) | vor dem Paket (Stylesheet von vor Option 1 eingespielt): 900 px **14 von 14**, 720 px **9 von 14** · Option 1: 900 px **13 von 14**, 720 px **6 von 14** · mit E-P5c-131 (echtes Stylesheet): **720 px 14 von 14**, **900 px 13 von 14** (Servereinstellungen 16/18) · sieben Höhen: 720, 768 (1024 breit), 799, 960 alle 14; **800: Status 15, Updates 17, Server 16; 850: Status 17, Server 16** (F-P5c-164) |
+| **Übersicht und Leiste im Bild** (AP9e) | Playwright 1440 und 390 px gegen M-P5c-01c | wie im Mockup; Kontraste Weiß auf Dunkelblau **13,62**, Dunkelblau auf Rauch **12,48**, Gedämpft auf Rauch **5,30** : 1 |
+| **Druckblätter** (AP9f) | `page.pdf()` aus Chromium, `media: 'print'` (F-P5c-151) | Schlüsselblatt Härtefall (drei Werte, lange Namen, Staging) **1013 von 1017 px**, Produktiv **978**, Regelfall **742**; Notfallblatt **711**; je **1 Seite** |
+| **Nr. 269** | Playwright, Abruf mit `route.abort()` | Prüfen: Meldung, **vier Werte bleiben**, Knopf frei; Rückfrage: Meldung, „Später" schließt |
+| **Rechtstexte — Vorschau** (AP9g) | Playwright, Datenschutzerklärung, Text mit `## Abschnitt` und `<b>` | Plakette „gespeicherter Stand" → „wird aktualisiert …" → „ungespeichert"; h2 da, `<b>` maskiert; ohne Skript „gespeicherter Stand"; 1199 px gestapelt, 1200 px nebeneinander, 390 px Reihe rollt, Seite nicht |
+| **Rechtstexte — Speichern** | Playwright: Impressum mit Stand, Speichern | Meldung „Impressum gespeichert.", Kopf „Stand 25.09.2026", öffentliche Seite trägt den Text, Protokoll „Impressum geändert (Stand 2026-09-25)" |
+| **Rechtstexte — Ratenschutz** | 125 Zählungen im Topf, dann tippen | 429, Plakette „nicht aktuell", Meldung in einem Satzgefüge; **eine** Zeile `id:admin@…`, keine `ip:` (F-P5c-155) |
+| **Bedienwege** | `node tools/bedienprobe/probe.mjs --nur admin-rechtstexte` | **2 von 2**; Gegenprobe ohne `ui_csrf_bootstrap()` rot („Der Server hat den Vorgang abgelehnt (csrf)") |
+| **Rollenprobe** | `proben.sh rollen` | **304 / 0** (70 Handlungen × 4 Rollen und die Wirkungen; neu 12 Zellen: Seite, Speichern, Vorschau) |
+| **Wartungsprobe** | `proben.sh wartung` | **69 / 0**; neu 6b (Komplett-Backup und Backup-Ziele offen, mit Balken); Gegenprobe ohne den Eintrag **2 rot** (6b, 17) |
+| **Diensttage-Leiste unverändert** (Konzept AP9: „keine Abweichung") | Playwright, Demo-Konto, `index.php`; die berechneten Stile aller `details.akkordeon` ohne `.leiste-gruppe` (Kopf, Text, Winkel, Inhalt; 11 Eigenschaften und Lage), einmal mit dem Stylesheet von `origin/main`, einmal mit dem neuen, 1440 / 1280 / 390 px | **156 Messungen, 0 Abweichungen** — die Signatur `span.akkordeon-text <summary.akkordeon-zeile>` im Stilvergleich kommt allein von der Einstellungsleiste |
+| **Stilvergleich** | `gegen.sh` gegen `origin/main`, dann `--schreiben` | vorher gegen `geplant.txt` aus AP8: **57 ungeplant, 26 nicht gemessen** — alle 57 durchgesehen: Leiste (Option 1), Bereichskarten, Druckblätter, Vorschau, einspaltige Installation, dazu die Lage absolut gesetzter Elemente (`span.nur-vorlesen`); danach geschrieben: **42 276 Elementmessungen, 170 Signaturen** |
+| **Billige Riegel** | `pruefen.sh alle`, `zaehlen.php` | Quelltext **13 von 13**; Register **40 Zeilen, 0 über der Decke** (Z25, Z26 Zeilen und Dateiname nachgezogen) |
+| **Erster Prüfstand — nicht als Beleg verwendet** | `hochfahren.sh --neu`, `pruefen.sh` → Stufe `haupt` (20.37.3 → 21.1.0, Stufenregel `migration` für die Migrationen, die der Zweig gegen `main` trägt), 50 Proben | **50 grün, 0 rot, 0 nicht gemessen, 2 344 s.** Darin Bilderlauf **925 s** mit den neuen Seiten `29-einstellungen-uebersicht` und `43d-rechtstexte`, Bedienprobe **359 s**, Messstand **633 s**, Stilvergleich gegen `geplant.txt` (170 Signaturen), beide Kreisläufe, Schemaprobe, `syntax-php` **503 / 0**. Nicht als Beleg verwendet, weil danach die Stufe in der Konzeptzeile berichtigt wurde („neben" → „haupt") — der Baum änderte sich |
+| **Zweiter Prüfstand — nicht als Beleg verwendet** | derselbe Aufruf auf frischer Anlage | **49 grün, 1 rot, 2 399 s.** Rot: die Wartungsprobe, Fall 15, „503 kommt schneller als die Antwort ohne Wartung" — **4,6 ms statt 4,0 ms** (F-P5c-165) |
+| **Fall 15 einzeln** (F-P5c-165) | `proben.sh wartung`, zwölfmal mit dem alten Fall, fünfzehnmal mit dem neuen; dann Gegenprobe mit `usleep(6000)` vor der 503 in `wartung_tor()` | alt: **11 von 12** grün, die 503 bei 1,4–1,9 ms, einmal **4,4 ms** gegen 3,6 ms · neu (Median aus fünf): **15 von 15** grün, Median 1,5–2,0 ms gegen 3,8–6,1 ms · Gegenprobe **rot** (Median 9,4 gegen 5,4 ms), danach 69 / 0. Die Läufe 13 bis 27 zeigten zusätzlich Fall 8 und 9 mit 429 — der Topf `pair` war von den Wiederholungen gesperrt (Abschnitt 3), nach dem Leeren grün |
+| **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh`, dritter Lauf | *steht in der Commit-Nachricht von `P5c-AP9`* |
+
+**Liste der berichtigten Sätze (F-P5c-160):** Kontoseite des Demo-Kontos
+(Aktionsmenü, Setz-Link) · Archiv-Verweis auf `#das-archiv-nur-betreiberin` ·
+Seitenkopf NutzerInnen · Backup-Ziele „Wartet auf den nächsten Lauf" (drei
+Gründe, „Sicherungen") · Aufbewahrung am Ziel „als Vorgabe … je Konto" ·
+Konto-Backups „ein noch nicht eingelöst freigegebenes nie" · Ordner-Dialog
+„Pakete" · Statusseite „ein fehlendes Muss färbt die Ampel rot, ein knappes
+orange" · Sicherheit „Leiter wie bei der Anmeldung" · Servereinstellungen
+„wie vor Web 20.0.0" und „Umstellung" ohne Zusatz, wenn vollständig ·
+Updates ohne „(R12)", „(R65)", „(R66)" · Handbuch 12.1 (Serverschlüssel),
+12.4 („Fehler", fünf Gründe), 12.7 (Standorte), „Der Wartungsmodus".
+
 ## 2. Prüfliste
 
 | Nr. | Punkt | Bedienweg | Erwartet | Scheitern erkennbar an | Stand |
@@ -299,9 +340,43 @@ unverändert.
 | P-P5c-35 | **`update.php` mit der zerstörenden Migration** (AP8) | nach dem Merge auf Staging, nach dem Tag auf Produktiv: **vorher ein Komplett-Backup** (Betrieb → Komplett-Backup) und in phpMyAdmin `SELECT COUNT(*)` der sechs Tabellen `bases`, `vehicles`, `crew_presets`, `resources`, `bw_units`, `transport_dests` notieren; dann Betrieb → Updates. Steht eine Zeile auf „WIRD NICHT AUSGEFÜHRT — Vorbedingung nicht erfüllt", den Weg aus der Zeile gehen (Eintrag ohne Konto einem Konto zuordnen oder löschen; FTP-Ziel unter Verwaltung → Sicherungsziele umstellen oder löschen), dann erneut ausführen; Wartung aus | drei Migrationen `Web 21.0` angewendet; dieselben sechs Zahlen wie vorher (weniger nur um die Zeilen, die man selbst gelöscht hat); `SHOW CREATE TABLE bases` zeigt `user_id int(10) unsigned NOT NULL` (MySQL: `int unsigned`); `SHOW TABLES LIKE 'user_bases'` leer; Betrieb → Status ohne ausstehende Migration | ein Häkchen an einer Vorbedingungszeile; eine Migration, die trotz Eintrag ohne Konto oder FTP-Ziel läuft; eine Zahl, die ohne eigenes Löschen gesunken ist | offen |
 | P-P5c-36 | **Ein Tag mit „Anderem Rettungsmittel"** (AP8, Nr. 169) | auf Staging, einmal am Handy: Diensttag anlegen → Rettungsmittel „Anderes Rettungsmittel …" → Bezeichnung eintippen, Typ „Standard", Betriebsart **luftgebunden**; Besatzung ansehen; dann auf **bodengebunden** umschalten, wieder ansehen; einmal den Typ auf **Bergwacht** stellen; speichern; einen Einsatz an diesem Tag anlegen | bei luftgebunden sofort **Pilot 1, Pilot 2, HEMS-TC, Flugretter, Sonstige**, bei bodengebunden **Fahrer, Praktikant, Sonstige** — auch mit Typ Bergwacht (E-P5c-126); nach dem Speichern dieselben Rollen am Tag und im Einsatzformular; ein Tag dieser Art von vor dem Deploy trägt nach `update.php` die Rollen seiner Betriebsart | keine Besatzungsfelder am Tag oder im Einsatz (der Stand vor 21.0.0); die Rollen der falschen Betriebsart; auf dem Handy eine waagerecht schiebbare Seite | offen |
 | ~~P-P5c-37~~ | ~~**Eine Sicherung von vor dem Deploy einspielen**~~ (AP8) | **gestrichen** am 25.09.2026 (E-P5c-127): Er sollte vor dem Merge eine Konto-Sicherung auf Staging ziehen und nach 21.0.0 wieder einspielen — also eine Rückwärtskompatibilität belegen, die nach Auskunft der Betreiberin nicht gebraucht wird. Der Lesepfad bleibt bis 1.0 und ist maschinell gemessen (1g) | — | — | gestrichen |
-| P-P5c-38 | **Sicherungsziele ohne FTP** (AP8, Nr. 46) | Verwaltung → Sicherungsziele → neues Ziel, die Auswahl „Protokoll" öffnen; dann Betrieb → Status und Betrieb → Hintergrundjobs; auf Produktiv nach dem Tag dasselbe | die Auswahl kennt **SFTP und FTPS**; die Karte „Was hier gilt" sagt „FTP wird nicht angeboten."; keine Plakette und keine Zeile „Zuletzt übergangen"; der Versandjob meldet kein `uebergangen` | ein Eintrag „FTP"; eine Statuszeile, die zum Umstellen auffordert | offen |
+| P-P5c-38 | **Backup-Ziele ohne FTP** (AP8, Nr. 46; Ort und Karte berichtigt mit AP9) | Betrieb → Backup-Ziele → neues Ziel, die Auswahl „Protokoll" öffnen; dann Betrieb → Status und Betrieb → Hintergrundjobs; auf Produktiv nach dem Tag dasselbe | die Auswahl kennt **SFTP und FTPS**; keine Plakette und keine Zeile „Zuletzt übergangen"; der Versandjob meldet kein `uebergangen`. *Hier stand bis AP9 „Verwaltung → Sicherungsziele" und die Karte „Was hier gilt" — beides gibt es so nicht mehr* | ein Eintrag „FTP"; eine Statuszeile, die zum Umstellen auffordert | offen |
+| P-P5c-39 | **Die Rechtstexte mit Vorschau** (AP9, Nr. 121) | auf Staging nach dem Merge, als BetreiberIn: Verwaltung → Rechtstexte, Reiter Datenschutzerklärung; ein paar Zeilen tippen, eine davon mit `## Überschrift`; dann Reiter „Impressum" anklicken, ohne zu speichern; einmal in Firefox, einmal am Handy | Die Plakette wechselt nach „ungespeichert", die Vorschau zeigt die Überschrift als Überschrift; der Reiterwechsel fragt „Der geänderte Text ist nicht gespeichert. Trotzdem wechseln?"; am Handy rollt die Reiterreihe, die Seite nicht | Plakette bleibt auf „wird aktualisiert …" oder springt auf „nicht aktuell" (Token, Ratenschutz); Wechsel ohne Rückfrage | offen |
+| P-P5c-40 | **Die eigene Datenschutzerklärung nachziehen** (AP9, F-P5c-147, -153) | Verwaltung → Rechtstexte → Datenschutzerklärung: steht dort der Abschnitt „Schutz vor unbefugten Anmeldeversuchen" oder „Welche Daten verschlüsselt gespeichert werden"? | Der letzte Satz des ersten heißt „Sicherungskopien der Datenbank enthalten diese Angaben nicht."; der zweite nennt die Notizen eines Einsatzes (verschlüsselt) und die eines Diensttags (Klartext) — die aktuelle Fassung steht in der Karte „Textbausteine" bzw. im Handbuch 11.5a | „können diese Angaben enthalten"; die Notizen fehlen | offen |
+| P-P5c-41 | **Schlüsselblatt und Notfallblatt aus Firefox auf Papier** (AP9) | auf Staging: Servereinstellungen → Schlüssel des Servers → Schlüsselblatt; dann (neues Passwort oder Profil) das Notfallblatt; je Druckvorschau in Firefox, A4 | **je eine Seite**; oben die Zeile „Staging — Testdaten …"; nummerierte Vierergruppen; unten „Mehr." mit der kurzen Handbuchadresse | eine zweite Seite (Firefox setzt anders als Chromium — 4 px Luft im Härtefall) | offen |
+| P-P5c-42 | **Wartungsmodus: sichern, obwohl der Torwächter geschlossen hat** (AP9, E-P5c-134) | beim nächsten Deploy mit Migration auf Staging: Betrieb → Updates → Knopf „Komplett-Backup" in der Karte „Ausstehende Updates"; dann Betrieb → Backup-Ziele; dann eine Seite unter Verwaltung | Komplett-Backup und Backup-Ziele öffnen, beide mit dem orangen Balken; „Jetzt sichern" läuft; die Seite unter Verwaltung zeigt die Wartungsseite | 503 auf Komplett-Backup — dann steht `admin_komplettsicherung.php` nicht in `WARTUNG_AUSNAHMEN` der ausgelieferten Fassung | offen |
+| P-P5c-43 | **Die Leiste an einem Laptop** (AP9, E-P5c-131, F-P5c-164) | am eigenen Laptop mit einem Fenster um 700 und um 850 px Höhe: Betrieb → Servereinstellungen, dann Betrieb → Status | unter 800 px: keine Sprungmarken in der Leiste, alle 18 Einträge ohne Rollen erreichbar; um 850 px: Sprungmarken da, bei Servereinstellungen und Status reicht die Leiste über den Rand und rollt in sich | — (Hinweis: Ob die Lücke zwischen 800 und 946 px stört, entscheidet die BetreiberIn; zu ändern wäre die eine Höhe in `style.css`) | offen |
+| P-P5c-44 | **Die Texte lesen** (AP9, E-P5c-06) | an einem ruhigen Nachmittag: jede Seite unter Verwaltung und Betrieb einmal ansehen und je Karte einen Verweis „Handbuch: …" anklicken | je Karte höchstens ein Satz; jeder Verweis landet auf der passenden Überschrift, nicht am Anfang des Handbuchs | ein Satz, der nicht stimmt — die Endzählung hat rund zwanzig gefunden, sie liest aber Quelltext, nicht die Seite | offen |
 
 ## 3. Grenzen der benutzten Prüfmittel
+
+**Aus AP9:**
+
+- **Die Zählung liest Quelltext, nicht die Seite.** Bedingte Sätze sind je
+  Zweig gezählt, Schleifen je Katalogeintrag; welche Sätze eine bestimmte
+  Anlage wirklich zeigt, hängt am Zustand. Und die Zählregel beantwortet die
+  Frage „wie viele Sätze", nicht „stimmen sie" — die rund zwanzig falschen
+  Sätze hat das Lesen nebenbei gefunden, nicht das Zählen (P-P5c-44).
+- **Die Zähler waren Agenten, und die Gegenprobe auch.** Zwei Zählweisen
+  derselben Regel ergaben in Kn verschiedene Zahlen (je Fassung gegen je
+  Stelle); über dem Soll lagen in beiden dieselben zwei Stellen. Belegt ist
+  die Übereinstimmung, nicht die Unfehlbarkeit.
+- **„Ohne Rollen erreichbar" ist gemessen in Chromium, mit der BetreiberIn,
+  im Demo-Bestand.** Wie viele Sprungmarken eine Seite trägt, hängt an ihren
+  Karten, und die an der Rolle und am Zustand (bedingte Karten). Die Messung
+  zählt einen Eintrag nur über seine Lage — ob er klickbar ist, misst die
+  Bedienprobe.
+- **Die Vorschau ist mit gestelltem Ratenschutz gemessen** (125 Zählungen von
+  Hand), nicht mit 120 echten Tastenpausen.
+- **Fall 15 der Wartungsprobe ist ein Zeitvergleich** — auch als Median aus
+  fünf gegen einen einzelnen Vergleichsabruf. Er belegt „das Tor greift vor
+  der Datenbank" nur, solange der Abstand (heute rund 1,5 gegen 4 ms) größer
+  ist als das Rauschen der Anlage; auf einer langsamen, belasteten Maschine
+  kann er wieder kippen (F-P5c-165).
+- **Die Wartungsprobe läuft höchstens zehnmal in zehn Minuten.** Fall 9
+  zählt je Lauf einen Fehlversuch in den Topf `pair`; ab dem elften Lauf
+  antworten Fall 8 und 9 mit 429. Wer sie wiederholt fährt, leert den Topf
+  oder wartet — der Prüfstand fährt sie einmal.
 
 **Aus AP8:**
 

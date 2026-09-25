@@ -244,6 +244,9 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                          'href' => '?neu=1']))
           : '',
   ]); ?>
+  <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — seit
+           P5c/AP9 steht diese Seite in WARTUNG_AUSNAHMEN (E-P5c-134). */ ?>
+  <?= wartung_balken() ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
@@ -383,13 +386,20 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                     ? ui_plakette('keines', ['ton' => 'orange'])
                     : ui_plakette((string)$aktiveZiele, ['ton' => 'blau'])]);
       $rueck = $autoAn ? sz_versand_rueckstand() : null;
+      /* DREI GRÜNDE FÜR „KEINE ZAHL", UND JEDER SAGT SEINEN (Endzählung AP9,
+         B-1). Bis Web 21.1.0 stand in allen dreien „solange ein Ziel nie
+         erfolgreich lief" — auch bei abgeschaltetem Versand und ohne aktives
+         Ziel. Gezählt werden Konto-Backups, Komplett-Stände und Archive des
+         Protokolls; das Wort dafür ist „Sicherungen", nicht „Pakete" (B-2). */
+      $rueckKlein = !$autoAn ? 'keine Aussage — der Versand ist aus'
+          : ($aktiveZiele === 0 ? 'keine Aussage — es gibt kein aktives Ziel'
+          : ($rueck === null
+              ? 'noch keine Aussage — ein Ziel lief noch nie erfolgreich'
+              : ($rueck === 1 ? '1 Sicherung ist' : $rueck . ' Sicherungen sind')
+                . ' neuer als der letzte erfolgreiche Versand (Schätzung; '
+                . 'gezählt wird hier, nicht am Ziel)'));
       ui_zeile(['text' => 'Wartet auf den nächsten Lauf',
-                'klein' => $rueck === null
-                    ? 'noch keine Aussage — solange ein Ziel nie erfolgreich lief, '
-                    . 'ist jede Zahl geraten'
-                    : $rueck . ($rueck === 1 ? ' Paket' : ' Pakete')
-                    . ' sind neuer als der letzte erfolgreiche Versand (Schätzung; '
-                    . 'gezählt wird hier, nicht am Ziel)',
+                'klein' => $rueckKlein,
                 'plaketten' => $rueck === null
                     ? ui_plakette('unbekannt', ['ton' => 'neutral'])
                     : ui_plakette((string)$rueck, ['ton' => $rueck > 0 ? 'orange' : 'blau'])]);
@@ -644,9 +654,13 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                          'wert' => (string)($form['behalten_konto'] ?? 6),
                          /* BIS WEB 21.0.0 STAND HIER FEST „zwei" (F-P5c-139) —
                             die Vorgabe, nicht die Einstellung unter
-                            Verwaltung → Konto-Backups. */
-                         'klein' => 'Hier auf dem Server sind es ' . edbak_aufbewahrung()
-                                  . ', dort darf es mehr sein.']); ?>
+                            Verwaltung → Konto-Backups. Und es ist die VORGABE:
+                            Ein Konto kann eine eigene Zahl haben (seit P5b/AP6,
+                            `edbak_aufbewahrung_konto()`) — „sind es N" stimmte
+                            für solche Konten nicht (Endzählung AP9, B-3). */
+                         'klein' => 'Hier auf dem Server gilt als Vorgabe '
+                                  . edbak_aufbewahrung() . ' je Konto, am Ziel darf es '
+                                  . 'mehr sein.']); ?>
           <?php ui_feld(['name' => 'behalten_komplett', 'label' => 'Komplett-Stände behalten',
                          'art' => 'number', 'attr' => 'min="1" max="999"',
                          'wert' => (string)($form['behalten_komplett'] ?? 12),

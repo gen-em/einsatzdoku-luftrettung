@@ -80,9 +80,9 @@ arbeiten, nicht erneut kollidieren:
 | 241 | Sitzungsablage — PHP-Sitzungen im geteilten Hosterverzeichnis | Schritt 16 |
 | 242 | Sitzungsbindung per Cookie-Token | Schritt 18 |
 | 243 | Staging-Umgebungsbanner | erledigt 23.09.2026 (Web 20.38.0) |
-| 244 | Einstellungen-Übersicht: Bereiche als Gliederung erkennbar | 10c AP9 |
-| 245 | Erklärtext-Regel und Überarbeitung aller Texte in Verwaltung und Betrieb | 10c AP9 |
-| 246 | Schlüsselblatt und Notfallblatt: Druckseite | 10c AP9 |
+| 244 | Einstellungen-Übersicht: Bereiche als Gliederung erkennbar | erledigt 25.09.2026 (Web 21.1.0) |
+| 245 | Erklärtext-Regel und Überarbeitung aller Texte in Verwaltung und Betrieb | erledigt 25.09.2026 (Web 21.1.0) |
+| 246 | Schlüsselblatt und Notfallblatt: Druckseite | erledigt 25.09.2026 (Web 21.1.0) |
 | 247 | Serverschlüssel wechseln — als Vorgang | Schritt 18 |
 | 248 | Prüftor Stufe 1 zählt die `error_log(`-Aufrufe | 10c AP3 |
 | 249 | TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert | Schritt 18 (der Rest; teilweise gelöst mit Konzept RW) |
@@ -108,7 +108,7 @@ kollidieren.
 | 250 | Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten | Schritt 17 |
 | 251 | Cookie-Attribut `secure` der Sitzung — zwei Arten HTTPS-abhängig, zwei fest | Schritt 18 |
 | 252 | Gelaufene Migrationen fragen das Schema 57× von Hand | P8 (R66) |
-| 253 | Datum-Zeit-Trenner vereinheitlichen | 10c AP9 |
+| 253 | Datum-Zeit-Trenner vereinheitlichen | erledigt 25.09.2026 (Web 21.1.0) |
 | 254 | Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs | erledigt 21.09.2026 |
 | 255 | `lokal_einrichten.sh` kopiert Handbuch und Bilder nicht nach `server/doku/` | behoben 21.09.2026 |
 | 256 | Vier `api/`-Dateien antworten auf eine falsche Methode anders als die übrigen | erledigt 21.09.2026 |
@@ -1165,21 +1165,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Fehler. Dieselbe Frage stellt sich für
     `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
 
-121. **Vorschau der Rechtstexte beim Tippen.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
-    berichtigt 05.09.2026 in S8/AP3.* **Eine Vorschau gibt es seit Web
-    9.11.0** — sie steht unter dem Feld, entsteht auf dem SERVER mit
-    `rt_html()` und zeigt den zuletzt **gespeicherten** Stand. Der Mockup-Text
-    hatte sie übersehen; sie ist nicht neu zu bauen. Was fehlt, ist das
-    Mitlaufen beim Tippen. **Zu tun:** entscheiden, wie — ein zweiter
-    Renderer im Browser ist ausgeschlossen (er müsste dieselbe Positivliste
-    für Linkziele, dieselbe Maskierreihenfolge und dieselben Zeichenfilter
-    führen, und beim nächsten Fund würde einer von beiden vergessen, E-P3-38);
-    bliebe ein Abruf gegen den Server beim Innehalten. **Neue Funktion.**
-    Zuordnung: Backlog-Runde.
-
-    **Zuordnung (20.09.2026): 10c, AP9** — die Rechtstextseiten werden dort ohnehin angefasst (E-P5c-20).
-
 122. **Freie Zeiträume und Diagramme in der Statistik.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
     Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
@@ -1602,6 +1587,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die Handbuch-Überschriften, ein Zusatz zur `linkprobe`, führt diese
     Nummer als Anlass. Sie misst Verweise aus der Anwendung ins Handbuch —
     einen Teil dieses Punkts, nicht die Dokumentenprobe selbst.
+    **Gebaut mit Web 21.1.0** (`tools/quelltext/anker.php`, im Tor unter
+    `bash tools/quelltext/pruefen.sh anker`); **dieser Punkt bleibt offen.**
 
 193. **Register und Doku führen die R42-Auswertung als offen, obwohl sie
     seit Web 15.3.0 läuft.**
@@ -2760,79 +2747,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Reset-Fluss; Wechselwirkung mit `users.session_epoch`) und gehört nicht
     in einen Verzeichniswechsel.
 
-244. **Einstellungen-Übersicht: die drei Bereiche sind als Gliederung nicht
-    erkennbar.** *Aufgenommen 18.09.2026, präzisiert 20.09.2026
-    (Auftraggeber).* Zugeordnet: **10c, AP9**.
-
-    In der Übersicht (`ui_einstellungen_uebersicht()`) gehen die
-    Bereichsnamen Einstellungen / Verwaltung / Betrieb als oberste Ebene
-    unter.
-
-    **Berichtigt am 20.09.2026 (M-P5c-01, E-P5c-29):** Gemeint war vor allem
-    das **linke Menü** (`ui_leiste_einstellungen()`), nicht die Übersicht —
-    dort fällt die fehlende Gliederung zuerst auf, weil man es auf jeder
-    Seite sieht. **Entschieden und freigegeben:** Die **Leiste** bekommt
-    Bereichsüberschriften nach **Option 1 „Linie"**; die **Übersicht**
-    bekommt je Bereich eine **eigene Karte** mit Bereichszeichen und mittigem
-    Kopf. **Der Fable-Schritt ist damit erledigt** — es braucht kein weiteres
-    Mockup.
-
-    *(Überholt, vermerkt 23.09.2026 — der Absatz „Berichtigt am 20.09.2026"
-    darüber gilt; einen Fable-Schritt gibt es nicht mehr:)* Entschieden:
-    zuerst ein Mockup mit einer klaren
-    **Überschriftenzeile je Bereich** (Bricolage, Abstand davor, Linie);
-    trägt das nicht, bekommt jeder Bereich eine **eigene Karte** mit seiner
-    Liste. Fable-Schritt (Mockup), Umsetzung klein; das Mockup läuft mit den
-    übrigen 10c-Mockups in einer Runde.
-
-245. **Erklärtext-Regel — und danach alle Texte in Verwaltung und Betrieb.**
-    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
-    **10c, AP9**.
-
-    Gemeint ist der **gesamte** Bereich Verwaltung und Betrieb unter
-    Einstellungen: viel Erklärtext, viele neue Funktionen seit S8–S10 und
-    P5a.
-
-    **Entschieden als Grundregel für `docs/Design.md`:** In der Oberfläche
-    steht je Karte **höchstens ein Satz**, der sagt, was hier passiert;
-    alles Erklärende steht im **Handbuch**, die Karte trägt den Verweis auf
-    die Sprungmarke (`hilfe.php#abschnitt`, E-P5b-08). Warnungen bleiben als
-    Meldung, Feldhinweise bleiben eine Zeile.
-
-    **Folge:** Alle Texte des Bereichs werden nach der Regel überarbeitet;
-    der ausgelagerte Text **wandert ins Handbuch und wird nicht gelöscht**.
-    Voraussetzung: 10b AP8 (Handbuch aus der Anwendung erreichbar).
-    Abnahme: ein Textpaket mit Wortliste und Bilderlauf; gezählt werden
-    Sätze je Karte (Ziel ≤ 1) und Handbuch-Verweise (Ziel ≥ 1 je Karte mit
-    ausgelagertem Text).
-
-246. **Schlüsselblatt und Notfallblatt: eine Druckseite, die eine ist.**
-    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
-    **10c, AP9**.
-
-    Drei Vorgaben für `betrieb_schluesselblatt.php` (S10) und das
-    Notfallblatt (P5b AP9):
-
-    (a) Der Schlüssel steht **abgesetzt in einer Kachel** — Rahmen, Rauch,
-    Vierergruppen, Feste Schrift.
-    (b) Der Druck passt **genau auf eine A4-Seite** (`@page A4`, Ränder,
-    kein Umbruch). Abnahme: PDF-Druck aus Chromium **und** Firefox hat je
-    eine Seite.
-    (c) Oben stehen **Marke und „NAdoku"** (das Wort-Bild-Logo) und die
-    Überschrift, damit sofort klar ist, worum es geht.
-
-    **Das ändert E-P5b-09** („ohne Logo" → mit Logo). Beide Blätter
-    bekommen denselben Baustein (`.blatt-druck`); 10b AP9 ist gebaut, das
-    Notfallblatt wird dort nachgezogen.
-
-
-    **Berichtigt am 20.09.2026 (M-P5c-01f, E-P5c-08/-30):** Oben steht
-    **nicht** „Marke + NAdoku", sondern **Bildmarke + Kurzname der
-    Installation** (`instanz_kurz()`, Vorgabe „Gen-EM NAdoku"). Ein fest
-    eingebautes „NAdoku" wäre auf einer umbenannten Installation schlicht
-    falsch. Die **Webversion steht in der Fußzeile** des Blattes.
-    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`),
-    beide Blätter mit demselben Baustein `.blatt-druck`.
 247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.**
     *Aufgenommen 20.09.2026 (aus V4 der P5c-Vorbereitung).* Zugeordnet:
     **Schritt 18**.
@@ -2926,21 +2840,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     umzuschreiben heißt, eine Anlage anders zu behandeln als die, auf der
     sie schon lief. Das Register in P8 löst es an der Wurzel; bis dahin
     steht im Zählmittel eine **Decke von 57** — sie darf nicht wachsen.
-
-253. **Datum-Zeit-Trenner vereinheitlichen.** *Aufgenommen 20.09.2026
-    (Konzept Zentralisierung, F-ZE-3/FF-5).* Zugeordnet: **10c AP9**.
-
-    Zwischen Datum und Uhrzeit steht mal ein Komma, mal ein Gedankenstrich,
-    mal nur ein Leerzeichen. Nach Schritt 15 AP7 steht die Formatierung an
-    einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
-    Suche, und deshalb wartet es bis dahin.
-
-    **Berichtigt 23.09.2026:** Gemeint ist ` · ` (Mittelpunkt mit
-    Leerzeichen), kein Gedankenstrich. **Entschieden: das Komma** (Konzept
-    P5c, E-P5c-37). Es ist auch nicht „eine Zeile": rund 18 Stellen in 11
-    Dateien (F-P5c-11). Zuordnung: **10c AP2** (die neue Protokollzeile
-    schreibt schon mit Komma) **und AP9** (die Vorgabe und die übrigen
-    Stellen).
 
 259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen
     fallen, und ihr Kernvergleich läuft gar nicht.** *Aufgenommen
@@ -3250,18 +3149,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Nicht in Schritt 15 behoben** (E-ZE-10: das Paket ändert kein
     Verhalten). Beim Anfassen mitzudenken: Der Satz muss sagen, dass der
     Zustand unklar ist, nicht dass es fehlgeschlagen ist.
-
-269. **`assets/schluesselblatt.js` — bei Netzausfall eine stille Sackgasse.**
-    Gefunden bei derselben Vermessung. Der Prüfknopf setzt `disabled = true`
-    **vor** dem Senden, und die Wiederfreigabe liegt im `.then`. Wirft das
-    `fetch`, fängt niemand: Der Knopf bleibt tot, das Fehlerfeld leer, der
-    Dialog offen. Die Person kann weder weiter noch erkennen, warum.
-    Zwei Aufrufer sind betroffen (Prüfen und Antworten). **Nicht in
-    Schritt 15 behoben.** Beim Anfassen mitzudenken: `EdApi.postForm()` aus
-    AP8c liefert im Netzfehler ein `{ ok: false, status: 0 }` statt zu
-    werfen — damit ist die Stelle danach mit drei Zeilen zu heilen.
-
-    **Zuordnung (23.09.2026): 10c AP9** — als Beifang (E-P5c-46).
 
 270. **`assets/import_ui.js` — eine 500 mit wohlgeformtem JSON gilt als
     Erfolg.** Gefunden bei derselben Vermessung (bei Aufnahme Zeile 258).
@@ -3755,6 +3642,20 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bestand der Betreiberin steht in der frischen 1.0-Anlage; das Skript
     ist danach aus dem Repositorium entfernt; die 1.0 liest keine Nutzlast
     von vor 1.0.
+
+326. **Ausgeführte Migrationen stehen nur auf der Seite Updates, nicht im
+    Protokoll.** *Aufgenommen 25.09.2026 in P5c/AP9 (F-P5c-146).* Die Karte
+    „Ausgeführt" auf Betrieb → Updates versprach, sie stehe „bis P5" dort,
+    danach führe das Audit-Protokoll die ausgeführten Kennungen (R66), und
+    sie entfalle. Das Protokoll gibt es seit Web 20.39.0 — Migrationen
+    schreibt es nicht. Der Satz ist gestrichen; die Karte ist damit die
+    einzige Stelle, an der steht, wann welche Kennung lief, und das Handbuch
+    (12.3) sagt es so. **Zu tun:** `update.php` und der Torwächter schreiben
+    je gelaufener Kennung einen Eintrag `migration_gelaufen` in den Reiter
+    Verwaltung (wer, wann, Kennung, Dauer, Ergebnis); danach entscheiden, ob
+    die Karte bleibt. *Abnahme:* ein `update.php`-Lauf mit zwei Kennungen
+    schreibt zwei Einträge, einer ohne neue Kennung keinen. *Zuordnung:*
+    Backlog-Runde (Schritt 17) oder P6.
 
 ## Erledigt
 
@@ -10814,3 +10715,168 @@ zutreffen.
     da: Mit dem Alter der Demo-Einsätze werden mehr Spuren ausgedünnt, die
     Zahl sinkt legitim; `$dateien > 0` bleibt der Riegel gegen „0
     Vergleiche".
+
+121. **Vorschau der Rechtstexte beim Tippen.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
+    berichtigt 05.09.2026 in S8/AP3.* **Eine Vorschau gibt es seit Web
+    9.11.0** — sie steht unter dem Feld, entsteht auf dem SERVER mit
+    `rt_html()` und zeigt den zuletzt **gespeicherten** Stand. Der Mockup-Text
+    hatte sie übersehen; sie ist nicht neu zu bauen. Was fehlt, ist das
+    Mitlaufen beim Tippen. **Zu tun:** entscheiden, wie — ein zweiter
+    Renderer im Browser ist ausgeschlossen (er müsste dieselbe Positivliste
+    für Linkziele, dieselbe Maskierreihenfolge und dieselben Zeichenfilter
+    führen, und beim nächsten Fund würde einer von beiden vergessen, E-P3-38);
+    bliebe ein Abruf gegen den Server beim Innehalten. **Neue Funktion.**
+    Zuordnung: Backlog-Runde.
+
+    **Zuordnung (20.09.2026): 10c, AP9** — die Rechtstextseiten werden dort ohnehin angefasst (E-P5c-20).
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-28).** Die
+    Rechtstexte sind wieder eine eigene Seite (`admin_rechtstexte.php`), ein
+    Reiter je Text, ab 1200 px die Vorschau neben dem Feld. Sie läuft beim
+    Tippen mit: 0,4 s nach dem letzten Tastendruck fragt
+    `assets/rechtstext_vorschau.js` den Endpunkt `api/rechtstext_vorschau.php`,
+    der mit `rt_html()` rendert — derselbe Renderer wie die öffentliche Seite,
+    kein zweiter im Browser. Nur Admin und BetreiberIn, Token, eigener Topf
+    `rt_vorschau` (nur das Konto, F-P5c-155). Ohne Skript bleibt der
+    gespeicherte Stand. Belegt: Rollenprobe 304 von 304 (12 neue Zellen),
+    Bedienwege `admin-rechtstexte-vorschau` und `-rueckfrage` 2 von 2, die
+    Gegenprobe ohne Token rot.
+
+244. **Einstellungen-Übersicht: die drei Bereiche sind als Gliederung nicht
+    erkennbar.** *Aufgenommen 18.09.2026, präzisiert 20.09.2026
+    (Auftraggeber).* Zugeordnet: **10c, AP9**.
+
+    In der Übersicht (`ui_einstellungen_uebersicht()`) gehen die
+    Bereichsnamen Einstellungen / Verwaltung / Betrieb als oberste Ebene
+    unter.
+
+    **Berichtigt am 20.09.2026 (M-P5c-01, E-P5c-29):** Gemeint war vor allem
+    das **linke Menü** (`ui_leiste_einstellungen()`), nicht die Übersicht —
+    dort fällt die fehlende Gliederung zuerst auf, weil man es auf jeder
+    Seite sieht. **Entschieden und freigegeben:** Die **Leiste** bekommt
+    Bereichsüberschriften nach **Option 1 „Linie"**; die **Übersicht**
+    bekommt je Bereich eine **eigene Karte** mit Bereichszeichen und mittigem
+    Kopf. **Der Fable-Schritt ist damit erledigt** — es braucht kein weiteres
+    Mockup.
+
+    *(Überholt, vermerkt 23.09.2026 — der Absatz „Berichtigt am 20.09.2026"
+    darüber gilt; einen Fable-Schritt gibt es nicht mehr:)* Entschieden:
+    zuerst ein Mockup mit einer klaren
+    **Überschriftenzeile je Bereich** (Bricolage, Abstand davor, Linie);
+    trägt das nicht, bekommt jeder Bereich eine **eigene Karte** mit seiner
+    Liste. Fable-Schritt (Mockup), Umsetzung klein; das Mockup läuft mit den
+    übrigen 10c-Mockups in einer Runde.
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-29).** Die
+    Übersicht zeigt jeden Bereich als eigene Karte mit Zeichen und Zahl im
+    Kopf (Bereichskarten), die Leiste ihre Blöcke als Überschriften mit dem
+    Winkel rechts und einer Linie dazwischen (Option 1). Gemessen bei 1440 und
+    390 px gegen das Mockup. **Die Leiste, ohne Rollen erreichbar** (18
+    Einträge, 14 Seiten): bei 1280 × 720 mit den Sprungmarken auf 6 Seiten
+    vollständig — sie fallen deshalb unter 800 px Fensterhöhe weg
+    (E-P5c-131), dann auf 14 von 14; bei 1280 × 900 auf 13 von 14, die
+    Servereinstellungen (acht Sprungmarken) bei 16 von 18.
+
+245. **Erklärtext-Regel — und danach alle Texte in Verwaltung und Betrieb.**
+    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
+    **10c, AP9**.
+
+    Gemeint ist der **gesamte** Bereich Verwaltung und Betrieb unter
+    Einstellungen: viel Erklärtext, viele neue Funktionen seit S8–S10 und
+    P5a.
+
+    **Entschieden als Grundregel für `docs/Design.md`:** In der Oberfläche
+    steht je Karte **höchstens ein Satz**, der sagt, was hier passiert;
+    alles Erklärende steht im **Handbuch**, die Karte trägt den Verweis auf
+    die Sprungmarke (`hilfe.php#abschnitt`, E-P5b-08). Warnungen bleiben als
+    Meldung, Feldhinweise bleiben eine Zeile.
+
+    **Folge:** Alle Texte des Bereichs werden nach der Regel überarbeitet;
+    der ausgelagerte Text **wandert ins Handbuch und wird nicht gelöscht**.
+    Voraussetzung: 10b AP8 (Handbuch aus der Anwendung erreichbar).
+    Abnahme: ein Textpaket mit Wortliste und Bilderlauf; gezählt werden
+    Sätze je Karte (Ziel ≤ 1) und Handbuch-Verweise (Ziel ≥ 1 je Karte mit
+    ausgelagertem Text).
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-06, -49, -128).**
+    Alle Seiten unter Verwaltung und Betrieb folgen der Ein-Satz-Regel; die
+    Karten „Was hier gilt" sind fort, ihr Inhalt steht im Handbuch unter
+    eigenen Sprungmarken, und die Ankerprüfung im Tor hält jeden Verweis
+    `hilfe.php#…` gegen das gerenderte Handbuch. Die Endzählung nach der
+    Zählregel Fassung 2 und ihre unabhängige Gegenprobe stehen im Konzept P5c
+    und im Prüfdokument.
+
+246. **Schlüsselblatt und Notfallblatt: eine Druckseite, die eine ist.**
+    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
+    **10c, AP9**.
+
+    Drei Vorgaben für `betrieb_schluesselblatt.php` (S10) und das
+    Notfallblatt (P5b AP9):
+
+    (a) Der Schlüssel steht **abgesetzt in einer Kachel** — Rahmen, Rauch,
+    Vierergruppen, Feste Schrift.
+    (b) Der Druck passt **genau auf eine A4-Seite** (`@page A4`, Ränder,
+    kein Umbruch). Abnahme: PDF-Druck aus Chromium **und** Firefox hat je
+    eine Seite.
+    (c) Oben stehen **Marke und „NAdoku"** (das Wort-Bild-Logo) und die
+    Überschrift, damit sofort klar ist, worum es geht.
+
+    **Das ändert E-P5b-09** („ohne Logo" → mit Logo). Beide Blätter
+    bekommen denselben Baustein (`.blatt-druck`); 10b AP9 ist gebaut, das
+    Notfallblatt wird dort nachgezogen.
+
+
+    **Berichtigt am 20.09.2026 (M-P5c-01f, E-P5c-08/-30):** Oben steht
+    **nicht** „Marke + NAdoku", sondern **Bildmarke + Kurzname der
+    Installation** (`instanz_kurz()`, Vorgabe „Gen-EM NAdoku"). Ein fest
+    eingebautes „NAdoku" wäre auf einer umbenannten Installation schlicht
+    falsch. Die **Webversion steht in der Fußzeile** des Blattes.
+    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`),
+    beide Blätter mit demselben Baustein `.blatt-druck`.
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-08, -30, -50).**
+    Schlüssel- und Notfallblatt stehen auf dem Druckblatt `.blatt-druck` des
+    Codeblatts: nummerierte Vierergruppen, Umgebungszeile auf Staging, genau
+    eine A4-Seite. Der Härtefall (drei Werte, Staging) misst 1013 von 1017 px
+    Satzhöhe (F-P5c-152), Produktiv 978, das Notfallblatt 711.
+
+253. **Datum-Zeit-Trenner vereinheitlichen.** *Aufgenommen 20.09.2026
+    (Konzept Zentralisierung, F-ZE-3/FF-5).* Zugeordnet: **10c AP9**.
+
+    Zwischen Datum und Uhrzeit steht mal ein Komma, mal ein Gedankenstrich,
+    mal nur ein Leerzeichen. Nach Schritt 15 AP7 steht die Formatierung an
+    einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
+    Suche, und deshalb wartet es bis dahin.
+
+    **Berichtigt 23.09.2026:** Gemeint ist ` · ` (Mittelpunkt mit
+    Leerzeichen), kein Gedankenstrich. **Entschieden: das Komma** (Konzept
+    P5c, E-P5c-37). Es ist auch nicht „eine Zeile": rund 18 Stellen in 11
+    Dateien (F-P5c-11). Zuordnung: **10c AP2** (die neue Protokollzeile
+    schreibt schon mit Komma) **und AP9** (die Vorgabe und die übrigen
+    Stellen).
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-37).** Datum und
+    Uhrzeit trennt überall ein Komma (`datum_zeit_text()` ohne zweites
+    Argument). Zwei Stellen übergeben bewusst einen anderen Trenner: die
+    Mailtexte („ um ") und der GPX-Spurname, weil `Export-Format.md` ihn
+    festlegt (E-P5c-129). Register Z26 nennt sie.
+
+269. **`assets/schluesselblatt.js` — bei Netzausfall eine stille Sackgasse.**
+    Gefunden bei derselben Vermessung. Der Prüfknopf setzt `disabled = true`
+    **vor** dem Senden, und die Wiederfreigabe liegt im `.then`. Wirft das
+    `fetch`, fängt niemand: Der Knopf bleibt tot, das Fehlerfeld leer, der
+    Dialog offen. Die Person kann weder weiter noch erkennen, warum.
+    Zwei Aufrufer sind betroffen (Prüfen und Antworten). **Nicht in
+    Schritt 15 behoben.** Beim Anfassen mitzudenken: `EdApi.postForm()` aus
+    AP8c liefert im Netzfehler ein `{ ok: false, status: 0 }` statt zu
+    werfen — damit ist die Stelle danach mit drei Zeilen zu heilen.
+
+    **Zuordnung (23.09.2026): 10c AP9** — als Beifang (E-P5c-46).
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026).** Seit Schritt 15
+    sendet die Datei über `EdApi.postForm()`; übrig war, dass ein
+    Netzfehler beim Prüfen die vier Felder leerte wie eine falsche Eingabe.
+    Jetzt bleibt bei `status: 0` alles stehen, und der Knopf wird wieder
+    frei. Belegt im Browser mit abgebrochenem Abruf, für Prüfen und für die
+    Rückfrage.

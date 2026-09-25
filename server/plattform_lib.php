@@ -390,7 +390,7 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
             'nicht anlegbar', 'beschreibbar', false,
             ($sStand['grund'] !== null ? $sStand['grund'] . ' ' : '')
           . 'Die Sitzungen liegen deshalb dort, wo der Hoster hinzeigt. Die '
-          . 'Anwendung laeuft vollstaendig weiter; was das bedeutet, sagt die '
+          . 'Anwendung läuft vollständig weiter; was das bedeutet, sagt die '
           . 'Zeile „Sitzungsablage" darunter.');
     } else {
         $sProbe = plattform_schreibprobe($sPfad);
@@ -447,13 +447,13 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
         $sIst = 'Rechte nicht lesbar';
     } elseif (($modus & 0007) !== 0) {
         $sOk = false;
-        $sIst = sprintf('%04o', $modus) . ' - fuer andere zugaenglich';
+        $sIst = sprintf('%04o', $modus) . ' - für andere zugänglich';
     } elseif ($fremd === true && @scandir($wirk) !== false) {
         $sOk = false;
-        $sIst = sprintf('%04o', $modus) . ' - fremder Eigentuemer, auflistbar';
+        $sIst = sprintf('%04o', $modus) . ' - fremder Eigentümer, auflistbar';
     } elseif ($fremd === null && ($modus & 0070) !== 0) {
         $sOk = null;
-        $sIst = sprintf('%04o', $modus) . ' - Gruppe hat Rechte, Eigentuemer nicht feststellbar';
+        $sIst = sprintf('%04o', $modus) . ' - Gruppe hat Rechte, Eigentümer nicht feststellbar';
     } else {
         $sOk = true;
         $sIst = sprintf('%04o', $modus);
@@ -483,7 +483,7 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
             ? '.' : ', ' . sprintf('%04o', $vRoh & 0777) . '.'));
 
     $b[] = plattform_befund('sitzung_ablage', 'Sitzungsablage', 'muss',
-        $sIst, 'eigenes Verzeichnis, fuer andere gesperrt', $sOk,
+        $sIst, 'eigenes Verzeichnis, für andere gesperrt', $sOk,
         sitzung_ablage_satz($sStand) . $sVerz
       . ' Der Dateiname einer Sitzungsdatei IST die Sitzungskennung - wer sie '
       . 'liest, ist angemeldet. Wirksam: ' . $wirk);

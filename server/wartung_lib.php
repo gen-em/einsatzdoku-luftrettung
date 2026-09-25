@@ -143,6 +143,16 @@ const WARTUNG_AUSNAHMEN = [
     'betrieb_jobs.php',
     'betrieb_server.php',
     'betrieb_schluesselblatt.php',
+    /* SEIT P5c/AP9 (E-P5c-134): Komplett-Backup und Backup-Ziele. Bis dahin
+     * antworteten beide im Wartungsmodus mit 503 — und genau dann braucht man
+     * sie: Schliesst der Torwaechter, weil eine Migration aussteht, sagt die
+     * Seite Updates „vorher sichern" und bot einen Knopf zum Komplett-Backup
+     * an, der in die Sperre fuehrte. Ebenso nannte die Vorbedingung der
+     * FTP-Migration die Backup-Ziele als Weg, und die waren zu. Beide Seiten
+     * erreicht nur die BetreiberIn (`require_betreiberin()`), und beide
+     * zeigen den Balken. */
+    'admin_komplettsicherung.php',
+    'admin_sicherungsziele.php',
     'update.php',
     'wiederherstellen.php',
     'jobs.php',
@@ -552,9 +562,9 @@ function wartung_balken(): string
          * das geschieht — zwei Umrechnungen waeren die sicherste Art, sich
          * eine Stunde Versatz einzuhandeln. Sie steht hier ueber
          * `function_exists()` und nicht ueber `require`, weil diese Datei
-         * nichts laden darf (siehe Kopf): Der Balken laeuft nur auf
-         * `update.php` und `login.php`, und dort ist `db.php` laengst
-         * geladen. Faellt sie doch einmal aus, bleibt die Rohzeit stehen —
+         * nichts laden darf (siehe Kopf): Der Balken laeuft auf den
+         * Ausnahmeseiten mit Geruest und auf `login.php`, und dort ist
+         * `db.php` laengst geladen. Faellt sie doch einmal aus, bleibt die Rohzeit stehen —
          * eine Stunde daneben ist besser als eine leere Zeile. */
         $utc = str_replace(['T', 'Z'], [' ', ''], $d['seit']);
         $seit = 'seit ' . (function_exists('fmt_local')

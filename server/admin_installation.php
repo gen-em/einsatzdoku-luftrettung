@@ -2,7 +2,6 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
-require_once __DIR__ . '/rechtstexte_lib.php';
 /* VOR dem POST-Zweig und nicht danach: Der Protokolleintrag entsteht beim
  * Speichern, und `function_exists('protokoll')` waere weiter unten `false`
  * gewesen — der Eintrag waere still ausgefallen (P5b/AP4). */
@@ -17,24 +16,16 @@ require_once __DIR__ . '/protokoll_lib.php';
  * das Logo beantwortet sie ebenso. Es lag auf der Wartungsseite, und das war
  * ein Befund (B-S8-10): Der Logo-Standard ist Gestaltung, keine Wartung.
  *
- * DREI KARTEN, EIN SPEICHERN — mit einer Ausnahme. Impressum und Datenschutz
- * teilen sich die Speichern-Leiste, wie bisher; man pflegt sie in einem Zug.
- * Das Logo hat einen EIGENEN Knopf, weil es kein Text ist, der reift, sondern
- * eine Wahl, die sofort wirkt — auch fuer bereits angemeldete Konten. Ein
- * gemeinsames Speichern haette bedeutet, dass ein halbfertiger Rechtstext die
- * Logo-Wahl aufhaelt.
+ * SEIT P5c/AP9 OHNE DIE RECHTSTEXTE (E-P5c-28). Sie stehen wieder auf einer
+ * eigenen Seite, `admin_rechtstexte.php`, mit Reitern und einer Vorschau, die
+ * beim Tippen mitläuft. Hier bleiben Name, Adressen und Logo — jede Karte mit
+ * ihrem eigenen Knopf, weil jede eine Wahl ist, die sofort wirkt.
  *
  * WAS P5 HIER ERGAENZT (E-S8-12): Karten „Support-Adresse", „Registrierung"
  * und „Ankuendigungsbanner" — als weitere Karten DIESER Seite. Heute steht
  * dafuer kein Platzhalter (B-S8-11): Ein Kasten mit „kommt spaeter" ist eine
  * Zusage, die niemand gegeben hat.
  *
- * DIE VORSCHAU KOMMT VOM SERVER, nicht aus JavaScript. Ein zweiter Renderer
- * im Browser waere genau die Stelle, an der die Regeln auseinanderlaufen: Er
- * muesste dieselbe Positivliste fuer Linkziele, dieselbe Maskierreihenfolge
- * und dieselben Zeichenfilter fuehren, und beim naechsten Fund wuerde einer
- * von beiden vergessen. Sie zeigt also den zuletzt GESPEICHERTEN Stand — das
- * Konzept laesst das ausdruecklich zu (E-P3-38).
  */
 
 /**
@@ -110,71 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    : '.')
                 . ' Wer im Profil keine eigene Wahl getroffen hat, sieht das ab sofort.'];
         }
-    } else {
-        /* ERST ALLES PRUEFEN, DANN ALLES SPEICHERN. Sonst stuende nach einem
-         * abgelehnten zweiten Text der erste schon in der Datenbank, und die
-         * Meldung „nicht gespeichert" waere zur Haelfte falsch. */
-        $eingaben = [];
-        foreach (RT_TEXTE as $k => $name) {
-            $eingaben[$k] = [
-                'text'  => (string)($_POST['text_' . $k] ?? ''),
-                'stand' => trim((string)($_POST['stand_' . $k] ?? '')),
-            ];
-            $mangel = rt_pruefen($eingaben[$k]['text'], $eingaben[$k]['stand']);
-            if ($mangel !== null) {
-                $error = $name . ': ' . $mangel;
-                break;
-            }
-        }
-
-        if ($error === null) {
-            $geaendert = [];
-            foreach (RT_TEXTE as $k => $name) {
-                $vorher = rt_lesen($k);
-                /* Zeilenenden vergleichbar machen: Der Browser schickt CRLF aus
-                 * einem <textarea>, gespeichert wurde LF. Ohne das meldete jedes
-                 * Speichern eine Aenderung. */
-                $neu = str_replace(["\r\n", "\r"], "\n", $eingaben[$k]['text']);
-                $standNeu = $eingaben[$k]['stand'] === '' ? null : $eingaben[$k]['stand'];
-                if ($neu !== $vorher['inhalt'] || $standNeu !== $vorher['stand']) {
-                    rt_speichern($k, $neu, $standNeu);
-                    $geaendert[] = $name;
-
-                    /* INS PROTOKOLL, UND ZWAR MIT DEM STAND (P5b/AP4,
-                     * E-P5b-15). Bei Nutzungsbedingungen und
-                     * Auftragsverarbeitung ist das keine Buchhaltung: Ein
-                     * neuer Stand **sperrt beim naechsten Login jedes
-                     * Konto**, bis es angenommen hat. Wer das ausloest,
-                     * soll es nachlesen koennen — und wer sich wundert,
-                     * warum alle am Tor stehen, findet hier den Grund und
-                     * den Zeitpunkt.
-                     *
-                     * DER TEXT SELBST STEHT NICHT DARIN. Ein Rechtstext hat
-                     * bis zu 60 000 Zeichen; das Protokoll haelt, DASS und
-                     * WANN geaendert wurde, nicht WAS. Die Fassungen
-                     * nachzuhalten waere eine Versionierung und etwas
-                     * anderes. */
-                    if (function_exists('protokoll')) {
-                        $folge = isset(RT_EINWILLIGUNG[$k])
-                               && RT_EINWILLIGUNG[$k]['art'] === 'annahme'
-                            ? ' — mit neuem Stand sperrt das den nächsten Login, '
-                            . 'bis alle Konten angenommen haben'
-                            : '';
-                        protokoll('verwaltung', 'rechtstext_geaendert',
-                                  $name . ' geändert (Stand '
-                                . ($standNeu ?? 'ohne Datum') . ')' . $folge,
-                                  ['schluessel' => $k, 'stand' => $standNeu]);
-                    }
-                }
-            }
-            $notice = $geaendert
-                ? implode(' und ', $geaendert) . ' gespeichert.'
-                : 'Es gab nichts zu ändern.';
-        }
     }
 }
-
-$texte = rt_alle();
 
 ui_seite_start(['titel' => 'Installation']);
 ?>
@@ -188,28 +116,15 @@ ui_seite_start(['titel' => 'Installation']);
 
   <?php ui_meldung($notice, $error, 'ok', '  '); ?>
 
-  <?php /* Links das Logo, rechts die beiden Texte (Mockup 09).
-           Unter 1200 px ist das Raster ein Block, und alles steht
-           untereinander.
-
-           `.form-raster` MIT `.form-spalte`, WIE AUF DEN FUENF ANDEREN
-           SEITEN (Backlog Nr. 125, Web 19.3.0). Bis dahin trug diese Seite
-           als EINZIGE eine eigene Klasse `.zweispalter` — dieselbe Regel
-           Zeichen fuer Zeichen (Grid, zwei gleiche Spalten, `align-items:
-           start`), nur unter anderem Namen und in einem anderen Block des
-           Stylesheets. Zwei Namen fuer eine Sache heisst: Wer den einen
-           aendert, aendert den anderen nicht mit, und zwar ohne dass es
-           auffaellt.
-
-           DIE SPALTEN TRAGEN `.form-spalte`, obwohl die Klasse keine
-           CSS-Regel hat (gemessen: 0 Treffer im Stylesheet). Sie ist
-           trotzdem noetig: `assets/menue.js` liest sie, um in der Leiste je
-           SPALTE die oberste sichtbare Karte zu markieren. Ohne sie waere
-           die Seite weiterhin die Ausnahme — nur unter fremdem Namen und
-           mit halber Bauform. Sichtbare Folge: In der Leiste stehen
-           kuenftig ZWEI Marken statt einer, wie auf den fuenf anderen
-           Seiten auch. */ ?>
-  <div class="form-raster">
+  <?php /* EINE SPALTE SEIT P5c/AP9 (E-P5c-28, F-P5c-46). Bis Web 21.0.0 stand
+           rechts das Formular der vier Rechtstexte; sie haben eine eigene
+           Seite bekommen (`admin_rechtstexte.php`, Vorschau beim Tippen).
+           Übrig sind drei Karten — nach Design.md 9.26 kein Fall für zwei
+           Spalten —, gesetzt mit der vorhandenen Variante
+           `.form-raster-einspaltig`: höchstens Lesespalte breit, damit die
+           kurzen Felder nicht über 1400 px laufen. `.form-spalte` bleibt,
+           `menue.js` liest sie (9.26). */ ?>
+  <div class="form-raster form-raster-einspaltig">
 
     <div class="form-spalte">
       <?php /* DER NAME STEHT ZUOBERST, und zwar vor dem Logo: Er ist das,
@@ -320,195 +235,12 @@ ui_seite_start(['titel' => 'Installation']);
           </div>
         </form>
       <?php ui_karte_ende(); ?>
-    </div><?php /* .form-spalte (links) */ ?>
-
-    <?php /* DIE RECHTE SPALTE IST DAS FORMULAR SELBST, kein <div> darum.
-             Ein zusaetzlicher Behaelter schoebe das <form> aus dem Raster
-             heraus, und `.form-spalte` muss am direkten Kind haengen.
-
-             data-dirty-track haengt die Speichern-Leiste an das Formular
-             (assets/forms.js) — ohne das Attribut erschiene sie nie, und zwar
-             lautlos. data-submit-on-ctrl-enter, weil der Hinweistext der Leiste
-             es zusagt. */ ?>
-    <form class="form-spalte" method="post" data-dirty-track data-submit-on-ctrl-enter>
-      <?= csrf_field() ?>
-
-      <?php foreach (RT_TEXTE as $k => $name):
-        $t = $texte[$k];
-        $leer = rt_leer($t['inhalt']);
-        /* Der Kartenkopf traegt den Stand — dieselbe Auskunft, die die
-           oeffentliche Seite unten zeigt.
-           MIT ZEITSTEMPEL, deshalb kein `datum_text()` (Schritt 15 AP7,
-           benannte Ausnahme): `stand` ist ein KALENDERTAG, keine UTC-Marke —
-           eine Umrechnung nach `app.timezone` verschoebe ihn. Gleiche Lage
-           wie in `rt_stand_markup()`. */
-        $kopfzahl = $t['stand'] !== null && strtotime($t['stand']) !== false
-            ? 'Stand ' . date('d.m.Y', (int)strtotime($t['stand']))
-            : 'ohne Standdatum';
-      ?>
-        <?php /* „Ansehen" oeffnet die oeffentliche Seite. Sie war bisher nur
-                 ueber die Fusszeile erreichbar — und wer gerade einen Text
-                 bearbeitet, will ihn dort sehen, wo ihn andere sehen. */ ?>
-        <?php ui_karte_start(['titel' => $name, 'zahl' => $kopfzahl,
-                              'id' => 'k-' . $k,
-                              'aktion' => ['text' => 'Ansehen',
-                                           'href' => RT_SEITEN[$k],
-                                           'symbol' => 'winkel']]); ?>
-
-          <?php ui_feld([
-              'name'         => 'text_' . $k,
-              'id'           => 'rt-' . $k,
-              'label'        => 'Text',
-              'label_zusatz' => '(Markdown: Überschriften, Absätze, Listen, Links)',
-              'art'          => 'textarea',
-              'zeilen'       => 18,
-              'klasse'       => 'feld-fest',
-              'wert'         => $t['inhalt'],
-              'klein'        => 'Erlaubt: ## Überschrift, ### Unterüberschrift, '
-                              . 'Absätze, - Listen, 1. Nummerierung, '
-                              . '[Text](https://…). Kein HTML — Tags erscheinen '
-                              . 'als Text.',
-          ]); ?>
-
-          <?php /* DAS STANDDATUM WIRD VON HAND GESETZT. Automatisch waere es
-                   bequemer und an einem Rechtstext falsch: Das Datum ist eine
-                   Aussage darueber, auf welchem Stand der Text INHALTLICH ist —
-                   eine Kommakorrektur soll ihn nicht neu datieren. Leer heisst:
-                   keine Standzeile auf der oeffentlichen Seite. */ ?>
-          <?php ui_feld([
-              'name'  => 'stand_' . $k,
-              'id'    => 'rt-stand-' . $k,
-              'label' => 'Stand',
-              'art'   => 'date',
-              'wert'  => (string)($t['stand'] ?? ''),
-              'klein' => 'Erscheint als „Stand: …" am Ende der Seite. Leer '
-                       . 'lassen heißt: kein Datum. Wird nicht automatisch '
-                       . 'gesetzt — bei einem Rechtstext ist das Datum eine '
-                       . 'Aussage.'
-                       . ($k === 'datenschutz'
-                          ? ' Dieser Text erscheint auch in der Android-App.'
-                          : ''),
-          ]); ?>
-
-          <?php if ($k === 'datenschutz'): ?>
-            <?php /* TEXTBAUSTEIN ZUR ADRESSSUCHE (S9/AP2, E-S9-05, Nr. 137).
-                     Die Anwendung liefert KEINEN Rechtstext mit — was darin
-                     steht, ist Sache der BetreiberIn (R32). Ein Absatz, den
-                     die Anwendung von sich aus in die Datenschutzerklaerung
-                     schriebe, waere genau das, was dieses Modul seit Web
-                     9.11.0 nicht tut.
-
-                     Was sie tun kann und hier tut: den Satz VORSCHLAGEN, mit
-                     der Adresse, die tatsaechlich eingestellt ist. Wer den
-                     Dienst wechselt, sieht hier den neuen Namen und weiss,
-                     dass der Text nachzuziehen ist.
-
-                     Er steht nur, solange die Adresssuche eingeschaltet ist:
-                     Ein Absatz ueber eine Abfrage, die nicht stattfindet,
-                     waere eine falsche Auskunft in einem Rechtstext. */ ?>
-            <?php require_once __DIR__ . '/geocoder_lib.php'; ?>
-            <?php if (geocoder_installation_an()): ?>
-              <p class="feld-hinweis"><strong>Zum Übernehmen: die Adresssuche.</strong>
-                 Diese Installation fragt beim Tippen in einem Ortsfeld und nach
-                 jeder Wahl auf der Karte
-                 <strong><?= e(geocoder_host()) ?></strong>; der getippte Text
-                 und die Koordinate verlassen dabei das Gerät. Wer das nennt,
-                 nennt eine Verarbeitung durch Dritte — der Baustein unten ist
-                 ein Vorschlag, keine Rechtsberatung. Abschaltbar unter
-                 Betrieb → Servereinstellungen und je Konto im Profil.</p>
-              <?= ui_codeblock_lang(
-                    '### Adresssuche' . "\n\n"
-                  . 'Wenn du in ein Ortsfeld tippst oder auf der Karte einen Ort '
-                  . 'wählst, fragt dein Browser den Adressdienst '
-                  . geocoder_host() . '. Übertragen werden dabei der getippte '
-                  . 'Text beziehungsweise die gewählte Koordinate, dazu — wie bei '
-                  . 'jedem Abruf im Internet — deine IP-Adresse. Namen, Diagnosen '
-                  . 'und Einsatznummern werden nicht übertragen. Die Suche lässt '
-                  . 'sich abschalten: in deinem Profil unter „Datenschutz".',
-                    'Vorschlag für den Abschnitt „Adresssuche"') ?>
-            <?php endif; ?>
-
-            <?php /* ZWEITER TEXTBAUSTEIN: SICHERHEITSEREIGNISSE (P5a/AP8,
-                     E-P5a-08). Dieselbe Bauart und derselbe Vorbehalt wie
-                     oben — die Anwendung liefert KEINEN Rechtstext mit (R32),
-                     sie kann nur vorschlagen.
-
-                     WARUM ER OHNE BEDINGUNG DASTEHT, anders als der Baustein
-                     zur Adresssuche: Den Ratenschutz gibt es in jeder
-                     Installation, und er laesst sich nicht abschalten. Es
-                     gibt also keine Lage, in der dieser Absatz eine falsche
-                     Auskunft waere. */ ?>
-            <p class="feld-hinweis"><strong>Zum Übernehmen: die
-               Sicherheitsereignisse.</strong> Seit Web 20.12.0 führt diese
-               Installation unter <em>Betrieb → Status → Sicherheit</em> eine
-               Liste der Sperren und Verlangsamungen der letzten
-               <strong>30 Tage</strong>. Sie enthält <strong>IP-Adressen und
-               E-Mail-Adressen im Klartext</strong> — ohne sie ließe sich keine
-               Sperre aufheben. Wer das nennt, nennt eine Verarbeitung
-               personenbezogener Daten; der Baustein unten ist ein Vorschlag,
-               keine Rechtsberatung.</p>
-            <?= ui_codeblock_lang(
-                  '### Schutz vor unbefugten Anmeldeversuchen' . "\n\n"
-                . 'Wenn bei der Anmeldung mehrfach ein falsches Passwort eingegeben '
-                . 'wird oder ein Gerät sich wiederholt mit einem ungültigen '
-                . 'Schlüssel meldet, sperrt die Anwendung den betroffenen Zugang '
-                . 'vorübergehend. Dafür werden die betroffene E-Mail-Adresse '
-                . 'beziehungsweise IP-Adresse zusammen mit Zeitpunkt und Anzahl '
-                . 'der Versuche gespeichert. Diese Angaben dienen ausschließlich '
-                . 'der Abwehr von Angriffen, werden nicht ausgewertet und nach '
-                . '**30 Tagen automatisch gelöscht**. Eine laufende Sperre kann '
-                . 'die BetreiberIn vorzeitig aufheben; auch das wird mit '
-                . 'Zeitpunkt vermerkt.' . "\n\n"
-                . 'Hinweis: Sicherungskopien der Datenbank können diese Angaben '
-                . 'enthalten, solange die Sicherung aufbewahrt wird.',
-                  'Vorschlag für den Abschnitt „Schutz vor unbefugten Anmeldeversuchen"') ?>
-          <?php endif; ?>
-
-          <?php if (!$leer): ?>
-            <div class="vorschau">
-              <h4>Vorschau</h4>
-              <div class="text">
-                <?= rt_html($t['inhalt']) ?>
-                <?= rt_stand_markup($t['stand']) ?>
-              </div>
-            </div>
-          <?php endif; ?>
-
-          <div class="rechtstext-fuss">
-            <?= $leer
-                ? ui_plakette('leer', ['ton' => 'rot'])
-                : ui_plakette('öffentlich', ['ton' => 'blau']) ?>
-            <span class="feld-klein">Seite:
-              <a href="<?= e(RT_SEITEN[$k]) ?>"><?= e(RT_SEITEN[$k]) ?></a></span>
-          </div>
-
-        <?php ui_karte_ende(); ?>
-      <?php endforeach; ?>
-
-      <?php /* Die Leiste steht INNERHALB des Formulars — forms.js sucht sie mit
-               f.querySelector('[data-speichern]'). Ausserhalb erschiene sie nie,
-               ohne Fehlermeldung. */ ?>
-      <?php ui_speichern_leiste(['text' => 'Änderungen speichern',
-                                 'hinweis' => 'Es gibt ungespeicherte Änderungen',
-                                 'hinweis_vorlage' => 'Ungespeichert']); ?>
-    </form><?php /* .form-spalte (rechts) */ ?>
-
+    </div><?php /* .form-spalte */ ?>
   </div><?php /* .form-raster */ ?>
 
-  <?php /* Die Vorschau zeigt den GESPEICHERTEN Stand. Das ist keine
-           Einschraenkung, die man verschweigt — wer gerade getippt hat und
-           unten nichts davon sieht, haelt den Editor fuer kaputt. */ ?>
-  <p class="feld-hinweis">Impressum und Datenschutzerklärung sind
-     <strong>ohne Anmeldung</strong> erreichbar und in jeder Fußzeile verlinkt.
-     Der Inhalt ist Sache der BetreiberIn; die Anwendung liefert keinen Text mit.
-     Die Vorschau zeigt den zuletzt <strong>gespeicherten</strong> Stand — sie
-     entsteht auf dem Server, mit demselben Renderer wie die öffentliche Seite.</p>
-
 <?php ui_geruest_ende(); ?>
-<?php /* forms.js bringt ui_geruest_ende() NICHT mit (nur symbol, schublade,
-         blatt, confirm) — ohne diese Zeile bliebe die Speichern-Leiste
-         unsichtbar, und zwar ohne jede Fehlermeldung. */ ?>
-<?php /* `assets/kopieren.js` gehoert zum Wertekasten (Design.md 9.18): Der
-         Textbaustein zur Adresssuche traegt einen Kopieren-Knopf, und ohne das
-         Skript bliebe er versteckt (S9/AP2). */ ?>
-<?php ui_seite_ende(['skripte' => ['assets/forms.js', 'assets/kopieren.js']]); ?>
+<?php /* KEINE SEITENSKRIPTE MEHR (P5c/AP9): `forms.js` hing an der
+         Speichern-Leiste der Rechtstexte, `kopieren.js` an deren
+         Textbausteinen — beide sind mit auf die Seite „Rechtstexte"
+         gezogen. Name, Adressen und Logo sind schlichte Formulare. */ ?>
+<?php ui_seite_ende(); ?>

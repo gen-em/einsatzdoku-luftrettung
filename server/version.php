@@ -7578,5 +7578,29 @@ declare(strict_types=1);
  * Einsatzformular; eine dritte Migration zieht sie fuer den Bestand nach
  * (E-P5c-123). Eine Wiederherstellung legt weiter an, was in der Datei
  * steht (E8).
+ *
+ * 21.1.0 — WENIGER TEXT AUF DEN SEITEN, MEHR IM HANDBUCH (P5c/AP9, E-P5c-06,
+ *   -28, -29, -37, -49, -50, -128 bis -134; Backlog Nr. 121, 244, 245, 246,
+ *   253, 269). Nebenstufe ohne Migration.
+ *   Die Verwaltungs- und Betriebsseiten folgen der Ein-Satz-Regel: je Karte
+ *   hoechstens ein Satz, der sagt, was hier passiert, und ein Verweis ins
+ *   Handbuch, wo der Rest jetzt steht — unter eigenen Sprungmarken, die das
+ *   Tor gegen das gerenderte Handbuch prueft. Die Karten „Was hier gilt"
+ *   sind fort. Die Leiste traegt ihre Bloecke als Ueberschriften mit dem
+ *   Winkel rechts und unter 800 px Fensterhoehe keine Sprungmarken mehr,
+ *   damit jeder Eintrag ohne Rollen erreichbar bleibt; die Uebersicht der
+ *   Einstellungen zeigt Bereichskarten.
+ *   Schluessel- und Notfallblatt stehen auf dem Druckblatt des Codeblatts,
+ *   mit Umgebungszeile auf Staging und je einer Seite A4 auch im Haertefall.
+ *   Die Rechtstexte sind wieder eine eigene Seite: ein Reiter je Text, die
+ *   Vorschau daneben und beim Tippen — gerendert auf dem Server, mit
+ *   demselben `rt_html()` wie die oeffentliche Seite. Datum und Uhrzeit
+ *   trennt ueberall ein Komma.
+ *   Mitgekommen: das Token fuer `EdApi` ohne Schluesselmaterial
+ *   (`ui_csrf_bootstrap()`, E-P5c-130), das Schluesselblatt-Pruefen, das
+ *   einen Netzfehler nicht mehr als falsche Eingabe behandelt (Nr. 269),
+ *   Komplett-Backup und Backup-Ziele im Wartungsmodus — genau dann braucht
+ *   man sie (E-P5c-134) —, und rund zwei Dutzend Saetze, die nicht mehr
+ *   stimmten (F-P5c-138 bis -164).
  */
-const WEB_VERSION = '21.0.0';
+const WEB_VERSION = '21.1.0';

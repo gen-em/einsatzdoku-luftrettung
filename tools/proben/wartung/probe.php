@@ -442,6 +442,21 @@ pruefe($ohneBalken === [],
        '6   ... und ALLE FUENF tragen den Balken „Wartungsmodus seit"',
        'ohne Balken: ' . implode(', ', $ohneBalken));
 
+/* KOMPLETT-BACKUP UND BACKUP-ZIELE SEIT P5c/AP9 (E-P5c-134).
+ *
+ * Bis Web 21.0.0 antworteten beide im Wartungsmodus mit 503 — und die Seite
+ * Updates bot, wenn der Torwaechter geschlossen hatte, einen Knopf zum
+ * Komplett-Backup an, der genau dort hineinfuehrte. Gemessen wird hier, dass
+ * beide antworten UND den Balken tragen: Ein Statuscode allein sagt nicht,
+ * was die Seite zeigt (siehe oben, Web 15.5.1). */
+$a6g = hole('admin_komplettsicherung.php', $sidAdmin);
+$a6h = hole('admin_sicherungsziele.php', $sidAdmin);
+pruefe($a6g['code'] === 200 && $a6h['code'] === 200
+       && str_contains($a6g['rumpf'], 'Wartungsmodus seit')
+       && str_contains($a6h['rumpf'], 'Wartungsmodus seit'),
+       '6b  Komplett-Backup und Backup-Ziele offen, mit Balken (P5c/AP9)',
+       'komplett ' . $a6g['code'] . ', ziele ' . $a6h['code']);
+
 /* DAS SCHLUESSELBLATT TRAEGT IHN NICHT — UND ZWAR ABSICHTLICH.
  *
  * Es ist die sechste Ausnahmeseite, steht aber bewusst NICHT in der Schleife
@@ -612,12 +627,25 @@ pruefe(str_contains($a14b['rumpf'], 'seit unbekannt'),
 /* Fall 15: Das Tor greift VOR Datenbank und Ratenschutz. Gemessen an
  * ingest.php, weil der Weg dort am laengsten ist — Zugangsdaten pruefen,
  * Ratenschutz zaehlen, Nutzlast lesen. Der Vergleich ist der Lauf aus
- * Teil 0 ohne Wartung. */
-$a15 = hole('ingest.php', null, ['mission' => ['x' => 1]],
-            ['Content-Type: application/json', 'X-Device-Id: ' . $devId, 'X-Api-Key: ' . $apiKey]);
-pruefe($a15['dauer'] < $dauerOhne,
+ * Teil 0 ohne Wartung.
+ *
+ * DER MEDIAN AUS FUENF, NICHT EIN ABRUF (F-P5c-165). Die 503 braucht hier
+ * 1,4 bis 1,9 ms, der Vergleich 3,3 bis 5,8 ms — aber ein einzelner Abruf
+ * sprang in einem von zwoelf Laeufen auf 4,4 ms, und ein Vergleich zweier
+ * Einzelwerte im Millisekundenbereich faerbt den Pruefstand dann rot, ohne
+ * dass das Tor sich geaendert haette. Die 503 hat keine Nebenwirkung (das Tor
+ * greift vor jedem Zaehler), deshalb darf sie fuenfmal kommen; der Vergleich
+ * aus Teil 0 bleibt EIN Abruf, weil jeder weitere den Adresstopf zaehlte. */
+$dauern15 = [];
+for ($i = 0; $i < 5; $i++) {
+    $a15 = hole('ingest.php', null, ['mission' => ['x' => 1]],
+                ['Content-Type: application/json', 'X-Device-Id: ' . $devId, 'X-Api-Key: ' . $apiKey]);
+    $dauern15[] = $a15['code'] === 503 ? $a15['dauer'] : INF;
+}
+sort($dauern15);
+pruefe($dauern15[2] < $dauerOhne,
        '15  503 kommt schneller als die Antwort ohne Wartung',
-       sprintf('%.1f ms statt %.1f ms', $a15['dauer'] * 1000, $dauerOhne * 1000));
+       sprintf('Median %.1f ms aus 5 statt %.1f ms', $dauern15[2] * 1000, $dauerOhne * 1000));
 
 /* ======================================================================
  * Teil 4 — Kommandozeile und die Regeln am Code
@@ -650,13 +678,14 @@ $sollAusnahmen = ['betrieb_status.php', 'betrieb_sicherheit.php',
                   'betrieb_statistik.php',
                   'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
                   'betrieb_schluesselblatt.php',
+                  'admin_komplettsicherung.php', 'admin_sicherungsziele.php',
                   'update.php', 'wiederherstellen.php', 'jobs.php',
                   'login.php', 'auth_salt.php', 'logout.php', 'install.php'];
 sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8 + P5c/AP9',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer

@@ -382,7 +382,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--linie` | `#E3DAC6` | 41 |  |
-| `--linie-stark` | `var(--gedaempft)` | 13 |  |
+| `--linie-stark` | `var(--gedaempft)` | 12 |  |
 
 **Orange — Handeln**
 
@@ -421,13 +421,13 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 9 |  |
 | `--groesse-2` | `13px` | 56 |  |
-| `--groesse-3` | `15px` | 14 |  |
+| `--groesse-3` | `15px` | 15 |  |
 | `--groesse-4` | `16px` | 16 |  |
 | `--groesse-5` | `19px` | 12 |  |
 | `--groesse-6` | `24px` | 5 |  |
 | `--groesse-titel` | `28px` | 2 |  |
 | `--zeile-eng` | `1.3` | 5 | Titel, Kacheln |
-| `--zeile` | `1.55` | 2 | Oberfläche |
+| `--zeile` | `1.55` | 3 | Oberfläche |
 | `--zeile-lesen` | `1.6` | 4 | Fließtext in der Lesespalte |
 
 **Abstände**
@@ -435,17 +435,17 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 81 |  |
-| `--abstand-2` | `8px` | 118 |  |
-| `--abstand-3` | `12px` | 159 |  |
-| `--abstand-4` | `16px` | 66 |  |
-| `--abstand-5` | `24px` | 34 |  |
+| `--abstand-2` | `8px` | 117 |  |
+| `--abstand-3` | `12px` | 158 |  |
+| `--abstand-4` | `16px` | 65 |  |
+| `--abstand-5` | `24px` | 35 |  |
 
 **Radien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 29 | Plakette, Kästchen, Eingabefeld |
-| `--radius` | `10px` | 21 | Knopf, Meldung |
+| `--radius` | `10px` | 20 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 8 | Karte, Blatt, Dialog |
 
 **Maße**
@@ -472,7 +472,7 @@ auseinanderlaufen kann.
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 58 | Haarlinie |
+| `--strich` | `1px` | 57 | Haarlinie |
 | `--strich-stark` | `2px` | 36 | Aktivstrich, Randstrich, Fokus |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
@@ -790,6 +790,12 @@ Dazu **eine** Ausnahme nach unten: `@media (max-width:479px)` lässt in der
 Wahlliste den Zusatz unter den Text rutschen — „zurzeit Hubschrauber (RTH)"
 neben „Standard der Installation" sprengt sonst jede Zeile.
 
+Und **eine Höhenschwelle** (seit Web 21.1.0, E-P5c-131): `@media
+(min-width:1024px) and (max-height:799px)` nimmt die Sprungmarken aus der
+festen Leiste (9.25). Sie ist keine Stufe der Breitenskala und steht deshalb
+nicht in `--s-*`; die erzeugte Tabelle führt sie als eigene Zeile, und die
+Summe darunter zählt nur Breiten.
+
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
 | Abfrage | Regelblöcke |
@@ -797,12 +803,13 @@ neben „Standard der Installation" sprengt sonst jede Zeile.
 | `@media (min-width:1600px)` | 3 |
 | `@media (min-width:1200px)` | 5 |
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
+| `@media (min-width:1024px) and (max-height:799px)` | 1 |
 | `@media (min-width:1024px)` | 3 |
 | `@media (min-width:720px)` | 14 |
 | `@media screen and (min-width:720px)` | 1 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 28 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 29 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -907,9 +914,9 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 20 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 31 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 32 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
-| `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
+| `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 14 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
@@ -1004,50 +1011,51 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 387 |
 | `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 449 |
 | `ui_geruest_start()` | `.inhalt` | ja | 541 |
-| `ui_leiste_ende()` | `.leiste` | ja (+16 Unterklassen) | 612 |
+| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 612 |
 | `ui_geruest_ende()` | `.inhalt` | ja | 636 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 686 |
 | `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 915 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1066 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1137 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1224 |
-| `ui_hinweise()` | `.hinweise` | ja | 1272 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1300 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1335 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1388 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1438 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1505 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1552 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1605 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1631 |
-| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1676 |
-| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1760 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1795 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1837 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1885 |
-| `ui_zeile()` | `.zeile` | ja (+34 Unterklassen) | 1949 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2004 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2053 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2098 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2170 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2212 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2254 |
-| `ui_feld()` | `.feld` | ja (+25 Unterklassen) | 2323 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2388 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2432 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2485 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2529 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2628 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2690 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2731 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2831 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2861 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2873 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3023 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3102 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1076 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1148 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1235 |
+| `ui_hinweise()` | `.hinweise` | ja | 1283 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1311 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1346 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1399 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1449 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1516 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1563 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1616 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1642 |
+| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1687 |
+| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1771 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1806 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1848 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1896 |
+| `ui_zeile()` | `.zeile` | ja (+34 Unterklassen) | 1960 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2015 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2064 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2109 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2181 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2223 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2265 |
+| `ui_feld()` | `.feld` | ja (+25 Unterklassen) | 2334 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2399 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2443 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2496 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2540 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2639 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2701 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2742 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 2836 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2877 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2907 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2919 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3069 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3148 |
 
-48 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
-**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
+49 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
 
@@ -2144,6 +2152,20 @@ Menüpunkte zweiter Ordnung; wer sie dafür hält, sucht dahinter eine eigene
 Seite. Die Markierung ist **fett, nicht orange**: Orange heißt in dieser
 Oberfläche „hier stehst du" und gehört dem aktiven Menüpunkt.
 
+**Unter 800 px Fensterhöhe fallen sie in der festen Leiste weg** (seit Web
+21.1.0, E-P5c-131; Kapitel 7). Gemessen bei 1280 × 720 mit der BetreiberIn
+(18 Einträge): Mit Sprungmarken waren auf 6 von 14 Seiten alle Einträge ohne
+Rollen erreichbar, ohne sie auf 14 von 14 — die Servereinstellungen tragen
+acht Marken. Die Einträge sind die Wege durch die Anwendung, die Marken nur
+Wege durch eine Seite. In der Schublade (unter 1024 px) bleiben sie. **Die
+Lücke darüber ist benannt:** Zwischen 800 und 946 px Höhe stehen die Marken,
+und drei Listen passen nicht ganz — Servereinstellungen braucht 947 px,
+Status 891, Updates 835; dort rollt die Leiste in sich. Gemessen wird „ohne
+Rollen erreichbar" so: Ein Eintrag zählt, wenn er im Bild steht **oder** der
+Kopf seiner zugeklappten Gruppe. Einträge einer zugeklappten Gruppe haben in
+Chromium eine Box (36 px hoch, Lage wie offen) — wer nach der Box fragt, zählt
+sie mit (F-P5c-157).
+
 **Auf einer zweispaltigen Seite sind es zwei Marken, nicht eine.** `menue.js`
 bestimmt die oberste sichtbare Karte je `.form-spalte` — sonst bliebe die
 rechte Spalte, in der man gerade liest, unmarkiert. Das betrifft die sechs
@@ -2787,8 +2809,8 @@ der Mockup-Runde M-P5c-01a (20.09.2026).*
 die Reiter der Protokollseite (Verwaltung, Sicherheit, Jobs, E-Mail, System,
 Fehler, dazu Archiv). Serverseitig: Jeder Reiter ist ein Verweis, der
 Parameter steht in der Adresse, und ohne Skript funktioniert alles. **Drei
-Verwender sind geplant:** Protokoll (AP2, hier entstanden), Statistik
-(AP7), Rechtstexte (AP9).
+Verwender:** Protokoll (AP2, hier entstanden), Statistik (AP7), Rechtstexte
+(AP9, seit Web 21.1.0 — der einzige, dessen Reiter ein Formular schützen).
 
 ```php
 ui_reiter(['label' => 'Bereiche des Protokolls', 'punkte' => [
@@ -2837,6 +2859,23 @@ denselben Sichten wären einer zu viel.
 **Attribute je Reiter** (`attr`) reicht der Baustein durch — gebraucht für
 die Rückfrage bei ungespeichertem Text in den Rechtstexten (AP9,
 `data-cancel-form`, F-P5c-57).
+
+**Die Rechtstexte: Reiter über Feld und Vorschau** (seit Web 21.1.0, Mockup
+M-P5c-01d Variante 2, freigegeben 20.09.2026). Unter den Reitern steht
+`.form-raster` — ab 1200 px links die Karte mit Feld und Stand, rechts die
+Karte „Vorschau", darunter gestapelt. Keine neue Darstellung, nur vorhandene
+Bausteine und eine Klasse:
+
+| Teil | Darstellung |
+|---|---|
+| Karte „Vorschau" | `ui_karte_start()` mit `plakette` — der Zustand steht als Plakette im Kopf: „gespeicherter Stand" `blau`, „wird aktualisiert …" `neutral`, „ungespeichert" und „nicht aktuell" `orange` |
+| `.vorschau-rollt` | der Kasten in der Karte: `max-height` = Höhe des Textfelds (18 Zeilen, `--zeile` × `--groesse-3` + `--abstand-5`), rollt in sich (`overscroll-behavior:contain`); `.text` darin ohne Lesebreite, weil die Spalte schon schmal ist |
+| Fehlfall | `EdHtml.meldung('warn', …, {auftakt})` über dem Kasten; die letzte Vorschau bleibt stehen |
+| `.rechtstext-fuss` | Plakette „öffentlich"/„leer" und der Pfad der öffentlichen Seite nebeneinander |
+
+**`.vorschau` ist entfallen.** Bis Web 21.0.0 stand unter jedem Feld auf
+„Installation" ein gestrichelter Kasten mit dem gespeicherten Stand; mit der
+eigenen Seite hatte die Klasse keinen Verwender mehr.
 
 **Kein neues Token, kein neuer Farbwert.** Neues Symbol dieses Pakets ist
 `protokoll.svg` (Kapitel 8) — für den Menüpunkt, nicht für den Reiter; ein

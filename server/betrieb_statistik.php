@@ -553,8 +553,8 @@ ui_seite_start(['titel' => 'Statistik']);
           </tbody>
         </table>
       </div>
-      <p class="feld-klein">Anteile bezogen auf alle <?= $geraeteZahl ?> Geräte
-         bzw. <?= $kontenZahl ?> Konten, der Hersteller abgeleitet und nicht
+      <p class="feld-klein">Anteile bezogen auf alle <?= e(zahl_text($geraeteZahl)) ?> Geräte
+         bzw. <?= e(zahl_text($kontenZahl)) ?> Konten, der Hersteller abgeleitet und nicht
          gespeichert. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>

@@ -367,7 +367,7 @@ return [
 ['kennung' => 'Z25', 'paket' => 'AP7',
  'beschreibung' => "str_replace(['T','Z'] … — ISO-UTC-Marke lesen",
  'grund' => 'iso_utc_lesen() in format_lib.php (E-ZE-23). Die eine erlaubte Stelle ist '
-          . 'die Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php 552, '
+          . 'die Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php 559, '
           . 'dieselbe Ladezusage wie bei Z24.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~str_replace\s*\(\s*\[\s*[\'"]T[\'"]\s*,\s*[\'"]Z[\'"]~'],
@@ -379,9 +379,10 @@ return [
           . 'die Varianten, 10c AP9 hat entschieden: das Komma (E-P5c-37), 19 Aufrufer '
           . 'ohne zweites Argument; „ um " der Mailtexte und der GPX-Spurname (Dateiformat, '
           . 'E-P5c-129) uebergeben noch einen. '
-          . 'DREI NAMENTLICH (AP7): admin_installation.php 363 und rechtstexte_lib.php '
+          . 'DREI NAMENTLICH (AP7): admin_rechtstexte.php 85 (bis Web 21.0.0 '
+          . 'admin_installation.php) und rechtstexte_lib.php '
           . '482 formatieren einen Unix-Zeitstempel bewusst OHNE Zonenumrechnung — eine '
-          . 'Umstellung waere eine weitere sichtbare Ausnahme; wartung_lib.php 554 '
+          . 'Umstellung waere eine weitere sichtbare Ausnahme; wartung_lib.php 561 '
           . 'darf nichts laden (siehe Z24).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]d\.m\.[^\'"]*[\'"]~'],

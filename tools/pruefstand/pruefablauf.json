@@ -393,6 +393,7 @@
         "server/auth_guard.php",
         "server/admin_*.php",
         "server/betrieb_*.php",
+        "server/api/rechtstext_vorschau.php",
         "docs/Technik.md"
       ],
       "proben": [

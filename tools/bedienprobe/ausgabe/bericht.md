@@ -1,12 +1,14 @@
 # Klickprobe — Bericht
 
 Lauf gegen `https://127.0.0.1:8443` — 1280 px als Zeigergerät (Sollhöhe 36 px).
-**56 von 56 Wegen erfüllt**, 0 verfehlt.
+**58 von 58 Wegen erfüllt**, 0 verfehlt.
 
 | Weg | Paket | Prüfpunkt | Breite | Soll | Ist | |
 |---|---|---|--:|---|---|---|
 | `admin-protokoll-reiter` | P5c-AP2 | E-P5c-25 | 1280 px (36) | Reiter „Jobs" aktiv und in der Adresse; 0 Unterpunkte in der Leiste; eine Fehlerkennung im Suchfeld führt auf „System" | **aktiv „Jobs" · ?r=jobs · 0 Unterpunkte · Leiste „Protokoll" · Kennung → „System"** | erfüllt |
 | `admin-protokoll-zeilen` | P5c-AP2 | F-P5c-13 | 1280 px (36) | Aufgeklappt stehen die Angaben da; beide Messzeilen gleich hoch; die Art-Auswahl schickt ab, der Knopf „Filtern" ist verborgen | **Höhe mit Angaben 68.4 px, fest 68.4 px · aufgeklappt „wegprobe" · Knopf verborgen · Art: 1 Zeilen „Wartung an"** | erfüllt |
+| `admin-rechtstexte-vorschau` | P5c-AP9 | E-P5c-28 | 1280 px (36) | Plakette „gespeicherter Stand" → „ungespeichert"; die Vorschau zeigt die neue Überschrift als h2 und „<b>" als Text; keine Fehlermeldung | **Plakette „gespeicherter Stand" → „ungespeichert" · h2 da · <b> maskiert · Meldung „" · gespeichert unverändert** | erfüllt |
+| `admin-rechtstexte-rueckfrage` | P5c-AP9 | F-P5c-57 | 1280 px (36) | Reiter „Impressum" mit ungespeichertem Text: Dialog; „Abbrechen" bleibt mit Text, „Verwerfen" wechselt auf t=impressum; nichts gespeichert | **Dialog „Der geänderte Text ist nicht gespeichert. Trotzdem wechseln?" · Abbrechen → ?t=nutzungsbedingungen, Text steht · Verwerfen → ?t=impressum · gespeichert unverändert** | erfüllt |
 | `ap1-ps2-gehaltene-maus` | AP1 | P-01 | 1280 px (36) | 3 von 3 | **3 von 3** | erfüllt |
 | `ap1-transportziel-eine-liste` | AP1 | P-03 | 1280 px (36) | 1 Liste · 2 Gruppen · ≤ 2 Stammdaten · Zeile ≥ Bedienhöhe | **1 Liste(n) · 2 Gruppen · 2 Stammdaten · 4 Adressen · 0 <datalist> · Zeile 51 px** | erfüllt |
 | `ap1-liste-ueber-speichern-leiste` | AP1 | P-03 | 1280 px (36) | Liste über der Leiste, Kopfleiste über der Liste | **61 px Überlappung, oben liegt: Liste (z-index Liste 35 · Leiste 30 · Kopf 40)** | erfüllt |

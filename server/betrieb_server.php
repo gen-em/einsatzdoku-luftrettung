@@ -28,8 +28,9 @@ require_once __DIR__ . '/format_lib.php';         // groesse_text(), datum_zeit_
  * Karten, und ein zweispaltiges Raster fuer zwei Karten waere Raster um des
  * Rasters willen (E-S8-18 — Zweispaltigkeit gilt ab mehr als vier Karten)."
  * Seit S8 sind fuenf Karten dazugekommen (Kopfzeilen, Ratenschutz,
- * CSP-Berichte, Schluessel des Servers, Konten); es sind SIEBEN, und die
- * Zahl, die die Einspaltigkeit begruendete, ist ueberschritten.
+ * CSP-Berichte, Schluessel des Servers, Konten), dazu Ankuendigung und
+ * Protokoll; es sind ACHT (Stand Web 21.1.0), und die Zahl, die die
+ * Einspaltigkeit begruendete, ist ueberschritten.
  *
  * EINSPALTIG BLEIBT SIE TROTZDEM, und zwar bis jemand das Gegenteil mit
  * einem Mockup freigibt (`CLAUDE.md` 5): Die Karten hier sind keine Kacheln,
@@ -691,7 +692,9 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
 ui_seite_start(['titel' => 'Servereinstellungen']);
 ?>
 
-<?php /* Lesespalte: zwei Karten, viel Erklärtext (E-S8-18, Mockup 07). */ ?>
+<?php /* Lesespalte (E-S8-18, Mockup 07) — damals zwei Karten mit viel
+         Erklärtext; heute acht mit je einem Satz, einspaltig aus dem Grund
+         im Kopf dieser Datei. */ ?>
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
                         'menue' => 'betrieb_server', 'lesespalte' => true]); ?>
 
@@ -840,7 +843,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
             ? 'Kennung ' . $skZustand['kennung'] . ' — versiegelt Backup-Ziele, '
               . 'Komplett-Backup und Konto-Backups'
             : ($skZustand['stand'] === 'fehlt'
-                ? 'Fehlt. Ohne ihn entsteht kein Komplett-Backup, kein '
+                /* EIN SATZ (E-P5c-06): „Fehlt. Ohne ihn …" waren zwei
+                   (Endzählung AP9, die einzige Kleinzeile über dem Soll). */
+                ? 'Fehlt — ohne ihn entsteht kein Komplett-Backup, kein '
                   . 'Konto-Backup und kein Versand auf ein Backup-Ziel'
                 : 'In config.php steht Kennung '
                   . ($skZustand['kennung'] ?? '—') . ', versiegelt wurde mit '
@@ -862,8 +867,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                   . $anZustand['kennung_alt'] . ' — beide werden ausgeliefert, '
                   . 'bis kein Konto mehr auf dem alten steht'
                 : ($anZustand['stand'] === 'fehlt'
-                    ? 'Nicht eingerichtet — alles läuft wie vor S10, nur der '
-                      . 'Schutz gegen einen Datenbankabzug fehlt'
+                    /* Kein Konzeptname im sichtbaren Text (C-4): „wie vor
+                       S10" hieß für niemanden etwas; die Statusseite sagt
+                       dasselbe mit der Fassung. */
+                    ? 'Nicht eingerichtet — alles läuft wie vor Web 20.0.0, nur '
+                      . 'der Schutz gegen einen Datenbankabzug fehlt'
                     : 'In config.php steht Kennung '
                       . ($anZustand['kennung'] ?? '—') . ', gebaut wurden die '
                       . 'Hüllen mit ' . $anZustand['erwartet'] . ' — bis das '
@@ -893,9 +901,14 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           /* EIN SATZ JE KLEINZEILE (P5c/AP9): Dass der alte Anteil erst weg
              darf, wenn kein Konto mehr auf ihm steht, stand bis Web 21.0.0 als
              eigener Absatz unter den Knöpfen und steht jetzt hier. */
+          /* DREI LAGEN, NICHT ZWEI (C-5): Ist nichts mehr offen, stellt auch
+             niemand mehr um — bis Web 21.1.0 stand dann trotzdem „jedes Konto
+             stellt beim nächsten Anmelden von selbst um". */
           $umstellungRest = ($anZustand['kennung_alt'] !== null && $anZaehlung['alt'] > 0)
               ? ' — der alte Anteil bleibt, bis kein Konto mehr auf ihm steht'
-              : ' — jedes Konto stellt beim nächsten Anmelden von selbst um';
+              : ($anOffen > 0
+                  ? ' — jedes Konto stellt beim nächsten Anmelden von selbst um'
+                  : '');
           ui_zeile([
             'text'  => 'Umstellung der Konten',
             'klein' => implode(' · ', $teile) . $umstellungRest,
@@ -1437,7 +1450,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           'wert' => geocoder_dienst(),
           'attr' => ' maxlength="180" inputmode="url"',
           'klein' => 'Ein Photon-Dienst mit „https://", Vorgabe '
-                   . e(GEOCODER_VORGABE) . ' — ein eigener hält die Anfragen im '
+                   . GEOCODER_VORGABE . ' — ein eigener hält die Anfragen im '
                    . 'Haus.']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>

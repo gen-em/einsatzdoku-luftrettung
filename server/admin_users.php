@@ -551,8 +551,12 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin']); ?>
 
   <?php ui_titelzeile(['titel' => 'NutzerInnen']); ?>
-  <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite mit Kontodaten,
-     Geräten und Konto-Backups — ein Klick auf eine Zeile öffnet sie.
+  <?php /* „MIT KONTODATEN, GERÄTEN UND KONTO-BACKUPS" STAND HIER BIS WEB 21.1.0 —
+           der Support und das Demo-Konto haben keine Karte Konto-Backups
+           (Endzählung AP9, A-4). Welche Karten eine Kontoseite trägt, sagt
+           das Handbuch. */ ?>
+  <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite — ein Klick auf
+     eine Zeile öffnet sie.
      <a href="hilfe.php#11-2-die-liste-der-nutzerinnen">Handbuch: NutzerInnen</a></p>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>

@@ -10,8 +10,9 @@
  *    wer gerade ein Formular halb ausgefuellt hat, verliert nichts.
  *
  *    NUR WO `CSRF` STEHT. `EdApi` haengt das Token der Seite an, und das
- *    gibt es nur auf Seiten mit `ui_krypto_bootstrap()`. Wo es fehlt
- *    (Anmeldeseite, Verwaltung), schickt das Formular selbst ab — ein Token
+ *    gibt es nur auf Seiten mit `ui_krypto_bootstrap()` oder
+ *    `ui_csrf_bootstrap()`. Wo es fehlt
+ *    (Anmeldeseite, die meisten Verwaltungsseiten), schickt das Formular selbst ab — ein Token
  *    von Hand hierher zu reichen hiesse, an EdApi vorbei einen zweiten
  *    Transport zu bauen (Register Z29).
  *
