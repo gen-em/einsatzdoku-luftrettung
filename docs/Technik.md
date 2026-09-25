@@ -4361,6 +4361,18 @@ Block *i* deckt die Klartextbytes [i·256 KB, (i+1)·256 KB). Der Klartext-Dump
 liegt für die Dauer des Baus im Bauordner und wird gelöscht, sobald die
 versiegelte Fassung steht.
 
+**Neben dem Index merkt sich der Zustand die gültige Länge der Datei**
+(`siegel_bytes`) — die Blöcke sind verschieden lang, und das nächste
+Häppchen schneidet zuerst darauf zurück, was ein abgebrochenes Häppchen
+hinterlassen hat. Diese Länge wird **mitgezählt**, nach jedem vollständig
+geschriebenen Block, und nicht mit `ftell()` erfragt: Auf einer Datei im
+Anhängemodus zählt `ftell()` ab null, also nur, was die laufende Anfrage
+geschrieben hat. Bis Web 21.1.1 stand dort genau das, und eine
+Versiegelung über zwei Häppchen ergab eine Datei, die sich nie mehr öffnen
+liess (Nr. 328). Ist die Datei kürzer als die gemerkte Länge oder fort,
+beginnt die Versiegelung von vorn. Die Komplettprobe fährt beides fest
+über mehrere Häppchen, statt es der Laufzeit zu überlassen.
+
 #### Das Format EDKOMP1
 
     "EDKOMP1\n"                                       8 Byte

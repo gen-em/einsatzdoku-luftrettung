@@ -274,6 +274,46 @@ pruef('Ein veränderter Dateikopf macht die Datei unlesbar',
       $fehler(fn() => komp_oeffnen($verdreht, (string)serverschluessel(), fn() => null)) !== '',
       'der Kopf hängt über die Zusatzdaten an jedem Block');
 
+/* VERSIEGELN ÜBER MEHRERE HÄPPCHEN — erzwungen, nicht dem Zufall überlassen
+ * (Nr. 328, F-P5c-170). Oben entscheidet die Laufzeit, ob die Häppchengrenze
+ * ins Siegeln fällt; im Abschluss von P5c tat sie es einmal, und die Datei
+ * liess sich nicht öffnen. Hier schreibt jedes Häppchen genau einen Block,
+ * aus einem Klartext von drei Blöcken — und am Ende muss derselbe Inhalt
+ * herauskommen. Danach dasselbe mit einer Zieldatei, die zwischen zwei
+ * Häppchen verschwindet: Dann beginnt das Siegeln von vorn. */
+$mhQuelle = $tmp . '/mehrhaeppchen.gz';
+file_put_contents($mhQuelle, random_bytes(KOMP_BLOCK * 2 + 12345));
+$mhKopf = komp_kopf_bauen(['migration' => 'probe', 'tabellen' => 1, 'zeilen' => 1,
+                           'roh' => (int)filesize($mhQuelle)], null) . "\n";
+$mhSiegeln = static function (?callable $zwischen) use ($mhQuelle, $mhKopf, $tmp): array {
+    $ziel = $tmp . '/mehrhaeppchen.edk';
+    @unlink($ziel);
+    $zs = ['siegel_i' => 0, 'siegel_bytes' => 0];
+    $runden = 0;
+    do {
+        $runden++;
+        $einer = 1;
+        $e = komp_siegel_schub($mhQuelle, $ziel, (string)serverschluessel(), $mhKopf, $zs,
+                               static function () use (&$einer): float { return $einer-- > 0 ? 60.0 : 0.0; },
+                               1.0);
+        if ($zwischen !== null && $runden === 2) { $zwischen($ziel); }
+    } while (!$e['fertig'] && $runden < 20);
+    $klar = '';
+    $fehlerText = '';
+    try {
+        komp_oeffnen($ziel, (string)serverschluessel(),
+                     static function (string $s) use (&$klar): void { $klar .= $s; });
+    } catch (Throwable $t) { $fehlerText = $t->getMessage(); }
+    return [$runden, $klar === (string)file_get_contents($mhQuelle), $fehlerText];
+};
+[$mhRunden, $mhGleich, $mhFehler] = $mhSiegeln(null);
+pruef('Über drei Häppchen versiegelt, öffnet die Datei mit demselben Inhalt',
+      $mhRunden === 3 && $mhGleich,
+      $mhRunden . ' Häppchen' . ($mhFehler !== '' ? ' — ' . $mhFehler : ''));
+[$mhRunden, $mhGleich, $mhFehler] = $mhSiegeln(static function (string $ziel): void { @unlink($ziel); });
+pruef('Verschwindet die Zieldatei zwischen zwei Häppchen, beginnt das Siegeln von vorn',
+      $mhGleich, $mhRunden . ' Häppchen' . ($mhFehler !== '' ? ' — ' . $mhFehler : ''));
+
 /* =========================================================================
  * Teil 5 — Die Passphrase-Fassung
  * ====================================================================== */

@@ -1,6 +1,10 @@
 # Prüfdokument RW — der Rückweg beim Zweitfaktor
 
-Gehört zu `Konzept-RW-Zweitfaktor-Rueckweg.md` (im P5c-Konzept AP5b). Nach
+Gehörte zu `Konzept-RW-Zweitfaktor-Rueckweg.md` (im P5c-Konzept AP5b) — **das
+Konzept ist mit dem Abschluss von P5c am 25.09.2026 gelöscht**, samt
+Vorbereitung und `konzept-rw/`; der letzte Stand liegt in der Git-Historie
+(`ae829e6`), Tabelle 5.2 und die Grenzen stehen in `docs/Technik.md` 4.99q.
+Nach
 `CLAUDE.md` 7: was maschinell geprüft wurde (Mittel **und** Zahl), was im
 Browser, was nicht und warum, und eine abhakbare Prüfliste — je Punkt der
 Bedienweg, das erwartete Ergebnis und woran ein Scheitern zu erkennen ist.

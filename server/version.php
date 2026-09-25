@@ -7621,5 +7621,18 @@ declare(strict_types=1);
  *   alle Wege, auf denen es ungueltig wird, die Karte Sicherheit sieben
  *   Toepfe mit Sperrleiter statt fuenf, zwei Verweise zeigen ins richtige
  *   Kapitel.
+ *
+ * 21.1.2 — EIN KOMPLETT-BACKUP, DAS SICH NICHT OEFFNEN LIESS (Nr. 328,
+ *   F-P5c-170). Korrekturstufe ohne Migration, noch im Abschluss von P5c.
+ *   Fiel die Zeitgrenze einer Anfrage mitten in die Versiegelung, merkte
+ *   sich `komp_siegel_schub()` als gueltige Laenge, was `ftell()` auf der
+ *   angehaengten Datei meldete — und das zaehlt im Anhaengemodus ab null.
+ *   Das naechste Haeppchen schnitt die Datei auf diese zu kleine Zahl
+ *   zurueck, mitten in einen Block, und das Backup war versiegelt, gross
+ *   genug und nie mehr zu oeffnen. Jetzt wird die Laenge mitgezaehlt, und
+ *   ist die Datei kuerzer als gemerkt, beginnt das Siegeln von vorn.
+ *   Gefunden hat es der letzte Pruefstand des Abschlusses, dessen Dump
+ *   zufaellig ueber zwei Haeppchen lief; die Komplettprobe erzwingt den
+ *   Fall seither, statt ihn der Laufzeit zu ueberlassen.
  */
-const WEB_VERSION = '21.1.1';
+const WEB_VERSION = '21.1.2';

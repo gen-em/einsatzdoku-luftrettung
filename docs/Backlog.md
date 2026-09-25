@@ -2010,7 +2010,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     - **Nicht hier:** der Log-Helfer (`error_log()` 39× in 19 Dateien,
       Präfixe uneinheitlich, nur `json_fehler()` mit Kennung). Er ist der
       Schreibweg des 10c-Protokolls und wird dort entworfen
-      (`Vorbereitung-P5c-Protokollierung.md`, V7).
+      (`Vorbereitung-P5c-Protokollierung.md`, V7 — gelöscht mit dem
+      Abschluss von P5c, Historie `ae829e6`).
 
     **Paket 4 — JavaScript.**
     - JSON-POST mit CSRF-Kopf 15× in 6 Dateien (`export.js` 2,
@@ -3647,20 +3648,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bestand der Betreiberin steht in der frischen 1.0-Anlage; das Skript
     ist danach aus dem Repositorium entfernt; die 1.0 liest keine Nutzlast
     von vor 1.0.
-
-326. **Bleibt die Karte „Ausgeführt" auf Betrieb → Updates?** *Aufgenommen
-    25.09.2026 in P5c/AP9 (F-P5c-146), berichtigt in P5c/AP11.* Die Karte
-    versprach, sie stehe „bis P5" dort, danach führe das Audit-Protokoll die
-    ausgeführten Kennungen (R66), und sie entfalle. AP9 hat den Satz
-    gestrichen und diesen Eintrag mit der Begründung angelegt, das Protokoll
-    schreibe keine Migrationen. **Das war falsch** (Gegenlesung AP11): Seit
-    P5c/AP2 schreibt `migrationen_lauf()` je ausgeführter Kennung einen
-    Eintrag `migration_ausgefuehrt` in den Reiter Verwaltung (E-P5c-38) —
-    für `update.php` wie für die Seite. Offen ist damit nur noch die Frage,
-    die R66 schon beantwortet hatte: **Entfällt die Karte jetzt, oder bleibt
-    sie**, weil sie als Einzige die Fassung („Web") je Kennung nennt? Die
-    Dauer eines Laufs steht an keiner der beiden Stellen. *Zuordnung:* die
-    Entscheidung der Betreiberin im Abschluss von P5c.
 
 327. **Die Rollenmatrix führt die Handlungen der BetreiberIn-Seiten nicht
     einzeln.** *Aufgenommen 25.09.2026 in P5c/AP11 (Gegenlesung AP4).*
@@ -10853,7 +10840,8 @@ zutreffen.
     Installation** (`instanz_kurz()`, Vorgabe „Gen-EM NAdoku"). Ein fest
     eingebautes „NAdoku" wäre auf einer umbenannten Installation schlicht
     falsch. Die **Webversion steht in der Fußzeile** des Blattes.
-    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`),
+    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`,
+    gelöscht mit dem Abschluss von P5c, Historie `ae829e6`),
     beide Blätter mit demselben Baustein `.blatt-druck`.
 
     **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-08, -30, -50).**
@@ -10901,3 +10889,43 @@ zutreffen.
     Jetzt bleibt bei `status: 0` alles stehen, und der Knopf wird wieder
     frei. Belegt im Browser mit abgebrochenem Abruf, für Prüfen und für die
     Rückfrage.
+
+326. **Bleibt die Karte „Ausgeführt" auf Betrieb → Updates?** *Aufgenommen
+    25.09.2026 in P5c/AP9 (F-P5c-146), berichtigt in P5c/AP11.* Die Karte
+    versprach, sie stehe „bis P5" dort, danach führe das Audit-Protokoll die
+    ausgeführten Kennungen (R66), und sie entfalle. AP9 hat den Satz
+    gestrichen und diesen Eintrag mit der Begründung angelegt, das Protokoll
+    schreibe keine Migrationen. **Das war falsch** (Gegenlesung AP11): Seit
+    P5c/AP2 schreibt `migrationen_lauf()` je ausgeführter Kennung einen
+    Eintrag `migration_ausgefuehrt` in den Reiter Verwaltung (E-P5c-38) —
+    für `update.php` wie für die Seite. Offen ist damit nur noch die Frage,
+    die R66 schon beantwortet hatte: **Entfällt die Karte jetzt, oder bleibt
+    sie**, weil sie als Einzige die Fassung („Web") je Kennung nennt? Die
+    Dauer eines Laufs steht an keiner der beiden Stellen. *Zuordnung:* die
+    Entscheidung der Betreiberin im Abschluss von P5c.
+
+    **Erledigt 25.09.2026 (P5c/AP11, Q-P5c-53): Die Karte bleibt.** Sie
+    ist die einzige Stelle, die zu jeder Kennung die Fassung („Web") nennt;
+    das Protokoll sagt, wer wann ausgeführt hat. Beides steht in Handbuch
+    12.3. Das Versprechen aus R66, die Karte entfalle, ist damit
+    zurückgenommen.
+
+
+328. **Ein Komplett-Backup, über zwei Häppchen versiegelt, lässt sich nicht
+    öffnen.** *Aufgenommen und erledigt 25.09.2026 in P5c/AP11 (F-P5c-170),
+    gefunden vom letzten Prüfstand des Abschlusses.* `komp_siegel_schub()`
+    merkte sich als gültige Länge der Datei, was `ftell()` auf dem Handle im
+    Anhängemodus meldete — und das zählt ab null, also ohne Kopf und ohne die
+    Blöcke früherer Häppchen. Das nächste Häppchen schnitt die Datei darauf
+    zurück, mitten in einen Block; die Datei ging aufs Backup-Ziel und ließ
+    sich nie mehr öffnen. Die Komplettprobe sah es nicht, weil die Laufzeit
+    entschied, ob die Häppchengrenze ins Siegeln fiel.
+
+    **Erledigt mit Web 21.1.2 (P5c/AP11, 25.09.2026).** Die Länge wird nach
+    jedem vollständig geschriebenen Block mitgezählt; ist die Datei kürzer
+    als gemerkt oder fort, beginnt die Versiegelung von vorn. Die
+    Komplettprobe erzwingt beides in Teil 4 (drei Häppchen zu je einem
+    Block, dazu eine verschwundene Zieldatei) — gegen die alte Bibliothek
+    2 von 69 offen, gegen die neue 0 von 69. **Offen bleibt nur die Frage
+    an die Betreiberin**, ob ein vorhandener Stand auf Produktiv betroffen
+    ist (P-P5c-45 im Prüfdokument P5c).

@@ -359,8 +359,8 @@ ui_seite_start(['titel' => 'Updates']);
              Termin nicht auf die Seite gehört. Die Begründung dazu war falsch
              (Gegenlesung AP11): Das Protokoll führt jede ausgeführte Migration
              seit P5c/AP2 im Reiter Verwaltung (`migration_ausgefuehrt` in
-             `migrationen_lauf()`). Ob die Karte trotzdem bleibt, steht in
-             Backlog Nr. 326. */ ?>
+             `migrationen_lauf()`). Die Karte bleibt trotzdem — sie nennt
+             als Einzige die Fassung je Kennung (Q-P5c-53, Nr. 326). */ ?>
   <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Fassung ------------------------------------------------------

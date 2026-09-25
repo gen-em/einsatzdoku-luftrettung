@@ -14,6 +14,53 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.2] — 2026-09-25
+
+**Ein Komplett-Backup, das über zwei Häppchen versiegelt wurde, ließ sich
+nicht mehr öffnen.** Noch im Abschluss von P5c (AP11), gefunden vom letzten
+Prüfstand. **Korrekturstufe ohne Migration.**
+
+### Behoben
+
+- **Web: Die Versiegelung des Komplett-Backups zerschnitt beim Wiederanlauf
+  ihre eigene Datei** (Nr. 328, F-P5c-170). Das Backup entsteht in
+  Häppchen, damit keine Anfrage an die Zeitgrenze des Webspace stößt, und
+  wird danach Block für Block versiegelt. Fiel die Grenze mitten in die
+  Versiegelung, merkte sich `komp_siegel_schub()` als gültige Länge der
+  Datei, was `ftell()` meldete. Auf einer Datei im Anhängemodus zählt
+  `ftell()` aber ab null — also nur, was die laufende Anfrage geschrieben
+  hatte, ohne Kopf und ohne die Blöcke davor. Das nächste Häppchen schnitt
+  die Datei auf diese zu kleine Zahl zurück, mitten in einen Block, und
+  schrieb dahinter weiter. **Die Datei sah aus wie ein Backup, hatte die
+  richtige Größe, ging aufs Backup-Ziel — und ließ sich nie mehr öffnen.**
+  Aufgefallen wäre das erst beim Wiederherstellen. Jetzt wird die Länge
+  nach jedem vollständig geschriebenen Block mitgezählt, und ist die Datei
+  kürzer als gemerkt oder fort, beginnt die Versiegelung von vorn.
+  **Wie oft es auf Produktiv getroffen hat, ist nicht zu sagen.** Es
+  braucht eine Zeitgrenze, die genau in die Versiegelung fällt, und die
+  dauert bei kleinem Bestand Millisekunden — unwahrscheinlich, nicht
+  ausgeschlossen. Die Zeile stand mindestens seit Web 15.6.0 da; weiter
+  reicht die Historie dieses Arbeitsstands nicht zurück. **Deshalb einmal
+  prüfen** (P-P5c-45): jeden vorhandenen Stand unter Betrieb →
+  Komplett-Backup herunterladen. Bricht der Download ab, steht unter
+  Verwaltung → Protokoll → System „Download … abgebrochen", und dieser
+  Stand ist nicht zu retten — ein neues Backup anlegen.
+
+### Geändert
+
+- **Werkzeug: Die Komplettprobe erzwingt die Versiegelung über mehrere
+  Häppchen** (Teil 4, zwei neue Fälle, jetzt 69 Erwartungen). Ob die
+  Häppchengrenze ins Siegeln fiel, entschied bisher die Laufzeit: In
+  allen früheren Läufen tat sie es nicht, im letzten Prüfstand des
+  Abschlusses einmal — bei 66 825 Zeilen im Bestand (einzeln gefahren sind
+  es rund 19 000, und der Dump braucht ein Häppchen). Jetzt schreibt jedes Häppchen genau einen Block, und am
+  Ende muss derselbe Inhalt herauskommen; dazu eine Zieldatei, die zwischen
+  zwei Häppchen verschwindet. Gegenprobe gegen die alte Bibliothek: beide
+  Fälle offen, 2 von 69.
+- **Doku:** `docs/Technik.md` 4 (der Siegelzustand sind zwei Zahlen, nicht
+  eine, und warum die zweite gezählt wird), Backlog Nr. 328, Prüfdokument
+  P5c (F-P5c-170, P-P5c-45), Rahmenplan (Erledigt-Zeile P5c, Abschnitt 6).
+
 ## [Web 21.1.1] — 2026-09-25
 
 **Der Abschluss von P5c: ein Tor, das bei einem Fehler aufging, und was die
@@ -65,8 +112,16 @@ nicht auf dem Papier stand.
   jetzt in `Technik.md` 4.99q, damit es das Löschen des Konzepts übersteht.
 - **Doku: Backlog Nr. 326 berichtigt.** AP9 hatte ihn mit der Begründung
   angelegt, das Protokoll führe keine Migrationen. Es führt sie seit
-  20.39.0 (`migration_ausgefuehrt`); offen ist nur, ob die Karte
-  „Ausgeführt" bleibt.
+  20.39.0 (`migration_ausgefuehrt`). **Die Karte „Ausgeführt" bleibt**
+  (Q-P5c-53): Nur sie nennt die Fassung je Kennung; das Versprechen aus R66,
+  sie entfalle, ist zurückgenommen.
+- **Doku: Die Konzepte P5c und RW sind mit dem Abschluss gelöscht** —
+  samt den beiden Vorbereitungen und den Mockup-Ordnern `konzept-p5c/` und
+  `konzept-rw/` (Q-P5c-54); letzter Stand in der Git-Historie `ae829e6`.
+  Was nur dort stand und bleibt, steht jetzt in `Technik.md` 4.99q. Die
+  Prüfdokumente bleiben, bis ihre Prüflisten abgehakt sind. `CLAUDE.md` 4
+  nennt neben `pat_wrap_rc` auch `rw_privat` als Hülle, die nie am
+  Server-Anteil hängen darf (Q-P5c-55).
 - **Werkzeug: Zweitfaktorprobe Teil 2b und Rückwegprobe A7** (F-P5c-166):
   `totp_spalten_da()` und `rw_zustand()` mit einer Verbindung, deren
   `prepare()` wirft — beide müssen abbrechen; mit fehlender Spalte (42S22)

@@ -1,6 +1,11 @@
 # Prüfdokument P5c — Rollen, Sicherheit, Betriebslage
 
-Gehört zu `Konzept-P5c-Rollen-Sicherheit-Betriebslage.md`. Nach `CLAUDE.md`
+Gehörte zu `Konzept-P5c-Rollen-Sicherheit-Betriebslage.md` — **das Konzept
+ist mit dem Abschluss am 25.09.2026 gelöscht**, samt Vorbereitung und
+Mockup-Ordner `konzept-p5c/`; der letzte Stand liegt in der Git-Historie
+(`ae829e6`). Verweise hier auf „Konzept, Abschnitt …" und auf Befunde
+F-P5c-… meinen diesen Stand. Dieses Dokument bleibt, bis seine Prüfliste
+abgehakt ist (Rahmenplan 6). Nach `CLAUDE.md`
 7: was maschinell geprüft wurde (Mittel **und** Zahl), was im Browser, was
 nicht und warum, und eine abhakbare Prüfliste — je Punkt der Bedienweg, das
 erwartete Ergebnis und woran ein Scheitern zu erkennen ist. Angelegt mit
@@ -12,6 +17,7 @@ AP1; jedes Paket schreibt seinen Abschnitt fort.
 
 | Was | Warum nicht | Wann dann |
 |---|---|---|
+| **Ob ein vorhandenes Komplett-Backup auf Produktiv betroffen ist** (AP11, Nr. 328, F-P5c-170) | Bis 21.1.1 ließ sich ein Komplett-Backup nicht öffnen, wenn die Zeitgrenze einer Anfrage mitten in die Versiegelung fiel. Örtlich ist die Behebung gemessen (Komplettprobe Teil 4, Gegenprobe 2 von 69 offen). Welche Stände auf Produktiv und auf dem Backup-Ziel liegen und ob einer davon über zwei Häppchen versiegelt wurde, sieht nur, wer sie öffnet — die Arbeitsumgebung erreicht Produktiv nicht. | P-P5c-45, **vor** dem Merge sinnvoll: Ein betroffener Stand ist kein Rückfallstand |
 | **Das Einrichtungstor mit gestörter Datenbank** (AP11, F-P5c-166) | Die Zweitfaktorprobe misst die Behebung an `totp_spalten_da()` und `rw_zustand()` mit einer Verbindung, deren `prepare()` wirft (2b, mit dem Code von 21.1.0 zwei rot). Das Tor in `auth_guard.php` hat dieselbe Unterscheidung, läuft aber nur über HTTP, und dort lässt sich die Datenbank nicht gezielt stören — **gelesen, nicht gemessen**. | kein Prüfpunkt; ein Anlass für eine Probe mit gestörter Verbindung über HTTP wäre eine neue Backlog-Nummer |
 | **Das SQL der Nachrechnung aus AP7** (Gegenlesung AP7) | Die Abnahme von AP7 verlangte das SQL der unabhängigen Rechnung im Prüfdokument; in 1f steht nur, was gerechnet wurde (Fenstergrenzen aus PHP, alle Konten außer Demo), nicht die Abfrage. Die Rechnung ist damit **nicht wiederholbar dokumentiert**; die Zahlen (10 / 0) stehen. | wer die Zahlen nachrechnen will, schreibt die Abfrage neu aus `statistik_lib.php` (`stat_im_fenster()`) |
 | **Die Handlungen der BetreiberIn-Seiten in der Rollenmatrix** (AP11, Gegenlesung AP4) | 25 POST-Handlungen und 7 Seitenaufrufe hinter `require_betreiberin()` stehen nicht einzeln in der Matrix; die Probe misst nur das Tor der Seite. Einen Platzhalter für ein Support-Konto als Ziel gibt es nicht. | Backlog Nr. 327 |
@@ -302,7 +308,7 @@ orange" · Sicherheit „Leiter wie bei der Anmeldung" · Servereinstellungen
 Updates ohne „(R12)", „(R65)", „(R66)" · Handbuch 12.1 (Serverschlüssel),
 12.4 („Fehler", fünf Gründe), 12.7 (Standorte), „Der Wartungsmodus".
 
-## 1j. Messprotokoll AP11 (25.09.2026, Web 21.1.1)
+## 1j. Messprotokoll AP11 (25.09.2026, Web 21.1.1 und 21.1.2)
 
 | Mittel | Aufruf | Zahl |
 |---|---|---|
@@ -314,10 +320,17 @@ Updates ohne „(R12)", „(R65)", „(R66)" · Handbuch 12.1 (Serverschlüssel)
 | **Kreislauf `edbak-alt`** | `kreislauf.py --art edbak-alt --frisch`, von Hand (nicht im Prüfstand) | **287 853 verglichen, 0 unerklärt, 796 erwartet** — wie in AP8 |
 | **Anker, Handbuch, Bestand** | `anker.php`; `pruefen.sh handbuch`; `bestand.py` | **50 Verweise auf 102 Marken, 0 ohne Ziel** (der neue Verweis auf 3.2 und der aufs Archiv eingeschlossen); Handbuch 0 Befunde; Bestand zuerst **1** (die erzeugte Tabelle in `Pruefablauf.md` nach dem Muster `rollen` — neu erzeugt), dann **0** |
 | **Auswahl** | `auswahl.py --selbstprobe` | **36 Lagen, 0 Fehlschläge** |
-| **Prüfstand** | `hochfahren.sh --neu`, `pruefen.sh` | *steht in der Commit-Nachricht von `P5c-AP11`* |
+| **Prüfstand, AP11 Teil 1** | `hochfahren.sh --neu`, `pruefen.sh` → Stufe `haupt` | **50 grün, 0 rot, 0 nicht gemessen, 2 362 s** — im Commit `f747bf7` |
+| **Prüfstand, Abschluss — erster Lauf, nicht verwendet** | derselbe Aufruf nach dem Löschen der Konzepte und dem Rahmenplan | **0 rot, 1 nicht gemessen, 49 grün, 2 583 s**: Die Schemaprobe meldete „Modul plattform steht nicht" — der Docker-Dienst der Arbeitsumgebung war zwischen zwei Läufen eingegangen. Dienst neu gestartet, `plattform.sh alles`, dann von vorn |
+| **Prüfstand, Abschluss — zweiter Lauf, abgebrochen** | derselbe Aufruf, derselbe Baum | **Komplettprobe rot:** „Die Datei liess sich nicht öffnen: falscher Schlüssel …" in Teil 4. Der Dump lief diesmal über **zwei Häppchen** (66 825 Zeilen im Bestand), und die Grenze fiel ins Siegeln; im ersten Lauf über denselben Baum war die Probe grün. Einzeln gefahren grün (67 / 0, ein Häppchen, 19 140 Zeilen). Den Lauf habe ich abgebrochen, um die Ursache zu suchen |
+| **F-P5c-170** (Nr. 328) — ein Fehler im Produkt, nicht in der Probe | Nachgestellt mit einem Klartext von drei Blöcken, je Häppchen einer: **nicht zu öffnen**, dieselbe Meldung. `ftell()` auf der Datei im Anhängemodus zählt ab null (PHP 8.4.19: nach 3 geschriebenen Byte an 8 vorhandene meldet es 3, nicht 11) | behoben in `komplett_lib.php`, `komp_siegel_schub()`: Länge mitgezählt, bei zu kurzer oder fehlender Datei von vorn — Web **21.1.2** |
+| **Komplettprobe Teil 4, zwei neue Fälle** | `proben.sh komplett`; Gegenprobe mit der Bibliothek von 21.1.1 | Gegenprobe **69 / 2 offen** (beide neuen Fälle: „falscher Schlüssel …" nach drei Häppchen; „kein Komplett-Backup im Format EDKOMP1", wenn die Zieldatei zwischendurch fehlt); mit der Behebung **69 / 0** — drei Häppchen, inhaltsgleich; fünf Häppchen, wenn die Datei nach dem zweiten verschwindet |
+| **Prüfstand, Abschluss** | derselbe Aufruf, frische Anlage, nach der Behebung | *steht in der Commit-Nachricht von `P5c-AP11: Abschluss`* |
 
 **Liste der berichtigten Stellen** steht im CHANGELOG unter Web 21.1.1 und
-im Konzept, Abschnitt 5, F-P5c-166 bis -169.
+im Konzept, Abschnitt 5, F-P5c-166 bis -169. **F-P5c-170** entstand nach dem
+Löschen des Konzepts; er steht hier, im CHANGELOG unter Web 21.1.2 und in
+Backlog Nr. 328.
 
 ## 2. Prüfliste
 
@@ -333,7 +346,7 @@ im Konzept, Abschnitt 5, F-P5c-166 bis -169.
 | P-P5c-08 | **Die Seite am Handy** (AP2) | auf Staging am Handy, als BetreiberIn: Verwaltung → Protokoll, Reiter „Archiv" (ganz rechts) antippen, dann „Verwaltung"; eine Zeile mit Winkel aufklappen | Die Reiterreihe rollt waagerecht, der aktive Reiter ist nach dem Laden im Bild, die Seite selbst rollt **nicht** waagerecht; die Plakette steht unter dem Text; aufgeklappt stehen die Angaben in fester Schrift | der aktive Reiter außerhalb des Bildes; die Seite lässt sich seitlich schieben; die Plakette neben einem fünfzeiligen Text | offen |
 | P-P5c-09 | **Ein Komplett-Backup hinterlässt einen Eintrag und keine IP** (AP2) | auf Staging: Betrieb → Komplett-Backup → Jetzt sichern, dann „Herunterladen" (unverschlüsselt), die `.sql.gz` entpacken | im Kopf eine Zeile `-- OHNE ZEILEN: sicherheit_ereignisse, rate_limits …`; zu beiden Tabellen `CREATE TABLE`, aber kein `INSERT`; im Protokoll, Reiter Sicherung, zwei Einträge (erzeugt, heruntergeladen) | ein `INSERT` für `sicherheit_ereignisse` oder `rate_limits`; kein Eintrag im Reiter Sicherung | offen |
 | P-P5c-10 | **Die Kennungssuche findet einen Eintrag** (AP3) | auf Staging nach dem Merge: Verwaltung → Protokoll → System; hat der Reiter einen Eintrag, dessen Winkel aufklappen und die Kennung abschreiben; dann in einem anderen Reiter die Kennung **klein geschrieben** ins Suchfeld | Die Seite springt nach System und zeigt genau diesen Eintrag | „Keine Einträge" — dann vergleicht Staging (MySQL 8.4) anders, als die Abfrage gemessen hat (F-P5c-89) | offen — **nur, wenn ein Eintrag da ist**; sonst bei P-P5c-12 nachholen |
-| P-P5c-11 | **Die Fehlerseite, wie sie gebaut ist** (AP3, E-P5c-96) | die beiden Bilder in `docs/konzepte/konzept-p5c/ap3/` ansehen | Gerüst wie die Wartungsseite, rote Meldung mit der Kennung, darunter der Meldeweg und „Zur Startseite"; am Handy kein Überlauf | Wortlaut oder Aufbau nicht, was du willst — dann sag es; die Seite hat kein freigegebenes Bild (E-P5c-96) | offen — **Durchsicht** |
+| P-P5c-11 | **Die Fehlerseite, wie sie gebaut ist** (AP3, E-P5c-96) | die beiden Bilder aus der Git-Historie ansehen — der Ordner ist mit dem Abschluss gelöscht: `git show ae829e6:docs/konzepte/konzept-p5c/ap3/fehlerseite-1280.png > /tmp/f1280.png`, ebenso `…-390.png` | Gerüst wie die Wartungsseite, rote Meldung mit der Kennung, darunter der Meldeweg und „Zur Startseite"; am Handy kein Überlauf | Wortlaut oder Aufbau nicht, was du willst — dann sag es; die Seite hat kein freigegebenes Bild (E-P5c-96) | offen — **Durchsicht** |
 | P-P5c-12 | **Was im Reiter System steht** (AP3) | eine Woche nach dem Merge auf Staging (nach dem Tag auf Produktiv): Verwaltung → Protokoll → System, Zeitraum 7 Tage | Wenige Einträge; jeder mit Kennung, Datei und Zeile; **keine** IP-Adresse, keine E-Mail-Adresse außer als `[Adresse]` | viele gleiche Einträge (eine Stelle, die dauernd meldet — Befund); eine Adresse im Klartext in einer Meldung (die Bereinigung hat ein Muster nicht getroffen) | offen |
 | P-P5c-13 | **Das Fehlerprotokoll des Webspace wird still** (AP3) | wo zugänglich: das PHP-Fehlerprotokoll beim Hoster vor und eine Woche nach dem Deploy vergleichen | Danach nur noch Zeilen mit `[KENNUNG]` vorn (der Rückfall), Zeilen „protokoll: Eintrag nicht geschrieben — …" (die zweite erlaubte Stelle, `protokoll_fehler_vermerken()`, bei einem Ausfall der Datenbank) und die Meldungen, die PHP selbst schreibt | Zeilen ohne Kennung im alten Format („app_state: …", „Ratenschutz …") — dann ruft eine Stelle noch `error_log()` (Register Z38 hätte es melden müssen) | offen — **nur, wo zugänglich** |
 | P-P5c-14 | **Die Kontaktadresse erscheint auf der Fehlerseite** (AP3) | Verwaltung → Installation: steht eine Kontaktadresse? | Wenn ja, nennt die Fehlerseite sie als Verweis; wenn nein, sagt sie „Nenne diese Kennung …" (beides örtlich gemessen) | — (Hinweis: Ohne Kontaktadresse weiß eine NutzerIn nicht, wohin mit der Kennung) | offen — **Entscheidung, ob eine eingetragen wird** |
@@ -367,6 +380,7 @@ im Konzept, Abschnitt 5, F-P5c-166 bis -169.
 | P-P5c-42 | **Wartungsmodus: sichern, obwohl der Torwächter geschlossen hat** (AP9, E-P5c-134) | beim nächsten Deploy mit Migration auf Staging: Betrieb → Updates → Knopf „Komplett-Backup" in der Karte „Ausstehende Updates"; dann Betrieb → Backup-Ziele; dann eine Seite unter Verwaltung | Komplett-Backup und Backup-Ziele öffnen, beide mit dem orangen Balken; „Jetzt sichern" läuft; die Seite unter Verwaltung zeigt die Wartungsseite | 503 auf Komplett-Backup — dann steht `admin_komplettsicherung.php` nicht in `WARTUNG_AUSNAHMEN` der ausgelieferten Fassung | offen |
 | P-P5c-43 | **Die Leiste an einem Laptop** (AP9, E-P5c-131, F-P5c-164) | am eigenen Laptop mit einem Fenster um 700 und um 850 px Höhe: Betrieb → Servereinstellungen, dann Betrieb → Status | unter 800 px: keine Sprungmarken in der Leiste, alle 18 Einträge ohne Rollen erreichbar; um 850 px: Sprungmarken da, bei Servereinstellungen und Status reicht die Leiste über den Rand und rollt in sich | — (Hinweis: Ob die Lücke zwischen 800 und 946 px stört, entscheidet die BetreiberIn; zu ändern wäre die eine Höhe in `style.css`) | offen |
 | P-P5c-44 | **Die Texte lesen** (AP9, E-P5c-06) | an einem ruhigen Nachmittag: jede Seite unter Verwaltung und Betrieb einmal ansehen und je Karte einen Verweis „Handbuch: …" anklicken | je Karte höchstens ein Satz; jeder Verweis landet auf der passenden Überschrift, nicht am Anfang des Handbuchs | ein Satz, der nicht stimmt — die Endzählung hat rund zwanzig gefunden, sie liest aber Quelltext, nicht die Seite | offen |
+| P-P5c-45 | **Vorhandene Komplett-Backups öffnen** (AP11, Nr. 328, F-P5c-170) | auf **Produktiv**, am besten vor dem Merge: Betrieb → Komplett-Backup, bei jedem Stand der Liste „Herunterladen" (die entsiegelte Fassung, `.sql.gz`); danach `gzip -t` auf jede Datei und Verwaltung → Protokoll → System ansehen. Ältere Stände, die nur noch auf dem Backup-Ziel liegen, öffnet allein die Wiederherstellung (mit Nachweis) — sie sind dieselben Dateien, die der Versand hinaufgeschoben hat | jeder Download läuft bis zum Ende, `gzip -t` meldet nichts, im Reiter System kein Eintrag „Download … abgebrochen" | ein abgebrochener Download, `gzip -t` meldet „unexpected end of file", oder im Reiter System „Download … abgebrochen" mit „falscher Schlüssel …" bzw. „verändert oder unvollständig (Block …)" — **dieser Stand ist nicht zu retten**: nach dem Deploy von 21.1.2 ein neues Komplett-Backup anlegen und den kaputten Stand löschen | offen |
 
 ## 3. Grenzen der benutzten Prüfmittel
 

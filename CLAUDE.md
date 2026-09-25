@@ -262,7 +262,11 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   öffnet ohne ihn, und deshalb ist der Verlust des Anteils **kein
   Datenverlust**, sondern ein Passwort-Reset für alle. Eine
   `edka1:`-Wiederherstellungshülle wäre der Verlust genau dieses Rückwegs;
-  `WRAP_RC_RE` und `huelle_rc_pruefen()` lassen sie nicht zu.
+  `WRAP_RC_RE` und `huelle_rc_pruefen()` lassen sie nicht zu. **Dasselbe
+  gilt für `rw_privat`**, den privaten Teil des Rückwegs beim Zweitfaktor:
+  Er liegt als `edk1:` unter dem Inhaltsschlüssel und muss mit dem
+  Wiederherstellungsschlüssel allein aufgehen (`RW_PRIVAT_RE = WRAP_RC_RE`,
+  `docs/Technik.md` 4.99q).
   **Zwei Zeichen tragen die Zusage in die Oberfläche:** ein Schloss an jedem
   verschlüsselten Feld, die Kleinzeile „Klartext — keine Patientendaten" an
   jedem Klartext-Freitextfeld. Sie schließen einander aus; die Wahl steht an

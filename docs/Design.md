@@ -948,6 +948,13 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 Alle in `server/ui.php`. **Der Vorrat ist die Antwort auf die Freigaberegel:**
 Wer eine Seite baut, sucht hier, statt etwas Neues zu erfinden.
 
+> **Wo die freigegebenen Bilder liegen.** Die Mockups, die unten als Herkunft
+> genannt sind, liegen neben ihrem Konzept unter `docs/konzepte/konzept-…/`.
+> **M-P5c-01a bis -01f, M-P5c-02a bis -02e und M-RW-01 sind mit dem
+> Abschluss von P5c gelöscht** (25.09.2026, Q-P5c-54) — sie stehen in der
+> Git-Historie, letzter Stand `ae829e6` (`docs/konzepte/konzept-p5c/`,
+> `docs/konzepte/konzept-rw/`).
+
 ### 9.0 Wenn du X willst, nimm Y
 
 Die Tabelle ist der Einstieg. Steht dein Fall nicht darin, ist das der Moment
