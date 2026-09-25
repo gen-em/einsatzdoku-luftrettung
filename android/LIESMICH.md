@@ -185,6 +185,38 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.16.0 (Konzept AR: AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20,
+API 37), `./gradlew build --rerun-tasks` im Container, 25.09.2026 —
+`BUILD SUCCESSFUL in 4m 54s`:**
+
+| | `handy` | `uhr` |
+|---|---|---|
+| Lint-Fehler | **0** | **0** |
+| Lint-Warnungen | **0** | **0** |
+| Prüffälle je Bauart | **267**, davon 15 übersprungen | **72**, davon 0 übersprungen |
+| Kotlin-Warnungen | 0 | 0 |
+| APK (unsigniert, Release) | **9 197 370 B** | **22 743 506 B** |
+
+**Null Warnungen, und keine stummgeschaltet.** Vor der Runde waren es 14:
+zehn Fassungshinweise (die Kette hinter AGP 9, Nr. 65), drei
+`PluralsCandidate` und eine unbenutzte Zeichenkette. Die Fassungshinweise
+sind mit dem Umstieg weg, die Plurale sind `<plurals>` geworden — zwei davon
+waren echte Fehler („Noch 1 Minuten", „Noch 1 Sekunden") —, die Zeichenkette
+ist ausgetragen. **Die Zahl ist trotzdem kein Sollwert:** Sobald draußen eine
+neuere Fassung erscheint, meldet Lint sie wieder, ohne dass hier jemand
+etwas angefasst hat. Sollwert sind die 0 Lint-FEHLER.
+
+**267 statt 264:** `MehrzahlTest` (drei Fälle). **72 statt 71:** der Bildfall
+„Handy nicht erreichbar" der Uhr — den Zustand führt der Emulator nicht herbei. **Das APK ist gewachsen**,
+Handy um 1,33 MB, Uhr um 3,17 MB — Compose 1.12 und Wear-Compose 1.7 bringen
+mehr mit; B-S4-03 (die Uhr ist groß) gilt weiter.
+
+**Berichtigung zum Stand 0.15.1 darunter:** Dort steht als Kandidat für die
+15. Warnung Robolectric 4.16.1 → 4.17. Robolectric 4.17 ist erschienen, und
+Lint meldet es nicht — der Kandidat war es nicht (Konzept AR, F-AR-10).
+Wahrscheinlich war es die unbenutzte Zeichenkette; belegen lässt sich das
+nicht mehr.
+
 **Stand Android 0.15.1 (Robolectric-Abbild über Gradle, Backlog Nr. 240),
 `./gradlew build` im Container, 20.09.2026 — `BUILD SUCCESSFUL in 6m 16s`:**
 
@@ -226,6 +258,35 @@ Dazu die Gegenprobe an der Wurzel: `./gradlew :handy:dependencies
 --configuration releaseRuntimeClasspath` nennt **kein** Robolectric und kein
 `android-all-instrumented`. Die neue Abhängigkeit hängt an einer eigenen
 Konfiguration und kann das Paket nicht erreichen.
+
+**Siebter Emulatorlauf am 24./25.09.2026 (0.16.0, Konzept AR) — zum ersten
+Mal auf Android 17 (API 37), und mit drei Stolpersteinen, die es vorher
+nicht gab.** Handy: `system-images;android-37.0;google_apis;x86_64`
+(`default` gibt es für 37 nicht), Boot **1 420 s** (API 34: 502–715 s),
+Prüf-APK 26 s. Kopplung gegen die örtliche Installation (Code `EKG G89`,
+Konto 1, „Ja, koppeln", `devices`-Zeile am Server), Einstellungen →
+Rechtliches mit „von der BetreiberIn des Servers" und „Fassung 0.16.0-pruef"
+(P-PK-28), der Knopf „Datenschutzerklärung" übergibt an Chrome — der
+steht auf seiner Ersteinrichtung, die Seite selbst kam deshalb nicht an.
+Uhr: Wear OS 5 (`android-34;android-wear;x86_64`), Boot **864 s**,
+Startseite auf rundem Glas. **Und der Weg, an dem `targetSdk` 37 am
+meisten hängt, lief durch:** Dienst beginnen mit Ortung und Meldungen per
+`pm grant`, Positionen per `adb emu geo fix` — der Vordergrunddienst läuft
+(`isForeground=true`, `types=0x00000008`, Standort), „Aufzeichnung läuft
+seit 00:34 · GPS empfängt", 27 Punkte, 4,3 km; Dienst beenden mit
+Rückfrage, am Server ein `POST /ingest.php` mit 200, der Diensttag mit
+`ended_at` und das Segment mit `final = 1`. Der zweite Boot des Handys brauchte
+526 s statt 1 420 s — die Vorübersetzung von ART lag schon im Abbild. Bilder unter
+`emulator-bilder/0160-*.png` (nicht im Repositorium).
+
+| Stolperstein | Was zu tun ist |
+|---|---|
+| **SurfaceFlinger bricht auf API 37 ab** — `Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma` (`mapper.ranchu.so`, Faden `RegionSampling`), die ganze Oberfläche startet neu: drei Abstürze in 13 Minuten | `emulator.sh start` schaltet seither auf Drei-Tasten-Navigation um; das Sampling der Gestenleiste bleibt dann aus, danach über neun Minuten kein Absturz. Ein Fehler des Emulators 37.1.11, nicht der App (Backlog Nr. 337) |
+| **`screencap` liefert auf API 37 72 Bytes Fehlertext** statt PNG — dieselbe Assertion | `emulator.sh bild` zieht dann von der Wirtsseite ab (`adb emu screenrecord screenshot`) |
+| **Das einzige Wear-Abbild mit API 37 ist ein `user`-Build** (`android-wear-signed`: `ro.adb.secure=1`, `ro.debuggable=0`) — kein Root, also kein Watchdog-Faktor, `adb` blieb über zehn Minuten `offline` | Wear OS 5 (API 34, `userdebug`) nehmen; die Prüfpunkte der Uhr hängen nicht an der API-Stufe |
+| **Emulator und Gradle-Daemon zusammen blockieren den Container** — 6 GB plus rund 5 GB in 15 GB ohne Swap: Last 60, `ps`, `uptime` und `adb` hingen | vor dem Emulator `./gradlew --stop`; `emulator.sh start` warnt seither, wenn ein Daemon läuft |
+| **Nach einem Neustart der Oberfläche sagt `sys.boot_completed` weiter 1**, aber der Nutzerspeicher ist noch gesperrt — `am start` meldet „Activity class … does not exist" | auf `sys.user.0.ce_available=true` warten |
+| **Wear OS 5 zeigt ohne Telefon „Handy verbunden"** — anders als Wear OS 3 am 02.09.2026 (B-S4-09). Die Anzeige folgt einer zugestellten Nachricht, nicht einem Vorgabewert; woran sie hier zugestellt wurde, ist ungeklärt | Gerätetest; den Zustand „nicht erreichbar" zeichnet seither der Bilderlauf (`uhr-handy-fehlt-192dp`) |
 
 **Kein siebter Emulatorlauf für 0.15.1 — und das ist zu sagen, nicht zu
 verschweigen** (`CLAUDE.md` 6 macht den Emulator bei jeder Änderung an einem
@@ -392,16 +453,16 @@ fertige Bauart die andere, und die Fassungszeile im Bild hing an der
 Reihenfolge):
 
 ```bash
-./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  6 Bilder
+./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  7 Bilder
 ./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 72 Bilder
 ```
 
 | | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
 |---|---|---|
-| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | **72** — 24 Bildschirme × 3 Breiten (360, 411, 600 dp) |
+| Bilder | 7 — zwei Marken, laufende Ansicht, zwei Ortungszustände, „Handy nicht erreichbar" (seit 0.16.0), 227-dp-Uhr | **72** — 24 Bildschirme × 3 Breiten (360, 411, 600 dp) |
 | Bedienhöhe | 48 dp je Bild | 48 dp an **69 von 72** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall) |
 | Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**; dazu der **ganze** Inhalt gegen den sichtbaren Bereich |
-| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
+| Unterscheidbarkeit | alle 7 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
 
 **Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
 Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die

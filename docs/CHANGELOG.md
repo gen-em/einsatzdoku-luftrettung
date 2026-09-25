@@ -146,6 +146,41 @@ Was das Werkzeug nicht sieht, steht in seinem Kopf: eine bekannte Schrift auf
 einem neuen Grund. Und es hängt an keinem Lauf — das Einhängen in den
 Prüfstand ist Nr. 334, nach P5c.
 
+### Geprüft — der Emulator auf Android 17 (AR-05)
+
+Der Emulatorlauf lief zum ersten Mal auf **API 37**: Kopplung gegen die
+örtliche Installation, Einstellungen → Rechtliches mit „von der BetreiberIn
+des Servers" und „Fassung 0.16.0-pruef" — damit ist P-PK-28 auf dem
+gelaufenen Gerät belegt. **Und der Weg, an dem `targetSdk` 37 am meisten
+hängt, lief durch:** Dienst beginnen, der Vordergrunddienst mit Standort
+läuft, „GPS empfängt", 27 Punkte; Dienst beenden, am Server ein
+`ingest.php` mit 200 und der Diensttag geschlossen. Die Uhr lief auf Wear OS 5, weil das einzige
+Wear-Abbild mit API 37 ein `user`-Build ist, auf dem kein Root und damit
+kein Start unter reiner Software-Emulation geht.
+
+**Drei Hindernisse lagen im Emulator, nicht in der App**, und
+`android/werkzeuge/emulator.sh` umgeht sie seither: SurfaceFlinger bricht
+auf den Abbildern mit API 37 unter Emulator 37.1.11 in seinem
+`RegionSampling` ab und reißt die ganze Oberfläche mit (drei Neustarts in 13
+Minuten) — mit Drei-Tasten- statt Gestennavigation bleibt das Sampling aus;
+`screencap` scheitert an derselben Stelle, und `bild` zieht dann von der
+Wirtsseite ab; und Emulator und Gradle-Daemon zusammen brachten den
+Container zum Stehen, weshalb `start` jetzt warnt. Die Umgehung des
+Absturzes ist Backlog Nr. 337: auszutragen, sobald ein neuerer Emulator
+erscheint.
+
+**„Handy nicht erreichbar" in Rosa zeigt der Bilderlauf, nicht der
+Emulator.** Das Wear-OS-5-Abbild meldet ohne Telefon „Handy verbunden" —
+die Anzeige folgt einer zugestellten Nachricht, und woran sie dort
+zugestellt wurde, ist ungeklärt (ein Gerätetest klärt es). Der Zustand
+„nicht erreichbar" ist deshalb ein eigener Bildfall der Uhr
+(`uhr-handy-fehlt-192dp`), nachgezählt: 553 Bildpunkte Rosa, keiner Rot in
+der Zeile. Die Uhr hat damit sieben Bilder statt sechs.
+
+**Und ein toter Baustein:** Den Cursor, dessen Farbe AR-04 behoben hat, zeigt
+kein Bildschirm — `Eingabefeld` hat seit dem Wegfall des Adressfelds (R63)
+keinen Aufrufer. Die Behebung bleibt, der Baustein ist Backlog Nr. 336.
+
 ### Arbeitsumgebung — `aufbauen.sh android`
 
 Die Ausbaustufe holt Plattform 37.0 (und 36, an der `tools/pruefstand/`

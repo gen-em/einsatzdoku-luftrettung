@@ -95,6 +95,13 @@ aufbauen() {
 
 start() {
   local avd="${1:-handy34}" beginn; beginn=$(date +%s)
+  # SPEICHER (Android 0.16.0, Konzept AR): Ein Gradle-Daemon belegt nach
+  # einem Bau rund 5 GB, der Emulator 6 GB -- in 15 GB ohne Swap blieb am
+  # 24.09.2026 der ganze Container stehen (Last 60, `ps` und `uptime` hingen).
+  # Vorher `./gradlew --stop`.
+  if pgrep -f org.gradle.launcher.daemon.bootstrap.GradleDaemon >/dev/null 2>&1; then
+    sag "WARNUNG: Ein Gradle-Daemon laeuft -- erst ./gradlew --stop (Speicher)"
+  fi
   # -no-window ist Pflicht: die GUI-Binaerdatei braucht ein X11 und Ton.
   # -accel off ist der Kern -- ohne /dev/kvm gibt es keinen anderen Weg.
   # -gpu swiftshader_indirect: die Grafik rechnet ebenfalls die CPU.
@@ -133,6 +140,15 @@ start() {
   # dann zu Recht den Abzug. Ausblenden ist ehrlicher, als vor jedem Abzug
   # "Wait" zu tippen: Der ANR ist eine Eigenschaft der Emulation, nicht der App.
   "$ADB" shell settings put global hide_error_dialogs 1 >/dev/null 2>&1 || true
+  # DREI-TASTEN-NAVIGATION (Android 0.16.0, Konzept AR). Auf den Abbildern mit
+  # API 37 bricht SurfaceFlinger unter Emulator 37.1.11 im Faden
+  # `RegionSampling` ab ("Assertion failed: !rcEnc->featureInfo()->
+  # hasReadColorBufferDma", mapper.ranchu.so), und die ganze Oberflaeche
+  # startet neu -- am 24.09.2026 alle fuenf bis sieben Minuten. Das Sampling
+  # braucht die Gestenleiste; ohne sie blieb es stehen. Auf aelteren Abbildern
+  # schadet die Umstellung nicht. Backlog Nr. 337.
+  "$ADB" shell cmd overlay enable-exclusive --category \
+      com.android.internal.systemui.navbar.threebutton >/dev/null 2>&1 || true
   sag "Boot fertig nach $(( $(date +%s) - beginn )) s (Watchdog-Faktor $("$ADB" shell getprop ro.hw_timeout_multiplier 2>/dev/null | tr -d '\r'))"
 }
 
@@ -165,6 +181,14 @@ bild() {
        return 1 ;;
   esac
   "$ADB" exec-out screencap -p > "$ZIEL/$1.png"
+  # KEIN PNG? Dann von der Wirtsseite abziehen (Android 0.16.0). Auf API 37
+  # scheitert `screencap` an derselben Assertion wie SurfaceFlinger (Nr. 337)
+  # und liefert 72 Bytes Fehlertext; der Emulator selbst liest den
+  # Bildpuffer ohne den Gast.
+  if ! head -c 8 "$ZIEL/$1.png" | grep -q PNG; then
+    rm -f "$ZIEL/$1.png"
+    "$ADB" emu screenrecord screenshot "$ZIEL/$1.png" >/dev/null
+  fi
   sag "abgezogen: $ZIEL/$1.png ($(stat -c%s "$ZIEL/$1.png") Bytes)"
 }
 

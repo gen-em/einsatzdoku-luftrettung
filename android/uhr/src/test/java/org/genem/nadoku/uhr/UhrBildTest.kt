@@ -268,6 +268,25 @@ class UhrBildTest {
         pruefeBedienhoehe("192 dp, GPS sucht", dp)
     }
 
+    /**
+     * **„Handy nicht erreichbar" — in Rosa, nicht in Rot** (Android 0.16.0,
+     * Konzept AR, F-AR-13).
+     *
+     * Bis 0.16.0 stand diese Zeile in `marke_rot` auf Asphalt: 4,12:1 gegen
+     * die 4,5 fuer Schrift. Gefunden hat es die Vollstaendigkeitspruefung von
+     * `werkzeuge/kontraste.py` (Nr. 116). Der Fall steht HIER, weil der
+     * Emulator den Zustand nicht herbeifuehrt: Das Abbild mit Wear OS 5
+     * meldet eine Zustellung auch ohne Telefon und zeigt „Handy verbunden"
+     * (Konzept AR, F-AR-16).
+     */
+    @Test fun handyNichtErreichbar() {
+        val z = Uhrzustand(handyErreichbar = false)
+        val dp = male("uhr-handy-fehlt-192dp", 384) {
+            UhrOberflaeche(logoWahl = LogoWahl.BODEN, anfang = z)
+        }
+        pruefeBedienhoehe("192 dp, Handy fehlt", dp)
+    }
+
     /** Galaxy Watch, 227 dp Rundbild — dieselbe Ansicht, andere Kante. */
     @Test fun groessereUhr() {
         RuntimeEnvironment.setQualifiers("w227dp-h227dp-round-xhdpi")
@@ -303,6 +322,7 @@ class UhrBildTest {
         laufendeAnsichtMitLangemText()
         laufendOhneOrtung()
         laufendGpsSucht()
+        handyNichtErreichbar()
         groessereUhr()
 
         val doppelt = pruefsummen.entries
