@@ -13,11 +13,11 @@ python3 tools/pruefstand/bericht.py lesen [--commit C] [--basis B] [--riegel n=w
 
 ## Was es misst
 
-`pruefen.sh` ermittelt die Stufe aus dem Versionssprung, fährt die örtliche
-Anlage hoch, läuft die Riegel und die Proben, die zur Berührung gehören, und
+`pruefen.sh` ermittelt die Stufe (Versionssprung; neue Migration heißt haupt),
+fährt die Anlage hoch, läuft Riegel und Proben der Berührung und
 **erzeugt** den Prüfbericht für die Commit-Nachricht. `auswahl.py` beantwortet
 „welche Probe zu welcher Datei" aus `pruefablauf.json`. `bericht.py lesen` ist
-die Gegenlesung in Stufe 1 (PK-05): fünf rote Lagen, Riegelzahlen als `--riegel`.
+die Gegenlesung in Stufe 1 (PK-05): fünf Lagen, Riegelzahlen als `--riegel`.
 
 ## Was es braucht
 
@@ -28,8 +28,8 @@ für `uhr-stufe1` `CIQ_GERAETE_URL`, für die Schemaprobe das Modul
 ## Erwartete Zahl
 
 `bericht.py lesen --selbstprobe` → **13 / 0**, `auswahl.py --selbstprobe` →
-**27 / 0**, `--abdeckung` → **0 ohne Muster**. `pruefen.sh` → 0 rot, 0 nicht
-gemessen, rc 0 (ohne Bericht rc 1); klein ohne `server/` **17**, neben **36 in rund 21 min**.
+**36 / 0**, `--abdeckung` → **0 ohne Muster**. `pruefen.sh` → 0 rot, 0 nicht
+gemessen, rc 0 (ohne Bericht rc 1); klein ohne `server/` **18**, neben **44** (gelaufen zuletzt 42 in 23 min, P5c/AP3).
 
 ## Was es nicht kann
 

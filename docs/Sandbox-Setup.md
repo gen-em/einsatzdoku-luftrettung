@@ -151,7 +151,7 @@ diese Tabelle mit (`Pruefablauf.md` 5).
 ### 2.2 Das Modul `plattform` — Fassungen und Wege
 
 ```
-bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|--aus]
+bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|schema|--aus]
 ```
 
 **Alle vier über Docker, gemessen am 21.09.2026 — `alles` in 29,7 s:**
@@ -163,7 +163,7 @@ bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|--aus]
 | MySQL 8.0 | `mysql:8.0`, Port 3307 | bereit nach **8 s**, 8.0.46 |
 | MySQL 8.4.0 | `mysql:8.4.0`, Port 3308 | bereit nach **10 s**, 8.4.0 |
 | MariaDB 10.11 | die örtliche, Port 3306 | 10.11.14 |
-| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „19 Prüfungen, 0 Fehlschläge"** |
+| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „30 Prüfungen, 0 Fehlschläge"** (seit P5c/AP8; bis dahin 19) |
 
 **Drei Dinge, die erst die Messung ergeben hat** — und die alle drei gegen die
 erste Planung stehen:
@@ -245,6 +245,17 @@ in der Dokumentation steht, ist keiner mehr.
 | `_MAIL_USER` | Postfach dort | gesetzt, 18 Zeichen |
 | `_MAIL_PASS` | dessen Passwort | gesetzt, 20 Zeichen |
 | `CIQ_GERAETE_URL` | Gerätedateien des Uhr-SDK | gesetzt, 33 Zeichen |
+
+> **Der Zweitfaktor des Prüfkontos (seit Web 20.42.0) ist kein Wert dieser
+> Tabelle.** In der Sandbox rechnen die Werkzeuge mit dem Geheimnis der
+> Sandbox, das `tools/zweitfaktor/pruefkonto.php` beim Einrichten einträgt
+> (`lokal_einrichten.sh`, Schritt 6b). **`NADOKU_TOTP` muss hier leer
+> bleiben** — ist es gesetzt, rechnen die Rechner mit diesem Geheimnis, und
+> die Anmeldung an der Sandbox scheitert am Code-Schritt; die Meldung nennt
+> die Quelle. Gegen Staging reicht die Kette das Secret `STAGING_TOTP`
+> durch (`tools/zweitfaktor/LIESMICH.md`); aus der Arbeitsumgebung heraus
+> gibt es dafür keinen Wert, und die Staging-Werkzeuge nehmen es als
+> Schalter (`--admin-totp`).
 
 > **Die drei Mailwerte tragen einen führenden Unterstrich und kein Präfix.**
 > Sie heißen `_MAIL_URL`, `_MAIL_USER`, `_MAIL_PASS` — nicht

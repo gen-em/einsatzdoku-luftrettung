@@ -205,6 +205,7 @@ function jobs_aufzaehlung(array $teile): string
 function jobs_katalog(): array
 {
     require_once __DIR__ . '/mail_lib.php';
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
     $katalog = [
         /* `mail` STEHT GANZ VORN, und das ist kein Zufall (P5a/AP5).
          *
@@ -256,7 +257,7 @@ function jobs_katalog(): array
             'titel'        => 'Beantragte Löschungen ausführen',
             'beschreibung' => 'Konten, deren 30-tägige Karenz abgelaufen ist, '
                             . 'endgültig löschen — mitsamt GPS-Daten, Stammdaten und '
-                            . 'Konto-Backups. Eine Anmeldung in der Karenz nimmt '
+                            . 'Konto-Backups; eine Anmeldung in der Karenz nimmt '
                             . 'den Antrag zurück',
             'taeglich'     => false,
             'rueckstand'   => 'job_konto_loeschung_rueckstand',
@@ -272,7 +273,7 @@ function jobs_katalog(): array
             'titel'        => 'Verfallene Registrierungen löschen',
             'beschreibung' => 'Unbestätigte Registrierungen nach 48 Stunden und '
                             . 'wartende nach Ablauf der Freischaltfrist (Vorgabe '
-                            . '30 Tage) löschen. Die Wartenden bekommen vorher '
+                            . '30 Tage) löschen — die Wartenden bekommen vorher '
                             . 'eine letzte Mail',
             'taeglich'     => false,
             'rueckstand'   => 'job_konto_verfall_rueckstand',
@@ -309,6 +310,19 @@ function jobs_katalog(): array
             'taeglich'     => false,
             'rueckstand'   => 'job_adminbackup_rueckstand',
             'lauf'         => 'job_adminbackup',
+        ],
+        /* DAS PROTOKOLLARCHIV STEHT VOR DEM VERSAND (P5c/AP2, E-P5c-03,
+         * -57): Ein fertiges Archiv geht so noch im selben Lauf hinaus. Es
+         * ist leicht — alle sieben Tage ein Zeitraum, im Regelfall eine
+         * Abfrage auf die Marke und sonst nichts. */
+        'protokoll_archiv' => [
+            'titel'        => 'Protokoll archivieren',
+            'beschreibung' => 'Die Einträge eines abgelaufenen Zeitraums versiegelt als '
+                            . 'ZIP ablegen und Archive nach Ablauf der Aufbewahrung '
+                            . 'löschen — ohne IP-Adressen, in Häppchen',
+            'taeglich'     => false,
+            'rueckstand'   => 'protokoll_archiv_rueckstand',
+            'lauf'         => 'protokoll_archiv_job',
         ],
         /* DER VERSAND STEHT NACH DEM SICHERN UND VOR `waisen` (S2/AP7).
          * Nach dem Sichern, weil er schickt, was jenes erzeugt hat — in
@@ -476,7 +490,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
     $zustand = json_decode((string)($z->fetchColumn() ?: '{}'), true);
     if (!is_array($zustand)) { $zustand = []; }
 
-    $erledigt = 0; $fertig = false; $fehler = null; $uebergangen = 0;
+    $erledigt = 0; $fertig = false; $fehler = null;
     $geloescht = 0; $geloeschtDateien = 0;
     try {
         $e = ($job['lauf'])($pdo, $zustand, $zeitLinks);
@@ -484,14 +498,13 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
         $erledigt = (int)($e['erledigt'] ?? 0);
         $fertig   = (bool)($e['fertig'] ?? false);
         /* DER BERICHT WIRD MIT FESTEN SCHLÜSSELN NEU GEBAUT, und was hier
-         * nicht steht, fällt heraus. `uebergangen` (S10/AP4) wäre sonst im
+         * nicht steht, fällt heraus. `geloescht` (P5a/AP10) wäre sonst im
          * Versandjob entstanden und auf dem Weg zur Ausgabe verschwunden —
-         * eine Zahl, die es gibt und die niemand sieht. */
-        $uebergangen = (int)($e['uebergangen'] ?? 0);
-        /* Dieselbe Ueberlegung fuer `geloescht` (P5a/AP10): Was die
+         * eine Zahl, die es gibt und die niemand sieht: Was die
          * Aufbewahrungsregel auf einem Ziel entfernt hat, ist eine Handlung
          * auf einer FREMDEN Maschine. Sie gehoert in den Lauf, nicht nur in
-         * die Karte, die man dafuer aufrufen muss. */
+         * die Karte, die man dafuer aufrufen muss. (Bis Web 20.47.0 nahm
+         * denselben Weg `uebergangen`, die Zahl der FTP-Ziele, S10/AP4.) */
         $geloescht = (int)($e['geloescht'] ?? 0);
         /* UND DIE DATEIEN (Schritt 16, E-SA-06). Derselbe Grund wie bei den
          * beiden Zeilen darueber: Was hier nicht abgeholt wird, entsteht im
@@ -501,7 +514,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
         $fehler = get_class($ex) . ': ' . $ex->getMessage();
         // Still gegenueber der Anfrage — die Wartung darf keine Seite
         // kaputtmachen —, aber nachlesbar, und ab jetzt auch sichtbar.
-        error_log("jobs: \"$name\" fehlgeschlagen: $fehler");
+        system_melden('jobs', '„' . $name . '" fehlgeschlagen', (string)$fehler);
     }
 
     /* Rueckstand fuer die Anzeige — MIT DEM FRISCHEN ZUSTAND.
@@ -552,13 +565,13 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
                            VALUES (?, UTC_TIMESTAMP(), ?, ?, ?)')
                 ->execute([$name, $ausloeser, $erledigt, $fehler]);
         } catch (Throwable $ex) {
-            error_log('job_laeufe: ' . $ex->getMessage());
+            system_melden('job_laeufe', 'Lauf nicht vermerkt', $ex);
         }
     }
 
     return ['erledigt' => $erledigt, 'fertig' => $fertig,
             'rueckstand' => $rueckstand, 'fehler' => $fehler,
-            'uebergangen' => $uebergangen, 'geloescht' => $geloescht,
+            'geloescht' => $geloescht,
             'geloescht_dateien' => $geloeschtDateien];
 }
 
@@ -847,7 +860,7 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
                     app_state_setzen($marke, '1');
                 }
             } catch (Throwable $ex) {
-                error_log('Mengenmessung je Konto: ' . $ex->getMessage());
+                system_melden('jobs', 'Mengenmessung je Konto fehlgeschlagen', $ex);
             }
         },
         'Verwaiste Kontomarken' => function (PDO $pdo): void {
@@ -870,7 +883,7 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
                             WHERE (a.k LIKE 'mengen:%' OR a.k LIKE 'mengen_gemeldet:%')
                               AND u.id IS NULL");
             } catch (Throwable $ex) {
-                error_log('Verwaiste Kontomarken: ' . $ex->getMessage());
+                system_melden('jobs', 'Verwaiste Kontomarken nicht geräumt', $ex);
             }
         },
         'Job-Verlauf' => function (PDO $pdo): void {
@@ -971,8 +984,7 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
         try { $schritt($pdo); }
         catch (Throwable $ex) {
             $fehler[] = $name . ': ' . $ex->getMessage();
-            error_log('jobs: Aufraeumschritt "' . $name . '" fehlgeschlagen: '
-                      . $ex->getMessage());
+            system_melden('jobs', 'Aufräumschritt „' . $name . '" fehlgeschlagen', $ex);
         }
     }
     if ($fehler) {
@@ -1048,8 +1060,8 @@ function job_konto_loeschung(PDO $pdo, array $zustand, callable $zeitLinks): arr
              * loescht dann ausdruecklich NICHTS. Der naechste Lauf versucht
              * es wieder; bleibt es dabei, faellt es in der Statusliste auf,
              * weil der Rueckstand nicht sinkt. */
-            error_log('konto_loeschung: Konto ' . $k['id'] . ' nicht gelöscht — '
-                    . $r['grund']);
+            system_melden('konto_loeschung', 'Konto ' . $k['id'] . ' nicht gelöscht',
+                          (string)$r['grund']);
         }
     }
 
@@ -1109,8 +1121,8 @@ function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
         if ($r['ok']) {
             $erledigt++;
         } else {
-            error_log('konto_verfall: unbestätigtes Konto ' . $k['id']
-                    . ' nicht gelöscht — ' . $r['grund']);
+            system_melden('konto_verfall', 'unbestätigtes Konto ' . $k['id']
+                        . ' nicht gelöscht', (string)$r['grund']);
         }
     }
 
@@ -1124,8 +1136,8 @@ function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
         if ($r['ok']) {
             $erledigt++;
         } else {
-            error_log('konto_verfall: wartendes Konto ' . $k['id']
-                    . ' nicht gelöscht — ' . $r['grund']);
+            system_melden('konto_verfall', 'wartendes Konto ' . $k['id']
+                        . ' nicht gelöscht', (string)$r['grund']);
         }
     }
 
@@ -1421,7 +1433,7 @@ function job_verdichtung(PDO $pdo, array $zustand, callable $zeitLinks): array
                 else {
                     if (count($sammeln['fehler']) < JOB_LISTE_MAX) { $sammeln['fehler'][] = "$typ:$id — $meldung"; }
                     $offen++;
-                    error_log("jobs: Verdichtung $typ/$id abgelehnt: $meldung");
+                    system_melden('jobs', "Verdichtung $typ/$id abgelehnt", (string)$meldung);
                 }
             }
             $marke = (int)end($ids);
@@ -1598,7 +1610,7 @@ function job_ausduennen(PDO $pdo, array $zustand, callable $zeitLinks): array
                 else {
                     if (count($sammeln['fehler']) < JOB_LISTE_MAX) { $sammeln['fehler'][] = "$typ:$id — $meldung"; }
                     $offen++;
-                    error_log("jobs: Ausduennung $typ/$id abgelehnt: $meldung");
+                    system_melden('jobs', "Ausdünnung $typ/$id abgelehnt", (string)$meldung);
                 }
             }
             $marke = (int)end($ids);
@@ -1737,17 +1749,13 @@ function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
     if ($e['fehler'] !== []) {
         throw new RuntimeException(implode(' | ', array_slice($e['fehler'], 0, 3)));
     }
-    /* „uebergangen" UND NICHT „uebersprungen" (S10/AP4, E-S10-U-09).
-     *
-     * Der Name `uebersprungen` ist auf DIESER Ebene bereits belegt, und zwar
-     * schärfer als es aussieht: `jobs_lauf()` setzt ihn, wenn ein Job wegen
-     * einer Pause gar nicht gelaufen ist, und `jobs.php` prüft ihn mit
-     * `isset()` und überspringt dann die GANZE Ergebniszeile (`continue`).
-     * Ein gleichnamiger Schlüssel hätte das Ergebnis des Versandjobs also
-     * nicht ergänzt, sondern ersetzt: „versand übersprungen (1)" statt
-     * „versand fertig · erledigt 3 · 1 übergangen". */
+    /* KEIN SCHLÜSSEL `uebersprungen` HIER: Der Name ist auf DIESER Ebene
+     * belegt, und zwar schärfer als es aussieht — `jobs_lauf()` setzt ihn,
+     * wenn ein Job wegen einer Pause gar nicht gelaufen ist, und `jobs.php`
+     * prüft ihn mit `isset()` und überspringt dann die GANZE Ergebniszeile.
+     * Deshalb hiess die Zahl der FTP-Ziele bis Web 20.47.0 `uebergangen`
+     * (S10/AP4, E-S10-U-09); sie ist mit P5c/AP8 gefallen. */
     return ['zustand' => [], 'erledigt' => $e['gesendet'], 'fertig' => $e['fertig'],
-            'uebergangen' => (int)($e['uebersprungen'] ?? 0),
             'geloescht'   => (int)($e['geloescht'] ?? 0)];
 }
 

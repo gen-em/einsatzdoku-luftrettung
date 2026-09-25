@@ -32,6 +32,7 @@ ui_seite_start(['titel' => 'Anmeldeadresse bestätigen']);
 ?>
 <div class="rahmen rahmen-lesespalte">
   <main class="inhalt">
+  <?php ui_hinweise(); ?>
     <h1>Anmeldeadresse</h1>
 
     <?php if ($ergebnis !== null && $ergebnis['ok']): ?>

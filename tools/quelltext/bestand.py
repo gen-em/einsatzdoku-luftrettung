@@ -143,7 +143,9 @@ MUSTER_FELDER = ['id', 'ab', 'pfade', 'proben', 'anlass']   # auswahl.py und erz
 # — `nach` am Muster, `Nach` an der Probe — wurde still übergangen, und die
 # Voraussetzung fehlte ohne Meldung (Gegenprobe BR-05, Runde 3).
 SCHLUESSEL = {
-    'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen'},
+    # `stufenregeln` lesen auswahl.py und bericht.py seit P5c/AP4 (E-P5c-88, Stufenregel
+    # `migration`); beim Aufnehmen von BR in den P5c-Zweig eingetragen.
+    'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen', 'stufenregeln'},
     'riegel': {'beschreibung', 'proben'},
     'probe': {'aufruf', 'bemerkung', 'braucht', 'nach'},
     'muster': set(MUSTER_FELDER),

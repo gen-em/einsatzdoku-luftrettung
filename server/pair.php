@@ -161,7 +161,7 @@ if ($aktion === 'start') {
     try {
         $geraet = geraet_block_lesen(is_array($b) ? ($b['geraet'] ?? null) : null);
     } catch (Throwable $ex) {
-        error_log('Geraeteangabe unlesbar, Kopplung laeuft weiter: ' . $ex->getMessage());
+        system_melden('pair', 'Geräteangabe unlesbar, Kopplung läuft weiter', $ex);
         $geraet = ['art' => null, 'modell' => null, 'teil' => null];
     }
 
@@ -179,7 +179,7 @@ if ($aktion === 'start') {
     try {
         $code = pair_sitzung_anlegen($pdo, $devId, geraet_schluessel_hash($key), $geraet);
     } catch (Throwable $ex) {
-        error_log('Kopplungssitzung konnte nicht angelegt werden: ' . $ex->getMessage());
+        system_melden('pair', 'Kopplungssitzung konnte nicht angelegt werden', $ex);
         antworten(500, ['error' => 'server']);
     }
 
@@ -301,7 +301,7 @@ if ($sitzung !== null) {
         }
     } catch (Throwable $ex) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
-        error_log('Kopplung fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('pair', 'Kopplung fehlgeschlagen', $ex);
         antworten(500, ['error' => 'server']);
     }
 
@@ -336,7 +336,7 @@ if ($sitzung !== null) {
                 ]);
             }
         } catch (Throwable $ex) {
-            error_log('Hinweis auf neues Geraet konnte nicht verschickt werden: ' . $ex->getMessage());
+            system_melden('pair', 'Hinweis auf neues Gerät konnte nicht verschickt werden', $ex);
         }
         exit;
     }
@@ -388,7 +388,7 @@ if ($aktion === 'bestaetigen') {
 try {
     $pdo->prepare('DELETE FROM devices WHERE id = ?')->execute([(int)$dev['id']]);
 } catch (Throwable $ex) {
-    error_log('Trennen fehlgeschlagen: ' . $ex->getMessage());
+    system_melden('pair', 'Trennen fehlgeschlagen', $ex);
     antworten(500, ['error' => 'server']);
 }
 
@@ -440,5 +440,5 @@ try {
         ]);
     }
 } catch (Throwable $ex) {
-    error_log('Hinweis auf getrenntes Geraet konnte nicht verschickt werden: ' . $ex->getMessage());
+    system_melden('pair', 'Hinweis auf getrenntes Gerät konnte nicht verschickt werden', $ex);
 }

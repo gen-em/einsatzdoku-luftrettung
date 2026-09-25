@@ -23,8 +23,8 @@ require_once __DIR__ . '/auth_guard.php';
  */
 
 /* Stammdaten fuer die Vorbelegung neu angelegter Diensttage (wie index.php).
- * Dieselbe Menge, die dt_zuordnen() beim Speichern annimmt: eigene und
- * ausgewaehlte zentrale Standorte samt ihren Rettungsmitteln (E16). */
+ * Dieselbe Menge, die dt_zuordnen() beim Speichern annimmt: die eigenen
+ * Standorte und Rettungsmittel. */
 require_once __DIR__ . '/diensttag_lib.php';
 $SD_BASES    = dt_bases($userId);
 $SD_VEHICLES = dt_vehicles($userId);
@@ -105,8 +105,7 @@ ui_seite_start(['titel' => 'Import / Export']);
             <option value="">–</option>
             <?php foreach ($SD_BASES as $b): ?>
               <option value="<?= (int)$b['id'] ?>"
-                <?= (int)$b['id'] === $DEF_BASE ? 'selected' : '' ?>><?= e($b['name']) ?><?php
-                echo !empty($b['zentral']) ? ' (systemweit)' : ''; ?></option>
+                <?= (int)$b['id'] === $DEF_BASE ? 'selected' : '' ?>><?= e($b['name']) ?></option>
             <?php endforeach; ?>
           </select>
         </div>

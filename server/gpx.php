@@ -108,7 +108,13 @@ try {
      * der Spurenseite in der Kleinzeile jeder Zeile daneben. */
     $spurname = static function (string $art, int $id, ?string $von): string {
         $n = ($art === 'mission' ? 'Einsatz ' : 'Ruhezeit ') . $id;
-        return $von ? $n . ' — ' . datum_zeit_text($von) : $n;
+        /* MIT LEERZEICHEN, NICHT MIT DER VORGABE (P5c/AP9, E-P5c-129). Der
+         * Name steht IN DER DATEI, und `Export-Format.md` legt ihn fest:
+         * `Einsatz <id> — <Datum> <Uhrzeit>`; `assets/export.js` baut ihn im
+         * Browser genauso. Das Komma aus E-P5c-37 gilt der Oberflaeche — ein
+         * Dateiformat aendert man nicht nebenbei, und hier liefen Server und
+         * Browser sonst auseinander. */
+        return $von ? $n . ' — ' . datum_zeit_text($von, ' ') : $n;
     };
 
     /* ---- Mehrere Spuren eines Diensttages als EINE Datei ------------------
@@ -301,6 +307,6 @@ try {
     gpx_ausliefern($xml,
         gpx_dateiname($art, $id, (string)($eintrag['started_at'] ?? ''), $stand['stufe']));
 } catch (Throwable $e) {
-    error_log('gpx: ' . $e->getMessage());
+    system_melden('gpx', 'Export fehlgeschlagen', $e);
     json_out(['error' => 'server'], 500);
 }

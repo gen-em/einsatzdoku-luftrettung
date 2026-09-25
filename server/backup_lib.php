@@ -47,6 +47,21 @@ require_once __DIR__ . '/geraete_lib.php';         // HERKUNFT_WERTE, herkunft_a
 const EDBAK_FENSTER = 500;
 
 /**
+ * Die Nutzlast, die diese Fassung schreibt (Backup-Format 2; die Geschichte
+ * der Zahlen steht bei `'version'` in `edbak_build()`).
+ *
+ * EINE STELLE SEIT P5c/AP8. Die Zahl stand bis dahin viermal: hier als
+ * Literal, im Manifest der Admin-Sicherung und in den zwei Wegen, die
+ * Eintragsteile einspielen. Drei davon sagten 10 und behaupteten im
+ * Kommentar, sie folgten der geschriebenen Nutzlast — seit S9/AP7 schrieb
+ * diese Datei 11 (F-P5c-128). Folgenlos, weil der Rueckweg nur `>= 8` fragt;
+ * aber eine Zahl, die an drei Stellen nachgezogen werden muss, wird an einer
+ * vergessen. `NUTZLAST_HOECHSTENS` (api/backup_restore.php) steht bewusst
+ * NICHT hierauf: Die Obergrenze hebt nur, wer den Rueckweg vorbereitet hat.
+ */
+const EDBAK_NUTZLAST = 12;
+
+/**
  * Inneres Backup-JSON aufbauen.
  *
  * DER PAPIERKORB IST TEIL JEDES BACKUPS (E-S1-01). Bis Web 7.3.1 filterten
@@ -637,13 +652,9 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         ];
     }
 
-    /* Auswahl zentraler Standorte (E16). Als NAME, nicht als Kennung: Ein
-     * zentraler Standort heisst in der Zieldatenbank gleich, hat dort aber eine
-     * andere Kennung. */
-    $userBases = $q('SELECT b.name FROM user_bases ub
-                     JOIN bases b ON b.id = ub.base_id
-                     WHERE ub.user_id = ? AND b.user_id IS NULL
-                     ORDER BY b.name', [$userId]);
+    /* Die Auswahl zentraler Standorte (E16) stand hier bis Nutzlast 11. Mit
+     * P5c/AP8 gibt es keine zentralen Standorte mehr (R39); der Rueckweg
+     * ueberliest das Feld in alten Dateien. */
 
     /* Die uebrigen Stammdaten tragen jetzt ihren Standort (E15) — ebenfalls als
      * Name. Ohne ihn liesse sich nach dem Einspielen nicht entscheiden, zu
@@ -742,8 +753,21 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          * Umgekehrt bleibt der Weg offen: Eine 10er-Datei traegt den Klartext
          * in der Spalte, und der Einspielweg schreibt sie weiter (siehe
          * `$extraCols` weiter unten) — der Anhebelauf holt sie danach in den
-         * Blob. */
-        'version' => $ohneSpuren ? 11 : 7,
+         * Blob.
+         *
+         * 12 SEIT P5c/AP8 (Web 21.0.0): Die Auswahl zentraler Standorte in
+         * `stammdaten` faellt weg (R39), und ein Tag mit einem Rettungsmittel NUR FUER DIESEN TAG
+         * traegt die Rollen seiner Betriebsart in `crew` (Nr. 169). Eine
+         * aeltere Installation laese beides ohne Schaden — ihr fehlte ein
+         * Feld, das sie ueberliest, und die Rollen blendete sie aus. Die Zahl
+         * steigt trotzdem: Sie sagt, was in der Datei stehen KANN, und hinter
+         * AP8 liegt kein Rueckweg — Code vor Web 21.0.0 laeuft auf diesem
+         * Schema nicht (Hauptstufe). Umgekehrt bleiben 6 bis 11 lesbar;
+         * die Standortauswahl darin wird still ueberlesen (Backlog Nr. 46).
+         *
+         * NUTZLAST 7 BLEIBT 7: Sie ist die Punktlisten-Variante der
+         * Demo-Fixture und traegt die Felder der 12 wie zuvor die der 11. */
+        'version' => $ohneSpuren ? EDBAK_NUTZLAST : 7,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-notarzt',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
@@ -762,7 +786,6 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         'stammdaten' => [
             'bases'           => $bases,
             'vehicles'        => $vehicles,
-            'user_bases'      => array_map(static fn($r) => (string)$r['name'], $userBases),
             'crew_presets'    => $mitBase($q('SELECT role_code, name, base_id FROM crew_presets
                                               WHERE user_id = ? ORDER BY role_code, name', [$userId]), $baseNameById),
             'bw_units'        => $mitBase($q('SELECT name, base_id FROM bw_units
@@ -1086,8 +1109,10 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
     $eigeneTransaktion = !$pdo->inTransaction();
     if ($eigeneTransaktion) { $pdo->beginTransaction(); }
     try {
-        /* Stammdaten (INSERT IGNORE ueber die Unique-Schluessel; zentral
-         * vorhandene Eintraege werden uebersprungen und gezaehlt, s. 6.3/8) */
+        /* Stammdaten (INSERT IGNORE ueber die Unique-Schluessel). Was nicht
+         * angelegt werden kann — kein Standort, eine Pruefung schlaegt an —,
+         * wird uebersprungen und gezaehlt (Backup-Format 6.3/8). Bis Web
+         * 20.47.0 zaehlte dort auch „systemweit schon vorhanden" (R39). */
         $sd = $data['stammdaten'] ?? [];
         /* Vorbereitete Anweisung, nicht eingesetzter Wert (M5-06).
          *
@@ -1103,7 +1128,6 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
         $newDefBaseName = null;
         foreach (($sd['bases'] ?? []) as $b) {
             $name = (string)$b['name'];
-            if (stammdaten_dup_global('bases', 'name', $name)) { $stats['stammdaten_skipped']++; continue; }
             // Koordinaten kommen mit (E37); sie duerfen leer bleiben.
             $st = $pdo->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)');
             $st->execute([$userId, $name, $b['lat'] ?? null, $b['lon'] ?? null]);
@@ -1112,27 +1136,22 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
         }
         /* Standortkennung zum Namen. Der Name ist der portable Schluessel (E15):
          * Die Kennung aus der Backup-Datei gilt nur in der Datenbank, aus der
-         * sie stammt. Gesucht wird unter den EIGENEN und den zentralen
-         * Standorten — ein zentraler heisst in beiden Installationen gleich. */
+         * sie stammt. Gesucht wird unter den eigenen Standorten (bis Web
+         * 20.47.0 auch unter den zentralen, R39). */
         $baseIdByName = function (?string $name) use ($pdo, $userId): ?int {
             if ($name === null || $name === '') { return null; }
-            $x = $pdo->prepare('SELECT id FROM bases
-                                WHERE name = ? AND (user_id = ? OR user_id IS NULL)
-                                ORDER BY user_id IS NULL LIMIT 1');
+            $x = $pdo->prepare('SELECT id FROM bases WHERE name = ? AND user_id = ?');
             $x->execute([$name, $userId]);
             $id = $x->fetchColumn();
             return $id === false ? null : (int)$id;
         };
 
-        /* Zentrale Standorte wieder auswaehlen (E16). Ohne das verschwaenden sie
-         * nach dem Einspielen aus den Auswahllisten, obwohl die Diensttage sie
-         * weiter benennen. */
-        foreach (($sd['user_bases'] ?? []) as $bn) {
-            $bid = $baseIdByName((string)$bn);
-            if ($bid === null) { continue; }
-            $pdo->prepare('INSERT IGNORE INTO user_bases (user_id, base_id) VALUES (?,?)')
-                ->execute([$userId, $bid]);
-        }
+        /* DIE AUSWAHL ZENTRALER STANDORTE (bis Nutzlast 11, E16) WIRD
+         * UEBERLESEN, nicht gelesen: Die Tabelle, in die sie gehoerte, gibt
+         * es seit P5c/AP8 nicht mehr (R39). Die Schleife, die hier stand,
+         * liefe gegen sie mit 42S02 — in jeder Wiederherstellung, jeder
+         * Kontosicherung und jedem Demo-Reset. Toleranz, die mit NaDoku 1.0
+         * faellt (Backlog Nr. 46). */
 
         /* Rettungsmittel samt Typ, Art, Rollen und Faehigkeiten (E3, E29, E-S9-09).
          *
@@ -1171,7 +1190,6 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
             $rm = $geprueft['daten'];
             if ($rm === null) { $stats['stammdaten_skipped']++; continue; }
             $name = $rm['name'];
-            if (stammdaten_dup_global('vehicles', 'name', $name)) { $stats['stammdaten_skipped']++; continue; }
             $st = $pdo->prepare('INSERT IGNORE INTO vehicles (user_id, base_id, name, kurz, kind, typ)
                                  VALUES (?,?,?,?,?,?)');
             $st->execute([$userId, $rm['base_id'], $name, $rm['kurz'], $rm['kind'], $rm['typ']]);
@@ -1504,9 +1522,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
              * NAMEN wieder verknuepft, soweit der Stammdatensatz existiert. */
             $vehId  = null;
             if (!empty($d['vehicle_ref'])) {
-                $x = $pdo->prepare('SELECT id FROM vehicles
-                                    WHERE name = ? AND (user_id = ? OR user_id IS NULL)
-                                    ORDER BY user_id IS NULL LIMIT 1');
+                $x = $pdo->prepare('SELECT id FROM vehicles WHERE name = ? AND user_id = ?');
                 $x->execute([(string)$d['vehicle_ref'], $userId]);
                 $w = $x->fetchColumn();
                 $vehId = $w === false ? null : (int)$w;

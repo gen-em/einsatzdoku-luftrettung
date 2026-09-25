@@ -86,6 +86,9 @@ ui_seite_start(['titel' => 'Zustimmung nötig']);
 ?>
 <div class="rahmen rahmen-lesespalte">
   <main class="inhalt">
+  <?php /* Ohne den Datenschutz-Streifen: Diese Seite IST der Weg, auf den er
+           zeigt, und er stuende ueber seinem eigenen Ziel. */ ?>
+  <?php ui_hinweise(false); ?>
     <h1>Bevor es weitergeht</h1>
     <?php ui_meldung($notice, $error); ?>
 
@@ -164,7 +167,7 @@ ui_seite_start(['titel' => 'Zustimmung nötig']);
           'klein' => 'Alles als CSV oder als versiegeltes Paket — dasselbe wie sonst',
           'href'  => 'import.php']); ?>
       <?php ui_zeile(['text' => 'Konto löschen',
-          'klein' => 'Unter Einstellungen → Konto. 30 Tage Karenz; in der Zeit '
+          'klein' => 'Unter Einstellungen → Profil. 30 Tage Karenz; in der Zeit '
                    . 'nimmt eine Anmeldung die Löschung zurück',
           'href'  => 'einstellungen.php#karte-konto']); ?>
       <?php ui_zeile(['text' => 'Abmelden',

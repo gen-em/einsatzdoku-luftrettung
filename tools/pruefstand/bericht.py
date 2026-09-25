@@ -29,7 +29,7 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 ABLAUF = os.path.join(HIER, 'pruefablauf.json')
 sys.path.insert(0, HIER)
-from auswahl import UNLESBAR, beruehrte, fassung, stufe_aus_fassungen  # noqa: E402 — die EINE Lesestelle (F-PK-30)
+from auswahl import UNLESBAR, beruehrte, fassung, stufe_aus_fassungen, stufe_aus_version  # noqa: E402 — die EINE Lesestelle (F-PK-30)
 
 STUFEN = ['klein', 'neben', 'haupt']
 KOPF_RE = re.compile(
@@ -161,10 +161,11 @@ def zerlegen(text):
 
 
 def versionsstufe(basis, commit):
-    """Welche Stufe verlangt der Unterschied in server/version.php?
-    Gelesen in `auswahl.py` — eine Stelle für beide. UNLESBAR, wenn eine
-    Seite keine Fassung trägt."""
-    return stufe_aus_fassungen(fassung(basis), fassung(commit))[0]
+    """Welche Stufe verlangt der Unterschied — die Fassung in
+    server/version.php und die Stufenregeln (E-P5c-88: eine neue Migration
+    heißt haupt)? Gelesen in `auswahl.py` — eine Stelle für beide. UNLESBAR,
+    wenn eine Seite keine Fassung trägt."""
+    return stufe_aus_version(basis, commit)[0]
 
 
 def beruehrt(basis, commit):
@@ -366,6 +367,10 @@ def erzeugen_doku(args):
     melde()
     melde('**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** '
           + ', '.join(f"`{p}`" for p in a['riegel']['proben']) + '.')
+    for r in a.get('stufenregeln', []):
+        melde()
+        melde(f"**Stufenregel `{r['id']}`:** eine neue Kennung in `{r['datei']}` "
+              f"heißt mindestens **{r['stufe']}** — {r['anlass']}")
     return 0
 
 

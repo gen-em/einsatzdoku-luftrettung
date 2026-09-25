@@ -13,6 +13,11 @@
  *   5. Beides an `api/schluessel_erneuern.php`
  *   6. Den Code zurückgeben, damit ihn jemand aufschreiben kann
  *
+ * Die Schritte 1 bis 3 stehen seit Konzept RW (RW-02) als `oeffnen()` für
+ * sich: „Rückweg erneuern" (`assets/rueckweg.js`) braucht denselben
+ * Inhaltsschlüssel mit derselben Wache, und eine zweite Fassung davon wäre
+ * eine zweite Stelle, an der sie vergessen werden kann.
+ *
  * **Der Inhaltsschlüssel ändert sich nicht.** Er ist der Schlüssel, mit dem
  * jeder Datensatz verschlüsselt ist; was sich ändert, ist allein das Schloss,
  * das der Zettel öffnet. Deshalb öffnet der alte Zettel danach nichts mehr
@@ -77,6 +82,60 @@
    * @throws {Error} mit einer Meldung, die man anzeigen kann
    */
   async function erneuern(o) {
+    const { ck, token } = await oeffnen(o);
+
+    /* ---- 4: neuer Code, neue Hülle -------------------------------------- */
+    const rc = EdCrypto.newRecoveryCode();
+    const rk = await EdCrypto.recoveryKeyHex(rc);
+    /* `encrypt()` UND NICHT `huelleBauen()` — die Wiederherstellungs-Hülle
+     * bekommt KEINEN Anteil (E-S10-04). Sie ist der Rückweg für den Fall,
+     * dass der Anteil verloren ist; hinge sie selbst daran, gäbe es keinen.
+     * Der Server weist eine `edka1:`-Hülle hier ohnehin ab — aber die
+     * richtige Stelle, sie gar nicht erst zu bauen, ist diese. */
+    const wrapRc = await EdCrypto.encrypt(rk, ck);
+
+    /* ---- 5: senden ------------------------------------------------------ */
+    /* UEBER EdApi (Schritt 15, AP8). Das Feld `csrf` haengt EdApi selbst an,
+     * die Erfolgsregel (HTTP UND Fachschluessel) liegt dort, und ein
+     * Netzfehler kommt als `status: 0` zurueck statt als Wurf -- der Aufrufer
+     * sieht dadurch einen deutschen Satz, wo bisher der Browsertext
+     * „Failed to fetch" stand.
+     *
+     * EdApi NICHT beim Laden in eine Variable nehmen: Auf einstellungen.php
+     * kommt `api.js` spaeter als diese Datei (siehe Kopf von assets/api.js).
+     * Hier steht der Zugriff in der Funktion und damit erst beim Klick. */
+    const antw = await EdApi.postForm('api/schluessel_erneuern.php', {
+      token:   token,
+      wrap_rc: wrapRc,
+    }, { vorgang: 'Die Erneuerung' });
+
+    if (!antw.ok) {
+      /* DER SATZ KOMMT FERTIG AUS EdApi. Dieser Endpunkt nennt sein
+       * Satzfeld `text` statt `meldung`; die Vorrangkette in
+       * `grund()` (assets/api.js) liest es seit AP8 mit, und der
+       * Vorgangsname steht davor. Hier stand bis zum Gegenlesen ein
+       * eigener Griff auf `antw.daten.text`, der genau diesen
+       * Vorgangsnamen wieder verlor. */
+      throw new Error(antw.meldung);
+    }
+
+    /* ---- 6 ------------------------------------------------------------- */
+    return rc;
+  }
+
+  /**
+   * Die Schritte 1 bis 3: Passwort → Inhaltsschlüssel, gehalten gegen
+   * `pat_key_check`. Seit Konzept RW (RW-02) eine eigene Funktion, weil ein
+   * zweiter Vorgang sie braucht: „Rückweg erneuern" (`assets/rueckweg.js`)
+   * verpackt mit diesem Inhaltsschlüssel ein neues Schlüsselpaar. Die Wache
+   * steht damit EINMAL, für beide.
+   *
+   * @param {object} o  wie erneuern()
+   * @returns {Promise<{ck: string, token: string}>} der Inhaltsschlüssel und
+   *   das Anmelde-Token — der Nachweis des Passworts für den Server
+   * @throws {Error} mit einer Meldung, die man anzeigen kann
+   */
+  async function oeffnen(o) {
     if (!o.keyCheck) {
       /* Siehe Kopf: ohne Maßstab keine Erneuerung. */
       throw new Error('Für dieses Konto ist keine Prüfsumme des '
@@ -119,44 +178,8 @@
                     + 'neu laden und die BetreiberIn verständigen.');
     }
 
-    /* ---- 4: neuer Code, neue Hülle -------------------------------------- */
-    const rc = EdCrypto.newRecoveryCode();
-    const rk = await EdCrypto.recoveryKeyHex(rc);
-    /* `encrypt()` UND NICHT `huelleBauen()` — die Wiederherstellungs-Hülle
-     * bekommt KEINEN Anteil (E-S10-04). Sie ist der Rückweg für den Fall,
-     * dass der Anteil verloren ist; hinge sie selbst daran, gäbe es keinen.
-     * Der Server weist eine `edka1:`-Hülle hier ohnehin ab — aber die
-     * richtige Stelle, sie gar nicht erst zu bauen, ist diese. */
-    const wrapRc = await EdCrypto.encrypt(rk, ck);
-
-    /* ---- 5: senden ------------------------------------------------------ */
-    /* UEBER EdApi (Schritt 15, AP8). Das Feld `csrf` haengt EdApi selbst an,
-     * die Erfolgsregel (HTTP UND Fachschluessel) liegt dort, und ein
-     * Netzfehler kommt als `status: 0` zurueck statt als Wurf -- der Aufrufer
-     * sieht dadurch einen deutschen Satz, wo bisher der Browsertext
-     * „Failed to fetch" stand.
-     *
-     * EdApi NICHT beim Laden in eine Variable nehmen: Auf einstellungen.php
-     * kommt `api.js` spaeter als diese Datei (siehe Kopf von assets/api.js).
-     * Hier steht der Zugriff in der Funktion und damit erst beim Klick. */
-    const antw = await EdApi.postForm('api/schluessel_erneuern.php', {
-      token:   k.authToken,
-      wrap_rc: wrapRc,
-    }, { vorgang: 'Die Erneuerung' });
-
-    if (!antw.ok) {
-      /* DER SATZ KOMMT FERTIG AUS EdApi. Dieser Endpunkt nennt sein
-       * Satzfeld `text` statt `meldung`; die Vorrangkette in
-       * `grund()` (assets/api.js) liest es seit AP8 mit, und der
-       * Vorgangsname steht davor. Hier stand bis zum Gegenlesen ein
-       * eigener Griff auf `antw.daten.text`, der genau diesen
-       * Vorgangsnamen wieder verlor. */
-      throw new Error(antw.meldung);
-    }
-
-    /* ---- 6 ------------------------------------------------------------- */
-    return rc;
+    return { ck: ck, token: k.authToken };
   }
 
-  window.EdSchluessel = { erneuern: erneuern };
+  window.EdSchluessel = { erneuern: erneuern, oeffnen: oeffnen };
 })();

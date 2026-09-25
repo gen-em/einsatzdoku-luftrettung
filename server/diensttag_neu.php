@@ -81,8 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
  * steht deshalb von Hand im Markup. */
 $baseOpt = ['' => '–'];
 foreach ($SD_BASES as $b) {
-    $baseOpt[(string)(int)$b['id']] = (string)$b['name']
-        . (!empty($b['zentral']) ? ' (zentral)' : '');
+    $baseOpt[(string)(int)$b['id']] = (string)$b['name'];
 }
 
 ui_seite_start(['titel' => 'Diensttag anlegen']);

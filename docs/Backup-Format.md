@@ -36,6 +36,11 @@ Format, Ablage, Freigabeweg.
 **Das Komplett-Backup hilft gegen „der Webspace ist weg"**, nicht gegen
 „jemand hat sich vertan". Backup und Konto-Backup können beides.
 
+**Das Archiv des Protokolls ist keines davon** (seit Web 20.39.0): Es sichert
+keine Daten, die man zurückspielen könnte, sondern hält Protokolleinträge
+über ihre Frist hinaus. Sein Format steht trotzdem hier, in Abschnitt 7, weil
+es denselben Siegel und dieselbe Ablage benutzt.
+
 ---
 
 ## 1. Container, Fassung 4 (seit Web 11.1.0)
@@ -109,7 +114,7 @@ Das Manifest im Klartext:
   "kennung": "9f3c…",              // 16 Byte Zufall, hex — bindet die Teile
   "erzeugt_am": "2026-08-31T12:00:00.000Z",
   "web_version": "11.1.0",
-  "nutzlast": 9,                   // Fassung der Nutzlast, s. Abschnitt 2
+  "nutzlast": 12,                  // Fassung der Nutzlast, s. Abschnitt 2
   "teile": [
     { "name": "kopf.edbak",          "art": "kopf",      "sha256": "…" },
     { "name": "eintraege/0001.edbak","art": "eintraege", "sha256": "…" },
@@ -370,7 +375,31 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
-**Nutzlastversion 11 (seit Web 19.0.0).** Wie 10, mit einer Verschiebung: Die
+**Nutzlastversion 12 (seit Web 21.0.0, P5c/AP8).** Wie 11, mit zwei
+Unterschieden. **Die Auswahl zentraler Standorte fehlt unter `stammdaten`.**
+Das Feld war seit Web 18.0.0 immer leer. Mit der Migration
+`2026_09_25_zentrale_stammdaten` gibt es die Tabelle dazu nicht mehr (R39,
+Backlog Nr. 168), und jeder Stammdatensatz gehört einem Konto. **Und ein
+Diensttag mit einem Rettungsmittel nur für diesen Tag trägt in `crew` die
+Rollen seiner Betriebsart** (Nr. 169). Bis Nutzlast 11 hatte er dort keine.
+
+*Rückwärts:* Nutzlast 6 bis 11 bleiben lesbar. Die Standortauswahl darin wird
+**still überlesen** — eine Toleranz, die mit NaDoku 1.0 fällt (Backlog
+Nr. 46). Ein Diensttag aus einer älteren Datei kommt so zurück, wie er dort
+steht: ohne Rollensatz. Die Wiederherstellung legt an, was in der Datei steht
+(E8), und leitet nichts neu ab. Einmal die Zuordnung speichern trägt den Satz
+nach.
+
+*Warum die Zahl trotzdem steigt:* Eine ältere Installation läse eine 12er-Datei
+ohne Schaden. Ihr fehlte ein Feld, das sie überliest, und die Rollen blendete
+sie aus. Die Nummer sagt aber, was in der Datei stehen **kann**. Und hinter
+Web 21.0.0 führt ohnehin kein Weg zurück, denn Code davor läuft auf diesem
+Schema nicht. `NUTZLAST_HOECHSTENS` steht auf 12. Die geschriebene Zahl steht
+seit Web 21.0.0 an **einer** Stelle, `EDBAK_NUTZLAST` in `backup_lib.php`.
+Bis dahin stand sie viermal, und drei davon — das Manifest der
+Admin-Sicherung und die zwei Wege, die Eintragsteile einspielen — sagten 10.
+
+**Nutzlastversion 11 (Web 19.0.0 bis 20.47.0).** Wie 10, mit einer Verschiebung: Die
 **Notizen des Einsatzes** stehen nicht mehr als Klartextspalte `notes` im
 `missions`-Datensatz, sondern als Schlüssel `notes` im verschlüsselten
 `pat`-Block daneben. Die Spalte `notes` bleibt im Format bestehen und ist in
@@ -505,7 +534,7 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 11,                        // 8/9/10/11 = Verweise, 6/7 = Punktlisten
+  "version": 12,                        // 8 bis 12 = Verweise, 6/7 = Punktlisten
   "app": "einsatzdoku-notarzt",         // Kennung der Anwendung
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
@@ -557,14 +586,9 @@ seit Web 4.1.2 auch:
                         "capabilities": [],
                         "is_default": 0 } ],
 
-    // Auswahl ZENTRALER Standorte dieser NutzerIn, als Namensliste. Zentrale
-    // Standorte selbst gehören dem Konto nicht und werden nicht exportiert —
-    // die Auswahl schon, sonst stünden nach dem Einspielen leere Listen da.
-    // SEIT WEB 18.0.0 IN DER REGEL LEER: Es gibt keine Oberfläche mehr, die
-    // zentrale Standorte anlegt oder auswählt (Rahmenplan R39). Das Feld
-    // bleibt im Format, damit ältere Sicherungen unverändert einspielen; es
-    // fällt mit dem Rückbau in P5 (Backlog Nr. 168).
-    "user_bases":   [ "Zentrale Wache Süd" ],
+    // Bis Nutzlast 11 stand hier die Auswahl ZENTRALER Standorte als
+    // Namensliste (E16), seit Web 18.0.0 immer leer. Seit Nutzlast 12 fehlt
+    // sie; in älteren Dateien wird sie still überlesen (R39, Backlog Nr. 168).
 
     // Alle übrigen Stammdaten tragen ihren Standort (base_ref). Ohne ihn ließe
     // sich nach dem Einspielen nicht entscheiden, zu welchem Standort eine
@@ -887,12 +911,13 @@ in Abschnitt 3.
   `aircraft`): intern seit Version 3 in einer
   nutzerbezogenen Tabelle (`user_defaults`) abgelegt, im Exportformat aber
   weiterhin als Flag je Zeile abgebildet (Abwärtskompatibilität).
-- **Zentrale (globale) Stammdaten** gehören nicht dem Konto und werden
-  **nicht** exportiert. Beim Import werden Einträge, die zentral bereits
-  (case-insensitiv) vorhanden sind, still übersprungen und in der
-  Ergebnismeldung gezählt — diese Regel gilt unverändert. Gepflegt wurden sie
-  von einer AdministratorIn (seit Version 3); **seit Web 18.0.0 gibt es dafür
-  keine Seite mehr** (Rahmenplan R39), es kann also nur noch Altbestand sein.
+- **Übersprungene Stammdaten** zählt die Ergebnismeldung
+  (`stammdaten_skipped`). Seit Web 21.0.0 gibt es dafür zwei Gründe: Der
+  Standort lässt sich nicht auflösen, oder die Prüfung eines Rettungsmittels
+  schlägt an. Bis dahin kam ein dritter hinzu: Ein gleichnamiger **zentraler**
+  Eintrag war schon vorhanden. Zentrale Stammdaten gibt es seit Web 18.0.0
+  nicht mehr in der Oberfläche und seit Web 21.0.0 nicht mehr im Schema
+  (R39).
 - **`origin`** (seit Version 4): Herkunft des Einsatzes, wird beim Anlegen
   einmalig gesetzt und nie wieder geändert. **Sechs Werte seit Web 14.0.0**
   (vorher drei), einer je Client-App:
@@ -1401,7 +1426,7 @@ Ruhesegmente).
   "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…" },
   "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3,
               "papierkorb": { "einsaetze": 5, "diensttage": 1, "ruhezeiten": 5 } },
-  "nutzlast":      9,          // Fassung des Kerns, s. Abschnitt 2
+  "nutzlast":      12,         // Fassung des Kerns, s. Abschnitt 2 (EDBAK_NUTZLAST)
   "eintraege":     45,         // Einsätze und Ruhesegmente zusammen
   "eintragsteile": 1,
   "spurteile":     1,
@@ -1574,6 +1599,13 @@ Serverschlüssel — also genau das, womit sich diese Datei öffnen lässt. Sie
 gehört ins getrennt aufbewahrte Wiederanlaufpaket (`docs/Technik.md`,
 Abschnitt 7).
 
+**Das Schlüsselpaar des Rückwegs reist hier mit, und nur hier** (seit Web
+20.43.0, Konzept RW, E-RW-09): `users.rw_oeffentlich`, `rw_privat` und
+`rw_seit` sind Spalten von `users` und stehen damit im Dump wie jede andere.
+Das Konto-Backup (Abschnitte 1 bis 5) und die Freigabe tragen sie **nicht** —
+beide dienen dem Einspielen in ein anderes Konto, dessen Paar an seinem
+eigenen Inhaltsschlüssel hängt.
+
 ### 6.1 Drei Schichten
 
     1. SQL-Text     ein Statement je Zeile, INSERT-Stapel bis 1 MB
@@ -1673,7 +1705,8 @@ Angabe im Kopf. Dadurch fällt jedes Abschneiden auf, egal wo.
 * **Tabellen in einspielbarer Reihenfolge** (topologisch nach
   Fremdschlüsseln); `SET FOREIGN_KEY_CHECKS = 0` steht daneben als Gürtel.
 * **Kopfkommentare** mit Web-Version, Migrationsstand, Zeitpunkt,
-  Datenbankserver und Tabellenzahl.
+  Datenbankserver und Tabellenzahl — dazu die Zeilen „NICHT ENTHALTEN:
+  config.php" und seit Web 20.39.0 „OHNE ZEILEN: …" (6.9).
 * **Eine Endmarke** am Schluss: `-- EDKOMP-ENDE <n> Zeilen in <m> Tabellen`.
   Sie ist der Beleg, dass die Datei nicht mitten im Erzeugen abgebrochen ist.
   Ein `mysqldump` hat sie nicht; der Rückweg verlangt sie deshalb nur bei
@@ -1766,3 +1799,134 @@ selbst herunterlädt, noch das Konto-Backup der Verwaltung. Es ist die Datei
 *einer* NutzerIn und sagt nichts darüber, was sie darf. Wer es in ein anderes
 Konto einspielt, ändert dessen Rolle nicht; das ist Absicht und war nie
 anders.
+
+### 6.9 Zwei Tabellen ohne Zeilen (seit Web 20.39.0)
+
+`sicherheit_ereignisse` und `rate_limits` stehen mit **Schema, aber ohne
+Zeilen** im Dump (P5c/AP2, E-P5c-57, F-P5c-20). Beide führen IP-Adressen —
+die erste auch E-Mail-Adressen — und verfallen bewusst nach 30 Tagen bzw.
+von selbst (E-P5a-09); ein Komplett-Stand liegt länger und geht außer Haus.
+
+Im Dump steht an der Stelle der Zeilen ein Kommentar mit dem Grund:
+
+```
+-- `sicherheit_ereignisse`: ohne Zeilen — IP- und E-Mail-Adressen, verfallen nach 30 Tagen (E-P5a-09).
+```
+
+und im Kopf eine Zeile `-- OHNE ZEILEN: sicherheit_ereignisse, rate_limits — …`.
+
+**Ganz weglassen ginge nicht:** Nach einem Wiederanlauf aus einem Dump ohne
+die Tabellen scheiterte `ratelimit_lib.php` bei der ersten Anmeldung. Mit
+Schema und ohne Zeilen beginnt die Installation mit leeren Zählern.
+**Der Preis:** Sperren und Sperrereignisse der letzten 30 Tage kommen nicht
+zurück; eine laufende Sperre ist nach dem Einspielen aufgehoben.
+
+**Ältere Stände** (vor Web 20.39.0) tragen die Zeilen noch und werden
+unverändert eingespielt — die Tabellen verfallen danach wie gewohnt.
+
+---
+
+## 7. Archiv des Protokolls (seit Web 20.39.0)
+
+*Code: `server/protokoll_archiv_lib.php`; Betrieb und Entscheidungen:
+`docs/Technik.md` 4.99g.*
+
+Alle 7 Tage (einstellbar 1–31) schreibt der Job `protokoll_archiv` die
+Einträge eines abgelaufenen Zeitraums aus allen sieben Reitern der
+Protokollseite in ein Archiv. Es liegt 365 Tage (90–1095) auf dem Server und
+geht mit dem Versandjob auf die Sicherungsziele.
+
+### 7.1 Name und Ablage
+
+```
+sicherungen/protokoll/2026-09-13T22-00-00Z_1a2b3c4d.zip
+                      └──── Beginn (UTC) ───┘ └Kennung┘
+```
+
+Der **Beginn** ist Mitternacht in der Zeitzone der Anlage, als UTC
+geschrieben — dasselbe Zeitstempelmuster wie Kontopakete und Komplett-Stände,
+damit `sz_zeit_aus_dateiname()` es liest und der Name zeitlich sortiert. Die
+**Kennung** ist die Kennung des Serverschlüssels
+(`serverschluessel_kennung()`: die ersten acht Hexzeichen von SHA-256 über
+den Schlüssel — dieselbe, die das Schlüsselblatt zeigt). Ein Archiv eines anderen Schlüssels erkennt
+die Seite am Namen, ohne es zu öffnen.
+
+### 7.2 Aufbau
+
+Ein ZIP, **ungepackt** (die Teile sind versiegelt, und ein Siegel ist
+Zufallsrauschen):
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.json.sk` | das Manifest (7.3), versiegelt |
+| `<reiter>.<nnnn>.jsonl.sk` | je Reiter ein oder mehr Teile, fortlaufend ab `0001`, je höchstens **1 MB** Klartext, versiegelt |
+
+**Versiegelt** heißt: `sk_versiegeln($klartext, $zweck)` — AES-256-GCM mit
+dem Serverschlüssel, Format `edsk1:` (`docs/Technik.md`, Serverschlüssel).
+Der **Zweck** ist
+
+```
+protokollarchiv|<Name des Archivs>|<Name des Teils ohne .sk>
+```
+
+und steht, mit `edsk1|` davor, in den Zusatzdaten von AES-GCM.
+
+Ein umbenanntes Archiv oder ein vertauschter Teil lässt sich deshalb nicht
+öffnen. **Warum Teile:** AES-GCM verlangt den Klartext am Stück, und ein Guss
+über ein Jahr Sicherheitsereignisse sprengte das Speicherlimit von PHP.
+
+### 7.3 Das Manifest
+
+```json
+{
+  "format": "einsatzdoku-protokollarchiv",
+  "fassung": 1,
+  "von": "2026-09-13 22:00:00",
+  "bis": "2026-09-20 22:00:00",
+  "kennung": "1a2b3c4d",
+  "erzeugt": "2026-09-21T03:12:44Z",
+  "web": "20.39.0",
+  "zeilen": { "verwaltung": 41, "sicherheit": 7, "jobs": 318 },
+  "teile": ["jobs.0001.jsonl", "sicherheit.0001.jsonl", "verwaltung.0001.jsonl"],
+  "gekuerzt": {},
+  "hinweis": "Sicherheit ohne merkmal und wer, E-Mail nur Vorlage, Zustand, Zeit (E-P5c-39)."
+}
+```
+
+`von` und `bis` sind UTC, `bis` ausschließlich. `teile` nennt die Teile
+**ohne** `.sk` — so, wie sie im Zweck stehen. **`gekuerzt`** nennt je Reiter
+die Zeilen, die nicht mehr hineinpassten: Ein Archiv hält höchstens
+**32 MB** Klartext, und was darüber liegt — praktisch nur ein Angriff, der
+Zehntausende Sperren schreibt —, wird nicht archiviert. Ein Reiter ohne
+Zeilen im Zeitraum hat keinen Teil.
+
+### 7.4 Eine Zeile
+
+Je Zeile ein JSON-Objekt. **Was hineindarf, hängt am Reiter** (E-P5c-39, -75):
+
+| Reiter | Felder |
+|---|---|
+| Sicherheit — Sperrereignis | `zeit`, `art`, `topf`, `stufe` — **nicht** `merkmal` (IP oder Adresse) und `wer` |
+| Sicherheit — CSP-Bericht | `zeit`, `art` (`csp_bericht`), `richtlinie`, `quelle`, `seite`, `anzahl` |
+| E-Mail — aus der Warteschlange | `zeit`, `art` (`mail_…`), `vorlage` |
+| alle übrigen (auch Protokolleinträge in E-Mail, Jobs, Ziele) | `zeit`, `art`, `urheber` (Kontonummer, 0 = kein Mensch), `urheber_art`, `betroffen`, `text`, `daten` — **wie gespeichert, samt Adressen im Text** |
+
+`zeit` ist UTC (`JJJJ-MM-TT hh:mm:ss`). Die Zeilen eines Reiters stehen nach
+Quelle und darin nach Zeit.
+
+### 7.5 Der Download
+
+Die Seite (Verwaltung → Protokoll → Archiv, nur BetreiberIn) liefert **kein**
+versiegeltes Archiv aus, sondern entsiegelt es: ein gewöhnliches, gepacktes
+ZIP mit `manifest.json` und je Reiter **einer** `<reiter>.jsonl` (die Teile
+hintereinander), Name `protokoll-<JJJJ-MM-TT>.zip`. Das geht nur mit dem
+Serverschlüssel, der das Archiv versiegelt hat; ein Archiv eines anderen
+Schlüssels lässt sich hier nicht öffnen — dafür ist das Wiederanlaufpaket
+mit dem alten `config.php` da.
+
+**Von Hand öffnen:** Jeder Teil ist `edsk1:` gefolgt von Base64 über
+Nonce (12 Byte), Tag (16 Byte) und Chiffretext; Schlüssel ist `server_key`
+aus `config.php` (32 Byte, hexadezimal), Zusatzdaten
+`edsk1|protokollarchiv|<Name>|<Teil>`. Anders als bei den Konto-Backups ist
+der Klartext **nicht** gzip-gepackt.
+

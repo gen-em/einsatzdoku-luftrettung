@@ -218,12 +218,13 @@ return [
 ['kennung' => 'Z13', 'paket' => 'AP4',
  'beschreibung' => 'Rollenvergleich von Hand ausserhalb db.php',
  'grund' => 'rolle_darf_verwalten()/rolle_ist_betreiberin() bestehen; 10c AP4 '
-          . 'setzt rolle_darf_support() daneben. Kein Handvergleich mehr.',
+          . 'hat rolle_darf_support() und rolle_ist_support() daneben gesetzt und '
+          . 'das Muster um `support` erweitert (F-P5c-36). Kein Handvergleich mehr.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/db.php'],
  'regel' => ['art' => 'muster', 'muster' =>
-    '~(===|!==|==|!=)\s*[\'"](admin|betreiberin|user)[\'"]'
-  . '|[\'"](admin|betreiberin|user)[\'"]\s*(===|!==|==|!=)~'],
+    '~(===|!==|==|!=)\s*[\'"](admin|betreiberin|user|support)[\'"]'
+  . '|[\'"](admin|betreiberin|user|support)[\'"]\s*(===|!==|==|!=)~'],
  'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z14', 'paket' => 'AP4',
@@ -231,11 +232,13 @@ return [
  'grund' => 'db_hat_tabelle()/-spalte()/-index() sind seit AP4 oeffentlich (E-ZE-04). '
           . 'Was bleibt, fragt KEINE Existenz: komplett_lib.php 2 (Spaltenliste mit '
           . 'Typen, Fremdschluessel), speicher_lib.php 1 (Groesse in Bytes) und '
-          . 'nachbearbeitung_lib.php 2 (is_nullable). Fuer is_nullable entsteht KEIN '
-          . 'vierter Helfer: Beide Stellen liegen in EINER Datei, und nb_moeglich() '
+          . 'nachbearbeitung_lib.php 2 (is_nullable). Fuer diese beiden entsteht KEIN '
+          . 'Helfer: Sie liegen in EINER Datei, und nb_moeglich() '
           . 'fragt bewusst vier Tabellen in einer Abfrage (1,071 ms gegen 0,355 ms je '
           . 'Seitenaufbau) — ein Einzelhelfer naehme das wieder auseinander. '
-          . 'Auftraggeber, 21.09.2026.',
+          . 'Auftraggeber, 21.09.2026. Seit P5c/AP8 gibt es trotzdem '
+          . 'db_spalte_nullbar(): fuer eine NEUE Migration, die sonst Z15 hoebe; '
+          . 'die beiden Stellen hier bleiben, wie entschieden.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/migration_lib.php', 'server/db.php'],
  'regel' => ['art' => 'muster', 'muster' => '~information_schema~i'],
@@ -354,7 +357,7 @@ return [
 ['kennung' => 'Z24', 'paket' => 'AP7',
  'beschreibung' => "gmdate('Y-m-d\\TH:i:s\\Z' — ISO-UTC-Marke schreiben",
  'grund' => 'iso_utc() in format_lib.php (E-ZE-23). Die eine erlaubte Stelle ist die '
-          . 'Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php 215. Deren '
+          . 'Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php, wartung_einschalten(). Deren '
           . 'Dateikopf sagt als Eigenschaft 2 zu, NICHTS zu laden — sie traegt den '
           . 'Wartungsmodus gerade dann, wenn der Rest ersetzt wird.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
@@ -364,7 +367,7 @@ return [
 ['kennung' => 'Z25', 'paket' => 'AP7',
  'beschreibung' => "str_replace(['T','Z'] … — ISO-UTC-Marke lesen",
  'grund' => 'iso_utc_lesen() in format_lib.php (E-ZE-23). Die eine erlaubte Stelle ist '
-          . 'die Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php 552, '
+          . 'die Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php, wartung_balken(), '
           . 'dieselbe Ladezusage wie bei Z24.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~str_replace\s*\(\s*\[\s*[\'"]T[\'"]\s*,\s*[\'"]Z[\'"]~'],
@@ -372,11 +375,14 @@ return [
 
 ['kennung' => 'Z26', 'paket' => 'AP7',
  'beschreibung' => 'Datumsformat-Literale mit d.m. ausserhalb format_lib.php',
- 'grund' => 'datum_text() und datum_zeit_text($utc, $trenner) (F-ZE-3). Schritt 15 '
-          . 'benennt die Varianten und aendert keinen Pixel; 10c AP9 entscheidet. '
-          . 'DREI NAMENTLICH (AP7): admin_installation.php 363 und rechtstexte_lib.php '
+ 'grund' => 'datum_text() und datum_zeit_text($utc) (F-ZE-3). Schritt 15 benannte '
+          . 'die Varianten, 10c AP9 hat entschieden: das Komma (E-P5c-37), 19 Aufrufer '
+          . 'ohne zweites Argument; „ um " der Mailtexte und der GPX-Spurname (Dateiformat, '
+          . 'E-P5c-129) uebergeben noch einen. '
+          . 'DREI NAMENTLICH (AP7): admin_rechtstexte.php 85 (bis Web 21.0.0 '
+          . 'admin_installation.php) und rechtstexte_lib.php '
           . '482 formatieren einen Unix-Zeitstempel bewusst OHNE Zonenumrechnung — eine '
-          . 'Umstellung waere eine weitere sichtbare Ausnahme; wartung_lib.php 554 '
+          . 'Umstellung waere eine weitere sichtbare Ausnahme; wartung_lib.php, wartung_balken(), '
           . 'darf nichts laden (siehe Z24).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]d\.m\.[^\'"]*[\'"]~'],
@@ -487,11 +493,39 @@ return [
 
 ['kennung' => 'Z38', 'paket' => '10c AP3',
  'beschreibung' => 'Uebergabe 10c: error_log( Aufrufe',
- 'grund' => 'Schritt 15 stellt KEINEN error_log()-Aufruf um (E-ZE-05); wer Code '
-          . 'verschiebt, verschiebt die Zeile unveraendert mit. Der Log-Helfer '
-          . 'kommt in 10c AP3, das die Decke dann auf 2 setzt (Nr. 248).',
+ 'grund' => 'Schritt 15 stellte keinen Aufruf um (E-ZE-05); 10c AP3 (Nr. 248, '
+          . 'E-P5c-58) hat die 75 auf system_melden() umgestellt. Es bleiben ZWEI, '
+          . 'und beide mit Absicht: der Rueckfall in systemmeldung_lib.php (die '
+          . 'Datenbank antwortet nicht) und protokoll_fehler_vermerken() (wer dort '
+          . 'system_melden() riefe, schriebe den Fehlschlag des Protokolls ins '
+          . 'Protokoll). Wer eine dritte Stelle braucht, nimmt system_melden() oder '
+          . 'system_rueckfall().',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'aufruf', 'namen' => ['error_log']],
- 'start' => 77, 'decke_jetzt' => 77, 'decke_ziel' => 77],
+ 'start' => 77, 'decke_jetzt' => 2, 'decke_ziel' => 2],
+
+/* ---- 10c AP2: zwei neue eine Stellen (R83) ------------------------------- */
+
+['kennung' => 'Z39', 'paket' => '10c AP2',
+ 'beschreibung' => 'new ZipArchive ausserhalb zip_lib.php',
+ 'grund' => 'P5c AP2 (E-P5c-57, F-P5c-55): Das Archiv des Protokolls waere die '
+          . 'fuenfte Stelle gewesen, die ein Archiv selbst oeffnet und selbst '
+          . 'prueft, ob die Erweiterung da ist. Art MUSTER, weil die Art aufruf '
+          . 'ein new X( nicht sieht.',
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/zip_lib.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~\bnew\s+\\\\?ZipArchive\b~'],
+ 'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
+['kennung' => 'Z40', 'paket' => '10c AP2',
+ 'beschreibung' => 'Listen- und Reiter-Markup von Hand ausserhalb ui.php',
+ 'grund' => 'P5c AP2 (F-P5c-54): Suchfeld, Filterpillen und Seitenwahl standen '
+          . 'nur als handgeschriebenes Markup in admin_users.php; die '
+          . 'Protokollseite waere die zweite Kopie gewesen. Seither '
+          . 'ui_listenkopf(), ui_listenfuss() und ui_reiter().',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/ui.php', 'server/version.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~class=\\\\?["\'][^"\']*\b(listensuche|listenfilter|filterreihe|seitenwahl|seitenknopf|seitenluecke|listenfuss|listenzahl|reiter-punkt|reiter-rahmen)\b~'],
+ 'start' => 8, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ];

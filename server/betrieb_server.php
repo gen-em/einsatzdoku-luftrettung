@@ -28,8 +28,9 @@ require_once __DIR__ . '/format_lib.php';         // groesse_text(), datum_zeit_
  * Karten, und ein zweispaltiges Raster fuer zwei Karten waere Raster um des
  * Rasters willen (E-S8-18 — Zweispaltigkeit gilt ab mehr als vier Karten)."
  * Seit S8 sind fuenf Karten dazugekommen (Kopfzeilen, Ratenschutz,
- * CSP-Berichte, Schluessel des Servers, Konten); es sind SIEBEN, und die
- * Zahl, die die Einspaltigkeit begruendete, ist ueberschritten.
+ * CSP-Berichte, Schluessel des Servers, Konten), dazu Ankuendigung und
+ * Protokoll; es sind ACHT (Stand Web 21.1.0), und die Zahl, die die
+ * Einspaltigkeit begruendete, ist ueberschritten.
  *
  * EINSPALTIG BLEIBT SIE TROTZDEM, und zwar bis jemand das Gegenteil mit
  * einem Mockup freigibt (`CLAUDE.md` 5): Die Karten hier sind keine Kacheln,
@@ -45,6 +46,51 @@ $notice = null; $error = null;
 /* Die Rueckfrage zur Demo-Anmeldung (P5b/AP7) — sie entsteht im
  * Konten-Zweig und wird unten in der Karte gezeigt. */
 $demoFrage = false;
+
+/* ---- Ankuendigung und Rundmail (P5c/AP1, E-P5c-13, -55) ------------------
+ *
+ * EIN FORMULAR, DREI KNOEPFE: Speichern, Rundmail, Entfernen. Die Rundmail
+ * SPEICHERT ZUERST, und das ist der Punkt: Was im Feld steht, ist das, was
+ * hinausgeht. Wer den Text aendert und gleich „Als Rundmail senden" drueckt,
+ * soll nicht die alte Fassung verschickt haben.
+ *
+ * `$ankForm` haelt bei einem Fehler, was eingegeben war — ein abgewiesenes
+ * Formular, das die Eingabe verwirft, laesst sie ein zweites Mal tippen. */
+require_once __DIR__ . '/ankuendigung_lib.php';
+$ankForm = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST'
+    && in_array($_POST['action'] ?? '', ['ankuendigung', 'rundmail', 'ankuendigung_weg'], true)) {
+    csrf_check();
+    if ($_POST['action'] === 'ankuendigung_weg') {
+        ankuendigung_entfernen();
+        $notice = 'Ankündigung entfernt — der Streifen erscheint auf keiner Seite mehr.';
+    } else {
+        $ankForm = ['text' => (string)($_POST['ank_text'] ?? ''),
+                    'ton'  => (string)($_POST['ank_ton'] ?? 'info'),
+                    'tag'  => trim((string)($_POST['ank_bis'] ?? '')),
+                    'zeit' => trim((string)($_POST['ank_bis_zeit'] ?? ''))];
+        require_once __DIR__ . '/validate_lib.php';
+        $bisUtc = pruef_ortszeit_zu_utc($ankForm['tag'], $ankForm['zeit'], 0, 'Sichtbar bis');
+        if ($bisUtc === null) {
+            $error = 'Bitte bei „Sichtbar bis" ein Datum und eine Uhrzeit (HH:MM) angeben.';
+        } else {
+            $error = ankuendigung_setzen($ankForm['text'], $ankForm['ton'],
+                                         (int)iso_utc_lesen($bisUtc));
+        }
+        if ($error === null) {
+            $ankForm = null;
+            if ($_POST['action'] === 'rundmail') {
+                $r = rundmail_senden();
+                if ($r['ok']) { $notice = $r['meldung']; } else { $error = $r['meldung']; }
+            } else {
+                $a = ankuendigung();
+                $notice = 'Ankündigung gespeichert — sie steht bis '
+                        . datum_zeit_text(iso_utc($a['bis'] ?? time()))
+                        . ' über jeder Seite.';
+            }
+        }
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speicher') {
     csrf_check();
@@ -257,6 +303,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'raten
     }
 }
 
+/* ---- Protokoll: Frist und Archiv (P5c/AP2, E-P5c-02, -03, -24) ----------
+ *
+ * ALLES ODER NICHTS, wie bei den Konten darunter: vier Werte, geprüft, dann
+ * geschrieben. Was sich geändert hat, steht als EIN Eintrag im Protokoll —
+ * Fristen ändern heißt, das Audit kürzer oder länger zu machen, und das
+ * gehört selbst ins Audit (E-P5c-02: „Fristen ändern: BetreiberIn,
+ * protokolliert"). */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'protokoll') {
+    csrf_check();
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
+    $felder = [
+        'protokoll_frist'    => ['Verwaltungseinträge aufbewahren', PROTOKOLL_K_FRIST_VERWALTUNG,
+                                 PROTOKOLL_FRIST_MIN, PROTOKOLL_FRIST_MAX, protokoll_frist_verwaltung()],
+        'archiv_tage'        => ['Archiv alle', PROTOKOLL_K_ARCHIV_TAGE,
+                                 PROTOKOLL_ARCHIV_TAGE_MIN, PROTOKOLL_ARCHIV_TAGE_MAX, protokoll_archiv_tage()],
+        'archiv_behalten'    => ['Archive aufbewahren', PROTOKOLL_K_ARCHIV_BEHALTEN,
+                                 PROTOKOLL_ARCHIV_BEHALTEN_MIN, PROTOKOLL_ARCHIV_BEHALTEN_MAX,
+                                 protokoll_archiv_behalten()],
+    ];
+    $neu = []; $geaendert = [];
+    foreach ($felder as $feld => [$name, $schluessel, $min, $max, $alt]) {
+        $roh = trim((string)($_POST[$feld] ?? ''));
+        if (!ctype_digit($roh) || (int)$roh < $min || (int)$roh > $max) {
+            $error = $name . ': eine ganze Zahl zwischen ' . $min . ' und ' . $max . ' Tagen.';
+            break;
+        }
+        $neu[$schluessel] = $roh;
+        if ((int)$roh !== $alt) { $geaendert[] = $name . ' ' . $alt . ' → ' . $roh . ' Tage'; }
+    }
+    $versand = !empty($_POST['archiv_versand']);
+    if ($error === null) {
+        foreach ($neu as $k => $v) { app_state_setzen($k, $v); }
+        if ($versand !== protokoll_archiv_versand()) {
+            $geaendert[] = 'Archive auf das Backup-Ziel ' . ($versand ? 'an' : 'aus');
+        }
+        app_state_setzen(PROTOKOLL_K_ARCHIV_VERSAND, $versand ? '1' : '0');
+        if ($geaendert) {
+            protokoll('verwaltung', 'frist_geaendert',
+                      'Fristen des Protokolls geändert: ' . implode(' · ', $geaendert),
+                      ['geaendert' => $geaendert]);
+        }
+        $notice = $geaendert ? 'Protokoll: ' . implode(' · ', $geaendert) . '.'
+                             : 'Es gab nichts zu ändern.';
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geocoder') {
     csrf_check();
     $adresse = geocoder_adresse_pruefen((string)($_POST['dienst'] ?? ''));
@@ -387,18 +479,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
         $neu[KONTEN_K_DEMO_ANMELDUNG] = empty($_POST['demo_anmeldung']) ? '0' : '1';
     }
 
-    /* ---- Protokollfrist Verwaltung -------------------------------------- */
-    if ($error === null) {
-        require_once __DIR__ . '/protokoll_lib.php';
-        $roh = trim((string)($_POST['protokoll_frist'] ?? ''));
-        if (!ctype_digit($roh) || (int)$roh < PROTOKOLL_FRIST_MIN
-                               || (int)$roh > PROTOKOLL_FRIST_MAX) {
-            $error = 'Aufbewahrung der Verwaltungseinträge: eine ganze Zahl zwischen '
-                   . PROTOKOLL_FRIST_MIN . ' und ' . PROTOKOLL_FRIST_MAX . ' Tagen.';
-        } else {
-            $neu[PROTOKOLL_K_FRIST_VERWALTUNG] = $roh;
-        }
-    }
+    /* Die Protokollfrist stand bis Web 20.38.0 hier. Seit P5c/AP2 hat sie
+     * eine eigene Karte, zusammen mit dem Archiv — und wird protokolliert,
+     * was sie hier nie wurde (`konten_einstellungen()` kannte sie nicht). */
 
     if ($error === null) {
         $vorher = konten_einstellungen();
@@ -609,7 +692,9 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
 ui_seite_start(['titel' => 'Servereinstellungen']);
 ?>
 
-<?php /* Lesespalte: zwei Karten, viel Erklärtext (E-S8-18, Mockup 07). */ ?>
+<?php /* Lesespalte (E-S8-18, Mockup 07) — damals zwei Karten mit viel
+         Erklärtext; heute acht mit je einem Satz, einspaltig aus dem Grund
+         im Kopf dieser Datei. */ ?>
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
                         'menue' => 'betrieb_server', 'lesespalte' => true]); ?>
 
@@ -620,10 +705,100 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
   <?php if ($error !== null): ?><?= ui_meldung_markup('fehler', $error) ?><?php endif; ?>
 
 
+  <?php /* ---- Ankündigung (P5c/AP1, E-P5c-13, -55; Bild M-P5c-02 a) ---------
+       ZUOBERST, wie im freigegebenen Bild: Sie ist die Karte, für die eine
+       BetreiberIn diese Seite am häufigsten aufschlägt, und sie ist kurz.
+       Die Schlüssel folgen unmittelbar darunter — ihre rote Lage steht
+       zusätzlich auf der Statusseite und am Menüzähler.
+
+       DREI KNÖPFE IN EINEM FORMULAR, jeder mit eigenem `action`. Die
+       Rückfrage hängt deshalb am Rundmail-KNOPF und nicht am Formular
+       (confirm.js: „Wenn EIN Formular mehrere Absendeknöpfe hat …").
+
+       DER BYTEZÄHLER zählt Byte, nicht Zeichen — `app_state` fasst 190
+       (E-P5c-55). Den ersten Stand rechnet der Server, das Mitzählen
+       `assets/ankuendigung.js`; ohne Skript steht der Stand beim Laden. */ ?>
+  <?php
+    $ankGesp = ankuendigung_gespeichert();
+    $ankWert = $ankForm ?? ($ankGesp !== null
+        ? ['text' => $ankGesp['text'], 'ton' => $ankGesp['ton'],
+           'tag'  => fmt_local(iso_utc($ankGesp['bis']), 'Y-m-d'),
+           'zeit' => fmt_local(iso_utc($ankGesp['bis']), 'H:i')]
+        : ['text' => '', 'ton' => 'info', 'tag' => '', 'zeit' => '']);
+    $ankRest = APP_STATE_MAX - strlen(trim((string)preg_replace('/\s+/u', ' ', $ankWert['text'])));
+    $rundZuletzt = app_state_lesen(RUNDMAIL_K_ZULETZT);
+    $rundHeute   = rundmail_heute_gesendet() !== null;
+    $rundZahl    = count(rundmail_empfaenger());
+  ?>
+  <?php ui_karte_start(['titel' => 'Ankündigung', 'id' => 'k-ankuendigung',
+      'plakette' => $ankGesp === null
+          ? ui_plakette('keine', ['ton' => 'neutral'])
+          : ($ankGesp['abgelaufen']
+              ? ui_plakette('abgelaufen', ['ton' => 'neutral'])
+              : ui_plakette('sichtbar bis ' . datum_zeit_text(iso_utc($ankGesp['bis'])),
+                            ['ton' => $ankGesp['ton'] === 'warn' ? 'orange' : 'blau']))]); ?>
+    <p class="feld-hinweis">Ein Streifen über jeder Seite, bis er abläuft —
+       als Rundmail höchstens einmal je Tag.
+       <a href="hilfe.php#12-8-ankuendigung-und-rundmail">Wie er wirkt</a></p>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?>
+      <?php /* VON HAND, NICHT DURCH ui_feld: Der Zähler darunter braucht eine
+               Kennung (`aria-describedby`, `data-bytezaehler`), und ui_feld
+               gibt seiner Kleinzeile keine. */ ?>
+      <div class="feld">
+        <label class="feld-label" for="f-ank_text">Text</label>
+        <textarea class="feld-eingabe feld-mehrzeilig" id="f-ank_text" name="ank_text" rows="3"
+                  data-bytegrenze="<?= APP_STATE_MAX ?>" data-bytezaehler="f-ank_rest"
+                  aria-describedby="f-ank_rest"><?= e($ankWert['text']) ?></textarea>
+        <p class="feld-klein" id="f-ank_rest"><?= $ankRest >= 0
+            ? 'Noch ' . $ankRest . ' von ' . APP_STATE_MAX . ' Byte — Umlaute zählen doppelt.'
+            : (-$ankRest) . ' Byte zu viel — erlaubt sind ' . APP_STATE_MAX
+              . ', Umlaute zählen doppelt.' ?></p>
+      </div>
+      <?php ui_feld(['name' => 'ank_ton', 'label' => 'Ton', 'art' => 'select',
+          'optionen' => ANKUENDIGUNG_TOENE, 'wert' => $ankWert['ton']]); ?>
+      <?php ui_feld(['name' => 'ank_bis', 'label' => 'Sichtbar bis', 'art' => 'date',
+          'wert' => $ankWert['tag']]); ?>
+      <?php /* Textfeld mit der Klasse `zeitfeld` statt type="time" — native
+               Zeitfelder zeigen je nach Systemsprache AM/PM (E1); die Maske
+               haengt an der Klasse (assets/zeitfeld.js). */ ?>
+      <div class="feld">
+        <label class="feld-label" for="f-ank_bis_zeit">Uhrzeit
+          <span class="feld-klein-inline">HH:MM</span></label>
+        <input class="feld-eingabe zeitfeld" type="text" id="f-ank_bis_zeit" name="ank_bis_zeit"
+               value="<?= e($ankWert['zeit']) ?>" placeholder="z. B. 21:00" autocomplete="off">
+        <p class="feld-klein">Danach verschwindet der Streifen von selbst.</p>
+      </div>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer',
+                      'name' => 'action', 'wert' => 'ankuendigung']) ?>
+        <?= ui_knopf(['text' => 'Als Rundmail senden …', 'symbol' => 'mail', 'art' => 'neutral',
+                      'name' => 'action', 'wert' => 'rundmail',
+                      'attr' => $rundHeute ? ' disabled' : ' data-confirm-titel="Rundmail senden?"'
+                          . ' data-confirm="' . e('Der Ankündigungstext geht an ' . $rundZahl
+                              . ' erreichbare Konten — alle mit gesetztem Passwort, ohne das '
+                              . 'Demo-Konto. Die Mails laufen über die Warteschlange; das kann '
+                              . 'einige Minuten dauern. Heute ist danach keine zweite Rundmail '
+                              . 'mehr möglich.') . '"'
+                          . ' data-confirm-ok="' . e('An ' . $rundZahl . ' Konten senden') . '"'
+                          . ' data-confirm-tone="normal"']) ?>
+        <?php if ($ankGesp !== null): ?>
+          <?= ui_knopf(['text' => 'Entfernen', 'art' => 'leise',
+                        'name' => 'action', 'wert' => 'ankuendigung_weg']) ?>
+        <?php endif; ?>
+      </div>
+      <?php /* EINE WERTANZEIGE, KEIN SATZ (P5c/AP9): Die Regel „höchstens eine
+               je Tag" steht im einen Satz der Karte oben. */ ?>
+      <p class="feld-klein"><?= $rundZuletzt !== null && $rundZuletzt !== ''
+          ? 'Letzte Rundmail: ' . e(datum_zeit_text($rundZuletzt))
+          : 'noch keine Rundmail' ?><?= $rundHeute ? ' · heute schon gesendet' : '' ?></p>
+    </form>
+  <?php ui_karte_ende(); ?>
+
   <?php /* ---- Die Schlüssel des Servers (S10, E-S10-12) -------------------
-       SIE STEHT ZUERST, VOR DEM SPEICHER. Die übrigen Karten dieser Seite
-       melden Einstellungen; diese hier kann melden, dass sich niemand mehr
-       anmelden kann. Eine rote Zeile unter einem Speicherbalken wird später
+       SIE STEHT VOR DEM SPEICHER (seit P5c unter der Ankündigung). Die
+       übrigen Karten dieser Seite melden Einstellungen; diese hier kann
+       melden, dass sich niemand mehr anmelden kann. Eine rote Zeile unter einem Speicherbalken wird später
        gesehen als eine darüber.
 
        GEZEIGT WIRD NIE DER WERT, immer nur die KENNUNG (acht Hexzeichen aus
@@ -657,14 +832,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                       ? ui_plakette('nicht eingerichtet', ['ton' => 'neutral'])
                       : ui_plakette('Übergang läuft', ['ton' => 'blau']))))]); ?>
 
-    <p class="feld-hinweis">Diese Installation hat <strong>zwei Geheimnisse</strong>,
-       und beide stehen in <code>config.php</code> — nicht in der Datenbank. Der
-       <strong>Serverschlüssel</strong> versiegelt, was der Server ohne Browser
-       lesen können muss: Zugangsdaten der Backup-Ziele, Komplett-Backup,
-       Konto-Backups. Der <strong>Server-Anteil</strong> geht in den
-       Datenschlüssel <em>jedes Kontos</em> ein; der Server kann damit trotzdem
-       nichts öffnen, aber ein Datenbankabzug allein reicht nicht mehr, um ein
-       Passwort durchzuprobieren.</p>
+    <p class="feld-hinweis">Zwei Geheimnisse in <code>config.php</code>, nicht
+       in der Datenbank — gedruckt gehören beide auf das Schlüsselblatt.
+       <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: was sie schützen und was tun, wenn einer fehlt</a></p>
 
     <?php
       ui_zeile([
@@ -673,12 +843,14 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
             ? 'Kennung ' . $skZustand['kennung'] . ' — versiegelt Backup-Ziele, '
               . 'Komplett-Backup und Konto-Backups'
             : ($skZustand['stand'] === 'fehlt'
-                ? 'Fehlt. Ohne ihn entsteht kein Komplett-Backup, kein '
+                /* EIN SATZ (E-P5c-06): „Fehlt. Ohne ihn …" waren zwei
+                   (Endzählung AP9, die einzige Kleinzeile über dem Soll). */
+                ? 'Fehlt — ohne ihn entsteht kein Komplett-Backup, kein '
                   . 'Konto-Backup und kein Versand auf ein Backup-Ziel'
                 : 'In config.php steht Kennung '
                   . ($skZustand['kennung'] ?? '—') . ', versiegelt wurde mit '
-                  . $skZustand['erwartet'] . '. Versiegeltes lässt sich nicht '
-                  . 'mehr öffnen, bis der richtige Wert nachgetragen ist'),
+                  . $skZustand['erwartet'] . ' — bis der richtige Wert '
+                  . 'nachgetragen ist, lässt sich Versiegeltes nicht öffnen'),
         'plaketten' => ui_plakette(
             ['bereit' => 'vorhanden', 'fehlt' => 'fehlt',
              'abweichend' => 'abweichend'][$skZustand['stand']] ?? '?',
@@ -692,16 +864,19 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
               . 'Datenschlüssel jedes Kontos ein'
             : ($anZustand['stand'] === 'rotation'
                 ? 'Rotation läuft: neu ' . $anZustand['kennung'] . ', alt '
-                  . $anZustand['kennung_alt'] . '. Beide werden ausgeliefert, '
+                  . $anZustand['kennung_alt'] . ' — beide werden ausgeliefert, '
                   . 'bis kein Konto mehr auf dem alten steht'
                 : ($anZustand['stand'] === 'fehlt'
-                    ? 'Nicht eingerichtet. Alles läuft wie vor S10 — der Schutz '
-                      . 'gegen einen Datenbankabzug fehlt aber'
+                    /* Kein Konzeptname im sichtbaren Text (C-4): „wie vor
+                       S10" hieß für niemanden etwas; die Statusseite sagt
+                       dasselbe mit der Fassung. */
+                    ? 'Nicht eingerichtet — alles läuft wie vor Web 20.0.0, nur '
+                      . 'der Schutz gegen einen Datenbankabzug fehlt'
                     : 'In config.php steht Kennung '
                       . ($anZustand['kennung'] ?? '—') . ', gebaut wurden die '
-                      . 'Hüllen mit ' . $anZustand['erwartet'] . '. Solange das '
-                      . 'so ist, kommt niemand mit umgestellter Hülle an seine '
-                      . 'geschützten Angaben')),
+                      . 'Hüllen mit ' . $anZustand['erwartet'] . ' — bis das '
+                      . 'behoben ist, kommt niemand mit umgestellter Hülle an '
+                      . 'seine geschützten Angaben')),
         'plaketten' => ui_plakette(
             ['bereit' => 'bereit', 'rotation' => 'Rotation',
              'fehlt' => 'nicht eingerichtet',
@@ -723,10 +898,20 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           if ($anZaehlung['demo'] > 0) {
               $teile[] = 'das Demo-Konto bleibt ohne Anteil und zählt nicht mit';
           }
+          /* EIN SATZ JE KLEINZEILE (P5c/AP9): Dass der alte Anteil erst weg
+             darf, wenn kein Konto mehr auf ihm steht, stand bis Web 21.0.0 als
+             eigener Absatz unter den Knöpfen und steht jetzt hier. */
+          /* DREI LAGEN, NICHT ZWEI (C-5): Ist nichts mehr offen, stellt auch
+             niemand mehr um — bis Web 21.1.0 stand dann trotzdem „jedes Konto
+             stellt beim nächsten Anmelden von selbst um". */
+          $umstellungRest = ($anZustand['kennung_alt'] !== null && $anZaehlung['alt'] > 0)
+              ? ' — der alte Anteil bleibt, bis kein Konto mehr auf ihm steht'
+              : ($anOffen > 0
+                  ? ' — jedes Konto stellt beim nächsten Anmelden von selbst um'
+                  : '');
           ui_zeile([
             'text'  => 'Umstellung der Konten',
-            'klein' => implode(' · ', $teile) . '. Jedes Konto stellt beim '
-                     . 'nächsten Anmelden von selbst um; niemand muss etwas tun.',
+            'klein' => implode(' · ', $teile) . $umstellungRest,
             'plaketten' => ui_plakette($anOffen === 0 ? 'vollständig'
                                                       : $anOffen . ' offen',
                 ['ton' => 'blau']),
@@ -797,22 +982,10 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php endif; ?>
     </div>
 
-    <?php if ($anZustand['kennung_alt'] !== null && $anZaehlung['alt'] > 0): ?>
-      <p class="feld-hinweis">Der alte Anteil lässt sich entfernen, sobald
-         <strong>kein Konto</strong> mehr auf ihm steht — derzeit sind es
-         <strong><?= (int)$anZaehlung['alt'] ?></strong>. Bis dahin bleibt er in
-         <code>config.php</code>, sonst kämen diese Konten nicht mehr an ihre
-         geschützten Angaben.</p>
-    <?php endif; ?>
 
     <?php /* ---- Nachtragen vom Blatt (E-S10-10) -------------------------- */ ?>
     <?php if ($skZustand['stand'] === 'abweichend' || $anZustand['stand'] === 'abweichend'): ?>
-      <p class="feld-hinweis"><strong>Nachtragen vom Blatt.</strong> Den Wert vom
-         Schlüsselblatt einfügen — Leerzeichen und Bindestriche dürfen
-         drinbleiben, Groß- und Kleinschreibung ist gleich. Der Server rechnet
-         die Kennung und <strong>schreibt nur bei Übereinstimmung</strong>:
-         Ein falsch abgeschriebener Wert, der stillschweigend landet, macht aus
-         einer behebbaren Lage eine unbehebbare.</p>
+      <h3 class="listen-form-titel">Nachtragen vom Blatt</h3>
       <?php foreach ([
             ['anteil', 'Server-Anteil', $anZustand, 'schluessel_anteil_nachtragen'],
             ['sk', 'Serverschlüssel', $skZustand, 'schluessel_sk_nachtragen'],
@@ -828,13 +1001,14 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
               'klasse' => 'feld-fest',
               'attr' => ' autocomplete="off" spellcheck="false" inputmode="latin"',
               'klein' => 'Erwartet wird der Wert mit Kennung '
-                       . ($z['erwartet'] ?? '—') . '.']); ?>
+                       . ($z['erwartet'] ?? '—') . ' — geschrieben wird nur, wenn '
+                       . 'die Kennung übereinstimmt.']); ?>
           <?php if ($z['kennung'] !== null): ?>
             <?php ui_schalter(['name' => 'ersetzen',
                 'label' => 'Den vorhandenen Eintrag ersetzen',
                 'an' => false,
                 'klein' => 'In config.php steht bereits ein gültiger Wert '
-                         . '(Kennung ' . $z['kennung'] . '). Ohne diesen Haken '
+                         . '(Kennung ' . $z['kennung'] . ') — ohne diesen Haken '
                          . 'wird nichts überschrieben.']); ?>
           <?php endif; ?>
           <div class="listen-form-fuss">
@@ -848,13 +1022,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
 
     <?php /* ---- Neuanfang (E-S10-09, Zustand „Neuanfang") ---------------- */ ?>
     <?php if ($anZustand['stand'] === 'abweichend'): ?>
-      <p class="feld-hinweis"><strong>Wenn der Wert unwiederbringlich weg ist</strong>
-         — <code>config.php</code> verloren und beide Ausdrucke des Blatts dazu —,
-         bleibt der Neuanfang. Danach setzt <em>jede NutzerIn</em> ihr Passwort
-         über den <strong>Wiederherstellungsschlüssel</strong> neu. Das ist
-         <strong>kein Datenverlust</strong>: Die Wiederherstellungs-Hülle hängt
-         nicht am Server-Anteil. Es ist ein Vorgang für alle — und der letzte
-         Ausweg, nicht der erste.</p>
+      <h3 class="listen-form-titel">Neuanfang <span class="feld-klein-inline">nur, wenn der Wert unwiederbringlich weg ist</span></h3>
       <div class="listen-form-fuss">
         <form method="post" action="betrieb_server.php"
               data-confirm="Einen NEUEN Server-Anteil erzeugen? Jede NutzerIn mit umgestellter Hülle muss danach ihr Passwort über den Wiederherstellungsschlüssel neu setzen. Die Daten selbst bleiben unversehrt. Dieser Schritt lässt sich nicht zurücknehmen — der bisherige Wert ist danach gegenstandslos."
@@ -915,13 +1083,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
            'text' => 'Komplett-Backups'],
         ], $sp['gesamt']['bezug'], $sp['schwellen']) ?>
 
-    <p class="feld-klein">Datenbank aus <code>information_schema</code> (Daten und
-       Indizes), Dateien aus dem Verzeichnislauf über das Anwendungsverzeichnis
-       (Code, Symbole, Logos, APK) — ohne <code>sicherungen/</code>, die zählen
-       bei den Backups. Der freie Webspace wird <strong>nicht gemessen</strong>:
-       <code>disk_free_space()</code> zeigt auf geteiltem Hosting den Datenträger
-       des Hosts, nicht die Quota. Versendete Pakete auf Backup-Zielen zählen
-       nirgends mit — sie liegen außerhalb dieses Webspace.</p>
+    <p class="feld-hinweis">Der freie Webspace wird nicht gemessen, nur was
+       diese Installation belegt.
+       <a href="hilfe.php#speicher">Handbuch: was gezählt wird</a></p>
 
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="speicher">
@@ -935,12 +1099,12 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                  in die Ausgabe schreibt. */ ui_feld(['name' => 'grenze', 'label' => 'Speichergrenze Backups',
             'wert' => rtrim(rtrim(number_format(
                           edbak_grenze_bytes() / (1024 * 1024 * 1024), 2, '.', ''), '0'), '.'),
-            'klein' => 'GB für Konto-Backups und Komplett-Backups zusammen. Ist sie '
-                     . 'erreicht, wird nicht mehr gesichert; gelöscht wird nichts.']); ?>
+            'klein' => 'GB für Konto- und Komplett-Backups zusammen — ist sie '
+                     . 'erreicht, wird nicht mehr gesichert, aber nichts gelöscht.']); ?>
         <?php ui_feld(['name' => 'schwellen', 'label' => 'Warnschwellen',
             'wert' => implode(', ', edbak_schwellen()),
-            'klein' => 'Prozent, durch Komma getrennt — gelten für beide Balken. '
-                     . 'Je Schwelle einmal eine Meldung.']); ?>
+            'klein' => 'Prozent, durch Komma getrennt, für beide Balken — je '
+                     . 'Schwelle einmal eine Meldung.']); ?>
       </div>
       <div class="fld-reihe">
         <?php ui_feld(['name' => 'webspace', 'label' => 'Webspace laut Hosting',
@@ -949,17 +1113,14 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                 ? rtrim(rtrim(number_format(
                       speicher_webspace_bytes() / (1024 * 1024 * 1024), 2, '.', ''), '0'), '.')
                 : '',
-            'klein' => 'GB, aus dem Hosting-Tarif abgelesen. Ohne Angabe zeigt '
-                     . '„Installation gesamt" nur die Summe — ohne Anteil und ohne '
-                     . 'Warnung.']); ?>
+            'klein' => 'GB, aus dem Hosting-Tarif abgelesen — ohne Angabe zeigt '
+                     . '„Installation gesamt" nur die Summe.']); ?>
         <?php ui_feld(['name' => 'db_gb', 'label' => 'Kontingent der Datenbank',
             'wert' => rtrim(rtrim(number_format(
                           speicher_db_kontingent_bytes() / (1024 * 1024 * 1024),
                           2, '.', ''), '0'), '.'),
-            'klein' => 'GB, aus dem Hosting-Tarif abgelesen. Kein Hoster macht es '
-                     . 'abfragbar, deshalb eine Angabe — leer setzt auf die Vorgabe '
-                     . SPEICHER_DB_GB_VORGABE . ' GB zurück. Gewarnt wird mit '
-                     . 'denselben Schwellen wie oben.']); ?>
+            'klein' => 'GB, aus dem Hosting-Tarif abgelesen — leer setzt auf die '
+                     . 'Vorgabe ' . SPEICHER_DB_GB_VORGABE . ' GB zurück.']); ?>
       </div>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
@@ -1007,31 +1168,16 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => kopf_csp_scharf()
           ? ui_plakette('CSP scharf', ['ton' => 'blau'])
           : ui_plakette('CSP meldet nur', ['ton' => 'orange'])]); ?>
-    <p class="feld-hinweis">Seit Web 20.7.0 setzt <strong>PHP</strong> die
-       Sicherheitskopfzeilen, nicht mehr die <code>.htaccess</code> — die liest
-       nur Apache. <strong>Die Content-Security-Policy sagt dem Browser, woher
-       er etwas laden darf.</strong> Sie ist die Linie gegen eingeschleuste
-       Skripte; gegen einen Server, der selbst verändert wurde, hilft sie
-       nicht (dafür läuft die Integritätswache).</p>
+    <p class="feld-hinweis">Die Content-Security-Policy sagt dem Browser, woher
+       er etwas laden darf — erst beobachten, dann scharf schalten.
+       <a href="hilfe.php#karte-sicherheitskopfzeilen-seit-web-20-7-0">Handbuch: Sicherheitskopfzeilen</a></p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="kopfzeilen">
       <?php ui_schalter(['name' => 'csp_scharf', 'label' => 'Richtlinie scharf schalten',
           'an' => kopf_csp_scharf(),
-          'klein' => 'Aus heißt „nur melden": Der Browser lädt alles wie bisher und '
-                   . 'schickt einen Bericht, wenn die Richtlinie etwas blockiert '
-                   . 'hätte. So gehört es nach dem Ausrollen — mindestens zwei '
-                   . 'Wochen, und erst wenn unten keine unerklärten Berichte mehr '
-                   . 'stehen, scharf schalten.']); ?>
-      <h3 class="listen-form-titel">Dauer der HTTPS-Bindung (HSTS)</h3>
-      <p class="feld-hinweis">So lange merkt sich ein Browser, dass diese Domain
-         <strong>nur</strong> über HTTPS zu haben ist — und lässt bis dahin kein
-         <code>http://</code> mehr zu, auch nicht auf Klick.
-         <strong>Deshalb klein anfangen:</strong> Ein zu lang gesetzter Wert sperrt
-         die Domain aus, wenn das Zertifikat wegfällt, und zwar für die ganze
-         Dauer. <strong>Für bestehende Installationen:</strong> Bis Web 20.6.0
-         stand in der <code>.htaccess</code> fest ein Jahr; diese Einstellung
-         beginnt bei einem Tag. Nach ein bis zwei ruhigen Wochen gehört sie
-         zurück auf ein Jahr.</p>
+          'klein' => 'Aus heißt „nur melden" — scharf schalten, wenn nach zwei '
+                   . 'Wochen unten keine unerklärten Berichte stehen.']); ?>
+      <h3 class="listen-form-titel">Dauer der HTTPS-Bindung (HSTS) <span class="feld-klein-inline">klein anfangen</span></h3>
       <?php ui_segment(['name' => 'hsts_tage', 'wert' => (string)kopf_hsts_tage(),
           'label' => 'Dauer der HTTPS-Bindung',
           'optionen' => ['0' => 'aus', '1' => '1 Tag', '7' => '7 Tage',
@@ -1042,23 +1188,19 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </form>
 
     <?php if ($cspBerichte): ?>
-      <p class="feld-hinweis"><strong>Berichte der letzten 30 Tage</strong> —
-         zusammengefasst nach Richtlinie, Quelle und Seite. Jede Zeile ist eine
-         Quelle, die die Richtlinie blockiert hätte; solange hier etwas steht,
-         das nicht erklärt ist, bleibt sie auf „nur melden".</p>
+      <h3 class="listen-form-titel">Berichte der letzten 30 Tage</h3>
       <?php foreach ($cspBerichte as $b): ?>
         <?php ui_zeile([
           'text'  => (string)$b['richtlinie'] . ' · ' . (string)$b['quelle'],
           'klein' => 'auf ' . (string)$b['seite'] . ' · zuletzt '
-                   . datum_zeit_text((string)$b['zuletzt'], ' · ') . ' Uhr',
+                   . datum_zeit_text((string)$b['zuletzt']) . ' Uhr',
           'plaketten' => ui_plakette((string)$b['anzahl'] . ' Meldungen', ['ton' => 'orange']),
         ]); ?>
       <?php endforeach; ?>
     <?php else: ?>
       <?php ui_zeile(['text' => 'Berichte der letzten 30 Tage',
-          'klein' => 'Keine. Entweder ist die Richtlinie vollständig — oder es war '
-                   . 'noch niemand auf einer Seite, die etwas nachlädt. Karten, '
-                   . 'Import und Export sind die interessanten drei.',
+          'klein' => 'Keine — die Richtlinie ist vollständig, oder niemand war auf '
+                   . 'einer Seite, die etwas nachlädt (Karten, Import, Export).',
           'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
@@ -1114,11 +1256,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         </form>
       </div>
     <?php endif; ?>
-    <p class="feld-hinweis"><strong>Die Vorgabe ist „nur auf Einladung", und
-       das ist Absicht.</strong> Wer diese Seite nie aufschlägt, bekommt keine
-       offene Registrierung durch Untätigkeit. Ein Umschalten wirkt sofort auf
-       die Registrierungsseite; Registrierungen, die schon laufen, laufen zu
-       Ende.</p>
+    <p class="feld-hinweis">Die Vorgabe ist „nur auf Einladung", damit niemand
+       durch Untätigkeit eine offene Registrierung bekommt.
+       <a href="hilfe.php#karte-konten-seit-web-20-16-5">Handbuch: Konten</a></p>
 
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="konten">
@@ -1129,67 +1269,83 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php ui_feld(['name' => 'reg_frist', 'label' => 'Wartende Registrierungen verfallen nach',
           'art' => 'number', 'label_zusatz' => 'Tagen',
           'wert' => (string)konten_reg_frist_tage(),
-          'klein' => 'Gilt nur bei „mit Freischaltung". Die Frist steht auf der '
-                   . 'Registrierungsseite und in der Bestätigungsmail; beim Verfall '
-                   . 'geht eine letzte Nachricht heraus. Davon getrennt und nicht '
-                   . 'einstellbar: Wer seine Adresse nicht bestätigt, verfällt nach '
+          'klein' => 'Gilt nur bei „mit Freischaltung"; wer seine Adresse gar nicht '
+                   . 'bestätigt, verfällt davon getrennt nach '
                    . KONTEN_UNBESTAETIGT_H . ' Stunden.']); ?>
 
       <h3 class="listen-form-titel">Wegwerfadressen</h3>
       <?php ui_schalter(['name' => 'wegwerf', 'label' => 'Wegwerfadressen abweisen',
           'an' => konten_wegwerf_an(),
-          'klein' => 'Gegen die mitgelieferte Liste, die mit jeder Auslieferung kommt — '
-                   . 'sie liegt in der Anwendung, es wird nichts bei Dritten '
-                   . 'abgefragt. Abgewiesen wird mit derselben Antwort wie jede '
-                   . 'andere Registrierung, damit die Seite nicht verrät, welche '
-                   . 'Adressen sie kennt. Ohne Wirkung bei „nur auf Einladung".']); ?>
+          'klein' => 'Gegen die mitgelieferte Liste, ohne Anfrage bei Dritten und '
+                   . 'ohne Wirkung bei „nur auf Einladung".']); ?>
       <?php ui_feld(['name' => 'wegwerf_eigene', 'label' => 'Zusätzlich abweisen',
           'art' => 'textarea', 'zeilen' => 2,
           'wert' => implode(', ', konten_wegwerf_eigene()),
           'platzhalter' => 'beispiel.invalid, noch-eine.test',
-          'klein' => 'Eigene Domains, durch Komma oder Zeilenumbruch getrennt — die '
-                   . 'reine Domain, ohne „@". Für längere Listen ist die Datei der '
-                   . 'Ort.']); ?>
+          'klein' => 'Reine Domains ohne „@", durch Komma oder Zeilenumbruch '
+                   . 'getrennt.']); ?>
 
-      <h3 class="listen-form-titel">Was ein Konto halten darf</h3>
-      <p class="feld-hinweis">Vorgaben für neue und bestehende Konten. <strong>Je
-         Konto überschreibbar</strong> in der Kontoverwaltung. Ab
-         <?= (int)(KONTEN_WARNSCHWELLE * 100) ?> % geht einmalig eine Nachricht
-         heraus und die Kontoseite trägt einen Hinweis; bei 100 % nimmt der
-         Server keine Gerätedaten mehr an und der Import bricht ab —
-         <strong>Bearbeiten und Löschen bleiben frei</strong>, sonst säße man in
-         der eigenen Grenze fest.</p>
+      <h3 class="listen-form-titel">Was ein Konto halten darf
+        <span class="feld-klein-inline">— je Konto überschreibbar</span></h3>
       <?php ui_feld(['name' => 'grenze_einsaetze', 'label' => 'Einsätze je Konto',
-          'art' => 'number', 'wert' => (string)konten_grenze_einsaetze()]); ?>
+          'art' => 'number', 'wert' => (string)konten_grenze_einsaetze(),
+          'klein' => 'Ab ' . (int)(KONTEN_WARNSCHWELLE * 100) . ' % geht eine '
+                   . 'Nachricht heraus, bei 100 % weder Gerätedaten noch Import — '
+                   . 'Bearbeiten und Löschen bleiben frei.']); ?>
       <?php ui_feld(['name' => 'grenze_mb', 'label' => 'Speicher je Konto',
           'art' => 'number', 'label_zusatz' => 'MB',
           'wert' => (string)konten_grenze_mb(),
           'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, gemessen wie die '
                    . 'Statistik zählt.']); ?>
-      <p class="feld-hinweis"><strong>Wie viele Konto-Backups aufgehoben
-         werden</strong>, steht weiterhin unter Verwaltung → Konto-Backups —
-         eine zweite Zahl daneben wäre eine Doppelung. Was hier dazukommt, ist
-         die <strong>Überschreibung je Konto</strong>: Sie steht auf der
-         Kontoseite (Backlog Nr. 48).</p>
-
-      <h3 class="listen-form-titel">Demo und Protokoll</h3>
+      <h3 class="listen-form-titel">Demo</h3>
       <?php ui_schalter(['name' => 'demo_anmeldung', 'label' => 'Demo-Anmeldung zulassen',
           'an' => konten_demo_anmeldung_an(),
-          'klein' => 'Ist sie aus, wird die Demo-Adresse bei der Anmeldung wie ein '
-                   . 'falsches Passwort behandelt — gleiche Antwort, gleiche Dauer. '
-                   . 'Der Bestand bleibt und lässt sich jederzeit wieder '
-                   . 'freischalten. Einen Demo-Knopf auf der Anmeldeseite gibt es '
-                   . 'bewusst nicht; die Zugangsdaten stehen im Handbuch.']); ?>
+          'klein' => 'Aus heißt: Die Demo-Adresse gilt bei der Anmeldung als '
+                   . 'unbekannt, ihr Bestand bleibt.']); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Protokoll: Frist und Archiv (P5c/AP2, E-P5c-02, -03, -24) ----
+           Die Frist der Verwaltungseinträge stand bis Web 20.38.0 in der
+           Karte „Konten". Sie gehört zu dem, was sie begrenzt: dem
+           Protokoll und seinem Archiv. Gelesen wird das Protokoll unter
+           Verwaltung → Protokoll; hier steht, wie lange es liegt. */
+        require_once __DIR__ . '/protokoll_archiv_lib.php';
+        $archive = protokoll_archive(); ?>
+  <?php ui_karte_start(['titel' => 'Protokoll', 'id' => 'k-protokoll',
+      'plakette' => ui_plakette(count($archive) . (count($archive) === 1 ? ' Archiv' : ' Archive'),
+                                ['ton' => $archive ? 'blau' : 'neutral']),
+      'aktion' => ['text' => 'Protokoll lesen', 'href' => 'admin_protokoll.php']]); ?>
+    <p class="feld-hinweis">Was hier steht, begrenzt, wie lange Betriebsereignisse
+       liegen — in der Datenbank und im versiegelten Archiv.
+       <a href="hilfe.php#das-archiv-nur-betreiberin">Wie das Archiv arbeitet</a></p>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="protokoll">
       <?php ui_feld(['name' => 'protokoll_frist',
-          'label' => 'Verwaltungseinträge im Protokoll aufbewahren',
+          'label' => 'Verwaltungseinträge aufbewahren',
           'art' => 'number', 'label_zusatz' => 'Tage',
           'wert' => (string)protokoll_frist_verwaltung(),
           'klein' => 'Zwischen ' . PROTOKOLL_FRIST_MIN . ' und ' . PROTOKOLL_FRIST_MAX
-                   . ' Tagen. Betrifft nur das Audit — wer wann ein Konto angelegt, '
-                   . 'freigeschaltet, gesperrt oder gelöscht hat. Alle übrigen '
-                   . 'Einträge verfallen nach ' . PROTOKOLL_FRIST_UEBRIGE
-                   . ' Tagen, und das ist keine Einstellung.']); ?>
-
+                   . ' Tagen; alle übrigen Einträge verfallen fest nach '
+                   . PROTOKOLL_FRIST_UEBRIGE . ' Tagen.']); ?>
+      <?php ui_feld(['name' => 'archiv_tage', 'label' => 'Archiv alle',
+          'art' => 'number', 'label_zusatz' => 'Tage',
+          'wert' => (string)protokoll_archiv_tage(),
+          'klein' => 'Zwischen ' . PROTOKOLL_ARCHIV_TAGE_MIN . ' und '
+                   . PROTOKOLL_ARCHIV_TAGE_MAX . ' Tagen.']); ?>
+      <?php ui_feld(['name' => 'archiv_behalten', 'label' => 'Archive aufbewahren',
+          'art' => 'number', 'label_zusatz' => 'Tage',
+          'wert' => (string)protokoll_archiv_behalten(),
+          'klein' => 'Zwischen ' . PROTOKOLL_ARCHIV_BEHALTEN_MIN . ' und '
+                   . PROTOKOLL_ARCHIV_BEHALTEN_MAX . ' Tagen, danach löscht der Job '
+                   . 'sie hier — auf dem Backup-Ziel bleiben sie.']); ?>
+      <?php ui_schalter(['name' => 'archiv_versand',
+          'label' => 'Archive auf das Backup-Ziel schicken',
+          'an' => protokoll_archiv_versand(),
+          'klein' => 'Mit dem Versandjob, wie Konto-Backups und Komplett-Stände.']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>
@@ -1208,12 +1364,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => $vBr['stufe'] > 0
           ? ui_plakette('Verlangsamung Stufe ' . $vBr['stufe'], ['ton' => 'orange'])
           : ui_plakette('ruhig', ['ton' => 'blau'])]); ?>
-    <p class="feld-hinweis"><strong>Eine Sperre dauert beim zweiten Mal
-       länger.</strong> Wer sich zu oft vertippt, ist eine Viertelstunde
-       draußen; wer es am selben Tag noch einmal tut, länger. Nach
-       <strong>24 Stunden ohne Fehlversuch</strong> fängt die Leiter wieder
-       von vorn an. Gezählt wird am <em>eingetippten</em> Namen und nicht am
-       Konto — deshalb verrät eine Sperre nicht, ob es das Konto gibt.</p>
+    <p class="feld-hinweis">Eine Sperre dauert beim zweiten Mal länger und
+       zählt am eingetippten Namen, nicht am Konto.
+       <a href="hilfe.php#11-4a-ratenschutz-was-jemanden-aufhaelt-der-es-von-aussen-versucht">Handbuch: Ratenschutz</a></p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="ratenschutz">
 
@@ -1221,12 +1374,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           'label_zusatz' => 'vier Dauern in Minuten, aufsteigend',
           'wert' => implode(', ', array_map(
                         static fn(int $s): int => (int)($s / 60), rate_leiter())),
-          'platzhalter' => '15, 20, 30, 60']); ?>
-      <p class="feld-hinweis">Die erste Sprosse gilt für die erste Sperre, die
-         vierte für jede weitere. <strong>Nicht unter 15 setzen, ohne es zu
-         wollen:</strong> Bis Web 20.9.1 sperrte die Anmeldung fest 15 Minuten
-         — eine kürzere erste Sprosse macht den ersten Verstoß milder als
-         vorher.</p>
+          'platzhalter' => '15, 20, 30, 60',
+          'klein' => 'Die vierte Sprosse gilt für jede weitere Sperre; die erste '
+                   . 'nicht unter 15 setzen, ohne es zu wollen.']); ?>
 
       <?php ui_feld(['name' => 'login', 'label' => 'Fehlversuche je Konto',
           'art' => 'number',
@@ -1235,30 +1385,22 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php ui_feld(['name' => 'login_ip', 'label' => 'Fehlversuche je Anschluss',
           'art' => 'number',
           'label_zusatz' => 'bis zur Sperre, je 15 Minuten',
-          'wert' => (string)rate_grenze('login_ip')['max']]); ?>
-      <p class="feld-hinweis"><strong>Die zweite Zahl ist die größere, und das
-         ist Absicht.</strong> Hinter einem Klinik-Anschluss teilen sich viele
-         eine Adresse; läge sie auf zehn, sperrte die zehnte Vertipperin die
-         übrigen neunzehn aus. Eine gelungene Anmeldung setzt beide Zähler
-         zurück.</p>
+          'wert' => (string)rate_grenze('login_ip')['max'],
+          'klein' => 'Die größere Zahl, weil sich hinter einem Klinik-Anschluss '
+                   . 'viele eine Adresse teilen.']); ?>
 
       <h3 class="listen-form-titel">Verlangsamung statt globaler Sperre</h3>
-      <p class="feld-hinweis">Zählt die ganze Installation zu viele
-         Fehlversuche, antwortet <strong>jede fehlgeschlagene</strong> Anmeldung
-         langsamer — 1, 2, 4, 8 Sekunden. Wer das richtige Passwort hat, kommt
-         ohne Verzögerung durch. <strong>Eine globale Sperre gibt es bewusst
-         nicht:</strong> Sie wäre ein Schalter, den jeder von außen umlegt.</p>
       <?php ui_feld(['name' => 'bremse', 'label' => 'Schwellen der Verlangsamung',
           'label_zusatz' => 'vier Zahlen, Fehlversuche je 15 Minuten',
           'wert' => implode(', ', rate_bremse_schwellen()),
-          'platzhalter' => '200, 400, 800, 1600']); ?>
+          'platzhalter' => '200, 400, 800, 1600',
+          'klein' => 'Darüber antwortet jede fehlgeschlagene Anmeldung langsamer '
+                   . '(1, 2, 4, 8 Sekunden), die gelungene ohne Verzögerung.']); ?>
 
       <?php ui_schalter(['name' => 'mail', 'label' => 'Bei der höchsten Stufe melden',
           'an' => rate_mail_an(),
-          'klein' => 'Eine Sammelmeldung an die Betreiberadresse, sobald eine Sperre '
-                   . 'die letzte Sprosse erreicht oder die Verlangsamung ihre vierte '
-                   . 'Stufe — höchstens eine je Stunde. Wohin sie geht, steht unter '
-                   . 'Verwaltung → Installation.']); ?>
+          'klein' => 'Eine Sammelmeldung an die Betreiberadresse aus Verwaltung → '
+                   . 'Installation, höchstens eine je Stunde.']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>
@@ -1266,8 +1408,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
 
     <?php $sperren = rate_sperren_aktiv(8); ?>
     <?php if ($sperren): ?>
-      <p class="feld-hinweis"><strong>Läuft gerade</strong> — die vollständige
-         Liste samt „Sperre aufheben" kommt auf Betrieb → Status → Sicherheit.</p>
+      <h3 class="listen-form-titel">Läuft gerade
+        <span class="feld-klein-inline">— <a href="betrieb_sicherheit.php">alle
+        samt „Sperre aufheben" unter Status → Sicherheit</a></span></h3>
       <?php foreach ($sperren as $sp): ?>
         <?php ui_zeile([
           'text'  => (string)$sp['merkmal'],
@@ -1278,8 +1421,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php endforeach; ?>
     <?php else: ?>
       <?php ui_zeile(['text' => 'Laufende Sperren',
-          'klein' => 'Keine. Das ist der Normalfall — eine Sperre ist ein Ereignis, '
-                   . 'kein Zustand.',
+          'klein' => 'Keine — das ist der Normalfall.',
           'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
@@ -1294,11 +1436,8 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           ? ui_plakette('an', ['ton' => 'blau'])
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
     <p class="feld-hinweis">Beim Tippen in einem Ortsfeld und nach jeder Wahl auf
-       der Karte fragt die Anwendung einen <strong>Adressdienst</strong> —
-       vorwärts nach Vorschlägen zum getippten Text, rückwärts nach der Adresse
-       zu einer Koordinate. Der getippte Text und die Koordinate verlassen dabei
-       das Gerät. Alles Übrige bleibt hier: Koordinaten, Plus Codes, „Meine
-       Position" und die Karte selbst brauchen den Dienst nicht.</p>
+       der Karte gehen der getippte Text und die Koordinate an einen Adressdienst.
+       <a href="hilfe.php#karte-adresssuche-seit-web-15-8-0">Handbuch: Adresssuche</a></p>
 
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="geocoder">
@@ -1310,55 +1449,14 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php ui_feld(['name' => 'dienst', 'label' => 'Dienst',
           'wert' => geocoder_dienst(),
           'attr' => ' maxlength="180" inputmode="url"',
-          'klein' => 'Adresse eines Photon-Dienstes, mit „https://". Vorgabe ist '
-                   . 'der frei betriebene Gemeinschaftsdienst ' . e(GEOCODER_VORGABE)
-                   . '. Wer einen eigenen betreibt, trägt ihn hier ein — dann '
-                   . 'verlassen die Anfragen das eigene Haus nicht.']); ?>
+          'klein' => 'Ein Photon-Dienst mit „https://", Vorgabe '
+                   . GEOCODER_VORGABE . ' — ein eigener hält die Anfragen im '
+                   . 'Haus.']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>
     </form>
   <?php ui_karte_ende(); ?>
-
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
-                        'vorschau' => 'Schlüssel · Grenze · Schwellen · Webspace · Adresssuche']); ?>
-    <p class="feld-hinweis"><strong>Die Grenze gilt nur für Backups.</strong> Die
-       Datenbank wächst mit jedem Einsatz und wird nie angehalten — eine Grenze
-       darauf hieße, die Anwendung anzuhalten. Ist die Grenze erreicht, wird
-       <em>nicht mehr gesichert</em>; gelöscht wird nie von selbst.</p>
-    <p class="feld-hinweis"><strong>Warnschwellen</strong> melden einmal je
-       Schwelle, für beide Balken. Mit eingerichtetem SMTP geht die Meldung
-       zusätzlich an alle mit Verwaltungsrechten. Wer Grenze oder Schwellen
-       ändert, setzt die Meldungen zurück: Dieselben Bytes sind bei einer
-       anderen Grenze eine andere Aussage.</p>
-    <p class="feld-hinweis"><strong>Der Webspace ist eine Angabe, keine
-       Messung.</strong> Er steht im Hosting-Tarif und lässt sich von hier aus
-       nicht ermitteln. Ohne ihn bleibt der zweite Balken eine Zusammensetzung
-       ohne Füllstand — das ist ehrlicher als eine erfundene Bezugsgröße.</p>
-    <p class="feld-hinweis"><strong>Gemessen wird einmal täglich</strong>, im
-       Aufräumjob. Der Stand steht im Kartenkopf. Die Backups werden dagegen bei
-       jedem Aufruf gewogen — ihr Verzeichnis ist klein genug dafür, und ihre
-       Zahl entscheidet, ob noch gesichert werden darf.</p>
-    <p class="feld-hinweis"><strong>Die beiden Schlüssel sind verschiedene
-       Dinge.</strong> Der <em>Serverschlüssel</em> versiegelt, was das Haus
-       verlässt — Backup-Ziele, Komplett-Backup, Konto-Backups. Der
-       <em>Server-Anteil</em> geht in den Datenschlüssel jedes Kontos ein und
-       verlässt das Haus nie. Beide stehen in <code>config.php</code> und
-       nirgends sonst; angezeigt wird hier immer nur ihre <strong>Kennung</strong>
-       (acht Hexzeichen), nie der Wert. Wer den Wert braucht, druckt das
-       Schlüsselblatt — das ist die einzige Seite, die ihn zeigt.</p>
-    <p class="feld-hinweis"><strong>Der Verlust des Anteils ist kein
-       Datenverlust.</strong> Die Wiederherstellungs-Hülle hängt nicht an ihm:
-       Jede NutzerIn kommt über ihren Wiederherstellungsschlüssel wieder herein
-       und setzt dabei ihr Passwort neu. Es ist ein Vorgang für alle — und
-       genau deshalb gehört das Schlüsselblatt an zwei Orte.</p>
-    <p class="feld-hinweis"><strong>Die Adresssuche ist zweimal abschaltbar</strong>
-       — hier für die Installation und im Profil je Konto. Diese Einstellung ist
-       die Obergrenze: Ist sie aus, ist der Kontoschalter ausgegraut und die
-       Suche für alle aus. Der Datenschutztext nennt den eingetragenen Dienst;
-       wer ihn wechselt, sollte den Text gegenlesen (Verwaltung →
-       Rechtstexte).</p>
-  <?php ui_karte_ende(true); ?>
 
 <?php /* DIE BALKENBREITEN — nach dem Aufbau, nicht im Markup (P5a/AP4).
          Siehe `speicher_balken()` oben: Ein `style`-Attribut faellt unter
@@ -1371,4 +1469,4 @@ document.querySelectorAll('.speicher-balken [data-breite]').forEach(function (el
 </script>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(); ?>
+<?php ui_seite_ende(['skripte' => ['assets/zeitfeld.js', 'assets/ankuendigung.js']]); ?>

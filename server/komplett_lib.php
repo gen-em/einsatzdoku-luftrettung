@@ -92,6 +92,29 @@ require_once __DIR__ . '/format_lib.php';      /* iso_utc() — ausdruecklich, n
 /** Unterordner in `sicherungen/`. Fester Name — der Zufall steckt im Dateinamen. */
 const KOMP_ORDNER = 'komplett';
 
+/**
+ * TABELLEN MIT SCHEMA, ABER OHNE ZEILEN (P5c/AP2, E-P5c-57, F-P5c-20).
+ *
+ * Beide führen IP-Adressen (und `sicherheit_ereignisse` E-Mail-Adressen) und
+ * verfallen bewusst nach 30 Tagen bzw. von selbst (E-P5a-09). Ein
+ * Komplett-Stand liegt länger und geht außer Haus — mit Zeilen hielte er,
+ * was die Anwendung gerade nicht halten will.
+ *
+ * WARUM NICHT GANZ WEGLASSEN: Nach einem Wiederanlauf aus einem Dump ohne
+ * die Tabellen scheitert `ratelimit_lib.php` bei der ersten Anmeldung, weil
+ * es in eine Tabelle schreibt, die es nicht gibt. Mit Schema und ohne
+ * Zeilen beginnt die neue Installation mit leeren Zählern — genau der
+ * Zustand, den 30 Tage später ohnehin jede hat. Muster: die Zeile `jobs`,
+ * die als Zustand mitgeht, aber nicht als Befehl (siehe den Neuanlauf in
+ * `komp_dump_schub()`).
+ *
+ * Tabelle => Grund, wie er im Dumpkopf steht.
+ */
+const KOMP_OHNE_ZEILEN = [
+    'sicherheit_ereignisse' => 'IP- und E-Mail-Adressen, verfallen nach 30 Tagen (E-P5a-09)',
+    'rate_limits'           => 'Zähler und Sperren nach IP-Adresse, verfallen von selbst',
+];
+
 /** Praefix eines Bauordners. Ein Punkt voran: kein Stand, sondern eine Baustelle. */
 const KOMP_BAU_PRAEFIX = '.bau-';
 
@@ -587,6 +610,12 @@ function komp_dump_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
                 $z['kopf'] = true;
                 $z['f'] = 0; $z['nach'] = null;
             }
+            if (isset(KOMP_OHNE_ZEILEN[$tab])) {
+                /* Schema ja, Zeilen nein — siehe KOMP_OHNE_ZEILEN. */
+                $schreib('-- `' . $tab . '`: ohne Zeilen — ' . KOMP_OHNE_ZEILEN[$tab] . '.');
+                $z['i']++; $z['kopf'] = false; $z['f'] = 0; $z['nach'] = null;
+                continue;
+            }
 
             $komb = komp_kombinationen($info['fest']);
             if ($z['f'] >= count($komb)) {
@@ -806,6 +835,10 @@ function komp_kopfzeilen(PDO $pdo, array $tabellen, array $z): array
         '-- Sie gehört ins getrennt aufbewahrte Wiederanlaufpaket; ohne den',
         '-- Serverschlüssel daraus ist eine versiegelte Fassung dieser Datei',
         '-- nicht zu öffnen. Siehe docs/Technik.md, Abschnitt 7.',
+        '-- OHNE ZEILEN: ' . implode(', ', array_keys(KOMP_OHNE_ZEILEN))
+            . ' — das Schema steht darin, die Zeilen nicht: IP- und',
+        '-- E-Mail-Adressen mit eigener, kurzer Frist (E-P5a-09). Nach dem',
+        '-- Einspielen beginnen Ratenschutz und Sperrereignisse leer.',
         '--',
         '-- Einspielbar mit:   mysql -uNUTZER -pPASSWORT DATENBANK < dump.sql',
         '--                    oder über „Installation wiederherstellen" der Anwendung.',
@@ -1178,7 +1211,7 @@ function komp_zustand_setzen(array $z): bool
             ->execute([json_encode($z), KOMP_JOB]);
         return true;
     } catch (Throwable $ex) {
-        error_log('komplett: Zustand liess sich nicht schreiben: ' . $ex->getMessage());
+        system_melden('komplett', 'Zustand ließ sich nicht schreiben', $ex);
         return false;
     }
 }
@@ -1291,8 +1324,9 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
             'geraeumt' => $geraeumt,
         ];
         komp_zustand_setzen($z);
-        error_log('komplett: Lauf gescheitert (' . $ex->getMessage() . '); Bauordner '
-                  . ($bau === '' ? 'gab es nicht' : ($geraeumt ? 'geraeumt' : 'NICHT geraeumt: ' . $bau)));
+        system_melden('komplett', 'Lauf gescheitert; Bauordner '
+                    . ($bau === '' ? 'gab es nicht' : ($geraeumt ? 'geräumt' : 'NICHT geräumt: ' . $bau)),
+                      $ex);
         throw $ex;
     }
 }
@@ -1387,6 +1421,16 @@ function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
             'verdraengt' => $weg,
             'warnung'    => array_values(array_unique($z['warnung'] ?? [])),
         ];
+        /* REITER SICHERUNG (P5c/AP2, E-P5c-38): Es gibt keine Tabelle, die
+         * festhält, wann ein Komplett-Stand entstand — der Dateiname sagt es,
+         * bis die Aufbewahrung ihn verdrängt. Der Eintrag hält es länger.
+         * Verdrängte Stände stehen in `daten`, nicht in je einem Eintrag. */
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll('sicherung', 'komplett_erzeugt',
+            'Komplett-Backup ' . $z['name'] . ' erzeugt (' . groesse_text($bytes) . ', '
+            . zahl_text((int)$z['zeilen']) . ' Zeilen in ' . (int)$z['tabellen'] . ' Tabellen)'
+            . ($weg ? ' — ' . count($weg) . ' älterer Stand verdrängt' : ''),
+            ['datei' => $z['name'], 'bytes' => $bytes, 'verdraengt' => $weg]);
         return ['erledigt' => $erledigt, 'fertig' => true];
     }
 

@@ -106,6 +106,7 @@ require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
 ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'anmeldung-body']);
 ?>
 <main class="anmeldung">
+ <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
   <?php /* DAS LOGO STEHT JETZT AUCH HIER (O10). Diese Seite ist die
            Nachbarin der Anmeldung — dieselbe dunkelblaue Fläche, dieselbe

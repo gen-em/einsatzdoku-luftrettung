@@ -158,7 +158,7 @@ function rt_haken_satz(string $schluessel, ?string $fassung = null): string
     if ($e === null) { return ''; }
 
     /* `htmlspecialchars` unmittelbar und nicht `ui_e()`: Diese Datei laedt
-     * `ui.php` nicht, und die Funktion wird auch aus `admin_installation.php`
+     * `ui.php` nicht, und die Funktion wird auch aus `admin_rechtstexte.php`
      * heraus erreichbar sein. Eine Abhaengigkeit, die nur zufaellig erfuellt
      * ist, faellt beim ersten neuen Aufrufer um. */
     $m = static fn(string $x): string => htmlspecialchars($x, ENT_QUOTES, 'UTF-8');

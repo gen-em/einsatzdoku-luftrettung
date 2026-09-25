@@ -44,6 +44,21 @@ if (!is_file(__DIR__ . '/config.php')) {
       . 'install.php anlegen und aufrufen (docs/Technik.md, Runbook).');
 }
 
+/* ---- DAS FEHLERPROTOKOLL (P5c/AP3, E-P5c-12, -58) --------------------------
+ *
+ * HIER UND GENAU EINMAL. Jede Seite, jeder Endpunkt und jeder Job laedt diese
+ * Datei; ab dieser Zeile landet jede Ausnahme, die niemand faengt, und jede
+ * Warnung im Reiter System — mit Kennung, ohne Anfragedaten. Die Fehlerseite
+ * nennt die Kennung und die Kontaktadresse. `tools/quelltext/behandler.php`
+ * zaehlt die beiden Zeilen: je eine, in dieser Datei.
+ *
+ * HINTER der Pruefung auf `config.php`: Fehlt sie, soll ihr Satz dastehen und
+ * nicht eine Fehlerseite, die eine Datenbank fragt, die es nicht gibt. */
+require_once __DIR__ . '/systemmeldung_lib.php';
+set_exception_handler('system_ausnahme_behandeln');
+set_error_handler('system_fehler_behandeln');
+register_shutdown_function('system_abbruch_pruefen');
+
 function db(): PDO {
     static $pdo = null;
     /* DER RIEGEL GEGEN DIE SCHLEIFE (P5a/AP9). Siehe den Block unten. */
@@ -141,34 +156,12 @@ function db(): PDO {
     return $pdo;
 }
 
-/**
- * Zentrale Stammdaten (Konzept: Zentrale Stammdaten & Transportziele):
- * user_id IS NULL kennzeichnet globale (Admin-)Eintraege. Die UNIQUE-Keys
- * (user_id, name) greifen bei NULL nicht (MySQL erlaubt mehrere NULLs),
- * daher muss die Duplikatpruefung in der Anwendung erfolgen.
- */
-
-/** True, wenn bereits ein GLOBALER Eintrag mit gleichem (Vergleichs-)Namen
- *  existiert (case-insensitiv, optional zusaetzliches Gleichheitskriterium
- *  wie role/registration). $excludeId blendet den eigenen Datensatz beim
- *  Umbenennen aus. */
-function stammdaten_dup_global(string $table, string $col, string $val,
-                                ?string $extraCol = null, ?string $extraVal = null,
-                                int $excludeId = 0): bool {
-    $sql = "SELECT COUNT(*) FROM $table WHERE user_id IS NULL AND LOWER($col) = LOWER(?)";
-    $params = [$val];
-    if ($extraCol !== null) { $sql .= " AND $extraCol = ?"; $params[] = $extraVal; }
-    if ($excludeId > 0) { $sql .= " AND id != ?"; $params[] = $excludeId; }
-    $st = db()->prepare($sql);
-    $st->execute($params);
-    return (bool)$st->fetchColumn();
-}
-
-/* `stammdaten_dup_personal_count()` STAND HIER BIS S9/AP5b. Sie zaehlte, wie
- * viele Konten denselben Namen selbst fuehren, und beantwortete damit den
- * Admin-Hinweis „N NutzerInnen haben ..." auf der systemweiten
- * Stammdatenpflege. Ihre sechs Aufrufer standen ausnahmslos in
- * `admin_stammdaten.php`; mit der Seite verliert die Frage ihre Stelle. */
+/* DIE HILFEN FUER ZENTRALE STAMMDATEN STANDEN HIER BIS WEB 20.47.0 (R39).
+ * `stammdaten_dup_global()` pruefte, ob ein eigener Name schon systemweit
+ * vergeben war — die UNIQUE-Schluessel (user_id, name) greifen bei NULL nicht.
+ * Seit P5c/AP8 traegt jeder Eintrag ein Konto, und der Schluessel haelt die
+ * Dubletten selbst ab. `stammdaten_dup_personal_count()` fiel schon mit
+ * `admin_stammdaten.php` (S9/AP5b). */
 
 /* ---------------------------------------------------------------------------
  * EIN STANDORT WIRD GELOESCHT — WAS ES UEBERLEBT      S9/AP5-5, M-S9-10 (b)
@@ -193,21 +186,14 @@ function stammdaten_dup_global(string $table, string $col, string $val,
  * naechsten Typ auseinander, und zwar still: Ein Rettungsmittel wuerde
  * geloescht, das man haette anlegen duerfen.
  *
- * EINE AUFRUFSTELLE SEIT S9/AP5b: `einstellungen.php` (eigene Standorte).
- * Bis dahin waren es zwei — `admin_stammdaten.php` pflegte den systemweiten
- * Bestand und uebergab dafuer `$userId === null`. Die Seite ist gestrichen
- * (R39), der Zweig `$userId === null` bleibt: Er ist billig, er trifft in
- * einer Anlage ohne zentrale Eintraege nie, und der Rueckbau in P5 (Backlog
- * Nr. 168) will genau hier nachsehen. Dieselbe Unterscheidung fuehrt
- * `stammdaten_dup_global()` darueber.
+ * EINE AUFRUFSTELLE: `einstellungen.php` (eigene Standorte). Bis S9/AP5b
+ * pflegte `admin_stammdaten.php` auch den systemweiten Bestand und uebergab
+ * dafuer `$userId === null`; der Zweig ist mit P5c/AP8 gefallen (R39).
  *
  * WARUM HIER UND NICHT IN `validate_lib.php`. Das Konzept schreibt „eine
  * Funktion neben `pruef_rettungsmittel()`" — gemeint ist: EINE Fassung fuer
  * beide Seiten. Die Datei selbst sagt in ihrem Kopf „Diese Datei aendert von
  * sich aus nichts"; ein `UPDATE` darin waere der erste Verstoss dagegen.
- * `db.php` fuehrt mit `stammdaten_dup_global()` bereits genau diese Sorte
- * Helfer: eine Abfrage ueber den Stammdatenbestand, die mehrere Schreibwege
- * brauchen.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -219,18 +205,16 @@ function stammdaten_dup_global(string $table, string $col, string $val,
  *
  * @return list<array{id:int,name:string}>
  */
-function stammdaten_ohne_standortpflicht(int $baseId, ?int $userId): array
+function stammdaten_ohne_standortpflicht(int $baseId, int $userId): array
 {
     $typen = array_keys(array_filter(VEHICLE_TYPEN,
         static fn(array $t): bool => $t['standort'] === false));
     if ($typen === []) { return []; }
     $platz = implode(',', array_fill(0, count($typen), '?'));
     $sql = 'SELECT id, name FROM vehicles
-             WHERE base_id = ? AND typ IN (' . $platz . ')
-               AND user_id ' . ($userId === null ? 'IS NULL' : '= ?') . '
+             WHERE base_id = ? AND typ IN (' . $platz . ') AND user_id = ?
              ORDER BY name';
-    $werte = array_merge([$baseId], $typen);
-    if ($userId !== null) { $werte[] = $userId; }
+    $werte = array_merge([$baseId], $typen, [$userId]);
     $q = db()->prepare($sql);
     $q->execute($werte);
     $raus = [];
@@ -247,17 +231,15 @@ function stammdaten_ohne_standortpflicht(int $baseId, ?int $userId): array
  *
  * @return int wie viele
  */
-function stammdaten_standort_loesen(int $baseId, ?int $userId): int
+function stammdaten_standort_loesen(int $baseId, int $userId): int
 {
     $typen = array_keys(array_filter(VEHICLE_TYPEN,
         static fn(array $t): bool => $t['standort'] === false));
     if ($typen === []) { return 0; }
     $platz = implode(',', array_fill(0, count($typen), '?'));
     $sql = 'UPDATE vehicles SET base_id = NULL
-             WHERE base_id = ? AND typ IN (' . $platz . ')
-               AND user_id ' . ($userId === null ? 'IS NULL' : '= ?');
-    $werte = array_merge([$baseId], $typen);
-    if ($userId !== null) { $werte[] = $userId; }
+             WHERE base_id = ? AND typ IN (' . $platz . ') AND user_id = ?';
+    $werte = array_merge([$baseId], $typen, [$userId]);
     $q = db()->prepare($sql);
     $q->execute($werte);
     return $q->rowCount();
@@ -266,45 +248,29 @@ function stammdaten_standort_loesen(int $baseId, ?int $userId): int
 /**
  * Der Satz der Rueckfrage vor dem Loeschen eines Standorts (M-S9-10 b).
  *
- * Er stand an EINER Stelle, weil er an zwei gebraucht wurde, und er steht dort
- * weiter, weil er drei
- * Zahlen zusammenbringt, die leicht auseinanderlaufen: die Zahl der
- * mitgeloeschten Saetze, die Zahl der ueberlebenden Rettungsmittel und deren
- * Namen. Bis Web 17.0.0 zaehlte die Rueckfrage ALLES mit — sie sagte „6
- * werden mitgeloescht", und eines davon blieb dann doch nicht.
+ * Er steht an EINER Stelle, weil er drei Zahlen zusammenbringt, die leicht
+ * auseinanderlaufen: die Zahl der mitgeloeschten Saetze, die Zahl der
+ * ueberlebenden Rettungsmittel und deren Namen. Bis Web 17.0.0 zaehlte die
+ * Rueckfrage ALLES mit — sie sagte „6 werden mitgeloescht", und eines davon
+ * blieb dann doch nicht.
  *
- * $zusatz haengt hinten an (die Verwaltung nannte zusaetzlich, wie viele
- * Konten den Standort gewaehlt haben).
- *
- * SEIT S9/AP5b HAT DIESE FUNKTION EINEN AUFRUFER, NICHT ZWEI. Mit
- * `admin_stammdaten.php` (R39) faellt der Aufrufer weg, der `$systemweit =
- * true` und `$zusatz` uebergab: Beide sind seither unerreichbar. Sie bleiben
- * trotzdem stehen — die vier ausgeschriebenen Beugungsformen unten sind
- * sichtbarer Text, und den baut man nicht als Nebenwirkung eines
- * Streichpakets um. Sie fallen mit dem Modell in P5 (Backlog Nr. 168).
+ * BIS WEB 20.47.0 KANNTE SIE ZWEI FASSUNGEN, „eigene" und „systemweite"
+ * (`$systemweit`, dazu `$zusatz` fuer die Zahl der Konten, die den Standort
+ * gewaehlt hatten). Der Aufrufer dafuer ist mit S9/AP5b gefallen, die beiden
+ * Angaben mit P5c/AP8 (R39).
  */
-function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben,
-                                bool $systemweit, string $zusatz = ''): string
+function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben): string
 {
     $bleibt = count($bleiben);
     $mit    = max(0, $anzahlGesamt - $bleibt);
-    /* DIE BEUGUNG STEHT AUSGESCHRIEBEN, sie wird nicht gerechnet. Der erste
-       Entwurf schnitt das „e" von „eigene" ab und hängte ein „r" an — daraus
-       wurde „Ein eigenr Stammdatensatz" (und „systemweitr"). Deutsche
-       Adjektivendungen aus einer Zeichenkette abzuleiten geht schief, sobald
-       jemand ein zweites Wort einsetzt; vier Formen hinzuschreiben kostet
-       vier Zeilen und hält. Gefunden von der Klickprobe. */
-    $einer = $systemweit ? 'Ein systemweiter Stammdatensatz' : 'Ein eigener Stammdatensatz';
-    $viele = $systemweit ? ' systemweite Stammdatensätze'    : ' eigene Stammdatensätze';
-    $keine = $systemweit ? 'systemweiten' : 'eigenen';
-    $satz = 'Standort „' . $name . '“ ' . ($systemweit ? 'systemweit ' : '') . 'löschen? ';
+    $satz = 'Standort „' . $name . '“ löschen? ';
     if ($mit > 0) {
-        $satz .= ($mit === 1 ? $einer : $mit . $viele)
+        $satz .= ($mit === 1 ? 'Ein eigener Stammdatensatz' : $mit . ' eigene Stammdatensätze')
                . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere '
                . 'Rettungsmittel, Bergwacht) '
                . ($mit === 1 ? 'wird' : 'werden') . ' mitgelöscht. ';
     } else {
-        $satz .= 'Es hängen keine ' . $keine . ' Stammdaten daran, die mitgelöscht würden. ';
+        $satz .= 'Es hängen keine eigenen Stammdaten daran, die mitgelöscht würden. ';
     }
     if ($bleibt > 0) {
         /* MIT NAMEN, NICHT MIT ZAHL (M-S9-10, Anmerkung 3). Bei mehr als
@@ -320,7 +286,6 @@ function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben,
                 : $bleibt . ' Rettungsmittel ohne Standortpflicht (' . $liste . ') bleiben bestehen und stehen')
                . ' danach unter „Ohne Standort“. ';
     }
-    if ($zusatz !== '') { $satz .= $zusatz . ' '; }
     return $satz . 'Bereits dokumentierte Diensttage bleiben unverändert.';
 }
 
@@ -684,36 +649,23 @@ require_once __DIR__ . '/instanz_lib.php';   // Name dieser Installation (P5a/AP
 require_once __DIR__ . '/wartung_lib.php';
 wartung_tor();
 
-/* DIE SITZUNGSABLAGE — EINE VON ZWEI AUFRUFSTELLEN (Schritt 16, E-SA-02,
- * Backlog Nr. 241). Die andere ist `install.php`.
+/* DIE SITZUNGSBIBLIOTHEK (Schritt 16, E-SA-02; Schritt 15/AP2, E-ZE-06).
  *
- * WARUM HIER UND NICHT AN DEN NEUN `session_start()`. Es gibt neun
- * Sitzungsstarts in neun Dateien; ACHT davon laden diese Datei vorher, die
- * neunte ist `install.php`, wo es noch keine `config.php` gibt. Eine Stelle
- * je Sitzungsstart waere neunmal dieselbe Zeile — und der zehnte Sitzungsstart
- * vergaesse sie. Vergessen heisst hier nicht „ungeschuetzt": Die Anmeldung
- * legte die Sitzung dann beim Hoster ab und das Tor suchte sie in
- * `.sitzungen/`. NIEMAND KOENNTE SICH ANMELDEN.
+ * BIS P5c/AP3 STAND HIER „EINE VON ZWEI AUFRUFSTELLEN" der Sitzungsablage,
+ * die andere sei `install.php`, und eine Begruendung, warum der Aufruf hier
+ * und nicht an den neun `session_start()` steht. Beides war seit Web 20.27.0
+ * nicht mehr wahr: Bis Web 20.26.3 stand hier `sitzung_ablage();`; seither
+ * gibt es nur noch EINEN Sitzungsstart, `sitzung_starten()`, und der richtet
+ * die Ablage selbst ein, unmittelbar bevor PHP die Sitzungsdatei anlegt —
+ * also nicht mehr bei jeder Anfrage, die `db.php` laedt, ohne eine Sitzung
+ * zu starten (Register Z01/Z02 halten beides auf eins).
  *
- * WARUM HINTER `wartung_tor()`. Dessen Sperrpfade enden mit `exit` und
- * brauchen keine Sitzung; die Wartungsseite fuehrt keine. Ein Aufruf davor
- * kostete auf jeder gesperrten Anfrage Dateisystemarbeit — ausgerechnet
- * waehrend des Schemaumbaus, fuer den es den Wartungsmodus gibt. Die Seiten,
- * die im Wartungsmodus doch eine Sitzung brauchen (`login.php`, die sieben
- * `betrieb_*.php`, `update.php`), stehen in `WARTUNG_AUSNAHMEN` und kehren
- * aus `wartung_tor()` mit `return` zurueck — sie kommen hier vorbei.
- *
- * UND HIER UND NICHT WEITER OBEN, aus demselben Grund wie die Zeile darueber:
- * Bis zu dieser Stelle ist keine Kopfzeile gesendet und keine Verbindung
- * geoeffnet. `sitzung_lib.php` laedt ihrerseits nichts. */
+ * WAS HIER BLEIBT, ist das Laden: `jobs_lib.php` braucht den Raeumteil,
+ * `plattform_lib.php` die Auskunft, und beide verlassen sich darauf, dass
+ * `db.php` die Datei mitbringt. Sie laedt ihrerseits nichts — die Zeile ist
+ * vor und hinter `wartung_tor()` gleich billig; sie steht dahinter, weil die
+ * Sperrpfade des Tors mit `exit` enden und keine Sitzung brauchen. */
 require_once __DIR__ . '/sitzung_lib.php';
-/* BIS WEB 20.26.3 STAND HIER `sitzung_ablage();`. Der Aufruf ist mit
- * Schritt 15 AP2 entfallen (E-ZE-06): `sitzung_starten()` ruft ihn jetzt
- * selbst, unmittelbar bevor PHP die Sitzungsdatei anlegt. Damit laeuft die
- * Einrichtung der Ablage genau dann, wenn sie gebraucht wird — und NICHT
- * mehr bei jeder Anfrage, die `db.php` laedt, ohne eine Sitzung zu starten.
- * Die Datei wird hier weiter geladen, weil `jobs_lib.php` den Raeumteil und
- * `plattform_lib.php` die Auskunft daraus braucht. */
 
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
@@ -771,9 +723,15 @@ function sql_in_bloecken(PDO $pdo, string $sqlVorlage, array $ids,
  * stand, stand nirgends sonst. Wer eine Woche spaeter nachsehen wollte, hatte
  * nur die Erinnerung an einen Screenshot.
  *
- * Beides loest dieselbe Aenderung: Der volle Text geht ins Fehlerprotokoll
- * des Webspace, nach aussen geht eine Kennung. Sie ist kurz genug, um sie am
- * Telefon durchzugeben, und lang genug, um im Protokoll eindeutig zu sein.
+ * Beides loest dieselbe Aenderung: Der volle Text geht ins Protokoll, nach
+ * aussen geht eine Kennung. Sie ist kurz genug, um sie am Telefon
+ * durchzugeben, und lang genug, um im Protokoll eindeutig zu sein.
+ *
+ * SEIT P5c/AP3 (E-P5c-58) steht der Text im Reiter System und nicht mehr im
+ * Fehlerprotokoll des Webspace, bereinigt wie jede fremde Meldung
+ * (`systemmeldung_lib.php`); nur wenn die Datenbank nicht antwortet, geht er
+ * mit derselben Kennung dorthin. Die ANTWORTFORM bleibt, auch auf dem
+ * Geraeteweg: `{"error": …, "kennung": …}` (`JSON-Vertrag.md` 5).
  *
  * Bewusst NICHT geaendert: install.php und update.php zeigen ihre Ausnahmen
  * weiterhin im Klartext. Beide laufen nur fuer Verwaltende, beide in Lagen
@@ -783,10 +741,7 @@ function sql_in_bloecken(PDO $pdo, string $sqlVorlage, array $ids,
  */
 function fehler_kennung(Throwable $ex, string $bereich): string
 {
-    $kennung = strtoupper(bin2hex(random_bytes(4)));
-    error_log('[' . $kennung . '] ' . $bereich . ': ' . $ex->getMessage()
-              . ' @ ' . $ex->getFile() . ':' . $ex->getLine());
-    return $kennung;
+    return system_melden($bereich, 'unerwarteter Fehler', $ex, [], 'ausnahme');
 }
 
 /**
@@ -807,7 +762,7 @@ function json_fehler(Throwable $ex, string $bereich): never
     json_out(['error'   => $bereich,
               'kennung' => $kennung,
               'meldung' => 'Es ist ein unerwarteter Fehler aufgetreten (Kennung '
-                         . $kennung . '). Er steht im Fehlerprotokoll des Webspace.'], 500);
+                         . $kennung . '). ' . system_meldesatz($kennung)], 500);
 }
 
 /**
@@ -1110,19 +1065,30 @@ function email_maskieren(string $email): string
     return mb_substr($lokal, 0, 2) . '***' . ($domain !== '' ? '@' . $domain : '');
 }
 
-/* ---- Die drei Rollen (Web 15.0.0, S8/AP1; Rahmenplan R75) ----------------
+/* ---- Die Rollen (Web 15.0.0, S8/AP1; Rahmenplan R75; Support seit
+ *      Web 20.41.0, P5c/AP4, R38) ---------------------------------------------
  *
- * DREI ROLLEN, ZWEI STUFEN VON RECHTEN, EINE HIERARCHIE:
+ * VIER ROLLEN, und jede kann alles, was die vorige kann:
  *
  *   user          dokumentiert eigene Einsaetze
+ *   support       hilft NutzerInnen: sieht Konten der Rolle `user` und ihre
+ *                 Geraete, sendet Setz-Link und Bestaetigung neu, schaltet
+ *                 ein Geraet ab — und sonst nichts (E-P5c-14, -40)
  *   admin         verwaltet Konten, Konto-Backups, Rechtstexte, Demo
  *   betreiberin   dazu der Bereich BETRIEB: Server, Speicher, Updates, Jobs,
  *                 Komplett-Backup, Backup-Ziele
  *
- * BetreiberIn ⊇ Admin ⊇ NutzerIn: Wer betreibt, kann alles, was ein Admin
- * kann. Deshalb liefert ist_admin() (auth_guard.php) auch fuer eine
+ * BetreiberIn ⊇ Admin ⊇ Support ⊇ NutzerIn: Wer betreibt, kann alles, was ein
+ * Admin kann. Deshalb liefert ist_admin() (auth_guard.php) auch fuer eine
  * BetreiberIn wahr — es gibt genau EINE Rollenpruefung je Frage, und die
  * Frage "darf verwalten?" hat zwei richtige Antworten.
+ *
+ * DER SUPPORT IST KEINE EIGENE VERWALTUNG, sondern ihr schmaler Ausschnitt:
+ * Was er darf, darf auch ein Admin (`rolle_darf_support()` ist fuer alle drei
+ * wahr); was ein Admin darf, darf er fast alles NICHT. Die Seiten fragen deshalb
+ * je Handlung, nicht je Seite — der POST-Verteiler ist nicht zentralisiert
+ * (E-ZE-07), und eine Seitenwache haette den Support entweder ganz
+ * ausgesperrt oder ganz hereingelassen.
  *
  * WARUM HIER UND NICHT IN auth_guard.php. Die Wachen dort haengen an der
  * angemeldeten Sitzung. Zwei Stellen brauchen die Frage aber OHNE Sitzung:
@@ -1139,8 +1105,19 @@ function email_maskieren(string $email): string
  */
 const ROLLEN = [
     'user'        => 'NutzerIn',
+    'support'     => 'Support',
     'admin'       => 'Admin',
     'betreiberin' => 'BetreiberIn',
+];
+
+/** Dieselben Rollen in der Mehrzahl, fuer Zaehlungen (Statistik). Hier und
+ *  nicht an der Stelle, die zaehlt: Eine fuenfte Rolle fehlte sonst dort,
+ *  wo niemand an sie denkt (F-P5c-36). */
+const ROLLEN_MEHRZAHL = [
+    'user'        => 'NutzerInnen',
+    'support'     => 'Support',
+    'admin'       => 'Admins',
+    'betreiberin' => 'BetreiberInnen',
 ];
 
 /** Ist das ein gueltiger Rollenwert? Alles andere wird zu 'user'. */
@@ -1170,6 +1147,50 @@ function rolle_darf_verwalten(?string $rolle): bool
     return $r === 'admin' || $r === 'betreiberin';
 }
 
+/**
+ * Darf diese Rolle die Handlungen des Supports (E-P5c-14)? Support, Admin und
+ * BetreiberIn — die EINE Andockstelle neben `rolle_darf_verwalten()`.
+ */
+function rolle_darf_support(?string $rolle): bool
+{
+    $r = rolle_normieren($rolle);
+    return $r === 'support' || rolle_darf_verwalten($r);
+}
+
+/** Ist diese Rolle genau der Support — und damit auf Konten der Rolle `user`
+ *  und die schmalen Handlungen beschraenkt (E-P5c-40)? */
+function rolle_ist_support(?string $rolle): bool
+{
+    return rolle_normieren($rolle) === 'support';
+}
+
+/**
+ * Muss diese Rolle einen Zweitfaktor haben (P5c/AP5, E-P5c-15)? Support,
+ * Admin und BetreiberIn — jede Rolle, die fremde Konten sieht. Dieselbe Menge
+ * wie `rolle_darf_support()`, und das ist kein Zufall: Wer an fremde Konten
+ * herankommt, sichert den eigenen Zugang doppelt. Ein eigener Name, weil die
+ * Frage eine andere ist; wer die eine Menge aendert, soll die andere sehen.
+ */
+function rolle_braucht_zweitfaktor(?string $rolle): bool
+{
+    return rolle_darf_support($rolle);
+}
+
+/**
+ * Darf `$wer` den Zweitfaktor eines Kontos der Rolle `$ziel` zuruecksetzen?
+ * (P5c/AP5, E-P5c-42): die BetreiberIn fuer alle Rollen, ein Admin nur fuer
+ * Konten der Rolle user. Support-, Admin- und BetreiberIn-Konten setzt allein
+ * die BetreiberIn zurueck — der Zweitfaktor schuetzt dort Rechte, die ein
+ * Admin selbst nicht hat oder die ihm gleichen. Das eigene Konto schliesst der
+ * Aufrufer aus.
+ */
+function rolle_darf_zweitfaktor_zuruecksetzen(?string $wer, ?string $ziel): bool
+{
+    $wer = rolle_normieren($wer);
+    return $wer === 'betreiberin'
+        || ($wer === 'admin' && rolle_normieren($ziel) === 'user');
+}
+
 /** Darf diese Rolle den Bereich Betrieb sehen und bedienen? */
 function rolle_ist_betreiberin(?string $rolle): bool
 {
@@ -1190,6 +1211,16 @@ function rolle_text(?string $rolle): string
  * Rollenzuwachs (Support-Rolle, R38) genau diese eine.
  */
 const ROLLEN_VERWALTUNG_SQL = "role IN ('admin','betreiberin')";
+
+/**
+ * SQL-Bedingung fuer „Konto ohne eigene Rechte" — das, was der Support sieht
+ * und betreut (P5c/AP4, E-P5c-40). Aus demselben Grund eine Konstante wie die
+ * darueber. `alias` ist der Tabellenname davor, oder leer.
+ */
+function rollen_ohne_rechte_sql(string $alias = ''): string
+{
+    return ($alias !== '' ? $alias . '.' : '') . "role = 'user'";
+}
 
 /**
  * Zahl der BetreiberInnen-Konten.
@@ -1676,8 +1707,8 @@ function app_state_lesen(string $k): ?string {
  */
 function app_state_zu_lang(string $k, string $v): bool {
     if (strlen($v) <= APP_STATE_MAX) { return false; }
-    error_log('app_state: "' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
-            . 'erlaubt sind ' . APP_STATE_MAX . '.');
+    system_melden('app_state', '„' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
+                . 'erlaubt sind ' . APP_STATE_MAX . '.');
     return true;
 }
 
@@ -1689,8 +1720,7 @@ function app_state_setzen(string $k, string $v): bool {
                        ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
         return true;
     } catch (Throwable $ex) {
-        error_log('app_state: "' . $k . '" liess sich nicht schreiben: '
-                . $ex->getMessage());
+        system_melden('app_state', '„' . $k . '" ließ sich nicht schreiben', $ex);
         return false;
     }
 }
@@ -1762,7 +1792,7 @@ function app_state_setzen_mehrere(array $kv): bool {
         foreach ($kv as $k => $v) { $st->execute([(string)$k, $v]); }
         return true;
     } catch (Throwable $ex) {
-        error_log('app_state: Mehrfachschreiben fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('app_state', 'Mehrfachschreiben fehlgeschlagen', $ex);
         return false;
     }
 }
@@ -1781,8 +1811,8 @@ function app_state_loeschen(string ...$k): void {
         $platz = implode(',', array_fill(0, count($k), '?'));
         db()->prepare("DELETE FROM app_state WHERE k IN ($platz)")->execute($k);
     } catch (Throwable $ex) {
-        error_log('app_state: Loeschen von "' . implode('", "', $k)
-                . '" fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('app_state', 'Löschen von „' . implode('", „', $k)
+                    . '" fehlgeschlagen', $ex);
     }
 }
 
@@ -1879,6 +1909,43 @@ function db_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool {
     return (int)$q->fetchColumn() > 0;
 }
 
+/**
+ * Der Typ einer Spalte, wie die Datenbank ihn nennt (`enum('user',…)`,
+ * `varchar(190)`) — oder null, wenn es sie nicht gibt.
+ *
+ * DER VIERTE HELFER (P5c/AP4). Eine Migration, die ein ENUM erweitert, muss
+ * fragen koennen, ob der neue Wert schon drinsteht; die drei `db_hat_*`
+ * sagen nur, OB es die Spalte gibt. Frueher stand dafuer `information_schema`
+ * von Hand in der Migration (`2026_09_03_rolle_betreiberin`); neue
+ * Migrationen fragen hierueber (Register Z15).
+ */
+function db_spalte_typ(PDO $pdo, string $tabelle, string $spalte): ?string {
+    $q = $pdo->prepare('SELECT column_type FROM information_schema.columns
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND column_name = ?');
+    $q->execute([$tabelle, $spalte]);
+    $typ = $q->fetchColumn();
+    return $typ === false || $typ === null ? null : (string)$typ;
+}
+
+/**
+ * Darf die Spalte NULL tragen? Null, wenn es sie nicht gibt.
+ *
+ * DER FUENFTE HELFER (P5c/AP8). Eine Migration, die eine Spalte auf
+ * `NOT NULL` zieht, muss fragen koennen, ob sie es schon ist — der Typ
+ * (`db_spalte_typ()`) sagt das nicht, `int(10) unsigned` steht in beiden
+ * Faellen da. Die Frage stand bis dahin von Hand in einer Migration
+ * (`2026_09_07_rest_segments_created_at`, `is_nullable`).
+ */
+function db_spalte_nullbar(PDO $pdo, string $tabelle, string $spalte): ?bool {
+    $q = $pdo->prepare('SELECT is_nullable FROM information_schema.columns
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND column_name = ?');
+    $q->execute([$tabelle, $spalte]);
+    $n = $q->fetchColumn();
+    return $n === false || $n === null ? null : strtoupper((string)$n) === 'YES';
+}
+
 /** Gibt es den Index? */
 function db_hat_index(PDO $pdo, string $tabelle, string $index): bool {
     $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.statistics
@@ -1944,7 +2011,7 @@ const RESUS_LABELS = [
  * DREI ÄNDERUNGEN
  *  1. Jeder Schritt hat seinen eigenen Fehlerblock. Einer, der scheitert,
  *     haelt die anderen sechs nicht auf.
- *  2. Fehler landen im Fehlerprotokoll des Webspace. Weiterhin still
+ *  2. Fehler landen im Protokoll (seit P5c/AP3 Reiter System). Weiterhin still
  *     GEGENUEBER DER ANFRAGE — die Wartung darf keine Seite kaputt machen —
  *     aber nicht mehr spurlos.
  *  3. Ein zweiter Zustandsschluessel haelt fest, wann zuletzt ein Lauf
@@ -1981,6 +2048,6 @@ function run_cleanup_if_due(): void {
         require_once __DIR__ . '/jobs_lib.php';
         jobs_lauf('anfrage');
     } catch (Throwable $ex) {
-        error_log('cleanup: Job-Einstieg fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('cleanup', 'Job-Einstieg fehlgeschlagen', $ex);
     }
 }

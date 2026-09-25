@@ -26,8 +26,9 @@ declare(strict_types=1);
  * Zweiseitigkeit stammt, steht unten als Option und ist als solche
  * gekennzeichnet.
  *
- * DER UNTERSCHIED ZWISCHEN DEN BEIDEN SEITEN steckte in genau drei Dingen,
- * und die stehen als Optionen darin:
+ * DER UNTERSCHIED ZWISCHEN DEN BEIDEN SEITEN steckte in drei Dingen, und
+ * zwei davon stehen weiter als Optionen darin (die dritte, `zentral`, ist
+ * mit P5c/AP8 gefallen — R39):
  *
  *   `seite`     wohin ein Formular absendet und ein Anker zeigt
  *               (heisst NICHT `basis`: In dieser Anwendung ist eine Basis
@@ -35,10 +36,6 @@ declare(strict_types=1);
  *                Wortliste haette das Homonym zu Recht gemeldet)
  *               (seit S9/AP5 die Seite EINES Standorts: `sd_seite($bid)`
  *                — den Reiter `t=rettungsmittel` gibt es nicht mehr)
- *   `zentral`   ein systemweiter Eintrag in der Kontoansicht ist
- *               unveraenderlich. Bis S9/AP5b war er in der Adminansicht der
- *               Gegenstand; die gibt es nicht mehr, die Option bleibt fuer
- *               den Altbestand (R39, Backlog Nr. 168)
  *   `def_action` die Vorbelegung ist eine Eigenschaft des Kontos, nicht des
  *               Bestands
  */
@@ -51,7 +48,7 @@ declare(strict_types=1);
  * (ui_zeilenaktionen), also müssen sie im selben Atemzug entstehen.
  *
  * $o: seite, name, klein, anker, praefix (eindeutig je Liste), id, base_id,
- *     zentral (bool), stern (bool), del_action, del_frage,
+ *     stern (bool), del_action, del_frage,
  *     def_action (optional — nur wo es eine Vorbelegung gibt),
  *     bearbeiten_attr (Attribute am „Bearbeiten"-Eintrag — der Dialog-Öffner,
  *     S9/AP5-4), plaketten (zusätzliches Markup),
@@ -113,11 +110,10 @@ function sd_zeile(array $o): void
        reichen ihn heute mit; der Wert steht als Netz, nicht als Weg. */
     $seite = (string)($o['seite'] ?? 'einstellungen.php?t=standorte');
     $ziel = $seite . '#' . (string)$o['anker'];
-    $zentral = !empty($o['zentral']);
 
-    /* Systemweite Einträge lassen sich in der Kontoansicht weder bearbeiten
-       noch löschen — sie gehören der Administration. Die Vorbelegung dagegen
-       schon: Sie ist eine Eigenschaft DIESES Kontos. */
+    /* Bis Web 20.47.0 waren systemweite Einträge hier weder zu bearbeiten
+       noch zu löschen (Option `zentral`, Plakette „systemweit"); sie gibt es
+       seit P5c/AP8 nicht mehr (R39). */
     $eintraege = [];
     if (!empty($o['def_action']) && empty($o['stern'])) {
         echo '<form method="post" id="f-' . $pre . '-def" class="nur-vorlesen" action="'
@@ -129,32 +125,29 @@ function sd_zeile(array $o): void
         $eintraege[] = ['text' => 'Als Vorbelegung', 'symbol' => 'stern',
                         'art' => 'leise-orange', 'form' => 'f-' . $pre . '-def'];
     }
-    if (!$zentral) {
-        /* „Bearbeiten" ist seit S9/AP5-4 kein Verweis mehr, sondern ein
-           Dialog-Oeffner: `attr` traegt `data-dialog` und die `data-w-`-Kette
-           (`sd_oeffner()`). Die Option `bearbeiten_href` stand daneben,
-           solange die Verwaltung den Verweis-Weg noch benutzte; sie ist mit
-           S9/AP5b entfallen. `href` BLEIBT `#` und wird nicht weggelassen:
-           `ui_zeilenaktionen()` gibt nur bei nichtleerem `href` ein `<a>` aus
-           — ohne wuerde aus dem Oeffner ein Absendeknopf, und die Seite luede
-           neu, statt den Dialog zu oeffnen. */
-        if (!empty($o['bearbeiten_attr'])) {
-            $eintraege[] = ['text' => 'Bearbeiten', 'symbol' => 'stift',
-                            'href' => '#',
-                            'attr' => (string)$o['bearbeiten_attr']];
-        }
-        echo '<form method="post" id="f-' . $pre . '-del" class="nur-vorlesen" action="'
-           . ui_e($ziel) . '" data-confirm="' . ui_e((string)$o['del_frage']) . '">' . csrf_field()
-           . '<input type="hidden" name="action" value="' . ui_e((string)$o['del_action']) . '">'
-           . '<input type="hidden" name="id" value="' . $id . '">'
-           . '<input type="hidden" name="base_id" value="' . (int)$o['base_id'] . '">'
-           . "</form>\n";
-        $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb',
-                        'art' => 'gefahr', 'form' => 'f-' . $pre . '-del'];
+    /* „Bearbeiten" ist seit S9/AP5-4 kein Verweis mehr, sondern ein
+       Dialog-Oeffner: `attr` traegt `data-dialog` und die `data-w-`-Kette
+       (`sd_oeffner()`). Die Option `bearbeiten_href` stand daneben,
+       solange die Verwaltung den Verweis-Weg noch benutzte; sie ist mit
+       S9/AP5b entfallen. `href` BLEIBT `#` und wird nicht weggelassen:
+       `ui_zeilenaktionen()` gibt nur bei nichtleerem `href` ein `<a>` aus
+       — ohne wuerde aus dem Oeffner ein Absendeknopf, und die Seite luede
+       neu, statt den Dialog zu oeffnen. */
+    if (!empty($o['bearbeiten_attr'])) {
+        $eintraege[] = ['text' => 'Bearbeiten', 'symbol' => 'stift',
+                        'href' => '#',
+                        'attr' => (string)$o['bearbeiten_attr']];
     }
+    echo '<form method="post" id="f-' . $pre . '-del" class="nur-vorlesen" action="'
+       . ui_e($ziel) . '" data-confirm="' . ui_e((string)$o['del_frage']) . '">' . csrf_field()
+       . '<input type="hidden" name="action" value="' . ui_e((string)$o['del_action']) . '">'
+       . '<input type="hidden" name="id" value="' . $id . '">'
+       . '<input type="hidden" name="base_id" value="' . (int)$o['base_id'] . '">'
+       . "</form>\n";
+    $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb',
+                    'art' => 'gefahr', 'form' => 'f-' . $pre . '-del'];
 
     $plaketten = (string)($o['plaketten'] ?? '');
-    if ($zentral) { $plaketten .= ui_plakette('systemweit'); }
     if (!empty($o['stern'])) {
         $plaketten .= ui_symbol('stern', 'zeile-stern', 'Vorbelegung neuer Diensttage');
     }

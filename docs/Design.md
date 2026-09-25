@@ -307,14 +307,20 @@ Schnee oder Rauch, nicht Weiß.
 | **Dunkelblau auf Orange** | **5,97:1** | 4,5 | **Primärknopf** |
 | Weiß auf Dunkelblau | 13,62:1 | 4,5 | Kopfleiste |
 | Orange tief auf Schnee | 4,32:1 | 3,0 | nur groß oder fett |
-| Orange tief auf Rauch | 4,04:1 | 3,0 | nur groß oder fett |
+| Orange tief auf Rauch | 4,04:1 | 3,0 | nur groß oder fett; Strich des aktiven Reiters (9.37) |
 | Orange tief auf Orange hell | 3,81:1 | 3,0 | Warnung, Auftakt fett |
 | Rot auf Schnee | 4,68:1 | 3,0 | Gefahrknopf: Rand und Schrift ab 18 px |
 | Blau als Fokusring | 3,77:1 | 3,0 | Rand |
 | Linie stark auf Schnee | 5,66:1 | 3,0 | Rand von Bedienelementen |
 | Linie stark auf Rauch | 5,30:1 | 3,0 | Rand von Bedienelementen |
+| Dunkelblau auf Orange hell | 11,74:1 | 4,5 | aktives Sprungziel, aktive Kennzahl |
+| Weiß auf Rot | 4,78:1 | 4,5 | Kopfleiste einer Anlage mit Etikett (9.36) |
+| Schnee auf Rot | 4,68:1 | 4,5 | Name in dieser Kopfleiste |
+| Orange hell auf Rot | 4,12:1 | 3,0 | Strich des aktiven Kopfpunkts auf Rot |
 
-**21 Paare, 0 verfehlt.**
+**25 Paare, 0 verfehlt** (Web 20.38.0). Hier standen bis dahin 21 — das
+Paar „Dunkelblau auf Orange hell" war mit Web 16.3.0 ins Werkzeug gekommen,
+aber nicht in diese Tabelle; die drei Paare auf Rot kommen mit P5c/AP1.
 
 **Drei Ausnahmen, jede mit Grund** — sie stehen im Werkzeug selbst, damit
 niemand sie aus Versehen weiterreicht:
@@ -358,33 +364,33 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--schnee` | `#FFFCFA` | 34 |  |
-| `--rauch` | `#F7F5ED` | 34 |  |
-| `--sand` | `#D4C7AD` | 14 |  |
+| `--schnee` | `#FFFCFA` | 37 |  |
+| `--rauch` | `#F7F5ED` | 39 |  |
+| `--sand` | `#D4C7AD` | 15 |  |
 
 **Schrift**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--asphalt` | `#1A0500` | 23 |  |
-| `--dunkelblau` | `#1A2E4D` | 55 |  |
-| `--gedaempft` | `#6E6459` | 63 |  |
-| `--auf-dunkel` | `#FFFFFF` | 9 | Schrift auf Dunkelblau, 13,62:1 |
+| `--asphalt` | `#1A0500` | 24 |  |
+| `--dunkelblau` | `#1A2E4D` | 64 |  |
+| `--gedaempft` | `#6E6459` | 71 |  |
+| `--auf-dunkel` | `#FFFFFF` | 10 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 36 |  |
-| `--linie-stark` | `var(--gedaempft)` | 11 |  |
+| `--linie` | `#E3DAC6` | 41 |  |
+| `--linie-stark` | `var(--gedaempft)` | 12 |  |
 
 **Orange — Handeln**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--orange` | `#FF8F1F` | 30 |  |
-| `--orange-tief` | `#C25A00` | 17 |  |
-| `--orange-hell` | `#FFEBD6` | 22 |  |
+| `--orange-tief` | `#C25A00` | 18 |  |
+| `--orange-hell` | `#FFEBD6` | 23 |  |
 
 **Blau — Auswählen und Erklären**
 
@@ -398,9 +404,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--rot` | `#D63338` | 13 |  |
-| `--rot-tief` | `#9E2226` | 15 |  |
-| `--rosa` | `#FCE2D6` | 6 |  |
+| `--rot` | `#D63338` | 14 |  |
+| `--rot-tief` | `#9E2226` | 19 |  |
+| `--rosa` | `#FCE2D6` | 7 |  |
 
 **Primärknopf**
 
@@ -413,47 +419,47 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-1` | `12px` | 8 |  |
-| `--groesse-2` | `13px` | 50 |  |
-| `--groesse-3` | `15px` | 13 |  |
-| `--groesse-4` | `16px` | 13 |  |
-| `--groesse-5` | `19px` | 7 |  |
-| `--groesse-6` | `24px` | 3 |  |
-| `--groesse-titel` | `28px` | 1 |  |
-| `--zeile-eng` | `1.3` | 4 | Titel, Kacheln |
-| `--zeile` | `1.55` | 2 | Oberfläche |
+| `--groesse-1` | `12px` | 9 |  |
+| `--groesse-2` | `13px` | 56 |  |
+| `--groesse-3` | `15px` | 15 |  |
+| `--groesse-4` | `16px` | 16 |  |
+| `--groesse-5` | `19px` | 12 |  |
+| `--groesse-6` | `24px` | 5 |  |
+| `--groesse-titel` | `28px` | 2 |  |
+| `--zeile-eng` | `1.3` | 5 | Titel, Kacheln |
+| `--zeile` | `1.55` | 3 | Oberfläche |
 | `--zeile-lesen` | `1.6` | 4 | Fließtext in der Lesespalte |
 
 **Abstände**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 73 |  |
-| `--abstand-2` | `8px` | 103 |  |
-| `--abstand-3` | `12px` | 140 |  |
-| `--abstand-4` | `16px` | 59 |  |
-| `--abstand-5` | `24px` | 29 |  |
+| `--abstand-1` | `4px` | 81 |  |
+| `--abstand-2` | `8px` | 117 |  |
+| `--abstand-3` | `12px` | 158 |  |
+| `--abstand-4` | `16px` | 65 |  |
+| `--abstand-5` | `24px` | 35 |  |
 
 **Radien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--radius-klein` | `6px` | 26 | Plakette, Kästchen, Eingabefeld |
+| `--radius-klein` | `6px` | 29 | Plakette, Kästchen, Eingabefeld |
 | `--radius` | `10px` | 20 | Knopf, Meldung |
-| `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
+| `--radius-gross` | `12px` | 8 | Karte, Blatt, Dialog |
 
 **Maße**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--kopf` | `56px` | 12 |  |
-| `--knopf` | `44px` | 42 |  |
+| `--knopf` | `44px` | 45 |  |
 | `--leiste` | `260px` | 2 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 2 | Seitenleiste 1024–1199 |
 | `--leiste-filter` | `280px` | 1 | Filterleiste der Suche ab 1200 |
 | `--leiste-filter-schmal` | `240px` | 1 | Filterleiste 1024–1199 |
 | `--rahmen` | `1680px` | 3 | Leiste und Inhalt als Einheit |
-| `--lesespalte` | `760px` | 4 | Fließtext |
+| `--lesespalte` | `760px` | 5 | Fließtext |
 | `--schublade` | `320px` | 1 | Höchstbreite der mobilen Schublade |
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--unterpunkt` | `28px` | 2 | Sprungmarke unter dem Menüpunkt |
@@ -465,10 +471,10 @@ auseinanderlaufen kann.
 | `--ziel-chip` | `calc(var(--symbol-gross) + var(--abstand-1))` | 2 | 28 px, Treffziel |
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
-| `--symbol-gross` | `24px` | 12 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 48 | Haarlinie |
-| `--strich-stark` | `2px` | 32 | Aktivstrich, Randstrich, Fokus |
-| `--radius-rund` | `999px` | 19 | Zähler, Griff, Punkt — voll rund |
+| `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
+| `--strich` | `1px` | 57 | Haarlinie |
+| `--strich-stark` | `2px` | 36 | Aktivstrich, Randstrich, Fokus |
+| `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
 | `--schalter-punkt` | `20px` | 4 | 44-px-Zeile passt und greifbar bleibt |
@@ -480,7 +486,7 @@ auseinanderlaufen kann.
 | `--balken` | `8px` | 1 | Höhe des Speicherbalkens |
 | `--logo-kachel` | `var(--kopf)` | 2 | Vorschau-Kachel der Installation … |
 | `--balken-punkt` | `10px` | 2 | Farbpunkt in seiner Legende |
-| `--anmeldekarte` | `400px` | 1 | Karte der Anmeldung (E-P3-38) |
+| `--anmeldekarte` | `400px` | 3 | Karte der Anmeldung (E-P3-38) |
 | `--zeile-frei` | `1.4em` | 1 | Mindesthöhe der Zustandszeile |
 | `--balken-glied` | `28px` | 1 | ein Segment des Passwortstärke- … |
 | `--strich-balken` | `6px` | 1 | … balkens, vier davon (E-P3-16) |
@@ -522,9 +528,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--dauer` | `.24s` | 8 |  |
+| `--dauer` | `.24s` | 9 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
-| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
+| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 8 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
 | `--auf-dunkel-leise` | `rgba(255,255,255,.55)` | 2 |  |
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
@@ -636,6 +642,40 @@ Redesign zurückzunehmen.
 > bloße Klasse**. Wer ein solches Kästchen über eine Klasse ausblenden will,
 > braucht `input[type=checkbox].meine-klasse` — `.meine-klasse` allein
 > verliert, und das Kästchen bleibt 20 × 20 px groß und fängt Klicks ab.
+
+### Erklärtext: ein Satz je Karte, der Rest steht im Handbuch
+
+*Seit Web 21.1.0 (P5c/AP9, E-P5c-06, -49, -128).* Wer eine Seite zum
+zehnten Mal öffnet, liest den Text darauf nicht mehr und muss trotzdem daran
+vorbei. Deshalb gilt unter **Verwaltung** und **Betrieb**:
+
+- **Je Karte höchstens ein Satz**, der sagt, was hier passiert — als
+  `<p class="feld-hinweis">`, dahinter der Verweis ins Handbuch
+  (`<a href="hilfe.php#…">`) auf die Stelle, an der das Erklärende steht.
+  Die Sprungmarke ist die, die `doku_marke()` aus der Überschrift bildet; die
+  Ankerprüfung im Tor hält jeden Verweis dagegen.
+- **Der Seitenkopf** (`ui_titelzeile(['unter' => …])` oder
+  `<p class="seiten-erklaerung">`) trägt höchstens einen Satz.
+- **Eine Kleinzeile bleibt eine Zeile** — unter einem Feld wie unter einer
+  Zeile (`'klein'`): höchstens ein Satz.
+- **Warnungen bleiben Meldungen** (`ui_meldung()`), keine Absätze.
+- **Keine Karte „Was hier gilt"** mehr (bis Web 21.0.0 nach R74 (5) die
+  zugeklappte Karte am Seitenende). Ihr Inhalt steht im Handbuch am Ende des
+  Kapitels, und jede Karte der Seite verweist auf ihre Stelle.
+
+Ausgenommen sind, weil sie Zustand und keine Erklärung sind: der Satz eines
+**Leerzustands** („Zurzeit keine."), die **Befundzeilen** der Statusseite
+(`status_erhebung()`, `plattform_pruefen()`), Meldungen, Dialoge und
+Kopierwerte. Der Bereich **Einstellungen** folgt der Regel noch nicht
+(E-P5c-06); drei Seiten außerhalb tragen die Karte „Was hier gilt" bis
+Schritt 17 (Nr. 287).
+
+**Gezählt wird so** (E-P5c-128): S = fester Kartentext in Sätzen, Sb_max =
+die meisten bedingten Sätze, die gleichzeitig sichtbar sind; Soll
+**S + Sb_max ≤ 1**. Ein Satz endet mit `.`, `!` oder `?`; ein Stück ohne
+Satzzeichen zählt ab vier Wörtern. Kartentitel, Vorschau, Zeilentitel,
+Beschriftungen, Zwischenüberschriften, Link- und Knopftexte sind nie Sätze.
+Belegt wird die Zählung mit einer unabhängigen Gegenprobe.
 
 ### Text, den niemand im Repositorium kontrolliert, bricht selbst um
 
@@ -750,20 +790,26 @@ Dazu **eine** Ausnahme nach unten: `@media (max-width:479px)` lässt in der
 Wahlliste den Zusatz unter den Text rutschen — „zurzeit Hubschrauber (RTH)"
 neben „Standard der Installation" sprengt sonst jede Zeile.
 
+Und **eine Höhenschwelle** (seit Web 21.1.0, E-P5c-131): `@media
+(min-width:1024px) and (max-height:799px)` nimmt die Sprungmarken aus der
+festen Leiste (9.25). Sie ist keine Stufe der Breitenskala und steht deshalb
+nicht in `--s-*`; die erzeugte Tabelle führt sie als eigene Zeile, und die
+Summe darunter zählt nur Breiten.
+
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
 | Abfrage | Regelblöcke |
 |---|--:|
 | `@media (min-width:1600px)` | 3 |
-| `@media (min-width:1200px)` | 4 |
+| `@media (min-width:1200px)` | 5 |
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
+| `@media (min-width:1024px) and (max-height:799px)` | 1 |
 | `@media (min-width:1024px)` | 3 |
-| `@media (min-width:720px)` | 12 |
+| `@media (min-width:720px)` | 14 |
+| `@media screen and (min-width:720px)` | 1 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 24 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
-
-Zusammen 22 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 29 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -838,17 +884,17 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
 | `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 3 |
-| `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 29 |
-| `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
-| `drucken.svg` | Tabler Icons „printer" (MIT) | 2 |
+| `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 32 |
+| `datenbank.svg` | Tabler Icons „database" (MIT) | 11 |
+| `drucken.svg` | Tabler Icons „printer" (MIT) | 3 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
-| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
+| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
-| `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 35 |
+| `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 38 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 3 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 41 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 37 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
 | `karte-breit.svg` | Tabler Icons „arrows-horizontal" (MIT) | 1 |
@@ -859,41 +905,42 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 13 |
-| `mail.svg` | Tabler Icons „mail" (MIT) | 7 |
+| `mail.svg` | Tabler Icons „mail" (MIT) | 15 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
-| `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 9 |
+| `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
 | `plus.svg` | Tabler Icons „plus" (MIT) | 22 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
-| `profil.svg` | Tabler Icons „user" (MIT) | 16 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 26 |
+| `profil.svg` | Tabler Icons „user" (MIT) | 18 |
+| `protokoll.svg` | Tabler Icons „list" (MIT) | 20 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 32 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
-| `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 12 |
-| `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 19 |
-| `server.svg` | Tabler Icons „server" (MIT) | 6 |
-| `sicherung.svg` | Tabler Icons „archive" (MIT) | 11 |
+| `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 14 |
+| `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
+| `server.svg` | Tabler Icons „server" (MIT) | 9 |
+| `sicherung.svg` | Tabler Icons „archive" (MIT) | 21 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 51 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 49 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 12 |
-| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 278 |
+| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
-| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 35 |
+| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 29 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
-| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
-| `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
+| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
+| `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 30 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 32 |
 
-57 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+58 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine
@@ -934,9 +981,12 @@ für eine Rückfrage — nicht für ein neues Element.
 | einen Hinweis unter einem Feld | `<p class="feld-klein">` | `<small>` |
 | einen Hinweis vor einem Feld | `<p class="feld-hinweis">` | dasselbe wie oben |
 | einen Zusatz **in** einer Beschriftung | `<span class="feld-klein-inline">` | Klammern im Beschriftungstext |
-| einen Erklärabsatz oben auf der Seite | `<p class="seiten-erklaerung">` — **einen**, keine zwei | zwei Absätze Vorrede |
+| einen Satz oben auf der Seite | `ui_titelzeile(['unter' => …])` oder `<p class="seiten-erklaerung">` — **höchstens einen Satz** (Kapitel 6, Erklärtext) | zwei Absätze Vorrede |
+| erklären, **wie** etwas funktioniert | ein Absatz im Handbuch am Kapitelende, in der Karte ein Satz mit Verweis `hilfe.php#…` (Kapitel 6, Erklärtext) | eine Karte „Was hier gilt", mehrere Absätze in der Karte |
 | einen Knopf am Ende eines Formulars | `ui_knopf()` in `<div class="listen-form-fuss">` | einen blanken `<button>` |
 | einen **Wert zum Abschreiben oder Kopieren** (Kennung, Schlüssel, Prüfsumme, Adresse) | `ui_codeblock_lang()` — beide Stufen und wann welche: 9.18 | ein `<code>` im Fließtext |
+| eine **Liste von Einmalcodes** zeigen oder einen **Code eintippen** lassen | `.codeblock-liste` im Codeblock, `ui_feld([… 'klasse' => 'feld-code'])`: 9.38 | eine Tabelle, ein Feld in Normalschrift |
+| eine Seite, die **gedruckt** wird (genau eine A4-Seite) | `.blatt-druck`: 9.39 | das Gerüst mit `@media print` |
 | eine **Füllung gegen eine Grenze** zeigen | `.speicher-balken` mit seinen drei Schwellen (9.19) | ein `<progress>` oder ein eigener Balken |
 | eine **Zahl an einem Menüpunkt** („hier ist etwas zu tun") | `ui_zaehler()` — drei Töne wie die Ampel (9.25) | eine Zahl in Klammern hinter dem Text |
 | mehrere Karten **nebeneinander** | einen der drei Wege aus 9.26 — und lies dort erst, welcher | ein eigenes Raster je Seite |
@@ -945,54 +995,67 @@ für eine Rückfrage — nicht für ein neues Element.
 | in eine **lange Liste** hineinspringen | `ui_sprungliste()` — ab sechs Einträgen, und nur wo die Einträge ein Zeichen tragen (9.31) | dieselben Namen ein zweites Mal aufzählen |
 | eine **lange Liste durchsuchen** | `ui_kartenfilter()` — ab sechs Einträgen, filtert im Browser (9.32) | ein zweites `.suchfeld` (das ist 48 px hoch und gehört der Seitensuche) |
 | an das **Ende eines langen Abschnitts** einen Rückweg | `ui_nach_oben()` (9.33) | einen gedämpften Textverweis ohne `.knopf` |
+| einen **Streifen über dem Inhalt**, der auf jeder Seite gilt (Umgebung, Ankündigung, Demo, Datenschutz) | `ui_hinweise()` — die eine Reihe mit fester Reihenfolge (9.36) | einen weiteren Streifen unter der Kopfleiste oder einen eigenen Aufruf in der Seite |
+| zwischen **gleichrangigen Sichten einer Seite** wechseln | `ui_reiter()` — serverseitig, jeder Reiter ein Verweis (9.37) | ein Segment mit sieben Wörtern oder eine zweite Reihe Filterpillen |
+| **Angaben zu einem Listeneintrag**, die nicht in den Satz passen | `ui_zeile(['daten' => [[Schlüssel, Wert], …]])` — die Zeile klappt auf (9.2) | ein Blatt mit „⋯“ oder eine zweite Zeile darunter |
+| **Suche, Filter und Seitenwahl** einer langen Liste | `ui_listenkopf()` und `ui_listenfuss()` (9.18a) | dasselbe Markup ein zweites Mal von Hand |
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
 | Baustein | Klasse | Regel im Stylesheet | `ui.php` |
 |---|---|---|--:|
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 54 |
-| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 121 |
-| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 167 |
-| `ui_symbol()` | `.symbol` | ja (+10 Unterklassen) | 220 |
-| `ui_logo_masse()` | `.logo-masse` | **keine** | 323 |
-| `ui_kopf()` | `.kopf` | ja (+20 Unterklassen) | 385 |
-| `ui_geruest_start()` | `.inhalt` | ja | 471 |
-| `ui_leiste_ende()` | `.leiste` | ja (+13 Unterklassen) | 542 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 567 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 612 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 841 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 971 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 1042 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1126 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1169 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1211 |
-| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1271 |
-| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1317 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1370 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1396 |
-| `ui_karte_start()` | `.karte` | ja (+36 Unterklassen) | 1432 |
-| `ui_karte_ende()` | `.karte` | ja (+36 Unterklassen) | 1512 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1547 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1589 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1637 |
-| `ui_zeile()` | `.zeile` | ja (+16 Unterklassen) | 1691 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1739 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1781 |
-| `ui_feld()` | `.feld` | ja (+21 Unterklassen) | 1850 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1915 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1959 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2012 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2056 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2155 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2217 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2258 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2357 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2387 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2399 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2582 |
+| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 164 |
+| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 231 |
+| `ui_symbol()` | `.symbol` | ja (+10 Unterklassen) | 284 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 387 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 449 |
+| `ui_geruest_start()` | `.inhalt` | ja | 541 |
+| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 612 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 636 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 686 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 915 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1076 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1148 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1235 |
+| `ui_hinweise()` | `.hinweise` | ja | 1283 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1311 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1346 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1399 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1449 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1516 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1563 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1616 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1642 |
+| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1687 |
+| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1771 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1806 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1848 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1896 |
+| `ui_zeile()` | `.zeile` | ja (+34 Unterklassen) | 1960 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2015 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2064 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2109 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2181 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2223 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2265 |
+| `ui_feld()` | `.feld` | ja (+25 Unterklassen) | 2334 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2399 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2443 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2496 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2540 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2639 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2701 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2742 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 2836 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2877 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2907 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2919 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3069 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3148 |
 
-40 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
-**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
+49 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
 
@@ -1043,6 +1106,35 @@ Feldbeschriftung, an derselben Stelle: rechts vom Wort.
 <h2 class="karte-titel">Notizen<svg class="symbol symbol-schutz">…</svg></h2>
 ```
 
+**Variante „Bereichskarte"** (`.karte-bereich`, seit Web 21.1.0, P5c/AP9,
+freigegeben mit M-P5c-01c, E-P5c-29). Der Kopf liegt auf **Rauch** und trägt
+ein rundes **Bereichszeichen** (`.bereich-zeichen`: `--knopf` im Durchmesser,
+Dunkelblau, Symbol in `--auf-dunkel`), den Titel und die Zahl — **als Gruppe
+mittig**. Aufruf: `ui_karte_start(['titel' => …, 'zahl' => …, 'klasse' =>
+'karte-bereich', 'symbol' => 'profil'])`; die Option `symbol` gibt das Zeichen
+vor dem Titel aus. Abgesetzt wird über das Zeichen und die Mitte, **nicht über
+eine Farbe mit Bedeutung** — Orange heißt „hier stehst du", Hellblau
+„erledigt", Rot „Gefahr", und ein getönter Kopf las sich im Mockup als Meldung
+oder Kopfleiste. Kontraste, gerechnet: Weiß auf Dunkelblau 13,6 : 1,
+Dunkelblau auf Rauch (Titel) 12,5 : 1, Gedämpft auf Rauch (Zahl) 5,3 : 1.
+
+- **Ein Verwender:** die Einstellungs-Übersicht (9.27). Ein zweiter braucht
+  einen Grund.
+- **Keine Kopfaktion, keine Plakette.** Mittig gesetzt hätte eine Aktion
+  keinen Platz, und eine Plakette würde die Gruppe aus der Mitte schieben.
+- **Nur offen.** Eine klappbare Karte kennt die Option nicht.
+
+```html
+<section class="karte karte-bereich">
+  <div class="karte-kopf">
+    <span class="bereich-zeichen"><svg class="symbol">…</svg></span>
+    <h2 class="karte-titel">Verwaltung</h2>
+    <span class="karte-zahl">5</span>
+  </div>
+  <div class="karte-inhalt">…</div>
+</section>
+```
+
 ### 9.2 Zeile — der Listeneintrag
 
 **Zweck:** Ein Eintrag einer Liste. Text links (fett plus Kleinzeile),
@@ -1081,6 +1173,44 @@ anderes auf sie zeigt — Rauchfläche plus ein orangener Balken links in
 > **Nur für eine Verknüpfung, nicht für einen Zustand.** „Hervorgehoben" heißt
 > *worauf gerade gezeigt wird*, nicht *was ausgewählt ist* und nicht *was
 > wichtig ist*. Für einen Zustand ist die Plakette da (9.6).
+
+**Die aufklappbare Zeile `.zeile-mehr` (seit Web 20.39.0, P5c/AP2,
+E-P5c-26, Bild M-P5c-01a).** Hat ein Eintrag Angaben, die nicht in den Satz
+passen — die `daten` eines Protokolleintrags —, bekommt `ui_zeile()` den
+Schlüssel `daten` (eine Liste von Schlüssel-Wert-Paaren) und gibt statt des
+`<div>` ein `<details class="zeile-mehr">` aus, dessen `<summary>` die Zeile
+**ist**. Die Angaben stehen aufgeklappt darunter als `<dl class="zeile-daten">`
+auf Rauch, in der festen Schrift, `--groesse-2`. Der Winkel steht in der
+Aktionsspalte und dreht sich beim Öffnen (`--dauer`).
+
+```html
+<details class="zeile-mehr">
+  <summary class="zeile">
+    <div class="zeile-text">…</div>
+    <div class="zeile-plaketten">…</div>
+    <div class="zeile-aktionen"><svg class="symbol zeile-winkel">…</svg></div>
+  </summary>
+  <dl class="zeile-daten"><dt>weg</dt><dd>probe</dd></dl>
+</details>
+```
+
+**Kein „⋯"-Blatt auf dem Handy:** Aufklappen ist keine Handlung, sondern
+Lesen, und gehört deshalb nicht zu den Zeilenaktionen (9.3).
+
+**Die Gegenregel ist Pflicht, nicht Zierde.** Das `<summary>` ist immer
+erstes Kind seines `<details>`; `.zeile:first-child` nähme ihm den oberen
+Innenabstand, und aufklappbare Zeilen wären **13 px niedriger** als feste
+(F-P5c-13, gemessen in M-P5c-01). Die Gegenregel steht an
+`.zeile-mehr > summary.zeile` (Spezifität 0,2,1 gegen 0,2,0); erste und
+letzte Zeile der Liste behandelt `.zeile-mehr:first-child` bzw.
+`:last-child`. Die Trennlinie trägt das `<details>`, nicht das `<summary>` —
+sonst stünde sie aufgeklappt zwischen Zeile und Angaben. Der Bedienweg
+`admin-protokoll-zeilen` misst beide Fassungen gleich hoch.
+
+**`aktionsspalte => true`** hält die leere Aktionsspalte auch in Zeilen
+**ohne** Angaben, damit alle Plaketten einer Liste auf einer Kante enden
+(Vorgabe 17.09.2026). Ohne den Schlüssel bleibt eine Zeile ohne Aktionen,
+wie sie war.
 
 ### 9.3 Zeilenaktionen — dieselben Handlungen, zwei Formen
 
@@ -1705,7 +1835,7 @@ Werts**:
 
 | Stufe | Klasse | Wofür | Schrift |
 |---|---|---|---|
-| groß | `.codeblock-wert` | Werte, die jemand **abschreibt**: Kopplungscode, Wiederherstellungsschlüssel, Schlüsselblatt (`+ .blatt-wert`) | `--groesse-5`, 600, gesperrt (`.06em`) |
+| groß | `.codeblock-wert` | Werte, die jemand **abschreibt**: Kopplungscode, Wiederherstellungsschlüssel | `--groesse-5`, 600, gesperrt (`.06em`) |
 | klein | `.codeblock-wert-lang` | sechzig bis hundert Zeichen, die jemand **kopiert**: Cron-Zeile, Token-Adresse, Setz-Link, Einladungslink, Geräte-ID, API-Schlüssel, APK-Prüfsumme | `--groesse-2`, 400, ohne Sperrung, `word-break:break-all` |
 
 ```
@@ -1750,6 +1880,12 @@ der aufklappt, den Rest der Seite verschiebt.
 > Kopieren-Knopf, den 9.18a gar nicht kennt. Zurückgeschoben, als 9.18a beim
 > Anlegen des Kartenfilters gegengelesen wurde.*
 
+> *Seit Web 21.1.0 stehen die Werte von Schlüssel- und Notfallblatt nicht
+> mehr im Wertekasten, sondern als nummerierte Gruppen im Druckblatt (9.39);
+> `.blatt-wert` ist entfallen. Der folgende Absatz beschreibt den Stand bis
+> Web 21.0.0 — die Begründung für „groß und gesperrt" gilt für die Gruppen
+> unverändert.*
+
 > **Und seit Web 20.1.0 gibt es eine dritte Stelle für die große Stufe — das
 > Schlüsselblatt** (S10/AP3). 64 Hexzeichen sind ein langer Wert, und nach
 > der Regel oben gehörten sie in die kleine Stufe. Sie stehen trotzdem groß
@@ -1790,6 +1926,28 @@ lesbar, sondern nur breiter.
 
 **Die Regel gilt für jede Liste mit Suche und Filtern**, nicht für die eine
 Seite, auf der sie aufgefallen ist.
+
+**Seit Web 20.39.0 ein Weg: `ui_listenkopf()` und `ui_listenfuss()`** (P5c/AP2,
+R83, F-P5c-54). Bis dahin standen Suchfeld, Filterpillen und Seitenwahl nur
+als handgeschriebenes Markup in `admin_users.php`; die Protokollseite wäre
+die zweite Kopie gewesen. Beide Seiten benutzen jetzt die Helfer, und das
+Register (`tools/zaehlung/register.php`, Zeile „Listenkopf und Reiter")
+hält die Klassen außerhalb von `ui.php` auf **null**.
+
+- **`ui_listenkopf()`** — Suchfeld (Kennung = Name des Feldes, wie bisher),
+  versteckte Felder für das, was die Suche mitnehmen soll, Filterpillen mit
+  optionaler Zahl und optional ein **Auswahlfeld** in der Filterreihe
+  (`.filterreihe .feld-eingabe`: so hoch wie ein Filter, nur so breit, wie
+  es muss). Mit Skript (`assets/listenkopf.js`) schickt das Auswahlfeld
+  sofort ab und der Knopf „Filtern" ist verborgen; ohne Skript steht er da.
+- **Eine Pille mit Kreuz** (`kreuz => true`) ist ein Filter aus der Adresse,
+  der sich zurücknehmen lässt — der Kontofilter der Protokollseite: aktiv,
+  mit `schliessen`-Zeichen, der Verweis nimmt ihn weg. **Keine neue
+  Darstellung:** Es ist die aktive `.listenfilter`-Pille mit einem Symbol
+  aus dem Vorrat.
+- **`ui_listenfuss()`** — die Zählung und ab zwei Seiten die Seitenwahl:
+  erste, letzte und die Nachbarn der aktuellen Seite, dazwischen eine
+  Ellipse.
 
 
 ### 9.19 Speicherbalken (`.speicher-balken`)
@@ -1959,10 +2117,21 @@ E-S8-07, E-S8-15). Alle drei entstehen in `ui_leiste_einstellungen()` und
 
 **Der Block ist ein Akkordeon.** `<details class="akkordeon leiste-gruppe">`
 mit `<summary class="akkordeon-zeile">` — derselbe Baustein wie in der
-Diensttage-Leiste, nur mit Schriftgrad und Farbe der früheren
-`.leiste-kopfzeile`. Der Winkel steht **links**, wie dort; das freigegebene
-Mockup 01 zeichnet ihn rechts, und diese Abweichung ist Absicht: Zwei Leisten
-mit demselben Mechanismus sollen denselben Griff haben.
+Diensttage-Leiste. **Seit Web 21.1.0 nach Option 1 „Linie"** (P5c/AP9,
+E-P5c-29, Nr. 244, Mockup M-P5c-01c): Der Winkel steht **rechts**, die
+Überschrift eine Stufe größer (`--groesse-4`) in **Dunkelblau**, und vor jedem
+weiteren Block stehen eine Trennlinie und `--abstand-3` Luft. Geändert sind
+nur Regeln an `.leiste-gruppe`; Markup, Aufklappen und das Merken des
+Zustands bleiben.
+
+> **Bis Web 21.0.0 stand der Winkel links**, mit der Begründung „zwei Leisten
+> mit demselben Mechanismus sollen denselben Griff haben" (E-S8-07). Option 1
+> hebt sie **für dieses Menü** auf: Links stand der Winkel genau dort, wo die
+> Einträge ihr Symbol tragen, und zwischen Überschrift und Eintrag lag eine
+> einzige Gewichtsstufe (Bricolage ist nur in 500 und 600 eingebunden) — die
+> Überschrift las sich wie ein Eintrag. **Die Diensttage-Leiste bleibt, wie
+> sie ist:** Winkel links, Jahreszeilen in `--groesse-4`, keine Trennlinie. Sie
+> trägt `.leiste-gruppe` nicht.
 
 Offen sind „Einstellungen" und der Block der aktiven Seite — **in jeder
 Breite**. Der zugeklappte Block zeigt die Zahl seiner Einträge
@@ -1983,6 +2152,20 @@ Menüpunkte zweiter Ordnung; wer sie dafür hält, sucht dahinter eine eigene
 Seite. Die Markierung ist **fett, nicht orange**: Orange heißt in dieser
 Oberfläche „hier stehst du" und gehört dem aktiven Menüpunkt.
 
+**Unter 800 px Fensterhöhe fallen sie in der festen Leiste weg** (seit Web
+21.1.0, E-P5c-131; Kapitel 7). Gemessen bei 1280 × 720 mit der BetreiberIn
+(18 Einträge): Mit Sprungmarken waren auf 6 von 14 Seiten alle Einträge ohne
+Rollen erreichbar, ohne sie auf 14 von 14 — die Servereinstellungen tragen
+acht Marken. Die Einträge sind die Wege durch die Anwendung, die Marken nur
+Wege durch eine Seite. In der Schublade (unter 1024 px) bleiben sie. **Die
+Lücke darüber ist benannt:** Zwischen 800 und 946 px Höhe stehen die Marken,
+und drei Listen passen nicht ganz — Servereinstellungen braucht 947 px,
+Status 891, Updates 835; dort rollt die Leiste in sich. Gemessen wird „ohne
+Rollen erreichbar" so: Ein Eintrag zählt, wenn er im Bild steht **oder** der
+Kopf seiner zugeklappten Gruppe. Einträge einer zugeklappten Gruppe haben in
+Chromium eine Box (36 px hoch, Lage wie offen) — wer nach der Box fragt, zählt
+sie mit (F-P5c-157).
+
 **Auf einer zweispaltigen Seite sind es zwei Marken, nicht eine.** `menue.js`
 bestimmt die oberste sichtbare Karte je `.form-spalte` — sonst bliebe die
 rechte Spalte, in der man gerade liest, unmarkiert. Das betrifft die sechs
@@ -2000,6 +2183,27 @@ sie ist die Karte kein Sprungziel und erscheint nicht.
 |---|---|---|---|
 | `.form-raster` + `.form-spalte` | 1200 | die Seite, im Markup | Karten mit thematischer Ordnung: links Server und E-Mail, rechts Jobs und Backups |
 | `.karten-raster` | 1200 | der Browser (Mehrspaltensatz) | eine Reihe gleichrangiger Karten ohne Ordnung |
+| `.form-raster` + `.form-raster-links-breit` | 1200 | die Seite, im Markup, **3 : 2** | links eine Tabelle „… je Zeitraum" mit bis zu fünf Zahlenspalten, rechts eine Karte mit Zeilen — heute die Statistik |
+
+**Variante `.form-raster-einspaltig`** (seit Web 20.41.0, P5c/AP4, freigegeben
+mit M-P5c-02c, E-P5c-66): eine Spalte, höchstens Lesespalte plus
+`--abstand-5` breit. Für eine Seite, deren zweite Spalte **für diese Rolle**
+leer bliebe — die Kontoseite des Supports, der weder Konto-Backups noch
+die Gefahrenzone sieht, und seit Web 21.1.0 die Installation, für alle
+Rollen. Ohne sie stünde die linke Spalte ab 1200 px halb so
+breit neben einer Leere. Sie steht im Stylesheet **hinter** der Regel von
+`.form-raster` und gewinnt deshalb bei gleicher Spezifität; die eine
+`.form-spalte` darin bleibt, `menue.js` liest sie.
+
+**Variante `.form-raster-links-breit`** (seit Web 20.47.0, P5c/AP7,
+freigegeben mit M-P5c-01b, E-P5c-18): zwei Spalten im Verhältnis **3 : 2**
+statt gleich. Gleich geteilt läuft die Tabelle mit fünf Fenstern über und
+rollt in ihrer `.tabelle-scroll` — gemessen: 40 px bei 1200, 20 px bei 1240,
+ab 1280 px nicht mehr. Mit 3 : 2 passt sie bei 1200, 1280, 1366 und 1440 px
+ohne Rollen, in allen drei Motoren (36 Messungen, 0 Überläufe; P5c/AP7,
+Commit `d519fac`). Wie die einspaltige
+Variante steht sie im Stylesheet hinter `.form-raster` und gewinnt bei
+gleicher Spezifität; die zwei `.form-spalte` bleiben.
 
 `.karten-raster` nimmt die Karten **direkt** als Kinder und lässt sie
 fließen; `break-inside:avoid` hält jede zusammen. Eine Karte, die dazukommt,
@@ -2029,17 +2233,27 @@ in der Leiste je Spalte die oberste sichtbare Karte zu markieren. Ein
 
 ### 9.27 Die Einstellungs-Übersicht in drei Spalten
 
-`.uebersicht-raster` mit einer `.uebersicht-gruppe` je Block, ab 1024 px als
+`.uebersicht-raster` mit einer Bereichskarte je Block, ab 1024 px als
 Grid mit `repeat(auto-fit, minmax(var(--uebersicht-spalte), 1fr))`. Die Zahl
 der Spalten ergibt sich damit aus der Zahl der Blöcke und die aus der Rolle —
 eine für eine NutzerIn, zwei für eine Admin, drei für eine BetreiberIn, ohne
 dass das Stylesheet die Rolle kennt.
 
-Die Überschrift des ersten Blocks (`.uebersicht-block-erst`) steht nur
-nebeneinander. Gestapelt stünde „EINSTELLUNGEN" unmittelbar unter der
-Seitenüberschrift „Einstellungen"; in drei Spalten benennt sie die Spalte,
-und ohne sie stünde eine namenlose neben zwei benannten. Im Markup steht sie
-immer, damit ein Vorleseprogramm alle Blöcke gleich benennt.
+**Je Block eine Bereichskarte** (9.1, seit Web 21.1.0): Der Bereichsname ist
+der Kartentitel, die Zahl der Einträge steht daneben, davor das Zeichen —
+`profil` (Einstellungen), `gruppe` (Verwaltung), `server` (Betrieb). Sie
+doppeln je einen Eintrag darunter; das ist mit der Freigabe in Kauf genommen.
+Darin die Übersichtszeilen (`.uebersicht-zeile`: Symbol, Text, Zähler,
+Winkel).
+
+> **Bis Web 21.0.0 stand der Bereichsname als gesperrte Versalzeile über einer
+> titellosen Karte** (`.uebersicht-block`, Mockup 07), und die des ersten
+> Blocks (`.uebersicht-block-erst`) nur nebeneinander — gestapelt hätte
+> „EINSTELLUNGEN" die Seitenüberschrift wiederholt. Beide Klassen sind
+> entfallen, mit ihnen der Behälter `.uebersicht-gruppe` um Überschrift und
+> Karte: Die Karte ist jetzt selbst das Kind des Rasters. Die Sonderregel für den ersten Block braucht es nicht mehr: Ein
+> Kartentitel benennt die Karte, nicht die Seite, und steht deshalb in jeder
+> Breite.
 
 ### 9.28 Vorschlagsliste (`.vorschlaege`)
 
@@ -2151,7 +2365,9 @@ Bausteintabelle steht er deshalb nicht.
 
 **Zweck:** Einen Punkt auf der Karte wählen. **Ein** Dialog für fünf
 Einbauorte: Einsatzort, manueller Abfahrtort, Transportziel und die
-Lagefelder der Standorte in Konto- und Systemverwaltung.
+Lagefelder von Standort und Zielklinik in den Einstellungen. Bis Web 18.0.0
+war der fünfte der Standort der Systemverwaltung (R39); die Bedienprobe misst
+seither vier davon (`wege/ap2.mjs`), die Zielklinik nicht.
 
 ```html
 <dialog class="dialog dialog-karte">
@@ -2538,6 +2754,242 @@ erfahren. Nach dem Umschalten läuft `map.invalidateSize()` mit 60 ms Verzug —
 ohne das bleibt die neue Fläche grau. Gemessen: 10 → 15 Kacheln, 0 px
 unbedeckt nach 200 ms.
 
+### 9.36 Streifen über dem Inhalt (`.hinweise`) und die Kopfleiste mit Etikett (`.kopf-umgebung`)
+
+*Seit Web 20.38.0 (P5c/AP1, E-P5c-05, -13, -55, -59, -60, -66). Freigegeben
+mit der Mockup-Runde M-P5c-02 (a), Variante A des aktiven Kopfpunkts.*
+
+**Kein neuer Baustein, sondern ein Behälter und zwei Varianten.** Die
+Streifen gab es schon — den Demo-Hinweis und den Datenschutz-Hinweis
+(`.demo-hinweis`), dazu die Meldung (9.5). Neu ist, dass bis zu vier davon
+**in einer Reihe** stehen, mit fester Reihenfolge:
+
+| Streifen | Klasse | Ton | wegklickbar |
+|---|---|---|---|
+| Umgebung | `.demo-hinweis.hinweis-umgebung` | Rot tief auf Rosa (6,27 : 1), Symbol `server` | nein |
+| Ankündigung | `.meldung.meldung-info` / `.meldung-warn` + `.meldung-ankuendigung` | wie die Meldung | ja, je Sitzung |
+| Demo | `.demo-hinweis` | Orange hell | nein |
+| Datenschutz | `.demo-hinweis` | Orange hell | nein |
+
+**Die Reihe `.hinweise`** ist ein Spaltenbehälter mit `--abstand-2`
+zwischen den Streifen und `--abstand-5` darunter; die Kinder geben ihren
+eigenen Außenabstand ab. Gestapelt ohne Behälter ergäben zwei
+`--abstand-5` untereinander 32-px-Lücken zwischen Zeilen, die
+zusammengehören. **Sie steht an der Stelle des Demo-Hinweises**, als erstes
+Kind von `main.inhalt` — nicht unter der Kopfleiste, wo ein Streifen die
+klebende Leiste verschob (F-P3-G). Auf den Anmeldeseiten steht sie über der
+Karte und ist so breit wie sie (`.anmeldung .hinweise`, `--anmeldekarte`).
+Ohne Streifen gibt `ui_hinweise()` nichts aus, auch keinen leeren Behälter.
+
+**Die Ankündigung** ist die vorhandene Meldung mit einem Kreuz in
+`.meldung-aktion`. `.meldung-ankuendigung` hält das Kreuz **oben rechts**:
+Die Meldung bricht sonst um, sobald der Text seine Mindestbreite (16rem)
+nicht bekommt, und das Kreuz landete allein in einer Zeile unten links. Hat
+der Text mehr als einen Satz, steht der erste als fetter Auftakt.
+
+**Die Kopfleiste einer Anlage mit Etikett** (`.kopf-umgebung`) ist eine
+Variante von `.kopf`: Fläche `--rot` statt `--dunkelblau` (Weiß darauf
+4,78 : 1), der Name in `--schnee` statt `--sand` (Sand hätte auf Rot
+2,86 : 1), und der **aktive Kopfpunkt** gestrichen in `--orange-hell`
+(4,12 : 1). Das gewohnte `--orange` hätte auf Rot 2,10 : 1 und fiele unter
+die 3 : 1 für einen Bedienzustand (WCAG 1.4.11); `--orange-hell` bleibt in
+der Farbe, die „hier stehst du" heißt. Weiß wäre die Alternative gewesen
+(Variante B, nicht gewählt). **Die Farbe ist eine geschlossene Liste** —
+heute nur `rot` (`UMGEBUNG_FARBEN`). Eine zweite braucht eine Regel hier,
+drei Paare in `kontrast.py` und eine Freigabe mit Mockup.
+
+**Kein neues Token, kein neuer Farbwert, kein neues Symbol** — `server`,
+`schliessen` und `mail` lagen im Vorrat.
+
+
+### 9.37 Reiter (`.reiter`, `.reiter-punkt`, `.reiter-abgesetzt`, `.reiter-rahmen`)
+
+*Seit Web 20.39.0 (P5c/AP2, E-P5c-25). **Neuer Baustein**, freigegeben mit
+der Mockup-Runde M-P5c-01a (20.09.2026).*
+
+**Zweck:** Wechsel zwischen gleichrangigen Sichten **einer** Seite — etwa
+die Reiter der Protokollseite (Verwaltung, Sicherheit, E-Mail, Jobs,
+Sicherung, Ziele, System, dazu Archiv; hier stand bis Web 21.1.0 ein Reiter
+„Fehler", den es nie gab). Serverseitig: Jeder Reiter ist ein Verweis, der
+Parameter steht in der Adresse, und ohne Skript funktioniert alles. **Drei
+Verwender:** Protokoll (AP2, hier entstanden), Statistik (AP7), Rechtstexte
+(AP9, seit Web 21.1.0 — der einzige, dessen Reiter ein Formular schützen).
+
+```php
+ui_reiter(['label' => 'Bereiche des Protokolls', 'punkte' => [
+    ['text' => 'Verwaltung', 'href' => '?r=verwaltung', 'aktiv' => true],
+    ['text' => 'Jobs',       'href' => '?r=jobs'],
+    ['text' => 'Archiv',     'href' => '?r=archiv', 'abgesetzt' => true],
+]]);
+```
+
+| Teil | Darstellung |
+|---|---|
+| `.reiter` | Reihe mit Grundlinie `--strich` in `--linie`, `--abstand-4` darunter |
+| `.reiter-punkt` | Kopfschrift 600, `--gedaempft`, `min-height: var(--knopf)` (44/36 px), nie umbrechend |
+| `.reiter-punkt.aktiv` | `--dunkelblau`, Unterstrich `--strich-stark` in `--orange-tief`, `aria-current="page"` |
+| `.reiter-abgesetzt` | am rechten Rand (`margin-left:auto`) — die Ablage („Archiv"), kein Ereignisreiter |
+| `.reiter-rahmen` | Behälter für den Verlauf am Rand; `.rollt` / `.rollt-links` setzt `assets/reiter.js` |
+
+**Orange heißt „hier stehst du"** — dieselbe Auszeichnung wie der aktive
+Punkt der Kopfleiste, **aber in der tiefen Stufe** (E-P5c-79). Der Strich
+steht auf Rauch, und `--orange` hätte dort **2,09 : 1**, unter den 3 : 1 für
+einen Bedienzustand (WCAG 1.4.11). Die Schrift wechselt zwar mit, von
+Gedämpft nach Dunkelblau, aber auch diese beiden liegen nur **2,35 : 1**
+auseinander — zusammen tragen zwei schwache Zeichen kein starkes.
+`--orange-tief` auf Rauch hat **4,04 : 1** (3.4). Das ist die Regel aus der
+Ausnahme „Orange als Fläche": Wo ein oranger Strich allein steht, tritt
+`--orange-tief` an seine Stelle. Das Mockup M-P5c-01a zeigte `--orange`;
+entschieden am 24.09.2026.
+
+**Warum nicht das Segment und nicht die Filterpillen** (M-P5c-01a, geprüft
+und verworfen): Das Segment ist für wenige kurze Möglichkeiten; sieben
+Wörter passen bei 400 px nicht. Die Pillen stehen eine Zeile tiefer als
+Zeitraumfilter — zwei Reihen gleich aussehender Pillen mit verschiedener
+Bedeutung wären die Verwechslung.
+
+**Schmal rollt die Reihe in ihrem eigenen Behälter** (`overflow-x:auto`,
+Rollbalken verborgen); die Seite selbst läuft nie waagerecht aus dem Bild
+(Grundregel Kapitel 6). `assets/reiter.js` holt den aktiven Reiter beim
+Laden ins Bild und setzt den Verlauf (`--abstand-5` breit, nach `--rauch`)
+an den Rand, hinter dem noch etwas liegt. Ohne Skript rollt die Reihe
+trotzdem, nur ohne Verlauf.
+
+**Seiten mit Reitern tragen keine Unterpunkte in der Leiste:** `menue.js`
+baut keine, wenn `#inhalt` eine `.reiter`-Reihe enthält. Zwei Wege zu
+denselben Sichten wären einer zu viel.
+
+**Attribute je Reiter** (`attr`) reicht der Baustein durch — gebraucht für
+die Rückfrage bei ungespeichertem Text in den Rechtstexten (AP9,
+`data-cancel-form`, F-P5c-57).
+
+**Die Rechtstexte: Reiter über Feld und Vorschau** (seit Web 21.1.0, Mockup
+M-P5c-01d Variante 2, freigegeben 20.09.2026). Unter den Reitern steht
+`.form-raster` — ab 1200 px links die Karte mit Feld und Stand, rechts die
+Karte „Vorschau", darunter gestapelt. Keine neue Darstellung, nur vorhandene
+Bausteine und eine Klasse:
+
+| Teil | Darstellung |
+|---|---|
+| Karte „Vorschau" | `ui_karte_start()` mit `plakette` — der Zustand steht als Plakette im Kopf: „gespeicherter Stand" `blau`, „wird aktualisiert …" `neutral`, „ungespeichert" und „nicht aktuell" `orange` |
+| `.vorschau-rollt` | der Kasten in der Karte: `max-height` = Höhe des Textfelds (18 Zeilen, `--zeile` × `--groesse-3` + `--abstand-5`), rollt in sich (`overscroll-behavior:contain`); `.text` darin ohne Lesebreite, weil die Spalte schon schmal ist |
+| Fehlfall | `EdHtml.meldung('warn', …, {auftakt})` über dem Kasten; die letzte Vorschau bleibt stehen |
+| `.rechtstext-fuss` | Plakette „öffentlich"/„leer" und der Pfad der öffentlichen Seite nebeneinander |
+
+**`.vorschau` ist entfallen.** Bis Web 21.0.0 stand unter jedem Feld auf
+„Installation" ein gestrichelter Kasten mit dem gespeicherten Stand; mit der
+eigenen Seite hatte die Klasse keinen Verwender mehr.
+
+**Kein neues Token, kein neuer Farbwert.** Neues Symbol dieses Pakets ist
+`protokoll.svg` (Kapitel 8) — für den Menüpunkt, nicht für den Reiter; ein
+Reiter trägt kein Zeichen.
+
+### 9.38 Zweitfaktor: QR-Code, Einrichtung, Codefeld, Codeliste (`.qr`, `.zweitfaktor-einrichtung`, `.feld-code`, `.codeblock-liste`, `.anmeldung-schritt`)
+
+*Seit Web 20.42.0 (P5c/AP5, E-P5c-41). **Neue Bausteine**, freigegeben mit
+der Mockup-Runde M-P5c-02 (b), 23.09.2026 (E-P5c-66).*
+
+**Zweck:** die Einrichtung des Zweitfaktors (Karte „Zweitfaktor" unter
+Einstellungen → Profil und das Einrichtungstor `zweitfaktor.php`) und der
+Code-Schritt der Anmeldung. Tor und Karte teilen ihre Teile über
+`zweitfaktor_teile.php` (`zf_einrichtung()`, `zf_codes()`) — eine Stelle,
+damit beide dieselben drei Wege in die App zeigen: scannen, am Handy öffnen,
+abtippen.
+
+| Teil | Darstellung |
+|---|---|
+| `.qr` | SVG, halbe Anmeldekarte breit (`calc(var(--anmeldekarte) / 2)`, 200 px); `max-width:100%` |
+| `.qr-grund` / `.qr-modul` | `fill: var(--schnee)` / `fill: var(--asphalt)` — ein Rechteck, ein Pfad |
+| `.zweitfaktor-einrichtung` | Raster: QR links, Text rechts ab 720 px; darunter gestapelt, der QR zuerst. In `.anmeldung` immer gestapelt und mittig |
+| `.feld-code` | an der Hülle `.feld`: Eingabe in der festen Schrift, `--groesse-5`, Sperrung `.06em` — wie der Codeblock, damit Abschreiben und Eintippen gleich aussehen |
+| `.codeblock-liste` | Erweiterung des Codeblocks: zehn nummerierte Codes in zwei Spalten, Schrift wie `.codeblock-wert` (`--groesse-4`, 600, `--dunkelblau`), Nummer gedämpft |
+| `.anmeldung-schritt` | Zwischenüberschrift in der Anmeldekarte (Code-Schritt, Einrichtungstor), `--groesse-5` |
+
+**Nur die Modulmatrix kommt aus der Bibliothek** (`qrcode-generator`,
+`docs/Lizenzen.md` 3). Das SVG baut `assets/qr.js` im Browser aus
+`data-qr` — ein Rechteck `.qr-grund`, ein Pfad `.qr-modul`, Farben über die
+Token, kein `style="…"`. Der Server gibt ein leeres, verborgenes `<svg>` aus;
+ohne JavaScript bleibt es verborgen, und die beiden anderen Wege daneben
+tragen allein. Fehlerstufe M, vier Module Ruhezone.
+
+**Kein neues Token, kein neuer Farbwert, keine neue Größe:** 200 px ist die
+halbe Anmeldekarte, die Sperrung die des Codeblocks.
+
+**„Weiter" erst nach dem Haken** (Einrichtungstor, Schritt 2): Der Knopf
+steht im Markup frei und wird von `assets/zweitfaktor.js` gesperrt, bis
+„Ich habe die Codes gesichert." angehakt ist — umgekehrt wäre das Tor ohne
+Skript eine Sackgasse.
+
+**Der Druckknopf „Codeblatt drucken"** ist das vorhandene Druckformular
+`.rf-druck` im Codeblock (wie beim Wiederherstellungsschlüssel), volle
+Breite des Kastens. Im Einrichtungstor zeigt das Mockup ihn schmal — dort
+stand das Formular im Mockup verschachtelt in einem anderen, und der Parser
+hat es verworfen; die Karte (b) desselben Mockups zeigt die richtige
+Darstellung (F-P5c-107).
+
+**Der Rückweg mit dem Wiederherstellungsschlüssel — ohne neuen Baustein**
+(Konzept RW, M-RW-01, freigegeben 24.09.2026, E-RW-13; seit Web 20.44.0 bzw.
+20.45.0). Der **Schlüsselschritt** in `login.php` ist `.anmeldung-schritt`
+über einem gewöhnlichen `ui_feld` und der `.zustandszeile` für die
+Sofortprüfung — dieselbe Form wie das Schlüsselfeld der Passwort-Reset-Seite.
+Die **Erfolgskarte** ist `.anmeldung-schritt`, eine Meldung im Ton `ok` und ein
+Knopf. Die Zeile **„Rückweg mit dem Wiederherstellungsschlüssel"** in der
+Karte „Zweitfaktor" ist eine `.zeile` (9.2) mit Plakette (9.23: blau
+„eingerichtet", neutral „ab der nächsten Anmeldung"); **„Rückweg erneuern"**
+öffnet den Dialog mit dem Aufbau des Passwortabschnitts von „Neuen
+Wiederherstellungsschlüssel erzeugen". Keine neue Klasse, kein neues Symbol,
+keine neue Farbe.
+
+### 9.39 Druckblatt (`.blatt-druck`)
+
+*Seit Web 20.42.0 (P5c/AP5, E-P5c-08). **Neuer Baustein**, freigegeben mit
+M-P5c-01f (20.09.2026), die Codeliste mit M-P5c-02 (b), die Umgebungszeile
+mit M-P5c-02 (e).*
+
+**Zweck:** eine Seite, die gedruckt wird — **genau eine A4-Seite**. Drei
+Verwender: das **Codeblatt** des Zweitfaktors (`codeblatt.php`, seit AP5), das
+**Schlüsselblatt** (`betrieb_schluesselblatt.php`) und das **Notfallblatt**
+(`notfallblatt.php`), beide seit Web 21.1.0 (P5c/AP9). Die Seite baut ihre
+Hülle selbst (kein Gerüst), `<body class="blatt-seite">`, darin
+`<main class="blatt-druck">`. Das **Logo** ist beim Schlüsselblatt der
+Standard der Installation — das Blatt gehört der Anlage —, bei Code- und
+Notfallblatt die Wahl des Kontos, ohne Sitzung der Standard (E-P5c-30).
+
+| Teil | Darstellung |
+|---|---|
+| `.blatt-kopf` | Bildmarke (11 mm hoch) + `.blatt-marke` (Kurzname der Installation, Kopfschrift `--groesse-6`) links, `.blatt-kopf-rechts` (Adresse, Konto, Druckzeit; `--groesse-2`, gedämpft) rechts; darunter `--strich-stark` in `--dunkelblau` |
+| `.blatt-umgebung` | nur mit `app.umgebung`: Rahmen `--strich-stark` in `--rot-tief`, Text in `--rot-tief` — ohne Fläche, weil der Browser Flächen nicht druckt (E-P5c-50) |
+| `.blatt-druck h1` / `h2` | `--groesse-titel` / `--groesse-4` |
+| `.blatt-druck .meldung` | die vorhandene Meldung, auf Papier mit Rand `--strich` in `--linie-stark` |
+| `.blatt-kachel` | Rahmen `--strich-stark` in `--dunkelblau`, Fläche `--rauch` (im Druck ohne), nicht umbrechend; Kopf mit `.blatt-kachel-name` und `.blatt-kachel-neben` |
+| `.blatt-codes` | zehn Einmalcodes in zwei Spalten, feste Schrift `--groesse-5`, Sperrung `.08em`; davor die Nummer, **davor das Kästchen** zum Abhaken (E-P5c-65) |
+| `.blatt-druck-gruppen` + `.blatt-druck-gruppe` | ein Schlüssel in **nummerierten Vierergruppen**: acht je Zeile (Schlüsselblatt, 16 Gruppen), mit `.blatt-druck-gruppen-5` fünf in einer Zeile und eine Stufe größer (Notfallblatt). Feste Schrift `--groesse-5`, Sperrung `.08em`; die Nummer (`data-nr`) steht **darüber**, `--groesse-1`, gedämpft — die Rückfrage zum Schlüsselblatt fragt „Gruppe 11". Der Name trägt `-druck-`, weil `.blatt-gruppen` schon vergeben ist (F-P5c-44) |
+| `.blatt-fuss` | Blattname · Installation · Webversion · Lizenz, rechts „Seite 1 von 1" |
+
+**`@page` gilt für jede gedruckte Seite** (A4, 14 mm / 18 mm): Eine
+Seitenregel lässt sich nicht an eine Klasse binden, und ein benannter
+Seitentyp trägt nicht in jedem Browser. Bis Web 20.41 gab es keine Vorgabe.
+Am Bildschirm sieht das Blatt ab 720 px aus wie das Blatt — 210 mm breit,
+mit denselben Rändern.
+
+**Gemessen** — PDF aus Chromium ohne Hintergrundgrafiken, belegte Höhe bei
+658 px Satzbreite von 1017 px: Codeblatt **1 Seite**; Schlüsselblatt mit zwei
+Werten **1 Seite, 742 px**; Notfallblatt **1 Seite, 711 px**; **Härtefall**
+des Schlüsselblatts (drei Werte, Kurzname 83 Zeichen, Adresse 62) **1 Seite,
+978 px**, auf Staging mit Umgebungszeile **1013 px** — 4 px Luft.
+
+> **Die Zeile „Mehr" des Schlüsselblatts ist knapp, und das ist gemessen**
+> (Web 21.1.0). Mit der langen Sprungmarke `#karte-schluessel-des-servers-…`
+> lief sie im Härtefall auf drei Zeilen und das Blatt auf zwei Seiten
+> (1032 px). Der Rückfall aus M-P5c-02 — die Umgebungszeile in den Kopf —
+> half nicht: Neben einem langen Kurznamen wird die rechte Kopfspalte dadurch
+> höher (1051 px). Geholfen hat die kurze Marke `#das-schluesselblatt`. Wer
+> dem Blatt eine Zeile hinzufügt, misst den Härtefall neu.
+>
+> **Eine Falle beim Messen:** `page.pdf()` druckt mit der Medienart, die
+> zuletzt per `emulateMedia` gesetzt wurde. Wer vorher `screen` gesetzt hat,
+> bekommt die Bildschirmfassung — mit A4-Mindesthöhe und Rand — und misst
+> zwei Seiten, wo eine ist.
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
@@ -2593,6 +3045,20 @@ beiden Rechtstextseiten brauchen eine.
 > antwortet `betrieb_updates.php` ausdrücklich, bei einer Überlast antwortet
 > sie so wenig wie jede andere Seite — ein Verweis dorthin führte ins selbe
 > 503.
+>
+> **Seit Web 20.40.0 dreimal** (P5c/AP3, E-P5c-58): die **Fehlerseite** (500)
+> für eine Ausnahme, die niemand gefangen hat. Dasselbe Gerüst, statt
+> `.meldung-warn` eine `.meldung-fehler` mit der Kennung, darunter der
+> Meldeweg („Melde diese Kennung an …" mit der Kontaktadresse, sonst „Nenne
+> diese Kennung …") und ein Verweis zur Startseite — die antwortet hier ja.
+> Kein neuer Baustein. Ihr Markup steht in `system_fehlerseite()`
+> (`systemmeldung_lib.php`), weil sie auch dann stehen muss, wenn `ui.php`
+> selbst der Fehler ist.
+
+> *Seit Web 21.1.0 bauen alle drei Blätter auf dem Druckblatt `.blatt-druck`
+> (9.39) statt auf der Lesespalte; `.blatt-wert` ist entfallen, und den
+> Seitenumbruch mitten im Wert verhindert jetzt `.blatt-kachel`. Der folgende
+> Absatz beschreibt den Stand bis Web 21.0.0.*
 
 > **Die Druckseite ist der zweite Sonderfall — und das erste `@media print`
 > des Projekts** (Web 20.1.0, S10/AP3). Sie ist kein neuer Baustein: Sie
@@ -2629,8 +3095,10 @@ beiden Rechtstextseiten brauchen eine.
 3. `ui_titelzeile(['titel' => '…', 'zurueck' => […]])` — **nicht** ein blankes
    `<h1>`; der Rückweg gehört dazu.
 4. `ui_meldung($hinweis, $fehler)` direkt darunter.
-5. `<p class="seiten-erklaerung">` — ein Absatz, keine zwei. Wer die Seite zum
-   zehnten Mal öffnet, liest sie nicht mehr und muss trotzdem daran vorbei.
+5. `<p class="seiten-erklaerung">` (oder `'unter'` der Titelzeile) —
+   höchstens **ein Satz**; alles Erklärende steht im Handbuch, und die Karte
+   verweist darauf (Kapitel 6, Erklärtext). Wer die Seite zum zehnten Mal
+   öffnet, liest sie nicht mehr und muss trotzdem daran vorbei.
 6. Inhalt in `ui_karte_start()` … `ui_karte_ende()`; Listen als `ui_zeile()`
    mit `ui_zeilenaktionen()`; Formulare aus `ui_feld()` und Geschwistern.
 7. Der Hauptknopf: `ui_speichern_leiste()` **nur**, wenn man an der Seite
@@ -2724,6 +3192,8 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 20.39.0 (P5c/AP2)** | **9.37 neu — Reiter**, freigegeben mit M-P5c-01a (E-P5c-25): Wechsel zwischen gleichrangigen Sichten einer Seite, serverseitig, schmal rollend im eigenen Behälter; Seiten mit Reitern tragen keine Unterpunkte in der Leiste. Der Strich des aktiven Reiters steht in `--orange-tief` statt im `--orange` des Mockups (2,09 → 4,04 : 1 auf Rauch, E-P5c-79); Kapitel 3.4 nennt die Rolle beim Paar „Orange tief auf Rauch". **9.2 um die aufklappbare Zeile `.zeile-mehr` ergänzt** (E-P5c-26) samt Gegenregel zu `.zeile:first-child` (F-P5c-13) und dem Schlüssel `aktionsspalte`. **9.18a um die Helfer `ui_listenkopf()` und `ui_listenfuss()`** — Suche, Filterpillen (eine mit Kreuz), Auswahlfeld und Seitenwahl sind ein Weg; `admin_users.php` ist umgezogen, das Register hält die Klassen außerhalb von `ui.php` auf null (F-P5c-54). Kapitel 9.0 um drei Zeilen. **Ein neues Symbol** — `protokoll.svg`, Tabler „list" (Vorrat 57 → 58), für den Menüpunkt Verwaltung → Protokoll. **Kein neues Token, kein neuer Farbwert.** Die erzeugten Tabellen neu erzeugt: Bausteine **44 → 48** Funktionen (`ui_zeile_mehr()`, `ui_reiter()`, `ui_listenkopf()`, `ui_listenfuss()`), Medienblöcke **24 → 25** (die Protokollliste ab 720 px), Symbole **57 → 58**. In Kapitel 7 stand unter der erzeugten Schwellentabelle eine **zweite, veraltete Summenzeile** („22 Medienblöcke") — ein Rest eines früheren Einsetzens von Hand; beim Ersetzen bis zur nächsten Überschrift ist sie gefallen. |
+| **Web 20.38.0 (P5c/AP1)** | **9.36 neu — Streifen über dem Inhalt und Kopfleiste mit Etikett**, freigegeben mit M-P5c-02 (a). Ein Behälter `.hinweise` für bis zu vier Streifen in fester Reihenfolge (Umgebung → Ankündigung → Demo → Datenschutz), zwei Varianten vorhandener Bausteine (`.hinweis-umgebung` am Hinweisstreifen, `.meldung-ankuendigung` an der Meldung) und eine Variante der Kopfleiste (`.kopf-umgebung`, aktiver Punkt in `--orange-hell`, Variante A, E-P5c-59). Kapitel **3.4** um die drei Paare auf Rot ergänzt und um das Paar „Dunkelblau auf Orange hell", das seit Web 16.3.0 im Werkzeug stand und hier fehlte — **25 Paare, 0 verfehlt**. Kapitel 9.0 um eine Zeile. **Die vier erzeugten Tabellen neu erzeugt** — sie standen auf einem älteren Stand: Bausteine **40 → 44** Funktionen (drei aus diesem Paket, dazu `ui_tabellen_bootstrap()` aus Schritt 15, das bis dahin fehlte), Verwendungszahlen der Token und Symbole nachgezogen; `tools/erzeugen/design.py` kennt die beiden neuen Funktionen in seiner Liste der abweichenden Namen. **Kein neues Token, kein neuer Farbwert, kein neues Symbol.** |
 | **Web 20.1.0 (S10/AP3)** | **10.1 um einen sechsten Seitentyp ergänzt: die Druckseite** — und mit ihr das **erste `@media print` des Projekts** (Stylesheet, Abschnitt 26, drei Regeln). Kein neuer Baustein: Das Schlüsselblatt benutzt Lesespalte, Meldung, Wertekasten, Feldhinweis und Knopf; was es zum eigenen Typ macht, ist sein Zweck. Eine neue Klasse mit Regel — `.blatt-wert`, `.codeblock-wert` mit zwei Änderungen (darf umbrechen, bricht **nur zwischen** den Vierergruppen). **Kein neues Token, kein neuer Farbwert, kein neues Symbol:** Die Flächenregel im Druck setzt `background: none` statt eines weißen Hexwerts, weil die Skala geschlossen ist und es keinen Token für Weiß gibt. Kapitel **9.6** um den dritten durchgerutschten Plakettenton ergänzt (`ok`, zwei Altstellen ohne Regel, Backlog Nr. 36). Gemessen: Vollständigkeit **Hexfarben außerhalb `:root` 0**, Befunde 329 → 335 (die sechs sind das `→` der Pfadschreibweise *Betrieb → Servereinstellungen*); Bilderlauf `43b`, `45`, `48`, `48a` in acht Breiten, **beide Bedienhöhen**, je **0 Überlauf / 0 Knöpfe falscher Höhe**; Kontraste **22 Paare, 0 verfehlt**; Druckansicht bei 718 px (210 mm) **16 Gruppen, 0 zerschnitten, 0 Überlauf**. |
 | **Web 19.6.0 (Mockup-Runde 9c / AP4)** | **9.12 um zwei Absätze ergänzt** (E-P3-27 fortgeschrieben): Das Blatt **fährt auf** (`translateY(100%)` → `.blatt-auf`, `--dauer`, am Schreibtisch ausdrücklich nicht), und der **Öffner bleibt markiert**, solange sein Blatt offen ist. Kapitel **3.1** sagt dazu, dass Orange seither auch „hier ist gerade etwas offen" heißt — als Fortsetzung von „hier wird gehandelt", nicht als zweite Bedeutung. Die Markierung steht **am Attribut** `[data-blatt][aria-expanded="true"]` und erreicht damit alle vier Bauarten von Öffnern (6 × `ui_aktionen()`, 9 × `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds, 3 handgeschriebene Sortierblatt-Knöpfe) — E-MR-25. **`--dauer` von .18 s auf .24 s** für die ganze Anwendung (E-MR-22, F-MR-12); der Grundsatz in Kapitel 6 nennt den neuen Wert. **Kein neues Token** — die Fassung D4 benutzt `--orange-hell` und `--orange-tief`, das Kontrastpaar „Orange tief auf Orange hell" war schon gerechnet. **Kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren, fünf Öffner, mit und ohne abbestellte Bewegung: Fläche und Schrift überall richtig, nach `Escape` `hidden=true`, `aria-expanded=false`, Fokus zurück am Knopf; mit abbestellter Bewegung 0,01 ms und kein Zwischenbild. |
 | **Web 19.5.1 (Mockup-Runde 9c / AP3b)** | **9.35 nachgetragen** (siehe dort — die Kapitelpflicht aus 1.3 war mit 19.5.0 übersehen worden) und **9.7 um einen Absatz ergänzt:** Ein `<select>` bekommt `contain:paint`, weil WebKit den längsten Eintrag in den Überlauf des Kastens rechnet und `import.php` bei 360 px dadurch um 6 px überlief (Backlog Nr. 185) — gefunden vom ersten dreifachen Bilderlauf. **Kein neues Token, kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren: Kaskade **758 → 759 Regeln, 0 entfallen, 1 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **46 150 Elementmessungen, 104 Abweichungen** — 8 Auswahlfelder × 13 Breiten, und die einzige geänderte Eigenschaft ist `contain: none → paint`. Chromium, Firefox und WebKit melden dieselben Zahlen. |

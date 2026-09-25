@@ -215,6 +215,9 @@ antwortet `login.php` wie eine eingerichtete Installation, sind Punktdateien
 gesperrt und ist `.well-known` offen (beides Apache des Hosters), und läuft
 **ein** Kreislauf `edbak` durch — als Plattformprobe auf PHP 8.3 beim
 Hoster. Dazu ein benannter leerer Platz für Backlog Nr. 234 (8).
+**Seit Web 20.45.0 kommt die Rückwegprobe dazu** (Konzept RW, E-RW-11): Ob
+die Anlage die Signatur des Rückwegs prüft — über `openssl` oder in reinem
+PHP —, zeigt nur der Hoster. Sie läuft nach dem Kreislauf, im selben Job.
 
 **Heutiger Umfang:** Der Job heißt „Prüfung Stufe 2", hat **6** Schritte und
 eine Zeitgrenze von 45 Minuten; gemessen 16 min je Lauf. Bilderlauf und
@@ -275,7 +278,7 @@ nichts gelesen wird, misst gegen nichts.
 |---|---|---|
 | **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten, Chromium; Bedienprobe der berührten Seiten |
 | **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in acht Breiten, Chromium, Bedienprobe aller Seiten; Handy- und Uhr-Bau, wenn berührt |
-| **haupt** | Hauptstufe `X.a.a`, oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Bilderlauf mit allen drei Engines über alle Seiten, Messstand, Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
+| **haupt** | Hauptstufe `X.a.a`, **eine neue Migration** (Stufenregel `migration`, 4; seit P5c/AP4) oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Bilderlauf mit allen drei Engines über alle Seiten, Messstand, Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
 
 **Warum die Matrix in die Hauptstufe gehört und nicht in die Kette:** Der
 Export scheiterte am 21.09.2026 nicht an der Anwendung, sondern an einem
@@ -284,6 +287,19 @@ Drei Kreisläufe zu je vier Minuten örtlich fanden ihn; drei Läufe zu je
 fünfzehn Minuten in der Kette hatten es nicht getan. Der Kreislauf `edbak`
 läuft bei `haupt` und bei `--gegen staging` deshalb **gegen MySQL 8.4.0**,
 nicht nur gegen MariaDB.
+
+**Was davon heute läuft, und was nicht** (nachgesehen in P5c/AP4,
+F-P5c-103). `pruefablauf.json` gibt `haupt` über `neben` hinaus: Messstand,
+Anteil-, Verbindungs- und Schemaprobe (`plattform.sh schema`, vier
+Datenbanken, PHP des Containers) und den Bilderlauf. **Nicht gebaut
+sind:** PHP 8.3.33 als zweite Fassung, der Kreislauf `edbak` je Paar — auch
+der gegen MySQL 8.4.0 aus dem Absatz darüber; `kreislauf.py` kennt keine
+zweite Datenbank —, der Uhr-Prüfstand Stufe II und **Firefox und WebKit im
+Bilderlauf**: `aufnehmen.mjs` fährt einen Motor aus `--motor` (Vorgabe
+Chromium), und `--stufe haupt` ändert daran nichts. Die Zeile „haupt" oben ist damit **das Ziel, nicht der Stand**
+(Backlog Nr. 300). Bis dahin fährt ein Paket in `haupt` die Teile, die es
+berühren, von Hand (`hochfahren.sh --php 8.3`) und nennt im Prüfdokument,
+was fehlt.
 
 **Eine Hauptstufe, die mit `--stufe klein` gefahren wurde, fällt im Tor
 auf** — das ist eine der fünf roten Lagen in 5.1.
@@ -328,10 +344,15 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/komplett_lib.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02 |
 | `server/gpx_lib.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130 |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
-| `server/mail_lib.php`, `server/email_lib.php` | klein | `mailprobe` | smtp_letzter_fehler() |
+| `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |
+| `server/auth_guard.php`, `server/db.php`, `server/admin_*.php`, `server/betrieb_*.php`, `server/api/rechtstext_vorschau.php`, `docs/Technik.md` | klein | `rollenprobe` | Nr. 286, Nr. 149 |
+| `server/login.php`, `server/auth_guard.php`, `server/totp_lib.php`, `server/zweitfaktor.php`, `server/zweitfaktor_teile.php`, `server/codeblatt.php`, `server/status_lib.php`, `server/demo_lib.php`, `tools/zweitfaktor/**` | klein | `zweitfaktorprobe` | F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset) |
+| `server/rueckweg_lib.php`, `server/status_lib.php`, `server/vendor/phpseclib3/**`, `server/api/rueckweg_anlegen.php`, `server/assets/rueckweg.js`, `server/login.php`, `server/zweitfaktor.php`, `tools/proben/rueckweg/**`, `tools/bedienprobe/wege/einstellungen_profil_rueckweg.mjs` | klein | `rueckwegprobe`, `rollenprobe`, `bedienprobe` | Nr. 319 (F-P5c-106: Rueckweg pruefte gegen einen Wert aus der Datenbank), Konzept RW E-RW-03, -11, -12 |
+| `server/protokoll_lib.php`, `server/protokoll_archiv_lib.php`, `server/zip_lib.php`, `server/admin_protokoll.php`, `server/systemmeldung_lib.php` | klein | `protokollprobe`, `versandprobe` | F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39); protokollprobe Teil 7 für das Fehlerprotokoll (Nr. 248) |
 | `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
 | `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
 | `server/wartung_lib.php`, `server/auth_guard.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171 |
+| `server/api/health.php`, `server/speicher_lib.php` | klein | `ratenprobe`, `wartungsprobe` | E-P5c-17, -52 (Health, P5c/AP6): Token, Felder, Migration und Menge in der Ratenprobe, die Antwort aus dem Tor in der Wartungsprobe |
 | `server/db.php` | klein | `verbindungsprobe` | Nr. 210 |
 | `server/serverkrypto_lib.php`, `server/auth_salt.php`, `server/assets/unlock.js`, `server/assets/crypto.js` | klein | `anteilprobe`, `containerprobe` | S10-Kern, F-S10-AP3-03 |
 | `server/*freigabe*.php`, `server/*schluessel*.php` | klein | `freigabeprobe` | F-S2-F |
@@ -340,15 +361,18 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/schema.sql`, `server/migration_lib.php`, `server/update.php` | klein | `migrationsregister`, `schemaprobe` | Nr. 238; Hausregel dreimal vergessen |
 | `server/install.php`, `server/plattform_lib.php` | klein | `installweiche` | PP-1 |
 | `docs/rechtstexte/*.md`, `server/nutzungsbedingungen.php`, `server/avv.php`, `server/datenschutz.php` | klein | `rechtstexte` | P3/O10 |
-| `server/assets/style.css` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
+| `server/assets/style.css`, `tools/stilvergleich/**` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
 | `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe` | Nr. 185, 225; PS-2 |
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau` | E-PK-02 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1` | E-PK-02 |
-| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). |
+| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01. |
+| `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Steht am ENDE der Muster: Die Reihenfolge der Proben ist die ihres ersten Auftretens, und Messstand und Bilderlauf weiter vorn schoben die demo-empfindlichen Proben hinter den Demo-Reset (F-P5c-127, Nr. 322) |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
+
+**Stufenregel `migration`:** eine neue Kennung in `server/migration_lib.php` heißt mindestens **haupt** — E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3).
 
 ---
 
@@ -707,6 +731,21 @@ gehalten; **jede Abweichung darüber hinaus ist unbeabsichtigt und wird
 geklärt, bevor committet wird.** Wer eine Null erwartet, wo eine Liste
 richtig ist, schaltet das Werkzeug beim ersten beabsichtigten Umbau ab.
 
+**Die Liste steht seit P5c/AP1 in einer Datei** (F-P5c-72):
+`tools/stilvergleich/geplant.txt`, je Zeile eine Signatur — Probe, Element
+mit Elternteil, die Namen der Eigenschaften, die sich ändern (ohne Werte,
+vereinigt über alle Breiten). Grün ist der Lauf, wenn Messung und Liste
+**gleich** sind: Eine ungeplante Abweichung ist rot, und eine geplante, die
+nicht gemessen wird, auch — sonst verdeckte eine veraltete Liste beim
+nächsten Mal eine ungewollte Änderung. Geschrieben wird sie mit
+`bash tools/stilvergleich/gegen.sh --schreiben`, **gelesen im Pull
+Request**: Jede Zeile ist die Aussage „das soll sich ändern". Fehlt die
+Datei oder ist sie leer, gilt die Null. **Nach dem Merge wird sie
+geleert**; wer das vergisst, bekommt beim nächsten Lauf die Zeilen als
+„geplant, aber nicht gemessen" genannt. Bis dahin war gebaut, was hier
+steht, nur als Null: Jede gewollte Gestaltungsänderung machte seit PK-05
+den Prüfbericht rot (Lage 5).
+
 **Er ersetzt die Browserprüfung nicht:** Er misst statisches Markup, keine
 Bedienzustände. Er beantwortet die eine Frage, die der Bilderlauf nicht
 beantwortet — hat sich ein berechneter Stil geändert, der nicht sollte —,
@@ -724,12 +763,13 @@ hier steht, ist nur, **was grün heißt**:
 |---|---|
 | `tools/quelltext/` `textprobe` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde — ohne Schwelle seit PK-04/5e (E-PK-16) |
-| `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt` |
+| `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1) |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
 | `tools/quelltext/` `bestand` | 0 Befunde in allen elf Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
-| `tools/stilvergleich/` | die Liste deckt sich mit der Liste der geplanten Änderungen (6.10) |
+| `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
 
 PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
 Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur

@@ -690,9 +690,10 @@ function sz_pruefen_eingabe(array $e): array
     }
     $prot = (string)($e['protokoll'] ?? '');
     if (!sz_protokoll_erlaubt($prot)) {
-        /* DER SATZ NENNT DEN GRUND, nicht bloss „unbekannt". Wer ein
-         * bestehendes `ftp`-Ziel bearbeitet, soll nicht rätseln, warum das
-         * Protokoll, das gestern noch dastand, heute abgewiesen wird. */
+        /* DER SATZ NENNT DEN GRUND, nicht bloss „unbekannt". Geschrieben fuer
+         * das bestehende `ftp`-Ziel, das jemand bearbeitete (S10/AP4); seit
+         * P5c/AP8 kann es keines mehr geben, und der Fall kommt nur noch aus
+         * einer gebauten Anfrage. Der Grund bleibt derselbe. */
         $f[] = $prot === 'ftp'
             ? 'FTP überträgt alles im Klartext, auch Nutzername und Passwort. '
               . 'Es wird seit Web 20.2.0 nicht mehr angeboten — bitte SFTP oder '
@@ -1041,15 +1042,14 @@ function sz_auto_setzen(bool $an): bool
  *
  * @param callable $zeitLinks gibt die verbleibenden Sekunden
  * @return array ['gesendet' => int, 'bytes' => int, 'ziele' => int,
- *                'fehler' => [text, ...], 'fertig' => bool,
- *                'uebersprungen' => int, 'uebersprungen_namen' => [text, ...]]
+ *                'fehler' => [text, ...], 'fertig' => bool, …]
  *
- * WARUM „uebersprungen" NICHT IN „fehler" GEHÖRT (S10/AP4, E-S10-U-09).
- * `jobs_lib.php` wirft, sobald `fehler` nicht leer ist — und das mit gutem
- * Grund: Sonst meldete die Wartungsseite „grün", während seit drei Wochen
- * nichts hinausgeht. Ein Ziel, das planmäßig übergangen wird, ist aber keine
- * Störung; stünde sein Vermerk dort, wäre der Versandjob dauerhaft rot und
- * das Signal für echte Störungen verbrannt. Deshalb zwei getrennte Zahlen.
+ * BIS WEB 20.47.0 KANNTE SIE EIN DRITTES ERGEBNIS NEBEN GESENDET UND
+ * GESCHEITERT: übergangen, für ein Ziel mit dem abgeschafften Protokoll
+ * `ftp` (S10/AP4, E-S10-14), mit eigener Zahl und Namensliste. Seit P5c/AP8
+ * nimmt die Datenbank den Wert nicht mehr an (E-P5c-124), und der Weg ist
+ * gefallen. Ein Protokoll, das diese Fassung nicht kennt, kann nur noch aus
+ * einem Fehler kommen — `sz_weg()` wirft dann, und das gehört in `fehler`.
  */
 function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESERVE_S): array
 {
@@ -1057,7 +1057,6 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
     $ziele = sz_alle(true);
     $raus = ['gesendet' => 0, 'bytes' => 0, 'ziele' => count($ziele),
              'fehler' => [], 'fertig' => true,
-             'uebersprungen' => 0, 'uebersprungen_namen' => [],
              /* P5a/AP10: was die Aufbewahrungsregel dort entfernt hat — und
               * was deshalb nicht noch einmal hinuebergeschickt wurde. */
              'geloescht' => 0, 'geloescht_bytes' => 0, 'nicht_wieder' => 0];
@@ -1090,25 +1089,17 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
     require_once __DIR__ . '/komplett_lib.php';
     if (is_dir(komp_wurzel())) { array_unshift($ordner, KOMP_ORDNER); }
 
+    /* DIE ARCHIVE DES PROTOKOLLS SIND DIE DRITTE DATEIART (P5c/AP2,
+     * E-P5c-39) — hinten angehängt, weil sie klein sind und weil ein
+     * Kontopaket, das nicht hinausgeht, schwerer wiegt. Nur mit der
+     * Einstellung (Vorgabe an). */
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
+    if (protokoll_archiv_versand() && is_dir(protokoll_archiv_wurzel())) {
+        $ordner[] = PROTOKOLL_ARCHIV_ORDNER;
+    }
+
     foreach ($ziele as $z) {
         if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
-
-        /* ÜBERGANGEN STATT BESCHICKT (S10/AP4, E-S10-14).
-         *
-         * Ein Ziel mit einem Protokoll, das diese Fassung nicht mehr kennt,
-         * wird NICHT im Klartext beliefert und NICHT als Störung gezählt. Es
-         * bekommt einen Vermerk an sich selbst (rote Plakette auf der
-         * Zielseite) und eine Zahl im Lauf. `continue` VOR `sz_weg()`: Jene
-         * würfe sonst, und der Wurf landete in `fehler`. */
-        if (!sz_protokoll_erlaubt((string)$z['protokoll'])) {
-            $raus['uebersprungen']++;
-            $raus['uebersprungen_namen'][] = (string)$z['name'];
-            sz_lauf_merken((int)$z['id'], false,
-                'Übergangen: Das Protokoll „' . (string)$z['protokoll']
-                . '" wird nicht mehr beschickt, weil es unverschlüsselt '
-                . 'überträgt. Bitte das Ziel auf SFTP oder FTPS umstellen.');
-            continue;
-        }
 
         $weg = null;
         try {
@@ -1134,11 +1125,15 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
                  * der mitten in einer Übertragung von der Zeit eingeholt
                  * wird, hinterlässt am Ziel eine halbe Datei. */
                 if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
-                $pakete = $kennung === KOMP_ORDNER
-                    ? array_map(fn(array $s): array => ['datei' => $s['datei'],
-                                                        'groesse' => $s['groesse']],
-                                komp_staende())
-                    : edbak_pakete($kennung);
+                $pakete = match ($kennung) {
+                    KOMP_ORDNER => array_map(fn(array $s): array => ['datei' => $s['datei'],
+                                                                     'groesse' => $s['groesse']],
+                                             komp_staende()),
+                    PROTOKOLL_ARCHIV_ORDNER => array_map(fn(array $a): array => [
+                                                   'datei' => $a['datei'], 'groesse' => $a['bytes']],
+                                               protokoll_archive()),
+                    default => edbak_pakete($kennung),
+                };
                 if ($pakete === []) { continue; }
                 $weg->ordner($kennung);
                 $dort = $weg->liste($kennung);
@@ -1178,9 +1173,11 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
                         sz_versand_vermerken((int)$z['id'], $kennung, $name, $bytes);
                         continue;
                     }
-                    $hier = $kennung === KOMP_ORDNER
-                        ? komp_wurzel() . '/' . $name
-                        : edbak_ordner($kennung) . '/' . $name;
+                    $hier = match ($kennung) {
+                        KOMP_ORDNER             => komp_wurzel() . '/' . $name,
+                        PROTOKOLL_ARCHIV_ORDNER => protokoll_archiv_wurzel() . '/' . $name,
+                        default                 => edbak_ordner($kennung) . '/' . $name,
+                    };
                     $weg->senden($hier, $kennung . '/' . $name);
                     /* DAS PROTOKOLL STEHT DIREKT HINTER DEM VERSAND
                      * (P5a/AP10). Es ist die zweite der drei Sicherungen der
@@ -1236,19 +1233,9 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
 function sz_versand_rueckstand(): ?int
 {
     require_once __DIR__ . '/adminbackup_lib.php';
-    /* ÜBERGANGENE ZIELE ZÄHLEN NICHT MIT (S10/AP4, E-S10-U-15).
-     *
-     * Sie werden nie beschickt, also steht ihr `letzter_erfolg` für immer auf
-     * `null` — und die Zeile darunter machte daraus „keine Aussage" für die
-     * GANZE Installation. Die Jobzeile stünde dann dauerhaft blau „in
-     * Ordnung", obwohl Pakete liegenbleiben; oder, mit einem alten Erfolg,
-     * dauerhaft orange, obwohl jedes erreichbare Ziel beliefert ist. Beides
-     * ist eine Dauermeldung, die nichts mehr sagt.
-     *
-     * Sichtbar bleibt das Ziel an SEINER Zeile: rote Plakette, Vermerk aus
-     * dem Lauf. Das ist der Ort, an dem etwas zu tun ist. */
-    $ziele = array_values(array_filter(sz_alle(true),
-        static fn(array $z): bool => sz_protokoll_erlaubt((string)$z['protokoll'])));
+    /* Bis Web 20.47.0 fielen hier die uebergangenen FTP-Ziele heraus
+     * (E-S10-U-15); sie gibt es seit P5c/AP8 nicht mehr (E-P5c-124). */
+    $ziele = sz_alle(true);
     if ($ziele === []) { return null; }
     $aeltester = null;
     foreach ($ziele as $z) {
@@ -1271,6 +1258,13 @@ function sz_versand_rueckstand(): ?int
     require_once __DIR__ . '/komplett_lib.php';
     foreach (komp_staende() as $st) {
         if ((int)@filemtime(komp_wurzel() . '/' . $st['datei']) > $grenze) { $n++; }
+    }
+    /* Und die Archive des Protokolls (P5c/AP2), wenn sie mitgehen. */
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
+    if (protokoll_archiv_versand()) {
+        foreach (protokoll_archive() as $a) {
+            if ((int)@filemtime(protokoll_archiv_wurzel() . '/' . $a['datei']) > $grenze) { $n++; }
+        }
     }
     return $n;
 }
@@ -1352,8 +1346,8 @@ function sz_versand_vermerken(int $zielId, string $ordner, string $datei, int $b
                          geloescht_am = NULL, grund = NULL')
             ->execute([$zielId, $ordner, $datei, max(0, $bytes)]);
     } catch (Throwable $e) {
-        error_log('Sicherungsziel: Versandvermerk fuer ' . $ordner . '/' . $datei
-                . ' misslang: ' . $e->getMessage());
+        system_melden('sicherungsziel', 'Versandvermerk für ' . $ordner . '/' . $datei
+                    . ' misslang', $e);
     }
 }
 
@@ -1421,8 +1415,8 @@ function sz_loeschung_vermerken(int $zielId, string $ordner, string $datei,
                         WHERE ziel_id = ? AND ordner = ? AND datei = ?')
             ->execute([mb_substr($grund, 0, 190), $zielId, $ordner, $datei]);
     } catch (Throwable $e) {
-        error_log('Sicherungsziel: Loeschvermerk fuer ' . $ordner . '/' . $datei
-                . ' misslang: ' . $e->getMessage());
+        system_melden('sicherungsziel', 'Löschvermerk für ' . $ordner . '/' . $datei
+                    . ' misslang', $e);
     }
 }
 
@@ -1448,9 +1442,12 @@ function sz_ist_sicherungsname(string $ordner, string $name): bool
 {
     require_once __DIR__ . '/komplett_lib.php';
     require_once __DIR__ . '/adminbackup_lib.php';
-    return $ordner === KOMP_ORDNER
-        ? komp_name_gueltig($name)
-        : edbak_paketname_gueltig($name);
+    require_once __DIR__ . '/protokoll_archiv_lib.php';
+    return match ($ordner) {
+        KOMP_ORDNER             => komp_name_gueltig($name),
+        PROTOKOLL_ARCHIV_ORDNER => protokoll_archiv_name_gueltig($name),
+        default                 => edbak_paketname_gueltig($name),
+    };
 }
 
 /**
@@ -1595,9 +1592,15 @@ function sz_aufraeumen(array $ziel, Zielweg $weg, callable $zeitLinks,
     }
     $ordner = array_values(array_unique(array_filter($ordner, static fn($o) => $o !== '')));
     sort($ordner);
+    require_once __DIR__ . '/protokoll_archiv_lib.php';   // PROTOKOLL_ARCHIV_ORDNER
 
     foreach ($ordner as $o) {
         if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
+        /* DIE ARCHIVE DES PROTOKOLLS HABEN DORT KEINE REGEL (E-P5c-39):
+         * rund 52 kleine Dateien im Jahr. Ohne diese Zeile fiele der Ordner
+         * unter die Zahl je KONTO — und die Regel löschte drüben alle bis
+         * auf die letzten zwei Wochen. */
+        if ($o === PROTOKOLL_ARCHIV_ORDNER) { continue; }
         $behalten = $o === KOMP_ORDNER ? $bm : $bk;
         if ($behalten === null) { continue; }   // nur eine der beiden Zahlen gesetzt
 

@@ -246,6 +246,12 @@ jobs:
       STAGING_URL:   ${{ vars.STAGING_URL }}
       STAGING_KONTO: ${{ secrets.STAGING_KONTO }}
       STAGING_PASS:  ${{ secrets.STAGING_PASS }}
+      # DAS GEHEIMNIS DES ZWEITFAKTORS DES PRUEFKONTOS (P5c/AP5, E-P5c-43),
+      # Base32, wie es das Einrichtungstor auf Staging zeigt. Das Pruefkonto
+      # hat Verwaltungsrechte, und fuer sie ist der Zweitfaktor Pflicht; ohne
+      # das Geheimnis kaeme der Kreislauf nicht ueber den Code-Schritt. Kein
+      # Schalter, der die Pflicht abschaltet — der Kreislauf rechnet den Code.
+      STAGING_TOTP:  ${{ secrets.STAGING_TOTP }}
       # DERSELBE NAME WIE IM JOB `produktion`, ANDERER WERT. Beide Jobs lesen
       # ihn aus IHRER Umgebung (`environment:`) — `stufe2` aus `staging`,
       # `produktion` aus `produktion`. Das Token gehoert der jeweiligen
@@ -384,6 +390,11 @@ jobs:
             echo '**Kreislauf: NICHT GEMESSEN** (kein Prüfkonto) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
+          if [ -z "${STAGING_TOTP:-}" ]; then
+            echo "::error::STAGING_TOTP fehlt — das Prüfkonto hat Verwaltungsrechte und damit einen Pflicht-Zweitfaktor (P5c/AP5). Ohne das Geheimnis kommt der Kreislauf nicht über den Code-Schritt, und ÜBERSPRINGEN IST ROT (E-KH-12). Das Geheimnis zeigt das Einrichtungstor auf Staging (Base32)."
+            echo '**Kreislauf: NICHT GEMESSEN** (kein `STAGING_TOTP`) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
           # ALLE RIEGEL VOR DER ERSTEN INSTALLATION. Der JOBS_TOKEN-Riegel
           # stand zuerst hinter pip, npm und dem Chromium-Download: Fehlte das
           # Token UND brach der Download ab (Netz, Spiegel, Rate-Limit), wurde
@@ -457,9 +468,40 @@ jobs:
                     --basis "$STAGING_URL" \
                     --admin-email "$STAGING_KONTO" \
                     --admin-passwort "$STAGING_PASS" \
+                    --admin-totp "$STAGING_TOTP" \
                     --jobs-token "$JOBS_TOKEN" \
               || { echo "::error::Kreislauf $art gegen Staging gescheitert."; exit 1; }
           done
+
+      - name: Rückwegprobe gegen Staging
+        # DER RÜCKWEG BEIM ZWEITFAKTOR AUF DER ECHTEN ANLAGE (Konzept RW,
+        # RW-03; E-RW-11, -12). Die Signatur prüft phpseclib über `openssl`
+        # oder in reinem PHP — welcher Weg es beim Hoster wird, zeigt nur der
+        # Hoster. Der Browser-Teil der Rückwegprobe legt zwei Wegwerfkonten
+        # an (NutzerIn und BetreiberIn, Präfix `umlauf-`), schaltet ihren
+        # Zweitfaktor ein und setzt ihn mit dem Wiederherstellungsschlüssel
+        # wieder zurück; danach löscht er sie.
+        #
+        # LÄUFT NACH DEM KREISLAUF, UND DAS IST EINE ABHÄNGIGKEIT: Dort sind
+        # Playwright (unter `node_modules/`), Chromium und `cryptography`
+        # installiert worden. Ein eigener Schritt holt nur den Pfad des
+        # Moduls neu — Umgebungswerte überleben einen Schritt nicht. Ist der
+        # Kreislauf rot, läuft dieser Schritt ohnehin nicht.
+        #
+        # ÜBERSPRINGEN IST ROT (E-KH-12): Ohne Prüfkonto oder Geheimnis bricht
+        # er ab, statt grün zu melden.
+        run: |
+          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ] || [ -z "${STAGING_TOTP:-}" ]; then
+            echo "::error::Prüfkonto, Passwort oder STAGING_TOTP fehlt — die Rückwegprobe kann nicht messen, und ÜBERSPRINGEN IST ROT (E-KH-12)."
+            echo '**Rückwegprobe: NICHT GEMESSEN** — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
+          [ -f "$PLAYWRIGHT_MODUL" ] \
+            || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
+          node tools/proben/rueckweg/probe.mjs --basis "$STAGING_URL" --admin "$STAGING_KONTO" \
+               --admin-pw "$STAGING_PASS" --admin-totp "$STAGING_TOTP" \
+            || { echo "::error::Rückwegprobe gegen Staging gescheitert."; exit 1; }
 
       # BILDERLAUF UND MESSSTAND-HINWEIS STANDEN HIER BIS ZUM 21.09.2026
       # (Konzept PK, E-PK-01/E-PK-17, Vorgriff auf PK-06). Der Bilderlauf

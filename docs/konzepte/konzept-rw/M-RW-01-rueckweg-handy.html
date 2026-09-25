@@ -1,0 +1,184 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=400">
+<title>RW · Mockup M-RW-01 — Rückweg · Handy 400</title>
+<link rel="stylesheet" href="../../../server/assets/style.css">
+<style>
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) ---------------------------- */
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau);line-height:1.2}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe{padding:14px 24px 6px}
+.reihe > h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.reihe > .unter{margin:0 0 10px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:1180px}
+.frames{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.frame-huelle{flex:0 0 auto;max-width:100%}
+.frame-titel{display:inline-block;background:var(--dunkelblau);color:#fff;font-size:11px;line-height:1.4;padding:2px 10px;border-radius:8px 8px 0 0}
+.frame{position:relative;overflow:hidden;border-radius:0 var(--radius) var(--radius) var(--radius);background:var(--rauch);box-shadow:0 8px 24px rgba(26,46,77,.10)}
+.notiz{padding:6px 24px 26px;max-width:1180px}
+.notiz h3{font-family:var(--schrift-kopf);font-size:var(--groesse-4);margin:12px 0 4px;color:var(--dunkelblau)}
+.notiz ul{margin:0 0 8px 20px;padding:0}
+.notiz li{margin:0 0 4px;font-size:var(--groesse-2);line-height:1.45}
+.notiz code{font-family:var(--schrift-fest);font-size:12px;background:var(--schnee);padding:0 4px;border-radius:4px}
+/* Das Gerüst im Rahmen: nichts klebt, nichts ist an die Fensterhöhe gebunden. */
+.frame .kopf{position:static}
+.frame .leiste{position:static;height:auto;align-self:stretch}
+.frame .rahmen{min-height:0}
+.frame .anmeldung-body{min-height:0}
+.frame .fuss{margin-top:0}
+/* ---- Nur im Mockup, nicht Teil des Vorschlags -------------------------- */
+
+.anmeldung{flex-direction:column}   /* Befund Nr. 289, siehe (a) */
+.frame .schleier{display:none}
+.frame-kurz{max-height:1500px}
+.frame-kurz::after{content:"";position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(to bottom,transparent,#EDE9DF)}
+.nur-karte{padding:24px}
+.nur-karte .karte{margin:0}
+
+/* ---- Vorschlag für style.css (neu mit P5c, M-P5c-02) ------------------- */
+
+/* QR-CODE (.qr) — E-P5c-41. Die Modulmatrix kommt aus qrcode-generator (MIT, vendoriert, kein Netz);
+   das SVG baut die Anwendung selbst: ein Pfad, Klassen statt style="…", Token statt Hexwerten.
+   Halbe Anmeldekarte breit (200 px): 49 Module bei Fehlerstufe M, also rund 4 px je Modul. */
+.qr{display:block;width:calc(var(--anmeldekarte) / 2);max-width:100%;height:auto;flex:0 0 auto}
+.qr-grund{fill:var(--schnee)}
+.qr-modul{fill:var(--asphalt)}
+/* Einrichtung: QR links, Text rechts ab 720 px; darunter gestapelt, der QR zuerst. */
+.zweitfaktor-einrichtung{display:grid;gap:var(--abstand-4);align-items:start;margin-bottom:var(--abstand-4)}
+@media (min-width:720px){.zweitfaktor-einrichtung{grid-template-columns:auto minmax(0,1fr)}}
+.anmeldung .zweitfaktor-einrichtung{grid-template-columns:1fr;justify-items:center;text-align:center}
+.zweitfaktor-einrichtung .codeblock{text-align:left}
+/* Das Geheimnis bricht nur zwischen den Vierergruppen um — .codeblock-wert trägt break-all für Werte ohne Leerzeichen. */
+.zweitfaktor-einrichtung .codeblock-wert{word-break:normal}
+/* Codefeld: dieselbe Schrift und Sperrung wie der Codeblock, damit Abschreiben und Eintippen gleich aussehen. */
+.feld-code .feld-eingabe{font-family:var(--schrift-fest);font-size:var(--groesse-5);letter-spacing:.06em}
+/* WIEDERHERSTELLUNGSCODES (.codeblock-liste) — Erweiterung des Codeblocks: zehn nummerierte Werte in zwei
+   Spalten, Schrift wie .codeblock-wert. Die Nummer hilft beim Abhaken auf dem Blatt. */
+.codeblock-liste{
+  list-style:none;margin:var(--abstand-2) 0 var(--abstand-3);padding:0;counter-reset:code;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-1) var(--abstand-4);
+  font-family:var(--schrift-fest);font-size:var(--groesse-4);font-weight:600;color:var(--dunkelblau);letter-spacing:.06em;
+}
+.codeblock-liste li{counter-increment:code;white-space:nowrap}
+.codeblock-liste li::before{content:counter(code) ".";display:inline-block;min-width:2.2em;color:var(--gedaempft);font-weight:400;letter-spacing:0}
+/* Zwischenüberschrift in der Anmeldekarte (Code-Schritt, Einrichtungstor). */
+.anmeldung-schritt{font-size:var(--groesse-5);margin:0 0 var(--abstand-2)}
+</style></head><body><svg style="display:none" aria-hidden="true"><symbol id="s-abmelden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /> <path d="M9 12h12l-3 -3" /> <path d="M18 15l3 -3" /></symbol><symbol id="s-drucken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" /> <path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" /> <path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" /></symbol><symbol id="s-haken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10" /></symbol><symbol id="s-hilfe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 17l0 .01" /> <path d="M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4" /></symbol><symbol id="s-kalender" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" /> <path d="M16 3v4" /> <path d="M8 3v4" /> <path d="M4 11h16" /> <path d="M11 15h1" /> <path d="M12 15v3" /></symbol><symbol id="s-lupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /> <path d="M21 21l-6 -6" /></symbol><symbol id="s-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l16 0" /> <path d="M4 12l16 0" /> <path d="M4 18l16 0" /></symbol><symbol id="s-profil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /> <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></symbol><symbol id="s-schliessen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" /> <path d="M6 6l12 12" /></symbol><symbol id="s-sicherung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2" /> <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" /> <path d="M10 12l4 0" /></symbol><symbol id="s-standort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /> <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></symbol><symbol id="s-tausch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h14l-4 -4" /> <path d="M17 14h-14l4 4" /></symbol><symbol id="s-uhr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a3 3 0 0 1 3 -3h6a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-6a3 3 0 0 1 -3 -3v-6" /> <path d="M9 18v3h6v-3" /> <path d="M9 6v-3h6v3" /></symbol><symbol id="s-warnung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4" /> <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0" /> <path d="M12 16h.01" /></symbol><symbol id="s-winkel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" /></symbol><symbol id="s-zahnrad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /> <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></symbol></svg><div class="mock-kopf"><h1>M-RW-01 — Rückweg beim Zweitfaktor über den Wiederherstellungsschlüssel</h1><p>Konzept RW, Q-RW-01 bis -05, -08 · aus dem freigegebenen M-P5c-02b (b), Anmeldekarte und Profilkarte · <strong>freigegeben 24.09.2026</strong> · Handy 400</p></div><div class="reihe"><h2>1 · Code-Schritt mit drittem Weg</h2><p class="unter">Bei 376 px bricht der lange Verweis um; die drei Verweise bleiben getrennte Zeilen.</p><div class="frames"><div class="frame-huelle" style="width:376px"><span class="frame-titel">login.php · Schritt 2 · Code</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post">
+    <p class="feld-hinweis">Angemeldet als <strong>mara.beispiel@example.invalid</strong> — es fehlt noch der Code aus deiner App.</p>
+    <div class="feld feld-code">
+      <label class="feld-label" for="f-code">Code aus der App</label>
+      <input class="feld-eingabe" type="text" id="f-code" name="code" inputmode="numeric" autocomplete="one-time-code" autofocus placeholder="000 000">
+    </div>
+    <div class="listen-form-fuss"><button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button></div>
+  </form>
+  <p class="anmeldung-neben"><a href="#">Wiederherstellungscode verwenden</a><br><a href="#">Gerät und Codes verloren? Wiederherstellungsschlüssel verwenden</a><br><a href="login.php">Zurück zur Anmeldung</a></p>
+  <p class="zustandszeile" id="loginstate"></p>
+ </div>
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.41.0</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+</div></div></div></div></div><div class="reihe"><h2>2 · Schlüsselschritt</h2><p class="unter">Feld, Sofortmeldung und Knopf in voller Breite.</p><div class="frames"><div class="frame-huelle" style="width:376px"><span class="frame-titel">login.php · Schritt 2 · Schlüssel vollständig</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post">
+    <h2 class="anmeldung-schritt">Gerät und Codes verloren</h2>
+    <p class="feld-hinweis">Angemeldet als <strong>mara.beispiel@example.invalid</strong>. Der <strong>Wiederherstellungsschlüssel</strong> vom Notfallblatt schaltet den Zweitfaktor aus — danach richtest du ihn mit einem neuen Gerät wieder ein.</p>
+    <div class="feld">
+      <label class="feld-label" for="f-rs">Wiederherstellungsschlüssel <span class="feld-pflicht" aria-hidden="true">*</span></label>
+      <input class="feld-eingabe" type="text" id="f-rs" name="rs" autocomplete="off" autocapitalize="characters" placeholder="ABCD-EFGH-JKMN-PQRS-TVWX" value="K7QF-2MXD-9TRA-4HWP-6ZNC">
+      <p class="feld-klein">20 Zeichen in fünf Gruppen; Bindestriche und Leerzeichen zählen nicht.</p>
+    </div>
+    <p class="zustandszeile" id="rcstate">Schlüssel vollständig.</p>
+    <div class="listen-form-fuss"><button class="knopf knopf-primaer knopf-breit" type="submit"><span>Zweitfaktor zurücksetzen</span></button></div>
+  </form>
+  <p class="anmeldung-neben"><a href="#">Code aus der App verwenden</a><br><a href="login.php">Zurück zur Anmeldung</a></p>
+  <p class="zustandszeile" id="loginstate"></p>
+ </div>
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.41.0</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+</div></div></div><div class="frame-huelle" style="width:376px"><span class="frame-titel">login.php · Schritt 2 · Schlüssel passt nicht</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post">
+    <h2 class="anmeldung-schritt">Gerät und Codes verloren</h2>
+    <p class="feld-hinweis">Angemeldet als <strong>mara.beispiel@example.invalid</strong>. Der <strong>Wiederherstellungsschlüssel</strong> vom Notfallblatt schaltet den Zweitfaktor aus — danach richtest du ihn mit einem neuen Gerät wieder ein.</p>
+    <div class="feld">
+      <label class="feld-label" for="f-rs">Wiederherstellungsschlüssel <span class="feld-pflicht" aria-hidden="true">*</span></label>
+      <input class="feld-eingabe" type="text" id="f-rs" name="rs" autocomplete="off" autocapitalize="characters" placeholder="ABCD-EFGH-JKMN-PQRS-TVWX" value="K7QF-2MXD-9TRA-4HWP-6ZNC">
+      <p class="feld-klein">20 Zeichen in fünf Gruppen; Bindestriche und Leerzeichen zählen nicht.</p>
+    </div>
+    <p class="zustandszeile" id="rcstate">Der Schlüssel ist formal korrekt, passt aber nicht zu diesem Konto. Kein Tippfehler — vermutlich der Schlüssel eines anderen Kontos oder aus einer früheren Einrichtung.</p>
+    <div class="listen-form-fuss"><button class="knopf knopf-primaer knopf-breit" type="submit"><span>Zweitfaktor zurücksetzen</span></button></div>
+  </form>
+  <p class="anmeldung-neben"><a href="#">Code aus der App verwenden</a><br><a href="login.php">Zurück zur Anmeldung</a></p>
+  <p class="zustandszeile" id="loginstate"></p>
+ </div>
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.41.0</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+</div></div></div></div></div><div class="reihe"><h2>3 · Kartenzeile</h2><p class="unter">Die Plakette rutscht unter den Text, wie bei den übrigen Zeilen der Karte.</p><div class="frames"><div class="frame-huelle" style="width:376px"><span class="frame-titel">a · Rolle user, Rückweg eingerichtet</span><div class="frame"><div class="nur-karte"><section class="karte" id="k-zweitfaktor">
+  <div class="karte-kopf"><h2 class="karte-titel">Zweitfaktor</h2><span class="plakette plakette-blau">an</span></div>
+  <div class="karte-inhalt">
+    <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy. <a href="hilfe.php#10-9-zweitfaktor">Wie das geht</a></p>
+    <div class="zeile">
+      <div class="zeile-text"><span class="zeile-haupt">Eingeschaltet</span><span class="zeile-klein">seit 23.09.2026, 14:05</span></div>
+    </div>
+    <div class="zeile">
+      <div class="zeile-text"><span class="zeile-haupt">Wiederherstellungscodes</span><span class="zeile-klein">zwei benutzt — neue Codes machen die alten ungültig</span></div>
+      <div class="zeile-plaketten"><span class="plakette plakette-blau">8 von 10</span></div>
+    </div>
+    <div class="zeile">
+      <div class="zeile-text"><span class="zeile-haupt">Rückweg mit dem Wiederherstellungsschlüssel</span><span class="zeile-klein">seit 25.09.2026 — der Schlüssel vom Notfallblatt genügt, wenn Handy und Codes fehlen</span></div><div class="zeile-plaketten"><span class="plakette plakette-blau">eingerichtet</span></div>
+    </div>
+    <div class="listen-form-fuss">
+      <button class="knopf knopf-neutral" type="button"><span>Neue Codes erzeugen</span></button>
+      <button class="knopf knopf-neutral" type="button"><span>Rückweg erneuern</span></button>
+      <button class="knopf knopf-leise" type="button"><span>Ausschalten</span></button>
+    </div>
+  </div>
+</section></div></div></div></div></div></body></html>

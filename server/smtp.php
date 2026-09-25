@@ -14,6 +14,9 @@ require_once __DIR__ . '/instanz_lib.php';
  * Sie laedt selbst nur `konfig_lib.php` — nichts auf dem Weg erreicht
  * `db.php`. */
 require_once __DIR__ . '/format_lib.php';
+/* `system_melden()` (P5c/AP3). Die Datei laedt ihrerseits nichts; der
+ * Versand kann so auch ohne `db.php` melden — dann nur im Rueckfall. */
+require_once __DIR__ . '/systemmeldung_lib.php';
 
 /**
  * DIE ANTWORT ABSCHLIESSEN, BEVOR LANGSAME ARBEIT BEGINNT.
@@ -97,7 +100,7 @@ function antwort_abschliessen(): bool {
 /**
  * Minimaler SMTPS-Versand (implizites TLS, z. B. Port 465 bei Stalwart).
  * Bewusst ohne Composer-Abhaengigkeit, damit es auf jedem Webspace laeuft.
- * Rueckgabe: true bei Erfolg, sonst false (Details im error_log).
+ * Rueckgabe: true bei Erfolg, sonst false (Details im Protokoll, Reiter System).
  *
  * $zeitlimit ist die Frist fuer Verbindungsaufbau und jede einzelne Antwort
  * des Mailservers. Der Vorgabewert gilt fuer Wege, bei denen niemand wartet.
@@ -251,7 +254,7 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
         || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
         $GLOBALS['__smtp_fehler'] = ['kennung' => 'ADRESSE',
                                      'grund'   => 'Die Empfaengeradresse ist unbrauchbar.'];
-        error_log('SMTP: unzulaessige Empfaengeradresse abgewiesen');
+        system_melden('smtp', 'unzulässige Empfängeradresse abgewiesen');
         return false;
     }
 
@@ -312,7 +315,7 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     if (!$fp) {
         $GLOBALS['__smtp_fehler'] = ['kennung' => $kennung,
                                      'grund'   => 'Verbindung nicht moeglich: ' . $errstr];
-        error_log('[' . $kennung . '] SMTP connect: ' . $errstr);
+        system_melden('smtp', 'Verbindung nicht möglich', (string)$errstr, [], 'stoerung', $kennung);
         smtp_versand_vermerken(false);
         return false;
     }
@@ -321,8 +324,10 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
         do {
             $r = $rest();
             if ($r <= 0) {
+                /* Kein eigener Eintrag: Der Grund geht mit dem Schluss-
+                 * vermerk unten hinaus, unter derselben Kennung. Zwei
+                 * Eintraege einer Kennung saehen aus wie zwei Fehler. */
                 $GLOBALS['__smtp_fehler'] = 'Zeitbudget erschoepft';
-                error_log('[' . $kennung . '] SMTP: Zeitbudget erschoepft, Versuch abgebrochen');
                 return false;
             }
             /* Vor JEDEM Lesen neu — auch in der Fortsetzungsschleife. Sonst
@@ -376,7 +381,7 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     if (!$ok) {
         $grund = (string)($GLOBALS['__smtp_fehler'] ?? 'Grund unbekannt');
         $GLOBALS['__smtp_fehler'] = ['kennung' => $kennung, 'grund' => $grund];
-        error_log('[' . $kennung . '] SMTP: Versand fehlgeschlagen: ' . $grund);
+        system_melden('smtp', 'Versand fehlgeschlagen', $grund, [], 'stoerung', $kennung);
     }
     smtp_versand_vermerken($ok);
     return $ok;

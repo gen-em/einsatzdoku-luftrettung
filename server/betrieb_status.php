@@ -32,18 +32,17 @@ require_once __DIR__ . '/mail_lib.php';
  * SIE AENDERT NICHTS AM BESTAND. Die Seite fasst zusammen und verweist;
  * geaendert wird auf der zustaendigen Seite.
  *
- * ZWEI AUSNAHMEN, und beide fuehren nicht weg, sondern pruefen an Ort und
- * Stelle:
- *   - Der fehlende Serverschluessel. Ihn dort zu erzeugen, wo das Problem
- *     gemeldet wird, ist kuerzer als ein Umweg auf eine Seite mit demselben
- *     Knopf.
- *   - „Testmail an mich" (Backlog Nr. 120, Web 19.3.0, freigegeben am
- *     12.09.2026). Sie aendert keinen Bestand, sie prueft — und es GIBT
- *     keine zustaendige Seite, auf die man verweisen koennte: SMTP steht
- *     allein in der `config.php` und hat keine Oberflaeche. Bis dahin
- *     stand hier „genau eine Ausnahme"; wer eine zweite hinzufuegt, ohne
- *     den Satz mitzuschreiben, hinterlaesst eine Beschreibung, die die
- *     Seite nicht mehr trifft.
+ * EINE AUSNAHME fuehrt nicht weg, sondern prueft an Ort und Stelle:
+ * „Testmail an mich" (Backlog Nr. 120, Web 19.3.0, freigegeben am
+ * 12.09.2026). Sie aendert keinen Bestand, sie prueft — und es GIBT keine
+ * zustaendige Seite, auf die man verweisen koennte: SMTP steht allein in der
+ * `config.php` und hat keine Oberflaeche.
+ * HIER STANDEN BIS WEB 21.1.0 „ZWEI AUSNAHMEN", die zweite der fehlende
+ * Serverschluessel „mit demselben Knopf" — die Zeile verweist seit S10 aber
+ * auf die Karte „Schluessel des Servers" (`betrieb_server.php#k-schluessel`,
+ * status_lib.php), erzeugt wird hier nichts (Endzaehlung AP9, C-3). Wer eine
+ * Ausnahme hinzufuegt oder wegnimmt, schreibt diesen Satz mit; sonst
+ * beschreibt er eine Seite, die es nicht mehr gibt.
  *
  * WELCHE KARTE IN WELCHER SPALTE STEHT, entscheidet DIESE Datei: Das ist
  * Anordnung, keine Auskunft. Links Server und E-Mail, rechts Hintergrundjobs
@@ -64,13 +63,13 @@ function status_zeile(array $z): void
 
 /* DIE TESTMAIL (Backlog Nr. 120).
  *
- * DIE EINZIGE AUSNAHME VON „REIN LESEND" IST JETZT DIE ZWEITE. Freigegeben
- * am 12.09.2026: Beide Ausnahmen fuehren nicht weg, sondern pruefen an Ort
- * und Stelle. Fuer SMTP gibt es ausserdem gar keine Seite, auf die man
- * verweisen koennte — es steht nur in der `config.php` und hat keine
- * Oberflaeche. Der Satz in der Karte „Was hier gilt", der Kopf dieser Datei,
- * die Unterzeile und das Handbuch sind mitgeschrieben; eine Zusage, die die
- * Seite nicht mehr beschreibt, waere schlimmer als keine.
+ * DIE TESTMAIL IST DIE AUSNAHME VON „REIN LESEND". Freigegeben am
+ * 12.09.2026: Sie fuehrt nicht weg, sondern prueft an Ort und Stelle. Fuer
+ * SMTP gibt es ausserdem gar keine Seite, auf die man verweisen koennte — es
+ * steht nur in der `config.php` und hat keine Oberflaeche. Der Kopf dieser
+ * Datei und das Handbuch (12.1) sagen es; eine Zusage, die die Seite nicht
+ * mehr beschreibt, waere schlimmer als keine. (Hier stand bis Web 21.1.0
+ * „die zweite Ausnahme" und die Karte „Was hier gilt" — beide sind fort.)
  *
  * DER ZWEIG STEHT VOR `status_karten()`. Sonst zeigt die Zeile „Letzter
  * Versand" den Stand von VOR dem Versand: `smtp_send()` vermerkt ihn selbst
@@ -118,7 +117,7 @@ function status_zeile(array $z): void
  * — seit E-P5a-37 haelt sie auch die Fehlermeldung ein, die bis dahin
  * „Versand an <Adresse> fehlgeschlagen" schrieb. Die Adresse steht in der
  * Warteschlange, solange die Zeile offen oder unzustellbar ist; das ist der
- * Ort dafuer, nicht das Fehlerprotokoll des Webspace. */
+ * Ort dafuer, nicht das Protokoll (Reiter System). */
 $mailMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'testmail') {
     csrf_check();
@@ -143,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'testm
             default         => ['fehler', 'Die Testmail wurde nicht eingereiht. Das '
                    . 'passiert, wenn die eigene Adresse unbrauchbar ist oder die '
                    . 'Warteschlange nicht erreichbar war; die Ursache steht im '
-                   . 'Fehlerprotokoll des Webspace.'],
+                   . 'Protokoll unter System.'],
         };
     }
 }
@@ -168,8 +167,8 @@ ui_seite_start(['titel' => 'Status']);
 
   <?php ui_titelzeile([
       'titel' => 'Status',
-      'unter' => 'Was diese Installation gerade meldet. Geändert wird auf der '
-               . 'Seite, auf die die Zeile führt — hier wird nur geprüft.',
+      'unter' => 'Was diese Installation gerade meldet — geändert wird auf der '
+               . 'Seite, auf die die Zeile führt.',
       /* ZWEI HANDLUNGEN NEBEN DEM TITEL, seit P5a/AP8 die Unterseite
          „Sicherheit" dazugekommen ist. `ui_aktionen()` ist der Baustein fuer
          Handlungen DER SEITE; die Titelzeile reicht ihr Markup durch. Die
@@ -275,30 +274,27 @@ ui_seite_start(['titel' => 'Status']);
            ausserdem das, was sie ist: die Auskunft UNTER der Anwendung, nicht
            eine vierte gleichrangige Sache.
 
-           EINGEKLAPPT (`vorschau`), wie „Was hier gilt". Wer sie braucht,
+           EINGEKLAPPT (`vorschau`). Wer sie braucht,
            braucht sie einmal nach dem Deploy oder wenn oben etwas rot steht;
            wer sie nicht braucht, soll nicht an zwanzig Zeilen vorbeiscrollen. */ ?>
   <?php $kp = $nach('k-plattform'); ?>
   <?php ui_karte_start(['titel' => $kp['titel'], 'id' => $kp['id'],
                         'vorschau' => 'Muss · Empfohlen · gemessen']); ?>
-    <p class="feld-hinweis"><strong>Dieselbe Liste, die <code>install.php</code>
-       vor der Einrichtung prüft.</strong> <em>Muss</em>: Fehlt es, läuft die
-       Anwendung nicht — die Zeile steht rot. <em>Empfohlen</em>: Die Anwendung
-       läuft vollständig, nur langsamer oder mit einem Handgriff mehr — die
-       Zeile steht als Hinweis und <strong>färbt die Ampel nicht</strong>.
-       Erfüllte Empfehlungen stehen nicht einzeln da; die letzte Zeile nennt
-       ihre Zahl.</p>
+    <p class="feld-hinweis">Dieselbe Liste, die <code>install.php</code> vor
+       der Einrichtung prüft — ein fehlendes <em>Muss</em> färbt die Ampel rot,
+       ein knappes orange, ein <em>Empfohlen</em> gar nicht.
+       <a href="hilfe.php#12-1-status">Handbuch: Muss und Empfohlen</a></p>
     <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
-  <?php /* ---- Betriebsprotokoll: eine Zaehlkarte, mehr nicht (P5b/AP1) ----
+  <?php /* ---- Betriebsprotokoll: eine Zaehlkarte (P5b/AP1, P5c/AP2) -------
      *
-     * WARUM HIER NUR ZAHLEN STEHEN UND KEINE EINTRAEGE. 10b baut den
-     * Schreibweg, 10c die Oberflaeche mit Reitern, Archiv und Download
-     * (V4 bis V9). Diese Karte ist der Beleg, dass geschrieben wird —
-     * nicht die Sicht auf das Geschriebene. Ohne sie wuesste niemand, ob
-     * das Protokoll laeuft, bis 10c fertig ist; mit einer halben Sicht
-     * haette 10c einen Vorgaenger, den es wegraeumen muss.
+     * WARUM HIER NUR ZAHLEN STEHEN UND KEINE EINTRAEGE. Die Eintraege stehen
+     * seit P5c/AP2 unter Verwaltung → Protokoll, mit Reitern, Suche und
+     * Archiv; jede Zeile hier fuehrt auf ihren Reiter. Diese Karte bleibt
+     * der Beleg, dass geschrieben wird — und zaehlt seither ueber dieselben
+     * Quellen wie die Seite, also auch E-Mail, Jobs und Ziele, die bis dahin
+     * auf null standen (E-P5c-38).
      *
      * DIE FEHLERZEILE IST DER EIGENTLICHE ZWECK. Ein Protokoll, dessen
      * Schreiben scheitert, laesst die Handlung weiterlaufen (V7) — richtig
@@ -311,62 +307,36 @@ ui_seite_start(['titel' => 'Status']);
       'plakette' => $pf > 0
           ? ui_plakette($pf . ' nicht geschrieben', ['ton' => 'rot'])
           : ui_plakette((string)$pz['alle'] . ' Einträge', ['ton' => 'blau'])]); ?>
-    <p class="feld-hinweis"><strong>Was hier gezählt wird, sind
-       Betriebsereignisse</strong> — Konten, Post, Jobs, Sicherungen. <strong>Kein
-       Zugriffsprotokoll:</strong> Dass jemand einen Einsatz geöffnet, gelesen
-       oder exportiert hat, steht hier nicht und soll hier nicht stehen. Sperren
-       und Angriffsversuche stehen getrennt unter <em>Sicherheit</em>, weil sie
-       IP-Adressen führen und nach 30 Tagen verfallen.</p>
+    <p class="feld-hinweis">Gezählt werden Betriebsereignisse — kein
+       Zugriffsprotokoll.
+       <a href="hilfe.php#karte-betriebsprotokoll-seit-web-20-16-5">Handbuch: Betriebsprotokoll</a></p>
     <?php if ($pf > 0): ?>
       <?php status_zeile(['text' => 'Einträge, die nicht geschrieben werden konnten',
-          'klein' => 'Die Handlungen selbst sind gelungen — das Protokoll lässt sie '
-                   . 'nie scheitern. Aber es hat sie nicht festgehalten. Der Grund '
-                   . 'steht im Serverprotokoll unter „protokoll:".',
+          'klein' => 'Die Handlungen sind gelungen, aber nicht festgehalten — der '
+                   . 'Grund steht im Serverprotokoll unter „protokoll:".',
           'href' => null, 'plakette' => (string)$pf, 'ton' => 'rot']); ?>
     <?php endif; ?>
-    <?php foreach (PROTOKOLL_REITER as $r => $titel): ?>
+    <?php foreach (PROTOKOLL_SEITE_REITER as $r => $titel): ?>
       <?php status_zeile([
           'text'  => $titel,
           'klein' => $r === 'verwaltung'
               ? 'Das Audit — ' . protokoll_frist_verwaltung() . ' Tage, einstellbar '
-                . 'unter Servereinstellungen → Konten'
+                . 'unter Servereinstellungen → Protokoll'
               : 'verfällt nach ' . PROTOKOLL_FRIST_UEBRIGE . ' Tagen',
-          'href'  => null,
+          'href'  => 'admin_protokoll.php?r=' . $r,
           'plakette' => $pz['tag'][$r] . ' heute · ' . $pz['gesamt'][$r] . ' gesamt',
           'ton'   => $pz['gesamt'][$r] > 0 ? 'blau' : 'neutral']); ?>
     <?php endforeach; ?>
-    <p class="feld-hinweis"><strong>Lesen lässt sich das Protokoll noch
-       nicht.</strong> Die Reiter mit Filter, Archiv und Download kommen mit dem
-       nächsten Schritt; bis dahin belegt diese Karte, dass geschrieben
-       wird.</p>
-  <?php ui_karte_ende(true); ?>
+  <?php /* OHNE `true` (P5c/AP9, F-P5c-140): Die Karte ist weder zugeklappt
+           noch hat sie eine Vorschau, sie oeffnet also ein <section>. Bis Web
+           21.0.0 stand hier `ui_karte_ende(true)` und schloss mit </details> —
+           der Browser liess das <section> offen, und die folgende Karte
+           rutschte hinein. */ ?>
+  <?php ui_karte_ende(); ?>
 
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
-                        'vorschau' => 'Ampel · prüfen · zwei Ausnahmen']); ?>
-    <p class="feld-hinweis"><strong>Die Ampel hat vier Töne, und sie bedeuten
-       auf dieser Seite überall dasselbe.</strong> <em>Blau</em>: es ist in
-       Ordnung. <em>Orange</em>: es braucht Aufmerksamkeit, arbeitet aber.
-       <em>Rot</em>: es arbeitet nicht — oder es geht dabei etwas verloren.
-       <em>Neutral</em>: nicht eingerichtet, oder eine reine Zahl ohne
-       Wertung.</p>
-    <p class="feld-hinweis"><strong>Die Seite ändert nichts am Bestand.</strong>
-       Jede Zeile führt auf die Seite, die zuständig ist. <strong>Zwei
-       Ausnahmen</strong> führen nicht weg, sondern prüfen an Ort und Stelle:
-       der <em>fehlende Serverschlüssel</em> — von der Seite, die das Problem
-       meldet, auf eine andere zu schicken, wo derselbe Knopf steht, wäre ein
-       Umweg ohne Zweck — und die <em>Testmail</em> im Kopf der Karte
-       „E-Mail". Für SMTP gibt es gar keine zuständige Seite: Der Zugang steht
-       allein in der <code>config.php</code>. Die Testmail geht an die eigene
-       Adresse, höchstens dreimal je Stunde, und danach sagt die Zeile
-       „Letzter Versand", ob sie hinausgegangen ist.</p>
-    <p class="feld-hinweis"><strong>Die Zahlen sind nicht alle gleich alt.</strong>
-       Wartungsmodus, Migrationen, Jobs, Konto-Backups und die Ablage werden
-       bei jedem Aufruf gelesen. Die Größe von Datenbank und Dateien kommt aus
-       der täglichen Messung im Aufräumjob — die Zeile „Datenbank" sagt, wann
-       sie entstanden ist. Ein Zwischenspeicher über das Ganze gibt es
-       bewusst nicht: Eine Statusseite, die einen Zustand zeigt, den es nicht
-       mehr gibt, ist schlechter als keine.</p>
-  <?php ui_karte_ende(true); ?>
+  <?php /* DIE KARTE „WAS HIER GILT" IST MIT P5c/AP9 ENTFALLEN (E-P5c-49): Die
+           Ampel, die zwei Ausnahmen und das Alter der Zahlen stehen im
+           Handbuch 12.1. */ ?>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

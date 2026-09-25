@@ -659,6 +659,7 @@ function render_page(string $title, string $body): void {
     ui_kopf(['menue' => false]);
     echo '<div class="rahmen rahmen-lesespalte">' . "\n";
     echo '  <main class="inhalt">' . "\n";
+    ui_hinweise();
     echo $body, "\n";
     echo "  </main>\n</div>\n";
     /* OHNE die Verweise auf Impressum und Datenschutz: Diese Seite laeuft

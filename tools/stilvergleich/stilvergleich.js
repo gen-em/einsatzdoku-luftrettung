@@ -13,10 +13,15 @@ const path = require('path');
 const SEP = String.fromCharCode(1);
 /* `--motor <name>` wird vor den Stellungsangaben herausgenommen, damit SP,
  * ALT und NEU an ihrer Stelle bleiben, gleich wo der Schalter steht. */
+/* `--geplant <datei>` und `--geplant-schreiben <datei>` ebenso (P5c/AP1,
+ * F-P5c-72) — siehe unten bei GEPLANT. */
+const SCHALTER = {};
 const ARGV = (() => {
   const a = process.argv.slice(2);
-  const i = a.indexOf('--motor');
-  if (i >= 0) { a.splice(i, 2); }
+  for (const s of ['--motor', '--geplant', '--geplant-schreiben']) {
+    const i = a.indexOf(s);
+    if (i >= 0) { SCHALTER[s] = a[i + 1]; a.splice(i, 2); }
+  }
   return a;
 })();
 const SP  = ARGV[0];                  // Ordner mit fixtures/
@@ -44,6 +49,40 @@ const BEISPIELE = parseInt(process.env.BEISPIELE || '8', 10);
  * Ohne 1024 und 1600 haette der Vergleich die halben Media-Bloecke nie
  * gesehen. */
 const BREITEN = [1920, 1680, 1440, 1280, 1100, 1024, 900, 768, 720, 560, 420, 390, 360];
+
+/* DIE LISTE DER GEPLANTEN ABWEICHUNGEN (P5c/AP1, F-P5c-72).
+ *
+ * `docs/Pruefablauf.md` 6.10 sagt seit PK-01: Bei einer beabsichtigten
+ * Gestaltungsaenderung ist das Ergebnis keine Null, sondern eine Liste, und
+ * die wird gegen die Liste der geplanten Aenderungen gehalten. Gebaut war
+ * davon nur die Null — der Rueckgabewert war 1 bei jeder Abweichung. Im
+ * Pruefstand hiess das seit PK-05: Jede gewollte Aenderung an `style.css`
+ * macht den Bericht rot (Lage 5), und das Tor laesst keinen PR durch, der
+ * gestaltet. Gefunden am ersten Paket, das es tat (P5c/AP1).
+ *
+ * JETZT: Jede Abweichung bekommt eine SIGNATUR — Probe, Element (Tag,
+ * Klassen, Elternteil) und die Namen der geaenderten Eigenschaften,
+ * vereinigt ueber alle Breiten. Werte stehen nicht darin: Die Hoehe von
+ * `html` in der Katalogprobe aendert sich mit jeder neuen Regel, und eine
+ * Liste, die an Pixeln haengt, muesste man bei jedem Satz neu schreiben.
+ * Mit `--geplant <datei>` ist der Lauf gruen, wenn die gemessenen Signaturen
+ * und die Liste GLEICH sind — nicht nur, wenn die Messung in der Liste
+ * steht: Eine Zeile, die nichts mehr trifft, ist eine Liste, die nicht mehr
+ * stimmt, und die verdeckt beim naechsten Mal eine ungewollte Aenderung.
+ * `--geplant-schreiben <datei>` schreibt die gemessenen Signaturen hin; die
+ * Datei steht dann im Diff des Pull Requests und wird dort gelesen. */
+const SIGNATUREN = new Map();   // probe \t wer -> Set(eigenschaft)
+function signatur_merken(probe, wer, eigenschaften) {
+  const k = probe + '\t' + wer;
+  if (!SIGNATUREN.has(k)) { SIGNATUREN.set(k, new Set()); }
+  for (const e of eigenschaften) { SIGNATUREN.get(k).add(e); }
+}
+function signaturen_zeilen() {
+  return [...SIGNATUREN.entries()].map(([k, s]) => {
+    const [probe, wer] = k.split('\t');
+    return probe + '  ' + wer + '  :  ' + [...s].sort().join(', ');
+  }).sort();
+}
 
 function eigenschaften(css) {
   const s = css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -107,7 +146,11 @@ function eigenschaften(css) {
       }
       return { werte: out, gruppe: [...alle].map(el => {
         const g = el.closest('[data-paar]'); return g ? g.getAttribute('data-paar') : ''; }), wer: [...alle].map(el =>
-        el.tagName.toLowerCase() + (el.id ? '#' + el.id : '')
+        /* WEISSRAUM IN DER KENNUNG WIRD EIN LEERZEICHEN (P5c/AP2, F-P5c-85):
+         * Die Seitenprobe setzt Markup aus PHP-Zeichenketten zusammen, und
+         * eine Kennung kann dabei einen Zeilenumbruch tragen. Die Signatur
+         * stand dann ueber zwei Zeilen in `geplant.txt` und passte nie. */
+        el.tagName.toLowerCase() + (el.id ? '#' + String(el.id).replace(/\s+/g, ' ').trim() : '')
         + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : '')
         + ' <' + (el.parentElement ? el.parentElement.tagName.toLowerCase()
                   + (el.parentElement.className && typeof el.parentElement.className === 'string'
@@ -129,12 +172,13 @@ function eigenschaften(css) {
       for (let i = 0; i < a.length; i++) {
         if (a[i] !== n[i]) {
           diff++; if (grp[i]) gruppen.add(grp[i]);
+          const va = a[i].split(SEP), vn = n[i].split(SEP);
+          const wo = [], namen = [];
+          for (let k = 0; k < props.length; k++) {
+            if (va[k] !== vn[k]) { wo.push(props[k] + ': ' + va[k] + ' -> ' + vn[k]); namen.push(props[k]); }
+          }
+          signatur_merken(probe, wer[i], namen);
           if (beispiele.length < BEISPIELE) {
-            const va = a[i].split(SEP), vn = n[i].split(SEP);
-            const wo = [];
-            for (let k = 0; k < props.length; k++) {
-              if (va[k] !== vn[k]) wo.push(props[k] + ': ' + va[k] + ' -> ' + vn[k]);
-            }
             beispiele.push('Element #' + i + '  ' + wer[i] + '\n         ' + wo.slice(0, 4).join(' | '));
           }
         }
@@ -155,5 +199,34 @@ function eigenschaften(css) {
   console.log('');
   console.log(gemessen + ' Elementmessungen, ' + abweichungen + ' Abweichungen, '
               + props.length + ' Eigenschaften je Element  [' + MOTOR + ']');
+
+  const ist = signaturen_zeilen();
+  if (SCHALTER['--geplant-schreiben']) {
+    const kopf = ['# Stilvergleich — geplante Abweichungen (docs/Pruefablauf.md 6.10).',
+      '# Geschrieben mit `bash tools/stilvergleich/gegen.sh --schreiben`, gegen den',
+      '# Vergleichsstand des Laufs. Je Zeile: Probe, Element <Elternteil>, die',
+      '# Eigenschaften, die sich aendern. Diese Datei wird im Pull Request GELESEN —',
+      '# jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge ist',
+      '# sie leer zu machen (der naechste Lauf meldet sonst ihre Zeilen als',
+      '# „geplant, aber nicht gemessen").', ''];
+    fs.writeFileSync(SCHALTER['--geplant-schreiben'], kopf.concat(ist).join('\n') + '\n');
+    console.log(ist.length + ' Signaturen geschrieben: ' + SCHALTER['--geplant-schreiben']);
+    process.exit(0);
+  }
+  if (SCHALTER['--geplant']) {
+    let soll = [];
+    try {
+      soll = fs.readFileSync(SCHALTER['--geplant'], 'utf8').split('\n')
+        .map(z => z.trim()).filter(z => z !== '' && !z.startsWith('#'));
+    } catch (e) { /* keine Datei = keine geplante Abweichung */ }
+    const sollSet = new Set(soll), istSet = new Set(ist);
+    const unerwartet = ist.filter(z => !sollSet.has(z));
+    const ungenutzt  = soll.filter(z => !istSet.has(z));
+    for (const z of unerwartet) { console.log('  UNGEPLANT  ' + z); }
+    for (const z of ungenutzt)  { console.log('  GEPLANT, ABER NICHT GEMESSEN  ' + z); }
+    console.log('Geplant: ' + soll.length + ' Signaturen · gemessen: ' + ist.length
+                + ' · ungeplant: ' + unerwartet.length + ' · nicht gemessen: ' + ungenutzt.length);
+    process.exit(unerwartet.length || ungenutzt.length ? 1 : 0);
+  }
   process.exit(abweichungen ? 1 : 0);
 })();

@@ -183,6 +183,13 @@
         return;
       }
       melde(a.meldung);
+      /* KEIN NETZ, KEINE PRÜFUNG (Backlog Nr. 269, P5c/AP9). Kommt die
+       * Anfrage gar nicht an (`status: 0`), hat der Server nichts gezählt und
+       * nichts entschieden — die vier Gruppen bleiben stehen, und der Knopf
+       * geht wieder. Bis Web 21.0.0 lief auch dieser Fall in den Zweig
+       * „falsch" darunter und leerte die Felder: Wer im Funkloch prüfte,
+       * tippte vier Gruppen noch einmal ab, obwohl nichts falsch war. */
+      if (a.status === 0) { pruefen.disabled = false; return; }
       /* GESPERRT HEISST ZU. Weitere Felder anzubieten, während der Topf
        * gesperrt ist, wäre eine Einladung zum Weiterraten — und jeder
        * Versuch verlängerte die Sperre über die Leiter. */

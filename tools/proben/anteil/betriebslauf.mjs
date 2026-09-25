@@ -27,7 +27,7 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import('file://' + MODUL);
 const pw = PW.default ?? PW;
-const { motorWahl, starten } = await import(
+const { motorWahl, starten, nachDemPasswort } = await import(
   'file:///home/user/einsatzdoku-luftrettung/tools/motor.mjs');
 
 const WURZEL = '/home/user/einsatzdoku-luftrettung';
@@ -140,6 +140,24 @@ const text = () => p.evaluate(() => document.body.innerText.replace(/\s+/g, ' ')
  * `form.submit()` ginge am Zuhörer vorbei, misst dann aber einen Weg, den
  * niemand geht. Der Prüfstand drückt deshalb den Knopf und beantwortet den
  * Dialog, wie es eine Betreiberin täte. */
+/** Nach dem Absenden des Passworts: warten, den Code-Schritt des
+ * Zweitfaktors gehen und bei einem Fehlschlag ABBRECHEN (P5c/AP5, E-P5c-43).
+ *
+ * Hier stand `waitForURL(… !login.php)`. Seit dem Zweitfaktor steht die
+ * Seite nach dem Passwort des Admin-Kontos WIEDER unter `login.php` und
+ * fragt nach dem Code — das Warten liefe 120 Sekunden ins Leere. Und das
+ * Einrichtungstor (`zweitfaktor.php`) hätte es durchgelassen, obwohl von
+ * dort keine Seite erreichbar ist, die dieser Lauf messen will.
+ * `nachDemPasswort()` (motor.mjs) kennt beide.
+ *
+ * ES WIRFT, WIE VORHER DIE ZEITGRENZE. Ein Fehlschlag soll den Lauf beenden
+ * und das `finally` `config.php` zurücklegen lassen — nur jetzt mit einem
+ * Grund statt „Timeout 120000ms exceeded". */
+async function angemeldetOderAbbruch(tab, konto) {
+  const a = await nachDemPasswort(tab, { frist: 120000 });
+  if (!a.angemeldet) { throw new Error(`Anmeldung als ${konto} gescheitert — ${a.meldung}`); }
+}
+
 /** In einer EIGENEN SITZUNG anmelden und auf eine Seite gehen, die den
  * Inhaltsschlüssel braucht.
  *
@@ -163,9 +181,8 @@ async function tabAnmelden(konto, passwort) {
   await tab.goto(BASIS + '/login.php', { waitUntil: 'domcontentloaded' });
   await tab.fill('input[name="email"]', konto);
   await tab.fill('input[name="password"]', passwort);
-  await tab.click('button[type="submit"], input[type="submit"]');
-  await tab.waitForURL(u => !String(u).includes('login.php'),
-                       { timeout: 120000, waitUntil: 'commit' });
+  await tab.click('#loginform button[type="submit"]');
+  await angemeldetOderAbbruch(tab, konto);
   await tab.goto(BASIS + '/suche.php', { waitUntil: 'domcontentloaded' });
   await tab.waitForFunction(
     () => typeof EdCrypto !== 'undefined' && typeof EdUnlock !== 'undefined',
@@ -237,9 +254,8 @@ try {
   await p.goto(BASIS + '/login.php', { waitUntil: 'domcontentloaded' });
   await p.fill('input[name="email"]', ADMIN);
   await p.fill('input[name="password"]', ADMIN_PW);
-  await p.click('button[type="submit"], input[type="submit"]');
-  await p.waitForURL(u => !String(u).includes('login.php'),
-                     { timeout: 120000, waitUntil: 'commit' });
+  await p.click('#loginform button[type="submit"]');
+  await angemeldetOderAbbruch(p, ADMIN);
 
   /* ---- 1. Der Regelfall: bereit ---------------------------------------- */
   teil('1. Zustand „bereit" — Karte, Status und Blatt nennen DIESELBE Kennung');
@@ -262,9 +278,20 @@ try {
   const blatt = await text();
   pruefe('das Blatt nennt dieselbe Kennung',
          new RegExp('Kennung ' + kennung).test(blatt), true);
-  /* DIE EINE STELLE, AN DER DER WERT STEHEN MUSS — in Vierergruppen. */
+  /* DIE EINE STELLE, AN DER DER WERT STEHEN MUSS — in Vierergruppen.
+   *
+   * SEIT P5c/AP9 JE GRUPPE EIN ELEMENT (`.blatt-druck-gruppe`, mit Nummer
+   * darüber). Bis dahin stand der Wert als ein Absatz mit Leerzeichen
+   * (`.blatt-wert`), und der Seitentext enthielt ihn am Stück. Jetzt steht
+   * zwischen den Gruppen ein Zeilenwechsel des Seitentexts; gelesen wird
+   * deshalb die Kachel des Anteils, Gruppe für Gruppe. */
   const gruppiert = (anteilEcht.match(/..../g) || []).join(' ');
-  pruefe('und den Wert in Vierergruppen', blatt.includes(gruppiert), true);
+  const blattWert = await p.evaluate(() => {
+    const k = [...document.querySelectorAll('.blatt-kachel')]
+      .find(x => /\bkdf_anteil\b/.test(x.querySelector('.blatt-kachel-neben')?.textContent || ''));
+    return k ? [...k.querySelectorAll('.blatt-druck-gruppe')].map(g => g.textContent.trim()).join(' ') : '';
+  });
+  pruefe('und den Wert in Vierergruppen', blattWert.toLowerCase() === gruppiert.toLowerCase(), true);
   pruefe('drei Kennungen gleich (Karte = Status = Blatt)',
          [new RegExp('Kennung ' + kennung).test(karte),
           new RegExp('Kennung ' + kennung).test(status),
@@ -279,31 +306,30 @@ try {
   await p.setViewportSize({ width: 718, height: 1123 });
   await oeffne('/betrieb_schluesselblatt.php');
   const druck = await p.evaluate(() => {
-    const w = document.querySelector('.blatt-wert');
-    if (!w) { return { da: false }; }
-    const r = w.getClientRects();
-    const zeilen = [];
-    /* Jede Zeile eines umgebrochenen Absatzes ist ein eigenes Rechteck. Der
-     * Text selbst sagt nicht, wo umgebrochen wurde — deshalb wird über einen
-     * Bereich je Gruppe gemessen: Liegt eine Gruppe auf ZWEI Zeilen, ist sie
-     * zerschnitten. */
-    const knoten = w.firstChild;
-    const gruppen = w.textContent.trim().split(' ');
-    let pos = 0, zerschnitten = 0;
-    for (const g of gruppen) {
-      const bereich = document.createRange();
-      bereich.setStart(knoten, pos);
-      bereich.setEnd(knoten, pos + g.length);
-      const oben = new Set([...bereich.getClientRects()].map(r2 => Math.round(r2.top)));
-      if (oben.size > 1) { zerschnitten++; }
-      pos += g.length + 1;
+    /* JE WERT EINE KACHEL MIT SECHZEHN GRUPPEN (P5c/AP9, `.blatt-druck`).
+     * Bis dahin wurde hier ein Absatz `.blatt-wert` Gruppe für Gruppe über
+     * Textbereiche vermessen. Jetzt ist jede Gruppe ein eigenes Element;
+     * zerschnitten ist eine Gruppe, deren TEXT auf zwei Zeilen liegt. */
+    const kacheln = [...document.querySelectorAll('.blatt-kachel')];
+    if (!kacheln.length) { return { da: false }; }
+    let zerschnitten = 0, gruppenMin = Infinity;
+    for (const k of kacheln) {
+      const gs = [...k.querySelectorAll('.blatt-druck-gruppe')];
+      gruppenMin = Math.min(gruppenMin, gs.length);
+      for (const g of gs) {
+        const bereich = document.createRange();
+        bereich.selectNodeContents(g);
+        const oben = new Set([...bereich.getClientRects()].map(r2 => Math.round(r2.top)));
+        if (oben.size > 1) { zerschnitten++; }
+      }
     }
+    const blatt = document.querySelector('.blatt-druck');
     return {
       da: true,
-      gruppen: gruppen.length,
+      gruppen: gruppenMin,
       zerschnitten,
-      zeilen: r.length,
-      ueberlauf: Math.max(0, w.scrollWidth - w.clientWidth),
+      zeilen: kacheln.length,
+      ueberlauf: Math.max(0, blatt.scrollWidth - blatt.clientWidth),
       knoepfe: [...document.querySelectorAll('.nur-bildschirm')]
         .filter(e => getComputedStyle(e).display !== 'none').length,
       flaeche: getComputedStyle(document.body).backgroundColor,
@@ -314,7 +340,7 @@ try {
   pruefe('keine Gruppe über zwei Zeilen zerschnitten', druck.zerschnitten, 0);
   pruefe('kein waagerechter Überlauf', druck.ueberlauf, 0);
   pruefe('die Bildschirmknöpfe werden nicht mitgedruckt', druck.knoepfe, 0);
-  console.log(`  gemessen: ${druck.zeilen} Zeile(n) bei 718 px Papierbreite`);
+  console.log(`  gemessen: ${druck.zeilen} Kachel(n) bei 718 px Papierbreite`);
   await p.screenshot({ path: WURZEL + '/tools/proben/anteil/ausgabe-blatt-druck.png',
                        fullPage: true });
   await p.emulateMedia({ media: 'screen' });

@@ -281,6 +281,56 @@ function ruf(string $pfad, ?array $post = null): array {
 echo "GPX-Probe gegen $basis\n";
 echo "  Konto $email (uid $uid)\n";
 
+/* DER VORLAUF (P5c/AP8, F-P5c-137, Nr. 325). Verglichen wird nur, was der
+ * Nachlauf in denselben Zustand gebracht hat wie beim Erzeugen der Referenz:
+ * gepackt (Stufe 2) oder ausgeduennt (Stufe 3, dann zu Recht uebersprungen).
+ * Nach `hochfahren.sh --neu` liegen aber ALLE Demo-Spuren noch als Zeilen
+ * vor (`spur_stand()` meldet Stufe 1), und der Huckepack-Weg kommt
+ * hoechstens alle JOB_ANFRAGE_PAUSE_S. Ohne diesen Vorlauf verglich der Teil
+ * dort 0 von 204 Dateien, und ob der Pruefstand gruen war, hing an der Uhr —
+ * mit dem Code von AP7 genauso wie mit dem von AP8.
+ * Stufe 1 einfach MITZUVERGLEICHEN geht nicht: Der Referenzexport traegt
+ * aeltere Spuren ausgeduennt, und eine rohe Spur hat dann zu Recht mehr
+ * Punkte (gemessen: 42 Abweichungen). Die Probe stellt die Lage deshalb
+ * SELBST her — ueber denselben Weg wie der Nachlauf, bis beide Jobs in einer
+ * Runde nichts mehr zu tun hatten.
+ * ER STEHT VOR DER PAUSE DARUNTER, und das muss so bleiben: Die Probe haelt
+ * die Jobs fuer ihren eigenen Lauf an, damit der Nachlauf ihre Probedaten
+ * nicht anfasst. Hinter der Pause meldete der Vorlauf nur „angehalten" und
+ * packte nichts (gemessen). Bis hier hat die Probe nur ihr Konto angelegt,
+ * noch keine Spur — der Vorlauf trifft also nur, was es schon gab. */
+$vorlaufRunden = 0; $vorlaufErledigt = 0; $vorlaufRuhe = false; $vorlaufHalt = null;
+for ($r = 1; $r <= 40 && !$vorlaufRuhe && $vorlaufHalt === null; $r++) {
+    $vorlaufRunden = $r;
+    $b = jobs_lauf('cli', ['verdichtung', 'ausduennen']);
+    $ruhe = true;
+    foreach (['verdichtung', 'ausduennen'] as $j) {
+        $x = $b[$j] ?? ['uebersprungen' => 'fehlt im Bericht'];
+        if (isset($x['uebersprungen'])) {
+            // Ein laufender Huckepack-Lauf haelt die Sperre: noch eine Runde.
+            if (!str_starts_with((string)$x['uebersprungen'], 'läuft')) {
+                $vorlaufHalt = "$j: " . $x['uebersprungen'];
+            }
+            $ruhe = false; continue;
+        }
+        if (!empty($x['fehler'])) { $vorlaufHalt = "$j: " . $x['fehler']; $ruhe = false; continue; }
+        $vorlaufErledigt += (int)($x['erledigt'] ?? 0);
+        /* RUHE heisst: fertig gemeldet und in dieser Runde nichts erledigt.
+         * NICHT `rueckstand` 0 — der zaehlt auch Spuren, die noch nicht dran
+         * sind (gemessen: 55 und 10, Runde fuer Runde gleich, bei 0
+         * erledigt), und blieb deshalb nie null. */
+        if ((int)($x['erledigt'] ?? 0) > 0 || empty($x['fertig'])) {
+            $ruhe = false;
+        }
+    }
+    $vorlaufRuhe = $ruhe;
+}
+pruefe($vorlaufRuhe,
+       'Vorlauf: Verdichten und Ausduennen haben nichts mehr zu tun',
+       $vorlaufRuhe
+           ? "$vorlaufRunden Runden, $vorlaufErledigt Spuren bearbeitet"
+           : ($vorlaufHalt ?? "nach $vorlaufRunden Runden noch nicht fertig"));
+
 jobs_pause(900);
 $aufraeumen = function () use ($pdo, $uid, $keks) {
     jobs_pause(0);

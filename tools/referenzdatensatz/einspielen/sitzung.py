@@ -9,10 +9,17 @@ Danach steht der Inhaltsschluessel zur Verfuegung: Er liegt passwortverpackt
 in `users.pat_wrap_pw` und wird von jeder angemeldeten Seite als Konstante
 `PAT_WRAP` mitgegeben (ui.php). Das Skript packt ihn mit dem dataKey aus --
 derselbe Weg, den crypto.js im Browser geht.
+
+SEIT P5c/AP5 AUCH DEN CODE-SCHRITT (E-P5c-43, F-P5c-33). Ein Konto mit
+Zweitfaktor bekommt nach dem Passwort keine Sitzung, sondern die Frage nach
+dem Code. Das Skript beantwortet sie, wie die App es taete: mit dem Code aus
+`tools/zweitfaktor/totp.py`. Auch das ist kein Sonderzugang -- das Pruefkonto
+hat einen echten Zweitfaktor, nur mit einem Geheimnis, das der Rechner kennt.
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import pathlib
@@ -21,6 +28,13 @@ import requests
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "generator"))
 import krypto  # noqa: E402
+
+# DER CODE-RECHNER STEHT EINMAL JE SPRACHE, nicht einmal je Werkzeug
+# (`tools/zweitfaktor/`). Er fuehrt einen Zaehler, den alle drei Rechner
+# teilen -- ein zweiter, hier abgeschriebener Rechner saehe ihn nicht und
+# schickte einen Code, den der Server schon einmal angenommen hat.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "zweitfaktor"))
+from totp import naechster_code  # noqa: E402
 
 
 def fehlertext(html: str) -> str | None:
@@ -105,6 +119,33 @@ def seitenkennung(antwort) -> str:
     return " \u00b7 ".join(teile)
 
 
+def ist_code_schritt(antwort) -> bool:
+    """Steht die Anmeldung zwischen Passwort und Code? (P5c/AP5)
+
+    WORAN ES ZU ERKENNEN IST: an `login.php` MIT dem Formular `codeform`.
+    Die Adresse allein reicht nicht -- auf `login.php` endet auch jede
+    Abweisung des Passworts, und die kommt ohne Umleitung. Das Formular
+    allein reichte zwar, aber beides zusammen schliesst aus, dass eine
+    andere Seite, die das Wort irgendwann einmal traegt, fuer den
+    Code-Schritt gehalten wird.
+    """
+    return "login.php" in antwort.url and 'id="codeform"' in antwort.text
+
+
+def geheimnis_herkunft(totp: str | None) -> str:
+    """WOHER das Geheimnis kam, mit dem gerechnet wurde -- nie das Geheimnis.
+
+    Ein abgewiesener Code hat fast immer denselben Grund: das Geheimnis einer
+    anderen Anlage. Die Meldung muss deshalb sagen, WELCHES genommen wurde;
+    die Reihenfolge ist die von `naechster_code()`.
+    """
+    if (totp or "").strip():
+        return "dem mitgegebenen Geheimnis"
+    if (os.environ.get("NADOKU_TOTP") or "").strip():
+        return "dem Geheimnis aus NADOKU_TOTP"
+    return "dem Geheimnis der Sandbox (NADOKU_TOTP ist nicht gesetzt)"
+
+
 class Sitzung:
     def __init__(self, basis: str) -> None:
         self.basis = basis.rstrip("/")
@@ -147,7 +188,21 @@ class Sitzung:
             return m.group(1).strip()
 
     # ---- Anmelden -------------------------------------------------------
-    def anmelden(self, email: str, passwort: str) -> "Sitzung":
+    def anmelden(self, email: str, passwort: str,
+                 totp: str | None = None) -> "Sitzung":
+        """Anmelden -- Passwort und, wo das Konto einen hat, der Zweitfaktor.
+
+        `totp` ist das Geheimnis des Zweitfaktors in Base32. `None` (oder
+        leer, auch nur Leerraum) heisst: `NADOKU_TOTP` aus der Umgebung, sonst das der Sandbox --
+        die Wahl trifft `naechster_code()`, nicht dieses Modul. Gebraucht wird
+        es nur, wenn die Anlage nach dem Passwort den Code-Schritt zeigt;
+        ein Konto ohne Zweitfaktor meldet sich an wie bisher.
+
+        JEDE ANMELDUNG MIT CODE VERBRAUCHT EINEN ZEITSCHRITT (E-P5c-54): Der
+        Server nimmt keinen Code zweimal. Zwei Anmeldungen desselben Kontos
+        binnen 30 Sekunden gehen ohne Warten durch, die dritte wartet bis zum
+        naechsten Fenster -- das regelt der Zaehler in `totp.py`.
+        """
         # Das Anmeldeformular traegt seit Web 15.6.0 ein CSRF-Token
         # (Backlog Nr. 127). Ohne einen GET auf login.php gibt es weder Sitzung
         # noch Token, und der POST endet mit "Das Formular ist abgelaufen" --
@@ -184,6 +239,34 @@ class Sitzung:
             "email": email,
             "tokens": json.dumps(token_nach),
         }, allow_redirects=True)
+
+        # ---- Der Code-Schritt (P5c/AP5, E-P5c-43, F-P5c-33) --------------
+        #
+        # Mit Zweitfaktor antwortet `login.php` auf das richtige Passwort mit
+        # 303 auf sich selbst und zeigt dort `codeform`. Bis dahin gibt es
+        # KEINE Sitzung -- jede andere Seite leitet zur Anmeldung, jeder
+        # Endpunkt unter `api/` antwortet 401. Ohne diesen Schritt liefe die
+        # Pruefung unten auf „Anmeldung gescheitert: kein Meldungstext",
+        # und das saehe aus wie ein falsches Passwort.
+        if ist_code_schritt(antwort):
+            antwort = self._code_schicken(antwort, totp)
+
+        # DAS EINRICHTUNGSTOR (P5c/AP5, E-P5c-53). Ein Konto mit Pflichtrolle
+        # (Support, Admin, BetreiberIn) OHNE Zweitfaktor bekommt eine Sitzung,
+        # aber jede Seite schickt es auf `zweitfaktor.php`, und die API
+        # antwortet 403. Die Pruefung darunter saehe davon nichts -- die
+        # Adresse enthaelt kein `login.php` --, und der Lauf ginge mit einer
+        # Sitzung weiter, die nichts darf. Deshalb hier, laut.
+        if "zweitfaktor.php" in antwort.url:
+            raise RuntimeError(
+                f"Anmeldung gescheitert: {email} hat eine Rolle mit Pflicht zum "
+                "Zweitfaktor, aber keinen eingerichtet -- die Anlage schickt "
+                "jede Seite auf zweitfaktor.php. In der Sandbox: "
+                "`php tools/zweitfaktor/pruefkonto.php` richtet ihn mit "
+                "bekanntem Geheimnis ein. Auf Staging richtet die "
+                "BetreiberIn ihn im Browser ein und hinterlegt das Geheimnis "
+                "als STAGING_TOTP. \u2014 " + seitenkennung(antwort))
+
         if "login.php" in antwort.url and "Abmelden" not in antwort.text:
             # DIE SEITENKENNUNG GEHOERT AN JEDE ABWEISUNG, nicht nur an die
             # ohne Meldungstext: Auch eine gefundene Meldung sagt nicht, ob
@@ -225,6 +308,53 @@ class Sitzung:
         if wrap:
             self.inhaltsschluessel = krypto.entpacken(wrap, self.data_key)
         return self
+
+    def _code_schicken(self, antwort: requests.Response,
+                       totp: str | None) -> requests.Response:
+        """Den Code-Schritt beantworten -- hoechstens zweimal.
+
+        Geliefert wird die Antwort auf den letzten Code: nach einem
+        angenommenen die Seite hinter der Umleitung (`index.php`), nach einer
+        Abweisung ohne Code-Formular die Seite, die `login.php` dann zeigt
+        (Sperre nach fuenf Fehlversuchen, Wartung, Kontostatus). Beides
+        beurteilt `anmelden()` mit derselben Pruefung wie nach dem Passwort.
+
+        EIN ZWEITER VERSUCH, NICHT MEHR. Der erste Code kann abgewiesen
+        werden, ohne dass das Geheimnis falsch ist: Der Zaehler in `totp.py`
+        gilt je Rechner, und hat ein anderer -- ein zweiter Laeufer, ein
+        Browser -- im selben 30-Sekunden-Fenster schon einen Code dieses
+        Kontos eingeloest, nimmt der Server ihn kein zweites Mal
+        (E-P5c-54). Der naechste Code liegt im naechsten Fenster und geht
+        durch. Ein zweites Nein dagegen heisst fast immer: das Geheimnis
+        einer anderen Anlage. Weitere Versuche aendern daran nichts und
+        zaehlen nur die fuenf Fehlversuche bis zur Sperre herunter -- die
+        dann auch die Anmeldung von Hand trifft.
+        """
+        for _ in range(2):
+            # Das Token steht im Code-Formular selbst. Es wird jedes Mal
+            # frisch gelesen, statt das des Passwortformulars
+            # weiterzureichen: Was die Seite traegt, ist das, was der
+            # Server gerade erwartet.
+            m = re.search(r'name="csrf"\s+value="([0-9a-f]+)"', antwort.text)
+            if not m:
+                raise RuntimeError("Code-Schritt ohne Formular-Token \u2014 "
+                                   + seitenkennung(antwort))
+            antwort = self.post("login.php", {
+                "csrf": m.group(1),
+                "schritt": "code",
+                "code": naechster_code((totp or "").strip() or None),
+            }, allow_redirects=True)
+            if not ist_code_schritt(antwort):
+                return antwort
+        raise RuntimeError(
+            "Anmeldung gescheitert: Der Zweitfaktor hat zwei Codes "
+            "nacheinander abgewiesen ("
+            + (fehlertext(antwort.text) or "kein Meldungstext auf der Seite")
+            + f"). Gerechnet mit {geheimnis_herkunft(totp)}. Gegen eine "
+            "andere Anlage als die Sandbox gehoert deren Geheimnis dazu -- "
+            "als Parameter `totp` bzw. `--admin-totp`, oder in NADOKU_TOTP. "
+            "In der Sandbox stellt `php tools/zweitfaktor/pruefkonto.php` "
+            "das bekannte Geheimnis wieder her. \u2014 " + seitenkennung(antwort))
 
     def csrf_auffrischen(self, pfad: str = "index.php") -> str:
         """CSRF-Token von einer Seite holen. Es steckt entweder als Konstante

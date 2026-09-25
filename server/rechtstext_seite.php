@@ -81,6 +81,7 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
 ?>
 <div class="rahmen rahmen-lesespalte">
   <main class="inhalt">
+  <?php ui_hinweise(); ?>
     <h1><?= e($titel) ?></h1>
 
     <?php ui_karte_start([]); ?>
@@ -100,8 +101,8 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
             . (RT_LEERTEXT[$rtSchluessel] ?? 'diesen Text noch nicht hinterlegt.')) ?>
         <?php if ($istAdmin): ?>
           <p class="feld-hinweis">Du bist mit Verwaltungsrechten angemeldet und
-             kannst den Text unter <a href="admin_installation.php">Verwaltung →
-             Installation</a> hinterlegen.</p>
+             kannst den Text unter <a href="admin_rechtstexte.php?t=<?= e($rtSchluessel) ?>">Verwaltung →
+             Rechtstexte</a> hinterlegen.</p>
         <?php endif; ?>
       <?php else: ?>
         <div class="text">

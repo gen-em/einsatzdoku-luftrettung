@@ -116,6 +116,7 @@ function session_beenden(string $grund = 'abgemeldet'): never
     ]);
     ?>
 <main class="anmeldung">
+ <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
   <p><?= e($text) ?></p>
   <p class="anmeldung-neben"><a href="<?= e($ziel) ?>">Zur Anmeldung</a></p>

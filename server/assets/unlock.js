@@ -41,6 +41,14 @@ const EdUnlock = (() => {
   // Aufrufstellen mehrere Dialoge uebereinander.
   let laufend = null;
 
+  /* Das Anmelde-Token für das Paar des Rückwegs — siehe `rueckwegAnlegen()`
+   * unten. Es lebt vom Auflösen des Vormerkfachs bis zum ersten Versuch. */
+  let rwToken = null;
+
+  /* Das Auflösen des Vormerkfachs läuft EINMAL je Seite, auch wenn zwei
+   * Stellen gleichzeitig danach fragen (siehe `nachDerAnmeldung()` unten). */
+  let vormerkLauf = null;
+
   /* ---- Die Meldung, wenn der Server-Anteil nicht passt (S10, E-S10-09) ---
    *
    * DREI LAGEN, ZWEI SAETZE — UND KEINER DAVON HEISST „Passwort falsch".
@@ -242,6 +250,10 @@ const EdUnlock = (() => {
       return null;
     }
     EdCrypto.setDataKey(dk);
+    /* Das Token für das Paar des Rückwegs, BEVOR das Fach geräumt wird
+     * (Konzept RW, E-RW-02; siehe `rueckwegAnlegen()`). Hebt die Umstellung
+     * unten die Rundenzahl an, gilt danach das neue — dort wird es ersetzt. */
+    rwToken = vor.tk[String(kdfIter)] || null;
 
     /* ---- Stille Umstellung (Schritt 4; seit S10 mit zwei Anlässen) -----
      *
@@ -310,6 +322,7 @@ const EdUnlock = (() => {
            * bestätigt. Andersherum stünde im Browser ein Schlüssel, zu dem
            * die gespeicherte Hülle nicht passt (M2-07). */
           EdCrypto.setDataKey(dkNeu);
+          rwToken = vor.tk[String(neuIter)] || rwToken;
           EdCrypto.vergissAbleitungen();
           if (ck) {
             /* DIE HÜLLE DIESER SEITE IST JETZT VERALTET.
@@ -432,6 +445,32 @@ const EdUnlock = (() => {
     }
   }
 
+  /* ---- Das Paar des Rückwegs (Konzept RW, RW-02, E-RW-02) ---------------
+   *
+   * DIE EINE STELLE, AN DER ES STILL ENTSTEHT. Es braucht zweierlei: das
+   * Anmelde-Token als Nachweis des Passworts (E-RW-06) — das gibt es nur im
+   * Vormerkfach, also nur unmittelbar nach einer Anmeldung — und den
+   * Inhaltsschlüssel, der den privaten Teil verpackt. `loeseVormerkung()`
+   * merkt sich das Token, bevor es das Fach räumt; sobald der
+   * Inhaltsschlüssel da ist, auf welchem der drei Wege auch immer, geht
+   * beides an `EdRueckweg.anlegen()`.
+   *
+   * NUR BEI `RW_STAND === 'fehlt'`: 'da' hat eins, 'demo' bekommt keins
+   * (E-RW-15), 'spalten' heißt, die Migration steht aus. `rueckweg.js` wird
+   * auch nur dann ausgeliefert (`ui_krypto_bootstrap()`).
+   *
+   * NIEMAND WARTET DARAUF, wie bei den Notizen: kein `await`, kein Fehler
+   * nach außen. Das Token wird nach dem ersten Versuch vergessen, auch nach
+   * einem gescheiterten — der nächste kommt mit der nächsten Anmeldung.
+   */
+  function rueckwegAnlegen(ck) {
+    const token = rwToken;
+    rwToken = null;
+    if (!token || !ck || typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt'
+        || !window.EdRueckweg) { return; }
+    window.EdRueckweg.anlegen(ck, token);
+  }
+
   async function ensureContentKey(wrap, kdfSalt, kdfIter) {
     if (!wrap) { return null; }
 
@@ -440,8 +479,13 @@ const EdUnlock = (() => {
      * diesen Schritt erschiene der Entsperrdialog unmittelbar nach dem
      * Anmelden — und zwar bei jedem Anmelden. */
     if (!EdCrypto.getDataKey()) {
-      const ausVormerkung = await loeseVormerkung(wrap, kdfIter);
-      if (ausVormerkung) { notizenAnheben(ausVormerkung); return ausVormerkung; }
+      if (!vormerkLauf) { vormerkLauf = loeseVormerkung(wrap, kdfIter); }
+      const ausVormerkung = await vormerkLauf;
+      if (ausVormerkung) {
+        notizenAnheben(ausVormerkung);
+        rueckwegAnlegen(ausVormerkung);
+        return ausVormerkung;
+      }
     }
 
     // NICHT EdCrypto.getContentKey: Jene Fassung liefert einen
@@ -451,7 +495,7 @@ const EdUnlock = (() => {
     // Stellen tun das, eine nicht. EdKeyGuard prueft es selbst und verwirft
     // einen fremden oder zu alten Schluessel.
     const vorhanden = await EdKeyGuard.contentKey(wrap);
-    if (vorhanden) { notizenAnheben(vorhanden); return vorhanden; }
+    if (vorhanden) { notizenAnheben(vorhanden); rueckwegAnlegen(vorhanden); return vorhanden; }
 
     // Ohne Salt laesst sich nichts ableiten; sehr alte Browser ohne <dialog>
     // bekommen bewusst keinen window.prompt (Passwort im Klartext sichtbar).
@@ -462,8 +506,43 @@ const EdUnlock = (() => {
     /* Der dritte Weg: über den Dialog. `then` statt `await`, damit der
        Aufrufer seinen Schlüssel sofort bekommt und die Anhebung daneben
        läuft. */
-    laufend.then(ck => { if (ck) { notizenAnheben(ck); } });
+    laufend.then(ck => { if (ck) { notizenAnheben(ck); rueckwegAnlegen(ck); } });
     return laufend;
+  }
+
+  /* ---- Nach der Anmeldung, auch auf einer Seite ohne Schlüsselbedarf ------
+   * (Konzept RW, RW-02, F-RW-14).
+   *
+   * Das Vormerkfach löst sonst erst die Seite auf, die den Inhaltsschlüssel
+   * BRAUCHT. Die Startseite eines Kontos ohne Diensttag braucht ihn nie —
+   * gemessen: Anmeldung, `index.php`, Fach belegt, kein Paar; erst
+   * `suche.php` legte es an. Genau die Konten der BetreiberInnen haben oft
+   * keine Einsätze, und für sie ist der Rückweg gedacht (E-RW-08).
+   *
+   * Deshalb löst diese Stelle das Fach selbst auf, wenn ein Paar fehlt:
+   * nach dem Laden der Seite (die Konstanten stehen HINTER diesem Skript),
+   * STILL — ohne Entsperrdialog; fehlt der Schlüssel, geschieht nichts. Sie
+   * geht durch dasselbe `vormerkLauf` wie `ensureContentKey()`: Fragt die
+   * Seite gleichzeitig selbst, läuft die stille Umstellung trotzdem nur
+   * einmal. Zwei Läufe schickten zweimal dasselbe alte Token an
+   * `kdf_upgrade.php`, und der zweite setzte danach den alten
+   * Datenschlüssel wieder ein. */
+  async function nachDerAnmeldung() {
+    if (typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt') { return; }
+    if (typeof PAT_WRAP === 'undefined' || !PAT_WRAP || typeof KDF_ITER === 'undefined') { return; }
+    if (EdCrypto.getDataKey() || !EdCrypto.holeAbleitungen()) { return; }
+    try {
+      if (!vormerkLauf) { vormerkLauf = loeseVormerkung(PAT_WRAP, KDF_ITER); }
+      const ck = (await vormerkLauf) || await EdKeyGuard.contentKey(PAT_WRAP);
+      rueckwegAnlegen(ck);
+    } catch (e) {
+      /* still, wie `rueckwegAnlegen()` selbst */
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', nachDerAnmeldung);
+  } else {
+    nachDerAnmeldung();
   }
 
   return { ensureContentKey };
