@@ -375,8 +375,10 @@ return [
 
 ['kennung' => 'Z26', 'paket' => 'AP7',
  'beschreibung' => 'Datumsformat-Literale mit d.m. ausserhalb format_lib.php',
- 'grund' => 'datum_text() und datum_zeit_text($utc, $trenner) (F-ZE-3). Schritt 15 '
-          . 'benennt die Varianten und aendert keinen Pixel; 10c AP9 entscheidet. '
+ 'grund' => 'datum_text() und datum_zeit_text($utc) (F-ZE-3). Schritt 15 benannte '
+          . 'die Varianten, 10c AP9 hat entschieden: das Komma (E-P5c-37), 19 Aufrufer '
+          . 'ohne zweites Argument; „ um " der Mailtexte und der GPX-Spurname (Dateiformat, '
+          . 'E-P5c-129) uebergeben noch einen. '
           . 'DREI NAMENTLICH (AP7): admin_installation.php 363 und rechtstexte_lib.php '
           . '482 formatieren einen Unix-Zeitstempel bewusst OHNE Zonenumrechnung — eine '
           . 'Umstellung waere eine weitere sichtbare Ausnahme; wartung_lib.php 554 '

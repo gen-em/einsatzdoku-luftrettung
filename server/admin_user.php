@@ -1072,7 +1072,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                      ? 'Löschung beantragt'
                      : 'Gesperrt: ' . (string)$u['gesperrt_grund'],
             'klein' => ($u['gesperrt_seit'] ?? null)
-                     ? 'seit ' . datum_zeit_text((string)$u['gesperrt_seit'], ' · ') . ' Uhr'
+                     ? 'seit ' . datum_zeit_text((string)$u['gesperrt_seit']) . ' Uhr'
                      : '',
             'plaketten' => ($u['loeschung_am'] ?? null)
                 ? ui_plakette('löscht sich am '
@@ -1155,7 +1155,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         'plakette' => $zfZ['an'] ? ui_plakette('an', ['ton' => 'blau']) : ui_plakette('aus')]); ?>
       <?php if ($zfZ['an']): ?>
         <?php ui_zeile(['text' => 'Eingeschaltet',
-            'klein' => 'seit ' . datum_zeit_text($zfZ['seit'], ', ') . ' · Wiederherstellungscodes: '
+            'klein' => 'seit ' . datum_zeit_text($zfZ['seit']) . ' · Wiederherstellungscodes: '
                      . $zfZ['codes_offen'] . ' von ' . $zfZ['codes_alle']]); ?>
         <?php if ($zfDarf): ?>
         <form method="post">

@@ -24,6 +24,11 @@
       "aufruf": "bash tools/quelltext/pruefen.sh linkprobe",
       "braucht": "nichts"
     },
+    "anker": {
+      "aufruf": "bash tools/quelltext/pruefen.sh anker",
+      "braucht": "nichts",
+      "bemerkung": "P5c/AP9, Anlass Nr. 188. Jeder Verweis hilfe.php#... aus server/ gegen die Marken des gerenderten Handbuchs (doku_seite, derselbe Weg wie hilfe.php) -- seit jede Karte unter Verwaltung und Betrieb auf ihre Stelle im Handbuch verweist, bricht eine umformulierte Ueberschrift sonst still."
+    },
     "bestand": {
       "aufruf": "bash tools/quelltext/pruefen.sh bestand",
       "braucht": "nichts",
@@ -250,6 +255,7 @@
       "vollstaendigkeit",
       "kontraste",
       "linkprobe",
+      "anker",
       "bestand",
       "syntax-py",
       "handbuch",

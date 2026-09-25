@@ -62,7 +62,7 @@ if ($konto !== '') {
 
 $adresse = app_url();
 $ohneSchema = preg_replace('#^https?://#', '', rtrim($adresse, '/')) ?? '';
-$jetzt   = datum_zeit_text(gmdate('Y-m-d H:i:s'), ', ');
+$jetzt   = datum_zeit_text(gmdate('Y-m-d H:i:s'));
 $umg     = umgebung();
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 

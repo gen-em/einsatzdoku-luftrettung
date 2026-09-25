@@ -1672,7 +1672,7 @@ function edbak_zeitpunkt_text(?string $iso): string
     if (!$iso) { return 'unbekannt'; }
     /* Mittelpunkt zwischen Datum und Uhrzeit (Mockup 40: „03.08.2026 ·
      * 22:10") — derselbe Trenner wie in der Umfangszeile darunter. */
-    try { return datum_zeit_text((string)$iso, ' · '); }
+    try { return datum_zeit_text((string)$iso); }
     catch (Throwable) { return (string)$iso; }
 }
 

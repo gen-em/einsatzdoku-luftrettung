@@ -3906,7 +3906,7 @@ Dienst nachliefert, sendet beliebig viele Stücke.
 >
 > **Woran du es siehst:** In **Einstellungen → Geräte** trägt die Zeile des
 > Geräts eine orange Plakette „abgewiesen" und in der Kleinzeile die Zahl mit
-> Zeitpunkt — „30 abgewiesen seit 16.09.2026 11:01". Beides verschwindet von
+> Zeitpunkt — „30 abgewiesen seit 16.09.2026, 11:01". Beides verschwindet von
 > selbst, sobald wieder ein Upload durchkommt.
 
 **Auf Betrieb → Status** stehen dazu bis zu drei Zeilen, sobald es etwas zu
@@ -3917,7 +3917,7 @@ steht auch der Knopf zum Aufheben.
 ### 11.4b Sicherheit — wer ausgesperrt ist, und wie man ihn wieder hereinlässt
 
 Unter **Betrieb → Status**, Knopf **„Sicherheit"** neben dem Titel *(seit
-Web 20.12.0)*. Fünf Karten:
+Web 20.12.0)*. Sechs Karten:
 
 | Karte | Was dort steht |
 |---|---|
@@ -3925,6 +3925,7 @@ Web 20.12.0)*. Fünf Karten:
 | **Verlangsamung** | Ob die Bremse gerade läuft, und jeder **Anstieg** der Stufe in den letzten 30 Tagen |
 | **Mengenbremse der Geräte** | Geräte mit abgewiesenen Anmeldungen, dazu gesperrte Gerätekennungen und Anschlüsse |
 | **Ereignisse der letzten 30 Tage** | Alles zusammen, das Jüngste zuerst |
+| **Löschungen auf Sicherungszielen** | Was die Aufbewahrungsregel auf einem Backup-Ziel entfernt hat, mit Datei, Größe und Zeitpunkt *(seit Web 20.14.0)* |
 | **Meldung per Mail** | Ob die Sammelmeldung eingeschaltet ist, wann zuletzt eine hinausging, an wen |
 
 **Der Knopf „Aufheben" ist für den Anruf gedacht**, nicht als Regelweg: Eine
@@ -3950,6 +3951,44 @@ ohnehin nicht mehr gesperrt. Es kommt eine Rückfrage, und der Vorgang wird
 Die Seite ist auch im **Wartungsmodus** erreichbar. Das ist Absicht: Wer
 jemanden wieder hereinlassen muss, während die Anwendung zu ist, braucht
 genau sie.
+
+#### Sicherheit: Schwellen, Aufräumen, Mailregel
+
+*Bis Web 21.0.0 stand das als Absätze in den Karten und in der zugeklappten
+Karte „Was hier gilt" (P5c/AP9).*
+
+**Eine einzige Handlung ändert etwas: „Aufheben".** Alles andere auf der
+Seite wird nur gelesen. Die Zahlen selbst — Grenzen, Sprossen, Schwellen —
+stellst du unter *Betrieb → Servereinstellungen*, Karte „Ratenschutz", ein.
+
+**Verlangsamung.** Die Bremse greift erst ab 200 Fehlversuchen je 15 Minuten
+über die ganze Installation — ein Wert, den ein gewöhnlicher Dienstbetrieb
+nicht erreicht. Während sie läuft, wartet jede **fehlgeschlagene** Anmeldung;
+wer das richtige Passwort hat, kommt ohne Verzögerung durch. Vermerkt wird
+jeder **Anstieg** der Stufe, nicht jeder Fehlversuch — sonst stünde nach einer
+Stunde Angriff ein Eintrag je Versuch. Ein Ende hat kein eigenes Ereignis; die
+Bremse fällt von selbst, sobald das 15-Minuten-Fenster leerläuft.
+
+**Mengenbremse der Geräte.** 30 fehlgeschlagene Geräteanmeldungen je
+Viertelstunde, danach dieselbe Leiter wie bei der Anmeldung. Der einzige Fall,
+in dem es ein echtes Gerät trifft, ist ein veralteter Schlüssel — es verliert
+dabei nichts und sendet später; die Abhilfe ist neu koppeln (Abschnitt 10).
+
+**Löschungen auf Sicherungszielen.** Der Versand ergänzt sonst nur: Der Zweck
+eines auswärtigen Ziels ist, den Ausfall dieses Servers zu überleben — samt
+eines Fehlers, der hier zu viel löscht. Wo die Aufbewahrungsregel an ist,
+entfernt sie nur, was dem Namensmuster einer Sicherung entspricht **und** im
+Versandprotokoll dieser Installation steht; fremde Dateien bleiben.
+
+**Meldung per Mail.** Erreicht eine Sperre die letzte Sprosse oder die
+Verlangsamung ihre vierte Stufe, geht **eine** Sammelmeldung hinaus —
+höchstens eine je Stunde. Sie sagt nicht, dass jemand hereingekommen ist,
+sondern dass es jemand versucht.
+
+**Aufräumen.** Der Aufräumjob löscht jede Nacht, was älter als 30 Tage ist —
+Ereignisse, Gerätevermerke, CSP-Berichte, erledigte Warteschlangenzeilen und
+den Job-Verlauf. Die Frist gilt in der laufenden Datenbank, nicht im
+versiegelten Abzug eines Komplett-Backups.
 
 ### 11.5 Installation
 
@@ -4532,6 +4571,20 @@ festgehalten, und der Grund steht im Serverprotokoll deines Hosters unter der
 Kennung `protokoll:`. Der häufigste Grund: Ein Update ist eingespielt, aber
 `update.php` ist noch nicht gelaufen.
 
+#### Die Ampel der Statusseite
+
+*Bis Web 21.0.0 stand das in der zugeklappten Karte „Was hier gilt" am Ende
+der Seite (P5c/AP9).* Die Ampel hat **vier Töne**, und sie bedeuten auf der
+ganzen Seite dasselbe: **Blau** — es ist in Ordnung. **Orange** — es braucht
+Aufmerksamkeit, arbeitet aber. **Rot** — es arbeitet nicht, oder es geht dabei
+etwas verloren. **Neutral** — nicht eingerichtet, oder eine reine Zahl ohne
+Wertung. Die Meldung oben zählt die roten und orangen Zeilen.
+
+Einen **Zwischenspeicher** über die ganze Seite gibt es bewusst nicht: Eine
+Statusseite, die einen Zustand zeigt, den es nicht mehr gibt, ist schlechter
+als keine. Die Testmail geht höchstens dreimal je Stunde hinaus; danach sagt
+die Zeile „Letzter Versand", ob sie angenommen wurde.
+
 ### 12.2 Statistik
 
 **Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend,
@@ -4820,6 +4873,41 @@ besser einen Zeitplan ein, weil der Rückstand sonst wächst; welcher der beiden
 geht, sagt der Hoster. Die Adresse enthält ein **Geheimnis** — sie gehört nicht
 in eine Mail und nicht in ein Ticket. „Neues Token erzeugen" macht die alte
 Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
+
+#### Die drei Auslöser, Budget und Reihenfolge
+
+*Bis Web 21.0.0 stand das auf der Seite selbst, als Absätze in der Karte
+„Auslöser" und in einer zugeklappten Karte „Was hier gilt" (P5c/AP9).*
+
+**1. Kommandozeile** (empfohlen) — ein Eintrag im Cron des Webspace. Jede
+Minute ist unbedenklich: Ein Lauf ohne Arbeit kostet zwei Abfragen.
+**2. Abruf über die Adresse** — wo es keinen Cron auf der Kommandozeile gibt,
+aber einen zeitgesteuerten Abruf („Cronjob per URL"). **3. Huckepack auf einer
+Anfrage** — der Rückfall, immer eingeschaltet. Er trägt höchstens 3 Sekunden
+je Anfrage und wiederholt sich frühestens nach 5 Minuten: genug, damit eine
+Installation ohne jede Einrichtung nicht stillsteht, zu wenig für einen großen
+Rückstand. Wer 1. oder 2. eingerichtet hat, merkt ihn nicht.
+
+**Budget.** Ein Lauf arbeitet, bis seine Zeit um ist, und hört dann auf — er
+bricht nichts ab, sondern merkt sich, wo er war. Die Kommandozeile bekommt
+300 Sekunden, der Abruf über die Adresse 20, die Anfrage 3.
+
+**Reihenfolge.** Die Jobs laufen in der Reihenfolge der Liste in der Karte
+„Zustand", und was ins Restbudget nicht mehr passt, kommt beim nächsten Mal.
+Deshalb steht die eigentliche Arbeit vorn und das Sicherheitsnetz („Verwaiste
+GPS-Daten") hinten.
+
+**Ein Rückstand ist kein Fehler.** Er zählt auch mit, was einfach noch zu
+frisch ist: GPS-Daten werden erst zwei Wochen nach dem Einsatz verdichtet und
+sechs Monate danach ausgedünnt.
+
+**Was liegenbleibt und warum.** Eine **Lücke in der Nummernfolge** hält die
+Verdichtung an, weil die Position im Paket die Nummer des Punkts ist — eine
+Lücke verschöbe jeden Punkt dahinter. **Zu viele Punkte** (über 50 000 je
+Aufzeichnung) bleiben als Zeilen stehen, weil ein Backup so große GPS-Daten
+nicht wiederherstellen könnte. Steht bei **Punkte auf ausgedünnten GPS-Daten**
+eine Zahl, nimmt die Uhr-Schnittstelle Punkte an, die sie nach der Ausdünnung
+verwerfen sollte.
 
 ### 12.5 Servereinstellungen
 

@@ -361,7 +361,7 @@ ui_seite_start(['titel' => 'Konto-Backups']);
                `iso_utc()`, und das `DateTime` in `fmt_local()` liest die
                T/Z-Marke selbst — nachgerechnet ueber 112 574 Zeitpunkte
                ueber Sommer- und Winterzeit, 0 Abweichungen. */
-            ? ' Begonnen ' . datum_zeit_text((string)$auftrag['seit'], ' · ') . ' Uhr.'
+            ? ' Begonnen ' . datum_zeit_text((string)$auftrag['seit']) . ' Uhr.'
             : ''), 'Auftrag läuft.') ?>
   <?php endif; ?>
   <?php if ($speicher['voll']): ?>

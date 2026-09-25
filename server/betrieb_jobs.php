@@ -196,25 +196,22 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         $zst   = json_decode((string)($j['zustand'] ?? ''), true);
         $stand = is_array($zst) ? ($zst['stand'] ?? []) : [];
         $benennung = [
+            /* JE KLEINZEILE EIN SATZ (P5c/AP9, E-P5c-06); die Begründungen
+             * stehen im Handbuch 12.4, „Was liegenbleibt und warum". */
             'luecke'      => ['Lücke in der Nummernfolge',
-                              'Diese GPS-Daten werden NICHT verdichtet — die Position im '
-                            . 'Blob ist die Nummer, eine Lücke verschöbe jeden Punkt '
-                            . 'dahinter. Meist eine Uhr, die ein Teilstück nie '
-                            . 'nachgeliefert hat.'],
+                              'Wird nicht verdichtet — meist hat eine Uhr ein Teilstück '
+                            . 'nie nachgeliefert.'],
             'zu_gross'    => ['Zu viele Punkte',
-                              'Über 50 000 Punkte je Aufzeichnung. Solche GPS-Daten sind aus '
-                            . 'einem Backup nicht wiederherstellbar; sie bleibt '
-                            . 'deshalb als Zeilen stehen.'],
+                              'Über 50 000 Punkte je Aufzeichnung — bleibt als Zeilen '
+                            . 'stehen, weil ein Backup sie nicht wiederherstellen könnte.'],
             'stufe3'      => ['Punkte auf ausgedünnten GPS-Daten',
-                              'Erwartet werden hier null. Steht eine Zahl da, nimmt '
-                            . 'die Uhr-Schnittstelle Punkte an, die sie nach der '
-                            . 'Ausdünnung verwerfen sollte.'],
+                              'Hier sollte null stehen.'],
             'nachzuegler' => ['Wartet auf die Verdichtung',
-                              'Zu diesen GPS-Daten sind noch Punkte nachgekommen. Sie '
-                            . 'werden erst verdichtet und dann ausgedünnt.'],
+                              'Es sind noch Punkte nachgekommen; sie werden erst '
+                            . 'verdichtet, dann ausgedünnt.'],
             'fehler'      => ['Prüfung nicht bestanden',
-                              'Die Rundlauf- oder Ausdünnungsprüfung hat angeschlagen. '
-                            . 'Es wurde NICHTS gelöscht und NICHTS ersetzt.'],
+                              'Die Rundlauf- oder Ausdünnungsprüfung hat angeschlagen; '
+                            . 'gelöscht oder ersetzt wurde nichts.'],
         ];
         foreach ($benennung as $art => [$titel, $erklaerung]):
             $liste = $stand[$art] ?? [];
@@ -244,9 +241,9 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_an">
         <h3 class="listen-form-titel">Anhalten</h3>
         <p class="feld-hinweis">Für den Fall, dass etwas schiefläuft oder ein
-           großes Backup einzuspielen ist. Die Pause läuft von selbst ab —
-           länger als <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden am Stück
-           geht nicht.</p>
+           großes Backup einzuspielen ist — die Pause läuft nach höchstens
+           <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden von selbst ab.
+           <a href="hilfe.php#12-4-hintergrundjobs">Handbuch: Hintergrundjobs</a></p>
         <?php ui_segment(['name' => 'dauer', 'wert' => '1800',
                           'label' => 'Dauer der Pause',
                           'optionen' => array_map('strval',
@@ -283,20 +280,20 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <?php if ($jobsMeldung): ?>
       <?= ui_meldung_markup($jobsMeldung[0], $jobsMeldung[1]) ?>
     <?php endif; ?>
-    <p class="seiten-erklaerung">Dieselbe Arbeit über drei Wege. <strong>Einer
-       genügt</strong> — eingerichtet werden muss keiner, dann läuft sie
-       huckepack auf den Anfragen mit.</p>
+    <?php /* EIN SATZ JE KARTE (P5c/AP9, E-P5c-06). Bis Web 21.0.0 stand hier
+             ein Seitenkopf MITTEN IN DER KARTE und je Weg ein eigener Absatz;
+             das steht jetzt im Handbuch 12.4, „Die drei Auslöser, Budget und
+             Reihenfolge". Die Warnung zur Adresse bleibt als Meldung. */ ?>
+    <p class="feld-hinweis">Einer der drei Wege genügt; ohne Einrichtung läuft
+       die Arbeit huckepack auf den Anfragen mit.
+       <a href="hilfe.php#die-drei-ausloeser-budget-und-reihenfolge">Wie die drei Wege arbeiten</a></p>
 
     <h3 class="listen-form-titel">1. Kommandozeile <span class="feld-klein-inline">empfohlen</span></h3>
-    <p class="feld-hinweis">Ein Eintrag im Cron des Webspace. Jede Minute ist
-       unbedenklich: Ein Lauf ohne Arbeit kostet zwei Abfragen.</p>
     <?= ui_codeblock_lang('* * * * * php ' . __DIR__ . '/jobs.php') ?>
 
     <h3 class="listen-form-titel">2. Abruf über die Adresse</h3>
-    <p class="feld-hinweis">Wo es keinen Cron auf der Kommandozeile gibt, aber
-       einen zeitgesteuerten Abruf („Cronjob per URL"). Die Adresse enthält ein
-       <strong>Geheimnis</strong> — sie gehört nicht in eine Mail und nicht in
-       ein Ticket.</p>
+    <?= ui_meldung_markup('warn', 'Die Adresse enthält ein Geheimnis — sie gehört '
+        . 'nicht in eine Mail und nicht in ein Ticket.') ?>
     <?php if ($tokenAdresse !== null): ?>
       <?= ui_codeblock_lang($tokenAdresse, 'Adresse') ?>
       <form method="post" action="betrieb_jobs.php">
@@ -312,37 +309,11 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
       </form>
     <?php endif; ?>
 
-    <h3 class="listen-form-titel">3. Huckepack auf einer Anfrage</h3>
-    <p class="feld-hinweis">Der Rückfall, immer eingeschaltet. Er trägt
-       höchstens <?= (int)JOB_BUDGET_ANFRAGE ?> Sekunden je Anfrage und wiederholt
-       sich frühestens nach <?= (int)(JOB_ANFRAGE_PAUSE_S / 60) ?> Minuten — genug,
-       damit eine Installation ohne jede Einrichtung nicht stillsteht, zu wenig
-       für einen großen Rückstand. Wer 1. oder 2. eingerichtet hat, merkt ihn
-       nicht.</p>
+    <h3 class="listen-form-titel">3. Huckepack auf einer Anfrage <span class="feld-klein-inline">immer an</span></h3>
   <?php ui_karte_ende(); ?>
-
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
-                        'vorschau' => 'Budget · Reihenfolge · Anhalten']); ?>
-    <p class="feld-hinweis"><strong>Budget.</strong> Ein Lauf arbeitet, bis
-       seine Zeit um ist, und hört dann auf — er bricht nichts ab, sondern
-       merkt sich, wo er war. Die Kommandozeile bekommt
-       <?= (int)JOB_BUDGET_CLI ?> Sekunden, der Abruf über die Adresse
-       <?= (int)JOB_BUDGET_TOKEN ?>, die Anfrage <?= (int)JOB_BUDGET_ANFRAGE ?>.</p>
-    <p class="feld-hinweis"><strong>Reihenfolge.</strong> Die Jobs laufen in
-       der Reihenfolge dieser Liste, und was ins Restbudget nicht mehr passt,
-       kommt beim nächsten Mal. Deshalb steht die eigentliche Arbeit vorn und
-       das Sicherheitsnetz („Verwaiste GPS-Daten") hinten.</p>
-    <p class="feld-hinweis"><strong>Anhalten</strong> geht seit Web 19.3.0
-       über den Knopf in der Karte „Zustand" — und weiterhin auf der
-       Kommandozeile: <code>php jobs.php --pause &lt;Sekunden&gt;</code>
-       (<code>0</code> hebt auf). Beide Wege schreiben denselben Wert.
-       Höchstens <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden am Stück; die
-       Pause läuft von selbst ab — eine vergessene hält die Installation nicht
-       dauerhaft an.</p>
-    <p class="feld-hinweis"><strong>Ein Rückstand ist kein Fehler.</strong> Er
-       zählt auch mit, was einfach noch zu frisch ist: GPS-Daten werden erst zwei
-       Wochen nach dem Einsatz verdichtet und sechs Monate danach ausgedünnt.</p>
-  <?php ui_karte_ende(true); ?>
+  <?php /* DIE KARTE „WAS HIER GILT" IST MIT P5c/AP9 ENTFALLEN (E-P5c-49).
+           Budget, Reihenfolge, Anhalten auf der Kommandozeile und „Ein
+           Rückstand ist kein Fehler" stehen im Handbuch 12.4. */ ?>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(['skripte' => ['assets/kopieren.js']]); ?>

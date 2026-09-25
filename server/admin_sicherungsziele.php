@@ -307,7 +307,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       if ($bestand['aeltester'] !== null) {
           ui_zeile(['text' => 'Ältester Stand',
                     'klein' => 'Der jüngste ist von '
-                             . datum_zeit_text((string)$bestand['juengster'], ' · ') . ' Uhr',
+                             . datum_zeit_text((string)$bestand['juengster']) . ' Uhr',
                     'plaketten' => ui_plakette(
                         datum_text((string)$bestand['aeltester']), ['ton' => 'neutral'])]);
       }
@@ -459,7 +459,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
             /* NICHT noch einmal „zuletzt in Ordnung" — das steht schon als
                Plakette daneben. Bei 390 px umfliesst die Kleinzeile die
                Plaketten, und jedes doppelte Wort kostet dort eine Zeile. */
-            $klein .= ' · ' . datum_zeit_text((string)$z['letzter_erfolg'], ' · ') . ' Uhr';
+            $klein .= ' · ' . datum_zeit_text((string)$z['letzter_erfolg']) . ' Uhr';
         }
         ?>
         <form method="post" id="zp-<?= (int)$z['id'] ?>" hidden>
@@ -542,7 +542,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
             ui_zeile(['text' => 'Zuletzt gescheitert',
                       'klein' => (string)$z['letzter_fehler'],
                       'plaketten' => ui_plakette(
-                          datum_zeit_text((string)$z['letzter_lauf'], ' · '),
+                          datum_zeit_text((string)$z['letzter_lauf']),
                           ['ton' => 'rot'])]);
         }
         ?>

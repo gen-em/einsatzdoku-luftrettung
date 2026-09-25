@@ -373,7 +373,7 @@ ui_seite_start(['titel' => 'Statistik']);
 
   <?php ui_titelzeile([
       'titel' => 'Statistik',
-      'unter' => 'Stand ' . e(datum_zeit_text(gmdate('Y-m-d H:i:s'), ' · ')) . ' Uhr · '
+      'unter' => 'Stand ' . e(datum_zeit_text(gmdate('Y-m-d H:i:s'))) . ' Uhr · '
                . '<strong>ohne Demo-Konto</strong> · rein lesend',
   ]); ?>
 

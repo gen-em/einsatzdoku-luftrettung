@@ -96,7 +96,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $anAlt)) {
 }
 
 $adresse = app_url();
-$jetzt   = datum_zeit_text(gmdate('Y-m-d H:i:s'), ', ');
+$jetzt   = datum_zeit_text(gmdate('Y-m-d H:i:s'));
 
 /* Erkennungswert wie `asset()`, aber diese Seite lädt db.php ohnehin — der
  * Aufruf steht hier trotzdem ausgeschrieben, damit sie ohne `ui.php` auskommt

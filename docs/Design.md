@@ -643,6 +643,40 @@ Redesign zurückzunehmen.
 > braucht `input[type=checkbox].meine-klasse` — `.meine-klasse` allein
 > verliert, und das Kästchen bleibt 20 × 20 px groß und fängt Klicks ab.
 
+### Erklärtext: ein Satz je Karte, der Rest steht im Handbuch
+
+*Seit Web 21.1.0 (P5c/AP9, E-P5c-06, -49, -128).* Wer eine Seite zum
+zehnten Mal öffnet, liest den Text darauf nicht mehr und muss trotzdem daran
+vorbei. Deshalb gilt unter **Verwaltung** und **Betrieb**:
+
+- **Je Karte höchstens ein Satz**, der sagt, was hier passiert — als
+  `<p class="feld-hinweis">`, dahinter der Verweis ins Handbuch
+  (`<a href="hilfe.php#…">`) auf die Stelle, an der das Erklärende steht.
+  Die Sprungmarke ist die, die `doku_marke()` aus der Überschrift bildet; die
+  Ankerprüfung im Tor hält jeden Verweis dagegen.
+- **Der Seitenkopf** (`ui_titelzeile(['unter' => …])` oder
+  `<p class="seiten-erklaerung">`) trägt höchstens einen Satz.
+- **Eine Kleinzeile bleibt eine Zeile** — unter einem Feld wie unter einer
+  Zeile (`'klein'`): höchstens ein Satz.
+- **Warnungen bleiben Meldungen** (`ui_meldung()`), keine Absätze.
+- **Keine Karte „Was hier gilt"** mehr (bis Web 21.0.0 nach R74 (5) die
+  zugeklappte Karte am Seitenende). Ihr Inhalt steht im Handbuch am Ende des
+  Kapitels, und jede Karte der Seite verweist auf ihre Stelle.
+
+Ausgenommen sind, weil sie Zustand und keine Erklärung sind: der Satz eines
+**Leerzustands** („Zurzeit keine."), die **Befundzeilen** der Statusseite
+(`status_erhebung()`, `plattform_pruefen()`), Meldungen, Dialoge und
+Kopierwerte. Der Bereich **Einstellungen** folgt der Regel noch nicht
+(E-P5c-06); drei Seiten außerhalb tragen die Karte „Was hier gilt" bis
+Schritt 17 (Nr. 287).
+
+**Gezählt wird so** (E-P5c-128): S = fester Kartentext in Sätzen, Sb_max =
+die meisten bedingten Sätze, die gleichzeitig sichtbar sind; Soll
+**S + Sb_max ≤ 1**. Ein Satz endet mit `.`, `!` oder `?`; ein Stück ohne
+Satzzeichen zählt ab vier Wörtern. Kartentitel, Vorschau, Zeilentitel,
+Beschriftungen, Zwischenüberschriften, Link- und Knopftexte sind nie Sätze.
+Belegt wird die Zählung mit einer unabhängigen Gegenprobe.
+
 ### Text, den niemand im Repositorium kontrolliert, bricht selbst um
 
 **Regel:** Ein Baustein, dessen Inhalt aus der **Datenbank** oder aus einer
@@ -939,7 +973,8 @@ für eine Rückfrage — nicht für ein neues Element.
 | einen Hinweis unter einem Feld | `<p class="feld-klein">` | `<small>` |
 | einen Hinweis vor einem Feld | `<p class="feld-hinweis">` | dasselbe wie oben |
 | einen Zusatz **in** einer Beschriftung | `<span class="feld-klein-inline">` | Klammern im Beschriftungstext |
-| einen Erklärabsatz oben auf der Seite | `<p class="seiten-erklaerung">` — **einen**, keine zwei | zwei Absätze Vorrede |
+| einen Satz oben auf der Seite | `ui_titelzeile(['unter' => …])` oder `<p class="seiten-erklaerung">` — **höchstens einen Satz** (Kapitel 6, Erklärtext) | zwei Absätze Vorrede |
+| erklären, **wie** etwas funktioniert | ein Absatz im Handbuch am Kapitelende, in der Karte ein Satz mit Verweis `hilfe.php#…` (Kapitel 6, Erklärtext) | eine Karte „Was hier gilt", mehrere Absätze in der Karte |
 | einen Knopf am Ende eines Formulars | `ui_knopf()` in `<div class="listen-form-fuss">` | einen blanken `<button>` |
 | einen **Wert zum Abschreiben oder Kopieren** (Kennung, Schlüssel, Prüfsumme, Adresse) | `ui_codeblock_lang()` — beide Stufen und wann welche: 9.18 | ein `<code>` im Fließtext |
 | eine **Liste von Einmalcodes** zeigen oder einen **Code eintippen** lassen | `.codeblock-liste` im Codeblock, `ui_feld([… 'klasse' => 'feld-code'])`: 9.38 | eine Tabelle, ein Feld in Normalschrift |
@@ -2935,8 +2970,10 @@ beiden Rechtstextseiten brauchen eine.
 3. `ui_titelzeile(['titel' => '…', 'zurueck' => […]])` — **nicht** ein blankes
    `<h1>`; der Rückweg gehört dazu.
 4. `ui_meldung($hinweis, $fehler)` direkt darunter.
-5. `<p class="seiten-erklaerung">` — ein Absatz, keine zwei. Wer die Seite zum
-   zehnten Mal öffnet, liest sie nicht mehr und muss trotzdem daran vorbei.
+5. `<p class="seiten-erklaerung">` (oder `'unter'` der Titelzeile) —
+   höchstens **ein Satz**; alles Erklärende steht im Handbuch, und die Karte
+   verweist darauf (Kapitel 6, Erklärtext). Wer die Seite zum zehnten Mal
+   öffnet, liest sie nicht mehr und muss trotzdem daran vorbei.
 6. Inhalt in `ui_karte_start()` … `ui_karte_ende()`; Listen als `ui_zeile()`
    mit `ui_zeilenaktionen()`; Formulare aus `ui_feld()` und Geschwistern.
 7. Der Hauptknopf: `ui_speichern_leiste()` **nur**, wenn man an der Seite

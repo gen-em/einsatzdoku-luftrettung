@@ -558,7 +558,7 @@ function wartung_balken(): string
          * eine Stunde daneben ist besser als eine leere Zeile. */
         $utc = str_replace(['T', 'Z'], [' ', ''], $d['seit']);
         $seit = 'seit ' . (function_exists('fmt_local')
-            ? fmt_local($utc, 'd.m.Y H:i')
+            ? fmt_local($utc, 'd.m.Y, H:i')   // derselbe Trenner wie datum_zeit_text() (E-P5c-37)
             : $utc . ' UTC');
     }
     $von = $d['von'] !== null ? ' von ' . $h($d['von']) : '';

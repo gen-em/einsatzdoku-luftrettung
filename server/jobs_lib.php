@@ -257,7 +257,7 @@ function jobs_katalog(): array
             'titel'        => 'Beantragte Löschungen ausführen',
             'beschreibung' => 'Konten, deren 30-tägige Karenz abgelaufen ist, '
                             . 'endgültig löschen — mitsamt GPS-Daten, Stammdaten und '
-                            . 'Konto-Backups. Eine Anmeldung in der Karenz nimmt '
+                            . 'Konto-Backups; eine Anmeldung in der Karenz nimmt '
                             . 'den Antrag zurück',
             'taeglich'     => false,
             'rueckstand'   => 'job_konto_loeschung_rueckstand',
@@ -273,7 +273,7 @@ function jobs_katalog(): array
             'titel'        => 'Verfallene Registrierungen löschen',
             'beschreibung' => 'Unbestätigte Registrierungen nach 48 Stunden und '
                             . 'wartende nach Ablauf der Freischaltfrist (Vorgabe '
-                            . '30 Tage) löschen. Die Wartenden bekommen vorher '
+                            . '30 Tage) löschen — die Wartenden bekommen vorher '
                             . 'eine letzte Mail',
             'taeglich'     => false,
             'rueckstand'   => 'job_konto_verfall_rueckstand',

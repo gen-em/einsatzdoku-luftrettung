@@ -266,7 +266,7 @@ function status_erhebung(): array
         $wAktiv
             ? 'Wartungsmodus seit '
               . ($wartung['seit'] !== null
-                  ? datum_zeit_text($wartung['seit'], ' · ') . ' Uhr'
+                  ? datum_zeit_text($wartung['seit']) . ' Uhr'
                   : 'unbekannt')
               . ($wartung['von'] !== null ? ' von ' . $wartung['von'] : '')
               . ' — alle anderen Anfragen bekommen 503'
@@ -720,7 +720,7 @@ function status_erhebung(): array
         $gut = $smtpOk === '1';
         $mail[] = status_z('Letzter Versand',
             zeit_relativ($smtpLetzte) . ' · '
-            . datum_zeit_text($smtpLetzte, ' · ')
+            . datum_zeit_text($smtpLetzte)
             . ' Uhr'
             . ($gut ? '' : '. Die Ursache steht im Protokoll unter System — '
                           . 'geprüft wird der Host, nicht die Zugangsdaten'),
@@ -790,7 +790,7 @@ function status_erhebung(): array
         if ($jobPause !== null) {
             $jobZeilen[] = status_z('Pause',
                 'Die Hintergrundarbeit ist angehalten bis '
-                . datum_zeit_text($jobPause, ' · ')
+                . datum_zeit_text($jobPause)
                 . ' Uhr. Aufheben über Betrieb → Hintergrundjobs '
                 . '(oder php jobs.php --pause 0)',
                 'orange', 'angehalten', 'betrieb_jobs.php');

@@ -91,7 +91,7 @@ function datum_text(?string $utc): string
 }
 
 /**
- * Datum und Uhrzeit: „22.09.2026 14:30".
+ * Datum und Uhrzeit: „22.09.2026, 14:30".
  *
  * DER TRENNER WIRD ANGEHAENGT, NICHT INS FORMAT GESCHRIEBEN. Die naheliegende
  * Bauform `fmt_local($utc, 'd.m.Y' . $trenner . 'H:i')` geht fuer die drei
@@ -101,13 +101,21 @@ function datum_text(?string $utc): string
  * „22.09.2026 0000009 30:14" statt „22.09.2026 um 14:30". Und so ein Trenner
  * steht schon im Bestand — `einstellungen.php` baut „ um " aus zwei Aufrufen.
  *
- * DREI TRENNER SIND HEUTE IM UMLAUF (F-ZE-3, FF-5): ein Leerzeichen (25
- * Stellen), ein Mittelpunkt mit Leerzeichen (11) und ein Komma (1 als
- * Literal, vier weitere aus zwei Aufrufen zusammengesetzt). Schritt 15
- * BENENNT sie und aendert keinen Pixel; die Vereinheitlichung entscheidet
- * 10c AP9 — und findet dafuer nach diesem Paket eine Stelle statt 41.
+ * DER TRENNER IST DAS KOMMA (P5c/AP9, E-P5c-37, Nr. 253): „TT.MM.JJJJ,
+ * HH:MM", wie in den freigegebenen Mockups und auf dem Schluesselblatt.
+ * Bis Web 21.0.0 liefen drei Trenner um — ein Leerzeichen (Vorgabe), ein
+ * Mittelpunkt mit Leerzeichen (11 Aufrufer) und ein Komma (8) —, und
+ * dieselbe Zeit stand auf zwei Seiten verschieden da. Schritt 15 hat sie
+ * benannt, AP9 hat die Vorgabe umgestellt und das zweite Argument bei allen
+ * 19 Aufrufern gestrichen. ZWEI BENANNTE AUSNAHMEN: „ um " in den
+ * Mailtexten (`konto_lib.php`, `einstellungen.php`) — ein Satz, keine
+ * Zeitangabe —, und das Leerzeichen im GPX-Spurnamen (`gpx.php`,
+ * E-P5c-129): Der steht in der Datei, `Export-Format.md` legt ihn fest, und
+ * `export.js` baut ihn im Browser gleich. Der Parameter bleibt dafuer; wer
+ * ihn fuer etwas anderes braucht, fragt zuerst, ob es wirklich eine andere
+ * Schreibweise sein soll.
  */
-function datum_zeit_text(?string $utc, string $trenner = ' '): string
+function datum_zeit_text(?string $utc, string $trenner = ', '): string
 {
     if ($utc === null || $utc === '') { return fmt_local($utc); }
     return fmt_local($utc, 'd.m.Y') . $trenner . fmt_local($utc, 'H:i');

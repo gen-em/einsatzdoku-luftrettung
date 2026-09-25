@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
             } else {
                 $a = ankuendigung();
                 $notice = 'Ankündigung gespeichert — sie steht bis '
-                        . datum_zeit_text(iso_utc($a['bis'] ?? time()), ', ')
+                        . datum_zeit_text(iso_utc($a['bis'] ?? time()))
                         . ' über jeder Seite.';
             }
         }
@@ -732,7 +732,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           ? ui_plakette('keine', ['ton' => 'neutral'])
           : ($ankGesp['abgelaufen']
               ? ui_plakette('abgelaufen', ['ton' => 'neutral'])
-              : ui_plakette('sichtbar bis ' . datum_zeit_text(iso_utc($ankGesp['bis']), ', '),
+              : ui_plakette('sichtbar bis ' . datum_zeit_text(iso_utc($ankGesp['bis'])),
                             ['ton' => $ankGesp['ton'] === 'warn' ? 'orange' : 'blau']))]); ?>
     <p class="feld-hinweis">Ein Streifen über jeder Seite, bis er abläuft.
        <a href="hilfe.php#12-8-ankuendigung-und-rundmail">Wie er wirkt</a></p>
@@ -784,7 +784,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         <?php endif; ?>
       </div>
       <p class="feld-klein"><?= $rundZuletzt !== null && $rundZuletzt !== ''
-          ? 'Letzte Rundmail: ' . e(datum_zeit_text($rundZuletzt, ', '))
+          ? 'Letzte Rundmail: ' . e(datum_zeit_text($rundZuletzt))
           : 'Noch keine Rundmail' ?> · höchstens eine je Tag<?= $rundHeute
           ? ' — heute ist sie schon hinausgegangen' : '' ?>.</p>
     </form>
@@ -1220,7 +1220,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         <?php ui_zeile([
           'text'  => (string)$b['richtlinie'] . ' · ' . (string)$b['quelle'],
           'klein' => 'auf ' . (string)$b['seite'] . ' · zuletzt '
-                   . datum_zeit_text((string)$b['zuletzt'], ' · ') . ' Uhr',
+                   . datum_zeit_text((string)$b['zuletzt']) . ' Uhr',
           'plaketten' => ui_plakette((string)$b['anzahl'] . ' Meldungen', ['ton' => 'orange']),
         ]); ?>
       <?php endforeach; ?>

@@ -168,8 +168,8 @@ ui_seite_start(['titel' => 'Status']);
 
   <?php ui_titelzeile([
       'titel' => 'Status',
-      'unter' => 'Was diese Installation gerade meldet. Geändert wird auf der '
-               . 'Seite, auf die die Zeile führt — hier wird nur geprüft.',
+      'unter' => 'Was diese Installation gerade meldet — geändert wird auf der '
+               . 'Seite, auf die die Zeile führt.',
       /* ZWEI HANDLUNGEN NEBEN DEM TITEL, seit P5a/AP8 die Unterseite
          „Sicherheit" dazugekommen ist. `ui_aktionen()` ist der Baustein fuer
          Handlungen DER SEITE; die Titelzeile reicht ihr Markup durch. Die
@@ -281,13 +281,9 @@ ui_seite_start(['titel' => 'Status']);
   <?php $kp = $nach('k-plattform'); ?>
   <?php ui_karte_start(['titel' => $kp['titel'], 'id' => $kp['id'],
                         'vorschau' => 'Muss · Empfohlen · gemessen']); ?>
-    <p class="feld-hinweis"><strong>Dieselbe Liste, die <code>install.php</code>
-       vor der Einrichtung prüft.</strong> <em>Muss</em>: Fehlt es, läuft die
-       Anwendung nicht — die Zeile steht rot. <em>Empfohlen</em>: Die Anwendung
-       läuft vollständig, nur langsamer oder mit einem Handgriff mehr — die
-       Zeile steht als Hinweis und <strong>färbt die Ampel nicht</strong>.
-       Erfüllte Empfehlungen stehen nicht einzeln da; die letzte Zeile nennt
-       ihre Zahl.</p>
+    <p class="feld-hinweis">Dieselbe Liste, die <code>install.php</code> vor
+       der Einrichtung prüft — nur ein fehlendes <em>Muss</em> färbt die Ampel.
+       <a href="hilfe.php#12-1-status">Handbuch: Muss und Empfohlen</a></p>
     <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
@@ -311,17 +307,13 @@ ui_seite_start(['titel' => 'Status']);
       'plakette' => $pf > 0
           ? ui_plakette($pf . ' nicht geschrieben', ['ton' => 'rot'])
           : ui_plakette((string)$pz['alle'] . ' Einträge', ['ton' => 'blau'])]); ?>
-    <p class="feld-hinweis"><strong>Was hier gezählt wird, sind
-       Betriebsereignisse</strong> — Konten, Post, Jobs, Sicherungen. <strong>Kein
-       Zugriffsprotokoll:</strong> Dass jemand einen Einsatz geöffnet, gelesen
-       oder exportiert hat, steht hier nicht und soll hier nicht stehen. Sperren
-       und Angriffsversuche stehen getrennt unter <em>Sicherheit</em>, weil sie
-       IP-Adressen führen und nach 30 Tagen verfallen.</p>
+    <p class="feld-hinweis">Gezählt werden Betriebsereignisse — kein
+       Zugriffsprotokoll.
+       <a href="hilfe.php#karte-betriebsprotokoll-seit-web-20-16-5">Handbuch: Betriebsprotokoll</a></p>
     <?php if ($pf > 0): ?>
       <?php status_zeile(['text' => 'Einträge, die nicht geschrieben werden konnten',
-          'klein' => 'Die Handlungen selbst sind gelungen — das Protokoll lässt sie '
-                   . 'nie scheitern. Aber es hat sie nicht festgehalten. Der Grund '
-                   . 'steht im Serverprotokoll unter „protokoll:".',
+          'klein' => 'Die Handlungen sind gelungen, aber nicht festgehalten — der '
+                   . 'Grund steht im Serverprotokoll unter „protokoll:".',
           'href' => null, 'plakette' => (string)$pf, 'ton' => 'rot']); ?>
     <?php endif; ?>
     <?php foreach (PROTOKOLL_SEITE_REITER as $r => $titel): ?>
@@ -335,34 +327,16 @@ ui_seite_start(['titel' => 'Status']);
           'plakette' => $pz['tag'][$r] . ' heute · ' . $pz['gesamt'][$r] . ' gesamt',
           'ton'   => $pz['gesamt'][$r] > 0 ? 'blau' : 'neutral']); ?>
     <?php endforeach; ?>
-  <?php ui_karte_ende(true); ?>
+  <?php /* OHNE `true` (P5c/AP9, F-P5c-140): Die Karte ist weder zugeklappt
+           noch hat sie eine Vorschau, sie oeffnet also ein <section>. Bis Web
+           21.0.0 stand hier `ui_karte_ende(true)` und schloss mit </details> —
+           der Browser liess das <section> offen, und die folgende Karte
+           rutschte hinein. */ ?>
+  <?php ui_karte_ende(); ?>
 
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
-                        'vorschau' => 'Ampel · prüfen · zwei Ausnahmen']); ?>
-    <p class="feld-hinweis"><strong>Die Ampel hat vier Töne, und sie bedeuten
-       auf dieser Seite überall dasselbe.</strong> <em>Blau</em>: es ist in
-       Ordnung. <em>Orange</em>: es braucht Aufmerksamkeit, arbeitet aber.
-       <em>Rot</em>: es arbeitet nicht — oder es geht dabei etwas verloren.
-       <em>Neutral</em>: nicht eingerichtet, oder eine reine Zahl ohne
-       Wertung.</p>
-    <p class="feld-hinweis"><strong>Die Seite ändert nichts am Bestand.</strong>
-       Jede Zeile führt auf die Seite, die zuständig ist. <strong>Zwei
-       Ausnahmen</strong> führen nicht weg, sondern prüfen an Ort und Stelle:
-       der <em>fehlende Serverschlüssel</em> — von der Seite, die das Problem
-       meldet, auf eine andere zu schicken, wo derselbe Knopf steht, wäre ein
-       Umweg ohne Zweck — und die <em>Testmail</em> im Kopf der Karte
-       „E-Mail". Für SMTP gibt es gar keine zuständige Seite: Der Zugang steht
-       allein in der <code>config.php</code>. Die Testmail geht an die eigene
-       Adresse, höchstens dreimal je Stunde, und danach sagt die Zeile
-       „Letzter Versand", ob sie hinausgegangen ist.</p>
-    <p class="feld-hinweis"><strong>Die Zahlen sind nicht alle gleich alt.</strong>
-       Wartungsmodus, Migrationen, Jobs, Konto-Backups und die Ablage werden
-       bei jedem Aufruf gelesen. Die Größe von Datenbank und Dateien kommt aus
-       der täglichen Messung im Aufräumjob — die Zeile „Datenbank" sagt, wann
-       sie entstanden ist. Ein Zwischenspeicher über das Ganze gibt es
-       bewusst nicht: Eine Statusseite, die einen Zustand zeigt, den es nicht
-       mehr gibt, ist schlechter als keine.</p>
-  <?php ui_karte_ende(true); ?>
+  <?php /* DIE KARTE „WAS HIER GILT" IST MIT P5c/AP9 ENTFALLEN (E-P5c-49): Die
+           Ampel, die zwei Ausnahmen und das Alter der Zahlen stehen im
+           Handbuch 12.1. */ ?>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

@@ -1591,7 +1591,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy. <a href="hilfe.php#3-1f-zweitfaktor">Wie das geht</a></p>
 <?php if ($zf['an']):
         $zfBenutzt = max(0, $zf['codes_alle'] - $zf['codes_offen']);
-        ui_zeile(['text' => 'Eingeschaltet', 'klein' => 'seit ' . datum_zeit_text($zf['seit'], ', ')]);
+        ui_zeile(['text' => 'Eingeschaltet', 'klein' => 'seit ' . datum_zeit_text($zf['seit'])]);
         ui_zeile(['text' => 'Wiederherstellungscodes',
                   'klein' => $zfLeer($zfBenutzt) . ' benutzt — neue Codes machen die alten ungültig',
                   'plaketten' => ui_plakette($zf['codes_offen'] . ' von ' . $zf['codes_alle'],

@@ -370,7 +370,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Steht am ENDE der Muster: Die Reihenfolge der Proben ist die ihres ersten Auftretens, und Messstand und Bilderlauf weiter vorn schoben die demo-empfindlichen Proben hinter den Demo-Reset (F-P5c-127, Nr. 322) |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
 
 **Stufenregel `migration`:** eine neue Kennung in `server/migration_lib.php` heißt mindestens **haupt** — E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3).
 
@@ -766,6 +766,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1) |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
 | `tools/quelltext/` `bestand` | 0 Befunde in allen elf Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |

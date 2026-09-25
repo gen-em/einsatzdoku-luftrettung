@@ -250,7 +250,7 @@ ui_seite_start(['titel' => 'Protokoll']);
     <?php else: ?>
       <div class="zeilen">
       <?php foreach ($liste['zeilen'] as $z) {
-          $klein = array_filter([datum_zeit_text($z['zeit'], ', '), $z['wer'],
+          $klein = array_filter([datum_zeit_text($z['zeit']), $z['wer'],
                                  $z['betrifft'] !== '' ? 'betrifft ' . $z['betrifft'] : '']);
           ui_zeile([
               'text' => $z['text'],
