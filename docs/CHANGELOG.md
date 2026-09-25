@@ -57,6 +57,14 @@ Prüfstand. **Korrekturstufe ohne Migration.**
   Ende muss derselbe Inhalt herauskommen; dazu eine Zieldatei, die zwischen
   zwei Häppchen verschwindet. Gegenprobe gegen die alte Bibliothek: beide
   Fälle offen, 2 von 69.
+- **Werkzeug: Der Bedienweg `ap5-standort-loeschen-variante-b` wartet auf
+  die Seite, nicht auf die Uhr.** Er schickte als einziger Weg ein Formular
+  ab und maß danach nach festen 600 ms. Einzeln reichte das, im Prüfstand
+  des Abschlusses unter Last nicht: Die Adresse trug schon die Zielzeile,
+  die Seite lud noch, und der Weg meldete „Variante b greift nicht" — als
+  wäre das Rettungsmittel mitgelöscht worden. Mit 250 ms lässt sich genau
+  dieses Bild von Hand herstellen. Jetzt wartet er wie alle übrigen Wege
+  auf die Navigation.
 - **Doku:** `docs/Technik.md` 4 (der Siegelzustand sind zwei Zahlen, nicht
   eine, und warum die zweite gezählt wird), Backlog Nr. 328, Prüfdokument
   P5c (F-P5c-170, P-P5c-45), Rahmenplan (Erledigt-Zeile P5c, Abschnitt 6).
