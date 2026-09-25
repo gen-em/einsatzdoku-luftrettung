@@ -7634,5 +7634,8 @@ declare(strict_types=1);
  *   Gefunden hat es der letzte Pruefstand des Abschlusses, dessen Dump
  *   zufaellig ueber zwei Haeppchen lief; die Komplettprobe erzwingt den
  *   Fall seither, statt ihn der Laufzeit zu ueberlassen.
+ *   Dazu `doku_lib.php` ohne `db.php` (F-P5c-171): Die Bibliothek brauchte
+ *   nichts daraus, und die Ankerpruefung, die sie laedt, lief in Stufe 1
+ *   ohne `config.php` in den Abbruch — gruen im Pruefstand, rot im Tor.
  */
 const WEB_VERSION = '21.1.2';

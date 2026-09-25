@@ -3672,6 +3672,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
     Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
 
+329. **Der Prüfstand fährt die Quelltextprüfungen mit eingerichteter Anlage,
+    Stufe 1 ohne.** *Aufgenommen 25.09.2026 in P5c/AP11 (F-P5c-171).* Die
+    Ankerprüfung aus AP9 lädt `server/doku_lib.php`, und die lud `db.php`,
+    das ohne `config.php` abbricht. Im Prüfstand gibt es die Datei — dort
+    war `anker` in jedem Lauf grün. In Stufe 1 gibt es sie nicht, und der
+    erste Lauf auf dem Pull Request von P5c war rot, nach sechs Läufen des
+    Prüfstands. Behoben ist die eine Stelle (`doku_lib.php` braucht `db.php`
+    nicht, Web 21.1.2); **offen ist die Lücke**: Jedes künftige
+    Quelltextwerkzeug, das eine Serverbibliothek mit `db.php` lädt, ist
+    örtlich grün und im Tor rot. *Weg:* Der Prüfstand fährt `quelltext
+    pruefen.sh --selbstprobe` und `alle` mit beiseitegelegter `config.php`
+    — so, wie das Tor sie sieht. *Abnahme:* mit dem Stand vor 21.1.2 im
+    Prüfstand rot an `anker`; mit dem heutigen grün. *Zuordnung:*
+    Backlog-Runde.
+
 ## Erledigt
 
 

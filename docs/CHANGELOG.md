@@ -46,6 +46,15 @@ Prüfstand. **Korrekturstufe ohne Migration.**
   Verwaltung → Protokoll → System „Download … abgebrochen", und dieser
   Stand ist nicht zu retten — ein neues Backup anlegen.
 
+- **Web: `doku_lib.php` lädt `db.php` nicht mehr** (F-P5c-171, Backlog
+  Nr. 329). Die Bibliothek braucht nichts daraus, und `db.php` bricht ohne
+  `config.php` ab. Die Ankerprüfung aus AP9 lädt `doku_lib.php`, und in
+  Stufe 1 gibt es keine `config.php`: Der erste Lauf auf dem Pull Request
+  von P5c war rot, obwohl `anker` in jedem Prüfstand grün war — dort ist
+  die Anlage eingerichtet. Die Seiten laden `db.php` selbst
+  (`doku_seite.php`), für sie ändert sich nichts. **Was bleibt:** Die
+  Lücke zwischen Prüfstand und Tor steht als Nr. 329 im Backlog.
+
 ### Geändert
 
 - **Werkzeug: Die Komplettprobe erzwingt die Versiegelung über mehrere

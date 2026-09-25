@@ -330,7 +330,9 @@ Updates ohne „(R12)", „(R65)", „(R66)" · Handbuch 12.1 (Serverschlüssel)
 | **Der Bedienweg — ein Fehler der Probe, nicht der Anlage** | `probe.mjs --nur ap5-standort-loeschen-variante-b`, einzeln; dann mit verkürzter Wartezeit | einzeln **3 von 3 grün**. Der Weg schickte als einziger ein Formular ab und wartete danach **fest 600 ms** statt auf die Seite. Gegenprobe: mit 50 ms „Execution context was destroyed", mit 150 ms 0 Einträge, mit **250 ms genau das Bild aus dem Prüfstand** — die Seite lud noch. Jetzt wartet der Weg auf die Navigation (`waitForNavigation`, `load`) wie alle übrigen: **3 von 3 grün** |
 | **Prüfstand, Abschluss — fünfter Lauf, angehalten** | frische Anlage (Zwischenstand `0be5261`) | der Bedienweg von eben **grün**, aber die Bedienprobe **56 von 58**: `admin-protokoll-reiter` und `-zeilen` „nicht gefahren" — `net::ERR_TOO_MANY_RETRIES` bzw. eine Navigation nach `chrome-error://`. **Dasselbe Bild wie im ersten Prüfstand von RW-04** (Prüfdokument RW, 0). Im Protokoll des PHP-Servers fehlt die erste Anfrage ganz; sie kam in der Sekunde nach der Anmeldung, als die Startseite rund 90 Verbindungen öffnete. Die Warteschlange von socat lief **nicht** über (`ListenOverflows 0`, `ListenDrops 0`). Nach der Bedienprobe angehalten — der vierte Lauf hatte alles Übrige auf fast demselben Baum grün gezeigt |
 | **Vier Arbeiter für den örtlichen PHP-Server** | `PHP_CLI_SERVER_WORKERS=4` in `lokal_starten.sh` und `lokal_einrichten.sh` (Backlog Nr. 301), dann `hochfahren.sh --neu` und die volle Bedienprobe zweimal | der Weg, den das Prüfdokument RW für den Wiederholungsfall vorgezeichnet hatte. Die Anwendung zählt nichts im Prozessspeicher (0 Treffer für `apcu_`). Anlage mit **1 + 4 Prozessen**, `login.php` 200, Fassung 21.1.2; Bedienprobe **58 von 58** und **58 von 58** |
-| **Prüfstand, Abschluss** | derselbe Aufruf, frische Anlage, nach den drei Behebungen | *steht in der Commit-Nachricht von `P5c-AP11: Abschluss`* |
+| **Prüfstand, sechster Lauf — grün, aber nicht das Ende** | frische Anlage | **50 grün, 0 rot, 0 nicht gemessen, 2 564 s**, im Commit `d33d1bb` |
+| **Stufe 1 auf dem Pull Request #89 — rot** (F-P5c-171) | Lauf 36193373154 | die Selbstprobe von `anker` brach ab: `server/config.php fehlt` aus `db.php`, eingebunden über `doku_lib.php`. In Stufe 1 gibt es keine `config.php`, im Prüfstand schon — dort war `anker` in jedem Lauf grün. Örtlich nachgestellt mit beiseitegelegter `config.php`: Selbstproben **10 von 11**, Prüfungen **12 von 13**, alle übrigen Schritte von Stufe 1 rc 0. `doku_lib.php` braucht aus `db.php` nichts (Tokenzählung: 0 fremde Funktionen); die Zeile ist fort. Danach ohne `config.php` **11 von 11** und **13 von 13**, `anker` 50 Verweise auf 102 Marken, 0 ohne Ziel; mit Anlage `hilfe.php` und `ueber.php` 200. Die Lücke dahinter: Nr. 329 |
+| **Prüfstand, Abschluss** | derselbe Aufruf, frische Anlage, nach den vier Behebungen | *steht in der Commit-Nachricht des Kopf-Commits* |
 
 **Liste der berichtigten Stellen** steht im CHANGELOG unter Web 21.1.1 und
 im Konzept, Abschnitt 5, F-P5c-166 bis -169. **F-P5c-170** entstand nach dem
@@ -388,6 +390,16 @@ Backlog Nr. 328.
 | P-P5c-45 | **Vorhandene Komplett-Backups öffnen** (AP11, Nr. 328, F-P5c-170) | auf **Produktiv**, am besten vor dem Merge: Betrieb → Komplett-Backup, bei jedem Stand der Liste „Herunterladen" (die entsiegelte Fassung, `.sql.gz`); danach `gzip -t` auf jede Datei und Verwaltung → Protokoll → System ansehen. Ältere Stände, die nur noch auf dem Backup-Ziel liegen, öffnet allein die Wiederherstellung (mit Nachweis) — sie sind dieselben Dateien, die der Versand hinaufgeschoben hat | jeder Download läuft bis zum Ende, `gzip -t` meldet nichts, im Reiter System kein Eintrag „Download … abgebrochen" | ein abgebrochener Download, `gzip -t` meldet „unexpected end of file", oder im Reiter System „Download … abgebrochen" mit „falscher Schlüssel …" bzw. „verändert oder unvollständig (Block …)" — **dieser Stand ist nicht zu retten**: nach dem Deploy von 21.1.2 ein neues Komplett-Backup anlegen und den kaputten Stand löschen | offen |
 
 ## 3. Grenzen der benutzten Prüfmittel
+
+**Aus AP11:**
+
+- **Der Prüfstand sieht die Anlage, das Tor nicht.** Die Quelltextprüfungen
+  laufen im Prüfstand neben einer eingerichteten Anlage mit `config.php`,
+  in Stufe 1 ohne. Ein Werkzeug, das über eine Serverbibliothek `db.php`
+  lädt, ist deshalb örtlich grün und im Tor rot — so ging es `anker`
+  (F-P5c-171). Bis Nr. 329 gebaut ist, fährt man bei einer Änderung an
+  `tools/quelltext/` die Prüfungen einmal von Hand mit beiseitegelegter
+  `config.php`.
 
 **Aus AP9:**
 
