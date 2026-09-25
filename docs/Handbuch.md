@@ -286,9 +286,10 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 | **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation**, Demo-Konto, Protokoll — **Kapitel 11** |
 | **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
 
-Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen Geräten
-untereinander. Abmelden steht getrennt am Ende und fragt sicherheitshalber
-nach.
+Jeder Block ist eine eigene Karte; im Kopf stehen ein rundes Zeichen, sein
+Name und die Zahl der Einträge. Am Schreibtisch stehen die Blöcke
+nebeneinander, auf schmalen Geräten untereinander. Abmelden steht getrennt
+am Ende und fragt sicherheitshalber nach.
 
 Der Punkt für die Stammdaten hat zweimal den Namen gewechselt, und beide alten
 Links funktionieren weiter. Bis Web 6.3.0 hieß er „Standortdaten" und trug
@@ -299,7 +300,10 @@ dessen eigener Seite. Der Grund war, dass beide Reiter denselben Bestand
 luden und man zwischen ihnen hin und her ging, um einen einzigen Standort
 einzurichten.
 
-**In der Leiste klappen dieselben drei Blöcke auf und zu.** Offen sind
+**In der Leiste klappen dieselben drei Blöcke auf und zu.** Ihre Namen
+stehen eine Stufe größer in Dunkelblau, der Winkel zum Aufklappen rechts, und
+eine Linie trennt die Blöcke voneinander (seit Web 21.1.0 — bis dahin stand
+der Winkel links, dort, wo die Einträge ihr Symbol tragen). Offen sind
 „Einstellungen" und der Block, in dem die gerade geöffnete Seite steht; die
 übrigen zeigen nur ihren Namen und die Zahl der Einträge dahinter
 („Betrieb · 7"). Ein Klick auf die Zeile klappt sie auf. Was man dabei

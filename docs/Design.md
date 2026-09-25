@@ -364,25 +364,25 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--schnee` | `#FFFCFA` | 35 |  |
-| `--rauch` | `#F7F5ED` | 37 |  |
+| `--schnee` | `#FFFCFA` | 37 |  |
+| `--rauch` | `#F7F5ED` | 39 |  |
 | `--sand` | `#D4C7AD` | 15 |  |
 
 **Schrift**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--asphalt` | `#1A0500` | 23 |  |
-| `--dunkelblau` | `#1A2E4D` | 57 |  |
-| `--gedaempft` | `#6E6459` | 66 |  |
-| `--auf-dunkel` | `#FFFFFF` | 9 | Schrift auf Dunkelblau, 13,62:1 |
+| `--asphalt` | `#1A0500` | 24 |  |
+| `--dunkelblau` | `#1A2E4D` | 64 |  |
+| `--gedaempft` | `#6E6459` | 70 |  |
+| `--auf-dunkel` | `#FFFFFF` | 10 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 38 |  |
-| `--linie-stark` | `var(--gedaempft)` | 11 |  |
+| `--linie` | `#E3DAC6` | 41 |  |
+| `--linie-stark` | `var(--gedaempft)` | 13 |  |
 
 **Orange — Handeln**
 
@@ -405,7 +405,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--rot` | `#D63338` | 14 |  |
-| `--rot-tief` | `#9E2226` | 17 |  |
+| `--rot-tief` | `#9E2226` | 19 |  |
 | `--rosa` | `#FCE2D6` | 7 |  |
 
 **Primärknopf**
@@ -420,13 +420,13 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 8 |  |
-| `--groesse-2` | `13px` | 51 |  |
-| `--groesse-3` | `15px` | 13 |  |
-| `--groesse-4` | `16px` | 13 |  |
-| `--groesse-5` | `19px` | 7 |  |
-| `--groesse-6` | `24px` | 3 |  |
-| `--groesse-titel` | `28px` | 1 |  |
-| `--zeile-eng` | `1.3` | 4 | Titel, Kacheln |
+| `--groesse-2` | `13px` | 56 |  |
+| `--groesse-3` | `15px` | 14 |  |
+| `--groesse-4` | `16px` | 16 |  |
+| `--groesse-5` | `19px` | 11 |  |
+| `--groesse-6` | `24px` | 4 |  |
+| `--groesse-titel` | `28px` | 2 |  |
+| `--zeile-eng` | `1.3` | 5 | Titel, Kacheln |
 | `--zeile` | `1.55` | 2 | Oberfläche |
 | `--zeile-lesen` | `1.6` | 4 | Fließtext in der Lesespalte |
 
@@ -434,32 +434,32 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 76 |  |
-| `--abstand-2` | `8px` | 107 |  |
-| `--abstand-3` | `12px` | 146 |  |
-| `--abstand-4` | `16px` | 61 |  |
-| `--abstand-5` | `24px` | 31 |  |
+| `--abstand-1` | `4px` | 79 |  |
+| `--abstand-2` | `8px` | 117 |  |
+| `--abstand-3` | `12px` | 159 |  |
+| `--abstand-4` | `16px` | 66 |  |
+| `--abstand-5` | `24px` | 34 |  |
 
 **Radien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--radius-klein` | `6px` | 27 | Plakette, Kästchen, Eingabefeld |
-| `--radius` | `10px` | 20 | Knopf, Meldung |
-| `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
+| `--radius-klein` | `6px` | 29 | Plakette, Kästchen, Eingabefeld |
+| `--radius` | `10px` | 21 | Knopf, Meldung |
+| `--radius-gross` | `12px` | 8 | Karte, Blatt, Dialog |
 
 **Maße**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--kopf` | `56px` | 12 |  |
-| `--knopf` | `44px` | 43 |  |
+| `--knopf` | `44px` | 45 |  |
 | `--leiste` | `260px` | 2 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 2 | Seitenleiste 1024–1199 |
 | `--leiste-filter` | `280px` | 1 | Filterleiste der Suche ab 1200 |
 | `--leiste-filter-schmal` | `240px` | 1 | Filterleiste 1024–1199 |
 | `--rahmen` | `1680px` | 3 | Leiste und Inhalt als Einheit |
-| `--lesespalte` | `760px` | 4 | Fließtext |
+| `--lesespalte` | `760px` | 5 | Fließtext |
 | `--schublade` | `320px` | 1 | Höchstbreite der mobilen Schublade |
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--unterpunkt` | `28px` | 2 | Sprungmarke unter dem Menüpunkt |
@@ -472,9 +472,9 @@ auseinanderlaufen kann.
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 51 | Haarlinie |
-| `--strich-stark` | `2px` | 33 | Aktivstrich, Randstrich, Fokus |
-| `--radius-rund` | `999px` | 19 | Zähler, Griff, Punkt — voll rund |
+| `--strich` | `1px` | 58 | Haarlinie |
+| `--strich-stark` | `2px` | 36 | Aktivstrich, Randstrich, Fokus |
+| `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
 | `--schalter-punkt` | `20px` | 4 | 44-px-Zeile passt und greifbar bleibt |
@@ -486,7 +486,7 @@ auseinanderlaufen kann.
 | `--balken` | `8px` | 1 | Höhe des Speicherbalkens |
 | `--logo-kachel` | `var(--kopf)` | 2 | Vorschau-Kachel der Installation … |
 | `--balken-punkt` | `10px` | 2 | Farbpunkt in seiner Legende |
-| `--anmeldekarte` | `400px` | 2 | Karte der Anmeldung (E-P3-38) |
+| `--anmeldekarte` | `400px` | 3 | Karte der Anmeldung (E-P3-38) |
 | `--zeile-frei` | `1.4em` | 1 | Mindesthöhe der Zustandszeile |
 | `--balken-glied` | `28px` | 1 | ein Segment des Passwortstärke- … |
 | `--strich-balken` | `6px` | 1 | … balkens, vier davon (E-P3-16) |
@@ -530,7 +530,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--dauer` | `.24s` | 9 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
-| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
+| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 8 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
 | `--auf-dunkel-leise` | `rgba(255,255,255,.55)` | 2 |  |
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
@@ -795,13 +795,14 @@ neben „Standard der Installation" sprengt sonst jede Zeile.
 | Abfrage | Regelblöcke |
 |---|--:|
 | `@media (min-width:1600px)` | 3 |
-| `@media (min-width:1200px)` | 4 |
+| `@media (min-width:1200px)` | 5 |
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px)` | 3 |
-| `@media (min-width:720px)` | 13 |
+| `@media (min-width:720px)` | 14 |
+| `@media screen and (min-width:720px)` | 1 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 25 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 28 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -877,13 +878,13 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 3 |
 | `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 32 |
-| `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
-| `drucken.svg` | Tabler Icons „printer" (MIT) | 2 |
+| `datenbank.svg` | Tabler Icons „database" (MIT) | 11 |
+| `drucken.svg` | Tabler Icons „printer" (MIT) | 3 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
-| `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 36 |
+| `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 38 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 3 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 37 |
@@ -897,38 +898,38 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 13 |
-| `mail.svg` | Tabler Icons „mail" (MIT) | 8 |
+| `mail.svg` | Tabler Icons „mail" (MIT) | 15 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
 | `plus.svg` | Tabler Icons „plus" (MIT) | 22 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
-| `profil.svg` | Tabler Icons „user" (MIT) | 16 |
-| `protokoll.svg` | Tabler Icons „list" (MIT) | 27 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 28 |
+| `profil.svg` | Tabler Icons „user" (MIT) | 18 |
+| `protokoll.svg` | Tabler Icons „list" (MIT) | 20 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 31 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 14 |
-| `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 20 |
-| `server.svg` | Tabler Icons „server" (MIT) | 7 |
+| `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
+| `server.svg` | Tabler Icons „server" (MIT) | 9 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 21 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 49 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 53 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 12 |
-| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 278 |
+| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 29 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
-| `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
+| `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 32 |
 
@@ -1003,47 +1004,47 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 387 |
 | `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 449 |
 | `ui_geruest_start()` | `.inhalt` | ja | 541 |
-| `ui_leiste_ende()` | `.leiste` | ja (+13 Unterklassen) | 612 |
+| `ui_leiste_ende()` | `.leiste` | ja (+16 Unterklassen) | 612 |
 | `ui_geruest_ende()` | `.inhalt` | ja | 636 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 686 |
 | `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 915 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1051 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 1122 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1206 |
-| `ui_hinweise()` | `.hinweise` | ja | 1254 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1282 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1317 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1370 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1420 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1487 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1534 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1587 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1613 |
-| `ui_karte_start()` | `.karte` | ja (+36 Unterklassen) | 1649 |
-| `ui_karte_ende()` | `.karte` | ja (+36 Unterklassen) | 1729 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1764 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1806 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1854 |
-| `ui_zeile()` | `.zeile` | ja (+34 Unterklassen) | 1918 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 1973 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2022 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2067 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2139 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2181 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2223 |
-| `ui_feld()` | `.feld` | ja (+23 Unterklassen) | 2292 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2357 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2401 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2454 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2498 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2597 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2659 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2700 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2800 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2830 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2842 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 2992 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3070 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1066 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1137 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1224 |
+| `ui_hinweise()` | `.hinweise` | ja | 1272 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1300 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1335 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1388 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1438 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1505 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1552 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1605 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1631 |
+| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1676 |
+| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1760 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1795 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1837 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1885 |
+| `ui_zeile()` | `.zeile` | ja (+34 Unterklassen) | 1949 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2004 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2053 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2098 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2170 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2212 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2254 |
+| `ui_feld()` | `.feld` | ja (+25 Unterklassen) | 2323 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2388 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2432 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2485 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2529 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2628 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2690 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2731 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2831 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2861 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2873 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3023 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3102 |
 
 48 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1095,6 +1096,35 @@ Feldbeschriftung, an derselben Stelle: rechts vom Wort.
 
 ```html
 <h2 class="karte-titel">Notizen<svg class="symbol symbol-schutz">…</svg></h2>
+```
+
+**Variante „Bereichskarte"** (`.karte-bereich`, seit Web 21.1.0, P5c/AP9,
+freigegeben mit M-P5c-01c, E-P5c-29). Der Kopf liegt auf **Rauch** und trägt
+ein rundes **Bereichszeichen** (`.bereich-zeichen`: `--knopf` im Durchmesser,
+Dunkelblau, Symbol in `--auf-dunkel`), den Titel und die Zahl — **als Gruppe
+mittig**. Aufruf: `ui_karte_start(['titel' => …, 'zahl' => …, 'klasse' =>
+'karte-bereich', 'symbol' => 'profil'])`; die Option `symbol` gibt das Zeichen
+vor dem Titel aus. Abgesetzt wird über das Zeichen und die Mitte, **nicht über
+eine Farbe mit Bedeutung** — Orange heißt „hier stehst du", Hellblau
+„erledigt", Rot „Gefahr", und ein getönter Kopf las sich im Mockup als Meldung
+oder Kopfleiste. Kontraste, gerechnet: Weiß auf Dunkelblau 13,6 : 1,
+Dunkelblau auf Rauch (Titel) 12,5 : 1, Gedämpft auf Rauch (Zahl) 5,3 : 1.
+
+- **Ein Verwender:** die Einstellungs-Übersicht (9.27). Ein zweiter braucht
+  einen Grund.
+- **Keine Kopfaktion, keine Plakette.** Mittig gesetzt hätte eine Aktion
+  keinen Platz, und eine Plakette würde die Gruppe aus der Mitte schieben.
+- **Nur offen.** Eine klappbare Karte kennt die Option nicht.
+
+```html
+<section class="karte karte-bereich">
+  <div class="karte-kopf">
+    <span class="bereich-zeichen"><svg class="symbol">…</svg></span>
+    <h2 class="karte-titel">Verwaltung</h2>
+    <span class="karte-zahl">5</span>
+  </div>
+  <div class="karte-inhalt">…</div>
+</section>
 ```
 
 ### 9.2 Zeile — der Listeneintrag
@@ -2073,10 +2103,21 @@ E-S8-07, E-S8-15). Alle drei entstehen in `ui_leiste_einstellungen()` und
 
 **Der Block ist ein Akkordeon.** `<details class="akkordeon leiste-gruppe">`
 mit `<summary class="akkordeon-zeile">` — derselbe Baustein wie in der
-Diensttage-Leiste, nur mit Schriftgrad und Farbe der früheren
-`.leiste-kopfzeile`. Der Winkel steht **links**, wie dort; das freigegebene
-Mockup 01 zeichnet ihn rechts, und diese Abweichung ist Absicht: Zwei Leisten
-mit demselben Mechanismus sollen denselben Griff haben.
+Diensttage-Leiste. **Seit Web 21.1.0 nach Option 1 „Linie"** (P5c/AP9,
+E-P5c-29, Nr. 244, Mockup M-P5c-01c): Der Winkel steht **rechts**, die
+Überschrift eine Stufe größer (`--groesse-4`) in **Dunkelblau**, und vor jedem
+weiteren Block stehen eine Trennlinie und `--abstand-3` Luft. Geändert sind
+nur Regeln an `.leiste-gruppe`; Markup, Aufklappen und das Merken des
+Zustands bleiben.
+
+> **Bis Web 21.0.0 stand der Winkel links**, mit der Begründung „zwei Leisten
+> mit demselben Mechanismus sollen denselben Griff haben" (E-S8-07). Option 1
+> hebt sie **für dieses Menü** auf: Links stand der Winkel genau dort, wo die
+> Einträge ihr Symbol tragen, und zwischen Überschrift und Eintrag lag eine
+> einzige Gewichtsstufe (Bricolage ist nur in 500 und 600 eingebunden) — die
+> Überschrift las sich wie ein Eintrag. **Die Diensttage-Leiste bleibt, wie
+> sie ist:** Winkel links, Jahreszeilen in `--groesse-4`, keine Trennlinie. Sie
+> trägt `.leiste-gruppe` nicht.
 
 Offen sind „Einstellungen" und der Block der aktiven Seite — **in jeder
 Breite**. Der zugeklappte Block zeigt die Zahl seiner Einträge
@@ -2162,17 +2203,27 @@ in der Leiste je Spalte die oberste sichtbare Karte zu markieren. Ein
 
 ### 9.27 Die Einstellungs-Übersicht in drei Spalten
 
-`.uebersicht-raster` mit einer `.uebersicht-gruppe` je Block, ab 1024 px als
+`.uebersicht-raster` mit einer Bereichskarte je Block, ab 1024 px als
 Grid mit `repeat(auto-fit, minmax(var(--uebersicht-spalte), 1fr))`. Die Zahl
 der Spalten ergibt sich damit aus der Zahl der Blöcke und die aus der Rolle —
 eine für eine NutzerIn, zwei für eine Admin, drei für eine BetreiberIn, ohne
 dass das Stylesheet die Rolle kennt.
 
-Die Überschrift des ersten Blocks (`.uebersicht-block-erst`) steht nur
-nebeneinander. Gestapelt stünde „EINSTELLUNGEN" unmittelbar unter der
-Seitenüberschrift „Einstellungen"; in drei Spalten benennt sie die Spalte,
-und ohne sie stünde eine namenlose neben zwei benannten. Im Markup steht sie
-immer, damit ein Vorleseprogramm alle Blöcke gleich benennt.
+**Je Block eine Bereichskarte** (9.1, seit Web 21.1.0): Der Bereichsname ist
+der Kartentitel, die Zahl der Einträge steht daneben, davor das Zeichen —
+`profil` (Einstellungen), `gruppe` (Verwaltung), `server` (Betrieb). Sie
+doppeln je einen Eintrag darunter; das ist mit der Freigabe in Kauf genommen.
+Darin die Übersichtszeilen (`.uebersicht-zeile`: Symbol, Text, Zähler,
+Winkel).
+
+> **Bis Web 21.0.0 stand der Bereichsname als gesperrte Versalzeile über einer
+> titellosen Karte** (`.uebersicht-block`, Mockup 07), und die des ersten
+> Blocks (`.uebersicht-block-erst`) nur nebeneinander — gestapelt hätte
+> „EINSTELLUNGEN" die Seitenüberschrift wiederholt. Beide Klassen sind
+> entfallen, mit ihnen der Behälter `.uebersicht-gruppe` um Überschrift und
+> Karte: Die Karte ist jetzt selbst das Kind des Rasters. Die Sonderregel für den ersten Block braucht es nicht mehr: Ein
+> Kartentitel benennt die Karte, nicht die Seite, und steht deshalb in jeder
+> Breite.
 
 ### 9.28 Vorschlagsliste (`.vorschlaege`)
 

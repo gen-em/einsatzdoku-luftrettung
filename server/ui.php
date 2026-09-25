@@ -1049,12 +1049,14 @@ function ui_einstellungen_punkte(): array
  * nicht, dass es den Eintrag gibt.
  *
  * Gebaut aus dem vorhandenen Akkordeon-Baustein (`.akkordeon-zeile`,
- * `-winkel`, `-inhalt`) — demselben, den die Diensttage-Leiste benutzt. Das
- * freigegebene Mockup 01 zeichnet den Winkel rechts; hier steht er links,
- * weil er in der anderen Leiste links steht und beide Leisten denselben
- * Griff haben sollen. `.leiste-gruppe` setzt nur Schriftgrad und Farbe der
- * bisherigen `.leiste-kopfzeile` — die Blocküberschrift sieht aus wie zuvor
- * und hat einen Winkel dazubekommen.
+ * `-winkel`, `-inhalt`) — demselben, den die Diensttage-Leiste benutzt.
+ * SEIT P5c/AP9 STEHT DER WINKEL RECHTS (Option 1 „Linie", E-P5c-29, Nr. 244):
+ * Bis Web 21.0.0 stand er links, damit beide Leisten denselben Griff haben
+ * (E-S8-07) — und genau dort, wo die Einträge ihr Symbol tragen, so dass sich
+ * die Überschrift wie ein Eintrag las. Das Markup ist unverändert; die
+ * Regeln an `.leiste-gruppe` setzen Winkel, Schriftstufe, Farbe und
+ * Trennlinie. Die Diensttage-Leiste trägt die Klasse nicht und bleibt, wie
+ * sie war.
  *
  * OFFEN IST: „Einstellungen" und der Block der aktiven Seite — in JEDER
  * Breite. Das Konzept sah ab 1024 px alle Blöcke offen vor; damit blieb es
@@ -1129,7 +1131,7 @@ function ui_leiste_einstellungen(string $aktiv): void
  * gibt — dort ist die Leiste eine Schublade, und ein Zahnrad, das ungefragt
  * auf „Profil" landet, verschweigt die übrigen sechzehn Punkte.
  *
- * Verwaltung und Betrieb stehen als abgesetzte Blöcke. „Abmelden" steht
+ * Jeder Bereich ist eine Bereichskarte (seit P5c/AP9). „Abmelden" steht
  * getrennt am Ende, darunter nur der Name der angemeldeten Person.
  */
 function ui_einstellungen_uebersicht(): void
@@ -1141,31 +1143,35 @@ function ui_einstellungen_uebersicht(): void
     ui_titelzeile(['titel' => 'Einstellungen', 'unter' => ui_e(ui_user_label())]);
 
     /* AM SCHREIBTISCH DREI SPALTEN (Konzept AP5 (6)). Gestapelt sind es für
-     * eine BetreiberIn drei Karten mit siebzehn Zeilen — anderthalb
+     * eine BetreiberIn drei Karten mit achtzehn Zeilen — anderthalb
      * Bildschirme, auf denen nur die erste Karte ohne Rollen zu sehen ist.
      * Nebeneinander passt der ganze Bereich auf einen Blick. Das Raster
      * füllt sich nach Rolle von selbst: eine Spalte für eine NutzerIn, zwei
      * für eine Admin, drei für eine BetreiberIn. */
     echo '  <div class="uebersicht-raster">' . "\n";
     foreach ($bloecke as $b) {
-        echo '  <section class="uebersicht-gruppe">' . "\n";
-        /* Die Blocküberschrift steht ÜBER der Karte, nicht in ihr — Mockup 07
-         * zeigt „ADMINISTRATION" als gesperrte Versalzeile außerhalb
-         * (Fable-Kontrolle, F-P3-W).
+        /* JE BEREICH EINE BEREICHSKARTE (P5c/AP9, E-P5c-29, Mockup M-P5c-01c).
+         * Bis Web 21.0.0 stand der Bereichsname als gesperrte Versalzeile
+         * ÜBER einer titellosen Karte (`.uebersicht-block`, Mockup 07), und
+         * der erste Block trug sie nur nebeneinander — gestapelt hätte sie
+         * die Seitenüberschrift wiederholt. Jetzt ist der Name der
+         * Kartentitel, mit Zeichen und Zahl der Einträge, mittig auf Rauch;
+         * die Sonderregel für den ersten Block entfällt, weil ein Kartentitel
+         * etwas anderes ist als eine zweite Überschrift darüber: Er benennt
+         * die Karte, nicht die Seite.
          *
-         * DER ERSTE BLOCK TRÄGT SIE NUR NEBENEINANDER. Gestapelt stünde
-         * „EINSTELLUNGEN" unmittelbar unter der Seitenüberschrift
-         * „Einstellungen" — eine Dublette, und deshalb sah das Konzept hier
-         * keine Überschrift vor. In drei Spalten ist sie etwas anderes: Sie
-         * benennt die Spalte, und ohne sie stünde eine namenlose neben zwei
-         * benannten. Das Stylesheet blendet sie unter 1024 px aus; im Markup
-         * steht sie immer, damit ein Vorleseprogramm alle drei Blöcke
-         * gleich benennt. */
-        $erst = $b['titel'] === '';
-        echo '    ' . ($erst
-                ? '<h2 class="uebersicht-block uebersicht-block-erst">Einstellungen</h2>'
-                : '<h2 class="uebersicht-block">' . ui_e($b['titel']) . '</h2>') . "\n";
-        ui_karte_start([]);
+         * DIE ZEICHEN gehören zur Freigabe: `profil` (Einstellungen — ich),
+         * `gruppe` (Verwaltung — die Konten), `server` (Betrieb — die Anlage).
+         * Sie doppeln je einen Eintrag darunter; das ist in Kauf genommen.
+         *
+         * DIE KARTE IST SELBST DAS KIND DES RASTERS. Bis Web 21.0.0 stand um
+         * Überschrift und Karte ein Behälter `.uebersicht-gruppe`; ohne die
+         * Überschrift hielt er nur noch die Karte und trug keine Regel mehr. */
+        $zeichen = ['einstellungen' => 'profil', 'verwaltung' => 'gruppe',
+                    'betrieb' => 'server'][$b['schluessel']] ?? 'zahnrad';
+        ui_karte_start(['titel' => $b['titel'] !== '' ? $b['titel'] : 'Einstellungen',
+                        'zahl' => (string)count($b['punkte']),
+                        'klasse' => 'karte-bereich', 'symbol' => $zeichen]);
         foreach ($b['punkte'] as $punkt) {
             [$key, $href, $text, $sym] = $punkt;
             echo '    <a class="uebersicht-zeile" href="' . ui_e($href) . '">'
@@ -1175,7 +1181,6 @@ function ui_einstellungen_uebersicht(): void
                . ui_symbol('winkel', 'symbol-rechts uebersicht-winkel') . "</a>\n";
         }
         ui_karte_ende();
-        echo '  </section>' . "\n";
     }
     echo '  </div>' . "\n";
     ui_karte_start();
@@ -1651,7 +1656,16 @@ function ui_plakette(string $text, array $o = []): string
  * („keine", „vom Diensttag", „3 · 1 ausgewählt").
  *
  * $o: titel, zahl, aktion ['text','href','symbol','art','form','attr'],
- *     zu (bool), vorschau, klasse, id, plakette, geschuetzt (bool)
+ *     zu (bool), vorschau, klasse, id, plakette, geschuetzt (bool),
+ *     symbol (Bereichszeichen vor dem Titel — nur mit 'klasse' => 'karte-bereich')
+ *
+ * DIE BEREICHSKARTE (P5c/AP9, E-P5c-29, Mockup M-P5c-01c). `symbol` setzt ein
+ * rundes Zeichen in Dunkelblau vor den Titel; zusammen mit der Klasse
+ * `.karte-bereich` steht der Kopf auf Rauch und die Gruppe aus Zeichen, Titel
+ * und Zahl MITTIG. Gedacht für die Einstellungen-Übersicht; ein zweiter
+ * Verwender braucht einen Grund (Design.md 9.1). Eine Bereichskarte trägt
+ * KEINE Kopfaktion — mittig gesetzt hätte sie keinen Platz. Das Zeichen ist
+ * `aria-hidden` wie jedes Symbol; der Titel daneben sagt, was es meint.
  *
  * DIE KOPFAKTION KANN AUCH EIN ABSENDEKNOPF SEIN (S8/AP3). „Jetzt sichern"
  * auf der Kontoseite ist ein POST, kein Link — mit `form` wird aus dem <a>
@@ -1707,6 +1721,10 @@ function ui_karte_start(array $o = []): void
     echo '<section class="' . $k . '"' . $id . ">\n";
     if (isset($o['titel'])) {
         echo '  <div class="karte-kopf">' . "\n";
+        if (!empty($o['symbol'])) {
+            echo '    <span class="bereich-zeichen">' . ui_symbol((string)$o['symbol'])
+               . "</span>\n";
+        }
         echo '    <h2 class="karte-titel">' . $titel . "</h2>\n";
         if (isset($o['zahl'])) {
             echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";

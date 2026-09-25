@@ -266,7 +266,9 @@ def bausteine_lesen() -> list[dict]:
         'ui_geruest_ende': 'inhalt',
         'ui_leiste_diensttage': 'leiste-liste',
         'ui_leiste_einstellungen': 'leiste-liste',
-        'ui_einstellungen_uebersicht': 'uebersicht-block',
+        # P5c/AP9: `.uebersicht-block` ist entfallen; die Hülle ist das Raster,
+        # die Bereiche sind Karten (`.karte-bereich`, Design.md 9.1).
+        'ui_einstellungen_uebersicht': 'uebersicht-raster',
         'ui_ortsfeld': 'ortsfeld-zeile',
         # P5c/AP1: Variante des Hinweisstreifens bzw. der Meldung (Design.md 9.36).
         'ui_umgebung_hinweis': 'hinweis-umgebung',

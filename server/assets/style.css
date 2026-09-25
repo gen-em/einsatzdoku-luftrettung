@@ -854,20 +854,35 @@ img,svg,video{max-width:100%;height:auto}
 }
 .leiste-leer{color:var(--gedaempft);padding:0 var(--abstand-3)}
 
-/* ---- Die drei Blöcke des Einstellungsmenüs (E-S8-07) ---------------------
- * Ein `<details>` je Block, gebaut aus dem Akkordeon-Baustein. Diese Regeln
- * setzen nur, was die Blocküberschrift von einer Jahreszeile unterscheidet:
- * Schriftgrad und Farbe der bisherigen `.leiste-kopfzeile`. Der Rest — Winkel
- * links, Drehung, Trefferfläche, Innenabstand — kommt vom Baustein und bleibt
- * damit gleich wie in der Diensttage-Leiste.
+/* ---- Die drei Blöcke des Einstellungsmenüs (E-S8-07, Option 1 „Linie") ----
+ * Ein `<details>` je Block, gebaut aus dem Akkordeon-Baustein. Markup,
+ * Aufklappen und das Merken des Zustands (`menue.js`) kommen vom Baustein;
+ * diese Regeln setzen nur, was die Blocküberschrift von einem Eintrag
+ * unterscheidet.
+ *
+ * SEIT P5c/AP9 NACH OPTION 1 „LINIE" (E-P5c-29, Nr. 244, Mockup M-P5c-01c).
+ * Bis Web 21.0.0 unterschied die Überschrift von einem Eintrag nur eine
+ * Gewichtsstufe — Bricolage ist nur in 500 und 600 eingebunden, 400 fällt auf
+ * 500 — und ein Winkel an der Stelle, an der die Einträge ihr Symbol tragen.
+ * Jetzt: Winkel rechts (die linke Spalte gehört allein den Symbolen), eine
+ * Schriftstufe größer in Dunkelblau, Trennlinie und Luft vor jedem weiteren
+ * Bereich. Das hebt für DIESES Menü die Begründung aus E-S8-07 auf („zwei
+ * Leisten mit demselben Mechanismus sollen denselben Griff haben"): Die
+ * Diensttage-Leiste behält Winkel links und Jahreszeilen wie bisher — die
+ * Regeln hängen alle an `.leiste-gruppe`, und die trägt nur dieses Menü.
  *
  * DIE ZAHL STEHT NUR AM ZUGEKLAPPTEN BLOCK. Sie sagt, was verborgen ist
  * („Betrieb · 7"); über einer offenen Liste wäre sie das Abzählen dessen, was
  * man sieht. `aria-hidden`, weil ein Vorleseprogramm die Einträge selbst
  * zählt und die Zahl sonst zweimal ansagt. */
 .leiste-gruppe > .akkordeon-zeile{
-  font-size:var(--groesse-3);
-  color:var(--asphalt);
+  font-size:var(--groesse-4);
+  color:var(--dunkelblau);
+}
+.leiste-gruppe > .akkordeon-zeile > .akkordeon-winkel{order:2;margin-left:auto}
+.leiste-gruppe + .leiste-gruppe{
+  margin-top:var(--abstand-3);padding-top:var(--abstand-3);
+  border-top:var(--strich) solid var(--linie);
 }
 .leiste-gruppe > .akkordeon-inhalt{padding-left:0}
 
@@ -2548,37 +2563,39 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
 }
 .uebersicht-winkel{color:var(--sand)}
-/* Blocküberschrift ÜBER einer Karte („Administration") — Mockup 07 zeigt sie
- * als gesperrte Versalzeile außerhalb der Karte, nicht als Kartentitel. */
-.uebersicht-block{
-  font-family:var(--schrift-kopf);font-size:var(--groesse-1);
-  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--gedaempft);
-  margin:var(--abstand-5) 0 var(--abstand-2) var(--abstand-1);
+/* DIE BEREICHSKARTE (P5c/AP9, E-P5c-29, Mockup M-P5c-01c, Design.md 9.1).
+ * Je Bereich eine eigene Karte; der Kopf trägt ein rundes Bereichszeichen,
+ * den Bereichsnamen und die Zahl der Einträge — als Gruppe MITTIG — und liegt
+ * auf Rauch, dem Ton der Seite. Abgesetzt wird über das Zeichen und die
+ * Mitte, nicht über eine Farbe mit Bedeutung: Orange heißt „hier stehst du",
+ * Hellblau „erledigt", Rot „Gefahr", und ein getönter Kopf las sich im
+ * Mockup als Meldung.
+ *
+ * Bis Web 21.0.0 stand der Bereichsname als gesperrte Versalzeile ÜBER einer
+ * titellosen Karte (`.uebersicht-block`, `.uebersicht-block-erst`); beide
+ * Klassen sind entfallen. */
+.karte-bereich > .karte-kopf{
+  justify-content:center;
+  background:var(--rauch);
+  border-radius:calc(var(--radius-gross) - var(--strich)) calc(var(--radius-gross) - var(--strich)) 0 0;
 }
-/* GESTAPELT KEINE ÜBERSCHRIFT AM ERSTEN BLOCK (Konzept AP5 (6)): Sie stünde
- * unmittelbar unter der Seitenüberschrift „Einstellungen" und sagte dasselbe
- * noch einmal. Nebeneinander benennt sie die Spalte und muss da sein — sonst
- * stünde eine namenlose neben zwei benannten. Im Markup steht sie immer,
- * damit ein Vorleseprogramm alle drei Blöcke gleich benennt. */
-.uebersicht-block-erst{display:none}
-/* Ohne Überschrift beginnt die erste Karte oben; der Abstand der übrigen
- * Blöcke gehört zur Überschrift und entfällt mit ihr. */
-.uebersicht-gruppe:first-child > .uebersicht-block + .karte{margin-top:0}
+.bereich-zeichen{
+  flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);border-radius:var(--radius-rund);
+  background:var(--dunkelblau);color:var(--auf-dunkel);
+}
 
 /* AM SCHREIBTISCH DREI SPALTEN. `auto-fit` füllt nach Rolle: eine Spalte für
  * eine NutzerIn, zwei für eine Admin, drei für eine BetreiberIn — ohne dass
  * das Stylesheet die Rolle kennen müsste. Die 240 px sind die Breite, unter
  * der „Rettungsmittel" mit Symbol und Winkel umbricht. */
 @media (min-width:1024px){
-  .uebersicht-block-erst{display:block}
   .uebersicht-raster{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(var(--uebersicht-spalte),1fr));
     gap:0 var(--abstand-4);
     align-items:start;
   }
-  .uebersicht-gruppe > .uebersicht-block{margin-top:0}
 }
 
 /* Die Anmeldekarte des Einrichters und der Passwortvergabe ist breiter: Dort
