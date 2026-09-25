@@ -8,6 +8,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/format_lib.php';        // groesse_text(), datum_text(), datum_zeit_text()
+require_once __DIR__ . '/adminbackup_lib.php';    // edbak_aufbewahrung()
 
 /**
  * BACKUP-ZIELE — wohin die Backups geschoben werden (E-S2-22, S2/AP7).
@@ -230,9 +231,10 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
 
   <?php ui_titelzeile([
       'titel' => 'Backup-Ziele',
-      'unter' => 'FTPS- und SFTP-Gegenstellen, auf die Backups geschoben '
-               . 'werden. Nicht zu verwechseln mit den Transportzielen unter '
-               . '<a href="einstellungen.php?t=standorte">Standorte</a> — das sind Zielkliniken.',
+      'unter' => 'SFTP- und FTPS-Gegenstellen für die Backups, nicht zu verwechseln '
+               . 'mit den Zielkliniken unter '
+               . '<a href="einstellungen.php?t=standorte">Standorte</a>. '
+               . '<a href="hilfe.php#12-7-backup-ziele">Handbuch: Backup-Ziele</a>',
       'aktionen' => $schluesselDa && $tabelleDa
           ? (($aktiveZiele > 0
               ? ui_knopf(['text' => 'Jetzt versenden', 'symbol' => 'tausch',
@@ -272,10 +274,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                           'plaketten' => ui_plakette('abgebrochen', ['ton' => 'rot'])]); ?>
         <?php endif; ?>
         <?php if (!empty($ergebnis['uebernommen'])): ?>
-          <p class="feld-hinweis"><strong>Der Hostschlüssel wurde übernommen.</strong>
-             Ab jetzt wird er bei jeder Verbindung verglichen; meldet sich der
-             Server einmal mit einem anderen, bricht die Verbindung ab, bevor
-             ein Passwort gesendet wird.</p>
+          <p class="feld-hinweis"><strong>Der Hostschlüssel wurde übernommen</strong>
+             und wird ab jetzt bei jeder Verbindung verglichen.</p>
         <?php endif; ?>
       <?php ui_karte_ende(); ?>
     <?php endif; ?>
@@ -320,9 +320,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                 'plaketten' => ui_plakette((string)(int)$bestand['fremd'],
                     ['ton' => (int)$bestand['fremd'] > 0 ? 'orange' : 'blau'])]);
       ?>
-      <p class="feld-hinweis">Eine Momentaufnahme, gelesen in diesem Augenblick —
-         sie wird nicht gespeichert. Gezählt wird, was dem Namensmuster einer
-         Sicherung entspricht; alles andere steht unter „Fremde Dateien".</p>
+      <p class="feld-hinweis">Eine Momentaufnahme, die nicht gespeichert wird;
+         was nicht dem Namensmuster einer Sicherung entspricht, zählt als fremd.</p>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
@@ -341,23 +340,14 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
        BetreiberIn auf die Suche. */ ?>
   <?php if (!$schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
-      <p class="feld-hinweis">Die Zugangsdaten der Ziele werden verschlüsselt in
-         der Datenbank abgelegt. Der Schlüssel dazu steht in
-         <code>config.php</code> und damit <strong>nicht</strong> im
-         Datenbankdump: Wer die Datenbank hat, hat die Passwörter nicht.
-         Solange kein Schlüssel eingetragen ist, lässt sich kein Ziel anlegen —
-         ein Passwort im Klartext zu speichern kommt nicht in Frage.</p>
+      <p class="feld-hinweis">Die Zugangsdaten der Ziele werden mit dem
+         Serverschlüssel verschlüsselt, und ohne ihn lässt sich kein Ziel anlegen.
+         <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: Schlüssel des Servers</a></p>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Zu den Servereinstellungen', 'symbol' => 'schloss',
                       'art' => 'primaer',
                       'href' => 'betrieb_server.php#k-schluessel']) ?>
       </div>
-      <p class="feld-hinweis">Dort steht die Karte <strong>„Schlüssel des
-         Servers"</strong> — sie legt ihn an, zeigt seine Kennung und druckt das
-         Schlüsselblatt. Beides gehört ins Wiederanlaufpaket: Geht der Schlüssel
-         verloren, sind die Zugangsdaten der Ziele neu einzutragen
-         (verschmerzbar) und ein versiegeltes Komplett-Backup nicht mehr zu
-         öffnen (nicht verschmerzbar).</p>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
@@ -378,9 +368,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                             * Zusage, die neben einer Option steht, die sie
                             * aufhebt, ist schlimmer als keine. */
                            'klein' => 'Der Aufräumjob schiebt neue Pakete auf die '
-                                    . 'aktiven Ziele. Es wird nur ergänzt — gelöscht '
-                                    . 'wird dort nur, wo die Aufbewahrungsregel des '
-                                    . 'Ziels ausdrücklich eingeschaltet ist.']); ?>
+                                    . 'aktiven Ziele und löscht dort nur, wo die '
+                                    . 'Aufbewahrungsregel des Ziels eingeschaltet ist.']); ?>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
@@ -405,9 +394,9 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                     ? ui_plakette('unbekannt', ['ton' => 'neutral'])
                     : ui_plakette((string)$rueck, ['ton' => $rueck > 0 ? 'orange' : 'blau'])]);
       ?>
-      <p class="feld-hinweis">Der Versand schickt, was am Ziel FEHLT — verglichen
-         werden Name und Größe. Eine abgebrochene Übertragung wird deshalb beim
-         nächsten Lauf wiederholt und gilt nicht als erledigt.</p>
+      <p class="feld-hinweis">Der Versand schickt, was am Ziel nach Name und Größe
+         fehlt, und wiederholt deshalb eine abgebrochene Übertragung.
+         <a href="hilfe.php#12-7-backup-ziele">Handbuch: Backup-Ziele</a></p>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
@@ -415,9 +404,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php if ($tabelleDa): ?>
     <?php ui_karte_start(['titel' => 'Ziele', 'id' => 'k-ziele', 'zahl' => count($ziele)]); ?>
       <?php if (!$ziele): ?>
-        <p class="feld-hinweis">Es ist noch kein Ziel eingetragen. Ohne Ziel bleiben
-           die Backups dort, wo sie entstehen — auf demselben Server, dessen
-           Ausfall der Grund für ein Backup wäre.</p>
+        <p class="feld-hinweis">Es ist noch kein Ziel eingetragen — bis dahin
+           bleiben die Backups auf diesem Server.</p>
       <?php endif; ?>
       <?php foreach ($ziele as $z): ?>
         <?php
@@ -571,9 +559,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
           <?php ui_feld(['name' => 'protokoll', 'label' => 'Protokoll', 'art' => 'select',
                          'optionen' => SZ_PROTOKOLLE,
                          'wert' => (string)($form['protokoll'] ?? 'sftp'),
-                         'klein' => 'SFTP erkennt den Server am Hostschlüssel wieder. '
-                                  . 'FTPS verschlüsselt nur die Leitung — das Zertifikat '
-                                  . 'wird von PHP nicht geprüft.']); ?>
+                         'klein' => 'SFTP erkennt den Server am Hostschlüssel wieder, '
+                                  . 'FTPS verschlüsselt nur die Leitung.']); ?>
         </div>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'host', 'label' => 'Rechnername', 'pflicht' => true,
@@ -589,27 +576,26 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                          'wert' => (string)($form['nutzer'] ?? '')]); ?>
           <?php ui_feld(['name' => 'pfad', 'label' => 'Pfad auf dem Ziel',
                          'wert' => (string)($form['pfad'] ?? '/'),
-                         'klein' => 'Der Ordner, in dem die Backups landen. Je Konto '
-                                  . 'entsteht darunter ein Unterordner.']); ?>
+                         'klein' => 'Der Ordner für die Backups, mit einem '
+                                  . 'Unterordner je Konto.']); ?>
         </div>
         <?php ui_feld(['name' => 'geheim', 'label' => 'Passwort', 'art' => 'password',
                        'wert' => '',
                        'klein' => $neu
                            ? 'Bei Anmeldung mit privatem Schlüssel: dessen Passphrase '
                            . '(leer lassen, wenn er keine hat).'
-                           : 'Leer lassen heisst: unverändert. Was gespeichert ist, '
-                           . 'wird nie zurück in dieses Feld geschrieben.']); ?>
+                           : 'Leer lassen heißt unverändert; Gespeichertes wird nie '
+                           . 'in dieses Feld zurückgeschrieben.']); ?>
         <?php ui_feld(['name' => 'schluessel', 'label' => 'Privater Schlüssel (nur SFTP)',
                        'art' => 'textarea', 'zeilen' => 4, 'wert' => '',
                        'platzhalter' => "-----BEGIN OPENSSH PRIVATE KEY-----\n"
                                       . "(der ganze Schlüssel)\n"
                                       . "-----END OPENSSH PRIVATE KEY-----",
-                       'klein' => 'Vollständig einfügen, mit den BEGIN- und END-Zeilen. '
-                                . 'Ist hier etwas eingetragen, wird damit angemeldet und '
-                                . 'das Feld „Passwort" ist die Passphrase.'
+                       'klein' => 'Vollständig mit BEGIN- und END-Zeile; das Feld '
+                                . '„Passwort" ist dann seine Passphrase'
                                 . (($form['schluessel'] ?? null) !== null
-                                   ? ' Zurzeit ist ein Schlüssel hinterlegt; leer lassen '
-                                   . 'heisst unverändert.' : '')]); ?>
+                                   ? ', und leer lassen heißt, der hinterlegte bleibt.'
+                                   : '.')]); ?>
         <?php if (($form['schluessel'] ?? null) !== null): ?>
           <?php ui_schalter(['name' => 'schluessel_weg',
                              'label' => 'Hinterlegten Schlüssel entfernen',
@@ -618,8 +604,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         <?php endif; ?>
         <?php ui_schalter(['name' => 'passiv', 'label' => 'Passiver Modus (nur FTPS)',
                            'an' => (int)($form['passiv'] ?? 1) === 1,
-                           'klein' => 'Fast immer richtig. Aus nur, wenn die Gegenstelle '
-                                    . 'ausdrücklich aktives FTP verlangt.']); ?>
+                           'klein' => 'Fast immer richtig, aus nur für eine Gegenstelle, '
+                                    . 'die aktives FTP verlangt.']); ?>
         <?php ui_schalter(['name' => 'aktiv', 'label' => 'Ziel benutzen',
                            'an' => (int)($form['aktiv'] ?? 1) === 1,
                            'klein' => 'Aus heisst: Es bleibt eingetragen, der Versand '
@@ -649,22 +635,18 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         <?php ui_schalter(['name' => 'aufraeumen',
                            'label' => 'Auf dem Ziel aufräumen',
                            'an' => $aufAn,
-                           'klein' => 'Aus ist die Vorgabe: Der Versand ergänzt nur, '
-                                    . 'gelöscht wird dort nie. An heisst, dass alte '
-                                    . 'Sicherungen dieser Installation dort entfernt '
-                                    . 'werden, sobald mehr liegen als unten steht. '
-                                    . 'Fremde Dateien bleiben immer; gelöscht wird nur, '
-                                    . 'was dem Namensmuster entspricht UND im '
-                                    . 'Versandprotokoll steht, nie unter der Zahl, und '
-                                    . 'nie in einem Lauf, dessen eigener Versand '
-                                    . 'gescheitert ist.']); ?>
+                           'klein' => 'An entfernt dort alte Sicherungen dieser '
+                                    . 'Installation über der Zahl darunter, nie fremde '
+                                    . 'Dateien.']); ?>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'behalten_konto', 'label' => 'Je Konto behalten',
                          'art' => 'number', 'attr' => 'min="1" max="999"',
                          'wert' => (string)($form['behalten_konto'] ?? 6),
-                         'klein' => 'Wie viele Konto-Sicherungen je Konto dort bleiben. '
-                                  . 'Hier auf dem Server sind es zwei — dort darf es '
-                                  . 'mehr sein, das ist der Sinn der Sache.']); ?>
+                         /* BIS WEB 21.0.0 STAND HIER FEST „zwei" (F-P5c-139) —
+                            die Vorgabe, nicht die Einstellung unter
+                            Verwaltung → Konto-Backups. */
+                         'klein' => 'Hier auf dem Server sind es ' . edbak_aufbewahrung()
+                                  . ', dort darf es mehr sein.']); ?>
           <?php ui_feld(['name' => 'behalten_komplett', 'label' => 'Komplett-Stände behalten',
                          'art' => 'number', 'attr' => 'min="1" max="999"',
                          'wert' => (string)($form['behalten_komplett'] ?? 12),
@@ -681,29 +663,6 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       </form>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
-
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt', 'vorschau' => 'zwei Protokolle']); ?>
-    <p class="feld-hinweis"><strong>SFTP ist die Empfehlung.</strong> Es verschlüsselt
-       nicht nur, es erkennt den Server auch wieder: Beim ersten Prüfen wird der
-       Fingerabdruck des Hostschlüssels übernommen, danach bei jeder Verbindung
-       verglichen. Passt er nicht, bricht die Verbindung ab, <em>bevor</em> ein
-       Passwort gesendet wird.</p>
-    <p class="feld-hinweis"><strong>FTPS verschlüsselt, prüft aber nichts.</strong> Die
-       PHP-Erweiterung <code>ftp</code> nimmt jedes Zertifikat an, auch ein selbst
-       ausgestelltes ohne Vertrauenskette (nachgemessen in
-       <code>tools/proben/versand/</code>). Schutz gegen Mitlesen: ja. Schutz gegen
-       einen untergeschobenen Server: nein.</p>
-    <?php /* GEKUERZT MIT P5c/AP8 (E-P5c-124). Seit S10/AP4 erklaerte dieser
-             Absatz auch die Plakette „wird übergangen" an einem Altziel; die
-             gibt es nicht mehr. Stehen bleibt, warum es FTP nicht gibt. */ ?>
-    <p class="feld-hinweis"><strong>FTP wird nicht angeboten.</strong> Es überträgt
-       alles im Klartext, auch den Nutzernamen und das Passwort — und eine
-       Backup-Datei ist genau das, was man dabei nicht mitlesen lassen will.</p>
-    <p class="feld-hinweis">Die Zugangsdaten liegen verschlüsselt in der Datenbank;
-       der Schlüssel steht in <code>config.php</code>. Ein Datenbankdump enthält
-       die Passwörter deshalb nicht — und ein Backup der Installation, in das der
-       Schlüssel hineingeriete, wäre nur scheinbar versiegelt.</p>
-  <?php ui_karte_ende(true); ?>
 
 <?php ui_geruest_ende(); ?>
 <?php /* `assets/kopieren.js` ist mit S10 entfallen: Es hing am

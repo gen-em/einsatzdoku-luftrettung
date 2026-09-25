@@ -338,10 +338,9 @@ ui_seite_start(['titel' => 'Konto-Backups']);
            lesen, und der Name allein sagt es nicht. */ ?>
   <?php ui_titelzeile([
       'titel' => 'Konto-Backups',
-      'unter' => 'Pakete, die die Verwaltung je Konto anlegt — nicht die Backups, '
-               . 'die NutzerInnen selbst herunterladen. Die Pakete eines einzelnen '
-               . 'Kontos stehen auf dessen Seite unter '
-               . '<a href="admin_users.php">NutzerInnen</a>.',
+      'unter' => 'Pakete, die die Verwaltung je Konto anlegt — nicht die, die '
+               . 'NutzerInnen selbst herunterladen; die eines Kontos stehen auf '
+               . 'dessen Seite unter <a href="admin_users.php">NutzerInnen</a>.',
       'aktionen' => ui_knopf(['text' => 'Alle sichern', 'symbol' => 'sicherung',
                               'art' => 'primaer', 'attr' => ' form="f-alle"']),
   ]); ?>
@@ -439,13 +438,13 @@ ui_seite_start(['titel' => 'Konto-Backups']);
           <?php ui_feld(['name' => 'tage', 'label' => 'Erinnerung nach', 'art' => 'number',
                          'wert' => (string)edbak_intervall(),
                          'attr' => 'min="1" max="3650"',
-                         'klein' => 'Tagen. Konten, deren letztes Konto-Backup älter '
-                                  . 'ist, gelten als überfällig.']); ?>
+                         'klein' => 'Tagen ohne neues Konto-Backup gilt ein Konto '
+                                  . 'als überfällig.']); ?>
           <?php ui_feld(['name' => 'pakete', 'label' => 'Aufbewahrung je Konto',
                          'art' => 'number', 'wert' => (string)edbak_aufbewahrung(),
                          'attr' => 'min="1" max="100"',
-                         'klein' => 'Pakete. Ältere werden beim nächsten Sichern '
-                                  . 'gelöscht — das jüngste und ein freigegebenes nie.']); ?>
+                         'klein' => 'Pakete; ältere löscht das nächste Sichern, das '
+                                  . 'jüngste und ein freigegebenes nie.']); ?>
         </div>
         <?php ui_schalter(['name' => 'mail', 'label' => 'Erinnerung an Admins per E-Mail',
                            'an' => edbak_admin_mail_an(),
@@ -455,11 +454,10 @@ ui_seite_start(['titel' => 'Konto-Backups']);
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
       </form>
-      <p class="feld-klein"><strong>Speichergrenze, Warnschwellen, Belegung und
-         Ablage</strong> stehen unter
-         <a href="betrieb_server.php">Betrieb → Servereinstellungen</a>: Sie
-         gelten für Konto-Backups <em>und</em> Komplett-Backups zusammen und
-         sind damit eine Einstellung der Installation, keine der Konten.</p>
+      <p class="feld-hinweis">Speichergrenze und Ablage gelten für beide
+         Backup-Arten und stehen deshalb unter
+         <a href="betrieb_server.php">Betrieb → Servereinstellungen</a>.
+         <a href="hilfe.php#11-4-konto-backups">Handbuch: Konto-Backups</a></p>
     <?php ui_karte_ende(); ?>
 
   </div><?php /* .form-spalte (links) */ ?>
@@ -485,13 +483,9 @@ ui_seite_start(['titel' => 'Konto-Backups']);
                                 . $paketeOhneKonto . ($paketeOhneKonto === 1 ? ' Paket · ' : ' Pakete · ')
                                 . groesse_text($bytesOhneKonto)
                               : 'keine']); ?>
-      <p class="feld-hinweis">Pakete, deren Konto gelöscht wurde. Sie bleiben, bis
-         jemand sie einspielt oder löscht — typisch nach „Konto gelöscht und neu
-         aufgesetzt". Sie überleben die Löschung mit Absicht; genau dafür sind sie
-         da. Einspielen geht nur in ein bestehendes Konto, und weicht die
-         Kontokennung ab, ist der Weg die <strong>Freigabe</strong>: Die geschützten
-         Angaben öffnet nur der Wiederherstellungsschlüssel der Person, und der
-         liegt ausschließlich bei ihr.</p>
+      <p class="feld-hinweis">Pakete, deren Konto gelöscht wurde, bleiben mit
+         Absicht liegen, bis jemand sie einspielt oder löscht.
+         <a href="hilfe.php#backups-ohne-konto-und-die-freigabe">Handbuch: Backups ohne Konto</a></p>
 
       <?php if (!$verwaist): ?>
         <p class="feld-hinweis">Zurzeit keine.</p>
@@ -560,51 +554,6 @@ ui_seite_start(['titel' => 'Konto-Backups']);
               ]]),
         ]);
       endforeach; ?>
-    <?php ui_karte_ende(true); ?>
-
-    <?php /* ---- Was hier gilt (Regel 5 aus E-S8-01) -----------------------
-         * Eine Karte je Seite, zugeklappt, am Ende. Sie beantwortet die
-         * Frage, die dieser Seite ihren Namen gegeben hat: Welches der drei
-         * Backups ist das hier? */ ?>
-    <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
-                          'vorschau' => 'Drei Backups · Freigabe · Schlüssel']); ?>
-      <p class="feld-hinweis"><strong>Drei Backups, drei Namen.</strong> Ein
-         <strong>Konto-Backup</strong> legt die Verwaltung an; es liegt auf dem
-         Server, adressiert über die Kontokennung. Ein <strong>Backup</strong>
-         lädt eine NutzerIn sich im eigenen Bereich selbst herunter — es zählt
-         hier nicht. Das <strong>Komplett-Backup</strong> der Installation ist
-         ein Drittes und liegt unter
-         <?= ist_betreiberin()
-             ? '<a href="admin_komplettsicherung.php">Betrieb → Komplett-Backup</a>'
-             : 'Betrieb → Komplett-Backup (BetreiberIn)' ?>.</p>
-      <p class="feld-hinweis"><strong>Konto-Backups entstehen nie von selbst.</strong>
-         Die geschützten Angaben bleiben mit dem Inhaltsschlüssel des Kontos
-         verschlüsselt, und den hat der Server nicht — ein nächtlicher Lauf hätte
-         nichts, womit er sie lesen könnte. Angestoßen werden sie hier über „Alle
-         sichern", auf der Kontoseite je Konto oder über die Auswahl in der
-         NutzerInnen-Liste.</p>
-      <p class="feld-hinweis"><strong>Was angestoßen ist, arbeitet der
-         Aufräumjob in Schüben ab</strong>; die Warteschlange überlebt einen
-         Abbruch. Wie oft er läuft, hängt vom eingerichteten Auslöser ab —
-         Kommandozeile, Token-Aufruf oder huckepack an einer Anfrage
-         (<a href="betrieb_jobs.php">Betrieb → Hintergrundjobs</a>). Die
-         wöchentliche Erinnerung fährt auf demselben Weg mit: Wird die Anwendung
-         zwei Wochen nicht angefasst, kommt die Mail zwei Wochen später.</p>
-      <p class="feld-hinweis"><strong>Die Freigabe</strong> ist der Weg, wenn die
-         Kontokennung nicht passt — etwa nach „Konto gelöscht und neu aufgesetzt".
-         Die Verwaltung gibt ein Paket für ein Konto frei; einspielen kann es nur
-         die NutzerIn selbst, in ihrem Backup-Bereich, mit ihrem
-         <strong>Wiederherstellungsschlüssel</strong>. Der liegt ausschließlich
-         bei ihr — auch die Verwaltung hat ihn nicht.</p>
-      <p class="feld-hinweis"><strong>Wohin die Pakete von hier aus gehen</strong>,
-         steht unter <?= ist_betreiberin()
-             ? '<a href="admin_sicherungsziele.php">Backup-Ziele</a>'
-             : 'Betrieb → Backup-Ziele (BetreiberIn)' ?> —
-         FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
-         Backups auf demselben Server, dessen Ausfall der Grund für ein Backup
-         wäre. Die Ablage selbst ist über den Browser nicht erreichbar: eine
-         <code>.htaccess</code> sperrt sie, und der Ordnername je Konto ist nicht
-         zu erraten.</p>
     <?php ui_karte_ende(true); ?>
 
   </div><?php /* .form-spalte (rechts) */ ?>

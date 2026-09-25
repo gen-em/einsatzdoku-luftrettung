@@ -3833,7 +3833,9 @@ auch die Grenze steht, gegen die sie gemessen werden. Ist die Ablage nicht
 beschreibbar, sagt das eine Meldung oben auf der Seite; ohne beschreibbare
 Ablage entsteht kein Konto-Backup.
 
-**Backups ohne Konto** steht zugeklappt am Rand: Ordner, zu deren Konto es
+#### Backups ohne Konto und die Freigabe
+
+Die Karte steht zugeklappt am Rand: Ordner, zu deren Konto es
 keine Zeile mehr gibt — der Fall „Konto gelöscht und neu aufgesetzt". Sie
 überleben die Löschung mit Absicht; genau dafür sind sie da. Seit Web 15.2.0
 steht dort **eine Zeile je Ordner** statt je Paket, mit der Kontokennung als
@@ -3843,9 +3845,36 @@ löschen* und *Ganzen Ordner löschen*. Welches Paket gemeint ist, wird im Dialo
 gewählt; jüngstes zuerst. An den Rückfragen ändert sich nichts: Vor dem
 Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
 
-**„Was hier gilt"** am Ende der Seite fasst zusammen, was die drei Backups
-unterscheidet, warum Konto-Backups nie von selbst entstehen, wie die Freigabe
-funktioniert und wohin die Pakete von hier aus gehen.
+**Die Freigabe** ist der Weg, wenn die Kontokennung nicht passt. Unmittelbar
+einspielen lässt sich ein Paket nur in ein bestehendes Konto mit derselben
+Kennung; weicht sie ab und enthält das Paket geschützte Angaben, ist das
+gesperrt — nach „Konto gelöscht und neu aufgesetzt" ist das der Regelfall,
+denn das neue Konto hat eine andere Kennung. Dann gibt die Verwaltung
+ein Paket für ein Konto frei, und einspielen kann es nur die NutzerIn selbst,
+in ihrem Backup-Bereich, mit ihrem **Wiederherstellungsschlüssel**. Der liegt
+ausschließlich bei ihr — auch die Verwaltung hat ihn nicht, und ohne ihn
+öffnen sich die geschützten Angaben des Pakets nicht.
+
+#### Drei Backups, drei Namen
+
+*Bis Web 21.0.0 stand das in der zugeklappten Karte „Was hier gilt" am Ende
+der Seite (P5c/AP9).*
+
+Ein **Konto-Backup** legt die Verwaltung an; es liegt auf dem Server,
+adressiert über die Kontokennung. Ein **Backup** lädt eine NutzerIn sich im
+eigenen Bereich selbst herunter — es zählt hier nicht. Das
+**Komplett-Backup** der Installation ist ein Drittes und liegt unter
+Betrieb → Komplett-Backup (12.6).
+
+**Was angestoßen ist, arbeitet der Aufräumjob in Schüben ab**; die
+Warteschlange überlebt einen Abbruch. Wie oft er läuft, hängt vom
+eingerichteten Auslöser ab (12.4).
+
+**Wohin die Pakete von hier aus gehen**, steht unter Betrieb → Backup-Ziele
+(12.7) — FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
+Backups auf demselben Server, dessen Ausfall der Grund für ein Backup wäre.
+Die Ablage selbst ist über den Browser nicht erreichbar: Eine `.htaccess`
+sperrt sie, und der Ordnername je Konto ist nicht zu erraten.
 
 ### 11.4a Ratenschutz — was jemanden aufhält, der es von außen versucht
 
@@ -4186,6 +4215,30 @@ dort aus Sicht dessen, der es benutzt.
 Zwei Dinge, die nur die Verwaltung betreffen: Auf der **Kontoseite** des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
+
+Auf der Seite stehen der Zustand (Konto, letzter und nächster Reset), die
+drei **Papierkorbzahlen** und — sobald es einen gibt — der **Bericht des
+letzten Laufs**, zugeklappt. Die Papierkorbzahlen sind die Kontrolle des
+Resets: Der Papierkorb kommt **aus der Fixture** zurück, nicht aus einem
+Nachlauf. Stehen sie auf null, ist beim Einspielen etwas übersprungen worden.
+Ausgelöst wird der Reset von der nächsten Anfrage nach Ablauf der dreißig
+Minuten, nicht von einem Zeitdienst.
+
+#### Was der Reset umfasst
+
+*Bis Web 21.0.0 stand das in der zugeklappten Karte „Was hier gilt" der Seite
+(P5c/AP9).*
+
+- Diensttage, Einsätze, Ruhesegmente, GPS-Daten, Stammdaten — vollständig
+  ersetzt.
+- Geräte, offene Kopplungssitzungen, Papierkorb und Sperrliste — auch das,
+  was Besucher angelegt haben.
+- Konto- und Schlüsselmaterial: E-Mail, Passwort, Salz und beide
+  Schlüsselhüllen werden aus der Fixture überschrieben. Selbst eine
+  unerwartet gelungene Änderung der Konto-Identität bliebe damit folgenlos.
+- Der Papierkorb kommt aus der Fixture zurück — als Papierkorb, mit frischer
+  90-Tage-Frist. Der Reset ist damit *ein* Vorgang in *einer* Transaktion:
+  Entweder er gelingt ganz, oder er ändert nichts.
 
 ### 11.7 Protokoll
 
@@ -5259,6 +5312,13 @@ Passwort. Lästig für alle, aber kein Datenverlust.
 Beide stehen auf dem **Schlüsselblatt** (12.5) — drucken, sobald ein Anteil
 angelegt oder gewechselt wurde, zweimal und an zwei Orten.
 
+**Der Schnappschuss ist nicht scharf.** Der Dump entsteht über mehrere Läufe
+hinweg; eine Zeile, die währenddessen entsteht, kann enthalten sein oder
+nicht. Übersprungen wird nichts, was schon dastand. Wer es genauer braucht,
+lässt nachts sichern. *(Bis Web 21.0.0 stand das mit den beiden Wegen heraus
+und dem Wiederanlaufpaket in der zugeklappten Karte „Was hier gilt" der
+Seite; P5c/AP9.)*
+
 **Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
 gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank
 und verlangt einen Nachweis, dass man Zugriff auf das Verzeichnis der
@@ -5285,10 +5345,15 @@ Zielklinik und steht unter Stammdaten.
 Was dabei zu wissen ist:
 
 - **SFTP ist die Empfehlung.** Es ist das einzige der beiden Protokolle, das
-  den Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
-  anderer, bricht die Verbindung ab, bevor ein Passwort hinausgeht.
-- **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht.** Das
-  schützt gegen Mitlesen, nicht gegen einen untergeschobenen Server.
+  den Server beim nächsten Mal wiedererkennt: Beim ersten Prüfen wird der
+  Fingerabdruck des Hostschlüssels übernommen, danach bei jeder Verbindung
+  verglichen. Meldet sich dort plötzlich ein anderer, bricht die Verbindung
+  ab, bevor ein Passwort hinausgeht. Nach einem Schlüsselwechsel der
+  Gegenstelle ist *Hostschlüssel vergessen* im Menü der Zielzeile der Weg.
+- **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht** — die
+  PHP-Erweiterung nimmt jedes an, auch ein selbst ausgestelltes ohne
+  Vertrauenskette. Das schützt gegen Mitlesen, nicht gegen einen
+  untergeschobenen Server.
 - **FTP wird seit Web 20.2.0 nicht mehr angeboten.** Es überträgt alles im
   Klartext, auch das Passwort — und seit derselben Fassung tragen die Pakete
   Geheimnisse, die dort nicht mitlesbar sein dürfen. Seit Web 21.0.0 nimmt
@@ -5297,12 +5362,18 @@ Was dabei zu wissen ist:
   auf SFTP oder FTPS um (Protokoll, Port und Zugangsdaten neu) oder löschst
   es und führst das Update danach erneut aus.
 - Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
-  dazu steht in einer Datei, die nicht mitgesichert wird — wer den
-  Datenbankdump hat, hat die Passwörter nicht.
+  dazu — der Serverschlüssel aus 12.5 — steht in einer Datei, die nicht
+  mitgesichert wird: Wer den Datenbankdump hat, hat die Passwörter nicht.
+  Ohne Serverschlüssel lässt sich kein Ziel anlegen; geht er verloren, sind
+  die Zugangsdaten neu einzutragen.
+- **Der Versand schickt, was am Ziel fehlt** — verglichen werden Name und
+  Größe. Eine abgebrochene Übertragung wird deshalb beim nächsten Lauf
+  wiederholt und gilt nicht als erledigt. Wann er läuft, entscheidet der
+  Auslöser (12.4); der Schalter *Backups automatisch versenden* sagt nur, ob.
 - **Auf dem Ziel wird nur gelöscht, wo es ausdrücklich eingeschaltet ist**
-  (seit Web 20.14.0). Ohne diese Option ergänzt der Versand nur: Die Regel
-  „höchstens zwei je Konto" gilt für die Ablage auf dem eigenen Server,
-  drüben sammelt sich alles an, bis dort jemand aufräumt. Das ist die
+  (seit Web 20.14.0). Ohne diese Option ergänzt der Versand nur: Die
+  *Aufbewahrung je Konto* (11.4, Vorgabe zwei) gilt für die Ablage auf dem
+  eigenen Server, drüben sammelt sich alles an, bis dort jemand aufräumt. Das ist die
   Voreinstellung und der Grund dafür ist ernst — der Zweck eines auswärtigen
   Ziels ist, den Ausfall dieses Servers zu überleben, **samt eines Fehlers,
   der hier zu viel löscht**. Ein Versand, der drüben aufräumt, trägt diesen

@@ -3,7 +3,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/demo_lib.php';
-require_once __DIR__ . '/trash_lib.php';   // TRASH_DAYS fuer den Erklaertext
 
 /**
  * Demo-Konto verwalten (Phase P1, E-P1-08).
@@ -216,15 +215,14 @@ ui_seite_start(['titel' => 'Demo-Konto']);
         'Keine Fixture') ?>
   <?php endif; ?>
 
-  <p class="seiten-erklaerung">Ein Konto zum Ausprobieren: erfundene Daten,
-     öffentliche Zugangsdaten, Änderungen ausdrücklich erwünscht. Es setzt sich
-     <strong>alle 30 Minuten</strong> selbst auf den Standardzustand zurück —
-     ausgelöst von der nächsten Anfrage, nicht von einem Zeitdienst.</p>
+  <p class="seiten-erklaerung">Ein Konto zum Ausprobieren, das sich
+     <strong>alle 30 Minuten</strong> selbst auf den Standardzustand zurücksetzt.
+     <a href="hilfe.php#11-6-demo-konto">Handbuch: Demo-Konto</a></p>
 
 <?php if ($demoId === null): ?>
 
   <?php ui_karte_start(['titel' => 'Zustand', 'id' => 'k-zustand']); ?>
-    <p class="feld-hinweis">Es gibt derzeit <strong>kein</strong> Demo-Konto.
+    <p class="feld-hinweis">Es gibt derzeit <strong>kein</strong> Demo-Konto;
        „Demo-Konto anlegen" legt es an und spielt die Fixture ein.</p>
   <?php ui_karte_ende(); ?>
 
@@ -276,48 +274,23 @@ ui_seite_start(['titel' => 'Demo-Konto']);
       ui_zeile(['text' => 'Diensttage im Papierkorb',   'klein' => (string)$zahlen['im Papierkorb, Diensttage']]);
       ui_zeile(['text' => 'Ruhesegmente im Papierkorb', 'klein' => (string)$zahlen['im Papierkorb, Ruhesegmente']]);
       ?>
-      <p class="feld-hinweis">Diese drei Zahlen sind die Kontrolle des Resets: Der
-         Papierkorb kommt <strong>aus der Fixture</strong> zurück, nicht aus einem
-         Nachlauf. Stehen sie auf null, ist beim Einspielen etwas übersprungen
-         worden.</p>
+      <p class="feld-hinweis">Die drei Zahlen sind die Kontrolle des Resets —
+         stehen sie auf null, hat das Einspielen etwas übersprungen.</p>
     <?php ui_karte_ende(); ?>
 
-  <?php /* EINE ERKLAERKARTE JE SEITE, ZUGEKLAPPT, AM ENDE (E-S8-01, Regel 5).
-           Bis Web 15.3.3 standen hier ZWEI: „Was der Reset umfasst" und
-           „Bericht des letzten Laufs" — dieselbe Frage („was tut der Reset
-           und was hat er getan") in zwei Kaesten, und der Bericht erschien
-           nur manchmal, so dass die Seite mal drei und mal vier Karten
-           hatte. Jetzt eine Karte am Ende ueber die volle Breite, mit dem
-           Bericht als letztem Abschnitt darin. */ ?>
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt', 'zu' => true,
-                        'vorschau' => 'Umfang des Resets'
-                                    . ($bericht !== null ? ' · letzter Lauf' : '')]); ?>
-      <?php /* `.text` ist der Lesetext-Baustein: nur darin haben ul/li
-               Punkte und Einzug (Stylesheet, Abschnitt 13). Eine eigene
-               Klasse fuer eine vierzeilige Liste waere ein Sonderfall. */ ?>
-      <p class="feld-hinweis"><strong>Was der Reset umfasst.</strong></p>
-      <div class="text">
-      <ul>
-        <li>Diensttage, Einsätze, Ruhesegmente, GPS-Daten, Stammdaten — vollständig
-            ersetzt.</li>
-        <li>Geräte, offene Kopplungssitzungen, Papierkorb und Sperrliste — auch
-            das, was Besucher angelegt haben.</li>
-        <li>Konto- und Schlüsselmaterial: E-Mail, Passwort, Salz und beide
-            Schlüsselhüllen werden aus der Fixture überschrieben. Selbst eine
-            unerwartet gelungene Änderung der Konto-Identität bliebe damit
-            folgenlos.</li>
-        <li>Der Papierkorb kommt aus der Fixture zurück — als Papierkorb, mit
-            frischer <?= TRASH_DAYS ?>-Tage-Frist. Der Reset ist damit
-            <em>ein</em> Vorgang in <em>einer</em> Transaktion: Entweder er
-            gelingt ganz, oder er ändert nichts.</li>
-      </ul>
-      </div>
-      <?php if ($bericht !== null): ?>
-        <p class="feld-hinweis"><strong>Bericht des letzten Laufs.</strong></p>
-        <pre><?= e(json_encode($bericht,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
-      <?php endif; ?>
-  <?php ui_karte_ende(true); ?>
+  <?php /* DER BERICHT BLEIBT, DIE ERKLAERUNG GEHT (P5c/AP9, E-P5c-49). Bis
+           Web 21.0.0 stand hier die zugeklappte Karte „Was hier gilt" mit dem
+           Umfang des Resets und dem Bericht als letztem Abschnitt. Der Umfang
+           ist Erklaertext und steht jetzt im Handbuch 11.6; der Bericht ist
+           ein Messwert dieses Laufs und gehoert auf die Seite — als eigene,
+           zugeklappte Karte, die es nur gibt, wenn es einen Bericht gibt. */ ?>
+  <?php if ($bericht !== null): ?>
+    <?php ui_karte_start(['titel' => 'Bericht des letzten Laufs', 'id' => 'k-bericht',
+                          'zu' => true, 'vorschau' => 'Zahlen des Resets']); ?>
+      <pre><?= e(json_encode($bericht,
+          JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
+    <?php ui_karte_ende(true); ?>
+  <?php endif; ?>
 
 <?php endif; ?>
 
