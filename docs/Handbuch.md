@@ -3862,10 +3862,15 @@ eine Viertelstunde draußen; wer es am selben Tag noch einmal tut, länger:
 | 3 | 30 Minuten |
 | 4 | 60 Minuten |
 
-Nach **24 Stunden ohne Fehlversuch** fängt die Leiter wieder von vorn an. Alle
-vier Dauern lassen sich ändern — **aber nicht unter 15 setzen, ohne es zu
-wollen:** Bis Web 20.9.1 sperrte die Anmeldung fest 15 Minuten, eine kürzere
-erste Sprosse macht den ersten Verstoß milder als vorher.
+Die vierte Stufe gilt für jede weitere Sperre. Nach **24 Stunden ohne
+Fehlversuch** fängt die Leiter wieder von vorn an. Alle vier Dauern lassen
+sich ändern — **aber nicht unter 15 setzen, ohne es zu wollen:** Bis Web
+20.9.1 sperrte die Anmeldung fest 15 Minuten, eine kürzere erste Sprosse macht
+den ersten Verstoß milder als vorher.
+
+**Gezählt wird am eingetippten Namen, nicht am Konto.** Deshalb verrät eine
+Sperre nicht, ob es das Konto gibt: Ein Name, den niemand trägt, wird genauso
+gesperrt wie einer, den es gibt.
 
 **Zwei Zahlen, und die zweite ist die größere.** Zehn Fehlversuche je *Konto*,
 fünfzig je *Anschluss*. Hinter einem Klinik-Anschluss teilen sich viele eine
@@ -4936,7 +4941,8 @@ Geheimnisse, und beide stehen in `config.php` — nicht in der Datenbank:
 acht Zeichen. Damit lässt sich vergleichen, ohne vorzulesen: Stimmt die
 Kennung auf dem Ausdruck in der Betriebsakte mit der auf dem Bildschirm
 überein, ist es derselbe Wert. Ein Wert, der vollständig auf dem Bildschirm
-steht, landet früher oder später in einem Screenshot.
+steht, landet früher oder später in einem Screenshot. Die einzige Seite, die
+den Wert zeigt, ist das Schlüsselblatt.
 
 **Drucke das Schlüsselblatt, sobald du einen Anteil angelegt oder gewechselt
 hast.** Der Knopf steht auf der Karte. Was darauf steht und wohin es gehört,
@@ -4982,15 +4988,34 @@ Hier steht, wie viel Platz belegt ist — als **zwei Balken**:
 - **Installation gesamt** gegen den **Webspace laut Hosting**: Datenbank,
   Dateien und beide Backup-Arten.
 
+*Bis Web 21.0.0 stand ein Teil des Folgenden in der zugeklappten Karte „Was
+hier gilt" am Ende der Seite (P5c/AP9).*
+
+**Die Grenze gilt nur für Backups.** Die Datenbank wächst mit jedem Einsatz
+und wird nie angehalten — eine Grenze darauf hieße, die Anwendung anzuhalten.
+
 **Der Webspace ist eine Angabe, keine Messung.** Er steht in deinem
 Hosting-Tarif und lässt sich von der Anwendung aus nicht ermitteln — was ein
 Server über den freien Platz meldet, ist auf geteiltem Hosting der Datenträger
 des Hosts und nicht dein Kontingent. Ohne die Angabe zeigt der zweite Balken
 nur die Zusammensetzung, ohne Füllstand.
 
+**Was gezählt wird.** Die Datenbank mit Daten und Indizes, wie sie selbst es
+meldet; die Dateien über das ganze Anwendungsverzeichnis — Code, Symbole,
+Logos, APK —, aber ohne die Ablage der Backups, die im ersten Balken stehen.
+Pakete, die auf ein **Backup-Ziel** versendet sind, zählen nirgends mit: Sie
+liegen außerhalb dieses Webspace.
+
 Gemessen wird **einmal täglich** im Aufräumjob; der Stand steht im Kartenkopf.
+Die Backups werden dagegen bei jedem Aufruf gewogen — ihr Verzeichnis ist
+klein genug dafür, und ihre Zahl entscheidet, ob noch gesichert werden darf.
 Darunter Speichergrenze, Warnschwellen, die beiden **Kontingente**, Ablage und
 Reste abgebrochener Läufe.
+
+**Warnschwellen** melden einmal je Schwelle, für beide Balken; mit
+eingerichtetem SMTP geht die Meldung zusätzlich an alle mit Verwaltungsrecht.
+**Wer Grenze oder Schwellen ändert, setzt die Meldungen zurück:** Dieselben
+Bytes sind bei einer anderen Grenze eine andere Aussage.
 
 **Zwei Kontingente, zwei Vorgaben** (seit Web 20.5.0). Neben *Webspace laut
 Hosting* steht jetzt *Kontingent der Datenbank*. Beides sind Angaben aus deinem
@@ -5009,11 +5034,14 @@ Warnschwellen** wie die Speichergrenze (Vorgabe 70 und 90 %) — je Schwelle
 einmal. Wer aufräumt und wieder darunter fällt, wird beim nächsten
 Überschreiten erneut gewarnt.
 
-**Karte „Adresssuche"** (seit Web 15.8.0). Beim Tippen in einem Ortsfeld und
+#### Karte „Adresssuche" (seit Web 15.8.0)
+
+Beim Tippen in einem Ortsfeld und
 nach jeder Wahl auf der Karte fragt die Anwendung einen **Adressdienst** —
 vorwärts nach Vorschlägen zum getippten Text, rückwärts nach der Adresse zu
 einer Koordinate. Der getippte Text und die Koordinate verlassen dabei das
-Gerät; alles Übrige bleibt hier. Zwei Einstellungen:
+Gerät; alles Übrige bleibt hier — Koordinaten, Plus Codes, „Meine Position"
+und die Karte selbst brauchen den Dienst nicht. Zwei Einstellungen:
 
 - **Adresssuche im Internet** — der Schalter für die **ganze Installation**.
   Aus heißt: keine Vorschläge, keine Umkehrsuche, kein Suchfeld im
@@ -5030,10 +5058,13 @@ Die Karte hat ihr eigenes „Speichern": Ein Tippfehler in der Speichergrenze
 soll die Dienstadresse nicht mit abweisen und umgekehrt. Welcher Dienst
 eingetragen ist, erscheint anschließend im Hinweis unter dem Ortsfeld, in der
 Karte „Datenschutz" jedes Profils und im Textbaustein für die
-Datenschutzerklärung (11.5).
+Datenschutzerklärung (11.5). **Wer den Dienst wechselt, übernimmt den
+Baustein neu in die Datenschutzerklärung** — die einmal eingefügte Fassung
+nennt den alten Dienst, bis jemand sie ersetzt.
 
-**Karte „Sicherheitskopfzeilen"** (seit Web 20.7.0). Zwei Einstellungen, die
-den Browser betreffen, nicht die Daten.
+#### Karte „Sicherheitskopfzeilen" (seit Web 20.7.0)
+
+Zwei Einstellungen, die den Browser betreffen, nicht die Daten.
 
 **„CSP scharf schalten".** Die Anwendung schickt jeder Seite eine Regel mit,
 welche Skripte, Bilder und Schriften geladen werden dürfen — eine
@@ -5071,6 +5102,10 @@ Stufen: **aus / 1 Tag / 7 Tage / 1 Jahr**.
 - **Gerade erst aufgesetzt, Adresse steht noch nicht fest?** 1 Tag lassen.
 - **Läuft seit Jahren unter dieser Domain?** 1 Jahr.
 
+**Warum klein anfangen:** Ein zu lang gesetzter Wert sperrt die Domain aus,
+wenn das Zertifikat wegfällt — und zwar für die ganze Dauer, auch auf Klick
+auf einen `http://`-Link.
+
 **Nach dem Update auf Web 20.7.0 steht die Einstellung auf 1 Tag** — auch dann,
 wenn deine Installation vorher über die Serverkonfiguration ein Jahr gebunden
 hat. Das ist kein Versehen: Die Dauer wird jetzt von der Anwendung bestimmt,
@@ -5099,7 +5134,9 @@ bestätigte, die auf deine Freischaltung warten — verfallen nach der Zahl, die
 du hier einträgst (Vorgabe 30 Tage). Davon getrennt: Wer seine Adresse gar
 nicht erst bestätigt, verfällt nach **48 Stunden**, und das ist keine
 Einstellung. Ein unbestätigtes Konto ist eine Adresse, die jemand eingetippt
-hat — möglicherweise nicht die eigene.
+hat — möglicherweise nicht die eigene. Die einstellbare Frist steht auf der
+Registrierungsseite und in der Bestätigungsmail; beim Verfall geht eine
+letzte Nachricht heraus.
 
 **Wegwerfadressen.** Die Liste bekannter Anbieter kommt mit jeder
 Auslieferung mit und liegt in der Anwendung; **es wird nichts bei Dritten
@@ -5117,9 +5154,9 @@ Kontoverwaltung überschreibbar: Zahl der Einsätze und Speicher in Megabyte
   bricht mit einer Erklärung ab. **Bearbeiten und Löschen bleiben frei** —
   sonst säße jemand in der eigenen Grenze fest und käme nicht heraus.
 
-**Einsätze aufbewahren** ist leer, solange nichts von selbst verschwinden
-soll. Eine **0 gibt es hier nicht**: Sie hieße „nichts aufbewahren", und das
-ist bei Einsatzdaten die eine Antwort, die niemand aus Versehen geben soll.
+**Wie viele Konto-Backups aufgehoben werden**, steht nicht hier, sondern
+unter Verwaltung → Konto-Backups (11.4); die Überschreibung je Konto steht
+auf der Kontoseite.
 
 **Demo-Anmeldung zulassen.** Ist sie aus, wird die Demo-Adresse bei der
 Anmeldung **wie eine unbekannte Adresse** behandelt — dieselbe Meldung,
