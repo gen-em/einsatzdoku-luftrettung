@@ -3756,37 +3756,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ist danach aus dem Repositorium entfernt; die 1.0 liest keine Nutzlast
     von vor 1.0.
 
-325. **Die GPX-Probe vergleicht auf frischer Anlage nichts, bis der
-    Nachlauf gelaufen ist.** *Aufgenommen 25.09.2026 in P5c/AP8
-    (F-P5c-137), gemessen.* Teil 2 hält die serverseitig gebauten GPX-Dateien
-    des Demo-Kontos gegen den Referenzexport aus dem Browser und überspringt
-    jede Spur, die `spur_stand()` nicht als Stufe 2 meldet. Nach
-    `hochfahren.sh --neu` liegen aber **alle** Demo-Spuren als Zeilen vor
-    (Stufe 1, 0 Blobs), und keine der Proben davor fährt den Nachlauf — der
-    Huckepack-Weg kommt höchstens alle 300 s. Ergebnis im Prüfstand:
-    „0 von 204 Dateien verglichen; übersprungen: 204 verdichtet", rot.
-    **Mit dem Code von AP7 (`d519fac`) dasselbe**, auf frischer Anlage in
-    derselben Abfolge nachgestellt — kein Fehler der Anwendung. Allein
-    gefahren, nachdem der Nachlauf gepackt hat: 95 / 0, 115 von 204
-    Dateien, 137 860 Einzelvergleiche, 0 Abweichungen.
-
-    *Warum nicht einfach Stufe 1 mitvergleichen:* Versucht und
-    zurückgenommen — **42 Abweichungen**. Der Referenzexport trägt ältere
-    Spuren **ausgedünnt** (`mission_000001`: 113 Punkte gegen 443 roh); ob
-    eine Spur vergleichbar ist, hängt am Nachlauf, nicht an der Stufe
-    allein.
-
-    *Weg:* Die Probe stellt ihre Lage selbst her (R84: die Lage herstellen,
-    nicht auf sie hoffen) — vor Teil 2 `verdichtung` und `ausduennen` bis
-    zum Rückstand 0, über `jobs_lib.php`, wie es der Nachlauf täte. Danach
-    ist die Zahl der Vergleiche fest und kann als Untergrenze dastehen.
-    Verwandt mit Nr. 322 (Reihenfolge gegen den Demo-Reset): beide Male hängt
-    eine Probe am Zustand des Demo-Kontos, den sie nicht selbst herstellt.
-    *Zuordnung:* **vor dem Pull Request von P5c** — dessen Bericht muss
-    grün sein. *Abnahme:* Prüfstand auf frischer Anlage, GPX-Probe grün
-    mit mindestens 100 verglichenen Dateien; Gegenprobe ohne den
-    Vorlauf rot.
-
 ## Erledigt
 
 
@@ -10798,3 +10767,50 @@ zutreffen.
     von der Bedienprobe: `p5c-ap8-adhoc-tag-in-der-luft` (dreimal
     p1, p2, hems, fr, other) und vier umgedrehte Wege aus S9/AP6. Die
     Abnahme „erlaubt einen Besatzungsnamen" ist erfüllt; kein dritter Zustand.
+
+325. **Die GPX-Probe vergleicht auf frischer Anlage nichts, bis der
+    Nachlauf gelaufen ist.** *Aufgenommen 25.09.2026 in P5c/AP8
+    (F-P5c-137), gemessen.* Teil 2 hält die serverseitig gebauten GPX-Dateien
+    des Demo-Kontos gegen den Referenzexport aus dem Browser und überspringt
+    jede Spur, die `spur_stand()` nicht als Stufe 2 meldet. Nach
+    `hochfahren.sh --neu` liegen aber **alle** Demo-Spuren als Zeilen vor
+    (Stufe 1, 0 Blobs), und keine der Proben davor fährt den Nachlauf — der
+    Huckepack-Weg kommt höchstens alle 300 s. Ergebnis im Prüfstand:
+    „0 von 204 Dateien verglichen; übersprungen: 204 verdichtet", rot.
+    **Mit dem Code von AP7 (`d519fac`) dasselbe**, auf frischer Anlage in
+    derselben Abfolge nachgestellt — kein Fehler der Anwendung. Allein
+    gefahren, nachdem der Nachlauf gepackt hat: 95 / 0, 115 von 204
+    Dateien, 137 860 Einzelvergleiche, 0 Abweichungen.
+
+    *Warum nicht einfach Stufe 1 mitvergleichen:* Versucht und
+    zurückgenommen — **42 Abweichungen**. Der Referenzexport trägt ältere
+    Spuren **ausgedünnt** (`mission_000001`: 113 Punkte gegen 443 roh); ob
+    eine Spur vergleichbar ist, hängt am Nachlauf, nicht an der Stufe
+    allein.
+
+    *Weg:* Die Probe stellt ihre Lage selbst her (R84: die Lage herstellen,
+    nicht auf sie hoffen) — vor Teil 2 `verdichtung` und `ausduennen` bis
+    zum Rückstand 0, über `jobs_lib.php`, wie es der Nachlauf täte. Danach
+    ist die Zahl der Vergleiche fest und kann als Untergrenze dastehen.
+    Verwandt mit Nr. 322 (Reihenfolge gegen den Demo-Reset): beide Male hängt
+    eine Probe am Zustand des Demo-Kontos, den sie nicht selbst herstellt.
+    *Zuordnung:* **vor dem Pull Request von P5c** — dessen Bericht muss
+    grün sein. *Abnahme:* Prüfstand auf frischer Anlage, GPX-Probe grün
+    mit mindestens 100 verglichenen Dateien; Gegenprobe ohne den
+    Vorlauf rot.
+
+    **Erledigt 25.09.2026 (P5c, zwischen AP8 und AP9; nur `tools/`, keine
+    Versionsstufe).** Die Probe hat einen **Vorlauf** vor ihrer eigenen
+    Job-Pause: `jobs_lauf('cli', ['verdichtung', 'ausduennen'])`, bis beide
+    Jobs in einer Runde fertig melden und nichts erledigen. Zwei Dinge hat
+    erst der Bau gezeigt: **Die Probe hält die Jobs selbst an**
+    (`jobs_pause(900)`, für ihre Probedaten) — ein Vorlauf dahinter meldete
+    nur „angehalten" und packte nichts; und **`rueckstand` wird nicht null**
+    (55 und 10, Runde für Runde bei 0 erledigt), weil er auch Spuren zählt,
+    die noch nicht dran sind. Gemessen auf frischer Anlage in der Abfolge
+    des Prüfstands: Vorlauf 2 Runden, 247 Spuren; **96 / 0**, 115 von 204
+    Dateien, 137 860 Einzelvergleiche, 0 Abweichungen. Gegenprobe mit 0
+    Runden: rot, 0 von 204. Eine feste Untergrenze steht bewusst **nicht**
+    da: Mit dem Alter der Demo-Einsätze werden mehr Spuren ausgedünnt, die
+    Zahl sinkt legitim; `$dateien > 0` bleibt der Riegel gegen „0
+    Vergleiche".

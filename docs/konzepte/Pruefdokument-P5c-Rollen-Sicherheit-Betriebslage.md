@@ -14,7 +14,7 @@ AP1; jedes Paket schreibt seinen Abschnitt fort.
 |---|---|---|
 | **`update.php` mit der zerstörenden Migration an einem echten Bestand** (AP8) | Örtlich gemessen: Schemaprobe auf vier Fassungen (Fall 5: Sperre, keine Freigabe hilft, danach ohne Verlust), der Sandbox-Bestand migriert, die gesperrte Lage in Betrieb → Updates und auf der Kommandozeile gestellt (1g). Ob Staging oder Produktiv eine Zeile ohne Konto oder ein FTP-Ziel tragen, sagt erst der Lauf dort — und über 21.0.0 zurück geht es nur mit dem Rückfallstand. | nach dem Merge (Staging), nach dem Tag (Produktiv): P-P5c-35 |
 | **Eine echte Sicherung von vor 21.0.0 einspielen** (AP8) | **Mit Absicht nicht** (E-P5c-127): Nach 1.0 gibt es keine alten Daten, eine Komplett-Sicherung aus Altdaten wird nie eingespielt, und der eigene Bestand kommt über ein Einmal-Skript (Nr. 324). Gemessen bleibt der Lesepfad maschinell: der Kreislauf `edbak-alt` gegen eine Altsicherung (Nutzlast 7) und Teil 13 der Wiederherstellungsprobe mit einer gestellten Nutzlast 11 samt Standortauswahl. | entfällt — P-P5c-37 gestrichen |
-| **Der Punktvergleich der GPX-Probe auf frischer Anlage** (AP8, F-P5c-137) | Im Prüfstand vergleicht Teil 2 nichts, solange der Nachlauf die Demo-Spuren nicht gepackt hat — mit dem Code von AP7 ebenso. Belegt ist der Vergleich allein nach dem Nachlauf (95 / 0, 137 860 Einzelvergleiche). | vor dem Pull Request: Nr. 325 |
+| **Der Punktvergleich der GPX-Probe auf frischer Anlage** (AP8, F-P5c-137) | Im Prüfstand vergleicht Teil 2 nichts, solange der Nachlauf die Demo-Spuren nicht gepackt hat — mit dem Code von AP7 ebenso. Belegt ist der Vergleich allein nach dem Nachlauf (95 / 0, 137 860 Einzelvergleiche). | **erledigt** mit Nr. 325 (1h) — der Bericht von `P5c-AP8` bleibt rot, der nächste Prüfstand misst den Vorlauf mit |
 | **Der Tag mit „Anderem Rettungsmittel" am Handy und in Firefox und WebKit** (AP8, Nr. 169, Nr. 300) | Die Bedienwege laufen in Chromium am Schreibtischfenster (`ap6` 5 von 5, `p5c-ap8-adhoc-tag-in-der-luft` 1 von 1). | P-P5c-36 |
 | **`EXPLAIN` und die Migration auf Staging** (AP7) | Örtlich gemessen: Migration über Betrieb → Updates, beide Indizes angelegt, Wartung an (1f); `EXPLAIN` der Herkunftsabfrage über `idx_missions_started`. Ob MySQL auf Staging denselben Plan wählt, hängt an Fassung und Bestand. | nach Merge und `update.php`: P-P5c-32 |
 | **Die Zahlen an einem echten Bestand** (AP7) | Nachgerechnet ist die Seite gegen unabhängiges SQL an einem gestellten Bestand (Messstand, Referenzbestand, Demo, Papierkorb, künftige Einsätze). Ob die Zahlen auf Produktiv zur Erfahrung der BetreiberIn passen, sieht nur sie. | P-P5c-33 |
@@ -247,6 +247,17 @@ aus AP6 und AP7 standen in der Tabelle von Abschnitt 0 statt in der
 Prüfliste — mit sechs Spalten in einer Tabelle mit drei. Sie stehen jetzt in 2,
 unverändert.
 
+## 1h. Messprotokoll Nr. 325 (25.09.2026, nur `tools/`, keine Versionsstufe)
+
+| Mittel | Aufruf | Zahl |
+|---|---|---|
+| **Wer die Jobs anhält** | Pause nach jedem Schritt der Abfolge ausgelesen (`jobs_pause_bis()`), ab `hochfahren.sh --neu` | nach `--neu`, ingest, jobs, wiederherstellung, container, `kreislauf.py`, komplett und gpx je **keine** — aber **während** der GPX-Probe „angehalten bis …+900 s": Sie hält die Jobs selbst an (`jobs_pause(900)`, für ihre Probedaten) |
+| **Vorlauf hinter der Pause — verworfen** | erste Fassung, Vorlauf vor Teil 2 | „ausduennen: angehalten bis …", 0 Demo-Blobs, 0 von 204 verglichen |
+| **Ruhe-Kriterium `rueckstand` 0 — verworfen** | Vorlauf vor der Pause, Kriterium „Rückstand 0" | „nach 40 Runden noch nicht fertig"; zwei Läufe `jobs_lauf()` von Hand: `verdichtung` Rückstand **55**, `ausduennen` **10**, je 0 erledigt, `fertig` — der Rückstand zählt auch Spuren, die noch nicht dran sind |
+| **Vorlauf, wie gebaut** | frische Anlage, Abfolge des Prüfstands, dann `proben.sh gpx` | **96 / 0** — Vorlauf **2 Runden, 247 Spuren**; 115 von 204 Dateien, **137 860** Einzelvergleiche, 0 Abweichungen, 89 übersprungen |
+| **Gegenprobe** | dieselbe Abfolge, Vorlauf auf 0 Runden gestellt, danach zurück | **rot, 96 / 2** — „nach 0 Runden noch nicht fertig", 0 von 204 verglichen |
+| **Billige Riegel** | `pruefen.sh alle`, `bestand.py`, Textprobe | *im Commit `P5c-325`* |
+
 ## 2. Prüfliste
 
 | Nr. | Punkt | Bedienweg | Erwartet | Scheitern erkennbar an | Stand |
@@ -321,7 +332,8 @@ unverändert.
   (F-P5c-137, Nr. 325). Ihr Rot im ersten Lauf ist mit dem Code von AP7
   nachgestellt; warum derselbe Code am 24.09. grün war, ist nicht belegt —
   am wahrscheinlichsten ein Nachlauf, der damals vor ihr lief, aber das ist
-  eine Vermutung, keine Messung.
+  eine Vermutung, keine Messung. Seit Nr. 325 (1h) stellt sie den Zustand
+  selbst her; die Frage ist damit ohne Folgen.
 
 **Aus AP7:**
 

@@ -128,6 +128,15 @@ diese Fassung hinweg braucht den Rückfallstand aus dem Komplett-Backup.**
   Die Versandprobe misst, dass die Datenbank `ftp` abweist. Die Jobprobe
   misst die Zahl `geloescht` statt der gefallenen `uebergangen`: Die Falle
   im festen Schlüsselsatz von `jobs_lauf()` bleibt dieselbe.
+- **Werkzeug: Die GPX-Probe stellt ihren Ausgangszustand selbst her**
+  (Anlass Nr. 325, F-P5c-137). Auf frischer Anlage verglich Teil 2 nichts,
+  denn die Demo-Spuren lagen noch als Zeilen vor, bis der Nachlauf sie
+  packte. Ob der Prüfstand grün war, hing damit an der Uhr, und das galt
+  mit dem Code von AP7 genauso. Jetzt fährt ein Vorlauf `verdichtung` und
+  `ausduennen`, bis beide nichts mehr zu tun haben, und zwar **vor** der
+  Job-Pause, die die Probe für ihre eigenen Daten setzt. Gemessen: 96 / 0,
+  115 von 204 Dateien, 137 860 Einzelvergleiche, 0 Abweichungen. Ohne
+  Vorlauf ist sie rot.
 
 **Was bewusst bleibt:** Die zwei gelaufenen Migrationen, die die Tabelle
 einst anlegten und füllten, stehen unverändert im Katalog. Gelaufene
