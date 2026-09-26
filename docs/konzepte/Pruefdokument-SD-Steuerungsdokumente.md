@@ -12,7 +12,7 @@ PR #88, ist aufgenommen). Was die Betreiberin jetzt tut, steht in 3.7.*
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
-| **Stufe 1 auf GitHub für diesen Zweig — bis zum PR** | Sie läuft auf Arbeitszweigen nur beim Pull Request; PR #92 ist offen, sein Lauf wird in 3.6 eingetragen. Örtlich ist der Prüfstand nach jedem Paket gefahren (Abschnitt 2, Stufe klein, zuletzt 21 grün) | 3.6 |
+| **Stufe 1 auf GitHub — seit PR #92 gemessen** | Lauf 311 grün (P-SD-15); die Gegenprobe Lauf 312 rot, aber an der Selbstprobe statt an der Stelle (P-SD-16, F-SD-13) — der zweite Versuch steht in 3.6. Örtlich ist der Prüfstand nach jedem Paket gefahren (Abschnitt 2, Stufe klein) | 3.6 |
 | **Ob eine Zeile in Abschnitt 6 wirklich erledigt ist** | Dreizehn Zeilen tragen den Vermerk „vermutlich erledigt" oder „löschen?" — das ist aus anderen Dokumenten geschlossen (Konzept PK: M1 am 21.09.2026 mit Migrationen von Hand; Fassung 110: Gerätetest erfolgt; Produktiv antwortet unter `nadoku.gen-em.org`), nicht an der Anlage gemessen. Gelöscht ist keine (E-SD-31) | Q-SD-01, Prüfliste 3.1 |
 | **Ob die drei Zuarbeiten-Gruppen richtig sortiert sind** | Die Einteilung „jetzt / vor Schritt X / vor v1.0" ist aus der Spalte „Wann" der Fassung 124 gelesen; drei Zeilen ohne klares „Wann" (SPF/DKIM, BR-Fragen, „Freigabe je Konzept") stehen in 6.1 | Q-SD-01, Prüfliste 3.1 |
 | **Ob die Kurzfassungen Sinn verloren haben** | Register-Statussätze (R51 bis R85 von Absätzen auf ≤ 160 Zeichen), Erledigt-Zeilen (31 Blöcke von bis zu 90 Zeilen auf je eine) und die Fahrplanzeilen sind Kürzungen; gezählt sind Zeichen, nicht Sinn. Der Volltext liegt in Archiv-2 | Prüfliste 3.2 |
@@ -82,6 +82,8 @@ E-SD-19).
 | SD-04 | P-SD-19 | Riegel `wortliste` im Prüfstand (Textprobe, `Pruefablauf.md` 6.6) | 0 neue Treffer in den 14 normativen Dokumenten (Rahmenplan und Backlog sind Klasse H) | **0** |
 | SD-04 | Decken | `python3 tools/steuerung/decken.py`; `uebersicht.py --pruefen` | nach den Änderungen an Rahmenplan (Fassung 130) und Backlog-Kopf | **20 Decken, 0 gerissen**; **105, 0, 0** |
 | SD-04 | Prüfstand | `bash tools/pruefstand/pruefen.sh` | Stufe klein, gegen `origin/main` | Bericht in der Commit-Nachricht von SD-04 |
+| PR | P-SD-15 | Stufe 1, Lauf 311 (`d8266f4`) | Schritt „Steuerungsdokumente — halten sie ihre Decken?", „Prüfbericht gegenlesen", vier Jobs | **grün · grün · 4 von 4** |
+| PR | P-SD-16 | Stufe 1, Lauf 312 (`46b213e`, Nr. 332 mit 21 Zeilen) | Erwartung: rot mit Datei und Zeile | **rot, ohne Datei und Zeile** — `decken.py --selbstprobe` fiel zuerst („22 Fälle, 2 Fehlschläge", F-SD-13); berichtigt (E-SD-47), zweiter Versuch: 3.6 |
 
 ---
 
@@ -245,6 +247,21 @@ Commit mit einer 21. Zeile in einem Backlog-Eintrag, pushen, Stufe 1 lesen,
 Commit zurücknehmen. **Erwartung:** rot, mit `docs/Backlog.md:<Zeile>` und
 `Nr. NNN: 21 Zeilen` in der Anmerkung. **Scheitern:** grün — dann misst das
 Tor nicht, was der Prüfstand misst.
+
+**Ergebnis P-SD-15:** Lauf 311 (`d8266f4`): Schritt 15 „Steuerungsdokumente
+— halten sie ihre Decken?" grün, „Prüfbericht gegenlesen" grün, alle vier
+Jobs grün. ☑
+
+**Ergebnis P-SD-16, erster Versuch:** Lauf 312 (`46b213e`, Nr. 332 mit 21
+Zeilen): **rot — aber an der falschen Stelle.** Der Schritt fiel schon bei
+`decken.py --selbstprobe` („22 Fälle, 2 Fehlschläge": GEGENPROBE und
+`backlog-eintrag`), weil die Selbstprobe einen grünen Baum voraussetzte; die
+Zeile `decken.py --stellen`, die Datei und Zeile nennt, kam nie dran
+(F-SD-13). Behoben: Die Selbstprobe zählt je Decke die Stellen vor und nach
+dem Riss (E-SD-47) — örtlich auf dem roten Baum 22 Fälle, 0 Fehlschläge, und
+`--stellen` sagt `docs/Backlog.md:1712: Nr. 332: 21 Zeilen`.
+**Zweiter Versuch:** der Commit, der die Selbstprobe berichtigt und die 21.
+Zeile stehen lässt — Ergebnis wird hier eingetragen. ☐
 
 ### 3.7 Freigabe des Abschlusses — was die Betreiberin jetzt tut
 

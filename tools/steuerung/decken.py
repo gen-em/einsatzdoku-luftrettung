@@ -339,15 +339,21 @@ def selbstprobe(wurzel):
         ('berichtigung-backlog', BACKLOG, f_bberichtigung), ('backlog-schnittmenge', ERLEDIGT, None),
         ('backlog-codeblock', BACKLOG, f_codeblock), ('backlog-listenpunkte', BACKLOG, f_li),
     ]
+    # UNABHÄNGIG VOM ZUSTAND DES BAUMS (F-SD-13): Die Selbstprobe zählt je
+    # Decke die Stellen VOR und NACH dem Riss. Ein Baum, der schon rot ist,
+    # bleibt damit prüfbar — die erste Gegenprobe im Tor (Nr. 332 mit einer
+    # 21. Zeile) fiel sonst hier, und `--stellen` kam nie dran.
     fehl = 0
+    baum = {k: len(s) for k, (_, s) in messen(wurzel).items()}
     with tempfile.TemporaryDirectory(prefix='decken-') as d:
         os.makedirs(os.path.join(d, 'docs'))
         for rel in DATEIEN:
             shutil.copy(os.path.join(wurzel, *rel.split('/')), os.path.join(d, 'docs'))
-        basis = {k for k, (_, s) in messen(d).items() if s}
-        ok = not basis
+        basis = {k: len(s) for k, (_, s) in messen(d).items()}
+        ok = basis == baum
         fehl += not ok
-        print(f"  [{'ok  ' if ok else 'FEHL'}] GEGENPROBE: die Kopie misst wie der Baum — {len(basis)} Decke(n) gerissen")
+        gerissen = sum(1 for v in basis.values() if v)
+        print(f"  [{'ok  ' if ok else 'FEHL'}] GEGENPROBE: die Kopie misst wie der Baum — {gerissen} Decke(n) gerissen, in beiden")
         erste = None
         with open(os.path.join(wurzel, *BACKLOG.split('/')), encoding='utf-8') as f:
             for z in f:
@@ -361,9 +367,10 @@ def selbstprobe(wurzel):
             pfad = os.path.join(d, *rel.split('/'))
             _einbauen(pfad, wandeln if wandeln else (lambda z: f_schnitt(z, erste)))
             try:
-                rot = {k for k, (_, s) in messen(d).items() if s} - basis
-                ist = name in rot
-                zusatz = '' if rot == {name} else f' (rot: {", ".join(sorted(rot))})'
+                danach = {k: len(s) for k, (_, s) in messen(d).items()}
+                neu_rot = sorted(k for k in danach if danach[k] > basis.get(k, 0))
+                ist = name in neu_rot
+                zusatz = '' if neu_rot == [name] else f' (neu rot: {", ".join(neu_rot)})'
             except NichtGelaufen as e:
                 ist, zusatz = False, f' (nicht gelaufen: {e})'
             fehl += not ist
