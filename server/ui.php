@@ -1068,8 +1068,9 @@ function ui_einstellungen_punkte(): array
  * NACHGEMESSEN IN P5c/AP9 (F-P5c-157), mit 18 Einträgen: bei 1280 × 900 auf
  * 13 von 14 Seiten alle erreichbar (die Servereinstellungen mit acht
  * Sprungmarken 16), bei 1280 × 720 auf 6 von 14. Seither fallen die
- * Sprungmarken unter 800 px Fensterhöhe weg (E-P5c-131, style.css) — dann
- * 14 von 14. Gezählt wird ein Eintrag, wenn er im Bild steht oder der Kopf
+ * Sprungmarken unter einer Fensterhöhe weg (E-P5c-131, style.css) — seit
+ * Web 21.1.3 unter 950 px statt 800 (F-P5c-164), und bei jeder gemessenen
+ * Höhe sind es 14 von 14. Gezählt wird ein Eintrag, wenn er im Bild steht oder der Kopf
  * seiner zugeklappten Gruppe; nach der Box allein zu fragen zählt die Einträge
  * zugeklappter Gruppen mit, denn Chromium gibt ihnen eine.
  */

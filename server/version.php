@@ -7637,5 +7637,12 @@ declare(strict_types=1);
  *   Dazu `doku_lib.php` ohne `db.php` (F-P5c-171): Die Bibliothek brauchte
  *   nichts daraus, und die Ankerpruefung, die sie laedt, lief in Stufe 1
  *   ohne `config.php` in den Abbruch — gruen im Pruefstand, rot im Tor.
+ *
+ * 21.1.3 — DIE SPRUNGMARKEN WEICHEN FRUEHER (F-P5c-164). Korrekturstufe ohne
+ *   Migration, die erste nach dem Merge von P5c. Die Sprungmarken der
+ *   festen Leiste stehen erst ab 950 px Fensterhoehe statt ab 800: Darunter
+ *   passten drei Listen nicht ganz, jetzt ist die Leiste bei jeder
+ *   gemessenen Hoehe auf allen 14 Seiten ohne Rollen vollstaendig.
+ *   Entschieden von der Betreiberin, die Luecke hatte AP9 benannt.
  */
-const WEB_VERSION = '21.1.2';
+const WEB_VERSION = '21.1.3';

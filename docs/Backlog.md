@@ -10814,7 +10814,9 @@ zutreffen.
     Einträge, 14 Seiten): bei 1280 × 720 mit den Sprungmarken auf 6 Seiten
     vollständig — sie fallen deshalb unter 800 px Fensterhöhe weg
     (E-P5c-131), dann auf 14 von 14; bei 1280 × 900 auf 13 von 14, die
-    Servereinstellungen (acht Sprungmarken) bei 16 von 18.
+    Servereinstellungen (acht Sprungmarken) bei 16 von 18. **Mit Web 21.1.3
+    liegt die Schwelle bei 950 px** (F-P5c-164, Entscheidung der
+    Betreiberin): bei 800 bis 1000 px Höhe überall 14 von 14.
 
 245. **Erklärtext-Regel — und danach alle Texte in Verwaltung und Betrieb.**
     *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
