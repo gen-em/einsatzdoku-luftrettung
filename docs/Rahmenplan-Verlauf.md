@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 132 | 26.09.2026 | AR-Abschluss | Erledigt-Zeile AR (PR #88, `f5bddc2`, Android 0.16.0); Fahrplanzeile und die AR-Zeile in Abschnitt 4 weg; Konzept gelöscht; Gerätetests als Zuarbeit in 6.1; P-PK-28 im Prüfdokument PK belegt (Nr. 284). |
 | 131 | 26.09.2026 | SD-Abschluss | Erledigt-Zeile SD (PR #92, `056781c`); Fahrplanzeile und SD-Sperre in Abschnitt 4 weg; Konzept gelöscht; Nr. 177, 193, 196, 199, 294 nach `Backlog-Erledigt.md`; Stand von `main` gemessen; Kopf: Abschlüsse und Konzept 17 auf `claude/schritt-17-hl9egt`. |
 | 130 | 26.09.2026 | SD-04 | Abschluss: Stand von `main` gemessen (`f5bddc2`, Android 0.16.0), AR gemergt, Abschnitt 5 endgültig (Kopfzeilen und `uebersicht.py`), Kopf und 9 ohne „ab SD-03"; SD-Fahrplanzeile „gebaut", PR offen. |
 | 129 | 26.09.2026 | SD-03 | Berichtigt: Die Fahrplanzeile „Betriebsübergang" trug keinen Status („—"); `decken.py` verlangt das erste Wort aus dem Vokabular — jetzt „offen — beginnt mit v1.0 (nach den Schritten 13 und 14)". |
