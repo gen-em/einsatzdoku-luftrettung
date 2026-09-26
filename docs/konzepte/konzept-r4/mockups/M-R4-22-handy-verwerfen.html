@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-R4-22 · Handy — abgewiesene Pakete verwerfen</title>
+<style>
+/* Die Farben sind die Markenwerte der App (android/handy, Farbe.*) = die Token
+ * aus server/assets/style.css; die Bausteine sind die aus Bausteine.kt
+ * (Kopfleiste, Zustandszeile, KnopfNeutral, KnopfBeenden) und der Material-3-
+ * AlertDialog aus HauptActivity.kt (Rueckfrage). Maße in dp bei 1:1. */
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;
+  --linie:#E3DAC6;--orange:#FF8F1F;--orange-tief:#C25A00;--blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;
+  --rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;--auf-dunkel:#FFFFFF;
+}
+body{margin:0;padding:24px;background:#EDE9DF;font-family:Roboto,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--asphalt)}
+.mock-kopf h1{font-size:22px;margin:0 0 4px;color:var(--dunkelblau);font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.mock-kopf p{margin:0 0 18px;color:var(--gedaempft);font-size:13px;max-width:1100px}
+.reihe{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+figure{margin:0;width:360px}
+figure h2{font-size:15px;margin:0 0 8px;color:var(--dunkelblau);font-family:"Bricolage Grotesque",system-ui,sans-serif}
+figcaption{margin-top:10px;font-size:12.5px;color:var(--gedaempft)}
+/* Gerät */
+.geraet{position:relative;width:360px;height:760px;background:var(--rauch);border-radius:22px;overflow:hidden;box-shadow:0 8px 24px rgba(26,46,77,.14);display:flex;flex-direction:column}
+.statusleiste{height:24px;background:var(--dunkelblau);color:var(--auf-dunkel);font-size:12px;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.kopfleiste{height:56px;background:var(--dunkelblau);color:var(--auf-dunkel);display:flex;align-items:center;gap:12px;padding:0 16px;font-size:19px;font-weight:600}
+.marke{width:28px;height:28px;border-radius:6px;background:var(--auf-dunkel);display:inline-block;position:relative}
+.marke::after{content:"";position:absolute;left:5px;top:9px;width:18px;height:9px;border-radius:5px 5px 3px 3px;background:var(--rot)}
+.inhalt{flex:1;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.karte{background:var(--schnee);border:1px solid var(--linie);border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.karte h3{margin:0;font-size:17px;color:var(--dunkelblau);font-weight:600}
+.zustand{display:flex;align-items:center;gap:8px;font-size:13px;min-height:20px}
+.punkt{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.knopf{min-height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;padding:12px 16px;box-sizing:border-box}
+.knopf-neutral{background:var(--schnee);color:var(--dunkelblau);border:1px solid var(--gedaempft)}
+.knopf-primaer{background:var(--orange);color:var(--dunkelblau)}
+.knopf-beenden{background:var(--rot);color:var(--auf-dunkel)}
+.hinweis{background:var(--blau-hell);border-radius:12px;padding:8px 12px;font-size:13px}
+.ergebnis{font-size:13px;color:var(--gedaempft)}
+.navleiste{height:48px;background:var(--rauch);display:flex;justify-content:space-around;align-items:center;color:#555;font-size:18px;border-top:1px solid var(--linie)}
+/* Rückfrage (Material 3 AlertDialog) */
+.schleier{position:absolute;inset:0;background:rgba(0,0,0,.32);display:flex;align-items:center;justify-content:center;padding:28px}
+.dialog{background:var(--schnee);border-radius:28px;padding:24px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,.28)}
+.dialog h4{margin:0 0 12px;font-size:20px;font-weight:500;color:var(--dunkelblau)}
+.dialog p{margin:0 0 20px;font-size:14px;line-height:1.45;color:var(--asphalt)}
+.dialog .tasten{display:flex;justify-content:flex-end;gap:8px}
+.dialog .taste{min-height:40px;padding:8px 12px;border-radius:20px;font-size:14px;font-weight:500;display:flex;align-items:center}
+.dialog .taste.nein{color:var(--dunkelblau)}
+.dialog .taste.ja{color:var(--rot-tief);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="mock-kopf">
+  <h1>M-R4-22 — Handy-App: abgewiesene Pakete verwerfen</h1>
+  <p>Konzept R4, Paket R4-22 (Nr. 114, E-R4-09, H-R4-01) · Dienstansicht der Android-App · Bausteine aus <code>Bausteine.kt</code>, Rückfrage wie „Gerät trennen" (<code>Rueckfrage()</code>, Material 3 <code>AlertDialog</code>). Neu ist ein <strong>neutraler Knopf</strong> direkt unter der roten Zustandszeile — keine dritte Knopfart: Verwerfen ist keine beendende Handlung der Ansicht (die bleibt Rot, unten), und der Fehltipp wird von der Rückfrage gefangen (E-S4-21b). Wortlaut der Rückfrage nach dem Muster der Garmin-Uhr (Nr. 159).</p>
+</div>
+
+<div class="reihe">
+
+  <figure>
+    <h2>1 · Dienst läuft, 3 Pakete abgewiesen</h2>
+    <div class="geraet">
+      <div class="statusleiste"><span>12:59</span><span>▮</span></div>
+      <div class="kopfleiste"><span class="marke" aria-hidden="true"></span>Dienst</div>
+      <div class="inhalt">
+        <div class="karte">
+          <h3>RTH-Dienst · 26.09.2026</h3>
+          <div class="zustand"><span class="punkt" style="background:var(--rot)"></span><span>Aufzeichnung läuft · Ortung gut</span></div>
+          <div class="zustand"><span class="punkt" style="background:var(--blau)"></span><span style="color:var(--blau-tief)">Gekoppelt mit nadoku.example.invalid</span></div>
+          <div class="zustand"><span class="punkt" style="background:var(--orange-tief)"></span><span style="color:var(--gedaempft)">2 Pakete im Rückstand</span></div>
+          <div class="zustand"><span class="punkt" style="background:var(--rot)"></span><span style="color:var(--rot-tief)">3 Pakete vom Server abgewiesen</span></div>
+          <div class="knopf knopf-neutral">Abgewiesene verwerfen …</div>
+          <div class="hinweis">Der Server hat diese Pakete endgültig abgelehnt (Antwort 400). Sie werden nicht erneut gesendet und nach 30 Tagen oder beim Trennen des Geräts geräumt.</div>
+          <div class="knopf knopf-primaer">Jetzt senden</div>
+        </div>
+        <div class="karte">
+          <h3>Einsatz</h3>
+          <div class="zustand"><span>Kein Einsatz offen</span></div>
+          <div class="knopf knopf-primaer">Einsatz beginnen</div>
+        </div>
+        <div style="flex:1"></div>
+        <div class="knopf knopf-beenden">Dienst beenden</div>
+      </div>
+      <div class="navleiste"><span>◀</span><span>●</span><span>■</span></div>
+    </div>
+    <figcaption>Die rote Zustandszeile gibt es seit 0.8.2; neu ist der Knopf darunter. Er steht nur, solange <code>abgewiesen &gt; 0</code>. Die Beschriftung nennt keine Zahl — die steht in der Zeile darüber, und ein Plural in der Beschriftung wäre eine zweite Zahl, die altern kann.</figcaption>
+  </figure>
+
+  <figure>
+    <h2>2 · Rückfrage</h2>
+    <div class="geraet">
+      <div class="statusleiste"><span>12:59</span><span>▮</span></div>
+      <div class="kopfleiste"><span class="marke" aria-hidden="true"></span>Dienst</div>
+      <div class="inhalt">
+        <div class="karte">
+          <h3>RTH-Dienst · 26.09.2026</h3>
+          <div class="zustand"><span class="punkt" style="background:var(--rot)"></span><span>Aufzeichnung läuft · Ortung gut</span></div>
+          <div class="zustand"><span class="punkt" style="background:var(--blau)"></span><span style="color:var(--blau-tief)">Gekoppelt mit nadoku.example.invalid</span></div>
+          <div class="zustand"><span class="punkt" style="background:var(--orange-tief)"></span><span style="color:var(--gedaempft)">2 Pakete im Rückstand</span></div>
+          <div class="zustand"><span class="punkt" style="background:var(--rot)"></span><span style="color:var(--rot-tief)">3 Pakete vom Server abgewiesen</span></div>
+          <div class="knopf knopf-neutral">Abgewiesene verwerfen …</div>
+          <div class="hinweis">Der Server hat diese Pakete endgültig abgelehnt (Antwort 400). Sie werden nicht erneut gesendet und nach 30 Tagen oder beim Trennen des Geräts geräumt.</div>
+          <div class="knopf knopf-primaer">Jetzt senden</div>
+        </div>
+        <div class="karte">
+          <h3>Einsatz</h3>
+          <div class="zustand"><span>Kein Einsatz offen</span></div>
+          <div class="knopf knopf-primaer">Einsatz beginnen</div>
+        </div>
+        <div style="flex:1"></div>
+        <div class="knopf knopf-beenden">Dienst beenden</div>
+      </div>
+      <div class="navleiste"><span>◀</span><span>●</span><span>■</span></div>
+      <div class="schleier">
+        <div class="dialog" role="alertdialog" aria-labelledby="rf-titel" aria-describedby="rf-text">
+          <h4 id="rf-titel">3 abgewiesene Pakete verwerfen?</h4>
+          <p id="rf-text">Der Server hat sie endgültig abgelehnt; sie kommen nie mehr an. Die Aufzeichnungen darin sind dann weg.</p>
+          <div class="tasten"><span class="taste nein">Behalten</span><span class="taste ja">Verwerfen</span></div>
+        </div>
+      </div>
+    </div>
+    <figcaption>Titel nennt die Zahl (<code>&lt;plurals&gt;</code>: „1 abgewiesenes Paket verwerfen?"), der Text den Grund und die Folge; „Verwerfen" in Rot tief und fett wie „Trennen" beim Gerät, „Behalten" in Dunkelblau. Tippen außerhalb schließt = Behalten.</figcaption>
+  </figure>
+
+  <figure>
+    <h2>3 · danach</h2>
+    <div class="geraet">
+      <div class="statusleiste"><span>13:00</span><span>▮</span></div>
+      <div class="kopfleiste"><span class="marke" aria-hidden="true"></span>Dienst</div>
+      <div class="inhalt">
+        <div class="karte">
+          <h3>RTH-Dienst · 26.09.2026</h3>
+          <div class="zustand"><span class="punkt" style="background:var(--rot)"></span><span>Aufzeichnung läuft · Ortung gut</span></div>
+          <div class="zustand"><span class="punkt" style="background:var(--blau)"></span><span style="color:var(--blau-tief)">Gekoppelt mit nadoku.example.invalid</span></div>
+          <div class="zustand"><span class="punkt" style="background:var(--orange-tief)"></span><span style="color:var(--gedaempft)">2 Pakete im Rückstand</span></div>
+          <div class="ergebnis">3 Pakete verworfen</div>
+          <div class="knopf knopf-primaer">Jetzt senden</div>
+        </div>
+        <div class="karte">
+          <h3>Einsatz</h3>
+          <div class="zustand"><span>Kein Einsatz offen</span></div>
+          <div class="knopf knopf-primaer">Einsatz beginnen</div>
+        </div>
+        <div style="flex:1"></div>
+        <div class="knopf knopf-beenden">Dienst beenden</div>
+      </div>
+      <div class="navleiste"><span>◀</span><span>●</span><span>■</span></div>
+    </div>
+    <figcaption>Rote Zeile, Knopf und Hinweis sind weg; die Quittung „3 Pakete verworfen" steht als Ergebniszeile (wie nach „Jetzt senden") und lebt nur, solange die Ansicht offen ist — sie ist eine Quittung, kein Zustand.</figcaption>
+  </figure>
+
+</div>
+
+</body>
+</html>

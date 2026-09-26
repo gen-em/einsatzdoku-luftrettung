@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-R4-24 · Statistik — Diagramme als Inline-SVG</title>
+<link rel="stylesheet" href="../../../../server/assets/style.css">
+<style>
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) --------------------------- */
+body{background:#EDE9DF}
+.mock-kopf{padding:20px 24px 4px;max-width:1180px;margin:0 auto}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.mock-zustand{max-width:1180px;margin:16px auto 28px;padding:0 24px}
+.mock-zustand>h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.mock-zustand>p.unter{margin:0 0 10px;color:var(--gedaempft);font-size:var(--groesse-2)}
+.mock-seite{background:var(--rauch);border-radius:var(--radius);box-shadow:0 8px 24px rgba(26,46,77,.10);padding:var(--abstand-5)}
+@media (max-width:479px){.mock-kopf,.mock-zustand{padding-left:12px;padding-right:12px}.mock-seite{padding:var(--abstand-4) var(--abstand-3)}}
+
+/* ---- Vorschlag für style.css (neu mit R4-24): Baustein „Diagramm" -------
+ * Zwei Formen, beide ohne Bibliothek:
+ *   .diagramm-saeulen  — Inline-SVG aus PHP, eine Säule je Woche (Größe über
+ *                        die Zeit). EINE Farbe (--blau: „hier wird erklärt",
+ *                        Design.md 3.1); der Höchstwert in --orange
+ *                        („Hervorhebung", wie die Extremwerte der
+ *                        Zeitraumübersicht) MIT Beschriftung — Farbe ist nie
+ *                        der einzige Träger. Zahlen und Achsen in
+ *                        Schrifttoken (--asphalt, --gedaempft), nie in der
+ *                        Reihenfarbe. Gitter --linie (zeichnerisch).
+ *   .diagramm-balken   — HTML-Zeilen: Beschriftung, Balken, Zahl. Für
+ *                        Anteile (Herkunft). Eine Farbe; die Identität trägt
+ *                        die Beschriftung, nicht der Ton.
+ * Die Tabelle daneben bleibt: Sie ist die Tabellensicht des Diagramms.
+ * Kein neuer Farbwert, keine neue Schriftgröße (12/13 px = Skala 1/2).
+ * Schwebe-Beschriftung ohne Skript: die Zahl über der Säule erscheint bei
+ * :hover/:focus-within (Zeigergerät); am Fingergerät ist die Tabelle die
+ * Auskunft. */
+.diagramm{margin:0 0 var(--abstand-3)}
+.diagramm-saeulen{display:block;width:100%;height:auto;font-family:var(--schrift-text)}
+.diagramm-saeulen .gitter{stroke:var(--linie);stroke-width:1}
+.diagramm-saeulen .achse{fill:var(--gedaempft);font-size:12px}
+.diagramm-saeulen .saeule rect{fill:var(--blau);rx:2}
+.diagramm-saeulen .saeule.hoechst rect{fill:var(--orange)}
+.diagramm-saeulen .saeule text{fill:var(--asphalt);font-size:12px;text-anchor:middle;opacity:0}
+.diagramm-saeulen .saeule.hoechst text,.diagramm-saeulen .saeule:hover text,.diagramm-saeulen .saeule:focus-within text{opacity:1}
+.diagramm-saeulen .saeule:hover rect{fill:var(--blau-tief)}
+.diagramm-saeulen .saeule.hoechst:hover rect{fill:var(--orange-tief)}
+@media (max-width:767px){.diagramm-saeulen .achse.nur-breit{display:none}}
+.diagramm-balken{display:grid;grid-template-columns:minmax(7rem,12rem) 1fr 3.2rem;gap:var(--abstand-1) var(--abstand-2);align-items:center;margin:var(--abstand-2) 0 var(--abstand-3)}
+.diagramm-balken .balken-text{font-size:var(--groesse-2)}
+.diagramm-balken .balken-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-1)}
+.diagramm-balken .balken{height:12px;background:var(--linie);border-radius:4px;overflow:hidden}
+.diagramm-balken .balken>span{display:block;height:100%;background:var(--blau);border-radius:4px}
+.diagramm-balken .balken-zahl{text-align:right;font-variant-numeric:tabular-nums;font-size:var(--groesse-2)}
+@media (max-width:479px){.diagramm-balken{grid-template-columns:1fr 3.2rem}.diagramm-balken .balken-text{grid-column:1 / -1}}
+.kleinvielfach{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--abstand-3)}
+@media (max-width:767px){.kleinvielfach{grid-template-columns:1fr}}
+.kleinvielfach h3{font-family:var(--schrift-kopf);font-size:var(--groesse-3);margin:0 0 var(--abstand-1);color:var(--dunkelblau)}
+.kleinvielfach .kennwert{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0;color:var(--asphalt)}
+.kleinvielfach .kennwert span{font-family:var(--schrift-text);font-size:var(--groesse-1);color:var(--gedaempft);margin-left:var(--abstand-1)}
+</style>
+</head>
+<body>
+
+<div class="mock-kopf">
+  <h1>M-R4-24 — Statistik: Diagramme als Inline-SVG</h1>
+  <p>Konzept R4, Paket R4-24 (E-R4-07, H-R4-01) · Betrieb → Statistik · neuer Baustein „Diagramm" in zwei Formen (Säulen als SVG aus PHP, Balken als HTML), ohne Bibliothek; Farben nur über Token — Blau erklärt, Orange hebt den Höchstwert hervor, Schrift in Asphalt/Gedämpft. Die Tabelle bleibt als Tabellensicht. Zahlen erfunden.</p>
+</div>
+
+<!-- ===================================================================== -->
+<section class="mock-zustand">
+  <h2>Zustand A — Reiter „Einsätze", Fenster 180 Tage: Säulen je Woche, Balken je Herkunft</h2>
+  <p class="unter">Links die Zeitreihe (26 Wochen), Höchstwert beschriftet; am Zeigergerät zeigt jede Säule beim Überfahren ihre Zahl. Rechts die Anteile als Balken mit Beschriftung und Zahl — kein Kreisdiagramm, keine zweite Achse.</p>
+  <div class="mock-seite">
+    <main class="inhalt">
+
+      <div class="titelzeile">
+        <div class="titelzeile-haupt"><div class="titelzeile-text"><h1>Statistik</h1></div></div>
+        <p class="titelzeile-unter">Stand 26.09.2026 14:02 Uhr · <strong>ohne Demo-Konto</strong> · rein lesend</p>
+      </div>
+
+      <div class="kennzahl-raster kennzahl-raster-4">
+        <a class="kennzahl" href="?r=nutzer"><p class="kennzahl-wert">47</p><p class="kennzahl-label">Konten</p></a>
+        <a class="kennzahl" href="?r=geraete"><p class="kennzahl-wert">61</p><p class="kennzahl-label">Geräte</p></a>
+        <a class="kennzahl" href="?r=einsaetze"><p class="kennzahl-wert">1 284</p><p class="kennzahl-label">Einsätze gesamt</p></a>
+        <a class="kennzahl aktiv" href="?r=einsaetze"><p class="kennzahl-wert">702</p><p class="kennzahl-label">Einsätze in 180 Tagen</p></a>
+      </div>
+
+      <form method="get" class="zeitraumwahl" aria-label="Zeitraum der Statistik" style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);margin:var(--abstand-4) 0 var(--abstand-3)">
+        <div class="filterreihe">
+          <a class="listenfilter" href="?r=einsaetze&amp;t=7"><span>7 Tage</span></a>
+          <a class="listenfilter" href="?r=einsaetze&amp;t=30"><span>30 Tage</span></a>
+          <a class="listenfilter aktiv" href="?r=einsaetze&amp;t=180" aria-current="true"><span>180 Tage</span></a>
+          <a class="listenfilter" href="?r=einsaetze&amp;t=365"><span>365 Tage</span></a>
+        </div>
+      </form>
+
+      <div class="reiter-rahmen"><nav class="reiter" aria-label="Bereiche der Statistik">
+        <a class="reiter-punkt" href="?r=nutzer">NutzerInnen</a>
+        <a class="reiter-punkt aktiv" href="?r=einsaetze" aria-current="page">Einsätze</a>
+        <a class="reiter-punkt" href="?r=geraete">Geräte</a>
+      </nav></div>
+
+      <div class="form-raster form-raster-links-breit">
+        <div class="form-spalte">
+          <section class="karte" id="k-einsaetze-zeit">
+            <div class="karte-kopf"><h2 class="karte-titel">Einsätze je Woche</h2><span class="karte-zahl">702 in 180 Tagen</span></div>
+            <div class="karte-inhalt">
+              <figure class="diagramm">
+                <svg class="diagramm-saeulen" viewBox="0 0 640 220" role="img" aria-labelledby="d1-titel" tabindex="0">
+                  <title id="d1-titel">Einsätze je Woche, 26 Wochen bis zum 26.09.2026; Höchstwert 41 in der Woche vom 13.07.</title>
+                  <line class="gitter" x1="36" y1="20" x2="640" y2="20"/><text class="achse" x="30" y="24" text-anchor="end">40</text>
+                  <line class="gitter" x1="36" y1="60" x2="640" y2="60"/><text class="achse" x="30" y="64" text-anchor="end">30</text>
+                  <line class="gitter" x1="36" y1="100" x2="640" y2="100"/><text class="achse" x="30" y="104" text-anchor="end">20</text>
+                  <line class="gitter" x1="36" y1="140" x2="640" y2="140"/><text class="achse" x="30" y="144" text-anchor="end">10</text>
+                  <line class="gitter" x1="36" y1="180" x2="640" y2="180" style="stroke:var(--gedaempft)"/>
+                  <!-- 26 Säulen, Breite 18, Lücke 5 (2 px Fläche zwischen Füllungen), Nullpunkt y=180, 4 px je Einsatz -->
+                  <g class="saeule"><rect x="40" y="88" width="18" height="92"/><text x="49" y="80">23</text></g>
+                  <g class="saeule"><rect x="63" y="104" width="18" height="76"/><text x="72" y="96">19</text></g>
+                  <g class="saeule"><rect x="86" y="72" width="18" height="108"/><text x="95" y="64">27</text></g>
+                  <g class="saeule"><rect x="109" y="96" width="18" height="84"/><text x="118" y="88">21</text></g>
+                  <g class="saeule"><rect x="132" y="84" width="18" height="96"/><text x="141" y="76">24</text></g>
+                  <g class="saeule"><rect x="155" y="68" width="18" height="112"/><text x="164" y="60">28</text></g>
+                  <g class="saeule"><rect x="178" y="56" width="18" height="124"/><text x="187" y="48">31</text></g>
+                  <g class="saeule"><rect x="201" y="76" width="18" height="104"/><text x="210" y="68">26</text></g>
+                  <g class="saeule"><rect x="224" y="48" width="18" height="132"/><text x="233" y="40">33</text></g>
+                  <g class="saeule"><rect x="247" y="60" width="18" height="120"/><text x="256" y="52">30</text></g>
+                  <g class="saeule"><rect x="270" y="40" width="18" height="140"/><text x="279" y="32">35</text></g>
+                  <g class="saeule"><rect x="293" y="52" width="18" height="128"/><text x="302" y="44">32</text></g>
+                  <g class="saeule"><rect x="316" y="36" width="18" height="144"/><text x="325" y="28">36</text></g>
+                  <g class="saeule"><rect x="339" y="44" width="18" height="136"/><text x="348" y="36">34</text></g>
+                  <g class="saeule hoechst"><rect x="362" y="16" width="18" height="164"/><text x="371" y="10">41</text></g>
+                  <g class="saeule"><rect x="385" y="32" width="18" height="148"/><text x="394" y="24">37</text></g>
+                  <g class="saeule"><rect x="408" y="56" width="18" height="124"/><text x="417" y="48">31</text></g>
+                  <g class="saeule"><rect x="431" y="64" width="18" height="116"/><text x="440" y="56">29</text></g>
+                  <g class="saeule"><rect x="454" y="80" width="18" height="100"/><text x="463" y="72">25</text></g>
+                  <g class="saeule"><rect x="477" y="72" width="18" height="108"/><text x="486" y="64">27</text></g>
+                  <g class="saeule"><rect x="500" y="92" width="18" height="88"/><text x="509" y="84">22</text></g>
+                  <g class="saeule"><rect x="523" y="84" width="18" height="96"/><text x="532" y="76">24</text></g>
+                  <g class="saeule"><rect x="546" y="100" width="18" height="80"/><text x="555" y="92">20</text></g>
+                  <g class="saeule"><rect x="569" y="76" width="18" height="104"/><text x="578" y="68">26</text></g>
+                  <g class="saeule"><rect x="592" y="96" width="18" height="84"/><text x="601" y="88">21</text></g>
+                  <g class="saeule"><rect x="615" y="132" width="18" height="48"/><text x="624" y="124">12</text></g>
+                  <text class="achse" x="49" y="200" text-anchor="middle">30.03.</text>
+                  <text class="achse nur-breit" x="164" y="200" text-anchor="middle">04.05.</text>
+                  <text class="achse" x="279" y="200" text-anchor="middle">08.06.</text>
+                  <text class="achse nur-breit" x="394" y="200" text-anchor="middle">13.07.</text>
+                  <text class="achse" x="509" y="200" text-anchor="middle">17.08.</text>
+                  <text class="achse nur-breit" x="624" y="200" text-anchor="middle">21.09.</text>
+                  <text class="achse" x="640" y="216" text-anchor="end">Woche ab (Montag) · laufende Woche unvollständig</text>
+                </svg>
+              </figure>
+              <div class="tabelle-scroll"><table class="tabelle">
+                <thead><tr><th>&nbsp;</th><th>1 Tag</th><th>7 Tage</th><th>30 Tage</th><th><strong>180 Tage</strong></th><th>365 Tage</th></tr></thead>
+                <tbody>
+                  <tr><th>Einsätze</th><td>4</td><td>27</td><td>118</td><td><strong>702</strong></td><td>1 284</td></tr>
+                  <tr><th>NutzerInnen <span class="feld-klein-inline">mit Einsatz</span></th><td>3</td><td>14</td><td>31</td><td><strong>44</strong></td><td>47</td></tr>
+                  <tr><th>Ø je NutzerIn <span class="feld-klein-inline">mit Einsatz</span></th><td>1,3</td><td>1,9</td><td>3,8</td><td><strong>16,0</strong></td><td>27,3</td></tr>
+                </tbody>
+              </table></div>
+              <p class="feld-klein">Gezählt ab dem Beginn des Einsatzes — ohne Demo-Konto, ohne Papierkorb. Die Säulen zeigen das gewählte Fenster in Wochen. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+            </div>
+          </section>
+        </div>
+        <div class="form-spalte">
+          <section class="karte" id="k-herkunft">
+            <div class="karte-kopf"><h2 class="karte-titel">Herkunft der Einsätze</h2><span class="karte-zahl">702 in 180 Tagen</span></div>
+            <div class="karte-inhalt">
+              <div class="diagramm-balken" role="list" aria-label="Herkunft der Einsätze, Anteil">
+                <span class="balken-text" role="listitem">Garmin-Uhr <span class="balken-klein">53 %</span></span><span class="balken" aria-hidden="true"><span style="width:53%"></span></span><span class="balken-zahl">372</span>
+                <span class="balken-text" role="listitem">Android-Handy und Wear-OS-Uhr <span class="balken-klein">29 %</span></span><span class="balken" aria-hidden="true"><span style="width:29%"></span></span><span class="balken-zahl">204</span>
+                <span class="balken-text" role="listitem">Von Hand im Browser <span class="balken-klein">14 %</span></span><span class="balken" aria-hidden="true"><span style="width:14%"></span></span><span class="balken-zahl">98</span>
+                <span class="balken-text" role="listitem">GPX-Import <span class="balken-klein">4 %</span></span><span class="balken" aria-hidden="true"><span style="width:4%"></span></span><span class="balken-zahl">28</span>
+              </div>
+              <p class="feld-klein">Anteile am gewählten Fenster. Ein Wert, den diese Fassung nicht kennt, erschiene als Zeile „Andere".</p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="mock-zustand">
+  <h2>Zustand B — Reiter „NutzerInnen": Konten je Zeitraum als drei kleine Vielfache</h2>
+  <p class="unter">Aktiv, angemeldet, neu angelegt sind drei Reihen mit verschiedenen Größenordnungen — deshalb drei kleine Diagramme mit je eigener Skala statt einer Grafik mit drei Farben oder zwei Achsen. Jedes trägt seinen Namen und den Wert des Fensters; die Zeitraumtabelle darunter bleibt.</p>
+  <div class="mock-seite">
+    <main class="inhalt">
+
+      <div class="reiter-rahmen"><nav class="reiter" aria-label="Bereiche der Statistik">
+        <a class="reiter-punkt aktiv" href="?r=nutzer" aria-current="page">NutzerInnen</a>
+        <a class="reiter-punkt" href="?r=einsaetze">Einsätze</a>
+        <a class="reiter-punkt" href="?r=geraete">Geräte</a>
+      </nav></div>
+
+      <section class="karte" id="k-konten-zeit">
+        <div class="karte-kopf"><h2 class="karte-titel">Konten je Zeitraum</h2><span class="karte-zahl">von 47</span></div>
+        <div class="karte-inhalt">
+          <div class="kleinvielfach">
+            <figure class="diagramm">
+              <h3>Aktiv</h3>
+              <p class="kennwert">38 <span>in 180 Tagen</span></p>
+              <svg class="diagramm-saeulen" viewBox="0 -14 200 96" role="img" aria-label="Aktive Konten je Monat, sechs Monate: 29, 31, 33, 35, 36, 38">
+                <line class="gitter" x1="0" y1="70" x2="200" y2="70" style="stroke:var(--gedaempft)"/>
+                <g class="saeule"><rect x="6" y="20" width="24" height="50"/><text x="18" y="14">29</text></g>
+                <g class="saeule"><rect x="38" y="17" width="24" height="53"/><text x="50" y="11">31</text></g>
+                <g class="saeule"><rect x="70" y="13" width="24" height="57"/><text x="82" y="7">33</text></g>
+                <g class="saeule"><rect x="102" y="10" width="24" height="60"/><text x="114" y="4">35</text></g>
+                <g class="saeule"><rect x="134" y="8" width="24" height="62"/><text x="146" y="2">36</text></g>
+                <g class="saeule hoechst"><rect x="166" y="5" width="24" height="65"/><text x="178" y="-1">38</text></g>
+              </svg>
+            </figure>
+            <figure class="diagramm">
+              <h3>Angemeldet</h3>
+              <p class="kennwert">27 <span>in 180 Tagen</span></p>
+              <svg class="diagramm-saeulen" viewBox="0 -14 200 96" role="img" aria-label="Angemeldete Konten je Monat, sechs Monate: 18, 22, 25, 21, 24, 27">
+                <line class="gitter" x1="0" y1="70" x2="200" y2="70" style="stroke:var(--gedaempft)"/>
+                <g class="saeule"><rect x="6" y="30" width="24" height="40"/><text x="18" y="24">18</text></g>
+                <g class="saeule"><rect x="38" y="21" width="24" height="49"/><text x="50" y="15">22</text></g>
+                <g class="saeule"><rect x="70" y="14" width="24" height="56"/><text x="82" y="8">25</text></g>
+                <g class="saeule"><rect x="102" y="23" width="24" height="47"/><text x="114" y="17">21</text></g>
+                <g class="saeule"><rect x="134" y="16" width="24" height="54"/><text x="146" y="10">24</text></g>
+                <g class="saeule hoechst"><rect x="166" y="10" width="24" height="60"/><text x="178" y="4">27</text></g>
+              </svg>
+            </figure>
+            <figure class="diagramm">
+              <h3>Neu angelegt</h3>
+              <p class="kennwert">9 <span>in 180 Tagen</span></p>
+              <svg class="diagramm-saeulen" viewBox="0 -14 200 96" role="img" aria-label="Neu angelegte Konten je Monat, sechs Monate: 1, 2, 0, 3, 1, 2">
+                <line class="gitter" x1="0" y1="70" x2="200" y2="70" style="stroke:var(--gedaempft)"/>
+                <g class="saeule"><rect x="6" y="50" width="24" height="20"/><text x="18" y="44">1</text></g>
+                <g class="saeule"><rect x="38" y="30" width="24" height="40"/><text x="50" y="24">2</text></g>
+                <g class="saeule"><rect x="70" y="70" width="24" height="0"/><text x="82" y="64">0</text></g>
+                <g class="saeule hoechst"><rect x="102" y="10" width="24" height="60"/><text x="114" y="4">3</text></g>
+                <g class="saeule"><rect x="134" y="50" width="24" height="20"/><text x="146" y="44">1</text></g>
+                <g class="saeule"><rect x="166" y="30" width="24" height="40"/><text x="178" y="24">2</text></g>
+              </svg>
+            </figure>
+          </div>
+          <p class="feld-klein">Je Monat, April bis September 2026; der Höchstwert ist beschriftet. Aktiv heißt: angemeldet <strong>oder</strong> eines der Geräte hat sich gemeldet. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</section>
+
+</body>
+</html>

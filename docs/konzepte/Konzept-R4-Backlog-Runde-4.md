@@ -26,7 +26,8 @@ Pakete an `android/` stufen Android; Pakete nur an `tools/` und `docs/`
 keine Zählung (`CLAUDE.md` 2). **Eine Migration** (R4-15) — nach dem Deploy
 `update.php`.
 **Ablage:** dieses Konzept; Prüfdokument `Pruefdokument-R4-Backlog-Runde-4.md`
-daneben (angelegt mit dem Konzept, gefüllt von der Umsetzung).
+daneben (angelegt mit dem Konzept, gefüllt von der Umsetzung); **Mockups**
+in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 **Zweig:** `claude/schritt-17-hl9egt`, von `origin/main` `056781c`; die
 Umsetzung läuft nach dem Merge des Konzept-PR (#93) auf einem eigenen
 Zweig (E-R4-02).
@@ -38,9 +39,9 @@ Zweig (E-R4-02).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Konzept vollständig, zur Freigabe vorgelegt; Konzept-PR #93 offen** (E-R4-02: Abschlüsse SD, AR, BV und dieses Konzept; jeder Push trägt einen Prüfbericht, `Pruefablauf.md` 5). Befund: 55 Punkte gesichtet und gegengeprüft (2.1). Paketschnitt: 26 Pakete (4). |
-> | Entschieden | **E-R4-01 bis E-R4-12** (Abschnitt 3). Von der Betreiberin am 26.09.2026: E-R4-01 bis -05 (Sitzung), E-R4-07 bis -10 (Q-R4-02, -04, -05, -10). Aus dem Konzept: E-R4-06, -11, -12. |
-> | Offen | **Q-R4-01, -03, -06 bis -09, -11 bis -15** — jede mit Empfehlung (3.2); nach K6 spätestens vor dem Paket, das sie braucht. **Mockup-Freigaben** vor R4-22, R4-23, R4-24 (H-R4-01). **Die Freigabe des Konzepts.** |
+> | Stand | **26.09.2026 — Konzept vollständig, zur Freigabe vorgelegt; Konzept-PR #93 offen** (E-R4-02: Abschlüsse SD, AR, BV und dieses Konzept; jeder Push trägt einen Prüfbericht, `Pruefablauf.md` 5). Befund: 55 Punkte gesichtet und gegengeprüft (2.1). Paketschnitt: 26 Pakete (4). **Mockups für R4-22, R4-23, R4-24 liegen bei** (`konzept-r4/mockups/`, LIESMICH dort; zur Freigabe, Q-R4-16). |
+> | Entschieden | **E-R4-01 bis E-R4-13** (Abschnitt 3). Von der Betreiberin am 26.09.2026: E-R4-01 bis -05 (Sitzung), E-R4-07 bis -10 (Q-R4-02, -04, -05, -10). Aus dem Konzept: E-R4-06, -11, -12, -13. |
+> | Offen | **Q-R4-01, -03, -06 bis -09, -11 bis -15** — jede mit Empfehlung (3.2); nach K6 spätestens vor dem Paket, das sie braucht. **Q-R4-16** — die Freigabe der drei Mockups (H-R4-01). **Die Freigabe des Konzepts.** |
 > | Umsetzung | noch nicht begonnen. **R4-00 erledigt** (Konzept, Spanne, Abschlüsse von SD, AR und BV auf diesem Zweig — Rahmenplan Fassungen 131 bis 134). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: je Paket in 4. |
@@ -56,8 +57,9 @@ begründet an ihren richtigen Ort hängen — so, dass nach dem Merge
 Backlog-Runde`, ein anderer Schritt, `nach v1.0`, `Pflegeaufgabe` oder
 `nicht umsetzen` mit Begründung. Eine Backlog-Runde ist eine Aufräumrunde;
 die drei Pakete mit neuer Darstellung (R4-22 bis R4-24) sind die Ausnahme,
-die die Betreiberin entschieden hat (E-R4-07, E-R4-09), und sie brauchen
-je ein Mockup vor dem Bau (`CLAUDE.md` 5).
+die die Betreiberin entschieden hat (E-R4-07, E-R4-09); ihre Mockups liegen
+beim Konzept (`konzept-r4/mockups/`) und warten auf die Freigabe
+(Q-R4-16, `CLAUDE.md` 5).
 
 **Nicht Ziel:** alles, was Schritt 18 gehört (Sitzung, Zweitfaktor,
 Serverschlüssel, `ingest.php`-Deadlock — Nr. 242, 247, 249, 233, 210, 228),
@@ -326,6 +328,7 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-09 | **Nr. 114 in 17, mit Mockup:** Knopf „Verwerfen" mit Rückfrage nach dem Muster der Garmin-Uhr — Android Neben. | Betreiberin, 26.09.2026 (Q-R4-05) | Der Server hat das Paket mit 400 endgültig abgelehnt; „Nachreichen von Hand" wäre ein zweiter Weg an `validate_lib.php` vorbei. Android-Mockups liegen unter `android/mockups/`. |
 | E-R4-10 | **Nr. 76 in 17:** Änderungsmarke in `app_state`, gesetzt bei POST des Demo-Kontos und bei angenommenem Upload; Reset nur bei gesetzter Marke, täglicher Pflichtreset als Netz. | Betreiberin, 26.09.2026 (Q-R4-10) | Die Fahrplanzeile nennt den Demo-Reset-Takt; die zwei Setzstellen sind je eine Zeile in Dateien der 18-Liste, und 18 baut auf 17 auf. |
 | E-R4-11 | **Die Sperrliste von Schritt 18 ist ein Gebot, kein Verbot.** Pakete an diesen Dateien bleiben klein, ändern keine Zeile, die 18 umbaut, und sind in 4 vermerkt. | Konzept | 18 hat „Merge von 17" als Voraussetzung und wird danach konzipiert. Ein Verbot hätte acht Punkte der Runde (76, 158, 175, 250, 258, 277, 291, 299) ohne Not nach 18 geschoben. |
+| E-R4-13 | **Die Diagramme der Statistik folgen vier Regeln:** eine Farbe je Diagramm (Blau), der Höchstwert in Orange **mit** Beschriftung, Schrift nur in Schrifttoken, die Tabelle bleibt daneben; drei Reihen verschiedener Größenordnung sind drei kleine Vielfache, keine Grafik mit drei Farben oder zwei Achsen; kein Kreis, keine Bibliothek (Inline-SVG aus PHP, Balken als HTML). | Konzept (M-R4-24) | `Design.md` 3.1/3.2 (Farbe trägt eine Aussage; Orange nie als Schrift, F-P3-J) und das dataviz-Verfahren (eine Achse, Farbe folgt der Sache, Tabellensicht); die zwei Töne haben die Palettenprüfung bestanden (Mockup-LIESMICH). |
 | E-R4-12 | **Ein Backlog-Punkt = ein Paket, außer die Punkte teilen Dateien oder Erzeugnis.** Blöcke sind Reihenfolge, nicht Bündel (wie Runde 3). | Konzept | 26 Pakete für 37 zu bauende Punkte; jedes einzeln abnehmbar, jedes mit Abnahmezahl. Gebündelt sind nur: 36+331 (eine Funktion), 322+334 (eine Ablaufdatei), 318+283 (ein Werkzeugordner), 116+321+297 (drei Bildwerkzeuge, seriell auf der einen Anlage), 271+272+273 (zwei Skripte, eine Zählzeile), 76+259 und 275+323 (ein Demo-Bestand), die Kommentar- und Kleinstpunkte unter `server/` (R4-09). |
 
 ### 3.2 Fragen an die Betreiberin
@@ -348,13 +351,16 @@ Empfehlung; nach K6 werden sie vor dem Paket entschieden, das sie braucht
 | Q-R4-13 | Nr. 297: Breiten 1200 und 1600 (die zwei ungemessenen Schwellen aus `Design.md` 7) statt 400 und 1366 aus dem Eintrag? Preis rund +12 % Laufzeit je Breite in neben/haupt. | Ja — jede Schwelle einmal knapp darüber messen; 1366 nur, wenn eine Laptop-Breite gewünscht ist. | R4-08 |
 | Q-R4-14 | Nr. 239: Weg A — die Backticks um den Spaltennamen in `mf_spalten()` setzen (die eine Stelle, die aus dem Register SQL macht), statt jeden Aufrufer zu ändern? | Ja — deckt alle drei INSERTs und jedes SELECT ab, ohne `ingest.php` anzufassen (18-Liste); `komplett_lib.php` behält seine vier Kopien oder nimmt denselben Weg. | R4-12 |
 | Q-R4-15 | Nr. 170 (F-R4-18): Soll der manuelle Abfahrtort in der Leseansicht eine beschriftete Zeile mit Schloss bekommen (heute nur Kartenpopup ohne Zeichen)? | Sollliste zuerst mit dem Ist schreiben; die Frage als **Nr. 341** notieren (`gehört zu: nächste Backlog-Runde`) — eine Oberflächenänderung außerhalb dieser Runde. | R4-06 |
+| Q-R4-16 | **Die drei Mockups freigeben** — M-R4-22 (Verwerfen-Knopf mit Rückfrage), M-R4-23 (Zeitraumwahl: Pillen + Von/Bis in einer Reihe über den Reitern), M-R4-24 (Säulen je Woche, Balken je Herkunft, kleine Vielfache)? Bilder und Regeln in `konzept-r4/mockups/LIESMICH.md`. | Ja, wie gezeigt; Änderungswünsche werden vor dem jeweiligen Paket ins Mockup eingearbeitet (H-R4-01). Ohne Freigabe bleiben R4-22 bis R4-24 stehen, die übrigen 23 Pakete laufen. | R4-22, R4-23, R4-24 |
 
 ### 3.3 Haltepunkte
 
-- **H-R4-01 Mockup vor R4-22, R4-23, R4-24.** Die Umsetzung legt je Paket
-  ein Mockup vor (Android unter `android/mockups/`, Web unter
-  `docs/konzepte/konzept-r4/`) und **wartet auf die Freigabe** (`CLAUDE.md`
-  5, `Design.md` 1). Kein Bau vor der Freigabe.
+- **H-R4-01 Freigabe der Mockups vor R4-22, R4-23, R4-24.** Die Mockups
+  liegen beim Konzept (`konzept-r4/mockups/`, Q-R4-16). Gebaut wird erst
+  nach der Freigabe (`CLAUDE.md` 5, `Design.md` 1); verlangt die
+  Betreiberin Änderungen, zieht die Umsetzung das Mockup nach und legt es
+  erneut vor, bevor das Paket beginnt. Die Emulatorbilder der fertigen
+  Android-Ansicht gehen nach `android/mockups/bilder/`.
 - **H-R4-02 R4-15 ist eine Migration.** Nach dem Deploy muss eine
   Administratorin `update.php` aufrufen; die Kette lässt den Wartungsmodus
   an. Das steht in der Commit-Nachricht, im Changelog und im Prüfdokument —
@@ -660,31 +666,48 @@ Konto 1; `kontraste.py` 0 Befunde, Selbstprobe 5/5. *Stufe:* Android
 Korrektur. *Fächerung:* keine.
 
 **R4-22 Android: Abgewiesene verwerfen** — Nr. 114 (E-R4-09, H-R4-01).
-Nach der Mockup-Freigabe: in `DienstAnsicht.kt` unter der roten
-Zustandszeile ein Knopf „Verwerfen" mit Rückfrage (Zahl, Hinweis auf
-Datenverlust — Wortlaut der Uhr aus `SyncView.mc`), ruft
-`puffer.abgewieseneRaeumen(null)`; `<plurals>`; Prüffall; Emulatorbilder;
-`docs/Geraete-Eingabe.md`, `android/LIESMICH.md`, Handbuch 10.
+Nach der Freigabe von **M-R4-22**: in `DienstAnsicht.kt` unter der roten
+Zustandszeile ein neutraler Knopf „Abgewiesene verwerfen …" (ohne Zahl —
+die steht in der Zeile darüber), Rückfrage über `Rueckfrage()` wie „Gerät
+trennen" mit `<plurals>` im Titel („3 abgewiesene Pakete verwerfen?"),
+Grund und Folge im Text, „Verwerfen" in Rot tief, „Behalten"; ruft
+`puffer.abgewieseneRaeumen(null)`; danach die Quittung „N Pakete verworfen"
+als Ergebniszeile; Prüffall; Emulatorbilder; `docs/Geraete-Eingabe.md`,
+`android/LIESMICH.md`, Handbuch 10.
 *Abnahme:* Prüffall grün; Bild mit Rückfrage; nach „Verwerfen" Zahl 0.
 *Stufe:* Android Neben. *Fächerung:* keine.
 
 **R4-23 Statistik: freier Zeitraum** — Nr. 122 (a) (E-R4-07, H-R4-01).
-Nach der Mockup-Freigabe: Von/Bis-Felder (Muster `suche.php` `f-dv`/`f-db`)
-— als Erweiterung von `ui_listenkopf()` (Baustein 9.18a) oder als eigenes
-Formular, das entscheidet das Mockup; `stat_…`-Abfragen mit Ober- und
-Untergrenze; Rollenmatrix-Zeile; Messstand-Schritt `statistik` mit
-freiem Zeitraum; Handbuch 12.2; `Design.md` 9.
+Nach der Freigabe von **M-R4-23**: eine Reihe `.zeitraumwahl` zwischen
+Kennzahlen und Reitern — die vier festen Fenster als Listenfilter-Pillen,
+daneben Von/Bis (`.feld-eingabe type=date`, Muster `suche.php`) und
+„Anwenden" (mit Skript beim Verlassen des zweiten Feldes, ohne Skript der
+Knopf); ein eigener Zeitraum steht als Pille mit Kreuz (9.18a). Tagesgrenzen
+in Europe/Berlin, `stat_…`-Abfragen mit Ober- und Untergrenze über den
+Index `missions(started_at)`; bei eigenem Zeitraum eine einspaltige
+Zeitraumtabelle mit Wochen- und Tagesschnitt, Kennzahl und Kartenzahl „im
+Zeitraum"; Rollenmatrix-Zeile; Messstand-Schritt `statistik` mit freiem
+Zeitraum; Handbuch 12.2; `Design.md` 9 (Vorrat: `.zeitraumwahl` ist eine
+Anordnung vorhandener Bausteine, kein neuer).
 *Abnahme:* Messstand drei Reiter mit freiem Zeitraum unter 1 s bei 5 000
 Einsätzen, `EXPLAIN` mit Index; Bilderlauf; Rollenprobe. *Stufe:* Web
 Neben. *Fächerung:* keine.
 
 **R4-24 Statistik: Diagramme als Inline-SVG** — Nr. 122 (b) (E-R4-07,
-H-R4-01). Nach der Mockup-Freigabe: je Reiter ein Diagramm aus den schon
-gerechneten Zahlen, als Inline-SVG aus PHP (keine Bibliothek, keine fremde
-Quelle — `Lizenzen.md` bleibt unberührt); Farben nur über Token, Kontrast
-gegen Schnee/Rauch; ein neuer Baustein „Diagramm" in `Design.md` 9 nach
-Freigabe; Bilderlauf in allen Breiten; Handbuch 12.2. Der Eintrag 122 ist
-danach erledigt.
+E-R4-13, H-R4-01). Nach der Freigabe von **M-R4-24**: Baustein „Diagramm"
+in zwei Formen — Säulen je Woche als Inline-SVG aus PHP
+(`.diagramm-saeulen`: eine Farbe, Höchstwert orange mit Zahl, Gitter,
+`:hover`-Zahl ohne Skript) für „Einsätze je Zeitraum" und „Geräte je
+Zeitraum", Anteile als HTML-Balken (`.diagramm-balken`) für die Herkunft,
+„Konten je Zeitraum" als drei kleine Vielfache je Monat; alles aus den
+schon gerechneten Zahlen (`statistik_lib.php` liefert je Woche bzw. Monat
+eine Zahl dazu), keine Bibliothek, keine fremde Quelle — `Lizenzen.md`
+bleibt unberührt; Farben nur über Token, Kontrast gegen Schnee/Rauch
+(`kontrast.py` mit den neuen Paaren); die Tabelle bleibt neben jedem
+Diagramm. Am Fingergerät unter 480 px: Achsentext über `.nur-breit` weg
+oder halbes Fenster — die Umsetzung entscheidet nach dem Bilderlauf.
+Baustein „Diagramm" in `Design.md` 9; Bilderlauf in allen Breiten;
+Handbuch 12.2. Der Eintrag 122 ist danach erledigt.
 *Abnahme:* Bilderlauf ohne Überlauf in 10 Breiten; `kontrast.py` 0
 verfehlt; Rollenprobe; Handbuch. *Stufe:* Web Neben. *Fächerung:* keine.
 

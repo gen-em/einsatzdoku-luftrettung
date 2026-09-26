@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-R4-23 · Statistik — freier Zeitraum</title>
+<link rel="stylesheet" href="../../../../server/assets/style.css">
+<style>
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) --------------------------- */
+body{background:#EDE9DF}
+.mock-kopf{padding:20px 24px 4px;max-width:1180px;margin:0 auto}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.mock-zustand{max-width:1180px;margin:16px auto 28px;padding:0 24px}
+.mock-zustand>h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.mock-zustand>p.unter{margin:0 0 10px;color:var(--gedaempft);font-size:var(--groesse-2)}
+.mock-seite{background:var(--rauch);border-radius:var(--radius);box-shadow:0 8px 24px rgba(26,46,77,.10);padding:var(--abstand-5)}
+@media (max-width:479px){.mock-kopf,.mock-zustand{padding-left:12px;padding-right:12px}.mock-seite{padding:var(--abstand-4) var(--abstand-3)}}
+
+/* ---- Vorschlag für style.css (neu mit R4-23) ---------------------------
+ * .zeitraumwahl — die Filterreihe der Statistik: feste Fenster als
+ * Listenfilter-Pillen (vorhanden, 9.18a) plus zwei Datumsfelder (vorhanden,
+ * .feld-eingabe) und der Knopf „Anwenden", der ohne Skript da steht und mit
+ * Skript beim Verlassen des zweiten Feldes abschickt (wie das Auswahlfeld in
+ * ui_listenkopf(), assets/listenkopf.js). Neu ist NUR die Anordnung:
+ * Pillen und Felder in EINER Reihe mit Umbruch. Kein neuer Farbwert, keine
+ * neue Schriftgröße. */
+.zeitraumwahl{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);margin:var(--abstand-4) 0 var(--abstand-3)}
+.zeitraumwahl .filterreihe{margin:0}
+.zeitraumwahl-felder{display:flex;align-items:center;gap:var(--abstand-2);flex-wrap:wrap}
+.zeitraumwahl-felder .feld{margin:0;display:flex;align-items:center;gap:var(--abstand-1)}
+.zeitraumwahl-felder .feld-label{margin:0;font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
+.zeitraumwahl-felder .feld-eingabe{width:9.5rem;min-height:var(--knopf)}
+.zeitraumwahl-felder .knopf{min-height:var(--knopf)}
+@media (max-width:479px){.zeitraumwahl-felder .feld-eingabe{width:8.6rem}}
+</style>
+</head>
+<body>
+
+<div class="mock-kopf">
+  <h1>M-R4-23 — Statistik: freier Zeitraum</h1>
+  <p>Konzept R4, Paket R4-23 (E-R4-07, H-R4-01) · Betrieb → Statistik · Klassen aus <code>server/assets/style.css</code>; neu nur <code>.zeitraumwahl</code> (Anordnung) — Pillen, Felder und Knopf sind vorhandene Bausteine (9.18a, 9.7, 9.4). Zahlen erfunden.</p>
+</div>
+
+<!-- ===================================================================== -->
+<section class="mock-zustand">
+  <h2>Zustand A — festes Fenster (wie heute), Reiter „Einsätze"</h2>
+  <p class="unter">Die vier festen Fenster stehen als Pillen. Die Tabelle bleibt die heutige Zeitraumtabelle; die Kennzahlen oben bleiben Summen.</p>
+  <div class="mock-seite">
+    <main class="inhalt">
+
+      <div class="titelzeile">
+        <div class="titelzeile-haupt"><div class="titelzeile-text"><h1>Statistik</h1></div></div>
+        <p class="titelzeile-unter">Stand 26.09.2026 14:02 Uhr · <strong>ohne Demo-Konto</strong> · rein lesend</p>
+      </div>
+
+      <div class="kennzahl-raster kennzahl-raster-4">
+        <a class="kennzahl" href="?r=nutzer"><p class="kennzahl-wert">47</p><p class="kennzahl-label">Konten</p></a>
+        <a class="kennzahl" href="?r=geraete"><p class="kennzahl-wert">61</p><p class="kennzahl-label">Geräte</p></a>
+        <a class="kennzahl" href="?r=einsaetze"><p class="kennzahl-wert">1 284</p><p class="kennzahl-label">Einsätze gesamt</p></a>
+        <a class="kennzahl" href="?r=einsaetze"><p class="kennzahl-wert">118</p><p class="kennzahl-label">Einsätze in 30 Tagen</p></a>
+      </div>
+
+      <form method="get" class="zeitraumwahl" aria-label="Zeitraum der Statistik">
+        <input type="hidden" name="r" value="einsaetze">
+        <div class="filterreihe">
+          <a class="listenfilter" href="?r=einsaetze&amp;t=7"><span>7 Tage</span></a>
+          <a class="listenfilter aktiv" href="?r=einsaetze&amp;t=30" aria-current="true"><span>30 Tage</span></a>
+          <a class="listenfilter" href="?r=einsaetze&amp;t=180"><span>180 Tage</span></a>
+          <a class="listenfilter" href="?r=einsaetze&amp;t=365"><span>365 Tage</span></a>
+        </div>
+        <div class="zeitraumwahl-felder">
+          <div class="feld"><label class="feld-label" for="f-von">Von</label><input class="feld-eingabe" type="date" id="f-von" name="von" value=""></div>
+          <div class="feld"><label class="feld-label" for="f-bis">Bis</label><input class="feld-eingabe" type="date" id="f-bis" name="bis" value=""></div>
+          <button class="knopf knopf-neutral" type="submit"><span>Anwenden</span></button>
+        </div>
+      </form>
+
+      <div class="reiter-rahmen"><nav class="reiter" aria-label="Bereiche der Statistik">
+        <a class="reiter-punkt" href="?r=nutzer">NutzerInnen</a>
+        <a class="reiter-punkt aktiv" href="?r=einsaetze" aria-current="page">Einsätze</a>
+        <a class="reiter-punkt" href="?r=geraete">Geräte</a>
+      </nav></div>
+
+      <div class="form-raster form-raster-links-breit">
+        <div class="form-spalte">
+          <section class="karte" id="k-einsaetze-zeit">
+            <div class="karte-kopf"><h2 class="karte-titel">Einsätze je Zeitraum</h2><span class="karte-zahl">1 284 gesamt</span></div>
+            <div class="karte-inhalt">
+              <div class="tabelle-scroll"><table class="tabelle">
+                <thead><tr><th>&nbsp;</th><th>1 Tag</th><th>7 Tage</th><th><strong>30 Tage</strong></th><th>180 Tage</th><th>365 Tage</th></tr></thead>
+                <tbody>
+                  <tr><th>Einsätze</th><td>4</td><td>27</td><td><strong>118</strong></td><td>702</td><td>1 284</td></tr>
+                  <tr><th>NutzerInnen <span class="feld-klein-inline">mit Einsatz</span></th><td>3</td><td>14</td><td><strong>31</strong></td><td>44</td><td>47</td></tr>
+                  <tr><th>Ø je NutzerIn <span class="feld-klein-inline">mit Einsatz</span></th><td>1,3</td><td>1,9</td><td><strong>3,8</strong></td><td>16,0</td><td>27,3</td></tr>
+                </tbody>
+              </table></div>
+              <p class="feld-klein">Gezählt ab dem Beginn des Einsatzes — ohne Demo-Konto, ohne Papierkorb. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+            </div>
+          </section>
+        </div>
+        <div class="form-spalte">
+          <section class="karte" id="k-herkunft">
+            <div class="karte-kopf"><h2 class="karte-titel">Herkunft der Einsätze</h2><span class="karte-zahl">118 in 30 Tagen</span></div>
+            <div class="karte-inhalt">
+              <div class="zeile"><div class="zeile-text"><span class="zeile-haupt">Garmin-Uhr</span><span class="zeile-klein">52 %</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">61</span></div></div>
+              <div class="zeile"><div class="zeile-text"><span class="zeile-haupt">Android-Handy und Wear-OS-Uhr</span><span class="zeile-klein">31 %</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">37</span></div></div>
+              <div class="zeile"><div class="zeile-text"><span class="zeile-haupt">Von Hand im Browser</span><span class="zeile-klein">14 %</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">16</span></div></div>
+              <div class="zeile"><div class="zeile-text"><span class="zeile-haupt">GPX-Import</span><span class="zeile-klein">3 %</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">4</span></div></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="mock-zustand">
+  <h2>Zustand B — eigener Zeitraum 01.03.2026 bis 31.05.2026</h2>
+  <p class="unter">Keine Pille aktiv, die Felder tragen die Grenzen. Die Zeitraumtabelle hat dann <strong>eine</strong> Spalte für den gewählten Zeitraum und daneben den Wochenschnitt; Kartenzahl und Kennzahl „in 30 Tagen" werden zu „im Zeitraum". Die Untergrenze liegt am Tagesbeginn, die Obergrenze am Tagesende (Europe/Berlin), die Abfrage nutzt den Index <code>missions(started_at)</code> aus 10c/AP7.</p>
+  <div class="mock-seite">
+    <main class="inhalt">
+
+      <div class="titelzeile">
+        <div class="titelzeile-haupt"><div class="titelzeile-text"><h1>Statistik</h1></div></div>
+        <p class="titelzeile-unter">Stand 26.09.2026 14:02 Uhr · <strong>ohne Demo-Konto</strong> · rein lesend</p>
+      </div>
+
+      <div class="kennzahl-raster kennzahl-raster-4">
+        <a class="kennzahl" href="?r=nutzer"><p class="kennzahl-wert">47</p><p class="kennzahl-label">Konten</p></a>
+        <a class="kennzahl" href="?r=geraete"><p class="kennzahl-wert">61</p><p class="kennzahl-label">Geräte</p></a>
+        <a class="kennzahl" href="?r=einsaetze"><p class="kennzahl-wert">1 284</p><p class="kennzahl-label">Einsätze gesamt</p></a>
+        <a class="kennzahl aktiv" href="?r=einsaetze"><p class="kennzahl-wert">341</p><p class="kennzahl-label">Einsätze im Zeitraum</p></a>
+      </div>
+
+      <form method="get" class="zeitraumwahl" aria-label="Zeitraum der Statistik">
+        <input type="hidden" name="r" value="einsaetze">
+        <div class="filterreihe">
+          <a class="listenfilter" href="?r=einsaetze&amp;t=7"><span>7 Tage</span></a>
+          <a class="listenfilter" href="?r=einsaetze&amp;t=30"><span>30 Tage</span></a>
+          <a class="listenfilter" href="?r=einsaetze&amp;t=180"><span>180 Tage</span></a>
+          <a class="listenfilter" href="?r=einsaetze&amp;t=365"><span>365 Tage</span></a>
+        </div>
+        <div class="zeitraumwahl-felder">
+          <div class="feld"><label class="feld-label" for="g-von">Von</label><input class="feld-eingabe" type="date" id="g-von" name="von" value="2026-03-01"></div>
+          <div class="feld"><label class="feld-label" for="g-bis">Bis</label><input class="feld-eingabe" type="date" id="g-bis" name="bis" value="2026-05-31"></div>
+          <button class="knopf knopf-neutral" type="submit"><span>Anwenden</span></button>
+          <a class="listenfilter aktiv" href="?r=einsaetze" aria-current="true"><span>01.03.–31.05.2026</span><svg class="symbol" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-label="Zeitraum entfernen"><path d="M18 6 6 18M6 6l12 12"/></svg></a>
+        </div>
+      </form>
+
+      <div class="reiter-rahmen"><nav class="reiter" aria-label="Bereiche der Statistik">
+        <a class="reiter-punkt" href="?r=nutzer">NutzerInnen</a>
+        <a class="reiter-punkt aktiv" href="?r=einsaetze" aria-current="page">Einsätze</a>
+        <a class="reiter-punkt" href="?r=geraete">Geräte</a>
+      </nav></div>
+
+      <div class="form-raster form-raster-links-breit">
+        <div class="form-spalte">
+          <section class="karte" id="k-einsaetze-zeit-b">
+            <div class="karte-kopf"><h2 class="karte-titel">Einsätze im Zeitraum</h2><span class="karte-zahl">01.03.–31.05.2026 · 92 Tage</span></div>
+            <div class="karte-inhalt">
+              <div class="tabelle-scroll"><table class="tabelle">
+                <thead><tr><th>&nbsp;</th><th>im Zeitraum</th><th>Ø je Woche</th><th>Ø je Tag</th></tr></thead>
+                <tbody>
+                  <tr><th>Einsätze</th><td><strong>341</strong></td><td>25,9</td><td>3,7</td></tr>
+                  <tr><th>NutzerInnen <span class="feld-klein-inline">mit Einsatz</span></th><td><strong>39</strong></td><td>—</td><td>—</td></tr>
+                  <tr><th>Ø je NutzerIn <span class="feld-klein-inline">mit Einsatz</span></th><td><strong>8,7</strong></td><td>—</td><td>—</td></tr>
+                </tbody>
+              </table></div>
+              <p class="feld-klein">Gezählt ab dem Beginn des Einsatzes, Tagesgrenzen in Europe/Berlin — ohne Demo-Konto, ohne Papierkorb. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+            </div>
+          </section>
+        </div>
+        <div class="form-spalte">
+          <section class="karte" id="k-herkunft-b">
+            <div class="karte-kopf"><h2 class="karte-titel">Herkunft der Einsätze</h2><span class="karte-zahl">341 im Zeitraum</span></div>
+            <div class="karte-inhalt">
+              <div class="zeile"><div class="zeile-text"><span class="zeile-haupt">Garmin-Uhr</span><span class="zeile-klein">55 %</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">188</span></div></div>
+              <div class="zeile"><div class="zeile-text"><span class="zeile-haupt">Android-Handy und Wear-OS-Uhr</span><span class="zeile-klein">27 %</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">92</span></div></div>
+              <div class="zeile"><div class="zeile-text"><span class="zeile-haupt">Von Hand im Browser</span><span class="zeile-klein">15 %</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">51</span></div></div>
+              <div class="zeile"><div class="zeile-text"><span class="zeile-haupt">GPX-Import</span><span class="zeile-klein">3 %</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">10</span></div></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</section>
+
+</body>
+</html>

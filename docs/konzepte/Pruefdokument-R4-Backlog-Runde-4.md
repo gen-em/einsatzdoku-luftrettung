@@ -18,7 +18,7 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 |---|---|---|
 | **Der Befund ist eine Lesung, keine Messung an der Anlage.** | Die Sichtung lief nur lesend (Konzept 2.1): kein Prüfmittel gefahren, keine Probe, kein Gradle-Lauf. Jede Trefferzahl ist ein `grep` am 26.09.2026; jede Aussage „die Probe fällt" (Nr. 259: 4 von 95) stammt aus dem Eintrag oder dem Code, nicht aus einem Lauf. | Die Umsetzung misst je Paket zuerst das Ausgangsmaß (wie AR-01) und trägt die Zahl hier ein; weicht sie von 2.2 des Konzepts ab, ist das ein Befund, kein Fehler des Konzepts. |
 | **Der Baum ist nach der Sichtung weitergelaufen.** | Gesichtet wurde `8e29cf0` bis `5a2a69a`; danach kamen R4-00-Commits (nur `docs/`). Kein Code hat sich geändert; wer die Umsetzung beginnt, nimmt `main` nach dem Merge von PR #93 und misst neu. | `git log --stat 5a2a69a..HEAD -- server/ tools/ android/` → leer heißt: der Befund gilt. |
-| **Die Mockups zu R4-22, R4-23, R4-24 liegen nicht vor.** | Sie entstehen in der Umsetzung, vor dem jeweiligen Paket, und brauchen die Freigabe der Betreiberin (H-R4-01). Das Konzept legt fest, was sie zeigen müssen, nicht wie. | Prüfliste 4, P-R4-04. |
+| **Die Mockups sind gerendert, nicht bedient.** | M-R4-22, -23, -24 liegen als HTML und PNG bei (`konzept-r4/mockups/`); gemessen ist nur der Überlauf je Breite. Ob die Datumsfelder, die Pillen und der Schwebe-Wert der Säulen sich so bedienen lassen, zeigt erst die Anwendung (Bedienprobe in R4-23/-24). Die Handy-Nachbildung ist HTML, kein Compose — Maße in dp bei 1:1 nachgebaut, kein Emulatorbild. | Prüfliste 4, P-R4-04; Emulatorbilder mit R4-22. |
 | **Ob `stroeme.py` den Baum ändert** (F-R4-17) | Nicht gefahren; nur der Kopf der erzeugten Datei gelesen. | R4-04 misst den Baum-Hash vor und nach dem Lauf. |
 | **Die tatsächliche Laufzeit je zusätzlicher Bilderlauf-Breite** (Q-R4-13) | Hochgerechnet (+12 % je Breite aus 745–845 s für acht), nicht gemessen. | R4-08 nennt die Zahl nach dem ersten Lauf `neben`. |
 | **Die Nebenfrage aus Nr. 170** (Q-R4-15) | Gestaltungsfrage, nicht messbar. | Wird als Nr. 341 notiert, wenn die Betreiberin es will. |
@@ -33,6 +33,8 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | 17-00 | `git show <zweig>:docs/Backlog.md` über alle Remote-Zweige, offene PRs | Nummernkollision vor der Spanne 340–349 | **0** (höchste 337 auf `main`, 336 auf den Zweigen; 0 offene PRs) |
 | jeder Push | `bash tools/pruefstand/pruefen.sh` (Stufe klein, 20 Riegel + Probe `steuerung`) | der Baum des Kopf-Commits | **0 rot, 0 nicht gemessen, 20 grün**, 56–57 s je Lauf; Bericht in der Commit-Nachricht; nichts in den Baum geschrieben |
 | Befund | zwei Workflows, 13 Agenten, nur lesend | 55 Einträge mit Ziel 17 | **55 von 55 zurück, 20 bestätigt, 35 korrigiert, 0 widerlegt** (Konzept 2.1) |
+| Mockups | Chromium 141 über Playwright, 1280/390/1240 px, `scrollWidth > clientWidth` | M-R4-22, -23, -24 | **5 Bilder, Überlauf 0** |
+| Mockups | `validate_palette.js` (dataviz), Fläche `#FFFCFA` | die zwei Diagrammtöne `#4280E5`, `#FF8F1F` | **alle Prüfungen bestanden**; Kontrastwarnung Orange 2,23:1 → Beschriftung in Asphalt (F-P3-J) |
 
 ## 3. Im Browser geprüft
 
@@ -49,7 +51,7 @@ ist. Die Umsetzung hängt je Paket ihre Punkte an (P-R4-06 ff.).
 | P-R4-01 | PR #93 lesen: Stufe 1 grün (Bericht im Kopf-Commit), Konzept Abschnitt 3.2 — die offenen Q-R4 mit „alles wie empfohlen" oder einzeln beantworten. | Antworten liegen vor der Umsetzung vor (K6). | Ein Paket beginnt mit einer offenen Q — dann hält die Umsetzung an (H-R4-05). |
 | P-R4-02 | **Freigabe des Konzepts** (ein Satz im PR oder im Chat), dann Merge von PR #93. | Rahmenplan auf `main`: Fahrplanzeile 17 „Konzept", Erledigt-Zeilen SD, AR, BV; `uebersicht.py --ziel 17` 55. | Stufe 1 rot am Kopf-Commit (Bericht fehlt oder falscher Baum) — dann kein Merge, Instanz beauftragen. |
 | P-R4-03 | Nach dem Merge: Umsetzungsinstanz mit Opus auf eigenem Zweig starten (Konzept 4, Reihenfolge = Paketnummer). | Erster Commit `R4-01: …`; Zweig nach jedem Paket gepusht. | Ein Paket ohne Push, ein Statusblock ohne Fortschreibung. |
-| P-R4-04 | Vor R4-22, R4-23, R4-24: Mockup ansehen (Android unter `android/mockups/`, Web unter `docs/konzepte/konzept-r4/`) und freigeben oder ändern lassen. | Gebaut wird erst nach der Freigabe. | Ein Bild im Bilderlauf, das kein Mockup hatte. |
+| P-R4-04 | Die drei Mockups ansehen (`docs/konzepte/konzept-r4/mockups/*.png`, Regeln in der LIESMICH dort) und freigeben oder Änderungen nennen — Q-R4-16, spätestens vor R4-22. | Gebaut wird erst nach der Freigabe; Änderungen werden vorher ins Mockup eingearbeitet. | Ein Bild im Bilderlauf, das so in keinem freigegebenen Mockup steht. |
 | P-R4-05 | Nach dem Deploy von R4-15 (Migration): als Administratorin `update.php` aufrufen, Betrieb → Updates ansehen. | Migration `days.created_at` gelaufen; Wartungsmodus geht aus. | Wartungsmodus bleibt an; Statuszeile nennt eine ausstehende Migration. |
 
 ## 5. Grenzen der benutzten Prüfmittel
