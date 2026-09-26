@@ -26,7 +26,13 @@
 # Abweichungen genau diese Liste sind — nicht weniger, nicht mehr. Fehlt sie
 # oder ist sie leer, gilt wie bisher: null Abweichungen. Der Weg bei einer
 # gewollten Gestaltungsaenderung: `gegen.sh --schreiben`, die Datei lesen,
-# committen. Nach dem Merge wird sie geleert.
+# committen.
+#
+# NACH DEM MERGE WIRD SIE NICHT MEHR GELEERT (Nr. 330, 26.09.2026). Die
+# Liste des Vergleichsstands geht als `--geerbt` mit: Eine Zeile, die dort
+# wortgleich steht und nicht gemessen wird, zaehlt nicht. Bis dahin war das
+# ein Handgriff nach jedem Merge, und wer ihn vergass, bekam beim naechsten
+# Zweig die Zeilen als „geplant, aber nicht gemessen" rot.
 set -euo pipefail
 
 SCHREIBEN=""
@@ -44,9 +50,17 @@ git -C "$WURZEL" show "$REF:server/assets/style.css" > "$ALT" \
 python3 "$WURZEL/tools/stilvergleich/proben.py" "$ALT" "$NEU" "$ARBEIT/proben" >/dev/null
 
 GEPLANT="$WURZEL/tools/stilvergleich/geplant.txt"
+GEERBT="$ARBEIT/geerbt.txt"
 LISTE=()
 if [ -n "$SCHREIBEN" ]; then LISTE=(--geplant-schreiben "$GEPLANT")
-elif [ -f "$GEPLANT" ]; then LISTE=(--geplant "$GEPLANT"); fi
+elif [ -f "$GEPLANT" ]; then
+    LISTE=(--geplant "$GEPLANT")
+    # Fehlt die Liste im Vergleichsstand, gibt es nichts zu erben — dann
+    # bleibt es bei der strengen Zaehlung, nicht bei einem Abbruch.
+    if git -C "$WURZEL" show "$REF:tools/stilvergleich/geplant.txt" > "$GEERBT" 2>/dev/null; then
+        LISTE+=(--geerbt "$GEERBT")
+    fi
+fi
 
 echo "Vergleichsstand: $REF"
 NODE_PATH="${NODE_PATH:-/opt/node22/lib/node_modules}" \

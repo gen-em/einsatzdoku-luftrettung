@@ -839,7 +839,7 @@ Daten erst nach Server-Bestätigung.
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`uhr_gesperrt`** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; hieß bis Web 20.24.2 `manual` und brach damit die Einrichtung auf MySQL 8.4.0–8.4.10 (reserviertes Wort, Backlog Nr. 238) — **in Sicherungs- und Exportdatei heißt das Feld weiter `manual`**, abgebildet per Alias; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`uhr_gesperrt`** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; hieß bis Web 20.24.2 `manual` und brach damit die Einrichtung auf MySQL 8.4.0–8.4.10 (reserviertes Wort, Backlog Nr. 238) — **in Sicherungs- und Exportdatei heißt das Feld weiter `manual`**, abgebildet per Alias; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes, seit Web 6.2.0 auch der manuelle Abfahrtort, seit Web 19.0.0 auch die Notizen des Einsatzes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr; der ganze Katalog steht in 4.98) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
@@ -913,7 +913,7 @@ gespeichert) und eine **Hälfte**, aus der der Datenschlüssel entsteht (bleibt
 im Browser, `sessionStorage`).
 Ein zufälliger **Inhaltsschlüssel** (256 Bit, nicht vom Passwort abgeleitet)
 verschlüsselt `pat_blob` (`{last, first, dob, dx, age, mission_no,
-loc:{addr,lat,lon}, site_desc}`, AES-256-GCM) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
+loc:{addr,lat,lon}, site_desc, start:{addr,lat,lon}, notes}`, AES-256-GCM; Katalog in 4.98) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
 (`pat_wrap_pw`) und mit dem aus dem Wiederherstellungsschlüssel abgeleiteten
 Schlüssel (`pat_wrap_rc`). Weil der Inhaltsschlüssel vom Passwort getrennt ist,
 kostet ein Passwortwechsel kein Neuverschlüsseln — nur die Hülle wird erneuert.
@@ -1989,8 +1989,8 @@ Fehlerbox an.
 
 **Suche (`suche.php`, `api/suchindex.php`, ab Web 3.1.0).** Gefiltert wird
 vollständig im Browser. Das ist keine Optimierung, sondern eine Folge der
-Ende-zu-Ende-Verschlüsselung: Einsatznummer, Name, Geburtsdatum, Diagnose und
-Einsatzort liegen im `pat_blob`, der Server sieht davon nur Chiffretext und
+Ende-zu-Ende-Verschlüsselung: Einsatznummer, Name, Geburtsdatum, Diagnose,
+Einsatzort und — seit S9/AP7 — die Notizen des Einsatzes liegen im `pat_blob`, der Server sieht davon nur Chiffretext und
 kann darin nicht suchen. Zusätzlich wäre ein Suchbegriff wie ein Nachname
 selbst schon ein Patientendatum — er darf den Browser gar nicht verlassen.
 `api/suchindex.php` nimmt deshalb **keine Suchparameter entgegen**; es liefert
@@ -2500,8 +2500,8 @@ und bekommt `edited=1` — er wird in der Einsatzansicht als „Uhr" +
 
 **Import fremder Einsatzlisten** (`import.php`, Web 2.8.0): Läuft bis auf den
 letzten Schritt vollständig im Browser — nicht aus Bequemlichkeit, sondern
-zwingend: Die Dateien enthalten Name, Geburtsdatum, Diagnose und Einsatzort,
-und diese Angaben dürfen den Rechner nur verschlüsselt verlassen. Ein
+zwingend: Die Dateien enthalten Name, Geburtsdatum, Diagnose, Einsatzort,
+Notizen und die übrigen geschützten Angaben aus 4.98, und diese Angaben dürfen den Rechner nur verschlüsselt verlassen. Ein
 Datei-Upload ist damit ausgeschlossen. Kette:
 
 1. `assets/vendor/xlsx.full.min.js` (SheetJS 0.18.5, Apache-2.0, lokal
@@ -3463,9 +3463,17 @@ Knopf „kopieren".
 
 | Auslöser | Aufruf | Zeitbudget je Lauf | gedacht für |
 |---|---|---|---|
-| `cli` | `* * * * * php …/server/jobs.php` | `JOB_BUDGET_CLI` = 300 s | der **empfohlene** Regelfall |
+| `cli` | `* * * * * php /pfad/zur/installation/jobs.php` | `JOB_BUDGET_CLI` = 300 s | der **empfohlene** Regelfall |
 | `token` | `https://…/jobs.php?token=…` | `JOB_BUDGET_TOKEN` = 20 s | Hoster ohne CLI-Cron, aber mit „Cronjob per URL" |
 | `anfrage` | `auth_guard.php` → `run_cleanup_if_due()` | `JOB_BUDGET_ANFRAGE` = 3 s | Rückfall, immer eingeschaltet |
+
+**Der Pfad im Aufruf ist ein Platzhalter.** Auf einer Installation gibt es
+keinen Ordner `server/` — die Kette legt dessen **Inhalt** in den Webroot.
+Wer den Befehl mit `…/server/jobs.php` abtippt, bekommt „Could not open input
+file" (Backlog Nr. 150, so beim Einrichten auf Produktiv passiert). Der
+verlässliche Weg ist der Kopier-Knopf auf **Betrieb → Hintergrundjobs**: Der
+Wertekasten baut den Befehl über `__DIR__` und kennt den Pfad dieser
+Installation.
 
 Die Budgets sind kein Geschmack: 300 s, weil auf der Kommandozeile niemand
 wartet und meist keine Laufzeitgrenze gilt; 20 s, weil das unter der
@@ -3830,8 +3838,8 @@ danach zusammenzusetzen, was auf dem Server schon beieinander liegt.
 
 Den Ausschlag gibt ein Sicherheitsargument: Der **Dateiname** landet im
 Downloadordner, in einem Backup, vielleicht in einer Mail. Serverseitig gebaut
-**kann** er keine geschützte Angabe tragen — der Server kann Diagnose, Alter
-und Einsatzort nicht lesen. Browserseitig gebaut könnte er es.
+**kann** er keine geschützte Angabe tragen — der Server kann Diagnose, Alter,
+Einsatzort und die übrigen Angaben aus 4.98 nicht lesen. Browserseitig gebaut könnte er es.
 
 `gpx.php` prüft die **Datentrennung selbst**: `spur_lib.php` prüft kein
 Eigentum, es nimmt `owner_type` und `owner_id` und liest, was da ist. Erst
@@ -4677,8 +4685,8 @@ Backup, Export und Papierkorb kommt (R24), und ob `ingest.php` seine Phasen
 später noch anfasst. Alles läuft in **einer** Transaktion; `spur_teilen()`
 schließt sich ihr an, statt eine eigene mitzubringen.
 
-**Was der Endpunkt nicht tut:** Einsatzfelder füllen. Einsatzort, Alter und
-Diagnose sind Ende-zu-Ende-verschlüsselt und entstehen im Browser; ein
+**Was der Endpunkt nicht tut:** Einsatzfelder füllen. Einsatzort, Alter,
+Diagnose und die übrigen Angaben aus 4.98 sind Ende-zu-Ende-verschlüsselt und entstehen im Browser; ein
 Endpunkt, der sie annähme, bräuchte Klartext.
 
 **Ein Schnitt ohne Punkte wird abgelehnt** (409). Er entstünde beim zweiten
@@ -5048,6 +5056,7 @@ Browser), erzeugt in `einsatz_form.php`:
 | `loc.addr` | Adresse des Einsatzorts |
 | `loc.lat`, `loc.lon` | Koordinaten des Einsatzorts |
 | `site_desc` | Beschreibung des Einsatzorts (Zufahrt, Landestelle) |
+| `start.addr`, `start.lat`, `start.lon` | **Manueller Abfahrtort** (seit Web 6.2.0) — nur bei der Regel „Manueller Ort"; die Regel selbst (`missions.start_src`) ist Klartext. Bis zum 25.09.2026 fehlte die Zeile hier und in `CLAUDE.md` 4, obwohl 4.98a ihn als Blob-Schlüssel führt (Konzept BV, F-BV-13) |
 | `notes` | **Notizen des Einsatzes** (seit Web 19.0.0, S9/AP7). Bis dahin die Klartextspalte `missions.notes`; sie bleibt `NULL`-fähig stehen, bis P8 sie entfernt (R60), und trägt nur noch Altbestand, den die Anhebung nicht erreicht hat |
 
 Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
@@ -5093,7 +5102,9 @@ betreibt, sollte das wissen und den Datenbankzugang entsprechend behandeln.
 >
 > Deshalb sagen `CLAUDE.md` 4, `README.md`, `Handbuch.md` 5 und der Textbaustein
 > für die Datenschutzerklärung (Handbuch 11.5) jetzt **dasselbe** und zählen
-> beide Seiten auf. Vorher versprachen sie „Diagnose, Alter und Einsatzort sind
+> beide Seiten auf. *(Stand 25.09.2026: für die ersten drei nachgemessen und
+> berichtigt — Notizen des Einsatzes, Abfahrtort, Höhe des Einsatzorts;
+> 11.5 zieht P5c/AP9 nach, Backlog Nr. 194.)* Vorher versprachen sie „Diagnose, Alter und Einsatzort sind
 > Ende-zu-Ende-verschlüsselt" — richtig für das Feld, irreführend für die Sache.
 >
 > **Das macht nichts sicherer.** Es macht das Projekt ehrlich, und es ist die
@@ -10828,6 +10839,24 @@ Backup zurückgespielt, aufgeräumt, oder der Webspace ist neu. Der Schritt
 legt sie dann von selbst wieder an; er läuft vor **jedem** Abgleich, gerade
 deshalb.
 
+**Und die Kehrseite: Eine auf dem Server von Hand gelöschte Datei kommt
+nicht zurück** (Backlog Nr. 214). Die Aktion vergleicht den Auscheckstand
+gegen ihre Zustandsdatei, **nie gegen den Server**; dort steht die Datei
+weiter mit ihrem Hash, also gilt sie als ausgeliefert, und kein Lauf
+schickt sie wieder — bis sich ihr Inhalt im Repositorium ändert. Drei Wege
+heraus, der erste ist der schonende:
+
+1. **Die eine Datei von Hand per FTPS hinauflegen**, im Stand des
+   ausgelieferten Commits. Sie passt dann wieder zu ihrem Hash, und die
+   Zustandsdatei stimmt.
+2. **Die Datei im Repositorium ändern** — der nächste Lauf sieht einen neuen
+   Hash und liefert sie aus. Nur, wenn ohnehin eine Änderung ansteht.
+3. **Die Zustandsdatei löschen.** Der Schritt oben legt eine leere an, und
+   die Aktion hält den Server für leer: **Der nächste Lauf überträgt alles**
+   — gemessen am 20.09.2026 688 Dateien in rund acht Minuten, und das mit
+   eingeschalteter Wartung, denn die geht in `ausliefern-lauf.yml`
+   unmittelbar vor dem Abgleich an. Auf Produktiv der teuerste Weg.
+
 ### 6.6a Der Zeiger `produktion` — wogegen die Wache vergleicht
 
 **Der Fehler war nicht der Auslöser, sondern der Vergleichsstand** (Befund B6
@@ -11249,7 +11278,9 @@ Spurpunkten sollte trotzdem ein echter Zeitgeber her.
 **Betrieb → Hintergrundjobs** → Karte **„Auslöser"**; dort stehen Befehl
 und Adresse je in einem Wertekasten mit Knopf „kopieren":
 
-1. **Kommandozeile** (bevorzugt): `* * * * * php …/server/jobs.php`. Jede
+1. **Kommandozeile** (bevorzugt): `* * * * * php /pfad/zur/installation/jobs.php`
+   — den Pfad dieser Installation nennt der Wertekasten, **nicht** `server/`,
+   das es auf dem Server nicht gibt (Nr. 150). Jede
    Minute ist unbedenklich — ein Lauf ohne Arbeit kostet zwei Abfragen. Die
    tägliche Aufräumarbeit läuft trotzdem nur einmal am Tag; das entscheidet der
    Job, nicht der Zeitplan. Einzelne Jobs: `php jobs.php waisen`, Hilfe:

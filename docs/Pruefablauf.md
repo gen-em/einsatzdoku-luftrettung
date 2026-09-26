@@ -740,9 +740,15 @@ nicht gemessen wird, auch — sonst verdeckte eine veraltete Liste beim
 nächsten Mal eine ungewollte Änderung. Geschrieben wird sie mit
 `bash tools/stilvergleich/gegen.sh --schreiben`, **gelesen im Pull
 Request**: Jede Zeile ist die Aussage „das soll sich ändern". Fehlt die
-Datei oder ist sie leer, gilt die Null. **Nach dem Merge wird sie
-geleert**; wer das vergisst, bekommt beim nächsten Lauf die Zeilen als
-„geplant, aber nicht gemessen" genannt. Bis dahin war gebaut, was hier
+Datei oder ist sie leer, gilt die Null. **Nach dem Merge bleibt sie
+stehen** (seit dem 26.09.2026, Nr. 330): `gegen.sh` übergibt die Liste des
+Vergleichsstands als `--geerbt`, und eine Zeile, die dort wortgleich steht
+und **nicht gemessen** wird, zählt nicht — sie steht mit Zahl als „geerbt,
+nicht gemessen" im Protokoll. Nur diese eine Kategorie: Eine gemessene
+Abweichung ohne Zeile bleibt rot, eine eigene Zeile ohne Messung auch.
+Wortgleich allein streicht nichts, weil dieselbe Signatur in zwei Pull
+Requests hintereinander gewollt sein kann. Bis dahin musste die Liste nach
+jedem Merge von Hand geleert werden. Bis P5c/AP1 war gebaut, was hier
 steht, nur als Null: Jede gewollte Gestaltungsänderung machte seit PK-05
 den Prüfbericht rot (Lage 5).
 

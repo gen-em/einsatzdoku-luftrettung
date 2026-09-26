@@ -64,15 +64,16 @@ declare(strict_types=1);
  * (94 bis S10/AP4 — Teil 8 hat mit der Fassung 3 vier Erwartungen dazu
  *  bekommen, Teil 12 acht. Am 16.09.2026 stand hier 106 und gemessen wurden
  *  105: eine Erwartung Unterschied, entstanden ohne Spur. Mit den fuenf
- *  neuen aus P5a/AP10 — Nr. 195, die Geraeteart auf dem Rueckweg — sind es
- *  110, gemessen am selben Tag. Wer die Zahl hier nicht mitfuehrt, hat beim
+ *  neuen aus P5a/AP10 — Nr. 195, die Geraeteart auf dem Rueckweg — waren es
+ *  110; die 111. kam mit RP-03. Wer die Zahl hier nicht mitfuehrt, hat beim
  *  naechsten Lauf keinen Vergleich, sondern nur ein Gefuehl.
  *
- *  ZWEI DAVON SIND AUF EINER LEEREN INSTALLATION ROT (Teil 10, Backlog
- *  Nr. 212): Der Sammelvorgang „Alle sichern" bekommt ein enges Zeitbudget
- *  und soll danach etwas offen lassen — bei zwei fast leeren Konten passen
- *  beide hinein. Ein Mangel des Pruefmittels, nicht der Anwendung;
- *  nachgemessen gegen den unveraenderten Stand.)
+ *  BIS RP-03 WAREN ZWEI DAVON AUF EINER LEEREN INSTALLATION ROT (Teil 10,
+ *  Backlog Nr. 212): Der Sammelvorgang „Alle sichern" bekommt ein enges
+ *  Zeitbudget und soll danach etwas offen lassen — bei zwei fast leeren
+ *  Konten passten beide hinein. Seit RP-03 legt Teil 10 zwei Zusatzkonten
+ *  an und faehrt eine gestellte Uhr; die Erwartung haengt damit am Bestand,
+ *  nicht an der Geschwindigkeit der Maschine („2 erledigt, 2 von 4 offen").)
  *
  * (Die Zahl stand bis Web 14.2.0 auf 30 und war seit Langem falsch — die
  * Probe ist auf elf Teile gewachsen. Sie ist ausserdem seit einiger Zeit

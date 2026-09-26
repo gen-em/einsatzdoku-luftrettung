@@ -1314,7 +1314,9 @@ Vorfahren) und einen über `push` (rund 56 min, ohne Vergleichsstand misst er
 alles). Der Zweigschutz wartet auf den Namen, also auf den langsameren.
 Gemessen an PR #69 (Läufe 192, 193) und PR #70 (Lauf 186). **Erledigt mit dem
 Vorgriff auf PK-05** (PR #71, 21.09.2026): `branches: [ main ]`. Die Abnahme —
-nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17** offen.
+nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17** im
+Prüfdokument und ist **belegt am 25.09.2026** (Lauf 281, Prüfdokument 5.6;
+nachgetragen von Konzept BV).
 
 **Einschub 1 — Vorgriff auf PK-06 (21.09.2026, PR nach PR #70, Backlog
 Nr. 268).** Anlass: Der erste Tag durch Kette II (`web-v20.26.3`, Lauf
