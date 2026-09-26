@@ -30,13 +30,13 @@ Arbeit an derselben Datei bleiben seriell.
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — SD-02 gebaut.** Rahmenplan (SD-01: Fassung 124 wörtlich in `docs/Rahmenplan-Archiv-2.md`, Verlauf ab 125 in `docs/Rahmenplan-Verlauf.md`, Fassung 128 mit **460 Zeilen**) und Backlog sind geschnitten: `docs/Backlog.md` hält die **105 offenen Einträge** mit Kopfzeile in **1 788 Zeilen** (Fassung N: 11 329), Kopf 56 Zeilen, 52 Einträge gekürzt, 0 über 20 Zeilen, `cmark-gfm` 0 `<pre>` · 105 `<li>`; `docs/Backlog-Erledigt.md` trägt die 228 erledigten Einträge wörtlich (0 Unterschiede) und den Werdegang der Nummernvergabe. `tools/quelltext/bestand.py` liest beide Dateien (E-SD-37). Prüfdokument liegt daneben. |
-> | Entschieden | E-SD-01 bis E-SD-27 (Konzept, 24.09.2026); die fünf Punkte zum Gegenlesen in 2.4 gelten ohne Widerspruch. **Aus der Umsetzung: E-SD-28 bis E-SD-33** (Abschnitt 2.5). **Von der Betreiberin am 26.09.2026: E-SD-34** (27 Zuarbeiten erledigt), **E-SD-35** (alle 40 Vorschläge), **E-SD-36** (Decke 500 reicht). **Aus SD-02: E-SD-37 bis E-SD-41** (Abschnitt 2.5). |
-> | Offen | nichts an Fragen. Befunde F-SD-01 bis F-SD-10 in 2.5. F-SD-05 (die `update.php`-Zeile gegen M1) klärt sich nur an der Anlage; **F-SD-07** (zwei Sätze zu R42 in `Technik.md` und `Handbuch.md`) und die AR-Fahrplanzeile („PR #88 offen" — er ist gemergt) zieht **SD-04** nach; F-SD-06 und F-SD-08 (drei erledigte Einträge unter *Offen*; GitHub zählt die Liste fort) sind Sache von Schritt 17. |
-> | Umsetzung | **SD-00 erledigt** 24.09.2026 (P5c-Instanz, Fassung 111). **SD-01 erledigt** 26.09.2026 auf `claude/serene-tesla-sqeno2` (von `claude/affectionate-newton-6pzfkc` `bdf1787`, der `origin/main` `d34908b` enthält; Fassungen 125 bis 127). **SD-M1 erledigt** 26.09.2026 (Fassung 128, `fd536e7`). `origin/main` `f5bddc2` (PR #88, AR) aufgenommen (`1596469`, Pruefablauf.md 5.3). **SD-02 erledigt** 26.09.2026. **Als Nächstes SD-03** (`tools/steuerung/`), dann SD-04. |
+> | Stand | **26.09.2026 — SD-03 gebaut.** `tools/steuerung/` steht: `decken.py` hält **20 Decken** (0 gerissen; Selbstprobe 22 Fälle), `uebersicht.py` die Kopfzeilen (105, 0 ohne Grammatik, 0 ohne Ziel; Selbstprobe 7 Fälle); als Riegel `steuerung` in `pruefablauf.json` und als Schritt in `pruefung.yml`, `Pruefablauf.md` 4 neu erzeugt, 6.11 und 6.12 nachgezogen. Rahmenplan (SD-01: Fassung 124 wörtlich in `docs/Rahmenplan-Archiv-2.md`, Verlauf ab 125 in `docs/Rahmenplan-Verlauf.md`, Fassung 129 mit **459 Zeilen**) und Backlog sind geschnitten: `docs/Backlog.md` hält die **105 offenen Einträge** mit Kopfzeile in **1 788 Zeilen** (Fassung N: 11 329), Kopf 56 Zeilen, 52 Einträge gekürzt, 0 über 20 Zeilen, `cmark-gfm` 0 `<pre>` · 105 `<li>`; `docs/Backlog-Erledigt.md` trägt die 228 erledigten Einträge wörtlich (0 Unterschiede) und den Werdegang der Nummernvergabe. `tools/quelltext/bestand.py` liest beide Dateien (E-SD-37). Prüfdokument liegt daneben. |
+> | Entschieden | E-SD-01 bis E-SD-27 (Konzept, 24.09.2026); die fünf Punkte zum Gegenlesen in 2.4 gelten ohne Widerspruch. **Aus der Umsetzung: E-SD-28 bis E-SD-33** (Abschnitt 2.5). **Von der Betreiberin am 26.09.2026: E-SD-34** (27 Zuarbeiten erledigt), **E-SD-35** (alle 40 Vorschläge), **E-SD-36** (Decke 500 reicht). **Aus SD-02: E-SD-37 bis E-SD-41, aus SD-03: E-SD-42 bis E-SD-44** (Abschnitt 2.5). |
+> | Offen | nichts an Fragen. Befunde F-SD-01 bis F-SD-11 in 2.5. F-SD-05 (die `update.php`-Zeile gegen M1) klärt sich nur an der Anlage; **F-SD-07** (zwei Sätze zu R42 in `Technik.md` und `Handbuch.md`) und die AR-Fahrplanzeile („PR #88 offen" — er ist gemergt) zieht **SD-04** nach; F-SD-06 und F-SD-08 (drei erledigte Einträge unter *Offen*; GitHub zählt die Liste fort) sind Sache von Schritt 17. |
+> | Umsetzung | **SD-00 erledigt** 24.09.2026 (P5c-Instanz, Fassung 111). **SD-01 erledigt** 26.09.2026 auf `claude/serene-tesla-sqeno2` (von `claude/affectionate-newton-6pzfkc` `bdf1787`, der `origin/main` `d34908b` enthält; Fassungen 125 bis 127). **SD-M1 erledigt** 26.09.2026 (Fassung 128, `fd536e7`). `origin/main` `f5bddc2` (PR #88, AR) aufgenommen (`1596469`, Pruefablauf.md 5.3). **SD-02 erledigt** 26.09.2026 (`135863c`). **SD-03 erledigt** 26.09.2026 (Fassung 129). **Als Nächstes SD-04** — Abschluss: `CLAUDE.md`, Changelog, Prüfdokument, F-SD-07, AR-Fahrplanzeile, Erledigt-Zeile, PR. |
 > | Fable-Schritte | keine. SD-01 lief mit Fable (Anweisung der Betreiberin, 26.09.2026); Abweichung von K2 zur Kenntnis. |
-> | Fächerung | SD-01: das Lesen der 105 offenen Backlog-Einträge auf 32 Agenten (E-SD-33); alles Schreiben seriell. SD-02: keine — ein Skript setzt zusammen, die 52 Kürzungen sind von Hand geschrieben (E-SD-40). |
-> | Nummern | Rahmenplan-Fassungen 125 bis 128 vergeben; keine Backlog-Nummer vergeben (der neue Kopf nennt 339 als nächste freie; 338 blieb frei). |
+> | Fächerung | SD-01: das Lesen der 105 offenen Backlog-Einträge auf 32 Agenten (E-SD-33); alles Schreiben seriell. SD-02: keine — ein Skript setzt zusammen, die 52 Kürzungen sind von Hand geschrieben (E-SD-40). SD-03: keine (E-SD-44). |
+> | Nummern | Rahmenplan-Fassungen 125 bis 129 vergeben; keine Backlog-Nummer vergeben (der neue Kopf nennt 339 als nächste freie; 338 blieb frei). |
 
 ---
 
@@ -475,6 +475,38 @@ Konzept sagte „E-SD-28 ff."; die Nummern sind belegt, die Reihenfolge nicht).
   wartete auf ein Paket, das längst gemergt ist. Er sagt es jetzt; die
   Zeilen brauchen eine Web-Stufe (17).
 
+**Aus SD-03 (26.09.2026):**
+
+- **E-SD-42 Zwanzig Decken, an einer Stelle.** `decken.py` führt die
+  Tabelle aus Abschnitt 5 als zwanzig benannte Decken (die Fahrplan-Zelle
+  „Status" als zwei: Länge und Vokabular; das Berichtigungsmuster je Datei;
+  das Rendering als `<pre>` = 0 und `<li>` = Einträge). Die Zahlen stehen
+  **im Werkzeug** und in seiner `LIESMICH.md`, nicht in `pruefung.yml`
+  (6.11) und nicht mehr maßgeblich in diesem Konzept — Abschnitt 5 hier
+  ist der Vorschlag, gültig ist `decken.py`. Doppelte Nummern innerhalb
+  einer Datei misst weiter `bestand` (Regel `backlog`, seit E-SD-37 über
+  beide Dateien); `decken.py` misst die Schnittmenge.
+- **E-SD-43 Riegel und Muster zugleich; kein eigener Schritt „Backlog —
+  keine Nummer zweimal".** `steuerung` steht in `riegel.proben` (läuft in
+  jeder Stufe, wird im Tor mit `--riegel` gegengelesen) **und** als Muster
+  (`docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`), damit die
+  erzeugte Tabelle in `Pruefablauf.md` 4 die Berührung nennt; `bestand`
+  lässt beides zu. Den Schritt, den 3.2 für „Backlog — keine Nummer
+  zweimal" vorsah, gibt es seit BR-03 nicht mehr als eigenen Schritt — die
+  Prüfung ist die Regel `backlog` in `bestand`, und die liest seit E-SD-37
+  beide Dateien. Die Rendering-Probe (Nr. 196) läuft in `decken.py`, nicht
+  als Shell-Zeile im Workflow: eine Stelle, und der Prüfstand fährt sie
+  örtlich mit (Grundsatz 2).
+- **E-SD-44 Fächerung: keine.** Das Konzept erlaubte zwei Agenten für die
+  zwei Werkzeugdateien und den Workflow; drei kleine Dateien mit einem
+  gemeinsamen Vokabular sind seriell schneller geschrieben als abgestimmt.
+- **F-SD-11 Eine Fahrplanzeile ohne Status.** Die Zeile „Betriebsübergang"
+  trug in der Statuszelle nur „—"; das Wegwerfskript von SD-01 hatte „—"
+  als erstes Wort durchgelassen, `decken.py` nicht (Vokabular nach
+  E-SD-08). Berichtigt mit Fassung 129 („offen — beginnt mit v1.0 …"), die
+  Verlaufszeile sagt es. Der erste Lauf des Werkzeugs hat damit einen
+  Befund geliefert, bevor er grün war — Grundsatz 7 in Reinform.
+
 ---
 
 ## 3. Arbeitspakete
@@ -901,6 +933,6 @@ Nicht-Prüfbare zuerst.
 | SD-00 | erledigt 24.09.2026 (P5c-Instanz) | `d85d898` (Rahmenplan Fassung 111) | P-SD-01: Fassungen 112 bis 124 tragen außerhalb von Abschnitt 10 keinen neuen Satz der Form „hier stand" (nachgezählt beim Schnitt: 0 neue Treffer nach Fassung 111; die alten stehen im Archiv-2) |
 | SD-01 | erledigt 26.09.2026 | `758aaf4`; Nachtrag: Verlaufszeile 125 auf die Decke gekürzt (sie war 315 Zeichen lang, das Wegwerfskript hatte sie gemeldet und ich hatte nur 126 und 127 gekürzt) | P-SD-02 **0 Unterschiede** (3 928 = 27 + 3 901 Zeilen) · P-SD-03 **487 Zeilen** (< 500, nicht < 400 — F-SD-01), Kopf **15** · P-SD-04 Fahrplan **27 → 14** (11 + 3 neu), Zuarbeiten **67 → 69** (+ 2 neu), Register **85 = 85**, Erledigt **31 → 34** (+ 3 aus Fahrplanzeilen), 6a **10 = 10** · P-SD-06 **9 von 9** · Decken: Blockquotes **0**, Berichtigungsmuster **0**, Zellen **0 über der Decke** in 14 + 69 + 85 + 34 + 3 Zeilen · `cmark-gfm` **0 `<pre>`, 9 Tabellen** · Fächerung **105 Einträge, 97 einig, 8 Schiedsrichter, 40 ohne Schritt** · Prüfstand: Bericht in der Commit-Nachricht |
 | SD-M1 | erledigt 26.09.2026 | `fd536e7` (Rahmenplan Fassung 128); `1596469` nimmt `origin/main` `f5bddc2` auf (PR #88, Pruefablauf.md 5.3) | Q-SD-01 (a) **69 Zeilen durchgesehen, 27 gestrichen, 42 bleiben**, 6a 3 abgehakt (E-SD-34) · Q-SD-01 (b) **40 von 40** Vorschläge übernommen (E-SD-35) · Q-SD-02 Decke 500 (E-SD-36) · Rahmenplan **460 Zeilen**, Zuarbeiten-Zeilen 0 über der Decke, Verlaufszeilen 4, 0 über der Decke |
-| SD-02 | erledigt 26.09.2026 | *wird beim Commit eingetragen* | P-SD-07 **0 Unterschiede** (Erledigt-Teil, 228 Einträge; Werdegang-Absätze 0) · P-SD-08 **105 = 105**, Nummernmenge gleich · P-SD-09 **105 von 105** Kopfzeilen mit Grammatik (`grep -P`; das Werkzeug kommt mit SD-03), Ziele: 17 × 54, PK × 9, nach v1.0 × 8, 18 × 7, 14 × 6, SD · 13 · 12 je 5, 12a · Zuarbeit · Pflegeaufgabe je 2 — alle Fahrplan-Kennung oder festes Wort · P-SD-10 **0 Einträge über 20 Zeilen**, **52 Werdegang-Zeilen = 52 gekürzte** · P-SD-11 `cmark-gfm` **0 `<pre>`, 105 `<li>`**, 1 Tabelle (Kopf) · P-SD-12 Schnittmenge **0**, doppelt **0 / 0**, `bestand.py` **0 Befunde**, Selbstprobe **141 Fälle, 0 Fehlschläge** · Decken: Kopf **56 Zeilen** bis `## Offen`, Einrückung **0** abweichend, Berichtigungsmuster **0**, Blockquotes 0 · Datei **11 329 → 1 788 Zeilen**, Erledigt-Datei 8 041 · Prüfstand: Bericht in der Commit-Nachricht |
-| SD-03 | — | — | — |
+| SD-02 | erledigt 26.09.2026 | `135863c` | P-SD-07 **0 Unterschiede** (Erledigt-Teil, 228 Einträge; Werdegang-Absätze 0) · P-SD-08 **105 = 105**, Nummernmenge gleich · P-SD-09 **105 von 105** Kopfzeilen mit Grammatik (`grep -P`; das Werkzeug kommt mit SD-03), Ziele: 17 × 54, PK × 9, nach v1.0 × 8, 18 × 7, 14 × 6, SD · 13 · 12 je 5, 12a · Zuarbeit · Pflegeaufgabe je 2 — alle Fahrplan-Kennung oder festes Wort · P-SD-10 **0 Einträge über 20 Zeilen**, **52 Werdegang-Zeilen = 52 gekürzte** · P-SD-11 `cmark-gfm` **0 `<pre>`, 105 `<li>`**, 1 Tabelle (Kopf) · P-SD-12 Schnittmenge **0**, doppelt **0 / 0**, `bestand.py` **0 Befunde**, Selbstprobe **141 Fälle, 0 Fehlschläge** · Decken: Kopf **56 Zeilen** bis `## Offen`, Einrückung **0** abweichend, Berichtigungsmuster **0**, Blockquotes 0 · Datei **11 329 → 1 788 Zeilen**, Erledigt-Datei 8 041 · Prüfstand: Bericht in der Commit-Nachricht |
+| SD-03 | erledigt 26.09.2026 | *wird beim Commit eingetragen* (Rahmenplan Fassung 129) | P-SD-13 `decken.py --selbstprobe` **22 Fälle, 0 Fehlschläge** — 20 Decken je einmal gerissen, 2 Gegenproben; `uebersicht.py --selbstprobe` **7 Fälle, 0 Fehlschläge** · P-SD-14 `decken.py` **20 Decken, 0 gerissen** (erster Lauf: 1 — F-SD-11, behoben mit Fassung 129); `uebersicht.py --pruefen` **105 Einträge, 0 ohne Grammatik, 0 ohne Ziel** · P-SD-15 `bestand` **0 Befunde**, `kettenaufrufe` **0 Befunde, 0 ungeprüft**, `Pruefablauf.md` 4 neu erzeugt (41 → 42 Zeilen), `pruefen.sh --trocken` wählt `steuerung` als Riegel und über das Muster; **Stufe 1 auf GitHub steht aus** (läuft erst mit dem PR, SD-04) · P-SD-16 Gegenprobe im PR: SD-04 · Prüfstand: Bericht in der Commit-Nachricht |
 | SD-04 | — | — | — |

@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 129 | 26.09.2026 | SD-03 | Berichtigt: Die Fahrplanzeile „Betriebsübergang" trug keinen Status („—"); `decken.py` verlangt das erste Wort aus dem Vokabular — jetzt „offen — beginnt mit v1.0 (nach den Schritten 13 und 14)". |
 | 128 | 26.09.2026 | SD-M1 | Durchsicht der Betreiberin (E-SD-34): 27 Zuarbeiten erledigt und gestrichen (6.1: 17, 6.2: 7, 6.3: 3), 6a Schritte 7–9 abgehakt. Schritt 6 Teil C ist nicht mehr blockiert (D-U-N-S, Play-Konto, Play App Signing erledigt); R65 und der Kopf nachgezogen. |
 | 127 | 26.09.2026 | SD-01 | Berichtigt: K7 und R40 (2) nannten den Push auf `main` als Produktiv-Deploy — seit Web 20.4.0 Staging, Produktiv über den Tag. Android ist 0.15.1, nicht 0.15.0; S7 ist PR #27; „Branch-Schutz" nennt nur noch den 2FA-Zwang. |
 | 126 | 26.09.2026 | SD-01 | Ergänzt (E-SD-09): Fahrplanzeilen für AR, BV, PK; Kette II, 11 und 6 (Teil C) bleiben; Erledigt-Zeilen für S4-Merge, S6, S5-Konzept aus ihren Fahrplanzeilen. Neue Zuarbeiten: Tag für 10c, Kette-II-Prüfpunkte 26–28 (6.1). |

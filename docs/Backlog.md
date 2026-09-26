@@ -2,8 +2,8 @@
 
 Bewusst offene Punkte, einer je Nummer, jeder mit Kopfzeile. Erledigtes steht
 wörtlich in `docs/Backlog-Erledigt.md` (Konzept SD, E-SD-18); welche Punkte
-zu welchem Schritt gehören, zeigt `python3 tools/steuerung/uebersicht.py`
-(ab SD-03) — die Zuordnung steht nur hier, in den Kopfzeilen.
+zu welchem Schritt gehören, zeigt `python3 tools/steuerung/uebersicht.py` —
+die Zuordnung steht nur hier, in den Kopfzeilen.
 
 **Nummern sind dauerhaft.** Verweise aus Code und Dokumentation nennen sie
 („Backlog Nr. 10"). Ein erledigter Punkt wird nicht gelöscht, sondern mit
@@ -26,7 +26,7 @@ bleibt hier, weil nichts erledigt wurde. Ein Eintrag hat höchstens
 beginnt mit **fünf Leerzeichen** (E-SD-17 — mit vier rendert GitHub ab
 Nr. 100 einen Codeblock, Nr. 196). Ein gekürzter Eintrag endet mit
 `Werdegang bis DD.MM.YYYY: \`docs/Backlog.md@abc1234\`, Nr. NNN.`; dort
-steht die lange Fassung. Die Decken misst `tools/steuerung/` (ab SD-03), und
+steht die lange Fassung. Die Decken misst `tools/steuerung/decken.py`, und
 Stufe 1 ist rot, wenn eine reißt.
 
 **Fundstellen und Zahlen (Regel seit 13.09.2026).** Funktionsnamen statt

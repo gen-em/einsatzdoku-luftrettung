@@ -2,7 +2,7 @@
 
 *Gehört zu `Konzept-SD-Steuerungsdokumente.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
-Abschnitt 9 des Konzepts. Stand: **SD-02 gebaut, 26.09.2026** (Zweig
+Abschnitt 9 des Konzepts. Stand: **SD-03 gebaut, 26.09.2026** (Zweig
 `claude/serene-tesla-sqeno2`; `origin/main` `f5bddc2`, der Merge von PR #88,
 ist aufgenommen). Wird mit jedem Paket fortgeschrieben.*
 
@@ -21,7 +21,8 @@ ist aufgenommen). Wird mit jedem Paket fortgeschrieben.*
 | **Der Prüfstand mit `origin/main` als Basis — bis zur Aufnahme von `main`** | SD-01 und SD-M1 liefen mit `--basis bdf1787` (der Zweig saß auf dem AR-Zweig, `android/` berührt, kein Android-SDK im Container). Seit `1596469` (PR #88 gemergt, `main` aufgenommen) fährt der Prüfstand gegen `origin/main`; berührt sind nur `docs/` und `tools/` | Commit-Nachrichten SD-01, SD-M1, SD-02 |
 | **Ob die 52 Kurzfassungen des Backlogs Sinn verloren haben** | Gekürzt ist von Hand nach Konzept 4.7 (Befund, Wirkung, Weg, Entscheidung bleiben; Messreihen und Werdegang entfallen); gezählt sind Zeilen, nicht Sinn. Der Volltext liegt in `docs/Backlog.md@f5bddc2`, und jeder gekürzte Eintrag nennt ihn in seiner letzten Zeile | Prüfliste 3.2 |
 | **Wie GitHub die Nummern der Einträge zeigt** | Hier rendert nur `cmark-gfm`: eine Liste `<ol start="21">` mit 105 `<li>`. Dass ein Browser daraus 21, 22, 23 … macht, folgt aus HTML und ist nicht auf GitHub angesehen (F-SD-08) | Prüfliste 3.4 |
-| **Die Kopfzeilen mit dem Werkzeug** | `tools/steuerung/uebersicht.py --pruefen` (P-SD-09) entsteht mit SD-03; gemessen hat `grep -P` mit der Grammatik aus Konzept 4.6, und das Zusammensetz-Skript hat jedes Ziel gegen die Kennungen der Fahrplan-Tabelle gehalten | P-SD-09 mit SD-03 |
+| **Die Kopfzeilen mit dem Werkzeug — bis SD-03** | In SD-02 hat `grep -P` mit der Grammatik aus Konzept 4.6 gemessen; seit SD-03 misst `tools/steuerung/uebersicht.py --pruefen` denselben Stand: **105, 0, 0** (Abschnitt 2) | erledigt mit SD-03 |
+| **Stufe 1 mit dem Schritt „Steuerungsdokumente" (P-SD-15) und die Gegenprobe im PR (P-SD-16)** | Beides braucht den Pull Request, und der kommt mit SD-04. Örtlich sind `decken.py`, `uebersicht.py`, `bestand`, `kettenaufrufe` und der Prüfstand grün; ob das Tor die neue `--riegel`-Zeile annimmt, zeigt erst der PR-Lauf | SD-04, Prüfliste 3.6 |
 
 **Vorbedingungen** (Konzept 3.2): 10c ist gemergt (PR #89, 26.09.2026); PR #88
 (AR) ist gemergt (`f5bddc2`) und nach `Pruefablauf.md` 5.3 aufgenommen
@@ -65,6 +66,13 @@ E-SD-19).
 | SD-02 | Decken 5 | `grep -n '^## Offen'`; `grep -vE` auf die Einrückung; Berichtigungsmuster; `^ *>` | Kopf bis `## Offen` (≤ 60); Folgezeilen ohne fünf / mit mehr als fünf Leerzeichen; Muster; Blockquotes | **56; 0 / 0; 0; 0** |
 | SD-02 | Umfang | `wc -l` | `docs/Backlog.md` Fassung N → neu; `docs/Backlog-Erledigt.md` | **11 329 → 1 788**; **8 041** |
 | SD-02 | Prüfstand | `bash tools/pruefstand/pruefen.sh` | Stufe klein, die Riegel, gegen `origin/main` | Bericht in der Commit-Nachricht von SD-02 |
+| SD-03 | P-SD-13 | `python3 tools/steuerung/decken.py --selbstprobe` | je Decke ein Riss in einer Kopie der vier Dateien; Gegenprobe Kopie = Baum; eine Datei fehlt → 2 | **22 Fälle, 0 Fehlschläge** (20 Decken je einmal rot, 2 Gegenproben) |
+| SD-03 | P-SD-13 | `python3 tools/steuerung/uebersicht.py --selbstprobe` | Kopfzeile ohne `seit`, Stand außerhalb des Vokabulars, Ziel `99`, Kennung mit Paket, kein `## Offen`, Rahmenplan ohne Tabelle | **7 Fälle, 0 Fehlschläge** |
+| SD-03 | P-SD-14 | `python3 tools/steuerung/decken.py --stellen` | die 20 Decken auf dem Stand nach SD-02 | **0 gerissen** — der erste Lauf meldete **1** (Fahrplanzeile „Betriebsübergang" ohne Status, F-SD-11), behoben mit Fassung 129 |
+| SD-03 | P-SD-14 | `python3 tools/steuerung/uebersicht.py --pruefen` | Kopfzeilen | **105 Einträge, 0 ohne Grammatik, 0 ohne gültiges Ziel**; die Übersicht listet 105 Zeilen in 12 Gruppen |
+| SD-03 | P-SD-15 | `bash tools/quelltext/pruefen.sh bestand`; `python3 tools/kettenaufrufe/pruefen.py`; `bash tools/pruefstand/pruefen.sh --trocken` | Anleitung (40 Zeilen, fünf Abschnitte, Anlass-Zeile), Einhängen in `pruefablauf.json` (Probe, Riegel, Muster), Aufrufe, Auswahl | **0 Befunde** (der erste Lauf: 1 — 41 Zeilen, gekürzt); **0 Befunde, 0 ungeprüft**; `steuerung` als 20. Riegel und über das Muster gewählt |
+| SD-03 | P-SD-15 | `python3 tools/pruefstand/bericht.py erzeugen-doku` | `Pruefablauf.md` 4 | Block ersetzt, **41 → 42 Zeilen** (eine Musterzeile, ein Riegel mehr) |
+| SD-03 | Prüfstand | `bash tools/pruefstand/pruefen.sh` | Stufe klein, jetzt 20 Riegel, gegen `origin/main` | Bericht in der Commit-Nachricht von SD-03 |
 
 ---
 
@@ -214,6 +222,21 @@ Kopfzeile geändert; das ist eine Zeile, kein Paket.
 Die 40 Zuordnungen aus 3.3 sind E-SD-35; die übrigen 46 stehen so im Text des
 Eintrags.
 
+### 3.6 Das Tor (P-SD-15, P-SD-16) — mit dem Pull Request
+
+**Bedienweg P-SD-15:** Im PR-Lauf von Stufe 1 den Schritt „Steuerungsdokumente
+— halten sie ihre Decken?" öffnen. **Erwartung:** `22 Fälle, 0 Fehlschläge`,
+`7 Fälle, 0 Fehlschläge`, `20 Decken, 0 gerissen`, `105 offene Einträge, 0 …,
+0 …`; der Schritt „Prüfbericht gegenlesen" nennt `steuerung=0`.
+**Scheitern:** der Schritt fehlt, ist rot, oder die Gegenlesung meldet
+`steuerung=nicht-gelaufen` — dann fehlt das `--riegel` oder die `env:`-Zeile.
+
+**Bedienweg P-SD-16 (macht die Instanz in SD-04, die Betreiberin liest):** ein
+Commit mit einer 21. Zeile in einem Backlog-Eintrag, pushen, Stufe 1 lesen,
+Commit zurücknehmen. **Erwartung:** rot, mit `docs/Backlog.md:<Zeile>` und
+`Nr. NNN: 21 Zeilen` in der Anmerkung. **Scheitern:** grün — dann misst das
+Tor nicht, was der Prüfstand misst.
+
 ---
 
 ## 4. Grenzen der benutzten Prüfmittel
@@ -233,6 +256,10 @@ Eintrags.
 - **`cmark-gfm`** misst die Struktur (`<pre>`, `<li>`, `<table>`), nicht das,
   was GitHub daraus zeigt; die fortlaufende Nummerierung ist daraus
   geschlossen (F-SD-08).
+- **`decken.py` misst Form, nicht Sinn.** Zeilen, Zeichen, ein erstes Wort,
+  ein Regex — ob eine Zelle das Richtige sagt, sieht es nicht. Seine
+  Selbstprobe reißt jede Decke einmal in einer Kopie; sie belegt, dass
+  jede Messung anschlägt, nicht, dass sie alles Falsche findet.
 - **Die Vermerke „vermutlich erledigt"** sind Schlüsse aus Dokumenten, keine
   Messungen an Staging oder Produktiv.
 - **`cmark-gfm`** zählt Blöcke, nicht Lesbarkeit; eine Tabelle mit 500

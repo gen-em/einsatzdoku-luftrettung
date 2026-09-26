@@ -12032,7 +12032,8 @@ Datei. Verweise aus Code und Dokumentation nennen die Nummer (z. B. „Backlog
 Nr. 10"); sie löst in genau einer der beiden Dateien auf, und
 `tools/quelltext/bestand.py` (Regel `backlog`) hält beide zusammen frei von
 Doppelungen. Die Übersicht nach Ziel und Stand liefert
-`tools/steuerung/uebersicht.py` (ab SD-03).
+`tools/steuerung/uebersicht.py`; die Decken der Steuerungsdokumente hält
+`tools/steuerung/decken.py` (Konzept SD, `tools/steuerung/LIESMICH.md`).
 
 ---
 
