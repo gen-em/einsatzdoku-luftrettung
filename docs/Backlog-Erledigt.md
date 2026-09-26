@@ -8299,3 +8299,28 @@ zutreffen.
      compileSdk aus android/handy/build.gradle.kts; `aufbauen.sh android`
      holt nur noch 37.0. Mit beiseitegelegter 37.0 meldet der Prüfstand
      „Ausbaustufe android fehlt (Plattform android-37 aus compileSdk)".
+
+339. **Eine Nummernspanne, die nur auf dem eigenen Zweig steht, sieht niemand — der Prüfstand soll neue Nummern gegen alle offenen Zweige halten.** · gehört zu: 17 · Stand: erledigt · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit dem Abschluss von Konzept BV (Q-BV-05,
+     E-BV-19).* Zweimal an einem Tag ist eine Nummer aus der Spanne von BV
+     auf `main` kollidiert (F-BV-14: 329 durch P5c/AP11; F-BV-18: 330 durch
+     PR #91), ohne dass jemand eine sichtbare Regel verletzt hätte: Der
+     Kopf des Backlogs verlangt, die Spanne vor dem ersten Push einzutragen
+     (E-SD-21) — eingetragen wird sie aber auf dem eigenen Zweig, und „auf
+     allen offenen Zweigen nachsehen" ist ein Blick, den kein Werkzeug
+     abnimmt. Jede Kollision kostet das Umnummerieren samt Verweisen in
+     Konzept, Prüfdokument und Werkzeugen, und sie fällt erst beim
+     Aufnehmen von `main` auf, also spät.
+     *Weg:* Der Prüfstand (`tools/pruefstand/pruefen.sh`) ermittelt die
+     Backlog-Nummern, die der Zweig gegen `origin/main` neu anlegt, holt
+     `docs/Backlog.md` aller offenen Remote-Zweige (`git fetch`, dann
+     `git show <zweig>:docs/Backlog.md`) und ist bei einer Überschneidung
+     rot — örtlich, weil Stufe 1 die anderen Zweige nicht sieht.
+     *Abnahme:* Eine Nummer, die ein zweiter Zweig schon trägt, färbt den
+     örtlichen Lauf rot und nennt Zweig und Nummer; eine Selbstprobe stellt
+     die Doppelung nach.
+     Erledigt 26.09.2026 mit R4-03 (Konzept R4): tools/steuerung/nummern.py
+     hält die neuen Nummern des Arbeitsbaums gegen origin/main und alle
+     Remote-Zweige (je gegen den Vorfahren mit main, beide Backlog-Dateien)
+     und nennt Zweig und Nummer; Probe nummern im Muster steuerung, nur
+     örtlich; Selbstprobe 8 / 0 mit gestellter Doppelung.

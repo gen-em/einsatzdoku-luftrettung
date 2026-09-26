@@ -60,7 +60,10 @@ Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
    hängen hinten an, 4, 5, 6 und 7 bleiben frei. **Wer Nummern vergeben
    könnte, reserviert zuerst eine Zehnerspanne in der Tabelle im Kopf von
    `Backlog.md` und pusht das** (E-SD-21). Kopfzeilen und Decken misst
-   `tools/steuerung/`, Doppelungen `bestand` — beides in Stufe 1.
+   `tools/steuerung/`, Doppelungen `bestand` — beides in Stufe 1. Ob eine
+   neue Nummer schon auf einem anderen Zweig steht, misst
+   `tools/steuerung/nummern.py` — nur örtlich im Prüfstand, weil Stufe 1
+   die anderen Zweige nicht sieht (Nr. 339).
 5. **Rahmenplan schreiben — an vier Anlässen, sonst nicht.** (1) Ein
    Schritt beginnt oder endet (Fahrplanzeile, Erledigt-Eintrag). (2) Eine
    Programmentscheidung fällt (R-Nummer). (3) Die Reihenfolge ändert sich.

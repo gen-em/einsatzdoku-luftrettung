@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 135 (26.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 136 (26.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -208,7 +208,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste P5c/AP9:** die eigene Datenschutzerklärung nachziehen (P-P5c-40, sofort), Rechtstexte mit Vorschau in Firefox und am Handy, beide Blätter auf Papier, Wartungsmodus nach einem echten Deploy, die Leiste bei 850 und über 950 px Höhe | 10c AP9 | 25.09.2026 | P-P5c-39 bis -44 |
 | **Prüfliste AR:** Gerätetests P-AR-03/-04 (Android 17), -06, -07, -10 (Handy), -11 bis -14 (Wear-OS-Uhr), -15 (Rundlauf gegen die örtliche Anlage), -01 (Bau ohne Spiegel) | AR | 26.09.2026 | `Pruefdokument-AR-Android-Runde.md` |
 | **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.97a), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefdokument-BV-Backlog-Vorgriff.md` |
-| **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`), P-BR-09 (beim nächsten Prüfmittel); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefdokument-BR-Bestandsriegel.md` |
+| **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefdokument-BR-Bestandsriegel.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md`, P-R4-06 |
 | **Zuarbeiten aus Kette II:** der Rückfallstand bei einer echten Auslieferung, der Hotfix über den ganzen Weg, die Aufbewahrung der Komplett-Stände auf Staging (Nr. 261: Vorgabe 2, Vorschlag 5) | Kette II, PK-07 | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, Prüfpunkte 26 bis 28 |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |

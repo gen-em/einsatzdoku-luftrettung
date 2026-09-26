@@ -219,6 +219,11 @@
       "braucht": "nichts",
       "bemerkung": "Konzept SD (SD-03). Halten Rahmenplan, Verlauf und Backlog ihre Decken (Zeilen, Zeichen je Zelle, Einrueckung, Rendering mit cmark-gfm), und traegt jede Kopfzeile im Backlog Grammatik und ein Ziel aus der Fahrplan-Tabelle? Die Decken stehen in tools/steuerung/decken.py und LIESMICH.md, nicht hier. Riegel UND Muster: Riegel, damit er in jeder Stufe laeuft und im Tor gegengelesen wird; Muster, damit die Tabelle in Pruefablauf.md 4 die Beruehrung nennt."
     },
+    "nummern": {
+      "aufruf": "python3 tools/steuerung/nummern.py --selbstprobe && python3 tools/steuerung/nummern.py",
+      "braucht": "nichts",
+      "bemerkung": "Konzept R4 (R4-03, Nr. 339). Legt der Arbeitsbaum eine Backlog-Nummer neu an, die origin/main oder ein anderer Remote-Zweig auch neu anlegt? Holt die Zweige (git fetch --prune) und braucht deshalb Netz. NUR MUSTER, KEIN RIEGEL: Stufe 1 sieht die anderen Zweige nicht, im Tor gaebe es nichts gegenzulesen. Die Selbstprobe laeuft hier mit, weil kein Workflow sie faehrt (Pruefablauf.md 6.3: im Tor haelt dieses Mittel nichts auf)."
+    },
     "spaltenregister": {
       "aufruf": "php tools/spaltenregister/pruefen.php",
       "braucht": "nichts",
@@ -748,12 +753,14 @@
       "pfade": [
         "docs/Rahmenplan*.md",
         "docs/Backlog*.md",
-        "CLAUDE.md"
+        "CLAUDE.md",
+        "tools/steuerung/**"
       ],
       "proben": [
-        "steuerung"
+        "steuerung",
+        "nummern"
       ],
-      "anlass": "Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung."
+      "anlass": "Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier."
     }
   ]
 }

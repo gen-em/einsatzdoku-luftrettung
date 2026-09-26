@@ -369,7 +369,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01. |
 | `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Steht am ENDE der Muster: Die Reihenfolge der Proben ist die ihres ersten Auftretens, und Messstand und Bilderlauf weiter vorn schoben die demo-empfindlichen Proben hinter den Demo-Reset (F-P5c-127, Nr. 322) |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
-| `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md` | klein | `steuerung` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. |
+| `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. |
 
 **Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
 
@@ -915,9 +915,13 @@ F-BR-19) — vier davon blieben damals grün.
    sein (`bestand`, `inventur`).
 6. **Die Tabelle in 4 erzeugen:** `python3 tools/pruefstand/bericht.py
    erzeugen-doku`. Die Ausgabe ersetzt in Abschnitt 4 den Block von der
-   Zeile `<!-- ERZEUGT … -->` bis einschließlich der Zeile „**Die billigen
-   Riegel laufen in jeder Stufe …**". Nie von Hand (fehlt der Schritt oder
-   ist die Tabelle von Hand geändert: `bestand`, `tabelle`).
+   Zeile `<!-- ERZEUGT … -->` bis zur **letzten Zeile, die der Erzeuger
+   schreibt** — heute die Stufenregel `migration` unter der Zeile „**Die
+   billigen Riegel laufen in jeder Stufe …**". *Bis R4-03 stand hier „bis
+   einschließlich der Riegelzeile"; wörtlich befolgt, stand die Stufenregel
+   danach zweimal da (P-BR-09, F-R4-23).* Nie von Hand (fehlt der Schritt,
+   ist die Tabelle von Hand geändert oder eine Zeile doppelt: `bestand`,
+   `tabelle`).
 7. **Die Riegel grün:** `bash tools/quelltext/pruefen.sh bestand`,
    `python3 tools/kettenaufrufe/pruefen.py` und
    `bash tools/quelltext/pruefen.sh --selbstprobe`, alle **0 Befunde** bzw.

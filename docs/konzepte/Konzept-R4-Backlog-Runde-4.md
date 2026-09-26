@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-03.** |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-04.** |
 > | Entschieden | **E-R4-01 bis E-R4-28** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01, R4-02 erledigt** (26.09.2026). Offen: R4-03 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-03 erledigt** (26.09.2026). Offen: R4-04 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08). 341 wird nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03) — 2.4. |
 
 ---|---|
 > | Stand | **26.09.2026 — Konzept vollständig, zur Freigabe vorgelegt; Konzept-PR #93 offen** (E-R4-02: Abschlüsse SD, AR, BV und dieses Konzept; jeder Push trägt einen Prüfbericht, `Pruefablauf.md` 5). Befund: 55 Punkte gesichtet und gegengeprüft (2.1). Paketschnitt: 26 Pakete (4). **Mockups für R4-22, R4-23, R4-24 liegen bei** (`konzept-r4/mockups/`, LIESMICH dort; zur Freigabe, Q-R4-16). |
@@ -349,6 +349,11 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   Android-Bau war damit in jeder Sitzung ohne `export ANDROID_HOME` „nicht
   gemessen" (gefunden im ersten Lauf von R4-02, weil `android/LIESMICH.md`
   berührt war). Behoben in R4-02: Pflicht ist nur, was ohne Vorgabe steht.
+- **F-R4-23 Das Runbook für ein neues Prüfmittel beschrieb das Ende der
+  erzeugten Tabelle falsch** (`Pruefablauf.md` 6.12, Schritt 6: „bis
+  einschließlich der Riegelzeile"; der Erzeuger schreibt seit P5c/AP4 die
+  Stufenregel darunter). Gefunden mit P-BR-09 in R4-03 — `bestand` war im
+  ersten Lauf rot (`tabelle-kopie`); Schritt 6 berichtigt.
 
 ## 3. Entscheidungen und Fragen
 
@@ -510,6 +515,22 @@ nichts`, örtlich — Stufe 1 sieht die Zweige nicht); ein Satz in `CLAUDE.md`
 *Abnahme:* Eine Nummer, die ein zweiter Zweig trägt, färbt den örtlichen
 Lauf rot und nennt Zweig und Nummer; Selbstprobe N / 0. *Stufe:* keine.
 *Fächerung:* keine.
+**Erledigt 26.09.2026.** „Neu" heißt je Stand: gegen den gemeinsamen
+Vorfahren mit `origin/main`, über beide Backlog-Dateien — so hat ein
+gemergter Zweig nichts Neues, und der eigene Remote-Zweig bleibt draußen.
+Die Selbstprobe fährt im Aufruf der Probe mit, nicht in `pruefung.yml`
+(im Tor hält das Mittel nichts auf, `Pruefablauf.md` 6.3). Die Probe hängt
+nur am Muster `steuerung` (dazu `tools/steuerung/**`), nicht an den
+Riegeln. **6.12 ausschließlich befolgt (P-BR-09):** ein Fund in Schritt 6
+(F-R4-23), berichtigt; P-BR-09 im Prüfdokument BR abgehakt, aus Rahmenplan
+6.1 gestrichen (Fassung 136). *Gemessen:* Selbstprobe **8 / 0**; gegen das
+Repositorium mit Holen **1 neue Nummer (340), 6 Zweige, 0
+Überschneidungen**; `auswahl.py --stufe klein --datei docs/Backlog.md`
+wählt `nummern`; `auswahl.py --selbstprobe` 36 / 0, `--abdeckung` 0 ohne
+Muster; `bestand` 0; `kettenaufrufe` 0; `pruefen.sh --selbstprobe` 11 / 11.
+Die Abnahme „ein zweiter Zweig trägt die Nummer" ist nur in der
+Selbstprobe gestellt — einen echten fremden Zweig mit Nummer anzulegen,
+hieße ihn zu pushen.
 
 **R4-04 Ablaufdatei: Demo-Marke und Android-Proben** — Nr. 322, 334.
 `pruefablauf.json` je demo-empfindlicher Probe `demo: true` (aus der

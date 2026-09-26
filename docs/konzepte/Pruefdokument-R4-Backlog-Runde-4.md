@@ -3,8 +3,8 @@
 *Gehört zu `Konzept-R4-Backlog-Runde-4.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
-füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 und
-R4-02 erledigt** (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
+R4-03 erledigt** (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -55,6 +55,12 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-02 | `bash tools/sandbox/hochfahren.sh`, einmal mit entfernter Registerzeile `2026_09_25_zentrale_stammdaten`, dann wieder eingesetzt | Schemafrage | heute **0 Migrationen offen**, rc 0; gestellt: **rot, rc 1**, Kennung `(skip)` und Weg; zurück: 0, rc 0 |
 | R4-02 | `bash tools/pruefstand/pruefen.sh --stufe klein --datei android/handy/build.gradle.kts` mit beiseitegelegter `platforms/android-37.0` und einer leeren `android-36` | Erkennung der Ausbaustufe aus `compileSdk` | **„Ausbaustufe android fehlt (Plattform android-37 aus compileSdk)"**, `android-bau=nicht-gemessen`, rc 1; mit 37.0 erkannt (Nachbau der Zeile) |
 | R4-02 | `bash tools/sandbox/aufbauen.sh android` nach der Änderung | holt es nur noch 37.0? | rc 0; `platforms/`: **nur `android-37.0`**; Nachweis 5 Stücke ok (Plattform 37.0, Build-Tools 36.0.0, JDK 21, Spiegel, `cmdline-tools` 23.0) |
+
+| R4-02 | `bash tools/pruefstand/pruefen.sh` über den Baum des Commits `519ded8` (steht erst nach dem Commit fest und deshalb hier, eine Zeile später) | 20 Riegel, `kettenaufrufe`, `steuerung`, **`android-bau`** (berührt: `android/LIESMICH.md`) | **0 rot, 0 nicht gemessen, 21 grün**, 504 s, davon Android-Bau **466 s**, `handy=gebaut`; der erste Lauf davor war `android-bau=nicht-gemessen` (F-R4-22) |
+| R4-03 | `python3 tools/steuerung/nummern.py --selbstprobe` | gestellte Doppelungen in einem Wegwerf-Ursprung (offener, gemergter, fortgeschriebener Zweig; Nummer in Erledigt; eigener Zweig gepusht; kein `origin/main`) | **8 Fälle, 0 Fehlschläge** |
+| R4-03 | `python3 tools/steuerung/nummern.py` (holt mit `git fetch --prune`) | neue Nummern dieses Arbeitsbaums gegen `origin/main` und fünf weitere Remote-Zweige | **1 neue (340), 6 Zweige, 0 Überschneidungen** |
+| R4-03 | `auswahl.py --stufe klein --datei docs/Backlog.md --nur-proben`; `--selbstprobe`; `--abdeckung` | wird `nummern` bei einer Backlog-Berührung gewählt? | gewählt; **36 / 0**; **0 ohne Muster** |
+| R4-03 | `Pruefablauf.md` 6.12 ausschließlich befolgt (P-BR-09) | trägt die zweite Fassung des Runbooks? | **ein Fund**: Schritt 6 ließ die Stufenregel doppelt stehen, `bestand` rot (`tabelle-kopie`); berichtigt, danach 0; `kettenaufrufe` 0; `pruefen.sh --selbstprobe` 11 / 11 |
 
 ## 3. Im Browser geprüft
 

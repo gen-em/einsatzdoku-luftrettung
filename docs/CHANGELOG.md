@@ -23,6 +23,20 @@ Fassung.
 
 ### Hinzugefügt
 
+- **Ein Nummernriegel gegen alle Zweige** (R4-03, Nr. 339,
+  `tools/steuerung/nummern.py`). Zweimal an einem Tag ist eine Nummer aus
+  der Spanne von BV auf `main` kollidiert, ohne dass jemand eine sichtbare
+  Regel verletzt hätte: Die Spanne stand, aber nur auf dem eigenen Zweig,
+  und „auf allen offenen Zweigen nachsehen" nahm kein Werkzeug ab. Jetzt
+  holt der Prüfstand die Remote-Zweige und ist rot, wenn der Arbeitsbaum
+  eine Nummer neu anlegt, die `origin/main` oder ein anderer Zweig auch neu
+  anlegt — „neu" jeweils gegen den gemeinsamen Vorfahren mit `main`, über
+  `Backlog.md` und `Backlog-Erledigt.md` zusammen, damit ein gemergter Zweig
+  nichts Neues mehr hat und der eigene nicht mit sich selbst kollidiert.
+  Nur örtlich, im Muster `steuerung`: Stufe 1 sieht die anderen Zweige
+  nicht, im Tor gäbe es nichts gegenzulesen. Die Selbstprobe (8 Fälle)
+  baut einen Ursprung mit offenem, gemergtem und fortgeschriebenem Zweig
+  und fährt im Aufruf der Probe mit.
 - **Ein Helfer verschiebt erledigte Backlog-Punkte** (R4-01,
   `tools/steuerung/verschieben.py`, E-R4-06, E-R4-28). Konzept SD sagte
   „wörtlich nach `Backlog-Erledigt.md`", aber nicht, was mit dem Stand
@@ -75,6 +89,13 @@ Fassung.
   —, und der Android-Bau galt in jeder Sitzung ohne `export ANDROID_HOME`
   als „nicht gemessen", also im Tor als rot. Gefunden, weil R4-02
   `android/LIESMICH.md` berührte und der Prüfstand den Bau auswählte.
+- **`Pruefablauf.md` 6.12, Schritt 6, beschreibt das Ende der erzeugten
+  Tabelle richtig** (R4-03, P-BR-09). Er sagte „bis einschließlich der
+  Riegelzeile", der Erzeuger schreibt seit P5c/AP4 darunter die
+  Stufenregel `migration` — wer den Schritt wörtlich befolgte, hatte sie
+  danach zweimal im Dokument, und `bestand` war rot. Gefunden, weil R4-03
+  das Runbook für ein neues Prüfmittel zum ersten Mal seit seiner zweiten
+  Fassung ausschließlich befolgt hat, wie P-BR-09 es verlangte.
 - **`Sandbox-Setup.md` 1 sagt, welche Engine die vier Bibliotheken braucht**
   (R4-01, Nr. 301): nur WebKit — Firefox startet ohne sie, gemessen durch
   Entfernen und Wiederholen.
