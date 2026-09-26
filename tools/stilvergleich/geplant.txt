@@ -2,9 +2,10 @@
 # Geschrieben mit `bash tools/stilvergleich/gegen.sh --schreiben`, gegen den
 # Vergleichsstand des Laufs. Je Zeile: Probe, Element <Elternteil>, die
 # Eigenschaften, die sich aendern. Diese Datei wird im Pull Request GELESEN —
-# jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge ist
-# sie leer zu machen (der naechste Lauf meldet sonst ihre Zeilen als
-# „geplant, aber nicht gemessen").
+# jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge
+# bleibt sie stehen: Der naechste Lauf findet ihre Zeilen wortgleich im
+# Vergleichsstand und zaehlt sie nicht, solange sie nicht gemessen werden
+# (Nr. 330). Die naechste Gestaltungsaenderung schreibt sie neu.
 
 katalog.html  body <html>  :  height
 katalog.html  div <body>  :  height

@@ -10961,3 +10961,21 @@ zutreffen.
     2 von 69 offen, gegen die neue 0 von 69. **Offen bleibt nur die Frage
     an die Betreiberin**, ob ein vorhandener Stand auf Produktiv betroffen
     ist (P-P5c-45 im Prüfdokument P5c).
+
+330. **Die Liste der geplanten Stilabweichungen musste nach jedem Merge von
+    Hand geleert werden.** *Aufgenommen und erledigt 26.09.2026, nach dem
+    Merge von Web 21.1.3 (PR #90), auf Nachfrage der Betreiberin.* `tools/stilvergleich/geplant.txt`
+    muss im Pull Request stehen — ohne sie ist der Stilvergleich rot und der
+    Bericht ungültig — und ist nach dem Merge auf `main` falsch: Der nächste
+    Lauf misst keine ihrer Abweichungen mehr und meldete sie als „geplant,
+    aber nicht gemessen", rot. Der Handgriff „nach dem Merge leeren" stand
+    deshalb im Rahmenplan 6 und in `Pruefablauf.md` 6.10.
+
+    **Erledigt 26.09.2026** (nur Werkzeug, keine Versionsstufe). `gegen.sh`
+    übergibt die Liste des
+    Vergleichsstands als `--geerbt`; eine Zeile, die dort wortgleich steht
+    und nicht gemessen wird, zählt nicht und steht mit Zahl im Protokoll.
+    Alles andere bleibt streng. Gegenproben: nach dem Merge ohne
+    `--geerbt` rot (13 nicht gemessen), mit grün (13 geerbt); eigene Zeile
+    ohne Messung rot (1); leere Liste gegen `main` rot (13 ungeplant); der
+    Pull-Request-Fall grün (13 / 13).
