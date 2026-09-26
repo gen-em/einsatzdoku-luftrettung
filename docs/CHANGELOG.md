@@ -50,6 +50,24 @@ Fassung.
 
 ### Geändert
 
+- **Der Demo-Reset trifft keine Probe mehr** (R4-04, Nr. 322). Er spielt
+  den Demo-Bestand alle 30 Minuten neu ein, und die Einsätze bekommen neue
+  Kennungen; welche Probe er traf, entschied die Reihenfolge der Muster in
+  `pruefablauf.json` — ein neues Muster weit vorn schob die Bedien- und
+  die GPX-Probe hinter die Marke, und beide wurden rot. Die Reihenfolge war
+  eine Voraussetzung, die nirgends stand. Jetzt tragen die Proben, die das
+  Demo-Konto anmelden oder Demo-Daten über ihre Kennungen lesen, `"demo":
+  true` (sieben), und der Prüfstand schiebt vor jeder die Marke des
+  letzten Resets auf „jetzt" und stellt sie am Ende zurück — auch nach
+  einem Abbruch, und nie gegen Staging. Die Zeile steht im Lauf.
+- **Die vier Prüfwerkzeuge der Android-App hängen am Prüfstand** (R4-04,
+  Nr. 334). `kontraste.py` (mit Selbstprobe), `farbabgleich.py`,
+  `bildmarken.sh` und `stroeme.py` liefen nur, wenn jemand daran dachte.
+  Jetzt stehen sie am Ende des Musters `android`, die letzten zwei im
+  Prüfmodus, der vergleicht statt schreibt — ein Lauf, der den Baum ändert,
+  änderte auch den Baum-Hash seines eigenen Berichts (F-R4-17). Dazu
+  laufen `farbabgleich` und `bildmarken`, wenn `style.css` oder eine
+  Bildmarke im Web berührt ist: Dort ändert sich, was die App übernimmt.
 - **Der Bestandsriegel hält den Prüfstand an das Tor — zwei Regeln mehr**
   (R4-02, Nr. 329). Zweimal war ein Riegel örtlich grün und im Pull
   Request rot: Die Ankerprüfung lud über `doku_lib.php` die Datei

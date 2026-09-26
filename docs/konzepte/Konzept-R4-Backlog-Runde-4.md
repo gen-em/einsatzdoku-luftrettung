@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-04.** |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-05.** |
 > | Entschieden | **E-R4-01 bis E-R4-28** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-03 erledigt** (26.09.2026). Offen: R4-04 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-04 erledigt** (26.09.2026) — Block A fertig. Offen: R4-05 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08). 341 wird nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29) — 2.4. |
 
 ---|---|
 > | Stand | **26.09.2026 — Konzept vollständig, zur Freigabe vorgelegt; Konzept-PR #93 offen** (E-R4-02: Abschlüsse SD, AR, BV und dieses Konzept; jeder Push trägt einen Prüfbericht, `Pruefablauf.md` 5). Befund: 55 Punkte gesichtet und gegengeprüft (2.1). Paketschnitt: 26 Pakete (4). **Mockups für R4-22, R4-23, R4-24 liegen bei** (`konzept-r4/mockups/`, LIESMICH dort; zur Freigabe, Q-R4-16). |
@@ -354,6 +354,18 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   einschließlich der Riegelzeile"; der Erzeuger schreibt seit P5c/AP4 die
   Stufenregel darunter). Gefunden mit P-BR-09 in R4-03 — `bestand` war im
   ersten Lauf rot (`tabelle-kopie`); Schritt 6 berichtigt.
+- **F-R4-24 „29 Proben demo-empfindlich" sind 29 Dateien, nicht Proben.**
+  Die Sichtung zählte Dateien mit einem Demo-Bezug. Getroffen wird eine
+  Probe aber nur, wenn sie das Demo-Konto anmeldet (das löst den Reset aus)
+  oder Demo-Daten über ihre Kennungen liest: sieben — `bedienprobe`,
+  `bilderlauf`, `kopplungsprobe`, `anteilprobe`, `gpxprobe`, `spurprobe`,
+  `zweitfaktorprobe`. Nicht dabei, mit Grund: `mailprobe` und
+  `rueckwegprobe` lesen nur `demo_id()`, und der Reset behält die Kennung
+  (`UPDATE users`); die Kreisläufe und die Wegprobe fahren eigene
+  Umlaufkonten; der Messstand nennt das Demo-Konto nur, um es auszulassen.
+- **F-R4-17 ist ohne Umbau gelöst:** `stroeme.py` und `bildmarken.sh` haben
+  schon einen Modus `pruefen`, der vergleicht statt schreibt; die Proben
+  rufen ihn. Gemessen: nach dem Lauf der vier `git status android/` leer.
 
 ## 3. Entscheidungen und Fragen
 
@@ -545,6 +557,26 @@ schreibt.
 (Marke im Protokoll); `auswahl.py --abdeckung` 0 ohne Muster; die vier
 Proben grün mit Zahl; Baum-Hash vor und nach dem Lauf gleich. *Stufe:*
 keine. *Fächerung:* keine.
+**Erledigt 26.09.2026.** `demo: true` an sieben Proben (F-R4-24, nicht
+29); `pruefen.sh` schiebt die Marke vor jeder und stellt sie am Ende
+zurück, über `trap` auch nach einem Abbruch, nie mit `--gegen staging`;
+`auswahl.py` hat die eine Stelle `demo_proben()` und drei Lagen in der
+Selbstprobe (nur `true` zählt; Bedienprobe und Bilderlauf tragen es; jede
+braucht die Anlage), `bestand` kennt den Schlüssel. Die vier Android-Proben
+am Ende des Musters `android`, dazu ein Muster `android-quellen`
+(`style.css`, Bildmarken im Web → `farbabgleich`, `bildmarken`) — über das
+Konzept hinaus, weil sich dort ändert, was die App übernimmt. Die
+Abnahme fährt **Stufe neben statt haupt**: haupt verlangt das Modul
+`plattform` (Docker, Schemaprobe) und prüft für die Demo-Marke nichts,
+was neben nicht auch prüft — Bedienprobe, Bilderlauf, GPX-, Spur-,
+Kopplungs- und Zweitfaktorprobe laufen in beiden; die Anteilprobe (nur
+haupt) meldet sich als Demo-Konto an und wird mit dem ersten Lauf der
+Hauptstufe (R4-15) mitgemessen. *Gemessen vor dem Lauf:* `auswahl.py
+--selbstprobe` **39 / 0** (36 + 3), `--abdeckung` 0 ohne Muster;
+`kontraste.py` 30 Paare / 0 Befunde, Selbstprobe 5 / 5; `farbabgleich.py`
+18 Web-, 17 App-Token, 0 Abweichungen, 0 eigene; `bildmarken.sh pruefen` 0
+Abweichungen; `stroeme.py pruefen` 5 Ströme, 0 Abweichungen; danach `git
+status android/` leer.
 
 ### Block B — Quelltext- und Bildprüfmittel (nur `tools/` und `docs/`)
 

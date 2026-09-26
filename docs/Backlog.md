@@ -1458,26 +1458,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Vergleich bleibt 0 / 0. Anlass für `tools/stilvergleich/`.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 321.
 
-322. **Welche Probe der Demo-Reset trifft, entscheidet die Reihenfolge der Muster.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 in P5c/AP7 (F-P5c-127), gemessen.* Der
-     Demo-Bestand wird alle 30 Minuten neu eingespielt, und seine Einsätze
-     bekommen neue Kennungen. Ein Prüfstand der Hauptstufe dauert rund 39
-     Minuten; der Reset fällt also in jeden Lauf. Wen er trifft, hängt davon
-     ab, welche Probe um diese Zeit läuft — und die Reihenfolge der Proben ist
-     die ihres ersten Auftretens in den Mustern von `pruefablauf.json`. Ein
-     neues Muster weit vorn mit Messstand und Bilderlauf (AP7) schob die
-     Bedienprobe (51 / 55) und die GPX-Probe (204 von 204 ohne Gegenstück)
-     hinter die Marke; am Ende eingereiht, liefen beide grün. **Die
-     Reihenfolge ist damit eine Voraussetzung, die nirgends steht**, und wer
-     ein Muster ergänzt, verschiebt sie, ohne es zu merken.
-
-     *Weg:* entweder der Prüfstand hält den Demo-Reset für die Dauer des
-     Laufs an (eine Marke, die der Job liest, wie die Sperre des Demo-Resets
-     in F-P5c-117), oder `pruefablauf.json` bekommt eine ausdrückliche
-     Reihenfolge der demo-empfindlichen Proben (`nach`), und `auswahl.py
-     --selbstprobe` prüft sie. *Abnahme:* ein Muster mit Messstand ganz vorn,
-     der Prüfstand bleibt grün. **Zuordnung: Backlog-Runde** (Prüfmittel).
-
 323. **Referenzbestand und Demo-Fixture tragen noch Nutzlast 11.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
      *Aufgenommen 25.09.2026 (P5c/AP8).* Die Referenz
      `referenz/einsatzdoku-backup-2026-09-15.edbak` und
@@ -1556,24 +1536,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
      `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
      braucht eine Web-Stufe).
-
-334. **Die Prüfwerkzeuge der Android-App hängen an keinem Lauf.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-05, E-AR-12).*
-     `android/werkzeuge/kontraste.py`, `farbabgleich.py`, `bildmarken.sh` und
-     `stroeme.py` werden von keinem Workflow, keinem Aufruf in
-     `tools/pruefstand/pruefen.sh` und keiner Zeile in
-     `tools/pruefstand/pruefablauf.json` gerufen — gezählt am 24.09.2026:
-     0 Treffer außerhalb von `android/werkzeuge/`. Der Riegel `kontraste` im
-     Tor ist das Web-Werkzeug `tools/screenshots/kontrast.py`. Was Nr. 116 an
-     `kontraste.py` verbessert hat (Vollständigkeit je Modul und Rolle, mit
-     Selbstprobe), läuft also nur, wenn jemand daran denkt.
-     *Weg:* die vier unter das Muster `android/**` in `pruefablauf.json`
-     hängen (sie brauchen nur Python und die Quellen, `braucht: nichts`),
-     `kontraste.py --selbstprobe` dazu. Nicht in AR, weil
-     `tools/pruefstand/` während P5c dessen Gebiet ist.
-     *Abnahme:* eine Berührung unter `android/` wählt die vier im Prüfstand
-     aus, der Bericht nennt ihre Zahlen. **Zuordnung: nach dem Merge von P5c**,
-     von der Instanz, die `main` aufnimmt, oder der nächsten Backlog-Runde.
 
 336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in

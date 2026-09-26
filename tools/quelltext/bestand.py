@@ -174,7 +174,7 @@ SCHLUESSEL = {
     # `migration`); beim Aufnehmen von BR in den P5c-Zweig eingetragen.
     'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen', 'stufenregeln'},
     'riegel': {'beschreibung', 'proben'},
-    'probe': {'aufruf', 'bemerkung', 'braucht', 'nach'},
+    'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'nach'},    # `demo`: R4-04, Nr. 322
     'muster': set(MUSTER_FELDER),
 }
 QUELLTEXT_SPRACHEN = ('.py', '.php')          # was der Riegel lesen kann — alles andere ist ein Befund

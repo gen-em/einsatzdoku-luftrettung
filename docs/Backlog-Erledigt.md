@@ -8324,3 +8324,53 @@ zutreffen.
      Remote-Zweige (je gegen den Vorfahren mit main, beide Backlog-Dateien)
      und nennt Zweig und Nummer; Probe nummern im Muster steuerung, nur
      örtlich; Selbstprobe 8 / 0 mit gestellter Doppelung.
+
+322. **Welche Probe der Demo-Reset trifft, entscheidet die Reihenfolge der Muster.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 in P5c/AP7 (F-P5c-127), gemessen.* Der
+     Demo-Bestand wird alle 30 Minuten neu eingespielt, und seine Einsätze
+     bekommen neue Kennungen. Ein Prüfstand der Hauptstufe dauert rund 39
+     Minuten; der Reset fällt also in jeden Lauf. Wen er trifft, hängt davon
+     ab, welche Probe um diese Zeit läuft — und die Reihenfolge der Proben ist
+     die ihres ersten Auftretens in den Mustern von `pruefablauf.json`. Ein
+     neues Muster weit vorn mit Messstand und Bilderlauf (AP7) schob die
+     Bedienprobe (51 / 55) und die GPX-Probe (204 von 204 ohne Gegenstück)
+     hinter die Marke; am Ende eingereiht, liefen beide grün. **Die
+     Reihenfolge ist damit eine Voraussetzung, die nirgends steht**, und wer
+     ein Muster ergänzt, verschiebt sie, ohne es zu merken.
+
+     *Weg:* entweder der Prüfstand hält den Demo-Reset für die Dauer des
+     Laufs an (eine Marke, die der Job liest, wie die Sperre des Demo-Resets
+     in F-P5c-117), oder `pruefablauf.json` bekommt eine ausdrückliche
+     Reihenfolge der demo-empfindlichen Proben (`nach`), und `auswahl.py
+     --selbstprobe` prüft sie. *Abnahme:* ein Muster mit Messstand ganz vorn,
+     der Prüfstand bleibt grün. **Zuordnung: Backlog-Runde** (Prüfmittel).
+     Erledigt 26.09.2026 mit R4-04 (Konzept R4): Proben, die das Demo-Konto
+     anmelden oder Demo-Daten über ihre Kennungen lesen, tragen in
+     pruefablauf.json "demo": true (sieben, F-R4-24); der Prüfstand schiebt
+     vor jeder die Marke des letzten Resets und stellt sie am Ende zurück —
+     die Reihenfolge der Muster ist keine Voraussetzung mehr. Abnahmelauf
+     Stufe neben: Zahlen im Prüfdokument R4.
+
+334. **Die Prüfwerkzeuge der Android-App hängen an keinem Lauf.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-05, E-AR-12).*
+     `android/werkzeuge/kontraste.py`, `farbabgleich.py`, `bildmarken.sh` und
+     `stroeme.py` werden von keinem Workflow, keinem Aufruf in
+     `tools/pruefstand/pruefen.sh` und keiner Zeile in
+     `tools/pruefstand/pruefablauf.json` gerufen — gezählt am 24.09.2026:
+     0 Treffer außerhalb von `android/werkzeuge/`. Der Riegel `kontraste` im
+     Tor ist das Web-Werkzeug `tools/screenshots/kontrast.py`. Was Nr. 116 an
+     `kontraste.py` verbessert hat (Vollständigkeit je Modul und Rolle, mit
+     Selbstprobe), läuft also nur, wenn jemand daran denkt.
+     *Weg:* die vier unter das Muster `android/**` in `pruefablauf.json`
+     hängen (sie brauchen nur Python und die Quellen, `braucht: nichts`),
+     `kontraste.py --selbstprobe` dazu. Nicht in AR, weil
+     `tools/pruefstand/` während P5c dessen Gebiet ist.
+     *Abnahme:* eine Berührung unter `android/` wählt die vier im Prüfstand
+     aus, der Bericht nennt ihre Zahlen. **Zuordnung: nach dem Merge von P5c**,
+     von der Instanz, die `main` aufnimmt, oder der nächsten Backlog-Runde.
+     Erledigt 26.09.2026 mit R4-04 (Konzept R4): android-kontraste (mit
+     Selbstprobe), -farbabgleich, -bildmarken und -stroeme am Ende des
+     Musters android, die letzten zwei im Prüfmodus; farbabgleich und
+     bildmarken dazu im Muster android-quellen (style.css, Bildmarken im
+     Web). Von Hand gefahren: alle vier grün, git status android/ danach
+     leer.

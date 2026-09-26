@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-03 erledigt** (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-04 erledigt** (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -61,6 +61,11 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-03 | `python3 tools/steuerung/nummern.py` (holt mit `git fetch --prune`) | neue Nummern dieses Arbeitsbaums gegen `origin/main` und fünf weitere Remote-Zweige | **1 neue (340), 6 Zweige, 0 Überschneidungen** |
 | R4-03 | `auswahl.py --stufe klein --datei docs/Backlog.md --nur-proben`; `--selbstprobe`; `--abdeckung` | wird `nummern` bei einer Backlog-Berührung gewählt? | gewählt; **36 / 0**; **0 ohne Muster** |
 | R4-03 | `Pruefablauf.md` 6.12 ausschließlich befolgt (P-BR-09) | trägt die zweite Fassung des Runbooks? | **ein Fund**: Schritt 6 ließ die Stufenregel doppelt stehen, `bestand` rot (`tabelle-kopie`); berichtigt, danach 0; `kettenaufrufe` 0; `pruefen.sh --selbstprobe` 11 / 11 |
+
+| R4-03 | `bash tools/pruefstand/pruefen.sh` über den Baum des Commits `ab007e9` | 20 Riegel, `kettenaufrufe`, `android-bau`, `steuerung`, **`nummern`** | **0 rot, 0 nicht gemessen, 22 grün**, 42 s; `nummern` 5 s |
+| R4-04 | `auswahl.py --selbstprobe`, `--abdeckung` | das Feld `demo` (nur `true`; Bedienprobe und Bilderlauf tragen es; jede Probe damit braucht die Anlage) | **39 Lagen, 0 Fehlschläge** (vorher 36); **0 ohne Muster** |
+| R4-04 | die vier Aufrufe aus `pruefablauf.json`, einmal von Hand | `android-kontraste`, `-farbabgleich`, `-bildmarken`, `-stroeme` | `kontraste.py` **30 Paare, 0 Befunde**, Selbstprobe **5 / 5**; `farbabgleich.py` **18 / 17 Token, 0 Abweichungen, 0 eigene**; `bildmarken.sh pruefen` **0 Abweichungen**; `stroeme.py pruefen` **5 Ströme, 0 Abweichungen**; danach `git status android/` **leer** (F-R4-17) |
+| R4-04 | `bestand`, `bestand --selbstprobe`, `kettenaufrufe` | Schlüssel `demo`, neue Proben und Muster, Tabelle in `Pruefablauf.md` 4 neu erzeugt | **0 Befunde**; **155 / 0**; **0** |
 
 ## 3. Im Browser geprüft
 

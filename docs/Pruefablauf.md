@@ -326,6 +326,14 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
   mit in den Lauf und stellt sie davor. So fährt die Wegprobe des
   Spaltenregisters erst, wenn der Kreislauf `edbak` ihr Umlaufkonto angelegt
   hat; `auswahl.py --selbstprobe` belegt die Reihenfolge.
+- **Der Demo-Reset trifft keine Probe mehr** (`demo` in `pruefablauf.json`,
+  seit R4-04, Nr. 322). Er spielt den Demo-Bestand alle 30 Minuten neu ein,
+  und die Einsätze bekommen neue Kennungen; wen er traf, entschied bis dahin
+  die Reihenfolge der Muster. Jetzt schiebt der Prüfstand vor jeder Probe
+  mit `"demo": true` die Marke des letzten Resets auf „jetzt" und stellt sie
+  am Ende zurück; die Zeile steht im Lauf. Das Feld trägt, wer das
+  Demo-Konto anmeldet oder Demo-Daten über ihre Kennungen liest — heute
+  sieben Proben (`auswahl.py --selbstprobe` hält die Form).
 - **Der Prüfstand meldet, wenn eine Datei unter `server/` kein Muster
   trifft.** Gemessen am 23.09.2026: **267 versionierte Dateien, 0 ohne
   Muster**; 87 treffen nur das Auffangmuster und die beiden Stufenmuster
@@ -364,12 +372,13 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/assets/style.css`, `tools/stilvergleich/**` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
 | `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe` | Nr. 185, 225; PS-2 |
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
-| `android/**` | klein | `android-bau` | E-PK-02 |
+| `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1` | E-PK-02 |
 | `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01. |
-| `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Steht am ENDE der Muster: Die Reihenfolge der Proben ist die ihres ersten Auftretens, und Messstand und Bilderlauf weiter vorn schoben die demo-empfindlichen Proben hinter den Demo-Reset (F-P5c-127, Nr. 322) |
+| `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig. |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 | `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. |
+| `server/assets/style.css`, `server/assets/images/gen-em_logo_*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
 
 **Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
 
@@ -881,7 +890,8 @@ F-BR-19) — vier davon blieben damals grün.
 
    `braucht` ist `nichts`, `installation`, `plattform`, `android` oder
    `uhr` (ein anderer Wert: `bestand`, `ablauf` — die Vorabprüfung entfiele
-   still); `nach` nur, wenn es eine andere Probe voraussetzt (4), nie im
+   still); `"demo": true`, wenn die Probe das Demo-Konto anmeldet oder
+   Demo-Daten über ihre Kennungen liest (4, Nr. 322); `nach` nur, wenn es eine andere Probe voraussetzt (4), nie im
    Kreis und nie an einem Riegel. Der
    `aufruf` darf eine Kette sein (`a && b`, wie bei `uhr-stufe1`);
    `kettenaufrufe` prüft seit BR-04 jeden Teil. Ein **neuer Schlüssel**,

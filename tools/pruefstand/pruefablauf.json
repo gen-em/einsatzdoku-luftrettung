@@ -87,7 +87,8 @@
     },
     "spurprobe": {
       "aufruf": "bash tools/proben/proben.sh spur",
-      "braucht": "installation"
+      "braucht": "installation",
+      "demo": true
     },
     "jobprobe": {
       "aufruf": "bash tools/proben/proben.sh jobs",
@@ -112,7 +113,8 @@
     },
     "gpxprobe": {
       "aufruf": "bash tools/proben/proben.sh gpx",
-      "braucht": "installation"
+      "braucht": "installation",
+      "demo": true
     },
     "geraeteprobe": {
       "aufruf": "bash tools/proben/proben.sh geraete",
@@ -120,7 +122,8 @@
     },
     "kopplungsprobe": {
       "aufruf": "bash tools/proben/proben.sh kopplung",
-      "braucht": "installation"
+      "braucht": "installation",
+      "demo": true
     },
     "mailprobe": {
       "aufruf": "bash tools/proben/proben.sh mail",
@@ -144,7 +147,8 @@
     },
     "anteilprobe": {
       "aufruf": "bash tools/proben/proben.sh anteil",
-      "braucht": "installation"
+      "braucht": "installation",
+      "demo": true
     },
     "freigabeprobe": {
       "aufruf": "bash tools/proben/proben.sh freigabe",
@@ -168,11 +172,13 @@
     },
     "bedienprobe": {
       "aufruf": "node tools/bedienprobe/probe.mjs",
-      "braucht": "installation"
+      "braucht": "installation",
+      "demo": true
     },
     "bilderlauf": {
       "aufruf": "node tools/screenshots/aufnehmen.mjs --stufe {stufe}",
       "braucht": "installation",
+      "demo": true,
       "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920), Chromium; neben = acht Breiten; haupt = acht Breiten, alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM: aufnehmen.mjs nimmt einen Motor aus --motor, die Stufe waehlt nur die Breiten (F-P5c-103, Backlog Nr. 300; P5c/AP4 hat Firefox und WebKit von Hand gefahren). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05) -- bis dahin stand hier fest --stufe klein, und jede Stufe bekam drei Breiten."
     },
     "stilvergleich": {
@@ -203,6 +209,26 @@
     "android-bau": {
       "aufruf": "cd android && ANDROID_HOME=${ANDROID_HOME:-/opt/android-sdk} ./gradlew build",
       "braucht": "android"
+    },
+    "android-kontraste": {
+      "aufruf": "python3 android/werkzeuge/kontraste.py --selbstprobe && python3 android/werkzeuge/kontraste.py",
+      "braucht": "nichts",
+      "bemerkung": "Konzept R4 (R4-04, Nr. 334). Kontraste der App-Farbpaare und ihre Vollstaendigkeit je Modul und Rolle (Nr. 116, E-AR-09) -- bis R4-04 an keinem Lauf. Das Web-Werkzeug ist der Riegel kontraste."
+    },
+    "android-farbabgleich": {
+      "aufruf": "python3 android/werkzeuge/farbabgleich.py",
+      "braucht": "nichts",
+      "bemerkung": "Konzept R4 (R4-04, Nr. 334). Farb-Token der App gegen :root in server/assets/style.css (E-S4-22a): 0 Abweichungen, 0 eigene Werte. Liest nur."
+    },
+    "android-bildmarken": {
+      "aufruf": "bash android/werkzeuge/bildmarken.sh pruefen",
+      "braucht": "nichts",
+      "bemerkung": "Konzept R4 (R4-04, Nr. 334). Die vier Bildmarken der App gegen ihre Quelle in server/assets/images/ -- im Pruefmodus, der nichts schreibt."
+    },
+    "android-stroeme": {
+      "aufruf": "python3 android/werkzeuge/stroeme.py pruefen",
+      "braucht": "nichts",
+      "bemerkung": "Konzept R4 (R4-04, Nr. 334, F-R4-17). Soll-Zahlen der Ausduennung gegen android/handy/src/test/resources/stroeme.txt -- im Pruefmodus, der vergleicht statt schreibt; ohne ihn aenderte die Probe den Baum und damit den Baum-Hash des Berichts."
     },
     "uhr-stufe1": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh reihe /tmp/uhr-auswahl.txt",
@@ -240,6 +266,7 @@
     "zweitfaktorprobe": {
       "aufruf": "bash tools/proben/proben.sh zweitfaktor",
       "braucht": "installation",
+      "demo": true,
       "bemerkung": "RFC-6238-Vektoren 6/6, Code-Schritt über HTTP, Einrichtungstor, Demo-Reset, Bus-Faktor (P5c/AP5). Den Demo-Reset misst sie an seinem Schritt demo_zweitfaktor_leeren() und nicht am ganzen Reset -- bis F-P5c-117 setzte sie den Demo-Bestand zurueck und machte die GPX-Probe danach blind."
     },
     "rueckwegprobe": {
@@ -668,7 +695,11 @@
         "android/**"
       ],
       "proben": [
-        "android-bau"
+        "android-bau",
+        "android-kontraste",
+        "android-farbabgleich",
+        "android-bildmarken",
+        "android-stroeme"
       ],
       "anlass": "E-PK-02"
     },
@@ -731,7 +762,7 @@
         "messstand",
         "bilderlauf"
       ],
-      "anlass": "Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Steht am ENDE der Muster: Die Reihenfolge der Proben ist die ihres ersten Auftretens, und Messstand und Bilderlauf weiter vorn schoben die demo-empfindlichen Proben hinter den Demo-Reset (F-P5c-127, Nr. 322)"
+      "anlass": "Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig."
     },
     {
       "id": "mengen",
@@ -761,6 +792,19 @@
         "nummern"
       ],
       "anlass": "Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier."
+    },
+    {
+      "id": "android-quellen",
+      "ab": "klein",
+      "pfade": [
+        "server/assets/style.css",
+        "server/assets/images/gen-em_logo_*.png"
+      ],
+      "proben": [
+        "android-farbabgleich",
+        "android-bildmarken"
+      ],
+      "anlass": "Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst."
     }
   ]
 }

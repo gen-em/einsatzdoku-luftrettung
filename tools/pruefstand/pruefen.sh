@@ -64,6 +64,25 @@ if [ "$HOCHFAHREN" = 1 ] && [ "$GEGEN" = oertlich ]; then
 fi
 [ "$GEGEN" = staging ] && melde "Gegen die Prüfanlage — NUR LESEND (E-PK-29)"
 
+# ---- 3a. Demo-Marke -------------------------------------------------------
+# Der Demo-Reset (alle 30 Minuten, `demo_lib.php`) spielt den Demo-Bestand neu
+# ein, und seine Einsätze bekommen neue Kennungen. Welche Probe er traf,
+# entschied bis R4-04 die Reihenfolge der Muster — eine Voraussetzung, die
+# nirgends stand (Nr. 322). Jetzt schiebt der Prüfstand die Marke des letzten
+# Resets vor jeder Probe mit `"demo": true` auf „jetzt": dreißig Minuten ohne
+# Reset je Probe. Am Ende stellt er sie zurück, auch nach einem Abbruch.
+# NUR ÖRTLICH: Gegen Staging schreibt er nichts (E-PK-29).
+demo_marke() {   # demo_marke lesen | demo_marke setzen <unix-sekunden>
+    (cd "$WURZEL/server" && php -r 'require "db.php"; require_once "demo_lib.php";
+        if (($argv[1] ?? "") === "setzen") { demo_reset_marke_setzen((int)$argv[2]); }
+        echo demo_letzter_reset();' -- "$@" 2>/dev/null)
+}
+DEMO_ALT=
+if [ "$GEGEN" = oertlich ]; then
+    DEMO_ALT=$(demo_marke lesen) || DEMO_ALT=
+    [ -n "$DEMO_ALT" ] && trap 'demo_marke setzen "$DEMO_ALT" >/dev/null' EXIT
+fi
+
 # ---- 4. Proben ------------------------------------------------------------
 melde "Proben (${#PROBEN[@]})"
 declare -A ZAHL; fehl=0; nicht=0
@@ -72,8 +91,9 @@ for name in "${PROBEN[@]}"; do
 import json,sys
 a=json.load(open('$HIER/pruefablauf.json'))
 p=a['proben'].get('$name')
-print(p['aufruf'] if p else '', p['braucht'] if p else '', sep='\t')")
+print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get('demo') is True else '', sep='\t')")
     befehl=$(printf '%s' "$aufruf" | cut -f1); braucht=$(printf '%s' "$aufruf" | cut -f2)
+    demo=$(printf '%s' "$aufruf" | cut -f3)
     befehl=${befehl//\{stufe\}/$STUFE}   # der Bilderlauf misst je Stufe anders (PK-05)
     if [ -z "$befehl" ]; then
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
@@ -118,6 +138,14 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', sep='\t')")
             || { zeile "ROT   $name  $n/$s"; fehl=$((fehl+1)); }
         continue
     fi
+    # Die Marke steht im Protokoll: Wer einen Reset mitten in einer Probe
+    # vermutet, sieht hier, ob sie geschoben war (Nr. 322).
+    if [ -n "$demo" ] && [ "$GEGEN" = oertlich ]; then
+        jetzt=$(date +%s)
+        [ "$(demo_marke setzen "$jetzt")" = "$jetzt" ] \
+            && zeile "      $name: Demo-Marke auf $(date -u -d "@$jetzt" +%H:%M:%S) UTC — kein Reset in den nächsten 30 min" \
+            || zeile "      $name: Demo-Marke NICHT gesetzt — ein Demo-Reset kann diese Probe treffen"
+    fi
     # Die Zeit je Probe steht in der Zeile (RP-01): Die Nebenstufe brauchte
     # 1 266 s, und niemand konnte sagen, wofür.
     t0=$SECONDS
@@ -129,6 +157,12 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', sep='\t')")
 done
 
 # ---- 5. Bericht -----------------------------------------------------------
+if [ -n "$DEMO_ALT" ]; then
+    trap - EXIT
+    [ "$(demo_marke setzen "$DEMO_ALT")" = "$DEMO_ALT" ] \
+        && zeile "Demo-Marke zurückgestellt ($(date -u -d "@$DEMO_ALT" '+%d.%m. %H:%M:%S') UTC)" \
+        || zeile "Demo-Marke NICHT zurückgestellt — sie steht auf dem Stand der letzten Probe"
+fi
 melde "Bericht"
 # Die Flächen leitet bericht.py aus Berührung UND Bau ab — „gebaut" nur nach
 # einem grünen Bau (F-PK-34, E-PK-44).
