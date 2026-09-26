@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 135 | 26.09.2026 | R4-01 | Umsetzung von 17 beginnt auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus); Konzept mit PR #93 gemergt und samt Fragen und Mockups freigegeben (E-R4-14 ff.). Zuarbeit in 6.1: die zwei toten Zweige löscht die Betreiberin (Q-R4-01). |
 | 134 | 26.09.2026 | 17 beginnt | Fahrplanzeile 17 auf „Konzept": `Konzept-R4-Backlog-Runde-4.md` (Kürzel R4) auf `claude/schritt-17-hl9egt`, Voraussetzung SD erfüllt, 55 Einträge mit Ziel 17; Umsetzung nach dem Merge des Konzept-PR (E-R4-02). |
 | 133 | 26.09.2026 | BV-Abschluss | Erledigt-Zeile BV (PR #87, `d34908b`; gemergt vor AR, das BV aufnahm); Fahrplanzeile weg; Konzept gelöscht (mit E-BV-19, -20: Nr. 339, Handbuch 11.5a); P-BV-04, -07, -09 als Zuarbeit in 6.1. |
 | 132 | 26.09.2026 | AR-Abschluss | Erledigt-Zeile AR (PR #88, `f5bddc2`, Android 0.16.0); Fahrplanzeile und die AR-Zeile in Abschnitt 4 weg; Konzept gelöscht; Gerätetests als Zuarbeit in 6.1; P-PK-28 im Prüfdokument PK belegt (Nr. 284). |

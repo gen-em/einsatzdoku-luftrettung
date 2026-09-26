@@ -49,9 +49,8 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 339 | Abschluss BV auf `claude/schritt-17-hl9egt` — Q-BV-05, der Nummernriegel (E-BV-19) | 26.09.2026 |
-| 340 bis 349 | `claude/schritt-17-hl9egt` — Konzept 17, Backlog-Runde 4 | 26.09.2026 |
-| ab 350 | frei — höchste vergebene Nummer 339; 338 war für AR reserviert und blieb frei (`origin/main` `056781c`) | 26.09.2026 |
+| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340 | 26.09.2026 |
+| ab 350 | frei — höchste vergebene Nummer 340; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 26.09.2026 |
 
 ---
 
@@ -229,7 +228,7 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
 
      ---
 
-62. **Logodateien tragen teilweise wieder die alten Farbwerte.** · gehört zu: 17 · Stand: offen · seit 31.08.2026
+62. **Logodateien tragen teilweise wieder die alten Farbwerte.** · gehört zu: 13 · Stand: offen · seit 31.08.2026
      Befund (B-S4-01; bis 02.09.2026 Nr. 49): Der Commit „Update Logos" hat
      alte Werte zurückgebracht — `gen-em_logo_helicopter.svg` führt `#587abc`,
      `#e3322b`, `#f7941d`, Korpus `#1d0e0a` statt `#4280E5`, `#D63338`,
@@ -237,10 +236,13 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      nur `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef.png`.
      Entschieden 12.09.2026: neue Vorlagen anfordern; bis dahin nichts am
      Code. `Design.md` 2.5 ist am 13.09.2026 berichtigt.
-     Weg: Laut Durchsicht vom 26.09.2026 liegen die Vorlagen vor (E-SD-34);
-     alle Fassungen samt Ableitungen (PNG, Favicons, Uhr-Bilder) nachziehen,
-     nachmessen und `Design.md` 2.5 mitziehen — mit dem neuen NEF-Logo, vor
-     P7.
+     Weg: Die Durchsicht vom 26.09.2026 nahm an, die Vorlagen lägen vor
+     (E-SD-34); im Baum ist seit `6f316ee` vom 12.09.2026 keine Logodatei
+     geändert (Konzept R4, F-R4-08). Mit den Vorlagen alle Fassungen samt
+     Ableitungen (PNG, Favicons, Uhr-Bilder) nachziehen, nachmessen und
+     `Design.md` 2.5 mitziehen — mit dem neuen NEF-Logo, vor P7.
+     Ziel 13 seit 26.09.2026 (R4-01, E-R4-08); Schritt 17 fasst keine
+     Bilddatei an.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 62.
 
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert hat.** · gehört zu: 17 · Stand: teilweise · seit 02.09.2026
@@ -303,7 +305,7 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      oder eine Prüf-Einstellung in der App, die einen negativen Code
      einspeist (dann aber als Fremdkörper im ausgelieferten Code).
 
-92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.** · gehört zu: 17 · Stand: offen · seit 03.09.2026
+92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.** · gehört zu: 12a · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus S5 Paket C.*
      Für Stufe II verlangt die Abnahme „je Vertreter ein Bild der `PairView`".
      `bildreihe` lädt die App, wartet und fotografiert — es gibt keinen Weg,
@@ -316,6 +318,8 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      **Vorschlag:** `bildreihe <liste> <ziel> [tastenfolge]`, wobei die
      Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
      braucht die nächste Ansicht keine eigene Schleife.
+     Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): Der erste Abnehmer einer
+     Tastenfolge ist S11 (Uhr Haupt); dort entsteht die nächste Ansicht.
 
 95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.** · gehört zu: 17 · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
@@ -405,27 +409,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
 
      **Zuordnung (20.09.2026): Schritt 17** (Backlog-Runde 4) — nicht 10c. Entschieden mit der Freigabe des P5c-Konzepts (E-P5c-23, F-P5c-4).
 
-140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.** · gehört zu: 17 · Stand: teilweise · seit 06.09.2026
-     Befund (Krypto-Review K-16): Die FTPS-Action deployte jeden Push mit
-     Zugangsdaten aus Secrets; jedes Konto mit Push-Recht konnte `crypto.js`
-     ändern und Passwörter beim nächsten Anmelden abgreifen — der eine
-     Angriff, gegen den keine Browser-Verschlüsselung hilft. Seit S10 wiegt
-     er schwerer: Wer `server/` beschreiben kann, liefert den Server-Anteil
-     aus `config.php` mit aus (R78 (1)).
-     Entschieden (R78): Zweigschutz und 2FA sofort als Zuarbeit, das
-     Deploy-Tor mit dem Staging-Aufbau (R40 (2), nicht S10), die
-     Integritätswache im Sofortpaket.
-     Erledigt: die Wache (Web 15.6.0, `tools/integritaetswache/`,
-     `integritaet.yml`, täglich und nach jedem Deploy; 112 Dateien, ein
-     Inline-Block, ohne eingecheckte Prüfsummen); das Deploy-Tor (Web 20.4.0,
-     R67: Push auf `main` geht auf Staging, Produktiv nur über Tag und
-     Pflichtfreigabe); der Zweigschutz für `main` (21.09.2026, Rahmenplan
-     6b) und der 2FA-Zwang in der GitHub-Organisation (Durchsicht der
-     Betreiberin 26.09.2026, E-SD-34).
-     Offen ist damit nichts mehr als die Verschiebung nach Erledigt, die
-     Konzept SD nicht vornimmt; die Backlog-Runde holt sie nach.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 140.
-
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.** · gehört zu: 12 · Stand: offen · seit 06.09.2026
      Drei Fragen, keine Fehler (R78, 06.09.2026): **Argon2id statt PBKDF2**
      (WASM-Fremdbestandteil gegen GPU-Resistenz) · **Inhaltsschlüssel als
@@ -505,7 +488,7 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      Vereinfachung — und die Voraussetzung dafür, die Regel in einem Satz
      erklären zu können. Zuordnung: Backlog-Runde.
 
-161. **Aus einer Aufzeichnung ein Stück löschen können.** · gehört zu: 17 · Stand: offen · seit 08.09.2026
+161. **Aus einer Aufzeichnung ein Stück löschen können.** · gehört zu: 12a · Stand: offen · seit 08.09.2026
      *Aufgenommen 08.09.2026 beim Bauen von Nr. 160.* Ein vergessener Dienst
      zeichnet weiter auf — auch das Wochenende, auch den Weg nach Hause. Was
      dabei hochgeladen wurde, lässt sich heute nur **ganz oder gar nicht**
@@ -516,8 +499,10 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      GPS-Daten, die im Klartext liegen und den Wohnort zeigen, ist das zu grob.
      Behebung: In der Ansicht der Ruhezeiten einen Zeitraum wählen und dessen
      Punkte löschen können — über `spur_lib.php`, nie unmittelbar per SQL
-     (CLAUDE.md 4), mit Rückfrage und einer Zeile im Protokoll. Zuordnung:
-     Backlog-Runde, gemeinsam mit Nr. 43 (Ortsdaten) zu betrachten.
+     (CLAUDE.md 4), mit Rückfrage und einer Zeile im Protokoll.
+     Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): S11 verlegt die
+     Spurfunktionen in den Browser (Nr. 43); ein Schnitt über `spur_lib.php`
+     davor wäre dort neu zu bauen.
 
 170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.** · gehört zu: 17 · Stand: offen · seit 10.09.2026
      Befund (zwei Rückmeldungen zu Web 19.1.0, behoben mit 19.1.1): AP7
@@ -535,19 +520,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      Abnahme: Die Probe wird rot, wenn ein `dtGeschuetzt()` in `einsatz.php`
      durch einen nackten String ersetzt wird.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 170.
-
-172. **Eine Erwartung der Wartungsprobe flackert.** · gehört zu: 17 · Stand: offen · seit 12.09.2026
-     Befund (Web 19.1.2): Erwartung 15 („das 503 kommt schneller als die
-     Antwort ohne Wartung") vergleicht zwei Einzelmessungen mit `<` ohne
-     Spielraum; örtlich liegen beide bei rund 71 ms, und drei Läufe ergaben
-     0, 1, 0 nicht erfüllte Erwartungen (71,7 gegen 71,6 ms). Eine Probe,
-     die jeden dritten Lauf grundlos rot wird, liest nach dem dritten Mal
-     niemand mehr — und sie ist die einzige rote Zahl eines grünen Laufs.
-     Weg: mehrfach messen und Mediane vergleichen, oder die Erwartung
-     strukturell stellen — `wartung_tor()` steht in `db.php` vor jedem
-     Verbindungsaufbau, und das prüft man am Code, nicht mit der Stoppuhr.
-     Abnahme: zehn Läufe hintereinander, zehnmal dieselbe Zahl.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 172.
 
 175. **`edbak_uebersicht()` hat keinen Aufrufer mehr.** · gehört zu: 17 · Stand: offen · seit 13.09.2026
      *Aufgenommen 13.09.2026 als Nebenfund der Gegenprüfung zu Nr. 37;
@@ -606,7 +578,7 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      früher, wenn vorher ein weiteres Konzept gelöscht wird.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 188.
 
-198. **Die Zeitraumübersicht zählt Windendienste nur luftgebunden.** · gehört zu: 17 · Stand: nicht umsetzen · seit 14.09.2026
+198. **Die Zeitraumübersicht zählt Windendienste nur luftgebunden.** · gehört zu: nach v1.0 · Stand: nicht umsetzen · seit 14.09.2026
      Befund (Demo-Ausbau AP0): Seit Web 20.3.0 darf ein Rettungsmittel des
      Typs Bergwacht Winde und Bergwacht auch bodengebunden führen; das
      Einsatzformular zeigt die Windenfelder (`cap_gate` fragt ohne
@@ -624,9 +596,10 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      keiner Tages- oder Zeitraumansicht (vier solche Tage im Bestand, zwei
      mit Windeneinsatz); erfasst und in der Einsatzbearbeitung sichtbar
      bleiben sie. Wer das ändert, findet die beiden Stellen oben.
+     Ziel `nach v1.0` seit 26.09.2026 (R4-01, Q-R4-12): kein „nie" im Vokabular.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 198.
 
-200. **Bounce-Postfach: Unzustellbares erkennen, nicht nur zählen.** · gehört zu: 17 · Stand: nicht umsetzen · seit 15.09.2026
+200. **Bounce-Postfach: Unzustellbares erkennen, nicht nur zählen.** · gehört zu: nach v1.0 · Stand: nicht umsetzen · seit 15.09.2026
      Befund (Konzept P5a, E-P5a-14; Plattformprofil PP-7): Die
      Mail-Warteschlange zählt Zustellversuche und führt eine
      Unzustellbar-Liste auf der Statusseite — was der SMTP-Server annimmt
@@ -641,6 +614,7 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      Konten sieht die Betreiberin Rückläufer im Postfach der Absenderadresse
      (Handbuch 12.8). Wie Nr. 198: geschlossen, aber nicht nach Erledigt,
      weil nichts erledigt wurde.
+     Ziel `nach v1.0` seit 26.09.2026 (R4-01, Q-R4-12): kein „nie" im Vokabular.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 200.
 
 201. **`Retry-After` in Uhr und Handy auswerten.** · gehört zu: 13 · Stand: offen · seit 15.09.2026
@@ -653,25 +627,24 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      Uhr-Stufe und Android-Stufe je eine Zeile in der Antwortauswertung
      (`Uploader.mc`, `Sendeantwort.kt`).
 
-202. **Zentralisierung Web — eine Stelle je Sache (Sammelnummer, Schritt 15, R83).** · gehört zu: 17 · Stand: nur auf Anlass · seit 16.09.2026
+202. **Zentralisierung Web — eine Stelle je Sache (Sammelnummer, Schritt 15, R83).** · gehört zu: Pflegeaufgabe · Stand: nur auf Anlass · seit 16.09.2026
      Befund (16.09.2026, nachgemessen 20.09.2026 an `862ca7f`): Eine eigene
      Sitzung hat `server/` (ohne `assets/vendor/`) auf Code untersucht, der
      nach dem Vorbild von `mission_fields.php` an eine Stelle gehört — sechs
      Pakete: Marke/Mail/Link/Token, Datenzugriff, API-Eingang/Sitzung/Flash,
      JavaScript, Zeit/Zahl/Migration, Beifang. Regel R83: zentralisiert wird
      beim zweiten echten Verbraucher.
-     Erledigt: Paket 1 in P5a/AP5 und P5b/AP2 (`mail_rahmen()`, `app_url()`,
-     `konto_lib.php`), der Log-Helfer in 10c AP3 (`system_melden()`,
-     Nr. 248), Pakete 2 bis 5 in Schritt 15 AP2 bis AP8 (Rahmenplan
-     Abschnitt 8; die Vorher/Nachher-Zahlen je Sache führt
-     `tools/zaehlung/register.php`). `post_ende()` wurde bewusst nicht
-     gebaut (F-ZE-4, Nr. 250).
+     Erledigt: Paket 1 in P5a/AP5 und P5b/AP2, der Log-Helfer in 10c AP3
+     (Nr. 248), Pakete 2 bis 5 in Schritt 15 AP2 bis AP8 (Zahlen je Sache:
+     `tools/zaehlung/register.php`); `post_ende()` bewusst nicht (F-ZE-4).
      Offen ist Paket 6, Beifang ohne Termin, nur zusammen mit Arbeit an der
-     Datei: Stammdaten-CRUD in `einstellungen.php` (vier Speicher-, vier
-     Löschzweige), Verwaltungsseiten-Auftakt (`ui_meldung` in 12 Dateien
-     gleich komponiert), Umfangsliste mit Zahl-Plakette (3× wortgleich),
-     Nachweisdatei-Mechanik in `install.php` und `wiederherstellen.php`,
-     Ablage mit Zeitstempel in drei Bibliotheken.
+     Datei (Stand 26.09.2026, Konzept R4, F-R4-13): Stammdaten-CRUD in
+     `einstellungen.php` (sechs Speicher- und Löschpaare), Auftakt der
+     Verwaltungsseiten (`ui_meldung` in 12 Dateien gleich komponiert),
+     Umfangsliste mit Zahl-Plakette (3× wortgleich), Nachweisdatei-Mechanik
+     in `install.php` und `wiederherstellen.php`, Ablage mit Zeitstempel
+     (dreimal `gmdate('Y-m-d\TH-i-s\Z')`). Seit 26.09.2026 Ziel
+     `Pflegeaufgabe` (R4-01, Q-R4-12): Jeder Anlass träfe Dateien von 18.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 202.
 
 207. **`gen-em.org` steht 96× in `tools/` und `.github/`.** · gehört zu: 17 · Stand: offen · seit 16.09.2026
@@ -747,13 +720,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      seit Kette II/AP6, E-KH-07); (3) die `.htaccess` gilt nur auf Apache
      (wie Nr. 129).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 213.
-
-216. **Zwei Trennlinien hintereinander an vier Stellen des P5a-Prüfdokuments.** · gehört zu: 17 · Stand: offen · seit 16.09.2026
-     *Aufgenommen 16.09.2026, gleiche Durchsicht.*
-     Rein kosmetisch: `---` gefolgt von `---` erzeugt in manchen
-     Markdown-Darstellungen eine doppelte Linie, in anderen eine Überschrift.
-     Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
-     Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
 
 227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole mehr.** · gehört zu: PK · Stand: teilweise · seit 17.09.2026
      Befund (P5b-Zweig, 17.09.2026): `tools/vollstaendigkeit/` prüft
@@ -835,7 +801,7 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      die Quelle abruft — er machte jeden Lauf von einem fremden Host abhängig.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 230.
 
-232. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.** · gehört zu: 17 · Stand: nur auf Anlass · seit 17.09.2026
+232. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.** · gehört zu: 18 · Stand: nur auf Anlass · seit 17.09.2026
      *Aufgenommen 17.09.2026 (P5b/AP9).* Die Konto-Rückfrage fragt nach 30
      Tagen, 6 Monaten und dann jährlich; die Betreiber-Rückfrage alle drei
      Monate. Geprüft wurde mit **gestelltem** `rueckfrage_naechste` — die
@@ -852,6 +818,8 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      müsste `einstieg_lib.php` eine Zeit hereingereicht bekommen, statt sie zu
      holen. Lohnt sich, wenn die nächste Frist dazukommt; für zwei Fristen ist
      der Umbau teurer als der Fehler.
+     Ziel 18 seit 26.09.2026 (R4-01, Q-R4-12): Alle Aufrufer von
+     `einstieg_lib.php` liegen in Dateien, die Schritt 18 umbaut (Nr. 233).
 
 233. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.** · gehört zu: 18 · Stand: offen · seit 17.09.2026
      *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
@@ -1183,7 +1151,7 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      oder ein Ende der Pflege der Aktion.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 264.
 
-265. **Verweise von `.github/` in die Dokumentation hält kein Prüfmittel nach.** · gehört zu: 17 · Stand: nur auf Anlass · seit 21.09.2026
+265. **Verweise von `.github/` in die Dokumentation hält kein Prüfmittel nach.** · gehört zu: PK · Stand: nur auf Anlass · seit 21.09.2026
      *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-02).*
      Priorität: niedrig. Auslöser: eine weitere Neufassung von Rahmenplan 6a.
 
@@ -1201,6 +1169,8 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
 
      **Zu tun:** ein Prüfschritt, der die in `.github/` genannten
      Dokumentstellen gegen die Überschriften hält, die es wirklich gibt.
+     Ziel PK seit 26.09.2026 (R4-01, Q-R4-12): `auslieferung.yml` gehört der
+     Kette (PK-06 bis PK-08).
 
 266. **`plattform_pruefen()` sagt „aus", wo „nicht feststellbar" stehen müsste.** · gehört zu: 17 · Stand: offen · seit 21.09.2026
      *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-05).*
@@ -1264,24 +1234,23 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      genügt, der Leerwert ist dort nicht erreichbar (`Math.max(0, …)`).
 
 275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — laut Handbuch „der klassische Fall".** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Befund (Schritt 15 AP9b, über `CONVERT_TZ` in Ortszeit): 0 von 20
-     aktiven Diensttagen des Demo-Kontos haben Einsätze auf zwei
-     Kalendertagen, über alle fünf Konten ebenso. In AP9b sortierte das
-     Einsatztabellen-Modul „Beginn" über die Zeichenkette `start_hhmm`
-     (01:10 vor 23:50) — jahrealt, von keinem Mittel zu finden, weil es
-     nichts zu messen gab; belegt mit einem im Browser gebauten Nachtdienst.
-     Ob die drei APIs `start_sort` für einen echten Nachtdienst richtig
-     rechnen, ist gelesen, nicht gefahren.
-     Weg: dem Demo-Konto zehn Einsätze über Nacht geben, auf mindestens zwei
-     Diensttage verteilt (einer luft-, einer bodengebunden), jeder mit
-     Einsätzen vor und nach Mitternacht; `days.day` bleibt der Dienstbeginn.
-     Über den normalen Einspielweg (`tools/referenzdatensatz/`), `started_at`
-     in UTC gerechnet. Danach zeigen Tages-, Zeitraum- und Suchtabelle die
-     drei Datumsbegriffe getrennt (`day` gegen `dienst_day`), und der
-     Bilderlauf bekommt die Seite dazu.
-     Abnahme: Diensttage mit Einsätzen auf mehr als einem Kalendertag
-     (`COUNT(DISTINCT DATE(CONVERT_TZ(...)))` > 1) mindestens 2; 0 heißt
-     Fehlschlag.
+     Befund (Schritt 15 AP9b, in Ortszeit; Zahl berichtigt mit Konzept R4,
+     F-R4-05, nachgemessen am 26.09.2026): 2 von 20 aktiven Diensttagen des
+     Demo-Kontos haben Einsätze auf zwei Kalendertagen — beide bodengebunden
+     (NEF Talwang), beide auf einer Zeitumstellung; der Eintrag zählte 0.
+     Ein luftgebundener Nachtdienst ohne Zeitumstellung fehlt. In AP9b
+     sortierte das Einsatztabellen-Modul „Beginn" über die Zeichenkette
+     `start_hhmm` (01:10 vor 23:50) — jahrealt, von keinem Mittel zu finden,
+     weil es nichts zu messen gab; belegt mit einem im Browser gebauten
+     Nachtdienst. Ob die drei APIs `start_sort` für einen echten Nachtdienst
+     richtig rechnen, ist gelesen, nicht gefahren.
+     Weg (Konzept R4, R4-16): ein luftgebundener Nachtdienst als D22 mit
+     Einsätzen vor und nach Mitternacht über den normalen Einspielweg
+     (`tools/referenzdatensatz/`, `started_at` in UTC); `days.day` bleibt der
+     Dienstbeginn; Matrixzeile, Bilderlauf-Seite, Bedienprobe „Sortierung
+     nach Beginn".
+     Abnahme: Diensttage mit Einsätzen auf mehr als einem Kalendertag in
+     Ortszeit mindestens 3, davon einer luftgebunden ohne Zeitumstellung.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 275.
 
 276. **Die tote Spalte `missions.other_resources` löschen.** · gehört zu: 14 · Stand: offen · seit 22.09.2026
@@ -1393,18 +1362,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
      **Zuordnung: Backlog-Runde.**
 
-295. **Der Messstand hat keinen Schritt für die Statistik.** · gehört zu: 17 · Stand: teilweise · seit 24.09.2026
-     *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-40), als Anlass nach der
-     Zuarbeit von Konzept BR (E-BR-07).* `tools/messstand/` misst die Seiten,
-     die es kennt; die Statistik ist keine davon, und das Konto `messstand@…`
-     fehlte auf der örtlichen Anlage (seit AP4 legt der Prüfstand es über
-     `messen.py --frisch` selbst an, F-P5c-104). 10c AP7 baut die Statistik auf eine
-     Zählung mit Obergrenze und einen neuen Index `missions(started_at)` um —
-     ohne Messstand-Schritt gäbe es für die Zeiten keinen Beleg, nur ein
-     `EXPLAIN` von Hand. *Weg:* Schritt `statistik` im Messstand (drei Reiter
-     und `EXPLAIN`, Sitzung der BetreiberIn; fehlt das Konto, legt AP7 es nach
-     E-PK-27 an). **Zuordnung: 10c AP7.**
-
 297. **Der Bilderlauf lässt Breiten, die Admin-Rolle und Rollbehälter aus.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-41), als Anlass nach der
      Zuarbeit von Konzept BR (E-BR-07).* Es fehlen die Breiten 400, 1200 und
@@ -1458,23 +1415,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      Gebaute zurückgenommen, mit Begründung. Nicht beides offen lassen.
      Zuordnung PK-06 ff.; bis dahin je Paket von Hand.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 300.
-
-301. **`Sandbox-Setup.md` 1 sagt, Firefox und WebKit starten im Container nicht — sie starten.** · gehört zu: 17 · Stand: teilweise · seit 24.09.2026
-     Befund (Konzept RW, F-RW-02; Playwright 1.56): Firefox 142 und WebKit
-     26 starten, laden eine Seite über `localhost` und rechnen WebCrypto;
-     RW-04 hat die Rückwegprobe in beiden gefahren. Die Tabelle „Nicht im
-     Abbild" nennt ihre Systembibliotheken als fehlend (Nr. 183); das gilt
-     nicht mehr. Dabei gemessen (F-RW-23): Gegen `php -S` mit einem Arbeiter
-     blieb WebKit in 2 von 4 Läufen beim zweiten Anmelden 90 s ohne
-     Navigation, mit `PHP_CLI_SERVER_WORKERS=4` 3 von 3 grün.
-     Erledigt (P5c/AP11, 25.09.2026): `hochfahren.sh` startet den Server
-     mit vier Arbeitern (`lokal_starten.sh`, `lokal_einrichten.sh`, auch im
-     Behälter für PHP 8.3) — Anlass war die Bedienprobe
-     (`net::ERR_TOO_MANY_RETRIES`), nicht WebKit.
-     Offen: die Zeile in `Sandbox-Setup.md` 1 berichtigen und datieren,
-     Nr. 183 nachsehen; ob der Bilderlauf in `haupt` alle drei Motoren
-     fahren kann, gehört zu Nr. 300.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 301.
 
 318. **`pysyntax` sieht ungültige Escape-Folgen nicht, und zwei Werkzeuge tragen welche.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      *Aufgenommen 24.09.2026 mit dem Abschluss von Konzept BR,
@@ -1720,3 +1660,18 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      *Abnahme:* Eine Nummer, die ein zweiter Zweig schon trägt, färbt den
      örtlichen Lauf rot und nennt Zweig und Nummer; eine Selbstprobe stellt
      die Doppelung nach.
+
+340. **GitHub zählt die Backlog-Liste fort — neben jedem Eintrag außer dem ersten steht eine falsche Nummer.** · gehört zu: 17 · Stand: offen · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit R4-01 aus Konzept SD (F-SD-08, Q-R4-11).*
+     `cmark-gfm` macht aus den offenen Einträgen eine einzige Liste
+     `<ol start="21">`; ein Browser nummeriert sie fort und zeigt 21, 22,
+     23 … statt 21, 23, 36. Wer auf GitHub „Nr. 36" sucht, liest daneben
+     eine andere Zahl als im Markdown. Die Decke `backlog-listenpunkte`
+     (`decken.py`) zählt `<li>` gegen Einträge, nicht die Nummern — sie
+     sieht es deshalb nicht.
+     *Weg (Konzept R4, R4-25):* jeden Eintrag als eigene Liste rendern —
+     ein Element zwischen den Einträgen, das die Liste beendet, oder die
+     Nummer im Titel; beides ändert E-SD-16 und die Grammatik in
+     `uebersicht.py` und `decken.py`.
+     *Abnahme:* `cmark-gfm` liefert je Eintrag eine Liste, deren `start`
+     die Nummer des Eintrags ist; die Decke misst das.

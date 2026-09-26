@@ -3,9 +3,9 @@
 *Gehört zu `Konzept-R4-Backlog-Runde-4.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
-füllt es je Paket mit Mittel **und** Zahl. Stand: Konzeptphase — nichts
-gebaut; geprüft ist die Buchführung (Abschlüsse SD, AR, BV, Konzept), Stand
-Konzept-PR #93. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
+füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01
+erledigt** (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
 ---
@@ -21,7 +21,9 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | **Die Mockups sind gerendert, nicht bedient.** | M-R4-22, -23, -24 liegen als HTML und PNG bei (`konzept-r4/mockups/`); gemessen ist nur der Überlauf je Breite. Ob die Datumsfelder, die Pillen und der Schwebe-Wert der Säulen sich so bedienen lassen, zeigt erst die Anwendung (Bedienprobe in R4-23/-24). Die Handy-Nachbildung ist HTML, kein Compose — Maße in dp bei 1:1 nachgebaut, kein Emulatorbild. | Prüfliste 4, P-R4-04; Emulatorbilder mit R4-22. |
 | **Ob `stroeme.py` den Baum ändert** (F-R4-17) | Nicht gefahren; nur der Kopf der erzeugten Datei gelesen. | R4-04 misst den Baum-Hash vor und nach dem Lauf. |
 | **Die tatsächliche Laufzeit je zusätzlicher Bilderlauf-Breite** (Q-R4-13) | Hochgerechnet (+12 % je Breite aus 745–845 s für acht), nicht gemessen. | R4-08 nennt die Zahl nach dem ersten Lauf `neben`. |
-| **Die Nebenfrage aus Nr. 170** (Q-R4-15) | Gestaltungsfrage, nicht messbar. | Wird als Nr. 341 notiert, wenn die Betreiberin es will. |
+| **Die Nebenfrage aus Nr. 170** (Q-R4-15) | Entschieden: in 17 gebaut (E-R4-25); gemessen wird sie mit R4-06. | R4-06, Bilderlauf `einsatz.php` mit manuellem Abfahrtort. |
+| **Das Löschen der zwei toten Zweige** (Q-R4-01) | Die Betreiberin löscht sie selbst (E-R4-15); die Umsetzung hat nichts gelöscht. | P-R4-06; `git ls-remote --heads origin` zeigt die zwei Zweige, solange es aussteht. |
+| **Ortszeit-Abfragen auf der örtlichen Anlage** (F-R4-21) | Die örtliche MariaDB hat keine Zeitzonentabellen; `CONVERT_TZ` mit `Europe/Berlin` liefert NULL. Die Anwendung nutzt es nicht; Messungen in Ortszeit sind über UTC-Zeiten nachgerechnet. | R4-16: jede Ortszeit-Zahl mit Rechenweg. |
 
 ## 2. Maschinell geprüft — Konzeptphase (R4-00)
 
@@ -36,6 +38,17 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | Mockups | Chromium 141 über Playwright, 1280/390/1240 px, `scrollWidth > clientWidth` | M-R4-22, -23, -24 | **5 Bilder, Überlauf 0** |
 | Mockups | `validate_palette.js` (dataviz), Fläche `#FFFCFA` | die zwei Diagrammtöne `#4280E5`, `#FF8F1F` | **alle Prüfungen bestanden**; Kontrastwarnung Orange 2,23:1 → Beschriftung in Asphalt (F-P3-J) |
 
+### 2.1 Umsetzung — je Paket
+
+| Paket | Mittel | Gegenstand | Zahl |
+|---|---|---|---|
+| R4-01 | `python3 tools/steuerung/uebersicht.py --ziel 17` / `--pruefen` | offene Punkte mit Ziel 17; Grammatik und Ziel aller Kopfzeilen | **43** mit Ziel 17 (vorher 55; −5 ausgetragen, −8 umgehängt, +1 Nr. 340 — F-R4-19: das Konzept erwartete 37); **97 Einträge, 0 ohne Grammatik, 0 ohne Ziel** |
+| R4-01 | `python3 tools/steuerung/decken.py` | 20 Decken der Steuerungsdokumente (Rahmenplan Fassung 135) | **20 Decken, 0 gerissen** |
+| R4-01 | `python3 tools/quelltext/bestand.py` | Form der Anleitungen, Nummern in beiden Backlog-Dateien | **0 Befunde** (die Anleitung `tools/steuerung/` bei 40 von 40 Zeilen) |
+| R4-01 | Playwright 1.56, `launch()` je Motor, vor/nach `apt-get remove` der vier Pakete | Nr. 301: startet Firefox und WebKit ohne die vier Bibliotheken? | mit: **3 / 3**; ohne: Chromium und Firefox starten, **WebKit nicht**; wieder geholt: **3 / 3** (F-R4-20) |
+| R4-01 | SQL über die Anlage, UTC-Zeiten mit Hand in Ortszeit umgerechnet | Nr. 275: aktive Diensttage des Demo-Kontos mit Einsätzen auf zwei Kalendertagen | **2 von 20** (`id` 7 und 19, beide `ground`, beide Zeitumstellung) — bestätigt F-R4-05 |
+| R4-01 | `git show` der drei Commits, `grep` | Belege für 172 (`3258916`, Median aus 5 in `tools/proben/wartung/probe.php`), 295 (`d519fac`, `schritt_statistik()`), 216 (0 doppelte Trennlinien in `docs/`) | **3 von 3 Belegen** vorhanden |
+
 ## 3. Im Browser geprüft
 
 Nichts — die Konzeptphase ändert keine Seite. Die Anlage lief (HTTP 200 auf
@@ -48,11 +61,12 @@ ist. Die Umsetzung hängt je Paket ihre Punkte an (P-R4-06 ff.).
 
 | Nr. | Bedienweg | Erwartung | Scheitern |
 |---|---|---|---|
-| P-R4-01 | PR #93 lesen: Stufe 1 grün (Bericht im Kopf-Commit), Konzept Abschnitt 3.2 — die offenen Q-R4 mit „alles wie empfohlen" oder einzeln beantworten. | Antworten liegen vor der Umsetzung vor (K6). | Ein Paket beginnt mit einer offenen Q — dann hält die Umsetzung an (H-R4-05). |
-| P-R4-02 | **Freigabe des Konzepts** (ein Satz im PR oder im Chat), dann Merge von PR #93. | Rahmenplan auf `main`: Fahrplanzeile 17 „Konzept", Erledigt-Zeilen SD, AR, BV; `uebersicht.py --ziel 17` 55. | Stufe 1 rot am Kopf-Commit (Bericht fehlt oder falscher Baum) — dann kein Merge, Instanz beauftragen. |
-| P-R4-03 | Nach dem Merge: Umsetzungsinstanz mit Opus auf eigenem Zweig starten (Konzept 4, Reihenfolge = Paketnummer). | Erster Commit `R4-01: …`; Zweig nach jedem Paket gepusht. | Ein Paket ohne Push, ein Statusblock ohne Fortschreibung. |
-| P-R4-04 | Die drei Mockups ansehen (`docs/konzepte/konzept-r4/mockups/*.png`, Regeln in der LIESMICH dort) und freigeben oder Änderungen nennen — Q-R4-16, spätestens vor R4-22. | Gebaut wird erst nach der Freigabe; Änderungen werden vorher ins Mockup eingearbeitet. | Ein Bild im Bilderlauf, das so in keinem freigegebenen Mockup steht. |
+| P-R4-01 | ☑ 26.09.2026 (E-R4-14 bis -26) — PR #93 lesen: Stufe 1 grün (Bericht im Kopf-Commit), Konzept Abschnitt 3.2 — die offenen Q-R4 mit „alles wie empfohlen" oder einzeln beantworten. | Antworten liegen vor der Umsetzung vor (K6). | Ein Paket beginnt mit einer offenen Q — dann hält die Umsetzung an (H-R4-05). |
+| P-R4-02 | ☑ 26.09.2026 (E-R4-14, Merge PR #93) — **Freigabe des Konzepts** (ein Satz im PR oder im Chat), dann Merge von PR #93. | Rahmenplan auf `main`: Fahrplanzeile 17 „Konzept", Erledigt-Zeilen SD, AR, BV; `uebersicht.py --ziel 17` 55. | Stufe 1 rot am Kopf-Commit (Bericht fehlt oder falscher Baum) — dann kein Merge, Instanz beauftragen. |
+| P-R4-03 | ☑ 26.09.2026 (`claude/schritt-17-konzept-mockups-q0yjcm`) — Nach dem Merge: Umsetzungsinstanz mit Opus auf eigenem Zweig starten (Konzept 4, Reihenfolge = Paketnummer). | Erster Commit `R4-01: …`; Zweig nach jedem Paket gepusht. | Ein Paket ohne Push, ein Statusblock ohne Fortschreibung. |
+| P-R4-04 | ☑ 26.09.2026 (E-R4-26) — Die drei Mockups ansehen (`docs/konzepte/konzept-r4/mockups/*.png`, Regeln in der LIESMICH dort) und freigeben oder Änderungen nennen — Q-R4-16, spätestens vor R4-22. | Gebaut wird erst nach der Freigabe; Änderungen werden vorher ins Mockup eingearbeitet. | Ein Bild im Bilderlauf, das so in keinem freigegebenen Mockup steht. |
 | P-R4-05 | Nach dem Deploy von R4-15 (Migration): als Administratorin `update.php` aufrufen, Betrieb → Updates ansehen. | Migration `days.created_at` gelaufen; Wartungsmodus geht aus. | Wartungsmodus bleibt an; Statuszeile nennt eine ausstehende Migration. |
+| P-R4-06 | GitHub → Branches: `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` löschen (E-R4-15). Vorher: Beide tragen nichts Ungemergtes (F-R4-04). | Die zwei Zweige sind weg; `git ls-remote --heads origin` nennt sie nicht mehr. | Einer steht noch da — oder ein anderer fehlt. |
 
 ## 5. Grenzen der benutzten Prüfmittel
 

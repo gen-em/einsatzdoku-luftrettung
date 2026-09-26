@@ -48,6 +48,10 @@ und den drei Engine-Dateien unter `/opt/pw-browsers/`, Python **3.11**
 Speicher.
 
 **Nicht im Abbild, und ohne diese steht die Hälfte der Prüfmittel:**
+*(Am 26.09.2026 brachte das Abbild MariaDB, ImageMagick und `rsvg-convert`
+schon mit — der apt-Verlauf zeigt sie am 22.09.2026, vom Sitzungshook vor
+PK-02; cmark-gfm und die vier WebKit-Bibliotheken fehlten. `aufbauen.sh`
+prüft je Paket und holt nur, was fehlt.)*
 
 | fehlt | wer es braucht |
 |---|---|
@@ -57,7 +61,7 @@ Speicher.
 | **cmark-gfm** | die Quelltextprüfungen `handbuch` — rendern Handbuch und „Was ist NAdoku"? (seit BR-03) — und `bestand`, die die Tabelle der Quelltextprüfungen so liest, wie GitHub sie zeigt (seit BR-05) |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
-| **Systembibliotheken für Firefox und WebKit** | jede Aussage über die Oberfläche, die für mehr als Chromium gelten soll (Backlog Nr. 183) |
+| **Vier Systembibliotheken für WebKit** (`libenchant-2-2`, `libsecret-1-0`, `libwayland-server0`, `libmanette-0.2-0`) — Firefox startet ohne sie, WebKit nicht (gemessen 26.09.2026: entfernt, Start versucht, wieder geholt; Backlog Nr. 301) | jede Aussage über die Oberfläche, die auch für WebKit gelten soll (Backlog Nr. 183) |
 | **Android-SDK** (Plattformen 37.0 und 36, Build-Tools 36.0.0, `cmdline-tools` 23.0) | `./gradlew build` im Ordner `android/`; `cmdline-tools` unter 23.0 legt AVDs mit API 37 falsch an (F-AR-18) |
 | **Emulator, Abbilder API 37, `lz4`, `cpio`, `libpulse0`** | `android/werkzeuge/emulator.sh` — der Emulatorlauf nach `Pruefablauf.md` 6.9 |
 | **Uhr-SDK und Gerätedateien** | `tools/uhr-pruefstand/` |

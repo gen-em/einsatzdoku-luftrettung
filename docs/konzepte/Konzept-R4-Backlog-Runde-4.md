@@ -28,9 +28,10 @@ keine Zählung (`CLAUDE.md` 2). **Eine Migration** (R4-15) — nach dem Deploy
 **Ablage:** dieses Konzept; Prüfdokument `Pruefdokument-R4-Backlog-Runde-4.md`
 daneben (angelegt mit dem Konzept, gefüllt von der Umsetzung); **Mockups**
 in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
-**Zweig:** `claude/schritt-17-hl9egt`, von `origin/main` `056781c`; die
-Umsetzung läuft nach dem Merge des Konzept-PR (#93) auf einem eigenen
-Zweig (E-R4-02).
+**Zweig:** Konzept auf `claude/schritt-17-hl9egt` (von `origin/main`
+`056781c`, gemergt mit PR #93); **Umsetzung auf
+`claude/schritt-17-konzept-mockups-q0yjcm`**, von `origin/main` `05dfc12`
+(E-R4-02, E-R4-14).
 **Backlog-Spanne:** **340 bis 349** (E-SD-21, eingetragen und gepusht mit
 `17-00` vor jeder Vergabe). 339 hat der Abschluss von BV vergeben
 (Q-BV-05, E-BV-19). Vergeben aus der Spanne: siehe Statusblock.
@@ -39,6 +40,16 @@ Zweig (E-R4-02).
 >
 > | | |
 > |---|---|
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-02.** |
+> | Entschieden | **E-R4-01 bis E-R4-28** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28. |
+> | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
+> | Umsetzung | **R4-01 erledigt** (26.09.2026). Offen: R4-02 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Fable-Schritte | keine. |
+> | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
+> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08). 341 wird nicht gebraucht (E-R4-25). |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen) — 2.4. |
+
+---|---|
 > | Stand | **26.09.2026 — Konzept vollständig, zur Freigabe vorgelegt; Konzept-PR #93 offen** (E-R4-02: Abschlüsse SD, AR, BV und dieses Konzept; jeder Push trägt einen Prüfbericht, `Pruefablauf.md` 5). Befund: 55 Punkte gesichtet und gegengeprüft (2.1). Paketschnitt: 26 Pakete (4). **Mockups für R4-22, R4-23, R4-24 liegen bei** (`konzept-r4/mockups/`, LIESMICH dort; zur Freigabe, Q-R4-16). |
 > | Entschieden | **E-R4-01 bis E-R4-13** (Abschnitt 3). Von der Betreiberin am 26.09.2026: E-R4-01 bis -05 (Sitzung), E-R4-07 bis -10 (Q-R4-02, -04, -05, -10). Aus dem Konzept: E-R4-06, -11, -12, -13. |
 > | Offen | **Q-R4-01, -03, -06 bis -09, -11 bis -15** — jede mit Empfehlung (3.2); nach K6 spätestens vor dem Paket, das sie braucht. **Q-R4-16** — die Freigabe der drei Mockups (H-R4-01). **Die Freigabe des Konzepts.** |
@@ -311,6 +322,27 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   hat in der Leseansicht keine beschriftete Zeile (nur das Kartenpopup,
   ohne Zeichen) — Q-R4-15.
 
+**Befunde der Umsetzung** (gemessen, nicht gelesen):
+
+- **F-R4-19 Die Abnahmezahl von R4-01 ist verzählt.** „`uebersicht.py
+  --ziel 17` zählt 37" stimmt nicht mit 2.2 überein: Die Tabelle führt 42
+  Punkte mit einem anderen Paket als R4-01, dazu kommt Nr. 340 — nach
+  R4-01 sind es **43** (gemessen 26.09.2026). E-R4-12 („37 zu bauende
+  Punkte") ist dieselbe Zahl und ebenso verzählt; der Paketschnitt ist
+  davon nicht berührt, jeder der 42 steht in genau einem Paket.
+- **F-R4-20 Firefox braucht die vier Bibliotheken nicht, WebKit schon.**
+  Gemessen am 26.09.2026 für Nr. 301: die vier Pakete entfernt — Chromium
+  und Firefox starten, WebKit bricht ab; wieder geholt — drei von drei.
+  Dazu brachte das Abbild MariaDB, ImageMagick und `rsvg-convert` schon mit
+  (apt-Verlauf 22.09.2026, der Sitzungshook vor PK-02); `Sandbox-Setup.md`
+  1 sagt beides jetzt.
+- **F-R4-21 Die örtliche MariaDB kennt keine benannten Zeitzonen.**
+  `CONVERT_TZ(…, '+00:00', 'Europe/Berlin')` liefert NULL (Zeitzonentabellen
+  nicht geladen). Die Anwendung ruft `CONVERT_TZ` nirgends (0 Treffer in
+  `server/` und `tools/`); wer aber in Ortszeit misst wie Nr. 275, misst
+  örtlich nichts. Nr. 275 ist deshalb über die UTC-Zeiten nachgerechnet (2
+  von 20 bestätigt, Tage mit `id` 7 und 19); R4-16 rechnet ebenso.
+
 ## 3. Entscheidungen und Fragen
 
 ### 3.1 Entscheidungen
@@ -328,15 +360,32 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-09 | **Nr. 114 in 17, mit Mockup:** Knopf „Verwerfen" mit Rückfrage nach dem Muster der Garmin-Uhr — Android Neben. | Betreiberin, 26.09.2026 (Q-R4-05) | Der Server hat das Paket mit 400 endgültig abgelehnt; „Nachreichen von Hand" wäre ein zweiter Weg an `validate_lib.php` vorbei. Android-Mockups liegen unter `android/mockups/`. |
 | E-R4-10 | **Nr. 76 in 17:** Änderungsmarke in `app_state`, gesetzt bei POST des Demo-Kontos und bei angenommenem Upload; Reset nur bei gesetzter Marke, täglicher Pflichtreset als Netz. | Betreiberin, 26.09.2026 (Q-R4-10) | Die Fahrplanzeile nennt den Demo-Reset-Takt; die zwei Setzstellen sind je eine Zeile in Dateien der 18-Liste, und 18 baut auf 17 auf. |
 | E-R4-11 | **Die Sperrliste von Schritt 18 ist ein Gebot, kein Verbot.** Pakete an diesen Dateien bleiben klein, ändern keine Zeile, die 18 umbaut, und sind in 4 vermerkt. | Konzept | 18 hat „Merge von 17" als Voraussetzung und wird danach konzipiert. Ein Verbot hätte acht Punkte der Runde (76, 158, 175, 250, 258, 277, 291, 299) ohne Not nach 18 geschoben. |
+| E-R4-14 | **Konzept freigegeben; die Umsetzung arbeitet durch** — Halt nur an H-R4-01 bis -05, bei Problemen und vor dem PR; **Fächerung strikt nach Abschnitt 4** (nur R4-11, R4-19), auch bei eingeschaltetem Ultracode. Zweig `claude/schritt-17-konzept-mockups-q0yjcm`. | Betreiberin, 26.09.2026 (Freigabe des Umsetzungsplans) | Merge von PR #93 und Auftrag „Leg los"; `CLAUDE.md` 7: ohne Fächerungszeile keine Fächerung, und der Container fährt zwei Agenten gleichzeitig (F-R4-01). |
+| E-R4-15 | Q-R4-01: **Die Betreiberin löscht die zwei toten Zweige selbst**; die Umsetzung löscht nichts. | Betreiberin, 26.09.2026 | Zuarbeit in Rahmenplan 6.1, P-R4-06. |
+| E-R4-16 | Q-R4-03: (a) Seitengrenze und (b) benannte Kappungen in 17 (R4-17); Vorschneiden und Monatsvorwahl nach v1.0. | Betreiberin, 26.09.2026 | wie empfohlen |
+| E-R4-17 | Q-R4-06: Die Dauer im Schnittblock folgt `EdFormat.dauer()` („1h 06min"). | Betreiberin, 26.09.2026 | wie empfohlen |
+| E-R4-18 | Q-R4-07: E-PK-27 in `tools/` (R4-19); die Ausnahme für `messstand@` fällt. | Betreiberin, 26.09.2026 | wie empfohlen |
+| E-R4-19 | Q-R4-08: **E-P1-02 gilt auch für Kommentare.** Die acht Stellen unter `server/` werden umgeschrieben (R4-09), dazu ein realer Vorname als Beispiel eines Gerätenamens in `migration_lib.php`; das Fremdformat bleibt Ausnahme (E-PK-39). | Betreiberin, 26.09.2026 (nach Erklärung) | Die Dateien sind öffentlich; die Textprobe liest danach in der Klasse `namen` auch Kommentare (R4-07). |
+| E-R4-20 | Q-R4-09: `days.created_at` mit Migration in 17 (R4-15). | Betreiberin, 26.09.2026 | wie empfohlen |
+| E-R4-21 | Q-R4-11: F-SD-08 ist **Nr. 340**, behoben in R4-25. | Betreiberin, 26.09.2026 | wie empfohlen |
+| E-R4-22 | Q-R4-12: Umhängen wie vorgeschlagen — ausgeführt in R4-01. | Betreiberin, 26.09.2026 | wie empfohlen |
+| E-R4-23 | Q-R4-13: Der Bilderlauf misst zusätzlich **1200 und 1600 px** — zehn Breiten. | Betreiberin, 26.09.2026 | wie empfohlen |
+| E-R4-24 | Q-R4-14: **Weg A** — die Backticks in `mf_spalten()`. | Betreiberin, 26.09.2026 | wie empfohlen |
+| E-R4-25 | Q-R4-15: **Der manuelle Abfahrtort bekommt in der Leseansicht schon in 17 eine beschriftete Zeile mit Schloss** (R4-06, Web Korrektur) — abweichend von der Empfehlung; Nr. 341 wird nicht vergeben. | Betreiberin, 26.09.2026 | Vorhandene Bausteine (`zeile()`, `dtGeschuetzt()` in `einsatz.php`), kein neuer — kein Mockup nötig (`CLAUDE.md` 5). |
+| E-R4-26 | Q-R4-16: **Die drei Mockups sind freigegeben**, wie gezeigt; H-R4-01 ist erfüllt. | Betreiberin, 26.09.2026 | — |
+| E-R4-27 | **R4-19 läuft vor R4-16**, direkt nach R4-15; sonst gilt die Nummernfolge. | Umsetzung, 26.09.2026 | R4-16 verlangt es selbst („Nach R4-19 und R4-15"); die Nummer allein hätte die Referenz zweimal erzeugt. |
+| E-R4-28 | **Der Verschiebe-Helfer ist eingecheckt** (`tools/steuerung/verschieben.py`), ohne Selbstprobe. | Umsetzung (R4-01) | E-R4-06; eine Runde verschiebt Dutzende Punkte, je drei Stellen in zwei Dateien. Er hält nichts auf, deshalb keine Selbstprobe (`Pruefablauf.md` 6.3); die Anleitung liegt in `tools/steuerung/LIESMICH.md`. |
 | E-R4-13 | **Die Diagramme der Statistik folgen vier Regeln:** eine Farbe je Diagramm (Blau), der Höchstwert in Orange **mit** Beschriftung, Schrift nur in Schrifttoken, die Tabelle bleibt daneben; drei Reihen verschiedener Größenordnung sind drei kleine Vielfache, keine Grafik mit drei Farben oder zwei Achsen; kein Kreis, keine Bibliothek (Inline-SVG aus PHP, Balken als HTML). | Konzept (M-R4-24) | `Design.md` 3.1/3.2 (Farbe trägt eine Aussage; Orange nie als Schrift, F-P3-J) und das dataviz-Verfahren (eine Achse, Farbe folgt der Sache, Tabellensicht); die zwei Töne haben die Palettenprüfung bestanden (Mockup-LIESMICH). |
 | E-R4-12 | **Ein Backlog-Punkt = ein Paket, außer die Punkte teilen Dateien oder Erzeugnis.** Blöcke sind Reihenfolge, nicht Bündel (wie Runde 3). | Konzept | 26 Pakete für 37 zu bauende Punkte; jedes einzeln abnehmbar, jedes mit Abnahmezahl. Gebündelt sind nur: 36+331 (eine Funktion), 322+334 (eine Ablaufdatei), 318+283 (ein Werkzeugordner), 116+321+297 (drei Bildwerkzeuge, seriell auf der einen Anlage), 271+272+273 (zwei Skripte, eine Zählzeile), 76+259 und 275+323 (ein Demo-Bestand), die Kommentar- und Kleinstpunkte unter `server/` (R4-09). |
 
 ### 3.2 Fragen an die Betreiberin
 
-Beantwortet am 26.09.2026: **Q-R4-02** (E-R4-07), **Q-R4-04** (E-R4-08),
-**Q-R4-05** (E-R4-09), **Q-R4-10** (E-R4-10). Die übrigen tragen eine
-Empfehlung; nach K6 werden sie vor dem Paket entschieden, das sie braucht
-— eine Antwort „alles wie empfohlen" reicht.
+**Alle beantwortet am 26.09.2026.** In der Konzeptsitzung: **Q-R4-02**
+(E-R4-07), **Q-R4-04** (E-R4-08), **Q-R4-05** (E-R4-09), **Q-R4-10**
+(E-R4-10). Zum Beginn der Umsetzung, einzeln: Q-R4-01 → E-R4-15 (anders als
+empfohlen), -03 → -16, -06 → -17, -07 → -18, -08 → -19, -09 → -20, -11 →
+-21, -12 → -22, -13 → -23, -14 → -24, -15 → -25 (anders als empfohlen),
+-16 → -26. Die Tabelle bleibt als Frage mit Empfehlung stehen.
 
 | Nr. | Frage | Empfehlung | Paket |
 |---|---|---|---|
@@ -398,6 +447,15 @@ LIESMICH, Selbstprobe) — Empfehlung ja.
 *Abnahme:* `uebersicht.py --ziel 17` zählt 37 (die zu bauenden), `decken.py`
 0 gerissen, `bestand` Regel `backlog` 0.
 *Stufe:* keine. *Fächerung:* keine.
+**Erledigt 26.09.2026.** Ausgetragen 140, 172, 216, 295, 301 (Belege je
+Schlusssatz in `Backlog-Erledigt.md`); umgehängt nach E-R4-08 und E-R4-22;
+Nr. 202 und 275 auf Stand (275 nachgemessen, F-R4-21); Nr. 340 angelegt;
+`Sandbox-Setup.md` 1 berichtigt (F-R4-20); Spanne 340–349 auf den neuen
+Zweig, Zeile 339 gestrichen (gemergt); Rahmenplan Fassung 135 (Beginn,
+Zuarbeit Zweige). Q-R4-01: nichts gelöscht (E-R4-15). Helfer eingecheckt
+(E-R4-28). *Gemessen:* `uebersicht.py --ziel 17` **43** (F-R4-19 — nicht
+37), `--pruefen` 97 Einträge / 0 / 0, `decken.py` 20 / 0 gerissen,
+`bestand` 0 Befunde.
 
 **R4-02 Prüfstand: Anlage, Schema, Ausbaustufe** — Nr. 329, 332, 335.
 `hochfahren.sh` fragt nach dem Start `migrationen_ausstehend()` und ist bei

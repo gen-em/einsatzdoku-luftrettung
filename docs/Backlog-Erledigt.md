@@ -8145,3 +8145,90 @@ zutreffen.
      Erledigt 26.09.2026: SD-01 bis SD-04 gemergt (PR #92, `056781c`),
      Erledigt-Zeile in Rahmenplan 8, Konzept gelöscht; damit sind Nr. 177,
      193, 196 und 199 erledigt.
+
+140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.** · gehört zu: 17 · Stand: erledigt · seit 06.09.2026
+     Befund (Krypto-Review K-16): Die FTPS-Action deployte jeden Push mit
+     Zugangsdaten aus Secrets; jedes Konto mit Push-Recht konnte `crypto.js`
+     ändern und Passwörter beim nächsten Anmelden abgreifen — der eine
+     Angriff, gegen den keine Browser-Verschlüsselung hilft. Seit S10 wiegt
+     er schwerer: Wer `server/` beschreiben kann, liefert den Server-Anteil
+     aus `config.php` mit aus (R78 (1)).
+     Entschieden (R78): Zweigschutz und 2FA sofort als Zuarbeit, das
+     Deploy-Tor mit dem Staging-Aufbau (R40 (2), nicht S10), die
+     Integritätswache im Sofortpaket.
+     Erledigt: die Wache (Web 15.6.0, `tools/integritaetswache/`,
+     `integritaet.yml`, täglich und nach jedem Deploy; 112 Dateien, ein
+     Inline-Block, ohne eingecheckte Prüfsummen); das Deploy-Tor (Web 20.4.0,
+     R67: Push auf `main` geht auf Staging, Produktiv nur über Tag und
+     Pflichtfreigabe); der Zweigschutz für `main` (21.09.2026, Rahmenplan
+     6b) und der 2FA-Zwang in der GitHub-Organisation (Durchsicht der
+     Betreiberin 26.09.2026, E-SD-34).
+     Offen ist damit nichts mehr als die Verschiebung nach Erledigt, die
+     Konzept SD nicht vornimmt; die Backlog-Runde holt sie nach.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 140.
+     Erledigt 26.09.2026 mit R4-01 (Konzept R4, F-R4-07): Wache, Deploy-Tor,
+     Zweigschutz und 2FA-Zwang stehen (F-SD-06); offen war nur noch diese
+     Verschiebung.
+
+172. **Eine Erwartung der Wartungsprobe flackert.** · gehört zu: 17 · Stand: erledigt · seit 12.09.2026
+     Befund (Web 19.1.2): Erwartung 15 („das 503 kommt schneller als die
+     Antwort ohne Wartung") vergleicht zwei Einzelmessungen mit `<` ohne
+     Spielraum; örtlich liegen beide bei rund 71 ms, und drei Läufe ergaben
+     0, 1, 0 nicht erfüllte Erwartungen (71,7 gegen 71,6 ms). Eine Probe,
+     die jeden dritten Lauf grundlos rot wird, liest nach dem dritten Mal
+     niemand mehr — und sie ist die einzige rote Zahl eines grünen Laufs.
+     Weg: mehrfach messen und Mediane vergleichen, oder die Erwartung
+     strukturell stellen — `wartung_tor()` steht in `db.php` vor jedem
+     Verbindungsaufbau, und das prüft man am Code, nicht mit der Stoppuhr.
+     Abnahme: zehn Läufe hintereinander, zehnmal dieselbe Zahl.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 172.
+     Erledigt 26.09.2026 mit R4-01 (Konzept R4, F-R4-07): Die Wartungsprobe
+     vergleicht seit P5c/AP9 den Median aus fünf Messungen (F-P5c-165,
+     `3258916`); die Nummer wurde damals nicht genannt.
+
+216. **Zwei Trennlinien hintereinander an vier Stellen des P5a-Prüfdokuments.** · gehört zu: 17 · Stand: erledigt · seit 16.09.2026
+     *Aufgenommen 16.09.2026, gleiche Durchsicht.*
+     Rein kosmetisch: `---` gefolgt von `---` erzeugt in manchen
+     Markdown-Darstellungen eine doppelte Linie, in anderen eine Überschrift.
+     Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
+     Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
+     Erledigt 26.09.2026 mit R4-01 (Konzept R4, F-R4-07): Das
+     P5a-Prüfdokument ist mit `f6cb5fd` gelöscht; in `docs/` stehen 0
+     doppelte Trennlinien (nachgemessen am 26.09.2026).
+
+295. **Der Messstand hat keinen Schritt für die Statistik.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-40), als Anlass nach der
+     Zuarbeit von Konzept BR (E-BR-07).* `tools/messstand/` misst die Seiten,
+     die es kennt; die Statistik ist keine davon, und das Konto `messstand@…`
+     fehlte auf der örtlichen Anlage (seit AP4 legt der Prüfstand es über
+     `messen.py --frisch` selbst an, F-P5c-104). 10c AP7 baut die Statistik auf eine
+     Zählung mit Obergrenze und einen neuen Index `missions(started_at)` um —
+     ohne Messstand-Schritt gäbe es für die Zeiten keinen Beleg, nur ein
+     `EXPLAIN` von Hand. *Weg:* Schritt `statistik` im Messstand (drei Reiter
+     und `EXPLAIN`, Sitzung der BetreiberIn; fehlt das Konto, legt AP7 es nach
+     E-PK-27 an). **Zuordnung: 10c AP7.**
+     Erledigt 26.09.2026 mit R4-01 (Konzept R4, F-R4-07): Der Messstand hat
+     seit P5c/AP7 den Schritt `statistik` (`schritt_statistik()` in
+     `tools/messstand/messen.py`, `d519fac`); die Nummer wurde damals nicht
+     genannt.
+
+301. **`Sandbox-Setup.md` 1 sagt, Firefox und WebKit starten im Container nicht — sie starten.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     Befund (Konzept RW, F-RW-02; Playwright 1.56): Firefox 142 und WebKit
+     26 starten, laden eine Seite über `localhost` und rechnen WebCrypto;
+     RW-04 hat die Rückwegprobe in beiden gefahren. Die Tabelle „Nicht im
+     Abbild" nennt ihre Systembibliotheken als fehlend (Nr. 183); das gilt
+     nicht mehr. Dabei gemessen (F-RW-23): Gegen `php -S` mit einem Arbeiter
+     blieb WebKit in 2 von 4 Läufen beim zweiten Anmelden 90 s ohne
+     Navigation, mit `PHP_CLI_SERVER_WORKERS=4` 3 von 3 grün.
+     Erledigt (P5c/AP11, 25.09.2026): `hochfahren.sh` startet den Server
+     mit vier Arbeitern (`lokal_starten.sh`, `lokal_einrichten.sh`, auch im
+     Behälter für PHP 8.3) — Anlass war die Bedienprobe
+     (`net::ERR_TOO_MANY_RETRIES`), nicht WebKit.
+     Offen: die Zeile in `Sandbox-Setup.md` 1 berichtigen und datieren,
+     Nr. 183 nachsehen; ob der Bilderlauf in `haupt` alle drei Motoren
+     fahren kann, gehört zu Nr. 300.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 301.
+     Erledigt 26.09.2026 mit R4-01: Die Zeile in `Sandbox-Setup.md` 1 nennt
+     jetzt die vier Bibliotheken für WebKit — nachgemessen: ohne sie startet
+     Firefox, WebKit nicht; mit ihnen alle drei. Nr. 183 ist erledigt; drei
+     Motoren im Bilderlauf der Stufe haupt bleiben bei Nr. 300.
