@@ -290,7 +290,9 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   (`ui_karte_start(['geschuetzt' => true])`). **Und: Die Zahl belegt es
   nicht.** „8 Schlösser gezählt" sagt nichts darüber, ob eines fehlt — beide
   Lücken, die Web 19.1.1 geschlossen hat, standen neben einer richtigen Zahl
-  (Backlog Nr. 170).
+  (Backlog Nr. 170). Seit Web 21.1.5 hält der Riegel `kennzeichnung` jedes
+  Zeichen gegen eine Sollliste (`tools/quelltext/kennzeichnung-soll.md`);
+  wer ein Feld verschlüsselt, trägt es auch dort ein.
 - **Keine fremde Quelle zur Laufzeit.** Kein CDN, keine Google Fonts, kein
   externes Skript. Schriften und Bibliotheken liegen unter
   `server/assets/fonts/` bzw. `server/assets/vendor/`, mit Herkunft und

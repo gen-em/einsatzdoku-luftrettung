@@ -488,23 +488,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Spurfunktionen in den Browser (Nr. 43); ein Schnitt über `spur_lib.php`
      davor wäre dort neu zu bauen.
 
-170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.** · gehört zu: 17 · Stand: offen · seit 10.09.2026
-     Befund (zwei Rückmeldungen zu Web 19.1.0, behoben mit 19.1.1): AP7
-     zählte 8 Schlösser und 9 Kleinzeilen, und die Zahlen stimmten — das
-     Schloss fehlte trotzdem an der Einsatznummer (Leseansicht) und an der
-     Karte „Notizen" (Formular). Eine Zählung ohne Sollmaß bestätigt ihre
-     eigene Liste und findet keine fehlende Zeile darin.
-     Weg: eine Probe, die Formular und Leseansicht aufruft und für jedes
-     Feld prüft, ob das erwartete Zeichen an der erwarteten Stelle steht —
-     „8 von 8" statt „8". Das Sollmaß ist noch zu bestimmen (13.09.2026):
-     Der Feldkatalog trägt nur ein Feld mit `'store' => 'pat'` (`notes`) und
-     drei mit `'hinweis'`; die acht Schlösser der Karte „PatientIn" sind
-     handgeschriebene `dtGeschuetzt()`-Aufrufe in `einsatz.php` und stehen in
-     keinem Katalog.
-     Abnahme: Die Probe wird rot, wenn ein `dtGeschuetzt()` in `einsatz.php`
-     durch einen nackten String ersetzt wird.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 170.
-
 175. **`edbak_uebersicht()` hat keinen Aufrufer mehr.** · gehört zu: 17 · Stand: offen · seit 13.09.2026
      *Aufgenommen 13.09.2026 als Nebenfund der Gegenprüfung zu Nr. 37;
      angelegt auf Anweisung des Auftraggebers.* Die Funktion in

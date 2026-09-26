@@ -8422,3 +8422,28 @@ zutreffen.
      geschlossenem Vorrat (Tonübergaben, pwq- aus STUFEN); Hinweise 73 → 13,
      jeder benannt, die sechs ohne Verwender als Nr. 341. Gegenprobe:
      entfernte Regel pwq-2 rot.
+
+170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.** · gehört zu: 17 · Stand: erledigt · seit 10.09.2026
+     Befund (zwei Rückmeldungen zu Web 19.1.0, behoben mit 19.1.1): AP7
+     zählte 8 Schlösser und 9 Kleinzeilen, und die Zahlen stimmten — das
+     Schloss fehlte trotzdem an der Einsatznummer (Leseansicht) und an der
+     Karte „Notizen" (Formular). Eine Zählung ohne Sollmaß bestätigt ihre
+     eigene Liste und findet keine fehlende Zeile darin.
+     Weg: eine Probe, die Formular und Leseansicht aufruft und für jedes
+     Feld prüft, ob das erwartete Zeichen an der erwarteten Stelle steht —
+     „8 von 8" statt „8". Das Sollmaß ist noch zu bestimmen (13.09.2026):
+     Der Feldkatalog trägt nur ein Feld mit `'store' => 'pat'` (`notes`) und
+     drei mit `'hinweis'`; die acht Schlösser der Karte „PatientIn" sind
+     handgeschriebene `dtGeschuetzt()`-Aufrufe in `einsatz.php` und stehen in
+     keinem Katalog.
+     Abnahme: Die Probe wird rot, wenn ein `dtGeschuetzt()` in `einsatz.php`
+     durch einen nackten String ersetzt wird.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 170.
+     Erledigt 26.09.2026 mit R4-06 (Web 21.1.5): Riegel kennzeichnung gegen
+     die Sollliste tools/quelltext/kennzeichnung-soll.md, 20 von 20
+     Kennzeichen (zehn Felder, Formular und Leseansicht), 9
+     Klartext-Freitextfelder mit Kleinzeile; Selbstprobe 8 von 8. Die Probe
+     liest Quelltext statt die Seiten aufzurufen, damit sie im Tor läuft.
+     Abnahme: dtGeschuetzt('Einsatznummer') durch den nackten String ersetzt
+     → rot mit Feld und Datei. Ihr erster Lauf fand den manuellen Abfahrtort
+     ohne Zeile in der Leseansicht; behoben im selben Paket (E-R4-25).

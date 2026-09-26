@@ -5064,6 +5064,15 @@ Browser), erzeugt in `einsatz_form.php`:
 Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
 `__CLEAR__` übertragen und löscht den vorhandenen.
 
+**Jeder Schlüssel trägt in der Oberfläche ein Schloss, und wo, steht in einer
+Sollliste** (seit Web 21.1.5, R4-06, Backlog Nr. 170):
+`tools/quelltext/kennzeichnung-soll.md` nennt je Feld die Stelle im Formular
+(`einsatz_form.php`) und in der Einsatzansicht (`einsatz.php`); der Riegel
+`kennzeichnung` hält den Quelltext dagegen. Wer ein Feld in den Block legt,
+ergänzt diese Tabelle, `CLAUDE.md` 4 **und** die Sollliste — ein Blobfeld des
+Katalogs ohne Zeile dort ist rot. Der manuelle Abfahrtort hat in der
+Einsatzansicht erst seit dieser Fassung eine beschriftete Zeile.
+
 > **`notes` ist das erste Feld, das über den Feldkatalog in den Block kommt.**
 > Alle Schlüssel darüber entstehen aus handgeschriebenem Markup in
 > `einsatz_form.php` mit festen Kennungen. `notes` trägt dagegen

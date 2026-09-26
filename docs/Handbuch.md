@@ -1289,18 +1289,21 @@ ist danach nicht noch einmal nötig.
 **Welche Angaben geschützt sind, sagen die Karten selbst:** Die Blöcke
 **Einsatz** und **PatientIn** tragen im Kopf die blaue Plakette
 **„verschlüsselt"**, und die einzelnen geschützten Zeilen — Einsatzort,
-Beschreibung, Diagnose, Name, Geburtsdatum, Alter und die Notizen des
-Einsatzes — tragen daneben ein kleines
+Beschreibung, manueller Abfahrtort, Diagnose, Name, Geburtsdatum, Alter und
+die Notizen des Einsatzes — tragen daneben ein kleines
 **Schloss**. Die Plakette sagt „hier stehen verschlüsselte Angaben", das
 Schloss sagt „diese hier". Auch die **Einsatznummer** trägt es (seit
 Web 19.1.1) — sie ist seit langem verschlüsselt, war aber die einzige Zeile
-des Blocks ohne das Zeichen.
+des Blocks ohne das Zeichen. Der **manuelle Abfahrtort** steht seit
+Web 21.1.5 als eigene Zeile da; bis dahin nannte ihn nur das Kurzinfo des
+Punkts auf der Karte, ohne Schloss.
 
 Die Angaben selbst stehen in **vier Karten**:
 
 - **Einsatz**: Einsatzort (darunter klein Höhe — sofern luftgebunden und aus
   dem Track ermittelbar —, Luftlinie und Strecke), Beschreibung des
-  Einsatzorts, Diagnose, Notizen, weitere Rettungsmittel. Am Fuß der Karte
+  Einsatzorts, Abfahrtort (nur bei „Manueller Ort", Abschnitt 4.3),
+  Diagnose, Notizen, weitere Rettungsmittel. Am Fuß der Karte
   stehen **Plaketten**: Winde (mit Cycles), Bergwacht (mit Bereitschaft),
   Sekundär, Fehleinsatz — nur was zutrifft.
 - **PatientIn**: Einsatznummer, Name, Geburtsdatum mit Alter. Diese

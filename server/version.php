@@ -7658,5 +7658,18 @@ declare(strict_types=1);
  *   Selektorpruefung in `vollstaendigkeit.py`: Ihr erster Entwurf meldete
  *   `.focus-target` als von niemandem gesetzt. Gesetzt war die Klasse —
  *   nur an der falschen Stelle, und das sieht die fertige Pruefung nicht.
+ *
+ * 21.1.5 — DER ABFAHRTORT MIT SCHLOSS (Schritt 17, R4-06, Nr. 170, E-R4-25).
+ *   Korrekturstufe ohne Migration. Der manuelle Abfahrtort liegt seit
+ *   Web 6.2.0 im verschluesselten Block, stand in der Einsatzansicht aber
+ *   nur im Kurzinfo des Kartenpunkts — ohne Beschriftung und ohne Schloss.
+ *   Jetzt hat er eine eigene Zeile „Abfahrtort" mit Schloss in der Karte
+ *   Einsatz, zwischen Beschreibung und Diagnose, sobald die Regel „Manueller
+ *   Ort" gilt und eine Adresse da ist. Gefunden hat es die neue
+ *   Kennzeichnungsprobe (`tools/quelltext/kennzeichnung.php`), die jedes
+ *   Zeichen gegen eine Sollliste haelt statt es zu zaehlen: 19 von 20 vor
+ *   der Aenderung, 20 von 20 danach. Die Betreiberin hat entschieden, die
+ *   Zeile gleich zu bauen statt sie in die naechste Runde zu legen; sie
+ *   braucht keinen neuen Baustein, nur `zeile()` und `dtGeschuetzt()`.
  */
-const WEB_VERSION = '21.1.4';
+const WEB_VERSION = '21.1.5';

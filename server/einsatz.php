@@ -454,6 +454,7 @@ const RANG = {
   pat_dob:         30,
   pat_loc:         40,
   pat_site_desc:   50,
+  start_manual:    55,
   luftlinie:       60,
   pat_dx:          70,
   notes:           80,
@@ -904,6 +905,16 @@ async function zeigePat(m, bounds){
   if (o.site_desc != null) {
     zeile('einsatz', RANG.pat_site_desc, dtGeschuetzt('Beschreibung Einsatzort'),
           esc(String(o.site_desc)));
+  }
+  /* DER MANUELLE ABFAHRTORT (Web 21.1.5, Nr. 170, E-R4-25). Er liegt seit
+     Web 6.2.0 im Blob wie der Einsatzort, stand hier aber nur im Popup des
+     Kartenpunkts — ohne Beschriftung und ohne Schloss. Die Kennzeichnungsprobe
+     hat ihn als einziges der zehn Felder ohne Zeichen gefunden. Dieselbe
+     Bedingung wie im Formular: nur bei der Regel „Manueller Ort" und mit
+     Adresse; die drei anderen Regeln nennen keinen eigenen Ort. */
+  if (m.start_src === 'manual' && o.start && o.start.addr) {
+    zeile('einsatz', RANG.start_manual, dtGeschuetzt('Abfahrtort'),
+          esc(String(o.start.addr)));
   }
   if (o.dx != null) {
     zeile('einsatz', RANG.pat_dx, dtGeschuetzt('Diagnose'), esc(String(o.dx)));

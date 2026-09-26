@@ -380,7 +380,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. |
 | `server/assets/style.css`, `server/assets/images/gen-em_logo_*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
 
 **Stufenregel `migration`:** eine neue Kennung in `server/migration_lib.php` heißt mindestens **haupt** — E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3).
 
@@ -616,7 +616,10 @@ gemessen hat, und im Zweifel eine unabhängige Gegenprobe fahren.
 
 Das gilt auch für die Zahl, die eine Zusage belegen soll: „8 Schlösser
 gezählt" sagt nichts darüber, ob eines fehlt — beide Lücken, die Web 19.1.1
-geschlossen hat, standen neben einer richtigen Zahl (Backlog Nr. 170).
+geschlossen hat, standen neben einer richtigen Zahl (Backlog Nr. 170). Seit
+R4-06 misst `kennzeichnung` gegen eine Sollliste statt zu zählen — und fand
+beim ersten Lauf ein Feld, das in der Einsatzansicht gar keine Zeile hatte:
+den manuellen Abfahrtort (Web 21.1.5).
 
 ### 6.6 Jeder sichtbare Text läuft durch die Wortliste
 
@@ -795,6 +798,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
 | `tools/quelltext/` `bestand` | 0 Befunde in allen dreizehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
+| `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 20 von 20: zehn Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |

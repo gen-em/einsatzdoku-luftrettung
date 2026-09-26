@@ -14,6 +14,27 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.5] — 2026-09-26
+
+Schritt 17, Backlog-Runde 4, Paket R4-06. Korrekturstufe ohne Migration.
+
+### Behoben
+
+- **Der manuelle Abfahrtort trägt in der Einsatzansicht sein Schloss**
+  (Nr. 170, E-R4-25). Er liegt seit Web 6.2.0 im verschlüsselten Block wie
+  der Einsatzort, stand in der Einsatzansicht aber nur im Kurzinfo des
+  Kartenpunkts — ohne Beschriftung und ohne Zeichen. Wer die Karte las,
+  konnte nicht sehen, dass es ihn gibt, geschweige denn, dass er geschützt
+  ist. Jetzt steht er als eigene Zeile „Abfahrtort" mit Schloss in der
+  Karte Einsatz, zwischen Beschreibung und Diagnose — mit derselben
+  Bedingung wie im Formular: nur bei der Regel „Manueller Ort" und mit
+  Adresse. Die drei anderen Regeln (Standort, letzter Einsatzort, letzte
+  Zielklinik) nennen keinen eigenen Ort und bekommen keine Zeile. Gefunden
+  hat die Lücke die neue Kennzeichnungsprobe (unten, unter *Werkzeug*); die
+  Betreiberin hat entschieden, sie gleich zu schließen statt sie in die
+  nächste Runde zu legen. Kein neuer Baustein: `zeile()` und
+  `dtGeschuetzt()` gab es schon.
+
 ## [Web 21.1.4] — 2026-09-26
 
 Schritt 17, Backlog-Runde 4, Paket R4-05. Korrekturstufe ohne Migration.
@@ -70,6 +91,24 @@ Fassung.
   Zeile mit Zahl und Punkt beginnt (der Bestandsriegel läse dort eine
   Nummer). Er hält nichts auf und hat deshalb keine Selbstprobe
   (`Pruefablauf.md` 6.3).
+
+- **Eine Kennzeichnungsprobe hält jedes Schloss gegen eine Sollliste**
+  (R4-06, Nr. 170, `tools/quelltext/kennzeichnung.php`). Web 19.1.0 zählte
+  8 Schlösser und 9 Kleinzeilen, und die Zahlen stimmten — zwei Schlösser
+  fehlten trotzdem, an der Einsatznummer der Leseansicht und an der Karte
+  „Notizen" des Formulars. Eine Zählung ohne Sollmaß bestätigt ihre eigene
+  Liste. Jetzt steht in `kennzeichnung-soll.md` je verschlüsseltem Feld, WO
+  im Formular und WO in der Leseansicht das Schloss stehen muss; die Probe
+  hält den Quelltext ohne Kommentare dagegen, liest den Feldkatalog über
+  seine Bibliothek (ein Blobfeld ohne Zeile in der Sollliste ist rot) und
+  verlangt von jedem Klartext-Freitextfeld die Kleinzeile. Sie läuft ohne
+  Anlage und damit als Riegel im Tor; `CREW_ROLES`, das der Katalog braucht,
+  liest sie deshalb aus den Tokens von `db.php`, statt die Datei zu laden.
+  Ihr erster Lauf fand den Abfahrtort ohne Zeile (oben, Web 21.1.5). Die
+  Selbstprobe baut die beiden Fehler aus 19.1.0 nach, dazu einen Kommentar,
+  der den alten Aufruf nennt und nicht zählen darf. Dafür eine Zeile in
+  `.github/workflows/pruefung.yml` (`--riegel "kennzeichnung=$q"`): Das Tor
+  liest jeden Riegel des Berichts gegen, und ein fehlender ist rot.
 
 ### Geändert
 

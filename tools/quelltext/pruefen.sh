@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Quelltextprüfungen — ein Läufer für die dreizehn Prüfungen, die nur Quelltext
+# Quelltextprüfungen — ein Läufer für die vierzehn Prüfungen, die nur Quelltext
 # lesen und im Tor laufen (E-PK-24, E-BR-08). `handbuch` braucht dazu
 # `cmark-gfm` (Ausbaustufe web); fehlt es, endet sie mit rc 2, nicht grün.
 #
@@ -10,7 +10,7 @@
 #
 # Namen:   installweiche sitzungshaertung csp jobregister migrationsregister
 #          behandler linkprobe vollstaendigkeit textprobe bestand pysyntax
-#          handbuch anker
+#          handbuch anker kennzeichnung
 #
 # Vor PK-04 waren das acht Ordner mit acht Anleitungen und acht
 # Aufrufkonventionen; die Messungen darunter sind unverändert (Abnahme von
@@ -21,16 +21,17 @@ WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$WURZEL" || exit 1
 
 NAMEN=(installweiche sitzungshaertung csp jobregister migrationsregister
-       behandler linkprobe vollstaendigkeit textprobe bestand pysyntax handbuch anker)
-# Die elf mit eingebauter Selbstprobe (`behandler` seit P5c/AP3, `anker` seit
-# P5c/AP9). `linkprobe`
+       behandler linkprobe vollstaendigkeit textprobe bestand pysyntax handbuch anker
+       kennzeichnung)
+# Die zwölf mit eingebauter Selbstprobe (`behandler` seit P5c/AP3, `anker` seit
+# P5c/AP9, `kennzeichnung` seit R4-06). `linkprobe`
 # und `vollstaendigkeit` haben keine und hatten vor dem Umzug auch keine — das
 # ist kein Rückschritt, sondern ein Rest, den E-PK-24 mit dem gemeinsamen
 # Rahmen erst noch einlöst. `textprobe` hatte eine, hinter `--probe`, und sie
 # lief bis BR-05 nirgends — `bestand` (Regel `selbst`) hält die Liste seither
 # gegen den Code.
 SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister behandler
-        textprobe bestand pysyntax handbuch anker)
+        textprobe bestand pysyntax handbuch anker kennzeichnung)
 
 starter() {   # starter <name> — womit die Datei gefahren wird
     case "$1" in

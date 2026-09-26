@@ -24,6 +24,11 @@
       "aufruf": "bash tools/quelltext/pruefen.sh linkprobe",
       "braucht": "nichts"
     },
+    "kennzeichnung": {
+      "aufruf": "bash tools/quelltext/pruefen.sh kennzeichnung",
+      "braucht": "nichts",
+      "bemerkung": "R4-06, Anlass Nr. 170. Je verschluesseltem Feld das Schloss in Formular und Leseansicht gegen die Sollliste tools/quelltext/kennzeichnung-soll.md, dazu die Kleinzeile an jedem Klartext-Freitextfeld des Katalogs. Web 19.1.0 zaehlte 8 Schloesser und die Zahl stimmte -- zwei fehlten trotzdem."
+    },
     "anker": {
       "aufruf": "bash tools/quelltext/pruefen.sh anker",
       "braucht": "nichts",
@@ -293,6 +298,7 @@
       "kontraste",
       "linkprobe",
       "anker",
+      "kennzeichnung",
       "bestand",
       "syntax-py",
       "handbuch",
