@@ -32,10 +32,10 @@ zweimal ausgewichen: 331 hieß bis zum 26.09.2026 **329**, 333 hieß **330**
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — `main` zweimal aufgenommen (nach P5c, dann nach #90 und #91), Pull Request #87 ohne Konflikt.** Fassung 1 freigegeben (E-BV-01 bis -04); BV-01 bis BV-07 erledigt. P5c ist am 25.09.2026 gemergt (PR #89). **Vor BV wird die Android-Runde AR gemergt** (PR #88, E-BV-13); danach nimmt BV `main` ein zweites Mal auf (P-BV-08), dann Abschluss nach `CLAUDE.md` 7 (Erledigt-Zeile im Rahmenplan, Konzept löschen). |
-> | Entschieden | **E-BV-01 bis -08** (Abschnitt 3). Aus der Umsetzung: **E-BV-09** (BV-01, zur Kenntnis — weicht vom Konzepttext ab). Von der Betreiberin am 25.09.2026: **E-BV-10, -11** (Q-BV-02, -03); am 26.09.2026: **E-BV-13** (Reihenfolge P5c, AR, BV — beantwortet Q-BV-01) und **E-BV-16** (Q-BV-04 wie empfohlen). Aus BV-07: **E-BV-18**. Aus dem Aufnehmen von `main`: **E-BV-12, -14, -15, -17**. |
-> | Offen | **Q-BV-05** (Nummernspannen, die nur auf dem eigenen Zweig stehen — ein Backlog-Punkt?), Empfehlung in 3.4. **Q-BV-06** (der Satz zur Schlüsselableitung im Textbaustein 11.5a), Empfehlung in 3.5. **Freigabe des Abschlusses.** Q-BV-01 bis -04 beantwortet (E-BV-13, -10, -11, -16). |
-> | Umsetzung | **BV-00 erledigt** (Konzept, Backlog-Spanne). **BV-01 erledigt** (Nr. 184, `b712aca`; Befunde F-BV-07 bis -09). **BV-02 erledigt** (Nr. 274, `65c5348`; Befund F-BV-10). **BV-03 erledigt** (Nr. 40, `121ee81`; Befund F-BV-11, Nr. 331 notiert — damals 329). **BV-04 erledigt** (`e4a1931`; Nr. 214 ganz, Nr. 194 und 150 zum Teil). **BV-05 erledigt** (Nr. 222, 270, 281, 212 ausgetragen; Pull Request geöffnet). **BV-06 erledigt** (`f67c483`; Nr. 194 erweitert). **`main` aufgenommen** (26.09.2026, `Pruefablauf.md` 5.3): 9 Konflikte in 4 Dateien, keiner im Code (F-BV-15); Nummernkollision 329 (F-BV-14); der Prüfstand maß erst gegen das alte Schema (F-BV-17, Nr. 332). **`main` ein zweites Mal aufgenommen** (26.09.2026, nach #90 Web 21.1.3 und #91): 2 Konflikte, beide additiv; zweite Nummernkollision, 330 (F-BV-18). **BV-07 erledigt** (Q-BV-04: Handbuch 11.5a und 3; Nr. 194 erledigt, Nr. 150 bleibt für `server/jobs.php`). **Als Nächstes:** nach dem Merge von AR `main` ein zweites Mal aufnehmen (P-BV-08), Q-BV-04, dann Freigabe und Abschluss. |
+> | Stand | **26.09.2026 — gemergt (PR #87, `d34908b`), Abschluss freigegeben; Q-BV-05 und Q-BV-06 entschieden (E-BV-19, -20), BV-08 gebaut.** Gemergt wurde BV **vor** AR: AR hat den BV-Zweig aufgenommen (`af9df30`, PR #88 `f5bddc2`), das zweite Aufnehmen aus P-BV-08 entfiel. Der Abschluss läuft auf dem Zweig von Schritt 17 (`claude/schritt-17-hl9egt`), weil der BV-Zweig mit dem Merge zu ist: Erledigt-Zeile im Rahmenplan, Verlaufszeile, Löschung dieses Konzepts (K9); das Prüfdokument bleibt, bis P-BV-04, -07 und -09 abgehakt sind. |
+> | Entschieden | **E-BV-01 bis -08** (Abschnitt 3). Aus der Umsetzung: **E-BV-09** (BV-01, zur Kenntnis — weicht vom Konzepttext ab). Von der Betreiberin am 25.09.2026: **E-BV-10, -11** (Q-BV-02, -03); am 26.09.2026: **E-BV-13** (Reihenfolge P5c, AR, BV — beantwortet Q-BV-01) und **E-BV-16** (Q-BV-04 wie empfohlen). Aus BV-07: **E-BV-18**. Aus dem Aufnehmen von `main`: **E-BV-12, -14, -15, -17**. Von der Betreiberin am 26.09.2026, zum Abschluss: **E-BV-19, -20** (Q-BV-05, -06). |
+> | Offen | nichts an Fragen — Q-BV-01 bis -06 beantwortet (E-BV-13, -10, -11, -16, -19, -20). Für die Betreiberin bleiben P-BV-04, -07 und -09 im Prüfdokument. |
+> | Umsetzung | **BV-00 erledigt** (Konzept, Backlog-Spanne). **BV-01 erledigt** (Nr. 184, `b712aca`; Befunde F-BV-07 bis -09). **BV-02 erledigt** (Nr. 274, `65c5348`; Befund F-BV-10). **BV-03 erledigt** (Nr. 40, `121ee81`; Befund F-BV-11, Nr. 331 notiert — damals 329). **BV-04 erledigt** (`e4a1931`; Nr. 214 ganz, Nr. 194 und 150 zum Teil). **BV-05 erledigt** (Nr. 222, 270, 281, 212 ausgetragen; Pull Request geöffnet). **BV-06 erledigt** (`f67c483`; Nr. 194 erweitert). **`main` aufgenommen** (26.09.2026, `Pruefablauf.md` 5.3): 9 Konflikte in 4 Dateien, keiner im Code (F-BV-15); Nummernkollision 329 (F-BV-14); der Prüfstand maß erst gegen das alte Schema (F-BV-17, Nr. 332). **`main` ein zweites Mal aufgenommen** (26.09.2026, nach #90 Web 21.1.3 und #91): 2 Konflikte, beide additiv; zweite Nummernkollision, 330 (F-BV-18). **BV-07 erledigt** (Q-BV-04: Handbuch 11.5a und 3; Nr. 194 erledigt, Nr. 150 bleibt für `server/jobs.php`). **BV-08 erledigt** (26.09.2026, auf dem Zweig von Schritt 17: Nr. 339 angelegt, Handbuch 11.5a ergänzt). **Abschluss** nach K9 im selben Zug. |
 > | Fable-Schritte | keine. |
 >
 > **Stand der Umsetzung**
@@ -52,6 +52,7 @@ zweimal ausgewichen: 331 hieß bis zum 26.09.2026 **329**, 333 hieß **330**
 > | Aufnahme `main` (nach P5c) | **erledigt 26.09.2026** | 329 → 331, neu 332 | `docs/Backlog.md` (6 Konflikte), `docs/CHANGELOG.md` (1), `docs/Technik.md` (1), `tools/proben/wiederherstellung/probe.php` (1), dieses Konzept, Prüfdokument | klein | | Konflikte **9** in 4 Dateien, **0** im Code; Nummern doppelt **0**; `vollstaendigkeit` am vereinigten Stand **0** Befunde, Hinweise 73, Unicode 6, Emoji 0, Töne PHP = JS **5**; Probe-Merge mit AR (`83106eb`): Konflikte nur in Backlog (**4**, additiv) und Changelog (**1**, additiv), `docs/Lizenzen.md` ohne; Prüfstand erst **1 rot** (Rollenprobe gegen das Schema vor P5c, F-BV-17), nach `hochfahren.sh --neu` **20 grün, 0 rot, 0 nicht gemessen**; Bericht über den endgültigen Baum in der Nachricht des Merge-Commits |
 > | Aufnahme `main` 2 (nach #90, #91) | **erledigt 26.09.2026** | 330 → 333 | `docs/Backlog.md` (1 Konflikt: Ende *Erledigt*; Kopf, Nr. 40), `docs/CHANGELOG.md` (1: oben), `tools/quelltext/vollstaendigkeit-streichliste.md` (`map`: Nr. 333), dieses Konzept, Prüfdokument | klein | | Konflikte **2**, beide additiv, **0** im Code; neue Migrationen **0** (`git diff 29cf394 a9d00ea`); Nummern doppelt vor dem Ausweichen **330**, danach **0**; Prüfstand im Prüfdokument 2 |
 > | BV-07 Reste von Nr. 194 (Q-BV-04) | **erledigt 26.09.2026** | 194 (erledigt), 150 (Vermerk) | `docs/Handbuch.md` (11.5a Textbaustein, Abschnitt 3), `docs/Backlog.md`, `docs/CHANGELOG.md` (BV-Eintrag), dieses Konzept, Prüfdokument | klein | | Textbaustein: verschlüsselt **+1** Angabe (Abfahrtort, Adresse und Koordinate), Klartext **+2** (Höhe des Einsatzorts, Koordinate des Transportziels) — gleich `CLAUDE.md` 4; `grep` „Diagnose, Alter und Einsatzort" außerhalb von Konzepten, Changelog und Backlog **0**; Karte „Textbausteine" (`admin_rechtstexte.php`) führt den Baustein **nicht** (2 Bausteine: Adresssuche, Anmeldeversuche) — keine Web-Stufe nötig; Prüfstand im Prüfdokument 2 |
+> | BV-08 Die zwei letzten Fragen (Q-BV-05, -06) | **erledigt 26.09.2026** | 339 (neu) | `docs/Backlog.md` (Kopf: 339 vergeben, 340–349 an Konzept 17; Eintrag 339), `docs/Handbuch.md` (11.5a, ein Satz), `docs/CHANGELOG.md` (BV-Eintrag), dieses Konzept, Prüfdokument | klein | | `uebersicht.py --ziel 17`: Nr. 339 dabei, 0 ohne Grammatik; `decken.py` 0 gerissen; Baustein: `grep -c "den der Server beisteuert" docs/Handbuch.md` **1** |
 
 ---
 
@@ -126,6 +127,8 @@ gewählten Punkten sind gegen diesen Stand nachgemessen (F-BV-02).
 | E-BV-17 | **Die BV-Nummer 330 weicht auf 333 aus.** | Umsetzung (Aufnahme 2) | Wie E-BV-12: `main` behält die Nummer. 333 ist die letzte freie Nummer der Spanne und auf keinem Zweig vergeben (AR: 334 bis 337). |
 | E-BV-16 | **Q-BV-04 wie empfohlen:** die zwei Handbuchstellen in BV (Paket BV-07), `server/jobs.php` nicht. | Betreiberin, 26.09.2026 | Nur `docs/`, AR fasst das Handbuch nicht an; eine Web-Stufe nur für einen Kommentar machte aus einem Werkzeug-PR eine Auslieferung. |
 | E-BV-18 | **Nr. 194 ist erledigt; die Klartextliste des Bausteins ist mitgezogen; der Satz zur Schlüsselableitung wird Q-BV-06.** Die zwei Rechtstexte bleiben als P-BV-07 im Prüfdokument. | Umsetzung (BV-07) | Die Abnahme von Nr. 194 (dieselben Felder in Einstieg, Kapitel 5 und Baustein) ist erfüllt; die Rechtstexte kamen erst mit P-BV-03 dazu und gehören der Betreiberin, und das Prüfdokument bleibt bis zum Abhaken — sie verschwinden also nicht. Die Klartextliste gehört zur selben Aufzählung wie der Abfahrtort (E-BV-11: „alle Aufzählungen"). Den Schlüsselsatz ändert BV nicht von sich aus: Der Text geht in eine Rechtserklärung. |
+| E-BV-19 | **Q-BV-05 wie empfohlen: ein Backlog-Punkt, Nr. 339, `gehört zu: 17` — der Prüfstand hält neue Nummern örtlich gegen alle offenen Zweige.** | Betreiberin, 26.09.2026 | Zwei Kollisionen an einem Tag (F-BV-14, -18) ohne eine verletzte Regel; Stufe 1 sieht die anderen Zweige nicht. Die Nummer vergibt der Abschluss von BV auf dem Zweig von Schritt 17, wo sie seit `17-00` in der Reservierungstabelle steht (Konzept 17 beginnt bei 340) — so wird sie nicht die dritte Kollision. |
+| E-BV-20 | **Q-BV-06 wie empfohlen: Der Baustein nennt den Server-Anteil** — ein Satz in Handbuch 11.5a (BV-08). | Betreiberin, 26.09.2026 | Nur `docs/`, keine Web-Stufe. Die zweite Satzhälfte („aus dem Anteil allein lässt er sich nicht bilden") ist die Zusage, auf die es in einer Erklärung ankommt; Handbuch 3 bleibt unberührt. |
 
 ### 3.1 Q-BV-01 — Merge-Zeitpunkt (beantwortet 26.09.2026, E-BV-13)
 
@@ -191,7 +194,7 @@ Schlüssel wird aus dem Passwort des Kontos abgeleitet". Seit S10 geht
 zusätzlich der Server-Anteil ein (`CLAUDE.md` 4). Der Satz ist damit nicht
 falsch, aber unvollständig — und der Text geht in eine Rechtserklärung.
 
-### 3.4 Q-BV-05 — Nummernspannen, die niemand sieht (offen, 26.09.2026)
+### 3.4 Q-BV-05 — Nummernspannen, die niemand sieht (beantwortet 26.09.2026: wie empfohlen, E-BV-19)
 
 Zweimal an einem Tag ist eine Nummer aus der Spanne von BV auf `main`
 gelandet (F-BV-14, -18). Beide Male hat niemand gegen eine Regel verstoßen,
@@ -211,7 +214,7 @@ gegen `main` neu anlegt, mit denen aller offenen Zweige (`git fetch`, dann
 kostet jedes Mal die Verweise in Konzept, Prüfdokument und Werkzeugen, und
 es fällt nur beim Aufnehmen von `main` auf, also spät.
 
-### 3.5 Q-BV-06 — der Satz zur Schlüsselableitung im Textbaustein (offen, 26.09.2026)
+### 3.5 Q-BV-06 — der Satz zur Schlüsselableitung im Textbaustein (beantwortet 26.09.2026: wie empfohlen, E-BV-20)
 
 Der Baustein in Handbuch 11.5a sagt: „der Schlüssel wird aus dem Passwort
 des Kontos abgeleitet." Seit S10 geht zusätzlich der **Server-Anteil** ein
@@ -313,6 +316,18 @@ aufzuzählen. Nr. 194 wandert nach *Erledigt* (E-BV-18); Nr. 150 bleibt für
 den Kopfkommentar in `server/jobs.php` offen.
 **Abnahme:** Baustein, Kapitel 5 und `CLAUDE.md` 4 nennen dieselben Felder;
 Stufe klein grün.
+
+### BV-08 Die zwei letzten Fragen (Q-BV-05, Q-BV-06)
+
+Nach der Freigabe vom 26.09.2026 (E-BV-19, E-BV-20), gebaut auf dem Zweig
+von Schritt 17, weil BV gemergt ist (PR #87, `d34908b`) und sein Zweig
+damit zu ist. Nr. **339** beschreibt den Nummernriegel für den Prüfstand
+mit `gehört zu: 17` — Konzept 17 nimmt ihn als Kandidaten auf; der
+Textbaustein in Handbuch 11.5a sagt, dass der Schlüssel aus dem Passwort
+**und** dem Server-Anteil abgeleitet wird und sich aus dem Anteil allein
+nicht bilden lässt. Kein Code, keine Web-Stufe (`CLAUDE.md` 2).
+**Abnahme:** `uebersicht.py --ziel 17` führt Nr. 339 mit gültiger
+Kopfzeile; der Baustein nennt den Anteil; `decken.py` 0 gerissen.
 
 ## 5. Prüfprotokoll-Soll
 

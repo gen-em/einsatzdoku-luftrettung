@@ -4186,8 +4186,9 @@ Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 > und Beschreibung des Einsatzorts, ein von Hand eingetragener Abfahrtort
 > (Adresse und Koordinate) sowie die Notizen eines Einsatzes werden
 > bereits im Browser verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
-> kann sie nicht lesen; der Schlüssel wird aus dem Passwort des Kontos
-> abgeleitet.
+> kann sie nicht lesen; der Schlüssel wird aus dem Passwort des Kontos und
+> einem Anteil abgeleitet, den der Server beisteuert; aus dem Anteil allein
+> lässt er sich nicht bilden.
 >
 > Nicht verschlüsselt gespeichert werden: die aufgezeichnete GPS-Spur, die
 > Koordinaten der einzelnen Einsatzphasen, die Höhe des Einsatzorts, das

@@ -363,7 +363,13 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   Transportziels ergänzt. **Der Textbaustein für die Datenschutzerklärung**
   (Handbuch 11.5a; die Notizen hatte P5c dort schon ergänzt) nennt jetzt
   auch den Abfahrtort, und seine Klartextliste die Höhe des Einsatzorts und
-  das Transportziel samt Koordinate (BV-07, Q-BV-04). **Wer den Baustein
+  das Transportziel samt Koordinate (BV-07, Q-BV-04). Sein Satz zur
+  Schlüsselableitung nennt seit dem Abschluss (BV-08, Q-BV-06) auch den
+  Server-Anteil: Seit S10 geht `kdf_anteil` in den Datenschlüssel ein
+  (`CLAUDE.md` 4), und „aus dem Passwort abgeleitet" war damit nicht
+  falsch, aber halb — für einen Text, der in eine Datenschutzerklärung
+  geht, zu wenig. Die Zusage steht dabei: Aus dem Anteil allein lässt sich
+  der Schlüssel nicht bilden. **Wer den Baustein
   schon übernommen hat, übernimmt ihn neu:** Die alte Fassung untertrieb
   nicht nur den Schutz, sie nannte auch zwei Angaben nicht, die im Klartext
   liegen — und das ist in einer Erklärung die unangenehmere Richtung.
