@@ -14,6 +14,30 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Geplante Stilabweichungen bleiben nach dem Merge stehen (Nr. 330)] — 2026-09-26
+
+**Die Liste der geplanten Stilabweichungen muss nach dem Merge nicht mehr
+geleert werden.** Auf Nachfrage der Betreiberin, nach dem Merge von
+Web 21.1.3 (PR #90). Nur `tools/` und `docs/` — keine Versionsstufe.
+
+`tools/stilvergleich/geplant.txt` sagt im Pull Request, welche
+Abweichungen gewollt sind; mit dem Merge landet sie auf `main`, und dort
+misst der nächste Lauf keine davon mehr. Bis hier meldete er sie dann als
+„geplant, aber nicht gemessen", rot, und jemand musste die Datei nach
+jedem Merge von Hand leeren — vorher ging es nicht, weil der Pull Request
+selbst sie braucht. Jetzt übergibt
+`gegen.sh` die Liste von `main` als `--geerbt`: Eine Zeile, die dort
+wortgleich steht und nicht gemessen wird, zählt nicht und steht mit Zahl
+im Protokoll. **Nur diese Kategorie** — dieselbe Signatur kann in zwei
+Pull Requests hintereinander gewollt sein (`body <html> : height` ändert
+sich mit fast jeder Regel), deshalb entscheidet die Messung, nicht die
+Liste. Gegenproben: nach dem Merge ohne `--geerbt` rot (13 nicht
+gemessen), mit grün (13 geerbt); eine eigene Zeile ohne Messung rot; eine
+ungeplante Abweichung rot. **Der Lauf dieses Pull Requests ist selbst der
+Fall, für den es gebaut ist:** Auf `main` steht die Liste von 21.1.3, das
+Stylesheet ist gleich, und der Stilvergleich meldet 13 geerbte Zeilen statt
+13 roter.
+
 ## [Web 21.1.3] — 2026-09-26
 
 **Die Sprungmarken der Leiste weichen früher.** Die erste Änderung nach dem
