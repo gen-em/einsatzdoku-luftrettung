@@ -68,7 +68,99 @@ erst seit SD-02 an einer Stelle steht.
 
 ## 2. Befund
 
-*(wird mit dem Ergebnis der Workflows gefüllt)*
+### 2.1 Wie gemessen
+
+Am 26.09.2026 auf dem Arbeitszweig (`8e29cf0` bis `5a2a69a`), **nur
+lesend** — keine Probe, kein Prüfstand, nichts geschrieben —, gefächert auf
+Agenten (E-ZE-25): je Gruppe von neun Punkten ein **Sichter** (Eintrag
+vollständig lesen, am heutigen Code und an der Doku nachsehen, ob das
+Problem noch besteht, einordnen, Dateien und Prüfmittel nennen) und ein
+**Gegenprüfer** mit dem Auftrag, jede Einordnung zu **widerlegen**
+(Trefferzahlen selbst nachrechnen, Dateilisten vervollständigen,
+Kollisionen mit 18 und PK suchen); dazu ein **Umfeld-Agent** (Schritt 18,
+PK-06 bis -08, Rahmenplan 4 und 6, tote Zweige, Vorlage Runde 3). Sechs
+Gruppen: A Demo und Referenz · B Quelltext-Prüfmittel · C Prüfstand und
+Android · D Server-Code · E Oberfläche · F Doku und Betrieb.
+
+Zwei Befunde zur Fächerung selbst:
+
+- **F-R4-01 Ein Workflow fährt in diesem Container zwei Agenten
+  gleichzeitig,** nicht sechzehn: die Grenze ist `CPUs − 2`, und der
+  Container hat vier. Dreizehn Agenten in einem Workflow hätten sieben
+  Runden gebraucht; zwei Workflows mit je drei Gruppen fahren vier.
+- **F-R4-02 Eine Unterbrechung des Zugs beendet die Agenten.** Der erste
+  Anlauf (14 Agenten, ein Workflow) starb um 14:31 mit „Request interrupted
+  by user" in beiden laufenden Agenten; gestartet hatten erst zwei. Wer
+  einen Workflow laufen lässt, schreibt es der Betreiberin, bevor er den
+  Zug beendet — eine normale Nachricht ist unschädlich, der Stopp-Knopf
+  nicht.
+
+### 2.2 Die 55 Punkte — Einordnung
+
+*(folgt aus den Sichtungen)*
+
+### 2.3 Umfeld — was 17 nicht anfassen soll
+
+**Schritt 18** (Nr. 242, 247, 249, 233, 210, 228) wird die folgenden
+Dateien schreiben; wo ein Punkt der Runde dieselbe Datei anfasst, steht er
+daneben. Das ist die Sperrliste für den Paketschnitt: Ein 17er-Paket an
+einer dieser Dateien bleibt klein, wird vor 18 gemergt und ändert keine
+Zeile, die 18 umbauen wird.
+
+| Datei | Schritt 18 | Punkt der Runde an derselben Datei |
+|---|---|---|
+| `server/ingest.php`, `server/diensttag_lib.php` | 210 (Deadlock) | **Nr. 158** (`days.created_at`, `ingest_tag_offen()`) — echte Überschneidung |
+| `server/api/rueckfrage.php`, `api/schluessel_erneuern.php`, `api/schluesselblatt_pruefen.php` | 233, 242 | **Nr. 258** (`json_out()`) |
+| `server/einstellungen.php` | 242 | **Nr. 277** (`await fetch` ohne `catch`) |
+| `server/admin_user.php`, `server/konto_lib.php` | 249, 228 | **Nr. 299** (`konto_loeschen()`), evtl. **Nr. 250** |
+| `server/install.php` | 247 | **Nr. 291** (halbes Schema) |
+| `server/auth_guard.php`, `server/demo_lib.php` | 242 | **Nr. 76, 259, 322** (Demo-Reset, `demo_reset_wenn_faellig()`) |
+| `server/wartung_lib.php`, `server/db.php` | 210 | **Nr. 172** (`wartung_tor()`) |
+| `server/betrieb_server.php`, `betrieb_schluesselblatt.php`, `admin_*.php` | 233, 247 | **Nr. 250** (Umleiten nach POST) |
+| `server/schema.sql`, `server/migration_lib.php` | 242 („Gerät merken") | **Nr. 158** (Migration) |
+| `sitzung_lib.php`, `session_lib.php`, `login.php`, `pw_handling.php`, `zweitfaktor*.php`, `totp_lib.php`, `rueckweg_lib.php`, `serverkrypto_lib.php`, `*_archiv_lib.php`, `sicherungsziel_lib.php`, `adminbackup_lib.php`, `zip_lib.php`, `transaktion_lib.php`, `registrieren.php`, `ratelimit_lib.php` | 242/247/249/210/228 | keiner — frei halten |
+
+**PK-06 bis PK-08** schreiben `.github/workflows/auslieferung.yml`,
+`ausliefern-lauf.yml`, `integritaet.yml` (PK-06, -08), `CLAUDE.md` 3 und
+6, `Technik.md` 6.2/6.3, `Rahmenplan.md` (Erledigt-Zeile Kette II) und
+`Backlog.md` (Nr. 227) beim Abschluss PK-07, dazu die fünf Geheimnisse und
+`signatur.properties` (PK-08). **Nr. 207** (`gen-em.org` in `tools/` und
+`.github/`) schreibt in dieselben Workflow-Dateien — es gehört nicht in
+diese Runde, solange PK-06 offen ist. Nr. 265 (`.github/` → Doku) steht
+„nur auf Anlass".
+
+**Mittelbare Bezüge** (kein Punkt nennt einen Schritt wörtlich; Muster
+`Schritt 1[2348]a?` über die Folgezeilen → 0): Nr. 62 → 13 (P7: „mit dem
+neuen NEF-Logo, vor P7"); Nr. 140 → nichts Offenes mehr als die
+Verschiebung (F-SD-06); Nr. 114 → Krypto-Review AN-2 (Eingang von 12);
+Nr. 283 → Gegenlesung PK-04; **Nr. 295 widerspricht sich** — Kopfzeile
+`gehört zu: 17`, Text „Zuordnung: 10c AP7" (gemergt); Nr. 332 → F-PK-39;
+Nr. 260, 265, 266 → Kette II, die mit PK-07 endet.
+
+**Rahmenplan 4 und 6:** Die Faustregel („alles, was `server/`, `schema.sql`
+oder `update.php` schreibt, wartet auf das Paket davor") gilt für 17 wie
+für jeden Schritt. Kein Posten in 6 nennt 17; fällig wird mit dem ersten
+Prüfmittel der Runde **P-BR-09** („beim nächsten Prüfmittel", Prüfliste
+BR), und die Demo-Reset-Punkte (76, 259, 322) berühren den Posten
+„Demo-Konto einmal „Auf Standard zurücksetzen"".
+
+**P-SD-20 ist beantwortet** (Prüfdokument SD 3.7 (4): „Kommt die nächste
+Instanz ohne Rückfrage zurecht?"): ja. Die Abschlüsse von SD, AR und BV und
+dieses Konzept sind mit Kopfzeilen und unter den Decken geschrieben,
+`decken.py` und `uebersicht.py` haben jede Fassung gemessen, ohne
+Rückfrage. Eine Stelle war nicht beschrieben und ist jetzt entschieden
+(**E-R4-06**): Wie ein erledigter Eintrag in `Backlog-Erledigt.md` aussieht
+— Kopfzeile bleibt, `Stand: erledigt`, ein Schlusssatz mit Datum, Anlass und
+Beleg als letzte Folgezeile. Kein Backlog-Punkt.
+
+**Zwei tote Zweige** (F-R4-03): `claude/nice-lovelace-snlo8m` (Konzept RW,
+inhaltsgleich über `5fb1d2a` auf `main`, dort mit `00cacef` gelöscht) und
+`claude/pk05-tor-umbauen` (zwei Textcommits, inhaltsgleich über `dc90678`
+und PR #82 auf `main`) tragen nichts Ungemergtes — Q-R4-01.
+
+### 2.4 Befunde am Bestand
+
+*(folgt aus den Sichtungen)*
 
 ## 3. Entscheidungen
 
@@ -108,5 +200,7 @@ Prüfdokument bleibt, bis seine Prüfliste abgehakt ist.
 `gehört zu: 17`), `tools/steuerung/uebersicht.py`, Konzept SD (E-SD-35,
 E-SD-38, E-SD-39, F-SD-06, F-SD-08; gelöscht `831e3e7`), Konzept BV
 (E-BV-19, E-BV-20; gelöscht `8e29cf0`), Konzept AR (E-AR-12: Nr. 334, 335;
-gelöscht `956c370`), `Konzept-Backlog-Runde-3.md` (gelöscht `5e501ae`,
+gelöscht `956c370`), `Konzept-Backlog-Runde-3.md` (gelöscht `f6cb5fd`, 24.09.2026 — nicht
+`5e501ae`, wie die Erledigt-Zeile im Rahmenplan sagt; letzte Fassung
+`git show f6cb5fd^:docs/konzepte/Konzept-Backlog-Runde-3.md`, 689 Zeilen;
 Vorlage für Form und Paketschnitt).
