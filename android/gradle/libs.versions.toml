@@ -19,22 +19,30 @@
 # die Vertraeglichkeit mit der AGPL werden in docs/Lizenzen.md nachgetragen
 # (Block D, E-S4-04). Bis dahin ist diese Datei die vollstaendige Liste.
 #
-# WARUM DIESE NUMMERN. compileSdk ist 36 (siehe handy/build.gradle.kts).
-# Eine AndroidX-Bibliothek nennt ein MINDEST-compileSdk; die Nummern hier sind
-# durchweg Fassungen, die mit 36 auskommen. Wer eine hochzieht, prueft das
+# WARUM DIESE NUMMERN. compileSdk ist 37 (siehe handy/build.gradle.kts, seit
+# Android 0.16.0). Eine AndroidX-Bibliothek nennt ein MINDEST-compileSdk; die
+# Nummern hier sind durchweg Fassungen, die mit 37 auskommen. Wer eine hochzieht, prueft das
 # mit -- AGP meldet es als Fehler, nicht als Warnung, und der Baulauf bricht.
 # ---------------------------------------------------------------------------
 
 [versions]
-agp = "8.13.2"
-kotlin = "2.1.21"
+agp = "9.4.1"
+# KOTLIN IST SEIT AGP 9 EINGEBAUT (AR-02, Backlog Nr. 65). AGP bringt ein
+# Kotlin-Gradle-Plugin als Laufzeitabhaengigkeit mit (bei 9.4.1: 2.2.10);
+# die Zahl hier hebt es an. Sie gilt fuer ZWEI Plugins, die zusammen wandern
+# muessen: das Kotlin-Plugin selbst (nur noch in der Wurzel, `apply false`,
+# um die Fassung festzulegen) und den Compose-Compiler, der an genau diese
+# Kotlin-Fassung gebunden ist.
+kotlin = "2.4.20"
 
 # --- AndroidX (Apache-2.0) ---
-coreKtx = "1.16.0"
-lifecycle = "2.9.1"
-activityCompose = "1.10.1"
-composeBom = "2025.06.01"
-wearCompose = "1.4.1"
+# Stand der Android-Runde AR (24.09.2026). core-ktx, Compose-BOM und
+# wear-compose verlangen compileSdk 37 und AGP >= 9.1 (aar-metadata).
+coreKtx = "1.19.1"
+lifecycle = "2.11.0"
+activityCompose = "1.13.0"
+composeBom = "2026.09.00"
+wearCompose = "1.7.0"
 wearInput = "1.2.0"
 
 # --- Google Play-Dienste (proprietaer, nur Data Layer) ---

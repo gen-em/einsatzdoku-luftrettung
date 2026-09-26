@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.ContextCompat
@@ -124,8 +125,12 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
             raeumen = { app.puffer.abgewieseneRaeumen(null) },
         )
     }
+    /* `LocalResources` statt `kontext.resources` (Android 0.16.0): Compose
+     * 1.12 meldet den Weg ueber den Context als nicht konfigurationsfest
+     * (Lint `LocalContextResourcesRead`). */
+    val ressourcen = LocalResources.current
     val geraet = remember {
-        val masse = kontext.resources.displayMetrics
+        val masse = ressourcen.displayMetrics
         Geraeteangabe.vomGeraet(masse.widthPixels, masse.heightPixels, BuildConfig.VERSION_NAME)
     }
 

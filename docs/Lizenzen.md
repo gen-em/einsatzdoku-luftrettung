@@ -372,7 +372,8 @@ Abhängigkeit des Projekts.
 
 | Bestandteil | Version | Lizenz | wofür |
 |---|---|---|---|
-| **AndroidX / Jetpack Compose** (`core-ktx`, `lifecycle`, `activity-compose`, Compose-BOM, `wear.compose`, `wear-input`) | BOM 2025.06.01, Wear-Compose 1.4.1 | Apache-2.0 | Die gesamte Oberfläche beider Module |
+| **AndroidX / Jetpack Compose** (`core-ktx`, `lifecycle`, `activity-compose`, Compose-BOM, `wear.compose`, `wear-input`) | BOM 2026.09.00 (Compose 1.12.1), Wear-Compose 1.7.0, `core-ktx` 1.19.1, `lifecycle` 2.11.0, `activity-compose` 1.13.0, `wear-input` 1.2.0 — seit Android 0.16.0; bis 0.15.1 BOM 2025.06.01, Wear-Compose 1.4.1 | Apache-2.0 | Die gesamte Oberfläche beider Module |
+| **Kotlin-Standardbibliothek** (`kotlin-stdlib`) | 2.4.20 (seit Android 0.16.0; bis 0.15.1 2.1.21) | Apache-2.0 | Die Laufzeit der Sprache — sie liegt in jedem Kotlin-APK und stand hier bis 0.16.0 nicht, obwohl sie es immer tat |
 | **play-services-wearable** | 20.0.1 | **proprietär** (Google APIs ToS) | **Ausschließlich** der Wear Data Layer — der Weg zwischen Uhr und Handy |
 
 **Zwei statt vier seit Android 0.11.0.** Bis dahin standen hier auch

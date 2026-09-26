@@ -12,8 +12,10 @@
 import java.util.Properties
 
 plugins {
+    /* KEIN `kotlin.android` MEHR (AR-02): AGP 9 uebersetzt Kotlin selbst
+     * ("built-in Kotlin"), und das alte Plugin daneben bricht den Bau ab.
+     * Welche Kotlin-Fassung das ist, legt die Wurzel fest. */
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -23,7 +25,9 @@ android {
     // getrennte Pakete auf getrennten Geraeten; der Data Layer verlangt
     // trotzdem Namens- UND Signaturgleichheit.
     namespace = "org.genem.nadoku"
-    compileSdk = 36
+    /* 37 seit Android 0.16.0 (Konzept AR, E-AR-08): Compose 1.12, wear-compose
+     * 1.7 und core-ktx 1.19 verlangen es (aar-metadata: minCompileSdk=37). */
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "org.genem.nadoku"
@@ -32,7 +36,9 @@ android {
          * Tizen-Modelle fuehren gar keine Android-Apps aus, ein niedrigerer
          * Stand gewaenne also kein einziges Geraet. */
         minSdk = 30
-        targetSdk = 36
+        /* 37 seit Android 0.16.0 (E-AR-08): Es gelten die Regeln von Android 17.
+         * Durchsicht der 17 Verhaltensaenderungen: Konzept AR, AR-03. */
+        targetSdk = 37
 
         /* Der Versatz aus Backlog Nr. 98: Play verlangt je APK unter
          * derselben Anwendungs-ID einen eindeutigen Code. Begruendung des
@@ -88,16 +94,18 @@ android {
     }
 
     // Derselbe gemeinsame Quelltext wie im Handy-Modul -- Begruendung dort.
-    sourceSets["main"].java.srcDir("../gemeinsam/quelle")
-    sourceSets["main"].res.srcDir("../gemeinsam/res")
+    //
+    // SEIT AGP 9 UEBER `kotlin`, NICHT UEBER `java` (AR-02, F-AR-08). Das
+    // eingebaute Kotlin nimmt Kotlin-Dateien aus einem `java`-Verzeichnis
+    // nicht mehr an; bis Android 0.15.1 stand hier `java.srcDir(…)`.
+    sourceSets["main"].kotlin.directories += "../gemeinsam/quelle"
+    sourceSets["main"].res.directories += "../gemeinsam/res"
 
     lint {
         abortOnError = true
         warningsAsErrors = false
         checkDependencies = false
-        textReport = true
-        htmlReport = false
-        xmlReport = true
+        // Keine Berichtsschalter mehr -- Begruendung im Handy-Modul (AR-02).
     }
 
     testOptions {
@@ -128,11 +136,10 @@ android {
     }
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-    }
-}
+/* HIER STAND BIS ANDROID 0.15.1 `kotlin { compilerOptions { jvmTarget = 17 } }`.
+ * Mit dem eingebauten Kotlin von AGP 9 folgt `jvmTarget` von selbst
+ * `compileOptions.targetCompatibility` (oben, 17) -- eine zweite Angabe
+ * derselben Zahl waere eine, die auseinanderlaufen kann (AR-02). */
 
 /* DAS ROBOLECTRIC-ABBILD KOMMT ÜBER GRADLE, NICHT ÜBER ROBOLECTRIC
  * (Backlog Nr. 240, 20.09.2026).
@@ -168,7 +175,9 @@ kotlin {
  * und gehört bei einer Änderung von `sdk=` oder einem Robolectric-Update
  * mitgezogen. Vergisst man es, bricht der Lauf mit einer klaren Meldung —
  * das ist der bessere Tausch gegen einen stillen Download. */
-val robolectricAbbild: Configuration by configurations.creating
+// `create` statt `by configurations.creating`: Gradle 9.6 meldet den
+// Delegaten als veraltet (AR-02).
+val robolectricAbbild: Configuration = configurations.create("robolectricAbbild")
 
 val robolectricAbbildOrdner = layout.buildDirectory.dir("robolectric-abbild")
 

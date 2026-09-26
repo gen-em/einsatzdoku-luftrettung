@@ -14,6 +14,222 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.16.0] — 2026-09-24 (in Arbeit, Android-Runde AR)
+
+Konzept AR, Backlog Nr. 65, 116 (Android-Hälfte) und 284. **Eine Nummer für
+die ganze Runde** (E-AR-04); dieser Eintrag wächst mit jedem Paket.
+**Nebennummer**, weil `targetSdk` auf 37 steigt und damit die
+Verhaltensregeln von Android 17 für die App gelten — Datenmodell, Sendeweg
+und Vertrag bleiben unberührt.
+
+### Nachgezogen — die Hausform-Zeile bekommt ihre Nummer (Nr. 284)
+
+PK-04/5b hat `recht_hinweis` in `strings.xml` auf die Hausform gebracht („von
+der BetreiberIn des Servers"), ohne die Android-Fassung anzuheben. Bis hier
+liefen damit zwei verschiedene Stände des Handy-Moduls unter `0.15.1`, und
+ein APK aus dem einen war von einem aus dem anderen an der Nummer nicht zu
+unterscheiden. Eine eigene Korrekturnummer für eine Zeile sollte es nicht
+geben (E-PK-40); die Zeile reist in 0.16.0 mit. Der Emulatorlauf, der sie auf
+der Seite Einstellungen → Rechtliches zeigt, folgt am Ende der Runde
+(P-PK-28).
+
+### Geändert — die Bau-Sprache: Gradle 9, AGP 9, Kotlin 2.4 (AR-02)
+
+Gradle 8.14.3 → **9.7.1** (Prüfsumme auf zwei Wegen: offizielle Datei und
+eigene Rechnung über das Archiv, beide `acd53f1e…`; die Wrapper-JAR ist
+byteweise die aus dieser Verteilung), AGP 8.13.2 → **9.4.1**, Kotlin und
+Compose-Compiler 2.1.21 → **2.4.20**. Bis hierhin standen die Bibliotheken
+**absichtlich still** — ein Fehler dieses Schritts sollte der Bau-Sprache
+gehören und nicht einer Bibliothek.
+
+AGP 9 übersetzt Kotlin selbst; das Plugin `kotlin-android` ist aus beiden
+Modulen ausgetragen und steht nur noch in der Wurzel, um die Fassung
+festzulegen. **Zwei Dinge hätte der Umstieg still weggenommen**, und beide
+sind festgehalten, statt es zu merken, wenn sie fehlen:
+
+- **Die Release-Prüffälle.** AGP 9 legt Prüffälle nur noch für die geprüfte
+  Bauart an. `testReleaseUnitTest` wäre entfallen — und mit ihm der Fall von
+  `ServeradresseTest`, der nur im Release laufen kann (Nr. 142). Er bleibt
+  über `android.onlyEnableUnitTestForTheTestedBuildType=false` an; gezählt:
+  264 Fälle je Bauart wie vorher.
+- **Der gemeinsame Quelltext.** Beide Module binden `gemeinsam/quelle` ein
+  (E-S4-02), und zwar bis hierhin über `java.srcDir`. Das eingebaute Kotlin
+  nimmt Kotlin-Dateien aus einem Java-Verzeichnis nicht mehr an; der Weg ist
+  jetzt `kotlin.directories`.
+
+Die Bauskripte meldeten danach zwölf Veraltungen (die drei
+Berichtsschalter von Lint — AGP 9 erzeugt alle Berichte immer — und
+`by configurations.creating`); sie sind **umgestellt, nicht unterdrückt**,
+und `--warning-mode all` meldet nichts mehr.
+
+**Gemessen, was das allein am APK ändert** — mit der alten Nummer gebaut,
+damit der Versionsstempel nicht mitzählt: Manifest, Ressourcen und 161 von
+175 Einträgen des Handy-APK (Uhr: 176 von 190) byteweise gleich, alle
+**78 Bilder** des Bilderlaufs byteweise gleich. Verschieden sind DEX,
+Kotlin-Builtins und Baseline-Profil, weil die Standardbibliothek von 2.1.21
+auf 2.4.20 geht; `kotlin-tooling-metadata.json` fällt weg.
+
+### Geändert — die Kette dahinter, und Android 17 als Ziel (AR-03)
+
+`compileSdk` und `targetSdk` 36 → **37**; Compose-BOM 2025.06.01 → 2026.09.00
+(Compose 1.8.3 → 1.12.1), `wear-compose` 1.4.1 → 1.7.0, `core-ktx` 1.16.0 →
+1.19.1, `lifecycle` 2.9.1 → 2.11.0, `activity-compose` 1.10.1 → 1.13.0.
+**`compileSdk` war nicht frei wählbar**: BOM, `wear-compose` und `core-ktx`
+tragen `minCompileSdk=37` in ihren Metadaten. **`targetSdk` 37 ist eine
+Entscheidung** (E-AR-08) und der Grund für die Nebennummer: Die App bekommt
+die Regeln von Android 17. Die 17 Verhaltensänderungen sind Punkt für Punkt
+gegen den Quelltext beider Module gehalten — 14 treffen sie nicht, drei
+betreffen den Netzweg (Encrypted Client Hello und Certificate Transparency als
+Vorgabe, die Berechtigung für das lokale Netz) und gehören an ein Gerät.
+
+**Was die Bibliotheken an der Oberfläche verschieben: nichts, das der
+Bilderlauf sieht.** 73 der 78 Bilder sind byteweise gleich, die fünf übrigen
+unterscheiden sich in einem Kästchen von rund 30 × 18 Pixeln — der Zeile
+„Fassung 0.15.1" → „0.16.0". Der Preis steht woanders: Das Handy-APK wächst von
+7,87 auf 9,20 MB, das der Uhr von 19,57 auf 22,74 MB (Compose 1.12 und
+Wear-Compose 1.7 bringen mehr mit). Für eine Uhr ist das viel; der Befund
+B-S4-03 aus S4 gilt weiter.
+
+### Behoben — „Noch 1 Minuten" und „Noch 1 Sekunden"
+
+Lint meldete seit 0.15.0 dreimal `PluralsCandidate`, und die Warnung stand
+als „der Plural ist dort immer richtig" stehen. Für zwei der drei stimmte das
+nicht: Die Restzeit der Kopplung rundet bei genau 60 Sekunden auf eine Minute
+und zählt unter einer Minute bis eins herunter — dort stand „Noch 1 Minuten"
+und „Noch 1 Sekunden". Alle drei Texte stehen jetzt als `<plurals>`, die
+Erinnerung an einen langen Dienst eingeschlossen (sie kommt frühestens nach
+26 Stunden, aber eine spätere Schwelle soll keinen falschen Satz erben). Drei
+Prüffälle in `MehrzahlTest` halten die Singularformen fest. Dazu ist eine
+Zeichenkette ausgetragen, die nirgends mehr angezeigt wurde
+(„Koppel die App mit deinem Konto."), und die Bildschirmmaße für die
+Kopplung liest die App über `LocalResources` statt über den Context — Compose
+1.12 meldet den alten Weg als nicht konfigurationsfest.
+
+**Lint meldet damit in beiden Modulen keine einzige Warnung** — vor der Runde
+waren es 14 im Handy-Modul. Stummgeschaltet ist keine.
+
+### Behoben — der Bilderlauf schrieb zwei Bauarten in einen Ordner
+
+`HandyBildTest` und `UhrBildTest` laufen in `testDebugUnitTest` **und**
+`testReleaseUnitTest`, und beide schrieben nach `build/bilder/`. Liegen blieb,
+was zuletzt fertig war — einmal „Fassung 0.16.0", einmal „0.16.0-pruef", je
+nach Reihenfolge der parallelen Aufgaben. Aufgefallen ist es beim
+Bild-für-Bild-Vergleich dieser Runde, der einen festen Stand braucht. Die
+Bilder liegen jetzt unter `build/bilder/debug/` und `build/bilder/release/`.
+
+### Behoben — zwei Kontraste, die in keiner Liste standen (AR-04, Nr. 116)
+
+`werkzeuge/kontraste.py` rechnete bis hierhin nur die Paare nach, die von
+Hand in seiner Liste standen; ein fehlendes Paar war ein grünes Paar. Es
+prüft jetzt zusätzlich, ob die Liste **vollständig** ist: Jede Farbe, die im
+Quelltext eines Moduls als Schrift, Zeichen (Punkt, Cursor), Linie oder
+Fläche vorkommt, muss in der Liste dieses Moduls in dieser Rolle stehen, und
+eine Farbe, deren Rolle es nicht erkennt, ist ebenfalls ein Befund (Weg (c),
+E-AR-09). Eine Selbstprobe baut die zwei Lücken von früher ein — den orangen
+Punkt auf der Karte (B-S5Z-13) und Rot als Schrift auf der Uhr (B-S5Z-15) —
+und muss beide finden.
+
+**Der erste Lauf fand dieselbe Lücke ein zweites Mal.** Auf der Uhr stand
+„Handy nicht erreichbar" in **Rot auf Asphalt, 4,12 : 1** gegen 4,5 — eine
+Zeile neben der Stelle, die B-S5Z-15 behoben hatte, und in keiner Liste. Sie
+ist jetzt Rosa, wie dort. Und am Handy war der **Cursor im Eingabefeld Orange
+auf Schnee, 2,23 : 1** gegen 3,0; er ist jetzt Orange tief (4,32 : 1), wie
+der Rückstandspunkt. Beide Farben gab es schon — kein neuer Wert. Dazu kamen
+vier Paare, die immer bestanden, aber nie gemessen wurden (der blaue Punkt
+auf der Karte, die Fassungszeile auf dem Seitengrund, die Rahmen der
+Bedienelemente). Der Rahmen `linie` um Karten und beschriftete Auswahlzeilen
+ist als Zierde begründet, nicht gerechnet: Man erkennt diese Elemente an
+Beschriftung und Fläche.
+
+Stand: **30 Paare, 0 Befunde, 125 Farbstellen, alle mit erkannter Rolle.**
+Was das Werkzeug nicht sieht, steht in seinem Kopf: eine bekannte Schrift auf
+einem neuen Grund. Und es hängt an keinem Lauf — das Einhängen in den
+Prüfstand ist Nr. 334, nach P5c.
+
+### Geprüft — der Emulator auf Android 17 (AR-05)
+
+Der Emulatorlauf lief zum ersten Mal auf **API 37**: Kopplung gegen die
+örtliche Installation, Einstellungen → Rechtliches mit „von der BetreiberIn
+des Servers" und „Fassung 0.16.0-pruef" — damit ist P-PK-28 auf dem
+gelaufenen Gerät belegt. **Und der Weg, an dem `targetSdk` 37 am meisten
+hängt, lief durch:** Dienst beginnen, der Vordergrunddienst mit Standort
+läuft, „GPS empfängt", 27 Punkte; Dienst beenden, am Server ein
+`ingest.php` mit 200 und der Diensttag geschlossen. Die Uhr lief zuerst auf
+Wear OS 5, weil das einzige Wear-Abbild mit API 37 ein `user`-Build ohne Root
+ist — und im Nachtrag doch auf **Wear OS 7**: Startseite und „Dienst
+beginnen" bis zur Sperrfläche, ohne Absturz der App. Nicht der fehlende Root
+war das Haupthindernis, sondern eine falsch angelegte AVD
+(`target=android-0` aus `cmdline-tools` 12.0), an der `system_server` im
+Minutentakt abbrach; den Watchdog-Faktor setzt die Debug-Ramdisk, die AOSP
+für genau solche Prüfläufe vorsieht. **Das Werkzeug kann es seither
+selbst**, damit der nächste Lauf nicht wieder neun Anläufe braucht: Die neue
+Ausbaustufe `tools/sandbox/aufbauen.sh emulator` holt `cmdline-tools` 23.0
+(auch über ein veraltetes hinweg), Emulator, beide Abbilder mit API 37 und
+legt die AVDs `handy37` und `uhr37` an; `android/werkzeuge/emulator.sh`
+berichtigt `target`, baut für `user`-Abbilder die Debug-Ramdisk und startet
+sie damit, und es warnt, wenn die 7,4 GB für die Datenpartition fehlen. Die
+Vorgabe des Werkzeugs ist damit API 37 für beide Geräte; bis dahin stand
+dort API 34 für das Handy und Wear OS 3 für die Uhr, und wer auf 37 fahren
+wollte, setzte es von außen.
+
+**Drei Hindernisse lagen im Emulator, nicht in der App**, und
+`android/werkzeuge/emulator.sh` umgeht sie seither: SurfaceFlinger bricht
+auf den Abbildern mit API 37 unter Emulator 37.1.11 in seinem
+`RegionSampling` ab und reißt die ganze Oberfläche mit (drei Neustarts in 13
+Minuten) — mit Drei-Tasten- statt Gestennavigation bleibt das Sampling aus;
+`screencap` scheitert an derselben Stelle, und `bild` zieht dann von der
+Wirtsseite ab; und Emulator und Gradle-Daemon zusammen brachten den
+Container zum Stehen, weshalb `start` jetzt warnt. **Die ersten beiden
+Umgehungen sind im Nachtrag wieder ausgetragen:** Der Abbruch lag nicht am
+Emulator, sondern an `target=android-0` in der AVD (unten); mit richtigem
+`target` lief das Handy 15 Minuten mit Gestennavigation ohne einen Eintrag
+im Absturzpuffer, und `screencap` liefert wieder ein PNG (Backlog Nr. 337,
+erledigt). `bild` meldet ein fehlendes PNG seither als Fehler, statt still
+auf die Wirtsseite auszuweichen.
+
+**„Handy nicht erreichbar" in Rosa zeigt der Bilderlauf, nicht der
+Emulator.** Das Wear-OS-5-Abbild meldet ohne Telefon „Handy verbunden" —
+die Anzeige folgt einer zugestellten Nachricht, und woran sie dort
+zugestellt wurde, ist ungeklärt (ein Gerätetest klärt es). Der Zustand
+„nicht erreichbar" ist deshalb ein eigener Bildfall der Uhr
+(`uhr-handy-fehlt-192dp`), nachgezählt: 553 Bildpunkte Rosa, keiner Rot in
+der Zeile. Die Uhr hat damit sieben Bilder statt sechs.
+
+**Und ein toter Baustein:** Den Cursor, dessen Farbe AR-04 behoben hat, zeigt
+kein Bildschirm — `Eingabefeld` hat seit dem Wegfall des Adressfelds (R63)
+keinen Aufrufer. Die Behebung bleibt, der Baustein ist Backlog Nr. 336.
+
+### Arbeitsumgebung — `aufbauen.sh android`
+
+Die Ausbaustufe holt Plattform 37.0 (und 36, an der `tools/pruefstand/`
+sie noch erkennt — Backlog Nr. 335), prüft das JDK und schreibt Spiegel und
+Wiederholungen für Gradle; ihr Nachweis nennt 21 Stücke. Das Emulator-Abbild,
+das `Sandbox-Setup.md` ihr bis hierhin zuschrieb, holte sie nie — die Zusage
+ist berichtigt, das Abbild holt `emulator.sh aufbauen`.
+
+### Behoben — ein Prüffall, der seinen Rückstand nie übergab
+
+Kotlin 2.4 meldete vier neue Warnungen; drei waren Kleinigkeiten (ein
+überflüssiges `else` in `Uhrbedienung`, zweimal `.toInt()` auf einem Wert,
+der schon eine Ganzzahl ist). **Die vierte war ein Fehler:**
+`KopplungRundlaufTest` übergab den Rückstand als nachgestellte Lambda —
+`Kopplungsdienst(…, basis) { rueckstand }`. Seit Nr. 114 ist der **letzte**
+Parameter aber `raeumen`, nicht `rueckstand`; die Lambda ging dorthin, und
+der Rückstand kam nie an. Gewirkt hat es nicht, weil kein Fall einen
+Rückstand setzt — aber der erste, der es täte, hätte etwas anderes geprüft
+als gedacht. Die App selbst übergibt beide Werte mit Namen und war nie
+betroffen. Das `else` in `Uhrbedienung` ist nicht bloß ausgetragen: Ohne es
+bricht ein künftiges Ereignis, das dort niemand behandelt, den Bau, statt
+still nichts zu tun.
+
+### Arbeitsumgebung
+
+Maven Central drosselt den Container (`429`, 13 von 20 Abrufen); der
+unveränderte Stand baute erst im fünften Anlauf. Die Arbeitsumgebung holt
+deshalb über Googles Maven-Central-Spiegel mit Maven Central als Rückfall
+(E-AR-13) — **nur dort**, die Bauskripte im Repositorium nennen keine neue
+Quelle.
+
 ## [Werkzeug: Vorgriff auf Backlog-Runde 4 (Konzept BV)] — 2026-09-24
 
 Konzept BV, parallel zu P5c: Backlog-Punkte, die keine Datei von P5c
@@ -260,6 +476,7 @@ Prüfstand. **Korrekturstufe ohne Migration.**
 - **Doku:** `docs/Technik.md` 4 (der Siegelzustand sind zwei Zahlen, nicht
   eine, und warum die zweite gezählt wird), Backlog Nr. 328, Prüfdokument
   P5c (F-P5c-170, P-P5c-45), Rahmenplan (Erledigt-Zeile P5c, Abschnitt 6).
+
 
 ## [Web 21.1.1] — 2026-09-25
 

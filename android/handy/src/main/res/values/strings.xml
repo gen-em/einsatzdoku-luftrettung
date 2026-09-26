@@ -37,7 +37,6 @@
 
     <!-- ==== Sync-Anzeige: die drei Zustände (Backlog Nr. 11) ============ -->
     <string name="sync_nicht_eingerichtet">Nicht eingerichtet</string>
-    <string name="sync_fehlt_kopplung">Koppel die App mit deinem Konto.</string>
     <!-- Mehrzahl über <plurals>, nicht über zwei Zeichenketten und ein if:
          Android kennt die Regeln der Sprache, der Code nicht. -->
     <plurals name="sync_rueckstand">
@@ -73,8 +72,18 @@
         laedt zum Zusehen ein, und zehn Minuten sind reichlich Zeit. Unter
         einer Minute wird es genau, weil es dann darauf ankommt.
     -->
-    <string name="kopplung_rest_min">Noch %1$d Minuten</string>
-    <string name="kopplung_rest_sek">Noch %1$d Sekunden</string>
+    <!-- Mehrzahl ueber <plurals> seit Android 0.16.0 (Konzept AR, E-AR-10):
+         Bei genau 60 s rundet die Anzeige auf "1", und unter einer Minute
+         zaehlt sie bis 1 herunter; als <string> stand dort "Noch 1 Minuten"
+         und "Noch 1 Sekunden". Lint meldete es als PluralsCandidate. -->
+    <plurals name="kopplung_rest_min">
+        <item quantity="one">Noch %1$d Minute</item>
+        <item quantity="other">Noch %1$d Minuten</item>
+    </plurals>
+    <plurals name="kopplung_rest_sek">
+        <item quantity="one">Noch %1$d Sekunde</item>
+        <item quantity="other">Noch %1$d Sekunden</item>
+    </plurals>
 
     <!--
         DAS ZWEITE TOR (Vertrag 1a.2). Hier steht die maskierte Adresse des
@@ -196,7 +205,14 @@
     <string name="dienst_keiner">Kein Dienst</string>
     <!-- Erinnerung an einen sehr langen Dienst (Backlog Nr. 160). Die Schwelle
          und ihre Begruendung stehen an AufzeichnungsDienst.DIENSTDAUER_ERINNERUNG_H. -->
-    <string name="warnung_dienstdauer_titel">Dienst läuft seit %1$d Stunden</string>
+    <!-- <plurals> seit Android 0.16.0 (E-AR-10). Die Erinnerung kommt
+         fruehestens nach 26 Stunden, "1 Stunde" erscheint also nie; die
+         Form steht trotzdem richtig da, damit eine spaetere Schwelle nicht
+         einen falschen Satz erbt. -->
+    <plurals name="warnung_dienstdauer_titel">
+        <item quantity="one">Dienst läuft seit %1$d Stunde</item>
+        <item quantity="other">Dienst läuft seit %1$d Stunden</item>
+    </plurals>
     <string name="warnung_dienstdauer_text">Begonnen am %1$s. Wenn der Dienst zu Ende ist, beende ihn — sonst zeichnet das Handy weiter auf, auch auf dem Weg nach Hause.</string>
 
     <string name="dienst_beginnen">Dienst beginnen</string>

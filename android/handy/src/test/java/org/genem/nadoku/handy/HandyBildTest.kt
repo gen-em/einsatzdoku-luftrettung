@@ -557,7 +557,12 @@ class HandyBildTest {
         val bild = Bitmap.createBitmap(breitePx, hoehePx, Bitmap.Config.ARGB_8888)
         ansicht.draw(Canvas(bild))
 
-        val ordner = File("build/bilder")
+        /* JE BAUART EIN ORDNER (Android 0.16.0, Konzept AR, F-AR-12). Bis
+         * dahin schrieben `testDebugUnitTest` und `testReleaseUnitTest` beide
+         * nach build/bilder/, und liegen blieb, was zuletzt fertig war --
+         * einmal "Fassung 0.16.0", einmal "0.16.0-pruef", je nach Reihenfolge
+         * der parallelen Aufgaben. Ein Bildvergleich braucht einen festen Stand. */
+        val ordner = File("build/bilder/${org.genem.nadoku.BuildConfig.BUILD_TYPE}")
         ordner.mkdirs()
         val ziel = File(ordner, "$name.png")
         ziel.outputStream().use { bild.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -591,10 +596,10 @@ class HandyBildTest {
             breiteDp = breiteDp,
             knopfDp = if (band == null) 0.0 else (band.last - band.first + 1) / dichte.toDouble(),
             knopfUnterkanteDp =
-                if (band == null) 0 else Math.round((band.last + 1) / dichte).toInt(),
+                if (band == null) 0 else Math.round((band.last + 1) / dichte),
             amRand = knopfAmRand(punkte, breitePx, hoehePx),
             unterDerFaltkante = band != null && band.last == hoehePx - 1,
-            inhaltDp = Math.round((letzteZeile + 1) / dichte).toInt(),
+            inhaltDp = Math.round((letzteZeile + 1) / dichte),
             knoepfeGesamt = alleBaender.size,
             knoepfeSichtbar = alleBaender.count { it.last < hoehePx },
             farben = punkte.toHashSet().size,

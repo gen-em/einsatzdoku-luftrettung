@@ -36,7 +36,7 @@ nicht gibt.
 | Regeln für Prüfmittel (6) | **gilt** |
 | Benennung (7) | **gilt** |
 | Was nicht geprüft wird (8) | **gilt** |
-| Arbeitsumgebung in vier Ausbaustufen | **gebaut mit PK-02** (`Sandbox-Setup.md` 2); `web`, `plattform` und `android` gemessen, **`uhr` noch nicht** |
+| Arbeitsumgebung in fünf Ausbaustufen | **gebaut mit PK-02** (`Sandbox-Setup.md` 2), `emulator` mit Konzept AR (25.09.2026); `web`, `plattform`, `android` und `emulator` gemessen, **`uhr` noch nicht** |
 | Station B, der Prüfstand-Befehl, die drei Stufen (3) | **gebaut und gemessen mit PK-03** |
 | `pruefablauf.json`, die Tabelle Berührung → Probe (4) | **gebaut mit PK-03**, Tabelle erzeugt |
 | Der Prüfbericht (5) | **gebaut mit PK-03**, seit PK-05 Selbstprobe 13 Lagen / 0 Fehlschläge |

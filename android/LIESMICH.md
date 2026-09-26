@@ -46,8 +46,8 @@ Grund, warum die Blöcke B und C parallel zu S2/S3 laufen können.
 | | Stand | Woher |
 |---|---|---|
 | JDK | 21 (im Container), mindestens 17 | `JAVA_HOME` |
-| Android SDK | Plattform 36, Build-Tools 36.0.0 | `ANDROID_HOME` |
-| Gradle | 8.14.3 | der Wrapper holt sie selbst |
+| Android SDK | Plattform 37.0 (und 36, siehe Sandbox-Setup), Build-Tools 36.0.0 | `ANDROID_HOME` |
+| Gradle | 9.7.1 (seit Android 0.16.0; bis dahin 8.14.3) | der Wrapper holt sie selbst |
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
@@ -185,6 +185,38 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.16.0 (Konzept AR: AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20,
+API 37), `./gradlew build --rerun-tasks` im Container, 25.09.2026 —
+`BUILD SUCCESSFUL in 4m 54s`:**
+
+| | `handy` | `uhr` |
+|---|---|---|
+| Lint-Fehler | **0** | **0** |
+| Lint-Warnungen | **0** | **0** |
+| Prüffälle je Bauart | **267**, davon 15 übersprungen | **72**, davon 0 übersprungen |
+| Kotlin-Warnungen | 0 | 0 |
+| APK (unsigniert, Release) | **9 197 370 B** | **22 743 506 B** |
+
+**Null Warnungen, und keine stummgeschaltet.** Vor der Runde waren es 14:
+zehn Fassungshinweise (die Kette hinter AGP 9, Nr. 65), drei
+`PluralsCandidate` und eine unbenutzte Zeichenkette. Die Fassungshinweise
+sind mit dem Umstieg weg, die Plurale sind `<plurals>` geworden — zwei davon
+waren echte Fehler („Noch 1 Minuten", „Noch 1 Sekunden") —, die Zeichenkette
+ist ausgetragen. **Die Zahl ist trotzdem kein Sollwert:** Sobald draußen eine
+neuere Fassung erscheint, meldet Lint sie wieder, ohne dass hier jemand
+etwas angefasst hat. Sollwert sind die 0 Lint-FEHLER.
+
+**267 statt 264:** `MehrzahlTest` (drei Fälle). **72 statt 71:** der Bildfall
+„Handy nicht erreichbar" der Uhr — den Zustand führt der Emulator nicht herbei. **Das APK ist gewachsen**,
+Handy um 1,33 MB, Uhr um 3,17 MB — Compose 1.12 und Wear-Compose 1.7 bringen
+mehr mit; B-S4-03 (die Uhr ist groß) gilt weiter.
+
+**Berichtigung zum Stand 0.15.1 darunter:** Dort steht als Kandidat für die
+15. Warnung Robolectric 4.16.1 → 4.17. Robolectric 4.17 ist erschienen, und
+Lint meldet es nicht — der Kandidat war es nicht (Konzept AR, F-AR-10).
+Wahrscheinlich war es die unbenutzte Zeichenkette; belegen lässt sich das
+nicht mehr.
+
 **Stand Android 0.15.1 (Robolectric-Abbild über Gradle, Backlog Nr. 240),
 `./gradlew build` im Container, 20.09.2026 — `BUILD SUCCESSFUL in 6m 16s`:**
 
@@ -226,6 +258,82 @@ Dazu die Gegenprobe an der Wurzel: `./gradlew :handy:dependencies
 --configuration releaseRuntimeClasspath` nennt **kein** Robolectric und kein
 `android-all-instrumented`. Die neue Abhängigkeit hängt an einer eigenen
 Konfiguration und kann das Paket nicht erreichen.
+
+**Siebter Emulatorlauf am 24./25.09.2026 (0.16.0, Konzept AR) — zum ersten
+Mal auf Android 17 (API 37), und mit drei Stolpersteinen, die es vorher
+nicht gab.** Handy: `system-images;android-37.0;google_apis;x86_64`
+(`default` gibt es für 37 nicht), Boot **1 420 s** (API 34: 502–715 s),
+Prüf-APK 26 s. Kopplung gegen die örtliche Installation (Code `EKG G89`,
+Konto 1, „Ja, koppeln", `devices`-Zeile am Server), Einstellungen →
+Rechtliches mit „von der BetreiberIn des Servers" und „Fassung 0.16.0-pruef"
+(P-PK-28), der Knopf „Datenschutzerklärung" übergibt an Chrome — der
+steht auf seiner Ersteinrichtung, die Seite selbst kam deshalb nicht an.
+Uhr: Wear OS 5 (`android-34;android-wear;x86_64`), Boot **864 s**,
+Startseite auf rundem Glas. **Und der Weg, an dem `targetSdk` 37 am
+meisten hängt, lief durch:** Dienst beginnen mit Ortung und Meldungen per
+`pm grant`, Positionen per `adb emu geo fix` — der Vordergrunddienst läuft
+(`isForeground=true`, `types=0x00000008`, Standort), „Aufzeichnung läuft
+seit 00:34 · GPS empfängt", 27 Punkte, 4,3 km; Dienst beenden mit
+Rückfrage, am Server ein `POST /ingest.php` mit 200, der Diensttag mit
+`ended_at` und das Segment mit `final = 1`. Der zweite Boot des Handys brauchte
+526 s statt 1 420 s — die Vorübersetzung von ART lag schon im Abbild. Bilder unter
+`emulator-bilder/0160-*.png` (nicht im Repositorium).
+
+| Stolperstein | Was zu tun ist |
+|---|---|
+| **SurfaceFlinger bricht auf API 37 ab** — `Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma` (`mapper.ranchu.so`, Faden `RegionSampling`), die ganze Oberfläche startet neu: drei Abstürze in 13 Minuten | ~~Drei-Tasten-Navigation~~ — **Ursache war `target=android-0`** (Zeile unten), nicht der Emulator: mit richtigem `target` 15 Minuten Gestennavigation ohne Absturz. Umgehung am 25.09.2026 ausgetragen (Backlog Nr. 337, erledigt) |
+| **`screencap` liefert auf API 37 72 Bytes Fehlertext** statt PNG — dieselbe Assertion | dieselbe Ursache; seit dem Nachtrag liefert `screencap` PNG, und `bild` meldet ein fehlendes PNG als Fehler, statt auf die Wirtsseite auszuweichen |
+| **Das einzige Wear-Abbild mit API 37 ist ein `user`-Build** (`android-wear-signed`: `ro.adb.secure=1`, `ro.debuggable=0`) — kein `adb root`, also kein Watchdog-Faktor über `setprop`; `adb` blieb 45 Minuten `offline` | **Nachgeholt am 25.09.2026, die Uhr bootet auf Wear OS 7** — `emulator.sh` setzt den Faktor dort über die Debug-Ramdisk (siehe unten, „Wear OS 7 ohne Root") |
+| **`avdmanager` aus `cmdline-tools` 12.0 schreibt `target=android-0`** in die AVD, weil er das Abbild mit API „37.0" nicht lesen kann (`sdkmanager` warnt: „SDK XML versions up to 3") — gfxstream wird dann falsch eingerichtet, und der Gast bricht mit `!hasReadColorBufferDma` ab: auf der Uhr `system_server` in `EmulatorDisplayOverlay`, 44 Neustarts in einer Stunde | `aufbauen.sh android` holt `cmdline-tools` 23.0; `emulator.sh` berichtigt den Eintrag in `~/.android/avd/<name>.ini` bei `aufbauen` und bei `start`. **Vermutlich auch die Ursache des SurfaceFlinger-Absturzes beim Handy** (erste Zeile der Tabelle, Backlog Nr. 337) — dort nicht nachgemessen |
+| **Emulator und Gradle-Daemon zusammen blockieren den Container** — 6 GB plus rund 5 GB in 15 GB ohne Swap: Last 60, `ps`, `uptime` und `adb` hingen | vor dem Emulator `./gradlew --stop`; `emulator.sh start` warnt seither, wenn ein Daemon läuft |
+| **Nach einem Neustart der Oberfläche sagt `sys.boot_completed` weiter 1**, aber der Nutzerspeicher ist noch gesperrt — `am start` meldet „Activity class … does not exist" | auf `sys.user.0.ce_available=true` warten |
+| **Wear OS 5 zeigt ohne Telefon „Handy verbunden"** — anders als Wear OS 3 am 02.09.2026 (B-S4-09). Die Anzeige folgt einer zugestellten Nachricht, nicht einem Vorgabewert; woran sie hier zugestellt wurde, ist ungeklärt. Wear OS 7 zeigt auf der Startseite dasselbe, nach „Dienst beginnen" aber „Handy nicht erreichbar" | Gerätetest; den Zustand „nicht erreichbar" zeichnet seither der Bilderlauf (`uhr-handy-fehlt-192dp`) |
+
+**Wear OS 7 ohne Root (25.09.2026, nachgeholt).** Die Uhr lief auf
+`system-images;android-37.0;android-wear-signed;x86_64` — Android 17, SDK 37,
+`user`-Build —, Boot **1 141 s**, Prüf-APK mit `targetSdk` 37 aufgespielt,
+Start 55 s, Startseite auf rundem Glas, „Dienst beginnen" führt auf die
+Sperrfläche „wartet aufs Handy · keine Aufzeichnung" mit „Handy nicht
+erreichbar"; kein Absturz der App (im Absturzpuffer nur der Bluetooth-Stapel
+des Systems, HCI-Zeitüberschreitung unter TCG). Drei Handgriffe waren nötig;
+**seit demselben Tag stehen sie im Werkzeug** — `tools/sandbox/aufbauen.sh
+emulator` richtet alles ein, `emulator.sh start uhr37` startet:
+
+1. **Der Watchdog-Faktor über die Debug-Ramdisk** — der Weg, den AOSP für
+   `adb root` auf `user`-Builds zu Prüfzwecken vorsieht: `force_debuggable`
+   und eine `adb_debug.prop` (`ro.hw_timeout_multiplier=50`,
+   `persist.sys.usb.config=adb`) als zusätzliches cpio-Archiv an die
+   entpackte `ramdisk.img` gehängt, **auch unter `first_stage_ramdisk/`**,
+   neu gepackt mit `lz4 -l`, gestartet mit `-ramdisk`. System- und
+   Vendor-Abbild bleiben unberührt, keine Signatur wird verändert. **Die
+   Ramdisk besteht aus mehreren aneinandergehängten Archiven** — wer sie mit
+   `cpio -i` auspackt und neu packt, verliert den Vendor-Teil samt fstab,
+   und der Kernel gerät in eine Panik-Schleife (34 Neustarts).
+2. **`-append-userspace-opt androidboot.verifiedbootstate=orange`** — der
+   Emulator 37.1.11 übergibt den Zustand nicht, und ohne „entsperrt"
+   verwirft init die Debug-Ramdisk. Belegt durch die Zeile
+   `init: Loading /debug_ramdisk/adb_debug.prop` im Kernelprotokoll.
+3. **`target=android-37.0`** (Zeile oben) — und dann **7,4 GB freier
+   Platz** für die Datenpartition; bei 6,4 GB bricht der Emulator mit
+   „Not enough space to create userdata partition" sofort ab. `start`
+   warnt seither.
+
+**Was das Werkzeug seither tut:** `emulator.sh aufbauen` lädt Emulator und
+die Abbilder mit API 37 **einzeln** (die `sdkmanager`-Hülle aus
+`cmdline-tools` 23.0 scheitert an mehreren Paketen in einem Aufruf), legt
+`handy37` und `uhr37` an, berichtigt `target` und baut für jedes `user`-Abbild
+`ramdisk-debug.img` in den AVD-Ordner. `start` erkennt den `user`-Build an
+`build.prop`, übergibt Ramdisk und `verifiedbootstate`, lässt `adb root` weg,
+wartet außer auf `sys.boot_completed` auch auf `sys.user.0.ce_available` und
+bricht ab, statt zu warten, wenn der Emulator stirbt. Der Faktor ist für
+beide Arten 50 (vorher 10), einstellbar über `FAKTOR`.
+
+Nicht geprüft: ob die Uhr nach der Berichtigung von `target` auch **ohne**
+die Debug-Ramdisk bootet — der Watchdog-Abbruch war unter dem falschen
+`target` nie zu sehen, weil `system_server` vorher starb. Ohne Wirkung
+blieben `ro.emulator.circular=false`, `-gpu guest` (wird auf
+`lavapipe`/`swangle` umgesetzt), `-feature -GLDMA` und Emulator 37.3.1 aus
+dem Canary-Kanal (liegt seither im Container).
 
 **Kein siebter Emulatorlauf für 0.15.1 — und das ist zu sagen, nicht zu
 verschweigen** (`CLAUDE.md` 6 macht den Emulator bei jeder Änderung an einem
@@ -386,19 +494,22 @@ Bedienung *entscheidet* und was der Funk *zusichert*, nicht was die Uhr
 
 **Zwei Bilderläufe, einer je Modul.** Beide bauen die Ansicht in einer
 Robolectric-Activity auf, messen und zeichnen sie selbst auf eine Bitmap und
-legen PNG unter `<modul>/build/bilder/` ab:
+legen PNG unter `<modul>/build/bilder/<bauart>/` ab — `debug` und `release`
+getrennt, seit Android 0.16.0 (F-AR-12: vorher überschrieb die zuletzt
+fertige Bauart die andere, und die Fassungszeile im Bild hing an der
+Reihenfolge):
 
 ```bash
-./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  6 Bilder
+./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  7 Bilder
 ./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 72 Bilder
 ```
 
 | | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
 |---|---|---|
-| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | **72** — 24 Bildschirme × 3 Breiten (360, 411, 600 dp) |
+| Bilder | 7 — zwei Marken, laufende Ansicht, zwei Ortungszustände, „Handy nicht erreichbar" (seit 0.16.0), 227-dp-Uhr | **72** — 24 Bildschirme × 3 Breiten (360, 411, 600 dp) |
 | Bedienhöhe | 48 dp je Bild | 48 dp an **69 von 72** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall) |
 | Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**; dazu der **ganze** Inhalt gegen den sichtbaren Bereich |
-| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
+| Unterscheidbarkeit | alle 7 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
 
 **Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
 Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die
@@ -473,7 +584,7 @@ Ein Mockup mit Vorher/Nachher-Bildern liegt unter `mockups/`.
 
 **Was diese Bilder nicht zeigen:** Robolectrics Schriften statt der von Wear OS, keine
 Hardwarebeschleunigung, und **einen** Android-Stand (sdk=34) statt der Spanne
-30 bis 36. Wo das runde Glas zur Frage steht, hilft nur der Emulator.
+30 bis 37. Wo das runde Glas zur Frage steht, hilft nur der Emulator.
 
 ### Das SDK ist im Container nicht vorinstalliert
 
@@ -487,7 +598,7 @@ unzip -q /tmp/cmdline-tools.zip -d /opt/android-sdk/cmdline-tools
 mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
 yes | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager \
-  "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+  "platform-tools" "platforms;android-37.0" "platforms;android-36" "build-tools;36.0.0"
 ```
 
 Rund 460 MB. Die Zuarbeitenliste des Konzepts (Abschnitt 9) nennt die
@@ -632,6 +743,14 @@ Wrapper-Lauf. Eine siebte, `downloads.gradle.org`, trägt nur die
 Prüfsummen-Datei; sie war bis zum 07.09.2026 gesperrt und ist seither
 freigegeben — siehe 2.1.
 
+**In diesem Container drosselt Maven Central** (`429 Too Many Requests`,
+13 von 20 Abrufen am 24.09.2026; Konzept AR, F-AR-01). Die Arbeitsumgebung
+setzt deshalb Googles Spiegel `maven-central.storage-download.googleapis.com`
+vor die Quellen des Projekts und erhöht die Wiederholungen — über
+`tools/sandbox/aufbauen.sh android`, **nicht** über die Bauskripte hier:
+`settings.gradle.kts` nennt weiter nur `google()`, `mavenCentral()` und das
+Plugin-Portal. Einzelheiten: `docs/Sandbox-Setup.md` 5.1.
+
 **Eine achte sprach nicht der Baulauf, sondern der Prüflauf — und zwar an
 Gradle vorbei** (bis Android 0.15.1). Robolectric holte sein Android-Abbild
 `org.robolectric:android-all-instrumented` (rund 145 MB) beim ersten
@@ -645,9 +764,18 @@ ist das Abbild eine erklärte Test-Abhängigkeit — siehe 2.3.
 `gradle-wrapper.properties` führt jetzt ein `distributionSha256Sum`:
 
 ```
-SHA-256  bd71102213493060956ec229d946beee57158dbd89d0e62b91bca0fa2c5f3531
-         gradle-8.14.3-bin.zip   (137 393 837 Bytes)
+SHA-256  acd53f1edaf02f1a8ff99879f8a34b302661a057d9b063ae9e35b552f804d20a
+         gradle-9.7.1-bin.zip    (151 433 392 Bytes, seit Android 0.16.0)
 ```
+
+**Seit Android 0.16.0 (AR-02) auf demselben doppelten Weg belegt:** die Summe
+aus `https://services.gradle.org/distributions/gradle-9.7.1-bin.zip.sha256`
+und die eigene Rechnung über das frisch geladene Archiv, beide am 24.09.2026
+gleich. Warum 9.7.1 und nicht 9.8.0: 9.8.0 erschien am selben Tag; AGP 9.4.1
+verlangt Gradle ≥ 9.1, und die jüngste Fassung mit einigen Wochen Einsatz war
+9.7.1 (19.08.2026). *Bis 0.15.1 stand hier Gradle 8.14.3 mit
+`bd711022…`, 137 393 837 Bytes; der Absatz darunter erzählt, wie jene Zahl
+entstand.*
 
 Der Wrapper prüft die Summe **beim Herunterladen** der Verteilung — einmal je
 Rechner, danach liegt sie unter `~/.gradle/wrapper/dists/`. Ein Container,
@@ -672,9 +800,13 @@ Die Wrapper-JAR selbst liegt im Repositorium (das ist bei Gradle so
 vorgesehen). Ihre Prüfsumme, für den Fall, dass jemand sie nachrechnen will:
 
 ```
-SHA-256  7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172
-         gradle/wrapper/gradle-wrapper.jar   (aus Gradle 8.14.3)
+SHA-256  7a9ce74cff467ca1bf60a4fcd9f05185acceda4d0f382434d393e17864262c5d
+         gradle/wrapper/gradle-wrapper.jar   (47 505 Bytes, aus Gradle 9.7.1)
 ```
+
+Sie ist **byteweise** die JAR, die in der geprüften Verteilung liegt
+(`lib/plugins/gradle-wrapper-main-9.7.1.jar`, Eintrag `gradle-wrapper.jar`) —
+nachgerechnet am 24.09.2026. Bis 0.15.1: `7d3a4ac4…` aus Gradle 8.14.3.
 
 **R8 bleibt aus** (`isMinifyEnabled = false` in beiden Modulen; AN-5 nennt
 es mit). Die Begründung steht dort, wo die Ausnahmen hingehörten, wenn es je
@@ -752,9 +884,13 @@ Entscheidung, die das Konzept nicht getroffen hat. Stattdessen wird
 `gemeinsam/` in **beide** Module **eingebunden**:
 
 ```kotlin
-sourceSets["main"].java.srcDir("../gemeinsam/quelle")
-sourceSets["main"].res.srcDir("../gemeinsam/res")
+sourceSets["main"].kotlin.directories += "../gemeinsam/quelle"
+sourceSets["main"].res.directories += "../gemeinsam/res"
 ```
+
+**Seit Android 0.16.0 über `kotlin`, nicht über `java`.** Bis dahin stand
+hier `java.srcDir(…)`; das eingebaute Kotlin von AGP 9 nimmt Kotlin-Dateien
+aus einem Java-Verzeichnis nicht mehr an (Konzept AR, F-AR-08).
 
 Der gemeinsame Teil wird damit zweimal übersetzt. Das kostet Bauzeit und
 sonst nichts — und es spart eine Modulgrenze mit eigenem Manifest, eigener
@@ -770,28 +906,42 @@ Nachricht von der Uhr an — und zwar ohne Fehlermeldung.
 
 | | gewählt | warum |
 |---|---|---|
-| `compileSdk` / `targetSdk` | **36** (Android 16) | siehe unten |
+| `compileSdk` / `targetSdk` | **37** (Android 17, seit 0.16.0) | siehe unten |
 | `minSdk` Handy | **26** (Android 8.0) | E-S4-03, mit F-S4-A am 31.08.2026 bestätigt |
 | `minSdk` Uhr | **30** (Wear OS 3) | Galaxy Watch4 aufwärts; ältere Tizen-Modelle führen gar keine Android-Apps aus |
 | Sprachstand | **17** | E-S4-02 |
-| AGP | **8.13.2** | siehe unten |
-| Kotlin | **2.1.21** | Compose-Compiler ist seit 2.0 Teil von Kotlin |
+| AGP | **9.4.1** (seit 0.16.0) | siehe unten |
+| Kotlin | **2.4.20** (seit 0.16.0) | eingebaut in AGP 9; die Fassung legt die Wurzel fest, der Compose-Compiler wandert mit |
 
-**Warum `targetSdk` 36 und nicht 37.** Das SDK-Verzeichnis führt inzwischen
-`android-37.0`, `-37.1` und `-37.2` — API 37 gibt es nur mit
-**Nebenversionen**, eine schlichte `platforms;android-37` existiert nicht.
-Diese Schreibweise (`compileSdk` + `compileSdkMinor`) beherrscht erst AGP 9.
-API **36** ist die letzte Stufe mit ganzer Nummer, und sie erfüllt genau
-das, wofür E-S4-03 „`targetSdk` aktuell" verlangt: Ab API 34 gelten die
-strengen Regeln für Vordergrunddienste, und die App deklariert
-`FOREGROUND_SERVICE_LOCATION` (ab B3).
+**`compileSdk` und `targetSdk` 37 seit Android 0.16.0** (Konzept AR,
+E-AR-08). Bis 0.15.1 stand hier „Warum `targetSdk` 36 und nicht 37" — API 37
+gibt es nur mit Nebenversionen (`android-37.0`, `-37.1`, `-37.2`), und die
+beherrschte erst AGP 9. Mit AGP 9.4.1 genügt `compileSdk = 37`; es übersetzt
+gegen `platforms/android-37.0`.
 
-**Warum AGP 8.13.2 und nicht 9.x.** AGP 9 ist ein Umbau der Bau-Sprache
-(eingebautes Kotlin-Plugin, verschobene DSL). Ihn blind einzuführen, um eine
-API-Stufe zu gewinnen, die die App nicht braucht, wäre der teure Weg zum
-kleinen Gewinn. 8.13.2 ist die letzte Fassung der 8er-Reihe. Der Wechsel auf
-AGP 9 samt API 37 ist eine eigene, absichtliche Runde — nicht ein Nebeneffekt
-von B1.
+**`compileSdk` war nicht frei wählbar:** Compose-BOM 2026.09.00,
+`wear-compose` 1.7.0 und `core-ktx` 1.19.1 tragen in ihren AAR-Metadaten
+`minCompileSdk=37` (F-AR-03). **`targetSdk` 37 ist eine Entscheidung** — es
+schaltet die Regeln von Android 17 für die App ein. Die 17
+Verhaltensänderungen für `targetSdk` 37 sind am 24.09.2026 gegen den
+Quelltext beider Module durchgesehen (Konzept AR, Protokoll AR-03): 14 treffen
+die App nicht (keine Widgets, keine Reflexion, keine native Bibliothek, kein
+Audio, keine Kontakte, keine SMS, keine Ausrichtung im Manifest, kein
+Bluetooth, …); drei betreffen den Netzweg — Encrypted Client Hello und
+Certificate Transparency als Vorgabe, dazu die Berechtigung für das lokale
+Netz — und sind am Gerät zu belegen (`docs/konzepte/Pruefdokument-AR-Android-Runde.md`).
+Google Play verlangt seit dem 31.08.2026 `targetSdk` 36; 37 ist also ein
+Schritt voraus, nicht nachgeholt.
+
+**AGP 9 seit Android 0.16.0 (Konzept AR, Backlog Nr. 65).** Bis 0.15.1
+stand hier „Warum AGP 8.13.2 und nicht 9.x" — AGP 9 sei ein Umbau der
+Bau-Sprache und gehöre in eine eigene, absichtliche Runde. Das war die Runde.
+Was der Umbau hier bedeutete: Das Plugin `kotlin-android` ist aus den Modulen
+ausgetragen (AGP übersetzt Kotlin selbst), `gemeinsam/` hängt an
+`kotlin.directories` (Abschnitt 3), und `gradle.properties` hält
+`android.onlyEnableUnitTestForTheTestedBuildType=false` — sonst entfielen die
+Release-Prüffälle still, darunter der Release-Fall von `ServeradresseTest`
+(Nr. 142).
 
 **JDK 21 baut, JDK 17 ist der Sprachstand.** Das ist kein Widerspruch:
 `sourceCompatibility`/`jvmTarget` legen fest, welchen Bytecode die App
@@ -824,7 +974,7 @@ einmal erzeugt und dem Auftraggeber zur Verwahrung übergeben.
 | Skript | Was es prüft | Sollstand |
 |---|---|---|
 | `farbabgleich.py` | App-Token gegen `:root` des Web | 0 Abweichungen, 0 eigene Farbwerte |
-| `kontraste.py` | Kontrast jedes Farbpaars der App | 0 Paare unter dem Zielwert |
+| `kontraste.py` | Kontrast jedes Farbpaars der App — und seit 0.16.0, ob die Liste **vollständig** ist: jede Farbe, die im Quelltext eines Moduls als Schrift, Zeichen, Linie oder Fläche vorkommt, steht in der Paarliste dieses Moduls in dieser Rolle (Nr. 116). `--selbstprobe` baut die zwei historischen Lücken ein (B-S5Z-13, -15) | 0 Befunde (Paare unter Zielwert, fehlende Paare, Farben ohne erkannte Rolle); Selbstprobe 5 von 5. **Hängt an keinem Lauf** — von Hand fahren (Nr. 334) |
 | `bildmarken.sh` | Bildmarken gegen ihre Vorlagen | 0 Abweichungen |
 | `stroeme.py` | Soll-Zahlen der Ausdünnung, mit der Referenzregel aus `tools/referenzdatensatz/` nachgerechnet | 0 Abweichungen gegen die analytischen Werte |
 
@@ -874,7 +1024,7 @@ Räumteil von 114) dazugelegt hat:
 | Nicht prüfbar | Warum | Wo es geprüft wird |
 |---|---|---|
 | **Ob eine echte Uhr nach der Absenderprüfung noch ankommt** (Nr. 144) | Kein Data Layer mit Telefonseite im Container. Geprüft ist die Entscheidung (`Uhrannahme`, 19 Fälle gegen echtes SQLite), nicht, was `connectedNodes` auf Hardware liefert | Gerätetest mit Uhr: Dienst an der Uhr beginnen, die Quittung muss kommen; `adb logcat -s NAdoku` darf kein „unbekanntem Knoten" zeigen |
-| **Das Klartextverbot auf Android 8.0/8.1** (Nr. 142) | Kein Gerät mit API 26/27; der Emulator läuft mit API 34, wo Android Klartext ohnehin verbietet | Gerätetest, falls ein altes Gerät greifbar ist; ersatzweise die Manifest-Zusammenführung (`build/intermediates/merged_manifest/release/`, Eintrag `networkSecurityConfig`) |
+| **Das Klartextverbot auf Android 8.0/8.1** (Nr. 142) | Kein Gerät mit API 26/27; der Emulator läuft mit API 37 (bis 0.15.x: 34), wo Android Klartext ohnehin verbietet | Gerätetest, falls ein altes Gerät greifbar ist; ersatzweise die Manifest-Zusammenführung (`build/intermediates/merged_manifest/release/`, Eintrag `networkSecurityConfig`) |
 | **Der Räumlauf nach 30 Tagen im Feld** (Nr. 114) | Die Frist lässt sich nur im Prüfstand stellen (`jetzt`) | Robolectric: `AbgewieseneTest` und `SenderTest`; am Gerät nur über das Trennen |
 
 ### Der Emulator — er läuft, und er ist ab 03.09.2026 Pflicht
@@ -1001,7 +1151,7 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   Schleife. Die Läufe von 0.7.2 bis 0.13.0 haben diese Klippe offenbar
   knapp umschifft — 621 s Boot war kein schlechter Tag, sondern Glück.
 
-  **Gegenmittel, jetzt in `emulator.sh start`:** `ro.hw_timeout_multiplier=10`
+  **Gegenmittel, jetzt in `emulator.sh start`:** `ro.hw_timeout_multiplier=10` (seit 0.16.0 50; bei `user`-Builds über die Debug-Ramdisk, siehe „Wear OS 7 ohne Root")
   streckt jede Watchdog-Frist (Cuttlefish nutzt dieselbe Eigenschaft für
   langsame Geräte). `-prop` kann sie nicht setzen (nur `qemu.*`) — aber das
   Abbild ist `userdebug`: Sobald `adbd` da ist (120 s), `adb root`, `setprop`

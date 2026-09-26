@@ -833,25 +833,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     berichtigt, damit dort bis zur Lieferung keine falsche Zusage steht.
     Zuordnung: **wartet auf Zuarbeit** (Rahmenplan Abschnitt 6).
 
-65. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
-    Entscheidung.**
-    *Aufgenommen 02.09.2026 als Rest aus B-S4-04 (S4/D1).*
-    `lintDebug` meldete für `android/handy/` 14 Warnungen (Stand Android
-    0.11.x; die Zahl ist am 13.09.2026 vier Android-Stufen alt und ohne SDK
-    nicht nachzählbar — gemessen sind AGP 8.13.2, Kotlin 2.1.21, Compose-BOM
-    2025.06.01, wear-compose 1.4.1, `abortOnError = true`, nichts
-    stummgeschaltet), und sie sind nicht vierzehn Entscheidungen, sondern
-    **eine**: `androidx.wear.compose` 1.6.2
-    und die Compose-BOM 2026.08.00 verlangen einen neueren Compose-Compiler;
-    der hängt an Kotlin, Kotlin 2.4 an AGP 9. Dieselbe Kette ziehen
-    `core-ktx`, `lifecycle`, `activity-compose` und die vier
-    `camera`-Bausteine.
-    **AGP 9 ist ein Umbau der Bau-Sprache** und gehört in eine eigene,
-    absichtliche Runde — nicht in eine Korrekturfassung. Stummgeschaltet wird
-    nichts (CLAUDE.md 6): Die 14 stehen und werden gezählt; sie sind das
-    Preisschild an einer aufgeschobenen Entscheidung, und genau das sollen sie
-    sein.
-
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
     *Aufgenommen 02.09.2026 als Frage des Auftraggebers (Rahmenplan Fassung
@@ -1150,6 +1131,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     der Liste fehlen. Das Zweite ist deutlich billiger und fängt denselben
     Fehler. Dieselbe Frage stellt sich für
     `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
+
+    **Android-Hälfte erledigt 24.09.2026 mit Konzept AR (Android 0.16.0,
+    E-AR-09) — der Punkt bleibt offen für das Web.** `android/werkzeuge/
+    kontraste.py` prüft seither auch die Vollständigkeit je Modul und Rolle
+    (Schrift, Zeichen, Linie, Fläche), mit Selbstprobe; der erste Lauf fand
+    zwei Kontraste unter AA (Rot als Schrift auf der Uhr, 4,12 : 1; Cursor
+    Orange auf Schnee, 2,23 : 1), beide behoben. **Offen:** dieselbe Frage für
+    `tools/screenshots/kontrast.py` — zurückgestellt, weil P5c die Datei
+    ändert. Und das Android-Werkzeug hängt an keinem Lauf (Nr. 334).
 
 122. **Freie Zeiträume und Diagramme in der Statistik.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
@@ -3157,44 +3147,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bis dahin gilt: **`namen = 0` heißt „null im sichtbaren Text", nicht
     „null im Repositorium".** Steht so in `docs/Pruefablauf.md` 6.6.
 
-284. **Eine ausgelieferte Android-Zeile ohne Versionsstufe, ohne
-    Changelog-Zeile und ohne Emulatorlauf.**
-    *Aufgenommen 23.09.2026 auf Nachfrage des Auftraggebers zu PK-04/5b;
-    die Zeile bleibt stehen, die drei Pflichten werden nachgezogen (E-PK-40).*
-    `android/handy/src/main/res/values/strings.xml` trägt seit PK-04/5b
-    `recht_hinweis` in der Hausform („von der BetreiberIn des Servers"), und
-    das ist **ausgelieferter Code des Handy-Moduls**. Damit greift
-    `CLAUDE.md` 2 — „drei Zählungen, drei Auslieferungen" —, und drei Dinge
-    sind unterblieben:
-
-    - **`android/version.properties` steht unverändert auf `0.15.1`.**
-      Fällig wäre 0.15.2 gewesen; den Präzedenzfall führt die Datei selbst
-      mit 0.14.1 („fünf Sätze, keine Funktion").
-    - **Der Changelog hat keine Zeile mit dem Präfix `Android`**, nur
-      `[Web 20.37.1]`. Die Regel steht im Kopf von `version.properties`.
-    - **Der Emulator ist nicht gelaufen.** `docs/Pruefablauf.md` 6.9
-      verlangt ihn bei **jeder** Änderung an einem der beiden Module,
-      angesehen, bedient und mit Bildern belegt. Pflicht ist dort der
-      Versuch, nicht der Erfolg — auch ein gescheiterter Start wäre ein
-      Befund mit Zahl gewesen.
-
-    **Wie es passiert ist:** Die Fächerung von 5b lief über
-    Wort-Eimer, nicht über Auslieferungsbereiche. Ein Agent hat die Datei
-    als eine von 434 Fundstellen behandelt, und keine Stufe danach hat
-    gefragt, welchem der drei Auslieferungsstränge sie angehört. Die
-    Textprobe misst Bereich `d` (Android-Strings) mit und ist grün — sie
-    prüft das Wort, nicht die Versionspflicht.
-
-    **Der Preis, solange es offen ist:** Zwei verschiedene Stände des
-    Handy-Moduls tragen dieselbe Nummer `0.15.1` — genau das, was
-    `version.properties` „zwei Wahrheiten über denselben Stand" nennt. Ein
-    APK aus diesem Stand ist von einem APK aus dem vorherigen nicht an der
-    Fassung zu unterscheiden.
-
-    **Nachzuziehen beim nächsten Android-Paket**, zusammen: Nummer,
-    Kopfabsatz, Changelog-Zeile und ein Emulatorlauf, der die
-    Rechtstexte-Seite zeigt. Abnahme als **P-PK-28**.
-
 287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.**
     *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
     Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
@@ -3554,6 +3506,53 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
     `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
     braucht eine Web-Stufe).
+
+334. **Die Prüfwerkzeuge der Android-App hängen an keinem Lauf.**
+    *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-05, E-AR-12).*
+    `android/werkzeuge/kontraste.py`, `farbabgleich.py`, `bildmarken.sh` und
+    `stroeme.py` werden von keinem Workflow, keinem Aufruf in
+    `tools/pruefstand/pruefen.sh` und keiner Zeile in
+    `tools/pruefstand/pruefablauf.json` gerufen — gezählt am 24.09.2026:
+    0 Treffer außerhalb von `android/werkzeuge/`. Der Riegel `kontraste` im
+    Tor ist das Web-Werkzeug `tools/screenshots/kontrast.py`. Was Nr. 116 an
+    `kontraste.py` verbessert hat (Vollständigkeit je Modul und Rolle, mit
+    Selbstprobe), läuft also nur, wenn jemand daran denkt.
+    *Weg:* die vier unter das Muster `android/**` in `pruefablauf.json`
+    hängen (sie brauchen nur Python und die Quellen, `braucht: nichts`),
+    `kontraste.py --selbstprobe` dazu. Nicht in AR, weil
+    `tools/pruefstand/` während P5c dessen Gebiet ist.
+    *Abnahme:* eine Berührung unter `android/` wählt die vier im Prüfstand
+    aus, der Bericht nennt ihre Zahlen. **Zuordnung: nach dem Merge von P5c**,
+    von der Instanz, die `main` aufnimmt, oder der nächsten Backlog-Runde.
+
+335. **Der Prüfstand erkennt die Ausbaustufe `android` an der falschen
+    Plattform.**
+    *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-07, E-AR-12).*
+    `tools/pruefstand/pruefen.sh` prüft vor dem `android-bau`, ob
+    `platforms/android-36` liegt. Seit Android 0.16.0 baut die App gegen
+    **37.0**; die Zeile ist grün, wenn 36 liegt und 37.0 fehlt, und rot, wenn
+    es umgekehrt ist. `tools/sandbox/aufbauen.sh android` installiert
+    deshalb beide Plattformen, damit die Erkennung nicht fehlschlägt — das
+    ist eine Krücke, keine Messung.
+    *Weg:* die Erkennung an die Plattform hängen, die der Bau braucht (am
+    besten aus `compileSdk` gelesen statt fest geschrieben), dann Plattform
+    36 aus `aufbauen.sh` streichen. *Abnahme:* ohne `android-37.0` meldet
+    der Prüfstand „Ausbaustufe android fehlt". **Zuordnung: nach dem Merge
+    von P5c**, zusammen mit Nr. 334.
+
+336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.**
+    *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in
+    `handy/.../Bausteine.kt` hat seit R63 (Android 0.11.0, feste
+    Serveradresse, Backlog Nr. 84) keinen Aufrufer mehr — das Adressfeld der
+    Kopplung war sein einziger. Aufgefallen, als AR-04 die Farbe seines
+    Cursors behob (Orange auf Schnee, 2,23 : 1) und der Emulatorlauf den
+    Cursor zeigen sollte: Es gibt ihn auf keinem Bildschirm. Lint meldet es
+    nicht, weil die Funktion öffentlich ist. Die Behebung bleibt richtig, hat
+    aber keine sichtbare Wirkung.
+    *Weg:* den Baustein austragen, oder ihn stehen lassen, wenn ein
+    Eingabefeld absehbar wiederkommt — dann mit einem Satz, warum.
+    *Abnahme:* kein unbenutzter öffentlicher Baustein in `Bausteine.kt`.
+    **Zuordnung: nächste Android-Runde.**
 
 ## Erledigt
 
@@ -11216,3 +11215,115 @@ zutreffen.
     ist seit S10 unvollständig (der Server-Anteil fehlt) — eine Frage an
     die Betreiberin, weil der Text in eine Rechtserklärung geht, nicht Teil
     dieses Punkts.
+
+65. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
+    Entscheidung.**
+    *Aufgenommen 02.09.2026 als Rest aus B-S4-04 (S4/D1).*
+    `lintDebug` meldete für `android/handy/` 14 Warnungen (Stand Android
+    0.11.x; die Zahl ist am 13.09.2026 vier Android-Stufen alt und ohne SDK
+    nicht nachzählbar — gemessen sind AGP 8.13.2, Kotlin 2.1.21, Compose-BOM
+    2025.06.01, wear-compose 1.4.1, `abortOnError = true`, nichts
+    stummgeschaltet), und sie sind nicht vierzehn Entscheidungen, sondern
+    **eine**: `androidx.wear.compose` 1.6.2
+    und die Compose-BOM 2026.08.00 verlangen einen neueren Compose-Compiler;
+    der hängt an Kotlin, Kotlin 2.4 an AGP 9. Dieselbe Kette ziehen
+    `core-ktx`, `lifecycle`, `activity-compose` und die vier
+    `camera`-Bausteine.
+    **AGP 9 ist ein Umbau der Bau-Sprache** und gehört in eine eigene,
+    absichtliche Runde — nicht in eine Korrekturfassung. Stummgeschaltet wird
+    nichts (CLAUDE.md 6): Die 14 stehen und werden gezählt; sie sind das
+    Preisschild an einer aufgeschobenen Entscheidung, und genau das sollen sie
+    sein.
+
+    **Erledigt 24.09.2026 mit Konzept AR (Android 0.16.0).** Gradle 9.7.1,
+    AGP 9.4.1 mit eingebautem Kotlin, Kotlin 2.4.20; `compileSdk` und
+    `targetSdk` 37 (E-AR-08), Compose-BOM 2026.09.00, `wear-compose` 1.7.0,
+    `core-ktx` 1.19.1, `lifecycle` 2.11.0, `activity-compose` 1.13.0.
+    **Zwei Angaben dieses Eintrags waren überholt:** `camera` gehörte seit
+    R63 (Android 0.11.0) nicht mehr zur Kette, und die Kette verlangte
+    inzwischen auch `compileSdk` 37 (`minCompileSdk=37` in den
+    AAR-Metadaten). Gezählt am unveränderten Stand: 14 Warnungen, davon
+    zehn Fassungshinweise; danach **0 Lint-Warnungen in beiden Modulen**,
+    nichts stummgeschaltet (auch die drei Plurale und eine unbenutzte
+    Zeichenkette sind behoben). Nebenbei gefunden: ein Prüffall, der seinen
+    Rückstand nie übergab (Kotlin 2.4), und zwei Kontraste unter AA
+    (Nr. 116). 73 von 78 Bildern des Bilderlaufs byteweise gleich, die
+    übrigen fünf nur in der Fassungszeile.
+
+284. **Eine ausgelieferte Android-Zeile ohne Versionsstufe, ohne
+    Changelog-Zeile und ohne Emulatorlauf.**
+    *Aufgenommen 23.09.2026 auf Nachfrage des Auftraggebers zu PK-04/5b;
+    die Zeile bleibt stehen, die drei Pflichten werden nachgezogen (E-PK-40).*
+    `android/handy/src/main/res/values/strings.xml` trägt seit PK-04/5b
+    `recht_hinweis` in der Hausform („von der BetreiberIn des Servers"), und
+    das ist **ausgelieferter Code des Handy-Moduls**. Damit greift
+    `CLAUDE.md` 2 — „drei Zählungen, drei Auslieferungen" —, und drei Dinge
+    sind unterblieben:
+
+    - **`android/version.properties` steht unverändert auf `0.15.1`.**
+      Fällig wäre 0.15.2 gewesen; den Präzedenzfall führt die Datei selbst
+      mit 0.14.1 („fünf Sätze, keine Funktion").
+    - **Der Changelog hat keine Zeile mit dem Präfix `Android`**, nur
+      `[Web 20.37.1]`. Die Regel steht im Kopf von `version.properties`.
+    - **Der Emulator ist nicht gelaufen.** `docs/Pruefablauf.md` 6.9
+      verlangt ihn bei **jeder** Änderung an einem der beiden Module,
+      angesehen, bedient und mit Bildern belegt. Pflicht ist dort der
+      Versuch, nicht der Erfolg — auch ein gescheiterter Start wäre ein
+      Befund mit Zahl gewesen.
+
+    **Wie es passiert ist:** Die Fächerung von 5b lief über
+    Wort-Eimer, nicht über Auslieferungsbereiche. Ein Agent hat die Datei
+    als eine von 434 Fundstellen behandelt, und keine Stufe danach hat
+    gefragt, welchem der drei Auslieferungsstränge sie angehört. Die
+    Textprobe misst Bereich `d` (Android-Strings) mit und ist grün — sie
+    prüft das Wort, nicht die Versionspflicht.
+
+    **Der Preis, solange es offen ist:** Zwei verschiedene Stände des
+    Handy-Moduls tragen dieselbe Nummer `0.15.1` — genau das, was
+    `version.properties` „zwei Wahrheiten über denselben Stand" nennt. Ein
+    APK aus diesem Stand ist von einem APK aus dem vorherigen nicht an der
+    Fassung zu unterscheiden.
+
+    **Nachzuziehen beim nächsten Android-Paket**, zusammen: Nummer,
+    Kopfabsatz, Changelog-Zeile und ein Emulatorlauf, der die
+    Rechtstexte-Seite zeigt. Abnahme als **P-PK-28**.
+
+    **Erledigt 24.09.2026 mit Konzept AR (E-AR-04):** Die Zeile trägt
+    Android **0.16.0**, zusammen mit Nr. 65 — keine eigene Korrekturnummer.
+    Kopfabsatz in `version.properties`, Changelog `[Android 0.16.0]`,
+    Emulatorlauf mit Bild der Seite Einstellungen → Rechtliches: siehe
+    `docs/konzepte/Pruefdokument-AR-Android-Runde.md` (P-PK-28). Der Eintrag
+    P-PK-28 in `Pruefdokument-PK-Pruefkette.md` ist dort noch abzuhaken
+    (E-AR-02: AR fasst das PK-Dokument nicht an).
+
+337. **Emulator 37.1.11 und die Abbilder mit API 37: SurfaceFlinger bricht ab.**
+    *Aufgenommen 24.09.2026 mit Konzept AR (AR-05, F-AR-14).* Auf
+    `system-images;android-37.0;google_apis;x86_64` (ohne KVM, `-accel off
+    -gpu swiftshader_indirect`) bricht SurfaceFlinger im Faden
+    `RegionSampling` ab — `Assertion failed:
+    !rcEnc->featureInfo()->hasReadColorBufferDma` in `mapper.ranchu.so` —,
+    und die Oberfläche startet neu: drei Abstürze in 13 Minuten nach dem
+    Boot. `screencap` scheitert an derselben Stelle (72 Bytes Fehlertext
+    statt PNG). *Umgangen* in `android/werkzeuge/emulator.sh`: Drei-Tasten-
+    statt Gestennavigation (danach über neun Minuten kein Absturz mehr) und
+    Abzug von der Wirtsseite (`adb emu screenrecord screenshot`). Das ist ein
+    Fehler des Emulators, nicht der App. **Nachtrag 25.09.2026 (F-AR-18):**
+    Auf dem Wear-Abbild mit API 37 kam derselbe Abbruch aus `system_server`,
+    und die Ursache war nicht der Emulator, sondern die AVD — `avdmanager`
+    aus `cmdline-tools` 12.0 schreibt `target=android-0`; mit
+    `target=android-37.0` blieb er aus. **Vermutlich gilt das auch hier;
+    nicht nachgemessen.** Emulator 37.3.1 änderte am Abbruch nichts.
+    *Weg:* zuerst die AVD mit richtigem `target` nachmessen, dann mit einer neueren Fassung des
+    Emulators nachmessen und die Umgehung austragen, sobald sie nicht mehr
+    nötig ist. *Abnahme:* ein Boot auf API 37 mit Gestennavigation, 15
+    Minuten ohne Eintrag im Absturzpuffer. ~~**Zuordnung: nächste
+    Android-Runde, sobald `sdkmanager` einen neueren Emulator führt.**~~
+    **Erledigt 25.09.2026 mit Konzept AR (Nachtrag AR-05).** Ursache war
+    `target=android-0`, nicht der Emulator: `handy37`, angelegt mit
+    `cmdline-tools` 23.0 (`target=android-37.0`), nach dem Boot auf
+    Gestennavigation gestellt — **15 Minuten, 0 Einträge im
+    Absturzpuffer**, SurfaceFlinger 44 Minuten ohne Neustart, `screencap`
+    liefert PNG. Abweichung von der Abnahme: gebootet mit Drei-Tasten, erst
+    danach auf Gesten umgestellt (die Umgehung stand beim Boot noch im
+    Werkzeug). Beide Umgehungen sind aus `emulator.sh` ausgetragen; `bild`
+    meldet ein fehlendes PNG seither als Fehler, statt auszuweichen.
