@@ -428,8 +428,9 @@ wird an dieser Regel nicht gemessen; es enthält kein Listenwort.
 je mehr gefüllt, desto besser. Rot heißt zu kurz oder zu leicht zu raten,
 Orange geht, Dunkelblau ist gut. Die Stärke des Passworts ist unmittelbar die
 Stärke der Verschlüsselung — es schützt nicht nur den Zugang, sondern leitet
-den Schlüssel ab, mit dem Diagnose, Alter und Einsatzort verschlüsselt werden
-(Abschnitt 5).
+den Schlüssel ab, mit dem die geschützten Angaben eines Einsatzes
+verschlüsselt werden — Patientendaten, Einsatzort, Abfahrtort und Notizen;
+die vollständige Liste steht in Abschnitt 5.
 
 **Die erste Anmeldung nach dem Update dauert länger.** Seit Web 15.6.0 rechnet
 der Browser mit 600 000 statt 320 000 Runden; solange ein Konto noch auf der
@@ -4180,15 +4181,16 @@ Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 > ## Welche Daten verschlüsselt gespeichert werden — und welche nicht
 >
 > Name, Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse, Koordinate
-> und Beschreibung des Einsatzorts sowie die Notizen eines Einsatzes werden
+> und Beschreibung des Einsatzorts, ein von Hand eingetragener Abfahrtort
+> (Adresse und Koordinate) sowie die Notizen eines Einsatzes werden
 > bereits im Browser verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
 > kann sie nicht lesen; der Schlüssel wird aus dem Passwort des Kontos
 > abgeleitet.
 >
 > Nicht verschlüsselt gespeichert werden: die aufgezeichnete GPS-Spur, die
-> Koordinaten der einzelnen Einsatzphasen, das Transportziel, alle Zeiten,
-> der Verlauf einer Reanimation, die Namen der Besatzung und die Notizen
-> eines Diensttags. Diese Angaben
+> Koordinaten der einzelnen Einsatzphasen, die Höhe des Einsatzorts, das
+> Transportziel samt Koordinate, alle Zeiten, der Verlauf einer Reanimation,
+> die Namen der Besatzung und die Notizen eines Diensttags. Diese Angaben
 > werden für Auswertungen und Statistiken benötigt, die der Server selbst
 > berechnet.
 >

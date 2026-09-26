@@ -81,9 +81,13 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   und die Zeile `missions` in `Technik.md` nennen jetzt dieselben Felder
   wie `CLAUDE.md` 4 und `Technik.md` 4.98; die Klartextliste ist um die
   Notizen des Diensttags, die Höhe des Einsatzorts und die Koordinate des
-  Transportziels ergänzt. **Der Textbaustein für die Datenschutzerklärung
-  (Handbuch 11.5) ist noch nicht berichtigt** — den überarbeitet P5c mit den
-  übrigen Texten in Verwaltung und Betrieb; der Punkt bleibt deshalb offen.
+  Transportziels ergänzt. **Der Textbaustein für die Datenschutzerklärung**
+  (Handbuch 11.5a; die Notizen hatte P5c dort schon ergänzt) nennt jetzt
+  auch den Abfahrtort, und seine Klartextliste die Höhe des Einsatzorts und
+  das Transportziel samt Koordinate (BV-07, Q-BV-04). **Wer den Baustein
+  schon übernommen hat, übernimmt ihn neu:** Die alte Fassung untertrieb
+  nicht nur den Schutz, sie nannte auch zwei Angaben nicht, die im Klartext
+  liegen — und das ist in einer Erklärung die unangenehmere Richtung.
 - **Der manuelle Abfahrtort ist verschlüsselt — die Zusage nannte ihn nicht**
   (Konzept BV, BV-06, Backlog Nr. 194). Seit Web 6.2.0 liegt er als Schlüssel
   `start` im verschlüsselten Block; `CLAUDE.md` 4 und die Tabelle in
@@ -94,8 +98,9 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   seit August tut. Mitgezogen: zwölf weitere Stellen, die den Umfang ohne die
   Notizen des Einsatzes nannten (Technik, Handbuch, README, `Lizenzen.md`,
   `Was-ist-NAdoku.md`). **Nicht berichtigt:** zwei Rechtstexte (`AVV.md`,
-  `Nutzungsbedingungen.md` 2.6) — sie gehören der Betreiberin — und eine
-  Zeile in Handbuch 3 neben einer Stelle, die P5c ändert.
+  `Nutzungsbedingungen.md` 2.6) — sie gehören der Betreiberin. Handbuch 3
+  zählte nur „Diagnose, Alter und Einsatzort" auf und verweist jetzt auf
+  Kapitel 5 (BV-07).
 - **Der Cron-Befehl stand mit dem Pfad des Repositoriums in der
   Dokumentation** (Backlog Nr. 150, BV-04). Auf einer Installation gibt es
   kein `server/`, und wer `php …/server/jobs.php` abtippte, bekam „Could not
@@ -104,7 +109,8 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   der den Pfad der Installation kennt; der Eintrag Web 10.1.0 unten ist
   rückwirkend berichtigt, wie am 12.09.2026 entschieden. **Der Kopfkommentar
   in `server/jobs.php` trägt den alten Pfad noch** — eine Zeile unter
-  `server/` braucht eine Web-Stufe, und die vergibt bis zu seinem Merge P5c.
+  `server/` braucht eine Web-Stufe. Sie kommt mit der nächsten, die
+  `jobs.php` ohnehin anfasst (Q-BV-04); Nr. 150 bleibt bis dahin offen.
 - **Eine auf dem Server von Hand gelöschte Datei kommt nicht zurück — das
   stand nirgends** (Backlog Nr. 214, BV-04). Die Auslieferungsaktion
   vergleicht gegen ihre Zustandsdatei, nie gegen den Server. `Technik.md`
