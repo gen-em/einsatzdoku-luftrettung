@@ -1527,25 +1527,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
      Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
 
-329. **Der Prüfstand fährt die Quelltextprüfungen mit eingerichteter Anlage, Stufe 1 ohne.** · gehört zu: 17 · Stand: teilweise · seit 25.09.2026
-     Befund (P5c/AP11, F-P5c-171): Die Ankerprüfung lud `doku_lib.php`, die
-     lud `db.php`, das ohne `config.php` abbricht — im Prüfstand grün, im
-     ersten Lauf auf dem Pull Request rot, nach sechs Läufen des
-     Prüfstands. Zweiter Fall derselben Lücke (F-P5c-172): `anker` stand
-     als Riegel in `pruefablauf.json`, aber nicht als `--riegel` im Schritt
-     „Prüfbericht gegenlesen" von `pruefung.yml`; `--alle-riegel` war im Tor
-     rot, örtlich fährt den Schritt niemand.
-     Erledigt: die eine Stelle (`doku_lib.php` braucht `db.php` nicht,
-     Web 21.1.2). Offen ist die Lücke: Jedes künftige Quelltextwerkzeug,
-     das eine Serverbibliothek mit `db.php` lädt, ist örtlich grün und im
-     Tor rot.
-     Weg: Der Prüfstand fährt `quelltext pruefen.sh --selbstprobe` und
-     `alle` mit beiseitegelegter `config.php` — so, wie das Tor sie sieht —
-     und `bericht.py lesen --alle-riegel` mit genau den `--riegel`, die
-     `pruefung.yml` übergibt. Abnahme: mit dem Stand vor 21.1.2 zweimal rot
-     (`anker`, fehlende Übergabe), mit dem heutigen grün.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 329.
-
 331. **Zusammengesetzte Klassen der übrigen Bausteine sieht die Vollständigkeitsprüfung nicht.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      *Aufgenommen 24.09.2026 in Konzept BV (BV-03, F-BV-11), notiert und nicht
      mitgemacht.* BV-02 hat die Meldungstöne aufgelöst (Nr. 274): Ihre Liste
@@ -1562,27 +1543,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      dort, wo der Wert als Literal übergeben wird. *Weg:* je Baustein prüfen,
      ob sein Wertevorrat geschlossen ist; wo ja, wie in BV-02 lesen, wo nein,
      bleibt es beim Hinweis. **Zuordnung: Backlog-Runde** (Prüfmittel).
-
-332. **Nach dem Aufnehmen fremder Migrationen misst der Prüfstand gegen das alte Schema.** · gehört zu: 17 · Stand: offen · seit 26.09.2026
-     Befund (Konzept BV, F-BV-17, beim Aufnehmen von `main` nach P5c):
-     `Pruefablauf.md` 5.3 misst nur, was die Arbeit gegen `main` ändert,
-     nicht, was `main` mitbringt (F-PK-39); ohne eigene Migration ist die
-     Stufe `klein`, und die Anlage wird nur gestartet, nicht nachgezogen.
-     Mit P5c kamen Migrationen aus fünf Paketen, die Anlage stand auf dem
-     Schema davor; `login.php` antwortete 200 mit „Fassung v21.1.2", der
-     Nachweis sah nichts. Gemessen: Rollenprobe rot mit `Data truncated for
-     column 'role'` (Rolle `support` fehlte im `ENUM`), nach
-     `hochfahren.sh --neu` 20 grün, 0 rot. Diesmal laut — eine Probe, die
-     die neuen Spalten nicht berührt, misst still gegen einen Stand, den es
-     nirgends gibt, und ein grüner Bericht trägt einen Baum, den die Anlage
-     nie hatte.
-     Weg: `pruefen.sh` fragt vor den Proben, ob die Anlage offene
-     Migrationen hat (dieselbe Frage wie der Torwächter), und ist bei
-     Rückstand rot mit dem Weg (`hochfahren.sh --neu`) — oder richtet neu
-     ein; dazu ein Satz in `Pruefablauf.md` 5.3, Schritt 2. Abnahme: Anlage
-     auf `ba2ec57`, Baum mit `main` von `29cf394` → rot vor der ersten
-     Probe, mit Ansage; nach `--neu` grün.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 332.
 
 333. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo` das falsche Paket.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
      *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
@@ -1612,20 +1572,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      *Abnahme:* eine Berührung unter `android/` wählt die vier im Prüfstand
      aus, der Bericht nennt ihre Zahlen. **Zuordnung: nach dem Merge von P5c**,
      von der Instanz, die `main` aufnimmt, oder der nächsten Backlog-Runde.
-
-335. **Der Prüfstand erkennt die Ausbaustufe `android` an der falschen Plattform.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-07, E-AR-12).*
-     `tools/pruefstand/pruefen.sh` prüft vor dem `android-bau`, ob
-     `platforms/android-36` liegt. Seit Android 0.16.0 baut die App gegen
-     **37.0**; die Zeile ist grün, wenn 36 liegt und 37.0 fehlt, und rot, wenn
-     es umgekehrt ist. `tools/sandbox/aufbauen.sh android` installiert
-     deshalb beide Plattformen, damit die Erkennung nicht fehlschlägt — das
-     ist eine Krücke, keine Messung.
-     *Weg:* die Erkennung an die Plattform hängen, die der Bau braucht (am
-     besten aus `compileSdk` gelesen statt fest geschrieben), dann Plattform
-     36 aus `aufbauen.sh` streichen. *Abnahme:* ohne `android-37.0` meldet
-     der Prüfstand „Ausbaustufe android fehlt". **Zuordnung: nach dem Merge
-     von P5c**, zusammen mit Nr. 334.
 
 336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in

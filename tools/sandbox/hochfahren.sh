@@ -103,5 +103,33 @@ if [ "$code" != "200" ]; then
     zeile "Die Anmeldeseite antwortet nicht mit 200 — das ist ein Befund mit Zahl."
     exit 1
 fi
+
+# ---- 5. Schema ------------------------------------------------------------
+# DIESELBE FRAGE WIE DER TORWÄCHTER (`migrationen_lauf()` ohne Ausführen,
+# jede Zeile außer `ok` steht aus). Anlass: Nr. 332 — nach dem Aufnehmen von
+# `main` kamen Migrationen aus fünf Paketen, die Anlage stand auf dem Schema
+# davor, `login.php` antwortete trotzdem 200, und eine Probe, die die neuen
+# Spalten nicht berührt, maß still gegen einen Stand, den es nirgends gibt.
+# NICHT STILL NEU EINRICHTEN: `--neu` löscht die Datenbank — das entscheidet
+# ein Mensch, nicht dieser Befehl.
+melde "Schema"
+schema=$(cd "$WURZEL/server" && php -r '
+    require "db.php"; require_once "migration_lib.php";
+    try {
+        $offen = [];
+        foreach (migrationen_lauf(db(), false)["results"] as $z) {
+            if ($z[2] !== "ok") { $offen[] = $z[0] . " (" . $z[2] . ")"; }
+        }
+        echo count($offen), "\t", implode(", ", $offen);
+    } catch (Throwable $ex) { echo "?\t", $ex->getMessage(); }' 2>&1)
+offen=$(printf '%s' "$schema" | cut -f1)
+if [ "$offen" != "0" ]; then
+    zeile "Die Anlage steht nicht auf dem Schema dieses Baums: ${offen} Migration(en) offen."
+    zeile "$(printf '%s' "$schema" | cut -f2- | cut -c1-300)"
+    zeile "Weg: bash tools/sandbox/hochfahren.sh --neu   (löscht Datenbank und config.php)"
+    zeile "     oder php server/update.php, wenn der Bestand bleiben soll."
+    exit 1
+fi
+zeile "0 Migrationen offen"
 melde "Die örtliche Installation steht."
 exit 0

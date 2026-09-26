@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-02.** |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-03.** |
 > | Entschieden | **E-R4-01 bis E-R4-28** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 erledigt** (26.09.2026). Offen: R4-02 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01, R4-02 erledigt** (26.09.2026). Offen: R4-03 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08). 341 wird nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02) — 2.4. |
 
 ---|---|
 > | Stand | **26.09.2026 — Konzept vollständig, zur Freigabe vorgelegt; Konzept-PR #93 offen** (E-R4-02: Abschlüsse SD, AR, BV und dieses Konzept; jeder Push trägt einen Prüfbericht, `Pruefablauf.md` 5). Befund: 55 Punkte gesichtet und gegengeprüft (2.1). Paketschnitt: 26 Pakete (4). **Mockups für R4-22, R4-23, R4-24 liegen bei** (`konzept-r4/mockups/`, LIESMICH dort; zur Freigabe, Q-R4-16). |
@@ -342,6 +342,13 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   `server/` und `tools/`); wer aber in Ortszeit misst wie Nr. 275, misst
   örtlich nichts. Nr. 275 ist deshalb über die UTC-Zeiten nachgerechnet (2
   von 20 bestätigt, Tage mit `id` 7 und 19); R4-16 rechnet ebenso.
+- **F-R4-22 Der Prüfstand hielt eine Variable mit Vorgabe für Pflicht.**
+  `pruefen.sh` suchte im Aufruf jeder Probe nach `${NAME` und meldete
+  „Umgebungswert fehlt", wenn `NAME` nicht exportiert war — auch für
+  `${ANDROID_HOME:-/opt/android-sdk}`, das seine Vorgabe mitbringt. Der
+  Android-Bau war damit in jeder Sitzung ohne `export ANDROID_HOME` „nicht
+  gemessen" (gefunden im ersten Lauf von R4-02, weil `android/LIESMICH.md`
+  berührt war). Behoben in R4-02: Pflicht ist nur, was ohne Vorgabe steht.
 
 ## 3. Entscheidungen und Fragen
 
@@ -472,6 +479,26 @@ gelesen, nicht geschrieben). Selbstproben für beide Regeln; P-BR-09 fällig.
 `android-37.0` → „Ausbaustufe android fehlt"; `bestand` beide Regeln 0,
 Selbstprobe je ein roter Fall. *Stufe:* keine. *Fächerung:* keine (drei
 Punkte, zwei Dateien).
+**Erledigt 26.09.2026.** Die zwei Regeln heißen in `bestand.py` `anlage`
+und `tor` — eine Kennung trägt ihre Regel vor dem ersten Bindestrich, ein
+Name mit Bindestrich ginge nicht. `anlage` liest die Ladekette mit dem
+PHP-Tokenizer und wertet Pfade nur über eine Positivliste aus; ein
+`require` im Rumpf einer Funktion zählt nicht (Grenze im Kopf von
+`bestand.py`). Die Schemafrage steht in `hochfahren.sh`, nicht in
+`pruefen.sh` — dort fahren beide Wege durch, und `--ohne-hochfahren`
+bleibt, was es heißt. *Gemessen:* `bestand` 0 Befunde (21 Proben ohne
+Anlage, 10 PHP-Einstiege, 18 Dateien in der Ladekette, davon 7 unter
+`server/`; 20 von 20 Riegeln im Tor); historischer Fehler nachgebaut
+(`doku_lib.php` lädt `db.php`, `anker` fehlt im Tor) → **2 Befunde**
+(`anlage-db`, `tor-fehlt`); Selbstprobe **155 / 0**, 93 von 93
+Befundstellen (vorher 141 / 85); `hochfahren.sh` mit entfernter
+Registerzeile → rot, rc 1, Kennung und Weg; zurück → 0 offen; `pruefen.sh`
+mit beiseitegelegter Plattform 37.0 → „Ausbaustufe android fehlt
+(Plattform android-37 aus compileSdk)", nicht gemessen, rc 1.
+Beifang F-R4-22: `pruefen.sh` verlangt eine Umgebungsvariable nur noch,
+wenn der Aufruf sie ohne Vorgabe nennt. **P-BR-09 ist hier nicht fällig**, anders als oben angenommen: R4-02 legt
+kein neues Prüfmittel an, sondern erweitert eines. Das erste neue ist
+`nummern` (R4-03); dort wird 6.12 befolgt und P-BR-09 abgehakt.
 
 **R4-03 Nummernriegel** — Nr. 339. `tools/steuerung/nummern.py`: neue
 Nummern des Arbeitsbaums gegen `origin/main` und alle Remote-Zweige (`git

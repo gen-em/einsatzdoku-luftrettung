@@ -22,7 +22,7 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe · 
 | `linkprobe` | jeder Verweis nennt einen Parameter, den sein Ziel liest | Nr. 148, 151 |
 | `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=` | Nr. 179, 227 |
 | `textprobe` | **fünf Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen | B-S4-06, E-PK-08 |
-| `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6, elf Regeln: Form, Anlass, gerufen, keine lose Datei, keine Backlog-Nummer zweimal; eingehängt in `SELBST`, Tabelle, `pruefablauf.json` und die Tabelle in 4 | Nr. 293, 315 |
+| `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6, dreizehn Regeln: Form, Anlass, gerufen, keine lose Datei, keine Backlog-Nummer zweimal; eingehängt in `SELBST`, Tabelle, `pruefablauf.json` und die Tabelle in 4; keine Probe ohne Anlage lädt `db.php`, jeder Riegel steht im Tor | Nr. 293, 315, 329 |
 | `pysyntax` | jedes Python-Werkzeug unter `tools/` übersetzt | Kette II/AP4: `zustand.py` |
 | `handbuch` | Handbuch und „Was ist NAdoku" rendern, UTF-8 streng, kein fremdes Bild | P5b/AP8 |
 | `anker` | jeder Verweis `hilfe.php#…` trifft eine Überschrift des gerenderten Handbuchs | Nr. 188 |

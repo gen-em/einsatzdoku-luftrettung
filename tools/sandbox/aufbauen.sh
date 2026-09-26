@@ -83,17 +83,17 @@ teil_android() {
     gradle_bezug
     cmdtools_holen || return 1
     local sdkm="$ANDROID_SDK/cmdline-tools/latest/bin/sdkmanager"
-    if [ -d "$ANDROID_SDK/platforms/android-37.0" ] && [ -d "$ANDROID_SDK/platforms/android-36" ]; then
+    if [ -d "$ANDROID_SDK/platforms/android-37.0" ]; then
         melde "Android-SDK liegt bereits"; return 0
     fi
-    melde "Android-SDK beschaffen (Plattformen 37.0 und 36, Build-Tools 36.0.0)"
+    melde "Android-SDK beschaffen (Plattform 37.0, Build-Tools 36.0.0)"
     yes | "$sdkm" --licenses >/dev/null 2>&1 || true
-    # ZWEI PLATTFORMEN (Konzept AR, AR-03). Gebaut wird seit Android 0.16.0
-    # gegen 37.0 (`compileSdk`); 36 bleibt, weil `tools/pruefstand/pruefen.sh`
-    # die Ausbaustufe noch an `platforms/android-36` erkennt (Backlog Nr. 335).
-    # Den Emulator und seine Abbilder holt die Stufe `emulator` — mehrere GB,
-    # die nur der Emulatorlauf braucht (F-AR-02).
-    "$sdkm" "platform-tools" "platforms;android-37.0" "platforms;android-36" \
+    # EINE PLATTFORM: die, gegen die gebaut wird (`compileSdk` 37, seit
+    # Android 0.16.0). Bis R4-02 kam 36 dazu, nur weil der Prüfstand die
+    # Ausbaustufe an `platforms/android-36` erkannte (Backlog Nr. 335) — seit
+    # R4-02 liest er `compileSdk`. Den Emulator und seine Abbilder holt die
+    # Stufe `emulator` — mehrere GB, die nur der Emulatorlauf braucht (F-AR-02).
+    "$sdkm" "platform-tools" "platforms;android-37.0" \
         "build-tools;36.0.0" >/dev/null 2>&1
 }
 
@@ -261,7 +261,6 @@ nachweis() {
     # einziges Uhr-Stück angesehen zu haben (Grundsatz 7).
     if [ -n "${STUFE_ANDROID:-}" ]; then
         pruefe "android-sdk     Plattform 37.0" "[ -d \"$ANDROID_SDK/platforms/android-37.0\" ]"
-        pruefe "android-sdk     Plattform 36" "[ -d \"$ANDROID_SDK/platforms/android-36\" ]"
         pruefe "android-sdk     Build-Tools 36.0.0" "[ -d \"$ANDROID_SDK/build-tools/36.0.0\" ]"
         pruefe "jdk             $(java -version 2>&1 | grep -oE 'version "[0-9]+' | tr -d 'version "')" \
             "java -version 2>&1 | grep -qE 'version \"(17|2[0-9])'"

@@ -37,4 +37,4 @@ Der Bericht ist ein **Nachweis, kein Riegel** (`docs/Pruefablauf.md` 5.2).
 Die Stufe kommt aus `server/version.php`; unlesbar ist rot, nicht „klein".
 `--gegen staging` misst **nur lesend** (E-PK-29).
 
-*Anlass: O9c, Nr. 217, Nr. 267, Nr. 314, F-PK-30.*
+*Anlass: O9c, Nr. 217, Nr. 267, Nr. 314, Nr. 335, F-PK-30.*

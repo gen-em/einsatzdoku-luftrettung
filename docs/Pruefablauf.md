@@ -447,7 +447,10 @@ Stand. Der Weg, der grün wird:
 1. `git fetch origin main && git merge --no-commit origin/main` — Konflikte
    lösen, nichts committen.
 2. `bash tools/pruefstand/pruefen.sh` — misst genau diesen Baum, samt allem,
-   was der Lauf selbst schreibt.
+   was der Lauf selbst schreibt. Bringt `main` Migrationen mit, ist er
+   schon beim Hochfahren **rot** mit der Kennung und dem Weg: Die Anlage
+   steht auf dem Schema davor (Nr. 332). Dann `hochfahren.sh --neu` und
+   Schritt 2 noch einmal.
 3. `git add -A`, den Merge-Commit mit dem Bericht als Nachricht schreiben,
    pushen.
 
@@ -536,6 +539,15 @@ Nachbauten jede Runde eine andere Randschreibweise anders lesen. Jede
 Befundstelle hat eine Kennung, und die Selbstprobe von `bestand` schlägt an,
 wenn eine in keinem Fall fällt. Was er nicht sieht, steht im Kopf von
 `bestand.py`.
+
+**Seit R4-02 hält er den Prüfstand an das Tor** (Nr. 329), mit zwei Regeln:
+`anlage` — keine Probe mit `braucht: nichts` lädt über ihre Ladekette auf
+oberster Ebene `db.php` oder `config.php`, denn Stufe 1 hat keine Anlage;
+gelesen über `token_get_all`, ein Pfad nur aus Zeichenketten, `__DIR__`,
+`dirname()`, `realpath()` und so gebauten Variablen — und `tor` — jeder
+Riegel steht als `--riegel NAME=` im Aufruf `bericht.py lesen
+--alle-riegel` von `pruefung.yml`. Beides war örtlich grün und im Pull
+Request rot (F-P5c-171, -172).
 
 *Gemessen am 24.09.2026 mit `bestand`: 25 Anleitungen mit zusammen 972
 Zeilen, alle in der Form, 0 Befunde. Vor Konzept BR waren es 24 Anleitungen
@@ -772,7 +784,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde — ohne Schwelle seit PK-04/5e (E-PK-16) |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1) |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen elf Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen dreizehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
@@ -895,7 +907,8 @@ F-BR-19) — vier davon blieben damals grün.
      Quelltextprüfung `--riegel "<name>=$q"` (der Schritt „Quelltext"
      fährt sie schon mit — die Zahl in seinem Namen nachziehen), sonst
      `--riegel "<name>=$(r "$X")"` mit `X: ${{ steps.<id>.outcome }}`
-     unter `env:`. Fehlt das `--riegel`, ist Stufe 1 rot (`--alle-riegel`).
+     unter `env:`. Fehlt das `--riegel`, ist Stufe 1 rot (`--alle-riegel`)
+     — und seit R4-02 schon örtlich (`bestand`, `tor`).
 
    Ein Ordner, der hier nicht steht, muss in einem Arbeitslauf, in
    `tools/pruefstand/pruefen.sh` oder in `docs/Sandbox-Setup.md` genannt

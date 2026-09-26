@@ -3,8 +3,8 @@
 *Gehört zu `Konzept-R4-Backlog-Runde-4.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
-füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01
-erledigt** (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 und
+R4-02 erledigt** (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -48,6 +48,13 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-01 | Playwright 1.56, `launch()` je Motor, vor/nach `apt-get remove` der vier Pakete | Nr. 301: startet Firefox und WebKit ohne die vier Bibliotheken? | mit: **3 / 3**; ohne: Chromium und Firefox starten, **WebKit nicht**; wieder geholt: **3 / 3** (F-R4-20) |
 | R4-01 | SQL über die Anlage, UTC-Zeiten mit Hand in Ortszeit umgerechnet | Nr. 275: aktive Diensttage des Demo-Kontos mit Einsätzen auf zwei Kalendertagen | **2 von 20** (`id` 7 und 19, beide `ground`, beide Zeitumstellung) — bestätigt F-R4-05 |
 | R4-01 | `git show` der drei Commits, `grep` | Belege für 172 (`3258916`, Median aus 5 in `tools/proben/wartung/probe.php`), 295 (`d519fac`, `schritt_statistik()`), 216 (0 doppelte Trennlinien in `docs/`) | **3 von 3 Belegen** vorhanden |
+
+| R4-02 | `python3 tools/quelltext/bestand.py` | die dreizehn Regeln, darunter `anlage` und `tor` neu | **0 Befunde**; 21 Proben ohne Anlage, 10 PHP-Einstiege, 18 Dateien in der Ladekette (7 unter `server/`); **20 von 20** Riegeln im Tor |
+| R4-02 | dito, mit nachgebautem Fehler von Web 21.1.2 (`doku_lib.php` lädt `db.php`; `--riegel "anker=…"` aus `pruefung.yml` genommen), danach zurückgesetzt | fängt die neue Regel den Fall, der im Pull Request rot war? | **2 Befunde**: `anlage-db` (`anker.php → doku_lib.php → db.php`), `tor-fehlt` (`anker`); nach dem Zurücksetzen 0; `git status` für `server/` und `.github/` leer |
+| R4-02 | `python3 tools/quelltext/bestand.py --selbstprobe` | je Befundstelle ein eingebauter Fehler | **155 Fälle, 0 Fehlschläge** (130 mit Fehler, 25 Gegenproben); **93 von 93** Befundstellen (vorher 141 / 85) |
+| R4-02 | `bash tools/sandbox/hochfahren.sh`, einmal mit entfernter Registerzeile `2026_09_25_zentrale_stammdaten`, dann wieder eingesetzt | Schemafrage | heute **0 Migrationen offen**, rc 0; gestellt: **rot, rc 1**, Kennung `(skip)` und Weg; zurück: 0, rc 0 |
+| R4-02 | `bash tools/pruefstand/pruefen.sh --stufe klein --datei android/handy/build.gradle.kts` mit beiseitegelegter `platforms/android-37.0` und einer leeren `android-36` | Erkennung der Ausbaustufe aus `compileSdk` | **„Ausbaustufe android fehlt (Plattform android-37 aus compileSdk)"**, `android-bau=nicht-gemessen`, rc 1; mit 37.0 erkannt (Nachbau der Zeile) |
+| R4-02 | `bash tools/sandbox/aufbauen.sh android` nach der Änderung | holt es nur noch 37.0? | rc 0; `platforms/`: **nur `android-37.0`**; Nachweis 5 Stücke ok (Plattform 37.0, Build-Tools 36.0.0, JDK 21, Spiegel, `cmdline-tools` 23.0) |
 
 ## 3. Im Browser geprüft
 

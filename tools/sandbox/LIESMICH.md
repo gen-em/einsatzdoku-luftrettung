@@ -26,8 +26,8 @@ Namen und die Grenzen der Umgebung in `docs/Sandbox-Setup.md`.
 ## Erwartete Zahl
 
 `aufbauen.sh web` → 11 von 11 Stücken, **3 von 3 Engines**, 8 von 8 Werten,
-Rückgabewert 0. `hochfahren.sh` → HTTP **200** auf `login.php`,
-Rückgabewert 0. `plattform.sh alles` → vier Fassungen bereit und **viermal
+Rückgabewert 0. `hochfahren.sh` → HTTP **200** auf `login.php`, **0 Migrationen
+offen**, Rückgabewert 0 (Nr. 332). `plattform.sh alles` → vier Fassungen bereit und **viermal
 „30 Prüfungen, 0 Fehlschläge"** (19 bis P5c/AP8; 29,7 s am 21.09.2026).
 
 ## Was es nicht kann
@@ -37,4 +37,4 @@ kein echtes Gerät, kein echtes Sicherungsziel. Es stellt **Fassungen** nach,
 keine Anlagen — eine grüne Plattformmatrix sagt nichts darüber, wie sich
 Staging oder Produktiv verhalten. `--aus` räumt die Behälter weg.
 
-*Anlass: Nr. 183 (WebKit fehlte still), Nr. 267 (nur MySQL 8.4 scheiterte).*
+*Anlass: Nr. 183 (WebKit fehlte still), Nr. 267 (nur MySQL 8.4 scheiterte), Nr. 332 (altes Schema).*

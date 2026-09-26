@@ -83,8 +83,13 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', sep='\t')")
     # Bericht, wo das Tor es als rot liest. Bis dahin fehlte es dort ganz.
     ohne() { zeile "--    $name — $1"; nicht=$((nicht+1)); ZAHL[$name]=nicht-gemessen; }
     case "$braucht" in
-      android) [ -d "${ANDROID_HOME:-/opt/android-sdk}/platforms/android-36" ] || {
-                 ohne "Ausbaustufe android fehlt"; continue; } ;;
+      # Die Plattform, gegen die gebaut wird — aus `compileSdk` gelesen, nicht
+      # fest geschrieben (Nr. 335): Bis R4-02 stand hier `android-36`, und die
+      # Zeile war grün, wenn 36 lag und die gebrauchte 37.0 fehlte.
+      android) sdk=$(grep -oE '^\s*compileSdk\s*=\s*[0-9]+' "$WURZEL/android/handy/build.gradle.kts" | grep -oE '[0-9]+$')
+               [ -n "$sdk" ] || { ohne "compileSdk in android/handy/build.gradle.kts nicht lesbar"; continue; }
+               ls -d "${ANDROID_HOME:-/opt/android-sdk}/platforms/android-$sdk"* >/dev/null 2>&1 || {
+                 ohne "Ausbaustufe android fehlt (Plattform android-$sdk aus compileSdk)"; continue; } ;;
       uhr)     [ -n "${CIQ_GERAETE_URL:-}" ] || { ohne "CIQ_GERAETE_URL fehlt"; continue; } ;;
       plattform) docker image inspect mysql:8.4.0 >/dev/null 2>&1 || {
                  ohne "Modul plattform steht nicht"; continue; } ;;
@@ -92,8 +97,12 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', sep='\t')")
     # Ein Umgebungswert, den der Aufruf nennt und der fehlt, ist eine fehlende
     # Voraussetzung, kein Absturz: `set -u` machte daraus „unbound variable"
     # und eine rote Probe (spaltenregister-wegprobe, 23.09.2026).
+    # Nur was OHNE Vorgabe steht: `${ANDROID_HOME:-/opt/android-sdk}` bringt
+    # seine mit, und bis R4-02 galt der Android-Bau deshalb als „nicht
+    # gemessen", sobald ANDROID_HOME nicht exportiert war (F-R4-22). Der
+    # Name wird besitzergreifend gelesen (`*+`), sonst träfe `ANDROID_HOM`.
     leer=""
-    for v in $(printf '%s' "$befehl" | grep -oE '\$\{?[A-Z_][A-Z0-9_]*' | tr -d '${' | sort -u); do
+    for v in $(printf '%s' "$befehl" | grep -oP '\$(?:\{[A-Z_][A-Z0-9_]*+(?!:?[-=])|[A-Z_][A-Z0-9_]*+)' | tr -d '${' | sort -u); do
         [ -n "${!v:-}" ] || leer="$leer $v"
     done
     [ -z "$leer" ] || { ohne "Umgebungswert fehlt:$leer"; continue; }

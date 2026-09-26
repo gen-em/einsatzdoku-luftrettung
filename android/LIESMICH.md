@@ -46,7 +46,7 @@ Grund, warum die Blöcke B und C parallel zu S2/S3 laufen können.
 | | Stand | Woher |
 |---|---|---|
 | JDK | 21 (im Container), mindestens 17 | `JAVA_HOME` |
-| Android SDK | Plattform 37.0 (und 36, siehe Sandbox-Setup), Build-Tools 36.0.0 | `ANDROID_HOME` |
+| Android SDK | Plattform 37.0, Build-Tools 36.0.0 | `ANDROID_HOME` (Vorgabe `/opt/android-sdk`) |
 | Gradle | 9.7.1 (seit Android 0.16.0; bis dahin 8.14.3) | der Wrapper holt sie selbst |
 
 ```bash
@@ -598,7 +598,7 @@ unzip -q /tmp/cmdline-tools.zip -d /opt/android-sdk/cmdline-tools
 mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
 yes | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager \
-  "platform-tools" "platforms;android-37.0" "platforms;android-36" "build-tools;36.0.0"
+  "platform-tools" "platforms;android-37.0" "build-tools;36.0.0"
 ```
 
 Rund 460 MB. Die Zuarbeitenliste des Konzepts (Abschnitt 9) nennt die

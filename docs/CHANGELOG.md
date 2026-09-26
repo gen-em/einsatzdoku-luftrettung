@@ -14,6 +14,71 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Backlog-Runde 4 (Konzept R4)] — 2026-09-26
+
+Schritt 17, eigener Zweig nach dem Merge des Konzepts (PR #93). Hier stehen
+die Pakete, die nur `tools/` und `docs/` berühren — keine Versionsstufe
+(`CLAUDE.md` 2); was `server/` oder `android/` anfasst, steht unter seiner
+Fassung.
+
+### Hinzugefügt
+
+- **Ein Helfer verschiebt erledigte Backlog-Punkte** (R4-01,
+  `tools/steuerung/verschieben.py`, E-R4-06, E-R4-28). Konzept SD sagte
+  „wörtlich nach `Backlog-Erledigt.md`", aber nicht, was mit dem Stand
+  geschieht; E-R4-06 hat die Form festgelegt — Kopfzeile bleibt, `Stand:
+  erledigt`, ein Schlusssatz mit Datum und Beleg als letzte Folgezeile. Von
+  Hand sind das drei Stellen in zwei Dateien je Punkt, und diese Runde
+  verschiebt Dutzende. Der Helfer bricht den Schlusssatz so um, dass keine
+  Zeile mit Zahl und Punkt beginnt (der Bestandsriegel läse dort eine
+  Nummer). Er hält nichts auf und hat deshalb keine Selbstprobe
+  (`Pruefablauf.md` 6.3).
+
+### Geändert
+
+- **Der Bestandsriegel hält den Prüfstand an das Tor — zwei Regeln mehr**
+  (R4-02, Nr. 329). Zweimal war ein Riegel örtlich grün und im Pull
+  Request rot: Die Ankerprüfung lud über `doku_lib.php` die Datei
+  `db.php`, die ohne `config.php` abbricht — örtlich steht die Anlage, in
+  Stufe 1 nicht; und `anker` stand als Riegel in `pruefablauf.json`, aber
+  nicht als `--riegel` im Tor. Die Regel `anlage` liest jetzt die
+  Ladekette jeder Probe mit `braucht: nichts` mit dem PHP-Tokenizer und ist
+  rot, sobald sie auf oberster Ebene `db.php` oder `config.php` erreicht;
+  ein Pfad wird dabei nur aus Zeichenketten, `__DIR__`, `dirname()`,
+  `realpath()` und so gebauten Variablen ausgewertet, alles andere ist ein
+  Befund „nicht auflösbar", kein stilles Grün. Ein `require` im Rumpf einer
+  Funktion zählt nicht — es läuft erst beim Aufruf, und ob der Riegel die
+  Funktion ruft, sieht die Regel nicht; das steht als Grenze im Kopf von
+  `bestand.py`. Die Regel `tor` liest `pruefung.yml` (ohne sie zu
+  schreiben) und verlangt jeden Riegel als `--riegel NAME=` im Aufruf mit
+  `--alle-riegel`, und keinen fremden. Mit dem Stand vor Web 21.1.2 sind
+  beide rot, mit dem heutigen 0; die Selbstprobe wächst von 141 auf 155
+  Fälle, 93 von 93 Befundstellen fallen.
+- **`hochfahren.sh` fragt das Schema** (R4-02, Nr. 332). Nach dem Aufnehmen
+  von `main` stand die örtliche Anlage auf dem Schema davor, `login.php`
+  antwortete trotzdem 200, und eine Probe maß still gegen einen Stand, den
+  es nirgends gab. Jetzt stellt der Befehl dieselbe Frage wie der
+  Torwächter (`migrationen_lauf()` ohne Ausführen) und ist bei jeder offenen
+  Migration rot, mit Kennung und Weg. Neu eingerichtet wird **nicht** von
+  selbst — `--neu` löscht die Datenbank, und das entscheidet ein Mensch.
+- **Der Prüfstand erkennt die Ausbaustufe `android` an der Plattform, gegen
+  die gebaut wird** (R4-02, Nr. 335). Er prüfte `platforms/android-36`,
+  gebaut wird seit Android 0.16.0 gegen 37.0 — die Zeile war grün, wenn die
+  falsche lag, und rot, wenn die richtige lag. Jetzt liest er `compileSdk`
+  aus `android/handy/build.gradle.kts`; `aufbauen.sh android` holt nur noch
+  37.0, die Krücke 36 ist weg. Gemessen: mit beiseitegelegter 37.0 meldet
+  der Prüfstand „Ausbaustufe android fehlt (Plattform android-37 aus
+  compileSdk)".
+- **Der Prüfstand verlangt eine Umgebungsvariable nur noch, wenn der Aufruf
+  keine Vorgabe mitbringt** (R4-02, F-R4-22). Er las jedes `${NAME` im
+  Aufruf einer Probe als Pflicht — auch `${ANDROID_HOME:-/opt/android-sdk}`
+  —, und der Android-Bau galt in jeder Sitzung ohne `export ANDROID_HOME`
+  als „nicht gemessen", also im Tor als rot. Gefunden, weil R4-02
+  `android/LIESMICH.md` berührte und der Prüfstand den Bau auswählte.
+- **`Sandbox-Setup.md` 1 sagt, welche Engine die vier Bibliotheken braucht**
+  (R4-01, Nr. 301): nur WebKit — Firefox startet ohne sie, gemessen durch
+  Entfernen und Wiederholen.
+
 ## [Werkzeug: Rahmenplan und Backlog geschnitten (Konzept SD)] — 2026-09-26
 
 Konzept SD, ein eigener Zweig nach dem Merge von 10c. Keine Versionsstufe —
