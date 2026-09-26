@@ -1,6 +1,13 @@
 {
   "beschreibung": "Was am Tag der Einfuehrung schon dastand (E-PK-08). Je (Datei, Muster) eine Zahl; rot ist nur, was DARUEBER liegt — und was darunter liegt, ohne ausgetragen zu sein. Erzeugt mit `--altbestand-schreiben`, nie von Hand.",
-  "stand": "PK-04/1c",
-  "summe": 0,
-  "stellen": {}
+  "stand": "R4-07 — die acht Kommentare, die R4-09 umschreibt (E-R4-19)",
+  "summe": 8,
+  "stellen": {
+    "server/assets/geo.js\tname-real": 1,
+    "server/assets/style.css\tname-real": 1,
+    "server/diensttag_lib.php\tname-real": 1,
+    "server/migration_lib.php\tname-real": 1,
+    "server/ui.php\tname-real": 1,
+    "server/version.php\tname-real": 3
+  }
 }

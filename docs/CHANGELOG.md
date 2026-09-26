@@ -112,6 +112,28 @@ Fassung.
 
 ### Geändert
 
+- **Die Textprobe liest reale Namen auch in Kommentaren** (R4-07, Nr. 283,
+  E-R4-19). E-P1-02 — keine realen Orte und Rufnamen — richtet sich gegen
+  das öffentliche Repositorium, und ein Kommentar steht genauso darin; die
+  Probe las bis dahin nur sichtbaren Text, und mit der vollen Namensliste
+  standen acht Stellen in Kommentaren unter `server/`. Jetzt trägt jedes
+  Muster ein Feld `sicht`: `sichtbar` (Vorgabe) oder `mit_kommentaren`, und
+  nur die Klasse `namen` liest mit Kommentaren. Für die vier anderen bliebe
+  die Null sonst keine mehr, ohne dass etwas gewonnen wäre — ein
+  Luftbegriff im Kommentar erreicht niemanden, der die Anwendung bedient.
+  Dazu ein Bereich für das Stylesheet, der nur diese Klasse misst: Eine der
+  acht Stellen stand in `style.css`, und das lag in keinem Bereich. Die
+  acht stehen im Altbestand (neu: `--stand` sagt, wer ihn geschrieben hat),
+  bis R4-09 sie umschreibt; der Kommentar über dem GuteSeele-Profil nennt
+  das Fremdformat und steht unter dessen Ausnahme (E-PK-39).
+- **`pysyntax` zählt Warnungen als Fehler** (R4-07, Nr. 318). Eine
+  ungültige Escape-Folge (`"\d"` statt `r"\d"`) übersetzt heute mit einer
+  Warnung — unter Python 3.11 unterdrückt, ab 3.12 sichtbar im Tor —, und
+  eine künftige Fassung macht einen Syntaxfehler daraus; dann bräche das
+  Werkzeug ab, statt zu prüfen. Die Prüfung meldete „0 mit Syntaxfehler",
+  während das Tor zwei Warnungen ausgab. Jetzt übersetzt sie zweimal und
+  nennt beide Zahlen. Ihr erster Lauf fand drei: die zwei bekannten und
+  ihren eigenen neuen Docstring.
 - **Die Vollständigkeitsprüfung liest Selektoren, bedingte Töne und die
   Klassen-Stellen der Bausteine** (R4-05, Nr. 36, 331). Ein Selektor, der
   ins Leere greift, ist in JavaScript kein Fehler, sondern eine leere Liste

@@ -657,7 +657,8 @@ Hand.
 
 **Rot ist nur ein NEUER Treffer.** Der Altbestand steht mit Zahl in
 `textprobe-altbestand.json`, je (Datei, Muster); wer eine Stelle bereinigt,
-zieht ihn mit `--altbestand-schreiben` nach. So hält der Lauf auf, was
+zieht ihn mit `--altbestand-schreiben --stand PAKET` nach (`--stand` seit
+R4-07; bis dahin trug jede Fassung „PK-04/1c"). So hält der Lauf auf, was
 hinzukommt, ohne bei jeder Änderung den ganzen Altbestand zu verlangen.
 
 > **Zwei Eigenschaften, ohne die eine Zahl aus dieser Probe nichts
@@ -695,9 +696,19 @@ Uhr-Ressourcen und 14 normative Dokumente. **Nicht** gemessen werden
 > unsichtbar. Die schärfste stand **sechs Zeilen unter einem Platzhalter,
 > den E-S3-13 schon berichtigt hatte**.
 >
-> **`namen = 0` heißt deshalb „null im sichtbaren Text", nicht „null im
-> Repositorium".** Die acht sind bereinigt; die Lücke im Prüfmittel ist es
-> nicht.
+> Die acht sind bereinigt worden, die Lücke im Prüfmittel blieb — und mit
+> der vollen Namensliste standen danach acht andere da (F-R4-12).
+>
+> **Seit R4-07 liest `namen` mit Kommentaren** (E-R4-19): Jedes Muster trägt
+> ein Feld `sicht`, `sichtbar` (Vorgabe) oder `mit_kommentaren`, und nur
+> `name-real` trägt das zweite. Dazu ein sechster Bereich `f`,
+> `server/assets/*.css`, der **nur** diese Klasse misst (`nur_klassen`) —
+> das Stylesheet lag in keinem Bereich, und eine der acht Stellen stand
+> dort (F-R4-27). Die acht stehen im Altbestand, bis R4-09 sie umschreibt;
+> das Fremdformat aus E-PK-39 steht unter seiner Ausnahme. **`namen = 0`
+> heißt damit „null in Text und Kommentaren der sechs Bereiche"**, nicht
+> „null im Repositorium": `tools/`, `docs/konzepte/**`, die
+> Steuerungsdokumente und der Kotlin-Quelltext bleiben ungelesen.
 
 ### 6.7 Die Prüfmittel laufen zuletzt, nicht zwischendurch
 
@@ -799,7 +810,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `bestand` | 0 Befunde in allen dreizehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 20 von 20: zehn Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
-| `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
+| `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
 | `tools/steuerung/` | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock; Selbstproben alle Fälle grün |

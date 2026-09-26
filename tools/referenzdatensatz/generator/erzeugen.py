@@ -91,7 +91,7 @@ def iso_z(ts: int | None) -> str | None:
 
 
 def iso_offset(ts: int) -> str:
-    """Ortszeit mit Zonenversatz, Schreibweise wie im Export der Anwendung.
+    r"""Ortszeit mit Zonenversatz, Schreibweise wie im Export der Anwendung.
 
     MIT DOPPELPUNKT im Versatz ("+02:00", nicht "+0200"). `assets/export.js`
     baut ihn in `isoOffset()` von Hand genau so zusammen, und der Rueckweg

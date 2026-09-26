@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-07.** |
-> | Entschieden | **E-R4-01 bis E-R4-28** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-08.** |
+> | Entschieden | **E-R4-01 bis E-R4-29** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-06 erledigt** (26.09.2026); Web 21.1.5. Offen: R4-07 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-07 erledigt** (26.09.2026); Web 21.1.5. Offen: R4-08 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe) — 2.4. |
 
 
 ---
@@ -371,6 +371,12 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   Bindestrich. Gefunden von der eigenen Gegenprobe in R4-05 (entfernte
   Regel `kennzahl-orange`, das Stylesheet trug danach
   `.kennzahl-orange-weg` — grün statt rot); jetzt `(?![\w-])`.
+- **F-R4-27 Das Stylesheet lag in keinem Bereich der Textprobe.** Eine der
+  acht Kommentarstellen aus F-R4-12 steht in `server/assets/style.css` —
+  mit Kommentaren gelesen hätten `a` und `b` sie trotzdem nicht gefunden,
+  weil die Bereiche nur `*.php` und `*.js` lesen. Gefunden in R4-07 beim
+  Abgleich der `grep`-Zählung über `server/` (9 Treffer) mit der Probe (8);
+  behoben mit Bereich `f`, der nur `namen` misst (E-R4-29).
 
 ## 3. Entscheidungen und Fragen
 
@@ -403,6 +409,7 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-25 | Q-R4-15: **Der manuelle Abfahrtort bekommt in der Leseansicht schon in 17 eine beschriftete Zeile mit Schloss** (R4-06, Web Korrektur) — abweichend von der Empfehlung; Nr. 341 wird nicht vergeben. | Betreiberin, 26.09.2026 | Vorhandene Bausteine (`zeile()`, `dtGeschuetzt()` in `einsatz.php`), kein neuer — kein Mockup nötig (`CLAUDE.md` 5). |
 | E-R4-26 | Q-R4-16: **Die drei Mockups sind freigegeben**, wie gezeigt; H-R4-01 ist erfüllt. | Betreiberin, 26.09.2026 | — |
 | E-R4-27 | **R4-19 läuft vor R4-16**, direkt nach R4-15; sonst gilt die Nummernfolge. | Umsetzung, 26.09.2026 | R4-16 verlangt es selbst („Nach R4-19 und R4-15"); die Nummer allein hätte die Referenz zweimal erzeugt. |
+| E-R4-29 | **`sicht` gilt je Muster in jedem Bereich, und das Stylesheet bekommt einen Bereich nur für `namen`.** Das Konzept nannte `a` und `b`; das Feld am Muster wirkt aber überall, wo das Muster läuft — in `c` ohnehin (Markdown wird nicht zerlegt), in `d` und `e` mit 0 zusätzlichen Treffern. Bereich `f` (`server/assets/*.css`, `nur_klassen: ["namen"]`) schließt F-R4-27. Die acht Kommentare stehen bis R4-09 im Altbestand (`--stand`), damit R4-07 grün bleibt, ohne sie zu erklären. | Umsetzung (R4-07) | E-R4-19 sagt „E-P1-02 gilt auch für Kommentare"; eine Probe, die das Stylesheet nicht liest, hielte das an einer von acht Stellen nicht. Für die vier anderen Klassen hat das Stylesheet keinen sichtbaren Text (`flex-basis` träfe `basis`). |
 | E-R4-28 | **Der Verschiebe-Helfer ist eingecheckt** (`tools/steuerung/verschieben.py`), ohne Selbstprobe. | Umsetzung (R4-01) | E-R4-06; eine Runde verschiebt Dutzende Punkte, je drei Stellen in zwei Dateien. Er hält nichts auf, deshalb keine Selbstprobe (`Pruefablauf.md` 6.3); die Anleitung liegt in `tools/steuerung/LIESMICH.md`. |
 | E-R4-13 | **Die Diagramme der Statistik folgen vier Regeln:** eine Farbe je Diagramm (Blau), der Höchstwert in Orange **mit** Beschriftung, Schrift nur in Schrifttoken, die Tabelle bleibt daneben; drei Reihen verschiedener Größenordnung sind drei kleine Vielfache, keine Grafik mit drei Farben oder zwei Achsen; kein Kreis, keine Bibliothek (Inline-SVG aus PHP, Balken als HTML). | Konzept (M-R4-24) | `Design.md` 3.1/3.2 (Farbe trägt eine Aussage; Orange nie als Schrift, F-P3-J) und das dataviz-Verfahren (eine Achse, Farbe folgt der Sache, Tabellensicht); die zwei Töne haben die Palettenprüfung bestanden (Mockup-LIESMICH). |
 | E-R4-12 | **Ein Backlog-Punkt = ein Paket, außer die Punkte teilen Dateien oder Erzeugnis.** Blöcke sind Reihenfolge, nicht Bündel (wie Runde 3). | Konzept | 26 Pakete für 37 zu bauende Punkte; jedes einzeln abnehmbar, jedes mit Abnahmezahl. Gebündelt sind nur: 36+331 (eine Funktion), 322+334 (eine Ablaufdatei), 318+283 (ein Werkzeugordner), 116+321+297 (drei Bildwerkzeuge, seriell auf der einen Anlage), 271+272+273 (zwei Skripte, eine Zählzeile), 76+259 und 275+323 (ein Demo-Bestand), die Kommentar- und Kleinstpunkte unter `server/` (R4-09). |
@@ -668,6 +675,27 @@ einmal.
 *Abnahme:* `pysyntax` 63 geprüft, 0 Fehler, 0 Warnungen, Selbstprobe 4/0;
 `textprobe` fünf Klassen 0 neue Treffer, 0 ungenutzte Ausnahmen. *Stufe:*
 keine. *Fächerung:* keine (ein Ordner, eine LIESMICH).
+**Erledigt 26.09.2026.** `pysyntax` übersetzt zweimal — wie Python selbst,
+dann mit Warnungen als Fehler — und nennt beide Zahlen getrennt. Der erste
+Lauf fand drei Warnungen statt zwei: Der neue Kopf von `pysyntax.py` selbst
+schrieb `"\d"` in seinem Docstring; alle drei jetzt roh. *Gemessen:*
+**62** Werkzeuge (nicht 63: 60 beim Konzept, dazu `nummern.py` und
+`verschieben.py`; die Kennzeichnungsprobe ist PHP), **0 Syntaxfehler, 0
+Warnungen**; Selbstprobe **4 / 0**; die beiden Stellen vor der Änderung
+unter `-W error` → **2 von 62**. Die Textprobe trägt `sicht` am Muster
+(`sichtbar` Vorgabe, `mit_kommentaren` nur an `name-real`, ein anderer Wert
+bricht ab), Bereich `f` für das Stylesheet (F-R4-27, E-R4-29) und
+`--stand` für den Altbestand; ihre Selbstprobe fährt nach dem Zerleger
+(**21 / 21**) vier Fälle der Sicht (**4 / 4**). *Gemessen gegen die alte
+Fassung:* in allen fünf alten Bereichen dieselben erklärten Treffer (207,
+62, 514, 3, 2) und dieselben Fallen; neu genau **9** Namenstreffer in
+Kommentaren — **einer** ist das Fremdformat aus E-PK-39 (der Kommentar
+über dem GuteSeele-Profil, jetzt unter der Ausnahme
+`exporttitel-guteseele`), **acht** schreibt R4-09 um und stehen bis dahin im
+Altbestand (**8 in 6 Paaren**). Gegenprobe: je ein realer Name in einem
+PHP- und einem CSS-Kommentar → **2 neue**, rc 1; zurück rc 0. Nachtrag zu
+R4-06: `docs/Technik.md` nannte im Verzeichnisbaum noch „dreizehn
+Prüfungen" und kannte `kennzeichnung` nicht — nachgezogen.
 
 **R4-08 Kontrast, Stilvergleich, Bilderlauf** — Nr. 116, 321, 297.
 (1) `kontrast.py` leitet die Token-Paare aus `style.css` ab und meldet

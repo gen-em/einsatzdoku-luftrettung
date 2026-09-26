@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-06 erledigt**, Web 21.1.5 (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-07 erledigt**, Web 21.1.5 (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -75,6 +75,14 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-06 | Gegenproben von Hand, je einzeln, danach zurück (`git diff` nur die gewollten Zeilen) | `dtGeschuetzt('Abfahrtort')` → nackter String; `'geschuetzt' => true` am Ortsfeld `start` entfernt | je **1 Befund** mit Feld, Ansicht und Datei; zurück **0** |
 | R4-06 | `kennzeichnung.php` und `--selbstprobe` mit beiseitegelegter `server/config.php` (wie Stufe 1) | läuft sie ohne Anlage? `CREW_ROLES` aus den Tokens von `db.php` | **0 Befunde**, **8 / 0**; `bestand` Regel `anlage`: 27 Proben ohne Anlage, 19 Dateien in der Ladekette, 0 Befunde |
 | R4-06 | `bestand`, `kettenaufrufe`, `pruefen.sh --selbstprobe` nach 6.12 | Eintrag in `NAMEN`, `SELBST`, LIESMICH (40 von 40 Zeilen), `pruefablauf.json`, `pruefung.yml`, Tabelle in 4 neu erzeugt | **0 Befunde**, **21 von 21** Riegeln im Tor; **0**; **12 von 12** Selbstproben |
+| R4-06 | `bash tools/pruefstand/pruefen.sh` über den Baum des Commits `bbff56d` (Bericht im Commit) | 21 Riegel (neu `kennzeichnung`), `bilderlauf`, `bedienprobe`, `rollenprobe`, `kettenaufrufe`, `android-bau`, die vier Android-Proben, `steuerung`, `nummern` | **0 rot, 0 nicht gemessen, 30 grün**, 733 s (Bilderlauf 368 s, Bedienprobe 310 s); Baum `aa454579`; `bericht.py lesen`: 32 Zahlen in Ordnung |
+| R4-07 | `python3 -W error` über jede `.py` unter `tools/`, vor der Änderung | ungültige Escape-Folgen (Nr. 318) | **2 von 62**: `kettenaufrufe/pruefen.py:247` (`` \` ``), `referenzdatensatz/generator/erzeugen.py:94` (`\d`) |
+| R4-07 | `pysyntax.py` neu, erst mit den alten Docstrings, dann mit den rohen | Syntaxfehler und Warnungen getrennt | erst **3 mit Warnung** (die zwei und der neue Kopf von `pysyntax.py`), danach **62 geprüft, 0 Syntaxfehler, 0 Warnungen**; Selbstprobe **4 / 0** |
+| R4-07 | dito unter Python **3.10, 3.12, 3.13** (`/usr/bin/python3.x`) | verhält sich die Prüfung dort gleich? (das Tor hat 3.12) | je **62 / 0 / 0**, Selbstprobe **4 / 0**; mit den alten Docstrings unter 3.12 und 3.13 je **2 mit Warnung** |
+| R4-07 | `textprobe.py` alt (aus `HEAD`) gegen neu, `--alle`, je Bereich | bleiben die vier anderen Klassen unverändert? | erklärte Treffer **207 / 62 / 514 / 3 / 2** in a–e vorher wie nachher, Fallen gleich; neu **9** `name-real` in Kommentaren (6 in a, 2 in b, 1 im neuen Bereich f) — die `grep`-Zählung über `server/` gab 13: dieselben 9 und vier schon erklärte (`pwquality.js` 3, `exportTitle` 1) |
+| R4-07 | `textprobe.py` nach Ausnahme und Altbestand | 0 neue Treffer | **8 im Altbestand (6 Paare)**, 1 unter `exporttitel-guteseele`; **0 neu, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**, rc 0 |
+| R4-07 | Gegenprobe: `/* Beispiel: <realer Ort> */` in `einsatz.php`, dasselbe mit anderem Ort in `style.css`; danach zurück | liest die Probe Kommentare und das Stylesheet? | **2 neue**, rc **1**; zurück rc 0, `git status server/` leer |
+| R4-07 | `textprobe.py --selbstprobe` | Zerleger und Sicht | **21 / 21** und **4 / 4** (auch unter 3.12 und 3.13) |
 
 ## 3. Im Browser geprüft
 

@@ -8447,3 +8447,30 @@ zutreffen.
      Abnahme: dtGeschuetzt('Einsatznummer') durch den nackten String ersetzt
      → rot mit Feld und Datei. Ihr erster Lauf fand den manuellen Abfahrtort
      ohne Zeile in der Leseansicht; behoben im selben Paket (E-R4-25).
+
+318. **`pysyntax` sieht ungültige Escape-Folgen nicht, und zwei Werkzeuge tragen welche.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 mit dem Abschluss von Konzept BR,
+     gefunden beim Belegen von P-BR-01 im Log des PR-Laufs 36037964804.* Im Tor
+     meldet Python (ab 3.12) `SyntaxWarning: invalid escape sequence` für
+     `tools/kettenaufrufe/pruefen.py:247` (`` \` `` im Docstring von
+     `pruefe_block()`) und `tools/referenzdatensatz/generator/erzeugen.py:94`
+     (`\d`), und `pysyntax` zählt trotzdem „57 Python-Werkzeuge geprüft, 0 mit
+     Syntaxfehler". Örtlich (Python 3.11) ist es nur eine unterdrückte
+     `DeprecationWarning`. Gemessen mit `python3 -W error`: **2 von 60**
+     versionierten Python-Dateien. Beide Stellen sind älter als BR (Nr. 217
+     und S4). Eine künftige Python-Fassung macht daraus einen
+     `SyntaxError`, und dann bricht das Werkzeug ab, statt zu prüfen.
+
+     *Weg:* beide Zeichenketten roh schreiben oder den Rückstrich
+     verdoppeln; `pysyntax` übersetzt mit Warnungen als Fehler
+     (`SyntaxWarning` und `DeprecationWarning`) und bekommt dafür einen Fall
+     in seiner Selbstprobe. *Abnahme:* die Selbstprobe rot mit einer Datei,
+     die `"\d"` enthält; `pysyntax` im Tor ohne Warnung. Klein, kein Risiko
+     für die Anwendung. **Zuordnung: Backlog-Runde** (Vorschlag; oder das
+     nächste Paket, das `tools/quelltext/` anfasst).
+     Erledigt 26.09.2026 mit R4-07: pysyntax übersetzt zweimal — wie Python
+     selbst und mit Warnungen als Fehler — und nennt beide Zahlen; 62
+     Python-Werkzeuge, 0 Syntaxfehler, 0 Warnungen. Die neue Prüfung fand
+     vor dem Rohschreiben 3: die zwei Docstrings aus dem Befund und den
+     neuen Kopf von pysyntax selbst. Selbstprobe 4/0 mit einer Datei, die
+     "\d+" enthält.

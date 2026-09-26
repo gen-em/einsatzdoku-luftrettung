@@ -1282,6 +1282,9 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      für `namen` über den ganzen Baum. Bis dahin heißt `namen = 0` „null im
      sichtbaren Text", nicht „null im Repositorium" (`Pruefablauf.md` 6.6).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 283.
+     R4-07 (26.09.2026): gebaut nach E-R4-19 — `namen` liest mit
+     Kommentaren (Feld `sicht`), dazu `style.css` als Bereich `f`. Die acht
+     Stellen aus F-R4-12 stehen im Altbestand, bis R4-09 sie umschreibt.
 
 287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.** · gehört zu: 17 · Stand: offen · seit 23.09.2026
      *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
@@ -1382,27 +1385,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Gebaute zurückgenommen, mit Begründung. Nicht beides offen lassen.
      Zuordnung PK-06 ff.; bis dahin je Paket von Hand.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 300.
-
-318. **`pysyntax` sieht ungültige Escape-Folgen nicht, und zwei Werkzeuge tragen welche.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 mit dem Abschluss von Konzept BR,
-     gefunden beim Belegen von P-BR-01 im Log des PR-Laufs 36037964804.* Im Tor
-     meldet Python (ab 3.12) `SyntaxWarning: invalid escape sequence` für
-     `tools/kettenaufrufe/pruefen.py:247` (`` \` `` im Docstring von
-     `pruefe_block()`) und `tools/referenzdatensatz/generator/erzeugen.py:94`
-     (`\d`), und `pysyntax` zählt trotzdem „57 Python-Werkzeuge geprüft, 0 mit
-     Syntaxfehler". Örtlich (Python 3.11) ist es nur eine unterdrückte
-     `DeprecationWarning`. Gemessen mit `python3 -W error`: **2 von 60**
-     versionierten Python-Dateien. Beide Stellen sind älter als BR (Nr. 217
-     und S4). Eine künftige Python-Fassung macht daraus einen
-     `SyntaxError`, und dann bricht das Werkzeug ab, statt zu prüfen.
-
-     *Weg:* beide Zeichenketten roh schreiben oder den Rückstrich
-     verdoppeln; `pysyntax` übersetzt mit Warnungen als Fehler
-     (`SyntaxWarning` und `DeprecationWarning`) und bekommt dafür einen Fall
-     in seiner Selbstprobe. *Abnahme:* die Selbstprobe rot mit einer Datei,
-     die `"\d"` enthält; `pysyntax` im Tor ohne Warnung. Klein, kein Risiko
-     für die Anwendung. **Zuordnung: Backlog-Runde** (Vorschlag; oder das
-     nächste Paket, das `tools/quelltext/` anfasst).
 
 321. **Der Stilvergleich meldet unveränderte Stile als ungeplant, sobald eine andere Seite Elemente dazubekommt.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      Befund (P5c/AP7, F-P5c-126, gemessen): AP7 baute die Statistikseite um
