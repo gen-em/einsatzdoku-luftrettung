@@ -322,8 +322,9 @@ höchstens eine Minute alt.
 **Unter dem geöffneten Menüpunkt stehen die Karten der Seite** als
 Sprungmarken — kleiner und ohne Symbol, damit sie nicht wie eigene Seiten
 aussehen. Ein Klick springt zur Karte; während man liest, ist die Marke der
-Karte fett, die gerade oben steht. **Ist das Fenster niedriger als 800 px**
-(seit Web 21.1.0), fallen die Sprungmarken in der festen Leiste weg: Sonst
+Karte fett, die gerade oben steht. **Ist das Fenster niedriger als 950 px**
+(seit Web 21.1.3; vorher 800 px), fallen die Sprungmarken in der festen
+Leiste weg: Sonst
 schieben sie auf einem Laptop die Einträge darunter aus dem Bild, und die
 Einträge sind die Wege durch die Anwendung. Am Handy stehen die Sprungmarken
 immer, dort ohne Markierung: Die Schublade liegt vor dem Inhalt, und wer sie

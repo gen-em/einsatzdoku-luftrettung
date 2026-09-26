@@ -14,6 +14,27 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.3] — 2026-09-26
+
+**Die Sprungmarken der Leiste weichen früher.** Die erste Änderung nach dem
+Merge von P5c (PR #89). **Korrekturstufe ohne Migration.**
+
+### Geändert
+
+- **Web: Die Sprungmarken in der festen Leiste stehen erst ab 950 px
+  Fensterhöhe, nicht mehr ab 800** (F-P5c-164, Entscheidung der
+  Betreiberin vom 26.09.2026). AP9 hatte sie unter 800 px ausgeblendet,
+  damit auf einem niedrigen Laptopfenster alle Einträge der Leiste ohne
+  Rollen erreichbar sind, und die Lücke darüber benannt: Zwischen 800 und 946 px standen die
+  Marken, und drei Listen passten nicht — Servereinstellungen braucht rund
+  947 px, Status 891, Updates 835. Nachgemessen bei 1280 px Breite und acht
+  Höhen von 800 bis 1000 px: mit 800 bei 800 px 11 von 14 Seiten
+  vollständig, bei 900 px 13 von 14; mit 950 überall 14 von 14. Bei 950 px
+  stehen alle acht Marken der Servereinstellungen, bei 949 keine. **Was
+  bleibt:** Wer ein Fenster zwischen 800 und 949 px hat, sieht die Marken
+  nicht mehr; der Weg zur Karte führt dort über das Rollen der Seite. Unter
+  1024 px Breite, in der Schublade, stehen sie weiter immer.
+
 ## [Web 21.1.2] — 2026-09-25
 
 **Ein Komplett-Backup, das über zwei Häppchen versiegelt wurde, ließ sich
