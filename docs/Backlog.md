@@ -49,7 +49,9 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| ab 339 | frei — höchste vergebene Nummer 337; 338 war für AR reserviert und blieb frei (`origin/main` `f5bddc2`) | 26.09.2026 |
+| 339 | Abschluss BV auf `claude/schritt-17-hl9egt` — Q-BV-05, der Nummernriegel (E-BV-19) | 26.09.2026 |
+| 340 bis 349 | `claude/schritt-17-hl9egt` — Konzept 17, Backlog-Runde 4 | 26.09.2026 |
+| ab 350 | frei — höchste vergebene Nummer 339; 338 war für AR reserviert und blieb frei (`origin/main` `056781c`) | 26.09.2026 |
 
 ---
 
