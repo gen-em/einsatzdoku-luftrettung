@@ -564,21 +564,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      *Abnahme:* `grep -rn edbak_uebersicht server/ tools/ docs/` ist leer,
      bis auf den Changelog. Zuordnung: Backlog-Runde.
 
-177. **Der Änderungsverlauf des Rahmenplans führt sechs Fassungsnummern doppelt.** · gehört zu: SD · Stand: offen · seit 13.09.2026
-     Befund (Backlog-Runde 3, AP10): In Abschnitt 10 stehen die Nummern 35,
-     36, 37, 39, 38, 37 zwischen „30" und „47" ein zweites Mal mit anderem
-     Inhalt — mehrere Sitzungen schrieben am selben Tag. Ein Verweis auf
-     „Fassung 38" ist nicht auflösbar; zwei Konzeptdokumente zitieren
-     betroffene Nummern (Sofortpaket „Fassung 36", S9 „Fassung 38").
-     Zurückgestellt 13.09.2026 auf Anweisung („nur historisch"): keine
-     Wirkung auf Code, Daten oder Oberfläche.
-     Erledigt sich mit Konzept SD (Sammelnummer 294): Der alte Verlauf liegt
-     eingefroren in `Rahmenplan-Archiv-2.md`, der neue
-     (`Rahmenplan-Verlauf.md`) beginnt bei Fassung 125 mit eindeutigen
-     Nummern; die Doppelungen werden nicht umnummeriert. Abnahme: jede
-     Fassung im neuen Verlauf genau einmal.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 177.
-
 187. **Alle „Anhebungs"-Wege werden mit NaDoku 1.0 abgeschafft.** · gehört zu: 14 · Stand: offen · seit 14.09.2026
      Entschieden 14.09.2026 (S10/AP3): Ab 1.0 gibt es nur neue Konten, also
      keinen Altbestand, der still gehoben werden müsste. Anhebung heißt: ein
@@ -621,45 +606,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      früher, wenn vorher ein weiteres Konzept gelöscht wird.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 188.
 
-193. **Register und Doku führen die R42-Auswertung als offen, obwohl sie seit Web 15.3.0 läuft.** · gehört zu: SD · Stand: teilweise · seit 14.09.2026
-     Befund (Bestandsaufnahme zu R42, 14.09.2026): R42 verlangt eine
-     Geräteverteilung je Kategorie und Bezeichnung ohne `manual-%` und ohne
-     Demo-Konto; sie steht seit S8/AP4 in `betrieb_statistik.php`. Fünf
-     Stellen sagten das Gegenteil: die Registerzeilen R42 und R64 des
-     Rahmenplans, `Technik.md` („Die Auswertung ist P5"), `Handbuch.md` 10
-     („Bevor eine Auswertung entsteht, wird sie in der Datenschutzerklärung
-     benannt") und die Kopfzeile von Nr. 80. Der Handbuchsatz ist eine
-     Zusage an die NutzerIn und steht zwei Kapitel vor 12.2, das die
-     Statistik mitsamt Gerätemodell-Tabelle beschreibt. Für die
-     Momentaufnahme am Einsatz (`missions.geraet_art`) bleibt er wahr; die
-     Datenschutz-Frage steht bei Nr. 80. Zweiter Beleg für Nr. 188.
-     Erledigt mit Konzept SD (E-SD-26): R42 und R64 tragen seit Fassung 125
-     ihren Statussatz, Nr. 80 trägt seit SD-02 eine Kopfzeile ohne
-     „ausgewertet ist nichts". Offen sind die zwei Sätze in `Technik.md`
-     und `Handbuch.md` 10 (26.09.2026 nachgemessen: beide stehen noch);
-     SD-04 zieht sie nach. Abnahme: Die fünf Stellen sagen dasselbe wie
-     die Registerzeile R42.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 193.
-
-196. **68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten.** · gehört zu: SD · Stand: offen · seit 15.09.2026
-     Befund (15.09.2026, cmark-gfm): Ab Nr. 100 ist der Listenmarker fünf
-     Zeichen breit, die Datei rückte mit vier ein — bei dreistelligen Nummern
-     endet der Listenpunkt nach dem ersten Absatz, der Rest wird zum
-     eingerückten Codeblock. 195 Einträge, 68 als Codeblock, vier davon mit
-     Tabelle (123, 187, 192, 193). Der Rahmenplan war schlimmer dran:
-     Abschnitt 10 brach als Tabelle nach 8 `<tr>` ab (Leerzeile in der Zeile
-     zu Fassung 61), die Fahrplanzeile 9c hatte neun Zellen durch drei
-     ungeschützte Pipes in einem Code-Span.
-     Weg: ein Leerzeichen mehr bei allen Fortsetzungszeilen, in einem Zug —
-     nicht in Teilen.
-     Erledigt sich mit Konzept SD (Sammelnummer 294): SD-02 rückt jeden
-     Eintrag mit fünf Leerzeichen ein und misst mit cmark-gfm (`<pre>` 0,
-     `<li>` = Einträge); der alte Rahmenplan liegt eingefroren im Archiv-2,
-     der neue Verlauf ist eine Tabelle ohne Leerzeilen; SD-03 hängt die
-     Probe an Stufe 1. Abnahme: 0 Einträge mit `<pre>`, Tabellen als
-     `<table>`, jede Verlaufszeile ein `<tr>`.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 196.
-
 198. **Die Zeitraumübersicht zählt Windendienste nur luftgebunden.** · gehört zu: 17 · Stand: nicht umsetzen · seit 14.09.2026
      Befund (Demo-Ausbau AP0): Seit Web 20.3.0 darf ein Rettungsmittel des
      Typs Bergwacht Winde und Bergwacht auch bodengebunden führen; das
@@ -679,23 +625,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      mit Windeneinsatz); erfasst und in der Einsatzbearbeitung sichtbar
      bleiben sie. Wer das ändert, findet die beiden Stellen oben.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 198.
-
-199. **Die Nummer 5 fehlt im Backlog, obwohl der Changelog sie unter Erledigt verortet.** · gehört zu: SD · Stand: offen · seit 15.09.2026
-     Befund (Gegenlesen des Merges von PR #47): `grep -cE '^5\. '` liefert
-     0 — weder unter Offen noch unter Erledigt gibt es die Nummer, und die
-     Kopfnotiz nennt als frei nur 4, 6 und 7. Der Changelog zu Web 7.2.0
-     sagt zweimal das Gegenteil („Das Geräte-Limit (Nr. 5) … steht jetzt
-     unter Erledigt"). Ein Verweis auf „Nr. 5" löst ins Leere; dritter
-     Beleg für Nr. 188.
-     Zwei Wege, nur einer richtig: den Eintrag aus der Historie unter
-     Erledigt wiederherstellen, oder die 5 als dauerhaft frei führen und den
-     Changelog-Satz als überholt kennzeichnen.
-     Erledigt sich mit Konzept SD (Sammelnummer 294): Die Nummer steht in
-     keiner Fassung von `docs/Backlog.md` (gemessen 26.09.2026 über die
-     ganze Historie ab `7154ec5`) — der Changelog-Satz beschreibt einen
-     Stand, der nie im Repositorium lag. E-SD-25: 5 ist dauerhaft frei und
-     steht so in der Reservierungstabelle des Kopfes.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 199.
 
 200. **Bounce-Postfach: Unzustellbares erkennen, nicht nur zählen.** · gehört zu: 17 · Stand: nicht umsetzen · seit 15.09.2026
      Befund (Konzept P5a, E-P5a-14; Plattformprofil PP-7): Die
@@ -1463,23 +1392,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
      kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
      **Zuordnung: Backlog-Runde.**
-
-294. **Steuerungsdokumente schneiden (Konzept SD).** · gehört zu: SD · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 mit SD-00 (Rahmenplan Fassung 111).* Anlass:
-     Rahmenplan und Backlog sind auf 3 700 bzw. 10 000 Zeilen gewachsen,
-     weil Steuerung, Register und Protokoll in denselben Dateien stehen und
-     jede Fassung Erzähltext nachzieht. Konzept:
-     `docs/konzepte/Konzept-SD-Steuerungsdokumente.md` (SD-00 bis SD-04; die
-     Schreibregeln aus SD-00 gelten seit Fassung 111). Zeitpunkt: SD-01 bis
-     SD-04 nach dem Merge des 10c-PR, auf eigenem Zweig von `main`.
-     **Zuordnung: SD.** Mit ihm erledigen sich Nr. 177, 193, 196 und 199.
-     *Stand 26.09.2026:* **SD-01 erledigt** — der Rahmenplan ist geschnitten
-     (Fassungen 125 bis 127; Fassung 124 wörtlich in
-     `docs/Rahmenplan-Archiv-2.md`, Verlauf in `docs/Rahmenplan-Verlauf.md`),
-     Zweig `claude/serene-tesla-sqeno2`. **SD-M1 und SD-02 erledigt** (26.09.2026):
-     Durchsicht der Betreiberin (E-SD-34 bis E-SD-36), dieser Backlog geschnitten
-     (Kopfzeilen, `docs/Backlog-Erledigt.md`). Als Nächstes SD-03, das Werkzeug
-     `tools/steuerung/`.
 
 295. **Der Messstand hat keinen Schritt für die Statistik.** · gehört zu: 17 · Stand: teilweise · seit 24.09.2026
      *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-40), als Anlass nach der

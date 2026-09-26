@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 130 (26.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 131 (26.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `f5bddc2`, gemessen 26.09.2026): Web 21.1.3 ·
+**Stand `origin/main`** (Commit `056781c`, gemessen 26.09.2026): Web 21.1.3 ·
 Uhr 3.1.0 · Android 0.16.0.
-**Läuft:** SD auf `claude/serene-tesla-sqeno2` (Konzept `docs/konzepte/Konzept-SD-Steuerungsdokumente.md`, gebaut, PR #92); AR und BV sind gemergt, ihre Abschlüsse (K9) offen — Abschnitt 3.
-**Als Nächstes:** Merge des SD-PR, dann die Abschlüsse von AR und BV, dann Schritt 17 — Reihenfolge in Abschnitt 3.
-**Offene PRs:** #92 (SD).
+**Läuft:** auf `claude/schritt-17-hl9egt` die Abschlüsse von AR und BV (K9) und das Konzept zu Schritt 17 — Abschnitt 3.
+**Als Nächstes:** PR mit den Abschlüssen und dem Konzept 17; die Umsetzung von 17 danach auf eigenem Zweig — Reihenfolge in Abschnitt 3.
+**Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 25 Posten (Abschnitt 6.1). **`update.php`:** auf Staging gelaufen (26.09.2026); auf Produktiv mit dem Tag (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -104,15 +104,13 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** **SD** (läuft) → **17** →
-**18** → 12 → 12a → 13 → 14; der Betriebsübergang folgt auf v1.0. Daneben,
-ohne Platz in der Reihe: **PK-06 bis PK-08** (die Kette gehört PK, dort endet
-auch Kette II), der Merge von **AR**, der Abschluss von **BV**, die
-Paketschnitte von **11** und Teil C von **6** (seit SD-M1 frei). **Warum so:** 17 und 18 vor 12,
-damit der Review aufgeräumte und gehärtete Seiten liest; 12a nach 12 und vor
-der Öffnung, weil die Altbestand-Entscheidung ein einziges Konto voraussetzt;
-SD zuerst, weil währenddessen kein anderer Zweig Rahmenplan oder Backlog
-schreibt (Abschnitt 4).
+**Die Reihenfolge der offenen Schritte ist:** **17** → **18** → 12 → 12a →
+13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in der
+Reihe: **PK-06 bis PK-08** (die Kette gehört PK, dort endet auch Kette II),
+die Abschlüsse von **AR** und **BV** (K9), die Paketschnitte von **11** und
+Teil C von **6** (seit SD-M1 frei). **Warum so:** 17 und 18 vor 12, damit der
+Review aufgeräumte und gehärtete Seiten liest; 12a nach 12 und vor der
+Öffnung, weil die Altbestand-Entscheidung ein einziges Konto voraussetzt.
 
 | Schritt | Kennung | Inhalt | Voraussetzung | Konzept | Status |
 |---|---|---|---|---|---|
@@ -127,7 +125,6 @@ schreibt (Abschnitt 4).
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 | Kette II | **Härtung der Auslieferungskette** | Zeiger-Zweig und Integritätswache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Abbruchverhalten, Hotfix-Weg; M1 erster grüner Produktivlauf, M2 Probe-Hotfix | — | `docs/konzepte/Konzept-Kette-Haertung.md` (E-KH-01 bis -30) | gemergt 21.09.2026 (PR #65, #66, #68); **M1 erreicht 21.09.2026** (`web-v20.26.3`, Lauf 35654132667); M2 und der Abschluss sind an PK übergeben (PK-07); Zuarbeiten in 6.1 |
 | PK | **Prüfkette — jede Prüfung einmal, an ihrer Stelle** | Arbeitsumgebung als Station B mit Prüfstand und Bericht, Stufe 1 liest den Bericht gegen, Staging verschlanken, App-Auslieferung mit Signatur; PK-M2 erster Durchlauf der neuen Kette | — | `docs/konzepte/Konzept-PK-Pruefkette.md` (E-PK-01 bis -49) | Umsetzung — PK-01 bis PK-05 gemergt (PR #75, #81, #82, 23.09.2026); offen PK-06, PK-07 (übernimmt den Abschluss von Kette II), PK-08, PK-M2; Buchführung hier erst nach dem SD-Merge |
-| SD | **Steuerungsdokumente schneiden** | Rahmenplan und Backlog schneiden: zweites wörtliches Archiv, Verlauf-Datei, Kopfzeilen im Backlog, Erledigt-Datei, Längendecken als Stufe-1-Schritt | Merge von 10c — erfüllt; kein anderer Zweig an Rahmenplan/Backlog | `docs/konzepte/Konzept-SD-Steuerungsdokumente.md` (E-SD-01 bis -27) | gebaut 26.09.2026 — SD-01 bis SD-04 (Fassungen 125 bis 130, Backlog geschnitten, `tools/steuerung/` als Riegel); PR #92 offen; nach der Freigabe Erledigt-Zeile und Löschung (K9) |
 | AR | **Android-Runde** | AGP 9 und die Kette dahinter (Nr. 65), Kontrastwerkzeug prüft seine Vollständigkeit (Nr. 116, Android-Hälfte), Hausform-Zeile mit Versionsstufe und Emulatorlauf (Nr. 284); Android 0.16.0 | Merge nach 10c (E-AR-01) — erfüllt | `docs/konzepte/Konzept-AR-Android-Runde.md` (E-AR-01 bis -14) | gemergt 26.09.2026 (PR #88, `f5bddc2`); Abschluss nach K9 offen — Erledigt-Zeile und Löschung nach der Freigabe, die Buchführung dazu nach dem SD-Merge (Abschnitt 4) |
 | BV | **Vorgriff auf Backlog-Runde 4** | Punkte, die P5c nicht in die Quere kamen: Nr. 184, 274, 40, 214, 194; 150 zum Teil; 222, 270, 281, 212 ausgetragen | keine — bewusster Vorgriff auf 17 (E-BV-01) | `docs/konzepte/Konzept-BV-Backlog-Vorgriff.md` (E-BV-01 bis -18) | gemergt 26.09.2026 (PR #87, `d34908b`); offen Q-BV-05, Q-BV-06 und die Freigabe des Abschlusses, danach Erledigt-Zeile und Löschung (K9) |
 
@@ -173,7 +170,7 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; PK-06 bis PK-08 (Kette) zu 17 und 18 (`server/`) | **SD zu jedem anderen Zweig an `docs/Rahmenplan.md` und `docs/Backlog.md`** (E-SD-19) — bis der SD-PR gemergt ist, warten 17, PK-06 bis -08 und die Abschlüsse von AR und BV mit ihrer Buchführung dort |
+| Konzeptarbeit zu allem; PK-06 bis PK-08 (Kette) zu 17 und 18 (`server/`); ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | — |
 | AR (nur `android/` und Buchführung) zu allem | 12 → 12a → 13 → 14 nacheinander, nichts parallel (R71) |
 | — | S11 (12a) baut auf `store => 'pat'` (E-S9-01) auf, nicht daneben |
 
@@ -423,6 +420,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | TB — Produktionstor vergleicht Baum statt Commit | nur Werkzeug | 23.09.2026 · PR #77 | gelöscht (`a72c7df`) | gelöscht 24.09.2026 (`5e501ae`) | Ein Tag wartet nicht mehr auf eine zweite Messung; Job `Schon gemessen?` auf `main`; „Require branches to be up to date" (TB-M1, Nr. 285) |
 | BR — Bestandsriegel | nur Werkzeug | 24.09.2026 · PR #85, #86 | gelöscht (`d4e96e6`) | `Pruefdokument-BR-Bestandsriegel.md` (P-BR-05, -06, -08, -09 offen) | `tools/quelltext/bestand.py` misst den Werkzeugbestand in elf Regeln; 57 Befunde → 0; `Pruefablauf.md` 6.12 (Nr. 293) |
 | P5c — Rollen, Sicherheit, Betriebslage (Schritt 10c) | Web 20.38.0–21.1.3 | 26.09.2026 · PR #89, #90 (Tag offen, 6.1) | gelöscht 25.09.2026 (`ae829e6`; mit Konzept RW) | Prüfdokumente P5c (P-P5c-01 bis -45) und RW (P-RW-01 bis -05) | Umgebungsbanner, Protokoll mit Archiv, Reiter System, Rolle Support, Zweitfaktor mit Rückweg, Health-Endpunkt, Statistik nach R38, Rückbau von R39, Ein-Satz-Regel |
+| SD — Steuerungsdokumente schneiden | nur Werkzeug | 26.09.2026 · PR #92 | gelöscht 26.09.2026 (`831e3e7`) | `Pruefdokument-SD-Steuerungsdokumente.md` (3.1–3.5 offen; P-SD-20 in Konzept 17) | Rahmenplan in drei Dateien (Kopf 15 Zeilen), Backlog mit Kopfzeilen und Erledigt-Datei (keiner über 20 Zeilen), `tools/steuerung/` als Riegel in Stufe 1 (20 Decken); Nr. 177, 193, 196, 199, 294 |
 
 ## 9. Pflege dieses Dokuments
 
