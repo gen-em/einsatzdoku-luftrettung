@@ -42,9 +42,22 @@ if ! mysqladmin ping >/dev/null 2>&1; then
 fi
 echo "MariaDB laeuft."
 
+# VIER ARBEITER, NICHT EINER. Ohne `PHP_CLI_SERVER_WORKERS` bedient der
+# eingebaute Server EINE Anfrage zur Zeit, und davor terminiert socat TLS fuer
+# einen Browser, der sechs Verbindungen gleichzeitig und weitere auf Vorrat
+# oeffnet. Das hat dreimal einen Pruefstand rot gefaerbt, ohne dass die
+# Anwendung etwas falsch machte: WebKit hing beim zweiten Anmelden (F-RW-23,
+# Backlog Nr. 301), und zweimal kam die Bedienprobe nach der Anmeldung nicht
+# an ihre erste Seite (`net::ERR_TOO_MANY_RETRIES`; RW-04 und der Abschluss
+# von P5c) -- die Anfrage erreichte den Server nie. Die Anwendung zaehlt nichts
+# im Prozessspeicher (kein APCu); Sitzungen und Ratenbremsen liegen in Dateien
+# und in der Datenbank, und Produktiv bedient ohnehin viele Anfragen zugleich.
+# Dieselbe Zahl in `lokal_einrichten.sh`.
+PHP_ARBEITER=${PHP_ARBEITER:-4}
+
 if ! curl -s --noproxy '*' -o /dev/null "http://$ADRESSE/login.php"; then
-  echo "PHP-Server starten ..."
-  setsid php -S "$ADRESSE" -t "$WURZEL" >/tmp/php-server.log 2>&1 &
+  echo "PHP-Server starten ($PHP_ARBEITER Arbeiter) ..."
+  PHP_CLI_SERVER_WORKERS=$PHP_ARBEITER setsid php -S "$ADRESSE" -t "$WURZEL" >/tmp/php-server.log 2>&1 &
   curl -s --noproxy '*' --retry 20 --retry-delay 1 --retry-all-errors \
        -o /dev/null "http://$ADRESSE/login.php" || true
 fi

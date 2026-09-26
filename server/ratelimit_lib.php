@@ -255,6 +255,22 @@ const RATE_GRENZEN = [
      * ist der Sinn des Hinweises „Betrieb -> Schluesselblatt neu drucken". */
     'blatt' => ['max' => 3, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
+    /* DER CODE-SCHRITT DER ANMELDUNG (P5c/AP5, E-P5c-53).
+     *
+     * FUENF VERSUCHE JE KONTO, MIT LEITER. Sechs Ziffern sind eine Million
+     * Moeglichkeiten; mit drei gueltigen Fenstern trifft ein Rateversuch mit
+     * 3 zu 1 000 000. Fuenf Versuche je Viertelstunde, danach die Leiter —
+     * bei der zweiten Sprosse eine Stunde —, machen das Raten aussichtslos,
+     * ohne jemanden auszusperren, der sich zweimal vertippt oder eine
+     * Minute zu spaet schaut.
+     *
+     * JE KONTO UND NICHT JE ADRESSE. Wer hier steht, hat das Passwort schon;
+     * gezaehlt wird, wie oft an DIESEM Konto der zweite Faktor fehlt. Ein
+     * gesperrter Code-Schritt sperrt die Anmeldung dieses Kontos, nicht die
+     * der Klinik hinter demselben NAT. Wiederherstellungscodes zaehlen in
+     * denselben Topf — sonst waere er mit ihnen zu umgehen. */
+    'totp' => ['max' => 5, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
+
     /* DER GLOBALE ZAEHLER SPERRT NIE (E-P5a-05). `max` steht auf der
      * groesstmoeglichen Zahl, damit die Sperrbedingung in `rate_misserfolg()`
      * fuer diesen Topf niemals wahr wird — eine globale Sperre waere ein
@@ -342,6 +358,28 @@ const RATE_GRENZEN = [
      * die ZUSAMMENFASSUNG in der Tabelle: Tausend gleiche Meldungen werden
      * eine Zeile mit einem Zaehler. */
     'csp' => ['max' => 200, 'fenster' => 3600, 'sperre' => 3600],
+
+    /* HEALTH ZAEHLT EBENSO DIE MENGE (P5c/AP6, E-P5c-17, -52).
+     *
+     * `api/health.php` ist ohne Sitzung erreichbar; der Token schuetzt die
+     * Auskunft, nicht den Aufwand. 60 je Minute und Adresse: Ein Monitoring
+     * fragt einmal je Minute, und eine Minute Sperre ist genau ein
+     * ausgefallener Abruf. OHNE LEITER — eine wachsende Sperre traefe das
+     * Monitoring der BetreiberIn, nicht einen Angreifer, der den Token nicht
+     * kennt; der liest aus der 403 ohnehin nichts. */
+    'health' => ['max' => 60, 'fenster' => 60, 'sperre' => 60],
+
+    /* DIE VORSCHAU DER RECHTSTEXTE ZAEHLT DIE MENGE (P5c/AP9, E-P5c-28).
+     *
+     * `api/rechtstext_vorschau.php` rendert, was im Feld steht — ohne zu
+     * speichern. Das Skript fragt 0,4 s nach dem letzten Tastendruck; wer
+     * tippt, macht Pausen, und daraus werden ein paar Abrufe je Minute.
+     * 120 je fuenf Minuten und Konto liegen weit darueber und fangen ein
+     * Skript ab, das den Renderer als Rechenknecht benutzt. EINE MINUTE
+     * SPERRE, OHNE LEITER: Getroffen wuerde eine angemeldete Verwaltung, und
+     * die soll nicht laenger warten als noetig — der Text selbst ist nie
+     * betroffen, nur die Vorschau. Merkmal ist das Konto, nicht die Adresse. */
+    'rt_vorschau' => ['max' => 120, 'fenster' => 300, 'sperre' => 60],
 
     /* DIE REGISTRIERUNG HAT DREI TOEPFE, UND JEDER SCHUETZT ETWAS ANDERES
      * (P5b/AP3, E-P5b-13, R37 (4)).
@@ -655,7 +693,7 @@ function rate_sperre_aufheben(string $topf, string $merkmal, ?string $wer = null
         }
         return $weg;
     } catch (Throwable $ex) {
-        error_log('Ratenschutz: Aufheben gescheitert (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'Aufheben gescheitert (' . $topf . ')', $ex);
         return false;
     }
 }
@@ -732,7 +770,7 @@ function rate_erlaubt(string $topf, ?string $konto = null,
         }
         return true;
     } catch (Throwable $ex) {
-        error_log('Ratenschutz nicht verfuegbar (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'nicht verfügbar (' . $topf . ')', $ex);
         return true;   // s. Kopfkommentar: durchlassen statt selbstgebauter Ausfall
     }
 }
@@ -825,7 +863,7 @@ function rate_misserfolg(string $topf, ?string $konto = null,
             }
         }
     } catch (Throwable $ex) {
-        error_log('Ratenschutz konnte nicht zaehlen (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'konnte nicht zählen (' . $topf . ')', $ex);
     }
 }
 
@@ -995,7 +1033,7 @@ function rate_erfolg(string $topf, ?string $konto = null,
             $st->execute([$topf, $merkmal]);
         }
     } catch (Throwable $ex) {
-        error_log('Ratenschutz konnte nicht zuruecksetzen (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'konnte nicht zurücksetzen (' . $topf . ')', $ex);
     }
 }
 
@@ -1101,7 +1139,7 @@ function rate_sperre(string $topf, ?string $konto = null,
         }
         return $beste;
     } catch (Throwable $ex) {
-        error_log('Ratenschutz: Sperrstand nicht lesbar (' . $topf . '): ' . $ex->getMessage());
+        system_melden('ratenschutz', 'Sperrstand nicht lesbar (' . $topf . ')', $ex);
         return null;
     }
 }
@@ -1149,8 +1187,7 @@ function rate_sperre_paare(array $paare): ?array
     } catch (Throwable $ex) {
         /* Wie `rate_erlaubt()`: durchlassen statt selbstgebauter Ausfall.
          * Die Tabelle fehlt genau dann, wenn `update.php` noch nicht lief. */
-        error_log('Ratenschutz: Sperrstand nicht lesbar (mehrere Toepfe): '
-                  . $ex->getMessage());
+        system_melden('ratenschutz', 'Sperrstand nicht lesbar (mehrere Töpfe)', $ex);
         return null;
     }
 }
@@ -1379,7 +1416,7 @@ function sicherheit_verlangsamung_vermerken(): void
     } catch (Throwable $ex) {
         /* Wie unten: ein Protokoll, das nicht geschrieben werden kann, darf
          * die Anmeldung nicht mitreissen. */
-        error_log('Verlangsamungsstufe nicht vermerkbar: ' . $ex->getMessage());
+        system_melden('ratenschutz', 'Verlangsamungsstufe nicht vermerkbar', $ex);
     }
 }
 
@@ -1481,7 +1518,7 @@ function sicherheit_melden_pruefen(): void
         /* Die Tabelle fehlt (Migration steht aus) oder die Datenbank ist weg.
          * Eine Meldung, die nicht hinausgeht, darf die Anmeldung nicht
          * mitreissen — sie ist ein Hinweis, nicht der Vorgang. */
-        error_log('Sicherheitsmeldung nicht moeglich: ' . $ex->getMessage());
+        system_melden('ratenschutz', 'Sicherheitsmeldung nicht möglich', $ex);
     }
 }
 

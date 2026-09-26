@@ -1,7 +1,7 @@
 # Quelltextprüfungen
 
-Elf Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
-**Anlass: Nr. 148, 205, 208, 238, 293, 315** — je Prüfung in der Tabelle.
+Dreizehn Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
+**Anlass: Nr. 148, 188, 205, 208, 238, 248, 293, 315** — je Prüfung in der Tabelle.
 
 ## Aufruf
 
@@ -18,12 +18,14 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe · 
 | `csp` | Kopfzeilen gegen `kopfzeilen_lib.php` | 15.09.: Meldeweg tot |
 | `jobregister` | Registerzeilen gegen `jobs_lib.php` | Nr. 208 |
 | `migrationsregister` | Migrationen gegen `schema.sql` | Nr. 238 |
+| `behandler` | die drei Behandler des Fehlerprotokolls in `db.php` | Nr. 248 |
 | `linkprobe` | jeder Verweis nennt einen Parameter, den sein Ziel liest | Nr. 148, 151 |
 | `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=` | Nr. 179, 227 |
 | `textprobe` | **fünf Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen | B-S4-06, E-PK-08 |
 | `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6, elf Regeln: Form, Anlass, gerufen, keine lose Datei, keine Backlog-Nummer zweimal; eingehängt in `SELBST`, Tabelle, `pruefablauf.json` und die Tabelle in 4 | Nr. 293, 315 |
 | `pysyntax` | jedes Python-Werkzeug unter `tools/` übersetzt | Kette II/AP4: `zustand.py` |
 | `handbuch` | Handbuch und „Was ist NAdoku" rendern, UTF-8 streng, kein fremdes Bild | P5b/AP8 |
+| `anker` | jeder Verweis `hilfe.php#…` trifft eine Überschrift des gerenderten Handbuchs | Nr. 188 |
 
 ## Was es braucht
 
@@ -31,9 +33,7 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe · 
 
 ## Erwartete Zahl
 
-`alle` → **11 von 11 grün**, `--selbstprobe` → **9 von 9**; ohne Schwelle.
-Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json`
-(neu schreiben mit `--altbestand-schreiben`, nie von Hand).
+`alle` → **13 von 13 grün**, `--selbstprobe` → **11 von 11**; ohne Schwelle. Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json` (neu schreiben mit `--altbestand-schreiben`, nie von Hand).
 
 ## Was es nicht kann
 

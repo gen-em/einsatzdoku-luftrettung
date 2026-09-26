@@ -28,6 +28,9 @@
  * Erwartet: 17 Pruefungen, 0 Befunde. Rueckgabewert 0, sonst 1.
  */
 
+/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
+import { codeSchritt } from '../../motor.mjs';
+
 const MODUL = process.env.PW_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
 
@@ -62,9 +65,15 @@ try {
    * der die Falle beschreiben soll, nennt die Funktion, die hineinfuehrt.) */
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
-  pruef('Anmeldung', !seite.url().includes('login.php'), seite.url());
+  /* DER ZWEITFAKTOR (P5c/AP5, E-P5c-43). Das Pruefkonto ist eine BetreiberIn
+   * mit Zweitfaktor: Nach dem Passwort steht die Seite wieder unter
+   * `login.php` und fragt nach dem Code. `codeSchritt()` geht ihn und meldet
+   * das Einrichtungstor (`zweitfaktor.php`) als Scheitern — dessen Adresse
+   * enthaelt `login.php` nicht, die Zeile darunter liesse es sonst durch. */
+  const zf = await codeSchritt(seite);
+  pruef('Anmeldung', zf.ok && !seite.url().includes('login.php'), zf.meldung || seite.url());
 
   await seite.goto(`${BASIS}/admin_komplettsicherung.php`, { waitUntil: 'domcontentloaded' });
   pruef('Die Seite ist erreichbar', await seite.locator('h1', { hasText: 'Komplett-Backup' }).count() > 0);

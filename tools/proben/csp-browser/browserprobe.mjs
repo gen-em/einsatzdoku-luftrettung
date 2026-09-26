@@ -31,6 +31,9 @@
  * Aufruf:  node tools/proben/csp-browser/browserprobe.mjs
  * Rueckgabewert: 0 = alle Erwartungen erfuellt · 1 = mindestens eine nicht.
  */
+/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
+import { codeSchritt } from '../../motor.mjs';
+
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
@@ -101,8 +104,14 @@ ok('Inline-Skripte der Anmeldeseite tragen alle einen Nonce',
 await seite.fill('input[name="email"]', ADMIN.email);
 await seite.fill('input[name="password"]', ADMIN.pw);
 await Promise.all([ seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-                    seite.click('button[type="submit"]') ]);
-ok('Anmeldung als BetreiberIn', !seite.url().includes('login.php'), seite.url());
+                    seite.click('#loginform button[type="submit"]') ]);
+/* DER ZWEITFAKTOR (P5c/AP5, E-P5c-43). Die BetreiberIn hat einen; nach dem
+ * Passwort fragt `login.php` nach dem Code. `codeSchritt()` geht ihn und
+ * meldet das Einrichtungstor als Scheitern — dessen Adresse enthaelt
+ * `login.php` nicht, und die Seitenrunde unten maesse sonst neunmal das Tor. */
+const zf = await codeSchritt(seite);
+ok('Anmeldung als BetreiberIn', zf.ok && !seite.url().includes('login.php'),
+   zf.meldung || seite.url());
 
 /* ---- 3. JSON-Antwort traegt die Kopfzeilen ------------------------------ */
 const j = await seite.request.get(`${BASIS}/api/day.php?d=1`, { failOnStatusCode: false });

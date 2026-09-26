@@ -122,7 +122,7 @@ try {
   await seite.fill('input[name="password"]', ZIELPW);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
   if (seite.url().includes('login.php')) {
     throw new Error(`Anmeldung als ${ZIEL} gescheitert. Das Konto muss bestehen `

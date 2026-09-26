@@ -44,3 +44,4 @@ gegen die sie schützt.
 | `imp-dup` | [bleibt] Wie `imp-cell` — Auswahlfeld für Dubletten, gelesen in `import_ui.js:819`. |
 | `imp-daymode` | [bleibt] Wie `imp-cell` — Auswahlfeld für den Umgang mit abweichender Besatzung, gelesen in `import_ui.js:824`. |
 | `imp-param` | [bleibt] Skriptanker an den Importparametern; `import_ui.js:89` sammelt `.imp-param`, um die eingestellten Werte einzulesen. |
+| `zeilen` | [bleibt] Behälter der Zeilen einer Liste auf der Protokollseite (`admin_protokoll.php`, P5c/AP2, Bild M-P5c-01a). Er trägt kein Aussehen, sondern die **Kindordnung**: Ohne ihn wären Listenkopf und Listenfuß Geschwister der Zeilen, und `.zeile:first-child` / `:last-child` träfen die erste und letzte Zeile nicht — die Randzeilen hätten dann Innenabstand und Trennlinie. Die Bedienprobe (`admin-protokoll-zeilen`) misst die Zeilen über diesen Anker. |

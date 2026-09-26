@@ -24,7 +24,7 @@ CREATE TABLE users (
   pat_wrap_pw   TEXT NULL,                           -- Inhaltsschluessel, passwortverpackt (Pflicht-Verschlüsselung)
   pat_wrap_rc   TEXT NULL,                           -- Inhaltsschluessel, mit Wiederherstellungsschluessel verpackt
   pat_key_check CHAR(32) NULL,                       -- Pruefsumme des Inhaltsschluessels (im Browser gerechnet); NULL = Altbestand
-  role          ENUM('user','admin','betreiberin') NOT NULL DEFAULT 'user',  -- BetreiberIn ⊇ Admin ⊇ NutzerIn (R75)
+  role          ENUM('user','admin','betreiberin','support') NOT NULL DEFAULT 'user',  -- BetreiberIn ⊇ Admin ⊇ Support ⊇ NutzerIn (R75, E-P5c-14)
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
@@ -77,11 +77,37 @@ CREATE TABLE users (
   -- weil „spaeter" sonst durch Abmelden zurueckgesetzt und damit unbegrenzt
   -- waere.
   rueckfrage_verschoben TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  -- ZWEITFAKTOR (P5c/AP5, E-P5c-54). Das Geheimnis versiegelt mit dem
+  -- Serverschluessel, Zweck `totp|<id>`; eingeschaltet erst mit `totp_seit`
+  -- (nach einem bestaetigten Code); `totp_schritt` ist der letzte angenommene
+  -- Zeitschritt — kein Code gilt zweimal.
+  totp_geheimnis VARCHAR(200) NULL,
+  totp_seit      DATETIME NULL,
+  totp_schritt   BIGINT UNSIGNED NULL,
+  -- RUECKWEG BEIM ZWEITFAKTOR (Konzept RW, E-RW-05). Der oeffentliche Teil
+  -- eines ECDSA-Paars (P-256, SPKI in Base64) und der private als Chiffretext
+  -- unter dem Inhaltsschluessel (`edk1:`, nie `edka1:`) — ein Abzug kann
+  -- damit pruefen, aber nicht signieren. `rw_seit`: wann es entstand.
+  rw_oeffentlich VARCHAR(255) NULL,
+  rw_privat      TEXT NULL,
+  rw_seit        DATETIME NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Fuer die Verfalljobs, nicht fuer die Anzeige: „alle Konten in einem
   -- Zustand, deren Frist abgelaufen ist" waere sonst ein Vollscan je Joblauf.
   INDEX idx_status_loeschung (status, loeschung_am),
   INDEX idx_email_neu_token (email_neu_token_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- WIEDERHERSTELLUNGSCODES DES ZWEITFAKTORS (P5c/AP5, E-P5c-42). Zehn je
+-- Konto, mit password_hash() — sie haengen NICHT am Serverschluessel und
+-- sind deshalb der Rueckweg, wenn das Geheimnis nicht mehr zu oeffnen ist.
+CREATE TABLE totp_codes (
+  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT UNSIGNED NOT NULL,
+  hash       VARCHAR(255) NOT NULL,
+  benutzt_am DATETIME NULL,
+  KEY idx_konto (user_id),
+  CONSTRAINT fk_totp_codes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE password_resets (
@@ -132,11 +158,15 @@ CREATE TABLE devices (
 -- jede Bergwacht-Bereitschaft gehoert GENAU EINEM Standort. Eine zweite,
 -- standortuebergreifende Ebene gibt es bewusst nicht — der Preis dafuer ist
 -- Doppelpflege, der Gewinn ein Modell mit einer Regel statt mit zwei.
+--
+-- Jeder Eintrag gehoert einem Konto (`user_id NOT NULL`, seit Web 21.0.0).
+-- Bis dahin hiess NULL „zentral", und eine eigene Tabelle ordnete zentrale
+-- Standorte den Konten zu (R39); beides ist mit P5c/AP8 gefallen.
 -- ===========================================================================
 
 CREATE TABLE bases (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   name VARCHAR(120) NOT NULL,
   -- Optionale Koordinaten, Quelle des Abfahrtorts 'base' (Konzept 3.5.1).
   -- Freiwillig: ein Standort ohne Koordinaten steht als Abfahrtort schlicht
@@ -149,28 +179,19 @@ CREATE TABLE bases (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Auswahl zentraler Standorte je NutzerIn (E16). Nur ausgewaehlte zentrale
--- Standorte erscheinen in den Auswahllisten. EIGENE Standorte brauchen hier
--- keinen Eintrag — sie gelten immer als ausgewaehlt.
-CREATE TABLE user_bases (
-  user_id INT UNSIGNED NOT NULL,
-  base_id INT UNSIGNED NOT NULL,
-  PRIMARY KEY (user_id, base_id),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- Rettungsmittel (bis Web 5.10.0: `aircraft`). Die Art ist binaer (E3) und
 -- entscheidet ueber Besatzungsrollen und sichtbare Einsatzfelder.
 CREATE TABLE vehicles (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   -- Seit Web 16.0.0 NULL-faehig: Die Typen ausser 'standard' brauchen keinen
   -- Standort (E-S9-09). Die Pflicht bei 'standard' steht in validate_lib.php,
   -- nicht hier — die Datenbank kann sie nicht auf eine zweite Spalte beziehen,
   -- ohne den Fehler an der Pruefschicht vorbei als SQL-Fehler zu melden.
   -- ON DELETE CASCADE bleibt: Loeschen eines Standorts nimmt seine
-  -- Rettungsmittel mit (E15), es macht sie nicht standortlos.
+  -- Standard-Rettungsmittel mit (E15). Den Typen ohne Standortpflicht nimmt
+  -- die Anwendung vorher den Standort ab (`stammdaten_standort_loesen()`,
+  -- seit Web 17.1.0) — sie bleiben ohne Standort bestehen.
   base_id INT UNSIGNED NULL,
   name VARCHAR(64) NOT NULL,                       -- bis Web 5.10.0: `registration`
   kurz VARCHAR(16) NULL,                           -- Kurzname fuer Leiste, Kacheln, Plaketten (Nr. 69)
@@ -212,7 +233,7 @@ CREATE TABLE vehicle_capabilities (
 
 CREATE TABLE crew_presets (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   base_id INT UNSIGNED NOT NULL,
   -- Bis Web 5.10.0 ein ENUM('p1','p2','hems','fr','other'). Jetzt VARCHAR,
   -- damit neue Rollen ohne Schemaaenderung moeglich sind (Katalog: db.php).
@@ -226,7 +247,7 @@ CREATE TABLE crew_presets (
 -- Vorbelegung: weitere Rettungsmittel (RTW, NEF, weitere Hubschrauber ...)
 CREATE TABLE resources (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_base_res (user_id, base_id, name),
@@ -236,7 +257,7 @@ CREATE TABLE resources (
 
 CREATE TABLE bw_units (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_base_name (user_id, base_id, name),
@@ -248,7 +269,7 @@ CREATE TABLE bw_units (
 -- dieses Feld selbst bleibt Freitext ohne FK-Referenz).
 CREATE TABLE transport_dests (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(190) NOT NULL,
   -- Optionale Koordinaten (E37). Werden AM EINSATZ eingefroren
@@ -262,8 +283,8 @@ CREATE TABLE transport_dests (
   FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Nutzerbezogene Standard-Vorbelegung fuer Diensttage (Standort/Rettungsmittel);
--- funktioniert fuer persoenliche UND zentrale Eintraege (item_id verweist je
+-- Nutzerbezogene Standard-Vorbelegung fuer Diensttage (Standort/Rettungsmittel)
+-- aus den eigenen Eintraegen (item_id verweist je
 -- nach kind auf bases.id bzw. vehicles.id, kein FK moeglich wegen zwei
 -- Zieltabellen). Beim Speichern ist zu pruefen, dass das Standard-Rettungsmittel
 -- zum Standard-Standort gehoert.
@@ -450,6 +471,11 @@ CREATE TABLE missions (
   UNIQUE KEY uq_dev_ref (device_id, client_ref),
   INDEX idx_user_started (user_id, started_at),
   INDEX idx_day (day_id),
+  -- Beginn ueber alle Konten: die Statistik der BetreiberIn (P5c/AP7, Nr. 191).
+  INDEX idx_missions_started (started_at),
+  -- Papierkorb je Konto. Bis Web 20.47.0 legte ihn nur die Migration
+  -- 2026_07_22_papierkorb an; eine frische Anlage hatte ihn nicht (F-P5c-39).
+  INDEX idx_missions_deleted (user_id, deleted_at),
   FOREIGN KEY (user_id)   REFERENCES users(id)   ON DELETE CASCADE,
   FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE SET NULL,
   FOREIGN KEY (day_id)    REFERENCES days(id)    ON DELETE SET NULL
@@ -671,7 +697,7 @@ CREATE TABLE protokoll_ereignisse (
 -- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden (S2/AP7, E-S2-22).
 --
 -- Der Name ist nicht `transport_dests` -- das sind die Zielkliniken. Hier geht
--- es um FTP-, FTPS- und SFTP-Gegenstellen. Begruendung in update.php bei der
+-- es um FTPS- und SFTP-Gegenstellen (FTP bis Web 20.47.0). Begruendung in update.php bei der
 -- Migration 2026_09_01_sicherungsziele und in
 -- docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md unter F-S2-G.
 --
@@ -681,7 +707,7 @@ CREATE TABLE protokoll_ereignisse (
 CREATE TABLE backup_targets (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name           VARCHAR(190) NOT NULL,
-  protokoll      ENUM('ftp','ftps','sftp') NOT NULL,
+  protokoll      ENUM('ftps','sftp') NOT NULL,
   host           VARCHAR(190) NOT NULL,
   port           SMALLINT UNSIGNED NOT NULL,
   nutzer         VARCHAR(190) NOT NULL,
@@ -1042,4 +1068,17 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- missions.uhr_gesperrt heisst oben schon so (Web 20.25.0, Nr. 238). Eine
   -- frische Anlage hat nichts umzubenennen; die Migration ist ausschliesslich
   -- fuer Bestandsdatenbanken da, die die Spalte noch als `manual` fuehren.
-  ('2026_09_20_uhr_gesperrt', 'skipped');
+  ('2026_09_20_uhr_gesperrt', 'skipped'),
+  ('2026_09_24_rolle_support', 'skipped'),
+  ('2026_09_24_zweitfaktor', 'skipped'),
+  -- users.rw_* stehen oben schon im Schema (Konzept RW, RW-01).
+  ('2026_09_24_rueckweg_schluesselpaar', 'skipped'),
+  -- missions.idx_missions_started und idx_missions_deleted stehen oben schon
+  -- im Schema (P5c/AP7).
+  ('2026_09_24_statistik_beginn', 'skipped'),
+  -- Die Stammdaten tragen oben schon `user_id NOT NULL`, die Auswahltabelle
+  -- gibt es nicht, und `backup_targets.protokoll` kennt kein 'ftp' (P5c/AP8). Einen
+  -- Tag mit Tagesrettungsmittel hat eine frische Anlage nicht.
+  ('2026_09_25_zentrale_stammdaten', 'skipped'),
+  ('2026_09_25_ftp_entfernen', 'skipped'),
+  ('2026_09_25_tagesrettungsmittel_rollen', 'skipped');

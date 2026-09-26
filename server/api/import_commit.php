@@ -128,10 +128,9 @@ function import_commit(array $b, int $userId): never
     $pdo->beginTransaction();
     try {
         /* Die Pruefung der Stammdaten-Kennungen steckt seit Web 6.0.0 in
-         * dt_zuordnen() (aufgerufen von dt_anlegen): Sie muss den STANDORT
-         * mitpruefen, weil ein zentrales Rettungsmittel erst zur Verfuegung
-         * steht, wenn die NutzerIn seinen Standort ausgewaehlt hat (E16). Eine
-         * zweite Fassung hier waere die Stelle, an der beide auseinanderlaufen.
+         * dt_zuordnen() (aufgerufen von dt_anlegen). Eine zweite Fassung hier
+         * waere die Stelle, an der beide auseinanderlaufen — bis Web 20.47.0
+         * pruefte sie dazu den Standort zentraler Rettungsmittel (E16, R39).
          */
 
         /* ---- Diensttage ----------------------------------------------------

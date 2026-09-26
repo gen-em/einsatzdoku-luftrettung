@@ -12,11 +12,31 @@ return [
         'logo_path' => 'assets/images/gen-em_logo_helicopter.svg',  // Logo auf Login- und Einrichtungsseite
         'max_body_bytes' => 524288,                   // 512 KB Ingest-Limit
         // Die KONTAKTADRESSE und die BETREIBERMAIL stehen NICHT hier, sondern
-        // unter Betrieb -> Servereinstellungen (P5a/AP5, E-P5a-40). Grund:
-        // config.php wird zur Laufzeit nicht geschrieben — was hier steht,
-        // laesst sich nur ueber FTP aendern. Eine Adresse, die in jeder Mail
-        // steht, muss eine BetreiberIn selbst umstellen koennen.
+        // unter Verwaltung -> Installation (P5a/AP5, E-P5a-40; bis Web 20.37.3
+        // stand hier „Betrieb -> Servereinstellungen", und dort sind sie
+        // nie gewesen). Grund: config.php wird zur Laufzeit nicht geschrieben
+        // — was hier steht, laesst sich nur ueber FTP aendern. Eine Adresse,
+        // die in jeder Mail steht, muss eine BetreiberIn selbst umstellen
+        // koennen.
+        //
+        // ---- Umgebungsetikett (P5c/AP1, E-P5c-05) ----------------------
+        // NUR AUF EINER ANLAGE, DIE NICHT DIE PRODUKTIVANLAGE IST. Leer oder
+        // fehlend heisst: keine Kennzeichnung — die Anlage verhaelt sich wie
+        // die Produktivanlage, und die Statusseite sagt „Produktiv". Gesetzt,
+        // traegt jede Seite den Titelvorsatz „[Staging]", eine rote
+        // Kopfleiste und die Zeile „Staging — Testdaten, kein Echtbetrieb".
+        // Nie abgeleitet: Weder Domain noch Zweig setzen es, nur diese Zeile.
+        // `farbe` ist eine geschlossene Liste, heute nur 'rot'.
+        //
+        //   'umgebung' => ['name' => 'Staging', 'farbe' => 'rot'],
     ],
+    // ---- Betreff-Vorsatz der Mails (P5a, E-PP-09) -------------------------
+    // Auf Staging '[Staging]': Jede Mail dieser Anlage traegt ihn vorn im
+    // Betreff. Gehoert mit dem Etikett oben zusammen — steht der Vorsatz und
+    // das Etikett nicht, warnt Betrieb -> Status („Praefix ohne Etikett").
+    //
+    //   'mail' => ['betreff_praefix' => '[Staging]'],
+
     'smtp' => [                                       // z. B. eigener Stalwart-Server
         'host' => 'mail.example.invalid',
         'port' => 465,                                // implizites TLS (SMTPS)
@@ -45,6 +65,18 @@ return [
     // eine Anfrage sei ueber HTTPS gekommen.
     'netz' => [
         'vertrauenswuerdige_proxys' => [],
+    ],
+    // ---- Health-Endpunkt fuer das eigene Monitoring (P5c/AP6, E-P5c-17) -
+    //
+    // LEER = ENDPUNKT AUS. Gesetzt, antwortet
+    //   https://…/api/health.php?token=<dieser Wert>
+    // mit JSON (ok, web_version, db, migration_ausstehend, jobs_alter_s,
+    // system_24h, protokoll_fehler, speicher_pct) und HTTP 200 bzw. 503.
+    // Ein langer Zufallswert, z. B. `php -r 'echo bin2hex(random_bytes(24));'`.
+    // Er steht hier und nicht in der Oberflaeche, weil er in einem fremden
+    // Monitoring steht: Wer ihn wechselt, wechselt ihn dort mit.
+    'betrieb' => [
+        'health_token' => '',
     ],
     // ---- Die zwei Geheimnisse des Servers -----------------------------
     // Beide 64 Hexzeichen. Der Installer wuerfelt sie; eine bestehende

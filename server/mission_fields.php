@@ -32,7 +32,7 @@ declare(strict_types=1);
  *                                                  der Rolle aus crew_presets;
  *                                                  Rollenkennungen: CREW_ROLES
  *                                                  in db.php
- *                                   Beide liefern persoenliche UND zentrale
+ *                                   Beide liefern die eigenen
  *                                   Stammdaten DES STANDORTS, der am Diensttag
  *                                   hinterlegt ist (E15) — es gibt keine
  *                                   standortuebergreifenden Stammdaten mehr.
@@ -199,7 +199,7 @@ declare(strict_types=1);
  *                                     'transport_dests'  Stammdaten-Tabelle
  *                                     'crew:<rolle>'     Besatzungs-Vorbelegungen
  *                                                        der Rolle (CREW_ROLES)
- *                                   Beide liefern persoenliche UND zentrale
+ *                                   Beide liefern die eigenen
  *                                   Eintraege des Standorts. Unterschied zu 'options_src':
  *                                   Dort ist die Liste die Auswahl, hier nur
  *                                   ein Vorschlag — ein Wert ausserhalb der

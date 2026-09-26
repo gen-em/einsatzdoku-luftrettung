@@ -6,18 +6,17 @@ Nimmt jede Seite in mehreren Breiten auf und misst, was ein Bild nicht zeigt.
 ## Aufruf
 
 ```bash
-node tools/screenshots/aufnehmen.mjs --stufe klein|neben|haupt  # --nur · --finger · --jobs-token · --selbstprobe
+node tools/screenshots/aufnehmen.mjs --stufe klein|neben|haupt  # --nur · --finger · --etikett · --jobs-token · --selbstprobe
 python3 tools/screenshots/kontrast.py                 # Kontrast der Token gegen die Fläche
 python3 tools/screenshots/vergleichen.py <vorher>     # --nur-text · --erwartet <seite> · --selbstprobe
 ```
 
 ## Was es misst
 
-Überlauf, **Konsolenfehler**, Knopfhöhen gegen 44 und 36 px (`CLAUDE.md` 5),
-Karten außerhalb von `main.inhalt` und die **Bildgleichheit** über die
-Breiten. Drei Stufen (E-PK-14): klein = berührte Seiten, drei Breiten,
-Chromium · neben = alle Seiten, acht Breiten · haupt = alle drei Engines.
-`vergleichen.py` hält zwei Läufe gegeneinander — Bild, Zeile und **Form**;
+Überlauf, **Konsolenfehler**, Knopfhöhen gegen 44 und 36 px (`CLAUDE.md` 5), Karten außerhalb von `main.inhalt`,
+das **Umgebungsetikett** (P5c/AP1: `--etikett Staging` misst Titelvorsatz und rote Kopfleiste, ohne den Schalter die Gegenrichtung)
+und die **Bildgleichheit** über die Breiten. Drei Stufen (E-PK-14): klein = berührte Seiten, drei Breiten, Chromium · neben = alle
+Seiten, acht Breiten · haupt = alle drei Engines. `vergleichen.py` hält zwei Läufe gegeneinander — Bild, Zeile und **Form**;
 nur die Form ist ein Befund. Seiten und Bedienschritte: `seiten.json`.
 
 ## Was es braucht
@@ -27,8 +26,8 @@ Wartungsseiten `--jobs-token`. **Ohne Token bricht der Lauf ab.**
 
 ## Erwartete Zahl
 
-Voller Lauf: **496 Einzelbilder, 62 Kontaktbögen, Überlauf 0, Knöpfe
-falscher Höhe 0, 162 Karten / 0 außerhalb**. Selbstproben offline:
+Voller Lauf: **560 Einzelbilder, 70 Kontaktbögen, Überlauf 0, Knöpfe
+falscher Höhe 0, 180 Karten / 0 außerhalb** (24.09.2026, P5c/AP7: drei Reiter der Statistik). Selbstproben offline:
 `aufnehmen.mjs` **15 von 15**, `vergleichen.py` **14 von 14**.
 
 ## Was es nicht kann

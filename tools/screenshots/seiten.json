@@ -8,6 +8,15 @@
       "pfad": "login.php"
     },
     {
+      "name": "01a-anmeldung-code",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "login.php",
+      "vorher": [
+        "code-schritt"
+      ]
+    },
+    {
       "name": "02-passwort-vergessen",
       "gruppe": "Öffentlich",
       "rolle": "aus",
@@ -253,10 +262,31 @@
       "pfad": "__LOESCHEN__"
     },
     {
+      "name": "29-einstellungen-uebersicht",
+      "gruppe": "Einstellungen",
+      "rolle": "admin",
+      "pfad": "einstellungen.php"
+    },
+    {
       "name": "30-einstellungen-profil",
       "gruppe": "Einstellungen",
       "rolle": "demo",
       "pfad": "einstellungen.php?t=profil"
+    },
+    {
+      "name": "30a-einstellungen-profil-zweitfaktor",
+      "gruppe": "Einstellungen",
+      "rolle": "admin",
+      "pfad": "einstellungen.php?t=profil"
+    },
+    {
+      "name": "30b-codeblatt",
+      "gruppe": "Einstellungen",
+      "rolle": "admin",
+      "pfad": "codeblatt.php",
+      "vorher": [
+        "codeblatt"
+      ]
     },
     {
       "name": "31-einstellungen-standorte",
@@ -343,10 +373,34 @@
       "pfad": "admin_installation.php"
     },
     {
+      "name": "43d-rechtstexte",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_rechtstexte.php?t=datenschutz"
+    },
+    {
       "name": "44-demo-konto",
       "gruppe": "Administration",
       "rolle": "admin",
       "pfad": "admin_demo.php"
+    },
+    {
+      "name": "44a-protokoll",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_protokoll.php"
+    },
+    {
+      "name": "44b-protokoll-sicherheit",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_protokoll.php?r=sicherheit"
+    },
+    {
+      "name": "44c-protokoll-archiv",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_protokoll.php?r=archiv"
     },
     {
       "name": "45-betrieb-status",
@@ -364,7 +418,19 @@
       "name": "45a-betrieb-statistik",
       "gruppe": "Betrieb",
       "rolle": "admin",
-      "pfad": "betrieb_statistik.php"
+      "pfad": "betrieb_statistik.php?r=nutzer"
+    },
+    {
+      "name": "45a2-betrieb-statistik-einsaetze",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_statistik.php?r=einsaetze"
+    },
+    {
+      "name": "45a3-betrieb-statistik-geraete",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_statistik.php?r=geraete"
     },
     {
       "name": "46-betrieb-updates",

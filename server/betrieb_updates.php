@@ -61,6 +61,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
                        . 'Der Wartungsmodus steht damit WEITERHIN — bitte die '
                        . 'Rechte prüfen oder die Datei von Hand entfernen.'];
     }
+    /* NUR WAS GESCHAH, STEHT IM PROTOKOLL (P5c/AP2, E-P5c-38): Ein Schalter,
+     * der nicht umlegte, ist keine Wartung. Der Eintrag steht hier und nicht
+     * in `wartung_lib.php` — die läuft im Torwächter vor jeder Datenbank. */
+    if ($wartungMeldung[0] === 'ok') {
+        require_once __DIR__ . '/protokoll_lib.php';
+        $an = ($_POST['action'] ?? '') === 'wartung_an';
+        protokoll('verwaltung', $an ? 'wartung_an' : 'wartung_aus',
+                  $an ? 'Wartungsmodus eingeschaltet' : 'Wartungsmodus ausgeschaltet',
+                  ['weg' => 'betrieb_updates']);
+    }
 }
 
 /* ---- Migrationen: Vorschau oder Lauf --------------------------------------
@@ -167,30 +177,18 @@ ui_seite_start(['titel' => 'Updates']);
           . 'bleibt sie an und du bist dran.',
           $wartungVon === 'torwaechter' ? 'Vom Torwächter geschlossen' : 'Von der Kette geschaltet') ?>
     <?php endif; ?>
-    <p class="feld-hinweis">Schließt die Installation vorübergehend für alle außer
-       Verwaltung und Betrieb: Jede andere Anfrage bekommt <strong>503</strong> mit
-       <code>Retry-After: <?= WARTUNG_RETRY_S ?></code> statt eines Fehlers aus einer
-       halb umgebauten Datenbank. Uhr und Handy puffern und liefern nach — es geht
-       nichts verloren. Wer sich anmeldet und nicht verwaltet, wird sofort wieder
-       abgemeldet und sieht die Wartungsseite.</p>
-    <?php /* DER ABLAUF STEHT IN DER KARTE (Mockup 05) und nicht nur im Runbook:
-             Er ist der Grund, warum der Schalter hierher gezogen ist. Fünf
-             Zeilen, und die Reihenfolge IST die Sache — deshalb eine
-             nummerierte Liste im Baustein `.text`. Ein blankes <ol> bekäme
-             keine Nummern: Das Stylesheet setzt `list-style:none` auf alle
-             Listen (sie sind sonst überall Aufzählungen im Markup, nicht im
-             Bild), und `.text` nimmt das für Fließtext zurück. */ ?>
-    <div class="text">
-      <ol>
-        <li>Komplett-Backup prüfen oder anstoßen</li>
-        <li>Wartungsmodus einschalten <em>(nimmt die Auslieferungskette ab; und
-            wenn nicht, schaltet der Torwächter spätestens bei der ersten
-            Anfrage nach dem Deploy)</em></li>
-        <li>Dateien einspielen (Deploy)</li>
-        <li>Hier „Ausstehende ausführen"</li>
-        <li>Wartungsmodus ausschalten <em>(immer von Hand — R66)</em></li>
-      </ol>
-    </div>
+    <?php /* EIN SATZ, UND ER STIMMT (P5c/AP9, E-P5c-132, F-P5c-158). Hier stand
+             „für alle außer Verwaltung und Betrieb" — das Tor arbeitet aber
+             nach SEITEN (`WARTUNG_AUSNAHMEN`), nicht nach Rollen: Jede Seite
+             unter Verwaltung antwortet im Wartungsmodus mit 503, offen bleiben
+             die Anmeldung und die Seiten unter Betrieb, und die erreicht nur
+             die BetreiberIn. Darunter stand bis Web 21.0.0 der Ablauf eines
+             Updates als nummerierte Liste (Mockup 05) — derselbe Ablauf stand
+             mit sieben Schritten im Handbuch. Zwei Fassungen einer Sache laufen
+             auseinander; er steht jetzt nur noch dort. */ ?>
+    <p class="feld-hinweis">Schließt die Anwendung für alle; offen bleiben nur die
+       Seiten unter Betrieb, und Uhr und Handy liefern danach nach.
+       <a href="hilfe.php#der-wartungsmodus">Handbuch: Wartungsmodus und Ablauf eines Updates</a></p>
     <form method="post" action="betrieb_updates.php">
       <?= csrf_field() ?>
       <input type="hidden" name="action"
@@ -221,10 +219,12 @@ ui_seite_start(['titel' => 'Updates']);
     <?php endif; ?>
 
     <?php if (!$ausstehend && !$ausfuehren): ?>
+      <?php /* OHNE e(): `ui_meldung_markup()` maskiert den Text selbst — bis Web
+               21.1.0 wurde hier zweimal maskiert (Endzählung AP9, D-5). */ ?>
       <?= ui_meldung_markup('info',
           'Alles aktuell · ' . ($stand['letzte'] !== null
-              ? e((string)$stand['letzte']) . ($stand['wann'] !== null
-                  ? ' am ' . e(datum_text((string)$stand['wann']))
+              ? (string)$stand['letzte'] . ($stand['wann'] !== null
+                  ? ' am ' . datum_text((string)$stand['wann'])
                   : '')
               : 'noch keine Migration verbucht')
           . '. Es steht nichts an.') ?>
@@ -236,8 +236,8 @@ ui_seite_start(['titel' => 'Updates']);
                es nichts, worauf man nach einer verlorenen Spalte zurückgriffe. */ ?>
       <?= $kompJuengst !== null
           ? ui_meldung_markup('info', 'Jüngstes Komplett-Backup: '
-              . e(datum_zeit_text((string)$kompJuengst['zeit']))
-              . ($kompAlter !== null ? ', ' . e($kompAlter) : '')
+              . datum_zeit_text((string)$kompJuengst['zeit'])
+              . ($kompAlter !== null ? ', ' . $kompAlter : '')
               . ' · ' . groesse_text((int)$kompJuengst['groesse']) . '.',
               '', ui_knopf(['text' => 'Komplett-Backup', 'art' => 'neutral',
                             'symbol' => 'datenbank',
@@ -251,11 +251,11 @@ ui_seite_start(['titel' => 'Updates']);
                         'href' => 'admin_komplettsicherung.php'])) ?>
       <?php if ($blockiert > 0): ?>
         <?= ui_meldung_markup('fehler', $blockiert . ' Migration(en) werden NICHT '
-            . 'ausgeführt, weil sie Spalten löschen würden, in denen noch Daten '
-            . 'stehen. Unten ist je Eintrag genannt, um welche Spalte und wie '
-            . 'viele Zeilen es geht. Wer sie behalten will, trägt sie vorher von '
-            . 'Hand ein (oder sichert sie außerhalb) und gibt die Migration '
-            . 'danach einzeln frei.') ?>
+            . 'ausgeführt. Unten steht je Eintrag, warum. Löscht eine davon Spalten, '
+            . 'in denen noch Daten stehen, sichert man sie vorher und gibt die '
+            . 'Migration danach einzeln frei. Fehlt eine Vorbedingung, gibt es '
+            . 'kein Häkchen: Sie wird hergestellt, wie es in der Zeile steht, '
+            . 'dann erneut ausführen.') ?>
       <?php endif; ?>
       <form method="post" action="betrieb_updates.php" id="migform">
         <?= csrf_field() ?><input type="hidden" name="action" value="migrate">
@@ -298,10 +298,12 @@ ui_seite_start(['titel' => 'Updates']);
         <?= ui_knopf(['text' => 'Ausstehende ausführen', 'art' => 'primaer',
                       'symbol' => 'datenbank', 'attr' => ' form="migform"']) ?>
       </div>
-      <p class="feld-klein">Führt der Reihe nach aus, was oben steht; blockierte
-         Einträge nur mit gesetztem Häkchen. Der Aufruf dieser Seite ändert
-         nichts — erst dieser Knopf.</p>
+      <p class="feld-klein">Führt der Reihe nach aus, was oben steht, blockierte
+         Einträge nur mit gesetztem Häkchen.</p>
     <?php endif; ?>
+    <?php /* DER VERWEIS STEHT IMMER (E-P5c-133): Die Seite hat keinen Seitenkopf,
+             der ihn für alle Karten trüge. */ ?>
+    <p class="feld-hinweis"><a href="hilfe.php#12-3-updates">Handbuch: Updates</a></p>
 
     <?php /* „WARTUNG BEENDEN" STEHT HIER UND NICHT NUR OBEN (P5a/AP3,
              E-P5a-20).
@@ -323,7 +325,7 @@ ui_seite_start(['titel' => 'Updates']);
               && (string)(wartung_daten()['von'] ?? '') === 'torwaechter'): ?>
       <?= ui_meldung_markup('ok', 'Es steht nichts mehr aus. Der Wartungsmodus '
           . 'läuft noch, weil der Torwächter ihn geschaltet hat — er geht nicht '
-          . 'von selbst aus (R66). Prüfe die Startseite in einem zweiten Reiter, '
+          . 'von selbst aus. Prüfe die Startseite in einem zweiten Reiter, '
           . 'dann beende ihn hier.', 'Migrationen erledigt') ?>
       <form method="post" action="betrieb_updates.php">
         <?= csrf_field() ?><input type="hidden" name="action" value="wartung_aus">
@@ -335,7 +337,7 @@ ui_seite_start(['titel' => 'Updates']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Ausgeführt: zugeklappt, bis P5 das Audit-Protokoll bringt -- */ ?>
+  <?php /* ---- Ausgeführt: zugeklappt ---------------------------------- */ ?>
   <?php ui_karte_start(['titel' => 'Ausgeführt', 'id' => 'k-ausgefuehrt',
       'zahl' => (string)count($erledigt),
       'vorschau' => $stand['letzte'] !== null
@@ -351,9 +353,14 @@ ui_seite_start(['titel' => 'Updates']);
                   'plaketten' => $plaketten]);
       ?>
     <?php endforeach; ?>
-    <p class="feld-hinweis">Diese Liste steht hier bis P5. Danach führt das
-       Audit-Protokoll die ausgeführten Kennungen (R66), und die Karte
-       entfällt.</p>
+    <?php /* BIS WEB 21.0.0 STAND HIER „Diese Liste steht hier bis P5. Danach
+             führt das Audit-Protokoll die ausgeführten Kennungen (R66), und die
+             Karte entfällt." (F-P5c-146). Gestrichen, weil ein Versprechen ohne
+             Termin nicht auf die Seite gehört. Die Begründung dazu war falsch
+             (Gegenlesung AP11): Das Protokoll führt jede ausgeführte Migration
+             seit P5c/AP2 im Reiter Verwaltung (`migration_ausgefuehrt` in
+             `migrationen_lauf()`). Die Karte bleibt trotzdem — sie nennt
+             als Einzige die Fassung je Kennung (Q-P5c-53, Nr. 326). */ ?>
   <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Fassung ------------------------------------------------------
@@ -378,8 +385,7 @@ ui_seite_start(['titel' => 'Updates']);
          abwärtskompatibel (R12). Eine Zahl hier zu erfinden wäre schlimmer als
          keine — sie sähe aus wie eine Zusage, die niemand einlöst. */
       ui_zeile(['text' => 'Uhr-App',
-                'klein' => 'Der Server verlangt keinen Mindeststand — der '
-                         . 'JSON-Vertrag ist abwärtskompatibel (R12). Welche '
+                'klein' => 'Der JSON-Vertrag ist abwärtskompatibel; welche '
                          . 'Fassung ein Gerät fährt, steht auf der Sync-Seite '
                          . 'der Uhr.',
                 'plaketten' => ui_plakette('ohne Mindeststand', ['ton' => 'neutral'])]);
@@ -390,9 +396,10 @@ ui_seite_start(['titel' => 'Updates']);
                 'klein' => $apk
                     ? 'APK auf dem Server, Stand '
                       . datum_text(gmdate('Y-m-d H:i:s', (int)$apk[0]['stand']))
-                    : 'kein APK auf dem Server — die App kommt über den Store (R65)',
+                    : 'kein APK auf dem Server — die App kommt über den Store',
                 'plaketten' => ui_plakette($apkV ?? '—', ['ton' => 'neutral'])]);
     ?>
+    <p class="feld-hinweis"><a href="hilfe.php#12-3-updates">Handbuch: Updates</a></p>
   <?php ui_karte_ende(); ?>
 
   </div><?php /* .karten-raster */ ?>

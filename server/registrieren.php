@@ -244,7 +244,7 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
                      * Beide Faelle enden hier gleich: still, mit derselben
                      * Antwort. Protokolliert wird trotzdem, sonst bliebe
                      * ein echter Datenbankfehler unsichtbar. */
-                    error_log('registrieren: Anlage gescheitert — ' . $ex->getMessage());
+                    system_melden('registrieren', 'Anlage gescheitert', $ex);
                 }
             }
         }
@@ -268,6 +268,7 @@ $unterzeile = match ($art) {
 };
 ?>
 <main class="anmeldung">
+ <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
   <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
   <h1 class="anmeldung-titel">Konto anlegen</h1>

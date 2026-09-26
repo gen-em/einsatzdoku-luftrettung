@@ -79,7 +79,7 @@ PAARE = [
     ('Dunkelblau auf Orange (Primaerknopf)', 'knopf-primaer-schrift', 'knopf-primaer-flaeche', 4.5, 'Primaerknopf'),
     ('Weiss auf Dunkelblau (Kopfleiste)', 'auf-dunkel', 'dunkelblau',  4.5, 'Kopfleiste'),
     ('Orange tief auf Schnee',            'orange-tief', 'schnee',     3.0, 'nur gross oder fett'),
-    ('Orange tief auf Rauch',             'orange-tief', 'rauch',      3.0, 'nur gross oder fett'),
+    ('Orange tief auf Rauch',             'orange-tief', 'rauch',      3.0, 'nur gross oder fett; Strich des aktiven Reiters'),
     ('Orange tief auf Orange hell',       'orange-tief', 'orange-hell', 3.0, 'Warnung, Auftakt fett'),
     # Der Zielzustand: aktive Kennzahl, aktiver Listenfilter, aktives
     # Sprungziel. Die Kombination steht seit O6 in der Anwendung
@@ -90,6 +90,12 @@ PAARE = [
     ('Blau als Fokusring',                'blau',       'schnee',      3.0, 'Rand'),
     ('Linie stark auf Schnee',            'linie-stark', 'schnee',     3.0, 'Rand von Bedienelementen'),
     ('Linie stark auf Rauch',             'linie-stark', 'rauch',      3.0, 'Rand von Bedienelementen'),
+    # P5c/AP1 (E-P5c-05, -55, -59; M-P5c-02 a): die Kopfleiste einer Anlage
+    # mit Etikett und der Umgebungsstreifen. Anlass: F-P5c-28 — das Orange
+    # des aktiven Punkts haette auf Rot 2,10 : 1 und fiele unter 3 : 1.
+    ('Weiss auf Rot (Kopfleiste Staging)', 'auf-dunkel', 'rot',        4.5, 'Kopfleiste mit Etikett'),
+    ('Schnee auf Rot (Name im Kopf)',     'schnee',     'rot',         4.5, 'Name in der Kopfleiste mit Etikett'),
+    ('Orange hell auf Rot (aktiver Punkt)', 'orange-hell', 'rot',      3.0, 'Strich des aktiven Kopfpunkts'),
 ]
 
 # Diese Paare sind ausdruecklich AUSGENOMMEN, und zwar mit Grund. Ohne die

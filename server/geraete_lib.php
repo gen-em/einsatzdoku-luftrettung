@@ -91,6 +91,33 @@ const GERAET_ARTEN = ['uhr', 'handy', 'sonstiges'];
 const HERKUNFT_WERTE = ['watch', 'android', 'wear', 'manual', 'import', 'schnitt'];
 
 /**
+ * Wie eine Herkunft in der Oberflaeche heisst — kurz fuer die Plakette am
+ * Einsatz, lang fuer die Karte „Herkunft der Einsaetze" in der Statistik
+ * (P5c/AP7, E-P5c-18, F-P5c-39).
+ *
+ * EIN KATALOG STATT ZWEIER LISTEN. Bis Web 20.46.0 standen die Woerter in
+ * `einsatz.php` (als Skriptkonstante) und sonst nirgends; die Statistik haette
+ * eine zweite Liste mit anderen Woertern gebraucht. Jetzt steht jede Herkunft
+ * einmal hier, beide Formen nebeneinander, und `einsatz.php` liest die kurze.
+ *
+ * NICHT HIER: die Werte des Exports (`EXPORT_ORIGIN_LABEL` in
+ * `api/export_data.php`). Sie sind ein Dateiformat mit eigener Zusage
+ * (`Export-Format.md`), keine Beschriftung — sie zu aendern, weil sich ein
+ * Wort in der Oberflaeche aendert, braeche jede Auswertung, die sie liest.
+ *
+ * Die Schluessel sind genau `HERKUNFT_WERTE`, in derselben Reihenfolge; die
+ * Geraeteprobe (Teil 7) haelt beides gegeneinander.
+ */
+const HERKUNFT_TEXTE = [
+    'watch'   => ['kurz' => 'Uhr',        'lang' => 'Garmin-Uhr'],
+    'android' => ['kurz' => 'Handy',      'lang' => 'Android-Handy'],
+    'wear'    => ['kurz' => 'Wear',       'lang' => 'Wear-OS-Uhr'],
+    'manual'  => ['kurz' => 'manuell',    'lang' => 'Formular'],
+    'import'  => ['kurz' => 'importiert', 'lang' => 'Import'],
+    'schnitt' => ['kurz' => 'Schnitt',    'lang' => 'Schnitt'],
+];
+
+/**
  * Woher ein Einsatz stammt — abgeleitet aus seiner Client-Kennung
  * (R64, E-R64-01).
  *

@@ -29,7 +29,7 @@ Programmentscheidungen: `docs/Rahmenplan.md` (Steuerung) und
 
 ## 2. Was bei jeder Codeänderung mitläuft
 
-Diese vier Punkte sind kein Nachklapp, sondern Teil der Änderung:
+Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
 
 1. **`server/version.php` hochstufen.** Zählweise `Haupt.Neben.Korrektur`:
    Haupt = grundlegender Umbau (Datenmodell, Verschlüsselung, Migration — oder
@@ -54,6 +54,17 @@ Diese vier Punkte sind kein Nachklapp, sondern Teil der Änderung:
    Punkte werden nicht gelöscht, sondern nach *Erledigt* verschoben und behalten
    ihre Nummer. Neue Punkte hängen hinten an. Die Nummern 4, 6 und 7 bleiben
    dauerhaft frei.
+5. **Rahmenplan schreiben — an vier Anlässen, sonst nicht.** (1) Ein
+   Schritt beginnt oder endet (Fahrplanzeile, Erledigt-Eintrag). (2) Eine
+   Programmentscheidung fällt (R-Nummer). (3) Die Reihenfolge ändert sich.
+   (4) Eine Zuarbeit entsteht oder ist erledigt (Abschnitt 6). Alles
+   innerhalb eines Schritts — Arbeitspakete, Befunde, Messungen,
+   Abnahmen — steht im Statusblock des Konzepts und im Prüfdokument, nicht
+   im Rahmenplan. **Eine Berichtigung ist eine Verlaufszeile, nie ein
+   Absatz im Text:** Wer etwas Falsches findet, ersetzt es und schreibt in
+   die Verlaufszeile (Abschnitt 10), was falsch war. Bis zum Schnitt
+   (Konzept SD) ändert sich am Kopf des Rahmenplans nur die
+   Fassungsnummer und der Absatz „Stand".
 
 Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 (Pflegepflichten).
@@ -254,7 +265,11 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   öffnet ohne ihn, und deshalb ist der Verlust des Anteils **kein
   Datenverlust**, sondern ein Passwort-Reset für alle. Eine
   `edka1:`-Wiederherstellungshülle wäre der Verlust genau dieses Rückwegs;
-  `WRAP_RC_RE` und `huelle_rc_pruefen()` lassen sie nicht zu.
+  `WRAP_RC_RE` und `huelle_rc_pruefen()` lassen sie nicht zu. **Dasselbe
+  gilt für `rw_privat`**, den privaten Teil des Rückwegs beim Zweitfaktor:
+  Er liegt als `edk1:` unter dem Inhaltsschlüssel und muss mit dem
+  Wiederherstellungsschlüssel allein aufgehen (`RW_PRIVAT_RE = WRAP_RC_RE`,
+  `docs/Technik.md` 4.99q).
   **Zwei Zeichen tragen die Zusage in die Oberfläche:** ein Schloss an jedem
   verschlüsselten Feld, die Kleinzeile „Klartext — keine Patientendaten" an
   jedem Klartext-Freitextfeld. Sie schließen einander aus; die Wahl steht an
@@ -300,19 +315,22 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/proben/spur/probe.php`.
 
 - **Eine Stelle je Sache — und ein Register, das es nachzählt** (R83,
-  Schritt 15). Fünf Wege haben seither genau einen Eingang, und wer daneben
+  Schritt 15). Diese Wege haben seither genau einen Eingang, und wer daneben
   einen zweiten baut, färbt Stufe 1 rot:
 
   | Sache | Der eine Weg | Nicht |
   |---|---|---|
   | Konfiguration lesen | `konfig('schluessel')` | `$CFG`, `global $CFG`, `config.php` einbinden |
   | Sitzung starten | `sitzung_starten()` | `session_start()` |
-  | Schema fragen (auch in neuen Migrationen) | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()` | `information_schema` von Hand |
+  | Schema fragen (auch in neuen Migrationen) | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, `db_spalte_typ()`, `db_spalte_nullbar()` | `information_schema` von Hand |
   | Transaktion | `db_transaktion()` | `beginTransaction()` |
   | Aus Zahl oder Zeitpunkt Text machen | `format_lib.php` (PHP), `EdFormat` (Browser) | eigene Rechnung |
   | Anfrage an den Server (Browser) | `EdApi.postJson()` / `.postForm()` | `fetch` mit eigenem `X-CSRF` |
   | Meldung im Browser | `EdHtml.meldung()` | Markup von Hand |
   | Spalten von `missions` | `mf_spalten($zweck)` | eigene Spaltenliste |
+  | Archiv (ZIP) bauen oder öffnen | `zip_lib.php` | `new ZipArchive` |
+  | Melden, was schiefging (Reiter System) | `system_melden()`, ohne Datenbank `system_rueckfall()` | `error_log()` |
+  | Suche, Filter, Seitenwahl, Reiter einer Seite | `ui_listenkopf()`, `ui_listenfuss()`, `ui_reiter()` | Markup von Hand |
 
   **Das Register steht in `tools/zaehlung/register.php`** und führt je Sache
   EINE Zeile mit einer Decke. Der Stufe-1-Schritt „Zentralisierung — hält

@@ -77,7 +77,13 @@ declare(strict_types=1);
  * einer Seite, die jede Besucherin vor der Anmeldung sieht.
  */
 
-require_once __DIR__ . '/db.php';
+/* KEIN `db.php`. Diese Bibliothek braucht nichts daraus — keine Funktion,
+ * keine Konstante —, und `db.php` bricht ohne `config.php` ab. Bis Web
+ * 21.1.1 stand die Zeile trotzdem hier; die Ankerprüfung
+ * (`tools/quelltext/anker.php`) laedt diese Datei, und in Stufe 1 gibt es
+ * keine `config.php`: Der erste Lauf auf dem Pull Request von P5c war daran
+ * rot, der Pruefstand mit seiner eingerichteten Anlage gruen. Die Seiten
+ * laden `db.php` selbst (`doku_seite.php`). */
 require_once __DIR__ . '/vendor/Parsedown.php';
 
 /**

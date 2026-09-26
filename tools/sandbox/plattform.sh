@@ -2,6 +2,7 @@
 # Modul `plattform` — die Fassungen, auf denen die Anlagen wirklich laufen.
 #
 # Aufruf:  bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles]
+#          bash tools/sandbox/plattform.sh schema     (nur die Schemaproben — der Prüfstand)
 #          bash tools/sandbox/plattform.sh --aus      (Behälter wieder weg)
 #
 # Anlass: Nr. 267. Am 21.09.2026 scheiterte der Export auf Staging und lief
@@ -132,7 +133,14 @@ for t in "$@"; do
                     datenbank mysql80    mysql:8.0    3307 mysql   MYSQL
                     datenbank mysql84    mysql:8.4.0  3308 mysql   MYSQL
                     schemaproben ;;
-        *) echo "Unbekannt: $t (php83, mariadb106, mysql80, mysql84, alles, --aus)" >&2; exit 2 ;;
+        # NUR DIE SCHEMAPROBEN, gegen die laufenden Behälter und die örtliche
+        # MariaDB (P5c/AP2, F-P5c-88). Der Prüfstand rief bis dahin
+        # `schemaprobe/probe.php` ohne Zugangsdaten — als root ohne Passwort,
+        # und das lehnt die örtliche MariaDB ab. Die Zugangsdaten je Fassung
+        # stehen hier, also läuft auch der Prüfstand über diese Stelle. Läuft
+        # ein Behälter nicht, ist die Zeile rot und nennt die Fassung.
+        schema)     schemaproben ;;
+        *) echo "Unbekannt: $t (php83, mariadb106, mysql80, mysql84, alles, schema, --aus)" >&2; exit 2 ;;
     esac
 done
 

@@ -282,7 +282,7 @@ function demo_reset_wenn_faellig(): bool
         demo_zuruecksetzen();
         return true;
     } catch (Throwable $ex) {
-        error_log('demo: Reset fehlgeschlagen: ' . $ex->getMessage());
+        system_melden('demo', 'Zurücksetzen fehlgeschlagen', $ex);
         return false;
     }
 }
@@ -303,7 +303,7 @@ function demo_anlegen(): array
 
     if (demo_id() !== null) {
         throw new RuntimeException('Es gibt bereits ein Demo-Konto. '
-            . 'Zum Erneuern „Auf Standard zurücksetzen" verwenden.');
+            . 'Zum Erneuern „Zurücksetzen" verwenden.');
     }
     $k = $fx['konto'];
     $st = $pdo->prepare('SELECT id FROM users WHERE email = ?');
@@ -327,8 +327,8 @@ function demo_anlegen(): array
                 $k['pat_wrap_pw'] ?? null, $k['pat_wrap_rc'] ?? null,
                 $k['pat_key_check'] ?? null,
                 /* NIEMALS eine Rolle mit Rechten (E-P1-09). Seit Web 15.0.0
-                 * gibt es drei Rollen (R75) — der Satz gilt fuer beide oberen
-                 * unveraendert. Der Reset unten schreibt denselben Wert
+                 * gibt es drei Rollen (R75), seit Web 20.41.0 vier (Support,
+                 * R38) — der Satz gilt fuer alle mit Rechten unveraendert. Der Reset unten schreibt denselben Wert
                  * zurueck, damit ein waehrend der Sitzung erhoehtes Konto
                  * spaetestens nach dreissig Minuten wieder eine NutzerIn ist. */
                 'user',
@@ -345,6 +345,42 @@ function demo_anlegen(): array
 }
 
 /* ------------------------------------------------------------- Zuruecksetzen */
+
+/**
+ * Den Zweitfaktor des Demo-Kontos leeren — ein Schritt von
+ * `demo_zuruecksetzen()` (P5c/AP5, E-P5c-54).
+ *
+ * WARUM ES IHN GIBT: Einschalten ist im Demo-Konto gesperrt; steht trotzdem
+ * einer da — ein Konto, das erst nachtraeglich zum Demo-Konto wurde, oder ein
+ * handgebauter POST an der Sperre vorbei —, sperrte er die naechste
+ * Besucherin aus. Vorabfrage auf die Spalte: Vor `update.php` gibt es sie
+ * nicht, und der Reset laeuft auch dann.
+ *
+ * WARUM EINE EIGENE FUNKTION (F-P5c-117): Die Zweitfaktorprobe soll diesen
+ * Schritt messen, ohne den ganzen Reset zu fahren. Der spielt den
+ * Demo-Bestand neu ein, die Einsaetze bekommen neue Nummern — und die
+ * GPX-Probe, die im Pruefstand danach laeuft, fand ihre Referenz nicht mehr
+ * (204 von 204 ohne Gegenstueck).
+ */
+function demo_zweitfaktor_leeren(PDO $pdo, int $id): void
+{
+    if (db_hat_spalte($pdo, 'users', 'totp_seit')) {
+        $pdo->prepare('UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL,
+                              totp_schritt = NULL WHERE id = ?')->execute([$id]);
+        $pdo->prepare('DELETE FROM totp_codes WHERE user_id = ?')->execute([$id]);
+    }
+    /* DAS PAAR DES RÜCKWEGS GEHÖRT MIT DAZU (Konzept RW, RW-02, E-RW-15):
+     * Das Demo-Konto bekommt keins — der Endpunkt weist es ab, und die Seite
+     * fragt gar nicht erst. Steht trotzdem eins da (ein Konto, das erst
+     * nachträglich zum Demo-Konto wurde), räumt es der Reset ab, an
+     * derselben Stelle wie den Zweitfaktor. EIGENE VORABFRAGE: Die Spalten
+     * kommen mit einer anderen Migration, und die eine kann fehlen, wo die
+     * andere schon gelaufen ist. */
+    if (db_hat_spalte($pdo, 'users', 'rw_seit')) {
+        $pdo->prepare('UPDATE users SET rw_oeffentlich = NULL, rw_privat = NULL,
+                              rw_seit = NULL WHERE id = ?')->execute([$id]);
+    }
+}
 
 /**
  * Demo-Konto auf den Ausgangsstand bringen.
@@ -386,6 +422,9 @@ function demo_zuruecksetzen(): array
                 $k['pat_wrap_pw'] ?? null, $k['pat_wrap_rc'] ?? null,
                 $k['pat_key_check'] ?? null, $k['account_key'] ?? null, $id,
             ]);
+        /* DER ZWEITFAKTOR FAELLT MIT (P5c/AP5, E-P5c-54) — siehe
+         * `demo_zweitfaktor_leeren()`. */
+        demo_zweitfaktor_leeren($pdo, $id);
 
         return demo_bestand_einspielen($pdo, $id, $fx);
     });
@@ -468,7 +507,7 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
 
     foreach (['missions', 'rest_segments', 'days', 'devices', 'pair_sessions',
               'password_resets', 'crew_presets', 'bw_units', 'resources',
-              'transport_dests', 'vehicles', 'user_bases', 'user_defaults',
+              'transport_dests', 'vehicles', 'user_defaults',
               'bases'] as $t) {
         $pdo->prepare("DELETE FROM `$t` WHERE user_id = ?")->execute([$id]);
     }

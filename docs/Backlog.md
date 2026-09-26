@@ -79,13 +79,13 @@ arbeiten, nicht erneut kollidieren:
 |---|---|---|
 | 241 | Sitzungsablage — PHP-Sitzungen im geteilten Hosterverzeichnis | Schritt 16 |
 | 242 | Sitzungsbindung per Cookie-Token | Schritt 18 |
-| 243 | Staging-Umgebungsbanner | 10c AP1 |
-| 244 | Einstellungen-Übersicht: Bereiche als Gliederung erkennbar | 10c AP9 |
-| 245 | Erklärtext-Regel und Überarbeitung aller Texte in Verwaltung und Betrieb | 10c AP9 |
-| 246 | Schlüsselblatt und Notfallblatt: Druckseite | 10c AP9 |
+| 243 | Staging-Umgebungsbanner | erledigt 23.09.2026 (Web 20.38.0) |
+| 244 | Einstellungen-Übersicht: Bereiche als Gliederung erkennbar | erledigt 25.09.2026 (Web 21.1.0) |
+| 245 | Erklärtext-Regel und Überarbeitung aller Texte in Verwaltung und Betrieb | erledigt 25.09.2026 (Web 21.1.0) |
+| 246 | Schlüsselblatt und Notfallblatt: Druckseite | erledigt 25.09.2026 (Web 21.1.0) |
 | 247 | Serverschlüssel wechseln — als Vorgang | Schritt 18 |
-| 248 | Prüftor Stufe 1 zählt die `error_log(`-Aufrufe | 10c AP3 |
-| 249 | TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert | Schritt 18 |
+| 248 | Prüftor Stufe 1 zählt die `error_log(`-Aufrufe | erledigt 24.09.2026 (Web 20.40.0) |
+| 249 | TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert | Schritt 18 (der Rest; teilweise gelöst mit Konzept RW) |
 
 > **Warum die Spanne bei 241 beginnt und nicht bei 240.** Das Paket sah 240
 > für die Sitzungsablage vor; am selben Tag hat Kette II 240 für den
@@ -108,7 +108,7 @@ kollidieren.
 | 250 | Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten | Schritt 17 |
 | 251 | Cookie-Attribut `secure` der Sitzung — zwei Arten HTTPS-abhängig, zwei fest | Schritt 18 |
 | 252 | Gelaufene Migrationen fragen das Schema 57× von Hand | P8 (R66) |
-| 253 | Datum-Zeit-Trenner vereinheitlichen | 10c AP9 |
+| 253 | Datum-Zeit-Trenner vereinheitlichen | erledigt 25.09.2026 (Web 21.1.0) |
 | 254 | Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs | erledigt 21.09.2026 |
 | 255 | `lokal_einrichten.sh` kopiert Handbuch und Bilder nicht nach `server/doku/` | behoben 21.09.2026 |
 | 256 | Vier `api/`-Dateien antworten auf eine falsche Methode anders als die übrigen | erledigt 21.09.2026 |
@@ -141,24 +141,32 @@ Spanne bekommen.
 
 Jeder weitere Zweig, der Nummern vergibt, beginnt bei **339** und trägt seine
 Spanne hier ein, bevor er pusht. **Vergeben und reserviert (24.09.2026,
-nachgesehen auf `origin/main` `ba2ec57`, höchste 318, und auf dem P5c-Zweig
-`3576a97`):** **319 bis 328** der P5c-Zweig `claude/p5c-mockups-konzept-4yeomf`
-(zweite Spanne, dort eingetragen beim Aufnehmen von BR); **329 bis 333**
-Konzept BV, der Vorgriff auf Backlog-Runde 4 (Zweig
-`claude/intelligent-carson-q8f7ag`); **334 bis 338** die Android-Runde AR
-(eigene Instanz, Zweig bei der Vergabe noch nicht angelegt). *(Bis
-zum 24.09.2026 stand hier 319. Bis zum 23.09.2026 stand hier 283; 283 bis
-285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
-Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
-Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** das
-Korrekturpaket RP. **293 und 304 bis 318** vergibt Konzept BR (24.09.2026,
-Zweig `claude/br-bestandsriegel`; 304 bis 313 sind die nachgetragenen Anlässe
+nachgesehen auf `origin/main` `ba2ec57`, höchste 318; zusammengeführt
+am 26.09.2026, als BV `main` nach dem Merge von P5c aufnahm — `29cf394`,
+höchste 329):** **293 und 304 bis
+318** Konzept BR (gemergt, PR #85/#86; 304 bis 313 die nachgetragenen Anlässe
 aus E-BR-17 und E-BR-18, 314 bis 317 Funde aus BR-04 und BR-05, 318 ein Fund
-des Abschlusses); die Spanne **294 bis 303** hat der P5c-Zweig
-`claude/p5c-mockups-konzept-4yeomf` am selben Tag reserviert — 294 Konzept
-SD, 295 bis 298 die Anlässe aus der Zuarbeit von BR, 299 bis 303 frei für
-Funde der Umsetzung. Nachgesehen auf `origin/main` und auf allen offenen
-Zweigen.)*
+des Abschlusses); **294 bis 303 und 319 bis 328** der P5c-Zweig
+`claude/p5c-mockups-konzept-4yeomf` — 294 Konzept SD (Sammelpunkt), 295 bis
+298 die Anlässe aus der Zuarbeit von Konzept BR (Konzept P5c, E-P5c-86), 299
+und 300 Funde aus AP4, 302, 303, 319 und 320 die nachgetragenen Anlässe aus
+dem Aufnehmen von BR (E-P5c-116), 301 für AP5b (Konzept RW), 321 ein Fund
+und 322 Funde aus AP7 (Stilvergleich, Reihenfolge des Prüfstands), 323 ein Fund aus AP8 (Referenz und Fixture auf Nutzlast 11), 324 ein Auftrag aus AP8 (Einmal-Skript für den Bestand zu 1.0), 325 ein Fund aus AP8 (GPX-Probe auf frischer Anlage), der Rest frei für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
+dazu: Die erste reichte nicht mehr, und 304 bis 318 hatte BR inzwischen
+vergeben. **329** vergab P5c in AP11 (F-P5c-171) über seine Spanne hinaus,
+in die von BV — die stand nur auf dem BV-Zweig, und P5c konnte sie nicht
+sehen; **330 bis 333** Konzept BV, der Vorgriff auf Backlog-Runde 4 (Zweig
+`claude/intelligent-carson-q8f7ag`; 330 bis 332 vergeben — die 331 hieß auf
+dem Zweig bis zum 26.09.2026 329 und ist ausgewichen, E-BV-12); **334 bis
+338** die Android-Runde AR (Zweig `claude/affectionate-newton-6pzfkc`; 334
+bis 337 vergeben, 338 frei). *(Bis zum 26.09.2026 stand hier auf `main` 329
+und auf den Zweigen von BV und AR 339 — die drei hatten den Absatz getrennt
+fortgeschrieben. Bis zum 23.09.2026
+stand hier 283; 283 bis 285 sind seither auf `main`, **286 und 287** vergibt
+Konzept P5c in seiner Fassung 2 vom 23.09.2026, **288 und 289** die
+Mockup-Runde M-P5c-02 am selben Tag, **290 und 291** die Korrekturstufe
+Web 20.37.3, **292** das Korrekturpaket RP — nachgesehen auf `origin/main`
+und auf allen offenen Zweigen.)*
 
 **Und sieht vorher nach — auf `origin/main` UND in die offenen Pull
 Requests.** Der Satz darüber beschreibt keinen Riegel, sondern eine Hoffnung:
@@ -202,7 +210,8 @@ Fassung 21, 84 bis 88 mit Fassung 22; alle stehen unten; die Zuordnung aller off
 **Zu den Nummern 98 bis 113 (Rahmenplan Fassung 26, 03.09.2026).** 98–100
 kommen aus der vorgezogenen Planung v1.0 (R65–R67), 101–113 sind die
 Problemsammlung für Schritt 8 (S9, R73); ihre Kennungen PS-1 bis PS-10 stehen
-in `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+in `docs/konzepte/Vorbereitung-S9-Problemsammlung.md` (gelöscht 24.09.2026,
+Historie `5e501ae`).
 
 **Zu den Nummern 147 bis 149 (Rahmenplan Fassung 32, 06.09.2026).** 147 ist
 die aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung (S9, als
@@ -214,7 +223,7 @@ Beschluss ist mit Fassung 31 umnummeriert worden, diese Datei nicht) und
 Nr. 115 in Nr. 95 aufgehen lassen — beide beschrieben denselben Fund.
 
 **Zu Nr. 152 und den Vermerken „Konzept S9" (Rahmenplan Fassung 34, 07.09.2026).**
-Das Konzept S9 liegt vor (`docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`,
+Das Konzept S9 lag vor (`docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`, gelöscht 24.09.2026, Historie `5e501ae`;
 E-S9-01 bis -19). Die Einträge 101–113, 147, 44, 68, 69, 70 und 72 tragen
 jetzt den Beschluss, der sie erledigt; 152 ist der einzige neue Punkt — die
 Standortseiten, aufgekommen bei der Mockup-Freigabe. 132 und 137 (9a) tragen
@@ -238,7 +247,7 @@ wird in P5 und P6 wieder aufgerufen.
 **Zu den Nummern 87, 81, 88 und 175 (Backlog-Durchsicht vom 12.09.2026,
 eingearbeitet 13.09.2026).** Die Durchsicht hat alle 61 offenen Punkte gegen
 Web 19.3.0 · Uhr 3.1.0 · Android 0.15.0 gehalten und sechzehn Entscheidungen
-protokolliert (`docs/konzepte/Backlog-Durchsicht-2026-09-12.md`). Kein Punkt
+protokolliert (`docs/konzepte/Backlog-Durchsicht-2026-09-12.md`, gelöscht 24.09.2026, Historie `5e501ae`). Kein Punkt
 hatte sich unbemerkt selbst erledigt; gealtert waren Zahlen, Zeilennummern
 und sechs Aussagen — alle berichtigt. Drei Punkte verlassen *Offen*: **87**
 ist als Erhebung mit R70 beantwortet und stünde sonst neben P7 ein zweites
@@ -566,7 +575,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Die Zeitraumübersicht wächst weiter linear und ungedeckelt, der Suchindex
     überträgt weiter den gesamten Bestand, die sechs stillen Kappungen sagen
     weiter nichts, und **`post_max_size` der Zielanlage bleibt ungemessen**
-    (Prüfpunkt P29 in `docs/konzepte/Pruefdokument-P5a-Kette-und-Fundament.md`).
+    (Prüfpunkt P29 des P5a-Prüfdokuments, gelöscht 24.09.2026, Historie `5e501ae`).
     Eine Grenze bei 5000 Einsätzen verhindert nur, dass jemand in den
     gemessenen Bereich hineinläuft, in dem die Zeitraumübersicht 42,61 s
     braucht — sie macht ihn nicht schneller. **Dieser Eintrag bleibt deshalb
@@ -686,6 +695,22 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mehr wählen kann, wäre Aufwand ohne Gegenwert). Der Wert kann
     alternativ mit dem P5-Schemarückbau (Nr. 168) fallen; wer zuerst kommt,
     nimmt ihn mit.
+    **Der `ENUM`-Wert ist mit Nr. 168 gefallen** (Web 21.0.0, P5c/AP8,
+    E-P5c-124; Migration `2026_09_25_ftp_entfernen`), und mit ihm der Weg,
+    der ein solches Ziel umschiffte. Von den zwei Resten bleibt der
+    Lesezweig für unversiegelte Adminpakete.
+
+    **Und eine vierte Toleranz kommt mit Web 21.0.0 dazu** (P5c/AP8, Nr. 168):
+    Nutzlast 6 bis 11 tragen unter `stammdaten` die Auswahl zentraler
+    Standorte. Der Rückweg **überliest** das Feld still; die Tabelle, in die
+    es gehörte, gibt es nicht mehr. Zum Stichtag fällt das mit dem übrigen
+    Altformat — ein Paket ab Nutzlast 12 trägt das Feld nicht.
+
+    **Wie der eine Bestand herüberkommt, steht seit dem 25.09.2026 fest**
+    (E-P5c-127, Nr. 324): nicht über einen Lesepfad der 1.0, sondern einmal
+    über ein Einmal-Skript aus der Konto-Sicherung der letzten Fassung vor
+    1.0. Eine Komplett-Sicherung aus Altdaten wird nie eingespielt. Die 1.0
+    muss damit **keine** Nutzlast von vorher lesen — auch nicht die letzte.
 50. **Der Versand liest je Konto ein Verzeichnis.**
     `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
     Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
@@ -927,6 +952,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dafür gilt die Vorbedingung unverändert. Auch die Lücke oben bleibt
     wahr: Die Wear-OS-Uhr koppelt nicht und erscheint als `handy`; die
     Statistik-Seite sagt es dazu.
+
+    **Vermerk 23.09.2026 (Konzept P5c, E-P5c-45):** Die Vorbedingung oben
+    gilt **nicht** für die Summenzählung der Herkunft je Einsatz — sie zählt
+    eine vorhandene Spalte, nur für die BetreiberIn sichtbar, und
+    identifiziert schwächer als die Modelltabelle, die seit Web 15.3.0 ohne
+    diese Bedingung läuft. **Die User-Agent-Hälfte ist gestrichen** (R36):
+    Browser-Zugriffe werden nicht gezählt, „Rechner" erscheinen also nicht.
+    Zuordnung: **10c AP7**.
     **Die Modelltabelle steht** (Web 12.9.1): 325 Teilenummern auf 173
     Modelle, davon 28 keine Uhren. Eine Zählung nach `geraet_art` trägt damit
     — aber nur für Geräte, die **nach** dem Füllen gekoppelt haben. Ältere
@@ -991,6 +1024,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP11 nur für den Nachlöse-Job (E-P5a-21, E-PP-06); Herkunft je Einsatz und Dashboard bleiben 10c.
 
     **Zuordnung (20.09.2026): 10c, AP7** — die Auswertung wird Teil der Betriebslage (Konzept P5c, E-P5c-18).
+
+    **Vermerk 24.09.2026 (Web 20.47.0, P5c/AP7):** Die **Herkunft je
+    Einsatz** wird gezählt — Betrieb → Statistik, Reiter *Einsätze*, Karte
+    „Herkunft der Einsätze" (letzte 30 Tage, alle sechs Werte, auch mit 0),
+    ohne die Vorbedingung (E-P5c-45). Das „Betriebslage-Dashboard" ist diese
+    Seite mit drei Reitern; einen eigenen Namen oder Menüeintrag bekommt es
+    nicht (E-P5c-18). **Die User-Agent-Hälfte bleibt gestrichen**
+    (Vermerk 23.09.2026). Nicht ausgewertet wird weiterhin die Momentaufnahme
+    am Einsatz (`missions.geraet_art`) — für sie gilt die Vorbedingung oben
+    unverändert, bestellt ist sie nicht.
 
 90. **Der Simulator kann keinen Verbindungsabriss herstellen.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
@@ -1106,21 +1149,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Fehler. Dieselbe Frage stellt sich für
     `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
 
-121. **Vorschau der Rechtstexte beim Tippen.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
-    berichtigt 05.09.2026 in S8/AP3.* **Eine Vorschau gibt es seit Web
-    9.11.0** — sie steht unter dem Feld, entsteht auf dem SERVER mit
-    `rt_html()` und zeigt den zuletzt **gespeicherten** Stand. Der Mockup-Text
-    hatte sie übersehen; sie ist nicht neu zu bauen. Was fehlt, ist das
-    Mitlaufen beim Tippen. **Zu tun:** entscheiden, wie — ein zweiter
-    Renderer im Browser ist ausgeschlossen (er müsste dieselbe Positivliste
-    für Linkziele, dieselbe Maskierreihenfolge und dieselben Zeichenfilter
-    führen, und beim nächsten Fund würde einer von beiden vergessen, E-P3-38);
-    bliebe ein Abruf gegen den Server beim Innehalten. **Neue Funktion.**
-    Zuordnung: Backlog-Runde.
-
-    **Zuordnung (20.09.2026): 10c, AP9** — die Rechtstextseiten werden dort ohnehin angefasst (E-P5c-20).
-
 122. **Freie Zeiträume und Diagramme in der Statistik.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
     Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
@@ -1180,18 +1208,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     genau die Grenze, die R78 Punkt (1) für das ganze Verfahren zieht. Das ist
     kein neuer Befund, sondern ein Grund mehr, Branch-Schutz und 2FA nicht
     weiter zu schieben.
-
-141. **Zweitfaktor für alle Konten.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
-    Anmeldung **und** Datenschlüssel; Phishing genügt für alles. R38 sieht
-    TOTP nur für Admin-Konten vor. **Entschieden (R78):** für alle Konten
-    angeboten, für Admins Pflicht; Geheimnis serverseitig versiegelt
-    (`sk_versiegeln()`), `otpauth://`-Text statt QR-Fremdbestandteil, acht
-    Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
-    nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
-    R38).
-
-    **Zuordnung (20.09.2026): 10c, AP5** — dort wird der Zweitfaktor konkretisiert: Pflicht für Admin, BetreiberIn und Support, Angebot für alle übrigen (E-P5c-15, F-P5c-1).
 
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
     *Aufgenommen 06.09.2026 (R78).* Drei Fragen, keine Fehler: **Argon2id
@@ -1325,88 +1341,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zu betrachten.
 
 
-168. **Zentrale Stammdaten vollständig zurückbauen — damit kein
-    Überbleibsel bleibt.** *Aufgenommen 09.09.2026, zugeordnet **P5**
-    (Rahmenplan R39, Beschluss vom 30.08.2026).* **Die Tür ist zu seit
-    Web 18.0.0** (S9/AP5b): `admin_stammdaten.php` ist ersatzlos gestrichen,
-    die Karte „Vordefinierte Standorte" und der Schreibweg `ub_toggle` mit
-    ihr — **kein Schema, keine Migration**. Damit kann keine neue Zeile mit
-    `user_id IS NULL` mehr entstehen, und die Vorbedingung unten hält von
-    selbst. Der eigentliche
-    Rückbau steht aus, und ohne ihn bleibt das Modell im Schema, in den
-    Sicherungsformaten und in der Dokumentation stehen, obwohl es keine Daten
-    mehr trägt. Die Fundstellen sind aufgenommen:
-    `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`, **208
-    Befunde** auf sechs Flächen (23 Schema, 71 Code, 83 Dokumentation, 22
-    Prüfmittel, 9 Daten) — das Dokument bleibt bis P5 liegen und wird
-    danach gelöscht wie ein Konzept.
-
-    *Was der Rückbau umfasst:* **(1)** `user_id` in `bases`, `vehicles`,
-    `crew_presets`, `resources`, `bw_units` und `transport_dests` auf
-    `NOT NULL` ziehen; **(2)** `user_bases` samt Auswahlweg entfernen (E16);
-    **(3)** das Feld `stammdaten.user_bases` aus der Nutzlast der
-    Kontosicherung nehmen, Nutzlastversion heben, den Import ältere Pakete
-    still darüber hinweglesen lassen; **(4)** `admin_stammdaten.php` samt
-    Menüeintrag entfernen; **(5)** die Abfragen entschlacken, die heute
-    „eigen ODER zentral" fragen (`dt_base_erlaubt()`, `dt_bases()`,
-    `dt_vehicles()`, die Dublettenprüfung, der Einspielweg); **(6)**
-    Dokumentation austragen (`docs/Technik.md` Datenmodell,
-    `docs/Backup-Format.md`, `docs/Handbuch.md`); **(7)** die Prüfmittel
-    nachziehen (Platzhalter `__ADMIN_STANDORT__` des Bilderlaufs, der
-    Klickprobenweg zu Nr. 163, die Umlaufausnahmen des Referenzbestands).
-
-    *Vorbedingung, die vor dem `ALTER TABLE` zu messen ist:* **0 Zeilen mit
-    `user_id IS NULL`** in allen sechs Tabellen. Steht auch nur eine da,
-    bricht die Änderung ab, und MySQL kennt kein Zurückrollen von
-    Schemaänderungen — die Installation bliebe auf halbem Weg stehen. Die
-    geschlossene Tür aus S9 sorgt dafür, dass diese Null von da an hält;
-    vorhandene Einträge lassen sich über die Verwaltung noch löschen.
-
-    *Abnahme („keine Überbleibsel"):* `grep -rn "zentral" server/` nennt
-    keine Stammdatenstelle mehr; `grep -rn "user_bases" server/ docs/` ist
-    **0**; Register und `SHOW CREATE TABLE` sind zwischen frischer
-    Installation und migrierter Datenbank strukturgleich; die Kreisläufe
-    `edbak`, `edbak-alt` und `csv` laufen mit **0 unerklärten** Abweichungen;
-    eine Sicherung im alten Format spielt weiterhin ein.
-
-    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
-
-169. **Ein Diensttag mit „Anderem Rettungsmittel" kann keine Besatzung
-    festhalten.** *Aufgenommen 09.09.2026 beim Beantworten von Frage 11
-    (S9/AP6, Web 18.1.1).* Ein Rettungsmittel nur für den Tag führt keine
-    Besatzungsrollen (E-S9-10, F19). Das gilt seit Web 18.1.1
-    **gleichmäßig** — vorher bot ein aus einer früheren Zuordnung
-    umgestellter Tag die alten Rollen an, ein frisch angelegter keine. Die
-    Gleichmäßigkeit legt die Lücke frei: Es gibt an einem solchen Tag
-    **keinen** Weg, einen Besatzungsnamen einzutragen, weder am Tag noch am
-    einzelnen Einsatz — beide fragen denselben Rollensatz.
-
-    *Warum das nicht nebenbei zu schließen ist:* Der Rollensatz kommt aus
-    `vehicle_roles` des Stammdatensatzes, und einen solchen gibt es hier
-    gerade nicht. Drei Wege sind denkbar, und sie unterscheiden sich in dem,
-    was sie versprechen:
-    **(a)** Der Adhoc-Dialog bekommt Rollenhaken wie das
-    Stammdatenformular — ehrlich, aber er wächst um sieben Felder und wird
-    damit zu dem Formular, das er nicht sein wollte.
-    **(b)** Der Tag bietet die Rollen an, die zu seiner **Betriebsart**
-    passen (luft/boden) — billig, aber es ist geraten, und E26 sagt
-    ausdrücklich: geraten wird nicht.
-    **(c)** So lassen und im Text sagen (heutiger Stand): Wer die Besatzung
-    braucht, legt das Rettungsmittel an. Kostet einen Stammdatensatz, den
-    F17 gerade ersparen wollte.
-
-    *Bis zur Entscheidung gilt (c).* Hinweis im Tagesformular und Handbuch
-    sagen es seit Web 18.1.1 zutreffend; vorher verwiesen beide auf die
-    abweichende Besatzung am Einsatz, wo dieselbe Sperre greift.
-    **Am 12.09.2026 vertagt auf P5** — dort wird über die Rettungsmittel
-    ohnehin entschieden. Bis dahin gilt (c), und Hinweis und Handbuch sagen
-    es zutreffend; kein dritter Zustand. Zuordnung: **P5**.
-    *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
-    Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
-    tut. Kein dritter Zustand.
-
-    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
-
 170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.**
     *Aufgenommen 10.09.2026 nach zwei Rückmeldungen zu Web 19.1.0 (behoben
     mit 19.1.1).* AP7 hat gezählt, **wie viele** Schlösser und Kleinzeilen
@@ -1504,11 +1438,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     vergeben. Wer der Spur folgt, findet zwei Zeilen und muss aus dem
     Zusammenhang wählen — lästig, aber nicht irreführend. **Der Fund ist
     älter als diese Runde:** `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`
+    (gelöscht mit P5c/AP8, Historie: `git log --
+    docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`)
     hat ihn am 09.09.2026 schon verzeichnet (dort für 35, 36 und 37) und
     nennt zusätzlich eine **fehlende** Zeile für den 09.09.2026. **Keine
     Wirkung auf Code, Daten oder Oberfläche** — deshalb bleibt der Punkt offen
     statt zurückgezogen: Er kostet nichts, solange niemand ihn anfasst, und er
     ist mit der nächsten größeren Rahmenplan-Pflege in einem Zug zu machen.
+
+    **Erledigt sich mit Konzept SD** (Sammelnummer 294).
 
 187. **Alle „Anhebungs"-Wege werden mit NaDoku 1.0 abgeschafft.**
     *Aufgenommen 14.09.2026 (S10/AP3) auf Anweisung des Auftraggebers.* Ab 1.0
@@ -1595,6 +1533,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md` ist die Löschung in
     Abschnitt 6 des Rahmenplans bereits angekündigt. Ohne die Probe wiederholt
     sich der Vorgang zweimal.
+    **Und so ist es gekommen (24.09.2026, Rahmenplan Fassung 110):** Beide sind
+    gelöscht, mit 34 weiteren Dokumenten und drei Ordnern; die Verweise sind
+    von Hand nachgezogen — mit `grep` über das Repositorium, ohne Probe. Der
+    zweite Fall dieses Punkts.
 
     *Abnahme:* Der Lauf meldet **0 Treffer außerhalb der Ausnahmeliste und 0
     ungenutzte Ausnahmen** — dieselbe Form wie die Wortliste — und nennt
@@ -1602,101 +1544,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zahl ist keiner. Zuordnung: **P6** (Review und Bereinigung, R69) oder
     früher, wenn vorher ein weiteres Konzept gelöscht wird.
 
-190. **Die Statistikseite lässt das virtuelle Gerät stehen — „Ohne Gerät"
-    zählt zu niedrig.**
-    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
-    `server/db.php` führt die Konstante `GERAETE_ECHT_SQL`
-    (`device_id NOT LIKE 'manual-%'`), damit das virtuelle Gerät der
-    Handeinträge an **einer** Stelle beschrieben ist. Fünf Abfragen benutzen
-    sie — zweimal `db.php`, dazu `einstellungen.php`, `admin_demo.php` und
-    `tools/referenzdatensatz/fixture/erzeugen.php`. Drei schreiben das `LIKE`
-    von Hand (`admin_users.php`, `admin_user.php` und die Geräteabfrage in
-    `betrieb_statistik.php`), und **eine hat gar keine Bedingung**: die
-    Kontenabfrage derselben Datei, aus der die Zeile „Ohne Gerät" kommt. Sie
-    fragt schlicht `NOT EXISTS (SELECT 1 FROM devices …)`.
+    **Anlass der Ankerprüfung aus 10c AP9** (Konzept P5c, F-P5c-43,
+    E-P5c-86, 24.09.2026): Die Prüfung der Sprungmarken `hilfe.php#…` gegen
+    die Handbuch-Überschriften, ein Zusatz zur `linkprobe`, führt diese
+    Nummer als Anlass. Sie misst Verweise aus der Anwendung ins Handbuch —
+    einen Teil dieses Punkts, nicht die Dokumentenprobe selbst.
+    **Gebaut mit Web 21.1.0** (`tools/quelltext/anker.php`, im Tor unter
+    `bash tools/quelltext/pruefen.sh anker`); **dieser Punkt bleibt offen.**
 
-    **Das ist eine falsche Zahl, kein Schönheitsfehler.** Das virtuelle Gerät
-    ist eine echte `devices`-Zeile (Bezeichnung „Manuelle Einträge",
-    `active = 0`) und entsteht an **vier** Stellen: beim ersten Handeintrag
-    (`einsatz_form.php`), beim CSV-Import (`api/import_commit.php`), beim
-    Schneiden (`api/schneiden.php`) und beim GPX-Import
-    (`api/gpx_import.php`) — viermal derselbe `$devKey`. (`db.php` sagt es
-    **nicht**: Der Kopf der Konstanten ist eine Zeile, und der Kopf von
-    `geraete_des_kontos()` nennt zwei Anlässe — „von Hand anlegt oder
-    importiert" —, das Schneiden gar nicht.)
-    Wer ausschließlich von Hand dokumentiert oder auch nur einmal eine
-    GPX-Datei einliest, hat damit eine Gerätezeile und fällt aus „Ohne Gerät"
-    heraus. Ausgerechnet aus der Gruppe, deren Kleinzeile „sie tragen von
-    Hand nach" genau diese Menschen meint.
-
-    **Weg:** `GERAETE_ECHT_SQL` in beide Abfragen der Statistikseite; die
-    beiden handgeschriebenen Zwillinge in `admin_users.php` und
-    `admin_user.php` filtern zwar richtig, gehören aber in denselben Griff.
-    Danach steht das Muster an einer Stelle statt an vieren. *Abnahme:* Ein
-    Konto ohne gekoppeltes Gerät, aber mit einem Handeintrag steht in „Ohne
-    Gerät"; die Kachel „Geräte" ändert sich dabei nicht. Zuordnung:
-    **Backlog-Runde.**
-
-191. **Der von R38 bestellte Index auf `missions(started_at)` ist nie gelegt
-    worden.**
-    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
-    R38 bestellt für die Einsatzzählung des Betriebslage-Dashboards wörtlich
-    einen Index auf `missions(started_at)` und begründet ihn: „der vorhandene
-    führt mit `user_id` und trägt die kontenübergreifende Zählung nicht"
-    (`docs/Rahmenplan-Archiv.md`, R38). `server/schema.sql` führt an
-    `missions` genau `uq_dev_ref`, `idx_user_started (user_id, started_at)`
-    und `idx_day` — mehr nicht.
-
-    **Warum das bis heute niemandem auffiel:** Die Statistikseite aus S8
-    zählt nach **Diensttag** (`days.day`) und kommt ohne ihn aus. Das
-    Dashboard nach R38 zählt nach `started_at` und braucht ihn — er ist die
-    einzige Schemaarbeit, die der Minimalumfang überhaupt vorschreibt.
-    Vorziehen muss man ihn nicht: Ohne die Zählung, für die er da ist, kostet
-    er nur Schreiblast. Er hängt außerdem an **Nr. 192** — nötig ist er nur,
-    wenn dort `started_at` gewinnt. *Abnahme:* Die Migration liegt, und
-    `EXPLAIN` zeigt den Index an einer kontenübergreifenden Zeitraumzählung.
-    Zuordnung: **P5**, mit dem Dashboard.
-
-    **Zuordnung (20.09.2026): 10c, AP7** — der Index wird mit der Betriebslage gelegt (E-P5c-18).
-
-192. **R38 und die Statistikseite aus S8 zählen Verschiedenes — „aktiv", die
-    Fenster und die Zählgröße.**
-    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
-    Der feste Minimalumfang des Betriebslage-Dashboards (R38) legt drei Dinge
-    fest, und die gebaute Seite macht alle drei anders. Das ist zunächst kein
-    Fehler: Die Seite **setzt R38 nicht um** — sie ist der nach E-S8-05
-    vorgezogene Teil von Nr. 80 und beantwortet eine andere Frage („was trägt
-    diese Installation"). Entsteht das Dashboard aber, stehen zwei Zählweisen
-    nebeneinander, und das wären zwei Wahrheiten.
-
-    | R38 verlangt | Die Seite tut |
-    |---|---|
-    | „aktiv" = `users.last_login` **oder** `devices.last_seen` im Fenster | zwei getrennte Zeilen in zwei Karten, nie verodert |
-    | Konten in **24 h / 7 T / 30 T**, Einsätze in **24 h / 7 T / 30 T / 6 M / 1 J** | drei Fenster, **7 / 30 / 180 Tage** (`STAT_ZEITRAEUME`) |
-    | Einsätze nach `started_at`, **nicht** `created_at` — „ein Alt-Import verzerrte sonst die Aktivität" | nach **Diensttag** (`days.day`), im Kopfkommentar ausdrücklich begründet |
-
-    Die dritte Zeile ist die unangenehmste: Hier stehen sich **zwei
-    ausformulierte Begründungen** gegenüber, nicht eine Vorgabe und ein
-    Versehen. Und die erste hat eine Wirkung, die R38 ausdrücklich verhindern
-    wollte — wer nur mit der Uhr arbeitet und sich nie anmeldet, erscheint
-    unter „Zuletzt angemeldet" als tot.
-
-    **Nr. 122 berührt dieselben drei Fenster** („Freie Zeiträume und
-    Diagramme in der Statistik") — verlangt aber etwas anderes, nämlich frei
-    wählbare Zeiträume, und nennt den Widerspruch zu R38 nicht. Zu
-    entscheiden, **bevor** das Dashboard gebaut wird: ob die Seite nachzieht
-    oder R38 berichtigt wird. Beides ist vertretbar, beides nebeneinander
-    stehen zu lassen nicht. *Abnahme:* Die Entscheidung steht im Rahmenplan,
-    und R38 und die Seite beschreiben dieselbe Zählung. Zuordnung:
-    **Entscheidung in einer Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
-
-    **Zuordnung (20.09.2026): 10c, AP7** — die Zählung heißt dort sichtbar „Bestand" (E-P5c-18).
-
-
-    **Zuordnung (20.09.2026): erledigt sich mit 10c AP7.** Dort entsteht
-    eine **Zählung ab Beginn des Einsatzes** (E-P5c-18) — damit ist die
-    Zählgröße entschieden, und die beiden Zählweisen stehen nicht mehr
-    nebeneinander.
 193. **Register und Doku führen die R42-Auswertung als offen, obwohl sie
     seit Web 15.3.0 läuft.**
     *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
@@ -1733,6 +1588,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die drei gehören in einen Griff. *Abnahme:* Die fünf Stellen sagen
     dasselbe wie Abschnitt 5. Zuordnung: **Backlog-Runde**,
     gemeinsam mit Nr. 177.
+
+    **Erledigt sich mit Konzept SD** (Sammelnummer 294).
 
 194. **Das Handbuch nennt den Verschlüsselungsumfang dreimal ohne die
     Notizen — einmal davon als Textbaustein für die Datenschutzerklärung.**
@@ -1797,6 +1654,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Höhe des Einsatzorts nicht (Anlage II Nr. 2 führt sie), und
     `Nutzungsbedingungen.md` 2.6 zählt die freiwilligen Angaben ohne die
     Notizen des Einsatzes und ohne den Abfahrtort auf.
+    **Stand nach dem Merge von P5c (26.09.2026, Konzept BV, F-BV-15):**
+    P5c/AP9 hat den Textbaustein nach **11.5a** verschoben und die Notizen
+    des Einsatzes dort schon ergänzt. Es fehlt noch der manuelle
+    Abfahrtort. Handbuch Abschnitt 3 ist unverändert. Ob beides in BV oder
+    in Schritt 17 kommt, fragt Q-BV-04.
 
 196. **68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
     *Aufgenommen 15.09.2026 beim Gegenlesen der Punkte 190–195.*
@@ -1865,6 +1727,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Nr. 188**, das die fehlende Dokumentenprobe führt, und **Nr. 199**:
     Alle drei sind Fehler, die niemand sieht, weil nichts sie misst.
 
+    **Erledigt sich mit Konzept SD** (Sammelnummer 294).
+
 198. **Die Zeitraumübersicht zählt Windendienste nur luftgebunden.**
     *Aufgenommen 14.09.2026 (Demo-Ausbau, AP0.)* Seit Web 20.3.0 darf ein
     Rettungsmittel des Typs **Bergwacht** die Fähigkeiten Winde und Bergwacht
@@ -1899,6 +1763,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     kleines Paket mit Mockup.
 
     **Zuordnung (20.09.2026): 10c, AP9** — Kacheln nach Typ, Mockup mit der 10c-Runde (E-P5c-20).
+    *(Überholt, vermerkt 23.09.2026: Der Punkt wird nicht umgesetzt — der
+    Absatz darunter gilt.)*
 
 
     **Wird NICHT umgesetzt — entschieden am 20.09.2026 (E-P5c-27, in der
@@ -1968,6 +1834,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nennt vier fehlende Nummern statt drei. Zuordnung: **Backlog-Runde** —
     zusammen mit **Nr. 196**, das dieselbe Datei ohnehin in einem Zug anfasst.
 
+    **Erledigt sich mit Konzept SD** (Sammelnummer 294).
+
 200. **Bounce-Postfach: Unzustellbares erkennen, nicht nur zählen.**
     *Aufgenommen 15.09.2026 (Konzept P5a, E-P5a-14; Vorbereitung
     Plattformprofil PP-7, Stufe Empfohlen).* Die Mail-Warteschlange aus P5a
@@ -1980,6 +1848,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nach P5a, mit dem Konto-Lebenszyklus (10b) oder als Backlog-Runde.
 
     **Zuordnung (20.09.2026): 10c, AP10** (Bounce-Postfach, E-P5c-21, F-P5c-3).
+    *(Überholt, vermerkt 23.09.2026 — der Absatz darunter gilt.)*
+
+    **Wird NICHT umgesetzt — entschieden am 23.09.2026 (E-P5c-51); AP10
+    entfällt.** Die Anwendung versendet nur, „zugestellt" heißt „vom
+    SMTP-Server des Hosters angenommen". Einen späteren Rückläufer könnte sie
+    nur über ein Postfach lesen, und dafür bräuchte es IMAP — seit PHP 8.4
+    nicht mehr im Kern, ein eigener Client wäre ein Paket für sich. Der Nutzen
+    ist klein: Jede Adresse ist bei Registrierung oder Einladung über einen
+    Link bestätigt worden, und bei wenigen Konten sieht die BetreiberIn die
+    Rückläufer im Postfach der Absenderadresse (Handbuch 12.8). Wie bei
+    Nr. 198: geschlossen, aber nicht nach *Erledigt*, weil nichts erledigt
+    wurde.
 
 201. **`Retry-After` in Uhr und Handy auswerten.**
     *Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7).* Beide Clients
@@ -2014,7 +1894,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     | 1 | Marke, Mail, Link, Token | **durch** — Gegenprobe in Schritt 15 AP1 |
     | 2 | Datenzugriff | Schritt 15 AP4 und AP5 |
     | 3 | API-Eingang, Sitzung, Flash | Schritt 15 AP2 und AP3 |
-    | 3 | *davon* Log-Helfer — **77 Aufrufe in 32 Dateien** | **10c AP3** |
+    | 3 | *davon* Log-Helfer — **77 Aufrufe in 32 Dateien** (Übergabe 75) | **10c AP3** — **durch** mit Web 20.40.0 (Nr. 248, `system_melden()`) |
     | 4 | JavaScript | Schritt 15 AP8 |
     | 5 | Zeit, Zahl, Migration | Schritt 15 AP7 |
     | 6 | Beifang | kein Arbeitspaket — nur mit Arbeit an der Datei |
@@ -2125,7 +2005,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     - **Nicht hier:** der Log-Helfer (`error_log()` 39× in 19 Dateien,
       Präfixe uneinheitlich, nur `json_fehler()` mit Kennung). Er ist der
       Schreibweg des 10c-Protokolls und wird dort entworfen
-      (`Vorbereitung-P5c-Protokollierung.md`, V7).
+      (`Vorbereitung-P5c-Protokollierung.md`, V7 — gelöscht mit dem
+      Abschluss von P5c, Historie `ae829e6`).
 
     **Paket 4 — JavaScript.**
     - JSON-POST mit CSRF-Kopf 15× in 6 Dateien (`export.js` 2,
@@ -2285,29 +2166,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     werden — er ändert nicht, was bei einem Deadlock geschieht. Wer beides
     in einem Paket macht, kann hinterher nicht sagen, welche der beiden
     Änderungen die Probe grün gemacht hat.
-211. **Ein `/api/`-Aufruf ohne Sitzung bekommt eine Weiterleitung statt
-    einer JSON-Antwort.** `auth_guard.php` prüft in Zeile 33
-    `empty($_SESSION['user_id'])` und antwortet mit
-    `header('Location: login.php')` — **vor** jeder Unterscheidung, ob das
-    Gegenüber JSON erwartet. `ist_api_aufruf()` gibt es, aber es wird erst
-    weiter unten benutzt, für die Fälle „Sitzung abgelaufen" und „Rolle reicht
-    nicht" (dort korrekt: 401 bzw. 403 als JSON).
-
-    **Die Folge ist klein, aber sie ist eine Unwahrheit:** Ein Werkzeug oder
-    ein Skript, das einen Endpunkt kalt aufruft, bekommt HTTP 302 und danach
-    die HTML-Anmeldeseite — und wird daran hängenbleiben, statt „nicht
-    angemeldet" zu lesen. Im Betrieb tritt das selten auf: Die Aufrufe des
-    Browsers kommen aus einer angemeldeten Seite, und eine **ablaufende**
-    Sitzung fängt der richtige Zweig ab.
-
-    **Zu tun:** Die Weiterleitung in Zeile 33 an `ist_api_aufruf()` vorbei
-    nicht mehr unbedingt machen, sondern denselben JSON-Weg nehmen wie
-    `sitzung_beenden_passend()` — 401 mit einem lesbaren Grund.
-    *Abnahme:* `curl -s -o /dev/null -w '%{http_code}' <basis>/api/day.php?day=2026-01-01`
-    liefert **401** und `{"error":…}` statt 302.
-    *Aufgenommen 16.09.2026 in P5a/AP9, gefunden beim Bau der
-    Verbindungsprobe: Sie wollte einen `/api/`-Endpunkt unter Überlast messen
-    und bekam eine 302, weil die Anfrage die Datenbank nie erreichte.*
 
 213. **Die Zustandsdatei der Auslieferungskette lag im Webroot.**
     *Aufgenommen 16.09.2026 aus einer Durchsicht des Auftraggebers; behoben
@@ -2744,45 +2602,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     will, nimmt den Fall aus Nr. 221 als Prüffall: Eine Mailadresse in einem
     Rechtstext, 360 px, der Finder muss das `<p>` nennen.
 
-238. **`missions.manual` bricht die Einrichtung auf MySQL 8.4.0–8.4.10.**
-    *Aufgenommen 20.09.2026 aus dem Fehlversuch auf dem neuen
-    Staging-Webspace.* **Umgesetzt in Web 20.25.0**, Zweig
-    `claude/festive-fermi-el0avv`. Offen ist allein die Prüfung durch die
-    Betreiberin — Liste in `docs/konzepte/Pruefdokument-uhr_gesperrt.md`;
-    im Browser ist noch nichts bedient worden.
-
-    `SQLSTATE[42000] … 1064 … near 'manual TINYINT(1) NOT NULL DEFAULT 0` —
-    MySQL führt **MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort**, ab
-    8.4.11 wieder nicht. `schema.sql` legte die Spalte ungequotet an; die
-    Staging-Datenbank ist 8.4.x.
-
-    **Gemessen:** 788 Bezeichner-Vorkommen in elf DDL-führenden Dateien gegen
-    284 reservierte Wörter → **zehn betroffene Stellen**, nicht eine. Neben
-    der Einrichtung der Uhr-Eingang, GPX- und Datei-Import, der Schnitt,
-    beide Zweige des Einsatzformulars und beide Richtungen der Sicherung.
-    `PARALLEL`, `QUALIFY`, `TABLESAMPLE` (in 8.4 ebenfalls neu reserviert)
-    kommen nicht vor.
-
-    **Entscheidung (Philipp, 20.09.2026): umbenennen in `uhr_gesperrt`, nicht
-    quoten.** Eine übersehene Stelle scheitert dann auf jeder Version sofort
-    statt nur auf elf im Betrieb. Der Dateischlüssel in Sicherung und Export
-    bleibt `manual`.
-
-    **Dahinter lag ein zweiter Blocker, und er war der größere:**
-    `DEFAULT UTC_TIMESTAMP()` ohne Klammern wird von MySQL auf **jeder**
-    Fassung abgewiesen (vier Stellen). Die Anwendung ließ sich damit **seit
-    Web 20.16.5 auf MySQL überhaupt nicht einrichten**; gemerkt hat es
-    niemand, weil der Fehler am reservierten Wort schon vorher kam. Beides
-    hatte dieselbe Ursache — entwickelt und geprüft wird gegen MariaDB,
-    ausgeliefert wird gegen MySQL. Dagegen steht jetzt
-    `tools/schemaprobe/` in Stufe 1, mit einer **Matrix** über MySQL 8.4.0
-    und MariaDB 10.6.
-
-    **Nachtrag 21.09.2026 (Web 20.26.3):** Der bewahrte Alias `AS manual`
-    war selbst betroffen — MySQL 8.4.0 bis 8.4.10 reserviert das Wort auch
-    als Alias. Export und Sicherung scheiterten auf Staging (MySQL 8.4.10)
-    mit 1064. Behoben mit Backticks um den Alias, Nr. 267.
-
 239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php`
     mit.**
     *Aufgenommen 20.09.2026 beim Beheben von Nr. 238.*
@@ -2844,95 +2663,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Reset-Fluss; Wechselwirkung mit `users.session_epoch`) und gehört nicht
     in einen Verzeichniswechsel.
 
-243. **Ein Umgebungsbanner, damit Staging nicht für Produktiv gehalten wird.**
-    *Aufgenommen 20.09.2026 (E-P5c-05).* Zugeordnet: **10c, AP1**.
-
-    `config.php` bekommt `app.umgebung = ['name' => 'Staging',
-    'farbe' => 'rot']`, Vorgabe leer. Ist es gesetzt: Kopfleiste in
-    **Newroz-Rot** statt Dunkelblau, darunter die Zeile „Staging —
-    Testdaten, kein Echtbetrieb", Seitentitel mit Präfix „[Staging]".
-
-    **Nie abgeleitet** — nicht aus Domain, Zweig oder Kette. Eine Ableitung
-    wäre bequem und falsch: Sie stimmte genau so lange, bis jemand eine
-    zweite Anlage unter derselben Domain aufsetzt. Die Statusseite warnt,
-    wenn `mail.betreff_praefix` gesetzt ist und `app.umgebung` nicht — das
-    ist der Fall, in dem die Mails schon „Staging" sagen und die Oberfläche
-    noch nicht.
-
-    **Derselbe Baustein** trägt das Ankündigungsbanner (E-P5c-13); zwei
-    Banner wären zwei Stellen, die auseinanderlaufen.
-
-244. **Einstellungen-Übersicht: die drei Bereiche sind als Gliederung nicht
-    erkennbar.** *Aufgenommen 18.09.2026, präzisiert 20.09.2026
-    (Auftraggeber).* Zugeordnet: **10c, AP9**.
-
-    In der Übersicht (`ui_einstellungen_uebersicht()`) gehen die
-    Bereichsnamen Einstellungen / Verwaltung / Betrieb als oberste Ebene
-    unter.
-
-    **Berichtigt am 20.09.2026 (M-P5c-01, E-P5c-29):** Gemeint war vor allem
-    das **linke Menü** (`ui_leiste_einstellungen()`), nicht die Übersicht —
-    dort fällt die fehlende Gliederung zuerst auf, weil man es auf jeder
-    Seite sieht. **Entschieden und freigegeben:** Die **Leiste** bekommt
-    Bereichsüberschriften nach **Option 1 „Linie"**; die **Übersicht**
-    bekommt je Bereich eine **eigene Karte** mit Bereichszeichen und mittigem
-    Kopf. **Der Fable-Schritt ist damit erledigt** — es braucht kein weiteres
-    Mockup.
-
-    **Entschieden:** zuerst ein Mockup mit einer klaren
-    **Überschriftenzeile je Bereich** (Bricolage, Abstand davor, Linie);
-    trägt das nicht, bekommt jeder Bereich eine **eigene Karte** mit seiner
-    Liste. Fable-Schritt (Mockup), Umsetzung klein; das Mockup läuft mit den
-    übrigen 10c-Mockups in einer Runde.
-
-245. **Erklärtext-Regel — und danach alle Texte in Verwaltung und Betrieb.**
-    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
-    **10c, AP9**.
-
-    Gemeint ist der **gesamte** Bereich Verwaltung und Betrieb unter
-    Einstellungen: viel Erklärtext, viele neue Funktionen seit S8–S10 und
-    P5a.
-
-    **Entschieden als Grundregel für `docs/Design.md`:** In der Oberfläche
-    steht je Karte **höchstens ein Satz**, der sagt, was hier passiert;
-    alles Erklärende steht im **Handbuch**, die Karte trägt den Verweis auf
-    die Sprungmarke (`hilfe.php#abschnitt`, E-P5b-08). Warnungen bleiben als
-    Meldung, Feldhinweise bleiben eine Zeile.
-
-    **Folge:** Alle Texte des Bereichs werden nach der Regel überarbeitet;
-    der ausgelagerte Text **wandert ins Handbuch und wird nicht gelöscht**.
-    Voraussetzung: 10b AP8 (Handbuch aus der Anwendung erreichbar).
-    Abnahme: ein Textpaket mit Wortliste und Bilderlauf; gezählt werden
-    Sätze je Karte (Ziel ≤ 1) und Handbuch-Verweise (Ziel ≥ 1 je Karte mit
-    ausgelagertem Text).
-
-246. **Schlüsselblatt und Notfallblatt: eine Druckseite, die eine ist.**
-    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
-    **10c, AP9**.
-
-    Drei Vorgaben für `betrieb_schluesselblatt.php` (S10) und das
-    Notfallblatt (P5b AP9):
-
-    (a) Der Schlüssel steht **abgesetzt in einer Kachel** — Rahmen, Rauch,
-    Vierergruppen, Feste Schrift.
-    (b) Der Druck passt **genau auf eine A4-Seite** (`@page A4`, Ränder,
-    kein Umbruch). Abnahme: PDF-Druck aus Chromium **und** Firefox hat je
-    eine Seite.
-    (c) Oben stehen **Marke und „NAdoku"** (das Wort-Bild-Logo) und die
-    Überschrift, damit sofort klar ist, worum es geht.
-
-    **Das ändert E-P5b-09** („ohne Logo" → mit Logo). Beide Blätter
-    bekommen denselben Baustein (`.blatt-druck`); 10b AP9 ist gebaut, das
-    Notfallblatt wird dort nachgezogen.
-
-
-    **Berichtigt am 20.09.2026 (M-P5c-01f, E-P5c-08/-30):** Oben steht
-    **nicht** „Marke + NAdoku", sondern **Bildmarke + Kurzname der
-    Installation** (`instanz_kurz()`, Vorgabe „Gen-EM NAdoku"). Ein fest
-    eingebautes „NAdoku" wäre auf einer umbenannten Installation schlicht
-    falsch. Die **Webversion steht in der Fußzeile** des Blattes.
-    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`),
-    beide Blätter mit demselben Baustein `.blatt-druck`.
 247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.**
     *Aufgenommen 20.09.2026 (aus V4 der P5c-Vorbereitung).* Zugeordnet:
     **Schritt 18**.
@@ -2942,7 +2672,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     Gesucht ist ein Vorgang unter Betrieb: neuen Schlüssel erzeugen, alles
     Versiegelte **umhüllen** (Adminpakete, Zugänge der Sicherungsziele,
-    Protokoll-Archive, Wiederanlaufpaket), neues Schlüsselblatt, Eintrag im
+    Protokoll-Archive, Wiederanlaufpaket, **die Zweitfaktor-Geheimnisse** aus
+    10c AP5 — ergänzt 23.09.2026), neues Schlüsselblatt, Eintrag im
     Protokoll, und **der Nachweis der Öffenbarkeit vor dem Verwerfen des
     alten Schlüssels** — das ist der Schritt, dessen Fehlen den Vorgang
     gefährlich macht. Auslöser: Verdacht, dass das Blatt in falsche Hände
@@ -2952,26 +2683,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Betreiberhandbuch: Der Schlüssel wird nicht gewechselt, das Blatt wird
     gehütet (Quartalsrückfrage E-P5b-10).
 
-248. **Das Prüftor Stufe 1 zählt die `error_log(`-Aufrufe.**
-    *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).* Zugeordnet:
-    **10c, AP3** — dort erledigt, hier als Prüfmittel-Vermerk.
-
-    Mit 10c wandern die `error_log()`-Aufrufe auf den Protokollreiter
-    System. Damit sie nicht nach und nach zurückkehren, zählt Stufe 1 sie
-    nach: **Soll ≤ 2**, und zwar ohne Kommentare und ohne Zeichenketten —
-    sonst zählt das Prüfmittel seine eigene Dokumentation mit.
-    Mitgeprüft wird der `set_exception_handler()`-Behandler.
-
-    **Berichtigt am 20.09.2026 (E-ZE-03):** Hier stand, das Zählmittel
-    entstehe mit 10c AP3. Es **besteht seit Schritt 15 AP1**
-    (`tools/zaehlung/`); 10c AP3 setzt nur die Registerzeile **Z38** auf
-    **Decke 2**. Zwei Pakete, die dasselbe Werkzeug bauen, hätten es zweimal
-    gebaut.
-
-    **Die Ausgangszahl ist gemessen:** 42 am 16.09.2026, nachgemessen am
-    20.09.2026 an `862ca7f` **77 Aufrufe in 32 Dateien**. Die Zahl ist in
-    vier Tagen um 35 gestiegen — genau deshalb braucht es einen Zähler und
-    keine Vorsatzerklärung.
+    *Vermerk 24.09.2026 (P5c/AP5, Web 20.42.0):* **Die Zweitfaktor-Geheimnisse
+    gibt es jetzt** — `users.totp_geheimnis`, versiegelt mit Zweck
+    `totp|<Konto>`. Ein Wechsel, der sie nicht umhüllt, lässt jede
+    Code-Anmeldung scheitern; die Konten kämen dann nur noch mit
+    Wiederherstellungscodes hinein, und die Profilkarte meldet „Das Geheimnis
+    lässt sich auf dieser Anlage nicht öffnen". Der Notweg bis dahin steht im
+    Runbook (`Technik.md` 7, Zweitfaktor).
 
 249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes
     verliert.** *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
@@ -2985,6 +2703,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     10c: Er wird nicht über die Oberfläche gelöst, sondern über das
     Wiederanlaufpaket. Hier nur benannt, damit er nicht erst auffällt, wenn
     er eintritt.
+
+    **Teilweise gelöst mit Konzept RW (E-RW-08, 24.09.2026; gebaut als 10c
+    AP5b, Web 20.43.0 bis 20.45.0):** Hat die einzige BetreiberIn Passwort
+    und Notfallblatt, setzt sie den Zweitfaktor am Code-Schritt selbst
+    zurück. Der Wiederanlauf-Fall bleibt für den Rest: ohne Zettel, ohne
+    Passwort, oder wenn der Rückweg ausgeschaltet ist (Statuszeile
+    „Rückweg-Prüfung" orange).
 
 250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.**
     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
@@ -3031,14 +2756,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     umzuschreiben heißt, eine Anlage anders zu behandeln als die, auf der
     sie schon lief. Das Register in P8 löst es an der Wurzel; bis dahin
     steht im Zählmittel eine **Decke von 57** — sie darf nicht wachsen.
-
-253. **Datum-Zeit-Trenner vereinheitlichen.** *Aufgenommen 20.09.2026
-    (Konzept Zentralisierung, F-ZE-3/FF-5).* Zugeordnet: **10c AP9**.
-
-    Zwischen Datum und Uhrzeit steht mal ein Komma, mal ein Gedankenstrich,
-    mal nur ein Leerzeichen. Nach Schritt 15 AP7 steht die Formatierung an
-    einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
-    Suche, und deshalb wartet es bis dahin.
 
 259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen
     fallen, und ihr Kernvergleich läuft gar nicht.** *Aufgenommen
@@ -3349,16 +3066,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verhalten). Beim Anfassen mitzudenken: Der Satz muss sagen, dass der
     Zustand unklar ist, nicht dass es fehlgeschlagen ist.
 
-269. **`assets/schluesselblatt.js` — bei Netzausfall eine stille Sackgasse.**
-    Gefunden bei derselben Vermessung. Der Prüfknopf setzt `disabled = true`
-    **vor** dem Senden, und die Wiederfreigabe liegt im `.then`. Wirft das
-    `fetch`, fängt niemand: Der Knopf bleibt tot, das Fehlerfeld leer, der
-    Dialog offen. Die Person kann weder weiter noch erkennen, warum.
-    Zwei Aufrufer sind betroffen (Prüfen und Antworten). **Nicht in
-    Schritt 15 behoben.** Beim Anfassen mitzudenken: `EdApi.postForm()` aus
-    AP8c liefert im Netzfehler ein `{ ok: false, status: 0 }` statt zu
-    werfen — damit ist die Stelle danach mit drei Zeilen zu heilen.
-
 271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr
     Ton bleibt „info", auch wenn ein Fehler darin steht.** Gefunden bei der
     AP8-Vermessung (Schritt 15, 22.09.2026) in `assets/schneiden.js`. Die
@@ -3549,36 +3256,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kopfabsatz, Changelog-Zeile und ein Emulatorlauf, der die
     Rechtstexte-Seite zeigt. Abnahme als **P-PK-28**.
 
-286. **Ein Admin erreicht Komplett-Backup und Backup-Ziele — samt
-    Klartext-Dump der ganzen Datenbank.**
-    *Aufgenommen 23.09.2026 im Abgleich des Konzepts P5c (F-P5c-15), von Hand
-    nachgeprüft.* R75 und der Kopf der Rollen in `db.php` behalten
-    Komplett-Backup und Backup-Ziele der BetreiberIn vor, und das Menü zeigt
-    beide Seiten nur ihr. **Die Seiten selbst fragen aber nur
-    `require_admin()`** (`admin_komplettsicherung.php` und
-    `admin_sicherungsziele.php`, je Z. 4; das Wort „betreiberin" kommt in
-    beiden Dateien nicht vor). Per Direktaufruf liefert
-    `action=herunterladen` jedem Admin über `komp_ausgeben_klar()` den
-    Klartext-Dump — mit Passwort-Hashes und versiegelten Zugängen; dazu
-    kommen die sieben Handlungen der Backup-Ziele. `admin_sicherungen.php`
-    verlinkt Admins sogar dorthin.
-
-    **Vorhergesagt und nie nachgemessen:** Das Prüfdokument S8 führt P-01
-    als „teilweise" mit der Auflage, nach AP5 zu wiederholen — „dann muss ein
-    Admin dort 403 bekommen". Die Wiederholung hat nie stattgefunden.
-
-    **Warum es heute nicht brennt:** Es gibt kein Konto mit der Rolle admin
-    (Auskunft der BetreiberIn, 23.09.2026; die Migration von S8 hat alle
-    Admins zu BetreiberInnen gemacht). **Bis zur Behebung legt niemand ein
-    Admin-Konto an.**
-
-    *Behebung:* `require_betreiberin()` an beiden Stellen, der Verweis in
-    `admin_sicherungen.php` nur für die BetreiberIn, Nachtrag in
-    `Technik.md`. *Abnahme:* die Rollenprobe (`tools/proben/rollen/`, Anlass
-    dieser Punkt) — 13 Handlungen, Admin 403, BetreiberIn 200. *Fehlschlag:*
-    ein Admin bekommt auf einer der beiden Seiten 200. **Zuordnung: 10c AP2**
-    (E-P5c-31).
-
 287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.**
     *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
     Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
@@ -3625,6 +3302,115 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
     **Zuordnung: Backlog-Runde.**
 
+294. **Steuerungsdokumente schneiden (Konzept SD).**
+    *Aufgenommen 24.09.2026 mit SD-00 (Rahmenplan Fassung 111).* Anlass:
+    Rahmenplan und Backlog sind auf 3 700 bzw. 10 000 Zeilen gewachsen,
+    weil Steuerung, Register und Protokoll in denselben Dateien stehen und
+    jede Fassung Erzähltext nachzieht. Konzept:
+    `docs/konzepte/Konzept-SD-Steuerungsdokumente.md` (SD-00 bis SD-04; die
+    Schreibregeln aus SD-00 gelten seit Fassung 111). Zeitpunkt: SD-01 bis
+    SD-04 nach dem Merge des 10c-PR, auf eigenem Zweig von `main`.
+    **Zuordnung: SD.** Mit ihm erledigen sich Nr. 177, 193, 196 und 199.
+
+295. **Der Messstand hat keinen Schritt für die Statistik.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-40), als Anlass nach der
+    Zuarbeit von Konzept BR (E-BR-07).* `tools/messstand/` misst die Seiten,
+    die es kennt; die Statistik ist keine davon, und das Konto `messstand@…`
+    fehlte auf der örtlichen Anlage (seit AP4 legt der Prüfstand es über
+    `messen.py --frisch` selbst an, F-P5c-104). 10c AP7 baut die Statistik auf eine
+    Zählung mit Obergrenze und einen neuen Index `missions(started_at)` um —
+    ohne Messstand-Schritt gäbe es für die Zeiten keinen Beleg, nur ein
+    `EXPLAIN` von Hand. *Weg:* Schritt `statistik` im Messstand (drei Reiter
+    und `EXPLAIN`, Sitzung der BetreiberIn; fehlt das Konto, legt AP7 es nach
+    E-PK-27 an). **Zuordnung: 10c AP7.**
+
+297. **Der Bilderlauf lässt Breiten, die Admin-Rolle und Rollbehälter aus.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-41), als Anlass nach der
+    Zuarbeit von Konzept BR (E-BR-07).* Es fehlen die Breiten 400, 1200 und
+    1366; Seiten mit `rolle: admin` meldet er als BetreiberIn an, eine reine
+    Admin-Sicht nimmt er nie auf; die Übersicht der Einstellungen steht nicht
+    in `seiten.json`; Überlauf in einem Behälter, der selbst rollt, und der
+    Vergleich mit einem früheren Stand misst er nicht. *Weg in 10c:* eigene
+    Messungen über `tools/motor.mjs`, wo eine Abnahme sie braucht (AP2
+    Zeilenhöhe bei 1440 und 390 px, AP7, AP9) — die Messungen führen diese
+    Nummer als Anlass. Der Umbau des Bilderlaufs selbst gehört nicht zu 10c.
+    **Seit Web 20.41.0 gilt dasselbe für die Rolle Support** (P5c/AP4): Ihre
+    Sicht — drei Kacheln über der Liste, eine einspaltige Kontoseite ohne
+    die Knöpfe, die der Support nicht darf, zwei Protokollreiter — nimmt der
+    Bilderlauf nicht auf (hier stand bis Web 21.1.0 „Liste ohne Kennzahlen,
+    ausgegraute Kontoseite", die Fassung vor F-P5c-102); belegt ist sie nur
+    über die Rollenprobe (Menü, Liste, Reiter) und im Prüfdokument von Hand.
+    **Zuordnung: 10c (Messungen); Umbau: nächste Backlog-Runde.**
+
+299. **Die Kontoseite löscht ein Konto an `konto_loeschen()` vorbei.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-99).* Es gibt zwei
+    Wege, ein Konto zu löschen: `konto_loeschen()` in `konto_lib.php` (die
+    Selbstlöschung und der Verfall gehen darüber) und den Zweig
+    `user_delete` in `admin_user.php`. Beide räumen dasselbe ab — die
+    Konto-Backups nach der Wahl, die Spuren ausdrücklich vor der Kaskade,
+    die Sperrvermerke — und jeder schreibt es selbst. Dass es zwei sind, hat
+    schon einmal geschadet: Die Löschung durch die Verwaltung schrieb bis
+    Web 20.40.0 keinen Eintrag `konto_geloescht`, weil nur der eine Weg ihn
+    kannte. AP4 hat den Eintrag nachgetragen und den Weg stehen lassen — ein
+    Umbau des Löschens gehört nicht in das Paket einer Rolle. *Weg:* Der
+    Zweig ruft `konto_loeschen($uid, $mitSicherungen)`; was die Seite zusätzlich
+    prüft (eigenes Konto, letzte BetreiberIn, abgetippte Adresse), bleibt
+    davor. Nachweis: Rollenprobe (Konto löschen 403 beim Support) und ein
+    Löschfall mit Spuren gegen `spur_zahlen()`. **Zuordnung: Backlog-Runde.**
+
+300. **Die Hauptstufe des Prüfstands fährt die Plattformmatrix nur zur Hälfte.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-103).*
+    `Pruefablauf.md` 3 verspricht für `haupt` PHP 8.3.33 und 8.4, je Paar mit
+    den vier Datenbanken eine Schemaprobe und einen Kreislauf `edbak` —
+    ausdrücklich auch gegen MySQL 8.4.0, weil dort Nr. 267 lag — und den
+    Uhr-Prüfstand Stufe II. `pruefablauf.json` gibt `haupt` davon die
+    Schemaprobe über vier Datenbanken unter dem PHP des Containers (8.4);
+    `kreislauf.py` kennt keine zweite Datenbank, PHP 8.3 fährt keine Probe,
+    die Uhr-Stufe II steht nirgends — und **der Bilderlauf läuft auch in
+    `haupt` nur in Chromium**: `aufnehmen.mjs` nimmt einen Motor aus
+    `--motor`, `--stufe haupt` wählt nur die Breiten. Der erste Lauf meldete
+    `bilderlauf=0` nach 840 s mit 520 Bildern — so viele wie in `neben`.
+    **Eine Falle für den Bau** (F-P5c-105): In WebKit setzt
+    `page.screenshot()` ein eigenes Stylesheet ein, die CSP meldet es an
+    `api/csp_bericht.php`, und auf den Wartungsseiten antwortet der
+    Endpunkt 503 — 16 „Konsolenfehler", die der Lauf selbst verursacht. Gemerkt hat es erst das erste Paket, das
+    seit PK-05 in `haupt` lief: Ein Bericht „haupt, grün" sagt über PHP 8.3
+    und MySQL 8.4 im Kreislauf nichts. AP4 hat die Rollenprobe und die
+    Migration über Betrieb → Updates unter PHP 8.3 von Hand gefahren, dazu
+    den Bilderlauf in Firefox und WebKit.
+    *Weg:* `pruefen.sh` fährt den Bilderlauf bei `haupt` je Motor (drei
+    Zahlen im Bericht), dazu einen zweiten Durchgang unter
+    `hochfahren.sh --php 8.3` (mindestens Rollen-, Wartungs- und
+    Schemaprobe, ein Kreislauf), `kreislauf.py` bekommt eine Datenbankwahl
+    für die Behälter aus `plattform.sh`, und der Bericht nennt je Paar eine
+    Zahl — **oder** die Zeile in `Pruefablauf.md` 3 wird auf das Gebaute
+    zurückgenommen, mit Begründung. Nicht beides offen lassen. **Zuordnung:
+    Prüfkette (PK-06 ff.); bis dahin je Paket von Hand.**
+
+301. **`Sandbox-Setup.md` 1 sagt, Firefox und WebKit starten im Container
+    nicht — sie starten.** *Aufgenommen 24.09.2026 aus Konzept RW
+    (F-RW-02).* Gemessen mit Playwright 1.56: Firefox 142 und WebKit 26
+    starten, laden eine Seite über `localhost` und rechnen WebCrypto; RW-04
+    hat die Rückwegprobe `probe.mjs` in beiden gefahren (`--motor`). Die
+    Tabelle „Nicht im Abbild" nennt die Systembibliotheken beider Motoren
+    als fehlend (Nr. 183); das gilt für dieses Abbild nicht mehr. *Weg:* die
+    Zeile berichtigen und mit einem Datum versehen, Nr. 183 nachsehen; ob der
+    Bilderlauf in `haupt` damit alle drei Motoren fahren kann, gehört zu
+    Nr. 300. **Dabei gemessen (Konzept RW, F-RW-23):** Gegen den örtlichen
+    `php -S` mit einem Arbeiter blieb WebKit in 2 von 4 Läufen beim zweiten
+    Anmelden 90 s ohne Navigation; mit `PHP_CLI_SERVER_WORKERS=4` waren es
+    3 von 3 grün. Wer WebKit in eine Stufe einhängt, startet den Server mit
+    mehreren Arbeitern (`hochfahren.sh`), sonst misst er die Sandbox statt
+    der Anwendung. **Zuordnung: Backlog-Runde.**
+
+    **Der Server-Teil ist erledigt (P5c/AP11, 25.09.2026):** `hochfahren.sh`
+    startet den Server seither mit vier Arbeitern (`lokal_starten.sh`,
+    `lokal_einrichten.sh`, auch im Behälter für PHP 8.3). Anlass war nicht
+    WebKit, sondern die Bedienprobe: Zum zweiten Mal nach RW-04 kamen ihre
+    ersten zwei Wege nach der Anmeldung nicht an die Seite
+    (`net::ERR_TOO_MANY_RETRIES`), und die Anfrage erreichte den Server nie.
+    **Offen bleibt** die Zeile in `Sandbox-Setup.md` 1 und Nr. 183.
+
 318. **`pysyntax` sieht ungültige Escape-Folgen nicht, und zwei Werkzeuge
     tragen welche.** *Aufgenommen 24.09.2026 mit dem Abschluss von Konzept BR,
     gefunden beim Belegen von P-BR-01 im Log des PR-Laufs 36037964804.* Im Tor
@@ -3646,7 +3432,149 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     für die Anwendung. **Zuordnung: Backlog-Runde** (Vorschlag; oder das
     nächste Paket, das `tools/quelltext/` anfasst).
 
-329. **Zusammengesetzte Klassen der übrigen Bausteine sieht die
+321. **Der Stilvergleich meldet unveränderte Stile als ungeplant, sobald eine
+    andere Seite Elemente dazubekommt.** *Aufgenommen 24.09.2026 in P5c/AP7
+    (F-P5c-126), gemessen.* AP7 baut die Statistikseite um und ergänzt eine
+    CSS-Regel. `gegen.sh` meldete danach **38 ungeplante** Signaturen und
+    **31 geplante, aber nicht gemessene** — 23 davon an den Druckblättern aus
+    AP5, deren Stile AP7 nicht anfasst. Gegenproben: mit der neuen Regel, aber
+    der **alten** Statistikseite genau **eine** ungeplante (die neue Regel);
+    auf dem sauberen Stand davor **0 / 0**. Die Signaturen hängen also nicht nur
+    an den beiden Stylesheets, sondern an der **Nachbarschaft** eines Elements
+    in der Probe `seiten.html`: Eine Seite, die wächst, verschiebt die
+    Stückelung (`chunks.py`), und dasselbe Element bekommt eine andere
+    Eigenschaftsliste. Gelöst ist AP7 auf dem vorgesehenen Weg
+    (`--schreiben`, 139 / 139); die Ursache nicht. **Folge:** Jede künftige
+    Seite mit mehr Markup kann `geplant.txt` für Stellen umwerfen, die sie nicht
+    berührt, und wer die Meldung liest, sucht an der falschen Stelle.
+
+    *Weg:* die Probe so bauen, dass jede Seite ein eigenes Stück bekommt
+    (oder die Signatur ohne geerbte Eigenschaften bilden, die aus dem
+    Stückkontext kommen); dazu ein Fall in der Selbstprobe: eine Seite um
+    hundert Elemente verlängert, die übrigen Signaturen unverändert.
+    *Abnahme:* die Gegenprobe oben — eine fremde Seite wächst, der Vergleich
+    bleibt 0 / 0. **Zuordnung: Backlog-Runde** (Prüfmittel, Anlass für
+    `tools/stilvergleich/`).
+
+322. **Welche Probe der Demo-Reset trifft, entscheidet die Reihenfolge der
+    Muster.** *Aufgenommen 24.09.2026 in P5c/AP7 (F-P5c-127), gemessen.* Der
+    Demo-Bestand wird alle 30 Minuten neu eingespielt, und seine Einsätze
+    bekommen neue Kennungen. Ein Prüfstand der Hauptstufe dauert rund 39
+    Minuten; der Reset fällt also in jeden Lauf. Wen er trifft, hängt davon
+    ab, welche Probe um diese Zeit läuft — und die Reihenfolge der Proben ist
+    die ihres ersten Auftretens in den Mustern von `pruefablauf.json`. Ein
+    neues Muster weit vorn mit Messstand und Bilderlauf (AP7) schob die
+    Bedienprobe (51 / 55) und die GPX-Probe (204 von 204 ohne Gegenstück)
+    hinter die Marke; am Ende eingereiht, liefen beide grün. **Die
+    Reihenfolge ist damit eine Voraussetzung, die nirgends steht**, und wer
+    ein Muster ergänzt, verschiebt sie, ohne es zu merken.
+
+    *Weg:* entweder der Prüfstand hält den Demo-Reset für die Dauer des
+    Laufs an (eine Marke, die der Job liest, wie die Sperre des Demo-Resets
+    in F-P5c-117), oder `pruefablauf.json` bekommt eine ausdrückliche
+    Reihenfolge der demo-empfindlichen Proben (`nach`), und `auswahl.py
+    --selbstprobe` prüft sie. *Abnahme:* ein Muster mit Messstand ganz vorn,
+    der Prüfstand bleibt grün. **Zuordnung: Backlog-Runde** (Prüfmittel).
+
+323. **Referenzbestand und Demo-Fixture tragen noch Nutzlast 11.**
+    *Aufgenommen 25.09.2026 (P5c/AP8).* Die Referenz
+    `referenz/einsatzdoku-backup-2026-09-15.edbak` und
+    `server/demo/fixture.json.gz` stammen aus der Zeit vor Nutzlast 12; beide
+    führen das leere Feld der Standortauswahl. Das ist **kein Fehler** — der
+    Rückweg überliest es, und genau das zeigt der Kreislauf. Es kostet aber
+    **zwei Übergangsregeln** in `vergleich/ausnahmen/edbak_umlauf.json`
+    (`kopf.version` 11 → 12, das fehlende Feld), und die Fixture trägt eine
+    Angabe, die keine Fassung mehr schreibt. *Zu tun:* Referenz und Fixture
+    neu erzeugen, wie mit Nr. 173; danach werden die beiden Regeln
+    ungenutzt und fallen, mit einem Satz im Änderungsverlauf. Die Regeln in
+    `edbak-alt_umlauf.json` bleiben — die Altformat-Referenz ist eingefroren
+    (Nr. 46). *Abnahme:* edbak-Kreislauf mit 0 unerklärten Abweichungen **und**
+    0 ungenutzten Regeln.
+
+324. **Der eigene Bestand kommt einmal über ein Einmal-Skript in die 1.0.**
+    *Aufgenommen 25.09.2026 (P5c/AP8) auf Auskunft der Betreiberin
+    (E-P5c-127).* Nach 1.0 gibt es keine alten Daten, die Probleme machen:
+    Die frische Anlage bekommt **einen** Altbestand — den der Betreiberin —
+    aus der **Konto-Sicherung** der letzten Fassung vor 1.0, einmal, und
+    danach nie wieder. Eine **Komplett-Sicherung** aus Altdaten wird nie
+    eingespielt. Rückwärtskompatibilität braucht die 1.0 deshalb weder für
+    Konto- noch für Komplett-Sicherungen.
+
+    *Zu bauen:* eine einzelne PHP-Datei, die genau diesen einen Weg geht und
+    nach dem Einspielen **aus dem Repositorium gelöscht** wird (die Historie
+    behält sie). Kein Teil der Anwendung, kein Prüfmittel, kein Menüpunkt.
+    Nachbearbeitet wird von Hand; nach Auskunft der Betreiberin trägt ihr
+    Bestand weder Tagesrettungsmittel noch Rettungsmittel außer Typ
+    Standard.
+
+    *Eine Randbedingung, die den Weg vorgibt:* Die Konto-Sicherung trägt
+    die geschützten Angaben im Klartext, und in die Datenbank dürfen sie nur
+    verschlüsselt — **mit dem Datenschlüssel, und den hat nur der Browser**
+    (`CLAUDE.md` 4). Ein PHP-Skript, das unmittelbar in die Tabellen
+    schreibt, kann diese Felder also nicht füllen. Naheliegend ist deshalb
+    ein **Umsetzer von Datei zu Datei** — alte Sicherung hinein, Sicherung
+    im Format der 1.0 heraus, mit demselben Passwort — und eingespielt wird
+    über den gewöhnlichen Weg der 1.0. Das entscheidet das Konzept, das es
+    baut.
+
+    *Zuordnung:* P8 Schnitt (Neuaufsetzen). Nr. 46 (Altformat, P7) und
+    Nr. 187 können damit ohne Übergangsweg fallen — das Skript liest eine
+    Konto-Sicherung der letzten Fassung vor 1.0, nicht das Altformat (hier
+    stand bis Web 21.1.0 „zusammen mit Nr. 46", was nach einer zweiten
+    Zuordnung klang; Nr. 46 bleibt bei P7). *Abnahme:* Der
+    Bestand der Betreiberin steht in der frischen 1.0-Anlage; das Skript
+    ist danach aus dem Repositorium entfernt; die 1.0 liest keine Nutzlast
+    von vor 1.0.
+
+327. **Die Rollenmatrix führt die Handlungen der BetreiberIn-Seiten nicht
+    einzeln.** *Aufgenommen 25.09.2026 in P5c/AP11 (Gegenlesung AP4).*
+    `docs/Technik.md` 4.99p hat eine Zeile je Handlung auf den Seiten, die
+    mehr als eine Rolle erreicht; die 25 POST-Handlungen und 7
+    Seitenaufrufe hinter `require_betreiberin()` (`betrieb_server.php`,
+    `betrieb_jobs.php`, `betrieb_updates.php`, `betrieb_status.php`,
+    `betrieb_sicherheit.php`, `api/schluesselblatt_pruefen.php`) misst die
+    Probe nur über das Tor der Seite. Eine Handlung, die dort **vor** dem
+    Tor stünde, fände sie nicht. Dazu fehlt ein Platzhalter `{support}`: dass
+    der Support andere Support-Konten nicht betreut (E-P5c-99), steht im
+    Code, gemessen ist es nicht. *Zu tun:* die Zeilen nachtragen (Admin und
+    Support 403, BetreiberIn `durch`) und den Platzhalter anlegen. *Abnahme:*
+    Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
+    Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
+
+329. **Der Prüfstand fährt die Quelltextprüfungen mit eingerichteter Anlage,
+    Stufe 1 ohne.** *Aufgenommen 25.09.2026 in P5c/AP11 (F-P5c-171).* Die
+    Ankerprüfung aus AP9 lädt `server/doku_lib.php`, und die lud `db.php`,
+    das ohne `config.php` abbricht. Im Prüfstand gibt es die Datei — dort
+    war `anker` in jedem Lauf grün. In Stufe 1 gibt es sie nicht, und der
+    erste Lauf auf dem Pull Request von P5c war rot, nach sechs Läufen des
+    Prüfstands. Behoben ist die eine Stelle (`doku_lib.php` braucht `db.php`
+    nicht, Web 21.1.2); **offen ist die Lücke**: Jedes künftige
+    Quelltextwerkzeug, das eine Serverbibliothek mit `db.php` lädt, ist
+    örtlich grün und im Tor rot. **Der zweite Lauf fand einen zweiten Fall
+    derselben Lücke (F-P5c-172):** AP9 hat `anker` als Riegel in
+    `pruefablauf.json` eingetragen, aber nicht als `--riegel` in den
+    Schritt „Prüfbericht gegenlesen" von `pruefung.yml` — obwohl das
+    Runbook (`Pruefablauf.md` 6) genau das verlangt. `--alle-riegel` war
+    im Tor rot; örtlich fährt diesen Schritt niemand. *Weg:* Der Prüfstand
+    fährt `quelltext pruefen.sh --selbstprobe` und `alle` mit
+    beiseitegelegter `config.php` — so, wie das Tor sie sieht —, und
+    `bericht.py lesen --alle-riegel` mit genau den `--riegel`, die
+    `pruefung.yml` übergibt. *Abnahme:* mit dem Stand vor 21.1.2 im
+    Prüfstand zweimal rot, an `anker` und an der fehlenden Übergabe; mit
+    dem heutigen grün. *Zuordnung:* Backlog-Runde.
+
+330. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo`
+    das falsche Paket.** *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
+    der Gegenprüfung P-BV-02.* Der Kommentar über `.geo.map-fs` sagt „Der
+    Kartenbehaelter wurde in O1 umbenannt". Gemessen: Das Stylesheet aus O1
+    (`ecd5ff98`) enthält weder `.map` noch `.geo`; `.geo` kommt mit O2
+    (`5436e854`), zugleich mit dem Markup der drei Karten. Harmlos, aber ein
+    Satz, der eine Herkunft falsch nennt, schickt die nächste Suche in das
+    falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
+    `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
+    braucht eine Web-Stufe).
+
+331. **Zusammengesetzte Klassen der übrigen Bausteine sieht die
     Vollständigkeitsprüfung nicht.** *Aufgenommen 24.09.2026 in Konzept BV
     (BV-03, F-BV-11), notiert und nicht mitgemacht.* BV-02 hat die
     Meldungstöne aufgelöst (Nr. 274): Ihre Liste ist geschlossen und steht in
@@ -3665,16 +3593,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wie in BV-02 lesen, wo nein, bleibt es beim Hinweis.
     **Zuordnung: Backlog-Runde** (Prüfmittel).
 
-330. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo`
-    das falsche Paket.** *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
-    der Gegenprüfung P-BV-02.* Der Kommentar über `.geo.map-fs` sagt „Der
-    Kartenbehaelter wurde in O1 umbenannt". Gemessen: Das Stylesheet aus O1
-    (`ecd5ff98`) enthält weder `.map` noch `.geo`; `.geo` kommt mit O2
-    (`5436e854`), zugleich mit dem Markup der drei Karten. Harmlos, aber ein
-    Satz, der eine Herkunft falsch nennt, schickt die nächste Suche in das
-    falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
-    `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
-    braucht eine Web-Stufe).
+332. **Nach dem Aufnehmen fremder Migrationen misst der Prüfstand gegen
+    das alte Schema.** *Aufgenommen 26.09.2026 in Konzept BV (F-BV-17),
+    beim Aufnehmen von `main` nach dem Merge von P5c.* `Pruefablauf.md` 5.3
+    sagt es selbst: Berührt ist nur, was die Arbeit gegen `main` ändert,
+    nicht, was `main` mitbringt (F-PK-39). Die Stufe ergibt sich aus
+    derselben Berührung — ohne eigene Migration also `klein`, und die
+    örtliche Anlage wird nur gestartet, nicht nachgezogen. Mit P5c kamen
+    Migrationen aus AP4, AP5, AP5b, AP7 und AP8; die Anlage stand auf dem
+    Schema davor. `login.php` antwortete mit HTTP 200 und „Fassung
+    v21.1.2", der Nachweis des Prüfstands sah nichts. **Gemessen:** die
+    Rollenprobe rot mit `Data truncated for column 'role'` (die Rolle
+    `support` aus AP4 fehlte im `ENUM`); nach `hochfahren.sh --neu`
+    **20 grün, 0 rot**. Diesmal war es laut. Eine Probe, die die neuen
+    Spalten nicht berührt, misst aber still gegen einen Stand, den es
+    nirgends gibt — und ein grüner Bericht darüber trägt einen Baum, den
+    die Anlage nie hatte. *Weg:* `pruefen.sh` fragt vor den Proben, ob die
+    Anlage offene Migrationen hat (dieselbe Frage wie der Torwächter), und
+    ist bei einem Rückstand rot mit dem Weg (`hochfahren.sh --neu`) —
+    oder richtet selbst neu ein. Dazu ein Satz in `Pruefablauf.md` 5.3,
+    Schritt 2. *Abnahme:* Anlage auf `ba2ec57` eingerichtet, Baum mit
+    `main` von `29cf394` → Prüfstand rot vor der ersten Probe, mit
+    Ansage; nach `--neu` grün. *Zuordnung:* Backlog-Runde.
 
 ## Erledigt
 
@@ -6109,7 +6049,8 @@ zutreffen.
     **Aber die Vorlage passt dann nicht mehr auf das Haus, und das gehört
     dazugesagt.** Die R39-Bestandsaufnahme hat es aufgeschrieben und
     ausdrücklich verlangt, dass es *im Punkt* steht
-    (`docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`): Nr. 71
+    (`docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`, gelöscht
+    mit P5c/AP8, Historie in Git): Nr. 71
     ist der **einzige** Backlog-Punkt, der das **zurückgebaute** Modell
     fachlich voraussetzt. Regionen hängen laut R39-Text „am zentralen
     Standort und vererben über E15" — zentrale Stammdaten also. Die gibt es
@@ -7885,6 +7826,11 @@ zutreffen.
     Betrieb → Updates öffnen und „Ausstehende ausführen" drücken, damit
     `2026_09_05_rolle_betreiberin` im Register steht (Rahmenplan
     Abschnitt 6).
+    **Die Regel angewandt mit Web 20.41.0 (P5c/AP4):** Die Support-Rolle
+    hängt einen Wert an, den zum Ausführen niemand braucht; nachgestellt mit
+    dem neuen Code auf dem alten Schema — Anmeldung und
+    `betrieb_updates.php` antworten, `update.php` läuft durch (`Technik.md`
+    7, Notweg).
 
 115. **Die Rundlaufprüffälle räumen ihren hochgeladenen Bestand nicht ab.**
     *Aufgenommen 03.09.2026 aus S5 (Vorbereitung 8.2).* `android/LIESMICH.md`
@@ -9874,6 +9820,267 @@ zutreffen.
     Anlage: 36 grün, 0 rot, 0 nicht gemessen, 1 239 s**; das Ziel ist seither
     rund 21 min (E-RP-05). Prüfliste: `docs/konzepte/Pruefdokument-RP-Rote-Proben.md`.
 
+243. **Ein Umgebungsbanner, damit Staging nicht für Produktiv gehalten wird.**
+    *Aufgenommen 20.09.2026 (E-P5c-05).* Zugeordnet: **10c, AP1**.
+    **Erledigt 23.09.2026 mit Web 20.38.0 (P5c/AP1)** — siehe unten.
+
+    `config.php` bekommt `app.umgebung = ['name' => 'Staging',
+    'farbe' => 'rot']`, Vorgabe leer. Ist es gesetzt: Kopfleiste in
+    **Newroz-Rot** statt Dunkelblau, darunter die Zeile „Staging —
+    Testdaten, kein Echtbetrieb", Seitentitel mit Präfix „[Staging]".
+
+    **Nie abgeleitet** — nicht aus Domain, Zweig oder Kette. Eine Ableitung
+    wäre bequem und falsch: Sie stimmte genau so lange, bis jemand eine
+    zweite Anlage unter derselben Domain aufsetzt. Die Statusseite warnt,
+    wenn `mail.betreff_praefix` gesetzt ist und `app.umgebung` nicht — das
+    ist der Fall, in dem die Mails schon „Staging" sagen und die Oberfläche
+    noch nicht.
+
+    **Derselbe Baustein** trägt das Ankündigungsbanner (E-P5c-13); zwei
+    Banner wären zwei Stellen, die auseinanderlaufen.
+
+    **Erledigt mit Web 20.38.0.** Gebaut wie beschrieben, mit drei
+    Abweichungen, die die Mockup-Runde M-P5c-02 entschieden hat: Die Zeile
+    steht **nicht unter der Kopfleiste**, sondern in der Reihe der Streifen an
+    der Stelle des Demo-Hinweises (unter der Kopfleiste verschob ein Streifen
+    die klebende Leiste, F-P3-G). Die Farbe heißt `--rot` (der Name
+    „Newroz-Rot" steht nur noch im Rahmenplan-Archiv). Und der aktive
+    Kopfpunkt wird auf Rot in `--orange-hell` gestrichen, weil das gewohnte
+    Orange dort 2,10 : 1 hätte (E-P5c-59). Die Statusseite zeigt die Zeile
+    „Umgebung" **immer**, nicht nur als Warnung (E-P5c-64). Der eine
+    Baustein trägt auch die Ankündigung (E-P5c-13). Gemessen: Titelvorsatz,
+    rote Kopfleiste und Streifen auf Anmelde-, Start-, Status- und
+    Servereinstellungsseite; alle vier Fälle der Statuszeile; Kontraste
+    **25 Paare, 0 verfehlt**. Auf Staging ist die Zeile in der `config.php`
+    nachzutragen (Rahmenplan 6).
+
+286. **Ein Admin erreicht Komplett-Backup und Backup-Ziele — samt
+    Klartext-Dump der ganzen Datenbank.**
+    *Aufgenommen 23.09.2026 im Abgleich des Konzepts P5c (F-P5c-15), von Hand
+    nachgeprüft.* R75 und der Kopf der Rollen in `db.php` behalten
+    Komplett-Backup und Backup-Ziele der BetreiberIn vor, und das Menü zeigt
+    beide Seiten nur ihr. **Die Seiten selbst fragen aber nur
+    `require_admin()`** (`admin_komplettsicherung.php` und
+    `admin_sicherungsziele.php`, je Z. 4; das Wort „betreiberin" kommt in
+    beiden Dateien nicht vor). Per Direktaufruf liefert
+    `action=herunterladen` jedem Admin über `komp_ausgeben_klar()` den
+    Klartext-Dump — mit Passwort-Hashes und versiegelten Zugängen; dazu
+    kommen die sieben Handlungen der Backup-Ziele. `admin_sicherungen.php`
+    verlinkt Admins sogar dorthin.
+
+    **Vorhergesagt und nie nachgemessen:** Das Prüfdokument S8 führt P-01
+    als „teilweise" mit der Auflage, nach AP5 zu wiederholen — „dann muss ein
+    Admin dort 403 bekommen". Die Wiederholung hat nie stattgefunden.
+
+    **Warum es heute nicht brennt:** Es gibt kein Konto mit der Rolle admin
+    (Auskunft der BetreiberIn, 23.09.2026; die Migration von S8 hat alle
+    Admins zu BetreiberInnen gemacht). **Bis zur Behebung legt niemand ein
+    Admin-Konto an.**
+
+    *Behebung:* `require_betreiberin()` an beiden Stellen, der Verweis in
+    `admin_sicherungen.php` nur für die BetreiberIn, Nachtrag in
+    `Technik.md`. *Abnahme:* die Rollenprobe (`tools/proben/rollen/`, Anlass
+    dieser Punkt) — 13 Handlungen, Admin 403, BetreiberIn 200. *Fehlschlag:*
+    ein Admin bekommt auf einer der beiden Seiten 200. **Zuordnung: 10c AP2**
+    (E-P5c-31).
+
+    **Erledigt mit Web 20.39.0 am 24.09.2026 (P5c/AP2).** Beide Seiten
+    fragen jetzt `require_betreiberin()` — vor jeder Handlung, auch vor dem
+    Token; der Verweis in `admin_sicherungen.php` steht nur noch für die
+    BetreiberIn. **Gemessen mit der Rollenprobe** (`tools/proben/rollen/`,
+    die Matrix steht in `docs/Technik.md` 4.99p): **15** Zellen je Rolle für
+    die beiden Seiten — die Seite selbst und sechs Handlungen beim
+    Komplett-Backup, die Seite und sieben Handlungen bei den Zielen; hier
+    standen „13 Handlungen", gezählt ohne die beiden Seitenaufrufe. Admin
+    **403** überall, BetreiberIn **200** bzw. **durch** (die Handlung
+    erreicht, mit absichtlich falschem Token, damit nichts ausgeführt wird).
+    Probe gesamt **87 Erwartungen, 0 offen**. **Gegenprobe:** das alte Tor an
+    `admin_sicherungsziele.php` kurz zurückgesetzt → **8** Zellen der
+    Admin-Spalte rot (Seite und sieben Handlungen), danach wieder grün.
+
+238. **`missions.manual` bricht die Einrichtung auf MySQL 8.4.0–8.4.10.**
+    *Aufgenommen 20.09.2026 aus dem Fehlversuch auf dem neuen
+    Staging-Webspace.* **Umgesetzt in Web 20.25.0**, Zweig
+    `claude/festive-fermi-el0avv`. Offen war allein die Prüfung durch die
+    Betreiberin — Liste im Prüfdokument `Pruefdokument-uhr_gesperrt.md`
+    (gelöscht 24.09.2026, Historie `5e501ae`).
+
+    `SQLSTATE[42000] … 1064 … near 'manual TINYINT(1) NOT NULL DEFAULT 0` —
+    MySQL führt **MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort**, ab
+    8.4.11 wieder nicht. `schema.sql` legte die Spalte ungequotet an; die
+    Staging-Datenbank ist 8.4.x.
+
+    **Gemessen:** 788 Bezeichner-Vorkommen in elf DDL-führenden Dateien gegen
+    284 reservierte Wörter → **zehn betroffene Stellen**, nicht eine. Neben
+    der Einrichtung der Uhr-Eingang, GPX- und Datei-Import, der Schnitt,
+    beide Zweige des Einsatzformulars und beide Richtungen der Sicherung.
+    `PARALLEL`, `QUALIFY`, `TABLESAMPLE` (in 8.4 ebenfalls neu reserviert)
+    kommen nicht vor.
+
+    **Entscheidung (Philipp, 20.09.2026): umbenennen in `uhr_gesperrt`, nicht
+    quoten.** Eine übersehene Stelle scheitert dann auf jeder Version sofort
+    statt nur auf elf im Betrieb. Der Dateischlüssel in Sicherung und Export
+    bleibt `manual`.
+
+    **Dahinter lag ein zweiter Blocker, und er war der größere:**
+    `DEFAULT UTC_TIMESTAMP()` ohne Klammern wird von MySQL auf **jeder**
+    Fassung abgewiesen (vier Stellen). Die Anwendung ließ sich damit **seit
+    Web 20.16.5 auf MySQL überhaupt nicht einrichten**; gemerkt hat es
+    niemand, weil der Fehler am reservierten Wort schon vorher kam. Beides
+    hatte dieselbe Ursache — entwickelt und geprüft wird gegen MariaDB,
+    ausgeliefert wird gegen MySQL. Dagegen steht jetzt
+    `tools/schemaprobe/` in Stufe 1, mit einer **Matrix** über MySQL 8.4.0
+    und MariaDB 10.6.
+
+    **Nachtrag 21.09.2026 (Web 20.26.3):** Der bewahrte Alias `AS manual`
+    war selbst betroffen — MySQL 8.4.0 bis 8.4.10 reserviert das Wort auch
+    als Alias. Export und Sicherung scheiterten auf Staging (MySQL 8.4.10)
+    mit 1064. Behoben mit Backticks um den Alias, Nr. 267.
+
+    *Erledigt 24.09.2026:* Prüfung durch die Betreiberin erfolgt — erklärt beim
+    Aufräumen der Konzeptablage (Rahmenplan Fassung 110); damit ist nichts
+    mehr offen. Aus Rahmenplan Abschnitt 5 herausgenommen.
+
+296. **Eine Rundmail hätte den Seitenaufruf bis zu 200 Sekunden aufgehalten.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-29), als Anlass nach der
+    Zuarbeit von Konzept BR (E-BR-07).* `mail_einreihen()` versuchte jede
+    Nachricht sofort, bis zu fünf Sekunden je Stück; eine Rundmail an
+    vierzig Konten hätte die Seite so lange warten lassen.
+    **Erledigt mit Web 20.38.0 am 23.09.2026 (P5c/AP1):** `mail_einreihen()`
+    kann nur einreihen; die Mailprobe misst es in Abschnitt 14 gegen einen
+    schweigenden Server (6 Zeilen in 0,01 s statt bis zu 30 s). Die Nummer
+    ist der Anlass dieses Abschnitts.
+
+248. **Das Prüftor Stufe 1 zählt die `error_log(`-Aufrufe.**
+    *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).* Zugeordnet:
+    **10c, AP3** — dort erledigt, hier als Prüfmittel-Vermerk.
+
+    Mit 10c wandern die `error_log()`-Aufrufe auf den Protokollreiter
+    System. Damit sie nicht nach und nach zurückkehren, zählt Stufe 1 sie
+    nach: **Soll ≤ 2**, und zwar ohne Kommentare und ohne Zeichenketten —
+    sonst zählt das Prüfmittel seine eigene Dokumentation mit.
+    Mitgeprüft wird der `set_exception_handler()`-Behandler.
+
+    **Berichtigt am 20.09.2026 (E-ZE-03):** Hier stand, das Zählmittel
+    entstehe mit 10c AP3. Es **besteht seit Schritt 15 AP1**
+    (`tools/zaehlung/`); 10c AP3 setzt nur die Registerzeile **Z38** auf
+    **Decke 2**. Zwei Pakete, die dasselbe Werkzeug bauen, hätten es zweimal
+    gebaut.
+
+    **Die Ausgangszahl ist gemessen:** 42 am 16.09.2026, nachgemessen am
+    20.09.2026 an `862ca7f` **77 Aufrufe in 32 Dateien**. Die Zahl ist in
+    vier Tagen um 35 gestiegen — genau deshalb braucht es einen Zähler und
+    keine Vorsatzerklärung.
+
+    **Berichtigt 23.09.2026 (Konzept P5c, E-P5c-58):** Die Übergabezahl aus
+    Schritt 15 ist **75** (Tokenizer, ohne Kommentare und Zeichenketten), die
+    Decke nach AP3 **2** (Helfer-Rückfall und `protokoll_fehler_vermerken()`).
+    **Der Behandler wird nicht von einer Registerzeile geprüft**, sondern von
+    einer Regel in `tools/quelltext/`: genau ein `set_exception_handler(` und
+    ein `set_error_handler(` in `db.php`. Das Register kennt nur Decken — ein
+    entfernter Behandler bliebe dort grün.
+
+    **Erledigt mit Web 20.40.0 am 24.09.2026 (P5c/AP3, E-P5c-58).** Die 75
+    Aufrufe gehen über `system_melden()` in den Reiter System; Z38 zählt
+    **2** (der Rückfall in `systemmeldung_lib.php` und
+    `protokoll_fehler_vermerken()`), `decke_jetzt` und `decke_ziel` stehen
+    auf 2. Die Behandler prüft `tools/quelltext/behandler.php` — ein Riegel
+    in Stufe 1: genau ein `set_exception_handler()`, ein
+    `set_error_handler()` und ein `register_shutdown_function()` in `db.php`,
+    kein zweiter Ausnahme-Behandler anderswo. Gegenprobe: Behandler
+    entfernt → Rückgabewert 1. Die Wirkung misst die Protokollprobe
+    (Teil 7) und die Ingestprobe (Teil 11).
+
+141. **Zweitfaktor für alle Konten.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
+    Anmeldung **und** Datenschlüssel; Phishing genügt für alles. R38 sieht
+    TOTP nur für Admin-Konten vor. **Entschieden (R78):** für alle Konten
+    angeboten, für Admins Pflicht; Geheimnis serverseitig versiegelt
+    (`sk_versiegeln()`), `otpauth://`-Text statt QR-Fremdbestandteil, acht
+    Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
+    nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
+    R38).
+
+    **Zuordnung (20.09.2026): 10c, AP5** — dort wird der Zweitfaktor konkretisiert: Pflicht für Admin, BetreiberIn und Support, Angebot für alle übrigen (E-P5c-15, F-P5c-1).
+
+    **Berichtigt 23.09.2026 (E-P5c-41, -42):** **QR-Code statt
+    `otpauth://`-Text** — aus der vendorierten Bibliothek `qrcode-generator`,
+    das SVG baut die Anwendung selbst; der Text steht daneben. **Zehn**
+    Ersatzcodes statt acht, gehasht, unabhängig vom Serverschlüssel.
+    **„Gerät 30 Tage merken" kommt nicht mit 10c**, sondern mit dem
+    Cookie-Token aus Nr. 242 in Schritt 18 — zwei Cookie-Mechanismen werden nur
+    einmal gebaut. Zuordnung bleibt **10c AP5**.
+
+    **Erledigt mit Web 20.42.0 am 24.09.2026 (P5c/AP5).** TOTP nach RFC 6238,
+    Pflicht für Support, Admin und BetreiberIn, Angebot für alle übrigen,
+    gesperrt im Demo-Konto; die Code-Abfrage steht vor der Sitzung
+    (E-P5c-53), Pflichtrollen ohne Zweitfaktor landen im Einrichtungstor
+    `zweitfaktor.php`. QR-Code aus `qrcode-generator` 2.0.4, zehn
+    Wiederherstellungscodes mit `password_hash()`, nicht am
+    Serverschlüssel; Zurücksetzen durch die Verwaltung. Nachweis:
+    Zweitfaktorprobe 44 / 0 (RFC-Vektoren 6 / 6), zwei Bedienwege.
+    **Zwei Stücke stehen noch aus, beide woanders:** der Rückweg über den
+    Wiederherstellungsschlüssel kommt mit dem Einschubkonzept RW
+    (E-P5c-104) — die Fassung gegen `pat_key_check` war fälschbar
+    (F-P5c-106) —, und „Gerät 30 Tage merken" mit dem Cookie-Token aus
+    Nr. 242 in Schritt 18. **Nachtrag 24.09.2026:** Rückweg über den
+    Wiederherstellungsschlüssel → Konzept RW, 10c AP5b — gebaut mit
+    Web 20.43.0 bis 20.45.0.
+
+211. **Ein `/api/`-Aufruf ohne Sitzung bekommt eine Weiterleitung statt
+    einer JSON-Antwort.** `auth_guard.php` prüft in Zeile 33
+    `empty($_SESSION['user_id'])` und antwortet mit
+    `header('Location: login.php')` — **vor** jeder Unterscheidung, ob das
+    Gegenüber JSON erwartet. `ist_api_aufruf()` gibt es, aber es wird erst
+    weiter unten benutzt, für die Fälle „Sitzung abgelaufen" und „Rolle reicht
+    nicht" (dort korrekt: 401 bzw. 403 als JSON).
+
+    **Die Folge ist klein, aber sie ist eine Unwahrheit:** Ein Werkzeug oder
+    ein Skript, das einen Endpunkt kalt aufruft, bekommt HTTP 302 und danach
+    die HTML-Anmeldeseite — und wird daran hängenbleiben, statt „nicht
+    angemeldet" zu lesen. Im Betrieb tritt das selten auf: Die Aufrufe des
+    Browsers kommen aus einer angemeldeten Seite, und eine **ablaufende**
+    Sitzung fängt der richtige Zweig ab.
+
+    **Zu tun:** Die Weiterleitung in Zeile 33 an `ist_api_aufruf()` vorbei
+    nicht mehr unbedingt machen, sondern denselben JSON-Weg nehmen wie
+    `sitzung_beenden_passend()` — 401 mit einem lesbaren Grund.
+    *Abnahme:* `curl -s -o /dev/null -w '%{http_code}' <basis>/api/day.php?day=2026-01-01`
+    liefert **401** und `{"error":…}` statt 302.
+    *Aufgenommen 16.09.2026 in P5a/AP9, gefunden beim Bau der
+    Verbindungsprobe: Sie wollte einen `/api/`-Endpunkt unter Überlast messen
+    und bekam eine 302, weil die Anfrage die Datenbank nie erreichte.*
+
+    **Erledigt mit Web 20.42.0 am 24.09.2026 (P5c/AP5, E-P5c-106,
+    F-P5c-108).** Mit dem Code-Schritt des Zweitfaktors wurde der Randfall
+    zum Normalfall: Eine halbe Anmeldung hat eine Sitzung, aber keine
+    `user_id`. `auth_guard.php` antwortet einem Aufruf unter `api/` jetzt
+    mit 401 und `{"error":"session_ende","grund":"nicht_angemeldet",…}`,
+    einer Seite weiter mit der Weiterleitung. Abnahme wie oben:
+    `curl …/api/day.php?day=2026-01-01` → **401**.
+
+298. **Kein Prüfmittel liest den QR-Code, den die Anwendung zeigt.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (AP5), als Anlass des Decoders
+    nach der Zuarbeit von Konzept BR (E-BR-07).* 10c AP5 zeigt das Geheimnis
+    des Zweitfaktors als QR-Code, gezeichnet aus der Modulmatrix einer
+    vendorierten Bibliothek. Ob der Code die angezeigte otpauth-Adresse
+    trägt, sieht niemand: Ein falsch kodierter Code sähe auf jedem Bild
+    richtig aus und ließe das Einrichten am Handy scheitern. Die
+    Mockup-Runde M-P5c-02 hat ihn von Hand gelesen (2 von 2). *Weg:* der
+    Bedienweg „Zweitfaktor einrichten" in `tools/bedienprobe/` liest einen
+    Abzug des Codes mit `jsqr` (Apache-2.0, vendoriert in
+    `tools/bedienprobe/vendor/` mit Herkunft und SHA-256, `Lizenzen.md`) und
+    vergleicht ihn mit der angezeigten Adresse (E-P5c-87). **Zuordnung: 10c
+    AP5.**
+
+    **Erledigt mit Web 20.42.0 am 24.09.2026 (P5c/AP5).** Der Bedienweg
+    `zweitfaktor-einrichten` (`tools/bedienprobe/wege/zweitfaktor.mjs`)
+    nimmt einen Abzug des `svg.qr`, liest ihn mit jsQR 1.4.0 auf einer
+    leeren Seite — die Inhaltsrichtlinie der Anwendung lässt kein fremdes
+    Skript zu, und das bleibt so — und vergleicht Zeichen für Zeichen mit
+    dem `otpauth://`-Verweis daneben: gleich, in Chromium unter PHP 8.4 und
+    8.3.
+
 304. **Die Rundlaufprüfung der Spuren hielt `int` gegen `float` — 175 von
     181 Spuren sahen verändert aus.** *Nachgetragen 24.09.2026 mit Konzept
     BR (E-BR-17); gefunden und behoben am 31.08.2026 in S2/AP1, Web 10.0.0.*
@@ -10101,6 +10308,579 @@ zutreffen.
     `backup_spuren_restore.php` löst seither `spurprobe` und
     `containerprobe` aus. Die Selbstprobe von `auswahl.py` hat dafür einen
     Fall, der ohne den Pfad fehlschlägt (28 Lagen, gegengeprobt: 1 rot).
+
+302. **Das Protokollarchiv hätte die 30-Tage-Zusage für IP-Adressen
+    gebrochen, und ein Archiv in einem Guss hätte den Speicher gesprengt.**
+    *Nachgetragen 24.09.2026 als Anlass der Protokollprobe (Konzept P5c,
+    E-P5c-116; E-BR-07); gefunden in der Fassung 2 von Konzept P5c
+    (F-P5c-18, -19), gebaut in P5c/AP2, Web 20.39.0.*
+    `sicherheit_ereignisse` hat keine eigene IP-Spalte — die Adresse steht in
+    `merkmal`, die E-Mail-Adresse in `wer`, und beide verfallen bewusst nach
+    30 Tagen (E-P5a-09). Das Archiv liegt 365 Tage und geht außer Haus;
+    hätte es die Spalten mitgenommen, wäre die Zusage mit dem ersten Archiv
+    gebrochen, und niemand hätte es gesehen, denn das Archiv ist versiegelt.
+    Dazu: `sk_versiegeln()` liefert eine Zeichenkette — ein Archiv in einem
+    Guss hätte bei 64 MB den Speicher gesprengt; der Job schreibt deshalb in
+    Häppchen. Nachweis: `tools/proben/protokoll/probe.php` (entsiegelt,
+    0 Treffer für Adressen in Sicherheit und E-Mail).
+
+303. **Ein Zweitfaktor hinter der Sitzung hätte API und sechs weitere
+    Stellen mit dem bloßen Passwort offen gelassen.** *Nachgetragen
+    24.09.2026 als Anlass der Zweitfaktorprobe (Konzept P5c, E-P5c-116;
+    E-BR-07); gefunden in der Fassung 2 von Konzept P5c (F-P5c-31), gebaut
+    in P5c/AP5, Web 20.42.0.* Setzt die Anmeldung `user_id`, bevor der Code
+    gefragt ist, gilt das Konto überall als angemeldet, wo nur die Sitzung
+    zählt — die API, die Downloads und die Seiten, die ein Tor danach nicht
+    kennen; das Vormerkfach im `sessionStorage` hielte den Schlüssel länger.
+    Die Code-Abfrage steht deshalb **vor** der Sitzung (E-P5c-53), in einer
+    halben Sitzung mit fünf Minuten Frist. Nachweis:
+    `tools/proben/zweitfaktor/probe.php` (nach dem Passwort keine Sitzung,
+    API 401; RFC-Vektoren 6 / 6).
+
+319. **Der Rückweg beim Zweitfaktor prüfte gegen einen Wert, den jeder
+    Datenbankabzug enthält.** *Nachgetragen 24.09.2026 als Anlass der
+    Rückwegprobe (Konzept P5c, E-P5c-116; E-BR-07); gefunden vor P5c/AP5
+    (F-P5c-106), gelöst mit Konzept RW (10c AP5b), Web 20.43.0 bis 20.45.0.*
+    E-P5c-42 sah vor, den Zweitfaktor mit dem Wiederherstellungsschlüssel
+    zurückzusetzen, und prüfte dafür gegen `pat_key_check` —
+    `SHA-256('edk-ckchk:' + ck)`, gespeichert in der Datenbank. Wer einen
+    Abzug hatte, legte den Wert vor; mit Zugang zum Postfach hätte das
+    genügt, Passwort **und** Zweitfaktor zurückzusetzen. Gebaut wurde
+    stattdessen ein Schlüsselpaar je Konto: Der private Teil liegt unter dem
+    Inhaltsschlüssel, der Server prüft eine Signatur über eine eigene
+    Herausforderung. Nachweis: `tools/proben/rueckweg/probe.sh`
+    (Abzug-Gegenprobe: 73 Versuche, 0 Erfolge; die alte Fassung mit
+    `pat_key_check` abgewiesen, 4 / 4).
+
+320. **Ohne bekanntes Geheimnis wäre jedes Werkzeug nach der Anmeldung im
+    Einrichtungstor gelandet.** *Nachgetragen 24.09.2026 als Anlass von
+    `tools/zweitfaktor/` (Konzept P5c, E-P5c-116; E-BR-07); gefunden in der
+    Fassung 2 von Konzept P5c (F-P5c-33), gebaut in P5c/AP5, Web 20.42.0.*
+    30 Werkzeugdateien melden sich an, 15 davon mit dem Prüfkonto
+    `admin@gen-em.org` — einer BetreiberIn, für die der Zweitfaktor Pflicht
+    ist. Mit einem unbekannten Geheimnis käme keines durch den Code-Schritt,
+    und Stufe 2 würde rot. Gelöst ohne Schalter, der die Pflicht abschaltet:
+    Das Prüfkonto hat einen echten Zweitfaktor mit einem Geheimnis, das ein
+    Rechner je Sprache kennt (E-P5c-43). Nachweis: jeder Lauf, der sich
+    anmeldet; die Rechner gegen den RFC-Vektor in der Zweitfaktorprobe.
+
+190. **Die Statistikseite lässt das virtuelle Gerät stehen — „Ohne Gerät"
+    zählt zu niedrig.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    `server/db.php` führt die Konstante `GERAETE_ECHT_SQL`
+    (`device_id NOT LIKE 'manual-%'`), damit das virtuelle Gerät der
+    Handeinträge an **einer** Stelle beschrieben ist. Fünf Abfragen benutzen
+    sie — zweimal `db.php`, dazu `einstellungen.php`, `admin_demo.php` und
+    `tools/referenzdatensatz/fixture/erzeugen.php`. Drei schreiben das `LIKE`
+    von Hand (`admin_users.php`, `admin_user.php` und die Geräteabfrage in
+    `betrieb_statistik.php`), und **eine hat gar keine Bedingung**: die
+    Kontenabfrage derselben Datei, aus der die Zeile „Ohne Gerät" kommt. Sie
+    fragt schlicht `NOT EXISTS (SELECT 1 FROM devices …)`.
+
+    **Das ist eine falsche Zahl, kein Schönheitsfehler.** Das virtuelle Gerät
+    ist eine echte `devices`-Zeile (Bezeichnung „Manuelle Einträge",
+    `active = 0`) und entsteht an **vier** Stellen: beim ersten Handeintrag
+    (`einsatz_form.php`), beim CSV-Import (`api/import_commit.php`), beim
+    Schneiden (`api/schneiden.php`) und beim GPX-Import
+    (`api/gpx_import.php`) — viermal derselbe `$devKey`. (`db.php` sagt es
+    **nicht**: Der Kopf der Konstanten ist eine Zeile, und der Kopf von
+    `geraete_des_kontos()` nennt zwei Anlässe — „von Hand anlegt oder
+    importiert" —, das Schneiden gar nicht.)
+    Wer ausschließlich von Hand dokumentiert oder auch nur einmal eine
+    GPX-Datei einliest, hat damit eine Gerätezeile und fällt aus „Ohne Gerät"
+    heraus. Ausgerechnet aus der Gruppe, deren Kleinzeile „sie tragen von
+    Hand nach" genau diese Menschen meint.
+
+    **Weg:** `GERAETE_ECHT_SQL` in beide Abfragen der Statistikseite; die
+    beiden handgeschriebenen Zwillinge in `admin_users.php` und
+    `admin_user.php` filtern zwar richtig, gehören aber in denselben Griff.
+
+    **Zuordnung (23.09.2026): 10c AP7** — als Beifang, weil AP7 die
+    Statistikseite ohnehin umbaut (E-P5c-46).
+    Danach steht das Muster an einer Stelle statt an vieren. *Abnahme:* Ein
+    Konto ohne gekoppeltes Gerät, aber mit einem Handeintrag steht in „Ohne
+    Gerät"; die Kachel „Geräte" ändert sich dabei nicht. Zuordnung:
+    **Backlog-Runde.**
+
+    **Erledigt mit Web 20.47.0 (P5c/AP7, 24.09.2026).** „Ohne Gerät" zählt
+    nur noch echte Geräte (`geraete_echt_sql('d')`); die Geräteabfrage der
+    Seite benutzt denselben Helfer statt des handgeschriebenen `LIKE`. Die
+    beiden Zwillinge in `admin_users.php` und `admin_user.php` bleiben — sie
+    filtern richtig, und AP7 baut sie nicht um. Nachweis im Prüfdokument P5c,
+    Abschnitt 1f (ein Konto mit Handeintrag, aber ohne Gerät, steht unter
+    „Ohne Gerät"; die Kachel „Geräte" bleibt).
+
+191. **Der von R38 bestellte Index auf `missions(started_at)` ist nie gelegt
+    worden.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    R38 bestellt für die Einsatzzählung des Betriebslage-Dashboards wörtlich
+    einen Index auf `missions(started_at)` und begründet ihn: „der vorhandene
+    führt mit `user_id` und trägt die kontenübergreifende Zählung nicht"
+    (`docs/Rahmenplan-Archiv.md`, R38). `server/schema.sql` führt an
+    `missions` genau `uq_dev_ref`, `idx_user_started (user_id, started_at)`
+    und `idx_day` — mehr nicht.
+
+    **Warum das bis heute niemandem auffiel:** Die Statistikseite aus S8
+    zählt nach **Diensttag** (`days.day`) und kommt ohne ihn aus. Das
+    Dashboard nach R38 zählt nach `started_at` und braucht ihn — er ist die
+    einzige Schemaarbeit, die der Minimalumfang überhaupt vorschreibt.
+    Vorziehen muss man ihn nicht: Ohne die Zählung, für die er da ist, kostet
+    er nur Schreiblast. Er hängt außerdem an **Nr. 192** — nötig ist er nur,
+    wenn dort `started_at` gewinnt. *Abnahme:* Die Migration liegt, und
+    `EXPLAIN` zeigt den Index an einer kontenübergreifenden Zeitraumzählung.
+    Zuordnung: **P5**, mit dem Dashboard.
+
+    **Zuordnung (20.09.2026): 10c, AP7** — der Index wird mit der Betriebslage gelegt (E-P5c-18).
+
+    **Erledigt mit Web 20.47.0 (P5c/AP7, 24.09.2026).** Migration
+    `2026_09_24_statistik_beginn` legt `idx_missions_started (started_at)`
+    und `idx_missions_deleted`, wo er fehlt — den hatten bis dahin nur
+    migrierte Anlagen (F-P5c-39, -124); `schema.sql` führt beide für frische
+    Anlagen. `EXPLAIN` der Abfrage aus `statistik_lib.php` misst der
+    Messstand (Schritt `statistik`). **Nach dem Deploy `update.php`, die
+    Wartung bleibt an.**
+
+192. **R38 und die Statistikseite aus S8 zählen Verschiedenes — „aktiv", die
+    Fenster und die Zählgröße.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    Der feste Minimalumfang des Betriebslage-Dashboards (R38) legt drei Dinge
+    fest, und die gebaute Seite macht alle drei anders. Das ist zunächst kein
+    Fehler: Die Seite **setzt R38 nicht um** — sie ist der nach E-S8-05
+    vorgezogene Teil von Nr. 80 und beantwortet eine andere Frage („was trägt
+    diese Installation"). Entsteht das Dashboard aber, stehen zwei Zählweisen
+    nebeneinander, und das wären zwei Wahrheiten.
+
+    | R38 verlangt | Die Seite tut |
+    |---|---|
+    | „aktiv" = `users.last_login` **oder** `devices.last_seen` im Fenster | zwei getrennte Zeilen in zwei Karten, nie verodert |
+    | Konten in **24 h / 7 T / 30 T**, Einsätze in **24 h / 7 T / 30 T / 6 M / 1 J** | drei Fenster, **7 / 30 / 180 Tage** (`STAT_ZEITRAEUME`) |
+    | Einsätze nach `started_at`, **nicht** `created_at` — „ein Alt-Import verzerrte sonst die Aktivität" | nach **Diensttag** (`days.day`), im Kopfkommentar ausdrücklich begründet |
+
+    Die dritte Zeile ist die unangenehmste: Hier stehen sich **zwei
+    ausformulierte Begründungen** gegenüber, nicht eine Vorgabe und ein
+    Versehen. Und die erste hat eine Wirkung, die R38 ausdrücklich verhindern
+    wollte — wer nur mit der Uhr arbeitet und sich nie anmeldet, erscheint
+    unter „Zuletzt angemeldet" als tot.
+
+    **Nr. 122 berührt dieselben drei Fenster** („Freie Zeiträume und
+    Diagramme in der Statistik") — verlangt aber etwas anderes, nämlich frei
+    wählbare Zeiträume, und nennt den Widerspruch zu R38 nicht. Zu
+    entscheiden, **bevor** das Dashboard gebaut wird: ob die Seite nachzieht
+    oder R38 berichtigt wird. Beides ist vertretbar, beides nebeneinander
+    stehen zu lassen nicht. *Abnahme:* Die Entscheidung steht im Rahmenplan,
+    und R38 und die Seite beschreiben dieselbe Zählung. Zuordnung:
+    **Entscheidung in einer Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
+
+    **Zuordnung (20.09.2026): 10c, AP7** — die Zählung heißt dort sichtbar „Bestand" (E-P5c-18).
+    *(Überholt, vermerkt 23.09.2026: Die Zählung heißt nicht „Bestand" — der
+    Absatz darunter gilt.)*
+
+
+    **Zuordnung (20.09.2026): erledigt sich mit 10c AP7.** Dort entsteht
+    eine **Zählung ab Beginn des Einsatzes** (E-P5c-18) — damit ist die
+    Zählgröße entschieden, und die beiden Zählweisen stehen nicht mehr
+    nebeneinander.
+
+    **Erledigt mit Web 20.47.0 (P5c/AP7, 24.09.2026).** Die Seite zählt jetzt
+    so, wie R38 es verlangt: „aktiv" als `last_login` **oder**
+    `devices.last_seen` eines echten Geräts, Fenster 24 h / 7 T / 30 T (Konten)
+    und 24 h / 7 T / 30 T / 6 M / 1 J (Einsätze), Einsätze ab `started_at` —
+    mit Obergrenze. Die Zählung nach Diensttag ist auf dieser Seite entfallen;
+    es gibt keine zwei Zählweisen mehr nebeneinander (E-P5c-18).
+
+168. **Zentrale Stammdaten vollständig zurückbauen — damit kein
+    Überbleibsel bleibt.** *Aufgenommen 09.09.2026, zugeordnet **P5**
+    (Rahmenplan R39, Beschluss vom 30.08.2026).* **Die Tür ist zu seit
+    Web 18.0.0** (S9/AP5b): `admin_stammdaten.php` ist ersatzlos gestrichen,
+    die Karte „Vordefinierte Standorte" und der Schreibweg `ub_toggle` mit
+    ihr — **kein Schema, keine Migration**. Damit kann keine neue Zeile mit
+    `user_id IS NULL` mehr entstehen, und die Vorbedingung unten hält von
+    selbst. Der eigentliche
+    Rückbau steht aus, und ohne ihn bleibt das Modell im Schema, in den
+    Sicherungsformaten und in der Dokumentation stehen, obwohl es keine Daten
+    mehr trägt. Die Fundstellen sind aufgenommen:
+    `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`, **208
+    Befunde** auf sechs Flächen (23 Schema, 71 Code, 83 Dokumentation, 22
+    Prüfmittel, 9 Daten) — das Dokument bleibt bis P5 liegen und wird
+    danach gelöscht wie ein Konzept.
+
+    *Was der Rückbau umfasst:* **(1)** `user_id` in `bases`, `vehicles`,
+    `crew_presets`, `resources`, `bw_units` und `transport_dests` auf
+    `NOT NULL` ziehen; **(2)** `user_bases` samt Auswahlweg entfernen (E16);
+    **(3)** das Feld `stammdaten.user_bases` aus der Nutzlast der
+    Kontosicherung nehmen, Nutzlastversion heben, den Import ältere Pakete
+    still darüber hinweglesen lassen; **(4)** `admin_stammdaten.php` samt
+    Menüeintrag entfernen; **(5)** die Abfragen entschlacken, die heute
+    „eigen ODER zentral" fragen (`dt_base_erlaubt()`, `dt_bases()`,
+    `dt_vehicles()`, die Dublettenprüfung, der Einspielweg); **(6)**
+    Dokumentation austragen (`docs/Technik.md` Datenmodell,
+    `docs/Backup-Format.md`, `docs/Handbuch.md`); **(7)** die Prüfmittel
+    nachziehen (Platzhalter `__ADMIN_STANDORT__` des Bilderlaufs, der
+    Klickprobenweg zu Nr. 163, die Umlaufausnahmen des Referenzbestands).
+
+    *Vorbedingung, die vor dem `ALTER TABLE` zu messen ist:* **0 Zeilen mit
+    `user_id IS NULL`** in allen sechs Tabellen. Steht auch nur eine da,
+    bricht die Änderung ab, und MySQL kennt kein Zurückrollen von
+    Schemaänderungen — die Installation bliebe auf halbem Weg stehen. Die
+    geschlossene Tür aus S9 sorgt dafür, dass diese Null von da an hält;
+    ~~vorhandene Einträge lassen sich über die Verwaltung noch löschen.~~
+    **Berichtigt 23.09.2026 (E-P5c-48):** Das stimmt seit S9/AP5b nicht mehr —
+    die Seite dafür ist gestrichen. Der Fall **tritt aber nicht auf**: Auf der
+    einen laufenden Anlage sind alle zentralen Einträge gelöscht (Auskunft des
+    Auftraggebers). Die Migration **zählt trotzdem vorher** und blockiert mit
+    Torwächter-Meldung, wenn sie etwas findet — das schützt eine Anlage, in
+    die jemand eine alte Sicherung einspielt. Die Vorzählung ist eine eigene
+    Vorbedingung auf `user_id IS NULL`; `migrationen_inhalt_zaehlen()` zählt
+    das Gegenteil. Ein eigener Runbook-Abschnitt entfällt.
+
+    *Abnahme („keine Überbleibsel"):* `grep -rn "zentral" server/` nennt
+    keine Stammdatenstelle mehr; `grep -rn "user_bases" server/ docs/` ist
+    **0**; Register und `SHOW CREATE TABLE` sind zwischen frischer
+    Installation und migrierter Datenbank strukturgleich; die Kreisläufe
+    `edbak`, `edbak-alt` und `csv` laufen mit **0 unerklärten** Abweichungen;
+    eine Sicherung im alten Format spielt weiterhin ein.
+
+    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
+
+    **Erledigt mit Web 21.0.0 (P5c/AP8, 25.09.2026).** Die sieben Punkte:
+    **(1)** `user_id NOT NULL` in allen sechs Tabellen — Migration
+    `2026_09_25_zentrale_stammdaten`, mit einer **Vorbedingung**, die vorher
+    zählt und ohne Freigabe sperrt (E-P5c-125); **(2)** die Auswahltabelle
+    ist in derselben Migration gefallen, der Auswahlweg schon mit S9/AP5b;
+    **(3)** Nutzlast 12 ohne das Feld, ältere Pakete überlesen es still
+    (`EDBAK_NUTZLAST`; die neue Toleranz steht in Nr. 46); **(4)** schon mit
+    S9/AP5b (Web 18.0.0); **(5)** `dt_base_erlaubt()`, `dt_vehicle_erlaubt()`,
+    `dt_bases()`, `dt_vehicles()`, die Vorlagen in Einsatzformular und
+    `api/day.php`, Standortseiten, Nachbearbeitung und Einspielweg fragen
+    `user_id = ?`, `stammdaten_dup_global()` ist mit ihren dreizehn Aufrufen
+    fort; **(6)** `Technik.md`, `Backup-Format.md`, `Handbuch.md`, `Design.md`;
+    **(7)** der Platzhalter und der Klickprobenweg schon mit S9/AP5b, die
+    Umlaufausnahmen jetzt (je zwei Übergangsregeln, siehe Nr. 323).
+    **Die Abnahme ist berichtigt** (F-P5c-38): `grep -rn user_bases server/
+    docs/` ist ohne Geschichtsfälschung nicht 0 — CHANGELOG, Backlog,
+    Konzepte und die zwei gelaufenen Migrationen nennen die Tabelle zu Recht.
+    Gemessen wurde die engere Fassung aus dem Konzept: in `server/` ohne
+    `version.php` und die gelaufenen Migrationen **13 → 0** (hier stand
+    bis Web 21.1.0 „15", F-P5c-129; außer der neuen
+    Löschmigration), in `docs/` ohne Changelog, Backlog und `konzepte/`
+    **3 → 0**. Kreisläufe und Schemaprobe siehe Rahmenplan 8.
+    **Eine Lehre, damit sie nicht nur in der gelöschten Bestandsaufnahme
+    steht:** Das S9-Konzept hat R39 nie aufgenommen (`grep -c R39` über
+    `docs/konzepte/` ergab am 09.09.2026 **0**), und in S9/AP5-4 ist deshalb
+    `admin_stammdaten.php` neu gebaut worden — eine Seite für ein Modell, das
+    seit dem 30.08.2026 abgeschafft werden sollte; S9/AP5b hat sie wieder
+    gestrichen. Ein Programmbeschluss, der nicht im Konzept des Schritts
+    steht, der ihn berührt, wird dort nicht umgesetzt, sondern umgangen.
+
+169. **Ein Diensttag mit „Anderem Rettungsmittel" kann keine Besatzung
+    festhalten.** *Aufgenommen 09.09.2026 beim Beantworten von Frage 11
+    (S9/AP6, Web 18.1.1).* Ein Rettungsmittel nur für den Tag führt keine
+    Besatzungsrollen (E-S9-10, F19). Das gilt seit Web 18.1.1
+    **gleichmäßig** — vorher bot ein aus einer früheren Zuordnung
+    umgestellter Tag die alten Rollen an, ein frisch angelegter keine. Die
+    Gleichmäßigkeit legt die Lücke frei: Es gibt an einem solchen Tag
+    **keinen** Weg, einen Besatzungsnamen einzutragen, weder am Tag noch am
+    einzelnen Einsatz — beide fragen denselben Rollensatz.
+
+    *Warum das nicht nebenbei zu schließen ist:* Der Rollensatz kommt aus
+    `vehicle_roles` des Stammdatensatzes, und einen solchen gibt es hier
+    gerade nicht. Drei Wege sind denkbar, und sie unterscheiden sich in dem,
+    was sie versprechen:
+    **(a)** Der Adhoc-Dialog bekommt Rollenhaken wie das
+    Stammdatenformular — ehrlich, aber er wächst um sieben Felder und wird
+    damit zu dem Formular, das er nicht sein wollte.
+    **(b)** Der Tag bietet die Rollen an, die zu seiner **Betriebsart**
+    passen (luft/boden) — billig, aber es ist geraten, und E26 sagt
+    ausdrücklich: geraten wird nicht.
+    **(c)** So lassen und im Text sagen (heutiger Stand): Wer die Besatzung
+    braucht, legt das Rettungsmittel an. Kostet einen Stammdatensatz, den
+    F17 gerade ersparen wollte.
+
+    *Bis zur Entscheidung gilt (c).* Hinweis im Tagesformular und Handbuch
+    sagen es seit Web 18.1.1 zutreffend; vorher verwiesen beide auf die
+    abweichende Besatzung am Einsatz, wo dieselbe Sperre greift.
+    **Am 12.09.2026 vertagt auf P5** — dort wird über die Rettungsmittel
+    ohnehin entschieden. Bis dahin gilt (c), und Hinweis und Handbuch sagen
+    es zutreffend; kein dritter Zustand. Zuordnung: **P5**.
+    *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
+    Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
+    tut. Kein dritter Zustand.
+
+    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
+
+    **Entschieden 23.09.2026 (E-P5c-47): Weg (b)** — der Tag bietet alle
+    Rollen der gewählten Betriebsart an. Geraten ist das nicht: Die
+    Betriebsart wird im Dialog ausdrücklich gewählt (`adhoc_kind` in
+    `index.php`), und `CREW_ROLES` trägt `kind` air/ground/both. Abnahme etwa:
+    „Tag Luft zeigt p1, p2, hems, fr, other". Zuordnung bleibt **10c AP8**.
+
+    **Erledigt mit Web 21.0.0 (P5c/AP8, 25.09.2026), Weg (b).** Der Tag
+    bietet die Rollen seiner Betriebsart an — in der Luft p1, p2, hems, fr,
+    other; am Boden driver, trainee, other, **gleich welcher Typ**
+    (E-P5c-126: ein gespeichertes Rettungsmittel vom Typ Bergwacht,
+    Veranstaltung oder Sonstiges hat keine Rollen-Vorlagen, das
+    Tagesrettungsmittel hat keine Vorlage, aus der man wählen könnte) — beim Zuordnen
+    (`dt_zuordnen()`), in der Vorschau (`api/day.php?vorschau=adhoc`) und im
+    Einsatzformular, über **eine** Funktion (`dt_tagesrettungsmittel_rollen()`).
+    Tage von vorher bekommen den Satz per Migration
+    (`2026_09_25_tagesrettungsmittel_rollen`, E-P5c-123); eine
+    Wiederherstellung legt weiter an, was in der Datei steht (E8). Gemessen
+    von der Bedienprobe: `p5c-ap8-adhoc-tag-in-der-luft` (dreimal
+    p1, p2, hems, fr, other) und vier umgedrehte Wege aus S9/AP6. Die
+    Abnahme „erlaubt einen Besatzungsnamen" ist erfüllt; kein dritter Zustand.
+
+325. **Die GPX-Probe vergleicht auf frischer Anlage nichts, bis der
+    Nachlauf gelaufen ist.** *Aufgenommen 25.09.2026 in P5c/AP8
+    (F-P5c-137), gemessen.* Teil 2 hält die serverseitig gebauten GPX-Dateien
+    des Demo-Kontos gegen den Referenzexport aus dem Browser und überspringt
+    jede Spur, die `spur_stand()` nicht als Stufe 2 meldet. Nach
+    `hochfahren.sh --neu` liegen aber **alle** Demo-Spuren als Zeilen vor
+    (Stufe 1, 0 Blobs), und keine der Proben davor fährt den Nachlauf — der
+    Huckepack-Weg kommt höchstens alle 300 s. Ergebnis im Prüfstand:
+    „0 von 204 Dateien verglichen; übersprungen: 204 verdichtet", rot.
+    **Mit dem Code von AP7 (`d519fac`) dasselbe**, auf frischer Anlage in
+    derselben Abfolge nachgestellt — kein Fehler der Anwendung. Allein
+    gefahren, nachdem der Nachlauf gepackt hat: 95 / 0, 115 von 204
+    Dateien, 137 860 Einzelvergleiche, 0 Abweichungen.
+
+    *Warum nicht einfach Stufe 1 mitvergleichen:* Versucht und
+    zurückgenommen — **42 Abweichungen**. Der Referenzexport trägt ältere
+    Spuren **ausgedünnt** (`mission_000001`: 113 Punkte gegen 443 roh); ob
+    eine Spur vergleichbar ist, hängt am Nachlauf, nicht an der Stufe
+    allein.
+
+    *Weg:* Die Probe stellt ihre Lage selbst her (R84: die Lage herstellen,
+    nicht auf sie hoffen) — vor Teil 2 `verdichtung` und `ausduennen` bis
+    zum Rückstand 0, über `jobs_lib.php`, wie es der Nachlauf täte. Danach
+    ist die Zahl der Vergleiche fest und kann als Untergrenze dastehen.
+    Verwandt mit Nr. 322 (Reihenfolge gegen den Demo-Reset): beide Male hängt
+    eine Probe am Zustand des Demo-Kontos, den sie nicht selbst herstellt.
+    *Zuordnung:* **vor dem Pull Request von P5c** — dessen Bericht muss
+    grün sein. *Abnahme:* Prüfstand auf frischer Anlage, GPX-Probe grün
+    mit mindestens 100 verglichenen Dateien; Gegenprobe ohne den
+    Vorlauf rot.
+
+    **Erledigt 25.09.2026 (P5c, zwischen AP8 und AP9; nur `tools/`, keine
+    Versionsstufe).** Die Probe hat einen **Vorlauf** vor ihrer eigenen
+    Job-Pause: `jobs_lauf('cli', ['verdichtung', 'ausduennen'])`, bis beide
+    Jobs in einer Runde fertig melden und nichts erledigen. Zwei Dinge hat
+    erst der Bau gezeigt: **Die Probe hält die Jobs selbst an**
+    (`jobs_pause(900)`, für ihre Probedaten) — ein Vorlauf dahinter meldete
+    nur „angehalten" und packte nichts; und **`rueckstand` wird nicht null**
+    (55 und 10, Runde für Runde bei 0 erledigt), weil er auch Spuren zählt,
+    die noch nicht dran sind. Gemessen auf frischer Anlage in der Abfolge
+    des Prüfstands: Vorlauf 2 Runden, 247 Spuren; **96 / 0**, 115 von 204
+    Dateien, 137 860 Einzelvergleiche, 0 Abweichungen. Gegenprobe mit 0
+    Runden: rot, 0 von 204. Eine feste Untergrenze steht bewusst **nicht**
+    da: Mit dem Alter der Demo-Einsätze werden mehr Spuren ausgedünnt, die
+    Zahl sinkt legitim; `$dateien > 0` bleibt der Riegel gegen „0
+    Vergleiche".
+
+121. **Vorschau der Rechtstexte beim Tippen.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
+    berichtigt 05.09.2026 in S8/AP3.* **Eine Vorschau gibt es seit Web
+    9.11.0** — sie steht unter dem Feld, entsteht auf dem SERVER mit
+    `rt_html()` und zeigt den zuletzt **gespeicherten** Stand. Der Mockup-Text
+    hatte sie übersehen; sie ist nicht neu zu bauen. Was fehlt, ist das
+    Mitlaufen beim Tippen. **Zu tun:** entscheiden, wie — ein zweiter
+    Renderer im Browser ist ausgeschlossen (er müsste dieselbe Positivliste
+    für Linkziele, dieselbe Maskierreihenfolge und dieselben Zeichenfilter
+    führen, und beim nächsten Fund würde einer von beiden vergessen, E-P3-38);
+    bliebe ein Abruf gegen den Server beim Innehalten. **Neue Funktion.**
+    Zuordnung: Backlog-Runde.
+
+    **Zuordnung (20.09.2026): 10c, AP9** — die Rechtstextseiten werden dort ohnehin angefasst (E-P5c-20).
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-28).** Die
+    Rechtstexte sind wieder eine eigene Seite (`admin_rechtstexte.php`), ein
+    Reiter je Text, ab 1200 px die Vorschau neben dem Feld. Sie läuft beim
+    Tippen mit: 0,4 s nach dem letzten Tastendruck fragt
+    `assets/rechtstext_vorschau.js` den Endpunkt `api/rechtstext_vorschau.php`,
+    der mit `rt_html()` rendert — derselbe Renderer wie die öffentliche Seite,
+    kein zweiter im Browser. Nur Admin und BetreiberIn, Token, eigener Topf
+    `rt_vorschau` (nur das Konto, F-P5c-155). Ohne Skript bleibt der
+    gespeicherte Stand. Belegt: Rollenprobe 304 von 304 (12 neue Zellen),
+    Bedienwege `admin-rechtstexte-vorschau` und `-rueckfrage` 2 von 2, die
+    Gegenprobe ohne Token rot.
+
+244. **Einstellungen-Übersicht: die drei Bereiche sind als Gliederung nicht
+    erkennbar.** *Aufgenommen 18.09.2026, präzisiert 20.09.2026
+    (Auftraggeber).* Zugeordnet: **10c, AP9**.
+
+    In der Übersicht (`ui_einstellungen_uebersicht()`) gehen die
+    Bereichsnamen Einstellungen / Verwaltung / Betrieb als oberste Ebene
+    unter.
+
+    **Berichtigt am 20.09.2026 (M-P5c-01, E-P5c-29):** Gemeint war vor allem
+    das **linke Menü** (`ui_leiste_einstellungen()`), nicht die Übersicht —
+    dort fällt die fehlende Gliederung zuerst auf, weil man es auf jeder
+    Seite sieht. **Entschieden und freigegeben:** Die **Leiste** bekommt
+    Bereichsüberschriften nach **Option 1 „Linie"**; die **Übersicht**
+    bekommt je Bereich eine **eigene Karte** mit Bereichszeichen und mittigem
+    Kopf. **Der Fable-Schritt ist damit erledigt** — es braucht kein weiteres
+    Mockup.
+
+    *(Überholt, vermerkt 23.09.2026 — der Absatz „Berichtigt am 20.09.2026"
+    darüber gilt; einen Fable-Schritt gibt es nicht mehr:)* Entschieden:
+    zuerst ein Mockup mit einer klaren
+    **Überschriftenzeile je Bereich** (Bricolage, Abstand davor, Linie);
+    trägt das nicht, bekommt jeder Bereich eine **eigene Karte** mit seiner
+    Liste. Fable-Schritt (Mockup), Umsetzung klein; das Mockup läuft mit den
+    übrigen 10c-Mockups in einer Runde.
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-29).** Die
+    Übersicht zeigt jeden Bereich als eigene Karte mit Zeichen und Zahl im
+    Kopf (Bereichskarten), die Leiste ihre Blöcke als Überschriften mit dem
+    Winkel rechts und einer Linie dazwischen (Option 1). Gemessen bei 1440 und
+    390 px gegen das Mockup. **Die Leiste, ohne Rollen erreichbar** (18
+    Einträge, 14 Seiten): bei 1280 × 720 mit den Sprungmarken auf 6 Seiten
+    vollständig — sie fallen deshalb unter 800 px Fensterhöhe weg
+    (E-P5c-131), dann auf 14 von 14; bei 1280 × 900 auf 13 von 14, die
+    Servereinstellungen (acht Sprungmarken) bei 16 von 18.
+
+245. **Erklärtext-Regel — und danach alle Texte in Verwaltung und Betrieb.**
+    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
+    **10c, AP9**.
+
+    Gemeint ist der **gesamte** Bereich Verwaltung und Betrieb unter
+    Einstellungen: viel Erklärtext, viele neue Funktionen seit S8–S10 und
+    P5a.
+
+    **Entschieden als Grundregel für `docs/Design.md`:** In der Oberfläche
+    steht je Karte **höchstens ein Satz**, der sagt, was hier passiert;
+    alles Erklärende steht im **Handbuch**, die Karte trägt den Verweis auf
+    die Sprungmarke (`hilfe.php#abschnitt`, E-P5b-08). Warnungen bleiben als
+    Meldung, Feldhinweise bleiben eine Zeile.
+
+    **Folge:** Alle Texte des Bereichs werden nach der Regel überarbeitet;
+    der ausgelagerte Text **wandert ins Handbuch und wird nicht gelöscht**.
+    Voraussetzung: 10b AP8 (Handbuch aus der Anwendung erreichbar).
+    Abnahme: ein Textpaket mit Wortliste und Bilderlauf; gezählt werden
+    Sätze je Karte (Ziel ≤ 1) und Handbuch-Verweise (Ziel ≥ 1 je Karte mit
+    ausgelagertem Text).
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-06, -49, -128).**
+    Alle Seiten unter Verwaltung und Betrieb folgen der Ein-Satz-Regel; die
+    Karten „Was hier gilt" sind fort, ihr Inhalt steht im Handbuch unter
+    eigenen Sprungmarken, und die Ankerprüfung im Tor hält jeden Verweis
+    `hilfe.php#…` gegen das gerenderte Handbuch. Die Endzählung nach der
+    Zählregel Fassung 2 und ihre unabhängige Gegenprobe stehen im Konzept P5c
+    und im Prüfdokument.
+
+246. **Schlüsselblatt und Notfallblatt: eine Druckseite, die eine ist.**
+    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
+    **10c, AP9**.
+
+    Drei Vorgaben für `betrieb_schluesselblatt.php` (S10) und das
+    Notfallblatt (P5b AP9):
+
+    (a) Der Schlüssel steht **abgesetzt in einer Kachel** — Rahmen, Rauch,
+    Vierergruppen, Feste Schrift.
+    (b) Der Druck passt **genau auf eine A4-Seite** (`@page A4`, Ränder,
+    kein Umbruch). Abnahme: PDF-Druck aus Chromium **und** Firefox hat je
+    eine Seite.
+    (c) Oben stehen **Marke und „NAdoku"** (das Wort-Bild-Logo) und die
+    Überschrift, damit sofort klar ist, worum es geht.
+
+    **Das ändert E-P5b-09** („ohne Logo" → mit Logo). Beide Blätter
+    bekommen denselben Baustein (`.blatt-druck`); 10b AP9 ist gebaut, das
+    Notfallblatt wird dort nachgezogen.
+
+
+    **Berichtigt am 20.09.2026 (M-P5c-01f, E-P5c-08/-30):** Oben steht
+    **nicht** „Marke + NAdoku", sondern **Bildmarke + Kurzname der
+    Installation** (`instanz_kurz()`, Vorgabe „Gen-EM NAdoku"). Ein fest
+    eingebautes „NAdoku" wäre auf einer umbenannten Installation schlicht
+    falsch. Die **Webversion steht in der Fußzeile** des Blattes.
+    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`,
+    gelöscht mit dem Abschluss von P5c, Historie `ae829e6`),
+    beide Blätter mit demselben Baustein `.blatt-druck`.
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-08, -30, -50).**
+    Schlüssel- und Notfallblatt stehen auf dem Druckblatt `.blatt-druck` des
+    Codeblatts: nummerierte Vierergruppen, Umgebungszeile auf Staging, genau
+    eine A4-Seite. Der Härtefall (drei Werte, Staging) misst 1013 von 1017 px
+    Satzhöhe (F-P5c-152), Produktiv 978, das Notfallblatt 711.
+
+253. **Datum-Zeit-Trenner vereinheitlichen.** *Aufgenommen 20.09.2026
+    (Konzept Zentralisierung, F-ZE-3/FF-5).* Zugeordnet: **10c AP9**.
+
+    Zwischen Datum und Uhrzeit steht mal ein Komma, mal ein Gedankenstrich,
+    mal nur ein Leerzeichen. Nach Schritt 15 AP7 steht die Formatierung an
+    einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
+    Suche, und deshalb wartet es bis dahin.
+
+    **Berichtigt 23.09.2026:** Gemeint ist ` · ` (Mittelpunkt mit
+    Leerzeichen), kein Gedankenstrich. **Entschieden: das Komma** (Konzept
+    P5c, E-P5c-37). Es ist auch nicht „eine Zeile": rund 18 Stellen in 11
+    Dateien (F-P5c-11). Zuordnung: **10c AP2** (die neue Protokollzeile
+    schreibt schon mit Komma) **und AP9** (die Vorgabe und die übrigen
+    Stellen).
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-37).** Datum und
+    Uhrzeit trennt überall ein Komma (`datum_zeit_text()` ohne zweites
+    Argument). Zwei Stellen übergeben bewusst einen anderen Trenner: die
+    Mailtexte („ um ") und der GPX-Spurname, weil `Export-Format.md` ihn
+    festlegt (E-P5c-129). Register Z26 nennt sie.
+
+269. **`assets/schluesselblatt.js` — bei Netzausfall eine stille Sackgasse.**
+    Gefunden bei derselben Vermessung. Der Prüfknopf setzt `disabled = true`
+    **vor** dem Senden, und die Wiederfreigabe liegt im `.then`. Wirft das
+    `fetch`, fängt niemand: Der Knopf bleibt tot, das Fehlerfeld leer, der
+    Dialog offen. Die Person kann weder weiter noch erkennen, warum.
+    Zwei Aufrufer sind betroffen (Prüfen und Antworten). **Nicht in
+    Schritt 15 behoben.** Beim Anfassen mitzudenken: `EdApi.postForm()` aus
+    AP8c liefert im Netzfehler ein `{ ok: false, status: 0 }` statt zu
+    werfen — damit ist die Stelle danach mit drei Zeilen zu heilen.
+
+    **Zuordnung (23.09.2026): 10c AP9** — als Beifang (E-P5c-46).
+
+    **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026).** Seit Schritt 15
+    sendet die Datei über `EdApi.postForm()`; übrig war, dass ein
+    Netzfehler beim Prüfen die vier Felder leerte wie eine falsche Eingabe.
+    Jetzt bleibt bei `status: 0` alles stehen, und der Knopf wird wieder
+    frei. Belegt im Browser mit abgebrochenem Abruf, für Prüfen und für die
+    Rückfrage.
+
+326. **Bleibt die Karte „Ausgeführt" auf Betrieb → Updates?** *Aufgenommen
+    25.09.2026 in P5c/AP9 (F-P5c-146), berichtigt in P5c/AP11.* Die Karte
+    versprach, sie stehe „bis P5" dort, danach führe das Audit-Protokoll die
+    ausgeführten Kennungen (R66), und sie entfalle. AP9 hat den Satz
+    gestrichen und diesen Eintrag mit der Begründung angelegt, das Protokoll
+    schreibe keine Migrationen. **Das war falsch** (Gegenlesung AP11): Seit
+    P5c/AP2 schreibt `migrationen_lauf()` je ausgeführter Kennung einen
+    Eintrag `migration_ausgefuehrt` in den Reiter Verwaltung (E-P5c-38) —
+    für `update.php` wie für die Seite. Offen ist damit nur noch die Frage,
+    die R66 schon beantwortet hatte: **Entfällt die Karte jetzt, oder bleibt
+    sie**, weil sie als Einzige die Fassung („Web") je Kennung nennt? Die
+    Dauer eines Laufs steht an keiner der beiden Stellen. *Zuordnung:* die
+    Entscheidung der Betreiberin im Abschluss von P5c.
+
+    **Erledigt 25.09.2026 (P5c/AP11, Q-P5c-53): Die Karte bleibt.** Sie
+    ist die einzige Stelle, die zu jeder Kennung die Fassung („Web") nennt;
+    das Protokoll sagt, wer wann ausgeführt hat. Beides steht in Handbuch
+    12.3. Das Versprechen aus R66, die Karte entfalle, ist damit
+    zurückgenommen.
+
+
+328. **Ein Komplett-Backup, über zwei Häppchen versiegelt, lässt sich nicht
+    öffnen.** *Aufgenommen und erledigt 25.09.2026 in P5c/AP11 (F-P5c-170),
+    gefunden vom letzten Prüfstand des Abschlusses.* `komp_siegel_schub()`
+    merkte sich als gültige Länge der Datei, was `ftell()` auf dem Handle im
+    Anhängemodus meldete — und das zählt ab null, also ohne Kopf und ohne die
+    Blöcke früherer Häppchen. Das nächste Häppchen schnitt die Datei darauf
+    zurück, mitten in einen Block; die Datei ging aufs Backup-Ziel und ließ
+    sich nie mehr öffnen. Die Komplettprobe sah es nicht, weil die Laufzeit
+    entschied, ob die Häppchengrenze ins Siegeln fiel.
+
+    **Erledigt mit Web 21.1.2 (P5c/AP11, 25.09.2026).** Die Länge wird nach
+    jedem vollständig geschriebenen Block mitgezählt; ist die Datei kürzer
+    als gemerkt oder fort, beginnt die Versiegelung von vorn. Die
+    Komplettprobe erzwingt beides in Teil 4 (drei Häppchen zu je einem
+    Block, dazu eine verschwundene Zieldatei) — gegen die alte Bibliothek
+    2 von 69 offen, gegen die neue 0 von 69. **Offen bleibt nur die Frage
+    an die Betreiberin**, ob ein vorhandener Stand auf Produktiv betroffen
+    ist (P-P5c-45 im Prüfdokument P5c).
 
 184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
     *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn

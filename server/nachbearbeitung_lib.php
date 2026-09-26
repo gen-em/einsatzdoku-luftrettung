@@ -114,22 +114,20 @@ function nb_offene_tage(int $userId, int $limit = 500): array
 }
 
 /**
- * Stammdatensaetze ohne Standortzuordnung, je Tabelle.
+ * Eigene Stammdatensaetze ohne Standortzuordnung, je Tabelle.
  *
- * $zentral === true liefert die zentralen Eintraege (`user_id IS NULL`). Sie
- * gehoeren den Admins; die Seite zeigt sie nur diesen. Solange EIN zentraler
- * Eintrag offen ist, kann die NOT-NULL-Bedingung nicht gezogen werden — auch
- * dann nicht, wenn jede NutzerIn ihre eigenen bereits zugeordnet hat.
+ * Bis Web 20.47.0 lieferte ein zweiter Aufruf die zentralen Eintraege
+ * (`user_id IS NULL`) fuer die Admins; sie gibt es seit P5c/AP8 nicht mehr
+ * (R39).
  *
  * @return array<string,list<array>>
  */
-function nb_offene_stammdaten(int $userId, bool $zentral = false): array
+function nb_offene_stammdaten(int $userId): array
 {
     $offen = [];
     foreach (array_keys(NB_STAMMDATEN) as $tabelle) {
         // Die Tabellennamen stammen aus der Konstante oben, nicht aus einer
         // Anfrage. Ein Platzhalter ist fuer Tabellennamen ohnehin nicht moeglich.
-        $wo = $zentral ? 'user_id IS NULL' : 'user_id = ?';
         /* BEI RETTUNGSMITTELN IST DER FEHLENDE STANDORT NUR BEIM TYP 'standard'
          * EIN MANGEL (E-S9-09, Web 16.0.0). Bergwacht, Veranstaltung und
          * Sonstiges duerfen ohne bestehen; sie hier zu melden hiesse, eine
@@ -139,8 +137,8 @@ function nb_offene_stammdaten(int $userId, bool $zentral = false): array
          * 'standard' gesetzt hat. */
         $nur = $tabelle === 'vehicles' ? " AND typ = 'standard'" : '';
         $q  = db()->prepare("SELECT id, name FROM `$tabelle`
-                             WHERE base_id IS NULL AND $wo$nur ORDER BY name");
-        $q->execute($zentral ? [] : [$userId]);
+                             WHERE base_id IS NULL AND user_id = ?$nur ORDER BY name");
+        $q->execute([$userId]);
         $zeilen = $q->fetchAll();
         if ($zeilen) { $offen[$tabelle] = $zeilen; }
     }
@@ -150,10 +148,6 @@ function nb_offene_stammdaten(int $userId, bool $zentral = false): array
 /**
  * Zahl der offenen Punkte fuer diese NutzerIn — Grundlage dafuer, ob die Seite
  * ueberhaupt erscheint.
- *
- * Zentrale Stammdaten zaehlen nur fuer Admins mit: Wer sie nicht bearbeiten
- * kann, bekommt sonst einen Hinweis auf eine Aufgabe, die er nicht erledigen
- * kann — und der bliebe dann dauerhaft stehen.
  */
 function nb_offen_gesamt(int $userId): int
 {
@@ -174,7 +168,6 @@ function nb_offen_gesamt(int $userId): int
      * (`nb_tage_bedingung()`) und wird von beiden benutzt. */
     $n = nb_offene_tage_zahl($userId);
     $n += nb_offene_stammdaten_zahl($userId);
-    if (ist_admin()) { $n += nb_offene_stammdaten_zahl($userId, true); }
     return $n;
 }
 
@@ -223,19 +216,14 @@ function nb_offene_tage_zahl(int $userId): int
  * Tabelle ist dieselbe wie in nb_offene_stammdaten() — auch der Sonderfall
  * `vehicles`, wo nur der Typ 'standard' einen Mangel darstellt (E-S9-09).
  */
-function nb_offene_stammdaten_zahl(int $userId, bool $zentral = false): int
+function nb_offene_stammdaten_zahl(int $userId): int
 {
     $teile = []; $args = [];
     foreach (array_keys(NB_STAMMDATEN) as $tabelle) {
         $nur = $tabelle === 'vehicles' ? " AND typ = 'standard'" : '';
-        if ($zentral) {
-            $teile[] = "SELECT COUNT(*) FROM `$tabelle`
-                         WHERE base_id IS NULL AND user_id IS NULL$nur";
-        } else {
-            $teile[] = "SELECT COUNT(*) FROM `$tabelle`
-                         WHERE base_id IS NULL AND user_id = ?$nur";
-            $args[] = $userId;
-        }
+        $teile[] = "SELECT COUNT(*) FROM `$tabelle`
+                     WHERE base_id IS NULL AND user_id = ?$nur";
+        $args[] = $userId;
     }
     $q = db()->prepare('SELECT (' . implode(') + (', $teile) . ')');
     $q->execute($args);

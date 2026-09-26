@@ -155,7 +155,7 @@ const TOKEN_REGISTRIERUNG_S = 172800;
  *
  * @param string $email   bereits geprueft und normalisiert (email_pruefen())
  * @param string $name    darf leer sein
- * @param string $rolle   `user` | `admin` | `betreiberin`
+ * @param string $rolle   `user` | `support` | `admin` | `betreiberin`
  * @param string $quelle  `einladung` | `registrierung` | `einrichtung`
  * @param string $status  Anfangszustand; `einladung` und `einrichtung` legen
  *                        `aktiv` an, die Registrierung `unbestaetigt`
@@ -261,6 +261,62 @@ function reset_token_ausstellen(int $userId, int $laufzeitS, ?PDO $pdo = null): 
     return $token;
 }
 
+/**
+ * Die Bestaetigungsmail einer Registrierung noch einmal senden (P5c/AP4,
+ * E-P5c-14, F-P5c-58) — fuer die Verwaltung und den Support.
+ *
+ * NUR FUER `unbestaetigt`. Das ist der Status, den allein die
+ * Selbstregistrierung vergibt (siehe `konto_verfall_unbestaetigt()`); ein
+ * eingeladenes Konto bekommt einen Setz-Link, keine Bestaetigung.
+ *
+ * DIE FRIST WIRD NICHT VERLAENGERT. Der neue Link gilt bis zu dem Zeitpunkt,
+ * an dem der Verfalljob das Konto ohnehin raeumt — `created_at` plus
+ * `KONTEN_UNBESTAETIGT_H`. Wer ihn ab JETZT 48 Stunden gelten liesse, haette
+ * mit einem Knopf eine Registrierung am Leben gehalten, die ihr eigener
+ * Besitzer nie bestaetigt hat; und ein Link, der laenger gilt als das Konto,
+ * fuehrte nach dem Raeumen ins Leere. Der vorige Link verliert seine
+ * Gueltigkeit (`reset_token_ausstellen()`: ein gueltiger Token je Konto).
+ *
+ * DER LINK GEHT NUR PER MAIL HINAUS und nie in die Antwort — auch nicht,
+ * wenn die Mail nicht zugestellt wird (E-P5c-40). Wer ihn saehe, koennte das
+ * Konto uebernehmen: `pw_handling.php` setzt auf einem Konto ohne
+ * Wiederherstellungshuelle Passwort und Schluessel ohne weiteren Nachweis.
+ *
+ * @return array{ok: bool, grund: ?string, zustellung: ?string}
+ *   `grund`: `status` (nicht unbestaetigt oder nicht da), `abgelaufen` (die
+ *   Frist ist um, der Verfalljob raeumt es gleich), `mail` (abgelehnt).
+ */
+function konto_verifikation_erneut(int $userId): array
+{
+    require_once __DIR__ . '/mail_lib.php';
+    $st = db()->prepare('SELECT email, status,
+                                DATE_ADD(created_at, INTERVAL ? HOUR) AS bis,
+                                TIMESTAMPDIFF(SECOND, NOW(),
+                                              DATE_ADD(created_at, INTERVAL ? HOUR)) AS rest
+                           FROM users WHERE id = ?');
+    $st->execute([KONTEN_UNBESTAETIGT_H, KONTEN_UNBESTAETIGT_H, $userId]);
+    $u = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$u || $u['status'] !== 'unbestaetigt') {
+        return ['ok' => false, 'grund' => 'status', 'zustellung' => null];
+    }
+    /* Eine Minute Rest ist keine Frist mehr: Bis die Mail gelesen ist, hat
+     * der Verfalljob das Konto geraeumt. */
+    if ((int)$u['rest'] < 60) {
+        return ['ok' => false, 'grund' => 'abgelaufen', 'zustellung' => null];
+    }
+    $token = reset_token_ausstellen($userId, (int)$u['rest']);
+    $zustellung = mail_einreihen('registrierung_erneut', (string)$u['email'], [
+        'link'      => app_url('/pw_handling.php?token=' . $token),
+        'zeitpunkt' => datum_zeit_text((string)$u['bis'], ' um ') . ' Uhr',
+    ]);
+    protokoll('verwaltung', 'verifikation_gesendet',
+              'Bestätigungsmail erneut gesendet',
+              ['zustellung' => $zustellung], $userId);
+    return ['ok' => $zustellung !== MAIL_ABGELEHNT,
+            'grund' => $zustellung === MAIL_ABGELEHNT ? 'mail' : null,
+            'zustellung' => $zustellung];
+}
+
 /* ---- Status ------------------------------------------------------------- */
 
 /**
@@ -284,8 +340,8 @@ function konto_status_setzen(int $userId, string $neu, ?string $grund = null): b
     $alt = (string)$zeile['status'];
     if ($alt === $neu) { return true; }          // nichts zu tun, kein Fehler
     if (!in_array($neu, KONTO_UEBERGAENGE[$alt] ?? [], true)) {
-        error_log('konto_status_setzen: Übergang ' . $alt . ' -> ' . $neu
-                . ' ist nicht vorgesehen (Konto ' . $userId . ').');
+        system_melden('konto_status_setzen', 'Übergang ' . $alt . ' -> ' . $neu
+                    . ' ist nicht vorgesehen (Konto ' . $userId . ').');
         return false;
     }
 
@@ -619,7 +675,7 @@ function konto_warten_melden(): void
                             'link' => app_url('/admin_users.php?f=wartet')]);
         }
     } catch (Throwable $ex) {
-        error_log('Wartemeldung nicht moeglich: ' . $ex->getMessage());
+        system_melden('konto', 'Wartemeldung nicht möglich', $ex);
     }
 }
 

@@ -57,6 +57,7 @@ require_once __DIR__ . '/instanz_lib.php';
     ui_seite_start(['titel' => 'Installation wiederherstellen']);
     ui_kopf(['menue' => false]);
     echo '<div class="rahmen rahmen-lesespalte">' . "\n  <main class=\"inhalt\">\n";
+    ui_hinweise();
     ui_karte_start(['titel' => 'Diese Installation ist noch nicht eingerichtet']);
     echo '<p class="feld-hinweis">Es gibt keine <code>config.php</code>. Ohne sie ist '
        . 'weder ein Datenbankzugang noch der Serverschlüssel bekannt. Entweder die '
@@ -283,6 +284,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                     if (($stand['phase'] ?? '') === 'fertig') {
                         $notice = 'Eingespielt: ' . zahl_text((int)$stand['statements'], 0)
                                 . ' Anweisungen. Die Installation steht wieder.';
+                        /* IN DIE EINGESPIELTE DATENBANK (P5c/AP2, E-P5c-38).
+                         * Das Protokoll der Quelle kam mit dem Dump; dieser
+                         * Eintrag ist der erste danach und sagt, woher der
+                         * Stand stammt. */
+                        require_once __DIR__ . '/protokoll_lib.php';
+                        protokoll('sicherung', 'komplett_eingespielt',
+                            'Komplett-Backup eingespielt über „Installation wiederherstellen" ('
+                            . zahl_text((int)$stand['statements'], 0) . ' Anweisungen)',
+                            ['datei' => (string)($stand['datei'] ?? ''),
+                             'anweisungen' => (int)$stand['statements']]);
                     } else {
                         $notice = 'Durchgang zu Ende: '
                                 . zahl_text((int)$stand['statements'], 0)
@@ -538,6 +549,7 @@ ui_kopf(['menue' => false]);
 ?>
 <div class="rahmen rahmen-lesespalte">
   <main class="inhalt">
+  <?php ui_hinweise(); ?>
 
   <?php ui_titelzeile([
       'titel' => 'Installation wiederherstellen',
@@ -551,7 +563,8 @@ ui_kopf(['menue' => false]);
     <?php ui_karte_start(['titel' => 'Die Datenbank antwortet nicht']); ?>
       <p class="feld-hinweis">Die Verbindung nach <code>config.php</code> kam nicht
       zustande. Kennung: <code><?= ui_e($dbFehler) ?></code> — unter dieser Kennung
-      steht der vollständige Fehlertext im Fehlerprotokoll des Webspace. Auf dem
+      steht der vollständige Fehlertext im Fehlerprotokoll des Webspace, nicht im
+      Protokoll der Anwendung: Das liegt in der Datenbank, die gerade nicht antwortet. Auf dem
       Bildschirm steht er bewusst nicht: Er nennt Rechnernamen und Datenbanknutzer,
       und diese Seite ist ohne Anmeldung erreichbar.</p>
       <p class="feld-hinweis">Zu prüfen: Stimmen Rechnername, Datenbankname, Nutzer und

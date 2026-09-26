@@ -761,6 +761,19 @@ img,svg,video{max-width:100%;height:auto}
  * Der negative Rand des Zahnrads zieht nur den letzten Knopf an die Kante;
  * dieser hier braucht ihn nicht. */
 .kopf-hilfe.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+/* KOPFLEISTE EINER ANLAGE MIT ETIKETT (.kopf-umgebung) — Variante der
+ * Kopfleiste (P5c/AP1, E-P5c-05, -55, -59; M-P5c-02 a). Gesetzt von ui_kopf(),
+ * wenn `app.umgebung` einen Namen traegt; die Farbe ist eine geschlossene
+ * Liste, heute nur `rot`. Weiss auf --rot 4,78 : 1.
+ * Der aktive Punkt: --orange haette auf Rot 2,10 : 1 und fiele unter die
+ * 3 : 1 aus WCAG 1.4.11. --orange-hell bleibt in der Familie „hier stehst du"
+ * und traegt 4,12 : 1 (Variante A, Q-P5c-26).
+ * Der Name traegt auf Dunkelblau --sand (8,15 : 1); auf Rot waeren es
+ * 2,86 : 1. --schnee traegt 4,68 : 1 und bleibt durch Gewicht 400 gegen 600
+ * der Marke untergeordnet. */
+.kopf-umgebung{background:var(--rot)}
+.kopf-umgebung .kopf-punkt.aktiv{border-bottom-color:var(--orange-hell)}
+.kopf-umgebung .kopf-nutzer{color:var(--schnee)}
 
 /* ---- Rahmen: Leiste und Inhalt als Einheit, zentriert -------------------- */
 .rahmen{
@@ -841,20 +854,35 @@ img,svg,video{max-width:100%;height:auto}
 }
 .leiste-leer{color:var(--gedaempft);padding:0 var(--abstand-3)}
 
-/* ---- Die drei Blöcke des Einstellungsmenüs (E-S8-07) ---------------------
- * Ein `<details>` je Block, gebaut aus dem Akkordeon-Baustein. Diese Regeln
- * setzen nur, was die Blocküberschrift von einer Jahreszeile unterscheidet:
- * Schriftgrad und Farbe der bisherigen `.leiste-kopfzeile`. Der Rest — Winkel
- * links, Drehung, Trefferfläche, Innenabstand — kommt vom Baustein und bleibt
- * damit gleich wie in der Diensttage-Leiste.
+/* ---- Die drei Blöcke des Einstellungsmenüs (E-S8-07, Option 1 „Linie") ----
+ * Ein `<details>` je Block, gebaut aus dem Akkordeon-Baustein. Markup,
+ * Aufklappen und das Merken des Zustands (`menue.js`) kommen vom Baustein;
+ * diese Regeln setzen nur, was die Blocküberschrift von einem Eintrag
+ * unterscheidet.
+ *
+ * SEIT P5c/AP9 NACH OPTION 1 „LINIE" (E-P5c-29, Nr. 244, Mockup M-P5c-01c).
+ * Bis Web 21.0.0 unterschied die Überschrift von einem Eintrag nur eine
+ * Gewichtsstufe — Bricolage ist nur in 500 und 600 eingebunden, 400 fällt auf
+ * 500 — und ein Winkel an der Stelle, an der die Einträge ihr Symbol tragen.
+ * Jetzt: Winkel rechts (die linke Spalte gehört allein den Symbolen), eine
+ * Schriftstufe größer in Dunkelblau, Trennlinie und Luft vor jedem weiteren
+ * Bereich. Das hebt für DIESES Menü die Begründung aus E-S8-07 auf („zwei
+ * Leisten mit demselben Mechanismus sollen denselben Griff haben"): Die
+ * Diensttage-Leiste behält Winkel links und Jahreszeilen wie bisher — die
+ * Regeln hängen alle an `.leiste-gruppe`, und die trägt nur dieses Menü.
  *
  * DIE ZAHL STEHT NUR AM ZUGEKLAPPTEN BLOCK. Sie sagt, was verborgen ist
  * („Betrieb · 7"); über einer offenen Liste wäre sie das Abzählen dessen, was
  * man sieht. `aria-hidden`, weil ein Vorleseprogramm die Einträge selbst
  * zählt und die Zahl sonst zweimal ansagt. */
 .leiste-gruppe > .akkordeon-zeile{
-  font-size:var(--groesse-3);
-  color:var(--asphalt);
+  font-size:var(--groesse-4);
+  color:var(--dunkelblau);
+}
+.leiste-gruppe > .akkordeon-zeile > .akkordeon-winkel{order:2;margin-left:auto}
+.leiste-gruppe + .leiste-gruppe{
+  margin-top:var(--abstand-3);padding-top:var(--abstand-3);
+  border-top:var(--strich) solid var(--linie);
 }
 .leiste-gruppe > .akkordeon-inhalt{padding-left:0}
 
@@ -893,6 +921,25 @@ img,svg,video{max-width:100%;height:auto}
 }
 .eintrag-unter:hover{background:var(--rauch);color:var(--asphalt);text-decoration:none}
 .eintrag-unter.hier{color:var(--dunkelblau);font-weight:600}
+
+/* SPRUNGMARKEN ERST AB 800 PX FENSTERHÖHE — in der festen Leiste (P5c/AP9,
+ * E-P5c-131). Bei 1280 × 720 schoben sie auf acht von vierzehn Seiten
+ * Einträge unter den Rand, auf der Seite Servereinstellungen acht Stück; die
+ * Leiste war dort nur mit Rollen vollständig, und das Akkordeon wurde gegen
+ * genau diesen Zustand gebaut (E-S8-07). Die Einträge sind die Wege durch die
+ * Anwendung, die Sprungmarken nur Wege durch eine Seite — wenn einer weichen
+ * muss, dann sie. Gemessen bei 1280 × 720: 18 von 18 Einträgen auf allen 14
+ * Seiten statt auf 6.
+ * NUR AB 1024 PX: Darunter ist die Leiste eine Schublade, und dort sind die
+ * Sprungmarken der einzige Weg zu den Karten, den man sieht, ohne zu rollen.
+ * 800 IST ENTSCHIEDEN, NICHT ERRECHNET, und die Lücke darüber ist benannt:
+ * Zwischen 800 und 946 px Höhe stehen die Sprungmarken, und drei Listen passen
+ * trotzdem nicht — Servereinstellungen (acht Marken) braucht 947 px, Status
+ * 891, Updates 835. Dort rollt die Leiste in sich. Keine Stufe der
+ * Breitenskala (Design.md Kapitel 7), sondern die eine Höhenschwelle. */
+@media (min-width:1024px) and (max-height:799px){
+  .leiste-gruppe .eintrag-unterliste{display:none}
+}
 
 /* KEINE `scroll-margin-top` AN DER KARTE. Das Konzept sah eine vor — „gibt es
  * im Stylesheet noch nicht" — und das stimmte für den Namen, nicht für die
@@ -1146,6 +1193,31 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 .zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
 .zeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto}
+
+/* ZEILE MIT AUFKLAPPBAREN ANGABEN (.zeile-mehr) — P5c/AP2, E-P5c-26,
+ * M-P5c-01a. Ein <details>, dessen <summary> die Zeile ist; die Angaben
+ * stehen darunter als Liste, der Winkel in der Aktionsspalte.
+ *
+ * DAS <summary> IST IMMER ERSTES KIND seines <details>. `.zeile:first-child`
+ * (oben) naehme ihm den oberen Innenabstand, und aufklappbare Zeilen waeren
+ * 13 px niedriger als die uebrigen (F-P5c-13, gemessen). Die Gegenregel
+ * steht an `.zeile-mehr > summary.zeile` — Spezifitaet 0,2,1 gegen 0,2,0. */
+.zeile-mehr{border-bottom:var(--strich) solid var(--linie)}
+.zeile-mehr > summary{list-style:none;cursor:pointer;border-bottom:0}
+.zeile-mehr > summary::-webkit-details-marker{display:none}
+.zeile-mehr > summary.zeile{padding:var(--abstand-3) 0}
+.zeile-mehr:first-child > summary.zeile{padding-top:0}
+.zeile-mehr:last-child{border-bottom:0}
+.zeile-winkel{color:var(--sand);transform:rotate(-90deg);transition:transform var(--dauer) ease-out}
+.zeile-mehr[open] > summary .zeile-winkel{transform:none}
+.zeile-daten{
+  display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--abstand-1) var(--abstand-3);
+  margin:0 0 var(--abstand-3);padding:var(--abstand-2) var(--abstand-3);
+  background:var(--rauch);border-radius:var(--radius-klein);
+  font-family:var(--schrift-fest);font-size:var(--groesse-2);
+}
+.zeile-daten dt{color:var(--gedaempft)}
+.zeile-daten dd{margin:0;overflow-wrap:anywhere}
 /* Zeile hervorgehoben — die Spurliste des Diensttages (S2/AP4).
  *
  * Kein neuer Farbwert und kein neues Mass: dieselbe Rauchflaeche, die schon
@@ -2081,6 +2153,29 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 }
 .demo-hinweis .symbol{color:var(--orange-tief)}
 
+/* ---- Die Reihe der Hinweise (.hinweise) — P5c/AP1, E-P5c-55 --------------
+ * Umgebung → Ankündigung → Demo → Datenschutz, an der Stelle des
+ * Demo-Hinweises (ui_hinweise()). EIN BEHÄLTER STATT VIER AUSSENABSTÄNDEN:
+ * .demo-hinweis und .meldung bringen je --abstand-5 nach unten mit; gestapelt
+ * ergäbe das 32-px-Lücken zwischen Zeilen, die zusammengehören. */
+.hinweise{display:flex;flex-direction:column;gap:var(--abstand-2);margin-bottom:var(--abstand-5)}
+.hinweise > .demo-hinweis,.hinweise > .meldung{margin-bottom:0}
+/* Umgebungszeile — Variante des Hinweisstreifens im Ton der Fehlermeldung:
+ * Rot-tief auf Rosa 6,27 : 1. Nicht wegklickbar, wie der Demo-Hinweis. */
+.hinweis-umgebung{background:var(--rosa);color:var(--rot-tief)}
+.hinweis-umgebung .symbol{color:var(--rot-tief)}
+/* Ankündigung — die vorhandene .meldung (info/warn); das Kreuz steht in
+ * .meldung-aktion. Die Klasse benennt den Verwender. Das Kreuz bleibt oben
+ * rechts, auch auf dem Handy: .meldung bricht sonst um, sobald der Text seine
+ * Mindestbreite (16rem) nicht bekommt, und das Kreuz landete allein in einer
+ * Zeile unten links. */
+.meldung-ankuendigung{flex-wrap:nowrap;align-items:flex-start}
+.meldung-ankuendigung p{flex:1 1 auto}
+.meldung-ankuendigung .meldung-aktion{margin:calc(var(--abstand-2) * -1) calc(var(--abstand-2) * -1) 0 0}
+.meldung-ankuendigung .meldung-aktion .knopf-symbol{color:inherit}
+/* Anmeldeseiten: dieselbe Reihe über der Karte, so breit wie die Karte. */
+.anmeldung .hinweise{width:100%;max-width:var(--anmeldekarte);margin-bottom:var(--abstand-4)}
+
 
 /* == 14. TABELLE UND KACHEL ================================================
  *
@@ -2487,37 +2582,39 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
 }
 .uebersicht-winkel{color:var(--sand)}
-/* Blocküberschrift ÜBER einer Karte („Administration") — Mockup 07 zeigt sie
- * als gesperrte Versalzeile außerhalb der Karte, nicht als Kartentitel. */
-.uebersicht-block{
-  font-family:var(--schrift-kopf);font-size:var(--groesse-1);
-  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--gedaempft);
-  margin:var(--abstand-5) 0 var(--abstand-2) var(--abstand-1);
+/* DIE BEREICHSKARTE (P5c/AP9, E-P5c-29, Mockup M-P5c-01c, Design.md 9.1).
+ * Je Bereich eine eigene Karte; der Kopf trägt ein rundes Bereichszeichen,
+ * den Bereichsnamen und die Zahl der Einträge — als Gruppe MITTIG — und liegt
+ * auf Rauch, dem Ton der Seite. Abgesetzt wird über das Zeichen und die
+ * Mitte, nicht über eine Farbe mit Bedeutung: Orange heißt „hier stehst du",
+ * Hellblau „erledigt", Rot „Gefahr", und ein getönter Kopf las sich im
+ * Mockup als Meldung.
+ *
+ * Bis Web 21.0.0 stand der Bereichsname als gesperrte Versalzeile ÜBER einer
+ * titellosen Karte (`.uebersicht-block`, `.uebersicht-block-erst`); beide
+ * Klassen sind entfallen. */
+.karte-bereich > .karte-kopf{
+  justify-content:center;
+  background:var(--rauch);
+  border-radius:calc(var(--radius-gross) - var(--strich)) calc(var(--radius-gross) - var(--strich)) 0 0;
 }
-/* GESTAPELT KEINE ÜBERSCHRIFT AM ERSTEN BLOCK (Konzept AP5 (6)): Sie stünde
- * unmittelbar unter der Seitenüberschrift „Einstellungen" und sagte dasselbe
- * noch einmal. Nebeneinander benennt sie die Spalte und muss da sein — sonst
- * stünde eine namenlose neben zwei benannten. Im Markup steht sie immer,
- * damit ein Vorleseprogramm alle drei Blöcke gleich benennt. */
-.uebersicht-block-erst{display:none}
-/* Ohne Überschrift beginnt die erste Karte oben; der Abstand der übrigen
- * Blöcke gehört zur Überschrift und entfällt mit ihr. */
-.uebersicht-gruppe:first-child > .uebersicht-block + .karte{margin-top:0}
+.bereich-zeichen{
+  flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);border-radius:var(--radius-rund);
+  background:var(--dunkelblau);color:var(--auf-dunkel);
+}
 
 /* AM SCHREIBTISCH DREI SPALTEN. `auto-fit` füllt nach Rolle: eine Spalte für
  * eine NutzerIn, zwei für eine Admin, drei für eine BetreiberIn — ohne dass
  * das Stylesheet die Rolle kennen müsste. Die 240 px sind die Breite, unter
  * der „Rettungsmittel" mit Symbol und Winkel umbricht. */
 @media (min-width:1024px){
-  .uebersicht-block-erst{display:block}
   .uebersicht-raster{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(var(--uebersicht-spalte),1fr));
     gap:0 var(--abstand-4);
     align-items:start;
   }
-  .uebersicht-gruppe > .uebersicht-block{margin-top:0}
 }
 
 /* Die Anmeldekarte des Einrichters und der Passwortvergabe ist breiter: Dort
@@ -3000,6 +3097,25 @@ body.map-fs-lock{overflow:hidden}
     gap:0 var(--abstand-4);
     align-items:start;
   }
+}
+/* EINE SPALTE, WENN DIE ZWEITE LEER BLIEBE (P5c/AP4, M-P5c-02c, E-P5c-66):
+ * Der Support sieht auf der Kontoseite keine Konto-Backups und keine
+ * Gefahrenzone — die rechte Spalte entfiele, und die linke stuende halb so
+ * breit neben einer Leere. Hinter der Regel oben, damit sie ab 1200 px
+ * gewinnt; die Breite ist die der Lesespalte samt einem Abstand. */
+.form-raster-einspaltig{
+  grid-template-columns:minmax(0,1fr);
+  max-width:calc(var(--lesespalte) + var(--abstand-5));
+}
+/* LINKS BREIT, 3 : 2 (P5c/AP7, M-P5c-01b, E-P5c-18): links eine Tabelle
+ * „… je Zeitraum" mit bis zu fuenf Zahlenspalten, rechts eine Karte mit
+ * Zeilen und Zaehlplakette. Gleich geteilt laeuft die Fuenf-Fenster-Tabelle
+ * ueber und rollt — gemessen in AP7: 40 px bei 1200, 20 px bei 1240, ab
+ * 1280 px nicht mehr. Mit 3 : 2 passt sie bei 1200, 1280, 1366 und 1440 px
+ * ohne Rollen, in Chromium, Firefox und WebKit. Hinter der Regel von
+ * `.form-raster`, gleiche Spezifitaet. */
+@media (min-width:1200px){
+  .form-raster-links-breit{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
 }
 
 /* Zwei kurze Felder in einer Zeile (Nachname/Vorname, Geburtsdatum/Alter) —
@@ -3734,9 +3850,10 @@ h1 + .seiten-erklaerung{margin-top:0}
  * keine eigenen Karten: Zwei Rahmen um dieselbe Sache trennen, was
  * zusammengehört — die zweite Ebene ordnet nur. */
 /* ABSTAND AUCH VOR DER ERSTEN LISTE (F-N1-M). Die Regel setzte den Abstand
- * nur ZWISCHEN zwei Listen. Steht davor etwas anderes — der Hinweis
- * „[systemweit] Dieser Standort wird von der Administration gepflegt" —,
- * klebte die Überschrift „Rettungsmittel" unmittelbar daran. */
+ * nur ZWISCHEN zwei Listen. Steht davor etwas anderes — gemessen am Hinweis
+ * „[systemweit] Dieser Standort wird von der Administration gepflegt", den
+ * es bis Web 20.47.0 gab (R39) —, klebte die Überschrift „Rettungsmittel"
+ * unmittelbar daran. */
 .sd-liste{margin-top:var(--abstand-4)}
 .sd-liste:first-child{margin-top:0}
 .sd-liste + .sd-liste{
@@ -3955,6 +4072,9 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * erreichbar), und er funktioniert ohne Skript. Der aktive ist orange
  * hinterlegt — dieselbe Auszeichnung wie die aktive Kennzahl. */
 .filterreihe{display:flex;flex-wrap:wrap;gap:var(--abstand-2)}
+/* Ein Auswahlfeld in der Filterreihe („Art", P5c/AP2) ist so hoch wie ein
+ * Filter und nur so breit, wie es muss. */
+.filterreihe .feld-eingabe{width:auto;min-width:12rem;flex:0 1 auto}
 /* AUCH DIESER NAME IST NICHT FREI: `.filterknopf` gehoert seit O6 dem Knopf,
  * der auf der Suchseite die Filterschublade oeffnet — und der ist 48 px hoch,
  * weil er neben dem 48-px-Suchfeld steht (die einzige benannte Ausnahme von
@@ -4074,21 +4194,20 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * Baustein aus. */
 .feld-fest .feld-eingabe{font-family:var(--schrift-fest)}
 
-/* Der Vorschaukasten (Mockup 35). GESTRICHELT, und das ist der ganze Zweck:
- * Er sagt „das hier ist nicht die Seite, sondern ein Blick darauf". Ein
- * durchgezogener Rahmen sähe aus wie eine zweite Karte. `dashed` kommt
- * sonst nirgends im Stylesheet vor — deshalb steht es hier und nicht als
- * Zusatz an `.karte`. */
-.vorschau{
-  border:var(--strich) dashed var(--linie-stark);
-  border-radius:var(--radius);
-  padding:var(--abstand-4);
-  margin-top:var(--abstand-3);
-}
-.vorschau > h4{margin-bottom:var(--abstand-2)}
-/* Der Fließtext darin ist `.text` — aber ohne dessen Lesebreite: Der Kasten
- * IST schon schmal, und eine zweite Begrenzung darin ließe ihn links kleben. */
-.vorschau .text{max-width:none}
+/* DIE VORSCHAU, DIE MITLÄUFT (P5c/AP9, E-P5c-28, Mockup M-P5c-01d Variante 2).
+ * Seit Web 21.1.0 ist die Vorschau eine eigene Karte neben dem Feld (Seite
+ * „Rechtstexte"); der Zustand steht als Plakette im Kartenkopf. Bis dahin war
+ * sie ein gestrichelter Kasten `.vorschau` unter jedem Feld auf
+ * „Installation" (Mockup 35) — zwei Rahmen ineinander sagten nichts, und die
+ * Klasse ist mit ihrem einzigen Verwender entfallen.
+ *
+ * DER KASTEN ROLLT IN SICH, damit er in Sichtweite des Feldes bleibt. Die
+ * Höhe ist die des Textfelds (18 Zeilen) — kein neues Maß, sondern dasselbe
+ * wie nebenan. Der Fließtext darin ist `.text`, aber ohne dessen Lesebreite:
+ * Die Spalte IST schon schmal. */
+.vorschau-rollt{max-height:calc(18 * var(--zeile) * var(--groesse-3) + var(--abstand-5));
+  overflow:auto;overscroll-behavior:contain}
+.vorschau-rollt .text{max-width:none}
 
 /* Die Fußzeile einer Editorkarte: Plakette und Pfad nebeneinander. */
 .rechtstext-fuss{
@@ -4365,22 +4484,204 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   .blatt-seite .rahmen,
   .blatt-seite .inhalt { background: none; }
 
-  /* KEIN SEITENUMBRUCH MITTEN IM WERT. Ein Schlüssel, der über zwei Blätter
-   * läuft, ist beim Abtippen die eine Stelle, an der eine Gruppe verlorengeht
-   * — und ein halb abgetippter Schlüssel sieht aus wie ein falscher. */
-  .blatt-wert { break-inside: avoid; page-break-inside: avoid; }
+  /* KEIN UMBRUCH NACH EINER ÜBERSCHRIFT. Den Umbruch MITTEN im Wert hielt
+   * bis Web 21.0.0 hier `.blatt-wert`; das tut seither `.blatt-kachel`
+   * (Druckblatt, P5c/AP9). */
   h2 { break-after: avoid; page-break-after: avoid; }
 }
 
-/* Der Wert auf dem Blatt: 64 Hexzeichen in sechzehn Vierergruppen.
+
+
+/* ===========================================================================
+ * 31  REITER UND PROTOKOLL                     (P5c/AP2, E-P5c-25, -26)
  *
- * ER BENUTZT `.codeblock-wert` als Grundlage und ändert genau zwei Dinge: Er
- * darf umbrechen (sechzehn Gruppen passen in keine Zeile von 210 mm), und er
- * bricht NUR ZWISCHEN den Gruppen um — `word-break:break-all` zerschnitte eine
- * Gruppe mitten durch, und dann zählt beim Abtippen niemand mehr nach. */
-.blatt-wert {
-  white-space: normal;
-  word-break: keep-all;
-  overflow-wrap: normal;
-  line-height: 1.9;
+ * REITER (.reiter-rahmen, .reiter, .reiter-punkt, .reiter-abgesetzt) — NEUER
+ * BAUSTEIN, freigegeben mit M-P5c-01a (20.09.2026). Wechsel zwischen
+ * gleichrangigen Sichten EINER Seite; serverseitig, jeder Reiter ist ein
+ * Verweis (`ui_reiter()`). Orange heisst wie in der Kopfleiste „hier stehst
+ * du" — hier in der tiefen Stufe, weil der Strich auf Rauch steht. Unter
+ * 720 px rollt die Reihe in ihrem EIGENEN Behaelter — die Seite selbst
+ * laeuft nie waagerecht aus dem Bild (Grundregel Kapitel 6).
+ * ======================================================================== */
+.reiter{
+  display:flex;gap:var(--abstand-1);margin:0 0 var(--abstand-4);
+  border-bottom:var(--strich) solid var(--linie);
+  overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
 }
+.reiter::-webkit-scrollbar{display:none}
+.reiter-punkt{
+  flex:0 0 auto;display:inline-flex;align-items:center;
+  min-height:var(--knopf);padding:0 var(--abstand-3);
+  font-family:var(--schrift-kopf);font-weight:600;color:var(--gedaempft);
+  text-decoration:none;white-space:nowrap;
+  border-bottom:var(--strich-stark) solid transparent;
+}
+.reiter-punkt:hover{color:var(--dunkelblau);text-decoration:none}
+/* ORANGE TIEF, NICHT ORANGE (E-P5c-79, 24.09.2026): Der Strich steht auf
+ * Rauch, und --orange haette dort 2,09 : 1 — unter den 3 : 1 fuer einen
+ * Bedienzustand. Die Schrift wechselt zwar mit, aber Gedaempft gegen
+ * Dunkelblau sind auch nur 2,35 : 1. --orange-tief: 4,04 : 1. */
+.reiter-punkt.aktiv{color:var(--dunkelblau);border-bottom-color:var(--orange-tief)}
+/* Abgesetzter Reiter am rechten Rand („Archiv"): kein Ereignis-Reiter,
+ * sondern die Ablage. */
+.reiter-abgesetzt{margin-left:auto}
+/* Der Rand verraet, dass die Reihe weiterrollt (`assets/reiter.js`). */
+.reiter-rahmen{position:relative}
+.reiter-rahmen.rollt::after,.reiter-rahmen.rollt-links::before{
+  content:"";position:absolute;top:0;bottom:var(--strich);width:var(--abstand-5);pointer-events:none;z-index:1;
+}
+.reiter-rahmen.rollt::after{right:0;background:linear-gradient(to right,transparent,var(--rauch))}
+.reiter-rahmen.rollt-links::before{left:0;background:linear-gradient(to left,transparent,var(--rauch))}
+
+/* DIE PROTOKOLLLISTE (.protokoll-liste). UNTER 720 px STEHT DIE PLAKETTE
+ * UNTER DEM TEXT. Gemessen bei 376 px (M-P5c-01a): Neben einer Plakette von
+ * 110 px bleiben dem Haupttext 170 px — „Konto …: aktiv → gesperrt (…)"
+ * bricht auf fuenf Zeilen. Der Winkel bleibt rechts, lotrecht mittig zur
+ * ganzen Zeile. */
+.protokoll-liste .zeile{
+  display:grid;grid-template-columns:minmax(0,1fr) var(--symbol-gross);
+  grid-template-areas:"text akt" "plak akt";gap:var(--abstand-1) var(--abstand-3);
+}
+.protokoll-liste .zeile-text{grid-area:text}
+.protokoll-liste .zeile-plaketten{grid-area:plak}
+.protokoll-liste .zeile-aktionen{grid-area:akt;align-self:center;justify-content:flex-end}
+/* AB 720 px EINE KANTE FUER ALLE PLAKETTEN (Vorgabe 17.09.2026, Punkt 1):
+ * Plakette und Winkel stehen in je einer Spalte am rechten Rand; die
+ * Aktionsspalte ist in JEDER Zeile gleich breit — auch dort, wo es nichts
+ * aufzuklappen gibt. */
+@media (min-width:720px){
+  .protokoll-liste .zeile{display:flex}
+  .protokoll-liste .zeile-plaketten{justify-content:flex-end}
+  .protokoll-liste .zeile-aktionen{width:var(--symbol-gross)}
+}
+.archiv-liste .zeile-plaketten{justify-content:flex-end}
+
+
+/* ===========================================================================
+ * 32  ZWEITFAKTOR UND DRUCKBLATT              (P5c/AP5, E-P5c-08, -41, -66)
+ *
+ * NEUE BAUSTEINE, freigegeben mit M-P5c-02b (23.09.2026, E-P5c-66) und — für
+ * das Druckblatt — mit M-P5c-01f (20.09.2026). Die Regeln sind die aus dem
+ * Abschnitt „Vorschlag für style.css" der Mockups, unverändert.
+ * ======================================================================== */
+
+/* QR-CODE (.qr) — E-P5c-41. Die Modulmatrix kommt aus qrcode-generator (MIT,
+ * vendoriert, kein Netz); das SVG baut `assets/qr.js`: ein Pfad, Klassen statt
+ * style="…", Token statt Hexwerten. Halbe Anmeldekarte breit (200 px): 53
+ * Module bei Fehlerstufe M für eine übliche Adresse, rund 3,3 px je Modul. */
+.qr{display:block;width:calc(var(--anmeldekarte) / 2);max-width:100%;height:auto;flex:0 0 auto}
+.qr-grund{fill:var(--schnee)}
+.qr-modul{fill:var(--asphalt)}
+/* Einrichtung: QR links, Text rechts ab 720 px; darunter gestapelt, der QR
+ * zuerst. In der Anmeldekarte (Einrichtungstor) immer gestapelt, mittig. */
+.zweitfaktor-einrichtung{display:grid;gap:var(--abstand-4);align-items:start;margin-bottom:var(--abstand-4)}
+@media (min-width:720px){.zweitfaktor-einrichtung{grid-template-columns:auto minmax(0,1fr)}}
+.anmeldung .zweitfaktor-einrichtung{grid-template-columns:1fr;justify-items:center;text-align:center}
+.zweitfaktor-einrichtung .codeblock{text-align:left}
+/* Das Geheimnis bricht nur zwischen den Vierergruppen um — .codeblock-wert
+ * trägt break-all für Werte ohne Leerzeichen. */
+.zweitfaktor-einrichtung .codeblock-wert{word-break:normal}
+/* Codefeld: dieselbe Schrift und Sperrung wie der Codeblock, damit Abschreiben
+ * und Eintippen gleich aussehen. */
+.feld-code .feld-eingabe{font-family:var(--schrift-fest);font-size:var(--groesse-5);letter-spacing:.06em}
+/* WIEDERHERSTELLUNGSCODES (.codeblock-liste) — Erweiterung des Codeblocks:
+ * zehn nummerierte Werte in zwei Spalten, Schrift wie .codeblock-wert. Die
+ * Nummer hilft beim Abhaken auf dem Blatt. */
+.codeblock-liste{
+  list-style:none;margin:var(--abstand-2) 0 var(--abstand-3);padding:0;counter-reset:code;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-1) var(--abstand-4);
+  font-family:var(--schrift-fest);font-size:var(--groesse-4);font-weight:600;color:var(--dunkelblau);letter-spacing:.06em;
+}
+.codeblock-liste li{counter-increment:code;white-space:nowrap}
+.codeblock-liste li::before{content:counter(code) ".";display:inline-block;min-width:2.2em;color:var(--gedaempft);font-weight:400;letter-spacing:0}
+/* Zwischenüberschrift in der Anmeldekarte (Code-Schritt, Einrichtungstor). */
+.anmeldung-schritt{font-size:var(--groesse-5);margin:0 0 var(--abstand-2)}
+
+/* DRUCKBLATT (.blatt-druck) — EIN Baustein für Codeblatt, Schlüsselblatt und
+ * Notfallblatt (E-P5c-08, Nr. 246). Das Codeblatt war sein erster Verwender
+ * (AP5); Schlüssel- und Notfallblatt sind mit AP9 nachgezogen, und mit ihnen
+ * ist `.blatt-wert` entfallen — der Wert am Stück in der Lesespalte.
+ *
+ * `@page` GILT FÜR JEDE GEDRUCKTE SEITE, nicht nur für das Blatt — eine
+ * Seitenregel lässt sich nicht an eine Klasse binden, und ein benannter
+ * Seitentyp (`page:`) trägt nicht in jedem Browser, der hier druckt. Bis
+ * hierher gab es keine Vorgabe; gedruckt wird in dieser Anwendung ohnehin nur
+ * auf den Blättern. */
+@page{size:A4;margin:14mm 18mm}
+.blatt-druck{font-size:var(--groesse-3);line-height:1.45;color:var(--asphalt)}
+.blatt-kopf{display:flex;align-items:center;gap:var(--abstand-3);
+  padding-bottom:var(--abstand-2);margin-bottom:var(--abstand-3);
+  border-bottom:var(--strich-stark) solid var(--dunkelblau)}
+.blatt-kopf img{height:11mm;width:auto;flex:0 0 auto}
+.blatt-marke{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-6);color:var(--dunkelblau);line-height:var(--zeile-eng);min-width:0;overflow-wrap:anywhere}
+.blatt-kopf-rechts{margin-left:auto;flex:0 1 45%;min-width:0;overflow-wrap:anywhere;text-align:right;font-size:var(--groesse-2);color:var(--gedaempft);line-height:1.4}
+/* `break-word` AN DER ÜBERSCHRIFT: „Wiederherstellungscodes" ist bei 360 px
+ * breiter als die Spalte (345 gegen 328 px, Bilderlauf P5c/AP5) und hat
+ * keine Stelle, an der ein Browser von sich aus umbricht. Dieselbe Härte wie
+ * `.text` (Backlog Nr. 221) — sie greift nur, wenn das Wort sonst überliefe;
+ * auf A4 nie. */
+.blatt-druck h1{font-size:var(--groesse-titel);margin:0 0 var(--abstand-2);overflow-wrap:break-word}
+.blatt-druck h2{font-size:var(--groesse-4);margin:var(--abstand-3) 0 var(--abstand-1)}
+.blatt-druck p,.blatt-druck li{margin:0 0 var(--abstand-1);font-size:var(--groesse-2)}
+.blatt-druck ol{margin:0 0 0 var(--abstand-5);padding:0;list-style:decimal}
+/* Die Warnung braucht auf Papier einen Rand: Flächen druckt der Browser in
+ * der Vorgabe nicht. */
+.blatt-druck .meldung{border:var(--strich) solid var(--linie-stark);margin:0 0 var(--abstand-3);padding-top:var(--abstand-2);padding-bottom:var(--abstand-2)}
+/* DIE KACHEL: Rahmen, Rauch, Feste Schrift. Der Rahmen trägt die Aussage —
+ * die Fläche ist Zugabe für den Bildschirm und für den, der
+ * „Hintergrundgrafiken" mitdruckt. */
+.blatt-kachel{border:var(--strich-stark) solid var(--dunkelblau);border-radius:var(--radius);
+  background:var(--rauch);padding:var(--abstand-2) var(--abstand-4);margin:0 0 var(--abstand-2);
+  break-inside:avoid;page-break-inside:avoid}
+.blatt-kachel-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:var(--abstand-3);flex-wrap:wrap}
+.blatt-kachel-name{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);color:var(--dunkelblau)}
+.blatt-kachel-neben{font-size:var(--groesse-2);color:var(--gedaempft)}
+.blatt-kachel > p{font-size:var(--groesse-2);margin:0}
+.blatt-kachel-neben code{font-size:inherit}
+/* DIE NUMMERIERTEN GRUPPEN (.blatt-druck-gruppen, P5c/AP9, M-P5c-01f) —
+ * sechzehn Vierergruppen je Wert beim Schlüsselblatt, fünf beim Notfallblatt.
+ * Jede Gruppe trägt ihre NUMMER darüber: Die Quartalsrückfrage (E-P5b-10)
+ * fragt „Serverschlüssel · Gruppe 11", und bis elf zählt auf Papier niemand
+ * gern. DER NAME TRÄGT `-druck-`, weil `.blatt-gruppen` und `.blatt-gruppe`
+ * schon vergeben sind (Betreiber-Rückfrage, P5b/AP9; F-P5c-44). Die Kachel
+ * bricht nicht über zwei Seiten (`.blatt-kachel`); eine halb abgetippte
+ * Gruppe sieht aus wie eine falsche. */
+.blatt-druck-gruppen{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:var(--abstand-1) 0;margin:var(--abstand-1) 0 var(--abstand-2)}
+.blatt-druck-gruppen-5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:30rem}
+.blatt-druck-gruppe{display:flex;flex-direction:column;align-items:center;
+  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:600;letter-spacing:.08em;line-height:1.25}
+.blatt-druck-gruppen-5 .blatt-druck-gruppe{font-size:var(--groesse-6)}
+.blatt-druck-gruppe::before{content:attr(data-nr);font-family:var(--schrift-text);font-weight:400;
+  font-size:var(--groesse-1);letter-spacing:0;color:var(--gedaempft)}
+.blatt-fuss{margin-top:var(--abstand-3);padding-top:var(--abstand-2);border-top:var(--strich) solid var(--linie);
+  font-size:var(--groesse-1);color:var(--gedaempft);display:flex;justify-content:space-between;gap:var(--abstand-3)}
+/* AM BILDSCHIRM sieht das Blatt aus wie das Blatt: A4 mit den Rändern aus @page.
+ * `max-width:100%`, weil A4 794 px breit ist und die Regel ab 720 px greift:
+ * Bei 768 px stand das Blatt 26 px über (Bilderlauf in Firefox und WebKit,
+ * P5c/AP5). Ab 794 px ändert die Grenze nichts. */
+@media screen{ .blatt-druck{padding:var(--abstand-4);background:var(--schnee)} }
+@media screen and (min-width:720px){
+  .blatt-druck{box-sizing:border-box;width:210mm;max-width:100%;min-height:297mm;padding:14mm 18mm;margin:var(--abstand-5) auto;
+    border:var(--strich) solid var(--linie);box-shadow:var(--schatten)}
+}
+@media print{ .blatt-kachel{background:none} }
+/* DIE UMGEBUNGSZEILE DES DRUCKBLATTS (E-P5c-50, M-P5c-02e) — steht nur, wenn
+ * app.umgebung gesetzt ist, direkt unter dem Kopf. Text und Rahmen, keine
+ * Fläche: Das Blatt muss auch schwarzweiß sagen, dass es nicht zur
+ * Produktivanlage gehört. */
+.blatt-umgebung{margin:0 0 var(--abstand-3);padding:var(--abstand-1) var(--abstand-3);
+  border:var(--strich-stark) solid var(--rot-tief);border-radius:var(--radius-klein);
+  font-size:var(--groesse-3);color:var(--rot-tief)}
+/* DIE CODELISTE DES CODEBLATTS (.blatt-codes) — zehn Einmalcodes, nummeriert,
+ * mit einem Kästchen zum Abhaken. Zwei Spalten; die Nummer steht davor, nicht
+ * darüber, weil ein Code acht Zeichen hat und nicht vier. DAS KÄSTCHEN STEHT
+ * VORN (order:-1, E-P5c-65): Am Zeilenende stand das der linken Spalte direkt
+ * vor der Nummer der rechten und schien zu ihr zu gehören. */
+.blatt-codes{list-style:none;margin:var(--abstand-2) 0;padding:0;counter-reset:code;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-2) var(--abstand-5)}
+.blatt-codes li{counter-increment:code;display:flex;align-items:center;gap:var(--abstand-3);margin:0;
+  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:600;letter-spacing:.08em;line-height:1.25}
+.blatt-codes li::before{content:counter(code);min-width:1.5em;text-align:right;
+  font-family:var(--schrift-text);font-weight:400;font-size:var(--groesse-2);letter-spacing:0;color:var(--gedaempft)}
+.blatt-codes li::after{content:"";order:-1;width:1em;height:1em;flex:0 0 auto;
+  border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein)}

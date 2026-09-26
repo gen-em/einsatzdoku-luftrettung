@@ -61,37 +61,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'sd_zuordnen') {
         $tabelle = (string)($_POST['tabelle'] ?? '');
         $id      = (int)($_POST['id'] ?? 0);
-        $zentral = ($_POST['zentral'] ?? '') === '1';
         $baseId  = (int)($_POST['base_id'] ?? 0);
 
         if (!array_key_exists($tabelle, NB_STAMMDATEN)) {
             $error = 'Unbekannte Stammdatenart. Es wurde nichts geändert.';
-        } elseif ($zentral && !ist_admin()) {
-            // Zentrale Eintraege gehoeren den Admins (nachbearbeitung_lib.php).
-            $error = 'Systemweite Standorte lassen sich nur von einer AdministratorIn '
-                   . 'zuordnen. Es wurde nichts geändert.';
         } else {
-            /* Der Zielstandort muss zur Zeile passen: Ein ZENTRALER Eintrag
-             * gehoert an einen zentralen Standort, ein persoenlicher an einen,
-             * den die NutzerIn hat. Sonst entstuende eine Zuordnung, die in
-             * keiner Auswahlliste je erscheint. */
-            $baseOk = false;
-            if ($zentral) {
-                $q = db()->prepare('SELECT id FROM bases WHERE id = ? AND user_id IS NULL');
-                $q->execute([$baseId]);
-                $baseOk = $q->fetchColumn() !== false;
-            } else {
-                $baseOk = dt_base_erlaubt(db(), $userId, $baseId) !== null;
-            }
-            if (!$baseOk) {
+            /* Der Zielstandort muss der NutzerIn gehoeren — sonst entstuende
+             * eine Zuordnung, die in keiner Auswahlliste je erscheint. Den
+             * Zweig fuer zentrale Eintraege gab es bis Web 20.47.0 (R39). */
+            if (dt_base_erlaubt(db(), $userId, $baseId) === null) {
                 $error = 'Bitte einen passenden Standort wählen. Es wurde nichts geändert.';
             } else {
                 // Der Tabellenname stammt aus NB_STAMMDATEN, nicht aus der
                 // Anfrage; ein Platzhalter ist dafuer ohnehin nicht moeglich.
-                $wo = $zentral ? 'user_id IS NULL' : 'user_id = ?';
                 $st = db()->prepare("UPDATE `$tabelle` SET base_id = ?
-                                     WHERE id = ? AND base_id IS NULL AND $wo");
-                $st->execute($zentral ? [$baseId, $id] : [$baseId, $id, $userId]);
+                                     WHERE id = ? AND base_id IS NULL AND user_id = ?");
+                $st->execute([$baseId, $id, $userId]);
                 $notice = $st->rowCount() > 0
                     ? 'Zuordnung gespeichert.'
                     : 'Dieser Eintrag war bereits zugeordnet. Es wurde nichts geändert.';
@@ -130,23 +115,15 @@ if ($flash !== null) {
 $moeglich   = nb_moeglich();
 $offeneTage = $moeglich ? nb_offene_tage($userId) : [];
 $offeneSd   = $moeglich ? nb_offene_stammdaten($userId) : [];
-$offeneSdZ  = ($moeglich && ist_admin()) ? nb_offene_stammdaten($userId, true) : [];
 $sdGesamt   = $moeglich ? nb_stammdaten_offen_gesamt() : [];
 
 $SD_BASES    = dt_bases($userId);
 $SD_VEHICLES = dt_vehicles($userId);
-$zentraleBases = [];
-if (ist_admin()) {
-    $zentraleBases = db()->query('SELECT id, name FROM bases WHERE user_id IS NULL
-                                  ORDER BY name')->fetchAll();
-}
-$nichtsOffen = !$offeneTage && !$offeneSd && !$offeneSdZ;
+$nichtsOffen = !$offeneTage && !$offeneSd;
 
-/* Die Zahl fuer den Kartenkopf: eigene und zentrale Stammdatensaetze
- * zusammen. Sie steht neben dem Titel, weil eine Liste ohne Zahl nicht sagt,
- * wie viel Arbeit sie ist. */
-$sdOffenEigen = array_sum(array_map('count', $offeneSd));
-$sdOffenZentral = array_sum(array_map('count', $offeneSdZ));
+/* Die Zahl fuer den Kartenkopf. Sie steht neben dem Titel, weil eine Liste
+ * ohne Zahl nicht sagt, wie viel Arbeit sie ist. */
+$sdOffen = array_sum(array_map('count', $offeneSd));
 
 ui_seite_start(['titel' => 'Zuordnung nachtragen']);
 ?>
@@ -201,8 +178,7 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
 
         <?php if (!$SD_BASES && !$SD_VEHICLES): ?>
           <?= ui_meldung_markup('warn', 'Es stehen keine Standorte und '
-              . 'Rettungsmittel zur Verfügung. Bitte zuerst welche anlegen oder '
-              . 'einen vordefinierten Standort auswählen.', '',
+              . 'Rettungsmittel zur Verfügung. Bitte zuerst welche anlegen.', '',
               ui_knopf(['text' => 'Zu den Standorten', 'art' => 'neutral',
                         'href' => 'einstellungen.php?t=standorte'])) ?>
         <?php endif; ?>
@@ -280,21 +256,12 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
     <?php ui_karte_ende(); ?>
 
     <?php /* ---------------------------------------------------------- 2 --
-             STAMMDATEN. Ein Block je Art, eigene und (fuer Admins) zentrale
-             getrennt: Sie brauchen verschiedene Standortlisten, und die
-             Verwechslung waere folgenreich — ein zentraler Eintrag an einem
-             persoenlichen Standort erschiene in keiner Auswahlliste. */ ?>
-    <?php
-      $blocks = [['Eigene Einträge ohne Standort', $offeneSd, false, $SD_BASES, $sdOffenEigen]];
-      if (ist_admin()) {
-          $blocks[] = ['Zentrale Einträge ohne Standort', $offeneSdZ, true,
-                       $zentraleBases, $sdOffenZentral];
-      }
-      foreach ($blocks as [$kartentitel, $liste, $istZentral, $basen, $anzahl]):
-    ?>
-      <?php ui_karte_start(['titel' => $kartentitel, 'zahl' => $anzahl]); ?>
+             STAMMDATEN. Bis Web 20.47.0 zwei Karten, eigene und (fuer Admins)
+             zentrale Eintraege; die zentralen gibt es seit P5c/AP8 nicht mehr
+             (R39). */ ?>
+      <?php ui_karte_start(['titel' => 'Eigene Einträge ohne Standort', 'zahl' => $sdOffen]); ?>
 
-        <?php if (!$anzahl): ?>
+        <?php if (!$sdOffen): ?>
           <p class="feld-hinweis">Alles zugeordnet.</p>
         <?php else: ?>
 
@@ -302,27 +269,15 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
              (E15). Wo die Migration ihn nicht ableiten konnte — bei mehreren
              oder bei keinem Standort —, blieb er offen.</p>
 
-          <?php if (!$basen): ?>
-            <?php /* SEIT S9/AP5b OHNE ZENTRAL-ZWEIG (R39). Der Satz forderte hier
-                     auf, „zuerst unter ‚Standorte systemweit' einen anzulegen" — die
-                     Seite ist ersatzlos gestrichen, und einen zentralen Standort kann
-                     niemand mehr anlegen. Ein zentraler Eintrag ohne Standort, wenn es
-                     ihn in einer Anlage noch gibt, laesst sich hier deshalb nicht mehr
-                     aufloesen; er braucht einen Eingriff in der Datenbank. Der Zweig
-                     `$istZentral` bleibt (Zeilen darunter) — er meldet einen Zustand,
-                     der nicht mehr entstehen kann, aber bestehen koennte. Faellt mit
-                     dem Rueckbau in P5 (Backlog Nr. 168). */ ?>
-            <?= ui_meldung_markup('warn', 'Es steht kein passender Standort zur '
-                . 'Verfügung' . ($istZentral
-                    ? ' — dieser Eintrag lässt sich hier nicht mehr zuordnen.'
-                    : '.')) ?>
+          <?php if (!$SD_BASES): ?>
+            <?= ui_meldung_markup('warn', 'Es steht kein passender Standort zur Verfügung.') ?>
           <?php endif; ?>
 
-          <?php foreach ($liste as $tabelle => $zeilen): ?>
+          <?php foreach ($offeneSd as $tabelle => $zeilen): ?>
             <?php foreach ($zeilen as $z): $zid = (int)$z['id'];
-                  $anker = ($istZentral ? 'z' : 'e') . '-' . $tabelle . '-' . $zid;
+                  $anker = 'e-' . $tabelle . '-' . $zid;
                   $bOpt = ['' => 'Standort wählen –'];
-                  foreach ($basen as $b) { $bOpt[(string)(int)$b['id']] = (string)$b['name']; }
+                  foreach ($SD_BASES as $b) { $bOpt[(string)(int)$b['id']] = (string)$b['name']; }
             ?>
               <div class="listen-form">
                 <h3 class="listen-form-titel"><?= e((string)$z['name']) ?></h3>
@@ -331,7 +286,6 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
                   <?= csrf_field() ?><input type="hidden" name="action" value="sd_zuordnen">
                   <input type="hidden" name="tabelle" value="<?= e($tabelle) ?>">
                   <input type="hidden" name="id" value="<?= $zid ?>">
-                  <input type="hidden" name="zentral" value="<?= $istZentral ? '1' : '0' ?>">
                   <?php ui_feld([
                       'name' => 'base_id', 'id' => 'nb-sd-' . $anker,
                       'label' => 'Standort', 'art' => 'select',
@@ -348,7 +302,6 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
 
         <?php endif; ?>
       <?php ui_karte_ende(); ?>
-    <?php endforeach; ?>
 
     <?php /* ---------------------------------------------------------- 3 -- */ ?>
     <?php ui_karte_start(['titel' => 'Standortbezug verbindlich machen']); ?>

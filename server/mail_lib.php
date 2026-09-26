@@ -421,6 +421,73 @@ function mail_katalog(): array
          * Warteschlange schlecht macht: Man wartet, und irgendwann merkt
          * man, dass nichts mehr kommt. Der Satz „du kannst sie neu stellen"
          * ist der Zweck der Mail — nicht die Absage. */
+        /* DIESELBE BESTAETIGUNG, NOCH EINMAL (P5c/AP4, E-P5c-14). Verwaltung
+         * oder Support haben sie angestossen, weil die erste nicht ankam oder
+         * untergegangen ist. Eigener Eintrag, weil die Frist eine andere ist:
+         * Der Link gilt nicht 48 Stunden ab jetzt, sondern bis zu dem
+         * Zeitpunkt, an dem die Registrierung ohnehin verfaellt — und der
+         * Text muss das sagen, sonst verspricht er Zeit, die es nicht gibt. */
+        'registrierung_erneut' => [
+            'art' => 'konto', 'frist' => 172800, 'pflicht' => ['link', 'zeitpunkt'],
+            'betreff' => fn(array $d): string => 'Adresse bestätigen — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "hier ist noch einmal der Link, mit dem du deine Adresse bei der " . $n . "\n"
+                . "bestätigst und dein Passwort festlegst. Er gilt bis " . $d['zeitpunkt'] . ";\n"
+                . "ein früher verschickter Link gilt nicht mehr:\n\n"
+                . $d['link'],
+                "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
+                . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
+                . "Passwort-Reset von niemandem mehr öffnen.\n\n"
+                . "Falls du dich nicht registriert hast, ignoriere diese E-Mail einfach. Ohne den\n"
+                . "Link passiert nichts, und zum genannten Zeitpunkt wird die Anfrage gelöscht."),
+        ],
+
+        /* DER ZWEITFAKTOR IST ZURUECKGESETZT (P5c/AP5, E-P5c-42). Die Mail
+         * geht an die Kontoadresse, und zwar IMMER — auch dann, wenn die
+         * Person selbst darum gebeten hat. Wer sie NICHT erbeten hat, erfaehrt
+         * so, dass an seinem Konto die zweite Schranke gefallen ist; das ist
+         * der Zweck, nicht die Bestaetigung. */
+        'totp_zurueckgesetzt' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
+            'betreff' => fn(array $d): string => 'Zweitfaktor zurückgesetzt — ' . $n,
+            /* DER ERSTE SATZ HÄNGT AM WEG (Konzept RW, RW-03, E-RW-14): Die
+             * Verwaltung (E-P5c-42) oder der Wiederherstellungsschlüssel am
+             * Code-Schritt. `weg` ist kein Pflichtwert — fehlt er, bleibt der
+             * Satz der Verwaltung stehen, wörtlich wie seit Web 20.42.0. */
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                (($d['weg'] ?? '') === 'schluessel'
+                    ? "der Zweitfaktor deines Kontos bei der " . $n . " ist mit dem\n"
+                    . "Wiederherstellungsschlüssel vom Notfallblatt zurückgesetzt worden. Die Anmeldung\n"
+                    . "fragt ab jetzt nur nach dem Passwort; deine\n"
+                    : "die Verwaltung der " . $n . " hat den Zweitfaktor deines Kontos\n"
+                    . "zurückgesetzt. Die Anmeldung fragt ab jetzt nur nach dem Passwort; deine\n")
+                . "Wiederherstellungscodes und ein gedrucktes Codeblatt gelten nicht mehr.\n\n"
+                . "Richte ihn nach der nächsten Anmeldung unter Einstellungen → Profil neu ein —\n"
+                . "für Support, Admin und BetreiberIn geschieht das beim Anmelden von selbst:\n\n"
+                . $d['link'],
+                (($d['weg'] ?? '') === 'schluessel' ? "Falls du das nicht warst" : "Falls du darum nicht gebeten hast")
+                . ", melde dich bitte umgehend bei der Verwaltung\n"
+                . "und ändere dein Passwort."),
+        ],
+
+        /* DER RÜCKWEG IST ERNEUERT (Konzept RW, RW-02, E-RW-06). Nur beim
+         * ERSETZEN, nicht beim ersten Anlegen nach der Anmeldung: Wer den
+         * Rückweg eines Kontos an sich nähme, hinterlässt damit eine Spur im
+         * Postfach. Das erste Anlegen geschieht still bei einer gewöhnlichen
+         * Anmeldung, einmal je Konto — eine Mail dazu hätte nichts zu
+         * melden, was die Person nicht gerade selbst getan hat. */
+        'rueckweg_erneuert' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
+            'betreff' => fn(array $d): string => 'Rückweg beim Zweitfaktor erneuert — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " ist der Rückweg mit dem\n"
+                . "Wiederherstellungsschlüssel erneuert worden — dafür wurde dein Passwort\n"
+                . "eingegeben. Dein Notfallblatt bleibt gültig.\n\n"
+                . $d['link'],
+                "Falls du das nicht warst, ändere bitte umgehend dein Passwort und melde dich\n"
+                . "bei der Verwaltung."),
+        ],
+
         'registrierung_verfallen' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Registrierung verfallen — ' . $n,
@@ -445,6 +512,24 @@ function mail_katalog(): array
                 $d['kern'] . "\n\n" . $d['link'],
                 "Diese Nachricht kommt höchstens einmal je Stunde, auch wenn in der Zwischenzeit\n"
                 . "mehrere Registrierungen eingehen."),
+        ],
+
+        /* DIE RUNDMAIL (P5c/AP1, E-P5c-13). Der Kern ist der Text der
+         * Ankuendigung, woertlich — die BetreiberIn hat ihn geschrieben, und
+         * der Streifen zeigt denselben. Die FRIST IST EIN TAG: Die Rundmail
+         * wird nur eingereiht (`$sofort = false`), und auf einer Anlage ohne
+         * Cron traegt der Huckepack-Job sie erst hinaus, wenn jemand eine
+         * Seite aufruft. Eine Wartungsankuendigung, die zwei Tage spaeter
+         * ankommt, ist keine mehr. Art `konto`: Sie geht an die Konten, nicht
+         * an die Verwaltung. */
+        'rundmail' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['text'],
+            'betreff' => fn(array $d): string => 'Ankündigung — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                wordwrap((string)$d['text'], 78),
+                "Diese Nachricht ging an alle Konten der " . $n . ",\n"
+                . "die sich anmelden können. Dieselbe Ankündigung steht bis zu ihrem Ablauf\n"
+                . "über jeder Seite der Anwendung."),
         ],
 
         'testmail' => [
@@ -514,23 +599,34 @@ function mail_praefix(): string
 }
 
 /**
- * Eine Nachricht einreihen UND sofort versuchen.
+ * Eine Nachricht einreihen UND sofort versuchen — oder nur einreihen.
  *
  * @param string $schluessel Eintrag aus `mail_katalog()`
  * @param string $empfaenger Eine Adresse
  * @param array  $daten      Die Pflichtwerte des Eintrags
+ * @param bool   $sofort     `false` = nur einreihen; der Job traegt sie hinaus
  * @return string MAIL_ZUGESTELLT | MAIL_WARTET | MAIL_ABGELEHNT
+ *
+ * NUR EINREIHEN (P5c/AP1, F-P5c-29) gibt es fuer die Rundmail: Der sofortige
+ * Versuch kostet bis zu MAIL_BUDGET_S je Nachricht, und vierzig Empfaenger
+ * in einem Seitenaufruf waeren bis zu 200 s. Es ist EIN Parameter an DIESER
+ * Funktion und keine zweite: Pruefung, Praefix, Frist und das Schliessen
+ * ueberholter Zeilen muessen fuer beide Wege dieselben sein. Mit `false`
+ * ist die Antwort `MAIL_WARTET` oder `MAIL_ABGELEHNT`, nie `ZUGESTELLT` —
+ * und auch der Rueckfall ohne Warteschlange versucht dann nicht (die Zeile
+ * fehlt, also `ABGELEHNT`).
  *
  * WIRFT NICHT BEI EINEM FEHLENDEN PFLICHTWERT, sondern schreibt ins
  * Fehlerprotokoll und gibt `MAIL_ABGELEHNT` zurueck. Eine Ausnahme mitten im
  * Anlegen eines Kontos riesse den ganzen Vorgang mit — und die Mail ist
  * nicht der Vorgang. Der Fehler ist trotzdem einer und steht als solcher da.
  */
-function mail_einreihen(string $schluessel, string $empfaenger, array $daten = []): string
+function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [],
+                        bool $sofort = true): string
 {
     $katalog = mail_katalog();
     if (!isset($katalog[$schluessel])) {
-        error_log('mail: unbekannter Schluessel "' . $schluessel . '"');
+        system_melden('mail', 'unbekannter Schlüssel „' . $schluessel . '"');
         return MAIL_ABGELEHNT;
     }
     $e = $katalog[$schluessel];
@@ -539,13 +635,13 @@ function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [
      * unbrauchbarer Adresse wuerde fuenfmal versucht und fuenfmal scheitern. */
     if ($empfaenger === '' || strcspn($empfaenger, "\r\n") !== strlen($empfaenger)
         || !filter_var($empfaenger, FILTER_VALIDATE_EMAIL)) {
-        error_log('mail: unzulaessige Empfaengeradresse abgewiesen (' . $schluessel . ')');
+        system_melden('mail', 'unzulässige Empfängeradresse abgewiesen (' . $schluessel . ')');
         return MAIL_ABGELEHNT;
     }
 
     foreach ($e['pflicht'] as $k) {
         if (!array_key_exists($k, $daten) || (string)$daten[$k] === '') {
-            error_log('mail: "' . $schluessel . '" ohne Pflichtwert "' . $k . '" — nicht eingereiht');
+            system_melden('mail', '„' . $schluessel . '" ohne Pflichtwert „' . $k . '" — nicht eingereiht');
             return MAIL_ABGELEHNT;
         }
     }
@@ -589,12 +685,13 @@ function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [
          * DANN WIRD TROTZDEM VERSUCHT — ohne Warteschlange, wie vor Web
          * 20.8.0. Eine Einladung, die hinausgeht, ist besser als eine, die
          * an der fehlenden Warteschlange scheitert. */
-        error_log('mail: Warteschlange nicht verfuegbar (' . $ex->getMessage()
-                . ') — es wird ohne sie versucht');
+        system_melden('mail', 'Warteschlange nicht verfügbar — es wird ohne sie versucht', $ex);
+        if (!$sofort) { return MAIL_ABGELEHNT; }
         return smtp_send($empfaenger, $betreff, $text, MAIL_BUDGET_S)
             ? MAIL_ZUGESTELLT : MAIL_ABGELEHNT;
     }
 
+    if (!$sofort) { return MAIL_WARTET; }
     return mail_zeile_versuchen($id) ? MAIL_ZUGESTELLT : MAIL_WARTET;
 }
 

@@ -149,6 +149,23 @@ function _fk_name(PDO $pdo, string $tabelle, string $spalte): ?string
  * andere Frage, naemlich ob die Aenderung ueberhaupt noch aussteht. Eine
  * bereits geloeschte Spalte hat keinen Inhalt mehr — ohne 'skip' waere sie
  * damit von einer vollen nicht zu unterscheiden.
+ *
+ * ---- Eine dritte Angabe: die Vorbedingung (P5c/AP8, E-P5c-125) -------------
+ *
+ * 'vorbedingung'     : Funktion (PDO) -> Liste [was, Zahl, Beschreibung] wie
+ *                      `migrationen_inhalt_zaehlen()`. Leer heisst: Die
+ *                      Migration darf laufen.
+ * 'vorbedingung_weg' : EIN Satz, wie man die Vorbedingung herstellt.
+ *
+ * WARUM NICHT 'inhalt'. 'inhalt' zaehlt Zeilen MIT Inhalt, und seine Sperre
+ * laesst sich einzeln freigeben — richtig dort, wo die Migration ihren Zweck
+ * auch ueber Daten hinweg erfuellt, die jemand gesichert hat. Eine
+ * Vorbedingung ist das Gegenteil: Die Migration KANN nicht laufen, solange
+ * sie nicht erfuellt ist (`MODIFY … NOT NULL` ueber einer NULL-Zeile bricht
+ * ab oder macht, je nach `sql_mode`, still eine 0 daraus, und die zeigt auf
+ * kein Konto). Eine Freigabe haette hier nichts freizugeben. Deshalb steht
+ * die Zeile als `stopp` OHNE Freigabe-Kennung da, und `betrieb_updates.php`
+ * zeichnet kein Haekchen.
  */
 /**
  * Der Katalog. Eine Funktion und keine Variable, damit ihn zwei Aufrufer
@@ -3167,9 +3184,278 @@ function migrationen_katalog(): array
             'ALTER TABLE missions CHANGE `manual` uhr_gesperrt TINYINT(1) NOT NULL DEFAULT 0',
         ],
     ],
+    [
+        'id'    => '2026_09_24_rolle_support',
+        'web'   => '20.41',
+        'label' => 'Vierte Rolle: Support (P5c/AP4, R38)',
+        /* DER SUPPORT (E-P5c-14, -40). Er sieht Konten der Rolle `user` und
+         * ihre Geraete, sendet Setz-Link und Verifikationsmail neu, ohne den
+         * Link je zu sehen, und schaltet ein Geraet ab, aber nicht wieder an.
+         * Mehr nicht: kein Einspielen, kein Loeschen, keine Rollen, keine
+         * Stammdaten, keine Konten anderer Rollen. Die Rechte stehen im
+         * Code (`rolle_darf_support()`); hier steht nur, dass die Datenbank
+         * den Wert kennt — dieselbe Begruendung wie beim ENUM der dritten
+         * Rolle: Rollen werden bewusst und selten vergeben, und die Datenbank
+         * soll ausschliessen, was der Code nicht kennt.
+         *
+         * HINTEN ANGEHAENGT, NICHT NACH DER RANGFOLGE EINGEREIHT. Ein Wert am
+         * Ende eines ENUM ist eine Aenderung der Metadaten; ein Wert in der
+         * Mitte zwingt MySQL, die Tabelle umzukopieren, und verschiebt die
+         * Ordnungszahlen aller Zeilen, nach denen `ORDER BY role` sortiert.
+         * Die Rangfolge fuer die Anzeige steht in `ROLLEN`, nicht im ENUM.
+         *
+         * KEIN `zerstoert`: Es faellt nichts weg. Aelterer Code, der auf eine
+         * Zeile mit `support` trifft, macht ueber `rolle_normieren()` einen
+         * `user` daraus — ein Ruecksetzen ueber AP4 hinweg sperrt niemanden
+         * aus und erweitert keine Rechte. */
+        'skip'  => function (PDO $pdo): bool {
+            return str_contains((string)db_spalte_typ($pdo, 'users', 'role'), "'support'");
+        },
+        'sql'   => [
+            "ALTER TABLE users
+               MODIFY role ENUM('user','admin','betreiberin','support') NOT NULL DEFAULT 'user'",
+        ],
+    ],
+    [
+        'id'    => '2026_09_24_zweitfaktor',
+        'web'   => '20.42',
+        'label' => 'Zweitfaktor: Geheimnis, letzter Zeitschritt, Wiederherstellungscodes (P5c/AP5)',
+        /* DER ZWEITFAKTOR (E-P5c-54). Drei Spalten an `users` und eine Tabelle.
+         *
+         * `totp_geheimnis` traegt das versiegelte Geheimnis (`edsk1:` …, rund
+         * 90 Zeichen); `totp_seit` ist erst nach einem bestaetigten Code
+         * gesetzt — ein Geheimnis ohne `totp_seit` ist eine angefangene
+         * Einrichtung und schaltet nichts ein; `totp_schritt` haelt den
+         * letzten angenommenen Zeitschritt, damit kein Code zweimal gilt.
+         *
+         * `totp_codes` haengt NICHT am Serverschluessel (E-P5c-42): Sie sind
+         * der Rueckweg fuer genau den Fall, dass er fehlt. `ON DELETE CASCADE`,
+         * weil ein Code ohne Konto nichts mehr bedeutet — anders als ein
+         * Protokolleintrag, der die Loeschung ueberleben soll.
+         *
+         * ERST DIE TABELLE, DANN DIE SPALTEN, und `skip` fragt nach beidem.
+         * Scheitert das zweite Stueck, laeuft beim naechsten Aufruf das erste
+         * dank `IF NOT EXISTS` ohne Fehler durch. Bis beides steht, ist der
+         * Zweitfaktor stumm (`totp_spalten_da()`, E-P5c-53): keine
+         * Code-Abfrage, kein Tor. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_spalte($pdo, 'users', 'totp_seit') && db_hat_tabelle($pdo, 'totp_codes');
+        },
+        'sql'   => [
+            "CREATE TABLE IF NOT EXISTS totp_codes (
+               id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               user_id    INT UNSIGNED NOT NULL,
+               hash       VARCHAR(255) NOT NULL,
+               benutzt_am DATETIME NULL,
+               KEY idx_konto (user_id),
+               CONSTRAINT fk_totp_codes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            "ALTER TABLE users
+               ADD COLUMN totp_geheimnis VARCHAR(200) NULL,
+               ADD COLUMN totp_seit      DATETIME NULL,
+               ADD COLUMN totp_schritt   BIGINT UNSIGNED NULL",
+        ],
+    ],
+    [
+        'id'    => '2026_09_24_rueckweg_schluesselpaar',
+        'web'   => '20.43',
+        'label' => 'Rückweg beim Zweitfaktor: Schlüsselpaar je Konto (Konzept RW)',
+        /* DAS PAAR DES RUECKWEGS (Konzept RW, E-RW-05). Drei Spalten an
+         * `users`, keine Tabelle: Die Herausforderung lebt in der halben
+         * Anmeldesitzung (E-RW-04), nicht in der Datenbank.
+         *
+         * `rw_oeffentlich` ist der oeffentliche Teil (SPKI, Base64, 124
+         * Zeichen fuer P-256), `rw_privat` der private als Chiffretext unter
+         * dem Inhaltsschluessel (`edk1:`, rund 220 Zeichen), `rw_seit` der
+         * Zeitpunkt des Entstehens. Leer heisst: noch kein Paar — es entsteht
+         * beim naechsten Anmelden (E-RW-02).
+         *
+         * EINE ANWEISUNG FUER ALLE DREI: `ALTER TABLE` legt sie gemeinsam an
+         * oder gar nicht, und `skip` fragt nach der letzten. Bis sie steht,
+         * ist der Rueckweg stumm (`rw_spalten_da()`). Nichts wird geloescht —
+         * die Migration ist nicht zerstoerend. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_spalte($pdo, 'users', 'rw_seit');
+        },
+        'sql'   => [
+            "ALTER TABLE users
+               ADD COLUMN rw_oeffentlich VARCHAR(255) NULL,
+               ADD COLUMN rw_privat      TEXT NULL,
+               ADD COLUMN rw_seit        DATETIME NULL",
+        ],
+    ],
+    [
+        'id'    => '2026_09_24_statistik_beginn',
+        'web'   => '20.47',
+        'label' => 'Statistik: Indizes auf Beginn und Papierkorb der Einsätze (P5c/AP7, Nr. 191)',
+        /* EINE ZAEHLUNG AB BEGINN DES EINSATZES (E-P5c-18, R38). Die
+         * Statistik der BetreiberIn zaehlt seit Web 20.47.0 ueber alle Konten
+         * nach `missions.started_at`, in fuenf Fenstern mit Unter- UND
+         * Obergrenze. Der vorhandene Index `idx_user_started` fuehrt mit
+         * `user_id` und hilft einer Abfrage ueber alle Konten nicht; dieser
+         * fuehrt mit dem Beginn. Nr. 191 hat ihn seit S8 verlangt.
+         *
+         * UND DER PAPIERKORB-INDEX, WO ER FEHLT (F-P5c-39, F-P5c-124).
+         * `idx_missions_deleted` legte bis Web 20.46.0 nur die Migration
+         * `2026_07_22_papierkorb` an; `schema.sql` kannte ihn nicht, und jede
+         * FRISCH eingerichtete Anlage hat die Migration als 'skipped' ohne
+         * ihn. Ihn nur in `schema.sql` nachzutragen machte kuenftige Anlagen
+         * gleich und liesse jede bisherige frische ohne ihn — gemessen an der
+         * Sandbox. Deshalb legt diese Migration ihn dort nach, wo er fehlt.
+         *
+         * `run` statt `sql`, weil jeder Index nur angelegt wird, wenn er
+         * fehlt: Eine migrierte Anlage hat den zweiten schon, und ein
+         * doppeltes `ADD INDEX` bricht mit „Duplicate key name" ab. `skip`
+         * fragt nach beiden. Nicht zerstoerend — ein Index kostet Platz,
+         * keine Daten. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_index($pdo, 'missions', 'idx_missions_started')
+                && db_hat_index($pdo, 'missions', 'idx_missions_deleted');
+        },
+        'run'   => function (PDO $pdo): void {
+            if (!db_hat_index($pdo, 'missions', 'idx_missions_started')) {
+                $pdo->exec("ALTER TABLE missions ADD INDEX idx_missions_started (started_at)");
+            }
+            if (!db_hat_index($pdo, 'missions', 'idx_missions_deleted')) {
+                $pdo->exec("ALTER TABLE missions ADD INDEX idx_missions_deleted (user_id, deleted_at)");
+            }
+        },
+    ],
+    [
+        'id'    => '2026_09_25_zentrale_stammdaten',
+        'web'   => '21.0',
+        'label' => 'Stammdaten: jeder Eintrag gehört einem Konto, die Tabelle user_bases entfällt (P5c/AP8, R39, Nr. 168)',
+        'zerstoert' => 'die Tabelle user_bases (Auswahl zentraler Standorte je Konto)',
+        /* DER RUECKBAU VON R39 (E-P5c-19, -48). Zentrale Stammdaten
+         * (`user_id IS NULL`) gibt es in der Oberflaeche seit Web 18.0.0 nicht
+         * mehr, die Verwaltung dafuer ist mit S9/AP5b gefallen. Stehen blieben
+         * das Schema, das sie zuliess, und die Tabelle, die sie einem Konto
+         * zuordnete — und damit in jeder Abfrage ein „eigen ODER zentral".
+         * Ab hier traegt jede der sechs Tabellen ein Konto, und die Datenbank
+         * haelt das fest.
+         *
+         * ZUERST GEZAEHLT, NICHT FREIGEBBAR (E-P5c-125). Steht irgendwo noch
+         * eine Zeile ohne Konto, laeuft nichts, und die Zeile nennt, wo. Nach
+         * Auskunft der BetreiberIn tritt das nicht auf (E-P5c-48); die
+         * Zaehlung schuetzt eine Anlage, in die jemand ein altes
+         * Komplett-Backup einspielt — das bringt das alte Schema mit, und
+         * diese Migration steht danach wieder aus.
+         *
+         * `run` STATT `sql`: Jede Spalte wird nur gezogen, wo sie noch NULL
+         * zulaesst, und `user_bases` faellt zuletzt. Die Fehlertoleranz des
+         * `sql`-Wegs kennt 1051 („unknown table") nicht; `IF EXISTS` und die
+         * Frage vorher machen den Lauf wiederholbar, auch nach einem Abbruch
+         * in der Mitte. `MODIFY` behaelt Fremdschluessel und Indizes — geaendert
+         * wird nur, ob NULL erlaubt ist (gemessen an MariaDB 10.11; die
+         * Schemaprobe faehrt Fall 5 auf allen vier Fassungen). */
+        'skip'  => function (PDO $pdo): bool {
+            foreach (MIG_STAMMDATEN_TABELLEN as $t) {
+                if (db_spalte_nullbar($pdo, $t, 'user_id') === true) { return false; }
+            }
+            return !db_hat_tabelle($pdo, 'user_bases');
+        },
+        'vorbedingung' => function (PDO $pdo): array {
+            $fehlt = [];
+            foreach (MIG_STAMMDATEN_TABELLEN as $t) {
+                if (db_spalte_nullbar($pdo, $t, 'user_id') !== true) { continue; }
+                /* Der Tabellenname steht fest in MIG_STAMMDATEN_TABELLEN. */
+                $n = (int)$pdo->query("SELECT COUNT(*) FROM `$t` WHERE user_id IS NULL")->fetchColumn();
+                if ($n > 0) { $fehlt[] = [$t . '.user_id', $n, 'Einträge ohne Konto']; }
+            }
+            /* DIE ZWEITE ZAHL, DIE DER WEG BRAUCHT: Eigene Eintraege anderer
+             * Konten koennen an einem zentralen Standort haengen. Loescht man
+             * ihn, gehen sie per Kaskade mit; ordnet man ihn einem Konto zu,
+             * zeigen sie auf einen fremden Standort. Sie werden nur genannt,
+             * wenn es zentrale Standorte ueberhaupt gibt. */
+            if ($fehlt && db_spalte_nullbar($pdo, 'bases', 'user_id') === true) {
+                $haengen = 0;
+                foreach (array_diff(MIG_STAMMDATEN_TABELLEN, ['bases']) as $t) {
+                    $haengen += (int)$pdo->query(
+                        "SELECT COUNT(*) FROM `$t` x JOIN bases b ON b.id = x.base_id
+                          WHERE b.user_id IS NULL AND x.user_id IS NOT NULL")->fetchColumn();
+                }
+                if ($haengen > 0) {
+                    $fehlt[] = ['base_id', $haengen, 'eigene Einträge an einem Standort ohne Konto'];
+                }
+            }
+            return $fehlt;
+        },
+        'vorbedingung_weg' => 'Einträge ohne Konto lassen sich seit Web 18.0.0 nur noch '
+            . 'von Hand in der Datenbank bearbeiten: einem Konto zuordnen oder löschen '
+            . '(ein gelöschter Standort nimmt die Einträge mit, die an ihm hängen).',
+        'run'   => function (PDO $pdo): void {
+            foreach (MIG_STAMMDATEN_TABELLEN as $t) {
+                if (db_spalte_nullbar($pdo, $t, 'user_id') === true) {
+                    $pdo->exec("ALTER TABLE `$t` MODIFY user_id INT UNSIGNED NOT NULL");
+                }
+            }
+            $pdo->exec('DROP TABLE IF EXISTS user_bases');
+        },
+    ],
+    [
+        'id'    => '2026_09_25_ftp_entfernen',
+        'web'   => '21.0',
+        'label' => 'Sicherungsziele: das Protokoll FTP fällt aus dem Schema (P5c/AP8, Nr. 46)',
+        /* DER REST AUS S10 (E-S10-14, E-P5c-124). Seit Web 20.2.0 ist FTP
+         * weder waehlbar noch wird es beschickt; das ENUM behielt den Wert,
+         * und ein Ziel, das noch darauf stand, wurde uebergangen. Mit dem Wert
+         * faellt der ganze Weg dafuer — was die Datenbank nicht mehr annimmt,
+         * muss die Anwendung nicht mehr umschiffen.
+         *
+         * ZUERST GEZAEHLT, NICHT FREIGEBBAR: Ein `MODIFY` ueber einer Zeile
+         * mit `ftp` bricht ab oder macht, je nach `sql_mode`, still einen
+         * Leerstring daraus. Umstellen oder loeschen geht in der Oberflaeche. */
+        'skip'  => function (PDO $pdo): bool {
+            $typ = db_spalte_typ($pdo, 'backup_targets', 'protokoll');
+            return $typ === null || !str_contains($typ, "'ftp'");
+        },
+        'vorbedingung' => function (PDO $pdo): array {
+            $n = (int)$pdo->query("SELECT COUNT(*) FROM backup_targets WHERE protokoll = 'ftp'")
+                          ->fetchColumn();
+            return $n > 0 ? [['backup_targets.protokoll', $n, 'Sicherungsziele mit FTP']] : [];
+        },
+        /* DER ORT STAND BIS WEB 21.1.0 FALSCH („Verwaltung → Sicherungsziele",
+         * F-P5c-159): Die Seite heisst Backup-Ziele und steht unter Betrieb —
+         * und sie war im Wartungsmodus gesperrt, in dem dieser Satz erscheint.
+         * Seit E-P5c-134 ist sie offen. */
+        'vorbedingung_weg' => 'Unter Betrieb → Backup-Ziele auf SFTP oder FTPS '
+            . 'umstellen oder löschen.',
+        'sql'   => [
+            "ALTER TABLE backup_targets MODIFY protokoll ENUM('ftps','sftp') NOT NULL",
+        ],
+    ],
+    [
+        'id'    => '2026_09_25_tagesrettungsmittel_rollen',
+        'web'   => '21.0',
+        'label' => 'Diensttage mit anderem Rettungsmittel: Rollen der Betriebsart nachtragen (P5c/AP8, Nr. 169)',
+        /* NR. 169 FUER DEN BESTAND (E-P5c-47, E-P5c-123). Ein Tag mit einem
+         * Rettungsmittel NUR FUER DIESEN TAG bekommt seit Web 21.0.0 beim
+         * Zuordnen die Rollen seiner Betriebsart. Tage von vorher haben
+         * keinen Rollensatz und damit kein Besatzungsfeld; diese Migration
+         * traegt ihn nach — leere Zeilen, geloescht wird nichts.
+         *
+         * EIN RANDFALL, BENANNT: Ein Tag, dessen Rettungsmittel spaeter
+         * geloescht wurde, traegt ebenfalls `vehicle_id IS NULL` und einen
+         * eingefrorenen Namen. Hatte dieses Rettungsmittel Rollen, stehen sie
+         * im Tag, und er wird uebergangen; hatte es keine, bekommt er jetzt
+         * die seiner Betriebsart. Unterscheiden laesst sich das nicht — die
+         * Momentaufnahme sagt nicht, woher sie kam. */
+        'skip'  => function (PDO $pdo): bool {
+            require_once __DIR__ . '/diensttag_lib.php';
+            return dt_tagesrettungsmittel_ohne_rollen($pdo) === [];
+        },
+        'run'   => function (PDO $pdo): void {
+            require_once __DIR__ . '/diensttag_lib.php';
+            dt_tagesrettungsmittel_rollen_nachziehen($pdo);
+        },
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }
+
+/** Die sechs Stammdatentabellen mit `user_id` (P5c/AP8, Nr. 168). */
+const MIG_STAMMDATEN_TABELLEN = ['bases', 'vehicles', 'crew_presets', 'resources',
+                                 'bw_units', 'transport_dests'];
 
 /* ---- Inhaltspruefung vor destruktiven Migrationen (M6-01) ------------------
  *
@@ -3356,6 +3642,25 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
             continue;
         }
 
+        /* ---- Vorbedingung: kann sie ueberhaupt laufen? (P5c/AP8) --------
+         *
+         * VOR der Inhaltspruefung und OHNE Freigabe-Kennung (Element 6 bleibt
+         * null): Was hier sperrt, laesst sich nicht wegklicken, nur herstellen
+         * (E-P5c-125). Die Kette laeuft weiter wie bei 'inhalt' — nichts ist
+         * geschehen, und die spaeteren Migrationen sollen nicht mit warten. */
+        $fehlt = isset($m['vorbedingung']) ? ($m['vorbedingung'])($pdo) : [];
+        if ($fehlt) {
+            $results[] = [$m['id'], $m['label'], 'stopp',
+                          ($ausfuehren ? 'NICHT AUSGEFÜHRT' : 'WIRD NICHT AUSGEFÜHRT')
+                          . ' — Vorbedingung nicht erfüllt: '
+                          . migrationen_inhalt_text($fehlt) . '. '
+                          . ($m['vorbedingung_weg'] ?? '')
+                          . ($ausfuehren ? ' Es wurde nichts geändert.' : ''),
+                          $m['zerstoert'] ?? null, null, $m['web'] ?? null];
+            $blockiert++;
+            continue;
+        }
+
         /* ---- Inhalt: stuende etwas darin, das verlorenginge? (M6-01) ----
          *
          * OHNE DIE SCHLEIFE ZU VERLASSEN. Das ist der Unterschied zu einem
@@ -3436,6 +3741,17 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
             $results[] = [$m['id'], $m['label'], 'ok', $detail, $m['zerstoert'] ?? null, null,
                           $m['web'] ?? null];
             $gelaufen = true;
+            /* EIN EINTRAG JE AUSGEFÜHRTER MIGRATION (P5c/AP2, E-P5c-38). NUR,
+             * WENN ES DIE TABELLE SCHON GIBT: Die Migration, die sie anlegt,
+             * läuft in diesem Lauf mit, und ein Eintrag davor scheiterte und
+             * stünde als „nicht geschrieben" rot auf der Statusseite — ein
+             * Fehler, der keiner ist. */
+            if (db_hat_tabelle($pdo, 'protokoll_ereignisse')) {
+                require_once __DIR__ . '/protokoll_lib.php';
+                protokoll('verwaltung', 'migration_ausgefuehrt',
+                    'Migration ' . $m['id'] . ' ausgeführt — ' . $detail,
+                    ['id' => $m['id'], 'freigegeben' => (bool)$freigegeben]);
+            }
         } catch (Throwable $ex) {
             // Nicht verbuchen -> naechster Aufruf versucht es erneut
             $results[] = [$m['id'], $m['label'], 'fail',
@@ -3581,7 +3897,7 @@ function migrationen_tor_merken(PDO $pdo, bool $offen): void
         $st->execute([MIGRATION_TOR_HASH, migrationen_katalog_hash(),
                       MIGRATION_TOR_OFFEN, $offen ? '1' : '0']);
     } catch (Throwable $ex) {
-        error_log('Torwaechter: Zwischenspeicher nicht schreibbar: ' . $ex->getMessage());
+        system_rueckfall('torwaechter', 'Zwischenspeicher nicht schreibbar', $ex);
     }
 }
 
@@ -3600,7 +3916,7 @@ function migrationen_tor_zuruecksetzen(PDO $pdo): void
         $pdo->prepare('DELETE FROM app_state WHERE k IN (?, ?)')
             ->execute([MIGRATION_TOR_HASH, MIGRATION_TOR_OFFEN]);
     } catch (Throwable $ex) {
-        error_log('Torwaechter: Zwischenspeicher nicht loeschbar: ' . $ex->getMessage());
+        system_rueckfall('torwaechter', 'Zwischenspeicher nicht löschbar', $ex);
     }
 }
 
@@ -3628,7 +3944,7 @@ function migrationen_ausstehend(PDO $pdo): bool
         $l = migrationen_lauf($pdo, false);
         $offen = ((int)$l['offen'] + (int)$l['blockiert']) > 0;
     } catch (Throwable $ex) {
-        error_log('Torwaechter: Pruefung fehlgeschlagen: ' . $ex->getMessage());
+        system_rueckfall('torwaechter', 'Prüfung fehlgeschlagen', $ex);
         return false;
     }
     migrationen_tor_merken($pdo, $offen);

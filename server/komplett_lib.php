@@ -92,6 +92,29 @@ require_once __DIR__ . '/format_lib.php';      /* iso_utc() — ausdruecklich, n
 /** Unterordner in `sicherungen/`. Fester Name — der Zufall steckt im Dateinamen. */
 const KOMP_ORDNER = 'komplett';
 
+/**
+ * TABELLEN MIT SCHEMA, ABER OHNE ZEILEN (P5c/AP2, E-P5c-57, F-P5c-20).
+ *
+ * Beide führen IP-Adressen (und `sicherheit_ereignisse` E-Mail-Adressen) und
+ * verfallen bewusst nach 30 Tagen bzw. von selbst (E-P5a-09). Ein
+ * Komplett-Stand liegt länger und geht außer Haus — mit Zeilen hielte er,
+ * was die Anwendung gerade nicht halten will.
+ *
+ * WARUM NICHT GANZ WEGLASSEN: Nach einem Wiederanlauf aus einem Dump ohne
+ * die Tabellen scheitert `ratelimit_lib.php` bei der ersten Anmeldung, weil
+ * es in eine Tabelle schreibt, die es nicht gibt. Mit Schema und ohne
+ * Zeilen beginnt die neue Installation mit leeren Zählern — genau der
+ * Zustand, den 30 Tage später ohnehin jede hat. Muster: die Zeile `jobs`,
+ * die als Zustand mitgeht, aber nicht als Befehl (siehe den Neuanlauf in
+ * `komp_dump_schub()`).
+ *
+ * Tabelle => Grund, wie er im Dumpkopf steht.
+ */
+const KOMP_OHNE_ZEILEN = [
+    'sicherheit_ereignisse' => 'IP- und E-Mail-Adressen, verfallen nach 30 Tagen (E-P5a-09)',
+    'rate_limits'           => 'Zähler und Sperren nach IP-Adresse, verfallen von selbst',
+];
+
 /** Praefix eines Bauordners. Ein Punkt voran: kein Stand, sondern eine Baustelle. */
 const KOMP_BAU_PRAEFIX = '.bau-';
 
@@ -587,6 +610,12 @@ function komp_dump_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
                 $z['kopf'] = true;
                 $z['f'] = 0; $z['nach'] = null;
             }
+            if (isset(KOMP_OHNE_ZEILEN[$tab])) {
+                /* Schema ja, Zeilen nein — siehe KOMP_OHNE_ZEILEN. */
+                $schreib('-- `' . $tab . '`: ohne Zeilen — ' . KOMP_OHNE_ZEILEN[$tab] . '.');
+                $z['i']++; $z['kopf'] = false; $z['f'] = 0; $z['nach'] = null;
+                continue;
+            }
 
             $komb = komp_kombinationen($info['fest']);
             if ($z['f'] >= count($komb)) {
@@ -806,6 +835,10 @@ function komp_kopfzeilen(PDO $pdo, array $tabellen, array $z): array
         '-- Sie gehört ins getrennt aufbewahrte Wiederanlaufpaket; ohne den',
         '-- Serverschlüssel daraus ist eine versiegelte Fassung dieser Datei',
         '-- nicht zu öffnen. Siehe docs/Technik.md, Abschnitt 7.',
+        '-- OHNE ZEILEN: ' . implode(', ', array_keys(KOMP_OHNE_ZEILEN))
+            . ' — das Schema steht darin, die Zeilen nicht: IP- und',
+        '-- E-Mail-Adressen mit eigener, kurzer Frist (E-P5a-09). Nach dem',
+        '-- Einspielen beginnen Ratenschutz und Sperrereignisse leer.',
         '--',
         '-- Einspielbar mit:   mysql -uNUTZER -pPASSWORT DATENBANK < dump.sql',
         '--                    oder über „Installation wiederherstellen" der Anwendung.',
@@ -969,9 +1002,16 @@ function komp_siegel_schub(string $quelle, string $ziel, string $schluessel,
     /* Wie beim Dump: erst auf den gueltigen Teil zurueckschneiden. Der ist
      * hier ausrechenbar — der Kopf plus die Bloecke, die der Zustand kennt —,
      * steht aber trotzdem im Zustand, weil die Blocklaengen im Kopf der
-     * Bloecke stehen und nicht in einer Formel. */
+     * Bloecke stehen und nicht in einer Formel.
+     *
+     * IST DIE DATEI KUERZER ALS DER ZUSTAND SAGT — oder weg —, beginnt die
+     * Versiegelung von vorn. Anhaengen hiesse, Block `i` hinter ein Loch zu
+     * schreiben, und die Datei liesse sich spaeter nicht oeffnen, ohne dass
+     * jetzt jemand etwas merkte (Nr. 328). */
     $gueltig = (int)($z['siegel_bytes'] ?? 0);
-    if ($i === 0 || $gueltig === 0) {
+    clearstatcache(true, $ziel);
+    $da = is_file($ziel) ? (int)filesize($ziel) : -1;
+    if ($i === 0 || $gueltig === 0 || $da < $gueltig) {
         $fh = fopen($ziel, 'wb');
         if ($fh === false) { throw new RuntimeException('Die versiegelte Datei liess sich nicht anlegen: ' . $ziel); }
         fwrite($fh, KOMP_SIEGEL);
@@ -979,7 +1019,7 @@ function komp_siegel_schub(string $quelle, string $ziel, string $schluessel,
         $gueltig = ftell($fh);
         fclose($fh);
         $i = 0;
-    } elseif (is_file($ziel) && filesize($ziel) > $gueltig) {
+    } elseif ($da > $gueltig) {
         $fh = fopen($ziel, 'r+b');
         if ($fh !== false) { ftruncate($fh, $gueltig); fclose($fh); }
     }
@@ -1007,12 +1047,27 @@ function komp_siegel_schub(string $quelle, string $ziel, string $schluessel,
             if ($chiffre === false) {
                 throw new RuntimeException('Die Versiegelung ist fehlgeschlagen (Block ' . $i . ').');
             }
-            fwrite($zh, pack('N', strlen($chiffre)) . $nonce . $tag . $chiffre);
+            /* DIE GUELTIGE LAENGE WIRD MITGEZAEHLT, NICHT MIT `ftell()`
+             * ERFRAGT. Auf einem Handle im Anhaengemodus (`'ab'`) beginnt
+             * `ftell()` bei null und zaehlt nur, was DIESE Anfrage
+             * geschrieben hat — der Kopf und die Bloecke frueherer Haeppchen
+             * fehlen darin. Bis Web 21.1.1 stand hier genau das; das naechste
+             * Haeppchen schnitt die Datei dann auf diese zu kleine Zahl
+             * zurueck, mitten in einen schon geschriebenen Block, und das
+             * Backup liess sich nie mehr oeffnen (Nr. 328, F-P5c-170).
+             * Gezaehlt wird erst nach einem vollstaendigen Schreiben: Ein
+             * halber Block zaehlt nicht, und der naechste Lauf schneidet ihn
+             * weg. */
+            $satz = pack('N', strlen($chiffre)) . $nonce . $tag . $chiffre;
+            if (fwrite($zh, $satz) !== strlen($satz)) {
+                throw new RuntimeException('Die Versiegelung liess sich nicht vollständig '
+                    . 'schreiben (Block ' . $i . '): ' . $ziel);
+            }
+            $gueltig += strlen($satz);
             $i++; $getan++;
         }
     } finally {
         fclose($qh);
-        $gueltig = ftell($zh);
         fclose($zh);
     }
     $z['siegel_i'] = $i;
@@ -1178,7 +1233,7 @@ function komp_zustand_setzen(array $z): bool
             ->execute([json_encode($z), KOMP_JOB]);
         return true;
     } catch (Throwable $ex) {
-        error_log('komplett: Zustand liess sich nicht schreiben: ' . $ex->getMessage());
+        system_melden('komplett', 'Zustand ließ sich nicht schreiben', $ex);
         return false;
     }
 }
@@ -1291,8 +1346,9 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
             'geraeumt' => $geraeumt,
         ];
         komp_zustand_setzen($z);
-        error_log('komplett: Lauf gescheitert (' . $ex->getMessage() . '); Bauordner '
-                  . ($bau === '' ? 'gab es nicht' : ($geraeumt ? 'geraeumt' : 'NICHT geraeumt: ' . $bau)));
+        system_melden('komplett', 'Lauf gescheitert; Bauordner '
+                    . ($bau === '' ? 'gab es nicht' : ($geraeumt ? 'geräumt' : 'NICHT geräumt: ' . $bau)),
+                      $ex);
         throw $ex;
     }
 }
@@ -1387,6 +1443,16 @@ function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
             'verdraengt' => $weg,
             'warnung'    => array_values(array_unique($z['warnung'] ?? [])),
         ];
+        /* REITER SICHERUNG (P5c/AP2, E-P5c-38): Es gibt keine Tabelle, die
+         * festhält, wann ein Komplett-Stand entstand — der Dateiname sagt es,
+         * bis die Aufbewahrung ihn verdrängt. Der Eintrag hält es länger.
+         * Verdrängte Stände stehen in `daten`, nicht in je einem Eintrag. */
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll('sicherung', 'komplett_erzeugt',
+            'Komplett-Backup ' . $z['name'] . ' erzeugt (' . groesse_text($bytes) . ', '
+            . zahl_text((int)$z['zeilen']) . ' Zeilen in ' . (int)$z['tabellen'] . ' Tabellen)'
+            . ($weg ? ' — ' . count($weg) . ' älterer Stand verdrängt' : ''),
+            ['datei' => $z['name'], 'bytes' => $bytes, 'verdraengt' => $weg]);
         return ['erledigt' => $erledigt, 'fertig' => true];
     }
 

@@ -451,6 +451,25 @@ if ($db === null) {
           !in_array('ftp', array_column(sz_alle(), 'protokoll'), true),
           implode(', ', array_unique(array_column(sz_alle(), 'protokoll'))) ?: '(keine)');
 
+    /* UND DIE DATENBANK SELBST NIMMT ES NICHT MEHR AN (P5c/AP8, E-P5c-124).
+     * Bis Web 20.47.0 kannte das ENUM den Wert noch, und die Anwendung
+     * umschiffte ein solches Ziel (Plakette „wird übergangen"). Seither steht
+     * er nicht mehr im Schema — gemessen am Typ der Spalte UND an einem
+     * Schreibversuch an der Anwendung vorbei: Je nach `sql_mode` bricht er
+     * ab oder macht einen Leerstring daraus, ein `ftp` steht danach nie da. */
+    $typ = db_spalte_typ($db, 'backup_targets', 'protokoll');
+    pruef('Das Schema kennt ftp nicht mehr (Migration 2026_09_25_ftp_entfernen)',
+          $typ !== null && !str_contains($typ, "'ftp'"), (string)$typ);
+    try {
+        $db->exec("INSERT INTO backup_targets (name, protokoll, host, port, nutzer, erstellt_am)
+                   VALUES ('Versandprobe FTP-Schema', 'ftp', 'x', 21, 'x', UTC_TIMESTAMP())");
+    } catch (PDOException $e) { /* der Regelfall: STRICT_TRANS_TABLES */ }
+    $nachFtp = (int)$db->query("SELECT COUNT(*) FROM backup_targets WHERE protokoll = 'ftp'")
+                       ->fetchColumn();
+    pruef('...und ein Schreibversuch an der Anwendung vorbei hinterlaesst kein ftp',
+          $nachFtp === 0, $nachFtp . ' Zeilen');
+    $db->exec("DELETE FROM backup_targets WHERE name = 'Versandprobe FTP-Schema'");
+
     [$ok3, $f3] = sz_speichern(null, [
         'name' => 'Versandprobe Murks', 'protokoll' => 'gopher', 'host' => '',
         'port' => 99999, 'nutzer' => '', 'pfad' => '/', 'passiv' => 1, 'aktiv' => 1,
@@ -826,6 +845,142 @@ if ($db12 === null) {
     @rmdir($kontoOrd);
     @unlink($tmpF);
     echo "  Ziel, Prüfordner und der Zustand der übrigen Ziele wiederhergestellt.\n";
+}
+
+/* ====================================================================
+ * Teil 13 — Die Archive des Protokolls als dritte Dateiart (P5c/AP2)
+ *
+ * ANLASS: E-P5c-39 sagt zwei Dinge über die Archive, und keines davon hatte
+ * einen Gegenstand. Sie gehen mit dem Versand hinaus — die Protokollprobe
+ * misst nur, dass der Name als eigene Sicherung erkannt wird, nicht, dass
+ * eine Datei drüben ankommt. Und auf dem Ziel gilt für sie KEINE
+ * Aufbewahrungsregel: Ohne die eine Zeile in `sz_aufraeumen()` fiele der
+ * Ordner `protokoll` unter die Zahl je KONTO, und eine Regel „höchstens
+ * eins" löschte drüben alle Archive bis auf das jüngste — still, denn die
+ * Regel tut genau das, wofür sie gebaut ist.
+ *
+ * DAHER DIE REGEL HIER MIT „EINS", nicht mit zwei: Je kleiner die Zahl,
+ * desto sicherer fiele ein fehlender Riegel auf.
+ * ==================================================================== */
+kopf('Teil 13 — Die Archive des Protokolls: hinüber, und drüben bleiben sie');
+
+$db13 = null;
+try {
+    require_once __DIR__ . '/../../../server/db.php';
+    require_once __DIR__ . '/../../../server/protokoll_archiv_lib.php';
+    $db13 = (sz_tabelle_da() && sz_dateien_tabelle_da() && serverschluessel_da()) ? db() : null;
+} catch (Throwable $e) { $db13 = null; }
+
+if ($db13 === null) {
+    pruef('Teil 13 läuft (Tabellen und Serverschlüssel da)', false,
+          'AUSGEFALLEN — ohne Serverschlüssel gibt es keine Archive');
+} else {
+    $vorherAktiv13 = [];
+    foreach (sz_alle(true) as $za) { $vorherAktiv13[] = (int)$za['id']; }
+    if ($vorherAktiv13 !== []) {
+        $db13->exec('UPDATE backup_targets SET aktiv = 0 WHERE id IN ('
+                  . implode(',', $vorherAktiv13) . ')');
+    }
+    $db13->exec("DELETE FROM backup_targets WHERE name LIKE 'Versandprobe%'");
+    $versandVorher = app_state_lesen(PROTOKOLL_K_ARCHIV_VERSAND);
+
+    /* Drei Archive mit gültigem Namen und der Kennung dieses Schlüssels.
+     * Der Versand öffnet sie nicht — ihr Inhalt ist gleichgültig. Jahr 2020,
+     * damit kein echtes Archiv denselben Namen trägt. */
+    $ordA = protokoll_archiv_wurzel();
+    @mkdir($ordA, 0700, true);
+    $kenn13 = (string)serverschluessel_kennung();
+    $archive13 = [];
+    for ($i = 1; $i <= 3; $i++) {
+        $dn = sprintf('2020-01-%02dT23-00-00Z_%s.zip', $i * 7, $kenn13);
+        file_put_contents($ordA . '/' . $dn, str_repeat('A', 50 + $i));
+        $archive13[] = $dn;
+    }
+    $vierte13 = '2020-02-01T23-00-00Z_' . $kenn13 . '.zip';
+
+    [$ok13, $zid13] = sz_speichern(null, [
+        'name' => 'Versandprobe Protokollarchiv', 'protokoll' => 'sftp', 'host' => HOST,
+        'port' => P_SFTP, 'nutzer' => NUTZER, 'pfad' => PFAD_SFTP,
+        'passiv' => 1, 'aktiv' => 1,
+        'aufraeumen' => 1, 'behalten_konto' => 1, 'behalten_komplett' => 1,
+    ], PASSWORT, null);
+    pruef('Ein Ziel MIT Regel „eins je Konto" lässt sich anlegen', $ok13 === true,
+          is_int($zid13) ? "Kennung $zid13" : implode(' ', (array)$zid13));
+    $zid13 = (int)$zid13;
+
+    $zaehle13 = static function (string $datei = '') use ($db13, $zid13): int {
+        $st = $db13->prepare('SELECT COUNT(*) FROM sicherungsziel_dateien
+                               WHERE ziel_id = ? AND ordner = ? AND geloescht_am IS NULL'
+                             . ($datei !== '' ? ' AND datei = ?' : ''));
+        $st->execute($datei !== '' ? [$zid13, PROTOKOLL_ARCHIV_ORDNER, $datei]
+                                   : [$zid13, PROTOKOLL_ARCHIV_ORDNER]);
+        return (int)$st->fetchColumn();
+    };
+    $drueben13 = static function (): array {
+        $w = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, PFAD_SFTP, null);
+        $w->verbinden();
+        $l = array_keys($w->liste(PROTOKOLL_ARCHIV_ORDNER));
+        $w->trennen();
+        return array_values(array_filter($l, static fn($n) => str_starts_with($n, '2020-')));
+    };
+
+    app_state_setzen(PROTOKOLL_K_ARCHIV_VERSAND, '1');
+    $budget13 = static fn(): float => 300.0;
+    $m1 = sz_versand_schub($budget13, 1.0);
+    pruef('Mit Versand an gehen die drei Archive hinüber', $zaehle13() === 3,
+          $zaehle13() . ' im Versandprotokoll unter „protokoll", Fehler: '
+          . (implode(' | ', $m1['fehler']) ?: 'keine'));
+    pruef('...und liegen drüben im Ordner „protokoll"', count($drueben13()) === 3,
+          implode(', ', $drueben13()) ?: '(keine)');
+    /* GEZAEHLT IM ORDNER `protokoll`, nicht an `geloescht` des Laufs: Die
+     * Regel „eins je Konto" raeumt im selben Lauf Kontopakete ANDERER Konten
+     * auf, die hier liegen (Kreislauf, Demo) — zu Recht. Der erste Bau
+     * dieses Teils zaehlte die mit und war rot, ohne dass ein Archiv fehlte. */
+    $weg13 = static function () use ($db13, $zid13): int {
+        $st = $db13->prepare('SELECT COUNT(*) FROM sicherungsziel_dateien
+                               WHERE ziel_id = ? AND ordner = ? AND geloescht_am IS NOT NULL');
+        $st->execute([$zid13, PROTOKOLL_ARCHIV_ORDNER]);
+        return (int)$st->fetchColumn();
+    };
+    pruef('Die Regel „eins je Konto" hat drüben KEIN Archiv entfernt',
+          count($drueben13()) === 3 && $weg13() === 0,
+          $weg13() . ' Archive gelöscht, drüben ' . count($drueben13())
+          . ' (im ganzen Lauf ' . (int)$m1['geloescht'] . ' Kontopakete anderer Konten)');
+
+    sz_versand_schub($budget13, 1.0);
+    pruef('Auch ein zweiter Lauf nach erfolgreichem Versand lässt alle drei liegen',
+          count($drueben13()) === 3 && $weg13() === 0,
+          $weg13() . ' Archive gelöscht, drüben ' . count($drueben13()));
+
+    app_state_setzen(PROTOKOLL_K_ARCHIV_VERSAND, '0');
+    file_put_contents($ordA . '/' . $vierte13, str_repeat('A', 60));
+    sz_versand_schub($budget13, 1.0);
+    pruef('Mit Versand aus bleibt ein neues Archiv hier', $zaehle13($vierte13) === 0
+          && !in_array($vierte13, $drueben13(), true),
+          $zaehle13($vierte13) . ' im Versandprotokoll');
+
+    /* ---- Aufräumen ----------------------------------------------------- */
+    try {
+        $wR = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, PFAD_SFTP, null);
+        $wR->verbinden();
+        foreach ($drueben13() as $fn) {
+            try { $wR->loeschen(PROTOKOLL_ARCHIV_ORDNER . '/' . $fn); } catch (Throwable $x) {}
+        }
+        $wR->trennen();
+    } catch (Throwable $x) {}
+    sz_loeschen($zid13);
+    $db13->exec("DELETE FROM backup_targets WHERE name LIKE 'Versandprobe%'");
+    if ($vorherAktiv13 !== []) {
+        $db13->exec('UPDATE backup_targets SET aktiv = 1 WHERE id IN ('
+                  . implode(',', $vorherAktiv13) . ')');
+    }
+    foreach (array_merge($archive13, [$vierte13]) as $dn) { @unlink($ordA . '/' . $dn); }
+    if ($versandVorher === null) {
+        db()->prepare('DELETE FROM app_state WHERE k = ?')->execute([PROTOKOLL_K_ARCHIV_VERSAND]);
+    } else {
+        app_state_setzen(PROTOKOLL_K_ARCHIV_VERSAND, $versandVorher);
+    }
+    echo "  Ziel, Archive hier und drüben und die Einstellung wiederhergestellt.\n";
 }
 
 printf("\n-> %d Erwartungen, %d nicht erfuellt\n", $n, $offen);

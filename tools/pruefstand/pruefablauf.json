@@ -24,6 +24,11 @@
       "aufruf": "bash tools/quelltext/pruefen.sh linkprobe",
       "braucht": "nichts"
     },
+    "anker": {
+      "aufruf": "bash tools/quelltext/pruefen.sh anker",
+      "braucht": "nichts",
+      "bemerkung": "P5c/AP9, Anlass Nr. 188. Jeder Verweis hilfe.php#... aus server/ gegen die Marken des gerenderten Handbuchs (doku_seite, derselbe Weg wie hilfe.php) -- seit jede Karte unter Verwaltung und Betrieb auf ihre Stelle im Handbuch verweist, bricht eine umformulierte Ueberschrift sonst still."
+    },
     "bestand": {
       "aufruf": "bash tools/quelltext/pruefen.sh bestand",
       "braucht": "nichts",
@@ -42,6 +47,11 @@
     "installweiche": {
       "aufruf": "bash tools/quelltext/pruefen.sh installweiche",
       "braucht": "nichts"
+    },
+    "behandler": {
+      "aufruf": "bash tools/quelltext/pruefen.sh behandler",
+      "braucht": "nichts",
+      "bemerkung": "P5c/AP3, Nr. 248: genau ein Ausnahme-, ein Fehler- und ein Abschlussbehandler in server/db.php. Ein Riegel und keine Registerzeile, weil das Register nur Decken kennt -- ein entfernter Behandler waere dort gruen."
     },
     "sitzungshaertung": {
       "aufruf": "bash tools/quelltext/pruefen.sh sitzungshaertung",
@@ -85,6 +95,15 @@
     },
     "komplettprobe": {
       "aufruf": "bash tools/proben/proben.sh komplett",
+      "braucht": "installation"
+    },
+    "rollenprobe": {
+      "aufruf": "bash tools/proben/proben.sh rollen",
+      "braucht": "installation",
+      "bemerkung": "Die Matrix steht in docs/Technik.md 4.99p zwischen den Markierungen rollenprobe:anfang und rollenprobe:ende; die Probe liest sie von dort (E-P5c-22)."
+    },
+    "protokollprobe": {
+      "aufruf": "bash tools/proben/proben.sh protokoll",
       "braucht": "installation"
     },
     "wiederherstellung": {
@@ -154,7 +173,7 @@
     "bilderlauf": {
       "aufruf": "node tools/screenshots/aufnehmen.mjs --stufe {stufe}",
       "braucht": "installation",
-      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920), Chromium; neben = acht Breiten; haupt = acht Breiten, alle drei Engines. pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05) -- bis dahin stand hier fest --stufe klein, und jede Stufe bekam drei Breiten."
+      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920), Chromium; neben = acht Breiten; haupt = acht Breiten, alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM: aufnehmen.mjs nimmt einen Motor aus --motor, die Stufe waehlt nur die Breiten (F-P5c-103, Backlog Nr. 300; P5c/AP4 hat Firefox und WebKit von Hand gefahren). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05) -- bis dahin stand hier fest --stufe klein, und jede Stufe bekam drei Breiten."
     },
     "stilvergleich": {
       "aufruf": "bash tools/stilvergleich/gegen.sh",
@@ -162,8 +181,9 @@
       "bemerkung": "proben.py allein baut nur die vier Proben und gibt ohne Argumente seine Anleitung aus; der Vergleich ist stilvergleich.js und braucht den alten Stand (F-PK-20). braucht=nichts, weil der Vergleich gegen zwei Stylesheets laeuft, nicht gegen die Anlage."
     },
     "messstand": {
-      "aufruf": "node tools/messstand/browserprobe.mjs",
-      "braucht": "installation"
+      "aufruf": "python3 tools/messstand/messen.py --frisch",
+      "braucht": "installation",
+      "bemerkung": "Seit P5c/AP4 die ganze Kette (F-P5c-104): Konto, Bestand von 5050 Einsaetzen, Einspielen, Browser, Server — rund zehn Minuten. Bis dahin stand hier nur browserprobe.mjs, und die meldet sich mit einem Konto an, das auf einer frischen Anlage niemand angelegt hatte: Im ersten Lauf der Hauptstufe seit PK-05 scheiterte die Anmeldung, und die Probe wartete 1086 s auf Elemente, die nie kamen. Das Konto legt messen.py selbst an (Schritt konto, ueber das Pruefkonto der Anlage); die Zuarbeit aus F-PK-22 ist damit nicht noetig."
     },
     "kreislauf-csv": {
       "aufruf": "python3 tools/referenzdatensatz/vergleich/kreislauf.py --art csv --frisch",
@@ -176,8 +196,9 @@
       "bemerkung": "--frisch seit RP-01: Ohne den Schalter bricht der zweite Lauf auf einer nicht frischen Anlage ab, weil das Umlaufkonto schon besteht (F-RP-11)."
     },
     "schemaprobe": {
-      "aufruf": "php tools/schemaprobe/probe.php --datenbank nadoku_probe",
-      "braucht": "plattform"
+      "aufruf": "bash tools/sandbox/plattform.sh schema",
+      "braucht": "plattform",
+      "bemerkung": "Bis P5c/AP2 stand hier der Aufruf ohne Zugangsdaten (root ohne Passwort) und scheiterte an der örtlichen MariaDB; in keinem Prüfbericht war die Schemaprobe gemessen (F-P5c-88). plattform.sh kennt die Zugangsdaten je Fassung und fährt alle vier."
     },
     "android-bau": {
       "aufruf": "cd android && ANDROID_HOME=${ANDROID_HOME:-/opt/android-sdk} ./gradlew build",
@@ -205,8 +226,27 @@
       "nach": [
         "kreislauf-edbak"
       ]
+    },
+    "zweitfaktorprobe": {
+      "aufruf": "bash tools/proben/proben.sh zweitfaktor",
+      "braucht": "installation",
+      "bemerkung": "RFC-6238-Vektoren 6/6, Code-Schritt über HTTP, Einrichtungstor, Demo-Reset, Bus-Faktor (P5c/AP5). Den Demo-Reset misst sie an seinem Schritt demo_zweitfaktor_leeren() und nicht am ganzen Reset -- bis F-P5c-117 setzte sie den Demo-Bestand zurueck und machte die GPX-Probe danach blind."
+    },
+    "rueckwegprobe": {
+      "aufruf": "bash tools/proben/proben.sh rueckweg",
+      "braucht": "installation",
+      "bemerkung": "Konzept RW. Teil A (RW-01): Selbsttest beider Engines gegen den festen Browser-Vektor, sechs Signaturfaelle, fremde Kurven, Pruefregeln, Statuszeile in drei Lagen, Marke. Braucht die Datenbank nur fuer die Marke in app_state und stellt sie danach wieder her."
     }
   },
+  "stufenregeln": [
+    {
+      "id": "migration",
+      "datei": "server/migration_lib.php",
+      "muster": "^\\s*'id'\\s*=>\\s*'(\\d{4}_\\d{2}_\\d{2}_[A-Za-z0-9_]+)'",
+      "stufe": "haupt",
+      "anlass": "E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3)."
+    }
+  ],
   "riegel": {
     "beschreibung": "Die billigen Riegel. Sie laufen in JEDER Stufe und werden im Tor gegengelesen (docs/Pruefablauf.md 5.1). Kein Muster, keine Bedingung -- sie kosten zusammen rund 25 s.",
     "proben": [
@@ -215,10 +255,12 @@
       "vollstaendigkeit",
       "kontraste",
       "linkprobe",
+      "anker",
       "bestand",
       "syntax-py",
       "handbuch",
       "installweiche",
+      "behandler",
       "sitzungshaertung",
       "cspprobe",
       "jobregister",
@@ -336,12 +378,85 @@
       "ab": "klein",
       "pfade": [
         "server/mail_lib.php",
-        "server/email_lib.php"
+        "server/email_lib.php",
+        "server/ankuendigung_lib.php"
       ],
       "proben": [
         "mailprobe"
       ],
-      "anlass": "smtp_letzter_fehler()"
+      "anlass": "smtp_letzter_fehler(); Rundmail Nr. 296"
+    },
+    {
+      "id": "rollen",
+      "ab": "klein",
+      "pfade": [
+        "server/auth_guard.php",
+        "server/db.php",
+        "server/admin_*.php",
+        "server/betrieb_*.php",
+        "server/api/rechtstext_vorschau.php",
+        "docs/Technik.md"
+      ],
+      "proben": [
+        "rollenprobe"
+      ],
+      "anlass": "Nr. 286, Nr. 149"
+    },
+    {
+      "id": "zweitfaktor",
+      "ab": "klein",
+      "pfade": [
+        "server/login.php",
+        "server/auth_guard.php",
+        "server/totp_lib.php",
+        "server/zweitfaktor.php",
+        "server/zweitfaktor_teile.php",
+        "server/codeblatt.php",
+        "server/status_lib.php",
+        "server/demo_lib.php",
+        "tools/zweitfaktor/**"
+      ],
+      "proben": [
+        "zweitfaktorprobe"
+      ],
+      "anlass": "F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset)"
+    },
+    {
+      "id": "rueckweg",
+      "ab": "klein",
+      "pfade": [
+        "server/rueckweg_lib.php",
+        "server/status_lib.php",
+        "server/vendor/phpseclib3/**",
+        "server/api/rueckweg_anlegen.php",
+        "server/assets/rueckweg.js",
+        "server/login.php",
+        "server/zweitfaktor.php",
+        "tools/proben/rueckweg/**",
+        "tools/bedienprobe/wege/einstellungen_profil_rueckweg.mjs"
+      ],
+      "proben": [
+        "rueckwegprobe",
+        "rollenprobe",
+        "bedienprobe"
+      ],
+      "anlass": "Nr. 319 (F-P5c-106: Rueckweg pruefte gegen einen Wert aus der Datenbank), Konzept RW E-RW-03, -11, -12"
+    },
+    {
+      "id": "protokoll",
+      "ab": "klein",
+      "pfade": [
+        "server/protokoll_lib.php",
+        "server/protokoll_archiv_lib.php",
+        "server/zip_lib.php",
+        "server/admin_protokoll.php",
+        "server/systemmeldung_lib.php"
+      ],
+      "proben": [
+        "protokollprobe",
+        "versandprobe"
+      ],
+      "anlass": "F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39); protokollprobe Teil 7 für das Fehlerprotokoll (Nr. 248)"
     },
     {
       "id": "sicherungsziel",
@@ -377,6 +492,19 @@
         "wartungsprobe"
       ],
       "anlass": "F-S8-P-04, Nr. 171"
+    },
+    {
+      "id": "health",
+      "ab": "klein",
+      "pfade": [
+        "server/api/health.php",
+        "server/speicher_lib.php"
+      ],
+      "proben": [
+        "ratenprobe",
+        "wartungsprobe"
+      ],
+      "anlass": "E-P5c-17, -52 (Health, P5c/AP6): Token, Felder, Migration und Menge in der Ratenprobe, die Antwort aus dem Tor in der Wartungsprobe"
     },
     {
       "id": "datenbank",
@@ -487,7 +615,8 @@
       "id": "stylesheet",
       "ab": "klein",
       "pfade": [
-        "server/assets/style.css"
+        "server/assets/style.css",
+        "tools/stilvergleich/**"
       ],
       "proben": [
         "stilvergleich",
@@ -572,9 +701,26 @@
         "bilderlauf",
         "kreislauf-csv",
         "kreislauf-edbak",
-        "spaltenregister-wegprobe"
+        "spaltenregister-wegprobe",
+        "protokollprobe",
+        "rollenprobe",
+        "zweitfaktorprobe",
+        "rueckwegprobe"
       ],
-      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32)."
+      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01."
+    },
+    {
+      "id": "statistik",
+      "ab": "klein",
+      "pfade": [
+        "server/betrieb_statistik.php",
+        "server/statistik_lib.php"
+      ],
+      "proben": [
+        "messstand",
+        "bilderlauf"
+      ],
+      "anlass": "Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Steht am ENDE der Muster: Die Reihenfolge der Proben ist die ihres ersten Auftretens, und Messstand und Bilderlauf weiter vorn schoben die demo-empfindlichen Proben hinter den Demo-Reset (F-P5c-127, Nr. 322)"
     },
     {
       "id": "mengen",

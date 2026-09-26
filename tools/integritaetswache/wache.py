@@ -197,6 +197,27 @@ NICHT_PRUEFEN = {'.md'}
 # erreichbare -- die Wache hat keine Zugangsdaten und soll keine bekommen.
 SEITEN = ['login.php']
 
+# FORMULARE, DIE NUR MIT EINER SITZUNG IN DER SEITE STEHEN (seit Web 20.42.0,
+# P5c/AP5). Der Code-Schritt des Zweitfaktors steht in `login.php`, aber nur
+# nach einem richtigen Passwort -- mit dem halben Stand `totp_halb` in der
+# Sitzung. Die Wache fragt ohne Sitzung und sieht ihn deshalb nie.
+#
+# DIE AUSNAHME IST ENG: Ein Formular dieser Liste darf in der Auslieferung
+# FEHLEN; steht es da, muss es Zeichen fuer Zeichen das der Quelle sein.
+# Jedes weitere Formular bleibt eine Abweichung. Der Code-Schritt nimmt den
+# Code aus der App, nicht das Passwort -- das Passwort ist zu dem Zeitpunkt
+# schon gesendet, und zwar ueber das Formular, das die Wache weiter
+# vollstaendig vergleicht. Die Selbstprobe haelt jeden Eintrag gegen die
+# Quelle: Eine Ausnahme ohne Gegenstand ist rot.
+#
+# SEIT WEB 20.45.0 (Konzept RW, RW-03) steht der Schluesselschritt daneben:
+# `?weg=schluessel` im selben halben Stand. Er nimmt den
+# Wiederherstellungsschluessel NICHT entgegen -- sein Feld hat keinen Namen,
+# gesendet wird eine Signatur --, und seine Skripte stehen immer in der
+# Seite, damit die Wache sie vergleicht.
+BEDINGTE_FORMULARE = {'login.php': ['<form method="post" id="codeform">',
+                                    '<form method="post" id="schluesselform">']}
+
 # Ein Attributname beginnt nach Leerraum, nicht nach einem Bindestrich: `\bsrc`
 # traf auch `data-src` -- die Wortgrenze liegt am Bindestrich --, und ein
 # <script data-src="x">…</script> galt damit als Fremdskript "x" statt als
@@ -383,6 +404,31 @@ def normalisiere_src(src: str) -> str:
     return src.lstrip('/')
 
 
+def huelle_srcs(quelle: str) -> list[str]:
+    """Die Skripte, die die SEITENHUELLE einer Seite gibt (`ui_seite_start()`
+    in `ui.php`), wenn die Seite sie aufruft.
+
+    SEIT WEB 20.34.0 (Schritt 15, AP8) stehen `assets/api.js` und
+    `assets/format.js` im Kopf JEDER Seite -- ausgegeben von `ui.php`, nicht
+    von `login.php`. Die Wache kannte nur die Quelle der Seite und meldete
+    beide seither taeglich als ZUSAETZLICH (Lauf 124 gegen Produktiv,
+    24.09.2026, F-P5c-110): ein Fehlalarm, und eine Wache, die jeden Tag rot
+    ist, schaut bald niemand mehr an. Gelesen wird die Huelle aus DEMSELBEN
+    Vergleichsstand wie die Seite (`SERVER`), nicht als feste Liste -- sonst
+    liefe die Liste der naechsten Aenderung an `ui.php` hinterher.
+    """
+    if 'ui_seite_start(' not in quelle:
+        return []
+    ui = SERVER / 'ui.php'
+    if not ui.is_file():
+        return []
+    m = re.search(r'\nfunction ui_seite_start\b.*?\n}\n', ui.read_text(encoding='utf-8'), re.S)
+    if not m:
+        return []
+    return [normalisiere_src(x) for x in
+            re.findall(r"<script src=\"' \. ui_asset\('([^']+)'\)", m.group(0))]
+
+
 def quell_srcs(quelle: str) -> tuple[list[str], int]:
     """Die externen Skripte, wie die Quelle sie nennt. `<?= asset('x') ?>` wird
     aufgeloest; ein anderer PHP-Ausdruck ist nicht bestimmbar und wird gezaehlt."""
@@ -495,6 +541,7 @@ def seite_vergleichen(seite: str, quelle: str, geliefert: str) -> tuple[list[str
 
     # -- Externe Skripte: dieselbe Menge, kein Verweis mehr und keiner weniger.
     soll_src, z['src_unbestimmt'] = quell_srcs(quelle)
+    soll_src = huelle_srcs(quelle) + soll_src
     ist_src = [normalisiere_src(src_wert(m)) for m in SRC_RE.finditer(geliefert)]
     for src in soll_src:
         if src in ist_src:
@@ -510,6 +557,11 @@ def seite_vergleichen(seite: str, quelle: str, geliefert: str) -> tuple[list[str
     # -- Formulare: die Tags selbst, samt Attributen. Ein fremdes `action`
     #    schickte das Passwort woandershin, ohne dass ein Skript sich aendert.
     f_soll, f_ist = form_paare(quelle, geliefert)
+    bedingt = [f for f in BEDINGTE_FORMULARE.get(seite, []) if f in f_soll]
+    for f in bedingt:
+        f_soll.remove(f)
+        if f in f_ist:
+            f_ist.remove(f)
     a, z['form_gleich'], _ = menge_vergleichen(seite, 'Formular', f_soll, f_ist)
     ab.extend(a)
 
@@ -735,7 +787,18 @@ def selbstprobe() -> int:
         q = re.sub(r"<\?=\s*asset\('([^']+)'\)\s*\?>", r'\1?v=1', q)
         return re.sub(r'<\?(?:php\b|=).*?\?>', '', q, flags=re.S)
 
-    sim = nachgestellt(quelle)
+    # Die Seitenhuelle gibt ihre Skripte in den Kopf (`huelle_srcs()`) -- die
+    # nachgestellte Auslieferung bekommt sie deshalb dazu, wie der Server.
+    huelle = huelle_srcs(quelle)
+    pruefe(len(huelle) >= 1, 'Die Seitenhuelle von login.php nennt ihre Skripte',
+           ', '.join(huelle) or 'keines gefunden')
+    kopf = ''.join(f'<script src="{h}?v=1"></script>' for h in huelle)
+    ohne_huelle = nachgestellt(quelle)
+    sim = kopf + ohne_huelle
+    ab_h, _ = seite_vergleichen('login.php', quelle, ohne_huelle)
+    pruefe(len(huelle) >= 1 and all(any(h in a and 'fehlt' in a for a in ab_h) for h in huelle),
+           'ABWEICHUNG ERKANNT: fehlt ein Skript der Seitenhuelle, faellt es auf',
+           '; '.join(ab_h)[:90])
     ab0, z0 = seite_vergleichen('login.php', quelle, sim)
     pruefe(ab0 == [] and z0['src_gleich'] >= 1 and z0['form_gleich'] >= 1,
            'Quelle gegen nachgestellte Auslieferung: kein Unterschied',
@@ -753,6 +816,29 @@ def selbstprobe() -> int:
     pruefe(any('ZUSAETZLICHE' in a and 'Inline' in a for a in ab2),
            'ABWEICHUNG ERKANNT: ein zusaetzlicher Inline-Block faellt auf',
            '; '.join(ab2)[:90])
+
+    # 4a. Die bedingten Formulare (Code-Schritt, seit Web 20.42.0): Jeder
+    #     Eintrag hat einen Gegenstand in der Quelle; fehlt es in der
+    #     Auslieferung, ist das keine Abweichung; ein veraendertes schon.
+    q_formen = tags(FORM_RE, quelle)
+    fehlend = [f for s_, l in BEDINGTE_FORMULARE.items() for f in l
+               if f not in tags(FORM_RE, (SERVER / s_).read_text(encoding='utf-8'))]
+    pruefe(fehlend == [], 'Jedes bedingte Formular steht in der Quelle',
+           f'{sum(len(l) for l in BEDINGTE_FORMULARE.values())} Eintrag/Eintraege, '
+           f'{len(fehlend)} ohne Gegenstand')
+    ohne_bedingt = sim
+    for f in BEDINGTE_FORMULARE.get('login.php', []):
+        ohne_bedingt = FORM_RE.sub(lambda m: '' if tags(FORM_RE, m.group(0)) == [f] else m.group(0),
+                                   ohne_bedingt)
+    ab4a, _ = seite_vergleichen('login.php', quelle, ohne_bedingt)
+    pruefe(ohne_bedingt != sim and ab4a == [],
+           'Ohne das bedingte Formular (Seite ohne Sitzung): kein Unterschied',
+           f'{len(q_formen)} Formulare in der Quelle, {len(ab4a)} Abweichungen')
+    veraendert_b = sim.replace('id="codeform">', 'id="codeform" action="https://boese.example/">', 1)
+    ab4b, _ = seite_vergleichen('login.php', quelle, veraendert_b)
+    pruefe(veraendert_b != sim and any('Formular' in a for a in ab4b),
+           'ABWEICHUNG ERKANNT: ein veraendertes bedingtes Formular faellt auf',
+           '; '.join(ab4b)[:90])
 
     sim3 = umlenke(sim)
     ab3, _ = seite_vergleichen('login.php', quelle, sim3)

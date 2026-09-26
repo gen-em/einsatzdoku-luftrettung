@@ -93,6 +93,7 @@ if ($angemeldet) {
 ?>
 <div class="rahmen<?= $mitVerzeichnis ? '' : ' rahmen-lesespalte' ?>">
   <main class="inhalt">
+  <?php ui_hinweise(); ?>
 
   <?php if ($seite === null): ?>
     <h1><?= e($seitenTitel) ?></h1>
