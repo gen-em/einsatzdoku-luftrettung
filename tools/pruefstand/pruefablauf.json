@@ -214,6 +214,11 @@
       "braucht": "nichts",
       "bemerkung": "Schritt 15/AP10 (R83). Je Sache eine Registerzeile mit einer Decke; der Lauf schlaegt an, sobald eine Zeile darueber steigt. Haengt seit Schritt 15 auch in pruefung.yml -- hier steht er, damit er sich OERTLICH fahren laesst, bevor jemand pusht (Grundsatz 2: was Fehler findet, laeuft in der Arbeitsumgebung)."
     },
+    "steuerung": {
+      "aufruf": "python3 tools/steuerung/decken.py && python3 tools/steuerung/uebersicht.py --pruefen",
+      "braucht": "nichts",
+      "bemerkung": "Konzept SD (SD-03). Halten Rahmenplan, Verlauf und Backlog ihre Decken (Zeilen, Zeichen je Zelle, Einrueckung, Rendering mit cmark-gfm), und traegt jede Kopfzeile im Backlog Grammatik und ein Ziel aus der Fahrplan-Tabelle? Die Decken stehen in tools/steuerung/decken.py und LIESMICH.md, nicht hier. Riegel UND Muster: Riegel, damit er in jeder Stufe laeuft und im Tor gegengelesen wird; Muster, damit die Tabelle in Pruefablauf.md 4 die Beruehrung nennt."
+    },
     "spaltenregister": {
       "aufruf": "php tools/spaltenregister/pruefen.php",
       "braucht": "nichts",
@@ -268,7 +273,8 @@
       "rechtstexte",
       "kettenaufrufe",
       "zaehlung",
-      "spaltenregister"
+      "spaltenregister",
+      "steuerung"
     ]
   },
   "muster": [
@@ -735,6 +741,19 @@
         "schemaprobe"
       ],
       "anlass": "F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05)."
+    },
+    {
+      "id": "steuerung",
+      "ab": "klein",
+      "pfade": [
+        "docs/Rahmenplan*.md",
+        "docs/Backlog*.md",
+        "CLAUDE.md"
+      ],
+      "proben": [
+        "steuerung"
+      ],
+      "anlass": "Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung."
     }
   ]
 }

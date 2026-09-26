@@ -14,6 +14,69 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Rahmenplan und Backlog geschnitten (Konzept SD)] — 2026-09-26
+
+Konzept SD, ein eigener Zweig nach dem Merge von 10c. Keine Versionsstufe —
+berührt sind `docs/`, `tools/` und `.github/` (`CLAUDE.md` 2), kein Byte
+unter `server/`, `android/` oder `watch/`.
+
+### Geändert
+
+- **Der Rahmenplan ist in drei Dateien geschnitten** (SD-01, E-SD-01 bis
+  -15). Bis Fassung 124 standen Steuerung, Register, Werdegang und
+  Änderungsverlauf in einer Datei von 3 700 Zeilen, und 121 Sätze darin
+  begannen mit „hier stand": Jede Fassung schrieb Erzähltext nach, keine
+  strich. Fassung 124 liegt jetzt wörtlich in `docs/Rahmenplan-Archiv-2.md`
+  (0 Unterschiede zum Commit), der Verlauf ab Fassung 125 in
+  `docs/Rahmenplan-Verlauf.md` (eine Zeile je Fassung, höchstens 300
+  Zeichen; eine Berichtigung steht nur dort), und `docs/Rahmenplan.md`
+  selbst hat 459 Zeilen mit einem Kopf von 15: nur offene Schritte im
+  Fahrplan mit festem Statusvokabular, Zuarbeiten in drei Gruppen, Register
+  mit einem Satz je Zeile, Erledigtes als Tabelle. Die Abschnittsnummern
+  bleiben, damit die Verweise „Rahmenplan Abschnitt N" in Code und
+  Dokumenten weiter auflösen (30 gemessen, alle auf 1 bis 9).
+- **Der Backlog trägt Kopfzeilen und ist in zwei Dateien geteilt** (SD-02,
+  E-SD-16 bis -21). Jeder offene Eintrag beginnt mit `NNN. **Titel.** ·
+  gehört zu: ZIEL · Stand: STAND · seit DD.MM.YYYY` und hat höchstens 20
+  Zeilen; die 52 längeren sind gekürzt und nennen ihre alte Fassung
+  (`docs/Backlog.md@f5bddc2`). Alle Folgezeilen sind mit fünf Leerzeichen
+  eingerückt — vier ließen GitHub ab Nr. 100 einen Codeblock rendern
+  (Nr. 196). `docs/Backlog-Erledigt.md` hält die 228 erledigten Punkte
+  wörtlich und den Werdegang der Nummernvergabe; `docs/Backlog.md` schrumpft
+  von 11 329 auf 1 788 Zeilen. Die Zuordnung der offenen Punkte zu Schritten
+  steht nur noch in den Kopfzeilen — Rahmenplan Abschnitt 5 war eine zweite
+  Liste von Hand, mit 96 Zeilen gegen 113 Punkte. Nr. 5 ist dauerhaft frei
+  (sie war nie vergeben, E-SD-25); 177, 193, 196 und 199 erledigen sich mit
+  dem Schnitt.
+- **`tools/quelltext/bestand.py` liest beide Backlog-Dateien** (E-SD-37):
+  Die Anlass-Zeilen der Prüfmittel nennen auch erledigte Nummern, und eine
+  Nummer in beiden Dateien ist dieselbe Doppelung wie zweimal in einer.
+- **Zwei Sätze zur Gerätestatistik sagten seit Web 15.3.0 das Gegenteil des
+  Ist-Stands** (Nr. 193): `Technik.md` („Die Auswertung ist P5") und
+  `Handbuch.md` 10 („Bevor eine Auswertung entsteht …"). Beide sagen jetzt,
+  dass die Auswertung läuft und der Datenschutztext aussteht (Nr. 80).
+
+### Hinzugefügt
+
+- **`tools/steuerung/` — die Decken der Steuerungsdokumente als Riegel in
+  Stufe 1** (SD-03, E-SD-42, -43). `decken.py` hält die vier Dateien an 20
+  benannte Decken (Zeilen, Zeichen je Zelle, Statusvokabular,
+  Berichtigungsmuster, Blockquotes, Einrückung, Schnittmenge der Nummern,
+  Rendering mit `cmark-gfm`); `--selbstprobe` reißt jede einmal in einer
+  Kopie (22 Fälle). `uebersicht.py` prüft die Kopfzeilen und gibt die
+  offenen Punkte nach Ziel aus. Beides läuft als Riegel `steuerung` im
+  Prüfstand und im Tor; die Zahlen stehen im Werkzeug, nicht in
+  `pruefung.yml`. Der erste Lauf fand einen Riss (F-SD-11): Die
+  Fahrplanzeile „Betriebsübergang" hatte keinen Status.
+
+### Bewusst stehen geblieben
+
+- GitHub zählt die Liste der Einträge fort (`<ol start="21">`) und zeigt
+  darum andere Nummern als das Markdown (F-SD-08) — wie vor dem Schnitt; ein
+  Weg dagegen änderte die Kopfzeilenform und gehört in Schritt 17.
+- Drei Einträge sind erledigt und stehen mit `Stand: teilweise` unter
+  *Offen* (140, 227, 295): Konzept SD verschiebt keinen Eintrag (F-SD-06).
+
 ## [Android 0.16.0] — 2026-09-24 (in Arbeit, Android-Runde AR)
 
 Konzept AR, Backlog Nr. 65, 116 (Android-Hälfte) und 284. **Eine Nummer für

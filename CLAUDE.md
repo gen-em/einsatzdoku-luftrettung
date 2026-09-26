@@ -50,10 +50,17 @@ Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
    `docs/Backup-Format.md`. **Entfernte Funktionen werden ausgetragen**, nicht
    nur neue eingetragen. Danach die betroffenen Dokumente auf Konsistenz
    gegenlesen; sie verweisen aufeinander.
-4. **Backlog pflegen** (`docs/Backlog.md`). Nummern sind dauerhaft. Erledigte
-   Punkte werden nicht gelöscht, sondern nach *Erledigt* verschoben und behalten
-   ihre Nummer. Neue Punkte hängen hinten an. Die Nummern 4, 6 und 7 bleiben
-   dauerhaft frei.
+4. **Backlog pflegen — zwei Dateien, eine Zählung** (Konzept SD, E-SD-18).
+   `docs/Backlog.md` hält die offenen Punkte, jeder mit Kopfzeile
+   `NNN. **Titel.** · gehört zu: ZIEL · Stand: STAND · seit DD.MM.YYYY`
+   (Vokabular im Kopf der Datei, E-SD-16), höchstens 20 Zeilen, jede
+   Folgezeile mit fünf Leerzeichen; `docs/Backlog-Erledigt.md` hält die
+   erledigten wörtlich. Nummern sind dauerhaft: Ein erledigter Punkt wandert
+   mit seinem Text in die zweite Datei und behält seine Nummer, neue Punkte
+   hängen hinten an, 4, 5, 6 und 7 bleiben frei. **Wer Nummern vergeben
+   könnte, reserviert zuerst eine Zehnerspanne in der Tabelle im Kopf von
+   `Backlog.md` und pusht das** (E-SD-21). Kopfzeilen und Decken misst
+   `tools/steuerung/`, Doppelungen `bestand` — beides in Stufe 1.
 5. **Rahmenplan schreiben — an vier Anlässen, sonst nicht.** (1) Ein
    Schritt beginnt oder endet (Fahrplanzeile, Erledigt-Eintrag). (2) Eine
    Programmentscheidung fällt (R-Nummer). (3) Die Reihenfolge ändert sich.
@@ -62,9 +69,9 @@ Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
    Abnahmen — steht im Statusblock des Konzepts und im Prüfdokument, nicht
    im Rahmenplan. **Eine Berichtigung ist eine Verlaufszeile, nie ein
    Absatz im Text:** Wer etwas Falsches findet, ersetzt es und schreibt in
-   die Verlaufszeile (Abschnitt 10), was falsch war. Bis zum Schnitt
-   (Konzept SD) ändert sich am Kopf des Rahmenplans nur die
-   Fassungsnummer und der Absatz „Stand".
+   die Verlaufszeile (`docs/Rahmenplan-Verlauf.md`), was falsch war. Der
+   Kopf hält höchstens 15 Zeilen; die übrigen Decken misst
+   `tools/steuerung/` (Konzept SD).
 
 Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 (Pflegepflichten).
@@ -455,10 +462,12 @@ R62). Innerhalb von Claude Code gilt:
   (Abschnitt 8).
 - Erst dann zum nächsten Paket.
 - **Nach der Freigabe des Abschlusses:** Erledigt-Zeile in
-  `docs/Rahmenplan.md` Abschnitt 8 (Versionen, Datum, wesentliche Änderungen,
-  Prüfzahlen, letzter Commit des Konzepts), Reste nach Abschnitt 6, Backlog
-  nach Abschnitt 5, eine Zeile nach Abschnitt 10 — und **das Konzept wird
-  gelöscht**; die Git-Historie behält es. Das **Prüfdokument bleibt, bis
+  `docs/Rahmenplan.md` Abschnitt 8 — **eine Tabellenzeile** (Kennung,
+  Versionen, Datum · PR, letzter Commit des Konzepts, Prüfdokument, Kern;
+  E-SD-10), die Prüfzahlen stehen im Prüfdokument —, Reste nach Abschnitt 6,
+  der Backlog in die Kopfzeilen (`gehört zu`), eine Verlaufszeile in
+  `docs/Rahmenplan-Verlauf.md` — und **das Konzept wird gelöscht**, die
+  Fahrplanzeile geht mit; die Git-Historie behält es. Das **Prüfdokument bleibt, bis
   seine Prüfliste abgehakt ist**, und wird dann ebenso gelöscht. Wer ein
   Konzept löscht, ohne die Erledigt-Zeile zu schreiben, hat die Phase nicht
   abgeschlossen.
@@ -561,6 +570,12 @@ nicht später, nicht „in P6":
   Entscheidungen, Prüfstand), `docs/Technik.md` 5a (wie es zusammenhängt),
   `docs/Lizenzen.md` 6a (Fremdbestandteile — die Liste selbst steht in
   `android/gradle/libs.versions.toml`), `docs/Geraete-Eingabe.md` (Wear-Teil).
+- **Steuerungsdokumente** (`docs/Rahmenplan.md`, `Rahmenplan-Verlauf.md`,
+  `Backlog.md`, `Backlog-Erledigt.md`): Was hinein gehört, sagt Rahmenplan 9
+  und der Kopf jeder Datei; die Form misst `tools/steuerung/` (Decken in
+  `decken.py`, Kopfzeilen in `uebersicht.py`) in Stufe 1. Die Archive
+  `Rahmenplan-Archiv.md` und `Rahmenplan-Archiv-2.md` werden nicht
+  fortgeschrieben.
 - **Prüfmittel:** welches Mittel welche Berührung beantwortet, steht in
   `docs/Pruefablauf.md` — dort und nur dort. Hier stand bis PK-01 eine
   zweite, kürzere Liste; sie nannte den Stilvergleich als „ab P4 wieder",
