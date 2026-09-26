@@ -659,8 +659,8 @@ hinzukommt, ohne bei jeder Änderung den ganzen Altbestand zu verlangen.
 Wörter in fünf Bereichen: `server/*.php`, `server/api/*.php` (sichtbarer
 Text **ohne Kommentare**), `server/assets/*.js`, die Android- und
 Uhr-Ressourcen und 14 normative Dokumente. **Nicht** gemessen werden
-`Rahmenplan.md`, `Backlog.md`, `CHANGELOG.md`, `docs/konzepte/**` und **alle
-Kommentare**. Wer die Zahl zitiert, zitiert diesen Absatz mit.
+`Rahmenplan.md`, `Backlog.md`, `Backlog-Erledigt.md`, `CHANGELOG.md`,
+`docs/konzepte/**` und **alle Kommentare**. Wer die Zahl zitiert, zitiert diesen Absatz mit.
 
 > **Für die Klasse `namen` ist „ohne Kommentare" zu wenig** (Backlog
 > Nr. 283). E-P1-02 richtet sich gegen das **öffentliche Repositorium**, das
@@ -797,26 +797,30 @@ ist gemessen: Eine Instanz, die diesen Abschnitt nicht geschrieben hat, hat
 danach zwei Attrappen eingehängt und je einen Schritt weggelassen (BR-04,
 F-BR-19) — vier davon blieben damals grün.
 
-1. **Die Backlog-Nummer anlegen** (6.1). Am **Ende von *Offen*** in
-   `docs/Backlog.md`, also direkt vor `## Erledigt`, mit der nächsten
-   freien Nummer aus dem Kopf der Datei. Vorher auf `origin/main` **und**
-   auf den offenen Arbeitszweigen nachsehen; wer Nummern vergibt, trägt
-   seine Spanne im Kopf ein, bevor er pusht. Die Form — die Nummer am
-   Zeilenanfang, jede Folgezeile vier Leerzeichen eingerückt:
+1. **Die Backlog-Nummer anlegen** (6.1). Am **Ende von `docs/Backlog.md`**
+   — die Datei hält nur *Offen*; Erledigtes steht in
+   `docs/Backlog-Erledigt.md` (Konzept SD, seit 26.09.2026) — mit der
+   nächsten freien Nummer aus der Reservierungstabelle im Kopf der Datei.
+   Vorher auf `origin/main` **und** auf den offenen Arbeitszweigen
+   nachsehen; wer Nummern vergibt, trägt seine Spanne dort ein, bevor er
+   pusht. Die Form — die Kopfzeile nach dem Muster im Kopf der Datei
+   (Ziel und Stand aus dem dort genannten Vokabular), jede Folgezeile
+   **fünf** Leerzeichen eingerückt, höchstens 20 Zeilen:
 
    ```
-   NNN. **Ein Satz: der Fehler oder das Risiko.**
-       *Aufgenommen TT.MM.JJJJ mit <Paket>.* Was, wo (Funktionsname, nicht
-       Zeilennummer), wie gefunden.
-       *Weg:* … *Abnahme:* … **Zuordnung: …**
+   NNN. **Ein Satz: der Fehler oder das Risiko.** · gehört zu: ZIEL · Stand: offen · seit TT.MM.JJJJ
+        *Aufgenommen TT.MM.JJJJ mit <Paket>.* Was, wo (Funktionsname, nicht
+        Zeilennummer), wie gefunden.
+        *Weg:* … *Abnahme:* …
    ```
 
-   Behebt das Paket den Fehler gleich mit, wandert der Eintrag am Ende
-   nach *Erledigt* (ans Ende der Datei) und bleibt zitierbar. `bestand`
-   meldet eine Nummer, die **zweimal** steht, und eine Anlass-Zeile, deren
-   Nummer es **nicht** gibt. Achtung: Er liest **jede** Zeile, die mit Zahl
-   und Punkt beginnt, als Nummer — auch ein umbrochenes Datum. Den Umbruch
-   davor setzen.
+   Behebt das Paket den Fehler gleich mit, wandert der Eintrag mit seinem
+   Text ans Ende von `docs/Backlog-Erledigt.md` und bleibt zitierbar.
+   `bestand` meldet eine Nummer, die **zweimal** steht — auch einmal je
+   Datei —, und eine Anlass-Zeile, deren Nummer es in keiner der beiden
+   Dateien gibt. Achtung: Er liest **jede** Zeile, die mit Zahl und Punkt
+   beginnt, als Nummer — auch ein umbrochenes Datum. Den Umbruch davor
+   setzen.
 2. **Den Ort wählen.** Keine Datei lose unter `tools/` (`bestand`, `lose`).
    - **Liest es nur Quelltext** → `tools/quelltext/<name>.py` oder `.php`.
      Den Namen in `NAMEN` von `tools/quelltext/pruefen.sh` eintragen

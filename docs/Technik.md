@@ -27,7 +27,8 @@ Daten erst nach Server-Bestätigung.
 
 ```
 <repo>/
-├── docs/                  Handbuch, Technik, Changelog, Backlog, JSON-Vertrag,
+├── docs/                  Handbuch, Technik, Changelog, Backlog (offen) und
+│                          Backlog-Erledigt, JSON-Vertrag,
 │                          Design (Gestaltungsrichtlinie: Token, Schwellen,
 │                          Symbole, Bausteine, Seitentypen — verbindlich),
 │                          Lizenzen (Fremdbestandteile mit Version und Lizenz),
@@ -12022,9 +12023,16 @@ erfolgreichem Upload. *Bei Garmin liegen diese Einstellungen in Garmin Connect.*
 
 ## 8. Backlog
 
-Die offenen Punkte stehen in einer eigenen Datei: **`Backlog.md`**. Dort sind
-sie durchnummeriert; Verweise aus Code und Dokumentation nennen die Nummer
-(z. B. „Backlog Nr. 10").
+Die offenen Punkte stehen in **`Backlog.md`**, die erledigten wörtlich in
+**`Backlog-Erledigt.md`** (seit Konzept SD, 26.09.2026). Jeder offene Eintrag
+beginnt mit einer Kopfzeile — Nummer, Titel, `gehört zu` (eine Kennung der
+Fahrplan-Tabelle des Rahmenplans oder eines von vier festen Wörtern),
+`Stand`, `seit` — und hat höchstens 20 Zeilen; die Regeln stehen im Kopf der
+Datei. Verweise aus Code und Dokumentation nennen die Nummer (z. B. „Backlog
+Nr. 10"); sie löst in genau einer der beiden Dateien auf, und
+`tools/quelltext/bestand.py` (Regel `backlog`) hält beide zusammen frei von
+Doppelungen. Die Übersicht nach Ziel und Stand liefert
+`tools/steuerung/uebersicht.py` (ab SD-03).
 
 ---
 

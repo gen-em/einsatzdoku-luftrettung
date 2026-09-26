@@ -32,8 +32,9 @@ WAS ER MISST — elf Regeln, jede mit Namen im Befund:
   probe      jede Probe in tools/proben/proben.sh hat eine Einstiegsdatei,
              und deren Kopfkommentar trägt genau eine Anlass-Zeile mit
              Backlog-Nummer; kein Probenordner ohne Eintrag im Läufer
-  backlog    keine Nummer in docs/Backlog.md zweimal — bis BR-03 ein eigener
-             Schritt in Stufe 1, den Station B nie fuhr (F-BR-03)
+  backlog    keine Nummer zweimal, über docs/Backlog.md UND
+             docs/Backlog-Erledigt.md zusammen (seit SD-02) — bis BR-03 ein
+             eigener Schritt in Stufe 1, den Station B nie fuhr (F-BR-03)
 
 Die vier letzten sind die Schritte beim Einhängen eines Prüfmittels, deren
 Fehlen bis BR-05 niemand meldete (Nr. 315, gefunden von der Gegenlesung des
@@ -340,20 +341,32 @@ def anlass_zeilen(zeilen):
     return aus
 
 
+BACKLOG_DATEIEN = ('docs/Backlog.md', 'docs/Backlog-Erledigt.md')
+
+
 def backlog_zeilen(wurzel):
-    """{Nummer: [Zeilen]} — jede Zeile, die mit „Zahl und Punkt" beginnt.
+    """{Nummer: [„Datei:Zeile"]} — jede Zeile, die mit „Zahl und Punkt" beginnt,
+    über BEIDE Backlog-Dateien (seit Konzept SD, SD-02: die offenen Punkte in
+    `Backlog.md`, die erledigten wörtlich in `Backlog-Erledigt.md`, E-SD-18).
+    Eine Nummer, die in beiden steht, ist damit dieselbe Doppelung wie zweimal
+    in einer — und die Anlass-Zeilen der Prüfmittel dürfen erledigte Nummern
+    nennen, weil ein Anlass nicht verschwindet, wenn der Punkt erledigt ist.
 
     DIESELBE LESART WIE DER SCHRITT, DEN DIESE REGEL ABLÖST (`grep -oE
     '^[0-9]+\\.'`): Auch ein Datum am Zeilenanfang zählt als Nummer. Das ist
     Absicht und steht im Kopf von Backlog.md — wer dort umbricht, setzt den
-    Umbruch vor das Datum."""
-    pfad = os.path.join(wurzel, 'docs', 'Backlog.md')
+    Umbruch vor das Datum. Fehlt die zweite Datei, wird nur die erste gelesen
+    (die Selbstprobe baut nur `Backlog.md`; vor SD-02 gab es die zweite nicht)."""
     aus = {}
-    with open(pfad, encoding='utf-8') as f:
-        for i, z in enumerate(f, 1):
-            m = BACKLOG_RE.match(z)
-            if m:
-                aus.setdefault(int(m.group(1)), []).append(i)
+    for datei in BACKLOG_DATEIEN:
+        pfad = os.path.join(wurzel, *datei.split('/'))
+        if not os.path.exists(pfad):
+            continue
+        with open(pfad, encoding='utf-8') as f:
+            for i, z in enumerate(f, 1):
+                m = BACKLOG_RE.match(z)
+                if m:
+                    aus.setdefault(int(m.group(1)), []).append(f'{datei}:{i}')
     return aus
 
 
@@ -848,8 +861,8 @@ def messen(wurzel):
     # backlog — keine Nummer zweimal
     for nr, zeilen in sorted(backlog_zeilen(wurzel).items()):
         if len(zeilen) > 1:
-            befunde.append(bef('backlog-doppelt', f'docs/Backlog.md: Nr. {nr} steht {len(zeilen)}-mal '
-                                                  f'(Zeilen {", ".join(map(str, zeilen))})'))
+            befunde.append(bef('backlog-doppelt', f'Backlog: Nr. {nr} steht {len(zeilen)}-mal '
+                                                  f'({", ".join(zeilen)})'))
 
     # selbst, zeile, ablauf, tabelle — UNBEDINGT (Runde 2). Scheitert eine
     # Gruppe an einer Eingabe, die sie nicht erwartet, ist das ein Befund
@@ -1763,6 +1776,8 @@ FAELLE = [
      _mehr('docs/Backlog.md', '2. **Zwei.**\n', '2. **Zwei.**\n\n2. **Noch einmal zwei.**\n')),
     ('backlog — ein Datum am Zeilenanfang zählt wie eine Nummer', 'backlog-doppelt',
      _mehr('docs/Backlog.md', '2. **Zwei.**\n', '2. **Zwei.** Aus der Durchsicht vom\n1.09.2026.\n')),
+    ('backlog — eine Nummer steht in Backlog.md UND in Backlog-Erledigt.md (SD-02)', 'backlog-doppelt',
+     _setze('docs/Backlog-Erledigt.md', 'Erledigt.\n\n2. **Zwei, ein zweites Mal.**\n')),
     # selbst
     ('selbst — der Quelltextläufer fehlt', 'selbst-laeufer', _weg(QUELLTEXT)),
     ('selbst — --liste nennt nur SELBST, keinen Namen', 'selbst-keine-namen',

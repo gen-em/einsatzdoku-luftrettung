@@ -53,7 +53,8 @@ wird nur der Weg hinein.
 | [`docs/JSON-Vertrag.md`](docs/JSON-Vertrag.md) | Schnittstelle Uhr/Fremdquellen → Server |
 | [`docs/Backup-Format.md`](docs/Backup-Format.md) | Aufbau der `.edbak` und was **nicht** darin steht |
 | [`docs/Export-Format.md`](docs/Export-Format.md) | CSV- und Excel-Export, Rückimport |
-| [`docs/Backlog.md`](docs/Backlog.md) | bewusst offene Punkte, Nummern sind dauerhaft |
+| [`docs/Backlog.md`](docs/Backlog.md) | bewusst offene Punkte, je Eintrag mit Kopfzeile (Ziel, Stand, seit); Nummern sind dauerhaft |
+| [`docs/Backlog-Erledigt.md`](docs/Backlog-Erledigt.md) | erledigte Punkte, wörtlich, samt dem Werdegang der Nummernvergabe |
 | [`docs/Design.md`](docs/Design.md) | Gestaltungsrichtlinie: Farben, Token, Schwellen, Symbole, Bausteine, Seitentypen — verbindlich für jede Oberflächenänderung |
 | [`docs/Lizenzen.md`](docs/Lizenzen.md) | Bibliotheken, Schriften, Symbole und Dienste — Herkunft, Version, Lizenz |
 | [`docs/Geraete-Eingabe.md`](docs/Geraete-Eingabe.md) | gemessenes Eingabeverhalten je Uhrmodell |
