@@ -30,10 +30,10 @@ Arbeit an derselben Datei bleiben seriell.
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — SD-01 gebaut, SD-M1 vorgelegt.** Der Rahmenplan ist geschnitten: Fassung 124 liegt wörtlich in `docs/Rahmenplan-Archiv-2.md` (0 Unterschiede), `docs/Rahmenplan-Verlauf.md` beginnt mit Fassung 125, der neue `docs/Rahmenplan.md` hat **487 Zeilen** (Decke 500 gehalten, Ziel < 400 verfehlt — F-SD-01, Q-SD-02), Kopf 15 Zeilen, 0 Blockquotes, 0 Berichtigungssätze, alle Zellen unter ihren Decken. Prüfdokument liegt daneben. |
-> | Entschieden | E-SD-01 bis E-SD-27 (Konzept, 24.09.2026); die fünf Punkte zum Gegenlesen in 2.4 gelten ohne Widerspruch. **Aus der Umsetzung: E-SD-28 bis E-SD-33** (Abschnitt 2.5, 26.09.2026) — zur Kenntnis und zum Widerspruch. |
-> | Offen | **Q-SD-01** (SD-M1: Zuarbeiten-Durchsicht und die 40 Backlog-Nummern ohne genannten Schritt — Vorlage in 3.2 und im Prüfdokument 3.1/3.3); **Q-SD-02** (Ziel < 400 Zeilen). Befunde F-SD-01 bis F-SD-04 in 2.5. |
-> | Umsetzung | **SD-00 erledigt** 24.09.2026 (P5c-Instanz, Fassung 111). **SD-01 erledigt** 26.09.2026 auf `claude/serene-tesla-sqeno2` (von `claude/affectionate-newton-6pzfkc` `bdf1787`, der `origin/main` `d34908b` enthält; Fassungen 125 bis 127). **SD-M1 wartet** auf die Betreiberin. Danach SD-02 (erst nach dem Merge von PR #88, der `docs/Backlog.md` anfasst), SD-03, SD-04. |
+> | Stand | **26.09.2026 — SD-01 gebaut, SD-M1 beantwortet.** Der Rahmenplan ist geschnitten: Fassung 124 liegt wörtlich in `docs/Rahmenplan-Archiv-2.md` (0 Unterschiede), `docs/Rahmenplan-Verlauf.md` beginnt mit Fassung 125, der neue `docs/Rahmenplan.md` hat nach der Durchsicht **460 Zeilen** (Fassung 128; Decke 500, E-SD-36), Kopf 15 Zeilen, 0 Blockquotes, 0 Berichtigungssätze, alle Zellen unter ihren Decken. Prüfdokument liegt daneben. |
+> | Entschieden | E-SD-01 bis E-SD-27 (Konzept, 24.09.2026); die fünf Punkte zum Gegenlesen in 2.4 gelten ohne Widerspruch. **Aus der Umsetzung: E-SD-28 bis E-SD-33** (Abschnitt 2.5). **Von der Betreiberin am 26.09.2026: E-SD-34** (27 Zuarbeiten erledigt), **E-SD-35** (alle 40 Vorschläge), **E-SD-36** (Decke 500 reicht). |
+> | Offen | nichts an Fragen. Befunde F-SD-01 bis F-SD-05 in 2.5; F-SD-05 (die `update.php`-Zeile gegen M1) klärt sich nur an der Anlage. |
+> | Umsetzung | **SD-00 erledigt** 24.09.2026 (P5c-Instanz, Fassung 111). **SD-01 erledigt** 26.09.2026 auf `claude/serene-tesla-sqeno2` (von `claude/affectionate-newton-6pzfkc` `bdf1787`, der `origin/main` `d34908b` enthält; Fassungen 125 bis 127). **SD-M1 erledigt** 26.09.2026 (Fassung 128). **Als Nächstes SD-02** — erst nach dem Merge von PR #88, der `docs/Backlog.md` anfasst; dann SD-03, SD-04. |
 > | Fable-Schritte | keine. SD-01 lief mit Fable (Anweisung der Betreiberin, 26.09.2026); Abweichung von K2 zur Kenntnis. |
 > | Fächerung | SD-01: das Lesen der 105 offenen Backlog-Einträge auf 32 Agenten (E-SD-33); alles Schreiben seriell. |
 > | Nummern | Rahmenplan-Fassungen 125, 126, 127 vergeben; keine Backlog-Nummer vergeben. |
@@ -355,11 +355,48 @@ Konzept sagte „E-SD-28 ff."; die Nummern sind belegt, die Reihenfolge nicht).
   `seit` kommt dort aus `git log`), 2 mit „umgesetzt, Prüfung offen" (213,
   227 — nicht 238/239, die sind seit Fassung 110 erledigt).
 
-**Q-SD-02** (an die Betreiberin, mit SD-M1): Bleibt es bei Decke 500 mit dem
-gemessenen Stand von 487 — mit der Erwartung, dass SD-M1 Zeilen streicht —,
-oder soll SD-04 weiter kürzen (Kandidaten: die Werte-Tabelle in 6a nach
-`Technik.md` 6 mit Nachzug der drei Verweise; die Spalte „Volltext" des
-Registers als Satz über der Tabelle)? Empfehlung: erst SD-M1, dann messen.
+**Antworten der Betreiberin (SD-M1, 26.09.2026, anklickbar je vier Zeilen):**
+
+- **E-SD-34 Q-SD-01 (a) — 27 Zuarbeiten sind erledigt und gestrichen**
+  (Rahmenplan Fassung 128). Aus 6.1 (17): `update.php` nach dem Merge von
+  10c · Secret `STAGING_TOTP` · Staging-Schritte 7 bis 9 (mit 6a) ·
+  Signaturschlüssel des APK verwahren · eigenes Passwort prüfen ·
+  2FA-Zwang in der GitHub-Organisation · D-U-N-S-Nummer · GitHub-Umgebungen
+  und Pflichtfreigabe · GitHub-App und `CIQ_GERAETE_URL` · V1 bis V9 der
+  Protokollierung · Nachträge an P5a · P5a-Reste · Data Layer auf echter
+  Hardware · Dienst-Test am S24 · DNS und TLS für `nadoku.gen-em.org` ·
+  offene Fragen aus Konzept BR · „Freigabe je Konzept" (Regel, kein Posten).
+  Aus 6.2 (7): Play-Console-Organisationskonto · Play App Signing ·
+  Fable-Instanz für den Review · Symbole für Handy- und Web-App ·
+  Uhr-Darstellungen und Handy-Screenshots · NEF-Logo und Favicon ·
+  Logovorlagen in den Markenfarben. Aus 6.3 (3): FTPS- und
+  SFTP-Zugangsdaten · SMTP auf Produktiv · Sichtprüfung in WebKit und
+  Firefox. 6a: Schritte 7, 8, 9 abgehakt. **Es bleiben 42 Zeilen** (6.1: 25,
+  6.2: 5, 6.3: 12), ausdrücklich bestätigt offen — darunter der Tag für
+  10c, alle Prüflisten aus P5c, RW, BR und Kette II, die fünf
+  S10-Betriebsposten, die Abnahme S6 und die Datenschutzerklärung.
+  **Folge für die Steuerung:** Schritt 6 Teil C ist nicht mehr blockiert
+  (Fahrplanzeile auf „offen", R65 nachgezogen).
+- **F-SD-05 Ein Widerspruch bleibt stehen, mit Absicht:** Die Zeile
+  „`update.php` für S9/9a und P5b auf Produktiv" hat die Betreiberin als
+  offen bestätigt, obwohl Konzept PK zu M1 (21.09.2026) „Migrationen von
+  Hand ausgeführt" sagt und Produktiv seither Web 20.26.3 und höher fährt.
+  Die Zeile steht mit diesem Hinweis in 6.1; klären lässt es sich nur unter
+  Betrieb → Updates auf Produktiv.
+
+- **E-SD-35 Q-SD-01 (b) — alle 40 Vorschläge übernommen** (Betreiberin,
+  26.09.2026; Tabelle im Prüfdokument 3.3). SD-02 schreibt sie so in die
+  Kopfzeilen: 17 für 21 Nummern (92, 170, 172, 207, 209, 216, 232, 239, 266,
+  271, 272, 273, 275, 277, 283, 323, 333, 336 und die drei ohne Zeile in
+  Abschnitt 5), PK für 213, 234, 236, 237, 240, 290; 13 für 23, 154, 157,
+  201, 229; `nach v1.0` für 50, 51, 52, 55, 90; 18 für 210, 228; 12 für 263;
+  14 für 187; `Zuarbeit` für 261; `Pflegeaufgabe` für 280. Der Stand kommt
+  aus dem Text (228 und 232 „nur auf Anlass", 229 „zurückgestellt", 210,
+  213, 234, 283 „teilweise").
+- **E-SD-36 Q-SD-02 — Decke 500 reicht** (Betreiberin, 26.09.2026). E-SD-27
+  bleibt: 500 ist der Prüfwert im Werkzeug, „unter 400" war ein Wunsch beim
+  Schnitt und wird nicht weiterverfolgt. Nach SD-M1 misst der Rahmenplan
+  **460 Zeilen**; SD-04 kürzt nicht weiter.
 
 ---
 
@@ -786,7 +823,7 @@ Nicht-Prüfbare zuerst.
 |---|---|---|---|
 | SD-00 | erledigt 24.09.2026 (P5c-Instanz) | `d85d898` (Rahmenplan Fassung 111) | P-SD-01: Fassungen 112 bis 124 tragen außerhalb von Abschnitt 10 keinen neuen Satz der Form „hier stand" (nachgezählt beim Schnitt: 0 neue Treffer nach Fassung 111; die alten stehen im Archiv-2) |
 | SD-01 | erledigt 26.09.2026 | `758aaf4`; Nachtrag: Verlaufszeile 125 auf die Decke gekürzt (sie war 315 Zeichen lang, das Wegwerfskript hatte sie gemeldet und ich hatte nur 126 und 127 gekürzt) | P-SD-02 **0 Unterschiede** (3 928 = 27 + 3 901 Zeilen) · P-SD-03 **487 Zeilen** (< 500, nicht < 400 — F-SD-01), Kopf **15** · P-SD-04 Fahrplan **27 → 14** (11 + 3 neu), Zuarbeiten **67 → 69** (+ 2 neu), Register **85 = 85**, Erledigt **31 → 34** (+ 3 aus Fahrplanzeilen), 6a **10 = 10** · P-SD-06 **9 von 9** · Decken: Blockquotes **0**, Berichtigungsmuster **0**, Zellen **0 über der Decke** in 14 + 69 + 85 + 34 + 3 Zeilen · `cmark-gfm` **0 `<pre>`, 9 Tabellen** · Fächerung **105 Einträge, 97 einig, 8 Schiedsrichter, 40 ohne Schritt** · Prüfstand: Bericht in der Commit-Nachricht |
-| SD-M1 | vorgelegt 26.09.2026 — wartet | — | Q-SD-01 (a) 69 Zeilen, (b) 40 Nummern (Prüfdokument 3.1, 3.3) |
+| SD-M1 | erledigt 26.09.2026 | *wird beim Commit eingetragen* (Rahmenplan Fassung 128) | Q-SD-01 (a) **69 Zeilen durchgesehen, 27 gestrichen, 42 bleiben**, 6a 3 abgehakt (E-SD-34) · Q-SD-01 (b) **40 von 40** Vorschläge übernommen (E-SD-35) · Q-SD-02 Decke 500 (E-SD-36) · Rahmenplan **460 Zeilen**, Zuarbeiten-Zeilen 0 über der Decke, Verlaufszeilen 4, 0 über der Decke |
 | SD-02 | — | — | — |
 | SD-03 | — | — | — |
 | SD-04 | — | — | — |

@@ -60,7 +60,11 @@ seinem Kopf auf und fasst den Backlog in SD-01 nur an Nr. 294 an. SD-02
 
 ### 3.1 Q-SD-01 (a) — die Zuarbeiten durchsehen (SD-M1)
 
-**Bedienweg:** `docs/Rahmenplan.md` Abschnitt 6 öffnen. Drei Gruppen: 6.1
+**Erledigt am 26.09.2026** (anklickbar in sechs Runden, je vier Zeilen):
+27 Zeilen gestrichen, 42 bleiben, 6a Schritte 7 bis 9 abgehakt — E-SD-34 im
+Konzept, Verlaufszeile 128. Ein Widerspruch bleibt benannt (F-SD-05).
+
+**Bedienweg (war):** `docs/Rahmenplan.md` Abschnitt 6 öffnen. Drei Gruppen: 6.1
 (42 Zeilen), 6.2 (12), 6.3 (15), dazu 6a (10 Schritte, 3 offen). Jede Zeile
 trägt `seit`. **Erwartung:** Zu jeder Zeile eine von drei Antworten —
 *erledigt* (die Zeile wird gelöscht, mit Verlaufszeile), *bleibt* (ggf. mit
@@ -88,7 +92,11 @@ zusammenfasst — dann ist es ein Befund F-SD-NN, und die Zeile wird ersetzt
 
 ### 3.3 Q-SD-01 (b) — die 40 Backlog-Einträge ohne genannten Schritt
 
-**Bedienweg:** die Tabelle unten. Spalte „Abschnitt 5 (F124)" ist die alte
+**Erledigt am 26.09.2026:** alle 40 Vorschläge übernommen (E-SD-35); die
+Tabelle bleibt als Vorgabe für SD-02 stehen. **Q-SD-02** ist am selben Tag
+entschieden: Decke 500 reicht (E-SD-36).
+
+**Bedienweg (war):** die Tabelle unten. Spalte „Abschnitt 5 (F124)" ist die alte
 Zuordnung im Rahmenplan, soweit es eine gab; „Vorschlag" ist, was SD-02 in
 die Kopfzeile (`gehört zu`) schriebe. **Erwartung:** je Zeile ein Haken oder
 ein anderes Ziel aus dem Vokabular (Kennung aus der Fahrplan-Tabelle, oder

@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 127 (26.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 128 (26.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -9,7 +9,7 @@ Uhr 3.1.0 · Android 0.15.1.
 **Läuft:** SD auf `claude/serene-tesla-sqeno2` (Konzept `docs/konzepte/Konzept-SD-Steuerungsdokumente.md`, Paket SD-01); daneben AR (PR #88 offen) und BV (gemergt, Abschluss offen) — Abschnitt 3.
 **Als Nächstes:** SD-M1 (Durchsicht der Betreiberin), SD-02 bis SD-04, dann Schritt 17 — Reihenfolge in Abschnitt 3.
 **Offene PRs:** #88 (AR, Android 0.16.0).
-**Fällig bei der Betreiberin:** 42 Posten (Abschnitt 6.1). **`update.php`:** fällig — 10c bringt fünf Migrationen (6.1).
+**Fällig bei der Betreiberin:** 25 Posten (Abschnitt 6.1). **`update.php`:** auf Staging gelaufen (26.09.2026); auf Produktiv mit dem Tag (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -108,7 +108,7 @@ Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
 **18** → 12 → 12a → 13 → 14; der Betriebsübergang folgt auf v1.0. Daneben,
 ohne Platz in der Reihe: **PK-06 bis PK-08** (die Kette gehört PK, dort endet
 auch Kette II), der Merge von **AR**, der Abschluss von **BV**, die
-Paketschnitte von **11** und Teil C von **6**. **Warum so:** 17 und 18 vor 12,
+Paketschnitte von **11** und Teil C von **6** (seit SD-M1 frei). **Warum so:** 17 und 18 vor 12,
 damit der Review aufgeräumte und gehärtete Seiten liest; 12a nach 12 und vor
 der Öffnung, weil die Altbestand-Entscheidung ein einziges Konto voraussetzt;
 SD zuerst, weil währenddessen kein anderer Zweig Rahmenplan oder Backlog
@@ -116,7 +116,7 @@ schreibt (Abschnitt 4).
 
 | Schritt | Kennung | Inhalt | Voraussetzung | Konzept | Status |
 |---|---|---|---|---|---|
-| 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Signaturweg (6.1, 6.2) | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | blockiert seit 04.09.2026 — Teile A bis C gemergt (PR #33, Abschnitt 8); Android 1.0.0 wartet auf die Zuarbeiten |
+| 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12, 13 und 14 |
 | 12 | **P6 — Review und Bereinigung** | Bedrohungsmodell und Bug- und Sicherheitsreview in zwölf Stücken (R17, R69); Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); Fragen Nr. 146; R5-Ausnahmeliste | 18 gemergt; Nr. 43-Fragen beantwortet (R78) — erfüllt | neu; `docs/konzepte/Review-R17.md` entsteht im Review als Sammelstelle; Eingang `Review-Krypto-Sicherheit.md` | offen — nach 18 |
 | 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R78) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | 12; **vor der Öffnung** | neu, nach K1 (Skizze SP-9 in `Vorbereitung-Sicherheitspaket.md`, Vorstudie `Konzept-V1-Ortsdaten.md`) | offen — nach 12 |
@@ -193,20 +193,18 @@ Fassung 124, mit den dort genannten Lücken (Verlaufszeile 122).
 
 Eine Zeile je Posten, in drei Gruppen; Bedienweg und Erwartung stehen im
 genannten Prüfdokument oder Runbook (`docs/Technik.md` 7), der Werdegang in
-`Rahmenplan-Archiv-2.md` 6. Erledigt heißt gelöscht, mit Verlaufszeile. **Die
-Zeilen sind aus Fassung 124 eins zu eins überführt und bis zur Durchsicht der
-Betreiberin (SD-M1) ungeprüft**; wo eine Erledigung vermutet wird, steht es dabei.
+`Rahmenplan-Archiv-2.md` 6. Erledigt heißt gelöscht, mit Verlaufszeile. **Durchgesehen von der
+Betreiberin am 26.09.2026** (SD-M1, E-SD-34): 27 Zeilen als erledigt
+gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 ### 6.1 Jetzt — blockiert etwas oder ist seit einem Merge fällig
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
-| **`update.php` nach dem Merge von 10c** — fünf Migrationen (AP4, AP5, AP5b, AP7, AP8; AP8 zerstörend); Staging jetzt, Produktiv nach dem Tag, bis dahin Wartung an. Bis zur Auslieferung kein Konto mit Rolle admin (E-P5c-31) | 10c | 26.09.2026 | Runbook; P-P5c-35 bis -38 |
-| **Secret `STAGING_TOTP`** in der Umgebung `staging`: der erste Stufe-2-Lauf nach dem Merge ist rot mit Ansage; `update.php` auf Staging, Prüfkonto durch das Einrichtungstor, Geheimnis eintragen, Lauf neu starten. Ohne es kommt kein Tag durch | 10c AP5 | 24.09.2026 | Archiv-2 6; P-P5c-20 ff. |
 | **`app.umgebung` in die `config.php` von Staging** (`name` Staging, `farbe` rot) — nie auf Produktiv; danach Betrieb → Status, Zeile „Umgebung" | 10c AP1 (E-P5c-05) | 23.09.2026 | Runbook „Eine Testanlage kennzeichnen"; P-P5c-01 |
 | **Tag `web-v21.1.3` setzen** — die Auslieferung von 10c auf Produktiv, nach `STAGING_TOTP` und `update.php` auf Staging; danach `update.php` auf Produktiv | 10c | 26.09.2026 | `Technik.md` 6; Prüfdokument P5c |
 | **`betrieb.health_token`** in die `config.php` beider Anlagen, das Monitoring auf `/api/health.php?token=…` richten — ohne Eintrag antwortet der Endpunkt jedem mit 403 | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
-| **Vorhandene Komplett-Backups auf Produktiv öffnen** (`gzip -t`) — ein Stand, der sich nicht öffnen lässt, ist kein Rückfallstand (Nr. 328). War „vor dem Merge" fällig; der Merge lief am 26.09.2026 — Stand? | 10c AP11 | 25.09.2026 | P-P5c-45 |
+| **Vorhandene Komplett-Backups auf Produktiv öffnen** (`gzip -t`) — ein Stand, der sich nicht öffnen lässt, ist kein Rückfallstand (Nr. 328). War vor dem Merge fällig; der Merge ist gelaufen, der Punkt steht aus | 10c AP11 | 25.09.2026 | P-P5c-45 |
 | **Prüfliste P5c/AP1:** Staging rot nach dem Merge, Produktiv blau nach dem Tag, Rundmail in einem echten Postfach, Ankündigung am Handy | 10c AP1 | 23.09.2026 | P-P5c-01 bis -04 |
 | **Prüfliste P5c/AP2:** Archive unter Verwaltung → Protokoll → Archiv nach dem ersten Jobdurchlauf (beginnt beim ältesten Eintrag), Plakette „auf dem Ziel", einmal herunterladen — ob der Job ohne Cron in einer Woche drankommt, zeigt nur die Anlage | 10c AP2 | 24.09.2026 | P-P5c-05 bis -09 |
 | **Prüfliste P5c/AP3 und AP4:** Reiter System mit echtem Fehler, Fehlerseite, stilles Fehlerprotokoll des Webspace; ein Support-Konto anlegen, einrichten, seine Sicht, der Admin-Weg vor `update.php` | 10c AP3, AP4 | 25.09.2026 | P-P5c-10 bis -19 |
@@ -217,47 +215,25 @@ Betreiberin (SD-M1) ungeprüft**; wo eine Erledigung vermutet wird, steht es dab
 | **Prüfliste P5c/AP9:** die eigene Datenschutzerklärung nachziehen (P-P5c-40, sofort), Rechtstexte mit Vorschau in Firefox und am Handy, beide Blätter auf Papier, Wartungsmodus nach einem echten Deploy, die Leiste bei 850 und über 950 px Höhe | 10c AP9 | 25.09.2026 | P-P5c-39 bis -44 |
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`), P-BR-09 (beim nächsten Prüfmittel); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefdokument-BR-Bestandsriegel.md` |
 | **Zuarbeiten aus Kette II:** der Rückfallstand bei einer echten Auslieferung, der Hotfix über den ganzen Weg, die Aufbewahrung der Komplett-Stände auf Staging (Nr. 261: Vorgabe 2, Vorschlag 5) | Kette II, PK-07 | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, Prüfpunkte 26 bis 28 |
-| **Staging fertig einrichten** — Schritte 7 bis 9 der Tabelle 6a (Absender und Präfix in `config.php`, Demo-Konto aus der Fixture, eigenes SFTP-Sicherungsziel); Zuarbeit Z7 aus Kette II, seit AP5 überfällig | Kette II | 20.09.2026 | 6a; `Pruefdokument-Kette-Haertung.md` |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |
 | **Schlüsselblatt drucken** — zwei Ausdrucke, zwei Orte (Betriebsakte, Passwortmanager); Ablageort in der Betriebsakte vermerken | S10 | 14.09.2026 | Archiv-2 6 |
 | **Einmal anmelden und auf Status nachsehen** — die Zeile „Server-Anteil" zählt die stille Umstellung je Konto mit | S10 | 14.09.2026 | Archiv-2 6 |
 | **Ein `ftp`-Ziel, falls vorhanden, auf SFTP oder FTPS umstellen** — seit 10c AP8 fällt die Zielart ganz | S10 | 14.09.2026 | Archiv-2 6 |
 | **Wiederanlaufpaket um den Server-Anteil ergänzen** — vier Stücke: `config.php`, Serverschlüssel, Server-Anteil, Zugang zum Backup-Ziel (E-S10-17) | S10 | 14.09.2026 | Archiv-2 6 |
 | **Demo-Konto einmal „Auf Standard zurücksetzen"** (Adminbereich) — der Deploy legt nur die Fixture ab, das Konto zeigt bis zum nächsten Reset den alten Bestand | 9d | 15.09.2026 | Archiv-2 6 |
-| **`update.php` für S9/9a (drei Migrationen) und P5b (sechs)** — auf Produktiv vermutlich mit M1 am 21.09.2026 von Hand erledigt (Konzept PK); bestätigen, dann löschen | S9, 9a, 10b | 10.09.2026 | Archiv-2 6 |
+| **`update.php` für S9/9a (drei Migrationen) und P5b (sechs)** auf Produktiv — laut Durchsicht vom 26.09.2026 weiter offen, obwohl Konzept PK zu M1 „Migrationen von Hand ausgeführt" sagt; unter Betrieb → Updates nachsehen | S9, 9a, 10b | 10.09.2026 | Archiv-2 6 |
 | **Abnahme S6:** je eine Kopplung mit Garmin-Uhr und Handy-App (Art und Modell in der Liste), eine Sitzung über 30 Minuten mit Bedienung, ein Leerlauf mit Abmeldung | S6 | 02.09.2026 | Archiv-2 6 |
-| **`tools/geraetemodelle/nachaufloesen.php` auf Produktiv fahren** — oder feststellen, dass der Nachlöse-Job aus P5a AP11 (Nr. 80 Teil 1) die Zeile erledigt hat | Nr. 80, R42 | 14.09.2026 | Archiv-2 6 |
+| **`tools/geraetemodelle/nachaufloesen.php` auf Produktiv fahren** — oder feststellen, dass der Nachlöse-Job aus P5a AP11 (Nr. 80 Teil 1) es schon getan hat | Nr. 80, R42 | 14.09.2026 | Archiv-2 6 |
 | **Das geplante Komplett-Backup einmal im Betrieb sehen** — Plan „täglich", ein Tag warten; erster Betriebsnachweis für Nr. 89 | S7 | 03.09.2026 | Archiv-2 6 |
-| **Signaturschlüssel des APK verwahren** (RSA 4096, Zertifikat `078c…ad64`, übergeben 02.09.2026) — vermutlich erledigt; bestätigen | Schritt 6 | 02.09.2026 | Archiv-2 6 |
-| **Passwort des eigenen Kontos prüfen** — zwölf Zeichen oder Passphrase, nirgends wiederverwendet; der Server kann es nicht prüfen (Nr. 136) | Krypto-Review | 06.09.2026 | — |
-| **2FA-Zwang in der GitHub-Organisation** (Nr. 140, SP-4) — der Zweigschutz auf `main` steht seit dem 21.09.2026 (PK-M1) | 9a | 06.09.2026 | `Pruefablauf.md` 2.3 |
-| **D-U-N-S-Nummer für die Gen-EM GbR** beantragen (kostenlos, bis zu vier Wochen); klären, ob die GbR als eGbR im Register steht | R65 | 03.09.2026 | Archiv-2 6 |
 | **SPF/DKIM/DMARC der Versanddomain; `smtp.from` als echtes Postfach**, das die Betreiberin liest — Rückläufer liest die Anwendung nicht (E-P5c-51) | P5 | 15.09.2026 | Archiv-2 6 |
-| **GitHub-Umgebungen `staging` und `produktion`, Pflichtfreigabe, Prüfkonto** — vermutlich erledigt: M1 lief durch Pflichtfreigabe und Backup-Tor; bestätigen, dann löschen | P5a | 16.09.2026 | Archiv-2 6, 6a |
-| **GitHub-App auf dem Handy mit Push-Nachrichten; ob `CIQ_GERAETE_URL` als CI-Secret taugt** (bleibt bis PK-08, E-PK-48) — der Rest der Zeile (Umgebung `produktion`) ist mit M1 belegt | R67 | 03.09.2026 | Archiv-2 6 |
-| **V1 bis V9 der Protokollierung** — alles gebaut (10b AP1, 10c AP2); offen allein die juristische Bestätigung der 30-Tage-Frist, die in der Zeile „Anwaltliche Prüfung" (6.3) steht — löschen? | 10c | 16.09.2026 | Archiv-2 6 |
-| **Nachträge an die P5a-Instanz** (Mailrahmen, `app_url()`, SMTP-Log, AP4a) — übergeben 16.09.2026 und gebaut; löschen? | P5a | 16.09.2026 | Archiv-2 6 |
-| **P5a-Reste nach dem Merge** — die Prüfliste (33 Punkte) ist abgearbeitet, das Prüfdokument am 24.09.2026 gelöscht; löschen? | P5a | 16.09.2026 | Archiv-2 6 |
-| **Data Layer Uhr↔Handy auf echter Hardware** (zwischen zwei Emulatoren nicht prüfbar) — die S4-Prüfliste galt am 24.09.2026 als abgearbeitet („Gerätetest erfolgt"); bestätigen, dann löschen | Schritt 6 | 31.08.2026 | Archiv-2 6 |
-| **Dienst-Test mit der Handy-App auf dem S24** (zwei bis drei Runden) — wie oben: vermutlich mit dem Gerätetest erledigt; bestätigen, dann löschen | Schritt 6 | 31.08.2026 | Archiv-2 6 |
-| **DNS-Eintrag und TLS für `nadoku.gen-em.org`** — vermutlich erledigt: Produktiv antwortet dort (`PRODUKTION_URL`, Integritätswache); bestätigen, dann löschen | S5 | 03.09.2026 | Archiv-2 6 |
-| **Offene Fragen aus Konzept BR** (vier): Positionsargumente in `kettenaufrufe`, Riegel für tote Werkzeugpfade, Messung des erzählenden Bestands (SD-03 baut sie für Rahmenplan und Backlog), `\|`-Maskierung in `bericht.py` | BR | 24.09.2026 | Archiv-2 6 |
-| **Freigabe je Konzept und je Q-Frage** — laufend (K6) | alle | — | — |
 
 ### 6.2 Vor einem bestimmten Schritt
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
-| **Google-Konto der GbR als Kontoinhaber, Play-Console-Organisationskonto** (25 USD), Identitätsprüfung; Entwicklername und öffentliche Kontaktadresse | 6 Teil C (R65), nach D-U-N-S | 03.09.2026 | `Vorbereitung-Play-Console.md` |
-| **Signaturschlüssel bei Play App Signing hochladen, Upload-Schlüssel erzeugen** und außerhalb des Repositoriums verwahren | 6 Teil C, mit dem ersten Track-Release | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Demo-Video des Vordergrunddienstes auf echtem Gerät** für die Standort-Deklaration — falls der interne Track sie verlangt (beim Einrichten prüfen) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Datensicherheitsformular der Play Console** — setzt die Datenschutzerklärung voraus (6.3) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Wear-OS-Uhr für den Gerätetest**, die Wear-OS-Prüfrunde und den Installationstest aus dem Track | 6 Teil C; Prüfliste AR | 31.08.2026 | `Pruefdokument-AR-Android-Runde.md` |
-| **Fable-Instanz mit Repositoriumszugriff** für den Review in zwölf Sitzungen; `docs/konzepte/Review-R17.md` als Sammelstelle | vor 12 (R17, R69) | 03.09.2026 | Fahrplan, Schritt 12 |
-| **Wahl der Symbole für Handy-App und Web-App** aus dem Entwurf im P7-Konzept (gleicher Hubschrauber, zwei Hintergrundfarben); ein iPhone für den Safari-Nachweis | mit dem Konzept zu 13 (R70) | 03.09.2026 | Fahrplan, Schritt 13 |
-| **Drei repräsentative Uhr-Darstellungen benennen; Handy-Screenshots** aus dem Gerätetest mit dem Demo-Konto | mit dem Konzept zu 13 (R72) | 03.09.2026 | Fahrplan, Schritt 13 |
-| **Neues NEF-Logo und -Favicon** (Platzhalter liegt) | vor 13 (R71) | 30.08.2026 | `Design.md` 2.5 |
-| **Korrigierte Logovorlagen in den Markenfarben** (Nr. 62), SVG und PNG — die vorliegenden tragen die alten Werte; bis dahin passiert am Code nichts | vor 13, mit dem NEF-Logo | 12.09.2026 | `Design.md` 2.5 |
 | **Impressums- und Datenschutztext der Installation** über den Editor eintragen (R32); für das Datensicherheitsformular der Play Console schon vor dem ersten Track-Release | vor 13 | 30.08.2026 | Handbuch 11.5 |
 | **GitHub: `gen-em/nadoku` anlegen** (öffentlich, AGPL-3.0), Umgebungen `staging` und `produktion` mit Pflichtfreigabe, Zweigschutz; danach dieses Repositorium archivieren | mit dem Umzug in 14 (R68) | 03.09.2026 | Fahrplan, Schritt 14 |
 
@@ -276,9 +252,6 @@ Betreiberin (SD-M1) ungeprüft**; wo eine Erledigung vermutet wird, steht es dab
 | **Play-Store-Beitrittslink des internen Tests** für die Karte „App installieren" (Konstante `PLAY_TEST_URL`) | S8 AP6, vor der Produktionsfreigabe | 06.09.2026 | Archiv-2 6 |
 | **Adresse der Uhr-App im Connect-IQ-Store**, falls veröffentlicht (Konstante `CONNECT_IQ_URL`) | S8 AP6 | 06.09.2026 | Archiv-2 6 |
 | **Prüfliste S2** (12 Punkte), darunter die **Probe-Wiederherstellung der ganzen Installation** auf einem Wegwerf-Webspace — wichtigster offener Punkt, blockiert nichts; danach halbjährlich | S2 | 01.09.2026 | `erledigt/Pruefdokument-S2-Mengen-Spuren-Sicherung.md` |
-| **Zugangsdaten je eines echten FTPS- und SFTP-Ziels; ein Klick auf „Verbindung prüfen"** (FTP fällt seit 10c AP8) | S2 | 01.09.2026 | Archiv-2 6 |
-| **Bestätigung, dass SMTP auf Produktiv eingerichtet ist** | S2 | 01.09.2026 | Archiv-2 6 |
-| **Sichtprüfung in WebKit und Firefox** (Symbole am Dateiverweis) | P3 | 30.08.2026 | Archiv-2 6 |
 | **Bilderlauf für die zweite Logo-Wahl; Autosuche gegen den echten Photon; Bedienzustände** | S3 | 02.09.2026 | Archiv-2 6 |
 
 ### 6a. Staging einrichten — die zehn Schritte
@@ -295,9 +268,9 @@ Werdegang und Kästen: `Rahmenplan-Archiv-2.md` 6a.
 | 4 | Umgebung `staging`: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`; Variablen `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` | GitHub | ☑ 21.09.2026 (`FTP_STATE_PFAD` mit Kette II/AP6) |
 | 5 | Push auf `main` — ab hier synchronisiert die Kette | — | ☑ 21.09.2026 (17 Schritte in 49 s) |
 | 6 | `install.php` im Browser: `config.php`, BetreiberIn, `install.lock`; eigener Serverschlüssel und Server-Anteil | Browser | ☑ 20.09.2026 |
-| 7 | `config.php`: `smtp` auf `staging@gen-em.org`, `mail.betreff_praefix` `[Staging]`; dazu `app.umgebung` (6.1) | FTP | ☐ Z7 |
-| 8 | Demo-Konto aus der Fixture anlegen (Verwaltung → Demo-Konto) | Browser | ☐ Z7 |
-| 9 | Eigenes SFTP-Sicherungsziel für Staging | Anwendung | ☐ Z7 |
+| 7 | `config.php`: `smtp` auf `staging@gen-em.org`, `mail.betreff_praefix` `[Staging]`; dazu `app.umgebung` (6.1) | FTP | ☑ 26.09.2026 (Auskunft der Betreiberin, SD-M1) |
+| 8 | Demo-Konto aus der Fixture anlegen (Verwaltung → Demo-Konto) | Browser | ☑ 26.09.2026 (Auskunft der Betreiberin, SD-M1) |
+| 9 | Eigenes SFTP-Sicherungsziel für Staging | Anwendung | ☑ 26.09.2026 (Auskunft der Betreiberin, SD-M1) |
 | 10 | `JOBS_TOKEN` als Environment secret der Umgebung `staging` | GitHub | ☑ 20.09.2026 |
 
 | Variable | Staging (lima-city) | Produktiv (Plesk) |
@@ -386,7 +359,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R62 | Konzeptablage `docs/konzepte/` mit Lebenszyklus: Statusblock und Push je Paket; Erledigt-Zeile und Löschung nach der Freigabe; Prüfdokument bis zur Prüfliste | gilt; Regel in 2.2; Erledigt-Zeile seit Fassung 125 als Tabellenzeile, Prüfzahlen im Prüfdokument (E-SD-10) | Archiv-2 7 |
 | R63 | Android-App kennt nur `nadoku.gen-em.org`; Adressfeld, Adress-QR und Adresswahl entfallen; Handy-App „Gen-EM NAdoku", Wear-Uhr „NAdoku" | erledigt (Android 0.11.0, Nr. 84 bis 86) | Archiv-2 7 |
 | R64 | Herkunft und Gerät je Einsatz: Momentaufnahme an `missions` und `rest_segments`, `origin` mit sechs Werten, sichtbar im Dashboard | erledigt: Speicherung Web 14.0.0 (Nutzlast 9), Dashboard Web 20.47.0 (10c AP7); die Kachel Nr. 88 ist am 12.09.2026 verworfen | Archiv-2 7 |
-| R65 | Store-Verteilung in zwei Stufen: Organisationskonto (D-U-N-S), interner Test-Track ab Schritt 6, Produktionsfreigabe als Welle 1; Play App Signing | gilt; Konto und Track offen (6.1, 6.2), Produktion im Betriebsübergang | `Konzept-Planung-v1.0.md`, E-PV-1 |
+| R65 | Store-Verteilung in zwei Stufen: Organisationskonto (D-U-N-S), interner Test-Track ab Schritt 6, Produktionsfreigabe als Welle 1; Play App Signing | gilt; Organisationskonto und Play App Signing erledigt 26.09.2026, Track mit Schritt 6 Teil C, Produktion im Betriebsübergang | `Konzept-Planung-v1.0.md`, E-PV-1 |
 | R66 | Update-Weg ab v1.0: keine Selbstprüfung, kein Selbst-Update, Produktion nur auf Auslösung; Register beginnt bei v1.0 neu | gilt; Ausgeführte seit Web 20.39.0 im Protokoll (Q-P5c-53); `git pull` auf dem Server verworfen (E-KH-02); Neubeginn in P8 | `Konzept-Planung-v1.0.md`, E-PV-2 |
 | R67 | Auslieferungskette: `main` → Staging, Tag → Produktion nach Pflichtfreigabe und Backup-Tor; Prüftor in Stufen; Rollback = voriger Tag | gilt; gebaut P5a, gehärtet Kette II (E-KH-01 bis -30), erster grüner Produktivlauf M1 am 21.09.2026 (`web-v20.26.3`); Rest bei PK | `Konzept-Planung-v1.0.md`, E-PV-3; Konzept Kette II |
 | R68 | Ein Repositorium, frisch, öffentlich: `gen-em/nadoku` (AGPL-3.0) ohne Historie; Altrepositorium archiviert und verweist | gilt; Umzug in P8 mit dem Neuaufsetzen | `Konzept-Planung-v1.0.md`, E-PV-4 |
