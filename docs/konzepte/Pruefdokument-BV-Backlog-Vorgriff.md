@@ -2,10 +2,12 @@
 
 *Gehört zu `Konzept-BV-Backlog-Vorgriff.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
-Konzepts. Stand: BV-01 bis BV-07 gebaut, P-BV-02 und -03 gegengeprüft,
-P-BV-05 erledigt; `main` zweimal aufgenommen (nach P5c, nach #90/#91), Pull
-Request #87 ohne Konflikt, 26.09.2026. Vor BV wird AR gemergt (P-BV-08). Wird mit jedem
-Paket fortgeschrieben.*
+Konzepts. Stand: BV-01 bis BV-08 gebaut, P-BV-02 und -03 gegengeprüft,
+P-BV-05 erledigt; gemergt 26.09.2026 (PR #87, `d34908b`) — **vor** AR, das
+den BV-Zweig aufgenommen hat (`af9df30`); P-BV-08 damit überholt. Q-BV-05
+und -06 sind entschieden (E-BV-19, -20), der Abschluss nach K9 ist auf dem
+Zweig von Schritt 17 geschrieben, das Konzept gelöscht. Dieses Dokument
+bleibt, bis P-BV-04, -07 und -09 abgehakt sind.*
 
 ---
 
@@ -15,7 +17,7 @@ Paket fortgeschrieben.*
 |---|---|---|
 | **Stufe 1 auf GitHub für diesen Zweig** | Bis zum Pull Request lief sie nicht — Stufe 1 läuft auf Arbeitszweigen nur beim PR (Nr. 281). Örtlich sind alle 17 Riegel je Paket grün, und `bericht.py lesen` hat jeden Kopf-Commit gegengelesen („in Ordnung, 19 Zahlen"). Ob das Tor dasselbe sagt, zeigt erst der PR-Lauf. **Stand 26.09.2026:** Über den Stand vor dem Aufnehmen, `f67c483`, lief er grün (Lauf 36180954206, 25.09.2026, dazu beide Schemaläufe); über den vereinigten Stand läuft er erst mit dem Push des Merge-Commits. | PR-Lauf von `pruefung.yml`, P-BV-01 |
 | ~~**Der Abtaster gegen den P5c-Stand nach dem Merge**~~ | ~~Gefahren ist er gegen einen Abzug von P5c `3576a97` … Was P5c bis zum Merge noch an `server/` baut (AP6 bis AP9), kann niemand vorher messen.~~ **Gemessen am 26.09.2026** am vereinigten Stand: **0 Befunde** (Abschnitt 2, F-BV-15). Örtlich erfüllt; das Tor sagt es mit P-BV-01. | P-BV-01 |
-| P-BV-08 | **Nach dem Merge von AR** (PR #88): BV nimmt `main` ein zweites Mal auf, nach `Pruefablauf.md` 5.3 — eine Instanz beauftragen, nicht „Update branch". | Konflikte nur in `docs/Backlog.md` (Kopf, Ende *Offen*, Ende *Erledigt*) und `docs/CHANGELOG.md` (oben), alle additiv; AR-Einträge vor denen von BV, im Changelog BV oben (E-BV-14); keine Nummer doppelt; Stufe 1 grün. | Ein Konflikt in einer anderen Datei, eine Nummer doppelt, oder der PR zeigt nach dem Merge von AR „This branch has conflicts" und niemand nimmt auf. |
+| ~~P-BV-08~~ | ~~**Nach dem Merge von AR** (PR #88): BV nimmt `main` ein zweites Mal auf, nach `Pruefablauf.md` 5.3.~~ **Überholt 26.09.2026:** Die Betreiberin hat BV vor AR gemergt (PR #87 `d34908b`, dann PR #88 `f5bddc2`); AR hat den BV-Zweig aufgenommen (`af9df30`), Stufe 1 war grün. Nichts mehr zu tun. | Konflikte nur in `docs/Backlog.md` (Kopf, Ende *Offen*, Ende *Erledigt*) und `docs/CHANGELOG.md` (oben), alle additiv; AR-Einträge vor denen von BV, im Changelog BV oben (E-BV-14); keine Nummer doppelt; Stufe 1 grün. | Ein Konflikt in einer anderen Datei, eine Nummer doppelt, oder der PR zeigt nach dem Merge von AR „This branch has conflicts" und niemand nimmt auf. |
 | P-BV-09 | **Den Textbaustein neu übernehmen** — nur, wenn er schon in der eigenen Datenschutzerklärung steht (hängt an P-P5c-40): Handbuch 11.5a öffnen, den Baustein kopieren, unter Verwaltung → Rechtstexte → Datenschutzerklärung den alten Abschnitt „Welche Daten verschlüsselt gespeichert werden" ersetzen. | Die Erklärung nennt den Abfahrtort unter „verschlüsselt" und die Höhe des Einsatzorts sowie die Koordinate des Transportziels unter „nicht verschlüsselt". | Die Vorschau zeigt „das Transportziel," ohne „samt Koordinate" — dann steht noch die alte Fassung dort. |
 | **Das zweite Aufnehmen nach dem Merge von AR** | AR (PR #88) ist noch nicht gemergt und nimmt `main` selbst noch auf. Gemessen ist nur ein Probe-Merge gegen den heutigen Stand von AR, `83106eb` (F-BV-16): Konflikte nur in Backlog und Changelog, alle additiv. Was AR beim eigenen Aufnehmen noch ändert, sieht erst das zweite Aufnehmen. | P-BV-08 |
 | **Eine eingebaute Selbstprobe der Vollständigkeitsprüfung** | Sie hat keine (`pruefen.sh`, Liste `SELBST`: „ein Rest, den E-PK-24 … erst noch einlöst"). Eine anzulegen hieße, `pruefen.sh` und `tools/quelltext/LIESMICH.md` zu ändern — beide hat P5c geändert. Die Abnahme von BV-01 ist deshalb von Hand gefahren und in Abschnitt 2 mit Zahl belegt, die Gegenproben sind nicht eingecheckt. | — |
