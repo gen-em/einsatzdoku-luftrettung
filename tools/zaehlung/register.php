@@ -528,4 +528,15 @@ return [
  'regel' => ['art' => 'muster', 'muster' => '~class=\\\\?["\'][^"\']*\b(listensuche|listenfilter|filterreihe|seitenwahl|seitenknopf|seitenluecke|listenfuss|listenzahl|reiter-punkt|reiter-rahmen)\b~'],
  'start' => 8, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+['kennung' => 'Z41', 'paket' => 'R4-09',
+ 'beschreibung' => 'JSON-Antwort von Hand (echo json_encode) unter api/',
+ 'grund' => 'Nr. 258: drei Endpunkte schrieben ihre 19 Antworten mit '
+          . 'echo json_encode und eigenem Content-Type — ohne nosniff, '
+          . 'Referrer-Policy, HSTS und no-store, die json_out() ueber json_kopf() '
+          . 'setzt. Seit Web 21.1.7 antwortet jeder Endpunkt unter api/ ueber '
+          . 'json_out() oder json_roh_out().',
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'api', 'ausser' => [],
+ 'regel' => ['art' => 'muster', 'muster' => '~\becho\s+json_encode\s*\(~'],
+ 'start' => 19, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 ];

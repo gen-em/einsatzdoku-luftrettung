@@ -333,7 +333,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Schema einspielen + Admin anlegen
+    /* ERST FRAGEN, OB DIE DATENBANK LEER IST (Web 21.1.7, Backlog Nr. 291).
+     *
+     * `schema.sql` legt 41 von 42 Tabellen ohne `IF NOT EXISTS` an, und DDL
+     * bestaetigt in MySQL still — eine Transaktion haelt nichts zurueck.
+     * Scheiterte die Einrichtung nach dem Schema, standen die Tabellen, und
+     * der naechste Versuch brach am ersten `CREATE` ab, mit einer Meldung,
+     * die in jedem Fall „eine leere Datenbank verwenden" riet — auch beim
+     * ersten Fehlschlag, der mit der Datenbank nichts zu tun hatte (Nr. 288).
+     * Jetzt steht die Frage vor dem ersten `CREATE`, mit der Zahl; und die
+     * zwei Schritte danach melden je ihren eigenen Satz. */
+    if (!$errors && $pdo !== null) {
+        try {
+            $vorhanden = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+            if ($vorhanden) {
+                $errors[] = 'Die Datenbank „' . $dbName . '" enthält schon '
+                          . count($vorhanden) . ' ' . (count($vorhanden) === 1 ? 'Tabelle' : 'Tabellen')
+                          . ' — die Einrichtung legt ihre Tabellen nur in einer leeren '
+                          . 'Datenbank an und löscht keine. Eine leere Datenbank angeben '
+                          . 'oder die vorhandene mit dem Werkzeug des Hosters leeren.';
+            }
+        } catch (Throwable $ex) {
+            $errors[] = 'Die Tabellen der Datenbank ließen sich nicht abfragen: ' . $ex->getMessage();
+        }
+    }
+
+    // Schema einspielen
     if (!$errors && $pdo !== null) {
         try {
             /* HIER STAND EIN HAEKCHEN "Vorhandene Tabellen vorher loeschen"
@@ -350,6 +375,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * Datenbank an oder leert die vorhandene mit dem Werkzeug seines
              * Hosters — beides bewusste Handlungen an der richtigen Stelle. */
             run_sql_file($pdo, $schemaPath);
+        } catch (Throwable $ex) {
+            $errors[] = 'Beim Anlegen der Tabellen ist ein Fehler aufgetreten: '
+                      . $ex->getMessage() . ' — was bis dahin entstanden ist, bleibt '
+                      . 'stehen; vor dem nächsten Versuch die Datenbank leeren.';
+        }
+    }
+
+    // Erstes Konto anlegen
+    if (!$errors && $pdo !== null) {
+        try {
 
             /* Bewusst OHNE Passwort: Der Server darf das Passwort nie sehen.
              * Es wird ueber pw_handling.php im Browser gesetzt; dort entstehen
@@ -387,11 +422,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $adminId    = $angelegt['id'];
             $setupLink  = $baseUrl . '/pw_handling.php?token=' . $angelegt['token'];
         } catch (Throwable $ex) {
-            $errors[] = 'Beim Anlegen der Tabellen/des ersten Kontos ist ein Fehler aufgetreten: '
-                      . $ex->getMessage()
-                      . ' — Tipp: eine leere Datenbank verwenden. Bestehende '
-                      . 'Tabellen werden von der Einrichtung bewusst nicht mehr '
-                      . 'gelöscht.';
+            $errors[] = 'Beim Anlegen des ersten Kontos ist ein Fehler aufgetreten: '
+                      . $ex->getMessage() . ' — die Tabellen stehen bereits; vor '
+                      . 'dem nächsten Versuch die Datenbank leeren.';
         }
     }
 

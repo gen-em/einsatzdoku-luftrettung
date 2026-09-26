@@ -21,12 +21,12 @@ declare(strict_types=1);
  *      .htaccess abgeschaltet. Dasselbe Muster wie bei der Nachweisdatei der
  *      Ersteinrichtung (`server/.htaccess`, M1-11).
  *
- * ZWINGEND: `sicherungen/` steht in der `exclude`-Liste **beider**
- * FTPS-Schritte von `.github/workflows/auslieferung.yml` (bis Web 20.3.0:
- * `deploy.yml`, seither gelöscht). Der Deploy synchronisiert `server/` und
- * löscht alles, was nicht ausgenommen ist — ohne den Eintrag wäre die erste
- * Auslieferung nach dieser Fassung zugleich das letzte aller Backups. Seit
- * der Kette gilt das zweimal: für Staging und für Produktiv.
+ * ZWINGEND: `sicherungen/` steht in der `exclude`-Liste des FTPS-Schritts
+ * in `.github/workflows/ausliefern-lauf.yml` — **einmal**, für Staging und
+ * Produktiv zugleich (seit Kette II/AP5; bis dahin je einmal in den beiden
+ * FTPS-Schritten von `auslieferung.yml`, bis Web 20.3.0 in `deploy.yml`).
+ * Ohne den Eintrag wäre die erste Auslieferung, die mit Löschabgleich
+ * synchronisiert, zugleich das Ende aller Backups (`CLAUDE.md` 3).
  *
  * Aufbau der Ablage:
  *
@@ -1161,66 +1161,6 @@ function edbak_weg(array $paket, array $ziel): array
                       . 'ausschliesslich bei der NutzerIn.'];
 }
 
-/**
- * Übersicht: bestehende Konten und verwaiste Ordner (E19).
- *
- * Die Liste der Ordner entsteht aus dem VERZEICHNIS, nicht aus der Datenbank.
- * Eine Liste allein aus `users` würde genau die Backups verschweigen, um
- * derentwillen die Funktion gebaut wird: Das neu aufgesetzte Konto trägt eine
- * neue Kennung, zum alten Ordner existiert keine Datenbankzeile mehr.
- */
-function edbak_uebersicht(): array
-{
-    $konten = db()->query('SELECT id, email, name, account_key, pat_wrap_rc
-                           FROM users ORDER BY email')->fetchAll();
-    $nachKennung = [];
-    foreach ($konten as $k) {
-        if (edbak_kennung_gueltig($k['account_key'])) {
-            $nachKennung[(string)$k['account_key']] = $k;
-        }
-    }
-
-    $wurzel = edbak_wurzel();
-    $ordner = [];
-    if (is_dir($wurzel)) {
-        foreach (scandir($wurzel) ?: [] as $n) {
-            if (edbak_kennung_gueltig($n) && is_dir($wurzel . '/' . $n)) { $ordner[$n] = true; }
-        }
-    }
-
-    $mitKonto = [];
-    foreach ($konten as $k) {
-        $kennung = (string)($k['account_key'] ?? '');
-        $hat = edbak_kennung_gueltig($kennung) && isset($ordner[$kennung]);
-        $begleit = $hat ? edbak_begleit_lesen($kennung) : null;
-        $mitKonto[] = [
-            'user_id'     => (int)$k['id'],
-            'email'       => (string)$k['email'],
-            'name'        => $k['name'],
-            'account_key' => $kennung,
-            'kennung_ok'  => edbak_kennung_gueltig($kennung),
-            'pakete'      => $hat ? edbak_pakete($kennung) : [],
-            'freigabe'    => $begleit['freigabe'] ?? null,
-        ];
-    }
-
-    $verwaist = [];
-    foreach (array_keys($ordner) as $kennung) {
-        if (isset($nachKennung[$kennung])) { continue; }
-        $begleit = edbak_begleit_lesen($kennung);
-        $verwaist[] = [
-            'account_key' => $kennung,
-            'lesbar'      => (bool)$begleit['lesbar'],
-            'email'       => $begleit['email'],
-            'name'        => $begleit['name'],
-            'pakete'      => edbak_pakete($kennung),
-            'freigabe'    => $begleit['freigabe'] ?? null,
-        ];
-    }
-
-    return ['konten' => $mitKonto, 'verwaist' => $verwaist];
-}
-
 /** Freigabe setzen (A8.6): das Backup wird für ein Zielkonto sichtbar. */
 function edbak_freigeben(string $kennung, string $datei, int $zielUserId): bool
 {
@@ -1451,10 +1391,12 @@ function edbak_admin_mail_an(): bool
 
 /* ---- Stand EINES Kontos (E-P3-41) ----------------------------------------
  *
- * edbak_uebersicht() liest ALLE Konten und dazu je Konto eine Begleitdatei
- * und ein Verzeichnis. Für die Kontoseite ist das die falsche Frage: Sie
- * zeigt genau ein Konto, und bei mehreren hundert Konten wäre die Übersicht
- * dafür ein Verzeichnisdurchlauf über den ganzen Bestand.
+ * Die Gesamtübersicht, die hier bis Web 21.1.6 stand, las ALLE Konten und
+ * dazu je Konto eine Begleitdatei und ein Verzeichnis. Für die Kontoseite
+ * war das die falsche Frage: Sie zeigt genau ein Konto, und bei mehreren
+ * hundert Konten war die Übersicht dafür ein Verzeichnisdurchlauf über den
+ * ganzen Bestand. Seit E-P3-41 und O9c rief sie niemand mehr; mit
+ * Web 21.1.7 ist sie gestrichen (Backlog Nr. 175).
  *
  * Zurück kommt, was die Karte „Backups" braucht: die Pakete, die
  * Freigabe, und der Stand als eines von fünf Worten. „nie" ist dabei nicht
@@ -2037,9 +1979,9 @@ function edbak_faellige_konten(): array
  * Datenbank: Eine Liste aus `users` verschwiege genau die Backups, um
  * derentwillen es sie gibt.
  *
- * Das ist die schmale Fassung von edbak_uebersicht(): NUR die verwaisten
- * Ordner. Die Konten selbst brauchen hier nichts mehr — ihre Backups
- * stehen seit Web 9.8.0 auf der Kontoseite.
+ * Das ist die schmale Fassung der Gesamtübersicht, die bis Web 21.1.6
+ * daneben stand: NUR die verwaisten Ordner. Die Konten selbst brauchen hier
+ * nichts mehr — ihre Backups stehen seit Web 9.8.0 auf der Kontoseite.
  */
 function edbak_verwaiste(): array
 {

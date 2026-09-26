@@ -776,8 +776,8 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
                   $typ  = $t['vehicle_typ'] === null ? null : (string)$t['vehicle_typ'];
                   $sym  = dt_art_symbol($kind, $typ);
                   /* DIE LEISTE ZEIGT DEN KURZNAMEN (Nr. 69, E-S9-09): Sie ist
-                     die schmalste Stelle der Anwendung, und „C1" statt
-                     „Christoph 1" ist genau dafuer gedacht. Der TITEL nennt
+                     die schmalste Stelle der Anwendung, und „AF1" statt
+                     „Alpenfalke 1" ist genau dafuer gedacht. Der TITEL nennt
                      weiterhin die volle Bezeichnung — wer den Kurznamen nicht
                      zuordnen kann, findet sie im Tooltip. */
                   $name = dt_rm_kurz($t);

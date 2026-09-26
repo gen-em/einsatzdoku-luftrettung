@@ -970,8 +970,8 @@ function migrationen_katalog(): array
          *
          * WARUM DAS HIER GEFAHRLOS IST
          * Geaendert wird NUR, was exakt dem automatisch vergebenen Muster
-         * entspricht. Ein selbst vergebener Name — "Uhr Philipp", "Christoph
-         * 17", auch "Uhr (gekoppelt, alt)" — passt nicht auf das Muster und
+         * entspricht. Ein selbst vergebener Name — "Uhr Hanna", "Alpenfalke
+         * 1", auch "Uhr (gekoppelt, alt)" — passt nicht auf das Muster und
          * bleibt unberuehrt. Es geht keine Angabe verloren: Das Datum steht in
          * created_at und wird in der Geraeteliste als "seit …" angezeigt.
          *

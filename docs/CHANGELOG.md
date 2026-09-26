@@ -14,6 +14,64 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.7] — 2026-09-26
+
+Schritt 17, Backlog-Runde 4, Paket R4-09. Korrekturstufe ohne Migration.
+
+### Behoben
+
+- **Ein unterbrochenes Einspielen meldet nicht mehr „fehlgeschlagen", wenn
+  die Daten da sind** (Nr. 277). Beim Einspielen eines freigegebenen
+  Backups vermerkt die Seite am Ende, dass die Freigabe eingelöst ist.
+  Diese Antwort wurde nie gelesen: Eine 500 lief still durch, und ein
+  Netzfehler warf in den äußeren Fehlerzweig — der dann das ganze
+  Einspielen als fehlgeschlagen meldete, obwohl die Daten zu diesem
+  Zeitpunkt vollständig auf dem Server lagen. Jetzt steht in jedem Fall
+  „Fertig" da, und scheitert der Vermerk, sagt die Meldung in Orange, dass
+  unklar ist, ob die Freigabe noch offen ist, und dass ein zweites
+  Einspielen nicht nötig ist. „Unklar" und nicht „fehlgeschlagen", weil
+  der Server den Vermerk bei einem Netzfehler längst geschrieben haben
+  kann.
+- **Die Einrichtung fragt zuerst, ob die Datenbank leer ist** (Nr. 291).
+  `schema.sql` legt seine Tabellen ohne `IF NOT EXISTS` an, und DDL
+  bestätigt in MySQL still. Scheiterte die Einrichtung nach dem Schema,
+  blieb ein halbes Schema zurück, und der nächste Versuch brach an der
+  ersten Tabelle ab — mit einer Meldung, die in jedem Fall „eine leere
+  Datenbank verwenden" riet, auch beim ersten Fehlschlag, der mit der
+  Datenbank nichts zu tun hatte. Jetzt bricht sie vor dem ersten `CREATE`
+  ab und nennt die Zahl der vorhandenen Tabellen; Schema und erstes Konto
+  melden je ihren eigenen Fehler.
+- **Die Statusseite sagt „nicht messbar", wo der Hoster eine Funktion
+  abgeschaltet hat** (Nr. 266). Auf Staging steht `opcache_get_status` in
+  `disable_functions`; die Seite zeigte „OPcache: aus", während der
+  OPcache lief. `plattform_funktion()` unterscheidet jetzt drei Fälle —
+  aufrufbar, nicht vorhanden, abgeschaltet —, und im dritten behauptet die
+  Seite nichts.
+- **Drei Endpunkte senden ihre Kopfzeilen** (Nr. 258). `rueckfrage.php`,
+  `schluessel_erneuern.php` und `schluesselblatt_pruefen.php` schrieben
+  ihre 19 Antworten mit `echo json_encode` und eigenem `Content-Type` —
+  ohne `nosniff`, `no-store`, `Referrer-Policy` und HSTS, die `json_out()`
+  setzt. Sie laufen jetzt darüber; an der Logik ändert sich keine Zeile.
+
+### Entfernt
+
+- **`edbak_uebersicht()`** (Nr. 175). Die Gesamtübersicht der
+  Konto-Backups las für jedes Konto einen Ordner und eine Begleitdatei; die
+  Kontoseite und die Zähler lesen seit Web 9.8.0 bzw. O9c schmaler, und
+  aufgerufen hat sie seither niemand. Die zwei Kommentare und die Stelle in
+  `docs/Technik.md`, die sie nannten, stehen jetzt in der Vergangenheit.
+
+### Geändert
+
+- **Kommentare berichtigt, die die Sache falsch erzählten.** Der Cron-Pfad
+  im Kopf von `jobs.php` nennt einen Ordner `server/`, den es auf einer
+  Anlage nicht gibt (Nr. 150); „beider FTPS-Schritte" steht seit Kette
+  II/AP5 in einem (Nr. 260); `.geo` kam mit O2, nicht mit O1 (Nr. 333).
+  Und acht Kommentare trugen reale Orts- und Rufnamen als Messbeispiele —
+  sie sind öffentlich wie jede andere Zeile, und die Textprobe liest sie
+  seit R4-07 (E-R4-19). Sie nennen jetzt eine Zeichenzahl oder einen Namen
+  aus dem Referenzbestand; die Zahlen daneben gelten weiter.
+
 ## [Web 21.1.6] — 2026-09-26
 
 Schritt 17, Backlog-Runde 4, Paket R4-08. Korrekturstufe ohne Migration.
@@ -139,6 +197,14 @@ Fassung.
   deshalb bei jedem `hochfahren.sh` mit: Eine Anlage von vorher bekommt die
   Konten, ohne dass jemand die Datenbank löscht.
 
+- **Die Freigabeprobe fährt ein gescheitertes Einlösen** (R4-09, Nr. 277).
+  Sie bricht den Vermerk nach dem Einspielen ab und verlangt „Fertig" mit
+  Ton warn, „unklar" im Satz und die Daten im Zielkonto; danach fährt sie
+  den Weg wie bisher zu Ende. Gegen das alte Formular sind die zwei neuen
+  Erwartungen rot — mit genau der Meldung, die Nr. 277 beschreibt.
+- **Eine Registerzeile für den JSON-Ausgang** (R4-09, Z41 in
+  `tools/zaehlung/register.php`): `echo json_encode` unter `api/`, Decke 0.
+
 ### Geändert
 
 - **`kontrast.py` leitet die Farbpaare aus dem Stylesheet ab** (R4-08,
@@ -186,7 +252,8 @@ Fassung.
   acht Stellen stand in `style.css`, und das lag in keinem Bereich. Die
   acht stehen im Altbestand (neu: `--stand` sagt, wer ihn geschrieben hat),
   bis R4-09 sie umschreibt; der Kommentar über dem GuteSeele-Profil nennt
-  das Fremdformat und steht unter dessen Ausnahme (E-PK-39).
+  das Fremdformat und steht unter dessen Ausnahme (E-PK-39). *Nachtrag
+  R4-09:* umgeschrieben, der Altbestand ist leer.
 - **`pysyntax` zählt Warnungen als Fehler** (R4-07, Nr. 318). Eine
   ungültige Escape-Folge (`"\d"` statt `r"\d"`) übersetzt heute mit einer
   Warnung — unter Python 3.11 unterdrückt, ab 3.12 sichtbar im Tor —, und

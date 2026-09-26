@@ -52,8 +52,6 @@ require_once __DIR__ . '/../einstieg_lib.php';
  * niemand ernst nimmt.
  */
 
-header('Content-Type: application/json; charset=utf-8');
-
 api_methode();
 csrf_check();
 
@@ -67,8 +65,7 @@ if (in_array($antwort, ['beantwortet', 'spaeter', 'weggeklickt'], true)) {
 }
 
 if ($antwort === 'weggeklickt') {
-    echo json_encode(['ok' => true]);
-    exit;
+    json_out(['ok' => true]);
 }
 
 /* EIGENES MERKMAL, EIGENE FRAGE. `blatt_spaeter` darf die Konto-Rueckfrage
@@ -78,14 +75,12 @@ if ($antwort === 'weggeklickt') {
  * stillgelegt. */
 if ($antwort === 'blatt_spaeter') {
     $_SESSION['blatt_gezeigt'] = true;
-    echo json_encode(['ok' => true]);
-    exit;
+    json_out(['ok' => true]);
 }
 
 if ($antwort === 'beantwortet') {
     rueckfrage_beantwortet($userId);
-    echo json_encode(['ok' => true]);
-    exit;
+    json_out(['ok' => true]);
 }
 
 if ($antwort === 'spaeter') {
@@ -93,9 +88,7 @@ if ($antwort === 'spaeter') {
      * Der Dialog schliesst sich trotzdem — er soll nicht zur Falle werden —,
      * aber er steht bei der naechsten Anmeldung wieder da. Der Browser sagt
      * das an, damit niemand sich wundert. */
-    echo json_encode(['ok' => true, 'geschoben' => rueckfrage_spaeter($userId)]);
-    exit;
+    json_out(['ok' => true, 'geschoben' => rueckfrage_spaeter($userId)]);
 }
 
-http_response_code(400);
-echo json_encode(['error' => 'antwort']);
+json_out(['error' => 'antwort'], 400);

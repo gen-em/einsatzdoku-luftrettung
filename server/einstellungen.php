@@ -4392,33 +4392,31 @@ ui_seite_start(['titel' => 'Einstellungen',
           s = out.stats;
         }
 
-        /* HIER WIRD EIN FEHLER BEWAHRT, NICHT BEHOBEN -- Backlog Nr. 277.
-         *
-         * Die Antwort wird auch jetzt NICHT gelesen: kein Blick auf den
-         * Status, kein Blick auf den Rumpf. Eine 500 laeuft also weiterhin
-         * durch, und die Erfolgsmeldung darunter erscheint, obwohl die
-         * Freigabe nicht als eingeloest vermerkt ist. Ein Netzfehler
-         * dagegen warf bisher aus dem `fetch` heraus in den aeusseren
-         * catch -- und meldete das Einspielen als fehlgeschlagen, obwohl
-         * es vollstaendig durchgelaufen war.
-         *
-         * EdApi wirft NIE. Damit dieses Paket kein Verhalten aendert
-         * (E-ZE-10), bildet die Stelle den alten Wurf nach: `status === 0`
-         * heisst, die Anfrage kam gar nicht durch -- genau der Fall, in dem
-         * `fetch` bisher warf. Ein HTTP-Fehler wirft weiterhin nicht.
-         * Wer Nr. 277 loest, streicht die `status === 0`-Zeile und liest
-         * stattdessen `frei.ok`. */
+        /* DIE ANTWORT WIRD GELESEN (Web 21.1.7, Backlog Nr. 277). Bis dahin
+         * lief eine 500 still durch, und ein Netzfehler warf in den
+         * aeusseren catch — der dann „Das Einspielen ist fehlgeschlagen"
+         * meldete, obwohl die Daten an dieser Stelle schon vollstaendig auf
+         * dem Server liegen. Beides war falsch, in entgegengesetzter
+         * Richtung. Jetzt steht die Fertig-Meldung in jedem Fall da, und
+         * scheitert das Vermerken, sagt sie es mit Ton `warn`: Die Daten
+         * sind eingespielt, OB die Freigabe als eingeloest gilt, ist
+         * unklar — nicht „fehlgeschlagen", denn bei einem Netzfehler kann
+         * der Server sie laengst vermerkt haben. */
         const frei = await EdApi.postJson('api/adminbackup_freigabe.php',
-                                          { eingeloest: true });
-        if (frei.status === 0) { throw new Error(frei.meldung); }
+                                          { eingeloest: true },
+                                          { vorgang: 'Das Vermerken der Freigabe' });
         const zusatz = (s.spuren_uebernommen !== undefined
                           ? ` ${s.spuren_uebernommen} Aufzeichnungen übernommen.` : '')
                      + (unlesbar
                           ? ` ACHTUNG: ${unlesbar} Einsätze liessen sich mit diesem `
                           + `Schlüssel nicht öffnen; ihre geschützten Angaben bleiben `
-                          + `hier unlesbar.` : '');
+                          + `hier unlesbar.` : '')
+                     + (frei.ok ? ''
+                          : ` Die Daten sind eingespielt. ${frei.meldung} — ob die `
+                          + `Freigabe noch offen ist, ist unklar. Ein zweites `
+                          + `Einspielen ist nicht nötig.`);
         melde(fgState, 'Fertig: ' + restoreBericht(s, zusatz),
-              unlesbar || s.spuren_ohne_ziel ? 'warn' : 'ok');
+              unlesbar || s.spuren_ohne_ziel || !frei.ok ? 'warn' : 'ok');
         document.getElementById('freigabebtn').disabled = true;
       } catch (e) {
         /* OHNE PRAEFIX (Schritt 15 AP8, R2). Den Satzanfang setzt jetzt

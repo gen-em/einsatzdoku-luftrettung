@@ -393,25 +393,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      entpackten Schlüssel im `sessionStorage`.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 146.
 
-150. **Der Cron-Befehl für den Job-Einstieg steht mit dem Repositoriumspfad in der Dokumentation.** · gehört zu: 17 · Stand: teilweise · seit 06.09.2026
-     Befund: Der Deploy legt den Inhalt von `server/` nach `httpdocs/`; einen
-     Unterordner `server/` gibt es auf einer Anlage nicht. Wer den Befehl
-     `php …/server/jobs.php` aus Docstring oder `Technik.md` abtippt, bekommt
-     „Could not open input file" — so geschehen beim Plesk-Cron auf Produktiv.
-     Richtig war und ist der Kopier-Knopf auf Betrieb → Hintergrundjobs
-     (baut über `__DIR__`, E-S8-10).
-     Entschieden 12.09.2026: alle Stellen berichtigen, auch rückwirkend im
-     Changelog; künftig der Platzhalter `php /pfad/zur/installation/jobs.php`
-     plus ein Satz zum Kopier-Knopf.
-     Erledigt (Konzept BV, BV-04, 24.09.2026): `Technik.md` 4.97a und
-     Runbook 7, Changelog Web 10.1.0, eine fünfte Stelle (inzwischen mit dem
-     FTP-Rückbau gestrichen).
-     Offen: der Kopfkommentar von `server/jobs.php` (Zeile 13) — eine Zeile
-     unter `server/` verlangt eine Web-Stufe, und die gab es in BV nicht
-     (E-BV-18, 26.09.2026). Geht mit der nächsten Web-Stufe, die die Datei
-     ohnehin anfasst.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 150.
-
 154. **Handy-App liest `kept_points` und `kept_meta` nicht.** · gehört zu: 13 · Stand: offen · seit 07.09.2026
      *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
      `Sendeantwort.kt` nimmt aus der Antwort von `ingest.php` nur
@@ -470,21 +451,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): S11 verlegt die
      Spurfunktionen in den Browser (Nr. 43); ein Schnitt über `spur_lib.php`
      davor wäre dort neu zu bauen.
-
-175. **`edbak_uebersicht()` hat keinen Aufrufer mehr.** · gehört zu: 17 · Stand: offen · seit 13.09.2026
-     *Aufgenommen 13.09.2026 als Nebenfund der Gegenprüfung zu Nr. 37;
-     angelegt auf Anweisung des Auftraggebers.* Die Funktion in
-     `adminbackup_lib.php` liest für **jedes** Konto eine Begleitdatei und
-     ein Verzeichnis — die Bauform, die E-P3-41 mit `edbak_konto_stand()` für
-     die Kontoseite und O9c mit `edbak_staende()` und `edbak_verwaiste()` für
-     die Zähler und die verwaisten Ordner abgelöst hat. Am 13.09.2026 ruft
-     sie **niemand** mehr auf, weder in `server/` noch in `tools/`; genannt
-     wird sie nur noch in `docs/Technik.md` („Die Kontoseite (E-P3-41, seit
-     Web 9.8.0)") als Begründung, warum die Kontoseite anders liest.
-     **Zu tun:** die Funktion austragen und den Satz in `Technik.md` so
-     fassen, dass er die abgelöste Bauform als Vergangenheit beschreibt.
-     *Abnahme:* `grep -rn edbak_uebersicht server/ tools/ docs/` ist leer,
-     bis auf den Changelog. Zuordnung: Backlog-Runde.
 
 187. **Alle „Anhebungs"-Wege werden mit NaDoku 1.0 abgeschafft.** · gehört zu: 14 · Stand: offen · seit 14.09.2026
      Entschieden 14.09.2026 (S10/AP3): Ab 1.0 gibt es nur neue Konten, also
@@ -967,23 +933,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      sie schon lief. Das Register in P8 löst es an der Wurzel; bis dahin
      steht im Zählmittel eine **Decke von 57** — sie darf nicht wachsen.
 
-258. **Drei Dateien unter `api/` antworten am `json_out()` vorbei.** · gehört zu: 17 · Stand: teilweise · seit 21.09.2026
-     Befund (Schritt 15 AP3): `rueckfrage.php`, `schluessel_erneuern.php`
-     und `schluesselblatt_pruefen.php` schreiben ihre Antworten mit
-     `header('Content-Type: …')` und `echo json_encode(...); exit;` — 19
-     Stellen. `json_out()` setzt über `json_kopf()` die Kopfzeilen
-     (`nosniff`, `Referrer-Policy`, HSTS, `Cache-Control: no-store`); die
-     19 Stellen setzen nichts davon. Derselbe Mangel ist mit Web 20.9.1 an
-     sieben anderen Stellen behoben (Nr. 203); diese drei arbeiten über
-     `$_POST` und fielen als JSON-Endpunkte nicht auf. Praktische Folge
-     gering (Quittungen, Fehlerkennungen, ein Prüfergebnis), aber `nosniff`
-     ist bei `application/json` die Zeile, auf die es ankommt.
-     Erledigt: die Methodenprüfung auf `api_methode()` (AP3, Nr. 256).
-     Offen: der Umbau auf `json_out()` — nicht in AP3, weil der den Eingang
-     zentralisiert, nicht den Ausgang, und die Kopfzeilen eine sichtbare
-     Änderung sind (E-ZE-10).
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 258.
-
 259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen fallen, ihr Kernvergleich läuft gar nicht.** · gehört zu: 17 · Stand: offen · seit 21.09.2026
      Befund (Schritt 15 AP3): `tools/gpxprobe/probe.php` hält den
      Referenzexport vom 15.09.2026 gegen die GPX-Dateien des Demo-Kontos.
@@ -1004,25 +953,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Klickprobe, die einen Reset mitten im Lauf meldet (42 von 48, mit
      Pause 48 von 48).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 259.
-
-260. **Zwei Code-Kommentare in `server/` sagen „beider FTPS-Schritte" — seit Kette II/AP5 ist es einer.** · gehört zu: 17 · Stand: offen · seit 21.09.2026
-     Befund (Kette II, AP5): `server/wartung_lib.php` (Kopfkommentar zu
-     `ueberlast.json`) und `server/adminbackup_lib.php` (der
-     `ZWINGEND`-Absatz zu `sicherungen/`) behaupten im Präsens, die
-     Ausnahmeliste stehe in beiden FTPS-Schritten von `auslieferung.yml`.
-     Seit AP5 steht sie einmal, in `ausliefern-lauf.yml`.
-     Nicht im selben Paket erledigt, weil die Sätze die ausgelieferte Kette
-     beschreiben und erst falsch werden, wenn AP5 auf `main` ankommt — und
-     eine Änderung unter `server/` eine Versionsstufe verlangt, die zu dem
-     Paket gehört, das ohnehin Code bewegt. Inzwischen liegt AP5 auf `main`
-     (`ausliefern-lauf.yml` steht neben `auslieferung.yml`), und beide
-     Kommentare stehen noch (nachgesehen 26.09.2026) — sie gehen mit der
-     nächsten Web-Stufe, die die Dateien anfasst (wie Nr. 150).
-     Nicht betroffen: die zwei Stellen in `server/version.php` (Werdegang
-     der Fassungen 20.15.2 und 20.16.x — dort ist „zwei" richtig) sowie
-     Changelog, Backlog und Prüfdokumente (Protokolle werden nicht
-     rückwirkend umgeschrieben).
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 260.
 
 261. **Staging bewahrt zwei Komplett-Stände auf — der Hotfix-Weg braucht mehr.** · gehört zu: Zuarbeit · Stand: offen · seit 21.09.2026
      Befund (Kette II, AP7): `KOMP_AUFBEWAHRUNG_VORGABE` steht auf 2
@@ -1122,27 +1052,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel PK seit 26.09.2026 (R4-01, Q-R4-12): `auslieferung.yml` gehört der
      Kette (PK-06 bis PK-08).
 
-266. **`plattform_pruefen()` sagt „aus", wo „nicht feststellbar" stehen müsste.** · gehört zu: 17 · Stand: offen · seit 21.09.2026
-     *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-05).*
-     Priorität: niedrig.
-
-     Steht eine geprüfte Funktion in `disable_functions`, antwortet
-     `function_exists()` mit `false` — und der Befund wird zu einem **Mangel**
-     statt zu einer **Nichtmessung**. Betroffen ist heute der **OPcache**
-     (`opcache_get_status`, auf lima-city abgeschaltet): Die Statusseite meldet
-     ihn als „aus", obwohl niemand weiß, ob er läuft.
-
-     **Die Bauform steckt in jeder weiteren Prüfung, die über
-     `function_exists()` geht**, nicht nur in dieser einen — das ist der Grund,
-     warum der Punkt aufgeschrieben wird und nicht nur der OPcache-Fall.
-
-     **Warum das mehr als Kosmetik ist:** Dreiwertigkeit ist im Projekt schon
-     einmal teuer erkauft worden. Die Zielprobe unterscheidet ausdrücklich
-     **LIEGT / FEHLT / NICHT FESTSTELLBAR** (`tools/kette/zielprobe.py`), weil
-     ein „fehlt", das in Wahrheit ein „ich konnte nicht nachsehen" war, die
-     Kette zu falschen Schlüssen brachte. Hier gilt dasselbe, nur auf der
-     Statusseite.
-
 271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr Ton bleibt „info", auch wenn ein Fehler darin steht.** · gehört zu: 17 · Stand: offen · seit 22.09.2026
      Gefunden bei der AP8-Vermessung (Schritt 15, 22.09.2026) in
      `assets/schneiden.js`. Die Stelle erzeugt keine Meldung, sondern einen
@@ -1220,16 +1129,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `mf_missions_gruende()` wird gestrichen, nicht umgeschrieben.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 276.
 
-277. **`einstellungen.php` — ein `await fetch` ohne eigenes `catch` steht vor der Erfolgsmeldung.** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Gefunden bei der AP8-Vermessung am 22.09.2026 (Schritt 15), in der
-     Funktion, die den Wiederherstellungsschlüssel abschließt (bei Aufnahme
-     Zeile 4158). Der Aufruf liegt im großen `try` des Knopfes; bricht das Netz
-     genau dort, springt der Ablauf in den äußeren `catch`, und die Person
-     liest eine Fehlermeldung zu einem Vorgang, der auf dem Server bereits
-     durchgelaufen sein kann. **Nicht in Schritt 15 behoben** (E-ZE-10: das
-     Paket ändert kein Verhalten). Beim Anfassen mitzudenken: Der Satz muss
-     sagen, dass der Zustand unklar ist, nicht dass es fehlgeschlagen ist.
-
 280. **Die Kartenquelle OpenHikingMap steht in keiner Lizenzliste.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 22.09.2026
      *Gefunden 22.09.2026 von der neuen Regelklasse `netz` (PK-04/1c);
      nicht behoben.*
@@ -1248,26 +1147,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      ein Eintrag in `Lizenzen.md` behauptet mehr als das — er nennt
      Rechteinhaber und Bedingungen. Das gehört nachgesehen, nicht
      abgeschrieben.
-
-283. **Die Textprobe liest die Kommentare in `server/` nicht — und dort standen reale Ortsnamen.** · gehört zu: 17 · Stand: teilweise · seit 23.09.2026
-     Befund (Gegenlesung PK-04/5c): Bereich `a` der Textprobe ist
-     „`server/*.php`, `server/api/*.php` (sichtbare Texte, ohne
-     Kommentare)" — für vier der fünf Regelklassen richtig, für `namen`
-     falsch: E-P1-02 richtet sich gegen das öffentliche Repositorium, und
-     ein Kommentar steht darin. Mit `grep` gemessen: acht Stellen in
-     `server/` trugen „Kempten", „Christoph 17" oder eine Ortskennung, alle
-     in Kommentaren — die schärfste sechs Zeilen unter dem Platzhalter, den
-     E-S3-13 auf „Standort Talwang" berichtigt hatte. Die acht Stellen sind
-     bereinigt, die Lücke nicht.
-     Zu entscheiden: Bereich `a` um Kommentare erweitern (dann messen die
-     anderen vier Klassen Kommentare mit, und ihre Null ist keine mehr —
-     vermutlich ein Bereich je Klasse) oder eine eigene schmale Prüfung nur
-     für `namen` über den ganzen Baum. Bis dahin heißt `namen = 0` „null im
-     sichtbaren Text", nicht „null im Repositorium" (`Pruefablauf.md` 6.6).
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 283.
-     R4-07 (26.09.2026): gebaut nach E-R4-19 — `namen` liest mit
-     Kommentaren (Feld `sicht`), dazu `style.css` als Bereich `f`. Die acht
-     Stellen aus F-R4-12 stehen im Altbestand, bis R4-09 sie umschreibt.
 
 287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.** · gehört zu: 17 · Stand: offen · seit 23.09.2026
      *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
@@ -1299,21 +1178,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      der Schritt wird rot, wenn man c3b5bff nachstellt (den Rahmen zurück nach
      `db.php`). *Fehlschlag:* grün auf diesem Stand. `docs/Pruefablauf.md`
      führt ihn mit „Anlass: Nr. 288".
-
-291. **Eine gescheiterte Einrichtung hinterlässt ein halbes Schema.** · gehört zu: 17 · Stand: offen · seit 23.09.2026
-     *Aufgenommen 23.09.2026 mit Web 20.37.3, gemessen.* `install.php` spielt
-     `schema.sql` ein (Z. 352) und legt danach das Konto an. Scheitert
-     danach etwas, stehen die Tabellen — `schema.sql` legt 41 von 42 ohne
-     `IF NOT EXISTS` an —, und der nächste Versuch auf derselben Datenbank
-     bricht an ihnen ab. Die Meldung rät dabei in jedem Fall „eine leere
-     Datenbank verwenden", auch beim ersten Fehlschlag, der mit der Datenbank
-     nichts zu tun hatte (so bei Nr. 288). Eine Transaktion hilft hier nicht:
-     DDL bestätigt in MySQL still.
-
-     *Weg (zu entscheiden):* entweder den Rat nur geben, wenn der Fehler vom
-     Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
-     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
-     **Zuordnung: Backlog-Runde.**
 
 299. **Die Kontoseite löscht ein Konto an `konto_loeschen()` vorbei.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-99).* Es gibt zwei
@@ -1403,17 +1267,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
      Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
 
-333. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo` das falsche Paket.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
-     *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
-     der Gegenprüfung P-BV-02.* Der Kommentar über `.geo.map-fs` sagt „Der
-     Kartenbehaelter wurde in O1 umbenannt". Gemessen: Das Stylesheet aus O1
-     (`ecd5ff98`) enthält weder `.map` noch `.geo`; `.geo` kommt mit O2
-     (`5436e854`), zugleich mit dem Markup der drei Karten. Harmlos, aber ein
-     Satz, der eine Herkunft falsch nennt, schickt die nächste Suche in das
-     falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
-     `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
-     braucht eine Web-Stufe).
-
 336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in
      `handy/.../Bausteine.kt` hat seit R63 (Android 0.11.0, feste
@@ -1474,3 +1327,18 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      mit Mockup (`CLAUDE.md` 5), keine Korrektur.
      *Abnahme:* Bilderlauf, Spalte „Rollt bei" für die drei Seiten ab
      1280 px leer.
+
+343. **`plattform.sh` scheitert an gedrosseltem Docker Hub, obwohl ein Spiegel geht.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit R4-09 (F-R4-31).* Der erste Lauf von
+     `plattform.sh alles` in dieser Sitzung holte `mariadb:10.6` und
+     `mysql:8.4.0` nicht — „You have reached your unauthenticated pull rate
+     limit" im Protokoll von `dockerd` —, meldete „4 Stück fehlen" und ließ
+     die `schemaprobe` im Prüfstand „nicht gemessen", was ein Bericht im
+     Tor als rot zählt. Von Hand ging es sofort über den Spiegel:
+     `docker pull mirror.gcr.io/library/<abbild>`, dann `docker tag` auf den
+     Namen, den das Skript erwartet; danach vier Fassungen, je 30 Prüfungen,
+     0 Fehlschläge.
+     *Weg:* `plattform.sh` versucht bei einem gescheiterten Abruf den Spiegel
+     und sagt, welchen Weg es genommen hat; `docs/Sandbox-Setup.md` nennt
+     ihn. *Abnahme:* ein Lauf mit gesperrtem `registry-1.docker.io` holt die
+     Abbilder über den Spiegel und meldet es.

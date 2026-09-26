@@ -2473,8 +2473,8 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
      dreizehn Datumsangaben des Prüfbestands bei 1024 und bei 1199 px steht
      dem Nebentext zur Verfügung: ohne die beiden Regeln darunter 48–63 px,
      mit der Einrückung allein 56–71, mit beiden 64–79. „BW Hoch" braucht 55,
-     „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz, „RTH Murnau" (76)
-     an den meisten. Ein Auslassungszeichen bleibt möglich und ist kein
+     „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz, „RTH" mit einem
+     Ort aus sechs Buchstaben (76) an den meisten. Ein Auslassungszeichen bleibt möglich und ist kein
      Fehler: Der Tooltip nennt die volle Bezeichnung.
      Der Zustand darunter — Schublade, 320 px — bleibt unberührt: Dort greift
      dieser Block nicht, und der volle Name steht dort weiterhin. */
@@ -3031,8 +3031,10 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  * Vollbildzustand nie herstellt.
  *
  * Der Selektor heisst jetzt `.geo`, nicht mehr `.map`: Der Kartenbehaelter
- * wurde in O1 umbenannt. Die alten Zeilen zurueckzukopieren haette den
- * Fehler stehen lassen.
+ * wurde in O2 umbenannt, zusammen mit dem Markup der drei Karten (bis
+ * Web 21.1.6 stand hier „O1" — das Stylesheet aus O1 kennt weder `.map`
+ * noch `.geo`, Backlog Nr. 333). Die alten Zeilen zurueckzukopieren haette
+ * den Fehler stehen lassen.
  *
  * z-index 70 statt der alten 2000: Das ist die Ebene des Blatts. Hoehere
  * Werte braucht die Anwendung nicht mehr, seit `.geo` einen eigenen

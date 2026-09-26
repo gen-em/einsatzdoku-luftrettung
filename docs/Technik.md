@@ -3054,7 +3054,10 @@ nicht laden — `no-store` steht dort trotzdem.
 > `nosniff` noch `no-store` setzen. Das ist derselbe Mangel, den Web 20.9.1
 > an sieben anderen Stellen behoben hat; diese drei arbeiten über `$_POST`
 > und sind damals niemandem als „JSON-Endpunkt" aufgefallen. Backlog
-> **Nr. 258**.
+> **Nr. 258** — **behoben mit Web 21.1.7** (R4-09): Die 19 Antworten laufen
+> über `json_out()`, die drei eigenen `Content-Type`-Zeilen sind fort, und
+> die Registerzeile Z41 (`tools/zaehlung/`) hält `echo json_encode` unter
+> `api/` auf null. Es bleiben die drei Codezeilen darüber.
 
 ### Der Eingang der Endpunkte (ab Web 20.28.0)
 
@@ -10418,7 +10421,7 @@ erklärt.
 | `memory_limit` | **512 MB** | **512 MB** — gleich |
 | `max_execution_time` | **240 s** | **300 s** |
 | `post_max_size` / `upload_max_filesize` | **256 MB / 256 MB** | **500 MB / 500 MB** |
-| OPcache | **aus** | **an** — aber nur **Dateicache** (`file_cache_only`), SHM und JIT aus. **Die Statusseite wird ihn trotzdem als „aus" melden** — siehe Kasten |
+| OPcache | **aus** | **an** — aber nur **Dateicache** (`file_cache_only`), SHM und JIT aus. **Die Statusseite meldete ihn bis Web 21.1.6 als „aus", seither „nicht messbar"** — siehe Kasten |
 | Datenbank | **MariaDB 10.11.14** | **MySQL 8.4.10** (Statusseite, 21.09.2026) — **eine andere Datenbank als Produktiv**; genau daran ist der Export bis Web 20.26.3 gescheitert (Nr. 267) |
 | `max_user_connections` | **nicht gesetzt**; es gilt `max_connections` = **151** | ⬚ |
 | Kontingent der Datenbank | Angabe 10 GB, belegt 9,8 MB (0 %) | ⬚ |
@@ -10462,8 +10465,13 @@ sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
 > Portabilitätszusage aus R81 werde von nun an wirklich geprobt statt nur
 > behauptet. Das hier ist der Beleg: ein Zuschnitt auf den einen Hoster, der
 > sechs Tage lang niemandem auffiel, weil beide Anlagen derselbe Hoster
-> waren. **Behoben wird er nicht hier** — das wäre Servercode und gehört
-> nicht in ein Dokumentationspaket; der Vorschlag steht im Prüfdokument.
+> waren. **Behoben mit Web 21.1.7** (Backlog Nr. 266): `plattform_funktion()`
+> in `plattform_lib.php` antwortet dreiwertig — aufrufbar, nicht vorhanden,
+> oder **abgeschaltet** (`disable_functions`), und dann ist der Befund
+> `null` mit dem Wort „nicht messbar". Nachgestellt mit
+> `php -d disable_functions=opcache_get_status`: vorher „aus", nachher
+> „nicht messbar"; ohne den Schalter „aus", mit `opcache.enable_cli=1`
+> „aktiv".
 
 > **Zwei Zahlen der Produktiv-Spalte sind keine Messung, und das muss
 > dabeistehen.** **Freier Platz** meldet auf geteiltem Webspace den
@@ -12024,6 +12032,15 @@ Tabelle der Datenbank hätte leeren können. Für eine Neuinstallation auf einer
 belegten Datenbank: leere Datenbank anlegen oder die vorhandene beim Hoster
 leeren.
 
+**Seit Web 21.1.7 fragt die Einrichtung vorher** (Backlog Nr. 291): Liegen
+in der Datenbank schon Tabellen, bricht sie **vor dem ersten `CREATE`** ab
+und nennt die Zahl („enthält schon 1 Tabelle"). Bis dahin spielte sie
+`schema.sql` ein und scheiterte erst an der ersten vorhandenen Tabelle — DDL
+bestätigt in MySQL still, und eine gescheiterte Einrichtung ließ deshalb ein
+halbes Schema zurück, an dem der nächste Versuch mit derselben Meldung
+abbrach. Schema und erstes Konto melden seither je ihren eigenen Fehler; der
+Rat „eine leere Datenbank verwenden" steht nur noch dort, wo er stimmt.
+
 **Deploy schlägt fehl:** Actions-Log lesen. `ENOTFOUND` = `FTP_SERVER`-Secret
 prüfen (nur Hostname, kein Schema/Pfad). Auth-Fehler = Zugangsdaten;
 SFTP-only-Hoster brauchen einen anderen Workflow.
@@ -12270,10 +12287,11 @@ Paket, was die andere Seite noch tun muss — mit „Widerrufen". Ist das
 Zielkonto inzwischen gelöscht, sagt sie auch das: Die Freigabe läuft dann ins
 Leere.
 
-Der Grund ist nicht nur Bedienung, sondern Menge: `edbak_uebersicht()` liest
-für **jedes** Konto ein Verzeichnis und eine Begleitdatei, um eine Zeile zu
+Der Grund ist nicht nur Bedienung, sondern Menge: Die frühere Gesamtübersicht
+las für **jedes** Konto ein Verzeichnis und eine Begleitdatei, um eine Zeile zu
 zeigen — Arbeit, die mit der Zahl der Konten wächst, obwohl man immer nur ein
-Konto ansieht. `edbak_konto_stand($userzeile)` liest genau einen Ordner und
+Konto ansieht. Sie hatte seither keinen Aufrufer mehr und ist mit Web 21.1.7
+gestrichen (Backlog Nr. 175). `edbak_konto_stand($userzeile)` liest genau einen Ordner und
 liefert `stand` (`aktuell` · `ueberfaellig` · `nie` · `ohne_kennung`), die
 Pakete, die Freigabe und das Alter des jüngsten Backups.
 

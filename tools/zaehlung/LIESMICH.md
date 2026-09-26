@@ -1,7 +1,7 @@
 # Zählung
 
 Hält jede Sache ihre eine Stelle? (Schritt 15, R83, E-ZE-24)
-**Anlass: Nr. 202, 257** — eine Bibliothek in zehn fremden Dateien; `$CFG` blieb unter `tools/`.
+**Anlass: Nr. 202, 257, 258** — eine Bibliothek in zehn fremden Dateien; `$CFG` blieb unter `tools/`.
 
 ## Aufruf
 
@@ -25,7 +25,7 @@ Nichts außer `php`. Rückgabe 0 = jede Zeile auf oder unter ihrer Decke,
 
 ## Erwartete Zahl
 
-**0 über der Decke** (38 Zeilen, 24.09.2026); `--selbstprobe` → **34 von
+**0 über der Decke** (41 Zeilen, 26.09.2026; Z41 seit R4-09); `--selbstprobe` → **34 von
 34**. Wird eine Zeile rot: Eine neue zweite Stelle gehört an die eine, die
 `grund` nennt; eine begründete Ausnahme kommt mit Grund in `ausser`; eine
 falsche Decke wird im Konzept begründet, bevor sie steigt (E-ZE-24).

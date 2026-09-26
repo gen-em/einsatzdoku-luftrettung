@@ -16,11 +16,15 @@
  * Schlüssel blieb offen, weil die Prüfkonten ihren Wiederherstellungsschlüssel
  * nicht aufbewahrt haben.
  *
- * Diese Probe schliesst die Lücke. Sie belegt drei Dinge:
+ * Diese Probe schliesst die Lücke. Sie belegt vier Dinge:
  *
  *   1. Die Rückfrage nach dem Schlüssel erscheint überhaupt (F-S2-F).
  *   2. Ein FALSCHER Schlüssel wird abgewiesen, und es wird nichts geschrieben.
- *   3. Mit dem richtigen kommen die Angaben an — mit einem ANDEREN
+ *   3. Scheitert das Vermerken der Freigabe (Netz weg), sagt die Seite
+ *      „Fertig" mit Ton warn und „unklar" — die Daten sind da (Nr. 277,
+ *      seit Web 21.1.7; bis dahin meldete sie das Einspielen als
+ *      fehlgeschlagen).
+ *   4. Mit dem richtigen kommen die Angaben an — mit einem ANDEREN
  *      Chiffretext als in der Quelle (umgeschlüsselt) und demselben Klartext.
  *
  * ALLE KRYPTO KOMMT AUS DER ANWENDUNG. Hülle, Prüfsumme und Chiffretext
@@ -148,7 +152,43 @@ try {
   pruefe(nachFalsch.angekommen === false,
          '...und es wurde NICHTS geschrieben', 'kein Einsatz im Zielkonto');
 
-  /* ---- 5. Der richtige Schlüssel ---------------------------------------- */
+  /* ---- 5a. Richtiger Schlüssel, aber das Vermerken scheitert (Nr. 277) --
+   * Nur der POST an die Freigabe wird abgebrochen — der Abruf des Pakets
+   * (GET) und das Einspielen laufen durch. So sieht ein Netzfehler genau
+   * zwischen Einspielen und Vermerken aus, und das ist der Fall, in dem die
+   * Seite bis Web 21.1.6 „fehlgeschlagen" sagte, obwohl alles da war. */
+  const nurVermerk = r => (r.request().method() === 'POST' ? r.abort('failed') : r.continue());
+  await seite.route('**/api/adminbackup_freigabe.php', nurVermerk);
+  await seite.fill('#freigabecode', mat.code);
+  await seite.click('#freigabebtn');
+  let tonA = '';
+  for (let i = 0; i < 90; i++) {
+    await seite.waitForTimeout(1000);
+    if (await seite.locator('#freigabestate .meldung').count() > 0) {
+      tonA = await seite.locator('#freigabestate .meldung').first().getAttribute('class') || '';
+      break;
+    }
+  }
+  const textA = (await seite.locator('#freigabestate').textContent() || '').trim();
+  pruefe(/meldung-warn/.test(tonA) && /^Fertig/.test(textA),
+         'Scheitert das Vermerken, heißt es „Fertig" mit Ton warn', tonA.replace('meldung ', ''));
+  pruefe(/eingespielt/.test(textA) && /unklar/.test(textA),
+         '...und der Satz sagt: eingespielt, Freigabe unklar', textA.slice(-60));
+  pruefe(php('pruefen', { ziel: ZIEL }).angekommen === true,
+         '...und die Daten sind wirklich eingespielt');
+  await seite.unroute('**/api/adminbackup_freigabe.php', nurVermerk);
+  /* Der abgebrochene POST steht als Konsolenfehler da — er ist der Fall,
+   * den dieser Schritt baut, kein Fehler der Anwendung. */
+  konsole.length = 0;
+  await seite.reload({ waitUntil: 'domcontentloaded' });
+  await seite.waitForTimeout(1500);
+  pruefe(await seite.locator('#freigabebtn').isVisible(),
+         'Die Freigabe ist danach noch offen (der Vermerk kam nie an)');
+
+  /* ---- 5. Der richtige Schlüssel, zum zweiten Mal ----------------------- *
+   * Nach 5a ist der Einsatz schon da und wird als „bereits vorhanden"
+   * übersprungen — gemessen wird hier der Ton, das Vermerken und dass
+   * nichts doppelt ankommt (die Spur hat danach weiter 2 Punkte). */
   await seite.fill('#freigabecode', mat.code);
   await seite.click('#freigabebtn');
   let ton = '';

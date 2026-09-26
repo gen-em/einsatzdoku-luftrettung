@@ -639,8 +639,10 @@ function wartung_balken(): string
  * `db.php` gerade abgeloest hat („Fuenf Fassungen derselben zwei Zeilen").
  * Eine Zahl, ein Ort.
  *
- * WAS DAS KOSTET: Die Datei liegt nur auf dem Server (`.gitignore` UND
- * Ausnahmeliste beider FTPS-Schritte, wie `wartung.lock`), sie ueberlebt
+ * WAS DAS KOSTET: Die Datei liegt nur auf dem Server (`.gitignore` UND die
+ * Ausnahmeliste des FTPS-Schritts in `ausliefern-lauf.yml`, wie
+ * `wartung.lock` — seit Kette II/AP5 EINE Liste fuer beide Umgebungen,
+ * bis dahin je eine in zwei Schritten), sie ueberlebt
  * keinen Serverumzug, und sie steht nicht in der Sicherung. Fuer eine
  * Betriebszahl, die sagt „heute war es dreimal eng", ist das der richtige
  * Preis — sie ist ein Hinweis auf eine Einstellung des Hosters, kein

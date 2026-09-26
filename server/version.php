@@ -1801,11 +1801,12 @@ declare(strict_types=1);
  * DER FEHLER: Standort- und Klinik-Schilder sassen umso weiter oestlich, je
  * weiter herausgezoomt wurde. Drei Glieder, jedes fuer sich richtig:
  * `.geo-schild` ist eine Flex-SPALTE (wird so breit wie ihr breitestes
- * Kind), das breiteste Kind war das NAMENSSCHILD (nowrap, bei „Klinikum
- * Immenstadt" rund 150 px statt 44), und `iconSize: null` liess Leaflet die
- * Groesse aus dem Markup nehmen -- `iconAnchor: [22, 22]` verankerte damit
- * rund 50 px links der Kastenmitte. Ein KONSTANTER Pixelversatz:
- * herausgezoomt sind dieselben 50 px Kilometer, hereingezoomt Meter.
+ * Kind), das breiteste Kind war das NAMENSSCHILD (nowrap, bei einem
+ * Kliniknamen von neunzehn Zeichen rund 150 px statt 44), und
+ * `iconSize: null` liess Leaflet die Groesse aus dem Markup nehmen --
+ * `iconAnchor: [22, 22]` verankerte damit rund 50 px links der
+ * Kastenmitte. Ein KONSTANTER Pixelversatz: herausgezoomt sind dieselben
+ * 50 px Kilometer, hereingezoomt Meter.
  *
  * Nachgemessen im Browser: 51,7 px vorher, 0,0 px nachher, ueber sechs
  * Zoomstufen unveraendert.
@@ -1836,11 +1837,12 @@ declare(strict_types=1);
  * E2E-Zusage ist unberuehrt: Gesucht wird, BEVOR aus der Eingabe ein
  * gespeicherter -- und damit verschluesselter -- Wert wird.
  *
- * PLATZHALTER TRAGEN JETZT PHANTASIENAMEN (E-S3-13). „z. B. Standort
- * Kempten" bevorzugte einen realen Ort und las sich fuer manche als die
- * erwartete Antwort, fuer andere als Auskunft darueber, wer diese Anwendung
- * betreibt. Elf Stellen getauscht, mit Namen aus der Welt des
- * Referenzdatensatzes (Talwang, Westried, Sonnenau, Alpenfalke).
+ * PLATZHALTER TRAGEN JETZT PHANTASIENAMEN (E-S3-13). Der alte Platzhalter
+ * nannte einen realen Standort, bevorzugte damit einen realen Ort und las
+ * sich fuer manche als die erwartete Antwort, fuer andere als Auskunft
+ * darueber, wer diese Anwendung betreibt. Elf Stellen getauscht, mit Namen
+ * aus der Welt des Referenzdatensatzes (Talwang, Westried, Sonnenau,
+ * Alpenfalke).
  *
  * Dazu die Wahlliste als schlichte Liste statt vier umrandeter Einzelzeilen:
  * 248 auf 224 px bei gleicher Zeilenhoehe.
@@ -3201,10 +3203,11 @@ declare(strict_types=1);
  * zweimal — zwei Akkordeonebenen, zwei Zwischenraeume —, macht also 16 px.
  *
  * GEMESSEN AN DEN DREIZEHN DATUMSANGABEN DES PRUEFBESTANDS: Dem Nebentext
- * standen 48 bis 63 px zur Verfuegung, jetzt 64 bis 79. „BW Hoch" braucht 55
- * und „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz statt an dreien
- * von zwoelf; „RTH Murnau" (76 px) an den meisten. Vorher: 13 Kurznamen,
- * 10 mit Auslassungszeichen. Nachher: 13 Kurznamen, KEINES.
+ * standen 48 bis 63 px zur Verfuegung, jetzt 64 bis 79. „BW Hoch" braucht
+ * 55 und „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz statt an
+ * dreien von zwoelf; „RTH" mit einem Ort aus sechs Buchstaben (76 px) an
+ * den meisten. Vorher: 13 Kurznamen, 10 mit Auslassungszeichen. Nachher: 13
+ * Kurznamen, KEINES.
  *
  * DER ABSTAND IST GESCOPED, DIE EINRUECKUNG NICHT. `.eintrag` tragen auch
  * der Leistenfuss, die Hauptpunkte der Schublade und jede Zeile des
@@ -7683,5 +7686,22 @@ declare(strict_types=1);
  *   seine Liste zu rechnen. Der zweite Fund derselben Ableitung — weisse
  *   Schrift auf `--orange-tief` im Hover des Primaerknopfs, 4,42:1 — bleibt:
  *   Die Betreiberin hat den Ton angenommen (E-R4-30).
+ *
+ * 21.1.7 — AUSGANG, FEHLERWEGE, KOMMENTARE (Schritt 17, R4-09).
+ *   Korrekturstufe ohne Migration, acht Backlog-Punkte und ein Beifang.
+ *   Drei Endpunkte unter `api/` antworten ueber `json_out()` und bekommen
+ *   damit `nosniff`, `no-store` und die uebrigen Kopfzeilen (Nr. 258, 19
+ *   Stellen, keine Logikzeile). Das Einspielen eines freigegebenen Backups
+ *   liest die Antwort des Vermerks: Scheitert er, heisst es „Fertig" mit
+ *   Ton warn und „unklar", statt das Einspielen als fehlgeschlagen zu
+ *   melden, das laengst durch war (Nr. 277). Die Einrichtung fragt vor dem
+ *   ersten `CREATE`, ob die Datenbank leer ist, und nennt die Zahl (Nr. 291).
+ *   Die Statusseite sagt zu einer vom Hoster abgeschalteten Funktion „nicht
+ *   messbar" statt „aus" (Nr. 266, `plattform_funktion()`). Gestrichen:
+ *   `edbak_uebersicht()`, seit Monaten ohne Aufrufer (Nr. 175). Berichtigt:
+ *   der Cron-Pfad im Kopf von `jobs.php` (Nr. 150), „beider FTPS-Schritte"
+ *   in zwei Kommentaren (Nr. 260), die Herkunft von `.geo` im Stylesheet
+ *   (Nr. 333) — und acht Kommentare mit realen Orts- und Rufnamen, die die
+ *   Textprobe seit R4-07 liest (E-R4-19).
  */
-const WEB_VERSION = '21.1.6';
+const WEB_VERSION = '21.1.7';

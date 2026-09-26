@@ -2455,6 +2455,10 @@ Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deine
 neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
 hast, kann die Verwaltung sie zurücknehmen — auf deiner Kontoseite steht
 seit Web 15.2.0 sichtbar, dass eine Freigabe läuft, für wen und seit wann.
+Bricht die Verbindung genau nach dem Einspielen ab, sagt die Seite
+**„Fertig"** in Orange und dazu, dass unklar ist, ob die Freigabe noch offen
+ist (seit Web 21.1.7): Deine Daten sind dann eingespielt, ein zweites
+Einspielen ist nicht nötig.
 
 **Grenzen des Verfahrens** — sie gehören genannt, bevor man sich darauf verlässt:
 

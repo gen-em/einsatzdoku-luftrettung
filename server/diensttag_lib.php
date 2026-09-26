@@ -286,7 +286,7 @@ function dt_merge_rm_gewinner(array $ziel, array $quelle, string $wahl = 'ziel')
  * Der Kurzname, wenn einer gesetzt ist, sonst die volle Bezeichnung. Beides
  * steht eingefroren am Diensttag (E8) — diese Funktion sieht NICHT in den
  * Stammdaten nach, und das ist der ganze Punkt: Ein Rettungsmittel, das
- * gestern „Christoph 1" hiess und heute „C1" heisst, aendert keinen einzigen
+ * gestern „Alpenfalke 1" hiess und heute „AF1" heisst, aendert keinen einzigen
  * Diensttag von gestern.
  *
  * WO SIE GILT UND WO NICHT (E-S9-09, berichtigt am 08.09.2026). Kurzname

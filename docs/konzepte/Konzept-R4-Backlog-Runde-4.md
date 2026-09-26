@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-09.** |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-10.** |
 > | Entschieden | **E-R4-01 bis E-R4-31** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-08 erledigt** (26.09.2026); Web 21.1.6. Offen: R4-09 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-09 erledigt** (26.09.2026); Web 21.1.7. Offen: R4-10 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
-> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342) — 2.4. |
+> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343) — 2.4. |
 
 
 ---
@@ -399,6 +399,12 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   Handbuch-Tabellen am Handy, Reiter und Statistiktabellen unter 420 px
   rollen gewollt. Nr. 342, `nächste Backlog-Runde`: eine Gestaltungsfrage
   mit Mockup, keine Korrektur dieser Runde.
+- **F-R4-31 Docker Hub drosselte, der Spiegel nicht.** Der Prüfstand von
+  R4-09 wählte die `schemaprobe` (ein Kommentar in `migration_lib.php`), und
+  das Modul `plattform` stand nicht. `plattform.sh alles` holte
+  `mariadb:10.6` und `mysql:8.4.0` nicht („unauthenticated pull rate
+  limit"); über `mirror.gcr.io` von Hand geholt und umbenannt, danach
+  vier Fassungen je **30 / 0**. Nr. 343, `nächste Backlog-Runde`.
 
 ## 3. Entscheidungen und Fragen
 
@@ -783,6 +789,28 @@ eingespielt; Einrichtung gegen eine Datenbank mit Tabellen → Abbruch mit
 Zahl vor dem ersten `CREATE`; Statusseite auf lima-city: „nicht messbar";
 `grep -rn edbak_uebersicht server/ docs/Technik.md` 0; Textprobe 0 neu.
 *Stufe:* Web Korrektur. *Fächerung:* keine — ein Paket, ein Changelog-Ton.
+**Erledigt 26.09.2026 — mit Web 21.1.7.** Die Dateien der 18-Liste nur an
+den vermerkten Stellen: die drei Endpunkte mechanisch (19 × `json_out()`,
+drei `Content-Type`-Zeilen fort, keine Logikzeile), in `einstellungen.php`
+nur der Vermerk der Freigabe, in `install.php` der Block vor Zeile 397; in
+`diensttag_lib.php` und `migration_lib.php` je eine Kommentarzeile (Q-R4-08).
+*Gemessen:* `echo json_encode` unter `api/` **0** (Z41 neu, Gegenprobe mit
+der alten Datei **5**, über der Decke); Freigabeprobe mit dem neuen Fall
+**20 / 20**, gegen das alte Formular **2 rot** mit „Die Verbindung zum
+Server ist abgebrochen", Ton `fehler`, Daten trotzdem da; Einrichtung an
+einer Kopie von `server/` gegen eine Wegwerfdatenbank: mit einer Tabelle
+Abbruch „enthält schon 1 Tabelle" vor dem ersten `CREATE`, leer 42 Tabellen
+und Setz-Link; `plattform_funktion()` in drei Lagen („aktiv", „aus",
+„nicht messbar") — die übrigen `function_exists()`-Stellen des Profils
+prüfen Funktionen der Anwendung oder werten `null` schon richtig
+(`posix_geteuid`); `edbak_uebersicht` in `server/` und `Technik.md` **0**.
+Textprobe nach dem Umschreiben **0 Treffer**, Altbestand leer — damit ist
+die zweite Messung von R4-07 gemacht (Nr. 283 erledigt). Gegenzählung mit
+`grep` über `server/`, `android/`, `watch/` samt dem Vornamen aus Q-R4-08:
+**10 Treffer, keiner eine der acht** — Fremdformat (2) und
+Schwachwortliste (3) unter Ausnahme, eine Wegwerf-Domain (2), der
+Markenfarbname der Uhr und zweimal der Name der Betreiberin als Urheberin
+einer Entscheidung (außerhalb von E-P1-02 und E-R4-19, nicht angefasst).
 
 **R4-10 Kontolöschung über eine Stelle** — Nr. 299. `konto_loeschen()`
 bekommt den Weg als Parameter (`'verwaltung'` mit Entscheidung über die
