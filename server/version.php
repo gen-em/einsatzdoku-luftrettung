@@ -7644,5 +7644,19 @@ declare(strict_types=1);
  *   passten drei Listen nicht ganz, jetzt ist die Leiste bei jeder
  *   gemessenen Hoehe auf allen 14 Seiten ohne Rollen vollstaendig.
  *   Entschieden von der Betreiberin, die Luecke hatte AP9 benannt.
+ *
+ * 21.1.4 — DER FOKUS NACH DEM ANKER (Schritt 17, R4-05, F-R4-25).
+ *   Korrekturstufe ohne Migration, die erste der Backlog-Runde 4. Wer die
+ *   Einstellungen mit einem Anker oeffnete (`?t=standorte#standorte`),
+ *   sollte im Namensfeld landen und landete im Seitenkoerper — aus zwei
+ *   Gruenden zugleich: `.focus-target` sitzt an der HUELLE, die `ui_feld()`
+ *   baut, und `focus()` auf einem `div` tut nichts; und der Browser
+ *   verarbeitet den Anker erst am Ende des Ladens und setzt den Fokus dabei
+ *   zurueck, weil die Karte selbst nicht fokussierbar ist. Jetzt nimmt
+ *   `fokus()` das Feld in der Huelle, und der erste Aufruf wartet auf
+ *   `load`. Gemessen in Chromium, Firefox und WebKit. Gefunden beim Bau der
+ *   Selektorpruefung in `vollstaendigkeit.py`: Ihr erster Entwurf meldete
+ *   `.focus-target` als von niemandem gesetzt. Gesetzt war die Klasse —
+ *   nur an der falschen Stelle, und das sieht die fertige Pruefung nicht.
  */
-const WEB_VERSION = '21.1.3';
+const WEB_VERSION = '21.1.4';

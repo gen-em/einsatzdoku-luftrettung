@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-04 erledigt** (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-05 erledigt**, Web 21.1.4 (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -67,6 +67,12 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-04 | die vier Aufrufe aus `pruefablauf.json`, einmal von Hand | `android-kontraste`, `-farbabgleich`, `-bildmarken`, `-stroeme` | `kontraste.py` **30 Paare, 0 Befunde**, Selbstprobe **5 / 5**; `farbabgleich.py` **18 / 17 Token, 0 Abweichungen, 0 eigene**; `bildmarken.sh pruefen` **0 Abweichungen**; `stroeme.py pruefen` **5 Ströme, 0 Abweichungen**; danach `git status android/` **leer** (F-R4-17) |
 | R4-04 | `bestand`, `bestand --selbstprobe`, `kettenaufrufe` | Schlüssel `demo`, neue Proben und Muster, Tabelle in `Pruefablauf.md` 4 neu erzeugt | **0 Befunde**; **155 / 0**; **0** |
 
+| R4-04 | `bash tools/pruefstand/pruefen.sh --stufe neben` über den Baum des Commits `403f819` (Bericht im Commit) | 20 Riegel, `kettenaufrufe`, `steuerung`, `nummern`, `android-bau` und die **vier Android-Proben** | **0 rot, 0 nicht gemessen, 26 grün**, 45 s — ohne Demo-Probe, weil `nebenstufe` nur `server/**` trifft |
+| R4-04 | **Abnahme:** `pruefen.sh --stufe neben --datei server/demo_lib.php`, derselbe Baum; vorher Demo-Marke seit 2 780 s fällig | trifft ein Demo-Reset eine Probe? | **46 grün, 0 rot, 0 nicht gemessen**, 1 632 s; Marke vor `zweitfaktorprobe`, `bilderlauf`, `bedienprobe`, `spurprobe`, `gpxprobe`, `kopplungsprobe` im Lauf; Demo-Einsätze vorher und nachher **1..106** (kein Reset), GPX-Probe grün; Marke danach wieder `1790448460` |
+| R4-05 | `python3 tools/quelltext/vollstaendigkeit.py --ausfuehrlich` | sechs Prüfungen, davon neu: Selektoren, Tonübergaben mit Bedingung, Klassen-Stellen | **0 Befunde**; Selektoren **59 / 27 Dateien, 2 mit Grund**; Töne **383 geprüft, 12 ohne Literal**; Hinweise **73 → 13** |
+| R4-05 | dieselbe Prüfung mit drei eingebauten Fehlern, einzeln, danach zurück (`git status server/` leer) | erfundener Selektor; Regel `pwq-2` weg; Regel `kennzahl-orange` weg | **1**, **2**, erst **0** → F-R4-26 berichtigt → **2** Befunde; zurück **0** |
+| R4-05 | Playwright, `einstellungen.php?t=standorte#standorte`, Admin-Prüfkonto, `document.activeElement` | Fokus nach dem Anker (F-R4-25) | vorher **`BODY`**; nach der ersten Änderung nur über `hashchange` im Feld; nach der zweiten **`INPUT#sdbase-name`** in **Chromium, Firefox, WebKit** |
+
 ## 3. Im Browser geprüft
 
 Nichts — die Konzeptphase ändert keine Seite. Die Anlage lief (HTTP 200 auf
@@ -84,6 +90,7 @@ ist. Die Umsetzung hängt je Paket ihre Punkte an (P-R4-06 ff.).
 | P-R4-03 | ☑ 26.09.2026 (`claude/schritt-17-konzept-mockups-q0yjcm`) — Nach dem Merge: Umsetzungsinstanz mit Opus auf eigenem Zweig starten (Konzept 4, Reihenfolge = Paketnummer). | Erster Commit `R4-01: …`; Zweig nach jedem Paket gepusht. | Ein Paket ohne Push, ein Statusblock ohne Fortschreibung. |
 | P-R4-04 | ☑ 26.09.2026 (E-R4-26) — Die drei Mockups ansehen (`docs/konzepte/konzept-r4/mockups/*.png`, Regeln in der LIESMICH dort) und freigeben oder Änderungen nennen — Q-R4-16, spätestens vor R4-22. | Gebaut wird erst nach der Freigabe; Änderungen werden vorher ins Mockup eingearbeitet. | Ein Bild im Bilderlauf, das so in keinem freigegebenen Mockup steht. |
 | P-R4-05 | Nach dem Deploy von R4-15 (Migration): als Administratorin `update.php` aufrufen, Betrieb → Updates ansehen. | Migration `days.created_at` gelaufen; Wartungsmodus geht aus. | Wartungsmodus bleibt an; Statuszeile nennt eine ausstehende Migration. |
+| P-R4-07 | Nach dem Deploy von Web 21.1.4 auf Staging: Einstellungen → Standorte, einen Standort anlegen und speichern (das Formular sendet an `…?t=standorte#standorte`); danach einmal „Bearbeiten". | Nach dem Speichern und nach „Bearbeiten" steht der Cursor im Feld „Name" des Standortformulars, ohne Klick. | Die Seite springt zur Karte, aber kein Feld ist aktiv — dann ist der Fokus wieder am Seitenkörper (F-R4-25). |
 | P-R4-06 | GitHub → Branches: `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` löschen (E-R4-15). Vorher: Beide tragen nichts Ungemergtes (F-R4-04). | Die zwei Zweige sind weg; `git ls-remote --heads origin` nennt sie nicht mehr. | Einer steht noch da — oder ein anderer fehlt. |
 
 ## 5. Grenzen der benutzten Prüfmittel

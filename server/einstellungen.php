@@ -4875,6 +4875,13 @@ ui_seite_start(['titel' => 'Einstellungen',
     function fokus(d, rolle){
       let f = rolle ? d.querySelector('.focus-target[data-role="' + rolle + '"]') : null;
       if (!f) { f = d.querySelector('.focus-target'); }
+      /* `ui_feld()` setzt `klasse` an die HÜLLE `.feld`, nicht an das
+         Eingabefeld. `.focus-target` traf deshalb ein `div`, `focus()` tat
+         nichts, und der Rückfall darunter kam nie dran, weil `f` gefunden
+         war (R4-05, F-R4-25). Gemeint ist das Feld darin. */
+      if (f && !f.matches('input, select, textarea, button')) {
+        f = f.querySelector('input, select, textarea, button');
+      }
       if (!f) { f = d.querySelector('input[type=text], input[type=number], select, textarea'); }
       if (f) { f.focus({ preventScroll: true }); }
     }
@@ -4893,7 +4900,14 @@ ui_seite_start(['titel' => 'Einstellungen',
       d.scrollIntoView({ block: 'start' });
       fokus(d, rolle);
     }
-    if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
+    /* NACH DEM LADEN, NICHT BEIM LESEN DES SKRIPTS (R4-05, F-R4-25). Der
+       Browser verarbeitet den Anker der Adresse erst am Ende des Ladens, und
+       ist das Ziel selbst nicht fokussierbar (hier eine Karte), setzt er den
+       Fokus dabei auf den Seitenkörper zurück — gemessen in Chromium: Der
+       Aufruf kam an, der Fokus war danach weg. */
+    if (location.hash.length > 1) {
+      window.addEventListener('load', () => { setTimeout(() => oeffne(location.hash.slice(1)), 0); });
+    }
     window.addEventListener('hashchange', () => {
       if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
     });

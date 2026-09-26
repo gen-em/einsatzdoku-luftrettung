@@ -21,6 +21,12 @@ Fuenf Pruefungen:
      confirm()/alert()/prompt() ausser den begruendeten Rueckfaellen
      (Backlog Nr. 47), und jede Seite mit eigener Huelle hat ihr Geruest
      (Nr. 58). Ausnahmen mit Grund in zusagen.md.
+  6  Selektoren (R4-05, Nr. 36) -- jede Klasse, die JavaScript in
+     querySelector(All)/closest/matches/getElementsByClassName sucht, setzt
+     irgendwo jemand: im Markup, an einer Klassen-Stelle als Zeichenkette,
+     zusammengesetzt aus einem geschlossenen Vorrat -- oder sie steht mit
+     Grund in selektoren.md. Ein Selektor, der ins Leere greift, ist in
+     JavaScript kein Fehler, sondern eine leere Liste (F-P3-AG).
 
 Dazu die Ausgabe: je Pruefung Zahl und Liste, Rueckgabewert != 0 bei Befund.
 
@@ -383,6 +389,66 @@ def liste_lesen(name, spalten=1):
     return [z for z in zeilen if len(z) >= spalten]
 
 
+# --------------------------------- Klassen an Literal-Stellen (R4-05, Nr. 331)
+#
+# DIE 73 HINWEISE WAREN FAST ALLE KEINE. „Regel im Stylesheet, im Markup nicht
+# gefunden" hiess bis R4-05: nicht in class="..." und nicht in classList. Die
+# meisten Klassen stehen aber an Stellen, die der Leser nicht kannte -- als
+# Option (`'klasse' => 'feld-fest'`), als Zusatzklasse eines Symbols
+# (`ui_symbol('winkel', 'symbol-rechts')`), als Leaflet-Behaelter
+# (`L.DomUtil.create('div', 'leaflet-bar map-ctrl-fs')`) oder als Bruchstueck
+# einer Verkettung (`' kachel-knapp'`, `$k = 'reiter-punkt' . (`). Sie zaehlen
+# als VERMUTET: belegt genug, um kein Hinweis zu sein, nicht genug, um eine
+# Regel zu verlangen (das bleibt `sicher` vorbehalten).
+LITERAL_STELLEN = [
+    # (Name, Muster, Gruppe mit den Klassen)
+    ('Option klasse', re.compile(r'''(?<![\w$])['"]?klasse['"]?\s*(?:=>|:)\s*(['"])([^'"$<{}]*)\1'''), 2),
+    ('Symbol-Zusatzklasse', re.compile(
+        r'''\b(?:ui_symbol|edSymbol)\s*\(\s*(['"])[^'"]*\1\s*,\s*(['"])([^'"$<{}]*)\2'''), 3),
+    ('Leaflet-Behaelter', re.compile(
+        r'''\bDomUtil\.create\s*\(\s*(['"])[^'"]*\1\s*,\s*(['"])([^'"$<{}]*)\2'''), 3),
+    ('setAttribute class', re.compile(
+        r'''setAttribute\s*\(\s*(['"])class\1\s*,\s*(['"])([^'"$<{}]*)\2'''), 3),
+    ('Bruchstueck mit Leerzeichen', re.compile(r'''(['"]) ((?:-?[_A-Za-z][\w-]*)(?: +-?[_A-Za-z][\w-]*)*)\1'''), 2),
+    ('Kopf einer Verkettung', re.compile(r'''=\s*(['"])(-?[_A-Za-z][\w -]*)\1\s*[.+]\s*\('''), 2),
+    ('class=" vor einer Verkettung', re.compile(r'''class\s*=\s*"(-?[_A-Za-z][\w -]*)'\s*\.'''), 1),
+    ('Zweig einer Bedingung', re.compile(r'''[?:]\s*(['"])(-?[_A-Za-z][\w -]*)\1'''), 2),
+    ('mehrere Klassen in einer Zeichenkette', re.compile(
+        r'''(['"])(-?[_A-Za-z][\w-]*(?: +-?[_A-Za-z][\w-]*)+)\1'''), 2),
+    ('Zusatzklasse einer Meldung', re.compile(r'''\bui_meldung_markup\s*\((?:[^()]|\([^()]*\))*,\s*(['"])([\w -]+)\1\s*\)'''), 2),
+]
+KLASSENNAME = re.compile(r'-?[_A-Za-z][\w-]*')
+
+
+def literal_klassen(dateien, css=None):
+    """{Klasse: {Fundstelle}} -- Namen an einer der LITERAL_STELLEN. Mit
+    `css` nur die, die es als Regel gibt: Ein Bruchstueck ' Einsatz' ist
+    kein Klassenname. Ohne `css` alle -- fuer die Selektoren, denn ein
+    Skriptanker hat keine Regel und ist trotzdem gesetzt."""
+    aus = {}
+    for pfad in dateien:
+        t = lies(pfad)
+        for _, rx, g in LITERAL_STELLEN:
+            for m in rx.finditer(t):
+                for name in m.group(g).split():
+                    if KLASSENNAME.fullmatch(name) and (css is None or name in css):
+                        aus.setdefault(name, set()).add('%s:%d' % (kurz(pfad), zeile_von(t, m.start())))
+    return aus
+
+
+def pwq_stufen():
+    """Die Klassen `pwq-0` bis `pwq-<n-1>`: `pwquality.js` setzt
+    `'pwstaerke pwq-' + ergebnis.staerke`, und `staerke` ist ein Index in
+    `STUFEN`. Gelesen wird die Laenge dieser Liste, nicht abgeschrieben."""
+    pfad = os.path.join(SERVER, 'assets', 'pwquality.js')
+    if not os.path.exists(pfad):
+        return None
+    m = re.search(r'\bconst\s+STUFEN\s*=\s*\[(.*?)\]', lies(pfad), re.S)
+    if not m:
+        return None
+    return {'pwq-%d' % i for i in range(len(re.findall(r"'[^']*'", m.group(1))))}
+
+
 # =========================================================== 1. Klassen
 def pruefung_klassen(bericht):
     vorher_pfad = os.path.join(HIER, 'vollstaendigkeit-vorher-klassen.txt')
@@ -418,7 +484,8 @@ def pruefung_klassen(bericht):
     bericht.befund('1 Klassen', 'zugleich gestrichen UND mit Regel (Streichliste veraltet)', doppelt)
 
     # Gegenrichtung: im Markup benutzt, aber nirgends beschrieben.
-    sicher, vermutet = markup_klassen(list(quelldateien()))
+    dateien = list(quelldateien())
+    sicher, vermutet = markup_klassen(dateien)
     verwaist = sorted(k for k in sicher if k not in jetzt_css and k not in streich)
 
     # ohne-regel.md — DAMIT DIE LISTE GELESEN WIRD (O12, Backlog Nr. 39).
@@ -482,13 +549,67 @@ def pruefung_klassen(bericht):
                     for t in sorted(php_toene ^ js_toene)])
     zusammengesetzt = {'meldung-' + t for t in php_toene | js_toene}
     bericht.zahl('1 Klassen', 'zusammengesetzt belegt (meldung-<ton>)', len(zusammengesetzt))
+    # R4-05 (Nr. 331): zwei weitere geschlossene Vorraete -- die Toene der
+    # Bausteine aus ihren Aufrufen (Literal, beide Zweige einer Bedingung,
+    # Vorgabe im Baustein; ton_uebergaben()) und die Staerkestufen der
+    # Passwortguete aus `STUFEN`.
+    ton = ton_uebergaben()
+    ton_klassen = {'%s-%s' % (p, w) for p, werte in ton['werte'].items() for w in werte}
+    pwq = pwq_stufen()
+    if pwq is None:
+        bericht.fehler('1 Klassen', 'STUFEN in assets/pwquality.js nicht gefunden')
+        pwq = set()
+    bericht.zahl('1 Klassen', 'zusammengesetzt belegt (<baustein>-<ton> aus den Aufrufen)', len(ton_klassen))
+    bericht.zahl('1 Klassen', 'zusammengesetzt belegt (pwq-<stufe> aus STUFEN)', len(pwq))
     bericht.befund('1 Klassen', 'zusammengesetzte Klasse ohne Regel im Stylesheet',
-                   sorted(k for k in zusammengesetzt if k not in jetzt_css))
+                   sorted(k for k in zusammengesetzt | pwq if k not in jetzt_css))
+    zusammengesetzt |= ton_klassen | pwq
 
+    literal = literal_klassen(dateien, jetzt_css)
+    bericht.zahl('1 Klassen', 'an einer Klassen-Stelle als Zeichenkette (klasse =>, Symbol, Leaflet …)',
+                 len(literal))
     unbenutzt = sorted(k for k in jetzt_css
                        if k not in sicher and k not in vermutet
-                       and k not in zusammengesetzt)
+                       and k not in zusammengesetzt and k not in literal)
     bericht.hinweis('1 Klassen', 'Regel im Stylesheet, im Markup nicht gefunden', unbenutzt)
+
+    pruefung_selektoren(bericht, dateien,
+                        set(sicher) | set(vermutet) | zusammengesetzt | set(literal_klassen(dateien)))
+
+
+# ------------------------------------------------------ 6. Selektoren (Nr. 36)
+SELEKTOR_RUF = re.compile(
+    r'''\b(querySelector(?:All)?|closest|matches|getElementsByClassName)\s*\(\s*(['"`])((?:(?!\2).)*)\2''', re.S)
+
+
+def selektor_klassen(ruf, text):
+    """Die Klassennamen eines Selektors. getElementsByClassName nimmt Namen,
+    die anderen einen CSS-Selektor; `${…}` in einer Vorlage und der Inhalt
+    von `[…]` sind nicht aufloesbar bzw. keine Klassen und fallen weg."""
+    text = re.sub(r'\$\{[^}]*\}', ' ', text)
+    if ruf == 'getElementsByClassName':
+        return [n for n in text.split() if KLASSENNAME.fullmatch(n)]
+    return re.findall(r'\.(-?[_A-Za-z][\w-]*)', re.sub(r'\[[^\]]*\]', ' ', text))
+
+
+def pruefung_selektoren(bericht, dateien, belegt):
+    ausnahmen = {z[0].strip('`'): z[1] for z in liste_lesen('vollstaendigkeit-selektoren.md', 2)}
+    fund, gesehen, orte = {}, set(), set()
+    for pfad in dateien:
+        text = ohne_php_js_kommentare(lies(pfad), pfad.endswith('.php'))
+        for m in SELEKTOR_RUF.finditer(text):
+            for k in selektor_klassen(m.group(1), m.group(3)):
+                gesehen.add(k)
+                orte.add(pfad)
+                if k not in belegt:
+                    fund.setdefault(k, []).append('%s:%d' % (kurz(pfad), zeile_von(text, m.start())))
+    bericht.zahl('6 Selektoren', 'Klassen in Selektoren (verschieden)', len(gesehen))
+    bericht.zahl('6 Selektoren', 'Dateien mit Klassen-Selektoren', len(orte))
+    bericht.zahl('6 Selektoren', 'nicht gesetzt, mit Grund in selektoren.md', len([k for k in fund if k in ausnahmen]))
+    bericht.befund('6 Selektoren', 'Selektor sucht eine Klasse, die niemand setzt',
+                   ['%s  (%s)' % (k, ', '.join(w[:3])) for k, w in sorted(fund.items()) if k not in ausnahmen])
+    bericht.befund('6 Selektoren', 'selektoren.md: Eintrag ungenutzt',
+                   sorted(k for k in ausnahmen if k not in fund))
 
 
 def meldungstoene():
@@ -777,33 +898,101 @@ def _ruf_spanne(text, start):
     return text[i:]
 
 
+def _wert_ausdruck(spanne, start):
+    """Der Ausdruck nach `=>` bis zum naechsten Komma oder zum Ende auf
+    gleicher Klammertiefe."""
+    tiefe, j = 0, start
+    while j < len(spanne):
+        c = spanne[j]
+        if c in '([':
+            tiefe += 1
+        elif c in ')]':
+            if tiefe == 0:
+                break
+            tiefe -= 1
+        elif c == ',' and tiefe == 0:
+            break
+        j += 1
+    return spanne[start:j].strip()
+
+
+def ton_uebergaben():
+    """Die Toene, die die Bausteine aus TON_BAUSTEINE bekommen (R4-05).
+
+    Rueckgabe {'werte': {praefix: {wert}}, 'stellen': [(datei, zeile, name,
+    schluessel, wert)], 'offen': [Fundstelle]}. BIS R4-05 NUR LITERALE: Ein
+    `'ton' => $x ? 'rot' : 'ok'` wurde uebersprungen, und von 39 solchen
+    Uebergaben pruefte keine etwas. Jetzt: ein Literal ist ein Wert; eine
+    Bedingung (`?:`, `??`) liefert die Literale ihrer Zweige; was dann noch
+    ohne Literal ist (`'ton' => $ton`), steht in `offen` und wird GEZAEHLT,
+    nicht verschwiegen. Dazu die Vorgabe im Baustein selbst
+    (`$o['ton'] ?? 'neutral'`) -- auch sie wird zur Klasse."""
+    werte, stellen, offen = {}, [], []
+    ui = os.path.join(SERVER, 'ui.php')
+    ui_text = ohne_php_js_kommentare(lies(ui), True) if os.path.exists(ui) else ''
+    for name, schluessel, praefix in TON_BAUSTEINE:
+        m = re.search(r'function\s+' + name + r'\s*\(.*?\n\}', ui_text, re.S)
+        for v in re.findall(r"\$o\['" + schluessel + r"'\]\s*\?\?\s*'([a-z]+)'", m.group(0) if m else ''):
+            werte.setdefault(praefix, set()).add(v)
+            stellen.append(('server/ui.php', zeile_von(ui_text, m.start()), name, schluessel, v))
+    for datei in quelldateien():
+        if not datei.endswith('.php'):
+            continue
+        text = ohne_php_js_kommentare(lies(datei), True)
+        for name, schluessel, praefix in TON_BAUSTEINE:
+            for m in re.finditer(r'\b' + name + r'\s*\(', text):
+                spanne = _ruf_spanne(text, m.start())
+                for w in re.finditer(r"'" + schluessel + r"'\s*=>\s*", spanne):
+                    ausdruck = _wert_ausdruck(spanne, w.end())
+                    lit = re.fullmatch(r"'([a-z]+)'", ausdruck)
+                    if lit:
+                        gefunden = [lit.group(1)]
+                    elif '?' in ausdruck and not ausdruck.lstrip().startswith('match'):
+                        # Nur die ZWEIGE: was nach dem ersten `?` steht, ohne
+                        # Indizes (`$z['ton'] ?? 'neutral'` gibt `neutral`,
+                        # nicht `ton`) und ohne die Argumente eines Aufrufs.
+                        zweige = ausdruck[ausdruck.index('?'):]
+                        zweige = re.sub(r"\[[^\]]*\]", ' ', zweige)
+                        zweige = re.sub(r"\b\w+\s*\([^()]*\)", ' ', zweige)
+                        gefunden = [x for x in re.findall(r"'([a-z]*)'", zweige) if x]
+                    else:
+                        gefunden = []
+                    if not gefunden:
+                        offen.append('%s:%d  %s(%s => %s)' % (kurz(datei), zeile_von(text, m.start()),
+                                                              name, schluessel, ausdruck[:40]))
+                    for wert in gefunden:
+                        werte.setdefault(praefix, set()).add(wert)
+                        stellen.append((kurz(datei), zeile_von(text, m.start()), name, schluessel, wert))
+    return {'werte': werte, 'stellen': stellen, 'offen': offen}
+
+
 def pruefung_toene(bericht):
     if not os.path.exists(CSS):
         return
     css = ohne_kommentare(lies(CSS))
     verstoss = []
+    ton = ton_uebergaben()
+    praefixe = {n: p for n, _, p in TON_BAUSTEINE}
+    for datei, zeile, name, schluessel, wert in ton['stellen']:
+        # `(?![\w-])` UND NICHT `\b` (R4-05): `\b` greift auch vor einem
+        # Bindestrich, und `.knopf-leise-orange` galt dann als Regel fuer
+        # `knopf-leise` -- verschwand die, meldete es niemand.
+        if re.search(r'\.%s-%s(?![\w-])' % (praefixe[name], wert), css):
+            continue
+        verstoss.append('%s:%d  %s(%s => %s) -> .%s-%s gibt es nicht' % (
+            datei, zeile, name, schluessel, wert, praefixe[name], wert))
+    bericht.zahl('4 Knopf', 'Tonuebergaben geprueft (Literal, Bedingung, Vorgabe)', len(ton['stellen']))
+    bericht.hinweis('4 Knopf', 'Tonuebergabe ohne Literal (Wert erst zur Laufzeit)', ton['offen'])
 
     for datei in quelldateien():
         if not datei.endswith('.php'):
             continue
         text = ohne_php_js_kommentare(lies(datei), True)
 
-        for name, schluessel, praefix in TON_BAUSTEINE:
-            for m in re.finditer(r'\b' + name + r'\s*\(', text):
-                spanne = _ruf_spanne(text, m.start())
-                for w in re.finditer(r"'" + schluessel + r"'\s*=>\s*'([a-z]+)'", spanne):
-                    wert = w.group(1)
-                    if ('.%s-%s{' % (praefix, wert)) in css.replace(' {', '{') \
-                       or re.search(r'\.%s-%s\b' % (praefix, wert), css):
-                        continue
-                    verstoss.append('%s:%d  %s(%s => %s) -> .%s-%s gibt es nicht' % (
-                        kurz(datei), zeile_von(text, m.start()), name,
-                        schluessel, wert, praefix, wert))
-
         # `ui_meldung_markup('ton', ...)` -- der Ton ist das ERSTE Argument
         for m in re.finditer(r"\bui_meldung_markup\s*\(\s*'([a-z]+)'", text):
             wert = m.group(1)
-            if not re.search(r'\.meldung-%s\b' % wert, css):
+            if not re.search(r'\.meldung-%s(?![\w-])' % wert, css):
                 verstoss.append('%s:%d  ui_meldung_markup(%s) -> .meldung-%s gibt es nicht' % (
                     kurz(datei), zeile_von(text, m.start()), wert, wert))
 

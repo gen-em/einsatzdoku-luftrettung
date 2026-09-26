@@ -14,6 +14,29 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.4] — 2026-09-26
+
+Schritt 17, Backlog-Runde 4, Paket R4-05. Korrekturstufe ohne Migration.
+
+### Behoben
+
+- **Die Einstellungen öffnen mit einem Anker wieder im richtigen Feld**
+  (F-R4-25). Wer `einstellungen.php?t=standorte#standorte` aufrief — etwa
+  über den Verweis „Standorte" beim Anlegen eines Diensttags —, sollte im
+  Namensfeld des Standorts landen und landete im Seitenkörper, in Chromium,
+  Firefox und WebKit gleich. Zwei Gründe zugleich: `ui_feld()` setzt seine
+  Option `klasse` an die Hülle `.feld`, nicht an das Eingabefeld, und
+  `.focus-target` traf deshalb ein `div`, auf dem `focus()` nichts tut; der
+  Rückfall auf das erste Eingabefeld kam nie dran, weil etwas gefunden war.
+  Und der Browser verarbeitet den Anker der Adresse erst am Ende des Ladens
+  und setzt den Fokus dabei zurück, wenn das Ziel selbst nicht fokussierbar
+  ist — ein früher gesetzter Fokus war danach weg. Jetzt nimmt `fokus()` das
+  Feld in der Hülle, und der erste Aufruf wartet auf `load`. Gefunden beim
+  Bau der Selektorprüfung (unten): Ihr erster Entwurf meldete die Klasse als
+  von niemandem gesetzt; gesetzt war sie, nur an der falschen Stelle.
+  Bewusst stehen gelassen: der Zweig für `.focus-target[data-role=…]`, den
+  heute kein Element erfüllt — Aufräumstoff für P6 (Nr. 341).
+
 ## [Werkzeug: Backlog-Runde 4 (Konzept R4)] — 2026-09-26
 
 Schritt 17, eigener Zweig nach dem Merge des Konzepts (PR #93). Hier stehen
@@ -50,6 +73,27 @@ Fassung.
 
 ### Geändert
 
+- **Die Vollständigkeitsprüfung liest Selektoren, bedingte Töne und die
+  Klassen-Stellen der Bausteine** (R4-05, Nr. 36, 331). Ein Selektor, der
+  ins Leere greift, ist in JavaScript kein Fehler, sondern eine leere Liste
+  — in P3/O6 wirkte so drei Pakete lang kein Filter der Suchseite. Die
+  sechste Prüfung hält jede Klasse, die `querySelector`, `closest`,
+  `matches` oder `getElementsByClassName` sucht, gegen das, was irgendwo
+  gesetzt wird; was die Bibliothek setzt (Leaflet), steht mit Grund in
+  `vollstaendigkeit-selektoren.md`. Die Tonprüfung las nur Literale; jetzt
+  liest sie auch beide Zweige einer Bedingung und die Vorgabe im Baustein
+  (383 Übergaben), und die zwölf, deren Wert erst zur Laufzeit feststeht,
+  stehen als Hinweis mit Fundstelle da. Dabei ist ein alter Fehler der
+  Prüfung aufgefallen (F-R4-26): Sie suchte `\.knopf-leise\b`, und `\b`
+  greift auch vor einem Bindestrich — `.knopf-leise-orange` galt als Regel
+  für `knopf-leise`, und verschwand die, meldete es niemand. Von den 73
+  Hinweisen „Regel im Stylesheet, im Markup nicht gefunden" waren fast alle
+  keine: Die Klassen stehen als Option (`'klasse' => …`), als Zusatzklasse
+  eines Symbols, als Leaflet-Behälter, als Zweig einer Bedingung oder
+  zusammengesetzt aus einem geschlossenen Vorrat (`pwq-` aus `STUFEN`).
+  Übrig sind 13, jeder mit Grund: sechs Regeln ohne Verwender (Nr. 341),
+  vier `geo-ring-`, zwei `zaehler-`, deren Werte erst JavaScript bzw. ein
+  Aufrufer wählt, und eine Klasse, die Leaflet selbst vergibt.
 - **Der Demo-Reset trifft keine Probe mehr** (R4-04, Nr. 322). Er spielt
   den Demo-Bestand alle 30 Minuten neu ein, und die Einsätze bekommen neue
   Kennungen; welche Probe er traf, entschied die Reihenfolge der Muster in

@@ -20,7 +20,7 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe · 
 | `migrationsregister` | Migrationen gegen `schema.sql` | Nr. 238 |
 | `behandler` | die drei Behandler des Fehlerprotokolls in `db.php` | Nr. 248 |
 | `linkprobe` | jeder Verweis nennt einen Parameter, den sein Ziel liest | Nr. 148, 151 |
-| `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=` | Nr. 179, 227 |
+| `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=`; Ton ohne Regel (auch über eine Bedingung); Selektor, dessen Klasse niemand setzt | Nr. 36, 179, 227, 331 |
 | `textprobe` | **fünf Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen | B-S4-06, E-PK-08 |
 | `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6, dreizehn Regeln: Form, Anlass, gerufen, keine lose Datei, keine Backlog-Nummer zweimal; eingehängt in `SELBST`, Tabelle, `pruefablauf.json` und die Tabelle in 4; keine Probe ohne Anlage lädt `db.php`, jeder Riegel steht im Tor | Nr. 293, 315, 329 |
 | `pysyntax` | jedes Python-Werkzeug unter `tools/` übersetzt | Kette II/AP4: `zustand.py` |

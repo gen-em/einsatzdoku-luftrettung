@@ -1340,16 +1340,18 @@ sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 > Regel — die Plakette steht dann ohne Hintergrund da, als bloßer Text. Genau
 > das ist passiert: `warn` wurde an drei Stellen übergeben und fiel niemandem
 > auf, weil der Klassenname zusammengesetzt wird (`'plakette-' . $ton`) und als
-> Literal nirgends auftaucht; `tools/quelltext/` (`vollstaendigkeit`) kann ihn deshalb nicht
-> finden. Behoben mit Web 10.3.0, vermerkt in Backlog Nr. 36.
+> Literal nirgends auftaucht. Behoben mit Web 10.3.0. Seit P5b/AP9 hält
+> `tools/quelltext/` (`vollstaendigkeit`) jeden übergebenen Ton gegen das
+> Stylesheet, seit R4-05 auch die Zweige einer Bedingung und die Vorgabe im
+> Baustein (Backlog Nr. 36).
 >
 > **Und es ist ein zweites Mal passiert — `ok`.** In S10/AP3 beim Gegenlesen
 > gefunden, bevor es ausgeliefert wurde: Die neue Karte „Schlüssel des
 > Servers" sollte `plakette-ok` tragen, und die Klasse gibt es im Stylesheet
 > nicht. Sie steht seit Längerem an **zwei Stellen im Bestand** und war dort
 > nie aufgefallen. Wer einen Zustand „alles in Ordnung" meint, nimmt `blau` —
-> das ist der Ton dafür (9.23). Die zwei Altstellen bleiben vorerst stehen;
-> sie sind in Backlog Nr. 36 vermerkt.
+> das ist der Ton dafür (9.23). Die zwei Altstellen sind mit P5b/AP9
+> behoben.
 
 > **Plakette und Schloss schließen einander nicht mehr aus** (S3/AP6,
 > E-S3-16). F-N1-B hatte in P3 entschieden: entweder die Plakette

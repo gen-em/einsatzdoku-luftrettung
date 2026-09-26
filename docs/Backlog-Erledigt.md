@@ -8374,3 +8374,51 @@ zutreffen.
      bildmarken dazu im Muster android-quellen (style.css, Bildmarken im
      Web). Von Hand gefahren: alle vier grün, git status android/ danach
      leer.
+
+36. **Ein Prüfmittel für Klassennamen, die JavaScript sucht und niemand mehr vergibt.** · gehört zu: 17 · Stand: erledigt · seit 30.08.2026
+     Befund: Ein Selektor, der ins Leere greift, ist in JavaScript kein
+     Fehler, sondern eine leere Liste — in P3/O6 wirkte deshalb drei Pakete
+     lang kein Filter der Suchseite (`.filterspalte` war beim Umzug in die
+     Leiste verschwunden, F-P3-AG). Dieselbe Lücke von der anderen Seite:
+     Töne, die PHP zur Klasse zusammensetzt (`'plakette-' . $ton`), gab es
+     viermal ohne Regel im Stylesheet (`warn`, zweimal `ok`, `info`).
+     Wirkung: Die Seite sieht fast richtig aus; kein Mittel meldet es.
+     Weg: Die billige Hälfte ist gebaut (P5b/AP9, Web 20.24.0):
+     `tools/quelltext/vollstaendigkeit.py` hält die Werte von `ui_plakette`,
+     `ui_knopf`, `ui_kennzahl` und `ui_meldung_markup` gegen das Stylesheet,
+     Gegenprobe mit beiden Fehlern gefahren. Offen ist die andere Hälfte:
+     Klassennamen, die JavaScript in Selektoren nennt, und Töne, die als
+     Variable übergeben werden — dafür braucht es eine Ausnahmeliste mit
+     Begründung (Klassen, die JS selbst vergibt; zusammengesetzte Selektoren
+     sind statisch nicht auflösbar), keine Ja/Nein-Regel.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 36.
+     Erledigt 26.09.2026 mit R4-05 (Konzept R4, Web 21.1.4):
+     vollstaendigkeit.py hat die sechste Prüfung Selektoren (59 Klassen in
+     27 Dateien, 0 Befunde, 2 Leaflet-Klassen mit Grund in
+     vollstaendigkeit-selektoren.md) und liest bei Tonübergaben auch die
+     Zweige einer Bedingung und die Vorgabe im Baustein (383 geprüft, 12
+     ohne Literal als Hinweis). Gegenproben: erfundener Selektor rot,
+     entfernte Regel kennzahl-orange rot (über eine Bedingung übergeben).
+
+331. **Zusammengesetzte Klassen der übrigen Bausteine sieht die Vollständigkeitsprüfung nicht.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 in Konzept BV (BV-03, F-BV-11), notiert und nicht
+     mitgemacht.* BV-02 hat die Meldungstöne aufgelöst (Nr. 274): Ihre Liste
+     ist geschlossen und steht in zwei Bausteinen. Dieselbe Grenze trifft
+     andere Klassen, die zur Laufzeit entstehen. *(Hier stand als Beispiel
+     `c-dc-<spalte>` — die Gegenprüfung P-BV-02 hat gezeigt, dass diese Klasse
+     zwar erzeugt, aber an kein Element gesetzt wird; ein Mittel müsste genau
+     das unterscheiden.)* Von den 62 Hinweisen „Regel im Stylesheet, im Markup
+     nicht gefunden" (gemessen 24.09.2026) tragen **28** das Präfix eines
+     Bausteins (`symbol-` 9, `pwq-` 5, `kennzahl-` 4, `karte-` 3, `blatt-` 2,
+     `knopf-` 2, `zaehler-` 2, `plakette-` 1) — vermutlich zusammengesetzt,
+     nicht einzeln geprüft. Verschwände eine dieser Regeln, meldete es nur die
+     Tonprüfung am Aufruf — und die kennt vier Bausteine, und auch die nur
+     dort, wo der Wert als Literal übergeben wird. *Weg:* je Baustein prüfen,
+     ob sein Wertevorrat geschlossen ist; wo ja, wie in BV-02 lesen, wo nein,
+     bleibt es beim Hinweis. **Zuordnung: Backlog-Runde** (Prüfmittel).
+     Erledigt 26.09.2026 mit R4-05 (Konzept R4): pruefung_klassen() liest
+     Klassen an Klassen-Stellen (Option klasse, Symbol-Zusatzklasse,
+     Leaflet-Behälter, Zweig einer Bedingung u. a.) und zusammengesetzte aus
+     geschlossenem Vorrat (Tonübergaben, pwq- aus STUFEN); Hinweise 73 → 13,
+     jeder benannt, die sechs ohne Verwender als Nr. 341. Gegenprobe:
+     entfernte Regel pwq-2 rot.

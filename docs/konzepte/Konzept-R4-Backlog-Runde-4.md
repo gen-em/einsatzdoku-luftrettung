@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-05.** |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-06.** |
 > | Entschieden | **E-R4-01 bis E-R4-28** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-04 erledigt** (26.09.2026) — Block A fertig. Offen: R4-05 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-05 erledigt** (26.09.2026); Web 21.1.4. Offen: R4-06 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
-> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08). 341 wird nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29) — 2.4. |
+> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`) — 2.4. |
 
 ---|---|
 > | Stand | **26.09.2026 — Konzept vollständig, zur Freigabe vorgelegt; Konzept-PR #93 offen** (E-R4-02: Abschlüsse SD, AR, BV und dieses Konzept; jeder Push trägt einen Prüfbericht, `Pruefablauf.md` 5). Befund: 55 Punkte gesichtet und gegengeprüft (2.1). Paketschnitt: 26 Pakete (4). **Mockups für R4-22, R4-23, R4-24 liegen bei** (`konzept-r4/mockups/`, LIESMICH dort; zur Freigabe, Q-R4-16). |
@@ -366,6 +366,19 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 - **F-R4-17 ist ohne Umbau gelöst:** `stroeme.py` und `bildmarken.sh` haben
   schon einen Modus `pruefen`, der vergleicht statt schreibt; die Proben
   rufen ihn. Gemessen: nach dem Lauf der vier `git status android/` leer.
+- **F-R4-25 Der Fokus nach dem Anker landete im Seitenkörper** (Web
+  21.1.4). `einstellungen.php?t=standorte#standorte` sollte das Namensfeld
+  des Standorts fokussieren; gemessen in drei Engines: `BODY`. Zwei Gründe:
+  `ui_feld()` setzt `klasse` an die Hülle, `.focus-target` traf ein `div`,
+  und der Rückfall kam nie dran; und der Browser setzt den Fokus beim
+  Verarbeiten des Ankers am Ende des Ladens zurück, wenn das Ziel nicht
+  fokussierbar ist. Der Zweig `.focus-target[data-role=…]` greift nie —
+  Nr. 341.
+- **F-R4-26 Die Tonprüfung hielt `.knopf-leise-orange` für eine Regel von
+  `knopf-leise`.** Sie suchte mit `\b`, und das greift vor einem
+  Bindestrich. Gefunden von der eigenen Gegenprobe in R4-05 (entfernte
+  Regel `kennzahl-orange`, das Stylesheet trug danach
+  `.kennzahl-orange-weg` — grün statt rot); jetzt `(?![\w-])`.
 
 ## 3. Entscheidungen und Fragen
 
@@ -594,6 +607,25 @@ Zusatzklassen, `pwq-0…4`, `karte-*`, `blatt-*`). Ausgangsmaß 73 Hinweise /
 entfernte Regel rot; Hinweise 73 → N, benannt. *Stufe:* keine, außer die
 Prüfung findet einen echten Fehler (dann Web Korrektur im selben Paket).
 *Fächerung:* keine (eine Datei).
+**Erledigt 26.09.2026 — mit Web 21.1.4.** Die geschlossene Werteliste je
+Baustein steht nicht einheitlich im Quelltext (bei `ui_zaehler` nur im
+Kopfkommentar); gelesen wird deshalb, was im Code steht: die Tonübergaben
+der Aufrufe (Literal, Zweige einer Bedingung ohne Indizes und Argumente,
+Vorgabe im Baustein) und `STUFEN` für `pwq-`. Dazu zehn Klassen-Stellen,
+an denen eine Klasse als Zeichenkette gesetzt wird (Option `klasse`,
+Symbol-Zusatzklasse, Leaflet-Behälter, `setAttribute`, Bruchstück, Kopf
+einer Verkettung, `class="…' .`, Zweig einer Bedingung, mehrere Klassen,
+Zusatzklasse einer Meldung) — sie zählen als vermutet, nicht als sicher,
+verlangen also keine Regel. Die Selektorprüfung ist die sechste; ihr
+erster Entwurf fand F-R4-25. *Gemessen:* Selektoren **59 Klassen in 27
+Dateien, 0 Befunde, 2 mit Grund** (Leaflet); Tonübergaben **383 geprüft,
+0 ohne Regel, 12 ohne Literal** (Hinweis mit Fundstelle); Hinweise **73 →
+13** (sechs ohne Verwender → Nr. 341; vier `geo-ring-`, zwei `zaehler-`,
+eine Leaflet-Klasse mit Grund). Gegenproben: erfundener Selektor → **1
+Befund**; Regel `pwq-2` entfernt → **2 Befunde** (ohne Gegenstück,
+zusammengesetzt ohne Regel); Regel `kennzahl-orange` entfernt → erst **0**
+(F-R4-26), nach der Berichtigung **2**; alles zurück → 0. Fokus: vorher
+`BODY`, nachher `INPUT#sdbase-name` in Chromium, Firefox und WebKit.
 
 **R4-06 Kennzeichnungsprobe** — Nr. 170. Neues Prüfmittel
 `tools/quelltext/kennzeichnung.php` mit Sollliste `kennzeichnung-soll.md`

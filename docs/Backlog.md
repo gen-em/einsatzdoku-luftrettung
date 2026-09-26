@@ -51,8 +51,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340 | 26.09.2026 |
-| ab 350 | frei — höchste vergebene Nummer 340; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 26.09.2026 |
+| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340, 341 | 26.09.2026 |
+| ab 350 | frei — höchste vergebene Nummer 341; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 26.09.2026 |
 
 ---
 
@@ -85,24 +85,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Sitzungsbeginn daneben). Gefunden in P1/B3 (dort F-P1-F); bewusst nicht
      nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
      Änderung an ihm eine Entscheidung wäre, keine Korrektur.
-
-36. **Ein Prüfmittel für Klassennamen, die JavaScript sucht und niemand mehr vergibt.** · gehört zu: 17 · Stand: teilweise · seit 30.08.2026
-     Befund: Ein Selektor, der ins Leere greift, ist in JavaScript kein
-     Fehler, sondern eine leere Liste — in P3/O6 wirkte deshalb drei Pakete
-     lang kein Filter der Suchseite (`.filterspalte` war beim Umzug in die
-     Leiste verschwunden, F-P3-AG). Dieselbe Lücke von der anderen Seite:
-     Töne, die PHP zur Klasse zusammensetzt (`'plakette-' . $ton`), gab es
-     viermal ohne Regel im Stylesheet (`warn`, zweimal `ok`, `info`).
-     Wirkung: Die Seite sieht fast richtig aus; kein Mittel meldet es.
-     Weg: Die billige Hälfte ist gebaut (P5b/AP9, Web 20.24.0):
-     `tools/quelltext/vollstaendigkeit.py` hält die Werte von `ui_plakette`,
-     `ui_knopf`, `ui_kennzahl` und `ui_meldung_markup` gegen das Stylesheet,
-     Gegenprobe mit beiden Fehlern gefahren. Offen ist die andere Hälfte:
-     Klassennamen, die JavaScript in Selektoren nennt, und Töne, die als
-     Variable übergeben werden — dafür braucht es eine Ausnahmeliste mit
-     Begründung (Klassen, die JS selbst vergibt; zusammengesetzte Selektoren
-     sind statisch nicht auflösbar), keine Ja/Nein-Regel.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 36.
 
 37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?** · gehört zu: 17 · Stand: teilweise · seit 30.08.2026
      Befund (Messstand, 5050 Einsätze, CPU sechsfach gedrosselt, 16.09.2026):
@@ -1509,23 +1491,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
      Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
 
-331. **Zusammengesetzte Klassen der übrigen Bausteine sieht die Vollständigkeitsprüfung nicht.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 in Konzept BV (BV-03, F-BV-11), notiert und nicht
-     mitgemacht.* BV-02 hat die Meldungstöne aufgelöst (Nr. 274): Ihre Liste
-     ist geschlossen und steht in zwei Bausteinen. Dieselbe Grenze trifft
-     andere Klassen, die zur Laufzeit entstehen. *(Hier stand als Beispiel
-     `c-dc-<spalte>` — die Gegenprüfung P-BV-02 hat gezeigt, dass diese Klasse
-     zwar erzeugt, aber an kein Element gesetzt wird; ein Mittel müsste genau
-     das unterscheiden.)* Von den 62 Hinweisen „Regel im Stylesheet, im Markup
-     nicht gefunden" (gemessen 24.09.2026) tragen **28** das Präfix eines
-     Bausteins (`symbol-` 9, `pwq-` 5, `kennzahl-` 4, `karte-` 3, `blatt-` 2,
-     `knopf-` 2, `zaehler-` 2, `plakette-` 1) — vermutlich zusammengesetzt,
-     nicht einzeln geprüft. Verschwände eine dieser Regeln, meldete es nur die
-     Tonprüfung am Aufruf — und die kennt vier Bausteine, und auch die nur
-     dort, wo der Wert als Literal übergeben wird. *Weg:* je Baustein prüfen,
-     ob sein Wertevorrat geschlossen ist; wo ja, wie in BV-02 lesen, wo nein,
-     bleibt es beim Hinweis. **Zuordnung: Backlog-Runde** (Prüfmittel).
-
 333. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo` das falsche Paket.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
      *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
      der Gegenprüfung P-BV-02.* Der Kommentar über `.geo.map-fs` sagt „Der
@@ -1565,3 +1530,18 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `uebersicht.py` und `decken.py`.
      *Abnahme:* `cmark-gfm` liefert je Eintrag eine Liste, deren `start`
      die Nummer des Eintrags ist; die Decke misst das.
+
+341. **Sechs Stylesheet-Regeln ohne Verwender und ein Fokus-Zweig, den kein Element erfüllt.** · gehört zu: 12 · Stand: offen · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit R4-05 (Konzept R4).* Die
+     Vollständigkeitsprüfung meldet nach R4-05 noch 13 Hinweise „Regel im
+     Stylesheet, im Markup nicht gefunden". Sieben haben einen Grund (vier
+     `geo-ring-`, zwei `zaehler-`, deren Werte erst JavaScript bzw. ein
+     Aufrufer wählt, und `leaflet-div-icon`, die Leaflet vergibt). Sechs
+     haben keinen Verwender: `feld-reihe` (nur im Kopf von `ui_feld()`
+     genannt), `karte-neben`, `kennzahl-raster-5`, `sd-titel`, `sd-zahl`,
+     `symbol-gefuellt` (gemessen 26.09.2026). Dazu der Zweig
+     `.focus-target[data-role=…]` in `fokus()` (`einstellungen.php`), den
+     heute kein Element erfüllt (F-R4-25).
+     *Weg:* im Aufräumpaket von P6 je Stelle nachsehen, ob ein Verwender
+     vergessen wurde oder sie weg kann; `Design.md` mitziehen.
+     *Abnahme:* Hinweise 13 → 7, jeder übrige mit Grund.
