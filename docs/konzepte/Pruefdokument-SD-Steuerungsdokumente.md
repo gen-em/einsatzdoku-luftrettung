@@ -12,7 +12,7 @@ PR #88, ist aufgenommen). Was die Betreiberin jetzt tut, steht in 3.7.*
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
-| **Stufe 1 auf GitHub — seit PR #92 gemessen** | Lauf 311 grün (P-SD-15); die Gegenprobe Lauf 312 rot, aber an der Selbstprobe statt an der Stelle (P-SD-16, F-SD-13) — der zweite Versuch steht in 3.6. Örtlich ist der Prüfstand nach jedem Paket gefahren (Abschnitt 2, Stufe klein) | 3.6 |
+| **Stufe 1 auf GitHub — seit PR #92 gemessen** | Lauf 311 grün (P-SD-15); Gegenprobe Lauf 312 rot an der Selbstprobe (F-SD-13), Lauf 313 rot mit Datei und Zeile (P-SD-16 erfüllt) — 3.6. Der Lauf nach der Rücknahme der 21. Zeile war beim Schreiben dieser Zeile noch nicht gelaufen; er muss grün sein. Örtlich ist der Prüfstand nach jedem Paket gefahren (Abschnitt 2, Stufe klein) | 3.6, PR #92 |
 | **Ob eine Zeile in Abschnitt 6 wirklich erledigt ist** | Dreizehn Zeilen tragen den Vermerk „vermutlich erledigt" oder „löschen?" — das ist aus anderen Dokumenten geschlossen (Konzept PK: M1 am 21.09.2026 mit Migrationen von Hand; Fassung 110: Gerätetest erfolgt; Produktiv antwortet unter `nadoku.gen-em.org`), nicht an der Anlage gemessen. Gelöscht ist keine (E-SD-31) | Q-SD-01, Prüfliste 3.1 |
 | **Ob die drei Zuarbeiten-Gruppen richtig sortiert sind** | Die Einteilung „jetzt / vor Schritt X / vor v1.0" ist aus der Spalte „Wann" der Fassung 124 gelesen; drei Zeilen ohne klares „Wann" (SPF/DKIM, BR-Fragen, „Freigabe je Konzept") stehen in 6.1 | Q-SD-01, Prüfliste 3.1 |
 | **Ob die Kurzfassungen Sinn verloren haben** | Register-Statussätze (R51 bis R85 von Absätzen auf ≤ 160 Zeichen), Erledigt-Zeilen (31 Blöcke von bis zu 90 Zeilen auf je eine) und die Fahrplanzeilen sind Kürzungen; gezählt sind Zeichen, nicht Sinn. Der Volltext liegt in Archiv-2 | Prüfliste 3.2 |
@@ -83,7 +83,8 @@ E-SD-19).
 | SD-04 | Decken | `python3 tools/steuerung/decken.py`; `uebersicht.py --pruefen` | nach den Änderungen an Rahmenplan (Fassung 130) und Backlog-Kopf | **20 Decken, 0 gerissen**; **105, 0, 0** |
 | SD-04 | Prüfstand | `bash tools/pruefstand/pruefen.sh` | Stufe klein, gegen `origin/main` | Bericht in der Commit-Nachricht von SD-04 |
 | PR | P-SD-15 | Stufe 1, Lauf 311 (`d8266f4`) | Schritt „Steuerungsdokumente — halten sie ihre Decken?", „Prüfbericht gegenlesen", vier Jobs | **grün · grün · 4 von 4** |
-| PR | P-SD-16 | Stufe 1, Lauf 312 (`46b213e`, Nr. 332 mit 21 Zeilen) | Erwartung: rot mit Datei und Zeile | **rot, ohne Datei und Zeile** — `decken.py --selbstprobe` fiel zuerst („22 Fälle, 2 Fehlschläge", F-SD-13); berichtigt (E-SD-47), zweiter Versuch: 3.6 |
+| PR | P-SD-16 | Stufe 1, Lauf 312 (`46b213e`, Nr. 332 mit 21 Zeilen) | Erwartung: rot mit Datei und Zeile | **rot, ohne Datei und Zeile** — `decken.py --selbstprobe` fiel zuerst („22 Fälle, 2 Fehlschläge", F-SD-13); berichtigt (E-SD-47) |
+| PR | P-SD-16 | Stufe 1, Lauf 313 (`10d4867`, Selbstprobe berichtigt, 21. Zeile steht) | Erwartung: rot mit Datei und Zeile | **rot mit `docs/Backlog.md:1712: Nr. 332: 21 Zeilen`**, Anmerkung `backlog-eintrag: Nr. 332: 21 Zeilen`; Selbstproben davor **22 / 0** und **7 / 0** |
 
 ---
 
@@ -260,8 +261,14 @@ Zeile `decken.py --stellen`, die Datei und Zeile nennt, kam nie dran
 (F-SD-13). Behoben: Die Selbstprobe zählt je Decke die Stellen vor und nach
 dem Riss (E-SD-47) — örtlich auf dem roten Baum 22 Fälle, 0 Fehlschläge, und
 `--stellen` sagt `docs/Backlog.md:1712: Nr. 332: 21 Zeilen`.
-**Zweiter Versuch:** der Commit, der die Selbstprobe berichtigt und die 21.
-Zeile stehen lässt — Ergebnis wird hier eingetragen. ☐
+**Ergebnis P-SD-16, zweiter Versuch:** Lauf 313 (`10d4867`, Selbstprobe
+berichtigt, 21. Zeile steht): **rot, mit Datei und Zeile.** `decken.py
+--selbstprobe` 22 Fälle, 0 Fehlschläge; `uebersicht.py --selbstprobe` 7 Fälle,
+0 Fehlschläge; `decken.py --stellen` „ROT backlog-eintrag …
+`docs/Backlog.md:1712: Nr. 332: 21 Zeilen`", Anmerkung `backlog-eintrag:
+Nr. 332: 21 Zeilen`, „20 Decken, 1 gerissen", Schritt rot, Lauf rot. Die 21.
+Zeile ist mit dem nächsten Commit zurückgenommen; dessen Lauf muss wieder grün
+sein (auf PR #92 nachsehen). ☑
 
 ### 3.7 Freigabe des Abschlusses — was die Betreiberin jetzt tut
 

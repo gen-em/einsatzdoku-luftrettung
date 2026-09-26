@@ -1729,7 +1729,6 @@ gestrichen; die nächste freie Nummer steht in der letzten Zeile.
      auf `ba2ec57`, Baum mit `main` von `29cf394` → rot vor der ersten
      Probe, mit Ansage; nach `--neu` grün.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 332.
-     Gegenprobe P-SD-16: eine 21. Zeile, die das Tor rot färben muss.
 
 333. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo` das falsche Paket.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
      *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
