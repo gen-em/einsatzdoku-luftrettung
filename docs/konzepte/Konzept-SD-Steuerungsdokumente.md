@@ -30,12 +30,13 @@ Arbeit an derselben Datei bleiben seriell.
 >
 > | | |
 > |---|---|
-> | Stand | 24.09.2026 — Fassung 1, zur Freigabe vorgelegt |
-> | Entschieden | E-SD-01 bis E-SD-27 |
-> | Offen | Q-SD-01 (Zuarbeiten-Durchsicht, mit SD-M1); die fünf Punkte zum Gegenlesen in 2.4 |
-> | Umsetzung | nicht begonnen. **SD-00 sofort** (P5c-Instanz, vor AP2); **SD-01 bis SD-04 nach dem Merge des 10c-PR** auf eigenem Zweig von `main` (E-SD-19) |
-> | Fable-Schritte | keine |
-> | Nummern | keine vergeben |
+> | Stand | **26.09.2026 — SD-01 gebaut, SD-M1 vorgelegt.** Der Rahmenplan ist geschnitten: Fassung 124 liegt wörtlich in `docs/Rahmenplan-Archiv-2.md` (0 Unterschiede), `docs/Rahmenplan-Verlauf.md` beginnt mit Fassung 125, der neue `docs/Rahmenplan.md` hat **487 Zeilen** (Decke 500 gehalten, Ziel < 400 verfehlt — F-SD-01, Q-SD-02), Kopf 15 Zeilen, 0 Blockquotes, 0 Berichtigungssätze, alle Zellen unter ihren Decken. Prüfdokument liegt daneben. |
+> | Entschieden | E-SD-01 bis E-SD-27 (Konzept, 24.09.2026); die fünf Punkte zum Gegenlesen in 2.4 gelten ohne Widerspruch. **Aus der Umsetzung: E-SD-28 bis E-SD-33** (Abschnitt 2.5, 26.09.2026) — zur Kenntnis und zum Widerspruch. |
+> | Offen | **Q-SD-01** (SD-M1: Zuarbeiten-Durchsicht und die 40 Backlog-Nummern ohne genannten Schritt — Vorlage in 3.2 und im Prüfdokument 3.1/3.3); **Q-SD-02** (Ziel < 400 Zeilen). Befunde F-SD-01 bis F-SD-04 in 2.5. |
+> | Umsetzung | **SD-00 erledigt** 24.09.2026 (P5c-Instanz, Fassung 111). **SD-01 erledigt** 26.09.2026 auf `claude/serene-tesla-sqeno2` (von `claude/affectionate-newton-6pzfkc` `bdf1787`, der `origin/main` `d34908b` enthält; Fassungen 125 bis 127). **SD-M1 wartet** auf die Betreiberin. Danach SD-02 (erst nach dem Merge von PR #88, der `docs/Backlog.md` anfasst), SD-03, SD-04. |
+> | Fable-Schritte | keine. SD-01 lief mit Fable (Anweisung der Betreiberin, 26.09.2026); Abweichung von K2 zur Kenntnis. |
+> | Fächerung | SD-01: das Lesen der 105 offenen Backlog-Einträge auf 32 Agenten (E-SD-33); alles Schreiben seriell. |
+> | Nummern | Rahmenplan-Fassungen 125, 126, 127 vergeben; keine Backlog-Nummer vergeben. |
 
 ---
 
@@ -283,6 +284,83 @@ ohne Widerspruch gelten sie):
 5. SD-01 bis SD-04 als eigener PR nach dem 10c-Merge, nicht im 10c-PR
    (E-SD-19).
 
+### 2.5 Entscheidungen und Befunde aus der Umsetzung (SD-01, 26.09.2026)
+
+Von der umsetzenden Instanz entschieden, zur Kenntnis und zum Widerspruch.
+Die Antworten der Betreiberin auf Q-SD-01 folgen als **E-SD-34 ff.** (das
+Konzept sagte „E-SD-28 ff."; die Nummern sind belegt, die Reihenfolge nicht).
+
+- **E-SD-28 6a bleibt, 6b wird Verweis.** Die Zehn-Schritte-Tabelle zur
+  Staging-Einrichtung und die Werte der Variablen stehen weiter im
+  Rahmenplan unter 6a: E-KH-21 bindet die Schrittnummern, und
+  `auslieferung.yml` nennt „Rahmenplan 6a, Schritte 1 bis 3" in seinen
+  Fehlermeldungen, `Technik.md` 6 zeigt dreimal dorthin. Die Kästen und der
+  Werdegang liegen nur im Archiv-2. 6b ist ein Absatz, der auf
+  `Pruefablauf.md` 2.3 (die drei Lagen) und Archiv-2 6b (die Maske) zeigt —
+  `Pruefablauf.md` 2.3 nennt „Rahmenplan.md 6b" als Ort der Maske; SD-04
+  entscheidet, ob der Satz dort auf Archiv-2 zeigen soll.
+- **E-SD-29 Welche Zeilen der Fahrplan behält.** Neben den sieben offenen
+  Schritten (12, 12a, 13, 14, 17, 18, Betriebsübergang) und SD stehen
+  **Kette II** (M2 und Abschluss bei PK), **11** (Paketschnitte offen) und
+  **6** (Teil C: Play Console, Android 1.0.0) in der Tabelle, weil ihre
+  Konzepte liegen und Reste offen sind; **AR, BV, PK** sind neu (E-SD-09,
+  P-SD-06: 9 von 9 Konzepten mit Zeile). Blöcke gibt es nur für 12 und 12a;
+  13, 14 und der Betriebsübergang leben in ihrer Zeile — ihr Volltext liegt
+  im Archiv-2, und die Decke von 500 Zeilen ließ keine drei Blöcke mehr zu.
+- **E-SD-30 Drei Erledigt-Zeilen aus Fahrplanzeilen.** Schritt 1 (S4 Merge),
+  2 (S6) und 3 (S5 Konzept) hatten in Fassung 124 keinen Block in Abschnitt
+  8; ihre Erledigt-Zeile ist aus der Fahrplanzeile gebildet (Versionen,
+  Datum, PR nach GitHub). Korrekturstufen (148/149, Web 21.1.3) bekommen keine
+  Zeile — sie sind keine Schritte.
+- **E-SD-31 Zuarbeiten eins zu eins, Erledigungen nur vermerkt.** 67 nicht
+  durchgestrichene Zeilen sind überführt, zwei neue dazu (der Tag für 10c
+  und die Kette-II-Prüfpunkte 26 bis 28 aus der Fahrplanzeile). Dreizehn
+  Zeilen tragen den Vermerk „vermutlich erledigt" oder „löschen?" mit dem
+  Grund; gelöscht ist keine — das entscheidet SD-M1 (E-SD-11). Die
+  Gruppierung folgt der alten Spalte „Wann".
+- **E-SD-32 Drei Fassungen in einem Commit.** 125 ist der Schnitt, 126 die
+  Ergänzungen (E-SD-29, -30, neue Zuarbeiten), 127 die Berichtigungen (K7
+  und R40 nannten den Push auf `main` als Produktiv-Deploy; Android auf
+  `origin/main` ist 0.15.1; S7 ist PR #27 nach GitHub, nicht #28/#30;
+  „Branch-Schutz" ist bis auf den 2FA-Zwang erledigt). Eine Verlaufszeile
+  von 300 Zeichen trägt nicht alles; je Sache eine Zeile ist das Muster aus
+  4.8.
+- **E-SD-33 Fächerung in SD-01.** Das Konzept sah für SD-01 keine Fächerung
+  vor. Die Sitzung lief mit der Ansage „Ultracode" der Betreiberin; deshalb
+  ist das **Lesen** der 105 offenen Backlog-Einträge (Zuordnung, Stand,
+  Aufnahmedatum, Zeilenzahl — Vorarbeit für SD-M1 (b) und SD-02) auf 32
+  lesende Agenten gefächert worden: je Block von neun Einträgen zwei
+  unabhängige Leser, ein Schiedsrichter bei Abweichung (8 Fälle). Alles
+  Schreiben blieb seriell (`CLAUDE.md` 7: Messung ja, Text nein).
+
+**Befunde.**
+
+- **F-SD-01 Ziel < 400 Zeilen verfehlt: 487.** Die Decke 500 hält (13 Zeilen
+  Luft). Das Konzept rechnete mit 27 Erledigt-Blöcken und schätzte die
+  Zuarbeiten nicht: 85 Register-, 69 Zuarbeiten- und 34 Erledigt-Zeilen sind
+  allein 188 Zeilen, dazu 6a (21) und 14 Fahrplanzeilen. Nach SD-M1 schrumpft
+  6.1 (dreizehn Zeilen als vermutlich erledigt markiert). → Q-SD-02.
+- **F-SD-02 Vier Aussagen der Fassung 124 waren falsch** und sind mit
+  Verlaufszeile 127 ersetzt: K7 und R40 (2) (Produktiv-Deploy), der Kopf
+  (Android 0.15.0 statt 0.15.1), die PR-Nummern von S7 (#28/#30 statt #27),
+  die Zuarbeit „Branch-Schutz" (der Zweigschutz steht seit dem 21.09.2026).
+- **F-SD-03 Abschnitt 5 der Fassung 124 war weiter auseinander als gezählt:**
+  91 Zeilen gegen 105 offene Punkte; **22 offene Nummern ohne Zeile**, **8
+  Zeilen zu nicht mehr offenen Nummern** (Prüfdokument 3.3). SD-02 ersetzt
+  die Tabelle durch Kopfzeilen; bis dahin verweist Abschnitt 5 auf Archiv-2.
+- **F-SD-04 Die Zahlen des Konzepts zum Backlog sind gealtert:** 105 offene
+  Einträge statt 113 (BV, P5c und AR haben ausgetragen und angelegt), **55
+  über 20 Zeilen** statt 66, **40 ohne genannten Schritt** statt „mindestens
+  18", 11 ohne Aufnahmedatum im Text (21, 23, 36, 37, 50–53, 55, 272, 273 —
+  `seit` kommt dort aus `git log`), 2 mit „umgesetzt, Prüfung offen" (213,
+  227 — nicht 238/239, die sind seit Fassung 110 erledigt).
+
+**Q-SD-02** (an die Betreiberin, mit SD-M1): Bleibt es bei Decke 500 mit dem
+gemessenen Stand von 487 — mit der Erwartung, dass SD-M1 Zeilen streicht —,
+oder soll SD-04 weiter kürzen (Kandidaten: die Werte-Tabelle in 6a nach
+`Technik.md` 6 mit Nachzug der drei Verweise; die Spalte „Volltext" des
+Registers als Satz über der Tabelle)? Empfehlung: erst SD-M1, dann messen.
+
 ---
 
 ## 3. Arbeitspakete
@@ -369,8 +447,17 @@ ohne Widerspruch gelten sie):
 - **Antwort der Betreiberin (Q-SD-01):** welche Zuarbeiten erledigt sind
   (werden gelöscht, eine Verlaufszeile), welche Zuordnung die
   unzugeordneten Nummern bekommen.
-- Die Instanz **wartet** hier; die Antwort geht als E-SD-28 ff. in dieses
-  Konzept.
+- Die Instanz **wartet** hier; die Antwort geht als E-SD-34 ff. in dieses
+  Konzept (E-SD-28 bis -33 sind seit SD-01 belegt, 2.5).
+- **Vorlage (SD-01, 26.09.2026):** (a) `docs/Rahmenplan.md` Abschnitt 6 —
+  6.1 mit 42, 6.2 mit 12, 6.3 mit 15 Zeilen, jede mit `seit`; dreizehn
+  Zeilen tragen einen Vermerk „vermutlich erledigt" (Liste im Prüfdokument
+  3.1). (b) Die 40 offenen Nummern ohne genannten Schritt mit der alten
+  Zuordnung aus Abschnitt 5 und dem Vorschlag je Nummer: Prüfdokument 3.3.
+  Vorgeschlagen sind 17 (nächste Backlog-Runde) für 21 Nummern, 13 für fünf,
+  PK für sechs, `nach v1.0` für fünf, 18 für zwei, 12, 14, Zuarbeit und
+  Pflegeaufgabe je einmal — der Standardvorschlag `nächste Backlog-Runde`
+  greift nur, wo weder Abschnitt 5 noch der Inhalt etwas anderes nahelegt.
 
 #### SD-02 — Backlog schneiden
 
@@ -697,9 +784,9 @@ Nicht-Prüfbare zuerst.
 
 | Paket | Stand | Commit | Zahlen |
 |---|---|---|---|
-| SD-00 | — | — | — |
-| SD-01 | — | — | — |
-| SD-M1 | — | — | — |
+| SD-00 | erledigt 24.09.2026 (P5c-Instanz) | `d85d898` (Rahmenplan Fassung 111) | P-SD-01: Fassungen 112 bis 124 tragen außerhalb von Abschnitt 10 keinen neuen Satz der Form „hier stand" (nachgezählt beim Schnitt: 0 neue Treffer nach Fassung 111; die alten stehen im Archiv-2) |
+| SD-01 | erledigt 26.09.2026 | *wird beim Commit eingetragen* | P-SD-02 **0 Unterschiede** (3 928 = 27 + 3 901 Zeilen) · P-SD-03 **487 Zeilen** (< 500, nicht < 400 — F-SD-01), Kopf **15** · P-SD-04 Fahrplan **27 → 14** (11 + 3 neu), Zuarbeiten **67 → 69** (+ 2 neu), Register **85 = 85**, Erledigt **31 → 34** (+ 3 aus Fahrplanzeilen), 6a **10 = 10** · P-SD-06 **9 von 9** · Decken: Blockquotes **0**, Berichtigungsmuster **0**, Zellen **0 über der Decke** in 14 + 69 + 85 + 34 + 3 Zeilen · `cmark-gfm` **0 `<pre>`, 9 Tabellen** · Fächerung **105 Einträge, 97 einig, 8 Schiedsrichter, 40 ohne Schritt** · Prüfstand: Bericht in der Commit-Nachricht |
+| SD-M1 | vorgelegt 26.09.2026 — wartet | — | Q-SD-01 (a) 69 Zeilen, (b) 40 Nummern (Prüfdokument 3.1, 3.3) |
 | SD-02 | — | — | — |
 | SD-03 | — | — | — |
 | SD-04 | — | — | — |

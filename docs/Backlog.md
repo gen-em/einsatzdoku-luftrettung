@@ -3202,6 +3202,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Schreibregeln aus SD-00 gelten seit Fassung 111). Zeitpunkt: SD-01 bis
     SD-04 nach dem Merge des 10c-PR, auf eigenem Zweig von `main`.
     **Zuordnung: SD.** Mit ihm erledigen sich Nr. 177, 193, 196 und 199.
+    *Stand 26.09.2026:* **SD-01 erledigt** — der Rahmenplan ist geschnitten
+    (Fassungen 125 bis 127; Fassung 124 wörtlich in
+    `docs/Rahmenplan-Archiv-2.md`, Verlauf in `docs/Rahmenplan-Verlauf.md`),
+    Zweig `claude/serene-tesla-sqeno2`. Als Nächstes SD-M1 (Durchsicht der
+    Betreiberin), dann SD-02 — der Backlog selbst bleibt bis dahin, wie er ist.
 
 295. **Der Messstand hat keinen Schritt für die Statistik.**
     *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-40), als Anlass nach der
