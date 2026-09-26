@@ -35,7 +35,7 @@ Umsetzung läuft nach dem Merge des Konzept-PR auf einem eigenen Zweig
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Konzept in Arbeit** (Befund läuft, Abschnitt 2). |
+> | Stand | **26.09.2026 — Konzept in Arbeit; der Konzept-PR ist offen** (E-R4-02: Abschlüsse SD, AR, BV und dieses Konzept; jeder Push trägt einen Prüfbericht, `Pruefablauf.md` 5). Sichtungen abgeschlossen bis auf die Gegenprüfung der Gruppe C; Abschnitt 2.2, 2.4 und der Paketschnitt (4) folgen mit dem nächsten Push. |
 > | Entschieden | **E-R4-01 bis E-R4-05** (Abschnitt 3), von der Betreiberin am 26.09.2026. |
 > | Offen | Q-R4-NN nach dem Befund (Abschnitt 3); die Freigabe des Konzepts. |
 > | Umsetzung | noch nicht begonnen. **R4-00** (Konzept, Spanne, Abschlüsse von SD, AR und BV auf diesem Zweig) läuft. |
