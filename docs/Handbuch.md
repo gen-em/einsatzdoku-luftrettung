@@ -20,12 +20,16 @@ Die Web-Oberfläche zeigt Diensttage mit Karte, Einsatz-Details
 und Reanimations-Protokollen — und erlaubt Nachtragen und Bearbeiten von Hand.
 
 **Patientendaten sind geschützt.** Nachname, Vorname, Geburtsdatum, Alter,
-Diagnose, der Einsatzort und seine Beschreibung werden
+Diagnose, die Einsatznummer, der Einsatzort (Adresse und Koordinate) und
+seine Beschreibung, der manuelle Abfahrtort sowie die **Notizen des
+Einsatzes** werden
 **Ende-zu-Ende-verschlüsselt** gespeichert:
 Der Browser ver- und entschlüsselt sie mit einem Schlüssel aus deinem
-Login-Passwort, der Server sieht nur Chiffretext (Abschnitt 5). Notizen und
-Freitextfelder sind davon **nicht** erfasst — dort gehören keine
-Patientendaten hinein.
+Login-Passwort, der Server sieht nur Chiffretext (Abschnitt 5). Die Notizen
+des **Diensttags** und die übrigen Freitextfelder sind davon **nicht**
+erfasst — dort gehören keine Patientendaten hinein; sie tragen die Kleinzeile
+„Klartext — keine Patientendaten". Was sonst im Klartext liegt und warum,
+steht in Abschnitt 5.
 
 ---
 
@@ -424,8 +428,9 @@ wird an dieser Regel nicht gemessen; es enthält kein Listenwort.
 je mehr gefüllt, desto besser. Rot heißt zu kurz oder zu leicht zu raten,
 Orange geht, Dunkelblau ist gut. Die Stärke des Passworts ist unmittelbar die
 Stärke der Verschlüsselung — es schützt nicht nur den Zugang, sondern leitet
-den Schlüssel ab, mit dem Diagnose, Alter und Einsatzort verschlüsselt werden
-(Abschnitt 5).
+den Schlüssel ab, mit dem die geschützten Angaben eines Einsatzes
+verschlüsselt werden — Patientendaten, Einsatzort, Abfahrtort und Notizen;
+die vollständige Liste steht in Abschnitt 5.
 
 **Die erste Anmeldung nach dem Update dauert länger.** Seit Web 15.6.0 rechnet
 der Browser mit 600 000 statt 320 000 Runden; solange ein Konto noch auf der
@@ -1284,7 +1289,8 @@ ist danach nicht noch einmal nötig.
 **Welche Angaben geschützt sind, sagen die Karten selbst:** Die Blöcke
 **Einsatz** und **PatientIn** tragen im Kopf die blaue Plakette
 **„verschlüsselt"**, und die einzelnen geschützten Zeilen — Einsatzort,
-Beschreibung, Diagnose, Name, Geburtsdatum — tragen daneben ein kleines
+Beschreibung, Diagnose, Name, Geburtsdatum, Alter und die Notizen des
+Einsatzes — tragen daneben ein kleines
 **Schloss**. Die Plakette sagt „hier stehen verschlüsselte Angaben", das
 Schloss sagt „diese hier". Auch die **Einsatznummer** trägt es (seit
 Web 19.1.1) — sie ist seit langem verschlüsselt, war aber die einzige Zeile
@@ -2065,8 +2071,8 @@ wieder bei den ersten 200 an. Die Zeitraum-Übersicht ist davon nicht betroffen,
 sie zeigt weiterhin jede Zeile.
 
 **Gesperrte Verschlüsselung.** Sind die geschützten Angaben gesperrt
-(Abschnitt 5), werden Einsatznummer, Name, Geburtsdatum, Diagnose, Einsatzort
-und dessen Beschreibung nicht durchsucht, der Altersfilter ist abgeschaltet und die
+(Abschnitt 5), werden Einsatznummer, Name, Geburtsdatum, Diagnose, Einsatzort,
+dessen Beschreibung und die Notizen des Einsatzes nicht durchsucht, der Altersfilter ist abgeschaltet und die
 entsprechenden Spalten bleiben leer. Alle übrigen Filter arbeiten normal
 weiter. Über **Entsperren** im Hinweis oben nimmst du die Sperre auf, danach
 sucht die Seite sofort mit den vollständigen Daten weiter — ohne Neuladen.
@@ -2091,8 +2097,9 @@ gar nicht darin suchen.
 
 ## 5. Verschlüsselung der Patientendaten (Pflicht)
 
-Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Einsatzort, die Beschreibung
-des Einsatzortes und die Einsatznummer sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
+Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Adresse und Koordinate des
+Einsatzorts, die Beschreibung des Einsatzortes, der manuelle Abfahrtort, die
+Einsatznummer und die Notizen des Einsatzes sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
 entschlüsselt mit einem Schlüssel aus deinem Login-Passwort; der Server
 speichert nur Chiffretext. Es
 gibt kein zweites Passwort und keinen Schalter — die Verschlüsselung ist
@@ -2175,11 +2182,13 @@ damit ungültig.
   wurde erneuert"*, hilft der **Wiederherstellungsschlüssel**: Damit setzt du
   dein Passwort neu, und alles ist wieder da.
 - **Verschlüsselt sind nicht alle Daten, sondern diese:** Name, Geburtsdatum,
-  Alter, Diagnose, Einsatznummer sowie Adresse, Koordinate und Beschreibung des
-  Einsatzorts. **Im Klartext liegen dagegen:** die GPS-Daten, die Koordinate
-  jeder Einsatzphase, das Transportziel, alle Zeiten, der Verlauf einer
-  Reanimation und die Namen der Besatzung — sie werden für Auswertung und
-  Statistik gebraucht, die der Server rechnet.
+  Alter, Diagnose, Einsatznummer, Adresse, Koordinate und Beschreibung des
+  Einsatzorts, der manuelle Abfahrtort und die Notizen des Einsatzes. **Im
+  Klartext liegen dagegen:**
+  die Notizen des Diensttags, die GPS-Daten, die Koordinate jeder
+  Einsatzphase, die Höhe des Einsatzorts, das Transportziel samt Koordinate,
+  alle Zeiten, der Verlauf einer Reanimation und die Namen der Besatzung —
+  sie werden für Auswertung und Statistik gebraucht, die der Server rechnet.
   **Der Einsatzort lässt sich damit aus den GPS-Daten ableiten**, auch wenn die
   Adresse verschlüsselt ist. Das ist keine Lücke, sondern die Grenze dieser
   Bauform, und sie steht hier, damit niemand mehr erwartet, als sie hält. Wer
@@ -2237,7 +2246,8 @@ dieser Frist, sondern an den drei oben genannten Fällen.
 
 In diesem Fall erscheint ein Fenster **„Geschützte Angaben entsperren“**, das
 nach deinem Kontopasswort fragt. Nach der Eingabe sind Einsatznummer, Name,
-Geburtsdatum, Alter, Diagnose und Einsatzort sofort wieder sichtbar — ohne die
+Geburtsdatum, Alter, Diagnose, Einsatzort, dessen Beschreibung und die Notizen
+des Einsatzes sofort wieder sichtbar — ohne die
 Seite neu zu laden und ohne Ab- und Neuanmelden. Das Passwort wird dabei nur in
 deinem Browser verwendet; es wird **nicht** an den Server geschickt. Die
 Prüfung dauert je nach Gerät eine knappe Sekunde, solange steht „Schlüssel wird
@@ -2494,8 +2504,9 @@ Tabelle einschränken auf *Alle Zeilen*, *Nur Probleme* oder *Nur Dubletten* —
 die gewählte Fläche ist orange hinterlegt.
 
 Die Datei wird **nicht hochgeladen**. Sie wird in deinem Browser gelesen,
-geprüft und dort verschlüsselt; der Server bekommt Name, Geburtsdatum,
-Diagnose, Einsatzort und Einsatznummer nur als Chiffretext zu sehen. Das ist keine
+geprüft und dort verschlüsselt; der Server bekommt Name, Geburtsdatum, Alter,
+Diagnose, Einsatzort samt Beschreibung, Abfahrtort, Einsatznummer und die
+Notizen des Einsatzes nur als Chiffretext zu sehen. Das ist keine
 Bequemlichkeit, sondern die einzige Möglichkeit, die die
 Ende-zu-Ende-Verschlüsselung (Abschnitt 5) offen lässt. Aus demselben Grund
 ist der Import gesperrt, solange die Verschlüsselung nicht bereitsteht — dann
@@ -4170,15 +4181,16 @@ Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 > ## Welche Daten verschlüsselt gespeichert werden — und welche nicht
 >
 > Name, Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse, Koordinate
-> und Beschreibung des Einsatzorts sowie die Notizen eines Einsatzes werden
+> und Beschreibung des Einsatzorts, ein von Hand eingetragener Abfahrtort
+> (Adresse und Koordinate) sowie die Notizen eines Einsatzes werden
 > bereits im Browser verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
 > kann sie nicht lesen; der Schlüssel wird aus dem Passwort des Kontos
 > abgeleitet.
 >
 > Nicht verschlüsselt gespeichert werden: die aufgezeichnete GPS-Spur, die
-> Koordinaten der einzelnen Einsatzphasen, das Transportziel, alle Zeiten,
-> der Verlauf einer Reanimation, die Namen der Besatzung und die Notizen
-> eines Diensttags. Diese Angaben
+> Koordinaten der einzelnen Einsatzphasen, die Höhe des Einsatzorts, das
+> Transportziel samt Koordinate, alle Zeiten, der Verlauf einer Reanimation,
+> die Namen der Besatzung und die Notizen eines Diensttags. Diese Angaben
 > werden für Auswertungen und Statistiken benötigt, die der Server selbst
 > berechnet.
 >

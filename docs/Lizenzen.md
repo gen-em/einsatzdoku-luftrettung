@@ -44,7 +44,8 @@ Bibliothek und jede Schrift liegt im Repositorium und wird vom eigenen Server
 ausgeliefert.
 
 Das ist keine Vorliebe, sondern folgt aus dem Zweck der Anwendung: Sie
-verschlüsselt Diagnose, Alter und Einsatzort im Browser, damit sie den Server
+verschlüsselt Diagnose, Alter, Einsatzort und die übrigen Angaben aus
+`Technik.md` 4.98 im Browser, damit sie den Server
 nie im Klartext erreichen. Eine Schrift, die bei jedem Seitenaufruf von einem
 fremden Server geholt wird, meldet demselben Server die IP-Adresse und den
 Zeitpunkt — und damit, *dass und wann* jemand Einsatzdaten bearbeitet. Das ist

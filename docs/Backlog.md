@@ -139,9 +139,11 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **329** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **339** und trägt seine
 Spanne hier ein, bevor er pusht. **Vergeben und reserviert (24.09.2026,
-nachgesehen auf `origin/main` `ba2ec57`, höchste 318):** **293 und 304 bis
+nachgesehen auf `origin/main` `ba2ec57`, höchste 318; zusammengeführt
+am 26.09.2026, als BV `main` nach dem Merge von P5c aufnahm — `29cf394`,
+höchste 329 —, und erneut nach PR #91, `a9d00ea`, höchste 330):** **293 und 304 bis
 318** Konzept BR (gemergt, PR #85/#86; 304 bis 313 die nachgetragenen Anlässe
 aus E-BR-17 und E-BR-18, 314 bis 317 Funde aus BR-04 und BR-05, 318 ein Fund
 des Abschlusses); **294 bis 303 und 319 bis 328** der P5c-Zweig
@@ -151,7 +153,17 @@ und 300 Funde aus AP4, 302, 303, 319 und 320 die nachgetragenen Anlässe aus
 dem Aufnehmen von BR (E-P5c-116), 301 für AP5b (Konzept RW), 321 ein Fund
 und 322 Funde aus AP7 (Stilvergleich, Reihenfolge des Prüfstands), 323 ein Fund aus AP8 (Referenz und Fixture auf Nutzlast 11), 324 ein Auftrag aus AP8 (Einmal-Skript für den Bestand zu 1.0), 325 ein Fund aus AP8 (GPX-Probe auf frischer Anlage), der Rest frei für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
 dazu: Die erste reichte nicht mehr, und 304 bis 318 hatte BR inzwischen
-vergeben. *(Bis zum 23.09.2026
+vergeben. **329 und 330** vergab der P5c-Zweig über seine Spanne hinaus, in
+die von BV: 329 in AP11 (F-P5c-171), 330 mit PR #91 (Stilvergleich,
+aufgenommen und erledigt). Die Spanne von BV stand auf den Zweigen von BV
+und AR, nicht auf `main`; **331 bis 333** Konzept BV, der Vorgriff auf
+Backlog-Runde 4 (Zweig `claude/intelligent-carson-q8f7ag`; alle drei
+vergeben — 331 hieß auf dem Zweig bis zum 26.09.2026 329, 333 hieß 330;
+beide sind ausgewichen, E-BV-12 und -17); **334 bis
+338** die Android-Runde AR (Zweig `claude/affectionate-newton-6pzfkc`; 334
+bis 337 vergeben, 338 frei). *(Bis zum 26.09.2026 stand hier auf `main` 329
+und auf den Zweigen von BV und AR 339 — die drei hatten den Absatz getrennt
+fortgeschrieben. Bis zum 23.09.2026
 stand hier 283; 283 bis 285 sind seither auf `main`, **286 und 287** vergibt
 Konzept P5c in seiner Fassung 2 vom 23.09.2026, **288 und 289** die
 Mockup-Runde M-P5c-02 am selben Tag, **290 und 291** die Korrekturstufe
@@ -570,32 +582,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     gemessenen Bereich hineinläuft, in dem die Zeitraumübersicht 42,61 s
     braucht — sie macht ihn nicht schneller. **Dieser Eintrag bleibt deshalb
     offen**, und die Zeile in Rahmenplan Abschnitt 5 sagt das auch so.
-
-40. **Altklassen ohne Gegenstück — 53 (gemessen 13.09.2026), 55 bei Aufnahme.**
-    *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
-    zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
-    Klassen des alten Stylesheets entweder eine Regel im neuen oder einen
-    Eintrag auf der Streichliste. O11 hat 22 Einträge nachgetragen (die Zahl
-    fiel von 78 auf 55, seither auf 53); die übrigen stammen aus O1 bis O10 und sind dort mit
-    dem Umbau verschwunden, ohne eingetragen zu werden. Die Streichliste ist
-    damit unvollständig — sie sagt nicht zu jeder verschwundenen Klasse,
-    *warum* sie verschwunden ist, und genau das ist ihr Zweck.
-
-    **Warum nicht in O12 erledigt.** Nr. 39 daneben war Werkzeugarbeit: 29
-    Namen, jeder in wenigen Minuten am Fundort zu klären. Dieser Punkt ist
-    etwas anderes — er verlangt für 55 Klassen die Rekonstruktion, in welchem
-    von zehn Paketen sie verschwunden sind und wodurch sie ersetzt wurden.
-    Das ist Archäologie in zehn Commits, und sie **halbherzig** zu machen
-    wäre schlimmer als sie zu lassen: Eine Streichliste mit 55 Einträgen
-    „ersatzlos entfallen" sieht vollständig aus und sagt nichts. Der Zweck der
-    Liste ist die Begründung, nicht die Zeile.
-
-    **Weg dahin** (P4, vor dem ersten CSS-Umbau): Die 55 Namen gruppenweise
-    gegen die Konzeptabschnitte O2 bis O10 halten — der Umsetzungsstand nennt
-    zu jedem Paket, welcher Baustein welche alte Klasse abgelöst hat. Was sich
-    daraus nicht klären lässt, bekommt einen Eintrag „Herkunft nicht mehr
-    feststellbar" und wird als solcher gezählt; auch das ist eine ehrliche
-    Auskunft, „ersatzlos" wäre eine erfundene.
 
 43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt — und das
     Transportziel auch nicht.**
@@ -1287,6 +1273,22 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kopier-Knopf auf Betrieb → Hintergrundjobs der verlässliche Weg ist.
     **Zu tun:** die vier Stellen angleichen; keine Codeänderung an der
     Mechanik. Zuordnung: **Backlog-Runde**.
+    **Zum Teil erledigt 24.09.2026 mit Konzept BV (BV-04).** `Technik.md`
+    4.97a („Die drei Auslöser") und Runbook 7 („Hintergrundjobs
+    einrichten") tragen den Platzhalter `php /pfad/zur/installation/jobs.php`
+    und den Satz zum Kopier-Knopf; der Eintrag Web 10.1.0 im Changelog ist
+    rückwirkend berichtigt und sagt es. Eine fünfte Stelle, die der Eintrag
+    nicht zählte, ist mitgezogen (`Technik.md`, Tabelle zum übergangenen
+    Sicherungsziel: `php jobs.php versand`; die Tabelle hat P5c/AP8 mit dem
+    Rückbau von FTP inzwischen gestrichen). **Offen bleibt der
+    Kopfkommentar von `server/jobs.php`:** Eine Zeile unter `server/`
+    verlangt eine Web-Stufe, und die vergibt bis zu seinem Merge P5c
+    (Konzept BV, E-BV-05). Nach dem Merge mit der nächsten Stufe nachziehen.
+    **Entschieden am 26.09.2026 (Q-BV-04, E-BV-18):** nicht in BV — eine
+    Web-Stufe nur für einen Kommentar machte aus einem Werkzeug-PR eine
+    Auslieferung. Die Zeile geht mit der nächsten Web-Stufe, die
+    `server/jobs.php` ohnehin anfasst; bis dahin steht dort weiter
+    `php /pfad/zu/server/jobs.php` (Zeile 13).
 
 154. **Handy-App liest `kept_points` und `kept_meta` nicht.**
     *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
@@ -1454,38 +1456,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Erledigt sich mit Konzept SD** (Sammelnummer 294).
 
-184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
-    *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
-    benutzen wollte.* `ohne_php_js_kommentare()` in
-    `tools/vollstaendigkeit/pruefen.py` (Backlog-Runde 3, Nr. 47/58) geht
-    zeichenweise durch die Datei und merkt sich, ob es gerade in einer
-    Zeichenkette steht. In einer **PHP-Datei mit HTML** trifft es dabei auf
-    Anführungszeichen im Fließtext, die kein String sind — und ein einzelnes
-    ungepaartes `"` schickt es in den Zeichenketten-Modus, aus dem es erst
-    beim nächsten herauskommt.
-    **Gemessen** an `server/einsatz_form.php`: ab Zeile 1547 verschluckt es
-    **rund 800 Zeilen am Stück**; der Kommentar in Zeile 1613 wird nicht mehr
-    erkannt. Von 2350 Zeilen werden 853 geleert — der Rest bleibt stehen, ohne
-    dass irgendetwas meldet.
-    **Die Folge sind falsche NEGATIVE, und die sind teurer als falsche
-    positive:** Die drei Zusagen-Prüfungen (`native Dialoge`, `Seite ohne
-    Gerüst`, `fremde Quelle`) suchen ihre Muster in genau diesem Text. Was im
-    verschluckten Bereich steht, wird nicht gefunden — und die Gruppe meldet
-    trotzdem **0**. Genau die Sorte grüner Zahl, gegen die `CLAUDE.md` 6
-    warnt.
-    *Warum AP2 ihn nicht benutzt hat:* Mit Ausblenden fiele die Symbolzahl von
-    252 auf 108. Eine kleinere Zahl, die durch Wegsehen entsteht, ist
-    schlechter als eine große, die alles zeigt — deshalb zählt die
-    Symbolprüfung weiterhin den ganzen Quelltext.
-    **Weg:** Für `.php`-Dateien nur **innerhalb** der Bereiche abtasten, die
-    wirklich Code sind — `<?php … ?>`, `<?= … ?>` und `<script> … </script>`;
-    alles dazwischen ist HTML, dort gibt es keine Zeichenketten und keine
-    `//`-Kommentare. *Abnahme:* An `einsatz_form.php` werden die Kommentare ab
-    Zeile 1547 wieder erkannt (geleerte Zeilen deutlich über 853); die drei
-    Zusagen-Prüfungen bleiben bei 0 Befunden **und** finden eine testweise
-    eingeschleuste `confirm(`-Stelle im bisher verschluckten Bereich.
-    Zuordnung: **Backlog-Runde**.
-
 187. **Alle „Anhebungs"-Wege werden mit NaDoku 1.0 abgeschafft.**
     *Aufgenommen 14.09.2026 (S10/AP3) auf Anweisung des Auftraggebers.* Ab 1.0
     gibt es **nur noch neue Konten** — also keinen Altbestand mehr, der still
@@ -1628,42 +1598,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     gemeinsam mit Nr. 177.
 
     **Erledigt sich mit Konzept SD** (Sammelnummer 294).
-
-194. **Das Handbuch nennt den Verschlüsselungsumfang dreimal ohne die
-    Notizen — einmal davon als Textbaustein für die Datenschutzerklärung.**
-    *Aufgenommen 14.09.2026 als Nebenfund der Bestandsaufnahme zu R42.*
-    Seit **Web 19.0.0** (S9/AP7) sind die **Notizen des Einsatzes**
-    Ende-zu-Ende-verschlüsselt; `mission_fields.php` führt sie mit
-    `'store' => 'pat'`, `docs/Technik.md` 4.98 und `CLAUDE.md` 4 nennen sie
-    im Katalog. Das Handbuch weiß es in **Abschnitt 4.3**, und dort gleich
-    viermal: in der Kartenliste („Notizen — seit Web 19 **verschlüsselt** wie
-    die Patientendaten"), im Absatz „Zwei Zeichen sagen dir, wer mitliest",
-    im Absatz zum Schloss am Kartentitel und im Merkkasten zu den beiden
-    Notizfeldern. An **drei** anderen Stellen weiß es das Gegenteil oder
-    nichts:
-
-    - **Der Einstieg** sagt das Gegenteil: „Notizen und Freitextfelder sind
-      davon **nicht** erfasst — dort gehören keine Patientendaten hinein."
-      Das ist für die Notizen des **Einsatzes** schlicht falsch; wahr ist es
-      nur noch für die des **Diensttags**.
-    - **Kapitel 5** („Verschlüsselung der Patientendaten (Pflicht)") zählt
-      die Felder auf und lässt die Notizen aus.
-    - **Der Textbaustein zum Übernehmen** (Abschnitt 11.5, Backlog Nr. 138)
-      tut dasselbe — und der ist keine Beschreibung, sondern ein Absatz, der
-      **in eine Rechtserklärung kopiert werden soll.**
-
-    **Das ist die schwerere Hälfte.** Der Baustein untertreibt den Schutz,
-    nennt also nicht zu viel, sondern zu wenig — die Erklärung wäre nicht
-    falsch zugunsten des Betreibers, sondern veraltet. Unangenehm ist etwas
-    anderes: `CLAUDE.md` 4 verlangt, dass wer die Zusage zitiert, sie
-    **vollständig oder gar nicht** zitiert. Drei Handbuchstellen zitieren sie
-    unvollständig, und eine widerspricht der vierten offen.
-
-    *Abnahme:* `CLAUDE.md` 4, `docs/Technik.md` 4.98, die vier Passagen in
-    Abschnitt 4.3 und die drei berichtigten Stellen nennen **dieselben**
-    Felder; der Satz „Notizen und Freitextfelder sind davon nicht erfasst"
-    ist auf die Notizen des Diensttags eingegrenzt. Zuordnung: **vor 1.0** — es ist ein Rechtstext,
-    kein Feinschliff; spätestens mit der Doku-Neufassung in P7 (R72).
 
 196. **68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
     *Aufgenommen 15.09.2026 beim Gegenlesen der Punkte 190–195.*
@@ -2171,28 +2105,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     werden — er ändert nicht, was bei einem Deadlock geschieht. Wer beides
     in einem Paket macht, kann hinterher nicht sagen, welche der beiden
     Änderungen die Probe grün gemacht hat.
-212. **Zwei Erwartungen der Wiederherstellungsprobe sind auf einer leeren
-    Installation rot — ohne dass etwas kaputt ist.** *Aufgenommen 16.09.2026
-    in P5a/AP10, nachgemessen gegen den unveränderten Stand: dieselben zwei.*
-    Teil 10 („Der Auftrag Alle sichern") gibt dem Sammelvorgang ein enges
-    Zeitbudget und erwartet, dass er **wenigstens ein Konto sichert und dann
-    aufhört** — also dass danach etwas offen bleibt und der Zeiger auf dem
-    zuletzt gesicherten Konto steht. Auf einer Installation mit zwei fast
-    leeren Konten passen beide in das Budget: `2 erledigt, 0 von 2 offen`,
-    `cur=—`.
-
-    **Das ist ein Mangel des Prüfmittels, nicht der Anwendung** — und der
-    unangenehmere von beiden Sorten: Er meldet Rot, wo nichts ist, und
-    gewöhnt damit jeden, der die Probe fährt, an zwei rote Zeilen. Genau so
-    verschwindet später ein echter Befund darin.
-
-    **Zu tun:** Die Erwartung an einen Bestand binden, statt an eine Zeit —
-    etwa, indem der Prüffall zwei Konten mit genug Inhalt herstellt, oder
-    indem das Budget aus der gemessenen Dauer des ersten Backups abgeleitet
-    wird statt fest zu stehen. Ein drittes Konto anzulegen wäre die billigste
-    Fassung und verschöbe das Problem nur auf die nächste schnellere Maschine.
-    *Abnahme:* `php tools/wiederherstellungs-probe/probe.php` meldet **110 von
-    110** auf einer frisch aufgesetzten Installation. Zuordnung: Backlog-Runde.
 
 213. **Die Zustandsdatei der Auslieferungskette lag im Webroot.**
     *Aufgenommen 16.09.2026 aus einer Durchsicht des Auftraggebers; behoben
@@ -2242,41 +2154,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `.well-known/acme-challenge/`, weil eine zu breite Sperre die
     Zertifikatserneuerung lautlos umbringt.
 
-214. **`install.php` wurde bei jedem Lauf wieder ausgeliefert.**
-    *Angewiesen von der Betreiberin am 16.09.2026, umgesetzt am selben Tag in
-    Web 20.15.2.*
-    `docs/Technik.md` sagt zur Neuinstallation seit jeher: „Nach Erfolg sperrt
-    `install.lock`; `install.php` danach löschen." Die Auslieferungskette hat
-    das bei jedem Lauf rückgängig gemacht — die Datei stand nicht in der
-    Ausnahmeliste (dort steht `install.lock`, nicht `install.php`) und wurde
-    mitgeschickt. Wer sie von Hand entfernte, fand sie nach dem nächsten Lauf
-    wieder vor.
-
-    **Es war nie eine Lücke.** `install.php:136` verweigert sich selbst,
-    solange `config.php` **oder** `install.lock` existiert. Der Punkt ist, dass
-    zwei Anweisungen desselben Projekts einander widersprachen.
-
-    **Der Preis, und er bleibt bestehen:** Eine leere Anlage lässt sich nicht
-    mehr allein über die Kette einrichten — `server/install.php` muss einmal
-    von Hand hinauf, dann einrichten, dann wieder löschen. Ein Fehler **im**
-    Einrichter erreicht über die Kette ebenfalls keinen Server mehr. Stufe 2
-    fängt den Fall ab und nennt ihn beim Namen, damit niemand den
-    `FTP_ZIELPFAD` verdächtigt.
-
-    **Wie es aufgefallen ist, und was daran lehrreich bleibt.** Gemeldet wurde
-    zuerst „install.php wird nicht gesynct". Die Ursache war eine andere und
-    liegt weiter offen: Die Aktion vergleicht die lokalen Dateien gegen ihre
-    **State-Datei**, nie gegen den Server (`deploy.ts:84`, `:150`, `:155`).
-    Wer auf dem Server von Hand löscht, bekommt die Datei **nie** zurück —
-    gemessen an der Live-State-Datei von Staging, die `install.php` mit Hash
-    führte, während der Lauf 14 Sekunden später belegte, dass sie dort fehlte.
-    Für `install.php` ist das jetzt gegenstandslos, weil sie ausgenommen ist.
-    **Für jede andere Datei gilt es weiter** — siehe den nächsten Absatz.
-
-    *Offen daraus:* Ein Hinweis im Runbook, dass eine von Hand auf dem Server
-    gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
-    nicht geschrieben.
-
 216. **Zwei Trennlinien hintereinander an vier Stellen des P5a-Prüfdokuments.**
     *Aufgenommen 16.09.2026, gleiche Durchsicht.*
     Rein kosmetisch: `---` gefolgt von `---` erzeugt in manchen
@@ -2284,29 +2161,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
     Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
 
-
-222. **Der Aufbau des Uhr-Prüfstands wird bei jedem Lauf neu geholt.**
-    *Aufgenommen 17.09.2026 bei der Selektion der Stufe-1-Schritte.*
-    Der Schritt „Uhr Stufe I" brauchte im gemessenen Lauf **34 min 46 s** und
-    ist damit mit Abstand der teuerste der ganzen Kette — der Android-Bau
-    daneben 7:15, die übrigen dreizehn Schritte zusammen 23 Sekunden. Seit
-    derselben Fassung läuft er nur noch, wenn `watch/` oder
-    `tools/uhr-pruefstand/` berührt ist. Wer an der Uhr arbeitet, wartet
-    allerdings weiterhin jedes Mal die volle Zeit ab.
-
-    **Vermutung, ausdrücklich keine Messung:** Der größere Teil davon dürfte
-    der Aufbau sein — `pruefstand.sh aufbau-uebersetzen` holt SDK und
-    Gerätedateien bei jedem Lauf neu —, nicht das Übersetzen selbst. Träfe
-    das zu, spräche ein `actions/cache` auf `~/.Garmin/ConnectIQ` den größten
-    Teil der Zeit an, und zwar auch dann, wenn tatsächlich an der Uhr
-    gearbeitet wird.
-
-    *Zu tun, in dieser Reihenfolge:* zuerst die Verteilung zwischen Holen und
-    Übersetzen im Protokoll eines Laufs **nachmessen** — ohne diese Zahl ist
-    alles Weitere Spekulation, und genau davor warnt die Hausregel; erst wenn
-    der Aufbau überwiegt, einen Cache-Schritt einziehen, dessen Schlüssel an
-    der SDK-Fassung und an `CIQ_ZIELE` hängt. **Kein eigenes Paket** —
-    Beifang, sobald jemand den Prüfstand ohnehin anfasst (R83-Muster).
 
 227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole
     mehr.**
@@ -3151,18 +3005,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verhalten). Beim Anfassen mitzudenken: Der Satz muss sagen, dass der
     Zustand unklar ist, nicht dass es fehlgeschlagen ist.
 
-270. **`assets/import_ui.js` — eine 500 mit wohlgeformtem JSON gilt als
-    Erfolg.** Gefunden bei derselben Vermessung (bei Aufnahme Zeile 258).
-    Der Bestandsabgleich vor dem Import prüft nur `d.error`, nicht `res.ok`.
-    Antwortet der Server mit Status 500 und einem JSON-Rumpf ohne
-    `error`-Schlüssel, läuft der Dublettenabgleich **wortlos** gegen einen
-    leeren Bestand weiter — und meldet keine einzige Dublette, obwohl der
-    Bestand voll ist. Der Fehler ist still: Die Vorschau sieht richtig aus.
-    **Nicht in Schritt 15 behoben.** Von den 15 JSON-Sendestellen prüfen
-    **acht** `res.ok` nicht; diese hier ist die mit der schlimmsten Folge,
-    weil ihr Ergebnis eine Entscheidung der Person trägt.
-
-
 271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr
     Ton bleibt „info", auch wenn ein Fehler darin steht.** Gefunden bei der
     AP8-Vermessung (Schritt 15, 22.09.2026) in `assets/schneiden.js`. Die
@@ -3204,19 +3046,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wurden — diese war nicht darunter. Beim Anfassen: `EdFormat.dauer(s)`
     genügt, der Leerwert ist dort nicht erreichbar (`Math.max(0, …)`).
 
-274. **Die Vollständigkeitsprüfung kann eine zusammengesetzte Klasse nicht
-    sehen — und das trifft jetzt zwei Meldungstöne.** Seit Web 20.34.0 baut
-    `EdHtml.meldung()` die Tonklasse zusammen (`'meldung meldung-' + ton`),
-    wie es `ui_meldung_markup()` in PHP seit jeher tut. `tools/vollstaendigkeit/`
-    meldet `.meldung-ok` und `.meldung-schutz` deshalb als „Regel im
-    Stylesheet, im Markup nicht gefunden". Beide Regeln werden benutzt; das
-    Werkzeug kann es nur nicht belegen. `meldung-schutz` stand aus demselben
-    Grund schon vorher in der Liste. **Kein Befund, aber ein blinder Fleck:**
-    Verschwände eine der beiden Regeln aus `style.css`, meldete es niemand.
-    Der Kommentar in `ui_meldung_markup()` sagt genau das („das kann nur
-    diese Stelle selbst prüfen"). Möglicher Weg: Das Werkzeug liest die
-    Tonliste aus der Funktion und trägt die daraus gebildeten Klassen als
-    belegt ein.
 275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — und das
     ist laut Handbuch „der klassische Fall".**
     *Aufgenommen 22.09.2026 (Schritt 15 AP9b).*
@@ -3294,27 +3123,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Rechteinhaber und Bedingungen. Das gehört nachgesehen, nicht
     abgeschrieben.
 
-
-281. **Stufe 1 lief bei jedem Push auf einem Arbeitszweig doppelt.**
-    *Aufgenommen 21.09.2026 (PK-01), erledigt mit dem Vorgriff auf PK-05.*
-    `pruefung.yml` trug `push: branches: ['**']` **und** `pull_request`;
-    jeder Push auf einen Arbeitszweig erzeugte zwei Läufe desselben Namens
-    `Stufe 1` — einen über `pull_request` (rund 1 min, vergleicht gegen den
-    gemeinsamen Vorfahren) und einen über `push` (rund 56 min, ohne
-    Vergleichsstand misst er alles). Der Zweigschutz wartet auf den Namen,
-    also auf den langsameren. Gemessen an PR #69 (Läufe 192, 193) und
-    PR #70 (Lauf 186).
-
-    **Erledigt** mit PR #71 (21.09.2026): `branches: [ main ]`. Die Abnahme
-    — nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17**
-    offen und gehört ins Prüfdokument, nicht hierher.
-
-    *Diese Nummer war zweimal in Bewegung: zuerst die 268 (Kollision mit
-    PR #72), dann die 269 (Kollision mit Schritt 15, PR #74). Beide Male
-    hatte ein paralleler Zweig die Nummer in `Backlog.md` stehen, während
-    sie hier nur im Konzept stand. Der Satz „Jeder weitere Zweig, der
-    Nummern vergibt, beginnt bei 267" beschreibt keinen Riegel, sondern eine
-    Hoffnung.*
 
 283. **Die Textprobe liest die Kommentare in `server/` nicht — und dort
     standen reale Ortsnamen.**
@@ -3693,6 +3501,59 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `pruefung.yml` übergibt. *Abnahme:* mit dem Stand vor 21.1.2 im
     Prüfstand zweimal rot, an `anker` und an der fehlenden Übergabe; mit
     dem heutigen grün. *Zuordnung:* Backlog-Runde.
+
+331. **Zusammengesetzte Klassen der übrigen Bausteine sieht die
+    Vollständigkeitsprüfung nicht.** *Aufgenommen 24.09.2026 in Konzept BV
+    (BV-03, F-BV-11), notiert und nicht mitgemacht.* BV-02 hat die
+    Meldungstöne aufgelöst (Nr. 274): Ihre Liste ist geschlossen und steht in
+    zwei Bausteinen. Dieselbe Grenze trifft andere Klassen, die zur
+    Laufzeit entstehen. *(Hier stand als Beispiel `c-dc-<spalte>` — die
+    Gegenprüfung P-BV-02 hat gezeigt, dass diese Klasse zwar erzeugt, aber an
+    kein Element gesetzt wird; ein Mittel müsste genau das unterscheiden.)*
+    Von den 62 Hinweisen „Regel im Stylesheet, im Markup
+    nicht gefunden" (gemessen 24.09.2026) tragen **28** das Präfix eines
+    Bausteins (`symbol-` 9, `pwq-` 5, `kennzahl-` 4, `karte-` 3, `blatt-` 2,
+    `knopf-` 2, `zaehler-` 2, `plakette-` 1) — vermutlich zusammengesetzt,
+    nicht einzeln geprüft. Verschwände eine dieser Regeln, meldete es nur
+    die Tonprüfung am Aufruf — und die kennt vier Bausteine, und auch die
+    nur dort, wo der Wert als Literal übergeben wird.
+    *Weg:* je Baustein prüfen, ob sein Wertevorrat geschlossen ist; wo ja,
+    wie in BV-02 lesen, wo nein, bleibt es beim Hinweis.
+    **Zuordnung: Backlog-Runde** (Prüfmittel).
+
+332. **Nach dem Aufnehmen fremder Migrationen misst der Prüfstand gegen
+    das alte Schema.** *Aufgenommen 26.09.2026 in Konzept BV (F-BV-17),
+    beim Aufnehmen von `main` nach dem Merge von P5c.* `Pruefablauf.md` 5.3
+    sagt es selbst: Berührt ist nur, was die Arbeit gegen `main` ändert,
+    nicht, was `main` mitbringt (F-PK-39). Die Stufe ergibt sich aus
+    derselben Berührung — ohne eigene Migration also `klein`, und die
+    örtliche Anlage wird nur gestartet, nicht nachgezogen. Mit P5c kamen
+    Migrationen aus AP4, AP5, AP5b, AP7 und AP8; die Anlage stand auf dem
+    Schema davor. `login.php` antwortete mit HTTP 200 und „Fassung
+    v21.1.2", der Nachweis des Prüfstands sah nichts. **Gemessen:** die
+    Rollenprobe rot mit `Data truncated for column 'role'` (die Rolle
+    `support` aus AP4 fehlte im `ENUM`); nach `hochfahren.sh --neu`
+    **20 grün, 0 rot**. Diesmal war es laut. Eine Probe, die die neuen
+    Spalten nicht berührt, misst aber still gegen einen Stand, den es
+    nirgends gibt — und ein grüner Bericht darüber trägt einen Baum, den
+    die Anlage nie hatte. *Weg:* `pruefen.sh` fragt vor den Proben, ob die
+    Anlage offene Migrationen hat (dieselbe Frage wie der Torwächter), und
+    ist bei einem Rückstand rot mit dem Weg (`hochfahren.sh --neu`) —
+    oder richtet selbst neu ein. Dazu ein Satz in `Pruefablauf.md` 5.3,
+    Schritt 2. *Abnahme:* Anlage auf `ba2ec57` eingerichtet, Baum mit
+    `main` von `29cf394` → Prüfstand rot vor der ersten Probe, mit
+    Ansage; nach `--neu` grün. *Zuordnung:* Backlog-Runde.
+
+333. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo`
+    das falsche Paket.** *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
+    der Gegenprüfung P-BV-02.* Der Kommentar über `.geo.map-fs` sagt „Der
+    Kartenbehaelter wurde in O1 umbenannt". Gemessen: Das Stylesheet aus O1
+    (`ecd5ff98`) enthält weder `.map` noch `.geo`; `.geo` kommt mit O2
+    (`5436e854`), zugleich mit dem Markup der drei Karten. Harmlos, aber ein
+    Satz, der eine Herkunft falsch nennt, schickt die nächste Suche in das
+    falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
+    `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
+    braucht eine Web-Stufe).
 
 ## Erledigt
 
@@ -10979,3 +10840,379 @@ zutreffen.
     `--geerbt` rot (13 nicht gemessen), mit grün (13 geerbt); eigene Zeile
     ohne Messung rot (1); leere Liste gegen `main` rot (13 ungeplant); der
     Pull-Request-Fall grün (13 / 13).
+
+184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
+    *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
+    benutzen wollte; **erledigt 24.09.2026 mit Konzept BV (BV-01).*** `ohne_php_js_kommentare()` in
+    `tools/vollstaendigkeit/pruefen.py` (Backlog-Runde 3, Nr. 47/58) geht
+    zeichenweise durch die Datei und merkt sich, ob es gerade in einer
+    Zeichenkette steht. In einer **PHP-Datei mit HTML** trifft es dabei auf
+    Anführungszeichen im Fließtext, die kein String sind — und ein einzelnes
+    ungepaartes `"` schickt es in den Zeichenketten-Modus, aus dem es erst
+    beim nächsten herauskommt.
+    **Gemessen** an `server/einsatz_form.php`: ab Zeile 1547 verschluckt es
+    **rund 800 Zeilen am Stück**; der Kommentar in Zeile 1613 wird nicht mehr
+    erkannt. Von 2350 Zeilen werden 853 geleert — der Rest bleibt stehen, ohne
+    dass irgendetwas meldet.
+    **Die Folge sind falsche NEGATIVE, und die sind teurer als falsche
+    positive:** Die drei Zusagen-Prüfungen (`native Dialoge`, `Seite ohne
+    Gerüst`, `fremde Quelle`) suchen ihre Muster in genau diesem Text. Was im
+    verschluckten Bereich steht, wird nicht gefunden — und die Gruppe meldet
+    trotzdem **0**. Genau die Sorte grüner Zahl, gegen die `CLAUDE.md` 6
+    warnt.
+    *Warum AP2 ihn nicht benutzt hat:* Mit Ausblenden fiele die Symbolzahl von
+    252 auf 108. Eine kleinere Zahl, die durch Wegsehen entsteht, ist
+    schlechter als eine große, die alles zeigt — deshalb zählt die
+    Symbolprüfung weiterhin den ganzen Quelltext.
+    **Weg:** Für `.php`-Dateien nur **innerhalb** der Bereiche abtasten, die
+    wirklich Code sind — `<?php … ?>`, `<?= … ?>` und `<script> … </script>`;
+    alles dazwischen ist HTML, dort gibt es keine Zeichenketten und keine
+    `//`-Kommentare. *Abnahme:* An `einsatz_form.php` werden die Kommentare ab
+    Zeile 1547 wieder erkannt (geleerte Zeilen deutlich über 853); die drei
+    Zusagen-Prüfungen bleiben bei 0 Befunden **und** finden eine testweise
+    eingeschleuste `confirm(`-Stelle im bisher verschluckten Bereich.
+    Zuordnung: **Backlog-Runde**.
+
+    **Erledigt (BV-01, 24.09.2026).** Der Abtaster liest eine PHP-Datei jetzt
+    so, wie PHP und der Browser sie lesen: HTML bleibt unberührt, abgetastet
+    werden `<?php … ?>`, `<?= … ?>`, `<script>` und `<style>`, jeder nach den
+    Regeln seiner Sprache (ein PHP-Zeilenkommentar endet auch am `?>`, ein
+    Skriptblock am `</script`); in JS und CSS enden `'`- und `"`-Ketten am
+    Zeilenende. **Die Beschreibung oben war nur zur Hälfte richtig.** Am
+    heutigen Stand verschluckte der alte Abtaster keine 800 Zeilen am Stück —
+    in `einsatz_form.php` leert der neue 877 statt 851 Zeilen, über alle 179
+    Dateien 47 856 statt 47 555, in 21 Dateien anders. Die falschen
+    **Negative** kamen aus zwei Quellen, die der Eintrag nicht nannte: `#`
+    und `//` im **HTML** galten als Kommentaranfang (`href="#…"`, `http://` im
+    Text — 7 Zeilen, alle einzeln gelesen), und ein `"` in einem
+    **Regex-Literal** (`/[;"\r\n]/` in `export.js`) brachte ihn in JS aus dem
+    Tritt. Gefunden hat das der erste Lauf: Die Zusage „fremde Quelle" meldete
+    `export.js` mit der GPX-Namensraumadresse, die bis dahin verschluckt war
+    (eingetragen in `vollstaendigkeit-zusagen.md`, 18 → 19 Ausnahmen).
+    *Abnahme:* Zusagen 0 Befunde; eingeschleustes
+    `<a href="#" onclick="return confirm(…)">` — alt 3, neu 4 von 4 gefunden
+    (nicht eingecheckt); derselbe Lauf auf dem P5c-Stand `3576a97` mit
+    zusammengeführter Ausnahmeliste 0 Befunde. **Dazu genommen:** Die
+    Symbolprüfung blendet Kommentare jetzt aus (Unicode 14 → 5, Emoji 8 → 0;
+    alle 17 weggefallenen standen in Kommentaren) — der Grund, es nicht zu
+    tun, war dieser Punkt.
+
+274. **Die Vollständigkeitsprüfung kann eine zusammengesetzte Klasse nicht
+    sehen — und das trifft jetzt zwei Meldungstöne.** Seit Web 20.34.0 baut
+    `EdHtml.meldung()` die Tonklasse zusammen (`'meldung meldung-' + ton`),
+    wie es `ui_meldung_markup()` in PHP seit jeher tut. `tools/vollstaendigkeit/`
+    meldet `.meldung-ok` und `.meldung-schutz` deshalb als „Regel im
+    Stylesheet, im Markup nicht gefunden". Beide Regeln werden benutzt; das
+    Werkzeug kann es nur nicht belegen. `meldung-schutz` stand aus demselben
+    Grund schon vorher in der Liste. **Kein Befund, aber ein blinder Fleck:**
+    Verschwände eine der beiden Regeln aus `style.css`, meldete es niemand.
+    Der Kommentar in `ui_meldung_markup()` sagt genau das („das kann nur
+    diese Stelle selbst prüfen"). Möglicher Weg: Das Werkzeug liest die
+    Tonliste aus der Funktion und trägt die daraus gebildeten Klassen als
+    belegt ein.
+
+    **Erledigt 24.09.2026 mit Konzept BV (BV-02).** Die Prüfung liest die
+    Töne aus `ui_meldung_markup()` (`$symbole`) und `EdHtml.meldung()`
+    (`MELDUNG_SYMBOLE`), zählt `meldung-<ton>` als belegt und meldet
+    zweierlei als Befund: eine dieser Klassen ohne Regel im Stylesheet und
+    Töne, die nur in einer der beiden Listen stehen. Findet sie eine Liste
+    nicht, ist das ebenfalls ein Befund. Hinweis „im Markup nicht gefunden"
+    **64 → 62**, auf dem P5c-Stand 74 → 72; 0 Befunde. *Gegenprobe* (Kopie,
+    nicht eingecheckt): `.meldung-schutz` umbenannt und ein Ton nur in JS —
+    3 neue Befunde, dazu der bestehende am Aufruf.
+    **Der blinde Fleck war kleiner als oben beschrieben.** „Verschwände eine
+    der beiden Regeln, meldete es niemand" stimmte nicht: Die Tonprüfung am
+    Aufruf („Ton ohne Regel im Stylesheet") hätte jede der fünf Regeln
+    gemeldet, weil jeder Ton mindestens einmal als Literal übergeben wird —
+    gemessen je Ton mit entfernter Regel, alte und neue Fassung gleich
+    viele Treffer an den Aufrufen. Für `schutz` hing das allerdings an
+    **einem einzigen** Aufruf (`tag_spuren.php`). Seit BV-02 hängt es an
+    keinem.
+
+40. **Altklassen ohne Gegenstück — 53 (gemessen 13.09.2026), 55 bei Aufnahme.**
+    *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
+    zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
+    Klassen des alten Stylesheets entweder eine Regel im neuen oder einen
+    Eintrag auf der Streichliste. O11 hat 22 Einträge nachgetragen (die Zahl
+    fiel von 78 auf 55, seither auf 53); die übrigen stammen aus O1 bis O10 und sind dort mit
+    dem Umbau verschwunden, ohne eingetragen zu werden. Die Streichliste ist
+    damit unvollständig — sie sagt nicht zu jeder verschwundenen Klasse,
+    *warum* sie verschwunden ist, und genau das ist ihr Zweck.
+
+    **Warum nicht in O12 erledigt.** Nr. 39 daneben war Werkzeugarbeit: 29
+    Namen, jeder in wenigen Minuten am Fundort zu klären. Dieser Punkt ist
+    etwas anderes — er verlangt für 55 Klassen die Rekonstruktion, in welchem
+    von zehn Paketen sie verschwunden sind und wodurch sie ersetzt wurden.
+    Das ist Archäologie in zehn Commits, und sie **halbherzig** zu machen
+    wäre schlimmer als sie zu lassen: Eine Streichliste mit 55 Einträgen
+    „ersatzlos entfallen" sieht vollständig aus und sagt nichts. Der Zweck der
+    Liste ist die Begründung, nicht die Zeile.
+
+    **Weg dahin** (P4, vor dem ersten CSS-Umbau): Die 55 Namen gruppenweise
+    gegen die Konzeptabschnitte O2 bis O10 halten — der Umsetzungsstand nennt
+    zu jedem Paket, welcher Baustein welche alte Klasse abgelöst hat. Was sich
+    daraus nicht klären lässt, bekommt einen Eintrag „Herkunft nicht mehr
+    feststellbar" und wird als solcher gezählt; auch das ist eine ehrliche
+    Auskunft, „ersatzlos" wäre eine erfundene.
+
+    **Erledigt 24.09.2026 mit Konzept BV (BV-03).** Die Zahl oben war
+    überholt: Seit PK-04/1b (22.09.2026) stand jede Altklasse auf der
+    Streichliste, 25 davon aber nur mit dem Grund „Ersatzlos entfallen.
+    Gemessen am 22.09.2026: Die Klasse steht in keiner … Datei mehr" —
+    genau die Zeile, vor der dieser Eintrag warnt. BV-03 hat für alle 25 in
+    der vollständigen Geschichte den Commit gesucht, in dem die letzte
+    Verwendung verschwand (dafür musste der Klon erst vertieft werden: 381 →
+    1 040 Commits), und den Ersatz am Diff gelesen: **25 von 25
+    rekonstruiert, keine „Herkunft nicht mehr feststellbar"** — O1 4, O2 2,
+    O4 1, O7 2, O8a 1, O9a 1, O9b 2, O9c 12. Die Vollständigkeitsprüfung
+    bleibt bei 0 Befunden.
+    **Gegengeprüft am 25.09.2026 (P-BV-02), von einer Instanz, die die
+    Zeilen nicht geschrieben hat: 12 trugen, 12 nur teilweise, 1 nicht.**
+    Die Commits und Pakete stimmten in allen 25; ungenau war der **Ersatz** —
+    Stellenzahlen (`btn-yellow` sechs, nicht vier), Bausteine, die es an der
+    Stelle nicht gab (`ui_feld()`, `stammdaten_ui.php` bei `neu-*`), Farben
+    (`pwquality`: drei, kein Gelb) und ein Paket (`map`: O2, nicht O1). Alle
+    15 Zeilen sind nach den belegten Angaben berichtigt, die zehn übrigen als
+    bestätigt vermerkt. **Hier stand bis dahin, vier `c-dc-*`-Klassen seien
+    nicht ersatzlos, weil `mission_fields_lib.php` sie weiter erzeuge — das war
+    falsch:** `c-dc-false_alarm` hat seit Web 6.3.0 keine Spalte mehr, und die
+    drei übrigen erreichen seit Schritt 15 AP9b kein Element, weil
+    `missiontable.js` diese Spalten selbst führt. PK-04/1b lag mit „ersatzlos"
+    richtig. Nebenfund: Nr. 333 (bis zum 26.09.2026 als 330 geführt).
+
+214. **`install.php` wurde bei jedem Lauf wieder ausgeliefert.**
+    *Angewiesen von der Betreiberin am 16.09.2026, umgesetzt am selben Tag in
+    Web 20.15.2.*
+    `docs/Technik.md` sagt zur Neuinstallation seit jeher: „Nach Erfolg sperrt
+    `install.lock`; `install.php` danach löschen." Die Auslieferungskette hat
+    das bei jedem Lauf rückgängig gemacht — die Datei stand nicht in der
+    Ausnahmeliste (dort steht `install.lock`, nicht `install.php`) und wurde
+    mitgeschickt. Wer sie von Hand entfernte, fand sie nach dem nächsten Lauf
+    wieder vor.
+
+    **Es war nie eine Lücke.** `install.php:136` verweigert sich selbst,
+    solange `config.php` **oder** `install.lock` existiert. Der Punkt ist, dass
+    zwei Anweisungen desselben Projekts einander widersprachen.
+
+    **Der Preis, und er bleibt bestehen:** Eine leere Anlage lässt sich nicht
+    mehr allein über die Kette einrichten — `server/install.php` muss einmal
+    von Hand hinauf, dann einrichten, dann wieder löschen. Ein Fehler **im**
+    Einrichter erreicht über die Kette ebenfalls keinen Server mehr. Stufe 2
+    fängt den Fall ab und nennt ihn beim Namen, damit niemand den
+    `FTP_ZIELPFAD` verdächtigt.
+
+    **Wie es aufgefallen ist, und was daran lehrreich bleibt.** Gemeldet wurde
+    zuerst „install.php wird nicht gesynct". Die Ursache war eine andere und
+    liegt weiter offen: Die Aktion vergleicht die lokalen Dateien gegen ihre
+    **State-Datei**, nie gegen den Server (`deploy.ts:84`, `:150`, `:155`).
+    Wer auf dem Server von Hand löscht, bekommt die Datei **nie** zurück —
+    gemessen an der Live-State-Datei von Staging, die `install.php` mit Hash
+    führte, während der Lauf 14 Sekunden später belegte, dass sie dort fehlte.
+    Für `install.php` ist das jetzt gegenstandslos, weil sie ausgenommen ist.
+    **Für jede andere Datei gilt es weiter** — siehe den nächsten Absatz.
+
+    *Offen daraus:* Ein Hinweis im Runbook, dass eine von Hand auf dem Server
+    gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
+    nicht geschrieben.
+
+    **Erledigt 24.09.2026 mit Konzept BV (BV-04):** Der Hinweis steht in
+    `Technik.md` 6.5b, am Ende — nicht in Abschnitt 7, weil er zur
+    Zustandsdatei gehört. Er nennt drei Wege, den schonenden zuerst: die eine
+    Datei von Hand per FTPS hinauflegen; die Datei im Repositorium ändern;
+    die Zustandsdatei löschen — dann überträgt der nächste Lauf alles (688
+    Dateien in rund acht Minuten, gemessen 20.09.2026), und zwar bei
+    eingeschalteter Wartung.
+
+222. **Der Aufbau des Uhr-Prüfstands wird bei jedem Lauf neu geholt.**
+    *Aufgenommen 17.09.2026 bei der Selektion der Stufe-1-Schritte.*
+    Der Schritt „Uhr Stufe I" brauchte im gemessenen Lauf **34 min 46 s** und
+    ist damit mit Abstand der teuerste der ganzen Kette — der Android-Bau
+    daneben 7:15, die übrigen dreizehn Schritte zusammen 23 Sekunden. Seit
+    derselben Fassung läuft er nur noch, wenn `watch/` oder
+    `tools/uhr-pruefstand/` berührt ist. Wer an der Uhr arbeitet, wartet
+    allerdings weiterhin jedes Mal die volle Zeit ab.
+
+    **Vermutung, ausdrücklich keine Messung:** Der größere Teil davon dürfte
+    der Aufbau sein — `pruefstand.sh aufbau-uebersetzen` holt SDK und
+    Gerätedateien bei jedem Lauf neu —, nicht das Übersetzen selbst. Träfe
+    das zu, spräche ein `actions/cache` auf `~/.Garmin/ConnectIQ` den größten
+    Teil der Zeit an, und zwar auch dann, wenn tatsächlich an der Uhr
+    gearbeitet wird.
+
+    *Zu tun, in dieser Reihenfolge:* zuerst die Verteilung zwischen Holen und
+    Übersetzen im Protokoll eines Laufs **nachmessen** — ohne diese Zahl ist
+    alles Weitere Spekulation, und genau davor warnt die Hausregel; erst wenn
+    der Aufbau überwiegt, einen Cache-Schritt einziehen, dessen Schlüssel an
+    der SDK-Fassung und an `CIQ_ZIELE` hängt. **Kein eigenes Paket** —
+    Beifang, sobald jemand den Prüfstand ohnehin anfasst (R83-Muster).
+    **Erledigt 24.09.2026 mit Konzept BV (BV-05) — durch Wegfall, nicht durch
+    einen Cache.** Seit PK-05/3 (`17fdd32`) baut die Kette die Uhr gar nicht
+    mehr: `pruefung.yml` sagt im Kopf „Android und Uhr baut Station B", und in
+    `.github/workflows/` steht kein Aufruf des Uhr-Prüfstands, kein ConnectIQ
+    und kein `actions/cache` (0 Treffer, nachgesehen 24.09.2026). Die Stufe I
+    läuft örtlich im Prüfstand (`uhr-stufe1`), dort auf einer einmal
+    aufgebauten Anlage — gemessen rund 10 min für 99 Geräte (Nr. 316). Die
+    Frage, ob Holen oder Übersetzen die Zeit frisst, hat damit keinen Ort
+    mehr.
+
+270. **`assets/import_ui.js` — eine 500 mit wohlgeformtem JSON gilt als
+    Erfolg.** Gefunden bei derselben Vermessung (bei Aufnahme Zeile 258).
+    Der Bestandsabgleich vor dem Import prüft nur `d.error`, nicht `res.ok`.
+    Antwortet der Server mit Status 500 und einem JSON-Rumpf ohne
+    `error`-Schlüssel, läuft der Dublettenabgleich **wortlos** gegen einen
+    leeren Bestand weiter — und meldet keine einzige Dublette, obwohl der
+    Bestand voll ist. Der Fehler ist still: Die Vorschau sieht richtig aus.
+    **Nicht in Schritt 15 behoben.** Von den 15 JSON-Sendestellen prüfen
+    **acht** `res.ok` nicht; diese hier ist die mit der schlimmsten Folge,
+    weil ihr Ergebnis eine Entscheidung der Person trägt.
+    **Erledigt 24.09.2026 mit Konzept BV (BV-05) — behoben war es schon mit
+    Web 20.34.0** (`0bee2fb`, Schritt 15 AP8b bis AP8f): `bestandPruefen()`
+    sendet über `EdApi.postJson()`, und dessen `ok` ist
+    `antwort.ok && daten !== null && daten.error == null && daten.ok !== false`.
+    Eine 500 mit wohlgeformtem JSON ergibt `ok = false`, und der Import meldet
+    „… Dubletten werden deshalb nicht erkannt." — sichtbar, nicht still. Der
+    Eintrag ist damals nicht nachgezogen worden.
+
+281. **Stufe 1 lief bei jedem Push auf einem Arbeitszweig doppelt.**
+    *Aufgenommen 21.09.2026 (PK-01), erledigt mit dem Vorgriff auf PK-05.*
+    `pruefung.yml` trug `push: branches: ['**']` **und** `pull_request`;
+    jeder Push auf einen Arbeitszweig erzeugte zwei Läufe desselben Namens
+    `Stufe 1` — einen über `pull_request` (rund 1 min, vergleicht gegen den
+    gemeinsamen Vorfahren) und einen über `push` (rund 56 min, ohne
+    Vergleichsstand misst er alles). Der Zweigschutz wartet auf den Namen,
+    also auf den langsameren. Gemessen an PR #69 (Läufe 192, 193) und
+    PR #70 (Lauf 186).
+
+    **Erledigt** mit PR #71 (21.09.2026): `branches: [ main ]`. Die Abnahme
+    — nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17**
+    offen und gehört ins Prüfdokument, nicht hierher.
+
+    *Diese Nummer war zweimal in Bewegung: zuerst die 268 (Kollision mit
+    PR #72), dann die 269 (Kollision mit Schritt 15, PR #74). Beide Male
+    hatte ein paralleler Zweig die Nummer in `Backlog.md` stehen, während
+    sie hier nur im Konzept stand. Der Satz „Jeder weitere Zweig, der
+    Nummern vergibt, beginnt bei 267" beschreibt keinen Riegel, sondern eine
+    Hoffnung.*
+    **Ausgetragen 24.09.2026 mit Konzept BV (BV-05).** Die Abnahme P-PK-17 ist
+    inzwischen belegt: Für den Zweig `claude/br-bestandsriegel` gab es drei
+    Läufe von `pruefung.yml` zu drei Köpfen, alle mit dem Ereignis
+    `pull_request`, keinen über `push` (Läufe 35983100731, 36037964804,
+    36040164523). Gegenprobe am Zweig von Konzept BV: vier Pushes ohne Pull
+    Request, **null** Läufe von `pruefung.yml` (beide über die
+    Schnittstelle abgefragt am 24.09.2026). **P-PK-17 ist am 25.09.2026 im
+    Prüfdokument PK als belegt eingetragen** (5.6): Der Bedienweg im Wortlaut
+    — Push bei offenem PR — ist Lauf 281 (`7f4106a`, PR #85).
+
+212. **Zwei Erwartungen der Wiederherstellungsprobe sind auf einer leeren
+    Installation rot — ohne dass etwas kaputt ist.** *Aufgenommen 16.09.2026
+    in P5a/AP10, nachgemessen gegen den unveränderten Stand: dieselben zwei.*
+    Teil 10 („Der Auftrag Alle sichern") gibt dem Sammelvorgang ein enges
+    Zeitbudget und erwartet, dass er **wenigstens ein Konto sichert und dann
+    aufhört** — also dass danach etwas offen bleibt und der Zeiger auf dem
+    zuletzt gesicherten Konto steht. Auf einer Installation mit zwei fast
+    leeren Konten passen beide in das Budget: `2 erledigt, 0 von 2 offen`,
+    `cur=—`.
+
+    **Das ist ein Mangel des Prüfmittels, nicht der Anwendung** — und der
+    unangenehmere von beiden Sorten: Er meldet Rot, wo nichts ist, und
+    gewöhnt damit jeden, der die Probe fährt, an zwei rote Zeilen. Genau so
+    verschwindet später ein echter Befund darin.
+
+    **Zu tun:** Die Erwartung an einen Bestand binden, statt an eine Zeit —
+    etwa, indem der Prüffall zwei Konten mit genug Inhalt herstellt, oder
+    indem das Budget aus der gemessenen Dauer des ersten Backups abgeleitet
+    wird statt fest zu stehen. Ein drittes Konto anzulegen wäre die billigste
+    Fassung und verschöbe das Problem nur auf die nächste schnellere Maschine.
+    *Abnahme:* `php tools/wiederherstellungs-probe/probe.php` meldet **110 von
+    110** auf einer frisch aufgesetzten Installation. Zuordnung: Backlog-Runde.
+    **Erledigt 24.09.2026 mit Konzept BV (BV-05) — behoben war es mit RP-03**
+    (23.09.2026): Teil 10 legt zwei Zusatzkonten an und fährt eine gestellte
+    Uhr, die Erwartung hängt damit am Bestand, nicht an der Geschwindigkeit
+    der Maschine. Die Sorge oben, ein drittes Konto verschiebe das Problem
+    nur auf die nächste schnellere Maschine, trifft deshalb nicht. Nachgemessen
+    auf frisch eingerichteter Anlage (`hochfahren.sh --neu`): **111
+    Erwartungen, 0 nicht erfüllt**, Teil 10 „2 erledigt, 2 von 4 offen". Der
+    Kopfkommentar der Probe, der noch „110 von 110" und „zwei davon rot"
+    sagte, ist berichtigt.
+
+194. **Das Handbuch nennt den Verschlüsselungsumfang dreimal ohne die
+    Notizen — einmal davon als Textbaustein für die Datenschutzerklärung.**
+    *Aufgenommen 14.09.2026 als Nebenfund der Bestandsaufnahme zu R42.*
+    Seit **Web 19.0.0** (S9/AP7) sind die **Notizen des Einsatzes**
+    Ende-zu-Ende-verschlüsselt; `mission_fields.php` führt sie mit
+    `'store' => 'pat'`, `docs/Technik.md` 4.98 und `CLAUDE.md` 4 nennen sie
+    im Katalog. Das Handbuch weiß es in **Abschnitt 4.3**, und dort gleich
+    viermal: in der Kartenliste („Notizen — seit Web 19 **verschlüsselt** wie
+    die Patientendaten"), im Absatz „Zwei Zeichen sagen dir, wer mitliest",
+    im Absatz zum Schloss am Kartentitel und im Merkkasten zu den beiden
+    Notizfeldern. An **drei** anderen Stellen weiß es das Gegenteil oder
+    nichts:
+
+    - **Der Einstieg** sagt das Gegenteil: „Notizen und Freitextfelder sind
+      davon **nicht** erfasst — dort gehören keine Patientendaten hinein."
+      Das ist für die Notizen des **Einsatzes** schlicht falsch; wahr ist es
+      nur noch für die des **Diensttags**.
+    - **Kapitel 5** („Verschlüsselung der Patientendaten (Pflicht)") zählt
+      die Felder auf und lässt die Notizen aus.
+    - **Der Textbaustein zum Übernehmen** (Abschnitt 11.5, Backlog Nr. 138)
+      tut dasselbe — und der ist keine Beschreibung, sondern ein Absatz, der
+      **in eine Rechtserklärung kopiert werden soll.**
+
+    **Das ist die schwerere Hälfte.** Der Baustein untertreibt den Schutz,
+    nennt also nicht zu viel, sondern zu wenig — die Erklärung wäre nicht
+    falsch zugunsten des Betreibers, sondern veraltet. Unangenehm ist etwas
+    anderes: `CLAUDE.md` 4 verlangt, dass wer die Zusage zitiert, sie
+    **vollständig oder gar nicht** zitiert. Drei Handbuchstellen zitieren sie
+    unvollständig, und eine widerspricht der vierten offen.
+
+    *Abnahme:* `CLAUDE.md` 4, `docs/Technik.md` 4.98, die vier Passagen in
+    Abschnitt 4.3 und die drei berichtigten Stellen nennen **dieselben**
+    Felder; der Satz „Notizen und Freitextfelder sind davon nicht erfasst"
+    ist auf die Notizen des Diensttags eingegrenzt. Zuordnung: **vor 1.0** — es ist ein Rechtstext,
+    kein Feinschliff; spätestens mit der Doku-Neufassung in P7 (R72).
+    **Zum Teil erledigt 24.09.2026 mit Konzept BV (BV-04).** Der Einstieg
+    und beide Stellen in Kapitel 5 nennen jetzt dieselben Felder wie
+    `CLAUDE.md` 4 und `Technik.md` 4.98 — die Notizen des Einsatzes
+    verschlüsselt, die des Diensttags im Klartext; die Klartextliste in
+    Kapitel 5 ist um die Notizen des Diensttags, die Höhe des Einsatzorts
+    und die Koordinate des Transportziels ergänzt. Mitgezogen: `README.md`
+    (Einleitung und Kasten) und die Zeile `missions` im Datenmodell von
+    `Technik.md`. **Offen bleibt der Textbaustein in 11.5** — den überarbeitet
+    P5c/AP9 mit allen Texten in Verwaltung und Betrieb, und ein Absatz, der
+    in eine Rechtserklärung kopiert wird, bekommt nicht zwei Hände
+    gleichzeitig (Konzept BV, E-BV-06). Nach dem Merge von P5c dort
+    nachziehen, dann ist der Punkt erledigt.
+    **Erweitert am 25.09.2026 (Konzept BV, BV-06, nach der Gegenprüfung
+    P-BV-03).** Der **manuelle Abfahrtort** (`start`) liegt seit Web 6.2.0 im
+    verschlüsselten Block und fehlte in `CLAUDE.md` 4 und in der Tabelle von
+    `Technik.md` 4.98 — nachgetragen auf Weisung der Betreiberin, dazu in allen
+    oben genannten Aufzählungen. Zwölf weitere Stellen, die den Umfang ohne die
+    Notizen des Einsatzes nannten oder als vollständige Liste lasen, sind
+    nachgezogen (Technik: Schlüsselliste, Suche, Import, Wiederherstellung,
+    Endpunkt; Handbuch: Einsatzansicht, Suche, Entsperren, Import; README,
+    `Lizenzen.md`, `Was-ist-NAdoku.md` mit der Höhe des Einsatzorts). **Offen
+    bleiben** außer 11.5 noch Handbuch Abschnitt 3 (die Zeile „den Schlüssel
+    ab, mit dem Diagnose, Alter und Einsatzort verschlüsselt werden" — sie
+    liegt direkt neben einer Stelle, die P5c ändert) und **zwei Rechtstexte,
+    die der Betreiberin gehören:** `AVV.md` nennt in der Klartextliste die
+    Höhe des Einsatzorts nicht (Anlage II Nr. 2 führt sie), und
+    `Nutzungsbedingungen.md` 2.6 zählt die freiwilligen Angaben ohne die
+    Notizen des Einsatzes und ohne den Abfahrtort auf.
+    **Stand nach dem Merge von P5c (26.09.2026, Konzept BV, F-BV-15):**
+    P5c/AP9 hat den Textbaustein nach **11.5a** verschoben und die Notizen
+    des Einsatzes dort schon ergänzt. Es fehlt noch der manuelle
+    Abfahrtort. Handbuch Abschnitt 3 ist unverändert. Ob beides in BV oder
+    in Schritt 17 kommt, fragt Q-BV-04.
+    **Erledigt 26.09.2026 mit Konzept BV (BV-07, Q-BV-04, E-BV-18).** Der
+    Textbaustein in 11.5a nennt den Abfahrtort (Adresse und Koordinate),
+    seine Klartextliste die Höhe des Einsatzorts und das Transportziel samt
+    Koordinate — dieselben Felder wie `CLAUDE.md` 4 und `Technik.md` 4.98.
+    Abschnitt 3 zählt nicht mehr auf, sondern verweist auf Kapitel 5. Die
+    Abnahme oben ist damit erfüllt. **Nicht darin:** die zwei Rechtstexte
+    (`AVV.md`, `Nutzungsbedingungen.md` 2.6) — sie kamen erst mit der
+    Gegenprüfung P-BV-03 dazu, gehören der Betreiberin und stehen als
+    P-BV-07 im Prüfdokument BV, das bis zum Abhaken bleibt. Und der Satz
+    „der Schlüssel wird aus dem Passwort des Kontos abgeleitet" im Baustein
+    ist seit S10 unvollständig (der Server-Anteil fehlt) — eine Frage an
+    die Betreiberin, weil der Text in eine Rechtserklärung geht, nicht Teil
+    dieses Punkts.

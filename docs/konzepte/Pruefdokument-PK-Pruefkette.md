@@ -50,7 +50,7 @@ dem PR. Die sechs PK-05-Zeilen stehen oben; darunter der Stand nach PK-03.
 | P-PK-13 | Die Selbstproben (PK-03) | `bericht.py lesen --selbstprobe`; `auswahl.py --selbstprobe` | **6 Lagen / 0 Fehlschläge** (5 rote, 1 grüne) bzw. **11 Lagen / 0** | eine rote Lage wird nicht rot | **erledigt 21.09.2026** (5.2) |
 | P-PK-14 | Abdeckung: keine Datei ohne Muster (PK-03) | `auswahl.py --abdeckung` | **0 Dateien unter `server/` ohne Muster** | eine Datei trifft kein Muster und hat damit keine Probe | **erledigt 21.09.2026 — 262 Dateien, 0 ohne Muster** (5.3) |
 | P-PK-15 | `kettenaufrufe` liest die Zuordnung mit (PK-03) | Fehler einbauen (`--format` statt `--art`), Werkzeug fahren, zurücksetzen | mit Fehler **2 Befunde** mit Namen, ohne Fehler **0** | der Fehler kommt durch | **erledigt 21.09.2026** (5.4) |
-| P-PK-17 | Nach dem Merge von PR #71: ein Arbeitszweig-Push erzeugt nur noch **einen** Lauf (Vorgriff auf PK-05) | auf einem Arbeitszweig committen und pushen, dann die Läufe von `pruefung.yml` zu diesem Commit zählen | **genau 1 Lauf**, Ereignis `pull_request`; **kein** `push`-Lauf | es entstehen zwei Läufe, oder gar keiner (dann prüft der Zweig nichts mehr) | **teilweise gemessen 21.09.2026 (5.6)** — die Wirkung ist belegt, der volle Bedienweg noch nicht gefahren |
+| P-PK-17 | Nach dem Merge von PR #71: ein Arbeitszweig-Push erzeugt nur noch **einen** Lauf (Vorgriff auf PK-05) | auf einem Arbeitszweig committen und pushen, dann die Läufe von `pruefung.yml` zu diesem Commit zählen | **genau 1 Lauf**, Ereignis `pull_request`; **kein** `push`-Lauf | es entstehen zwei Läufe, oder gar keiner (dann prüft der Zweig nichts mehr) | **belegt 25.09.2026 (5.6)** — der Bedienweg im Wortlaut: Lauf 281 (`7f4106a`, Push auf den Zweig von PR #85 bei offenem PR), genau ein Lauf, `pull_request`, kein `push`-Lauf; die Wirkung schon am 21.09.2026 |
 | P-PK-20 | Die vier roten Proben aus 5.7 trennen: veraltete Erwartung oder Fehler der Anwendung (F-PK-18, F-PK-22) | je Probe den Befund nachvollziehen, Referenzbestand erneuern, erneut fahren | jede Probe nennt danach entweder eine behobene Anwendung oder eine berichtigte Erwartung — mit Zahl | eine Probe bleibt rot, ohne dass jemand sagen kann, woran | **offen** — eigene Korrekturstufe, kein PK-Paket |
 | P-PK-16 | Der offene Befund der Wiederherstellungsprobe | Sicherungsziel eintragen, `php tools/wiederherstellungs-probe/probe.php` | 110 Erwartungen, 0 nicht erfüllt | die zwei Befunde bleiben auch mit Sicherungsziel stehen (dann ist es die Anwendung) | **offen** — siehe F-PK-18 |
 | P-PK-11 | Ausbaustufen `android` und `uhr` (PK-02) | `aufbauen.sh android` → `./gradlew build`; `aufbauen.sh uhr` → `pruefstand.sh reihe` | 0 Lint-Fehler, 0 Fehlschläge bzw. Reihe grün | ein Fehlschlag, oder das SDK fehlt | **beide erledigt 21.09.2026.** android: BUILD SUCCESSFUL in 7m 19s, **0 Lint-Fehler**, **670 Prüffälle / 0**. uhr: `aufbauen.sh uhr` rc 0 mit Gegenstand — SDK **9.2.0**, **1332** Schriftdateien, **99 von 99** Manifest-Geräten, **173** Geräte mit `compiler.json`, **0** fehlende Simulatorbibliotheken, Nachweis **15 Stücke ok** (darunter die zwei neuen Uhr-Zeilen), **8 von 8** Umgebungswerten. Stufe I danach über alle Geräte: **99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei**, rc 0. **Der Bedienweg oben war unvollständig** — siehe F-PK-21 |
@@ -388,6 +388,25 @@ ist kein Fehlschlag, sondern der Zweck der Änderung — Stufe 1 läuft beim Pul
 Request, nicht bei jedem Push —, aber es ist **nicht dasselbe wie „genau ein
 Lauf"**. Die Zeile in der Prüfliste beschreibt den PR-Fall; gemessen wird er
 am **Phasen-PR** oder an PR #72.
+
+**Nachgetragen am 25.09.2026 (Konzept BV, P-BV-05) — der Bedienweg im
+Wortlaut ist jetzt gefahren**, und zwar nicht eigens, sondern von einem
+Konzept, das ohnehin lief. Abgefragt über die Lauf-API, je Zweig alle Läufe
+von `pruefung.yml`:
+
+| Lauf | Zweig, Kopf | Wie er entstand | Ereignis |
+|---|---|---|---|
+| 280 | `claude/br-bestandsriegel`, `bc94056` | **Öffnen** von PR #85 (09:44:42, Lauf 09:44:45) | `pull_request` |
+| **281** | `claude/br-bestandsriegel`, `7f4106a` | **Push auf den Zweig bei offenem PR #85** (17:58, PR offen bis 18:03) | `pull_request` |
+| 283 | `claude/br-bestandsriegel`, `03a30b5` | Öffnen von PR #86 | `pull_request` |
+| 285 | `claude/intelligent-carson-q8f7ag`, `4da0c42` | Öffnen von PR #87 | `pull_request` |
+
+**Lauf 281 ist der Prüfpunkt:** ein Push auf einen Arbeitszweig, der die
+neue Datei trägt und zu dem ein Pull Request offen ist — **genau ein Lauf**,
+Ereignis `pull_request`, **kein** `push`-Lauf (der Zweig hat insgesamt drei
+Läufe, alle `pull_request`). Die Gegenprobe steht am Zweig von Konzept BV:
+**vier Pushes ohne offenen PR, null Läufe**; erst das Öffnen von PR #87
+brachte einen. Beides ist der Zweck der Änderung aus PR #71.
 
 ---
 

@@ -14,6 +14,126 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Vorgriff auf Backlog-Runde 4 (Konzept BV)] — 2026-09-24
+
+Konzept BV, parallel zu P5c: Backlog-Punkte, die keine Datei von P5c
+berühren. Keine Versionsstufe — berührt sind nur `tools/` und `docs/`
+(`CLAUDE.md` 2). Nichts unter `server/`: Dort vergibt P5c die Web-Fassungen,
+und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
+
+### Behoben
+
+- **Der Kommentar-Abtaster der Vollständigkeitsprüfung verlor in
+  PHP-Dateien mit HTML die Spur** (Backlog Nr. 184, BV-01). Er ging auch
+  durch das HTML einer Seite, und dort galt ihm `#` als PHP-Kommentar und
+  `//` als JS-Kommentar — ein `href="#…"` oder ein `http://` im Text leerte
+  den Rest der Zeile. In JavaScript brachte ihn ein `"` in einem
+  Regex-Literal aus dem Tritt. Beides erzeugt falsche **Negative**: Was
+  geleert wird, finden die drei Zusagen-Prüfungen nicht, und die Gruppe
+  meldet trotzdem 0. Jetzt liest er eine PHP-Datei so, wie PHP und der
+  Browser sie lesen — HTML bleibt unberührt, abgetastet werden
+  `<?php … ?>`, `<?= … ?>`, `<script>` und `<style>` nach den Regeln ihrer
+  Sprache —, und in JS und CSS endet eine `'`- oder `"`-Kette am
+  Zeilenende. **Der erste Lauf fand, was vorher verschluckt war:** die
+  GPX-Namensraumadresse in `export.js`, eine Kennung und keine
+  Laufzeitquelle, jetzt mit Grund in der Ausnahmeliste (18 → 19). Die
+  Gegenprobe mit einem eingeschleusten `<a href="#" onclick="return
+  confirm(…)">` findet der alte Abtaster nicht, der neue schon.
+- **Die Symbolprüfung zählte Zeichen in Kommentaren mit** (BV-01). Sie tat
+  es mit Absicht: Solange der Abtaster unzuverlässig war, war eine große
+  ehrliche Zahl besser als eine kleine durch Wegsehen. Mit dem neuen
+  Abtaster blendet sie Kommentare aus — Unicode-Symbole 14 → 5, Emoji
+  8 → 0; alle 17 weggefallenen standen in Kommentaren, die fünf bleibenden
+  sind das Malzeichen im sichtbaren Text. Es bleibt ein Hinweis, kein
+  Befund.
+- **Die zusammengesetzten Meldungsklassen standen als „im Markup nicht
+  gefunden" da** (Backlog Nr. 274, BV-02). `ui_meldung_markup()` und
+  `EdHtml.meldung()` bauen `meldung-<ton>` zur Laufzeit; `meldung-ok` und
+  `meldung-schutz` steht nirgends als Literal. Die Prüfung liest die Töne
+  jetzt aus beiden Bausteinen, zählt die Klassen als belegt (Hinweis
+  64 → 62) und meldet als Befund, wenn eine davon keine Regel hat oder die
+  beiden Listen auseinanderlaufen. **Der blinde Fleck war kleiner als
+  befürchtet:** Die Tonprüfung am Aufruf hätte jede fehlende Regel schon
+  gemeldet — für `schutz` allerdings nur über einen einzigen Aufruf. Seit
+  BV-02 hängt die Aussage an keinem.
+- **25 Zeilen der Streichliste sagten „ersatzlos", ohne es zu wissen**
+  (Backlog Nr. 40, BV-03). PK-04/1b hatte die letzten Altklassen
+  eingetragen, damit die Prüfung auf null kam — mit dem Grund „steht in
+  keiner Datei mehr". Die Liste ist aber für das Warum da. BV-03 hat je
+  Klasse den Commit gesucht, in dem ihre letzte Verwendung verschwand, und
+  den Ersatz am Diff gelesen: 25 von 25 rekonstruiert, zwölf davon aus
+  O9c. **Eine unabhängige Gegenprüfung (P-BV-02) hat 13 davon verworfen
+  oder eingeschränkt**, in allen Fällen beim Ersatz, nie beim Commit —
+  berichtigt, mit Belegen. Darunter die Behauptung, vier `c-dc-*`-Klassen
+  seien nicht ersatzlos: Sie erreichen seit Schritt 15 kein Element mehr,
+  `c-dc-false_alarm` schon seit Web 6.3.0 nicht. Eine Rekonstruktion aus
+  Diffs ist eine Deutung; ohne Gegenlesung hätte die Liste 13 ungenaue
+  Gründe getragen, die genauso vollständig aussahen wie die 25 Platzhalter
+  davor.
+
+### Dokumentation
+
+- **Das Handbuch nannte den Verschlüsselungsumfang ohne die Notizen des
+  Einsatzes — und der Einstieg sagte das Gegenteil** (Backlog Nr. 194,
+  BV-04). Seit Web 19.0.0 liegen die Notizen des Einsatzes im
+  verschlüsselten Block; der Einstieg sagte „Notizen und Freitextfelder sind
+  davon nicht erfasst". Einstieg, beide Stellen in Kapitel 5, `README.md`
+  und die Zeile `missions` in `Technik.md` nennen jetzt dieselben Felder
+  wie `CLAUDE.md` 4 und `Technik.md` 4.98; die Klartextliste ist um die
+  Notizen des Diensttags, die Höhe des Einsatzorts und die Koordinate des
+  Transportziels ergänzt. **Der Textbaustein für die Datenschutzerklärung**
+  (Handbuch 11.5a; die Notizen hatte P5c dort schon ergänzt) nennt jetzt
+  auch den Abfahrtort, und seine Klartextliste die Höhe des Einsatzorts und
+  das Transportziel samt Koordinate (BV-07, Q-BV-04). **Wer den Baustein
+  schon übernommen hat, übernimmt ihn neu:** Die alte Fassung untertrieb
+  nicht nur den Schutz, sie nannte auch zwei Angaben nicht, die im Klartext
+  liegen — und das ist in einer Erklärung die unangenehmere Richtung.
+- **Der manuelle Abfahrtort ist verschlüsselt — die Zusage nannte ihn nicht**
+  (Konzept BV, BV-06, Backlog Nr. 194). Seit Web 6.2.0 liegt er als Schlüssel
+  `start` im verschlüsselten Block; `CLAUDE.md` 4 und die Tabelle in
+  `Technik.md` 4.98 kannten ihn nicht, andere Stellen (Handbuch 4.3,
+  Rechtstexte) schon. Gefunden von einer unabhängigen Gegenprüfung, auf
+  Weisung der Betreiberin in beiden nachgetragen und in allen Aufzählungen
+  des Umfangs. Die Änderung weicht nichts auf — sie beschreibt, was der Code
+  seit August tut. Mitgezogen: zwölf weitere Stellen, die den Umfang ohne die
+  Notizen des Einsatzes nannten (Technik, Handbuch, README, `Lizenzen.md`,
+  `Was-ist-NAdoku.md`). **Nicht berichtigt:** zwei Rechtstexte (`AVV.md`,
+  `Nutzungsbedingungen.md` 2.6) — sie gehören der Betreiberin. Handbuch 3
+  zählte nur „Diagnose, Alter und Einsatzort" auf und verweist jetzt auf
+  Kapitel 5 (BV-07).
+- **Der Cron-Befehl stand mit dem Pfad des Repositoriums in der
+  Dokumentation** (Backlog Nr. 150, BV-04). Auf einer Installation gibt es
+  kein `server/`, und wer `php …/server/jobs.php` abtippte, bekam „Could not
+  open input file". `Technik.md` 4.97a und Runbook 7 tragen jetzt
+  `php /pfad/zur/installation/jobs.php` und verweisen auf den Kopier-Knopf,
+  der den Pfad der Installation kennt; der Eintrag Web 10.1.0 unten ist
+  rückwirkend berichtigt, wie am 12.09.2026 entschieden. **Der Kopfkommentar
+  in `server/jobs.php` trägt den alten Pfad noch** — eine Zeile unter
+  `server/` braucht eine Web-Stufe. Sie kommt mit der nächsten, die
+  `jobs.php` ohnehin anfasst (Q-BV-04); Nr. 150 bleibt bis dahin offen.
+- **Eine auf dem Server von Hand gelöschte Datei kommt nicht zurück — das
+  stand nirgends** (Backlog Nr. 214, BV-04). Die Auslieferungsaktion
+  vergleicht gegen ihre Zustandsdatei, nie gegen den Server. `Technik.md`
+  6.5b nennt jetzt drei Wege heraus, den schonenden zuerst, und was der
+  teuerste kostet: einen vollständigen Abgleich bei eingeschalteter
+  Wartung.
+- **Vier Backlog-Punkte waren erledigt und standen noch unter „Offen"**
+  (BV-05): Nr. 222 (die Kette baut die Uhr seit PK-05 nicht mehr), Nr. 270
+  (seit Web 20.34.0 wertet `EdApi.postJson()` den Status aus), Nr. 281
+  (Stufe 1 läuft auf Arbeitszweigen nur beim Pull Request — an echten Läufen
+  belegt) und Nr. 212 (seit RP-03 grün; auf frischer Anlage nachgemessen,
+  111 von 111). Alle vier mit Beleg nach *Erledigt*; der Kopfkommentar der
+  Wiederherstellungsprobe, der noch „110 von 110, zwei davon rot" sagte, ist
+  berichtigt.
+
+### Bewusst so
+
+- **Der Abtaster kennt weiter kein Heredoc und keine Regex-Literale mit
+  `//`**, und ein PHP-Block, der in einem JS-Zeilenkommentar beginnt und
+  über dessen Ende reicht, bringt ihn aus dem Tritt. Nichts davon kommt im
+  eigenen Code vor; die Grenze steht im Docstring, damit die nächste Fassung
+  sie findet.
+
 ## [Werkzeug: Geplante Stilabweichungen bleiben nach dem Merge stehen (Nr. 330)] — 2026-09-26
 
 **Die Liste der geplanten Stilabweichungen muss nach dem Merge nicht mehr
@@ -18500,7 +18620,7 @@ eingerichtet werden muss keiner:
 
 | Weg | Aufruf | Budget je Lauf |
 |---|---|---|
-| Kommandozeile (empfohlen) | `* * * * * php …/server/jobs.php` | 300 s |
+| Kommandozeile (empfohlen) | `* * * * * php /pfad/zur/installation/jobs.php` *(berichtigt 24.09.2026, Backlog Nr. 150 — hier stand der Pfad des Repositoriums mit `server/`)* | 300 s |
 | Adresse mit Token | `https://…/jobs.php?token=…` | 20 s |
 | Huckepack auf einer Anfrage (Rückfall) | wie bisher, automatisch | 3 s |
 
