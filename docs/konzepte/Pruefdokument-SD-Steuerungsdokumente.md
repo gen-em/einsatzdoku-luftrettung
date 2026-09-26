@@ -2,9 +2,9 @@
 
 *Gehört zu `Konzept-SD-Steuerungsdokumente.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
-Abschnitt 9 des Konzepts. Stand: **SD-03 gebaut, 26.09.2026** (Zweig
-`claude/serene-tesla-sqeno2`; `origin/main` `f5bddc2`, der Merge von PR #88,
-ist aufgenommen). Wird mit jedem Paket fortgeschrieben.*
+Abschnitt 9 des Konzepts. Stand: **SD-04 gebaut, 26.09.2026 — PR #92 offen**
+(Zweig `claude/serene-tesla-sqeno2`; `origin/main` `f5bddc2`, der Merge von
+PR #88, ist aufgenommen). Was die Betreiberin jetzt tut, steht in 3.7.*
 
 ---
 
@@ -12,7 +12,7 @@ ist aufgenommen). Wird mit jedem Paket fortgeschrieben.*
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
-| **Stufe 1 auf GitHub für diesen Zweig** | Sie läuft auf Arbeitszweigen nur beim Pull Request, und der kommt mit SD-04. Örtlich ist der Prüfstand gefahren (Abschnitt 2, Stufe klein); ob das Tor dasselbe sagt, zeigt der PR-Lauf | P-SD-15 |
+| **Stufe 1 auf GitHub für diesen Zweig — bis zum PR** | Sie läuft auf Arbeitszweigen nur beim Pull Request; PR #92 ist offen, sein Lauf wird in 3.6 eingetragen. Örtlich ist der Prüfstand nach jedem Paket gefahren (Abschnitt 2, Stufe klein, zuletzt 21 grün) | 3.6 |
 | **Ob eine Zeile in Abschnitt 6 wirklich erledigt ist** | Dreizehn Zeilen tragen den Vermerk „vermutlich erledigt" oder „löschen?" — das ist aus anderen Dokumenten geschlossen (Konzept PK: M1 am 21.09.2026 mit Migrationen von Hand; Fassung 110: Gerätetest erfolgt; Produktiv antwortet unter `nadoku.gen-em.org`), nicht an der Anlage gemessen. Gelöscht ist keine (E-SD-31) | Q-SD-01, Prüfliste 3.1 |
 | **Ob die drei Zuarbeiten-Gruppen richtig sortiert sind** | Die Einteilung „jetzt / vor Schritt X / vor v1.0" ist aus der Spalte „Wann" der Fassung 124 gelesen; drei Zeilen ohne klares „Wann" (SPF/DKIM, BR-Fragen, „Freigabe je Konzept") stehen in 6.1 | Q-SD-01, Prüfliste 3.1 |
 | **Ob die Kurzfassungen Sinn verloren haben** | Register-Statussätze (R51 bis R85 von Absätzen auf ≤ 160 Zeichen), Erledigt-Zeilen (31 Blöcke von bis zu 90 Zeilen auf je eine) und die Fahrplanzeilen sind Kürzungen; gezählt sind Zeichen, nicht Sinn. Der Volltext liegt in Archiv-2 | Prüfliste 3.2 |
@@ -73,6 +73,15 @@ E-SD-19).
 | SD-03 | P-SD-15 | `bash tools/quelltext/pruefen.sh bestand`; `python3 tools/kettenaufrufe/pruefen.py`; `bash tools/pruefstand/pruefen.sh --trocken` | Anleitung (40 Zeilen, fünf Abschnitte, Anlass-Zeile), Einhängen in `pruefablauf.json` (Probe, Riegel, Muster), Aufrufe, Auswahl | **0 Befunde** (der erste Lauf: 1 — 41 Zeilen, gekürzt); **0 Befunde, 0 ungeprüft**; `steuerung` als 20. Riegel und über das Muster gewählt |
 | SD-03 | P-SD-15 | `python3 tools/pruefstand/bericht.py erzeugen-doku` | `Pruefablauf.md` 4 | Block ersetzt, **41 → 42 Zeilen** (eine Musterzeile, ein Riegel mehr) |
 | SD-03 | Prüfstand | `bash tools/pruefstand/pruefen.sh` | Stufe klein, jetzt 20 Riegel, gegen `origin/main` | Bericht in der Commit-Nachricht von SD-03 |
+| SD-04 | P-SD-05 | Skript: `grep -rnoE 'Backlog(\.md)? ?(Nr\.\|Nummer) ?[0-9]+'` über `docs/`, `server/`, `tools/`, `android/`, `watch/`, `.github/` (ohne Backlog, Changelog, Archive), Nummern gegen beide Backlog-Dateien | „Backlog Nr. N" — vollständig statt Stichprobe (E-SD-46) | **773 Verweise, 202 Nummern, 0 unauflösbar**; je Fünfzigerbereich 43 · 35 · 32 · 30 · 29 · 22 · 11 Nummern |
+| SD-04 | P-SD-05 | `grep -rnoE 'Rahmenplan(\.md)? Abschnitt [0-9]+[a-z]?'` (ohne Archive, Changelog, Verlauf) | „Rahmenplan Abschnitt N" | **30 Stellen**, N ∈ {1, 2, 3, 5, 6, 7, 8, 9} — alle vorhanden (E-SD-24; 5 ist Verweisabschnitt) |
+| SD-04 | P-SD-05 | `grep -rno 'Rahmenplan-Archiv[-0-9]*\.md'` | Pfade der Archive | **37 Nennungen** in 11 Dateien; `Rahmenplan-Archiv.md` und `Rahmenplan-Archiv-2.md` vorhanden |
+| SD-04 | P-SD-05 | `grep -rnoE '\bFassung [0-9]{1,3}\b'` (ohne Archive, Changelog, Verlauf, Konzepte) | „Fassung NN" | **168 Treffer** in 30 Dateien, überwiegend Container- und Nutzlastfassungen (`Backup-Format.md`, `adminbackup_lib.php`); Rahmenplan-Fassungen lösen strukturell auf: 1–15 Archiv, 16–124 Archiv-2 Abschnitt 10, 125–130 Verlauf; 35–39 doppelt (Nr. 177, bleibt) |
+| SD-04 | P-SD-17 | Lesen | `CLAUDE.md` 2 (Punkte 4 und 5), 7 (Abschluss), 9 (Steuerungsdokumente); Rahmenplan 2.1 K5, K9, 2.2 R62, 5, 9 | **je Regel eine Fassung**: Vier Anlässe (2.5 / Rahmenplan 9), Erledigt als Zeile (7 / K5, K9, R62), Backlog-Kopfzeile und Reservierung (2.4 / 2.2 „Backlog-Nummern sind dauerhaft"), Decken (9 / Rahmenplan 9) |
+| SD-04 | P-SD-18 | `grep -n 'Werkzeug: Rahmenplan und Backlog geschnitten' docs/CHANGELOG.md` | Changelog-Eintrag | **vorhanden** (2026-09-26, oberster Eintrag) |
+| SD-04 | P-SD-19 | Riegel `wortliste` im Prüfstand (Textprobe, `Pruefablauf.md` 6.6) | 0 neue Treffer in den 14 normativen Dokumenten (Rahmenplan und Backlog sind Klasse H) | **0** |
+| SD-04 | Decken | `python3 tools/steuerung/decken.py`; `uebersicht.py --pruefen` | nach den Änderungen an Rahmenplan (Fassung 130) und Backlog-Kopf | **20 Decken, 0 gerissen**; **105, 0, 0** |
+| SD-04 | Prüfstand | `bash tools/pruefstand/pruefen.sh` | Stufe klein, gegen `origin/main` | Bericht in der Commit-Nachricht von SD-04 |
 
 ---
 
@@ -231,11 +240,26 @@ Eintrags.
 **Scheitern:** der Schritt fehlt, ist rot, oder die Gegenlesung meldet
 `steuerung=nicht-gelaufen` — dann fehlt das `--riegel` oder die `env:`-Zeile.
 
-**Bedienweg P-SD-16 (macht die Instanz in SD-04, die Betreiberin liest):** ein
+**Bedienweg P-SD-16 (macht die Instanz nach dem Öffnen des PR, die Betreiberin liest):** ein
 Commit mit einer 21. Zeile in einem Backlog-Eintrag, pushen, Stufe 1 lesen,
 Commit zurücknehmen. **Erwartung:** rot, mit `docs/Backlog.md:<Zeile>` und
 `Nr. NNN: 21 Zeilen` in der Anmerkung. **Scheitern:** grün — dann misst das
 Tor nicht, was der Prüfstand misst.
+
+### 3.7 Freigabe des Abschlusses — was die Betreiberin jetzt tut
+
+1. PR #92 lesen: Stufe 1 grün (3.6), die Prüfliste 3.1 bis 3.5 durchgehen.
+2. **Freigabe des Abschlusses** erteilen (ein Satz im PR oder im Chat) — oder
+   sagen, was fehlt.
+3. Nach der Freigabe schreibt die Instanz die Erledigt-Zeile SD in Rahmenplan
+   Abschnitt 8 (Fassung 131, Verlaufszeile), löscht das Konzept, lässt dieses
+   Prüfdokument stehen und pusht; dann **mergt die Betreiberin** (eine Instanz
+   mergt nie, `CLAUDE.md` 8).
+4. Nach dem Merge: Die Sperre in Rahmenplan 4 ist damit aufgehoben; die
+   Abschlüsse von AR und BV und Schritt 17 schreiben wieder in Rahmenplan und
+   Backlog — **mit Kopfzeile und unter den Decken** (P-SD-20: Kommt die
+   nächste Instanz ohne Rückfrage zurecht? Wenn nicht, ist das ein
+   Backlog-Punkt mit `gehört zu: 17`).
 
 ---
 

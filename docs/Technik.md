@@ -2928,12 +2928,13 @@ IMEI und Seriennummer (Handy) — dauerhafte Gerätekennungen, die für eine
 Stückzahl-Statistik nicht gebraucht werden und in einer kleinen Gruppe mehr
 Personenbezug schaffen, als die Frage rechtfertigt.
 
-**Die Auswertung ist P5** (Geräteverteilung im Betriebslage-Dashboard, R38).
-Vorher muss die **Datenschutzerklärung die Erhebung benennen** (Backlog
-Nr. 80) — bei einer Anwendung, deren Versprechen die
+**Die Auswertung läuft:** seit Web 15.3.0 die Modelltabelle unter Betrieb →
+Statistik (S8/AP4), seit Web 20.47.0 die Herkunft je Einsatz mit drei Reitern
+(10c AP7; R42, R64). Die **Datenschutzerklärung muss die Erhebung benennen**
+(Backlog Nr. 80, Rahmenplan 6.3) — bei einer Anwendung, deren Versprechen die
 Ende-zu-Ende-Verschlüsselung ist, gehört das nicht als Nebenprodukt
-eingeführt. Der Text entsteht nach R60/Schritt 10 aus einer Bestandsaufnahme
-des gesamten Projekts, vor v1.0.
+eingeführt; der Text steht aus und entsteht aus einer Bestandsaufnahme des
+gesamten Projekts, vor v1.0.
 
 **Der Name des Geräts folgt der Art.** Beim Anlegen des Geräts — seit Web
 13.0.0 im Augenblick des Ja am Gerät — vergibt `pair.php` als Bezeichnung

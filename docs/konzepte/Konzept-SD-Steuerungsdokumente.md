@@ -30,13 +30,13 @@ Arbeit an derselben Datei bleiben seriell.
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — SD-03 gebaut.** `tools/steuerung/` steht: `decken.py` hält **20 Decken** (0 gerissen; Selbstprobe 22 Fälle), `uebersicht.py` die Kopfzeilen (105, 0 ohne Grammatik, 0 ohne Ziel; Selbstprobe 7 Fälle); als Riegel `steuerung` in `pruefablauf.json` und als Schritt in `pruefung.yml`, `Pruefablauf.md` 4 neu erzeugt, 6.11 und 6.12 nachgezogen. Rahmenplan (SD-01: Fassung 124 wörtlich in `docs/Rahmenplan-Archiv-2.md`, Verlauf ab 125 in `docs/Rahmenplan-Verlauf.md`, Fassung 129 mit **459 Zeilen**) und Backlog sind geschnitten: `docs/Backlog.md` hält die **105 offenen Einträge** mit Kopfzeile in **1 788 Zeilen** (Fassung N: 11 329), Kopf 56 Zeilen, 52 Einträge gekürzt, 0 über 20 Zeilen, `cmark-gfm` 0 `<pre>` · 105 `<li>`; `docs/Backlog-Erledigt.md` trägt die 228 erledigten Einträge wörtlich (0 Unterschiede) und den Werdegang der Nummernvergabe. `tools/quelltext/bestand.py` liest beide Dateien (E-SD-37). Prüfdokument liegt daneben. |
-> | Entschieden | E-SD-01 bis E-SD-27 (Konzept, 24.09.2026); die fünf Punkte zum Gegenlesen in 2.4 gelten ohne Widerspruch. **Aus der Umsetzung: E-SD-28 bis E-SD-33** (Abschnitt 2.5). **Von der Betreiberin am 26.09.2026: E-SD-34** (27 Zuarbeiten erledigt), **E-SD-35** (alle 40 Vorschläge), **E-SD-36** (Decke 500 reicht). **Aus SD-02: E-SD-37 bis E-SD-41, aus SD-03: E-SD-42 bis E-SD-44** (Abschnitt 2.5). |
-> | Offen | nichts an Fragen. Befunde F-SD-01 bis F-SD-11 in 2.5. F-SD-05 (die `update.php`-Zeile gegen M1) klärt sich nur an der Anlage; **F-SD-07** (zwei Sätze zu R42 in `Technik.md` und `Handbuch.md`) und die AR-Fahrplanzeile („PR #88 offen" — er ist gemergt) zieht **SD-04** nach; F-SD-06 und F-SD-08 (drei erledigte Einträge unter *Offen*; GitHub zählt die Liste fort) sind Sache von Schritt 17. |
-> | Umsetzung | **SD-00 erledigt** 24.09.2026 (P5c-Instanz, Fassung 111). **SD-01 erledigt** 26.09.2026 auf `claude/serene-tesla-sqeno2` (von `claude/affectionate-newton-6pzfkc` `bdf1787`, der `origin/main` `d34908b` enthält; Fassungen 125 bis 127). **SD-M1 erledigt** 26.09.2026 (Fassung 128, `fd536e7`). `origin/main` `f5bddc2` (PR #88, AR) aufgenommen (`1596469`, Pruefablauf.md 5.3). **SD-02 erledigt** 26.09.2026 (`135863c`). **SD-03 erledigt** 26.09.2026 (Fassung 129). **Als Nächstes SD-04** — Abschluss: `CLAUDE.md`, Changelog, Prüfdokument, F-SD-07, AR-Fahrplanzeile, Erledigt-Zeile, PR. |
+> | Stand | **26.09.2026 — SD-04 gebaut, PR #92 offen.** Alle vier Pakete sind durch; es fehlt die Freigabe des Abschlusses durch die Betreiberin (dann Erledigt-Zeile, Verlaufszeile, Löschung dieses Konzepts — K9) und der Merge. `CLAUDE.md` 2, 7, 9 und Rahmenplan 5, 9, K5, K9, R62 tragen die neuen Sätze; Changelog-Eintrag `[Werkzeug: Rahmenplan und Backlog geschnitten (Konzept SD)]`; Rahmenplan Fassung 130 (Stand von `main` gemessen: `f5bddc2`, Android 0.16.0; AR gemergt). `tools/steuerung/` steht: `decken.py` hält **20 Decken** (0 gerissen; Selbstprobe 22 Fälle), `uebersicht.py` die Kopfzeilen (105, 0 ohne Grammatik, 0 ohne Ziel; Selbstprobe 7 Fälle); als Riegel `steuerung` in `pruefablauf.json` und als Schritt in `pruefung.yml`, `Pruefablauf.md` 4 neu erzeugt, 6.11 und 6.12 nachgezogen. Rahmenplan (SD-01: Fassung 124 wörtlich in `docs/Rahmenplan-Archiv-2.md`, Verlauf ab 125 in `docs/Rahmenplan-Verlauf.md`, Fassung 129 mit **459 Zeilen**) und Backlog sind geschnitten: `docs/Backlog.md` hält die **105 offenen Einträge** mit Kopfzeile in **1 788 Zeilen** (Fassung N: 11 329), Kopf 56 Zeilen, 52 Einträge gekürzt, 0 über 20 Zeilen, `cmark-gfm` 0 `<pre>` · 105 `<li>`; `docs/Backlog-Erledigt.md` trägt die 228 erledigten Einträge wörtlich (0 Unterschiede) und den Werdegang der Nummernvergabe. `tools/quelltext/bestand.py` liest beide Dateien (E-SD-37). Prüfdokument liegt daneben. |
+> | Entschieden | E-SD-01 bis E-SD-27 (Konzept, 24.09.2026); die fünf Punkte zum Gegenlesen in 2.4 gelten ohne Widerspruch. **Aus der Umsetzung: E-SD-28 bis E-SD-33** (Abschnitt 2.5). **Von der Betreiberin am 26.09.2026: E-SD-34** (27 Zuarbeiten erledigt), **E-SD-35** (alle 40 Vorschläge), **E-SD-36** (Decke 500 reicht). **Aus SD-02: E-SD-37 bis E-SD-41, aus SD-03: E-SD-42 bis E-SD-44, aus SD-04: E-SD-45, E-SD-46** (Abschnitt 2.5). |
+> | Offen | nichts an Fragen. **Die Freigabe des Abschlusses** (Prüfdokument 3.7); danach schreibt die Instanz Erledigt-Zeile und Verlaufszeile und löscht dieses Konzept (E-SD-45). Im PR: P-SD-15 (Stufe 1 mit dem Schritt „Steuerungsdokumente") und P-SD-16 (Gegenprobe mit einer 21. Zeile). Befunde F-SD-01 bis F-SD-12 in 2.5: F-SD-05 klärt sich nur an der Anlage; F-SD-06 und F-SD-08 sind Sache von Schritt 17; F-SD-07 ist mit SD-04 erledigt. |
+> | Umsetzung | **SD-00 erledigt** 24.09.2026 (P5c-Instanz, Fassung 111). **SD-01 erledigt** 26.09.2026 auf `claude/serene-tesla-sqeno2` (von `claude/affectionate-newton-6pzfkc` `bdf1787`, der `origin/main` `d34908b` enthält; Fassungen 125 bis 127). **SD-M1 erledigt** 26.09.2026 (Fassung 128, `fd536e7`). `origin/main` `f5bddc2` (PR #88, AR) aufgenommen (`1596469`, Pruefablauf.md 5.3). **SD-02 erledigt** 26.09.2026 (`135863c`). **SD-03 erledigt** 26.09.2026 (Fassung 129, `61e8c79`). **SD-04 erledigt** 26.09.2026 (Fassung 130); **PR #92 offen**, nicht gemergt — eine Instanz mergt nie (`CLAUDE.md` 8). |
 > | Fable-Schritte | keine. SD-01 lief mit Fable (Anweisung der Betreiberin, 26.09.2026); Abweichung von K2 zur Kenntnis. |
 > | Fächerung | SD-01: das Lesen der 105 offenen Backlog-Einträge auf 32 Agenten (E-SD-33); alles Schreiben seriell. SD-02: keine — ein Skript setzt zusammen, die 52 Kürzungen sind von Hand geschrieben (E-SD-40). SD-03: keine (E-SD-44). |
-> | Nummern | Rahmenplan-Fassungen 125 bis 129 vergeben; keine Backlog-Nummer vergeben (der neue Kopf nennt 339 als nächste freie; 338 blieb frei). |
+> | Nummern | Rahmenplan-Fassungen 125 bis 130 vergeben; keine Backlog-Nummer vergeben (der neue Kopf nennt 339 als nächste freie; 338 blieb frei). |
 
 ---
 
@@ -507,6 +507,37 @@ Konzept sagte „E-SD-28 ff."; die Nummern sind belegt, die Reihenfolge nicht).
   Verlaufszeile sagt es. Der erste Lauf des Werkzeugs hat damit einen
   Befund geliefert, bevor er grün war — Grundsatz 7 in Reinform.
 
+**Aus SD-04 (26.09.2026):**
+
+- **E-SD-45 Erledigt-Zeile und Löschung erst nach der Freigabe.** 3.2 las
+  sich, als schriebe SD-04 die Erledigt-Zeile selbst; `CLAUDE.md` 7,
+  Rahmenplan K5, R62 und 9 sagen einhellig „nach der Freigabe des
+  Abschlusses". SD-04 setzt die Fahrplanzeile SD auf „gebaut, PR offen" und
+  öffnet den PR; die Erledigt-Zeile (neue Form, E-SD-10), die Verlaufszeile
+  dazu und die Löschung dieses Konzepts schreibt die Instanz, die die
+  Freigabe bekommt — wie bei AR und BV, deren Abschlüsse ebenso offen
+  stehen. Die Sperre in Abschnitt 4 sagt schon „bis der SD-PR gemergt ist"
+  und braucht keine weitere Zeile.
+- **E-SD-46 Verweisprobe vollständig, wo es billig ist.** P-SD-05 sah für
+  „Backlog Nr. N" eine Stichprobe von 30 vor; ein Skript hält stattdessen
+  **alle 773 Verweise** (202 verschiedene Nummern, in `docs/`, `server/`,
+  `tools/`, `android/`, `watch/`, `.github/`, ohne Backlog, Changelog und
+  Archive) gegen die Nummern beider Backlog-Dateien: **0 unauflösbar**.
+  „Rahmenplan Abschnitt N": **30**, alle auf 1 bis 9 — die Abschnitte gibt
+  es (E-SD-24), 5 und 10 sind Verweisabschnitte. `Rahmenplan-Archiv…md`:
+  **37** Pfadnennungen, beide Dateien vorhanden. „Fassung NN" ist nicht
+  zählbar zu prüfen — von 168 Treffern außerhalb der Archive meinen die
+  meisten Container- und Nutzlastfassungen —, löst aber strukturell auf:
+  1–15 im Archiv, 16–124 in Archiv-2 Abschnitt 10, 125–130 im Verlauf; die
+  Doppelungen 35 bis 39 sind Nr. 177 und bleiben, wie sie sind.
+- **F-SD-12 `Pruefablauf.md` 2.3 zeigte auf `Rahmenplan.md` 6b,** und 6b
+  ist seit SD-01 nur noch ein Verweis auf `Rahmenplan-Archiv-2.md` 6b — ein
+  Leser lief zwei Sprünge. Der Satz zeigt jetzt auf das Archiv (Zahl der
+  „Fallen" weggelassen: 2.3 sagte drei, 6b vier — welche stimmt, klärt
+  Schritt 17 mit Nr. 188). F-SD-07 ist erledigt: `Technik.md` und
+  `Handbuch.md` 10 sagen, dass die Auswertung läuft und der Datenschutztext
+  aussteht (Nr. 80); Nr. 193 kann mit dem Abschluss nach *Erledigt*.
+
 ---
 
 ## 3. Arbeitspakete
@@ -934,5 +965,5 @@ Nicht-Prüfbare zuerst.
 | SD-01 | erledigt 26.09.2026 | `758aaf4`; Nachtrag: Verlaufszeile 125 auf die Decke gekürzt (sie war 315 Zeichen lang, das Wegwerfskript hatte sie gemeldet und ich hatte nur 126 und 127 gekürzt) | P-SD-02 **0 Unterschiede** (3 928 = 27 + 3 901 Zeilen) · P-SD-03 **487 Zeilen** (< 500, nicht < 400 — F-SD-01), Kopf **15** · P-SD-04 Fahrplan **27 → 14** (11 + 3 neu), Zuarbeiten **67 → 69** (+ 2 neu), Register **85 = 85**, Erledigt **31 → 34** (+ 3 aus Fahrplanzeilen), 6a **10 = 10** · P-SD-06 **9 von 9** · Decken: Blockquotes **0**, Berichtigungsmuster **0**, Zellen **0 über der Decke** in 14 + 69 + 85 + 34 + 3 Zeilen · `cmark-gfm` **0 `<pre>`, 9 Tabellen** · Fächerung **105 Einträge, 97 einig, 8 Schiedsrichter, 40 ohne Schritt** · Prüfstand: Bericht in der Commit-Nachricht |
 | SD-M1 | erledigt 26.09.2026 | `fd536e7` (Rahmenplan Fassung 128); `1596469` nimmt `origin/main` `f5bddc2` auf (PR #88, Pruefablauf.md 5.3) | Q-SD-01 (a) **69 Zeilen durchgesehen, 27 gestrichen, 42 bleiben**, 6a 3 abgehakt (E-SD-34) · Q-SD-01 (b) **40 von 40** Vorschläge übernommen (E-SD-35) · Q-SD-02 Decke 500 (E-SD-36) · Rahmenplan **460 Zeilen**, Zuarbeiten-Zeilen 0 über der Decke, Verlaufszeilen 4, 0 über der Decke |
 | SD-02 | erledigt 26.09.2026 | `135863c` | P-SD-07 **0 Unterschiede** (Erledigt-Teil, 228 Einträge; Werdegang-Absätze 0) · P-SD-08 **105 = 105**, Nummernmenge gleich · P-SD-09 **105 von 105** Kopfzeilen mit Grammatik (`grep -P`; das Werkzeug kommt mit SD-03), Ziele: 17 × 54, PK × 9, nach v1.0 × 8, 18 × 7, 14 × 6, SD · 13 · 12 je 5, 12a · Zuarbeit · Pflegeaufgabe je 2 — alle Fahrplan-Kennung oder festes Wort · P-SD-10 **0 Einträge über 20 Zeilen**, **52 Werdegang-Zeilen = 52 gekürzte** · P-SD-11 `cmark-gfm` **0 `<pre>`, 105 `<li>`**, 1 Tabelle (Kopf) · P-SD-12 Schnittmenge **0**, doppelt **0 / 0**, `bestand.py` **0 Befunde**, Selbstprobe **141 Fälle, 0 Fehlschläge** · Decken: Kopf **56 Zeilen** bis `## Offen`, Einrückung **0** abweichend, Berichtigungsmuster **0**, Blockquotes 0 · Datei **11 329 → 1 788 Zeilen**, Erledigt-Datei 8 041 · Prüfstand: Bericht in der Commit-Nachricht |
-| SD-03 | erledigt 26.09.2026 | *wird beim Commit eingetragen* (Rahmenplan Fassung 129) | P-SD-13 `decken.py --selbstprobe` **22 Fälle, 0 Fehlschläge** — 20 Decken je einmal gerissen, 2 Gegenproben; `uebersicht.py --selbstprobe` **7 Fälle, 0 Fehlschläge** · P-SD-14 `decken.py` **20 Decken, 0 gerissen** (erster Lauf: 1 — F-SD-11, behoben mit Fassung 129); `uebersicht.py --pruefen` **105 Einträge, 0 ohne Grammatik, 0 ohne Ziel** · P-SD-15 `bestand` **0 Befunde**, `kettenaufrufe` **0 Befunde, 0 ungeprüft**, `Pruefablauf.md` 4 neu erzeugt (41 → 42 Zeilen), `pruefen.sh --trocken` wählt `steuerung` als Riegel und über das Muster; **Stufe 1 auf GitHub steht aus** (läuft erst mit dem PR, SD-04) · P-SD-16 Gegenprobe im PR: SD-04 · Prüfstand: Bericht in der Commit-Nachricht |
-| SD-04 | — | — | — |
+| SD-03 | erledigt 26.09.2026 | `61e8c79` (Rahmenplan Fassung 129) | P-SD-13 `decken.py --selbstprobe` **22 Fälle, 0 Fehlschläge** — 20 Decken je einmal gerissen, 2 Gegenproben; `uebersicht.py --selbstprobe` **7 Fälle, 0 Fehlschläge** · P-SD-14 `decken.py` **20 Decken, 0 gerissen** (erster Lauf: 1 — F-SD-11, behoben mit Fassung 129); `uebersicht.py --pruefen` **105 Einträge, 0 ohne Grammatik, 0 ohne Ziel** · P-SD-15 `bestand` **0 Befunde**, `kettenaufrufe` **0 Befunde, 0 ungeprüft**, `Pruefablauf.md` 4 neu erzeugt (41 → 42 Zeilen), `pruefen.sh --trocken` wählt `steuerung` als Riegel und über das Muster; **Stufe 1 auf GitHub steht aus** (läuft erst mit dem PR, SD-04) · P-SD-16 Gegenprobe im PR: SD-04 · Prüfstand: Bericht in der Commit-Nachricht |
+| SD-04 | erledigt 26.09.2026 | *wird beim Commit eingetragen* (Rahmenplan Fassung 130; PR #92) | P-SD-05 „Backlog Nr. N" **773 Verweise, 202 Nummern, 0 unauflösbar** (vollständig statt Stichprobe, E-SD-46) · „Rahmenplan Abschnitt N" **30, alle 1–9** · `Rahmenplan-Archiv…md` **37 Nennungen, 2 Dateien vorhanden** · „Fassung NN" strukturell (Archiv 1–15, Archiv-2 16–124, Verlauf 125–130) · P-SD-17 Fundstellen: `CLAUDE.md` 2 (Punkte 4, 5), 7, 9; Rahmenplan 2.1 K5, K9, 2.2 R62, 5, 9 — je Regel eine Fassung, die Konzeptfassung in 4.10 ist damit abgelöst · P-SD-18 Changelog-Eintrag **vorhanden** · P-SD-19 `wortliste` im Prüfstand **0** (Bereich c misst die 14 normativen Dokumente; Rahmenplan und Backlog sind Klasse H, `Pruefablauf.md` 6.6) · Rahmenplan **459 → 460 Zeilen**, Kopf **15** · F-SD-07 erledigt (`Technik.md`, `Handbuch.md` 10) · P-SD-15, P-SD-16: mit dem PR (Prüfdokument 3.6) · Prüfstand: Bericht in der Commit-Nachricht |

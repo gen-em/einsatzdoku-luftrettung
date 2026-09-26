@@ -3272,9 +3272,11 @@ Modellname nachträglich aufgelöst, ändert das an bestehenden Einsätzen nicht
 dort steht weiter, was beim Anlegen galt. Sichtbar ist die Angabe im
 CSV-Export (Abschnitt 8), nicht in der Einsatzansicht.
 
-Darüber hinaus ausgewertet wird davon vorerst nichts — die Angabe wird
-gespeichert, damit später überhaupt zählbar ist, welche Geräte im Einsatz sind.
-Bevor eine Auswertung entsteht, wird sie in der Datenschutzerklärung benannt.
+Ausgewertet wird die Gerätekennung unter Betrieb → Statistik (Abschnitt
+12.2): welche Modelle koppeln und aus welcher Quelle ein Einsatz stammt. Die
+Momentaufnahme am einzelnen Einsatz wird dort nicht ausgewertet; sie steht im
+Export. Die Datenschutzerklärung soll die Erhebung benennen — dieser Text
+steht noch aus (Backlog Nr. 80).
 
 ### 10.1 Die App installieren
 

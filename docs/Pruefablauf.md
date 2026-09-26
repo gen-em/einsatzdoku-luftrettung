@@ -143,8 +143,8 @@ Rulesets auf `main`: „Main Protect" (Pull-Request-Pflicht, Pflichtprüfung
 `Stufe 1` mit **„Require branches to be up to date before merging"** — gesetzt
 am 23.09.2026, Konzept TB —, kein Force-Push, kein Löschen, Bypass leer) und „Main
 Merge-Recht" (Restrict updates, Bypass nur die BetreiberIn, Modus „pull
-requests only"). Die Maske und die drei Fallen dabei stehen in
-`Rahmenplan.md` 6b.
+requests only"). Die Maske und die Fallen dabei stehen in
+`Rahmenplan-Archiv-2.md` 6b (`Rahmenplan.md` 6b verweist dorthin).
 
 > **Ohne Zweigschutz ist jedes Tor eine Auskunft.** Der Lauf färbt sich rot,
 > und der Stand liegt trotzdem auf `main` — und damit auf Staging. Das war
