@@ -53,7 +53,8 @@ mariadb -e "DROP DATABASE IF EXISTS \`$DB\`;
   FLUSH PRIVILEGES;"
 
 echo "== 2. PHP-Server starten"
-php -S "$ADRESSE" -t "$SERVER" >/tmp/php-server.log 2>&1 &
+# Vier Arbeiter wie in `lokal_starten.sh` -- dort steht, warum.
+PHP_CLI_SERVER_WORKERS=${PHP_ARBEITER:-4} php -S "$ADRESSE" -t "$SERVER" >/tmp/php-server.log 2>&1 &
 curl -s --noproxy '*' --retry 20 --retry-delay 1 --retry-all-errors \
      -o /dev/null "http://$ADRESSE/install.php"
 

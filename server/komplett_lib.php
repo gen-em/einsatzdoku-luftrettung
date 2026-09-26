@@ -1002,9 +1002,16 @@ function komp_siegel_schub(string $quelle, string $ziel, string $schluessel,
     /* Wie beim Dump: erst auf den gueltigen Teil zurueckschneiden. Der ist
      * hier ausrechenbar — der Kopf plus die Bloecke, die der Zustand kennt —,
      * steht aber trotzdem im Zustand, weil die Blocklaengen im Kopf der
-     * Bloecke stehen und nicht in einer Formel. */
+     * Bloecke stehen und nicht in einer Formel.
+     *
+     * IST DIE DATEI KUERZER ALS DER ZUSTAND SAGT — oder weg —, beginnt die
+     * Versiegelung von vorn. Anhaengen hiesse, Block `i` hinter ein Loch zu
+     * schreiben, und die Datei liesse sich spaeter nicht oeffnen, ohne dass
+     * jetzt jemand etwas merkte (Nr. 328). */
     $gueltig = (int)($z['siegel_bytes'] ?? 0);
-    if ($i === 0 || $gueltig === 0) {
+    clearstatcache(true, $ziel);
+    $da = is_file($ziel) ? (int)filesize($ziel) : -1;
+    if ($i === 0 || $gueltig === 0 || $da < $gueltig) {
         $fh = fopen($ziel, 'wb');
         if ($fh === false) { throw new RuntimeException('Die versiegelte Datei liess sich nicht anlegen: ' . $ziel); }
         fwrite($fh, KOMP_SIEGEL);
@@ -1012,7 +1019,7 @@ function komp_siegel_schub(string $quelle, string $ziel, string $schluessel,
         $gueltig = ftell($fh);
         fclose($fh);
         $i = 0;
-    } elseif (is_file($ziel) && filesize($ziel) > $gueltig) {
+    } elseif ($da > $gueltig) {
         $fh = fopen($ziel, 'r+b');
         if ($fh !== false) { ftruncate($fh, $gueltig); fclose($fh); }
     }
@@ -1040,12 +1047,27 @@ function komp_siegel_schub(string $quelle, string $ziel, string $schluessel,
             if ($chiffre === false) {
                 throw new RuntimeException('Die Versiegelung ist fehlgeschlagen (Block ' . $i . ').');
             }
-            fwrite($zh, pack('N', strlen($chiffre)) . $nonce . $tag . $chiffre);
+            /* DIE GUELTIGE LAENGE WIRD MITGEZAEHLT, NICHT MIT `ftell()`
+             * ERFRAGT. Auf einem Handle im Anhaengemodus (`'ab'`) beginnt
+             * `ftell()` bei null und zaehlt nur, was DIESE Anfrage
+             * geschrieben hat — der Kopf und die Bloecke frueherer Haeppchen
+             * fehlen darin. Bis Web 21.1.1 stand hier genau das; das naechste
+             * Haeppchen schnitt die Datei dann auf diese zu kleine Zahl
+             * zurueck, mitten in einen schon geschriebenen Block, und das
+             * Backup liess sich nie mehr oeffnen (Nr. 328, F-P5c-170).
+             * Gezaehlt wird erst nach einem vollstaendigen Schreiben: Ein
+             * halber Block zaehlt nicht, und der naechste Lauf schneidet ihn
+             * weg. */
+            $satz = pack('N', strlen($chiffre)) . $nonce . $tag . $chiffre;
+            if (fwrite($zh, $satz) !== strlen($satz)) {
+                throw new RuntimeException('Die Versiegelung liess sich nicht vollständig '
+                    . 'schreiben (Block ' . $i . '): ' . $ziel);
+            }
+            $gueltig += strlen($satz);
             $i++; $getan++;
         }
     } finally {
         fclose($qh);
-        $gueltig = ftell($zh);
         fclose($zh);
     }
     $z['siegel_i'] = $i;

@@ -230,6 +230,110 @@ deshalb über Googles Maven-Central-Spiegel mit Maven Central als Rückfall
 (E-AR-13) — **nur dort**, die Bauskripte im Repositorium nennen keine neue
 Quelle.
 
+## [Web 21.1.3] — 2026-09-26
+
+**Die Sprungmarken der Leiste weichen früher.** Die erste Änderung nach dem
+Merge von P5c (PR #89). **Korrekturstufe ohne Migration.**
+
+### Geändert
+
+- **Web: Die Sprungmarken in der festen Leiste stehen erst ab 950 px
+  Fensterhöhe, nicht mehr ab 800** (F-P5c-164, Entscheidung der
+  Betreiberin vom 26.09.2026). AP9 hatte sie unter 800 px ausgeblendet,
+  damit auf einem niedrigen Laptopfenster alle Einträge der Leiste ohne
+  Rollen erreichbar sind, und die Lücke darüber benannt: Zwischen 800 und 946 px standen die
+  Marken, und drei Listen passten nicht — Servereinstellungen braucht rund
+  947 px, Status 891, Updates 835. Nachgemessen bei 1280 px Breite und acht
+  Höhen von 800 bis 1000 px: mit 800 bei 800 px 11 von 14 Seiten
+  vollständig, bei 900 px 13 von 14; mit 950 überall 14 von 14. Bei 950 px
+  stehen alle acht Marken der Servereinstellungen, bei 949 keine. **Was
+  bleibt:** Wer ein Fenster zwischen 800 und 949 px hat, sieht die Marken
+  nicht mehr; der Weg zur Karte führt dort über das Rollen der Seite. Unter
+  1024 px Breite, in der Schublade, stehen sie weiter immer.
+
+## [Web 21.1.2] — 2026-09-25
+
+**Ein Komplett-Backup, das über zwei Häppchen versiegelt wurde, ließ sich
+nicht mehr öffnen.** Noch im Abschluss von P5c (AP11), gefunden vom letzten
+Prüfstand. **Korrekturstufe ohne Migration.**
+
+### Behoben
+
+- **Web: Die Versiegelung des Komplett-Backups zerschnitt beim Wiederanlauf
+  ihre eigene Datei** (Nr. 328, F-P5c-170). Das Backup entsteht in
+  Häppchen, damit keine Anfrage an die Zeitgrenze des Webspace stößt, und
+  wird danach Block für Block versiegelt. Fiel die Grenze mitten in die
+  Versiegelung, merkte sich `komp_siegel_schub()` als gültige Länge der
+  Datei, was `ftell()` meldete. Auf einer Datei im Anhängemodus zählt
+  `ftell()` aber ab null — also nur, was die laufende Anfrage geschrieben
+  hatte, ohne Kopf und ohne die Blöcke davor. Das nächste Häppchen schnitt
+  die Datei auf diese zu kleine Zahl zurück, mitten in einen Block, und
+  schrieb dahinter weiter. **Die Datei sah aus wie ein Backup, hatte die
+  richtige Größe, ging aufs Backup-Ziel — und ließ sich nie mehr öffnen.**
+  Aufgefallen wäre das erst beim Wiederherstellen. Jetzt wird die Länge
+  nach jedem vollständig geschriebenen Block mitgezählt, und ist die Datei
+  kürzer als gemerkt oder fort, beginnt die Versiegelung von vorn.
+  **Wie oft es auf Produktiv getroffen hat, ist nicht zu sagen.** Es
+  braucht eine Zeitgrenze, die genau in die Versiegelung fällt, und die
+  dauert bei kleinem Bestand Millisekunden — unwahrscheinlich, nicht
+  ausgeschlossen. Die Zeile stand mindestens seit Web 15.6.0 da; weiter
+  reicht die Historie dieses Arbeitsstands nicht zurück. **Deshalb einmal
+  prüfen** (P-P5c-45): jeden vorhandenen Stand unter Betrieb →
+  Komplett-Backup herunterladen. Bricht der Download ab, steht unter
+  Verwaltung → Protokoll → System „Download … abgebrochen", und dieser
+  Stand ist nicht zu retten — ein neues Backup anlegen.
+
+- **Web: `doku_lib.php` lädt `db.php` nicht mehr** (F-P5c-171, Backlog
+  Nr. 329). Die Bibliothek braucht nichts daraus, und `db.php` bricht ohne
+  `config.php` ab. Die Ankerprüfung aus AP9 lädt `doku_lib.php`, und in
+  Stufe 1 gibt es keine `config.php`: Der erste Lauf auf dem Pull Request
+  von P5c war rot, obwohl `anker` in jedem Prüfstand grün war — dort ist
+  die Anlage eingerichtet. Die Seiten laden `db.php` selbst
+  (`doku_seite.php`), für sie ändert sich nichts. **Was bleibt:** Die
+  Lücke zwischen Prüfstand und Tor steht als Nr. 329 im Backlog.
+- **Werkzeug: Das Tor übergibt `anker` an die Gegenlesung** (F-P5c-172).
+  AP9 hat die Ankerprüfung als Riegel eingetragen und im Quelltextläufer
+  verdrahtet, aber im Schritt „Prüfbericht gegenlesen" von `pruefung.yml`
+  fehlte `--riegel "anker=$q"` — das Runbook in `Pruefablauf.md` 6 verlangt
+  es ausdrücklich. Mit `--alle-riegel` war der zweite Lauf von Stufe 1
+  deshalb rot, obwohl jeder Prüfschritt grün war. Örtlich mit denselben
+  Argumenten nachgestellt: ohne die Zeile „Riegel ‚anker' … läuft aber
+  nicht im Tor", mit ihr „Prüfbericht in Ordnung".
+
+### Geändert
+
+- **Werkzeug: Die Komplettprobe erzwingt die Versiegelung über mehrere
+  Häppchen** (Teil 4, zwei neue Fälle, jetzt 69 Erwartungen). Ob die
+  Häppchengrenze ins Siegeln fiel, entschied bisher die Laufzeit: In
+  allen früheren Läufen tat sie es nicht, im letzten Prüfstand des
+  Abschlusses einmal — bei 66 825 Zeilen im Bestand (einzeln gefahren sind
+  es rund 19 000, und der Dump braucht ein Häppchen). Jetzt schreibt jedes Häppchen genau einen Block, und am
+  Ende muss derselbe Inhalt herauskommen; dazu eine Zieldatei, die zwischen
+  zwei Häppchen verschwindet. Gegenprobe gegen die alte Bibliothek: beide
+  Fälle offen, 2 von 69.
+- **Werkzeug: Der Bedienweg `ap5-standort-loeschen-variante-b` wartet auf
+  die Seite, nicht auf die Uhr.** Er schickte als einziger Weg ein Formular
+  ab und maß danach nach festen 600 ms. Einzeln reichte das, im Prüfstand
+  des Abschlusses unter Last nicht: Die Adresse trug schon die Zielzeile,
+  die Seite lud noch, und der Weg meldete „Variante b greift nicht" — als
+  wäre das Rettungsmittel mitgelöscht worden. Mit 250 ms lässt sich genau
+  dieses Bild von Hand herstellen. Jetzt wartet er wie alle übrigen Wege
+  auf die Navigation.
+- **Werkzeug: Der örtliche PHP-Server läuft mit vier Arbeitern**
+  (`PHP_CLI_SERVER_WORKERS` in `lokal_starten.sh` und
+  `lokal_einrichten.sh`, Backlog Nr. 301). Im nächsten Prüfstand kamen die
+  ersten zwei Wege der Bedienprobe nach der Anmeldung nicht an ihre Seite
+  (`net::ERR_TOO_MANY_RETRIES`) — dasselbe Bild wie im ersten Prüfstand von
+  RW-04, und wie dort erreichte die Anfrage den Server nie. Ein Arbeiter
+  bediente eine Anfrage zur Zeit, hinter socat, für einen Browser, der
+  sechs Verbindungen gleichzeitig öffnet; mit vier Arbeitern war WebKit
+  schon in RW (F-RW-23) 3 von 3 grün. Die Anwendung zählt nichts im
+  Prozessspeicher, und Produktiv bedient ohnehin viele Anfragen zugleich.
+- **Doku:** `docs/Technik.md` 4 (der Siegelzustand sind zwei Zahlen, nicht
+  eine, und warum die zweite gezählt wird), Backlog Nr. 328, Prüfdokument
+  P5c (F-P5c-170, P-P5c-45), Rahmenplan (Erledigt-Zeile P5c, Abschnitt 6).
+
+
 ## [Web 21.1.1] — 2026-09-25
 
 **Der Abschluss von P5c: ein Tor, das bei einem Fehler aufging, und was die
@@ -281,8 +385,16 @@ nicht auf dem Papier stand.
   jetzt in `Technik.md` 4.99q, damit es das Löschen des Konzepts übersteht.
 - **Doku: Backlog Nr. 326 berichtigt.** AP9 hatte ihn mit der Begründung
   angelegt, das Protokoll führe keine Migrationen. Es führt sie seit
-  20.39.0 (`migration_ausgefuehrt`); offen ist nur, ob die Karte
-  „Ausgeführt" bleibt.
+  20.39.0 (`migration_ausgefuehrt`). **Die Karte „Ausgeführt" bleibt**
+  (Q-P5c-53): Nur sie nennt die Fassung je Kennung; das Versprechen aus R66,
+  sie entfalle, ist zurückgenommen.
+- **Doku: Die Konzepte P5c und RW sind mit dem Abschluss gelöscht** —
+  samt den beiden Vorbereitungen und den Mockup-Ordnern `konzept-p5c/` und
+  `konzept-rw/` (Q-P5c-54); letzter Stand in der Git-Historie `ae829e6`.
+  Was nur dort stand und bleibt, steht jetzt in `Technik.md` 4.99q. Die
+  Prüfdokumente bleiben, bis ihre Prüflisten abgehakt sind. `CLAUDE.md` 4
+  nennt neben `pat_wrap_rc` auch `rw_privat` als Hülle, die nie am
+  Server-Anteil hängen darf (Q-P5c-55).
 - **Werkzeug: Zweitfaktorprobe Teil 2b und Rückwegprobe A7** (F-P5c-166):
   `totp_spalten_da()` und `rw_zustand()` mit einer Verbindung, deren
   `prepare()` wirft — beide müssen abbrechen; mit fehlender Spalte (42S22)

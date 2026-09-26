@@ -65,6 +65,7 @@ if [ -n "$PHPFASSUNG" ]; then
     sleep 1
     docker rm -f nadoku-php83-lauf >/dev/null 2>&1 || true
     docker run -d --rm --name nadoku-php83-lauf --network host \
+        -e PHP_CLI_SERVER_WORKERS="${PHP_ARBEITER:-4}" \
         -v "$WURZEL/server:/app" -w /app nadoku-php83 \
         php -S "$ADRESSE" -t /app >/dev/null \
         || { zeile "Behälter startete nicht."; exit 1; }

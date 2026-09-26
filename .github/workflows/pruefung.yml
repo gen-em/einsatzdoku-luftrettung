@@ -207,6 +207,7 @@ jobs:
           python3 tools/pruefstand/bericht.py lesen --commit "$KOPF" --basis origin/main --alle-riegel \
             --riegel "syntax-php=${PHP_ZAHL:-nicht-gelaufen}" --riegel "wortliste=$q" --riegel "vollstaendigkeit=$q" \
             --riegel "linkprobe=$q" --riegel "bestand=$q" --riegel "syntax-py=$q" --riegel "handbuch=$q" \
+            --riegel "anker=$q" \
             --riegel "installweiche=$q" --riegel "behandler=$q" --riegel "sitzungshaertung=$q" \
             --riegel "cspprobe=$q" --riegel "jobregister=$q" --riegel "migrationsregister=$q" \
             --riegel "kontraste=$(r "$KONTRASTE")" --riegel "kettenaufrufe=$(r "$KETTENAUFRUFE")" \

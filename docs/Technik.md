@@ -4361,6 +4361,18 @@ Block *i* deckt die Klartextbytes [i·256 KB, (i+1)·256 KB). Der Klartext-Dump
 liegt für die Dauer des Baus im Bauordner und wird gelöscht, sobald die
 versiegelte Fassung steht.
 
+**Neben dem Index merkt sich der Zustand die gültige Länge der Datei**
+(`siegel_bytes`) — die Blöcke sind verschieden lang, und das nächste
+Häppchen schneidet zuerst darauf zurück, was ein abgebrochenes Häppchen
+hinterlassen hat. Diese Länge wird **mitgezählt**, nach jedem vollständig
+geschriebenen Block, und nicht mit `ftell()` erfragt: Auf einer Datei im
+Anhängemodus zählt `ftell()` ab null, also nur, was die laufende Anfrage
+geschrieben hat. Bis Web 21.1.1 stand dort genau das, und eine
+Versiegelung über zwei Häppchen ergab eine Datei, die sich nie mehr öffnen
+liess (Nr. 328). Ist die Datei kürzer als die gemerkte Länge oder fort,
+beginnt die Versiegelung von vorn. Die Komplettprobe fährt beides fest
+über mehrere Häppchen, statt es der Laufzeit zu überlassen.
+
 #### Das Format EDKOMP1
 
     "EDKOMP1\n"                                       8 Byte
@@ -6935,14 +6947,16 @@ Leiste nennte die Karten des gerade offenen Reiters und wechselte bei jedem
 Reiterwechsel ihren Inhalt. Der Bedienweg `admin-protokoll-reiter` misst
 **0** Unterpunkte.
 
-**Unter 800 px Fensterhöhe blendet das Stylesheet sie in der festen Leiste
-aus** (ab Web 21.1.0, P5c/AP9, E-P5c-131): `@media (min-width:1024px) and
-(max-height:799px)` setzt `.leiste-gruppe .eintrag-unterliste` auf
+**Unter 950 px Fensterhöhe blendet das Stylesheet sie in der festen Leiste
+aus** (ab Web 21.1.0, P5c/AP9, E-P5c-131; bis 21.1.2 unter 800 px,
+F-P5c-164): `@media (min-width:1024px) and
+(max-height:949px)` setzt `.leiste-gruppe .eintrag-unterliste` auf
 `display:none`. `menue.js` baut sie weiter — die Entscheidung steht an einer
 Stelle, im Stylesheet, und die Schublade unter 1024 px behält sie. Anlass:
 bei 1280 × 720 waren auf 8 von 14 Seiten nicht alle 18 Einträge ohne Rollen
-erreichbar. Die Lücke zwischen 800 und 946 px ist benannt (`Design.md` 9.25,
-F-P5c-164).
+erreichbar. Mit 800 als Schwelle blieben darüber drei Listen unvollständig
+(Servereinstellungen braucht rund 947 px); seit 21.1.3 sind es bei jeder
+gemessenen Höhe 14 von 14 Seiten (`Design.md` 9.25, F-P5c-164).
 
 Die Markierung („welche Karte steht gerade oben") läuft über einen
 `IntersectionObserver`, dessen `rootMargin` die Kopfhöhe plus einen Saum

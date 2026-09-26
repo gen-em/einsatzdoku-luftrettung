@@ -293,8 +293,9 @@ if (await dlg.count()) {
   pruefe('nach richtigem Passwort ist der Dialog zu',
          await tab.locator('dialog.dialog[open]').count(), 0);
 }
-/* DEN ZWEITEN TAB SCHLIESSEN, UND ZWAR SOFORT. Der Prüfstand fährt gegen
- * `php -S`, und der bedient EINE Anfrage zur Zeit. Ein zweiter offener Tab
+/* DEN ZWEITEN TAB SCHLIESSEN, UND ZWAR SOFORT. Der Prüfstand fuhr gegen
+ * `php -S`, und der bediente bis zum Abschluss von P5c EINE Anfrage zur Zeit
+ * (seither vier Arbeiter, `lokal_starten.sh`). Ein zweiter offener Tab
  * mit einer Karte hält die Leitung besetzt; der nächste Schritt wartete
  * daraufhin minutenlang auf eine Seite, die einzeln in 1,7 Sekunden da ist
  * (gemessen 14.09.2026). Das sah aus wie ein Fehler der Anmeldung und war

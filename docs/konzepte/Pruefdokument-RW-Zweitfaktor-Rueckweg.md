@@ -1,6 +1,10 @@
 # Prüfdokument RW — der Rückweg beim Zweitfaktor
 
-Gehört zu `Konzept-RW-Zweitfaktor-Rueckweg.md` (im P5c-Konzept AP5b). Nach
+Gehörte zu `Konzept-RW-Zweitfaktor-Rueckweg.md` (im P5c-Konzept AP5b) — **das
+Konzept ist mit dem Abschluss von P5c am 25.09.2026 gelöscht**, samt
+Vorbereitung und `konzept-rw/`; der letzte Stand liegt in der Git-Historie
+(`ae829e6`), Tabelle 5.2 und die Grenzen stehen in `docs/Technik.md` 4.99q.
+Nach
 `CLAUDE.md` 7: was maschinell geprüft wurde (Mittel **und** Zahl), was im
 Browser, was nicht und warum, und eine abhakbare Prüfliste — je Punkt der
 Bedienweg, das erwartete Ergebnis und woran ein Scheitern zu erkennen ist.
@@ -21,7 +25,7 @@ Prüfpunkte in 2 und das, was 0 nennt.**
 | **Die Sperre nach zehn Fehlversuchen am Endpunkt** (RW-02) | Zehn falsche Token sperrten die Adresse der Sandbox für jede Anmeldung (F-RW-16). Gemessen: Ein Fehlversuch zählt unter dem Kontomerkmal im Topf `login`, eine gesetzte Sperre dort hält auch das richtige Token auf (429). Die Leiter misst die Ratenprobe. | — |
 | **Die Rückwegprobe gegen Staging** (RW-03, Stufe 2) | Der Schritt steht in `auslieferung.yml`, `kettenaufrufe` hält den Aufruf gegen die Schnittstelle (0 ungeprüft) — gelaufen ist er nicht: Stufe 2 fährt erst nach dem Merge, und `STAGING_TOTP` muss dann stehen. Welchen Prüfweg phpseclib beim Hoster nimmt, sagt erst dieser Lauf. | P-RW-02 |
 | **Der Rückweg in Firefox und WebKit — im Tor** (RW-03, RW-04) | Von Hand in RW-04 gemessen (1c: Firefox 23 / 0, WebKit 23 / 0); die Kette und der Prüfstand fahren weiter nur Chromium. **WebKit braucht dafür einen `php -S` mit mehreren Arbeitern** — mit einem blieb es in 2 von 4 Läufen beim zweiten Anmelden hängen (F-RW-23) | Nr. 300, Nr. 301; P-RW-03 |
-| **Zwei Verbindungsabbrüche der Bedienprobe im ersten Prüfstand von RW-04** | `admin-protokoll-reiter` und `-zeilen` kamen nicht an die Seite (`ERR_TOO_MANY_RETRIES`), obwohl der Server mit 200 antwortete; einzeln 3 von 3 grün. Die Verbindungsschicht der Sandbox (TLS-Vorschaltung vor einem einfädigen `php -S`) ist die naheliegende Stelle — belegt ist das nicht, anders als bei WebKit (F-RW-23) | tritt es wieder auf: `php -S` mit mehreren Arbeitern, wie bei F-RW-23 (Backlog Nr. 301) |
+| **Zwei Verbindungsabbrüche der Bedienprobe im ersten Prüfstand von RW-04** | `admin-protokoll-reiter` und `-zeilen` kamen nicht an die Seite (`ERR_TOO_MANY_RETRIES`), obwohl der Server mit 200 antwortete; einzeln 3 von 3 grün. Die Verbindungsschicht der Sandbox (TLS-Vorschaltung vor einem einfädigen `php -S`) ist die naheliegende Stelle — belegt ist das nicht, anders als bei WebKit (F-RW-23) | **aufgetreten und behoben im Abschluss von P5c (25.09.2026):** dieselben zwei Wege, derselbe Fehler, die erste Anfrage kam nie beim Server an. Seither startet der Server mit vier Arbeitern (`lokal_starten.sh`, Backlog Nr. 301; Prüfdokument P5c, 1j) |
 | **Ein einmaliger Fehlschlag des Bedienwegs `einstellungen-profil-rueckweg`** (RW-03) | Einmal rot in sieben Läufen, im selben Lauf mit den beiden Zweitfaktor-Wegen; die Stelle ist verloren. Danach nicht wieder aufgetreten: sechs Läufe von Hand und **drei Prüfstände** (RW-03 zweimal, das Aufnehmen von BR; Bedienprobe je **55 / 55**). Kein Befund mit Ursache, aber auch kein Grund, ihn wegzulassen. | — (tritt er wieder auf, steht der Schritt im Bericht) |
 | **Die Sperre von „10 falschen Signaturen" über HTTP** (RW-03) | Gemessen an der Bibliothek (`probe.php` B4): nach **5** falschen die Sperre im Topf `totp` — der Topf erlaubt fünf, nicht zehn; das Konzept nannte zehn aus dem Topf `login`. Über HTTP geht der Browser nie mit einer falschen Signatur, weil er vorher im Browser scheitert; handgebaute POSTs misst B8 für „nicht angeboten" (400), die echte Signatur und das gesperrte Konto — die Sperre nicht. | — |
 

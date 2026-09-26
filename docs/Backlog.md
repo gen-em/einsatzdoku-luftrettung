@@ -152,8 +152,11 @@ und 300 Funde aus AP4, 302, 303, 319 und 320 die nachgetragenen Anlässe aus
 dem Aufnehmen von BR (E-P5c-116), 301 für AP5b (Konzept RW), 321 ein Fund
 und 322 Funde aus AP7 (Stilvergleich, Reihenfolge des Prüfstands), 323 ein Fund aus AP8 (Referenz und Fixture auf Nutzlast 11), 324 ein Auftrag aus AP8 (Einmal-Skript für den Bestand zu 1.0), 325 ein Fund aus AP8 (GPX-Probe auf frischer Anlage), der Rest frei für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
 dazu: Die erste reichte nicht mehr, und 304 bis 318 hatte BR inzwischen
-vergeben; **329 bis 333** Konzept BV, der Vorgriff auf Backlog-Runde 4
-(Zweig `claude/intelligent-carson-q8f7ag`); **334 bis 338** die
+vergeben; 326 ein Fund aus AP9, **328 und 329** Funde aus AP11 (Komplett-Backup
+über zwei Häppchen, F-P5c-170; Quelltextprüfungen ohne Anlage, F-P5c-171) —
+329 lag in der Spanne von BV, und BV ist darauf ausgewichen; **330 bis 333**
+Konzept BV, der Vorgriff auf Backlog-Runde 4 (Zweig
+`claude/intelligent-carson-q8f7ag`; 330 bis 332 vergeben); **334 bis 338** die
 Android-Runde AR (Zweig `claude/affectionate-newton-6pzfkc`; 334 bis 337
 vergeben, 338 frei). *(Bis zum 25.09.2026 stand hier auf dem P5c-Zweig 329
 und auf dem AR-Zweig 339 — beide Zweige hatten den Absatz getrennt
@@ -2006,7 +2009,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     - **Nicht hier:** der Log-Helfer (`error_log()` 39× in 19 Dateien,
       Präfixe uneinheitlich, nur `json_fehler()` mit Kennung). Er ist der
       Schreibweg des 10c-Protokolls und wird dort entworfen
-      (`Vorbereitung-P5c-Protokollierung.md`, V7).
+      (`Vorbereitung-P5c-Protokollierung.md`, V7 — gelöscht mit dem
+      Abschluss von P5c, Historie `ae829e6`).
 
     **Paket 4 — JavaScript.**
     - JSON-POST mit CSRF-Kopf 15× in 6 Dateien (`export.js` 2,
@@ -3491,6 +3495,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mehreren Arbeitern (`hochfahren.sh`), sonst misst er die Sandbox statt
     der Anwendung. **Zuordnung: Backlog-Runde.**
 
+    **Der Server-Teil ist erledigt (P5c/AP11, 25.09.2026):** `hochfahren.sh`
+    startet den Server seither mit vier Arbeitern (`lokal_starten.sh`,
+    `lokal_einrichten.sh`, auch im Behälter für PHP 8.3). Anlass war nicht
+    WebKit, sondern die Bedienprobe: Zum zweiten Mal nach RW-04 kamen ihre
+    ersten zwei Wege nach der Anmeldung nicht an die Seite
+    (`net::ERR_TOO_MANY_RETRIES`), und die Anfrage erreichte den Server nie.
+    **Offen bleibt** die Zeile in `Sandbox-Setup.md` 1 und Nr. 183.
+
 318. **`pysyntax` sieht ungültige Escape-Folgen nicht, und zwei Werkzeuge
     tragen welche.** *Aufgenommen 24.09.2026 mit dem Abschluss von Konzept BR,
     gefunden beim Belegen von P-BR-01 im Log des PR-Laufs 36037964804.* Im Tor
@@ -3606,20 +3618,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ist danach aus dem Repositorium entfernt; die 1.0 liest keine Nutzlast
     von vor 1.0.
 
-326. **Bleibt die Karte „Ausgeführt" auf Betrieb → Updates?** *Aufgenommen
-    25.09.2026 in P5c/AP9 (F-P5c-146), berichtigt in P5c/AP11.* Die Karte
-    versprach, sie stehe „bis P5" dort, danach führe das Audit-Protokoll die
-    ausgeführten Kennungen (R66), und sie entfalle. AP9 hat den Satz
-    gestrichen und diesen Eintrag mit der Begründung angelegt, das Protokoll
-    schreibe keine Migrationen. **Das war falsch** (Gegenlesung AP11): Seit
-    P5c/AP2 schreibt `migrationen_lauf()` je ausgeführter Kennung einen
-    Eintrag `migration_ausgefuehrt` in den Reiter Verwaltung (E-P5c-38) —
-    für `update.php` wie für die Seite. Offen ist damit nur noch die Frage,
-    die R66 schon beantwortet hatte: **Entfällt die Karte jetzt, oder bleibt
-    sie**, weil sie als Einzige die Fassung („Web") je Kennung nennt? Die
-    Dauer eines Laufs steht an keiner der beiden Stellen. *Zuordnung:* die
-    Entscheidung der Betreiberin im Abschluss von P5c.
-
 327. **Die Rollenmatrix führt die Handlungen der BetreiberIn-Seiten nicht
     einzeln.** *Aufgenommen 25.09.2026 in P5c/AP11 (Gegenlesung AP4).*
     `docs/Technik.md` 4.99p hat eine Zeile je Handlung auf den Seiten, die
@@ -3634,6 +3632,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Support 403, BetreiberIn `durch`) und den Platzhalter anlegen. *Abnahme:*
     Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
     Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
+
+329. **Der Prüfstand fährt die Quelltextprüfungen mit eingerichteter Anlage,
+    Stufe 1 ohne.** *Aufgenommen 25.09.2026 in P5c/AP11 (F-P5c-171).* Die
+    Ankerprüfung aus AP9 lädt `server/doku_lib.php`, und die lud `db.php`,
+    das ohne `config.php` abbricht. Im Prüfstand gibt es die Datei — dort
+    war `anker` in jedem Lauf grün. In Stufe 1 gibt es sie nicht, und der
+    erste Lauf auf dem Pull Request von P5c war rot, nach sechs Läufen des
+    Prüfstands. Behoben ist die eine Stelle (`doku_lib.php` braucht `db.php`
+    nicht, Web 21.1.2); **offen ist die Lücke**: Jedes künftige
+    Quelltextwerkzeug, das eine Serverbibliothek mit `db.php` lädt, ist
+    örtlich grün und im Tor rot. **Der zweite Lauf fand einen zweiten Fall
+    derselben Lücke (F-P5c-172):** AP9 hat `anker` als Riegel in
+    `pruefablauf.json` eingetragen, aber nicht als `--riegel` in den
+    Schritt „Prüfbericht gegenlesen" von `pruefung.yml` — obwohl das
+    Runbook (`Pruefablauf.md` 6) genau das verlangt. `--alle-riegel` war
+    im Tor rot; örtlich fährt diesen Schritt niemand. *Weg:* Der Prüfstand
+    fährt `quelltext pruefen.sh --selbstprobe` und `alle` mit
+    beiseitegelegter `config.php` — so, wie das Tor sie sieht —, und
+    `bericht.py lesen --alle-riegel` mit genau den `--riegel`, die
+    `pruefung.yml` übergibt. *Abnahme:* mit dem Stand vor 21.1.2 im
+    Prüfstand zweimal rot, an `anker` und an der fehlenden Übergabe; mit
+    dem heutigen grün. *Zuordnung:* Backlog-Runde.
 
 334. **Die Prüfwerkzeuge der Android-App hängen an keinem Lauf.**
     *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-05, E-AR-12).*
@@ -10802,7 +10822,9 @@ zutreffen.
     Einträge, 14 Seiten): bei 1280 × 720 mit den Sprungmarken auf 6 Seiten
     vollständig — sie fallen deshalb unter 800 px Fensterhöhe weg
     (E-P5c-131), dann auf 14 von 14; bei 1280 × 900 auf 13 von 14, die
-    Servereinstellungen (acht Sprungmarken) bei 16 von 18.
+    Servereinstellungen (acht Sprungmarken) bei 16 von 18. **Mit Web 21.1.3
+    liegt die Schwelle bei 950 px** (F-P5c-164, Entscheidung der
+    Betreiberin): bei 800 bis 1000 px Höhe überall 14 von 14.
 
 245. **Erklärtext-Regel — und danach alle Texte in Verwaltung und Betrieb.**
     *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
@@ -10858,7 +10880,8 @@ zutreffen.
     Installation** (`instanz_kurz()`, Vorgabe „Gen-EM NAdoku"). Ein fest
     eingebautes „NAdoku" wäre auf einer umbenannten Installation schlicht
     falsch. Die **Webversion steht in der Fußzeile** des Blattes.
-    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`),
+    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`,
+    gelöscht mit dem Abschluss von P5c, Historie `ae829e6`),
     beide Blätter mit demselben Baustein `.blatt-druck`.
 
     **Erledigt mit Web 21.1.0 (P5c/AP9, 25.09.2026, E-P5c-08, -30, -50).**
@@ -10906,6 +10929,46 @@ zutreffen.
     Jetzt bleibt bei `status: 0` alles stehen, und der Knopf wird wieder
     frei. Belegt im Browser mit abgebrochenem Abruf, für Prüfen und für die
     Rückfrage.
+
+326. **Bleibt die Karte „Ausgeführt" auf Betrieb → Updates?** *Aufgenommen
+    25.09.2026 in P5c/AP9 (F-P5c-146), berichtigt in P5c/AP11.* Die Karte
+    versprach, sie stehe „bis P5" dort, danach führe das Audit-Protokoll die
+    ausgeführten Kennungen (R66), und sie entfalle. AP9 hat den Satz
+    gestrichen und diesen Eintrag mit der Begründung angelegt, das Protokoll
+    schreibe keine Migrationen. **Das war falsch** (Gegenlesung AP11): Seit
+    P5c/AP2 schreibt `migrationen_lauf()` je ausgeführter Kennung einen
+    Eintrag `migration_ausgefuehrt` in den Reiter Verwaltung (E-P5c-38) —
+    für `update.php` wie für die Seite. Offen ist damit nur noch die Frage,
+    die R66 schon beantwortet hatte: **Entfällt die Karte jetzt, oder bleibt
+    sie**, weil sie als Einzige die Fassung („Web") je Kennung nennt? Die
+    Dauer eines Laufs steht an keiner der beiden Stellen. *Zuordnung:* die
+    Entscheidung der Betreiberin im Abschluss von P5c.
+
+    **Erledigt 25.09.2026 (P5c/AP11, Q-P5c-53): Die Karte bleibt.** Sie
+    ist die einzige Stelle, die zu jeder Kennung die Fassung („Web") nennt;
+    das Protokoll sagt, wer wann ausgeführt hat. Beides steht in Handbuch
+    12.3. Das Versprechen aus R66, die Karte entfalle, ist damit
+    zurückgenommen.
+
+
+328. **Ein Komplett-Backup, über zwei Häppchen versiegelt, lässt sich nicht
+    öffnen.** *Aufgenommen und erledigt 25.09.2026 in P5c/AP11 (F-P5c-170),
+    gefunden vom letzten Prüfstand des Abschlusses.* `komp_siegel_schub()`
+    merkte sich als gültige Länge der Datei, was `ftell()` auf dem Handle im
+    Anhängemodus meldete — und das zählt ab null, also ohne Kopf und ohne die
+    Blöcke früherer Häppchen. Das nächste Häppchen schnitt die Datei darauf
+    zurück, mitten in einen Block; die Datei ging aufs Backup-Ziel und ließ
+    sich nie mehr öffnen. Die Komplettprobe sah es nicht, weil die Laufzeit
+    entschied, ob die Häppchengrenze ins Siegeln fiel.
+
+    **Erledigt mit Web 21.1.2 (P5c/AP11, 25.09.2026).** Die Länge wird nach
+    jedem vollständig geschriebenen Block mitgezählt; ist die Datei kürzer
+    als gemerkt oder fort, beginnt die Versiegelung von vorn. Die
+    Komplettprobe erzwingt beides in Teil 4 (drei Häppchen zu je einem
+    Block, dazu eine verschwundene Zieldatei) — gegen die alte Bibliothek
+    2 von 69 offen, gegen die neue 0 von 69. **Offen bleibt nur die Frage
+    an die Betreiberin**, ob ein vorhandener Stand auf Produktiv betroffen
+    ist (P-P5c-45 im Prüfdokument P5c).
 
 65. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
     Entscheidung.**
@@ -11018,3 +11081,4 @@ zutreffen.
     danach auf Gesten umgestellt (die Umgehung stand beim Boot noch im
     Werkzeug). Beide Umgehungen sind aus `emulator.sh` ausgetragen; `bild`
     meldet ein fehlendes PNG seither als Fehler, statt auszuweichen.
+

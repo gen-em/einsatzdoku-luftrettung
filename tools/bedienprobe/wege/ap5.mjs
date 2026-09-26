@@ -710,8 +710,17 @@ export const wege = [
           document.querySelector('form[id^="f-bdel-"]')?.getAttribute('data-confirm') || '');
         await k.bild('ap5-loeschen-rueckfrage');
 
-        await k.seite.evaluate(() => document.querySelector('form[id^="f-bdel-"]').submit());
-        await k.seite.waitForTimeout(600);
+        /* AUF DIE SEITE WARTEN, NICHT AUF DIE UHR. Hier standen bis zum
+           Abschluss von P5c fest 600 ms — der einzige Weg, der ein Formular
+           abschickte, ohne auf die Navigation zu warten. Einzeln reichte
+           das; im Prüfstand unter Last nicht: Die Adresse trug schon
+           „#veh-…", die Seite lud noch, keine Zeile war Ziel, die Karte zu
+           (Prüfdokument P5c, 1j). Mit 250 ms statt 600 lässt sich genau
+           dieses Bild von Hand herstellen. */
+        await Promise.all([
+          k.seite.waitForNavigation({ waitUntil: 'load' }).catch(() => {}),
+          k.seite.evaluate(() => document.querySelector('form[id^="f-bdel-"]').submit()),
+        ]);
         const mass = await k.seite.evaluate((n) => {
           const z = document.querySelector('.zeile:target');
           return {

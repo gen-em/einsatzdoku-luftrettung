@@ -790,11 +790,12 @@ Dazu **eine** Ausnahme nach unten: `@media (max-width:479px)` lässt in der
 Wahlliste den Zusatz unter den Text rutschen — „zurzeit Hubschrauber (RTH)"
 neben „Standard der Installation" sprengt sonst jede Zeile.
 
-Und **eine Höhenschwelle** (seit Web 21.1.0, E-P5c-131): `@media
-(min-width:1024px) and (max-height:799px)` nimmt die Sprungmarken aus der
-festen Leiste (9.25). Sie ist keine Stufe der Breitenskala und steht deshalb
-nicht in `--s-*`; die erzeugte Tabelle führt sie als eigene Zeile, und die
-Summe darunter zählt nur Breiten.
+Und **eine Höhenschwelle** (seit Web 21.1.0, E-P5c-131; seit 21.1.3 bei
+950 statt 800 px, F-P5c-164): `@media (min-width:1024px) and
+(max-height:949px)` nimmt die Sprungmarken aus der festen Leiste (9.25).
+Sie ist keine Stufe der Breitenskala und steht deshalb nicht in `--s-*`;
+die erzeugte Tabelle führt sie als eigene Zeile, und die Summe darunter
+zählt nur Breiten.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
@@ -803,7 +804,7 @@ Summe darunter zählt nur Breiten.
 | `@media (min-width:1600px)` | 3 |
 | `@media (min-width:1200px)` | 5 |
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
-| `@media (min-width:1024px) and (max-height:799px)` | 1 |
+| `@media (min-width:1024px) and (max-height:949px)` | 1 |
 | `@media (min-width:1024px)` | 3 |
 | `@media (min-width:720px)` | 14 |
 | `@media screen and (min-width:720px)` | 1 |
@@ -947,6 +948,13 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 
 Alle in `server/ui.php`. **Der Vorrat ist die Antwort auf die Freigaberegel:**
 Wer eine Seite baut, sucht hier, statt etwas Neues zu erfinden.
+
+> **Wo die freigegebenen Bilder liegen.** Die Mockups, die unten als Herkunft
+> genannt sind, liegen neben ihrem Konzept unter `docs/konzepte/konzept-…/`.
+> **M-P5c-01a bis -01f, M-P5c-02a bis -02e und M-RW-01 sind mit dem
+> Abschluss von P5c gelöscht** (25.09.2026, Q-P5c-54) — sie stehen in der
+> Git-Historie, letzter Stand `ae829e6` (`docs/konzepte/konzept-p5c/`,
+> `docs/konzepte/konzept-rw/`).
 
 ### 9.0 Wenn du X willst, nimm Y
 
@@ -2152,15 +2160,19 @@ Menüpunkte zweiter Ordnung; wer sie dafür hält, sucht dahinter eine eigene
 Seite. Die Markierung ist **fett, nicht orange**: Orange heißt in dieser
 Oberfläche „hier stehst du" und gehört dem aktiven Menüpunkt.
 
-**Unter 800 px Fensterhöhe fallen sie in der festen Leiste weg** (seit Web
-21.1.0, E-P5c-131; Kapitel 7). Gemessen bei 1280 × 720 mit der BetreiberIn
-(18 Einträge): Mit Sprungmarken waren auf 6 von 14 Seiten alle Einträge ohne
-Rollen erreichbar, ohne sie auf 14 von 14 — die Servereinstellungen tragen
-acht Marken. Die Einträge sind die Wege durch die Anwendung, die Marken nur
-Wege durch eine Seite. In der Schublade (unter 1024 px) bleiben sie. **Die
-Lücke darüber ist benannt:** Zwischen 800 und 946 px Höhe stehen die Marken,
-und drei Listen passen nicht ganz — Servereinstellungen braucht 947 px,
-Status 891, Updates 835; dort rollt die Leiste in sich. Gemessen wird „ohne
+**Unter 950 px Fensterhöhe fallen sie in der festen Leiste weg** (seit Web
+21.1.0, E-P5c-131, dort unter 800 px; seit 21.1.3 unter 950, F-P5c-164;
+Kapitel 7). Gemessen bei 1280 × 720 mit der BetreiberIn (18 Einträge): Mit
+Sprungmarken waren auf 6 von 14 Seiten alle Einträge ohne Rollen
+erreichbar, ohne sie auf 14 von 14 — die Servereinstellungen tragen acht
+Marken. Die Einträge sind die Wege durch die Anwendung, die Marken nur Wege
+durch eine Seite. In der Schublade (unter 1024 px) bleiben sie. **Warum 950
+und nicht 800:** Zwischen 800 und 946 px standen die Marken, und drei
+Listen passten nicht — Servereinstellungen braucht rund 947 px, Status 891,
+Updates 835. Nachgemessen bei 1280 px Breite und acht Höhen von 800 bis
+1000 px: mit 800 bei 800 px 11 von 14 Seiten vollständig, bei 900 px 13 von
+14; mit 950 überall 14 von 14. Bei 950 px stehen alle acht Marken der
+Servereinstellungen, bei 949 keine. Gemessen wird „ohne
 Rollen erreichbar" so: Ein Eintrag zählt, wenn er im Bild steht **oder** der
 Kopf seiner zugeklappten Gruppe. Einträge einer zugeklappten Gruppe haben in
 Chromium eine Box (36 px hoch, Lage wie offen) — wer nach der Box fragt, zählt
