@@ -8,6 +8,8 @@ Vier Stueck, jede beantwortet eine andere Frage:
                  PHP-Anteil. Alle Zweige bleiben stehen — auch die von
                  if/else —, was hier erwuenscht ist: Es erhoeht die Abdeckung,
                  und verglichen wird ohnehin dieselbe DOM gegen sich selbst.
+                 Je Datei ein Stueck, getrennt durch STUECK; stilvergleich.js
+                 misst jedes als eigenes Dokument (R4-08, Nr. 321).
   js_markup.html Das Markup, das ERST IM BROWSER entsteht: HTML-Zeichenketten
                  aus den JS-Modulen und den Inline-Skripten der Seiten.
   katalog.html   Fuer JEDEN Selektor aus style.css ein Element, das ihn trifft.
@@ -65,6 +67,17 @@ def php_zeichenketten(text):
     return h
 
 
+# DIE TRENNMARKE ZWISCHEN DEN SEITEN (R4-08, Nr. 321). In EINEM Dokument
+# teilten sich alle Seiten Hoehe und Verschachtelung: Eine Regel fuer Seite A
+# aenderte die Hoehe des Dokuments, damit `top`/`bottom` jedes absolut
+# gesetzten Elements auf ALLEN Seiten (`span.nur-vorlesen`), und eine Seite B,
+# die ein solches Element dazubekam, brachte eine Signatur mit, die niemand
+# geplant hatte. Nachgestellt: eine Regel, `--schreiben`, dann Seite B um 25
+# Zeilen mit Vorlesetext verlaengert — 1 ungeplant. Ein Kommentar, weil er
+# im Markup keiner Seite vorkommt und im Browser kein Element erzeugt.
+STUECK = '<!--STILVERGLEICH-STUECK-->'
+
+
 def seitenprobe():
     teile = []
     for pfad in sorted(glob.glob(SERVER + '/*.php')):
@@ -83,7 +96,7 @@ def seitenprobe():
                 os.path.basename(pfad), '\n'.join(aus_php))
         if h.strip():
             teile.append('<div data-quelle="%s">%s</div>' % (os.path.basename(pfad), h))
-    return '\n'.join(teile)
+    return ('\n' + STUECK + '\n').join(teile)
 
 
 def jsprobe():

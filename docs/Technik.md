@@ -733,6 +733,8 @@ Daten erst nach Server-Bestätigung.
 │   │   │                  lokal_einrichten.sh baut eine Installation von Null
 │   │   │                  auf (install.php über HTTP, Passwort im Browser,
 │   │   │                  Demo-Konto), lokal_starten.sh fährt sie nur hoch;
+│   │   │                  pruefkonten.sh legt die Prüfkonten der Rollen
+│   │   │                  admin und support für den Bilderlauf an (R4-08);
 │   │   │                  sitzungsprobe.py misst, dass sitzung.py BEIDE
 │   │   │                  Hüllenfassungen öffnet (edk1: und edka1:, S10);
 │   │   │                  demo_kennzeichnen.php vermerkt das frische Konto als
@@ -765,11 +767,15 @@ Daten erst nach Server-Bestätigung.
 │   │                      AP5 hatte die Zweitfaktorprobe nicht nachgetragen.
 │   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
 │   │                      ein LIESMICH. Vorher zwanzig Ordner.
-│   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
-│   │                      auf, je Seite ein Kontaktbogen; misst dabei
+│   ├── screenshots/       nimmt alle Seiten in zehn Breiten von 360 bis 1920 px
+│   │                      auf (1200 und 1600 seit R4-08), je Seite ein
+│   │                      Kontaktbogen, in fünf Rollen (aus, demo,
+│   │                      betreiberin, admin, support — die letzten zwei mit
+│   │                      eigenen Prüfkonten seit R4-08); misst dabei
 │   │                      waagerechten Überlauf, Konsolenfehler, Knopfhöhen
 │   │                      und — seit Web 20.21.1 — Karten, die ausserhalb von
-│   │                      main.inhalt haengen (Nr. 225).
+│   │                      main.inhalt haengen (Nr. 225); rollende Behälter
+│   │                      nennt er, sie halten nicht auf.
 │   │                      Seit Web 9.10.1 prueft er nach JEDEM Aufruf, ob er
 │   │                      die richtige Seite vor sich hat, und meldet sich bei
 │   │                      Bedarf neu an; ein nicht aufloesbarer Platzhalter
@@ -780,7 +786,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      Klasse (Backlog Nr. 176; die Mutationsprobe dazu
 │   │                      steht in der LIESMICH).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
-│   │                      (s. LIESMICH.md)
+│   │                      und leitet die Paare seit R4-08 aus den Regeln des
+│   │                      Stylesheets ab (s. LIESMICH.md)
 │   ├── spaltenregister/   hält `schema.sql` gegen `mf_missions_register()`
 │   │                      (beide Richtungen) und misst die Vollständigkeit der
 │   │                      drei Abbildungen, die von Hand bleiben — jede muss
@@ -794,7 +801,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      (Schritt 15 AP6, E-ZE-22; s. Dateikopf)
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
-│   │                      plus berechnete Stile im Browser, 13 Breiten.
+│   │                      plus berechnete Stile im Browser, 13 Breiten; die
+│   │                      Seitenprobe je Seite als eigenes Dokument (R4-08).
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-

@@ -277,7 +277,7 @@ nichts gelesen wird, misst gegen nichts.
 | Stufe | Auslöser | Umfang |
 |---|---|---|
 | **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten, Chromium; Bedienprobe der berührten Seiten |
-| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in acht Breiten, Chromium, Bedienprobe aller Seiten; Handy- und Uhr-Bau, wenn berührt |
+| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in zehn Breiten (seit R4-08; vorher acht), Chromium, Bedienprobe aller Seiten; Handy- und Uhr-Bau, wenn berührt |
 | **haupt** | Hauptstufe `X.a.a`, **eine neue Migration** (Stufenregel `migration`, 4; seit P5c/AP4) oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Bilderlauf mit allen drei Engines über alle Seiten, Messstand, Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
 
 **Warum die Matrix in die Hauptstufe gehört und nicht in die Kette:** Der
@@ -374,7 +374,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1` | E-PK-02 |
-| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01. |
+| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01. |
 | `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig. |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 | `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. |
@@ -788,6 +788,17 @@ jedem Merge von Hand geleert werden. Bis P5c/AP1 war gebaut, was hier
 steht, nur als Null: Jede gewollte Gestaltungsänderung machte seit PK-05
 den Prüfbericht rot (Lage 5).
 
+**Jede Seite ist ein eigenes Dokument** (seit R4-08, Nr. 321). Bis dahin
+lagen alle Seiten der Seitenprobe in einem: Eine Regel für Seite A änderte
+dessen Höhe und damit `top`/`bottom` jedes absolut gesetzten Elements auf
+allen Seiten, und wuchs Seite B um ein solches Element, stand eine
+ungeplante Signatur da, ohne dass an B etwas geändert war (P5c/AP7: 38
+ungeplante und 31 geplante, nicht gemessene — 23 davon an Druckblättern,
+die niemand anfasste). Die Signatur
+nennt seither die Seite: `seiten.html[einsatz.php]`. Nachgestellt vorher
+**1 ungeplant**, nachher **0**; gegen die Änderung aus Web 21.1.3 dieselben
+13 Signaturen wie das alte Werkzeug.
+
 **Er ersetzt die Browserprüfung nicht:** Er misst statisches Markup, keine
 Bedienzustände. Er beantwortet die eine Frage, die der Bilderlauf nicht
 beantwortet — hat sich ein berechneter Stil geändert, der nicht sollte —,
@@ -805,7 +816,8 @@ hier steht, ist nur, **was grün heißt**:
 |---|---|
 | `tools/quelltext/` `textprobe` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde in sechs Prüfungen — ohne Schwelle seit PK-04/5e (E-PK-16); die sechste, Selektoren, seit R4-05 |
-| `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1) |
+| `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
+| `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
 | `tools/quelltext/` `bestand` | 0 Befunde in allen dreizehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |

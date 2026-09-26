@@ -1,5 +1,5 @@
 {
-  "_lies_mich": "Seitenliste der Bildaufnahme. Jede Zeile: name (Dateiname und Überschrift im Kontaktbogen), gruppe, rolle ('aus' = abgemeldet, 'demo', 'admin'), pfad (relativ zur Basis; Platzhalter in __GROSSBUCHSTABEN__ löst aufnehmen.mjs zur Laufzeit aus dem Bestand auf), karte (true = zusätzlich auf Leaflet warten), vorher (Bedienschritte vor der Aufnahme), wartung (true = server/wartung.lock wird fuer diesen Eintrag angelegt und danach wieder entfernt; dazu gehoert status: 503). Die Gruppe 'Betrieb' (seit Web 15.1.0, S8/AP2) laeuft unter der Rolle 'admin' — das Konto admin@gen-em.org ist seit Web 15.0.0 BetreiberIn und sieht damit beides. ganzseitig (false = nur der sichtbare Ausschnitt statt des ganzen Dokuments; gebraucht fuer `hilfe.php`, das das gesamte Handbuch auf einer Seite zeigt — 19 MB je Abzug, und ab 1024 px scheitert Chromium an seiner Hoechsthoehe. Die MESSUNGEN laufen weiter ueber das ganze Dokument, nur das Bild ist ein Ausschnitt).",
+  "_lies_mich": "Seitenliste der Bildaufnahme. Jede Zeile: name (Dateiname und Überschrift im Kontaktbogen), gruppe, rolle ('aus' = abgemeldet, 'demo', 'betreiberin', 'admin', 'support' — seit R4-08; bis dahin hiess 'betreiberin' 'admin' und meldete sich trotzdem als BetreiberIn an), pfad (relativ zur Basis; Platzhalter in __GROSSBUCHSTABEN__ löst aufnehmen.mjs zur Laufzeit aus dem Bestand auf), karte (true = zusätzlich auf Leaflet warten), vorher (Bedienschritte vor der Aufnahme), wartung (true = server/wartung.lock wird fuer diesen Eintrag angelegt und danach wieder entfernt; dazu gehoert status: 503). Die Gruppe 'Betrieb' (seit Web 15.1.0, S8/AP2) laeuft unter der Rolle 'betreiberin' (das Konto admin@gen-em.org); 'admin' und 'support' haben eigene Pruefkonten aus pruefkonten.sh. ganzseitig (false = nur der sichtbare Ausschnitt statt des ganzen Dokuments; gebraucht fuer `hilfe.php`, das das gesamte Handbuch auf einer Seite zeigt — 19 MB je Abzug, und ab 1024 px scheitert Chromium an seiner Hoechsthoehe. Die MESSUNGEN laufen weiter ueber das ganze Dokument, nur das Bild ist ein Ausschnitt).",
   "seiten": [
     {
       "name": "01-anmeldung",
@@ -97,7 +97,7 @@
     {
       "name": "02i-rueckfrage-blatt",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "index.php",
       "ganzseitig": false
     },
@@ -264,7 +264,7 @@
     {
       "name": "29-einstellungen-uebersicht",
       "gruppe": "Einstellungen",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "einstellungen.php"
     },
     {
@@ -276,13 +276,13 @@
     {
       "name": "30a-einstellungen-profil-zweitfaktor",
       "gruppe": "Einstellungen",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "einstellungen.php?t=profil"
     },
     {
       "name": "30b-codeblatt",
       "gruppe": "Einstellungen",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "codeblatt.php",
       "vorher": [
         "codeblatt"
@@ -339,128 +339,164 @@
     {
       "name": "40-nutzerinnen",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_users.php"
     },
     {
       "name": "41-kontoseite",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "__KONTO__"
     },
     {
       "name": "43-sicherungen",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_sicherungen.php"
     },
     {
       "name": "43b-sicherungsziele",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_sicherungsziele.php"
     },
     {
       "name": "43c-komplettsicherung",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_komplettsicherung.php"
     },
     {
       "name": "43a-installation",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_installation.php"
     },
     {
       "name": "43d-rechtstexte",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_rechtstexte.php?t=datenschutz"
     },
     {
       "name": "44-demo-konto",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_demo.php"
     },
     {
       "name": "44a-protokoll",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_protokoll.php"
     },
     {
       "name": "44b-protokoll-sicherheit",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_protokoll.php?r=sicherheit"
     },
     {
       "name": "44c-protokoll-archiv",
       "gruppe": "Administration",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "admin_protokoll.php?r=archiv"
+    },
+    {
+      "name": "40a-nutzerinnen-admin",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_users.php"
+    },
+    {
+      "name": "41a-kontoseite-admin",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "__KONTO_NUTZERIN__"
+    },
+    {
+      "name": "44d-protokoll-admin",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_protokoll.php"
+    },
+    {
+      "name": "40b-nutzerinnen-support",
+      "gruppe": "Administration",
+      "rolle": "support",
+      "pfad": "admin_users.php"
+    },
+    {
+      "name": "41b-kontoseite-support",
+      "gruppe": "Administration",
+      "rolle": "support",
+      "pfad": "__KONTO_NUTZERIN__"
+    },
+    {
+      "name": "44e-protokoll-support",
+      "gruppe": "Administration",
+      "rolle": "support",
+      "pfad": "admin_protokoll.php"
     },
     {
       "name": "45-betrieb-status",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_status.php"
     },
     {
       "name": "45b-betrieb-sicherheit",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_sicherheit.php"
     },
     {
       "name": "45a-betrieb-statistik",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_statistik.php?r=nutzer"
     },
     {
       "name": "45a2-betrieb-statistik-einsaetze",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_statistik.php?r=einsaetze"
     },
     {
       "name": "45a3-betrieb-statistik-geraete",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_statistik.php?r=geraete"
     },
     {
       "name": "46-betrieb-updates",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_updates.php"
     },
     {
       "name": "46a-betrieb-updates-wartung",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_updates.php",
       "wartung": true
     },
     {
       "name": "47-betrieb-jobs",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_jobs.php"
     },
     {
       "name": "48-betrieb-server",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_server.php"
     },
     {
       "name": "48a-betrieb-schluesselblatt",
       "gruppe": "Betrieb",
-      "rolle": "admin",
+      "rolle": "betreiberin",
       "pfad": "betrieb_schluesselblatt.php"
     },
     {

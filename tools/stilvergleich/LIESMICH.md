@@ -1,7 +1,7 @@
 # Stilvergleich
 
 Hat sich am Erscheinungsbild etwas geändert, das niemand wollte?
-**Anlass: Nr. 312** — ein Umbau des Stylesheets ohne Netz und doppelten Boden (P0/A3).
+**Anlass: Nr. 312, 321** — ein Umbau des Stylesheets ohne Netz und doppelten Boden (P0/A3); eine fremde Seite, die wuchs, machte Signaturen ungeplant.
 
 ## Aufruf
 
@@ -14,8 +14,8 @@ bash tools/stilvergleich/gegen.sh --schreiben [<ref>]  # Messung als geplant.txt
 
 ## Was es misst
 
-Die **berechneten** Stile zweier Stylesheets an denselben Elementen, in acht
-Breiten: 175 Eigenschaften je Element. Vier Proben liefern die Elemente —
+Die **berechneten** Stile zweier Stylesheets an denselben Elementen, in
+dreizehn Breiten: 189 Eigenschaften je Element. Die Seitenprobe misst **jede Seite als eigenes Dokument** (seit R4-08), die Signatur nennt sie: `seiten.html[einsatz.php]`. Vier Proben liefern die Elemente —
 das Markup aller Seiten, das erst im Browser entstehende Markup, je ein
 Element pro Selektor und dasselbe für die Zustände (`:hover`, `:focus`).
 
@@ -27,7 +27,8 @@ Dateien, nicht eine laufende Anlage. `NODE_PATH` setzt `gegen.sh`, weil
 
 ## Erwartete Zahl
 
-**Genau die Signaturen in `geplant.txt` — ohne Datei 0** (`Pruefablauf.md` 6.10); gelesen im Pull Request. Nach dem Merge bleibt die Datei stehen: Zeilen, die wortgleich im Vergleichsstand stehen und nicht gemessen werden, zählen als „geerbt" nicht mit (`--geerbt`, seit dem 26.09.2026, Nr. 330).
+**Genau die Signaturen in `geplant.txt` — ohne Datei 0** (`Pruefablauf.md` 6.10); gelesen im Pull Request.
+Gemessen 26.09.2026 (R4-08) gegen `origin/main`: **61 191 Elementmessungen, 1 Signatur** (`.vorschlag.aktiv`, Web 21.1.6); gegen die Änderung aus Web 21.1.3 dieselben 13 Signaturen wie das alte Werkzeug; eine Seite, die um 25 Zeilen mit Vorlesetext wächst: vorher 1 ungeplant, nachher 0. Nach dem Merge bleibt die Datei stehen: Zeilen, die wortgleich im Vergleichsstand stehen und nicht gemessen werden, zählen als „geerbt" nicht mit (`--geerbt`, seit dem 26.09.2026, Nr. 330).
 Gemessen 26.09.2026 gegen `origin/main` vor dem Merge von Web 21.1.3 (Höhenschwelle der Sprungmarken): **42 276 Elementmessungen, 13 Signaturen** (Chromium); nach dem Merge dieselben 13 als „geerbt, nicht gemessen" — der erste Lauf, der das neue Verhalten braucht. Gegenprobe gegen den eigenen Stand (Zustand nach dem Merge): ohne `--geerbt` rot mit 13 „nicht gemessen", mit `--geerbt` grün mit 13 „geerbt"; eine eigene Zeile ohne Messung rot; eine leere Liste gegen `main` rot mit 13 ungeplant.
 Gemessen 25.09.2026 gegen `origin/main` (P5c/AP9): **42 276 Elementmessungen, 170 Signaturen** (Chromium). Neu gegenüber AP8 sind 57: Einstellungsleiste (Option 1), Bereichskarten, Schlüssel- und Notfallblatt auf dem Druckblatt, die Vorschau der Rechtstexte und die einspaltige Installation; 26 aus AP8 sind entfallen (die alten Blätter, `.uebersicht-block`). Die Diensttage-Leiste ist davon nicht betroffen — eigens gemessen, 156 Werte, 0 Abweichungen (Konzept P5c, Prüfdokument 1i). Davor, 24.09.2026 (AP5): 44 954 Elementmessungen, 128 Signaturen.
 

@@ -131,5 +131,13 @@ if [ "$offen" != "0" ]; then
     exit 1
 fi
 zeile "0 Migrationen offen"
+
+# ---- 6. Prüfkonten ----------------------------------------------------------
+# Admin und Support für den Bilderlauf (R4-08, Nr. 297). Das Skript legt nur
+# an, was fehlt, und löscht nichts — deshalb läuft es bei jedem Start: Eine
+# Anlage von vor R4-08 bekommt die Konten, ohne `--neu`.
+melde "Prüfkonten"
+sh "$WURZEL/tools/referenzdatensatz/einspielen/pruefkonten.sh" \
+    || { zeile "Prüfkonten nicht angelegt — der Bilderlauf käme nicht über die Anmeldung."; exit 1; }
 melde "Die örtliche Installation steht."
 exit 0

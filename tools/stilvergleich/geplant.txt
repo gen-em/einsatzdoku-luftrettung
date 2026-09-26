@@ -1,22 +1,11 @@
 # Stilvergleich — geplante Abweichungen (docs/Pruefablauf.md 6.10).
 # Geschrieben mit `bash tools/stilvergleich/gegen.sh --schreiben`, gegen den
-# Vergleichsstand des Laufs. Je Zeile: Probe, Element <Elternteil>, die
+# Vergleichsstand des Laufs. Je Zeile: Probe (bei seiten.html mit der Seite
+# in Klammern, seit R4-08), Element <Elternteil>, die
 # Eigenschaften, die sich aendern. Diese Datei wird im Pull Request GELESEN —
 # jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge
 # bleibt sie stehen: Der naechste Lauf findet ihre Zeilen wortgleich im
 # Vergleichsstand und zaehlt sie nicht, solange sie nicht gemessen werden
 # (Nr. 330). Die naechste Gestaltungsaenderung schreibt sie neu.
 
-katalog.html  body <html>  :  height
-katalog.html  div <body>  :  height
-katalog.html  div <div>  :  height
-katalog.html  div.eintrag-unterliste <div.leiste-gruppe>  :  display, height, width
-katalog.html  div.leiste-gruppe <div>  :  height
-katalog.html  div.nur-vorlesen <div>  :  bottom, inset, top
-katalog.html  div.suchfeld-lupe <div>  :  bottom, inset, top
-katalog.html  div.suchfeld-x <div>  :  bottom, inset, top
-katalog.html  div.vorschlaege <div>  :  bottom, inset, top
-katalog.html  html <->  :  height
-katalog.html  input.schalter-box <div>  :  bottom, inset, top
-katalog.html  input.segment-box <div>  :  bottom, inset, top
-katalog.html  input.wahl-box <div>  :  bottom, inset, top
+katalog.html  div.vorschlag.aktiv <div>  :  border-color, border-left, border-left-color

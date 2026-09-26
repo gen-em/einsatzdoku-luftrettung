@@ -14,6 +14,25 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.6] — 2026-09-26
+
+Schritt 17, Backlog-Runde 4, Paket R4-08. Korrekturstufe ohne Migration.
+
+### Behoben
+
+- **Der Strich an der markierten Zeile einer Vorschlagsliste ist dunkler**
+  (Nr. 116). Unter dem Zeiger oder mit der Pfeiltaste gewählt, trug die
+  Zeile links einen Strich in Orange auf Rauch — 2,09:1, wo ein Zeichen, das
+  einen Zustand trägt, 3:1 braucht. Rauch hebt sich von Schnee kaum ab, der
+  Strich stand also allein, und für genau diesen Fall sagt die
+  Gestaltungsrichtlinie „Orange tief" (4,04:1); beim Reiter ist derselbe
+  Tausch seit Web 20.39.0 gemacht. Gefunden hat es die neue Ableitung der
+  Farbpaare (unten, unter *Werkzeug*). Bewusst stehen gelassen: die weiße
+  Schrift auf Orange tief im Hover des Primärknopfs (4,42:1) — die
+  Betreiberin hat den Ton angenommen (E-R4-30), und `docs/Design.md` 3.2
+  nennt jetzt, was stimmt: Orange tief erreicht auf Schnee 4,32:1, nicht
+  4,5.
+
 ## [Web 21.1.5] — 2026-09-26
 
 Schritt 17, Backlog-Runde 4, Paket R4-06. Korrekturstufe ohne Migration.
@@ -110,8 +129,50 @@ Fassung.
   `.github/workflows/pruefung.yml` (`--riegel "kennzeichnung=$q"`): Das Tor
   liest jeden Riegel des Berichts gegen, und ein fehlender ist rot.
 
+- **Die Prüfkonten der Rollen Admin und Support** (R4-08, Nr. 297,
+  `tools/referenzdatensatz/einspielen/pruefkonten.sh`). Der Bilderlauf
+  meldete seine Rolle `admin` als admin@gen-em.org an — eine BetreiberIn —,
+  und die reine Admin-Sicht und die des Supports nahm er nie auf; belegt
+  waren sie nur als Statuscode in der Rollenprobe. Das Skript legt die zwei
+  Konten über dieselben Wege an wie jedes andere (Setz-Token, Passwort im
+  Browser, Zweitfaktor der Sandbox), lässt ein fertiges stehen und läuft
+  deshalb bei jedem `hochfahren.sh` mit: Eine Anlage von vorher bekommt die
+  Konten, ohne dass jemand die Datenbank löscht.
+
 ### Geändert
 
+- **`kontrast.py` leitet die Farbpaare aus dem Stylesheet ab** (R4-08,
+  Nr. 116). Bis dahin rechnete es nur, was in seiner Liste stand, und ein
+  Paar, das dort fehlte, meldete keinen Fehler — in der App standen so zwei
+  Kontraste unter dem Zielwert, während jeder Lauf grün war (für Android
+  gelöst mit E-AR-09). Jetzt ist jedes Paar aus Vorder- und Hintergrund
+  derselben Regel und jede Farbe, die allein steht, entweder gerechnet oder
+  mit Grund ausgenommen, sonst rot. Der erste Lauf fand 14: acht, die ihren
+  Sollwert erreichen und jetzt in der Liste stehen, den Strich am Vorschlag
+  (oben, Web 21.1.6) und fünf Ausnahmen mit Grund. Die Selbstprobe baut die
+  zwei alten Fehler im Web nach. Was die Ableitung nicht sieht, steht im
+  Kopf: eine bekannte Schrift auf einer neuen Fläche, die eine Elternregel
+  setzt.
+- **Der Stilvergleich misst jede Seite als eigenes Dokument** (R4-08,
+  Nr. 321). Alle Seiten lagen in einem Dokument; eine Regel für Seite A
+  änderte dessen Höhe und damit die Lage jedes absolut gesetzten Elements
+  auf allen Seiten, und wuchs Seite B um ein solches Element, stand eine
+  ungeplante Signatur da (P5c/AP7: 38). Nachgestellt: vorher 1, nachher 0;
+  gegen die Änderung aus Web 21.1.3 dieselben 13 Signaturen wie vorher. Die
+  Signatur nennt die Seite, `geplant.txt` ist einmal neu geschrieben. Jede
+  Seite wird je Stylesheet einmal geladen und für die dreizehn Breiten nur
+  neu vermessen; laufende Übergänge werden dabei abgeschlossen — der erste
+  Entwurf maß sonst den Zwischenstand, den eine Breite über eine
+  Medienabfrage hinweg auslöst.
+- **Der Bilderlauf misst zehn Breiten, fünf Rollen und rollende Behälter**
+  (R4-08, Nr. 297, E-R4-23). 1200 und 1600 px sind die zwei Schwellen der
+  Gestaltungsrichtlinie, die bis dahin niemand knapp darüber gemessen hat.
+  Die Rolle, die sich als BetreiberIn anmeldet, heißt jetzt so
+  (`betreiberin`); `admin` und `support` sind die neuen Prüfkonten, mit je
+  drei Seiten (Liste, Kontoseite einer NutzerIn, Protokoll). Behälter, die
+  selbst rollen — eine breite Tabelle am Handy —, nennt der Bericht mit
+  Maß; sie halten nicht auf, weil ein Behälter, der rollen soll, rollt
+  (E-R4-31).
 - **Die Textprobe liest reale Namen auch in Kommentaren** (R4-07, Nr. 283,
   E-R4-19). E-P1-02 — keine realen Orte und Rufnamen — richtet sich gegen
   das öffentliche Repositorium, und ein Kommentar steht genauso darin; die

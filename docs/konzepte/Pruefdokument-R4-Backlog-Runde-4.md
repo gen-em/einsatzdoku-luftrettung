@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-07 erledigt**, Web 21.1.5 (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-08 erledigt**, Web 21.1.6 (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -20,7 +20,8 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | **Der Baum ist nach der Sichtung weitergelaufen.** | Gesichtet wurde `8e29cf0` bis `5a2a69a`; danach kamen R4-00-Commits (nur `docs/`). Kein Code hat sich geändert; wer die Umsetzung beginnt, nimmt `main` nach dem Merge von PR #93 und misst neu. | `git log --stat 5a2a69a..HEAD -- server/ tools/ android/` → leer heißt: der Befund gilt. |
 | **Die Mockups sind gerendert, nicht bedient.** | M-R4-22, -23, -24 liegen als HTML und PNG bei (`konzept-r4/mockups/`); gemessen ist nur der Überlauf je Breite. Ob die Datumsfelder, die Pillen und der Schwebe-Wert der Säulen sich so bedienen lassen, zeigt erst die Anwendung (Bedienprobe in R4-23/-24). Die Handy-Nachbildung ist HTML, kein Compose — Maße in dp bei 1:1 nachgebaut, kein Emulatorbild. | Prüfliste 4, P-R4-04; Emulatorbilder mit R4-22. |
 | **Ob `stroeme.py` den Baum ändert** (F-R4-17) | Nicht gefahren; nur der Kopf der erzeugten Datei gelesen. | R4-04 misst den Baum-Hash vor und nach dem Lauf. |
-| **Die tatsächliche Laufzeit je zusätzlicher Bilderlauf-Breite** (Q-R4-13) | Hochgerechnet (+12 % je Breite aus 745–845 s für acht), nicht gemessen. | R4-08 nennt die Zahl nach dem ersten Lauf `neben`. |
+| **Stilvergleich und Bilderlauf nur in Chromium** (R4-08) | Beide Umbauten sind in Chromium gemessen; der Stilvergleich misst differenziell je Motor, der Bilderlauf fährt Firefox und WebKit erst in `haupt`. Ob `getAnimations().finish()` in Firefox und WebKit denselben Endwert herstellt, ist nicht gefahren. | Erster Lauf `haupt` (R4-15): Stilvergleich mit `--motor firefox`/`webkit` gegen `origin/main`, Signaturen gleich denen aus Chromium. |
+| **Die zwei neuen Prüfkonten gibt es nur in der Sandbox** (R4-08) | `pruefkonten.sh` und `pruefkonto.php` brechen außerhalb von 127.0.0.1 ab; auf Staging läuft kein Bilderlauf mehr (seit Konzept PK). | Nichts zu tun — gesagt, damit niemand die Konten auf Staging sucht. |
 | **Die Abfahrtort-Zeile auf einem echten Bestand** (R4-06, E-R4-25) | Gemessen nur am Demo-Konto der örtlichen Anlage (drei Einsätze mit „Manueller Ort", einer ohne). Ob ein Einsatz mit der Regel „Manueller Ort", aber **ohne Adresse** (nur Koordinaten, etwa aus einem Import) vorkommt, ist nicht gemessen — er bekäme keine Zeile, wie der Einsatzort ohne Adresse auch. | P-R4-08. |
 | **Das Löschen der zwei toten Zweige** (Q-R4-01) | Die Betreiberin löscht sie selbst (E-R4-15); die Umsetzung hat nichts gelöscht. | P-R4-06; `git ls-remote --heads origin` zeigt die zwei Zweige, solange es aussteht. |
 | **Ortszeit-Abfragen auf der örtlichen Anlage** (F-R4-21) | Die örtliche MariaDB hat keine Zeitzonentabellen; `CONVERT_TZ` mit `Europe/Berlin` liefert NULL. Die Anwendung nutzt es nicht; Messungen in Ortszeit sind über UTC-Zeiten nachgerechnet. | R4-16: jede Ortszeit-Zahl mit Rechenweg. |
@@ -83,6 +84,15 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-07 | `textprobe.py` nach Ausnahme und Altbestand | 0 neue Treffer | **8 im Altbestand (6 Paare)**, 1 unter `exporttitel-guteseele`; **0 neu, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**, rc 0 |
 | R4-07 | Gegenprobe: `/* Beispiel: <realer Ort> */` in `einsatz.php`, dasselbe mit anderem Ort in `style.css`; danach zurück | liest die Probe Kommentare und das Stylesheet? | **2 neue**, rc **1**; zurück rc 0, `git status server/` leer |
 | R4-07 | `textprobe.py --selbstprobe` | Zerleger und Sicht | **21 / 21** und **4 / 4** (auch unter 3.12 und 3.13) |
+| R4-07 | `bash tools/pruefstand/pruefen.sh` über den Baum des Commits `47d4035` (Bericht im Commit) | 21 Riegel, `bilderlauf`, `bedienprobe`, `rollenprobe`, `kettenaufrufe`, `android-bau`, die vier Android-Proben, `steuerung`, `nummern` | **0 rot, 0 nicht gemessen, 30 grün**, 728 s; Baum `1c8e31a7` |
+| R4-08 | Nachbau Nr. 321 (`sv_probe.sh` im Arbeitsordner): Regel `[data-quelle="admin_demo.php"] p{letter-spacing:1px}`, `--geplant-schreiben`, dann `admin_sicherungen.php` um 25 Zeilen mit `span.nur-vorlesen` verlängert | ungeplante Signaturen durch eine fremde Seite | altes Werkzeug **1 ungeplant** (`span.nur-vorlesen <label.feld>`); neues **0**, zweimal gefahren, je **6** Signaturen, alle an `admin_demo.php` |
+| R4-08 | neues `stilvergleich.js` gegen den Stand vor Web 21.1.3 | findet es dasselbe wie das alte? | **13 = 13** Signaturen, wortgleich mit `geplant.txt` aus 21.1.3; **61 191** Elementmessungen (alt 42 276) |
+| R4-08 | `kontrast.py` vor den Listen | Paare des Stylesheets ohne Eintrag | **32 abgeleitet, 14 ohne Eintrag** (F-R4-28) |
+| R4-08 | `kontrast.py` danach; `--selbstprobe`; Gegenprobe Strich am Vorschlag zurück auf Orange | Vollständigkeit und Sollwerte | **33 Paare, 0 verfehlt, 32 abgeleitet, 0 ohne Eintrag**; **4 / 0**; Gegenprobe **1 Befund** (`orange auf rauch`), zurück 0 |
+| R4-08 | `gegen.sh --schreiben`, dann `gegen.sh` | die eine Änderung am Stylesheet | **1 Signatur** (`katalog.html div.vorschlag.aktiv : border-color, border-left, border-left-color`); danach **1 geplant, 1 gemessen, 0 ungeplant** |
+| R4-08 | `pruefkonten.sh` zweimal; `hochfahren.sh` | Prüfkonten admin und support | erst **angelegt, Passwort gesetzt** (11 s), dann **„steht, mit Zweitfaktor"**; Datenbank: Rolle `admin`/`support`, Passwort und Zweitfaktor gesetzt |
+| R4-08 | `aufnehmen.mjs --stufe klein --nur` die sechs neuen Seiten und `41-kontoseite` | Anmeldung der neuen Rollen | **21 Bilder, 0 Überlauf, 0 Konsolenfehler**; die Support-Liste zeigt drei Kacheln und nur Konten ohne Rechte |
+| R4-08 | `aufnehmen.mjs --stufe neben` (voller Lauf, Demo-Marke geschoben) | zehn Breiten, fünf Rollen | **780 Bilder, 78 Seiten, Überlauf 0, Konsolenfehler 0, Knöpfe 0, 188 Karten / 0 außerhalb, 51 mit rollendem Behälter**, 1 170 s; `aufnehmen.mjs --selbstprobe` **15 / 15** |
 
 ## 3. Im Browser geprüft
 
@@ -93,6 +103,7 @@ Die Konzeptphase änderte keine Seite; die Anlage lief (HTTP 200 auf
 |---|---|---|
 | R4-05 | `einstellungen.php?t=standorte#standorte`, Admin-Prüfkonto; Chromium, Firefox, WebKit | Fokus vorher `BODY`, nachher **`INPUT#sdbase-name`** in allen drei |
 | R4-06 | `einsatz.php` nach dem Entsperren, Demo-Konto, Chromium 1280 px; drei Einsätze mit „Manueller Ort" (398, 428, 499), einer ohne (394); Demo-Marke vorher geschoben, danach zurück | Karte Einsatz: **„Abfahrtort" mit Schloss** zwischen „Beschreibung Einsatzort" und „Diagnose" bei allen drei (Einsatz 499: „Zwischenhalt Parkplatz Talstation"); bei 394 **keine** Zeile. Konsolenfehler nur die Kartenkacheln ohne Netz (`ERR_TOO_MANY_RETRIES`) |
+| R4-08 | Bilderlauf, 780 Bilder in zehn Breiten; eigens angesehen `40b-nutzerinnen-support-1024` | Support-Sicht: drei Kacheln, Liste ohne Konten mit Rechten; die Spalte „Öffnen" bei 1024 px angeschnitten (F-R4-30, Nr. 342) |
 
 ## 4. Prüfliste für die Betreiberin
 
@@ -108,6 +119,7 @@ ist. Die Umsetzung hängt je Paket ihre Punkte an (P-R4-06 ff.).
 | P-R4-05 | Nach dem Deploy von R4-15 (Migration): als Administratorin `update.php` aufrufen, Betrieb → Updates ansehen. | Migration `days.created_at` gelaufen; Wartungsmodus geht aus. | Wartungsmodus bleibt an; Statuszeile nennt eine ausstehende Migration. |
 | P-R4-06 | GitHub → Branches: `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` löschen (E-R4-15). Vorher: Beide tragen nichts Ungemergtes (F-R4-04). | Die zwei Zweige sind weg; `git ls-remote --heads origin` nennt sie nicht mehr. | Einer steht noch da — oder ein anderer fehlt. |
 | P-R4-07 | Nach dem Deploy von Web 21.1.4 auf Staging: Einstellungen → Standorte, einen Standort anlegen und speichern (das Formular sendet an `…?t=standorte#standorte`); danach einmal „Bearbeiten". | Nach dem Speichern und nach „Bearbeiten" steht der Cursor im Feld „Name" des Standortformulars, ohne Klick. | Die Seite springt zur Karte, aber kein Feld ist aktiv — dann ist der Fokus wieder am Seitenkörper (F-R4-25). |
+| P-R4-09 | Nach dem Deploy von Web 21.1.6 auf Staging: ein Einsatzformular öffnen, im Feld „Transportziel" tippen, bis Vorschläge erscheinen, und mit der Pfeiltaste eine Zeile wählen. | Die gewählte Zeile trägt links einen **dunkelorangen** Strich (Orange tief), gut sichtbar gegen den hellen Grund; mit dem Zeiger dieselbe Markierung. | Ein hellorangener Strich (alter Stand) oder keine Markierung. |
 | P-R4-08 | Nach dem Deploy von Web 21.1.5 auf Staging: einen Einsatz **ohne GPS-Aufzeichnung** bearbeiten, Abfahrtort „Manueller Ort", eine Adresse wählen, speichern; in der Einsatzansicht entsperren. Danach denselben Einsatz auf „Standort" umstellen. | Karte Einsatz: Zeile **„Abfahrtort"** mit Schloss zwischen Beschreibung und Diagnose, darin die Adresse. Nach dem Umstellen auf „Standort" ist die Zeile weg. | Keine Zeile, eine Zeile ohne Schloss, oder die Zeile bleibt bei „Standort" stehen. |
 
 ## 5. Grenzen der benutzten Prüfmittel

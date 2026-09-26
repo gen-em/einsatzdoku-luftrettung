@@ -8474,3 +8474,79 @@ zutreffen.
      vor dem Rohschreiben 3: die zwei Docstrings aus dem Befund und den
      neuen Kopf von pysyntax selbst. Selbstprobe 4/0 mit einer Datei, die
      "\d+" enthält.
+
+116. **Das Kontrastwerkzeug misst nur, was in seiner Paarliste steht.** · gehört zu: 17 · Stand: erledigt · seit 03.09.2026
+     Befund (S5 Paket E1, B-S5Z-13/-15): Ein Farbpaar, das nicht in der
+     festen Liste steht, wird nicht gemessen und meldet keinen Fehler — so
+     standen zwei Paare unter dem Zielwert, ohne dass ein grüner Lauf etwas
+     sagte (Rückstand-Punkt 2,23 : 1, „wartet aufs Handy" 4,12 : 1).
+     Erledigt für Android (Konzept AR, 0.16.0, E-AR-09, 24.09.2026):
+     `android/werkzeuge/kontraste.py` prüft die Vollständigkeit je Modul und
+     Rolle (Schrift, Zeichen, Linie, Fläche) mit Selbstprobe; der erste Lauf
+     fand dieselben zwei Kontraste, beide behoben. Das Werkzeug hängt an
+     keinem Lauf (Nr. 334).
+     Offen für das Web: dieselbe Frage für `tools/screenshots/kontrast.py` —
+     Paare aus dem Quelltext ableiten, oder eine Vollständigkeitsprüfung, die
+     im Code vorkommende Token-Paare ohne Listeneintrag meldet (billiger,
+     fängt denselben Fehler). Zurückgestellt war es, solange P5c die Datei
+     änderte; P5c ist gemergt, der Weg ist frei.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 116.
+     Erledigt 26.09.2026 mit R4-08 (Web 21.1.6): kontrast.py leitet die
+     Paare aus den Regeln von style.css ab; jedes Paar derselben Regel und
+     jede allein stehende Farbe steht in PAARE oder AUSNAHMEN, sonst rot.
+     Erster Lauf 14 ohne Eintrag: 8 in die Liste (alle über dem Sollwert),
+     der Strich am Vorschlag (2,09:1) auf --orange-tief gesetzt, 5 Ausnahmen
+     mit Grund, darunter der Hover des Primärknopfs (4,42:1, E-R4-30).
+     Danach 33 Paare, 0 verfehlt, 32 abgeleitet, 0 ohne Eintrag; Selbstprobe
+     4/0 mit den zwei alten Fehlern im Web.
+
+321. **Der Stilvergleich meldet unveränderte Stile als ungeplant, sobald eine andere Seite Elemente dazubekommt.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     Befund (P5c/AP7, F-P5c-126, gemessen): AP7 baute die Statistikseite um
+     und ergänzte eine CSS-Regel; `gegen.sh` meldete 38 ungeplante
+     Signaturen und 31 geplante, nicht gemessene — 23 davon an den
+     Druckblättern aus AP5, die AP7 nicht anfasst. Gegenproben: neue Regel
+     mit alter Statistikseite genau eine ungeplante, sauberer Stand 0 / 0.
+     Die Signaturen hängen an der Nachbarschaft eines Elements in
+     `seiten.html`: Eine wachsende Seite verschiebt die Stückelung
+     (`chunks.py`), und dasselbe Element bekommt eine andere
+     Eigenschaftsliste. AP7 ist über `--schreiben` gelöst (139 / 139), die
+     Ursache nicht — jede Seite mit mehr Markup kann `geplant.txt` für
+     Stellen umwerfen, die sie nicht berührt.
+     Weg: jede Seite bekommt ein eigenes Stück, oder die Signatur entsteht
+     ohne geerbte Eigenschaften aus dem Stückkontext; dazu ein Fall in der
+     Selbstprobe (eine Seite um hundert Elemente verlängert, übrige
+     Signaturen unverändert). Abnahme: eine fremde Seite wächst, der
+     Vergleich bleibt 0 / 0. Anlass für `tools/stilvergleich/`.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 321.
+     Erledigt 26.09.2026 mit R4-08: stilvergleich.js misst die Seitenprobe
+     je Seite als eigenes Dokument (Trennmarke aus proben.py), die Signatur
+     nennt die Seite. Nachgestellt (Regel für Seite A, --schreiben, Seite B
+     um 25 Zeilen mit Vorlesetext verlängert): vorher 1 ungeplant, nachher
+     0, zweimal. Gegen die Änderung aus Web 21.1.3 dieselben 13 Signaturen
+     wie das alte Werkzeug; geplant.txt einmal neu (1 Signatur,
+     .vorschlag.aktiv).
+
+297. **Der Bilderlauf lässt Breiten, die Admin-Rolle und Rollbehälter aus.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-41), als Anlass nach der
+     Zuarbeit von Konzept BR (E-BR-07).* Es fehlen die Breiten 400, 1200 und
+     1366; Seiten mit `rolle: admin` meldet er als BetreiberIn an, eine reine
+     Admin-Sicht nimmt er nie auf; die Übersicht der Einstellungen steht nicht
+     in `seiten.json`; Überlauf in einem Behälter, der selbst rollt, und der
+     Vergleich mit einem früheren Stand misst er nicht. *Weg in 10c:* eigene
+     Messungen über `tools/motor.mjs`, wo eine Abnahme sie braucht (AP2
+     Zeilenhöhe bei 1440 und 390 px, AP7, AP9) — die Messungen führen diese
+     Nummer als Anlass. Der Umbau des Bilderlaufs selbst gehört nicht zu 10c.
+     **Seit Web 20.41.0 gilt dasselbe für die Rolle Support** (P5c/AP4): Ihre
+     Sicht — drei Kacheln über der Liste, eine einspaltige Kontoseite ohne
+     die Knöpfe, die der Support nicht darf, zwei Protokollreiter — nimmt der
+     Bilderlauf nicht auf; belegt ist sie nur über die Rollenprobe (Menü,
+     Liste, Reiter) und im Prüfdokument von Hand.
+     **Zuordnung: 10c (Messungen); Umbau: nächste Backlog-Runde.**
+     Erledigt 26.09.2026 mit R4-08: zehn Breiten (1200 und 1600 neu,
+     E-R4-23), fünf Rollen — die Rolle der BetreiberIn heißt betreiberin,
+     admin und support haben eigene Prüfkonten aus pruefkonten.sh (E-R4-31)
+     mit je drei Seiten —, rollende Behälter im Bericht genannt, ohne
+     aufzuhalten. Voller Lauf: 780 Bilder aus 78 Seiten, 0 Überlauf, 0
+     Konsolenfehler, 0 Knöpfe falscher Höhe, 188 Karten / 0 außerhalb, 51
+     Bilder mit rollendem Behälter, 1 170 s. Die rollenden Tabellen am
+     Schreibtisch sind Nr. 342.

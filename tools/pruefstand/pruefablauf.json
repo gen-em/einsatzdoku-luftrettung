@@ -83,8 +83,9 @@
       "braucht": "nichts"
     },
     "kontraste": {
-      "aufruf": "python3 tools/screenshots/kontrast.py",
-      "braucht": "nichts"
+      "aufruf": "python3 tools/screenshots/kontrast.py --selbstprobe && python3 tools/screenshots/kontrast.py",
+      "braucht": "nichts",
+      "bemerkung": "Seit R4-08 (Nr. 116) leitet das Werkzeug die Paare aus den Regeln von style.css ab; ein Paar, das weder in PAARE noch in AUSNAHMEN steht, ist rot. Die Selbstprobe baut die zwei Fehler nach, die Nr. 116 ausgeloest haben, und laeuft hier davor -- im Tor faehrt pruefung.yml nur die Pruefung (die Datei gehoert nicht zu dieser Runde)."
     },
     "ingestprobe": {
       "aufruf": "bash tools/proben/proben.sh ingest",
@@ -184,7 +185,7 @@
       "aufruf": "node tools/screenshots/aufnehmen.mjs --stufe {stufe}",
       "braucht": "installation",
       "demo": true,
-      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920), Chromium; neben = acht Breiten; haupt = acht Breiten, alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM: aufnehmen.mjs nimmt einen Motor aus --motor, die Stufe waehlt nur die Breiten (F-P5c-103, Backlog Nr. 300; P5c/AP4 hat Firefox und WebKit von Hand gefahren). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05) -- bis dahin stand hier fest --stufe klein, und jede Stufe bekam drei Breiten."
+      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920), Chromium; neben = zehn Breiten (seit R4-08 mit 1200 und 1600, E-R4-23); haupt = zehn Breiten, alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM: aufnehmen.mjs nimmt einen Motor aus --motor, die Stufe waehlt nur die Breiten (F-P5c-103, Backlog Nr. 300; P5c/AP4 hat Firefox und WebKit von Hand gefahren). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05) -- bis dahin stand hier fest --stufe klein, und jede Stufe bekam drei Breiten."
     },
     "stilvergleich": {
       "aufruf": "bash tools/stilvergleich/gegen.sh",
@@ -755,7 +756,7 @@
         "zweitfaktorprobe",
         "rueckwegprobe"
       ],
-      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01."
+      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01."
     },
     {
       "id": "statistik",

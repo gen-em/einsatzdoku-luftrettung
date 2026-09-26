@@ -5,12 +5,33 @@
  * Werte ALLER Eigenschaften verglichen, die in style.css ueberhaupt
  * vorkommen. Gemessen wird bei mehreren Fensterbreiten, damit auch die
  * gesammelten Media Queries mitgeprueft werden.
+ *
+ * JE SEITE EIN DOKUMENT (R4-08, Nr. 321). Traegt eine Probe die Trennmarke
+ * aus proben.py (STUECK), wird jedes Stueck fuer sich geladen und gemessen,
+ * und die Signatur nennt seine Quelle: `seiten.html[einsatz.php]`. Vorher
+ * lagen alle Seiten in einem Dokument; eine Regel fuer Seite A aenderte dessen
+ * Hoehe und damit `top`/`bottom` jedes absolut gesetzten Elements auf allen
+ * Seiten — und eine Seite B, die ein solches Element dazubekam, brachte eine
+ * ungeplante Signatur mit, ohne dass an ihr etwas geaendert war (F-P5c-126).
+ * Jedes Stueck wird je Stylesheet EINMAL geladen und fuer alle Breiten nur
+ * neu vermessen; das haelt die Laufzeit trotz sechzig Dokumenten klein.
  */
 const PW = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
 const SEP = String.fromCharCode(1);
+const STUECK = '<!--STILVERGLEICH-STUECK-->';   // wie in proben.py
+
+/* Die Stuecke einer Probe: [{quelle, html}]. Ohne Trennmarke ein Stueck ohne
+ * Quelle — dann bleibt die Signatur, wie sie vor R4-08 war (katalog.html). */
+function stuecke(html) {
+  if (!html.includes(STUECK)) { return [{ quelle: '', html: html }]; }
+  return html.split(STUECK).map(h => {
+    const m = h.match(/data-quelle="([^"]*)"/);
+    return { quelle: m ? m[1] : '?', html: h };
+  }).filter(s => s.html.trim() !== '');
+}
 /* `--motor <name>` wird vor den Stellungsangaben herausgenommen, damit SP,
  * ALT und NEU an ihrer Stelle bleiben, gleich wo der Schalter steht. */
 /* `--geplant <datei>` und `--geplant-schreiben <datei>` ebenso (P5c/AP1,
@@ -143,13 +164,28 @@ function eigenschaften(css) {
   const seite = await browser.newPage();
   let abweichungen = 0, gemessen = 0;
 
-  async function messen(html, css, breite) {
-    await seite.setViewportSize({ width: breite, height: 900 });
+  async function laden(html, css) {
     await seite.setContent(
       '<!doctype html><html lang="de"><head><meta charset="utf-8">' +
       '<style>' + css + '</style></head><body>' + html + '</body></html>',
       { waitUntil: 'load' });
     await seite.evaluate(() => { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); });
+  }
+
+  async function vermessen(breite) {
+    await seite.setViewportSize({ width: breite, height: 900 });
+    /* UEBERGAENGE ABSCHLIESSEN. Eine neue Breite ueber eine Medienabfrage
+     * hinweg startet die Uebergaenge des Stylesheets (`.blatt` faehrt mit
+     * `--dauer`), und gemessen wuerde ein Zwischenwert — beim ersten
+     * Nachstellen stand so `transform` an `.blatt` als Abweichung da, ohne
+     * dass eine Regel sie aenderte. Frisch geladen, wie bis R4-08 je Breite,
+     * gibt es keinen Uebergang; `finish()` stellt denselben Endwert her.
+     * Eine endlose Animation laesst sich nicht beenden — sie steht auf null. */
+    await seite.evaluate(() => {
+      for (const a of document.getAnimations()) {
+        try { a.finish(); } catch (e) { a.pause(); a.currentTime = 0; }
+      }
+    });
     return await seite.evaluate(([props, sep]) => {
       const out = [];
       const alle = document.querySelectorAll('*');
@@ -175,38 +211,58 @@ function eigenschaften(css) {
 
   for (const probe of PROBEN) {
     const html = fs.readFileSync(path.join(SP, 'fixtures', probe), 'utf8');
-    for (const b of BREITEN) {
-      const ra = await messen(html, cssAlt, b);
-      const rn = await messen(html, cssNeu, b);
-      const a = ra.werte, n = rn.werte, wer = ra.wer, grp = ra.gruppe;
-      if (a.length !== n.length) {
-        console.log('  XX ' + probe + ' @' + b + 'px: verschiedene Elementzahl');
-        abweichungen++; continue;
+    const teile = stuecke(html);
+    /* Je Stueck erst alle Breiten mit dem alten, dann mit dem neuen
+     * Stylesheet — zwei Ladevorgaenge statt zwei je Breite. */
+    const je = teile.map(() => ({}));
+    for (const [j, s] of teile.entries()) {
+      for (const [seitenname, css] of [['alt', cssAlt], ['neu', cssNeu]]) {
+        await laden(s.html, css);
+        for (const b of BREITEN) {
+          (je[j][b] = je[j][b] || {})[seitenname] = await vermessen(b);
+        }
       }
-      let diff = 0; const beispiele = []; const gruppen = new Set();
-      for (let i = 0; i < a.length; i++) {
-        if (a[i] !== n[i]) {
-          diff++; if (grp[i]) gruppen.add(grp[i]);
-          const va = a[i].split(SEP), vn = n[i].split(SEP);
-          const wo = [], namen = [];
-          for (let k = 0; k < props.length; k++) {
-            if (va[k] !== vn[k]) { wo.push(props[k] + ': ' + va[k] + ' -> ' + vn[k]); namen.push(props[k]); }
-          }
-          signatur_merken(probe, wer[i], namen);
-          if (beispiele.length < BEISPIELE) {
-            beispiele.push('Element #' + i + '  ' + wer[i] + '\n         ' + wo.slice(0, 4).join(' | '));
+    }
+    for (const b of BREITEN) {
+      let diff = 0, zahl = 0; const beispiele = []; const gruppen = new Set(); const orte = new Set();
+      let schiefe = false;
+      for (const [j, s] of teile.entries()) {
+        const ra = je[j][b].alt, rn = je[j][b].neu;
+        const a = ra.werte, n = rn.werte, wer = ra.wer, grp = ra.gruppe;
+        const name = s.quelle ? probe + '[' + s.quelle + ']' : probe;
+        if (a.length !== n.length) {
+          console.log('  XX ' + name + ' @' + b + 'px: verschiedene Elementzahl');
+          schiefe = true; continue;
+        }
+        zahl += a.length;
+        for (let i = 0; i < a.length; i++) {
+          if (a[i] !== n[i]) {
+            diff++; if (grp[i]) gruppen.add(grp[i]); if (s.quelle) orte.add(s.quelle);
+            const va = a[i].split(SEP), vn = n[i].split(SEP);
+            const wo = [], namen = [];
+            for (let k = 0; k < props.length; k++) {
+              if (va[k] !== vn[k]) { wo.push(props[k] + ': ' + va[k] + ' -> ' + vn[k]); namen.push(props[k]); }
+            }
+            signatur_merken(name, wer[i], namen);
+            if (beispiele.length < BEISPIELE) {
+              beispiele.push('Element #' + i + '  ' + (s.quelle ? '[' + s.quelle + '] ' : '') + wer[i]
+                             + '\n         ' + wo.slice(0, 4).join(' | '));
+            }
           }
         }
       }
-      gemessen += a.length;
+      gemessen += zahl;
+      if (schiefe) { abweichungen++; }
+      const stueckzahl = teile.length > 1 ? ' in ' + teile.length + ' Stücken' : '';
       if (diff) {
         abweichungen += diff;
-        console.log('  XX ' + probe + ' @' + b + 'px: ' + diff + ' von ' + a.length + ' Elementen weichen ab');
+        console.log('  XX ' + probe + ' @' + b + 'px: ' + diff + ' von ' + zahl + ' Elementen' + stueckzahl + ' weichen ab'
+                    + (orte.size ? ' (' + [...orte].sort().join(', ') + ')' : ''));
         if (gruppen.size) { console.log('    betroffene Paare (' + gruppen.size + '):');
           [...gruppen].sort().forEach(function (x) { console.log('      * ' + x); }); }
         else beispiele.forEach(function (x) { console.log('       ' + x); });
-      } else {
-        console.log('  OK ' + probe + ' @' + b + 'px: ' + a.length + ' Elemente, kein Unterschied');
+      } else if (!schiefe) {
+        console.log('  OK ' + probe + ' @' + b + 'px: ' + zahl + ' Elemente' + stueckzahl + ', kein Unterschied');
       }
     }
   }
@@ -219,7 +275,8 @@ function eigenschaften(css) {
   if (SCHALTER['--geplant-schreiben']) {
     const kopf = ['# Stilvergleich — geplante Abweichungen (docs/Pruefablauf.md 6.10).',
       '# Geschrieben mit `bash tools/stilvergleich/gegen.sh --schreiben`, gegen den',
-      '# Vergleichsstand des Laufs. Je Zeile: Probe, Element <Elternteil>, die',
+      '# Vergleichsstand des Laufs. Je Zeile: Probe (bei seiten.html mit der Seite',
+      '# in Klammern, seit R4-08), Element <Elternteil>, die',
       '# Eigenschaften, die sich aendern. Diese Datei wird im Pull Request GELESEN —',
       '# jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge',
       '# bleibt sie stehen: Der naechste Lauf findet ihre Zeilen wortgleich im',

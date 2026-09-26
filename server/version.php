@@ -7671,5 +7671,17 @@ declare(strict_types=1);
  *   der Aenderung, 20 von 20 danach. Die Betreiberin hat entschieden, die
  *   Zeile gleich zu bauen statt sie in die naechste Runde zu legen; sie
  *   braucht keinen neuen Baustein, nur `zeile()` und `dtGeschuetzt()`.
+ *
+ * 21.1.6 — DER STRICH AM VORSCHLAG (Schritt 17, R4-08, Nr. 116).
+ *   Korrekturstufe ohne Migration. Die markierte Zeile einer Vorschlagsliste
+ *   — unter dem Zeiger oder mit der Pfeiltaste gewaehlt — trug links einen
+ *   Strich in `--orange` auf Rauch: 2,09:1, und Rauch hebt sich von Schnee
+ *   kaum ab, der Strich stand also allein. Design.md 3.1 sagt fuer genau
+ *   diesen Fall `--orange-tief` (4,04:1), und beim Reiter ist derselbe Tausch
+ *   schon gemacht (E-P5c-79). Gefunden hat es `kontrast.py`, das die
+ *   Farbpaare seither aus den Regeln des Stylesheets ableitet, statt nur
+ *   seine Liste zu rechnen. Der zweite Fund derselben Ableitung — weisse
+ *   Schrift auf `--orange-tief` im Hover des Primaerknopfs, 4,42:1 — bleibt:
+ *   Die Betreiberin hat den Ton angenommen (E-R4-30).
  */
-const WEB_VERSION = '21.1.5';
+const WEB_VERSION = '21.1.6';

@@ -362,23 +362,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      auf Knopfdruck). Ohne Weg wird die Zahl zur Tapete.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 114.
 
-116. **Das Kontrastwerkzeug misst nur, was in seiner Paarliste steht.** · gehört zu: 17 · Stand: teilweise · seit 03.09.2026
-     Befund (S5 Paket E1, B-S5Z-13/-15): Ein Farbpaar, das nicht in der
-     festen Liste steht, wird nicht gemessen und meldet keinen Fehler — so
-     standen zwei Paare unter dem Zielwert, ohne dass ein grüner Lauf etwas
-     sagte (Rückstand-Punkt 2,23 : 1, „wartet aufs Handy" 4,12 : 1).
-     Erledigt für Android (Konzept AR, 0.16.0, E-AR-09, 24.09.2026):
-     `android/werkzeuge/kontraste.py` prüft die Vollständigkeit je Modul und
-     Rolle (Schrift, Zeichen, Linie, Fläche) mit Selbstprobe; der erste Lauf
-     fand dieselben zwei Kontraste, beide behoben. Das Werkzeug hängt an
-     keinem Lauf (Nr. 334).
-     Offen für das Web: dieselbe Frage für `tools/screenshots/kontrast.py` —
-     Paare aus dem Quelltext ableiten, oder eine Vollständigkeitsprüfung, die
-     im Code vorkommende Token-Paare ohne Listeneintrag meldet (billiger,
-     fängt denselben Fehler). Zurückgestellt war es, solange P5c die Datei
-     änderte; P5c ist gemergt, der Weg ist frei.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 116.
-
 122. **Freie Zeiträume und Diagramme in der Statistik.** · gehört zu: 17 · Stand: offen · seit 05.09.2026
      *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
      Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
@@ -1332,23 +1315,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
      **Zuordnung: Backlog-Runde.**
 
-297. **Der Bilderlauf lässt Breiten, die Admin-Rolle und Rollbehälter aus.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-41), als Anlass nach der
-     Zuarbeit von Konzept BR (E-BR-07).* Es fehlen die Breiten 400, 1200 und
-     1366; Seiten mit `rolle: admin` meldet er als BetreiberIn an, eine reine
-     Admin-Sicht nimmt er nie auf; die Übersicht der Einstellungen steht nicht
-     in `seiten.json`; Überlauf in einem Behälter, der selbst rollt, und der
-     Vergleich mit einem früheren Stand misst er nicht. *Weg in 10c:* eigene
-     Messungen über `tools/motor.mjs`, wo eine Abnahme sie braucht (AP2
-     Zeilenhöhe bei 1440 und 390 px, AP7, AP9) — die Messungen führen diese
-     Nummer als Anlass. Der Umbau des Bilderlaufs selbst gehört nicht zu 10c.
-     **Seit Web 20.41.0 gilt dasselbe für die Rolle Support** (P5c/AP4): Ihre
-     Sicht — drei Kacheln über der Liste, eine einspaltige Kontoseite ohne
-     die Knöpfe, die der Support nicht darf, zwei Protokollreiter — nimmt der
-     Bilderlauf nicht auf; belegt ist sie nur über die Rollenprobe (Menü,
-     Liste, Reiter) und im Prüfdokument von Hand.
-     **Zuordnung: 10c (Messungen); Umbau: nächste Backlog-Runde.**
-
 299. **Die Kontoseite löscht ein Konto an `konto_loeschen()` vorbei.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-99).* Es gibt zwei
      Wege, ein Konto zu löschen: `konto_loeschen()` in `konto_lib.php` (die
@@ -1385,25 +1351,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Gebaute zurückgenommen, mit Begründung. Nicht beides offen lassen.
      Zuordnung PK-06 ff.; bis dahin je Paket von Hand.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 300.
-
-321. **Der Stilvergleich meldet unveränderte Stile als ungeplant, sobald eine andere Seite Elemente dazubekommt.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     Befund (P5c/AP7, F-P5c-126, gemessen): AP7 baute die Statistikseite um
-     und ergänzte eine CSS-Regel; `gegen.sh` meldete 38 ungeplante
-     Signaturen und 31 geplante, nicht gemessene — 23 davon an den
-     Druckblättern aus AP5, die AP7 nicht anfasst. Gegenproben: neue Regel
-     mit alter Statistikseite genau eine ungeplante, sauberer Stand 0 / 0.
-     Die Signaturen hängen an der Nachbarschaft eines Elements in
-     `seiten.html`: Eine wachsende Seite verschiebt die Stückelung
-     (`chunks.py`), und dasselbe Element bekommt eine andere
-     Eigenschaftsliste. AP7 ist über `--schreiben` gelöst (139 / 139), die
-     Ursache nicht — jede Seite mit mehr Markup kann `geplant.txt` für
-     Stellen umwerfen, die sie nicht berührt.
-     Weg: jede Seite bekommt ein eigenes Stück, oder die Signatur entsteht
-     ohne geerbte Eigenschaften aus dem Stückkontext; dazu ein Fall in der
-     Selbstprobe (eine Seite um hundert Elemente verlängert, übrige
-     Signaturen unverändert). Abnahme: eine fremde Seite wächst, der
-     Vergleich bleibt 0 / 0. Anlass für `tools/stilvergleich/`.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 321.
 
 323. **Referenzbestand und Demo-Fixture tragen noch Nutzlast 11.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
      *Aufgenommen 25.09.2026 (P5c/AP8).* Die Referenz
@@ -1510,3 +1457,20 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Weg:* im Aufräumpaket von P6 je Stelle nachsehen, ob ein Verwender
      vergessen wurde oder sie weg kann; `Design.md` mitziehen.
      *Abnahme:* Hinweise 13 → 7, jeder übrige mit Grund.
+
+342. **Die Einsatztabellen von Suche und Zeitraum rollen noch am Schreibtisch.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit R4-08 (F-R4-30),* gemessen vom Bilderlauf,
+     der rollende Behälter seither nennt (Nr. 297). Die Tabelle in
+     `.tabelle-scroll` rollt auf `suche.php` bei 1440 px noch um 176 px und
+     bei 1600 px um 16, auf `zeitraum.php` bei 1440 px um 136 (Tagesliste)
+     bzw. bei 1200 px um 52 (Monatsliste); die Kontenliste der Verwaltung
+     bei 1024 px um 81 (BetreiberIn), 24 (Support) — dort ist die Spalte
+     „Öffnen" angeschnitten. Unter 720 px zeigen alle drei Seiten Karten
+     statt der Tabelle; betroffen ist also genau die Schreibtischbreite, für
+     die die Tabelle da ist.
+     *Weg:* je Seite messen, welche Spalten die Breite treiben, und
+     entscheiden: Spalten erst ab einer Breite zeigen, die Kartenansicht bis
+     zu einer höheren Schwelle, oder umbrechen lassen. Eine Gestaltungsfrage
+     mit Mockup (`CLAUDE.md` 5), keine Korrektur.
+     *Abnahme:* Bilderlauf, Spalte „Rollt bei" für die drei Seiten ab
+     1280 px leer.

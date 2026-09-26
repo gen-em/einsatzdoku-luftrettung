@@ -3307,8 +3307,13 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 /* Zeiger und Pfeiltaste teilen sich EINE Markierung — sonst haette die
- * Tastaturbedienung ein zweites Aussehen fuer dieselbe Aussage. */
-.vorschlag:hover,.vorschlag.aktiv{background:var(--rauch);border-left-color:var(--orange)}
+ * Tastaturbedienung ein zweites Aussehen fuer dieselbe Aussage.
+ * DER STRICH IST `--orange-tief` (Web 21.1.6, R4-08): Er steht hier allein —
+ * Rauch hebt sich von Schnee kaum ab —, und Orange erreichte darauf 2,09:1.
+ * Die Regel aus Design.md 3.1 und derselbe Tausch wie beim Reiter
+ * (E-P5c-79): 4,04:1. Gefunden hat es kontrast.py, seit es die Paare aus
+ * den Regeln ableitet. */
+.vorschlag:hover,.vorschlag.aktiv{background:var(--rauch);border-left-color:var(--orange-tief)}
 /* Die freie Eingabe ist eine HANDLUNG, kein Datensatz. */
 .vorschlag-neu .vorschlag-haupt{
   color:var(--orange-tief);font-family:var(--schrift-kopf);font-weight:600;

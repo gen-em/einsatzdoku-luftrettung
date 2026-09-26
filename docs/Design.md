@@ -263,13 +263,20 @@ Jede Kernfarbe kommt dreifach vor, und die drei sind nicht austauschbar:
 | Endung | Rolle | Beispiel |
 |---|---|---|
 | — (`--orange`) | **Fläche und Strich.** Nie Schrift. | Primärknopf, aktiver Rand |
-| `-tief` | **Schrift.** Dunkel genug für 4,5:1 auf Schnee. | Textlink, Fehlertext |
+| `-tief` | **Schrift.** Blau und Rot tief erreichen 4,5:1 auf Schnee; **Orange tief 4,32:1** — als Schrift nur groß oder fett (3.4). | Textlink, Fehlertext |
 | `-hell` | **Fläche unter Schrift.** | Meldung, Plakette |
 
 Das ist der Fund F-P3-J: Orange erreicht auf Schnee 2,2:1 und ist als Schrift
 unbenutzbar; die Marke gibt aber keinen dunkleren Ton her. Statt den
 Markenwert zu ändern, bekommt jede Farbe eine dunkle Textfassung
 (`--orange-tief` `#C25A00`, `--blau-tief` `#1F4E9C`, `--rot-tief` `#9E2226`).
+
+*Bis R4-08 stand in der Tabelle „dunkel genug für 4,5:1 auf Schnee" für
+alle drei. Für Orange tief stimmte das nie (4,32:1); das Werkzeug rechnete
+das Paar ohnehin mit 3,0 als „nur groß oder fett". Die Ableitung aus dem
+Stylesheet fand dazu die weiße Schrift auf Orange tief im Hover des
+Primärknopfs (4,42:1 bei 15 px); die BetreiberIn hat entschieden, dass der
+Ton passt, und keine Farbe geändert (E-R4-30).*
 
 ### 3.3 Zwei Linien, und der Unterschied ist keine Geschmacksfrage
 
@@ -317,12 +324,26 @@ Schnee oder Rauch, nicht Weiß.
 | Weiß auf Rot | 4,78:1 | 4,5 | Kopfleiste einer Anlage mit Etikett (9.36) |
 | Schnee auf Rot | 4,68:1 | 4,5 | Name in dieser Kopfleiste |
 | Orange hell auf Rot | 4,12:1 | 3,0 | Strich des aktiven Kopfpunkts auf Rot |
+| Asphalt auf Sand | 11,80:1 | 4,5 | Nummer eines offenen Schritts (Erststart) |
+| Blau auf Blau hell | 3,19:1 | 3,0 | Strich am Zitat im Handbuch |
+| Blau tief auf Rauch | 7,32:1 | 4,5 | Übersichtszeile der Einstellungen unter dem Zeiger |
+| Dunkelblau auf Orange | 5,97:1 | 4,5 | oranger Zähler, Zeichen im Einsatzort-Kreis |
+| Dunkelblau auf Sand | 8,15:1 | 4,5 | neutraler Zähler |
+| Primärschrift auf Orange | 5,97:1 | 4,5 | Zahl des aktiven Filters, gewählte Segmenttaste |
+| Rauch auf Dunkelblau | 12,48:1 | 4,5 | Fußzeile auf dunklem Grund |
+| Rot auf Rosa | 3,87:1 | 3,0 | Rahmen der roten Kennzahl |
 
-**25 Paare, 0 verfehlt** (Web 20.38.0). Hier standen bis dahin 21 — das
-Paar „Dunkelblau auf Orange hell" war mit Web 16.3.0 ins Werkzeug gekommen,
-aber nicht in diese Tabelle; die drei Paare auf Rot kommen mit P5c/AP1.
+**33 Paare, 0 verfehlt** (Web 21.1.6). **Seit R4-08 ist die Liste nicht mehr
+das Maß:** `kontrast.py` leitet die Paare aus den Regeln des Stylesheets ab
+(Vorder- und Hintergrund in derselben Regel, dazu jede Farbe, die allein
+steht) und meldet jedes, das weder hier noch unter den Ausnahmen steht —
+Backlog Nr. 116. Der erste Lauf fand **14**: die acht Paare oben, die ihren
+Sollwert erreichen, den Strich am Vorschlag (2,09:1 — seither Orange tief)
+und fünf, die jetzt als Ausnahme stehen. Was die Ableitung nicht sieht: eine
+bekannte Schrift auf einer neuen Fläche, die eine Elternregel setzt. Hier
+standen bis Web 20.38.0 21 Paare, bis R4-08 25.
 
-**Drei Ausnahmen, jede mit Grund** — sie stehen im Werkzeug selbst, damit
+**Acht Ausnahmen, jede mit Grund** — sie stehen im Werkzeug selbst, damit
 niemand sie aus Versehen weiterreicht:
 
 - **Orange als Fläche auf Schnee (2,23:1).** Orange trägt nirgends allein:
@@ -339,6 +360,18 @@ niemand sie aus Versehen weiterreicht:
   ist die Auskunft, mit der ein Fehlerbericht anfängt, also ein zu *lesender*
   Text. Sie steht jetzt in `--gedaempft` (5,30:1). **Wer diese Ausnahme
   künftig weiterreicht, prüfe zuerst, ob der Text gelesen werden soll.**
+- **Weiß auf Orange tief (4,42:1)** im Hover des Primärknopfs — 15 px,
+  Gewicht 600, also normale Schrift. Die BetreiberIn hat den Ton angenommen
+  (E-R4-30); in Ruhe steht der Knopf mit 5,97:1 da.
+- **Linie auf Rauch (1,27:1).** Rahmen von Codeblock, `<pre>` und
+  Tagesgruppe des Imports — Zierrat wie „Linie auf Schnee".
+- **Orange als Strich auf Orange hell (1,97:1).** Aktiver Leisteneintrag,
+  aktive Kennzahl, Kennzahl im Ton orange: Der Strich begleitet die Fläche
+  und trägt den Zustand nicht allein — dieselbe Sprache wie oben.
+- **Orange tief auf Orange (1,93:1).** Rand des hervorgehobenen Phasenpunkts
+  auf der Karte; die orange Fläche ist das Zeichen.
+- **Spurfarbe als Farbschlüssel.** Die Linie der Legende zeigt die Farbe der
+  Spur; was sie bedeutet, sagt die Beschriftung daneben.
 
 ---
 
@@ -600,7 +633,7 @@ Menüpunkt (`--unterpunkt`, 28).
 
 Es gibt weiterhin keine Kompaktvariante innerhalb einer Eingabeart — was
 kleiner ist, ist kein Knopf, sondern ein Link mit Symbol (E-P3-22). Der
-Bilderlauf misst jedes `.knopf` in allen acht Breiten **gegen den Sollwert der
+Bilderlauf misst jedes `.knopf` in allen zehn Breiten **gegen den Sollwert der
 emulierten Eingabeart**; Abweichung ist ein Fehler, kein Geschmack.
 
 **Der Fokusring ist sichtbar und liegt an der richtigen Stelle.** Zwei
@@ -2337,7 +2370,7 @@ Handlung.
 | `.vorschlaege` | schwebt (`position:absolute`, **`z-index:35`**); der Behälter trägt `position:relative` |
 | `.vorschlaege-gruppe` | Herkunftszeile auf Rauch, `--groesse-1`, versal — keine Bedienhöhe, sie ist nicht anzufassen |
 | `.vorschlag` | `min-height: var(--knopf)` — folgt beiden Bedienhöhen von selbst (44/36, R76) |
-| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` Orange links — **eine** Markierung für Zeiger und Pfeiltaste |
+| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` **Orange tief** links — **eine** Markierung für Zeiger und Pfeiltaste. Bis Web 21.1.5 stand dort `--orange` (2,09:1 auf Rauch); der Strich steht allein, und dann gilt 3.1 (4,04:1, R4-08) |
 | `.vorschlag-haupt` | eine Zeile, mit Ellipse; der getippte Teil in `<b>` |
 | `.vorschlag-neben` | die Herkunft, gedämpft, `--groesse-2` |
 | `.vorschlag-neu` | die freie Eingabe: `--orange-tief`, Kopfschrift — sie ist eine Handlung, kein Datensatz |
@@ -3137,7 +3170,7 @@ lief, misst einen Stand, den es nicht mehr gibt.
 | Werkzeug | beantwortet |
 |---|---|
 | `tools/quelltext/vollstaendigkeit.py` | Ist etwas verlorengegangen? Steht jeder Wert an der einen Stelle? |
-| `tools/screenshots/aufnehmen.mjs` | Sieht es in allen acht Breiten so aus, wie es soll? Überlauf, Konsolenfehler, Knopfhöhen. |
+| `tools/screenshots/aufnehmen.mjs` | Sieht es in allen zehn Breiten so aus, wie es soll? Überlauf, Konsolenfehler, Knopfhöhen; rollende Behälter genannt. |
 | `tools/screenshots/kontrast.py` | Erreicht jedes Farbpaar der Token seinen Sollwert? |
 | `tools/erzeugen/design.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen. |
 | `tools/quelltext/textprobe.py` | Sprechen Oberfläche und Dokumentation neutral von Land und Luft? |
@@ -3206,6 +3239,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 21.1.6 (R4-08)** | **Der Strich am aktiven Vorschlag ist `--orange-tief`** (9.x Vorschlagsliste): Er steht allein auf Rauch, und dort erreichte Orange 2,09:1 — die Regel aus 3.1, derselbe Tausch wie beim Reiter (E-P5c-79). **3.4 um acht Paare und fünf Ausnahmen ergänzt**: `kontrast.py` leitet die Paare seither aus dem Stylesheet ab (Nr. 116). **3.2 berichtigt**: „-tief = 4,5:1 auf Schnee" galt für Orange tief nie (4,32:1, E-R4-30). **Kein neues Token, kein neuer Farbwert, kein neuer Baustein.** |
 | **Web 20.39.0 (P5c/AP2)** | **9.37 neu — Reiter**, freigegeben mit M-P5c-01a (E-P5c-25): Wechsel zwischen gleichrangigen Sichten einer Seite, serverseitig, schmal rollend im eigenen Behälter; Seiten mit Reitern tragen keine Unterpunkte in der Leiste. Der Strich des aktiven Reiters steht in `--orange-tief` statt im `--orange` des Mockups (2,09 → 4,04 : 1 auf Rauch, E-P5c-79); Kapitel 3.4 nennt die Rolle beim Paar „Orange tief auf Rauch". **9.2 um die aufklappbare Zeile `.zeile-mehr` ergänzt** (E-P5c-26) samt Gegenregel zu `.zeile:first-child` (F-P5c-13) und dem Schlüssel `aktionsspalte`. **9.18a um die Helfer `ui_listenkopf()` und `ui_listenfuss()`** — Suche, Filterpillen (eine mit Kreuz), Auswahlfeld und Seitenwahl sind ein Weg; `admin_users.php` ist umgezogen, das Register hält die Klassen außerhalb von `ui.php` auf null (F-P5c-54). Kapitel 9.0 um drei Zeilen. **Ein neues Symbol** — `protokoll.svg`, Tabler „list" (Vorrat 57 → 58), für den Menüpunkt Verwaltung → Protokoll. **Kein neues Token, kein neuer Farbwert.** Die erzeugten Tabellen neu erzeugt: Bausteine **44 → 48** Funktionen (`ui_zeile_mehr()`, `ui_reiter()`, `ui_listenkopf()`, `ui_listenfuss()`), Medienblöcke **24 → 25** (die Protokollliste ab 720 px), Symbole **57 → 58**. In Kapitel 7 stand unter der erzeugten Schwellentabelle eine **zweite, veraltete Summenzeile** („22 Medienblöcke") — ein Rest eines früheren Einsetzens von Hand; beim Ersetzen bis zur nächsten Überschrift ist sie gefallen. |
 | **Web 20.38.0 (P5c/AP1)** | **9.36 neu — Streifen über dem Inhalt und Kopfleiste mit Etikett**, freigegeben mit M-P5c-02 (a). Ein Behälter `.hinweise` für bis zu vier Streifen in fester Reihenfolge (Umgebung → Ankündigung → Demo → Datenschutz), zwei Varianten vorhandener Bausteine (`.hinweis-umgebung` am Hinweisstreifen, `.meldung-ankuendigung` an der Meldung) und eine Variante der Kopfleiste (`.kopf-umgebung`, aktiver Punkt in `--orange-hell`, Variante A, E-P5c-59). Kapitel **3.4** um die drei Paare auf Rot ergänzt und um das Paar „Dunkelblau auf Orange hell", das seit Web 16.3.0 im Werkzeug stand und hier fehlte — **25 Paare, 0 verfehlt**. Kapitel 9.0 um eine Zeile. **Die vier erzeugten Tabellen neu erzeugt** — sie standen auf einem älteren Stand: Bausteine **40 → 44** Funktionen (drei aus diesem Paket, dazu `ui_tabellen_bootstrap()` aus Schritt 15, das bis dahin fehlte), Verwendungszahlen der Token und Symbole nachgezogen; `tools/erzeugen/design.py` kennt die beiden neuen Funktionen in seiner Liste der abweichenden Namen. **Kein neues Token, kein neuer Farbwert, kein neues Symbol.** |
 | **Web 20.1.0 (S10/AP3)** | **10.1 um einen sechsten Seitentyp ergänzt: die Druckseite** — und mit ihr das **erste `@media print` des Projekts** (Stylesheet, Abschnitt 26, drei Regeln). Kein neuer Baustein: Das Schlüsselblatt benutzt Lesespalte, Meldung, Wertekasten, Feldhinweis und Knopf; was es zum eigenen Typ macht, ist sein Zweck. Eine neue Klasse mit Regel — `.blatt-wert`, `.codeblock-wert` mit zwei Änderungen (darf umbrechen, bricht **nur zwischen** den Vierergruppen). **Kein neues Token, kein neuer Farbwert, kein neues Symbol:** Die Flächenregel im Druck setzt `background: none` statt eines weißen Hexwerts, weil die Skala geschlossen ist und es keinen Token für Weiß gibt. Kapitel **9.6** um den dritten durchgerutschten Plakettenton ergänzt (`ok`, zwei Altstellen ohne Regel, Backlog Nr. 36). Gemessen: Vollständigkeit **Hexfarben außerhalb `:root` 0**, Befunde 329 → 335 (die sechs sind das `→` der Pfadschreibweise *Betrieb → Servereinstellungen*); Bilderlauf `43b`, `45`, `48`, `48a` in acht Breiten, **beide Bedienhöhen**, je **0 Überlauf / 0 Knöpfe falscher Höhe**; Kontraste **22 Paare, 0 verfehlt**; Druckansicht bei 718 px (210 mm) **16 Gruppen, 0 zerschnitten, 0 Überlauf**. |

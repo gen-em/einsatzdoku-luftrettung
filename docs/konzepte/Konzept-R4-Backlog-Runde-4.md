@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-08.** |
-> | Entschieden | **E-R4-01 bis E-R4-29** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-09.** |
+> | Entschieden | **E-R4-01 bis E-R4-31** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-07 erledigt** (26.09.2026); Web 21.1.5. Offen: R4-08 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-08 erledigt** (26.09.2026); Web 21.1.6. Offen: R4-09 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
-> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe) — 2.4. |
+> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342) — 2.4. |
 
 
 ---
@@ -378,6 +378,28 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   Abgleich der `grep`-Zählung über `server/` (9 Treffer) mit der Probe (8);
   behoben mit Bereich `f`, der nur `namen` misst (E-R4-29).
 
+- **F-R4-28 Vierzehn Farbpaare des Stylesheets standen in keiner Liste.**
+  Die Ableitung in `kontrast.py` fand in derselben Regel acht Paare über
+  ihrem Sollwert, zwei unter AA — den Strich am Vorschlag (Orange auf
+  Rauch, 2,09:1; behoben, Web 21.1.6) und die weiße Hover-Schrift des
+  Primärknopfs (4,42:1; E-R4-30) —, drei zierende Striche und Ränder unter
+  3:1 und eine Spurfarbe als Farbschlüssel. Dazu stimmte `Design.md` 3.2
+  nicht: „-tief = 4,5:1 auf Schnee" galt für Orange tief nie (4,32).
+- **F-R4-29 Der umgebaute Stilvergleich maß einen Übergang.** Jede Seite
+  einmal laden und nur die Breite wechseln hält die Laufzeit klein — aber
+  eine Breite über eine Medienabfrage hinweg startet die Übergänge des
+  Stylesheets, und der erste Entwurf meldete `transform` an `.blatt` als
+  Abweichung, die keine Regel verursachte. Behoben vor dem Commit:
+  `getAnimations()` abschließen nach jeder Breite; zwei Läufe danach
+  gleich (6 Signaturen, 0 an `ui.php`).
+- **F-R4-30 Drei Tabellen rollen am Schreibtisch.** Die erste Messung
+  rollender Behälter (51 von 780 Bildern): Die Einsatztabelle der Suche
+  rollt bei 1440 px um 176 px und bei 1600 um 16, die des Zeitraums bei 1440
+  um 136, die Kontenliste bei 1024 um 81 — dort ist „Öffnen" angeschnitten.
+  Handbuch-Tabellen am Handy, Reiter und Statistiktabellen unter 420 px
+  rollen gewollt. Nr. 342, `nächste Backlog-Runde`: eine Gestaltungsfrage
+  mit Mockup, keine Korrektur dieser Runde.
+
 ## 3. Entscheidungen und Fragen
 
 ### 3.1 Entscheidungen
@@ -395,6 +417,8 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-09 | **Nr. 114 in 17, mit Mockup:** Knopf „Verwerfen" mit Rückfrage nach dem Muster der Garmin-Uhr — Android Neben. | Betreiberin, 26.09.2026 (Q-R4-05) | Der Server hat das Paket mit 400 endgültig abgelehnt; „Nachreichen von Hand" wäre ein zweiter Weg an `validate_lib.php` vorbei. Android-Mockups liegen unter `android/mockups/`. |
 | E-R4-10 | **Nr. 76 in 17:** Änderungsmarke in `app_state`, gesetzt bei POST des Demo-Kontos und bei angenommenem Upload; Reset nur bei gesetzter Marke, täglicher Pflichtreset als Netz. | Betreiberin, 26.09.2026 (Q-R4-10) | Die Fahrplanzeile nennt den Demo-Reset-Takt; die zwei Setzstellen sind je eine Zeile in Dateien der 18-Liste, und 18 baut auf 17 auf. |
 | E-R4-11 | **Die Sperrliste von Schritt 18 ist ein Gebot, kein Verbot.** Pakete an diesen Dateien bleiben klein, ändern keine Zeile, die 18 umbaut, und sind in 4 vermerkt. | Konzept | 18 hat „Merge von 17" als Voraussetzung und wird danach konzipiert. Ein Verbot hätte acht Punkte der Runde (76, 158, 175, 250, 258, 277, 291, 299) ohne Not nach 18 geschoben. |
+| E-R4-12 | **Ein Backlog-Punkt = ein Paket, außer die Punkte teilen Dateien oder Erzeugnis.** Blöcke sind Reihenfolge, nicht Bündel (wie Runde 3). | Konzept | 26 Pakete für 37 zu bauende Punkte; jedes einzeln abnehmbar, jedes mit Abnahmezahl. Gebündelt sind nur: 36+331 (eine Funktion), 322+334 (eine Ablaufdatei), 318+283 (ein Werkzeugordner), 116+321+297 (drei Bildwerkzeuge, seriell auf der einen Anlage), 271+272+273 (zwei Skripte, eine Zählzeile), 76+259 und 275+323 (ein Demo-Bestand), die Kommentar- und Kleinstpunkte unter `server/` (R4-09). |
+| E-R4-13 | **Die Diagramme der Statistik folgen vier Regeln:** eine Farbe je Diagramm (Blau), der Höchstwert in Orange **mit** Beschriftung, Schrift nur in Schrifttoken, die Tabelle bleibt daneben; drei Reihen verschiedener Größenordnung sind drei kleine Vielfache, keine Grafik mit drei Farben oder zwei Achsen; kein Kreis, keine Bibliothek (Inline-SVG aus PHP, Balken als HTML). | Konzept (M-R4-24) | `Design.md` 3.1/3.2 (Farbe trägt eine Aussage; Orange nie als Schrift, F-P3-J) und das dataviz-Verfahren (eine Achse, Farbe folgt der Sache, Tabellensicht); die zwei Töne haben die Palettenprüfung bestanden (Mockup-LIESMICH). |
 | E-R4-14 | **Konzept freigegeben; die Umsetzung arbeitet durch** — Halt nur an H-R4-01 bis -05, bei Problemen und vor dem PR; **Fächerung strikt nach Abschnitt 4** (nur R4-11, R4-19), auch bei eingeschaltetem Ultracode. Zweig `claude/schritt-17-konzept-mockups-q0yjcm`. | Betreiberin, 26.09.2026 (Freigabe des Umsetzungsplans) | Merge von PR #93 und Auftrag „Leg los"; `CLAUDE.md` 7: ohne Fächerungszeile keine Fächerung, und der Container fährt zwei Agenten gleichzeitig (F-R4-01). |
 | E-R4-15 | Q-R4-01: **Die Betreiberin löscht die zwei toten Zweige selbst**; die Umsetzung löscht nichts. | Betreiberin, 26.09.2026 | Zuarbeit in Rahmenplan 6.1, P-R4-06. |
 | E-R4-16 | Q-R4-03: (a) Seitengrenze und (b) benannte Kappungen in 17 (R4-17); Vorschneiden und Monatsvorwahl nach v1.0. | Betreiberin, 26.09.2026 | wie empfohlen |
@@ -409,10 +433,10 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-25 | Q-R4-15: **Der manuelle Abfahrtort bekommt in der Leseansicht schon in 17 eine beschriftete Zeile mit Schloss** (R4-06, Web Korrektur) — abweichend von der Empfehlung; Nr. 341 wird nicht vergeben. | Betreiberin, 26.09.2026 | Vorhandene Bausteine (`zeile()`, `dtGeschuetzt()` in `einsatz.php`), kein neuer — kein Mockup nötig (`CLAUDE.md` 5). |
 | E-R4-26 | Q-R4-16: **Die drei Mockups sind freigegeben**, wie gezeigt; H-R4-01 ist erfüllt. | Betreiberin, 26.09.2026 | — |
 | E-R4-27 | **R4-19 läuft vor R4-16**, direkt nach R4-15; sonst gilt die Nummernfolge. | Umsetzung, 26.09.2026 | R4-16 verlangt es selbst („Nach R4-19 und R4-15"); die Nummer allein hätte die Referenz zweimal erzeugt. |
-| E-R4-29 | **`sicht` gilt je Muster in jedem Bereich, und das Stylesheet bekommt einen Bereich nur für `namen`.** Das Konzept nannte `a` und `b`; das Feld am Muster wirkt aber überall, wo das Muster läuft — in `c` ohnehin (Markdown wird nicht zerlegt), in `d` und `e` mit 0 zusätzlichen Treffern. Bereich `f` (`server/assets/*.css`, `nur_klassen: ["namen"]`) schließt F-R4-27. Die acht Kommentare stehen bis R4-09 im Altbestand (`--stand`), damit R4-07 grün bleibt, ohne sie zu erklären. | Umsetzung (R4-07) | E-R4-19 sagt „E-P1-02 gilt auch für Kommentare"; eine Probe, die das Stylesheet nicht liest, hielte das an einer von acht Stellen nicht. Für die vier anderen Klassen hat das Stylesheet keinen sichtbaren Text (`flex-basis` träfe `basis`). |
 | E-R4-28 | **Der Verschiebe-Helfer ist eingecheckt** (`tools/steuerung/verschieben.py`), ohne Selbstprobe. | Umsetzung (R4-01) | E-R4-06; eine Runde verschiebt Dutzende Punkte, je drei Stellen in zwei Dateien. Er hält nichts auf, deshalb keine Selbstprobe (`Pruefablauf.md` 6.3); die Anleitung liegt in `tools/steuerung/LIESMICH.md`. |
-| E-R4-13 | **Die Diagramme der Statistik folgen vier Regeln:** eine Farbe je Diagramm (Blau), der Höchstwert in Orange **mit** Beschriftung, Schrift nur in Schrifttoken, die Tabelle bleibt daneben; drei Reihen verschiedener Größenordnung sind drei kleine Vielfache, keine Grafik mit drei Farben oder zwei Achsen; kein Kreis, keine Bibliothek (Inline-SVG aus PHP, Balken als HTML). | Konzept (M-R4-24) | `Design.md` 3.1/3.2 (Farbe trägt eine Aussage; Orange nie als Schrift, F-P3-J) und das dataviz-Verfahren (eine Achse, Farbe folgt der Sache, Tabellensicht); die zwei Töne haben die Palettenprüfung bestanden (Mockup-LIESMICH). |
-| E-R4-12 | **Ein Backlog-Punkt = ein Paket, außer die Punkte teilen Dateien oder Erzeugnis.** Blöcke sind Reihenfolge, nicht Bündel (wie Runde 3). | Konzept | 26 Pakete für 37 zu bauende Punkte; jedes einzeln abnehmbar, jedes mit Abnahmezahl. Gebündelt sind nur: 36+331 (eine Funktion), 322+334 (eine Ablaufdatei), 318+283 (ein Werkzeugordner), 116+321+297 (drei Bildwerkzeuge, seriell auf der einen Anlage), 271+272+273 (zwei Skripte, eine Zählzeile), 76+259 und 275+323 (ein Demo-Bestand), die Kommentar- und Kleinstpunkte unter `server/` (R4-09). |
+| E-R4-29 | **`sicht` gilt je Muster in jedem Bereich, und das Stylesheet bekommt einen Bereich nur für `namen`.** Das Konzept nannte `a` und `b`; das Feld am Muster wirkt aber überall, wo das Muster läuft — in `c` ohnehin (Markdown wird nicht zerlegt), in `d` und `e` mit 0 zusätzlichen Treffern. Bereich `f` (`server/assets/*.css`, `nur_klassen: ["namen"]`) schließt F-R4-27. Die acht Kommentare stehen bis R4-09 im Altbestand (`--stand`), damit R4-07 grün bleibt, ohne sie zu erklären. | Umsetzung (R4-07) | E-R4-19 sagt „E-P1-02 gilt auch für Kommentare"; eine Probe, die das Stylesheet nicht liest, hielte das an einer von acht Stellen nicht. Für die vier anderen Klassen hat das Stylesheet keinen sichtbaren Text (`flex-basis` träfe `basis`). |
+| E-R4-30 | Frage aus R4-08: **Der Ton von `--orange-tief` passt** — „4,32 passt". Keine Farbe wird geändert; die weiße Schrift auf Orange tief im Hover des Primärknopfs (4,42:1 bei 15 px) steht als Ausnahme mit diesem Grund in `kontrast.py`, und `Design.md` 3.2 sagt jetzt, dass Orange tief auf Schnee 4,32:1 erreicht. | Betreiberin, 26.09.2026 | Vorgelegt waren: Token auf `#BD5700` dunkeln (Web und Android), nur den Hover ändern, Hover dunkelblau. |
+| E-R4-31 | **Im Bilderlauf heißt die Rolle der BetreiberIn `betreiberin`; `admin` und `support` sind eigene Prüfkonten; rollende Behälter halten nicht auf.** Der Strich am Vorschlag wird nach der Regel aus `Design.md` 3.1 `--orange-tief`, ohne eigene Frage. | Umsetzung (R4-08) | Die 25 Seiten, die `admin` hießen, zeigten die Sicht der BetreiberIn — der Name war der Fehler aus Nr. 297, nicht die Sicht. Ein Behälter, der rollen soll (eine breite Tabelle am Handy), rollt; als Fehler gezählt, stünde der Lauf dauerhaft rot. Der Strich stand allein (Rauch auf Schnee), und für diesen Fall sagt 3.1 Orange tief — derselbe Tausch wie E-P5c-79. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -714,6 +738,29 @@ falscher Höhe 0, zwei neue Rollen mit Bild. *Stufe:* keine, außer ein Paar
 liegt unter AA (dann Web Korrektur am Stylesheet, `Design.md` nachziehen).
 *Fächerung:* keine — drei Werkzeuge, aber je Werkzeug ein Lauf auf der
 einen Anlage.
+**Erledigt 26.09.2026 — mit Web 21.1.6.** Reihenfolge wie verlangt: erst
+der Stilvergleich, dann die eine Änderung am Stylesheet. *(2) Stilvergleich:*
+Trennmarke je Seite in `proben.py`, `stilvergleich.js` lädt jedes Stück je
+Stylesheet einmal und vermisst es in dreizehn Breiten; die Signatur nennt
+die Seite. Nachgestellt (Regel für Seite A, `--schreiben`, Seite B um 25
+Zeilen mit Vorlesetext): vorher **1 ungeplant**, nachher **0**, zweimal;
+gegen Web 21.1.3 dieselben **13** Signaturen wie das alte Werkzeug, jetzt
+**61 191** Elementmessungen (vorher 42 276). F-R4-29 unterwegs behoben.
+*(1) Kontrast:* Ableitung aus den Regeln, Selbstprobe **4 / 0** mit den zwei
+alten Fehlern im Web und einer Farbe ohne Liste; erster Lauf **14 ohne
+Eintrag** (F-R4-28) — acht in `PAARE`, fünf in `AUSNAHMEN` (eine davon
+E-R4-30), der Strich am Vorschlag auf `--orange-tief` (Web 21.1.6,
+E-R4-31); danach **33 Paare, 0 verfehlt, 32 abgeleitet, 0 ohne Eintrag**;
+Gegenprobe: Strich zurück auf Orange → 1 Befund. `geplant.txt` einmal neu:
+**1 Signatur** (`div.vorschlag.aktiv`). *(3) Bilderlauf:* Breiten 1200 und
+1600, Rollen `betreiberin` (die 25 Seiten, die `admin` hießen), `admin` und
+`support` mit Prüfkonten aus `pruefkonten.sh` (idempotent, von
+`hochfahren.sh` bei jedem Start gerufen) und je drei Seiten, rollende
+Behälter im Bericht. Voller Lauf **780 Bilder aus 78 Seiten, Überlauf 0,
+Konsolenfehler 0, Knöpfe falscher Höhe 0, 188 Karten / 0 außerhalb, 51
+Bilder mit rollendem Behälter**, 1 170 s (Q-R4-13 rechnete mit +12 % je
+Breite auf 745–845 s für acht; gemessen ist das mit den sechs neuen Seiten)
+— daraus F-R4-30.
 
 ### Block C — Server (Web-Stufen; Pakete an Dateien der 18-Liste bleiben klein)
 

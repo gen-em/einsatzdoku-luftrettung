@@ -237,6 +237,14 @@ Aufnehmen von `main` stand die Anlage auf dem Schema davor, `login.php`
 antwortete trotzdem 200, und eine Probe maß still gegen einen Stand, den es
 nirgends gab. Neu eingerichtet wird dabei **nicht** von selbst.
 
+**Zuletzt legt er die Prüfkonten der Rollen Admin und Support an** (seit
+R4-08, Backlog Nr. 297): `pruefkonten.sh` unter
+`tools/referenzdatensatz/einspielen/` nimmt dieselben Wege wie jedes Konto
+und lässt ein fertiges stehen — ohne diesen Schritt käme der Bilderlauf nicht
+über die Anmeldung seiner zwei neuen Rollen. Er löscht nichts und läuft
+deshalb bei jedem Start; eine Anlage von vor R4-08 bekommt die Konten, ohne
+`--neu`.
+
 **`--php 8.3`** beendet den PHP-Server des Containers und fährt die Anwendung
 im Abbild `nadoku-php83` weiter, im Netzwerk des Wirts, gegen dieselbe
 Datenbank und denselben TLS-Vorbau. Dafür muss das Abbild stehen

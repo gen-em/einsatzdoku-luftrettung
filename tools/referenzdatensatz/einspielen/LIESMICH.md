@@ -7,6 +7,7 @@ Spielt den erzeugten Datensatz über die **regulären Wege** ein — kein SQL (R
 ```bash
 sh lokal_einrichten.sh     # von Null: Datenbank, install.php, Admin, Demo-Konto
 sh lokal_starten.sh        # nur hochfahren: MariaDB, PHP-Server, TLS davor
+sh pruefkonten.sh          # Prüfkonten admin und support für den Bilderlauf (R4-08, wiederholbar)
 python3 einspielen.py --stufen konto
 php  demo_kennzeichnen.php                     # zwingend vor der ersten Anmeldung
 node passwort_setzen.mjs '<Einrichtungslink>' 'nadokudemo0815' rc.json
@@ -25,7 +26,7 @@ warum die Reihenfolge so ist, steht an der Stufe in `einspielen.py`.
 
 Eine Installation hinter TLS auf `127.0.0.1:8443` — das Sitzungs-Cookie
 trägt `secure`. Vorgaben: `admin@gen-em.org` / `pruefstandzugang2026`,
-`demo@gen-em.org` / `nadokudemo0815`. `lauf.json` und `rc.json` gehören
+`demo@gen-em.org` / `nadokudemo0815`, dazu `bilderlauf-admin@` und `bilderlauf-support@probe.invalid` (Passwörter in `pruefkonten.sh`). `lauf.json` und `rc.json` gehören
 **einer** Installation und stehen in `.gitignore`; `rc.json` öffnet ohne Passwort.
 
 ## Erwartete Zahl
@@ -35,6 +36,5 @@ Alle Stufen ohne Abbruch, so viele Schnitte wie in den Quelldaten (E-DA-11),
 
 ## Was es nicht kann
 
-Den Browserschritt nachbauen (E-P1-10) oder auf `edka1:` umstellen
-(E-S10-15); Kacheln und Mail sieht es nicht, und der Sperrlistenschritt geht
-je Installation nur einmal.
+Den Browserschritt nachbauen (E-P1-10) oder auf `edka1:` umstellen (E-S10-15);
+Kacheln und Mail sieht es nicht, und der Sperrlistenschritt geht je Installation nur einmal.
