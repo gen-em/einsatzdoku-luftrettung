@@ -128,6 +128,51 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   eigenen Code vor; die Grenze steht im Docstring, damit die nächste Fassung
   sie findet.
 
+## [Werkzeug: Geplante Stilabweichungen bleiben nach dem Merge stehen (Nr. 330)] — 2026-09-26
+
+**Die Liste der geplanten Stilabweichungen muss nach dem Merge nicht mehr
+geleert werden.** Auf Nachfrage der Betreiberin, nach dem Merge von
+Web 21.1.3 (PR #90). Nur `tools/` und `docs/` — keine Versionsstufe.
+
+`tools/stilvergleich/geplant.txt` sagt im Pull Request, welche
+Abweichungen gewollt sind; mit dem Merge landet sie auf `main`, und dort
+misst der nächste Lauf keine davon mehr. Bis hier meldete er sie dann als
+„geplant, aber nicht gemessen", rot, und jemand musste die Datei nach
+jedem Merge von Hand leeren — vorher ging es nicht, weil der Pull Request
+selbst sie braucht. Jetzt übergibt
+`gegen.sh` die Liste von `main` als `--geerbt`: Eine Zeile, die dort
+wortgleich steht und nicht gemessen wird, zählt nicht und steht mit Zahl
+im Protokoll. **Nur diese Kategorie** — dieselbe Signatur kann in zwei
+Pull Requests hintereinander gewollt sein (`body <html> : height` ändert
+sich mit fast jeder Regel), deshalb entscheidet die Messung, nicht die
+Liste. Gegenproben: nach dem Merge ohne `--geerbt` rot (13 nicht
+gemessen), mit grün (13 geerbt); eine eigene Zeile ohne Messung rot; eine
+ungeplante Abweichung rot. **Der Lauf dieses Pull Requests ist selbst der
+Fall, für den es gebaut ist:** Auf `main` steht die Liste von 21.1.3, das
+Stylesheet ist gleich, und der Stilvergleich meldet 13 geerbte Zeilen statt
+13 roter.
+
+## [Web 21.1.3] — 2026-09-26
+
+**Die Sprungmarken der Leiste weichen früher.** Die erste Änderung nach dem
+Merge von P5c (PR #89). **Korrekturstufe ohne Migration.**
+
+### Geändert
+
+- **Web: Die Sprungmarken in der festen Leiste stehen erst ab 950 px
+  Fensterhöhe, nicht mehr ab 800** (F-P5c-164, Entscheidung der
+  Betreiberin vom 26.09.2026). AP9 hatte sie unter 800 px ausgeblendet,
+  damit auf einem niedrigen Laptopfenster alle Einträge der Leiste ohne
+  Rollen erreichbar sind, und die Lücke darüber benannt: Zwischen 800 und 946 px standen die
+  Marken, und drei Listen passten nicht — Servereinstellungen braucht rund
+  947 px, Status 891, Updates 835. Nachgemessen bei 1280 px Breite und acht
+  Höhen von 800 bis 1000 px: mit 800 bei 800 px 11 von 14 Seiten
+  vollständig, bei 900 px 13 von 14; mit 950 überall 14 von 14. Bei 950 px
+  stehen alle acht Marken der Servereinstellungen, bei 949 keine. **Was
+  bleibt:** Wer ein Fenster zwischen 800 und 949 px hat, sieht die Marken
+  nicht mehr; der Weg zur Karte führt dort über das Rollen der Seite. Unter
+  1024 px Breite, in der Schublade, stehen sie weiter immer.
+
 ## [Web 21.1.2] — 2026-09-25
 
 **Ein Komplett-Backup, das über zwei Häppchen versiegelt wurde, ließ sich

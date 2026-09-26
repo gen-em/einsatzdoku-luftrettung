@@ -3,8 +3,8 @@
 *Gehört zu `Konzept-BV-Backlog-Vorgriff.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Stand: BV-01 bis BV-06 gebaut, P-BV-02 und -03 gegengeprüft,
-P-BV-05 erledigt; `main` nach dem Merge von P5c aufgenommen, Pull Request #87
-ohne Konflikt, 26.09.2026. Vor BV wird AR gemergt (P-BV-08). Wird mit jedem
+P-BV-05 erledigt; `main` zweimal aufgenommen (nach P5c, nach #90/#91), Pull
+Request #87 ohne Konflikt, 26.09.2026. Vor BV wird AR gemergt (P-BV-08). Wird mit jedem
 Paket fortgeschrieben.*
 
 ---
@@ -70,6 +70,10 @@ Paket fortgeschrieben.*
 | Aufnahme | `pruefen.sh vollstaendigkeit` am vereinigten Stand | findet der Abtaster aus BV-01 etwas im neuen P5c-Code? | **0** Befunde; Hinweise „im Markup nicht gefunden" **73**; Unicode **6**, Emoji **0**; Töne PHP = JS **5**; Ausnahmen „fremde Quelle" 19, „Seite ohne Gerüst" 13, keine ungenutzt |
 | Aufnahme | `git merge-tree --write-tree` des vereinigten Stands (loser Commit) gegen AR `83106eb` | kollidiert BV mit AR? | Konflikte nur in `docs/Backlog.md` (**4**) und `docs/CHANGELOG.md` (**1**), alle additiv; `docs/Lizenzen.md` ohne (F-BV-16) |
 | Aufnahme | Prüfstand `pruefen.sh`, Stufe klein, 20 Riegel und Proben (mit P5c neu: `anker`, `rollenprobe` über `CLAUDE.md`) | Riegel und Proben der Berührung | Lauf 1, Baum `d55c9d5`: **1 rot** — `rollenprobe`, `Data truncated for column 'role'`: die Anlage stand auf dem Schema vor P5c (F-BV-17, Nr. 332). Nach `hochfahren.sh --neu` Lauf 2, derselbe Baum: **20 grün, 0 rot, 0 nicht gemessen**, 38 s. Der Bericht über den endgültigen Baum (mit diesem Eintrag und Nr. 332) steht in der Nachricht des Merge-Commits; dazu `bericht.py lesen --alle-riegel` mit den `--riegel` aus `pruefung.yml` — so, wie das Tor liest (Lehre aus F-P5c-172, Nr. 329) |
+| Aufnahme 2 | `git merge --no-commit origin/main` (`a9d00ea`: #90 Web 21.1.3, #91 Stilvergleich) | Konflikte | **2**, beide additiv: Backlog Ende *Erledigt* (#91 mit Nr. 330, dahinter BV), Changelog oben (BV, dann #91 und 21.1.3); **0** im Code |
+| Aufnahme 2 | Nummern ab 326 auf `main`, AR `71b1c0d` und dem Zweig; `uniq -d` | Nummern doppelt | vor dem Ausweichen **330** (#91 und BV, F-BV-18); danach **leer**; BV 331 bis 333, AR 334 bis 337 |
+| Aufnahme 2 | `git diff --name-only 29cf394 a9d00ea \| grep -i migr` | bringt `main` Migrationen mit (Nr. 332)? | **0** — die Anlage vom ersten Aufnehmen hat das richtige Schema |
+| Aufnahme 2 | Prüfstand, Stufe klein, über den Baum des Merge-Commits | Riegel und Proben der Berührung | Bericht in der Nachricht des Merge-Commits |
 
 ---
 

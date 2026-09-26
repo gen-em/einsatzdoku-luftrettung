@@ -143,7 +143,7 @@ Jeder weitere Zweig, der Nummern vergibt, beginnt bei **339** und trägt seine
 Spanne hier ein, bevor er pusht. **Vergeben und reserviert (24.09.2026,
 nachgesehen auf `origin/main` `ba2ec57`, höchste 318; zusammengeführt
 am 26.09.2026, als BV `main` nach dem Merge von P5c aufnahm — `29cf394`,
-höchste 329):** **293 und 304 bis
+höchste 329 —, und erneut nach PR #91, `a9d00ea`, höchste 330):** **293 und 304 bis
 318** Konzept BR (gemergt, PR #85/#86; 304 bis 313 die nachgetragenen Anlässe
 aus E-BR-17 und E-BR-18, 314 bis 317 Funde aus BR-04 und BR-05, 318 ein Fund
 des Abschlusses); **294 bis 303 und 319 bis 328** der P5c-Zweig
@@ -153,11 +153,13 @@ und 300 Funde aus AP4, 302, 303, 319 und 320 die nachgetragenen Anlässe aus
 dem Aufnehmen von BR (E-P5c-116), 301 für AP5b (Konzept RW), 321 ein Fund
 und 322 Funde aus AP7 (Stilvergleich, Reihenfolge des Prüfstands), 323 ein Fund aus AP8 (Referenz und Fixture auf Nutzlast 11), 324 ein Auftrag aus AP8 (Einmal-Skript für den Bestand zu 1.0), 325 ein Fund aus AP8 (GPX-Probe auf frischer Anlage), der Rest frei für Funde der Umsetzung. Die zweite Spanne kam mit dem Aufnehmen von `main`
 dazu: Die erste reichte nicht mehr, und 304 bis 318 hatte BR inzwischen
-vergeben. **329** vergab P5c in AP11 (F-P5c-171) über seine Spanne hinaus,
-in die von BV — die stand nur auf dem BV-Zweig, und P5c konnte sie nicht
-sehen; **330 bis 333** Konzept BV, der Vorgriff auf Backlog-Runde 4 (Zweig
-`claude/intelligent-carson-q8f7ag`; 330 bis 332 vergeben — die 331 hieß auf
-dem Zweig bis zum 26.09.2026 329 und ist ausgewichen, E-BV-12); **334 bis
+vergeben. **329 und 330** vergab der P5c-Zweig über seine Spanne hinaus, in
+die von BV: 329 in AP11 (F-P5c-171), 330 mit PR #91 (Stilvergleich,
+aufgenommen und erledigt). Die Spanne von BV stand auf den Zweigen von BV
+und AR, nicht auf `main`; **331 bis 333** Konzept BV, der Vorgriff auf
+Backlog-Runde 4 (Zweig `claude/intelligent-carson-q8f7ag`; alle drei
+vergeben — 331 hieß auf dem Zweig bis zum 26.09.2026 329, 333 hieß 330;
+beide sind ausgewichen, E-BV-12 und -17); **334 bis
 338** die Android-Runde AR (Zweig `claude/affectionate-newton-6pzfkc`; 334
 bis 337 vergeben, 338 frei). *(Bis zum 26.09.2026 stand hier auf `main` 329
 und auf den Zweigen von BV und AR 339 — die drei hatten den Absatz getrennt
@@ -3563,17 +3565,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfstand zweimal rot, an `anker` und an der fehlenden Übergabe; mit
     dem heutigen grün. *Zuordnung:* Backlog-Runde.
 
-330. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo`
-    das falsche Paket.** *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
-    der Gegenprüfung P-BV-02.* Der Kommentar über `.geo.map-fs` sagt „Der
-    Kartenbehaelter wurde in O1 umbenannt". Gemessen: Das Stylesheet aus O1
-    (`ecd5ff98`) enthält weder `.map` noch `.geo`; `.geo` kommt mit O2
-    (`5436e854`), zugleich mit dem Markup der drei Karten. Harmlos, aber ein
-    Satz, der eine Herkunft falsch nennt, schickt die nächste Suche in das
-    falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
-    `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
-    braucht eine Web-Stufe).
-
 331. **Zusammengesetzte Klassen der übrigen Bausteine sieht die
     Vollständigkeitsprüfung nicht.** *Aufgenommen 24.09.2026 in Konzept BV
     (BV-03, F-BV-11), notiert und nicht mitgemacht.* BV-02 hat die
@@ -3615,6 +3606,17 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Schritt 2. *Abnahme:* Anlage auf `ba2ec57` eingerichtet, Baum mit
     `main` von `29cf394` → Prüfstand rot vor der ersten Probe, mit
     Ansage; nach `--neu` grün. *Zuordnung:* Backlog-Runde.
+
+333. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo`
+    das falsche Paket.** *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
+    der Gegenprüfung P-BV-02.* Der Kommentar über `.geo.map-fs` sagt „Der
+    Kartenbehaelter wurde in O1 umbenannt". Gemessen: Das Stylesheet aus O1
+    (`ecd5ff98`) enthält weder `.map` noch `.geo`; `.geo` kommt mit O2
+    (`5436e854`), zugleich mit dem Markup der drei Karten. Harmlos, aber ein
+    Satz, der eine Herkunft falsch nennt, schickt die nächste Suche in das
+    falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
+    `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
+    braucht eine Web-Stufe).
 
 ## Erledigt
 
@@ -10736,7 +10738,9 @@ zutreffen.
     Einträge, 14 Seiten): bei 1280 × 720 mit den Sprungmarken auf 6 Seiten
     vollständig — sie fallen deshalb unter 800 px Fensterhöhe weg
     (E-P5c-131), dann auf 14 von 14; bei 1280 × 900 auf 13 von 14, die
-    Servereinstellungen (acht Sprungmarken) bei 16 von 18.
+    Servereinstellungen (acht Sprungmarken) bei 16 von 18. **Mit Web 21.1.3
+    liegt die Schwelle bei 950 px** (F-P5c-164, Entscheidung der
+    Betreiberin): bei 800 bis 1000 px Höhe überall 14 von 14.
 
 245. **Erklärtext-Regel — und danach alle Texte in Verwaltung und Betrieb.**
     *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
@@ -10882,6 +10886,24 @@ zutreffen.
     an die Betreiberin**, ob ein vorhandener Stand auf Produktiv betroffen
     ist (P-P5c-45 im Prüfdokument P5c).
 
+330. **Die Liste der geplanten Stilabweichungen musste nach jedem Merge von
+    Hand geleert werden.** *Aufgenommen und erledigt 26.09.2026, nach dem
+    Merge von Web 21.1.3 (PR #90), auf Nachfrage der Betreiberin.* `tools/stilvergleich/geplant.txt`
+    muss im Pull Request stehen — ohne sie ist der Stilvergleich rot und der
+    Bericht ungültig — und ist nach dem Merge auf `main` falsch: Der nächste
+    Lauf misst keine ihrer Abweichungen mehr und meldete sie als „geplant,
+    aber nicht gemessen", rot. Der Handgriff „nach dem Merge leeren" stand
+    deshalb im Rahmenplan 6 und in `Pruefablauf.md` 6.10.
+
+    **Erledigt 26.09.2026** (nur Werkzeug, keine Versionsstufe). `gegen.sh`
+    übergibt die Liste des
+    Vergleichsstands als `--geerbt`; eine Zeile, die dort wortgleich steht
+    und nicht gemessen wird, zählt nicht und steht mit Zahl im Protokoll.
+    Alles andere bleibt streng. Gegenproben: nach dem Merge ohne
+    `--geerbt` rot (13 nicht gemessen), mit grün (13 geerbt); eigene Zeile
+    ohne Messung rot (1); leere Liste gegen `main` rot (13 ungeplant); der
+    Pull-Request-Fall grün (13 / 13).
+
 184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
     *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
     benutzen wollte; **erledigt 24.09.2026 mit Konzept BV (BV-01).*** `ohne_php_js_kommentare()` in
@@ -11019,7 +11041,7 @@ zutreffen.
     falsch:** `c-dc-false_alarm` hat seit Web 6.3.0 keine Spalte mehr, und die
     drei übrigen erreichen seit Schritt 15 AP9b kein Element, weil
     `missiontable.js` diese Spalten selbst führt. PK-04/1b lag mit „ersatzlos"
-    richtig. Nebenfund: Nr. 330.
+    richtig. Nebenfund: Nr. 333 (bis zum 26.09.2026 als 330 geführt).
 
 214. **`install.php` wurde bei jedem Lauf wieder ausgeliefert.**
     *Angewiesen von der Betreiberin am 16.09.2026, umgesetzt am selben Tag in

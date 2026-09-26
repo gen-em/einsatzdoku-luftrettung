@@ -14,11 +14,12 @@ const SEP = String.fromCharCode(1);
 /* `--motor <name>` wird vor den Stellungsangaben herausgenommen, damit SP,
  * ALT und NEU an ihrer Stelle bleiben, gleich wo der Schalter steht. */
 /* `--geplant <datei>` und `--geplant-schreiben <datei>` ebenso (P5c/AP1,
- * F-P5c-72) — siehe unten bei GEPLANT. */
+ * F-P5c-72) — siehe unten bei GEPLANT; `--geerbt <datei>` seit dem
+ * 26.09.2026 (Nr. 330). */
 const SCHALTER = {};
 const ARGV = (() => {
   const a = process.argv.slice(2);
-  for (const s of ['--motor', '--geplant', '--geplant-schreiben']) {
+  for (const s of ['--motor', '--geplant', '--geplant-schreiben', '--geerbt']) {
     const i = a.indexOf(s);
     if (i >= 0) { SCHALTER[s] = a[i + 1]; a.splice(i, 2); }
   }
@@ -70,7 +71,21 @@ const BREITEN = [1920, 1680, 1440, 1280, 1100, 1024, 900, 768, 720, 560, 420, 39
  * steht: Eine Zeile, die nichts mehr trifft, ist eine Liste, die nicht mehr
  * stimmt, und die verdeckt beim naechsten Mal eine ungewollte Aenderung.
  * `--geplant-schreiben <datei>` schreibt die gemessenen Signaturen hin; die
- * Datei steht dann im Diff des Pull Requests und wird dort gelesen. */
+ * Datei steht dann im Diff des Pull Requests und wird dort gelesen.
+ *
+ * GEERBTE ZEILEN (`--geerbt <datei>`, Nr. 330). Mit dem Merge landet die
+ * Liste auf `main`, und dort ist sie falsch: Das Stylesheet von `main` ist
+ * dann das, gegen das sie geschrieben wurde, der nächste Lauf misst keine
+ * ihrer Abweichungen mehr. Bis zum 26.09.2026 musste deshalb nach jedem Merge
+ * jemand die Datei von Hand leeren. Jetzt übergibt `gegen.sh` die Liste des
+ * Vergleichsstands, und eine Zeile, die NICHT gemessen wird und dort
+ * wortgleich steht, zählt nicht — sie wird mit Zahl genannt, nicht still
+ * übergangen. NUR diese eine Kategorie: Eine gemessene Abweichung ohne
+ * Zeile bleibt rot, eine eigene Zeile ohne Messung auch. Wortgleich allein
+ * reicht nicht, um eine Zeile zu streichen — dieselbe Signatur kann in zwei
+ * Pull Requests hintereinander gewollt sein (`body <html> : height` ändert
+ * sich mit fast jeder Regel); deshalb entscheidet die Messung, nicht die
+ * Liste. */
 const SIGNATUREN = new Map();   // probe \t wer -> Set(eigenschaft)
 function signatur_merken(probe, wer, eigenschaften) {
   const k = probe + '\t' + wer;
@@ -206,9 +221,10 @@ function eigenschaften(css) {
       '# Geschrieben mit `bash tools/stilvergleich/gegen.sh --schreiben`, gegen den',
       '# Vergleichsstand des Laufs. Je Zeile: Probe, Element <Elternteil>, die',
       '# Eigenschaften, die sich aendern. Diese Datei wird im Pull Request GELESEN —',
-      '# jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge ist',
-      '# sie leer zu machen (der naechste Lauf meldet sonst ihre Zeilen als',
-      '# „geplant, aber nicht gemessen").', ''];
+      '# jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge',
+      '# bleibt sie stehen: Der naechste Lauf findet ihre Zeilen wortgleich im',
+      '# Vergleichsstand und zaehlt sie nicht, solange sie nicht gemessen werden',
+      '# (Nr. 330). Die naechste Gestaltungsaenderung schreibt sie neu.', ''];
     fs.writeFileSync(SCHALTER['--geplant-schreiben'], kopf.concat(ist).join('\n') + '\n');
     console.log(ist.length + ' Signaturen geschrieben: ' + SCHALTER['--geplant-schreiben']);
     process.exit(0);
@@ -219,13 +235,24 @@ function eigenschaften(css) {
       soll = fs.readFileSync(SCHALTER['--geplant'], 'utf8').split('\n')
         .map(z => z.trim()).filter(z => z !== '' && !z.startsWith('#'));
     } catch (e) { /* keine Datei = keine geplante Abweichung */ }
+    let geerbtSet = new Set();
+    if (SCHALTER['--geerbt']) {
+      try {
+        geerbtSet = new Set(fs.readFileSync(SCHALTER['--geerbt'], 'utf8').split('\n')
+          .map(z => z.trim()).filter(z => z !== '' && !z.startsWith('#')));
+      } catch (e) { /* keine Liste im Vergleichsstand = nichts geerbt */ }
+    }
     const sollSet = new Set(soll), istSet = new Set(ist);
     const unerwartet = ist.filter(z => !sollSet.has(z));
-    const ungenutzt  = soll.filter(z => !istSet.has(z));
+    const nichtGemessen = soll.filter(z => !istSet.has(z));
+    const geerbt     = nichtGemessen.filter(z => geerbtSet.has(z));
+    const ungenutzt  = nichtGemessen.filter(z => !geerbtSet.has(z));
     for (const z of unerwartet) { console.log('  UNGEPLANT  ' + z); }
     for (const z of ungenutzt)  { console.log('  GEPLANT, ABER NICHT GEMESSEN  ' + z); }
+    for (const z of geerbt)     { console.log('  GEERBT, NICHT GEMESSEN (zählt nicht)  ' + z); }
     console.log('Geplant: ' + soll.length + ' Signaturen · gemessen: ' + ist.length
-                + ' · ungeplant: ' + unerwartet.length + ' · nicht gemessen: ' + ungenutzt.length);
+                + ' · ungeplant: ' + unerwartet.length + ' · nicht gemessen: ' + ungenutzt.length
+                + ' · geerbt und nicht gemessen: ' + geerbt.length);
     process.exit(unerwartet.length || ungenutzt.length ? 1 : 0);
   }
   process.exit(abweichungen ? 1 : 0);

@@ -2,177 +2,21 @@
 # Geschrieben mit `bash tools/stilvergleich/gegen.sh --schreiben`, gegen den
 # Vergleichsstand des Laufs. Je Zeile: Probe, Element <Elternteil>, die
 # Eigenschaften, die sich aendern. Diese Datei wird im Pull Request GELESEN —
-# jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge ist
-# sie leer zu machen (der naechste Lauf meldet sonst ihre Zeilen als
-# „geplant, aber nicht gemessen").
+# jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge
+# bleibt sie stehen: Der naechste Lauf findet ihre Zeilen wortgleich im
+# Vergleichsstand und zaehlt sie nicht, solange sie nicht gemessen werden
+# (Nr. 330). Die naechste Gestaltungsaenderung schreibt sie neu.
 
 katalog.html  body <html>  :  height
-katalog.html  code <div.blatt-kachel-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
-katalog.html  dd <div.zeile-daten>  :  font, font-family, font-size, height, line-height, min-height, min-width, overflow-wrap, width
 katalog.html  div <body>  :  height
 katalog.html  div <div>  :  height
-katalog.html  div.akkordeon-winkel <div.akkordeon-zeile>  :  font, font-size, height, line-height, margin, margin-left, order, width
-katalog.html  div.akkordeon-zeile <div.leiste-gruppe>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, line-height, outline
-katalog.html  div.anmeldung <div>  :  height
-katalog.html  div.anmeldung-schritt <div>  :  font, font-size, height, line-height, margin, margin-bottom
-katalog.html  div.bereich-zeichen <div>  :  align-items, background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, color, display, flex, height, justify-content, outline, width
-katalog.html  div.blatt-codes <div>  :  column-gap, counter-reset, display, gap, grid-template-columns, grid-template-rows, height, list-style, margin, margin-bottom, margin-top
-katalog.html  div.blatt-druck <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, box-shadow, font, height, line-height, margin, margin-bottom, margin-left, margin-right, margin-top, max-width, min-height, padding, padding-bottom, padding-left, padding-right, padding-top, width
-katalog.html  div.blatt-druck-gruppe <div.blatt-druck-gruppen-5>  :  align-items, display, flex-direction, font, font-family, font-size, font-weight, height, letter-spacing, line-height, width
-katalog.html  div.blatt-druck-gruppe <div>  :  align-items, display, flex-direction, font, font-family, font-size, font-weight, height, letter-spacing, line-height
-katalog.html  div.blatt-druck-gruppen <div>  :  column-gap, display, gap, grid-template-columns, grid-template-rows, margin, margin-bottom, margin-top
-katalog.html  div.blatt-druck-gruppen-5 <div>  :  grid-template-columns, height, max-width, width
-katalog.html  div.blatt-fuss <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, color, column-gap, display, font, font-size, gap, height, justify-content, line-height, margin, margin-top, outline, padding, padding-top
-katalog.html  div.blatt-kachel <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-width, break-inside, height, margin, margin-bottom, padding, padding-bottom, padding-left, padding-right, padding-top, page-break-inside
-katalog.html  div.blatt-kachel-kopf <div>  :  align-items, column-gap, display, flex-wrap, gap, justify-content
-katalog.html  div.blatt-kachel-name <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-family, font-size, font-weight, height, line-height, outline
-katalog.html  div.blatt-kachel-neben <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, height, line-height, outline
-katalog.html  div.blatt-kopf <div>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-width, column-gap, display, gap, height, margin, margin-bottom, padding, padding-bottom
-katalog.html  div.blatt-kopf-rechts <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, flex, flex-basis, font, font-size, height, line-height, outline, overflow-wrap, text-align
-katalog.html  div.blatt-marke <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-family, font-size, font-weight, height, line-height, outline, overflow-wrap
-katalog.html  div.blatt-umgebung <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-width, color, height, margin, margin-bottom, outline, padding, padding-bottom, padding-left, padding-right, padding-top
-katalog.html  div.codeblock <div.zweitfaktor-einrichtung>  :  min-height, min-width, text-align, width
-katalog.html  div.codeblock-liste <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, column-gap, counter-reset, display, font, font-family, font-size, font-weight, gap, grid-template-columns, grid-template-rows, height, letter-spacing, line-height, list-style, margin, margin-bottom, margin-top, outline
-katalog.html  div.codeblock-wert <div.zweitfaktor-einrichtung>  :  min-height, min-width, width, word-break
-katalog.html  div.demo-hinweis <div.hinweise>  :  margin, margin-bottom, min-height, min-width
-katalog.html  div.feld-eingabe <div.feld-code>  :  font, font-family, font-size, letter-spacing, line-height
-katalog.html  div.feld-eingabe <div.filterreihe>  :  min-width, width
-katalog.html  div.form-raster-einspaltig <div>  :  grid-template-columns, max-width, width
-katalog.html  div.form-raster-links-breit <div>  :  grid-template-columns
-katalog.html  div.hinweis-umgebung <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
-katalog.html  div.hinweise <div.anmeldung>  :  column-gap, display, flex-direction, gap, margin, margin-bottom, max-width, width
-katalog.html  div.hinweise <div>  :  column-gap, display, flex-direction, gap, margin, margin-bottom
-katalog.html  div.karte-kopf <div.karte-bereich>  :  background, border-radius, justify-content
-katalog.html  div.kartenfilter-lupe <div>  :  bottom, inset, top
-katalog.html  div.kartenfilter-x <div>  :  bottom, inset, top
-katalog.html  div.kopf-nutzer <div.kopf-umgebung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
-katalog.html  div.kopf-punkt.aktiv <div.kopf-umgebung>  :  border-bottom, border-bottom-color, border-color
-katalog.html  div.kopf-umgebung <div>  :  background
-katalog.html  div.meldung <div.blatt-druck>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, font, height, line-height, margin, margin-bottom, padding, padding-bottom, padding-top, width
-katalog.html  div.meldung <div.hinweise>  :  margin, margin-bottom, min-height, min-width
-katalog.html  div.meldung-aktion <div.meldung-ankuendigung>  :  margin, margin-right, margin-top, width
-katalog.html  div.meldung-ankuendigung <div>  :  align-items
+katalog.html  div.eintrag-unterliste <div.leiste-gruppe>  :  display, height, width
+katalog.html  div.leiste-gruppe <div>  :  height
 katalog.html  div.nur-vorlesen <div>  :  bottom, inset, top
-katalog.html  div.protokoll-liste <div>  :  height
-katalog.html  div.qr <div>  :  flex, max-width, width
-katalog.html  div.qr-grund <div>  :  fill
-katalog.html  div.qr-modul <div>  :  fill
-katalog.html  div.reiter <div>  :  border, border-bottom, border-bottom-color, border-color, border-width, column-gap, display, gap, height, margin, margin-bottom, overflow, overflow-x, overflow-y, overscroll-behavior, overscroll-behavior-x, scrollbar-width
-katalog.html  div.reiter-punkt <div>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, color, display, flex, font, font-family, font-weight, height, min-height, outline, padding, padding-left, padding-right, text-wrap, white-space, width
-katalog.html  div.reiter-punkt.aktiv <div>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, color, display, flex, font, font-family, font-weight, height, min-height, outline, padding, padding-left, padding-right, text-wrap, white-space, width
-katalog.html  div.reiter-rahmen <div>  :  bottom, inset, left, position, right, top
-katalog.html  div.reiter-rahmen.rollt <div>  :  bottom, inset, left, position, right, top
-katalog.html  div.reiter-rahmen.rollt-links <div>  :  bottom, inset, left, position, right, top
 katalog.html  div.suchfeld-lupe <div>  :  bottom, inset, top
 katalog.html  div.suchfeld-x <div>  :  bottom, inset, top
-katalog.html  div.symbol <div.hinweis-umgebung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline, stroke
-katalog.html  div.text <div.vorschau-rollt>  :  max-width, width
-katalog.html  div.vorschau-rollt <div>  :  max-height, overflow, overflow-x, overflow-y, overscroll-behavior, overscroll-behavior-x
 katalog.html  div.vorschlaege <div>  :  bottom, inset, top
-katalog.html  div.zeile <div.protokoll-liste>  :  display, gap, grid-template-areas, grid-template-columns, grid-template-rows, height
-katalog.html  div.zeile-aktionen <div.protokoll-liste>  :  align-self, grid-area, grid-column, justify-content, width
-katalog.html  div.zeile-daten <div>  :  background, border-radius, column-gap, display, font, font-family, font-size, gap, grid-template-columns, grid-template-rows, height, line-height, margin, margin-bottom, padding, padding-bottom, padding-left, padding-right, padding-top
-katalog.html  div.zeile-mehr <div>  :  height
-katalog.html  div.zeile-plaketten <div.archiv-liste>  :  justify-content
-katalog.html  div.zeile-plaketten <div.protokoll-liste>  :  grid-area, grid-column, justify-content
-katalog.html  div.zeile-text <div.protokoll-liste>  :  grid-area, grid-column
-katalog.html  div.zeile-winkel <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline, transform, transition, transition-duration
-katalog.html  div.zeile-winkel <summary>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, list-style, outline, transition, transition-duration
-katalog.html  div.zweitfaktor-einrichtung <div.anmeldung>  :  align-items, column-gap, display, gap, grid-template-columns, grid-template-rows, justify-items, margin, margin-bottom, text-align
-katalog.html  div.zweitfaktor-einrichtung <div>  :  align-items, column-gap, display, gap, grid-template-columns, grid-template-rows, height, margin, margin-bottom
-katalog.html  dt <div.zeile-daten>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-family, font-size, height, line-height, min-height, min-width, outline, width
-katalog.html  h1 <div.blatt-druck>  :  margin, margin-bottom, overflow-wrap, width
-katalog.html  h2 <div.blatt-druck>  :  font, font-size, height, line-height, margin, margin-bottom, margin-top, width
 katalog.html  html <->  :  height
-katalog.html  img <div.blatt-kopf>  :  display, flex, height, min-height, min-width
 katalog.html  input.schalter-box <div>  :  bottom, inset, top
 katalog.html  input.segment-box <div>  :  bottom, inset, top
 katalog.html  input.wahl-box <div>  :  bottom, inset, top
-katalog.html  li <div.blatt-codes>  :  align-items, column-gap, counter-increment, display, font, font-family, font-size, font-weight, gap, height, letter-spacing, line-height, list-style, min-height, min-width, width
-katalog.html  li <div.blatt-druck>  :  font, font-size, height, line-height, margin, margin-bottom, width
-katalog.html  li <div.codeblock-liste>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, counter-increment, font, font-family, font-size, font-weight, height, letter-spacing, line-height, list-style, min-height, min-width, outline, text-wrap, white-space, width
-katalog.html  ol <div.blatt-druck>  :  font, height, line-height, list-style, margin, margin-left, width
-katalog.html  p <div.blatt-druck>  :  font, font-size, height, line-height, margin, margin-bottom, width
-katalog.html  p <div.blatt-kachel>  :  font, font-size, height, line-height, width
-katalog.html  p <div.meldung-ankuendigung>  :  flex
-katalog.html  summary <div.zeile-mehr>  :  list-style
-katalog.html  summary.zeile <div.zeile-mehr>  :  height, list-style, padding, padding-bottom
-seiten.html  a.knopf.knopf-leise <p.nur-bildschirm>  :  font, line-height
-seiten.html  body <html>  :  height
-seiten.html  br <span.blatt-kopf-rechts>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, line-height, outline, overflow-wrap, text-align
-seiten.html  button.knopf.knopf-primaer <p.nur-bildschirm>  :  font, line-height
-seiten.html  code <p>  :  font, line-height
-seiten.html  code <span.blatt-kachel-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, line-height, outline
-seiten.html  div <body>  :  height
-seiten.html  div <div>  :  height
-seiten.html  div <scriptx>  :  height
-seiten.html  div <span.zeile-klein>  :  height
-seiten.html  div.blatt-druck-gruppen <section.blatt-kachel>  :  column-gap, display, font, gap, grid-template-columns, grid-template-rows, height, line-height, margin, margin-bottom, margin-top, width
-seiten.html  div.blatt-kachel-kopf <section.blatt-kachel>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, column-gap, display, flex-wrap, font, font-size, gap, height, justify-content, line-height, outline, width
-seiten.html  div.codeblock <div>  :  text-align
-seiten.html  div.demo-hinweis.hinweis-umgebung <aside.leisteX>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
-seiten.html  div.form-raster.form-raster-einspaltig <div>  :  grid-template-columns, grid-template-rows, height, max-width, width
-seiten.html  div.form-raster.form-raster-links-breit <div>  :  grid-template-columns, grid-template-rows, height
-seiten.html  div.form-spalte <div.form-raster.form-raster-einspaltig>  :  height, width
-seiten.html  div.form-spalte <div.form-raster.form-raster-links-breit>  :  height, width
-seiten.html  div.hinweise <span.zaehler.<div.class=>  :  column-gap, display, flex-direction, gap, margin, margin-bottom
-seiten.html  div.listen-form-fuss <form>  :  width
-seiten.html  div.logo-vorschau <div.form-spalte>  :  width
-seiten.html  div.reiter-rahmen <dd>  :  position
-seiten.html  div.text <div.vorschau-rollt>  :  max-width, width
-seiten.html  div.vorschau-rollt <div.form-spalte>  :  max-height, overflow, overflow-x, overflow-y, overscroll-behavior, overscroll-behavior-x
-seiten.html  div.zweitfaktor-einrichtung <div>  :  align-items, column-gap, display, gap, grid-template-columns, margin, margin-bottom
-seiten.html  footer.blatt-fuss <main.blatt-druck>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, color, column-gap, display, font, font-size, gap, height, justify-content, line-height, margin, margin-top, outline, padding, padding-top, width
-seiten.html  form <div.form-spalte>  :  width
-seiten.html  form.listen-form <div.form-spalte>  :  width
-seiten.html  h1 <main.blatt-druck>  :  margin, margin-bottom, overflow-wrap, width
-seiten.html  h2 <main.blatt-druck>  :  font, font-size, height, line-height, margin, margin-bottom, margin-top, width
-seiten.html  header.blatt-kopf <main.blatt-druck>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, color, column-gap, display, font, font-size, gap, height, line-height, margin, margin-bottom, outline, padding, padding-bottom, width
-seiten.html  html <->  :  height
-seiten.html  img <header.blatt-kopf>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, display, flex, font, font-size, height, line-height, min-height, min-width, outline, width
-seiten.html  input#<button class= <nav.reiter>  :  display
-seiten.html  li <ol.blatt-codes>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, column-gap, counter-increment, display, font-family, font-size, font-weight, gap, height, letter-spacing, line-height, list-style, min-height, min-width, outline, width
-seiten.html  li <ol.codeblock-liste>  :  counter-increment, font-family, font-weight, letter-spacing, text-wrap, white-space
-seiten.html  li <ol>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, height, line-height, list-style, margin, margin-bottom, outline, width
-seiten.html  main.blatt-druck <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-width, box-shadow, color, font, font-size, height, line-height, margin, margin-bottom, margin-left, margin-right, margin-top, max-width, min-height, outline, padding, padding-bottom, padding-left, padding-right, padding-top, width
-seiten.html  nav.reiter <div.reiter-rahmen>  :  border, border-bottom, border-bottom-color, border-color, border-width, column-gap, display, gap, margin, margin-bottom, overflow, overflow-x, overflow-y, overscroll-behavior, overscroll-behavior-x, scrollbar-width
-seiten.html  ol <main.blatt-druck>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font-size, height, line-height, list-style, margin, margin-left, outline, width
-seiten.html  ol.blatt-codes <section.blatt-kachel>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, column-gap, counter-reset, display, font-size, gap, grid-template-columns, grid-template-rows, height, line-height, list-style, margin, margin-left, outline, width
-seiten.html  ol.codeblock-liste <div.codeblock>  :  column-gap, counter-reset, display, font-family, font-size, font-weight, gap, grid-template-columns, letter-spacing, line-height
-seiten.html  p <div.demo-hinweis.hinweis-umgebung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
-seiten.html  p <main.blatt-druck>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, height, line-height, margin, margin-bottom, outline, width
-seiten.html  p <section.blatt-kachel>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, height, line-height, outline, width
-seiten.html  p.blatt-umgebung <main.blatt-druck>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-width, color, font, font-size, height, line-height, margin, margin-bottom, outline, padding, padding-bottom, padding-left, padding-right, padding-top, width
-seiten.html  p.codeblock-titel <div.codeblock>  :  text-align
-seiten.html  p.codeblock-wert <div.codeblock>  :  text-align, word-break
-seiten.html  p.feld-hinweis <div.form-spalte>  :  height, width
-seiten.html  p.feld-hinweis <div.logo-vorschau>  :  height, width
-seiten.html  p.feld-hinweis <div.text>  :  width
-seiten.html  p.feld-klein <div.codeblock>  :  text-align
-seiten.html  p.feld-klein <div.form-spalte>  :  height, width
-seiten.html  p.nur-bildschirm <main.blatt-druck>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, line-height, margin, margin-bottom, outline, width
-seiten.html  section.blatt-kachel <main.blatt-druck>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-width, break-inside, color, font, font-size, height, line-height, margin, margin-bottom, outline, padding, padding-bottom, padding-left, padding-right, padding-top, page-break-inside, width
-seiten.html  span <a.knopf.knopf-leise>  :  font, height, line-height
-seiten.html  span <button.knopf.knopf-primaer>  :  font, line-height
-seiten.html  span <footer.blatt-fuss>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, display, font, font-size, height, line-height, min-height, min-width, outline, width
-seiten.html  span.akkordeon-text <summary.akkordeon-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font-size, line-height, outline
-seiten.html  span.bereich-zeichen <a.<button.class=>  :  align-items, background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, color, display, flex, height, justify-content, outline, width
-seiten.html  span.blatt-druck-gruppe <div.blatt-druck-gruppen>  :  align-items, display, flex-direction, font, font-family, font-size, font-weight, height, letter-spacing, line-height, min-height, min-width, width
-seiten.html  span.blatt-kachel-name <div.blatt-kachel-kopf>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, display, font, font-family, font-size, font-weight, height, line-height, min-height, min-width, outline, width
-seiten.html  span.blatt-kachel-neben <div.blatt-kachel-kopf>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, display, font, font-size, height, line-height, min-height, min-width, outline, width
-seiten.html  span.blatt-kopf-rechts <header.blatt-kopf>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, display, flex, flex-basis, font, font-size, height, line-height, margin, margin-left, min-height, outline, overflow-wrap, text-align, width
-seiten.html  span.blatt-marke <header.blatt-kopf>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, display, font, font-family, font-size, font-weight, height, line-height, min-height, outline, overflow-wrap, width
-seiten.html  span.nur-vorlesen <label.doku-suche>  :  bottom, inset, top
-seiten.html  span.nur-vorlesen <th.wahl-spalte>  :  bottom, inset, top
-seiten.html  span.zeile-klein <td.zahl-spalte>  :  height
-seiten.html  strong <p.blatt-umgebung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, line-height, outline
-seiten.html  strong <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, line-height, outline
-seiten.html  strong <span.blatt-kachel-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, line-height, outline
-seiten.html  strong <span.blatt-kopf-rechts>  :  line-height, overflow-wrap
-seiten.html  summary.akkordeon-zeile <details.akkordeon.leiste-gruppe>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font-size, line-height, outline
-seiten.html  svg <div.zweitfaktor-einrichtung>  :  flex, width
-seiten.html  table.tabelle <a>  :  height
-seiten.html  tbody <table.tabelle>  :  height
-seiten.html  td.zahl-spalte <tr>  :  height
-seiten.html  th <tr>  :  height
-seiten.html  tr <tbody>  :  height
