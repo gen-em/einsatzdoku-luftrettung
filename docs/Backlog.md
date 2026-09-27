@@ -52,8 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340, 341 | 26.09.2026 |
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 | 27.09.2026 |
-| ab 360 | frei — höchste vergebene Nummer 350 (auf `origin/main` `05dfc12`: 341); 338 war für AR reserviert und blieb frei | 27.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351 | 27.09.2026 |
+| ab 360 | frei — höchste vergebene Nummer 351 (auf `origin/main` `05dfc12`: 341); 338 war für AR reserviert und blieb frei | 27.09.2026 |
 
 ---
 
@@ -1346,3 +1346,17 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      selbst erzeugten Vektoren (ES256, RS256, jede Ablehnung). **Nicht
      dabei:** Passkeys mit PRF als Ersatz der Passwortableitung (E-SR-28).
      *Abnahme:* Konzept SR, Paket SR-09; Prüfdokument P-SR-16.
+
+351. **Passkey als einziger Zweitfaktor, ohne Authenticator-App.** · gehört zu: nach v1.0 · Stand: zurückgestellt · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit Q-SR-12 (E-SR-35).* Schritt 18 baut den
+     Passkey als weiteres Verfahren neben dem eingeschalteten TOTP (Nr. 350);
+     wer keine App will, hat damit keinen Zweitfaktor. Allein tragen dürfte
+     der Passkey den Faktor erst, wenn drei Dinge umgebaut sind: die
+     Wiederherstellungscodes entstehen ohne TOTP-Geheimnis (`totp_codes_*`
+     hängen am Einrichten der App), das Einrichtungstor nimmt einen Passkey
+     als Erfüllung der Pflicht an (`totp_an()` wird ein Faktor-Begriff), und
+     der Reset-Weg (Verwaltung, Notzugang) kennt Konten ohne App.
+     **Anlass:** eine NutzerIn, die nach einem Passkey ohne App fragt — bis
+     dahin zurückgestellt, weil Support, Admin und BetreiberIn die App
+     ohnehin haben. *Abnahme:* Zweitfaktor mit Passkey allein einschaltbar,
+     Codes entstehen dabei, Rückweg und Notzugang gelten unverändert.
