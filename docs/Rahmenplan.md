@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 139 (27.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 140 (27.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -105,19 +105,26 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
 **Die Reihenfolge der offenen Schritte ist:** **17** → **18** → 12 → 12a →
-13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in der
-Reihe: **PK-06 bis PK-08** (die Kette gehört PK, dort endet auch Kette II),
-die Paketschnitte von **11** und Teil C von **6** (seit SD-M1 frei). **Warum so:** 17 und 18 vor 12, damit der
-Review aufgeräumte und gehärtete Seiten liest; 12a nach 12 und vor der
-Öffnung, weil die Altbestand-Entscheidung ein einziges Konto voraussetzt.
+12b → 13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+der Reihe: **PK-06 bis PK-08** (die Kette gehört PK, dort endet auch
+Kette II), die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
+frei). **Warum so:** 17 und 18 vor 12, damit der Review aufgeräumte und
+gehärtete Seiten liest. P6 liegt in zwei Hälften um S11 (R86): das
+**Bedrohungsmodell (12) vor S11 (12a)**, weil es dessen Entwurfsfragen
+beantwortet — was Klartext bleiben darf, wie der Schlüssel aufs Gerät kommt,
+SP-9 gegen Nr. 146 —, und der **Code-Review (12b) nach S11**, damit er die
+Krypto auf Uhr und Handy, SPUR2 und die Spurfunktionen im Browser mitliest
+und den Code genau einmal, in seiner Endfassung, liest. 12a vor der Öffnung,
+weil das Altbestand-Werkzeug ein einziges Konto voraussetzt.
 
 | Schritt | Kennung | Inhalt | Voraussetzung | Konzept | Status |
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
-| 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12, 13 und 14 |
-| 12 | **P6 — Review und Bereinigung** | Bedrohungsmodell und Bug- und Sicherheitsreview in zwölf Stücken (R17, R69); Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); Fragen Nr. 146; R5-Ausnahmeliste | 18 gemergt; Nr. 43-Fragen beantwortet (R78) — erfüllt | neu; `docs/konzepte/Review-R17.md` entsteht im Review als Sammelstelle; Eingang `Review-Krypto-Sicherheit.md` | offen — nach 18 |
-| 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R78) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | 12; **vor der Öffnung** | neu, nach K1 (Skizze SP-9 in `Vorbereitung-Sicherheitspaket.md`, Vorstudie `Konzept-V1-Ortsdaten.md`) | offen — nach 12 |
-| 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12a | eigenes Konzept nach K1 | offen — nach 12a |
+| 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
+| 12 | **P6 — Stück 1: Bedrohungsmodell** | Das Bedrohungsmodell der Anwendung als Dokument (R17, R69, R86) — Verschlüsselung, Spur, Serverschlüssel, Demo, Handy, Kopplung, Klartext-Koordinaten (SP-9), Signatur, Kette; Fragen Nr. 146, Grenze Nr. 263; Eingang des Konzepts S11, kein Code | 18 gemergt; Nr. 43-Fragen beantwortet (R78) — erfüllt | neu; `docs/konzepte/Review-R17.md` beginnt damit (Sammelstelle des Reviews); Eingang `Review-Krypto-Sicherheit.md` | offen — nach 18 |
+| 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R78) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | 12 (das Bedrohungsmodell liegt vor); **vor der Öffnung** | neu, nach K1 (Skizze SP-9 in `Vorbereitung-Sicherheitspaket.md`, Vorstudie `Konzept-V1-Ortsdaten.md`, Bedrohungsmodell aus 12) | offen — nach 12 |
+| 12b | **P6 — Stücke 2 bis 12: Review und Bereinigung** | Bug- und Sicherheitsreview mit Fable über den Stand nach S11 (R17, R69, R86) — auch Uhr- und Android-Krypto, SPUR2, Browser-Spurfunktionen; Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); R5-Ausnahmeliste | 12a gemergt | `docs/konzepte/Review-R17.md` (Fortsetzung aus 12); Paketschnitt nach der Freigaberunde | offen — nach 12a |
+| 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
 | 17 | **Backlog-Runde 4** | Die kleinen Punkte seit Runde 3 — Prüfmittel, Doku-Konsistenz, Streichlisten, `days.created_at`, Demo-Reset-Takt, Statistik-Rest (Nr. 122); die Liste liefert `tools/steuerung/uebersicht.py` (55 Einträge am 26.09.2026) | Merge von SD — erfüllt 26.09.2026 | `docs/konzepte/Konzept-R4-Backlog-Runde-4.md` (kurzes Konzept mit Paketschnitt, kein Fable-Schritt) | Umsetzung — seit 26.09.2026 auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus); Konzept gemergt 26.09.2026 (PR #93), freigegeben samt Fragen und Mockups (E-R4-14 ff.) |
 | 18 | **Sicherheitsrunde II** | Sitzungsbindung (Nr. 242) und „Gerät merken" mit frischem Code vor kritischen Handlungen, Serverschlüssel wechseln als Vorgang (Nr. 247), Notzugang der einzigen BetreiberIn (Nr. 249), Betreiber-Rückfrage (Nr. 233), `ingest.php`-Deadlock (Nr. 210), Proof-of-Work fest (Nr. 228); dazu Nr. 232, 251 | Merge von 17 | `docs/konzepte/Konzept-SR-Sicherheitsrunde-II.md` (Kürzel SR, nach K1; Konzept Fable, Umsetzung Opus) | freigegeben — Konzept am 27.09.2026 freigegeben (E-SR-27), auf `claude/gallant-mccarthy-yacnzk` (Fable, R14), aufgesetzt auf dem 17er-Zweig; Konzept-PR nach dem Merge von 17, Umsetzung danach auf eigenem Zweig (Opus) |
@@ -125,19 +132,18 @@ Review aufgeräumte und gehärtete Seiten liest; 12a nach 12 und vor der
 | Kette II | **Härtung der Auslieferungskette** | Zeiger-Zweig und Integritätswache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Abbruchverhalten, Hotfix-Weg; M1 erster grüner Produktivlauf, M2 Probe-Hotfix | — | `docs/konzepte/Konzept-Kette-Haertung.md` (E-KH-01 bis -30) | gemergt 21.09.2026 (PR #65, #66, #68); **M1 erreicht 21.09.2026** (`web-v20.26.3`, Lauf 35654132667); M2 und der Abschluss sind an PK übergeben (PK-07); Zuarbeiten in 6.1 |
 | PK | **Prüfkette — jede Prüfung einmal, an ihrer Stelle** | Arbeitsumgebung als Station B mit Prüfstand und Bericht, Stufe 1 liest den Bericht gegen, Staging verschlanken, App-Auslieferung mit Signatur; PK-M2 erster Durchlauf der neuen Kette | — | `docs/konzepte/Konzept-PK-Pruefkette.md` (E-PK-01 bis -49) | Umsetzung — PK-01 bis PK-05 gemergt (PR #75, #81, #82, 23.09.2026); offen PK-06, PK-07 (übernimmt den Abschluss von Kette II), PK-08, PK-M2; Buchführung hier erst nach dem SD-Merge |
 
-### Schritt 12 — P6 Review und Bereinigung
+### Schritt 12 — P6, Stück 1: das Bedrohungsmodell
 
-**Ziel:** sauberer Code, Verhalten unverändert außer bei Funden. Eingang ist
-der **Bug- und Sicherheitsreview mit Fable** (R17, R69), alles in zwölf
-Stücken; Stück 1 ist das **Bedrohungsmodell** (Verschlüsselung, Container 4,
+**Ziel:** ein Dokument, kein Code. Stück 1 des R17-Reviews (R69), mit
+Fable: das **Bedrohungsmodell** der Anwendung — Verschlüsselung, Container 4,
 SPUR1, Komplettbackup und Serverschlüssel, Demo-Konstruktion, Schlüsselablage
 auf dem Handy, Kopplungsweg, Klartext-Koordinaten mit SP-9 und Nr. 146,
-Signaturschlüssel bei Google, Geheimnisse der Kette, Nr. 109).
-**Kommentardurchgang:** keine Verweise auf Beschlüsse, Nummern, Fassungen oder
-Konzepte mehr im Code (R13, R31). **Freigaberunde:** die Betreiberin
-entscheidet je Fund; dann Sofortpaket für Kritisches, Pflicht- und
-Aufräumpakete für den Rest — v1.0 wird nicht erklärt, solange ein Fund offen
-ist. **Abnahme:** Review vollständig, Pakete abgenommen, Wortliste 0/0/0.
+Signaturschlüssel bei Google, Geheimnisse der Kette, Nr. 109, die Grenze der
+Integritätswache (Nr. 263). Es beginnt `Review-R17.md` und ist der
+**Eingang des Konzepts S11**: Es sagt, was Klartext bleiben darf, wie der
+Schlüssel aufs Gerät kommt und welche der drei Fragen aus Nr. 146 vor S11
+zu entscheiden sind. **Abnahme:** Modell vollständig, Fragen aus Nr. 146
+entschieden, Freigabe der Betreiberin.
 
 ### Schritt 12a — S11 Ortsdaten verschlüsselt (Weg B)
 
@@ -154,6 +160,22 @@ Android-Code, Backup Fassung 4. **Altbestand:** ein Einmalwerkzeug im Browser
 für das eine Konto vor der Öffnung, danach entfernt. **Rang:** Web, Uhr,
 Android Haupt. S11 baut auf `store => 'pat'` (E-S9-01) auf.
 
+### Schritt 12b — P6, Stücke 2 bis 12: Review und Bereinigung
+
+**Ziel:** sauberer Code, Verhalten unverändert außer bei Funden. Der
+**Bug- und Sicherheitsreview mit Fable** (R17, R69) liest den Stand **nach
+S11** in elf Stücken — auch die Krypto auf Uhr und Handy, SPUR2, die
+Spurfunktionen im Browser und Backup Fassung 4 —, damit der Code genau
+einmal und in seiner Endfassung gelesen wird (R86). **Kommentardurchgang:**
+keine Verweise auf Beschlüsse, Nummern, Fassungen oder Konzepte mehr im
+Code (R13, R31). **Freigaberunde:** die Betreiberin entscheidet je Fund;
+dann Sofortpaket für Kritisches, Pflicht- und Aufräumpakete für den Rest —
+v1.0 wird nicht erklärt, solange ein Fund offen ist. **Preis:** Ein Fund im
+heutigen Bestand bleibt bis nach S11 liegen; den Kryptoteil hat der
+Krypto-Review (R78) schon gelesen, seine kritischen Funde sind mit 9a und
+S10 behoben. **Abnahme:** Review vollständig, Pakete abgenommen, Wortliste
+0/0/0.
+
 Die Schritte 13, 14 und der Betriebsübergang haben keinen Block: Ihre
 Zeilen nennen den Inhalt, den Volltext hält `Rahmenplan-Archiv-2.md` 3.
 
@@ -167,7 +189,7 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; PK-06 bis PK-08 (Kette) zu 17 und 18 (`server/`); ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 12 → 12a → 13 → 14 nacheinander, nichts parallel (R71) |
+| Konzeptarbeit zu allem; PK-06 bis PK-08 (Kette) zu 17 und 18 (`server/`); ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 12 → 12a → 12b → 13 → 14 nacheinander, nichts parallel (R71, R86) |
 | — | S11 (12a) baut auf `store => 'pat'` (E-S9-01) auf, nicht daneben |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
@@ -359,9 +381,9 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R66 | Update-Weg ab v1.0: keine Selbstprüfung, kein Selbst-Update, Produktion nur auf Auslösung; Register beginnt bei v1.0 neu | gilt; Ausgeführte seit Web 20.39.0 im Protokoll (Q-P5c-53); `git pull` auf dem Server verworfen (E-KH-02); Neubeginn in P8 | `Konzept-Planung-v1.0.md`, E-PV-2 |
 | R67 | Auslieferungskette: `main` → Staging, Tag → Produktion nach Pflichtfreigabe und Backup-Tor; Prüftor in Stufen; Rollback = voriger Tag | gilt; gebaut P5a, gehärtet Kette II (E-KH-01 bis -30), erster grüner Produktivlauf M1 am 21.09.2026 (`web-v20.26.3`); Rest bei PK | `Konzept-Planung-v1.0.md`, E-PV-3; Konzept Kette II |
 | R68 | Ein Repositorium, frisch, öffentlich: `gen-em/nadoku` (AGPL-3.0) ohne Historie; Altrepositorium archiviert und verweist | gilt; Umzug in P8 mit dem Neuaufsetzen | `Konzept-Planung-v1.0.md`, E-PV-4 |
-| R69 | R17-Review liest alles in zwölf Stücken mit Fable; Stück 1 Bedrohungsmodell; Funde in `Review-R17.md`, kritisch → Sofortpaket | gilt; Eingang von P6 | `Konzept-Planung-v1.0.md`, E-PV-5 |
+| R69 | R17-Review liest alles in zwölf Stücken mit Fable; Stück 1 Bedrohungsmodell; Funde in `Review-R17.md`, kritisch → Sofortpaket | gilt; Stück 1 als Schritt 12 vor S11, Stücke 2 bis 12 als Schritt 12b danach (R86) | `Konzept-Planung-v1.0.md`, E-PV-5 |
 | R70 | Web-App-Manifest allein, kein Service Worker; in P7 mit der Umbenennung; Nachweis am S24 und am iPhone | gilt; P7 | `Konzept-Planung-v1.0.md`, E-PV-6 |
-| R71 | Drei Phasen vor v1.0: P6 Review, P7 Gesicht, P8 Schnitt — nacheinander, je ein Konzept | gilt; Schritte 12 bis 14 | `Konzept-Planung-v1.0.md`, E-PV-7 |
+| R71 | Drei Phasen vor v1.0: P6 Review, P7 Gesicht, P8 Schnitt — nacheinander, je ein Konzept | gilt; P6 in zwei Hälften um S11 (R86): Schritte 12, 12a, 12b, dann 13 und 14 | `Konzept-Planung-v1.0.md`, E-PV-7 |
 | R72 | Doku-Neufassung: vier Dokumente nach Zielgruppe plus Vertrag; Handbuch als HTML mit dem Release; höchstens ein Drittel des Umfangs | gilt; Umsetzung P7 | `Konzept-Planung-v1.0.md`, E-PV-8 |
 | R73 | Problemsammlung als S9 (Schritt 8), Konzept mit Fable | erledigt (S9, Web 15.7.0 bis 19.1.1) | `Konzept-Planung-v1.0.md`, E-PV-9 |
 | R74 | Ordnungsprinzip: jede Funktion hat genau einen Ort (wer, woran, wie oft); Ausnahmen eine Ebene tiefer; wer baut, benennt den Ort (K1) | gilt, dauerhaft; (5) seit 23.09.2026: je Karte höchstens ein Satz, Erklärtext im Handbuch (E-P5c-06, -49) | Archiv-2 7 |
@@ -376,6 +398,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R83 | Zentralisiert wird beim zweiten echten Verbraucher; Bibliothek statt Seite | gilt; Schritt 15 erledigt, das Register `tools/zaehlung/` misst es in Stufe 1 | Archiv-2 7 |
 | R84 | Kein Schritt der Auslieferungskette geht ungeprobt auf Produktiv; wer einen Schritt hinzufügt, sagt, wodurch er geprobt wird | gilt | `Konzept-Kette-Haertung.md`, E-KH-17 |
 | R85 | Die Kette des Tags N spricht mit dem Server der Fassung N−1; ein unbekanntes Feld ist `unbekannt`, nie eine erfundene Null | gilt | `Konzept-Kette-Haertung.md`, E-KH-19 |
+| R86 | P6 in zwei Hälften um S11: Bedrohungsmodell als 12 vor 12a, Code-Review als 12b danach — S11 wird gegengelesen, der Code einmal, in Endfassung | gilt; entschieden 27.09.2026 (Betreiberin, Konzeptsitzung SR) | Abschnitt 3 („Warum so", Blöcke 12 und 12b) |
 
 ## 8. Erledigt
 

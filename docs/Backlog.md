@@ -59,7 +59,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 ## Offen
 
-21. **Die 43 weiteren Funde der A4-Nachlese sichten.** · gehört zu: 12 · Stand: offen · seit 23.08.2026
+21. **Die 43 weiteren Funde der A4-Nachlese sichten.** · gehört zu: 12b · Stand: offen · seit 23.08.2026
      Die Erhebung „toter Code" in P0/A4 hat mit einer zweiten, breiteren
      Methode 43 zusätzliche Kandidaten geliefert (Abschnitt 9.3 des
      P0-Konzepts). Sie sind **nicht** freigegeben und **nicht** angefasst: Ein
@@ -244,7 +244,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Demo-Kontos, Reset nur bei gesetzter Marke.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 76.
 
-77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12 · Stand: teilweise · seit 02.09.2026
+77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12b · Stand: teilweise · seit 02.09.2026
      Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und
      weitere Betriebsangaben auf einer Fläche.
      Entschieden 05.09.2026 (E-S8-05): nicht aufteilen, sondern **auflösen** —
@@ -474,7 +474,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      keine ungenutzten Ausnahmen.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 187.
 
-188. **Eine Dokumentenprobe: kein Prüfmittel misst Verweise zwischen Dokumenten.** · gehört zu: 12 · Stand: teilweise · seit 14.09.2026
+188. **Eine Dokumentenprobe: kein Prüfmittel misst Verweise zwischen Dokumenten.** · gehört zu: 12b · Stand: teilweise · seit 14.09.2026
      Befund (S10-Nachlauf): „Linkprobe 117 Verweise, 0 Abweichungen" belegt
      nichts über `docs/` — die Linkprobe liest `<seite>.php?…` in `server/`.
      Die Fahrplanzeile zu Schritt 7 nannte acht Tage lang einen Konzeptpfad,
@@ -1281,7 +1281,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Abnahme:* `cmark-gfm` liefert je Eintrag eine Liste, deren `start`
      die Nummer des Eintrags ist; die Decke misst das.
 
-341. **Sechs Stylesheet-Regeln ohne Verwender und ein Fokus-Zweig, den kein Element erfüllt.** · gehört zu: 12 · Stand: offen · seit 26.09.2026
+341. **Sechs Stylesheet-Regeln ohne Verwender und ein Fokus-Zweig, den kein Element erfüllt.** · gehört zu: 12b · Stand: offen · seit 26.09.2026
      *Aufgenommen 26.09.2026 mit R4-05 (Konzept R4).* Die
      Vollständigkeitsprüfung meldet nach R4-05 noch 13 Hinweise „Regel im
      Stylesheet, im Markup nicht gefunden". Sieben haben einen Grund (vier

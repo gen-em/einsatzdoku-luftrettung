@@ -234,8 +234,9 @@ die Demo-Änderungsmarke (R4-14, offen) — je eine Zeile in `ingest.php` und
 **nicht**; die Umsetzung beginnt auf `main` nach dem Merge und misst neu.
 
 **PK-06 bis PK-08** schreiben die Workflows und `CLAUDE.md` 3 und 6; SR
-fasst `.github/` nicht an. **Schritt 12** liest danach: `Review-Krypto-
-Sicherheit.md` nennt in 3.2 die Sitzung („Sitzungscookie Secure, HttpOnly,
+fasst `.github/` nicht an. **Schritt 12** (Bedrohungsmodell) und **12b**
+(Code-Review, seit R86 nach S11) lesen danach: `Review-Krypto-Sicherheit.md`
+nennt in 3.2 die Sitzung („Sitzungscookie Secure, HttpOnly,
 SameSite=Strict; `session_regenerate_id(true)`") — nach SR-01 steht dort
 ein Satz mehr, und der Review misst ihn.
 
@@ -786,7 +787,8 @@ Nach der Freigabe des Abschlusses (K9): Erledigt-Zeile in Rahmenplan 8
 (eine Tabellenzeile, Prüfzahlen im Prüfdokument), Reste nach Abschnitt 6,
 Backlog in die Kopfzeilen, Verlaufszeile, dieses Konzept löschen. Das
 Prüfdokument bleibt, bis seine Prüfliste abgehakt ist. Danach beginnt
-Schritt 12 mit dem Bedrohungsmodell — und liest, was hier gebaut ist.
+Schritt 12 mit dem Bedrohungsmodell; der Code-Review 12b liest nach S11,
+was hier gebaut ist (R86).
 
 ## 7. Quellen
 
