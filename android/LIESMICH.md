@@ -199,6 +199,15 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.17.0 (R4-22, Abgewiesene verwerfen), `./gradlew build`
+im Container, 27.09.2026 — `BUILD SUCCESSFUL in 4m 10s`:** Lint **0**
+Fehler (Handy 1 Warnung: `NewerVersionAvailable`, Robolectric 4.17 — nicht
+aus diesem Paket), Prüffälle je Bauart Handy **270**, davon 15 ohne
+Installation übersprungen, Uhr **72**, **0** Fehlschläge. **270 statt 267:**
+`AbgewieseneTest` +2 (`verwerfbar()`, Zahl nach dem Verwerfen),
+`MehrzahlTest` +1. Der Bilderlauf des Handys hat **78** Bilder
+(26 Bildschirme, vorher 24).
+
 **Stand Android 0.16.0 (Konzept AR: AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20,
 API 37), `./gradlew build --rerun-tasks` im Container, 25.09.2026 —
 `BUILD SUCCESSFUL in 4m 54s`:**
@@ -515,15 +524,15 @@ Reihenfolge):
 
 ```bash
 ./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  7 Bilder
-./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 72 Bilder
+./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 78 Bilder
 ```
 
 | | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
 |---|---|---|
-| Bilder | 7 — zwei Marken, laufende Ansicht, zwei Ortungszustände, „Handy nicht erreichbar" (seit 0.16.0), 227-dp-Uhr | **72** — 24 Bildschirme × 3 Breiten (360, 411, 600 dp) |
-| Bedienhöhe | 48 dp je Bild | 48 dp an **69 von 72** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall) |
+| Bilder | 7 — zwei Marken, laufende Ansicht, zwei Ortungszustände, „Handy nicht erreichbar" (seit 0.16.0), 227-dp-Uhr | **78** — 26 Bildschirme × 3 Breiten (360, 411, 600 dp); seit 0.17.0 mit „Abgewiesene verwerfen" und der Quittung (R4-22) |
+| Bedienhöhe | 48 dp je Bild | 48 dp an **75 von 78** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall; die Zusammenfassung des Laufs sagt dazu „0.0 dp bis 48.0 dp an 78 von 78") |
 | Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**; dazu der **ganze** Inhalt gegen den sichtbaren Bereich |
-| Unterscheidbarkeit | alle 7 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
+| Unterscheidbarkeit | alle 7 paarweise verschieden | alle 78 paarweise verschieden, **und je Breite** (bis 0.16.1 stand hier „66" neben 72 Bildern — eine Zahl, die kein Lauf gemeldet hat) |
 
 **Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
 Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die
@@ -1235,6 +1244,22 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   gehen. Senden geht nicht, Trennen geht nicht, Neukoppeln setzt Trennen
   voraus: **Backlog Nr. 157**. Der Lauf endete deshalb mit `pm clear`
   statt mit „Getrennt".
+
+  **Lauf am 27.09.2026 (0.17.0, „Abgewiesene verwerfen", R4-22):**
+  `android-37.0;google_apis`, Boot **476 s**, Prüf-APK **181 s**. Gekoppelt
+  an Konto 1 der örtlichen Anlage (Code per `UPDATE pair_sessions` zugeordnet,
+  wie die Kopplungshilfe); drei abgewiesene Pakete **per `sqlite3` als Root**
+  in `puffer.db` — das Abbild hat `/system/bin/sqlite3`, `adb root` genügt,
+  die App vorher mit `am force-stop` anhalten. Bedient: Knopf, Rückfrage,
+  „Behalten" (3 bleiben), „Verwerfen" (0 Pakete, 0 Punkte, 0 Phasen), Quittung;
+  das Bild der Rückfrage liegt als `mockups/R4-handy-emulator-0.17.0-verwerfen.png`
+  bei. **Ein Stolperstein mehr:** `uiautomator dump` kam unter TCG zeitweise
+  nicht zur Verbindung (`TimeoutException` im Absturzpuffer — des Werkzeugs,
+  nicht der App), und ein Tipp auf seine Koordinaten kam nicht an. Sicherer:
+  Bild abziehen, Koordinaten daraus ablesen (Bildbreite 1080 px), tippen, am
+  Server nachsehen, ob die Anfrage kam. Abgebaut mit
+  `werkzeuge/rundlauf_aufraeumen.php 1` und dem `mariadb`-Weg der
+  Kopplungshilfe.
 
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf

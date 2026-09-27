@@ -317,23 +317,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
      ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
 
-114. **Abgewiesene Pakete sichtbar machen und ausräumen.** · gehört zu: 17 · Stand: teilweise · seit 03.09.2026
-     Befund (S5 Paket E, B-S5Z-06): Antwortet der Server auf ein Paket mit
-     400, markiert der Puffer es als `fehlerhaft = 1` und nimmt es aus
-     Warteschlange und Anzeige — die App sagt „Alles gesendet", beim Server
-     bleibt ein Segment offen. Paket E2 zeigt die Zahl („N Pakete vom Server
-     abgewiesen"); die Pakete bleiben samt GPS-Spur dauerhaft liegen
-     (Krypto-Review AN-2).
-     Erledigt (Android 0.14.0, 07.09.2026): `Puffer.abgewieseneRaeumen()`
-     löscht abgeschlossene abgewiesene Pakete samt Punkten und Phasen nach
-     30 Tagen und beim Trennen sofort; beendete `dienst`-Zeilen ohne Pakete
-     gehen mit, die laufende nie (`AbgewieseneTest`, 10 Fälle).
-     Offen ist der Bedienweg: ansehen, was drinsteht, ausleiten oder
-     verwerfen. Zu entscheiden, ob Ausleiten (als Datei zum Nachreichen von
-     Hand — braucht ein Format) oder Verwerfen mit Rückfrage (Datenverlust
-     auf Knopfdruck). Ohne Weg wird die Zahl zur Tapete.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 114.
-
 122. **Freie Zeiträume und Diagramme in der Statistik.** · gehört zu: 17 · Stand: offen · seit 05.09.2026
      *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
      Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,

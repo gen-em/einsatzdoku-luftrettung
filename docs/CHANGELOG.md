@@ -14,6 +14,34 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.17.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-22. **Neben.**
+
+### Neu
+
+- **Abgewiesene Pakete lassen sich verwerfen** (Nr. 114, E-R4-09, Bild
+  M-R4-22). Seit 0.8.2 steht in der Dienstansicht in Rot „N Pakete vom Server
+  abgewiesen", seit 0.14.0 räumt die App sie nach 30 Tagen weg — dazwischen
+  konnte niemand etwas tun, und die Zeile wurde zur Tapete. Jetzt steht
+  darunter der neutrale Knopf **„Abgewiesene verwerfen …"** und ein blauer
+  Kasten, der sagt, was die rote Zeile bedeutet und was ohne Zutun geschieht.
+  Der Knopf fragt nach dem Muster der Garmin-Uhr (Nr. 159) zurück: Titel mit
+  Zahl („3 abgewiesene Pakete verwerfen?"), Text mit Grund und Folge,
+  „Behalten" und „Verwerfen" in Rot tief. Danach steht die Quittung
+  „3 Pakete verworfen", solange die Ansicht offen ist. **Neutral und nicht
+  rot**, weil Verwerfen die Ansicht nicht beendet — Rot bleibt „Dienst
+  beenden" — und die Rückfrage den Fehltipp fängt. Verworfen wird über
+  denselben Weg wie beim Trennen (`abgewieseneRaeumen(null)`). **Der Knopf
+  steht nur, wenn er etwas verwirft:** Ein Paket, dessen Teil-Upload im
+  laufenden Dienst eine 400 bekam, wird noch beschrieben und nicht geräumt;
+  es zählt in der roten Zeile mit, in `verwerfbar()` nicht, sonst versprächen
+  Knopf und Rückfrage etwas, das danach noch dasteht. **Was bewusst fehlt:**
+  Ansehen und Nachreichen. Der Server hat mit 400 endgültig abgelehnt, und
+  ein Nachreichen von Hand wäre ein zweiter Weg an `validate_lib.php`
+  vorbei. Der Hinweiskasten stand im freigegebenen Mockup, nicht im Konzept
+  — mitgebaut auf Nachfrage (Q-R4-25).
+
 ## [Android 0.16.1] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-21. **Korrektur.**

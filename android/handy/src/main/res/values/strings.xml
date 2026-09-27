@@ -280,6 +280,33 @@
         <item quantity="one">Server hat %1$d Paket abgewiesen</item>
         <item quantity="other">Server hat %1$d Pakete abgewiesen</item>
     </plurals>
+
+    <!-- Abgewiesene verwerfen (Backlog Nr. 114, R4-22, Bild M-R4-22). Die
+         Beschriftung des Knopfs nennt keine Zahl: Die steht in der roten Zeile
+         darueber, und eine zweite Zahl in der Beschriftung koennte altern. Die
+         Frist im Hinweis (%1$d) kommt aus `Raeumung.FRIST_TAGE`, nicht aus
+         diesem Text - sonst stuende sie zweimal; die Zahl der Pakete waehlt
+         dort nur die Form. Wortlaut der Rueckfrage nach dem Muster der
+         Garmin-Uhr (Nr. 159): Titel mit Zahl, Text mit Grund und Folge. -->
+    <string name="abgewiesene_verwerfen">Abgewiesene verwerfen …</string>
+    <plurals name="abgewiesene_hinweis">
+        <item quantity="one">Der Server hat dieses Paket endgültig abgelehnt (Antwort 400). Es wird nicht erneut gesendet und nach %1$d Tagen oder beim Trennen des Geräts geräumt.</item>
+        <item quantity="other">Der Server hat diese Pakete endgültig abgelehnt (Antwort 400). Sie werden nicht erneut gesendet und nach %1$d Tagen oder beim Trennen des Geräts geräumt.</item>
+    </plurals>
+    <plurals name="verwerfen_frage">
+        <item quantity="one">%1$d abgewiesenes Paket verwerfen?</item>
+        <item quantity="other">%1$d abgewiesene Pakete verwerfen?</item>
+    </plurals>
+    <plurals name="verwerfen_text">
+        <item quantity="one">Der Server hat es endgültig abgelehnt; es kommt nie mehr an. Die Aufzeichnung darin ist dann weg.</item>
+        <item quantity="other">Der Server hat sie endgültig abgelehnt; sie kommen nie mehr an. Die Aufzeichnungen darin sind dann weg.</item>
+    </plurals>
+    <string name="verwerfen_ja">Verwerfen</string>
+    <string name="verwerfen_nein">Behalten</string>
+    <plurals name="sync_verworfen">
+        <item quantity="one">%1$d Paket verworfen</item>
+        <item quantity="other">%1$d Pakete verworfen</item>
+    </plurals>
     <string name="akku_titel">Von der Akkuoptimierung ausnehmen</string>
     <!--
         Der Text nennt jetzt den WEG, weil die App nicht mehr direkt fragen

@@ -3520,11 +3520,21 @@ unberührt weiter.
 |---|---|
 | „Alles gesendet" | Der Server hat alles. |
 | „Rückstand 2 Pakete" | Zwei abgeschlossene Pakete sind noch nicht bestätigt. Darunter steht der Knopf **„Jetzt senden"**, falls es schneller gehen soll. |
-| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Es wird nicht wiederholt** — bitte melden, solange die Zeile steht: Die Daten liegen noch **30 Tage** auf dem Telefon, danach räumt die App sie weg (seit Android 0.14.0); auch das Trennen des Geräts löscht sie. Einen Weg, sie von Hand nachzureichen, gibt es noch nicht. |
+| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Es wird nicht wiederholt** — bitte melden, solange die Zeile steht: Die Daten liegen noch **30 Tage** auf dem Telefon, danach räumt die App sie weg (seit Android 0.14.0); auch das Trennen des Geräts löscht sie. Darunter steht ein blauer Kasten, der das sagt, und der Knopf **„Abgewiesene verwerfen …"** (seit Android 0.17.0). Nachreichen lässt sich ein abgewiesenes Paket nicht. |
 
 Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
 „Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu
 koppeln".
+
+**Abgewiesene verwerfen** *(seit Android 0.17.0)*. Wer nicht 30 Tage warten
+will, tippt auf „Abgewiesene verwerfen …". Die App fragt nach — „3 abgewiesene
+Pakete verwerfen?" — und sagt, was dann geschieht: Die Aufzeichnungen darin
+sind weg, der Server hat sie ohnehin nie angenommen. **„Verwerfen"** löscht
+sie, **„Behalten"** oder ein Tipp neben die Frage lässt alles, wie es ist.
+Danach steht dort, wie viele verworfen sind („3 Pakete verworfen"), bis die
+App geschlossen wird. Ein Paket, das **während eines laufenden Dienstes**
+abgewiesen wurde, wird noch beschrieben; der Knopf erscheint dafür erst nach
+dem Dienstende, die rote Zeile schon vorher.
 
 ---
 

@@ -8987,8 +8987,19 @@ Backlog Nr. 114 Räumteil, Krypto-Review AN-2): Jeder Sendelauf räumt vorher,
 was älter ist als 30 Tage (`Raeumung.FRIST_TAGE`), und das Trennen räumt ohne
 Frist — die Pakete gehören dem zurückgegebenen Konto. Gelöscht wird nur
 Abgeschlossenes, samt Punkten und Phasen in einer Transaktion; beendete
-`dienst`-Zeilen ohne Pakete gehen mit, die laufende nie. Der Bedienweg zum
-Ansehen und Ausleiten bleibt Nr. 114.
+`dienst`-Zeilen ohne Pakete gehen mit, die laufende nie.
+
+**Der Bedienweg ist „Verwerfen"** (seit Android 0.17.0, Nr. 114, R4-22,
+E-R4-09): Unter der roten Zeile steht ein neutraler Knopf, dahinter die
+`Rueckfrage` mit „Behalten" / „Verwerfen" (Rot tief), und „Verwerfen" ruft
+`abgewieseneRaeumen(null)` — denselben Weg wie das Trennen. Der Knopf hängt an
+einer zweiten Zahl, `verwerfbar()` (`fehlerhaft = 1 AND final = 1`): Ein
+laufendes Paket mit 400 zählt in `abgewiesen()` mit, wird aber noch
+beschrieben und nicht geräumt; mit der ersten Zahl versprächen Knopf und
+Rückfrage etwas, das danach noch dasteht. Die Quittung „N Pakete verworfen"
+lebt in der Oberfläche, nicht in `NAdokuApp`. Ansehen und Ausleiten gibt es
+nicht: Der Server hat mit 400 endgültig abgelehnt, und ein Nachreichen von
+Hand wäre ein zweiter Weg an `validate_lib.php` vorbei.
 
 ### Der Uhr-Spiegel
 

@@ -34,6 +34,10 @@ import org.robolectric.RobolectricTestRunner
  * Spur, über Trennen und Neukopplung hinweg. Die Fälle unten schreiben die
  * Regel fest: nach der Frist und beim Trennen weg, laufende bleiben,
  * beendete `dienst`-Zeilen ohne Pakete gehen mit, die laufende nie.
+ *
+ * SEIT ANDROID 0.17.0 DER BEDIENWEG (Nr. 114, R4-22): „Verwerfen" in der
+ * Dienstansicht ruft den Räumteil ohne Frist. Die zwei Fälle am Ende halten
+ * fest, was der Knopf zählt und was danach bleibt.
  */
 @RunWith(RobolectricTestRunner::class)
 class AbgewieseneTest {
@@ -224,5 +228,47 @@ class AbgewieseneTest {
 
         assertEquals(1, puffer.abgewieseneRaeumen(vor = "2026-08-08T00:00:00Z").dienste)
         assertEquals(listOf("ad-jung"), dienstRefs())
+    }
+
+    // ---- Der Bedienweg „Verwerfen" (Nr. 114, R4-22) ------------------------
+
+    /**
+     * **Der Knopf steht nur, wenn er etwas tut.** [Puffer.verwerfbar] zählt
+     * die abgeschlossenen Abgewiesenen; ein laufendes zählt in
+     * [Puffer.abgewiesen] mit, hier nicht — Verwerfen nähme es nicht, und
+     * die Rückfrage nennte eine Zahl, die danach nicht stimmt.
+     */
+    @Test fun verwerfbarZaehltNurAbgeschlossene() {
+        abgewiesenesPaket("r-16", "2026-09-06T19:00:00Z")
+        abgewiesenesPaket("r-17", "2026-09-07T05:00:00Z")
+        val laufend = puffer.paketAnlegen(
+            clientRef = "r-18", art = Paketzeile.ART_RUHESEGMENT, tag = "2026-09-07",
+            dienstRef = null, begonnenAt = "2026-09-07T07:02:00Z",
+        )
+        puffer.alsFehlerhaftMerken(laufend)
+        paketMitRueckstand("r-19")
+
+        assertEquals(3, puffer.abgewiesen())
+        assertEquals(2, puffer.verwerfbar())
+    }
+
+    /**
+     * **Nach „Verwerfen" ist die Zahl 0** (Abnahme R4-22) — derselbe Aufruf
+     * wie hinter dem Knopf. Die Quittung ist die Zahl, die zurückkommt; der
+     * Rückstand gehört nicht dazu.
+     */
+    @Test fun nachDemVerwerfenIstDieZahlNull() {
+        abgewiesenesPaket("r-20", "2026-09-06T19:00:00Z")
+        abgewiesenesPaket("r-21", "2026-09-07T05:00:00Z")
+        abgewiesenesPaket("r-22", "2026-09-07T06:00:00Z")
+        paketMitRueckstand("r-23")
+        assertEquals(3, puffer.verwerfbar())
+
+        val r = puffer.abgewieseneRaeumen(vor = null)
+
+        assertEquals("die Quittung", 3, r.pakete)
+        assertEquals(0, puffer.abgewiesen())
+        assertEquals(0, puffer.verwerfbar())
+        assertEquals("der Rückstand bleibt", 1, puffer.rueckstand())
     }
 }

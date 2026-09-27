@@ -9058,3 +9058,25 @@ zutreffen.
      Papierkorbweg je Diensttag der Geräte des Kontos. Rundlauf 14 Fälle
      grün, danach Konto 1 0 Diensttage, 0 Einsätze, 0 Spurpunkte, 0 Waisen;
      ohne den Aufruf 9 / 5 / 14 439 wie bei der Aufnahme.
+
+114. **Abgewiesene Pakete sichtbar machen und ausräumen.** · gehört zu: 17 · Stand: erledigt · seit 03.09.2026
+     Befund (S5 Paket E, B-S5Z-06): Antwortet der Server auf ein Paket mit
+     400, markiert der Puffer es als `fehlerhaft = 1` und nimmt es aus
+     Warteschlange und Anzeige — die App sagt „Alles gesendet", beim Server
+     bleibt ein Segment offen. Paket E2 zeigt die Zahl („N Pakete vom Server
+     abgewiesen"); die Pakete bleiben samt GPS-Spur dauerhaft liegen
+     (Krypto-Review AN-2).
+     Erledigt (Android 0.14.0, 07.09.2026): `Puffer.abgewieseneRaeumen()`
+     löscht abgeschlossene abgewiesene Pakete samt Punkten und Phasen nach
+     30 Tagen und beim Trennen sofort; beendete `dienst`-Zeilen ohne Pakete
+     gehen mit, die laufende nie (`AbgewieseneTest`, 10 Fälle).
+     Offen ist der Bedienweg: ansehen, was drinsteht, ausleiten oder
+     verwerfen. Zu entscheiden, ob Ausleiten (als Datei zum Nachreichen von
+     Hand — braucht ein Format) oder Verwerfen mit Rückfrage (Datenverlust
+     auf Knopfdruck). Ohne Weg wird die Zahl zur Tapete.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 114.
+     Erledigt 27.09.2026 mit R4-22 (Android 0.17.0): Knopf „Abgewiesene
+     verwerfen …“ unter der roten Zeile mit Hinweiskasten, Rückfrage nach
+     dem Muster der Uhr („Behalten“ / „Verwerfen“) und Quittung; Nachreichen
+     gibt es nicht (E-R4-09). AbgewieseneTest +2, im Emulator nach
+     „Verwerfen“ 0 Pakete, 0 Punkte, 0 Phasen.
