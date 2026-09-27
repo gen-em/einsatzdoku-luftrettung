@@ -714,9 +714,10 @@ Zusätzlich können auftreten:
 > übernimmt aber weder Metadaten noch Phasen, Reanimation oder Punkte, rührt
 > den Diensttag nicht an und sagt das über die `kept_*`-Felder (`kept_meta`
 > eingeschlossen). **Neue** Datensätze sind nicht betroffen: Sie werden immer
-> angenommen — nur der Zeitraum eines Diensttags, an dem seit mehr als
-> 72 Stunden kein Datensatz mehr angelegt wurde, wird von ihnen nicht mehr
-> fortgeschrieben (4.4). Der Grund steht in `docs/Technik.md` 4.99a2; für die
+> angenommen — nur der Zeitraum eines Diensttags, den der Server vor mehr
+> als 72 Stunden angelegt hat, wird von ihnen nicht mehr fortgeschrieben
+> (4.4; seit Web 21.3.0 zählt dafür `days.created_at`, bis dahin das jüngste
+> Anlegen eines seiner Datensätze). Der Grund steht in `docs/Technik.md` 4.99a2; für die
 > Uhr ändert sich nichts, was sie tun müsste.
 
 > **Zeiten, die nicht zum `day` passen, schreiben den Diensttag nicht fort**

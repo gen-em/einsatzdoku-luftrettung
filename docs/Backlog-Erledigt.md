@@ -8886,3 +8886,25 @@ zutreffen.
      zählt Mehrdeutigkeit als eigene Erwartung. Nach einem erzwungenen Reset
      (Kennungen ab 484 statt 1): 97 / 97, 116 Dateien verglichen; die alte
      Fassung dort 2 rot.
+
+158. **`days` trägt kein `created_at`.** · gehört zu: 17 · Stand: erledigt · seit 08.09.2026
+     *Aufgenommen 08.09.2026 bei der Neufassung der Tagesregel (Nr. 134).* Für
+     Einsätze und Ruhesegmente ist der Anker des Ersetzfensters die Serverzeit
+     des Anlegens — genau deshalb kann eine falsch gestellte Geräteuhr das
+     Fenster nicht steuern. Für den **Diensttag** gibt es diese Spalte nicht.
+     Die Frage „wird an diesem Tag noch gearbeitet?" wird deshalb über das
+     jüngste `created_at` seiner Datensätze beantwortet (`ingest_tag_offen()`
+     in `ingest.php`). Das ist ein ehrlicher Ersatz und in der Sache meist
+     dasselbe, aber es ist eine Abfrage über zwei Tabellen statt eines
+     Spaltenwerts, und ein Tag, dessen Datensätze alle gelöscht wurden, hat gar
+     keinen Anker mehr. Behebung: `days.created_at` mit Migration (Rückfall auf
+     `started_at`, gekappt wie bei `rest_segments`), danach
+     `ingest_tag_offen()` auf einen Wert zurückführen. Kein Fehler, eine
+     Vereinfachung — und die Voraussetzung dafür, die Regel in einem Satz
+     erklären zu können. Zuordnung: Backlog-Runde.
+     Erledigt 27.09.2026 mit R4-15 (Web 21.3.0, Migration
+     2026_09_27_days_created_at, update.php nach dem Deploy):
+     days.created_at, der Bestand aus started_at gekappt; ingest_tag_offen()
+     fragt den Tag. Örtlich 1059 Tage migriert, 0 NULL; Schemaprobe Fall 6 4
+     × 40, Ingestprobe Fall 14 88 / 88, gegen den Stand davor rot. Das
+     Fenster gleitet nicht mehr (F-R4-46).

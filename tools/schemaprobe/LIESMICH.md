@@ -1,7 +1,7 @@
 # Schemaprobe
 
 Läuft `schema.sql` auf der Datenbank, gegen die es laufen soll?
-**Anlass: Nr. 238** — eine Migration, die nur auf MariaDB durchging.
+**Anlass: Nr. 238** — eine Migration, die nur auf MariaDB durchging; Nr. 158 — eine TIMESTAMP-Spalte, die je Fassung anders entsteht (Fall 6).
 
 ## Aufruf
 

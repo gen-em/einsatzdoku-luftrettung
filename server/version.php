@@ -7775,5 +7775,17 @@ declare(strict_types=1);
  *   Speichern faellig. Dazu ordnet die GPX-Probe den Referenzexport ueber
  *   Art, Tag und Uhrzeit zu statt ueber die Kennung, die ein Reset neu
  *   vergibt.
+ *
+ * 21.3.0 — DER DIENSTTAG BEKOMMT SEINEN ANKER (Schritt 17, R4-15, Nr. 158).
+ *   Nebenstufe MIT MIGRATION: `2026_09_27_days_created_at` — nach dem
+ *   Deploy muss eine Administratorin `update.php` aufrufen. Ob Geraete den
+ *   Zeitraum eines Diensttags noch fortschreiben, hing am juengsten
+ *   `created_at` seiner uebrigen Einsaetze und Ruhesegmente: zwei Tabellen
+ *   fuer eine Frage, und ein alter Tag ohne Datensaetze galt als offen. Jetzt
+ *   traegt `days` die Spalte selbst, und `ingest_tag_offen()` fragt den Tag.
+ *   Der Bestand bekommt sein `started_at` (ohne eines den Tag, 00:00),
+ *   gekappt auf 1970-01-01 00:00:01 und auf jetzt; die Wiederherstellung
+ *   setzt ihn ebenso, denn im Backup steht er nicht. Das Fenster gleitet
+ *   nicht mehr mit jedem neuen Datensatz, es zaehlt ab dem Tag.
  */
-const WEB_VERSION = '21.2.0';
+const WEB_VERSION = '21.3.0';

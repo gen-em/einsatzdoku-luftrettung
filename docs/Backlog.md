@@ -406,22 +406,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      aus Nr. 114 ihn beim Trennen mitnimmt. Prüffall in `KopplungTest`.
      Zuordnung: nächste Android-Stufe.
 
-158. **`days` trägt kein `created_at`.** · gehört zu: 17 · Stand: offen · seit 08.09.2026
-     *Aufgenommen 08.09.2026 bei der Neufassung der Tagesregel (Nr. 134).* Für
-     Einsätze und Ruhesegmente ist der Anker des Ersetzfensters die Serverzeit
-     des Anlegens — genau deshalb kann eine falsch gestellte Geräteuhr das
-     Fenster nicht steuern. Für den **Diensttag** gibt es diese Spalte nicht.
-     Die Frage „wird an diesem Tag noch gearbeitet?" wird deshalb über das
-     jüngste `created_at` seiner Datensätze beantwortet (`ingest_tag_offen()`
-     in `ingest.php`). Das ist ein ehrlicher Ersatz und in der Sache meist
-     dasselbe, aber es ist eine Abfrage über zwei Tabellen statt eines
-     Spaltenwerts, und ein Tag, dessen Datensätze alle gelöscht wurden, hat gar
-     keinen Anker mehr. Behebung: `days.created_at` mit Migration (Rückfall auf
-     `started_at`, gekappt wie bei `rest_segments`), danach
-     `ingest_tag_offen()` auf einen Wert zurückführen. Kein Fehler, eine
-     Vereinfachung — und die Voraussetzung dafür, die Regel in einem Satz
-     erklären zu können. Zuordnung: Backlog-Runde.
-
 161. **Aus einer Aufzeichnung ein Stück löschen können.** · gehört zu: 12a · Stand: offen · seit 08.09.2026
      *Aufgenommen 08.09.2026 beim Bauen von Nr. 160.* Ein vergessener Dienst
      zeichnet weiter auf — auch das Wochenende, auch den Weg nach Hause. Was

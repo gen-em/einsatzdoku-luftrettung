@@ -1208,8 +1208,9 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   | `bild` verweigert die Benachrichtigungsleiste | `bild` prüft, ob die App im Vordergrund steht, und die Leiste ist `NotificationShade`; für ein Bild der Meldung `cmd statusbar expand-notifications`, dann `adb exec-out screencap -p` unmittelbar, danach `cmd statusbar collapse` |
 
   Und eine Beobachtung, die kein Fehler der App ist, aber eine Falle des
-  Prüfstands: Das Demo-Konto wird alle 30 Minuten aus der Fixture neu
-  eingespielt, und das nimmt seine Geräte mit. Ein Gerät, das um 21:03 an
+  Prüfstands: Das Demo-Konto wird aus der Fixture neu eingespielt — damals
+  alle 30 Minuten, seit Web 21.2.0 30 Minuten nach der ersten Änderung, und
+  Koppeln ist eine —, und das nimmt seine Geräte mit. Ein Gerät, das um 21:03 an
   das Demo-Konto gekoppelt wurde, war um 21:37 am Server weg — das Paket vom
   Dienstende bekam `401`, die App sagte „Schlüssel abgewiesen · Gerät neu
   koppeln", und ein Paket mitten im Reset bekam `500` (Fremdschlüssel 1452,

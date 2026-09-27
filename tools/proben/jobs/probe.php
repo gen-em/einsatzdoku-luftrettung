@@ -143,6 +143,22 @@ function marke_zuruecksetzen(PDO $pdo): void {
         ->execute([json_encode(['mission' => 0, 'rest' => 0]), 'waisen']);
 }
 
+/** Die Marke direkt VOR die Waisen der Probe legen (Schritt 17, R4-15).
+ *
+ * Teil 2 fragt, ob jeder Ausloeser DIESELBE Arbeit tut — nicht, wie schnell ein
+ * Durchgang ueber die ganze Anlage ist. Mit der Marke auf 0 musste der
+ * Ausloeser `anfrage` alle Eigentuemer der Anlage in EINEM Lauf durchgehen,
+ * und ihm bleibt dafuer 1 s (JOB_BUDGET_ANFRAGE 3 s, 2 s Reserve). Seit der
+ * Messstand sein Konto mit 5050 Einsaetzen in der oertlichen Anlage laesst,
+ * dauert allein der Durchgang ueber die Einsaetze 0,79 s: Der Lauf raeumte
+ * deren Waisen ab und erreichte die der Ruhesegmente nicht mehr — rot, dreimal
+ * gleich, und nicht, weil ein Ausloeser falsch arbeitete. Dass der
+ * Huckepack-Weg nur ein Haeppchen traegt, ist Absicht; das misst Teil 6. */
+function marke_vor_die_waisen(PDO $pdo, int $basisM, int $basisR): void {
+    $pdo->prepare('UPDATE jobs SET zustand = ? WHERE job = ?')
+        ->execute([json_encode(['mission' => $basisM, 'rest' => $basisR]), 'waisen']);
+}
+
 echo "Jobprobe — Rahmen aus jobs_lib.php\n";
 echo "  Waisen werden auf Kennungen ab mission/$basisM und rest/$basisR gelegt.\n\n";
 
@@ -194,7 +210,7 @@ foreach (['cli', 'token', 'anfrage'] as $ausloeser) {
     $vorher = rest_waisen($pdo, $basisM, $basisR);
 
     faellig_machen($pdo);
-    marke_zuruecksetzen($pdo);
+    marke_vor_die_waisen($pdo, $basisM, $basisR);
     $bericht = jobs_lauf($ausloeser, ['waisen']);
     $nachher = rest_waisen($pdo, $basisM, $basisR);
 

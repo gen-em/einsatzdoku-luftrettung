@@ -327,7 +327,8 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
   Spaltenregisters erst, wenn der Kreislauf `edbak` ihr Umlaufkonto angelegt
   hat; `auswahl.py --selbstprobe` belegt die Reihenfolge.
 - **Der Demo-Reset trifft keine Probe mehr** (`demo` in `pruefablauf.json`,
-  seit R4-04, Nr. 322). Er spielt den Demo-Bestand alle 30 Minuten neu ein,
+  seit R4-04, Nr. 322). Er spielt den Demo-Bestand neu ein (seit Web 21.2.0
+  30 Minuten nach der ersten Änderung, R4-14),
   und die Einsätze bekommen neue Kennungen; wen er traf, entschied bis dahin
   die Reihenfolge der Muster. Jetzt schiebt der Prüfstand vor jeder Probe
   mit `"demo": true` die Marke des letzten Resets auf „jetzt" und stellt sie

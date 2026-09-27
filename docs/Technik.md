@@ -865,7 +865,7 @@ Daten erst nach Server-Bestätigung.
 | `bw_units` | Bergwacht-Bereitschaften; `user_id` = das Konto |
 | `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` = das Konto |
 | `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id` des Kontos — ohne FK, weil es zwei Zieltabellen sind); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
-| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb. `day_capabilities` bekommt dafür keinen Satz; `day_crew` seit Web 21.0.0 **die Rollen der gewählten Betriebsart** (Nr. 169, E-P5c-47 — bis dahin keinen, F19) |
+| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). **Seit Web 21.3.0 `created_at`** (TIMESTAMP, Serverzeit des Anlegens, Nr. 158): der Anker, ob Geräte den Zeitraum des Tages noch fortschreiben (4.99a2); der Bestand hat bei der Migration `started_at` bekommen, gekappt auf jetzt, und die Wiederherstellung setzt ihn ebenso — er steht nicht im Backup. `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb. `day_capabilities` bekommt dafür keinen Satz; `day_crew` seit Web 21.0.0 **die Rollen der gewählten Betriebsart** (Nr. 169, E-P5c-47 — bis dahin keinen, F19) |
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
@@ -6143,11 +6143,24 @@ sie, sondern das Ersetzfenster.
 Ein Paket mit neuem `client_ref` hat kein Fenster, wird aber über `day` oder
 `day_ref` auf den alten Tag aufgelöst und schrieb dessen Beginn und Ende
 genauso um wie Fund 1 (zweite Gegenprüfung, Wiederaufnahme). Der Zeitraum
-eines Diensttags wird deshalb nur fortgeschrieben, solange an ihm noch
-gearbeitet wird: Anker ist das **jüngste `created_at` der übrigen Datensätze
-des Tages** — Serverzeit, wie beim Fenster selbst. Der gerade angelegte zählt
-nicht mit, sonst wäre jeder Tag offen, an dem eben ein Paket ankam. Ein Tag
-ohne andere Datensätze ist frisch und offen.
+eines Diensttags wird deshalb nur **72 Stunden ab dem Anlegen des Tages**
+fortgeschrieben: Anker ist seit Web 21.3.0 **`days.created_at`** — Serverzeit,
+wie beim Fenster selbst (Schritt 17, R4-15, Nr. 158). Ein nachgelieferter
+Dienst ist offen, denn sein Tag entsteht mit dem ersten Paket. Im
+Deploy-Fenster vor `update.php` gilt ein Tag als offen, wie ein Ruhesegment
+vor seiner Migration; die Zeitprüfung gegen `day` deckt, was das offen lässt.
+
+**Bis Web 21.2.x hing der Anker an den Datensätzen:** das jüngste
+`created_at` der **übrigen** Einsätze und Ruhesegmente des Tages, der gerade
+angelegte ausgenommen. Das war eine Abfrage über zwei Tabellen für eine
+Frage, und ein Tag ohne übrige Datensätze hatte keinen Anker und galt als
+offen — auch ein alter, dessen Einsätze alle gelöscht waren. Der Unterschied
+im Verhalten ist benannt (F-R4-46): Das Fenster **gleitet nicht mehr** mit
+jedem neuen Datensatz, es zählt ab dem Tag. Ein Dienst, dessen Pakete über
+mehr als 72 Stunden nach dem ersten eintreffen, verlängert seinen Tag danach
+nicht mehr; ein von Hand angelegter Tag, zu dem ein Gerät später als 72
+Stunden danach liefert, ebenso wenig — die Datensätze kommen in beiden
+Fällen an.
 
 > **Die erste Fassung dieser Regel fragte den Tag nach *seinen* Zeiten** — und
 > die kommen vom Absender. Ein Dienst, der später als 72 Stunden nach seinem
@@ -6155,9 +6168,9 @@ ohne andere Datensätze ist frisch und offen.
 > `ended_at`: Sein Diensttag entstand in diesem Augenblick, galt aber nach
 > seinem Datum als längst geschlossen. Das war derselbe Fehler eine Ebene
 > höher als Fund 2 — gemessen an der eigenen Probe, nicht vermutet, und der
-> Grund, warum der Anker jetzt am Anlegen hängt. `days` trägt kein
-> `created_at`; die Datensätze des Tages sind der nächste ehrliche Ersatz
-> (Backlog Nr. 158).
+> Grund, warum der Anker jetzt am Anlegen hängt. `days` trug damals kein
+> `created_at`, und die Datensätze des Tages waren der nächste ehrliche
+> Ersatz — bis Web 21.3.0 (Nr. 158).
 
 Und ein
 **bestehender** Datensatz, dessen Tag inzwischen im Papierkorb liegt, wandert
@@ -6185,6 +6198,14 @@ hat die Zeitstempel der ganzen Probe auf `time()` umgestellt: Sie standen auf
 festen März-Daten, und damit prüfte die halbe Probe zweite Pakete an
 Datensätzen, die das Fenster längst verlassen hatten — zehn Erwartungen
 kippten, keine davon zu Recht.
+
+**Seit Web 21.3.0 (R4-15, Nr. 158) Fall 14:** ein alter Tag ohne
+Datensätze — der Einsatz kommt an, der Zeitraum bleibt — und derselbe Tag mit
+einem Anker von jetzt, dessen Zeitraum fortgeschrieben wird. Gegen den Stand
+vor R4-15 ist der erste rot. Fall 8b datiert seither auch `days.created_at`
+zurück: Mit dem neuen Anker galt sein in der Probe frisch entstandener Tag
+sonst als offen. Die Migration selbst fährt die Schemaprobe, Fall 6, auf den
+vier Datenbankfassungen.
 
 ### 4.99b Bedrohungsmodell der Kopplung (ab Web 13.0.0, S5)
 

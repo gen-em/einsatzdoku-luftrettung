@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-15.** |
-> | Entschieden | **E-R4-01 bis E-R4-44** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-19** (vor R4-16, E-R4-27; gefächert, E-R4-14). |
+> | Entschieden | **E-R4-01 bis E-R4-47** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-14 erledigt** (27.09.2026); Web 21.2.0. Offen: R4-15 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-15 erledigt** (27.09.2026); Web 21.3.0 — **mit Migration, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-16 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage) — 2.4. |
 
 
 ---
@@ -485,7 +485,47 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   `db.php` (in der Vergangenheit, stimmt weiter) und je zwei `$warum`-Texte in
   `D08.json` und `D19.json`, die mit R4-16 durch den Erzeuger gehen und dort
   mitgezogen werden. Drei neue Treffer sind Rückblicke („bis dahin alle 30
-  Minuten") in Handbuch, Technik und `demo_lib.php`.
+  Minuten") in Handbuch, Technik und `demo_lib.php`. **Nachtrag (R4-15):**
+  Die Zählung umfasste `README.md`, `android/` und die übrigen `docs/` nicht;
+  dort standen drei weitere (README, `android/LIESMICH.md`,
+  `Pruefablauf.md` 330), mit R4-15 nachgezogen. Über `README.md`, `CLAUDE.md`,
+  `docs/` ohne Archive und Konzepte, `android/` und `watch/` stehen danach nur
+  die zwei Rückblicke aus R4-14.
+- **F-R4-46 Mit `days.created_at` gleitet das Fenster des Tages nicht mehr.**
+  Bis Web 21.2.x zählte das jüngste Anlegen der übrigen Datensätze, jeder
+  neue verlängerte also die Zeit, in der der Tag offen war. Jetzt zählt der
+  Tag selbst. Zwei Fälle ändern sich: ein Dienst, dessen Pakete über mehr als
+  72 Stunden nach dem ersten eintreffen, und ein von Hand angelegter Tag, zu
+  dem ein Gerät später als 72 Stunden danach liefert. Beide verlängern ihren
+  Zeitraum nicht mehr, die Datensätze kommen an. Das ist die Folge dessen,
+  was Nr. 158 verlangt („auf einen Wert zurückführen"), und benannt in
+  CHANGELOG, `Technik.md` 4.99a2 und JSON-Vertrag 5 — dort stand die alte
+  Regel wörtlich.
+- **F-R4-47 Die Ingestprobe machte einen „alten Tag" über den alten Anker.**
+  Fall 8b datierte `missions.created_at` zurück; mit dem neuen Anker galt der
+  in der Probe frisch entstandene Tag als offen, und 8b war rot, obwohl der
+  Schutz stand. 8b datiert jetzt auch `days.created_at` zurück.
+- **F-R4-48 Die Schemaprobe fuhr den Migrationsweg nur für drei Migrationen**
+  (Umbenennung `uhr_gesperrt`, Rückbau R39 und FTP). Die neue lief auf den
+  vier Fassungen nur als frisches Schema — ausgerechnet eine
+  TIMESTAMP-Spalte, deren Entstehen je Fassung anders ist
+  (`explicit_defaults_for_timestamp`, 1292 vor 1970). Fall 6 dazu (E-R4-47).
+- **F-R4-49 Eine Gegenprobe war widersprüchlich.** Der erste Lauf der
+  Ingestprobe gegen `ingest.php` aus `HEAD` zeigte Fall 14 grün; zwei
+  Wiederholungen mit nachgesehener Datei (`grep -c eigeneTabelle` = 4) zeigten
+  ihn rot, wie erwartet. Der Server ist `php -S` ohne OPcache. Die Ursache
+  des ersten Laufs ist nicht gefunden; gezählt werden die zwei belegten.
+- **F-R4-50 Die Jobprobe hing an der Größe der örtlichen Anlage.** Erster
+  Prüfstand über R4-15: `jobprobe` rot, „Auslöser 'anfrage' räumt den
+  Rückstand ab: 10 Zeilen + 1 Blob → 5 + 0", dreimal gleich. Teil 2 setzte
+  die Marke des Waisenjobs auf 0; `anfrage` musste also alle Eigentümer der
+  Anlage in einem Lauf durchgehen und hat dafür 1 s (3 s Budget, 2 s
+  Reserve). Seit der Messstand in R4-14 sein Konto mit 5050 Einsätzen in der
+  Anlage ließ, dauert allein der Durchgang über die Einsätze 0,79 s — die
+  Waisen der Ruhesegmente blieben liegen. Nicht R4-15; im R4-14-Lauf lief die
+  Jobprobe vor dem Messstand. Behoben in der Probe: Teil 2 legt die Marke
+  direkt vor ihre Waisen, für alle drei Auslöser gleich; der volle Durchgang
+  bleibt in Teil 3 und 4 (cli). Gegenprobe: `JOB_BUDGET_ANFRAGE` 1,0 → rot.
 
 ## 3. Entscheidungen und Fragen
 
@@ -537,6 +577,9 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-42 | Q-R4-23: **Die 30 Minuten zählen ab der ersten Änderung seit dem letzten Reset**, nicht ab dem Reset und nicht ab der letzten Änderung; der spätere von Änderung und Reset zählt, damit Werkzeuge den Reset weiter aufhalten können. | Betreiberin, 27.09.2026 | Eine Änderung lebt rund 30 Minuten, wie der Hinweis verspricht. Ab der letzten Änderung gezählt, hielte jemand, der alle 29 Minuten etwas absendet, einen veränderten Stand auf der öffentlichen Demo bis zum Pflichtreset. |
 | E-R4-43 | **Mit Marke gilt nur ihre Frist; der tägliche Pflichtreset greift nur ohne Marke.** | Umsetzung (R4-14) | Mit Marke ist der Reset ohnehin höchstens 30 Minuten entfernt; beides zu nehmen hieße, einer Änderung kurz vor Ablauf des Tages ihre halbe Stunde zu kürzen. |
 | E-R4-44 | **Die Marke setzt nur eine POST des Demo-Kontos mit gültigem Formular-Token (`csrf_ok()`)**; Änderungen aus der Verwaltung zählen nicht. | Umsetzung (R4-14) | `csrf_check()` rufen die Seiten erst nach `auth_guard.php`; ohne Token könnte eine fremde Seite die Marke setzen. Eine Änderung durch eine Administratorin geschieht nicht in der Sitzung des Demo-Kontos — dafür ist der Pflichtreset das Netz, und die Kontoseite des Demo-Kontos sperrt Ändern ohnehin. |
+| E-R4-45 | **`ingest_tag_offen()` fragt nur noch den Tag; fehlt die Spalte (Deploy-Fenster), gilt der Tag als offen.** Der Weg über zwei Tabellen fällt ganz weg. | Umsetzung (R4-15) | Dasselbe wie bei `rest_segments` vor dessen Migration; die Zeitprüfung gegen `day` deckt den Schaden. Den alten Weg als Rückfall zu behalten hieße, die Abfrage zu behalten, die Nr. 158 abschaffen will. |
+| E-R4-46 | **Ein Tag ohne `started_at` bekommt den Tag selbst, 00:00, als Anker** — in der Migration und beim Einspielen. | Umsetzung (R4-15) | Q-R4-09 sagt „Rückfall `started_at`"; ohne einen wäre „jetzt" die Migrationszeit, und die ist ausdrücklich falsch. `dt_anlegen()` setzt denselben Ersatz für `started_at` selbst. Örtlich trägt kein Tag NULL (0 von 1059). |
+| E-R4-47 | **Die Schemaprobe bekommt Fall 6: die Migration auf allen vier Fassungen, mit Randwerten und ohne `ON UPDATE`.** | Umsetzung (R4-15) | Die Abnahme „Plattformmatrix viermal grün" hätte ohne ihn nur das frische Schema belegt (F-R4-48). |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -1110,6 +1153,28 @@ nur diese Stellen.
 viermal grün; Ingestprobe grün mit dem neuen Fall; Kreisläufe 0.
 *Stufe:* **Web Neben, Migration — `update.php` nach dem Deploy.**
 *Fächerung:* keine.
+**Erledigt 27.09.2026 — mit Web 21.3.0, Migration
+`2026_09_27_days_created_at`: nach dem Deploy `update.php` (P-R4-05).**
+`schema.sql` (Spalte und Vorabliste), Migration in drei Schritten über
+`db_hat_spalte()`/`db_spalte_nullbar()`, Rückfall `started_at`, ohne eines der
+Tag (E-R4-46), gekappt; `ingest_tag_offen($pdo, $dayId)` fragt den Tag
+(E-R4-45), der Aufruf verliert zwei Argumente; `backup_lib.php` setzt den
+Anker beim Einspielen. Von den vier `INSERT INTO days` braucht nur dieses
+eine eine Zeile: `dt_anlegen()` bekommt die Vorgabe der Spalte, und die zwei
+in `migration_lib.php` laufen vor der neuen Migration. Nutzlast unverändert.
+Ingestprobe Fall 14, 8b angepasst (F-R4-47); Schemaprobe Fall 6 (E-R4-47);
+`Technik.md` Datenmodell und 4.99a2, JSON-Vertrag 5, Backup-Format 4.
+*Gemessen:* `update.php` örtlich an **1059** Tagen: 990 = `started_at`,
+69 mit Beginn in der Zukunft auf jetzt gekappt, 0 NULL, Spalte `timestamp`
+NOT NULL, Vorgabe `current_timestamp()`, `extra` leer; danach 0 Migrationen
+offen. Schemaprobe **4 × 40** (vorher 4 × 30), ohne Kappung und Vorgabe
+**4 × 8 Fehlschläge**. Ingestprobe **88 / 88**; gegen `ingest.php` aus
+`HEAD` Fall 14 **rot** (zweimal, F-R4-49). Wiederherstellungsprobe
+**115 / 115**, Komplettprobe **75 / 75**. Demo-Reset danach: 21 Tage, 18
+mit `started_at` als Anker, 3 mit Beginn in der Zukunft auf den Reset
+gekappt. Erster Prüfstand **1 rot** (`jobprobe`, F-R4-50 — die Probe, nicht
+das Paket), danach die Probe berichtigt und der Prüfstand wiederholt.
+**Nicht gemessen:** die Migration auf der Datenbank des Hosters — P-R4-05.
 
 **R4-16 Referenzbestand: Nachtdienst, Fixture und Referenz neu** — Nr. 275,
 323 (H-R4-03). Ein luftgebundener Nachtdienst als D22 (Einsätze vor und

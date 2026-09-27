@@ -14,6 +14,60 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.3.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-15. **Nebenstufe mit Migration** —
+nach dem Deploy muss eine Administratorin **`update.php`** aufrufen
+(`2026_09_27_days_created_at`); bis dahin lässt die Kette den Wartungsmodus
+an.
+
+### Geändert
+
+- **Der Diensttag trägt `created_at`** (Nr. 158, Q-R4-09). Ob Geräte Beginn
+  und Ende eines Diensttags noch fortschreiben, hing am jüngsten Anlegen
+  seiner übrigen Einsätze und Ruhesegmente. Das war eine Abfrage über zwei
+  Tabellen für eine Frage, und ein Tag ohne übrige Datensätze hatte keinen
+  Anker und galt als offen — auch ein alter, dessen Einsätze alle gelöscht
+  waren: Ein neues Paket mit plausiblen Zeiten schrieb dessen Zeitraum um.
+  Jetzt fragt `ingest_tag_offen()` den Tag: 72 Stunden ab dem Augenblick, in
+  dem der Server ihn angelegt hat. Ein nachgelieferter Dienst bleibt offen,
+  denn sein Tag entsteht mit dem ersten Paket.
+- **Das Fenster gleitet nicht mehr** (F-R4-46). Bis hierher verlängerte jeder
+  neue Datensatz die Zeit, in der ein Tag offen war. Jetzt zählt der Tag.
+  Ein Dienst, dessen Pakete über mehr als 72 Stunden nach dem ersten
+  eintreffen, und ein von Hand angelegter Tag, zu dem ein Gerät später als
+  72 Stunden danach liefert, verlängern ihren Zeitraum nicht mehr; die
+  Datensätze kommen in beiden Fällen an. Das ist der Preis dafür, die Regel
+  in einem Satz sagen zu können, und er trifft nur Lieferungen, die ohnehin
+  spät sind.
+
+### Migration
+
+- **`2026_09_27_days_created_at`** legt die Spalte in drei Schritten an, die
+  jeder für sich wiederholbar sind (NULL anlegen, füllen, NOT NULL mit
+  Vorgabe), wie die Vorlage für `rest_segments`. Die vorhandenen Tage
+  bekommen ihr `started_at`, ohne eines den Tag um 00:00, gekappt auf
+  1970-01-01 00:00:01 und auf jetzt. Die Migrationszeit bekommen sie nicht:
+  Mit ihr wäre jeder alte Tag nach dem Update drei Tage lang wieder offen.
+  Örtlich an 1059 Tagen gefahren: 990 tragen ihr `started_at`, 69 mit einem
+  Beginn in der Zukunft sind auf jetzt gekappt.
+- **Die Wiederherstellung** setzt den Anker ebenso — im Backup steht er
+  nicht, die Nutzlast bleibt. Im Deploy-Fenster vor `update.php` gilt ein
+  Tag als offen, wie ein Ruhesegment vor seiner Migration.
+
+### Werkzeug
+
+- **Schemaprobe, Fall 6:** die Migration auf allen vier Datenbankfassungen,
+  mit einem Tag ohne Beginn, einem in der Zukunft und zweien vor 1970, dazu
+  die Spaltendefinition **ohne `ON UPDATE`**. Mit MariaDB vor 10.10 bekäme
+  die erste TIMESTAMP-Spalte einer Tabelle ohne ausdrückliche Vorgabe eines,
+  und jede Änderung eines Diensttags öffnete sein Fenster neu. 4 × 40
+  Prüfungen; ohne Kappung und Vorgabe je 8 Fehlschläge.
+- **Ingestprobe, Teil 9, Fall 14:** ein alter Tag ohne Datensätze bleibt,
+  derselbe Tag mit frischem Anker wird fortgeschrieben. Fall 8b datiert jetzt
+  auch den Tag zurück, sonst galt sein in der Probe frisch entstandener Tag
+  als offen.
+
 ## [Web 21.2.0] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-14. Nebenstufe ohne Migration.
