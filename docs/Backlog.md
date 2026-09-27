@@ -51,7 +51,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340 bis 345 | 26.09.2026 |
+| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340 bis 346 | 26.09.2026 |
 | ab 350 | frei — höchste vergebene Nummer 341; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 26.09.2026 |
 
 ---
@@ -1042,46 +1042,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel PK seit 26.09.2026 (R4-01, Q-R4-12): `auslieferung.yml` gehört der
      Kette (PK-06 bis PK-08).
 
-271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr Ton bleibt „info", auch wenn ein Fehler darin steht.** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Gefunden bei der AP8-Vermessung (Schritt 15, 22.09.2026) in
-     `assets/schneiden.js`. Die Stelle erzeugt keine Meldung, sondern einen
-     *Platz* für eine: `<div class="meldung meldung-info" role="status"
-     data-vorher><p></p></div>`, später dreimal per `textContent` befüllt. Zwei
-     Abweichungen vom Baustein: **kein Symbol** (`EdHtml.meldung()` setzt eines
-     ein — das wäre eine sichtbare Änderung im Schnittblock), und **der Ton
-     wechselt nie**, so dass Sätze wie „Das Ende liegt vor dem Beginn." in
-     blauer Hinweisfläche stehen statt in roter. Das zweite ist fachlich
-     falsch. **Nicht in Schritt 15 behoben** (E-ZE-10: das Paket ändert kein
-     Verhalten); die Zählzeile Z37 endet deshalb bei 4 statt 0. Beim Anfassen
-     mitzudenken: Der Anker `data-vorher` hängt am Wrapper, den
-     `EdHtml.meldung()` nicht mit Attributen versieht — entweder bekommt die
-     Funktion einen Weg dafür, oder der Anker wandert nach innen.
-
-272. **`<p class="meldung">` im Entsperrdialog ist gar keine Meldung.** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Gefunden bei derselben Vermessung, in `assets/unlock.js`. Dort steht ein
-     Absatz mit der Klasse `meldung` — **ohne** Tonklasse, **ohne** Symbol,
-     **ohne** `role`. Er trägt den Namen des Bausteins, ist aber keiner; das
-     Zählmuster von Z37 hält ihn trotzdem für einen. Zwei Folgen: Die Zeile
-     zählt einen Nachbau, den es nicht gibt (Z37 endet bei 4), und der Absatz
-     bekommt aus `style.css` Regeln, die für einen Kasten gedacht sind.
-     **Nicht in Schritt 15 behoben:** Ihn auf den Baustein umzustellen gäbe
-     ihm einen farbigen Kasten mit Symbol — eine sichtbare Änderung im
-     Entsperrdialog, und die war nicht beauftragt.
-
-273. **Eine dritte Schreibweise für Dauern, die kein Zählmittel sieht.** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Gefunden in Schritt 15 AP8d, aber **nicht** von der Zählzeile Z34: Die
-     misst über eine Namensliste und kennt `dauer()` in `assets/schneiden.js`
-     nicht. Gefunden hat sie erst eine Gegenprobe über das Muster der
-     *Rechnung* (`Math.floor(s / 3600)`). Die Funktion schreibt
-     **„1 h 6 min" mit Leerzeichen**, während der Rest der Anwendung seit
-     AP8d durchgängig „1h 06min" schreibt; dazu trägt sie denselben
-     Rundungsfehler, den AP8d in `EdFormat.dauer()` behoben hat (getrennte
-     Rechnung von Stunden und Minuten erzeugt bei 3599 s ein „60min").
-     **Nicht umgestellt**, weil es eine sichtbare Änderung im Schnittblock
-     wäre und die drei sichtbaren Änderungen von AP8d einzeln freigegeben
-     wurden — diese war nicht darunter. Beim Anfassen: `EdFormat.dauer(s)`
-     genügt, der Leerwert ist dort nicht erreichbar (`Math.max(0, …)`).
-
 275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — laut Handbuch „der klassische Fall".** · gehört zu: 17 · Stand: offen · seit 22.09.2026
      Befund (Schritt 15 AP9b, in Ortszeit; Zahl berichtigt mit Konzept R4,
      F-R4-05, nachgemessen am 26.09.2026): 2 von 20 aktiven Diensttagen des
@@ -1346,3 +1306,18 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      schreiben beide Werte in einer Transaktion oder sagen, was geschrieben
      ist. *Abnahme:* ein gescheitertes `app_state_setzen()` (Probe mit
      gesperrter Tabelle) ergibt eine Fehlermeldung statt „gespeichert".
+
+346. **Zwei Meldungen im Browser noch von Hand: der Hinweis `patwarn` und der Papierkorb-Hinweis des Diensttags.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-13 (F-R4-42).* Die Zählzeile Z37 sieht
+     seit R4-13 auch die Zuweisung `className = '…meldung'` und fand damit
+     zwei Nachbauten, die das alte Muster nicht sah: in `assets/patient.js`
+     den Hinweis `patwarn` (ohne Symbol — der Kommentar dort sagt, weil
+     `symbol.js` beim Aufbau noch fehlen kann) und in `index.php` den
+     Hinweis „Dieser Diensttag liegt im Papierkorb" als `<p>` mit
+     `meldung meldung-warn`. Beide sehen anders aus als jede andere Meldung.
+     **Nicht in R4-13 umgestellt:** Sie liegen außerhalb von Nr. 271–273,
+     beide wären eine sichtbare Änderung, und bei `patwarn` hängt es an der
+     Ladereihenfolge von `edSymbol()`. *Weg:* über `EdHtml.meldung()`, für
+     `patwarn` erst nachsehen, ob `symbol.js` zur Aufrufzeit steht (die
+     Immer-Liste kommt am Seitenende). *Abnahme:* Z37 **2** (nur `html.js`),
+     Bilderlauf ohne Konsolenfehler.

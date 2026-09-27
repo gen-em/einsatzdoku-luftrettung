@@ -53,6 +53,9 @@ const ZH_FORMATIERER = [
     'server/index.php'              => ['fmtDay'],
     'server/einsatz.php'            => ['fmtDay', 'fmtKm', 'fmtDauer'],
     'server/zeitraum.php'           => ['fmtKmDe', 'wertKm', 'wertKmSumme', 'fmtTagKurz'],
+    // R4-13 (Nr. 273): die dritte Dauer-Schreibweise stand hier; gefunden
+    // hatte sie erst eine Gegenprobe ueber das Muster der Rechnung.
+    'server/assets/schneiden.js'    => ['dauer'],
 ];
 
 return [
@@ -435,11 +438,9 @@ return [
           . 'fuenf — und drei von ihnen stehen im Export-Objekt von '
           . 'EdMissionTable, das zeitraum.php als Alias nimmt. '
           . 'DIE ZEILE MISST UEBER EINE NAMENSLISTE und sieht deshalb '
-          . 'keinen neu erfundenen Formatierer. Zwei hat erst eine '
-          . 'Gegenprobe ueber das Muster der RECHNUNG gefunden: '
-          . 'luftlinie.js (umgestellt, 57 143 Werte zeichengleich) und '
-          . 'schneiden.js mit einer DRITTEN Dauer-Schreibweise '
-          . '(Backlog Nr. 273, nicht umgestellt — sichtbare Aenderung).',
+          . 'keinen neu erfundenen Formatierer; luftlinie.js und schneiden.js '
+          . 'hat erst eine Gegenprobe ueber das Muster der RECHNUNG gefunden '
+          . '(beide umgestellt, schneiden.js mit R4-13, Nr. 273).',
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline',
  'ausser' => ['server/assets/format.js'],
  'regel' => ['art' => 'eigen', 'name' => 'js_formatierer'],
@@ -476,17 +477,19 @@ return [
  'grund' => 'EdHtml.meldung(ton, text) in assets/html.js. Gemessen in der Sicht '
           . 'js_und_inline — eine breite Suche ueber den Quelltext zaehlt das '
           . 'PHP-Markup mit (35 Erwaehnungen in 15 Dateien) und misst etwas anderes. '
-          . 'VIER BLEIBEN. Zwei davon sind die Zentrale selbst (html.js, zwei '
-          . 'Treffer in einer Funktion: Tonklasse und Aktionszeile). Die dritte '
-          . 'ist schneiden.js, eine LEERE Huelle mit data-vorher als Anker, die '
-          . 'spaeter per textContent befuellt wird; sie traegt kein Symbol, und '
-          . 'eines einzusetzen waere eine sichtbare Aenderung im Schnittblock '
-          . '(Backlog Nr. 271). Die vierte ist unlock.js und gar keine Meldung: '
-          . 'ein p-Element mit der Klasse meldung, ohne Tonklasse, ohne Symbol, '
-          . 'ohne role — ein Fehlalarm des Musters und zugleich ein Missbrauch '
-          . 'der Klasse (Backlog Nr. 272).',
+          . 'VIER BLEIBEN. Zwei sind die Zentrale selbst (html.js, zwei '
+          . 'Treffer in einer Funktion: Tonklasse und Aktionszeile). Seit R4-13 '
+          . 'zaehlt das Muster auch die ZUWEISUNG className = ...meldung: '
+          . 'schneiden.js (melde()) und unlock.js bauten ihre Meldung so, ohne '
+          . 'Symbol, und das Muster sah sie nicht (F-R4-42); beide fuellen '
+          . 'jetzt leere Behaelter ueber EdHtml.meldung() (Nr. 271, 272). Die '
+          . 'erweiterte Zeile fand zwei weitere, und die bleiben bis Nr. 346: '
+          . 'patient.js (patwarn — ohne Symbol, weil symbol.js dort beim '
+          . 'Aufbau noch fehlen kann) und index.php (der Papierkorb-Hinweis '
+          . 'des Diensttags als p). Mit dem Muster von vor R4-13 gemessen: 2.',
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline', 'ausser' => [],
- 'regel' => ['art' => 'muster', 'muster' => '~class\s*=\s*[\'"\\\\]{0,3}meldung~'],
+ 'regel' => ['art' => 'muster',
+             'muster' => '~class\s*=\s*[\'"\\\\]{0,3}meldung|className\s*=[^;\n]*[\'"]meldung\b~'],
  'start' => 8, 'decke_jetzt' => 4, 'decke_ziel' => 0],
 
 /* ---- Uebergabe an 10c --------------------------------------------------- */

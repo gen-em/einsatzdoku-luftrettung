@@ -616,11 +616,10 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
 <script src="<?= asset('assets/schluessel.js') ?>"></script>
 <script src="<?= asset('assets/rueckfrage.js') ?>"></script>
 <?php endif; ?>
-<script src="<?= asset('assets/html.js') ?>"></script>
 <?php /* Die eine Vorschlagsliste (E-S9-07). Sie loest an den
          Besatzungsfeldern des Diensttags die native <datalist> ab, die auf dem
-         Handy oft gar nichts zeigte (Backlog 68). Sie braucht EdHtml.escape
-         und steht deshalb nach html.js. */ ?>
+         Handy oft gar nichts zeigte (Backlog 68). Sie braucht EdHtml.escape;
+         html.js steht seit Web 21.1.11 im Kopf jeder Seite. */ ?>
 <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole,
@@ -628,8 +627,8 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
          zeitraum.php, seit Schritt 15 AP9b. */
       ui_tabellen_bootstrap(); ?>
 <?php /* missiontable.js liefert die gemeinsamen Bausteine der drei
-         Einsatztabellen. Muss NACH html.js stehen: Die Datei liest EdHtml
-         schon beim Laden. */ ?>
+         Einsatztabellen. Sie liest EdHtml schon beim Laden — html.js steht
+         dafuer im Kopf (seit Web 21.1.11). */ ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
@@ -637,7 +636,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
-<?php /* Der Schnitt (S4/A2b). Muss NACH html.js stehen (er liest EdHtml) und
+<?php /* Der Schnitt (S4/A2b). Er liest EdHtml (html.js, im Kopf) und steht
          VOR dem Block unten, der `EdSchnitt.starten()` ruft. `zeitfeld.js`
          ruestet die Felder des Schneide-Bereichs nach — es beobachtet das
          Dokument und erfasst auch spaeter erzeugte Felder, die erzeugende

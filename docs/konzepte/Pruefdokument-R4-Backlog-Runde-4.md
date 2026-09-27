@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-12 erledigt**, Web 21.1.10 (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-13 erledigt**, Web 21.1.11 (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -124,6 +124,10 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-12 | `php tools/spaltenregister/pruefen.php --selbstprobe`; ohne Schalter | beide Formen, Register vollständig | **19 / 19**; „jede Spalte genau einmal, drei Abbildungen vollständig" |
 | R4-12 | `kreislauf.py --art edbak --frisch`; `--art csv --frisch` | Einspielen und Import über die neuen Listen | **328 772** Einzelvergleiche, **0 unerklärt**, 23 erwartet; **10 922**, **0 unerklärt**, 1 271 erwartet |
 | R4-12 | `proben.sh wiederherstellung`, `ingest`, `spur`, `gpx` | die übrigen umgestellten Schreibwege | **115 / 115**, **86 / 86**, **45 / 45**; GPX erst **94 / 96** (Teil 2: „204 von 204 ohne Gegenstück" — Demo-Reset um 06:59, F-R4-40), nach `hochfahren.sh --neu` **96 / 96** |
+| R4-12 | `bash tools/pruefstand/pruefen.sh` über den Baum des Commits `831c8e8` (Bericht im Commit) | Stufe `klein` | **0 rot, 0 nicht gemessen, 45 grün**, 1033 s; Baum `cbb4414a` |
+| R4-13 | `zaehlen.php` (Z34, Z37); Z37 mit dem Muster von vor R4-13; beide gegen `server/` aus `HEAD` (Kopie im Scratchpad) | Nr. 271–273, F-R4-42 | Z34 **5 / 5**, Z37 **4 / 4** (`html.js` 2, `patient.js` 1, `index.php` 1 → Nr. 346); altes Muster **2**; alt Z34 **6**, Z37 **8** („DRUEBER") |
+| R4-13 | `grep -c "'assets/html.js'"` je Datei in `server/*.php`, `HEAD` gegen jetzt | E-R4-40 | **9** Einbindungen in 8 Dateien → **1** (`ui.php`, `ui_seite_start()`) |
+| R4-13 | `node tools/screenshots/aufnehmen.mjs --nur 12a-schnitt-grund,12b-schnitt-vorschau` | Abnahme: Schnittblock mit Symbol, roter Grund, „1h 06min" | **6 Bilder, 0 Überlauf, 0 Konsolenfehler**, 0 Knöpfe falscher Höhe; im Bild „Das Ende liegt vor dem Beginn." (`meldung-fehler` mit Symbol) und die Vorschau „… · 1h 06min." |
 
 ## 3. Im Browser geprüft
 
@@ -135,6 +139,8 @@ Die Konzeptphase änderte keine Seite; die Anlage lief (HTTP 200 auf
 | R4-05 | `einstellungen.php?t=standorte#standorte`, Admin-Prüfkonto; Chromium, Firefox, WebKit | Fokus vorher `BODY`, nachher **`INPUT#sdbase-name`** in allen drei |
 | R4-06 | `einsatz.php` nach dem Entsperren, Demo-Konto, Chromium 1280 px; drei Einsätze mit „Manueller Ort" (398, 428, 499), einer ohne (394); Demo-Marke vorher geschoben, danach zurück | Karte Einsatz: **„Abfahrtort" mit Schloss** zwischen „Beschreibung Einsatzort" und „Diagnose" bei allen drei (Einsatz 499: „Zwischenhalt Parkplatz Talstation"); bei 394 **keine** Zeile. Konsolenfehler nur die Kartenkacheln ohne Netz (`ERR_TOO_MANY_RETRIES`) |
 | R4-08 | Bilderlauf, 780 Bilder in zehn Breiten; eigens angesehen `40b-nutzerinnen-support-1024` | Support-Sicht: drei Kacheln, Liste ohne Konten mit Rechten; die Spalte „Öffnen" bei 1024 px angeschnitten (F-R4-30, Nr. 342) |
+| R4-13 | `index.php?day=…` (Tag aus `__TAG_SCHNITT__`), Demo-Konto, Chromium 1280 px: Schneiden, Ende gleich Beginn | `meldung-fehler` mit Warnsymbol, `role="alert"`, „Das Ende liegt vor dem Beginn."; danach gültige Zeiten → `meldung-info` mit „… · 1h 06min." |
+| R4-13 | Entsperrdialog auf `einsatz.php`, Demo-Konto, Chromium: „Entsperren" mit leerem Feld | `meldung-fehler` mit Warnsymbol, „Bitte das Kontopasswort eingeben."; **0 Seitenfehler** |
 
 ## 4. Prüfliste für die Betreiberin
 
@@ -156,6 +162,7 @@ ist. Die Umsetzung hängt je Paket ihre Punkte an (P-R4-06 ff.).
 | P-R4-11 | Nach dem Deploy von Web 21.1.8 auf Staging: Verwaltung → NutzerInnen, ein Wegwerfkonto anlegen, auf seiner Kontoseite „Konto löschen" (Adresse abtippen, Backups mitlöschen). Danach Verwaltung → Protokoll, Reiter Verwaltung, den Eintrag „Konto gelöscht" aufklappen. | Zurück auf der Liste, das Konto fehlt. Aufgeklappt: **sicherungen ja**, **weg verwaltung**. | Eine Fehlermeldung statt der Liste, das Konto steht noch da, oder der Eintrag hat keine Angabe `weg`. |
 | P-R4-12 | Nach dem Deploy von Web 21.1.9 auf Staging, je einmal: Verwaltung → Konto-Backups „Alle sichern"; Betrieb → Komplett-Backup „Jetzt sichern"; Verwaltung → Demo-Konto „Zurücksetzen". Nach jeder Meldung **F5** drücken. | Jede Handlung endet auf derselben Seite mit ihrer Meldung; F5 fragt nicht nach erneutem Senden, und die Meldung ist danach fort. Nach „Alle sichern" steht die Zahl der Backups einmal da, nicht zweimal. | Der Browser fragt „Formular erneut senden?", oder eine Handlung läuft zweimal (zwei Backups, zwei Protokolleinträge). |
 | P-R4-13 | Nach dem Deploy von Web 21.1.9 auf Staging, falls ein SFTP-Ziel eingetragen ist: das Ziel prüfen (Abdruck wird übernommen), dann in „Bearbeiten" den Rechnernamen ändern und speichern. | Meldung „… Der Hostschlüssel wurde vergessen, weil sich der Rechner geändert hat"; die nächste Prüfung übernimmt den neuen Abdruck. Danach den alten Namen zurück. | Keine solche Meldung, und die nächste Prüfung scheitert mit „ANDERER Hostschlüssel". |
+| P-R4-14 | Nach dem Deploy von Web 21.1.11 auf Staging, in einem neuen Tab (Schlüssel gesperrt): einen Einsatz öffnen, im Entsperrdialog ohne Passwort „Entsperren". Danach entsperren, auf einem Diensttag mit Ruheabschnitt „Schneiden" wählen und als Ende die Beginnzeit eintragen. | Beide Male eine **rote** Meldung mit Warndreieck; nach gültigen Zeiten eine blaue mit der Dauer in der Form „1h 06min". | Eine Meldung ohne Symbol, ein Grund in Blau, „1 h 6 min" (alter Stand) — oder ein Konsolenfehler `EdHtml is not defined`. |
 
 ## 5. Grenzen der benutzten Prüfmittel
 

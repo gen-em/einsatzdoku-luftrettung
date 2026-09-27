@@ -320,7 +320,6 @@ ui_seite_start(['titel' => 'Import / Export']);
     <script src="<?= asset('assets/vendor/xlsx.full.min.js') ?>"></script>
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
     <?php ui_krypto_bootstrap(['csrf' => true, 'einzug' => '    ']); ?>
-    <script src="<?= asset('assets/html.js') ?>"></script>
     <?php /* Passwortguete fuer das Archivpasswort des Exports (B9, M2-03). */ ?>
     <script src="<?= asset('assets/pwquality.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>

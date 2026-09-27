@@ -167,6 +167,24 @@
       ]
     },
     {
+      "name": "12a-schnitt-grund",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__TAG_SCHNITT__",
+      "vorher": [
+        "schnitt-grund"
+      ]
+    },
+    {
+      "name": "12b-schnitt-vorschau",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__TAG_SCHNITT__",
+      "vorher": [
+        "schnitt-vorschau"
+      ]
+    },
+    {
       "name": "12-einsatzansicht",
       "gruppe": "Inhalt",
       "rolle": "demo",

@@ -139,6 +139,16 @@ function ui_seite_start(array $o): void
      * nichts haengt und von mehr als einer Seite gebraucht wird, gehoert
      * in den Kopf. Alles andere in die Immer-Liste oder zur Seite. */
     $zeilen[] = '<script src="' . ui_asset('assets/format.js') . '"></script>';
+
+    /* `assets/html.js` (EdHtml: Maskierung und das Meldungs-Markup) NACH
+     * DERSELBEN REGEL (Web 21.1.11, R4-13): Es setzt `window.EdHtml`, haengt
+     * an nichts — `edSymbol()` liest es erst beim Aufruf — und wird von mehr
+     * als einer Seite gebraucht. Bis dahin luden es acht Seiten je einzeln,
+     * und `unlock.js`, das seit R4-13 ueber `EdHtml.meldung()` meldet, hinge
+     * an einer Zeile, die jede Seite mit `ui_krypto_bootstrap()` von Hand
+     * setzen muesste — die sieben heutigen tun es, eine neue vergaesse es
+     * still. */
+    $zeilen[] = '<script src="' . ui_asset('assets/html.js') . '"></script>';
     $zeilen[] = '</head>';
 
     $klasse = (string)($o['klasse'] ?? '');

@@ -126,7 +126,6 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
     </section>
 <?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>
-<script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole, Katalogspalten)
          — seit Schritt 15 AP9b an EINER Stelle, ui_tabellen_bootstrap() in

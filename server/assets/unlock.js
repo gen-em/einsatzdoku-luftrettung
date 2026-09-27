@@ -88,10 +88,11 @@ const EdUnlock = (() => {
   function baueDialog() {
     const d = document.createElement('dialog');
     /* Markup und Klassen des Dialog-Bausteins aus P3/O2 (.dialog, .feld,
-     * .knopf, .meldung) — dieselben wie serverseitig in ui.php. Die
-     * Meldungszeile benutzt den Meldungs-Baustein ohne Symbol: Sie wechselt
-     * zwischen Hinweis („Schlüssel wird abgeleitet …") und Fehler, und das
-     * sagt hier die Farbe samt Text. */
+     * .knopf) — dieselben wie serverseitig in ui.php. Die Meldungszeile
+     * wechselt zwischen Hinweis („Schlüssel wird abgeleitet …") und Fehler
+     * und kommt seit Web 21.1.11 aus EdHtml.meldung(), mit Symbol wie jede
+     * andere Meldung (unten, `melde()`). Hier stand, sie benutze den
+     * Baustein „ohne Symbol" — sie benutzte ihn gar nicht (Nr. 272). */
     d.className = 'dialog';
     d.innerHTML =
       '<div class="dialog-kopf"><h2>Geschützte Angaben entsperren</h2></div>' +
@@ -103,7 +104,7 @@ const EdUnlock = (() => {
       '    <input class="feld-eingabe" type="password" name="password"' +
       ' autocomplete="current-password">' +
       '  </label></div>' +
-      '  <p class="meldung" data-msg hidden></p>' +
+      '  <div data-msg hidden></div>' +
       '</div>' +
       '<div class="dialog-fuss">' +
       '  <button type="button" class="knopf knopf-leise" data-act="no">Abbrechen</button>' +
@@ -133,9 +134,14 @@ const EdUnlock = (() => {
         resolve(v);
       }
 
+      /* AUS DEM BAUSTEIN (Web 21.1.11, Backlog Nr. 272). Hier stand ein
+       * `<p class="meldung">` ohne Tonklasse, ohne Symbol, ohne `role`, dem
+       * `melde()` die Klassen nachtraeglich zuwies — der Name des Bausteins,
+       * aber keiner. Jetzt ist der Platz ein leerer Behaelter, und die
+       * Meldung kommt aus EdHtml.meldung() (html.js steht im Kopf jeder
+       * Seite). */
       function melde(text, art) {
-        msg.textContent = text;
-        msg.className = 'meldung ' + (art === 'err' ? 'meldung-fehler' : 'meldung-info');
+        msg.innerHTML = EdHtml.meldung(art === 'err' ? 'fehler' : 'info', text);
         msg.hidden = false;
       }
 

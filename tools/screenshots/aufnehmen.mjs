@@ -822,6 +822,23 @@ async function platzhalter() {
     if (m) { p['__EINSATZ_WINDE__'] = `einsatz.php?id=${m.id}`; break; }
   }
 
+  /* __TAG_SCHNITT__: ein Diensttag, dessen ERSTES Ruhesegment mit Punkten
+     mindestens 70 Minuten dauert (R4-13, Nr. 271/273). Die Bedienschritte
+     `schnitt-grund` und `schnitt-vorschau` oeffnen dessen Schneide-Bereich —
+     das erste „Schneiden" auf der Seite — und brauchen Platz fuer eine
+     Auswahl von 66 Minuten. Gesucht ueber den Inhalt, wie oben. */
+  p['__TAG_SCHNITT__'] = null;
+  for (const t of tagListe) {
+    const i = await tagInhalt(t.id);
+    const segs = ((i && i.rest_segments) || []).filter((r) => r.n > 0);
+    const erstes = segs[0];
+    if (erstes && erstes.bis_ts != null && erstes.bis_ts - erstes.von_ts >= 70 * 60
+        && !(erstes.schnitte || []).length) {
+      p['__TAG_SCHNITT__'] = `index.php?d=${t.id}`;
+      break;
+    }
+  }
+
   const fehlend = Object.entries(p).filter(([, v]) => v === null).map(([k]) => k);
   if (fehlend.length) {
     console.log('NICHT AUFGELÖST (diese Seiten werden nicht fotografiert): '
@@ -890,7 +907,8 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 
 async function vorher(seite, schritte, fehlerSammler) {
   const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
-                   'notfallblatt', 'code-schritt', 'codeblatt'];
+                   'notfallblatt', 'code-schritt', 'codeblatt',
+                   'schnitt-grund', 'schnitt-vorschau'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
@@ -1032,6 +1050,41 @@ async function vorher(seite, schritte, fehlerSammler) {
         fehlerSammler.push('Codeblatt ohne zehn Codes — nicht angemeldet, oder das '
                          + 'Format wurde abgewiesen.');
       }
+      continue;
+    }
+    if (schritt === 'schnitt-grund' || schritt === 'schnitt-vorschau') {
+      /* DER SCHNEIDE-BEREICH MIT SEINER MELDUNG (R4-13, Nr. 271, 273).
+         `schnitt-grund`: Ende gleich Beginn — der Grund „Das Ende liegt vor
+         dem Beginn." muss als rote Meldung mit Symbol stehen.
+         `schnitt-vorschau`: Beginn des Segments bis 66 Minuten danach — der
+         Erklaertext nennt die Dauer, „1h 06min".
+         DER SCHRITT SCHREIBT NICHTS: „Einsatz erzeugen" drueckt niemand. Die
+         Seite zeichnet die Segmentliste nach dem Laden; gewartet wird auf den
+         Knopf, nicht auf eine Zeit. */
+      const auf = seite.locator('[data-schnitt-auf]').first();
+      try { await auf.waitFor({ state: 'visible', timeout: 10000 }); } catch {
+        fehlerSammler.push('Kein „Schneiden" auf der Seite — hat der Tag aus '
+                         + '__TAG_SCHNITT__ kein Ruhesegment mit Punkten mehr?');
+        continue;
+      }
+      if ((await auf.getAttribute('aria-expanded')) !== 'true') {
+        await auf.click();
+      }
+      const bereich = seite.locator('[data-schnitt-fuer]').first();
+      await bereich.waitFor({ state: 'visible', timeout: 5000 });
+      const beg = bereich.locator('input[id^="s-beg-"]');
+      const end = bereich.locator('input[id^="s-end-"]');
+      const start = await beg.inputValue();
+      let ziel = start;
+      if (schritt === 'schnitt-vorschau') {
+        const [h, m] = start.split(':').map(Number);
+        const min = (h * 60 + m + 66) % 1440;
+        ziel = String(Math.floor(min / 60)).padStart(2, '0') + ':'
+             + String(min % 60).padStart(2, '0');
+      }
+      await end.fill(ziel);
+      await end.dispatchEvent('input');
+      await seite.waitForTimeout(300);
       continue;
     }
     if (schritt === 'schublade') {

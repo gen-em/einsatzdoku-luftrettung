@@ -2865,18 +2865,17 @@ ui_seite_start(['titel' => 'Einstellungen',
 
     <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
     <script src="<?= asset('assets/locparse.js') ?>"></script>
-    <?php /* html.js (EdHtml.escape) und vorschlagsliste.js (EdVorschlaege)
-             gehoeren zur Ortsfeld-Komponente, seit die Trefferliste ein
-             eigener Baustein ist (S9/AP1, E-S9-07). Reihenfolge = Abhaengigkeit.
+    <?php /* vorschlagsliste.js (EdVorschlaege) gehoert zur Ortsfeld-
+             Komponente, seit die Trefferliste ein eigener Baustein ist
+             (S9/AP1, E-S9-07). Reihenfolge = Abhaengigkeit.
 
-             html.js STEHT IN DIESER DATEI ZWEIMAL — hier und im Reiter
-             „Backup". Das geht, weil die Reiter einander ausschliessen
-             (`elseif`), und es geht NUR deshalb: Die Datei deklariert auf
-             oberster Ebene ein `const`, und eine zweite Deklaration im selben
-             Dokument ist ein SyntaxError, der das ganze zweite Skript
-             verwirft. Genau diese Falle hat F-12 schon einmal gekostet. Wer
-             die Reiterstruktur aendert, prueft beide Stellen. */ ?>
-    <script src="<?= asset('assets/html.js') ?>"></script>
+             html.js (EdHtml.escape) STAND HIER UND IM REITER „BACKUP" — zweimal
+             in einer Datei, und das ging nur, weil die Reiter einander
+             ausschliessen: html.js deklariert auf oberster Ebene ein `const`,
+             und eine zweite Deklaration im selben Dokument ist ein
+             SyntaxError (F-12). Seit Web 21.1.11 steht es im Kopf jeder Seite
+             (ui_seite_start()), und die Falle gibt es nicht mehr — wer es
+             hier wieder einbindet, stellt sie neu auf. */ ?>
     <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
     <script src="<?= asset('assets/geocoder.js') ?>"></script>
     <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
@@ -3168,13 +3167,12 @@ ui_seite_start(['titel' => 'Einstellungen',
                                'guete' => true, 'einzug' => '    ']); ?>
     <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife
              (Baustein B8), die der Backup-Lauf seit Web 4.6.0 benutzt. */ ?>
-    <?php /* html.js liefert EdHtml.meldung() UND EdHtml.escape() -- melde()
+    <?php /* html.js (im Kopf jeder Seite) liefert EdHtml.meldung() UND EdHtml.escape() -- melde()
              baut sein Markup seit Schritt 15 AP8 darueber, und die Maskierung
              steckt dort mit drin. Dass sie noetig ist, bleibt wahr: In dem
              Satz, den melde() nach einem gescheiterten Einspielen zeigt,
              steckt eine Fehlermeldung, die aus einer fremden Datei stammen
              kann. */ ?>
-    <script src="<?= asset('assets/html.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
     <?php /* zip.js: Seit Containerfassung 4 (S2/AP5) ist ein Backup ein
              ZIP mit versiegelten Teilen — geschrieben beim Sichern, gelesen

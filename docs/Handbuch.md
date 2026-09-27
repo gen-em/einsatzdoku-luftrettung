@@ -1134,8 +1134,12 @@ Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
    Klinik. Alles Weitere trägst du danach im Einsatz nach; zum Schneiden
    genügen Beginn und Ende.
 4. **„Einsatz erzeugen"**. Unter den Feldern steht vorher in Worten, was
-   passiert: welchen Zeitraum der Einsatz bekommt und welche Reste als
-   Ruhesegment stehen bleiben.
+   passiert: welchen Zeitraum der Einsatz bekommt, wie lange er dauert
+   (etwa „1h 06min", seit Web 21.1.11 wie überall in der Anwendung) und
+   welche Reste als Ruhesegment stehen bleiben. Passt die Auswahl nicht —
+   das Ende liegt vor dem Beginn, oder eine Zeit liegt außerhalb des
+   Segments —, steht dort stattdessen **rot**, warum, und der Knopf bleibt
+   gesperrt.
 
 **Die Punkte wandern, sie werden nicht kopiert.** Nach dem Schnitt liegt die
 Fahrt beim Einsatz und **nicht mehr** im Ruhesegment. Das ist gewollt: Sonst

@@ -269,7 +269,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
          braucht (`ui_csrf_bootstrap()`, E-P5c-130). Fehlt es, antwortet der
          Vorschau-Endpunkt 403, und die Plakette steht auf „nicht aktuell". */ ?>
 <?php ui_csrf_bootstrap(); ?>
-<?php /* html.js (EdHtml.meldung) VOR dem Vorschauskript — es steht in keiner
-         Immer-Liste; api.js (EdApi) steht im Kopf jeder Seite. */ ?>
+<?php /* html.js (EdHtml.meldung) und api.js (EdApi) stehen im Kopf jeder
+         Seite (ui_seite_start(); html.js seit Web 21.1.11). */ ?>
 <?php ui_seite_ende(['skripte' => ['assets/forms.js', 'assets/kopieren.js',
-                                   'assets/html.js', 'assets/rechtstext_vorschau.js']]); ?>
+                                   'assets/rechtstext_vorschau.js']]); ?>

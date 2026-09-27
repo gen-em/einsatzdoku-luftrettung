@@ -7747,5 +7747,18 @@ declare(strict_types=1);
  *   Namen. `mf_spalten()` liefert weiter blosse Namen, weil vier Aufrufer
  *   sie als Schluessel brauchen (Q-R4-22). Das Formular quotierte schon von
  *   Hand; auch das geht jetzt ueber die eine Stelle.
+ *
+ * 21.1.11 — MELDUNGEN AUS DEM BAUSTEIN, DAUER AUS EdFormat (Schritt 17,
+ *   R4-13, Nr. 271, 272, 273). Korrekturstufe ohne Migration. Der Satz im
+ *   Schneide-Bereich war eine leere Huelle mit fester Klasse `meldung-info`
+ *   — ein Grund wie „Das Ende liegt vor dem Beginn." stand blau und ohne
+ *   Symbol. Jetzt fuellt `EdHtml.meldung()` einen leeren Behaelter, mit
+ *   `fehler` fuer Gruende und `info` fuer den Erklaertext; dasselbe fuer die
+ *   Rueckmeldung ueber der Segmentliste und fuer die Meldungszeile im
+ *   Entsperrdialog, die den Namen des Bausteins trug, aber keiner war. Die
+ *   Dauer dort kommt aus `EdFormat.dauer()` — „1h 06min" statt „1 h 6 min",
+ *   ohne das „60 min" bei 3599 s. `html.js` steht dafuer im Kopf jeder Seite
+ *   statt auf acht Seiten einzeln. Die Zaehlzeile Z37 sieht seither auch
+ *   `className = '…meldung'` und fand zwei weitere Nachbauten (Nr. 346).
  */
-const WEB_VERSION = '21.1.10';
+const WEB_VERSION = '21.1.11';

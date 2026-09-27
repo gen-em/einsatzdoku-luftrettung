@@ -1559,11 +1559,10 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>
-<?php /* html.js (EdHtml.escape) und vorschlagsliste.js (EdVorschlaege) VOR
-         ortsfeld.js: Die Komponente baut ihre Trefferliste beim Aufbau, und
-         der Baustein muss dann stehen. Die Reihenfolge ist die Abhaengigkeit,
-         nicht der Zufall (E-S9-07). */ ?>
-<script src="<?= asset('assets/html.js') ?>"></script>
+<?php /* vorschlagsliste.js (EdVorschlaege) VOR ortsfeld.js: Die Komponente
+         baut ihre Trefferliste beim Aufbau, und der Baustein muss dann
+         stehen. Die Reihenfolge ist die Abhaengigkeit, nicht der Zufall
+         (E-S9-07). html.js (EdHtml.escape) steht seit Web 21.1.11 im Kopf. */ ?>
 <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
 <?php /* geocoder.js VOR ortsfeld.js und ortswahl.js: Beide fragen beim
          Aufbau, ob die Adresssuche an ist (S9/AP2, E-S9-05). */ ?>

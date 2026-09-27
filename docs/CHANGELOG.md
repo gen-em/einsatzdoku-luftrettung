@@ -14,6 +14,54 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.11] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-13. Korrekturstufe ohne Migration.
+
+### Behoben
+
+- **Ein Grund, der das Schneiden verhindert, steht rot** (Nr. 271). Unter
+  den Feldern des Schneide-Bereichs stand eine Meldungsfläche mit fester
+  Klasse `meldung-info`, die per `textContent` befüllt wurde: ohne Symbol,
+  und „Das Ende liegt vor dem Beginn." in blauer Hinweisfläche. Jetzt ist
+  der Platz ein leerer Behälter, den `EdHtml.meldung()` füllt — `fehler`
+  für einen Grund und für einen Fehlschlag des Servers, `info` für den
+  Satz, der beschreibt, was passieren wird. Die Rückmeldung über der
+  Segmentliste nach einem Schnitt kommt ebenfalls aus dem Baustein; sie
+  hatte bis dahin kein Symbol.
+- **Die Meldung im Entsperrdialog ist eine Meldung** (Nr. 272). Dort stand
+  ein Absatz mit der Klasse `meldung`, ohne Tonklasse, ohne Symbol, ohne
+  `role`, dem das Skript die Klassen nachträglich zuwies. Jetzt kommt sie
+  aus `EdHtml.meldung()`: „Bitte das Kontopasswort eingeben." steht rot mit
+  Warnsymbol, „Schlüssel wird abgeleitet …" blau mit Hinweiszeichen.
+- **Die Dauer im Schneide-Bereich schreibt sich wie überall** (Nr. 273,
+  freigegeben mit Q-R4-06). Eine eigene Funktion schrieb „1 h 6 min" mit
+  Leerzeichen und rechnete Stunden und Minuten getrennt — 3599 s ergaben
+  „60 min". Jetzt `EdFormat.dauer()`: „1h 06min", „1h 00min".
+
+### Geändert
+
+- **`html.js` steht im Kopf jeder Seite**, neben `api.js` und `format.js`.
+  Acht Seiten luden es einzeln — `einstellungen.php` zweimal, in zwei
+  einander ausschließenden Reitern, und nur deshalb ohne den SyntaxError,
+  den eine zweite Deklaration seines `const` auslöst. `unlock.js` meldet jetzt
+  über den Baustein und läuft auf jeder Seite mit geschützten Feldern; ohne
+  die Datei im Kopf hinge es an einer Zeile, die jede dieser Seiten von Hand
+  setzen muss — die sieben heutigen tun es, eine neue vergäße es still.
+
+### Werkzeug
+
+- **Registerzeile Z37** zählt auch `className = '…meldung'`: `melde()` im
+  Schnittblock und der Entsperrdialog bauten ihre Meldung so, und das
+  Muster (`class="meldung`) sah sie nicht (F-R4-42). Die erweiterte Zeile
+  fand zwei weitere Nachbauten — den Hinweis `patwarn` in `patient.js` und
+  den Papierkorb-Hinweis des Diensttags —; sie bleiben mit Nr. 346, die
+  Decke bleibt bei 4. Mit dem Muster von vorher gemessen sinkt die Zeile
+  von 4 auf 2. **Z34** kennt `dauer` in `schneiden.js`.
+- **Bilderlauf:** zwei Seiten mehr (80), der Schneide-Bereich mit rotem
+  Grund und mit der Vorschau „1h 06min"; der Platzhalter `__TAG_SCHNITT__`
+  sucht den Tag über den Inhalt.
+
 ## [Web 21.1.10] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-12. Korrekturstufe ohne Migration.
