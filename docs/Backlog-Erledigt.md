@@ -8761,3 +8761,26 @@ zutreffen.
      räumte, steht jetzt in ihr. Nachweis: Rollenprobe 309/309 mit dem
      Löschfall (Spur 3 → 0, Mengenstand, Sperrliste, weg = verwaltung), rot
      gegen die alte Kontoseite.
+
+239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php` mit.** · gehört zu: 17 · Stand: erledigt · seit 20.09.2026
+     Befund (beim Beheben von Nr. 238): `komplett_lib.php` schickt jeden
+     Tabellen- und Spaltennamen durch eine Quotierungsfunktion;
+     `backup_lib.php` setzt die Spaltenliste mit `implode(',', $cols)`
+     ungequotet zusammen — und in `$cols` fließen über `$extraCols` die
+     Namen aus dem Feldkatalog, also Namen, die noch dazukommen. Heute
+     ungefährlich, weil nach Nr. 238 kein Name reserviert ist; die Bauform
+     ist der Punkt: Genau diese Stelle hätte auf MySQL 8.4.0–8.4.10 das
+     Einspielen einer Sicherung unmöglich gemacht.
+     Weg: dieselbe Quotierung an beiden Stellen der Sicherung, und die
+     Frage, ob eine gemeinsame Helferfunktion sinnvoller ist als zwei
+     Kopien — sie wäre der Ort, an dem der nächste Schreibweg sie findet.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 239.
+     Erledigt 27.09.2026 mit R4-12 (Web 21.1.10): Weg A aus Q-R4-14, zentral
+     im Feldkatalog — mf_spalten_sql() setzt jeden Spaltennamen in
+     Backticks, mf_liste_sql() und mf_bezeichner() für selbst gebaute Listen
+     und einzelne Namen (Q-R4-22). Umgestellt: vier INSERTs (Ingest,
+     Schnitt, Import, Einspielen) und das UPDATE des Imports, dazu Formular
+     und Export. komplett_lib.php behält seine Quotierung (sichert jede
+     Tabelle, ein Helfer gehörte nach db.php, das für 18 frei bleibt).
+     Nachweis: Registerzeile Z42 0 (vorher 4), Kreisläufe edbak und csv 0
+     unerklärt, Wiederherstellungsprobe grün.

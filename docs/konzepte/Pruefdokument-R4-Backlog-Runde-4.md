@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-11 erledigt**, Web 21.1.9 (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-12 erledigt**, Web 21.1.10 (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -26,6 +26,7 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | **Das Löschen der zwei toten Zweige** (Q-R4-01) | Die Betreiberin löscht sie selbst (E-R4-15); die Umsetzung hat nichts gelöscht. | P-R4-06; `git ls-remote --heads origin` zeigt die zwei Zweige, solange es aussteht. |
 | **Ortszeit-Abfragen auf der örtlichen Anlage** (F-R4-21) | Die örtliche MariaDB hat keine Zeitzonentabellen; `CONVERT_TZ` mit `Europe/Berlin` liefert NULL. Die Anwendung nutzt es nicht; Messungen in Ortszeit sind über UTC-Zeiten nachgerechnet. | R4-16: jede Ortszeit-Zahl mit Rechenweg. |
 | **Die Zweige, die Bestand schreiben oder löschen, sind umgebaut, aber nicht gefahren** (R4-11) | Einspielen, Freigeben, Widerrufen, Pakete und Ordner löschen, „Alle sichern", Ziel prüfen, Jetzt versenden, Stand löschen, „Jetzt sichern"/„Fortsetzen", und alle drei Knöpfe des Demo-Kontos. Sie auf der örtlichen Anlage zu fahren, hieße Bestand anzulegen oder zu verlieren, den andere Proben brauchen; das Demo-Konto benutzen andere Wege gerade. Gelesen je Zweig (Gegenlesung) und im Muster gleich den gefahrenen. | P-R4-12 auf Staging. |
+| **Ein reserviertes Wort als Spaltenname** (R4-12) | Der Katalog hat keines, und eines anzulegen hieße eine Migration nur für die Probe. Belegt ist die Form (Selbstprobe: `m.\`id\``, `` `uhr_gesperrt` AS `manual` ``) und der Weg (beide Kreisläufe, die Proben der Schreibwege). | Erst bei einem neuen Katalogfeld mit reserviertem Namen — die Schemaprobe auf MySQL 8.4 fährt es dann mit. |
 
 ## 2. Maschinell geprüft — Konzeptphase (R4-00)
 
@@ -118,6 +119,11 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-11 | erster `pruefen.sh` über den Stand vor den zwei Korrekturen unten | alles | **2 rot**, 0 nicht gemessen, 41 grün, 1057 s: `rollenprobe` (Testmail: „Zu viele Testmails", Ratenschutz je Adresse 127.0.0.1, gesperrt bis 08:04) und `nummern` (4 Überschneidungen mit `claude/gallant-mccarthy-yacnzk`, F-R4-39) — beide Fehler der Prüfmittel, nicht der Seiten |
 | R4-11 | `nummern.py --selbstprobe`; dieselbe gegen die alte Rechnung (Kopie im Scratchpad); `nummern.py --ohne-holen` | F-R4-39 | **10 / 0**; alt **2 Fehlschläge** (`(6, origin/nachfolger)` statt keiner); echter Stand **0 Überschneidungen**, 6 eigene Nummern (340 bis 345) |
 | R4-11 | Rollenprobe dreimal hintereinander nach dem Leeren des Topfs `testmail` | wiederholbar? | **3 × 324 / 324** |
+| R4-11 | `bash tools/pruefstand/pruefen.sh` über den Baum des Commits `c0c2429` (Bericht im Commit) | Stufe `klein` | **0 rot, 0 nicht gemessen, 43 grün**, 1022 s; Baum `4c817833` |
+| R4-12 | `grep -rn "implode(',', \$cols)" server/`; `zaehlen.php` (Z42); Z42 gegen `server/` aus `HEAD` (Kopie im Scratchpad) | Nr. 239 | **0**; Z42 **0**; alt **4** („DRUEBER") |
+| R4-12 | `php tools/spaltenregister/pruefen.php --selbstprobe`; ohne Schalter | beide Formen, Register vollständig | **19 / 19**; „jede Spalte genau einmal, drei Abbildungen vollständig" |
+| R4-12 | `kreislauf.py --art edbak --frisch`; `--art csv --frisch` | Einspielen und Import über die neuen Listen | **328 772** Einzelvergleiche, **0 unerklärt**, 23 erwartet; **10 922**, **0 unerklärt**, 1 271 erwartet |
+| R4-12 | `proben.sh wiederherstellung`, `ingest`, `spur`, `gpx` | die übrigen umgestellten Schreibwege | **115 / 115**, **86 / 86**, **45 / 45**; GPX erst **94 / 96** (Teil 2: „204 von 204 ohne Gegenstück" — Demo-Reset um 06:59, F-R4-40), nach `hochfahren.sh --neu` **96 / 96** |
 
 ## 3. Im Browser geprüft
 

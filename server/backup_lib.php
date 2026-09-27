@@ -1961,7 +1961,9 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                     : $m[$c];
                 $cols[] = $c; $vals[] = $wert;
             }
-            $sql = 'INSERT INTO missions (' . implode(',', $cols) . ') VALUES ('
+            /* In Backticks ueber `mf_liste_sql()` (Web 21.1.9, Nr. 239): In
+             * `$cols` fliessen ueber `$extraCols` Namen, die noch dazukommen. */
+            $sql = 'INSERT INTO missions (' . mf_liste_sql($cols) . ') VALUES ('
                  . implode(',', array_fill(0, count($cols), '?')) . ')';
             $pdo->prepare($sql)->execute($vals);
             $mid = (int)$pdo->lastInsertId();

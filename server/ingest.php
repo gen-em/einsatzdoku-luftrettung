@@ -714,7 +714,7 @@ try {
          * und vergisst das Fragezeichen — und MariaDB meldet das erst zur
          * Laufzeit, beim ersten echten Paket eines Geraets. */
         $sp = mf_spalten('ingest_neu', '', false);
-        $pdo->prepare('INSERT INTO missions (' . implode(', ', $sp) . ')
+        $pdo->prepare('INSERT INTO missions (' . mf_spalten_sql('ingest_neu', '', false) . ')
                        VALUES (' . implode(',', array_fill(0, count($sp), '?')) . ')
                        ON DUPLICATE KEY UPDATE
                          ended_at   = COALESCE(VALUES(ended_at),   ended_at),

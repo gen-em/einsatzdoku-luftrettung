@@ -7735,5 +7735,17 @@ declare(strict_types=1);
  *   schaltete im offenen Formular die Aufbewahrung am Ziel ab. Und ein
  *   Fehler aus 21.1.8: Das Entfernen des Demo-Kontos ist keine Transaktion
  *   mehr, die Meldung sagte bei einem Abbruch trotzdem „nichts geaendert".
+ *
+ * 21.1.10 — SPALTENNAMEN IN BACKTICKS (Schritt 17, R4-12, Nr. 239).
+ *   Korrekturstufe ohne Migration. Vier INSERTs auf `missions` setzten ihre
+ *   Spaltenliste mit `implode()` ueber blosse Namen zusammen, der Import sein
+ *   UPDATE ebenso, und in die Liste der Sicherung fliessen Katalognamen, die
+ *   noch dazukommen. Keiner ist heute reserviert (Nr. 238) — die Bauform war
+ *   der Punkt. Jetzt macht `mission_fields_lib.php` SQL-Text aus
+ *   Spaltennamen: `mf_spalten_sql()` setzt jeden Namen in Backticks,
+ *   `mf_liste_sql()` eine selbst erweiterte Liste, `mf_bezeichner()` einen
+ *   Namen. `mf_spalten()` liefert weiter blosse Namen, weil vier Aufrufer
+ *   sie als Schluessel brauchen (Q-R4-22). Das Formular quotierte schon von
+ *   Hand; auch das geht jetzt ueber die eine Stelle.
  */
-const WEB_VERSION = '21.1.9';
+const WEB_VERSION = '21.1.10';

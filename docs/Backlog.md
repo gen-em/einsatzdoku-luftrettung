@@ -805,20 +805,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      verschweigt, kostet die Stunde, die es sparen sollte.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 237.
 
-239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php` mit.** · gehört zu: 17 · Stand: offen · seit 20.09.2026
-     Befund (beim Beheben von Nr. 238): `komplett_lib.php` schickt jeden
-     Tabellen- und Spaltennamen durch eine Quotierungsfunktion;
-     `backup_lib.php` setzt die Spaltenliste mit `implode(',', $cols)`
-     ungequotet zusammen — und in `$cols` fließen über `$extraCols` die
-     Namen aus dem Feldkatalog, also Namen, die noch dazukommen. Heute
-     ungefährlich, weil nach Nr. 238 kein Name reserviert ist; die Bauform
-     ist der Punkt: Genau diese Stelle hätte auf MySQL 8.4.0–8.4.10 das
-     Einspielen einer Sicherung unmöglich gemacht.
-     Weg: dieselbe Quotierung an beiden Stellen der Sicherung, und die
-     Frage, ob eine gemeinsame Helferfunktion sinnvoller ist als zwei
-     Kopien — sie wäre der Ort, an dem der nächste Schreibweg sie findet.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 239.
-
 240. **Der Rundlauf-Prüffall des Handy-Moduls läuft in der Kette nie.** · gehört zu: PK · Stand: offen · seit 20.09.2026
      Befund (beim Beheben des Robolectric-Downloads): `showStandardStreams`
      hängt an `rundlauf.isNotBlank()`, und in Stufe 1 ist `rundlauf` leer —

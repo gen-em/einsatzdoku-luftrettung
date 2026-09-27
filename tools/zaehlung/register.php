@@ -539,4 +539,16 @@ return [
  'regel' => ['art' => 'muster', 'muster' => '~\becho\s+json_encode\s*\(~'],
  'start' => 19, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+['kennung' => 'Z42', 'paket' => 'R4-12',
+ 'beschreibung' => 'Spaltenliste eines INSERT auf missions per implode() ueber blosse Namen',
+ 'grund' => 'Nr. 239: vier INSERTs setzten ihre Spaltenliste mit implode() '
+          . 'zusammen, ohne Backticks — in die der Sicherung fliessen ueber '
+          . '$extraCols Namen, die noch dazukommen. Seit Web 21.1.9 macht '
+          . 'mission_fields_lib.php SQL-Text aus Spaltennamen: '
+          . 'mf_spalten_sql(), mf_liste_sql(), mf_bezeichner().',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'regel' => ['art' => 'muster',
+             'muster' => '~INSERT\s+INTO\s+missions\s*\(\s*\'\s*\.\s*implode\s*\(~i'],
+ 'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 ];

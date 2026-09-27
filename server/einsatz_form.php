@@ -536,7 +536,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                $rows, $startedAt, $userId): int {
                 if ($editing) {
                     $set = 'started_at = ?, ended_at = ?, uhr_gesperrt = 1, edited = 1';
-                    foreach ($fieldCols as $c) { $set .= ", `$c` = ?"; }
+                    /* Katalognamen in Backticks ueber `mf_bezeichner()` — die
+                     * eine Stelle dafuer (Web 21.1.9, Nr. 239); bis dahin
+                     * standen sie hier von Hand. */
+                    foreach ($fieldCols as $c) { $set .= ', ' . mf_bezeichner($c) . ' = ?'; }
                     $pdo->prepare("UPDATE missions SET $set WHERE id = ? AND user_id = ?")
                         ->execute(array_merge([$startedAt, $endedAt], $fieldVals, [$id, $userId]));
                 } else {
@@ -544,7 +547,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $devId = geraet_virtuell_sicherstellen($pdo, $userId);
                     $cols = 'user_id, device_id, client_ref, day_id, started_at, ended_at, final, uhr_gesperrt, origin';
                     $qms  = "?,?,?,?,?,?,1,1,'manual'";
-                    foreach ($fieldCols as $c) { $cols .= ", `$c`"; $qms .= ',?'; }
+                    foreach ($fieldCols as $c) { $cols .= ', ' . mf_bezeichner($c); $qms .= ',?'; }
                     $pdo->prepare("INSERT INTO missions ($cols) VALUES ($qms)")
                         ->execute(array_merge(
                             [$userId, (int)$devId, 'man-' . uniqid(), $dayId, $startedAt, $endedAt],

@@ -14,6 +14,34 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.10] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-12. Korrekturstufe ohne Migration.
+
+### Behoben
+
+- **Die Schreibwege in `missions` setzen jeden Spaltennamen in Backticks**
+  (Nr. 239). Vier INSERTs — Ingest, Schnitt, Import, Einspielen einer
+  Sicherung — setzten ihre Spaltenliste mit `implode()` über bloße Namen
+  zusammen, das UPDATE des Imports ebenso, und in die Liste der Sicherung
+  fließen über den Feldkatalog Namen, die noch dazukommen. Keiner ist heute
+  reserviert (Nr. 238); die Bauform war der Punkt — genau so eine Stelle
+  hätte auf MySQL 8.4.0 bis 8.4.10 das Einspielen verhindert, nur mit dem
+  nächsten Namen statt mit `manual`. Jetzt macht `mission_fields_lib.php`
+  aus Spaltennamen SQL-Text, und nur sie: `mf_spalten_sql()` setzt jeden
+  Namen in Backticks (bis dahin nur den Alias), `mf_liste_sql()` eine selbst
+  erweiterte Liste, `mf_bezeichner()` einen Namen. **Was bleibt:**
+  `mf_spalten()` liefert weiter bloße Namen — vier Aufrufer brauchen sie
+  als Schlüssel —, und `komplett_lib.php` behält seine eigene Quotierung,
+  weil es jede Tabelle sichert, nicht den Katalog. Das Formular quotierte
+  schon von Hand; es geht jetzt über dieselbe Stelle, und der Export ebenso.
+
+### Werkzeug
+
+- **Registerzeile Z42:** eine Spaltenliste `INSERT INTO missions (' .
+  implode(` zählt, Decke 0 (gegen den Stand davor 4). Das Spaltenregister
+  prüft in seiner Selbstprobe beide Formen — bloße Namen und SQL-Form.
+
 ## [Web 21.1.9] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-11. Korrekturstufe ohne Migration.
