@@ -976,26 +976,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel PK seit 26.09.2026 (R4-01, Q-R4-12): `auslieferung.yml` gehört der
      Kette (PK-06 bis PK-08).
 
-275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — laut Handbuch „der klassische Fall".** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Befund (Schritt 15 AP9b, in Ortszeit; Zahl berichtigt mit Konzept R4,
-     F-R4-05, nachgemessen am 26.09.2026): 2 von 20 aktiven Diensttagen des
-     Demo-Kontos haben Einsätze auf zwei Kalendertagen — beide bodengebunden
-     (NEF Talwang), beide auf einer Zeitumstellung; der Eintrag zählte 0.
-     Ein luftgebundener Nachtdienst ohne Zeitumstellung fehlt. In AP9b
-     sortierte das Einsatztabellen-Modul „Beginn" über die Zeichenkette
-     `start_hhmm` (01:10 vor 23:50) — jahrealt, von keinem Mittel zu finden,
-     weil es nichts zu messen gab; belegt mit einem im Browser gebauten
-     Nachtdienst. Ob die drei APIs `start_sort` für einen echten Nachtdienst
-     richtig rechnen, ist gelesen, nicht gefahren.
-     Weg (Konzept R4, R4-16): ein luftgebundener Nachtdienst als D22 mit
-     Einsätzen vor und nach Mitternacht über den normalen Einspielweg
-     (`tools/referenzdatensatz/`, `started_at` in UTC); `days.day` bleibt der
-     Dienstbeginn; Matrixzeile, Bilderlauf-Seite, Bedienprobe „Sortierung
-     nach Beginn".
-     Abnahme: Diensttage mit Einsätzen auf mehr als einem Kalendertag in
-     Ortszeit mindestens 3, davon einer luftgebunden ohne Zeitumstellung.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 275.
-
 276. **Die tote Spalte `missions.other_resources` löschen.** · gehört zu: 14 · Stand: offen · seit 22.09.2026
      Befund (Schritt 15 AP6): Seit der Migration `2026_07` liegen die
      weiteren Rettungsmittel als Zeilen in `mission_resources`; die Spalte
@@ -1083,21 +1063,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Gebaute zurückgenommen, mit Begründung. Nicht beides offen lassen.
      Zuordnung PK-06 ff.; bis dahin je Paket von Hand.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 300.
-
-323. **Referenzbestand und Demo-Fixture tragen noch Nutzlast 11.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
-     *Aufgenommen 25.09.2026 (P5c/AP8).* Die Referenz
-     `referenz/einsatzdoku-backup-2026-09-15.edbak` und
-     `server/demo/fixture.json.gz` stammen aus der Zeit vor Nutzlast 12; beide
-     führen das leere Feld der Standortauswahl. Das ist **kein Fehler** — der
-     Rückweg überliest es, und genau das zeigt der Kreislauf. Es kostet aber
-     **zwei Übergangsregeln** in `vergleich/ausnahmen/edbak_umlauf.json`
-     (`kopf.version` 11 → 12, das fehlende Feld), und die Fixture trägt eine
-     Angabe, die keine Fassung mehr schreibt. *Zu tun:* Referenz und Fixture
-     neu erzeugen, wie mit Nr. 173; danach werden die beiden Regeln
-     ungenutzt und fallen, mit einem Satz im Änderungsverlauf. Die Regeln in
-     `edbak-alt_umlauf.json` bleiben — die Altformat-Referenz ist eingefroren
-     (Nr. 46). *Abnahme:* edbak-Kreislauf mit 0 unerklärten Abweichungen **und**
-     0 ungenutzten Regeln.
 
 324. **Der eigene Bestand kommt einmal über ein Einmal-Skript in die 1.0.** · gehört zu: 14 · Stand: offen · seit 25.09.2026
      Entschieden (P5c/AP8, Auskunft der Betreiberin, E-P5c-127): Die

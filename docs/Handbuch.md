@@ -832,8 +832,10 @@ Es gibt ein Konto, in dem sich alles gefahrlos ausprobieren lässt:
 **Alle Daten darin sind frei erfunden.** Die Orte, Kliniken, Rettungsmittel
 und Besatzungsnamen gibt es nicht; die Diagnosen gehören zu niemandem. Der
 Datensatz ist so gebaut, dass jede Funktion der Anwendung darin vorkommt —
-Luft- und Bodeneinsätze, Windeneinsätze, Bergwacht, Reanimationen, ein Dienst
-über Mitternacht, ein Diensttag ohne Einsatz, ein gefüllter Papierkorb.
+Luft- und Bodeneinsätze, Windeneinsätze, Bergwacht, Reanimationen, Dienste
+über Mitternacht am Boden und in der Luft (seit Web 21.3.1 ein Nachtdienst im
+Juni mit Einsätzen vor und nach Mitternacht), ein Diensttag ohne Einsatz, ein
+gefüllter Papierkorb.
 
 **Seit dem Ausbau des Bestands auch die drei Rettungsmittel-Typen im
 Betrieb** (Abschnitt 9.1a): ein **Bergwachtnotarzt am Boden** mit Winde und

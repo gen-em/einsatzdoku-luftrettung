@@ -185,6 +185,12 @@
       ]
     },
     {
+      "name": "12c-nachtdienst",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__TAG_NACHT__"
+    },
+    {
       "name": "12-einsatzansicht",
       "gruppe": "Inhalt",
       "rolle": "demo",

@@ -7787,5 +7787,15 @@ declare(strict_types=1);
  *   gekappt auf 1970-01-01 00:00:01 und auf jetzt; die Wiederherstellung
  *   setzt ihn ebenso, denn im Backup steht er nicht. Das Fenster gleitet
  *   nicht mehr mit jedem neuen Datensatz, es zaehlt ab dem Tag.
+ *
+ * 21.3.1 — DAS DEMO-KONTO BEKOMMT EINEN NACHTDIENST (Schritt 17, R4-16,
+ *   Nr. 275, 323). Korrektur: Am Code aendert sich nichts, wohl aber die
+ *   Fixture unter `server/demo/`, und die geht mit dem Deploy hinaus. Der
+ *   Referenzbestand hatte keinen Luftdienst mit Einsaetzen vor und nach
+ *   Mitternacht ohne Zeitumstellung — genau den Fall, an dem die Sortierung
+ *   nach Beginn zu pruefen ist. Jetzt steht er da (D22, 19.06.2026, drei
+ *   Einsaetze um 19:09, 23:50 und 01:40), und Referenz und Fixture sind neu
+ *   erzeugt: Nutzlast 12 statt 11, ohne die leere Standortauswahl, und die
+ *   zwei Uebergangsregeln im Kreislauf fallen weg.
  */
-const WEB_VERSION = '21.3.0';
+const WEB_VERSION = '21.3.1';

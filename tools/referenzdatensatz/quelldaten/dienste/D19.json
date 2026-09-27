@@ -334,8 +334,10 @@
     "Wie jeder geschnittene Einsatz traegt er KEINE geschuetzten Angaben:",
     "api/schneiden.php legt keinen pat_blob an. Der Sperrvermerk am",
     "Quellsegment geht mit in die Sicherung (Nutzlast 9, Backlog Nr. 63) --",
-    "und weil der Demo-Reset die Fixture alle 30 Minuten einspielt, wird er",
-    "auf dem Produktivserver alle 30 Minuten geprueft."
+    "und weil der Demo-Reset die Fixture bei jedem Reset einspielt (30 Minuten",
+    "nach der ersten Aenderung, ohne Aenderung einmal am Tag, seit Web 21.2.0),",
+    "wird er auf dem Produktivserver bei jedem Reset geprueft, mindestens einmal",
+    "am Tag."
   ],
   "schnitte": [
     {

@@ -839,6 +839,17 @@ async function platzhalter() {
     }
   }
 
+  /* __TAG_NACHT__: ein LUFTdienst, dessen Einsaetze an zwei Ortsdaten
+     beginnen (R4-16, Nr. 275, D22). Die Tagesansicht zeigt dann die Liste
+     ueber Mitternacht; sortiert sie „Beginn" ueber die Uhrzeit allein, steht
+     01:40 vor 23:50. `start_sort` traegt Datum UND Uhrzeit in Ortszeit. */
+  p['__TAG_NACHT__'] = null;
+  for (const t of tagListe.filter((x) => x.kind === 'air')) {
+    const i = await tagInhalt(t.id);
+    const daten = new Set(((i && i.missions) || []).map((x) => String(x.start_sort || '').slice(0, 10)));
+    if (daten.size > 1) { p['__TAG_NACHT__'] = `index.php?d=${t.id}`; break; }
+  }
+
   const fehlend = Object.entries(p).filter(([, v]) => v === null).map(([k]) => k);
   if (fehlend.length) {
     console.log('NICHT AUFGELÖST (diese Seiten werden nicht fotografiert): '

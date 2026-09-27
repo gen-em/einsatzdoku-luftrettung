@@ -11,6 +11,7 @@ sh pruefkonten.sh          # Prüfkonten admin und support für den Bilderlauf (
 python3 einspielen.py --stufen konto
 php  demo_kennzeichnen.php                     # zwingend vor der ersten Anmeldung
 node passwort_setzen.mjs '<Einrichtungslink>' 'nadokudemo0815' rc.json
+python3 ../generator/erzeugen.py               # schreibt generator/ausgabe/ — die Stufe ingest liest sendeplan.json daraus
 python3 einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
 python3 messprotokoll.py && node sichtpruefung.mjs
 ```
@@ -19,8 +20,7 @@ python3 messprotokoll.py && node sichtpruefung.mjs
 
 Sechs Wege: `pair.php`, `ingest.php`, `api/day.php`, `einsatz_form.php`,
 `api/schneiden.php` und die Oberfläche. Stand der Stufen in `lauf.json`;
-warum die Reihenfolge so ist, steht an der Stufe in `einspielen.py`.
-`messprotokoll.py` misst das Sendeverhalten einer Uhr (E-P1-14).
+warum die Reihenfolge so ist, steht an der Stufe in `einspielen.py`; `messprotokoll.py` misst das Sendeverhalten einer Uhr (E-P1-14).
 
 ## Was es braucht
 

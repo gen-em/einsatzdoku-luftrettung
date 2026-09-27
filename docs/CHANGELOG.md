@@ -14,6 +14,56 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.3.1] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-16. **Korrektur ohne Codeänderung** —
+ausgeliefert wird eine neue Demo-Fixture (`server/demo/fixture.json.gz`).
+Das bestehende Demo-Konto zeigt sie erst nach dem nächsten Reset; wer sie
+sofort sehen will, drückt unter Verwaltung → Demo-Konto „Zurücksetzen".
+
+### Geändert
+
+- **Das Demo-Konto hat einen Nachtdienst** (Nr. 275). Von 20 aktiven
+  Diensttagen hatten nur zwei Einsätze auf zwei Kalendertagen, beide
+  Bodendienste und beide in der Nacht der Zeitumstellung. Die Sortierung nach Beginn ließ
+  sich an ihnen nicht sauber prüfen: Ob 01:40 hinter 23:50 steht, verwischte
+  die zusätzliche oder fehlende Stunde. Jetzt steht ein Luftdienst vom
+  19. auf den 20.06.2026 im Bestand, mit Einsätzen um 19:09, 23:50 und 01:40
+  und ohne Zeitumstellung dazwischen. Der Bestand zählt damit 22 Diensttage
+  und 109 Einsätze (vorher 21 und 106). Weil die erzeugten Einsatznummern
+  je Jahr durchlaufen, haben 25 spätere Einsätze eine um eins höhere Nummer
+  bekommen.
+- **Referenz und Fixture sind neu erzeugt** (Nr. 323). Beide stammten aus der
+  Zeit vor Nutzlast 12 und führten die leere Standortauswahl. Der Rückweg
+  überlas sie, aber der Kreislauf brauchte dafür zwei Übergangsregeln. Mit
+  der neuen Referenz meldete er sie als ungenutzt, und sie sind ausgetragen.
+  Beide Kreisläufe stehen danach bei 0 unerklärten Abweichungen und
+  0 ungenutzten Regeln.
+
+### Werkzeug
+
+- **Bedienprobe, Weg `nachtdienst-sortierung-beginn`:** öffnet den
+  Nachtdienst, sortiert nach Beginn auf- und absteigend und verlangt 19:09 ·
+  23:50 · 01:40 und umgekehrt. Sortiert die Tabelle nach der Uhrzeit allein,
+  steht 01:40 vorn, und der Weg ist rot. Dazu holt er `start_sort` für die
+  drei Einsätze aus `api/day.php`, `api/range.php` und `api/suchindex.php`
+  und verlangt dieselben Werte auf zwei Ortsdaten. Das war in Nr. 275 als
+  „gelesen, nicht gefahren" offen; mit dem Datum des Diensttags in
+  `range.php` ist der Weg rot.
+- **Bilderlauf, Seite `12c-nachtdienst`:** der Nachtdienst in allen zehn
+  Breiten.
+- **`quelldaten/pruefen.py`** kennt die Matrixzeile „Luftdienst mit
+  Einsätzen vor und nach Mitternacht, ohne Zeitumstellung" und leitet sie
+  aus den Zeiten ab, statt sie aus einer Marke zu glauben.
+- **Sitzungsprobe:** Sie nimmt jetzt das Demo-Konto (`edk1:`) und das
+  Prüfkonto (`edka1:`), die zwei Konten, die auf jeder frischen Anlage in
+  der verlangten Fassung stehen. Mit den alten Vorgaben maß sie dort nichts
+  (F-R4-53).
+- **Runbook:** Der Neuaufbau des Referenzbestands nennt jetzt den
+  Generatorschritt. Ohne ihn bricht die Stufe `ingest` ab, und auf einem
+  Rechner, auf dem er schon einmal gelaufen war, fiel die Lücke nicht auf
+  (F-R4-52).
+
 ## [Web 21.3.0] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-15. **Nebenstufe mit Migration** —

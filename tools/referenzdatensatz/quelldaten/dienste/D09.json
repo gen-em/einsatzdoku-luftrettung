@@ -395,7 +395,7 @@
         "dx": "Amputationsverletzung der Hand",
         "dob": "1937-11-28",
         "age": null,
-        "mission_no": "2026-1028",
+        "mission_no": "2026-1029",
         "loc": {
           "addr": "Talstraße 77, 87561 Wangried",
           "lat": 47.7547,
@@ -574,7 +574,7 @@
         "dx": "Wirbelsäulentrauma nach Sturz",
         "dob": null,
         "age": 26,
-        "mission_no": "2026-1029",
+        "mission_no": "2026-1030",
         "loc": {
           "addr": "Rossgasse 10, 87477 Wangried",
           "lat": 47.74953,

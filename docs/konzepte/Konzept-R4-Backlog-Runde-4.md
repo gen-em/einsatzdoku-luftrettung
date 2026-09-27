@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-16** (Referenz neu, H-R4-03). |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-17** (Zeitraumübersicht). |
 > | Entschieden | **E-R4-01 bis E-R4-48** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-15 und R4-19 erledigt** (27.09.2026); Web 21.3.0 — **mit Migration, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-16 bis R4-18, R4-20 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-16 und R4-19 erledigt** (27.09.2026); Web 21.3.1 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-17, R4-18, R4-20 bis R4-26 in Nummernfolge. |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. **R4-19: ein Workflow, drei Agenten** auf getrennten Dateigruppen (`referenzdatensatz/` 22, `proben/` 17, übrige Werkzeuge 13 Dateien), alle drei gleichzeitig, 229 s, 0 gescheitert, 0 offene Stellen; Ausnahmeliste der Textprobe, Doku, Gegenlesung, Neuaufbau der Anlage und Prüfstand seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse) — 2.4. |
 
 
 ---
@@ -537,6 +537,44 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   `probe@example.invalid`. Eine Stelle bleibt bewusst: `mail/probe.php`
   prüft mit einem Muster, dass eine Mail den Vornamen der Betreiberin
   **nicht** enthält — ein Riegel gegen den Namen, kein Vorkommen im Text.
+- **F-R4-52 Der Neuaufbau des Referenzbestands nannte den Generator nicht.**
+  `einspielen.py --stufen …,ingest,…` brach auf der frischen Anlage ab:
+  `generator/ausgabe/sendeplan.json` fehlt. Die Ausgabe des Generators steht
+  in `.gitignore`; auf einem Rechner, auf dem er einmal gelaufen war, fiel
+  die fehlende Zeile im Runbook (`Technik.md`) und in
+  `einspielen/LIESMICH.md` nicht auf. Beide nennen ihn jetzt. Dazu nannte die
+  Einrichtungszeile des Demo-Kontos 15 Diensttage, 82 Einsätze und 95
+  Ruhesegmente — den Stand zwei Ausbauten zurück; nach einem Reset gemessen
+  sind es 21, 104 und 118.
+- **F-R4-53 Die Sitzungsprobe maß auf einer frischen Anlage nichts.** Ihre
+  Vorgaben waren das Prüfkonto (erwartet `edk1:`) und `umlauf-csv@`
+  (erwartet `edka1:`). Nach `hochfahren.sh --neu` trägt das Prüfkonto schon
+  `edka1:` (die erste Browserprobe stellt es um), und `umlauf-csv@` hat gar
+  keine Hülle. Gefahren wurde sie deshalb mit Umgebungswerten; die Vorgaben
+  sind jetzt das Demo-Konto (bauartbedingt `edk1:`, E-S10-06) und das
+  Prüfkonto (`edka1:`). Ohne Umgebungswerte **2 / 2**.
+- **F-R4-54 26 von 44 Zählungen in `csv_umlauf.json` waren veraltet.** Jede
+  Regel trägt „GEMESSEN n×". Beim Abgleich mit der neuen Referenz stimmten 18;
+  26 nannten eine ältere Zahl, auch unabhängig von D22 — die Liste war bei
+  früheren Erneuerungen nicht nachgezählt worden. Der Kreislauf liest die Zahl
+  nicht, er zählt nur, ob eine Regel greift. Nachgezählt je (Bereich, Feld),
+  nicht je Begründung: Mehrere Regeln teilen denselben Text, und eine
+  Zählung über den Text hätte ihre Treffer zusammengelegt.
+- **F-R4-55 D22 verschiebt 25 erzeugte Einsatznummern.** `aufbauen.py`
+  vergibt die Nummern der erzeugten Einsätze (Reihe `2026-10xx`) fortlaufend
+  nach Datum. Ein Dienst im Juni schiebt jeden späteren erzeugten Einsatz um
+  eins; deshalb stehen `D09` bis `D16` in der Berührung, mit nichts als
+  `mission_no`. Die handgeschriebene Reihe (`04xx`) bleibt. Kein Fehler — ein
+  Hinweis für die nächste Erweiterung: Ein Vergleich über den Neuaufbau
+  hinweg sieht diese Nummern als geändert.
+- **F-R4-56 Der Dateiname der CSV-Referenz trägt die Adresse, nicht einen
+  Namen.** Neu heißt er `…_demo-gen-em-org.zip`, vorher `…_demo-nutzerin.zip`.
+  Der Export bildet ihn aus dem Anzeigenamen, sonst aus der Adresse, und das
+  über `einspielen.py` angelegte Konto hat keinen Namen. Die Fixture hatte
+  auch vorher keinen (`name: null` in beiden Fassungen); die alte Referenz
+  kam aus einer Anlage, in der das Konto einen trug. Der Kreislauf nimmt das
+  Verzeichnis, nicht den Namen, und kein Dokument nannte die alte Datei außer
+  dem Eintrag Nr. 323.
 
 ## 3. Entscheidungen und Fragen
 
@@ -1202,6 +1240,38 @@ und `csv` **0 unerklärte Abweichungen und 0 ungenutzte Regeln**; GPX-Probe
 grün; Bilderlauf und Stilvergleich mit dem neuen Tag ohne Ungeplantes.
 *Stufe:* Web Korrektur (Fixture liegt unter `server/`; Neben, falls die
 Demo-Fassung im Handbuch eine Zahl ändert). *Fächerung:* keine.
+**Erledigt 27.09.2026 — mit Web 21.3.1** (Korrektur: Das Handbuch nennt
+keine neue Zahl, nur „Dienste über Mitternacht am Boden und in der Luft").
+D22 ist ein Luftdienst vom 19. auf den 20.06.2026, 19:00 bis 07:00, mit
+Einsätzen um 19:09 (erzeugt), 23:50 und 01:40 und vier Ruhesegmenten.
+`pruefen.py` leitet die neue Matrixzeile aus den Zeiten ab (zwei Ortsdaten,
+gleicher UTC-Versatz an Beginn und Ende) und glaubt keine Marke. Dann
+einmal neu: `hochfahren.sh --neu`, das Demo-Konto über `einspielen.py`,
+Generator, alle Stufen, CSV-Import, Referenzexport im Browser, Fixture. Die
+zwei Übergangsregeln der edbak-Liste sind ausgetragen, die Zählungen beider
+Listen nachgezogen (F-R4-54). Die zwei `$warum`-Texte in `D08.json` und
+`D19.json` aus F-R4-45 sagen jetzt „bei jedem Reset, mindestens einmal am
+Tag". Neu: Bilderlauf-Seite `12c-nachtdienst`, Bedienprobe-Weg
+`nachtdienst-sortierung-beginn`; Sitzungsprobe mit neuen Vorgaben
+(F-R4-53); Runbook mit Generatorschritt (F-R4-52).
+*Gemessen:* `quelldaten/pruefen.py` **0 Befunde**, 98 Matrixzeilen, 0 offen,
+7262 Einzelprüfungen. Einspielen **638 Anfragen, 0 Fehler**. Kreislauf
+`edbak` **346 763** Vergleiche, **0 unerklärt**, 22 erklärt, **0 ungenutzte
+Regeln** (vor dem Austragen genau die zwei geplanten ungenutzt); Kreislauf
+`csv` **11 234**, **0 unerklärt**, 1303 erklärt, **0 ungenutzt**. H-R4-03:
+Die CSV gegen die alte Referenz zeigt Unterschiede nur als Folge von D22
+(7 Spuren, 3 Einsatzzeilen, 1 Tageszeile mehr); kein Halt. Fixture:
+roh 3 080 109 Byte, gepackt 928 091, 67 292 Punkte; Reset 109 Einsätze,
+123 Ruhesegmente, 22 Tage, 2 Geräte, **7,3 s** (Median aus drei, andere
+Arbeitsumgebung als die 6,6 s vom 15.09.). Abnahme Nr. 275 nachgezählt:
+**3** Diensttage mit Einsätzen auf zwei Ortsdaten, **einer** luftgebunden
+ohne Zeitumstellung. GPX-Probe **97 / 0**, 211 Dateien, 0 mehrdeutig,
+155 024 Punktvergleiche. Sitzungsprobe **2 / 2**. Bedienprobe-Weg **1 / 1**,
+dazu `start_sort` aus `day.php`, `range.php` und `suchindex.php` gleich
+(3 / 3 / 3); zwei Gegenproben rot — die Tabelle nach `start_hhmm`, und
+`range.php` mit dem Dienstdatum. Bilderlauf `12c-nachtdienst`: 10 Bilder,
+Überlauf **0**, Konsolenfehler **0**. Stilvergleich und der übrige
+Bilderlauf im Prüfstand.
 
 **R4-17 Zeitraumübersicht: Seitengrenze und benannte Kappungen** — Nr. 37
 (Q-R4-03). `seite: 200` über `EdMissionTable` in `zeitraum.php` (Kopfzeile

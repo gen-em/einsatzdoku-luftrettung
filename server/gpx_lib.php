@@ -72,11 +72,12 @@ const GPX_NS      = 'http://www.topografix.com/GPX/1/1';
  * Jahr zurueckkommt, sagt damit selbst, welche Fassung sie geschrieben hat.
  *
  * WAS DAS KOSTET, ausgesprochen: Das Feld aendert sich bei JEDER
- * Versionserhoehung, und der Referenzvergleich vergleicht es — 204 GPX-Dateien
- * im Referenz-Export, alle mit `creator`, und `normalisieren.py` blendete es
- * bis Web 20.8.0 nicht aus. Ohne Gegenmassnahme meldete der Kreislauf bei
- * jeder Auslieferung 204 Unterschiede, und ein Werkzeug, das bei jeder
- * Auslieferung rauscht, wird abgeschaltet. Die Fassung wird deshalb dort
+ * Versionserhoehung, und der Referenzvergleich vergleicht es — ueber 200
+ * GPX-Dateien im Referenz-Export (seit R4-16 211), alle mit `creator`, und
+ * `normalisieren.py` blendete es bis Web 20.8.0 nicht aus. Ohne
+ * Gegenmassnahme meldete der Kreislauf bei jeder Auslieferung ebenso viele
+ * Unterschiede, und ein Werkzeug, das bei jeder Auslieferung rauscht, wird
+ * abgeschaltet. Die Fassung wird deshalb dort
  * maskiert — genau wie `App-Version:` in der LIESMICH schon seit jeher
  * maskiert wird (`MARKE_VERSION`). Der NAME bleibt verglichen, die Fassung
  * nicht.

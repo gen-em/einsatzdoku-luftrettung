@@ -124,7 +124,7 @@
         "dx": "Sturz aus dem Stand mit Platzwunde",
         "dob": "2023-01-13",
         "age": null,
-        "mission_no": "2026-1044",
+        "mission_no": "2026-1045",
         "loc": {
           "addr": "Talstraße 17, 87427 Grünegg",
           "lat": 47.58028,
@@ -211,7 +211,7 @@
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
         "dob": "1994-06-15",
         "age": null,
-        "mission_no": "2026-1045",
+        "mission_no": "2026-1046",
         "loc": {
           "addr": "Am Bühl 11, 87441 Auwiesen",
           "lat": 47.54853,
@@ -298,7 +298,7 @@
         "dx": "Femurfraktur nach häuslichem Sturz",
         "dob": null,
         "age": 44,
-        "mission_no": "2026-1046",
+        "mission_no": "2026-1047",
         "loc": {
           "addr": "Salzstraße 84, 87545 Auwiesen",
           "lat": 47.54851,

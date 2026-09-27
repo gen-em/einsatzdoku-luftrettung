@@ -256,7 +256,7 @@ schritt(`Als ${ziel} anmelden`);
  *
  * DIE ZAHLEN IN DEM ZITAT SIND DIE VON DAMALS und werden nicht nachgezogen —
  * es ist eine woertliche Rueckmeldung vom 01.09.2026, kein Sollwert. Der
- * Bestand zaehlt seit dem Demo-Ausbau 106 Einsaetze und 119 Ruhesegmente;
+ * Bestand zaehlt seit R4-16 109 Einsaetze und 123 Ruhesegmente;
  * die Probe liest die Meldung ohnehin nicht nach Zahlen, sondern nach
  * `0 Einsätze übernommen` (unten).
  *

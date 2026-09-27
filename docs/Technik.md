@@ -723,8 +723,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      Sollliste). Ein
 │   │                      Läufer (`pruefen.sh <name>|alle|--selbstprobe`),
 │   │                      ein LIESMICH. Vorher acht Ordner.
-│   ├── referenzdatensatz/ erfundener Beispielbestand (21 Diensttage,
-│   │   │                  106 Einsätze) — Demo-Konto UND Regressionsreferenz
+│   ├── referenzdatensatz/ erfundener Beispielbestand (22 Diensttage,
+│   │   │                  109 Einsätze) — Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei
 │   │   │                  Geräteblöcke (geraete.json), die drei Schnitte,
 │   │   │                  Schema und Prüfung (Abdeckungsmatrix, Sperrwörter
@@ -5775,14 +5775,17 @@ Backup aufbaut, aber serverseitig — dort steht `pat_blob` noch als
 Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
 Der Erzeuger bricht ab, wenn er Klartext findet.
 
-Gepackt abgelegt: roh rund 2,8 MB, im Wesentlichen 63 752 Spurpunkte als
-JSON-Zahlen. Gepackt sind es rund 860 KB, und die Datei geht bei jedem Deploy
-über FTPS mit.
+Gepackt abgelegt: roh rund 3,1 MB, im Wesentlichen 67 292 Spurpunkte als
+JSON-Zahlen (Stand R4-16, mit dem Nachtdienst D22). Gepackt sind es rund
+930 KB, und die Datei geht bei jedem Deploy über FTPS mit.
 
 **Was ein Reset kostet — gemessen, nicht geschätzt** (15.09.2026, Prüfstand
 mit MariaDB und PHP auf demselben Rechner, je drei Läufe): **6,6 s** mit dem
-heutigen Bestand (106 Einsätze, 63 752 Punkte), **5,9 s** mit dem Stand davor
-(88 Einsätze, 55 861 Punkte). Die Zeit trägt **die Besucherin**, deren Anfrage
+damaligen Bestand (106 Einsätze, 63 752 Punkte), **5,9 s** mit dem Stand davor
+(88 Einsätze, 55 861 Punkte). Mit dem heutigen Bestand (109 Einsätze,
+67 292 Punkte) sind es **7,3 s** (27.09.2026, Median aus drei Läufen,
+7,26–7,61 s) — gemessen in einer anderen Arbeitsumgebung, der Abstand zu den
+6,6 s ist deshalb nicht allein der Bestand. Die Zeit trägt **die Besucherin**, deren Anfrage
 den fälligen Reset auslöst (`demo_reset_wenn_faellig()` aus
 `auth_guard.php`) — sie sieht ihre Seite so lange nicht. Bis Web 21.1.x traf
 das jede, die nach einer Pause nur nachsehen wollte; seit Web 21.2.0 nur noch
@@ -11337,8 +11340,9 @@ mitgelesen behandeln.
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
 der Referenzbestand liegt — dann `server/demo/fixture.json.gz` mit ausrollen
 und im Adminbereich unter **Demo-Konto → anlegen**. Die Seite zeigt danach
-die Bestandszahlen; sie müssen 15 Diensttage, 82 Einsätze, 95 Ruhesegmente,
-5 im Papierkorb und 2 Geräte nennen. Mechanik: Abschnitt 4.99a.
+die Bestandszahlen; sie müssen 21 Diensttage, 104 Einsätze, 118 Ruhesegmente
+und 2 Geräte nennen, darunter im Papierkorb 5 Einsätze, 1 Diensttag und
+5 Ruhesegmente (gemessen nach einem Reset, R4-16). Mechanik: Abschnitt 4.99a.
 
 **Demo-Konto sieht falsch aus / hängt:** Adminbereich → **Demo-Konto → Auf
 Standard zurücksetzen**. Der Vorgang ist transaktional und dauert wenige
@@ -11361,10 +11365,17 @@ sh      tools/referenzdatensatz/einspielen/lokal_starten.sh
 python3 tools/referenzdatensatz/einspielen/einspielen.py --stufen konto
 php     tools/referenzdatensatz/einspielen/demo_kennzeichnen.php
 node    tools/referenzdatensatz/einspielen/passwort_setzen.mjs '<Einrichtungslink>' nadokudemo0815 rc.json
+python3 tools/referenzdatensatz/generator/erzeugen.py
 python3 tools/referenzdatensatz/einspielen/einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
 node    tools/referenzdatensatz/browser/csv_import.mjs
 node    tools/referenzdatensatz/browser/referenz_export.mjs
 ```
+
+Der Generatorschritt ist Pflicht und nicht nachzuholen: `generator/ausgabe/`
+steht in `.gitignore`, und ohne `sendeplan.json` bricht die Stufe `ingest` ab.
+Bis R4-16 fehlte die Zeile hier und in `einspielen/LIESMICH.md` — auf einem
+Rechner, auf dem der Generator schon einmal gelaufen war, fiel das nicht auf
+(F-R4-52).
 
 Rund vier Minuten für den Bestand, dazu je Export einige Minuten für die
 GPX-Dateien. **Nicht identisch** kommen zurück: interne Kennungen (die

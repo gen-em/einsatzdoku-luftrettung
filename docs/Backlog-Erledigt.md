@@ -8930,3 +8930,51 @@ zutreffen.
      Kopplungsprobe steht kein Vorname mehr. git grep in tools/ ohne demo@:
      0 (nach dem Prüfstand, der die Ausgaben der Bedienprobe neu schreibt).
      Die örtliche Anlage ist neu aufgesetzt.
+
+275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — laut Handbuch „der klassische Fall".** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Befund (Schritt 15 AP9b, in Ortszeit; Zahl berichtigt mit Konzept R4,
+     F-R4-05, nachgemessen am 26.09.2026): 2 von 20 aktiven Diensttagen des
+     Demo-Kontos haben Einsätze auf zwei Kalendertagen — beide bodengebunden
+     (NEF Talwang), beide auf einer Zeitumstellung; der Eintrag zählte 0.
+     Ein luftgebundener Nachtdienst ohne Zeitumstellung fehlt. In AP9b
+     sortierte das Einsatztabellen-Modul „Beginn" über die Zeichenkette
+     `start_hhmm` (01:10 vor 23:50) — jahrealt, von keinem Mittel zu finden,
+     weil es nichts zu messen gab; belegt mit einem im Browser gebauten
+     Nachtdienst. Ob die drei APIs `start_sort` für einen echten Nachtdienst
+     richtig rechnen, ist gelesen, nicht gefahren.
+     Weg (Konzept R4, R4-16): ein luftgebundener Nachtdienst als D22 mit
+     Einsätzen vor und nach Mitternacht über den normalen Einspielweg
+     (`tools/referenzdatensatz/`, `started_at` in UTC); `days.day` bleibt der
+     Dienstbeginn; Matrixzeile, Bilderlauf-Seite, Bedienprobe „Sortierung
+     nach Beginn".
+     Abnahme: Diensttage mit Einsätzen auf mehr als einem Kalendertag in
+     Ortszeit mindestens 3, davon einer luftgebunden ohne Zeitumstellung.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 275.
+     Erledigt 27.09.2026 mit R4-16 (Web 21.3.1): D22, ein Luftdienst vom 19.
+     auf den 20.06.2026 mit Einsätzen um 19:09, 23:50 und 01:40, ohne
+     Zeitumstellung; Matrixzeile, Bilderlauf-Seite 12c-nachtdienst,
+     Bedienprobe nachtdienst-sortierung-beginn 1 / 1, gegen die Sortierung
+     über start_hhmm rot. Abnahme gemessen: 3 Diensttage mit Einsätzen auf
+     zwei Kalendertagen, einer davon luftgebunden ohne Zeitumstellung. Die
+     offene Frage nach den drei APIs ist gefahren: start_sort aus day.php,
+     range.php und suchindex.php gleich (3 / 3 / 3), gegen range.php mit
+     dem Dienstdatum rot.
+
+323. **Referenzbestand und Demo-Fixture tragen noch Nutzlast 11.** · gehört zu: 17 · Stand: erledigt · seit 25.09.2026
+     *Aufgenommen 25.09.2026 (P5c/AP8).* Die Referenz
+     `referenz/einsatzdoku-backup-2026-09-15.edbak` und
+     `server/demo/fixture.json.gz` stammen aus der Zeit vor Nutzlast 12; beide
+     führen das leere Feld der Standortauswahl. Das ist **kein Fehler** — der
+     Rückweg überliest es, und genau das zeigt der Kreislauf. Es kostet aber
+     **zwei Übergangsregeln** in `vergleich/ausnahmen/edbak_umlauf.json`
+     (`kopf.version` 11 → 12, das fehlende Feld), und die Fixture trägt eine
+     Angabe, die keine Fassung mehr schreibt. *Zu tun:* Referenz und Fixture
+     neu erzeugen, wie mit Nr. 173; danach werden die beiden Regeln
+     ungenutzt und fallen, mit einem Satz im Änderungsverlauf. Die Regeln in
+     `edbak-alt_umlauf.json` bleiben — die Altformat-Referenz ist eingefroren
+     (Nr. 46). *Abnahme:* edbak-Kreislauf mit 0 unerklärten Abweichungen **und**
+     0 ungenutzten Regeln.
+     Erledigt 27.09.2026 mit R4-16 (Web 21.3.1): Referenz und Fixture neu
+     erzeugt (Nutzlast 12, ohne user_bases), die zwei Übergangsregeln
+     ausgetragen. Kreislauf edbak 346 763 Vergleiche, 0 unerklärt, 0
+     ungenutzt; csv 11 234, 0 unerklärt, 0 ungenutzt.

@@ -348,7 +348,7 @@ async function kasten(rolle, weg, breite) {
       if (!adresse) {
         throw new Error('Adresse nicht aufgelöst — entweder ist der Bestand '
           + 'wirklich leer, oder das Demo-Konto hat sich mitten im Lauf '
-          + 'zurückgesetzt (alle 30 min, demo_lib.php). Der Bericht sagt am '
+          + 'zurückgesetzt (30 min nach der ersten Änderung, demo_lib.php). Der Bericht sagt am '
           + 'Ende, welcher der beiden Fälle vorliegt.');
       }
       await r.seite.goto(adresse, { waitUntil: 'domcontentloaded' });

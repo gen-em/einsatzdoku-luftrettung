@@ -41,6 +41,15 @@ Die Konten kommen aus den Umgebungsvariablen oder aus den Vorgaben unten:
     SITZUNGSPROBE_ALT="konto:passwort"     erwartet `edk1:`
     SITZUNGSPROBE_NEU="konto:passwort"     erwartet `edka1:`
 
+Die Vorgaben sind seit R4-16 das Demo-Konto (ALT) und das Pruefkonto (NEU),
+weil nur diese beiden auf JEDER frischen Anlage in der verlangten Fassung
+stehen: Das Demo-Konto bekommt bauartbedingt keinen Anteil und bleibt `edk1:`
+(E-S10-06, der Riegel in `demo_lib.php`), das Pruefkonto wird von der ersten
+Browserprobe auf `edka1:` umgestellt. Bis dahin standen hier das Pruefkonto
+als ALT und `umlauf-csv@` als NEU — auf einer mit `hochfahren.sh --neu`
+aufgebauten Anlage traegt das eine schon `edka1:` und das andere gar keine
+Huelle, und die Probe mass nichts (F-R4-53).
+
 Erwartet: **2 von 2**, Rueckgabe 0.
 
 WENN DIE PROBE MELDET „beide Konten tragen dasselbe Praefix": Das ist kein
@@ -74,8 +83,8 @@ def konto(name: str, vorgabe: str) -> tuple[str, str]:
     return email, passwort
 
 
-ALT = konto("SITZUNGSPROBE_ALT", "admin@example.invalid:pruefstandzugang2026")
-NEU = konto("SITZUNGSPROBE_NEU", "umlauf-csv@example.invalid:umlaufpruefung2026")
+ALT = konto("SITZUNGSPROBE_ALT", "demo@gen-em.org:nadokudemo0815")
+NEU = konto("SITZUNGSPROBE_NEU", "admin@example.invalid:pruefstandzugang2026")
 
 gesamt = 0
 offen = 0
