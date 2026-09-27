@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 141 | 27.09.2026 | 18, Nachfassung | Fahrplanzeile 18: Passkeys als zweiter Faktor neben TOTP dazu (Nr. 350, Paket SR-09, E-SR-29) — neun Pakete; Passkeys mit PRF als Passwortersatz nicht weiterverfolgt (E-SR-28, Nr. 146). Entscheidung der Betreiberin am 27.09.2026; Q-SR-12, -13 offen. |
 | 140 | 27.09.2026 | R86, Reihenfolge | P6 in zwei Hälften um S11 (R86): 12 das Bedrohungsmodell, 12b die Stücke 2 bis 12 nach 12a; Reihe 17 → 18 → 12 → 12a → 12b → 13 → 14; Nr. 21, 77, 188, 341 nach 12b. Bis Fassung 139 stand 12a nach dem ganzen Review, S11 wäre nie gegengelesen worden. |
 | 139 | 27.09.2026 | 18 freigegeben | Konzept SR von der Betreiberin freigegeben (E-SR-27); Fahrplanzeile 18 auf „freigegeben". Konzept-PR nach dem Merge von 17; Umsetzung danach auf eigenem Zweig mit Opus, Fable liest SR-03 gegen (H-SR-06). |
 | 138 | 27.09.2026 | 18, Q-SR-07/-11 | Fahrplanzeile 18: Nr. 228 (Proof-of-Work) wird fest gebaut statt „nur auf Anlass" (Entscheidung der Betreiberin, E-SR-26), dazu ein frischer Code vor kritischen Handlungen (E-SR-20); Konzept SR mit acht statt sechs Paketen. |

@@ -52,8 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340, 341 | 26.09.2026 |
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: keine | 27.09.2026 |
-| ab 360 | frei — höchste vergebene Nummer 341; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 27.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 | 27.09.2026 |
+| ab 360 | frei — höchste vergebene Nummer 350 (auf `origin/main` `05dfc12`: 341); 338 war für AR reserviert und blieb frei | 27.09.2026 |
 
 ---
 
@@ -378,14 +378,16 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      **Zuordnung (20.09.2026): Schritt 17** (Backlog-Runde 4) — nicht 10c. Entschieden mit der Freigabe des P5c-Konzepts (E-P5c-23, F-P5c-4).
 
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.** · gehört zu: 12 · Stand: offen · seit 06.09.2026
-     Drei Fragen, keine Fehler (R78, 06.09.2026): **Argon2id statt PBKDF2**
-     (WASM-Fremdbestandteil gegen GPU-Resistenz) · **Inhaltsschlüssel als
-     nicht-extrahierbarer `CryptoKey`** statt Hex im `sessionStorage` (ein XSS
-     könnte dann entschlüsseln, den Schlüssel aber nicht mitnehmen; anderes
-     Lebensdauermodell „ein Tab, ein Schlüssel") · **Passkeys** als
-     Zweitfaktor (WebAuthn-Serverbibliothek) und Passkeys mit PRF als Ersatz
-     der Passwortableitung. Dazu die Design-Skizze für Weg B (Nr. 43, SP-9)
-     zur Prüfung. Zuordnung R17 Stück 1.
+     Zwei Fragen, keine Fehler (R78, 06.09.2026; bis 27.09.2026 drei):
+     **Argon2id statt PBKDF2** (WASM-Fremdbestandteil gegen GPU-Resistenz)
+     · **Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`** statt Hex
+     im `sessionStorage` (ein XSS könnte dann entschlüsseln, den Schlüssel
+     aber nicht mitnehmen; anderes Lebensdauermodell „ein Tab, ein
+     Schlüssel"). Dazu die Design-Skizze für Weg B (Nr. 43, SP-9) zur
+     Prüfung. Zuordnung R17 Stück 1.
+     **Passkeys** stehen seit 27.09.2026 nicht mehr hier: als zweiter Faktor
+     neben TOTP Nr. 350 (Schritt 18, SR-09); mit PRF als Ersatz der
+     Passwortableitung von der Betreiberin nicht weiterverfolgt (E-SR-28).
      Stand seit S10 (Web 20.0.0, 14.09.2026): Der erste Punkt ist messbar
      kleiner — der Datenschlüssel hängt am Server-Anteil aus `config.php`,
      ein Datenbankabzug allein reicht für einen Offline-Angriff nicht mehr;
@@ -1327,3 +1329,20 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      und sagt, welchen Weg es genommen hat; `docs/Sandbox-Setup.md` nennt
      ihn. *Abnahme:* ein Lauf mit gesperrtem `registry-1.docker.io` holt die
      Abbilder über den Spiegel und meldet es.
+
+350. **Passkeys als zweiter Faktor neben TOTP.** · gehört zu: 18 · Stand: offen · seit 27.09.2026
+     *Aufgenommen 27.09.2026 in der Nachfassung des Konzepts SR (Paket
+     SR-09, E-SR-29); herausgelöst aus Nr. 146, dessen Passkey-Frage damit
+     beantwortet ist.* Ein TOTP-Code lässt sich auf einer gefälschten Seite
+     abgreifen und weiterreichen; eine WebAuthn-Signatur ist an den Ursprung
+     gebunden — der Code-Schritt wird phishingfest. **Bauform:** ohne
+     Fremdbestandteil — `rw_pruefen()` prüft schon ECDSA P-256 mit phpseclib,
+     `Crypt/RSA` liegt für RS256 daneben, es fehlt ein kleiner CBOR-Leser
+     (`passkey_lib.php`, E-SR-30); Tabelle `passkeys` (Migration); die Karte
+     „Zweitfaktor" bekommt den Abschnitt, der Code-Schritt den Knopf „Mit
+     Passkey bestätigen"; Codes und Rückweg bleiben der Notweg; Anlegen und
+     Entfernen verlangen einen frischen Code. **Prüfmittel:** Bedienweg mit
+     dem virtuellen Authenticator Chromiums (CDP `WebAuthn`), Probe mit
+     selbst erzeugten Vektoren (ES256, RS256, jede Ablehnung). **Nicht
+     dabei:** Passkeys mit PRF als Ersatz der Passwortableitung (E-SR-28).
+     *Abnahme:* Konzept SR, Paket SR-09; Prüfdokument P-SR-16.

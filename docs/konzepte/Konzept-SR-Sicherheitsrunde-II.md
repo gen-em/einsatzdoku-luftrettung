@@ -15,16 +15,19 @@ Reihenfolge: Der Review soll gehärtete Seiten lesen (Rahmenplan 3).
 **Herkunft:** Konzeptsitzung am 27.09.2026 (Fable, R14). Die Liste der
 Punkte liefert `python3 tools/steuerung/uebersicht.py --ziel 18`: **acht
 Einträge** am 27.09.2026 — die sechs der Fahrplanzeile und **Nr. 232, 251**,
-die Schritt 15 (E-ZE-12) und R4-01 (Q-R4-12) hierher gehängt haben.
+die Schritt 15 (E-ZE-12) und R4-01 (Q-R4-12) hierher gehängt haben; seit
+der **Nachfassung** am selben Tag **neun**, mit **Nr. 350** (Passkeys, SR-09,
+aus der eigenen Spanne — E-SR-29).
 **Modell:** Konzept Fable (R14); Umsetzung **Opus** (K2), **kein
 Fable-Schritt**; SR-03 bekommt vor dem PR eine **Gegenlesung durch Fable**
-(Q-SR-09, E-SR-23, H-SR-06) — ein Halt, kein Schritt.
+(Q-SR-09, E-SR-23, H-SR-06) — ein Halt, kein Schritt; ob SR-09 dieselbe
+bekommt, fragt Q-SR-13 (H-SR-08).
 **Fächerung (`CLAUDE.md` 7):** keine, in keinem Paket. Alle Pakete
 schreiben `server/`, und jedes trägt erzählenden Text; die Konzeptsitzung
 hat nicht gefächert (2.1).
 **Versionsstufe:** legt die Umsetzung fest (K3). Je Paket in Abschnitt 4
 vermerkt: SR-05 Korrektur; SR-01, SR-03, SR-04, SR-07, SR-08 Neben; SR-02
-Neben **mit Migration** — der Prüfstand fährt dafür `haupt` (Stufenregel `migration`),
+und SR-09 Neben **mit Migration** — der Prüfstand fährt dafür `haupt` (Stufenregel `migration`),
 und nach dem Deploy ruft eine Administratorin `update.php`. Uhr und Android
 bleiben unberührt (kein Paket fasst `watch/` oder `android/` an).
 **Ablage:** dieses Konzept; Prüfdokument
@@ -43,22 +46,23 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27). Befund an acht Punkten und fünf Themen, gelesen am Stand R4-10 (2). Paketschnitt: **acht Pakete** (4) — die Klickrunde vom 27.09.2026 hat zwei dazugebracht (SR-07 frischer Code, SR-08 Proof-of-Work). Kein Konzept-PR offen: Der Zweig sitzt auf dem 17er-Zweig und wird erst nach dessen Merge gegen `main` gestellt (E-SR-02); bis dahin ist `nummern` im Prüfbericht rot, mit vier 17er-Nummern (F-SR-12). |
-> | Entschieden | **E-SR-01 bis E-SR-27** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11) und E-SR-27 (Freigabe); die übrigen aus dem Konzept. |
-> | Offen | nichts im Konzept. **Der Konzept-PR wartet auf den Merge von 17** (E-SR-02), die Umsetzung auf beide Merges. |
-> | Umsetzung | noch nicht begonnen. **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 137 und 138). |
-> | Fable-Schritte | keine; **eine Fable-Gegenlesung** von SR-03 vor dem PR (H-SR-06, E-SR-23). |
+> | Stand | **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. Kein Konzept-PR offen: Der Zweig sitzt auf dem 17er-Zweig und wird erst nach dessen Merge gegen `main` gestellt (E-SR-02); bis dahin ist `nummern` im Prüfbericht rot, mit vier 17er-Nummern (F-SR-12). |
+> | Entschieden | **E-SR-01 bis E-SR-34** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09); die übrigen aus dem Konzept. |
+> | Offen | **Q-SR-12 und Q-SR-13** (3.2, aus der Nachfassung; Empfehlung je Zeile) — Haltepunkt H-SR-07 vor SR-09. **Der Konzept-PR wartet auf den Merge von 17** (E-SR-02), die Umsetzung auf beide Merges. |
+> | Umsetzung | noch nicht begonnen. **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 137, 138 und 141). |
+> | Fable-Schritte | keine; **eine Fable-Gegenlesung** von SR-03 vor dem PR (H-SR-06, E-SR-23); eine zweite für SR-09, wenn Q-SR-13 es sagt (H-SR-08). |
 > | Fächerung | keine. |
-> | Nummern | 350 bis 359 reserviert; vergeben: **keine**. |
+> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09). |
 
 ---
 
 ## 1. Auftrag
 
-**Ziel:** Fünf Lücken schließen, die frühere Konzepte benannt und
-ausdrücklich hierher gelegt haben — und danach trägt **kein offener
-Backlog-Punkt mehr `gehört zu: 18`**: erledigt, oder mit Begründung an
-seinen richtigen Ort gehängt.
+**Ziel:** Die Lücken schließen, die frühere Konzepte benannt und
+ausdrücklich hierher gelegt haben — sieben Punkte, zwei davon (6 und 7) am
+27.09.2026 von der Betreiberin dazu entschieden — und danach trägt **kein
+offener Backlog-Punkt mehr `gehört zu: 18`**: erledigt, oder mit Begründung
+an seinen richtigen Ort gehängt.
 
 1. **Eine gelesene Sitzungsdatei ist wertlos** (Nr. 242, E-SA-09). Heute ist
    der Dateiname die Sitzung: Wer `sess_<id>` liest — aus dem Verzeichnis,
@@ -81,9 +85,14 @@ seinen richtigen Ort gehängt.
 6. **Ein Proof-of-Work vor der Registrierung** (Nr. 228) — fest eingebaut,
    nicht „auf Anlass": Die Betreiberin hat es am 27.09.2026 so entschieden
    (Q-SR-07, E-SR-26).
+7. **Passkeys als zweiter Faktor neben TOTP** (Nr. 350, Nachfassung vom
+   27.09.2026, E-SR-29): Der Code-Schritt wird phishingfest — eine
+   WebAuthn-Signatur ist an den Ursprung gebunden, ein abgefischter Code
+   nicht. Codes und Rückweg bleiben der Notweg.
 
 **Nicht Ziel:** alles, was Schritt 12 gehört (der Review liest, was hier
-gebaut ist); die Verschlüsselung der Ortsdaten (12a, R78); ein zweiter
+gebaut ist); die Verschlüsselung der Ortsdaten (12a, R78); **Passkeys als
+Ersatz des Passworts** (PRF-Erweiterung, E-SR-28: nicht weiterverfolgt); ein zweiter
 Faktor für die Geräte (Uhr und Handy melden sich mit Gerätekennung und
 Schlüssel an, nicht mit Passwort — F-P5c-31; kein Cookie, keine Sitzung);
 Änderungen an der Auslieferungskette (PK-06 bis PK-08); der Rahmenplan
@@ -119,7 +128,7 @@ Dateien (`sitzung_lib.php`, `login.php`, `serverkrypto_lib.php`), und eine
 Gegenprüfung durch Agenten hätte hier vor allem eines gemessen — dass
 niemand die Anlage anfassen durfte.
 
-### 2.2 Die acht Punkte — Einordnung
+### 2.2 Die neun Punkte — Einordnung
 
 Spalte „Befund": was am 27.09.2026 gilt. Spalte „Paket": Abschnitt 4.
 
@@ -133,6 +142,7 @@ Spalte „Befund": was am 27.09.2026 gilt. Spalte „Paket": Abschnitt 4.
 | 249 | TOTP-Reset der einzigen BetreiberIn ohne Blatt | gilt teilweise: mit Passwort und Notfallblatt der Rückweg (RW-03); ohne beides nur SQL im Runbook (`Technik.md` 7, „Notweg"), ohne Protokoll | umsetzen — Notzugang mit Nachweisdatei (Q-SR-05) | SR-04 |
 | 210 | `ingest.php`-Deadlock | gilt teilweise: 1213/1205 antworten 503 `ausgelastet` (E-P5a-52); die Transaktion wird **nicht** wiederholt (`Technik.md` 5e.1: „Die eigentliche Abhilfe steht aus"); `dt_zeitraum_fortschreiben()` läuft in derselben Transaktion wie der Einsatz-Upsert | umsetzen | SR-05 |
 | 232 | Fristen der Rückfragen nie im Betrieb abgelaufen | gilt, Anlass nicht eingetreten; SR fasst `einstieg_lib.php` an, baut aber keine dritte Frist | **umhängen → `nächste Backlog-Runde`**, `nur auf Anlass` — Q-SR-06 | SR-06 |
+| 350 | Passkeys als zweiter Faktor (Nachfassung 27.09.2026) | gilt: nichts davon existiert — aber `rw_pruefen()` prüft ECDSA-P-256-Signaturen über eine Server-Herausforderung mit phpseclib, `Crypt/EC` und `Crypt/RSA` liegen vendoriert (`Lizenzen.md` 3), es fehlt ein CBOR-Leser; SP-11 und Nr. 146 nennen eine Fremdbibliothek als Voraussetzung (F-SR-13) | **umsetzen — zusätzlich zu TOTP** (Betreiberin, E-SR-29; Q-SR-12), mit Migration | SR-09 |
 | 228 | Proof-of-Work gegen Registrierungs-Spam | gilt, `nur auf Anlass`; der Anlass (verfallene, nie bestätigte Konten je Woche) wäre im Protokoll ablesbar (`konto_geloescht`, `weg = verfall`) und entstünde erst mit offener Registrierung; `registrieren.php` hat Honeypot, Mindestausfülldauer und drei Ratentöpfe, keine Rechenaufgabe | **umsetzen — fest, ohne Anlass** (Betreiberin, Q-SR-07, E-SR-26) | SR-08 |
 
 ### 2.3 Der Bestand je Thema
@@ -161,6 +171,23 @@ Rückweg (`?weg=schluessel`) → `anmeldung_vollenden()`. Die Karte
 `zweitfaktor_teile.php`), das Tor in `auth_guard.php`. Der Vorschlag aus
 SP-11 („dieses Gerät 30 Tage merken" als Cookie mit eigenem Hash) ist in
 Nr. 141 zweimal auf Nr. 242 verschoben worden.
+
+**Passkeys.** Nichts davon existiert: kein `navigator.credentials` unter
+`assets/`, kein CBOR unter `server/`. Die Bausteine liegen dennoch da.
+`rw_pruefen()` in `rueckweg_lib.php` prüft eine ECDSA-P-256-Signatur über
+SHA-256 mit phpseclib (`Crypt/EC`, `PublicKeyLoader`) — das ist der Kern
+einer WebAuthn-Assertion; `rw_herausforderung_stellen()` legt eine
+Herausforderung in den halben Stand, und `login.php` nimmt die Signatur als
+Formularfeld; `api/rueckweg_anlegen.php` ist ein Registrierungsendpunkt mit
+Token; `rueckweg.js` zeigt den WebCrypto-Weg im Browser unter der CSP
+`script-src 'self'`; `Crypt/RSA` liegt in derselben vendorierten
+Bibliothek (`Lizenzen.md` 3, 338 Dateien mit Prüfsumme). Die Bedienprobe
+hält für Chromium schon eine CDP-Sitzung (`newCDPSession`, Fingergerät) —
+der virtuelle Authenticator (`WebAuthn.addVirtualAuthenticator`) liegt auf
+demselben Kanal; Firefox und WebKit haben keinen (`--motor`, Nr. 300). Ein
+Passkey ist an den Ursprung gebunden: Staging und Produktiv sind zwei
+Anlagen, die Sandbox unter `localhost` ist ein sicherer Kontext. SP-11
+nannte eine Fremdbibliothek als Voraussetzung (F-SR-13).
 
 **Serverschlüssel.** `server_key` in `config.php`, 64 Hexzeichen; Kennung
 acht Zeichen (`schluessel_kennung()`), Marke `server_key_kennung` in
@@ -218,11 +245,12 @@ gelesen:
 | Datei | R4 sagte | 18 tatsächlich |
 |---|---|---|
 | `sitzung_lib.php`, `session_lib.php`, `login.php`, `auth_guard.php` | 242 | ja — SR-01, SR-02 (F-SR-09: die Sätze „wer sie liest, ist angemeldet" gehen mit) |
-| `totp_lib.php`, `zweitfaktor*.php`, `einstellungen.php`, `admin_user.php`, `pw_handling.php` | 242/249 | ja — SR-02 (Gerät merken, vergessen beim Passwortwechsel und Zurücksetzen), SR-04 nur `totp_lib.php` |
+| `totp_lib.php`, `zweitfaktor*.php`, `einstellungen.php`, `admin_user.php`, `pw_handling.php` | 242/249 | ja — SR-02 (Gerät merken, vergessen beim Passwortwechsel und Zurücksetzen), SR-04 nur `totp_lib.php`; SR-09 (Passkeys: Abschnitt in der Karte, Knopf im Code-Schritt, `totp_abschalten()` nimmt sie mit) |
+| `rueckweg_lib.php`, `api/rueckweg_anlegen.php`, `assets/rueckweg.js`, `vendor/phpseclib3/` | — (nicht auf der Liste) | **nein** — SR-09 liest sie als Muster und lässt sie stehen; daneben entstehen `passkey_lib.php`, `api/passkey_anlegen.php`, `assets/passkey.js` |
 | `serverkrypto_lib.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `api/schluesselblatt_pruefen.php`, `einstieg_lib.php`, `sicherungsziel_lib.php`, `*_archiv_lib.php`, `adminbackup_lib.php`, `komplett_lib.php` | 233/247 | ja — SR-03; dazu `jobs_lib.php` (ein Job) und ein neues `schluesselwechsel_lib.php` |
 | `install.php` ab Zeile 397 | 247 | **nein** — die Schlüssel entstehen dort, die Rotation lebt in `serverkrypto_lib.php`; R4-09 durfte die Datei unbesorgt anfassen (F-SR-02) |
 | `ingest.php`, `diensttag_lib.php`, `transaktion_lib.php` | 210 | `ingest.php` ja, `transaktion_lib.php` nur ein Kommentar; `diensttag_lib.php` nein (R4-15 hat `days.created_at` dort gebaut, SR-05 liest es nur) |
-| `konto_lib.php`, `demo_lib.php`, `wartung_lib.php`, `db.php`, `schema.sql`, `migration_lib.php` | 249/228/242/210 | `schema.sql`, `migration_lib.php`, `demo_lib.php`, `jobs_lib.php` — SR-02; `konto_lib.php`, `wartung_lib.php`, `db.php` nein |
+| `konto_lib.php`, `demo_lib.php`, `wartung_lib.php`, `db.php`, `schema.sql`, `migration_lib.php` | 249/228/242/210 | `schema.sql`, `migration_lib.php`, `demo_lib.php`, `jobs_lib.php` — SR-02, dazu `schema.sql`, `migration_lib.php`, `demo_lib.php` in SR-09 (`passkeys`); `db.php` zwei Einträge in `ZF_FRISCH_HANDLUNGEN` (SR-07, SR-09); `konto_lib.php`, `wartung_lib.php` nein |
 | `registrieren.php`, `ratelimit_lib.php`, `zip_lib.php` | 228 | `registrieren.php` ja (SR-08, Proof-of-Work); `ratelimit_lib.php` bekommt einen Topf (SR-04); `zip_lib.php` nein |
 
 **Was 17 in diesen Dateien geändert hat und SR übernimmt:** `json_out()` in
@@ -329,6 +357,17 @@ ein Satz mehr, und der Review misst ihn.
   trägt `nummern` rot. Grün wird die Zeile mit dem Merge von 17 in `main`,
   und erst danach wird der Konzept-PR gestellt — mit einem frischen
   Bericht auf dem dann gemergten Baum (`Pruefablauf.md` 5.3).
+- **F-SR-13 SP-11 setzt für Passkeys eine WebAuthn-Serverbibliothek
+  voraus — das gilt seit Web 20.43.0 nicht mehr.**
+  `Vorbereitung-Sicherheitspaket.md` SP-11 und Nr. 146 sagen „brauchen
+  eine WebAuthn-Serverbibliothek (Fremdbestandteil)". Seit dem Rückweg
+  (Konzept RW) prüft `rw_pruefen()` ECDSA-P-256-Signaturen über eine
+  Server-Herausforderung mit phpseclib, und `Crypt/RSA` liegt in derselben
+  vendorierten Bibliothek (`Lizenzen.md` 3). Was fehlt, ist ein
+  CBOR-Leser für die Registrierung — wenige hundert Zeilen eigener Code,
+  kein Fremdbestandteil (E-SR-30). SR-09 trägt den Stand in SP-11 ein,
+  ohne den alten Satz zu löschen: Das Dokument ist ein Protokoll seiner
+  Zeit. *(Gefunden in der Nachfassung vom 27.09.2026.)*
 
 ## 3. Entscheidungen und Fragen
 
@@ -349,11 +388,11 @@ ein Satz mehr, und der Review misst ihn.
 | E-SR-11 | **Nr. 233: Jede Rotation — Anteil und Serverschlüssel — setzt `schluesselblatt_bestaetigt_am` zurück.** Die Rückfrage kommt damit bei der nächsten Anmeldung jeder BetreiberIn, mit einem Satz voran: „Ein Wert hat gewechselt — drucke das Blatt neu; während der Rotation gehört auch der bisherige (Kennung …) darauf." Gefragt werden weiter nur die **aktuellen** Werte (vier Felder); der bisherige wird genannt, nicht abgefragt. | Konzept | Nr. 233 sagt selbst, wo es zu schließen ist: „Der Rotationsvorgang selbst sollte sagen, dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt." Sechs Felder je nach Lage verwirren mehr, als sie prüfen (E-P5b-10, unverändert); dass der bisherige Wert auf dem Blatt steht, prüft der Ausdruck selbst — er druckt ihn. |
 | E-SR-12 | **Nr. 210: Der Transaktionsrumpf von `ingest.php` läuft in einer Schleife mit höchstens drei Anläufen** bei 1213 und 1205 (`gedraengel_erkannt()`), mit kurzem Zufallsabstand (50–200 ms) dazwischen; der Rumpf bleibt an Ort und Stelle (Weg B: `for` um `beginTransaction()`/`try`, keine Zerlegung in Funktionen); was der Rumpf für die Antwort befüllt, wird am Anfang jedes Anlaufs zurückgesetzt (Liste im Paket). **`dt_zeitraum_fortschreiben()` wandert hinter den Commit** — eine eigene kurze Anweisung, idempotent (min/max), mit demselben Wiederholungsrahmen. Nach dem dritten Anlauf 503 wie heute. | Konzept | Der Rumpf gehört zum Gerätevertrag und ist 670 Zeilen; ihn in eine Closure mit zwei Dutzend `use (&…)` zu heben, ist die Art Umbau, bei der eine Variable still stehen bleibt. Die `days`-Zeile ist der Kreuzungspunkt aller Uploads eines Tags; wer sie erst nach dem Commit anfasst, hält ihre Sperre nicht mehr, während er Punkte einfügt — der Deadlock verliert seinen zweiten Arm, und die Schleife wird zum Netz statt zur Regel. |
 | E-SR-13 | **Nr. 249 (Q-SR-05 = B, ergänzt durch E-SR-24): ein Notzugang `zweitfaktor_notweg.php`**, unangemeldet, nur wenn **genau eine** BetreiberIn existiert (`betreiberinnen_zahl() === 1`) und ihr Zweitfaktor eingeschaltet ist; Nachweis über eine Datei mit Zufallsnamen im Anwendungsverzeichnis (Muster `install.php`, M1-11) — die Hilfe dafür wandert als `nachweis_lib.php` heraus, weil `install.php` und `wiederherstellen.php` sie schon je einmal tragen (R83, dritter Verbraucher); Topf `notweg` (fünf je Stunde, Leiter); Erfolg: `totp_abschalten($id, 'notweg')`, Protokoll `totp_zurueckgesetzt` mit `weg = notweg`, Mail `totp_zurueckgesetzt`, danach Anmeldung mit Passwort ins Einrichtungstor. Die Seite gibt unangemeldet **keine Auskunft** (K-11-Linie): weder, ob es genau eine BetreiberIn gibt, noch welche. **Der SQL-Weg bleibt im Runbook** — als letzter. | Konzept | Wer die Nachweisdatei anlegen kann, hat den Webspace — dasselbe Vertrauen wie der, der heute SQL absetzt; der Unterschied ist, dass der Weg im Protokoll steht, eine Mail auslöst und kein Datenbankwerkzeug braucht. Bei zwei BetreiberInnen setzt die andere zurück (E-P5c-42); eine Tür, die dann offen bliebe, wäre ein zweiter Weg ohne Not. |
-| E-SR-14 | **Reihenfolge SR-01 → SR-02 → SR-07 → SR-05 → SR-03 → SR-04 → SR-08 → SR-06, seriell, ohne Fächerung.** | Konzept, ergänzt 27.09.2026 | Alle Pakete schreiben `server/` (Rahmenplan 4: nacheinander). Erst die Sitzung, weil SR-02 ihre Cookie-Tabelle braucht; der frische Code (SR-07) gleich danach, weil SR-03 und SR-04 seine Griffe schon mit ihm bauen; SR-05 vor SR-03, weil es klein ist und `ingest.php` niemand sonst anfasst; SR-03 vor SR-04, weil der Notzugang die Rotation nicht kennen muss, die Rotation aber den Zweitfaktor (Geheimnisse umhüllen); der Proof-of-Work (SR-08) zuletzt, weil er keine andere Datei der Runde teilt. |
+| E-SR-14 | **Reihenfolge SR-01 → SR-02 → SR-07 → SR-09 → SR-05 → SR-03 → SR-04 → SR-08 → SR-06, seriell, ohne Fächerung.** (SR-09 eingefügt mit der Nachfassung.) | Konzept, ergänzt 27.09.2026 (zweimal) | Alle Pakete schreiben `server/` (Rahmenplan 4: nacheinander). Erst die Sitzung, weil SR-02 ihre Cookie-Tabelle braucht; der frische Code (SR-07) gleich danach, weil SR-03 und SR-04 seine Griffe schon mit ihm bauen; die Passkeys (SR-09) direkt dahinter, weil sie den Haken aus SR-02 und die Frische aus SR-07 mitbenutzen und dieselben Anmeldedateien anfassen — danach sind `login.php`, `einstellungen.php` und `zweitfaktor_teile.php` für den Rest der Runde zu; SR-05 vor SR-03, weil es klein ist und `ingest.php` niemand sonst anfasst; SR-03 vor SR-04, weil der Notzugang die Rotation nicht kennen muss, die Rotation aber den Zweitfaktor (Geheimnisse umhüllen); der Proof-of-Work (SR-08) zuletzt, weil er keine andere Datei der Runde teilt. |
 | E-SR-15 | **Keine Mockups** (Q-SR-08: bestätigt): Der Haken im Code-Schritt ist ein `.schalter` in der Anmeldekarte, die Zeile in der Karte „Zweitfaktor" eine `zeile()` mit Knopf, der Fortschritt in der Karte „Schlüssel des Servers" die Lage `rotation` mit Zählung wie beim Anteil, der Notzugang das Gerüst von `wiederherstellen.php`. Die Bilder des Bilderlaufs gehen ins Prüfdokument. | Konzept (`CLAUDE.md` 5, `Design.md` 9) | Ein neuer Baustein entsteht nur mit Mockup; hier entsteht keiner. |
 | E-SR-16 | **Die Sätze „Wer sie liest, ist angemeldet" werden ersetzt**, nicht ergänzt: Kopf von `sitzung_lib.php`, `Technik.md` (Sitzungsablage); `Backlog-Erledigt.md` Nr. 241 bleibt wörtlich. Dazu die Doku-Stellen aus F-SR-01 und F-SR-03. | Konzept (F-SR-09) | `CLAUDE.md` 2, Punkt 3. |
 | E-SR-17 | Q-SR-01, Q-SR-10: **„Gerät merken" für alle Rollen, mit einstellbarer Dauer je Rollengruppe** — eine Zahl für NutzerInnen (Vorgabe 30 Tage), eine für Support, Admin und BetreiberIn (Vorgabe 7 Tage); Auswahl aus, 1, 7, 14, 30, 90 Tage; **0 heißt: kein Haken**. Ort: Betrieb → Servereinstellungen, neue Karte „Anmeldung" (zwei Wahllisten, eigenes Speichern; in derselben Karte später die Frist des frischen Codes, E-SR-20). **Die Dauer wird beim Prüfen gerechnet, nicht beim Merken:** Die Tabelle trägt `angelegt_am`, gültig ist eine Zeile, solange `angelegt_am` plus der heutigen Dauer der Rollengruppe in der Zukunft liegt. Der Text am Haken nennt die Dauer („Dieses Gerät 7 Tage merken"). Keine persönliche Wahl im Profil. | Betreiberin, 27.09.2026 | „Der Zeitraum sollte einstellbar sein, für User und für Admins die Standard-Einstellung." Gerechnet beim Prüfen, damit eine verkürzte Einstellung sofort für alle gilt und 0 alle Geräte auf einmal abmeldet — sonst hieße „aus" erst in 30 Tagen aus. Zwei Zahlen statt einer, weil die Verwaltung kürzer laufen soll als der Dienst; keine dritte Ebene im Profil, weil eine Einstellung, die kaum jemand ändert, nur Pflege kostet (Q-SR-10, wie empfohlen). |
-| E-SR-18 | Q-SR-02: **Gemerkt wird nur nach einem App-Code.** Nach Wiederherstellungscode oder Rückweg zeigt der Code-Schritt keinen Haken. | Betreiberin, 27.09.2026 | wie empfohlen (Begründung in E-SR-07). |
+| E-SR-18 | Q-SR-02: **Gemerkt wird nur nach einem App-Code.** Nach Wiederherstellungscode oder Rückweg zeigt der Code-Schritt keinen Haken. *Ergänzt durch E-SR-32: Ein Passkey zählt wie ein App-Code.* | Betreiberin, 27.09.2026 | wie empfohlen (Begründung in E-SR-07). |
 | E-SR-19 | Q-SR-08: **Keine Mockups**; die Bilder des Bilderlaufs kommen ins Prüfdokument (P-SR-05). | Betreiberin, 27.09.2026 | wie empfohlen (E-SR-15). |
 | E-SR-20 | Q-SR-11: **Ein frischer Code vor kritischen Handlungen** — Paket SR-07. „Frisch" heißt: In dieser Sitzung wurde in den letzten **15 Minuten** ein Code aus der App oder ein Wiederherstellungscode eingegeben (`$_SESSION['zf_frisch_bis']`, gesetzt in `login.php` nach dem Code-Schritt und auf der Bestätigungsseite); eine Anmeldung über ein gemerktes Gerät und der Rückweg setzen nichts. **Die Liste** (Konstante, eine Stelle): alle `schluessel_*`-Handlungen in `betrieb_server.php`, die Anzeige von `betrieb_schluesselblatt.php`, in `admin_user.php` Rollenwechsel, Zweitfaktor zurücksetzen und Konto löschen, in `einstellungen.php` den eigenen Zweitfaktor ausschalten. **Mechanik:** `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, gerufen vor `csrf_check()` wie ein Rollentor (E-P5c-85); nicht frisch → 303 auf `zweitfaktor.php?bestaetigen=1&zurueck=<eigener Pfad>` (nur Pfade der eigenen Anwendung), dort Code eingeben (Topf `totp`), zurück auf die Seite mit dem Hinweis „Code bestätigt — bitte die Handlung noch einmal auslösen"; für `api/` 403 JSON `zweitfaktor_frisch`. Ein Konto **ohne** Zweitfaktor hat nichts zu bestätigen; die Prüfung ist dort ein Durchlass — die Liste trifft ohnehin nur Verwaltungshandlungen und das eigene Ausschalten. | Betreiberin, 27.09.2026 („Ja, kurze Liste") | Ein gemerkter, unbeaufsichtigter Rechner mit bekanntem Passwort reicht sonst für einen Schlüsselwechsel. 15 Minuten sind die Frist des Topfes `totp`; die abgeschickte Handlung wird nicht nachgespielt, weil ein gespeicherter POST samt Formular-Token die Art Zwischenspeicher ist, die beim nächsten Umbau falsch abgespielt wird — ein zweiter Klick ist billiger. Vor dem Token wie jedes Tor, damit die Rollenprobe den Umweg von der Token-Ablehnung unterscheiden kann. |
 | E-SR-21 | Q-SR-03: **Komplett-Stände werden nicht umgehüllt; ein frischer Stand unter dem neuen Schlüssel ist Abschlussbedingung.** | Betreiberin, 27.09.2026 | wie empfohlen (E-SR-09, E-SR-10). |
@@ -363,6 +402,13 @@ ein Satz mehr, und der Review misst ihn.
 | E-SR-25 | Q-SR-06: **Nr. 232 → `nächste Backlog-Runde`, `nur auf Anlass`.** | Betreiberin, 27.09.2026 | wie empfohlen. |
 | E-SR-26 | Q-SR-07: **Nr. 228 wird gebaut — fest, ohne Anlass, ohne Schalter** (Paket SR-08). Der Server stellt beim Laden der Registrierungsseite eine Aufgabe (32 Zufallsbyte, Sitzung, zehn Minuten, einmal gültig); ein Worker im Browser rechnet ab dem Laden, **während die Person tippt**, SHA-256 über WebCrypto, ohne Fremdbestandteil (`assets/pow.js`); der Absendeknopf wartet nur, wenn die Person schneller ist als der Worker („Sicherheitsprüfung läuft …"). Der Server prüft **eine** SHA-256 (unter einer Millisekunde), **vor** jeder Adressprüfung, im selben Fehlerpfad wie Honeypot und Mindestausfülldauer — die Antwortzeitgleichheit aus E-P5b-13 bleibt (Δ < 50 ms). **Die Schwierigkeit ist eine Konstante**, die SR-08 misst und festlegt: Ziel ist der Median **unter einer Sekunde auf einem aktuellen Handy** und unter drei Sekunden auf dem alten Diensthandy (Chromium mit vierfacher CPU-Drosselung als Ersatz im Prüfstand); die gemessenen Hashraten und die gewählte Bitzahl stehen im Prüfdokument. | Betreiberin, 27.09.2026 („Bauen wir einfach fest ein") | Die Frage „wie viel Verzögerung" beantwortet die Bauform: Die Rechnung läuft nebenher, solange jemand Adresse und Passwort tippt (zehn bis dreißig Sekunden), und ist dann in aller Regel fertig — spürbar wird sie nur bei einem Skript, das das Formular sofort abschickt, und genau das ist der Zweck. Ohne JavaScript geht die Registrierung ohnehin nicht (E-P5b-13). Kein Schalter, weil ein Schalter, den niemand umlegt, eine zweite Wahrheit ist (R74). |
 | E-SR-27 | **Konzept freigegeben.** Die Umsetzung beginnt nach dem Merge von 17 und des Konzept-PR auf einem eigenen Zweig von `main` (Opus), arbeitet die acht Pakete in der Reihenfolge aus E-SR-14 durch und hält nur an: H-SR-05 (die Migration und das einmalige Neuanmelden ansagen), H-SR-06 (Gegenlesung von SR-03 durch Fable), bei Problemen und vor dem PR (H-SR-04). Keine Fächerung. | Betreiberin, 27.09.2026 („Freigabe") | K5, K6: alle Q sind entschieden, der Paketschnitt steht; `CLAUDE.md` 7: ohne Fächerungszeile keine Fächerung. |
+| E-SR-28 | **Passkeys mit PRF als Ersatz der Passwortableitung werden nicht weiterverfolgt.** Nr. 146 verliert den Satz; Schritt 12 stellt die Frage nicht neu, es sei denn, das Bedrohungsmodell wirft sie selbst auf. | Betreiberin, 27.09.2026 („Stufe B lassen wir") | Das Geheimnis, aus dem der Datenschlüssel entstünde, läge bei synchronisierten Passkeys im Schlüsselbund von Apple oder Google — eine Frage an die Zusage der Ende-zu-Ende-Verschlüsselung, nicht an ein Paket; PRF gibt es nicht auf jedem Authenticator, also blieben zwei Ableitungswege je Konto; Rang Haupt in der Größe von S10 (Verschlüsselung, Anmeldung, Reset, Schlüsselerneuerung, Anhebelauf). |
+| E-SR-29 | **Passkeys als zweiter Faktor neben TOTP — Paket SR-09, in Schritt 18** (Nachfassung des freigegebenen Konzepts; Nr. 350 aus der eigenen Spanne). Ein Passkey ist ein **weiteres Verfahren desselben Faktors**: Voraussetzung ist der eingeschaltete Zweitfaktor, Codes und Rückweg bleiben der Notweg, `totp_abschalten()` nimmt die Passkeys mit — auf jedem Weg. Ob ein Passkey den Faktor auch allein tragen darf, fragt Q-SR-12. | Betreiberin, 27.09.2026 („Stufe A geht ins Paket 18. Nachfassung ist ok") | Ein TOTP-Code lässt sich auf einer gefälschten Seite abgreifen und weiterreichen; eine WebAuthn-Signatur ist an den Ursprung gebunden — der Code-Schritt wird phishingfest, und das ist der Gewinn für Support, Admin und BetreiberIn (K-5). In 18 statt als eigener Schritt, weil die Anmeldedateien hier ohnehin offen sind und 12b den Code danach liest (R86). Nicht als Ersatz von TOTP, weil Einrichtungstor, Codes und Rückweg am TOTP-Verfahren hängen — das wäre ein Umbau der Anmeldung, nicht ein Verfahren mehr. |
+| E-SR-30 | **Bauform ohne Fremdbestandteil:** `passkey_lib.php` mit eigenem CBOR-Leser für die Teilmenge, die Registrierung und COSE brauchen (Ganzzahlen, Byte- und Textketten, Listen und Karten bestimmter Länge; alles andere ist eine Ablehnung); Signaturen über phpseclib (`Crypt/EC` ES256 wie der Rückweg, `Crypt/RSA` RS256 PKCS#1 v1.5); **Attestation `none`** wird verlangt und nicht geprüft; erlaubt sind genau zwei Algorithmen (-7, -257); `rp.id` ist der Host, der Ursprung wird gegen den eigenen geprüft; **UP** muss gesetzt sein, **UV** ist `preferred` und wird nicht verlangt. Der öffentliche Schlüssel wird bei der Registrierung nach SPKI überführt und so gespeichert. | Konzept (F-SR-13) | Was SP-11 als Fremdbibliothek ansah, liegt zu vier Fünfteln im Haus: `rw_pruefen()` ist der Kern einer Assertion. Ein CBOR-Leser für vier Typen ist klein und lesbar; eine WebAuthn-Bibliothek brächte Attestation-Ketten, Metadaten-Dienste und ein Dutzend Formate mit, die hier niemand braucht. Attestation sagt, welcher Hersteller den Authenticator gebaut hat — für einen zweiten Faktor nach dem Passwort ohne Wert und mit Datenschutzpreis (R36). UV nicht verlangt, weil das Passwort das Wissen ist und der Passkey den Besitz beweist; wer UV verlangte, schlösse Hardware-Schlüssel ohne PIN aus. SPKI, weil der Anmeldeweg dann ohne CBOR auskommt und `PublicKeyLoader` die eine Stelle bleibt (R83). |
+| E-SR-31 | **Ort: der Abschnitt „Passkeys" in der Karte „Zweitfaktor"** (Einstellungen → Profil), keine eigene Karte; „Passkey hinzufügen" und „Entfernen" stehen in `ZF_FRISCH_HANDLUNGEN` (E-SR-20) — die Karte zeigt den Knopf nur bei frischem Code, sonst den Verweis „Zuerst Code bestätigen", und der Endpunkt prüft es noch einmal (403). Bezeichnung optional, bis 40 Zeichen, sonst „Passkey vom <Datum>"; **kein** User-Agent, **keine** AAGUID; höchstens zehn je Konto. | Konzept | R74: ein Faktor, eine Karte. Wer eine fremde Sitzung erbeutet hat, darf sich damit keinen dauerhaften zweiten Faktor anlegen — genau der Fall, für den E-SR-20 gebaut ist; der Verweis statt eines 403 im Browser, weil die Person die Reihenfolge sehen soll, bevor der Plattform-Dialog aufgeht. Eine Bezeichnung braucht die Liste, sobald zwei Einträge darin stehen (Handy, Laptop) — anders als das Gerätecookie, das niemand sieht (E-SR-07); die AAGUID ist bei Attestation `none` ohnehin null. |
+| E-SR-32 | **Im Code-Schritt ist der Passkey der dritte Weg neben App-Code und Wiederherstellungscode:** Knopf „Mit Passkey bestätigen" über dem Codefeld, nur wenn das Konto Passkeys hat und der Browser `PublicKeyCredential` kennt; die Herausforderung liegt im halben Stand wie die des Rückwegs; die Antwort geht als Formularfeld an `login.php` (kein eigener Endpunkt), gezählt im Topf `totp`. **Ein Passkey zählt wie ein App-Code:** Haken „Gerät merken" (E-SR-18) und `zf_frisch_bis` (E-SR-20); dasselbe auf `zweitfaktor.php?bestaetigen=1`. Ohne JavaScript bleibt der Codeweg. | Konzept | Der Rückweg hat den Weg vorgezeichnet (RW-03): Herausforderung im halben Stand, Signatur als Feld, Prüfung vor `anmeldung_vollenden()` — ein zweiter Weg daneben, nicht ein zweiter Mechanismus. Ein Passkey beweist Gerätebesitz mit Nutzergeste, mindestens so stark wie ein App-Code; ihn schwächer zu zählen hieße, den sichereren Weg unbequemer zu machen. |
+| E-SR-33 | **Signaturzähler:** neu > alt oder beide 0 → gut; sonst Ablehnung und Protokoll `passkey_zaehler` (orange), der Passkey bleibt. Anlegen und Entfernen schreiben Protokoll (`passkey_angelegt`, `passkey_entfernt`) und eine Mail an das Konto; die Anmeldung mit Passkey schreibt nichts. | Konzept | Ein Zähler, der zurückläuft, ist ein Klon-Verdacht (WebAuthn Level 2, 6.1.1) — aber synchronisierte Passkeys melden dauerhaft 0, und ein Löschen bei Verdacht sperrte die Betroffene aus ihrem eigenen Konto; sie sieht den Eintrag und entscheidet. Mail bei Anlegen und Entfernen wie beim Rückweg (`rueckweg_erneuert`), weil ein neuer zweiter Faktor an einem erbeuteten Konto sonst still bliebe; je Anmeldung wäre Rauschen (E-SR-07). |
+| E-SR-34 | **Namen: Was den Faktor meint, heißt `zweitfaktor_*`; was ein Verfahren meint, `totp_*` oder `pk_*`.** Die neuen Helfer aus SR-02 (Gerät merken, erkennen, vergessen, Dauer) heißen deshalb `zweitfaktor_geraet_*`, die Protokollarten `zweitfaktor_geraet_gemerkt` und `zweitfaktor_geraete_vergessen`; `zweitfaktor_frisch*` (SR-07) heißt schon so. Bestehende `totp_*`-Helfer, die den Faktor tragen (`totp_an()`, `totp_abschalten()`, `totp_zustand()`), werden **nicht** umbenannt; `totp_lib.php` bleibt die Bibliothek des Faktors. | Konzept, Nachfassung 27.09.2026 | Seit SR-09 merkt ein Gerät nach App-Code **oder** Passkey — ein `zweitfaktor_geraet_merken()` hieße dann falsch. Die alten Namen bleiben, weil 12b den Code liest, den es gibt, und ein Umbenennen von zwanzig Aufrufern kein Sicherheitsgewinn ist. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -381,6 +427,8 @@ Jede mit Empfehlung; „alles wie empfohlen" ist eine gültige Antwort.
 | Q-SR-09 | **Fable für SR-03** (der Schlüsselwechsel), oder Opus wie überall? | **Opus.** Das Konzept legt Inventar, Reihenfolge und Nachweis fest; das Risiko trägt die Prüfliste (P-SR-08 bis -12: der ganze Vorgang auf der Sandbox mit allen sechs Zwecken, danach jedes Stück geöffnet). Alternative: Fable nur für die Gegenlesung des Pakets vor dem PR — ein Halt, kein Schritt. | SR-03 |
 | Q-SR-10 | *(aus der Antwort auf Q-SR-01)* **Die einstellbare Dauer des Merkens — wo und für wen?** Zwei Vorgaben je Rollengruppe · zwei Vorgaben und persönlich kürzer wählbar · eine Vorgabe für alle. | **Zwei Vorgaben je Rollengruppe** (NutzerInnen 30, Verwaltungsrollen 7 Tage; aus, 1, 7, 14, 30, 90), keine persönliche Wahl. | SR-02 |
 | Q-SR-11 | *(aus der Rückfrage der Betreiberin zu Q-SR-01)* **Kritische Aktionen trotz gemerktem Gerät — ein „frischer Code"?** Kurze Liste · nur der Betrieb · keiner. | **Ja, kurze Liste** (Schlüssel-Griffe, Schlüsselblatt, Rolle ändern, fremden Zweitfaktor zurücksetzen, Konto löschen, eigenen Zweitfaktor ausschalten); 15 Minuten; ein Paket. | SR-07 |
+| Q-SR-12 | *(aus der Nachfassung 27.09.2026)* **Darf ein Passkey den Zweitfaktor auch allein tragen** — ohne TOTP-App —, oder nur zusätzlich zum eingeschalteten TOTP? | **Nur zusätzlich** (E-SR-29). Allein hieße: Wiederherstellungscodes ohne TOTP-Geheimnis, ein Einrichtungstor, das einen Passkey annimmt, ein Reset-Weg ohne App — die Anmeldung würde umgebaut, nicht erweitert. Wer es allein will, bekommt einen eigenen Backlog-Punkt für später. Alternative: allein erlaubt — dann wächst SR-09 um etwa die Hälfte. | SR-09 |
+| Q-SR-13 | *(aus der Nachfassung 27.09.2026)* **Bekommt SR-09 dieselbe Fable-Gegenlesung wie SR-03** (E-SR-23), oder baut Opus es ohne? | **Ja, Gegenlesung** (H-SR-08): Ein selbst geschriebener CBOR-Leser und eine Signaturprüfung sind die Art Code, bei der ein falsch gelesenes Längenfeld einen fremden Schlüssel annimmt — und die Probe misst nur die Fälle, die jemand vorhergesehen hat. Preis: eine zweite Lesung. Alternative: Opus allein, die Passkeyprobe als einziger Beleg. | SR-09 |
 
 **Beantwortet am 27.09.2026** in der Konzeptsitzung (Klickrunde mit
 Erklärung je Frage): Q-SR-01 „alle Rollen, aber einstellbare Dauer" →
@@ -389,6 +437,10 @@ Q-SR-04 → E-SR-22; Q-SR-05 **(B) plus Datenbankwert** → E-SR-24;
 Q-SR-06 → E-SR-25; Q-SR-07 **abweichend: fest einbauen** → E-SR-26;
 Q-SR-08 → E-SR-19; Q-SR-09 **Opus baut, Fable liest gegen** → E-SR-23;
 Q-SR-10 wie empfohlen → E-SR-17; Q-SR-11 wie empfohlen → E-SR-20.
+
+**Offen seit der Nachfassung vom 27.09.2026:** Q-SR-12 und Q-SR-13 — die
+Empfehlung steht je Zeile; entschieden werden sie vor SR-09 (H-SR-07), die
+Umsetzung beginnt mit SR-01 auch ohne sie.
 
 ### 3.3 Haltepunkte
 
@@ -405,7 +457,15 @@ Q-SR-10 wie empfohlen → E-SR-17; Q-SR-11 wie empfohlen → E-SR-20.
   es; eine Fable-Instanz liest SR-03 gegen das Konzept (Inventar, Nachweis,
   die drei Bedingungen als Riegel, `sk_oeffnen()` mit zwei Schlüsseln, das
   Blatt); Befunde als F-SR-NN, Behebung durch Opus, dann SR-04.
-- **H-SR-05 mit dem Merge:** Die Migration `vertraute_geraete` steht aus,
+- **H-SR-07 vor SR-09:** Q-SR-12, -13 entschieden — **offen** seit der
+  Nachfassung vom 27.09.2026.
+- **H-SR-08 nach SR-09 (wenn Q-SR-13 es sagt):** wie H-SR-06 — Fable liest
+  `passkey_lib.php` gegen das Konzept (die CBOR-Teilmenge und jede
+  Ablehnung, Ursprung und `rpIdHash`, die Signatur beider Algorithmen, der
+  Zähler, die Frische an Karte und Endpunkt); Befunde als F-SR-NN, Behebung
+  durch Opus, dann SR-05.
+- **H-SR-05 mit dem Merge:** Die Migrationen `vertraute_geraete` (SR-02)
+  und `passkeys` (SR-09) stehen aus,
   bis eine Administratorin `update.php` ruft — die Kette lässt den
   Wartungsmodus an und sagt es (`CLAUDE.md` 3). **Und: Nach dem Ausrollen
   ist jede Angemeldete einmal abgemeldet** (E-SR-04) — die Ankündigung
@@ -465,29 +525,29 @@ melden sich über HTTP an und müssen das Cookie mitführen); Bedienprobe
 entschieden (H-SR-01). `schema.sql` und `migration_lib.php`: Tabelle
 `vertraute_geraete` (E-SR-07), Migration `2026_..._vertraute_geraete`, ID
 in die `skipped`-Liste; Stufenregel → Prüfstand `haupt`. `totp_lib.php`:
-`totp_geraet_merken($userId)` (würfelt, setzt das Cookie über die Tabelle
-aus SR-01, schreibt den Hash), `totp_geraet_erkannt($userId)` (Cookie →
+`zweitfaktor_geraet_merken($userId)` (würfelt, setzt das Cookie über die Tabelle
+aus SR-01, schreibt den Hash), `zweitfaktor_geraet_erkannt($userId)` (Cookie →
 Hash → Zeile, deren `angelegt_am` plus der heutigen Dauer der Rollengruppe
 in der Zukunft liegt, `zuletzt_am` fortschreiben — E-SR-17),
-`totp_geraete_vergessen($userId, $weg)`, gerufen aus `totp_abschalten()`;
-`totp_zustand()` liefert die Zahl; `totp_geraet_dauer($rolle)` liest die
+`zweitfaktor_geraete_vergessen($userId, $weg)`, gerufen aus `totp_abschalten()`;
+`totp_zustand()` liefert die Zahl; `zweitfaktor_geraet_dauer($rolle)` liest die
 zwei Einstellungen (`app_state`, Schlüssel `zf_geraet_tage_user`,
 `zf_geraet_tage_verwaltung`, Vorgaben 30 und 7) — 0 heißt: kein Haken, und
-`totp_geraet_erkannt()` gibt nie „erkannt". `betrieb_server.php`: neue Karte
+`zweitfaktor_geraet_erkannt()` gibt nie „erkannt". `betrieb_server.php`: neue Karte
 „Anmeldung" mit zwei Wahllisten (aus, 1, 7, 14, 30, 90 Tage) und eigenem
 Speichern; Protokoll `einstellung_geaendert` wie die übrigen Karten. `login.php`: nach dem Passwort und vor
-dem halben Stand `totp_geraet_erkannt()` → direkt `anmeldung_vollenden()`;
+dem halben Stand `zweitfaktor_geraet_erkannt()` → direkt `anmeldung_vollenden()`;
 im Code-Schritt der `.schalter` „Dieses Gerät n Tage merken" mit der Dauer
 der eigenen Rollengruppe (nur im App-Code-Formular, E-SR-18; bei Dauer 0
 gar nicht), ausgewertet nach `totp_anmeldung_pruefen()` mit `art === 'app'`. `einstellungen.php`/`zweitfaktor_teile.php`: Zeile
 „Gemerkte Geräte: n" mit Knopf „Alle vergessen" (POST, `csrf_check()`);
-beim Passwortwechsel `totp_geraete_vergessen()` neben `session_epoch + 1`;
+beim Passwortwechsel `zweitfaktor_geraete_vergessen()` neben `session_epoch + 1`;
 `pw_handling.php` ebenso beim Reset. `demo_lib.php`:
 `demo_zweitfaktor_leeren()` räumt die Tabelle. `jobs_lib.php`: Schritt
 `vertraute_geraete` in `job_aufraeumen_schritte()` (Abgelaufene); der
 Riegel `jobregister` zählt ihn, `Technik.md` 4.97a nennt achtzehn Schritte.
-`protokoll_lib.php`: Arten `totp_geraet_gemerkt` (neutral),
-`totp_geraete_vergessen` (neutral, `daten.weg`). Berechtigungsmatrix
+`protokoll_lib.php`: Arten `zweitfaktor_geraet_gemerkt` (neutral),
+`zweitfaktor_geraete_vergessen` (neutral, `daten.weg`). Berechtigungsmatrix
 (`Technik.md` 4.99p, Rollenprobe): „Alle vergessen" nur am eigenen Konto —
 die Kontoseite der Verwaltung setzt den Zweitfaktor zurück, und das vergisst
 mit. **Doku:** `Technik.md` 3 (Tabelle), 4.97a, 4.99q (Absatz „Gerät
@@ -554,6 +614,115 @@ Rollenprobe: die sechs Handlungen der Liste je einmal ohne frischen Code
 `ZF_FRISCH_HANDLUNGEN` (Register-Zeile Decke 0); Zweitfaktorprobe grün mit
 den sieben neuen Fällen; Rollenprobe grün; Textprobe 0 neu.
 *Stufe:* Web Neben. *Fächerung:* keine.
+
+**SR-09 Passkeys als zweiter Faktor** — Nr. 350; Nachfassung vom
+27.09.2026 (E-SR-29 bis -34); Q-SR-12, -13 entschieden (H-SR-07).
+`schema.sql` und `migration_lib.php`: Tabelle `passkeys` (`id`, `user_id`
+mit Kaskade, `credential_id` Base64url eindeutig, `oeffentlich` SPKI als
+PEM, `alg` (-7 ES256, -257 RS256), `zaehler`, `bezeichnung` bis 40 Zeichen
+oder leer, `angelegt_am`, `zuletzt_am`), Migration `2026_..._passkeys`, ID
+in die `skipped`-Liste; Stufenregel → Prüfstand `haupt`. **Neu
+`passkey_lib.php`** (die eine Stelle für WebAuthn, R83): `pk_cbor_lesen()`
+(nur, was Registrierung und COSE brauchen — Ganzzahlen, Byte- und
+Textketten, Listen und Karten bestimmter Länge; Fließzahlen, Marken,
+unbestimmte Längen und Verschachtelung über acht sind eine Ablehnung),
+`pk_registrierung_pruefen($ablage, $antwort)` (`clientDataJSON`: `type`
+`webauthn.create`, `challenge` gleich der gestellten, `origin` gleich dem
+eigenen; `attestationObject`: `authData` mit `rpIdHash` gleich
+`sha256(Host)`, Flags UP und AT gesetzt, Zähler, `credentialId`,
+COSE-Schlüssel nur EC2/P-256 mit `alg` -7 oder RSA mit `alg` -257; `fmt`
+wird gelesen und **nicht** geprüft — E-SR-30), `pk_anmeldung_pruefen($halb,
+$antwort)` (`type` `webauthn.get`, Herausforderung, Ursprung, `rpIdHash`,
+UP, Signatur über `authData ‖ sha256(clientDataJSON)` mit phpseclib —
+`Crypt/EC` wie `rw_pruefen()`, `Crypt/RSA` PKCS#1 v1.5 mit SHA-256 —,
+Zähler nach E-SR-33), `pk_liste($userId)`, `pk_anlegen()`,
+`pk_entfernen($userId, $id)`, `pk_alle_entfernen($userId, $weg)` — gerufen
+aus `totp_abschalten()` (jeder Weg, wie die Geräte aus SR-02);
+`pk_herausforderung_stellen(array &$ablage)` nach dem Muster von
+`rw_herausforderung_stellen()`; `pk_ursprung()` nimmt die Stelle in
+`kopfzeilen_lib.php`, die den Host schon liest (`https_tor()`-Umfeld),
+statt eine zweite zu bauen. Der öffentliche Schlüssel wird bei der
+Registrierung aus COSE in ein phpseclib-Objekt überführt und als SPKI
+gespeichert — beim Anmelden lädt `PublicKeyLoader` ohne CBOR.
+`einstellungen.php`/`zweitfaktor_teile.php`: in der Karte „Zweitfaktor"
+der Abschnitt „Passkeys" (nur bei eingeschaltetem Zweitfaktor, E-SR-29):
+Liste (`bezeichnung` oder „Passkey vom <Datum>", angelegt, zuletzt), je
+Zeile „Entfernen" (POST, `csrf_check()`, davor
+`zweitfaktor_frisch_verlangen('passkey_entfernen')`), Knopf „Passkey
+hinzufügen" mit Feld „Bezeichnung (optional)" — **nur wenn
+`zweitfaktor_frisch()`**, sonst der Verweis „Zuerst Code bestätigen" auf
+`zweitfaktor.php?bestaetigen=1&zurueck=…` (E-SR-31); die Herausforderung
+liegt als `data-`-Attribut am Abschnitt und in `$_SESSION['passkey_reg']`
+(zehn Minuten, einmal gültig). **Neu `api/passkey_anlegen.php`** (POST JSON
+über `EdApi.postJson()`, `zweitfaktor_frisch_verlangen('passkey_anlegen')`
+→ 403 JSON, Prüfung, Zeile, Protokoll, Mail; der elfte wird abgelehnt).
+**Neu `assets/passkey.js`** (ohne Fremdbestandteil): `anlegen()` baut
+`PublicKeyCredentialCreationOptions` (`rp.id` Host, `user.id` Kontonummer
+als Bytes, `pubKeyCredParams` -7 und -257, `userVerification: 'preferred'`,
+`residentKey: 'preferred'`, `attestation: 'none'`, `excludeCredentials` die
+vorhandenen) und schickt `clientDataJSON`, `attestationObject`, `rawId`
+Base64url; `bestaetigen()` baut `PublicKeyCredentialRequestOptions`
+(`allowCredentials` aus dem Markup, `userVerification: 'preferred'`), trägt
+die Antwort (`authenticatorData`, `clientDataJSON`, `signature`, `rawId`)
+in ein verstecktes Feld `passkey_antwort` und schickt das Formular ab; ohne
+`PublicKeyCredential` im Browser bleibt der Knopf verborgen. `login.php`: im
+Code-Schritt, wenn das Konto Passkeys hat, über dem Codefeld der Knopf „Mit
+Passkey bestätigen" (E-SR-32; Herausforderung in `totp_halb['passkey']` wie
+die des Rückwegs, `allowCredentials` als `data`-Attribut); POST mit
+`passkey_antwort` → `pk_anmeldung_pruefen()` im Topf `totp` →
+`anmeldung_vollenden()`, `zuletzt_am`; **zählt wie ein App-Code**: Haken
+„Gerät merken" (E-SR-18), `zf_frisch_bis` (E-SR-20).
+`zweitfaktor.php?bestaetigen=1` (SR-07): der Knopf ebenso. `admin_user.php`:
+„Zweitfaktor zurücksetzen" nimmt die Passkeys über `totp_abschalten()`
+mit, nichts Eigenes; die Kontoseite zeigt die Zahl. `demo_lib.php`:
+`demo_zweitfaktor_leeren()` räumt die Tabelle. `db.php`:
+`ZF_FRISCH_HANDLUNGEN` um `passkey_anlegen`, `passkey_entfernen`
+(Register-Zeile aus SR-07 zählt mit). `protokoll_lib.php`: `passkey_angelegt`
+(neutral), `passkey_entfernt` (neutral, `daten.weg`), `passkey_zaehler`
+(orange). `mail_lib.php`: Vorlagen `passkey_angelegt`, `passkey_entfernt`
+nach dem Muster `rueckweg_erneuert`. `totp_lib.php`: die Helfer aus SR-02
+tragen die Namen aus E-SR-34. **Doku:** `Technik.md` 3 (Tabelle), 4.99q
+(Absatz „Passkeys": beide Zeremonien, was geprüft wird und was nicht —
+Attestation —, Speicherform, Zähler, warum kein Fremdbestandteil, warum
+kein PRF — E-SR-28), 4.99p (zwei Handlungen mehr in der Spalte „frischer
+Code", der Endpunkt in der Matrix); `Handbuch.md` 3.1f (Abschnitt
+„Passkeys": was, für wen, hinzufügen, anmelden, entfernen; ein Passkey gilt
+nur für die Adresse der Anlage — Staging und Produktiv sind zwei; Ausschalten
+und Zurücksetzen nehmen die Passkeys mit), 11.1 (Kontoseite: Zahl), 11.5a
+(Datenschutz-Baustein: öffentlicher Schlüssel und Kennung als gespeicherte
+Daten — Zuarbeit wie in SR-02); `Backup-Format.md` 6 (die Tabelle reist im
+Komplett-Stand mit) und 5 (das Konto-Backup trägt sie **nicht**: ein
+Passkey gilt nur für den Ursprung, an dem er entstand); `Lizenzen.md` 3
+(phpseclib: dritter Verwender — `Crypt/RSA` und `Crypt/EC` für WebAuthn);
+`Vorbereitung-Sicherheitspaket.md` SP-11 (der Satz „brauchen eine
+WebAuthn-Serverbibliothek" bekommt den Stand, F-SR-13). Backlog 350 nach
+`Backlog-Erledigt.md`. **Prüfmittel:** neue Probe
+`tools/proben/passkey/probe.php` (Anlass Nr. 350) **ohne Browser**: sie
+erzeugt mit phpseclib je ein EC- und ein RSA-Paar, baut daraus gültige
+`attestationObject`/`clientDataJSON` und Assertions selbst und misst
+`passkey_lib.php` — ES256 durch, RS256 durch; abgelehnt: falscher `origin`,
+falscher `rpIdHash`, fremde Herausforderung, `type` vertauscht, UP nicht
+gesetzt, Zähler zurück (mit Protokolleintrag), unbekannte Kennung, `alg`
+-8, `kty` fremd, CBOR abgeschnitten, Fließzahl, unbestimmte Länge,
+Verschachtelung neun, der elfte Passkey; `totp_abschalten()` räumt die
+Tabelle. Bedienweg `einstellungen_profil_passkey.mjs` (neu; **nur
+Chromium** — CDP `WebAuthn.enable`, `WebAuthn.addVirtualAuthenticator`
+`ctap2`/`internal` mit Nutzerprüfung; unter `--motor firefox|webkit`
+meldet der Weg „nicht gemessen", nicht grün): Code bestätigen → hinzufügen
+mit Bezeichnung → Liste zeigt eine Zeile → abmelden → anmelden → „Mit
+Passkey bestätigen" → angemeldet, Haken gemerkt zählt → Blatt ohne neuen
+Code (frisch) → Entfernen → Anmeldung wieder mit Code; ohne frischen Code
+ist der Knopf ein Verweis. Zweitfaktorprobe: Passkey zählt für Merken und
+Frische; Rollenprobe: der Endpunkt ohne Rolle und ohne Frische (403);
+`cspprobe` (kein Inline-Skript); `schemaprobe`, `migrationsregister`
+(haupt); Textprobe; Bilderlauf der Karte mit Liste (P-SR-05).
+*Abnahme:* Passkeyprobe grün mit allen Fällen (Zahl im Prüfdokument);
+Bedienweg grün; `grep -rn "zweitfaktor_frisch_verlangen(" server/` = Länge
+der Liste (zwei mehr als nach SR-07); `SHOW CREATE TABLE passkeys` gleich
+Schema und Migration; `sha256sum -c phpseclib3.sha256` unverändert 338
+Dateien (kein neuer Fremdcode); Textprobe 0 neu.
+*Stufe:* Web Neben, **mit Migration** (Prüfstand `haupt`; nach dem Deploy
+`update.php`). *Fächerung:* keine.
 
 **SR-05 `ingest.php` ohne Deadlock** — Nr. 210 (E-SR-12). `ingest.php`:
 Schleife um `beginTransaction()`/`try` (höchstens drei Anläufe, Abstand
@@ -755,8 +924,9 @@ und die Register-Zeile der JSON-Ausgänge unverändert; Textprobe 0 neu.
 **SR-06 Buchführung und Abschluss** — nur `docs/`, `tools/steuerung/`
 mittelbar. Backlog: 232 → `nächste Backlog-Runde` (Q-SR-06, E-SR-25;
 `verschieben.py` nur für Erledigte — die Kopfzeile von Hand,
-`uebersicht.py --pruefen` danach); 228 ist mit SR-08 **erledigt**, nicht
-umgehängt; `uebersicht.py --ziel 18` → **0**.
+`uebersicht.py --pruefen` danach); 228 ist mit SR-08 **erledigt**, 350 mit
+SR-09, nicht umgehängt; `uebersicht.py --ziel 18` → **0**. Nr. 146 trägt
+seinen Stand seit der Nachfassung (E-SR-28) — nichts mehr zu tun.
 Prüfdokument 1 bis 6 vollständig; Statusblock „gebaut"; Prüfstand des
 Kopf-Commits (`haupt`); Pull Request gegen `main` mit dem Bericht, nach
 `Pruefablauf.md` 5.3, wenn `main` sich bewegt hat. **Nach der Freigabe des
@@ -777,8 +947,9 @@ Dokumentation nachziehen (entfernte Sätze austragen, E-SR-16), Backlog:
 erledigte Punkte wörtlich nach `Backlog-Erledigt.md` mit Schlusssatz
 (E-R4-06), Rahmenplan nur an den vier Anlässen. Die Prüfmittel laufen
 zuletzt; der Prüfstand (`tools/pruefstand/pruefen.sh`) erzeugt den Bericht
-für die Commit-Nachricht — SR-02 und der Kopf-Commit in `haupt`; nach einem
-fremden Merge `Pruefablauf.md` 5.3. Ein neues Prüfmittel (SR-01, SR-03)
+für die Commit-Nachricht — SR-02, SR-09 und der Kopf-Commit in `haupt`;
+nach einem fremden Merge `Pruefablauf.md` 5.3. Ein neues Prüfmittel (SR-01,
+SR-03, SR-09)
 geht den Weg aus `Pruefablauf.md` 6.12 und trägt seine Anlass-Zeile.
 
 ## 6. Abschluss
@@ -810,4 +981,10 @@ was hier gebaut ist (R86).
 `zweitfaktor.php`; `tools/pruefstand/pruefablauf.json`,
 `tools/quelltext/sitzungshaertung.php`, `tools/proben/verbindung/probe.php`.
 Die Klickrunde vom 27.09.2026 (Q-SR-01 bis -11) ist in E-SR-17 bis -26
-festgehalten; ihr Wortlaut steht nur dort.
+festgehalten; ihr Wortlaut steht nur dort. **Nachfassung vom 27.09.2026
+(SR-09):** `docs/Backlog.md` Nr. 146, 350; `server/api/rueckweg_anlegen.php`,
+`server/assets/rueckweg.js`, `server/vendor/phpseclib3/Crypt/` (EC, RSA),
+`server/kopfzeilen_lib.php`; `docs/Lizenzen.md` 3;
+`tools/bedienprobe/probe.mjs` (CDP-Sitzung), `LIESMICH.md` („fährt nur
+Chromium"); W3C Web Authentication Level 2 (Zeremonien 7.1 und 7.2, Zähler
+6.1.1), RFC 8949 (CBOR), RFC 9053 (COSE-Algorithmen).
