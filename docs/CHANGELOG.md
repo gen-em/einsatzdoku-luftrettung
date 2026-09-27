@@ -14,6 +14,38 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.4.1] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-20. **Korrektur.**
+
+### Geändert
+
+- **Keine Karte „Was hier gilt" mehr** (Nr. 287, E-P5c-06). Seit 10c stehen
+  Erklärungen im Handbuch, und die Seite trägt einen Satz mit Verweis; drei
+  Seiten außerhalb von Verwaltung und Betrieb hatten die zugeklappte Karte am
+  Ende noch, und dort galten bis heute zwei Regeln nebeneinander. Jetzt:
+  - **Import / Export** nennt in der Unterzeile das Backup als Verweis und
+    das Handbuch für die übrigen Wege (Kapitel 7, „Die übrigen Wege"). Neu
+    im Handbuch ist, was bis dahin nur in der Karte stand: dass ein Export
+    kein Backup ist, und dass es den GPX-Import ohne Diensttag nicht gibt.
+  - **Das Einsatzformular** sagt unter dem Titel in einem Satz, was das
+    Schloss heißt, mit Verweis auf 4.3, „Schloss und Klartext". Die Zeichen
+    an den Feldern bleiben.
+  - **Die Wiederherstellung** verweist in der Unterzeile auf 12.6, „Der
+    Wiederanlauf" — Reihenfolge, Serverschlüssel, und dass nichts
+    zurückgenommen wird. Das Handbuch ist ohne Anmeldung und auch mit leerer
+    Datenbank erreichbar (gemessen: HTTP 200 gegen eine Datenbank ohne
+    Tabellen); der Verweis trägt also genau in der Lage, für die die Seite
+    da ist.
+
+### Behoben
+
+- **Das Handbuch nannte den manuellen Abfahrtort nicht unter den Feldern mit
+  Schloss** (4.3; ebenso die Karte, die nun fort ist). Er ist seit Web 6.2.0
+  Ende-zu-Ende-verschlüsselt und trägt im Formular das Schloss; die Liste
+  der Felder endete trotzdem beim Einsatzort — dieselbe Lücke, die die
+  Gegenprüfung in Konzept BV im Satz der Zusage gefunden hatte (F-BV-13).
+
 ## [Web 21.4.0] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-17. **Nebenstufe ohne Migration.**

@@ -7810,5 +7810,15 @@ declare(strict_types=1);
  *   ueber die ersten 200 Treffer hinaus. Dazu sagen die drei gedeckelten
  *   Tageslisten (Leiste 500, `api/day.php` 120, Verschieben 400), dass sie
  *   greifen, und fragen dafuer nach einem mehr, als sie zeigen.
+ *
+ * 21.4.1 — DIE LETZTEN DREI KARTEN „WAS HIER GILT" (Schritt 17, R4-20,
+ *   Nr. 287). Korrektur. 10c/AP9 hatte die Erklaerkarten unter Verwaltung
+ *   und Betrieb abgeraeumt (E-P5c-06: Erklaertext ins Handbuch, auf der
+ *   Seite ein Satz mit Verweis); drei Seiten ausserhalb trugen sie weiter:
+ *   Import / Export, das Einsatzformular und die Wiederherstellung. Ihr Text
+ *   steht jetzt im Handbuch 7 („Die übrigen Wege"), 4.3 („Schloss und
+ *   Klartext") und 12.6 („Der Wiederanlauf"), und die Seiten verweisen mit
+ *   einem Satz dorthin. Der Verweis der Wiederherstellung traegt auch mit
+ *   leerer Datenbank; das Handbuch braucht weder Anmeldung noch Tabellen.
  */
-const WEB_VERSION = '21.4.0';
+const WEB_VERSION = '21.4.1';

@@ -1425,26 +1425,10 @@ in dieser Reihenfolge:
 6. **Notizen** — seit Web 19 **verschlüsselt** wie die Patientendaten
 7. **Einsatzphasen**
 8. **Reanimation** — zugeklappt („keine"), mit Bestand offen
-9. **Was hier gilt** — zugeklappt; die Legende zu den beiden Zeichen
 
-**Zwei Zeichen sagen dir, wer mitliest.** Ein **Schloss** neben der
-Beschriftung heißt: Dieses Feld ver- und entschlüsselt dein Browser, der Server
-sieht nur Chiffretext. Es steht an Name, Geburtsdatum, Alter, Diagnose,
-Einsatznummer, Einsatzort samt Beschreibung — und seit Web 19 an den
-**Notizen des Einsatzes**. Die Kleinzeile **„Klartext — keine
-Patientendaten"** heißt das Gegenteil: Dieses Feld wird unverschlüsselt
-gespeichert. Sie steht an den Bergwacht-Angaben, an der weiteren NotärztIn, an
-den Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
-ist. Die zugeklappte Karte **„Was hier gilt"** am Ende des Formulars erklärt
-beides in drei Sätzen.
-
-Bei den **Notizen des Einsatzes** steht das Schloss am **Kartentitel** und
-nicht am Feld: Die Karte enthält genau dieses eine Feld, und seine
-Beschriftung heißt wie die Karte — sie würde sonst zweimal dastehen.
-
-> Die Notizen des Einsatzes und die des Diensttags heißen gleich und werden
-> verschieden behandelt. Genau deshalb tragen sie verschiedene Zeichen: Wer
-> Patientenbezogenes notieren will, gehört in das Feld mit dem Schloss.
+Unter dem Titel steht ein Satz zu den beiden Zeichen an den Feldern, mit einem
+Verweis auf ihre Erklärung am Ende dieses Abschnitts (**Schloss und
+Klartext**).
 
 Windeneinsatz und Bergwacht fehlen ganz, wenn der Diensttag die jeweilige
 Fähigkeit nicht mitbringt und im Einsatz nichts dazu eingetragen ist.
@@ -1711,6 +1695,37 @@ nachliefernde Uhr ersetzt sie nicht mehr.
 Nach dem **Neuanlegen** eines Einsatzes zeigt die Einsatzansicht den Button
 „Weiteren Einsatz nachtragen" — er öffnet die Neuanlage direkt für denselben
 Diensttag. Beim Bearbeiten eines bestehenden Einsatzes erscheint er nicht.
+
+#### Schloss und Klartext
+
+*Bis Web 21.4.0 stand das in der zugeklappten Karte „Was hier gilt" am Ende
+des Formulars; seither trägt das Formular einen Satz mit Verweis hierher
+(R4-20).*
+
+**Zwei Zeichen sagen dir, wer mitliest.** Ein **Schloss** neben der
+Beschriftung heißt: Dieses Feld ver- und entschlüsselt dein Browser, der Server
+sieht nur Chiffretext. Es steht an Name, Geburtsdatum, Alter, Diagnose,
+Einsatznummer, Einsatzort samt Beschreibung, am **manuellen Abfahrtort** —
+und seit Web 19 an den **Notizen des Einsatzes**. Die Kleinzeile **„Klartext — keine
+Patientendaten"** heißt das Gegenteil: Dieses Feld wird unverschlüsselt
+gespeichert. Sie steht an den Bergwacht-Angaben, an der weiteren NotärztIn, an
+den Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
+ist.
+
+Bei den **Notizen des Einsatzes** steht das Schloss am **Kartentitel** und
+nicht am Feld: Die Karte enthält genau dieses eine Feld, und seine
+Beschriftung heißt wie die Karte — sie würde sonst zweimal dastehen.
+
+> Die Notizen des Einsatzes und die des Diensttags heißen gleich und werden
+> verschieden behandelt. Genau deshalb tragen sie verschiedene Zeichen: Wer
+> Patientenbezogenes notieren will, gehört in das Feld mit dem Schloss.
+
+**Der Server sieht das eine nie und das andere immer.** Er kann die
+verschlüsselten Felder weder anzeigen noch durchsuchen — deshalb findet die
+Suche sie erst, wenn du entsperrt hast. Alles Übrige — Zeiten, Phasen samt
+Koordinaten, GPS-Daten, Transportziel — liegt lesbar in der Datenbank, weil
+Auswertung und Statistik darauf angewiesen sind. Welche Felder genau
+verschlüsselt sind und warum, steht in Abschnitt 5.
 
 ### 4.4 Diensttage-Leiste, Jahres- und Monatsübersicht
 
@@ -2516,10 +2531,12 @@ Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
 Jahresliste.
 
+#### Die übrigen Wege
+
 **Der Name ist weiter gefasst als die Seite, und seit Web 19.3.0 sagt sie das
 selbst.** Hier läuft die **Einsatzliste als Ganzes** in beide Richtungen —
 mehr nicht. Die übrigen Wege für Daten hinein und hinaus liegen dort, wohin
-sie gehören, und die Seite nennt sie am Ende unter „Was hier gilt“:
+sie gehören; die Unterzeile der Seite verweist auf das Backup und hierher:
 
 | Weg | wo | Abschnitt |
 |---|---|---|
@@ -2530,7 +2547,25 @@ sie gehören, und die Seite nennt sie am Ende unter „Was hier gilt“:
 
 Bis Web 19.3.0 stand auf der Seite kein einziger Verweis auf einen dieser
 Wege. Wer den GPX-Import dort suchte, fand ihn nicht — und erfuhr auch nicht,
-wo er stattdessen steht.
+wo er stattdessen steht. Bis Web 21.4.0 nannte die Seite sie in der
+zugeklappten Karte „Was hier gilt" an ihrem Ende; seither steht das hier
+(R4-20).
+
+**Ein Export ist kein Backup.** Die Datei dieser Seite ist zum
+Weiterverarbeiten in anderen Programmen gedacht: Sie trägt die Einsatzliste,
+aber keine GPS-Daten, keine Stammdaten und keine Einstellungen. Ein
+vollständiges Backup deines Kontos — alles in einer verschlüsselten
+`.edbak`-Datei — gibt es unter Einstellungen → Backup. **Ein Backup
+einspielen** geht ebenfalls dort und nicht hier. Der Unterschied zählt: Diese
+Seite *ergänzt* Einsätze aus einer fremden Liste, ein Backup stellt deinen
+eigenen Stand wieder her.
+
+**Der GPX-Import liegt am Diensttag, mit Absicht.** Eine Aufzeichnung gehört
+immer zu *einem* Diensttag, und welcher das ist, weiß nur die Tagesübersicht.
+Solange das Konto noch keinen Diensttag hat, steht das Menü „Aktionen" dort
+nicht zur Verfügung — und damit auch kein GPX-Import.
+
+#### Der Weg einer Einsatzliste
 
 **Der Weg hat drei Schritte, und jeder ist eine eigene Karte:** *1. Datei
 wählen*, *2. Prüfen und korrigieren*, *3. Übernehmen*. Die Schritte 2 und 3
@@ -5561,6 +5596,28 @@ die Seite selbst führt durch sie hindurch.
 
 **Einmal im Halbjahr ausprobieren.** Ein Backup, das nie zurückgespielt
 wurde, ist eine Vermutung.
+
+#### Der Wiederanlauf
+
+*Bis Web 21.4.0 stand das in der zugeklappten Karte „Was hier gilt" auf
+`wiederherstellen.php`; seither verweist die Unterzeile der Seite hierher
+(R4-20). Die Seite erreicht das Handbuch auch mit leerer Datenbank.*
+
+**Die Reihenfolge:** Datenbank anlegen (leer) · Anwendungsdateien hochladen ·
+`config.php` aus dem Wiederanlaufpaket daneben legen · Backup-Datei nach
+`sicherungen/eingang/` ·
+`wiederherstellen.php` · anmelden · **Betrieb → Updates**. Ausführlich steht
+es im Runbook, `docs/Technik.md`, Abschnitt 7.
+
+**Der Serverschlüssel entscheidet.** Eine `.edk`-Datei mit dem Vermerk „mit
+dem Serverschlüssel" lässt sich nur mit *der* `config.php` öffnen, die beim
+Erzeugen galt. Ist sie verloren, hilft das Backup nicht — deshalb gehört sie
+ins Wiederanlaufpaket, getrennt vom Server aufbewahrt.
+
+**Es wird nichts zurückgenommen.** Scheitert das Einspielen auf halbem Weg,
+steht die Datenbank halb da. Ein neuer Versuch braucht dann eine wieder
+geleerte Datenbank; ein Dump über einen halben Bestand zu legen ergäbe eine
+Mischung, die niemand mehr auseinanderbekommt.
 
 ---
 

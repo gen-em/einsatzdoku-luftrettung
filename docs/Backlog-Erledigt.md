@@ -8999,3 +8999,25 @@ zutreffen.
      {support}; 108 Zeilen, Rollenprobe 476 / 0. Gegenproben rot: eine Zelle
      falsch (1), die Testmail vor das Tor gezogen (3), das Konto-Tor des
      Supports ausgebaut (6, davon 4 in den neuen Zeilen).
+
+287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.** · gehört zu: 17 · Stand: erledigt · seit 23.09.2026
+     *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
+     Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
+     Seitenende" vor. E-P5c-06 (jünger) sagt: je Karte höchstens ein Satz,
+     alles Erklärende ins Handbuch. 10c AP9 räumt die acht Karten unter
+     Verwaltung und Betrieb ab. **Drei Seiten außerhalb tragen die Karte
+     ebenfalls:** `import.php`, `einsatz_form.php`, `wiederherstellen.php`.
+     Sie liegen nicht im Umfang von 10c, und bis zu ihrer Umstellung gelten
+     dort zwei Regeln nebeneinander.
+
+     *Abnahme:* 0 Karten „Was hier gilt" in `server/`, der Inhalt im Handbuch,
+     jede Karte der drei Seiten mit Verweis auf ihre Sprungmarke. *Fehlschlag:*
+     `grep -l "Was hier gilt" server/*.php` findet eine Seite (außer
+     Kommentaren in `version.php`). **Zuordnung: Schritt 17.**
+     Erledigt 27.09.2026 mit R4-20 (Web 21.4.1): Die drei Karten sind fort,
+     ihr Text steht im Handbuch 7 („Die übrigen Wege“), 4.3 („Schloss und
+     Klartext“) und 12.6 („Der Wiederanlauf“); jede Seite verweist mit einem
+     Satz dorthin. 0 Karten mit diesem Titel in server/; erwähnt nur noch in
+     Kommentaren (admin_demo.php, betrieb_status.php, version.php). Riegel
+     anker 53 Verweise, 0 ohne Ziel; Bilderlauf der drei Seiten 30 Bilder,
+     Überlauf 0.

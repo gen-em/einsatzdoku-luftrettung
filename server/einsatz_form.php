@@ -765,6 +765,9 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         'unter' => $unter,
     ]);
   ?>
+  <p class="seiten-erklaerung">Felder mit Schloss ver- und entschlüsselt dein
+     Browser, alle anderen liegen lesbar auf dem Server.
+     <a href="hilfe.php#schloss-und-klartext">Handbuch: Schloss und Klartext</a></p>
   <?php if ($editing && !(int)$mission['uhr_gesperrt']):
           ui_meldung('Dieser Einsatz stammt von der Uhr. Nach dem Speichern gilt er als '
               . 'manuell bearbeitet — spätere Uhr-Uploads überschreiben ihn dann nicht '
@@ -1510,41 +1513,12 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     </div><?php /* .form-spalte (rechts) */ ?>
     </div><?php /* .form-raster */ ?>
 
-    <?php /* ---- „Was hier gilt" (S9/AP7, E-S9-02) ------------------------
-             DIE LEGENDE ZU DEN ZEICHEN, und nur sie. Drei Saetze: was das
-             Schloss bedeutet, was Klartext bedeutet, und was der Server davon
-             sieht. Sie steht ZUGEKLAPPT und am ENDE (R74 (5)): Wer sie
-             braucht, sucht sie einmal; wer sie nicht braucht, soll ueber sie
-             nicht hinweglesen muessen. Kein neuer Baustein — dieselbe
-             klappbare Karte wie „Reanimation" darueber.
-
-             AUSSERHALB DES RASTERS, ueber die volle Breite: Sie gehoert zu
-             beiden Spalten, nicht zu einer. */ ?>
-    <?php ui_karte_start(['titel' => 'Was hier gilt', 'klasse' => 'form-block-legende',
-                          'zu' => true]); ?>
-      <p class="feld-hinweis">
-        <?= ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt') ?>
-        <strong>Das Schloss</strong> steht an jedem Feld, das dein Browser
-        ver- und entschlüsselt: Name, Geburtsdatum, Alter, Diagnose,
-        Einsatznummer, Einsatzort samt Beschreibung und die Notizen des
-        Einsatzes. Ohne dein Passwort sind sie nicht zu lesen.
-      </p>
-      <p class="feld-hinweis">
-        <strong>„Klartext — keine Patientendaten"</strong> steht an den
-        Freitextfeldern, die unverschlüsselt gespeichert werden: die
-        Bergwacht-Angaben, die weitere NotärztIn, die Besatzungsnamen und die
-        Notizen des <em>Diensttags</em>. Dort gehören keine Angaben zu einer
-        Person hinein.
-      </p>
-      <p class="feld-hinweis">
-        <strong>Der Server</strong> sieht das eine nie und das andere immer.
-        Er kann die verschlüsselten Felder weder anzeigen noch durchsuchen —
-        deshalb findet die Suche sie erst, wenn du entsperrt hast. Alles
-        übrige — Zeiten, Phasen samt Koordinaten, GPS-Daten, Transportziel —
-        liegt lesbar in der Datenbank, weil Auswertung und Statistik darauf
-        angewiesen sind.
-      </p>
-    <?php ui_karte_ende(true); ?>
+    <?php /* KEINE KARTE „WAS HIER GILT" MEHR (Web 21.4.1, R4-20, Nr. 287).
+             Hier stand seit S9/AP7 die zugeklappte Legende zu Schloss,
+             Klartext und Server, am Ende und ueber die volle Breite. Seit
+             E-P5c-06 gehoert Erklaertext ins Handbuch, und die Seite traegt
+             einen Satz mit Verweis — er steht jetzt unter dem Titel. Die
+             Zeichen selbst bleiben an jedem Feld. */ ?>
 
     <?php /* Speichern-Leiste statt Knopf am Ende (E-P3-29): Sie klebt unten
              und erscheint, sobald das Formular schmutzig ist (forms.js).

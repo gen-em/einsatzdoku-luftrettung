@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-20** (Karten „Was hier gilt"). |
-> | Entschieden | **E-R4-01 bis E-R4-51** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-21** (Android: Eingabefeld und Rundlauf). |
+> | Entschieden | **E-R4-01 bis E-R4-52** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52. |
 > | Offen | **Q-R4-24** (Abnahme 5 s in R4-17 — gilt sie als erfüllt? Empfehlung ja; hält nichts auf). Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-19 erledigt** (27.09.2026); Web 21.4.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-20 bis R4-26 in Nummernfolge. |
+> | Umsetzung | **R4-01 bis R4-20 erledigt** (27.09.2026); Web 21.4.1 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-21 bis R4-26 in Nummernfolge. |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. **R4-19: ein Workflow, drei Agenten** auf getrennten Dateigruppen (`referenzdatensatz/` 22, `proben/` 17, übrige Werkzeuge 13 Dateien), alle drei gleichzeitig, 229 s, 0 gescheitert, 0 offene Stellen; Ausnahmeliste der Textprobe, Doku, Gegenlesung, Neuaufbau der Anlage und Prüfstand seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px), **F-R4-62** (R4-19 ohne CHANGELOG-Eintrag — nachgetragen), **F-R4-63** (Verbindungsprobe ließ 400 Waisen je Lauf — behoben) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px), **F-R4-62** (R4-19 ohne CHANGELOG-Eintrag — nachgetragen), **F-R4-63** (Verbindungsprobe ließ 400 Waisen je Lauf — behoben), **F-R4-64** (Abfahrtort fehlte in der Legende — behoben) — 2.4. |
 
 
 ---
@@ -643,6 +643,14 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   Jobprobe zählt vor Teil 3 fremde Waisen und nennt sie in der Meldung —
   rot bleibt es, denn eine Waise ist ein Fehler.
 
+- **F-R4-64 Karte und Handbuch nannten den manuellen Abfahrtort nicht.**
+  Die Legende „Was hier gilt" im Formular und der Absatz „Zwei Zeichen" in
+  Handbuch 4.3 zählten die Felder mit Schloss auf und hörten beim
+  Einsatzort auf; der manuelle Abfahrtort ist seit Web 6.2.0 im Block und
+  trägt im Formular das Schloss (Sollliste der Kennzeichnung, Zeile 27).
+  Dieselbe Lücke hatte F-BV-13 im Satz der Zusage in `CLAUDE.md` 4
+  gefunden. Behoben im Handbuch; die Karte ist mit R4-20 fort.
+
 ## 3. Entscheidungen und Fragen
 
 ### 3.1 Entscheidungen
@@ -700,6 +708,7 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-49 | **Die gedeckelten Tageslisten fragen nach einem mehr, als sie zeigen** — Leiste 500, `api/day.php` 120 (Antwort mit `grenze` und `gekappt`), Verschieben 400. | Umsetzung (R4-17) | „Benennen wie im Verschiebe-Dialog" (Q-R4-03) hätte dessen Schluss aus „genau 400" übernommen, und der meldet bei genau 400 Tagen ältere, die es nicht gibt. Eine Zeile mehr in der Abfrage macht aus einer Vermutung eine Auskunft; der Verschiebe-Dialog geht mit. |
 | E-R4-50 | **Zustände ab 200 Einsätzen stellt das Prüfmittel her, indem es die Antwort von `api/range.php` auf dem Weg in den Browser vervielfacht** (`einsaetzeVervielfachen()`, `tools/motor.mjs`) — nicht über einen größeren Demo-Bestand und nicht über einen Parameter der Anwendung. | Umsetzung (R4-17) | Das Demo-Konto (109 Einsätze) brauchen Bilderlauf und Bedienprobe unverändert; eine Prüftür in der Anwendung wäre ein Weg, den es im Betrieb gibt. Der Browser geht mit den Kopien den echten Weg (Entschlüsseln, Sortieren, Zeichnen); dasselbe Verfahren hat die Sondierung zu Nr. 37 in P3 benutzt. Der Weg braucht zwölffach: Die Luftansicht des Demo-Jahres hat 40 Einsätze, vierfach ergab 160 (gemessen). |
 | E-R4-51 | **Der Kopf der Einsatzkarte sagt „200 angezeigt", sobald die Tabelle weniger zeigt als der Zeitraum hat**; Einsatzzahl und km-Summe bleiben die des ganzen Zeitraums. | Umsetzung (R4-17) | Das Konzept verlangt, zu sagen, dass Kopfzeile und Karte beim ganzen Zeitraum bleiben. Die Suche sagt es seit Web 5.10.0 genau so; ein zweiter Wortlaut für dieselbe Lage wäre ein neuer. |
+| E-R4-52 | **Der Text der Import-Karte geht in die Einleitung von Kapitel 7 („Die übrigen Wege"), nicht ans Kapitelende**; der Rest der Einleitung bekommt eine eigene Überschrift („Der Weg einer Einsatzliste"). | Umsetzung (R4-20) | Die Einleitung trug die Tabelle der übrigen Wege schon; am Kapitelende hinter 7.2 („Zurücklesen") hätte sie ein zweites Mal gestanden oder unter der falschen Überschrift. Neu im Handbuch sind nur zwei Aussagen der Karte (Export ist kein Backup; ohne Diensttag kein GPX-Import). |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -1451,6 +1460,28 @@ unberührt); `Design.md` 9 nachziehen.
 *Abnahme:* `grep -l "Was hier gilt" server/*.php | grep -v version.php` 0;
 Riegel `anker` 0; Bilderlauf der drei Seiten. *Stufe:* Web Korrektur.
 *Fächerung:* keine.
+**Erledigt 27.09.2026 — mit Web 21.4.1** (Korrektur). Gebaut in einem
+eigenen Worktree, während der Prüfstand von R4-18 lief (auf Wunsch der
+Betreiberin „parallel weiter"); übernommen und geprüft erst danach, weil es
+eine Anlage gibt. Die drei Karten sind fort. Import / Export: Unterzeile mit
+Verweis auf das Backup (Adresse weiter aus `ui_einstellungen_punkte()`,
+Nr. 151) und auf das Handbuch. Formular: ein Satz unter dem Titel. Wieder-
+herstellung: die Unterzeile um den Verweis ergänzt. Handbuch: 4.3 „Schloss
+und Klartext" am Abschnittsende (Legende, Notizen-Schloss und der Satz über
+den Server, dazu der Abfahrtort, F-R4-64), 7 „Die übrigen Wege" in der
+Einleitung (E-R4-52), 12.6 „Der Wiederanlauf" am Kapitelende; `Design.md`
+nennt die drei Seiten nicht mehr als Ausnahme.
+*Gemessen:* Ausgangsmaß **3** Karten, `grep -l` **6** Dateien; danach
+**0** Karten, `grep -l` **3** Dateien — `admin_demo.php`, `betrieb_status.php`
+und `version.php`, alle drei nur in Kommentaren (die zwei aus 10c/AP9 waren
+schon vorher da; die Abnahme im Wortlaut hätte sie mitgezählt). Riegel
+`anker` **53** Verweise auf **106** Marken, **0** ohne Ziel (vorher 50 auf
+102); `kennzeichnung` **20 / 20**. `hilfe.php` gegen eine Kopie der
+Anwendung mit leerer Datenbank (0 Tabellen): **HTTP 200**, das ganze
+Handbuch, keine Warnung — der Verweis der Wiederherstellung trägt.
+Bilderlauf der drei Seiten: **30** Bilder, Überlauf **0**, Konsolenfehler
+**0**; angesehen Import 1280 und Formular 1280.
+
 
 **R4-21 Android: Eingabefeld und Rundlauf** — Nr. 336, 95. `Eingabefeld()`
 samt Kopfkommentar aus `Bausteine.kt`, Paar „Cursor" aus `kontraste.py`,

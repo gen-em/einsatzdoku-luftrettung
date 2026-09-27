@@ -700,8 +700,10 @@ Ausgenommen sind, weil sie Zustand und keine Erklärung sind: der Satz eines
 **Leerzustands** („Zurzeit keine."), die **Befundzeilen** der Statusseite
 (`status_erhebung()`, `plattform_pruefen()`), Meldungen, Dialoge und
 Kopierwerte. Der Bereich **Einstellungen** folgt der Regel noch nicht
-(E-P5c-06); drei Seiten außerhalb tragen die Karte „Was hier gilt" bis
-Schritt 17 (Nr. 287).
+(E-P5c-06). Die drei Seiten außerhalb von Verwaltung und Betrieb, die die
+Karte „Was hier gilt" noch trugen — Import / Export, das Einsatzformular und
+die Wiederherstellung —, haben sie seit Web 21.4.1 nicht mehr (R4-20,
+Nr. 287); ihr Text steht im Handbuch 4.3, 7 und 12.6.
 
 **Gezählt wird so** (E-P5c-128): S = fester Kartentext in Sätzen, Sb_max =
 die meisten bedingten Sätze, die gleichzeitig sichtbar sind; Soll

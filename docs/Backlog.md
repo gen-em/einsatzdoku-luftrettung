@@ -1010,21 +1010,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Rechteinhaber und Bedingungen. Das gehört nachgesehen, nicht
      abgeschrieben.
 
-287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.** · gehört zu: 17 · Stand: offen · seit 23.09.2026
-     *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
-     Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
-     Seitenende" vor. E-P5c-06 (jünger) sagt: je Karte höchstens ein Satz,
-     alles Erklärende ins Handbuch. 10c AP9 räumt die acht Karten unter
-     Verwaltung und Betrieb ab. **Drei Seiten außerhalb tragen die Karte
-     ebenfalls:** `import.php`, `einsatz_form.php`, `wiederherstellen.php`.
-     Sie liegen nicht im Umfang von 10c, und bis zu ihrer Umstellung gelten
-     dort zwei Regeln nebeneinander.
-
-     *Abnahme:* 0 Karten „Was hier gilt" in `server/`, der Inhalt im Handbuch,
-     jede Karte der drei Seiten mit Verweis auf ihre Sprungmarke. *Fehlschlag:*
-     `grep -l "Was hier gilt" server/*.php` findet eine Seite (außer
-     Kommentaren in `version.php`). **Zuordnung: Schritt 17.**
-
 290. **Keine Stufe der Kette richtet eine Anlage ein.** · gehört zu: PK · Stand: offen · seit 23.09.2026
      *Aufgenommen 23.09.2026 mit Web 20.37.3 (Anlass: Nr. 288).* Nr. 288 hat
      elf Fassungen lang (20.30.0 bis 20.37.2) jede Neueinrichtung gebrochen,
