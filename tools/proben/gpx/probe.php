@@ -5,7 +5,7 @@ declare(strict_types=1);
  * GPX-Probe — liefert der Abruf die richtige Spur, richtig ausgezeichnet?
  * (S2/AP4, E-S2-09, Backlog Nr. 3)
  *
- * Anlass: Nr. 130 — die DOCTYPE-Sperre des GPX-Imports liess UTF-16 durch (Teil 8)
+ * Anlass: Nr. 130 — die DOCTYPE-Sperre des GPX-Imports liess UTF-16 durch (Teil 8); Nr. 259 — ein Demo-Reset machte Teil 2 blind
  *
  * WOFUER. Der GPX-Abruf ist die erste Datei, die dieser Server ausliefert, und
  * er beantwortet drei Fragen, die alle drei schiefgehen koennen, ohne dass es
@@ -428,7 +428,16 @@ echo "\n  Teil 2 — Serverseitig gebaut gegen browserseitig gebaut\n";
  * Referenzexports MUSS eine Zeile im Demo-Konto haben. Findet sie keine, ist
  * die Referenz aelter als die Datenbank — und dann misst dieser Teil etwas
  * anderes als bestellt. Beides steht jetzt als eigene Erwartung da, mit
- * Zahl. */
+ * Zahl.
+ *
+ * NICHT MEHR UEBER DIE KENNUNG (Schritt 17, R4-14, Nr. 259). Ein Demo-Reset
+ * spielt die Fixture neu ein, und die Zeilen bekommen neue Kennungen: „204
+ * von 204 ohne Gegenstueck", bis jemand die Anlage neu aufsetzte (F-R4-40).
+ * Zugeordnet wird deshalb ueber das, was der Reset NICHT aendert und was
+ * der Dateiname ohnehin traegt — Art, Tag und Uhrzeit, wie `export.js` sie
+ * schreibt: bei Einsaetzen die erste Phase 2, bei Ruhezeiten der Beginn, in
+ * der Zeitzone der Anwendung. Zwei Zeilen mit demselben Schluessel waeren
+ * eine Zuordnung ohne Beleg; sie stehen als eigene Erwartung da. */
 // dirname(__DIR__, 2) ist tools/ — seit dem Umzug nach tools/proben/gpx/ (PK-04/2)
 // zeigte dirname(__DIR__) auf tools/proben/, und die Referenz fehlte (F-RP-01).
 $zipPfad = glob(dirname(__DIR__, 2) . '/referenzdatensatz/referenz/*csv*.zip')[0] ?? null;
@@ -442,20 +451,48 @@ if ($zipPfad === null) {
     $zip = new ZipArchive();
     $zip->open($zipPfad);
     $demo = (int)$pdo->query('SELECT id FROM users WHERE email = "demo@gen-em.org"')->fetchColumn();
+    /* Der Schluessel je Zeile des Demo-Kontos, ohne Papierkorb — der Export
+     * nimmt ihn nicht mit. `fmt_local()` rechnet in `app.timezone`, wie
+     * `hhmmLocal(…, APP_TZ)` im Browser. */
+    $schluessel = [];
+    $sm = $pdo->prepare("SELECT m.id, d.day,
+                                (SELECT p.occurred_at FROM mission_phases p
+                                  WHERE p.mission_id = m.id AND p.phase = 2
+                                  ORDER BY p.occurred_at LIMIT 1) AS p2
+                           FROM missions m JOIN days d ON d.id = m.day_id
+                          WHERE m.user_id = ? AND m.deleted_at IS NULL");
+    $sm->execute([$demo]);
+    foreach ($sm as $r) {
+        $hm = $r['p2'] !== null ? fmt_local((string)$r['p2'], 'Hi') : '0000';
+        $schluessel['mission|' . $r['day'] . '|' . $hm][] = (int)$r['id'];
+    }
+    $sr = $pdo->prepare("SELECT x.id, d.day, x.started_at
+                           FROM rest_segments x JOIN days d ON d.id = x.day_id
+                          WHERE x.user_id = ? AND x.deleted_at IS NULL");
+    $sr->execute([$demo]);
+    foreach ($sr as $r) {
+        $schluessel['rest|' . $r['day'] . '|' . fmt_local((string)$r['started_at'], 'Hi')][] = (int)$r['id'];
+    }
+    $mehrdeutig = 0; $mehrdeutigErste = null;
     for ($i = 0; $i < $zip->numFiles; $i++) {
         $name = $zip->getNameIndex($i);
         if (!str_ends_with($name, '.gpx')) { continue; }
-        if (!preg_match('~/(mission|rest)_(\d+)_~', $name, $m)) { $uebersprungenName++; continue; }
+        if (!preg_match('~/(mission|rest)_\d+_(\d{4}-\d{2}-\d{2})_(\d{4})\.gpx$~', $name, $m)) {
+            $uebersprungenName++; continue;
+        }
         $typ = $m[1] === 'mission' ? 'mission' : 'rest';
-        $id  = (int)$m[2];
+        $treffer = $schluessel["$typ|{$m[2]}|{$m[3]}"] ?? [];
+        if (!$treffer) { $uebersprungenFehlt++; continue; }
+        if (count($treffer) > 1) {
+            $mehrdeutig++;
+            $mehrdeutigErste ??= $name . ' → ' . implode(', ', $treffer);
+            continue;
+        }
+        $id = $treffer[0];
 
-        // Nur Spuren, die es hier noch gibt und die NICHT ausgeduennt sind:
-        // eine ausgeduennte hat zu Recht andere Punkte.
+        // Nur Spuren, die NICHT ausgeduennt sind: eine ausgeduennte hat zu
+        // Recht andere Punkte.
         $stand = spur_stand($pdo, $typ, $id);
-        $t = $typ === 'mission' ? 'missions' : 'rest_segments';
-        $q = $pdo->prepare("SELECT COUNT(*) FROM `$t` WHERE id = ? AND user_id = ?");
-        $q->execute([$id, $demo]);
-        if (!(int)$q->fetchColumn()) { $uebersprungenFehlt++; continue; }
         // Eine verdichtete Spur hat zu Recht andere Punkte. Das ist der EINE
         // Grund, aus dem hier etwas uebersprungen werden darf -- und er wird
         // gezaehlt, damit „0 Abweichungen" nicht „0 Vergleiche" heissen kann.
@@ -512,9 +549,13 @@ if ($zipPfad === null) {
                : "$uebersprungenFehlt von $refGeprueft ohne Gegenstueck — die "
                  . 'Referenz ist aelter als die Datenbank; dieser Teil misst dann '
                  . 'etwas anderes als bestellt');
+    pruefe($mehrdeutig === 0,
+           'Jede GPX-Datei trifft genau eine Zeile (Art, Tag, Uhrzeit)',
+           $mehrdeutig === 0 ? count($schluessel) . ' Schluessel im Demo-Konto, 0 mehrdeutig'
+                             : "$mehrdeutig mehrdeutig — erste: $mehrdeutigErste");
     pruefe($uebersprungenName === 0,
-           'Jeder GPX-Dateiname traegt seine Kennung',
-           "$uebersprungenName Namen ohne Kennung");
+           'Jeder GPX-Dateiname traegt Art, Tag und Uhrzeit',
+           "$uebersprungenName Namen ohne diese drei");
     pruefe($dateien > 0 && !$abweichungen,
            'Jeder Punkt stimmt mit der Browserfassung ueberein',
            $abweichungen

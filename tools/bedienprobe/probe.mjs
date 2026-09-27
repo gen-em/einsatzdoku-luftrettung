@@ -330,7 +330,7 @@ async function kasten(rolle, weg, breite) {
      * Seite oeffnen und auf das Stylesheet warten (sonst misst man ungestaltet).
      *
      * MIT SITZUNGSWACHE SEIT S9/AP6 — dieselbe, die der Bilderlauf seit
-     * Web 9.10.1 hat. Das Demo-Konto setzt sich alle 30 Minuten zurueck
+     * Web 9.10.1 hat. Das Demo-Konto setzt sich 30 Minuten nach der ersten Aenderung zurueck
      * (`DEMO_RESET_SEKUNDEN`, demo_lib.php) und erhoeht dabei die
      * Sitzungs-Epoche; `auth_guard.php` beendet daraufhin jede offene Sitzung
      * dieses Kontos — auch die der Probe. Ein voller Lauf ueber zwei Breiten
@@ -357,7 +357,7 @@ async function kasten(rolle, weg, breite) {
         await r.seite.goto(adresse, { waitUntil: 'domcontentloaded' });
         if (r.seite.url().includes('login.php')) {
           throw new Error('Sitzung verloren und Neuanmeldung gescheitert — '
-            + 'das Demo-Konto setzt sich alle 30 Minuten zurück (demo_lib.php)');
+            + 'das Demo-Konto setzt sich 30 Minuten nach der ersten Änderung zurück (demo_lib.php)');
         }
       }
       await r.seite.waitForFunction(

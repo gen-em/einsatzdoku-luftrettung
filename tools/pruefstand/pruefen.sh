@@ -65,7 +65,7 @@ fi
 [ "$GEGEN" = staging ] && melde "Gegen die Prüfanlage — NUR LESEND (E-PK-29)"
 
 # ---- 3a. Demo-Marke -------------------------------------------------------
-# Der Demo-Reset (alle 30 Minuten, `demo_lib.php`) spielt den Demo-Bestand neu
+# Der Demo-Reset (30 Minuten nach der ersten Änderung, `demo_lib.php`) spielt den Demo-Bestand neu
 # ein, und seine Einsätze bekommen neue Kennungen. Welche Probe er traf,
 # entschied bis R4-04 die Reihenfolge der Muster — eine Voraussetzung, die
 # nirgends stand (Nr. 322). Jetzt schiebt der Prüfstand die Marke des letzten

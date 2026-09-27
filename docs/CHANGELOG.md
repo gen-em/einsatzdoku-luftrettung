@@ -14,6 +14,53 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.2.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-14. Nebenstufe ohne Migration.
+
+### Geändert
+
+- **Das Demo-Konto setzt sich nur noch nach einer Änderung zurück** (Nr. 76,
+  E-R4-10). Bis hierher setzte die erste Anfrage nach 30 Minuten zurück, ob
+  sich etwas geändert hatte oder nicht. Der Reset läuft huckepack und kostet
+  rund sechseinhalb Sekunden, und die trug, wer nach einer Pause nur
+  nachsehen wollte — für einen Bestand, der ohnehin der Ausgangsstand war.
+  Jetzt hält `app_state.demo_geaendert` den Zeitpunkt der ersten Änderung
+  seit dem Reset. Gesetzt wird er bei jeder POST des Demo-Kontos mit
+  gültigem Formular-Token und bei jedem angenommenen Upload eines seiner
+  Geräte, fällig ist der Reset 30 Minuten danach. Ohne Änderung kommt er
+  einmal am Tag, als Netz für alles, was an keiner Setzstelle vorbeikommt,
+  und für eine neue Fixture nach einem Deploy.
+- **Gezählt wird ab der ersten Änderung, nicht ab dem letzten Reset**
+  (Q-R4-23, E-R4-42). Ab dem letzten Reset gezählt, wäre nach längerer Ruhe
+  schon die Umleitung nach dem ersten Speichern fällig gewesen, und die
+  Änderung wäre fort, bevor man sie sieht. Wer länger als 30 Minuten
+  ausprobiert, wird weiterhin mittendrin zurückgesetzt. Das ist gewollt: Die
+  Alternative, ab der letzten Änderung zu zählen, ließe einen veränderten
+  Stand auf der öffentlichen Demo stehen, solange jemand alle 29 Minuten
+  etwas absendet.
+- **Der Hinweis im Demo-Konto** sagt „30 Minuten nach der ersten Änderung"
+  und nennt die Restzeit erst, wenn es eine gibt. Ohne Änderung ist kein
+  Reset in Sicht außer dem täglichen, und „in etwa 1380 Minuten" hieße
+  nichts. Unter Verwaltung → Demo-Konto steht neu die Zeile **„Geändert"**.
+  Die übrigen Sätze, die „alle 30 Minuten" versprachen (Kontoseite,
+  Einstellungen, Status), sind nachgezogen.
+
+### Werkzeug
+
+- **GPX-Probe, Teil 2, übersteht einen Demo-Reset** (Nr. 259). Sie ordnete
+  die Dateien des Referenzexports über die Kennung im Dateinamen zu. Ein
+  Reset vergibt neue Kennungen, und danach stand „204 von 204 ohne
+  Gegenstück" da, bis jemand die Anlage neu aufsetzte (F-R4-40). Jetzt ordnet
+  sie über Art, Tag und Uhrzeit zu, wie `export.js` sie in den Namen schreibt.
+  Zwei Zeilen mit demselben Schlüssel zählen als eigene Erwartung. Nach einem
+  erzwungenen Reset: 97 / 97, die alte Fassung dort 2 rot.
+- **Zweitfaktorprobe, Teil 6b:** die Rechnung `demo_reset_faellig_ab()` als
+  Tabelle mit zehn Fällen, „nur die erste Änderung zählt" an `app_state`,
+  und die zwei Setzstellen am Quelltext. Die **Riegelprobe der Fixture**
+  setzt für ihren abgefangenen Reset jetzt auch die Änderungsmarke, sonst
+  würde gar kein Reset versucht.
+
 ## [Web 21.1.11] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-13. Korrekturstufe ohne Migration.

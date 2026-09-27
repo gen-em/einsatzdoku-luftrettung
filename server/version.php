@@ -7760,5 +7760,20 @@ declare(strict_types=1);
  *   ohne das „60 min" bei 3599 s. `html.js` steht dafuer im Kopf jeder Seite
  *   statt auf acht Seiten einzeln. Die Zaehlzeile Z37 sieht seither auch
  *   `className = '…meldung'` und fand zwei weitere Nachbauten (Nr. 346).
+ *
+ * 21.2.0 — DER DEMO-RESET NUR NACH EINER AENDERUNG (Schritt 17, R4-14,
+ *   Nr. 76, 259; E-R4-10, E-R4-42). Nebenstufe ohne Migration — der Hinweis
+ *   im Demo-Konto sagt etwas Neues. Bis hierher setzte die erste Anfrage
+ *   nach 30 Minuten das Demo-Konto zurueck, ob sich etwas geaendert hatte
+ *   oder nicht; die sechseinhalb Sekunden trug, wer nur nachsehen wollte.
+ *   Jetzt haelt `demo_geaendert` in `app_state` die erste Aenderung seit dem
+ *   Reset — gesetzt bei jeder POST des Demo-Kontos mit Token
+ *   (`auth_guard.php`) und bei jedem angenommenen Upload (`ingest.php`) —,
+ *   und faellig ist der Reset 30 Minuten danach, ohne Aenderung einen Tag
+ *   nach dem letzten. Gezaehlt ab der ERSTEN Aenderung, nicht ab dem letzten
+ *   Reset: Sonst waere nach langer Ruhe schon die Umleitung nach dem ersten
+ *   Speichern faellig. Dazu ordnet die GPX-Probe den Referenzexport ueber
+ *   Art, Tag und Uhrzeit zu statt ueber die Kennung, die ein Reset neu
+ *   vergibt.
  */
-const WEB_VERSION = '21.1.11';
+const WEB_VERSION = '21.2.0';

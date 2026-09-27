@@ -1423,15 +1423,18 @@ function ui_demo_hinweis(): void
         require_once __DIR__ . '/demo_lib.php';
     }
     if (!demo_ist_demo((int)$uid)) { return; }
-    $rest = demo_reset_in();
+    /* DIE FRIST NUR MIT MARKE (Web 21.2.0, R4-14, Nr. 76): Ohne Aenderung
+     * ist kein Reset in Sicht ausser dem taeglichen — „in etwa 1380 Minuten"
+     * hiesse nichts. Die Zahl erscheint, sobald etwas geaendert wurde. */
+    $rest = demo_geaendert_seit() > 0 ? demo_reset_in() : 0;
     ?>
 <div class="demo-hinweis" role="status">
   <?= ui_symbol('kolben', 'symbol-gross') ?>
   <p><strong>Demo-Konto.</strong> Alle Daten hier sind <strong>frei
   erfunden</strong>. Ausprobieren ist ausdrücklich erwünscht — ändern,
   anlegen, löschen, Gerät koppeln. Der Bestand wird
-  <strong>alle 30&nbsp;Minuten</strong> auf den Ausgangsstand
-  zurückgesetzt<?= $rest > 0 ? ', das nächste Mal in etwa '
+  <strong>30&nbsp;Minuten nach der ersten Änderung</strong> auf den
+  Ausgangsstand zurückgesetzt<?= $rest > 0 ? ', das nächste Mal in etwa '
       . (int)ceil($rest / 60) . '&nbsp;Minuten' : '' ?>.
   <strong>Bitte niemals echte Patienten- oder Einsatzdaten erfassen.</strong></p>
 </div>

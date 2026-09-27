@@ -757,7 +757,7 @@ def stufe_schneiden(lauf: Lauf) -> None:
     Sperrvermerk in `track_cuts`. Backlog Nr. 63 (der Vermerk muss die
     Konto-Sicherung ueberstehen) war deshalb nur ueber eine eigens gebaute
     Probe zu belegen. Mit einem Schnitt IM Bestand prueft ihn der Demo-Reset
-    auf dem Produktivserver alle 30 Minuten von selbst.
+    auf dem Produktivserver bei jedem Reset von selbst.
 
     WAS DER SCHNITT ANLEGT: einen Einsatz mit `origin = schnitt`, die drei
     Phasen 3/4/7, die gewanderten Spurpunkte und den Sperrvermerk am

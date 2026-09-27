@@ -110,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (demo_ist_demo($uid) && in_array($action, DEMO_GESPERRT, true)) {
         $error = 'Das Demo-Konto wird über den Reiter „Demo-Konto“ verwaltet — '
                . 'Anlegen, Zurücksetzen und Entfernen. Hier lässt es sich weder '
-               . 'ändern noch sichern: Der Reset überschreibt alle dreißig Minuten '
-               . 'Konto und Bestand, und eine Änderung wäre spätestens dann wieder '
+               . 'ändern noch sichern: Der Reset überschreibt Konto und Bestand, '
+               . 'spätestens einmal am Tag, und eine Änderung wäre dann wieder '
                . 'weg. Gesichert wird es nicht — der Bestand ist erfunden.';
         $action = '';
     }
@@ -893,8 +893,8 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?= ui_meldung_markup('info',
         'Dieses Konto wird über den Reiter „Demo-Konto“ verwaltet: dort wird es '
       . 'angelegt, zurückgesetzt und entfernt. Ändern und Sichern sind hier '
-      . 'gesperrt — der Reset überschreibt alle dreißig Minuten Konto und '
-      . 'Bestand, und der Bestand ist erfunden.',
+      . 'gesperrt — der Reset überschreibt Konto und Bestand, und der '
+      . 'Bestand ist erfunden.',
         'Demo-Konto.',
         ui_knopf(['text' => 'Zum Demo-Konto', 'art' => 'neutral',
                   'href' => 'admin_demo.php'])) ?>
@@ -1257,7 +1257,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php /* ---- Backups -----------------------------------------------
              ENTFAELLT BEIM DEMO-KONTO (S3/AP10, E-S3-07): Es wird nicht
              gesichert. Sein Bestand ist erfunden, liegt als Fixture im
-             Repositorium und wird alle dreissig Minuten daraus neu
+             Repositorium und wird bei jedem Reset daraus neu
              hergestellt — ein Backup davon waere eine Kopie einer Datei,
              die ohnehin im Git liegt. */ ?>
     <?php if (!$istDemo): ?>

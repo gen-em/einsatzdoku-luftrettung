@@ -70,7 +70,7 @@ if ($u['role'] !== 'user') {
  * sie unter KDF_ITER_ZIEL, kann der Altwert NIE aus KDF_ITER_LISTE
  * verschwinden: `api/kdf_upgrade.php` ueberspringt das Demo-Konto
  * ausdruecklich (E-P1-19, weil ein Upgrade bis zum naechsten Reset nicht mehr
- * zu den oeffentlichen Zugangsdaten passte). Die Fixture wird alle 30 Minuten
+ * zu den oeffentlichen Zugangsdaten passte). Die Fixture wird bei jedem Reset
  * eingespielt und haelt den Altwert damit dauerhaft am Leben.
  *
  * Der Riegel steht hier und nicht nur in der Dokumentation, weil die Zusage

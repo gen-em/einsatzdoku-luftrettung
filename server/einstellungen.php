@@ -138,8 +138,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Im Demo-Konto lassen sich E-Mail-Adresse und Passwort nicht '
                . 'ändern — sie sind öffentlich und müssen es bleiben, damit '
                . 'die nächste Besucherin hereinkommt. Alles andere darfst du '
-               . 'gern ausprobieren; spätestens nach 30 Minuten ist ohnehin '
-               . 'wieder der Ausgangszustand hergestellt.';
+               . 'gern ausprobieren; 30 Minuten nach der ersten Änderung ist '
+               . 'ohnehin wieder der Ausgangszustand hergestellt.';
         $action = '';
     }
 
@@ -311,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Server sieht das Passwort in dieser einen Anfrage, und das ist
      * derselbe Weg, den `login.php` ohnehin geht.
      *
-     * DEMO-KONTO NICHT. Es setzt sich alle 30 Minuten selbst zurueck; eine
+     * DEMO-KONTO NICHT. Es setzt sich nach jeder Aenderung selbst zurueck; eine
      * Loeschung mit 30 Tagen Karenz waere dort sinnlos und wuerde den
      * Pruefstand abraeumen. */
     if ($action === 'konto_loeschen') {
@@ -1963,7 +1963,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                           'id' => 'k-konto-loeschen']); ?>
       <?php if (demo_ist_demo($userId)): ?>
         <p class="feld-hinweis">Das Demo-Konto lässt sich nicht löschen — es setzt
-           sich ohnehin alle 30 Minuten selbst zurück.</p>
+           sich 30 Minuten nach der ersten Änderung ohnehin selbst zurück.</p>
       <?php else: ?>
         <p class="feld-hinweis"><strong>Dein Konto wird sofort gesperrt und nach
            <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht.</strong> In dieser Zeit

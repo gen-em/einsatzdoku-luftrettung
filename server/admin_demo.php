@@ -14,8 +14,8 @@ require_once __DIR__ . '/demo_lib.php';
  *
  * „Zuruecksetzen" sieht gefaehrlich aus und ist es nicht: Der Verlust ist der
  * Zweck. Was verlorengeht, sind Besuchereingaben in einem Konto mit rein
- * erfundenen Daten — und dasselbe passiert ohnehin alle 30 Minuten von
- * selbst. „Entfernen" dagegen ist endgueltig und hat deshalb eine Rueckfrage.
+ * erfundenen Daten — und dasselbe passiert ohnehin 30 Minuten nach der
+ * ersten Aenderung von selbst. „Entfernen" dagegen ist endgueltig und hat deshalb eine Rueckfrage.
  *
  * WARUM EINE EIGENE SEITE. Die Nutzerverwaltung listet Konten; hier geht es
  * um EIN Konto mit besonderen Regeln, dessen Zustand (wann war der letzte
@@ -45,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bericht = demo_zuruecksetzen();
             $notice = 'Demo-Konto auf den Standardzustand zurückgesetzt.';
             /* NUR DER RESET VON HAND (P5c/AP2, E-P5c-38). Der selbsttätige
-             * alle 30 Minuten schriebe rund 17 500 Einträge im Jahr in den
-             * Reiter mit der langen Frist — und verdeckte jeden anderen. */
+             * schriebe bis zu 48 Einträge am Tag in den Reiter mit der langen
+             * Frist — und verdeckte jeden anderen. */
             require_once __DIR__ . '/protokoll_lib.php';
             protokoll('verwaltung', 'demo_zurueckgesetzt',
                       'Demo-Konto von Hand auf den Standardzustand zurückgesetzt');
@@ -174,8 +174,9 @@ if ($demoId !== null) {
     ];
 }
 
-$letzter = demo_letzter_reset();
-$restSek = demo_reset_in();
+$letzter   = demo_letzter_reset();
+$geaendert = demo_geaendert_seit();
+$restSek   = demo_reset_in();
 
 /* ---- Anzeige --------------------------------------------------------------
  *
@@ -218,8 +219,8 @@ ui_seite_start(['titel' => 'Demo-Konto']);
 
   <?php
   /* KEINE RUECKFRAGE VOR DEM ZURUECKSETZEN: Der Verlust ist der Zweck, und
-     dasselbe passiert alle 30 Minuten von selbst. Eine Rueckfrage, die man
-     dreissigmal am Tag wegklickt, entwertet die Rueckfragen, die etwas
+     dasselbe passiert 30 Minuten nach jeder ersten Aenderung von selbst.
+     Eine Rueckfrage, die man oft am Tag wegklickt, entwertet die Rueckfragen, die etwas
      bedeuten. „Entfernen" dagegen ist endgueltig und steht deshalb im
      Aktionsmenue, hinter einer Rueckfrage. */
   $gesperrt = $fixtureDa ? '' : ' disabled';
@@ -258,7 +259,8 @@ ui_seite_start(['titel' => 'Demo-Konto']);
   <?php endif; ?>
 
   <p class="seiten-erklaerung">Ein Konto zum Ausprobieren, das sich
-     <strong>alle 30 Minuten</strong> selbst auf den Standardzustand zurücksetzt.
+     <strong>30 Minuten nach der ersten Änderung</strong> selbst auf den
+     Standardzustand zurücksetzt — ohne Änderung einmal am Tag.
      <a href="hilfe.php#11-6-demo-konto">Handbuch: Demo-Konto</a></p>
 
 <?php if ($demoId === null): ?>
@@ -291,9 +293,17 @@ ui_seite_start(['titel' => 'Demo-Konto']);
       ui_zeile(['text' => 'Konto', 'klein' => (string)$email]);
       ui_zeile(['text' => 'Letzter Reset',
                 'klein' => $letzter > 0 ? fmt_local(gmdate('Y-m-d H:i:s', $letzter)) : 'unbekannt']);
+      /* ZWEI FRISTEN SEIT WEB 21.2.0 (R4-14, Nr. 76): 30 Minuten nach der
+       * ersten Aenderung, ohne Aenderung ein Tag nach dem letzten Reset.
+       * Welche gilt, sagt die Zeile „Geändert" darueber. */
+      ui_zeile(['text' => 'Geändert',
+                'klein' => $geaendert > 0
+                    ? 'seit ' . fmt_local(gmdate('Y-m-d H:i:s', $geaendert))
+                    : 'nein — kein Reset außer dem täglichen']);
       ui_zeile(['text' => 'Nächster Reset',
-                'klein' => $restSek > 0 ? 'in ' . (int)ceil($restSek / 60) . ' Minuten'
-                                        : 'bei der nächsten Anfrage']);
+                'klein' => $restSek <= 0 ? 'bei der nächsten Anfrage'
+                    : ($restSek < 3600 ? 'in ' . (int)ceil($restSek / 60) . ' Minuten'
+                                       : 'ab ' . datum_zeit_text(gmdate('Y-m-d H:i:s', time() + $restSek)))]);
       ?>
     <?php ui_karte_ende(); ?>
 

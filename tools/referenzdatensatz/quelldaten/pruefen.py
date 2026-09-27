@@ -779,7 +779,7 @@ def main() -> int:
     #
     # WARUM HIER UND NICHT IN tools/quelltext/. Die Beschriftungen der zwei
     # Referenzgeraete werden ueber `server/demo/fixture.json.gz` zu SICHTBAREM
-    # TEXT des Demo-Kontos -- auf dem Produktivserver, alle 30 Minuten neu.
+    # TEXT des Demo-Kontos -- auf dem Produktivserver, bei jedem Reset neu.
     # Die Wortliste kennt fuenf Bereiche (server/*.php, assets/*.js,
     # normative Dokumentation, Android, watch/); `tools/` ist in keinem davon,
     # und das war kein Versehen: Dort steht Werkzeug, kein Client. Diese zwei

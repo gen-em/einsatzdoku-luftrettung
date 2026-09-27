@@ -117,7 +117,7 @@ def demo_uhr() -> str | None:
     """Zeitpunkt des letzten Demo-Resets, oder None.
 
     DIESELBE FALLE WIE IN DER KLICKPROBE (F-S10-AP3-09). Das Demo-Konto setzt
-    sich alle 30 Minuten zurueck, und E10 misst genau dieses Konto. Faellt der
+    sich 30 Minuten nach der ersten Aenderung zurueck, und E10 misst genau dieses Konto. Faellt der
     Reset in den Lauf, verschwindet das Konto fuer den Bruchteil einer
     Sekunde, der Endpunkt antwortet 404, und der Lauf meldet **30 von 34** —
     ohne dass an der Anwendung etwas fehlt.

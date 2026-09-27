@@ -1099,7 +1099,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
      * dieselbe Klammer nehmen: Kontomaterial, Geraete und Bestand. Zerfiele das
      * in mehrere Transaktionen, koennte ein Fehler in der Mitte ein Konto mit
      * halbem Bestand hinterlassen — und ausgerechnet der Reset laeuft
-     * unbeaufsichtigt, alle 30 Minuten.
+     * unbeaufsichtigt, huckepack auf einer Anfrage des Demo-Kontos.
      *
      * PDO kennt keine echten verschachtelten Transaktionen; ein zweites
      * beginTransaction() wirft. Deshalb wird geprueft, ob schon eine laeuft,

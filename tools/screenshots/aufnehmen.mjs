@@ -1111,7 +1111,7 @@ async function vorher(seite, schritte, fehlerSammler) {
  * mit derselben Pruefsumme.
  *
  * Die Ursache steht nicht in diesem Werkzeug, sondern in der Anwendung:
- * Das Demo-Konto setzt sich alle 30 Minuten zurueck, und dabei erhoeht
+ * Das Demo-Konto setzt sich 30 Minuten nach der ersten Aenderung zurueck, und dabei erhoeht
  * `demo_zuruecksetzen()` die Sitzungs-Epoche (server/demo_lib.php,
  * `session_epoch = session_epoch + 1`). `auth_guard.php` beendet daraufhin
  * jede offene Sitzung dieses Kontos — auch unsere. Der Lauf braucht
@@ -1400,7 +1400,7 @@ for (const eintrag of liste) {
     /* ---- 404 NACH EINEM DEMO-RESET: KENNUNGEN NEU HOLEN (S8/AP7) --------
      *
      * `platzhalter()` laeuft einmal, zu Beginn. Das Demo-Konto setzt sich
-     * alle 30 Minuten zurueck, ein voller Lauf dauert laenger als das — und
+     * 30 Minuten nach der ersten Aenderung zurueck, ein voller Lauf dauert laenger als das — und
      * danach zeigen `?d=` und `?id=` auf Zeilen, die es nicht mehr gibt.
      * Gemessen am 06.09.2026: Die Einsatzseiten (frueh im Lauf) standen, die
      * sechs Tag- und Aktionsseiten dahinter antworteten mit 404; 48 von 368
@@ -1780,7 +1780,7 @@ if (verlorene.length || ausgefallen.length) {
   if (verlorene.length) {
     md += `Bei ${verlorene.length} Aufnahmen war die Sitzung fort und wurde neu `
        +  `aufgebaut; das Bild entstand danach. Im Demo-Konto ist das normal — `
-       +  `sein Reset alle 30 Minuten erhöht die Sitzungs-Epoche.\n\n`;
+       +  `sein Reset (30 Minuten nach der ersten Änderung) erhöht die Sitzungs-Epoche.\n\n`;
     for (const v of verlorene) md += `- ${v}\n`;
   }
   if (ausgefallen.length) {

@@ -31,7 +31,7 @@ require_once __DIR__ . '/format_lib.php';   // zahl_text(), prozent_text(), proz
  *
  * OHNE DEMO-KONTO — durchgaengig und ohne Ausnahme (Rueckmeldung
  * 05.09.2026). Sein Bestand ist erfunden, liegt als Fixture im Repositorium
- * und wird alle dreissig Minuten daraus neu hergestellt. Ihn in einer
+ * und wird bei jedem Reset daraus neu hergestellt. Ihn in einer
  * Statistik mitzuzaehlen hiesse, 106 erfundene Einsaetze als Nutzung
  * auszugeben. Die Bezugsgroesse steht deshalb an jeder Karte: „von 11"
  * meint elf ECHTE Konten.

@@ -1128,6 +1128,8 @@ try {
 
     $pdo->prepare('UPDATE devices SET last_seen = NOW() WHERE id = ?')->execute([$dev['id']]);
     $pdo->commit();
+    /* Angenommen: Das Demo-Konto hat sich geaendert (Web 21.2.0, R4-14, Nr. 76). */
+    if (demo_ist_demo((int)$dev['user_id'])) { demo_aenderung_vermerken(); }
 
     if ($kind === 'mission' && $ownerType === 'mission') {
         try {

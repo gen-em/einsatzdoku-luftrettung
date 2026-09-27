@@ -81,9 +81,10 @@ if ($vorher !== null && $vorher !== $id) {
 $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                ON DUPLICATE KEY UPDATE v = VALUES(v)')
     ->execute([DEMO_K_USER, (string)$id]);
-/* Resetmarke in die ZUKUNFT: `demo_reset_in()` rechnet
- * DEMO_RESET_SEKUNDEN - (jetzt - Marke); eine Marke von morgen ergibt eine
- * Restzeit, die den Reset waehrend des Aufbaus nicht faellig werden laesst. */
+/* Resetmarke in die ZUKUNFT: `demo_reset_faellig_ab()` zaehlt die Frist ab
+ * dem spaeteren von Marke und erster Aenderung (seit Web 21.2.0, R4-14); eine
+ * Marke von morgen laesst den Reset waehrend des Aufbaus nicht faellig
+ * werden, auch wenn der Aufbau das Konto aendert. */
 demo_reset_marke_setzen(time() + $frist);
 
 printf("Konto #%d (%s) ist jetzt das Demo-Konto dieser Installation.\n", $id, $adresse);

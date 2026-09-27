@@ -229,20 +229,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Bilddatei an.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 62.
 
-76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert hat.** · gehört zu: 17 · Stand: teilweise · seit 02.09.2026
-     Befund: `demo_reset_wenn_faellig()` (`demo_lib.php`) setzt zeitgesteuert
-     zurück, ohne zu prüfen, ob eine Besucherin etwas verändert hat.
-     Gemessen 15.09.2026 (Prüfstand, drei Läufe): 5859 ms mit dem alten,
-     6610 ms mit dem neuen Bestand (106 Einsätze, 63 752 Spurpunkte) —
-     0,75 s mehr für 20 % mehr Einsätze.
-     Wirkung: Der Reset läuft huckepack auf einer Anfrage; die Besucherin,
-     die ihn auslöst, wartet sechseinhalb Sekunden. Das ist das Argument für
-     eine Änderungsmarke, nicht die Last. Produktiv (Datenbank auf anderem
-     Rechner) und gleichzeitige Zugriffe sind nicht gemessen.
-     Weg: entscheiden — durchlaufen lassen oder Zähler im Schreibweg des
-     Demo-Kontos, Reset nur bei gesetzter Marke.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 76.
-
 77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12 · Stand: teilweise · seit 02.09.2026
      Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und
      weitere Betriebsangaben auf einer Fläche.
@@ -922,27 +908,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      umzuschreiben heißt, eine Anlage anders zu behandeln als die, auf der
      sie schon lief. Das Register in P8 löst es an der Wurzel; bis dahin
      steht im Zählmittel eine **Decke von 57** — sie darf nicht wachsen.
-
-259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen fallen, ihr Kernvergleich läuft gar nicht.** · gehört zu: 17 · Stand: offen · seit 21.09.2026
-     Befund (Schritt 15 AP3): `tools/gpxprobe/probe.php` hält den
-     Referenzexport vom 15.09.2026 gegen die GPX-Dateien des Demo-Kontos.
-     Nach einem Demo-Reset haben die Einsätze neue Kennungen: „190 von 204
-     ohne Gegenstück", drei Folgefehler — und der punktweise Vergleich
-     meldet „0 von 204 Dateien verglichen (0 Abweichungen)": eine Null, die
-     nichts gemessen hat, neben Nullen, die etwas gemessen haben. 95/4 vor
-     und nach dem Paket identisch — der Befund liegt nicht am Code.
-     Der Reset hängt nicht an der Jobschlange, sondern an `auth_guard.php`
-     (`demo_reset_wenn_faellig()` bei jeder Anmeldung des Demo-Kontos nach
-     `DEMO_RESET_SEKUNDEN` = 1800); `jobs_pause()` hilft nicht. Das
-     richtige Mittel steht in `tools/klickprobe/LIESMICH.md`:
-     `UPDATE app_state SET v = UNIX_TIMESTAMP() WHERE k = 'demo_letzter_reset';`
-     verschiebt den nächsten Reset um 30 Minuten.
-     Weg: Die Probe hält den Reset selbst auf und setzt das Demo-Konto aus
-     der Fixture zurück, oder sie legt sich ein eigenes Konto an; jedenfalls
-     sagt sie, wenn ihr Hauptteil nichts geprüft hat. Vorbild ist die
-     Klickprobe, die einen Reset mitten im Lauf meldet (42 von 48, mit
-     Pause 48 von 48).
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 259.
 
 261. **Staging bewahrt zwei Komplett-Stände auf — der Hotfix-Weg braucht mehr.** · gehört zu: Zuarbeit · Stand: offen · seit 21.09.2026
      Befund (Kette II, AP7): `KOMP_AUFBEWAHRUNG_VORGABE` steht auf 2

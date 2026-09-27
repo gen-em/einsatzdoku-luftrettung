@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-14.** |
-> | Entschieden | **E-R4-01 bis E-R4-41** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-15.** |
+> | Entschieden | **E-R4-01 bis E-R4-44** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-13 erledigt** (27.09.2026); Web 21.1.11. Offen: R4-14 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-14 erledigt** (27.09.2026); Web 21.2.0. Offen: R4-15 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben) — 2.4. |
 
 
 ---
@@ -461,6 +461,31 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   fand die Zeile zwei weitere Nachbauten: `patwarn` in `patient.js` (ohne
   Symbol, weil `symbol.js` beim Aufbau noch fehlen kann) und den
   Papierkorb-Hinweis in `index.php`. Beide bleiben — Nr. 346.
+- **F-R4-43 E-R4-10 sagt nicht, ab wann die 30 Minuten zählen — und die
+  naheliegende Lesart verwirft die erste Änderung sofort.** Ab dem letzten
+  Reset gezählt, wäre nach längerer Ruhe (etwa drei Stunden ohne Besuch)
+  schon die Umleitung nach dem ersten Speichern fällig: Die Marke steht, die
+  Frist ist längst um. Gefragt als Q-R4-23, entschieden E-R4-42.
+- **F-R4-44 Die Riegelprobe der Fixture wäre mit R4-14 rot geworden, aus dem
+  falschen Grund.** Ihr Fall 5 machte den Reset fällig, indem er nur
+  `demo_letzter_reset` zurückschob; ohne Änderungsmarke versucht der Reset
+  nichts, und die Probe meldete „0 Störungen". Gegen den neuen Code gefahren:
+  alte Fassung Fall 5 rot, neue 10 / 10. Örtlich fehlt ihr Vorgabekonto
+  `umlauf-csv@gen-em.org`; gefahren mit `umlauf-edbak@gen-em.org` (Rolle
+  `user`, `edka1:`). Sie steht nicht im Prüfstand.
+- **F-R4-45 „Alle 30 Minuten" stand 43-mal für den Demo-Reset** —
+  nachgezählt über Zeilenumbrüche in `server/`, `tools/`, Handbuch und
+  Technik, ohne `version.php`; zwei weitere Treffer meinen die Schlüsselfrist
+  (`keyguard.js`, `frist/probe.html`). Dazu kamen Sätze ohne „alle" („spätestens
+  nach 30 Minuten", „Höchstdrift 30 Minuten") und der Hinweis selbst
+  (`alle 30&nbsp;Minuten`). **37 umgeschrieben**, darunter sieben sichtbare
+  Sätze (Hinweis, Verwaltung Demo-Konto, zwei in den Einstellungen, zwei auf
+  der Kontoseite, Status) und zwei Ausgaben von Werkzeugen (Bedienprobe,
+  Bilderlauf). **Sechs bleiben:** `pw_handling.php` (18-Liste, H-R4-05),
+  `db.php` (in der Vergangenheit, stimmt weiter) und je zwei `$warum`-Texte in
+  `D08.json` und `D19.json`, die mit R4-16 durch den Erzeuger gehen und dort
+  mitgezogen werden. Drei neue Treffer sind Rückblicke („bis dahin alle 30
+  Minuten") in Handbuch, Technik und `demo_lib.php`.
 
 ## 3. Entscheidungen und Fragen
 
@@ -509,6 +534,9 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-39 | Q-R4-22: **Die Backticks setzt `mf_spalten_sql()`, nicht `mf_spalten()`**; dazu `mf_liste_sql()` und `mf_bezeichner()` in derselben Datei. `komplett_lib.php` behält seine Quotierung. | Betreiberin, 27.09.2026 („Dann weiter") | Vier Aufrufer brauchen die blossen Namen als Schlüssel (`$werte[$c]`, `$fest[$c]`, `array_diff`); Backticks in `mf_spalten()` hätten sie gebrochen. Weg A bleibt: zentral im Feldkatalog. `komplett_lib.php` sichert jede Tabelle, nicht den Katalog; ein allgemeiner Helfer gehörte nach `db.php`, das für 18 frei bleibt (2.3). |
 | E-R4-40 | **`html.js` steht im Kopf jeder Seite (`ui_seite_start()`), nicht in der Immer-Liste am Ende.** | Umsetzung (R4-13) | Die Regel über der Zeile von `format.js` sagt, was in den Kopf gehört: was ein `window.Ed…` setzt, an nichts hängt und von mehr als einer Seite gebraucht wird. `html.js` erfüllt alle drei, und die Seiten rufen `EdHtml` in Inline-Skripten, die vor dem Seitenende laufen. Das Konzept sagte „Immer-Liste" — gemeint war „einmal für alle". |
 | E-R4-41 | **Z37 misst auch `className = '…meldung'`; die Decke bleibt 4, die zwei neuen Funde gehen als Nr. 346 in die nächste Backlog-Runde.** | Umsetzung (R4-13) | Die Abnahme („Z37 sinkt um 2") ist mit dem alten Muster erfüllt (4 → 2). Das alte Muster hätte die Decke aber über zwei Nachbauten hinweg grün gemeldet; die Zeile misst jetzt die Sache. `patwarn` und der Papierkorb-Hinweis liegen außerhalb von Nr. 271–273, und beide umzustellen wäre eine sichtbare Änderung ohne Auftrag. |
+| E-R4-42 | Q-R4-23: **Die 30 Minuten zählen ab der ersten Änderung seit dem letzten Reset**, nicht ab dem Reset und nicht ab der letzten Änderung; der spätere von Änderung und Reset zählt, damit Werkzeuge den Reset weiter aufhalten können. | Betreiberin, 27.09.2026 | Eine Änderung lebt rund 30 Minuten, wie der Hinweis verspricht. Ab der letzten Änderung gezählt, hielte jemand, der alle 29 Minuten etwas absendet, einen veränderten Stand auf der öffentlichen Demo bis zum Pflichtreset. |
+| E-R4-43 | **Mit Marke gilt nur ihre Frist; der tägliche Pflichtreset greift nur ohne Marke.** | Umsetzung (R4-14) | Mit Marke ist der Reset ohnehin höchstens 30 Minuten entfernt; beides zu nehmen hieße, einer Änderung kurz vor Ablauf des Tages ihre halbe Stunde zu kürzen. |
+| E-R4-44 | **Die Marke setzt nur eine POST des Demo-Kontos mit gültigem Formular-Token (`csrf_ok()`)**; Änderungen aus der Verwaltung zählen nicht. | Umsetzung (R4-14) | `csrf_check()` rufen die Seiten erst nach `auth_guard.php`; ohne Token könnte eine fremde Seite die Marke setzen. Eine Änderung durch eine Administratorin geschieht nicht in der Sitzung des Demo-Kontos — dafür ist der Pflichtreset das Netz, und die Kontoseite des Demo-Kontos sperrt Ändern ohnehin. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -542,6 +570,7 @@ Frage mit Empfehlung stehen.
 | Q-R4-20 | H-R4-05: Der Flash steht in `session_lib.php`, für 18 „frei halten". Darf R4-11 den Flash-Block ändern (rund 15 Zeilen)? | Ja, nur den Flash-Block; 18 baut Sitzungsbindung und Zweitfaktor, nicht ihn. Vermerk „18-Liste" in 4. | R4-11 |
 | Q-R4-21 | Drei ältere Fehler aus dem Umbau (F-R4-33, -35, -36): was davon in R4-11? | F-R4-35 und -36 jetzt (je eine Stelle in `admin_sicherungsziele.php`), F-R4-33 als Backlog-Punkt für 18 (`adminbackup_lib.php` frei halten), die Kleinigkeiten der Installationsseite als Nr. 345. | R4-11 |
 | Q-R4-22 | Nr. 239, Weg A: Backticks direkt in `mf_spalten()` brechen vier Aufrufer, die die Namen als Schlüssel brauchen. Stattdessen in `mf_spalten_sql()`? | Ja — die Funktion, die aus der Liste SQL-Text macht; die INSERTs bauen ihre Spaltenliste darüber. | R4-12 |
+| Q-R4-23 | Nr. 76: Ab wann zählen die 30 Minuten bis zum Reset — ab der ersten Änderung oder gleitend ab der letzten? (Ab dem letzten Reset scheidet aus, F-R4-43.) | Ab der ersten Änderung (E-R4-42). | R4-14 |
 
 ### 3.3 Haltepunkte
 
@@ -1036,6 +1065,37 @@ Erwartung; Anlass-Zeile Nr. 259.
 fällig (Zweitfaktorprobe Teil 6 grün); GPX-Probe nach erzwungenem Reset
 95 / 0 (heute 4 von 95 blind). *Stufe:* Web Korrektur (Neben, falls das
 Banner eine neue Aussage bekommt). *Fächerung:* keine.
+**Erledigt 27.09.2026 — mit Web 21.2.0** (Neben: Der Hinweis sagt „30
+Minuten nach der ersten Änderung"). `demo_lib.php`: `demo_geaendert` in
+`app_state`, `demo_aenderung_vermerken()` (nur die erste zählt, über
+`app_state_einmalig()`), `demo_aenderung_vergessen()` nach jedem Reset und
+beim Anlegen, `demo_reset_faellig_ab()` als reine Rechnung (E-R4-42, -43),
+Pflichtreset 24 h. Setzstellen: `auth_guard.php` bei POST mit Token
+(E-R4-44), `ingest.php` nach dem `commit()` — 18-Liste, je ein Block.
+Hinweis (`ui.php`) nennt die Restzeit nur mit Marke; Verwaltung → Demo-Konto
+mit Zeile „Geändert" und zwei Fristen; sieben sichtbare Sätze, acht
+Handbuchstellen und die Werkzeugtexte nachgezogen (F-R4-45, 43 → 6); `Technik.md` 4.99a „Die
+Änderungsmarke", Runbook. GPX-Probe Teil 2 über Art, Tag und Uhrzeit aus
+dem Dateinamen (erste Phase 2 bzw. Beginn, `fmt_local()`), Mehrdeutigkeit
+als eigene Erwartung, zweite Anlass-Nummer 259; die Demo-Markierung im
+Prüfstand bleibt, denn ein Reset MITTEN im Lauf träfe auch diese Zuordnung.
+Zweitfaktorprobe Teil 6b; Riegelprobe Fall 5 setzt die Marke mit (F-R4-44).
+*Gemessen:* GPX-Probe vor dem Reset **97 / 97** (215 Schlüssel, 0
+mehrdeutig; 116 von 204 Dateien, 140 864 Einzelvergleiche); erzwungener
+Reset (7,0 s, Kennungen ab 484 statt 1), danach neu **97 / 97**, dieselben
+Zahlen, alt **2 rot** („204 von 204 ohne Gegenstück"); Zweitfaktorprobe
+**63 / 63**, 16 Fälle neu, Gegenprobe (Rechnung ab dem letzten Reset, Setzstelle
+ohne `csrf_ok()`) **3 rot**; Riegelprobe **10 / 10**, alte Fassung Fall 5
+rot; im Browser (Chromium): Anmeldung und sechs Seitenaufrufe des
+Demo-Kontos **Marke 0**, 0 POST durch `auth_guard.php`, eine POST
+(Fahrzeug speichern) **setzt sie**, der Hinweis danach „das nächste Mal in
+etwa 30 Minuten"; Bilderlauf `44-`, `45-`, `02h-` **30 Bilder, 0 Überlauf,
+0 Konsolenfehler**; Register Z26 zuerst **4 / 3** — ein `'d.m.Y H:i'` in
+`admin_demo.php`, jetzt über `datum_zeit_text()` —, danach **3 / 3**. **Nicht gemessen:** der Entsperrdialog — er erschien
+nicht, weil der Schlüssel aus der Anmeldung stand; gelesen: `kdf_upgrade`
+ruft das Demo-Konto nicht (Rundenzahl 600 000 = Ziel, `edk1:` ohne Anteil).
+Ein Upload eines Demo-Geräts über `ingest.php` ist nur am Quelltext belegt
+(Teil 6b), nicht gefahren.
 
 **R4-15 `days.created_at`** — Nr. 158 (Q-R4-09, H-R4-02). Migration nach
 dem Vorbild von `missions.created_at` (Spalte, Rückfall `started_at`

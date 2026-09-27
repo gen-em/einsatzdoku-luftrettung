@@ -714,8 +714,8 @@ es zu spät.
 Absage und behalten ihre Warteschlange. Nimmst du die Löschung zurück, kommt
 alles nach. Lässt du es laufen, ist es mit dem Konto fort.
 
-**Das Demo-Konto lässt sich nicht löschen** — es setzt sich ohnehin alle 30
-Minuten selbst zurück.
+**Das Demo-Konto lässt sich nicht löschen** — es setzt sich 30 Minuten nach
+der ersten Änderung ohnehin selbst zurück.
 
 ### 3.1f Zweitfaktor
 
@@ -857,10 +857,15 @@ der gesperrte Bereich.
 lösche welche, pflege Stammdaten, koppele eine Uhr. Es geht nichts verloren,
 was jemandem fehlen würde.
 
-**Alle 30 Minuten setzt sich das Konto selbst zurück.** Danach ist der
-Ausgangsstand wieder da und deine Änderungen sind fort — auch die, die du
-gerade noch gebraucht hättest. Ein Banner am oberen Rand erinnert daran und
-nennt, wann es das nächste Mal so weit ist.
+**30 Minuten nach der ersten Änderung setzt sich das Konto selbst
+zurück.** Danach ist der Ausgangsstand wieder da und deine Änderungen sind
+fort — auch die, die du gerade noch gebraucht hättest. Gezählt wird ab der
+ersten Änderung, nicht ab deiner letzten: Wer länger ausprobiert, wird
+mittendrin zurückgesetzt. Solange niemand etwas ändert, bleibt der Bestand
+stehen, und du wartest beim Hereinkommen auf nichts; nur einmal am Tag wird
+er auch ohne Änderung zurückgesetzt. Ein Banner am oberen Rand erinnert
+daran und nennt, sobald du etwas geändert hast, wann es so weit ist.
+*Bis Web 21.1.x setzte es sich alle 30 Minuten zurück, auch ohne Änderung.*
 
 **Was im Demo-Konto nicht geht:** E-Mail-Adresse und Passwort lassen sich
 nicht ändern, und „Passwort vergessen" führt für diese Adresse zu nichts.
@@ -872,8 +877,8 @@ Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 **gesperrt**, die Karte „Konto-Backups" fehlt dort ganz, und der Anzeigename
 lautet **„Demo NutzerIn"**. Verwaltet wird das Konto ausschließlich über den
 Reiter **Demo-Konto**: anlegen, zurücksetzen, entfernen. Der Grund ist der
-Reset — was auf der Kontoseite eingetragen würde, wäre spätestens nach dreißig
-Minuten wieder weg, und zwar ohne Hinweis. **Die Geräte bleiben offen:** Eine
+Reset — was auf der Kontoseite eingetragen würde, wäre beim nächsten Reset
+wieder weg, und zwar ohne Hinweis. **Die Geräte bleiben offen:** Eine
 Uhr zu koppeln ist gerade der Sinn dieses Kontos, und der Reset räumt das
 selbst wieder ab.
 
@@ -2114,7 +2119,7 @@ Pflicht.
 
 > **Eine Ausnahme, und nur diese eine:** Im **Demo-Konto** (Abschnitt 3.2)
 > liegt das Schlüsselmaterial auf dem Server. Anders ließe sich das Konto
-> nicht alle 30 Minuten zurücksetzen, ohne dass die verschlüsselten Angaben
+> nicht selbsttätig zurücksetzen, ohne dass die verschlüsselten Angaben
 > danach unlesbar wären. Dort stehen ausschließlich erfundene Daten — und
 > deshalb gehören dort auch keine echten hinein.
 
@@ -4320,8 +4325,8 @@ fertiger Text.
 ### 11.6 Demo-Konto
 
 Unter **Verwaltung → Demo-Konto** wird das Demo-Konto **angelegt**,
-**zurückgesetzt** oder **entfernt**. Was es ist, wie es sich alle dreißig
-Minuten selbst zurücksetzt und was darin nicht geht, steht in Abschnitt 3.2 —
+**zurückgesetzt** oder **entfernt**. Was es ist, wann es sich selbst
+zurücksetzt und was darin nicht geht, steht in Abschnitt 3.2 —
 dort aus Sicht dessen, der es benutzt. **Entfernen** löscht es wie jedes
 andere Konto (seit Web 21.1.8): samt Konto-Backups und mit einem Eintrag im
 Protokoll.
@@ -4330,13 +4335,19 @@ Zwei Dinge, die nur die Verwaltung betreffen: Auf der **Kontoseite** des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
 
-Auf der Seite stehen der Zustand (Konto, letzter und nächster Reset), die
+Auf der Seite stehen der Zustand (Konto, letzter Reset, ob seither etwas
+geändert wurde, nächster Reset), die
 drei **Papierkorbzahlen** und — sobald es einen gibt — der **Bericht des
 letzten Laufs**, zugeklappt. Die Papierkorbzahlen sind die Kontrolle des
 Resets: Der Papierkorb kommt **aus der Fixture** zurück, nicht aus einem
 Nachlauf. Stehen sie auf null, ist beim Einspielen etwas übersprungen worden.
-Ausgelöst wird der Reset von der nächsten Anfrage nach Ablauf der dreißig
-Minuten, nicht von einem Zeitdienst.
+Ausgelöst wird der Reset von der nächsten Anfrage des Demo-Kontos, sobald er
+fällig ist — 30 Minuten nach der ersten Änderung, ohne Änderung einen Tag
+nach dem letzten —, nicht von einem Zeitdienst. Als Änderung zählt jedes
+Absenden im Demo-Konto und jeder angenommene Upload eines seiner Geräte;
+Änderungen aus der Verwaltung zählen nicht. **Nach einem Deploy mit neuer
+Fixture** zeigt das Demo-Konto deshalb bis zu einem Tag lang den alten
+Bestand — „Zurücksetzen" holt den neuen sofort.
 
 #### Was der Reset umfasst
 
@@ -4787,7 +4798,7 @@ trotzdem: **Deaktiviert** unter Geräte steht orange, sobald ein Gerät
 gesperrt ist.
 
 > **Ohne Demo-Konto**, und zwar in jeder Zahl. Sein Bestand ist erfunden und
-> wird alle dreißig Minuten neu aus einer Vorlage hergestellt; ihn
+> wird nach jeder Änderung neu aus einer Vorlage hergestellt; ihn
 > mitzuzählen hieße, erfundene Einsätze als Nutzung auszugeben. „Von 11"
 > meint elf echte Konten — in jedem Zustand: Unbestätigte, wartende und
 > gesperrte zählen mit.

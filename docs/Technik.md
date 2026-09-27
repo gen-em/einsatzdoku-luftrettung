@@ -1216,7 +1216,7 @@ des Prüfcontainers. Steht keine mehr, darf der Altwert gestrichen werden —
 **mit einer Ausnahme, die die Zeile selbst nennt:** Das Demo-Konto zählt dort
 nicht mit. Es steht auf der Rundenzahl seiner Fixture, die stille Anhebung
 überspringt es (`api/kdf_upgrade.php`, E-P1-19), und der Reset spielt die
-Fixture alle 30 Minuten neu ein; solange die Fixture den Altwert trägt
+Fixture jedes Mal neu ein; solange die Fixture den Altwert trägt
 (heute 320 000, Backlog Nr. 155), bleibt er in `KDF_ITER_LISTE`, sonst
 könnte sich das Demo-Konto nicht mehr anmelden. Der Demo-Satz erscheint nur,
 solange dieser Wert in der Liste steht; fehlt er, ist das Demo-Konto eines
@@ -5725,7 +5725,9 @@ fällt. Bis dahin gilt sie wie beschrieben.*
 ### 4.99a Demo-Konto (ab Web 7.3.0)
 
 Ein Konto zum Ausprobieren: erfundene Daten, öffentliche Zugangsdaten,
-Änderungen erwünscht — und alle 30 Minuten zurück auf den Ausgangsstand.
+Änderungen erwünscht — und 30 Minuten nach der ersten Änderung zurück auf den
+Ausgangsstand, ohne Änderung einmal am Tag (seit Web 21.2.0, R4-14, Nr. 76;
+bis dahin alle 30 Minuten, ob sich etwas geändert hatte oder nicht).
 
 **Die Ausnahme, die dafür gemacht wird.** Das Projekt verspricht
 Ende-zu-Ende-Verschlüsselung: Der Server sieht die geschützten Angaben nie im
@@ -5782,12 +5784,12 @@ mit MariaDB und PHP auf demselben Rechner, je drei Läufe): **6,6 s** mit dem
 heutigen Bestand (106 Einsätze, 63 752 Punkte), **5,9 s** mit dem Stand davor
 (88 Einsätze, 55 861 Punkte). Die Zeit trägt **die Besucherin**, deren Anfrage
 den fälligen Reset auslöst (`demo_reset_wenn_faellig()` aus
-`auth_guard.php`) — sie sieht ihre Seite so lange nicht. Zweimal die Stunde
-ist das wenig Last und trotzdem jedes Mal ein spürbarer Aufenthalt für genau
-eine Person; ob es dabei bleibt, steht als Backlog Nr. 76 offen. **Nach einem
-Deploy mit neuer Fixture zeigt das bestehende Demo-Konto bis zum nächsten
-Reset den alten Bestand** — wer ihn sofort sehen will, drückt unter
-Verwaltung → Demo-Konto „Zurücksetzen".
+`auth_guard.php`) — sie sieht ihre Seite so lange nicht. Bis Web 21.1.x traf
+das jede, die nach einer Pause nur nachsehen wollte; seit Web 21.2.0 nur noch
+die, die nach einer Änderung kommt (unten, „Die Änderungsmarke"). **Nach
+einem Deploy mit neuer Fixture zeigt das bestehende Demo-Konto bis zum
+nächsten Reset den alten Bestand** — ohne Änderung bis zu einem Tag. Wer ihn
+sofort sehen will, drückt unter Verwaltung → Demo-Konto „Zurücksetzen".
 
 #### Zwei Riegel je Geheimnis — einer beim Erzeugen, einer beim Einspielen
 
@@ -5881,8 +5883,44 @@ wäre die Rücksetzung ein Hebel für jeden, der die Adresse kennt.
 
 Die Marke (`app_state.demo_letzter_reset`) wird **vor** der Arbeit gesetzt —
 dasselbe Vorgehen wie bei der Tageswartung: Zwei gleichzeitige Anfragen sollen
-nicht beide zurücksetzen. Höchstdrift 30 Minuten relativ zu jeder Aktivität;
-ein Zeitdienst wird nicht vorausgesetzt.
+nicht beide zurücksetzen. Ein Zeitdienst wird nicht vorausgesetzt.
+
+#### Die Änderungsmarke (seit Web 21.2.0)
+
+Fällig ist der Reset nur noch, wenn sich etwas geändert hat (Schritt 17,
+R4-14, Backlog Nr. 76, E-R4-10). `app_state.demo_geaendert` hält den
+Zeitpunkt der **ersten** Änderung seit dem letzten Reset;
+`app_state_einmalig()` schreibt nur, wo nichts steht.
+
+| Setzstelle | wann |
+|---|---|
+| `auth_guard.php` | jede POST des Demo-Kontos mit gültigem Formular-Token (`csrf_ok()`), **nach** dem Reset-Aufruf |
+| `ingest.php` | jeder angenommene Upload eines Demo-Geräts, **nach** dem `commit()` |
+
+Die Rechnung steht in `demo_reset_faellig_ab($letzter, $geaendert)`, rein
+und ohne Uhr: **mit Marke** 30 Minuten nach dem späteren von erster Änderung
+und letztem Reset, **ohne Marke** einen Tag nach dem letzten Reset
+(Pflichtreset). Drei Entscheidungen stecken darin:
+
+- **Ab der ersten Änderung, nicht ab dem letzten Reset** (Q-R4-23, E-R4-42).
+  Nach längerer Ruhe wäre sonst schon die Umleitung nach dem ersten
+  Speichern fällig, und die Änderung wäre fort, bevor die Besucherin sie
+  sieht. Wer länger als 30 Minuten ausprobiert, wird wie bisher mittendrin
+  zurückgesetzt.
+- **Der spätere Zeitpunkt zählt.** Werkzeuge halten den Reset auf, indem sie
+  `demo_letzter_reset` auf jetzt oder in die Zukunft schieben (Prüfstand,
+  `demo_kennzeichnen.php`); das bleibt so wirksam.
+- **Mit Marke gilt nur ihre Frist.** Der Pflichtreset ist das Netz für den
+  Fall ohne Marke — eine Änderung, die an keiner Setzstelle vorbeikam, eine
+  Änderung aus der Verwaltung, eine neue Fixture nach einem Deploy. Einer
+  Änderung kurz vor Ablauf des Tages kürzt er die halbe Stunde nicht.
+
+Eine POST, die nichts ändert, setzt die Marke auch: Das kostet einen Reset,
+keinen Schaden; umgekehrt stünde eine Änderung ohne Marke bis zum
+Pflichtreset da. Nach dem Reset löscht `demo_aenderung_vergessen()` die
+Marke — nur, wenn sie nicht jünger ist als sein Beginn. Gemessen von der
+Zweitfaktorprobe, Teil 6b (Rechnung als Tabelle, die Marke an `app_state`,
+die zwei Setzstellen am Quelltext).
 
 Der Reset überschreibt auch **Konto- und Schlüsselmaterial** und zählt
 `session_epoch` hoch. Damit bliebe selbst eine unerwartet gelungene Änderung
@@ -5912,7 +5950,7 @@ Alles Übrige bleibt offen — ausdrücklich auch Geräteverwaltung, Kopplung un
 Uploads. Die Anwendung soll ausprobierbar sein, das ist der Zweck.
 
 **Warum überhaupt sperren, wenn der Reset ohnehin alles zurückholt?** Weil
-zwischen zwei Rücksetzungen bis zu dreißig Minuten liegen. Wer in dieser Zeit
+eine Änderung bis zu dreißig Minuten stehen bleibt. Wer in dieser Zeit
 E-Mail oder Passwort ändert, sperrt die nächste Besucherin aus — und die
 findet ein Konto vor, dessen öffentliche Zugangsdaten nicht mehr stimmen, ohne
 zu erfahren warum.
@@ -6781,7 +6819,7 @@ nicht, und `edbak_ablage_bereit()` legt das Verzeichnis notfalls neu an.
 #### Was die Statistik nicht zählt
 
 **Das Demo-Konto — in keiner Zahl.** Sein Bestand ist erfunden, liegt als
-Fixture im Repositorium und wird alle dreißig Minuten daraus neu hergestellt
+Fixture im Repositorium und wird bei jedem Reset daraus neu hergestellt
 (4.99a). Jede Abfrage der Seite trägt deshalb `WHERE … <> :demo`; fehlt die
 Marke `demo_user_id`, ist der Wert 0 und die Bedingung wahr für alle —
 dieselbe Abfrage, ein Sonderfall weniger.
@@ -11283,8 +11321,9 @@ die Bestandszahlen; sie müssen 15 Diensttage, 82 Einsätze, 95 Ruhesegmente,
 
 **Demo-Konto sieht falsch aus / hängt:** Adminbereich → **Demo-Konto → Auf
 Standard zurücksetzen**. Der Vorgang ist transaktional und dauert wenige
-Sekunden. Er läuft ohnehin alle 30 Minuten von selbst — ausgelöst von der
-nächsten Anfrage, nicht von einem Zeitdienst. Bleibt die Seite leer, fehlt
+Sekunden. Er läuft ohnehin von selbst, 30 Minuten nach der ersten Änderung
+und sonst einmal am Tag — ausgelöst von der nächsten Anfrage, nicht von
+einem Zeitdienst. Bleibt die Seite leer, fehlt
 die Fixture; das sagt sie dann auch.
 
 **Demo-Konto nach einem Datensatz-Update auffrischen:** Erst den
