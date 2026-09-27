@@ -9021,3 +9021,40 @@ zutreffen.
      Kommentaren (admin_demo.php, betrieb_status.php, version.php). Riegel
      anker 53 Verweise, 0 ohne Ziel; Bilderlauf der drei Seiten 30 Bilder,
      Überlauf 0.
+
+336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in
+     `handy/.../Bausteine.kt` hat seit R63 (Android 0.11.0, feste
+     Serveradresse, Backlog Nr. 84) keinen Aufrufer mehr — das Adressfeld der
+     Kopplung war sein einziger. Aufgefallen, als AR-04 die Farbe seines
+     Cursors behob (Orange auf Schnee, 2,23 : 1) und der Emulatorlauf den
+     Cursor zeigen sollte: Es gibt ihn auf keinem Bildschirm. Lint meldet es
+     nicht, weil die Funktion öffentlich ist. Die Behebung bleibt richtig, hat
+     aber keine sichtbare Wirkung.
+     *Weg:* den Baustein austragen, oder ihn stehen lassen, wenn ein
+     Eingabefeld absehbar wiederkommt — dann mit einem Satz, warum.
+     *Abnahme:* kein unbenutzter öffentlicher Baustein in `Bausteine.kt`.
+     **Zuordnung: nächste Android-Runde.**
+     Erledigt 27.09.2026 mit R4-21 (Android 0.16.1): Eingabefeld() samt
+     Kopfkommentar ausgetragen, das Paar „Cursor im Eingabefeld“ aus
+     kontraste.py gestrichen; alle übrigen öffentlichen Bausteine in
+     Bausteine.kt haben Aufrufer. kontraste.py 0 Befunde (29 Paare, vorher
+     30), Selbstprobe 5 / 5; ./gradlew build 0 Lint-Fehler, 0 Fehlschläge.
+
+95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.** · gehört zu: 17 · Stand: erledigt · seit 03.09.2026
+     *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
+     Gemessen: **9 Diensttage, 5 Einsätze und 14 439 Spurpunkte**, die kein
+     Prüffall wieder abräumt. Sie fallen nicht auf, solange niemand das
+     Admin-Konto ansieht — und verfälschen jede Zahl, die jemand daraus zieht.
+     **Vorschlag:** Aufräumen im `@After` der betroffenen Fälle, oder ein
+     eigenes Prüfkonto, das der Lauf am Ende löscht. Gehört zum S4-Rest, weil
+     er dieselben Prüffälle anfasst.
+     **Stand 06.09.2026 (Fassung 32):** Der S4-Rest ist gemergt und hat den
+     Punkt nicht mitgenommen; Nr. 115 (aus Paket E) meldete denselben Fund und
+     ist hier aufgegangen. Zuordnung jetzt: **Backlog-Runde (Android)**.
+     Erledigt 27.09.2026 mit R4-21 (Android 0.16.1):
+     Kopplungshilfe.datenAbraeumen() ruft
+     android/werkzeuge/rundlauf_aufraeumen.php vor dem Trennen,
+     Papierkorbweg je Diensttag der Geräte des Kontos. Rundlauf 14 Fälle
+     grün, danach Konto 1 0 Diensttage, 0 Einsätze, 0 Spurpunkte, 0 Waisen;
+     ohne den Aufruf 9 / 5 / 14 439 wie bei der Aufnahme.

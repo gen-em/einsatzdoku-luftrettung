@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-20 erledigt**, Web 21.4.1 (Migration aus 21.3.0) (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-21 erledigt**, Web 21.4.1, Android 0.16.1 (Migration aus 21.3.0) (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -191,6 +191,13 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-20 | Kopie von `server/` gegen eine leere Datenbank (`nadoku_leerprobe`, 0 Tabellen), `php -S` auf 8099, `curl hilfe.php`; danach Datenbank, Rechte und Kopie entfernt | trägt der Verweis der Wiederherstellung? | **HTTP 200**, 400 311 Byte, Handbuch vollständig, 0 Warnungen im Serverprotokoll |
 | R4-20 | `aufnehmen.mjs --nur 06-wiederherstellen,13-einsatzformular,35-import-export` | Abnahme | **30** Bilder, Überlauf **0**, Konsolenfehler **0**, Knöpfe falscher Höhe **0** |
 | R4-20 | erster `bash tools/pruefstand/pruefen.sh` | Stufe `haupt` | **0 rot, 1 nicht gemessen**, 57 grün, 2921 s: `schemaprobe` — „Modul plattform steht nicht". Der Docker-Dienst war beendet, wie vorher schon der PHP-Server der Anlage (der Bilderlauf fand 8443 geschlossen; `hochfahren.sh` holte sie zurück) — die Umgebung hat zwischen zwei Läufen Hintergrundprozesse beendet. `dockerd` und `plattform.sh` neu: Schemaprobe **4 × 40, 0 Fehlschläge**; danach der Prüfstand wiederholt. |
+| R4-21 | `python3 android/werkzeuge/kontraste.py` vorher und nachher, `--selbstprobe` | Nr. 336 | Handy vorher **94** Stellen / **30** Paare, nachher **88** / **29**; **0** Befunde; Selbstprobe **5 / 5** |
+| R4-21 | Aufrufer jeder öffentlichen Funktion in `Bausteine.kt` (`grep` über `src/main`, `src/test`, `src/androidTest`) | Abnahme Nr. 336 | **10** Bausteine, jeder mit mindestens 1 Aufrufer (`Karte` mit nachgestelltem Block) |
+| R4-21 | `cd android && ANDROID_HOME=/opt/android-sdk ./gradlew build` | Bau | BUILD SUCCESSFUL, 4 min 57 s; Lint Handy **0** Fehler, 1 Warnung (`NewerVersionAvailable`, Robolectric 4.17), Uhr ohne Befund; Handy **534** Fälle, 0 fehlgeschlagen, 30 übersprungen; Uhr **144**, 0 |
+| R4-21 | `./gradlew :handy:testDebugUnitTest --rerun-tasks -Pnadoku.rundlauf=http://127.0.0.1:8080/`; Konto 1 vorher und nachher gezählt | Abnahme Nr. 95 | **14** Rundlauffälle gelaufen (3 / 3 / 8), 0 fehlgeschlagen; Konto 1 vorher und nachher **0 / 0 / 0**, **0** Spurpunkte |
+| R4-21 | derselbe Lauf mit `datenAbraeumen() = null` (zurückgestellt, kein Diff); danach Papierkorbweg über alle Tage von Konto 1 | Gegenprobe | **9** Diensttage, **5** Einsätze, **14** Ruhesegmente, **14 439** Spurpunkte — wie die Aufnahme von Nr. 95; danach **0** und **0** Waisen |
+| R4-21 | Sperrvermerke ohne Gerät gezählt; `proben.sh wiederherstellung` nach der Umstellung | F-R4-65 | vorher **6 / 6** ohne Gerät (einer je Prüfstandslauf, „w-a"); Probe **115 / 115**, danach **0** |
+| R4-21 | `emulator.sh start handy37`, `legen` (Prüffassung), `am`/`monkey`-Start, `bild`, Absturzpuffer (`logcat -b crash`) | `Pruefablauf.md` 6.9 | Boot **1 587 s** (TCG, Watchdog-Faktor 50), aufgespielt **0.16.1-pruef** / Code **1601** in 234 s; App startet in „Gerät koppeln"; **0** Einträge im Absturzpuffer. Uhr nicht gestartet (R4-21 fasst `android/uhr/` nicht an) |
 | R4-16 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen`, `zaehlen.php`, `nummern.py` | Riegel | erst **12 / 14**: `bestand` (`einspielen/LIESMICH.md` 41 Zeilen, Decke 40) und `textprobe` („Maschine" im neuen Runbook-Satz, Regel `luft`); beide behoben, dann **14 / 14**; 20 Decken, 0 gerissen; 70 offene Einträge, 0 ohne Grammatik; 42 Zeilen, 0 über der Decke; 0 Überschneidungen |
 
 ## 3. Im Browser geprüft

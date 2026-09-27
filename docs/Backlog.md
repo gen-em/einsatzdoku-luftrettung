@@ -289,18 +289,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): Der erste Abnehmer einer
      Tastenfolge ist S11 (Uhr Haupt); dort entsteht die nächste Ansicht.
 
-95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.** · gehört zu: 17 · Stand: offen · seit 03.09.2026
-     *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
-     Gemessen: **9 Diensttage, 5 Einsätze und 14 439 Spurpunkte**, die kein
-     Prüffall wieder abräumt. Sie fallen nicht auf, solange niemand das
-     Admin-Konto ansieht — und verfälschen jede Zahl, die jemand daraus zieht.
-     **Vorschlag:** Aufräumen im `@After` der betroffenen Fälle, oder ein
-     eigenes Prüfkonto, das der Lauf am Ende löscht. Gehört zum S4-Rest, weil
-     er dieselben Prüffälle anfasst.
-     **Stand 06.09.2026 (Fassung 32):** Der S4-Rest ist gemergt und hat den
-     Punkt nicht mitgenommen; Nr. 115 (aus Paket E) meldete denselben Fund und
-     ist hier aufgegangen. Zuordnung jetzt: **Backlog-Runde (Android)**.
-
 96. **Uhr und Handy sagen nicht, dass gewartet wird.** · gehört zu: nach v1.0 · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-08).*
      Der Wartungsmodus antwortet mit **503** und einem `Retry-After`. Die
@@ -1067,20 +1055,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Übergangsweg. Abnahme: Bestand in der frischen Anlage, Skript entfernt,
      die 1.0 liest keine Nutzlast von vor 1.0.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 324.
-
-336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in
-     `handy/.../Bausteine.kt` hat seit R63 (Android 0.11.0, feste
-     Serveradresse, Backlog Nr. 84) keinen Aufrufer mehr — das Adressfeld der
-     Kopplung war sein einziger. Aufgefallen, als AR-04 die Farbe seines
-     Cursors behob (Orange auf Schnee, 2,23 : 1) und der Emulatorlauf den
-     Cursor zeigen sollte: Es gibt ihn auf keinem Bildschirm. Lint meldet es
-     nicht, weil die Funktion öffentlich ist. Die Behebung bleibt richtig, hat
-     aber keine sichtbare Wirkung.
-     *Weg:* den Baustein austragen, oder ihn stehen lassen, wenn ein
-     Eingabefeld absehbar wiederkommt — dann mit einem Satz, warum.
-     *Abnahme:* kein unbenutzter öffentlicher Baustein in `Bausteine.kt`.
-     **Zuordnung: nächste Android-Runde.**
 
 340. **GitHub zählt die Backlog-Liste fort — neben jedem Eintrag außer dem ersten steht eine falsche Nummer.** · gehört zu: 17 · Stand: offen · seit 26.09.2026
      *Aufgenommen 26.09.2026 mit R4-01 aus Konzept SD (F-SD-08, Q-R4-11).*

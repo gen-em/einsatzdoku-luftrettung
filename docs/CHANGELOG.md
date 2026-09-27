@@ -14,6 +14,38 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.16.1] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-21. **Korrektur.**
+
+### Entfernt
+
+- **Der Baustein `Eingabefeld()`** (Nr. 336). Er hatte seit Android 0.11.0
+  keinen Aufrufer mehr — das Adressfeld der Kopplung war sein einziger, und
+  das ist mit der festen Serveradresse gegangen (Nr. 84). Stehen blieb er
+  trotzdem, öffentlich und deshalb von Lint nicht gemeldet; die Cursorfarbe,
+  die AR-04 an ihm behoben hatte, war auf keinem Bildschirm zu sehen. Mit ihm
+  geht das Paar „Cursor im Eingabefeld" aus `werkzeuge/kontraste.py`
+  (vorher 94 Farbstellen und 30 Paare im Handy-Modul, jetzt 88 und 29, 0
+  Befunde). Die Regel, einen Cursor als Zeichen zu erkennen, bleibt: Kommt
+  ein Eingabefeld wieder, meldet die Prüfung seinen Cursor als Zeichen ohne
+  Paar.
+
+### Werkzeug
+
+- **Der Rundlauf räumt ab, was er hochgeladen hat** (Nr. 95). Die
+  Rundlauffälle ließen im Konto 1 der örtlichen Installation Diensttage,
+  Einsätze und Spur zurück — 9, 5 und 14 439 Punkte je Lauf, gemessen wie
+  bei der Aufnahme am 03.09.2026. Ein `DELETE` hätte die Spur als Waise
+  zurückgelassen (`CLAUDE.md` 4); `werkzeuge/rundlauf_aufraeumen.php` geht
+  deshalb den Weg einer NutzerIn, Diensttag in den Papierkorb und endgültig
+  löschen, und räumt die Sperrvermerke der Geräte mit ab. Abgeräumt werden
+  die Tage der Geräte des Kontos, nicht das ganze Konto: Auf einer anderen
+  örtlichen Installation ist Konto 1 womöglich ein echtes. Die
+  Rundlauffälle rufen es als Erstes im `@After`, vor dem Trennen, denn das
+  Trennen löscht das Gerät, und danach gehörte nichts mehr erkennbar zum
+  Lauf. Nach einem vollen Rundlauf (14 Fälle) steht Konto 1 bei 0 / 0 / 0.
+
 ## [Web 21.4.1] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-20. **Korrektur.**
@@ -669,6 +701,12 @@ Fassung.
   Platzhalter `{support}`: Dass der Support andere Support-Konten nicht
   betreut (E-P5c-99), stand im Code und ist jetzt gemessen; ohne das Tor
   sind vier der fünf neuen Zeilen rot.
+- **Die Wiederherstellungsprobe räumt ihren Sperrvermerk ab** (R4-21,
+  F-R4-65). Sie löschte ihre Probekonten mit `DELETE FROM users`; der
+  Sperrvermerk ihres Geräts (`deleted_refs`, Kennung „w-a") blieb liegen,
+  denn die Tabelle hat keinen Fremdschlüssel. Einer je Lauf — gezählt: 6 von
+  6 Vermerken der Anlage gehörten zu Geräten, die es nicht mehr gab. Jetzt
+  über `konto_loeschen()` wie die Verbindungsprobe.
 - **Die Verbindungsprobe räumt ihre Spur ab** (R4-18, F-R4-63). Sie löschte
   ihr Probekonto mit `DELETE FROM users`: Einsätze und Diensttage gingen per
   Kaskade mit, die 400 Spurpunkte ihrer 20 Pakete nicht — `track_points` hat

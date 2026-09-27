@@ -74,6 +74,12 @@ class MissionRundlaufTest {
     }
 
     @After fun abbauen() {
+        /* ZUERST DIE DATEN (Backlog Nr. 95, R4-21): Das Trennen loescht das
+         * Geraet, und danach gehoerte nichts mehr erkennbar zu diesem Lauf. */
+        if (basis.isNotEmpty()) {
+            val fehler = Kopplungshilfe.datenAbraeumen()
+            assertNull("Rundlauf nicht aufgeraeumt: $fehler", fehler)
+        }
         if (basis.isNotEmpty() && this::tresor.isInitialized && tresor.gekoppelt()) {
             Kopplungsdienst(HttpNetzweg(), tresor, basis).trennen()
         }

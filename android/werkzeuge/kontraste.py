@@ -99,10 +99,12 @@ PAARE = [
     # Seit 0.16.0 (AR-04): der blaue Zustandspunkt (Sync, Kopplung) -- er
     # bestand immer, stand aber nicht in der Liste.
     ("handy", "Zustandspunkt blau auf Karte", "marke_blau",       "marke_schnee",     3.0),
-    # Der Cursor im Eingabefeld war bis 0.16.0 `marke_orange`, 2,23:1.
-    ("handy", "Cursor im Eingabefeld",        "marke_orange_tief", "marke_schnee",    3.0),
-    # Die Rahmen echter Bedienelemente: Eingabefeld, Umschalter, Nebenknopf --
-    # auf der Karte und auf dem Seitengrund (Zurueck-Knopf).
+    # Hier stand bis R4-21 das Paar „Cursor im Eingabefeld" (bis 0.16.0
+    # `marke_orange`, 2,23:1). Das Eingabefeld hatte seit R63 keinen Aufrufer
+    # mehr und ist mit Nr. 336 gegangen; kommt eines wieder, meldet die
+    # Vollstaendigkeitspruefung seinen Cursor als Zeichen ohne Paar.
+    # Die Rahmen echter Bedienelemente: Umschalter, Nebenknopf -- auf der
+    # Karte und auf dem Seitengrund (Zurueck-Knopf).
     ("handy", "Rahmen Bedienelement, Karte",  "marke_gedaempft",  "marke_schnee",     3.0),
     ("handy", "Rahmen Bedienelement, Seite",  "marke_gedaempft",  "marke_rauch",      3.0),
     # -- Uhr: derselbe Zustand am Handgelenk (E-S5Z-15) --
@@ -137,8 +139,8 @@ ZIERDE = {
         "Bedienelement, sondern ein Behaelter; Phasen- und Auswahlzeile erkennt "
         "man an ihrer Beschriftung und die Wahl an Flaeche und Schrift (Blau hell, "
         "Blau tief). WCAG 1.4.11 verlangt 3:1 nur fuer das, was man zum Erkennen "
-        "braucht. Die Rahmen echter Bedienelemente -- Eingabefeld, Umschalter, "
-        "Nebenknopf -- sind `gedaempft` und stehen mit 5,66:1 in der Liste.",
+        "braucht. Die Rahmen echter Bedienelemente -- Umschalter, Nebenknopf -- "
+        "sind `gedaempft` und stehen mit 5,66:1 in der Liste.",
 }
 
 ROLLE_NACH_NAME = {

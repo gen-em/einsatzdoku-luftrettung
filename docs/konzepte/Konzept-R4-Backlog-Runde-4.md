@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-21** (Android: Eingabefeld und Rundlauf). |
-> | Entschieden | **E-R4-01 bis E-R4-52** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52. |
-> | Offen | **Q-R4-24** (Abnahme 5 s in R4-17 — gilt sie als erfüllt? Empfehlung ja; hält nichts auf). Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-20 erledigt** (27.09.2026); Web 21.4.1 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-21 bis R4-26 in Nummernfolge. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-22** (Android: Abgewiesene verwerfen — wartet auf Q-R4-25); R4-23 und R4-24 warten auf Q-R4-26 (F-R4-66). |
+> | Entschieden | **E-R4-01 bis E-R4-53** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52, -53. |
+> | Offen | **Q-R4-24** (Abnahme 5 s in R4-17 — gilt sie als erfüllt? Empfehlung ja; hält nichts auf). **Q-R4-25** (Hinweiskasten im Mockup M-R4-22 — mitbauen? Empfehlung ja; R4-22 wartet darauf). **Q-R4-26** (eigener Zeitraum: „aktiv/angemeldet/gemeldet" nicht zählbar, F-R4-66 — Empfehlung: nur Zählbares zeigen, M-R4-24 anpassen; R4-23 und R4-24 warten darauf). Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
+> | Umsetzung | **R4-01 bis R4-21 erledigt** (27.09.2026); Web 21.4.1, Android 0.16.1 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-22 bis R4-26 in Nummernfolge. |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. **R4-19: ein Workflow, drei Agenten** auf getrennten Dateigruppen (`referenzdatensatz/` 22, `proben/` 17, übrige Werkzeuge 13 Dateien), alle drei gleichzeitig, 229 s, 0 gescheitert, 0 offene Stellen; Ausnahmeliste der Textprobe, Doku, Gegenlesung, Neuaufbau der Anlage und Prüfstand seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px), **F-R4-62** (R4-19 ohne CHANGELOG-Eintrag — nachgetragen), **F-R4-63** (Verbindungsprobe ließ 400 Waisen je Lauf — behoben), **F-R4-64** (Abfahrtort fehlte in der Legende — behoben) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px), **F-R4-62** (R4-19 ohne CHANGELOG-Eintrag — nachgetragen), **F-R4-63** (Verbindungsprobe ließ 400 Waisen je Lauf — behoben), **F-R4-64** (Abfahrtort fehlte in der Legende — behoben), **F-R4-65** (Wiederherstellungsprobe ließ Sperrvermerke — behoben), **F-R4-66** (aktiv/angemeldet für vergangene Zeiträume nicht zählbar → Q-R4-26) — 2.4. |
 
 
 ---
@@ -651,6 +651,37 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   Dieselbe Lücke hatte F-BV-13 im Satz der Zusage in `CLAUDE.md` 4
   gefunden. Behoben im Handbuch; die Karte ist mit R4-20 fort.
 
+- **F-R4-65 Die Wiederherstellungsprobe ließ je Lauf einen Sperrvermerk
+  zurück.** Beim Prüfen, ob `rundlauf_aufraeumen.php` die Sperrliste
+  aufräumt, standen in der Anlage 6 Vermerke, alle für Geräte, die es nicht
+  mehr gab: je einer um 14:17, 15:40, 16:33, 17:26, 18:34 und 19:25 — die
+  sechs Prüfstandsläufe des Tages —, Kennung „w-a". Die
+  Wiederherstellungsprobe legt ihn in Teil 5 an und löschte ihr Konto mit
+  `DELETE FROM users`; `deleted_refs` hat keinen Fremdschlüssel. Dieselbe
+  Bauart wie F-R4-63, andere Tabelle. Behoben über `konto_loeschen()`;
+  danach **115 / 115** und **0** Vermerke ohne Gerät. Die 6 alten sind
+  von Hand entfernt.
+
+- **F-R4-66 „Aktiv" und „angemeldet" lassen sich für einen vergangenen
+  Zeitraum nicht zählen.** Gefunden beim Lesen für R4-23. Die Anlage
+  speichert je Konto nur die **letzte** Anmeldung (`users.last_login`,
+  geschrieben allein in `login.php`) und je Gerät nur die **letzte**
+  Meldung (`devices.last_seen`, allein in `ingest.php`); eine Geschichte
+  der Anmeldungen gibt es in keiner Tabelle (`sicherheit_ereignisse` führt
+  Sperren, `protokoll_ereignisse` Betriebsereignisse). Für ein Fenster, das
+  **jetzt** endet, ist „zuletzt im Fenster" dasselbe wie „im Fenster" —
+  deshalb stimmen die heutigen Zeilen. Für „01.03. bis 31.05." zählte
+  dieselbe Rechnung nur Konten, deren **letzte** Anmeldung dort liegt; wer
+  im März und wieder im September angemeldet war, fiele heraus, und die
+  Zahl sänke, je länger der Zeitraum zurückliegt. Das betrifft drei
+  Zeilen: NutzerInnen „aktiv" und „angemeldet", Geräte „gemeldet". Und es
+  betrifft das freigegebene Mockup **M-R4-24**: Die kleinen Vielfachen
+  „Aktiv" und „Angemeldet" **je Monat** sind aus diesen Daten nicht zu
+  zeichnen, die Säulen „Geräte je Woche" nur als „gekoppelt". Zählbar
+  sind: alles unter Einsätze (`missions.started_at`), „angelegt"
+  (`users.created_at`), „gekoppelt" (`devices.created_at`) und
+  „NutzerInnen mit Einsatz" — gefragt als **Q-R4-26**.
+
 ## 3. Entscheidungen und Fragen
 
 ### 3.1 Entscheidungen
@@ -709,6 +740,7 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-50 | **Zustände ab 200 Einsätzen stellt das Prüfmittel her, indem es die Antwort von `api/range.php` auf dem Weg in den Browser vervielfacht** (`einsaetzeVervielfachen()`, `tools/motor.mjs`) — nicht über einen größeren Demo-Bestand und nicht über einen Parameter der Anwendung. | Umsetzung (R4-17) | Das Demo-Konto (109 Einsätze) brauchen Bilderlauf und Bedienprobe unverändert; eine Prüftür in der Anwendung wäre ein Weg, den es im Betrieb gibt. Der Browser geht mit den Kopien den echten Weg (Entschlüsseln, Sortieren, Zeichnen); dasselbe Verfahren hat die Sondierung zu Nr. 37 in P3 benutzt. Der Weg braucht zwölffach: Die Luftansicht des Demo-Jahres hat 40 Einsätze, vierfach ergab 160 (gemessen). |
 | E-R4-51 | **Der Kopf der Einsatzkarte sagt „200 angezeigt", sobald die Tabelle weniger zeigt als der Zeitraum hat**; Einsatzzahl und km-Summe bleiben die des ganzen Zeitraums. | Umsetzung (R4-17) | Das Konzept verlangt, zu sagen, dass Kopfzeile und Karte beim ganzen Zeitraum bleiben. Die Suche sagt es seit Web 5.10.0 genau so; ein zweiter Wortlaut für dieselbe Lage wäre ein neuer. |
 | E-R4-52 | **Der Text der Import-Karte geht in die Einleitung von Kapitel 7 („Die übrigen Wege"), nicht ans Kapitelende**; der Rest der Einleitung bekommt eine eigene Überschrift („Der Weg einer Einsatzliste"). | Umsetzung (R4-20) | Die Einleitung trug die Tabelle der übrigen Wege schon; am Kapitelende hinter 7.2 („Zurücklesen") hätte sie ein zweites Mal gestanden oder unter der falschen Überschrift. Neu im Handbuch sind nur zwei Aussagen der Karte (Export ist kein Backup; ohne Diensttag kein GPX-Import). |
+| E-R4-53 | **Der Rundlauf räumt über die Geräte des Kontos ab, nicht über gemerkte `day_ref`s, und über den Papierkorbweg** (`trash_delete_day()`, `trash_purge_day()`), vor dem Trennen. Die Kopplungstabellen bleiben auf `mariadb`. | Umsetzung (R4-21) | Die `day_ref`s entstehen im Produktionscode der App (`Kennungen`) und laufen nie durch die Kopplungshilfe; das Gerät dagegen legt sie selbst an und löscht es schon heute. `day_refs`, `missions` und `rest_segments` verweisen mit ON DELETE SET NULL auf das Gerät — deshalb vor dem Trennen. Der Papierkorbweg nimmt Spur, Schnitte und Sperrvermerke mit; ein Abräumen von Hand hätte jede dieser Tabellen einzeln kennen müssen. Nur die Geräte, nicht das ganze Konto 1: Es kann auf einer anderen örtlichen Installation ein echtes sein. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -744,6 +776,8 @@ Frage mit Empfehlung stehen.
 | Q-R4-22 | Nr. 239, Weg A: Backticks direkt in `mf_spalten()` brechen vier Aufrufer, die die Namen als Schlüssel brauchen. Stattdessen in `mf_spalten_sql()`? | Ja — die Funktion, die aus der Liste SQL-Text macht; die INSERTs bauen ihre Spaltenliste darüber. | R4-12 |
 | Q-R4-23 | Nr. 76: Ab wann zählen die 30 Minuten bis zum Reset — ab der ersten Änderung oder gleitend ab der letzten? (Ab dem letzten Reset scheidet aus, F-R4-43.) | Ab der ersten Änderung (E-R4-42). | R4-14 |
 | Q-R4-24 | Nr. 37, Abnahme R4-17: „Messstand Zeitraum unter 5 s bei 3 983 Einsätzen (heute 42,61 s)". Auf diesem Rechner, der für dieselbe Seite 88 s brauchte, sind es **8,97 s** bei 4071 Einsätzen; die erste Zeile steht nach **2,51 s** (F-R4-58). Gilt die Abnahme als erfüllt? | **Empfehlung: ja** — verlangt war ein Faktor von 8,5 gegenüber dem Ausgangsmaß, gemessen sind 9,6 bis 12 auf demselben Rechner, und die erste Zeile liegt weit unter 5 s. Sonst: Monatsvorwahl vor v1.0 ziehen (E-R4-16 hält sie danach). **Offen, hält nichts auf.** | R4-17 |
+| Q-R4-25 | Nr. 114, R4-22: Das freigegebene Mockup M-R4-22 zeigt unter dem neuen Knopf einen blauen Hinweiskasten („Der Server hat diese Pakete endgültig abgelehnt (Antwort 400). Sie werden nicht erneut gesendet und nach 30 Tagen oder beim Trennen des Geräts geräumt."). Den gibt es in der App nicht; Konzept und Mockup-LIESMICH nennen ihn nicht, die Bildunterschrift sagt „neu ist der Knopf". Mitbauen (mit `Hinweiskasten()`) oder nur Knopf und Rückfrage? | **Empfehlung: mitbauen** — er sagt, was die rote Zeile bedeutet und was ohne Zutun geschieht, und das Mockup ist die freigegebene Vorlage. **Offen; R4-22 wartet darauf.** | R4-22 |
+| Q-R4-26 | Nr. 122, R4-23 und R4-24 (F-R4-66): Die Anlage kennt nur die **letzte** Anmeldung je Konto und die **letzte** Meldung je Gerät. „Aktiv", „angemeldet" und „gemeldet" lassen sich deshalb nur für Fenster zählen, die **jetzt** enden — nicht für einen eigenen Zeitraum in der Vergangenheit und nicht **je Monat** (M-R4-24, Zustand B). Was zeigen NutzerInnen und Geräte bei eigenem Zeitraum, und was wird aus den drei kleinen Vielfachen? | **Empfehlung:** Bei eigenem Zeitraum stehen nur die zählbaren Zeilen (angelegt, gekoppelt, NutzerInnen mit Einsatz); die drei anderen tragen „—" und eine Kleinzeile, warum. In M-R4-24 werden aus „Aktiv / Angemeldet / Neu angelegt je Monat" die Reihen „mit Einsatz" und „neu angelegt", aus „Geräte je Woche" „gekoppelt je Woche". Eine Anmeldegeschichte (neue Tabelle, Migration, personenbezogen) gehört nicht in eine Aufräumrunde. **Offen; R4-23 wartet darauf.** | R4-23, R4-24 |
 
 ### 3.3 Haltepunkte
 
@@ -1495,6 +1529,40 @@ welches). Emulator nach `Pruefablauf.md` 6.9.
 die örtliche Anlage: danach 0 Diensttage, 0 Einsätze, 0 Spurpunkte im
 Konto 1; `kontraste.py` 0 Befunde, Selbstprobe 5/5. *Stufe:* Android
 Korrektur. *Fächerung:* keine.
+**Erledigt 27.09.2026 — mit Android 0.16.1** (Korrektur). Code und Doku im
+Worktree vorbereitet, während der Prüfstand von R4-20 lief; gebaut und
+geprüft danach. `Eingabefeld()` samt Kopfkommentar ausgetragen (58 Zeilen);
+das Paar „Cursor" aus `kontraste.py` gestrichen, die zwei Begründungen, die
+das Eingabefeld unter den Rahmen echter Bedienelemente nannten, berichtigt;
+die Erkennungsregel für einen Cursor bleibt. Rundlauf: `rundlauf_aufraeumen.php`
+geht je Diensttag der Geräte von Konto 1 den Papierkorbweg und räumt die
+Sperrvermerke der Geräte ab (E-R4-53); `Kopplungshilfe.datenAbraeumen()`
+ruft es, `SendeRundlaufTest` und `MissionRundlaufTest` als Erstes im
+`@After`. Die drei Kopplungstabellen bleiben auf dem `mariadb`-Weg. Dabei
+F-R4-65 (Wiederherstellungsprobe) behoben.
+*Gemessen:* `kontraste.py` vorher **94** Stellen / **30** Paare im Handy,
+nachher **88** / **29**, **0** Befunde, Selbstprobe **5 / 5**; alle zehn
+öffentlichen Bausteine in `Bausteine.kt` mit Aufrufer. `./gradlew build`
+**0** Lint-Fehler (Handy 1 Warnung: Robolectric 4.17 erschienen,
+`NewerVersionAvailable` — nicht aus diesem Paket), **0** Fehlschläge,
+Handy 534 Fälle / 30 übersprungen, Uhr 144. Rundlauf gegen die örtliche
+Anlage: **14** Fälle (Senden 3, Einsatz 3, Kopplung 8), **0** Fehlschläge;
+Konto 1 vorher und nachher **0** Diensttage, **0** Einsätze, **0**
+Ruhesegmente, **0** Spurpunkte. Gegenprobe ohne `datenAbraeumen()`:
+**9 / 5 / 14** und **14 439** Spurpunkte — auf die Zahl die Aufnahme von
+Nr. 95; abgeräumt über denselben Papierkorbweg, danach 0 und **0** Waisen.
+Emulator (`Pruefablauf.md` 6.9): `handy37` (`android-37.0;google_apis`,
+userdebug) unter TCG gebootet in **1 587 s**, die Prüffassung
+**0.16.1-pruef** (Code 1601) in 234 s aufgespielt; die App startet in
+„Gerät koppeln", **0** Einträge im Absturzpuffer. Das Eingabefeld hatte
+keinen Aufrufer, zu sehen war es also nie — das Bild belegt, dass die App
+ohne die Datei startet, nicht mehr. Die Uhr ist nicht gestartet: R4-21
+fasst `android/uhr/` nicht an. Beim ersten Versuch lief
+`emulator.sh aufbauen` ohne die Stufe `emulator` von `aufbauen.sh`; `lz4`
+fehlte, und die Debug-Ramdisk der Uhr blieb eine leere Datei (rc 127,
+entfernt). Kein Fehler des Werkzeugs — `start` weist eine leere Ramdisk
+ab —, sondern der falsche Eingang.
+
 
 **R4-22 Android: Abgewiesene verwerfen** — Nr. 114 (E-R4-09, H-R4-01).
 Nach der Freigabe von **M-R4-22**: in `DienstAnsicht.kt` unter der roten

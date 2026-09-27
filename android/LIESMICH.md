@@ -106,6 +106,20 @@ und alle kommen von `127.0.0.1`. Ohne das Leeren läuft der erste Durchgang
 grün und der zweite meldet für jeden Fall `429` — wer das sieht, sucht den
 Fehler in der App. Genau das ist beim ersten Lauf dieses Pakets passiert.
 
+**Seit Android 0.16.1 räumt sie ab, was hochgeladen wurde** (Nr. 95, R4-21).
+Bis dahin blieben nach einem vollen Rundlauf 18 Diensttage, 10 Einsätze und
+28 Ruhesegmente samt Spur im Konto 1. `datenAbraeumen()` ruft
+`werkzeuge/rundlauf_aufraeumen.php`: Je Diensttag der Geräte des Kontos geht
+es den Weg einer NutzerIn — in den Papierkorb, dann endgültig löschen —, und
+die Spur geht über `spur_lib.php`, nicht über ein `DELETE` (`CLAUDE.md` 4).
+`SendeRundlaufTest` und `MissionRundlaufTest` rufen es **als Erstes** im
+`@After`: Das Trennen löscht das Gerät, und danach gehörte nichts mehr
+erkennbar zum Lauf. Die Kopplungstabellen bleiben auf dem `mariadb`-Weg. Der
+Aufruf braucht `php` im Pfad und die `server/config.php` der örtlichen
+Installation. Abgeräumt werden nur die Daten der Geräte, nicht das ganze
+Konto 1 — auf einer anderen örtlichen Installation ist es womöglich ein
+echtes.
+
 #### So bekommt ein Prüfling heute eine Kopplung
 
 Die Codes stehen in keiner Tabelle mehr, in die man sie legen könnte: Sie
