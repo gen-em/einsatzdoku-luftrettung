@@ -14,6 +14,48 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.8] — 2026-09-26
+
+Schritt 17, Backlog-Runde 4, Paket R4-10. Korrekturstufe ohne Migration.
+
+### Behoben
+
+- **Ein Konto wird auf genau einem Weg gelöscht** (Nr. 299). Es gab drei:
+  `konto_loeschen()` für Selbstlöschung und Verfall, den Zweig
+  `user_delete` der Kontoseite und das Entfernen des Demo-Kontos. Jeder
+  schrieb dieselbe Reihenfolge selbst hin — Backups, Spuren, Schnitte,
+  Protokoll, `DELETE` —, und zwei Abschriften waren schon
+  auseinandergelaufen: Die Kontoseite ließ den Mengenstand
+  `mengen:<id>` in `app_state` liegen (ein Konto, das nach einem
+  Wiederanlauf dieselbe Id bekommt, fände ihn vor), das Entfernen des
+  Demo-Kontos ließ dessen Konto-Backups als verwaisten Ordner stehen und
+  schrieb keinen Protokolleintrag. Beides, weil die Nachträge nur in die
+  Funktion gegangen waren. Jetzt rufen alle drei Wege `konto_loeschen()`.
+  Was die Kontoseite davor prüft — nicht das eigene Konto, nicht die letzte
+  BetreiberIn, die Adresse abgetippt —, bleibt davor; das Demo-Konto räumt
+  danach nur noch seine eigene Kennzeichnung.
+- **Die Sperrliste der Geräte geht mit dem Konto** (gefunden beim
+  Zusammenlegen). `deleted_refs` hängt an der Gerätekennung und an keinem
+  Fremdschlüssel; die Kaskade nimmt die Geräte, nicht ihre Sperrvermerke.
+  Geräumt hat sie bisher nur die Demo-Abschrift. Sie steht jetzt in
+  `konto_loeschen()` und gilt damit für jedes Konto. Verfallen wären die
+  Zeilen ohnehin nach 90 Tagen — aber ein Vermerk, dessen Gerät es nicht
+  mehr gibt, ist neunzig Tage lang eine Zeile ohne Gegenstand.
+
+### Geändert
+
+- **`konto_loeschen()` verlangt, wer löscht, und schreibt es ins
+  Protokoll.** Die Angabe `weg` — `verwaltung`, `loeschantrag`, `verfall`,
+  `demo` oder `probe` — steht in den aufklappbaren Angaben des Eintrags
+  „Konto gelöscht". Auch die Wahl über die Backups hat keine Vorgabe mehr:
+  Wer löscht, sagt es ausdrücklich. Eine Vorgabe war der Grund, warum eine
+  vergessene Angabe nicht auffiel.
+- **Werkzeug: Die Rollenprobe löscht ein Konto als Verwaltung** und prüft,
+  was an keinem Fremdschlüssel hängt: die Spur (`spur_zahlen()` 3 → 0), den
+  Mengenstand, die Sperrliste des Geräts und den Weg im Protokoll. Gegen die
+  alte Kontoseite ist sie rot am Mengenstand, gegen `konto_loeschen()` ohne
+  die neue Zeile rot an der Sperrliste.
+
 ## [Web 21.1.7] — 2026-09-26
 
 Schritt 17, Backlog-Runde 4, Paket R4-09. Korrekturstufe ohne Migration.

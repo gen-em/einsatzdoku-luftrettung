@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-10.** |
-> | Entschieden | **E-R4-01 bis E-R4-31** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-11.** |
+> | Entschieden | **E-R4-01 bis E-R4-32** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-09 erledigt** (26.09.2026); Web 21.1.7. Offen: R4-10 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-10 erledigt** (26.09.2026); Web 21.1.8. Offen: R4-11 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift) — 2.4. |
 
 
 ---
@@ -405,6 +405,14 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   `mariadb:10.6` und `mysql:8.4.0` nicht („unauthenticated pull rate
   limit"); über `mirror.gcr.io` von Hand geholt und umbenannt, danach
   vier Fassungen je **30 / 0**. Nr. 343, `nächste Backlog-Runde`.
+- **F-R4-32 Die Sperrliste der Geräte räumte nur die Demo-Abschrift.**
+  Beim Zusammenlegen in R4-10 Zeile für Zeile verglichen: Die Kaskade über
+  `users` nimmt 15 Tabellen mit (gezählt über `REFERENTIAL_CONSTRAINTS`,
+  `konto_lib.php` sagte „vierzehn"), `deleted_refs` nicht — sie hängt an
+  der Gerätekennung ohne Fremdschlüssel. `demo_bestand_loeschen()` räumte
+  sie, `konto_loeschen()` und die Kontoseite nicht. Über den einen Weg hätte
+  das Entfernen des Demo-Kontos sie also verloren. Die Zeile steht jetzt in
+  `konto_loeschen()` (E-R4-32); die Rollenprobe prüft sie.
 
 ## 3. Entscheidungen und Fragen
 
@@ -443,6 +451,7 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-29 | **`sicht` gilt je Muster in jedem Bereich, und das Stylesheet bekommt einen Bereich nur für `namen`.** Das Konzept nannte `a` und `b`; das Feld am Muster wirkt aber überall, wo das Muster läuft — in `c` ohnehin (Markdown wird nicht zerlegt), in `d` und `e` mit 0 zusätzlichen Treffern. Bereich `f` (`server/assets/*.css`, `nur_klassen: ["namen"]`) schließt F-R4-27. Die acht Kommentare stehen bis R4-09 im Altbestand (`--stand`), damit R4-07 grün bleibt, ohne sie zu erklären. | Umsetzung (R4-07) | E-R4-19 sagt „E-P1-02 gilt auch für Kommentare"; eine Probe, die das Stylesheet nicht liest, hielte das an einer von acht Stellen nicht. Für die vier anderen Klassen hat das Stylesheet keinen sichtbaren Text (`flex-basis` träfe `basis`). |
 | E-R4-30 | Frage aus R4-08: **Der Ton von `--orange-tief` passt** — „4,32 passt". Keine Farbe wird geändert; die weiße Schrift auf Orange tief im Hover des Primärknopfs (4,42:1 bei 15 px) steht als Ausnahme mit diesem Grund in `kontrast.py`, und `Design.md` 3.2 sagt jetzt, dass Orange tief auf Schnee 4,32:1 erreicht. | Betreiberin, 26.09.2026 | Vorgelegt waren: Token auf `#BD5700` dunkeln (Web und Android), nur den Hover ändern, Hover dunkelblau. |
 | E-R4-31 | **Im Bilderlauf heißt die Rolle der BetreiberIn `betreiberin`; `admin` und `support` sind eigene Prüfkonten; rollende Behälter halten nicht auf.** Der Strich am Vorschlag wird nach der Regel aus `Design.md` 3.1 `--orange-tief`, ohne eigene Frage. | Umsetzung (R4-08) | Die 25 Seiten, die `admin` hießen, zeigten die Sicht der BetreiberIn — der Name war der Fehler aus Nr. 297, nicht die Sicht. Ein Behälter, der rollen soll (eine breite Tabelle am Handy), rollt; als Fehler gezählt, stünde der Lauf dauerhaft rot. Der Strich stand allein (Rauch auf Schnee), und für diesen Fall sagt 3.1 Orange tief — derselbe Tausch wie E-P5c-79. |
+| E-R4-32 | **`demo_entfernen()` löscht über `konto_loeschen()` (Weg `demo`); die Sperrliste der Geräte zieht in `konto_loeschen()` um.** Die Kennzeichnung in `app_state` fällt danach und nur bei Erfolg. | Umsetzung (R4-10) | Die Empfehlung des Pakets. Die Demo-Abschrift hatte keine Konto-Backups gelöscht und kein Protokoll geschrieben; die Transaktion, die sie dafür hatte, ist kein Gewinn, wenn die Backups ohnehin im Dateisystem liegen. Die eine Zeile, die nur sie hatte (F-R4-32), gehört jedem Konto. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -821,6 +830,31 @@ entscheidet die Umsetzung (dritte Stelle, F-R4-09) — Empfehlung: ebenfalls
 *Abnahme:* `grep -rn "DELETE FROM users" server/` 1 (in `konto_lib.php`);
 Rollenprobe grün mit dem Fall; Protokoll nennt den Weg. *Stufe:* Web
 Korrektur. *Fächerung:* keine.
+**Erledigt 26.09.2026 — mit Web 21.1.8.** Die 18-Liste nur an diesem Zweig:
+in `admin_user.php` der Zweig `user_delete` (−62 / +13 Zeilen, der
+Aufruf und `require_once spur_lib.php` mit), in `konto_lib.php` die
+Funktion selbst. `konto_loeschen($id, $mitSicherungen, $weg)` ohne
+Vorgabewerte; fünf Aufrufer (`verwaltung`, `loeschantrag`, `verfall` ×2,
+`demo`, dazu `probe` in der Mailprobe). `demo_entfernen()` darüber
+(E-R4-32), gibt jetzt `{ok, grund}` zurück, `admin_demo.php` zeigt den
+Grund. Beifang: die Sperrliste (F-R4-32) und „vierzehn Tabellen" an drei
+Stellen (`konto_lib.php`, `jobs_lib.php`, `Technik.md` zweimal) — es sind
+15, und die Stellen nennen jetzt den Weg zum Nachzählen statt der Zahl.
+*Gemessen:* `grep -rn "DELETE FROM users" server/` **3 Zeilen, eine davon
+Code** (`konto_lib.php`), zwei Kommentare; Rollenprobe **309 / 309** mit
+dem neuen Löschfall (5 Erwartungen: 302 und Konto fort, Spur 3 → 0,
+`mengen:<id>` fort, Sperrliste fort, `weg = verwaltung`); Gegenproben:
+alte Kontoseite **rot** am Mengenstand, `konto_loeschen()` ohne die neue
+Zeile **rot** an der Sperrliste („stehen noch: 1"). Das Entfernen des
+Demo-Kontos an einer Kopie von `server/` gegen eine Kopie der Datenbank:
+15 Kontotabellen und die Kontozeile auf 0, 11 433 Spurpunkte und
+160 Blobs fort (die verbliebenen 214 Blobs und 3 Sperrvermerke gehören
+nachgezählt anderen Konten), Backup-Ordner fort, `demo_id()` danach
+`null`, Protokoll `{"sicherungen":true,"weg":"demo"}`. **Nebenbei
+gesehen:** Die örtliche Anlage hält 26 verwaiste `mengen:`-Marken — Proben
+löschen ihre Wegwerfkonten per `DELETE FROM users` (unter `tools/`, nicht
+Gegenstand von Nr. 299); der Job „Verwaiste Kontomarken" räumt genau das,
+kein neuer Punkt.
 
 **R4-11 Umleiten nach POST** — Nr. 250. Elf Seiten (F-R4-10, ohne
 `betrieb_server.php` — 18): je POST-Zweig (a) Zustandsänderung →

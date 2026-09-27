@@ -7703,5 +7703,19 @@ declare(strict_types=1);
  *   in zwei Kommentaren (Nr. 260), die Herkunft von `.geo` im Stylesheet
  *   (Nr. 333) — und acht Kommentare mit realen Orts- und Rufnamen, die die
  *   Textprobe seit R4-07 liest (E-R4-19).
+ *
+ * 21.1.8 — EIN WEG, EIN KONTO ZU LOESCHEN (Schritt 17, R4-10, Nr. 299).
+ *   Korrekturstufe ohne Migration. Die Kontoseite der Verwaltung loeschte
+ *   ein Konto selbst, und das Entfernen des Demo-Kontos ein drittes Mal —
+ *   drei Abschriften derselben Reihenfolge, von denen zwei schon
+ *   auseinandergelaufen waren: Die Verwaltung liess `mengen:<id>` in
+ *   `app_state` liegen, das Demo-Konto seine Konto-Backups und seinen
+ *   Protokolleintrag. Jetzt
+ *   rufen alle Wege `konto_loeschen()`, und die Funktion nimmt den Weg als
+ *   Pflichtangabe; er steht im Protokoll. Was die Kontoseite davor prueft
+ *   (eigenes Konto, letzte BetreiberIn, abgetippte Adresse), bleibt davor.
+ *   Beim Zusammenlegen fiel die eine Zeile auf, die nur die Demo-Abschrift
+ *   hatte — die Sperrvermerke in `deleted_refs` —; sie steht jetzt in
+ *   `konto_loeschen()` und gilt damit fuer jedes Konto.
  */
-const WEB_VERSION = '21.1.7';
+const WEB_VERSION = '21.1.8';

@@ -3576,7 +3576,11 @@ und Geräte endgültig — ohne Papierkorb. Vorher ist zu entscheiden, was mit d
 Konto-Backups geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts
 zurück. Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
 **Konto-Backups** als „Backup ohne Konto". Zur Bestätigung ist die
-E-Mail-Adresse abzutippen.
+E-Mail-Adresse abzutippen. Im **Protokoll** (Reiter Verwaltung) steht danach
+„Konto gelöscht"; aufgeklappt nennt der Eintrag die Wahl über die Backups und
+den Weg — `verwaltung` für diese Seite, `loeschantrag` für eine
+Selbstlöschung nach der Frist, `verfall` für ein Konto, das nie bestätigt
+oder nie freigeschaltet wurde, `demo` für das Demo-Konto.
 
 #### Mengen und Grenzen je Konto (seit Web 20.21.0)
 
@@ -4302,7 +4306,9 @@ fertiger Text.
 Unter **Verwaltung → Demo-Konto** wird das Demo-Konto **angelegt**,
 **zurückgesetzt** oder **entfernt**. Was es ist, wie es sich alle dreißig
 Minuten selbst zurücksetzt und was darin nicht geht, steht in Abschnitt 3.2 —
-dort aus Sicht dessen, der es benutzt.
+dort aus Sicht dessen, der es benutzt. **Entfernen** löscht es wie jedes
+andere Konto (seit Web 21.1.8): samt Konto-Backups und mit einem Eintrag im
+Protokoll.
 
 Zwei Dinge, die nur die Verwaltung betreffen: Auf der **Kontoseite** des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen

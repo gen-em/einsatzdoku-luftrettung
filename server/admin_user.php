@@ -2,7 +2,6 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/mail_lib.php';
-require_once __DIR__ . '/spur_lib.php';   // Spuren loeschen (F-S2-B)
 // Eine Rollenpruefung fuer alle Seiten (M1-15). Hier stand als einziger Stelle
 // eine handgeschriebene Fassung mit eigenem Wortlaut ("Nur fuer Admins.").
 // Seit P5c/AP4 betritt auch der Support die Seite; was er darf, fragt jede
@@ -621,68 +620,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * wäre die Kontokennung fort, und der Ordner liesse sich nur noch
              * über die Übersicht der verwaisten Backups finden. */
             $mitSicherungen = ($_POST['sicherungen_mit'] ?? '1') === '1';
-            $sicherungenWeg = false;
-            if ($mitSicherungen) {
-                $sicherungenWeg = edbak_konto_ordner_loeschen(
-                    $kennung !== '' ? $kennung : null);
-            }
-            if ($mitSicherungen && !$sicherungenWeg) {
-                /* Nicht löschen, wenn die Zusage nicht gehalten werden kann.
-                 * Ein Konto zu entfernen und das Backup stehen zu lassen,
-                 * OBWOHL das Gegenteil gewählt wurde, wäre die schlechteste
-                 * der drei möglichen Ausgänge. */
-                $error = 'Die Konto-Backups dieses Kontos liessen sich nicht '
-                       . 'entfernen — das Konto wurde deshalb NICHT gelöscht. Bitte '
-                       . 'unter „Konto-Backups" nachsehen.';
+            /* DER EINE WEG (Web 21.1.8, Backlog Nr. 299). Hier stand die
+             * Loeschung noch einmal ausgeschrieben — Backups, Spuren samt
+             * Blobs (F-S2-B: zwei Konten hinterliessen 6 202 931 verwaiste
+             * Punkte), Sperrvermerke, Protokoll, Kaskade. Die Abschrift ist
+             * zweimal hinter `konto_loeschen()` zurueckgeblieben: ohne
+             * Protokolleintrag bis Web 20.40.0, und bis Web 21.1.7 ohne das
+             * Abraeumen von `mengen:<id>` in `app_state`. Was diese Seite
+             * zusaetzlich prueft — eigenes Konto, letzte BetreiberIn, die
+             * abgetippte Adresse —, steht davor und bleibt hier. */
+            require_once __DIR__ . '/konto_lib.php';
+            $geloescht = konto_loeschen($uid, $mitSicherungen, 'verwaltung');
+            if (!$geloescht['ok']) {
+                $error = $geloescht['grund'];
             } else {
-                /* DIE SPUREN ZUERST, UND AUSDRUECKLICH (F-S2-B, S2/AP1).
-                 *
-                 * Hier stand: „FK-Kaskaden entfernen Einsätze, Segmente,
-                 * Tracks, Geräte, Diensttage". Fuer „Tracks" war das FALSCH,
-                 * und zwar seit jeher: `track_points` ist polymorph
-                 * (owner_type/owner_id) und traegt deshalb KEINEN
-                 * Fremdschluessel — die Kaskade nimmt die Punkte nicht mit.
-                 * Sie blieben als Waisen liegen, bis der Tagesjob das naechste
-                 * Mal lief: fruehestens am naechsten Kalendertag, und nur,
-                 * wenn ueberhaupt jemand die Installation aufrief.
-                 *
-                 * Was dort liegen blieb, sind Positionsdaten — Wohnorte,
-                 * Einsatzorte, Wege. Ein Konto zu loeschen ist die Handlung,
-                 * mit der eine NutzerIn genau das aus der Welt schaffen will.
-                 * Dass es bis zu einen Tag laenger dauerte, war vertretbar;
-                 * dass es niemand wusste, nicht — und der Kommentar hier hat
-                 * dafuer gesorgt, dass es niemand wusste.
-                 *
-                 * Der Messstand hat es vorgefuehrt: Zwei geloeschte Konten
-                 * hinterliessen 6 202 931 verwaiste Spurpunkte, rund 380 MB.
-                 *
-                 * Jetzt gehen Zeilen UND Blobs mit, vor der Kaskade. Der
-                 * Wartungsjob bleibt das Sicherheitsnetz (E-S2-18). */
-                $pdoDel = db();
-                foreach ([['mission', 'missions'], ['rest', 'rest_segments']] as [$typ, $tab]) {
-                    $ids = $pdoDel->prepare("SELECT id FROM `$tab` WHERE user_id = ?");
-                    $ids->execute([$uid]);
-                    spur_loeschen($pdoDel, $typ, $ids->fetchAll(PDO::FETCH_COLUMN));
-                }
-                /* Und die Sperrvermerke des Kontos (S4/A2). Sie haengen an
-                 * keinem Fremdschluessel — wie die Spuren, aus demselben
-                 * Grund und mit demselben Preis. Ein Vermerk nennt einen
-                 * Zeitraum, in dem sich jemand aufgehalten hat; das ist ein
-                 * Ortsdatum und faellt unter genau die Handlung, die hier
-                 * gerade vollzogen wird. */
-                schnitte_loeschen($pdoDel, 'konto', [$uid]);
-                /* IM PROTOKOLL, WIE BEI `konto_loeschen()` (P5c/AP4,
-                 * F-P5c-99). Diese Seite loescht selbst und ging bis Web
-                 * 20.40.0 am Eintrag vorbei — die Loeschung durch die
-                 * Verwaltung war die eine, die das Audit nicht kannte. Vor
-                 * dem DELETE, damit die Zeile noch weiss, wen es betraf. */
-                require_once __DIR__ . '/protokoll_lib.php';
-                protokoll('verwaltung', 'konto_geloescht',
-                          'Konto ' . $u['email'] . ' endgültig gelöscht'
-                        . ($mitSicherungen ? ' (samt Konto-Backups)' : ' — Konto-Backups bleiben'),
-                          ['sicherungen' => $mitSicherungen, 'weg' => 'verwaltung'], $uid);
-                // Der Rest kaskadiert wie bisher.
-                $pdoDel->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
                 header('Location: admin_users.php');
                 exit;
             }

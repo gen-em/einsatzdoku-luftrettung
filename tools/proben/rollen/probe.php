@@ -35,6 +35,12 @@ declare(strict_types=1);
  *
  * UND WIRKUNGEN, denn `durch` sagt nur, dass eine Rolle die Handlung
  * erreicht, nicht, was sie dort tut:
+ *   - Die Verwaltung loescht ein Konto mit Spur ueber `konto_loeschen()`
+ *     (R4-10, Backlog Nr. 299): Das Konto ist fort, die Spur auch, der
+ *     Protokolleintrag nennt den Weg `verwaltung`, `mengen:<id>` in
+ *     `app_state` ist abgeraeumt — das vergass die Abschrift auf der
+ *     Kontoseite bis Web 21.1.7 — und die Sperrliste seines Geraets auch
+ *     (die raeumte bis dahin nur das Entfernen des Demo-Kontos).
  *   - Ein Rollenwechsel auf der Kontoseite schreibt genau einen Eintrag
  *     `rolle_geaendert`, ein Speichern ohne Wechsel keinen (E-P5c-38).
  *   - Der Support (AP4, E-P5c-14, -40), mit GUELTIGEM Token: Menü, Liste
@@ -438,6 +444,72 @@ if ($s === null || $a === null) {
     $r = $bei($zielId, $s, ['action' => 'verifikation']);
     pruef(str_contains($r['rumpf'], 'wartet auf keine Bestätigung') && $bestaetigt($zielId) === 0,
           'Bestätigung an ein aktives Konto: abgewiesen, kein Eintrag');
+}
+
+/* ---- Die Löschung durch die Verwaltung (R4-10, Backlog Nr. 299) ----------
+ *
+ * Ein eigenes Wegwerfkonto mit einem Einsatz, drei Spurpunkten, einem Geraet
+ * mit einem Sperrvermerk und einem Mengenstand in `app_state` — genau das,
+ * was an keinem Fremdschluessel haengt und eine Abschrift des Loeschens
+ * deshalb vergessen kann. Geloescht wird es als Admin mit gueltigem Token, so wie die
+ * Kontoseite es tut. Erwartet: 302 auf die Liste, und danach steht nichts
+ * mehr davon da, dafuer ein Eintrag `konto_geloescht` mit `weg` =
+ * `verwaltung`. */
+echo "
+Löschen über konto_loeschen() (Nr. 299)
+";
+if ($a === null) {
+    pruef(false, 'Die Matrix hat keine Spalte „admin"');
+} else {
+    require_once $srv . '/spur_lib.php';
+    $loeschMail = 'rollenprobe-loeschen@probe.invalid';
+    $loeschId = zielkonto('loeschen', 'user');
+    /* Scheitert die Loeschung, darf das Konto nicht liegen bleiben. */
+    register_shutdown_function(static function () use ($pdo, $loeschId): void {
+        try { $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$loeschId]); } catch (Throwable) {}
+    });
+    $pdo->prepare("INSERT INTO missions (user_id, client_ref, started_at) VALUES (?, ?, UTC_TIMESTAMP())")
+        ->execute([$loeschId, 'rollenprobe-' . bin2hex(random_bytes(6))]);
+    $loeschEinsatz = (int)$pdo->lastInsertId();
+    $pp = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
+                         VALUES (?, ?, ?, ?, ?, ?, ?)');
+    for ($i = 0; $i < 3; $i++) {
+        $pp->execute(['mission', $loeschEinsatz, $i, 47.5 + $i / 1e4, 11.5, 700.0, 1750000000 + $i]);
+    }
+    $pdo->prepare("INSERT INTO devices (user_id, device_id, api_key_hash) VALUES (?, ?, '-')")
+        ->execute([$loeschId, 'rollenprobe-' . bin2hex(random_bytes(6))]);
+    $loeschGeraet = (int)$pdo->lastInsertId();
+    $pdo->prepare("INSERT INTO deleted_refs (device_id, owner_type, client_ref) VALUES (?, 'mission', 'rollenprobe')")
+        ->execute([$loeschGeraet]);
+    app_state_setzen('mengen:' . $loeschId, '1');
+    $spurVorher = spur_zahlen($pdo, 'mission', [$loeschEinsatz])[$loeschEinsatz] ?? 0;
+    $r = hole('admin_user.php?id=' . $loeschId, $a['sid'], ['csrf' => $a['csrf'],
+              'action' => 'user_delete', 'confirm_email' => $loeschMail, 'sicherungen_mit' => '1']);
+    $kontoDa = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE id = ' . $loeschId)->fetchColumn();
+    $spurNach = spur_zahlen($pdo, 'mission', [$loeschEinsatz])[$loeschEinsatz] ?? 0;
+    $mengeDa = app_state_lesen('mengen:' . $loeschId);
+    $sperreDa = (int)$pdo->query('SELECT COUNT(*) FROM deleted_refs WHERE device_id = ' . $loeschGeraet)->fetchColumn();
+    $st = $pdo->prepare("SELECT daten FROM protokoll_ereignisse
+                          WHERE art = 'konto_geloescht' AND betroffen_user_id = ? ORDER BY id DESC LIMIT 1");
+    $st->execute([$loeschId]);
+    $datenRoh = (string)$st->fetchColumn();
+    $wegImProtokoll = json_decode($datenRoh, true)['weg'] ?? null;
+    pruef($r['code'] === 302 && $kontoDa === 0, 'Admin löscht ein Konto: 302, das Konto ist fort',
+          'HTTP ' . $r['code'] . ', Konto ' . $kontoDa);
+    pruef($spurVorher === 3 && $spurNach === 0, 'Die Spur geht mit (spur_zahlen)',
+          $spurVorher . ' → ' . $spurNach . ' Punkte');
+    pruef($mengeDa === null, 'mengen:<id> in app_state ist abgeräumt',
+          $mengeDa === null ? '' : 'steht noch: ' . $mengeDa);
+    pruef($sperreDa === 0, 'Die Sperrliste des Geräts geht mit (deleted_refs)',
+          $sperreDa === 0 ? '' : 'stehen noch: ' . $sperreDa);
+    pruef($wegImProtokoll === 'verwaltung', 'Das Protokoll nennt den Weg', $datenRoh);
+    /* Das Konto ist fort — der Schluss braucht es nicht mehr zu loeschen,
+     * wohl aber seinen Protokolleintrag. */
+    try {
+        $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE betroffen_user_id = ?')->execute([$loeschId]);
+        $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([$loeschEinsatz]);
+        $pdo->prepare('DELETE FROM deleted_refs WHERE device_id = ?')->execute([$loeschGeraet]);
+    } catch (Throwable) {}
 }
 
 /* ---- Die Wirkung des Rückwegs: jede Rolle legt ein Paar ab (Konzept RW) ---

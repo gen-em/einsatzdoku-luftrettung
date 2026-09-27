@@ -43,8 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             protokoll('verwaltung', 'demo_zurueckgesetzt',
                       'Demo-Konto von Hand auf den Standardzustand zurückgesetzt');
         } elseif ($aktion === 'demo_entfernen' && ($_POST['confirm'] ?? '') === 'ja') {
-            demo_entfernen();
-            $notice = 'Demo-Konto entfernt.';
+            $r = demo_entfernen();
+            if ($r['ok']) {
+                $notice = 'Demo-Konto entfernt.';
+            } else {
+                $error = $r['grund'];
+            }
         }
     } catch (Throwable $ex) {
         /* DREI FAELLE, UND NUR EINER DAVON DARF WOERTLICH DURCH.

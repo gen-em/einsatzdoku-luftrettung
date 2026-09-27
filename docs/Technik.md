@@ -3585,7 +3585,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | Job | täglich? | was er tut |
 |---|---|---|
 | `mail` | nein | Nachrichten, deren erster Versuch scheiterte — fünf Versuche über 24 Stunden, danach steht die Nachricht als unzustellbar auf der Statusseite (4.99). Steht **ganz vorn** im Katalog: `jobs_lauf()` arbeitet ihn der Reihe nach ab, und am Huckepack-Weg sind 3 s für alle Jobs zusammen — ein Job dahinter bekäme dort regelmäßig nichts |
-| `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über vierzehn Tabellen kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
+| `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über jede Tabelle des Kontos kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
 | `aufraeumen` | ja, höchstens 1×/Kalendertag | **siebzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/quelltext/` `jobregister`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
 | `konto_verfall` | nein | Registrierungen, die nicht bestätigt wurden, und Freischaltfristen, die abgelaufen sind (P5b) — **höchstens fünf je Lauf**, aus demselben Grund wie beim Löschjob darüber |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
@@ -7889,6 +7889,29 @@ Konto fände dann den Mengenstand des alten vor und stünde womöglich sofort an
 seiner Grenze, ohne einen einzigen Einsatz. Genau das ist beim Prüfen
 passiert.
 
+#### Ein Weg, ein Konto zu löschen (seit Web 21.1.8)
+
+**Jede Löschung geht über `konto_loeschen($id, $mitSicherungen, $weg)`** —
+die Kontoseite der Verwaltung (`verwaltung`), der Job nach der Karenz
+(`loeschantrag`), der Verfall unbestätigter und wartender Konten
+(`verfall`), das Entfernen des Demo-Kontos (`demo`) und die Prüfmittel
+(`probe`). Der Weg steht als Angabe `weg` im Protokolleintrag
+`konto_geloescht`. `grep -rn "DELETE FROM users" server/` findet eine
+Codezeile, und die steht in `konto_lib.php`.
+
+**Bis Web 21.1.7 waren es drei Abschriften** (Backlog Nr. 299, F-R4-09):
+Die Kontoseite und `demo_entfernen()` schrieben die Reihenfolge selbst hin,
+und beide waren auseinandergelaufen — die Kontoseite vergaß die Marken oben,
+das Demo-Konto seine Konto-Backups und das Protokoll. Umgekehrt hatte nur
+die Demo-Abschrift die Sperrliste der Geräte (`deleted_refs`, ohne
+Fremdschlüssel) geräumt; die Zeile steht jetzt in der Funktion.
+
+**Was die Aufrufer davor prüfen, bleibt bei ihnen:** Die Kontoseite lehnt
+das eigene Konto, die letzte BetreiberIn und das Demo-Konto ab und verlangt
+die abgetippte Adresse; `demo_entfernen()` löscht danach nur noch seine
+Kennzeichnung in `app_state`, und nur, wenn die Löschung gelungen ist.
+Scheitert sie (Backups nicht zu entfernen), bleibt alles stehen.
+
 #### Was hier NICHT gebaut wurde
 
 **Die Umstellung der Geräteschlüssel auf SHA-256** (E-P5b-17). Sie ist seit
@@ -8285,7 +8308,8 @@ die Löschung verhindern will, um weiter mitzulesen.
 
 **Der Job löscht höchstens fünf je Lauf.** Eine Kontolöschung räumt die Spuren
 von Hand (die Kaskade erreicht sie nicht), löscht den Backup-Ordner im
-Dateisystem und kaskadiert über vierzehn Tabellen. Das Huckepack-Budget sind
+Dateisystem und kaskadiert über jede Tabelle des Kontos (fünfzehn am
+26.09.2026). Das Huckepack-Budget sind
 drei Sekunden für **alle** Jobs zusammen; einen Tag später zu löschen ist kein
 Zusagenbruch, eine hängende Anfrage schon.
 

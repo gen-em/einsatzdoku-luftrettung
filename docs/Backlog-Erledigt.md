@@ -8737,3 +8737,27 @@ zutreffen.
      Textprobe meldet 0 Treffer außerhalb der Ausnahmen. Gegenzählung mit
      grep über server/, android/, watch/: 10 Treffer, keiner davon eine der
      acht.
+
+299. **Die Kontoseite löscht ein Konto an `konto_loeschen()` vorbei.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-99).* Es gibt zwei
+     Wege, ein Konto zu löschen: `konto_loeschen()` in `konto_lib.php` (die
+     Selbstlöschung und der Verfall gehen darüber) und den Zweig
+     `user_delete` in `admin_user.php`. Beide räumen dasselbe ab — die
+     Konto-Backups nach der Wahl, die Spuren ausdrücklich vor der Kaskade,
+     die Sperrvermerke — und jeder schreibt es selbst. Dass es zwei sind, hat
+     schon einmal geschadet: Die Löschung durch die Verwaltung schrieb bis
+     Web 20.40.0 keinen Eintrag `konto_geloescht`, weil nur der eine Weg ihn
+     kannte. AP4 hat den Eintrag nachgetragen und den Weg stehen lassen — ein
+     Umbau des Löschens gehört nicht in das Paket einer Rolle. *Weg:* Der
+     Zweig ruft `konto_loeschen($uid, $mitSicherungen)`; was die Seite zusätzlich
+     prüft (eigenes Konto, letzte BetreiberIn, abgetippte Adresse), bleibt
+     davor. Nachweis: Rollenprobe (Konto löschen 403 beim Support) und ein
+     Löschfall mit Spuren gegen `spur_zahlen()`. **Zuordnung: Backlog-Runde.**
+     Erledigt 26.09.2026 mit R4-10 (Web 21.1.8): Die Kontoseite ruft
+     konto_loeschen($uid, $mitSicherungen, 'verwaltung'), ihre drei
+     Prüfungen bleiben davor; auch demo_entfernen() geht darüber (die dritte
+     Abschrift, F-R4-09). Die Funktion verlangt den Weg und schreibt ihn ins
+     Protokoll; die Sperrliste der Geräte, die nur die Demo-Abschrift
+     räumte, steht jetzt in ihr. Nachweis: Rollenprobe 309/309 mit dem
+     Löschfall (Spur 3 → 0, Mengenstand, Sperrliste, weg = verwaltung), rot
+     gegen die alte Kontoseite.

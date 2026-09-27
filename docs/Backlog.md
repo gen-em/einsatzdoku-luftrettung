@@ -1179,22 +1179,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `db.php`). *Fehlschlag:* grün auf diesem Stand. `docs/Pruefablauf.md`
      führt ihn mit „Anlass: Nr. 288".
 
-299. **Die Kontoseite löscht ein Konto an `konto_loeschen()` vorbei.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-99).* Es gibt zwei
-     Wege, ein Konto zu löschen: `konto_loeschen()` in `konto_lib.php` (die
-     Selbstlöschung und der Verfall gehen darüber) und den Zweig
-     `user_delete` in `admin_user.php`. Beide räumen dasselbe ab — die
-     Konto-Backups nach der Wahl, die Spuren ausdrücklich vor der Kaskade,
-     die Sperrvermerke — und jeder schreibt es selbst. Dass es zwei sind, hat
-     schon einmal geschadet: Die Löschung durch die Verwaltung schrieb bis
-     Web 20.40.0 keinen Eintrag `konto_geloescht`, weil nur der eine Weg ihn
-     kannte. AP4 hat den Eintrag nachgetragen und den Weg stehen lassen — ein
-     Umbau des Löschens gehört nicht in das Paket einer Rolle. *Weg:* Der
-     Zweig ruft `konto_loeschen($uid, $mitSicherungen)`; was die Seite zusätzlich
-     prüft (eigenes Konto, letzte BetreiberIn, abgetippte Adresse), bleibt
-     davor. Nachweis: Rollenprobe (Konto löschen 403 beim Support) und ein
-     Löschfall mit Spuren gegen `spur_zahlen()`. **Zuordnung: Backlog-Runde.**
-
 300. **Die Hauptstufe des Prüfstands fährt die Plattformmatrix nur zur Hälfte.** · gehört zu: PK · Stand: offen · seit 24.09.2026
      Befund (Konzept P5c AP4, F-P5c-103): `Pruefablauf.md` 3 verspricht für
      `haupt` PHP 8.3 und 8.4, je Paar mit vier Datenbanken Schemaprobe und

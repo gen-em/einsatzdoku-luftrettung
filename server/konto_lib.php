@@ -682,12 +682,28 @@ function konto_warten_melden(): void
 /* ---- Loeschen ------------------------------------------------------------ */
 
 /**
- * Ein Konto endgueltig loeschen — derselbe Weg fuer die Admin-Loeschung und
- * den Loeschjob der Karenz (E-P5b-16).
+ * Ein Konto endgueltig loeschen — DER eine Weg (E-P5b-16, Backlog Nr. 299).
  *
- * @param bool $mitSicherungen E25: Sollen die Konto-Backups mit? Die Vorgabe
- *                             ist `true` und folgt der Zusage, dass nach der
- *                             Loeschung nichts mehr lesbar ist.
+ * Hier stand „derselbe Weg fuer die Admin-Loeschung und den Loeschjob", und
+ * es stimmte bis Web 21.1.7 nur halb: Die Kontoseite der Verwaltung loeschte
+ * selbst — Backups, Spuren, Sperrvermerke, Protokoll, `DELETE`, jedes davon
+ * noch einmal hingeschrieben —, und das Entfernen des Demo-Kontos ein
+ * drittes Mal. Zwei Abschriften sind zweimal auseinandergelaufen: Die
+ * Verwaltung schrieb bis Web 20.40.0 keinen Protokolleintrag, und bis
+ * Web 21.1.7 liess sie `mengen:<id>` in `app_state` liegen (Schritt 5 unten
+ * kannte nur diese Funktion). Seither rufen alle Wege sie auf.
+ *
+ * @param bool   $mitSicherungen E25: Sollen die Konto-Backups mit? Wer
+ *                               loescht, entscheidet es ausdruecklich — die
+ *                               Verwaltung fragt, alle anderen sagen `true`
+ *                               und folgen der Zusage, dass nach der
+ *                               Loeschung nichts mehr lesbar ist.
+ * @param string $weg            Wer loescht — steht als Detail `weg` im
+ *                               Protokoll: `verwaltung` (Kontoseite),
+ *                               `loeschantrag` (Job nach der Karenz),
+ *                               `verfall` (verfallene Registrierung),
+ *                               `demo` (Demo-Konto entfernen), `probe`
+ *                               (Pruefmittel).
  *
  * @return array{ok:bool, grund:string} `ok=false` heisst: NICHTS wurde
  *         geloescht. Der Grund ist fuer die Oberflaeche.
@@ -698,14 +714,18 @@ function konto_warten_melden(): void
  *    liesse sich nur noch ueber die Uebersicht der verwaisten Backups finden.
  * 2. Die Spuren und Schnitte von Hand: Sie haengen an keinem Fremdschluessel
  *    (polymorph ueber `owner_type`/`owner_id`) und ueberleben die Kaskade.
- *    Das ist F-S2-B, gemessen mit 6 202 931 verwaisten Spurpunkten.
+ *    Das ist F-S2-B, gemessen mit 6 202 931 verwaisten Spurpunkten. Ebenso
+ *    die Sperrliste der Geraete (`deleted_refs`, seit Web 21.1.8).
  * 3. Der Protokolleintrag VOR dem DELETE. `protokoll_ereignisse` hat
  *    absichtlich keinen Fremdschluessel auf `users`, aber der Urheber kommt
  *    aus der Sitzung, und die Zeile soll geschrieben sein, bevor irgendetwas
  *    schiefgehen kann.
- * 4. Dann erst `DELETE FROM users` — die Kaskade nimmt vierzehn Tabellen mit.
+ * 4. Dann erst `DELETE FROM users` — die Kaskade nimmt jede Tabelle mit, die
+ *    ueber `user_id` an `users` haengt, samt deren Kindern. Hier stand
+ *    „vierzehn Tabellen"; am 26.09.2026 waren es fuenfzehn. Nachzaehlen
+ *    statt abschreiben: `grep -c "REFERENCES users" schema.sql`.
  */
-function konto_loeschen(int $userId, bool $mitSicherungen = true): array
+function konto_loeschen(int $userId, bool $mitSicherungen, string $weg): array
 {
     require_once __DIR__ . '/adminbackup_lib.php';
     require_once __DIR__ . '/spur_lib.php';
@@ -721,8 +741,8 @@ function konto_loeschen(int $userId, bool $mitSicherungen = true): array
 
     /* 1. Backups (E25) */
     if ($mitSicherungen) {
-        $weg = edbak_konto_ordner_loeschen($kennung !== '' ? $kennung : null);
-        if (!$weg) {
+        $backupsFort = edbak_konto_ordner_loeschen($kennung !== '' ? $kennung : null);
+        if (!$backupsFort) {
             /* Nicht loeschen, wenn die Zusage nicht gehalten werden kann. Ein
              * Konto zu entfernen und das Backup stehen zu lassen, OBWOHL das
              * Gegenteil gewaehlt wurde, waere der schlechteste der drei
@@ -741,12 +761,21 @@ function konto_loeschen(int $userId, bool $mitSicherungen = true): array
         spur_loeschen($pdo, $typ, $ids->fetchAll(PDO::FETCH_COLUMN));
     }
     schnitte_loeschen($pdo, 'konto', [$userId]);
+    /* Die Sperrliste der Geraete (`deleted_refs`) haengt an der
+     * Geraetekennung und an keinem Fremdschluessel — die Kaskade nimmt die
+     * Geraete, nicht ihre Sperrvermerke. Bis Web 21.1.7 raeumte sie nur das
+     * Entfernen des Demo-Kontos; seit es hier entlanggeht (Nr. 299), steht
+     * die Zeile hier, und jedes Konto bekommt sie. VOR dem `DELETE`: danach
+     * gibt es kein `devices.user_id` mehr, ueber das sie zu finden waeren. */
+    $pdo->prepare('DELETE dr FROM deleted_refs dr
+                   JOIN devices d ON d.id = dr.device_id
+                   WHERE d.user_id = ?')->execute([$userId]);
 
     /* 3. Das Protokoll VOR dem DELETE */
     protokoll('verwaltung', 'konto_geloescht',
               'Konto ' . $email . ' endgültig gelöscht'
             . ($mitSicherungen ? ' (samt Konto-Backups)' : ' — Konto-Backups bleiben'),
-              ['sicherungen' => $mitSicherungen], $userId);
+              ['sicherungen' => $mitSicherungen, 'weg' => $weg], $userId);
 
     /* 4. Die Kaskade */
     $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$userId]);

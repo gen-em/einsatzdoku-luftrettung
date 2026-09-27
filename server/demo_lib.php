@@ -592,20 +592,30 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
 /**
  * Demo-Konto vollstaendig entfernen (Kontozeile eingeschlossen).
  *
- * Getrennt von der Kontoverwaltung im Adminbereich, weil hier zusaetzlich
- * die Kennzeichnung in `app_state` faellt — bliebe sie stehen, zeigte sie
- * auf eine spaeter neu vergebene Kennung.
+ * UEBER `konto_loeschen()` SEIT WEB 21.1.8 (Backlog Nr. 299, F-R4-09). Bis
+ * dahin loeschte diese Funktion selbst — Bestand, Kontozeile, Kennzeichnung,
+ * in einer Transaktion —, und das war die dritte Abschrift des Loeschens:
+ * ohne die Konto-Backups (das Demo-Konto hat welche; sie blieben als
+ * verwaiste Ordner liegen), ohne Protokolleintrag und ohne `mengen:<id>` in
+ * `app_state`. Jetzt nimmt sie den Weg jedes Kontos und raeumt danach nur,
+ * was allein das Demo-Konto hat: seine Kennzeichnung.
+ *
+ * DIE KENNZEICHNUNG ZULETZT, und nur, wenn das Konto wirklich fort ist.
+ * Scheitert `konto_loeschen()` (Backups nicht zu entfernen), bleibt das
+ * Demo-Konto samt Kennzeichnung stehen, und nichts ist halb. Zwischen beiden
+ * Schritten zeigt die Kennzeichnung einen Augenblick auf ein geloeschtes
+ * Konto — `demo_id()` prueft das und antwortet dann `null`.
+ *
+ * @return array{ok:bool, grund:string} wie `konto_loeschen()`
  */
-function demo_entfernen(): void
+function demo_entfernen(): array
 {
     $id = demo_id();
-    if ($id === null) { return; }
-    db_transaktion(db(), function (PDO $pdo) use ($id): void {
-        /* Reihenfolge: erst der Bestand, dann die Kontozeile, ZULETZT die
-         * Kennzeichnung. Andersherum verloere demo_bestand_loeschen() seinen
-         * Riegel mitten im Vorgang — er haengt an genau dieser Kennzeichnung. */
-        demo_bestand_loeschen($pdo, $id);
-        $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
-        app_state_loeschen(DEMO_K_USER, DEMO_K_RESET);   // dieselbe Verbindung, dieselbe Transaktion
-    });
+    if ($id === null) { return ['ok' => true, 'grund' => '']; }
+    require_once __DIR__ . '/konto_lib.php';
+    $r = konto_loeschen($id, true, 'demo');
+    if ($r['ok']) {
+        app_state_loeschen(DEMO_K_USER, DEMO_K_RESET);
+    }
+    return $r;
 }
