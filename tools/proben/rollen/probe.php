@@ -28,10 +28,13 @@ declare(strict_types=1);
  *     sie nicht. So läuft die Probe gefahrlos über „Stand löschen",
  *     „jetzt versenden" und „jetzt sichern".
  *
- * ZWEI PLATZHALTER (AP4): `{ziel}` ist ein Konto der Rolle `user`, `{admin}`
- * eines der Rolle `admin`. Die Kontoseite fragt die Rolle zweimal — ob die
+ * DREI PLATZHALTER (AP4, der dritte seit R4-18): `{ziel}` ist ein Konto der
+ * Rolle `user`, `{admin}` eines der Rolle `admin`, `{support}` eines der
+ * Rolle `support`. Die Kontoseite fragt die Rolle zweimal — ob die
  * Angemeldete das Zielkonto betreuen darf, dann je Handlung —, und beide
- * Tore stehen in der Matrix.
+ * Tore stehen in der Matrix. `{support}` misst, dass der Support andere
+ * Support-Konten nicht betreut (E-P5c-99); bis R4-18 stand das nur im Code
+ * (Nr. 327).
  *
  * UND WIRKUNGEN, denn `durch` sagt nur, dass eine Rolle die Handlung
  * erreicht, nicht, was sie dort tut:
@@ -212,8 +215,8 @@ foreach ($rollen as $rolle) {
 }
 /* Die Zielkonten — eigene Zeilen, nicht die Konten der Rollen: `ziel` für
  * den Rollenwechsel und die Handlungen an einem Konto der Rolle `user`,
- * `zieladmin` für den Platzhalter `{admin}`, `neu` für die Bestätigung einer
- * Registrierung. */
+ * `zieladmin` für den Platzhalter `{admin}`, `zielsupport` für `{support}`
+ * (R4-18), `neu` für die Bestätigung einer Registrierung. */
 function zielkonto(string $name, string $rolle, string $status = 'aktiv'): int
 {
     global $pdo;
@@ -227,6 +230,7 @@ function zielkonto(string $name, string $rolle, string $status = 'aktiv'): int
 $zielMail = 'rollenprobe-ziel@probe.invalid';
 $zielId   = zielkonto('ziel', 'user');
 $adminZiel = zielkonto('zieladmin', 'admin');
+$supportZiel = zielkonto('zielsupport', 'support');
 $neuId    = zielkonto('neu', 'user', 'unbestaetigt');
 $pdo->prepare("INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
                VALUES (?, ?, '', 'Rollenprobe', 1)")
@@ -237,10 +241,11 @@ $geraetId = (int)$pdo->lastInsertId();
 try {
     $mailVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();
 } catch (Throwable) { $mailVorher = null; }
-$platzhalter = ['{ziel}' => (string)$zielId, '{admin}' => (string)$adminZiel];
+$platzhalter = ['{ziel}' => (string)$zielId, '{admin}' => (string)$adminZiel,
+                '{support}' => (string)$supportZiel];
 
-register_shutdown_function(static function () use ($pdo, $konten, $zielId, $adminZiel, $neuId, $mailVorher): void {
-    $ids = array_merge(array_column($konten, 'id'), [$zielId, $adminZiel, $neuId]);
+register_shutdown_function(static function () use ($pdo, $konten, $zielId, $adminZiel, $supportZiel, $neuId, $mailVorher): void {
+    $ids = array_merge(array_column($konten, 'id'), [$zielId, $adminZiel, $supportZiel, $neuId]);
     $in = implode(',', array_map('intval', $ids));
     foreach ($konten as $k) { @unlink(sitzung_ort() . '/sess_' . $k['sid']); }
     try {

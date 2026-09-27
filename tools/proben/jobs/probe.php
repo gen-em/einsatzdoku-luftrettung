@@ -228,6 +228,19 @@ foreach (['cli', 'token', 'anfrage'] as $ausloeser) {
 
 echo "\n  Teil 3 — Die gemeldete Zahl ist nachgerechnet\n";
 aufraeumen($pdo, $basisM, $basisR);
+/* FREMDE WAISEN ZAEHLEN, BEVOR GEZAEHLT WIRD (R4-18, F-R4-63). Teil 3 faehrt
+ * den Job von vorn und zaehlt, was er abraeumt — liegt in der Anlage noch
+ * etwas, das eine andere Probe zurueckgelassen hat, stimmt die 7 nicht. Das
+ * soll rot bleiben: Eine Waise in der Anlage ist ein Fehler, nicht Rauschen.
+ * Aber die Meldung soll sagen, woher die Differenz kommt; bis dahin stand da
+ * nur „erledigt=407", und die Suche begann bei dieser Probe. */
+$fremd = 0;
+foreach (['mission' => 'missions', 'rest' => 'rest_segments'] as $art => $tabelle) {
+    foreach (['track_points', 'track_blobs'] as $spur) {
+        $fremd += (int)$pdo->query("SELECT COUNT(*) FROM $spur s LEFT JOIN $tabelle t ON t.id = s.owner_id
+                                     WHERE s.owner_type = '$art' AND t.id IS NULL")->fetchColumn();
+    }
+}
 waise_zeilen($pdo, 'mission', $basisM + 3, 6);   // 6 Zeilen
 waise_blob($pdo, 'rest', $basisR + 3, 12);       // 1 Blob (12 Punkte darin)
 faellig_machen($pdo);
@@ -236,7 +249,8 @@ $bericht = jobs_lauf('cli', ['waisen']);
 $erledigt = (int)($bericht['waisen']['erledigt'] ?? -1);
 pruefe($erledigt === 7,
        'Sechs Zeilen und ein Blob werden als 7 gemeldet',
-       "erledigt=$erledigt (erwartet 7 — Zeilen zaehlen einzeln, ein Blob als eins)");
+       "erledigt=$erledigt (erwartet 7 — Zeilen zaehlen einzeln, ein Blob als eins)"
+       . ($fremd > 0 ? "; vorher $fremd fremde Waisen in der Anlage — raeumt eine Probe ihre Spur nicht ab?" : ''));
 $nachher = rest_waisen($pdo, $basisM, $basisR);
 pruefe($nachher['zeilen'] === 0 && $nachher['blobs'] === 0,
        'und danach steht nichts davon mehr da',

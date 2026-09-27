@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-18** (Rollenmatrix). |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-20** (Karten „Was hier gilt"). |
 > | Entschieden | **E-R4-01 bis E-R4-51** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51. |
 > | Offen | **Q-R4-24** (Abnahme 5 s in R4-17 — gilt sie als erfüllt? Empfehlung ja; hält nichts auf). Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-17 und R4-19 erledigt** (27.09.2026); Web 21.4.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-18, R4-20 bis R4-26 in Nummernfolge. |
+> | Umsetzung | **R4-01 bis R4-19 erledigt** (27.09.2026); Web 21.4.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-20 bis R4-26 in Nummernfolge. |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. **R4-19: ein Workflow, drei Agenten** auf getrennten Dateigruppen (`referenzdatensatz/` 22, `proben/` 17, übrige Werkzeuge 13 Dateien), alle drei gleichzeitig, 229 s, 0 gescheitert, 0 offene Stellen; Ausnahmeliste der Textprobe, Doku, Gegenlesung, Neuaufbau der Anlage und Prüfstand seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px), **F-R4-62** (R4-19 ohne CHANGELOG-Eintrag — nachgetragen), **F-R4-63** (Verbindungsprobe ließ 400 Waisen je Lauf — behoben) — 2.4. |
 
 
 ---
@@ -619,6 +619,29 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   Kontaktbogen lief in einen Zeitablauf von 30 s. Die Seite nimmt deshalb
   den sichtbaren Ausschnitt um die Nachladezeile (`ganzseitig: false`, wie
   die Hilfeseite); die Messungen laufen weiter über das ganze Dokument.
+- **F-R4-62 R4-19 hatte keinen CHANGELOG-Eintrag.** Das Paket berührte nur
+  `tools/` und `docs/` und gehört in den Abschnitt „Werkzeug: Backlog-Runde
+  4"; der Commit `3e205c0` hat die Datei nicht angefasst. Aufgefallen beim
+  Eintrag für R4-18, nachgetragen dort mit einem Satz dazu. Zusammen mit
+  F-R4-57 der zweite Fall in dieser Runde, dass eine Pflicht aus
+  `CLAUDE.md` 2 an einem Paket ohne Versionsstufe hängen blieb; R4-26 zählt
+  beim Abschluss jeden Paketnamen gegen den CHANGELOG.
+- **F-R4-63 Die Verbindungsprobe hinterließ je Lauf 400 Spurpunkte ohne
+  Einsatz.** Erster Prüfstand über R4-18: `jobprobe` rot, Teil 3
+  „erledigt=407 (erwartet 7)". In der Anlage lagen 400 Waisen: 20
+  Eigentümer zu je 20 Punkten, Kennungen 16883–16904 über dem größten
+  Einsatz (16882), Breite 47,0000–47,0038 — die 20 Pakete der
+  Verbindungsprobe. Sie löschte ihr Konto mit `DELETE FROM users`; die
+  Kaskade nimmt Einsätze und Diensttage mit, `track_points` hat keinen
+  Fremdschlüssel (`CLAUDE.md` 4). Die Probe läuft nur in der Hauptstufe und
+  als eine der letzten; rot wurde die Jobprobe des NÄCHSTEN Laufs, und nur,
+  wenn dazwischen kein Hintergrundjob Zeit zum Abräumen hatte — zwischen
+  R4-16 und R4-17 lag eine Stunde Handarbeit, zwischen R4-17 und R4-18
+  wenige Minuten. Nach einem vollen Lauf lagen genau diese 400 in der
+  Anlage und keine anderen, also lässt keine andere Probe Waisen zurück.
+  Behoben: `konto_loeschen()` statt `DELETE`, am Anfang und am Ende; die
+  Jobprobe zählt vor Teil 3 fremde Waisen und nennt sie in der Meldung —
+  rot bleibt es, denn eine Waise ist ein Fehler.
 
 ## 3. Entscheidungen und Fragen
 
@@ -1366,6 +1389,30 @@ der 18-Liste.
 *Abnahme:* Matrix N Zeilen (heute 70), Rollenprobe N / 0; Gegenprobe: eine
 Zeile mit falschem Sollwert rot. *Stufe:* keine, außer die Messung findet
 eine Handlung vor dem Tor (dann Web Korrektur, sofort). *Fächerung:* keine.
+**Erledigt 27.09.2026 — ohne Versionsstufe** (nur `tools/` und `docs/`;
+keine Handlung vor einem Tor gefunden). 38 Zeilen in 4.99p: je eine für
+die sechs Betriebsseiten und das CSV der Gerätemodelle (7 GET), die 26
+POST-Handlungen (16 auf `betrieb_server.php` neben der schon geführten
+„protokoll", je 3 auf Jobs und Updates, je 1 auf Status und Sicherheit, 2
+auf `api/schluesselblatt_pruefen.php`), dazu fünf am neuen Platzhalter
+`{support}` (Seite, Setz-Link, Bestätigung, Gerät aus, Zweitfaktor). Die
+Probe legt das Zielkonto `zielsupport` an und räumt es ab. Der Absatz
+„Was die Matrix nicht führt" ist ersetzt, die Platzhalterzeile auf drei
+gestellt. Nachgetragen: der CHANGELOG-Eintrag von R4-19 (F-R4-62).
+*Gemessen:* Ausgangsmaß **70** Zeilen, Rollenprobe **324 / 0**. Danach
+**108** Zeilen, **476 / 0** (108 × 4 Zellen und 44 Wirkungen); keine
+Wartungsdatei zurückgeblieben, Anlage HTTP 200. Gegenproben, je
+zurückgestellt, kein Diff: eine Zelle falsch (Testmail, admin `durch`) →
+**1** rot; die Testmail vor `require_betreiberin()` gezogen → **3** rot
+(user, support, admin „durch"); das Konto-Tor des Supports ausgebaut →
+**6** rot, davon **4** in den neuen `{support}`-Zeilen.
+Erster Prüfstand **1 rot** (`jobprobe`, „erledigt=407 (erwartet 7)") —
+nicht R4-18, sondern F-R4-63: Die Verbindungsprobe ließ je Lauf der
+Hauptstufe 400 Waisen zurück. Behoben in der Probe (`konto_loeschen()`),
+die Jobprobe nennt fremde Waisen jetzt in ihrer Meldung. Gegen den Stand
+mit Altlast: Jobprobe rot mit „vorher 400 fremde Waisen"; Verbindungsprobe
+**24 / 24**, danach **0** Waisen und kein Probekonto; Jobprobe **36 / 36**.
+Danach der Prüfstand wiederholt.
 
 **R4-19 Prüfadressen nach `.invalid`** — Nr. 207 (Q-R4-07). E-PK-27 in
 `tools/` ausführen: Prüfkonten außer `demo@` nach `example.invalid` (41

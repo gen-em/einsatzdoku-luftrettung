@@ -625,6 +625,37 @@ Fassung.
 
 ### Geändert
 
+- **Die Rollenmatrix führt die Betriebsseiten einzeln** (R4-18, Nr. 327).
+  `docs/Technik.md` 4.99p hatte eine Zeile je Handlung auf den Seiten, die
+  mehr als eine Rolle erreicht; die Seiten der BetreiberIn standen darin nur
+  über das Tor der Seite. Eine Handlung, die dort **vor**
+  `require_betreiberin()` stünde, hätte die Rollenprobe nicht gefunden. Jetzt
+  stehen die sechs Betriebsseiten, das CSV der Gerätemodelle, ihre 26
+  POST-Handlungen und die zwei des Schlüsselblatts einzeln darin — 108
+  Zeilen statt 70, 476 Erwartungen, 0 nicht erfüllt. Gegenprobe: die
+  Testmail vor das Tor gezogen, drei Rollen rot. Dazu der dritte
+  Platzhalter `{support}`: Dass der Support andere Support-Konten nicht
+  betreut (E-P5c-99), stand im Code und ist jetzt gemessen; ohne das Tor
+  sind vier der fünf neuen Zeilen rot.
+- **Die Verbindungsprobe räumt ihre Spur ab** (R4-18, F-R4-63). Sie löschte
+  ihr Probekonto mit `DELETE FROM users`: Einsätze und Diensttage gingen per
+  Kaskade mit, die 400 Spurpunkte ihrer 20 Pakete nicht — `track_points` hat
+  keinen Fremdschlüssel, und genau davor warnt die Regel „Spuren nur über
+  `spur_lib.php`". Jeder Lauf der Hauptstufe ließ so 400 Waisen zurück, und
+  die Jobprobe des nächsten Laufs meldete „erledigt=407 (erwartet 7)",
+  sobald zwei Läufe ohne Pause aufeinander folgten. Jetzt geht das Konto über
+  `konto_loeschen()`, den Weg der Verwaltung, und die Jobprobe nennt fremde
+  Waisen in ihrer Meldung, statt nur die falsche Zahl.
+- **Die Prüfkonten liegen unter `example.invalid`** (R4-19, Nr. 207,
+  E-PK-27; *nachgetragen mit R4-18* — der Commit von R4-19 hatte diesen
+  Eintrag vergessen, F-R4-62). 44 Dateien unter `tools/` trugen Adressen
+  unter der Projektdomain, obwohl eine Prüfadresse nie zustellbar sein soll:
+  `example.invalid` ist dafür reserviert (RFC 2606). Geblieben ist
+  `demo@gen-em.org` — das Demo-Konto ist ein echtes Konto der Anlage. Die
+  Schema-Kennungen des Referenzdatensatzes sind `urn:`-Kennungen statt
+  Adressen (E-R4-48), und die Ausnahme der Textprobe für die alte
+  Messstand-Adresse ist gestrichen.
+
 - **`kontrast.py` leitet die Farbpaare aus dem Stylesheet ab** (R4-08,
   Nr. 116). Bis dahin rechnete es nur, was in seiner Liste stand, und ein
   Paar, das dort fehlte, meldete keinen Fehler — in der App standen so zwei

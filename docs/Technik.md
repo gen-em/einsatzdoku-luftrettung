@@ -7425,11 +7425,13 @@ wird** — kein Komplett-Backup, keine Löschung, kein Versand. Der Preis: Dass
 die Handlung mit gültigem Token auch gelingt, zeigt die Matrix nicht; das tun
 die Bedienwege und die Proben der jeweiligen Sache.
 
-**Zwei Platzhalter** (seit Web 20.41.0, AP4): `{ziel}` ist ein Konto der
-Rolle `user`, `{admin}` eines der Rolle `admin` — beide legt die Probe an und
-räumt sie ab. Ein Konto der Rolle `support` als Ziel hat keinen Platzhalter;
-dass der Support auch andere Support-Konten nicht betreut (E-P5c-99), steht
-im Code (`rolle_darf_support()`), gemessen ist es hier nicht. Die Kontoseite
+**Drei Platzhalter** (seit Web 20.41.0, AP4; der dritte seit R4-18):
+`{ziel}` ist ein Konto der Rolle `user`, `{admin}` eines der Rolle `admin`,
+`{support}` eines der Rolle `support` — alle drei legt die Probe an und räumt
+sie ab. Mit `{support}` ist gemessen, was bis dahin nur im Code stand: Der
+Support betreut auch andere Support-Konten nicht (E-P5c-99,
+`rolle_darf_support()`), und zwar schon beim Seitenaufruf, vor jeder
+Handlung (Nr. 327). Die Kontoseite
 fragt die Rolle **dreimal**: erst, ob die Angemeldete das Zielkonto
 überhaupt betreuen darf (der Support nur Konten von NutzerInnen, E-P5c-40),
 dann je Handlung (`handlung_erlaubt()`), und seit Web 20.42.0 beim
@@ -7437,16 +7439,17 @@ Zurücksetzen des Zweitfaktors noch einmal nach der Rolle des Ziels
 (`rolle_darf_zweitfaktor_zuruecksetzen()`). Alle drei Tore stehen in der
 Matrix.
 
-**Was die Matrix nicht führt** (Gegenlesung AP11). Sie hat eine Zeile je
-Handlung auf den Seiten, die **mehr als eine Rolle** erreicht — Verwaltung,
-Protokoll, Rechtstexte — und je eine für die Seiten, die allein der
-BetreiberIn gehören. Die POST-Handlungen auf diesen BetreiberIn-Seiten
-(`betrieb_server.php`, `betrieb_jobs.php`, `betrieb_updates.php`,
-`betrieb_status.php`, `betrieb_sicherheit.php`, dazu
-`api/schluesselblatt_pruefen.php`; gezählt 25 Handlungen und 7
-Seitenaufrufe) stehen **nicht** einzeln darin: Jede liegt hinter
-`require_betreiberin()` am Kopf ihrer Datei, und das Tor der Seite misst die
-Probe. Eine Handlung, die dort vor dem Tor stünde, fände die Matrix nicht.
+**Seit R4-18 führt die Matrix auch die BetreiberIn-Seiten einzeln** (Nr. 327):
+je eine Zeile für den Aufruf von `betrieb_server.php`, `betrieb_jobs.php`,
+`betrieb_updates.php`, `betrieb_status.php`, `betrieb_sicherheit.php` und
+`betrieb_statistik.php` samt dem CSV der Gerätemodelle, dazu jede ihrer
+26 POST-Handlungen und die zwei von `api/schluesselblatt_pruefen.php`. Bis
+dahin stand hier, dass sie **nicht** darin stehen: Jede liegt hinter
+`require_betreiberin()` am Kopf ihrer Datei, gemessen war nur das Tor der
+Seite, und eine Handlung, die vor dem Tor stünde, hätte die Probe nicht
+gefunden (Gegenlesung AP11). Die Gegenprobe dazu: eine Handlung über das
+Tor gezogen — rot. Wer auf einer Betriebsseite eine Handlung ergänzt,
+ergänzt hier ihre Zeile; die Probe liest nur, was hier steht.
 
 **Seit Web 21.1.0 (AP9) stehen die Seite Rechtstexte und ihr
 Vorschau-Endpunkt darin.** Die Zeile „Installation: Rechtstexte speichern"
@@ -7505,6 +7508,11 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch |
 | Kontoseite: Zweitfaktor zurücksetzen | `POST admin_user.php?id={ziel} action=totp_zuruecksetzen` | 403 | 403 | durch | durch |
 | Kontoseite: Zweitfaktor eines Admins zurücksetzen | `POST admin_user.php?id={admin} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch |
+| Kontoseite: Konto eines Supports | `GET admin_user.php?id={support}` | 403 | 403 | 200 | 200 |
+| Kontoseite: Setz-Link an einen Support | `POST admin_user.php?id={support} action=pw_reset` | 403 | 403 | durch | durch |
+| Kontoseite: Bestätigung an einen Support | `POST admin_user.php?id={support} action=verifikation` | 403 | 403 | durch | durch |
+| Kontoseite: Gerät eines Supports deaktivieren | `POST admin_user.php?id={support} action=device_aus` | 403 | 403 | durch | durch |
+| Kontoseite: Zweitfaktor eines Supports zurücksetzen | `POST admin_user.php?id={support} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch |
 | Konto-Backups: die Seite | `GET admin_sicherungen.php` | 403 | 403 | 200 | 200 |
 | Konto-Backups: Regeln | `POST admin_sicherungen.php action=regeln` | 403 | 403 | durch | durch |
 | Konto-Backups: alle sichern | `POST admin_sicherungen.php action=sichern_alle` | 403 | 403 | durch | durch |
@@ -7525,6 +7533,39 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch |
 | Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch |
 | Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch |
+| Betrieb · Server: die Seite | `GET betrieb_server.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Server: Ankündigung setzen | `POST betrieb_server.php action=ankuendigung` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Ankündigung als Rundmail | `POST betrieb_server.php action=rundmail` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Ankündigung entfernen | `POST betrieb_server.php action=ankuendigung_weg` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Serverschlüssel anlegen | `POST betrieb_server.php action=schluessel_sk_anlegen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Server-Anteil anlegen | `POST betrieb_server.php action=schluessel_anteil_anlegen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Serverschlüssel nachtragen | `POST betrieb_server.php action=schluessel_sk_nachtragen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Server-Anteil nachtragen | `POST betrieb_server.php action=schluessel_anteil_nachtragen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Server-Anteil wechseln | `POST betrieb_server.php action=schluessel_anteil_wechseln` | 403 | 403 | 403 | durch |
+| Betrieb · Server: alten Anteil entfernen | `POST betrieb_server.php action=schluessel_anteil_alt_entfernen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Anteil neu anfangen | `POST betrieb_server.php action=schluessel_anteil_neuanfang` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Speicher | `POST betrieb_server.php action=speicher` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Sicherheitskopfzeilen | `POST betrieb_server.php action=kopfzeilen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Konten | `POST betrieb_server.php action=konten` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Demo-Anmeldung abschalten | `POST betrieb_server.php action=demo_aus` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Ratenschutz | `POST betrieb_server.php action=ratenschutz` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Adresssuche | `POST betrieb_server.php action=geocoder` | 403 | 403 | 403 | durch |
+| Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch |
+| Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch |
+| Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch |
+| Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Updates: Wartung an | `POST betrieb_updates.php action=wartung_an` | 403 | 403 | 403 | durch |
+| Betrieb · Updates: Wartung aus | `POST betrieb_updates.php action=wartung_aus` | 403 | 403 | 403 | durch |
+| Betrieb · Updates: Migrationen anwenden | `POST betrieb_updates.php action=migrate` | 403 | 403 | 403 | durch |
+| Betrieb · Status: die Seite | `GET betrieb_status.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Status: Testmail | `POST betrieb_status.php action=testmail` | 403 | 403 | 403 | durch |
+| Betrieb · Sicherheit: die Seite | `GET betrieb_sicherheit.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Sicherheit: Sperre aufheben | `POST betrieb_sicherheit.php action=aufheben` | 403 | 403 | 403 | durch |
+| Betrieb · Statistik: die Seite | `GET betrieb_statistik.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Statistik: Gerätemodelle als CSV | `GET betrieb_statistik.php?r=geraete&export=csv` | 403 | 403 | 403 | 200 |
+| Betrieb · Schlüsselblatt: Positionen stellen | `POST api/schluesselblatt_pruefen.php aktion=stellen` | 403 | 403 | 403 | durch |
+| Betrieb · Schlüsselblatt: prüfen | `POST api/schluesselblatt_pruefen.php aktion=pruefen` | 403 | 403 | 403 | durch |
 <!-- rollenprobe:ende -->
 
 **Daneben prüft die Probe Wirkungen**, denn eine Zelle `durch` sagt nur,

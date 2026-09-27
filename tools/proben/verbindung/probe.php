@@ -115,9 +115,27 @@ if ($rootPdo === null) {
 }
 
 require_once $wurzel . '/db.php';
+require_once $wurzel . '/konto_lib.php';
 
 
 $pdo = db();
+
+/* DAS KONTO GEHT UEBER `konto_loeschen()`, NICHT UEBER `DELETE FROM users`
+ * (R4-18, F-R4-63). Die Probe liefert 20 Pakete mit je 20 Punkten ein. Ein
+ * DELETE auf `users` nimmt Einsaetze und Diensttage per Kaskade mit, die Spur
+ * aber nicht — `track_points` haengt ueber `owner_type`/`owner_id` und hat
+ * keinen Fremdschluessel (CLAUDE.md 4, „Spuren nur ueber spur_lib.php").
+ * Jeder Lauf der Hauptstufe liess so 400 Waisen zurueck, und die Jobprobe
+ * des naechsten Laufs zaehlte sie mit: „erledigt=407 (erwartet 7)", sobald
+ * zwei Laeufe ohne Pause aufeinander folgten. `konto_loeschen()` ist der Weg
+ * der Verwaltung und raeumt die Spur mit ab. */
+function probekonto_weg(string $email): void {
+    $st = db()->prepare('SELECT id FROM users WHERE email = ?');
+    $st->execute([$email]);
+    foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $id) {
+        konto_loeschen((int)$id, true, 'probe');
+    }
+}
 
 /* ---- Zaehlwerk ------------------------------------------------------------ */
 $erfuellt = 0; $offen = 0; $nummer = 0;
@@ -157,7 +175,7 @@ echo "  Grenze $grenze · Arbeiter " . ($serverPid !== null ? $arbeiter : 'unbek
 
 /* ---- Konto und Geraet ----------------------------------------------------- */
 $email = 'verbindungsprobe@example.invalid';
-$pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$email]);
+probekonto_weg($email);
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Verbindungsprobe', 'user', '', '', 320000)")->execute([$email]);
 $uid = (int)$pdo->lastInsertId();
@@ -533,8 +551,10 @@ pruefe($punkte === $pakete * $runden * 20, '... samt aller Spurpunkte',
         }
     }
     try { $rootPdo->exec('FLUSH PRIVILEGES'); } catch (Throwable $e) { }
-    try { db()->prepare('DELETE FROM users WHERE email = ?')->execute([$email]); }
-    catch (Throwable $e) { }
+    try { probekonto_weg($email); }
+    catch (Throwable $e) {
+        fwrite(STDERR, "ACHTUNG: Probekonto liess sich nicht loeschen: " . $e->getMessage() . "\n");
+    }
     if ($serverPid !== null && $serverPid > 0) {
         /* Der eingebaute Server startet mit Arbeitern KINDPROZESSE. `kill`
          * auf die Gruppe erwischt sie mit; `pkill -P` ist der Rueckweg, wenn

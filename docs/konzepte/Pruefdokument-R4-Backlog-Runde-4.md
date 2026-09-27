@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-17 und R4-19 erledigt**, Web 21.4.0 (Migration aus 21.3.0) (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-19 erledigt**, Web 21.4.0 (Migration aus 21.3.0) (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -180,6 +180,12 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-17 | `fetch('api/day.php')` und Leiste an zwei Konten (Scratchpad) | E-R4-49 | Messstand (1029 Tage): **120**, `grenze` 120, `gekappt` **true**, Leiste **500** mit Hinweis; Demo: **21**, `gekappt` **false**, kein Hinweis |
 | R4-17 | Chromium 390 px, Suche (Messstand, 5096) und Zeitraum (Demo, dreifach): `.mehrzeile` Höhe und Elternbehälter | F-R4-59 | vorher beide **Höhe 0** in `.tabelle-scroll nur-ab-720`; nachher beide **sichtbar** in `.karte-inhalt` |
 | R4-17 | `node tools/screenshots/aufnehmen.mjs --nur 14b-` | neue Seite | erst **Zeitablauf** im Kontaktbogen (Vollbilder bis 45 722 px, F-R4-61); mit `ganzseitig: false` und `nachladezeile`: 10 Bilder, Überlauf **0**, Konsolenfehler **0** |
+| R4-18 | `php tools/proben/rollen/probe.php` vorher; Zeilen zwischen den Markierungen in 4.99p | Ausgangsmaß | **70** Zeilen, **324 / 0** |
+| R4-18 | dieselbe Probe mit 38 neuen Zeilen und `{support}` | Nr. 327 | **108** Zeilen × 4 Rollen, **476 / 0**; danach kein `server/wartung.lock`, `login.php` HTTP 200 |
+| R4-18 | Gegenproben, je zurückgestellt (kein Diff): Zelle falsch; Testmail vor `require_betreiberin()`; Konto-Tor des Supports aus | Abnahme | **1**, **3** und **6** rot (4 davon in den `{support}`-Zeilen) |
+| R4-18 | erster `bash tools/pruefstand/pruefen.sh` | Stufe `haupt` | **1 rot**, 0 nicht gemessen, 57 grün, 2858 s: `jobprobe` Teil 3 „erledigt=407 (erwartet 7)" (F-R4-63) |
+| R4-18 | Waisen in der Anlage gezählt (`LEFT JOIN` je Art und Tabelle); größte Einsatzkennung | Ursache F-R4-63 | **400** Zeilen, 20 Eigentümer 16883–16904, 0 Blobs; größter Einsatz **16882**; Breite 47,0000–47,0038 |
+| R4-18 | Jobprobe mit Altlast; `proben.sh verbindung`; Waisen und Probekonto gezählt; Jobprobe | Korrektur F-R4-63 | rot mit „vorher 400 fremde Waisen"; Verbindung **24 / 24**; **0** Waisen, **0** Probekonten; Jobprobe **36 / 36** |
 | R4-16 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen`, `zaehlen.php`, `nummern.py` | Riegel | erst **12 / 14**: `bestand` (`einspielen/LIESMICH.md` 41 Zeilen, Decke 40) und `textprobe` („Maschine" im neuen Runbook-Satz, Regel `luft`); beide behoben, dann **14 / 14**; 20 Decken, 0 gerissen; 70 offene Einträge, 0 ohne Grammatik; 42 Zeilen, 0 über der Decke; 0 Überschneidungen |
 
 ## 3. Im Browser geprüft

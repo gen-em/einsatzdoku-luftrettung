@@ -1083,21 +1083,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      die 1.0 liest keine Nutzlast von vor 1.0.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 324.
 
-327. **Die Rollenmatrix führt die Handlungen der BetreiberIn-Seiten nicht einzeln.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
-     *Aufgenommen 25.09.2026 in P5c/AP11 (Gegenlesung AP4).*
-     `docs/Technik.md` 4.99p hat eine Zeile je Handlung auf den Seiten, die
-     mehr als eine Rolle erreicht; die 25 POST-Handlungen und 7
-     Seitenaufrufe hinter `require_betreiberin()` (`betrieb_server.php`,
-     `betrieb_jobs.php`, `betrieb_updates.php`, `betrieb_status.php`,
-     `betrieb_sicherheit.php`, `api/schluesselblatt_pruefen.php`) misst die
-     Probe nur über das Tor der Seite. Eine Handlung, die dort **vor** dem
-     Tor stünde, fände sie nicht. Dazu fehlt ein Platzhalter `{support}`: dass
-     der Support andere Support-Konten nicht betreut (E-P5c-99), steht im
-     Code, gemessen ist es nicht. *Zu tun:* die Zeilen nachtragen (Admin und
-     Support 403, BetreiberIn `durch`) und den Platzhalter anlegen. *Abnahme:*
-     Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
-     Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
-
 336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
      *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in
      `handy/.../Bausteine.kt` hat seit R63 (Android 0.11.0, feste
