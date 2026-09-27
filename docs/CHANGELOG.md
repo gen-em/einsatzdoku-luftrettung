@@ -14,6 +14,72 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.4.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-17. **Nebenstufe ohne Migration.**
+
+### Geändert
+
+- **Die Zeitraumübersicht zeigt höchstens 200 Einsätze auf einmal** (Nr. 37,
+  E-R4-16). Sie zeichnete jede Zeile des Zeitraums, und ein Jahr mit einigen
+  tausend Einsätzen war damit die langsamste Seite der Anwendung: Im
+  Messstand brauchte ein Jahr mit 4071 Einsätzen 88 s, bis die erste Zeile
+  zu sehen war (sechsfach gedrosselte CPU). Jetzt gilt dieselbe Grenze wie in
+  der Suche, mit derselben Nachladezeile („Weitere 200 anzeigen", „Alle N
+  anzeigen"): 9 s bis die Seite fertig ist, die erste Zeile steht nach
+  2,5 s. Begrenzt ist nur die Liste. Einsatzzahl, Kilometersumme, Kacheln
+  und Karte gelten weiter für den ganzen Zeitraum, die Karte zeigt also auch
+  die Punkte der Einsätze, die in der Tabelle noch nicht stehen. Damit das
+  nicht zu raten ist, steht hinter der Einsatzzahl „200 angezeigt", wie in
+  der Suche.
+- **Eine Extremwert-Kachel holt ihre Zeile nach.** Ein Klick auf „Längste
+  Einsatzdauer" und die übrigen bedienbaren Kacheln springt zur Zeile. Mit
+  der Seitengrenze stand die womöglich jenseits der 200; Kachel und Pin
+  hätten geleuchtet, und die Zeile hätte gefehlt. Jetzt lädt die Liste in
+  ganzen Seiten so weit nach, dass sie dabei ist (`zeigeEinsatz()` im
+  Tabellenmodul).
+- **Die drei gedeckelten Tageslisten sagen es.** Die Leiste zeigt höchstens
+  500 Diensttage; hat ein Konto mehr, steht darunter jetzt „Die Leiste zeigt
+  die 500 jüngsten Diensttage; ältere findest du über die Suche." Bis hierher
+  fehlten die älteren still. Die Tagesliste von `api/day.php` (höchstens 120)
+  trägt dafür `grenze` und `gekappt`. Alle drei Listen, dazu die des
+  Verschiebe-Dialogs (400), fragen nach einem Tag mehr, als sie zeigen, und
+  wissen so, ob es ältere gibt. Der Verschiebe-Dialog schloss das aus „genau
+  400" und meldete bei genau 400 Tagen ältere, die es nicht gab.
+
+### Behoben
+
+- **Auf dem Handy fehlte der Knopf „Weitere 200 anzeigen"** — in der Suche
+  seit den Kacheln (E-P3-32), in der Zeitraumübersicht wäre es mit der neuen
+  Grenze ebenso gewesen. Die Nachladezeile hing unmittelbar hinter der
+  Tabelle und damit in deren Scrollbehälter, und der ist unter 720 px
+  ausgeblendet. Eine Suche mit mehr als 200 Treffern zeigte auf dem Handy
+  200 Kacheln und keinen Weg zu den übrigen. Jetzt steht die Zeile hinter
+  der Kachelliste: am Schreibtisch unter der Tabelle, auf dem Handy unter
+  den Kacheln. Gemessen an 5096 Treffern bei 390 px: vorher im DOM, aber
+  nicht sichtbar, jetzt sichtbar.
+
+### Werkzeug
+
+- **Bedienprobe, Weg `zeitraum-seitengrenze`:** vervielfacht die Einsatzliste
+  des Demo-Kontos auf dem Weg in den Browser zwölffach und prüft 200 Zeilen,
+  Nachladezeile, „200 angezeigt", alle Pins auf der Karte und den Sprung aus
+  einer Kachel zu Zeile 221. Ohne `zeigeEinsatz()` rot, ohne Seitengrenze
+  auch. Das Vervielfachen steht als `einsaetzeVervielfachen()` in
+  `tools/motor.mjs`; die Anwendung bekommt dafür keine Prüftür.
+- **Bilderlauf, Seite `14b-zeitraum-seitengrenze`:** dieselbe Übersicht mit
+  dreifacher Liste in zehn Breiten. Neu dafür `vervielfachen` in
+  `seiten.json` und der Bedienschritt `nachladezeile`, der auf die
+  **sichtbare** Nachladezeile wartet — er wäre am Handyfehler oben
+  gescheitert. Das Bild ist der sichtbare Ausschnitt (`ganzseitig: false`):
+  Mit 200 Zeilen wurden die Vollbilder bis zu 45 000 Pixel hoch, und der
+  Kontaktbogen lief in einen Zeitablauf.
+- **Messstand:** Die Zeitraumübersicht ist rot bei mehr als 200 Zeilen, die
+  Startseite bei 500 Tagesverweisen ohne den Hinweis der Leiste. Neu steht
+  die erste Zeile im DOM daneben, von der Seite selbst gemessen — die Dauer
+  bis Playwright sie sieht, enthält auch das Entschlüsseln aller Einsätze auf
+  dem gedrosselten Hauptfaden (F-R4-58).
+
 ## [Web 21.3.1] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-16. **Korrektur ohne Codeänderung** —

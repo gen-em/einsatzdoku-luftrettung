@@ -7797,5 +7797,18 @@ declare(strict_types=1);
  *   Einsaetze um 19:09, 23:50 und 01:40), und Referenz und Fixture sind neu
  *   erzeugt: Nutzlast 12 statt 11, ohne die leere Standortauswahl, und die
  *   zwei Uebergangsregeln im Kreislauf fallen weg.
+ *
+ * 21.4.0 — DIE ZEITRAUMUEBERSICHT BEKOMMT IHRE SEITENGRENZE (Schritt 17,
+ *   R4-17, Nr. 37). Nebenstufe ohne Migration. `zeitraum.php` zeichnete jede
+ *   Zeile des Zeitraums; ein Jahr mit 4071 Einsaetzen brauchte im Messstand
+ *   88 s. Jetzt 200 wie in der Suche, mit derselben Nachladezeile; Kopfzahl,
+ *   Kennzahlen und Karte bleiben beim ganzen Zeitraum, und der Kopf sagt
+ *   „200 angezeigt". Eine Extremwert-Kachel holt ihre Zeile nach, wenn sie
+ *   jenseits der 200 steht (`zeigeEinsatz()`). Dabei gefunden: Die
+ *   Nachladezeile hing im Scrollbehaelter der Tabelle und war unter 720 px
+ *   mit ihm ausgeblendet — auf dem Handy gab es in der Suche nie einen Weg
+ *   ueber die ersten 200 Treffer hinaus. Dazu sagen die drei gedeckelten
+ *   Tageslisten (Leiste 500, `api/day.php` 120, Verschieben 400), dass sie
+ *   greifen, und fragen dafuer nach einem mehr, als sie zeigen.
  */
-const WEB_VERSION = '21.3.1';
+const WEB_VERSION = '21.4.0';

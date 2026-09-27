@@ -50,7 +50,10 @@
  *   `demo`, `admin`) und Pfad; `status` nennt einen erwarteten Code, wenn es
  *   nicht 200 ist; `karte: true` wartet zusaetzlich auf Leaflet; `vorher`
  *   fuehrt Bedienschritte vor der Aufnahme aus (die bekannten stehen in
- *   `vorher()`). Platzhalter in `__GROSSBUCHSTABEN__` loest der Lauf aus dem
+ *   `vorher()`); `vervielfachen: n` gibt die Einsatzliste aus
+ *   `api/range.php` n-fach in den Browser (R4-17, `einsaetzeVervielfachen()`
+ *   in `tools/motor.mjs`) — fuer Zustaende, die erst ab 200 Einsaetzen
+ *   entstehen. Platzhalter in `__GROSSBUCHSTABEN__` loest der Lauf aus dem
  *   Bestand auf — Kennungen gehoeren zu EINER Installation und stehen in
  *   keiner eingecheckten Datei.
  *
@@ -81,7 +84,8 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
-const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG } =
+const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG,
+        einsaetzeVervielfachen } =
   await import(new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
@@ -919,7 +923,7 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 async function vorher(seite, schritte, fehlerSammler) {
   const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
                    'notfallblatt', 'code-schritt', 'codeblatt',
-                   'schnitt-grund', 'schnitt-vorschau'];
+                   'schnitt-grund', 'schnitt-vorschau', 'nachladezeile'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
@@ -1096,6 +1100,23 @@ async function vorher(seite, schritte, fehlerSammler) {
       await end.fill(ziel);
       await end.dispatchEvent('input');
       await seite.waitForTimeout(300);
+      continue;
+    }
+    if (schritt === 'nachladezeile') {
+      /* DIE NACHLADEZEILE MUSS IN JEDER BREITE SICHTBAR SEIN (R4-17).
+         Bis Web 21.4.0 hing sie im Scrollbehaelter der Tabelle, und der ist
+         unter 720 px ausgeblendet: Auf dem Handy gab es 200 Kacheln und
+         keinen Knopf. „Da" (im DOM, nicht `hidden`) genuegte also nicht —
+         gewartet wird auf SICHTBAR, und dann wird sie in den Ausschnitt
+         gerollt, den das Bild zeigt (`"ganzseitig": false`). */
+      const zeile = seite.locator('.mehrzeile:not([hidden])').first();
+      try { await zeile.waitFor({ state: 'visible', timeout: 15000 }); } catch {
+        fehlerSammler.push('Nachladezeile nicht sichtbar — unter 720 px im '
+                         + 'ausgeblendeten Scrollbehälter der Tabelle?');
+        continue;
+      }
+      await zeile.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await seite.waitForTimeout(200);
       continue;
     }
     if (schritt === 'schublade') {
@@ -1394,6 +1415,13 @@ for (const eintrag of liste) {
       continue;
     }
   }
+
+  /* DIE EINSATZLISTE VERVIELFACHEN, wo die Seitenliste es verlangt
+   * (R4-17): nur fuer diesen Eintrag, ueber alle Breiten, danach wieder
+   * weg. Die uebrigen Seiten sehen den echten Bestand. */
+  const aufheben = eintrag.vervielfachen
+    ? await einsaetzeVervielfachen(seite, '**/api/range.php*', eintrag.vervielfachen)
+    : null;
 
   for (const { b, h, art } of BREITEN) {
     let adresse = `${BASIS}/${pfad}`;
@@ -1697,6 +1725,7 @@ for (const eintrag of liste) {
     }
   }
 
+  if (aufheben) { await aufheben(); }
   wartungAus();
 
   await kontaktbogen(eintrag.name, bilder);

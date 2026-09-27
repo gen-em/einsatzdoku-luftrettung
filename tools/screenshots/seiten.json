@@ -225,6 +225,16 @@
       "karte": true
     },
     {
+      "name": "14b-zeitraum-seitengrenze",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "zeitraum.php?y=2026",
+      "karte": true,
+      "vervielfachen": 3,
+      "ganzseitig": false,
+      "vorher": ["nachladezeile"]
+    },
+    {
       "name": "15-suche",
       "gruppe": "Inhalt",
       "rolle": "demo",

@@ -122,6 +122,47 @@ export async function proxyRoute(kontext) {
 /** Sagt, ob eine Basisadresse auf diesen Rechner zeigt. */
 export function istOertlich(basis) { return OERTLICH.test(String(basis)); }
 
+/* EINSATZLISTE AUF DEM WEG IN DEN BROWSER VERVIELFACHEN (R4-17, Nr. 37).
+ *
+ * Die Zeitraumuebersicht zeigt seit Web 21.4.0 hoechstens 200 Zeilen, und
+ * was dann geschieht — Nachladezeile, „200 angezeigt", der Sprung aus einer
+ * Extremwert-Kachel zu einer Zeile jenseits der 200 —, ist am Demo-Konto
+ * nicht zu sehen: Es hat 109 Einsaetze. Einen groesseren Bestand dafuer
+ * einzuspielen hiesse, das Demo-Konto zu veraendern, das Bilderlauf und
+ * Bedienprobe unveraendert brauchen.
+ *
+ * Deshalb wie in der Sondierung zu Nr. 37 (P3): Die Antwort wird auf dem
+ * Weg in den Browser vervielfacht, und der Browser geht damit den echten
+ * Weg — entschluesseln, sortieren, zeichnen. Jede Kopie bekommt eine eigene
+ * Kennung (Versatz 10^6 je Kopie), alles andere bleibt, auch der
+ * verschluesselte Block: Er ist je Einsatz verschluesselt und geht deshalb
+ * auch als Kopie auf. Eine Kopie ist kein Einsatz auf dem Server — ein
+ * Klick auf ihre Zeile fuehrt ins Leere, und dafuer ist sie nicht da.
+ *
+ * DIE ANWENDUNG BEKOMMT DAFUER NICHTS. Kein Parameter, keine Prueftuer:
+ * Das Pruefmittel aendert, was ankommt, nicht, was der Server tut.
+ *
+ * `ziel` ist eine Seite oder ein Kontext; zurueck kommt eine Funktion, die
+ * die Route wieder entfernt. */
+export async function einsaetzeVervielfachen(ziel, muster, faktor) {
+  const umleiten = async (route) => {
+    const antwort = await route.fetch();
+    const daten = await antwort.json();
+    if (Array.isArray(daten.missions)) {
+      const vorlage = daten.missions;
+      daten.missions = [];
+      for (let k = 0; k < faktor; k++) {
+        for (const m of vorlage) {
+          daten.missions.push(k === 0 ? m : { ...m, id: m.id + k * 1000000 });
+        }
+      }
+    }
+    await route.fulfill({ response: antwort, json: daten });
+  };
+  await ziel.route(muster, umleiten);
+  return () => ziel.unroute(muster, umleiten);
+}
+
 /** Macht den Kontext, der zur Basisadresse passt — und trifft damit die
  *  TLS-Entscheidung EINMAL statt in jedem Werkzeug neu.
  *

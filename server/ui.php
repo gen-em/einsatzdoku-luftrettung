@@ -697,7 +697,18 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
 {
     global $userId;
     require_once __DIR__ . '/diensttag_lib.php';
-    $tage = dt_liste($userId, 500);
+    /* HOECHSTENS 500 DIENSTTAGE — UND DIE LEISTE SAGT ES (Web 21.4.0, R4-17,
+     * Nr. 37). Bis hierher kappte sie still: Ein Konto mit 1029 Diensttagen
+     * (Messstand) sah 500, und nichts deutete an, dass es aeltere gibt. Eine
+     * Dokumentation, die Zeilen verschweigt, ist falsch, nicht nur knapp.
+     * Gefragt wird nach EINEM MEHR, als gezeigt wird: So weiss die Leiste,
+     * ob es aeltere gibt, statt es aus „genau 500" zu schliessen — bei
+     * genau 500 Tagen fehlt keiner. Die Grenze selbst bleibt; 500 Tage sind
+     * bei einem Dienst je Woche fast zehn Jahre. */
+    $grenze = 500;
+    $tage = dt_liste($userId, $grenze + 1);
+    $gekappt = count($tage) > $grenze;
+    if ($gekappt) { $tage = array_slice($tage, 0, $grenze); }
 
     $monatsnamen = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
         'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -829,6 +840,13 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
           </div>
         </details>
       <?php endforeach; ?>
+      <?php /* Dieselbe gedaempfte Zeile wie „noch keine" oben — ein Hinweis,
+               kein Fehler. Der Weg zu den aelteren Tagen ist die Suche: Sie
+               geht ueber den ganzen Bestand. */ ?>
+      <?php if ($gekappt): ?>
+        <p class="leiste-leer">Die Leiste zeigt die <?= (int)$grenze ?> jüngsten
+          Diensttage; ältere findest du über die Suche.</p>
+      <?php endif; ?>
     </div>
     <?php
       require_once __DIR__ . '/trash_lib.php';

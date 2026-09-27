@@ -18,7 +18,7 @@ Sieben Schritte: `konto` `bestand` `einspielen` `browser` `server`
 Antwortzeiten und Speicher der Serverwege, dieselben im Browser (Halde,
 JSON, PBKDF2), und den `.edbak`-Umlauf bei voller Größe. `statistik`
 (**Anlass: Nr. 295**): Betrieb → Statistik, drei Reiter unter 1 s, und
-`EXPLAIN` der Abfragen aus `statistik_lib.php` — **rot**, wenn eines verfehlt. Der Bestand
+`EXPLAIN` der Abfragen aus `statistik_lib.php` — **rot**, wenn eines verfehlt. Ebenso **rot** (Nr. 37, seit R4-17): mehr als 200 Zeilen in der Zeitraumübersicht, 500 Tagesverweise ohne den Hinweis der Leiste. Der Bestand
 entsteht aus dem Referenzdatensatz und wird vervielfältigt — **nicht
 erfunden**, damit die Verteilung der Daten stimmt.
 

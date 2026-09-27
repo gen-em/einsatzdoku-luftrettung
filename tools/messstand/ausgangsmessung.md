@@ -262,6 +262,38 @@ Tabellenzeilen, wie der Zeitraum Einsätze hat — sie ist die einzige Ansicht
 ohne Seitengrenze. Auch durch die sechsfache Drossel geteilt bleiben gut
 sieben Sekunden. Der Umbau ist ein eigenes Paket (Backlog Nr. 37).
 
+## Nachmessung 27.09.2026 — die Zeitraumübersicht mit Seitengrenze (R4-17)
+
+Web 21.4.0 gibt `zeitraum.php` dieselbe Grenze wie der Suche, 200 Zeilen.
+Gemessen am Messstandbestand dieses Tages (**4071** Einsätze im Jahr 2026,
+**1029** Diensttage), derselbe Rechner vorher und nachher, Drossel 6×,
+`messen.py --schritte browser`:
+
+| Messung | vorher | nachher | |
+|---|---|---|---|
+| Zeitraumübersicht, Dauer bis Playwright die erste Zeile sieht | **88,11 s** (Prüfstand), **109,47 s** (Gegenprobe ohne Grenze) | **8,97 s** / 9,16 s | Faktor 9,6 bis 12 |
+| dieselbe, erste Zeile im DOM (von der Seite gemessen, neu) | — | **2,51 s** | |
+| Tabellenzeilen | 4071 | **200** | Riegel: mehr als 200 ist rot |
+| Startseite, Tagesverweise der Leiste | 500, ohne Hinweis | 500, **mit** Hinweis | Riegel: 500 ohne Hinweis ist rot |
+| Suche — erste Trefferanzeige (5096 Treffer) | 5,78 s | 5,95 s | unverändert, Bezug |
+
+**Was die zwei Zahlen der Zeitraumübersicht unterscheidet.** Die Dauer ist
+die Zeit, bis Playwright die Zeile sieht, und das kann es erst, wenn der
+gedrosselte Hauptfaden frei wird. Der Profiler von Chromium zeigt, womit er
+bis dahin beschäftigt ist: rund 1,2 s Entschlüsseln (`fromB64`, `decrypt`,
+für alle 4071 Einsätze — Karte und Kacheln brauchen sie alle), 0,8 s die
+erste Layoutberechnung der Seite (ausgelöst von Leaflet, `clientWidth`),
+0,4 s `innerHTML`. Die Tabelle steht nach 2,5 s; entschlüsselt ist sie nach
+rund 4 s.
+
+**Die Abnahme des Konzepts sagte „unter 5 s bei 3983 Einsätzen (heute
+42,61 s)"** — gemessen auf einem anderen Rechner als dieser, auf dem
+dieselbe Seite 88 s brauchte. Auf diesem Rechner sind es 8,97 s: absolut
+darüber, als Faktor (9,6 gegen verlangte 8,5) darunter, und die erste Zeile
+steht nach 2,5 s. Wie das zu werten ist, steht im Konzept R4 (F-R4-58,
+Q-R4-24). Weiter hinunter führen die zwei Wege, die Nr. 37 nach v1.0 hält:
+Vorschneiden und Monatsvorwahl.
+
 ---
 
 ## Wiederholen

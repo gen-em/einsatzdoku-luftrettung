@@ -6,8 +6,9 @@ require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabe
 
 /**
  * Alle Einsaetze eines Jahres oder Monats: Karte, Statistiktabelle und eine
- * Tabelle aller Einsaetze — bewusst ohne Farbmarkierung und ohne Tagesnummer,
- * dafuer mit Datum. Die Daten holt der Browser von api/range.php und
+ * Tabelle der Einsaetze — bewusst ohne Farbmarkierung und ohne Tagesnummer,
+ * dafuer mit Datum, seit Web 21.4.0 mit 200 Zeilen je Seite (Karte und
+ * Kennzahlen bleiben beim ganzen Zeitraum). Die Daten holt der Browser von api/range.php und
  * entschluesselt die geschuetzten Angaben selbst (wie auf der Tagesuebersicht);
  * die Karten-Pins nutzen dieselben entschluesselten Koordinaten. Die Karte
  * bleibt ausgeblendet, wenn kein Einsatz Koordinaten hat oder der
@@ -508,6 +509,10 @@ function verdrahteExtremKachel(tile){
     document.querySelectorAll('.kennzahl.aktiv').forEach(t => t.classList.remove('aktiv'));
     fixierteMid = mid;
     tile.classList.add('aktiv');
+    /* Die Zeile erst in die Anzeige holen (Web 21.4.0): Seit der
+       Seitengrenze steht sie nicht mehr sicher da. zeigeEinsatz() zeichnet
+       dafür neu, und onAfterDraw wendet die Festsetzung von oben an. */
+    tabelle.zeigeEinsatz(mid);
     wendeHervorhebungAn(mid);
     const zeile = document.querySelector(`#rangebody tr[data-mid="${mid}"]`);
     if (zeile) { zeile.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
@@ -565,6 +570,17 @@ const tabelle = EdMissionTable.erzeuge({
   kacheln: document.getElementById('rangekacheln'),
   kachelOpts: { artDatum: true, knapp: true },
   sortKey: 'day', sortAsc: true,
+  /* HOECHSTENS 200 ZEILEN AUF EINMAL (Web 21.4.0, R4-17, Nr. 37, E-R4-16) —
+     dieselbe Grenze wie in der Suche. Bis hierher zeichnete diese Seite
+     jede Zeile des Zeitraums: Der Messstand brauchte für ein Jahr mit
+     rund 4000 Einsätzen 42 s bis 88 s bis zur ersten Zeile, je nach
+     Rechner, und die Suche über den ganzen Bestand daneben keine 6 s.
+     Begrenzt ist nur die TABELLE (und unter 720 px die Kacheln). Die
+     Kopfzahl, die km-Summe, die Statistik-Kacheln und die Karte rechnen
+     weiter über den ganzen Zeitraum — die Karte zeichnet alle Pins, auch
+     die der Zeilen, die noch nicht dastehen. Das ist Absicht: Der Zeitraum
+     ist der Rahmen, die Tabelle nur seine Liste. */
+  seite: 200,
   /* Das mobile Sortierblatt und seine Beschriftung baut seit Schritt 15
      AP9b das Modul. Hier standen 22 Zeilen, die in suche.php zeichengleich
      noch einmal standen — und ein Klick darin stellte um, ohne dass sich
@@ -578,7 +594,10 @@ const tabelle = EdMissionTable.erzeuge({
     /* Kopf der Einsatzkarte: Zahl und km-Summe (Mockup 29/31). Anders als auf
        der Suchseite steht hier NIE „n von m": Der Zeitraum ist der Rahmen,
        nicht ein Filter über einem größeren Bestand — die Artenwahl daneben
-       sagt schon, welcher Ausschnitt gemeint ist. */
+       sagt schon, welcher Ausschnitt gemeint ist. Seit der Seitengrenze
+       (Web 21.4.0) steht wie dort „200 angezeigt" dahinter, sobald die
+       Tabelle weniger zeigt, als der Zeitraum hat: Zahl und Summe bleiben
+       die des ganzen Zeitraums, und das soll man nicht raten müssen. */
     const km = zeilen.reduce((sum, m) => sum + (m.distance_m || 0), 0);
     const teile = [String(gesamt)];
     /* Ganze Kilometer, wie in der Suche: Die Summe über Dutzende Einsätze auf
@@ -587,6 +606,7 @@ const tabelle = EdMissionTable.erzeuge({
        hier, weil die Zentrale die nackte Zahl liefert. Kein Leerwert: `km`
        ist eine Summe und steht hinter `km > 0`. */
     if (km > 0) { teile.push(EdFormat.kmSumme(km) + ' km'); }
+    if (gezeigt < gesamt) { teile.push(`${gezeigt} angezeigt`); }
     document.getElementById('einsatzzahl').textContent = teile.join(' · ');
 
     wendeHervorhebungAn(fixierteMid);

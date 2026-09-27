@@ -1720,6 +1720,12 @@ Jahr anzuklicken schließt das vorherige automatisch. Springst du auf einen Tag
 in einem anderen Zeitraum, klappt die Leiste automatisch dorthin auf. Auf
 schmalen Geräten liegt sie in der Schublade (Abschnitt 3).
 
+**Höchstens 500 Diensttage.** Die Leiste zeigt die 500 jüngsten. Hat dein
+Konto mehr, steht darunter „Die Leiste zeigt die 500 jüngsten Diensttage;
+ältere findest du über die Suche." — die Suche geht über den ganzen
+Bestand. Bei einem Dienst je Woche sind 500 Tage fast zehn Jahre. Bis
+Web 21.4.0 fehlte der Hinweis, und die älteren Tage fehlten still.
+
 **Die ganze Zeile klappt auf und zu** — Jahreszahl wie Monatsname. Der Weg in
 die Übersicht des Zeitraums ist das kleine Balkensymbol am rechten Rand
 derselben Zeile. Bis Web 8.0.1 war es umgekehrt: Der Text war der Link, und nur
@@ -1742,7 +1748,7 @@ breit genug; dort steht der Name wie am großen Bildschirm.
 Ein Klick auf das **Balkensymbol** neben Jahreszahl oder Monatsname öffnet eine
 Übersicht dieses Zeitraums. Unter dem Titel steht, wie viele Diensttage er hat
 und über welche Spanne er läuft; darunter die Statistik-Kacheln, dann eine
-Karte und schließlich alle Einsätze — am Schreibtisch als Tabelle mit Datum
+Karte und schließlich die Einsätze — am Schreibtisch als Tabelle mit Datum
 statt Tagesnummer, auf schmalen Geräten als Kacheln. Die Durchschnittswerte
 rechnen mit **allen angelegten Diensttagen** des Zeitraums, auch mit
 einsatzfreien. Solange du in einer Übersicht stehst, ist der betreffende
@@ -1792,6 +1798,16 @@ nicht erklärbar.
 Die gewählte Ansicht steht im Adressteil hinter dem `#` und bleibt beim Teilen
 eines Links erhalten.
 
+**Höchstens 200 Einsätze auf einmal** (seit Web 21.4.0), wie in der Suche.
+Hat der Zeitraum mehr, stehen unter der Tabelle **„Weitere 200 anzeigen"**
+und **„Alle N anzeigen"**, und hinter der Einsatzzahl über der Tabelle steht
+„200 angezeigt". Begrenzt ist nur die Liste: Die Einsatzzahl, die
+Kilometersumme, die Kacheln und die Karte gelten weiter für den **ganzen**
+Zeitraum — die Karte zeigt also auch die Punkte der Einsätze, die in der
+Tabelle noch nicht stehen. Bis dahin stand jede Zeile da, und ein Jahr mit
+einigen tausend Einsätzen brauchte über eine Minute, bis die Seite fertig
+war.
+
 Die Kacheln **„Längste Einsatzstrecke"** (in der Luftansicht: „Längste
 Flugstrecke") und **„Längste Einsatzdauer"** sind bedienbar, in der Luftansicht
 zusätzlich **„Höchster Einsatzort"**. Sie tragen einen kleinen Punkt oben
@@ -1799,7 +1815,8 @@ rechts und nennen in der Beschriftung den **Tag** des betreffenden Einsatzes
 („Längste Flugstrecke · 14.08.") — oft ist die Frage damit schon beantwortet.
 Zeigt man auf die Kachel, leuchten der zugehörige Karten-Punkt und die
 zugehörige Zeile auf; ein Klick hält die Hervorhebung fest und springt zur
-Zeile. Ein zweiter Klick auf dieselbe Kachel oder ein Klick auf eine freie
+Zeile — steht sie noch nicht in der Tabelle, lädt die Liste so weit nach,
+dass sie dabei ist. Ein zweiter Klick auf dieselbe Kachel oder ein Klick auf eine freie
 Stelle der Seite löst sie wieder.
 
 Die Hervorhebung ist seit Web 9.6.0 **orange** statt rot. Rot bedeutet in
@@ -2081,8 +2098,8 @@ Die Zeile über der Tabelle nennt deshalb unverändert die wahre Trefferzahl und
 dazu, wie viele davon gerade stehen. Welche 200 das sind, entscheidet die
 Sortierung — voreingestellt sind die neuesten zuerst. Sortierst du um, bleibt
 eine erweiterte Ansicht erweitert; änderst du einen Filter, fängt die Liste
-wieder bei den ersten 200 an. Die Zeitraum-Übersicht ist davon nicht betroffen,
-sie zeigt weiterhin jede Zeile.
+wieder bei den ersten 200 an. Die Zeitraum-Übersicht zeigt seit Web 21.4.0
+ebenso 200 Zeilen auf einmal (Abschnitt 4.4).
 
 **Gesperrte Verschlüsselung.** Sind die geschützten Angaben gesperrt
 (Abschnitt 5), werden Einsatznummer, Name, Geburtsdatum, Diagnose, Einsatzort,

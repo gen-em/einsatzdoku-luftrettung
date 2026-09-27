@@ -1699,6 +1699,19 @@ Drei Leisteninhalte teilen sich dasselbe Markup: `ui_leiste_diensttage()`,
 `ui_leiste_einstellungen()` und — für die Suche — der von der Seite selbst
 gefüllte Filterblock (`leiste => 'filter'`, danach `ui_leiste_ende()`).
 
+**Drei gedeckelte Tageslisten, und alle drei sagen es (seit Web 21.4.0,
+R4-17, Nr. 37).** `dt_liste()` nimmt eine Grenze, und drei Stellen setzen
+eine: die Leiste **500** (`ui_leiste_diensttage()`, darunter die Zeile „Die
+Leiste zeigt die 500 jüngsten Diensttage; ältere findest du über die
+Suche."), die Tagesliste von `api/day.php` ohne `d` **120** (die Antwort
+trägt `grenze` und `gekappt`) und der Verschiebe-Dialog **400** (Hinweis am
+Auswahlfeld). Alle drei fragen nach **einem mehr**, als sie zeigen: So
+wissen sie, ob es ältere gibt, statt es aus „genau so viele" zu schliessen.
+Bis dahin kappten die ersten zwei still, und der dritte meldete schon bei
+genau 400 Tagen, es gebe ältere. Laut waren nur die Grenzen von Import
+(3000 Einsätze, 600 Diensttage) und Export (5000), beide mit HTTP 413. Der
+Messstand prüft die Leiste mit: 500 Verweise ohne den Hinweis sind rot.
+
 **Die Grundformen des Stylesheets (Abschnitt 17, seit Web 9.12.0).** Bis dahin
 hieß dieser Abschnitt **Rohschicht** und war ausdrücklich befristet: Solange
 P3 die Seiten Paket für Paket umbaute, stand auf jeder noch nicht umgebauten
@@ -2258,10 +2271,25 @@ verloren. (Die frühere zweite Rücksicht, `pfeilInitial: false`, gibt es seit
 M6-10 nicht mehr: Der Sortierpfeil steht auf beiden Seiten von Anfang an.)
 
 **Seitengrösse (`opts.seite`, ab Web 5.10.0).** Ohne diese Option zeichnet die
-Tabelle jede Zeile — so verhält sich `zeitraum.php` weiterhin. `suche.php`
-setzt **200**: Dort steht beim Öffnen der gesamte Bestand zur Auswahl, und
-`anwenden()` zeichnet bei **jedem** Tastendruck im Suchfeld neu; bei einigen
-tausend Einsätzen ist der Aufbau der `<tr>` die teuerste Einzelheit der Seite.
+Tabelle jede Zeile. `suche.php` setzt **200**: Dort steht beim Öffnen der
+gesamte Bestand zur Auswahl, und `anwenden()` zeichnet bei **jedem**
+Tastendruck im Suchfeld neu; bei einigen tausend Einsätzen ist der Aufbau der
+`<tr>` die teuerste Einzelheit der Seite. **`zeitraum.php` setzt seit Web
+21.4.0 ebenfalls 200** (R4-17, Nr. 37). Bis dahin zeichnete sie jede Zeile;
+der Messstand brauchte für ein Jahr mit 4071 Einsätzen 88 s bis 109 s, danach
+9 s bis „fertig" und 2,5 s bis zur ersten Zeile im DOM (Drossel 6×; die
+Zahlen in `tools/messstand/ausgangsmessung.md`). Kopfzahl, km-Summe,
+Statistik und Karte rechnen weiter über den ganzen Zeitraum — begrenzt ist
+die Liste, nicht der Zeitraum; der Kopf sagt „200 angezeigt" dazu.
+
+**`zeigeEinsatz(mid)` (seit Web 21.4.0).** Eine Seite, die zu einer Zeile
+springen will, fand sie ohne Seitengrösse immer. Mit einer steht sie
+womöglich jenseits der gezeichneten; `zeigeEinsatz()` lädt dann in ganzen
+Seiten so weit nach, dass sie dabei ist, und meldet, ob es den Einsatz in der
+Trefferliste überhaupt gibt. Aufrufer: die Extremwert-Kacheln der
+Zeitraumübersicht. Die Bedienprobe (`wege/zeitraum.mjs`) belegt es an einer
+zwölffach vervielfachten Einsatzliste; ohne den Aufruf leuchten Kachel und
+Pin, und die Zeile fehlt.
 
 Begrenzt wird ausschliesslich die Anzeige — sortiert und gezählt wird über die
 volle Liste, geschnitten wird erst danach (`sortiert.slice(0, sichtbar)`).

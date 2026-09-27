@@ -57,8 +57,23 @@ const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownl
  * auch die Aufrufe erfasst, die beim Laden passieren — und genau die sind
  * interessant, weil dort das Entsperren liegt. */
 await kontext.addInitScript(() => {
-  const z = { pbkdf2: 0, jsonMax: 0, jsonParse: 0, jsonStringify: 0 };
+  const z = { pbkdf2: 0, jsonMax: 0, jsonParse: 0, jsonStringify: 0, ersteZeile: null };
   window.__messstand = z;
+
+  /* DIE ERSTE TABELLENZEILE, VON DER SEITE SELBST GEMESSEN (R4-17). Die
+   * Dauer unten ist die Zeit, bis Playwright die Zeile SIEHT — und das kann
+   * es erst, wenn der gedrosselte Hauptfaden frei wird. Solange er
+   * entschluesselt und das Layout rechnet, steht die Zeile schon da. Am
+   * 27.09.2026 gemessen: Zeile im DOM nach 1,9 s, Dauer 9,2 s. Beides ist
+   * eine Auskunft („wann sieht man etwas", „wann ist die Seite fertig"),
+   * und keine ersetzt die andere. */
+  new MutationObserver(function (_, beobachter) {
+    const tb = document.getElementById('rangebody');
+    if (tb && tb.firstElementChild) {
+      z.ersteZeile = performance.now();
+      beobachter.disconnect();
+    }
+  }).observe(document, { childList: true, subtree: true });
 
   const echtDerive = crypto.subtle.deriveBits.bind(crypto.subtle);
   crypto.subtle.deriveBits = function (alg, ...rest) {
@@ -246,14 +261,26 @@ messungen.push(await messen('Anmelden', async () => {
 }));
 
 /* Gewartet wird auf den INHALT, nicht auf das Ladeereignis: Die Tagesliste
- * der Seitenleiste ist das, was die Seite benutzbar macht. `dt_liste()`
- * deckelt sie bei 500 Einträgen — auch bei 928 Diensttagen stehen also
- * höchstens 500 im Markup. */
+ * der Seitenleiste ist das, was die Seite benutzbar macht. Die Leiste
+ * deckelt sie bei 500 Einträgen — auch bei 1029 Diensttagen stehen also
+ * höchstens 500 im Markup.
+ *
+ * SEIT WEB 21.4.0 SAGT SIE ES (R4-17, Nr. 37), und das misst dieser Schritt
+ * mit: Stehen 500 Verweise da, muss der Hinweis „… 500 jüngsten
+ * Diensttage …" darunter stehen. Der Messstandbestand hat über 1000 Tage;
+ * genau 500 (dann ohne Hinweis richtig) kommen hier nicht vor. Mehr als
+ * 500 hieße, der Deckel ist fort. */
 messungen.push(await messen('Startseite (Tagesliste)', async () => {
   await seite.goto(`${basis}/index.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
   await seite.locator('aside a[href*="?d="]').first().waitFor({ state: 'attached', timeout: 180000 });
   const tage = await seite.locator('aside a[href*="?d="]').count();
-  return { tagesverweise: tage };
+  const hinweis = await seite.locator('aside .leiste-liste .leiste-leer')
+    .filter({ hasText: 'jüngsten' }).count();
+  if (tage > 500) { throw new Error(`${tage} Tagesverweise — der Deckel der Leiste fehlt`); }
+  if (tage === 500 && hinweis !== 1) {
+    throw new Error('500 Tagesverweise, aber kein Hinweis auf ältere Diensttage (Nr. 37)');
+  }
+  return { tagesverweise: tage, leistenhinweis: hinweis === 1 };
 }));
 
 /* Die Tagesansicht ist erst fertig, wenn die Spur auf der Karte liegt — sie
@@ -287,6 +314,13 @@ messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
 }));
 
 /* ---- DIE BEIDEN OFFENEN MESSUNGEN AUS BACKLOG Nr. 37 (P5a/AP9) ----------
+ *
+ * SEIT WEB 21.4.0 HAT AUCH DIE ZEITRAUMUEBERSICHT IHREN DECKEL (R4-17): 200
+ * Zeilen wie die Suche. Gemessen vorher, am 27.09.2026 im Pruefstand:
+ * 88,11 s bei 4071 Einsaetzen und 4071 Zeilen (am 16.09.2026 auf einem
+ * anderen Rechner 42,61 s bei 3983). Der Schritt unten ist seither auch
+ * ein Riegel: Mehr als 200 Zeilen sind ein Fehler.
+ *
  *
  * Nr. 37 nennt sie seit S2 als „was hier offen bleibt": die
  * Zeitraumuebersicht und die Nachbearbeitung bei 5000 Einsaetzen. Beide
@@ -324,7 +358,10 @@ messungen.push(await messen('Zeitraumübersicht (ganzes Jahr)', async () => {
   await zeileDa;
   const zeilen = await seite.locator('#rangetable tbody tr').count();
   const zahl = (await seite.locator('#einsatzzahl').textContent().catch(() => '') || '').trim();
-  return { jahr, tabellenzeilen: zeilen, einsatzzahl: zahl };
+  if (zeilen > 200) { throw new Error(`${zeilen} Tabellenzeilen — die Seitengrenze der Zeitraumübersicht fehlt`); }
+  const ersteZeile = await seite.evaluate(() => window.__messstand.ersteZeile);
+  return { jahr, tabellenzeilen: zeilen, einsatzzahl: zahl,
+           erste_zeile_im_dom_s: ersteZeile == null ? null : Math.round(ersteZeile / 10) / 100 };
 }));
 
 /* Die Nachbearbeitung („Zuordnung nachtragen") ist das Gegenstueck: Sie

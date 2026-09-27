@@ -86,24 +86,22 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
      Änderung an ihm eine Entscheidung wäre, keine Korrektur.
 
-37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?** · gehört zu: 17 · Stand: teilweise · seit 30.08.2026
+37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?** · gehört zu: nach v1.0 · Stand: teilweise · seit 30.08.2026
      Befund (Messstand, 5050 Einsätze, CPU sechsfach gedrosselt, 16.09.2026):
-     Die **Zeitraumübersicht** ist der Engpass — `zeitraum.php` ruft
-     `EdMissionTable.erzeuge` ohne `seite`, bei 3983 Einsätzen im Jahr
-     42,61 s bis zur ersten Zeile und 3983 `<tr>` im DOM; die Suche über alle
-     5050 braucht 3,18 s (Seitengrenze 200). Der Suchindex überträgt den
-     gesamten Bestand (1097 Byte je Einsatz), obwohl rund dreißig Filter auf
-     Klartextspalten serverseitig vorschneiden könnten. Sechs stille Kappungen
-     sagen nichts (`dt_liste($userId, 500)`, 120 in `api/day.php`, 400 in
-     `einsatz_verschieben.php`; laut sind nur Import 3000 und Export 5000).
-     Fünf von sechs Zielzahlen aus E-S2-24 sind gehalten, Spuren 3,66 statt
-     3 MB je 1000 Einsätze knapp verfehlt (an frisch eingespieltem Bestand).
-     Erledigt: der Deckel je Konto (P5b/AP6, Web 20.21.0: 5000 Einsätze,
-     250 MB, `507`), die Kontenachse (P3/O9b), Speicher und Wartung (S2).
-     Weg: Seitengrenze oder Monatsvorwahl für die Zeitraumübersicht als
-     eigenes Paket; Vorschneiden im Suchindex; die Kappungen benennen.
-     `post_max_size` der Zielanlage steht auf Betrieb → Status (Plattform-
-     karte) — seit Staging läuft, ist das ein Seitenaufruf, keine Messung.
+     Die Zeitraumübersicht war der Engpass (42,61 s für 3983 Einsätze im
+     Jahr). Der Suchindex überträgt den gesamten Bestand (1097 Byte je
+     Einsatz), obwohl rund dreißig Filter auf Klartextspalten serverseitig
+     vorschneiden könnten. Fünf von sechs Zielzahlen aus E-S2-24 sind
+     gehalten, Spuren 3,66 statt 3 MB je 1000 Einsätze knapp verfehlt.
+     Erledigt: der Deckel je Konto (P5b/AP6), die Kontenachse (P3/O9b),
+     Speicher und Wartung (S2); mit R4-17 (Web 21.4.0) die Seitengrenze 200
+     der Zeitraumübersicht (4071 Einsätze: 88 s auf 9 s, erste Zeile nach
+     2,5 s) und die drei stillen Kappungen der Tageslisten (500, 120, 400),
+     die jetzt sagen, dass sie greifen.
+     Weg (nach v1.0, E-R4-16): Vorschneiden im Suchindex; Monatsvorwahl der
+     Zeitraumübersicht, falls die 9 s stören — sie gehen auf Entschlüsseln
+     und Layout über alle Einsätze des Jahres zurück (F-R4-58).
+     `post_max_size` der Zielanlage steht auf Betrieb → Status.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 37.
 
 43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt — und das Transportziel auch nicht.** · gehört zu: 12a · Stand: offen · seit 30.08.2026
