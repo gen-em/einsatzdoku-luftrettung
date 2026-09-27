@@ -156,7 +156,7 @@ echo "  Grenze $grenze · Arbeiter " . ($serverPid !== null ? $arbeiter : 'unbek
    . " · Pakete $pakete\n";
 
 /* ---- Konto und Geraet ----------------------------------------------------- */
-$email = 'verbindungsprobe@gen-em.org';
+$email = 'verbindungsprobe@example.invalid';
 $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$email]);
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Verbindungsprobe', 'user', '', '', 320000)")->execute([$email]);
@@ -358,7 +358,7 @@ pruefe(str_contains($ing['kopf']['content-type'] ?? '', 'application/json'),
  * HTML-Seite an dieser Stelle laese sie „Anmeldung derzeit nicht möglich"
  * schreiben statt „ausgelastet" (Backlog Nr. 171, eine Ebene tiefer). */
 $api = hole($basis . '/auth_salt.php', ['Content-Type: application/json'],
-            (string)json_encode(['email' => 'verbindungsprobe@gen-em.org']));
+            (string)json_encode(['email' => 'verbindungsprobe@example.invalid']));
 pruefe($api['code'] === 503
        && is_array($api['daten']) && ($api['daten']['error'] ?? '') === 'ausgelastet',
        'auth_salt.php ebenso — als JSON', 'HTTP ' . $api['code']

@@ -238,7 +238,7 @@ export async function anmelden(seite, { basis, konto, pass, frist = 90000 }) {
  * WAS SICH GEÄNDERT HAT. Ein Konto mit eingeschaltetem Zweitfaktor bekommt
  * nach dem richtigen Passwort KEINE Sitzung, sondern eine Weiterleitung (303)
  * zurück auf `login.php`, die dann nach dem Code fragt (`#codeform`). Das
- * Prüfkonto `admin@gen-em.org` ist eine BetreiberIn und hat deshalb einen —
+ * Prüfkonto `admin@example.invalid` ist eine BetreiberIn und hat deshalb einen —
  * mit bekanntem Geheimnis, damit die Werkzeuge den Code selbst rechnen
  * können (`tools/zweitfaktor/totp.mjs`). Jedes Werkzeug, das sich mit ihm
  * anmeldet, muss diesen Schritt gehen. Er steht hier und nicht in jedem

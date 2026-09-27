@@ -50,8 +50,8 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
 const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
-const quelle  = process.argv[3] || 'umlauf-edbak@gen-em.org';
-const ziel    = process.argv[4] || 'umlauf-misch@gen-em.org';
+const quelle  = process.argv[3] || 'umlauf-edbak@example.invalid';
+const ziel    = process.argv[4] || 'umlauf-misch@example.invalid';
 const kontoPw = process.env.UMLAUF_PASSWORT || 'umlaufpruefung2026';
 const zielPw  = process.env.ZIEL_PASSWORT || kontoPw;
 const bpw     = process.env.BACKUP_PASSWORT || 'nadokudemo0815';

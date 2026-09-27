@@ -94,10 +94,10 @@ const wert = (n, s) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] 
 
 const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
 const DEMO   = { email: wert('--demo', 'demo@gen-em.org'),  pw: wert('--demo-pw', 'nadokudemo0815') };
-const ADMIN  = { email: wert('--admin', 'admin@gen-em.org'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
+const ADMIN  = { email: wert('--admin', 'admin@example.invalid'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
 /* DIE ROLLEN ADMIN UND SUPPORT (R4-08, Nr. 297). `--admin` bleibt das Konto
  * der Rolle `betreiberin` — so hiess der Schalter schon, als das Konto
- * admin@gen-em.org BetreiberIn wurde, und die Kette kennt ihn. Die reine
+ * admin@example.invalid BetreiberIn wurde, und die Kette kennt ihn. Die reine
  * Admin- und die Support-Sicht haben eigene Pruefkonten, angelegt von
  * `tools/referenzdatensatz/einspielen/pruefkonten.sh`. */
 const ROLLE_ADMIN   = { email: wert('--rolle-admin', 'bilderlauf-admin@probe.invalid'),
@@ -512,7 +512,7 @@ async function anmeldenAuf(seite, rolle) {
 
   /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43, F-P5c-33).
    *
-   * Das Pruefkonto `admin@gen-em.org` ist eine BetreiberIn und hat einen
+   * Das Pruefkonto `admin@example.invalid` ist eine BetreiberIn und hat einen
    * Zweitfaktor. Nach dem Passwort steht die Seite deshalb WIEDER unter
    * `login.php` und fragt nach dem Code; die Adresspruefung darunter hielte
    * das zu Recht fuer gescheitert, und der Lauf kaeme ohne Admin-Bilder

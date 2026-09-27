@@ -5,7 +5,7 @@ declare(strict_types=1);
  * DAS PRÜFKONTO BEKOMMT EINEN ZWEITFAKTOR MIT BEKANNTEM GEHEIMNIS
  * (P5c/AP5, E-P5c-43).
  *
- * Anlass: Nr. 320 (F-P5c-33) — das Prüfkonto `admin@gen-em.org` ist eine BetreiberIn;
+ * Anlass: Nr. 320 (F-P5c-33) — das Prüfkonto `admin@example.invalid` ist eine BetreiberIn;
  * ohne Zweitfaktor landete jedes Werkzeug nach der Anmeldung im
  * Einrichtungstor, mit einem unbekannten nicht über den Code-Schritt.
  *
@@ -19,7 +19,7 @@ declare(strict_types=1);
  * BetreiberIn das Konto im Browser ein und trägt das Geheimnis als Secret
  * `STAGING_TOTP` ein.
  *
- * Aufruf: php tools/zweitfaktor/pruefkonto.php [adresse]   (Vorgabe admin@gen-em.org)
+ * Aufruf: php tools/zweitfaktor/pruefkonto.php [adresse]   (Vorgabe admin@example.invalid)
  */
 
 $wurzel = dirname(__DIR__, 2);
@@ -34,7 +34,7 @@ require_once __DIR__ . '/totp.php';
 const PRUEF_CODES = ['PRFA2345', 'PRFB2345', 'PRFC2345', 'PRFD2345', 'PRFE2345',
                      'PRFF2345', 'PRFG2345', 'PRFH2345', 'PRFJ2345', 'PRFK2345'];
 
-$adresse = $argv[1] ?? 'admin@gen-em.org';
+$adresse = $argv[1] ?? 'admin@example.invalid';
 $host = (string)parse_url(app_url(), PHP_URL_HOST);
 if (!in_array($host, ['127.0.0.1', 'localhost'], true)) {
     fwrite(STDERR, "Abbruch: Die Anlage heißt „{$host}\" — dieses Skript läuft nur in der Sandbox.\n");

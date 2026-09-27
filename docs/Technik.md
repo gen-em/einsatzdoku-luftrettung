@@ -11376,7 +11376,7 @@ wörtlich stimmen.
 
 **Ein Konto mit 5000 Einsätzen herstellen (Mengenprüfung, S2/R35):**
 `cd tools/messstand && python3 messen.py --frisch`. Der Lauf legt das Konto
-`messstand@gen-em.org` an, vervielfältigt das Referenz-Backup zu einer Folge
+`messstand@example.invalid` an (bis R4-19 unter `gen-em.org`), vervielfältigt das Referenz-Backup zu einer Folge
 `.edbak`-Dateien und spielt sie über den **regulären** Wiederherstellungsweg im
 Browser ein — kein SQL. Dauer je nach Rechner rund zehn Minuten; danach misst
 er Suche, Tagesansicht, Sichern (Browser, CPU-Drossel 6×) sowie Tabellengrößen

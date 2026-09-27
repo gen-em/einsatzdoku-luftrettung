@@ -243,7 +243,7 @@ function gpx_kopf_desc(string $xml): string
 
 /* ---- Konto, Anmeldung, Abruf --------------------------------------------- */
 
-$email = 'gpxprobe@gen-em.org';
+$email = 'gpxprobe@example.invalid';
 $token = bin2hex(random_bytes(32));          // was der Browser sonst ableitet
 
 /* KONTO PER SQL, Anmeldung ECHT ueber login.php. Die Ableitung des

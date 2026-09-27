@@ -289,8 +289,8 @@ function wartung_weg(): void {
 
 /* ---- Konten ------------------------------------------------------------ */
 
-$emailAdmin = 'wartungsprobe-admin@gen-em.org';
-$emailUser  = 'wartungsprobe-user@gen-em.org';
+$emailAdmin = 'wartungsprobe-admin@example.invalid';
+$emailUser  = 'wartungsprobe-user@example.invalid';
 $pdo->prepare('DELETE FROM users WHERE email IN (?, ?)')->execute([$emailAdmin, $emailUser]);
 /* Rolle `betreiberin` seit S8/AP1: `betrieb_updates.php` — die Seite mit dem
  * Schalter — beginnt mit `require_betreiberin()`. Ein blosser `admin` kaeme
@@ -542,7 +542,7 @@ pruefe(str_contains($a10['rumpf'], 'name="password"'),
  * Nebenaufruf nicht kannte. Deshalb misst sie ihn jetzt. */
 /* JSON, nicht Formular: auth_salt.php liest den Rumpf als JSON. `hole()`
  * entscheidet das an der Kopfzeile. */
-$a10b = hole('auth_salt.php', null, ['email' => 'admin@gen-em.org'],
+$a10b = hole('auth_salt.php', null, ['email' => 'admin@example.invalid'],
              ['Content-Type: application/json']);
 pruefe($a10b['code'] === 200,
        '10a auth_salt.php -> 200 (ohne ihn ist login.php nutzlos)',

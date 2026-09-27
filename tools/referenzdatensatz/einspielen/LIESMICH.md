@@ -25,7 +25,7 @@ warum die Reihenfolge so ist, steht an der Stufe in `einspielen.py`.
 ## Was es braucht
 
 Eine Installation hinter TLS auf `127.0.0.1:8443` — das Sitzungs-Cookie
-trägt `secure`. Vorgaben: `admin@gen-em.org` / `pruefstandzugang2026`,
+trägt `secure`. Vorgaben: `admin@example.invalid` / `pruefstandzugang2026`,
 `demo@gen-em.org` / `nadokudemo0815`, dazu `bilderlauf-admin@` und `bilderlauf-support@probe.invalid` (Passwörter in `pruefkonten.sh`). `lauf.json` und `rc.json` gehören
 **einer** Installation und stehen in `.gitignore`; `rc.json` öffnet ohne Passwort.
 

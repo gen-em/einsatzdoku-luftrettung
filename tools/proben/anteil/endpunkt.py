@@ -55,7 +55,7 @@ import krypto                                   # noqa: E402
 from sitzung import Sitzung                     # noqa: E402
 
 BASIS = sys.argv[1] if len(sys.argv) > 1 else "https://127.0.0.1:8443"
-ADMIN, ADMIN_PW = "admin@gen-em.org", "pruefstandzugang2026"
+ADMIN, ADMIN_PW = "admin@example.invalid", "pruefstandzugang2026"
 DEMO, DEMO_PW = "demo@gen-em.org", "nadokudemo0815"
 DB = str(WURZEL / "server" / "db.php")
 
@@ -161,7 +161,7 @@ if _stellen.returncode != 0:
 
 s = Sitzung(BASIS).anmelden(ADMIN, ADMIN_PW)
 uid = php('$st = db()->prepare("SELECT id FROM users WHERE email = ?");'
-          '$st->execute(["admin@gen-em.org"]); echo (string)$st->fetchColumn();').strip()
+          '$st->execute(["admin@example.invalid"]); echo (string)$st->fetchColumn();').strip()
 wrap_vorher = feld("pat_wrap_pw", uid)
 chk_vorher = feld("pat_key_check", uid)
 iter_vorher = feld("kdf_iter", uid).strip()

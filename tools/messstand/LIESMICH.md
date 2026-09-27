@@ -24,7 +24,7 @@ erfunden**, damit die Verteilung der Daten stimmt.
 
 ## Was es braucht
 
-Eine laufende Installation mit dem Prüfkonto (`admin@gen-em.org`). Das Konto `messstand@gen-em.org` legt der Schritt `konto` selbst an; **der Prüfstand ruft deshalb `messen.py --frisch` auf, nicht `browserprobe.mjs` allein** (seit P5c/AP4, F-P5c-104).
+Eine laufende Installation mit dem Prüfkonto (`admin@example.invalid`). Das Konto `messstand@example.invalid` legt der Schritt `konto` selbst an; **der Prüfstand ruft deshalb `messen.py --frisch` auf, nicht `browserprobe.mjs` allein** (seit P5c/AP4, F-P5c-104).
 Ohne das Konto scheitert der Browserschritt nach der Anmeldung und wartet 180 s auf ein Element, das nie kommt — so geschehen im ersten Lauf der Hauptstufe: 1086 s, sieben Zeitgrenzen. Bis dahin stand hier, das Konto sei eine Zuarbeit der Betreiberin (F-PK-22); für die örtliche Anlage stimmte das nicht.
 
 ## Erwartete Zahl

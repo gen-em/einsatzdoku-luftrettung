@@ -29,7 +29,7 @@ const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MO
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
 const quelle  = process.argv[3];
 const ordner  = process.argv[4] || '/tmp/kreislauf-csv';
-const konto   = process.env.UMLAUF_KONTO || 'umlauf-csv@gen-em.org';
+const konto   = process.env.UMLAUF_KONTO || 'umlauf-csv@example.invalid';
 const kontoPw = process.env.UMLAUF_PASSWORT || 'umlaufpruefung2026';
 mkdirSync(ordner, { recursive: true });
 

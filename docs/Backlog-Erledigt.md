@@ -8908,3 +8908,25 @@ zutreffen.
      fragt den Tag. Örtlich 1059 Tage migriert, 0 NULL; Schemaprobe Fall 6 4
      × 40, Ingestprobe Fall 14 88 / 88, gegen den Stand davor rot. Das
      Fenster gleitet nicht mehr (F-R4-46).
+
+207. **`gen-em.org` steht 96× in `tools/` und `.github/`.** · gehört zu: 17 · Stand: erledigt · seit 16.09.2026
+     Befund (P5a/AP7; `grep -rn "gen-em\.org" tools/ .github/ | wc -l` →
+     96, `server/` → 0 seit Web 20.9.0, Nr. 203): In den Prüfmitteln stehen
+     Prüfkonten (`ingestprobe@gen-em.org`, `demo@gen-em.org`,
+     `messstand@gen-em.org` …), Schema-`$id`s (`https://gen-em.org/nadoku/…`)
+     und Anleitungen in den `LIESMICH.md`. Kein Fehler — ein Prüfkonto ist
+     eine erfundene Adresse —, aber der Name einer realen Domain in einem
+     Repositorium, das weitergegeben werden soll.
+     Weg: `.invalid` (RFC 2606) für alle Prüfkonten — die Mailprobe benutzt
+     es bereits —, eine `urn:`-Kennung oder `example.org` für die
+     Schema-`$id`s. Mechanisch, berührt aber Bestandsdaten: Eine örtliche
+     Anlage mit `demo@gen-em.org` muss neu aufgesetzt werden, sonst greift
+     kein Kreislauf mehr. Deshalb ein Paket mit Ansage, nicht nebenbei.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 207.
+     Erledigt 27.09.2026 mit R4-19 (nur tools/ und docs/, keine
+     Versionsstufe): 45 Dateien, jede Prüfadresse außer demo@ nach
+     example.invalid, die Schema-$ids nach urn:nadoku:…, die
+     Messstand-Ausnahme der Textprobe gestrichen; im Maskierfall der
+     Kopplungsprobe steht kein Vorname mehr. git grep in tools/ ohne demo@:
+     0 (nach dem Prüfstand, der die Ausgaben der Bedienprobe neu schreibt).
+     Die örtliche Anlage ist neu aufgesetzt.

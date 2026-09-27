@@ -25,7 +25,7 @@ WEGWERFKONTO — die Umlaufkonten des Kreislaufs sind dafuer gemacht — und
 niemals an das Demo- oder ein echtes Konto.
 
     python3 tools/spaltenregister/wegprobe.py \\
-        --konto umlauf-edbak@gen-em.org --passwort umlaufpruefung2026
+        --konto umlauf-edbak@example.invalid --passwort umlaufpruefung2026
 
 Rueckgabe 0 = alle Erwartungen erfuellt, 1 = mindestens eine nicht,
 2 = nicht gelaufen (kein Segment mit GPS-Punkten, kein Einsatz).

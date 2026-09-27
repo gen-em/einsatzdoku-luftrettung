@@ -74,8 +74,8 @@ def konto(name: str, vorgabe: str) -> tuple[str, str]:
     return email, passwort
 
 
-ALT = konto("SITZUNGSPROBE_ALT", "admin@gen-em.org:pruefstandzugang2026")
-NEU = konto("SITZUNGSPROBE_NEU", "umlauf-csv@gen-em.org:umlaufpruefung2026")
+ALT = konto("SITZUNGSPROBE_ALT", "admin@example.invalid:pruefstandzugang2026")
+NEU = konto("SITZUNGSPROBE_NEU", "umlauf-csv@example.invalid:umlaufpruefung2026")
 
 gesamt = 0
 offen = 0

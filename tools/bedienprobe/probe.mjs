@@ -92,7 +92,7 @@ const wert = (n, s) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] 
 
 const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
 const DEMO   = { email: wert('--demo',  'demo@gen-em.org'),  pw: wert('--demo-pw',  'nadokudemo0815') };
-const ADMIN  = { email: wert('--admin', 'admin@gen-em.org'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
+const ADMIN  = { email: wert('--admin', 'admin@example.invalid'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
 const BILDER = flag('--bilder');
@@ -207,7 +207,7 @@ async function anmelden(rolle) {
     seite.click('#loginform button[type="submit"]'),
   ]);
   /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43). Das Pruefkonto
-   * `admin@gen-em.org` ist eine BetreiberIn mit Zweitfaktor; nach dem
+   * `admin@example.invalid` ist eine BetreiberIn mit Zweitfaktor; nach dem
    * Passwort fragt `login.php` nach dem Code. `codeSchritt()` (motor.mjs)
    * geht ihn — und meldet das Einrichtungstor als Scheitern: Dessen Adresse
    * enthaelt `login.php` nicht, und ohne diese Pruefung liefe jeder Admin-Weg

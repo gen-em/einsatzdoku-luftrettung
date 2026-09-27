@@ -51,7 +51,7 @@ sys.path.insert(0, str(WERKZEUGE / "referenzdatensatz" / "einspielen"))
 PLAYWRIGHT = os.environ.get(
     "PLAYWRIGHT_MODUL", "/opt/node22/lib/node_modules/playwright/index.mjs")
 
-KONTO = os.environ.get("MESSSTAND_KONTO", "messstand@gen-em.org")
+KONTO = os.environ.get("MESSSTAND_KONTO", "messstand@example.invalid")
 KONTO_PW = os.environ.get("MESSSTAND_PASSWORT", "messstandpruefung2026")
 BACKUP_PW = os.environ.get("MESSSTAND_BACKUP_PASSWORT", "nadokudemo0815")
 PRAEFIX = "messstand"
@@ -249,7 +249,7 @@ def main() -> int:
     p.add_argument("--frisch", action="store_true",
                    help="Messstandkonto vorher löschen (nur mit Präfix "
                         f"'{PRAEFIX}')")
-    p.add_argument("--admin-email", default="admin@gen-em.org")
+    p.add_argument("--admin-email", default="admin@example.invalid")
     p.add_argument("--admin-passwort", default="pruefstandzugang2026")
     # Das Geheimnis des Zweitfaktors (P5c/AP5, E-P5c-43) -- derselbe Schalter
     # wie in `kreislauf.py`: leer heisst `NADOKU_TOTP`, sonst das der Sandbox.

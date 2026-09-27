@@ -35,7 +35,7 @@ declare(strict_types=1);
  * AUFRUF
  *
  *     php tools/referenzdatensatz/fixture/riegelprobe.php
- *     php tools/referenzdatensatz/fixture/riegelprobe.php umlauf-csv@gen-em.org
+ *     php tools/referenzdatensatz/fixture/riegelprobe.php umlauf-csv@example.invalid
  *
  * Das Argument ist das Konto fuer den NEGATIVfall; es muss eine
  * `edka1:`-Huelle tragen, die Rolle `user` haben und auf `KDF_ITER_ZIEL`
@@ -54,7 +54,7 @@ $erzeuge = __DIR__ . '/erzeugen.php';
 
 require_once $server . '/db.php';
 
-$negativKonto = $argv[1] ?? 'umlauf-csv@gen-em.org';
+$negativKonto = $argv[1] ?? 'umlauf-csv@example.invalid';
 
 $gesamt = 0; $offen = 0;
 function pruef(string $was, bool $ok, string $dazu = ''): void {

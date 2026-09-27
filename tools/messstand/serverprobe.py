@@ -19,7 +19,7 @@ Anwendung auf — `edbak_build()` und die Abfragen der Ansichten — nur eben so
 dass sich die Spitze ablesen lässt.
 
 Aufruf:
-    python3 serverprobe.py [--ausgabe datei.json] [--konto messstand@gen-em.org]
+    python3 serverprobe.py [--ausgabe datei.json] [--konto messstand@example.invalid]
 """
 from __future__ import annotations
 
@@ -289,7 +289,7 @@ echo json_encode([
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--konto", default="messstand@gen-em.org")
+    p.add_argument("--konto", default="messstand@example.invalid")
     p.add_argument("--ausgabe", default="/tmp/messstand/serverprobe.json")
     p.add_argument("--wartung-fahren", action="store_true",
                    help="run_cleanup_if_due() wirklich laufen lassen und messen "

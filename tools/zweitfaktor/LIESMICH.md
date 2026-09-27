@@ -6,7 +6,7 @@ Richtet den Prüfkonten der Sandbox den Pflicht-Zweitfaktor mit bekanntem Geheim
 ## Aufruf
 
 ```bash
-php tools/zweitfaktor/pruefkonto.php [adresse]   # Vorgabe admin@gen-em.org; lokal_einrichten.sh, Schritt 6b
+php tools/zweitfaktor/pruefkonto.php [adresse]   # Vorgabe admin@example.invalid; lokal_einrichten.sh, Schritt 6b
 php tools/zweitfaktor/totp.php                   # der nächste Code; ebenso python3 tools/zweitfaktor/totp.py
 ```
 

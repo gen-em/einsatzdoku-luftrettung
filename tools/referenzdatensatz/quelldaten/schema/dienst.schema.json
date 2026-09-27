@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gen-em.org/nadoku/referenzdatensatz/dienst.schema.json",
+  "$id": "urn:nadoku:referenzdatensatz:dienst",
   "title": "Quelldokument eines Dienstes im Referenzdatensatz",
   "type": "object",
   "required": [

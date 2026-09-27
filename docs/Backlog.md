@@ -533,21 +533,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `Pflegeaufgabe` (R4-01, Q-R4-12): Jeder Anlass träfe Dateien von 18.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 202.
 
-207. **`gen-em.org` steht 96× in `tools/` und `.github/`.** · gehört zu: 17 · Stand: offen · seit 16.09.2026
-     Befund (P5a/AP7; `grep -rn "gen-em\.org" tools/ .github/ | wc -l` →
-     96, `server/` → 0 seit Web 20.9.0, Nr. 203): In den Prüfmitteln stehen
-     Prüfkonten (`ingestprobe@gen-em.org`, `demo@gen-em.org`,
-     `messstand@gen-em.org` …), Schema-`$id`s (`https://gen-em.org/nadoku/…`)
-     und Anleitungen in den `LIESMICH.md`. Kein Fehler — ein Prüfkonto ist
-     eine erfundene Adresse —, aber der Name einer realen Domain in einem
-     Repositorium, das weitergegeben werden soll.
-     Weg: `.invalid` (RFC 2606) für alle Prüfkonten — die Mailprobe benutzt
-     es bereits —, eine `urn:`-Kennung oder `example.org` für die
-     Schema-`$id`s. Mechanisch, berührt aber Bestandsdaten: Eine örtliche
-     Anlage mit `demo@gen-em.org` muss neu aufgesetzt werden, sonst greift
-     kein Kreislauf mehr. Deshalb ein Paket mit Ansage, nicht nebenbei.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 207.
-
 209. **`docs/Design.md` führt die erzeugte Bausteintabelle mit falschen Zeilennummern.** · gehört zu: 17 · Stand: offen · seit 16.09.2026
      Die Tabelle trägt den Vermerk „ERZEUGT von `tools/design/tabellen.py` —
      nicht von Hand ändern", und ihre Spalte `ui.php` nennt zu jeder Funktion

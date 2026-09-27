@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-19** (vor R4-16, E-R4-27; gefächert, E-R4-14). |
-> | Entschieden | **E-R4-01 bis E-R4-47** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-16** (Referenz neu, H-R4-03). |
+> | Entschieden | **E-R4-01 bis E-R4-48** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-15 erledigt** (27.09.2026); Web 21.3.0 — **mit Migration, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-16 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-15 und R4-19 erledigt** (27.09.2026); Web 21.3.0 — **mit Migration, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-16 bis R4-18, R4-20 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
-> | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. |
+> | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. **R4-19: ein Workflow, drei Agenten** auf getrennten Dateigruppen (`referenzdatensatz/` 22, `proben/` 17, übrige Werkzeuge 13 Dateien), alle drei gleichzeitig, 229 s, 0 gescheitert, 0 offene Stellen; Ausnahmeliste der Textprobe, Doku, Gegenlesung, Neuaufbau der Anlage und Prüfstand seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit) — 2.4. |
 
 
 ---
@@ -526,6 +526,17 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   Jobprobe vor dem Messstand. Behoben in der Probe: Teil 2 legt die Marke
   direkt vor ihre Waisen, für alle drei Auslöser gleich; der volle Durchgang
   bleibt in Teil 3 und 4 (cli). Gegenprobe: `JOB_BUDGET_ANFRAGE` 1,0 → rot.
+- **F-R4-51 `gen-em.org` stand in 56 versionierten Dateien unter `tools/`,
+  nicht in 41.** `git grep`: 56 Dateien, 107 Zeilen, 75 ohne `demo@`. Die
+  Abnahme des Konzepts mit `grep -rn` zählt dagegen Ausgaben und
+  `__pycache__` mit — 321 Dateien, 1453 Zeilen, überwiegend
+  `admin@gen-em.org` in Ausgaben des Bilderlaufs. Gemessen wird die Abnahme
+  deshalb mit `git grep`; zwei versionierte Ausgaben der Bedienprobe
+  (`ausgabe/bericht.*`) schreibt erst der nächste Lauf neu. Dazu im
+  Maskierfall der Kopplungsprobe ein realer Vorname (`philipp@…`), jetzt
+  `probe@example.invalid`. Eine Stelle bleibt bewusst: `mail/probe.php`
+  prüft mit einem Muster, dass eine Mail den Vornamen der Betreiberin
+  **nicht** enthält — ein Riegel gegen den Namen, kein Vorkommen im Text.
 
 ## 3. Entscheidungen und Fragen
 
@@ -571,7 +582,7 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-36 | Q-R4-20: **R4-11 ändert in `session_lib.php` nur den Flash-Block** (H-R4-05 gefragt, nicht gewachsen). | Betreiberin, 27.09.2026 | Der Flash ist die eine Stelle für Meldungen über eine Umleitung (E-ZE-16); ein zweiter Weg daneben wäre der Fehler, den Schritt 15 abgeschafft hat. |
 | E-R4-37 | Q-R4-21: **Die zwei Altfehler der Backup-Ziele (F-R4-35, -36) werden in R4-11 behoben; F-R4-33 wird Nr. 344 mit `gehört zu: 18`, F-R4-34 Nr. 345.** Dazu ein Übergabetext für die Instanz, die das Konzept von Schritt 18 schreibt. | Betreiberin, 27.09.2026 | Beide Korrekturen sind je ein bis zwei Zeilen in einer Datei, die R4-11 ohnehin ändert, und beide wirken still auf Daten am Ziel. `adminbackup_lib.php` bleibt für 18 frei. |
 | E-R4-38 | **Knöpfe ohne Eingabe leiten auch bei einer Abweisung um** („Jetzt sichern", „Abbrechen" beim Komplett-Backup); **„Es gab nichts zu ändern" und „Diese Sperre gibt es nicht mehr" leiten um.** | Umsetzung (R4-11) | E-R4-35 hält eine Eingabe auf der Seite; ein Knopf hat keine. Eine der Abweisungen rät „neu laden" — auf dem POST hieße das, den Start noch einmal zu schicken. Die zwei Auskünfte sind Ergebnisse des Versuchs, keine Eingabefehler. |
-| E-R4-39 | Q-R4-22: **Die Backticks setzt `mf_spalten_sql()`, nicht `mf_spalten()`**; dazu `mf_liste_sql()` und `mf_bezeichner()` in derselben Datei. `komplett_lib.php` behält seine Quotierung. | Betreiberin, 27.09.2026 („Dann weiter") | Vier Aufrufer brauchen die blossen Namen als Schlüssel (`$werte[$c]`, `$fest[$c]`, `array_diff`); Backticks in `mf_spalten()` hätten sie gebrochen. Weg A bleibt: zentral im Feldkatalog. `komplett_lib.php` sichert jede Tabelle, nicht den Katalog; ein allgemeiner Helfer gehörte nach `db.php`, das für 18 frei bleibt (2.3). |
+| E-R4-39 | Q-R4-22: **Die Backticks setzt `mf_spalten_sql()`, nicht `mf_spalten()`**; dazu `mf_liste_sql()` und `mf_bezeichner()` in derselben Datei. `komplett_lib.php` behält seine Quotierung. | Betreiberin, 27.09.2026 („Dann weiter"; ausdrücklich bestätigt während R4-19: „Bau das mit den Backticks so") | Vier Aufrufer brauchen die blossen Namen als Schlüssel (`$werte[$c]`, `$fest[$c]`, `array_diff`); Backticks in `mf_spalten()` hätten sie gebrochen. Weg A bleibt: zentral im Feldkatalog. `komplett_lib.php` sichert jede Tabelle, nicht den Katalog; ein allgemeiner Helfer gehörte nach `db.php`, das für 18 frei bleibt (2.3). |
 | E-R4-40 | **`html.js` steht im Kopf jeder Seite (`ui_seite_start()`), nicht in der Immer-Liste am Ende.** | Umsetzung (R4-13) | Die Regel über der Zeile von `format.js` sagt, was in den Kopf gehört: was ein `window.Ed…` setzt, an nichts hängt und von mehr als einer Seite gebraucht wird. `html.js` erfüllt alle drei, und die Seiten rufen `EdHtml` in Inline-Skripten, die vor dem Seitenende laufen. Das Konzept sagte „Immer-Liste" — gemeint war „einmal für alle". |
 | E-R4-41 | **Z37 misst auch `className = '…meldung'`; die Decke bleibt 4, die zwei neuen Funde gehen als Nr. 346 in die nächste Backlog-Runde.** | Umsetzung (R4-13) | Die Abnahme („Z37 sinkt um 2") ist mit dem alten Muster erfüllt (4 → 2). Das alte Muster hätte die Decke aber über zwei Nachbauten hinweg grün gemeldet; die Zeile misst jetzt die Sache. `patwarn` und der Papierkorb-Hinweis liegen außerhalb von Nr. 271–273, und beide umzustellen wäre eine sichtbare Änderung ohne Auftrag. |
 | E-R4-42 | Q-R4-23: **Die 30 Minuten zählen ab der ersten Änderung seit dem letzten Reset**, nicht ab dem Reset und nicht ab der letzten Änderung; der spätere von Änderung und Reset zählt, damit Werkzeuge den Reset weiter aufhalten können. | Betreiberin, 27.09.2026 | Eine Änderung lebt rund 30 Minuten, wie der Hinweis verspricht. Ab der letzten Änderung gezählt, hielte jemand, der alle 29 Minuten etwas absendet, einen veränderten Stand auf der öffentlichen Demo bis zum Pflichtreset. |
@@ -580,6 +591,7 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-45 | **`ingest_tag_offen()` fragt nur noch den Tag; fehlt die Spalte (Deploy-Fenster), gilt der Tag als offen.** Der Weg über zwei Tabellen fällt ganz weg. | Umsetzung (R4-15) | Dasselbe wie bei `rest_segments` vor dessen Migration; die Zeitprüfung gegen `day` deckt den Schaden. Den alten Weg als Rückfall zu behalten hieße, die Abfrage zu behalten, die Nr. 158 abschaffen will. |
 | E-R4-46 | **Ein Tag ohne `started_at` bekommt den Tag selbst, 00:00, als Anker** — in der Migration und beim Einspielen. | Umsetzung (R4-15) | Q-R4-09 sagt „Rückfall `started_at`"; ohne einen wäre „jetzt" die Migrationszeit, und die ist ausdrücklich falsch. `dt_anlegen()` setzt denselben Ersatz für `started_at` selbst. Örtlich trägt kein Tag NULL (0 von 1059). |
 | E-R4-47 | **Die Schemaprobe bekommt Fall 6: die Migration auf allen vier Fassungen, mit Randwerten und ohne `ON UPDATE`.** | Umsetzung (R4-15) | Die Abnahme „Plattformmatrix viermal grün" hätte ohne ihn nur das frische Schema belegt (F-R4-48). |
+| E-R4-48 | **Die Schema-Kennungen werden `urn:nadoku:referenzdatensatz:dienst` und `…:stammdaten`; die zwei Rückblicke der Integritätswache nennen die Produktivadresse nicht mehr im Wortlaut.** | Umsetzung (R4-19) | Das Konzept ließ `urn:` oder `example.org` offen. Eine URN behauptet keinen Ort; alle `$ref` sind intern (`#/$defs/…`), und `check_schema` ist mit ihr grün. Die Wache liest die Adresse zur Laufzeit aus der Umgebung; der Rückblick braucht den Wortlaut nicht. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -1222,6 +1234,24 @@ Regel `adressen` 0 ohne die gestrichene Ausnahme; Proben, die Konten
 anlegen, grün. *Stufe:* keine. *Fächerung:* **ja** — die Ersetzung je
 Werkzeugordner auf Agenten (getrennte Dateien); Proben und Textprobe
 seriell danach.
+**Erledigt 27.09.2026 — ohne Versionsstufe** (nur `tools/` und `docs/`).
+Ein Workflow mit drei Agenten (Fächerung-Zeile im Statusblock): 44 Dateien,
+jede Prüfadresse außer `demo@` nach `example.invalid`, dazu die zwei
+Schema-Kennungen, die Rückblicke der Wache und der Maskierfall ohne Vornamen
+(E-R4-48, F-R4-51). Seriell: die Ausnahme `messstand-eigene-adresse` der
+Textprobe gestrichen, die Begründung zur Uhr-Vorgabe ohne Domain,
+`Technik.md` Runbook Messstand. Danach `hochfahren.sh --neu`: Die Anlage
+trägt jetzt `admin@example.invalid`. `.github/` unberührt.
+*Gemessen:* Ausgangsmaß `git grep` **56** Dateien / **107** Zeilen / **75**
+ohne `demo@` (F-R4-51); danach **0** außer den zwei Ausgaben der
+Bedienprobe, die der Prüfstand neu schreibt. Gegenlesung jeder geänderten
+Zeile (Skript: `-` gegen `+` mit Adresse getauscht): **45** Dateien, alle
+Zeilen reiner Adresstausch bis auf die **sieben** beabsichtigten. Syntax
+selbst nachgeprüft **45 / 45** (`php -l`, `node --check`, `ast.parse`,
+`bash -n`, `json.tool`); `quelldaten/pruefen.py` mit den neuen
+Schema-Kennungen: „Keine Befunde, keine offene Matrixzeile". Textprobe **108 Ausnahmen, 108 gegriffen,
+0 Treffer**; Riegel **14 / 14**. `hochfahren.sh --neu` **rc 0**: Prüfkonten
+mit Zweitfaktor, Demo-Konto 106 Einsätze, 0 Migrationen offen.
 
 **R4-20 Karten „Was hier gilt"** — Nr. 287. Drei Karten und der Untertitel
 raus (`import.php`, `einsatz_form.php`, `wiederherstellen.php`); der Text

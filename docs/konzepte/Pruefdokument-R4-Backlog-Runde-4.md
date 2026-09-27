@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-15 erledigt**, Web 21.3.0 (mit Migration) (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-15 und R4-19 erledigt**, Web 21.3.0 (mit Migration) (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -151,6 +151,13 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-15 | erster `bash tools/pruefstand/pruefen.sh` über den Stand vor der Korrektur unten | Stufe `haupt` (Migration), 44 Proben und 21 Riegel | **1 rot**, 0 nicht gemessen, 57 grün, 2891 s: `jobprobe` — „'anfrage' räumt den Rückstand ab: 10 + 1 → 5 + 0" (F-R4-50) |
 | R4-15 | `php tools/proben/jobs/probe.php` dreimal; Durchgang des Waisenjobs über die Eigentümer gemessen; Konten nach Einsätzen | Ursache F-R4-50 | dreimal **→ 5 + 0**; Einsätze **3968** Eigentümer in **0,79 s**, Ruhesegmente 5731 in 0,37 s; `messstand@` **5050** von 5366 Einsätzen |
 | R4-15 | dieselbe Probe mit der Marke vor den Waisen; Gegenprobe `JOB_BUDGET_ANFRAGE` 1,0 (zurückgestellt, kein Diff) | Korrektur F-R4-50 | zweimal **36 / 36**; Gegenprobe **rot** („10 + 1 → 10 + 1") |
+| R4-15 | `bash tools/pruefstand/pruefen.sh` über den Baum des Commits `58b9a2b` (Bericht im Commit) | Stufe `haupt` | **0 rot, 0 nicht gemessen, 58 grün**, 2877 s; Baum `91f6e75d` |
+| R4-19 | `git grep -n "gen-em\.org" -- tools/` vorher; dasselbe mit `grep -rn` | Ausgangsmaß, F-R4-51 | **56** Dateien, **107** Zeilen, **75** ohne `demo@`; `grep -rn` **321** Dateien, 1453 Zeilen (Ausgaben, `__pycache__`) |
+| R4-19 | Workflow, drei Agenten auf getrennten Dateigruppen | die Ersetzung | 22 + 17 + 13 Dateien, **44 geändert**, 0 offene Stellen, 0 gescheitert, 229 s |
+| R4-19 | Gegenlesung: jede `-`-Zeile mit `@gen-em.org` → `@example.invalid` gegen ihre `+`-Zeile (Skript), dazu `git grep` ohne `demo@` | tauschen die Agenten nur Adressen? | **45** Dateien; abweichend nur die **sieben** beabsichtigten Zeilen (Wache 2, Maskierfall 2, Ausnahme der Textprobe 1+Block, Schema 2); Rest: nur `bedienprobe/ausgabe/bericht.*` (vom nächsten Lauf neu geschrieben) |
+| R4-19 | Syntax aller 45 Dateien selbst; `python3 tools/referenzdatensatz/quelldaten/pruefen.py` | nichts zerbrochen | **45 / 45**; „Keine Befunde, keine offene Matrixzeile" |
+| R4-19 | `bash tools/quelltext/pruefen.sh alle` | Textprobe ohne die Messstand-Ausnahme | **14 / 14**; Textprobe **108 Ausnahmen, 108 gegriffen, 0 Treffer, 0 ungenutzt** |
+| R4-19 | `bash tools/sandbox/hochfahren.sh --neu` | Anlage auf den neuen Prüfadressen | **rc 0**; `admin@example.invalid` mit Zweitfaktor, zwei Rollenkonten, Demo-Konto 106 Einsätze / 21 Diensttage, v21.3.0, 0 Migrationen offen |
 
 ## 3. Im Browser geprüft
 

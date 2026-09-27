@@ -71,7 +71,7 @@ function pruefe(bool $ok, string $was, string $wert = ''): void {
 
 /* ---- Konto und Geraet ---------------------------------------------------- */
 
-$email = 'ingestprobe@gen-em.org';
+$email = 'ingestprobe@example.invalid';
 
 /* DAS KONTO UND DAS GERAET ENTSTEHEN PER SQL, nicht ueber die Oberflaeche.
  * Das ist eine bewusste Abkuerzung und keine Nachlaessigkeit: Geprueft wird
