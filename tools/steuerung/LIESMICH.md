@@ -19,7 +19,7 @@ python3 tools/steuerung/verschieben.py NR "Erledigt TT.MM.JJJJ mit …: Beleg." 
 `uebersicht.py` hält jede Kopfzeile an Grammatik und Fahrplan-Ziel und gibt
 die offenen Punkte nach Ziel aus. `nummern.py` holt die Remote-Zweige und ist rot,
 wenn der Arbeitsbaum eine Nummer neu anlegt, die `origin/main` oder ein anderer
-Zweig auch neu anlegt (je gegen den Vorfahren mit `main`, beide Dateien).
+Zweig auch neu anlegt (je gegen den Vorfahren mit `main` und mit `HEAD`, beide Dateien).
 `verschieben.py` misst nichts: Es verschiebt einen erledigten Punkt (E-R4-06).
 
 ## Was es braucht
@@ -31,7 +31,7 @@ Rückgabe 0 = gehalten, 1 = gerissen, 2 = nicht gelaufen — nie still grün.
 
 `decken.py`: **20 Decken, 0 gerissen**, Selbstprobe **22 / 0**. `uebersicht.py
 --pruefen`: **0 ohne Grammatik, 0 ohne Ziel**, Selbstprobe **7 / 0**.
-`nummern.py`: **0 Überschneidungen**, Selbstprobe **8 / 0**. Reißt eine Decke:
+`nummern.py`: **0 Überschneidungen**, Selbstprobe **10 / 0**. Reißt eine Decke:
 kürzen — oder sie in `decken.py` ändern und begründen (E-SD-27).
 
 ## Was es nicht kann

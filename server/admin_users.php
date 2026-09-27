@@ -128,6 +128,12 @@ function konten_param(string $name, string $vorgabe = ''): string
     return is_string($v) ? $v : $vorgabe;
 }
 
+/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Was ein Konto anlegt
+ * oder sichert, endet mit `flash_setzen()` und einer Umleitung auf dieselbe
+ * Ansicht — `konten_weg()` behaelt Suche, Filter, Sortierung und Seite. Sonst
+ * wiederholt Neuladen die Handlung. Ein Eingabefehler bleibt auf der Seite;
+ * ebenso die Anlage mit Setz-Link: Der Link ist ein Geheimnis und gehoert
+ * nicht in die Sitzungsdatei (E-R4-33). */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
     handlung_erlaubt($action);   // der Support hat hier keine (E-P5c-85: Rolle vor Token)
@@ -242,7 +248,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      * Nur `zugestellt` heisst „die Mail ist raus". */
                     $zustellung = mail_einreihen('einladung', $email, ['link' => $link]);
                     if ($zustellung === MAIL_ZUGESTELLT) {
-                        $notice = 'Konto angelegt — Setz-Link per E-Mail verschickt.';
+                        flash_setzen('notice', 'Konto angelegt — Setz-Link per E-Mail verschickt.');
+                        header('Location: ' . konten_weg());
+                        exit;
                     } elseif ($zustellung === MAIL_WARTET) {
                         $notice = 'Konto angelegt — die E-Mail ist beim ersten Versuch '
                                 . 'NICHT hinausgegangen und steht in der Warteschlange. '
@@ -309,7 +317,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * verdeckte den einen, der anders lautet. */
                 $error = 'Nicht erzeugt: ' . implode(' · ', array_unique($schlecht));
             }
+            /* Zahl, Gruende und Restauswahl reisen ueber die Sitzung mit
+             * (E-R4-33) — die Restauswahl setzt das Skript unten wie bisher. */
+            flash_setzen('notice', $notice, '',
+                         ['fehler' => $error, 'auswahl_rest' => $auswahlRest]);
+            header('Location: ' . konten_weg());
+            exit;
         }
+    }
+}
+
+// Meldung, Gruende und Restauswahl aus der Umleitung uebernehmen
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ton'] === 'error') { $error = $flash['text']; }
+    else                           { $notice = $flash['text']; }
+    if (is_string($flash['daten']['fehler'] ?? null)) { $error = $flash['daten']['fehler']; }
+    if (is_string($flash['daten']['auswahl_rest'] ?? null)) {
+        $auswahlVerbraucht = true;
+        $auswahlRest = $flash['daten']['auswahl_rest'];
     }
 }
 

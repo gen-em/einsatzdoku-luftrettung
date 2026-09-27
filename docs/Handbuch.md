@@ -3483,6 +3483,18 @@ ihnen:
 Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
 Entscheidung dazu, was mit den Konto-Backups geschieht.
 
+**Nach einer Handlung lädt die Seite neu, und Neuladen wiederholt nichts**
+(seit Web 21.1.9). Wer speichert, sichert, einspielt oder löscht, landet
+wieder auf derselben Seite — mit der Meldung dort, wo geklickt wurde, und bei
+einem Ergebnis, das mehr ist als ein Satz (etwa dem Einspielbericht), mit dem
+ganzen Ergebnis. **F5** fragt danach nicht mehr, ob das Formular noch einmal
+gesendet werden soll, und die Meldung steht nur einmal da. Zwei Fälle bleiben
+bewusst stehen: Ein **abgewiesener Eintrag** (ungültige Adresse, falsche
+Zahl) — sonst wäre das Getippte fort —, und das **Anlegen eines Kontos, wenn
+die Einladung nicht hinausging**: Der Setz-Link steht dann einmal auf der
+Seite und wird nirgends zwischengespeichert. Dasselbe gilt für die Seiten unter
+Betrieb (Kapitel 12), außer den Servereinstellungen.
+
 Alles in diesem Kapitel können **Admin und BetreiberIn** — beim Protokoll
 sieht der Admin vier der sieben Reiter (11.7). Der **Support** (seit Web
 20.41.0) sieht davon die NutzerInnen und das Protokoll, und dort nur einen
@@ -4596,8 +4608,8 @@ und beantwortet damit die Frage, die die Zeile „SMTP" nicht beantworten kann:
 SMTP-Zugang fiel bis dahin erst auf, wenn jemand einen Einladungslink
 vermisste.
 
-Nach dem Klick sagt die Meldung oben, was passiert ist — seit Web 20.9.0
-**drei** Antworten statt zwei:
+Nach dem Klick sagt die Meldung in der Karte **E-Mail**, was passiert ist —
+seit Web 20.9.0 **drei** Antworten statt zwei:
 
 | Meldung | heißt |
 |---|---|

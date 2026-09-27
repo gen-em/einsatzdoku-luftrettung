@@ -14,6 +14,89 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.1.9] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-11. Korrekturstufe ohne Migration.
+
+### Geändert
+
+- **Nach einer Handlung leiten die Seiten unter Verwaltung und Betrieb um**
+  (Nr. 250). Elf Seiten gaben ihr POST-Ergebnis selbst aus: Konto-Backups,
+  Backup-Ziele, Komplett-Backup, NutzerInnen, Demo-Konto, Installation,
+  Rechtstexte, Hintergrundjobs, Sicherheit, Status und Updates. „Neu laden"
+  fragte dann, ob das Formular noch einmal gesendet werden soll — und wer
+  ja sagte, bekam ein zweites Token, eine zweite Testmail, einen zweiten
+  Protokolleintrag oder einen zweiten Lauf. Jetzt endet jede Handlung mit
+  einer Umleitung auf dieselbe Ansicht (Post/Redirect/Get), und die Meldung
+  kommt über die Sitzung; sie steht einmal da und beim nächsten Aufruf
+  nicht mehr. Die Seiten mit Meldungen in einer Karte bekommen sie dort,
+  wo geklickt wurde, samt Sprung an die Stelle. **Was bewusst stehen
+  bleibt:** ein abgewiesener Eintrag (ungültige Adresse, falsche Zahl) —
+  mit Umleitung wäre das Getippte fort (E-R4-35) —, und das Anlegen eines
+  Kontos, dessen Einladung nicht hinausging: Der Setz-Link ist ein
+  Geheimnis und gehört nicht in die Sitzungsdatei (E-R4-33).
+  `betrieb_server.php` leitet noch nicht um; die Seite gehört Schritt 18.
+- **Die Meldung über eine Umleitung trägt Ort, Ton und Ergebnis.**
+  `flash_setzen()` kannte zwei Töne und keinen Ort; die Seiten unter
+  Betrieb melden aber in der Karte, die gehandelt hat, und mit vier Tönen
+  — auf zwei gestaucht, wäre „Diese Sperre gibt es nicht mehr" ein Fehler
+  geworden. Und vier Handlungen zeigen mehr als einen Satz: die Schritte
+  einer Verbindungsprüfung, den Einspielbericht, das Ergebnis je Migration,
+  die Restauswahl beim Sammelsichern. „Flash mit Zahl", wie das Konzept es
+  vorsah, hätte genau das verloren, was man nach einem Fehlschlag lesen
+  will; es reist deshalb mit und erscheint nach der Umleitung wie vorher
+  (E-R4-33, -34). Die bisherigen Aufrufer bleiben unverändert.
+
+### Behoben
+
+- **Ein neuer Rechner vergisst den alten SFTP-Hostschlüssel** (gefunden
+  beim Umbau, F-R4-36). Die Seite Backup-Ziele las den alten Stand eines
+  Ziels erst nach dem Speichern — also den neuen —, und der Vergleich
+  „anderer Host, anderer Port" schlug nie an. Ein SFTP-Ziel auf neuem Host
+  behielt den Abdruck des alten, und die nächste Verbindung scheiterte als
+  „ANDERER Hostschlüssel", was wie ein Angriff aussieht. Jetzt wird vorher
+  gelesen und mit der gespeicherten Zeile verglichen.
+- **„Nachsehen, was dort liegt" schaltet die Aufbewahrung nicht mehr ab**
+  (F-R4-35). Scheiterte das Nachsehen bei offenem Bearbeitungsformular,
+  stand der Schalter „Auf dem Ziel aufräumen" danach auf aus — die Seite
+  füllte das Formular nach JEDEM gescheiterten POST aus der Anfrage, nicht
+  nur nach einem gescheiterten Speichern. Wer dann speicherte, schaltete die
+  Aufbewahrung am Ziel still ab.
+- **Das Entfernen des Demo-Kontos sagt bei einem Abbruch die Wahrheit**
+  (Fehler aus Web 21.1.8, F-R4-37). Seit es über `konto_loeschen()` geht,
+  ist es keine Transaktion mehr: Backups und Spuren fallen vor der
+  Kontozeile. Brach es dazwischen ab, sagte die Seite trotzdem „es wurde
+  nichts geändert". Jetzt sagt sie, dass ein Teil fort sein kann und ein
+  zweites „Entfernen" es zu Ende führt — und leitet um, weil schon etwas
+  geschehen ist.
+- **„Jetzt sichern" und „Abbrechen" beim Komplett-Backup leiten auch bei
+  einer Abweisung um.** Eine der Abweisungen rät „bitte neu laden"; auf dem
+  POST hätte das den Start noch einmal abgeschickt.
+
+### Werkzeug
+
+- **Rollenprobe:** je Seite ein Zweig, der auf einer Prüfanlage harmlos
+  gelingt, mit gültigem Token — 302 auf die genannte Adresse, die Meldung
+  beim ersten Aufruf genau einmal mehr als beim zweiten; dazu der
+  Setz-Link-Fall und die zwei Fehler der Backup-Ziele. Gegen die alten
+  Seiten 11 rot, gegen die Seiten ohne die zwei Korrekturen 2 rot.
+- **Bedienprobe:** zehn Wege `*-neuladen` mit dem Baustein `neuladen.mjs` —
+  Umleitung aus dem POST, Meldung einmal, „Neu laden" ist ein GET, ein
+  Zähler aus der Datenbank bewegt sich nicht. Gegen die alten Seiten 0 von
+  10: Das Neuladen war dort ein POST, und Warteschlange und Protokoll
+  wuchsen um je eine Zeile.
+- **Wartungsprobe:** Erwartung 13, 27 und 31 folgen der Umleitung und
+  verlangen die 302.
+- **Prüfstand:** Die Wartungsprobe läuft jetzt auch bei `betrieb_updates.php`,
+  die Komplettprobe auch bei `admin_komplettsicherung.php` — beide Proben
+  gehen über diese Seiten und wurden bei einer Änderung dort nicht gewählt
+  (F-R4-38).
+- **Nummernriegel:** `nummern.py` zieht von den Nummern eines anderen Zweigs
+  auch ab, was er vom eigenen geerbt hat (F-R4-39). Die Konzeptinstanz von
+  Schritt 18 zweigte von R4-10 ab, trug dessen Nummern 340 bis 343 mit, und
+  der Riegel meldete sie als Überschneidung — gegen `main` gemessen sahen
+  sie aus wie ihre eigenen.
+
 ## [Web 21.1.8] — 2026-09-26
 
 Schritt 17, Backlog-Runde 4, Paket R4-10. Korrekturstufe ohne Migration.

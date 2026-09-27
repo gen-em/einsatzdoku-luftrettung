@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-11.** |
-> | Entschieden | **E-R4-01 bis E-R4-32** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-12.** |
+> | Entschieden | **E-R4-01 bis E-R4-38** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38. |
 > | Offen | **keine Frage.** Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-10 erledigt** (26.09.2026); Web 21.1.8. Offen: R4-11 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
+> | Umsetzung | **R4-01 bis R4-11 erledigt** (27.09.2026); Web 21.1.9. Offen: R4-12 bis R4-26 in Nummernfolge, R4-19 vor R4-16 (E-R4-27). |
 > | Fable-Schritte | keine. |
-> | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); bisher keine. |
-> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift) — 2.4. |
+> | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. |
+> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde) — 2.4. |
 
 
 ---
@@ -413,6 +413,38 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   sie, `konto_loeschen()` und die Kontoseite nicht. Über den einen Weg hätte
   das Entfernen des Demo-Kontos sie also verloren. Die Zeile steht jetzt in
   `konto_loeschen()` (E-R4-32); die Rollenprobe prüft sie.
+- **F-R4-33 „Freigabe widerrufen" schreibt bei unauflösbarem Handgriff in
+  die Wurzel der Ablage.** `edbak_freigabe_widerrufen('')` legt eine
+  versiegelte `konto.json` in der Wurzel an und meldet Erfolg. Gefunden vom
+  Agenten der Gruppe Sicherung in R4-11. `adminbackup_lib.php` bleibt für 18
+  frei → Nr. 344, `gehört zu: 18` (E-R4-37).
+- **F-R4-34 Die Installationsseite meldet Erfolg ohne Rückgabewert.**
+  Logo-Standard verwirft den Rückgabewert von `app_state_setzen()`; die zwei
+  Setzfunktionen schreiben zwei Werte ohne Transaktion → Nr. 345, nächste
+  Backlog-Runde.
+- **F-R4-35 Ein gescheitertes „Nachsehen" schaltete die Aufbewahrung ab.**
+  `admin_sicherungsziele.php` füllte das Formular nach jedem gescheiterten
+  POST aus der Anfrage, nicht nur nach „Speichern"; der Schalter „Auf dem
+  Ziel aufräumen" stand danach auf aus. Behoben in R4-11 (E-R4-37).
+- **F-R4-36 Ein Hostwechsel vergaß den SFTP-Abdruck nie.** Der alte Stand
+  wurde nach `sz_speichern()` gelesen. Behoben in R4-11 (E-R4-37).
+- **F-R4-37 Fehler aus R4-10: „es wurde nichts geändert" nach einem
+  Abbruch beim Entfernen des Demo-Kontos.** `demo_entfernen()` ist seit
+  Web 21.1.8 keine Transaktion mehr; der `catch` in `admin_demo.php` sagte
+  es nicht. Gemeldet vom Agenten der Gruppe Verwaltung, behoben in R4-11.
+- **F-R4-38 Zwei Proben wurden an ihrer Seite nicht gewählt.** Die
+  Wartungsprobe schaltet über `betrieb_updates.php`, die Komplettprobe
+  klickt über `admin_komplettsicherung.php`; `pruefablauf.json` wählte sie
+  nur bei `wartung_lib.php`/`auth_guard.php` bzw. `komplett_lib.php`.
+  Beide Pfade eingetragen, Tabelle 4 neu erzeugt.
+- **F-R4-39 Der Nummernriegel hielt geerbte Nummern für fremde.** Der
+  Zweig der Konzeptinstanz von 18 (`claude/gallant-mccarthy-yacnzk`) ist
+  von R4-10 abgezweigt und trägt 340 bis 343 mit; `nummern.py` maß seine
+  neuen Nummern nur gegen den Vorfahren mit `main` und meldete vier
+  Überschneidungen, keine davon echt (erster Prüfstand von R4-11). Jetzt
+  zieht es auch ab, was am Vorfahren mit `HEAD` steht; Selbstprobe 10 / 0
+  mit zwei neuen Fällen, gegen die alte Rechnung 2 rot. Der Zweig hat 350
+  bis 359 reserviert — richtig.
 
 ## 3. Entscheidungen und Fragen
 
@@ -452,6 +484,12 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-30 | Frage aus R4-08: **Der Ton von `--orange-tief` passt** — „4,32 passt". Keine Farbe wird geändert; die weiße Schrift auf Orange tief im Hover des Primärknopfs (4,42:1 bei 15 px) steht als Ausnahme mit diesem Grund in `kontrast.py`, und `Design.md` 3.2 sagt jetzt, dass Orange tief auf Schnee 4,32:1 erreicht. | Betreiberin, 26.09.2026 | Vorgelegt waren: Token auf `#BD5700` dunkeln (Web und Android), nur den Hover ändern, Hover dunkelblau. |
 | E-R4-31 | **Im Bilderlauf heißt die Rolle der BetreiberIn `betreiberin`; `admin` und `support` sind eigene Prüfkonten; rollende Behälter halten nicht auf.** Der Strich am Vorschlag wird nach der Regel aus `Design.md` 3.1 `--orange-tief`, ohne eigene Frage. | Umsetzung (R4-08) | Die 25 Seiten, die `admin` hießen, zeigten die Sicht der BetreiberIn — der Name war der Fehler aus Nr. 297, nicht die Sicht. Ein Behälter, der rollen soll (eine breite Tabelle am Handy), rollt; als Fehler gezählt, stünde der Lauf dauerhaft rot. Der Strich stand allein (Rauch auf Schnee), und für diesen Fall sagt 3.1 Orange tief — derselbe Tausch wie E-P5c-79. |
 | E-R4-32 | **`demo_entfernen()` löscht über `konto_loeschen()` (Weg `demo`); die Sperrliste der Geräte zieht in `konto_loeschen()` um.** Die Kennzeichnung in `app_state` fällt danach und nur bei Erfolg. | Umsetzung (R4-10) | Die Empfehlung des Pakets. Die Demo-Abschrift hatte keine Konto-Backups gelöscht und kein Protokoll geschrieben; die Transaktion, die sie dafür hatte, ist kein Gewinn, wenn die Backups ohnehin im Dateisystem liegen. Die eine Zeile, die nur sie hatte (F-R4-32), gehört jedem Konto. |
+| E-R4-33 | Q-R4-17: **Ergebnisse gehen über die Sitzung mit** (`flash_setzen(…, $daten)`) und erscheinen nach der Umleitung wie vorher; **der Setz-Link nach „Konto anlegen" bleibt ohne Umleitung.** | Betreiberin, 27.09.2026 | „Flash mit Zahl" hätte die Schritte einer gescheiterten Verbindungsprüfung und die Meldung einer gescheiterten Migration verloren — genau das, was man danach lesen will. Ein Token in der Sitzungsdatei wäre ein Geheimnis an einem Ort mehr. |
+| E-R4-34 | Q-R4-18: **Der Flash trägt einen Ort und die vier Töne von `ui_meldung_markup()`** (`ok`, `fehler`, `warn`, `info`) neben `notice`/`error`. | Betreiberin, 27.09.2026 | Die Meldung bleibt bei der Karte, die gehandelt hat; auf zwei Töne gestaucht, würde „Diese Sperre gibt es nicht mehr" ein Fehler. |
+| E-R4-35 | Q-R4-19: **Eingabefehler ohne Zustandsänderung bleiben auf der Seite;** die Rollenprobe prüft je Zweig den Erfolgsfall auf 302. | Betreiberin, 27.09.2026 | Eine Umleitung leerte das Formular; Neuladen wiederholt dann nur die abgelehnte Eingabe. |
+| E-R4-36 | Q-R4-20: **R4-11 ändert in `session_lib.php` nur den Flash-Block** (H-R4-05 gefragt, nicht gewachsen). | Betreiberin, 27.09.2026 | Der Flash ist die eine Stelle für Meldungen über eine Umleitung (E-ZE-16); ein zweiter Weg daneben wäre der Fehler, den Schritt 15 abgeschafft hat. |
+| E-R4-37 | Q-R4-21: **Die zwei Altfehler der Backup-Ziele (F-R4-35, -36) werden in R4-11 behoben; F-R4-33 wird Nr. 344 mit `gehört zu: 18`, F-R4-34 Nr. 345.** Dazu ein Übergabetext für die Instanz, die das Konzept von Schritt 18 schreibt. | Betreiberin, 27.09.2026 | Beide Korrekturen sind je ein bis zwei Zeilen in einer Datei, die R4-11 ohnehin ändert, und beide wirken still auf Daten am Ziel. `adminbackup_lib.php` bleibt für 18 frei. |
+| E-R4-38 | **Knöpfe ohne Eingabe leiten auch bei einer Abweisung um** („Jetzt sichern", „Abbrechen" beim Komplett-Backup); **„Es gab nichts zu ändern" und „Diese Sperre gibt es nicht mehr" leiten um.** | Umsetzung (R4-11) | E-R4-35 hält eine Eingabe auf der Seite; ein Knopf hat keine. Eine der Abweisungen rät „neu laden" — auf dem POST hieße das, den Start noch einmal zu schicken. Die zwei Auskünfte sind Ergebnisse des Versuchs, keine Eingabefehler. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -460,7 +498,10 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 (E-R4-10). Zum Beginn der Umsetzung, einzeln: Q-R4-01 → E-R4-15 (anders als
 empfohlen), -03 → -16, -06 → -17, -07 → -18, -08 → -19, -09 → -20, -11 →
 -21, -12 → -22, -13 → -23, -14 → -24, -15 → -25 (anders als empfohlen),
--16 → -26. Die Tabelle bleibt als Frage mit Empfehlung stehen.
+-16 → -26. **In der Umsetzung (R4-11, 27.09.2026):** Q-R4-17 → E-R4-33,
+-18 → -34, -19 → -35, -20 → -36, -21 → -37, alle wie empfohlen; zu
+Q-R4-21 dazu ein Übergabetext an die Konzeptinstanz von 18. Die Tabelle bleibt als
+Frage mit Empfehlung stehen.
 
 | Nr. | Frage | Empfehlung | Paket |
 |---|---|---|---|
@@ -476,6 +517,11 @@ empfohlen), -03 → -16, -06 → -17, -07 → -18, -08 → -19, -09 → -20, -11
 | Q-R4-14 | Nr. 239: Weg A — die Backticks um den Spaltennamen in `mf_spalten()` setzen (die eine Stelle, die aus dem Register SQL macht), statt jeden Aufrufer zu ändern? | Ja — deckt alle drei INSERTs und jedes SELECT ab, ohne `ingest.php` anzufassen (18-Liste); `komplett_lib.php` behält seine vier Kopien oder nimmt denselben Weg. | R4-12 |
 | Q-R4-15 | Nr. 170 (F-R4-18): Soll der manuelle Abfahrtort in der Leseansicht eine beschriftete Zeile mit Schloss bekommen (heute nur Kartenpopup ohne Zeichen)? | Sollliste zuerst mit dem Ist schreiben; die Frage als **Nr. 341** notieren (`gehört zu: nächste Backlog-Runde`) — eine Oberflächenänderung außerhalb dieser Runde. | R4-06 |
 | Q-R4-16 | **Die drei Mockups freigeben** — M-R4-22 (Verwerfen-Knopf mit Rückfrage), M-R4-23 (Zeitraumwahl: Pillen + Von/Bis in einer Reihe über den Reitern), M-R4-24 (Säulen je Woche, Balken je Herkunft, kleine Vielfache)? Bilder und Regeln in `konzept-r4/mockups/LIESMICH.md`. | Ja, wie gezeigt; Änderungswünsche werden vor dem jeweiligen Paket ins Mockup eingearbeitet (H-R4-01). Ohne Freigabe bleiben R4-22 bis R4-24 stehen, die übrigen 23 Pakete laufen. | R4-22, R4-23, R4-24 |
+| Q-R4-17 | Nr. 250: Vier POST-Zweige zeigen mehr als einen Satz — die Schritte der Verbindungsprüfung, den Einspielbericht, das Ergebnis je Migration, die Restauswahl beim Sammelsichern. Das Paket sagte „Flash mit Zahl". Kürzen, mitnehmen oder ohne Umleitung lassen? | Über die Sitzung mitnehmen und nach der Umleitung wie heute zeigen; der einmalige Setz-Link nach „Konto anlegen" bleibt ohne Umleitung — ein Passwort-Token gehört nicht in die Sitzungsdatei. | R4-11 |
+| Q-R4-18 | Nr. 250: Fünf Seiten melden in der Karte, die gehandelt hat, mit vier Tönen; `flash_setzen()` kennt zwei Töne und keinen Ort. Flash erweitern oder die Meldung nach oben holen? | Flash um Ort und die vier Töne der Oberfläche erweitern; die bisherigen Aufrufer bleiben unverändert. | R4-11 |
+| Q-R4-19 | Nr. 250: Leitet auch ein Eingabefehler um, der nichts geändert hat? | Nein — er bleibt auf der Seite, die Eingabe im Formular. Umgeleitet wird jede Zustandsänderung, auch wenn sie nach dem ersten Schritt scheitert. | R4-11 |
+| Q-R4-20 | H-R4-05: Der Flash steht in `session_lib.php`, für 18 „frei halten". Darf R4-11 den Flash-Block ändern (rund 15 Zeilen)? | Ja, nur den Flash-Block; 18 baut Sitzungsbindung und Zweitfaktor, nicht ihn. Vermerk „18-Liste" in 4. | R4-11 |
+| Q-R4-21 | Drei ältere Fehler aus dem Umbau (F-R4-33, -35, -36): was davon in R4-11? | F-R4-35 und -36 jetzt (je eine Stelle in `admin_sicherungsziele.php`), F-R4-33 als Backlog-Punkt für 18 (`adminbackup_lib.php` frei halten), die Kleinigkeiten der Installationsseite als Nr. 345. | R4-11 |
 
 ### 3.3 Haltepunkte
 
@@ -867,6 +913,36 @@ Rollenprobe N Zweige mit 302; Neuladen nach POST wiederholt nichts
 (Bedienprobe je Seite). *Stufe:* Web Korrektur. *Fächerung:* **ja** — die
 elf Dateien in drei Gruppen auf drei Agenten (getrennte Dateien); Rollen-
 und Bedienprobe seriell danach.
+**Erledigt 27.09.2026 — mit Web 21.1.9.** Vorab seriell der Flash-Block in
+`session_lib.php` (18-Liste, E-R4-36: `$ort`, `$daten`, vier Töne dazu),
+dann ein Workflow mit drei Agenten auf getrennten Gruppen — Sicherung
+(`admin_sicherungen`, `-sicherungsziele`, `-komplettsicherung`), Verwaltung
+(`admin_users`, `-demo`, `-rechtstexte`, `-installation`), Betrieb
+(`betrieb_jobs`, `-sicherheit`, `-status`, `-updates`) —, danach seriell
+Gegenlesung, Prüfmittel und Doku. Die Agenten meldeten 19 offene Punkte;
+daraus Q-R4-21 (E-R4-37) und E-R4-38, der Rest sind Begründungen je Zweig.
+Beim Gegenlesen selbst gebaut: die zwei Knöpfe des Komplett-Backups
+(E-R4-38), F-R4-35/-36 (E-R4-37), F-R4-37 (Fehler aus R4-10). Auf den
+Dateien der 18-Liste nur Enden von POST-Zweigen und das Abholen der Meldung;
+in `admin_sicherungsziele.php` dazu die zwei Korrekturen. `betrieb_server.php`
+bleibt draußen: Nr. 250 ist `teilweise` und hängt an 18.
+*Gemessen:* Schleife aus 2.2 über `admin_*.php` und `betrieb_*.php` —
+POST ohne `Location` — **12 → 1** (`betrieb_server.php`); Rollenprobe
+**324 / 324** mit 12 neuen Fällen (je Seite ein harmloser Zweig: 302 auf
+das genannte Ziel, Meldung beim ersten GET genau einmal mehr als beim
+zweiten; der Setz-Link-Fall 200 mit Link; Testmail 302 in `#k-mail`) und
+3 zu den Backup-Zielen; Gegenproben: alte Seiten **11 rot**, Seiten ohne
+F-R4-35/-36 **2 rot**. Bedienprobe: zehn Wege `*-neuladen` **10 / 10**,
+gegen die alten Seiten **0 / 10** (Neuladen dort ein POST, Warteschlange
+34 → 35, Protokoll 18 → 19); das Demo-Konto ausgenommen (jeder Knopf setzt
+es zurück). Wartungsprobe **69 / 69** mit 302 in Erwartung 13, 27, 31;
+Komplettprobe **69 / 69**. **Nicht gemessen:** die Zweige, die Bestand
+schreiben oder löschen (Einspielen, Freigeben, Pakete löschen, Alle
+sichern, Ziel prüfen und versenden, Demo anlegen/zurücksetzen/entfernen) —
+sie sind gelesen, nicht gefahren; P-R4-12. **Erster Prüfstand rot (2):**
+die Testmail der Rollenprobe traf den Ratenschutz je Adresse (127.0.0.1,
+drei je Stunde — die Probe leert den Topf jetzt vorher, danach dreimal
+hintereinander 324 / 324), und `nummern` meldete F-R4-39.
 
 **R4-12 Backticks über `mf_spalten()`** — Nr. 239 (Q-R4-14). Die Backticks
 um den Spaltennamen in `mf_spalten()`; die drei INSERTs nutzen sie damit,

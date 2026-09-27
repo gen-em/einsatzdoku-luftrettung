@@ -43,6 +43,12 @@ $notice = null; $error = null;
  * der gespeicherte Stand. Sonst wäre die Eingabe mit der Fehlermeldung weg. */
 $eingabe = null;
 
+/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Das Speichern endet
+ * mit `flash_setzen()` und einer Umleitung auf den Reiter des Textes — sonst
+ * speichert Neuladen ein zweites Mal und schreibt einen zweiten
+ * Protokolleintrag. „Es gab nichts zu ändern" leitet ebenso um: Das Feld
+ * zeigt danach denselben Stand. Ein abgewiesener Text bleibt auf der Seite,
+ * mit der Eingabe im Feld (oben). */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $text  = (string)($_POST['text'] ?? '');
@@ -70,7 +76,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $notice = 'Es gab nichts zu ändern.';
         }
+        flash_setzen('notice', $notice);
+        header('Location: admin_rechtstexte.php?t=' . rawurlencode($k));
+        exit;
     }
+}
+
+// Meldung aus der Umleitung uebernehmen
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ton'] === 'error') { $error = $flash['text']; }
+    else                           { $notice = $flash['text']; }
 }
 
 $t = $eingabe ?? rt_lesen($k);

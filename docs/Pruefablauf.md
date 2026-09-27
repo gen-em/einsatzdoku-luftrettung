@@ -349,7 +349,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
-| `server/komplett_lib.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02 |
+| `server/komplett_lib.php`, `server/admin_komplettsicherung.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite |
 | `server/gpx_lib.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130 |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
 | `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |
@@ -359,7 +359,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/protokoll_lib.php`, `server/protokoll_archiv_lib.php`, `server/zip_lib.php`, `server/admin_protokoll.php`, `server/systemmeldung_lib.php` | klein | `protokollprobe`, `versandprobe` | F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39); protokollprobe Teil 7 für das Fehlerprotokoll (Nr. 248) |
 | `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
 | `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
-| `server/wartung_lib.php`, `server/auth_guard.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171 |
+| `server/wartung_lib.php`, `server/auth_guard.php`, `server/betrieb_updates.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171; betrieb_updates.php seit R4-11 (Nr. 250, F-R4-38): die Probe schaltet ueber diese Seite |
 | `server/api/health.php`, `server/speicher_lib.php` | klein | `ratenprobe`, `wartungsprobe` | E-P5c-17, -52 (Health, P5c/AP6): Token, Felder, Migration und Menge in der Ratenprobe, die Antwort aus dem Tor in der Wartungsprobe |
 | `server/db.php` | klein | `verbindungsprobe` | Nr. 210 |
 | `server/serverkrypto_lib.php`, `server/auth_salt.php`, `server/assets/unlock.js`, `server/assets/crypto.js` | klein | `anteilprobe`, `containerprobe` | S10-Kern, F-S10-AP3-03 |

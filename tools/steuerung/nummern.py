@@ -28,6 +28,13 @@ gegen denselben Vorfahren, für jeden anderen Remote-Zweig gegen
 und der eigene Remote-Zweig zählt nicht mit. Rot ist jede Nummer, die der
 Arbeitsbaum neu anlegt und ein anderer auch.
 
+UND NICHT, WAS DER ANDERE VOM EIGENEN ZWEIG GEERBT HAT (R4-11, F-R4-39).
+Zweigt ein Zweig vom eigenen ab statt von `main` — die Konzeptinstanz von
+18 tat das bei R4-10 —, trägt er dessen Nummern mit, und gegen `main`
+gemessen sahen sie aus wie seine eigenen: vier Überschneidungen, keine
+davon echt. Abgezogen wird deshalb auch, was am gemeinsamen Vorfahren mit
+`HEAD` schon steht. Was der andere danach selbst anlegt, bleibt seins.
+
 WAS ES NICHT KANN. Zweige, die nur auf einem anderen Rechner liegen, und
 Pull Requests aus Forks sieht es nicht; eine Nummer, die jemand erst morgen
 vergibt, auch nicht — die Spanne im Kopf von `docs/Backlog.md` bleibt die
@@ -104,7 +111,9 @@ def messen(wurzel, holen=True):
         mb = git(wurzel, 'merge-base', ref, HAUPT, pruefen=False).stdout.strip()
         if not mb:
             continue                            # ohne gemeinsamen Vorfahren kein Vergleich
-        fremde[ref] = nummern_ref(wurzel, ref) - nummern_ref(wurzel, mb)
+        geerbt = git(wurzel, 'merge-base', ref, 'HEAD', pruefen=False).stdout.strip()
+        fremde[ref] = (nummern_ref(wurzel, ref) - nummern_ref(wurzel, mb)
+                       - (nummern_ref(wurzel, geerbt) if geerbt else set()))
     doppelt = sorted((n, ref) for ref, neu in fremde.items() for n in meine & neu)
     return doppelt, {'meine': sorted(meine), 'zweige': len(fremde),
                      'fremd': sum(len(v) for v in fremde.values())}
@@ -174,6 +183,20 @@ def _meins(a, *nummern, erledigt=False, gepusht=False):
         git(a, 'push', '-q', 'origin', 'meins')
 
 
+def _nachfolger(a, *lokal):
+    """Der eigene Zweig trägt 6 und ist gepusht; ein Zweig `nachfolger`
+    zweigt von ihm ab und legt 9 an. `lokal`: Nummern, die der Arbeitsbaum
+    danach zusätzlich anlegt (ungespeichert)."""
+    _meins(a, 6, gepusht=True)
+    q = os.path.join(os.path.dirname(a), 'quelle')
+    git(q, 'checkout', '-q', '-b', 'nachfolger', 'meins')
+    _schreibe(q, '1. **Eins.**\n\n6. **Neu 6.**\n\n9. **Neun.**\n', '2. **Zwei.**\n')
+    _commit(q, 'neun')
+    git(q, 'checkout', '-q', 'main')
+    if lokal:
+        _meins(a, 6, *lokal)
+
+
 FAELLE = [
     # (Name, erwartete Überschneidungen als {(Nummer, Zweig)}, Eingriff)
     ('GEGENPROBE: eine Nummer, die niemand sonst trägt', set(), lambda a: _meins(a, 6)),
@@ -186,6 +209,10 @@ FAELLE = [
     ('GEGENPROBE: der eigene Zweig, gepusht, kollidiert nicht mit sich', set(),
      lambda a: _meins(a, 6, gepusht=True)),
     ('zwei Nummern, zwei Zweige', {(5, 'origin/fremd'), (8, 'origin/main')}, lambda a: _meins(a, 5, 6, 8)),
+    ('ein Zweig, der vom eigenen abzweigt, trägt dessen Nummern mit — nicht als seine',
+     set(), lambda a: _nachfolger(a)),
+    ('GEGENPROBE: was er danach selbst anlegt, ist seins', {(9, 'origin/nachfolger')},
+     lambda a: _nachfolger(a, 9)),
 ]
 
 

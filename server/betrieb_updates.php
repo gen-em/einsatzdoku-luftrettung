@@ -37,6 +37,12 @@ $pdo = db();
  * CSRF; ein Schalter dort waere ein Schalter ohne Nachweis, wer ihn betaetigt
  * hat. Wer per SSH schalten muss, legt `wartung.lock` von Hand an — die Datei
  * IST der Schalter (E-S5W-02), und das steht im Runbook.
+ *
+ * UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Ein Schalter, der
+ * umgelegt hat, endet mit `flash_setzen()` und einer Umleitung in die Karte
+ * „Wartungsmodus" — sonst schaltet Neuladen ein zweites Mal und schreibt
+ * einen zweiten Protokolleintrag. Legte er nicht um, ist nichts geschehen,
+ * und die Seite bleibt stehen.
  */
 $wartungMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
@@ -70,6 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         protokoll('verwaltung', $an ? 'wartung_an' : 'wartung_aus',
                   $an ? 'Wartungsmodus eingeschaltet' : 'Wartungsmodus ausgeschaltet',
                   ['weg' => 'betrieb_updates']);
+        flash_setzen($wartungMeldung[0], $wartungMeldung[1], 'k-wartungsmodus');
+        header('Location: betrieb_updates.php#k-wartungsmodus');
+        exit;
     }
 }
 
@@ -78,6 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
  * Die Freigabe einer blockierten Migration ist bewusst KEIN globales
  * „trotzdem": Angehakt wird genau die eine Migration, deren Meldung man
  * gerade gelesen hat (D10, zweite Stufe).
+ *
+ * DER LAUF LEITET UM, SEIN ERGEBNIS REIST MIT (Web 21.1.9, Backlog Nr. 250,
+ * E-R4-33). Sonst schickt Neuladen den Lauf ein zweites Mal. Nach der
+ * Umleitung zeigt die Seite keine frische Vorschau, sondern den Lauf, wie er
+ * war — eine gescheiterte Migration mit ihrer Meldung, die Zeile je Eintrag,
+ * „Wartung beenden". Deshalb geht `$lauf` ganz in die Sitzung, und
+ * `$ausfuehren` heisst ab dem Abholen: Die Seite zeigt einen Lauf.
  */
 $ausfuehren = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'migrate';
 if ($ausfuehren) { csrf_check(); }
@@ -85,7 +101,31 @@ $forcieren = [];
 if ($ausfuehren && isset($_POST['forcieren']) && is_array($_POST['forcieren'])) {
     foreach ($_POST['forcieren'] as $fid) { $forcieren[(string)$fid] = true; }
 }
-$lauf      = migrationen_lauf($pdo, $ausfuehren, $forcieren);
+$lauf = null; $laufMeldung = null;
+if ($ausfuehren) {
+    $lauf = migrationen_lauf($pdo, true, $forcieren);
+    $laufMeldung = $lauf['gelaufen']
+        ? ['ok', 'Die ausstehenden Updates wurden angewendet — '
+               . 'unten steht je Eintrag, was geschehen ist.']
+        : ['info', 'Es war nichts anzuwenden.'];
+    flash_setzen($laufMeldung[0], $laufMeldung[1], 'k-ausstehend', ['lauf' => $lauf]);
+    header('Location: betrieb_updates.php#k-ausstehend');
+    exit;
+}
+
+// Meldung und Lauf aus der Umleitung in die Karte, die gehandelt hat
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ort'] === 'k-wartungsmodus') {
+        $wartungMeldung ??= [$flash['ton'], $flash['text']];
+    } elseif ($flash['ort'] === 'k-ausstehend'
+              && is_array($flash['daten']['lauf']['results'] ?? null)) {
+        $lauf        = $flash['daten']['lauf'];
+        $laufMeldung = [$flash['ton'], $flash['text']];
+        $ausfuehren  = true;
+    }
+}
+$lauf    ??= migrationen_lauf($pdo, false);
 $results   = $lauf['results'];
 $blockiert = $lauf['blockiert'];
 
@@ -212,10 +252,7 @@ ui_seite_start(['titel' => 'Updates']);
           : ui_plakette('alles aktuell', ['ton' => 'blau'])]); ?>
 
     <?php if ($ausfuehren): ?>
-      <?= $lauf['gelaufen']
-            ? ui_meldung_markup('ok', 'Die ausstehenden Updates wurden angewendet — '
-                . 'unten steht je Eintrag, was geschehen ist.')
-            : ui_meldung_markup('info', 'Es war nichts anzuwenden.') ?>
+      <?= ui_meldung_markup($laufMeldung[0], $laufMeldung[1]) ?>
     <?php endif; ?>
 
     <?php if (!$ausstehend && !$ausfuehren): ?>

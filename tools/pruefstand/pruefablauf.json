@@ -384,12 +384,13 @@
       "id": "komplett",
       "ab": "klein",
       "pfade": [
-        "server/komplett_lib.php"
+        "server/komplett_lib.php",
+        "server/admin_komplettsicherung.php"
       ],
       "proben": [
         "komplettprobe"
       ],
-      "anlass": "count(null), F-S10-AP4-02"
+      "anlass": "count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite"
     },
     {
       "id": "gpx",
@@ -531,12 +532,13 @@
       "ab": "klein",
       "pfade": [
         "server/wartung_lib.php",
-        "server/auth_guard.php"
+        "server/auth_guard.php",
+        "server/betrieb_updates.php"
       ],
       "proben": [
         "wartungsprobe"
       ],
-      "anlass": "F-S8-P-04, Nr. 171"
+      "anlass": "F-S8-P-04, Nr. 171; betrieb_updates.php seit R4-11 (Nr. 250, F-R4-38): die Probe schaltet ueber diese Seite"
     },
     {
       "id": "health",

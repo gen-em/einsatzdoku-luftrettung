@@ -51,7 +51,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340, 341 | 26.09.2026 |
+| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340 bis 345 | 26.09.2026 |
 | ab 350 | frei — höchste vergebene Nummer 341; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 26.09.2026 |
 
 ---
@@ -888,7 +888,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Passwort, oder wenn der Rückweg ausgeschaltet ist (Statuszeile
      „Rückweg-Prüfung" orange).
 
-250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.** · gehört zu: 17 · Stand: offen · seit 20.09.2026
+250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
      *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
      `post_ende()`).* Zugeordnet: **Schritt 17**.
 
@@ -900,6 +900,10 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      15 verschiebt Code an eine Stelle und ändert keine Wege durch die
      Anwendung. Umleiten nach POST ist ein geänderter Weg — er gehört in eine
      Runde, die Wege ändern darf.
+     **Teilweise erledigt 27.09.2026 mit R4-11 (Web 21.1.9):** elf Seiten
+     leiten um, `flash_setzen()` trägt Ort, Ton und Ergebnis (E-R4-33 bis
+     -36). **Offen: `betrieb_server.php`** — auf der Liste von Schritt 18
+     und deshalb dort (Konzept R4 2.3); der Weg ist derselbe.
 
 251. **Cookie-Attribut `secure` der Sitzung ist in zwei Arten HTTPS-abhängig, in zwei fest.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
      *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-12).* Zugeordnet:
@@ -1326,3 +1330,33 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      und sagt, welchen Weg es genommen hat; `docs/Sandbox-Setup.md` nennt
      ihn. *Abnahme:* ein Lauf mit gesperrtem `registry-1.docker.io` holt die
      Abbilder über den Spiegel und meldet es.
+
+344. **„Freigabe widerrufen" mit unauflösbarem Handgriff schreibt eine `konto.json` in die Wurzel der Konto-Backups.** · gehört zu: 18 · Stand: offen · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-11 (gefunden vom Umbau der Seite
+     Konto-Backups, F-R4-33).* `edbak_freigabe_widerrufen()` prüft die
+     Kennung nicht. Lässt sich der Handgriff eines POST nicht auflösen, ist
+     die Kennung leer, und `edbak_begleit_schreiben('')` legt eine
+     versiegelte `konto.json` in der Wurzel der Ablage an und meldet Erfolg:
+     „Freigabe widerrufen." Erreichbar ist das über `admin_sicherungen.php`
+     (dort gibt es für den Zweig kein Formular mehr, nur ein handgebautes
+     POST einer Administratorin) und über die Kontoseite. **Nicht in 17**,
+     weil `adminbackup_lib.php` für Schritt 18 frei bleiben soll (Konzept R4
+     2.3, E-R4-37). *Weg:* `edbak_freigabe_widerrufen()` und
+     `edbak_begleit_schreiben()` verlangen `edbak_kennung_gueltig()`, wie es
+     `edbak_ordner_loeschen()` schon tut; die Aufrufer melden dann den
+     Fehlschlag. *Abnahme:* POST `widerrufen` mit einem Handgriff aus
+     Nullen → Fehlermeldung, keine Datei in der Wurzel der Ablage.
+
+345. **Die Installationsseite meldet Erfolg, ohne zu wissen, ob gespeichert wurde.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-11 (F-R4-34).* Zwei kleine Lücken auf
+     `admin_installation.php`, beide älter als die Umleitung nach POST:
+     „Logo-Standard" verwirft den Rückgabewert von `app_state_setzen()` und
+     meldet „Standard der Installation: …" auch, wenn das Schreiben
+     scheiterte. Und `instanz_namen_setzen()` / `instanz_adressen_setzen()`
+     schreiben zwei Werte nacheinander und liefern nur `[bool, Text]`:
+     Scheitert der zweite, ist der erste geschrieben, und die Seite hält das
+     für einen Fehlschlag ohne Änderung (sie bleibt ohne Umleitung stehen,
+     E-R4-35). *Weg:* den Rückgabewert prüfen; die zwei Setzfunktionen
+     schreiben beide Werte in einer Transaktion oder sagen, was geschrieben
+     ist. *Abnahme:* ein gescheitertes `app_state_setzen()` (Probe mit
+     gesperrter Tabelle) ergibt eine Fehlermeldung statt „gespeichert".

@@ -7717,5 +7717,23 @@ declare(strict_types=1);
  *   Beim Zusammenlegen fiel die eine Zeile auf, die nur die Demo-Abschrift
  *   hatte — die Sperrvermerke in `deleted_refs` —; sie steht jetzt in
  *   `konto_loeschen()` und gilt damit fuer jedes Konto.
+ *
+ * 21.1.9 — NEULADEN WIEDERHOLT NICHTS MEHR (Schritt 17, R4-11, Nr. 250).
+ *   Korrekturstufe ohne Migration. Elf Seiten unter Verwaltung und Betrieb
+ *   gaben ihr POST-Ergebnis selbst aus; „Neu laden" schickte die Handlung
+ *   noch einmal — ein zweites Token, eine zweite Testmail, ein zweiter Lauf.
+ *   Jetzt leiten sie um (Post/Redirect/Get), und die Meldung kommt ueber
+ *   die Sitzung. Dafuer traegt `flash_setzen()` einen Ort (die Karte, in
+ *   der geklickt wurde), die vier Toene der Oberflaeche und ein Ergebnis,
+ *   das mehr ist als ein Satz — die Schritte einer Verbindungspruefung,
+ *   den Einspielbericht, den Lauf der Migrationen (E-R4-33, -34). Bewusst
+ *   stehen bleiben: ein abgewiesener Eintrag, damit das Getippte nicht
+ *   verloren geht (E-R4-35), und der Setz-Link nach „Konto anlegen", der
+ *   nicht in die Sitzungsdatei gehoert. `betrieb_server.php` fehlt noch; es
+ *   gehoert Schritt 18. Beim Umbau gefunden und behoben: Ein Hostwechsel
+ *   vergass den SFTP-Hostschluessel nie, und ein gescheitertes „Nachsehen"
+ *   schaltete im offenen Formular die Aufbewahrung am Ziel ab. Und ein
+ *   Fehler aus 21.1.8: Das Entfernen des Demo-Kontos ist keine Transaktion
+ *   mehr, die Meldung sagte bei einem Abbruch trotzdem „nichts geaendert".
  */
-const WEB_VERSION = '21.1.8';
+const WEB_VERSION = '21.1.9';

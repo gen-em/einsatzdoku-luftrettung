@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-10 erledigt**, Web 21.1.8 (26.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-11 erledigt**, Web 21.1.9 (27.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -25,6 +25,7 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | **Die Abfahrtort-Zeile auf einem echten Bestand** (R4-06, E-R4-25) | Gemessen nur am Demo-Konto der örtlichen Anlage (drei Einsätze mit „Manueller Ort", einer ohne). Ob ein Einsatz mit der Regel „Manueller Ort", aber **ohne Adresse** (nur Koordinaten, etwa aus einem Import) vorkommt, ist nicht gemessen — er bekäme keine Zeile, wie der Einsatzort ohne Adresse auch. | P-R4-08. |
 | **Das Löschen der zwei toten Zweige** (Q-R4-01) | Die Betreiberin löscht sie selbst (E-R4-15); die Umsetzung hat nichts gelöscht. | P-R4-06; `git ls-remote --heads origin` zeigt die zwei Zweige, solange es aussteht. |
 | **Ortszeit-Abfragen auf der örtlichen Anlage** (F-R4-21) | Die örtliche MariaDB hat keine Zeitzonentabellen; `CONVERT_TZ` mit `Europe/Berlin` liefert NULL. Die Anwendung nutzt es nicht; Messungen in Ortszeit sind über UTC-Zeiten nachgerechnet. | R4-16: jede Ortszeit-Zahl mit Rechenweg. |
+| **Die Zweige, die Bestand schreiben oder löschen, sind umgebaut, aber nicht gefahren** (R4-11) | Einspielen, Freigeben, Widerrufen, Pakete und Ordner löschen, „Alle sichern", Ziel prüfen, Jetzt versenden, Stand löschen, „Jetzt sichern"/„Fortsetzen", und alle drei Knöpfe des Demo-Kontos. Sie auf der örtlichen Anlage zu fahren, hieße Bestand anzulegen oder zu verlieren, den andere Proben brauchen; das Demo-Konto benutzen andere Wege gerade. Gelesen je Zweig (Gegenlesung) und im Muster gleich den gefahrenen. | P-R4-12 auf Staging. |
 
 ## 2. Maschinell geprüft — Konzeptphase (R4-00)
 
@@ -107,6 +108,16 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-10 | Gegenproben: `admin_user.php` aus `HEAD`; `konto_loeschen()` ohne die `deleted_refs`-Zeile | sieht die Probe die zwei Lücken? | alte Kontoseite **1 rot** („mengen:<id> … steht noch: 1"); ohne die Zeile **1 rot** („stehen noch: 1") — beide danach zurückgestellt, wieder **309 / 309** |
 | R4-10 | `demo_entfernen()` an einer Kopie von `server/` gegen `nadoku_r410` (Abzug der örtlichen Datenbank), vorher ein Sperrvermerk und ein Mengenstand gesetzt; danach Datenbank, Rechte und Kopie entfernt | E-R4-32: räumt der eine Weg alles, was die Demo-Abschrift räumte? | 15 Kontotabellen und `users` **→ 0**, Spurpunkte **15 111 → 0** (alle des Demo-Kontos), Blobs **374 → 214**, Sperrvermerke **4 → 3** — die Reste nachgezählt in der Originaldatenbank: **0 / 214 / 3** gehören anderen Konten; Demo-Kennzeichnung **2 → 0**, Mengenstand **2 → 0**, Backup-Ordner **fort**, `demo_id()` `null`, Protokoll `weg = demo` |
 | R4-10 | `REFERENTIAL_CONSTRAINTS` der örtlichen Datenbank; `grep -c "REFERENCES users" server/schema.sql` | stimmt „vierzehn Tabellen"? | **15** mit `CASCADE` auf `users`, **15** in `schema.sql`, 0 ohne `CASCADE` — der Kommentar sagte vierzehn |
+| R4-10 | `bash tools/pruefstand/pruefen.sh` über den Baum des Commits `26b4761` (Bericht im Commit) | Stufe `klein`, 39 Proben | **0 rot, 0 nicht gemessen, 39 grün**, 924 s; Baum `ce6d94ef` |
+| R4-11 | Schleife aus Konzept 2.2: `admin_*.php` und `betrieb_*.php` mit POST und ohne `Location` | Nr. 250 | **12 → 1** (`betrieb_server.php`, Schritt 18) |
+| R4-11 | `php tools/proben/rollen/probe.php` mit Abschnitt „Umleiten nach POST" und „Backup-Ziele" | 302 je Seite, Meldung einmal; F-R4-35, -36 | **324 / 324**; 11 Seiten je 302 auf das Ziel, „Treffer 1 dann 0" (Jobs anhalten 2 dann 1: Dauerhinweis), Setz-Link-Fall 200 mit Link, Testmail 302 → `#k-mail`; Hostwechsel: Abdruck NULL; „Nachsehen" gescheitert: Schalter an |
+| R4-11 | Gegenproben: `server/` aus `HEAD` (Stash); `admin_sicherungsziele.php` ohne die zwei Korrekturen | sieht die Probe den alten Stand? | alte Seiten **11 rot** („HTTP 200 → —"), Setz-Link-Fall grün in beiden; ohne Korrekturen **2 rot** (Abdruck `SHA256:rollenprobe`, Schalter AUS); danach wiederhergestellt, `git diff --stat` gleich |
+| R4-11 | `node tools/bedienprobe/probe.mjs --nur R4-11` (zehn Wege mit `neuladen.mjs`) | Umleitung aus POST, Meldung einmal, Neuladen GET, Zähler fest | **10 / 10**; gegen `server/` aus `HEAD` **0 / 10** — Neuladen dort POST, Warteschlange 34 → 35, Protokoll 18 → 19 |
+| R4-11 | `bash tools/proben/proben.sh wartung`; `… komplett` | die zwei Proben, die über umgebaute Seiten gehen | **69 / 69** (Erwartung 13, 27, 31 mit 302); **69 / 69** |
+| R4-11 | `bericht.py erzeugen-doku` nach zwei neuen Pfaden in `pruefablauf.json` | F-R4-38 | Tabelle 4: **2 Zeilen** geändert, sonst gleich |
+| R4-11 | erster `pruefen.sh` über den Stand vor den zwei Korrekturen unten | alles | **2 rot**, 0 nicht gemessen, 41 grün, 1057 s: `rollenprobe` (Testmail: „Zu viele Testmails", Ratenschutz je Adresse 127.0.0.1, gesperrt bis 08:04) und `nummern` (4 Überschneidungen mit `claude/gallant-mccarthy-yacnzk`, F-R4-39) — beide Fehler der Prüfmittel, nicht der Seiten |
+| R4-11 | `nummern.py --selbstprobe`; dieselbe gegen die alte Rechnung (Kopie im Scratchpad); `nummern.py --ohne-holen` | F-R4-39 | **10 / 0**; alt **2 Fehlschläge** (`(6, origin/nachfolger)` statt keiner); echter Stand **0 Überschneidungen**, 6 eigene Nummern (340 bis 345) |
+| R4-11 | Rollenprobe dreimal hintereinander nach dem Leeren des Topfs `testmail` | wiederholbar? | **3 × 324 / 324** |
 
 ## 3. Im Browser geprüft
 
@@ -137,6 +148,8 @@ ist. Die Umsetzung hängt je Paket ihre Punkte an (P-R4-06 ff.).
 | P-R4-09 | Nach dem Deploy von Web 21.1.6 auf Staging: ein Einsatzformular öffnen, im Feld „Transportziel" tippen, bis Vorschläge erscheinen, und mit der Pfeiltaste eine Zeile wählen. | Die gewählte Zeile trägt links einen **dunkelorangen** Strich (Orange tief), gut sichtbar gegen den hellen Grund; mit dem Zeiger dieselbe Markierung. | Ein hellorangener Strich (alter Stand) oder keine Markierung. |
 | P-R4-10 | Nach dem Deploy von Web 21.1.7 auf Staging: Betrieb → Status, Zeile „OPcache". | **„nicht messbar"** mit dem Satz, dass der Hoster die Abfrage abgeschaltet hat — keine Ampel. | „aus" (alter Stand) oder „aktiv" (dann ist die Abfrage dort nicht mehr abgeschaltet — kein Fehler, aber der Fall ist nicht mehr belegt). |
 | P-R4-11 | Nach dem Deploy von Web 21.1.8 auf Staging: Verwaltung → NutzerInnen, ein Wegwerfkonto anlegen, auf seiner Kontoseite „Konto löschen" (Adresse abtippen, Backups mitlöschen). Danach Verwaltung → Protokoll, Reiter Verwaltung, den Eintrag „Konto gelöscht" aufklappen. | Zurück auf der Liste, das Konto fehlt. Aufgeklappt: **sicherungen ja**, **weg verwaltung**. | Eine Fehlermeldung statt der Liste, das Konto steht noch da, oder der Eintrag hat keine Angabe `weg`. |
+| P-R4-12 | Nach dem Deploy von Web 21.1.9 auf Staging, je einmal: Verwaltung → Konto-Backups „Alle sichern"; Betrieb → Komplett-Backup „Jetzt sichern"; Verwaltung → Demo-Konto „Zurücksetzen". Nach jeder Meldung **F5** drücken. | Jede Handlung endet auf derselben Seite mit ihrer Meldung; F5 fragt nicht nach erneutem Senden, und die Meldung ist danach fort. Nach „Alle sichern" steht die Zahl der Backups einmal da, nicht zweimal. | Der Browser fragt „Formular erneut senden?", oder eine Handlung läuft zweimal (zwei Backups, zwei Protokolleinträge). |
+| P-R4-13 | Nach dem Deploy von Web 21.1.9 auf Staging, falls ein SFTP-Ziel eingetragen ist: das Ziel prüfen (Abdruck wird übernommen), dann in „Bearbeiten" den Rechnernamen ändern und speichern. | Meldung „… Der Hostschlüssel wurde vergessen, weil sich der Rechner geändert hat"; die nächste Prüfung übernimmt den neuen Abdruck. Danach den alten Namen zurück. | Keine solche Meldung, und die nächste Prüfung scheitert mit „ANDERER Hostschlüssel". |
 
 ## 5. Grenzen der benutzten Prüfmittel
 

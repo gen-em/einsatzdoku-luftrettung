@@ -97,6 +97,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 }
 
 /* ---- Die übrigen Handgriffe ---------------------------------------------- */
+/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Was einen Lauf
+ * anstösst oder abbricht, Regeln speichert oder einen Stand löscht, endet mit
+ * `flash_setzen()` und einer Umleitung auf diese Seite — sonst stösst
+ * Neuladen den nächsten Durchgang an oder löscht ein zweites Mal. Eine
+ * Abweisung, die nichts geändert hat, bleibt auf der Seite — ausser bei den
+ * zwei Knöpfen ohne Eingabe (Starten, Abbrechen, unten); der Download oben
+ * bleibt, wie er ist. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
     csrf_check();
     $aktion = (string)($_POST['action'] ?? '');
@@ -104,7 +111,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
     if ($aktion === 'jetzt_sichern' || $aktion === 'fortsetzen') {
         if ($aktion === 'jetzt_sichern') {
             $r = komp_auftrag_starten();
-            if (!$r['ok']) { $error = (string)$r['meldung']; }
+            if (!$r['ok']) {
+                /* AUCH DIE ABWEISUNG LEITET UM, obwohl sie nichts aendert: Es
+                 * gibt keine Eingabe, die stehen bleiben muesste, und eine der
+                 * Meldungen rät „neu laden" — auf dem POST hiesse das, den
+                 * Start noch einmal abzuschicken. */
+                flash_setzen('error', (string)$r['meldung']);
+                header('Location: admin_komplettsicherung.php');
+                exit;
+            }
         }
         if ($error === null) {
             /* DERSELBE WEG WIE DER JOB, nur mit dem Budget dieser Seite.
@@ -142,10 +157,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                        . 'unverschlüsselte Dump, und der bleibt nicht liegen. '
                        . 'Ein neuer Lauf fängt von vorn an.';
             }
+            flash_setzen($error !== null ? 'error' : 'notice', (string)($error ?? $notice));
+            header('Location: admin_komplettsicherung.php');
+            exit;
         }
     } elseif ($aktion === 'abbrechen') {
         $r = komp_auftrag_abbrechen();
-        if ($r['ok']) { $notice = (string)$r['meldung']; } else { $error = (string)$r['meldung']; }
+        /* Beide Ausgaenge leiten um — aus demselben Grund wie die Abweisung
+         * von „Jetzt sichern" oben. */
+        flash_setzen($r['ok'] ? 'notice' : 'error', (string)$r['meldung']);
+        header('Location: admin_komplettsicherung.php');
+        exit;
     } elseif ($aktion === 'regeln') {
         $plan = (string)($_POST['plan'] ?? 'aus');
         $auf  = (int)($_POST['aufbewahrung'] ?? 0);
@@ -154,6 +176,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
         $notice = $ok ? 'Die Regeln wurden gespeichert.' : null;
         $error  = $ok ? null : 'Die Regeln liessen sich nicht vollständig speichern. '
                              . 'Aufbewahrung: 1 bis 20.';
+        /* Auch das Scheitern leitet um: Der Plan ist dann meist schon
+         * gespeichert, und das Formular zeigt ohnehin den gespeicherten Stand. */
+        flash_setzen($error !== null ? 'error' : 'notice', (string)($error ?? $notice));
+        header('Location: admin_komplettsicherung.php');
+        exit;
     } elseif ($aktion === 'stand_loeschen') {
         $datei = (string)($_POST['datei'] ?? '');
         $geloescht = komp_loeschen($datei);
@@ -175,7 +202,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
             . 'wird, entscheidet die Aufbewahrungsregel des jeweiligen Ziels.)'
             : null;
         if ($notice === null) { $error = 'Diesen Stand gibt es nicht (mehr).'; }
+        else {
+            flash_setzen('notice', $notice);
+            header('Location: admin_komplettsicherung.php');
+            exit;
+        }
     }
+}
+
+// Meldung aus der Umleitung uebernehmen
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ton'] === 'error') { $error = $flash['text']; }
+    else                           { $notice = $flash['text']; }
 }
 
 $schluesselDa = serverschluessel_da();

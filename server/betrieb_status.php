@@ -117,7 +117,13 @@ function status_zeile(array $z): void
  * — seit E-P5a-37 haelt sie auch die Fehlermeldung ein, die bis dahin
  * „Versand an <Adresse> fehlgeschlagen" schrieb. Die Adresse steht in der
  * Warteschlange, solange die Zeile offen oder unzustellbar ist; das ist der
- * Ort dafuer, nicht das Protokoll (Reiter System). */
+ * Ort dafuer, nicht das Protokoll (Reiter System).
+ *
+ * UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Ein Versand endet mit
+ * `flash_setzen()` und einer Umleitung in die Karte „E-Mail" — sonst
+ * verschickt Neuladen eine zweite Testmail und zaehlt sie mit. Das gilt fuer
+ * alle drei Ausgaenge, weil der Zaehler schon davor steht. „Kein SMTP" und
+ * „Zu viele" aendern nichts (`rate_erlaubt()` liest nur) und bleiben stehen. */
 $mailMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'testmail') {
     csrf_check();
@@ -144,7 +150,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'testm
                    . 'Warteschlange nicht erreichbar war; die Ursache steht im '
                    . 'Protokoll unter System.'],
         };
+        flash_setzen($mailMeldung[0], $mailMeldung[1], 'k-mail');
+        header('Location: betrieb_status.php#k-mail');
+        exit;
     }
+}
+
+// Meldung aus der Umleitung in die Karte, in der geklickt wurde
+$flash = flash_holen();
+if ($flash !== null && $flash['ort'] === 'k-mail') {
+    $mailMeldung ??= [$flash['ton'], $flash['text']];
 }
 
 $karten = status_karten();

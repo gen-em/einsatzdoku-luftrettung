@@ -148,6 +148,32 @@ function kopfzeile(array $a, string $name): ?string {
     return null;
 }
 
+/**
+ * Ein Formular von `betrieb_updates.php` abschicken — und der Umleitung folgen.
+ *
+ * SEIT WEB 21.1.9 LEITET DIE SEITE NACH JEDER HANDLUNG UM (R4-11, Backlog
+ * Nr. 250): Der POST antwortet 302, die Meldung kommt ueber die Sitzung auf
+ * der Seite an, die danach geholt wird. Bis dahin stand sie im Rumpf der
+ * POST-Antwort, und die Erwartungen 13, 27 und 31 lasen sie dort. Jetzt
+ * lesen sie den Rumpf der Folgeseite — und verlangen die 302, damit ein
+ * Rueckfall auf „POST gibt die Seite selbst aus" hier rot wird.
+ *
+ * @return array{code:int, ziel:?string, folge:array} `code` ist der des
+ *         POST, `folge` die Antwort auf das GET der Umleitung (bei einem
+ *         anderen Code als 302: die POST-Antwort selbst).
+ */
+function absenden(string $pfad, string $cookie, array $koerper): array {
+    $a = hole($pfad, $cookie, $koerper);
+    $ziel = kopfzeile($a, 'Location');
+    if ($a['code'] !== 302 || $ziel === null) {
+        return ['code' => $a['code'], 'ziel' => $ziel, 'folge' => $a];
+    }
+    /* Relativ wie im Bestand (`betrieb_updates.php#k-…`); der Anker geht
+     * nicht zum Server. */
+    $ziel = preg_replace('/#.*$/', '', $ziel);
+    return ['code' => 302, 'ziel' => $ziel, 'folge' => hole(ltrim($ziel, '/'), $cookie)];
+}
+
 /* ---- Sitzungen --------------------------------------------------------- */
 
 /**
@@ -601,17 +627,18 @@ pruefe($quellBloecke !== [] && $gefunden === count($quellBloecke)
  * ====================================================================== */
 echo "\n  Teil 3 — Schalten, kaputter Inhalt, Antwortzeit\n";
 
-$a13 = hole('betrieb_updates.php', $sidAdmin, ['action' => 'wartung_aus', 'csrf' => $csrfAdmin]);
-pruefe($a13['code'] === 200 && !file_exists(WARTUNG_DATEI),
-       '13  Ausschalten ueber betrieb_updates.php (POST, CSRF) -> Datei weg',
-       'HTTP ' . $a13['code']);
+$a13 = absenden('betrieb_updates.php', $sidAdmin, ['action' => 'wartung_aus', 'csrf' => $csrfAdmin]);
+pruefe($a13['code'] === 302 && $a13['folge']['code'] === 200 && !file_exists(WARTUNG_DATEI),
+       '13  Ausschalten ueber betrieb_updates.php (POST, CSRF, 302) -> Datei weg',
+       'HTTP ' . $a13['code'] . ' → ' . ($a13['ziel'] ?? '—') . ' ' . $a13['folge']['code']);
 $a13b = hole('index.php');
 pruefe($a13b['code'] !== 503, '13  ... und index.php antwortet wieder',
        'HTTP ' . $a13b['code']);
 
-$a13c = hole('betrieb_updates.php', $sidAdmin, ['action' => 'wartung_an', 'csrf' => $csrfAdmin]);
-pruefe($a13c['code'] === 200 && file_exists(WARTUNG_DATEI),
-       '13  Einschalten ueber betrieb_updates.php -> Datei da', 'HTTP ' . $a13c['code']);
+$a13c = absenden('betrieb_updates.php', $sidAdmin, ['action' => 'wartung_an', 'csrf' => $csrfAdmin]);
+pruefe($a13c['code'] === 302 && $a13c['folge']['code'] === 200 && file_exists(WARTUNG_DATEI),
+       '13  Einschalten ueber betrieb_updates.php (302) -> Datei da',
+       'HTTP ' . $a13c['code'] . ' → ' . ($a13c['ziel'] ?? '—') . ' ' . $a13c['folge']['code']);
 $d = json_decode((string)file_get_contents(WARTUNG_DATEI), true);
 pruefe(is_array($d) && ($d['von'] ?? '') === 'Wartungsprobe BetreiberIn' && !empty($d['seit']),
        '13  ... und traegt Zeitpunkt und Konto', json_encode($d));
@@ -937,17 +964,17 @@ if ($bereit) {
            '26  ... und der Knopf „Ausstehende ausführen" ist da (form="migform")');
 
     /* Druecken — derselbe POST, den der Knopf schickt. */
-    $klick = hole('betrieb_updates.php', $sidAdmin,
-                  ['action' => 'migrate', 'csrf' => $csrfAdmin]);
+    $klick = absenden('betrieb_updates.php', $sidAdmin,
+                      ['action' => 'migrate', 'csrf' => $csrfAdmin]);
     $frisch();
     $nach    = migrationen_lauf($pdo, false);
     $eintrag = $pdo->prepare('SELECT status FROM schema_migrations WHERE id = ?');
     $eintrag->execute([$kandidat]);
     $status  = $eintrag->fetchColumn();
     if ($status !== false) { $registerWeg = null; }
-    pruefe((int)$nach['offen'] === 0 && $status === 'skipped'
-           && str_contains($klick['rumpf'], 'wurden angewendet'),
-           '27  Nach dem Klick: 0 offen, Register „skipped", Meldung sagt es',
+    pruefe((int)$nach['offen'] === 0 && $status === 'skipped' && $klick['code'] === 302
+           && str_contains($klick['folge']['rumpf'], 'wurden angewendet'),
+           '27  Nach dem Klick: 302, 0 offen, Register „skipped", Meldung sagt es',
            'offen ' . (int)$nach['offen'] . ', Register '
            . var_export($status, true) . ', HTTP ' . $klick['code']);
 } else {
@@ -1023,18 +1050,18 @@ if ($torBereit) {
            '31  Betrieb → Updates bleibt offen und nennt den Torwaechter',
            'HTTP ' . $t3['code']);
 
-    $t4 = hole('betrieb_updates.php', $sidAdmin,
-               ['action' => 'migrate', 'csrf' => $csrfAdmin]);
+    $t4 = absenden('betrieb_updates.php', $sidAdmin,
+                   ['action' => 'migrate', 'csrf' => $csrfAdmin]);
     $st7 = $pdo->prepare('SELECT status FROM schema_migrations WHERE id = ?');
     $st7->execute([$kandidat]);
     if ($st7->fetchColumn() !== false) { $torWeg = null; }
-    pruefe(str_contains($t4['rumpf'], 'Wartung beenden')
-           && str_contains($t4['rumpf'], 'Migrationen erledigt'),
+    pruefe($t4['code'] === 302 && str_contains($t4['folge']['rumpf'], 'Wartung beenden')
+           && str_contains($t4['folge']['rumpf'], 'Migrationen erledigt'),
            '31  ... und bietet nach dem Lauf „Wartung beenden" an',
            'HTTP ' . $t4['code']);
 
-    $t5 = hole('betrieb_updates.php', $sidAdmin,
-               ['action' => 'wartung_aus', 'csrf' => $csrfAdmin]);
+    $t5 = absenden('betrieb_updates.php', $sidAdmin,
+                   ['action' => 'wartung_aus', 'csrf' => $csrfAdmin]);
     $t6 = hole('index.php', $sidAdmin);
     pruefe(!wartung_aktiv() && $t6['code'] === 200,
            '31  ... und danach ist die Installation wieder offen',
