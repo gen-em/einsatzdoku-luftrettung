@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 137 | 27.09.2026 | 18 beginnt | Fahrplanzeile 18 auf „Konzept": `Konzept-SR-Sicherheitsrunde-II.md` (Kürzel SR) auf `claude/gallant-mccarthy-yacnzk`, aufgesetzt auf dem 17er-Zweig (R4-10); die Zeile nennt Nr. 232 und 251 mit (acht Punkte mit Ziel 18); Spanne 350–359. |
 | 136 | 26.09.2026 | R4-03 | Zuarbeit erledigt: P-BR-09 (6.12 beim nächsten Prüfmittel befolgen) mit `nummern.py` gegangen — ein Fund in Schritt 6, berichtigt (F-R4-23); aus der Zeile „Prüfliste BR" in 6.1 gestrichen. |
 | 135 | 26.09.2026 | R4-01 | Umsetzung von 17 beginnt auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus); Konzept mit PR #93 gemergt und samt Fragen und Mockups freigegeben (E-R4-14 ff.). Zuarbeit in 6.1: die zwei toten Zweige löscht die Betreiberin (Q-R4-01). |
 | 134 | 26.09.2026 | 17 beginnt | Fahrplanzeile 17 auf „Konzept": `Konzept-R4-Backlog-Runde-4.md` (Kürzel R4) auf `claude/schritt-17-hl9egt`, Voraussetzung SD erfüllt, 55 Einträge mit Ziel 17; Umsetzung nach dem Merge des Konzept-PR (E-R4-02). |

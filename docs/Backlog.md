@@ -52,7 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340, 341 | 26.09.2026 |
-| ab 350 | frei — höchste vergebene Nummer 341; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 26.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: keine | 27.09.2026 |
+| ab 360 | frei — höchste vergebene Nummer 341; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 27.09.2026 |
 
 ---
 
