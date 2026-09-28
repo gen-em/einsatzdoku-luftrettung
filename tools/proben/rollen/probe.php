@@ -361,8 +361,10 @@ foreach ($zeilen as $z) {
  * JE ZEILE MIT `ja` EINE ANFRAGE, mit dem Konto der KLEINSTEN Rolle, die die
  * Handlung darf — und einer Sitzung ohne `zf_frisch_bis`. Erwartet: 303 auf
  * `zweitfaktor.php?bestaetigen=1&zurueck=<die Seite der Handlung>`, nach einem
- * POST mit `nochmal=1`. Mit frischem Code (die Matrix darueber) geht dieselbe
- * Anfrage durch.
+ * POST mit `nochmal=1`; bei einem Endpunkt unter `api/` 403 mit dem
+ * JSON-Fehler `zweitfaktor_frisch` (SR-09 — ein Endpunkt springt nicht um,
+ * der Browser meldet es). Mit frischem Code (die Matrix darueber) geht
+ * dieselbe Anfrage durch.
  *
  * DAS TOKEN IST ABSICHTLICH FALSCH. Fehlt das Tor, endet die Anfrage an der
  * Token-Ablehnung — ein „Konto löschen" ohne Tor loescht dann nichts.
@@ -405,6 +407,13 @@ try {
         $sz = $konten[$wer]['unfrisch'];
         $r = $a[1] === 'GET' ? hole($a[2], $sz['sid'])
                              : hole($a[2], $sz['sid'], $felder + ['csrf' => 'absichtlich-falsch']);
+        if (str_starts_with($a[2], 'api/')) {
+            $fehler = (string)(json_decode($r['rumpf'], true)['error'] ?? '');
+            pruef($r['code'] === 403 && $fehler === 'zweitfaktor_frisch',
+                  $z['Handlung'] . ' · ' . $wer . ' ohne frischen Code: 403 JSON',
+                  'HTTP ' . $r['code'] . ', error ' . ($fehler !== '' ? $fehler : '—'));
+            continue;
+        }
         $ziel = (string)($r['ziel'] ?? '');
         parse_str((string)parse_url($ziel, PHP_URL_QUERY), $q);
         $seite = basename((string)parse_url($a[2], PHP_URL_PATH));

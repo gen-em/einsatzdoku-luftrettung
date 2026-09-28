@@ -1323,6 +1323,14 @@ Fehlen fällt erst auf, wenn man danach sucht:
   gilt die Zeile ohnehin weiter. Nach dem Einspielen fragt die Anmeldung also
   wieder nach dem Code, und der Haken merkt das Gerät neu. Dasselbe gilt für
   das Konto-Backup in Abschnitt 5.
+- **Passkeys** (`passkeys`, seit Web 21.10.0, Schritt 18, SR-09). Ein
+  Passkey gilt nur für die **Adresse, an der er entstand**: Seine `rp.id` ist
+  der Hostname aus `app.base_url` (E-SR-42), und ein Browser bietet ihn einer
+  anderen Adresse gar nicht erst an — auch nicht Staging neben Produktiv. In
+  einer anderen Installation wäre die Zeile ein Schloss ohne Tür. Nach dem
+  Einspielen gilt dort der Code aus der App, und wer mag, legt den Passkey an
+  der neuen Adresse neu an. Dasselbe gilt für das Konto-Backup in
+  Abschnitt 5 — es trägt die Tabelle **nicht**.
 
 **Der Papierkorb steht seit Version 7 in der Datei** und stand bis Version 6
 in keiner. Der Absatz, der ihn hier als fehlend führte, ist damit gegenstandslos;
@@ -1852,6 +1860,22 @@ Cookie, und sie verfallen mit dem Aufräumjob. Anders als die zwei Tabellen
 in 6.9 halten sie keine IP- oder E-Mail-Adressen, und ihr Fehlen hätte nur
 einen Code-Schritt mehr gekostet — ein Grund, sie ohne Zeilen mitzunehmen,
 fehlt.
+
+### 6.11 Passkeys (seit Web 21.10.0)
+
+`passkeys` reist **mit Zeilen** im Komplett-Stand (Schritt 18, SR-09) — die
+Komplettsicherung nimmt jede Tabelle mit, die nicht in `KOMP_OHNE_ZEILEN`
+steht, und für einen Eintrag dort gibt es keinen Grund. Eine Zeile trägt den
+**öffentlichen** Schlüssel (SPKI als PEM), seine Kennung (`credential_id`,
+Base64url), den Algorithmus, den Zähler, die selbst gewählte Bezeichnung und
+zwei Zeitpunkte. **Nichts davon meldet jemanden an:** Der private Teil hat das
+Gerät nie verlassen; ein Stand, der außer Haus geht, verrät, dass es einen
+Passkey gibt und wann er zuletzt benutzt wurde, mehr nicht. **Nach einem
+Wiederanlauf auf derselben Adresse** gelten die Zeilen weiter; **auf einer
+anderen Adresse** passt die `rp.id` nicht, der Browser bietet sie nicht an,
+und die Anmeldung fragt nach dem Code (Abschnitt 4). Die Zeilen bleiben dort
+stehen, bis die NutzerIn sie entfernt oder der Zweitfaktor ausgeschaltet
+wird.
 
 ---
 

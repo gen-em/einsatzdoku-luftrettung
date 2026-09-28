@@ -54,13 +54,13 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **28.09.2026 — Umsetzung läuft, SR-01, SR-02 und SR-07 gebaut (Web 21.7.0, 21.8.0, 21.9.0)**, gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). Nächstes Paket: **SR-09**, danach Halt H-SR-08. Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
-> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (das Vergessen in der Transaktion des Passworts, SR-02), E-SR-41 (ein Abbruchziel für Handlungen, die eine Seite sind, SR-07). |
-> | Offen | nichts im Konzept. **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). |
-> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). In Arbeit: **SR-09**, danach Halt H-SR-08. |
+> | Stand | **28.09.2026 — Umsetzung hält an H-SR-08: SR-01, SR-02, SR-07 und SR-09 gebaut (Web 21.7.0, 21.8.0, 21.9.0, 21.10.0)**, gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). **Jetzt: Fable-Gegenlesung von `passkey_lib.php`** (E-SR-36), dazu E-SR-42 zur Bestätigung; danach SR-05. Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
+> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (das Vergessen in der Transaktion des Passworts, SR-02), E-SR-41 (ein Abbruchziel für Handlungen, die eine Seite sind, SR-07), E-SR-42 (Ursprung aus `app.base_url`, SR-09 — **weicht vom Konzept ab, zur Bestätigung**), E-SR-43 (kein Schloss an den Passkey-Knöpfen, SR-09). |
+> | Offen | **H-SR-08:** Fable liest `passkey_lib.php` gegen das Konzept; die Betreiberin bestätigt E-SR-42 oder entscheidet anders. **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). |
+> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). **SR-09 erledigt** 28.09.2026 (Web 21.10.0, Migration `2026_09_28_passkeys`; Befunde F-SR-28 bis -32; Nr. 350 erledigt, Nr. 353 neu). **Halt H-SR-08.** |
 > | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) und SR-09 (H-SR-08, E-SR-36). |
 > | Fächerung | keine. |
-> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`). |
+> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`), **353** (Schemaprobe vergleicht migriert und frisch nicht, F-SR-28, `nächste Backlog-Runde`). |
 
 ---
 
@@ -508,6 +508,48 @@ ein Satz mehr, und der Review misst ihn.
   Backup-Ziele aus — die Konstante führte sechzehn Einträge. **Gelöst in
   SR-07:** vollständig, mit `zweitfaktor.php` und dem Verweis auf die
   Konstante als maßgeblich.
+- **F-SR-28 Die Migrationskommentare versprachen einen Vergleich, den keine
+  Probe fährt.** Die Kommentare an `2026_09_28_vertraute_geraete` (SR-02)
+  und dem Entwurf von `2026_09_28_passkeys` sagten, die Schemaprobe halte
+  fest, dass Migration und `schema.sql` dieselbe Tabelle bauen. Die
+  Schemaprobe spielt `schema.sql` auf vier Fassungen ein und prüft die
+  Vorabliste; migriert gegen frisch vergleicht niemand. **Gelöst in SR-09,
+  soweit es hier geht:** beide Kommentare berichtigt, der Vergleich von Hand
+  gemessen (`SHOW CREATE TABLE` ohne `AUTO_INCREMENT`, beide Tabellen
+  zeichengleich — Prüfdokument), die Lücke als **Nr. 353** (`nächste
+  Backlog-Runde`).
+- **F-SR-29 Der Bilderlauf kann den Abschnitt „Passkeys" nicht zeigen.** Er
+  läuft gegen `https://127.0.0.1:8443`, und für eine IP-Adresse gibt es
+  keine Passkeys (E-SR-42) — der Abschnitt fehlt dort mit Absicht. P-SR-05
+  verlangt Bilder der Karte mit Liste; **gelöst in SR-09:** Sie kommen aus
+  dem Bedienweg `einstellungen-profil-passkey`, der für seinen Lauf die
+  Adresse auf `localhost` stellt (Karte mit einem Passkey, Code-Schritt mit
+  dem Knopf). Der Bilderlauf selbst bleibt, wie er ist.
+- **F-SR-30 Die Bedienprobe nannte nach SR-07 noch 73 Wege.** SR-07 hatte
+  `betrieb-server-frischer-code` dazugebracht (74 im Prüfbericht), die
+  `LIESMICH` nicht nachgezogen — dieselbe Sorte wie F-SR-18 und F-SR-23.
+  **Gelöst in SR-09:** 74, mit SR-09 75, und der Satz sagt, dass hier bis
+  SR-09 73 stand.
+- **F-SR-31 2,2 Sekunden reichen OPcache nicht immer.** Teil 5d der
+  Zweitfaktorprobe und der Bedienweg stellen `app.base_url` auf `localhost`
+  und warteten danach 2,2 s. Beim Gegenlesen vor dem Prüfstand lief die
+  Probe zweimal hintereinander: im ersten Lauf **7 von 9** Erwartungen in
+  5d rot (kein Passkey-Knopf — der Server sah noch die alte Adresse), im
+  zweiten 0. OPcache rechnet mit der Anfragezeit in **ganzen Sekunden**:
+  Wurde `config.php` zuletzt in Sekunde L geprüft, gilt die alte Fassung
+  bis einschließlich L+2, und sicher ist erst ein Abstand von drei
+  Sekunden. Dieselbe Falle hatte die Ratenprobe schon (F-P5c-123, dort
+  1,2 s). **Gelöst in SR-09:** beide warten 3,2 s, der Grund steht im
+  Kopf; gemessen mit wiederholten Läufen (Prüfdokument).
+- **F-SR-32 Die Mailprobe kannte `bezeichnung` nicht — und ist beim Bau
+  nicht gefahren worden.** Sie hält für jede Vorlage des Katalogs die
+  Pflichtwerte in einem Beispielsatz; die zwei neuen Vorlagen
+  (`passkey_angelegt`, `passkey_entfernt`) brachten den Wert `bezeichnung`,
+  der dort fehlte. `mail_lib.php` stand im Paket, die Mailprobe hätte
+  örtlich laufen müssen und lief nicht — gefunden hat es erst der Prüfstand
+  (1 rot, 53 grün). Dieselbe Sorte wie F-RP-04. **Gelöst in SR-09:** der
+  Wert steht im Beispielsatz, Mailprobe 51 Prüfungen, 0 Befunde, danach der
+  Prüfstand neu.
 
 ## 3. Entscheidungen und Fragen
 
@@ -556,6 +598,8 @@ ein Satz mehr, und der Review misst ihn.
 | E-SR-39 | **F-SR-15 wird in SR-01 gebaut:** Die lesenden Seiten prüfen die Bindung zentral in `sitzung_starten('lesend')` und sehen eine ungebundene Anmeldung nicht; verworfen wird ohne Schreiben, beendet wird sie erst von der nächsten angemeldeten Seite. | Betreiberin, 28.09.2026 (Rückfrage vor SR-01, wie empfohlen) | Ziel 1 des Konzepts heißt „eine gelesene Sitzungsdatei ist wertlos"; vier Seiten, die mit ihr noch Kopf und Adresse zeigten, ließen den Satz halb wahr. Eine Stelle statt vier (R83). Nicht beendet, weil eine lesende Seite lesbar bleiben und nicht abmelden soll. |
 | E-SR-40 | **Das Vergessen gemerkter Geräte beim Passwortwechsel und -reset steht in derselben Transaktion wie das Passwort** (`einstellungen.php`, `pw_handling.php`), nicht dahinter. | Umsetzung, 28.09.2026 (SR-02) | Der erste Entwurf setzte es hinter die Transaktion, „weil es ins Protokoll schreibt". Ein Fehler dort hätte dann ein gewechseltes Passwort mit der Meldung „Es wurde nichts geändert" gezeigt, der Browser hätte den neuen Schlüssel nicht übernommen (M2-07), und der gemerkte Browser des Fremden hätte weiter gegolten. In der Transaktion gilt beides oder keines; `db_transaktion()` hängt sich an die laufende an, `protokoll()` fängt seine eigenen Fehler. |
 | E-SR-41 | **Eine Handlung der Liste, die eine Seite ist, trägt ein eigenes Abbruchziel** (`'abbruch'` in `ZF_FRISCH_HANDLUNGEN`; heute nur das Schlüsselblatt → `betrieb_server.php#k-schluessel`); es reist als `abbruch` mit und wird wie `zurueck` geprüft. | Umsetzung, 28.09.2026 (SR-07) | Bei einem POST ist der Rücksprung die Karte, aus der geklickt wurde; bei einer Seite ist es die Seite selbst — und „Abbrechen" dorthin schickte wieder auf die Bestätigung, eine Schleife (gefunden beim Schreiben des Bedienwegs). Ein eigenes Feld statt einer Regel „bei GET woanders hin", weil nur die Liste weiß, woher eine Seite kommt. |
+| E-SR-42 | **Der eigene Ursprung und die `rp.id` kommen aus `app.base_url`, nicht aus der `Host`-Kopfzeile** (`pk_ursprung()` in `passkey_lib.php`). Folge: keine Passkeys für eine IP-Adresse, ohne HTTPS (außer `localhost`) und unter jeder anderen Adresse als der eingetragenen. **Weicht vom Konzept ab** (SR-09: „`pk_ursprung()` nimmt die Stelle in `kopfzeilen_lib.php`, die den Host schon liest"). **Zur Bestätigung durch die Betreiberin bei H-SR-08.** | Umsetzung, 28.09.2026 (SR-09) | Den `Host` setzt, wer die Anfrage schickt. Antwortet die Anlage auch unter einem fremden Namen, ließe ein Proxy, der mit seinem eigenen Namen weiterreicht, seinen Ursprung als den eigenen gelten — genau das, wogegen WebAuthn schützt. Die Stelle in `kopfzeilen_lib.php` ist für den Berichtsendpunkt der CSP richtig (dort muss es der Name der laufenden Anfrage sein) und für diese Frage falsch. Preis: Die Sandbox auf 127.0.0.1 zeigt keine Passkeys; die Proben stellen die Adresse für ihren Lauf auf `localhost`. |
+| E-SR-43 | **Die Passkey-Knöpfe tragen kein Schloss**; „Passkey hinzufügen" trägt das Plus, „Mit Passkey bestätigen" kein Zeichen. | Umsetzung, 28.09.2026 (SR-09) | Das Schloss ist in dieser Anwendung das Zeichen für ein Ende-zu-Ende-verschlüsseltes Feld (`CLAUDE.md` 4, Riegel `kennzeichnung`); ein Schloss an einem Anmeldeknopf verwässerte es. Der erste Entwurf trug es an allen drei Knöpfen. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -610,7 +654,9 @@ Kein Q ist offen.
   `passkey_lib.php` gegen das Konzept (die CBOR-Teilmenge und jede
   Ablehnung, Ursprung und `rpIdHash`, die Signatur beider Algorithmen, der
   Zähler, die Frische an Karte und Endpunkt); Befunde als F-SR-NN, Behebung
-  durch Opus, dann SR-05.
+  durch Opus, dann SR-05. **Erreicht 28.09.2026** nach dem Commit `SR-09`;
+  dazu E-SR-42 (Ursprung aus der Konfiguration, Abweichung vom Konzept) zur
+  Bestätigung.
 - **H-SR-05 mit dem Merge:** Die Migrationen `vertraute_geraete` (SR-02)
   und `passkeys` (SR-09) stehen aus,
   bis eine Administratorin `update.php` ruft — die Kette lässt den
@@ -958,6 +1004,45 @@ Schema und Migration; `sha256sum -c phpseclib3.sha256` unverändert 338
 Dateien (kein neuer Fremdcode); Textprobe 0 neu.
 *Stufe:* Web Neben, **mit Migration** (Prüfstand `haupt`; nach dem Deploy
 `update.php`). *Fächerung:* keine.
+*Erledigt 28.09.2026 (Web 21.10.0):* gebaut wie beschrieben —
+`passkey_lib.php` (CBOR-Leser mit Tiefe acht, `pk_cose_laden()` →
+phpseclib-JWK → SPKI, beide Zeremonien, Zählerregel, `pk_liste()`,
+`pk_anlegen()` unter `FOR UPDATE` auf der Kontozeile, `pk_entfernen()`,
+`pk_alle_entfernen()` aus `totp_abschalten()`), Tabelle und Migration
+`2026_09_28_passkeys` (`credential_id` `VARCHAR(1364)` `ascii_bin`: 1023
+Byte als Base64url), der Abschnitt in der Karte, `api/passkey_anlegen.php`,
+`assets/passkey.js`, der Knopf in `login.php` und auf
+`zweitfaktor.php?bestaetigen=1` (Herausforderung dort in
+`$_SESSION['passkey_best']`), `demo_zweitfaktor_leeren()`, die Zahl auf der
+Kontoseite, drei Protokollarten, zwei Mailvorlagen, zwei Einträge in
+`ZF_FRISCH_HANDLUNGEN` (acht Aufrufe für acht Handlungen, Z43).
+**Dazu, nicht im Konzept:** der Bauhelfer `tools/proben/passkey/bauen.php`
+(ein Authenticator zum Nachbauen, von Passkeyprobe und Zweitfaktorprobe
+geteilt); Teil 5d der Zweitfaktorprobe misst auch den Endpunkt über HTTP
+(anlegen mit frischem Code samt Protokoll und Mail, dieselbe Registrierung
+noch einmal → 400); die Rollenprobe erwartet an einem Endpunkt der Liste
+403 JSON statt der Umleitung; der Datenschutz-Baustein 11.5a bekommt einen
+dritten Absatz; F-SR-28 bis -32. **Abweichungen:** Ursprung aus
+`app.base_url` (E-SR-42 — zur Bestätigung); `pk_anmeldung_pruefen($userId,
+$ablage, $antwort)` statt `($halb, $antwort)` — die Ablage ist der halbe
+Stand **oder** die Bestätigung, das Konto kommt getrennt; kein Schloss an
+den Knöpfen (E-SR-43); die Bilder der Karte kommen aus dem Bedienweg, nicht
+aus dem Bilderlauf (F-SR-29); `Backup-Format.md` 5 bekommt den Satz über
+Abschnitt 4 wie bei SR-02, nicht einen eigenen. **Der Fall „API → 403
+JSON" aus SR-07 ist jetzt gemessen** (Rollenprobe und Teil 5d).
+**Probleme beim Bau:** Die Spalte hieß im ersten Entwurf `kennung` und im
+Konzept `credential_id` — auf das Konzept umgestellt. Ein
+`https://host:443` in `base_url` hätte jeden Vergleich gebrochen, weil der
+Browser den Standardport weglässt — `pk_ursprung()` lässt ihn jetzt auch
+weg. `app_url()` merkt sich die Adresse je Prozess; die Adressfälle der
+Passkeyprobe laufen deshalb in einem eigenen PHP-Prozess. Der erste Einbau
+in `login.php` setzte den Erfolgszweig in ein `elseif` hinter die
+Ratenprüfung — umgebaut, bevor er lief. Die Gegenproben: Tor im Endpunkt
+herausgenommen → die Rollenprobe rot (1 von 530); „Gerät merken" nur nach
+App-Code → Teil 5d rot (Gerät nicht gemerkt). Beim Gegenlesen vor dem
+Prüfstand war Teil 5d in einem von zwei Läufen rot — die Wartezeit nach dem
+Stellen der Adresse war zu kurz (F-SR-31). Der erste Prüfstand war rot an
+der Mailprobe (F-SR-32). Zahlen im Prüfdokument 2.
 
 **SR-05 `ingest.php` ohne Deadlock** — Nr. 210 (E-SR-12). `ingest.php`:
 Schleife um `beginTransaction()`/`try` (höchstens drei Anläufe, Abstand

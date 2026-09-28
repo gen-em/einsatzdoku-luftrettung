@@ -7910,5 +7910,29 @@ declare(strict_types=1);
  *   der Rueckweg nicht. Die Handlung wird nicht nachgespielt; die Seite sagt,
  *   dass sie noch einmal auszuloesen ist. Das Register zaehlt nach, dass jede
  *   Handlung genau einen Aufruf hat (Z43).
+ *
+ * 21.10.0 — PASSKEYS ALS ZWEITER FAKTOR (Schritt 18, SR-09; Nr. 350;
+ *   E-SR-28 bis -36, -42). Nebenstufe MIT MIGRATION: `2026_09_28_passkeys` —
+ *   nach dem Deploy muss eine Administratorin `update.php` aufrufen. Ein
+ *   Passkey ist ein weiteres Verfahren DESSELBEN Faktors, nicht ein eigener:
+ *   Er setzt den eingeschalteten Zweitfaktor voraus, Codes und Rueckweg
+ *   bleiben der Notweg, und `totp_abschalten()` nimmt ihn auf jedem Weg mit.
+ *   Der Gewinn ist die Bindung an den Ursprung — einen Code kann eine
+ *   gefaelschte Seite weiterreichen, eine WebAuthn-Signatur nicht. Gebaut
+ *   OHNE Fremdbestandteil (E-SR-30): `passkey_lib.php` mit eigenem
+ *   CBOR-Leser fuer die Teilmenge, die Registrierung und COSE brauchen,
+ *   Signaturen ueber das schon vendorierte phpseclib (ES256, RS256),
+ *   Attestation gelesen und nicht geprueft, der Schluessel als SPKI
+ *   gespeichert. Die `rp.id` ist der Hostname aus `app.base_url` (E-SR-42) —
+ *   fuer eine IP-Adresse oder ohne HTTPS gibt es keine Passkeys, und ein
+ *   Passkey gilt nur fuer die Adresse, an der er entstand. Anlegen und
+ *   Entfernen in der Karte „Zweitfaktor" nur mit frischem Code (zwei
+ *   Handlungen mehr in `ZF_FRISCH_HANDLUNGEN`, die erste davon ein Endpunkt:
+ *   `api/passkey_anlegen.php`); im Code-Schritt und auf der Bestaetigung
+ *   „Mit Passkey bestaetigen", und er zaehlt wie ein App-Code (Geraet
+ *   merken, frischer Code). Protokoll und Mail bei Anlegen und Entfernen,
+ *   ein zuruecklaufender Signaturzaehler als orange Meldung — der Passkey
+ *   bleibt. Keine Passkeys im Demo-Konto und im Konto-Backup; im
+ *   Komplett-Stand reisen sie mit.
  */
-const WEB_VERSION = '21.9.0';
+const WEB_VERSION = '21.10.0';

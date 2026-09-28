@@ -347,6 +347,11 @@ const PROTOKOLL_ARTEN = [
     'zweitfaktor_geraet_gemerkt'    => ['Gerät gemerkt', 'neutral'],
     'zweitfaktor_geraete_vergessen' => ['Geräte vergessen', 'neutral'],
     'einstellungen_anmeldung'   => ['Einstellungen', 'neutral'],
+    /* Verwaltung — neu mit Schritt 18 (SR-09, E-SR-33). Der Zaehler ist
+     * orange: ein Klon-Verdacht, den die Betroffene sehen soll. */
+    'passkey_angelegt'          => ['Passkey angelegt', 'neutral'],
+    'passkey_entfernt'          => ['Passkey entfernt', 'neutral'],
+    'passkey_zaehler'           => ['Passkey-Zähler', 'orange'],
     'geraet_umgeschaltet'       => ['Gerät umgeschaltet', 'neutral'],
     'geraet_geloescht'          => ['Gerät gelöscht', 'neutral'],
     'wartung_an'                => ['Wartung an', 'orange'],
@@ -561,6 +566,7 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'totp_zurueckgesetzt', 'totp_code_benutzt',
                          'rueckweg_angelegt', 'rueckweg_erneuert',
                          'zweitfaktor_geraet_gemerkt', 'zweitfaktor_geraete_vergessen',
+                         'passkey_angelegt', 'passkey_entfernt', 'passkey_zaehler',
                          'rechtstext_geaendert', 'schluessel_erneuert',
                          'schluesselblatt_bestaetigt', 'geraet_umgeschaltet',
                          'geraet_geloescht', 'wartung_an', 'wartung_aus',

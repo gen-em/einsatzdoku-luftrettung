@@ -957,7 +957,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 22 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 23 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |

@@ -14,6 +14,110 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.10.0] — 2026-09-28
+
+Schritt 18, Sicherheitsrunde II, Paket SR-09. **Neben, mit Migration**
+(`2026_09_28_passkeys`) — **nach dem Deploy muss eine Administratorin
+`update.php` aufrufen**; die Kette lässt den Wartungsmodus bis dahin an.
+
+### Neu
+
+- **Passkeys als zweiter Faktor, zusätzlich zur App** (Nr. 350, E-SR-29,
+  -35). Ein Code aus der App lässt sich auf einer nachgemachten
+  Anmeldeseite abfischen und sofort weiterreichen; eine WebAuthn-Signatur
+  ist an die Adresse gebunden, für die sie entstand, und nützt dort nichts.
+  Für Support, Admin und BetreiberIn — die den Zweitfaktor tragen müssen —
+  wird der Code-Schritt damit phishingfest. **Ein Passkey ist ein weiteres
+  Verfahren desselben Faktors, kein eigener:** Er setzt den eingeschalteten
+  Zweitfaktor voraus, Codes, Codeblatt und Rückweg bleiben der Notweg, und
+  jedes Ausschalten oder Zurücksetzen nimmt die Passkeys mit. Ein Passkey
+  **allein** hätte Einrichtungstor, Codes und Reset umgebaut, die am
+  TOTP-Verfahren hängen — das ist Nr. 351, nach v1.0.
+- **Hinzufügen und entfernen** in der Karte „Zweitfaktor" (Einstellungen →
+  Profil), Abschnitt „Passkeys": eine Zeile je Passkey, eine optionale
+  Bezeichnung bis 40 Zeichen, höchstens zehn je Konto. **Beides verlangt
+  einen frischen Code** (seit 21.9.0): Wer eine fremde Sitzung erbeutet
+  hat, soll sich damit keinen dauerhaften zweiten Faktor anlegen. Ist der
+  Code älter, steht statt des Knopfs der Verweis „Zuerst Code bestätigen" —
+  die Person soll die Reihenfolge sehen, bevor der Dialog des Browsers
+  aufgeht. Anlegen und Entfernen schreiben ins Protokoll und schicken eine
+  Mail an die Kontoadresse, wie beim Erneuern des Rückwegs: Ein neuer
+  zweiter Faktor an einem erbeuteten Konto bliebe sonst still.
+- **„Mit Passkey bestätigen"** im Code-Schritt und auf der Seite „Code
+  bestätigen", über dem Codefeld. **Er zählt wie ein App-Code** (E-SR-32):
+  „Dieses Gerät merken" gilt nach ihm, und er macht den Code frisch. Ihn
+  schwächer zu zählen, hieße, den sichereren Weg unbequemer zu machen.
+  Ohne JavaScript oder in einem Browser ohne Passkeys fehlt der Knopf, und
+  der Code bleibt.
+- **Ohne Fremdbestandteil gebaut** (E-SR-30). Die Vorbereitung zum
+  Sicherheitspaket hatte eine WebAuthn-Bibliothek vorausgesetzt; tatsächlich
+  lag das meiste schon im Haus — die Signaturprüfung des Rückwegs ist der
+  Kern einer Anmeldung mit Passkey. Neu ist `passkey_lib.php` mit einem
+  eigenen, kleinen CBOR-Leser für genau die vier Typen, die Registrierung und
+  Schlüssel brauchen; alles andere — Fließzahlen, Marken, unbestimmte
+  Längen, mehr als acht Ebenen — ist eine Ablehnung. Die Signaturen prüft
+  das schon vendorierte phpseclib (ES256, RS256); der Schlüssel wird beim
+  Anlegen nach SPKI überführt, damit die Anmeldung ohne CBOR auskommt.
+  **Attestation wird gelesen und nicht geprüft:** Sie sagte nur, wer den
+  Authenticator gebaut hat — für einen Faktor nach dem Passwort ohne Wert,
+  mit Datenschutzpreis. Gespeichert werden kein Gerätename, kein Hersteller.
+- **Ein zurücklaufender Signaturzähler** ist ein Klon-Verdacht und wird
+  abgelehnt, mit einer orangen Zeile im Protokoll — **der Passkey bleibt**.
+  Synchronisierte Passkeys melden dauerhaft 0, und ein Löschen bei Verdacht
+  sperrte die Betroffene aus ihrem eigenen Konto; sie sieht den Eintrag und
+  entscheidet (E-SR-33).
+- **Die Kontoseite der Verwaltung zeigt die Zahl der Passkeys**, keine Liste.
+- **Der Datenschutz-Baustein bekommt einen dritten Absatz: Passkeys**
+  (Handbuch 11.5a) — was gespeichert wird und was nicht, zum Übernehmen.
+
+### Bewusst so
+
+- **Die `rp.id` kommt aus `app.base_url`, nicht aus der Anfrage** (E-SR-42;
+  das Konzept sah die Stelle in `kopfzeilen_lib.php` vor, die den Host der
+  Anfrage liest). Ein Ursprung, der sich nach dem Host-Kopf richtet, nähme
+  jede Adresse hin, unter der die Anlage zufällig erreichbar ist; die
+  eingetragene Adresse ist die, unter der Passkeys entstehen sollen. **Preis:**
+  Unter einer anderen Adresse gibt es keine Passkeys, für eine IP-Adresse
+  und ohne HTTPS gar keine — die Sandbox auf 127.0.0.1 zeigt den Abschnitt
+  nicht. Staging und Produktiv sind zwei Adressen, ein Passkey gilt auf einer.
+- **Kein PRF** (E-SR-28): Der Passkey leitet keinen Datenschlüssel ab. Das
+  Geheimnis läge bei synchronisierten Passkeys im Schlüsselbund eines
+  Plattformanbieters — eine Frage an die Zusage der
+  Ende-zu-Ende-Verschlüsselung, nicht an ein Paket.
+- **Die Passkey-Knöpfe tragen kein Schloss.** Das Schloss steht in dieser
+  Anwendung für ein Ende-zu-Ende-verschlüsseltes Feld; „Passkey hinzufügen"
+  trägt das Plus wie jedes Hinzufügen.
+- **Nicht im Konto-Backup, wohl im Komplett-Stand** (Backup-Format 4, 6.11):
+  Ein Passkey gilt nur für die Adresse, an der er entstand.
+
+### Prüfmittel
+
+- **Neue Passkeyprobe** (`tools/proben/passkey/`, Anlass Nr. 350): ohne
+  Browser und ohne HTTP. Sie baut mit phpseclib Schlüsselpaare,
+  Registrierungen und Anmeldungen selbst und legt sie der Bibliothek vor —
+  der CBOR-Leser mit seinen Ablehnungen, beide Zeremonien in ES256 und RS256
+  mit fremdem Ursprung, fremder `rp.id`, fremder Herausforderung, fehlendem
+  UP, falscher Signatur, fremder Kennung und zurücklaufendem Zähler, dazu die
+  Tabelle. Die Grenze steht im Kopf: Sie misst nur, was vorhergesehen war —
+  deshalb liest Fable `passkey_lib.php` vor dem Pull Request gegen (H-SR-08).
+- **Die Zweitfaktorprobe hat einen Teil „Passkeys an der Anlage"**: der Knopf
+  im Code-Schritt, Anmeldung mit Passkey samt „Gerät merken" und frischem
+  Code, eine falsche und eine wiederholte Antwort, die Bestätigungsseite, der
+  Endpunkt ohne frischen Code (**403 JSON — der Fall, den 21.9.0 noch nicht
+  messen konnte**) und mit, Entfernen über die Karte.
+- **Die Berechtigungsmatrix hat zwei Zeilen mehr**, und die Rollenprobe
+  erwartet am Endpunkt ohne frischen Code 403 JSON statt der Umleitung.
+- **Ein Bedienweg** `einstellungen-profil-passkey` — nur in Chromium, das
+  über das DevTools-Protokoll einen virtuellen Authenticator stellt; unter
+  Firefox und WebKit meldet er „nicht gemessen", nicht grün.
+- **Die Mailprobe kennt den Pflichtwert `bezeichnung`** der zwei neuen
+  Vorlagen. Ohne ihn war sie rot, ohne dass ein Text falsch war — gefunden
+  erst vom Prüfstand, weil sie beim Bau nicht gefahren wurde (F-SR-32).
+- **Die Kommentare der zwei Migrationen dieser Runde sagten, die
+  Schemaprobe vergleiche frisch angelegt und migriert.** Sie tut das nicht
+  (F-SR-28); die Sätze sind berichtigt, der Vergleich ist von Hand gemacht,
+  und die Lücke steht als Nr. 353 im Backlog.
+
 ## [Web 21.9.0] — 2026-09-28
 
 Schritt 18, Sicherheitsrunde II, Paket SR-07. **Neben**, ohne Migration.

@@ -61,10 +61,22 @@ if (isset($_GET['bestaetigen'])) {
     $merkmale = [rate_merkmal_kennung((string)($row['email'] ?? ''))];
     $bFehler = null; $bAuftakt = '';
     $gesperrt = !rate_erlaubt('totp', null, $merkmale);
+    require_once __DIR__ . '/passkey_lib.php';
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$gesperrt) {
         csrf_check();
-        $pr = totp_anmeldung_pruefen($userId, (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''),
-                                     $mitRc ? 'code' : 'app');
+        /* DER PASSKEY ZAEHLT WIE EIN CODE (SR-09, E-SR-32): Antwort im Feld
+         * `passkey_antwort`, Herausforderung in `passkey_best` (einmal). */
+        $mitPk = !$mitRc && ($_POST['passkey_antwort'] ?? '') !== '';
+        if ($mitPk) {
+            $pkAblage = is_array($_SESSION['passkey_best'] ?? null) ? $_SESSION['passkey_best'] : [];
+            unset($_SESSION['passkey_best']);
+            $pkAntwort = json_decode((string)$_POST['passkey_antwort'], true);
+            $pkR = pk_anmeldung_pruefen($userId, $pkAblage, is_array($pkAntwort) ? $pkAntwort : []);
+            $pr = $pkR['ok'] ? ['ok' => true, 'art' => 'passkey'] : ['ok' => false, 'art' => null, 'passkey' => true];
+        } else {
+            $pr = totp_anmeldung_pruefen($userId, (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''),
+                                         $mitRc ? 'code' : 'app');
+        }
         if ($pr['ok']) {
             rate_erfolg('totp', null, $merkmale);
             $_SESSION['zf_frisch_bis'] = time() + ZF_FRISCH_S;
@@ -87,7 +99,10 @@ if (isset($_GET['bestaetigen'])) {
         }
         rate_misserfolg('totp', null, $merkmale);
         $gesperrt = !rate_erlaubt('totp', null, $merkmale);
-        if (!$gesperrt && !empty($pr['geheimnis_fehlt'])) {
+        if (!$gesperrt && !empty($pr['passkey'])) {
+            $bAuftakt = 'Der Passkey wurde nicht angenommen.';
+            $bFehler  = 'Nimm den Code aus der App — oder versuche es noch einmal.';
+        } elseif (!$gesperrt && !empty($pr['geheimnis_fehlt'])) {
             $bAuftakt = 'Der Code lässt sich hier nicht prüfen.';
             $bFehler  = 'Der Zweitfaktor wurde mit einem anderen Serverschlüssel eingerichtet. '
                       . 'Nimm einen Wiederherstellungscode.';
@@ -106,6 +121,15 @@ if (isset($_GET['bestaetigen'])) {
     }
     $hier = 'zweitfaktor.php?bestaetigen=1&zurueck=' . rawurlencode($zurueck) . ($nochmal ? '&nochmal=1' : '')
           . (isset($_GET['abbruch']) ? '&abbruch=' . rawurlencode($abbruch) : '');
+    /* Der Passkey als Weg daneben — wie im Code-Schritt (E-SR-32). */
+    $pkBest = null;
+    if (!$gesperrt && !$mitRc && pk_verfuegbar() && pk_zahl($userId) > 0) {
+        $pkAblage = [];
+        pk_herausforderung_stellen($pkAblage, 300);
+        $_SESSION['passkey_best'] = $pkAblage;
+        $pkBest = ['herausforderung' => $pkAblage['herausforderung'], 'rp_id' => pk_ursprung()['rp_id'],
+                   'kennungen' => pk_kennungen($userId)];
+    }
 
     ui_seite_start(['titel' => 'Code bestätigen', 'klasse' => 'anmeldung-body']);
 ?>
@@ -124,6 +148,17 @@ if (isset($_GET['bestaetigen'])) {
     <p class="feld-hinweis">Für diese Handlung fragt NAdoku noch einmal nach dem Code —
        danach gilt er <?= (int)(ZF_FRISCH_S / 60) ?> Minuten lang auch für die übrigen.</p>
     <?php ui_meldung(null, $bFehler, 'info', '    ', ['auftakt_fehler' => $bAuftakt]); ?>
+    <?php if ($pkBest !== null): ?>
+    <div data-passkey-bestaetigen hidden data-pk-formular="passkeyform"
+         data-pk-herausforderung="<?= e($pkBest['herausforderung']) ?>"
+         data-pk-rp-id="<?= e($pkBest['rp_id']) ?>"
+         data-pk-kennungen="<?= e((string)json_encode($pkBest['kennungen'])) ?>">
+      <?= ui_knopf(['text' => 'Mit Passkey bestätigen', 'art' => 'neutral', 'breit' => true,
+                    'typ' => 'button', 'attr' => ' data-passkey-knopf']) ?>
+      <div data-passkey-zustand></div>
+      <p class="feld-klein">oder der Code aus der App:</p>
+    </div>
+    <?php endif; ?>
     <?php if ($mitRc) {
         ui_feld(['name' => 'rc', 'label' => 'Wiederherstellungscode', 'klasse' => 'feld-code',
                  'platzhalter' => 'XXXX XXXX',
@@ -138,6 +173,11 @@ if (isset($_GET['bestaetigen'])) {
       <?= ui_knopf(['text' => 'Bestätigen', 'art' => 'primaer', 'breit' => true]) ?>
     </div>
   </form>
+  <?php if ($pkBest !== null): ?>
+  <form method="post" action="<?= e($hier) ?>" id="passkeyform" hidden>
+    <?= csrf_field() ?><input type="hidden" name="passkey_antwort" value="">
+  </form>
+  <?php endif; ?>
   <p class="anmeldung-neben"><a href="<?= e($mitRc ? $hier : $hier . '&art=rc') ?>"><?=
       $mitRc ? 'Code aus der App verwenden' : 'Wiederherstellungscode verwenden' ?></a></p>
   <?php endif; ?>
@@ -152,7 +192,7 @@ if (isset($_GET['bestaetigen'])) {
  </nav>
 </main>
 <?php ui_fuss_seite(['dunkel' => true]); ?>
-<?php ui_seite_ende();
+<?php ui_seite_ende(['skripte' => $pkBest !== null ? ['assets/passkey.js'] : []]);
     exit;
 }
 

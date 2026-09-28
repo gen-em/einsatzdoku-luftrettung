@@ -1139,9 +1139,15 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php ui_karte_start(['titel' => 'Zweitfaktor', 'id' => 'karte-zweitfaktor',
         'plakette' => $zfZ['an'] ? ui_plakette('an', ['ton' => 'blau']) : ui_plakette('aus')]); ?>
       <?php if ($zfZ['an']): ?>
-        <?php ui_zeile(['text' => 'Eingeschaltet',
+        <?php /* Die Zahl der Passkeys (SR-09): nur die Zahl, keine Liste —
+                 entfernen kann sie die Person selbst, und „Zurücksetzen"
+                 nimmt sie über totp_abschalten() mit. */
+              require_once __DIR__ . '/passkey_lib.php';
+              $zfPk = pk_zahl($uid);   // vor update.php: 0
+              ui_zeile(['text' => 'Eingeschaltet',
             'klein' => 'seit ' . datum_zeit_text($zfZ['seit']) . ' · Wiederherstellungscodes: '
-                     . $zfZ['codes_offen'] . ' von ' . $zfZ['codes_alle']]); ?>
+                     . $zfZ['codes_offen'] . ' von ' . $zfZ['codes_alle']
+                     . ' · Passkeys: ' . $zfPk]); ?>
         <?php if ($zfDarf): ?>
         <form method="post">
           <?= csrf_field() ?><input type="hidden" name="action" value="totp_zuruecksetzen">

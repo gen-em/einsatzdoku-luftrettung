@@ -9217,3 +9217,29 @@ zutreffen.
      Rundmail leitet auch nach einem Fehlschlag um (E-R4-34). Beleg:
      Rollenprobe (Umleitung an vier Karten, 492 Erwartungen) und Bedienweg
      betrieb-server-neuladen.
+
+350. **Passkeys als zweiter Faktor neben TOTP.** · gehört zu: 18 · Stand: erledigt · seit 27.09.2026
+     *Aufgenommen 27.09.2026 in der Nachfassung des Konzepts SR (Paket
+     SR-09, E-SR-29); herausgelöst aus Nr. 146, dessen Passkey-Frage damit
+     beantwortet ist.* Ein TOTP-Code lässt sich auf einer gefälschten Seite
+     abgreifen und weiterreichen; eine WebAuthn-Signatur ist an den Ursprung
+     gebunden — der Code-Schritt wird phishingfest. **Bauform:** ohne
+     Fremdbestandteil — `rw_pruefen()` prüft schon ECDSA P-256 mit phpseclib,
+     `Crypt/RSA` liegt für RS256 daneben, es fehlt ein kleiner CBOR-Leser
+     (`passkey_lib.php`, E-SR-30); Tabelle `passkeys` (Migration); die Karte
+     „Zweitfaktor" bekommt den Abschnitt, der Code-Schritt den Knopf „Mit
+     Passkey bestätigen"; Codes und Rückweg bleiben der Notweg; Anlegen und
+     Entfernen verlangen einen frischen Code. **Prüfmittel:** Bedienweg mit
+     dem virtuellen Authenticator Chromiums (CDP `WebAuthn`), Probe mit
+     selbst erzeugten Vektoren (ES256, RS256, jede Ablehnung). **Nicht
+     dabei:** Passkeys mit PRF als Ersatz der Passwortableitung (E-SR-28).
+     *Abnahme:* Konzept SR, Paket SR-09; Prüfdokument P-SR-16.
+     Erledigt 28.09.2026 mit SR-09 (Web 21.10.0, E-SR-29 bis -36, -42):
+     passkey_lib.php mit eigenem CBOR-Leser und beiden Zeremonien über
+     phpseclib (ES256, RS256), ohne Fremdbestandteil; Tabelle passkeys
+     (Migration), Abschnitt in der Karte Zweitfaktor, Knopf im Code-Schritt
+     und auf der Bestätigung, api/passkey_anlegen.php und assets/passkey.js;
+     rp.id aus app.base_url (E-SR-42). Passkeyprobe 57 ok, 0 fehlen;
+     Zweitfaktorprobe Teil 5d 9 ok; Bedienweg einstellungen-profil-passkey
+     (Chromium). Die Fable-Gegenlesung (H-SR-08) steht bei Abschluss dieses
+     Eintrags aus.

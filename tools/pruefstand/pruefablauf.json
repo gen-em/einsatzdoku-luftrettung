@@ -273,12 +273,17 @@
       "aufruf": "bash tools/proben/proben.sh zweitfaktor",
       "braucht": "installation",
       "demo": true,
-      "bemerkung": "RFC-6238-Vektoren 6/6, Code-Schritt über HTTP, Einrichtungstor, Demo-Reset, Bus-Faktor (P5c/AP5). Den Demo-Reset misst sie an seinem Schritt demo_zweitfaktor_leeren() und nicht am ganzen Reset -- bis F-P5c-117 setzte sie den Demo-Bestand zurueck und machte die GPX-Probe danach blind."
+      "bemerkung": "RFC-6238-Vektoren 6/6, Code-Schritt über HTTP, Einrichtungstor, Demo-Reset, Bus-Faktor (P5c/AP5); seit SR-09 Teil 5d, Passkeys an Anmeldung, Bestaetigung und Endpunkt (stellt app.base_url fuer den Teil auf localhost). Den Demo-Reset misst sie an seinem Schritt demo_zweitfaktor_leeren() und nicht am ganzen Reset -- bis F-P5c-117 setzte sie den Demo-Bestand zurueck und machte die GPX-Probe danach blind."
     },
     "rueckwegprobe": {
       "aufruf": "bash tools/proben/proben.sh rueckweg",
       "braucht": "installation",
       "bemerkung": "Konzept RW. Teil A (RW-01): Selbsttest beider Engines gegen den festen Browser-Vektor, sechs Signaturfaelle, fremde Kurven, Pruefregeln, Statuszeile in drei Lagen, Marke. Braucht die Datenbank nur fuer die Marke in app_state und stellt sie danach wieder her."
+    },
+    "passkeyprobe": {
+      "aufruf": "bash tools/proben/proben.sh passkey",
+      "braucht": "installation",
+      "bemerkung": "Schritt 18, SR-09 (Nr. 350). Ohne Browser und ohne HTTP: baut mit phpseclib Schluesselpaare, attestationObject, clientDataJSON und Assertions selbst und misst passkey_lib.php -- CBOR-Leser (Fliesszahl, Marke, unbestimmte Laenge, neun Ebenen abgelehnt), Registrierung und Anmeldung ES256 und RS256 samt Ablehnungen, Zaehlerregel, Tabelle (elfter Passkey, Kaskade ueber totp_abschalten). Stellt app.base_url fuer den Lauf auf https://localhost:8443 (E-SR-42) und legt config.php byte-gleich zurueck."
     },
     "sitzungsprobe": {
       "aufruf": "bash tools/proben/proben.sh sitzung",
@@ -474,7 +479,7 @@
       "proben": [
         "zweitfaktorprobe"
       ],
-      "anlass": "F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset); seit SR-02 auch das Vergessen gemerkter Geraete beim Passwortwechsel (einstellungen.php) und -reset (pw_handling.php), E-SR-07; seit SR-07 der frische Code am Schluesselblatt und an den Schluesselgriffen (Teil 5c, E-SR-20)"
+      "anlass": "F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset); seit SR-02 auch das Vergessen gemerkter Geraete beim Passwortwechsel (einstellungen.php) und -reset (pw_handling.php), E-SR-07; seit SR-07 der frische Code am Schluesselblatt und an den Schluesselgriffen (Teil 5c, E-SR-20); seit SR-09 Passkeys an Anmeldung und Bestaetigung (Teil 5d, E-SR-32)"
     },
     {
       "id": "rueckweg",
@@ -614,6 +619,28 @@
         "sitzungshaertung"
       ],
       "anlass": "R44; Nr. 22; Nr. 205"
+    },
+    {
+      "id": "passkey",
+      "ab": "klein",
+      "pfade": [
+        "server/passkey_lib.php",
+        "server/api/passkey_anlegen.php",
+        "server/assets/passkey.js",
+        "server/vendor/phpseclib3/**",
+        "server/login.php",
+        "server/zweitfaktor.php",
+        "server/einstellungen.php",
+        "tools/proben/passkey/**",
+        "tools/bedienprobe/wege/einstellungen_profil_passkey.mjs"
+      ],
+      "proben": [
+        "passkeyprobe",
+        "zweitfaktorprobe",
+        "rollenprobe",
+        "bedienprobe"
+      ],
+      "anlass": "Nr. 350 (Schritt 18, SR-09): Passkeys ohne WebAuthn-Bibliothek -- ein eigener CBOR-Leser und eine eigene Pruefung beider Zeremonien (E-SR-30, -36)."
     },
     {
       "id": "sitzungsbindung",
@@ -781,9 +808,10 @@
         "rollenprobe",
         "zweitfaktorprobe",
         "rueckwegprobe",
-        "sitzungsprobe"
+        "sitzungsprobe",
+        "passkeyprobe"
       ],
-      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01."
+      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09."
     },
     {
       "id": "statistik",

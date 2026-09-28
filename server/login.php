@@ -416,10 +416,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         $kontoId  = (int)$halb['konto'];
         $merkmale = [rate_merkmal_kennung((string)$halb['email'])];
         $mitRc    = ($_POST['art'] ?? '') === 'rc';
+        /* DER PASSKEY IST DER DRITTE WEG (Schritt 18, SR-09, E-SR-32): Die
+         * Antwort kommt als Feld `passkey_antwort` in denselben Schritt, im
+         * selben Topf `totp`, und der Erfolg laeuft durch denselben Zweig —
+         * Art `passkey` zaehlt unten wie `app` (Geraet merken, frischer
+         * Code). Die Herausforderung liegt im halben Stand und gilt einmal. */
+        $mitPk    = !$mitRc && ($_POST['passkey_antwort'] ?? '') !== '';
         $pr = ['ok' => false];
         if (rate_erlaubt('totp', null, $merkmale)) {
-            $pr = totp_anmeldung_pruefen($kontoId,
-                    (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''), $mitRc ? 'code' : 'app');
+            if ($mitPk) {
+                require_once __DIR__ . '/passkey_lib.php';
+                $pkAblage = is_array($halb['passkey'] ?? null) ? $halb['passkey'] : [];
+                unset($_SESSION['totp_halb']['passkey']);
+                $pkAntwort = json_decode((string)$_POST['passkey_antwort'], true);
+                $pkR = pk_anmeldung_pruefen($kontoId, $pkAblage, is_array($pkAntwort) ? $pkAntwort : []);
+                $pr = $pkR['ok'] ? ['ok' => true, 'art' => 'passkey']
+                                 : ['ok' => false, 'art' => null, 'passkey' => true];
+            } else {
+                $pr = totp_anmeldung_pruefen($kontoId,
+                        (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''), $mitRc ? 'code' : 'app');
+            }
             if ($pr['ok']) {
                 rate_erfolg('totp', null, $merkmale);
                 $u = login_zeile('id', $kontoId);
@@ -432,13 +448,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                      * fehlte — dann ist der Browser vor der Betroffenen nicht
                      * als ihrer ausgewiesen. Der Haken steht deshalb nur im
                      * App-Formular, und diese Zeile fragt die Art noch einmal:
-                     * ein handgebautes `merken=1` am anderen Feld zaehlt nicht. */
-                    if ($pr['art'] === 'app' && ($_POST['merken'] ?? '') === '1') {
+                     * ein handgebautes `merken=1` am anderen Feld zaehlt nicht.
+                     * Ein Passkey zaehlt wie ein App-Code (SR-09, E-SR-32). */
+                    if (in_array($pr['art'], ['app', 'passkey'], true) && ($_POST['merken'] ?? '') === '1') {
                         zweitfaktor_geraet_merken($kontoId);
                     }
-                    /* DER CODE IST FRISCH (SR-07, E-SR-20) — nach App-Code
-                     * und Wiederherstellungscode gleich: Beide zeigen, dass
-                     * gerade jemand den Faktor in der Hand hat. Die Liste der
+                    /* DER CODE IST FRISCH (SR-07, E-SR-20) — nach App-Code,
+                     * Wiederherstellungscode und Passkey gleich (E-SR-32):
+                     * Alle drei zeigen, dass gerade jemand den Faktor in der
+                     * Hand hat. Die Liste der
                      * Handlungen, die ihn verlangen, steht in `db.php`. */
                     $_SESSION['zf_frisch_bis'] = time() + ZF_FRISCH_S;
                     if ($pr['art'] === 'code') {
@@ -469,6 +487,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $fehlerAuftakt = 'Der Code lässt sich hier nicht prüfen.';
             $error = 'Der Zweitfaktor wurde mit einem anderen Serverschlüssel eingerichtet. '
                    . 'Nimm einen Wiederherstellungscode oder bitte die Verwaltung, ihn zurückzusetzen.';
+        } elseif (!$pr['ok'] && !empty($pr['passkey'])) {
+            $fehlerAuftakt = 'Der Passkey wurde nicht angenommen.';
+            $error = 'Nimm den Code aus der App — oder versuche es noch einmal.';
         } elseif (!$pr['ok'] && $mitRc) {
             $fehlerAuftakt = 'Der Code passt nicht.';
             $error = 'Jeder Wiederherstellungscode gilt einmal — ein benutzter ist verbraucht.';
@@ -834,6 +855,24 @@ if ($halb !== null && $rwWeg && $rwAngeboten) {
 } else {
     $rwWeg = false;
 }
+/* DER PASSKEY IM CODE-SCHRITT (Schritt 18, SR-09, E-SR-32): nur im Formular
+ * des App-Codes (dort steht der Haken „Geraet merken"), nur wenn das Konto
+ * Passkeys hat und die Anlage eine taugliche Adresse. Die Herausforderung
+ * liegt im halben Stand wie die des Rueckwegs, neu bei jedem Aufbau, fuenf
+ * Minuten — so lange wie der halbe Stand selbst. */
+$pkLogin = null;
+if ($halb !== null && !$rwWeg && ($_GET['art'] ?? $_POST['art'] ?? '') !== 'rc') {
+    require_once __DIR__ . '/passkey_lib.php';
+    if (pk_verfuegbar() && pk_zahl((int)$halb['konto']) > 0) {
+        $pkAblage = [];
+        pk_herausforderung_stellen($pkAblage, 300);
+        $_SESSION['totp_halb']['passkey'] = $pkAblage;
+        $halb = $_SESSION['totp_halb'];
+        $pkLogin = ['herausforderung' => $pkAblage['herausforderung'],
+                    'rp_id' => pk_ursprung()['rp_id'],
+                    'kennungen' => pk_kennungen((int)$halb['konto'])];
+    }
+}
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
 ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
 ?>
@@ -915,6 +954,17 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
     <p class="feld-hinweis">Angemeldet als <strong><?= e((string)$halb['email']) ?></strong> — <?=
       $rc ? 'kein Handy zur Hand?' : 'es fehlt noch der Code aus deiner App.' ?></p>
     <?php ui_meldung(null, $error, 'info', '    ', ['auftakt_fehler' => $fehlerAuftakt]); ?>
+    <?php if ($pkLogin !== null): /* SR-09: verborgen, bis passkey.js den Browser kennt */ ?>
+    <div data-passkey-bestaetigen hidden data-pk-formular="passkeyform"
+         data-pk-herausforderung="<?= e($pkLogin['herausforderung']) ?>"
+         data-pk-rp-id="<?= e($pkLogin['rp_id']) ?>"
+         data-pk-kennungen="<?= e((string)json_encode($pkLogin['kennungen'])) ?>">
+      <?= ui_knopf(['text' => 'Mit Passkey bestätigen', 'art' => 'neutral', 'breit' => true,
+                    'typ' => 'button', 'attr' => ' data-passkey-knopf']) ?>
+      <div data-passkey-zustand></div>
+      <p class="feld-klein">oder der Code aus der App:</p>
+    </div>
+    <?php endif; ?>
     <?php if ($rc) {
         ui_feld(['name' => 'rc', 'label' => 'Wiederherstellungscode', 'klasse' => 'feld-code',
                  'platzhalter' => 'XXXX XXXX',
@@ -941,6 +991,12 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
       <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
     </div>
   </form>
+  <?php if ($pkLogin !== null): ?>
+  <form method="post" id="passkeyform" hidden>
+    <?= csrf_field() ?><input type="hidden" name="schritt" value="code">
+    <input type="hidden" name="passkey_antwort" value=""><input type="hidden" name="merken" value="">
+  </form>
+  <?php endif; ?>
   <?php /* DER DRITTE VERWEIS (Konzept RW, E-RW-01; M-RW-01 Bild 1) — auch
            aus dem Schritt „Wiederherstellungscode", weil dort steht, wer
            die Codes nicht mehr hat. Nur, wenn der Weg angeboten wird; sonst
@@ -1231,4 +1287,4 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
 <?php /* Fusszeile auf JEDER Seite, auch vor der Anmeldung (R32, E-P3-14) —
          dunkel, weil sie hier auf der dunkelblauen Flaeche liegt. */ ?>
 <?php ui_fuss_seite(['dunkel' => true]); ?>
-<?php ui_seite_ende(); ?>
+<?php ui_seite_ende(['skripte' => $pkLogin !== null ? ['assets/passkey.js'] : []]); ?>

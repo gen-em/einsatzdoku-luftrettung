@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351, 352 | 27.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351, 352, 353 | 27.09.2026 |
 | ab 360 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 28.09.2026 |
 
 ---
@@ -1196,25 +1196,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-350. **Passkeys als zweiter Faktor neben TOTP.** · gehört zu: 18 · Stand: offen · seit 27.09.2026
-     *Aufgenommen 27.09.2026 in der Nachfassung des Konzepts SR (Paket
-     SR-09, E-SR-29); herausgelöst aus Nr. 146, dessen Passkey-Frage damit
-     beantwortet ist.* Ein TOTP-Code lässt sich auf einer gefälschten Seite
-     abgreifen und weiterreichen; eine WebAuthn-Signatur ist an den Ursprung
-     gebunden — der Code-Schritt wird phishingfest. **Bauform:** ohne
-     Fremdbestandteil — `rw_pruefen()` prüft schon ECDSA P-256 mit phpseclib,
-     `Crypt/RSA` liegt für RS256 daneben, es fehlt ein kleiner CBOR-Leser
-     (`passkey_lib.php`, E-SR-30); Tabelle `passkeys` (Migration); die Karte
-     „Zweitfaktor" bekommt den Abschnitt, der Code-Schritt den Knopf „Mit
-     Passkey bestätigen"; Codes und Rückweg bleiben der Notweg; Anlegen und
-     Entfernen verlangen einen frischen Code. **Prüfmittel:** Bedienweg mit
-     dem virtuellen Authenticator Chromiums (CDP `WebAuthn`), Probe mit
-     selbst erzeugten Vektoren (ES256, RS256, jede Ablehnung). **Nicht
-     dabei:** Passkeys mit PRF als Ersatz der Passwortableitung (E-SR-28).
-     *Abnahme:* Konzept SR, Paket SR-09; Prüfdokument P-SR-16.
-
-<!-- -->
-
 351. **Passkey als einziger Zweitfaktor, ohne Authenticator-App.** · gehört zu: nach v1.0 · Stand: zurückgestellt · seit 27.09.2026
      *Aufgenommen 27.09.2026 mit Q-SR-12 (E-SR-35).* Schritt 18 baut den
      Passkey als weiteres Verfahren neben dem eingeschalteten TOTP (Nr. 350);
@@ -1249,3 +1230,24 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
      28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
      → 0 Überschneidungen.
+
+<!-- -->
+
+353. **Die Schemaprobe vergleicht eine migrierte Tabelle nicht mit der frisch angelegten.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 28.09.2026
+     *Aufgenommen 28.09.2026 in SR-09 (Konzept SR, F-SR-28).* Die Kommentare
+     der Migrationen `2026_09_28_vertraute_geraete` und `2026_09_28_passkeys`
+     sagten, die Schemaprobe halte fest, dass `schema.sql` und die Migration
+     dieselbe Tabelle bauen. Sie tut es nicht: Sie spielt `schema.sql` auf
+     vier Fassungen ein und prüft die Vorabliste. Ob eine Migration auf einem
+     Altbestand dieselben Spalten, Schlüssel, Zeichensätze und Fremdschlüssel
+     erzeugt wie die frische Anlage, misst niemand — eine abweichende
+     Sortierfolge oder ein vergessener Index fiele erst auf einer migrierten
+     Anlage auf, und dort erst, wenn eine Abfrage daran scheitert. Die
+     Kommentare sind berichtigt; für die zwei Tabellen dieser Runde ist es
+     von Hand gemessen (`SHOW CREATE TABLE` ohne `AUTO_INCREMENT`,
+     zeichengleich, Prüfdokument SR).
+     *Weg:* Die Plattformmatrix spielt je Fassung zusätzlich einen älteren
+     Stand von `schema.sql` ein, führt die Migrationen aus und vergleicht
+     `SHOW CREATE TABLE` jeder Tabelle mit der frisch angelegten; eine
+     Abweichung ist rot. *Abnahme:* eine absichtlich abweichende Spalte in
+     einer Migration → rot.

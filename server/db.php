@@ -1227,6 +1227,11 @@ const ZF_FRISCH_HANDLUNGEN = [
     'user_delete'        => ['seite' => 'admin_user.php',              'ort' => ''],
     // den eigenen Zweitfaktor ausschalten
     'totp_ausschalten'   => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
+    // Passkeys (SR-09, E-SR-31): Wer eine fremde Sitzung erbeutet hat, soll
+    // sich damit keinen dauerhaften zweiten Faktor anlegen. Anlegen ist ein
+    // Endpunkt (403 JSON), Entfernen ein Formular der Karte.
+    'passkey_anlegen'    => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
+    'passkey_entfernen'  => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
 ];
 
 /** Darf diese Rolle den Bereich Betrieb sehen und bedienen? */

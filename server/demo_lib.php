@@ -483,6 +483,12 @@ function demo_zweitfaktor_leeren(PDO $pdo, int $id): void
     if (db_hat_tabelle($pdo, 'vertraute_geraete')) {
         $pdo->prepare('DELETE FROM vertraute_geraete WHERE user_id = ?')->execute([$id]);
     }
+    /* DIE PASSKEYS (SR-09, E-SR-29) — ein Verfahren desselben Faktors, also
+     * dieselbe Regel: Der Endpunkt nimmt vom Demo-Konto keinen an; steht
+     * trotzdem einer da, raeumt der Reset ihn ab. */
+    if (db_hat_tabelle($pdo, 'passkeys')) {
+        $pdo->prepare('DELETE FROM passkeys WHERE user_id = ?')->execute([$id]);
+    }
 }
 
 /**

@@ -375,7 +375,8 @@ function totp_anmeldung_pruefen(int $userId, string $eingabe, ?string $nur = nul
  * an die Kontoadresse verschickt der Aufrufer. EINE Funktion, drei
  * Aufrufer — RW baut das Zurücksetzen nicht ein zweites Mal (3.3).
  *
- * DIE GEMERKTEN GERAETE GEHEN MIT, auf jedem Weg (SR-02, E-SR-07): Ein
+ * DIE GEMERKTEN GERAETE UND DIE PASSKEYS GEHEN MIT, auf jedem Weg (SR-02,
+ * E-SR-07; SR-09, E-SR-29). Zu den Geraeten: Ein
  * Faktor, der aus ist, hat keine Geraete, die ihn ersetzen; und wer ihn
  * zuruecksetzen laesst, weil das Handy weg ist, will auch den Laptop nicht
  * mehr als bekannt gelten lassen, auf dem jemand anders sitzen koennte.
@@ -390,6 +391,10 @@ function totp_abschalten(int $userId, string $weg): bool
         $pdo->prepare('DELETE FROM totp_codes WHERE user_id = ?')->execute([$userId]);
     });
     zweitfaktor_geraete_vergessen($userId, 'zweitfaktor_' . $weg);
+    /* DIE PASSKEYS GEHEN MIT, auf jedem Weg (SR-09, E-SR-29): Ein Passkey ist
+     * ein Verfahren DIESES Faktors; ein Faktor, der aus ist, hat keine. */
+    require_once __DIR__ . '/passkey_lib.php';
+    pk_alle_entfernen($userId, 'zweitfaktor_' . $weg);
     if ($vorher['an']) {
         require_once __DIR__ . '/protokoll_lib.php';
         protokoll('verwaltung', $weg === 'selbst' ? 'totp_ausgeschaltet' : 'totp_zurueckgesetzt',

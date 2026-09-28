@@ -488,6 +488,32 @@ function mail_katalog(): array
                 . "bei der Verwaltung."),
         ],
 
+        /* PASSKEYS (Schritt 18, SR-09, E-SR-33) — nach dem Muster
+         * `rueckweg_erneuert`: Ein neuer zweiter Faktor an einem erbeuteten
+         * Konto bliebe sonst still. Die Anmeldung mit Passkey schreibt keine
+         * Mail (je Anmeldung waere Rauschen). */
+        'passkey_angelegt' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'bezeichnung'],
+            'betreff' => fn(array $d): string => 'Passkey hinzugefügt — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " ist ein Passkey hinzugefügt worden:\n"
+                . "„" . $d['bezeichnung'] . "“. Er ersetzt bei der Anmeldung den Code aus der App.\n\n"
+                . $d['link'],
+                "Falls du das nicht warst, entferne ihn dort, ändere umgehend dein Passwort\n"
+                . "und melde dich bei der Verwaltung."),
+        ],
+
+        'passkey_entfernt' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'bezeichnung'],
+            'betreff' => fn(array $d): string => 'Passkey entfernt — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " ist ein Passkey entfernt worden:\n"
+                . "„" . $d['bezeichnung'] . "“. Die Anmeldung fragt dort wieder nach dem Code.\n\n"
+                . $d['link'],
+                "Falls du das nicht warst, ändere bitte umgehend dein Passwort und melde dich\n"
+                . "bei der Verwaltung."),
+        ],
+
         'registrierung_verfallen' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Registrierung verfallen — ' . $n,

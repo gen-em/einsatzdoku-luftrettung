@@ -178,6 +178,8 @@ $beispiel = [
     'speicher'   => '412 MB von 500 MB',
     // Seit P5c/AP1: der Text der Ankuendigung fuer die Rundmail.
     'text'       => 'Wartung am Dienstag, 20:00 bis 21:00.',
+    // Seit SR-09: der Name eines Passkeys (passkey_angelegt, passkey_entfernt).
+    'bezeichnung' => 'Handy',
 ];
 $fehlend = [];
 foreach ($katalog as $k => $e) {

@@ -82,6 +82,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       (phpseclib), Nachricht, Selbsttest mit Marke,
 │   │                       Stand des Paars je Konto (rw_zustand(); Konzept
 │   │                       RW, 4.99q)
+│   ├── passkey_lib.php    Passkeys als Verfahren des Zweitfaktors (Schritt
+│   │                       18, SR-09): eigener CBOR-Leser, beide
+│   │                       WebAuthn-Zeremonien, Signaturen über phpseclib,
+│   │                       die Tabelle `passkeys` (4.99q)
 │   ├── zweitfaktor.php    Das Einrichtungstor für Pflichtrollen, in der
 │   │                       Anmeldehülle (E-P5c-61)
 │   ├── zweitfaktor_teile.php  QR, Geheimnis, Codefeld und Codeliste — EIN
@@ -501,6 +505,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      in den verschlüsselten Block, ab Web 19.0.0 — siehe 4.98d) ·
 │   │                      rueckweg_anlegen.php (das Schlüsselpaar des Rückwegs
 │   │                      ablegen, nur mit Passwortnachweis; Konzept RW, 4.99q) ·
+│   │                      passkey_anlegen.php (einen Passkey ablegen, nur mit
+│   │                      frischem Code; Schritt 18, SR-09, 4.99q) ·
 │   │                      rechtstext_vorschau.php (rendert das Getippte mit
 │   │                      rt_html(), speichert nichts; Admin und BetreiberIn,
 │   │                      Topf rt_vorschau — P5c/AP9)
@@ -531,7 +537,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      symbol.js (edSymbol() — dieselbe Zeichenkette wie ui_symbol()
 │   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code),
 │   │                      rueckweg.js (EdRueckweg: das Schlüsselpaar des Rückwegs
-│   │                       erzeugen, verpacken, senden — Konzept RW, 4.99q)
+│   │                       erzeugen, verpacken, senden — Konzept RW, 4.99q),
+│   │                      passkey.js (Passkey anlegen und bestätigen über
+│   │                       navigator.credentials, ohne Fremdbestandteil — SR-09, 4.99q)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
 │   │                      qrcode.js — qrcode-generator 2.0.4, MIT (nur die Modulmatrix
@@ -752,7 +760,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
-│   ├── proben/            fünfundzwanzig Prüfungen gegen die laufende Anlage
+│   ├── proben/            sechsundzwanzig Prüfungen gegen die laufende Anlage
 │   │                      (PK-04/2, E-PK-24): ingest, spur, jobs,
 │   │                      kopplung, wartung, raten, mail, versand,
 │   │                      komplett, wiederherstellung, gpx, geraete,
@@ -765,9 +773,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      seit Web 20.43.0 rueckweg (Signaturen des
 │   │                      Rückwegs, Selbsttest, Marke; Konzept RW),
 │   │                      seit Web 21.7.0 sitzung (die Bindung per
-│   │                      zweitem Cookie; Schritt 18, SR-01).
+│   │                      zweitem Cookie; Schritt 18, SR-01), seit
+│   │                      Web 21.10.0 passkey (CBOR-Leser, beide
+│   │                      Zeremonien, Tabelle; SR-09).
 │   │                      Gezählt am 28.09.2026 mit `proben.sh --liste`:
-│   │                      25 — bis zum 24.09.2026 stand hier
+│   │                      26 — bis zum 24.09.2026 stand hier
 │   │                      „zweiundzwanzig", AP5 hatte die
 │   │                      Zweitfaktorprobe nicht nachgetragen.
 │   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
@@ -852,6 +862,7 @@ Daten erst nach Server-Bestätigung.
 |---|---|
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.99q. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.99q) |
 | `vertraute_geraete` | „Gerät merken" beim Zweitfaktor (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07): `user_id` (`ON DELETE CASCADE`), `token_hash` (SHA-256 des Cookies `EDGERAET`, eindeutig), `angelegt_am`, `zuletzt_am` (fortgeschrieben bei jeder Anmeldung ohne Code, ohne Protokoll). **Kein User-Agent, kein Gerätename** (R36). **Gültig ist eine Zeile, solange `angelegt_am` plus die heutige Dauer ihrer Rollengruppe in der Zukunft liegt** — gerechnet beim Prüfen, nicht beim Merken (E-SR-17); der Aufräumjob löscht abgelaufene. Reist im Komplett-Stand mit (nur Hashes), **nicht** im Konto-Backup: Ein Cookie gehört zu einem Browser, nicht zu einem Konto. Mehr in 4.99q |
+| `passkeys` | Passkeys als Verfahren des Zweitfaktors (seit Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33): `user_id` (`ON DELETE CASCADE`), `credential_id` (Base64url der Kennung, höchstens 1023 Byte → `VARCHAR(1364)`, `ascii_bin`, eindeutig), `oeffentlich` (der öffentliche Schlüssel als SPKI-PEM — bei der Registrierung aus COSE überführt, damit die Anmeldung ohne CBOR auskommt), `alg` (-7 ES256 oder -257 RS256), `zaehler` (Signaturzähler, E-SR-33), `bezeichnung` (bis 40 Zeichen oder leer), `angelegt_am`, `zuletzt_am`. **Kein User-Agent, keine AAGUID, kein Gerätename** (E-SR-31, R36); höchstens zehn je Konto (`PK_HOECHSTENS`, geprüft unter `FOR UPDATE`). Reist im Komplett-Stand mit, **nicht** im Konto-Backup: Ein Passkey gilt nur für die Adresse, an der er entstand (Backup-Format 4, 6.11). Mehr in 4.99q |
 | `totp_codes` | Die Wiederherstellungscodes des Zweitfaktors (seit Web 20.42.0, P5c/AP5): `user_id`, `hash` (`password_hash()`), `benutzt_am` (NULL = offen). **Nicht am Serverschlüssel** (E-P5c-42) — sie sind der Rückweg für genau den Fall, dass das Geheimnis nicht mehr zu öffnen ist. `ON DELETE CASCADE` mit dem Konto. Angenommen wird atomar (`UPDATE … WHERE benutzt_am IS NULL`, gültig bei `rowCount() = 1`) |
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
@@ -2836,12 +2847,13 @@ Nachricht, und eine Rundmail an vierzig Konten hätte den Seitenaufruf bis zu
 Prüfung, Präfix, Frist und das Schließen überholter Zeilen bleiben eine
 Stelle.
 
-**Der Katalog** (`mail_katalog()`) führt **dreiundzwanzig** Einträge mit
+**Der Katalog** (`mail_katalog()`) führt **fünfundzwanzig** Einträge mit
 `art`, `frist`, `pflicht`, `betreff` und `text` (hier stand bis Web 20.37.3
 „zehn", der Stand von Web 20.8.0 — P5b hatte neun dazugebracht, 20.38.0
 bringt `rundmail`, 20.41.0 `registrierung_erneut`, 20.42.0
-`totp_zurueckgesetzt`, 20.44.0 `rueckweg_erneuert`; bis Web 21.1.0 stand
-hier „zwanzig"). Der Name der Installation kommt aus `instanz_name()`, die
+`totp_zurueckgesetzt`, 20.44.0 `rueckweg_erneuert`, 21.10.0
+`passkey_angelegt` und `passkey_entfernt`; bis Web 21.1.0 stand hier
+„zwanzig", bis Web 21.9.0 „dreiundzwanzig"). Der Name der Installation kommt aus `instanz_name()`, die
 Kontaktzeile aus `instanz_kontakt()` — über `mail_rahmen()`, den alle
 benutzen. Vorher gab es acht Mailtexte mit handgeschriebener Grußformel, und
 einer davon fehlte das „Gen-EM" im Betreff.
@@ -7440,10 +7452,14 @@ tragen `zf_frisch_bis` wie nach dem Code-Schritt. Den Umweg **ohne** ihn misst
 ein eigener Teil an jeder `ja`-Zeile: dieselbe Anfrage mit dem Konto der
 kleinsten Rolle, die die Handlung darf, erwartet 303 auf
 `zweitfaktor.php?bestaetigen=1` mit dem Rücksprung auf ihre Seite (nach einem
-POST mit `nochmal=1`), dazu einmal der Durchlass für ein Konto ohne
-Zweitfaktor. Dafür sind drei Zeilen dazugekommen: der Rollenwechsel
-(`action=konto&role=…` — nur ein wirklicher Wechsel verlangt den Code), die
-Anzeige des Schlüsselblatts und das Ausschalten des eigenen Zweitfaktors.
+POST mit `nochmal=1`) — bei einem Endpunkt unter `api/` stattdessen 403 mit
+dem JSON-Fehler `zweitfaktor_frisch` (seit Web 21.10.0, SR-09: der erste
+Endpunkt der Liste ist `api/passkey_anlegen.php`) —, dazu einmal der
+Durchlass für ein Konto ohne Zweitfaktor. Dafür sind drei Zeilen
+dazugekommen: der Rollenwechsel (`action=konto&role=…` — nur ein wirklicher
+Wechsel verlangt den Code), die Anzeige des Schlüsselblatts und das
+Ausschalten des eigenen Zweitfaktors; mit SR-09 zwei weitere, Passkey
+hinzufügen und entfernen.
 Dass jede Handlung der Liste genau **einen** Aufruf im Code hat, zählt das
 Register (`tools/zaehlung/`, Z43).
 
@@ -7577,6 +7593,8 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Betrieb · Server: Anmeldung (Gerät merken) | `POST betrieb_server.php action=anmeldung` | 403 | 403 | 403 | durch | — |
 | Profil: gemerkte Geräte vergessen (nur das eigene Konto) | `POST einstellungen.php?t=profil action=zf_geraete_vergessen` | durch | durch | durch | durch | — |
 | Profil: Zweitfaktor ausschalten (nur ohne Pflicht) | `POST einstellungen.php?t=profil action=zf_ausschalten` | durch | durch | durch | durch | ja |
+| Profil: Passkey hinzufügen (SR-09) | `POST api/passkey_anlegen.php` | durch | durch | durch | durch | ja |
+| Profil: Passkey entfernen (SR-09) | `POST einstellungen.php?t=profil action=passkey_entfernen` | durch | durch | durch | durch | ja |
 | Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 | — |
 | Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch | — |
 | Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch | — |
@@ -7715,7 +7733,7 @@ werden; dort fragt die Anmeldung danach keinen Code, bis die Dauer abläuft.
 | Cookie | `EDGERAET`, 32 Zufallsbyte; dieselben Parameter wie die Bindung (`SITZUNG_COOKIES`), Ablauf = Dauer der Rollengruppe beim Merken |
 | Tabelle | `vertraute_geraete` (Abschnitt 3): der SHA-256, das Konto, `angelegt_am`, `zuletzt_am` — kein User-Agent, kein Gerätename |
 | Dauer | je Rollengruppe in `app_state`: `zf_geraet_tage_user` (Vorgabe 30), `zf_geraet_tage_verwaltung` für Support, Admin und BetreiberIn (Vorgabe 7); Wahl aus 0, 1, 7, 14, 30, 90 — **0 heißt: kein Haken, und kein Gerät gilt**. Eingestellt unter Betrieb → Servereinstellungen, Karte „Anmeldung" |
-| gemerkt | in `login.php` nach `totp_anmeldung_pruefen()` mit Art `app` und Haken — **nur nach einem App-Code** (E-SR-18); nach Wiederherstellungscode und Rückweg nicht, auch nicht mit handgebautem `merken=1` |
+| gemerkt | in `login.php` nach `totp_anmeldung_pruefen()` mit Art `app` und Haken — **nur nach einem App-Code** (E-SR-18) **oder, seit Web 21.10.0, einem Passkey** (Art `passkey`, E-SR-32); nach Wiederherstellungscode und Rückweg nicht, auch nicht mit handgebautem `merken=1` |
 | erkannt | `zweitfaktor_geraet_erkannt()` nach dem Passwort und vor dem halben Stand: Cookie → Hash → Zeile **dieses** Kontos, deren `angelegt_am` plus die **heutige** Dauer in der Zukunft liegt; dann `anmeldung_vollenden()` ohne Code |
 | vergessen | beim Passwortwechsel und -reset — **in derselben Transaktion** wie Passwort und `session_epoch`, damit „Es wurde nichts geändert“ stimmt, wenn es scheitert —, in `totp_abschalten()` auf jedem Weg, mit dem Konto (Kaskade), im Demo-Reset, mit „Alle vergessen" im Profil; abgelaufene im Aufräumjob (Schritt „Gemerkte Geräte") |
 | Protokoll | `zweitfaktor_geraet_gemerkt` und `zweitfaktor_geraete_vergessen` (mit `daten.weg`), beide neutral — nicht je Anmeldung |
@@ -7737,15 +7755,43 @@ die Anwendung deshalb noch einmal nach dem Code, wenn der letzte älter als
 
 | | |
 |---|---|
-| frisch | `$_SESSION['zf_frisch_bis']`, gesetzt nach einem App- oder Wiederherstellungscode im Code-Schritt von `login.php` und auf der Bestätigungsseite; `ZF_FRISCH_S` = 900. Eine Anmeldung über ein gemerktes Gerät und der Rückweg setzen nichts, `anmeldung_vollenden()` räumt eine alte Frist weg. Ein Konto **ohne** Zweitfaktor hat nichts zu bestätigen: `zweitfaktor_frisch()` ist dort ein Durchlass |
-| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
+| frisch | `$_SESSION['zf_frisch_bis']`, gesetzt nach einem App- oder Wiederherstellungscode — seit Web 21.10.0 auch nach einem Passkey (E-SR-32) — im Code-Schritt von `login.php` und auf der Bestätigungsseite; `ZF_FRISCH_S` = 900. Eine Anmeldung über ein gemerktes Gerät und der Rückweg setzen nichts, `anmeldung_vollenden()` räumt eine alte Frist weg. Ein Konto **ohne** Zweitfaktor hat nichts zu bestätigen: `zweitfaktor_frisch()` ist dort ein Durchlass |
+| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle), seit Web 21.10.0 `passkey_anlegen` (`api/passkey_anlegen.php` — der erste Endpunkt der Liste) und `passkey_entfernen` (`einstellungen.php`, E-SR-31). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
 | das Tor | `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, **vor** `csrf_check()` wie ein Rollentor (E-P5c-85). Nicht frisch: Seiten bekommen 303 auf `zweitfaktor.php?bestaetigen=1&zurueck=…` (nach einem POST mit `nochmal=1`), die API 403 JSON `zweitfaktor_frisch`. Ein Name, der nicht in der Liste steht, wirft — ein Tippfehler darf kein Durchlass sein |
-| die Bestätigung | `zweitfaktor.php?bestaetigen=1`: Codefeld wie im Code-Schritt (App-Code oder Wiederherstellungscode, Topf `totp` mit dem Merkmal des Kontos, fünf Fehlversuche sperren), bei Erfolg die Frist und 303 auf `zurueck`; nach einem POST steht in der Karte „Code bestätigt — bitte die Handlung noch einmal auslösen." Die Handlung wird **nicht nachgespielt** (ein gespeicherter POST samt Token wäre ein Zwischenspeicher, der beim nächsten Umbau falsch abgespielt wird). Steht in `WARTUNG_AUSNAHMEN` |
+| die Bestätigung | `zweitfaktor.php?bestaetigen=1`: Codefeld wie im Code-Schritt (App-Code oder Wiederherstellungscode, seit Web 21.10.0 daneben „Mit Passkey bestätigen" mit eigener Herausforderung in `$_SESSION['passkey_best']`; Topf `totp` mit dem Merkmal des Kontos, fünf Fehlversuche sperren), bei Erfolg die Frist und 303 auf `zurueck`; nach einem POST steht in der Karte „Code bestätigt — bitte die Handlung noch einmal auslösen." Die Handlung wird **nicht nachgespielt** (ein gespeicherter POST samt Token wäre ein Zwischenspeicher, der beim nächsten Umbau falsch abgespielt wird). Steht in `WARTUNG_AUSNAHMEN` |
 | der Rücksprung | `zweitfaktor_zurueck()`: nur ein relativer Pfad auf eine Seite der Liste, die Abfrage nur mit harmlosen Zeichen (sonst fällt sie weg); alles andere wird `index.php` — sonst wäre die Seite ein offener Umleiter mit dem Vertrauen dieser Anwendung |
 
 Nachweis: `tools/proben/zweitfaktor/` Teil 5c, die Rollenprobe (Spalte
 „frischer Code" der Matrix, 4.99p), das Register (Z43: jede Handlung genau
 ein Aufruf), im Browser der Bedienweg `betrieb-server-frischer-code`.
+
+**Passkeys (ab Web 21.10.0, Schritt 18, SR-09; Nr. 350; E-SR-28 bis -36,
+-42).** Ein Passkey ist ein **weiteres Verfahren desselben Faktors**, kein
+eigener Faktor: Er setzt den eingeschalteten Zweitfaktor voraus, Codes und
+Rückweg bleiben der Notweg, und `totp_abschalten()` nimmt ihn mit — auf
+jedem Weg (E-SR-29, -35). Der Gewinn ist die Bindung an den Ursprung: Einen
+Code kann eine gefälschte Seite abgreifen und weiterreichen, eine
+WebAuthn-Signatur nicht.
+
+| | |
+|---|---|
+| Bibliothek | `passkey_lib.php` — die eine Stelle für WebAuthn (R83). **Kein Fremdbestandteil** (E-SR-30): ein eigener CBOR-Leser (`pk_cbor_lesen()`) für genau die Teilmenge, die Registrierung und COSE brauchen — Ganzzahlen, Byte- und Textketten, Listen und Karten bestimmter Länge; Fließzahl, Marke, einfacher Wert, unbestimmte Länge, doppelter Schlüssel, Rest hinter dem Element und mehr als acht Ebenen sind eine Ablehnung. Signaturen über phpseclib (`Crypt/EC` wie der Rückweg, `Crypt/RSA` PKCS#1 v1.5 mit SHA-256, Modul ab 2048 Bit) |
+| Ursprung | `pk_ursprung()` aus `app.base_url` (E-SR-42): `rp.id` = der Hostname, der Ursprung = Schema, Host und ein Port außer dem Standardport. **Keine Passkeys** für eine IP-Adresse, ohne HTTPS (außer `localhost`) und vor `update.php` (`pk_verfuegbar()`) — dann fehlt der Abschnitt in der Karte, und der Code-Schritt zeigt keinen Knopf. Weil die `rp.id` der Hostname ist, gilt ein Passkey **nur für diese Adresse**: Staging und Produktiv sind zwei |
+| Registrierung | `pk_registrierung_pruefen($ablage, $antwort)`: `clientDataJSON` mit `type` `webauthn.create`, der gestellten Herausforderung (einmal, zehn Minuten, `$_SESSION['passkey_reg']`, an das Konto gebunden) und dem eigenen Ursprung; `authData` mit `rpIdHash` = SHA-256 der `rp.id`, Flags UP und AT, `rawId` = Kennung; COSE-Schlüssel nur EC2/P-256 mit `alg` -7 oder RSA mit `alg` -257. **`fmt` wird gelesen und nicht geprüft** (E-SR-30): Attestation sagt, wer den Authenticator gebaut hat — für einen zweiten Faktor nach dem Passwort ohne Wert, mit Datenschutzpreis. Der Schlüssel wird nach SPKI überführt und so gespeichert |
+| Anmeldung | `pk_anmeldung_pruefen($userId, $ablage, $antwort)`: `type` `webauthn.get`, Herausforderung (einmal, fünf Minuten — im halben Stand `totp_halb['passkey']` bzw. in `$_SESSION['passkey_best']`), Ursprung, `rpIdHash`, **UP muss gesetzt sein, UV nicht** (das Passwort ist das Wissen; wer UV verlangte, schlösse Schlüssel ohne PIN aus), eine Kennung **dieses** Kontos, die Signatur über `authData ‖ SHA-256(clientDataJSON)` mit `PublicKeyLoader` aus dem SPKI |
+| Zähler | E-SR-33: neu > alt oder beide 0 → gut (synchronisierte Passkeys melden dauerhaft 0); sonst Ablehnung und Protokoll `passkey_zaehler` (orange), **der Passkey bleibt** — ein Löschen bei Klon-Verdacht sperrte die Betroffene aus |
+| Oberfläche | Karte „Zweitfaktor" (Einstellungen → Profil), Abschnitt „Passkeys" nur bei eingeschaltetem Zweitfaktor: je Passkey eine Zeile mit „Entfernen", darunter Bezeichnung und „Passkey hinzufügen" — **nur mit frischem Code**, sonst der Verweis „Zuerst Code bestätigen" (E-SR-31). Im Code-Schritt von `login.php` und auf `zweitfaktor.php?bestaetigen=1` über dem Codefeld „Mit Passkey bestätigen" (E-SR-32). Beides ist `hidden`, bis `assets/passkey.js` den Browser kennt; ohne JavaScript bleibt der Codeweg |
+| zählt wie | ein App-Code (E-SR-32): „Gerät merken" und `zf_frisch_bis`; Topf `totp` wie der Code |
+| Endpunkt | `api/passkey_anlegen.php`: `zweitfaktor_frisch_verlangen('passkey_anlegen')` **vor** dem Token (403 JSON `zweitfaktor_frisch`), dann Token, Demo-Konto 403, Zweitfaktor aus 409, Anlage ohne Passkeys 409, der elfte oder eine vorhandene Kennung 409 |
+| Protokoll, Mail | `passkey_angelegt` und `passkey_entfernt` (neutral, `daten.weg`: `selbst` oder `zweitfaktor_<weg>`), `passkey_zaehler` (orange); Mails `passkey_angelegt` und `passkey_entfernt` an die Kontoadresse beim Anlegen und beim einzelnen Entfernen (E-SR-33). Die Anmeldung mit Passkey schreibt nichts außer `zuletzt_am` und dem Zähler |
+| nicht | **kein PRF** (E-SR-28): Der Passkey leitet keinen Datenschlüssel ab — das Geheimnis läge bei synchronisierten Passkeys im Schlüsselbund eines Plattformanbieters, eine Frage an die Zusage der Ende-zu-Ende-Verschlüsselung. **Kein Passkey allein** (E-SR-35, Nr. 351). **Kein Konto-Backup** (Backup-Format 4) |
+
+Nachweis: `tools/proben/passkey/` (ohne Browser: CBOR, beide Zeremonien in
+ES256 und RS256 samt Ablehnungen, Zähler, Tabelle), `tools/proben/zweitfaktor/`
+Teil 5d (die Anbindung über HTTP), die Rollenprobe (zwei Zeilen der Matrix,
+der Endpunkt ohne Frische), im Browser der Bedienweg
+`einstellungen-profil-passkey` (nur Chromium: virtueller Authenticator über
+das DevTools-Protokoll).
 
 **Das Einrichtungstor** (`auth_guard.php`, E-P5c-61): Eine Pflichtrolle ohne
 `totp_seit` landet auf `zweitfaktor.php` — einer eigenen Seite in der
@@ -7772,11 +7818,13 @@ speichert nichts.
 **Zurücksetzen** (Kontoseite, E-P5c-42): die BetreiberIn für alle Rollen, ein
 Admin nur für Konten der Rolle user (`rolle_darf_zweitfaktor_zuruecksetzen()`,
 geprüft **vor** dem Formular-Token wie jedes Rollentor, E-P5c-85); das eigene
-Konto nicht. `totp_abschalten()` leert Geheimnis, Zeitschritt und Codes und
-schreibt `totp_zurueckgesetzt`; die Mail `totp_zurueckgesetzt` geht an die
+Konto nicht. `totp_abschalten()` leert Geheimnis, Zeitschritt und Codes —
+seit Web 21.8.0 vergisst es die gemerkten Geräte, seit Web 21.10.0 entfernt
+es die Passkeys (`pk_alle_entfernen()`, Protokoll `passkey_entfernt` mit
+`daten.weg`) — und schreibt `totp_zurueckgesetzt`; die Mail `totp_zurueckgesetzt` geht an die
 Kontoadresse. **Selbst ausschalten** geht nur ohne Pflicht. Der Demo-Reset
-leert die Spalten (`demo_zweitfaktor_leeren()`, gerufen aus
-`demo_zuruecksetzen()`).
+leert die Spalten, die gemerkten Geräte und die Passkeys
+(`demo_zweitfaktor_leeren()`, gerufen aus `demo_zuruecksetzen()`).
 
 **Der Rückweg über den Wiederherstellungsschlüssel entsteht in vier Paketen**
 (Konzept RW, E-P5c-104, F-P5c-106): E-P5c-42 sah ihn gegen `pat_key_check`

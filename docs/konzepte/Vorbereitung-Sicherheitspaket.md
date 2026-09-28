@@ -442,6 +442,13 @@ dafür ist SP-3 da. **Preis:** mittel; P5 baut den Kern ohnehin.
 Passwortableitung (Bitwarden seit 2024) sind die weitergehende Frage
 derselben Runde.
 
+> **Stand 28.09.2026 (Schritt 18, SR-09, Web 21.10.0):** Passkeys als
+> Zweitfaktor sind gebaut — **ohne** Fremdbestandteil. Der Satz über die
+> WebAuthn-Serverbibliothek hat sich nicht bestätigt (Konzept SR, F-SR-13,
+> E-SR-30): phpseclib lag für den Rückweg schon im Haus, es fehlte nur ein
+> CBOR-Leser für vier Typen. Passkeys **mit PRF** werden nicht
+> weiterverfolgt (E-SR-28); ein Passkey allein als Zweitfaktor ist Nr. 351.
+
 ### SP-12 — Photon und Kachelserver (K-6)
 
 Drei Wege, nach Preis:

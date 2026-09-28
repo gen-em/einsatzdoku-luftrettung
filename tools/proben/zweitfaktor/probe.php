@@ -47,6 +47,15 @@ declare(strict_types=1);
  *      „Alle vergessen", Passwortwechsel, Abschalten und Ablauf vergessen;
  *      ein fremdes Cookie zählt nicht; Dauer 0 und eine verkürzte Dauer
  *      gelten sofort; der Aufräumschritt; Protokoll.
+ *   5c. Der frische Code (SR-07, E-SR-20): Schlüsselblatt und Griff ohne
+ *      frischen Code → Bestätigung, zurück nur auf eine Seite der Liste.
+ *   5d. Passkeys an der Anlage (SR-09, E-SR-31, -32): der Knopf im
+ *      Code-Schritt, Anmeldung mit Passkey zählt wie ein App-Code (Gerät
+ *      merken, frischer Code), eine falsche Signatur und eine zweimal
+ *      geschickte Antwort nicht; die Bestätigungsseite nimmt ihn; der
+ *      Endpunkt ohne frischen Code 403 JSON, mit frischem Code legt er an
+ *      (Protokoll, Mail); Entfernen über die Karte. Die Prüfung selbst misst
+ *      die Passkeyprobe — hier geht es um die Anbindung.
  *   7. Der Bus-Faktor (E-P5c-16, -56): Ein Konto ohne Zweitfaktor zählt nicht
  *      als handlungsfähig; dazu die Tabelle der Lagen (Rollenmix → Plakette
  *      und Ton) über `status_verwaltungszeile()` mit gesetzten Zahlen —
@@ -75,6 +84,9 @@ require_once $srv . '/serverkrypto_lib.php';
 require_once $srv . '/sitzung_lib.php';
 require_once $srv . '/status_lib.php';
 require_once $wurzel . '/tools/zweitfaktor/totp.php';
+require_once $srv . '/passkey_lib.php';
+require_once $wurzel . '/tools/sandbox/konfig_stellen.php';
+require_once $wurzel . '/tools/proben/passkey/bauen.php';
 
 $basis = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
 $pdo = db();
@@ -165,19 +177,21 @@ register_shutdown_function(static function () use ($pdo, $uid, $merkmal): void {
  *  Sitzung gehört das Bindungscookie `EDBIND`. Bis dahin hielt `$keks` nur
  *  das zuletzt gesetzte Cookie, und das reichte, weil es nur eines gab. Jetzt
  *  hält es alle, nach Namen; ein gelöschtes (leer oder `deleted`) fällt heraus. */
-function http(string $methode, string $pfad, array $felder = []): array
+function http(string $methode, string $pfad, array $felder = [], ?string $json = null, string $csrf = ''): array
 {
     global $basis, $keks;
     $ch = curl_init($basis . '/' . ltrim($pfad, '/'));
     $paare = [];
     foreach ($keks as $n => $v) { $paare[] = $n . '=' . $v; }
     $kopf = $paare !== [] ? ['Cookie: ' . implode('; ', $paare)] : [];
+    /* EIN JSON-RUMPF MIT `X-CSRF` (SR-09), wie `EdApi.postJson()` ihn schickt. */
+    if ($json !== null) { $kopf[] = 'Content-Type: application/json'; $kopf[] = 'X-CSRF: ' . $csrf; }
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true,
         CURLOPT_FOLLOWLOCATION => false, CURLOPT_HTTPHEADER => $kopf,
         CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '']);
     if ($methode === 'POST') {
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($felder));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json ?? http_build_query($felder));
     }
     $roh = (string)curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -635,6 +649,171 @@ if (!zweitfaktor_geraete_da($pdo)) {
         $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ?")->execute([$uid]);
         $pdo->prepare('DELETE FROM vertraute_geraete WHERE user_id = ?')->execute([$uid]);
         $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([$merkmal]);
+        $keks = [];
+    }
+}
+
+/* ---- 5d. Passkeys an der Anlage (Schritt 18, SR-09) -----------------------
+ *
+ * DIE ADRESSE WIRD GESTELLT: `app.base_url` auf `https://localhost:8443`, weil
+ * es fuer eine IP-Adresse keine Passkeys gibt (E-SR-42). Die Anfragen gehen
+ * weiter an `$basis` — geprueft wird der Ursprung in `clientDataJSON` gegen
+ * die Konfiguration, nicht gegen den Host der Anfrage. Nach dem Stellen und
+ * nach dem Zuruecklegen wartet die Probe 3,2 Sekunden: OPcache sieht eine
+ * geaenderte `config.php` erst nach `revalidate_freq` (F-P5c-69), und er
+ * rechnet mit der Anfragezeit in GANZEN Sekunden — nach einer Pruefung in
+ * Sekunde L gilt die alte Fassung bis einschliesslich L+2. Die erste Fassung
+ * wartete 2,2 s und war in einem von zwei Laeufen rot (F-SR-31; dieselbe
+ * Falle wie F-P5c-123 in der Ratenprobe).
+ *
+ * DER PASSKEY WIRD UNMITTELBAR ABGELEGT, nicht ueber den Endpunkt: Diese
+ * Probe misst die Anbindung an Anmeldung und Bestaetigung. Den Endpunkt
+ * misst sie danach eigens, die Pruefung selbst die Passkeyprobe.
+ *
+ * DAS KONTO WIRD BETREIBERIN wie in 5c — das Schluesselblatt zeigt die
+ * Frische an der Seite selbst. */
+echo "== 5d. Passkeys an der Anlage (SR-09)\n";
+if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo)) {
+    pruefe(false, 'Passkeys an der Anlage', 'die Tabelle passkeys fehlt — update.php, nicht gemessen');
+} else {
+    $pkU = ['ursprung' => 'https://localhost:8443', 'rp_id' => 'localhost'];
+    $app = (array)konfig('app');
+    $app['base_url'] = $pkU['ursprung'];
+    $pkZurueck = konfig_stellen(['app' => $app]);
+    usleep(3200000);
+    $pdo->prepare("UPDATE users SET role = 'betreiberin' WHERE id = ?")->execute([$uid]);
+    $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([$merkmal]);
+    try {
+        $mailVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();
+    } catch (Throwable) { $mailVorher = null; }
+    $paar = pb_paar(-7);
+    $kennung = random_bytes(32);
+    $pdo->prepare("INSERT INTO passkeys (user_id, credential_id, oeffentlich, alg, zaehler, bezeichnung, angelegt_am)
+                   VALUES (?, ?, ?, -7, 0, 'Zweitfaktorprobe', UTC_TIMESTAMP())")
+        ->execute([$uid, pk_b64u($kennung), $paar['privat']->getPublicKey()->toString('PKCS8')]);
+    $pkId = (int)$pdo->lastInsertId();
+    $zaehler = 0;
+    /** Den Bereich des Knopfs aus einer Seite lesen: Herausforderung, rp.id, Kennungen. */
+    $knopf = static function (string $html, string $griff): ?array {
+        if (!preg_match('/<div ' . $griff . '\b[^>]*>/', $html, $m)) { return null; }
+        $a = [];
+        foreach (['herausforderung', 'rp-id', 'kennungen'] as $n) {
+            $a[$n] = preg_match('/data-pk-' . $n . '="([^"]*)"/', $m[0], $w) ? html_entity_decode($w[1]) : '';
+        }
+        return $a;
+    };
+    $antwort = static function (?array $k, array $o = []) use ($paar, $kennung, $pkU, &$zaehler): string {
+        $zaehler++;
+        return (string)json_encode(pb_anmeldung($paar, $kennung, (string)($k['herausforderung'] ?? ''), $pkU,
+                                                $o + ['flags' => 0x05, 'zaehler' => $zaehler]));
+    };
+    try {
+        // 1. Der Knopf im Code-Schritt
+        $keks = [];
+        passwort();
+        $s = http('GET', 'login.php');
+        $k = $knopf($s['rumpf'], 'data-passkey-bestaetigen');
+        pruefe($k !== null && $k['rp-id'] === 'localhost' && strlen($k['herausforderung']) >= 43
+               && in_array(pk_b64u($kennung), (array)json_decode($k['kennungen'], true), true)
+               && str_contains($s['rumpf'], 'id="passkeyform"') && str_contains($s['rumpf'], 'assets/passkey.js'),
+               'Code-Schritt: Knopf „Mit Passkey bestätigen" mit Herausforderung, rp.id localhost und der Kennung',
+               $k === null ? 'kein Knopf' : 'rp.id ' . $k['rp-id']);
+
+        // 2. Eine falsche Signatur zählt nicht
+        $f = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'schritt' => 'code',
+                                        'passkey_antwort' => $antwort($k, ['falsch' => true])]);
+        pruefe($f['code'] === 200 && str_contains(html_entity_decode($f['rumpf']), 'Der Passkey wurde nicht angenommen')
+               && http('GET', 'api/range.php')['code'] === 401,
+               'falsche Signatur: bleibt im Code-Schritt, Meldung, nicht angemeldet', "HTTP {$f['code']}");
+
+        // 3. Mit Passkey angemeldet, „Gerät merken" gesetzt
+        $k = $knopf($f['rumpf'], 'data-passkey-bestaetigen');
+        $gut1 = $antwort($k);
+        $r = http('POST', 'login.php', ['csrf' => csrf_von($f['rumpf']), 'schritt' => 'code',
+                                        'passkey_antwort' => $gut1, 'merken' => '1']);
+        $zeile = $pdo->query('SELECT zaehler, zuletzt_am FROM passkeys WHERE id = ' . $pkId)->fetch(PDO::FETCH_ASSOC);
+        $b = http('GET', 'betrieb_schluesselblatt.php');
+        pruefe($r['code'] === 302 && str_ends_with($r['ort'], 'index.php') && isset($keks['EDGERAET'])
+               && (int)$zeile['zaehler'] === $zaehler && $zeile['zuletzt_am'] !== null && $b['code'] === 200,
+               'mit Passkey angemeldet: 302, Gerät gemerkt, Zähler und „zuletzt" geschrieben, Schlüsselblatt sofort (frisch)',
+               "Anmeldung {$r['code']}, Gerät " . (isset($keks['EDGERAET']) ? 'ja' : 'nein')
+               . ", Zähler {$zeile['zaehler']}, Blatt {$b['code']}");
+
+        // 4. Dieselbe Antwort noch einmal: die Herausforderung gilt einmal
+        $g = $keks['EDGERAET'] ?? null;
+        $keks = [];
+        passwort();
+        $s = http('GET', 'login.php');
+        $w = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'schritt' => 'code',
+                                        'passkey_antwort' => $gut1]);
+        pruefe($w['code'] === 200 && http('GET', 'api/range.php')['code'] === 401,
+               'dieselbe Antwort noch einmal (neue Anmeldung): abgewiesen', "HTTP {$w['code']}");
+
+        // 5. Über das gemerkte Gerät, dann die Bestätigungsseite mit Passkey
+        $keks = $g !== null ? ['EDGERAET' => $g] : [];
+        $s = http('GET', 'login.php');
+        $a = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'email' => $mail,
+                                        'tokens' => json_encode([(string)$iter => $token])]);
+        $api = http('POST', 'api/passkey_anlegen.php', [], '{}', 'egal');
+        pruefe($a['code'] === 302 && $api['code'] === 403
+               && (json_decode($api['rumpf'], true)['error'] ?? '') === 'zweitfaktor_frisch',
+               'über das gemerkte Gerät, ohne frischen Code: Endpunkt 403 JSON zweitfaktor_frisch',
+               "Anmeldung {$a['code']}, Endpunkt {$api['code']} " . substr($api['rumpf'], 0, 60));
+        $b = http('GET', 'betrieb_schluesselblatt.php');
+        $seite = http('GET', $b['ort']);
+        $k = $knopf($seite['rumpf'], 'data-passkey-bestaetigen');
+        $best = http('POST', $b['ort'], ['csrf' => csrf_von($seite['rumpf']), 'passkey_antwort' => $antwort($k)]);
+        $b2 = http('GET', 'betrieb_schluesselblatt.php');
+        pruefe($b['code'] === 303 && $k !== null && $best['code'] === 303
+               && $best['ort'] === 'betrieb_schluesselblatt.php' && $b2['code'] === 200,
+               'Bestätigungsseite: Knopf da, Passkey bestätigt, zurück, Schlüsselblatt jetzt 200',
+               "Blatt {$b['code']}, Knopf " . ($k !== null ? 'ja' : 'nein') . ", Bestätigung {$best['code']} → {$best['ort']}, Blatt {$b2['code']}");
+
+        // 6. Anlegen über den Endpunkt, mit frischem Code
+        $e = http('GET', 'einstellungen.php?t=profil');
+        $kr = $knopf($e['rumpf'], 'data-passkey-anlegen');
+        $neu = pb_paar(-257);
+        $reg = pb_registrierung($neu, (string)($kr['herausforderung'] ?? ''), $pkU);
+        $an = http('POST', 'api/passkey_anlegen.php', [],
+                   (string)json_encode(['antwort' => $reg['antwort'], 'bezeichnung' => 'Probe RSA']), csrf_von($e['rumpf']));
+        $zahl = (int)$pdo->query('SELECT COUNT(*) FROM passkeys WHERE user_id = ' . $uid)->fetchColumn();
+        $prot = (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse WHERE betroffen_user_id = $uid
+                                   AND art = 'passkey_angelegt'")->fetchColumn();
+        $post = $mailVorher === null ? -1 : (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange
+                  WHERE id > $mailVorher AND schluessel = 'passkey_angelegt'")->fetchColumn();
+        pruefe($kr !== null && $an['code'] === 200 && (json_decode($an['rumpf'], true)['ok'] ?? false) === true
+               && $zahl === 2 && $prot === 1 && $post === 1,
+               'Karte: Herausforderung am Abschnitt; Endpunkt legt an (RS256), Protokoll und Mail',
+               "Abschnitt " . ($kr !== null ? 'ja' : 'nein') . ", HTTP {$an['code']}, Zahl $zahl, Protokoll $prot, Mail $post");
+        $noch = http('POST', 'api/passkey_anlegen.php', [],
+                     (string)json_encode(['antwort' => $reg['antwort'], 'bezeichnung' => '']), csrf_von($e['rumpf']));
+        pruefe($noch['code'] === 400, 'dieselbe Registrierung noch einmal: 400 (Herausforderung verbraucht)',
+               "HTTP {$noch['code']}");
+
+        // 7. Entfernen über die Karte
+        $e = http('GET', 'einstellungen.php?t=profil');
+        $x = http('POST', 'einstellungen.php?t=profil', ['csrf' => csrf_von($e['rumpf']),
+                                                          'action' => 'passkey_entfernen', 'id' => (string)$pkId]);
+        $da = (int)$pdo->query('SELECT COUNT(*) FROM passkeys WHERE id = ' . $pkId)->fetchColumn();
+        $prot = $pdo->query("SELECT daten FROM protokoll_ereignisse WHERE betroffen_user_id = $uid
+                              AND art = 'passkey_entfernt' ORDER BY id DESC LIMIT 1")->fetchColumn();
+        $postE = $mailVorher === null ? -1 : (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange
+                   WHERE id > $mailVorher AND schluessel = 'passkey_entfernt'")->fetchColumn();
+        pruefe(in_array($x['code'], [302, 303], true) && $da === 0 && is_string($prot)
+               && (json_decode($prot, true)['weg'] ?? '') === 'selbst' && $postE === 1,
+               'Entfernen über die Karte: Zeile fort, Protokoll mit weg „selbst", Mail',
+               "HTTP {$x['code']}, Zeile $da, Mail $postE, Protokoll " . (is_string($prot) ? $prot : '—'));
+    } finally {
+        $pdo->prepare('DELETE FROM passkeys WHERE user_id = ?')->execute([$uid]);
+        $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ?")->execute([$uid]);
+        $pdo->prepare('DELETE FROM vertraute_geraete WHERE user_id = ?')->execute([$uid]);
+        $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([$merkmal]);
+        if ($mailVorher !== null) {
+            $pdo->exec("DELETE FROM mail_warteschlange WHERE id > $mailVorher
+                           AND schluessel IN ('passkey_angelegt', 'passkey_entfernt')");
+        }
+        $pkZurueck();
+        usleep(3200000);
         $keks = [];
     }
 }

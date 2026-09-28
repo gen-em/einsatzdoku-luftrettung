@@ -126,6 +126,28 @@ CREATE TABLE vertraute_geraete (
   CONSTRAINT fk_vertraute_geraete_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Passkeys als zweiter Faktor (Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33).
+-- Ein weiteres Verfahren desselben Faktors: nur neben eingeschaltetem TOTP.
+-- credential_id: die Kennung des Authenticators, Base64url — ascii_bin, weil
+-- Base64url Gross- und Kleinschreibung unterscheidet; 1364 Zeichen fassen die
+-- 1023 Bytes, die WebAuthn hoechstens erlaubt. oeffentlich: SPKI als PEM,
+-- bei der Registrierung aus COSE ueberfuehrt. alg: -7 (ES256) oder -257
+-- (RS256). Kein User-Agent, keine AAGUID (E-SR-31).
+CREATE TABLE passkeys (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id       INT UNSIGNED NOT NULL,
+  credential_id VARCHAR(1364) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  oeffentlich   TEXT NOT NULL,
+  alg           SMALLINT NOT NULL,
+  zaehler       INT UNSIGNED NOT NULL DEFAULT 0,
+  bezeichnung   VARCHAR(40) NOT NULL DEFAULT '',
+  angelegt_am   DATETIME NOT NULL,
+  zuletzt_am    DATETIME NULL,
+  UNIQUE KEY uq_passkeys_credential (credential_id),
+  KEY idx_konto (user_id),
+  CONSTRAINT fk_passkeys_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE password_resets (
   id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id    INT UNSIGNED NOT NULL,
@@ -1107,4 +1129,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- vertraute_geraete steht oben schon im Schema (Web 21.8.0, SR-02). Der
   -- Wert `notzugang_geheim`, den dieselbe Migration im Bestand anlegt, entsteht
   -- auf einer frischen Anlage beim ersten Aufruf des Notzugangs (E-SR-24).
-  ('2026_09_28_vertraute_geraete', 'skipped');
+  ('2026_09_28_vertraute_geraete', 'skipped'),
+  -- passkeys steht oben schon im Schema (Web 21.10.0, SR-09).
+  ('2026_09_28_passkeys', 'skipped');

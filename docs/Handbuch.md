@@ -836,9 +836,9 @@ BetreiberIn ein, je Rolle: für NutzerInnen sind es von Haus aus 30, für
 Support, Admin und BetreiberIn 7 (Betrieb → Servereinstellungen, Karte
 „Anmeldung", 12.5). Steht dort „aus", gibt es keinen Haken.
 
-- **Nur nach einem Code aus der App.** Mit einem Wiederherstellungscode oder
-  dem Wiederherstellungsschlüssel gibt es keinen Haken — dann fehlte gerade
-  das Handy.
+- **Nur nach einem Code aus der App oder einem Passkey** (unten). Mit einem
+  Wiederherstellungscode oder dem Wiederherstellungsschlüssel gibt es keinen
+  Haken — dann fehlte gerade das Handy.
 - **Nicht an einem Rechner, den andere mitbenutzen.** Ein gemerkter Browser
   ist so gut wie dein Handy: Wer dort dein Passwort kennt, ist drin.
 - **Vergessen:** Einstellungen → Profil, Karte „Zweitfaktor", Zeile
@@ -853,14 +853,55 @@ Support, Admin und BetreiberIn 7 (Betrieb → Servereinstellungen, Karte
 Handlungen verlangen einen Code, der höchstens **15 Minuten** alt ist: die
 Griffe an den Schlüsseln des Servers und das Schlüsselblatt, auf der
 Kontoseite einer anderen Person Rolle wechseln, Zweitfaktor zurücksetzen und
-Konto löschen, und das Ausschalten deines eigenen Zweitfaktors. Hast du dich
-eben mit dem Code angemeldet, merkst du davon nichts. Kamst du über ein
+Konto löschen, das Ausschalten deines eigenen Zweitfaktors und — seit Web
+21.10.0 — einen Passkey hinzufügen oder entfernen. Hast du dich eben mit dem
+Code oder einem Passkey angemeldet, merkst du davon nichts. Kamst du über ein
 gemerktes Gerät herein oder ist die Anmeldung älter, erscheint die Seite
 **„Code bestätigen"** — Code aus der App (oder ein Wiederherstellungscode)
-eingeben, danach geht es zurück. Eine abgeschickte Handlung wird dabei **nicht
+eingeben oder **„Mit Passkey bestätigen"**, danach geht es zurück. Eine abgeschickte Handlung wird dabei **nicht
 nachgeholt**: Die Seite sagt „Code bestätigt — bitte die Handlung noch einmal
 auslösen", und ein zweiter Klick tut es. Danach gilt der Code 15 Minuten lang
 auch für die übrigen. Ohne Zweitfaktor fragt nichts nach.
+
+**Passkeys** (seit Web 21.10.0). Statt den Code aus der App abzutippen,
+kannst du die Anmeldung mit einem **Passkey** bestätigen — mit Fingerabdruck,
+Gesicht oder PIN des Geräts, oder mit einem Sicherheitsschlüssel am USB.
+Der Browser fragt danach, und die Antwort passt **nur zu dieser Adresse**:
+Eine nachgemachte Anmeldeseite unter einer anderen Adresse bekommt nichts,
+womit sie etwas anfangen kann — anders als ein Code, den man dort abtippen
+könnte.
+
+- **Für wen.** Für alle mit eingeschaltetem Zweitfaktor — ein Passkey kommt
+  **zusätzlich** zur App, nicht an ihre Stelle. Codes, Codeblatt und
+  Wiederherstellungsschlüssel bleiben der Weg, wenn das Gerät fehlt. Das
+  Demo-Konto hat keine.
+- **Hinzufügen.** Einstellungen → Profil, Karte „Zweitfaktor", Abschnitt
+  **„Passkeys"**: eine Bezeichnung, wenn du magst („Handy", „Laptop"; bis
+  40 Zeichen — sonst heißt er „Passkey vom <Datum>"), dann **„Passkey
+  hinzufügen"** und der Dialog deines Browsers. Weil ein neuer zweiter Faktor
+  am Konto hängt, fragt die Seite vorher nach einem **frischen Code**
+  (oben): Steht dort **„Zuerst Code bestätigen"**, führt der Verweis auf die
+  Seite „Code bestätigen" und zurück. Höchstens **zehn** je Konto. Eine Mail
+  an deine Adresse sagt, dass einer dazugekommen ist — hat das jemand
+  anderes getan, erfährst du es so.
+- **Anmelden.** Nach dem Passwort steht im Code-Schritt über dem Codefeld
+  **„Mit Passkey bestätigen"**. Er zählt wie ein Code aus der App: Der Haken
+  „Dieses Gerät merken" gilt auch für ihn, und die 15 Minuten des frischen
+  Codes beginnen. Der Code aus der App geht daneben weiter.
+- **Entfernen.** In der Liste je Passkey **„Entfernen"** (mit Rückfrage, auch
+  hier mit frischem Code); eine Mail sagt es. Mit dem Zweitfaktor gehen alle
+  Passkeys: beim **Ausschalten**, beim **Zurücksetzen** durch die Verwaltung
+  und mit dem Wiederherstellungsschlüssel.
+- **Nur für diese Adresse.** Ein Passkey gehört zu der Adresse, unter der die
+  Anlage läuft. Unter einer anderen Adresse — einer Testanlage neben der
+  echten, nach einem Umzug — gibt es ihn nicht, und die Anmeldung fragt nach
+  dem Code. Läuft die Anlage unter einer bloßen IP-Adresse oder ohne HTTPS,
+  gibt es keine Passkeys, und der Abschnitt fehlt.
+- **Wenn der Knopf fehlt:** Der Browser kennt keine Passkeys, JavaScript ist
+  aus, oder das Konto hat keinen — dann bleibt der Code.
+- Gespeichert wird der **öffentliche** Teil des Schlüssels, seine Kennung,
+  die Bezeichnung und wann er angelegt und zuletzt benutzt wurde; der geheime
+  Teil verlässt dein Gerät nicht. Kein Gerätename, kein Hersteller.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -3636,7 +3677,7 @@ Darunter:
 | Karte | Was dort steht |
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** in den Reiter Verwaltung, eingegrenzt auf dieses Konto — als Handelnde oder als Betroffene (11.7); was andere Reiter über das Konto führen, etwa ein eingespieltes Konto-Backup im Reiter Sicherung, zeigt dieser Filter nicht. |
-| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg — seit Web 21.8.0 auch die gemerkten Geräte (3.1f); die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
+| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind, seit Web 21.10.0 dazu die **Zahl der Passkeys** (nur die Zahl — welche es sind und wie sie heißen, sieht nur die Person selbst). **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg — seit Web 21.8.0 auch die gemerkten Geräte, seit Web 21.10.0 die Passkeys (3.1f); die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
@@ -4368,6 +4409,22 @@ Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 > BetreiberIn eingestellt hat; auf dem Server liegt davon nur ein Prüfwert,
 > kein Gerätename und kein Browsertyp. Beim Setzen eines Passworts kommt für
 > diesen einen Vorgang ein eigenes Sitzungscookie dazu.
+> ```
+>
+> **Ein dritter Absatz, seit Web 21.10.0: Passkeys** (Schritt 18, SR-09).
+> Ebenso eine technische Tatsache; ob sie in die Datenschutzerklärung
+> gehört, entscheidet die BetreiberIn. Zum Übernehmen:
+>
+> ```
+> ## Passkeys
+>
+> Wer beim Zweitfaktor einen Passkey hinzufügt, hinterlegt auf dem Server
+> dessen öffentlichen Schlüssel, eine vom Gerät vergebene Kennung, eine
+> selbst gewählte Bezeichnung und die Zeitpunkte des Anlegens und der
+> letzten Benutzung. Der geheime Teil des Schlüssels verlässt das Gerät
+> nicht. Gerätename, Hersteller und Modell werden nicht erhoben. Die
+> Angaben werden gelöscht, wenn der Passkey entfernt, der Zweitfaktor
+> ausgeschaltet oder das Konto gelöscht wird.
 > ```
 
 **Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:

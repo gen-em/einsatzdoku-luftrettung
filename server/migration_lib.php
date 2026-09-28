@@ -3503,9 +3503,12 @@ function migrationen_katalog(): array
          * (E-SR-17); der Aufraeumjob loescht die abgelaufenen.
          *
          * DERSELBE TEXT WIE IN `schema.sql`, Zeichen fuer Zeichen in Spalten,
-         * Schluesseln und Fremdschluessel: Die Schemaprobe haelt
-         * `SHOW CREATE TABLE` der migrierten gegen die frisch eingerichtete
-         * Anlage.
+         * Schluesseln und Fremdschluessel. KEINE PROBE HAELT DAS FEST: Die
+         * Schemaprobe spielt `schema.sql` auf vier Fassungen ein und prueft
+         * die Vorabliste, vergleicht aber migriert und frisch nicht (hier
+         * stand bis Web 21.10.0 das Gegenteil, F-SR-28; Nr. 353). Gemessen
+         * wurde es beim Bau von Hand — `SHOW CREATE TABLE` ohne den Zaehler
+         * `AUTO_INCREMENT`, zeichengleich (Pruefdokument SR).
          *
          * UND DER WERT DES NOTZUGANGS (E-SR-24): `app_state.notzugang_geheim`,
          * 32 Zufallsbyte hex. Er gehoert zu SR-04 und steht hier, damit jenes
@@ -3532,6 +3535,40 @@ function migrationen_katalog(): array
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             $pdo->prepare('INSERT IGNORE INTO app_state (k, v) VALUES (?, ?)')
                 ->execute(['notzugang_geheim', bin2hex(random_bytes(32))]);
+        },
+    ],
+    [
+        'id'    => '2026_09_28_passkeys',
+        'web'   => '21.10',
+        'label' => 'passkeys — Passkeys als zweiter Faktor (Schritt 18, SR-09)',
+        /* PASSKEYS (Schritt 18, SR-09, E-SR-29 bis -33). Eine Zeile je
+         * Authenticator: die Kennung (Base64url, ascii_bin, eindeutig), der
+         * oeffentliche Schluessel als SPKI, das Verfahren, der Zaehler, eine
+         * Bezeichnung, zwei Zeitpunkte. Mit dem Konto weg (Kaskade).
+         *
+         * DERSELBE TEXT WIE IN `schema.sql`, Zeichen fuer Zeichen in Spalten,
+         * Schluesseln und Fremdschluessel. KEINE PROBE HAELT DAS FEST: Die
+         * Schemaprobe spielt `schema.sql` auf vier Fassungen ein und prueft
+         * die Vorabliste, vergleicht aber migriert und frisch nicht (hier
+         * stand bis Web 21.10.0 das Gegenteil, F-SR-28; Nr. 353). Gemessen
+         * wurde es beim Bau von Hand — `SHOW CREATE TABLE` ohne den Zaehler
+         * `AUTO_INCREMENT`, zeichengleich (Pruefdokument SR). */
+        'skip'  => fn(PDO $pdo): bool => db_hat_tabelle($pdo, 'passkeys'),
+        'run'   => function (PDO $pdo): void {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS passkeys (
+              id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              user_id       INT UNSIGNED NOT NULL,
+              credential_id VARCHAR(1364) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+              oeffentlich   TEXT NOT NULL,
+              alg           SMALLINT NOT NULL,
+              zaehler       INT UNSIGNED NOT NULL DEFAULT 0,
+              bezeichnung   VARCHAR(40) NOT NULL DEFAULT '',
+              angelegt_am   DATETIME NOT NULL,
+              zuletzt_am    DATETIME NULL,
+              UNIQUE KEY uq_passkeys_credential (credential_id),
+              KEY idx_konto (user_id),
+              CONSTRAINT fk_passkeys_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         },
     ],
     // Naechste Migration hier anhaengen.
