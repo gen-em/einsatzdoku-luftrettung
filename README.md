@@ -22,8 +22,8 @@ verschlüsseltes **Backup** (.edbak) sichert alle Daten in eine Datei.
 > 4.98.
 
 Zum Ausprobieren gibt es ein **Demo-Konto** mit erfundenen Daten
-(`demo@gen-em.org` / `nadokudemo0815`), das sich alle 30 Minuten selbst
-zurücksetzt. Es ist die **einzige** Stelle, an der die
+(`demo@gen-em.org` / `nadokudemo0815`), das sich 30 Minuten nach der ersten
+Änderung selbst zurücksetzt. Es ist die **einzige** Stelle, an der die
 Ende-zu-Ende-Verschlüsselung bewusst ausgesetzt ist — sein Schlüsselmaterial
 liegt auf dem Server, damit die Rücksetzung funktioniert. Näheres im Handbuch
 (Abschnitt 3.2) und in `docs/Technik.md` 4.99a.

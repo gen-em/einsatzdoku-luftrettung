@@ -524,9 +524,15 @@ function mf_missions_gruende(): array
  * @param string $praefix Tabellenalias mit Punkt (`'x.'`, `'m.'`) oder leer
  * @param bool   $alias   Alias mitschreiben (`uhr_gesperrt AS manual`) — fuer
  *                        `INSERT`/`UPDATE` ist er falsch und muss weg
+ * @param bool   $sql     Spaltennamen in Backticks (Web 21.1.9, Nr. 239).
+ *                        Ohne: bloße Namen, und das ist die Vorgabe, weil vier
+ *                        Aufrufer sie als Schluessel brauchen (`$werte[$c]`,
+ *                        `$fest[$c]`, `array_diff()`). Wer SQL-Text will, nimmt
+ *                        `mf_spalten_sql()` — sie setzt den Schalter.
  * @return list<string>
  */
-function mf_spalten(string $zweck, string $praefix = '', bool $alias = true): array
+function mf_spalten(string $zweck, string $praefix = '', bool $alias = true,
+                    bool $sql = false): array
 {
     $reihen = [];
     foreach (mf_missions_register() as $spalte => $zwecke) {
@@ -551,7 +557,7 @@ function mf_spalten(string $zweck, string $praefix = '', bool $alias = true): ar
             throw new RuntimeException("mf_spalten($zweck): Position $nr ist doppelt vergeben — "
                 . "'{$reihen[$nr]}' und '$spalte'.");
         }
-        $reihen[$nr] = $praefix . $spalte . $as;
+        $reihen[$nr] = $praefix . ($sql ? mf_bezeichner($spalte) : $spalte) . $as;
     }
     if ($reihen === []) {
         throw new InvalidArgumentException("mf_spalten: unbekannter Zweck '$zweck'.");
@@ -568,8 +574,37 @@ function mf_spalten(string $zweck, string $praefix = '', bool $alias = true): ar
     return array_values($reihen);
 }
 
-/** Die Spaltenliste eines Zwecks als SQL-Text. */
+/**
+ * Die Spaltenliste eines Zwecks als SQL-Text — mit jedem Spaltennamen in
+ * Backticks.
+ *
+ * BACKTICKS AUCH UM DEN NAMEN, NICHT NUR UM DEN ALIAS (Web 21.1.9, Backlog
+ * Nr. 239). Bis dahin setzten drei `INSERT`s und ein `UPDATE` ihre
+ * Spaltenliste mit `implode()` ueber die blossen Namen zusammen, und in die
+ * Liste der Sicherung fliessen ueber `$extraCols` Namen, die noch dazukommen.
+ * Heute ist keiner reserviert (Nr. 238); die Bauform war der Punkt — genau so
+ * eine Stelle haette auf MySQL 8.4.0 bis 8.4.10 das Einspielen verhindert.
+ * Jetzt macht diese Datei SQL-Text aus Spaltennamen, und nur sie:
+ * `mf_spalten_sql()` fuer einen Zweck, `mf_liste_sql()` fuer eine Liste,
+ * die ein Aufrufer selbst erweitert, `mf_bezeichner()` fuer einen Namen.
+ */
 function mf_spalten_sql(string $zweck, string $praefix = '', bool $alias = true): string
 {
-    return implode(', ', mf_spalten($zweck, $praefix, $alias));
+    return implode(', ', mf_spalten($zweck, $praefix, $alias, true));
+}
+
+/** Eine selbst gebaute Liste von Spaltennamen als SQL-Text, jeder in Backticks. */
+function mf_liste_sql(array $namen): string
+{
+    return implode(', ', array_map('mf_bezeichner', $namen));
+}
+
+/**
+ * Ein Spalten- oder Tabellenname in Backticks; ein Backtick im Namen wird
+ * verdoppelt. Kein Schutz gegen fremde Eingaben — Namen kommen aus dem
+ * Katalog, nie aus einer Anfrage —, sondern gegen reservierte Woerter.
+ */
+function mf_bezeichner(string $name): string
+{
+    return '`' . str_replace('`', '``', $name) . '`';
 }

@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 142 (27.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 145 (28.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `05dfc12`, gemessen 26.09.2026): Web 21.1.3 ·
-Uhr 3.1.0 · Android 0.16.0.
-**Läuft:** auf `claude/schritt-17-konzept-mockups-q0yjcm` die Umsetzung von Schritt 17 (26 Pakete); auf `claude/gallant-mccarthy-yacnzk` das Konzept zu Schritt 18 — Abschnitt 3.
-**Als Nächstes:** PR der Umsetzung 17, dann der PR mit dem freigegebenen Konzept 18 (sein Zweig sitzt auf dem 17er-Zweig); die Umsetzung von 18 nach beiden Merges — Reihenfolge in Abschnitt 3.
-**Offene PRs:** keine.
-**Fällig bei der Betreiberin:** 27 Posten (Abschnitt 6.1). **`update.php`:** auf Staging gelaufen (26.09.2026); auf Produktiv mit dem Tag (6.1).
+**Stand `origin/main`** (Commit `f4ac705`, gemessen 28.09.2026): Web 21.6.1 ·
+Uhr 3.1.0 · Android 0.17.0.
+**Läuft:** auf `claude/gallant-mccarthy-yacnzk` der Konzept-PR zu Schritt 18 (Konzept SR, freigegeben; nur `docs/`) — Abschnitt 3.
+**Als Nächstes:** Merge des Konzept-PR 18 und `update.php` auf Staging (#94), dann die Umsetzung von 18 auf eigenem Zweig von `main` (Opus, neun Pakete) — Reihenfolge in Abschnitt 3.
+**Offene PRs:** der Konzept-PR zu 18 (dieser Zweig, `docs/` allein).
+**Fällig bei der Betreiberin:** 31 Posten (Abschnitt 6.1). **`update.php`:** auf Staging fällig (#94 gemergt am 28.09.2026, Migration aus Web 21.3.0), auf Produktiv mit dem Tag (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -104,12 +104,12 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** **17** → **18** → 12 → 12a →
-12b → 13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+**Die Reihenfolge der offenen Schritte ist:** **18** → 12 → 12a → 12b →
+13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: **PK-06 bis PK-08** (die Kette gehört PK, dort endet auch
 Kette II), die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
-frei). **Warum so:** 17 und 18 vor 12, damit der Review aufgeräumte und
-gehärtete Seiten liest. P6 liegt in zwei Hälften um S11 (R86): das
+frei). **Warum so:** 18 vor 12, wie 17 davor, damit der Review aufgeräumte
+und gehärtete Seiten liest. P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12) vor S11 (12a)**, weil es dessen Entwurfsfragen
 beantwortet — was Klartext bleiben darf, wie der Schlüssel aufs Gerät kommt,
 SP-9 gegen Nr. 146 —, und der **Code-Review (12b) nach S11**, damit er die
@@ -126,8 +126,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzt.
 | 12b | **P6 — Stücke 2 bis 12: Review und Bereinigung** | Bug- und Sicherheitsreview mit Fable über den Stand nach S11 (R17, R69, R86) — auch Uhr- und Android-Krypto, SPUR2, Browser-Spurfunktionen; Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); R5-Ausnahmeliste | 12a gemergt | `docs/konzepte/Review-R17.md` (Fortsetzung aus 12); Paketschnitt nach der Freigaberunde | offen — nach 12a |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
-| 17 | **Backlog-Runde 4** | Die kleinen Punkte seit Runde 3 — Prüfmittel, Doku-Konsistenz, Streichlisten, `days.created_at`, Demo-Reset-Takt, Statistik-Rest (Nr. 122); die Liste liefert `tools/steuerung/uebersicht.py` (55 Einträge am 26.09.2026) | Merge von SD — erfüllt 26.09.2026 | `docs/konzepte/Konzept-R4-Backlog-Runde-4.md` (kurzes Konzept mit Paketschnitt, kein Fable-Schritt) | Umsetzung — seit 26.09.2026 auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus); Konzept gemergt 26.09.2026 (PR #93), freigegeben samt Fragen und Mockups (E-R4-14 ff.) |
-| 18 | **Sicherheitsrunde II** | Sitzungsbindung (Nr. 242), „Gerät merken" mit frischem Code, Passkeys als Zweitfaktor (Nr. 350), Serverschlüssel wechseln (Nr. 247), Notzugang der einzigen BetreiberIn (Nr. 249), Betreiber-Rückfrage (Nr. 233), `ingest.php`-Deadlock (Nr. 210), Proof-of-Work (Nr. 228); dazu Nr. 232, 251 | Merge von 17 | `docs/konzepte/Konzept-SR-Sicherheitsrunde-II.md` (Kürzel SR, nach K1; Konzept Fable, Umsetzung Opus) | freigegeben — Konzept am 27.09.2026 freigegeben (E-SR-27), Nachfassung SR-09 Passkeys (E-SR-29, -35, -36); auf `claude/gallant-mccarthy-yacnzk` (Fable), auf dem 17er-Zweig; Konzept-PR nach dem Merge von 17, Umsetzung danach (Opus) |
+| 18 | **Sicherheitsrunde II** | Sitzungsbindung (Nr. 242), „Gerät merken" mit frischem Code, Passkeys als Zweitfaktor (Nr. 350), Serverschlüssel wechseln (Nr. 247), Notzugang der einzigen BetreiberIn (Nr. 249), Betreiber-Rückfrage (Nr. 233), `ingest.php`-Deadlock (Nr. 210), Proof-of-Work (Nr. 228); dazu Nr. 232, 251 | Merge von 17 (erfüllt 28.09.2026, PR #94) | `docs/konzepte/Konzept-SR-Sicherheitsrunde-II.md` (Kürzel SR, nach K1; Konzept Fable, Umsetzung Opus) | freigegeben — Konzept am 27.09.2026 freigegeben (E-SR-27), Nachfassung SR-09 Passkeys (E-SR-29, -35, -36); Konzept-PR seit 28.09.2026 offen (`claude/gallant-mccarthy-yacnzk`, Fable); Umsetzung nach dem Merge auf eigenem Zweig (Opus) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 | Kette II | **Härtung der Auslieferungskette** | Zeiger-Zweig und Integritätswache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Abbruchverhalten, Hotfix-Weg; M1 erster grüner Produktivlauf, M2 Probe-Hotfix | — | `docs/konzepte/Konzept-Kette-Haertung.md` (E-KH-01 bis -30) | gemergt 21.09.2026 (PR #65, #66, #68); **M1 erreicht 21.09.2026** (`web-v20.26.3`, Lauf 35654132667); M2 und der Abschluss sind an PK übergeben (PK-07); Zuarbeiten in 6.1 |
 | PK | **Prüfkette — jede Prüfung einmal, an ihrer Stelle** | Arbeitsumgebung als Station B mit Prüfstand und Bericht, Stufe 1 liest den Bericht gegen, Staging verschlanken, App-Auslieferung mit Signatur; PK-M2 erster Durchlauf der neuen Kette | — | `docs/konzepte/Konzept-PK-Pruefkette.md` (E-PK-01 bis -49) | Umsetzung — PK-01 bis PK-05 gemergt (PR #75, #81, #82, 23.09.2026); offen PK-06, PK-07 (übernimmt den Abschluss von Kette II), PK-08, PK-M2; Buchführung hier erst nach dem SD-Merge |
@@ -189,7 +188,7 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; PK-06 bis PK-08 (Kette) zu 17 und 18 (`server/`); ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 12 → 12a → 12b → 13 → 14 nacheinander, nichts parallel (R71, R86) |
+| Konzeptarbeit zu allem; PK-06 bis PK-08 (Kette) zu 18 (`server/`); ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 12 → 12a → 12b → 13 → 14 nacheinander, nichts parallel (R71, R86) |
 | — | S11 (12a) baut auf `store => 'pat'` (E-S9-01) auf, nicht daneben |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
@@ -232,6 +231,9 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.97a), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefdokument-BV-Backlog-Vorgriff.md` |
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefdokument-BR-Bestandsriegel.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md`, P-R4-06 |
+| **`update.php` nach dem Merge von #94** — erst Staging, nach dem Tag Produktiv: Migration `2026_09_27_days_created_at` (Web 21.3.0); bis dahin bleibt die Wartung an | 17 (R4-15) | 28.09.2026 | `Technik.md` 6; P-R4-05 |
+| **Tag `web-v21.6.1` setzen** — die Auslieferung von 17 auf Produktiv; sie schließt `web-v21.1.3` ein, falls der noch aussteht | 17 | 28.09.2026 | `Technik.md` 6 |
+| **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md` 4 |
 | **Zuarbeiten aus Kette II:** der Rückfallstand bei einer echten Auslieferung, der Hotfix über den ganzen Weg, die Aufbewahrung der Komplett-Stände auf Staging (Nr. 261: Vorgabe 2, Vorschlag 5) | Kette II, PK-07 | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, Prüfpunkte 26 bis 28 |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |
 | **Schlüsselblatt drucken** — zwei Ausdrucke, zwei Orte (Betriebsakte, Passwortmanager); Ablageort in der Betriebsakte vermerken | S10 | 14.09.2026 | Archiv-2 6 |
@@ -316,7 +318,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R1 | Rahmenplan plus Phasenkonzepte statt eines Großdokuments | gilt; seit Fassung 16 mit Archiv (R51), seit Fassung 125 mit zweitem Archiv und Verlauf-Datei (Konzept SD) | Archiv 3 |
 | R2 | Phasenfolge P0 → … → P6 mit Zwischenpaketen | überholt durch Abschnitt 3 | Archiv 3 |
 | R3 | Luftbegriffe nur ersetzen, wo sie Allgemeines meinen; Luftfahrt-Fachfelder bleiben | gilt; Wortliste in Konzept P2, 5; Prüfmittel R28 | Archiv 3 |
-| R4 | Referenzdatensatz wird generiert und über reguläre Wege eingespielt | erledigt (P1); seit 9d 21 Diensttage und 103 Einsätze in den Quelldaten, 106 im Bestand | Archiv 3 |
+| R4 | Referenzdatensatz wird generiert und über reguläre Wege eingespielt | erledigt (P1); seit R4-16 22 Diensttage und 106 Einsätze in den Quelldaten, 109 im Bestand | Archiv 3 |
 | R5 | Gespeicherte Namen bleiben; Ausnahmeliste in P7 beschließen (R71) | gilt; Liste zugeliefert und leer | Archiv 3 |
 | R6 | Backlog-Zuordnung (alt) | überholt durch die Kopfzeilen im Backlog (Abschnitt 5) | Archiv 3 |
 | R7 | Ordnerumbau vor P3 | gegenstandslos (E-A6-12) | Archiv 3 |
@@ -365,7 +367,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R50 | „Sicherung" wird „Backup", in einem Zug, nach S3 | erledigt (S7, Web 12.9.3 und 12.9.4) | Archiv 3 |
 | R51 | Rahmenplan in zwei Dateien: Steuerung und wörtliches Archiv | gilt; seit Fassung 125 drei Dateien und zwei Archive (Konzept SD, E-SD-01, -06) | Archiv-2 7 |
 | R52 | Kennungen bleiben; S6 und S7 für die beiden R-Pakete; der Fahrplan trägt die Reihenfolge | gilt | Archiv-2 7 |
-| R53 | P4 aufgelöst; Reste als Backlog-Runde ohne Konzept | gilt; Runden 1 bis 3 erledigt, Runde 4 ist Schritt 17 | Archiv-2 7 |
+| R53 | P4 aufgelöst; Reste als Backlog-Runde ohne Konzept | gilt; Runden 1 bis 4 erledigt (Runde 4: Schritt 17, PR #94) | Archiv-2 7 |
 | R54 | R-Einträge nur als Kurzregister, Volltext im Archiv | gilt; seit Fassung 125 Kern und Status je höchstens 160 Zeichen (E-SD-12) | Archiv-2 7 |
 | R55 | P0-Bedienprüfung und P2-Prüfliste überholt; P2-Punkt 4.1 geht in S5 | erledigt | Archiv-2 7 |
 | R56 | S7: Verb „sichern", Symbolname und `admin_sicherungen.php` bleiben | gilt | Archiv-2 7 |
@@ -444,6 +446,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | P5c — Rollen, Sicherheit, Betriebslage (Schritt 10c) | Web 20.38.0–21.1.3 | 26.09.2026 · PR #89, #90 (Tag offen, 6.1) | gelöscht 25.09.2026 (`ae829e6`; mit Konzept RW) | Prüfdokumente P5c (P-P5c-01 bis -45) und RW (P-RW-01 bis -05) | Umgebungsbanner, Protokoll mit Archiv, Reiter System, Rolle Support, Zweitfaktor mit Rückweg, Health-Endpunkt, Statistik nach R38, Rückbau von R39, Ein-Satz-Regel |
 | BV — Vorgriff auf Backlog-Runde 4 | nur Werkzeug | 26.09.2026 · PR #87 | gelöscht 26.09.2026 (`8e29cf0`) | `Pruefdokument-BV-Backlog-Vorgriff.md` (P-BV-04, -07, -09 offen, 6.1) | Nr. 184, 274, 40, 214, 194 erledigt, 222, 270, 281, 212 ausgetragen, 150 zum Teil; Verschlüsselungsumfang in 18 Doku-Stellen nachgezogen (Abfahrtort); zwei Nummernkollisionen (F-BV-14, -18) → Nr. 339; E-BV-01 bis -20 |
 | AR — Android-Runde | Android 0.16.0 | 26.09.2026 · PR #88 | gelöscht 26.09.2026 (`956c370`) | `Pruefdokument-AR-Android-Runde.md` (Gerätetests offen, 6.1) | AGP 9.4.1, Kotlin 2.4.20, API 37 in beiden Modulen, Lint 0/0 (vorher 14); `kontraste.py` prüft seine Vollständigkeit (Nr. 116, Android-Hälfte); Nr. 284 nachgereicht (P-PK-28); Emulator für Handy und Wear OS 7 (Nr. 337); E-AR-01 bis -14 |
+| 17 — Backlog-Runde 4 (Konzept R4) | Web 21.1.4–21.6.1, Android 0.16.1–0.17.0 | 28.09.2026 · PR #94 | gelöscht 28.09.2026 (`a6908a8`) | `Pruefdokument-R4-Backlog-Runde-4.md` (P-R4-05 bis -23 offen, 6.1) | 27 Pakete; Ziel 17: 45 erledigt, 10 umgehängt, neu 340–347; Nummernriegel, Erzeuger als Riegel, `days.created_at`, Statistik mit Diagrammen, Zeitraumübersicht schneller |
 | SD — Steuerungsdokumente schneiden | nur Werkzeug | 26.09.2026 · PR #92 | gelöscht 26.09.2026 (`831e3e7`) | `Pruefdokument-SD-Steuerungsdokumente.md` (3.1–3.5 offen; P-SD-20 in Konzept 17) | Rahmenplan in drei Dateien (Kopf 15 Zeilen), Backlog mit Kopfzeilen und Erledigt-Datei (keiner über 20 Zeilen), `tools/steuerung/` als Riegel in Stufe 1 (20 Decken); Nr. 177, 193, 196, 199, 294 |
 
 ## 9. Pflege dieses Dokuments

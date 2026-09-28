@@ -72,6 +72,10 @@ $logoMeldung = null;
 $nameMeldung = null;
 $adrMeldung  = null;
 
+/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Was gespeichert hat,
+ * endet mit `flash_setzen()` und einer Umleitung in die Karte, die gehandelt
+ * hat — Ort und Anker sind ihre `id`. Sonst wiederholt Neuladen das
+ * Speichern. Ein abgewiesener Wert bleibt auf der Seite. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
 
@@ -81,27 +85,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * soll die Rechtstexte nicht mit abweisen und umgekehrt. */
         [$ok, $meldung] = instanz_namen_setzen((string)($_POST['instanz_name'] ?? ''),
                                                (string)($_POST['instanz_kurz'] ?? ''));
-        $nameMeldung = [$ok ? 'ok' : 'fehler', $meldung];
+        if ($ok) {
+            flash_setzen('ok', $meldung, 'k-name');
+            header('Location: admin_installation.php#k-name');
+            exit;
+        }
+        $nameMeldung = ['fehler', $meldung];
     } elseif (($_POST['action'] ?? '') === 'instanz_adressen') {
         /* DIE ADRESSEN DIESER INSTALLATION (P5a/AP5, E-P5a-40). Eigenes
          * „Speichern" wie beim Namen, und aus demselben Grund. */
         [$ok, $meldung] = instanz_adressen_setzen((string)($_POST['instanz_kontakt'] ?? ''),
                                                   (string)($_POST['betrieb_mail'] ?? ''));
-        $adrMeldung = [$ok ? 'ok' : 'fehler', $meldung];
+        if ($ok) {
+            flash_setzen('ok', $meldung, 'k-adressen');
+            header('Location: admin_installation.php#k-adressen');
+            exit;
+        }
+        $adrMeldung = ['fehler', $meldung];
     } elseif (($_POST['action'] ?? '') === 'logo_standard') {
         $wahl = (string)($_POST['logo'] ?? '');
         if (!isset(INSTALLATION_LOGOS[$wahl])) {
             $logoMeldung = ['fehler', 'Unbekannte Logo-Wahl — es wurde nichts geändert.'];
         } else {
             app_state_setzen('logo_standard', $wahl);
-            $logoMeldung = ['ok', 'Standard der Installation: ' . INSTALLATION_LOGOS[$wahl]
+            flash_setzen('ok', 'Standard der Installation: ' . INSTALLATION_LOGOS[$wahl]
                 . ($wahl === 'wechselnd'
                    ? '. Je Anmeldung wird neu gewürfelt — innerhalb einer Sitzung '
                      . 'bleibt das Logo stehen.'
                    : '.')
-                . ' Wer im Profil keine eigene Wahl getroffen hat, sieht das ab sofort.'];
+                . ' Wer im Profil keine eigene Wahl getroffen hat, sieht das ab sofort.', 'k-logo');
+            header('Location: admin_installation.php#k-logo');
+            exit;
         }
     }
+}
+
+// Meldung aus der Umleitung in ihre Karte legen — oder nach oben
+$flash = flash_holen();
+if ($flash !== null) {
+    $paar = [$flash['ton'], $flash['text']];
+    if ($flash['ort'] === 'k-name')         { $nameMeldung = $paar; }
+    elseif ($flash['ort'] === 'k-adressen') { $adrMeldung = $paar; }
+    elseif ($flash['ort'] === 'k-logo')     { $logoMeldung = $paar; }
+    elseif ($flash['ton'] === 'error')      { $error = $flash['text']; }
+    else                                    { $notice = $flash['text']; }
 }
 
 ui_seite_start(['titel' => 'Installation']);

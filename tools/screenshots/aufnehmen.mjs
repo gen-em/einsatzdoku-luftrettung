@@ -50,7 +50,10 @@
  *   `demo`, `admin`) und Pfad; `status` nennt einen erwarteten Code, wenn es
  *   nicht 200 ist; `karte: true` wartet zusaetzlich auf Leaflet; `vorher`
  *   fuehrt Bedienschritte vor der Aufnahme aus (die bekannten stehen in
- *   `vorher()`). Platzhalter in `__GROSSBUCHSTABEN__` loest der Lauf aus dem
+ *   `vorher()`); `vervielfachen: n` gibt die Einsatzliste aus
+ *   `api/range.php` n-fach in den Browser (R4-17, `einsaetzeVervielfachen()`
+ *   in `tools/motor.mjs`) — fuer Zustaende, die erst ab 200 Einsaetzen
+ *   entstehen. Platzhalter in `__GROSSBUCHSTABEN__` loest der Lauf aus dem
  *   Bestand auf — Kennungen gehoeren zu EINER Installation und stehen in
  *   keiner eingecheckten Datei.
  *
@@ -81,7 +84,8 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
-const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG } =
+const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG,
+        einsaetzeVervielfachen } =
   await import(new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
@@ -94,10 +98,10 @@ const wert = (n, s) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] 
 
 const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
 const DEMO   = { email: wert('--demo', 'demo@gen-em.org'),  pw: wert('--demo-pw', 'nadokudemo0815') };
-const ADMIN  = { email: wert('--admin', 'admin@gen-em.org'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
+const ADMIN  = { email: wert('--admin', 'admin@example.invalid'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
 /* DIE ROLLEN ADMIN UND SUPPORT (R4-08, Nr. 297). `--admin` bleibt das Konto
  * der Rolle `betreiberin` — so hiess der Schalter schon, als das Konto
- * admin@gen-em.org BetreiberIn wurde, und die Kette kennt ihn. Die reine
+ * admin@example.invalid BetreiberIn wurde, und die Kette kennt ihn. Die reine
  * Admin- und die Support-Sicht haben eigene Pruefkonten, angelegt von
  * `tools/referenzdatensatz/einspielen/pruefkonten.sh`. */
 const ROLLE_ADMIN   = { email: wert('--rolle-admin', 'bilderlauf-admin@probe.invalid'),
@@ -512,7 +516,7 @@ async function anmeldenAuf(seite, rolle) {
 
   /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43, F-P5c-33).
    *
-   * Das Pruefkonto `admin@gen-em.org` ist eine BetreiberIn und hat einen
+   * Das Pruefkonto `admin@example.invalid` ist eine BetreiberIn und hat einen
    * Zweitfaktor. Nach dem Passwort steht die Seite deshalb WIEDER unter
    * `login.php` und fragt nach dem Code; die Adresspruefung darunter hielte
    * das zu Recht fuer gescheitert, und der Lauf kaeme ohne Admin-Bilder
@@ -822,6 +826,34 @@ async function platzhalter() {
     if (m) { p['__EINSATZ_WINDE__'] = `einsatz.php?id=${m.id}`; break; }
   }
 
+  /* __TAG_SCHNITT__: ein Diensttag, dessen ERSTES Ruhesegment mit Punkten
+     mindestens 70 Minuten dauert (R4-13, Nr. 271/273). Die Bedienschritte
+     `schnitt-grund` und `schnitt-vorschau` oeffnen dessen Schneide-Bereich —
+     das erste „Schneiden" auf der Seite — und brauchen Platz fuer eine
+     Auswahl von 66 Minuten. Gesucht ueber den Inhalt, wie oben. */
+  p['__TAG_SCHNITT__'] = null;
+  for (const t of tagListe) {
+    const i = await tagInhalt(t.id);
+    const segs = ((i && i.rest_segments) || []).filter((r) => r.n > 0);
+    const erstes = segs[0];
+    if (erstes && erstes.bis_ts != null && erstes.bis_ts - erstes.von_ts >= 70 * 60
+        && !(erstes.schnitte || []).length) {
+      p['__TAG_SCHNITT__'] = `index.php?d=${t.id}`;
+      break;
+    }
+  }
+
+  /* __TAG_NACHT__: ein LUFTdienst, dessen Einsaetze an zwei Ortsdaten
+     beginnen (R4-16, Nr. 275, D22). Die Tagesansicht zeigt dann die Liste
+     ueber Mitternacht; sortiert sie „Beginn" ueber die Uhrzeit allein, steht
+     01:40 vor 23:50. `start_sort` traegt Datum UND Uhrzeit in Ortszeit. */
+  p['__TAG_NACHT__'] = null;
+  for (const t of tagListe.filter((x) => x.kind === 'air')) {
+    const i = await tagInhalt(t.id);
+    const daten = new Set(((i && i.missions) || []).map((x) => String(x.start_sort || '').slice(0, 10)));
+    if (daten.size > 1) { p['__TAG_NACHT__'] = `index.php?d=${t.id}`; break; }
+  }
+
   const fehlend = Object.entries(p).filter(([, v]) => v === null).map(([k]) => k);
   if (fehlend.length) {
     console.log('NICHT AUFGELÖST (diese Seiten werden nicht fotografiert): '
@@ -890,7 +922,8 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 
 async function vorher(seite, schritte, fehlerSammler) {
   const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
-                   'notfallblatt', 'code-schritt', 'codeblatt'];
+                   'notfallblatt', 'code-schritt', 'codeblatt',
+                   'schnitt-grund', 'schnitt-vorschau', 'nachladezeile'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
@@ -1034,6 +1067,58 @@ async function vorher(seite, schritte, fehlerSammler) {
       }
       continue;
     }
+    if (schritt === 'schnitt-grund' || schritt === 'schnitt-vorschau') {
+      /* DER SCHNEIDE-BEREICH MIT SEINER MELDUNG (R4-13, Nr. 271, 273).
+         `schnitt-grund`: Ende gleich Beginn — der Grund „Das Ende liegt vor
+         dem Beginn." muss als rote Meldung mit Symbol stehen.
+         `schnitt-vorschau`: Beginn des Segments bis 66 Minuten danach — der
+         Erklaertext nennt die Dauer, „1h 06min".
+         DER SCHRITT SCHREIBT NICHTS: „Einsatz erzeugen" drueckt niemand. Die
+         Seite zeichnet die Segmentliste nach dem Laden; gewartet wird auf den
+         Knopf, nicht auf eine Zeit. */
+      const auf = seite.locator('[data-schnitt-auf]').first();
+      try { await auf.waitFor({ state: 'visible', timeout: 10000 }); } catch {
+        fehlerSammler.push('Kein „Schneiden" auf der Seite — hat der Tag aus '
+                         + '__TAG_SCHNITT__ kein Ruhesegment mit Punkten mehr?');
+        continue;
+      }
+      if ((await auf.getAttribute('aria-expanded')) !== 'true') {
+        await auf.click();
+      }
+      const bereich = seite.locator('[data-schnitt-fuer]').first();
+      await bereich.waitFor({ state: 'visible', timeout: 5000 });
+      const beg = bereich.locator('input[id^="s-beg-"]');
+      const end = bereich.locator('input[id^="s-end-"]');
+      const start = await beg.inputValue();
+      let ziel = start;
+      if (schritt === 'schnitt-vorschau') {
+        const [h, m] = start.split(':').map(Number);
+        const min = (h * 60 + m + 66) % 1440;
+        ziel = String(Math.floor(min / 60)).padStart(2, '0') + ':'
+             + String(min % 60).padStart(2, '0');
+      }
+      await end.fill(ziel);
+      await end.dispatchEvent('input');
+      await seite.waitForTimeout(300);
+      continue;
+    }
+    if (schritt === 'nachladezeile') {
+      /* DIE NACHLADEZEILE MUSS IN JEDER BREITE SICHTBAR SEIN (R4-17).
+         Bis Web 21.4.0 hing sie im Scrollbehaelter der Tabelle, und der ist
+         unter 720 px ausgeblendet: Auf dem Handy gab es 200 Kacheln und
+         keinen Knopf. „Da" (im DOM, nicht `hidden`) genuegte also nicht —
+         gewartet wird auf SICHTBAR, und dann wird sie in den Ausschnitt
+         gerollt, den das Bild zeigt (`"ganzseitig": false`). */
+      const zeile = seite.locator('.mehrzeile:not([hidden])').first();
+      try { await zeile.waitFor({ state: 'visible', timeout: 15000 }); } catch {
+        fehlerSammler.push('Nachladezeile nicht sichtbar — unter 720 px im '
+                         + 'ausgeblendeten Scrollbehälter der Tabelle?');
+        continue;
+      }
+      await zeile.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await seite.waitForTimeout(200);
+      continue;
+    }
     if (schritt === 'schublade') {
       /* Die Schublade gibt es nur unter 1024 px — darueber steht die Leiste
          fest daneben, und der Menueknopf ist ausgeblendet. Ein Klick darauf
@@ -1058,7 +1143,7 @@ async function vorher(seite, schritte, fehlerSammler) {
  * mit derselben Pruefsumme.
  *
  * Die Ursache steht nicht in diesem Werkzeug, sondern in der Anwendung:
- * Das Demo-Konto setzt sich alle 30 Minuten zurueck, und dabei erhoeht
+ * Das Demo-Konto setzt sich 30 Minuten nach der ersten Aenderung zurueck, und dabei erhoeht
  * `demo_zuruecksetzen()` die Sitzungs-Epoche (server/demo_lib.php,
  * `session_epoch = session_epoch + 1`). `auth_guard.php` beendet daraufhin
  * jede offene Sitzung dieses Kontos — auch unsere. Der Lauf braucht
@@ -1331,6 +1416,13 @@ for (const eintrag of liste) {
     }
   }
 
+  /* DIE EINSATZLISTE VERVIELFACHEN, wo die Seitenliste es verlangt
+   * (R4-17): nur fuer diesen Eintrag, ueber alle Breiten, danach wieder
+   * weg. Die uebrigen Seiten sehen den echten Bestand. */
+  const aufheben = eintrag.vervielfachen
+    ? await einsaetzeVervielfachen(seite, '**/api/range.php*', eintrag.vervielfachen)
+    : null;
+
   for (const { b, h, art } of BREITEN) {
     let adresse = `${BASIS}/${pfad}`;
     rolle.fehler.length = 0;
@@ -1347,7 +1439,7 @@ for (const eintrag of liste) {
     /* ---- 404 NACH EINEM DEMO-RESET: KENNUNGEN NEU HOLEN (S8/AP7) --------
      *
      * `platzhalter()` laeuft einmal, zu Beginn. Das Demo-Konto setzt sich
-     * alle 30 Minuten zurueck, ein voller Lauf dauert laenger als das — und
+     * 30 Minuten nach der ersten Aenderung zurueck, ein voller Lauf dauert laenger als das — und
      * danach zeigen `?d=` und `?id=` auf Zeilen, die es nicht mehr gibt.
      * Gemessen am 06.09.2026: Die Einsatzseiten (frueh im Lauf) standen, die
      * sechs Tag- und Aktionsseiten dahinter antworteten mit 404; 48 von 368
@@ -1633,6 +1725,7 @@ for (const eintrag of liste) {
     }
   }
 
+  if (aufheben) { await aufheben(); }
   wartungAus();
 
   await kontaktbogen(eintrag.name, bilder);
@@ -1727,7 +1820,7 @@ if (verlorene.length || ausgefallen.length) {
   if (verlorene.length) {
     md += `Bei ${verlorene.length} Aufnahmen war die Sitzung fort und wurde neu `
        +  `aufgebaut; das Bild entstand danach. Im Demo-Konto ist das normal — `
-       +  `sein Reset alle 30 Minuten erhöht die Sitzungs-Epoche.\n\n`;
+       +  `sein Reset (30 Minuten nach der ersten Änderung) erhöht die Sitzungs-Epoche.\n\n`;
     for (const v of verlorene) md += `- ${v}\n`;
   }
   if (ausgefallen.length) {

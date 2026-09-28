@@ -51,7 +51,7 @@ sys.path.insert(0, str(WERKZEUGE / "referenzdatensatz" / "einspielen"))
 PLAYWRIGHT = os.environ.get(
     "PLAYWRIGHT_MODUL", "/opt/node22/lib/node_modules/playwright/index.mjs")
 
-KONTO = os.environ.get("MESSSTAND_KONTO", "messstand@gen-em.org")
+KONTO = os.environ.get("MESSSTAND_KONTO", "messstand@example.invalid")
 KONTO_PW = os.environ.get("MESSSTAND_PASSWORT", "messstandpruefung2026")
 BACKUP_PW = os.environ.get("MESSSTAND_BACKUP_PASSWORT", "nadokudemo0815")
 PRAEFIX = "messstand"
@@ -147,30 +147,47 @@ def schritt_statistik(a) -> None:
     (gemessen 24.09.2026: 4832 von 5366, 90 %); ein Tabellenscan ist dann
     billiger, und MariaDB waehlt ihn zu Recht. Verlangt wird dort nur, dass
     der Index zur Wahl steht (`possible_keys`); der Anteil steht im Bericht.
+
+    SEIT R4-23 AUCH DER EIGENE ZEITRAUM (Nr. 122 a). Die drei Reiter noch
+    einmal mit `von`/`bis` ueber die letzten 90 Tage -- dieselbe Zielzahl --,
+    und `EXPLAIN` fuer die zwei Abfragen, die dann laufen
+    (`statistik_zeitraum_sql()`, `statistik_herkunft_sql()` mit Grenzen). Dort
+    MUSS der Index gewaehlt sein: 90 Tage sind ein Viertel des Jahres, und
+    ein Tabellenscan waere der Fehler, den der Index verhindern soll.
+    Seit R4-24 dazu die Abfrage der Diagramme (`statistik_stunden_sql()`),
+    ebenfalls mit gewaehltem Index.
     """
     import sitzung as sitzungsmodul
     s = sitzungsmodul.Sitzung(a.basis).anmelden(a.admin_email, a.admin_passwort,
                                                 a.admin_totp)
     aus: dict = {"ziel_s": STATISTIK_ZIEL_S, "reiter": {}, "explain": {}}
     fehler: list[str] = []
+    heute = time.strftime("%Y-%m-%d")
+    von = time.strftime("%Y-%m-%d", time.localtime(time.time() - 89 * 86400))
+    eigen = f"&von={von}&bis={heute}"
     for r, text in (("nutzer", "NutzerInnen"), ("einsaetze", "Einsätze"),
                     ("geraete", "Geräte")):
-        zeiten = []
-        for _ in range(3):
-            t0 = time.monotonic()
-            antwort = s.get(f"betrieb_statistik.php?r={r}")
-            zeiten.append(time.monotonic() - t0)
-            aktiv = f'class="reiter-punkt aktiv" href="?r={r}" aria-current="page">{text}<'
-            if antwort.status_code != 200 or aktiv not in antwort.text:
-                fehler.append(f"Reiter {r}: HTTP {antwort.status_code}, "
-                              f"{'Reiter aktiv' if aktiv in antwort.text else 'nicht der Reiter'}")
-                break
-        median = sorted(zeiten)[len(zeiten) // 2]
-        aus["reiter"][r] = {"median_s": round(median, 3),
-                            "zeiten_s": [round(z, 3) for z in zeiten]}
-        melde(f"  Reiter {r}: {median:.3f} s (Median aus {len(zeiten)})")
-        if median >= STATISTIK_ZIEL_S:
-            fehler.append(f"Reiter {r}: {median:.3f} s, Ziel unter {STATISTIK_ZIEL_S} s")
+        for name, zusatz in ((r, ""), (f"{r}+zeitraum", eigen)):
+            zeiten = []
+            for _ in range(3):
+                t0 = time.monotonic()
+                antwort = s.get(f"betrieb_statistik.php?r={r}{zusatz}")
+                zeiten.append(time.monotonic() - t0)
+                # Der Reiter traegt den Zeitraum in seiner Adresse (R4-23).
+                aktiv = (f'class="reiter-punkt aktiv" href="?r={r}{zusatz.replace("&", "&amp;")}"'
+                         f' aria-current="page">{text}<')
+                gemeint = not zusatz or 'Einsätze im Zeitraum' in antwort.text
+                if antwort.status_code != 200 or aktiv not in antwort.text or not gemeint:
+                    fehler.append(f"Reiter {name}: HTTP {antwort.status_code}, "
+                                  f"{'Reiter aktiv' if aktiv in antwort.text else 'nicht der Reiter'}"
+                                  f"{'' if gemeint else ', kein eigener Zeitraum'}")
+                    break
+            median = sorted(zeiten)[len(zeiten) // 2]
+            aus["reiter"][name] = {"median_s": round(median, 3),
+                                   "zeiten_s": [round(z, 3) for z in zeiten]}
+            melde(f"  Reiter {name}: {median:.3f} s (Median aus {len(zeiten)})")
+            if median >= STATISTIK_ZIEL_S:
+                fehler.append(f"Reiter {name}: {median:.3f} s, Ziel unter {STATISTIK_ZIEL_S} s")
 
     skript = r"""
 $wurzel = getenv("EDOKU_WURZEL");
@@ -184,23 +201,34 @@ $aus = ["einsaetze_im_bestand" => (int)$pdo->query("SELECT COUNT(*) FROM mission
         "im_laengsten_fenster" => (int)$pdo->query("SELECT COUNT(*) FROM missions
             WHERE started_at >= UTC_TIMESTAMP() - INTERVAL " . max(array_keys(STAT_FENSTER_EINSAETZE)) . " DAY
               AND started_at <= UTC_TIMESTAMP()")->fetchColumn()];
-foreach (["fenster" => statistik_einsaetze_sql(), "herkunft" => statistik_herkunft_sql()] as $n => $sql) {
+$fest = statistik_zeitraum([]);
+$eigen = statistik_zeitraum(["von" => getenv("EDOKU_VON"), "bis" => getenv("EDOKU_BIS")]);
+if ($eigen["art"] !== "eigen") { fwrite(STDERR, "Zeitraum ungueltig\n"); exit(1); }
+foreach (["fenster" => [statistik_einsaetze_sql(), $fest],
+          "herkunft" => [statistik_herkunft_sql($fest), $fest],
+          "zeitraum" => [statistik_zeitraum_sql($eigen), $eigen],
+          "herkunft_zeitraum" => [statistik_herkunft_sql($eigen), $eigen],
+          "stunden_zeitraum" => [statistik_stunden_sql($eigen), $eigen]] as $n => [$sql, $z]) {
     $st = $pdo->prepare("EXPLAIN " . $sql);
-    $st->execute([$demo]);
+    $st->execute(array_merge([$demo], statistik_bedingung_werte($z)));
     $aus[$n] = $st->fetchAll(PDO::FETCH_ASSOC);
 }
 echo json_encode($aus, JSON_UNESCAPED_UNICODE), "\n";
 """
     server = WERKZEUGE.parent / "server"
     e = subprocess.run(["php", "-r", skript], capture_output=True, text=True,
-                       env={**os.environ, "EDOKU_WURZEL": str(server)})
+                       env={**os.environ, "EDOKU_WURZEL": str(server),
+                            "EDOKU_VON": von, "EDOKU_BIS": heute})
     if e.returncode != 0:
         raise RuntimeError(f"EXPLAIN gescheitert: {e.stderr.strip()[:400]}")
     erkl = json.loads(e.stdout)
     aus["einsaetze_im_bestand"] = erkl["einsaetze_im_bestand"]
     aus["im_laengsten_fenster"] = erkl["im_laengsten_fenster"]
-    # Herkunft: der Index muss GEWAEHLT sein; Fenster: er muss zur Wahl stehen.
-    for name, feld in (("fenster", "possible_keys"), ("herkunft", "key")):
+    # Herkunft und eigener Zeitraum: der Index muss GEWAEHLT sein; Fenster:
+    # er muss zur Wahl stehen (siehe oben).
+    for name, feld in (("fenster", "possible_keys"), ("herkunft", "key"),
+                       ("zeitraum", "key"), ("herkunft_zeitraum", "key"),
+                       ("stunden_zeitraum", "key")):
         zeilen = erkl[name]
         schluessel = [str(z.get("key") or "") for z in zeilen]
         moeglich = ",".join(str(z.get("possible_keys") or "") for z in zeilen)
@@ -249,7 +277,7 @@ def main() -> int:
     p.add_argument("--frisch", action="store_true",
                    help="Messstandkonto vorher löschen (nur mit Präfix "
                         f"'{PRAEFIX}')")
-    p.add_argument("--admin-email", default="admin@gen-em.org")
+    p.add_argument("--admin-email", default="admin@example.invalid")
     p.add_argument("--admin-passwort", default="pruefstandzugang2026")
     # Das Geheimnis des Zweitfaktors (P5c/AP5, E-P5c-43) -- derselbe Schalter
     # wie in `kreislauf.py`: leer heisst `NADOKU_TOTP`, sonst das der Sandbox.

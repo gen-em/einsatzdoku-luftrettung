@@ -34,11 +34,11 @@ const WURZEL = '/home/user/einsatzdoku-luftrettung';
 const CONFIG = WURZEL + '/server/config.php';
 const SICHER = CONFIG + '.betriebslauf';
 const BASIS = 'https://127.0.0.1:8443';
-const ADMIN = 'admin@gen-em.org', ADMIN_PW = 'pruefstandzugang2026';
+const ADMIN = 'admin@example.invalid', ADMIN_PW = 'pruefstandzugang2026';
 /* Das Konto mit Einsatzbestand aus dem Referenzdatensatz — dasselbe, das der
  * Umstellungslauf benutzt. Nicht das Admin-Konto: Es hat keine Einsätze, und
  * Abschnitt 8b will nach dem Reset etwas zu LESEN haben. */
-const UMLAUF = 'umlauf-csv@gen-em.org', UMLAUF_PW = 'umlaufpruefung2026';
+const UMLAUF = 'umlauf-csv@example.invalid', UMLAUF_PW = 'umlaufpruefung2026';
 /* Der Wiederherstellungsschlüssel des Admin-Kontos. Er entsteht beim
  * Einrichten der Testinstallation (`lokal_einrichten.sh`, Schritt 6) und
  * liegt seither in dieser Datei. OHNE IHN entfällt Abschnitt 8b — als
@@ -237,7 +237,7 @@ const adminFeld = (f) => php(`$s=db()->prepare("SELECT ${f} FROM users WHERE id=
  * GENAU DAS IST PASSIERT (F-S10-AP3-08): Der Schnappschuss stand in
  * Abschnitt 7, also NACH 6b; zurückgelegt wurde auf einen Stand, der schon
  * umgestellt war, und das `finally` nahm den zugehörigen Anteil danach aus
- * `config.php`. `umlauf-csv@gen-em.org` war anschließend ausgesperrt und
+ * `config.php`. `umlauf-csv@example.invalid` war anschließend ausgesperrt und
  * musste neu eingerichtet werden. Der Schnappschuss gehört an den Anfang, und
  * die alte Hülle ist der einzige Rückweg, weil sie mit dem Anteil aufgeht,
  * den dasselbe `finally` wiederherstellt. */

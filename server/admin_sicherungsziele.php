@@ -49,10 +49,20 @@ $tabelleDa = sz_tabelle_da();
  * Aufruf eine Behauptung. */
 $bestand = null;
 
+/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Was ein Ziel anlegt,
+ * ändert, entfernt, prüft oder versendet, endet mit `flash_setzen()` und einer
+ * Umleitung auf dieselbe Ansicht (`neu`/`bearbeiten`, unten); das Ergebnis der
+ * Verbindungsprüfung reist über die Sitzung mit. Sonst wiederholt Neuladen die
+ * Handlung — beim Speichern samt Passwort. Eine Abweisung, die nichts geändert
+ * hat, bleibt auf der Seite, die Eingabe im Formular. „Nachsehen" ändert
+ * nichts und bleibt, wie es ist. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $aktion = (string)($_POST['action'] ?? '');
     $id = (int)($_POST['id'] ?? 0);
+    $zurueck = 'admin_sicherungsziele.php'
+             . (isset($_GET['neu']) ? '?neu=1'
+                : (isset($_GET['bearbeiten']) ? '?bearbeiten=' . (int)$_GET['bearbeiten'] : ''));
 
     if ($aktion === 'ziel_speichern') {
         /* Ein LEERES Passwortfeld heisst „nicht anfassen", nicht „löschen".
@@ -61,6 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $schluessel = trim((string)($_POST['schluessel'] ?? ''));
         $schluesselNeu = $schluessel === '' ? null : $schluessel;
         if (($_POST['schluessel_weg'] ?? '') === '1') { $schluesselNeu = ''; }
+        /* DER ALTE STAND VOR DEM SPEICHERN (Web 21.1.9, gefunden in R4-11).
+         * Bis dahin stand `sz_lesen()` erst nach `sz_speichern()` und las
+         * die neue Zeile: Der Vergleich unten schlug nie an, und ein
+         * SFTP-Ziel auf neuem Host behielt den Abdruck des alten — die
+         * naechste Verbindung scheiterte als „ANDERER Hostschluessel". */
+        $vorher = $id > 0 ? sz_lesen($id) : null;
         [$ok, $was] = sz_speichern($id > 0 ? $id : null, $_POST,
                                    $geheim, $schluesselNeu);
         if ($ok) {
@@ -68,30 +84,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             /* Der Fingerabdruck gehört zum Rechner. Zieht ein Ziel auf einen
              * anderen Host um, ist der alte Abdruck falsch — und ein falscher
              * Abdruck ist schlimmer als keiner, weil er jede Verbindung
-             * blockiert und wie ein Angriff aussieht. */
-            $vorher = $id > 0 ? sz_lesen($id) : null;
-            if ($vorher !== null && ((string)$vorher['host'] !== (string)($_POST['host'] ?? '')
-                || (int)$vorher['port'] !== (int)($_POST['port'] ?? 0))) {
+             * blockiert und wie ein Angriff aussieht. Verglichen wird mit
+             * der gespeicherten Zeile, nicht mit `$_POST` — `sz_speichern()`
+             * normalisiert, und ein Leerzeichen am Host ist kein Umzug. */
+            $nachher = $vorher !== null ? sz_lesen($id) : null;
+            if ($vorher !== null && $nachher !== null
+                && ((string)$vorher['host'] !== (string)$nachher['host']
+                    || (int)$vorher['port'] !== (int)$nachher['port'])) {
                 sz_fingerabdruck_merken($id, null);
                 $notice .= ' Der Hostschlüssel wurde vergessen, weil sich der '
                          . 'Rechner geändert hat — er wird bei der nächsten '
                          . 'Prüfung neu übernommen.';
             }
+            flash_setzen('notice', $notice);
+            header('Location: ' . $zurueck);
+            exit;
         } else {
             $error = implode(' ', (array)$was);
             $bearbeiten = $id > 0 ? $id : 0;
         }
     } elseif ($aktion === 'ziel_loeschen' && $id > 0) {
         $z = sz_lesen($id);
-        $notice = sz_loeschen($id)
-            ? 'Das Ziel „' . (string)($z['name'] ?? '') . '" wurde entfernt. '
-            . 'Was dort liegt, bleibt liegen — gelöscht wird auf dem Ziel nichts.'
-            : 'Dieses Ziel gibt es nicht (mehr).';
+        if (sz_loeschen($id)) {
+            flash_setzen('notice', 'Das Ziel „' . (string)($z['name'] ?? '') . '" wurde entfernt. '
+                . 'Was dort liegt, bleibt liegen — gelöscht wird auf dem Ziel nichts.');
+            header('Location: ' . $zurueck);
+            exit;
+        }
+        $notice = 'Dieses Ziel gibt es nicht (mehr).';
     } elseif ($aktion === 'abdruck_vergessen' && $id > 0) {
         sz_fingerabdruck_merken($id, null);
         $notice = 'Der gespeicherte Hostschlüssel wurde vergessen. Die nächste '
                 . 'Prüfung übernimmt den, den der Server dann zeigt — vorher '
                 . 'vergewissern, dass er der richtige ist.';
+        flash_setzen('notice', $notice);
+        header('Location: ' . $zurueck);
+        exit;
     } elseif ($aktion === 'versand_schalter') {
         $an = ($_POST['versand_auto'] ?? '') === '1';
         if (sz_auto_setzen($an)) {
@@ -101,6 +129,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . 'unter Betrieb → Hintergrundjobs.'
                 : 'Der Versand ist abgeschaltet. Die Ziele bleiben eingetragen; '
                 . 'es geht nur nichts mehr von selbst hinaus.';
+            flash_setzen('notice', $notice);
+            header('Location: ' . $zurueck);
+            exit;
         } else {
             $error = 'Der Schalter liess sich nicht speichern.';
         }
@@ -141,6 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ? 'Es ist kein aktives Ziel eingetragen — es wurde nichts gesendet.'
                 : $satz;
         }
+        flash_setzen($error !== null ? 'error' : 'notice', (string)($error ?? $notice));
+        header('Location: ' . $zurueck);
+        exit;
     } elseif ($aktion === 'ziel_pruefen' && $id > 0) {
         $z = sz_lesen($id);
         if ($z === null) {
@@ -158,6 +192,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             sz_lauf_merken($id, (bool)$ergebnis['ok'],
                            $ergebnis['ok'] ? null : (string)$ergebnis['meldung']);
+            /* Meldung, Schritte und „übernommen" reisen als Ergebnis mit; ein
+             * Hostschlüssel ist öffentlich, ein Zugangsdatum steht nicht darin. */
+            flash_setzen($ergebnis['ok'] ? 'ok' : 'fehler', (string)$ergebnis['meldung'], '',
+                         ['ergebnis' => $ergebnis]);
+            header('Location: ' . $zurueck);
+            exit;
         }
     } elseif ($aktion === 'ziel_bestand' && $id > 0) {
         /* ---- NACHSEHEN, WAS DORT LIEGT (P5a/AP10, E-P5a-03) --------------
@@ -192,6 +232,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Meldung oder Pruefergebnis aus der Umleitung uebernehmen
+$flash = flash_holen();
+if ($flash !== null) {
+    if (is_array($flash['daten']['ergebnis'] ?? null)) { $ergebnis = $flash['daten']['ergebnis']; }
+    elseif ($flash['ton'] === 'error')                 { $error = $flash['text']; }
+    else                                               { $notice = $flash['text']; }
+}
+
 if ($bearbeiten === null) {
     if (isset($_GET['neu'])) { $bearbeiten = 0; }
     elseif (isset($_GET['bearbeiten'])) { $bearbeiten = (int)$_GET['bearbeiten']; }
@@ -203,8 +251,16 @@ if ($bearbeiten !== null) {
     if ($bearbeiten > 0 && $form === null) { $bearbeiten = null; }
 }
 /* Nach einem misslungenen Speichern stehen die Eingaben im POST — sonst
- * tippt man alles noch einmal, nur um zu erfahren, dass der Port fehlt. */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error !== null && $bearbeiten !== null) {
+ * tippt man alles noch einmal, nur um zu erfahren, dass der Port fehlt.
+ *
+ * NUR NACH „SPEICHERN" (Web 21.1.9, gefunden in R4-11). Bis dahin hing das
+ * hier und am Schalter „Auf dem Ziel aufraeumen" unten an jedem POST mit
+ * Fehler: „Nachsehen, was dort liegt" mit offenem Formular mischte
+ * `csrf`, `id` und `action` in `$form`, und der Schalter stand danach auf
+ * aus — wer dann speicherte, schaltete die Aufbewahrung am Ziel still ab. */
+$speichernGescheitert = $_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($_POST['action'] ?? '') === 'ziel_speichern' && $error !== null;
+if ($speichernGescheitert && $bearbeiten !== null) {
     $form = array_merge((array)$form, $_POST);
 }
 
@@ -638,7 +694,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                  die beiden Zahlen aber schon. Ohne diese Unterscheidung
                  stünde der Haken nach einem Tippfehler im Port wieder an,
                  obwohl ihn niemand gesetzt hat. */ ?>
-        <?php $aufAn = $_SERVER['REQUEST_METHOD'] === 'POST'
+        <?php $aufAn = $speichernGescheitert
                        ? !empty($_POST['aufraeumen'])
                        : (($form['behalten_konto'] ?? null) !== null
                           || ($form['behalten_komplett'] ?? null) !== null); ?>

@@ -15,6 +15,12 @@ in zwei Dateien je Punkt — und eine Runde verschiebt Dutzende.
 
 Der Schlusssatz wird umbrochen; keine Zeile beginnt dabei mit Zahl und Punkt
 (der Bestandsriegel läse dort eine Nummer, Kopf von `docs/Backlog.md`).
+
+DIE TRENNZEILE BLEIBT ZURÜCK (seit R4-25, Nr. 340): Vor jedem Eintrag in
+`docs/Backlog.md` steht `<!-- -->`, damit GitHub jeden als eigene Liste mit
+seiner Nummer zeigt. Der Eintrag verlässt die Datei samt seiner Trennzeile;
+in `Backlog-Erledigt.md` kommt er ohne sie an, wie der Bestand dort
+(E-R4-62).
 """
 import argparse
 import os
@@ -29,7 +35,8 @@ ERLEDIGT = os.path.join(WURZEL, 'docs', 'Backlog-Erledigt.md')
 
 KOPF = re.compile(r'^(\d+)\. \*\*.+?\*\* · gehört zu: .+? · Stand: '
                   r'(offen|teilweise|zurückgestellt|nur auf Anlass|nicht umsetzen) · seit \d{2}\.\d{2}\.\d{4}$')
-GRENZE = re.compile(r'^(\d+\. \*\*|## |---)')
+GRENZE = re.compile(r'^(\d+\. \*\*|## |---|<!-- -->$)')
+TRENNER = '<!-- -->'
 EINZUG = '     '
 
 
@@ -75,9 +82,13 @@ def main():
     kopf = zeilen[start].replace(f' · Stand: {m.group(2)} · ', ' · Stand: erledigt · ', 1)
     neu = [kopf] + eintrag[1:] + umbrechen(a.satz)
 
-    # Aus Backlog.md: der Eintrag und die Leerzeilen danach bis zur Grenze,
-    # damit genau eine Leerzeile zwischen den Nachbarn bleibt.
-    rest = zeilen[:start] + zeilen[ende:]
+    # Aus Backlog.md: der Eintrag, seine Trennzeile davor und die Leerzeilen
+    # danach bis zur Grenze, damit genau eine Leerzeile zwischen den Nachbarn
+    # bleibt.
+    von = start
+    if start >= 2 and zeilen[start - 1] == '' and zeilen[start - 2] == TRENNER:
+        von = start - 2
+    rest = zeilen[:von] + zeilen[ende:]
     if a.trocken:
         print('\n'.join(neu))
         return 0

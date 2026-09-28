@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Ein Pruefkonto anlegen oder loeschen — ueber die Wege des Kreislaufs.
 
-    python3 tools/referenzdatensatz/vergleich/pruefkonto.py anlegen umlauf-freigabe@gen-em.org
-    python3 tools/referenzdatensatz/vergleich/pruefkonto.py loeschen umlauf-freigabe@gen-em.org
+    python3 tools/referenzdatensatz/vergleich/pruefkonto.py anlegen umlauf-freigabe@example.invalid
+    python3 tools/referenzdatensatz/vergleich/pruefkonto.py loeschen umlauf-freigabe@example.invalid
 
 KEIN ZWEITER ANLEGEWEG. `konto_anlegen()` und `konto_loeschen()` stehen in
 `kreislauf.py`; dieses Skript macht sie fuer Proben aufrufbar, die ihr

@@ -17,14 +17,15 @@ Sieben Schritte: `konto` `bestand` `einspielen` `browser` `server`
 
 Antwortzeiten und Speicher der Serverwege, dieselben im Browser (Halde,
 JSON, PBKDF2), und den `.edbak`-Umlauf bei voller Größe. `statistik`
-(**Anlass: Nr. 295**): Betrieb → Statistik, drei Reiter unter 1 s, und
-`EXPLAIN` der Abfragen aus `statistik_lib.php` — **rot**, wenn eines verfehlt. Der Bestand
+(**Anlass: Nr. 295**): Betrieb → Statistik, drei Reiter unter 1 s — seit
+R4-23 (Nr. 122) je einmal ohne und einmal mit eigenem Zeitraum über 90 Tage,
+seit R4-24 samt der Abfrage der Diagramme —, und `EXPLAIN` der Abfragen aus `statistik_lib.php` — **rot**, wenn eines verfehlt. Ebenso **rot** (Nr. 37, seit R4-17): mehr als 200 Zeilen in der Zeitraumübersicht, 500 Tagesverweise ohne den Hinweis der Leiste. Der Bestand
 entsteht aus dem Referenzdatensatz und wird vervielfältigt — **nicht
 erfunden**, damit die Verteilung der Daten stimmt.
 
 ## Was es braucht
 
-Eine laufende Installation mit dem Prüfkonto (`admin@gen-em.org`). Das Konto `messstand@gen-em.org` legt der Schritt `konto` selbst an; **der Prüfstand ruft deshalb `messen.py --frisch` auf, nicht `browserprobe.mjs` allein** (seit P5c/AP4, F-P5c-104).
+Eine laufende Installation mit dem Prüfkonto (`admin@example.invalid`). Das Konto `messstand@example.invalid` legt der Schritt `konto` selbst an; **der Prüfstand ruft deshalb `messen.py --frisch` auf, nicht `browserprobe.mjs` allein** (seit P5c/AP4, F-P5c-104).
 Ohne das Konto scheitert der Browserschritt nach der Anmeldung und wartet 180 s auf ein Element, das nie kommt — so geschehen im ersten Lauf der Hauptstufe: 1086 s, sieben Zeitgrenzen. Bis dahin stand hier, das Konto sei eine Zuarbeit der Betreiberin (F-PK-22); für die örtliche Anlage stimmte das nicht.
 
 ## Erwartete Zahl

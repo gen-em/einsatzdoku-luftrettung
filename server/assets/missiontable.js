@@ -577,7 +577,7 @@ const EdMissionTable = (() => {
    * aufklappen. Neue Daten (setData) fangen wieder bei der ersten Seite an —
    * das ist ein anderer Filter und damit eine andere Liste.
    *
-   * Rueckgabe: { setData, zeichne, sortKey, sortAsc, setSort }
+   * Rueckgabe: { setData, zeichne, sortKey, sortAsc, setSort, zeigeEinsatz, … }
    */
   function erzeuge(opts) {
     const table = opts.table;
@@ -599,6 +599,10 @@ const EdMissionTable = (() => {
      * suche.php nicht (dort ist sie das Suchergebnis); die Suche setzt ihn
      * deshalb einmal beim Laden auf den Gesamtbestand. */
     let bestand = null;
+    /* Die zuletzt gezeichnete, vollstaendige Trefferliste in ihrer
+     * Reihenfolge — fuer zeigeEinsatz(), das wissen muss, an welcher Stelle
+     * ein Einsatz steht, auch wenn er nicht gezeichnet ist. */
+    let letzte = [];
     /* null = „die Seite hat nichts gesagt" und NICHT `{}`: Ein leeres Objekt
      * hiesse „keine Faehigkeit vorhanden" und liesse die beiden Spalten
      * verschwinden. Der Unterschied ist der ganze Zweck des Rueckfalls. */
@@ -622,7 +626,7 @@ const EdMissionTable = (() => {
        * Klasse hat im neuen Stylesheet keine Regel mehr — die beiden Knoepfe
        * waren seit dem Redesign in der Grundform des Browsers. Aufgefallen ist
        * es niemandem, weil sie erst ab 200 Treffern erscheinen und der
-       * Referenzbestand 106 Einsaetze hat. */
+       * Referenzbestand unter 200 Einsaetze hat. */
       mehrKnopf = document.createElement('button');
       mehrKnopf.type = 'button';
       mehrKnopf.className = 'knopf knopf-neutral';
@@ -633,7 +637,19 @@ const EdMissionTable = (() => {
       mehrAlleKnopf.addEventListener('click', () => mehrZeigen(Infinity));
       mehrZeile.appendChild(mehrKnopf);
       mehrZeile.appendChild(mehrAlleKnopf);
-      table.insertAdjacentElement('afterend', mehrZeile);
+      /* HINTER DIE KACHELN, NICHT HINTER DIE TABELLE (Web 21.4.0, R4-17).
+       * Bis hierher hing die Zeile unmittelbar hinter dem <table> — und
+       * damit IN dessen Scrollbehaelter `.tabelle-scroll.nur-ab-720`. Unter
+       * 720 px ist der ausgeblendet, und mit ihm die Knoepfe: Die Suche
+       * zeigte auf dem Handy seit den Kacheln (E-P3-32) 200 Treffer und
+       * keinen Weg zu den uebrigen, gemessen an 5096 Treffern bei 390 px.
+       * Jetzt steht sie hinter der Kachelliste, wo es eine gibt: Am
+       * Schreibtisch ist die ausgeblendet, und die Zeile steht unter der
+       * Tabelle; auf dem Handy steht sie unter den Kacheln. Ohne Kacheln
+       * hinter dem Scrollbehaelter, damit sie nicht mit der Tabelle quer
+       * rollt. */
+      const anker = opts.kacheln || table.closest('.tabelle-scroll') || table;
+      anker.insertAdjacentElement('afterend', mehrZeile);
     }
 
     /* Spalten, die diese Seite ausdruecklich NICHT fuehrt. Eine Liste mit
@@ -709,6 +725,7 @@ const EdMissionTable = (() => {
         if (a._no != null && b._no != null) { return a._no - b._no; }
         return 0;
       });
+      letzte = sortiert;
       const gezeigt = seite > 0 ? sortiert.slice(0, sichtbar) : sortiert;
       tbody.innerHTML = '';
       gezeigt.forEach(m => {
@@ -834,6 +851,30 @@ const EdMissionTable = (() => {
       mehrAlleKnopf.textContent = 'Alle ' + gesamt + ' anzeigen';
     }
 
+    /* EINEN EINSATZ IN DIE ANZEIGE HOLEN (Web 21.4.0, R4-17, Nr. 37).
+     *
+     * Eine Seite, die zu einer Zeile springen will — die Zeitraumuebersicht
+     * aus ihren Extremwert-Kacheln —, fand sie bis hierher immer, weil sie
+     * ohne Seitengroesse jede Zeile zeichnete. Mit einer steht der laengste
+     * Einsatz des Jahres vielleicht an Stelle 900, und der Sprung liefe ins
+     * Leere, ohne dass es jemand merkt: Die Kachel leuchtet, die Karte auch,
+     * nur die Zeile gibt es nicht. Deshalb wird so weit nachgeladen, dass er
+     * dabei ist — in ganzen Seiten, wie mit dem Knopf, damit die Nachladezeile
+     * danach dieselben Zahlen nennt wie sonst auch.
+     *
+     * Rueckgabe: ob es den Einsatz in der Trefferliste gibt. Nein heisst: Ein
+     * Filter oder der Reiter hat ihn herausgenommen, und dann gibt es auch
+     * keine Zeile, zu der man springen koennte. */
+    function zeigeEinsatz(mid) {
+      const i = letzte.findIndex(m => m.id === mid);
+      if (i < 0) { return false; }
+      if (seite > 0 && i >= sichtbar) {
+        sichtbar = Math.ceil((i + 1) / seite) * seite;
+        zeichne();
+      }
+      return true;
+    }
+
     function setData(liste) {
       daten = liste || [];
       datenGesetzt = true;
@@ -866,7 +907,7 @@ const EdMissionTable = (() => {
     function setFaehigkeiten(f) { faehig = f || null; }
 
     return {
-      setData, zeichne, setSort, setSpaltenBestand, setFaehigkeiten,
+      setData, zeichne, setSort, setSpaltenBestand, setFaehigkeiten, zeigeEinsatz,
       /* Die sichtbaren Spalten mit ihrer schlichten Beschriftung — fuer ein
        * Sortierblatt, das nicht den Tabellenkopf abklauben muss. Spalten
        * ohne Kopftext (der Farbstreifen) bleiben draussen: Nach ihnen

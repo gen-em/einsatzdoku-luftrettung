@@ -17,7 +17,7 @@ Nichts — es erzeugt:
 
 | Name | erzeugt |
 |---|---|
-| `design` | die Tabellen in `docs/Design.md` (CLAUDE.md 5) |
+| `design` | die Tabellen in `docs/Design.md`; mit `schreiben` ersetzt es sie dort (CLAUDE.md 5) |
 | `logos` | die Favicons **aus** den Logodateien |
 | `uhr-bilder` | die vorgerasterten Bildmarken der Uhr-App |
 | `geraetemodelle` | `server/geraetemodelle.php` (+ `nachaufloesen`) |
@@ -26,14 +26,14 @@ Nichts — es erzeugt:
 
 ## Was es braucht
 
-`design`, `logos`, `uhr-bilder` nur die Quellen. `geraetemodelle` und
-`wegwerfdomains` brauchen **Netz**, `pruefkonten` eine Installation.
+`design`, `logos`, `uhr-bilder` nur die Quellen, `geraetemodelle` und `wegwerfdomains` **Netz**, `pruefkonten` eine Installation.
 
 ## Erwartete Zahl
 
-Keine — ein Erzeuger meldet, was er geschrieben hat. Der Prüfwert steht
-woanders: Ändert `design` etwas, war `docs/Design.md` von Hand angefasst
-worden (CLAUDE.md 5). `wegwerfdomains` schreibt **erst auf Zuruf**.
+Keine — ein Erzeuger meldet, was er geschrieben hat. Die Tabellen von `design` aber
+hält `bestand` (Regel `design`, seit R4-25, Nr. 209) an seine Ausgabe: Nach einer Änderung
+an `ui.php`, `style.css` oder einem Symbol `erzeugen.sh design schreiben`, sonst ist
+Stufe 1 rot. `wegwerfdomains` schreibt **erst auf Zuruf**.
 
 ## Was es nicht kann
 

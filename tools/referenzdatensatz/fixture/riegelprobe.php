@@ -6,10 +6,10 @@ declare(strict_types=1);
  *
  * DIE FRAGE. `fixture/erzeugen.php` schreibt die Schluesselhuelle des
  * Demo-Kontos unveraendert in die Fixture, und `demo_lib.php` schreibt sie
- * alle 30 Minuten unveraendert zurueck ins Konto — auf der
+ * bei jedem Reset unveraendert zurueck ins Konto — auf der
  * PRODUKTIVinstallation, die ihren eigenen Server-Anteil fuehrt. Eine Huelle
  * mit Anteil (`edka1:<kennung>:`) ist dort nicht zu oeffnen: Das Demo-Konto
- * kaeme herein und saehe nichts, alle 30 Minuten aufs Neue, ohne Meldung.
+ * kaeme herein und saehe nichts, bei jedem Reset aufs Neue, ohne Meldung.
  *
  * E-S10-15 verlangt deshalb den Riegel in `erzeugen.php`. Diese Probe misst
  * ihn — beide Richtungen, denn ein Riegel, der IMMER zuschlaegt, ist ebenso
@@ -35,7 +35,7 @@ declare(strict_types=1);
  * AUFRUF
  *
  *     php tools/referenzdatensatz/fixture/riegelprobe.php
- *     php tools/referenzdatensatz/fixture/riegelprobe.php umlauf-csv@gen-em.org
+ *     php tools/referenzdatensatz/fixture/riegelprobe.php umlauf-csv@example.invalid
  *
  * Das Argument ist das Konto fuer den NEGATIVfall; es muss eine
  * `edka1:`-Huelle tragen, die Rolle `user` haben und auf `KDF_ITER_ZIEL`
@@ -54,7 +54,7 @@ $erzeuge = __DIR__ . '/erzeugen.php';
 
 require_once $server . '/db.php';
 
-$negativKonto = $argv[1] ?? 'umlauf-csv@gen-em.org';
+$negativKonto = $argv[1] ?? 'umlauf-csv@example.invalid';
 
 $gesamt = 0; $offen = 0;
 function pruef(string $was, bool $ok, string $dazu = ''): void {
@@ -220,7 +220,12 @@ try {
      *
      * Gemessen statt gelesen: Der Reset wird faellig gemacht, gerufen, und es
      * wird nachgesehen, dass er `false` liefert und das Konto UNVERAENDERT
-     * dasteht. Zurueckgestellt wird die Marke im selben Zug. */
+     * dasteht. Zurueckgestellt werden die Marken im selben Zug.
+     *
+     * ZWEI MARKEN SEIT WEB 21.2.0 (R4-14, Nr. 76): Faellig ist der Reset erst
+     * mit einer Aenderungsmarke. Nur den letzten Reset zurueckzuschieben
+     * hiesse jetzt, gar keinen Versuch auszuloesen — und die Probe meldete
+     * „0 Stoerungen", also rot, aber aus dem falschen Grund. */
     $r3 = (static function () use ($wurzel): string {
         $d = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
         $p = proc_open(['php', '-r',
@@ -232,7 +237,9 @@ try {
           . '  . (int)demo_id())->fetchColumn();'
           . '$vor = (int)db()->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")'
           . '  ->fetchColumn();'
+          . '$g = demo_geaendert_seit();'
           . 'demo_reset_marke_setzen(time() - 4000);'
+          . 'app_state_setzen(DEMO_K_GEAENDERT, (string)(time() - 3900));'
           . '$ok = demo_reset_wenn_faellig();'
           . '$sys = db()->prepare("DELETE FROM protokoll_ereignisse WHERE reiter = \'system\'"'
           . '  . " AND id > ? AND text LIKE \'demo:%\'");'
@@ -240,6 +247,8 @@ try {
           . '$n2 = (int)db()->query("SELECT COUNT(*) FROM missions WHERE user_id = "'
           . '  . (int)demo_id())->fetchColumn();'
           . 'if ($m > 0) { demo_reset_marke_setzen($m); }'
+          . 'if ($g > 0) { app_state_setzen(DEMO_K_GEAENDERT, (string)$g); }'
+          . 'else { app_state_loeschen(DEMO_K_GEAENDERT); }'
           . 'echo ($ok ? "RESET" : "ABGEFANGEN") . "|" . $n . "|" . $n2 . "|" . $sys->rowCount();'], $d, $rohr);
         $aus = stream_get_contents($rohr[1]); fclose($rohr[1]);
         fclose($rohr[2]); proc_close($p);

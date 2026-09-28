@@ -43,6 +43,12 @@ $notice = null; $error = null;
  * der gespeicherte Stand. Sonst wäre die Eingabe mit der Fehlermeldung weg. */
 $eingabe = null;
 
+/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Das Speichern endet
+ * mit `flash_setzen()` und einer Umleitung auf den Reiter des Textes — sonst
+ * speichert Neuladen ein zweites Mal und schreibt einen zweiten
+ * Protokolleintrag. „Es gab nichts zu ändern" leitet ebenso um: Das Feld
+ * zeigt danach denselben Stand. Ein abgewiesener Text bleibt auf der Seite,
+ * mit der Eingabe im Feld (oben). */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $text  = (string)($_POST['text'] ?? '');
@@ -70,7 +76,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $notice = 'Es gab nichts zu ändern.';
         }
+        flash_setzen('notice', $notice);
+        header('Location: admin_rechtstexte.php?t=' . rawurlencode($k));
+        exit;
     }
+}
+
+// Meldung aus der Umleitung uebernehmen
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ton'] === 'error') { $error = $flash['text']; }
+    else                           { $notice = $flash['text']; }
 }
 
 $t = $eingabe ?? rt_lesen($k);
@@ -253,7 +269,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
          braucht (`ui_csrf_bootstrap()`, E-P5c-130). Fehlt es, antwortet der
          Vorschau-Endpunkt 403, und die Plakette steht auf „nicht aktuell". */ ?>
 <?php ui_csrf_bootstrap(); ?>
-<?php /* html.js (EdHtml.meldung) VOR dem Vorschauskript — es steht in keiner
-         Immer-Liste; api.js (EdApi) steht im Kopf jeder Seite. */ ?>
+<?php /* html.js (EdHtml.meldung) und api.js (EdApi) stehen im Kopf jeder
+         Seite (ui_seite_start(); html.js seit Web 21.1.11). */ ?>
 <?php ui_seite_ende(['skripte' => ['assets/forms.js', 'assets/kopieren.js',
-                                   'assets/html.js', 'assets/rechtstext_vorschau.js']]); ?>
+                                   'assets/rechtstext_vorschau.js']]); ?>

@@ -327,7 +327,8 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
   Spaltenregisters erst, wenn der Kreislauf `edbak` ihr Umlaufkonto angelegt
   hat; `auswahl.py --selbstprobe` belegt die Reihenfolge.
 - **Der Demo-Reset trifft keine Probe mehr** (`demo` in `pruefablauf.json`,
-  seit R4-04, Nr. 322). Er spielt den Demo-Bestand alle 30 Minuten neu ein,
+  seit R4-04, Nr. 322). Er spielt den Demo-Bestand neu ein (seit Web 21.2.0
+  30 Minuten nach der ersten Änderung, R4-14),
   und die Einsätze bekommen neue Kennungen; wen er traf, entschied bis dahin
   die Reihenfolge der Muster. Jetzt schiebt der Prüfstand vor jeder Probe
   mit `"demo": true` die Marke des letzten Resets auf „jetzt" und stellt sie
@@ -349,7 +350,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
-| `server/komplett_lib.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02 |
+| `server/komplett_lib.php`, `server/admin_komplettsicherung.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite |
 | `server/gpx_lib.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130 |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
 | `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |
@@ -359,7 +360,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/protokoll_lib.php`, `server/protokoll_archiv_lib.php`, `server/zip_lib.php`, `server/admin_protokoll.php`, `server/systemmeldung_lib.php` | klein | `protokollprobe`, `versandprobe` | F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39); protokollprobe Teil 7 für das Fehlerprotokoll (Nr. 248) |
 | `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
 | `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
-| `server/wartung_lib.php`, `server/auth_guard.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171 |
+| `server/wartung_lib.php`, `server/auth_guard.php`, `server/betrieb_updates.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171; betrieb_updates.php seit R4-11 (Nr. 250, F-R4-38): die Probe schaltet ueber diese Seite |
 | `server/api/health.php`, `server/speicher_lib.php` | klein | `ratenprobe`, `wartungsprobe` | E-P5c-17, -52 (Health, P5c/AP6): Token, Felder, Migration und Menge in der Ratenprobe, die Antwort aus dem Tor in der Wartungsprobe |
 | `server/db.php` | klein | `verbindungsprobe` | Nr. 210 |
 | `server/serverkrypto_lib.php`, `server/auth_salt.php`, `server/assets/unlock.js`, `server/assets/crypto.js` | klein | `anteilprobe`, `containerprobe` | S10-Kern, F-S10-AP3-03 |
@@ -464,7 +465,12 @@ Stand. Der Weg, der grün wird:
    pushen.
 
 So trägt der Merge-Commit selbst den Bericht, und es braucht keinen
-Leer-Commit dafür. Berührt ist dabei nur, was diese Arbeit gegen `main`
+Leer-Commit dafür. **Bringt `main` neue Backlog-Nummern mit, geht das so
+noch nicht:** `nummern.py` misst vor dem Commit gegen den alten
+Abzweigpunkt und meldet sie als Überschneidung (Nr. 352, F-SR-14) — bis das
+Werkzeug `MERGE_HEAD` kennt, kommt der Bericht in einen Folge-Commit über
+denselben Baum (etwa mit den Zahlen im Prüfdokument), nicht in den
+Merge-Commit. Berührt ist dabei nur, was diese Arbeit gegen `main`
 ändert — nicht, was `main` mitbringt (F-PK-39). Zum ersten Mal gegangen
 beim Merge von PR #80 in PK-05 (`5671d24`). Wer doch „Update branch" gedrückt hat, holt den Commit
 herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.
@@ -819,13 +825,13 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
 | `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen dreizehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen vierzehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 20 von 20: zehn Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
-| `tools/steuerung/` | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock; Selbstproben alle Fälle grün |
+| `tools/steuerung/` | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock, 0 offene Einträge ohne eigene Liste mit ihrer Nummer (seit R4-25); Selbstproben alle Fälle grün |
 
 PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
 Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur

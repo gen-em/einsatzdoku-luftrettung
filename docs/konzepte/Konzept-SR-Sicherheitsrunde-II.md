@@ -17,7 +17,9 @@ Punkte liefert `python3 tools/steuerung/uebersicht.py --ziel 18`: **acht
 Einträge** am 27.09.2026 — die sechs der Fahrplanzeile und **Nr. 232, 251**,
 die Schritt 15 (E-ZE-12) und R4-01 (Q-R4-12) hierher gehängt haben; seit
 der **Nachfassung** am selben Tag **neun**, mit **Nr. 350** (Passkeys, SR-09,
-aus der eigenen Spanne — E-SR-29).
+aus der eigenen Spanne — E-SR-29); seit dem Merge von 17 (28.09.2026) **elf**:
+**Nr. 250** (der Rest von R4-11, `betrieb_server.php`) und **Nr. 344**
+(F-R4-33) sind mit E-R4-37 hierher gekommen — Zuordnung E-SR-37.
 **Modell:** Konzept Fable (R14); Umsetzung **Opus** (K2), **kein
 Fable-Schritt**; SR-03 bekommt vor dem PR eine **Gegenlesung durch Fable**
 (Q-SR-09, E-SR-23, H-SR-06) — ein Halt, kein Schritt; **SR-09 ebenso**
@@ -38,7 +40,10 @@ dieser Runde besteht aus vorhandenen Bausteinen (Q-SR-08).
 `claude/schritt-17-konzept-mockups-q0yjcm` bei `26b4761` (R4-10, Web
 21.1.8) — dem Stand, den die Betreiberin am 27.09.2026 als jüngsten Code
 benannt hat (E-SR-02). Die Umsetzung läuft nach dem Merge von 17 **und**
-dieses Konzepts auf einem eigenen Zweig von `main`.
+dieses Konzepts auf einem eigenen Zweig von `main`. **17 ist am 28.09.2026
+gemergt** (PR #94, `f4ac705`, Web 21.6.1); dieser Zweig hat `main` nach
+`Pruefablauf.md` 5.3 aufgenommen (Merge-Commit mit Bericht), der Konzept-PR
+ist gestellt.
 **Backlog-Spanne:** **350 bis 359** (E-SD-21, eingetragen mit `SR-00`
 vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 
@@ -46,13 +51,13 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. Kein Konzept-PR offen: Der Zweig sitzt auf dem 17er-Zweig und wird erst nach dessen Merge gegen `main` gestellt (E-SR-02); bis dahin ist `nummern` im Prüfbericht rot, mit vier 17er-Nummern (F-SR-12). |
-> | Entschieden | **E-SR-01 bis E-SR-36** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept. |
-> | Offen | nichts im Konzept. **Der Konzept-PR wartet auf den Merge von 17** (E-SR-02), die Umsetzung auf beide Merges. |
-> | Umsetzung | noch nicht begonnen. **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 137, 138, 141 und 142). |
+> | Stand | **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
+> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. |
+> | Offen | nichts im Konzept. **Der Konzept-PR wartet auf den Merge**; die Umsetzung beginnt danach auf einem eigenen Zweig von `main`. |
+> | Umsetzung | noch nicht begonnen. **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). |
 > | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) und SR-09 (H-SR-08, E-SR-36). |
 > | Fächerung | keine. |
-> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35). |
+> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`). |
 
 ---
 
@@ -90,6 +95,11 @@ an seinen richtigen Ort gehängt.
    WebAuthn-Signatur ist an den Ursprung gebunden, ein abgefischter Code
    nicht. Codes und Rückweg bleiben der Notweg.
 
+Dazu zwei Reste aus 17, die mit dessen Merge am 28.09.2026 hierher kamen
+(E-R4-37, E-SR-37): **Nr. 250** — `betrieb_server.php` leitet nach POST um
+(SR-02) — und **Nr. 344** — der Widerruf einer Freigabe prüft die Kennung
+(SR-03).
+
 **Nicht Ziel:** alles, was Schritt 12 gehört (der Review liest, was hier
 gebaut ist); die Verschlüsselung der Ortsdaten (12a, R78); **Passkeys als
 Ersatz des Passworts** (PRF-Erweiterung, E-SR-28: nicht weiterverfolgt); ein zweiter
@@ -120,7 +130,9 @@ aus denen die Punkte stammen (Sitzungsablage `f6cb5fd^`, P5c `00cacef^`,
 Zentralisierung über `sitzung_lib.php`). Dazu die Sperrliste, die Konzept
 R4 für Schritt 18 geführt hat (dort 2.3), gegen den heutigen Stand.
 
-**Keine Probe gefahren, kein Prüfstand.** Trefferzahlen sind `grep` am
+**Keine Probe gefahren, kein Prüfstand.** Nachgelesen am 28.09.2026 nach
+dem Merge von 17: Nr. 250 und 344 im Backlog, `git log 26b4761..f4ac705`
+über die SR-Dateien (2.4). Trefferzahlen sind `grep` am
 27.09.2026; jede Aussage „so verhält sich die Anlage" stammt aus dem Code
 und der Doku. Die örtliche Anlage lief nur für den Prüfstand dieses
 Commits. Nicht gefächert: Fünf Themen, jedes hängt an denselben drei
@@ -128,7 +140,7 @@ Dateien (`sitzung_lib.php`, `login.php`, `serverkrypto_lib.php`), und eine
 Gegenprüfung durch Agenten hätte hier vor allem eines gemessen — dass
 niemand die Anlage anfassen durfte.
 
-### 2.2 Die neun Punkte — Einordnung
+### 2.2 Die elf Punkte — Einordnung
 
 Spalte „Befund": was am 27.09.2026 gilt. Spalte „Paket": Abschnitt 4.
 
@@ -143,6 +155,8 @@ Spalte „Befund": was am 27.09.2026 gilt. Spalte „Paket": Abschnitt 4.
 | 210 | `ingest.php`-Deadlock | gilt teilweise: 1213/1205 antworten 503 `ausgelastet` (E-P5a-52); die Transaktion wird **nicht** wiederholt (`Technik.md` 5e.1: „Die eigentliche Abhilfe steht aus"); `dt_zeitraum_fortschreiben()` läuft in derselben Transaktion wie der Einsatz-Upsert | umsetzen | SR-05 |
 | 232 | Fristen der Rückfragen nie im Betrieb abgelaufen | gilt, Anlass nicht eingetreten; SR fasst `einstieg_lib.php` an, baut aber keine dritte Frist | **umhängen → `nächste Backlog-Runde`**, `nur auf Anlass` — Q-SR-06 | SR-06 |
 | 350 | Passkeys als zweiter Faktor (Nachfassung 27.09.2026) | gilt: nichts davon existiert — aber `rw_pruefen()` prüft ECDSA-P-256-Signaturen über eine Server-Herausforderung mit phpseclib, `Crypt/EC` und `Crypt/RSA` liegen vendoriert (`Lizenzen.md` 3), es fehlt ein CBOR-Leser; SP-11 und Nr. 146 nennen eine Fremdbibliothek als Voraussetzung (F-SR-13) | **umsetzen — zusätzlich zu TOTP** (Betreiberin, E-SR-29; Q-SR-12), mit Migration | SR-09 |
+| 250 | Umleiten nach POST — Rest: `betrieb_server.php` (aus 17, R4-11) | laut Nr. 250: elf Seiten leiten seit Web 21.1.9 um (`flash_setzen()` mit Ort, Ton, Ergebnis); `betrieb_server.php` gibt nach POST noch seine Seite aus — für 18 freigelassen (Konzept R4 2.3) | umsetzen — mit der Karte „Anmeldung", derselbe Weg wie R4-11 (E-SR-37) | SR-02 |
+| 344 | `edbak_freigabe_widerrufen()` prüft die Kennung nicht (aus 17, F-R4-33) | laut Nr. 344: ein POST `widerrufen` mit unauflösbarem Handgriff schreibt eine versiegelte `konto.json` in die Wurzel der Ablage und meldet Erfolg; `edbak_ordner_loeschen()` prüft mit `edbak_kennung_gueltig()`, die zwei Nachbarn nicht — 17 ließ `adminbackup_lib.php` für 18 frei (E-R4-37) | umsetzen (E-SR-37) | SR-03 |
 | 228 | Proof-of-Work gegen Registrierungs-Spam | gilt, `nur auf Anlass`; der Anlass (verfallene, nie bestätigte Konten je Woche) wäre im Protokoll ablesbar (`konto_geloescht`, `weg = verfall`) und entstünde erst mit offener Registrierung; `registrieren.php` hat Honeypot, Mindestausfülldauer und drei Ratentöpfe, keine Rechenaufgabe | **umsetzen — fest, ohne Anlass** (Betreiberin, Q-SR-07, E-SR-26) | SR-08 |
 
 ### 2.3 Der Bestand je Thema
@@ -256,10 +270,17 @@ gelesen:
 **Was 17 in diesen Dateien geändert hat und SR übernimmt:** `json_out()` in
 `api/rueckfrage.php`, `api/schluessel_erneuern.php`,
 `api/schluesselblatt_pruefen.php` (R4-09); der Zweig `user_delete` über
-`konto_loeschen()` (R4-10); `days.created_at` (R4-15, offen am 27.09.2026);
-die Demo-Änderungsmarke (R4-14, offen) — je eine Zeile in `ingest.php` und
-`auth_guard.php`, die SR nicht umbaut. Gemergt ist 17 am 27.09.2026
-**nicht**; die Umsetzung beginnt auf `main` nach dem Merge und misst neu.
+`konto_loeschen()` (R4-10); `days.created_at` (R4-15); die
+Demo-Änderungsmarke (R4-14) — je eine Zeile in `ingest.php` und
+`auth_guard.php`, die SR nicht umbaut. **17 ist am 28.09.2026 gemergt**
+(PR #94, `f4ac705`). Gemessen mit `git log 26b4761..f4ac705` über die
+Dateien dieser Tabelle: **acht haben sich bewegt** — `session_lib.php`
+(R4-11), `auth_guard.php`, `admin_user.php`, `demo_lib.php` (R4-14),
+`einstellungen.php` (R4-13, R4-14), `ingest.php` (R4-12, R4-14, R4-15),
+`migration_lib.php` und `schema.sql` (R4-15); `sitzung_lib.php`,
+`login.php`, `totp_lib.php`, `serverkrypto_lib.php`, `betrieb_server.php`,
+`registrieren.php` und die Rückweg-Dateien unverändert. Der Befund (2.3)
+gilt damit weiter; die Umsetzung liest die acht vor SR-01 noch einmal.
 
 **PK-06 bis PK-08** schreiben die Workflows und `CLAUDE.md` 3 und 6; SR
 fasst `.github/` nicht an. **Schritt 12** (Bedrohungsmodell) und **12b**
@@ -338,7 +359,8 @@ ein Satz mehr, und der Review misst ihn.
   werden ausgetragen").
 - **F-SR-10 Die Fahrplanzeile 18 nannte sechs Punkte, der Backlog trägt
   acht.** Nr. 251 kam mit Schritt 15 (E-ZE-12), Nr. 232 mit R4-01 (Q-R4-12).
-  Die Fahrplanzeile nennt sie seit Fassung 137 mit (SR-00).
+  Die Fahrplanzeile nennt sie seit Fassung 139 mit (SR-00; bis zum Merge
+  von 17 als 137 gezählt).
 - **F-SR-11 Der Komplett-Stand trägt keine Kennung seines Schlüssels.** Der
   Dateiname ist Zeit plus 32 Bit Zufall, der Kopf sagt `kdf: null`. Ob ein
   Stand zum heutigen oder zum bisherigen Schlüssel gehört, zeigt nur der
@@ -356,7 +378,9 @@ ein Satz mehr, und der Review misst ihn.
   Satz ein, kein Umbau. **Folge:** Der Prüfbericht dieses Konzept-Commits
   trägt `nummern` rot. Grün wird die Zeile mit dem Merge von 17 in `main`,
   und erst danach wird der Konzept-PR gestellt — mit einem frischen
-  Bericht auf dem dann gemergten Baum (`Pruefablauf.md` 5.3).
+  Bericht auf dem dann gemergten Baum (`Pruefablauf.md` 5.3). **Erledigt
+  28.09.2026:** 17 ist gemergt, dieser Zweig hat `main` aufgenommen,
+  `nummern.py` meldet 0 (Prüfdokument 2).
 - **F-SR-13 SP-11 setzt für Passkeys eine WebAuthn-Serverbibliothek
   voraus — das gilt seit Web 20.43.0 nicht mehr.**
   `Vorbereitung-Sicherheitspaket.md` SP-11 und Nr. 146 sagen „brauchen
@@ -368,6 +392,18 @@ ein Satz mehr, und der Review misst ihn.
   kein Fremdbestandteil (E-SR-30). SR-09 trägt den Stand in SP-11 ein,
   ohne den alten Satz zu löschen: Das Dokument ist ein Protokoll seiner
   Zeit. *(Gefunden in der Nachfassung vom 27.09.2026.)*
+- **F-SR-14 `nummern.py` meldet während eines offenen Merges die Nummern
+  von `main` als Kollision** (28.09.2026, beim Aufnehmen von `main` nach
+  `Pruefablauf.md` 5.3). Vor dem Merge-Commit ist
+  `merge-base(HEAD, origin/main)` der alte Abzweigpunkt, und die Nummern,
+  die `main` seither vergeben hat — hier 344 bis 347 aus 17 —, stehen im
+  Arbeitsbaum als „neu" und in `origin/main` als „neu": vier
+  Scheinüberschneidungen, und der Prüfstand vor dem Commit (5.3, Schritt 2)
+  lieferte für den Merge-Commit einen roten Bericht. Nach dem Commit ist
+  die Basis `origin/main`, und es sind null. **Umgangen:** Der Merge-Commit
+  trägt keinen Bericht; der Bericht steht im Folge-Commit über denselben
+  Baum samt Prüfdokument. Werkzeug und 5.3 nachziehen: **Nr. 352**
+  (`nächste Backlog-Runde`), ein Satz steht seit heute in 5.3.
 
 ## 3. Entscheidungen und Fragen
 
@@ -411,6 +447,7 @@ ein Satz mehr, und der Review misst ihn.
 | E-SR-34 | **Namen: Was den Faktor meint, heißt `zweitfaktor_*`; was ein Verfahren meint, `totp_*` oder `pk_*`.** Die neuen Helfer aus SR-02 (Gerät merken, erkennen, vergessen, Dauer) heißen deshalb `zweitfaktor_geraet_*`, die Protokollarten `zweitfaktor_geraet_gemerkt` und `zweitfaktor_geraete_vergessen`; `zweitfaktor_frisch*` (SR-07) heißt schon so. Bestehende `totp_*`-Helfer, die den Faktor tragen (`totp_an()`, `totp_abschalten()`, `totp_zustand()`), werden **nicht** umbenannt; `totp_lib.php` bleibt die Bibliothek des Faktors. | Konzept, Nachfassung 27.09.2026 | Seit SR-09 merkt ein Gerät nach App-Code **oder** Passkey — ein `totp_geraet_merken()` hieße dann falsch. Die alten Namen bleiben, weil 12b den Code liest, den es gibt, und ein Umbenennen von zwanzig Aufrufern kein Sicherheitsgewinn ist. |
 | E-SR-35 | Q-SR-12: **Passkey nur zusätzlich zum eingeschalteten TOTP** (E-SR-29 bestätigt). „Passkey als einziger Zweitfaktor" wird **Nr. 351**, `nach v1.0`, `zurückgestellt` — mit den drei Umbauten, die er kostete, im Eintrag. | Betreiberin, 27.09.2026 | wie empfohlen: Codes, Einrichtungstor und Reset hängen am TOTP-Verfahren; ein Faktor ohne App ist ein Umbau der Anmeldung, nicht ein Verfahren mehr. Support, Admin und BetreiberIn haben die App ohnehin. |
 | E-SR-36 | Q-SR-13: **SR-09 bekommt die Fable-Gegenlesung wie SR-03** — Haltepunkt H-SR-08 ist fest: Die Umsetzungsinstanz hält nach SR-09 an und sagt es, Fable liest `passkey_lib.php` gegen das Konzept, Befunde als F-SR-NN, Behebung durch Opus, dann SR-05. Zwei Halte in der Runde, kein Fable-Schritt (K8). | Betreiberin, 27.09.2026 | wie empfohlen: Ein eigener CBOR-Leser und eine Signaturprüfung sind der Code, bei dem ein falsch gelesenes Längenfeld einen fremden Schlüssel annimmt; die Passkeyprobe misst nur Vorhergesehenes. |
+| E-SR-37 | **Nr. 250 gehört zu SR-02, Nr. 344 zu SR-03.** Beide sind mit dem Merge von 17 (28.09.2026, E-R4-37) zu Ziel 18 gekommen: `betrieb_server.php` leitet nach jedem POST um (`flash_setzen()` mit Ort, Ton und Ergebnis, der Weg aus R4-11) — gebaut in SR-02, das die Seite um die Karte „Anmeldung" erweitert; `edbak_freigabe_widerrufen()` und `edbak_begleit_schreiben()` verlangen `edbak_kennung_gueltig()` — gebaut in SR-03, das `adminbackup_lib.php` ohnehin offen hat, und von der Gegenlesung (H-SR-06) mitgelesen. Beide Pakete bleiben in ihrer Stufe. | Konzept, 28.09.2026 (nach dem Merge von 17) | Konzept R4 2.3 hat die Dateien für 18 freigehalten; ein eigenes Paket für zwei Handgriffe wäre mehr Buchführung als Code. Nr. 250 ist ein geänderter Weg (Umleiten), und SR-02 ändert die Wege dieser Seite ohnehin (E-SR-17). |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -481,7 +518,8 @@ Doku, dann Prüfmittel (`CLAUDE.md` 6), Statusblock fortschreiben, pushen
 
 **SR-00 Konzept, Spanne, Fahrplanzeile.** *Erledigt 27.09.2026:* dieses
 Konzept und das Prüfdokument; Backlog-Spanne 350 bis 359; Rahmenplan
-Fassung 137 (Kopf, Fahrplanzeile 18 mit Nr. 232 und 251, Verlaufszeile).
+Fassung 139 (bis zum Merge von 17 als 137 gezählt; Kopf, Fahrplanzeile 18
+mit Nr. 232 und 251, Verlaufszeile).
 Nur `docs/`. *Gemessen:* `decken.py` 20 Decken, `uebersicht.py --pruefen`
 0/0, `nummern.py` 0 (Zahlen im Prüfdokument 2).
 
@@ -537,7 +575,9 @@ zwei Einstellungen (`app_state`, Schlüssel `zf_geraet_tage_user`,
 `zf_geraet_tage_verwaltung`, Vorgaben 30 und 7) — 0 heißt: kein Haken, und
 `zweitfaktor_geraet_erkannt()` gibt nie „erkannt". `betrieb_server.php`: neue Karte
 „Anmeldung" mit zwei Wahllisten (aus, 1, 7, 14, 30, 90 Tage) und eigenem
-Speichern; Protokoll `einstellung_geaendert` wie die übrigen Karten. `login.php`: nach dem Passwort und vor
+Speichern; Protokoll `einstellung_geaendert` wie die übrigen Karten; **dazu Nr. 250
+(E-SR-37): jeder POST der Seite leitet danach um** (`flash_setzen()` mit Ort,
+Ton und Ergebnis, der Weg aus R4-11), nicht nur der neue. `login.php`: nach dem Passwort und vor
 dem halben Stand `zweitfaktor_geraet_erkannt()` → direkt `anmeldung_vollenden()`;
 im Code-Schritt der `.schalter` „Dieses Gerät n Tage merken" mit der Dauer
 der eigenen Rollengruppe (nur im App-Code-Formular, E-SR-18; bei Dauer 0
@@ -566,6 +606,8 @@ Zweitfaktorprobe, neuer Teil: merken → abmelden → anmelden ohne Code →
 „Alle vergessen" → Code wieder fällig; Passwortwechsel vergisst; Ablauf
 mit gestelltem `gueltig_bis`; Wiederherstellungscode merkt nicht; fremdes
 Cookie an fremdem Konto zählt nicht. Bedienweg `zweitfaktor.mjs` erweitert;
+Bedienweg `betrieb_server.mjs`: nach jedem POST der Seite eine 303 mit
+Flash (Nr. 250); Backlog 250 nach `Backlog-Erledigt.md`;
 `migrationsregister`, `jobregister`, `schemaprobe` (haupt); Rollenprobe
 für „Alle vergessen"; Bilderlauf des Code-Schritts mit Haken (P-SR-05).
 Dazu die Fälle der Einstellung: Dauer 0 → kein Haken, gemerkte Geräte
@@ -788,9 +830,12 @@ Zeile Serverschlüssel kennt `rotation` (blau mit Zahl). `einstieg_lib.php`:
 (E-SR-11). `komplett_lib.php`: Öffnen mit neu, dann alt; die Liste der
 Stände zeigt „anderer Schlüssel", wenn keiner öffnet (F-SR-11; Kopffeld
 `kennung` für neue Stände nach Entscheidung der Umsetzung, dann
-`Backup-Format.md` 6.3). `adminbackup_lib.php`, `sicherungsziel_lib.php`,
-`protokoll_archiv_lib.php`: keine Änderung an der Logik — sie rufen
-`sk_oeffnen()`; `protokoll_archive()` vergleicht die Kennung im Namen
+`Backup-Format.md` 6.3). `adminbackup_lib.php`: **Nr. 344 (E-SR-37)** —
+`edbak_freigabe_widerrufen()` und `edbak_begleit_schreiben()` verlangen
+`edbak_kennung_gueltig()` wie `edbak_ordner_loeschen()`, die Aufrufer
+melden den Fehlschlag; sonst keine Änderung an der Logik;
+`sicherungsziel_lib.php`, `protokoll_archiv_lib.php`: keine Änderung — sie
+rufen `sk_oeffnen()`; `protokoll_archive()` vergleicht die Kennung im Namen
 weiter mit der **aktuellen** (ein Archiv unter dem alten Namen ist nach dem
 Umhüllen umbenannt). `config.example.php`: `server_key_alt` als Kommentar
 wie `kdf_anteil_alt`. `protokoll_lib.php`: Arten `serverschluessel_gewechselt`
@@ -807,7 +852,7 @@ Vorgang in fünf Sätzen, die Blatt-Regel), 12.7 (Backup-Ziele: alte Kopien),
 11.4a/Protokoll (drei Arten); `Backup-Format.md` 5, 6, 7 (je ein Absatz:
 Schlüsselwechsel, was danach womit öffnet); Schlüsselblatt-Text; Kopf von
 `serverkrypto_lib.php` („Was passiert, wenn er sich ändert" wird zur
-Rotation). Backlog 247 und 233 nach `Backlog-Erledigt.md`. **Prüfmittel:**
+Rotation). Backlog 247, 233 und 344 nach `Backlog-Erledigt.md`. **Prüfmittel:**
 neue Probe `tools/proben/schluesselwechsel/` (Anlass Nr. 247): auf der
 Sandbox je Zweck ein Stück anlegen (ein Ziel mit Passwort, ein Konto mit
 Zweitfaktor, ein Adminpaket, ein Protokoll-Archiv, ein Komplett-Stand),
@@ -822,7 +867,9 @@ Häppchen und Wiederanlauf (kein halbes Stück). Dazu `anteilprobe`
 (Anteil-Rotation setzt die Blatt-Marke zurück), `freigabeprobe`,
 `komplettprobe`, `versandprobe` (Archiv unter neuem Namen geht hinaus),
 `protokollprobe`, `zweitfaktorprobe` (Code-Anmeldung während und nach der
-Rotation) unverändert grün; `jobregister`, `installweiche`, Bilderlauf der
+Rotation) unverändert grün; `freigabeprobe`, neuer Fall: POST `widerrufen`
+mit einem Handgriff aus Nullen → Fehlermeldung, keine Datei in der Wurzel
+der Ablage (Nr. 344); `jobregister`, `installweiche`, Bilderlauf der
 Karte in drei Lagen (P-SR-05).
 *Abnahme:* Schlüsselwechselprobe grün mit allen Fällen; `grep -rn
 "sk_versiegeln(" server/` = die Zwecke im Inventar (Zahl im Prüfdokument);
@@ -927,7 +974,7 @@ und die Register-Zeile der JSON-Ausgänge unverändert; Textprobe 0 neu.
 mittelbar. Backlog: 232 → `nächste Backlog-Runde` (Q-SR-06, E-SR-25;
 `verschieben.py` nur für Erledigte — die Kopfzeile von Hand,
 `uebersicht.py --pruefen` danach); 228 ist mit SR-08 **erledigt**, 350 mit
-SR-09, nicht umgehängt; `uebersicht.py --ziel 18` → **0**. Nr. 146 trägt
+SR-09, 250 mit SR-02, 344 mit SR-03, nicht umgehängt; `uebersicht.py --ziel 18` → **0**. Nr. 146 trägt
 seinen Stand seit der Nachfassung (E-SR-28) — nichts mehr zu tun.
 Prüfdokument 1 bis 6 vollständig; Statusblock „gebaut"; Prüfstand des
 Kopf-Commits (`haupt`); Pull Request gegen `main` mit dem Bericht, nach
@@ -966,7 +1013,7 @@ was hier gebaut ist (R86).
 ## 7. Quellen
 
 `docs/Rahmenplan.md` 3 (Fahrplanzeile 18), 4; `docs/Backlog.md` (Nr. 210,
-228, 232, 233, 242, 247, 249, 251); `docs/Backlog-Erledigt.md` (Nr. 141,
+228, 232, 233, 242, 247, 249, 251; seit dem Merge von 17 auch 250, 344); `docs/Backlog-Erledigt.md` (Nr. 141,
 241); Konzept Sitzungsablage (E-SA-09; gelöscht `f6cb5fd`, letzte Fassung
 `git show f6cb5fd^:docs/konzepte/Konzept-Sitzungsablage.md`); Konzept P5c
 (E-P5c-41, -42, Abschnitt 8; gelöscht `00cacef`); Konzept R4 2.3

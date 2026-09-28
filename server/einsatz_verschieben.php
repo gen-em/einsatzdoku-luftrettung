@@ -60,9 +60,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* Auswahlliste: die vorhandenen Diensttage ohne den, an dem der Einsatz schon
    haengt, und ohne Papierkorb-Eintraege (dt_liste() laesst sie aus). Die Zahl
    ist gedeckelt — wo der Deckel greift, sagt der Hinweis unten, dass „nicht in
-   der Liste" nicht „gibt es nicht" bedeutet. */
+   der Liste" nicht „gibt es nicht" bedeutet. Gefragt wird nach einem mehr,
+   als gezeigt wird (Web 21.4.0, R4-17): Bis dahin galt „genau 400" als
+   gedeckelt, und bei genau 400 Tagen sagte der Hinweis, es gebe aeltere. */
 $LIMIT = 400;
-$tage = dt_liste($userId, $LIMIT);
+$tage = dt_liste($userId, $LIMIT + 1);
+$gedeckelt = count($tage) > $LIMIT;
+if ($gedeckelt) { $tage = array_slice($tage, 0, $LIMIT); }
 
 // Einsatzzahl je Diensttag in EINER Abfrage; ohne sie ist ein Tag von einem
 // anderen desselben Datums oft nicht zu unterscheiden.
@@ -88,7 +92,6 @@ foreach ($tage as $t) {
         'einsaetze' => $zahlen[(int)$t['id']] ?? 0,
     ];
 }
-$gedeckelt = count($tage) >= $LIMIT;
 
 /* Die Auswahlliste als Wert=>Text-Abbildung fuer ui_feld. Der Text traegt
  * alles, was zwei Dienste eines Kalendertags unterscheidet — Uhrzeit, Wer,

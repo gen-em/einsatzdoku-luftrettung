@@ -92,21 +92,13 @@ object Kopplungshilfe {
      * einer Zahl zu messen.
      *
      * WAS DIESE FUNKTION AUSDRÜCKLICH NICHT TUT: die **hochgeladenen Daten**
-     * abräumen — Diensttage, Einsätze, Ruhesegmente. Das ist Backlog Nr. 95,
-     * und es bleibt dort offen. Der naheliegende Weg wäre ein `DELETE` auf
-     * `missions` und `rest_segments` in derselben SQL-Zeile; er scheidet aus,
-     * und zwar nicht aus Vorsicht, sondern nach einer festen Zusage des
-     * Projekts (`CLAUDE.md` 4): GPS-Punkte liegen je nach Alter als Zeilen in
-     * `track_points` **oder** als Blob in `track_blobs`, und beides fasst
-     * ausschließlich `spur_lib.php` an. Ein SQL-Löschen des Einsatzes ließe
-     * seine Spur als Waise zurück — ohne Fehlermeldung, und messbar erst,
-     * wenn ein Waisen-Vollscan sie findet.
-     *
-     * Was Nr. 95 wirklich braucht, ist der Weg, den der Backlog selbst nennt:
-     * ein **eigenes Prüfkonto**, das man als Ganzes verwerfen kann (Muster:
-     * `tools/pruefkonten/`). Das ist ein eigener Punkt und kein Nachklapp
-     * dieses Pakets. Gemessen nach einem vollen Rundlauf: 18 Diensttage,
-     * 10 Einsätze, 28 Ruhesegmente im Konto 1.
+     * abräumen — Diensttage, Einsätze, Ruhesegmente. Das tut seit R4-21
+     * [datenAbraeumen], und zwar VORHER: Diese Funktion löscht die Geräte,
+     * und danach wäre nicht mehr zu erkennen, welche Daten vom Lauf stammen.
+     * Ein `DELETE` auf `missions` und `rest_segments` in dieser SQL-Zeile
+     * scheidet weiter aus (`CLAUDE.md` 4): Es ließe die Spur als Waise zurück.
+     * Die drei Kopplungstabellen bleiben dagegen auf dem `mariadb`-Weg — sie
+     * tragen keine Spur, und ihr Abräumen ist hier seit S5 gemessen.
      */
     fun aufraeumen(kontoId: Int = KONTO_ID): String? = sqlAusfuehren(
         "DELETE FROM pair_sessions WHERE user_id = $kontoId OR user_id IS NULL; " +
@@ -115,19 +107,59 @@ object Kopplungshilfe {
     )
 
     /**
+     * Was die Geräte des Kontos hochgeladen haben, über die Wege der
+     * Anwendung abräumen (Backlog Nr. 95, R4-21).
+     *
+     * Ruft `android/werkzeuge/rundlauf_aufraeumen.php`: je Diensttag der
+     * Geräte `trash_delete_day()` und `trash_purge_day()` — Einsätze,
+     * Ruhesegmente, Spur und Sperrvermerke gehen über `spur_lib.php`, nicht
+     * über ein `DELETE`. Bis dahin blieben nach einem vollen Rundlauf 18
+     * Diensttage, 10 Einsätze und 28 Ruhesegmente im Konto 1.
+     *
+     * MUSS VOR `trennen()` UND VOR [aufraeumen] LAUFEN. Beide löschen die
+     * Geräte, und `day_refs`, `missions` und `rest_segments` verweisen mit
+     * ON DELETE SET NULL auf sie — danach gehörte nichts mehr zum Lauf.
+     *
+     * Nur die Geräte des Kontos, nicht das ganze Konto: Konto 1 ist auf einer
+     * fremden örtlichen Installation womöglich jemandes echtes Konto.
+     */
+    fun datenAbraeumen(kontoId: Int = KONTO_ID): String? = befehl(
+        listOf("php", skript().path, kontoId.toString()),
+    )
+
+    /** Das Skript liegt neben den übrigen Werkzeugen der App. Gradle startet
+     *  die Prüffälle im Modulverzeichnis (`android/handy`); gesucht wird
+     *  trotzdem nach oben, damit ein anderer Startort nicht still ins Leere
+     *  läuft. */
+    private fun skript(): java.io.File {
+        var ort: java.io.File? = java.io.File(System.getProperty("user.dir")).absoluteFile
+        while (ort != null) {
+            val kandidat = java.io.File(ort, "werkzeuge/rundlauf_aufraeumen.php")
+            if (kandidat.isFile) return kandidat
+            val vonOben = java.io.File(ort, "android/werkzeuge/rundlauf_aufraeumen.php")
+            if (vonOben.isFile) return vonOben
+            ort = ort.parentFile
+        }
+        return java.io.File("android/werkzeuge/rundlauf_aufraeumen.php")
+    }
+
+    /**
      * `mariadb` aufrufen. Der Rückgabewert ist `null` bei Erfolg und sonst
      * die Fehlerausgabe — sie sagt regelmäßig genauer, was fehlt, als eine
      * geworfene Ausnahme es täte (kein Client, keine Datenbank, keine
      * Tabelle).
      */
-    private fun sqlAusfuehren(sql: String): String? = try {
-        val lauf = ProcessBuilder("mariadb", "-e", sql, DATENBANK)
+    private fun sqlAusfuehren(sql: String): String? = befehl(listOf("mariadb", "-e", sql, DATENBANK))
+
+    /** Einen Befehl ausführen; `null` bei Erfolg, sonst seine Ausgabe. */
+    private fun befehl(aufruf: List<String>): String? = try {
+        val lauf = ProcessBuilder(aufruf)
             .redirectErrorStream(true)
             .start()
         val ausgabe = lauf.inputStream.bufferedReader().readText().trim()
-        if (lauf.waitFor() == 0) null else "mariadb: $ausgabe"
+        if (lauf.waitFor() == 0) null else "${aufruf.first()}: $ausgabe"
     } catch (e: Exception) {
-        "mariadb nicht aufrufbar: ${e.message}"
+        "${aufruf.first()} nicht aufrufbar: ${e.message}"
     }
 
     private const val DATENBANK = "nadoku"

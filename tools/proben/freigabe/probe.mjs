@@ -48,7 +48,7 @@ import { fileURLToPath } from 'node:url';
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const BASIS  = process.argv[2] || 'https://127.0.0.1:8443';
 const EIGENES = !process.argv[3];
-const ZIEL   = process.argv[3] || 'umlauf-freigabe@gen-em.org';
+const ZIEL   = process.argv[3] || 'umlauf-freigabe@example.invalid';
 const ZIELPW = process.argv[4] || 'umlaufpruefung2026';
 const KONTO  = join(HIER, '..', '..', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 

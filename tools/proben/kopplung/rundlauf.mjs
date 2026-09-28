@@ -17,7 +17,7 @@
  * WAS SIE HINTERLAESST: nichts. Das Pruefgeraet wird am Ende ueber
  * `aktion=trennen` wieder abgemeldet, und die Zahl der Geraete vorher und
  * nachher steht im Bericht. Sie laeuft im DEMO-Konto — dort ist Ausprobieren
- * ausdruecklich erwuenscht, und ein Reset alle 30 Minuten faengt auf, was ein
+ * ausdruecklich erwuenscht, und der naechste Reset faengt auf, was ein
  * Abbruch liegenlaesst.
  *
  * Aufruf (aus dem Wurzelverzeichnis, mit laufender lokaler Installation):

@@ -1268,6 +1268,14 @@ ist er unbrauchbar, wird die Spalte **weggelassen** statt auf `NULL` gesetzt —
 dann greift die Vorgabe der Datenbank, und die Zeile bleibt. Ein Komfortwert
 darf eine Wiederherstellung nicht kosten.
 
+**`days.created_at` steht nicht in der Datei** (seit Web 21.3.0, Schritt 17,
+R4-15, Nr. 158) — die Nutzlast bleibt, wie sie ist. Die Spalte ist der Anker,
+ob Geräte den Zeitraum eines Diensttags noch fortschreiben (`docs/Technik.md`
+4.99a2). Beim Einspielen wird sie gesetzt wie der Rückfall der Migration:
+`started_at`, ohne eines der Tag um 00:00, höchstens jetzt. Mit der Vorgabe
+der Datenbank stünde an jedem eingespielten Tag die Zeit des Einspielens,
+und ein Gerät schriebe seinen Zeitraum danach drei Tage lang wieder fort.
+
 **Was im Backup gar nicht vorkommt — und deshalb nach einer
 Wiederherstellung fehlt:**
 

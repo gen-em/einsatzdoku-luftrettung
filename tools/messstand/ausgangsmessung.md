@@ -262,6 +262,75 @@ Tabellenzeilen, wie der Zeitraum Einsätze hat — sie ist die einzige Ansicht
 ohne Seitengrenze. Auch durch die sechsfache Drossel geteilt bleiben gut
 sieben Sekunden. Der Umbau ist ein eigenes Paket (Backlog Nr. 37).
 
+## Nachmessung 27.09.2026 — die Zeitraumübersicht mit Seitengrenze (R4-17)
+
+Web 21.4.0 gibt `zeitraum.php` dieselbe Grenze wie der Suche, 200 Zeilen.
+Gemessen am Messstandbestand dieses Tages (**4071** Einsätze im Jahr 2026,
+**1029** Diensttage), derselbe Rechner vorher und nachher, Drossel 6×,
+`messen.py --schritte browser`:
+
+| Messung | vorher | nachher | |
+|---|---|---|---|
+| Zeitraumübersicht, Dauer bis Playwright die erste Zeile sieht | **88,11 s** (Prüfstand), **109,47 s** (Gegenprobe ohne Grenze) | **8,97 s** / 9,16 s | Faktor 9,6 bis 12 |
+| dieselbe, erste Zeile im DOM (von der Seite gemessen, neu) | — | **2,51 s** | |
+| Tabellenzeilen | 4071 | **200** | Riegel: mehr als 200 ist rot |
+| Startseite, Tagesverweise der Leiste | 500, ohne Hinweis | 500, **mit** Hinweis | Riegel: 500 ohne Hinweis ist rot |
+| Suche — erste Trefferanzeige (5096 Treffer) | 5,78 s | 5,95 s | unverändert, Bezug |
+
+**Was die zwei Zahlen der Zeitraumübersicht unterscheidet.** Die Dauer ist
+die Zeit, bis Playwright die Zeile sieht, und das kann es erst, wenn der
+gedrosselte Hauptfaden frei wird. Der Profiler von Chromium zeigt, womit er
+bis dahin beschäftigt ist: rund 1,2 s Entschlüsseln (`fromB64`, `decrypt`,
+für alle 4071 Einsätze — Karte und Kacheln brauchen sie alle), 0,8 s die
+erste Layoutberechnung der Seite (ausgelöst von Leaflet, `clientWidth`),
+0,4 s `innerHTML`. Die Tabelle steht nach 2,5 s; entschlüsselt ist sie nach
+rund 4 s.
+
+**Die Abnahme des Konzepts sagte „unter 5 s bei 3983 Einsätzen (heute
+42,61 s)"** — gemessen auf einem anderen Rechner als dieser, auf dem
+dieselbe Seite 88 s brauchte. Auf diesem Rechner sind es 8,97 s: absolut
+darüber, als Faktor (9,6 gegen verlangte 8,5) darunter, und die erste Zeile
+steht nach 2,5 s. Wie das zu werten ist, steht im Konzept R4 (F-R4-58,
+Q-R4-24). Weiter hinunter führen die zwei Wege, die Nr. 37 nach v1.0 hält:
+Vorschneiden und Monatsvorwahl.
+
+## Nachmessung 28.09.2026 — die Zeitraumübersicht in Stücken (R4-27)
+
+Die Betreiberin hat Q-R4-24 mit „nachbessern" beantwortet (E-R4-63). Web
+21.6.1 zeichnet die Seite in Stücken und entschlüsselt schneller
+(`fromB64()` als Schleife); der Schritt misst seither ab `zeitraum.php` und
+nennt eine zweite Zahl (E-R4-64, F-R4-70). Gemessen **je fünf Läufe** mit
+genau diesem Schritt (ohne den Backup-Schritt), derselbe Bestand (4071
+Einsätze im Jahr 2026), derselbe Rechner, Drossel 6×, warme Anlage:
+
+| Messung | Web 21.6.0 | Web 21.6.1 | |
+|---|---|---|---|
+| Zeitraumübersicht, **sichtbar** (ab `zeitraum.php`, bis Playwright die erste Zeile sieht) | 5,68–6,19 s, Median **5,83 s** | 3,42–4,72 s, Median **3,71 s** | Ziel 5 s ✔ |
+| dieselbe, erste Zeile im DOM | 1,68–2,07 s | 1,36–1,58 s | |
+| dieselbe, **fertig** (Ende der letzten Langaufgabe) | 6,12–6,57 s, Median **6,32 s** | 6,42–7,27 s, Median **7,01 s** | **+0,7 s, bewusst** |
+| längste Aufgabe des Hauptfadens (Langaufgaben der Seite, je zwei Läufe) | 2,79 / 2,97 s | 0,61 / 0,64 s | |
+| `fromB64()` im Profil | 1027 ms | 123 ms | |
+| der alte Schritt (Startseite + Zeitraum + zwei Abfragen), zum Vergleich | 7,58 / 7,76 s | — | |
+
+**Was die Zahlen sagen.** Die Tabelle ist rund zwei Sekunden früher zu
+sehen, und die Seite nimmt schon während des Entschlüsselns Eingaben an —
+vorher stand sie in einer Aufgabe von fast drei Sekunden. **Fertig** ist sie
+rund 0,7 s später: Die Bilder, die der Browser zwischendurch zeichnen darf,
+kosten Zeit. Die Betreiberin hat das mit diesen Zahlen entschieden
+(E-R4-64). Eine Probe ohne die Pause nach dem Entschlüsseln brachte
+„fertig" nicht zurück (6,2–7,1 s) und schob „sichtbar" in drei von fünf
+Läufen über 5 s.
+
+**Die alte Messung hätte die Abnahme auch am alten Stand verfehlt.** Der
+berichtigte Schritt misst Web 21.6.0 mit 5,7 bis 6,2 s: Die Messung war
+nicht der Grund, sondern die Seite.
+
+**Die Streuung ist groß** (3,4 bis 4,7 s bei gleichem Stand): „Sichtbar"
+ist die Zeit, bis Playwright nachfragt und eine Antwort bekommt, und es
+fragt in Abständen bis 500 ms, jedes Mal auf einen freien Moment des
+gedrosselten Hauptfadens angewiesen. Deshalb steht hier der Median, und
+die Spanne daneben.
+
 ---
 
 ## Wiederholen

@@ -2,7 +2,7 @@
 # Pruefkonten der Rollen admin und support anlegen -- fuer den Bilderlauf.
 #
 # Anlass: Nr. 297 (F-P5c-41). Der Bilderlauf kannte zwei angemeldete Rollen,
-# `demo` und `admin`, und `admin` meldete sich als admin@gen-em.org an --
+# `demo` und `admin`, und `admin` meldete sich als admin@example.invalid an --
 # eine BetreiberIn. Die reine Admin-Sicht und die des Supports (drei Kacheln
 # ueber der Liste, eine einspaltige Kontoseite ohne die Knoepfe, die der
 # Support nicht darf, zwei Protokollreiter) nahm er nie auf; belegt waren

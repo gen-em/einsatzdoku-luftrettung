@@ -28,6 +28,7 @@ import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.gemeinsam.Motiv
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.aufzeichnung.Ortungsstand
+import org.genem.nadoku.handy.puffer.Raeumung
 
 /**
  * Wie der letzte Sendelauf ausgegangen ist (E-S5Z-12).
@@ -109,9 +110,12 @@ fun DienstAnsicht(
     logoWahl: LogoWahl,
     rueckstand: Int,
     abgewiesen: Int = 0,
+    verwerfbar: Int = 0,
+    verworfen: Int? = null,
     sendeergebnis: Sendeergebnis? = null,
     sendelaufLaeuft: Boolean = false,
     aufJetztSenden: () -> Unit = {},
+    aufVerwerfen: () -> Unit = {},
     aufModus: (Modus) -> Unit,
     aufBeginnen: () -> Unit,
     aufBeenden: () -> Unit,
@@ -139,8 +143,8 @@ fun DienstAnsicht(
         ) {
             Karte {
                 Zustandsblock(
-                    stand, rueckstand, abgewiesen,
-                    sendeergebnis, sendelaufLaeuft, aufJetztSenden,
+                    stand, rueckstand, abgewiesen, verwerfbar, verworfen,
+                    sendeergebnis, sendelaufLaeuft, aufJetztSenden, aufVerwerfen,
                 )
 
                 /* ZWEI SPERREN, IN DIESER REIHENFOLGE (E-S5Z-03). Erst die
@@ -186,9 +190,12 @@ private fun Zustandsblock(
     stand: Dienststand,
     rueckstand: Int,
     abgewiesen: Int,
+    verwerfbar: Int,
+    verworfen: Int?,
     sendeergebnis: Sendeergebnis?,
     sendelaufLaeuft: Boolean,
     aufJetztSenden: () -> Unit,
+    aufVerwerfen: () -> Unit,
 ) {
     if (stand.laeuft) {
         Row(
@@ -246,6 +253,37 @@ private fun Zustandsblock(
                 R.plurals.sync_abgewiesen, abgewiesen, abgewiesen,
             ),
             punktfarbe = Farbe.rot, schriftfarbe = Farbe.rotTief,
+        )
+        /* VERWERFEN (seit 0.17.0, Backlog Nr. 114, R4-22, Bild M-R4-22).
+         * Ohne Weg wurde die rote Zeile zur Tapete: Sie stand, bis nach
+         * 30 Tagen die Frist räumte, und niemand konnte etwas tun.
+         *
+         * NEUTRAL, NICHT ROT: Verwerfen beendet die Ansicht nicht — Rot
+         * bleibt „Dienst beenden" unten vorbehalten —, und den Fehltipp
+         * fängt die Rückfrage (E-S4-21b). Der Knopf steht nur, wenn er etwas
+         * verwirft ([Puffer.verwerfbar]): Ein laufendes Paket mit 400 wird
+         * noch beschrieben und gehört erst nach dem Dienst dazu. Der Hinweis
+         * darunter sagt, was die rote Zeile bedeutet und was ohne Zutun
+         * geschieht (Q-R4-25). */
+        if (verwerfbar > 0) {
+            KnopfNeutral(stringResource(R.string.abgewiesene_verwerfen)) { aufVerwerfen() }
+        }
+        Hinweiskasten(
+            androidx.compose.ui.res.pluralStringResource(
+                R.plurals.abgewiesene_hinweis, abgewiesen, Raeumung.FRIST_TAGE.toInt(),
+            ),
+        )
+    }
+
+    /* Die Quittung nach „Verwerfen" — wie die Ergebniszeile darunter nur,
+     * solange die Ansicht offen ist: Sie antwortet auf eine Handlung und ist
+     * kein Zustand. Die Zahl ist die, die tatsächlich gelöscht wurde. */
+    if (verworfen != null) {
+        Text(
+            text = androidx.compose.ui.res.pluralStringResource(
+                R.plurals.sync_verworfen, verworfen, verworfen,
+            ),
+            color = Farbe.gedaempft, fontSize = 13.sp,
         )
     }
 

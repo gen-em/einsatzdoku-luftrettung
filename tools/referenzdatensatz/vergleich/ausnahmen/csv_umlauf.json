@@ -1,46 +1,46 @@
 {
   "name": "csv-umlauf",
-  "beschreibung": "Erwartete Abweichungen beim Umlauf CSV-Archiv -> frisches Konto -> CSV-Archiv. ZULETZT GEMESSEN am 23.09.2026 mit ERNEUERTER Referenz (RP-02, E-RP-01; Ausfuhr aus dem Demo-Bestand einer frischen Anlage, Web 20.37.3, 204 GPX, 101 Einsaetze im Export): 10922 Einzelvergleiche, 1271 erwartete Abweichungen, 0 unerklaerte. Die Referenz vom 15.09.2026 war aelter als die Hausform (PK-04/5b) und ergab 3 unerklaerte (\"Anderer Notarzt\" -> \"Andere NotaerztIn\"); dafuer steht KEINE Regel hier -- eine Regel fuer eine veraltete Referenz waere ein Filter. GEMESSEN am Referenzdatensatz nach S9/AP4, 07.09.2026 (88 Einsaetze, davon 83 im Export, 16 Diensttage, 100 Ruhesegmente, 172 GPX im Export): 9118 Einzelvergleiche, 1021 erwartete Abweichungen, 0 unerklaerte. Das sind 38 Einzelvergleiche mehr als vor AP4 (9080). Sie kommen von den zwei neuen Spalten der `diensttage.csv` -- `typ` und `rettungsmittel_kurz` (E-S9-09) -- und ihren zwei Zeilen in `felder.csv`. Wie sich die 38 auf Zellen verteilen, ist NICHT nachgerechnet: Der Vergleicher zaehlt nicht jede Zelle, und eine Aufschluesselung, die nur plausibel aussieht, waere keine Messung. Belegt ist die Differenz selbst und das Entscheidende daran: Sie erzeugt KEINE Abweichung -- Typ und Kurzname ueberstehen den Umlauf. Jede Regel traegt die Zahl, mit der sie belegt ist; was hier NICHT steht, bleibt als Befund stehen. STAND DAVOR: Bis Web 7.3.1 waren sechs Abweichungen unerklaert, und sie standen bewusst NICHT in dieser Liste, weil sie Fehler der Anwendung waren und keine Bauart — F-P1-L (vier Notizen ohne Zeilenumbruch, Backlog Nr. 27) und F-P1-M (final und ende ueberschrieben, Nr. 28). Beide sind mit Web 8.0.0 behoben; die Liste hat dafuer KEINE neuen Regeln bekommen, sondern der Kreislauf steht auf null. Genau das ist der Unterschied zwischen einer Ausnahme und einem Filter. Eine Zahl hat sich dabei geaendert: diensttage/dienst_ende 11 -> 12, weil der nicht abgeschlossene Einsatz sein Dienstende jetzt nicht mehr nach hinten zieht. Die uebrigen Zahlen sind mit Web 8.0.0 neu gemessen; die zuvor eingetragenen stammten teils noch aus dem Stand vor Web 7.3.1, als die beiden Einsaetze nach Mitternacht gar nicht verglichen wurden (daher durchgehend +2). ENTFERNT mit Web 7.3.1: drei Regeln zu crew_p2. Sie haben nie gegriffen — als einzige trugen ihre Begruendungen keine Zahl, sie waren aus der Analogie zu crew_p1 geschrieben statt gemessen. NICHT IN DIESER LISTE, obwohl gemessen: der Formelschutz-Apostroph (Backlog Nr. 24, 3 Zellen). Er faellt hier nicht auf, weil der erneute Export keinen zweiten Apostroph hinzufuegt — die Datei sieht gleich aus, waehrend der gespeicherte Wert ein Zeichen laenger geworden ist. Beschrieben in docs/Export-Format.md 5.1, Ausnahme 6. NACHTRAG WEB 14.1.0 (R64/AP3): zwei Regeln fuer einsaetze.geraet_art und einsaetze.geraet_modell (je 82x). Die Spalten sind mit Web 14.1.0 dazugekommen und werden vom Rueckimport nicht uebernommen. Die Regeln stehen auf 'nach: \"\"' und nicht auf 'von: …', damit sie sowohl gegen die alte Referenz greifen (dort gibt es die Spalte gar nicht) als auch gegen die mit AP4 erneuerte (dort steht ein echtes Modell). NICHT IN DIESER LISTE, mit Absicht: die fuenf Abweichungen in felder.csv (vier neue Zeilen fuer geraet_art/geraet_modell in einsaetze.csv und ruhezeiten.csv, eine geaenderte Beschreibung von herkunft). Sie sind keine Eigenschaft des UMLAUFS, sondern die Folge davon, dass die Referenzdatei aelter ist als der Code — mit der Erneuerung der Referenz (AP4) verschwinden sie. Eine Regel dafuer waere ein Filter und kein Ausnahmegrund. Zwischenstand bis dahin: 8965 Einzelvergleiche, 1023 erwartete, 5 unerklaerte. AM 13.09.2026 ZWEI REGELN AUSGETRAGEN (Backlog Nr. 173, Backlog-Runde 3): `felder.beschreibung` \"nach pat_blob.notes\" und die LIESMICH-Regel. Beide beschrieben denselben Uebergang aus S9/AP7 wie die drei im edbak-Umlauf; der heutige Referenzbestand kennt ihn nicht mehr, und der Kreislauf meldete sie als ungenutzt. AM 15.09.2026 SIND ZWEI REGELN DAZUGEKOMMEN (Demo-Ausbau): `diensttage/rettungsmittel_kurz` und `diensttage/typ`. Beide haben die Ursache, die hier schon viermal steht -- das Rettungsmittel wird auf der Importseite gewaehlt, nicht aus der Datei gelesen --, und beide waren bis dahin unsichtbar, weil kein Diensttag des Bestands einen Kurznamen oder einen anderen Typ als `standard` trug. Eine DRITTE Abweichung ist KEINE Regel geworden: Der Reanimationsverlauf in `rea_json` kam mit zwei vertauschten Ereignissen derselben Minute zurueck. Ereignisse mit gleicher Zeit haben keine zugesagte Reihenfolge; das gehoert in die Normalisierung (`_rea_json`) und nicht in eine Ausnahme, die etwas erklaert, das gar nicht abweicht.",
+  "beschreibung": "Erwartete Abweichungen beim Umlauf CSV-Archiv -> frisches Konto -> CSV-Archiv. ZULETZT GEMESSEN am 27.09.2026 mit ERNEUERTER Referenz (Schritt 17, R4-16, Backlog Nr. 275 und 323: Ausfuhr aus einem frisch eingespielten Demo-Bestand mit dem Nachtdienst D22, Web 21.3.0, 211 GPX, 104 Einsaetze im Export): 11234 Einzelvergleiche, 1303 erwartete Abweichungen, 0 unerklaerte, 0 ungenutzte Regeln. Gegen die ALTE Referenz am selben Tag gefahren: 10922 / 1271 / 0 -- die Differenz liegt ausschliesslich in den Feldern, die D22 beruehrt (Spuren +7, Einsatzspalten +3, Diensttagsspalten +1). Mit diesem Lauf sind die Zahlen hinter GEMESSEN je Regel nachgemessen, nach Bereich und Feld gezaehlt; 26 von 44 standen noch auf einem aelteren Stand -- etwa `tracks` mit 171 statt 211 und `crew_driver` mit 6 statt 13; beide Zahlen zeigte schon die alte Referenz. Davor: ZULETZT GEMESSEN am 23.09.2026 mit ERNEUERTER Referenz (RP-02, E-RP-01; Ausfuhr aus dem Demo-Bestand einer frischen Anlage, Web 20.37.3, 204 GPX, 101 Einsaetze im Export): 10922 Einzelvergleiche, 1271 erwartete Abweichungen, 0 unerklaerte. Die Referenz vom 15.09.2026 war aelter als die Hausform (PK-04/5b) und ergab 3 unerklaerte (\"Anderer Notarzt\" -> \"Andere NotaerztIn\"); dafuer steht KEINE Regel hier -- eine Regel fuer eine veraltete Referenz waere ein Filter. GEMESSEN am Referenzdatensatz nach S9/AP4, 07.09.2026 (88 Einsaetze, davon 83 im Export, 16 Diensttage, 100 Ruhesegmente, 172 GPX im Export): 9118 Einzelvergleiche, 1021 erwartete Abweichungen, 0 unerklaerte. Das sind 38 Einzelvergleiche mehr als vor AP4 (9080). Sie kommen von den zwei neuen Spalten der `diensttage.csv` -- `typ` und `rettungsmittel_kurz` (E-S9-09) -- und ihren zwei Zeilen in `felder.csv`. Wie sich die 38 auf Zellen verteilen, ist NICHT nachgerechnet: Der Vergleicher zaehlt nicht jede Zelle, und eine Aufschluesselung, die nur plausibel aussieht, waere keine Messung. Belegt ist die Differenz selbst und das Entscheidende daran: Sie erzeugt KEINE Abweichung -- Typ und Kurzname ueberstehen den Umlauf. Jede Regel traegt die Zahl, mit der sie belegt ist; was hier NICHT steht, bleibt als Befund stehen. STAND DAVOR: Bis Web 7.3.1 waren sechs Abweichungen unerklaert, und sie standen bewusst NICHT in dieser Liste, weil sie Fehler der Anwendung waren und keine Bauart — F-P1-L (vier Notizen ohne Zeilenumbruch, Backlog Nr. 27) und F-P1-M (final und ende ueberschrieben, Nr. 28). Beide sind mit Web 8.0.0 behoben; die Liste hat dafuer KEINE neuen Regeln bekommen, sondern der Kreislauf steht auf null. Genau das ist der Unterschied zwischen einer Ausnahme und einem Filter. Eine Zahl hat sich dabei geaendert: diensttage/dienst_ende 11 -> 12, weil der nicht abgeschlossene Einsatz sein Dienstende jetzt nicht mehr nach hinten zieht. Die uebrigen Zahlen sind mit Web 8.0.0 neu gemessen; die zuvor eingetragenen stammten teils noch aus dem Stand vor Web 7.3.1, als die beiden Einsaetze nach Mitternacht gar nicht verglichen wurden (daher durchgehend +2). ENTFERNT mit Web 7.3.1: drei Regeln zu crew_p2. Sie haben nie gegriffen — als einzige trugen ihre Begruendungen keine Zahl, sie waren aus der Analogie zu crew_p1 geschrieben statt gemessen. NICHT IN DIESER LISTE, obwohl gemessen: der Formelschutz-Apostroph (Backlog Nr. 24, 3 Zellen). Er faellt hier nicht auf, weil der erneute Export keinen zweiten Apostroph hinzufuegt — die Datei sieht gleich aus, waehrend der gespeicherte Wert ein Zeichen laenger geworden ist. Beschrieben in docs/Export-Format.md 5.1, Ausnahme 6. NACHTRAG WEB 14.1.0 (R64/AP3): zwei Regeln fuer einsaetze.geraet_art und einsaetze.geraet_modell (je 82x). Die Spalten sind mit Web 14.1.0 dazugekommen und werden vom Rueckimport nicht uebernommen. Die Regeln stehen auf 'nach: \"\"' und nicht auf 'von: …', damit sie sowohl gegen die alte Referenz greifen (dort gibt es die Spalte gar nicht) als auch gegen die mit AP4 erneuerte (dort steht ein echtes Modell). NICHT IN DIESER LISTE, mit Absicht: die fuenf Abweichungen in felder.csv (vier neue Zeilen fuer geraet_art/geraet_modell in einsaetze.csv und ruhezeiten.csv, eine geaenderte Beschreibung von herkunft). Sie sind keine Eigenschaft des UMLAUFS, sondern die Folge davon, dass die Referenzdatei aelter ist als der Code — mit der Erneuerung der Referenz (AP4) verschwinden sie. Eine Regel dafuer waere ein Filter und kein Ausnahmegrund. Zwischenstand bis dahin: 8965 Einzelvergleiche, 1023 erwartete, 5 unerklaerte. AM 13.09.2026 ZWEI REGELN AUSGETRAGEN (Backlog Nr. 173, Backlog-Runde 3): `felder.beschreibung` \"nach pat_blob.notes\" und die LIESMICH-Regel. Beide beschrieben denselben Uebergang aus S9/AP7 wie die drei im edbak-Umlauf; der heutige Referenzbestand kennt ihn nicht mehr, und der Kreislauf meldete sie als ungenutzt. AM 15.09.2026 SIND ZWEI REGELN DAZUGEKOMMEN (Demo-Ausbau): `diensttage/rettungsmittel_kurz` und `diensttage/typ`. Beide haben die Ursache, die hier schon viermal steht -- das Rettungsmittel wird auf der Importseite gewaehlt, nicht aus der Datei gelesen --, und beide waren bis dahin unsichtbar, weil kein Diensttag des Bestands einen Kurznamen oder einen anderen Typ als `standard` trug. Eine DRITTE Abweichung ist KEINE Regel geworden: Der Reanimationsverlauf in `rea_json` kam mit zwei vertauschten Ereignissen derselben Minute zurueck. Ereignisse mit gleicher Zeit haben keine zugesagte Reihenfolge; das gehoert in die Normalisierung (`_rea_json`) und nicht in eine Ausnahme, die etwas erklaert, das gar nicht abweicht.",
   "regeln": [
     {
       "bereich": "tracks",
       "feld": "*",
       "art": "fehlt",
-      "begruendung": "GEMESSEN 171x. GPX-Dateien werden nicht eingelesen — eine der drei ausdruecklich benannten Ausnahmen in Export-Format.md 5.1. Tracks stammen von der Uhr und sind der Rohbestand; ein Rueckspielen ueber den Export waere ein zweiter, schlechterer Weg neben dem Backup."
+      "begruendung": "GEMESSEN 211x. GPX-Dateien werden nicht eingelesen — eine der drei ausdruecklich benannten Ausnahmen in Export-Format.md 5.1. Tracks stammen von der Uhr und sind der Rohbestand; ein Rueckspielen ueber den Export waere ein zweiter, schlechterer Weg neben dem Backup."
     },
     {
       "bereich": "einsaetze",
       "feld": "track_datei",
       "art": "wert",
       "nach": "",
-      "begruendung": "GEMESSEN 76x. Folgt unmittelbar daraus, dass die GPX-Dateien nicht eingelesen werden: ohne Spur kein Dateiname."
+      "begruendung": "GEMESSEN 93x. Folgt unmittelbar daraus, dass die GPX-Dateien nicht eingelesen werden: ohne Spur kein Dateiname."
     },
     {
       "bereich": "einsaetze",
       "feld": "track_punkte",
       "art": "wert",
       "nach": "0",
-      "begruendung": "GEMESSEN 76x. Dieselbe Ursache wie track_datei."
+      "begruendung": "GEMESSEN 93x. Dieselbe Ursache wie track_datei."
     },
     {
       "bereich": "ruhezeiten",
       "feld": "*",
       "art": "fehlt",
-      "begruendung": "GEMESSEN 95x. Fuer Ruhesegmente gibt es keinen Importweg — das Profil export_csv_v1 kennt nur Einsaetze und Diensttage. Nach einem Umlauf ist ruhezeiten.csv leer. Das ist Bauart, steht aber bis Web 7.2.3 in KEINER Fassung von Export-Format.md 5.1; siehe Konzept P1, Fund F-P1-N."
+      "begruendung": "GEMESSEN 118x. Fuer Ruhesegmente gibt es keinen Importweg — das Profil export_csv_v1 kennt nur Einsaetze und Diensttage. Nach einem Umlauf ist ruhezeiten.csv leer. Das ist Bauart, steht aber bis Web 7.2.3 in KEINER Fassung von Export-Format.md 5.1; siehe Konzept P1, Fund F-P1-N."
     },
     {
       "bereich": "einsaetze",
       "feld": "herkunft",
       "art": "wert",
       "nach": "import",
-      "begruendung": "GEMESSEN 78x. api/import_commit.php vergibt origin='import'. Die Herkunft beschreibt, wie ein Datensatz IN DIESER Installation entstanden ist; beim Einlesen entsteht er neu. Ein Wert aus der Datei waere eine Aussage ueber ein fremdes Konto. Ausdruecklich so dokumentiert (Export-Format.md 5.1)."
+      "begruendung": "GEMESSEN 100x. api/import_commit.php vergibt origin='import'. Die Herkunft beschreibt, wie ein Datensatz IN DIESER Installation entstanden ist; beim Einlesen entsteht er neu. Ein Wert aus der Datei waere eine Aussage ueber ein fremdes Konto. Ausdruecklich so dokumentiert (Export-Format.md 5.1)."
     },
     {
       "bereich": "einsaetze",
       "feld": "edited",
       "art": "wert",
       "nach": "0",
-      "begruendung": "GEMESSEN 74x. Wie herkunft: Der Bearbeitungsstatus beschreibt das Quellkonto. Beim Einfuegen bleibt er auf dem Vorgabewert 0, beim Ueberschreiben setzt ihn der Server selbst auf 1."
+      "begruendung": "GEMESSEN 88x. Wie herkunft: Der Bearbeitungsstatus beschreibt das Quellkonto. Beim Einfuegen bleibt er auf dem Vorgabewert 0, beim Ueberschreiben setzt ihn der Server selbst auf 1."
     },
     {
       "bereich": "einsaetze",
@@ -54,43 +54,43 @@
       "bereich": "einsaetze",
       "feld": "rettungsmittel",
       "art": "wert",
-      "begruendung": "GEMESSEN 51x (Einsaetze). Rettungsmittel und Standort werden oben auf der Importseite GEWAEHLT, nicht aus der Datei gelesen (E15). Eine Aufloesung ueber Namensgleichheit waere bruechig und legte stillschweigend neue Stammdaten an. Folge fuer den Umlauf: Eine Datei mit drei Rettungsmitteln faellt auf EINES zusammen."
+      "begruendung": "GEMESSEN 70x (Einsaetze). Rettungsmittel und Standort werden oben auf der Importseite GEWAEHLT, nicht aus der Datei gelesen (E15). Eine Aufloesung ueber Namensgleichheit waere bruechig und legte stillschweigend neue Stammdaten an. Folge fuer den Umlauf: Eine Datei mit drei Rettungsmitteln faellt auf EINES zusammen."
     },
     {
       "bereich": "einsaetze",
       "feld": "art",
       "art": "wert",
-      "begruendung": "GEMESSEN 45x. Folgt aus der Wahl des Rettungsmittels: Die Art (luft/boden) haengt am gewaehlten Rettungsmittel, nicht an der Datei."
+      "begruendung": "GEMESSEN 64x. Folgt aus der Wahl des Rettungsmittels: Die Art (luft/boden) haengt am gewaehlten Rettungsmittel, nicht an der Datei."
     },
     {
       "bereich": "einsaetze",
       "feld": "standort",
       "art": "wert",
-      "begruendung": "GEMESSEN 45x. Folgt aus derselben Wahl wie rettungsmittel."
+      "begruendung": "GEMESSEN 64x. Folgt aus derselben Wahl wie rettungsmittel."
     },
     {
       "bereich": "diensttage",
       "feld": "rettungsmittel",
       "art": "wert",
-      "begruendung": "GEMESSEN 8x. Dieselbe Ursache wie bei den Einsaetzen: gewaehlt, nicht gelesen."
+      "begruendung": "GEMESSEN 11x. Dieselbe Ursache wie bei den Einsaetzen: gewaehlt, nicht gelesen."
     },
     {
       "bereich": "diensttage",
       "feld": "art",
       "art": "wert",
-      "begruendung": "GEMESSEN 7x. Folgt aus der Wahl des Rettungsmittels."
+      "begruendung": "GEMESSEN 10x. Folgt aus der Wahl des Rettungsmittels."
     },
     {
       "bereich": "diensttage",
       "feld": "standort",
       "art": "wert",
-      "begruendung": "GEMESSEN 7x. Folgt aus der Wahl des Rettungsmittels."
+      "begruendung": "GEMESSEN 10x. Folgt aus der Wahl des Rettungsmittels."
     },
     {
       "bereich": "diensttage",
       "feld": "faehigkeiten",
       "art": "wert",
-      "begruendung": "GEMESSEN 8x. Die Faehigkeiten werden beim Anlegen eines Diensttags vom Rettungsmittel EINGEFROREN. Ein neu angelegter Tag friert den heutigen Stand des GEWAEHLTEN Rettungsmittels ein, nicht den Stand aus der Datei."
+      "begruendung": "GEMESSEN 9x. Die Faehigkeiten werden beim Anlegen eines Diensttags vom Rettungsmittel EINGEFROREN. Ein neu angelegter Tag friert den heutigen Stand des GEWAEHLTEN Rettungsmittels ein, nicht den Stand aus der Datei."
     },
     {
       "bereich": "einsaetze",
@@ -114,19 +114,19 @@
       "bereich": "einsaetze",
       "feld": "crew_driver",
       "art": "wert",
-      "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+      "begruendung": "GEMESSEN 13x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
     },
     {
       "bereich": "einsaetze",
       "feld": "crew_trainee",
       "art": "wert",
-      "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+      "begruendung": "GEMESSEN 9x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
     },
     {
       "bereich": "einsaetze",
       "feld": "crew_other",
       "art": "wert",
-      "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+      "begruendung": "GEMESSEN 13x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
     },
     {
       "bereich": "einsaetze",
@@ -150,19 +150,19 @@
       "bereich": "einsaetze",
       "feld": "tag_crew_driver",
       "art": "wert",
-      "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+      "begruendung": "GEMESSEN 13x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
     },
     {
       "bereich": "einsaetze",
       "feld": "tag_crew_trainee",
       "art": "wert",
-      "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+      "begruendung": "GEMESSEN 9x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
     },
     {
       "bereich": "einsaetze",
       "feld": "tag_crew_other",
       "art": "wert",
-      "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+      "begruendung": "GEMESSEN 13x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
     },
     {
       "bereich": "diensttage",
@@ -204,25 +204,25 @@
       "bereich": "diensttage",
       "feld": "dienst_beginn",
       "art": "wert",
-      "begruendung": "GEMESSEN 13x. Ein neu angelegter Diensttag hat keinen echten Dienstbeginn — er entsteht aus den Einsaetzen (dt_zeitraum_fortschreiben in diensttag_lib.php zieht ihn auf den fruehesten Einsatzbeginn). Der echte Dienstbeginn kommt von der Uhr und steht nur in diensttage.csv, die der Import nicht liest."
+      "begruendung": "GEMESSEN 17x. Ein neu angelegter Diensttag hat keinen echten Dienstbeginn — er entsteht aus den Einsaetzen (dt_zeitraum_fortschreiben in diensttag_lib.php zieht ihn auf den fruehesten Einsatzbeginn). Der echte Dienstbeginn kommt von der Uhr und steht nur in diensttage.csv, die der Import nicht liest."
     },
     {
       "bereich": "diensttage",
       "feld": "dienst_ende",
       "art": "wert",
-      "begruendung": "GEMESSEN 12x. Dieselbe Ursache wie dienst_beginn, in die andere Richtung: bis zum spaetesten Einsatzende."
+      "begruendung": "GEMESSEN 16x. Dieselbe Ursache wie dienst_beginn, in die andere Richtung: bis zum spaetesten Einsatzende."
     },
     {
       "bereich": "diensttage",
       "feld": "notizen",
       "art": "wert",
-      "begruendung": "GEMESSEN 12x. Die Tagesnotiz steht nur in diensttage.csv; der Import liest ausschliesslich einsaetze.csv. Sie kann deshalb nicht zurueckkommen."
+      "begruendung": "GEMESSEN 16x. Die Tagesnotiz steht nur in diensttage.csv; der Import liest ausschliesslich einsaetze.csv. Sie kann deshalb nicht zurueckkommen."
     },
     {
       "bereich": "diensttage",
       "feld": "anzahl_einsaetze",
       "art": "wert",
-      "begruendung": "GEMESSEN 1x. Gerechnet, nicht gespeichert: Die Spalte nennt die Zahl der TATSAECHLICH uebernommenen Einsaetze des Tages."
+      "begruendung": "GEMESSEN 3x. Gerechnet, nicht gespeichert: Die Spalte nennt die Zahl der TATSAECHLICH uebernommenen Einsaetze des Tages."
     },
     {
       "bereich": "diensttage",
@@ -250,21 +250,21 @@
       "feld": "geraet_art",
       "art": "wert",
       "nach": "",
-      "begruendung": "GEMESSEN 82x. Die Momentaufnahme des Geraets (R64, Web 14.1.0) wird vom Rueckimport NICHT uebernommen — dieselbe Begruendung wie bei herkunft und edited: Sie beschreibt, mit welchem Geraet der Einsatz IM QUELLKONTO entstanden ist. Beim Einlesen entsteht er neu, ueber das virtuelle Geraet des Kontos, und das weiss nichts. Ausdruecklich so dokumentiert (Export-Format.md 5.1). Die 82 sind zugleich die Zahl aller Einsaetze — die Regel greift also an JEDEM, auch dort, wo in der Referenz noch nichts stand."
+      "begruendung": "GEMESSEN 93x. Die Momentaufnahme des Geraets (R64, Web 14.1.0) wird vom Rueckimport NICHT uebernommen — dieselbe Begruendung wie bei herkunft und edited: Sie beschreibt, mit welchem Geraet der Einsatz IM QUELLKONTO entstanden ist. Beim Einlesen entsteht er neu, ueber das virtuelle Geraet des Kontos, und das weiss nichts. Ausdruecklich so dokumentiert (Export-Format.md 5.1). Die 82 sind zugleich die Zahl aller Einsaetze — die Regel greift also an JEDEM, auch dort, wo in der Referenz noch nichts stand."
     },
     {
       "bereich": "einsaetze",
       "feld": "geraet_modell",
       "art": "wert",
       "nach": "",
-      "begruendung": "GEMESSEN 82x. Dieselbe Ursache wie geraet_art."
+      "begruendung": "GEMESSEN 93x. Dieselbe Ursache wie geraet_art."
     },
     {
       "bereich": "einsaetze",
       "feld": "phase_02_alarmierung",
       "art": "wert",
       "von": "",
-      "begruendung": "GEMESSEN 1x. Der EINE geschnittene Einsatz des Bestands (origin=schnitt) hat keine Phase 2: `api/schneiden.php` kennt nur die drei Phasen 3, 4 und 7. Das CSV kann eine Startzeit OHNE Alarmierung nicht ausdruecken -- die Spalte `uhrzeit_ortszeit` ist im Profil `export_csv_v1` das Ziel `alarm`, und `import_ui.js` macht daraus `started_local`. Beim Wiedereinlesen entsteht daraus eine Alarmierung. Das ist keine Verfaelschung: Fuer einen Einsatz, der aus einer Spur geschnitten wurde, ist der Beginn die einzige Zeit, die es gibt. Die Alternative waere eine zusaetzliche Spalte 'ohne Alarmierung' fuer genau einen Fall. Aufgekommen mit R64/AP4, als der Referenzbestand erstmals einen Schnitt trug."
+      "begruendung": "GEMESSEN 3x. Der EINE geschnittene Einsatz des Bestands (origin=schnitt) hat keine Phase 2: `api/schneiden.php` kennt nur die drei Phasen 3, 4 und 7. Das CSV kann eine Startzeit OHNE Alarmierung nicht ausdruecken -- die Spalte `uhrzeit_ortszeit` ist im Profil `export_csv_v1` das Ziel `alarm`, und `import_ui.js` macht daraus `started_local`. Beim Wiedereinlesen entsteht daraus eine Alarmierung. Das ist keine Verfaelschung: Fuer einen Einsatz, der aus einer Spur geschnitten wurde, ist der Beginn die einzige Zeit, die es gibt. Die Alternative waere eine zusaetzliche Spalte 'ohne Alarmierung' fuer genau einen Fall. Aufgekommen mit R64/AP4, als der Referenzbestand erstmals einen Schnitt trug."
     },
     {
       "bereich": "diensttage",

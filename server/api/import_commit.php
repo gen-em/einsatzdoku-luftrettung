@@ -248,7 +248,7 @@ function import_commit(array $b, int $userId): never
         $festNeu = ['uhr_gesperrt' => '1', 'origin' => "'import'"];
         $spNeu   = mf_spalten('import_neu', '', false);
         $insE = $pdo->prepare(
-            'INSERT INTO missions (' . implode(', ', $spNeu) . ')
+            'INSERT INTO missions (' . mf_spalten_sql('import_neu', '', false) . ')
              VALUES (' . implode(',', array_map(
                  static fn(string $c): string => $festNeu[$c] ?? '?', $spNeu)) . ')');
         /* UEBERSCHREIBEN LOESCHT NICHTS, WAS DIE DATEI NICHT KENNT (P10, A9).
@@ -293,9 +293,10 @@ function import_commit(array $b, int $userId): never
         $updE = $pdo->prepare(
             'UPDATE missions SET ' . implode(', ', array_map(
                 static function (string $c) use ($festAend, $schranke): string {
-                    if (isset($festAend[$c]))          { return "$c = {$festAend[$c]}"; }
-                    if (in_array($c, $schranke, true)) { return "$c = COALESCE(?, $c)"; }
-                    return "$c = ?";
+                    $q = mf_bezeichner($c);   // Nr. 239: Namen in Backticks
+                    if (isset($festAend[$c]))          { return "$q = {$festAend[$c]}"; }
+                    if (in_array($c, $schranke, true)) { return "$q = COALESCE(?, $q)"; }
+                    return "$q = ?";
                 }, $spAend)) . '
              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $hatPhase2 = $pdo->prepare(

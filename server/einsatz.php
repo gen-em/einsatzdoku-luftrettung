@@ -232,7 +232,6 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
          OHNE PAT_WRAP: Diese Seite bekommt die Huelle aus der API-Antwort
          (m.pat_wrap), nicht aus PHP. */ ?>
 <?php ui_krypto_bootstrap(['wrap' => false]); ?>
-<script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>

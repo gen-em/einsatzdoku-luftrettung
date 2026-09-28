@@ -110,6 +110,15 @@ MATRIX = [
     ("Diensttage", "Bodendienst", ["dienst-boden"]),
     ("Diensttage", "Kalendertag mit zwei Diensten", ["zwei-dienste-ein-tag"]),
     ("Diensttage", "Dienst über Mitternacht", ["dienst-ueber-mitternacht"]),
+    # SCHAERFER ALS DIE ZEILE DARUEBER (Schritt 17, R4-16, Nr. 275): Die zwei
+    # Dienste ueber Mitternacht waren beide bodengebunden und beide auf einer
+    # Zeitumstellung. Der klassische Fall -- ein Luftdienst in der Nacht, an
+    # dem Einsaetze vor UND nach Mitternacht beginnen, ohne Umstellung --
+    # fehlte, und mit ihm jede Probe fuer die Sortierung „Beginn" (AP9b: 01:10
+    # vor 23:50). Die Marke wird GERECHNET, nicht getippt: unten, am Ende der
+    # Einsatzschleife.
+    ("Diensttage", "Luftdienst mit Einsätzen vor und nach Mitternacht, ohne Zeitumstellung",
+     ["nachtdienst-luft"]),
     ("Diensttage", "Einsatzdatum ≠ Diensttag", ["einsatzdatum-abweichend"]),
     ("Diensttage", "Diensttag ohne Einsatz", ["dienst-ohne-einsatz"]),
     ("Diensttage", "Tagesnotizen", ["notizen-diensttag"]),
@@ -437,6 +446,16 @@ def main() -> int:
 
         if not d["einsaetze"]:
             merke(["dienst-ohne-einsatz"], n)
+
+        # NACHTDIENST IN DER LUFT (R4-16, Nr. 275): Einsatzbeginne an ZWEI
+        # Ortsdaten, und Dienstbeginn und -ende tragen denselben UTC-Versatz
+        # -- dann liegt keine Zeitumstellung dazwischen. Gerechnet aus den
+        # Beginnzeiten, weil es um die Sortierung nach Beginn geht.
+        nacht_luft = (dn["art"] == "air"
+                      and len({e["beginn"][:10] for e in d["einsaetze"]}) > 1
+                      and dbeg.utcoffset() == dend.utcoffset())
+        if nacht_luft:
+            merke(["nachtdienst-luft"], n)
 
         vorheriger = None
         for e in d["einsaetze"]:
@@ -779,7 +798,7 @@ def main() -> int:
     #
     # WARUM HIER UND NICHT IN tools/quelltext/. Die Beschriftungen der zwei
     # Referenzgeraete werden ueber `server/demo/fixture.json.gz` zu SICHTBAREM
-    # TEXT des Demo-Kontos -- auf dem Produktivserver, alle 30 Minuten neu.
+    # TEXT des Demo-Kontos -- auf dem Produktivserver, bei jedem Reset neu.
     # Die Wortliste kennt fuenf Bereiche (server/*.php, assets/*.js,
     # normative Dokumentation, Android, watch/); `tools/` ist in keinem davon,
     # und das war kein Versehen: Dort steht Werkzeug, kein Client. Diese zwei
@@ -1012,7 +1031,7 @@ def main() -> int:
                 offen.append((dimension, anforderung, hinweis))
 
     # ---- Umfang -----------------------------------------------------------
-    # Umfang: 21 Diensttage, im Schnitt rund fünf Einsätze je Dienst (Nachtrag
+    # Umfang: 22 Diensttage, im Schnitt rund fünf Einsätze je Dienst (Nachtrag
     # B1 zur Abdeckungsmatrix — die ursprünglichen 30–40 stammten aus einem
     # Entwurf mit deutlich weniger Bodendiensten; das Fenster 80–100 aus dem
     # Stand vor dem Demo-Ausbau).

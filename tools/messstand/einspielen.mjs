@@ -27,7 +27,7 @@ const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MO
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
 const ordner  = process.argv[3] || '/tmp/messstand/bestand';
 const ausgabe = process.argv[4] || `${ordner}/einspielprotokoll.json`;
-const konto   = process.env.MESSSTAND_KONTO || 'messstand@gen-em.org';
+const konto   = process.env.MESSSTAND_KONTO || 'messstand@example.invalid';
 const kontoPw = process.env.MESSSTAND_PASSWORT || 'messstandpruefung2026';
 const bpw     = process.env.MESSSTAND_BACKUP_PASSWORT || 'nadokudemo0815';
 

@@ -10,7 +10,9 @@ fortgeschrieben — was sich nach der Erledigung noch ändert, ist ein neuer
 Punkt in `Backlog.md`. Der Abschnitt *Erledigt* unten ist der aus
 `docs/Backlog.md@f5bddc2`, Zeile für Zeile; seine Einrückung mit vier
 Leerzeichen bleibt, samt ihrer Folge auf GitHub (Nr. 196) — wer hier liest,
-liest die Quelle.
+liest die Quelle. Die Trennzeile, die in `Backlog.md` vor jedem Eintrag
+steht, kommt nicht mit (E-R4-62): Hier zählt GitHub die Nummern fort
+(Nr. 340); es gilt die Nummer im Text.
 
 ## Werdegang der Nummernvergabe
 
@@ -8761,3 +8763,390 @@ zutreffen.
      räumte, steht jetzt in ihr. Nachweis: Rollenprobe 309/309 mit dem
      Löschfall (Spur 3 → 0, Mengenstand, Sperrliste, weg = verwaltung), rot
      gegen die alte Kontoseite.
+
+239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php` mit.** · gehört zu: 17 · Stand: erledigt · seit 20.09.2026
+     Befund (beim Beheben von Nr. 238): `komplett_lib.php` schickt jeden
+     Tabellen- und Spaltennamen durch eine Quotierungsfunktion;
+     `backup_lib.php` setzt die Spaltenliste mit `implode(',', $cols)`
+     ungequotet zusammen — und in `$cols` fließen über `$extraCols` die
+     Namen aus dem Feldkatalog, also Namen, die noch dazukommen. Heute
+     ungefährlich, weil nach Nr. 238 kein Name reserviert ist; die Bauform
+     ist der Punkt: Genau diese Stelle hätte auf MySQL 8.4.0–8.4.10 das
+     Einspielen einer Sicherung unmöglich gemacht.
+     Weg: dieselbe Quotierung an beiden Stellen der Sicherung, und die
+     Frage, ob eine gemeinsame Helferfunktion sinnvoller ist als zwei
+     Kopien — sie wäre der Ort, an dem der nächste Schreibweg sie findet.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 239.
+     Erledigt 27.09.2026 mit R4-12 (Web 21.1.10): Weg A aus Q-R4-14, zentral
+     im Feldkatalog — mf_spalten_sql() setzt jeden Spaltennamen in
+     Backticks, mf_liste_sql() und mf_bezeichner() für selbst gebaute Listen
+     und einzelne Namen (Q-R4-22). Umgestellt: vier INSERTs (Ingest,
+     Schnitt, Import, Einspielen) und das UPDATE des Imports, dazu Formular
+     und Export. komplett_lib.php behält seine Quotierung (sichert jede
+     Tabelle, ein Helfer gehörte nach db.php, das für 18 frei bleibt).
+     Nachweis: Registerzeile Z42 0 (vorher 4), Kreisläufe edbak und csv 0
+     unerklärt, Wiederherstellungsprobe grün.
+
+271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr Ton bleibt „info", auch wenn ein Fehler darin steht.** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Gefunden bei der AP8-Vermessung (Schritt 15, 22.09.2026) in
+     `assets/schneiden.js`. Die Stelle erzeugt keine Meldung, sondern einen
+     *Platz* für eine: `<div class="meldung meldung-info" role="status"
+     data-vorher><p></p></div>`, später dreimal per `textContent` befüllt. Zwei
+     Abweichungen vom Baustein: **kein Symbol** (`EdHtml.meldung()` setzt eines
+     ein — das wäre eine sichtbare Änderung im Schnittblock), und **der Ton
+     wechselt nie**, so dass Sätze wie „Das Ende liegt vor dem Beginn." in
+     blauer Hinweisfläche stehen statt in roter. Das zweite ist fachlich
+     falsch. **Nicht in Schritt 15 behoben** (E-ZE-10: das Paket ändert kein
+     Verhalten); die Zählzeile Z37 endet deshalb bei 4 statt 0. Beim Anfassen
+     mitzudenken: Der Anker `data-vorher` hängt am Wrapper, den
+     `EdHtml.meldung()` nicht mit Attributen versieht — entweder bekommt die
+     Funktion einen Weg dafür, oder der Anker wandert nach innen.
+     Erledigt 27.09.2026 mit R4-13 (Web 21.1.11): Der Anker data-vorher
+     sitzt am leeren Behälter, eine Funktion vorher() füllt ihn über
+     EdHtml.meldung() — fehler für Gründe und Serverfehler, info für den
+     Erklärtext; die Rückmeldung über der Segmentliste (melde()) ebenso.
+     Nachweis: Bilderlauf 12a-schnitt-grund (rot, Symbol, role alert) und
+     12b-schnitt-vorschau.
+
+272. **`<p class="meldung">` im Entsperrdialog ist gar keine Meldung.** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Gefunden bei derselben Vermessung, in `assets/unlock.js`. Dort steht ein
+     Absatz mit der Klasse `meldung` — **ohne** Tonklasse, **ohne** Symbol,
+     **ohne** `role`. Er trägt den Namen des Bausteins, ist aber keiner; das
+     Zählmuster von Z37 hält ihn trotzdem für einen. Zwei Folgen: Die Zeile
+     zählt einen Nachbau, den es nicht gibt (Z37 endet bei 4), und der Absatz
+     bekommt aus `style.css` Regeln, die für einen Kasten gedacht sind.
+     **Nicht in Schritt 15 behoben:** Ihn auf den Baustein umzustellen gäbe
+     ihm einen farbigen Kasten mit Symbol — eine sichtbare Änderung im
+     Entsperrdialog, und die war nicht beauftragt.
+     Erledigt 27.09.2026 mit R4-13 (Web 21.1.11): Der Platz ist ein leerer
+     Behälter (div data-msg hidden), melde() füllt ihn über
+     EdHtml.meldung(); html.js steht dafür im Kopf jeder Seite. Nachweis im
+     Browser: Entsperren ohne Passwort zeigt meldung-fehler mit Symbol, 0
+     Seitenfehler.
+
+273. **Eine dritte Schreibweise für Dauern, die kein Zählmittel sieht.** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Gefunden in Schritt 15 AP8d, aber **nicht** von der Zählzeile Z34: Die
+     misst über eine Namensliste und kennt `dauer()` in `assets/schneiden.js`
+     nicht. Gefunden hat sie erst eine Gegenprobe über das Muster der
+     *Rechnung* (`Math.floor(s / 3600)`). Die Funktion schreibt
+     **„1 h 6 min" mit Leerzeichen**, während der Rest der Anwendung seit
+     AP8d durchgängig „1h 06min" schreibt; dazu trägt sie denselben
+     Rundungsfehler, den AP8d in `EdFormat.dauer()` behoben hat (getrennte
+     Rechnung von Stunden und Minuten erzeugt bei 3599 s ein „60min").
+     **Nicht umgestellt**, weil es eine sichtbare Änderung im Schnittblock
+     wäre und die drei sichtbaren Änderungen von AP8d einzeln freigegeben
+     wurden — diese war nicht darunter. Beim Anfassen: `EdFormat.dauer(s)`
+     genügt, der Leerwert ist dort nicht erreichbar (`Math.max(0, …)`).
+     Erledigt 27.09.2026 mit R4-13 (Web 21.1.11), freigegeben mit Q-R4-06:
+     dauer() ist fort, beide Aufrufer nehmen EdFormat.dauer(Math.max(0, …));
+     dauer steht in ZH_FORMATIERER (Z34). Nachweis: Bilderlauf
+     12b-schnitt-vorschau zeigt „1h 06min".
+
+76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert hat.** · gehört zu: 17 · Stand: erledigt · seit 02.09.2026
+     Befund: `demo_reset_wenn_faellig()` (`demo_lib.php`) setzt zeitgesteuert
+     zurück, ohne zu prüfen, ob eine Besucherin etwas verändert hat.
+     Gemessen 15.09.2026 (Prüfstand, drei Läufe): 5859 ms mit dem alten,
+     6610 ms mit dem neuen Bestand (106 Einsätze, 63 752 Spurpunkte) —
+     0,75 s mehr für 20 % mehr Einsätze.
+     Wirkung: Der Reset läuft huckepack auf einer Anfrage; die Besucherin,
+     die ihn auslöst, wartet sechseinhalb Sekunden. Das ist das Argument für
+     eine Änderungsmarke, nicht die Last. Produktiv (Datenbank auf anderem
+     Rechner) und gleichzeitige Zugriffe sind nicht gemessen.
+     Weg: entscheiden — durchlaufen lassen oder Zähler im Schreibweg des
+     Demo-Kontos, Reset nur bei gesetzter Marke.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 76.
+     Erledigt 27.09.2026 mit R4-14 (Web 21.2.0), E-R4-10 und E-R4-42: Die
+     Änderungsmarke `demo_geaendert` hält die erste Änderung seit dem Reset,
+     gesetzt bei jeder POST des Demo-Kontos mit Token und bei jedem
+     angenommenen Upload; fällig ist der Reset 30 Minuten danach, ohne
+     Änderung einen Tag nach dem letzten. Nur Ansehen kostet keine
+     sechseinhalb Sekunden mehr (im Browser: Anmeldung und sechs Seiten ohne
+     Marke, eine POST setzt sie). Zweitfaktorprobe Teil 6b, 16 Fälle.
+
+259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen fallen, ihr Kernvergleich läuft gar nicht.** · gehört zu: 17 · Stand: erledigt · seit 21.09.2026
+     Befund (Schritt 15 AP3): `tools/gpxprobe/probe.php` hält den
+     Referenzexport vom 15.09.2026 gegen die GPX-Dateien des Demo-Kontos.
+     Nach einem Demo-Reset haben die Einsätze neue Kennungen: „190 von 204
+     ohne Gegenstück", drei Folgefehler — und der punktweise Vergleich
+     meldet „0 von 204 Dateien verglichen (0 Abweichungen)": eine Null, die
+     nichts gemessen hat, neben Nullen, die etwas gemessen haben. 95/4 vor
+     und nach dem Paket identisch — der Befund liegt nicht am Code.
+     Der Reset hängt nicht an der Jobschlange, sondern an `auth_guard.php`
+     (`demo_reset_wenn_faellig()` bei jeder Anmeldung des Demo-Kontos nach
+     `DEMO_RESET_SEKUNDEN` = 1800); `jobs_pause()` hilft nicht. Das
+     richtige Mittel steht in `tools/klickprobe/LIESMICH.md`:
+     `UPDATE app_state SET v = UNIX_TIMESTAMP() WHERE k = 'demo_letzter_reset';`
+     verschiebt den nächsten Reset um 30 Minuten.
+     Weg: Die Probe hält den Reset selbst auf und setzt das Demo-Konto aus
+     der Fixture zurück, oder sie legt sich ein eigenes Konto an; jedenfalls
+     sagt sie, wenn ihr Hauptteil nichts geprüft hat. Vorbild ist die
+     Klickprobe, die einen Reset mitten im Lauf meldet (42 von 48, mit
+     Pause 48 von 48).
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 259.
+     Erledigt 27.09.2026 mit R4-14 (Web 21.2.0): Teil 2 ordnet über Art, Tag
+     und Uhrzeit aus dem Dateinamen zu, wie export.js sie schreibt, und
+     zählt Mehrdeutigkeit als eigene Erwartung. Nach einem erzwungenen Reset
+     (Kennungen ab 484 statt 1): 97 / 97, 116 Dateien verglichen; die alte
+     Fassung dort 2 rot.
+
+158. **`days` trägt kein `created_at`.** · gehört zu: 17 · Stand: erledigt · seit 08.09.2026
+     *Aufgenommen 08.09.2026 bei der Neufassung der Tagesregel (Nr. 134).* Für
+     Einsätze und Ruhesegmente ist der Anker des Ersetzfensters die Serverzeit
+     des Anlegens — genau deshalb kann eine falsch gestellte Geräteuhr das
+     Fenster nicht steuern. Für den **Diensttag** gibt es diese Spalte nicht.
+     Die Frage „wird an diesem Tag noch gearbeitet?" wird deshalb über das
+     jüngste `created_at` seiner Datensätze beantwortet (`ingest_tag_offen()`
+     in `ingest.php`). Das ist ein ehrlicher Ersatz und in der Sache meist
+     dasselbe, aber es ist eine Abfrage über zwei Tabellen statt eines
+     Spaltenwerts, und ein Tag, dessen Datensätze alle gelöscht wurden, hat gar
+     keinen Anker mehr. Behebung: `days.created_at` mit Migration (Rückfall auf
+     `started_at`, gekappt wie bei `rest_segments`), danach
+     `ingest_tag_offen()` auf einen Wert zurückführen. Kein Fehler, eine
+     Vereinfachung — und die Voraussetzung dafür, die Regel in einem Satz
+     erklären zu können. Zuordnung: Backlog-Runde.
+     Erledigt 27.09.2026 mit R4-15 (Web 21.3.0, Migration
+     2026_09_27_days_created_at, update.php nach dem Deploy):
+     days.created_at, der Bestand aus started_at gekappt; ingest_tag_offen()
+     fragt den Tag. Örtlich 1059 Tage migriert, 0 NULL; Schemaprobe Fall 6 4
+     × 40, Ingestprobe Fall 14 88 / 88, gegen den Stand davor rot. Das
+     Fenster gleitet nicht mehr (F-R4-46).
+
+207. **`gen-em.org` steht 96× in `tools/` und `.github/`.** · gehört zu: 17 · Stand: erledigt · seit 16.09.2026
+     Befund (P5a/AP7; `grep -rn "gen-em\.org" tools/ .github/ | wc -l` →
+     96, `server/` → 0 seit Web 20.9.0, Nr. 203): In den Prüfmitteln stehen
+     Prüfkonten (`ingestprobe@gen-em.org`, `demo@gen-em.org`,
+     `messstand@gen-em.org` …), Schema-`$id`s (`https://gen-em.org/nadoku/…`)
+     und Anleitungen in den `LIESMICH.md`. Kein Fehler — ein Prüfkonto ist
+     eine erfundene Adresse —, aber der Name einer realen Domain in einem
+     Repositorium, das weitergegeben werden soll.
+     Weg: `.invalid` (RFC 2606) für alle Prüfkonten — die Mailprobe benutzt
+     es bereits —, eine `urn:`-Kennung oder `example.org` für die
+     Schema-`$id`s. Mechanisch, berührt aber Bestandsdaten: Eine örtliche
+     Anlage mit `demo@gen-em.org` muss neu aufgesetzt werden, sonst greift
+     kein Kreislauf mehr. Deshalb ein Paket mit Ansage, nicht nebenbei.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 207.
+     Erledigt 27.09.2026 mit R4-19 (nur tools/ und docs/, keine
+     Versionsstufe): 45 Dateien, jede Prüfadresse außer demo@ nach
+     example.invalid, die Schema-$ids nach urn:nadoku:…, die
+     Messstand-Ausnahme der Textprobe gestrichen; im Maskierfall der
+     Kopplungsprobe steht kein Vorname mehr. git grep in tools/ ohne demo@:
+     0 (nach dem Prüfstand, der die Ausgaben der Bedienprobe neu schreibt).
+     Die örtliche Anlage ist neu aufgesetzt.
+
+275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — laut Handbuch „der klassische Fall".** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Befund (Schritt 15 AP9b, in Ortszeit; Zahl berichtigt mit Konzept R4,
+     F-R4-05, nachgemessen am 26.09.2026): 2 von 20 aktiven Diensttagen des
+     Demo-Kontos haben Einsätze auf zwei Kalendertagen — beide bodengebunden
+     (NEF Talwang), beide auf einer Zeitumstellung; der Eintrag zählte 0.
+     Ein luftgebundener Nachtdienst ohne Zeitumstellung fehlt. In AP9b
+     sortierte das Einsatztabellen-Modul „Beginn" über die Zeichenkette
+     `start_hhmm` (01:10 vor 23:50) — jahrealt, von keinem Mittel zu finden,
+     weil es nichts zu messen gab; belegt mit einem im Browser gebauten
+     Nachtdienst. Ob die drei APIs `start_sort` für einen echten Nachtdienst
+     richtig rechnen, ist gelesen, nicht gefahren.
+     Weg (Konzept R4, R4-16): ein luftgebundener Nachtdienst als D22 mit
+     Einsätzen vor und nach Mitternacht über den normalen Einspielweg
+     (`tools/referenzdatensatz/`, `started_at` in UTC); `days.day` bleibt der
+     Dienstbeginn; Matrixzeile, Bilderlauf-Seite, Bedienprobe „Sortierung
+     nach Beginn".
+     Abnahme: Diensttage mit Einsätzen auf mehr als einem Kalendertag in
+     Ortszeit mindestens 3, davon einer luftgebunden ohne Zeitumstellung.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 275.
+     Erledigt 27.09.2026 mit R4-16 (Web 21.3.1): D22, ein Luftdienst vom 19.
+     auf den 20.06.2026 mit Einsätzen um 19:09, 23:50 und 01:40, ohne
+     Zeitumstellung; Matrixzeile, Bilderlauf-Seite 12c-nachtdienst,
+     Bedienprobe nachtdienst-sortierung-beginn 1 / 1, gegen die Sortierung
+     über start_hhmm rot. Abnahme gemessen: 3 Diensttage mit Einsätzen auf
+     zwei Kalendertagen, einer davon luftgebunden ohne Zeitumstellung. Die
+     offene Frage nach den drei APIs ist gefahren: start_sort aus day.php,
+     range.php und suchindex.php gleich (3 / 3 / 3), gegen range.php mit
+     dem Dienstdatum rot.
+
+323. **Referenzbestand und Demo-Fixture tragen noch Nutzlast 11.** · gehört zu: 17 · Stand: erledigt · seit 25.09.2026
+     *Aufgenommen 25.09.2026 (P5c/AP8).* Die Referenz
+     `referenz/einsatzdoku-backup-2026-09-15.edbak` und
+     `server/demo/fixture.json.gz` stammen aus der Zeit vor Nutzlast 12; beide
+     führen das leere Feld der Standortauswahl. Das ist **kein Fehler** — der
+     Rückweg überliest es, und genau das zeigt der Kreislauf. Es kostet aber
+     **zwei Übergangsregeln** in `vergleich/ausnahmen/edbak_umlauf.json`
+     (`kopf.version` 11 → 12, das fehlende Feld), und die Fixture trägt eine
+     Angabe, die keine Fassung mehr schreibt. *Zu tun:* Referenz und Fixture
+     neu erzeugen, wie mit Nr. 173; danach werden die beiden Regeln
+     ungenutzt und fallen, mit einem Satz im Änderungsverlauf. Die Regeln in
+     `edbak-alt_umlauf.json` bleiben — die Altformat-Referenz ist eingefroren
+     (Nr. 46). *Abnahme:* edbak-Kreislauf mit 0 unerklärten Abweichungen **und**
+     0 ungenutzten Regeln.
+     Erledigt 27.09.2026 mit R4-16 (Web 21.3.1): Referenz und Fixture neu
+     erzeugt (Nutzlast 12, ohne user_bases), die zwei Übergangsregeln
+     ausgetragen. Kreislauf edbak 346 763 Vergleiche, 0 unerklärt, 0
+     ungenutzt; csv 11 234, 0 unerklärt, 0 ungenutzt.
+
+327. **Die Rollenmatrix führt die Handlungen der BetreiberIn-Seiten nicht einzeln.** · gehört zu: 17 · Stand: erledigt · seit 25.09.2026
+     *Aufgenommen 25.09.2026 in P5c/AP11 (Gegenlesung AP4).*
+     `docs/Technik.md` 4.99p hat eine Zeile je Handlung auf den Seiten, die
+     mehr als eine Rolle erreicht; die 25 POST-Handlungen und 7
+     Seitenaufrufe hinter `require_betreiberin()` (`betrieb_server.php`,
+     `betrieb_jobs.php`, `betrieb_updates.php`, `betrieb_status.php`,
+     `betrieb_sicherheit.php`, `api/schluesselblatt_pruefen.php`) misst die
+     Probe nur über das Tor der Seite. Eine Handlung, die dort **vor** dem
+     Tor stünde, fände sie nicht. Dazu fehlt ein Platzhalter `{support}`: dass
+     der Support andere Support-Konten nicht betreut (E-P5c-99), steht im
+     Code, gemessen ist es nicht. *Zu tun:* die Zeilen nachtragen (Admin und
+     Support 403, BetreiberIn `durch`) und den Platzhalter anlegen. *Abnahme:*
+     Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
+     Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
+     Erledigt 27.09.2026 mit R4-18 (ohne Versionsstufe): 38 Zeilen in
+     Technik.md 4.99p — sechs Betriebsseiten und das CSV der Gerätemodelle,
+     26 POST-Handlungen, zwei des Schlüsselblatts, fünf am neuen Platzhalter
+     {support}; 108 Zeilen, Rollenprobe 476 / 0. Gegenproben rot: eine Zelle
+     falsch (1), die Testmail vor das Tor gezogen (3), das Konto-Tor des
+     Supports ausgebaut (6, davon 4 in den neuen Zeilen).
+
+287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.** · gehört zu: 17 · Stand: erledigt · seit 23.09.2026
+     *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
+     Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
+     Seitenende" vor. E-P5c-06 (jünger) sagt: je Karte höchstens ein Satz,
+     alles Erklärende ins Handbuch. 10c AP9 räumt die acht Karten unter
+     Verwaltung und Betrieb ab. **Drei Seiten außerhalb tragen die Karte
+     ebenfalls:** `import.php`, `einsatz_form.php`, `wiederherstellen.php`.
+     Sie liegen nicht im Umfang von 10c, und bis zu ihrer Umstellung gelten
+     dort zwei Regeln nebeneinander.
+
+     *Abnahme:* 0 Karten „Was hier gilt" in `server/`, der Inhalt im Handbuch,
+     jede Karte der drei Seiten mit Verweis auf ihre Sprungmarke. *Fehlschlag:*
+     `grep -l "Was hier gilt" server/*.php` findet eine Seite (außer
+     Kommentaren in `version.php`). **Zuordnung: Schritt 17.**
+     Erledigt 27.09.2026 mit R4-20 (Web 21.4.1): Die drei Karten sind fort,
+     ihr Text steht im Handbuch 7 („Die übrigen Wege“), 4.3 („Schloss und
+     Klartext“) und 12.6 („Der Wiederanlauf“); jede Seite verweist mit einem
+     Satz dorthin. 0 Karten mit diesem Titel in server/; erwähnt nur noch in
+     Kommentaren (admin_demo.php, betrieb_status.php, version.php). Riegel
+     anker 53 Verweise, 0 ohne Ziel; Bilderlauf der drei Seiten 30 Bilder,
+     Überlauf 0.
+
+336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in
+     `handy/.../Bausteine.kt` hat seit R63 (Android 0.11.0, feste
+     Serveradresse, Backlog Nr. 84) keinen Aufrufer mehr — das Adressfeld der
+     Kopplung war sein einziger. Aufgefallen, als AR-04 die Farbe seines
+     Cursors behob (Orange auf Schnee, 2,23 : 1) und der Emulatorlauf den
+     Cursor zeigen sollte: Es gibt ihn auf keinem Bildschirm. Lint meldet es
+     nicht, weil die Funktion öffentlich ist. Die Behebung bleibt richtig, hat
+     aber keine sichtbare Wirkung.
+     *Weg:* den Baustein austragen, oder ihn stehen lassen, wenn ein
+     Eingabefeld absehbar wiederkommt — dann mit einem Satz, warum.
+     *Abnahme:* kein unbenutzter öffentlicher Baustein in `Bausteine.kt`.
+     **Zuordnung: nächste Android-Runde.**
+     Erledigt 27.09.2026 mit R4-21 (Android 0.16.1): Eingabefeld() samt
+     Kopfkommentar ausgetragen, das Paar „Cursor im Eingabefeld“ aus
+     kontraste.py gestrichen; alle übrigen öffentlichen Bausteine in
+     Bausteine.kt haben Aufrufer. kontraste.py 0 Befunde (29 Paare, vorher
+     30), Selbstprobe 5 / 5; ./gradlew build 0 Lint-Fehler, 0 Fehlschläge.
+
+95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.** · gehört zu: 17 · Stand: erledigt · seit 03.09.2026
+     *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
+     Gemessen: **9 Diensttage, 5 Einsätze und 14 439 Spurpunkte**, die kein
+     Prüffall wieder abräumt. Sie fallen nicht auf, solange niemand das
+     Admin-Konto ansieht — und verfälschen jede Zahl, die jemand daraus zieht.
+     **Vorschlag:** Aufräumen im `@After` der betroffenen Fälle, oder ein
+     eigenes Prüfkonto, das der Lauf am Ende löscht. Gehört zum S4-Rest, weil
+     er dieselben Prüffälle anfasst.
+     **Stand 06.09.2026 (Fassung 32):** Der S4-Rest ist gemergt und hat den
+     Punkt nicht mitgenommen; Nr. 115 (aus Paket E) meldete denselben Fund und
+     ist hier aufgegangen. Zuordnung jetzt: **Backlog-Runde (Android)**.
+     Erledigt 27.09.2026 mit R4-21 (Android 0.16.1):
+     Kopplungshilfe.datenAbraeumen() ruft
+     android/werkzeuge/rundlauf_aufraeumen.php vor dem Trennen,
+     Papierkorbweg je Diensttag der Geräte des Kontos. Rundlauf 14 Fälle
+     grün, danach Konto 1 0 Diensttage, 0 Einsätze, 0 Spurpunkte, 0 Waisen;
+     ohne den Aufruf 9 / 5 / 14 439 wie bei der Aufnahme.
+
+114. **Abgewiesene Pakete sichtbar machen und ausräumen.** · gehört zu: 17 · Stand: erledigt · seit 03.09.2026
+     Befund (S5 Paket E, B-S5Z-06): Antwortet der Server auf ein Paket mit
+     400, markiert der Puffer es als `fehlerhaft = 1` und nimmt es aus
+     Warteschlange und Anzeige — die App sagt „Alles gesendet", beim Server
+     bleibt ein Segment offen. Paket E2 zeigt die Zahl („N Pakete vom Server
+     abgewiesen"); die Pakete bleiben samt GPS-Spur dauerhaft liegen
+     (Krypto-Review AN-2).
+     Erledigt (Android 0.14.0, 07.09.2026): `Puffer.abgewieseneRaeumen()`
+     löscht abgeschlossene abgewiesene Pakete samt Punkten und Phasen nach
+     30 Tagen und beim Trennen sofort; beendete `dienst`-Zeilen ohne Pakete
+     gehen mit, die laufende nie (`AbgewieseneTest`, 10 Fälle).
+     Offen ist der Bedienweg: ansehen, was drinsteht, ausleiten oder
+     verwerfen. Zu entscheiden, ob Ausleiten (als Datei zum Nachreichen von
+     Hand — braucht ein Format) oder Verwerfen mit Rückfrage (Datenverlust
+     auf Knopfdruck). Ohne Weg wird die Zahl zur Tapete.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 114.
+     Erledigt 27.09.2026 mit R4-22 (Android 0.17.0): Knopf „Abgewiesene
+     verwerfen …“ unter der roten Zeile mit Hinweiskasten, Rückfrage nach
+     dem Muster der Uhr („Behalten“ / „Verwerfen“) und Quittung; Nachreichen
+     gibt es nicht (E-R4-09). AbgewieseneTest +2, im Emulator nach
+     „Verwerfen“ 0 Pakete, 0 Punkte, 0 Phasen.
+
+122. **Freie Zeiträume und Diagramme in der Statistik.** · gehört zu: 17 · Stand: erledigt · seit 05.09.2026
+     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
+     Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
+     6 Monate — und zeigt Zahlen in Tabellen. Für den Blick auf einen
+     bestimmten Monat oder auf eine Entwicklung über ein Jahr reicht das
+     nicht. **Zu tun:** ein frei wählbarer Zeitraum (Von/Bis wie in der
+     Einsatzsuche) und eine grafische Darstellung der Entwicklung. Beides
+     sind **neue Darstellungen** und brauchen Mockup und Freigabe
+     (`CLAUDE.md` 5); die Diagrammfrage berührt außerdem die Zusage „keine
+     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
+     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
+
+     **Zuordnung (20.09.2026): Schritt 17** (Backlog-Runde 4) — nicht 10c. Entschieden mit der Freigabe des P5c-Konzepts (E-P5c-23, F-P5c-4).
+     Teil a erledigt 27.09.2026 mit R4-23 (Web 21.5.0): Pillen und Von/Bis
+     über den Reitern, je Tabelle eine Spalte „im Zeitraum", unter Einsätze
+     mit Wochen- und Tagesschnitt; aktiv, angemeldet und gemeldet nur bis
+     heute (F-R4-66, E-R4-55). Offen: Teil b, die Diagramme (R4-24).
+     Erledigt 28.09.2026 mit R4-23 (Web 21.5.0) und R4-24 (Web 21.6.0):
+     Zeitraumwahl über den Reitern mit Pillen und Von/Bis; Diagramme als
+     Inline-SVG aus PHP (Säulen je Tag, Woche oder Monat, Anteile als
+     Balken, zwei kleine Vielfache), ohne Bibliothek und ohne fremde Quelle;
+     die Tabellen bleiben. Aktiv und angemeldet nur bis heute (F-R4-66).
+     Bilderlauf 60 Bilder ohne Überlauf, kontrast.py 0 verfehlt.
+
+209. **`docs/Design.md` führt die erzeugte Bausteintabelle mit falschen Zeilennummern.** · gehört zu: 17 · Stand: erledigt · seit 16.09.2026
+     Die Tabelle trägt den Vermerk „ERZEUGT von `tools/design/tabellen.py` —
+     nicht von Hand ändern", und ihre Spalte `ui.php` nennt zu jeder Funktion
+     eine Zeilennummer. Diese Nummern liegen durchgängig **rund 26 Zeilen zu
+     niedrig**: `ui_seite_start()` steht dort mit 54 und im Code bei 80.
+     Ursache ist schlicht, dass das Werkzeug seit einigen Paketen nicht
+     gelaufen ist.
+
+     **Das ist kein Schönheitsfehler:** Eine erzeugte Tabelle, die nicht mehr
+     zu ihrer Quelle passt, ist schlechter als keine — wer ihr folgt, landet
+     mitten in einer anderen Funktion und hält das für den Baustein. Abhilfe
+     ist ein Aufruf (`python3 tools/design/tabellen.py alle`); der Punkt steht
+     hier, weil dabei **alle vier** erzeugten Tabellen neu entstehen und das
+     Ergebnis gegengelesen werden will.
+
+     *Aufgenommen 16.09.2026 in P5a/AP8, gefunden bei der Bestandsaufnahme der
+     Bausteine.*
+     Erledigt 28.09.2026 mit R4-25 (Werkzeug, keine Versionsstufe): Regel
+     `design` in `bestand.py` hält die vier erzeugten Tabellen in
+     `docs/Design.md` an die Ausgabe von `tools/erzeugen/design.py`, jede
+     genau einmal; `design.py schreiben` ersetzt sie. Beim ersten Lauf waren
+     alle vier veraltet, in der Bausteintabelle 48 von 49 Zeilen; jetzt 53
+     von 53. Gegenprobe: eine Funktion in `ui.php` eingefügt, rot.
+
+340. **GitHub zählt die Backlog-Liste fort — neben jedem Eintrag außer dem ersten steht eine falsche Nummer.** · gehört zu: 17 · Stand: erledigt · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit R4-01 aus Konzept SD (F-SD-08, Q-R4-11).*
+     `cmark-gfm` macht aus den offenen Einträgen eine einzige Liste
+     `<ol start="21">`; ein Browser nummeriert sie fort und zeigt 21, 22,
+     23 … statt 21, 23, 36. Wer auf GitHub „Nr. 36" sucht, liest daneben
+     eine andere Zahl als im Markdown. Die Decke `backlog-listenpunkte`
+     (`decken.py`) zählt `<li>` gegen Einträge, nicht die Nummern — sie
+     sieht es deshalb nicht.
+     *Weg (Konzept R4, R4-25):* jeden Eintrag als eigene Liste rendern —
+     ein Element zwischen den Einträgen, das die Liste beendet, oder die
+     Nummer im Titel; beides ändert E-SD-16 und die Grammatik in
+     `uebersicht.py` und `decken.py`.
+     *Abnahme:* `cmark-gfm` liefert je Eintrag eine Liste, deren `start`
+     die Nummer des Eintrags ist; die Decke misst das.
+     Erledigt 28.09.2026 mit R4-25 (Werkzeug, keine Versionsstufe, E-R4-62):
+     vor jedem offenen Eintrag eine Trennzeile `<!-- -->`, Decke
+     `backlog-listenstart` in `decken.py`. `cmark-gfm`: vorher eine Liste
+     für 64 Einträge, danach 64 Listen, jede mit ihrer Nummer als `start`.
+     `Backlog-Erledigt.md` bleibt ohne Trennzeilen.

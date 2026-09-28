@@ -287,7 +287,7 @@ function konten_demo_anmeldung_an(): bool
  * ---------------------------------------------------------------------------
  *
  * Die Byte-Messung liest die Blob-Laengen aller GPS-Daten eines Kontos. Beim
- * Demo-Bestand (106 Einsaetze, 63 752 Punkte) sind das Millisekunden; bei der
+ * Demo-Bestand (gut 100 Einsaetze, unter 70 000 Punkte) sind das Millisekunden; bei der
  * Zielmenge aus E-S2-24 ist es das nicht mehr. Sie liefe sonst bei JEDEM
  * Upload, und `ingest.php` ist genau der Weg, der schnell sein muss.
  *

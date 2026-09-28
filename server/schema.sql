@@ -337,6 +337,10 @@ CREATE TABLE days (
   vehicle_kurz VARCHAR(16) NULL,           -- eingefrorener Kurzname (Nr. 69)
   notes    TEXT NULL,
   deleted_at DATETIME NULL,
+  -- Der Augenblick, in dem der Server den Tag zum ersten Mal sah — der
+  -- Anker, ob Geraete seinen Zeitraum noch fortschreiben (Ersetzfenster,
+  -- ingest_tag_offen(), Web 21.3.0, Nr. 158). Serverzeit, nie vom Absender.
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_user_day (user_id, day),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL,
@@ -1081,4 +1085,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- Tag mit Tagesrettungsmittel hat eine frische Anlage nicht.
   ('2026_09_25_zentrale_stammdaten', 'skipped'),
   ('2026_09_25_ftp_entfernen', 'skipped'),
-  ('2026_09_25_tagesrettungsmittel_rollen', 'skipped');
+  ('2026_09_25_tagesrettungsmittel_rollen', 'skipped'),
+  -- days.created_at steht oben schon im Schema (Web 21.3.0, Nr. 158).
+  ('2026_09_27_days_created_at', 'skipped');

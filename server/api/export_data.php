@@ -291,8 +291,12 @@ function export_meta(array $b, int $userId): never
      * `$schranke` ein; die Liste selbst bleibt die des Registers. */
     $schranke = ['site_ele_m', 'bw_info', 'other_ema', 'pat_blob'];
     $einsCols = [];
-    foreach (mf_spalten('export') as $sp) {
-        $einsCols[] = (!$pers && in_array($sp, $schranke, true)) ? "NULL AS $sp" : "x.$sp";
+    /* Zwei Listen desselben Zwecks, Stelle fuer Stelle: die blossen Namen zum
+     * Vergleichen, die SQL-Form (Namen in Backticks, Nr. 239) zum Einsetzen. */
+    $sqlCols = mf_spalten('export', 'x.', true, true);
+    foreach (mf_spalten('export') as $i => $sp) {
+        $einsCols[] = (!$pers && in_array($sp, $schranke, true))
+            ? 'NULL AS ' . mf_bezeichner($sp) : $sqlCols[$i];
     }
     /* `d.day` kommt aus `days` und steht deshalb in keinem Register von
      * `missions`. Sein Platz ist hinter `day_id` — dort stand er immer, und

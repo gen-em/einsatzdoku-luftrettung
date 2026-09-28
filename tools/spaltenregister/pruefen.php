@@ -418,6 +418,16 @@ PHP;
                 in_array('uhr_gesperrt AS `manual`', $mit, true), true);
         $pruefe('mf_spalten: Alias aus', in_array('uhr_gesperrt', $ohneAlias, true), true);
         $pruefe('mf_spalten: Praefix', mf_spalten('range', 'm.')[0], 'm.id');
+        /* DIE SQL-FORM SETZT AUCH DEN NAMEN IN BACKTICKS (Web 21.1.9,
+         * Nr. 239), die blosse Liste nicht: Vier Aufrufer brauchen die Namen
+         * als Schluessel. Faellt eine der beiden Formen um, faellt es hier
+         * auf und nicht erst an einem reservierten Wort. */
+        $pruefe('mf_spalten_sql: Name in Backticks, Praefix davor',
+                explode(', ', mf_spalten_sql('range', 'm.'))[0], 'm.`id`');
+        $pruefe('mf_spalten_sql: Name und Alias in Backticks',
+                str_contains(mf_spalten_sql('export'), '`uhr_gesperrt` AS `manual`'), true);
+        $pruefe('mf_liste_sql: jeder Name, Backtick verdoppelt',
+                mf_liste_sql(['a', 'b`c']), '`a`, `b``c`');
     } catch (Throwable $ex) {
         $lueckenhaft = true;
     }

@@ -53,7 +53,7 @@ body{background:#EDE9DF}
 .diagramm-balken .balken>span{display:block;height:100%;background:var(--blau);border-radius:4px}
 .diagramm-balken .balken-zahl{text-align:right;font-variant-numeric:tabular-nums;font-size:var(--groesse-2)}
 @media (max-width:479px){.diagramm-balken{grid-template-columns:1fr 3.2rem}.diagramm-balken .balken-text{grid-column:1 / -1}}
-.kleinvielfach{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--abstand-3)}
+.kleinvielfach{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-3)}
 @media (max-width:767px){.kleinvielfach{grid-template-columns:1fr}}
 .kleinvielfach h3{font-family:var(--schrift-kopf);font-size:var(--groesse-3);margin:0 0 var(--abstand-1);color:var(--dunkelblau)}
 .kleinvielfach .kennwert{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0;color:var(--asphalt)}
@@ -69,7 +69,7 @@ body{background:#EDE9DF}
 
 <!-- ===================================================================== -->
 <section class="mock-zustand">
-  <h2>Zustand A — Reiter „Einsätze", Fenster 180 Tage: Säulen je Woche, Balken je Herkunft</h2>
+  <h2>Zustand A — Reiter „Einsätze", Fenster 6 Monate: Säulen je Woche, Balken je Herkunft</h2>
   <p class="unter">Links die Zeitreihe (26 Wochen), Höchstwert beschriftet; am Zeigergerät zeigt jede Säule beim Überfahren ihre Zahl. Rechts die Anteile als Balken mit Beschriftung und Zahl — kein Kreisdiagramm, keine zweite Achse.</p>
   <div class="mock-seite">
     <main class="inhalt">
@@ -83,15 +83,15 @@ body{background:#EDE9DF}
         <a class="kennzahl" href="?r=nutzer"><p class="kennzahl-wert">47</p><p class="kennzahl-label">Konten</p></a>
         <a class="kennzahl" href="?r=geraete"><p class="kennzahl-wert">61</p><p class="kennzahl-label">Geräte</p></a>
         <a class="kennzahl" href="?r=einsaetze"><p class="kennzahl-wert">1 284</p><p class="kennzahl-label">Einsätze gesamt</p></a>
-        <a class="kennzahl aktiv" href="?r=einsaetze"><p class="kennzahl-wert">702</p><p class="kennzahl-label">Einsätze in 180 Tagen</p></a>
+        <a class="kennzahl aktiv" href="?r=einsaetze"><p class="kennzahl-wert">702</p><p class="kennzahl-label">Einsätze in 6 Monaten</p></a>
       </div>
 
       <form method="get" class="zeitraumwahl" aria-label="Zeitraum der Statistik" style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);margin:var(--abstand-4) 0 var(--abstand-3)">
         <div class="filterreihe">
           <a class="listenfilter" href="?r=einsaetze&amp;t=7"><span>7 Tage</span></a>
           <a class="listenfilter" href="?r=einsaetze&amp;t=30"><span>30 Tage</span></a>
-          <a class="listenfilter aktiv" href="?r=einsaetze&amp;t=180" aria-current="true"><span>180 Tage</span></a>
-          <a class="listenfilter" href="?r=einsaetze&amp;t=365"><span>365 Tage</span></a>
+          <a class="listenfilter aktiv" href="?r=einsaetze&amp;t=180" aria-current="true"><span>6 Monate</span></a>
+          <a class="listenfilter" href="?r=einsaetze&amp;t=365"><span>1 Jahr</span></a>
         </div>
       </form>
 
@@ -104,7 +104,7 @@ body{background:#EDE9DF}
       <div class="form-raster form-raster-links-breit">
         <div class="form-spalte">
           <section class="karte" id="k-einsaetze-zeit">
-            <div class="karte-kopf"><h2 class="karte-titel">Einsätze je Woche</h2><span class="karte-zahl">702 in 180 Tagen</span></div>
+            <div class="karte-kopf"><h2 class="karte-titel">Einsätze je Woche</h2><span class="karte-zahl">702 in 6 Monaten</span></div>
             <div class="karte-inhalt">
               <figure class="diagramm">
                 <svg class="diagramm-saeulen" viewBox="0 0 640 220" role="img" aria-labelledby="d1-titel" tabindex="0">
@@ -151,7 +151,7 @@ body{background:#EDE9DF}
                 </svg>
               </figure>
               <div class="tabelle-scroll"><table class="tabelle">
-                <thead><tr><th>&nbsp;</th><th>1 Tag</th><th>7 Tage</th><th>30 Tage</th><th><strong>180 Tage</strong></th><th>365 Tage</th></tr></thead>
+                <thead><tr><th>&nbsp;</th><th>24 h</th><th>7 Tage</th><th>30 Tage</th><th><strong>6 Monate</strong></th><th>1 Jahr</th></tr></thead>
                 <tbody>
                   <tr><th>Einsätze</th><td>4</td><td>27</td><td>118</td><td><strong>702</strong></td><td>1 284</td></tr>
                   <tr><th>NutzerInnen <span class="feld-klein-inline">mit Einsatz</span></th><td>3</td><td>14</td><td>31</td><td><strong>44</strong></td><td>47</td></tr>
@@ -164,7 +164,7 @@ body{background:#EDE9DF}
         </div>
         <div class="form-spalte">
           <section class="karte" id="k-herkunft">
-            <div class="karte-kopf"><h2 class="karte-titel">Herkunft der Einsätze</h2><span class="karte-zahl">702 in 180 Tagen</span></div>
+            <div class="karte-kopf"><h2 class="karte-titel">Herkunft der Einsätze</h2><span class="karte-zahl">702 in 6 Monaten</span></div>
             <div class="karte-inhalt">
               <div class="diagramm-balken" role="list" aria-label="Herkunft der Einsätze, Anteil">
                 <span class="balken-text" role="listitem">Garmin-Uhr <span class="balken-klein">53 %</span></span><span class="balken" aria-hidden="true"><span style="width:53%"></span></span><span class="balken-zahl">372</span>
@@ -184,8 +184,8 @@ body{background:#EDE9DF}
 
 <!-- ===================================================================== -->
 <section class="mock-zustand">
-  <h2>Zustand B — Reiter „NutzerInnen": Konten je Zeitraum als drei kleine Vielfache</h2>
-  <p class="unter">Aktiv, angemeldet, neu angelegt sind drei Reihen mit verschiedenen Größenordnungen — deshalb drei kleine Diagramme mit je eigener Skala statt einer Grafik mit drei Farben oder zwei Achsen. Jedes trägt seinen Namen und den Wert des Fensters; die Zeitraumtabelle darunter bleibt.</p>
+  <h2>Zustand B — Reiter „NutzerInnen": Konten je Zeitraum als zwei kleine Vielfache</h2>
+  <p class="unter">Mit Einsatz und neu angelegt sind zwei Reihen mit verschiedenen Größenordnungen — deshalb zwei kleine Diagramme mit je eigener Skala statt einer Grafik mit zwei Farben oder zwei Achsen. Jedes trägt seinen Namen und den Wert des Fensters; die Zeitraumtabelle darunter bleibt. <strong>Angepasst am 27.09.2026 nach E-R4-55</strong> (F-R4-66): „Aktiv" und „Angemeldet" je Monat sind aus den Daten nicht zu zählen — die Anlage kennt je Konto nur die letzte Anmeldung. An ihre Stelle tritt „Mit Einsatz" (Konten mit mindestens einem Einsatz im Monat). Unter Geräte gilt dasselbe: Säulen „gekoppelt je Woche", nicht „gemeldet".</p>
   <div class="mock-seite">
     <main class="inhalt">
 
@@ -200,9 +200,9 @@ body{background:#EDE9DF}
         <div class="karte-inhalt">
           <div class="kleinvielfach">
             <figure class="diagramm">
-              <h3>Aktiv</h3>
-              <p class="kennwert">38 <span>in 180 Tagen</span></p>
-              <svg class="diagramm-saeulen" viewBox="0 -14 200 96" role="img" aria-label="Aktive Konten je Monat, sechs Monate: 29, 31, 33, 35, 36, 38">
+              <h3>Mit Einsatz</h3>
+              <p class="kennwert">44 <span>in 6 Monaten</span></p>
+              <svg class="diagramm-saeulen" viewBox="0 -14 200 96" role="img" aria-label="Konten mit Einsatz je Monat, sechs Monate: 29, 31, 33, 35, 36, 38">
                 <line class="gitter" x1="0" y1="70" x2="200" y2="70" style="stroke:var(--gedaempft)"/>
                 <g class="saeule"><rect x="6" y="20" width="24" height="50"/><text x="18" y="14">29</text></g>
                 <g class="saeule"><rect x="38" y="17" width="24" height="53"/><text x="50" y="11">31</text></g>
@@ -213,21 +213,8 @@ body{background:#EDE9DF}
               </svg>
             </figure>
             <figure class="diagramm">
-              <h3>Angemeldet</h3>
-              <p class="kennwert">27 <span>in 180 Tagen</span></p>
-              <svg class="diagramm-saeulen" viewBox="0 -14 200 96" role="img" aria-label="Angemeldete Konten je Monat, sechs Monate: 18, 22, 25, 21, 24, 27">
-                <line class="gitter" x1="0" y1="70" x2="200" y2="70" style="stroke:var(--gedaempft)"/>
-                <g class="saeule"><rect x="6" y="30" width="24" height="40"/><text x="18" y="24">18</text></g>
-                <g class="saeule"><rect x="38" y="21" width="24" height="49"/><text x="50" y="15">22</text></g>
-                <g class="saeule"><rect x="70" y="14" width="24" height="56"/><text x="82" y="8">25</text></g>
-                <g class="saeule"><rect x="102" y="23" width="24" height="47"/><text x="114" y="17">21</text></g>
-                <g class="saeule"><rect x="134" y="16" width="24" height="54"/><text x="146" y="10">24</text></g>
-                <g class="saeule hoechst"><rect x="166" y="10" width="24" height="60"/><text x="178" y="4">27</text></g>
-              </svg>
-            </figure>
-            <figure class="diagramm">
               <h3>Neu angelegt</h3>
-              <p class="kennwert">9 <span>in 180 Tagen</span></p>
+              <p class="kennwert">9 <span>in 6 Monaten</span></p>
               <svg class="diagramm-saeulen" viewBox="0 -14 200 96" role="img" aria-label="Neu angelegte Konten je Monat, sechs Monate: 1, 2, 0, 3, 1, 2">
                 <line class="gitter" x1="0" y1="70" x2="200" y2="70" style="stroke:var(--gedaempft)"/>
                 <g class="saeule"><rect x="6" y="50" width="24" height="20"/><text x="18" y="44">1</text></g>
@@ -239,7 +226,7 @@ body{background:#EDE9DF}
               </svg>
             </figure>
           </div>
-          <p class="feld-klein">Je Monat, April bis September 2026; der Höchstwert ist beschriftet. Aktiv heißt: angemeldet <strong>oder</strong> eines der Geräte hat sich gemeldet. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+          <p class="feld-klein">Je Monat, April bis September 2026; der Höchstwert ist beschriftet. „Mit Einsatz" zählt je Monat die Konten, die dort mindestens einen Einsatz begonnen haben. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
         </div>
       </section>
 

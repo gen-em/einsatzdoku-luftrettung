@@ -1099,7 +1099,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
      * dieselbe Klammer nehmen: Kontomaterial, Geraete und Bestand. Zerfiele das
      * in mehrere Transaktionen, koennte ein Fehler in der Mitte ein Konto mit
      * halbem Bestand hinterlassen — und ausgerechnet der Reset laeuft
-     * unbeaufsichtigt, alle 30 Minuten.
+     * unbeaufsichtigt, huckepack auf einer Anfrage des Demo-Kontos.
      *
      * PDO kennt keine echten verschachtelten Transaktionen; ein zweites
      * beginTransaction() wirft. Deshalb wird geprueft, ob schon eine laeuft,
@@ -1401,6 +1401,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                 AND ((vehicle_name IS NULL AND ? IS NULL) OR vehicle_name = ?)
                 AND ((base_name IS NULL AND ? IS NULL) OR base_name = ?)
               ORDER BY id LIMIT 1');
+        $tagAnkerDa = db_hat_spalte($pdo, 'days', 'created_at');
         foreach (($data['days'] ?? []) as $d) {
             $tagWert = pruef_kalendertag($d['day'] ?? null, 'days.day', $pruef);
             if ($tagWert === null) { $grund['tag_unbrauchbar']++; continue; }
@@ -1529,16 +1530,30 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
             }
             $baseId = $baseIdByName(isset($d['base_ref']) ? (string)$d['base_ref'] : null);
 
-            $st = $pdo->prepare('INSERT INTO days
-                (user_id, day, started_at, ended_at, vehicle_id, base_id, kind,
+            /* DER ANKER DES TAGES (Web 21.3.0, R4-15, Nr. 158) steht NICHT in
+             * der Datei — die Nutzlast bleibt, wie sie ist (Q-R4-09). Er wird
+             * gesetzt wie der Rueckfall der Migration: `started_at`, ohne
+             * eines der Tag um 00:00, hoechstens jetzt. Mit der Vorgabe der
+             * Spalte stuende an jedem eingespielten Tag die Zeit des
+             * Einspielens, und Geraete schrieben seinen Zeitraum drei Tage
+             * lang wieder fort. Ohne Spalte (Deploy-Fenster) bleibt sie weg. */
+            $tagSpalten = 'user_id, day, started_at, ended_at, vehicle_id, base_id, kind,
                  base_name, base_lat, base_lon, vehicle_name, vehicle_typ,
-                 vehicle_kurz, notes, deleted_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-            $st->execute([$userId, $tagWert, $startedAt, $endedAt,
+                 vehicle_kurz, notes, deleted_at';
+            $tagWerte = [$userId, $tagWert, $startedAt, $endedAt,
                 $vehId, $baseId, $kindWert,
                 $bName, $d['base_lat'] ?? null, $d['base_lon'] ?? null,
                 $vName, $vTyp, $vKurz, $d['notes'] ?? null,
-                $dateiGeloescht ? $loeschZeit : null]);
+                $dateiGeloescht ? $loeschZeit : null];
+            if ($tagAnkerDa) {
+                $anker = iso_utc_lesen(is_string($startedAt) ? $startedAt : null)
+                      ?? iso_utc_lesen($tagWert . ' 00:00:00') ?? time();
+                $tagSpalten .= ', created_at';
+                $tagWerte[]  = gmdate('Y-m-d H:i:s', max(1, min($anker, time())));
+            }
+            $st = $pdo->prepare('INSERT INTO days (' . $tagSpalten . ')
+                VALUES (' . implode(',', array_fill(0, count($tagWerte), '?')) . ')');
+            $st->execute($tagWerte);
             $neuId = (int)$pdo->lastInsertId();
             $stats['days']++;
             $zieltagGeloescht[$neuId] = $dateiGeloescht;
@@ -1961,7 +1976,9 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                     : $m[$c];
                 $cols[] = $c; $vals[] = $wert;
             }
-            $sql = 'INSERT INTO missions (' . implode(',', $cols) . ') VALUES ('
+            /* In Backticks ueber `mf_liste_sql()` (Web 21.1.9, Nr. 239): In
+             * `$cols` fliessen ueber `$extraCols` Namen, die noch dazukommen. */
+            $sql = 'INSERT INTO missions (' . mf_liste_sql($cols) . ') VALUES ('
                  . implode(',', array_fill(0, count($cols), '?')) . ')';
             $pdo->prepare($sql)->execute($vals);
             $mid = (int)$pdo->lastInsertId();

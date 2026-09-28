@@ -4120,6 +4120,82 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 }
 .listenfilter.aktiv .listenfilter-zahl{background:var(--orange);color:var(--knopf-primaer-schrift)}
 
+/* ZEITRAUMWAHL (.zeitraumwahl, R4-23, Nr. 122 a, Bild M-R4-23) — die
+ * Filterreihe der Statistik: feste Fenster als Pillen (9.18a) und zwei
+ * Datumsfelder mit „Anwenden" in EINER Reihe, die am Ende bricht. Neu ist nur
+ * die Anordnung; Pillen, Felder und Knopf sind vorhandene Bausteine, kein
+ * neuer Farbwert, keine neue Schriftgröße (Design.md 9.18b). Die Felder sind
+ * so hoch wie ein Knopf (`.feld-eingabe`) und nur so breit, wie ein Datum es
+ * braucht. */
+.zeitraumwahl{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);
+  margin:var(--abstand-4) 0 var(--abstand-3)}
+.zeitraumwahl-felder{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2)}
+.zeitraumwahl-felder .feld{margin:0;display:flex;align-items:center;gap:var(--abstand-1)}
+.zeitraumwahl-felder .feld-label{margin:0;font-weight:400;color:var(--gedaempft);
+  font-size:var(--groesse-2)}
+.zeitraumwahl-felder .feld-eingabe{width:9.5rem}
+@media (max-width:479px){
+  .zeitraumwahl-felder .feld-eingabe{width:8.6rem}
+}
+
+/* DIAGRAMM (R4-24, Nr. 122 b, Bild M-R4-24, Design.md 9.40) — zwei Formen,
+ * beide aus PHP, ohne Bibliothek und ohne Skript: Säulen über die Zeit
+ * (`ui_diagramm_saeulen()`) und Anteile als Balken (`ui_diagramm_balken()`).
+ *
+ * EINE FARBE JE DIAGRAMM. Blau erklärt; der Höchstwert steht in Orange tief
+ * und trägt seine Zahl (E-R4-60): Orange auf Schnee erreicht 2,23 : 1 und
+ * verfehlte als Grafik die 3 : 1 aus WCAG 1.4.11 — derselbe Fund wie der
+ * Rückstandspunkt der App (B-S5Z-13). Die Schrift steht in Asphalt und
+ * Gedämpft, nie in der Reihenfarbe; Gitter in Linie, die Nulllinie stärker
+ * in Gedämpft. */
+.diagramm{margin:0 0 var(--abstand-3)}
+.diagramm-saeulen{display:block;overflow:visible}
+.diagramm-saeulen .gitter{stroke:var(--linie);stroke-width:1}
+.diagramm-saeulen .nulllinie{stroke:var(--gedaempft);stroke-width:1}
+.diagramm-saeulen .achse{fill:var(--gedaempft);font-size:var(--groesse-1)}
+.diagramm-saeulen .achse-x{text-anchor:middle}
+.diagramm-saeulen .saeule-wert{fill:var(--blau)}
+.diagramm-saeulen .hoechst .saeule-wert{fill:var(--orange-tief)}
+.diagramm-saeulen .saeule-flaeche{fill:transparent}
+/* DIE ZAHL EINER SÄULE STEHT NUR BEIM ÜBERFAHREN — die des Höchstwerts
+ * immer. Ohne Skript: `:hover` an der Gruppe, deren unsichtbare Fläche die
+ * ganze Spalte deckt, damit auch eine niedrige Säule zu treffen ist. */
+.diagramm-saeulen .saeule-zahl{fill:var(--asphalt);font-size:var(--groesse-1);
+  font-weight:600;text-anchor:middle;visibility:hidden}
+.diagramm-saeulen .saeule:hover .saeule-zahl,
+.diagramm-saeulen .hoechst .saeule-zahl{visibility:visible}
+.diagramm-saeulen .saeule:hover .saeule-wert{fill:var(--blau-tief)}
+.diagramm-saeulen .hoechst:hover .saeule-wert{fill:var(--orange-tief)}
+@media (max-width:479px){
+  .diagramm-saeulen .achse-breit{display:none}
+}
+
+/* Kleine Vielfache: je Reihe ein Diagramm mit eigener Skala — untereinander,
+ * ab der Schwelle 720 nebeneinander. Das Mockup setzte 768 px; das ist keine
+ * Stufe der Skala (Design.md 7, F-R4-68). */
+.kleinvielfach{display:grid;grid-template-columns:1fr;gap:var(--abstand-4)}
+@media (min-width:720px){
+  .kleinvielfach{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+.kleinvielfach-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-3);
+  margin:0 0 var(--abstand-1);color:var(--dunkelblau)}
+.kleinvielfach-wert{margin:0 0 var(--abstand-2);color:var(--asphalt);
+  font-family:var(--schrift-kopf);font-size:var(--groesse-5);font-weight:600}
+.kleinvielfach-wert span{margin-left:var(--abstand-1);color:var(--gedaempft);
+  font-family:var(--schrift-text);font-size:var(--groesse-1);font-weight:400}
+
+/* Balken: Beschriftung, Spur, Zahl in einer Zeile; die Spur in Linie, die
+ * Füllung in Blau. */
+.diagramm-balken{display:flex;flex-direction:column;gap:var(--abstand-3);
+  margin-bottom:var(--abstand-3)}
+.balken-zeile{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;
+  align-items:center;gap:var(--abstand-3)}
+.balken-text .zeile-klein{display:block}
+.balken-spur{display:block}
+.balken-grund{fill:var(--linie)}
+.balken-fuellung{fill:var(--blau)}
+.balken-zahl{min-width:3ch;text-align:right;font-variant-numeric:tabular-nums}
+
 
 /* ---- Kontentabelle ------------------------------------------------------- */
 /* Name und Adresse stehen untereinander in EINER Zelle (Mockup 41): Zwei

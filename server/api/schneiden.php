@@ -156,7 +156,7 @@ function schnitt_ausfuehren(array $b, int $userId): never
         $sp   = mf_spalten('schnitt_neu', '', false);
         $wert = array_map(static fn(string $c): string => $fest[$c] ?? '?', $sp);
         $pdo->prepare('INSERT INTO missions
-                         (' . implode(', ', $sp) . ')
+                         (' . mf_spalten_sql('schnitt_neu', '', false) . ')
                        VALUES (' . implode(',', $wert) . ')')
             ->execute([$userId, $devId, 'cut-' . uniqid(), (int)$seg['day_id'],
                        $beginn, $ende, $seg['geraet_art'], $seg['geraet_modell']]);

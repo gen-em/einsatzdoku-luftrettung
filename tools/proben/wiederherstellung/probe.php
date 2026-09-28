@@ -110,6 +110,7 @@ require_once $server . '/trash_lib.php';
  * und wer nur auf die letzte Zeile sieht, sieht gar keine. Gefunden beim
  * Anhaengen von Teil 11 (R64/AP2). */
 require_once $server . '/smtp.php';
+require_once $server . '/konto_lib.php';
 
 $pdo = db();
 $fehler = 0; $gesamt = 0;
@@ -118,14 +119,26 @@ $sag = function (string $was, bool $ok, string $ist) use (&$fehler, &$gesamt) {
     if (!$ok) { $fehler++; }
     printf("  [%s] %-62s %s\n", $ok ? 'ok ' : 'FEHL', $was, $ist);
 };
-$konto = function (string $mail) use ($pdo): int {
-    $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$mail]);
+/* DIE PROBEKONTEN GEHEN UEBER `konto_loeschen()` (R4-21, F-R4-65). Bis
+ * dahin stand hier `DELETE FROM users`: Einsaetze und Tage gehen per Kaskade
+ * mit, der Sperrvermerk aus Teil 5 (`deleted_refs`, Kennung „w-a") nicht —
+ * die Tabelle hat keinen Fremdschluessel. Je Lauf blieb einer fuer ein Geraet
+ * zurueck, das es nicht mehr gibt; gezaehlt am 27.09.2026: 6 von 6 Vermerken
+ * der Anlage, einer je Pruefstandslauf. `konto_loeschen()` ist der Weg der
+ * Verwaltung und raeumt Spur und Sperrliste mit ab (vgl. F-R4-63). */
+$kontoWeg = function (int $uid): void {
+    konto_loeschen($uid, true, 'probe');
+};
+$konto = function (string $mail) use ($pdo, $kontoWeg): int {
+    $alt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+    $alt->execute([$mail]);
+    foreach ($alt->fetchAll(PDO::FETCH_COLUMN) as $id) { $kontoWeg((int)$id); }
     $pdo->prepare('INSERT INTO users (email, name, kdf_iter, role, session_epoch)
                    VALUES (?,?,?,?,?)')->execute([$mail, 'Probe', 310000, 'user', 0]);
     return (int)$pdo->lastInsertId();
 };
-$weg = function (int $uid) use ($pdo): void {
-    $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
+$weg = function (int $uid) use ($kontoWeg): void {
+    $kontoWeg($uid);
 };
 
 echo "Wiederherstellungsprobe\n";

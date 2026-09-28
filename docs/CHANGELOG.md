@@ -14,6 +14,581 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.6.1] — 2026-09-28
+
+Schritt 17, Backlog-Runde 4, Paket R4-27 — die Nachbesserung von R4-17.
+**Korrektur**, ohne Migration.
+
+### Geändert
+
+- **Die Zeitraumübersicht ist früher zu sehen und bleibt bedienbar**
+  (Nr. 37, Q-R4-24, E-R4-63, E-R4-64). R4-17 hatte ihr die Seitengrenze
+  gegeben; die Abnahme „unter 5 s" war damit trotzdem verfehlt (7,1 bis
+  9,2 s), und die Betreiberin wollte die Abweichung nicht wegerklärt,
+  sondern behoben haben. Das Profil zeigte, woran es lag: Die Seite
+  entschlüsselt alle Einsätze des Zeitraums — Karte und Kennzahlen brauchen
+  sie alle —, zeichnet danach Tabelle, Statistik und Karte ein zweites Mal
+  und tat beides in **einer** Aufgabe von fast drei Sekunden (Messstand,
+  Drossel 6×, 4071 Einsätze). So lange stand die Seite: Die erste Zeile war
+  im DOM, aber nicht zu sehen, und kein Klick kam an. Jetzt darf der
+  Browser vor und nach dem Entschlüsseln ein Bild zeichnen, und die Karte
+  folgt der Tabelle ein Bild später. Die Tabelle ist nach **3,7 s** zu
+  sehen statt nach 5,8 s (Median aus fünf Läufen), keine Aufgabe dauert
+  länger als rund 0,7 s. **Der Preis, bewusst:** Fertig — mit allen Pins —
+  ist die Seite rund 0,7 s später, nach 7,0 statt 6,3 s; die Bilder
+  zwischendurch kosten Zeit. Wer die Seite öffnet, will zuerst die Liste.
+  Damit eine spät gezeichnete Karte nach einem schnellen Wechsel der
+  Ansicht nicht die Pins der alten darüberlegt, verwirft ein Laufzähler
+  jede überholte; eine festgesetzte Hervorhebung geht auf die neuen Pins
+  mit.
+- **`fromB64()` in `crypto.js` ist eine Schleife.** Die kurze Form
+  `Uint8Array.from(atob(s), fn)` lief über den Iterator der Zeichenkette
+  und rief je Zeichen eine Funktion: beim Entschlüsseln eines Jahres 1027
+  von rund 1750 ms, mehr als das Entschlüsseln selbst. Als Schleife sind es
+  123 ms, bei gleichem Ergebnis. Das hilft jeder Seite, die eine Liste
+  entschlüsselt — Startseite, Suche, Tagesansicht —, nicht nur dieser.
+
+## [Web 21.6.0] — 2026-09-28
+
+Schritt 17, Backlog-Runde 4, Paket R4-24. **Neben**, ohne Migration.
+
+### Neu
+
+- **Die Statistik zeigt ihre Zahlen auch als Bild** (Nr. 122 b, E-R4-07,
+  Bild M-R4-24). Für den Blick auf eine Entwicklung über ein Jahr reichten
+  Tabellen nicht. Über jeder Tabelle steht jetzt der gewählte Zeitraum als
+  Säulen — Einsätze, gekoppelte Geräte und unter NutzerInnen zwei kleine
+  Diagramme „mit Einsatz" und „neu angelegt" mit je eigener Skala —, die
+  Herkunft der Einsätze als Balken mit Anteil und Zahl. Bis 31 Tage eine
+  Säule je Tag, bis ein Jahr je Woche ab Montag, darüber je Monat, in
+  Ortszeit (E-R4-59); bei „7 Tage" zwei Wochensäulen oder bei drei Jahren
+  157 hätten nichts gezeigt. **Neuer Baustein „Diagramm"** (Design.md 9.40),
+  mit Mockup freigegeben: Inline-SVG aus PHP, ohne Bibliothek, ohne Skript,
+  ohne fremde Quelle — `docs/Lizenzen.md` bleibt, wie sie ist. Die Tabellen
+  bleiben daneben; am Handy, wo es kein Überfahren gibt, sind sie die
+  Auskunft über jede einzelne Säule.
+- **Die Schrift wächst nicht mit dem Bild.** Das SVG hat keine `viewBox`,
+  sondern eine feste Höhe und Positionen in Prozent der Breite (E-R4-61):
+  Mit `viewBox` hätte der Browser die Achsen am Handy auf sechs Pixel
+  verkleinert, wie im Handybild des Mockups zu sehen.
+- **Der Höchstwert steht in Orange tief, nicht in Orange** (E-R4-60).
+  Eine Säule ist eine Grafik und braucht nach WCAG 1.4.11 3 : 1 gegen die
+  Fläche; Orange hat auf Schnee 2,23 : 1 — derselbe Fund wie am
+  Rückstandspunkt der App (B-S5Z-13). Die Zahl über der Säule sagt es
+  ohnehin noch einmal.
+- **Die Balken sind kleine SVGs, keine `<div style="width:…">`.** Ein
+  Stilattribut im PHP-Markup fiele unter `style-src` der CSP, und die
+  Anwendung hat seit P5a keins mehr; `width="53%"` an einem `<rect>` ist
+  ein Attribut der Grafik und steht auch ohne Skript.
+- **Was bewusst fehlt:** „aktiv" und „angemeldet" je Monat, die das Mockup
+  zeigte (F-R4-66, E-R4-55) — die Anlage kennt je Konto nur die letzte
+  Anmeldung. Das Mockup ist vorher angepasst worden.
+
+## [Web 21.5.0] — 2026-09-28
+
+Schritt 17, Backlog-Runde 4, Paket R4-23. **Neben**, ohne Migration.
+
+### Neu
+
+- **Die Statistik wählt ihren Zeitraum** (Nr. 122 a, E-R4-07, Bild M-R4-23).
+  Betrieb → Statistik rechnete feste Fenster — für den Blick auf einen
+  bestimmten Monat reichte das nicht. Zwischen Kennzahlen und Reitern steht
+  jetzt eine Reihe: vier Pillen (**7 Tage**, **30 Tage**, **6 Monate**,
+  **1 Jahr**) bestimmen die Kennzahl „Einsätze in …" und die Herkunft, die
+  bis dahin fest 30 Tage zeigten; daneben **Von** und **Bis** für einen
+  eigenen Zeitraum. Dann hat jede Tabelle eine Spalte „im Zeitraum", unter
+  Einsätze mit **Schnitt je Woche und je Tag** — erst der macht verschieden
+  lange Zeiträume vergleichbar —, unter NutzerInnen mit der Zeile
+  „NutzerInnen mit Einsatz". Tagesgrenzen in Ortszeit, ein Bis nach heute
+  wird auf heute gekürzt, ein Von nach heute oder nach dem Bis wird mit
+  einer Meldung abgewiesen. Der Reiter behält den Zeitraum. Die Abfragen
+  haben Unter- und Obergrenze und lesen über `idx_missions_started`; der
+  Messstand fährt die drei Reiter jetzt auch mit eigenem Zeitraum und
+  verlangt dort den Index im Plan. **Keine neue Darstellung:** Die Reihe ist
+  eine Anordnung aus Pillen der Filterreihe, Datumsfeldern und einem
+  neutralen Knopf (`ui_zeitraumwahl()`, Design.md 9.18b); mit Skript geht
+  der Zeitraum ab, sobald der Fokus die zwei Felder verlässt, ohne Skript
+  mit „Anwenden".
+- **Was bewusst fehlt: „aktiv", „angemeldet" und „gemeldet" für einen
+  vergangenen Zeitraum** (F-R4-66, E-R4-55). Die Anlage speichert je Konto
+  nur die **letzte** Anmeldung und je Gerät nur die letzte Meldung. Reicht
+  der Zeitraum bis heute, ist „zuletzt nach dem Beginn" dasselbe wie „im
+  Zeitraum", und die Zahl steht da; endet er früher, steht „—" mit einem
+  Satz, warum. Dieselbe Rechnung hätte dort nur gezählt, wer sich danach
+  nicht mehr gemeldet hat, und die Zahl wäre gesunken, je weiter der
+  Zeitraum zurückliegt. Eine Anmeldegeschichte wäre eine neue Tabelle mit
+  personenbezogenen Zeitpunkten — nicht in einer Aufräumrunde.
+- **Die Pillen heißen wie die Spaltenköpfe**, „6 Monate" und „1 Jahr",
+  nicht „180 Tage" und „365 Tage" wie im Mockup (E-R4-57).
+
+## [Android 0.17.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-22. **Neben.**
+
+### Neu
+
+- **Abgewiesene Pakete lassen sich verwerfen** (Nr. 114, E-R4-09, Bild
+  M-R4-22). Seit 0.8.2 steht in der Dienstansicht in Rot „N Pakete vom Server
+  abgewiesen", seit 0.14.0 räumt die App sie nach 30 Tagen weg — dazwischen
+  konnte niemand etwas tun, und die Zeile wurde zur Tapete. Jetzt steht
+  darunter der neutrale Knopf **„Abgewiesene verwerfen …"** und ein blauer
+  Kasten, der sagt, was die rote Zeile bedeutet und was ohne Zutun geschieht.
+  Der Knopf fragt nach dem Muster der Garmin-Uhr (Nr. 159) zurück: Titel mit
+  Zahl („3 abgewiesene Pakete verwerfen?"), Text mit Grund und Folge,
+  „Behalten" und „Verwerfen" in Rot tief. Danach steht die Quittung
+  „3 Pakete verworfen", solange die Ansicht offen ist. **Neutral und nicht
+  rot**, weil Verwerfen die Ansicht nicht beendet — Rot bleibt „Dienst
+  beenden" — und die Rückfrage den Fehltipp fängt. Verworfen wird über
+  denselben Weg wie beim Trennen (`abgewieseneRaeumen(null)`). **Der Knopf
+  steht nur, wenn er etwas verwirft:** Ein Paket, dessen Teil-Upload im
+  laufenden Dienst eine 400 bekam, wird noch beschrieben und nicht geräumt;
+  es zählt in der roten Zeile mit, in `verwerfbar()` nicht, sonst versprächen
+  Knopf und Rückfrage etwas, das danach noch dasteht. **Was bewusst fehlt:**
+  Ansehen und Nachreichen. Der Server hat mit 400 endgültig abgelehnt, und
+  ein Nachreichen von Hand wäre ein zweiter Weg an `validate_lib.php`
+  vorbei. Der Hinweiskasten stand im freigegebenen Mockup, nicht im Konzept
+  — mitgebaut auf Nachfrage (Q-R4-25).
+
+## [Android 0.16.1] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-21. **Korrektur.**
+
+### Entfernt
+
+- **Der Baustein `Eingabefeld()`** (Nr. 336). Er hatte seit Android 0.11.0
+  keinen Aufrufer mehr — das Adressfeld der Kopplung war sein einziger, und
+  das ist mit der festen Serveradresse gegangen (Nr. 84). Stehen blieb er
+  trotzdem, öffentlich und deshalb von Lint nicht gemeldet; die Cursorfarbe,
+  die AR-04 an ihm behoben hatte, war auf keinem Bildschirm zu sehen. Mit ihm
+  geht das Paar „Cursor im Eingabefeld" aus `werkzeuge/kontraste.py`
+  (vorher 94 Farbstellen und 30 Paare im Handy-Modul, jetzt 88 und 29, 0
+  Befunde). Die Regel, einen Cursor als Zeichen zu erkennen, bleibt: Kommt
+  ein Eingabefeld wieder, meldet die Prüfung seinen Cursor als Zeichen ohne
+  Paar.
+
+### Werkzeug
+
+- **Der Rundlauf räumt ab, was er hochgeladen hat** (Nr. 95). Die
+  Rundlauffälle ließen im Konto 1 der örtlichen Installation Diensttage,
+  Einsätze und Spur zurück — 9, 5 und 14 439 Punkte je Lauf, gemessen wie
+  bei der Aufnahme am 03.09.2026. Ein `DELETE` hätte die Spur als Waise
+  zurückgelassen (`CLAUDE.md` 4); `werkzeuge/rundlauf_aufraeumen.php` geht
+  deshalb den Weg einer NutzerIn, Diensttag in den Papierkorb und endgültig
+  löschen, und räumt die Sperrvermerke der Geräte mit ab. Abgeräumt werden
+  die Tage der Geräte des Kontos, nicht das ganze Konto: Auf einer anderen
+  örtlichen Installation ist Konto 1 womöglich ein echtes. Die
+  Rundlauffälle rufen es als Erstes im `@After`, vor dem Trennen, denn das
+  Trennen löscht das Gerät, und danach gehörte nichts mehr erkennbar zum
+  Lauf. Nach einem vollen Rundlauf (14 Fälle) steht Konto 1 bei 0 / 0 / 0.
+
+## [Web 21.4.1] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-20. **Korrektur.**
+
+### Geändert
+
+- **Keine Karte „Was hier gilt" mehr** (Nr. 287, E-P5c-06). Seit 10c stehen
+  Erklärungen im Handbuch, und die Seite trägt einen Satz mit Verweis; drei
+  Seiten außerhalb von Verwaltung und Betrieb hatten die zugeklappte Karte am
+  Ende noch, und dort galten bis heute zwei Regeln nebeneinander. Jetzt:
+  - **Import / Export** nennt in der Unterzeile das Backup als Verweis und
+    das Handbuch für die übrigen Wege (Kapitel 7, „Die übrigen Wege"). Neu
+    im Handbuch ist, was bis dahin nur in der Karte stand: dass ein Export
+    kein Backup ist, und dass es den GPX-Import ohne Diensttag nicht gibt.
+  - **Das Einsatzformular** sagt unter dem Titel in einem Satz, was das
+    Schloss heißt, mit Verweis auf 4.3, „Schloss und Klartext". Die Zeichen
+    an den Feldern bleiben.
+  - **Die Wiederherstellung** verweist in der Unterzeile auf 12.6, „Der
+    Wiederanlauf" — Reihenfolge, Serverschlüssel, und dass nichts
+    zurückgenommen wird. Das Handbuch ist ohne Anmeldung und auch mit leerer
+    Datenbank erreichbar (gemessen: HTTP 200 gegen eine Datenbank ohne
+    Tabellen); der Verweis trägt also genau in der Lage, für die die Seite
+    da ist.
+
+### Behoben
+
+- **Das Handbuch nannte den manuellen Abfahrtort nicht unter den Feldern mit
+  Schloss** (4.3; ebenso die Karte, die nun fort ist). Er ist seit Web 6.2.0
+  Ende-zu-Ende-verschlüsselt und trägt im Formular das Schloss; die Liste
+  der Felder endete trotzdem beim Einsatzort — dieselbe Lücke, die die
+  Gegenprüfung in Konzept BV im Satz der Zusage gefunden hatte (F-BV-13).
+
+## [Web 21.4.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-17. **Nebenstufe ohne Migration.**
+
+### Geändert
+
+- **Die Zeitraumübersicht zeigt höchstens 200 Einsätze auf einmal** (Nr. 37,
+  E-R4-16). Sie zeichnete jede Zeile des Zeitraums, und ein Jahr mit einigen
+  tausend Einsätzen war damit die langsamste Seite der Anwendung: Im
+  Messstand brauchte ein Jahr mit 4071 Einsätzen 88 s, bis die erste Zeile
+  zu sehen war (sechsfach gedrosselte CPU). Jetzt gilt dieselbe Grenze wie in
+  der Suche, mit derselben Nachladezeile („Weitere 200 anzeigen", „Alle N
+  anzeigen"): 9 s bis die Seite fertig ist, die erste Zeile steht nach
+  2,5 s. Begrenzt ist nur die Liste. Einsatzzahl, Kilometersumme, Kacheln
+  und Karte gelten weiter für den ganzen Zeitraum, die Karte zeigt also auch
+  die Punkte der Einsätze, die in der Tabelle noch nicht stehen. Damit das
+  nicht zu raten ist, steht hinter der Einsatzzahl „200 angezeigt", wie in
+  der Suche.
+- **Eine Extremwert-Kachel holt ihre Zeile nach.** Ein Klick auf „Längste
+  Einsatzdauer" und die übrigen bedienbaren Kacheln springt zur Zeile. Mit
+  der Seitengrenze stand die womöglich jenseits der 200; Kachel und Pin
+  hätten geleuchtet, und die Zeile hätte gefehlt. Jetzt lädt die Liste in
+  ganzen Seiten so weit nach, dass sie dabei ist (`zeigeEinsatz()` im
+  Tabellenmodul).
+- **Die drei gedeckelten Tageslisten sagen es.** Die Leiste zeigt höchstens
+  500 Diensttage; hat ein Konto mehr, steht darunter jetzt „Die Leiste zeigt
+  die 500 jüngsten Diensttage; ältere findest du über die Suche." Bis hierher
+  fehlten die älteren still. Die Tagesliste von `api/day.php` (höchstens 120)
+  trägt dafür `grenze` und `gekappt`. Alle drei Listen, dazu die des
+  Verschiebe-Dialogs (400), fragen nach einem Tag mehr, als sie zeigen, und
+  wissen so, ob es ältere gibt. Der Verschiebe-Dialog schloss das aus „genau
+  400" und meldete bei genau 400 Tagen ältere, die es nicht gab.
+
+### Behoben
+
+- **Auf dem Handy fehlte der Knopf „Weitere 200 anzeigen"** — in der Suche
+  seit den Kacheln (E-P3-32), in der Zeitraumübersicht wäre es mit der neuen
+  Grenze ebenso gewesen. Die Nachladezeile hing unmittelbar hinter der
+  Tabelle und damit in deren Scrollbehälter, und der ist unter 720 px
+  ausgeblendet. Eine Suche mit mehr als 200 Treffern zeigte auf dem Handy
+  200 Kacheln und keinen Weg zu den übrigen. Jetzt steht die Zeile hinter
+  der Kachelliste: am Schreibtisch unter der Tabelle, auf dem Handy unter
+  den Kacheln. Gemessen an 5096 Treffern bei 390 px: vorher im DOM, aber
+  nicht sichtbar, jetzt sichtbar.
+
+### Werkzeug
+
+- **Bedienprobe, Weg `zeitraum-seitengrenze`:** vervielfacht die Einsatzliste
+  des Demo-Kontos auf dem Weg in den Browser zwölffach und prüft 200 Zeilen,
+  Nachladezeile, „200 angezeigt", alle Pins auf der Karte und den Sprung aus
+  einer Kachel zu Zeile 221. Ohne `zeigeEinsatz()` rot, ohne Seitengrenze
+  auch. Das Vervielfachen steht als `einsaetzeVervielfachen()` in
+  `tools/motor.mjs`; die Anwendung bekommt dafür keine Prüftür.
+- **Bilderlauf, Seite `14b-zeitraum-seitengrenze`:** dieselbe Übersicht mit
+  dreifacher Liste in zehn Breiten. Neu dafür `vervielfachen` in
+  `seiten.json` und der Bedienschritt `nachladezeile`, der auf die
+  **sichtbare** Nachladezeile wartet — er wäre am Handyfehler oben
+  gescheitert. Das Bild ist der sichtbare Ausschnitt (`ganzseitig: false`):
+  Mit 200 Zeilen wurden die Vollbilder bis zu 45 000 Pixel hoch, und der
+  Kontaktbogen lief in einen Zeitablauf.
+- **Messstand:** Die Zeitraumübersicht ist rot bei mehr als 200 Zeilen, die
+  Startseite bei 500 Tagesverweisen ohne den Hinweis der Leiste. Neu steht
+  die erste Zeile im DOM daneben, von der Seite selbst gemessen — die Dauer
+  bis Playwright sie sieht, enthält auch das Entschlüsseln aller Einsätze auf
+  dem gedrosselten Hauptfaden (F-R4-58).
+
+## [Web 21.3.1] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-16. **Korrektur ohne Codeänderung** —
+ausgeliefert wird eine neue Demo-Fixture (`server/demo/fixture.json.gz`).
+Das bestehende Demo-Konto zeigt sie erst nach dem nächsten Reset; wer sie
+sofort sehen will, drückt unter Verwaltung → Demo-Konto „Zurücksetzen".
+
+### Geändert
+
+- **Das Demo-Konto hat einen Nachtdienst** (Nr. 275). Von 20 aktiven
+  Diensttagen hatten nur zwei Einsätze auf zwei Kalendertagen, beide
+  Bodendienste und beide in der Nacht der Zeitumstellung. Die Sortierung nach Beginn ließ
+  sich an ihnen nicht sauber prüfen: Ob 01:40 hinter 23:50 steht, verwischte
+  die zusätzliche oder fehlende Stunde. Jetzt steht ein Luftdienst vom
+  19. auf den 20.06.2026 im Bestand, mit Einsätzen um 19:09, 23:50 und 01:40
+  und ohne Zeitumstellung dazwischen. Der Bestand zählt damit 22 Diensttage
+  und 109 Einsätze (vorher 21 und 106). Weil die erzeugten Einsatznummern
+  je Jahr durchlaufen, haben 25 spätere Einsätze eine um eins höhere Nummer
+  bekommen.
+- **Referenz und Fixture sind neu erzeugt** (Nr. 323). Beide stammten aus der
+  Zeit vor Nutzlast 12 und führten die leere Standortauswahl. Der Rückweg
+  überlas sie, aber der Kreislauf brauchte dafür zwei Übergangsregeln. Mit
+  der neuen Referenz meldete er sie als ungenutzt, und sie sind ausgetragen.
+  Beide Kreisläufe stehen danach bei 0 unerklärten Abweichungen und
+  0 ungenutzten Regeln.
+
+### Werkzeug
+
+- **Bedienprobe, Weg `nachtdienst-sortierung-beginn`:** öffnet den
+  Nachtdienst, sortiert nach Beginn auf- und absteigend und verlangt 19:09 ·
+  23:50 · 01:40 und umgekehrt. Sortiert die Tabelle nach der Uhrzeit allein,
+  steht 01:40 vorn, und der Weg ist rot. Dazu holt er `start_sort` für die
+  drei Einsätze aus `api/day.php`, `api/range.php` und `api/suchindex.php`
+  und verlangt dieselben Werte auf zwei Ortsdaten. Das war in Nr. 275 als
+  „gelesen, nicht gefahren" offen; mit dem Datum des Diensttags in
+  `range.php` ist der Weg rot.
+- **Bilderlauf, Seite `12c-nachtdienst`:** der Nachtdienst in allen zehn
+  Breiten.
+- **`quelldaten/pruefen.py`** kennt die Matrixzeile „Luftdienst mit
+  Einsätzen vor und nach Mitternacht, ohne Zeitumstellung" und leitet sie
+  aus den Zeiten ab, statt sie aus einer Marke zu glauben.
+- **Sitzungsprobe:** Sie nimmt jetzt das Demo-Konto (`edk1:`) und das
+  Prüfkonto (`edka1:`), die zwei Konten, die auf jeder frischen Anlage in
+  der verlangten Fassung stehen. Mit den alten Vorgaben maß sie dort nichts
+  (F-R4-53).
+- **Runbook:** Der Neuaufbau des Referenzbestands nennt jetzt den
+  Generatorschritt. Ohne ihn bricht die Stufe `ingest` ab, und auf einem
+  Rechner, auf dem er schon einmal gelaufen war, fiel die Lücke nicht auf
+  (F-R4-52).
+
+## [Web 21.3.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-15. **Nebenstufe mit Migration** —
+nach dem Deploy muss eine Administratorin **`update.php`** aufrufen
+(`2026_09_27_days_created_at`); bis dahin lässt die Kette den Wartungsmodus
+an.
+
+### Geändert
+
+- **Der Diensttag trägt `created_at`** (Nr. 158, Q-R4-09). Ob Geräte Beginn
+  und Ende eines Diensttags noch fortschreiben, hing am jüngsten Anlegen
+  seiner übrigen Einsätze und Ruhesegmente. Das war eine Abfrage über zwei
+  Tabellen für eine Frage, und ein Tag ohne übrige Datensätze hatte keinen
+  Anker und galt als offen — auch ein alter, dessen Einsätze alle gelöscht
+  waren: Ein neues Paket mit plausiblen Zeiten schrieb dessen Zeitraum um.
+  Jetzt fragt `ingest_tag_offen()` den Tag: 72 Stunden ab dem Augenblick, in
+  dem der Server ihn angelegt hat. Ein nachgelieferter Dienst bleibt offen,
+  denn sein Tag entsteht mit dem ersten Paket.
+- **Das Fenster gleitet nicht mehr** (F-R4-46). Bis hierher verlängerte jeder
+  neue Datensatz die Zeit, in der ein Tag offen war. Jetzt zählt der Tag.
+  Ein Dienst, dessen Pakete über mehr als 72 Stunden nach dem ersten
+  eintreffen, und ein von Hand angelegter Tag, zu dem ein Gerät später als
+  72 Stunden danach liefert, verlängern ihren Zeitraum nicht mehr; die
+  Datensätze kommen in beiden Fällen an. Das ist der Preis dafür, die Regel
+  in einem Satz sagen zu können, und er trifft nur Lieferungen, die ohnehin
+  spät sind.
+
+### Migration
+
+- **`2026_09_27_days_created_at`** legt die Spalte in drei Schritten an, die
+  jeder für sich wiederholbar sind (NULL anlegen, füllen, NOT NULL mit
+  Vorgabe), wie die Vorlage für `rest_segments`. Die vorhandenen Tage
+  bekommen ihr `started_at`, ohne eines den Tag um 00:00, gekappt auf
+  1970-01-01 00:00:01 und auf jetzt. Die Migrationszeit bekommen sie nicht:
+  Mit ihr wäre jeder alte Tag nach dem Update drei Tage lang wieder offen.
+  Örtlich an 1059 Tagen gefahren: 990 tragen ihr `started_at`, 69 mit einem
+  Beginn in der Zukunft sind auf jetzt gekappt.
+- **Die Wiederherstellung** setzt den Anker ebenso — im Backup steht er
+  nicht, die Nutzlast bleibt. Im Deploy-Fenster vor `update.php` gilt ein
+  Tag als offen, wie ein Ruhesegment vor seiner Migration.
+
+### Werkzeug
+
+- **Schemaprobe, Fall 6:** die Migration auf allen vier Datenbankfassungen,
+  mit einem Tag ohne Beginn, einem in der Zukunft und zweien vor 1970, dazu
+  die Spaltendefinition **ohne `ON UPDATE`**. Mit MariaDB vor 10.10 bekäme
+  die erste TIMESTAMP-Spalte einer Tabelle ohne ausdrückliche Vorgabe eines,
+  und jede Änderung eines Diensttags öffnete sein Fenster neu. 4 × 40
+  Prüfungen; ohne Kappung und Vorgabe je 8 Fehlschläge.
+- **Ingestprobe, Teil 9, Fall 14:** ein alter Tag ohne Datensätze bleibt,
+  derselbe Tag mit frischem Anker wird fortgeschrieben. Fall 8b datiert jetzt
+  auch den Tag zurück, sonst galt sein in der Probe frisch entstandener Tag
+  als offen.
+
+## [Web 21.2.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-14. Nebenstufe ohne Migration.
+
+### Geändert
+
+- **Das Demo-Konto setzt sich nur noch nach einer Änderung zurück** (Nr. 76,
+  E-R4-10). Bis hierher setzte die erste Anfrage nach 30 Minuten zurück, ob
+  sich etwas geändert hatte oder nicht. Der Reset läuft huckepack und kostet
+  rund sechseinhalb Sekunden, und die trug, wer nach einer Pause nur
+  nachsehen wollte — für einen Bestand, der ohnehin der Ausgangsstand war.
+  Jetzt hält `app_state.demo_geaendert` den Zeitpunkt der ersten Änderung
+  seit dem Reset. Gesetzt wird er bei jeder POST des Demo-Kontos mit
+  gültigem Formular-Token und bei jedem angenommenen Upload eines seiner
+  Geräte, fällig ist der Reset 30 Minuten danach. Ohne Änderung kommt er
+  einmal am Tag, als Netz für alles, was an keiner Setzstelle vorbeikommt,
+  und für eine neue Fixture nach einem Deploy.
+- **Gezählt wird ab der ersten Änderung, nicht ab dem letzten Reset**
+  (Q-R4-23, E-R4-42). Ab dem letzten Reset gezählt, wäre nach längerer Ruhe
+  schon die Umleitung nach dem ersten Speichern fällig gewesen, und die
+  Änderung wäre fort, bevor man sie sieht. Wer länger als 30 Minuten
+  ausprobiert, wird weiterhin mittendrin zurückgesetzt. Das ist gewollt: Die
+  Alternative, ab der letzten Änderung zu zählen, ließe einen veränderten
+  Stand auf der öffentlichen Demo stehen, solange jemand alle 29 Minuten
+  etwas absendet.
+- **Der Hinweis im Demo-Konto** sagt „30 Minuten nach der ersten Änderung"
+  und nennt die Restzeit erst, wenn es eine gibt. Ohne Änderung ist kein
+  Reset in Sicht außer dem täglichen, und „in etwa 1380 Minuten" hieße
+  nichts. Unter Verwaltung → Demo-Konto steht neu die Zeile **„Geändert"**.
+  Die übrigen Sätze, die „alle 30 Minuten" versprachen (Kontoseite,
+  Einstellungen, Status), sind nachgezogen.
+
+### Werkzeug
+
+- **GPX-Probe, Teil 2, übersteht einen Demo-Reset** (Nr. 259). Sie ordnete
+  die Dateien des Referenzexports über die Kennung im Dateinamen zu. Ein
+  Reset vergibt neue Kennungen, und danach stand „204 von 204 ohne
+  Gegenstück" da, bis jemand die Anlage neu aufsetzte (F-R4-40). Jetzt ordnet
+  sie über Art, Tag und Uhrzeit zu, wie `export.js` sie in den Namen schreibt.
+  Zwei Zeilen mit demselben Schlüssel zählen als eigene Erwartung. Nach einem
+  erzwungenen Reset: 97 / 97, die alte Fassung dort 2 rot.
+- **Zweitfaktorprobe, Teil 6b:** die Rechnung `demo_reset_faellig_ab()` als
+  Tabelle mit zehn Fällen, „nur die erste Änderung zählt" an `app_state`,
+  und die zwei Setzstellen am Quelltext. Die **Riegelprobe der Fixture**
+  setzt für ihren abgefangenen Reset jetzt auch die Änderungsmarke, sonst
+  würde gar kein Reset versucht.
+
+## [Web 21.1.11] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-13. Korrekturstufe ohne Migration.
+
+### Behoben
+
+- **Ein Grund, der das Schneiden verhindert, steht rot** (Nr. 271). Unter
+  den Feldern des Schneide-Bereichs stand eine Meldungsfläche mit fester
+  Klasse `meldung-info`, die per `textContent` befüllt wurde: ohne Symbol,
+  und „Das Ende liegt vor dem Beginn." in blauer Hinweisfläche. Jetzt ist
+  der Platz ein leerer Behälter, den `EdHtml.meldung()` füllt — `fehler`
+  für einen Grund und für einen Fehlschlag des Servers, `info` für den
+  Satz, der beschreibt, was passieren wird. Die Rückmeldung über der
+  Segmentliste nach einem Schnitt kommt ebenfalls aus dem Baustein; sie
+  hatte bis dahin kein Symbol.
+- **Die Meldung im Entsperrdialog ist eine Meldung** (Nr. 272). Dort stand
+  ein Absatz mit der Klasse `meldung`, ohne Tonklasse, ohne Symbol, ohne
+  `role`, dem das Skript die Klassen nachträglich zuwies. Jetzt kommt sie
+  aus `EdHtml.meldung()`: „Bitte das Kontopasswort eingeben." steht rot mit
+  Warnsymbol, „Schlüssel wird abgeleitet …" blau mit Hinweiszeichen.
+- **Die Dauer im Schneide-Bereich schreibt sich wie überall** (Nr. 273,
+  freigegeben mit Q-R4-06). Eine eigene Funktion schrieb „1 h 6 min" mit
+  Leerzeichen und rechnete Stunden und Minuten getrennt — 3599 s ergaben
+  „60 min". Jetzt `EdFormat.dauer()`: „1h 06min", „1h 00min".
+
+### Geändert
+
+- **`html.js` steht im Kopf jeder Seite**, neben `api.js` und `format.js`.
+  Acht Seiten luden es einzeln — `einstellungen.php` zweimal, in zwei
+  einander ausschließenden Reitern, und nur deshalb ohne den SyntaxError,
+  den eine zweite Deklaration seines `const` auslöst. `unlock.js` meldet jetzt
+  über den Baustein und läuft auf jeder Seite mit geschützten Feldern; ohne
+  die Datei im Kopf hinge es an einer Zeile, die jede dieser Seiten von Hand
+  setzen muss — die sieben heutigen tun es, eine neue vergäße es still.
+
+### Werkzeug
+
+- **Registerzeile Z37** zählt auch `className = '…meldung'`: `melde()` im
+  Schnittblock und der Entsperrdialog bauten ihre Meldung so, und das
+  Muster (`class="meldung`) sah sie nicht (F-R4-42). Die erweiterte Zeile
+  fand zwei weitere Nachbauten — den Hinweis `patwarn` in `patient.js` und
+  den Papierkorb-Hinweis des Diensttags —; sie bleiben mit Nr. 346, die
+  Decke bleibt bei 4. Mit dem Muster von vorher gemessen sinkt die Zeile
+  von 4 auf 2. **Z34** kennt `dauer` in `schneiden.js`.
+- **Bilderlauf:** zwei Seiten mehr (80), der Schneide-Bereich mit rotem
+  Grund und mit der Vorschau „1h 06min"; der Platzhalter `__TAG_SCHNITT__`
+  sucht den Tag über den Inhalt.
+
+## [Web 21.1.10] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-12. Korrekturstufe ohne Migration.
+
+### Behoben
+
+- **Die Schreibwege in `missions` setzen jeden Spaltennamen in Backticks**
+  (Nr. 239). Vier INSERTs — Ingest, Schnitt, Import, Einspielen einer
+  Sicherung — setzten ihre Spaltenliste mit `implode()` über bloße Namen
+  zusammen, das UPDATE des Imports ebenso, und in die Liste der Sicherung
+  fließen über den Feldkatalog Namen, die noch dazukommen. Keiner ist heute
+  reserviert (Nr. 238); die Bauform war der Punkt — genau so eine Stelle
+  hätte auf MySQL 8.4.0 bis 8.4.10 das Einspielen verhindert, nur mit dem
+  nächsten Namen statt mit `manual`. Jetzt macht `mission_fields_lib.php`
+  aus Spaltennamen SQL-Text, und nur sie: `mf_spalten_sql()` setzt jeden
+  Namen in Backticks (bis dahin nur den Alias), `mf_liste_sql()` eine selbst
+  erweiterte Liste, `mf_bezeichner()` einen Namen. **Was bleibt:**
+  `mf_spalten()` liefert weiter bloße Namen — vier Aufrufer brauchen sie
+  als Schlüssel —, und `komplett_lib.php` behält seine eigene Quotierung,
+  weil es jede Tabelle sichert, nicht den Katalog. Das Formular quotierte
+  schon von Hand; es geht jetzt über dieselbe Stelle, und der Export ebenso.
+
+### Werkzeug
+
+- **Registerzeile Z42:** eine Spaltenliste `INSERT INTO missions (' .
+  implode(` zählt, Decke 0 (gegen den Stand davor 4). Das Spaltenregister
+  prüft in seiner Selbstprobe beide Formen — bloße Namen und SQL-Form.
+
+## [Web 21.1.9] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-11. Korrekturstufe ohne Migration.
+
+### Geändert
+
+- **Nach einer Handlung leiten die Seiten unter Verwaltung und Betrieb um**
+  (Nr. 250). Elf Seiten gaben ihr POST-Ergebnis selbst aus: Konto-Backups,
+  Backup-Ziele, Komplett-Backup, NutzerInnen, Demo-Konto, Installation,
+  Rechtstexte, Hintergrundjobs, Sicherheit, Status und Updates. „Neu laden"
+  fragte dann, ob das Formular noch einmal gesendet werden soll — und wer
+  ja sagte, bekam ein zweites Token, eine zweite Testmail, einen zweiten
+  Protokolleintrag oder einen zweiten Lauf. Jetzt endet jede Handlung mit
+  einer Umleitung auf dieselbe Ansicht (Post/Redirect/Get), und die Meldung
+  kommt über die Sitzung; sie steht einmal da und beim nächsten Aufruf
+  nicht mehr. Die Seiten mit Meldungen in einer Karte bekommen sie dort,
+  wo geklickt wurde, samt Sprung an die Stelle. **Was bewusst stehen
+  bleibt:** ein abgewiesener Eintrag (ungültige Adresse, falsche Zahl) —
+  mit Umleitung wäre das Getippte fort (E-R4-35) —, und das Anlegen eines
+  Kontos, dessen Einladung nicht hinausging: Der Setz-Link ist ein
+  Geheimnis und gehört nicht in die Sitzungsdatei (E-R4-33).
+  `betrieb_server.php` leitet noch nicht um; die Seite gehört Schritt 18.
+- **Die Meldung über eine Umleitung trägt Ort, Ton und Ergebnis.**
+  `flash_setzen()` kannte zwei Töne und keinen Ort; die Seiten unter
+  Betrieb melden aber in der Karte, die gehandelt hat, und mit vier Tönen
+  — auf zwei gestaucht, wäre „Diese Sperre gibt es nicht mehr" ein Fehler
+  geworden. Und vier Handlungen zeigen mehr als einen Satz: die Schritte
+  einer Verbindungsprüfung, den Einspielbericht, das Ergebnis je Migration,
+  die Restauswahl beim Sammelsichern. „Flash mit Zahl", wie das Konzept es
+  vorsah, hätte genau das verloren, was man nach einem Fehlschlag lesen
+  will; es reist deshalb mit und erscheint nach der Umleitung wie vorher
+  (E-R4-33, -34). Die bisherigen Aufrufer bleiben unverändert.
+
+### Behoben
+
+- **Ein neuer Rechner vergisst den alten SFTP-Hostschlüssel** (gefunden
+  beim Umbau, F-R4-36). Die Seite Backup-Ziele las den alten Stand eines
+  Ziels erst nach dem Speichern — also den neuen —, und der Vergleich
+  „anderer Host, anderer Port" schlug nie an. Ein SFTP-Ziel auf neuem Host
+  behielt den Abdruck des alten, und die nächste Verbindung scheiterte als
+  „ANDERER Hostschlüssel", was wie ein Angriff aussieht. Jetzt wird vorher
+  gelesen und mit der gespeicherten Zeile verglichen.
+- **„Nachsehen, was dort liegt" schaltet die Aufbewahrung nicht mehr ab**
+  (F-R4-35). Scheiterte das Nachsehen bei offenem Bearbeitungsformular,
+  stand der Schalter „Auf dem Ziel aufräumen" danach auf aus — die Seite
+  füllte das Formular nach JEDEM gescheiterten POST aus der Anfrage, nicht
+  nur nach einem gescheiterten Speichern. Wer dann speicherte, schaltete die
+  Aufbewahrung am Ziel still ab.
+- **Das Entfernen des Demo-Kontos sagt bei einem Abbruch die Wahrheit**
+  (Fehler aus Web 21.1.8, F-R4-37). Seit es über `konto_loeschen()` geht,
+  ist es keine Transaktion mehr: Backups und Spuren fallen vor der
+  Kontozeile. Brach es dazwischen ab, sagte die Seite trotzdem „es wurde
+  nichts geändert". Jetzt sagt sie, dass ein Teil fort sein kann und ein
+  zweites „Entfernen" es zu Ende führt — und leitet um, weil schon etwas
+  geschehen ist.
+- **„Jetzt sichern" und „Abbrechen" beim Komplett-Backup leiten auch bei
+  einer Abweisung um.** Eine der Abweisungen rät „bitte neu laden"; auf dem
+  POST hätte das den Start noch einmal abgeschickt.
+
+### Werkzeug
+
+- **Rollenprobe:** je Seite ein Zweig, der auf einer Prüfanlage harmlos
+  gelingt, mit gültigem Token — 302 auf die genannte Adresse, die Meldung
+  beim ersten Aufruf genau einmal mehr als beim zweiten; dazu der
+  Setz-Link-Fall und die zwei Fehler der Backup-Ziele. Gegen die alten
+  Seiten 11 rot, gegen die Seiten ohne die zwei Korrekturen 2 rot.
+- **Bedienprobe:** zehn Wege `*-neuladen` mit dem Baustein `neuladen.mjs` —
+  Umleitung aus dem POST, Meldung einmal, „Neu laden" ist ein GET, ein
+  Zähler aus der Datenbank bewegt sich nicht. Gegen die alten Seiten 0 von
+  10: Das Neuladen war dort ein POST, und Warteschlange und Protokoll
+  wuchsen um je eine Zeile.
+- **Wartungsprobe:** Erwartung 13, 27 und 31 folgen der Umleitung und
+  verlangen die 302.
+- **Prüfstand:** Die Wartungsprobe läuft jetzt auch bei `betrieb_updates.php`,
+  die Komplettprobe auch bei `admin_komplettsicherung.php` — beide Proben
+  gehen über diese Seiten und wurden bei einer Änderung dort nicht gewählt
+  (F-R4-38).
+- **Nummernriegel:** `nummern.py` zieht von den Nummern eines anderen Zweigs
+  auch ab, was er vom eigenen geerbt hat (F-R4-39). Die Konzeptinstanz von
+  Schritt 18 zweigte von R4-10 ab, trug dessen Nummern 340 bis 343 mit, und
+  der Riegel meldete sie als Überschneidung — gegen `main` gemessen sahen
+  sie aus wie ihre eigenen.
+
 ## [Web 21.1.8] — 2026-09-26
 
 Schritt 17, Backlog-Runde 4, Paket R4-10. Korrekturstufe ohne Migration.
@@ -246,8 +821,112 @@ Fassung.
   Erwartungen rot — mit genau der Meldung, die Nr. 277 beschreibt.
 - **Eine Registerzeile für den JSON-Ausgang** (R4-09, Z41 in
   `tools/zaehlung/register.php`): `echo json_encode` unter `api/`, Decke 0.
+- **Ein Riegel hält die Tabellen der Gestaltungsrichtlinie an ihren
+  Erzeuger** (R4-25, Nr. 209, Regel `design` in `tools/quelltext/bestand.py`).
+  `CLAUDE.md` 5 sagt, dass die vier Tabellen in `docs/Design.md` — Token,
+  Schwellen, Symbole, Bausteine — erzeugt sind und wer eine von Hand
+  ändert, sie an der falschen Stelle ändert. Gemessen hat
+  es niemand, und `design.py` gab die Tabellen nur aus: Einfügen musste sie
+  jemand, an vier Stellen. Beim ersten Lauf der Regel waren alle vier
+  veraltet — 16 Tokenzeilen mit alten Nutzungszahlen, zwei Schwellenzeilen,
+  drei Symbolzählungen, und in der Bausteintabelle trugen 48 von 49 Zeilen
+  eine verschobene Zeilennummer, vier Bausteine fehlten ganz. Jetzt vergleicht die
+  Regel je Teil die Ausgabe des Erzeugers als Ganzes mit dem Dokument, jede
+  genau einmal, dazu genau vier Marken; der Befund nennt die erste Zeile, die
+  fehlt. Und `design.py schreiben` ersetzt die vier Blöcke selbst, von der
+  Marke bis vor die nächste Überschrift, und schreibt nichts, wenn danach
+  nicht jede Ausgabe genau einmal dasteht. Ohne den Befehl hätte der Riegel
+  jede Änderung an `style.css` oder `ui.php` mit viermal Einfügen von Hand
+  bestraft — genau der Schritt, der unterblieben war. **Preis, und so
+  gewollt:** Wer `ui.php`, `style.css` oder ein Symbol ändert, erzeugt die
+  Tabellen neu, sonst ist Stufe 1 rot. Die Selbstprobe wächst von 155 auf
+  166 Fälle, 100 von 100 Befundstellen fallen; eine Funktion in `ui.php`
+  eingefügt, ist die Regel rot.
 
 ### Geändert
+
+- **Der Prüfstand fährt die Selbstproben von `tools/steuerung/` wie das
+  Tor** (Abschluss von Schritt 17). Der Abschluss-Commit war örtlich grün
+  und in Stufe 1 rot: Die Selbstprobe von `uebersicht.py` prüfte ihre
+  Gegenprobe „Kennung mit Paket" fest an `17 AP3`, und mit dem Abschluss war
+  die Fahrplanzeile 17 weg. Gefunden hat es nur das Tor, weil der Prüfstand
+  für `steuerung` nur `decken.py` und `uebersicht.py --pruefen` fuhr, Stufe 1
+  dazu beide `--selbstprobe` — dieselbe Lücke wie in Nr. 329, an einer
+  Stelle, die R4-02 nicht erfasst hat. Jetzt nimmt die Gegenprobe die erste
+  Kennung, die im Fahrplan steht, und der Aufruf in `pruefablauf.json` fährt
+  beide Selbstproben mit.
+- **Der Messstand misst die Zeitraumübersicht ab ihrer eigenen Adresse**
+  (R4-27, Nr. 37, F-R4-70). Die Uhr des Schritts lief bis dahin ab dem
+  Laden der **Startseite** — die brauchte er nur, um das Jahr zu finden,
+  und sie hat ihren eigenen Schritt — und endete erst nach zwei Abfragen,
+  die warten, bis der gedrosselte Hauptfaden frei ist: am 28.09.2026
+  1,1 s Startseite, 4,4 s bis zur Zeile, 0,9 s danach. Die Abnahme meinte
+  die Zeitraumübersicht. Jetzt ermittelt der Schritt das Jahr vor der Uhr,
+  misst von `zeitraum.php` bis Playwright die erste Zeile sieht und nennt
+  ohne Uhr eine zweite Zahl, `fertig_s`: das Ende der letzten Langaufgabe
+  der Seite, von ihr selbst gemessen. Die erste ist die Abnahme, die zweite
+  eine Auskunft — sie wird genannt, nicht gehalten. Der Riegel „mehr als
+  200 Zeilen ist rot" bleibt, jetzt nach der Uhr. Am alten Stand der Seite
+  misst der neue Schritt 5,7 bis 6,2 s bis zur Zeile — die Abnahme wäre
+  also auch mit der berichtigten Messung verfehlt gewesen; erfüllt hat sie
+  erst Web 21.6.1.
+- **Der Bedienprobe-Weg `zeitraum-seitengrenze` wartet auf die Pins, nicht
+  auf eine Uhr** (R4-27). Seit Web 21.6.1 kommt die Karte ein Bild nach der
+  Tabelle; die feste Pause von 300 ms nach dem Klick auf „Luft" wäre ein
+  Wettlauf gewesen. Läuft die Frist ab, liest der Weg den Stand trotzdem
+  und ist rot.
+- **Jeder offene Backlog-Eintrag zeigt auf GitHub seine eigene Nummer**
+  (R4-25, Nr. 340, E-R4-62). `cmark-gfm` machte aus den offenen Einträgen
+  eine einzige Liste `<ol start="21">`, und der Browser zählte fort: Neben
+  Nr. 23 stand 22, neben Nr. 36 stand 23. Wer auf GitHub eine Nummer suchte,
+  las daneben eine andere. Jetzt steht vor jedem Eintrag in `Backlog.md`
+  eine Zeile `<!-- -->` — ein HTML-Kommentar beendet die Liste und ist
+  unsichtbar, der nächste Eintrag beginnt eine neue mit seiner Nummer. Der
+  andere Weg aus Nr. 340, die Nummer in den Titel zu ziehen, hätte die
+  Kopfzeile (E-SD-16), die Grammatik in `uebersicht.py` und jede Gewohnheit
+  beim Verweisen umgestellt. Die neue Decke `backlog-listenstart` in
+  `decken.py` zählt, was GitHub zeigt: je Eintrag eine Liste, deren `start`
+  seine Nummer ist (21 Decken, Selbstprobe 23 Fälle); `verschieben.py` nimmt
+  die Trennzeile mit dem Eintrag heraus. **Bewusst nicht in
+  `Backlog-Erledigt.md`:** Die Datei hält ihren Bestand Zeile für Zeile, wie
+  schon bei Nr. 196; dort zählt GitHub weiter fort, und es gilt die Nummer
+  im Text.
+- **Die Rollenmatrix führt die Betriebsseiten einzeln** (R4-18, Nr. 327).
+  `docs/Technik.md` 4.99p hatte eine Zeile je Handlung auf den Seiten, die
+  mehr als eine Rolle erreicht; die Seiten der BetreiberIn standen darin nur
+  über das Tor der Seite. Eine Handlung, die dort **vor**
+  `require_betreiberin()` stünde, hätte die Rollenprobe nicht gefunden. Jetzt
+  stehen die sechs Betriebsseiten, das CSV der Gerätemodelle, ihre 26
+  POST-Handlungen und die zwei des Schlüsselblatts einzeln darin — 108
+  Zeilen statt 70, 476 Erwartungen, 0 nicht erfüllt. Gegenprobe: die
+  Testmail vor das Tor gezogen, drei Rollen rot. Dazu der dritte
+  Platzhalter `{support}`: Dass der Support andere Support-Konten nicht
+  betreut (E-P5c-99), stand im Code und ist jetzt gemessen; ohne das Tor
+  sind vier der fünf neuen Zeilen rot.
+- **Die Wiederherstellungsprobe räumt ihren Sperrvermerk ab** (R4-21,
+  F-R4-65). Sie löschte ihre Probekonten mit `DELETE FROM users`; der
+  Sperrvermerk ihres Geräts (`deleted_refs`, Kennung „w-a") blieb liegen,
+  denn die Tabelle hat keinen Fremdschlüssel. Einer je Lauf — gezählt: 6 von
+  6 Vermerken der Anlage gehörten zu Geräten, die es nicht mehr gab. Jetzt
+  über `konto_loeschen()` wie die Verbindungsprobe.
+- **Die Verbindungsprobe räumt ihre Spur ab** (R4-18, F-R4-63). Sie löschte
+  ihr Probekonto mit `DELETE FROM users`: Einsätze und Diensttage gingen per
+  Kaskade mit, die 400 Spurpunkte ihrer 20 Pakete nicht — `track_points` hat
+  keinen Fremdschlüssel, und genau davor warnt die Regel „Spuren nur über
+  `spur_lib.php`". Jeder Lauf der Hauptstufe ließ so 400 Waisen zurück, und
+  die Jobprobe des nächsten Laufs meldete „erledigt=407 (erwartet 7)",
+  sobald zwei Läufe ohne Pause aufeinander folgten. Jetzt geht das Konto über
+  `konto_loeschen()`, den Weg der Verwaltung, und die Jobprobe nennt fremde
+  Waisen in ihrer Meldung, statt nur die falsche Zahl.
+- **Die Prüfkonten liegen unter `example.invalid`** (R4-19, Nr. 207,
+  E-PK-27; *nachgetragen mit R4-18* — der Commit von R4-19 hatte diesen
+  Eintrag vergessen, F-R4-62). 44 Dateien unter `tools/` trugen Adressen
+  unter der Projektdomain, obwohl eine Prüfadresse nie zustellbar sein soll:
+  `example.invalid` ist dafür reserviert (RFC 2606). Geblieben ist
+  `demo@gen-em.org` — das Demo-Konto ist ein echtes Konto der Anlage. Die
+  Schema-Kennungen des Referenzdatensatzes sind `urn:`-Kennungen statt
+  Adressen (E-R4-48), und die Ausnahme der Textprobe für die alte
+  Messstand-Adresse ist gestrichen.
 
 - **`kontrast.py` leitet die Farbpaare aus dem Stylesheet ab** (R4-08,
   Nr. 116). Bis dahin rechnete es nur, was in seiner Liste stand, und ein

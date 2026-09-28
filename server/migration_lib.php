@@ -3449,6 +3449,48 @@ function migrationen_katalog(): array
             dt_tagesrettungsmittel_rollen_nachziehen($pdo);
         },
     ],
+    [
+        'id'    => '2026_09_27_days_created_at',
+        'web'   => '21.3',
+        'label' => 'days.created_at — der Anker, ob Geräte den Zeitraum eines Diensttags noch fortschreiben (Nr. 158)',
+        /* DER TAG BEKOMMT SEINEN EIGENEN ANKER (Schritt 17, R4-15, Nr. 158).
+         * Ob Geraete den Zeitraum eines Diensttags noch fortschreiben, hing
+         * bis hierher am juengsten `created_at` seiner Einsaetze und
+         * Ruhesegmente (`ingest_tag_offen()`): eine Abfrage ueber zwei
+         * Tabellen, und ein Tag ohne Datensaetze hatte gar keinen Anker und
+         * galt als offen. Jetzt fragt sie den Tag.
+         *
+         * DASSELBE MUSTER WIE `2026_09_07_rest_segments_created_at`, aus
+         * denselben Gruenden: drei Schritte, jeder fuer sich wiederholbar
+         * (Spalte NULL anlegen, fuellen wo NULL, dann NOT NULL mit Vorgabe),
+         * und erledigt erst, wenn alle drei stehen. Die vorhandenen Tage
+         * bekommen ihr `started_at` — ohne eines den Tag selbst, 00:00 —,
+         * nicht die Migrationszeit: Mit ihr waere jeder alte Tag nach dem
+         * Update drei Tage lang wieder offen (Q-R4-09). Gekappt auf den
+         * Bereich der Spalte (TIMESTAMP ab 1970-01-01 00:00:01) und auf
+         * hoechstens jetzt, denn `started_at` ist DATETIME und kommt beim
+         * Anlegen vom Geraet.
+         *
+         * SCHEMAFRAGEN UEBER `db.php` (R83, E-ZE-04), nicht ueber
+         * `information_schema` von Hand wie die Vorlage. */
+        'skip'  => function (PDO $pdo): bool {
+            if (!db_hat_spalte($pdo, 'days', 'created_at')) { return false; }
+            if (db_spalte_nullbar($pdo, 'days', 'created_at') !== false) { return false; }
+            return (int)$pdo->query('SELECT COUNT(*) FROM days WHERE created_at IS NULL')->fetchColumn() === 0;
+        },
+        'run'   => function (PDO $pdo): void {
+            if (!db_hat_spalte($pdo, 'days', 'created_at')) {
+                $pdo->exec("ALTER TABLE days
+                              ADD COLUMN created_at TIMESTAMP NULL DEFAULT NULL AFTER deleted_at");
+            }
+            $pdo->exec("UPDATE days
+                           SET created_at = GREATEST('1970-01-01 00:00:01',
+                                                     LEAST(COALESCE(started_at, TIMESTAMP(day)), UTC_TIMESTAMP()))
+                         WHERE created_at IS NULL");
+            $pdo->exec("ALTER TABLE days
+                          MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP");
+        },
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

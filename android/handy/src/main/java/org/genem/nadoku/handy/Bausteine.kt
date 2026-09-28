@@ -218,65 +218,6 @@ fun KnopfBeenden(beschriftung: String, modifier: Modifier = Modifier, aufTippen:
     Knopfflaeche(beschriftung, Farbe.knopfBeendenFlaeche, Farbe.knopfBeendenSchrift, null, modifier, aufTippen)
 
 /**
- * Ein Eingabefeld.
- *
- * Der Rand ist `--linie-stark` (= `--gedaempft`, 5,66:1) und nicht `--linie`:
- * An einem Bedienelement ist der Rand die einzige Auskunft darueber, wo es
- * anfaengt und aufhoert, und dafuer verlangt WCAG 1.4.11 3:1. Dieselbe
- * Unterscheidung wie im Web (Fund F-P3-K).
- */
-@Composable
-fun Eingabefeld(
-    wert: String,
-    beschriftung: String,
-    beispiel: String,
-    modifier: Modifier = Modifier,
-    grossschreiben: Boolean = false,
-    aufAenderung: (String) -> Unit,
-) {
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Abstand.eins)) {
-        Text(text = beschriftung, color = Farbe.gedaempft, fontSize = 13.sp)
-        androidx.compose.foundation.text.BasicTextField(
-            value = wert,
-            onValueChange = aufAenderung,
-            singleLine = true,
-            textStyle = androidx.compose.ui.text.TextStyle(
-                color = Farbe.asphalt,
-                fontSize = 15.sp,
-                fontFamily = if (grossschreiben) androidx.compose.ui.text.font.FontFamily.Monospace else null,
-            ),
-            /* `orangeTief` statt `orange` (Android 0.16.0, Konzept AR): Der
-             * Cursor ist ein grafisches Objekt; Orange auf Schnee traegt
-             * 2,23:1 gegen 3,0 (WCAG 1.4.11). Gefunden von der
-             * Vollstaendigkeitspruefung in `werkzeuge/kontraste.py`, Nr. 116 --
-             * derselbe Tausch wie beim Rueckstandspunkt (B-S5Z-13). */
-            cursorBrush = androidx.compose.ui.graphics.SolidColor(Farbe.orangeTief),
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                capitalization = if (grossschreiben) {
-                    androidx.compose.ui.text.input.KeyboardCapitalization.Characters
-                } else {
-                    androidx.compose.ui.text.input.KeyboardCapitalization.None
-                },
-                autoCorrectEnabled = false,
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri,
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = BEDIENHOEHE)
-                .background(Farbe.schnee, RoundedCornerShape(Radius.klein))
-                .border(1.dp, Farbe.gedaempft, RoundedCornerShape(Radius.klein))
-                .padding(horizontal = Abstand.drei, vertical = Abstand.drei),
-            decorationBox = { innen ->
-                if (wert.isEmpty()) {
-                    Text(text = beispiel, color = Farbe.gedaempft, fontSize = 15.sp)
-                }
-                innen()
-            },
-        )
-    }
-}
-
-/**
  * Die Wahl aus zwei Moeglichkeiten, nebeneinander (E-S4-20).
  *
  * DIE GEWAEHLTE HAELFTE STEHT AUF HELLBLAU, nicht auf Hell-Orange wie die

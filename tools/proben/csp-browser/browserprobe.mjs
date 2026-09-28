@@ -42,7 +42,7 @@ const { chromium } = PW;
 const argv  = process.argv.slice(2);
 const wert  = (n, v) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : v; };
 const BASIS = wert('--basis', 'https://127.0.0.1:8443');
-const ADMIN = { email: wert('--admin', 'admin@gen-em.org'),
+const ADMIN = { email: wert('--admin', 'admin@example.invalid'),
                 pw:    wert('--admin-pw', 'pruefstandzugang2026') };
 const erg = [];
 const ok = (n, b, d = '') => { erg.push([b, n, d]); };

@@ -38,7 +38,7 @@
  * Aufruf:
  *   node tools/proben/rueckweg/probe.mjs [--basis URL] [--admin E-MAIL]
  *        [--admin-pw PASSWORT] [--admin-totp GEHEIMNIS] [--motor chromium|firefox|webkit]
- *   (Vorgabe: die Sandbox, admin@gen-em.org, ihr Passwort und ihr Geheimnis.
+ *   (Vorgabe: die Sandbox, admin@example.invalid, ihr Passwort und ihr Geheimnis.
  *   BENANNTE SCHALTER und eine Menge `BEKANNT`, damit `tools/kettenaufrufe/`
  *   den Aufruf in Stufe 2 gegen die Schnittstelle halten kann.)
  *
@@ -61,7 +61,7 @@ for (let i = 0; i < ARG.length; i += 2) {
 }
 const wert = (name, vorgabe) => { const i = ARG.indexOf(name); return i >= 0 ? ARG[i + 1] : vorgabe; };
 const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
-const ADMIN  = [wert('--admin', 'admin@gen-em.org'), wert('--admin-pw', 'pruefstandzugang2026'),
+const ADMIN  = [wert('--admin', 'admin@example.invalid'), wert('--admin-pw', 'pruefstandzugang2026'),
                 wert('--admin-totp', '')];
 const KONTO  = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const PASSWORT = 'umlaufpruefung2026-rueckweg';
@@ -138,7 +138,7 @@ async function einschalten(s, knopf) {
 }
 
 async function weg(browser, rolle) {
-  const adresse = rolle === 'user' ? 'umlauf-rueckweg@gen-em.org' : 'umlauf-rueckweg-b@gen-em.org';
+  const adresse = rolle === 'user' ? 'umlauf-rueckweg@example.invalid' : 'umlauf-rueckweg-b@example.invalid';
   const ordner = mkdtempSync(join(tmpdir(), 'rueckweg-'));
   const rcDatei = join(ordner, 'rc.json');
   console.log(`\n== ${rolle}: ${adresse}`);

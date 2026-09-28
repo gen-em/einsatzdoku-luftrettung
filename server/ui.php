@@ -139,6 +139,16 @@ function ui_seite_start(array $o): void
      * nichts haengt und von mehr als einer Seite gebraucht wird, gehoert
      * in den Kopf. Alles andere in die Immer-Liste oder zur Seite. */
     $zeilen[] = '<script src="' . ui_asset('assets/format.js') . '"></script>';
+
+    /* `assets/html.js` (EdHtml: Maskierung und das Meldungs-Markup) NACH
+     * DERSELBEN REGEL (Web 21.1.11, R4-13): Es setzt `window.EdHtml`, haengt
+     * an nichts — `edSymbol()` liest es erst beim Aufruf — und wird von mehr
+     * als einer Seite gebraucht. Bis dahin luden es acht Seiten je einzeln,
+     * und `unlock.js`, das seit R4-13 ueber `EdHtml.meldung()` meldet, hinge
+     * an einer Zeile, die jede Seite mit `ui_krypto_bootstrap()` von Hand
+     * setzen muesste — die sieben heutigen tun es, eine neue vergaesse es
+     * still. */
+    $zeilen[] = '<script src="' . ui_asset('assets/html.js') . '"></script>';
     $zeilen[] = '</head>';
 
     $klasse = (string)($o['klasse'] ?? '');
@@ -687,7 +697,18 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
 {
     global $userId;
     require_once __DIR__ . '/diensttag_lib.php';
-    $tage = dt_liste($userId, 500);
+    /* HOECHSTENS 500 DIENSTTAGE — UND DIE LEISTE SAGT ES (Web 21.4.0, R4-17,
+     * Nr. 37). Bis hierher kappte sie still: Ein Konto mit 1029 Diensttagen
+     * (Messstand) sah 500, und nichts deutete an, dass es aeltere gibt. Eine
+     * Dokumentation, die Zeilen verschweigt, ist falsch, nicht nur knapp.
+     * Gefragt wird nach EINEM MEHR, als gezeigt wird: So weiss die Leiste,
+     * ob es aeltere gibt, statt es aus „genau 500" zu schliessen — bei
+     * genau 500 Tagen fehlt keiner. Die Grenze selbst bleibt; 500 Tage sind
+     * bei einem Dienst je Woche fast zehn Jahre. */
+    $grenze = 500;
+    $tage = dt_liste($userId, $grenze + 1);
+    $gekappt = count($tage) > $grenze;
+    if ($gekappt) { $tage = array_slice($tage, 0, $grenze); }
 
     $monatsnamen = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
         'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -819,6 +840,13 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
           </div>
         </details>
       <?php endforeach; ?>
+      <?php /* Dieselbe gedaempfte Zeile wie „noch keine" oben — ein Hinweis,
+               kein Fehler. Der Weg zu den aelteren Tagen ist die Suche: Sie
+               geht ueber den ganzen Bestand. */ ?>
+      <?php if ($gekappt): ?>
+        <p class="leiste-leer">Die Leiste zeigt die <?= (int)$grenze ?> jüngsten
+          Diensttage; ältere findest du über die Suche.</p>
+      <?php endif; ?>
     </div>
     <?php
       require_once __DIR__ . '/trash_lib.php';
@@ -1413,15 +1441,18 @@ function ui_demo_hinweis(): void
         require_once __DIR__ . '/demo_lib.php';
     }
     if (!demo_ist_demo((int)$uid)) { return; }
-    $rest = demo_reset_in();
+    /* DIE FRIST NUR MIT MARKE (Web 21.2.0, R4-14, Nr. 76): Ohne Aenderung
+     * ist kein Reset in Sicht ausser dem taeglichen — „in etwa 1380 Minuten"
+     * hiesse nichts. Die Zahl erscheint, sobald etwas geaendert wurde. */
+    $rest = demo_geaendert_seit() > 0 ? demo_reset_in() : 0;
     ?>
 <div class="demo-hinweis" role="status">
   <?= ui_symbol('kolben', 'symbol-gross') ?>
   <p><strong>Demo-Konto.</strong> Alle Daten hier sind <strong>frei
   erfunden</strong>. Ausprobieren ist ausdrücklich erwünscht — ändern,
   anlegen, löschen, Gerät koppeln. Der Bestand wird
-  <strong>alle 30&nbsp;Minuten</strong> auf den Ausgangsstand
-  zurückgesetzt<?= $rest > 0 ? ', das nächste Mal in etwa '
+  <strong>30&nbsp;Minuten nach der ersten Änderung</strong> auf den
+  Ausgangsstand zurückgesetzt<?= $rest > 0 ? ', das nächste Mal in etwa '
       . (int)ceil($rest / 60) . '&nbsp;Minuten' : '' ?>.
   <strong>Bitte niemals echte Patienten- oder Einsatzdaten erfassen.</strong></p>
 </div>
@@ -2213,6 +2244,195 @@ function ui_listenfuss(array $o): void
     echo "</div>\n";
 }
 
+/**
+ * Die Zeitraumwahl (`.zeitraumwahl`, R4-23, Nr. 122 a, Bild M-R4-23,
+ * Design.md 9.18b): feste Fenster als Pillen, daneben Von/Bis und
+ * „Anwenden"; ein eigener Zeitraum steht als aktive Pille mit Kreuz, deren
+ * Verweis ihn wegnimmt.
+ *
+ * KEIN NEUER BAUSTEIN, EINE ANORDNUNG: die Pillen der Filterreihe (9.18a),
+ * zwei Datumsfelder (`.feld-eingabe`), ein neutraler Knopf. Sie steht hier
+ * und nicht in der Seite, weil das Register (`tools/zaehlung/register.php`,
+ * Zeile „Listenkopf und Reiter") die Klassen der Filterreihe außerhalb
+ * dieser Datei auf null hält.
+ *
+ * MIT SKRIPT (`assets/listenkopf.js`) geht der Zeitraum ab, sobald der
+ * Fokus das Paar der Felder verlässt und beide gefüllt sind, und der Knopf
+ * ist fort; ohne Skript steht er da. Nicht bei jeder Änderung: Ein
+ * Datumsfeld meldet `change` schon beim Tippen der Jahreszahl.
+ *
+ * $o: label, form_id, versteckt [name => wert], pillen [[text, href,
+ *     aktiv]], von, bis (JJJJ-MM-TT oder ''), max (JJJJ-MM-TT),
+ *     eigen [text, href] oder null
+ */
+function ui_zeitraumwahl(array $o): void
+{
+    $id = (string)($o['form_id'] ?? 'f-zeitraum');
+    echo '<form method="get" class="zeitraumwahl" id="' . ui_e($id) . '" aria-label="'
+       . ui_e((string)($o['label'] ?? 'Zeitraum')) . '">' . "\n";
+    foreach ((array)($o['versteckt'] ?? []) as $n => $v) {
+        if ((string)$v === '') { continue; }
+        echo '  <input type="hidden" name="' . ui_e((string)$n) . '" value="'
+           . ui_e((string)$v) . '">' . "\n";
+    }
+    echo '  <div class="filterreihe">' . "\n";
+    foreach ((array)($o['pillen'] ?? []) as $p) {
+        $aktiv = !empty($p['aktiv']);
+        echo '    <a class="listenfilter' . ($aktiv ? ' aktiv' : '') . '" href="'
+           . ui_e((string)$p['href']) . '"' . ($aktiv ? ' aria-current="true"' : '')
+           . '><span>' . ui_e((string)$p['text']) . "</span></a>\n";
+    }
+    echo "  </div>\n";
+    echo '  <div class="zeitraumwahl-felder" data-zeitraum>' . "\n";
+    foreach (['von' => 'Von', 'bis' => 'Bis'] as $name => $text) {
+        $fid = $id . '-' . $name;
+        echo '    <div class="feld"><label class="feld-label" for="' . ui_e($fid) . '">' . $text
+           . '</label><input class="feld-eingabe" type="date" id="' . ui_e($fid) . '" name="'
+           . $name . '" value="' . ui_e((string)($o[$name] ?? '')) . '"'
+           . (!empty($o['max']) ? ' max="' . ui_e((string)$o['max']) . '"' : '') . "></div>\n";
+    }
+    echo '    ' . ui_knopf(['text' => 'Anwenden', 'art' => 'neutral', 'typ' => 'submit',
+                           'attr' => ' data-absenden-knopf']) . "\n";
+    if (!empty($o['eigen'])) {
+        echo '    <a class="listenfilter aktiv" href="' . ui_e((string)$o['eigen']['href'])
+           . '" aria-current="true"><span>' . ui_e((string)$o['eigen']['text']) . '</span>'
+           . ui_symbol('schliessen', '', 'Zeitraum entfernen') . "</a>\n";
+    }
+    echo "  </div>\n";
+    echo '  <script src="' . ui_e(ui_asset('assets/listenkopf.js')) . '" defer></script>' . "\n";
+    echo "</form>\n";
+}
+
+/**
+ * Die Skala eines Diagramms: ein runder Schritt (1, 2 oder 5 mal einer
+ * Zehnerpotenz) und höchstens fünf Gitterlinien, die den Höchstwert fassen.
+ * Bei 41 sind das 10, 20 … 50 — nicht 20, 40 … 80, bei denen die Säulen nur
+ * die halbe Fläche nutzten, und nicht 10,25er-Schritte, die niemand liest.
+ *
+ * @return array{0:int,1:int} [Schritt, Zahl der Gitterlinien]
+ */
+function ui_diagramm_skala(int $hoechst): array
+{
+    if ($hoechst <= 0) { return [1, 4]; }
+    for ($p = 1; ; $p *= 10) {
+        foreach ([1, 2, 5] as $f) {
+            $linien = (int)ceil($hoechst / ($f * $p));
+            if ($linien <= 5) { return [$f * $p, max(1, $linien)]; }
+        }
+    }
+}
+
+/**
+ * Das Diagramm „Säulen" (`.diagramm-saeulen`, R4-24, Nr. 122 b, Bild
+ * M-R4-24, Design.md 9.40): eine Reihe über die Zeit als Inline-SVG, aus
+ * PHP, ohne Bibliothek und ohne Skript.
+ *
+ * EINE FARBE, DER HÖCHSTWERT HERVORGEHOBEN UND BESCHRIFTET: Blau erklärt,
+ * Orange tief hebt hervor (E-R4-60) — und die Zahl darüber sagt es noch
+ * einmal, weil Farbe nie der einzige Träger ist. Jede andere Säule zeigt ihre
+ * Zahl beim Überfahren (`:hover`) und trägt sie als `<title>`.
+ *
+ * DIE SCHRIFT WÄCHST NICHT MIT: Das SVG hat keine `viewBox`, sondern eine
+ * feste Höhe und Positionen in Prozent der Breite. Mit einer `viewBox`
+ * skalierte der Browser die Beschriftung mit dem Bild — auf dem Handy auf
+ * sechs Pixel, am breiten Schirm auf das Doppelte.
+ *
+ * DIE TABELLE BLEIBT daneben (Design.md 9.40): Sie ist die Tabellensicht und
+ * die Auskunft für alle, die das Bild nicht sehen; `aria-label` fasst nur
+ * zusammen.
+ *
+ * $o: werte list<[text, wert]>, beschreibung (aria-label), klein (ohne
+ *     Achse und Gitterbeschriftung, für die kleinen Vielfachen),
+ *     unter (Satz unter dem Bild, optional)
+ */
+function ui_diagramm_saeulen(array $o): string
+{
+    $werte = array_values((array)($o['werte'] ?? []));
+    $n = count($werte);
+    $klein = !empty($o['klein']);
+    $hoechst = 0; $hi = -1;
+    foreach ($werte as $i => [, $w]) { if ((int)$w > $hoechst) { $hoechst = (int)$w; $hi = $i; } }
+    [$schrittWert, $linien] = ui_diagramm_skala($hoechst);
+    $skala = $schrittWert * $linien;
+    $oben = 18; $flaeche = $klein ? 80 : 150; $unten = $klein ? 4 : 22;
+    $hoehe = $oben + $flaeche + $unten;
+    $links = $klein ? 0.0 : 6.0;                       /* Prozent für die Skala */
+    $schritt = $n > 0 ? (100.0 - $links) / $n : 0.0;
+    $breite = $schritt * 0.78;
+    $pz = static fn(float $x): string => rtrim(rtrim(number_format($x, 3, '.', ''), '0'), '.') . '%';
+    $y = static fn(int $w): float => round($oben + $flaeche - ($skala > 0 ? $flaeche * $w / $skala : 0), 1);
+
+    $svg = '<svg class="diagramm-saeulen' . ($klein ? ' diagramm-klein' : '') . '" width="100%" height="'
+         . $hoehe . '" role="img" aria-label="' . ui_e((string)($o['beschreibung'] ?? '')) . '">';
+    if (!$klein) {
+        for ($g = 1; $g <= $linien; $g++) {
+            $wert = $schrittWert * $g;
+            $gy = $y($wert);
+            $svg .= '<line class="gitter" x1="' . $pz($links) . '" y1="' . $gy . '" x2="100%" y2="' . $gy . '"/>'
+                  . '<text class="achse" x="0" y="' . ($gy + 4) . '">' . ui_e(zahl_text($wert)) . '</text>';
+        }
+    }
+    $svg .= '<line class="nulllinie" x1="' . $pz($links) . '" y1="' . ($oben + $flaeche)
+          . '" x2="100%" y2="' . ($oben + $flaeche) . '"/>';
+    /* Höchstens acht Achsenbeschriftungen, unter 480 px vier (`achse-breit`). */
+    $jede = max(1, (int)ceil($n / 8));
+    foreach ($werte as $i => [$text, $w]) {
+        $w = (int)$w;
+        $x = $links + $i * $schritt + ($schritt - $breite) / 2;
+        $mitte = $x + $breite / 2;
+        $sy = $y($w);
+        $svg .= '<g class="saeule' . ($i === $hi ? ' hoechst' : '') . '">'
+              . '<title>' . ui_e((string)$text . ': ' . zahl_text($w)) . '</title>'
+              . '<rect class="saeule-flaeche" x="' . $pz($links + $i * $schritt) . '" y="0" width="'
+              . $pz($schritt) . '" height="' . ($oben + $flaeche) . '"/>'
+              . '<rect class="saeule-wert" x="' . $pz($x) . '" y="' . $sy . '" width="' . $pz($breite)
+              . '" height="' . ($oben + $flaeche - $sy) . '" rx="2"/>'
+              . '<text class="saeule-zahl" x="' . $pz($mitte) . '" y="' . ($sy - 5) . '">'
+              . ui_e(zahl_text($w)) . '</text></g>';
+        if (!$klein && $i % $jede === 0) {
+            $svg .= '<text class="achse achse-x' . (intdiv($i, $jede) % 2 === 1 ? ' achse-breit' : '')
+                  . '" x="' . $pz($mitte) . '" y="' . ($hoehe - 6) . '">' . ui_e((string)$text) . '</text>';
+        }
+    }
+    $svg .= '</svg>';
+    $unter = (string)($o['unter'] ?? '');
+    return '<figure class="diagramm">' . $svg
+         . ($unter !== '' ? '<figcaption class="feld-klein">' . ui_e($unter) . '</figcaption>' : '')
+         . '</figure>';
+}
+
+/**
+ * Das Diagramm „Balken" (`.diagramm-balken`, R4-24, Bild M-R4-24): Anteile
+ * — je Zeile Beschriftung mit Anteil, ein Balken, die Zahl. Kein Kreis:
+ * Anteile nebeneinander liest das Auge an einer gemeinsamen Linie genauer
+ * als an Winkeln.
+ *
+ * DER BALKEN IST EIN KLEINES SVG, KEIN DIV MIT STILATTRIBUT FÜR DIE BREITE:
+ * Ein Stilattribut im PHP-Markup fiele unter `style-src` der CSP, und die
+ * Seite hat keins mehr (`kopfzeilen_lib.php`, P5a/AP4; die
+ * Vollständigkeitsprüfung zählt jedes, auch in einem Kommentar). `width="53%"` an einem
+ * `<rect>` ist ein Attribut der Grafik, kein Stil — und der Balken steht
+ * damit auch ohne Skript.
+ *
+ * $o: zeilen list<[text, wert]>, bezug (die Summe, auf die sich der Anteil
+ *     bezieht)
+ */
+function ui_diagramm_balken(array $o): string
+{
+    $bezug = (int)($o['bezug'] ?? 0);
+    $m = '<div class="diagramm-balken">';
+    foreach ((array)($o['zeilen'] ?? []) as [$text, $w]) {
+        $w = (int)$w;
+        $anteil = $bezug > 0 ? min(100, max(0, prozent_wert($w, $bezug, 'kauf'))) : 0;
+        $m .= '<div class="balken-zeile"><div class="balken-text">' . ui_e((string)$text)
+            . '<span class="zeile-klein">' . ui_e(prozent_text($w, $bezug)) . '</span></div>'
+            . '<svg class="balken-spur" width="100%" height="12" aria-hidden="true">'
+            . '<rect class="balken-grund" width="100%" height="12" rx="4"/>'
+            . '<rect class="balken-fuellung" width="' . $anteil . '%" height="12" rx="4"/></svg>'
+            . '<div class="balken-zahl">' . ui_e(zahl_text($w)) . '</div></div>';
+    }
+    return $m . '</div>';
+}
 
 /* ---------------------------------------------------------------------------
  * TITELZEILE  (.titelzeile)

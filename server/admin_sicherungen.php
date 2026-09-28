@@ -58,6 +58,11 @@ const SICHERN_BUDGET = 20.0;
 
 $notice = null; $error = null; $bericht = null;
 
+/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Was gespeichert,
+ * gesichert, eingespielt, freigegeben oder gelöscht hat, endet mit
+ * `flash_setzen()` und einer Umleitung auf diese Seite; der Einspielbericht
+ * reist über die Sitzung mit (E-R4-33). Sonst wiederholt Neuladen die
+ * Handlung. Eine Abweisung, die nichts geändert hat, bleibt auf der Seite. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $action  = (string)($_POST['action'] ?? '');
@@ -110,6 +115,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $notice = $teile ? implode(', ', $teile) . ' gespeichert.'
                              : 'Es gab nichts zu ändern.';
+        }
+        /* Auch die abgewiesene Aufbewahrung leitet um, wenn das Intervall
+         * davor schon gespeichert war; ohne jede Änderung bleibt sie stehen. */
+        if ($error === null || $teile !== []) {
+            flash_setzen($error !== null ? 'error' : 'notice', (string)($error ?? $notice));
+            header('Location: admin_sicherungen.php');
+            exit;
         }
     }
 
@@ -176,6 +188,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Nicht erzeugt (' . (int)($a['feh'] ?? 0) . '): '
                        . implode(' · ', $e['meldungen']);
             }
+            /* Zahl und Gründe stehen nebeneinander da — die Gründe reisen
+             * deshalb als zweite Meldung mit. */
+            flash_setzen('notice', $notice, '', $error !== null ? ['fehler' => $error] : []);
+            header('Location: admin_sicherungen.php');
+            exit;
         }
     }
 
@@ -219,6 +236,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
                            . fehler_kennung($ex, 'adminbackup') . ').';
                 }
+                /* Auch das Scheitern leitet um: Der Einspielweg kann mittendrin
+                 * abbrechen, und was bis dahin angekommen ist, bleibt stehen. */
+                flash_setzen($error !== null ? 'error' : 'notice', (string)($error ?? $notice), '',
+                             $bericht !== null ? ['bericht' => $bericht] : []);
+                header('Location: admin_sicherungen.php');
+                exit;
             }
         }
     }
@@ -238,13 +261,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $notice = 'Freigegeben für ' . $ziel['email'] . '. Die NutzerIn sieht das '
                     . 'Paket jetzt im eigenen Backup-Bereich und spielt es dort '
                     . 'mit ihrem Wiederherstellungsschlüssel ein.';
+            flash_setzen('notice', $notice);
+            header('Location: admin_sicherungen.php');
+            exit;
         } else {
             $error = 'Die Freigabe liess sich nicht speichern.';
         }
     }
     if ($action === 'widerrufen') {
-        if (edbak_freigabe_widerrufen($kennung)) { $notice = 'Freigabe widerrufen.'; }
-        else { $error = 'Die Freigabe liess sich nicht widerrufen.'; }
+        if (edbak_freigabe_widerrufen($kennung)) {
+            flash_setzen('notice', 'Freigabe widerrufen.');
+            header('Location: admin_sicherungen.php');
+            exit;
+        }
+        $error = 'Die Freigabe liess sich nicht widerrufen.';
     }
 
     /* ---- Löschen (A8.8) -------------------------------------------------
@@ -273,6 +303,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $notice = edbak_paket_loeschen($kennung, $datei)
                 ? 'Paket gelöscht.' : null;
             if ($notice === null) { $error = 'Das Paket liess sich nicht löschen.'; }
+            else {
+                flash_setzen('notice', $notice);
+                header('Location: admin_sicherungen.php');
+                exit;
+            }
         } else {
             $notice = edbak_ordner_loeschen($kennung)
                 ? 'Alle Pakete dieses Ordners wurden gelöscht.' : null;
@@ -281,8 +316,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        . 'Dateien, die nicht von dieser Anwendung stammen, bleibt er '
                        . 'bewusst stehen.';
             }
+            /* Auch das Scheitern leitet um: Eigene Baureste sind dann schon
+             * geräumt, und ein misslungenes `rmdir()` folgt auf die Pakete. */
+            flash_setzen($error !== null ? 'error' : 'notice', (string)($error ?? $notice));
+            header('Location: admin_sicherungen.php');
+            exit;
         }
     }
+}
+
+// Meldung, Gruende und Einspielbericht aus der Umleitung uebernehmen
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ton'] === 'error') { $error = $flash['text']; }
+    else                           { $notice = $flash['text']; }
+    if (is_string($flash['daten']['fehler'] ?? null)) { $error = $flash['daten']['fehler']; }
+    if (is_array($flash['daten']['bericht'] ?? null))  { $bericht = $flash['daten']['bericht']; }
 }
 
 [$ablageBereit, $ablageGrund] = edbak_ablage_bereit();

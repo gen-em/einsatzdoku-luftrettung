@@ -24,7 +24,9 @@ ist `offen` · `teilweise` · `zurückgestellt` · `nur auf Anlass` ·
 bleibt hier, weil nichts erledigt wurde. Ein Eintrag hat höchstens
 **20 Zeilen**, die Kopfzeile eingeschlossen (E-SD-03); jede Folgezeile
 beginnt mit **fünf Leerzeichen** (E-SD-17 — mit vier rendert GitHub ab
-Nr. 100 einen Codeblock, Nr. 196). Ein gekürzter Eintrag endet mit
+Nr. 100 einen Codeblock, Nr. 196). Vor jeder Kopfzeile stehen `<!-- -->`
+und eine Leerzeile, sonst zählt GitHub die Nummern fort (Nr. 340,
+E-R4-62). Ein gekürzter Eintrag endet mit
 `Werdegang bis DD.MM.YYYY: \`docs/Backlog.md@abc1234\`, Nr. NNN.`; dort
 steht die lange Fassung. Die Decken misst `tools/steuerung/decken.py`, und
 Stufe 1 ist rot, wenn eine reißt.
@@ -51,13 +53,14 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340, 341 | 26.09.2026 |
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351 | 27.09.2026 |
-| ab 360 | frei — höchste vergebene Nummer 351 (auf `origin/main` `05dfc12`: 341); 338 war für AR reserviert und blieb frei | 27.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351, 352 | 27.09.2026 |
+| ab 360 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 28.09.2026 |
 
 ---
 
 ## Offen
+
+<!-- -->
 
 21. **Die 43 weiteren Funde der A4-Nachlese sichten.** · gehört zu: 12b · Stand: offen · seit 23.08.2026
      Die Erhebung „toter Code" in P0/A4 hat mit einer zweiten, breiteren
@@ -73,6 +76,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      durch und findet die Kandidaten neu; ein eigenes Paket vorher wäre Arbeit
      ohne Liste. Zuordnung: **P6**.
 
+<!-- -->
+
 23. **`docs/JSON-Vertrag.md` 3.3 nennt eine Reanimationsart, die kein Schreibweg annimmt.** · gehört zu: 13 · Stand: offen · seit 23.08.2026
      Der Vertrag führt `beginn` unter den gültigen Werten
      von `events[].type`; `ingest_tag_nachziehen()` in `ingest.php` speichert das
@@ -87,25 +92,28 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
      Änderung an ihm eine Entscheidung wäre, keine Korrektur.
 
-37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?** · gehört zu: 17 · Stand: teilweise · seit 30.08.2026
+<!-- -->
+
+37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?** · gehört zu: nach v1.0 · Stand: teilweise · seit 30.08.2026
      Befund (Messstand, 5050 Einsätze, CPU sechsfach gedrosselt, 16.09.2026):
-     Die **Zeitraumübersicht** ist der Engpass — `zeitraum.php` ruft
-     `EdMissionTable.erzeuge` ohne `seite`, bei 3983 Einsätzen im Jahr
-     42,61 s bis zur ersten Zeile und 3983 `<tr>` im DOM; die Suche über alle
-     5050 braucht 3,18 s (Seitengrenze 200). Der Suchindex überträgt den
-     gesamten Bestand (1097 Byte je Einsatz), obwohl rund dreißig Filter auf
-     Klartextspalten serverseitig vorschneiden könnten. Sechs stille Kappungen
-     sagen nichts (`dt_liste($userId, 500)`, 120 in `api/day.php`, 400 in
-     `einsatz_verschieben.php`; laut sind nur Import 3000 und Export 5000).
-     Fünf von sechs Zielzahlen aus E-S2-24 sind gehalten, Spuren 3,66 statt
-     3 MB je 1000 Einsätze knapp verfehlt (an frisch eingespieltem Bestand).
-     Erledigt: der Deckel je Konto (P5b/AP6, Web 20.21.0: 5000 Einsätze,
-     250 MB, `507`), die Kontenachse (P3/O9b), Speicher und Wartung (S2).
-     Weg: Seitengrenze oder Monatsvorwahl für die Zeitraumübersicht als
-     eigenes Paket; Vorschneiden im Suchindex; die Kappungen benennen.
-     `post_max_size` der Zielanlage steht auf Betrieb → Status (Plattform-
-     karte) — seit Staging läuft, ist das ein Seitenaufruf, keine Messung.
+     Die Zeitraumübersicht war der Engpass (42,61 s für 3983 Einsätze im
+     Jahr). Der Suchindex überträgt den gesamten Bestand (1097 Byte je
+     Einsatz), obwohl rund dreißig Filter auf Klartextspalten serverseitig
+     vorschneiden könnten. Fünf von sechs Zielzahlen aus E-S2-24 sind
+     gehalten, Spuren 3,66 statt 3 MB je 1000 Einsätze knapp verfehlt.
+     Erledigt: der Deckel je Konto (P5b/AP6), die Kontenachse (P3/O9b),
+     Speicher und Wartung (S2); mit R4-17 (Web 21.4.0) die Seitengrenze 200
+     der Zeitraumübersicht (4071 Einsätze: 88 s auf 9 s) und die drei
+     stillen Kappungen der Tageslisten (500, 120, 400), die jetzt sagen,
+     dass sie greifen; mit R4-27 (Web 21.6.1) das Zeichnen in Stücken — die
+     Tabelle ist nach 3,7 s zu sehen, fertig ist die Seite nach 7,0 s.
+     Weg (nach v1.0, E-R4-16): Vorschneiden im Suchindex; Monatsvorwahl der
+     Zeitraumübersicht, falls die 7 s bis „fertig" stören — sie gehen auf
+     Entschlüsseln und Layout über alle Einsätze des Jahres zurück.
+     `post_max_size` der Zielanlage steht auf Betrieb → Status.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 37.
+
+<!-- -->
 
 43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt — und das Transportziel auch nicht.** · gehört zu: 12a · Stand: offen · seit 30.08.2026
      Befund: Einsatzort und Adresse sind Ende-zu-Ende verschlüsselt, die
@@ -124,6 +132,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Nicht vorgezogen, weil das Transportziel allein nichts verbirgt, solange
      `mission_phases` die Koordinate der Ankunft trägt.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 43.
+
+<!-- -->
 
 46. **Das Altformat des Backups wird mit NaDoku 1.0 abgeschafft.** · gehört zu: 14 · Stand: teilweise · seit 31.08.2026
      Befund: Seit Web 11.0.0 schreibt die Anwendung Containerfassung 4; die
@@ -145,6 +155,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      keine alte Nutzlast, auch nicht die letzte.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 46.
 
+<!-- -->
+
 50. **Der Versand liest je Konto ein Verzeichnis.** · gehört zu: nach v1.0 · Stand: offen · seit 01.09.2026
      `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
      Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
@@ -159,6 +171,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      die Liste je Ziel **einmal rekursiv** zu holen, wo das Protokoll es
      hergibt, und nur bei Zweifel nachzufragen. Erst messen, dann bauen.
 
+<!-- -->
+
 51. **Die Suchseite verarbeitet 5 000 Einträge, um 200 zu zeigen.** · gehört zu: nach v1.0 · Stand: offen · seit 01.09.2026
      Befund (S2/AP9, 5002 Einsätze, Drossel 6×): 3,77 s bis die geschützten
      Spalten lesbar sind, davon rund 0,1 s Entschlüsselung der 200 gezeigten
@@ -169,6 +183,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Suchindex (E-S2-16). Vorher messen, welcher Posten vor der Tabelle
      wiegt — „es ist die Krypto" war in AP9 schon einmal falsch.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 51.
+
+<!-- -->
 
 52. **WebDAV als viertes Backup-Ziel.** · gehört zu: nach v1.0 · Stand: offen · seit 01.09.2026
      Aus E-S2-22, dort ausdrücklich in den Backlog verwiesen. Die Schnittstelle
@@ -183,6 +199,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      über curl **kann** man prüfen, und dann sollte man auch. Das ist eine
      Festlegung und kein Handgriff.
 
+<!-- -->
+
 53. **Konto-Schlüsselpaar für versiegelte Serversicherungen.** · gehört zu: 12a · Stand: offen · seit 01.09.2026
      Befund (E-S2-19): Nächtliche Backups je Konto ohne Browser sind
      abgelehnt, weil der Server den Inhaltsschlüssel nicht hat und nicht
@@ -195,6 +213,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      die NutzerIn öffnen kann, für die Verwaltung eine Rückfallebene ist —
      bei einem verlorenen Konto ist sie es nicht.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 53.
+
+<!-- -->
 
 55. **Das Komplett-Backup kennt keinen scharfen Schnappschuss.** · gehört zu: nach v1.0 · Stand: offen · seit 01.09.2026
      Aus S2/AP8. Der Dump entsteht über mehrere Anfragen; ein Lesestand über
@@ -213,6 +233,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
      ---
 
+<!-- -->
+
 62. **Logodateien tragen teilweise wieder die alten Farbwerte.** · gehört zu: 13 · Stand: offen · seit 31.08.2026
      Befund (B-S4-01; bis 02.09.2026 Nr. 49): Der Commit „Update Logos" hat
      alte Werte zurückgebracht — `gen-em_logo_helicopter.svg` führt `#587abc`,
@@ -230,19 +252,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Bilddatei an.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 62.
 
-76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert hat.** · gehört zu: 17 · Stand: teilweise · seit 02.09.2026
-     Befund: `demo_reset_wenn_faellig()` (`demo_lib.php`) setzt zeitgesteuert
-     zurück, ohne zu prüfen, ob eine Besucherin etwas verändert hat.
-     Gemessen 15.09.2026 (Prüfstand, drei Läufe): 5859 ms mit dem alten,
-     6610 ms mit dem neuen Bestand (106 Einsätze, 63 752 Spurpunkte) —
-     0,75 s mehr für 20 % mehr Einsätze.
-     Wirkung: Der Reset läuft huckepack auf einer Anfrage; die Besucherin,
-     die ihn auslöst, wartet sechseinhalb Sekunden. Das ist das Argument für
-     eine Änderungsmarke, nicht die Last. Produktiv (Datenbank auf anderem
-     Rechner) und gleichzeitige Zugriffe sind nicht gemessen.
-     Weg: entscheiden — durchlaufen lassen oder Zähler im Schreibweg des
-     Demo-Kontos, Reset nur bei gesetzter Marke.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 76.
+<!-- -->
 
 77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12b · Stand: teilweise · seit 02.09.2026
      Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und
@@ -254,6 +264,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      302-Weiterleitung, der Notausgang `php update.php` bleibt.
      Weg: Offen ist allein, dass die Adresse noch existiert — das räumt P6.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 77.
+
+<!-- -->
 
 80. **Auswertung der Gerätestatistik — und die zweite Hälfte der Frage.** · gehört zu: Zuarbeit · Stand: teilweise · seit 02.09.2026
      Befund: Rest von Nr. 59 (Speicherung, Web 12.9.0). Gebaut ist
@@ -269,6 +281,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Auswertung läuft seit Web 15.3.0, der Text steht aus (Rahmenplan 6.3);
      die Momentaufnahme am Einsatz (`missions.geraet_art`) ist nicht bestellt.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 80.
+
+<!-- -->
 
 90. **Der Simulator kann keinen Verbindungsabriss herstellen.** · gehört zu: nach v1.0 · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus S5 Paket C.*
@@ -290,6 +304,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      oder eine Prüf-Einstellung in der App, die einen negativen Code
      einspeist (dann aber als Fremdkörper im ausgelieferten Code).
 
+<!-- -->
+
 92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.** · gehört zu: 12a · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus S5 Paket C.*
      Für Stufe II verlangt die Abnahme „je Vertreter ein Bild der `PairView`".
@@ -306,17 +322,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): Der erste Abnehmer einer
      Tastenfolge ist S11 (Uhr Haupt); dort entsteht die nächste Ansicht.
 
-95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.** · gehört zu: 17 · Stand: offen · seit 03.09.2026
-     *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
-     Gemessen: **9 Diensttage, 5 Einsätze und 14 439 Spurpunkte**, die kein
-     Prüffall wieder abräumt. Sie fallen nicht auf, solange niemand das
-     Admin-Konto ansieht — und verfälschen jede Zahl, die jemand daraus zieht.
-     **Vorschlag:** Aufräumen im `@After` der betroffenen Fälle, oder ein
-     eigenes Prüfkonto, das der Lauf am Ende löscht. Gehört zum S4-Rest, weil
-     er dieselben Prüffälle anfasst.
-     **Stand 06.09.2026 (Fassung 32):** Der S4-Rest ist gemergt und hat den
-     Punkt nicht mitgenommen; Nr. 115 (aus Paket E) meldete denselben Fund und
-     ist hier aufgegangen. Zuordnung jetzt: **Backlog-Runde (Android)**.
+<!-- -->
 
 96. **Uhr und Handy sagen nicht, dass gewartet wird.** · gehört zu: nach v1.0 · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-08).*
@@ -329,6 +335,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Android-Auslieferung gekostet, für eine Lage, die wenige Minuten dauert.
      **Nach v1.0** neu abwägen — dann gibt es mehr als eine Uhr.
 
+<!-- -->
+
 99. **Fassungsprüfung auf Klick.** · gehört zu: nach v1.0 · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R66, Option A2).*
      Ein Knopf „Auf neue Fassung prüfen" auf der Wartungsseite, der einmalig
@@ -336,6 +344,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Banner. Nur, wenn Selbsthoster es verlangen; die eigene Installation
      braucht es nicht, weil Betreiberin und Entwicklung dieselben sind.
      **Nach v1.0.**
+
+<!-- -->
 
 100. **Play-API-Upload aus der Auslieferungskette.** · gehört zu: nach v1.0 · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R67).*
@@ -346,36 +356,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
      ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
 
-114. **Abgewiesene Pakete sichtbar machen und ausräumen.** · gehört zu: 17 · Stand: teilweise · seit 03.09.2026
-     Befund (S5 Paket E, B-S5Z-06): Antwortet der Server auf ein Paket mit
-     400, markiert der Puffer es als `fehlerhaft = 1` und nimmt es aus
-     Warteschlange und Anzeige — die App sagt „Alles gesendet", beim Server
-     bleibt ein Segment offen. Paket E2 zeigt die Zahl („N Pakete vom Server
-     abgewiesen"); die Pakete bleiben samt GPS-Spur dauerhaft liegen
-     (Krypto-Review AN-2).
-     Erledigt (Android 0.14.0, 07.09.2026): `Puffer.abgewieseneRaeumen()`
-     löscht abgeschlossene abgewiesene Pakete samt Punkten und Phasen nach
-     30 Tagen und beim Trennen sofort; beendete `dienst`-Zeilen ohne Pakete
-     gehen mit, die laufende nie (`AbgewieseneTest`, 10 Fälle).
-     Offen ist der Bedienweg: ansehen, was drinsteht, ausleiten oder
-     verwerfen. Zu entscheiden, ob Ausleiten (als Datei zum Nachreichen von
-     Hand — braucht ein Format) oder Verwerfen mit Rückfrage (Datenverlust
-     auf Knopfdruck). Ohne Weg wird die Zahl zur Tapete.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 114.
-
-122. **Freie Zeiträume und Diagramme in der Statistik.** · gehört zu: 17 · Stand: offen · seit 05.09.2026
-     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
-     Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
-     6 Monate — und zeigt Zahlen in Tabellen. Für den Blick auf einen
-     bestimmten Monat oder auf eine Entwicklung über ein Jahr reicht das
-     nicht. **Zu tun:** ein frei wählbarer Zeitraum (Von/Bis wie in der
-     Einsatzsuche) und eine grafische Darstellung der Entwicklung. Beides
-     sind **neue Darstellungen** und brauchen Mockup und Freigabe
-     (`CLAUDE.md` 5); die Diagrammfrage berührt außerdem die Zusage „keine
-     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
-     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
-
-     **Zuordnung (20.09.2026): Schritt 17** (Backlog-Runde 4) — nicht 10c. Entschieden mit der Freigabe des P5c-Konzepts (E-P5c-23, F-P5c-4).
+<!-- -->
 
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.** · gehört zu: 12 · Stand: offen · seit 06.09.2026
      Zwei Fragen, keine Fehler (R78, 06.09.2026; bis 27.09.2026 drei):
@@ -396,6 +377,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      entpackten Schlüssel im `sessionStorage`.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 146.
 
+<!-- -->
+
 154. **Handy-App liest `kept_points` und `kept_meta` nicht.** · gehört zu: 13 · Stand: offen · seit 07.09.2026
      *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
      `Sendeantwort.kt` nimmt aus der Antwort von `ingest.php` nur
@@ -405,6 +388,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      ein Erfolg aus. Der Server sagt es; die App hört es nicht. Beide Felder
      in `Sendeantwort` aufnehmen und in der Ergebniszeile nennen; Prüffall in
      `SendeantwortTest`. Zuordnung: nächste Android-Stufe.
+
+<!-- -->
 
 157. **Handy-App: Sackgasse zwischen „Schlüssel abgewiesen" und „Gerät trennen".** · gehört zu: 13 · Stand: offen · seit 07.09.2026
      *Aufgenommen 07.09.2026 aus dem Emulatorlauf zu Android 0.14.1.* Wird
@@ -423,21 +408,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      aus Nr. 114 ihn beim Trennen mitnimmt. Prüffall in `KopplungTest`.
      Zuordnung: nächste Android-Stufe.
 
-158. **`days` trägt kein `created_at`.** · gehört zu: 17 · Stand: offen · seit 08.09.2026
-     *Aufgenommen 08.09.2026 bei der Neufassung der Tagesregel (Nr. 134).* Für
-     Einsätze und Ruhesegmente ist der Anker des Ersetzfensters die Serverzeit
-     des Anlegens — genau deshalb kann eine falsch gestellte Geräteuhr das
-     Fenster nicht steuern. Für den **Diensttag** gibt es diese Spalte nicht.
-     Die Frage „wird an diesem Tag noch gearbeitet?" wird deshalb über das
-     jüngste `created_at` seiner Datensätze beantwortet (`ingest_tag_offen()`
-     in `ingest.php`). Das ist ein ehrlicher Ersatz und in der Sache meist
-     dasselbe, aber es ist eine Abfrage über zwei Tabellen statt eines
-     Spaltenwerts, und ein Tag, dessen Datensätze alle gelöscht wurden, hat gar
-     keinen Anker mehr. Behebung: `days.created_at` mit Migration (Rückfall auf
-     `started_at`, gekappt wie bei `rest_segments`), danach
-     `ingest_tag_offen()` auf einen Wert zurückführen. Kein Fehler, eine
-     Vereinfachung — und die Voraussetzung dafür, die Regel in einem Satz
-     erklären zu können. Zuordnung: Backlog-Runde.
+<!-- -->
 
 161. **Aus einer Aufzeichnung ein Stück löschen können.** · gehört zu: 12a · Stand: offen · seit 08.09.2026
      *Aufgenommen 08.09.2026 beim Bauen von Nr. 160.* Ein vergessener Dienst
@@ -454,6 +425,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): S11 verlegt die
      Spurfunktionen in den Browser (Nr. 43); ein Schnitt über `spur_lib.php`
      davor wäre dort neu zu bauen.
+
+<!-- -->
 
 187. **Alle „Anhebungs"-Wege werden mit NaDoku 1.0 abgeschafft.** · gehört zu: 14 · Stand: offen · seit 14.09.2026
      Entschieden 14.09.2026 (S10/AP3): Ab 1.0 gibt es nur neue Konten, also
@@ -476,6 +449,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      keine ungenutzten Ausnahmen.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 187.
 
+<!-- -->
+
 188. **Eine Dokumentenprobe: kein Prüfmittel misst Verweise zwischen Dokumenten.** · gehört zu: 12b · Stand: teilweise · seit 14.09.2026
      Befund (S10-Nachlauf): „Linkprobe 117 Verweise, 0 Abweichungen" belegt
      nichts über `docs/` — die Linkprobe liest `<seite>.php?…` in `server/`.
@@ -496,6 +471,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      und die Zahl der geprüften Verweise steht dabei. Zuordnung P6 (R69),
      früher, wenn vorher ein weiteres Konzept gelöscht wird.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 188.
+
+<!-- -->
 
 198. **Die Zeitraumübersicht zählt Windendienste nur luftgebunden.** · gehört zu: nach v1.0 · Stand: nicht umsetzen · seit 14.09.2026
      Befund (Demo-Ausbau AP0): Seit Web 20.3.0 darf ein Rettungsmittel des
@@ -518,6 +495,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel `nach v1.0` seit 26.09.2026 (R4-01, Q-R4-12): kein „nie" im Vokabular.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 198.
 
+<!-- -->
+
 200. **Bounce-Postfach: Unzustellbares erkennen, nicht nur zählen.** · gehört zu: nach v1.0 · Stand: nicht umsetzen · seit 15.09.2026
      Befund (Konzept P5a, E-P5a-14; Plattformprofil PP-7): Die
      Mail-Warteschlange zählt Zustellversuche und führt eine
@@ -536,6 +515,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel `nach v1.0` seit 26.09.2026 (R4-01, Q-R4-12): kein „nie" im Vokabular.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 200.
 
+<!-- -->
+
 201. **`Retry-After` in Uhr und Handy auswerten.** · gehört zu: 13 · Stand: offen · seit 15.09.2026
      *Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7).* Beide Clients
      behandeln jeden Antwortcode außer 200/400/401/403/413 als „später
@@ -545,6 +526,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      genannte Zeit abzuwarten statt bei jedem Auslöser anzuklopfen. Niedrig;
      Uhr-Stufe und Android-Stufe je eine Zeile in der Antwortauswertung
      (`Uploader.mc`, `Sendeantwort.kt`).
+
+<!-- -->
 
 202. **Zentralisierung Web — eine Stelle je Sache (Sammelnummer, Schritt 15, R83).** · gehört zu: Pflegeaufgabe · Stand: nur auf Anlass · seit 16.09.2026
      Befund (16.09.2026, nachgemessen 20.09.2026 an `862ca7f`): Eine eigene
@@ -566,38 +549,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `Pflegeaufgabe` (R4-01, Q-R4-12): Jeder Anlass träfe Dateien von 18.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 202.
 
-207. **`gen-em.org` steht 96× in `tools/` und `.github/`.** · gehört zu: 17 · Stand: offen · seit 16.09.2026
-     Befund (P5a/AP7; `grep -rn "gen-em\.org" tools/ .github/ | wc -l` →
-     96, `server/` → 0 seit Web 20.9.0, Nr. 203): In den Prüfmitteln stehen
-     Prüfkonten (`ingestprobe@gen-em.org`, `demo@gen-em.org`,
-     `messstand@gen-em.org` …), Schema-`$id`s (`https://gen-em.org/nadoku/…`)
-     und Anleitungen in den `LIESMICH.md`. Kein Fehler — ein Prüfkonto ist
-     eine erfundene Adresse —, aber der Name einer realen Domain in einem
-     Repositorium, das weitergegeben werden soll.
-     Weg: `.invalid` (RFC 2606) für alle Prüfkonten — die Mailprobe benutzt
-     es bereits —, eine `urn:`-Kennung oder `example.org` für die
-     Schema-`$id`s. Mechanisch, berührt aber Bestandsdaten: Eine örtliche
-     Anlage mit `demo@gen-em.org` muss neu aufgesetzt werden, sonst greift
-     kein Kreislauf mehr. Deshalb ein Paket mit Ansage, nicht nebenbei.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 207.
-
-209. **`docs/Design.md` führt die erzeugte Bausteintabelle mit falschen Zeilennummern.** · gehört zu: 17 · Stand: offen · seit 16.09.2026
-     Die Tabelle trägt den Vermerk „ERZEUGT von `tools/design/tabellen.py` —
-     nicht von Hand ändern", und ihre Spalte `ui.php` nennt zu jeder Funktion
-     eine Zeilennummer. Diese Nummern liegen durchgängig **rund 26 Zeilen zu
-     niedrig**: `ui_seite_start()` steht dort mit 54 und im Code bei 80.
-     Ursache ist schlicht, dass das Werkzeug seit einigen Paketen nicht
-     gelaufen ist.
-
-     **Das ist kein Schönheitsfehler:** Eine erzeugte Tabelle, die nicht mehr
-     zu ihrer Quelle passt, ist schlechter als keine — wer ihr folgt, landet
-     mitten in einer anderen Funktion und hält das für den Baustein. Abhilfe
-     ist ein Aufruf (`python3 tools/design/tabellen.py alle`); der Punkt steht
-     hier, weil dabei **alle vier** erzeugten Tabellen neu entstehen und das
-     Ergebnis gegengelesen werden will.
-
-     *Aufgenommen 16.09.2026 in P5a/AP8, gefunden bei der Bestandsaufnahme der
-     Bausteine.*
+<!-- -->
 
 210. **`ingest.php` läuft bei gleichzeitigen Uploads auf denselben Diensttag in einen Deadlock.** · gehört zu: 18 · Stand: teilweise · seit 16.09.2026
      Befund (P5a/AP9, `tools/verbindungsprobe/`, 16.09.2026): Zwanzig
@@ -618,6 +570,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Abnahme: `php tools/verbindungsprobe/probe.php --frei 20` meldet 0 × 503
      und 0 Gedrängel im Fehlerprotokoll.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 210.
+
+<!-- -->
 
 213. **Die Zustandsdatei der Auslieferungskette lag im Webroot.** · gehört zu: PK · Stand: teilweise · seit 16.09.2026
      Befund (Durchsicht des Auftraggebers; behoben am selben Tag, Web
@@ -640,6 +594,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      (wie Nr. 129).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 213.
 
+<!-- -->
+
 227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole mehr.** · gehört zu: PK · Stand: teilweise · seit 17.09.2026
      Befund (P5b-Zweig, 17.09.2026): `tools/vollstaendigkeit/` prüft
      „Unicode-Zeichen als Symbol im Markup", zählte aber `…` und `→` mit —
@@ -657,6 +613,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Konzept SD (4.7, Schritt 6) mit `Stand: teilweise` stehen, bis die
      Prüfliste abgehakt ist; nach Erledigt verschiebt ihn die Backlog-Runde.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 227.
+
+<!-- -->
 
 228. **Proof-of-Work im Browser als dritte Stufe gegen Registrierungs-Spam.** · gehört zu: 18 · Stand: nur auf Anlass · seit 17.09.2026
      Befund (Konzept P5b, R37 (4) „notfalls"): R37 schließt ein CAPTCHA aus
@@ -677,6 +635,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Registrierung bleibt unabhängig davon, ob die Adresse frei, bekannt
      oder Wegwerf ist (Enumerationsschutz E-P5b-13, Δ < 50 ms).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 228.
+
+<!-- -->
 
 229. **Die Uhr sagt „abgemeldet", wo „gesperrt" steht — und der Ausweg, den sie nennt, ist versperrt.** · gehört zu: 13 · Stand: zurückgestellt · seit 17.09.2026
      Befund (Konzept P5b, E-P5b-12): `ingest.php` antwortet 403 bei
@@ -699,6 +659,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `ingest.php` im Vertrag kennt weder 403 noch 507.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 229.
 
+<!-- -->
+
 230. **Die Wegwerfdomain-Liste altert still und muss mit jeder Auslieferung nachgezogen werden.** · gehört zu: Pflegeaufgabe · Stand: teilweise · seit 17.09.2026
      Befund (Konzept P5b, E-P5b-23): `server/wegwerfdomains.txt` stammt aus
      `disposable-email-domains` (CC0 1.0; bei der Auswahl 8 870 Domains,
@@ -720,6 +682,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      die Quelle abruft — er machte jeden Lauf von einem fremden Host abhängig.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 230.
 
+<!-- -->
+
 232. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.** · gehört zu: 18 · Stand: nur auf Anlass · seit 17.09.2026
      *Aufgenommen 17.09.2026 (P5b/AP9).* Die Konto-Rückfrage fragt nach 30
      Tagen, 6 Monaten und dann jährlich; die Betreiber-Rückfrage alle drei
@@ -740,6 +704,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel 18 seit 26.09.2026 (R4-01, Q-R4-12): Alle Aufrufer von
      `einstieg_lib.php` liegen in Dateien, die Schritt 18 umbaut (Nr. 233).
 
+<!-- -->
+
 233. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.** · gehört zu: 18 · Stand: offen · seit 17.09.2026
      *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
      `kdf_anteil_alt` mit auf dem Schlüsselblatt. Die Rückfrage fragt ihn
@@ -754,6 +720,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
      dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
      und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
+
+<!-- -->
 
 234. **Kein Prüfmittel fährt den Weg, den eine frisch ausgelieferte Anlage geht — Deploy, Anmeldung, `update.php`.** · gehört zu: PK · Stand: teilweise · seit 18.09.2026
      Befund (P5b-Deploy auf Staging; Anlass behoben in Web 20.24.1): Zwei
@@ -775,6 +743,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Prüfmittel fehlt.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 234.
 
+<!-- -->
+
 236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.** · gehört zu: PK · Stand: offen · seit 18.09.2026
      *Aufgenommen 18.09.2026, Merkposten mit Datum.*
 
@@ -789,6 +759,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
      Zu tun: **vor dem Datum** einmal gegen ein `ubuntu-26`-Label gegenprüfen,
      solange es beide gibt.
+
+<!-- -->
 
 237. **Der Täter-Finder des Bilderlaufs findet den Täter nicht.** · gehört zu: PK · Stand: offen · seit 18.09.2026
      Befund (beim Beheben von Nr. 221): Der Bericht trägt seit Web 20.16.2
@@ -808,19 +780,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      verschweigt, kostet die Stunde, die es sparen sollte.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 237.
 
-239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php` mit.** · gehört zu: 17 · Stand: offen · seit 20.09.2026
-     Befund (beim Beheben von Nr. 238): `komplett_lib.php` schickt jeden
-     Tabellen- und Spaltennamen durch eine Quotierungsfunktion;
-     `backup_lib.php` setzt die Spaltenliste mit `implode(',', $cols)`
-     ungequotet zusammen — und in `$cols` fließen über `$extraCols` die
-     Namen aus dem Feldkatalog, also Namen, die noch dazukommen. Heute
-     ungefährlich, weil nach Nr. 238 kein Name reserviert ist; die Bauform
-     ist der Punkt: Genau diese Stelle hätte auf MySQL 8.4.0–8.4.10 das
-     Einspielen einer Sicherung unmöglich gemacht.
-     Weg: dieselbe Quotierung an beiden Stellen der Sicherung, und die
-     Frage, ob eine gemeinsame Helferfunktion sinnvoller ist als zwei
-     Kopien — sie wäre der Ort, an dem der nächste Schreibweg sie findet.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 239.
+<!-- -->
 
 240. **Der Rundlauf-Prüffall des Handy-Moduls läuft in der Kette nie.** · gehört zu: PK · Stand: offen · seit 20.09.2026
      Befund (beim Beheben des Robolectric-Downloads): `showStandardStreams`
@@ -839,6 +799,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      soll.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 240.
 
+<!-- -->
+
 242. **Sitzungsbindung per Cookie-Token — benannt, nicht mitgenommen.** · gehört zu: 18 · Stand: offen · seit 20.09.2026
      *Aufgenommen 20.09.2026 (E-SA-09 des Konzepts Sitzungsablage).*
      Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
@@ -852,6 +814,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      (Cookie-Handling — Uhr und Handy sind nicht betroffen, nur der Browser;
      Reset-Fluss; Wechselwirkung mit `users.session_epoch`) und gehört nicht
      in einen Verzeichniswechsel.
+
+<!-- -->
 
 247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.** · gehört zu: 18 · Stand: offen · seit 20.09.2026
      Befund (V4 der P5c-Vorbereitung): Es gibt keinen Wechsel. Wer
@@ -870,6 +834,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      mit eigener Prüfung; bis dahin gilt im Betreiberhandbuch: Der Schlüssel
      wird nicht gewechselt, das Blatt gehütet (Quartalsrückfrage E-P5b-10).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 247.
+
+<!-- -->
 
 249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
      *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
@@ -891,7 +857,9 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Passwort, oder wenn der Rückweg ausgeschaltet ist (Statuszeile
      „Rückweg-Prüfung" orange).
 
-250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.** · gehört zu: 17 · Stand: offen · seit 20.09.2026
+<!-- -->
+
+250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
      *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
      `post_ende()`).* Zugeordnet: **Schritt 17**.
 
@@ -903,6 +871,14 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      15 verschiebt Code an eine Stelle und ändert keine Wege durch die
      Anwendung. Umleiten nach POST ist ein geänderter Weg — er gehört in eine
      Runde, die Wege ändern darf.
+     **Teilweise erledigt 27.09.2026 mit R4-11 (Web 21.1.9):** elf Seiten
+     leiten um, `flash_setzen()` trägt Ort, Ton und Ergebnis (E-R4-33 bis
+     -36). **Offen: `betrieb_server.php`** — auf der Liste von Schritt 18
+     und deshalb dort (Konzept R4 2.3); der Weg ist derselbe.
+     **Zuordnung in 18 (28.09.2026):** Paket SR-02, das `betrieb_server.php`
+     ohnehin um eine Karte erweitert (Konzept SR, E-SR-37).
+
+<!-- -->
 
 251. **Cookie-Attribut `secure` der Sitzung ist in zwei Arten HTTPS-abhängig, in zwei fest.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
      *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-12).* Zugeordnet:
@@ -922,6 +898,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      herstellt. Die Entscheidung für Schritt 18 ist damit **eine Zeile in
      einer Tabelle**, nicht mehr eine Suche über neun Dateien.
 
+<!-- -->
+
 252. **Gelaufene Migrationen fragen das Schema 57× von Hand.** · gehört zu: 14 · Stand: offen · seit 20.09.2026
      *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-04).* Zugeordnet:
      **P8** (R66, neues Migrationsregister).
@@ -936,26 +914,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      sie schon lief. Das Register in P8 löst es an der Wurzel; bis dahin
      steht im Zählmittel eine **Decke von 57** — sie darf nicht wachsen.
 
-259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen fallen, ihr Kernvergleich läuft gar nicht.** · gehört zu: 17 · Stand: offen · seit 21.09.2026
-     Befund (Schritt 15 AP3): `tools/gpxprobe/probe.php` hält den
-     Referenzexport vom 15.09.2026 gegen die GPX-Dateien des Demo-Kontos.
-     Nach einem Demo-Reset haben die Einsätze neue Kennungen: „190 von 204
-     ohne Gegenstück", drei Folgefehler — und der punktweise Vergleich
-     meldet „0 von 204 Dateien verglichen (0 Abweichungen)": eine Null, die
-     nichts gemessen hat, neben Nullen, die etwas gemessen haben. 95/4 vor
-     und nach dem Paket identisch — der Befund liegt nicht am Code.
-     Der Reset hängt nicht an der Jobschlange, sondern an `auth_guard.php`
-     (`demo_reset_wenn_faellig()` bei jeder Anmeldung des Demo-Kontos nach
-     `DEMO_RESET_SEKUNDEN` = 1800); `jobs_pause()` hilft nicht. Das
-     richtige Mittel steht in `tools/klickprobe/LIESMICH.md`:
-     `UPDATE app_state SET v = UNIX_TIMESTAMP() WHERE k = 'demo_letzter_reset';`
-     verschiebt den nächsten Reset um 30 Minuten.
-     Weg: Die Probe hält den Reset selbst auf und setzt das Demo-Konto aus
-     der Fixture zurück, oder sie legt sich ein eigenes Konto an; jedenfalls
-     sagt sie, wenn ihr Hauptteil nichts geprüft hat. Vorbild ist die
-     Klickprobe, die einen Reset mitten im Lauf meldet (42 von 48, mit
-     Pause 48 von 48).
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 259.
+<!-- -->
 
 261. **Staging bewahrt zwei Komplett-Stände auf — der Hotfix-Weg braucht mehr.** · gehört zu: Zuarbeit · Stand: offen · seit 21.09.2026
      Befund (Kette II, AP7): `KOMP_AUFBEWAHRUNG_VORGABE` steht auf 2
@@ -976,6 +935,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      will, weiß nur sie.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 261.
 
+<!-- -->
+
 262. **Atomare Auslieferung — umschalten statt überschreiben.** · gehört zu: 14 · Stand: offen · seit 21.09.2026
      *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Auslöser:
      **P8 oder ein Hosterwechsel.** Priorität: niedrig.
@@ -995,6 +956,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      her, und ohne sie wäre das Umschalten ein Verzeichnis-Umbenennen —
      schneller als 688 Dateien, aber nicht atomar. Der Gewinn hinge am Hoster,
      und genau deshalb hängt der Punkt an P8 oder einem Wechsel.
+
+<!-- -->
 
 263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.** · gehört zu: 12 · Stand: offen · seit 21.09.2026
      *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Priorität:
@@ -1017,6 +980,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      löst — die Entscheidung gehört in einen eigenen Durchgang, nicht in einen
      Nachtrag.
 
+<!-- -->
+
 264. **Die Fremd-Aktion des Transports ablösen.** · gehört zu: PK · Stand: nur auf Anlass · seit 21.09.2026
      Befund (Kette II, Einschub Abschnitt 8): Der Transport läuft über
      `SamKirkland/FTP-Deploy-Action`; Kette II/AP4 hat sich gegen eine
@@ -1033,6 +998,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Auslöser, und erst dann: erneute Abbrüche, Bedarf an Wiederaufnahme
      oder ein Ende der Pflege der Aktion.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 264.
+
+<!-- -->
 
 265. **Verweise von `.github/` in die Dokumentation hält kein Prüfmittel nach.** · gehört zu: PK · Stand: nur auf Anlass · seit 21.09.2026
      *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-02).*
@@ -1055,65 +1022,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel PK seit 26.09.2026 (R4-01, Q-R4-12): `auslieferung.yml` gehört der
      Kette (PK-06 bis PK-08).
 
-271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr Ton bleibt „info", auch wenn ein Fehler darin steht.** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Gefunden bei der AP8-Vermessung (Schritt 15, 22.09.2026) in
-     `assets/schneiden.js`. Die Stelle erzeugt keine Meldung, sondern einen
-     *Platz* für eine: `<div class="meldung meldung-info" role="status"
-     data-vorher><p></p></div>`, später dreimal per `textContent` befüllt. Zwei
-     Abweichungen vom Baustein: **kein Symbol** (`EdHtml.meldung()` setzt eines
-     ein — das wäre eine sichtbare Änderung im Schnittblock), und **der Ton
-     wechselt nie**, so dass Sätze wie „Das Ende liegt vor dem Beginn." in
-     blauer Hinweisfläche stehen statt in roter. Das zweite ist fachlich
-     falsch. **Nicht in Schritt 15 behoben** (E-ZE-10: das Paket ändert kein
-     Verhalten); die Zählzeile Z37 endet deshalb bei 4 statt 0. Beim Anfassen
-     mitzudenken: Der Anker `data-vorher` hängt am Wrapper, den
-     `EdHtml.meldung()` nicht mit Attributen versieht — entweder bekommt die
-     Funktion einen Weg dafür, oder der Anker wandert nach innen.
-
-272. **`<p class="meldung">` im Entsperrdialog ist gar keine Meldung.** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Gefunden bei derselben Vermessung, in `assets/unlock.js`. Dort steht ein
-     Absatz mit der Klasse `meldung` — **ohne** Tonklasse, **ohne** Symbol,
-     **ohne** `role`. Er trägt den Namen des Bausteins, ist aber keiner; das
-     Zählmuster von Z37 hält ihn trotzdem für einen. Zwei Folgen: Die Zeile
-     zählt einen Nachbau, den es nicht gibt (Z37 endet bei 4), und der Absatz
-     bekommt aus `style.css` Regeln, die für einen Kasten gedacht sind.
-     **Nicht in Schritt 15 behoben:** Ihn auf den Baustein umzustellen gäbe
-     ihm einen farbigen Kasten mit Symbol — eine sichtbare Änderung im
-     Entsperrdialog, und die war nicht beauftragt.
-
-273. **Eine dritte Schreibweise für Dauern, die kein Zählmittel sieht.** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Gefunden in Schritt 15 AP8d, aber **nicht** von der Zählzeile Z34: Die
-     misst über eine Namensliste und kennt `dauer()` in `assets/schneiden.js`
-     nicht. Gefunden hat sie erst eine Gegenprobe über das Muster der
-     *Rechnung* (`Math.floor(s / 3600)`). Die Funktion schreibt
-     **„1 h 6 min" mit Leerzeichen**, während der Rest der Anwendung seit
-     AP8d durchgängig „1h 06min" schreibt; dazu trägt sie denselben
-     Rundungsfehler, den AP8d in `EdFormat.dauer()` behoben hat (getrennte
-     Rechnung von Stunden und Minuten erzeugt bei 3599 s ein „60min").
-     **Nicht umgestellt**, weil es eine sichtbare Änderung im Schnittblock
-     wäre und die drei sichtbaren Änderungen von AP8d einzeln freigegeben
-     wurden — diese war nicht darunter. Beim Anfassen: `EdFormat.dauer(s)`
-     genügt, der Leerwert ist dort nicht erreichbar (`Math.max(0, …)`).
-
-275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — laut Handbuch „der klassische Fall".** · gehört zu: 17 · Stand: offen · seit 22.09.2026
-     Befund (Schritt 15 AP9b, in Ortszeit; Zahl berichtigt mit Konzept R4,
-     F-R4-05, nachgemessen am 26.09.2026): 2 von 20 aktiven Diensttagen des
-     Demo-Kontos haben Einsätze auf zwei Kalendertagen — beide bodengebunden
-     (NEF Talwang), beide auf einer Zeitumstellung; der Eintrag zählte 0.
-     Ein luftgebundener Nachtdienst ohne Zeitumstellung fehlt. In AP9b
-     sortierte das Einsatztabellen-Modul „Beginn" über die Zeichenkette
-     `start_hhmm` (01:10 vor 23:50) — jahrealt, von keinem Mittel zu finden,
-     weil es nichts zu messen gab; belegt mit einem im Browser gebauten
-     Nachtdienst. Ob die drei APIs `start_sort` für einen echten Nachtdienst
-     richtig rechnen, ist gelesen, nicht gefahren.
-     Weg (Konzept R4, R4-16): ein luftgebundener Nachtdienst als D22 mit
-     Einsätzen vor und nach Mitternacht über den normalen Einspielweg
-     (`tools/referenzdatensatz/`, `started_at` in UTC); `days.day` bleibt der
-     Dienstbeginn; Matrixzeile, Bilderlauf-Seite, Bedienprobe „Sortierung
-     nach Beginn".
-     Abnahme: Diensttage mit Einsätzen auf mehr als einem Kalendertag in
-     Ortszeit mindestens 3, davon einer luftgebunden ohne Zeitumstellung.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 275.
+<!-- -->
 
 276. **Die tote Spalte `missions.other_resources` löschen.** · gehört zu: 14 · Stand: offen · seit 22.09.2026
      Befund (Schritt 15 AP6): Seit der Migration `2026_07` liegen die
@@ -1131,6 +1040,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Registereintrag fällt mit der Spalte, die Zeile in
      `mf_missions_gruende()` wird gestrichen, nicht umgeschrieben.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 276.
+
+<!-- -->
 
 280. **Die Kartenquelle OpenHikingMap steht in keiner Lizenzliste.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 22.09.2026
      *Gefunden 22.09.2026 von der neuen Regelklasse `netz` (PK-04/1c);
@@ -1151,20 +1062,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Rechteinhaber und Bedingungen. Das gehört nachgesehen, nicht
      abgeschrieben.
 
-287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.** · gehört zu: 17 · Stand: offen · seit 23.09.2026
-     *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
-     Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
-     Seitenende" vor. E-P5c-06 (jünger) sagt: je Karte höchstens ein Satz,
-     alles Erklärende ins Handbuch. 10c AP9 räumt die acht Karten unter
-     Verwaltung und Betrieb ab. **Drei Seiten außerhalb tragen die Karte
-     ebenfalls:** `import.php`, `einsatz_form.php`, `wiederherstellen.php`.
-     Sie liegen nicht im Umfang von 10c, und bis zu ihrer Umstellung gelten
-     dort zwei Regeln nebeneinander.
-
-     *Abnahme:* 0 Karten „Was hier gilt" in `server/`, der Inhalt im Handbuch,
-     jede Karte der drei Seiten mit Verweis auf ihre Sprungmarke. *Fehlschlag:*
-     `grep -l "Was hier gilt" server/*.php` findet eine Seite (außer
-     Kommentaren in `version.php`). **Zuordnung: Schritt 17.**
+<!-- -->
 
 290. **Keine Stufe der Kette richtet eine Anlage ein.** · gehört zu: PK · Stand: offen · seit 23.09.2026
      *Aufgenommen 23.09.2026 mit Web 20.37.3 (Anlass: Nr. 288).* Nr. 288 hat
@@ -1181,6 +1079,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      der Schritt wird rot, wenn man c3b5bff nachstellt (den Rahmen zurück nach
      `db.php`). *Fehlschlag:* grün auf diesem Stand. `docs/Pruefablauf.md`
      führt ihn mit „Anlass: Nr. 288".
+
+<!-- -->
 
 300. **Die Hauptstufe des Prüfstands fährt die Plattformmatrix nur zur Hälfte.** · gehört zu: PK · Stand: offen · seit 24.09.2026
      Befund (Konzept P5c AP4, F-P5c-103): `Pruefablauf.md` 3 verspricht für
@@ -1203,20 +1103,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Zuordnung PK-06 ff.; bis dahin je Paket von Hand.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 300.
 
-323. **Referenzbestand und Demo-Fixture tragen noch Nutzlast 11.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
-     *Aufgenommen 25.09.2026 (P5c/AP8).* Die Referenz
-     `referenz/einsatzdoku-backup-2026-09-15.edbak` und
-     `server/demo/fixture.json.gz` stammen aus der Zeit vor Nutzlast 12; beide
-     führen das leere Feld der Standortauswahl. Das ist **kein Fehler** — der
-     Rückweg überliest es, und genau das zeigt der Kreislauf. Es kostet aber
-     **zwei Übergangsregeln** in `vergleich/ausnahmen/edbak_umlauf.json`
-     (`kopf.version` 11 → 12, das fehlende Feld), und die Fixture trägt eine
-     Angabe, die keine Fassung mehr schreibt. *Zu tun:* Referenz und Fixture
-     neu erzeugen, wie mit Nr. 173; danach werden die beiden Regeln
-     ungenutzt und fallen, mit einem Satz im Änderungsverlauf. Die Regeln in
-     `edbak-alt_umlauf.json` bleiben — die Altformat-Referenz ist eingefroren
-     (Nr. 46). *Abnahme:* edbak-Kreislauf mit 0 unerklärten Abweichungen **und**
-     0 ungenutzten Regeln.
+<!-- -->
 
 324. **Der eigene Bestand kommt einmal über ein Einmal-Skript in die 1.0.** · gehört zu: 14 · Stand: offen · seit 25.09.2026
      Entschieden (P5c/AP8, Auskunft der Betreiberin, E-P5c-127): Die
@@ -1239,49 +1126,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      die 1.0 liest keine Nutzlast von vor 1.0.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 324.
 
-327. **Die Rollenmatrix führt die Handlungen der BetreiberIn-Seiten nicht einzeln.** · gehört zu: 17 · Stand: offen · seit 25.09.2026
-     *Aufgenommen 25.09.2026 in P5c/AP11 (Gegenlesung AP4).*
-     `docs/Technik.md` 4.99p hat eine Zeile je Handlung auf den Seiten, die
-     mehr als eine Rolle erreicht; die 25 POST-Handlungen und 7
-     Seitenaufrufe hinter `require_betreiberin()` (`betrieb_server.php`,
-     `betrieb_jobs.php`, `betrieb_updates.php`, `betrieb_status.php`,
-     `betrieb_sicherheit.php`, `api/schluesselblatt_pruefen.php`) misst die
-     Probe nur über das Tor der Seite. Eine Handlung, die dort **vor** dem
-     Tor stünde, fände sie nicht. Dazu fehlt ein Platzhalter `{support}`: dass
-     der Support andere Support-Konten nicht betreut (E-P5c-99), steht im
-     Code, gemessen ist es nicht. *Zu tun:* die Zeilen nachtragen (Admin und
-     Support 403, BetreiberIn `durch`) und den Platzhalter anlegen. *Abnahme:*
-     Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
-     Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
-
-336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.** · gehört zu: 17 · Stand: offen · seit 24.09.2026
-     *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in
-     `handy/.../Bausteine.kt` hat seit R63 (Android 0.11.0, feste
-     Serveradresse, Backlog Nr. 84) keinen Aufrufer mehr — das Adressfeld der
-     Kopplung war sein einziger. Aufgefallen, als AR-04 die Farbe seines
-     Cursors behob (Orange auf Schnee, 2,23 : 1) und der Emulatorlauf den
-     Cursor zeigen sollte: Es gibt ihn auf keinem Bildschirm. Lint meldet es
-     nicht, weil die Funktion öffentlich ist. Die Behebung bleibt richtig, hat
-     aber keine sichtbare Wirkung.
-     *Weg:* den Baustein austragen, oder ihn stehen lassen, wenn ein
-     Eingabefeld absehbar wiederkommt — dann mit einem Satz, warum.
-     *Abnahme:* kein unbenutzter öffentlicher Baustein in `Bausteine.kt`.
-     **Zuordnung: nächste Android-Runde.**
-
-340. **GitHub zählt die Backlog-Liste fort — neben jedem Eintrag außer dem ersten steht eine falsche Nummer.** · gehört zu: 17 · Stand: offen · seit 26.09.2026
-     *Aufgenommen 26.09.2026 mit R4-01 aus Konzept SD (F-SD-08, Q-R4-11).*
-     `cmark-gfm` macht aus den offenen Einträgen eine einzige Liste
-     `<ol start="21">`; ein Browser nummeriert sie fort und zeigt 21, 22,
-     23 … statt 21, 23, 36. Wer auf GitHub „Nr. 36" sucht, liest daneben
-     eine andere Zahl als im Markdown. Die Decke `backlog-listenpunkte`
-     (`decken.py`) zählt `<li>` gegen Einträge, nicht die Nummern — sie
-     sieht es deshalb nicht.
-     *Weg (Konzept R4, R4-25):* jeden Eintrag als eigene Liste rendern —
-     ein Element zwischen den Einträgen, das die Liste beendet, oder die
-     Nummer im Titel; beides ändert E-SD-16 und die Grammatik in
-     `uebersicht.py` und `decken.py`.
-     *Abnahme:* `cmark-gfm` liefert je Eintrag eine Liste, deren `start`
-     die Nummer des Eintrags ist; die Decke misst das.
+<!-- -->
 
 341. **Sechs Stylesheet-Regeln ohne Verwender und ein Fokus-Zweig, den kein Element erfüllt.** · gehört zu: 12b · Stand: offen · seit 26.09.2026
      *Aufgenommen 26.09.2026 mit R4-05 (Konzept R4).* Die
@@ -1297,6 +1142,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Weg:* im Aufräumpaket von P6 je Stelle nachsehen, ob ein Verwender
      vergessen wurde oder sie weg kann; `Design.md` mitziehen.
      *Abnahme:* Hinweise 13 → 7, jeder übrige mit Grund.
+
+<!-- -->
 
 342. **Die Einsatztabellen von Suche und Zeitraum rollen noch am Schreibtisch.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 26.09.2026
      *Aufgenommen 26.09.2026 mit R4-08 (F-R4-30),* gemessen vom Bilderlauf,
@@ -1315,6 +1162,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Abnahme:* Bilderlauf, Spalte „Rollt bei" für die drei Seiten ab
      1280 px leer.
 
+<!-- -->
+
 343. **`plattform.sh` scheitert an gedrosseltem Docker Hub, obwohl ein Spiegel geht.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 26.09.2026
      *Aufgenommen 26.09.2026 mit R4-09 (F-R4-31).* Der erste Lauf von
      `plattform.sh alles` in dieser Sitzung holte `mariadb:10.6` und
@@ -1329,6 +1178,78 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      und sagt, welchen Weg es genommen hat; `docs/Sandbox-Setup.md` nennt
      ihn. *Abnahme:* ein Lauf mit gesperrtem `registry-1.docker.io` holt die
      Abbilder über den Spiegel und meldet es.
+
+<!-- -->
+
+344. **„Freigabe widerrufen" mit unauflösbarem Handgriff schreibt eine `konto.json` in die Wurzel der Konto-Backups.** · gehört zu: 18 · Stand: offen · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-11 (gefunden vom Umbau der Seite
+     Konto-Backups, F-R4-33).* `edbak_freigabe_widerrufen()` prüft die
+     Kennung nicht. Lässt sich der Handgriff eines POST nicht auflösen, ist
+     die Kennung leer, und `edbak_begleit_schreiben('')` legt eine
+     versiegelte `konto.json` in der Wurzel der Ablage an und meldet Erfolg:
+     „Freigabe widerrufen." Erreichbar ist das über `admin_sicherungen.php`
+     (dort gibt es für den Zweig kein Formular mehr, nur ein handgebautes
+     POST einer Administratorin) und über die Kontoseite. **Nicht in 17**,
+     weil `adminbackup_lib.php` für Schritt 18 frei bleiben soll (Konzept R4
+     2.3, E-R4-37). *Weg:* `edbak_freigabe_widerrufen()` und
+     `edbak_begleit_schreiben()` verlangen `edbak_kennung_gueltig()`, wie es
+     `edbak_ordner_loeschen()` schon tut; die Aufrufer melden dann den
+     Fehlschlag. *Abnahme:* POST `widerrufen` mit einem Handgriff aus
+     Nullen → Fehlermeldung, keine Datei in der Wurzel der Ablage.
+     **Zuordnung in 18 (28.09.2026):** Paket SR-03, das `adminbackup_lib.php`
+     ohnehin offen hat; die Gegenlesung liest es mit (Konzept SR, E-SR-37).
+
+<!-- -->
+
+345. **Die Installationsseite meldet Erfolg, ohne zu wissen, ob gespeichert wurde.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-11 (F-R4-34).* Zwei kleine Lücken auf
+     `admin_installation.php`, beide älter als die Umleitung nach POST:
+     „Logo-Standard" verwirft den Rückgabewert von `app_state_setzen()` und
+     meldet „Standard der Installation: …" auch, wenn das Schreiben
+     scheiterte. Und `instanz_namen_setzen()` / `instanz_adressen_setzen()`
+     schreiben zwei Werte nacheinander und liefern nur `[bool, Text]`:
+     Scheitert der zweite, ist der erste geschrieben, und die Seite hält das
+     für einen Fehlschlag ohne Änderung (sie bleibt ohne Umleitung stehen,
+     E-R4-35). *Weg:* den Rückgabewert prüfen; die zwei Setzfunktionen
+     schreiben beide Werte in einer Transaktion oder sagen, was geschrieben
+     ist. *Abnahme:* ein gescheitertes `app_state_setzen()` (Probe mit
+     gesperrter Tabelle) ergibt eine Fehlermeldung statt „gespeichert".
+
+<!-- -->
+
+346. **Zwei Meldungen im Browser noch von Hand: der Hinweis `patwarn` und der Papierkorb-Hinweis des Diensttags.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-13 (F-R4-42).* Die Zählzeile Z37 sieht
+     seit R4-13 auch die Zuweisung `className = '…meldung'` und fand damit
+     zwei Nachbauten, die das alte Muster nicht sah: in `assets/patient.js`
+     den Hinweis `patwarn` (ohne Symbol — der Kommentar dort sagt, weil
+     `symbol.js` beim Aufbau noch fehlen kann) und in `index.php` den
+     Hinweis „Dieser Diensttag liegt im Papierkorb" als `<p>` mit
+     `meldung meldung-warn`. Beide sehen anders aus als jede andere Meldung.
+     **Nicht in R4-13 umgestellt:** Sie liegen außerhalb von Nr. 271–273,
+     beide wären eine sichtbare Änderung, und bei `patwarn` hängt es an der
+     Ladereihenfolge von `edSymbol()`. *Weg:* über `EdHtml.meldung()`, für
+     `patwarn` erst nachsehen, ob `symbol.js` zur Aufrufzeit steht (die
+     Immer-Liste kommt am Seitenende). *Abnahme:* Z37 **2** (nur `html.js`),
+     Bilderlauf ohne Konsolenfehler.
+
+<!-- -->
+
+347. **Zweimal an einem Tag standen zwei fremde Waisen in der örtlichen Anlage — woher, ist nicht geklärt.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 28.09.2026
+     *Aufgenommen 28.09.2026 mit R4-27 (F-R4-72).* Die Jobprobe prüft,
+     dass „sechs Zeilen und ein Blob" als 7 gemeldet werden, und war zweimal
+     rot mit „vorher 2 fremde Waisen in der Anlage". Beim ersten Mal war
+     die Kopplungsprobe mitten im Lauf abgebrochen worden — dort ist die
+     Herkunft plausibel. Beim zweiten Mal nicht: davor lagen nur ein
+     Demo-Reset mitten in einem Bedienprobe-Lauf, Messläufe der
+     Browserprobe und ein Neustart des Containers. Die Jobprobe räumt die
+     Waisen selbst ab (Job `waisen`), der Wiederholungslauf war grün —
+     gesehen hat sie danach niemand mehr. *Weg:* vor dem Abräumen nennen,
+     WELCHE Waisen es sind (Tabelle, Kennung, Konto), und dann die Probe
+     oder den Weg suchen, der sie hinterlässt. *Abnahme:* die Jobprobe
+     nennt fremde Waisen mit Tabelle und Kennung; die Quelle ist gefunden
+     oder als Grenze benannt.
+
+<!-- -->
 
 350. **Passkeys als zweiter Faktor neben TOTP.** · gehört zu: 18 · Stand: offen · seit 27.09.2026
      *Aufgenommen 27.09.2026 in der Nachfassung des Konzepts SR (Paket
@@ -1347,6 +1268,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      dabei:** Passkeys mit PRF als Ersatz der Passwortableitung (E-SR-28).
      *Abnahme:* Konzept SR, Paket SR-09; Prüfdokument P-SR-16.
 
+<!-- -->
+
 351. **Passkey als einziger Zweitfaktor, ohne Authenticator-App.** · gehört zu: nach v1.0 · Stand: zurückgestellt · seit 27.09.2026
      *Aufgenommen 27.09.2026 mit Q-SR-12 (E-SR-35).* Schritt 18 baut den
      Passkey als weiteres Verfahren neben dem eingeschalteten TOTP (Nr. 350);
@@ -1360,3 +1283,24 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      dahin zurückgestellt, weil Support, Admin und BetreiberIn die App
      ohnehin haben. *Abnahme:* Zweitfaktor mit Passkey allein einschaltbar,
      Codes entstehen dabei, Rückweg und Notzugang gelten unverändert.
+
+<!-- -->
+
+352. **`nummern.py` meldet während eines offenen Merges die Nummern von `main` als Kollision.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 28.09.2026
+     *Aufgenommen 28.09.2026 beim Aufnehmen von `main` in den Konzeptzweig
+     zu 18 (Konzept SR, F-SR-14).* `Pruefablauf.md` 5.3 sagt: erst
+     `git merge --no-commit`, dann der Prüfstand über den Arbeitsbaum, dann
+     der Merge-Commit mit dem Bericht. Das Werkzeug misst den Arbeitsbaum
+     aber gegen `merge-base(HEAD, origin/main)` — vor dem Commit ist das der
+     alte Abzweigpunkt, und jede Nummer, die `main` seither vergeben hat
+     (hier vier aus Schritt 17), steht im Baum als „neu" und in
+     `origin/main` als „neu": Scheinüberschneidungen, der Bericht des
+     Merge-Commits wäre rot. Nach dem Commit ist die Basis `origin/main`,
+     und es sind null.
+     *Weg:* Liegt `MERGE_HEAD` vor, die Nummern des Arbeitsbaums zusätzlich
+     um die von `MERGE_HEAD` bereinigen (was der aufgenommene Zweig schon
+     trägt, ist nicht neu); die Selbstprobe bekommt den Fall; 5.3 verliert
+     den Satz zur Umgehung. Bis dahin: Merge-Commit ohne Bericht, der Bericht
+     im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
+     28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
+     → 0 Überschneidungen.

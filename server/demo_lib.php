@@ -12,7 +12,9 @@ require_once __DIR__ . '/serverkrypto_lib.php';
  * WOFUER ES DAS GIBT
  * Ein Konto, in dem sich die Anwendung ohne Anmeldehuerde ausprobieren
  * laesst: Zugangsdaten oeffentlich, Daten frei erfunden, Aenderungen
- * erwuenscht — und alle 30 Minuten wieder auf den Ausgangsstand.
+ * erwuenscht — und 30 Minuten nach der ersten Aenderung wieder auf den
+ * Ausgangsstand (seit Web 21.2.0; bis dahin alle 30 Minuten, auch ohne
+ * Aenderung — Abschnitt DIE AENDERUNGSMARKE unten).
  *
  * DIE AUSNAHME, DIE HIER GEMACHT WIRD, UND IHRE GRENZE
  * Das Projekt verspricht Ende-zu-Ende-Verschluesselung: Der Server sieht die
@@ -51,12 +53,19 @@ require_once __DIR__ . '/serverkrypto_lib.php';
  * derselben Fixture kommt, passt beides zusammen.
  */
 
-/** Abstand zwischen zwei selbsttaetigen Ruecksetzungen. */
+/** Frist nach der ersten Aenderung; danach setzt die naechste Anfrage des
+ *  Demo-Kontos zurueck. */
 const DEMO_RESET_SEKUNDEN = 1800;
 
+/** Pflichtreset: so lange nach dem letzten Reset auch OHNE Aenderung
+ *  (E-R4-10). Das Netz fuer eine Aenderung, die an keiner Setzstelle
+ *  vorbeikam, und fuer eine neue Fixture nach einem Deploy. */
+const DEMO_PFLICHT_SEKUNDEN = 86400;
+
 /** Schluessel in `app_state`. */
-const DEMO_K_USER  = 'demo_user_id';
-const DEMO_K_RESET = 'demo_letzter_reset';
+const DEMO_K_USER      = 'demo_user_id';
+const DEMO_K_RESET     = 'demo_letzter_reset';
+const DEMO_K_GEAENDERT = 'demo_geaendert';
 
 /** Pfad der Fixture. Liegt unter server/, weil der Produktivserver sie
  *  braucht — alles Uebrige der Phase P1 liegt unter tools/ (E-P1-07).
@@ -155,7 +164,7 @@ function demo_fixture_laden(): array
      *
      * OHNE DIESEN RIEGEL WAERE DER RESET STILL ERFOLGREICH. Das Konto kaeme
      * herein (der bcrypt-Hash stimmt ja), und erst das Entsperren scheiterte
-     * — auf der oeffentlichen Demo, alle 30 Minuten aufs Neue. Genau dieselbe
+     * — auf der oeffentlichen Demo, bei jedem Reset aufs Neue. Genau dieselbe
      * Begruendung wie beim Riegel auf die Rundenzahl (Backlog Nr. 155):
      * „Ohne den zweiten Riegel waere ein Reset still erfolgreich und niemand
      * kaeme mehr herein."
@@ -250,10 +259,94 @@ function demo_reset_marke_setzen(?int $wann = null): void
     app_state_setzen(DEMO_K_RESET, (string)($wann ?? time()));
 }
 
+/* ---- DIE AENDERUNGSMARKE (Web 21.2.0, Schritt 17, R4-14, Nr. 76) --------
+ *
+ * WARUM. Bis Web 21.1.x setzte die erste Anfrage des Demo-Kontos nach 30
+ * Minuten zurueck, ob sich etwas geaendert hatte oder nicht. Der Reset
+ * laeuft huckepack und kostet rund sechseinhalb Sekunden (gemessen
+ * 15.09.2026); die trug jede Besucherin, die nach einer Pause nur NACHSEHEN
+ * wollte — fuer einen Bestand, der ohnehin der Ausgangsstand war.
+ *
+ * WIE. `demo_geaendert` in `app_state` haelt den Zeitpunkt der ERSTEN
+ * Aenderung seit dem letzten Reset. Gesetzt wird sie an zwei Stellen, je
+ * hinter der Pruefung, die eine fremde Anfrage abweist: bei jedem POST des
+ * Demo-Kontos (`auth_guard.php`, nach CSRF) und bei jedem angenommenen
+ * Upload eines Demo-Geraets (`ingest.php`, nach dem Commit). Eine POST, die
+ * nichts aendert, setzt sie auch — das kostet einen Reset, keinen Schaden;
+ * umgekehrt waere eine Aenderung ohne Marke bis zum Pflichtreset sichtbar.
+ *
+ * AB DER ERSTEN AENDERUNG, NICHT AB DEM LETZTEN RESET (Q-R4-23, E-R4-42).
+ * Ab dem letzten Reset gezaehlt, waere nach laengerer Ruhe schon die
+ * Umleitung nach dem ersten Speichern faellig — die Aenderung waere weg,
+ * bevor die Besucherin sie sieht. Ab der ersten gezaehlt lebt eine
+ * Aenderung rund 30 Minuten, wie es der Hinweis verspricht.
+ *
+ * DER SPAETERE DER BEIDEN ZEITPUNKTE ZAEHLT. Werkzeuge halten den Reset auf,
+ * indem sie `demo_letzter_reset` auf jetzt oder in die Zukunft schieben
+ * (Pruefstand, `demo_kennzeichnen.php`, Klickprobe). Das bleibt so wirksam:
+ * Liegt der letzte Reset nach der Marke, zaehlt er. */
+
+/** Zeitpunkt der ersten Aenderung seit dem letzten Reset, oder 0. */
+function demo_geaendert_seit(): int
+{
+    try {
+        return (int)(app_state_lesen(DEMO_K_GEAENDERT) ?? 0);
+    } catch (Throwable $ex) {
+        return 0;
+    }
+}
+
+/**
+ * Eine Aenderung vermerken. Nur die ERSTE seit dem Reset setzt den
+ * Zeitpunkt — `app_state_einmalig()` schreibt nur, wo nichts steht.
+ *
+ * Scheitert still gegenueber der Anfrage, aber nicht spurlos: Eine fehlende
+ * Marke haelt die Aenderung bis zum Pflichtreset stehen, und das soll im
+ * Reiter System stehen, nicht nur in der Anlage.
+ */
+function demo_aenderung_vermerken(): void
+{
+    try {
+        app_state_einmalig(DEMO_K_GEAENDERT, static fn(): string => (string)time());
+    } catch (Throwable $ex) {
+        system_melden('demo', 'Änderungsmarke nicht gesetzt', $ex);
+    }
+}
+
+/**
+ * Die Marke nach einem Reset vergessen — aber nur, wenn sie nicht juenger
+ * ist als sein Beginn. Eine Aenderung, die WAEHREND des Resets einging,
+ * gehoert zum neuen Fenster; ihre Marke bleibt stehen.
+ */
+function demo_aenderung_vergessen(int $beginn): void
+{
+    $g = demo_geaendert_seit();
+    if ($g > 0 && $g <= $beginn) { app_state_loeschen(DEMO_K_GEAENDERT); }
+}
+
+/**
+ * Ab wann ist der naechste Reset faellig? Unix-Sekunden. REINE RECHNUNG,
+ * damit die Probe sie ohne Anlage und ohne Uhr nachrechnen kann
+ * (Zweitfaktorprobe, Teil 6b).
+ *
+ * MIT MARKE GILT NUR IHRE FRIST. Der Pflichtreset ist das Netz fuer den
+ * Fall OHNE Marke; mit Marke ist der Reset ohnehin 30 Minuten entfernt.
+ * Beides zu nehmen (`min`) hiesse, einer Aenderung kurz vor Ablauf des
+ * Tages ihre halbe Stunde zu kuerzen.
+ *
+ * @param int $letzter   letzter Reset (0 = nie)
+ * @param int $geaendert erste Aenderung seither (0 = keine)
+ */
+function demo_reset_faellig_ab(int $letzter, int $geaendert): int
+{
+    if ($geaendert <= 0) { return $letzter + DEMO_PFLICHT_SEKUNDEN; }
+    return max($geaendert, $letzter) + DEMO_RESET_SEKUNDEN;
+}
+
 /** Sekunden bis zum naechsten faelligen Reset (0 = jetzt faellig). */
 function demo_reset_in(): int
 {
-    $rest = DEMO_RESET_SEKUNDEN - (time() - demo_letzter_reset());
+    $rest = demo_reset_faellig_ab(demo_letzter_reset(), demo_geaendert_seit()) - time();
     return $rest > 0 ? $rest : 0;
 }
 
@@ -262,8 +355,9 @@ function demo_reset_in(): int
  *
  * ZUERST ZURUECKSETZEN, DANN ANTWORTEN. Wer nach laengerer Ruhe kommt, soll
  * den Ausgangsstand sehen und nicht die Hinterlassenschaft der letzten
- * Besucherin. Die Hoechstdrift ist damit 30 Minuten RELATIV ZU JEDER
- * Aktivitaet; ein Zeitdienst wird nicht vorausgesetzt.
+ * Besucherin. Faellig ist der Reset 30 Minuten nach der ersten Aenderung,
+ * ohne Aenderung einen Tag nach dem letzten (`demo_reset_faellig_ab()`);
+ * ein Zeitdienst wird nicht vorausgesetzt.
  *
  * Aufzurufen an genau zwei Stellen: bei Web-Anfragen des Demo-Kontos
  * (auth_guard.php) und bei `ingest.php` von einem Demo-Geraet.
@@ -341,6 +435,8 @@ function demo_anlegen(): array
         return [$id, demo_bestand_einspielen($pdo, $id, $fx)];
     });
     demo_reset_marke_setzen();
+    /* Eine Marke aus einem frueheren Demo-Konto gilt nicht fuer dieses. */
+    demo_aenderung_vergessen(time());
     return ['user_id' => $id] + $stats;
 }
 
@@ -402,6 +498,7 @@ function demo_zuruecksetzen(): array
     }
     $fx = demo_fixture_laden();
     $pdo = db();
+    $beginn = time();
 
     $stats = db_transaktion($pdo, function (PDO $pdo) use ($id, $fx): array {
         demo_bestand_loeschen($pdo, $id);
@@ -429,6 +526,7 @@ function demo_zuruecksetzen(): array
         return demo_bestand_einspielen($pdo, $id, $fx);
     });
     demo_reset_marke_setzen();
+    demo_aenderung_vergessen($beginn);
     return $stats;
 }
 
@@ -489,8 +587,8 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
      *
      * Sie fehlten hier, und das war folgenlos, solange es im Demo-Konto
      * keinen Schnitt gab. Seit E-R64-16 gibt es einen: Die Fixture traegt ihn,
-     * und der Reset spielt sie alle 30 Minuten neu ein. Ohne diese Zeile
-     * bliebe bei JEDEM Reset ein Vermerk liegen — 48 am Tag, und keiner davon
+     * und der Reset spielt sie bei jedem Lauf neu ein. Ohne diese Zeile
+     * bliebe bei JEDEM Reset ein Vermerk liegen — bis zu 48 am Tag, und keiner davon
      * je wieder auffindbar, weil seine Quelle mit dem Bestand verschwindet.
      * Auch der Waisenjob findet sie nicht: Er sucht Spuren ohne Eigentuemer,
      * und die Spurzeilen sind oben schon weg.
@@ -615,7 +713,7 @@ function demo_entfernen(): array
     require_once __DIR__ . '/konto_lib.php';
     $r = konto_loeschen($id, true, 'demo');
     if ($r['ok']) {
-        app_state_loeschen(DEMO_K_USER, DEMO_K_RESET);
+        app_state_loeschen(DEMO_K_USER, DEMO_K_RESET, DEMO_K_GEAENDERT);
     }
     return $r;
 }

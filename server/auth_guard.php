@@ -593,4 +593,12 @@ run_cleanup_if_due();   // taegliche Wartung, huckepack auf Web-Anfragen
  * Scheitert der Reset, laeuft die Anfrage weiter — eine Wartung darf keine
  * Seite kaputtmachen. Der Grund landet im Fehlerprotokoll. */
 require_once __DIR__ . '/demo_lib.php';
-if (demo_ist_demo($userId)) { demo_reset_wenn_faellig(); }
+if (demo_ist_demo($userId)) {
+    demo_reset_wenn_faellig();
+    /* DIE AENDERUNGSMARKE (Web 21.2.0, R4-14, Nr. 76): Jede POST des
+     * Demo-Kontos mit gueltigem Formular-Token zaehlt als Aenderung — NACH
+     * dem Reset, damit sie zum neuen Fenster gehoert. `csrf_ok()` liest nur;
+     * abweisen tut jede Seite selbst mit `csrf_check()`, und die kommt erst
+     * nach dieser Datei. Ohne Marke kein Reset (`demo_lib.php`). */
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && csrf_ok()) { demo_aenderung_vermerken(); }
+}

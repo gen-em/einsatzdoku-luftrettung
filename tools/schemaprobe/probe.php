@@ -28,6 +28,9 @@ declare(strict_types=1);
  *   FALL 4  Und eine, auf der die Umbenennung schon gelaufen ist?
  *   FALL 5  Sperrt der Rueckbau von R39 und FTP, solange Daten ihn verbieten,
  *           und laeuft er danach ohne Verlust und wiederholbar? (P5c/AP8)
+ *   FALL 6  Bekommt jeder Diensttag sein `created_at` aus `started_at`,
+ *           gekappt auf 1970-01-01 00:00:01 und auf jetzt — und traegt die
+ *           Spalte danach KEIN `ON UPDATE`? (Schritt 17, R4-15, Nr. 158)
  *
  * Fall 2 ist der wichtigste: Er legt Bestand an, migriert und vergleicht
  * Zeile fuer Zeile. Eine Migration, die Werte verliert, faellt hier auf.
@@ -544,6 +547,75 @@ pruefe('Lauf 3: mit leerem Register folgenlos — alle drei nur verbucht',
        && str_contains((string)($zeile5($lauf, $ID5[0])[3] ?? ''), 'Nicht nötig')
        && str_contains((string)($zeile5($lauf, $ID5[1])[3] ?? ''), 'Nicht nötig')
        && str_contains((string)($zeile5($lauf, $ID5[2])[3] ?? ''), 'Nicht nötig'));
+sag();
+
+/* ---- Fall 6: days.created_at (Schritt 17, R4-15, Nr. 158) -----------------
+ *
+ * WARUM AUF ALLEN VIER. `TIMESTAMP` ist die Spaltenart, in der sich die
+ * Fassungen unterscheiden: Mit `explicit_defaults_for_timestamp` = OFF (die
+ * Vorgabe von MariaDB vor 10.10) bekommt die ERSTE TIMESTAMP-Spalte einer
+ * Tabelle ohne ausdrueckliche Vorgabe `ON UPDATE CURRENT_TIMESTAMP` — dann
+ * setzte jede Aenderung eines Diensttags seinen Anker auf jetzt, und das
+ * Fenster ginge bei jedem Speichern wieder auf. Und ein Wert vor
+ * 1970-01-01 00:00:01 wirft 1292 unter STRICT_TRANS_TABLES — derselbe Fehler,
+ * der die Vorlage `2026_09_07_rest_segments_created_at` einmal gekostet hat.
+ *
+ * Wie db.php mit `time_zone = '+00:00'`: TIMESTAMP wird in der Zeitzone der
+ * Sitzung gelesen und geschrieben. */
+sag('FALL 6 — days.created_at aus started_at, gekappt (Nr. 158)');
+$pdo = frisch();
+schema_oder_raus('Fall 6');
+$pdo->exec("SET time_zone = '+00:00'");
+$pdo->exec('ALTER TABLE days DROP COLUMN created_at');
+$pdo->exec("DELETE FROM schema_migrations WHERE id = '2026_09_27_days_created_at'");
+$pdo->exec("INSERT INTO users (id, email, password_hash, role)
+            VALUES (1, 'probe@example.invalid', 'x', 'admin')");
+$tage6 = [
+    1 => ['2026-09-01', '2026-09-01 08:00:00'],   // gewoehnlich
+    2 => ['2026-08-15', null],                    // ohne Beginn: der Tag, 00:00
+    3 => ['2099-01-01', '2099-01-01 08:00:00'],   // Beginn in der Zukunft: jetzt
+    4 => ['1970-01-01', '1970-01-01 00:00:00'],   // Uhr ohne Zeitabgleich
+    5 => ['1000-01-01', '1000-01-01 00:00:00'],   // vor dem Bereich der Spalte
+];
+foreach ($tage6 as $id => [$tag, $beginn]) {
+    $pdo->prepare('INSERT INTO days (id, user_id, day, started_at) VALUES (?, 1, ?, ?)')
+        ->execute([$id, $tag, $beginn]);
+}
+pruefe('die Migration steht aus', migrationen_ausstehend($pdo));
+$vor6 = gmdate('Y-m-d H:i:s');
+$lauf6 = true;
+try { migrationen_lauf($pdo, true); } catch (Throwable $e) { $lauf6 = false; $grund6 = $e->getMessage(); }
+$nach6 = gmdate('Y-m-d H:i:s');
+pruefe('die Migration laeuft durch', $lauf6, $lauf6 ? '' : (string)($grund6 ?? ''));
+$anker6 = $pdo->query('SELECT id, created_at FROM days ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR);
+pruefe('gewoehnlicher Tag: created_at = started_at', ($anker6[1] ?? '') === '2026-09-01 08:00:00',
+       (string)($anker6[1] ?? 'fehlt'));
+pruefe('Tag ohne Beginn: der Tag, 00:00', ($anker6[2] ?? '') === '2026-08-15 00:00:00',
+       (string)($anker6[2] ?? 'fehlt'));
+pruefe('Beginn in der Zukunft: gekappt auf jetzt',
+       ($anker6[3] ?? '') >= $vor6 && ($anker6[3] ?? '') <= $nach6, (string)($anker6[3] ?? 'fehlt'));
+pruefe('1970-01-01 00:00:00 und 1000-01-01: auf 1970-01-01 00:00:01',
+       ($anker6[4] ?? '') === '1970-01-01 00:00:01' && ($anker6[5] ?? '') === '1970-01-01 00:00:01',
+       (string)($anker6[4] ?? 'fehlt') . ' / ' . (string)($anker6[5] ?? 'fehlt'));
+$def6 = spaltendefinition($pdo, 'days', 'created_at');
+$extra6 = (string)$pdo->query("SELECT extra FROM information_schema.columns
+                                WHERE table_schema = DATABASE()
+                                  AND table_name = 'days' AND column_name = 'created_at'")->fetchColumn();
+pruefe('die Spalte: timestamp, NOT NULL, Vorgabe jetzt, KEIN ON UPDATE',
+       ($def6['column_type'] ?? '') === 'timestamp' && ($def6['is_nullable'] ?? '') === 'NO'
+       && stripos((string)($def6['column_default'] ?? ''), 'current_timestamp') !== false
+       && stripos($extra6, 'on update') === false,
+       ($def6['column_type'] ?? '?') . ' / null=' . ($def6['is_nullable'] ?? '?')
+       . ' / default=' . ($def6['column_default'] ?? '?') . ' / extra=' . $extra6);
+$pdo->exec("UPDATE days SET notes = 'geaendert' WHERE id = 1");
+pruefe('eine Aenderung am Tag laesst den Anker stehen',
+       (string)$pdo->query('SELECT created_at FROM days WHERE id = 1')->fetchColumn() === '2026-09-01 08:00:00');
+$pdo->exec("INSERT INTO days (id, user_id, day) VALUES (6, 1, '2026-09-27')");
+$neu6 = (string)$pdo->query('SELECT created_at FROM days WHERE id = 6')->fetchColumn();
+pruefe('ein neuer Tag bekommt jetzt', $neu6 >= $vor6 && $neu6 <= gmdate('Y-m-d H:i:s'), $neu6);
+$zweiter6 = true;
+try { migrationen_lauf($pdo, true); } catch (Throwable $e) { $zweiter6 = false; }
+pruefe('der zweite Lauf ist folgenlos', $zweiter6 && !migrationen_ausstehend($pdo));
 sag();
 
 /* ---- Schluss -------------------------------------------------------------- */
