@@ -625,7 +625,7 @@ function sitzung_starten(string $art): bool
 }
 
 /* ===========================================================================
- * DIE ZUSATZCOOKIES — Bindung (SR-01), spaeter das gemerkte Geraet (SR-02)
+ * DIE ZUSATZCOOKIES — Bindung (SR-01) und das gemerkte Geraet (SR-02)
  * ======================================================================== */
 
 /**
@@ -649,6 +649,15 @@ function sitzung_starten(string $art): bool
 const SITZUNG_COOKIES = [
     'bindung' => [
         'name' => 'EDBIND', 'secure' => true, 'samesite' => 'Strict',
+        'httponly' => true, 'dauer_s' => 0,
+    ],
+    /* „GERAET MERKEN" (SR-02, E-SR-07). Dieselben Parameter wie die Bindung,
+     * bis auf die Lebensdauer: Die setzt `zweitfaktor_geraet_merken()` je
+     * Anmeldung aus der Dauer der Rollengruppe (`$dauerS`). `Strict` reicht,
+     * obwohl ein Verweis aus einer Mail seitenfremd ankommt: Geprueft wird
+     * das Cookie beim POST des Passworts, und der kommt von dieser Seite. */
+    'geraet' => [
+        'name' => 'EDGERAET', 'secure' => true, 'samesite' => 'Strict',
         'httponly' => true, 'dauer_s' => 0,
     ],
 ];

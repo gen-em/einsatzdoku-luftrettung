@@ -1279,7 +1279,7 @@ und ein Gerät schriebe seinen Zeitraum danach drei Tage lang wieder fort.
 **Was im Backup gar nicht vorkommt — und deshalb nach einer
 Wiederherstellung fehlt:**
 
-Der Abschnitt oben zählt Spalten auf. Diese drei sind ganze Bereiche, und ihr
+Der Abschnitt oben zählt Spalten auf. Diese vier sind ganze Bereiche, und ihr
 Fehlen fällt erst auf, wenn man danach sucht:
 
 - **Geräte.** Eine Uhr trägt einen API-Schlüssel; ein mitgesichertes Gerät
@@ -1316,6 +1316,13 @@ Fehlen fällt erst auf, wenn man danach sucht:
   füllt damit die Sperrliste nicht (`trash_block_ref()` verlangt eine
   Gerätekennung). Das ist dasselbe „Geräte weg → Sperrliste leer" wie oben,
   keine zusätzliche Lücke.
+- **Gemerkte Geräte** (`vertraute_geraete`, seit Web 21.8.0, Schritt 18,
+  SR-02). Eine Zeile gehört zu einem Cookie, und ein Cookie gehört zu
+  **einem Browser an einer Adresse** — nicht zum Konto. In einer anderen
+  Installation gäbe es den Browser nicht, der das Cookie trägt; in derselben
+  gilt die Zeile ohnehin weiter. Nach dem Einspielen fragt die Anmeldung also
+  wieder nach dem Code, und der Haken merkt das Gerät neu. Dasselbe gilt für
+  das Konto-Backup in Abschnitt 5.
 
 **Der Papierkorb steht seit Version 7 in der Datei** und stand bis Version 6
 in keiner. Der Absatz, der ihn hier als fehlend führte, ist damit gegenstandslos;
@@ -1831,6 +1838,20 @@ zurück; eine laufende Sperre ist nach dem Einspielen aufgehoben.
 
 **Ältere Stände** (vor Web 20.39.0) tragen die Zeilen noch und werden
 unverändert eingespielt — die Tabellen verfallen danach wie gewohnt.
+
+### 6.10 Gemerkte Geräte (seit Web 21.8.0)
+
+`vertraute_geraete` reist **mit Zeilen** im Komplett-Stand (Schritt 18,
+SR-02). Sie tragen keinen Gerätenamen und keinen Browsertyp, nur den SHA-256
+eines Cookies, das Konto und zwei Zeitpunkte — ein Stand, der außer Haus
+geht, verrät damit nicht, womit sich jemand anmeldet. **Nach einem
+Wiederanlauf auf derselben Adresse** gelten die Zeilen weiter, solange ihre
+Dauer läuft (sie wird beim Prüfen aus der Einstellung der Anlage gerechnet,
+nicht aus dem Stand); **auf einer anderen Adresse** schickt kein Browser das
+Cookie, und sie verfallen mit dem Aufräumjob. Anders als die zwei Tabellen
+in 6.9 halten sie keine IP- oder E-Mail-Adressen, und ihr Fehlen hätte nur
+einen Code-Schritt mehr gekostet — ein Grund, sie ohne Zeilen mitzunehmen,
+fehlt.
 
 ---
 

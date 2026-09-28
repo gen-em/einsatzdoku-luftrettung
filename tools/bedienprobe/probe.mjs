@@ -503,14 +503,19 @@ async function kasten(rolle, weg, breite) {
     breite,
     bedienhoehe: BEDIENHOEHE,
 
-    async bild(name) {
+    /** `seite`: die Seite, die ins Bild soll, wenn es nicht die der Rolle
+     *  ist — ein Weg mit eigenem Kontext (`eigenerKontext()`) gibt seine mit.
+     *  Bis SR-02 kannte `bild()` nur die Seite der Rolle, und die drei Bilder
+     *  des Zweitfaktor-Wegs zeigten die Startseite des Demo-Kontos statt Tor,
+     *  Codes und Haken — unter dem richtigen Namen (F-SR-21). */
+    async bild(name, seite = null) {
       if (!BILDER) { return; }
       mkdirSync(join(AUSGABE, 'bild'), { recursive: true });
       /* Eingabeart MIT IN DEN NAMEN: Unter 1024 px gilt 44 px fuer beide, und
        * ohne sie schreiben der Zeiger- und der Fingerlauf dieselbe Datei —
        * zwei Laeufe, ein Bild, und niemand sieht es. */
       const art = FINGER ? 'finger' : 'zeiger';
-      await r.seite.screenshot({
+      await (seite ?? r.seite).screenshot({
         path: join(AUSGABE, 'bild', `${name}-${breite}-${art}-${BEDIENHOEHE}px.png`),
         fullPage: false,
       });

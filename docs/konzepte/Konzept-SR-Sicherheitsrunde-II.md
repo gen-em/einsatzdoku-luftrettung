@@ -54,10 +54,10 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **28.09.2026 — Umsetzung läuft, SR-01 gebaut (Web 21.7.0)**, gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). Nächstes Paket: **SR-02**. Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
-> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026. |
+> | Stand | **28.09.2026 — Umsetzung läuft, SR-01 und SR-02 gebaut (Web 21.7.0, 21.8.0)**, gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). Nächstes Paket: **SR-07**. Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
+> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (das Vergessen in der Transaktion des Passworts, SR-02). |
 > | Offen | nichts im Konzept. **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). |
-> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). In Arbeit: **SR-02**. Reihenfolge danach SR-07, SR-09, dann Halt H-SR-08. |
+> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). In Arbeit: **SR-07**. Reihenfolge danach SR-09, dann Halt H-SR-08. |
 > | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) und SR-09 (H-SR-08, E-SR-36). |
 > | Fächerung | keine. |
 > | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`). |
@@ -439,6 +439,41 @@ ein Satz mehr, und der Review misst ihn.
   (Zweitfaktor- und Rückwegprobe kamen danach dazu, der Satz blieb). Mit der
   Sitzungsprobe sind es 25; die Zahl ist in SR-01 neu gemessen und
   eingetragen (Prüfdokument 2).
+- **F-SR-19 Die Protokollart `einstellung_geaendert` gibt es nicht.** SR-02
+  sagt „Protokoll `einstellung_geaendert` wie die übrigen Karten". Gemessen
+  (28.09.2026): Die Karten der Servereinstellungen schreiben je eine eigene
+  Art (`einstellungen_konten`, `frist_geaendert`, …), eine gemeinsame steht
+  in `PROTOKOLL_ARTEN` nicht. **Gelöst in SR-02:** eine eigene Art
+  `einstellungen_anmeldung` (Beschriftung „Einstellungen", Reiter
+  Verwaltung), gebaut wie `einstellungen_konten`.
+- **F-SR-20 Die Umleitung antwortet 302, nicht 303.** SR-02 sagt „nach jedem
+  POST der Seite eine 303 mit Flash". R4-11 hat die elf Seiten mit 302
+  umgestellt, und die Rollenprobe misst sie alle mit derselben Zeile; eine
+  303 auf der zwölften wäre ein zweites Muster ohne Gewinn — jeder heutige
+  Browser folgt einer 302 aus einem POST mit GET, und der Bedienweg misst
+  genau das („Neu laden ist ein GET"). **Gebaut: 302**, wie R4-11.
+- **F-SR-21 `bild()` der Bedienprobe fotografierte die Seite des Läufers.**
+  Gefunden beim Ansehen der Bilder für P-SR-05: Ein Weg mit eigenem
+  Browserkontext (`eigenerKontext()`) arbeitet auf einer anderen Seite als
+  der Läufer, `k.bild()` kannte aber nur dessen. Die zwei Bilder des Wegs
+  `zweitfaktor-einrichten` (seit P5c/AP5) und die zwei neuen zeigten die
+  Startseite des Demo-Kontos — unter den Namen „Tor", „Codes", „Haken",
+  „Gemerkte Geräte". **Gelöst in SR-02:** `bild(name, seite)`; die vier
+  Aufrufe geben ihre Seite mit. Dazu wartet der Haken-Weg, bis der Schalter
+  ausgeglitten ist — das erste richtige Bild zeigte ihn auf halbem Weg,
+  also scheinbar aus.
+- **F-SR-22 Den Link-Weg (`pw_handling.php`) fuhr keine Probe bis zum
+  Speichern.** SR-02 lässt dort die Geräte vergessen; gemessen hätte das
+  niemand. Die Rollenprobe fragt nur, ob ein Link ausgegeben wird, der
+  Bedienweg zum Rückweg setzt ein erstes Passwort im Browser. **Gelöst in
+  SR-02:** Fall 8b der Zweitfaktorprobe — Link-Token in `password_resets`,
+  Hüllen aus Zufall in der Form, die der Server prüft (er öffnet sie nie),
+  danach Zeilen 0 und ein Protokolleintrag; Gegenprobe ohne den Aufruf rot.
+- **F-SR-23 Die Bedienprobe nannte ihre Zahl zweimal, einmal veraltet.**
+  `tools/bedienprobe/LIESMICH.md` sagte oben „68 Bedienwege" und unter
+  „Erwartete Zahl" 71 — der Satz oben war bei vier Wegen nicht mitgegangen.
+  **Gelöst in SR-02:** Die Zahl steht nur noch unter „Erwartete Zahl" (jetzt
+  73), oben ein Verweis.
 
 ## 3. Entscheidungen und Fragen
 
@@ -485,6 +520,7 @@ ein Satz mehr, und der Review misst ihn.
 | E-SR-37 | **Nr. 250 gehört zu SR-02, Nr. 344 zu SR-03.** Beide sind mit dem Merge von 17 (28.09.2026, E-R4-37) zu Ziel 18 gekommen: `betrieb_server.php` leitet nach jedem POST um (`flash_setzen()` mit Ort, Ton und Ergebnis, der Weg aus R4-11) — gebaut in SR-02, das die Seite um die Karte „Anmeldung" erweitert; `edbak_freigabe_widerrufen()` und `edbak_begleit_schreiben()` verlangen `edbak_kennung_gueltig()` — gebaut in SR-03, das `adminbackup_lib.php` ohnehin offen hat, und von der Gegenlesung (H-SR-06) mitgelesen. Beide Pakete bleiben in ihrer Stufe. | Konzept, 28.09.2026 (nach dem Merge von 17) | Konzept R4 2.3 hat die Dateien für 18 freigehalten; ein eigenes Paket für zwei Handgriffe wäre mehr Buchführung als Code. Nr. 250 ist ein geänderter Weg (Umleiten), und SR-02 ändert die Wege dieser Seite ohnehin (E-SR-17). |
 | E-SR-38 | **Die Umsetzung beginnt vor dem Merge des Konzept-PR, gestapelt auf ihm.** Arbeitszweig `claude/pr95-stufe-18-ztactt`, per Fast-Forward auf den Kopf von PR #95 (`d88522e`); der PR der Umsetzung wird erst nach dem Merge von #95 gestellt. Weicht von E-SR-27 und P-SR-03 ab („nach dem Merge, eigener Zweig von `main`"). | Betreiberin, 28.09.2026 („Hol dir den Stand von PR95 und leg mit Stufe 18 los") | Der Konzept-PR trägt nur `docs/`, Stufe 1 ist grün; auf ihn zu warten, hielte die Umsetzung an, ohne dass sich an ihrer Grundlage etwas ändert. Preis: Wird #95 umgeschrieben (Squash, Rebase), zieht dieser Zweig nach (`Pruefablauf.md` 5.3); `nummern.py` zieht Geerbtes ab (R4-11) und misst deshalb keine Scheinkollision — gemessen: 0 Überschneidungen. |
 | E-SR-39 | **F-SR-15 wird in SR-01 gebaut:** Die lesenden Seiten prüfen die Bindung zentral in `sitzung_starten('lesend')` und sehen eine ungebundene Anmeldung nicht; verworfen wird ohne Schreiben, beendet wird sie erst von der nächsten angemeldeten Seite. | Betreiberin, 28.09.2026 (Rückfrage vor SR-01, wie empfohlen) | Ziel 1 des Konzepts heißt „eine gelesene Sitzungsdatei ist wertlos"; vier Seiten, die mit ihr noch Kopf und Adresse zeigten, ließen den Satz halb wahr. Eine Stelle statt vier (R83). Nicht beendet, weil eine lesende Seite lesbar bleiben und nicht abmelden soll. |
+| E-SR-40 | **Das Vergessen gemerkter Geräte beim Passwortwechsel und -reset steht in derselben Transaktion wie das Passwort** (`einstellungen.php`, `pw_handling.php`), nicht dahinter. | Umsetzung, 28.09.2026 (SR-02) | Der erste Entwurf setzte es hinter die Transaktion, „weil es ins Protokoll schreibt". Ein Fehler dort hätte dann ein gewechseltes Passwort mit der Meldung „Es wurde nichts geändert" gezeigt, der Browser hätte den neuen Schlüssel nicht übernommen (M2-07), und der gemerkte Browser des Fremden hätte weiter gegolten. In der Transaktion gilt beides oder keines; `db_transaktion()` hängt sich an die laufende an, `protokoll()` fängt seine eigenen Fehler. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -677,6 +713,38 @@ an; `SHOW CREATE TABLE vertraute_geraete` gleich Schema und Migration;
 Bilderlauf der Karte „Anmeldung".
 *Stufe:* Web Neben, **mit Migration** (Prüfstand `haupt`; nach dem Deploy
 `update.php`). *Fächerung:* keine.
+*Erledigt 28.09.2026 (Web 21.8.0):* gebaut wie beschrieben — Tabelle und
+Migration `2026_09_28_vertraute_geraete` (legt auch
+`app_state.notzugang_geheim` an, E-SR-24; `skip` erst, wenn beides steht),
+die Helfer `zweitfaktor_geraet_*` in `totp_lib.php` mit den zwei
+Einstellungen, der Haken im App-Formular, das Erkennen vor dem halben
+Stand, „Alle vergessen", die Karte „Anmeldung", der Aufräumschritt
+(achtzehn), zwei Protokollarten, zwei Matrixzeilen; `betrieb_server.php`
+leitet nach jedem erfolgreichen POST um — eine Stelle hinter allen zehn
+Zweigen, die Meldung in der Karte (Nr. 250). **Dazu, nicht im Konzept:**
+Fall 8b der Zweitfaktorprobe (F-SR-22); die Karten „Protokoll" und
+„Adresssuche" in der Umleitungsmessung der Rollenprobe (vier statt zwei);
+`bild(name, seite)` der Bedienprobe (F-SR-21); `pw_handling.php` und
+`einstellungen.php` im Muster der Zweitfaktorprobe (`pruefablauf.json`);
+ein Satz zur Meldung in der Karte in Handbuch 12.5. **Abweichungen:** eine
+eigene Protokollart statt `einstellung_geaendert` (F-SR-19); 302 statt 303
+(F-SR-20); die Zeile „Gemerkte Geräte" steht in `einstellungen.php`, wo die
+Karte gebaut wird — `zweitfaktor_teile.php` bleibt unberührt; „Ablauf mit
+gestelltem `gueltig_bis`" misst die Probe mit zurückgestelltem
+`angelegt_am`, weil die Tabelle nach E-SR-17 kein `gueltig_bis` hat. Der
+Cookie-Absatz im Datenschutz-Baustein (Handbuch 11.5a) fehlte und steht
+jetzt da; ihn zu übernehmen ist Teil des Postens „Datenschutzerklärung des
+Dienstes" in Rahmenplan 6.3 (P-SR-17). **Probleme beim Bau:** Das Vergessen
+stand im Entwurf hinter der Transaktion des Passworts (E-SR-40). Die neue
+Matrixzeile rief `einstellungen.php` ohne `?t=profil` — ohne `t` zeigt die
+Seite die Übersicht und endet vor dem POST, vier Zellen „unerwartet 200".
+Der Bedienweg wartete nach dem zweiten Passwort auf `login.php` und stand
+dort schon, bevor das Formular abgeschickt war — „MIT Code", obwohl die
+Anlage gemerkt hatte. Zwei Riegel: „Administratorin" statt der Hausform in
+einer Meldung (Wortliste) und ein `=== 'user'` über die Gruppe, das der
+Rollenvergleichs-Riegel Z13 zu Recht zählt (jetzt eine Zuordnung); die
+Symboltabelle in `Design.md` neu erzeugt (ein Haken mehr). Alle vor dem
+ersten grünen Lauf behoben. Zahlen im Prüfdokument 2.
 
 **SR-07 Frischer Code vor kritischen Handlungen** — Q-SR-11 (E-SR-20).
 `login.php`: nach einem angenommenen App- oder Wiederherstellungscode

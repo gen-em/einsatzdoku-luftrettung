@@ -7876,5 +7876,25 @@ declare(strict_types=1);
  *   `session_lib.php` als Befund. Dazu Nr. 251: Die Art `lesend` setzt
  *   `secure` jetzt fest; `einrichtung` bleibt an HTTPS gebunden, weil sie
  *   laeuft, bevor HTTPS steht (F-SR-06).
+ *
+ * 21.8.0 — „GERAET MERKEN" BEIM ZWEITFAKTOR (Schritt 18, SR-02; Rest aus
+ *   Nr. 141, dazu Nr. 250; E-SR-07, -15, -17, -18, -34, -37). Nebenstufe MIT
+ *   MIGRATION: `2026_09_28_vertraute_geraete` — nach dem Deploy muss eine
+ *   Administratorin `update.php` aufrufen. Nach einem Code aus der App kann
+ *   ein Browser gemerkt werden; dort fragt die Anmeldung dann keinen Code.
+ *   Das Cookie `EDGERAET` traegt 32 Zufallsbyte, die Tabelle nur ihren Hash —
+ *   kein User-Agent, kein Geraetename. Die Dauer stellt die BetreiberIn je
+ *   Rollengruppe ein (Betrieb -> Servereinstellungen, Karte „Anmeldung":
+ *   NutzerInnen 30, Verwaltung 7 Tage, 0 heisst aus), und GERECHNET WIRD SIE
+ *   BEIM PRUEFEN: Kuerzer gestellt gilt sofort, auch fuer schon gemerkte
+ *   Geraete. Gemerkt wird nur nach einem App-Code, nie nach
+ *   Wiederherstellungscode oder Rueckweg; vergessen beim Passwortwechsel und
+ *   -reset, bei jedem Abschalten des Zweitfaktors, mit dem Konto, im
+ *   Demo-Reset, mit „Alle vergessen" im Profil und — abgelaufen — im
+ *   Aufraeumjob (achtzehn Schritte). Dieselbe Migration legt
+ *   `app_state.notzugang_geheim` an, den Wert, den der Notzugang aus SR-04
+ *   verlangt (E-SR-24). Und `betrieb_server.php` leitet jetzt nach jedem
+ *   erfolgreichen POST um, mit der Meldung in der Karte (Nr. 250) — sie war
+ *   die letzte Seite unter Betrieb, die ihr Ergebnis selbst ausgab.
  */
-const WEB_VERSION = '21.7.0';
+const WEB_VERSION = '21.8.0';

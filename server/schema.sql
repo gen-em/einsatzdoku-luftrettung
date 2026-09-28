@@ -110,6 +110,22 @@ CREATE TABLE totp_codes (
   CONSTRAINT fk_totp_codes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Gemerkte Geraete des Zweitfaktors (Web 21.8.0, Schritt 18, SR-02, E-SR-07).
+-- Im Browser liegt ein Zufallswert im Cookie EDGERAET, hier nur sein SHA-256.
+-- Kein User-Agent, kein Geraetename. Gueltig ist eine Zeile, solange
+-- angelegt_am plus die HEUTIGE Dauer der Rollengruppe in der Zukunft liegt
+-- (E-SR-17) — gerechnet beim Pruefen, nicht beim Merken.
+CREATE TABLE vertraute_geraete (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT UNSIGNED NOT NULL,
+  token_hash  CHAR(64) NOT NULL,
+  angelegt_am DATETIME NOT NULL,
+  zuletzt_am  DATETIME NULL,
+  UNIQUE KEY uq_vertraute_geraete_token (token_hash),
+  KEY idx_konto (user_id),
+  CONSTRAINT fk_vertraute_geraete_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE password_resets (
   id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id    INT UNSIGNED NOT NULL,
@@ -1087,4 +1103,8 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_25_ftp_entfernen', 'skipped'),
   ('2026_09_25_tagesrettungsmittel_rollen', 'skipped'),
   -- days.created_at steht oben schon im Schema (Web 21.3.0, Nr. 158).
-  ('2026_09_27_days_created_at', 'skipped');
+  ('2026_09_27_days_created_at', 'skipped'),
+  -- vertraute_geraete steht oben schon im Schema (Web 21.8.0, SR-02). Der
+  -- Wert `notzugang_geheim`, den dieselbe Migration im Bestand anlegt, entsteht
+  -- auf einer frischen Anlage beim ersten Aufruf des Notzugangs (E-SR-24).
+  ('2026_09_28_vertraute_geraete', 'skipped');

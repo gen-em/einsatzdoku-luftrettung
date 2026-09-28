@@ -14,6 +14,92 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.8.0] — 2026-09-28
+
+Schritt 18, Sicherheitsrunde II, Paket SR-02. **Neben, mit Migration**
+(`2026_09_28_vertraute_geraete`) — **nach dem Deploy muss eine
+Administratorin `update.php` aufrufen**; die Kette lässt den Wartungsmodus
+bis dahin an.
+
+### Neu
+
+- **„Dieses Gerät merken" beim Zweitfaktor** (Rest aus Nr. 141, E-SR-07,
+  -17, -18). Wer den Code aus der App eingibt, kann den Browser merken
+  lassen; dort fragt die Anmeldung dann eine Zeit lang nur nach dem
+  Passwort. Die Frage kam zweimal auf und wurde zweimal auf die
+  Sitzungsbindung verschoben, weil zwei Cookie-Mechanismen einmal gebaut
+  werden sollten — SR-01 hat den ersten gebaut, hier steht der zweite
+  daneben, mit denselben Parametern in derselben Tabelle. Im Browser liegt
+  das Cookie `EDGERAET` mit 32 Zufallsbyte, in der neuen Tabelle
+  `vertraute_geraete` nur ihr SHA-256 — **kein Gerätename, kein
+  Browsertyp**: Das eine wäre Telemetrie, das andere eine Eingabe, die
+  niemand pflegt. **Gemerkt wird nur nach einem Code aus der App**, nie
+  nach einem Wiederherstellungscode oder dem Rückweg: In beiden Lagen fehlte
+  gerade das Handy.
+- **Die Dauer stellt die BetreiberIn ein, je Rollengruppe** (Q-SR-01,
+  Q-SR-10): Betrieb → Servereinstellungen, neue Karte **„Anmeldung"**,
+  NutzerInnen von Haus aus 30 Tage, Support, Admin und BetreiberIn 7, zur
+  Wahl aus, 1, 7, 14, 30 und 90. **Gerechnet wird beim Prüfen, nicht beim
+  Merken:** Wer die Dauer kürzt, meldet ältere Geräte sofort ab, und „aus"
+  ist sofort aus — sonst hieße „aus" erst in 30 Tagen aus. Eine persönliche
+  Wahl im Profil gibt es bewusst nicht.
+- **Vergessen** wird mit „Alle vergessen" im Profil (Karte „Zweitfaktor",
+  Zeile „Gemerkte Geräte"), beim Passwortwechsel und -reset — wer sein
+  Passwort wechselt, weil er Missbrauch vermutet, will den anderen draußen
+  haben, und ein gemerkter Browser des Fremden hätte den Wechsel sonst
+  überdauert —, bei jedem Ausschalten oder Zurücksetzen des Zweitfaktors,
+  mit dem Konto und im Demo-Reset; Abgelaufenes räumt ein neuer Schritt des
+  Aufräumjobs (jetzt achtzehn). Merken und Vergessen stehen im Protokoll,
+  die einzelne Anmeldung nicht. **Beim Passwortwechsel und -reset steht das
+  Vergessen in derselben Transaktion wie das Passwort.** Der erste Entwurf
+  hatte es dahinter gesetzt; ein Fehler dort hätte dann ein gewechseltes
+  Passwort mit der Meldung „Es wurde nichts geändert" gezeigt, und der
+  Browser hätte den neuen Schlüssel nicht übernommen. Jetzt gilt beides oder
+  keines.
+- **Der Datenschutz-Baustein bekommt einen zweiten Absatz: die Cookies**
+  (Handbuch 11.5a). Bis hierher nannte er keines; mit SR-01 und SR-02 sind
+  es drei, und ob der Hinweis in die Datenschutzerklärung gehört,
+  entscheidet die BetreiberIn — der Absatz ist zum Übernehmen da.
+
+### Geändert
+
+- **Servereinstellungen leiten nach jedem POST um** (Nr. 250, E-SR-37).
+  R4-11 hatte elf Seiten unter Verwaltung und Betrieb auf
+  Post/Redirect/Get umgestellt und diese eine für Schritt 18 freigelassen;
+  „Neu laden" schickte hier weiter die Handlung noch einmal — eine zweite
+  Rundmail, einen zweiten Schlüsselgriff. Jetzt entscheidet **eine** Stelle
+  nach allen zehn Zweigen, ob umgeleitet wird, und die Meldung steht in der
+  Karte, in der geklickt wurde (die Umleitung springt dorthin). **Bewusst
+  stehen bleibt** eine abgewiesene Eingabe, damit das Getippte nicht
+  verloren geht; die Rundmail leitet auch nach einem Fehlschlag um, weil die
+  Ankündigung dann schon gespeichert ist.
+- **`app_state.notzugang_geheim`** legt dieselbe Migration an (E-SR-24) —
+  den Wert, den der Notzugang der einzigen BetreiberIn aus SR-04 verlangen
+  wird. Er steht nirgends in der Oberfläche.
+
+### Prüfmittel
+
+- **Die Zweitfaktorprobe hat einen Teil „Gerät merken"** (22 Fälle): Haken
+  mit der Dauer der Rollengruppe, gemerkt nur nach App-Code, danach ohne
+  Code, ein fremdes Cookie an einem anderen Konto zählt nicht, Dauer 0 und
+  eine gekürzte Dauer gelten sofort, „Alle vergessen", Passwortwechsel,
+  **Passwort über den Link** und Abschalten vergessen, der Aufräumschritt.
+  Den Link-Weg (`pw_handling.php`) fuhr bis hierher keine Probe bis zum
+  Speichern; der Fall baut die Hüllen aus Zufall in der Form, die der Server
+  prüft — öffnen kann er sie ohnehin nicht.
+- **Die Rollenprobe** fährt zwei Zeilen mehr der Matrix (Karte „Anmeldung",
+  „Alle vergessen") und misst die Umleitung der Servereinstellungen an vier
+  Karten (Anmeldung, Kopfzeilen, Protokoll, Adresssuche).
+- **Zwei Bedienwege:** `zweitfaktor-merken` meldet sich im Browser zweimal
+  an, einmal mit Code und Haken, einmal ohne; `betrieb-server-neuladen`
+  speichert die Karte „Anmeldung", lädt neu und zählt die Protokolleinträge.
+- **Die Bilder der Bedienprobe zeigen wieder, was ihr Name sagt.** Ein Weg
+  mit eigenem Browserkontext arbeitet auf einer anderen Seite als der
+  Läufer, aber `bild()` kannte nur dessen — die Bilder „Tor" und „Codes" des
+  Zweitfaktor-Wegs zeigten seit Web 20.42.0 die Startseite des
+  Demo-Kontos. Aufgefallen ist es erst, als die Bilder für diese Runde
+  jemand ansah statt nur zählte. `bild()` nimmt jetzt die Seite mit.
+
 ## [Web 21.7.0] — 2026-09-28
 
 Schritt 18, Sicherheitsrunde II, Paket SR-01. **Neben**, ohne Migration —

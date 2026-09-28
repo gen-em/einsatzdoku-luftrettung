@@ -676,6 +676,47 @@ if ($b === null) {
         else                       { app_state_setzen(JOB_PAUSE_SCHLUESSEL, $pauseVorher); }
     }
 
+    /* Servereinstellungen (Schritt 18, SR-02, Nr. 250, E-SR-37): bis Web
+     * 21.7.0 die eine Betriebsseite ohne Umleitung. Zwei Karten, beide mit
+     * dem Stand, der schon gilt — „Es gab nichts zu ändern", in der Karte.
+     * Die Karte „Anmeldung" wird vorher einmal gespeichert: Beim ersten Mal
+     * legt sie ihre zwei Werte in `app_state` an, und die Meldung waere eine
+     * andere. */
+    require_once $srv . '/totp_lib.php';
+    require_once $srv . '/kopfzeilen_lib.php';
+    $anmFelder = ['action' => 'anmeldung',
+                  ZF_GERAET_K_USER => (string)zweitfaktor_geraet_tage('user'),
+                  ZF_GERAET_K_VERWALTUNG => (string)zweitfaktor_geraet_tage('verwaltung')];
+    $vor = hole('betrieb_server.php', $b['sid'], ['csrf' => $b['csrf']] + $anmFelder);
+    if ($vor['code'] === 302) { hole('betrieb_server.php', $b['sid']); }   // Meldung abholen
+    $prg('Servereinstellungen · Anmeldung unverändert', 'betrieb_server.php', $anmFelder,
+         'betrieb_server.php#k-anmeldung', 'Es gab nichts zu ändern.');
+    $prg('Servereinstellungen · Kopfzeilen unverändert', 'betrieb_server.php',
+         ['action' => 'kopfzeilen', 'hsts_tage' => (string)kopf_hsts_tage()]
+         + (kopf_csp_scharf() ? ['csp_scharf' => '1'] : []),
+         'betrieb_server.php#k-kopfzeilen', 'Es gab nichts zu ändern.');
+    /* Zwei Karten mehr (Nr. 250 sagt „jeder POST"): Protokoll und
+     * Adresssuche, wieder mit dem Stand, der gilt. Beide werden vorher einmal
+     * gespeichert, aus demselben Grund wie die Anmeldung — die Adresssuche
+     * zählt die Vorgabe beim ersten Mal als Änderung. */
+    require_once $srv . '/protokoll_archiv_lib.php';
+    require_once $srv . '/geocoder_lib.php';
+    $protFelder = ['action' => 'protokoll',
+                   'protokoll_frist' => (string)protokoll_frist_verwaltung(),
+                   'archiv_tage' => (string)protokoll_archiv_tage(),
+                   'archiv_behalten' => (string)protokoll_archiv_behalten()]
+                + (protokoll_archiv_versand() ? ['archiv_versand' => '1'] : []);
+    $geoFelder = ['action' => 'geocoder', 'dienst' => geocoder_dienst()]
+               + (geocoder_installation_an() ? ['adresssuche' => '1'] : []);
+    foreach ([$protFelder, $geoFelder] as $f) {
+        $vor = hole('betrieb_server.php', $b['sid'], ['csrf' => $b['csrf']] + $f);
+        if ($vor['code'] === 302) { hole('betrieb_server.php', $b['sid']); }
+    }
+    $prg('Servereinstellungen · Protokoll unverändert', 'betrieb_server.php', $protFelder,
+         'betrieb_server.php#k-protokoll', 'Es gab nichts zu ändern.');
+    $prg('Servereinstellungen · Adresssuche unverändert', 'betrieb_server.php', $geoFelder,
+         'betrieb_server.php#k-adresssuche', 'Es gab nichts zu ändern.');
+
     /* Sicherheit: eine Sperre aufheben, die es nicht gibt — Ton warn. */
     $prg('Sicherheit · Sperre aufheben (gibt es nicht)', 'betrieb_sicherheit.php',
          ['action' => 'aufheben', 'topf' => 'rollenprobe', 'merkmal' => 'rollenprobe'],

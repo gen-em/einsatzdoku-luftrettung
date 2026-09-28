@@ -826,8 +826,28 @@ neu ein (bei Pflichtrollen: erst zurücksetzen lassen).
 
 **Was er schützt und was nicht.** Er schützt die **Anmeldung** gegen ein
 gestohlenes Passwort. Gegen den Angriff auf eine gestohlene Datenbank hilft
-er nicht — dagegen steht der Server-Anteil (Abschnitt 5). Ein „Gerät 30 Tage
-merken" gibt es nicht; der Code wird bei jeder Anmeldung gefragt.
+er nicht — dagegen steht der Server-Anteil (Abschnitt 5).
+
+**Dieses Gerät merken** (seit Web 21.8.0). Im Code-Schritt steht unter dem
+Feld der Haken **„Dieses Gerät n Tage merken"**. Gibst du den Code aus der
+App mit Haken ein, fragt die Anmeldung an diesem Browser danach so viele
+Tage keinen Code — nur noch das Passwort. Wie viele Tage es sind, stellt die
+BetreiberIn ein, je Rolle: für NutzerInnen sind es von Haus aus 30, für
+Support, Admin und BetreiberIn 7 (Betrieb → Servereinstellungen, Karte
+„Anmeldung", 12.5). Steht dort „aus", gibt es keinen Haken.
+
+- **Nur nach einem Code aus der App.** Mit einem Wiederherstellungscode oder
+  dem Wiederherstellungsschlüssel gibt es keinen Haken — dann fehlte gerade
+  das Handy.
+- **Nicht an einem Rechner, den andere mitbenutzen.** Ein gemerkter Browser
+  ist so gut wie dein Handy: Wer dort dein Passwort kennt, ist drin.
+- **Vergessen:** Einstellungen → Profil, Karte „Zweitfaktor", Zeile
+  „Gemerkte Geräte" → **„Alle vergessen"**. Von selbst vergessen werden alle
+  gemerkten Geräte, wenn du dein **Passwort wechselst oder zurücksetzt**, wenn
+  der Zweitfaktor **ausgeschaltet oder zurückgesetzt** wird, und wenn die
+  BetreiberIn die Dauer **kürzer** stellt, als dein Gerät schon gemerkt ist.
+- Der Browser merkt sich das mit einem Cookie; auf dem Server liegt nur ein
+  Prüfwert davon, kein Gerätename und kein Browsertyp.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -3603,7 +3623,7 @@ Darunter:
 | Karte | Was dort steht |
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** in den Reiter Verwaltung, eingegrenzt auf dieses Konto — als Handelnde oder als Betroffene (11.7); was andere Reiter über das Konto führen, etwa ein eingespieltes Konto-Backup im Reiter Sicherung, zeigt dieser Filter nicht. |
-| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg; die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
+| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg — seit Web 21.8.0 auch die gemerkten Geräte (3.1f); die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
@@ -4316,6 +4336,24 @@ Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 >
 > Wer die Zeilen ändert, sollte den letzten Absatz stehen lassen: Er ist der
 > Grund, warum die anderen beiden dastehen.
+>
+> **Ein zweiter Absatz, seit Web 21.8.0: die Cookies** (Schritt 18, SR-01
+> und SR-02). Auch er ist eine technische Tatsache und keine Rechtsauskunft;
+> ob ein Hinweis darauf in die Datenschutzerklärung gehört, entscheidet die
+> BetreiberIn. Zum Übernehmen:
+>
+> ```
+> ## Welche Cookies diese Anwendung setzt
+>
+> Die Anwendung setzt nur Cookies, die für die Anmeldung nötig sind, und
+> keine zur Analyse oder Werbung. Das Sitzungscookie hält die Anmeldung,
+> ein zweites bindet sie an diesen Browser; beide enden, wenn der Browser
+> geschlossen oder man abgemeldet wird. Wer beim Zweitfaktor „Dieses Gerät
+> merken" wählt, bekommt ein drittes Cookie, das so viele Tage gilt, wie die
+> BetreiberIn eingestellt hat; auf dem Server liegt davon nur ein Prüfwert,
+> kein Gerätename und kein Browsertyp. Beim Setzen eines Passworts kommt für
+> diesen einen Vorgang ein eigenes Sitzungscookie dazu.
+> ```
 
 **Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:
 
@@ -5282,6 +5320,12 @@ verwerfen sollte.
 
 ### 12.5 Servereinstellungen
 
+**Nach dem Speichern steht die Meldung in der Karte, in der du geklickt
+hast**, und die Seite springt dorthin (seit Web 21.8.0). „Neu laden" schickt
+danach nichts noch einmal ab — bis dahin wiederholte es die Handlung, etwa
+eine Rundmail. Hat die Seite eine Eingabe abgewiesen, bleibt sie mit dem
+Getippten stehen, und die Meldung steht oben.
+
 #### Karte „Ankündigung" (seit Web 20.38.0)
 
 Ganz oben: Hier setzt du den Streifen, der über jeder Seite steht, und
@@ -5542,6 +5586,23 @@ Demo-Konto zum Vorzeigen haben.
 
 **Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht;** die
 Zugangsdaten stehen in diesem Handbuch und im README.
+
+#### Karte „Anmeldung" (seit Web 21.8.0)
+
+Wie lange ein Browser nach einem Code aus der App als bekannt gilt — **„Gerät
+merken"** beim Zweitfaktor (3.1f). Zwei Auswahlfelder, eines für
+**NutzerInnen** (von Haus aus 30 Tage) und eines für **Support, Admin und
+BetreiberIn** (7 Tage — wer mehr darf, soll öfter den Code zeigen). Zur Wahl
+stehen aus, 1, 7, 14, 30 und 90 Tage.
+
+**Kürzer stellen wirkt sofort**, auch für Geräte, die schon gemerkt sind: Wer
+von 30 auf 7 Tage geht, meldet jedes Gerät ab, das älter als 7 Tage ist.
+**„aus"** meldet alle gemerkten Geräte der Gruppe auf einmal ab und nimmt den
+Haken aus dem Code-Schritt. Eine Änderung steht im Protokoll (Verwaltung,
+„Einstellungen").
+
+**Einen Wert je Person gibt es nicht** — eine Einstellung, die kaum jemand
+ändert, ist die Pflege nicht wert.
 
 #### Karte „Protokoll" (seit Web 20.39.0)
 

@@ -843,27 +843,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
-     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
-     `post_ende()`).* Zugeordnet: **Schritt 17**.
-
-     Ein POST, der seine Seite selbst ausgibt statt umzuleiten, hinterlässt
-     im Browser ein Formular, das sich beim Neuladen wiederholt. Ein Teil der
-     Admin-Seiten macht es richtig, ein Teil nicht.
-
-     **Nicht in Schritt 15**, obwohl der Befund dort entstanden ist: Schritt
-     15 verschiebt Code an eine Stelle und ändert keine Wege durch die
-     Anwendung. Umleiten nach POST ist ein geänderter Weg — er gehört in eine
-     Runde, die Wege ändern darf.
-     **Teilweise erledigt 27.09.2026 mit R4-11 (Web 21.1.9):** elf Seiten
-     leiten um, `flash_setzen()` trägt Ort, Ton und Ergebnis (E-R4-33 bis
-     -36). **Offen: `betrieb_server.php`** — auf der Liste von Schritt 18
-     und deshalb dort (Konzept R4 2.3); der Weg ist derselbe.
-     **Zuordnung in 18 (28.09.2026):** Paket SR-02, das `betrieb_server.php`
-     ohnehin um eine Karte erweitert (Konzept SR, E-SR-37).
-
-<!-- -->
-
 252. **Gelaufene Migrationen fragen das Schema 57× von Hand.** · gehört zu: 14 · Stand: offen · seit 20.09.2026
      *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-04).* Zugeordnet:
      **P8** (R66, neues Migrationsregister).

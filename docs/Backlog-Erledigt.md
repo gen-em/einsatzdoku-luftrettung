@@ -9191,3 +9191,29 @@ zutreffen.
      Erledigt 28.09.2026 mit SR-01 (Web 21.7.0, E-SR-06): lesend setzt
      secure fest; einrichtung bleibt HTTPS-abhängig, weil sie läuft, bevor
      HTTPS steht (F-SR-06, Kommentar an der Tabelle).
+
+250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
+     `post_ende()`).* Zugeordnet: **Schritt 17**.
+
+     Ein POST, der seine Seite selbst ausgibt statt umzuleiten, hinterlässt
+     im Browser ein Formular, das sich beim Neuladen wiederholt. Ein Teil der
+     Admin-Seiten macht es richtig, ein Teil nicht.
+
+     **Nicht in Schritt 15**, obwohl der Befund dort entstanden ist: Schritt
+     15 verschiebt Code an eine Stelle und ändert keine Wege durch die
+     Anwendung. Umleiten nach POST ist ein geänderter Weg — er gehört in eine
+     Runde, die Wege ändern darf.
+     **Teilweise erledigt 27.09.2026 mit R4-11 (Web 21.1.9):** elf Seiten
+     leiten um, `flash_setzen()` trägt Ort, Ton und Ergebnis (E-R4-33 bis
+     -36). **Offen: `betrieb_server.php`** — auf der Liste von Schritt 18
+     und deshalb dort (Konzept R4 2.3); der Weg ist derselbe.
+     **Zuordnung in 18 (28.09.2026):** Paket SR-02, das `betrieb_server.php`
+     ohnehin um eine Karte erweitert (Konzept SR, E-SR-37).
+     Erledigt 28.09.2026 mit Schritt 18, SR-02 (Web 21.8.0):
+     betrieb_server.php leitet nach jedem erfolgreichen POST um — eine
+     Stelle für zehn Zweige, flash_setzen() mit dem Ort der Karte, die
+     Meldung steht in ihr; eine abgewiesene Eingabe bleibt stehen, die
+     Rundmail leitet auch nach einem Fehlschlag um (E-R4-34). Beleg:
+     Rollenprobe (Umleitung an vier Karten, 492 Erwartungen) und Bedienweg
+     betrieb-server-neuladen.

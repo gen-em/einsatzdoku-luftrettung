@@ -938,7 +938,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 38 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 39 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 3 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 37 |
@@ -960,7 +960,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `plus.svg` | Tabler Icons „plus" (MIT) | 22 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
-| `protokoll.svg` | Tabler Icons „list" (MIT) | 20 |
+| `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 32 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |

@@ -42,6 +42,11 @@ declare(strict_types=1);
  *      Marke „nur die erste zaehlt" an `app_state`, und die zwei Setzstellen
  *      am Quelltext (POST mit Token in `auth_guard.php`, nach dem Commit in
  *      `ingest.php`). Den Reset selbst loest sie auch hier nicht aus.
+ *   5b. „Gerät merken" (Schritt 18, SR-02, E-SR-07, -17, -18): Haken mit der
+ *      Dauer der Rollengruppe, gemerkt nur nach App-Code, danach ohne Code;
+ *      „Alle vergessen", Passwortwechsel, Abschalten und Ablauf vergessen;
+ *      ein fremdes Cookie zählt nicht; Dauer 0 und eine verkürzte Dauer
+ *      gelten sofort; der Aufräumschritt; Protokoll.
  *   7. Der Bus-Faktor (E-P5c-16, -56): Ein Konto ohne Zweitfaktor zählt nicht
  *      als handlungsfähig; dazu die Tabelle der Lagen (Rollenmix → Plakette
  *      und Ton) über `status_verwaltungszeile()` mit gesetzten Zahlen —
@@ -66,6 +71,7 @@ require_once $srv . '/db.php';
 require_once $srv . '/totp_lib.php';
 require_once $srv . '/ratelimit_lib.php';
 require_once $srv . '/demo_lib.php';
+require_once $srv . '/serverkrypto_lib.php';
 require_once $srv . '/status_lib.php';
 require_once $wurzel . '/tools/zweitfaktor/totp.php';
 
@@ -308,6 +314,224 @@ pruefe($a['code'] === 303 && $st === 'gesperrt', 'nach dem Passwort: halber Stan
 $r = code_senden($naechster());
 $st = (string)$pdo->query('SELECT status FROM users WHERE id = ' . $uid)->fetchColumn();
 pruefe($r['code'] === 302 && $st === 'aktiv', 'nach dem Code: angemeldet, Löschung zurückgenommen', "$st, HTTP {$r['code']}");
+
+/* ---- 5b. „Gerät merken" (Schritt 18, SR-02) ---------------------------------
+ *
+ * DAS KONTO IST ADMIN, also Verwaltung: Vorgabe 7 Tage. Die zwei Einstellungen
+ * stehen vorher fest auf ihren Vorgaben und nachher wieder auf dem Stand von
+ * vorher. Die Geräte-Tabelle räumt die Kaskade mit dem Konto ab.
+ *
+ * DAS COOKIE `EDGERAET` BLEIBT ÜBER ANMELDUNGEN HINWEG LIEGEN, und genau das
+ * ist sein Zweck. `passwort()` beginnt mit einem leeren Behälter (ein neuer
+ * Browser); `$mitGeraet()` behält das Gerätecookie (derselbe Browser nach
+ * dem Abmelden). */
+echo "== 5b. Gerät merken (SR-02)\n";
+if (!zweitfaktor_geraete_da($pdo)) {
+    pruefe(false, 'Gerät merken', 'die Tabelle vertraute_geraete fehlt — update.php, nicht gemessen');
+} else {
+    $einst = [ZF_GERAET_K_USER => app_state_lesen(ZF_GERAET_K_USER),
+              ZF_GERAET_K_VERWALTUNG => app_state_lesen(ZF_GERAET_K_VERWALTUNG)];
+    register_shutdown_function(static function () use ($einst): void {
+        foreach ($einst as $k => $v) {
+            if ($v === null) { app_state_loeschen($k); } else { app_state_setzen($k, $v); }
+        }
+    });
+    app_state_setzen(ZF_GERAET_K_USER, '30');
+    app_state_setzen(ZF_GERAET_K_VERWALTUNG, '7');
+    $zeilen = static fn(): int => (int)$pdo->query("SELECT COUNT(*) FROM vertraute_geraete WHERE user_id = $uid")->fetchColumn();
+    $protokollArt = static fn(string $art): int => (int)$pdo->query(
+        "SELECT COUNT(*) FROM protokoll_ereignisse WHERE art = '$art' AND betroffen_user_id = $uid")->fetchColumn();
+    $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([$merkmal]);
+    $mitGeraet = static function () use (&$keks): array {
+        /* Derselbe Browser: nur das Gerätecookie überlebt das Abmelden. */
+        $g = $keks['EDGERAET'] ?? null;
+        $keks = $g !== null ? ['EDGERAET' => $g] : [];
+        $s = http('GET', 'login.php');
+        global $mail, $token, $iter;
+        return http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'email' => $mail,
+                                          'tokens' => json_encode([(string)$iter => $token])]);
+    };
+    $codeMerken = static function (string $code): array {
+        $s = http('GET', 'login.php');
+        return http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'schritt' => 'code',
+                                          'code' => $code, 'merken' => '1']);
+    };
+
+    // 1. Der Haken, mit der Dauer der Rollengruppe
+    passwort();
+    $s = http('GET', 'login.php');
+    pruefe(str_contains($s['rumpf'], 'name="merken"') && str_contains($s['rumpf'], 'Dieses Gerät 7 Tage merken'),
+           'Code-Schritt (Admin): Haken „Dieses Gerät 7 Tage merken"');
+    $s = http('GET', 'login.php?art=rc');
+    pruefe(!str_contains($s['rumpf'], 'name="merken"'), 'im Formular des Wiederherstellungscodes kein Haken (E-SR-18)');
+    $pdo->prepare("UPDATE users SET role = 'user' WHERE id = ?")->execute([$uid]);
+    $s = http('GET', 'login.php');
+    pruefe(str_contains($s['rumpf'], 'Dieses Gerät 30 Tage merken'), 'dasselbe Konto als NutzerIn: „30 Tage" — die andere Gruppe');
+    $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ?")->execute([$uid]);
+
+    // 2. Merken nach App-Code, dann ohne Code
+    $vorGemerkt = $protokollArt('zweitfaktor_geraet_gemerkt');
+    $r = $codeMerken($naechster());
+    $gerat = $keks['EDGERAET'] ?? '';
+    pruefe($r['code'] === 302 && $gerat !== '' && $zeilen() === 1,
+           'App-Code mit Haken: angemeldet, Cookie EDGERAET, eine Zeile', "HTTP {$r['code']}, Zeilen " . $zeilen());
+    $roh = (string)$pdo->query("SELECT token_hash FROM vertraute_geraete WHERE user_id = $uid")->fetchColumn();
+    pruefe($roh === hash('sha256', $gerat), 'in der Tabelle steht der SHA-256, nicht der Wert');
+    pruefe($protokollArt('zweitfaktor_geraet_gemerkt') === $vorGemerkt + 1, 'Protokoll „zweitfaktor_geraet_gemerkt"');
+    http('GET', 'logout.php');
+    $a = $mitGeraet();
+    pruefe($a['code'] === 302 && str_ends_with($a['ort'], 'index.php'),
+           'derselbe Browser nach dem Abmelden: Passwort → 302 auf index.php, kein Code', $a['code'] . ' ' . $a['ort']);
+
+    // 3. Ein fremdes Cookie an einem anderen Konto zählt nicht
+    $mail2 = 'zweitfaktor-bf-geraet@probe.invalid';
+    $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$mail2]);
+    $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
+                   VALUES (?, 'Zweitfaktorprobe B', 'admin', ?, ?, ?)")
+        ->execute([$mail2, password_hash($token, PASSWORD_DEFAULT), $salz, $iter]);
+    $uid2 = (int)$pdo->lastInsertId();
+    $pdo->prepare('UPDATE users SET totp_geheimnis = ?, totp_seit = UTC_TIMESTAMP() WHERE id = ?')
+        ->execute([sk_versiegeln(random_bytes(20), 'totp|' . $uid2), $uid2]);
+    $keks = ['EDGERAET' => $gerat];
+    $s = http('GET', 'login.php');
+    $b2 = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'email' => $mail2,
+                                     'tokens' => json_encode([(string)$iter => $token])]);
+    pruefe($b2['code'] === 303, 'das Cookie von Konto A an Konto B: Code-Schritt (303)', (string)$b2['code']);
+    $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$uid2]);
+
+    // 4. Ein Wiederherstellungscode merkt nicht
+    $keks = [];
+    passwort();
+    $s = http('GET', 'login.php?art=rc');
+    $rc3 = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'schritt' => 'code', 'art' => 'rc',
+                                      'rc' => $codes[1] ?? '', 'merken' => '1']);
+    pruefe($rc3['code'] === 302 && $zeilen() === 1 && !isset($keks['EDGERAET']),
+           'Wiederherstellungscode mit handgebautem merken=1: angemeldet, nichts gemerkt',
+           "HTTP {$rc3['code']}, Zeilen " . $zeilen());
+
+    // 5. Die Dauer wird beim Prüfen gerechnet
+    $keks = ['EDGERAET' => $gerat];
+    $pdo->prepare('UPDATE vertraute_geraete SET angelegt_am = UTC_TIMESTAMP() - INTERVAL 10 DAY WHERE user_id = ?')
+        ->execute([$uid]);
+    app_state_setzen(ZF_GERAET_K_VERWALTUNG, '30');
+    $a = $mitGeraet();
+    pruefe($a['code'] === 302, 'Dauer 30, Gerät 10 Tage alt: ohne Code', (string)$a['code']);
+    http('GET', 'logout.php');
+    app_state_setzen(ZF_GERAET_K_VERWALTUNG, '7');
+    $a = $mitGeraet();
+    pruefe($a['code'] === 303, 'auf 7 gesenkt, dasselbe Gerät: Code-Schritt — ohne dass jemand vergisst',
+           (string)$a['code']);
+    pruefe(zweitfaktor_geraete_zahl($uid) === 0 && $zeilen() === 1,
+           '… die Zahl im Profil ist 0, die Zeile liegt noch (Aufräumen ist Hygiene)');
+    $weg = zweitfaktor_geraete_aufraeumen($pdo);
+    pruefe($weg >= 1 && $zeilen() === 0, 'der Aufräumschritt löscht die abgelaufene Zeile', "$weg gelöscht");
+
+    // 6. Dauer 0: kein Haken, gemerkte Geräte gelten nicht
+    $keks = [];
+    passwort();
+    $r = $codeMerken($naechster());
+    $gerat = $keks['EDGERAET'] ?? '';
+    app_state_setzen(ZF_GERAET_K_VERWALTUNG, '0');
+    $a = $mitGeraet();
+    $s = http('GET', 'login.php');
+    pruefe($a['code'] === 303 && !str_contains($s['rumpf'], 'name="merken"'),
+           'Dauer 0: Code-Schritt trotz Cookie, und kein Haken', (string)$a['code']);
+    http('GET', 'login.php?abbrechen=1');
+    app_state_setzen(ZF_GERAET_K_VERWALTUNG, '7');
+    app_state_setzen(ZF_GERAET_K_USER, '365');
+    pruefe(zweitfaktor_geraet_tage('user') === 30, 'ein Wert außerhalb der Wahl (365) gilt als Vorgabe 30');
+    app_state_setzen(ZF_GERAET_K_USER, '30');
+
+    // 7. „Alle vergessen" im Profil
+    $a = $mitGeraet();
+    pruefe($a['code'] === 302, 'wieder 7 Tage: ohne Code', (string)$a['code']);
+    $vorVergessen = $protokollArt('zweitfaktor_geraete_vergessen');
+    $e = http('GET', 'einstellungen.php?t=profil');
+    pruefe(str_contains($e['rumpf'], 'Gemerkte Geräte') && str_contains($e['rumpf'], 'form="f-zf-geraete"'),
+           'Profil: Zeile „Gemerkte Geräte" mit „Alle vergessen"');
+    $v = http('POST', 'einstellungen.php?t=profil', ['csrf' => csrf_von($e['rumpf']),
+                                                      'action' => 'zf_geraete_vergessen']);
+    pruefe($v['code'] === 302 && $zeilen() === 0 && !isset($keks['EDGERAET'])
+           && $protokollArt('zweitfaktor_geraete_vergessen') === $vorVergessen + 1,
+           '„Alle vergessen": 302, Zeilen 0, Cookie gelöscht, Protokoll', "HTTP {$v['code']}, Zeilen " . $zeilen());
+    $keks = ['EDGERAET' => $gerat] + $keks;
+    http('GET', 'logout.php');
+    $keks = ['EDGERAET' => $gerat];
+    $a = $mitGeraet();
+    pruefe($a['code'] === 303, 'danach mit dem alten Cookie: Code-Schritt', (string)$a['code']);
+    http('GET', 'login.php?abbrechen=1');
+
+    // 8. Der Passwortwechsel vergisst
+    $keks = [];
+    passwort();
+    $r = $codeMerken($naechster());
+    $e = http('GET', 'einstellungen.php?t=profil');
+    $neuToken = bin2hex(random_bytes(32));
+    $p = http('POST', 'einstellungen.php?t=profil', ['csrf' => csrf_von($e['rumpf']), 'action' => 'password',
+            'old_token' => $token, 'new_token' => $neuToken, 'new_salt' => bin2hex(random_bytes(16)),
+            'new_iter' => (string)KDF_ITER_ZIEL]);
+    $token = $neuToken;
+    pruefe($zeilen() === 0 && str_contains(html_entity_decode($p['rumpf']), 'Gemerkte Geräte sind vergessen'),
+           'Passwortwechsel: Zeilen 0, die Meldung sagt es', 'HTTP ' . $p['code'] . ', Zeilen ' . $zeilen());
+
+    /* 8b. Das neue Passwort über den Link vergisst ebenso (`pw_handling.php`).
+     * Bis SR-02 fuhr keine Probe diesen Weg bis zum Speichern. Das Konto hat
+     * keine Hüllen, also ist es die Erstvergabe: Der Server prüft Form und
+     * Anteil-Kennung der Hüllen, öffnen kann er sie nicht — gebaut werden sie
+     * hier aus Zufall in der richtigen Form. Danach stehen Passwort, Salz und
+     * Hüllen wieder wie vorher, damit Teil 9 auf demselben Konto weiterläuft. */
+    $keks = [];
+    passwort();
+    $codeMerken($naechster());
+    $vorZ = $zeilen();
+    $vorReset = $protokollArt('zweitfaktor_geraete_vergessen');
+    $sichernPw = $pdo->query("SELECT password_hash, kdf_salt, kdf_iter, pat_wrap_pw, pat_wrap_rc, pat_key_check
+                              FROM users WHERE id = $uid")->fetch(PDO::FETCH_ASSOC);
+    $linkTok = bin2hex(random_bytes(32));
+    $pdo->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
+                   VALUES (?, ?, NOW() + INTERVAL 1 HOUR)')->execute([$uid, hash('sha256', $linkTok)]);
+    $keks = [];
+    http('GET', 'pw_handling.php?token=' . $linkTok);
+    http('GET', 'pw_handling.php?w=1');
+    $kennung = anteil_ausgeliefert();
+    $r = http('POST', 'pw_handling.php', [
+        'new_token' => bin2hex(random_bytes(32)), 'new_salt' => bin2hex(random_bytes(16)),
+        'new_iter'  => (string)KDF_ITER_ZIEL,
+        'wrap_pw'   => ($kennung !== null ? 'edka1:' . $kennung . ':' : 'edk1:') . base64_encode(random_bytes(48)),
+        'wrap_rc'   => 'edk1:' . base64_encode(random_bytes(48)), 'key_check' => '']);
+    $gesetzt = (string)$pdo->query("SELECT password_hash FROM users WHERE id = $uid")->fetchColumn()
+               !== $sichernPw['password_hash'];
+    pruefe($vorZ === 1 && $gesetzt && $zeilen() === 0
+           && $protokollArt('zweitfaktor_geraete_vergessen') === $vorReset + 1,
+           'Passwort über den Link (pw_handling.php): gesetzt, Zeilen 0, Protokoll',
+           "vorher $vorZ, HTTP {$r['code']}, gesetzt " . ($gesetzt ? 'ja' : 'nein') . ', Zeilen ' . $zeilen());
+    $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ?, kdf_iter = ?, pat_wrap_pw = ?,
+                                    pat_wrap_rc = ?, pat_key_check = ? WHERE id = ?')
+        ->execute([$sichernPw['password_hash'], $sichernPw['kdf_salt'], $sichernPw['kdf_iter'],
+                   $sichernPw['pat_wrap_pw'], $sichernPw['pat_wrap_rc'], $sichernPw['pat_key_check'], $uid]);
+    $pdo->prepare('DELETE FROM password_resets WHERE user_id = ?')->execute([$uid]);
+    $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([$merkmal]);
+
+    // 9. Abschalten vergisst, auf jedem Weg
+    $keks = [];
+    passwort();
+    $codeMerken($naechster());
+    $vorZ = $zeilen();
+    $roh = (string)totp_geheimnis($uid);
+    $sichern = $pdo->query("SELECT totp_geheimnis, totp_seit, totp_schritt FROM users WHERE id = $uid")->fetch(PDO::FETCH_ASSOC);
+    $codesSichern = $pdo->query("SELECT hash, benutzt_am FROM totp_codes WHERE user_id = $uid")->fetchAll(PDO::FETCH_ASSOC);
+    totp_abschalten($uid, 'verwaltung');
+    pruefe($vorZ === 1 && $zeilen() === 0, 'totp_abschalten(…, verwaltung): die Geräte gehen mit', "$vorZ → " . $zeilen());
+    /* Zurückstellen, damit die Teile danach mit eingeschaltetem Zweitfaktor
+     * weiterlaufen — Geheimnis und Codes wie vorher. */
+    $pdo->prepare('UPDATE users SET totp_geheimnis = ?, totp_seit = ?, totp_schritt = ? WHERE id = ?')
+        ->execute([$sichern['totp_geheimnis'], $sichern['totp_seit'], $sichern['totp_schritt'], $uid]);
+    foreach ($codesSichern as $c) {
+        $pdo->prepare('INSERT INTO totp_codes (user_id, hash, benutzt_am) VALUES (?, ?, ?)')
+            ->execute([$uid, $c['hash'], $c['benutzt_am']]);
+    }
+    $keks = [];
+}
 
 /* ---- 6. Der Demo-Reset leert die Spalten ------------------------------------- */
 echo "== 6. Demo-Reset\n";

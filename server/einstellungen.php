@@ -404,6 +404,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $zfZurueck = ['error', 'Der Zweitfaktor ist nicht eingeschaltet.'];
             }
+        } elseif ($action === 'zf_geraete_vergessen') {
+            /* „ALLE VERGESSEN" (SR-02, E-SR-07): nur am eigenen Konto — die
+             * Kontoseite der Verwaltung setzt den Zweitfaktor zurueck, und
+             * das vergisst mit. Das Cookie dieses Browsers geht mit; ohne
+             * Zeile ist es ohnehin nur noch ein Zufallswert. */
+            $n = zweitfaktor_geraete_vergessen($userId, 'vergessen');
+            sitzung_cookie_loeschen('geraet');
+            $zfZurueck = ['notice', $n > 0
+                ? 'Gemerkte Geräte vergessen (' . $n . '). Die nächste Anmeldung fragt '
+                  . 'überall wieder nach dem Code.'
+                : 'Es war kein Gerät gemerkt.'];
         } elseif ($action === 'zf_ausschalten') {
             if ($zfPflicht) {
                 $zfZurueck = ['error', 'Für deine Rolle ist der Zweitfaktor Pflicht — '
@@ -497,8 +508,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Passwort und Huelle gemeinsam — sonst entstuende ein Konto, das
             // sich zwar anmelden laesst, dessen Angaben aber unlesbar waeren.
             try {
+                require_once __DIR__ . '/totp_lib.php';
+                $geraeteWeg = 0;
                 $_SESSION['epoch'] = db_transaktion(db(), function (PDO $pdo) use (
-                        $newTok, $newSalt, $newIter, $userId, $patReady, $wrapPw, $keyChk): int {
+                        $newTok, $newSalt, $newIter, $userId, $patReady, $wrapPw, $keyChk,
+                        &$geraeteWeg): int {
                 /* Sitzungszaehler mit erhoehen (M1-09/D6).
                  *
                  * Wer sein Passwort wechselt, weil er Missbrauch vermutet,
@@ -547,6 +561,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                WHERE user_id = ? AND used_at IS NULL')
                     ->execute([$userId]);
 
+                /* DIE GEMERKTEN GERAETE GEHEN MIT (Schritt 18, SR-02,
+                 * E-SR-07), aus demselben Grund wie der Zaehler oben: Wer
+                 * sein Passwort wechselt, weil er Missbrauch vermutet, will
+                 * den anderen draussen haben — ein gemerkter Browser des
+                 * Fremden ueberdauerte den Wechsel sonst, wie einst die
+                 * Sitzung (M1-09).
+                 *
+                 * IN DERSELBEN TRANSAKTION, damit „Es wurde nichts geaendert"
+                 * stimmt, wenn es scheitert: Hinter der Transaktion hiesse ein
+                 * Fehler hier, dass das Passwort gewechselt ist, die Seite das
+                 * Gegenteil meldet und der Browser den neuen Schluessel nicht
+                 * uebernimmt. `db_transaktion()` haengt sich an die laufende
+                 * an, und `protokoll()` faengt seine eigenen Fehler. */
+                $geraeteWeg = zweitfaktor_geraete_vergessen($userId, 'passwort');
+
                 /* Die EIGENE Sitzung zieht den neuen Stand mit und bleibt
                  * bestehen (Abnahmekriterium A5: "alle ANDEREN Sitzungen").
                  * Der Browser hat den neuen Datenschluessel in diesem Moment
@@ -557,9 +586,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return (int)$st2->fetchColumn();
                 });
 
+                /* Auch das Geraetecookie DIESES Browsers: Er hat sich mit
+                 * dem alten Passwort als bekannt ausgewiesen. */
+                sitzung_cookie_loeschen('geraet');
                 $notice = 'Passwort geändert. Alle anderen offenen Sitzungen dieses '
                         . 'Kontos sind damit beendet; noch offene Links zum '
-                        . 'Zurücksetzen sind ungültig.';
+                        . 'Zurücksetzen sind ungültig.'
+                        . ($geraeteWeg > 0 ? ' Gemerkte Geräte sind vergessen — die nächste '
+                                           . 'Anmeldung fragt wieder nach dem Code.' : '');
                 /* Signal fuer das Browser-Skript (M2-07): Erst JETZT darf es
                  * den neuen Datenschluessel uebernehmen. */
                 $pwGewechselt = true;
@@ -1597,6 +1631,24 @@ ui_seite_start(['titel' => 'Einstellungen',
                   'klein' => $zfLeer($zfBenutzt) . ' benutzt — neue Codes machen die alten ungültig',
                   'plaketten' => ui_plakette($zf['codes_offen'] . ' von ' . $zf['codes_alle'],
                                              ['ton' => 'blau'])]);
+        /* GEMERKTE GERAETE (SR-02, E-SR-07, -15, -17): Zahl und „Alle
+           vergessen". Der Knopf gehoert zum Formular `f-zf-geraete` unter
+           der Karte (`form=`), weil die Zeile in keinem Formular steht.
+           Vor `update.php` fehlt die Zeile — die Tabelle gibt es noch nicht. */
+        if (zweitfaktor_geraete_da()) {
+            $zfTage = zweitfaktor_geraet_dauer($userRole);
+            ui_zeile(['text' => 'Gemerkte Geräte',
+                      'klein' => $zfTage > 0
+                          ? 'dort fragt die Anmeldung ' . $zfTage . ($zfTage === 1 ? ' Tag' : ' Tage')
+                            . ' lang keinen Code — der Haken steht im Code-Schritt'
+                          : 'auf dieser Anlage für deine Rolle abgeschaltet',
+                      'plaketten' => ui_plakette((string)$zf['geraete'],
+                                                 ['ton' => $zf['geraete'] > 0 ? 'blau' : 'neutral']),
+                      'aktionen' => $zf['geraete'] > 0
+                          ? ui_knopf(['text' => 'Alle vergessen', 'art' => 'leise',
+                                      'attr' => ' form="f-zf-geraete" data-confirm="Alle gemerkten Geräte vergessen? Die nächste Anmeldung fragt dort wieder nach dem Code — auch an diesem." data-confirm-ok="Vergessen" data-confirm-tone="normal"'])
+                          : '']);
+        }
         /* DER RUECKWEG (Konzept RW, E-RW-07; M-RW-01 Bild 4): die dritte
            Zeile. Nur hier, bei eingeschaltetem Zweitfaktor — ausgeschaltet
            hat das Paar keinen Verbraucher. Vor `update.php` ('spalten')
@@ -1646,6 +1698,11 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?php endif; ?>
         </div>
       </form>
+      <?php if (zweitfaktor_geraete_da() && $zf['geraete'] > 0): ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor" id="f-zf-geraete" hidden>
+        <?= csrf_field() ?><input type="hidden" name="action" value="zf_geraete_vergessen">
+      </form>
+      <?php endif; ?>
 <?php elseif (demo_ist_demo($userId)): ?>
       <p class="feld-hinweis">Im Demo-Konto lässt sich der Zweitfaktor nicht einschalten — die Zugangsdaten sind öffentlich und müssen es bleiben.</p>
 <?php else: ?>

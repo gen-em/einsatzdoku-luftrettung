@@ -10,6 +10,11 @@
  *                                 wieder da → entfernen
  *   betrieb-server-rundmail       die Rückfrage nennt die Zahl der
  *                                 erreichbaren Konten; Abbrechen sendet nichts
+ *   betrieb-server-neuladen       Karte „Anmeldung" (Schritt 18, SR-02):
+ *                                 speichern leitet in die Karte um, die
+ *                                 Meldung steht dort einmal, Neuladen
+ *                                 schickt nichts noch einmal (Nr. 250,
+ *                                 `neuladen.mjs` wie die zehn aus R4-11)
  *
  * DIE RUNDMAIL SELBST GEHT HIER NICHT HINAUS. Ob N Konten N Zeilen bekommen,
  * die Gegenstelle N annimmt und eine zweite am selben Tag abgewiesen wird,
@@ -23,6 +28,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
+import { neuladenPruefen } from '../neuladen.mjs';
 
 const SEITE  = k => `${k.basis}/betrieb_server.php`;
 const TEXT   = 'Bedienprobe: Wartung am Dienstag, 20:00 bis 21:00. Danach geht alles weiter.';
@@ -153,6 +159,33 @@ export const wege = [
         };
       } finally {
         aufraeumen();
+      }
+    },
+  },
+  {
+    name: 'betrieb-server-neuladen',
+    paket: 'SR-02', punkt: 'Nr. 250', rolle: 'admin',
+    soll: 'Karte „Anmeldung" speichern: POST → umgeleitet auf #k-anmeldung, Meldung '
+        + 'einmal, Neuladen GET, kein zweiter Protokolleintrag',
+    async fahren(k) {
+      /* DIE LETZTE BETRIEBSSEITE MIT UMLEITUNG (Schritt 18, SR-02): bis Web
+       * 21.7.0 gab sie ihr Ergebnis selbst aus. Gespeichert wird ein Wert,
+       * der sicher anders ist als der jetzige — sonst hieße die Meldung
+       * „Es gab nichts zu ändern", und ins Protokoll käme nichts. */
+      const vorher = php('echo (string)app_state_lesen("zf_geraet_tage_verwaltung");');
+      const neu = vorher === '14' ? '30' : '14';
+      try {
+        return await neuladenPruefen(k, {
+          name: 'betrieb-server-anmeldung', seite: SEITE(k),
+          feld: '#k-anmeldung input[name="action"][value="anmeldung"]',
+          vorher: async (kk) => { await kk.seite.selectOption('#f-zf_geraet_tage_verwaltung', neu); },
+          meldung: 'Gerät merken:', ziel: '#k-anmeldung',
+          zaehler: () => Number(php('echo db()->query("SELECT COUNT(*) FROM protokoll_ereignisse '
+                                  + 'WHERE art = \'einstellungen_anmeldung\'")->fetchColumn();')),
+        });
+      } finally {
+        php(vorher === '' ? 'app_state_loeschen("zf_geraet_tage_verwaltung");'
+                          : 'app_state_setzen("zf_geraet_tage_verwaltung", ' + JSON.stringify(vorher) + ');');
       }
     },
   },

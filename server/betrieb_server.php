@@ -612,6 +612,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     }
 }
 
+/* ---- Anmeldung: „Gerät merken" (Schritt 18, SR-02, E-SR-17) --------------
+ *
+ * ZWEI ZAHLEN, KEINE DRITTE. Eine fuer NutzerInnen (Vorgabe 30 Tage), eine
+ * fuer Support, Admin und BetreiberIn (Vorgabe 7) — die Verwaltung soll
+ * kuerzer laufen als der Dienst. Keine persoenliche Wahl im Profil: Eine
+ * Einstellung, die kaum jemand aendert, kostet nur Pflege (Q-SR-10).
+ *
+ * GERECHNET WIRD BEIM PRUEFEN, nicht beim Merken (`totp_lib.php`): Wer hier
+ * von 30 auf 7 Tage geht, meldet jedes aeltere Geraet sofort ab, und „aus"
+ * ist sofort aus. Die Karte sagt das, bevor gespeichert wird.
+ *
+ * NUR WERTE AUS DER WAHL. Ein handgebautes „365" ist eine Ablehnung, kein
+ * stilles Runden. */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'anmeldung') {
+    csrf_check();
+    require_once __DIR__ . '/totp_lib.php';
+    require_once __DIR__ . '/protokoll_lib.php';
+    $neuTage = [];
+    foreach (['user' => ZF_GERAET_K_USER, 'verwaltung' => ZF_GERAET_K_VERWALTUNG] as $gruppe => $k) {
+        $v = (string)($_POST[$k] ?? '');
+        if (!ctype_digit($v) || !in_array((int)$v, ZF_GERAET_TAGE_WAHL, true)) {
+            $error = 'Gerät merken: bitte eine der vorgegebenen Dauern wählen.';
+            break;
+        }
+        $neuTage[$gruppe] = [$k, (int)$v];
+    }
+    if ($error === null) {
+        $geaendert = [];
+        foreach ($neuTage as $gruppe => [$k, $tage]) {
+            if (zweitfaktor_geraet_tage($gruppe) === $tage && app_state_lesen($k) !== null) { continue; }
+            app_state_setzen($k, (string)$tage);
+            $geaendert[] = ['user' => 'NutzerInnen', 'verwaltung' => 'Support, Admin, BetreiberIn'][$gruppe]
+                         . ' ' . ($tage === 0 ? 'aus' : $tage . ($tage === 1 ? ' Tag' : ' Tage'));
+        }
+        if ($geaendert) {
+            protokoll('verwaltung', 'einstellungen_anmeldung',
+                      'Gerät merken: ' . implode(' · ', $geaendert),
+                      ['geaendert' => $geaendert]);
+        }
+        $notice = $geaendert ? 'Gerät merken: ' . implode(' · ', $geaendert) . '.'
+                             : 'Es gab nichts zu ändern.';
+    }
+}
+
+/* ---- UMLEITEN NACH DEM POST (Schritt 18, SR-02, Backlog Nr. 250, E-SR-37) --
+ *
+ * JEDER ERFOLG DIESER SEITE LEITET UM, mit `flash_setzen()` und dem Ort der
+ * Karte, in der geklickt wurde — der Weg aus R4-11. Bis Web 21.7.0 gab die
+ * Seite ihr POST-Ergebnis selbst aus, und „Neu laden" schickte die Handlung
+ * noch einmal: einen zweiten Schluesselwechsel, eine zweite Rundmail.
+ *
+ * EINE STELLE UND NICHT ZEHN. Die Zweige oben setzen weiter `$notice` und
+ * `$error`; hier entscheidet sich, ob umgeleitet wird. Eine abgewiesene
+ * Eingabe bleibt stehen — die Seite zeigt das Getippte wieder (E-R4-35).
+ * Die Rundmail ist der eine Zweig, in dem auch ein Fehlschlag ein ERGEBNIS
+ * ist: Die Ankuendigung ist dann schon gespeichert, und ein Neuladen haette
+ * den Versand wiederholt (E-R4-34) — sie leitet deshalb auch mit `fehler` um.
+ *
+ * DIE RUECKFRAGE ZUR DEMO-ANMELDUNG reist in den Daten der Meldung mit
+ * (`demo_frage`), statt die Umleitung aufzuhalten. */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $bsAktion = (string)($_POST['action'] ?? '');
+    $bsOrt = str_starts_with($bsAktion, 'schluessel_') ? 'k-schluessel' : ([
+        'ankuendigung' => 'k-ankuendigung', 'rundmail' => 'k-ankuendigung',
+        'ankuendigung_weg' => 'k-ankuendigung', 'speicher' => 'k-speicher',
+        'kopfzeilen' => 'k-kopfzeilen', 'ratenschutz' => 'k-ratenschutz',
+        'protokoll' => 'k-protokoll', 'geocoder' => 'k-adresssuche',
+        'demo_aus' => 'k-konten', 'konten' => 'k-konten', 'anmeldung' => 'k-anmeldung',
+    ][$bsAktion] ?? '');
+    $bsRundmailFehler = $bsAktion === 'rundmail' && $error !== null && $ankForm === null;
+    if ($bsOrt !== '' && (($notice !== null && $error === null) || $bsRundmailFehler)) {
+        flash_setzen($error === null ? 'ok' : 'fehler', (string)($error ?? $notice), $bsOrt,
+                     $demoFrage ? ['demo_frage' => true] : []);
+        /* 302 wie die elf Seiten aus R4-11, nicht 303: Ein Muster, und die
+         * Rollenprobe misst es fuer alle mit derselben Zeile. */
+        header('Location: betrieb_server.php#' . $bsOrt);
+        exit;
+    }
+}
+
+/* Die Meldung aus der Umleitung steht in der Karte, in der geklickt wurde —
+ * die Umleitung springt dorthin, und oben saehe sie niemand. */
+$bsFlash = flash_holen();
+if ($bsFlash !== null && !in_array($bsFlash['ton'], ['ok', 'fehler', 'warn', 'info'], true)) {
+    $bsFlash = null;
+}
+if ($bsFlash !== null && $bsFlash['ort'] === 'k-konten' && !empty($bsFlash['daten']['demo_frage'])) {
+    $demoFrage = true;
+}
+$kartenMeldung = static function (string $id) use ($bsFlash): string {
+    return ($bsFlash !== null && $bsFlash['ort'] === $id)
+        ? '    ' . ui_meldung_markup($bsFlash['ton'], $bsFlash['text']) . "\n" : '';
+};
+
 $sp = speicher_uebersicht();
 $skZustand  = serverschluessel_zustand();
 $anZustand  = anteil_zustand();
@@ -737,6 +831,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
               ? ui_plakette('abgelaufen', ['ton' => 'neutral'])
               : ui_plakette('sichtbar bis ' . datum_zeit_text(iso_utc($ankGesp['bis'])),
                             ['ton' => $ankGesp['ton'] === 'warn' ? 'orange' : 'blau']))]); ?>
+  <?= $kartenMeldung('k-ankuendigung') ?>
     <p class="feld-hinweis">Ein Streifen über jeder Seite, bis er abläuft —
        als Rundmail höchstens einmal je Tag.
        <a href="hilfe.php#12-8-ankuendigung-und-rundmail">Wie er wirkt</a></p>
@@ -831,6 +926,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                   : ($anZustand['stand'] === 'fehlt'
                       ? ui_plakette('nicht eingerichtet', ['ton' => 'neutral'])
                       : ui_plakette('Übergang läuft', ['ton' => 'blau']))))]); ?>
+  <?= $kartenMeldung('k-schluessel') ?>
 
     <p class="feld-hinweis">Zwei Geheimnisse in <code>config.php</code>, nicht
        in der Datenbank — gedruckt gehören beide auf das Schlüsselblatt.
@@ -1048,6 +1144,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           ? ui_plakette($sp['backups']['prozent'] . ' %',
                         ['ton' => speicher_ton($sp['backups']['prozent'], $sp['schwellen'])])
           : '']); ?>
+  <?= $kartenMeldung('k-speicher') ?>
 
     <?php if ($sp['stand'] === null): ?>
       <?= ui_meldung_markup('info', 'Datenbank und Dateien sind noch nicht gemessen. '
@@ -1168,6 +1265,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => kopf_csp_scharf()
           ? ui_plakette('CSP scharf', ['ton' => 'blau'])
           : ui_plakette('CSP meldet nur', ['ton' => 'orange'])]); ?>
+  <?= $kartenMeldung('k-kopfzeilen') ?>
     <p class="feld-hinweis">Die Content-Security-Policy sagt dem Browser, woher
        er etwas laden darf — erst beobachten, dann scharf schalten.
        <a href="hilfe.php#karte-sicherheitskopfzeilen-seit-web-20-7-0">Handbuch: Sicherheitskopfzeilen</a></p>
@@ -1222,6 +1320,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
            'freischaltung' => 'mit Freischaltung',
            'einladung' => 'nur auf Einladung'][konten_reg_art()],
           ['ton' => konten_reg_art() === 'offen' ? 'orange' : 'blau'])]); ?>
+  <?= $kartenMeldung('k-konten') ?>
     <?php if ($demoFrage): ?>
       <?php /* Kein neuer Baustein: `.meldung` mit einem Knopf darin, wie ihn
                die Anwendung an mehreren Stellen fuehrt (`index.php`,
@@ -1308,6 +1407,47 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </form>
   <?php ui_karte_ende(); ?>
 
+  <?php /* ---- Anmeldung (Schritt 18, SR-02, E-SR-15, -17; Q-SR-01, -10) -----
+     *
+     * NACH DEN KONTEN: Wie lange ein Browser als bekannt gilt, ist eine Frage
+     * an die Konten dieser Installation, keine an die Abwehr darunter. Aus
+     * vorhandenen Bausteinen (E-SR-15): zwei Auswahlfelder, ein Knopf.
+     * ------------------------------------------------------------------- */
+        require_once __DIR__ . '/totp_lib.php';
+        $zfTageText = static fn(int $t): string => $t === 0 ? 'aus' : $t . ($t === 1 ? ' Tag' : ' Tage');
+        $zfWahl = [];
+        foreach (ZF_GERAET_TAGE_WAHL as $t) { $zfWahl[(string)$t] = $zfTageText($t); }
+        $zfTageU = zweitfaktor_geraet_tage('user');
+        $zfTageV = zweitfaktor_geraet_tage('verwaltung'); ?>
+  <?php ui_karte_start(['titel' => 'Anmeldung', 'id' => 'k-anmeldung',
+      'plakette' => ui_plakette('Gerät merken ' . $zfTageText($zfTageU) . ' / ' . $zfTageText($zfTageV),
+                                ['ton' => 'neutral'])]); ?>
+  <?= $kartenMeldung('k-anmeldung') ?>
+    <p class="feld-hinweis">Nach einem Code aus der App kann ein Browser gemerkt
+       werden; dort fragt die Anmeldung dann so lange keinen Code. Kürzer
+       stellen wirkt sofort — auch für schon gemerkte Geräte, „aus" meldet alle ab.
+       <a href="hilfe.php#karte-anmeldung-seit-web-21-8-0">Handbuch: Anmeldung</a></p>
+    <?php if (!zweitfaktor_geraete_da()): ?>
+      <?= ui_meldung_markup('warn', 'Die Tabelle für gemerkte Geräte fehlt noch — eine '
+          . 'AdministratorIn muss update.php aufrufen. Bis dahin fragt die Anmeldung '
+          . 'bei jedem Mal nach dem Code.') ?>
+    <?php endif; ?>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="anmeldung">
+      <?php ui_feld(['name' => ZF_GERAET_K_USER, 'label' => 'Gerät merken — NutzerInnen',
+          'art' => 'select', 'optionen' => $zfWahl, 'wert' => (string)$zfTageU,
+          'klein' => 'Vorgabe ' . ZF_GERAET_VORGABE_USER . ' Tage. Gilt nur für Konten mit '
+                   . 'eingeschaltetem Zweitfaktor.']); ?>
+      <?php ui_feld(['name' => ZF_GERAET_K_VERWALTUNG, 'label' => 'Gerät merken — Support, Admin, BetreiberIn',
+          'art' => 'select', 'optionen' => $zfWahl, 'wert' => (string)$zfTageV,
+          'klein' => 'Vorgabe ' . ZF_GERAET_VORGABE_VERWALTUNG . ' Tage — kürzer als für '
+                   . 'NutzerInnen, weil diese Konten mehr dürfen.']); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+  <?php ui_karte_ende(); ?>
+
   <?php /* ---- Protokoll: Frist und Archiv (P5c/AP2, E-P5c-02, -03, -24) ----
            Die Frist der Verwaltungseinträge stand bis Web 20.38.0 in der
            Karte „Konten". Sie gehört zu dem, was sie begrenzt: dem
@@ -1319,6 +1459,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => ui_plakette(count($archive) . (count($archive) === 1 ? ' Archiv' : ' Archive'),
                                 ['ton' => $archive ? 'blau' : 'neutral']),
       'aktion' => ['text' => 'Protokoll lesen', 'href' => 'admin_protokoll.php']]); ?>
+  <?= $kartenMeldung('k-protokoll') ?>
     <p class="feld-hinweis">Was hier steht, begrenzt, wie lange Betriebsereignisse
        liegen — in der Datenbank und im versiegelten Archiv.
        <a href="hilfe.php#das-archiv-nur-betreiberin">Wie das Archiv arbeitet</a></p>
@@ -1364,6 +1505,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => $vBr['stufe'] > 0
           ? ui_plakette('Verlangsamung Stufe ' . $vBr['stufe'], ['ton' => 'orange'])
           : ui_plakette('ruhig', ['ton' => 'blau'])]); ?>
+  <?= $kartenMeldung('k-ratenschutz') ?>
     <p class="feld-hinweis">Eine Sperre dauert beim zweiten Mal länger und
        zählt am eingetippten Namen, nicht am Konto.
        <a href="hilfe.php#11-4a-ratenschutz-was-jemanden-aufhaelt-der-es-von-aussen-versucht">Handbuch: Ratenschutz</a></p>
@@ -1435,6 +1577,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => geocoder_installation_an()
           ? ui_plakette('an', ['ton' => 'blau'])
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
+  <?= $kartenMeldung('k-adresssuche') ?>
     <p class="feld-hinweis">Beim Tippen in einem Ortsfeld und nach jeder Wahl auf
        der Karte gehen der getippte Text und die Koordinate an einen Adressdienst.
        <a href="hilfe.php#karte-adresssuche-seit-web-15-8-0">Handbuch: Adresssuche</a></p>

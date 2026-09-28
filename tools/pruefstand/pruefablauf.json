@@ -465,12 +465,14 @@
         "server/codeblatt.php",
         "server/status_lib.php",
         "server/demo_lib.php",
+        "server/pw_handling.php",
+        "server/einstellungen.php",
         "tools/zweitfaktor/**"
       ],
       "proben": [
         "zweitfaktorprobe"
       ],
-      "anlass": "F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset)"
+      "anlass": "F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset); seit SR-02 auch das Vergessen gemerkter Geraete beim Passwortwechsel (einstellungen.php) und -reset (pw_handling.php), E-SR-07"
     },
     {
       "id": "rueckweg",

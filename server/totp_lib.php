@@ -35,6 +35,13 @@ declare(strict_types=1);
  * `rueckweg_lib.php` (Konzept RW, seit Web 20.45.0); hier bleibt davon nur
  * `totp_abschalten(…, 'schluessel')`.
  *
+ * „GERAET MERKEN" (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07, -17, -18,
+ * -34). Nach einem Code aus der App kann der Browser fuer eine Dauer gemerkt
+ * werden, die die BetreiberIn je Rollengruppe einstellt; dann fragt die
+ * Anmeldung dort keinen Code. Die Helfer heissen `zweitfaktor_geraet_*`,
+ * weil sie den FAKTOR meinen und nicht das Verfahren (E-SR-34) — ab SR-09
+ * merkt auch ein Passkey. Das Datenmodell steht unten am Abschnitt.
+ *
  * OHNE DIE SPALTEN IST ALLES STUMM (E-P5c-36, -53). Zwischen Deploy und
  * `update.php` gibt es `totp_*` nicht; dann fragt die Anmeldung keinen Code,
  * und das Tor der Pflichtrollen schweigt. `totp_spalten_da()` ist die eine
@@ -191,7 +198,7 @@ function totp_spalten_da(?PDO $pdo = null): bool
 function totp_zustand(int $userId): array
 {
     $leer = ['an' => false, 'seit' => null, 'angefangen' => false,
-             'codes_offen' => 0, 'codes_alle' => 0, 'fehlt' => true];
+             'codes_offen' => 0, 'codes_alle' => 0, 'geraete' => 0, 'fehlt' => true];
     if (!totp_spalten_da()) { return $leer; }
     $st = db()->prepare('SELECT totp_seit, totp_geheimnis IS NOT NULL AS g FROM users WHERE id = ?');
     $st->execute([$userId]);
@@ -207,6 +214,7 @@ function totp_zustand(int $userId): array
         'angefangen'  => $z['totp_seit'] === null && (int)$z['g'] === 1,
         'codes_offen' => (int)($n['offen'] ?? 0),
         'codes_alle'  => (int)($n['alle'] ?? 0),
+        'geraete'     => zweitfaktor_geraete_zahl($userId),
         'fehlt'       => false,
     ];
 }
@@ -366,6 +374,11 @@ function totp_anmeldung_pruefen(int $userId, string $eingabe, ?string $nur = nul
  * `totp_zurueckgesetzt`; `daten.weg` unterscheidet sie (E-RW-14). Die Mail
  * an die Kontoadresse verschickt der Aufrufer. EINE Funktion, drei
  * Aufrufer — RW baut das Zurücksetzen nicht ein zweites Mal (3.3).
+ *
+ * DIE GEMERKTEN GERAETE GEHEN MIT, auf jedem Weg (SR-02, E-SR-07): Ein
+ * Faktor, der aus ist, hat keine Geraete, die ihn ersetzen; und wer ihn
+ * zuruecksetzen laesst, weil das Handy weg ist, will auch den Laptop nicht
+ * mehr als bekannt gelten lassen, auf dem jemand anders sitzen koennte.
  */
 function totp_abschalten(int $userId, string $weg): bool
 {
@@ -376,6 +389,7 @@ function totp_abschalten(int $userId, string $weg): bool
                         WHERE id = ?')->execute([$userId]);
         $pdo->prepare('DELETE FROM totp_codes WHERE user_id = ?')->execute([$userId]);
     });
+    zweitfaktor_geraete_vergessen($userId, 'zweitfaktor_' . $weg);
     if ($vorher['an']) {
         require_once __DIR__ . '/protokoll_lib.php';
         protokoll('verwaltung', $weg === 'selbst' ? 'totp_ausgeschaltet' : 'totp_zurueckgesetzt',
@@ -387,4 +401,219 @@ function totp_abschalten(int $userId, string $weg): bool
                   ['weg' => $weg], $userId);
     }
     return true;
+}
+
+
+/* ===========================================================================
+ * „GERAET MERKEN" (Schritt 18, SR-02; E-SR-07, -17, -18, -34)
+ * ===========================================================================
+ *
+ * DAS COOKIE IST DER BESITZ, DIE TABELLE NUR DER HASH. Im Browser liegt
+ * `EDGERAET` mit 32 Zufallsbyte (Parameter in `SITZUNG_COOKIES`,
+ * `sitzung_lib.php`), in `vertraute_geraete` sein SHA-256 — dieselbe
+ * Ueberlegung wie bei der Sitzungsbindung: Ein Datenbankabzug soll kein
+ * Geraet zum bekannten machen. KEIN User-Agent, KEIN Geraetename (R36): Das
+ * erste waere Telemetrie, das zweite eine Eingabe, die niemand pflegt.
+ *
+ * DIE DAUER WIRD BEIM PRUEFEN GERECHNET, NICHT BEIM MERKEN (E-SR-17). Die
+ * Zeile traegt `angelegt_am`; gueltig ist sie, solange `angelegt_am` plus
+ * die HEUTIGE Dauer ihrer Rollengruppe in der Zukunft liegt. So gilt eine
+ * verkuerzte Einstellung sofort fuer alle, und „aus" (0) meldet alle Geraete
+ * auf einmal ab — sonst hiesse „aus" erst in 30 Tagen aus. Das Cookie selbst
+ * traegt die Dauer von damals als Ablauf; es darf laenger leben als die
+ * Zeile, nicht umgekehrt.
+ *
+ * GEMERKT WIRD NUR NACH EINEM CODE AUS DER APP (E-SR-18) — nicht nach einem
+ * Wiederherstellungscode und nicht nach dem Rueckweg: In beiden Lagen fehlte
+ * gerade das Handy, und der Browser ist vor der Betroffenen nicht als ihrer
+ * ausgewiesen. Die Entscheidung trifft `login.php`, das die Art kennt.
+ *
+ * VERGESSEN wird beim Passwortwechsel und -reset (wo `session_epoch`
+ * steigt), bei `totp_abschalten()` auf jedem Weg, mit dem Konto (Kaskade),
+ * im Demo-Reset und mit „Alle vergessen" im Profil. Protokolliert wird Merken
+ * und Vergessen, nicht die Nutzung (E-SR-07).
+ *
+ * VOR `update.php` IST ALLES STUMM: ohne Tabelle kein Haken, kein Erkennen,
+ * keine Zahl — dieselbe Regel wie fuer die Spalten des Zweitfaktors.
+ */
+
+/** Die waehlbaren Dauern in Tagen (E-SR-17); 0 heisst: kein Haken. */
+const ZF_GERAET_TAGE_WAHL = [0, 1, 7, 14, 30, 90];
+/** Die zwei Einstellungen in `app_state`, je Rollengruppe (Q-SR-10). */
+const ZF_GERAET_K_USER       = 'zf_geraet_tage_user';
+const ZF_GERAET_K_VERWALTUNG = 'zf_geraet_tage_verwaltung';
+/** Die Vorgaben: NutzerInnen 30 Tage, die Verwaltung kuerzer (E-SR-17). */
+const ZF_GERAET_VORGABE_USER       = 30;
+const ZF_GERAET_VORGABE_VERWALTUNG = 7;
+
+/** Gibt es die Tabelle schon? Ohne sie ist „Geraet merken" stumm. */
+function zweitfaktor_geraete_da(?PDO $pdo = null): bool
+{
+    static $da = null;
+    if ($da !== null && $pdo === null) { return $da; }
+    $ergebnis = db_hat_tabelle($pdo ?? db(), 'vertraute_geraete');
+    if ($pdo === null) { $da = $ergebnis; }
+    return $ergebnis;
+}
+
+/** `user` oder `verwaltung` — die Verwaltung ist jede Rolle mit Pflicht zum
+ *  Zweitfaktor (Support, Admin, BetreiberIn), dieselbe Menge wie das Tor. */
+function zweitfaktor_geraet_gruppe(?string $rolle): string
+{
+    return rolle_braucht_zweitfaktor($rolle) ? 'verwaltung' : 'user';
+}
+
+/** Die eingestellte Dauer einer Rollengruppe in Tagen; ein Wert ausserhalb
+ *  der Wahl gilt als nicht gesetzt, und dann gilt die Vorgabe. */
+function zweitfaktor_geraet_tage(string $gruppe): int
+{
+    [$k, $vorgabe] = $gruppe === 'verwaltung'
+        ? [ZF_GERAET_K_VERWALTUNG, ZF_GERAET_VORGABE_VERWALTUNG]
+        : [ZF_GERAET_K_USER, ZF_GERAET_VORGABE_USER];
+    $v = app_state_lesen($k);
+    return ($v !== null && ctype_digit($v) && in_array((int)$v, ZF_GERAET_TAGE_WAHL, true))
+        ? (int)$v : $vorgabe;
+}
+
+/** Die Dauer fuer eine Rolle (Tage); 0 heisst: kein Haken, nichts gilt. */
+function zweitfaktor_geraet_dauer(?string $rolle): int
+{
+    return zweitfaktor_geraet_tage(zweitfaktor_geraet_gruppe($rolle));
+}
+
+/** Dieselbe Frage fuer ein Konto — die Rolle aus der Zeile, nicht aus der
+ *  Sitzung (M1-05). Ein Konto, das es nicht gibt, hat 0. */
+function zweitfaktor_geraet_dauer_konto(int $userId): int
+{
+    $st = db()->prepare('SELECT role FROM users WHERE id = ?');
+    $st->execute([$userId]);
+    $rolle = $st->fetchColumn();
+    return $rolle === false ? 0 : zweitfaktor_geraet_dauer((string)$rolle);
+}
+
+/**
+ * Diesen Browser fuer das Konto merken — nach einem Code aus der App.
+ *
+ * Wuerfelt 32 Byte, setzt `EDGERAET` mit der Dauer der Rollengruppe als
+ * Ablauf und schreibt den Hash. Ein Cookie, das der Browser schon trug (ein
+ * anderes Konto, eine abgelaufene Zeile), wird ersetzt; seine Zeile geht mit,
+ * weil sie ohne Cookie niemand mehr vorzeigen kann.
+ *
+ * @return bool Gemerkt? Nein bei Dauer 0 und ohne Tabelle.
+ */
+function zweitfaktor_geraet_merken(int $userId): bool
+{
+    if (!zweitfaktor_geraete_da()) { return false; }
+    $tage = zweitfaktor_geraet_dauer_konto($userId);
+    if ($tage <= 0) { return false; }
+    $alt = sitzung_cookie_lesen('geraet');
+    if ($alt !== null) {
+        db()->prepare('DELETE FROM vertraute_geraete WHERE token_hash = ?')
+            ->execute([hash('sha256', $alt)]);
+    }
+    $wert = bin2hex(random_bytes(32));
+    db()->prepare('INSERT INTO vertraute_geraete (user_id, token_hash, angelegt_am)
+                   VALUES (?, ?, UTC_TIMESTAMP())')->execute([$userId, hash('sha256', $wert)]);
+    sitzung_cookie_setzen('geraet', $wert, $tage * 86400);
+    require_once __DIR__ . '/protokoll_lib.php';
+    protokoll('verwaltung', 'zweitfaktor_geraet_gemerkt',
+              'Gerät gemerkt — die Anmeldung fragt dort ' . $tage . ' Tage keinen Code',
+              ['tage' => $tage], $userId);
+    return true;
+}
+
+/**
+ * Ist dieser Browser fuer das Konto gemerkt — und gilt das heute noch?
+ *
+ * Cookie → Hash → Zeile DIESES Kontos, deren `angelegt_am` plus die heutige
+ * Dauer in der Zukunft liegt. Ein fremdes Cookie an einem anderen Konto
+ * zaehlt nicht: Die Zeile muss zum Konto gehoeren. `zuletzt_am` wird
+ * fortgeschrieben, ohne Protokoll (E-SR-07: je Nutzung waere Rauschen).
+ *
+ * ERST LESEN, DANN SCHREIBEN, und zwar ueber die Kennung: `rowCount()` eines
+ * `UPDATE` zaehlt unter MySQL nur GEAENDERTE Zeilen — zwei Anmeldungen in
+ * derselben Sekunde saehen sonst beim zweiten Mal kein Geraet.
+ */
+function zweitfaktor_geraet_erkannt(int $userId): bool
+{
+    if (!zweitfaktor_geraete_da()) { return false; }
+    $wert = sitzung_cookie_lesen('geraet');
+    if ($wert === null) { return false; }
+    $tage = zweitfaktor_geraet_dauer_konto($userId);
+    if ($tage <= 0) { return false; }
+    $st = db()->prepare('SELECT id FROM vertraute_geraete
+                          WHERE user_id = ? AND token_hash = ?
+                            AND angelegt_am > UTC_TIMESTAMP() - INTERVAL ' . $tage . ' DAY');
+    $st->execute([$userId, hash('sha256', $wert)]);
+    $id = $st->fetchColumn();
+    if ($id === false) { return false; }
+    db()->prepare('UPDATE vertraute_geraete SET zuletzt_am = UTC_TIMESTAMP() WHERE id = ?')
+        ->execute([(int)$id]);
+    return true;
+}
+
+/** Wie viele gemerkte Geraete gelten fuer das Konto heute? */
+function zweitfaktor_geraete_zahl(int $userId): int
+{
+    if (!zweitfaktor_geraete_da()) { return 0; }
+    $tage = zweitfaktor_geraet_dauer_konto($userId);
+    if ($tage <= 0) { return 0; }
+    $st = db()->prepare('SELECT COUNT(*) FROM vertraute_geraete
+                          WHERE user_id = ? AND angelegt_am > UTC_TIMESTAMP() - INTERVAL ' . $tage . ' DAY');
+    $st->execute([$userId]);
+    return (int)$st->fetchColumn();
+}
+
+/**
+ * Alle gemerkten Geraete eines Kontos vergessen.
+ *
+ * `$weg` steht im Protokoll: `vergessen` (der Knopf im Profil), `passwort`,
+ * `passwort_reset`, `zweitfaktor_<weg>` (aus `totp_abschalten()`). Ein
+ * Eintrag nur, wenn etwas geloescht wurde — sonst stuende bei jedem
+ * Passwortwechsel ein „0 vergessen" im Protokoll.
+ *
+ * @return int Zahl der geloeschten Zeilen, abgelaufene eingeschlossen.
+ */
+function zweitfaktor_geraete_vergessen(int $userId, string $weg): int
+{
+    if (!zweitfaktor_geraete_da()) { return 0; }
+    $st = db()->prepare('DELETE FROM vertraute_geraete WHERE user_id = ?');
+    $st->execute([$userId]);
+    $n = $st->rowCount();
+    if ($n > 0) {
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll('verwaltung', 'zweitfaktor_geraete_vergessen',
+                  'Gemerkte Geräte vergessen (' . $n . ') — ' . match ($weg) {
+                      'vergessen'      => 'im Profil',
+                      'passwort'       => 'mit dem Passwortwechsel',
+                      'passwort_reset' => 'mit dem neuen Passwort',
+                      default          => str_starts_with($weg, 'zweitfaktor_')
+                                        ? 'mit dem Zweitfaktor' : $weg,
+                  }, ['weg' => $weg, 'anzahl' => $n], $userId);
+    }
+    return $n;
+}
+
+/**
+ * Abgelaufene Zeilen loeschen — der Schritt „Gemerkte Geräte" im
+ * Aufraeumjob (`job_aufraeumen_schritte()`).
+ *
+ * JE ROLLE, weil jede Rolle ihre Gruppe und damit ihre Dauer hat. Eine Dauer
+ * 0 loescht alle Zeilen der Gruppe — sie gelten ohnehin nicht mehr.
+ *
+ * @return int Zahl der geloeschten Zeilen.
+ */
+function zweitfaktor_geraete_aufraeumen(PDO $pdo): int
+{
+    if (!zweitfaktor_geraete_da($pdo)) { return 0; }
+    $n = 0;
+    foreach (array_keys(ROLLEN) as $rolle) {
+        $tage = zweitfaktor_geraet_dauer($rolle);
+        $st = $pdo->prepare('DELETE g FROM vertraute_geraete g JOIN users u ON u.id = g.user_id
+                              WHERE u.role = ? AND g.angelegt_am <= UTC_TIMESTAMP() - INTERVAL '
+                            . $tage . ' DAY');
+        $st->execute([$rolle]);
+        $n += $st->rowCount();
+    }
+    return $n;
 }

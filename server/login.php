@@ -422,6 +422,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                     login_zugang($u, $t0, true);
                     unset($_SESSION['totp_halb']);
                     anmeldung_vollenden($u, !empty($halb['demo']));
+                    /* GERAET MERKEN NUR NACH EINEM CODE AUS DER APP (SR-02,
+                     * E-SR-18): Ein Wiederherstellungscode heisst, das Handy
+                     * fehlte — dann ist der Browser vor der Betroffenen nicht
+                     * als ihrer ausgewiesen. Der Haken steht deshalb nur im
+                     * App-Formular, und diese Zeile fragt die Art noch einmal:
+                     * ein handgebautes `merken=1` am anderen Feld zaehlt nicht. */
+                    if ($pr['art'] === 'app' && ($_POST['merken'] ?? '') === '1') {
+                        zweitfaktor_geraet_merken($kontoId);
+                    }
                     if ($pr['art'] === 'code') {
                         /* Ein Wiederherstellungscode heisst: Das Handy fehlte.
                          * Das gehoert ins Protokoll — nach dem Anlegen der
@@ -743,8 +752,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * Stand gar nicht erst: Er liefe nach fünf Minuten ab, die Sperre
              * erst nach fünfzehn. Die Meldung sagt es gleich hier. */
             $mitCode = totp_an((int)$u['id']);
-            login_zugang($u, $t0, !$mitCode);
-            if (!$mitCode) {
+            /* EIN GEMERKTES GERAET ERSETZT DEN CODE (Schritt 18, SR-02,
+             * E-SR-07, -17). Nach dem Passwort und VOR dem halben Stand:
+             * `zweitfaktor_geraet_erkannt()` verlangt das Cookie `EDGERAET`,
+             * eine Zeile DIESES Kontos und eine Dauer, die heute noch gilt —
+             * gerechnet beim Pruefen, so dass „aus" sofort aus ist. Die
+             * Anmeldung ist damit vollstaendig: Passwort und Besitz. */
+            $gemerkt = $mitCode && zweitfaktor_geraet_erkannt((int)$u['id']);
+            login_zugang($u, $t0, !$mitCode || $gemerkt);
+            if (!$mitCode || $gemerkt) {
                 anmeldung_vollenden($u, $istDemoAdresse);
                 header('Location: index.php'); exit;
             }
@@ -899,6 +915,17 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
         ui_feld(['name' => 'code', 'label' => 'Code aus der App', 'klasse' => 'feld-code',
                  'platzhalter' => '000 000',
                  'attr' => ' inputmode="numeric" autocomplete="one-time-code" autofocus required']);
+        /* DER HAKEN „GERAET MERKEN" (SR-02, E-SR-15, -17, -18): nur hier,
+           im Formular des App-Codes, und nur, wenn die Rollengruppe eine
+           Dauer hat. Die Zahl steht im Text — sie ist die Einstellung der
+           Anlage fuer diese Rolle, nicht eine Wahl der Person. */
+        $zfTage = zweitfaktor_geraete_da() ? zweitfaktor_geraet_dauer_konto((int)$halb['konto']) : 0;
+        if ($zfTage > 0) {
+            ui_schalter(['name' => 'merken', 'id' => 'sw-merken',
+                         'label' => 'Dieses Gerät ' . $zfTage . ($zfTage === 1 ? ' Tag' : ' Tage') . ' merken',
+                         'klein' => 'Dann fragt die Anmeldung hier keinen Code. Nicht an einem Rechner, '
+                                  . 'den andere mitbenutzen.']);
+        }
     } ?>
     <div class="listen-form-fuss">
       <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>

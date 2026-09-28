@@ -713,6 +713,14 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             $zahlen['sitzungen'] = sitzung_aufraeumen(
                 SESSION_TIMEOUT_S + SITZUNG_KARENZ_S);
         },
+        /* GEMERKTE GERAETE (Schritt 18, SR-02, E-SR-07). Hygiene, kein
+         * Schutz: Eine abgelaufene Zeile oeffnet ohnehin nichts mehr, weil
+         * `zweitfaktor_geraet_erkannt()` die Dauer beim Pruefen rechnet
+         * (E-SR-17). Die Arbeit steht in `totp_lib.php`, neben dem Rest. */
+        'Gemerkte Geräte' => function (PDO $pdo) use (&$zahlen): void {
+            require_once __DIR__ . '/totp_lib.php';
+            $zahlen['geraete'] = zweitfaktor_geraete_aufraeumen($pdo);
+        },
         'Sperrliste gelöschter Kennungen' => function (PDO $pdo): void {
             $pdo->exec('DELETE FROM deleted_refs
                         WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)');
