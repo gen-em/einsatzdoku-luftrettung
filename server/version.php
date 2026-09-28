@@ -7856,5 +7856,25 @@ declare(strict_types=1);
  *   3,7 statt 5,8 s zu sehen, fertig ist die Seite rund 0,7 s spaeter
  *   (E-R4-64). Die Messung dazu ist mit berichtigt: Sie lief bis dahin ab
  *   dem Laden der Startseite.
+ *
+ * 21.7.0 — EINE GELESENE SITZUNGSDATEI IST WERTLOS (Schritt 18, SR-01,
+ *   Nr. 242, 251; E-SR-04 bis -06, E-SR-39). Nebenstufe ohne Migration —
+ *   aber mit einer Folge fuer alle: Nach dem Ausrollen meldet sich jede
+ *   Angemeldete einmal neu an. Bis hierher war der Dateiname die Sitzung;
+ *   wer `sess_<id>` las, aus dem Verzeichnis oder einem Webspace-Backup,
+ *   war angemeldet. Schritt 16 hatte den ORT gesichert, jetzt verliert die
+ *   Datei ihren WERT: Ein zweites Cookie `EDBIND` traegt 32 Zufallsbyte, die
+ *   Sitzung nur ihren SHA-256. Gebunden werden der halbe Stand vor dem Code
+ *   und die Anmeldung (neu gewuerfelt mit der Kennung); `auth_guard.php`
+ *   beendet eine Sitzung ohne passende Bindung mit dem Grund `bindung`,
+ *   `login.php` verwirft einen ungebundenen halben Stand, und die lesenden
+ *   Seiten — Handbuch, Rechtstexte, Notfall- und Codeblatt — sehen dann
+ *   keine Anmeldung. Alte Sitzungen werden bewusst nicht uebernommen: Sie
+ *   tragen keinen Hash, genau wie eine gelesene Datei. Beide Cookies stehen
+ *   in `sitzung_lib.php` (`SITZUNG_COOKIES` neben `SITZUNG_ARTEN`), und die
+ *   Sitzungshaertung zaehlt `setcookie()` ausserhalb dieser Datei und
+ *   `session_lib.php` als Befund. Dazu Nr. 251: Die Art `lesend` setzt
+ *   `secure` jetzt fest; `einrichtung` bleibt an HTTPS gebunden, weil sie
+ *   laeuft, bevor HTTPS steht (F-SR-06).
  */
-const WEB_VERSION = '21.6.1';
+const WEB_VERSION = '21.7.0';

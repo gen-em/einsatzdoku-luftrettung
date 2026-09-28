@@ -9150,3 +9150,44 @@ zutreffen.
      `backlog-listenstart` in `decken.py`. `cmark-gfm`: vorher eine Liste
      für 64 Einträge, danach 64 Listen, jede mit ihrer Nummer als `start`.
      `Backlog-Erledigt.md` bleibt ohne Trennzeilen.
+
+242. **Sitzungsbindung per Cookie-Token — benannt, nicht mitgenommen.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     *Aufgenommen 20.09.2026 (E-SA-09 des Konzepts Sitzungsablage).*
+     Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
+
+     Ein Zufallstoken nur im Cookie, dessen Hash in der Sitzung liegt, macht
+     eine gelesene Sitzungsdatei wertlos — auch eine aus einem gefundenen
+     Backup. Das ist der Schutz, den Nr. 241 **nicht** leistet: 241 verlegt
+     den Ort, 242 entwertet die Datei.
+
+     **Warum getrennt:** Das ist ein Sicherheitsumbau mit eigener Prüfung
+     (Cookie-Handling — Uhr und Handy sind nicht betroffen, nur der Browser;
+     Reset-Fluss; Wechselwirkung mit `users.session_epoch`) und gehört nicht
+     in einen Verzeichniswechsel.
+     Erledigt 28.09.2026 mit SR-01 (Web 21.7.0, E-SR-04, -05): Cookie EDBIND
+     mit 32 Zufallsbyte, SHA-256 in der Sitzung; gebunden werden der halbe
+     Stand und die Anmeldung, geprüft in auth_guard.php (Grund bindung, api/
+     401), login.php und sitzung_starten('lesend') (F-SR-15). Alte Sitzungen
+     werden nicht übernommen. Sitzungsprobe 25 ok, 0 fehlen; mit
+     herausgenommenen Prüfungen 11 von 25 rot.
+
+251. **Cookie-Attribut `secure` der Sitzung ist in zwei Arten HTTPS-abhängig, in zwei fest.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-12).* Zugeordnet:
+     **Schritt 18**, zusammen mit der Sitzungsbindung (Nr. 242).
+
+     Vier Stellen setzen das Attribut, und sie setzen es verschieden: zweimal
+     abhängig davon, ob die Anfrage über HTTPS kam, zweimal fest. Nach
+     Schritt 15 AP2 stehen sie alle in `sitzung_lib.php` — dann ist es eine
+     Tabelle und keine Suche, und dann lässt sich entscheiden, welche der
+     vier Arten die richtige ist.
+
+     **Eingetreten am 21.09.2026 (Web 20.27.0, Schritt 15 AP2).** Die Tabelle
+     heißt `SITZUNG_ARTEN` und steht in `sitzung_lib.php` neben
+     `sitzung_starten()`. Fest auf `true`: `app` und `passwort`. Von HTTPS
+     abhängig: `lesend` und `einrichtung` — also die beiden Arten, die auf
+     einer Anlage laufen können, deren HTTPS-Lage die Einrichterin erst
+     herstellt. Die Entscheidung für Schritt 18 ist damit **eine Zeile in
+     einer Tabelle**, nicht mehr eine Suche über neun Dateien.
+     Erledigt 28.09.2026 mit SR-01 (Web 21.7.0, E-SR-06): lesend setzt
+     secure fest; einrichtung bleibt HTTPS-abhängig, weil sie läuft, bevor
+     HTTPS steht (F-SR-06, Kommentar an der Tabelle).

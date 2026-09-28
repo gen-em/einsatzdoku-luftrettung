@@ -43,7 +43,10 @@ benannt hat (E-SR-02). Die Umsetzung läuft nach dem Merge von 17 **und**
 dieses Konzepts auf einem eigenen Zweig von `main`. **17 ist am 28.09.2026
 gemergt** (PR #94, `f4ac705`, Web 21.6.1); dieser Zweig hat `main` nach
 `Pruefablauf.md` 5.3 aufgenommen (Merge-Commit mit Bericht), der Konzept-PR
-ist gestellt.
+ist gestellt. **Die Umsetzung läuft seit dem 28.09.2026 auf
+`claude/pr95-stufe-18-ztactt`**, per Fast-Forward auf den Kopf des noch
+offenen Konzept-PR #95 (`d88522e`) gesetzt — auf Wunsch der Betreiberin vor
+dessen Merge (E-SR-38).
 **Backlog-Spanne:** **350 bis 359** (E-SD-21, eingetragen mit `SR-00`
 vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 
@@ -51,10 +54,10 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
-> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. |
-> | Offen | nichts im Konzept. **Der Konzept-PR wartet auf den Merge**; die Umsetzung beginnt danach auf einem eigenen Zweig von `main`. |
-> | Umsetzung | noch nicht begonnen. **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). |
+> | Stand | **28.09.2026 — Umsetzung läuft, SR-01 gebaut (Web 21.7.0)**, gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). Nächstes Paket: **SR-02**. Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
+> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026. |
+> | Offen | nichts im Konzept. **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). |
+> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). In Arbeit: **SR-02**. Reihenfolge danach SR-07, SR-09, dann Halt H-SR-08. |
 > | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) und SR-09 (H-SR-08, E-SR-36). |
 > | Fächerung | keine. |
 > | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`). |
@@ -404,6 +407,38 @@ ein Satz mehr, und der Review misst ihn.
   trägt keinen Bericht; der Bericht steht im Folge-Commit über denselben
   Baum samt Prüfdokument. Werkzeug und 5.3 nachziehen: **Nr. 352**
   (`nächste Backlog-Runde`), ein Satz steht seit heute in 5.3.
+- **F-SR-15 Die lesenden Seiten lesen `user_id` ohne `auth_guard.php`.**
+  Gefunden beim Lesen vor SR-01 (28.09.2026): `doku_seite.php`,
+  `rechtstext_seite.php`, `notfallblatt.php` und `codeblatt.php` starten die
+  Art `lesend` und fragen `$_SESSION['user_id']` selbst — für den
+  angemeldeten Kopf und die Kontoadresse auf dem Blatt. Mit einer gelesenen
+  Sitzungsdatei hätten sie auch nach der Bindung beides gezeigt; das Konzept
+  sah die Prüfung nur in `auth_guard.php` und `login.php` vor. **Gelöst in
+  SR-01** (E-SR-39): `sitzung_starten('lesend')` verwirft eine Sitzung mit
+  `user_id`, aber ohne passende Bindung, ohne zu schreiben — eine Stelle
+  statt vier. Die Sitzungsprobe misst es am Notfallblatt (Teil 5).
+- **F-SR-16 Vier weitere Proben fälschen Sitzungen.** Das Konzept nannte für
+  SR-01 die Zweitfaktor- und die Rückwegprobe. Gemessen: Auch `rollen`,
+  `wartung` und `protokoll` legen Sitzungsdateien selbst an und schicken nur
+  `PHPSESSID` — genau das, was die Bindung abweist; die Zweitfaktorprobe
+  führte zudem nur **ein** Cookie (das zuletzt gesetzte). Ohne Nachzug wären
+  alle fünf rot geworden, und zwar mit einem Fehler der Probe, nicht der
+  Anwendung. **Gelöst in SR-01:** Die gefälschten Sitzungen tragen den Hash,
+  die Anfragen das Cookie; die Zweitfaktorprobe hat einen Behälter nach
+  Namen. Die Protokollprobe zählt den Bindungswert zu den Marken, die das
+  Fehlerprotokoll nicht tragen darf.
+- **F-SR-17 Die `abmelde-probe` kann kein Cookie prüfen.** Das Konzept
+  wollte, dass sie „das zweite Cookie mitprüft". Sie ist eine statische
+  Seite unter `http-server`, die den `sessionStorage` nach dem Abmeldeweg
+  misst (Nr. 22) — ohne Anwendung, ohne Server-Cookie. **Gelöst:** „Abmelden
+  löscht beide Cookies" misst die Sitzungsprobe (Teil 6); die
+  `abmelde-probe` bleibt, wie sie ist.
+- **F-SR-18 Die Sammelanleitung der Proben nannte eine veraltete Zahl.**
+  `tools/proben/LIESMICH.md` sagte „`alle` fährt **22**; Stand 24.09.2026
+  22 von 22 grün", `RUF` in `proben.sh` hatte vor SR-01 aber **24** Einträge
+  (Zweitfaktor- und Rückwegprobe kamen danach dazu, der Satz blieb). Mit der
+  Sitzungsprobe sind es 25; die Zahl ist in SR-01 neu gemessen und
+  eingetragen (Prüfdokument 2).
 
 ## 3. Entscheidungen und Fragen
 
@@ -448,6 +483,8 @@ ein Satz mehr, und der Review misst ihn.
 | E-SR-35 | Q-SR-12: **Passkey nur zusätzlich zum eingeschalteten TOTP** (E-SR-29 bestätigt). „Passkey als einziger Zweitfaktor" wird **Nr. 351**, `nach v1.0`, `zurückgestellt` — mit den drei Umbauten, die er kostete, im Eintrag. | Betreiberin, 27.09.2026 | wie empfohlen: Codes, Einrichtungstor und Reset hängen am TOTP-Verfahren; ein Faktor ohne App ist ein Umbau der Anmeldung, nicht ein Verfahren mehr. Support, Admin und BetreiberIn haben die App ohnehin. |
 | E-SR-36 | Q-SR-13: **SR-09 bekommt die Fable-Gegenlesung wie SR-03** — Haltepunkt H-SR-08 ist fest: Die Umsetzungsinstanz hält nach SR-09 an und sagt es, Fable liest `passkey_lib.php` gegen das Konzept, Befunde als F-SR-NN, Behebung durch Opus, dann SR-05. Zwei Halte in der Runde, kein Fable-Schritt (K8). | Betreiberin, 27.09.2026 | wie empfohlen: Ein eigener CBOR-Leser und eine Signaturprüfung sind der Code, bei dem ein falsch gelesenes Längenfeld einen fremden Schlüssel annimmt; die Passkeyprobe misst nur Vorhergesehenes. |
 | E-SR-37 | **Nr. 250 gehört zu SR-02, Nr. 344 zu SR-03.** Beide sind mit dem Merge von 17 (28.09.2026, E-R4-37) zu Ziel 18 gekommen: `betrieb_server.php` leitet nach jedem POST um (`flash_setzen()` mit Ort, Ton und Ergebnis, der Weg aus R4-11) — gebaut in SR-02, das die Seite um die Karte „Anmeldung" erweitert; `edbak_freigabe_widerrufen()` und `edbak_begleit_schreiben()` verlangen `edbak_kennung_gueltig()` — gebaut in SR-03, das `adminbackup_lib.php` ohnehin offen hat, und von der Gegenlesung (H-SR-06) mitgelesen. Beide Pakete bleiben in ihrer Stufe. | Konzept, 28.09.2026 (nach dem Merge von 17) | Konzept R4 2.3 hat die Dateien für 18 freigehalten; ein eigenes Paket für zwei Handgriffe wäre mehr Buchführung als Code. Nr. 250 ist ein geänderter Weg (Umleiten), und SR-02 ändert die Wege dieser Seite ohnehin (E-SR-17). |
+| E-SR-38 | **Die Umsetzung beginnt vor dem Merge des Konzept-PR, gestapelt auf ihm.** Arbeitszweig `claude/pr95-stufe-18-ztactt`, per Fast-Forward auf den Kopf von PR #95 (`d88522e`); der PR der Umsetzung wird erst nach dem Merge von #95 gestellt. Weicht von E-SR-27 und P-SR-03 ab („nach dem Merge, eigener Zweig von `main`"). | Betreiberin, 28.09.2026 („Hol dir den Stand von PR95 und leg mit Stufe 18 los") | Der Konzept-PR trägt nur `docs/`, Stufe 1 ist grün; auf ihn zu warten, hielte die Umsetzung an, ohne dass sich an ihrer Grundlage etwas ändert. Preis: Wird #95 umgeschrieben (Squash, Rebase), zieht dieser Zweig nach (`Pruefablauf.md` 5.3); `nummern.py` zieht Geerbtes ab (R4-11) und misst deshalb keine Scheinkollision — gemessen: 0 Überschneidungen. |
+| E-SR-39 | **F-SR-15 wird in SR-01 gebaut:** Die lesenden Seiten prüfen die Bindung zentral in `sitzung_starten('lesend')` und sehen eine ungebundene Anmeldung nicht; verworfen wird ohne Schreiben, beendet wird sie erst von der nächsten angemeldeten Seite. | Betreiberin, 28.09.2026 (Rückfrage vor SR-01, wie empfohlen) | Ziel 1 des Konzepts heißt „eine gelesene Sitzungsdatei ist wertlos"; vier Seiten, die mit ihr noch Kopf und Adresse zeigten, ließen den Satz halb wahr. Eine Stelle statt vier (R83). Nicht beendet, weil eine lesende Seite lesbar bleiben und nicht abmelden soll. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -560,6 +597,26 @@ unverändert grün (der halbe Stand trägt jetzt eine Bindung — beide Proben
 melden sich über HTTP an und müssen das Cookie mitführen); Bedienprobe
 `zweitfaktor.mjs` grün; Textprobe 0 neu.
 *Stufe:* Web Neben. *Fächerung:* keine.
+*Erledigt 28.09.2026 (Web 21.7.0):* gebaut wie beschrieben —
+`SITZUNG_COOKIES` mit `bindung` (`EDBIND`), `sitzung_cookie_setzen()`,
+`sitzung_cookie_loeschen()`, `sitzung_cookie_lesen()`, `sitzung_binden()`,
+`sitzung_bindung_ok()`, `sitzung_bindung_loeschen()` in `sitzung_lib.php`;
+`lesend` fest `secure`, Kommentar an `einrichtung`; Grund `bindung` mit
+beiden Texten; `setcookie()`-Regel (e) in der Sitzungshärtung. **Dazu,
+nicht im Konzept:** die lesenden Seiten (F-SR-15, E-SR-39) und drei weitere
+Proben (F-SR-16). **Abweichungen:** Die `abmelde-probe` prüft kein Cookie
+(F-SR-17) — das tut die Sitzungsprobe; das Muster in `pruefablauf.json`
+heißt `sitzungsbindung` und trägt `notfallblatt.php` mit. **Probleme beim
+Bau:** Die Anlage fiel mit dem Ende des Hintergrundaufrufs, der sie
+eingerichtet hatte (MariaDB und PHP-Server waren dessen Kinder) —
+`hochfahren.sh` im Vordergrund startet sie über `setsid` dauerhaft. Die
+erste Fassung der Sitzungsprobe hatte drei Fehler der Probe (GET ohne
+Cookie statt POST ohne Cookie, `api/range.php` ohne Jahr,
+`session_start()` nach der ersten Ausgabe) und eine grüne Zeile ohne
+Gegenstand; alle vier vor dem ersten grünen Lauf behoben. Die erste
+Gegenprobe der `setcookie()`-Regel war falsch gebaut (Zeile hinter `?>`
+angehängt) und maß nichts; die zweite im PHP-Teil fand den Befund. Zahlen
+im Prüfdokument 2.
 
 **SR-02 Gerät merken** — Rest aus Nr. 141 (E-P5c-41); Q-SR-01, -02, -08
 entschieden (H-SR-01). `schema.sql` und `migration_lib.php`: Tabelle

@@ -37,6 +37,27 @@ if (empty($_SESSION['user_id'])) {
 }
 $userId = (int)$_SESSION['user_id'];
 
+/* ---- DIE BINDUNG (Schritt 18, SR-01, E-SR-04, Backlog Nr. 242) -----------
+ *
+ * UNMITTELBAR NACH `user_id`, VOR JEDER ANDEREN FRAGE. Bis Web 21.6.1 war
+ * die Sitzungsdatei allein die Anmeldung: Wer `sess_<id>` las — aus dem
+ * Verzeichnis, aus einem Webspace-Backup —, war angemeldet. Jetzt gehoert
+ * das Cookie `EDBIND` dazu, dessen SHA-256 in der Sitzung liegt
+ * (`sitzung_binden()` in `login.php`). Fehlt es oder passt es nicht, endet
+ * die Sitzung mit dem Grund `bindung` — als Seite mit Raeumung im Browser,
+ * fuer `api/` als 401 JSON.
+ *
+ * KEINE UEBERNAHME ALTER SITZUNGEN, und das ist Absicht (E-SR-04): Eine
+ * Sitzung von vor Web 21.7.0 traegt keinen Hash, genau wie eine gelesene
+ * Datei. Wer sie weiter gelten liesse, liesse auch die Datei gelten. Nach
+ * dem Ausrollen meldet sich deshalb jede Angemeldete einmal neu an (Runbook,
+ * `docs/Technik.md` 7). Die Sitzung wird dabei auf dem Server BEENDET, nicht
+ * nur abgewiesen: Eine Kennung, zu der jemand ohne Cookie kommt, gilt als
+ * gelesen. */
+if (!sitzung_bindung_ok()) {
+    sitzung_beenden_passend('bindung');
+}
+
 /* ---- DER TORWAECHTER (P5a/AP3, E-P5a-20; R40 (4), Backlog Nr. 54) --------
  *
  * STEHT EINE MIGRATION AUS, SCHLIESST DIE ANWENDUNG SICH SELBST. Zwischen

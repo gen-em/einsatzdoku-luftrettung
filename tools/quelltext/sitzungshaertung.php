@@ -32,6 +32,21 @@ declare(strict_types=1);
  * Cookie-Parameter der vier Arten neu erfinden muessen. Genau so sind die
  * neun entstanden.
  *
+ * WOGEGEN, DRITTER TEIL (Schritt 18, SR-01, E-SR-05). Seit Web 21.7.0 gehoert
+ * zur Sitzung ein zweites Cookie, die Bindung, und mit SR-02 kommt ein
+ * drittes. Ihre Parameter stehen in `SITZUNG_COOKIES` neben den Arten, und
+ * gesetzt wird ueber `sitzung_cookie_setzen()`. Deshalb zaehlt die Probe
+ * auch `setcookie()` und `setrawcookie()`:
+ *
+ *   (e) jeder Aufruf AUSSERHALB von `sitzung_lib.php` und `session_lib.php`
+ *       ist ein Befund.
+ *
+ * `session_lib.php` steht auf der Liste, weil sie das Sitzungscookie selbst
+ * loescht (`session_verwerfen()`, `session_beenden()`) — mit den Parametern,
+ * die PHP dafuer meldet, nicht mit eigenen. Ein drittes Cookie mit eigenen
+ * Parametern in `login.php` waere der Anfang derselben Geschichte wie die
+ * neun Sitzungsstarts.
+ *
  * MIT DEM TOKENIZER, NICHT MIT `grep`. Ein `grep` ueber `session_start`
  * findet jede Erwaehnung in jedem Kommentar — die erste Fassung dieser
  * Pruefung meldete deshalb zwei Befunde, und beide waren Kommentarzeilen, die
@@ -56,15 +71,18 @@ declare(strict_types=1);
 
 const ABSTAND = 12;   // so viele Zeilen davor darf die Haertung stehen
 const HEIMAT  = 'server/sitzung_lib.php';   // wo der eine Aufruf stehen darf
+/** Wo `setcookie()` stehen darf (e) — E-SR-05. */
+const COOKIE_ORTE = ['server/sitzung_lib.php', 'server/session_lib.php'];
 
-/** Echte `session_start()`-Aufrufe einer Datei — Zeilennummern. */
-function sp_aufrufe(string $quelle): array
+/** Echte Aufrufe einer Funktion (Vorgabe `session_start`) — Zeilennummern.
+ *  `$namen` nimmt mehrere, fuer (e) `setcookie` und `setrawcookie`. */
+function sp_aufrufe(string $quelle, array $namen = ['session_start']): array
 {
     $tok = token_get_all($quelle);
     $treffer = [];
     foreach ($tok as $i => $t) {
         if (!is_array($t) || $t[0] !== T_STRING) { continue; }
-        if (strtolower($t[1]) !== 'session_start') { continue; }
+        if (!in_array(strtolower($t[1]), $namen, true)) { continue; }
         /* Ein Aufruf, keine Definition: davor darf kein `function` stehen,
          * danach muss eine offene Klammer kommen. */
         $vor = $i - 1;
@@ -128,6 +146,24 @@ if (in_array('--selbstprobe', $argv, true)) {
                $passt ? 'ok  ' : 'FEHL', $was, $erwartet, $offen);
         if ($passt) { $ok++; }
     }
+    /* (e) `setcookie()` nur an zwei Orten (SR-01, E-SR-05). */
+    $keksFaelle = [
+        ["<?php setcookie('EDBIND', 'x');", 'server/sitzung_lib.php', 0, 'setcookie in sitzung_lib.php'],
+        ["<?php setcookie(session_name(), '');", 'server/session_lib.php', 0, 'setcookie in session_lib.php'],
+        ["<?php setcookie('EDGERAET', 'x');", 'server/login.php', 1, 'setcookie in login.php (e)'],
+        ["<?php setrawcookie('X', 'y');", 'server/totp_lib.php', 1, 'setrawcookie in totp_lib.php (e)'],
+        ["<?php /* setcookie('X') */ \$a = 'setcookie(';", 'server/login.php', 0, 'setcookie nur in Kommentar und Zeichenkette'],
+        ["<?php function setcookie_hilfe() {}", 'server/login.php', 0, 'aehnlicher Name, kein Aufruf'],
+    ];
+    foreach ($keksFaelle as [$code, $pfad, $erwartet, $was]) {
+        $offen = in_array($pfad, COOKIE_ORTE, true) ? 0
+               : count(sp_aufrufe($code, ['setcookie', 'setrawcookie']));
+        $passt = $offen === $erwartet;
+        printf("  %s  %-48s erwartet %d, gemessen %d\n",
+               $passt ? 'ok  ' : 'FEHL', $was, $erwartet, $offen);
+        if ($passt) { $ok++; }
+    }
+
     /* Der Fall, den die Faelle oben nicht abdecken: GAR KEIN Aufruf. Dann
      * gibt es nichts zu haerten — und genau das ist ein Befund, weil die
      * Anwendung ohne Sitzung nicht laeuft. */
@@ -136,7 +172,7 @@ if (in_array('--selbstprobe', $argv, true)) {
            $keiner ? 'ok  ' : 'FEHL', 'kein Aufruf wird als solcher erkannt', 'ja', $keiner ? 'ja' : 'nein');
     if ($keiner) { $ok++; }
 
-    $n = count($faelle) + 1;
+    $n = count($faelle) + count($keksFaelle) + 1;
     printf("\nSelbstprobe: %d von %d\n", $ok, $n);
     exit($ok === $n ? 0 : 1);
 }
@@ -149,7 +185,7 @@ if (!is_dir($wurzel)) {
     exit(2);
 }
 
-$dateien = 0; $aufrufe = 0; $befunde = [];
+$dateien = 0; $aufrufe = 0; $kekse = 0; $befunde = [];
 $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($wurzel));
 $liste = [];
 foreach ($it as $f) {
@@ -168,9 +204,22 @@ sort($liste);
 foreach ($liste as $pfad) {
     $quelle = (string)file_get_contents($pfad);
     $dateien++;
+    $rel = substr($pfad, strlen(dirname($wurzel)) + 1);
+    /* (e) — vor dem Filter auf `session_start`, der sonst eine Datei ohne
+     * Sitzungsstart gar nicht erst ansaehe. */
+    if (str_contains($quelle, 'cookie')) {
+        $kz = explode("\n", $quelle);
+        foreach (sp_aufrufe($quelle, ['setcookie', 'setrawcookie']) as $nr) {
+            $kekse++;
+            if (!in_array($rel, COOKIE_ORTE, true)) {
+                $befunde[] = $rel . ':' . $nr . '  ' . trim($kz[$nr - 1])
+                           . '   [Cookie ausserhalb von ' . implode(' und ', COOKIE_ORTE)
+                           . ' — die Parameter stehen in SITZUNG_COOKIES]';
+            }
+        }
+    }
     if (!str_contains($quelle, 'session_start')) { continue; }
     $zeilen = explode("\n", $quelle);
-    $rel = substr($pfad, strlen(dirname($wurzel)) + 1);
     foreach (sp_aufrufe($quelle) as $nr) {
         $aufrufe++;
         $stelle = $rel . ':' . $nr . '  ' . trim($zeilen[$nr - 1]);
@@ -193,6 +242,7 @@ echo "Sitzungshaertung — ein `session_start()`, gehaertet, in " . HEIMAT . "\n
 echo str_repeat('=', 72) . "\n";
 printf("  PHP-Dateien (ohne vendor/):   %5d\n", $dateien);
 printf("  Echte session_start()-Aufrufe:%5d   (erwartet: 1)\n", $aufrufe);
+printf("  setcookie()-Aufrufe:          %5d   (nur in %s)\n", $kekse, implode(', ', COOKIE_ORTE));
 printf("  Befunde:                      %5d\n", count($befunde));
 foreach ($befunde as $b) { echo "    - " . $b . "\n"; }
 echo "\nBefunde: " . count($befunde) . "\n";

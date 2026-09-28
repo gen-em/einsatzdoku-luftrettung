@@ -445,6 +445,15 @@ Angebot — alles dazu in 3.1f. **Handy und Codes verloren?** Seit Web 20.45.0
 genügt am Code-Schritt der Wiederherstellungsschlüssel vom Notfallblatt
 („Gerät und Codes verloren?", ebenfalls 3.1f).
 
+**Deine Anmeldung hängt an zwei Cookies** (seit Web 21.7.0). Das eine nennt
+die Sitzung, das zweite bestätigt, dass sie zu **diesem** Browser gehört. So
+nützt es niemandem, eine Sitzungsdatei auf dem Server gelesen zu haben — ohne
+das zweite Cookie ist die Sitzung beendet. Beide verschwinden beim Abmelden
+und wenn der Browser schließt. **Nach dem Update auf 21.7.0 meldest du dich
+einmal neu an**; die Anmeldeseite sagt dann „Die Sitzung ließ sich diesem
+Browser nicht zuordnen". Dasselbe siehst du, wenn du die Cookies dieser Seite
+gelöscht hast. Beides ist harmlos: Es geht nichts verloren.
+
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
 den Browser: Ein anderes Gerät oder ein neues Fenster hilft nicht. Sobald die

@@ -752,7 +752,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
-│   ├── proben/            vierundzwanzig Prüfungen gegen die laufende Anlage
+│   ├── proben/            fünfundzwanzig Prüfungen gegen die laufende Anlage
 │   │                      (PK-04/2, E-PK-24): ingest, spur, jobs,
 │   │                      kopplung, wartung, raten, mail, versand,
 │   │                      komplett, wiederherstellung, gpx, geraete,
@@ -763,10 +763,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      (Quellen, Archiv, Siegel), seit Web 20.42.0
 │   │                      zweitfaktor (RFC-Vektoren, Code-Schritt, Tor),
 │   │                      seit Web 20.43.0 rueckweg (Signaturen des
-│   │                      Rückwegs, Selbsttest, Marke; Konzept RW).
-│   │                      Gezählt am 24.09.2026 mit `proben.sh --liste`:
-│   │                      24 — bis dahin stand hier „zweiundzwanzig",
-│   │                      AP5 hatte die Zweitfaktorprobe nicht nachgetragen.
+│   │                      Rückwegs, Selbsttest, Marke; Konzept RW),
+│   │                      seit Web 21.7.0 sitzung (die Bindung per
+│   │                      zweitem Cookie; Schritt 18, SR-01).
+│   │                      Gezählt am 28.09.2026 mit `proben.sh --liste`:
+│   │                      25 — bis zum 24.09.2026 stand hier
+│   │                      „zweiundzwanzig", AP5 hatte die
+│   │                      Zweitfaktorprobe nicht nachgetragen.
 │   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
 │   │                      ein LIESMICH. Vorher zwanzig Ordner.
 │   ├── screenshots/       nimmt alle Seiten in zehn Breiten von 360 bis 1920 px
@@ -2745,7 +2748,8 @@ dagegen mit Nr. 127 erledigt: Die Prüfung läuft jetzt über `csrf_ok()`, und
 die castet.
 
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
-HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) — **seit
+HttpOnly/Secure/SameSite=Strict, **seit Web 21.7.0 an ein zweites Cookie
+gebunden** (`EDBIND`, 4.99q „Die Sitzungsbindung"), CSRF für Formulare (`csrf_field`) — **seit
 Web 15.6.0 auch am Anmeldeformular** (Backlog Nr. 127) — und für
 JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
 Passwörter/Schlüssel nur als Hash, Ratenschutz an **allen** ohne Anmeldung
@@ -7603,7 +7607,9 @@ richtigen Passwort setzt `login.php` für ein Konto mit Zweitfaktor **nicht**
 `user_id`, sondern den halben Stand `$_SESSION['totp_halb']` (Konto, Adresse,
 Frist **fünf Minuten**) und leitet mit 303 auf sich selbst um; die Seite zeigt
 dann den Code-Schritt. `user_id` und `session_regenerate_id()` kommen erst
-mit einem gültigen Code (`anmeldung_vollenden()`). Damit ist die halbe
+mit einem gültigen Code (`anmeldung_vollenden()`). **Seit Web 21.7.0 ist der
+halbe Stand gebunden** (Absatz „Die Sitzungsbindung" unten): Ohne das Cookie
+`EDBIND` endet er wie ein abgelaufener. Damit ist die halbe
 Anmeldung für jede andere Seite und jeden Endpunkt schlicht „nicht
 angemeldet" — **ohne dass einer von ihnen davon weiß**. Seit derselben
 Fassung antwortet `auth_guard.php` einem API-Aufruf ohne `user_id` mit
@@ -7636,6 +7642,46 @@ als Urheber.
 Konto, nicht je Adresse — wer hier steht, hat das Passwort schon. App-Code und
 Wiederherstellungscode zählen in denselben Topf. Ist er gesperrt, entsteht der
 halbe Stand gar nicht erst.
+
+**Die Sitzungsbindung (ab Web 21.7.0, Schritt 18, SR-01; Backlog Nr. 242,
+251; E-SR-04 bis -06, E-SR-39).** Bis Web 21.6.1 war der Dateiname die
+Sitzung: Wer `sess_<id>` las — aus `server/.sitzungen/`, aus einem
+Webspace-Backup des Hosters —, war angemeldet. Schritt 16 hatte den **Ort**
+gesichert, die Bindung nimmt der Datei den **Wert**:
+
+| | |
+|---|---|
+| Cookie | `EDBIND`, 32 Zufallsbyte (hex); `Secure`, `HttpOnly`, `SameSite=Strict`, Pfad `/`, bis der Browser schließt — dieselben Parameter wie das Sitzungscookie der Art `app`, damit beide immer zusammen reisen |
+| in der Sitzungsdatei | nur `hash('sha256', Wert)` unter `bindung` — die Datei ist das, was jemand gelesen haben könnte |
+| gesetzt | `sitzung_binden()` beim Anlegen des halben Stands (`totp_halb`) **und** in `anmeldung_vollenden()` nach `session_regenerate_id()`, neu gewürfelt |
+| geprüft | `auth_guard.php` unmittelbar nach `user_id` (Grund `bindung`, `api/` 401 JSON); `login.php` beim Lesen des halben Stands (verworfen wie abgelaufen); `sitzung_starten('lesend')` für Handbuch, Rechtstexte, Notfall- und Codeblatt — dort gilt die Sitzung als leer, verworfen ohne Schreiben (F-SR-15) |
+| gelöscht | `session_beenden()` und `session_verwerfen()`, also beim Abmelden und bei jedem Sitzungsende |
+
+**Alte Sitzungen werden nicht übernommen** (E-SR-04): Eine Sitzung von vor
+Web 21.7.0 trägt keinen Hash, genau wie eine gelesene Datei; wer die eine
+gelten ließe, ließe die andere gelten. Nach dem Ausrollen meldet sich jede
+Angemeldete einmal neu an (Runbook 7). **Die Sitzung endet dabei auf dem
+Server**, nicht nur für die Anfrage: Eine Kennung, zu der jemand ohne Cookie
+kommt, gilt als gelesen. Die Anmeldeseite nennt den Grund mit den zwei
+harmlosen Anlässen (Update, gelöschte Cookies).
+
+**Alle Cookie-Parameter stehen in `sitzung_lib.php`** (E-SR-05):
+`SITZUNG_ARTEN` für die vier Sitzungsarten, `SITZUNG_COOKIES` für die
+Zusatzcookies daneben, gesetzt und gelöscht über `sitzung_cookie_setzen()`
+und `sitzung_cookie_loeschen()`. Die Sitzungshärtung
+(`tools/quelltext/sitzungshaertung.php`) zählt `setcookie()` außerhalb von
+`sitzung_lib.php` und `session_lib.php` als Befund. **Nr. 251:** Die Art
+`lesend` setzt `secure` seither fest; `einrichtung` bleibt an HTTPS gebunden,
+weil sie läuft, bevor HTTPS steht (F-SR-06).
+
+**Was die Bindung nicht leistet:** Wer das Cookie selbst abgreift — mit der
+Hand am entsperrten Rechner, mit Schadcode im Browser —, hat beides. Gegen
+Skript in der Seite hilft `HttpOnly`, gegen fremde Seiten `SameSite=Strict`;
+gegen jemanden, der auf dem Webspace **schreiben** kann, hilft kein Cookie.
+Der Reset-Token in der Sitzungsdatei des Passwort-Wegs ist davon unberührt
+(Art `passwort`; 4.98, „Klartext-Reste außerhalb der Datenbank", Zeile
+„Reset-Token", in M1-06 anerkannt).
+Nachweis: `tools/proben/sitzung/` (Anlass Nr. 242).
 
 **Das Einrichtungstor** (`auth_guard.php`, E-P5c-61): Eine Pflichtrolle ohne
 `totp_seit` landet auf `zweitfaktor.php` — einer eigenen Seite in der
@@ -9167,8 +9213,13 @@ E-SA-04) · vertrauenswürdige Proxys eingetragen (reine Auskunft).
 >
 > **Muss und nicht Empfohlen**, obwohl es einen Rückfall gibt: Nur Muss wird
 > auf der Statusseite rot. Eine Sitzungsdatei trägt kein Schlüsselmaterial,
-> aber ihr **Dateiname ist die Sitzungskennung** — wer sie liest, ist
-> angemeldet und sieht die Klartextliste. Dass Muss die Einrichtung sperren
+> aber ihr **Dateiname ist die Sitzungskennung**. Bis Web 21.6.1 hieß das:
+> Wer sie liest, ist angemeldet und sieht die Klartextliste. **Seit Web
+> 21.7.0 genügt die Datei allein nicht mehr** — zur Sitzung gehört das
+> Cookie `EDBIND`, in der Datei steht nur sein SHA-256 (4.99q, „Die
+> Sitzungsbindung"). Der Punkt bleibt Muss: Die Datei trägt weiter
+> `totp_halb`, Marken und Rückfragen, und ein fremdes Verzeichnis ist ein
+> fremdes Verzeichnis. Dass Muss die Einrichtung sperren
 > kann, ist bedacht und fällt praktisch aus: `install.php` ruft
 > `sitzung_ablage()` lange vor der Prüfung, und wer die Wurzel beschreiben
 > darf (selbst ein Muss), kann `.sitzungen/` anlegen. Ist die Wurzel nicht
@@ -10675,8 +10726,9 @@ sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
 > sich darauf verlässt, ohne es zu prüfen, trägt nicht:** Auf Produktiv ist
 > derselbe Wert nicht erhoben, und für Selbsthoster ist er offen. Eine
 > Sitzungsdatei führt zwar kein Schlüsselmaterial — ihr **Dateiname ist die
-> Sitzungs-ID**, und wer sie auflisten kann, ist angemeldet. Vorschlag im
-> Prüfdokument, Abschnitt 4.
+> Sitzungs-ID**, und wer sie auflisten konnte, war bis Web 21.6.1
+> angemeldet; seit Web 21.7.0 braucht es dazu das Cookie `EDBIND` (4.99q).
+> Vorschlag im Prüfdokument, Abschnitt 4.
 > **(3) `open_basedir` ist leer** und `allow_url_fopen` an. Beides ist die
 > Voreinstellung vieler Hoster und kein Mangel der Anwendung; es steht hier,
 > damit der Vergleich später nicht bei null anfängt.
@@ -11307,6 +11359,14 @@ Browsersitzungen nicht.** Dasselbe passiert ein zweites Mal, falls sich der
 Ort noch einmal ändert — etwa wenn die Probe nach einer Stunde ein anderes
 Ergebnis liefert (E-SA-02). Ein Mischbetrieb zweier Ablagen wäre das
 Schlimmere; ein sauberer Schnitt ist deshalb gewollt.
+
+**Und noch einmal mit Web 21.7.0** (Schritt 18, SR-01, E-SR-04): Jede Sitzung
+braucht seither das Cookie `EDBIND`, und keine ältere trägt es. Beim ersten
+Aufruf nach dem Ausrollen endet jede offene Sitzung mit dem Grund `bindung`;
+die Anmeldeseite sagt, dass das nach einem Update einmal geschieht. **Vorher
+eine Ankündigung setzen** (Betrieb → Servereinstellungen, Karte
+„Ankündigung": „Nach dem Update einmal neu anmelden."). Geräte sind nicht
+betroffen — sie haben keine Sitzung, sondern Kennung und Schlüssel.
 
 **Danach: Betrieb → Status, Zeile „Sitzungsablage" ansehen** (seit Web
 20.26.1). Steht sie **blau**, liegt alles richtig. Steht sie **rot**, sagt der
@@ -12706,6 +12766,16 @@ Adminrolle würde sonst bis zur nächsten Anmeldung weitergelten.
 >
 > **Wer Dateien in `.sitzungen/` zählt, rechnet das ein:** Die Zahl auf der
 > Statusseite fällt seither, ohne dass jemand etwas gelöscht hätte.
+
+> **Und sie prüft seit Web 21.7.0 die Bindung** (Schritt 18, SR-01, F-SR-15,
+> E-SR-39). Die vier Seiten der Art `lesend` — `rechtstext_seite.php`,
+> `doku_seite.php`, `notfallblatt.php`, `codeblatt.php` — lesen `user_id`
+> ohne `auth_guard.php`. Eine gelesene Sitzungsdatei hätte hier sonst auch
+> nach der Bindung den angemeldeten Kopf und die Kontoadresse gezeigt.
+> `sitzung_starten('lesend')` verwirft eine Sitzung mit `user_id`, aber ohne
+> passende Bindung, **ohne zu schreiben**; die Seite sieht dann niemanden.
+> Beendet wird sie hier nicht — das tut die nächste angemeldete Seite mit
+> Grund (4.99q, „Die Sitzungsbindung").
 
 Ohne `config.php` leitet sie auf `install.php` um, wie `login.php` es tut. Ein
 Impressum ist das erste, was jemand auf einer frischen Installation aufruft — es

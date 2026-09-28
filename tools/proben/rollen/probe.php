@@ -133,7 +133,7 @@ function hole(string $pfad, ?string $sid, ?array $koerper = null, ?string $json 
 {
     global $basis;
     $ch = curl_init("$basis/$pfad");
-    $kopf = $sid !== null ? ['Cookie: PHPSESSID=' . $sid] : [];
+    $kopf = $sid !== null ? ['Cookie: PHPSESSID=' . $sid . bindung_keks($sid)] : [];
     if ($json !== null) { $kopf[] = 'Content-Type: application/json'; $kopf[] = 'X-CSRF: ' . $json; }
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => false,
         CURLOPT_FOLLOWLOCATION => false, CURLOPT_HTTPHEADER => $kopf,
@@ -162,17 +162,34 @@ function sitzung_ort(): string
     return is_dir($eigen) ? $eigen : (string)(session_save_path() ?: sys_get_temp_dir());
 }
 
-/** Eine Sitzung, wie `login.php` sie hinterlässt. VOR jeder Ausgabe anlegen. */
+/** Die Bindung je angelegter Sitzung — Kennung → Cookiewert (seit Web 21.7.0,
+ *  Schritt 18, SR-01). Ohne sie beendet `auth_guard.php` jede Sitzung dieser
+ *  Probe mit dem Grund `bindung`, und jede Zelle der Matrix stuende auf 200
+ *  der Abmeldeseite statt auf dem Rollentor. */
+$BINDUNGEN = [];
+
+/** Der Anhang an den `Cookie:`-Kopf: `; EDBIND=…`, wenn die Sitzung eine hat. */
+function bindung_keks(string $sid): string
+{
+    $w = $GLOBALS['BINDUNGEN'][$sid] ?? null;
+    return $w !== null ? '; ' . SITZUNG_COOKIES['bindung']['name'] . '=' . $w : '';
+}
+
+/** Eine Sitzung, wie `login.php` sie hinterlässt — mit Bindung (SR-01).
+ *  VOR jeder Ausgabe anlegen. */
 function sitzung_anlegen(int $uid, int $epoch): array
 {
     $sid  = 'rollenprobe' . bin2hex(random_bytes(10));
     $csrf = bin2hex(random_bytes(16));
+    $bind = bin2hex(random_bytes(32));
     if (session_status() === PHP_SESSION_ACTIVE) { session_write_close(); }
     session_save_path(sitzung_ort());
     session_id($sid);
     session_start();
-    $_SESSION = ['user_id' => $uid, 'epoch' => $epoch, 'last_seen' => time(), 'csrf' => $csrf];
+    $_SESSION = ['user_id' => $uid, 'epoch' => $epoch, 'last_seen' => time(), 'csrf' => $csrf,
+                 'bindung' => hash('sha256', $bind)];
     session_write_close();
+    $GLOBALS['BINDUNGEN'][$sid] = $bind;
     return ['sid' => $sid, 'csrf' => $csrf];
 }
 

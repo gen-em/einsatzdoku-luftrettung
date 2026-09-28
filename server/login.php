@@ -86,6 +86,18 @@ $fehlerAuftakt = '';
 $rwWeg = ($_GET['weg'] ?? '') === 'schluessel';
 $rwErfolg = false;
 $rwZustellung = null;
+/* DER HALBE STAND IST GEBUNDEN (Schritt 18, SR-01, E-SR-04, Nr. 242). Er
+ * traegt Konto, Adresse, fuenf Minuten Passwortnachweis und die
+ * Herausforderung des Rueckwegs — eine gelesene Sitzungsdatei darf auch ihn
+ * nicht tragen. Ohne passende Bindung endet er wie ein abgelaufener: Stand
+ * weg, Vormerkfach raeumen, Hinweis. Das deckt Code- und Schluesselschritt
+ * zugleich, weil beide erst unten ueber `$halb` gehen. */
+if ($halb !== null && !sitzung_bindung_ok()) {
+    $hinweis = $abgelaufen;
+    unset($_SESSION['totp_halb']);
+    $halb = null;
+    $vergessen = true;
+}
 if ($halb !== null && (isset($_GET['abbrechen']) || (int)($halb['bis'] ?? 0) < time())) {
     if (!isset($_GET['abbrechen'])) { $hinweis = $abgelaufen; }
     unset($_SESSION['totp_halb']);
@@ -255,6 +267,10 @@ function login_zugang(array $u, float $t0, bool $vollstaendig): void
 function anmeldung_vollenden(array $u, bool $istDemoAdresse): void
 {
     session_regenerate_id(true);
+    /* DIE BINDUNG WECHSELT MIT DER KENNUNG (Schritt 18, SR-01, E-SR-04):
+     * neu gewuerfelt, nicht die des halben Stands weitergereicht. Erst Cookie
+     * und Hash machen die Sitzung zur Anmeldung — die Datei allein nicht. */
+    sitzung_binden();
     /* Auch das Formular-Token wird neu gezogen (Backlog Nr. 127). Die
        Sitzungskennung wechselt eine Zeile darueber gegen die
        Sitzungsuebernahme; ein Token, das der Angreifer vor der
@@ -737,6 +753,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                 $_SESSION['totp_halb'] = ['konto' => (int)$u['id'], 'email' => $email,
                                           'bis' => time() + TOTP_HALB_FRIST_S,
                                           'demo' => $istDemoAdresse];
+                sitzung_binden();   // SR-01: auch der halbe Stand (Kopf der Datei)
                 header('Location: login.php', true, 303); exit;
             }
             [$error, $sperreRest] = login_code_sperre($merkmale);

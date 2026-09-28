@@ -107,7 +107,7 @@ function hole(string $pfad, ?string $cookie = null, ?array $koerper = null,
               array $kopf = []): array {
     global $basis;
     $ch = curl_init("$basis/$pfad");
-    if ($cookie !== null) { $kopf[] = 'Cookie: ' . session_name() . '=' . $cookie; }
+    if ($cookie !== null) { $kopf[] = 'Cookie: ' . session_name() . '=' . $cookie . bindung_keks($cookie); }
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HEADER         => true,
@@ -220,17 +220,33 @@ function sitzung_halb_anlegen(int $uid, string $email): string {
                                               'bis' => time() - 60, 'demo' => false]]);
 }
 
-/** Eine Sitzungsdatei mit genau diesem Inhalt schreiben; liefert die Kennung. */
+/** Die Bindung je geschriebener Sitzung — Kennung → Cookiewert (seit Web
+ *  21.7.0, Schritt 18, SR-01). Ohne sie beendet `auth_guard.php` jede
+ *  Sitzung dieser Probe mit dem Grund `bindung`, bevor das Wartungstor
+ *  gefragt ist, und `login.php` verwirft den halben Stand aus 12a nicht
+ *  wegen der Frist, sondern wegen der Bindung. */
+$BINDUNGEN = [];
+
+/** Der Anhang an den `Cookie:`-Kopf: `; EDBIND=…`, wenn die Sitzung eine hat. */
+function bindung_keks(string $sid): string {
+    $w = $GLOBALS['BINDUNGEN'][$sid] ?? null;
+    return $w !== null ? '; ' . SITZUNG_COOKIES['bindung']['name'] . '=' . $w : '';
+}
+
+/** Eine Sitzungsdatei mit genau diesem Inhalt schreiben — und gebunden, wie
+ *  `login.php` sie seit SR-01 hinterlaesst; liefert die Kennung. */
 function sitzung_schreiben(array $inhalt): string {
     $sid = 'wartungsprobe' . bin2hex(random_bytes(10));
+    $bind = bin2hex(random_bytes(32));
     if (session_status() === PHP_SESSION_ACTIVE) { session_write_close(); }
     /* VOR `session_start()`, sonst schreibt die Probe woanders hin als der
      * Server liest. Siehe den Kopf der Datei. */
     session_save_path(sitzung_ort());
     session_id($sid);
     session_start();
-    $_SESSION = $inhalt;
+    $_SESSION = $inhalt + ['bindung' => hash('sha256', $bind)];
     session_write_close();
+    $GLOBALS['BINDUNGEN'][$sid] = $bind;
     return $sid;
 }
 

@@ -152,12 +152,19 @@ register_shutdown_function(static function () use ($pdo, $uid, $merkmal): void {
 });
 
 /** Eine Anfrage mit eigener Cookieführung: Das Sitzungscookie trägt `secure`,
- *  und curl schickt es über HTTP nicht zurück — deshalb von Hand. */
+ *  und curl schickt es über HTTP nicht zurück — deshalb von Hand.
+ *
+ *  EIN BEHÄLTER, NICHT EIN COOKIE (seit Web 21.7.0, Schritt 18, SR-01): Zur
+ *  Sitzung gehört das Bindungscookie `EDBIND`. Bis dahin hielt `$keks` nur
+ *  das zuletzt gesetzte Cookie, und das reichte, weil es nur eines gab. Jetzt
+ *  hält es alle, nach Namen; ein gelöschtes (leer oder `deleted`) fällt heraus. */
 function http(string $methode, string $pfad, array $felder = []): array
 {
     global $basis, $keks;
     $ch = curl_init($basis . '/' . ltrim($pfad, '/'));
-    $kopf = $keks !== '' ? ['Cookie: ' . $keks] : [];
+    $paare = [];
+    foreach ($keks as $n => $v) { $paare[] = $n . '=' . $v; }
+    $kopf = $paare !== [] ? ['Cookie: ' . implode('; ', $paare)] : [];
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true,
         CURLOPT_FOLLOWLOCATION => false, CURLOPT_HTTPHEADER => $kopf,
         CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '']);
@@ -171,7 +178,9 @@ function http(string $methode, string $pfad, array $felder = []): array
     curl_close($ch);
     $k = substr($roh, 0, $kl);
     if (preg_match_all('/^Set-Cookie:\s*([^=;\s]+)=([^;\r\n]*)/mi', $k, $m, PREG_SET_ORDER)) {
-        foreach ($m as $c) { if ($c[2] !== '' && $c[2] !== 'deleted') { $keks = $c[1] . '=' . $c[2]; } }
+        foreach ($m as $c) {
+            if ($c[2] !== '' && $c[2] !== 'deleted') { $keks[$c[1]] = $c[2]; } else { unset($keks[$c[1]]); }
+        }
     }
     $ort = preg_match('/^Location:\s*(\S+)/mi', $k, $l) ? $l[1] : '';
     return ['code' => $code, 'ort' => $ort, 'rumpf' => substr($roh, $kl)];
@@ -186,7 +195,7 @@ function csrf_von(string $html): string
 function passwort(): array
 {
     global $keks, $mail, $token, $iter;
-    $keks = '';
+    $keks = [];
     $s = http('GET', 'login.php');
     return http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'email' => $mail,
                                       'tokens' => json_encode([(string)$iter => $token])]);
@@ -200,7 +209,7 @@ function code_senden(string $code, bool $rc = false): array
     return http('POST', 'login.php', $f);
 }
 
-$keks = '';
+$keks = [];
 
 /* ---- 4. Das Einrichtungstor (vor 3: das Konto hat noch keinen Zweitfaktor) -- */
 echo "== 4. Das Einrichtungstor\n";

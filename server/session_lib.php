@@ -32,9 +32,10 @@ require_once __DIR__ . '/db.php';
 /** Erlaubte Gruende. Andere Werte werden auf 'ende' abgebildet — der Grund
  *  landet in der Adresszeile und darf nicht frei setzbar sein. */
 const SESSION_ENDE_GRUENDE = ['abgemeldet', 'abgelaufen', 'passwort', 'konto',
-                              'gesperrt', 'ende'];
-/* `gesperrt` kam mit P5b/AP2 dazu, und dabei gilt der Satz aus dem Kopf
- * dieser Datei: Zu JEDEM Grund gehoeren ZWEI Texte — die Zwischenseite in
+                              'gesperrt', 'bindung', 'ende'];
+/* `gesperrt` kam mit P5b/AP2 dazu, `bindung` mit Web 21.7.0 (Schritt 18,
+ * SR-01, F-SR-07), und bei beiden gilt der Satz aus dem Kopf dieser Datei:
+ * Zu JEDEM Grund gehoeren ZWEI Texte — die Zwischenseite in
  * `session_beenden()` und die Meldung in `session_ende_text()`. Wer einen
  * Grund ergaenzt und nur einen Text schreibt, hinterlaesst an der anderen
  * Stelle ein „Du wirst abgemeldet …" ohne jede Auskunft. */
@@ -62,6 +63,9 @@ function session_verwerfen(): void
         setcookie(session_name(), '', time() - 42000,
                   $p['path'], $p['domain'], $p['secure'], $p['httponly']);
     }
+    /* Das Bindungscookie geht mit (Schritt 18, SR-01): Es gehoert zu genau
+     * dieser Sitzung und ist ohne sie nur noch ein Zufallswert im Browser. */
+    sitzung_cookie_loeschen('bindung');
     session_destroy();
 }
 
@@ -90,6 +94,7 @@ function session_beenden(string $grund = 'abgemeldet'): never
         setcookie(session_name(), '', time() - 42000,
                   $p['path'], $p['domain'], $p['secure'], $p['httponly']);
     }
+    sitzung_cookie_loeschen('bindung');   // SR-01: beide Cookies, siehe session_verwerfen()
     session_destroy();
 
     $ziel = 'login.php?ende=' . rawurlencode($grund);
@@ -98,6 +103,7 @@ function session_beenden(string $grund = 'abgemeldet'): never
         'passwort'   => 'Das Passwort wurde geändert — du wirst abgemeldet …',
         'konto'      => 'Das Konto steht nicht mehr zur Verfügung …',
         'gesperrt'   => 'Dieses Konto ist gesperrt — du wirst abgemeldet …',
+        'bindung'    => 'Die Sitzung ließ sich nicht bestätigen — du wirst abgemeldet …',
         default      => 'Du wirst abgemeldet …',
     };
 
@@ -155,6 +161,18 @@ function session_ende_text(?string $grund): string
          * durchprobiert, erfaehrt hier nichts, was er nicht schon weiss. */
         'gesperrt'   => 'Dieses Konto ist gesperrt. Wende dich an die Verwaltung '
                       . 'dieser Installation.',
+        /* ZWEI ANLAESSE, EIN TEXT (Schritt 18, SR-01). Der haeufige ist
+         * harmlos: einmal nach dem Update auf Web 21.7.0, weil keine
+         * aeltere Sitzung eine Bindung traegt, und immer dann, wenn die
+         * Cookies dieser Seite geloescht wurden. Der seltene ist der, fuer
+         * den es die Bindung gibt — jemand kam mit einer Sitzungskennung
+         * ohne das zweite Cookie. Der Text nennt die harmlosen, weil sie
+         * es fast immer sind, und macht aus dem anderen kein Raetsel: Die
+         * Sitzung ist beendet, hier wie dort. */
+        'bindung'    => 'Die Sitzung ließ sich diesem Browser nicht zuordnen und '
+                      . 'wurde beendet. Das geschieht einmal nach einem Update der '
+                      . 'Anwendung und wenn die Cookies dieser Seite gelöscht wurden. '
+                      . 'Bitte melde dich neu an.',
         default      => '',
     };
 }

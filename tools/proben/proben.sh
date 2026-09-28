@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Proben gegen die örtliche Installation — ein Läufer für die vierundzwanzig
+# Proben gegen die örtliche Installation — ein Läufer für die fünfundzwanzig
 # Prüfungen, die eine Bibliothek oder einen Endpunkt messen (E-PK-24).
 #
 # Aufruf:  bash tools/proben/proben.sh <name> [zusatz…]
@@ -59,6 +59,7 @@ declare -A RUF=(
   [geraete]="php tools/proben/geraete/probe.php"
   [zweitfaktor]="php tools/proben/zweitfaktor/probe.php"
   [rueckweg]="bash tools/proben/rueckweg/probe.sh"
+  [sitzung]="php tools/proben/sitzung/probe.php"
   [verbindung]="php tools/proben/verbindung/probe.php"
   [anteil]="php tools/proben/anteil/probe.php"
   [rechtstexte]="php tools/proben/rechtstexte/pruefen.php"

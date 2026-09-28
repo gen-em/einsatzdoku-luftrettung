@@ -14,6 +14,71 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.7.0] — 2026-09-28
+
+Schritt 18, Sicherheitsrunde II, Paket SR-01. **Neben**, ohne Migration —
+aber **nach dem Ausrollen meldet sich jede Angemeldete einmal neu an.**
+Vorher eine Ankündigung setzen (Betrieb → Servereinstellungen, Karte
+„Ankündigung"); Uhr und Handy sind nicht betroffen.
+
+### Geändert
+
+- **Eine gelesene Sitzungsdatei ist wertlos** (Nr. 242, E-SR-04, E-SA-09).
+  Bis hierher war der Dateiname die Sitzung: Wer `sess_<id>` las — aus dem
+  Verzeichnis, aus einem Webspace-Backup des Hosters —, war angemeldet und
+  sah die Klartextliste. Schritt 16 hatte den Ort gesichert (`.sitzungen/`,
+  `0700`); die Datei blieb der Beweis. Jetzt gehört zu jeder Sitzung ein
+  zweites Cookie, `EDBIND`: 32 Zufallsbyte im Browser, in der Datei nur ihr
+  SHA-256 — die Datei ist genau das, was jemand gelesen haben könnte, also
+  darf der Wert nicht darin stehen. Gebunden werden der halbe Stand nach dem
+  Passwort (er trägt fünf Minuten Passwortnachweis und die Herausforderung
+  des Rückwegs) und die Anmeldung, dort neu gewürfelt wie die Kennung.
+  Fehlt das Cookie oder passt es nicht, endet die Sitzung mit dem Grund
+  `bindung` — als Seite mit Räumung im Browser, für `api/` als 401 JSON —,
+  und ein halber Stand wird verworfen wie ein abgelaufener. **Alte
+  Sitzungen werden bewusst nicht übernommen:** Sie tragen keinen Hash, genau
+  wie eine gelesene Datei, und wer die eine gelten ließe, ließe die andere
+  gelten. Daher das einmalige Neuanmelden, mit Erklärung auf der
+  Anmeldeseite. Die Sitzung endet dabei auch auf dem Server: Eine Kennung,
+  zu der jemand ohne Cookie kommt, gilt als gelesen.
+- **Die lesenden Seiten sehen eine ungebundene Sitzung nicht** (F-SR-15,
+  E-SR-39). Handbuch, Rechtstexte, Notfall- und Codeblatt laden kein
+  `auth_guard.php` und lesen die Anmeldung selbst; mit einer gelesenen Datei
+  hätten sie auch nach der Bindung den angemeldeten Kopf und die
+  Kontoadresse gezeigt. Statt vier Seiten je eine Prüfung zu geben, prüft
+  sie der eine Sitzungsstart der Art `lesend` und verwirft eine solche
+  Sitzung, ohne zu schreiben. Das stand nicht im Konzept; die Lesung vor
+  dem Bau hat es gefunden.
+- **`secure` ist bei der Art `lesend` fest** (Nr. 251, E-SR-06). Schritt 15
+  hatte den Unterschied an eine Stelle geholt und ausdrücklich nicht
+  entschieden. `lesend` startet nur mit einem vorhandenen Cookie, und das
+  setzt die Art `app` mit `secure` — das feste `secure` ändert am Verhalten
+  nichts und nimmt den Unterschied aus der Tabelle. **Bewusst stehen
+  bleibt** `einrichtung`: Sie läuft, bevor HTTPS steht, und ein festes
+  `secure` sperrte genau diese Einrichtung, still (F-SR-06).
+- **Alle Cookie-Parameter stehen in `sitzung_lib.php`** (E-SR-05).
+  Neben `SITZUNG_ARTEN` steht `SITZUNG_COOKIES`, gesetzt und gelöscht wird
+  über je eine Funktion, und die Sitzungshärtung zählt `setcookie()`
+  außerhalb dieser Datei und `session_lib.php` als Befund. Neun
+  Sitzungsstarts in vier Fassungen sind entstanden, weil jeder abschrieb,
+  was in der Nähe stand; ein drittes Cookie mit eigenen Parametern in
+  `login.php` wäre der Anfang derselben Geschichte gewesen — und SR-02
+  bringt eines.
+
+### Prüfmittel
+
+- **Neu: die Sitzungsprobe** (`tools/proben/sitzung/`, Anlass Nr. 242):
+  halber Stand und Anmeldung gebunden, dieselbe Kennung ohne Cookie, mit
+  falschem Cookie und als Datei von vor dem Umbau endet mit `bindung`,
+  das Notfallblatt zeigt ohne Bindung keine Adresse, Abmelden löscht beide
+  Cookies. Mit herausgenommenen Prüfungen ist sie an 11 von 25 Stellen rot.
+- **Fünf Proben tragen die Bindung mit.** Zweitfaktor-, Rückweg-, Rollen-,
+  Wartungs- und Protokollprobe melden sich über HTTP an oder legen
+  Sitzungen als Datei an — genau das, was die Bindung jetzt abweist. Das
+  Konzept hatte nur zwei davon genannt (F-SR-16). Die Protokollprobe zählt
+  den Bindungswert zudem zu den Marken, die das Fehlerprotokoll nicht
+  tragen darf.
+
 ## [Web 21.6.1] — 2026-09-28
 
 Schritt 17, Backlog-Runde 4, Paket R4-27 — die Nachbesserung von R4-17.

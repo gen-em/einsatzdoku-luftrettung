@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 146 | 28.09.2026 | 18, SR-01 | Umsetzung von 18 beginnt auf `claude/pr95-stufe-18-ztactt` (Opus), auf Wunsch der Betreiberin gestapelt auf dem offenen Konzept-PR #95 statt nach dessen Merge (E-SR-38). |
 | 145 | 28.09.2026 | 18, Konzept-PR | `main` aufgenommen (17 gemergt, PR #94, `f4ac705`), Konzept-PR zu 18 gestellt; Nr. 250 nach SR-02, Nr. 344 nach SR-03 (E-SR-37). Berichtigt: Die Fassungen 137 bis 142 dieses Zweigs heißen seit dem Merge 139 bis 144 — 17 hatte 137 und 138 auch vergeben. |
 | 144 | 27.09.2026 | 18, Q-SR-12/-13 | Nachfassung beantwortet: Passkey nur zusätzlich zu TOTP (E-SR-35; Nr. 351 „Passkey allein" nach v1.0), Fable-Gegenlesung auch für SR-09 (E-SR-36, H-SR-08); das Konzept hat keine offene Frage. Entscheidung der Betreiberin am 27.09.2026. |
 | 143 | 27.09.2026 | 18, Nachfassung | Fahrplanzeile 18: Passkeys als zweiter Faktor neben TOTP dazu (Nr. 350, Paket SR-09, E-SR-29) — neun Pakete; Passkeys mit PRF als Passwortersatz nicht weiterverfolgt (E-SR-28, Nr. 146). Entscheidung der Betreiberin am 27.09.2026; Q-SR-12, -13 offen. |

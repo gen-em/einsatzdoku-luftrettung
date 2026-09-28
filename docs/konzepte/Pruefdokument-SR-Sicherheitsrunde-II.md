@@ -7,9 +7,11 @@ füllt es je Paket mit Mittel **und** Zahl. Stand: Konzeptphase — nichts
 gebaut; geprüft ist die Buchführung (Spanne, Fahrplanzeile, Konzept) am
 Stand R4-10 des 17er-Zweigs, dann mit der Nachfassung vom 27.09.2026
 (SR-09 Passkeys, Nr. 350), zuletzt am 28.09.2026 mit dem Merge von `main`
-(17 gemergt) und dem Konzept-PR. Dieses Dokument bleibt, bis seine Prüfliste
-abgehakt ist (K9); das Konzept wird nach der Freigabe des Abschlusses
-gelöscht.*
+(17 gemergt) und dem Konzept-PR. **Seit dem 28.09.2026 füllt es die
+Umsetzung** (Zweig `claude/pr95-stufe-18-ztactt`, gestapelt auf PR #95,
+E-SR-38): **SR-01 gebaut** (Web 21.7.0). Dieses Dokument bleibt, bis seine
+Prüfliste abgehakt ist (K9); das Konzept wird nach der Freigabe des
+Abschlusses gelöscht.*
 
 ---
 
@@ -19,6 +21,8 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **SR-01: Die lesenden Seiten einzeln.** | Die Sitzungsprobe misst F-SR-15 am **Notfallblatt** (Kontoadresse da / nicht da). Handbuch, Rechtstexte und Codeblatt gehen durch denselben Aufruf `sitzung_starten('lesend')`, sind aber nicht einzeln angefragt — ihr Merkmal „angemeldet" ist der Kopf, und den misst keine Probe am Text. | P-SR-12 (erweitert um das Handbuch). |
+| **SR-01: Das einmalige Neuanmelden nach dem Ausrollen.** | Örtlich ist jede Sitzung jünger als der Umbau; der Fall „Sitzung von vor 21.7.0" ist nachgestellt (Sitzungsprobe Teil 4: Datei ohne Hash), nicht auf einer Anlage mit echten offenen Sitzungen erlebt. | P-SR-04 auf Staging. |
 | **Der Befund ist eine Lesung, keine Messung an der Anlage.** | Keine Probe gefahren, kein Prüfstand für den Befund (Konzept 2.1); die örtliche Anlage lief nur für den Prüfbericht dieses Commits. Jede Trefferzahl ist ein `grep` am 27.09.2026; Aussagen wie „`anteil_wechseln()` fasst die Blatt-Marke nicht an" oder „`user_id` wird an einer Stelle gesetzt" stammen aus dem Code, nicht aus einem Lauf. | Die Umsetzung misst je Paket zuerst das Ausgangsmaß und trägt die Zahl hier ein; weicht sie vom Konzept ab, ist das ein Befund, kein Fehler des Konzepts. |
 | ~~**Der Baum ist der 17er-Zweig, nicht `main`.**~~ **Erledigt 28.09.2026:** 17 ist gemergt (PR #94, `f4ac705`), dieser Zweig hat `main` aufgenommen. | Gelesen wurde `26b4761` (R4-10). Gemessen danach: `git log 26b4761..f4ac705` über die SR-Dateien — **acht bewegt** (Konzept 2.4), darunter R4-14 (Demo-Änderungsmarke in `ingest.php`, `auth_guard.php`) und R4-15 (`days.created_at`, Migration). | Der Befund (Konzept 2.3) ist eine Lesung des Stands `26b4761`; die Umsetzung liest die acht Dateien vor SR-01 noch einmal. |
 | ~~**Der Nummernriegel ist auf diesem Zweig rot — mit fremden Nummern.**~~ **Erledigt 28.09.2026:** nach dem Merge von 17 meldet `nummern.py` 0 (Abschnitt 2), der Prüfbericht des Merge-Commits trägt die Zeile grün. | Bis dahin „legte" der gestapelte Zweig die Nummern 340 bis 343 von 17 mit an (F-SR-12). | Stufe 1 am Kopf des Konzept-PR: `nummern` grün. |
@@ -56,12 +60,35 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | SR-00 Merge | `git log 26b4761..f4ac705 -- server/<SR-Dateien>` | was 17 nach R4-10 an den Dateien der Sperrliste geändert hat | **5 Commits (R4-11 bis R4-15), 8 Dateien, 257 Zeilen dazu, 84 weg** — Konzept 2.4 |
 | SR-00 Merge | `bash tools/pruefstand/pruefen.sh` (Basis `origin/main`, nach `hochfahren.sh --neu` wegen der Migration aus 17) | der Baum des Merge-Commits | **22 grün, 0 rot, 0 nicht gemessen, 71 s** (Stufe klein, kein Versionssprung; `nummern` grün); Bericht in der Nachricht des Folge-Commits — der Merge-Commit trägt keinen (F-SR-14); die Zeile hier stammt aus dem ersten Lauf, der Bericht aus dem zweiten über den Baum mit dieser Zeile |
 | SR-00 | `bash tools/pruefstand/pruefen.sh` (Basis `origin/main`) | derselbe Baum — misst den 17er-Unterschied mit (R4-01 bis R4-10) | **35 grün, 2 rot, 2 nicht gemessen, 883 s**: rot `nummern` (F-SR-12) und `stilvergleich` (eine ungeplante Signatur an `login.php`, `input <label>`: `outline` — aus 17, nicht aus SR); nicht gemessen `android-bau` (Ausbaustufe `android` fehlt) und `schemaprobe` (Modul `plattform` fehlt). Die Bedienprobe schrieb `tools/bedienprobe/ausgabe/` neu; zurückgesetzt vor dem Commit |
+| SR-01 Ausgang | `tools/sandbox/aufbauen.sh web` + `hochfahren.sh --neu` | örtliche Anlage vor dem ersten Paket | **Web 21.6.1, HTTP 200, 0 Migrationen offen, zwei Prüfkonten mit Zweitfaktor**; nach dem Code **Web 21.7.0** (dieselbe Anlage) |
+| SR-01 | `php tools/proben/sitzung/probe.php` (neu) | halber Stand und Anmeldung gebunden, Kennung ohne / mit falschem / mit formlosem Cookie, Datei ohne Hash, Notfallblatt, Abmelden, Text zum Grund | **25 ok, 0 fehlen** |
+| SR-01 Gegenprobe | dieselbe Probe mit herausgenommenen Prüfungen in `auth_guard.php`, `login.php` und `sitzung_starten('lesend')` (`if (false && …)`), danach zurückgestellt | findet die Probe den Fehler? | **14 ok, 11 fehlen**; nach dem Zurückstellen `cmp` gleich, 0 Rest |
+| SR-01 | `php tools/quelltext/sitzungshaertung.php`, `--selbstprobe` | ein `session_start()`, gehärtet; **neu (e):** `setcookie()` nur in `sitzung_lib.php` und `session_lib.php` | **153 Dateien, 1 Aufruf, 4 `setcookie()`, 0 Befunde; Selbstprobe 18 von 18** (11 + 6 neue + „kein Aufruf") |
+| SR-01 Gegenprobe | eine Zeile `setcookie("PROBE", "x");` in den PHP-Teil von `login.php`, danach zurückgestellt | greift (e) am echten Baum? | **1 Befund** mit Ort `server/login.php:3`; danach 0. *Der erste Versuch hing die Zeile hinter `?>` an und maß nichts — HTML, kein Token.* |
+| SR-01 | `grep -rn "setcookie(" server/ --include=*.php` | Abnahme des Konzepts | **4 Aufrufe, alle in den zwei Dateien** (`sitzung_lib.php` 2, `session_lib.php` 2) |
+| SR-01 | `php tools/proben/zweitfaktor/probe.php` (Behälter statt eines Cookies) | Code-Schritt über HTTP mit Bindung | **63 ok, 0 fehlen** |
+| SR-01 | `bash tools/proben/rueckweg/probe.sh` (gefälschter halber Stand mit Hash und Cookie) | Rückweg über HTTP und im Browser | **50 ok, 0 fehlen** (Server) · **23 ok, 0 fehlen** (Chromium, zwei echte Cookies) |
+| SR-01 | `php tools/proben/rollen/probe.php` (gebundene Sitzungen) | Matrix `Technik.md` 4.99p | **480 Erwartungen, 0 nicht erfüllt** |
+| SR-01 | `php tools/proben/wartung/probe.php` (gebundene Sitzungen) | Wartungsmodus und Torwächter | **69 Erwartungen, 0 nicht erfüllt** |
+| SR-01 | `php tools/proben/protokoll/probe.php` (gebundene Sitzung; Bindungswert unter den Marken) | Archiv, Fehlerprotokoll | **36 Erwartungen, 0 nicht erfüllt**; Marken im Fehlerprotokoll **0 gefunden**, jetzt mit dem Bindungswert |
+| SR-01 | `bash tools/quelltext/pruefen.sh bestand`; `python3 tools/kettenaufrufe/pruefen.py` | Form der neuen Probe (Ordner, Anlass, `RUF`, `pruefablauf.json`, Tabelle in `Pruefablauf.md` 4) | **0 Befunde**; kein Aufruf widerspricht seiner Schnittstelle (die bekannte Zeile `android-stroeme` „ungeprüft" steht unverändert) |
+| SR-01 | `python3 tools/pruefstand/auswahl.py --selbstprobe` | `pruefablauf.json` nach dem neuen Muster `sitzungsbindung` | **39 Lagen, 0 Fehlschläge** |
+| SR-01 | `bash tools/proben/proben.sh alle` (nach Code und Doku) | alle 25 Proben der Sammlung, nacheinander gegen die örtliche Anlage | **24 von 25 grün.** Rot: die **Jobprobe**, ein Fall — „vorher 2 fremde Waisen in der Anlage" (**Nr. 347**, bekannt seit R4-27, drittes Auftreten; die Probenfolge davor steht jetzt im Eintrag). Einzeln danach **36 Erwartungen, 0 nicht erfüllt**; in der Anlage 0 Waisen (der Job hatte sie im Lauf abgeräumt). Nicht SR-01: Die Bindung berührt weder Spuren noch den Waisenjob. |
+| SR-01 | `decken.py`; `uebersicht.py --pruefen`, `--ziel 18`; `nummern.py --ohne-holen` | Steuerung nach Nr. 242, 251 und Fassung 146 | **21 Decken, 0 gerissen; 64 offen, 0 ohne Grammatik, 0 ohne Ziel; Ziel 18: 9** (vorher 11); **3 neue Nummern (350–352), 0 Überschneidungen** — das Stapeln auf #95 misst keine Scheinkollision (E-SR-38) |
 
 ## 3. Im Browser geprüft
 
-Nichts — die Konzeptphase ändert keine Seite. Die Anlage lief (HTTP 200 auf
-`login.php`, Fassung 21.1.8, 0 Migrationen offen, zwei Prüfkonten) nur für
-den Prüfstand.
+**Konzeptphase:** nichts — sie ändert keine Seite. Die Anlage lief (HTTP 200
+auf `login.php`, Fassung 21.1.8, 0 Migrationen offen, zwei Prüfkonten) nur
+für den Prüfstand.
+
+**SR-01:** Der Browserteil der Rückwegprobe (`probe.mjs`, Chromium über
+Playwright) meldet sich mit echten Cookies an — Passwort, halber Stand,
+Code-Schritt, Schlüsselschritt, Einrichtungstor — und ist mit beiden
+Cookies grün (23 ok). Firefox und WebKit nicht gefahren (Abschnitt 1,
+„Zwei Browser-Cookies in echten Browsern"). Neue Oberfläche gibt es in
+SR-01 nicht: nur ein Text auf der Anmeldeseite und einer auf der
+Abmeldeseite.
 
 ## 4. Prüfliste für die Betreiberin
 
@@ -81,7 +108,7 @@ ist. Die Umsetzung hängt je Paket ihre Punkte an (P-SR-13 ff.).
 | P-SR-09 | Nach P-SR-08 (freiwillig, mit der halbjährlichen Probe-Wiederherstellung, 6.3): einen Komplett-Stand **von vor** dem Wechsel vom Ziel holen und mit dem alten `server_key` vom alten Blatt in eine Wegwerf-Anlage einspielen. | Öffnet mit dem alten, nicht mit dem neuen Schlüssel — so sagt es das Runbook. | Öffnet mit keinem (dann ist der alte Wert falsch abgeschrieben — Kennung vergleichen). |
 | P-SR-10 | Auf Staging (genau eine BetreiberIn mit Zweitfaktor, Codeblatt beiseite): `zweitfaktor_notweg.php` aufrufen, Dateinamen ablesen, Datei per FTP anlegen, im Datenbankwerkzeug des Hosters den Wert lesen (`SELECT v FROM app_state WHERE k = 'notzugang_geheim'`, so steht es im Runbook), Adresse, Wert und Passwort eingeben. Danach dasselbe noch einmal mit dem **alten** Wert, und dasselbe mit zwei BetreiberInnen. | Zweitfaktor aus, Mail im Postfach, Protokoll `totp_zurueckgesetzt` mit `weg = notweg`, Datei weg, in `app_state` ein neuer Wert, Anmeldung führt ins Einrichtungstor. Mit dem alten Wert und mit zwei BetreiberInnen: dieselbe Meldung wie ohne Datei, nichts geändert. | Eine Auskunft, ob es genau eine BetreiberIn gibt oder ob der Wert stimmte; eine Antwort, die ohne Datei oder mit falschem Wert anders aussieht oder länger dauert als mit. |
 | P-SR-11 | Die Zahl aus SR-05 hier lesen: `php tools/proben/verbindung/probe.php --frei 20`. | **0 × 503, 20 von 20 Paketen, 0 Gedrängel** im Fehlerprotokoll (Sollwert Nr. 210). | Eine 503 oder ein `1213` im Protokoll — dann ist die Schleife zu kurz oder die `days`-Fortschreibung nicht hinter dem Commit. |
-| P-SR-12 | Freiwillig, nach SR-01 auf Staging: angemeldet bleiben, in den Entwicklerwerkzeugen des Browsers das Bindungscookie löschen, Seite neu laden. | Anmeldeseite mit dem Satz zum Grund `bindung`; nach dem Anmelden läuft alles. | Die Seite lädt weiter, als wäre nichts. |
+| P-SR-12 | Freiwillig, nach SR-01 auf Staging: angemeldet bleiben, in den Entwicklerwerkzeugen des Browsers das Bindungscookie (`EDBIND`) löschen, **zuerst das Handbuch** neu laden, dann eine andere Seite. | Das Handbuch zeigt den Kopf **ohne** Anmeldung (F-SR-15); die andere Seite führt auf die Anmeldeseite mit dem Satz zum Grund `bindung`; nach dem Anmelden läuft alles. | Das Handbuch zeigt noch den angemeldeten Kopf, oder die Seite lädt weiter, als wäre nichts. |
 | P-SR-13 | Nach SR-07 auf Staging: über ein gemerktes Gerät anmelden (kein Code), dann Betrieb → Servereinstellungen → „Schlüsselblatt drucken". Code eingeben. Blatt ansehen, zurück, „Server-Anteil wechseln" **nicht** ausführen, nur die Karte ansehen. Dann in einem zweiten Reiter Verwaltung → ein Konto → Rolle ändern. | Vor dem Blatt erscheint der Code-Schritt („Code bestätigen"), danach das Blatt; die Rollenänderung im zweiten Reiter geht ohne neuen Code durch (Frist 15 Minuten läuft). Nach 15 Minuten fragt die nächste Handlung der Liste wieder. | Das Blatt erscheint ohne Code nach einer gemerkten Anmeldung; oder der Code wird bei jeder Handlung verlangt, obwohl der letzte keine 15 Minuten alt ist. |
 | P-SR-14 | Nach SR-08 auf Staging, auf dem **alten Diensthandy** und am Rechner: Registrierungsseite öffnen (Betriebsart auf „Selbstregistrierung" oder „nach Prüfung" stellen, danach zurück), Adresse und Passwort tippen, absenden. Stoppuhr nur, falls der Knopf „Sicherheitsprüfung läuft …" zeigt. | Am Rechner keine spürbare Wartezeit; am alten Handy höchstens ein paar Sekunden, dann geht es weiter. Die Zahlen aus dem Prüfstand (Median, Höchstwert, `POW_BITS`) stehen in Abschnitt 2. | Der Knopf wartet am Handy länger als drei Sekunden (dann `POW_BITS` um eins senken, SR-08 sagt, wo), oder die Registrierung geht ohne die Kleinzeile durch, obwohl JavaScript aus ist (dann fehlt die Serverprüfung). |
 | P-SR-15 | ~~Konzept 3.2 lesen; Q-SR-12 und Q-SR-13 beantworten (Klickrunde) — vor SR-09 (H-SR-07).~~ **Erledigt 27.09.2026:** beide wie empfohlen — Passkey nur zusätzlich (E-SR-35, dazu Nr. 351), Fable-Gegenlesung für SR-09 (E-SR-36). | — | — |
