@@ -122,8 +122,16 @@ foreach (explode("\n", trim($t[1])) as $z) {
     }
     $zeilen[] = array_combine($spalten, $zellen);
 }
-$rollen = array_slice($spalten ?? [], 2);
+/* ROLLEN SIND DIE SPALTEN, DIE ROLLEN HEISSEN (seit SR-07). Die letzte Spalte
+ * „frischer Code" ist keine Rolle, sondern eine Markierung: `ja` heisst, die
+ * Handlung steht in `ZF_FRISCH_HANDLUNGEN` — der Teil „Frischer Code" unten
+ * misst an genau diesen Zeilen den Umweg. */
+$rollen = array_values(array_intersect(array_slice($spalten ?? [], 2), array_keys(ROLLEN)));
 if ($zeilen === [] || $rollen === []) { fwrite(STDERR, "Die Matrix ist leer.\n"); exit(2); }
+if (!in_array('frischer Code', $spalten, true)) {
+    fwrite(STDERR, "Die Matrix hat keine Spalte „frischer Code\" (SR-07).\n");
+    exit(2);
+}
 
 /* ---- HTTP und Sitzungen (Muster: tools/proben/wartung/) -------------------- */
 
@@ -176,8 +184,13 @@ function bindung_keks(string $sid): string
 }
 
 /** Eine Sitzung, wie `login.php` sie hinterlässt — mit Bindung (SR-01).
- *  VOR jeder Ausgabe anlegen. */
-function sitzung_anlegen(int $uid, int $epoch): array
+ *  VOR jeder Ausgabe anlegen.
+ *
+ *  FRISCH ALS VORGABE (seit SR-07): `login.php` setzt nach dem Code-Schritt
+ *  `zf_frisch_bis`, und so misst die Matrix das Rollentor und das Token —
+ *  den Umweg ohne frischen Code misst der eigene Teil darunter, mit
+ *  `$frisch = false`. */
+function sitzung_anlegen(int $uid, int $epoch, bool $frisch = true): array
 {
     $sid  = 'rollenprobe' . bin2hex(random_bytes(10));
     $csrf = bin2hex(random_bytes(16));
@@ -187,7 +200,8 @@ function sitzung_anlegen(int $uid, int $epoch): array
     session_id($sid);
     session_start();
     $_SESSION = ['user_id' => $uid, 'epoch' => $epoch, 'last_seen' => time(), 'csrf' => $csrf,
-                 'bindung' => hash('sha256', $bind)];
+                 'bindung' => hash('sha256', $bind)]
+              + ($frisch ? ['zf_frisch_bis' => time() + 3600] : []);
     session_write_close();
     $GLOBALS['BINDUNGEN'][$sid] = $bind;
     return ['sid' => $sid, 'csrf' => $csrf];
@@ -228,7 +242,13 @@ foreach ($rollen as $rolle) {
         $pdo->prepare('UPDATE users SET totp_seit = UTC_TIMESTAMP() WHERE id = ?')->execute([$id]);
     }
     $epoch = (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $id)->fetchColumn();
-    $konten[$rolle] = ['id' => $id, 'mail' => $mail] + sitzung_anlegen($id, $epoch);
+    /* ZWEI SITZUNGEN JE ROLLE, beide jetzt — `session_start()` geht nur vor
+     * der ersten Ausgabe: die frische fuer die Matrix, die unfrische fuer den
+     * Teil „Frischer Code" (SR-07). Die erste Fassung legte die zweite erst
+     * dort an, nach der Ausgabe der Matrix; jede Anfrage landete auf
+     * `login.php`. */
+    $konten[$rolle] = ['id' => $id, 'mail' => $mail] + sitzung_anlegen($id, $epoch)
+                    + ['unfrisch' => sitzung_anlegen($id, $epoch, false)];
 }
 /* Die Zielkonten — eigene Zeilen, nicht die Konten der Rollen: `ziel` für
  * den Rollenwechsel und die Handlungen an einem Konto der Rolle `user`,
@@ -335,6 +355,75 @@ foreach ($zeilen as $z) {
         pruef($ist === $soll, $z['Handlung'] . ' · ' . $rolle, 'soll ' . $soll . ', ist ' . $ist);
     }
 }
+
+/* ---- Der frische Code: der Umweg ohne ihn (Schritt 18, SR-07, E-SR-20) ------
+ *
+ * JE ZEILE MIT `ja` EINE ANFRAGE, mit dem Konto der KLEINSTEN Rolle, die die
+ * Handlung darf — und einer Sitzung ohne `zf_frisch_bis`. Erwartet: 303 auf
+ * `zweitfaktor.php?bestaetigen=1&zurueck=<die Seite der Handlung>`, nach einem
+ * POST mit `nochmal=1`. Mit frischem Code (die Matrix darueber) geht dieselbe
+ * Anfrage durch.
+ *
+ * DAS TOKEN IST ABSICHTLICH FALSCH. Fehlt das Tor, endet die Anfrage an der
+ * Token-Ablehnung — ein „Konto löschen" ohne Tor loescht dann nichts.
+ *
+ * Die Pflichtrollen haben `totp_seit`; die NutzerIn bekommt ihn fuer diesen
+ * Teil, sonst waere die Frage bei ihr ein Durchlass (kein Zweitfaktor, nichts
+ * zu bestaetigen), und das Ausschalten des eigenen Zweitfaktors liesse sich
+ * nicht messen. Danach steht er wieder, wie er war. */
+echo "\nFrischer Code: der Umweg ohne ihn (SR-07, E-SR-20)\n";
+$frischZeilen = array_values(array_filter($zeilen, static fn(array $z): bool => $z['frischer Code'] === 'ja'));
+/* ERST DER DURCHLASS: Ein Konto ohne Zweitfaktor hat nichts zu bestaetigen.
+ * Die NutzerIn der Probe hat keinen — ihr Ausschalten geht ohne frische
+ * Sitzung bis zur Token-Ablehnung, ohne Umweg. */
+if (isset($konten['user'])) {
+    $ohne = $mitZweitfaktor
+        ? $pdo->query('SELECT totp_seit IS NULL FROM users WHERE id = ' . $konten['user']['id'])->fetchColumn() : '1';
+    pruef((string)$ohne === '1'
+          && messen('`POST einstellungen.php?t=profil action=zf_ausschalten`', $konten['user']['unfrisch']) === 'durch',
+          'Konto ohne Zweitfaktor, Sitzung nicht frisch: kein Umweg (durch)');
+}
+$totpVorher = [];
+foreach ($rollen as $rolle) {
+    $totpVorher[$rolle] = $mitZweitfaktor
+        ? $pdo->query('SELECT totp_seit FROM users WHERE id = ' . $konten[$rolle]['id'])->fetchColumn() : null;
+    if ($mitZweitfaktor && $totpVorher[$rolle] === null) {
+        $pdo->prepare('UPDATE users SET totp_seit = UTC_TIMESTAMP() WHERE id = ?')->execute([$konten[$rolle]['id']]);
+    }
+}
+try {
+    foreach ($frischZeilen as $z) {
+        $wer = null;
+        foreach (['user', 'support', 'admin', 'betreiberin'] as $r) {
+            if (in_array($z[$r] ?? '', ['durch', '200'], true)) { $wer = $r; break; }
+        }
+        if ($wer === null) { pruef(false, $z['Handlung'], 'keine Rolle darf sie — Zeile falsch markiert'); continue; }
+        $aufruf = strtr(trim($z['Aufruf'], '` '), $platzhalter);
+        preg_match('/^(GET|POST)\s+(\S+)(?:\s+(\S+))?$/', $aufruf, $a);
+        $felder = [];
+        if (!empty($a[3])) { parse_str($a[3], $felder); }
+        $sz = $konten[$wer]['unfrisch'];
+        $r = $a[1] === 'GET' ? hole($a[2], $sz['sid'])
+                             : hole($a[2], $sz['sid'], $felder + ['csrf' => 'absichtlich-falsch']);
+        $ziel = (string)($r['ziel'] ?? '');
+        parse_str((string)parse_url($ziel, PHP_URL_QUERY), $q);
+        $seite = basename((string)parse_url($a[2], PHP_URL_PATH));
+        $zurueckSeite = basename((string)parse_url((string)($q['zurueck'] ?? ''), PHP_URL_PATH));
+        $ok = $r['code'] === 303 && str_starts_with($ziel, 'zweitfaktor.php?bestaetigen=1&')
+           && $zurueckSeite === $seite && (isset($q['nochmal']) === ($a[1] === 'POST'));
+        pruef($ok, $z['Handlung'] . ' · ' . $wer . ' ohne frischen Code: Umweg',
+              'HTTP ' . $r['code'] . ' → ' . ($ziel !== '' ? $ziel : '—'));
+    }
+} finally {
+    foreach ($rollen as $rolle) {
+        if ($mitZweitfaktor && $totpVorher[$rolle] === null) {
+            $pdo->prepare('UPDATE users SET totp_seit = NULL WHERE id = ?')->execute([$konten[$rolle]['id']]);
+        }
+    }
+}
+pruef(count($frischZeilen) >= count(ZF_FRISCH_HANDLUNGEN),
+      'Jede Handlung der Liste hat mindestens eine Zeile mit „ja"',
+      count($frischZeilen) . ' Zeilen, ' . count(ZF_FRISCH_HANDLUNGEN) . ' Handlungen');
 
 /* ---- Die Wirkung: ein Rollenwechsel, genau ein Eintrag ---------------------- */
 

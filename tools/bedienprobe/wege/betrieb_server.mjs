@@ -15,6 +15,11 @@
  *                                 Meldung steht dort einmal, Neuladen
  *                                 schickt nichts noch einmal (Nr. 250,
  *                                 `neuladen.mjs` wie die zehn aus R4-11)
+ *   betrieb-server-frischer-code  über ein gemerktes Gerät angemeldet (kein
+ *                                 Code): „Schlüsselblatt drucken" führt auf
+ *                                 die Bestätigung, nach dem Code steht das
+ *                                 Blatt da (Schritt 18, SR-07, E-SR-20;
+ *                                 P-SR-13 als Maschinenweg)
  *
  * DIE RUNDMAIL SELBST GEHT HIER NICHT HINAUS. Ob N Konten N Zeilen bekommen,
  * die Gegenstelle N annimmt und eine zweite am selben Tag abgewiesen wird,
@@ -29,6 +34,9 @@
 
 import { execFileSync } from 'node:child_process';
 import { neuladenPruefen } from '../neuladen.mjs';
+import { probekontoAnlegen, probekontoRaeumen, eigenerKontext, passwortSchicken, php as phpK, WURZEL }
+  from '../probekonto.mjs';
+import { naechsterCode, SANDBOX } from '../../zweitfaktor/totp.mjs';
 
 const SEITE  = k => `${k.basis}/betrieb_server.php`;
 const TEXT   = 'Bedienprobe: Wartung am Dienstag, 20:00 bis 21:00. Danach geht alles weiter.';
@@ -186,6 +194,73 @@ export const wege = [
       } finally {
         php(vorher === '' ? 'app_state_loeschen("zf_geraet_tage_verwaltung");'
                           : 'app_state_setzen("zf_geraet_tage_verwaltung", ' + JSON.stringify(vorher) + ');');
+      }
+    },
+  },
+  {
+    name: 'betrieb-server-frischer-code',
+    paket: 'SR-07', punkt: 'E-SR-20', rolle: 'admin',
+    soll: 'über ein gemerktes Gerät angemeldet: „Schlüsselblatt drucken" → Bestätigung; '
+        + 'Code → das Blatt; „Abbrechen" führt ohne Code zurück',
+    async fahren(k) {
+      /* EIN EIGENES KONTO DER ROLLE BETREIBERIN mit dem Geheimnis der
+       * Sandbox — nicht das Prüfkonto des Läufers: Dessen Sitzung ist mit
+       * Code entstanden und bliebe frisch, und ein Abmelden hier nähme sie
+       * ihm. Die Dauer der Verwaltung steht auf 7 und danach wie vorher. */
+      const ADR = 'bedienprobe-frisch@probe.invalid';
+      const PW  = 'Bedienprobe-Frisch-Leuchtturm-4';
+      probekontoAnlegen(ADR, PW, 'betreiberin', 'Bedienprobe Frisch');
+      execFileSync('php', ['tools/zweitfaktor/pruefkonto.php', ADR], { cwd: WURZEL });
+      const vorher = phpK('echo (string)app_state_lesen("zf_geraet_tage_verwaltung");');
+      phpK('app_state_setzen("zf_geraet_tage_verwaltung", "7");');
+      const kontext = await eigenerKontext(k);
+      try {
+        const s = await kontext.newPage();
+        await passwortSchicken(s, k.basis, ADR, PW);
+        await s.waitForSelector('#codeform', { timeout: 90000 });
+        await s.fill('input[name="code"]', await naechsterCode(SANDBOX));
+        await s.locator('#codeform label[for="sw-merken"]').click();
+        await Promise.all([s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+                           s.locator('#codeform button[type="submit"]').click()]);
+        await s.goto(`${k.basis}/logout.php`, { waitUntil: 'domcontentloaded' });
+        await passwortSchicken(s, k.basis, ADR, PW);
+        await Promise.race([s.waitForURL(/index\.php/, { timeout: 90000 }),
+                            s.waitForSelector('#codeform', { timeout: 90000 })]);
+        const ohneCode = (await s.locator('#codeform').count()) === 0;
+
+        /* Abbrechen: in die Karte zurück, ohne dass das Blatt aufgeht — nicht
+         * auf das Blatt selbst, das wieder hierher schickte. */
+        await s.goto(`${k.basis}/betrieb_server.php#k-schluessel`, { waitUntil: 'domcontentloaded' });
+        await Promise.all([s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+                           s.locator('#k-schluessel a[href="betrieb_schluesselblatt.php"]').first().click()]);
+        const umweg = /\/zweitfaktor\.php\?bestaetigen=1/.test(s.url());
+        await k.bild('zweitfaktor-bestaetigen', s);
+        await Promise.all([s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+                           s.locator('a', { hasText: 'Abbrechen' }).first().click()]);
+        const nachAbbruch = new URL(s.url()).pathname.split('/').pop();
+
+        /* Noch einmal, jetzt mit Code. */
+        await s.goto(`${k.basis}/betrieb_server.php#k-schluessel`, { waitUntil: 'domcontentloaded' });
+        await Promise.all([s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+                           s.locator('#k-schluessel a[href="betrieb_schluesselblatt.php"]').first().click()]);
+        await s.fill('#codeform input[name="code"]', await naechsterCode(SANDBOX));
+        await Promise.all([s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+                           s.locator('#codeform button[type="submit"]').click()]);
+        const blatt = new URL(s.url()).pathname.split('/').pop();
+        const ok = ohneCode && umweg && nachAbbruch === 'betrieb_server.php'
+                && blatt === 'betrieb_schluesselblatt.php';
+        return {
+          ist: `zweite Anmeldung ${ohneCode ? 'ohne' : 'MIT'} Code · Blatt → `
+             + `${umweg ? 'Bestätigung' : 'KEIN Umweg'} · Abbrechen → ${nachAbbruch} · mit Code → ${blatt}`,
+          ok,
+          bemerkung: ok ? '' : 'Soll: ohne Code · Bestätigung · Abbrechen → betrieb_server.php · '
+                             + 'mit Code → betrieb_schluesselblatt.php',
+        };
+      } finally {
+        await kontext.close();
+        probekontoRaeumen(ADR);
+        phpK(vorher === '' ? 'app_state_loeschen("zf_geraet_tage_verwaltung");'
+                           : 'app_state_setzen("zf_geraet_tage_verwaltung", ' + JSON.stringify(vorher) + ');');
       }
     },
   },

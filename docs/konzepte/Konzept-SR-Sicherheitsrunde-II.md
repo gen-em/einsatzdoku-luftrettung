@@ -54,10 +54,10 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **28.09.2026 — Umsetzung läuft, SR-01 und SR-02 gebaut (Web 21.7.0, 21.8.0)**, gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). Nächstes Paket: **SR-07**. Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
-> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (das Vergessen in der Transaktion des Passworts, SR-02). |
+> | Stand | **28.09.2026 — Umsetzung läuft, SR-01, SR-02 und SR-07 gebaut (Web 21.7.0, 21.8.0, 21.9.0)**, gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). Nächstes Paket: **SR-09**, danach Halt H-SR-08. Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
+> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (das Vergessen in der Transaktion des Passworts, SR-02), E-SR-41 (ein Abbruchziel für Handlungen, die eine Seite sind, SR-07). |
 > | Offen | nichts im Konzept. **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). |
-> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). In Arbeit: **SR-07**. Reihenfolge danach SR-09, dann Halt H-SR-08. |
+> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). In Arbeit: **SR-09**, danach Halt H-SR-08. |
 > | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) und SR-09 (H-SR-08, E-SR-36). |
 > | Fächerung | keine. |
 > | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`). |
@@ -474,6 +474,40 @@ ein Satz mehr, und der Review misst ihn.
   „Erwartete Zahl" 71 — der Satz oben war bei vier Wegen nicht mitgegangen.
   **Gelöst in SR-02:** Die Zahl steht nur noch unter „Erwartete Zahl" (jetzt
   73), oben ein Verweis.
+- **F-SR-24 Vier Prüfmittel rufen Handlungen der Liste auf.** SR-07 nannte
+  als Prüfmittel Zweitfaktor-, Rollenprobe und Bedienweg. Gemessen vor dem
+  Bau (`grep` über `tools/`): Der **Bilderlauf** fotografiert das
+  Schlüsselblatt und läuft rund 25 Minuten, länger als ein Code frisch ist;
+  der **Betriebslauf der Anteilprobe** öffnet das Blatt und drückt vier
+  Schlüsselgriffe; die **Wartungsprobe** ruft das Blatt mit einer
+  gefälschten Sitzung; der **Kreislauf** löscht ein Konto. Ohne Nachzug
+  hätte der Bilderlauf nach einer Viertelstunde die Bestätigung unter dem
+  Namen „Schlüsselblatt" fotografiert, und die Wartungsprobe hätte den Umweg
+  statt der Wartung gemessen. **Gelöst in SR-07:** Die Wartungsprobe legt
+  ihre Sitzungen frisch an; Bilderlauf und Betriebslauf gehen die
+  Bestätigung mit `codeSchritt()` (dasselbe Formular wie der Code-Schritt),
+  ein Griff, der auf ihr landet, bricht ab; der Kreislauf bleibt — er
+  meldet sich mit Code an, löscht nach rund 80 Sekunden und scheitert
+  sonst laut („ließ sich nicht löschen").
+- **F-SR-25 Die Kontoseite zeigte keine Meldung aus einer Umleitung.**
+  `admin_user.php` gibt ihre Ergebnisse selbst aus und rief `flash_holen()`
+  nie; der Hinweis nach der Bestätigung wäre in der Sitzung liegen
+  geblieben, bis eine andere Seite ihn abholt. **Gelöst in SR-07:** Die
+  Seite übernimmt eine Meldung aus der Umleitung, wenn der POST selbst
+  keine hat.
+- **F-SR-26 Die Abnahme „`grep` = Länge der Liste" zählt Kommentare mit.**
+  `grep -rn "zweitfaktor_frisch_verlangen(" server/` trifft neben den sechs
+  Aufrufen die Definition und die Kommentare, die den Namen nennen, und
+  sieht nicht, ob der Name im Aufruf in der Liste steht. **Gelöst in
+  SR-07:** Registerzeile Z43 mit eigener Regel über den Tokenizer — je
+  Eintrag genau ein Aufruf mit fester Zeichenkette, ein Name außerhalb der
+  Liste und ein Aufruf ohne feste Zeichenkette sind Befunde.
+- **F-SR-27 Die Runbook-Aufzählung der Wartungsausnahmen war unvollständig.**
+  `Technik.md` 7 („Was währenddessen erreichbar bleibt") nannte sechs
+  Betriebsseiten und ließ `betrieb_sicherheit.php`, Komplett-Backup und
+  Backup-Ziele aus — die Konstante führte sechzehn Einträge. **Gelöst in
+  SR-07:** vollständig, mit `zweitfaktor.php` und dem Verweis auf die
+  Konstante als maßgeblich.
 
 ## 3. Entscheidungen und Fragen
 
@@ -521,6 +555,7 @@ ein Satz mehr, und der Review misst ihn.
 | E-SR-38 | **Die Umsetzung beginnt vor dem Merge des Konzept-PR, gestapelt auf ihm.** Arbeitszweig `claude/pr95-stufe-18-ztactt`, per Fast-Forward auf den Kopf von PR #95 (`d88522e`); der PR der Umsetzung wird erst nach dem Merge von #95 gestellt. Weicht von E-SR-27 und P-SR-03 ab („nach dem Merge, eigener Zweig von `main`"). | Betreiberin, 28.09.2026 („Hol dir den Stand von PR95 und leg mit Stufe 18 los") | Der Konzept-PR trägt nur `docs/`, Stufe 1 ist grün; auf ihn zu warten, hielte die Umsetzung an, ohne dass sich an ihrer Grundlage etwas ändert. Preis: Wird #95 umgeschrieben (Squash, Rebase), zieht dieser Zweig nach (`Pruefablauf.md` 5.3); `nummern.py` zieht Geerbtes ab (R4-11) und misst deshalb keine Scheinkollision — gemessen: 0 Überschneidungen. |
 | E-SR-39 | **F-SR-15 wird in SR-01 gebaut:** Die lesenden Seiten prüfen die Bindung zentral in `sitzung_starten('lesend')` und sehen eine ungebundene Anmeldung nicht; verworfen wird ohne Schreiben, beendet wird sie erst von der nächsten angemeldeten Seite. | Betreiberin, 28.09.2026 (Rückfrage vor SR-01, wie empfohlen) | Ziel 1 des Konzepts heißt „eine gelesene Sitzungsdatei ist wertlos"; vier Seiten, die mit ihr noch Kopf und Adresse zeigten, ließen den Satz halb wahr. Eine Stelle statt vier (R83). Nicht beendet, weil eine lesende Seite lesbar bleiben und nicht abmelden soll. |
 | E-SR-40 | **Das Vergessen gemerkter Geräte beim Passwortwechsel und -reset steht in derselben Transaktion wie das Passwort** (`einstellungen.php`, `pw_handling.php`), nicht dahinter. | Umsetzung, 28.09.2026 (SR-02) | Der erste Entwurf setzte es hinter die Transaktion, „weil es ins Protokoll schreibt". Ein Fehler dort hätte dann ein gewechseltes Passwort mit der Meldung „Es wurde nichts geändert" gezeigt, der Browser hätte den neuen Schlüssel nicht übernommen (M2-07), und der gemerkte Browser des Fremden hätte weiter gegolten. In der Transaktion gilt beides oder keines; `db_transaktion()` hängt sich an die laufende an, `protokoll()` fängt seine eigenen Fehler. |
+| E-SR-41 | **Eine Handlung der Liste, die eine Seite ist, trägt ein eigenes Abbruchziel** (`'abbruch'` in `ZF_FRISCH_HANDLUNGEN`; heute nur das Schlüsselblatt → `betrieb_server.php#k-schluessel`); es reist als `abbruch` mit und wird wie `zurueck` geprüft. | Umsetzung, 28.09.2026 (SR-07) | Bei einem POST ist der Rücksprung die Karte, aus der geklickt wurde; bei einer Seite ist es die Seite selbst — und „Abbrechen" dorthin schickte wieder auf die Bestätigung, eine Schleife (gefunden beim Schreiben des Bedienwegs). Ein eigenes Feld statt einer Regel „bei GET woanders hin", weil nur die Liste weiß, woher eine Seite kommt. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -783,6 +818,37 @@ Rollenprobe: die sechs Handlungen der Liste je einmal ohne frischen Code
 `ZF_FRISCH_HANDLUNGEN` (Register-Zeile Decke 0); Zweitfaktorprobe grün mit
 den sieben neuen Fällen; Rollenprobe grün; Textprobe 0 neu.
 *Stufe:* Web Neben. *Fächerung:* keine.
+*Erledigt 28.09.2026 (Web 21.9.0):* gebaut wie beschrieben — `ZF_FRISCH_S`
+und `ZF_FRISCH_HANDLUNGEN` in `db.php` (sechs Handlungen: `schluessel` für
+alle sieben Griffe mit einem Aufruf, `schluesselblatt`, `rollenwechsel`,
+`totp_zuruecksetzen`, `user_delete`, `totp_ausschalten`), `zweitfaktor_frisch()`
+und `zweitfaktor_frisch_verlangen()` in `auth_guard.php`, dazu
+`zweitfaktor_zurueck()` (die Prüfung des Rücksprungs); die Frist in
+`login.php` nach App- und Wiederherstellungscode, `anmeldung_vollenden()`
+räumt eine alte; der Modus `bestaetigen` in `zweitfaktor.php` (Topf `totp`,
+Sperre, Protokoll bei einem Wiederherstellungscode) und die Seite in
+`WARTUNG_AUSNAHMEN`; sechs Aufrufe vor dem Token; Registerzeile Z43.
+**Dazu, nicht im Konzept:** das Abbruchziel (E-SR-41); die Meldung auf der
+Kontoseite (F-SR-25); die vier Prüfmittel (F-SR-24); die Spalte der Matrix
+misst den Umweg mit dem Konto der kleinsten Rolle und einmal den Durchlass
+ohne Zweitfaktor; drei neue Matrixzeilen (Rollenwechsel, Blatt,
+Ausschalten); die Runbook-Aufzählung (F-SR-27). **Abweichungen:** Z43 statt
+`grep` (F-SR-26); **der Fall „API → 403 JSON" ist nicht gemessen** — keine
+Handlung der Liste ist heute ein Endpunkt, der erste kommt mit SR-09
+(`passkey_anlegen`), dort wird er gemessen; vor der Bestätigung steht kein
+Flash, die Seite sagt selbst, warum sie fragt (ein Flash wäre eine zweite
+Stelle für denselben Satz); das Ausschalten des eigenen Zweitfaktors fragt
+nur, wo Ausschalten geht — eine Pflichtrolle bekäme sonst erst den Code und
+dann „Pflicht". **Probleme beim Bau:** Das Abbrechen beim Blatt lief im
+ersten Entwurf im Kreis (E-SR-41). Die Registerregel zählte zwei Aufrufe
+auf einer Zeile doppelt (Gegenprobe 5 statt 3) und hätte die
+Fortsetzungszeile `'abbruch' => …` als Eintrag gelesen — beides behoben,
+Gegenproben 3 und 1. Teil 5c der Zweitfaktorprobe überschrieb den Zähler
+`$gut` der Probe (Abbruch mit „Cannot increment array"). Die Rollenprobe
+legte die unfrischen Sitzungen nach ihrer ersten Ausgabe an, wo
+`session_start()` nicht mehr geht — 15 rote Zellen „302 → login.php"; jetzt
+entstehen sie oben mit den frischen. Alle vor dem ersten grünen Lauf
+behoben. Zahlen im Prüfdokument 2.
 
 **SR-09 Passkeys als zweiter Faktor** — Nr. 350; Nachfassung vom
 27.09.2026 (E-SR-29 bis -34); Q-SR-12, -13 entschieden (H-SR-07).

@@ -7896,5 +7896,19 @@ declare(strict_types=1);
  *   verlangt (E-SR-24). Und `betrieb_server.php` leitet jetzt nach jedem
  *   erfolgreichen POST um, mit der Meldung in der Karte (Nr. 250) — sie war
  *   die letzte Seite unter Betrieb, die ihr Ergebnis selbst ausgab.
+ *
+ * 21.9.0 — DER FRISCHE CODE (Schritt 18, SR-07; E-SR-20, Q-SR-11). Neben,
+ *   ohne Migration. Vor einer kurzen Liste von Handlungen fragt die Anwendung
+ *   noch einmal nach dem Code, wenn der letzte aelter als 15 Minuten ist:
+ *   die sieben Schluesselgriffe und das Schluesselblatt, Rolle wechseln,
+ *   fremden Zweitfaktor zuruecksetzen, Konto loeschen, den eigenen
+ *   Zweitfaktor ausschalten. Die Liste steht in `db.php`
+ *   (`ZF_FRISCH_HANDLUNGEN`), das Tor in `auth_guard.php`
+ *   (`zweitfaktor_frisch_verlangen()`, vor dem Token), die Bestaetigung ist
+ *   ein zweiter Modus von `zweitfaktor.php` und steht in
+ *   `WARTUNG_AUSNAHMEN`. Frisch macht nur ein Code — ein gemerktes Geraet und
+ *   der Rueckweg nicht. Die Handlung wird nicht nachgespielt; die Seite sagt,
+ *   dass sie noch einmal auszuloesen ist. Das Register zaehlt nach, dass jede
+ *   Handlung genau einen Aufruf hat (Z43).
  */
-const WEB_VERSION = '21.8.0';
+const WEB_VERSION = '21.9.0';

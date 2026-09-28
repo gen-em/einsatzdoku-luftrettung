@@ -15,7 +15,7 @@ bash tools/proben/proben.sh <name> [zusatz…]   # alle · --liste
 `komplett` Komplettsicherung · `wiederherstellung` Rückweg · `gpx` Export gegen das Schema · `geraete` Gerätevertrag ·
 `verbindung` Verbindungsgrenze · `anteil` Server-Anteil · `rechtstexte` Texte gegen die Quelle · `freigabe` Schlüsselweitergabe ·
 `container` Format der Sicherungsdatei · `frist` Inhaltsschlüssel · `abmelden` was liegen bleibt · `csp-browser` Richtlinie zur Laufzeit ·
-`rollen` Matrix aus `Technik.md` 4.99p · `protokoll` Archiv, Fehlerprotokoll · `zweitfaktor` Code-Schritt, Einrichtungstor, RFC-Vektoren, Demo-Reset nur nach Änderung · `sitzung` Bindung per zweitem Cookie ·
+`rollen` Matrix aus `Technik.md` 4.99p · `protokoll` Archiv, Fehlerprotokoll · `zweitfaktor` Code-Schritt, Einrichtungstor, RFC-Vektoren, Demo-Reset nur nach Änderung, Gerät merken (SR-02), frischer Code (SR-07) · `sitzung` Bindung per zweitem Cookie ·
 `rueckweg` Rückweg beim Zweitfaktor, zwei Teile hinter `probe.sh`: `probe.php` (Signaturen, Selbsttest, Marke, der Prüfzweig am Code-Schritt samt Abzug-Gegenprobe) und `probe.mjs` (der Weg im Browser, NutzerIn und BetreiberIn — auch gegen Staging, mit `--basis`, `--admin`, `--admin-pw`, `--admin-totp`; von Hand in Firefox und WebKit mit `--motor`).
 
 **Anlass: Nr. 31, 130, 171, 210** — je Probe im Kopfkommentar ihrer Datei.

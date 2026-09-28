@@ -117,6 +117,13 @@ $koppelSitzung = null; $koppelWarten = null;
 $dlgFehler = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    /* EIN FRISCHER CODE VOR DEM AUSSCHALTEN (Schritt 18, SR-07, E-SR-20), vor
+     * dem Token wie ein Rollentor. Nur, wo Ausschalten ueberhaupt geht: Einer
+     * Pflichtrolle erst den Code abzuverlangen und dann „Pflicht" zu sagen,
+     * waere ein Umweg ins Nein. */
+    if (($_POST['action'] ?? '') === 'zf_ausschalten' && !rolle_braucht_zweitfaktor($userRole)) {
+        zweitfaktor_frisch_verlangen('totp_ausschalten');
+    }
     csrf_check();
     $action = $_POST['action'] ?? '';
 

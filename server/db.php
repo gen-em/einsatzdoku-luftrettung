@@ -1191,6 +1191,44 @@ function rolle_darf_zweitfaktor_zuruecksetzen(?string $wer, ?string $ziel): bool
         || ($wer === 'admin' && rolle_normieren($ziel) === 'user');
 }
 
+/* ---- Der frische Code (Schritt 18, SR-07, E-SR-20) ------------------------
+ *
+ * WAS FRISCH HEISST: In dieser Sitzung wurde in den letzten `ZF_FRISCH_S`
+ * Sekunden ein Code aus der App oder ein Wiederherstellungscode eingegeben —
+ * im Code-Schritt der Anmeldung oder auf der Bestaetigungsseite
+ * (`zweitfaktor.php?bestaetigen=1`). Eine Anmeldung ueber ein gemerktes Geraet
+ * und der Rueckweg setzen nichts: Ein gemerkter, unbeaufsichtigter Rechner mit
+ * bekanntem Passwort soll fuer einen Schluesselwechsel nicht reichen.
+ *
+ * DIE LISTE STEHT HIER, NEBEN DEN ROLLEN, und nur hier. Je Handlung die Seite
+ * und die Karte, auf die die Bestaetigung zurueckfuehrt; bei einer Handlung,
+ * die eine SEITE ist (das Blatt), dazu das Ziel von „Abbrechen". `auth_guard.php`
+ * prueft gegen sie (`zweitfaktor_frisch_verlangen()`), `zweitfaktor.php`
+ * nimmt nur ihre Seiten als Ruecksprung an, und das Register zaehlt nach, dass
+ * jede Handlung genau einen Aufruf hat (`tools/zaehlung/`, Z43).
+ *
+ * 15 MINUTEN, die Frist des Topfes `totp`. Die abgeschickte Handlung wird
+ * nicht nachgespielt: Ein gespeicherter POST samt Formular-Token waere die
+ * Art Zwischenspeicher, die beim naechsten Umbau falsch abgespielt wird — ein
+ * zweiter Klick ist billiger. */
+const ZF_FRISCH_S = 900;
+const ZF_FRISCH_HANDLUNGEN = [
+    // alle sieben Schluesselgriffe (`schluessel_*`) — ein Aufruf, eine Zeile
+    'schluessel'         => ['seite' => 'betrieb_server.php',          'ort' => 'k-schluessel'],
+    // die Anzeige des Blatts, vor der ersten Ausgabe. „Abbrechen" fuehrt in
+    // die Karte, von der das Blatt kommt — zurueck auf das Blatt selbst hiesse
+    // zurueck auf die Bestaetigung, eine Schleife.
+    'schluesselblatt'    => ['seite' => 'betrieb_schluesselblatt.php', 'ort' => '',
+                             'abbruch' => 'betrieb_server.php#k-schluessel'],
+    // `admin_user.php` zeigt Meldungen oben — der Ruecksprung geht dorthin.
+    // Der Rollenwechsel nur, wenn sich die Rolle wirklich aendert.
+    'rollenwechsel'      => ['seite' => 'admin_user.php',              'ort' => ''],
+    'totp_zuruecksetzen' => ['seite' => 'admin_user.php',              'ort' => ''],
+    'user_delete'        => ['seite' => 'admin_user.php',              'ort' => ''],
+    // den eigenen Zweitfaktor ausschalten
+    'totp_ausschalten'   => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
+];
+
 /** Darf diese Rolle den Bereich Betrieb sehen und bedienen? */
 function rolle_ist_betreiberin(?string $rolle): bool
 {

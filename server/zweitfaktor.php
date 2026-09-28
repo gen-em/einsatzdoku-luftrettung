@@ -26,11 +26,135 @@ declare(strict_types=1);
  *
  * WER HIER NICHTS ZU TUN HAT — keine Pflichtrolle, schon eingeschaltet,
  * Spalten noch nicht da —, geht zur Startseite.
+ *
+ * SEIT WEB 21.9.0 EIN ZWEITER MODUS: DIE BESTAETIGUNG (Schritt 18, SR-07,
+ * E-SR-20). `?bestaetigen=1&zurueck=…` fragt nach einem Code — aus der App
+ * oder einem Wiederherstellungscode, im Topf `totp` wie der Code-Schritt der
+ * Anmeldung — und macht ihn damit frisch (`ZF_FRISCH_S`). Dahin schickt
+ * `zweitfaktor_frisch_verlangen()` jede Handlung der Liste in `db.php`, wenn
+ * der letzte Code aelter ist. Zurueck geht es nur auf eine Seite der Liste
+ * (`zweitfaktor_zurueck()`); „Abbrechen" fuehrt dorthin ohne Frist. Die Seite
+ * steht in `WARTUNG_AUSNAHMEN`: Die BetreiberIn braucht sie vor den
+ * Schluesselgriffen, und die liegen im Wartungsmodus offen.
  */
 
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/totp_lib.php';
 require_once __DIR__ . '/zweitfaktor_teile.php';
+
+/* ---- DIE BESTAETIGUNG (SR-07) ---------------------------------------------
+ *
+ * SCHON FRISCH ODER KEIN ZWEITFAKTOR: nichts zu fragen, gleich zurueck.
+ * GESPERRT (fuenf falsche Codes im Topf `totp`): Die Seite sagt bis wann und
+ * bietet nur den Rueckweg — die Anmeldung endet deshalb nicht, anders als im
+ * Code-Schritt, weil die Sitzung schon mit einem Code entstanden ist. */
+if (isset($_GET['bestaetigen'])) {
+    require_once __DIR__ . '/ratelimit_lib.php';
+    require_once __DIR__ . '/format_lib.php';   // fmt_local() fuer die Sperrzeit
+    $zurueck  = zweitfaktor_zurueck((string)($_GET['zurueck'] ?? ''));
+    $nochmal  = isset($_GET['nochmal']);
+    /* „Abbrechen" fuehrt auf `zurueck` — ausser die Handlung ist eine Seite
+     * (das Blatt): Dort hiesse zurueck wieder hierher. */
+    $abbruch  = isset($_GET['abbruch']) ? zweitfaktor_zurueck((string)$_GET['abbruch']) : $zurueck;
+    $mitRc    = ($_GET['art'] ?? '') === 'rc';
+    if (zweitfaktor_frisch()) { header('Location: ' . $zurueck, true, 303); exit; }
+    $merkmale = [rate_merkmal_kennung((string)($row['email'] ?? ''))];
+    $bFehler = null; $bAuftakt = '';
+    $gesperrt = !rate_erlaubt('totp', null, $merkmale);
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$gesperrt) {
+        csrf_check();
+        $pr = totp_anmeldung_pruefen($userId, (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''),
+                                     $mitRc ? 'code' : 'app');
+        if ($pr['ok']) {
+            rate_erfolg('totp', null, $merkmale);
+            $_SESSION['zf_frisch_bis'] = time() + ZF_FRISCH_S;
+            if ($pr['art'] === 'code') {
+                require_once __DIR__ . '/protokoll_lib.php';
+                protokoll('verwaltung', 'totp_code_benutzt',
+                          'Mit einem Wiederherstellungscode bestätigt',
+                          ['codes_offen' => (int)($pr['codes_offen'] ?? 0)], $userId);
+            }
+            /* NACH EINEM POST: Die Handlung wurde nicht ausgefuehrt und wird
+             * nicht nachgespielt (E-SR-20) — die Seite sagt es in der Karte,
+             * aus der sie kam. Nach einer Seite (dem Schluesselblatt) gibt es
+             * nichts zu wiederholen; der Ruecksprung zeigt sie. */
+            if ($nochmal) {
+                $ort = str_contains($zurueck, '#') ? substr($zurueck, strpos($zurueck, '#') + 1) : '';
+                flash_setzen('info', 'Code bestätigt — bitte die Handlung noch einmal auslösen.', $ort);
+            }
+            header('Location: ' . $zurueck, true, 303);
+            exit;
+        }
+        rate_misserfolg('totp', null, $merkmale);
+        $gesperrt = !rate_erlaubt('totp', null, $merkmale);
+        if (!$gesperrt && !empty($pr['geheimnis_fehlt'])) {
+            $bAuftakt = 'Der Code lässt sich hier nicht prüfen.';
+            $bFehler  = 'Der Zweitfaktor wurde mit einem anderen Serverschlüssel eingerichtet. '
+                      . 'Nimm einen Wiederherstellungscode.';
+        } elseif (!$gesperrt) {
+            $bAuftakt = 'Der Code passt nicht.';
+            $bFehler  = $mitRc ? 'Jeder Wiederherstellungscode gilt einmal — ein benutzter ist verbraucht.'
+                               : 'Er gilt 30 Sekunden — den nächsten aus der App nehmen.';
+        }
+    }
+    if ($gesperrt) {
+        $sp = rate_sperre('totp', null, $merkmale);
+        $bAuftakt = 'Zu viele falsche Codes für dieses Konto.';
+        $bFehler  = ($sp['bis'] ?? null) !== null
+                  ? 'Wieder ab ' . fmt_local($sp['bis'], 'H:i') . ' Uhr. Bis dahin geht diese Handlung nicht.'
+                  : 'Bitte später erneut versuchen.';
+    }
+    $hier = 'zweitfaktor.php?bestaetigen=1&zurueck=' . rawurlencode($zurueck) . ($nochmal ? '&nochmal=1' : '')
+          . (isset($_GET['abbruch']) ? '&abbruch=' . rawurlencode($abbruch) : '');
+
+    ui_seite_start(['titel' => 'Code bestätigen', 'klasse' => 'anmeldung-body']);
+?>
+<main class="anmeldung">
+ <?php ui_hinweise(); ?>
+ <div class="anmeldung-karte">
+  <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel"><?= e(instanz_kurz()) ?></h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+  <h2 class="anmeldung-schritt">Code bestätigen</h2>
+  <?php if ($gesperrt): ?>
+  <?php ui_meldung(null, $bFehler, 'info', '  ', ['auftakt_fehler' => $bAuftakt]); ?>
+  <?php else: ?>
+  <form method="post" action="<?= e($hier . ($mitRc ? '&art=rc' : '')) ?>" id="codeform">
+    <?= csrf_field() ?>
+    <p class="feld-hinweis">Für diese Handlung fragt NAdoku noch einmal nach dem Code —
+       danach gilt er <?= (int)(ZF_FRISCH_S / 60) ?> Minuten lang auch für die übrigen.</p>
+    <?php ui_meldung(null, $bFehler, 'info', '    ', ['auftakt_fehler' => $bAuftakt]); ?>
+    <?php if ($mitRc) {
+        ui_feld(['name' => 'rc', 'label' => 'Wiederherstellungscode', 'klasse' => 'feld-code',
+                 'platzhalter' => 'XXXX XXXX',
+                 'attr' => ' autocomplete="off" autocapitalize="characters" spellcheck="false" autofocus required',
+                 'klein' => 'Jeder Code gilt einmal.']);
+    } else {
+        ui_feld(['name' => 'code', 'label' => 'Code aus der App', 'klasse' => 'feld-code',
+                 'platzhalter' => '000 000',
+                 'attr' => ' inputmode="numeric" autocomplete="one-time-code" autofocus required']);
+    } ?>
+    <div class="listen-form-fuss">
+      <?= ui_knopf(['text' => 'Bestätigen', 'art' => 'primaer', 'breit' => true]) ?>
+    </div>
+  </form>
+  <p class="anmeldung-neben"><a href="<?= e($mitRc ? $hier : $hier . '&art=rc') ?>"><?=
+      $mitRc ? 'Code aus der App verwenden' : 'Wiederherstellungscode verwenden' ?></a></p>
+  <?php endif; ?>
+  <p class="anmeldung-neben"><a href="<?= e($abbruch) ?>">Abbrechen</a></p>
+ </div>
+
+ <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+<?php ui_fuss_seite(['dunkel' => true]); ?>
+<?php ui_seite_ende();
+    exit;
+}
 
 $zustand = totp_zustand($userId);
 $codes   = null;

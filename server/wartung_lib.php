@@ -153,6 +153,13 @@ const WARTUNG_AUSNAHMEN = [
      * zeigen den Balken. */
     'admin_komplettsicherung.php',
     'admin_sicherungsziele.php',
+    /* SEIT SR-07 (Schritt 18, E-SR-20): die Bestaetigung des frischen Codes.
+     * Die Schluesselgriffe und das Blatt oben liegen im Wartungsmodus offen
+     * und verlangen einen frischen Code; ohne diese Zeile fuehrte ihr Umweg
+     * auf eine 503 — derselbe Griff ins Leere wie beim Schluesselblatt. Ein
+     * Konto ohne Verwaltungsrolle kommt in der Wartung ohnehin nicht herein
+     * (`login.php`, E-S5W-09). */
+    'zweitfaktor.php',
     'update.php',
     'wiederherstellen.php',
     'jobs.php',

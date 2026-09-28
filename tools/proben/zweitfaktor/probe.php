@@ -72,6 +72,7 @@ require_once $srv . '/totp_lib.php';
 require_once $srv . '/ratelimit_lib.php';
 require_once $srv . '/demo_lib.php';
 require_once $srv . '/serverkrypto_lib.php';
+require_once $srv . '/sitzung_lib.php';
 require_once $srv . '/status_lib.php';
 require_once $wurzel . '/tools/zweitfaktor/totp.php';
 
@@ -531,6 +532,111 @@ if (!zweitfaktor_geraete_da($pdo)) {
             ->execute([$uid, $c['hash'], $c['benutzt_am']]);
     }
     $keks = [];
+}
+
+/* ---- 5c. Der frische Code (Schritt 18, SR-07, E-SR-20) ----------------------
+ *
+ * DAS KONTO WIRD FUER DIESEN TEIL BETREIBERIN: Das Schluesselblatt ist die
+ * eine Handlung der Liste, die ein GET ist und bei Erfolg 200 antwortet —
+ * die Probe kann „durch" an der Seite selbst sehen. Danach wieder Admin.
+ *
+ * DIE FRIST WIRD IN DER SITZUNGSDATEI GESTELLT, nicht abgewartet: 15 Minuten
+ * sind zu lang fuer eine Probe. Gestellt wird die eine Zahl hinter
+ * `zf_frisch_bis|i:`, sonst nichts. */
+echo "== 5c. Frischer Code (SR-07)\n";
+if (!zweitfaktor_geraete_da($pdo)) {
+    pruefe(false, 'Frischer Code', 'die Tabelle vertraute_geraete fehlt — update.php, nicht gemessen');
+} else {
+    $pdo->prepare("UPDATE users SET role = 'betreiberin' WHERE id = ?")->execute([$uid]);
+    $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([$merkmal]);
+    $frischStellen = static function (int $bis) use (&$keks): bool {
+        $datei = sitzung_ablage_pfad() . '/sess_' . ($keks['PHPSESSID'] ?? '');
+        $inhalt = @file_get_contents($datei);
+        if ($inhalt === false) { return false; }
+        $neu = preg_replace('/zf_frisch_bis\|i:\d+;/', 'zf_frisch_bis|i:' . $bis . ';', $inhalt, 1, $n);
+        return $n === 1 && file_put_contents($datei, $neu) !== false;
+    };
+    $umweg = static function (array $r): array {
+        parse_str((string)parse_url($r['ort'], PHP_URL_QUERY), $q);
+        return $q;
+    };
+    try {
+        // 1. Mit Code angemeldet: sofort frisch
+        $keks = [];
+        passwort();
+        $s = http('GET', 'login.php');
+        $r = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'schritt' => 'code',
+                                        'code' => $naechster(), 'merken' => '1']);
+        $b = http('GET', 'betrieb_schluesselblatt.php');
+        pruefe($r['code'] === 302 && $b['code'] === 200,
+               'mit Code angemeldet: Schlüsselblatt sofort (200)', "Anmeldung {$r['code']}, Blatt {$b['code']}");
+
+        // 2. Über das gemerkte Gerät: kein Code, also nicht frisch
+        $g = $keks['EDGERAET'] ?? null;
+        http('GET', 'logout.php');
+        $keks = $g !== null ? ['EDGERAET' => $g] : [];
+        $s = http('GET', 'login.php');
+        $a = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'email' => $mail,
+                                        'tokens' => json_encode([(string)$iter => $token])]);
+        $b = http('GET', 'betrieb_schluesselblatt.php');
+        $q = $umweg($b);
+        pruefe($a['code'] === 302 && $b['code'] === 303 && str_starts_with($b['ort'], 'zweitfaktor.php?bestaetigen=1&')
+               && ($q['zurueck'] ?? '') === 'betrieb_schluesselblatt.php' && !isset($q['nochmal'])
+               && ($q['abbruch'] ?? '') === 'betrieb_server.php#k-schluessel',
+               'über das gemerkte Gerät: Schlüsselblatt → 303 auf die Bestätigung, ohne „nochmal", Abbrechen in die Karte',
+               "Anmeldung {$a['code']}, Blatt {$b['code']} → {$b['ort']}");
+
+        // 3. Ein Griff als POST: Umweg mit „nochmal", zurück in die Karte
+        $p = http('POST', 'betrieb_server.php', ['csrf' => 'absichtlich-falsch', 'action' => 'schluessel_anteil_wechseln']);
+        $q = $umweg($p);
+        pruefe($p['code'] === 303 && ($q['zurueck'] ?? '') === 'betrieb_server.php#k-schluessel'
+               && ($q['nochmal'] ?? '') === '1',
+               'Schlüsselgriff (POST) ohne frischen Code: 303, zurück auf #k-schluessel, „nochmal"',
+               "{$p['code']} → {$p['ort']}");
+
+        // 4. Die Bestätigung: falscher Code, dann der richtige
+        $seite = http('GET', $p['ort']);
+        $falsch = http('POST', $p['ort'], ['csrf' => csrf_von($seite['rumpf']), 'code' => '000000']);
+        pruefe($seite['code'] === 200 && str_contains($seite['rumpf'], 'Code bestätigen')
+               && $falsch['code'] === 200 && str_contains(html_entity_decode($falsch['rumpf']), 'Der Code passt nicht'),
+               'Bestätigungsseite: 200 mit Codefeld; ein falscher Code bleibt dort',
+               "Seite {$seite['code']}, falsch {$falsch['code']}");
+        $richtig = http('POST', $p['ort'], ['csrf' => csrf_von($falsch['rumpf']), 'code' => $naechster()]);
+        $karte = http('GET', 'betrieb_server.php');
+        $b = http('GET', 'betrieb_schluesselblatt.php');
+        pruefe($richtig['code'] === 303 && $richtig['ort'] === 'betrieb_server.php#k-schluessel'
+               && str_contains(html_entity_decode($karte['rumpf']), 'Code bestätigt — bitte die Handlung noch einmal auslösen.')
+               && $b['code'] === 200,
+               'richtiger Code: zurück in die Karte, Meldung „noch einmal auslösen", Blatt jetzt 200',
+               "Code {$richtig['code']} → {$richtig['ort']}, Blatt {$b['code']}");
+
+        // 5. Die Frist läuft ab
+        $gestellt = $frischStellen(time() - 1);
+        $b = http('GET', 'betrieb_schluesselblatt.php');
+        pruefe($gestellt && $b['code'] === 303, 'Frist gestellt auf abgelaufen: wieder 303',
+               ($gestellt ? 'gestellt' : 'NICHT gestellt') . ", Blatt {$b['code']}");
+
+        // 6. Nur Rücksprünge auf eine Seite der Liste
+        $frischStellen(time() + 600);
+        $faelle = ['https://boese.invalid/'                  => 'index.php',
+                   '//boese.invalid/betrieb_server.php'      => 'index.php',
+                   'admin_users.php'                         => 'index.php',
+                   'betrieb_server.php?x=<script>#k-schluessel' => 'betrieb_server.php#k-schluessel',
+                   'admin_user.php?id=' . $uid               => 'admin_user.php?id=' . $uid];
+        $ist = [];
+        foreach ($faelle as $roh => $soll) {
+            $z = http('GET', 'zweitfaktor.php?bestaetigen=1&zurueck=' . rawurlencode($roh));
+            $ist[] = $z['code'] === 303 && $z['ort'] === $soll;
+        }
+        pruefe(!in_array(false, $ist, true),
+               'zurück nur auf eine Seite der Liste: fremde Adresse, // und fremde Seite → index.php, Abfrage mit Sonderzeichen fällt weg',
+               implode(' ', array_map(static fn(bool $b): string => $b ? 'ok' : 'NEIN', $ist)));
+    } finally {
+        $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ?")->execute([$uid]);
+        $pdo->prepare('DELETE FROM vertraute_geraete WHERE user_id = ?')->execute([$uid]);
+        $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([$merkmal]);
+        $keks = [];
+    }
 }
 
 /* ---- 6. Der Demo-Reset leert die Spalten ------------------------------------- */

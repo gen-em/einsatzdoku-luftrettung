@@ -234,7 +234,12 @@ function bindung_keks(string $sid): string {
 }
 
 /** Eine Sitzungsdatei mit genau diesem Inhalt schreiben — und gebunden, wie
- *  `login.php` sie seit SR-01 hinterlaesst; liefert die Kennung. */
+ *  `login.php` sie seit SR-01 hinterlaesst; liefert die Kennung.
+ *
+ *  MIT FRISCHEM CODE (seit SR-07, E-SR-20), wie nach dem Code-Schritt: Das
+ *  Schluesselblatt (Fall 6a) verlangt ihn, und ohne ihn maesse die Probe den
+ *  Umweg auf die Bestaetigung statt der Wartung. Den Umweg misst die
+ *  Zweitfaktorprobe. */
 function sitzung_schreiben(array $inhalt): string {
     $sid = 'wartungsprobe' . bin2hex(random_bytes(10));
     $bind = bin2hex(random_bytes(32));
@@ -244,7 +249,7 @@ function sitzung_schreiben(array $inhalt): string {
     session_save_path(sitzung_ort());
     session_id($sid);
     session_start();
-    $_SESSION = $inhalt + ['bindung' => hash('sha256', $bind)];
+    $_SESSION = $inhalt + ['bindung' => hash('sha256', $bind), 'zf_frisch_bis' => time() + 3600];
     session_write_close();
     $GLOBALS['BINDUNGEN'][$sid] = $bind;
     return $sid;
@@ -722,13 +727,14 @@ $sollAusnahmen = ['betrieb_status.php', 'betrieb_sicherheit.php',
                   'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
                   'betrieb_schluesselblatt.php',
                   'admin_komplettsicherung.php', 'admin_sicherungsziele.php',
+                  'zweitfaktor.php',
                   'update.php', 'wiederherstellen.php', 'jobs.php',
                   'login.php', 'auth_salt.php', 'logout.php', 'install.php'];
 sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8 + P5c/AP9',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8 + P5c/AP9 + SR-07',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer

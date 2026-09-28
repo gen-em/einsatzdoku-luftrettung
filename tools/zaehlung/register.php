@@ -554,4 +554,19 @@ return [
              'muster' => '~INSERT\s+INTO\s+missions\s*\(\s*\'\s*\.\s*implode\s*\(~i'],
  'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+/* ---- Schritt 18, SR-07: der frische Code --------------------------------- */
+
+['kennung' => 'Z43', 'paket' => 'SR-07',
+ 'beschreibung' => 'frischer Code: jede Handlung der Liste genau ein Aufruf',
+ 'grund' => 'E-SR-20: ZF_FRISCH_HANDLUNGEN in db.php ist die Liste, '
+          . 'zweitfaktor_frisch_verlangen() der eine Aufruf je Handlung, mit dem '
+          . 'Namen als fester Zeichenkette. Gezaehlt wird jede Abweichung — ein '
+          . 'Eintrag ohne Aufruf oder mit zweien (an seiner Zeile in db.php), ein '
+          . 'Aufruf ohne feste Zeichenkette oder mit einem Namen, der nicht in der '
+          . 'Liste steht. Eine Liste, die mehr verspricht als die Seiten fragen, '
+          . 'waere die gefaehrlichere Luecke: Sie saehe aus wie Schutz.',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'regel' => ['art' => 'eigen', 'name' => 'frischer_code'],
+ 'start' => 0, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 ];

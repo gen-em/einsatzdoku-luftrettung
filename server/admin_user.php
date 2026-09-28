@@ -106,6 +106,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ui_abbruch(403, 'Kein Zugriff — den Zweitfaktor von Konten mit Rechten setzt '
                       . 'nur die BetreiberIn zurück.');
     }
+    /* EIN FRISCHER CODE (Schritt 18, SR-07, E-SR-20) vor drei Handlungen:
+     * Rolle wechseln, Zweitfaktor zuruecksetzen, Konto loeschen — nach dem
+     * Rollentor, vor dem Token. Der Rollenwechsel ist Teil des Formulars
+     * „Konto" und zaehlt nur, wenn sich die Rolle aendert; die Bedingung
+     * rechnet wie der Zweig unten (`rolle_normieren($_POST['role'] ?? '')`). */
+    if ($action === 'konto'
+        && rolle_normieren($_POST['role'] ?? '') !== rolle_normieren($u['role'] ?? null)) {
+        zweitfaktor_frisch_verlangen('rollenwechsel');
+    }
+    if ($action === 'totp_zuruecksetzen') { zweitfaktor_frisch_verlangen('totp_zuruecksetzen'); }
+    if ($action === 'user_delete')        { zweitfaktor_frisch_verlangen('user_delete'); }
     csrf_check();
     if (demo_ist_demo($uid) && in_array($action, DEMO_GESPERRT, true)) {
         $error = 'Das Demo-Konto wird über den Reiter „Demo-Konto“ verwaltet — '
@@ -669,6 +680,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([(int)($_POST['dev'] ?? 0), $uid]);
         $notice = 'Gerät entkoppelt. Hochgeladene Daten bleiben erhalten.';
     }
+}
+
+/* EINE MELDUNG AUS EINER UMLEITUNG (seit Web 21.9.0, Schritt 18, SR-07). Diese
+ * Seite gibt ihr POST-Ergebnis selbst aus; umgeleitet wird hierher nur von
+ * der Bestaetigung des frischen Codes („Code bestätigt — bitte die Handlung
+ * noch einmal auslösen"). Ohne diese Zeilen laege die Meldung in der Sitzung,
+ * bis eine andere Seite sie abholt — dort ergaebe sie keinen Sinn. */
+if ($notice === null && $error === null && ($flash = flash_holen()) !== null) {
+    if (in_array($flash['ton'], ['error', 'fehler'], true)) { $error = $flash['text']; }
+    else                                                   { $notice = $flash['text']; }
 }
 
 // Auffrischen: zeigt Rolle, Name und E-Mail nach einer Aenderung aktuell an.

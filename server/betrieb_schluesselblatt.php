@@ -4,6 +4,10 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/instanz_lib.php';
 require_once __DIR__ . '/umgebung_lib.php';   // Vorsatz im Titel (P5c/AP1, E-P5c-70)
 require_betreiberin();
+/* EIN FRISCHER CODE VOR DEM BLATT (Schritt 18, SR-07, E-SR-20): Die Seite
+ * zeigt die Geheimnisse selbst. Vor jeder Ausgabe, damit der Umweg noch eine
+ * Kopfzeile setzen kann. */
+zweitfaktor_frisch_verlangen('schluesselblatt');
 require_once __DIR__ . '/serverkrypto_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitmarke des Blatts
 /* `ui.php` SEIT P5c/AP9 — nicht für das Gerüst (es gibt keins), sondern für

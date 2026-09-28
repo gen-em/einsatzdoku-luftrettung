@@ -5615,6 +5615,7 @@ Die Bausteine im Einzelnen:
 | Eingang der Endpunkte | `db.php` | `api_methode($erlaubt)` und `api_rumpf($o)` — Methodenprüfung (405 `method`) und Rumpf als JSON-Objekt (400 `leer`/`format`). Ab Web 20.28.0. **Zwei Funktionen, weil `csrf_check()` dazwischen steht**; Einzelheiten im Abschnitt „Der Eingang der Endpunkte". |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
+| Frischer Code | `db.php`, `auth_guard.php` | Die Liste `ZF_FRISCH_HANDLUNGEN` steht in `db.php` neben den Rollen, das Tor `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, vor `csrf_check()`. Jede Handlung der Liste hat **genau einen** Aufruf mit ihrem Namen als fester Zeichenkette — das zählt das Register (Z43). Ab Web 21.9.0 (Schritt 18, SR-07); Einzelheiten in 4.99q. |
 | Schlüssel/Wert-Ablage | `db.php` | `app_state_lesen()`, `app_state_setzen()`, dazu ab Web 20.29.0 `app_state_mehrere()` (eine Abfrage statt n), `app_state_setzen_mehrere()`, `app_state_loeschen()` und `app_state_einmalig()` (`INSERT IGNORE`, dann zurücklesen — für die beiden Servergeheimnisse, bei denen von zwei gleichzeitigen Anfragen nur **eine** gewinnen darf). Die Längenprüfung gegen `APP_STATE_MAX` steht in `app_state_zu_lang()`. **Zwei Stellen fragen weiter selbst:** `jobs.php` (Gerätevertrag — es antwortet `500 datenbank`, wo der Helfer `null` liefert) und `job_aufraeumen_schritte()` (Verbund auf `users`). |
 | Virtuelles Gerät | `db.php` | `geraet_virtuell_sicherstellen($pdo, $userId)` — holen oder anlegen, an einer Stelle statt an vier. Dazu `geraet_virtuell_kennung()`, `geraet_virtuell()` (für Listen im Speicher), `GERAETE_ECHT_SQL` und `geraete_echt_sql($alias)` für Abfragen mit Tabellenalias sowie `GERAET_VIRTUELL_MUSTER` für die eine Abfrage, die das `LIKE`-Muster bindet. Ab Web 20.29.0. |
 | Einsatz laden | `einsatz_lib.php` | `einsatz_laden($id, $userId, ['spalten' => …, 'papierkorb' => 'nein'\|'ja'\|'egal'])`. Die Besitzprüfung steht **in** der Abfrage; die drei Fehlerfälle (gibt es nicht · gehört jemand anderem · falsche Seite des Papierkorbs) sind bewusst nicht unterscheidbar. Ab Web 20.29.0; zwei Stellen bleiben namentlich außen vor (siehe Dateikopf). |
@@ -6335,7 +6336,7 @@ geändert** (E-S5W-08).
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript in `JSON_SKRIPTE_AUSSERHALB_API` steht — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php`. Die vier liegen nicht unter `/api/` und brauchen trotzdem JSON. **Für den Wartungsmodus zählen nur die ersten beiden**, weil die anderen zwei in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt; die Liste ist in P5a/AP9 für die **Überlast** gewachsen, die keine Ausnahmen kennt (Abschnitt 5e) |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
-| Ausnahmen | **sechzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `admin_komplettsicherung.php`, `admin_sicherungsziele.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Komplett-Backup und Backup-Ziele seit Web 21.1.0** (P5c/AP9, E-P5c-134): Schloss der Torwächter, führte der Knopf „Komplett-Backup" der Seite Updates in die Sperre, und die Vorbedingung der FTP-Migration nannte die gesperrten Backup-Ziele als Weg. **Das Tor fragt nie nach der Rolle** — bis Web 21.1.0 sagten Karte und Handbuch „für alle außer Verwaltung und Betrieb" (F-P5c-158); jede Seite unter Verwaltung antwortet 503. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Ausnahmen | **siebzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `admin_komplettsicherung.php`, `admin_sicherungsziele.php`, `zweitfaktor.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Komplett-Backup und Backup-Ziele seit Web 21.1.0** (P5c/AP9, E-P5c-134): Schloss der Torwächter, führte der Knopf „Komplett-Backup" der Seite Updates in die Sperre, und die Vorbedingung der FTP-Migration nannte die gesperrten Backup-Ziele als Weg. **`zweitfaktor.php` seit Web 21.9.0** (Schritt 18, SR-07): die Bestätigung des frischen Codes — Schlüsselgriffe und Blatt liegen in der Wartung offen und verlangen ihn; ohne die Zeile führte ihr Umweg auf eine 503. **Das Tor fragt nie nach der Rolle** — bis Web 21.1.0 sagten Karte und Handbuch „für alle außer Verwaltung und Betrieb" (F-P5c-158); jede Seite unter Verwaltung antwortet 503. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
@@ -7430,6 +7431,22 @@ wird** — kein Komplett-Backup, keine Löschung, kein Versand. Der Preis: Dass
 die Handlung mit gültigem Token auch gelingt, zeigt die Matrix nicht; das tun
 die Bedienwege und die Proben der jeweiligen Sache.
 
+**Die letzte Spalte „frischer Code"** (seit Web 21.9.0, Schritt 18, SR-07,
+E-SR-20) ist keine Rolle, sondern eine Markierung: `ja` heißt, die Handlung
+steht in `ZF_FRISCH_HANDLUNGEN` (`db.php`) und verlangt einen Code, der
+höchstens 15 Minuten alt ist; `—` heißt, sie steht nicht darin. Die Zellen
+der Rollen messen jede Zeile **mit** frischem Code — die Sitzungen der Probe
+tragen `zf_frisch_bis` wie nach dem Code-Schritt. Den Umweg **ohne** ihn misst
+ein eigener Teil an jeder `ja`-Zeile: dieselbe Anfrage mit dem Konto der
+kleinsten Rolle, die die Handlung darf, erwartet 303 auf
+`zweitfaktor.php?bestaetigen=1` mit dem Rücksprung auf ihre Seite (nach einem
+POST mit `nochmal=1`), dazu einmal der Durchlass für ein Konto ohne
+Zweitfaktor. Dafür sind drei Zeilen dazugekommen: der Rollenwechsel
+(`action=konto&role=…` — nur ein wirklicher Wechsel verlangt den Code), die
+Anzeige des Schlüsselblatts und das Ausschalten des eigenen Zweitfaktors.
+Dass jede Handlung der Liste genau **einen** Aufruf im Code hat, zählt das
+Register (`tools/zaehlung/`, Z43).
+
 **Drei Platzhalter** (seit Web 20.41.0, AP4; der dritte seit R4-18):
 `{ziel}` ist ein Konto der Rolle `user`, `{admin}` eines der Rolle `admin`,
 `{support}` eines der Rolle `support` — alle drei legt die Probe an und räumt
@@ -7446,8 +7463,8 @@ Matrix.
 
 **Seit R4-18 führt die Matrix auch die BetreiberIn-Seiten einzeln** (Nr. 327):
 je eine Zeile für den Aufruf von `betrieb_server.php`, `betrieb_jobs.php`,
-`betrieb_updates.php`, `betrieb_status.php`, `betrieb_sicherheit.php` und
-`betrieb_statistik.php` samt dem CSV der Gerätemodelle (und seit R4-23 dem
+`betrieb_updates.php`, `betrieb_status.php`, `betrieb_sicherheit.php`,
+`betrieb_statistik.php` und — seit SR-07 — `betrieb_schluesselblatt.php` samt dem CSV der Gerätemodelle (und seit R4-23 dem
 eigenen Zeitraum, der eine andere Abfrage stellt), dazu jede ihrer
 27 POST-Handlungen (seit SR-02 mit der Karte „Anmeldung"; bis dahin 26) und die zwei von `api/schluesselblatt_pruefen.php`. Bis
 dahin stand hier, dass sie **nicht** darin stehen: Jede liegt hinter
@@ -7462,119 +7479,122 @@ Vorschau-Endpunkt darin.** Die Zeile „Installation: Rechtstexte speichern"
 ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 
 <!-- rollenprobe:anfang -->
-| Handlung | Aufruf | user | support | admin | betreiberin |
-|---|---|---|---|---|---|
-| Protokoll: die Seite | `GET admin_protokoll.php` | 403 | 200 | 200 | 200 |
-| Protokoll: Reiter Verwaltung | `GET admin_protokoll.php?r=verwaltung` | 403 | 200 | 200 | 200 |
-| Protokoll: Reiter Sicherheit | `GET admin_protokoll.php?r=sicherheit` | 403 | 403 | 403 | 200 |
-| Protokoll: Reiter E-Mail | `GET admin_protokoll.php?r=email` | 403 | 200 | 200 | 200 |
-| Protokoll: Reiter Jobs | `GET admin_protokoll.php?r=jobs` | 403 | 403 | 200 | 200 |
-| Protokoll: Reiter Sicherung | `GET admin_protokoll.php?r=sicherung` | 403 | 403 | 200 | 200 |
-| Protokoll: Reiter Ziele | `GET admin_protokoll.php?r=ziele` | 403 | 403 | 403 | 200 |
-| Protokoll: Reiter System | `GET admin_protokoll.php?r=system` | 403 | 403 | 403 | 200 |
-| Protokoll: Archiv | `GET admin_protokoll.php?r=archiv` | 403 | 403 | 403 | 200 |
-| Protokoll: Archiv herunterladen | `POST admin_protokoll.php action=archiv_laden` | 403 | 403 | 403 | durch |
-| Protokoll: Fehlerkennung wechselt auf System | `GET admin_protokoll.php?q=0badc0de` | 403 | 200 | 200 | 303 |
-| Protokoll: unbekannter Reiter | `GET admin_protokoll.php?r=gibtesnicht` | 403 | 404 | 404 | 404 |
-| Protokoll: Fristen und Archiv einstellen | `POST betrieb_server.php action=protokoll` | 403 | 403 | 403 | durch |
-| Komplett-Backup: die Seite | `GET admin_komplettsicherung.php` | 403 | 403 | 403 | 200 |
-| Komplett-Backup: herunterladen | `POST admin_komplettsicherung.php action=herunterladen` | 403 | 403 | 403 | durch |
-| Komplett-Backup: jetzt sichern | `POST admin_komplettsicherung.php action=jetzt_sichern` | 403 | 403 | 403 | durch |
-| Komplett-Backup: fortsetzen | `POST admin_komplettsicherung.php action=fortsetzen` | 403 | 403 | 403 | durch |
-| Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | 403 | durch |
-| Komplett-Backup: Regeln | `POST admin_komplettsicherung.php action=regeln` | 403 | 403 | 403 | durch |
-| Komplett-Backup: Stand löschen | `POST admin_komplettsicherung.php action=stand_loeschen` | 403 | 403 | 403 | durch |
-| Backup-Ziele: die Seite | `GET admin_sicherungsziele.php` | 403 | 403 | 403 | 200 |
-| Backup-Ziele: Ziel speichern | `POST admin_sicherungsziele.php action=ziel_speichern` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Ziel löschen | `POST admin_sicherungsziele.php action=ziel_loeschen` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Abdruck vergessen | `POST admin_sicherungsziele.php action=abdruck_vergessen` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Versand an oder aus | `POST admin_sicherungsziele.php action=versand_schalter` | 403 | 403 | 403 | durch |
-| Backup-Ziele: jetzt versenden | `POST admin_sicherungsziele.php action=jetzt_versenden` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Ziel prüfen | `POST admin_sicherungsziele.php action=ziel_pruefen` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Bestand ansehen | `POST admin_sicherungsziele.php action=ziel_bestand` | 403 | 403 | 403 | durch |
-| NutzerInnen: die Liste | `GET admin_users.php` | 403 | 200 | 200 | 200 |
-| NutzerInnen: Konto anlegen | `POST admin_users.php action=user_add` | 403 | 403 | durch | durch |
-| NutzerInnen: Auswahl sichern | `POST admin_users.php action=sichern_auswahl` | 403 | 403 | durch | durch |
-| Kontoseite: Konto einer NutzerIn | `GET admin_user.php?id={ziel}` | 403 | 200 | 200 | 200 |
-| Kontoseite: Konto eines Admins | `GET admin_user.php?id={admin}` | 403 | 403 | 200 | 200 |
-| Kontoseite: Rolle, Name, Adresse | `POST admin_user.php?id={ziel} action=konto` | 403 | 403 | durch | durch |
-| Kontoseite: Mengengrenzen | `POST admin_user.php?id={ziel} action=konto_grenzen` | 403 | 403 | durch | durch |
-| Kontoseite: Status | `POST admin_user.php?id={ziel} action=konto_status` | 403 | 403 | durch | durch |
-| Kontoseite: Setz-Link senden | `POST admin_user.php?id={ziel} action=pw_reset` | 403 | durch | durch | durch |
-| Kontoseite: Bestätigung erneut senden | `POST admin_user.php?id={ziel} action=verifikation` | 403 | durch | durch | durch |
-| Kontoseite: Konto-Backup erzeugen | `POST admin_user.php?id={ziel} action=sichern` | 403 | 403 | durch | durch |
-| Kontoseite: Konto-Backup einspielen | `POST admin_user.php?id={ziel} action=einspielen` | 403 | 403 | durch | durch |
-| Kontoseite: Backup freigeben | `POST admin_user.php?id={ziel} action=freigeben` | 403 | 403 | durch | durch |
-| Kontoseite: Freigabe widerrufen | `POST admin_user.php?id={ziel} action=widerrufen` | 403 | 403 | durch | durch |
-| Kontoseite: Backup löschen | `POST admin_user.php?id={ziel} action=paket_loeschen` | 403 | 403 | durch | durch |
-| Kontoseite: Konto löschen | `POST admin_user.php?id={ziel} action=user_delete` | 403 | 403 | durch | durch |
-| Kontoseite: Gerät an oder aus | `POST admin_user.php?id={ziel} action=device_toggle` | 403 | 403 | durch | durch |
-| Kontoseite: Gerät deaktivieren | `POST admin_user.php?id={ziel} action=device_aus` | 403 | durch | durch | durch |
-| Kontoseite: Gerät entkoppeln | `POST admin_user.php?id={ziel} action=device_delete` | 403 | 403 | durch | durch |
-| Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch |
-| Kontoseite: Zweitfaktor zurücksetzen | `POST admin_user.php?id={ziel} action=totp_zuruecksetzen` | 403 | 403 | durch | durch |
-| Kontoseite: Zweitfaktor eines Admins zurücksetzen | `POST admin_user.php?id={admin} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch |
-| Kontoseite: Konto eines Supports | `GET admin_user.php?id={support}` | 403 | 403 | 200 | 200 |
-| Kontoseite: Setz-Link an einen Support | `POST admin_user.php?id={support} action=pw_reset` | 403 | 403 | durch | durch |
-| Kontoseite: Bestätigung an einen Support | `POST admin_user.php?id={support} action=verifikation` | 403 | 403 | durch | durch |
-| Kontoseite: Gerät eines Supports deaktivieren | `POST admin_user.php?id={support} action=device_aus` | 403 | 403 | durch | durch |
-| Kontoseite: Zweitfaktor eines Supports zurücksetzen | `POST admin_user.php?id={support} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch |
-| Konto-Backups: die Seite | `GET admin_sicherungen.php` | 403 | 403 | 200 | 200 |
-| Konto-Backups: Regeln | `POST admin_sicherungen.php action=regeln` | 403 | 403 | durch | durch |
-| Konto-Backups: alle sichern | `POST admin_sicherungen.php action=sichern_alle` | 403 | 403 | durch | durch |
-| Konto-Backups: einspielen | `POST admin_sicherungen.php action=einspielen` | 403 | 403 | durch | durch |
-| Konto-Backups: freigeben | `POST admin_sicherungen.php action=freigeben` | 403 | 403 | durch | durch |
-| Konto-Backups: Freigabe widerrufen | `POST admin_sicherungen.php action=widerrufen` | 403 | 403 | durch | durch |
-| Konto-Backups: Paket löschen | `POST admin_sicherungen.php action=paket_loeschen` | 403 | 403 | durch | durch |
-| Konto-Backups: Ordner löschen | `POST admin_sicherungen.php action=ordner_loeschen` | 403 | 403 | durch | durch |
-| Installation: die Seite | `GET admin_installation.php` | 403 | 403 | 200 | 200 |
-| Installation: Name | `POST admin_installation.php action=instanz_name` | 403 | 403 | durch | durch |
-| Installation: Adressen | `POST admin_installation.php action=instanz_adressen` | 403 | 403 | durch | durch |
-| Installation: Logo | `POST admin_installation.php action=logo_standard` | 403 | 403 | durch | durch |
-| Rechtstexte: die Seite | `GET admin_rechtstexte.php` | 403 | 403 | 200 | 200 |
-| Rechtstexte: speichern | `POST admin_rechtstexte.php` | 403 | 403 | durch | durch |
-| Rechtstexte: Vorschau beim Tippen | `POST api/rechtstext_vorschau.php` | 403 | 403 | durch | durch |
-| Demo-Konto: die Seite | `GET admin_demo.php` | 403 | 403 | 200 | 200 |
-| Demo-Konto: anlegen | `POST admin_demo.php action=demo_anlegen` | 403 | 403 | durch | durch |
-| Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch |
-| Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch |
-| Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch |
-| Betrieb · Server: die Seite | `GET betrieb_server.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Server: Ankündigung setzen | `POST betrieb_server.php action=ankuendigung` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Ankündigung als Rundmail | `POST betrieb_server.php action=rundmail` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Ankündigung entfernen | `POST betrieb_server.php action=ankuendigung_weg` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Serverschlüssel anlegen | `POST betrieb_server.php action=schluessel_sk_anlegen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Server-Anteil anlegen | `POST betrieb_server.php action=schluessel_anteil_anlegen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Serverschlüssel nachtragen | `POST betrieb_server.php action=schluessel_sk_nachtragen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Server-Anteil nachtragen | `POST betrieb_server.php action=schluessel_anteil_nachtragen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Server-Anteil wechseln | `POST betrieb_server.php action=schluessel_anteil_wechseln` | 403 | 403 | 403 | durch |
-| Betrieb · Server: alten Anteil entfernen | `POST betrieb_server.php action=schluessel_anteil_alt_entfernen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Anteil neu anfangen | `POST betrieb_server.php action=schluessel_anteil_neuanfang` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Speicher | `POST betrieb_server.php action=speicher` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Sicherheitskopfzeilen | `POST betrieb_server.php action=kopfzeilen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Konten | `POST betrieb_server.php action=konten` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Demo-Anmeldung abschalten | `POST betrieb_server.php action=demo_aus` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Ratenschutz | `POST betrieb_server.php action=ratenschutz` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Adresssuche | `POST betrieb_server.php action=geocoder` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Anmeldung (Gerät merken) | `POST betrieb_server.php action=anmeldung` | 403 | 403 | 403 | durch |
-| Profil: gemerkte Geräte vergessen (nur das eigene Konto) | `POST einstellungen.php?t=profil action=zf_geraete_vergessen` | durch | durch | durch | durch |
-| Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch |
-| Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch |
-| Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch |
-| Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Updates: Wartung an | `POST betrieb_updates.php action=wartung_an` | 403 | 403 | 403 | durch |
-| Betrieb · Updates: Wartung aus | `POST betrieb_updates.php action=wartung_aus` | 403 | 403 | 403 | durch |
-| Betrieb · Updates: Migrationen anwenden | `POST betrieb_updates.php action=migrate` | 403 | 403 | 403 | durch |
-| Betrieb · Status: die Seite | `GET betrieb_status.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Status: Testmail | `POST betrieb_status.php action=testmail` | 403 | 403 | 403 | durch |
-| Betrieb · Sicherheit: die Seite | `GET betrieb_sicherheit.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Sicherheit: Sperre aufheben | `POST betrieb_sicherheit.php action=aufheben` | 403 | 403 | 403 | durch |
-| Betrieb · Statistik: die Seite | `GET betrieb_statistik.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Statistik: Gerätemodelle als CSV | `GET betrieb_statistik.php?r=geraete&export=csv` | 403 | 403 | 403 | 200 |
-| Betrieb · Statistik: eigener Zeitraum | `GET betrieb_statistik.php?r=einsaetze&von=2026-03-01&bis=2026-05-31` | 403 | 403 | 403 | 200 |
-| Betrieb · Schlüsselblatt: Positionen stellen | `POST api/schluesselblatt_pruefen.php aktion=stellen` | 403 | 403 | 403 | durch |
-| Betrieb · Schlüsselblatt: prüfen | `POST api/schluesselblatt_pruefen.php aktion=pruefen` | 403 | 403 | 403 | durch |
+| Handlung | Aufruf | user | support | admin | betreiberin | frischer Code |
+|---|---|---|---|---|---|---|
+| Protokoll: die Seite | `GET admin_protokoll.php` | 403 | 200 | 200 | 200 | — |
+| Protokoll: Reiter Verwaltung | `GET admin_protokoll.php?r=verwaltung` | 403 | 200 | 200 | 200 | — |
+| Protokoll: Reiter Sicherheit | `GET admin_protokoll.php?r=sicherheit` | 403 | 403 | 403 | 200 | — |
+| Protokoll: Reiter E-Mail | `GET admin_protokoll.php?r=email` | 403 | 200 | 200 | 200 | — |
+| Protokoll: Reiter Jobs | `GET admin_protokoll.php?r=jobs` | 403 | 403 | 200 | 200 | — |
+| Protokoll: Reiter Sicherung | `GET admin_protokoll.php?r=sicherung` | 403 | 403 | 200 | 200 | — |
+| Protokoll: Reiter Ziele | `GET admin_protokoll.php?r=ziele` | 403 | 403 | 403 | 200 | — |
+| Protokoll: Reiter System | `GET admin_protokoll.php?r=system` | 403 | 403 | 403 | 200 | — |
+| Protokoll: Archiv | `GET admin_protokoll.php?r=archiv` | 403 | 403 | 403 | 200 | — |
+| Protokoll: Archiv herunterladen | `POST admin_protokoll.php action=archiv_laden` | 403 | 403 | 403 | durch | — |
+| Protokoll: Fehlerkennung wechselt auf System | `GET admin_protokoll.php?q=0badc0de` | 403 | 200 | 200 | 303 | — |
+| Protokoll: unbekannter Reiter | `GET admin_protokoll.php?r=gibtesnicht` | 403 | 404 | 404 | 404 | — |
+| Protokoll: Fristen und Archiv einstellen | `POST betrieb_server.php action=protokoll` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: die Seite | `GET admin_komplettsicherung.php` | 403 | 403 | 403 | 200 | — |
+| Komplett-Backup: herunterladen | `POST admin_komplettsicherung.php action=herunterladen` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: jetzt sichern | `POST admin_komplettsicherung.php action=jetzt_sichern` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: fortsetzen | `POST admin_komplettsicherung.php action=fortsetzen` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: Regeln | `POST admin_komplettsicherung.php action=regeln` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: Stand löschen | `POST admin_komplettsicherung.php action=stand_loeschen` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: die Seite | `GET admin_sicherungsziele.php` | 403 | 403 | 403 | 200 | — |
+| Backup-Ziele: Ziel speichern | `POST admin_sicherungsziele.php action=ziel_speichern` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Ziel löschen | `POST admin_sicherungsziele.php action=ziel_loeschen` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Abdruck vergessen | `POST admin_sicherungsziele.php action=abdruck_vergessen` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Versand an oder aus | `POST admin_sicherungsziele.php action=versand_schalter` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: jetzt versenden | `POST admin_sicherungsziele.php action=jetzt_versenden` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Ziel prüfen | `POST admin_sicherungsziele.php action=ziel_pruefen` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Bestand ansehen | `POST admin_sicherungsziele.php action=ziel_bestand` | 403 | 403 | 403 | durch | — |
+| NutzerInnen: die Liste | `GET admin_users.php` | 403 | 200 | 200 | 200 | — |
+| NutzerInnen: Konto anlegen | `POST admin_users.php action=user_add` | 403 | 403 | durch | durch | — |
+| NutzerInnen: Auswahl sichern | `POST admin_users.php action=sichern_auswahl` | 403 | 403 | durch | durch | — |
+| Kontoseite: Konto einer NutzerIn | `GET admin_user.php?id={ziel}` | 403 | 200 | 200 | 200 | — |
+| Kontoseite: Konto eines Admins | `GET admin_user.php?id={admin}` | 403 | 403 | 200 | 200 | — |
+| Kontoseite: Rolle, Name, Adresse | `POST admin_user.php?id={ziel} action=konto` | 403 | 403 | durch | durch | — |
+| Kontoseite: Rolle wechseln | `POST admin_user.php?id={ziel} action=konto&role=support` | 403 | 403 | durch | durch | ja |
+| Kontoseite: Mengengrenzen | `POST admin_user.php?id={ziel} action=konto_grenzen` | 403 | 403 | durch | durch | — |
+| Kontoseite: Status | `POST admin_user.php?id={ziel} action=konto_status` | 403 | 403 | durch | durch | — |
+| Kontoseite: Setz-Link senden | `POST admin_user.php?id={ziel} action=pw_reset` | 403 | durch | durch | durch | — |
+| Kontoseite: Bestätigung erneut senden | `POST admin_user.php?id={ziel} action=verifikation` | 403 | durch | durch | durch | — |
+| Kontoseite: Konto-Backup erzeugen | `POST admin_user.php?id={ziel} action=sichern` | 403 | 403 | durch | durch | — |
+| Kontoseite: Konto-Backup einspielen | `POST admin_user.php?id={ziel} action=einspielen` | 403 | 403 | durch | durch | — |
+| Kontoseite: Backup freigeben | `POST admin_user.php?id={ziel} action=freigeben` | 403 | 403 | durch | durch | — |
+| Kontoseite: Freigabe widerrufen | `POST admin_user.php?id={ziel} action=widerrufen` | 403 | 403 | durch | durch | — |
+| Kontoseite: Backup löschen | `POST admin_user.php?id={ziel} action=paket_loeschen` | 403 | 403 | durch | durch | — |
+| Kontoseite: Konto löschen | `POST admin_user.php?id={ziel} action=user_delete` | 403 | 403 | durch | durch | ja |
+| Kontoseite: Gerät an oder aus | `POST admin_user.php?id={ziel} action=device_toggle` | 403 | 403 | durch | durch | — |
+| Kontoseite: Gerät deaktivieren | `POST admin_user.php?id={ziel} action=device_aus` | 403 | durch | durch | durch | — |
+| Kontoseite: Gerät entkoppeln | `POST admin_user.php?id={ziel} action=device_delete` | 403 | 403 | durch | durch | — |
+| Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch | — |
+| Kontoseite: Zweitfaktor zurücksetzen | `POST admin_user.php?id={ziel} action=totp_zuruecksetzen` | 403 | 403 | durch | durch | ja |
+| Kontoseite: Zweitfaktor eines Admins zurücksetzen | `POST admin_user.php?id={admin} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch | ja |
+| Kontoseite: Konto eines Supports | `GET admin_user.php?id={support}` | 403 | 403 | 200 | 200 | — |
+| Kontoseite: Setz-Link an einen Support | `POST admin_user.php?id={support} action=pw_reset` | 403 | 403 | durch | durch | — |
+| Kontoseite: Bestätigung an einen Support | `POST admin_user.php?id={support} action=verifikation` | 403 | 403 | durch | durch | — |
+| Kontoseite: Gerät eines Supports deaktivieren | `POST admin_user.php?id={support} action=device_aus` | 403 | 403 | durch | durch | — |
+| Kontoseite: Zweitfaktor eines Supports zurücksetzen | `POST admin_user.php?id={support} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch | ja |
+| Konto-Backups: die Seite | `GET admin_sicherungen.php` | 403 | 403 | 200 | 200 | — |
+| Konto-Backups: Regeln | `POST admin_sicherungen.php action=regeln` | 403 | 403 | durch | durch | — |
+| Konto-Backups: alle sichern | `POST admin_sicherungen.php action=sichern_alle` | 403 | 403 | durch | durch | — |
+| Konto-Backups: einspielen | `POST admin_sicherungen.php action=einspielen` | 403 | 403 | durch | durch | — |
+| Konto-Backups: freigeben | `POST admin_sicherungen.php action=freigeben` | 403 | 403 | durch | durch | — |
+| Konto-Backups: Freigabe widerrufen | `POST admin_sicherungen.php action=widerrufen` | 403 | 403 | durch | durch | — |
+| Konto-Backups: Paket löschen | `POST admin_sicherungen.php action=paket_loeschen` | 403 | 403 | durch | durch | — |
+| Konto-Backups: Ordner löschen | `POST admin_sicherungen.php action=ordner_loeschen` | 403 | 403 | durch | durch | — |
+| Installation: die Seite | `GET admin_installation.php` | 403 | 403 | 200 | 200 | — |
+| Installation: Name | `POST admin_installation.php action=instanz_name` | 403 | 403 | durch | durch | — |
+| Installation: Adressen | `POST admin_installation.php action=instanz_adressen` | 403 | 403 | durch | durch | — |
+| Installation: Logo | `POST admin_installation.php action=logo_standard` | 403 | 403 | durch | durch | — |
+| Rechtstexte: die Seite | `GET admin_rechtstexte.php` | 403 | 403 | 200 | 200 | — |
+| Rechtstexte: speichern | `POST admin_rechtstexte.php` | 403 | 403 | durch | durch | — |
+| Rechtstexte: Vorschau beim Tippen | `POST api/rechtstext_vorschau.php` | 403 | 403 | durch | durch | — |
+| Demo-Konto: die Seite | `GET admin_demo.php` | 403 | 403 | 200 | 200 | — |
+| Demo-Konto: anlegen | `POST admin_demo.php action=demo_anlegen` | 403 | 403 | durch | durch | — |
+| Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch | — |
+| Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch | — |
+| Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch | — |
+| Betrieb · Server: die Seite | `GET betrieb_server.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Server: Ankündigung setzen | `POST betrieb_server.php action=ankuendigung` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Ankündigung als Rundmail | `POST betrieb_server.php action=rundmail` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Ankündigung entfernen | `POST betrieb_server.php action=ankuendigung_weg` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Serverschlüssel anlegen | `POST betrieb_server.php action=schluessel_sk_anlegen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Server-Anteil anlegen | `POST betrieb_server.php action=schluessel_anteil_anlegen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Serverschlüssel nachtragen | `POST betrieb_server.php action=schluessel_sk_nachtragen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Server-Anteil nachtragen | `POST betrieb_server.php action=schluessel_anteil_nachtragen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Server-Anteil wechseln | `POST betrieb_server.php action=schluessel_anteil_wechseln` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: alten Anteil entfernen | `POST betrieb_server.php action=schluessel_anteil_alt_entfernen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Anteil neu anfangen | `POST betrieb_server.php action=schluessel_anteil_neuanfang` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Speicher | `POST betrieb_server.php action=speicher` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Sicherheitskopfzeilen | `POST betrieb_server.php action=kopfzeilen` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Konten | `POST betrieb_server.php action=konten` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Demo-Anmeldung abschalten | `POST betrieb_server.php action=demo_aus` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Ratenschutz | `POST betrieb_server.php action=ratenschutz` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Adresssuche | `POST betrieb_server.php action=geocoder` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Anmeldung (Gerät merken) | `POST betrieb_server.php action=anmeldung` | 403 | 403 | 403 | durch | — |
+| Profil: gemerkte Geräte vergessen (nur das eigene Konto) | `POST einstellungen.php?t=profil action=zf_geraete_vergessen` | durch | durch | durch | durch | — |
+| Profil: Zweitfaktor ausschalten (nur ohne Pflicht) | `POST einstellungen.php?t=profil action=zf_ausschalten` | durch | durch | durch | durch | ja |
+| Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch | — |
+| Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch | — |
+| Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch | — |
+| Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Updates: Wartung an | `POST betrieb_updates.php action=wartung_an` | 403 | 403 | 403 | durch | — |
+| Betrieb · Updates: Wartung aus | `POST betrieb_updates.php action=wartung_aus` | 403 | 403 | 403 | durch | — |
+| Betrieb · Updates: Migrationen anwenden | `POST betrieb_updates.php action=migrate` | 403 | 403 | 403 | durch | — |
+| Betrieb · Status: die Seite | `GET betrieb_status.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Status: Testmail | `POST betrieb_status.php action=testmail` | 403 | 403 | 403 | durch | — |
+| Betrieb · Sicherheit: die Seite | `GET betrieb_sicherheit.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Sicherheit: Sperre aufheben | `POST betrieb_sicherheit.php action=aufheben` | 403 | 403 | 403 | durch | — |
+| Betrieb · Statistik: die Seite | `GET betrieb_statistik.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Statistik: Gerätemodelle als CSV | `GET betrieb_statistik.php?r=geraete&export=csv` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Statistik: eigener Zeitraum | `GET betrieb_statistik.php?r=einsaetze&von=2026-03-01&bis=2026-05-31` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Schlüsselblatt: Positionen stellen | `POST api/schluesselblatt_pruefen.php aktion=stellen` | 403 | 403 | 403 | durch | — |
+| Betrieb · Schlüsselblatt: prüfen | `POST api/schluesselblatt_pruefen.php aktion=pruefen` | 403 | 403 | 403 | durch | — |
+| Betrieb · Schlüsselblatt: die Seite | `GET betrieb_schluesselblatt.php` | 403 | 403 | 403 | 200 | ja |
 <!-- rollenprobe:ende -->
 
 **Daneben prüft die Probe Wirkungen**, denn eine Zelle `durch` sagt nur,
@@ -7708,6 +7728,24 @@ Browsers, den die Person selbst als ihren ausgewiesen hat; ein Rechner, den
 andere mitbenutzen, gehört nicht gemerkt, und der Haken sagt es.
 Nachweis: `tools/proben/zweitfaktor/` Teil 5b (22 Fälle; Rest aus Nr. 141),
 im Browser der Bedienweg `zweitfaktor-merken`.
+
+**Frischer Code (ab Web 21.9.0, Schritt 18, SR-07, E-SR-20).** Ein
+gemerkter, unbeaufsichtigter Rechner mit bekanntem Passwort soll für einen
+Schlüsselwechsel nicht reichen. Vor einer kurzen Liste von Handlungen fragt
+die Anwendung deshalb noch einmal nach dem Code, wenn der letzte älter als
+15 Minuten ist.
+
+| | |
+|---|---|
+| frisch | `$_SESSION['zf_frisch_bis']`, gesetzt nach einem App- oder Wiederherstellungscode im Code-Schritt von `login.php` und auf der Bestätigungsseite; `ZF_FRISCH_S` = 900. Eine Anmeldung über ein gemerktes Gerät und der Rückweg setzen nichts, `anmeldung_vollenden()` räumt eine alte Frist weg. Ein Konto **ohne** Zweitfaktor hat nichts zu bestätigen: `zweitfaktor_frisch()` ist dort ein Durchlass |
+| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
+| das Tor | `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, **vor** `csrf_check()` wie ein Rollentor (E-P5c-85). Nicht frisch: Seiten bekommen 303 auf `zweitfaktor.php?bestaetigen=1&zurueck=…` (nach einem POST mit `nochmal=1`), die API 403 JSON `zweitfaktor_frisch`. Ein Name, der nicht in der Liste steht, wirft — ein Tippfehler darf kein Durchlass sein |
+| die Bestätigung | `zweitfaktor.php?bestaetigen=1`: Codefeld wie im Code-Schritt (App-Code oder Wiederherstellungscode, Topf `totp` mit dem Merkmal des Kontos, fünf Fehlversuche sperren), bei Erfolg die Frist und 303 auf `zurueck`; nach einem POST steht in der Karte „Code bestätigt — bitte die Handlung noch einmal auslösen." Die Handlung wird **nicht nachgespielt** (ein gespeicherter POST samt Token wäre ein Zwischenspeicher, der beim nächsten Umbau falsch abgespielt wird). Steht in `WARTUNG_AUSNAHMEN` |
+| der Rücksprung | `zweitfaktor_zurueck()`: nur ein relativer Pfad auf eine Seite der Liste, die Abfrage nur mit harmlosen Zeichen (sonst fällt sie weg); alles andere wird `index.php` — sonst wäre die Seite ein offener Umleiter mit dem Vertrauen dieser Anwendung |
+
+Nachweis: `tools/proben/zweitfaktor/` Teil 5c, die Rollenprobe (Spalte
+„frischer Code" der Matrix, 4.99p), das Register (Z43: jede Handlung genau
+ein Aufruf), im Browser der Bedienweg `betrieb-server-frischer-code`.
 
 **Das Einrichtungstor** (`auth_guard.php`, E-P5c-61): Eine Pflichtrolle ohne
 `totp_seit` landet auf `zweitfaktor.php` — einer eigenen Seite in der
@@ -11430,11 +11468,15 @@ seine Löschliste nur aus der eigenen Zustandsdatei entsteht und der Ordner dort
 nie stand. Dass `.sitzungen/` trotzdem in die Ausnahmeliste gehört (Kette II,
 E-KH-20), hat einen anderen Grund; er steht in 6.5.
 
-**Was währenddessen erreichbar bleibt** (E-S5W-04): die **sechs**
-Betriebsseiten `betrieb_status.php`, `betrieb_statistik.php`,
-`betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php` und — seit
-S10 — `betrieb_schluesselblatt.php` (die Lage, in der man das Blatt braucht,
-ist genau eine Wartungslage), dazu `update.php` und
+**Was währenddessen erreichbar bleibt** (E-S5W-04; maßgeblich ist
+`WARTUNG_AUSNAHMEN`, siebzehn seit Web 21.9.0): die **sieben**
+Betriebsseiten `betrieb_status.php`, `betrieb_sicherheit.php`,
+`betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`,
+`betrieb_server.php` und — seit S10 — `betrieb_schluesselblatt.php` (die
+Lage, in der man das Blatt braucht, ist genau eine Wartungslage),
+Komplett-Backup und Backup-Ziele (seit Web 21.1.0), die Bestätigung des
+frischen Codes `zweitfaktor.php` (seit Web 21.9.0 — Schlüsselgriffe und Blatt
+verlangen ihn), dazu `update.php` und
 `wiederherstellen.php` (die Arbeit selbst und der Rückweg), `jobs.php` mit
 Token — das Komplett-Backup der Kette läuft **während** der Wartung, genau
 dann ist es konsistent —, `login.php` mit `auth_salt.php` (ohne den
@@ -11485,7 +11527,7 @@ für das sie da ist.
 
 **Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
 (1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
-(neben `db.php`)? (2) Ist die aufgerufene Seite eine der Ausnahmen (`WARTUNG_AUSNAHMEN`, seit Web 21.1.0 sechzehn; hier stand bis dahin „dreizehn", es waren vierzehn)?
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der Ausnahmen (`WARTUNG_AUSNAHMEN`, seit Web 21.9.0 siebzehn, von 21.1.0 an sechzehn; hier stand bis dahin „dreizehn", es waren vierzehn)?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
 `php tools/proben/wartung/probe.php` (**69 Erwartungen**, gezählt 25.09.2026; seit Web 15.5.2 misst

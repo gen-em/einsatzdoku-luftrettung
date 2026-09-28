@@ -849,6 +849,19 @@ Support, Admin und BetreiberIn 7 (Betrieb → Servereinstellungen, Karte
 - Der Browser merkt sich das mit einem Cookie; auf dem Server liegt nur ein
   Prüfwert davon, kein Gerätename und kein Browsertyp.
 
+**Noch einmal den Code — vor wenigen Handlungen** (seit Web 21.9.0). Ein paar
+Handlungen verlangen einen Code, der höchstens **15 Minuten** alt ist: die
+Griffe an den Schlüsseln des Servers und das Schlüsselblatt, auf der
+Kontoseite einer anderen Person Rolle wechseln, Zweitfaktor zurücksetzen und
+Konto löschen, und das Ausschalten deines eigenen Zweitfaktors. Hast du dich
+eben mit dem Code angemeldet, merkst du davon nichts. Kamst du über ein
+gemerktes Gerät herein oder ist die Anmeldung älter, erscheint die Seite
+**„Code bestätigen"** — Code aus der App (oder ein Wiederherstellungscode)
+eingeben, danach geht es zurück. Eine abgeschickte Handlung wird dabei **nicht
+nachgeholt**: Die Seite sagt „Code bestätigt — bitte die Handlung noch einmal
+auslösen", und ein zweiter Klick tut es. Danach gilt der Code 15 Minuten lang
+auch für die übrigen. Ohne Zweitfaktor fragt nichts nach.
+
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
 Es gibt ein Konto, in dem sich alles gefahrlos ausprobieren lässt:
@@ -3628,6 +3641,8 @@ Darunter:
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
 
+**Rolle wechseln, Zweitfaktor zurücksetzen und Konto löschen verlangen seit Web 21.9.0 einen frischen Code** (höchstens 15 Minuten alt, 3.1f). Ist er älter — etwa nach einer Anmeldung über ein gemerktes Gerät —, führt der Knopf zuerst auf „Code bestätigen"; danach steht die Kontoseite wieder da, mit dem Hinweis, die Handlung noch einmal auszulösen. Name und Adresse speichern ohne Rollenwechsel fragt nicht.
+
 > Die Karte **„Abonnement · ab P5"** gibt es seit Web 15.2.0 nicht mehr. Sie
 > war ein reservierter Platz und hat auf jeder Kontoseite eine Zusage
 > wiederholt, für die es keinen Termin gab. Tarif, Laufzeit und Rechnungen
@@ -5353,6 +5368,13 @@ Kennung auf dem Ausdruck in der Betriebsakte mit der auf dem Bildschirm
 überein, ist es derselbe Wert. Ein Wert, der vollständig auf dem Bildschirm
 steht, landet früher oder später in einem Screenshot. Die einzige Seite, die
 den Wert zeigt, ist das Schlüsselblatt.
+
+**Jeder Griff an den Schlüsseln und das Schlüsselblatt verlangen einen
+frischen Code** (seit Web 21.9.0) — einen, der höchstens 15 Minuten alt ist
+(3.1f). Ist er älter, führt der Knopf auf „Code bestätigen"; nach dem Code
+steht das Blatt da, bei einem Griff die Karte mit dem Hinweis, ihn noch
+einmal auszulösen. „Abbrechen" führt ohne Code in die Karte zurück. Die
+Bestätigung ist auch im Wartungsmodus erreichbar.
 
 **Drucke das Schlüsselblatt, sobald du einen Anteil angelegt oder gewechselt
 hast.** Der Knopf steht auf der Karte. Was darauf steht und wohin es gehört,

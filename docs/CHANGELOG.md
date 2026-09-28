@@ -14,6 +14,71 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.9.0] — 2026-09-28
+
+Schritt 18, Sicherheitsrunde II, Paket SR-07. **Neben**, ohne Migration.
+
+### Neu
+
+- **Ein frischer Code vor wenigen, schweren Handlungen** (Q-SR-11, E-SR-20).
+  Seit 21.8.0 kann ein Browser gemerkt werden; dann fragt die Anmeldung dort
+  keinen Code. Ein gemerkter, unbeaufsichtigter Rechner mit bekanntem
+  Passwort sollte aber nicht für einen Schlüsselwechsel reichen. Vor den
+  sieben Griffen an den Schlüsseln des Servers, vor dem Schlüsselblatt, vor
+  Rollenwechsel, Zweitfaktor-Zurücksetzen und Löschen auf der Kontoseite und
+  vor dem Ausschalten des eigenen Zweitfaktors verlangt die Anwendung deshalb
+  einen Code, der höchstens **15 Minuten** alt ist — die Frist des Topfes
+  `totp`. Wer sich eben mit dem Code angemeldet hat, merkt nichts; sonst
+  erscheint die neue Seite **„Code bestätigen"**. **Frisch macht nur ein
+  Code**, ein gemerktes Gerät und der Rückweg nicht. **Die abgeschickte
+  Handlung wird nicht nachgespielt:** Ein gespeicherter POST samt
+  Formular-Token wäre die Art Zwischenspeicher, die beim nächsten Umbau falsch
+  abgespielt wird — die Seite sagt stattdessen „bitte die Handlung noch einmal
+  auslösen", und ein zweiter Klick ist billiger. Ein Konto ohne Zweitfaktor
+  hat nichts zu bestätigen.
+- **Eine Liste, ein Tor, ein Zähler.** Die Handlungen stehen in
+  `ZF_FRISCH_HANDLUNGEN` (`db.php`, neben den Rollen), das Tor
+  `zweitfaktor_frisch_verlangen()` steht vor dem Formular-Token wie ein
+  Rollentor, und das Register zählt nach, dass jede Handlung **genau einen**
+  Aufruf hat (Z43). Ein Name, der nicht in der Liste steht, wirft: Ein
+  Tippfehler darf kein Durchlass sein.
+- **Die Bestätigung springt nur auf eine Seite der Liste zurück.** Der
+  Rücksprung steht in der Adresse; eine Seite, die danach überallhin springt,
+  wäre ein offener Umleiter mit dem Vertrauen dieser Anwendung. Beim Blatt —
+  einer Seite, kein Formular — führt „Abbrechen" in die Karte, nicht zurück
+  aufs Blatt, das wieder auf die Bestätigung schickte (so stand es im ersten
+  Entwurf). Die Bestätigung ist im **Wartungsmodus** erreichbar
+  (`WARTUNG_AUSNAHMEN`, jetzt siebzehn): Die Schlüsselgriffe sind es auch.
+
+### Geändert
+
+- **Die Kontoseite zeigt eine Meldung aus einer Umleitung.** Sie gibt ihre
+  Ergebnisse selbst aus und kannte bisher keine; der Hinweis nach der
+  Bestätigung wäre sonst in der Sitzung liegen geblieben, bis eine andere
+  Seite ihn abholt.
+
+### Prüfmittel
+
+- **Die Berechtigungsmatrix hat eine Spalte „frischer Code"** (`Technik.md`
+  4.99p) und drei Zeilen mehr (Rollenwechsel, Schlüsselblatt,
+  Zweitfaktor ausschalten). Die Rollenprobe fährt die Zellen mit frischem
+  Code und misst an jeder markierten Zeile den Umweg ohne ihn — mit
+  absichtlich falschem Token, damit ein fehlendes Tor kein Konto löscht.
+- **Die Zweitfaktorprobe hat einen Teil „frischer Code"**: mit Code
+  angemeldet sofort, über ein gemerktes Gerät der Umweg, falscher und
+  richtiger Code, die Meldung in der Karte, eine abgelaufene Frist, fremde
+  Rücksprungadressen. Den Fall „API bekommt 403 JSON" misst sie noch nicht —
+  keine Handlung der Liste ist heute ein Endpunkt; der erste kommt mit den
+  Passkeys (SR-09).
+- **Vier Prüfmittel, die eine Handlung der Liste aufrufen, sind nachgezogen:**
+  Die Wartungsprobe legt ihre Sitzungen frisch an, der Bilderlauf und der
+  Betriebslauf der Anteilprobe gehen die Bestätigung wie den Code-Schritt,
+  wenn ein Lauf länger als 15 Minuten dauert. Ohne das hätte der Bilderlauf
+  nach einer Viertelstunde die Bestätigung unter dem Namen „Schlüsselblatt"
+  fotografiert.
+- **Ein Bedienweg** `betrieb-server-frischer-code`: über ein gemerktes Gerät
+  angemeldet, „Schlüsselblatt drucken", Abbrechen, noch einmal, Code, Blatt.
+
 ## [Web 21.8.0] — 2026-09-28
 
 Schritt 18, Sicherheitsrunde II, Paket SR-02. **Neben, mit Migration**

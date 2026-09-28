@@ -290,6 +290,11 @@ function anmeldung_vollenden(array $u, bool $istDemoAdresse): void
     // Alte Sitzungsbremse aufraeumen: Auf Rechnern, die vor dieser
     // Fassung angemeldet waren, liegen die beiden Werte noch herum.
     unset($_SESSION['login_fails'], $_SESSION['login_last'], $_SESSION['role']);
+    /* DER FRISCHE CODE BEGINNT BEI NULL (Schritt 18, SR-07, E-SR-20). Nur der
+     * Code-Schritt setzt ihn, NACH dieser Funktion; eine Anmeldung ueber ein
+     * gemerktes Geraet oder den Rueckweg erbt keine Frist aus einer frueheren
+     * Anmeldung in derselben Sitzungsdatei. */
+    unset($_SESSION['zf_frisch_bis']);
     /* DIE ANKUENDIGUNG KOMMT MIT JEDER ANMELDUNG WIEDER (P5c/AP1,
      * E-P5c-13). Wer sie auf DIESER Seite geschlossen hat, schloss sie
      * fuer die Sitzung vor dem Anmelden — und `session_regenerate_id()`
@@ -431,6 +436,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                     if ($pr['art'] === 'app' && ($_POST['merken'] ?? '') === '1') {
                         zweitfaktor_geraet_merken($kontoId);
                     }
+                    /* DER CODE IST FRISCH (SR-07, E-SR-20) — nach App-Code
+                     * und Wiederherstellungscode gleich: Beide zeigen, dass
+                     * gerade jemand den Faktor in der Hand hat. Die Liste der
+                     * Handlungen, die ihn verlangen, steht in `db.php`. */
+                    $_SESSION['zf_frisch_bis'] = time() + ZF_FRISCH_S;
                     if ($pr['art'] === 'code') {
                         /* Ein Wiederherstellungscode heisst: Das Handy fehlte.
                          * Das gehoert ins Protokoll — nach dem Anlegen der

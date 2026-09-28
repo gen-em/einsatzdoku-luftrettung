@@ -551,6 +551,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && str_starts_with((string)($_POST['action'] ?? ''), 'schluessel_')) {
+    /* EIN FRISCHER CODE VOR JEDEM GRIFF (Schritt 18, SR-07, E-SR-20) — ein
+     * Aufruf fuer alle sieben, vor dem Token wie ein Rollentor. Ein
+     * gemerkter, unbeaufsichtigter Rechner soll fuer einen Schluesselwechsel
+     * nicht reichen. */
+    zweitfaktor_frisch_verlangen('schluessel');
     csrf_check();
     $aktion   = (string)$_POST['action'];
     $ersetzen = !empty($_POST['ersetzen']);
