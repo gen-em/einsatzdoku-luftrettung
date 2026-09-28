@@ -1,12 +1,12 @@
 # Prüfdokument R4 — Backlog-Runde 4 (Schritt 17)
 
-*Gehört zu `Konzept-R4-Backlog-Runde-4.md`. Beantwortet „was muss **ich**
+*Gehörte zu `Konzept-R4-Backlog-Runde-4.md` — gelöscht mit dem Abschluss am 28.09.2026, letzter Stand `a6908a8`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-27 erledigt — Umsetzung abgeschlossen**, Web 21.6.1, Android 0.17.0 (Migration aus 21.3.0) (28.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-27 erledigt, Schritt 17 abgeschlossen**, Web 21.6.1, Android 0.17.0 (Migration aus 21.3.0) (28.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
-(K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
+(K9); das Konzept ist mit dem Abschluss gelöscht (Rahmenplan 8).*
 
 ---
 
@@ -228,6 +228,7 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-27 | `node tools/messstand/browserprobe.mjs` (vollständig) | Riegel und Rückgabewert | zweimal Rückgabewert **0**, 200 Zeilen, sichtbar 6,47 und 3,52 s (der erste Lauf mit Last auf dem Rechner: Suche 6,35 statt 4,11 s) |
 | R4-27 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen`, `zaehlen.php`, `nummern.py` | Riegel | **14 / 14**; 21 Decken, 0 gerissen; 63 offene Einträge (mit Nr. 347), 0 ohne Grammatik, 0 ohne Ziel; 42 Zeilen, 0 über der Decke; 0 Überschneidungen |
 | R4-27 | Prüfstand, zwei abgebrochene Läufe | Befund | Lauf 1: `schemaprobe` **nicht gemessen** — Container neu gestartet, Docker-Dienst weg; `dockerd` und `plattform.sh alles` neu (Schemaprobe 4 × 40 Prüfungen, 0 Fehlschläge). Lauf 2: `jobprobe` **rot**, „vorher 2 fremde Waisen" (F-R4-72, Nr. 347); die Probe hat sie abgeräumt. Der dritte Lauf steht im Commit. |
+| R4-27 | Messstand im Prüfstand von `a6908a8` (ein Lauf) | Abnahme „sichtbar unter 5 s" im Tor-Lauf | sichtbar **4,93 s**, erste Zeile im DOM 1,69 s, fertig **7,62 s** — knapp unter der Grenze; die fünf Einzelläufe lagen bei 3,42–4,72 s. Die Streuung ist die der Nachfrage von Playwright (bis 500 ms je Versuch, `ausgangsmessung.md`). |
 | R4-16 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen`, `zaehlen.php`, `nummern.py` | Riegel | erst **12 / 14**: `bestand` (`einspielen/LIESMICH.md` 41 Zeilen, Decke 40) und `textprobe` („Maschine" im neuen Runbook-Satz, Regel `luft`); beide behoben, dann **14 / 14**; 20 Decken, 0 gerissen; 70 offene Einträge, 0 ohne Grammatik; 42 Zeilen, 0 über der Decke; 0 Überschneidungen |
 
 ## 3. Im Browser geprüft

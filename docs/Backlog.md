@@ -53,8 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340 bis 347 | 26.09.2026 |
-| ab 350 | frei — höchste vergebene Nummer 341; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 26.09.2026 |
+| ab 348 | frei — höchste vergebene Nummer 347 (Schritt 17, PR #94); 348 und 349 aus dessen Spanne blieben frei, 338 aus der von AR | 28.09.2026 |
 
 ---
 

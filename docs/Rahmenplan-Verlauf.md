@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 138 | 28.09.2026 | 17-Abschluss | Erledigt-Zeile 17 (PR #94, `a6908a8`); Fahrplanzeile und Reihenfolge ohne 17, Konzept gelöscht; 6.1: `update.php`, Tag `web-v21.6.1`, Prüfliste R4. Berichtigt: Der Kopf zählte seit Fassung 135 27 statt 28 Posten. |
 | 137 | 28.09.2026 | R4-26 | Fahrplanzeile 17 auf „gebaut" (R4-01 bis R4-26; Web 21.6.0 mit Migration, Android 0.17.0). Berichtigt: Registerzeile R4 nannte 21 Diensttage und 103/106 Einsätze — seit R4-16 sind es 22 und 106/109. |
 | 136 | 26.09.2026 | R4-03 | Zuarbeit erledigt: P-BR-09 (6.12 beim nächsten Prüfmittel befolgen) mit `nummern.py` gegangen — ein Fund in Schritt 6, berichtigt (F-R4-23); aus der Zeile „Prüfliste BR" in 6.1 gestrichen. |
 | 135 | 26.09.2026 | R4-01 | Umsetzung von 17 beginnt auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus); Konzept mit PR #93 gemergt und samt Fragen und Mockups freigegeben (E-R4-14 ff.). Zuarbeit in 6.1: die zwei toten Zweige löscht die Betreiberin (Q-R4-01). |
