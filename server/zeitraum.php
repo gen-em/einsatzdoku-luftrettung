@@ -677,8 +677,47 @@ function zeichneSegment(){
   });
 }
 
-/** Alles neu zeichnen, was am Tab haengt: Kacheln, Tabelle, Karte, Hinweis. */
-function zeichne(){
+/* IN STUECKEN ZEICHNEN (Web 21.6.1, R4-27, Nr. 37, E-R4-64). Ein Jahr mit
+ * 4071 Einsaetzen war EINE Aufgabe von 2,7 bis 3,8 s (Messstand, Drossel 6×):
+ * erste Zeichnung, Entschluesseln aller Einsaetze, zweite Zeichnung mit
+ * Tabelle, Statistik und 4071 Pins. So lange stand die Seite — die erste
+ * Zeile war laengst im DOM, aber nicht zu sehen, und kein Klick kam an.
+ * Jetzt darf der Browser vor und nach dem Entschluesseln ein Bild zeichnen,
+ * und die Karte kommt jedes Mal ein Bild nach der Tabelle. Keine Aufgabe dauert
+ * mehr laenger als rund 0,7 s, und die Tabelle ist nach 3,7 s statt 5,8 s
+ * zu sehen (Median aus fuenf Laeufen). DER PREIS: Fertig ist die Seite rund
+ * 0,7 s spaeter (7,0 statt 6,3 s) — die Bilder dazwischen kosten Zeit. Das
+ * ist gewollt (E-R4-64): Wer die Seite oeffnet, will zuerst die Liste.
+ *
+ * `setTimeout(…, 100)` DANEBEN, weil ein Tab im Hintergrund kein Bild
+ * zeichnet und `requestAnimationFrame` dort nie feuert — die Seite stuende
+ * sonst still, bis jemand hinsieht. */
+function naechstesBild(){
+  return new Promise(weiter => {
+    let fertig = false;
+    const los = () => { if (!fertig) { fertig = true; setTimeout(weiter, 0); } };
+    requestAnimationFrame(los);
+    setTimeout(los, 100);
+  });
+}
+
+/* DIE KARTE EIN BILD SPAETER — und nur die letzte, die bestellt ist. Wechselt
+ * der Tab in der Luecke, zeichnet zeichne() die Karte der neuen Ansicht
+ * sofort; die bestellte kaeme danach und legte die Pins der alten darueber.
+ * Der Zaehler verwirft sie. Die Hervorhebung einer Extremwert-Kachel geht
+ * auf die neuen Pins mit: onAfterDraw hat sie auf die alten gelegt. */
+let kartenLauf = 0;
+async function karteNachBild(liste){
+  const lauf = ++kartenLauf;
+  await naechstesBild();
+  if (lauf !== kartenLauf) { return; }
+  zeichneKarte(liste);
+  if (fixierteMid != null) { wendeHervorhebungAn(fixierteMid); }
+}
+
+/** Alles neu zeichnen, was am Tab haengt: Kacheln, Tabelle, Karte, Hinweis.
+ *  `{ karteDanach: true }`: die Karte erst nach dem naechsten Bild. */
+function zeichne(o){
   const liste = gefiltert();
   zeichneSegment();
   zeigeNeutralHinweis();
@@ -699,7 +738,8 @@ function zeichne(){
     ? { winch: false, bergwacht: false } : faehig);
   tabelle.setData(liste);
   zeichneStatistik(liste, tageDerAnsicht());
-  zeichneKarte(liste);
+  if (o && o.karteDanach) { karteNachBild(liste); }
+  else { zeichneKarte(liste); }
 }
 
 /* Karte neu bestuecken. Die Pins entstehen erst nach dem Entschluesseln —
@@ -709,6 +749,7 @@ function zeichne(){
  * Bildschirmposition, und ein spaeteres setStyle() aus der Hervorhebung
  * scheiterte daran ("this._point is undefined"). */
 function zeichneKarte(liste){
+  kartenLauf++;               // eine noch bestellte Karte ist damit ueberholt
   pinLayer.clearLayers();
   missions.forEach(m => { m._marker = null; });
   const bounds = [];
@@ -857,11 +898,14 @@ function zeigeFehler(msg){
   document.getElementById('untertage').textContent =
     tageGesamt === 1 ? '1 Diensttag' : tageGesamt + ' Diensttage';
 
-  zeichne();
+  zeichne({ karteDanach: true });
   // Die Ansicht von Anfang an ins Fragment schreiben, nicht erst beim ersten
   // Wechsel: Sonst zeigte ein sofort kopierter Link auf keine bestimmte.
 
-  if (PAT_WRAP) { await entschluesselePat(); }
+  if (PAT_WRAP) {
+    await naechstesBild();   // die Tabelle erscheint, bevor alles entschluesselt wird
+    await entschluesselePat();
+  }
 })();
 
 /* Geschuetzte Angaben nachtragen. Ist der Inhaltsschluessel gesperrt, bietet
@@ -895,8 +939,10 @@ async function entschluesselePat(){
   /* Immer neu zeichnen: Die Tabelle hat jetzt Ort, Alter und Diagnose, und
      die Karte ihre Pins. Ein „nur wenn sich etwas geaendert hat" waere hier
      eine zweite Buchfuehrung ueber dieselbe Schleife — die Ersparnis ist ein
-     Neuaufbau der Tabelle, den niemand bemerkt. */
-  zeichne();
+     Neuaufbau der Tabelle, den niemand bemerkt. Zwischen Entschluesseln,
+     Tabelle und Karte zeichnet der Browser je ein Bild (naechstesBild()). */
+  await naechstesBild();
+  zeichne({ karteDanach: true });
 }
 
 document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());

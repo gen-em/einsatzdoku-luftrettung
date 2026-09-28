@@ -14,6 +14,40 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.6.1] — 2026-09-28
+
+Schritt 17, Backlog-Runde 4, Paket R4-27 — die Nachbesserung von R4-17.
+**Korrektur**, ohne Migration.
+
+### Geändert
+
+- **Die Zeitraumübersicht ist früher zu sehen und bleibt bedienbar**
+  (Nr. 37, Q-R4-24, E-R4-63, E-R4-64). R4-17 hatte ihr die Seitengrenze
+  gegeben; die Abnahme „unter 5 s" war damit trotzdem verfehlt (7,1 bis
+  9,2 s), und die Betreiberin wollte die Abweichung nicht wegerklärt,
+  sondern behoben haben. Das Profil zeigte, woran es lag: Die Seite
+  entschlüsselt alle Einsätze des Zeitraums — Karte und Kennzahlen brauchen
+  sie alle —, zeichnet danach Tabelle, Statistik und Karte ein zweites Mal
+  und tat beides in **einer** Aufgabe von fast drei Sekunden (Messstand,
+  Drossel 6×, 4071 Einsätze). So lange stand die Seite: Die erste Zeile war
+  im DOM, aber nicht zu sehen, und kein Klick kam an. Jetzt darf der
+  Browser vor und nach dem Entschlüsseln ein Bild zeichnen, und die Karte
+  folgt der Tabelle ein Bild später. Die Tabelle ist nach **3,7 s** zu
+  sehen statt nach 5,8 s (Median aus fünf Läufen), keine Aufgabe dauert
+  länger als rund 0,7 s. **Der Preis, bewusst:** Fertig — mit allen Pins —
+  ist die Seite rund 0,7 s später, nach 7,0 statt 6,3 s; die Bilder
+  zwischendurch kosten Zeit. Wer die Seite öffnet, will zuerst die Liste.
+  Damit eine spät gezeichnete Karte nach einem schnellen Wechsel der
+  Ansicht nicht die Pins der alten darüberlegt, verwirft ein Laufzähler
+  jede überholte; eine festgesetzte Hervorhebung geht auf die neuen Pins
+  mit.
+- **`fromB64()` in `crypto.js` ist eine Schleife.** Die kurze Form
+  `Uint8Array.from(atob(s), fn)` lief über den Iterator der Zeichenkette
+  und rief je Zeichen eine Funktion: beim Entschlüsseln eines Jahres 1027
+  von rund 1750 ms, mehr als das Entschlüsseln selbst. Als Schleife sind es
+  123 ms, bei gleichem Ergebnis. Das hilft jeder Seite, die eine Liste
+  entschlüsselt — Startseite, Suche, Tagesansicht —, nicht nur dieser.
+
 ## [Web 21.6.0] — 2026-09-28
 
 Schritt 17, Backlog-Runde 4, Paket R4-24. **Neben**, ohne Migration.
@@ -811,6 +845,26 @@ Fassung.
 
 ### Geändert
 
+- **Der Messstand misst die Zeitraumübersicht ab ihrer eigenen Adresse**
+  (R4-27, Nr. 37, F-R4-70). Die Uhr des Schritts lief bis dahin ab dem
+  Laden der **Startseite** — die brauchte er nur, um das Jahr zu finden,
+  und sie hat ihren eigenen Schritt — und endete erst nach zwei Abfragen,
+  die warten, bis der gedrosselte Hauptfaden frei ist: am 28.09.2026
+  1,1 s Startseite, 4,4 s bis zur Zeile, 0,9 s danach. Die Abnahme meinte
+  die Zeitraumübersicht. Jetzt ermittelt der Schritt das Jahr vor der Uhr,
+  misst von `zeitraum.php` bis Playwright die erste Zeile sieht und nennt
+  ohne Uhr eine zweite Zahl, `fertig_s`: das Ende der letzten Langaufgabe
+  der Seite, von ihr selbst gemessen. Die erste ist die Abnahme, die zweite
+  eine Auskunft — sie wird genannt, nicht gehalten. Der Riegel „mehr als
+  200 Zeilen ist rot" bleibt, jetzt nach der Uhr. Am alten Stand der Seite
+  misst der neue Schritt 5,7 bis 6,2 s bis zur Zeile — die Abnahme wäre
+  also auch mit der berichtigten Messung verfehlt gewesen; erfüllt hat sie
+  erst Web 21.6.1.
+- **Der Bedienprobe-Weg `zeitraum-seitengrenze` wartet auf die Pins, nicht
+  auf eine Uhr** (R4-27). Seit Web 21.6.1 kommt die Karte ein Bild nach der
+  Tabelle; die feste Pause von 300 ms nach dem Klick auf „Luft" wäre ein
+  Wettlauf gewesen. Läuft die Frist ab, liest der Weg den Stand trotzdem
+  und ist rot.
 - **Jeder offene Backlog-Eintrag zeigt auf GitHub seine eigene Nummer**
   (R4-25, Nr. 340, E-R4-62). `cmark-gfm` machte aus den offenen Einträgen
   eine einzige Liste `<ol start="21">`, und der Browser zählte fort: Neben

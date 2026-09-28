@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-26 erledigt — Umsetzung abgeschlossen**, Web 21.6.0, Android 0.17.0 (Migration aus 21.3.0) (28.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-27 erledigt — Umsetzung abgeschlossen**, Web 21.6.1, Android 0.17.0 (Migration aus 21.3.0) (28.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -32,7 +32,7 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | **Ein Reset nach Ablauf der 30 Minuten über HTTP** (R4-14) | Die Rechnung ist als Tabelle belegt (6b), der Reset selbst per `demo_reset_wenn_faellig()` erzwungen; eine halbe Stunde auf die Anlage zu warten, hätte den Prüfstand aufgehalten. | P-R4-15, letzter Schritt. |
 | **Die Migration `2026_09_27_days_created_at` auf der Datenbank des Hosters** (R4-15) | Gefahren örtlich an 1059 Tagen (MariaDB 10.11) und in der Schemaprobe an je fünf Tagen auf MariaDB 10.6 und 10.11, MySQL 8.0 und 8.4.0 — nicht an einem Produktivbestand und nicht auf der Fassung des Hosters, deren genaue Nummer der Prüfstand nicht kennt. | P-R4-05 nach dem Deploy auf Staging, dann auf Produktiv. |
 | **Die neue Fixture auf Staging und Produktiv** (R4-16) | Örtlich eingespielt und gezählt (109 / 123 / 22 / 2, Reset 7,3 s). Ob der Hoster die 928 KB überträgt und der Reset dort in der Zeitgrenze bleibt, zeigt erst die Anlage; Staging belegt dabei kein Plattformverhalten von Produktiv. | P-R4-16 nach dem Deploy, erst Staging, dann Produktiv. |
-| **Die Abnahme „Zeitraum unter 5 s" in absoluten Sekunden** (R4-17, F-R4-58) | Gemessen ist dieser Rechner: 88,11 s vorher, 8,97 s nachher, erste Zeile im DOM 2,51 s. Die 5 s rechneten mit 42,61 s eines anderen Rechners; einen festen Bezugsrechner gibt es nicht. | Q-R4-24 (Wertung durch die Betreiberin); P-R4-17 auf einem echten Handy. |
+| **Die Abnahme „Zeitraum unter 5 s" auf echter Hardware** (R4-17, R4-27, F-R4-58) | Gemessen ist dieser Rechner mit sechsfach gedrosselter CPU: nach R4-27 „sichtbar" Median 3,71 s (3,42–4,72), „fertig" 7,01 s. Q-R4-24 ist beantwortet (nachbessern, E-R4-63), die Abnahme hier erfüllt. Wie schnell ein echtes Handy oder ein alter Laptop ist, sagt die Drossel nicht; einen festen Bezugsrechner gibt es nicht. | P-R4-17 und P-R4-23 auf echten Geräten. |
 | **Die Nachladezeile an einem echten Konto mit über 200 Treffern auf einem Handy** (R4-17, F-R4-59) | Gemessen in Chromium bei 390 px an 5096 Treffern (örtlich) und mit vervielfachter Liste; im Bilderlauf auch Firefox und WebKit (Stufe haupt). Ein echtes Gerät hat es nicht gesehen. | P-R4-17. |
 | **Die Nummern auf GitHub selbst** (R4-25, Nr. 340) | Gemessen ist `cmark-gfm` 0.29.0.gfm.6 örtlich. GitHub rendert mit einer eigenen Fassung und filtert das HTML danach; dass ein HTML-Kommentar dort die Liste beendet, zeigt erst die Seite selbst. | P-R4-22 |
 | **Stufe 1 auf dem Pull Request** (R4-26) | Stufe 1 läuft auf Arbeitszweigen nur beim Pull Request; der Prüfstand hat jeden Stand örtlich gemessen, und `bericht.py lesen --commit HEAD` hat jeden Bericht angenommen — das Tor selbst hat noch keinen gesehen. | Der Pull Request der Umsetzung: Stufe 1 grün auf dem Kopf-Commit. |
@@ -220,6 +220,14 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-26 | `uebersicht.py --ziel 17`; `grep -c "gehört zu: 17 "` in beiden Backlog-Dateien; Liste von `05dfc12` | Abnahme „kein Punkt mit Ziel 17" | **0** offen; **46** erledigte tragen das Ziel; von den **55** am Beginn **45** erledigt, **10** umgehängt (Abschnitt 6) |
 | R4-26 | `grep -c "R4-NN"` je Paket im Changelog | Changelog gegengelesen | **25 von 25** Paketen genannt; **2** Daten berichtigt (Web 21.5.0 und 21.6.0 → 28.09.) |
 | R4-26 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen`, `zaehlen.php`, `nummern.py` | Riegel | **14 / 14**; 21 Decken, 0 gerissen; 62 offene Einträge, 0 ohne Grammatik, 0 ohne Ziel; 42 Zeilen, 0 über der Decke; 0 Überschneidungen |
+| R4-27 | Profil (`Profiler`) und Trace (`devtools.timeline`) von `zeitraum.php`, Drossel 6×, 4071 Einsätze | Befund vor dem Bau | eine Aufgabe von **2,7–3,8 s**; darin `fromB64()` **1027 ms**, Layout durch `invalidateSize()` **783 ms**, Tabelle **541 ms**, `decrypt` nativ **401 ms** |
+| R4-27 | neuer Messschritt „Zeitraumübersicht" (Browserprobe ohne Backup), je **fünf** Läufe am alten und neuen Stand, warme Anlage | Abnahme „sichtbar unter 5 s"; „fertig" genannt | sichtbar **5,68–6,19 → 3,42–4,72 s**, Median **5,83 → 3,71 s**; erste Zeile im DOM 1,68–2,07 → 1,36–1,58 s; fertig **6,12–6,57 → 6,42–7,27 s**, Median 6,32 → **7,01 s** (+0,7 s, E-R4-64) |
+| R4-27 | Langaufgaben der Seite (`PerformanceObserver`), je zwei Läufe | keine lange Sperre mehr | längste Aufgabe **2,79 / 2,97 s → 0,61 / 0,64 s** |
+| R4-27 | Varianten vor dem Bau (je 2–5 Läufe) | Auswahl | nur A: alter Schritt 7,58/7,76 → 7,21/7,31 s; A+B mit altem Schritt **8,2–9,2 s** (daher C); „einmal zeichnen" ohne Wirkung (`zeichne()` weiter zweimal); ohne Pause nach dem Entschlüsseln sichtbar 4,1–5,9 s, dreimal über 5 s |
+| R4-27 | `node tools/bedienprobe/probe.mjs --nur zeitraum-seitengrenze` | Weg nach dem Umbau | **1 / 1**, Pins **456 / 456**, Kachel → Zeile 221, 400 Zeilen |
+| R4-27 | `node tools/messstand/browserprobe.mjs` (vollständig) | Riegel und Rückgabewert | zweimal Rückgabewert **0**, 200 Zeilen, sichtbar 6,47 und 3,52 s (der erste Lauf mit Last auf dem Rechner: Suche 6,35 statt 4,11 s) |
+| R4-27 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen`, `zaehlen.php`, `nummern.py` | Riegel | **14 / 14**; 21 Decken, 0 gerissen; 63 offene Einträge (mit Nr. 347), 0 ohne Grammatik, 0 ohne Ziel; 42 Zeilen, 0 über der Decke; 0 Überschneidungen |
+| R4-27 | Prüfstand, zwei abgebrochene Läufe | Befund | Lauf 1: `schemaprobe` **nicht gemessen** — Container neu gestartet, Docker-Dienst weg; `dockerd` und `plattform.sh alles` neu (Schemaprobe 4 × 40 Prüfungen, 0 Fehlschläge). Lauf 2: `jobprobe` **rot**, „vorher 2 fremde Waisen" (F-R4-72, Nr. 347); die Probe hat sie abgeräumt. Der dritte Lauf steht im Commit. |
 | R4-16 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen`, `zaehlen.php`, `nummern.py` | Riegel | erst **12 / 14**: `bestand` (`einspielen/LIESMICH.md` 41 Zeilen, Decke 40) und `textprobe` („Maschine" im neuen Runbook-Satz, Regel `luft`); beide behoben, dann **14 / 14**; 20 Decken, 0 gerissen; 70 offene Einträge, 0 ohne Grammatik; 42 Zeilen, 0 über der Decke; 0 Überschneidungen |
 
 ## 3. Im Browser geprüft
@@ -269,6 +277,7 @@ ist. Die Umsetzung hängt je Paket ihre Punkte an (P-R4-06 ff.).
 | P-R4-20 | Nach dem Deploy von Web 21.5.0 auf Staging, als BetreiberIn: Betrieb → Statistik → Einsätze. „6 Monate" anklicken; dann Von und Bis auf einen vergangenen Monat setzen und das zweite Feld verlassen; den Reiter NutzerInnen wählen; zuletzt das Kreuz an der orangen Pille. | „6 Monate" färbt sich, Kennzahl und Herkunft sagen „in 6 Monaten". Nach dem Verlassen lädt die Seite von selbst: eine Spalte „im Zeitraum" mit Schnitt je Woche und Tag, die Pille mit dem Zeitraum. NutzerInnen zeigt Aktiv und Angemeldet als „—" mit einem Satz darunter. Das Kreuz führt zurück zu den 30 Tagen. | Die Seite lädt schon beim Tippen der Jahreszahl, der Knopf „Anwenden" steht trotz Skript da, der Reiterwechsel verliert den Zeitraum, oder die Datumsfelder zeigen ein Format, das nicht zu lesen ist. |
 | P-R4-21 | Nach dem Deploy von Web 21.6.0 auf Staging, als BetreiberIn: Betrieb → Statistik, „1 Jahr", dann „7 Tage"; am Schreibtisch mit der Maus über eine Säule fahren; Reiter NutzerInnen und Geräte; dasselbe am Handy. | Über der Tabelle Säulen je Woche (1 Jahr) bzw. je Tag (7 Tage), die höchste dunkelorange mit Zahl, die übrigen zeigen ihre Zahl unter dem Zeiger; darunter ein Satz mit erstem und letztem Tag. Herkunft als Balken. NutzerInnen: zwei kleine Diagramme; Geräte: „gekoppelt". Am Handy dieselben Diagramme ohne Überlauf, Achse mit vier Beschriftungen. | Achsentext winzig oder überlappend, eine Säule über dem Rand, die Tabelle fehlt, oder die Seite braucht spürbar länger als vorher. |
 | P-R4-22 | Nach dem Merge (oder vorher auf dem Zweig): `docs/Backlog.md` auf GitHub öffnen und zu den ersten offenen Einträgen rollen. | Neben jedem Eintrag steht die Nummer seiner Kopfzeile — heute 21, dann 23, dann 37 —, und zwischen den Einträgen ist nichts zu sehen. | Eine fortlaufende Zählung (21, 22, 23 …) oder ein sichtbares `<!-- -->` zwischen zwei Einträgen. |
+| P-R4-23 | Nach dem Deploy von Web 21.6.1 auf Staging, am Schreibtisch und auf einem Handy, als Konto mit vielen Einsätzen (oder dem Demo-Konto): Zeitraumübersicht eines ganzen Jahres öffnen; gleich nach dem Erscheinen der Tabelle rollen und die Ansicht („Luft"/„Boden") wechseln. | Die Tabelle steht, bevor die Karte ihre Punkte hat; Rollen und Wechsel reagieren sofort; nach dem Wechsel zeigt die Karte nur die Punkte der gewählten Ansicht. | Die Seite reagiert erst, wenn die Karte fertig ist; nach einem schnellen Wechsel stehen Punkte der anderen Ansicht auf der Karte; die Karte bleibt grau. |
 
 ## 5. Grenzen der benutzten Prüfmittel
 
@@ -307,10 +316,11 @@ und **10** umgehängt; Nr. 340 ist in der Runde angelegt und erledigt.
 rollen am Schreibtisch, R4-08), 343 → nächste Backlog-Runde
 (`plattform.sh` ohne Spiegel, R4-09), 344 → 18 (Widerruf in die Wurzel,
 R4-11), 345 → nächste Backlog-Runde (Installationsseite, R4-11), 346 →
-nächste Backlog-Runde (zwei Meldungen noch von Hand, R4-13); 347 bis 349
+nächste Backlog-Runde (zwei Meldungen noch von Hand, R4-13), 347 →
+nächste Backlog-Runde (fremde Waisen in der Anlage, R4-27); 348 und 349
 frei.
 
-**Reste bei der Betreiberin:** Q-R4-24 (die Abnahme 5 s in R4-17 — gilt
-sie als erfüllt?); die zwei toten Zweige löschen (E-R4-15, P-R4-06); nach
-dem Deploy `update.php` wegen der Migration aus 21.3.0 (P-R4-05); die
-Prüfliste in Abschnitt 4 (P-R4-06 bis P-R4-22).
+**Reste bei der Betreiberin:** die zwei toten Zweige löschen (E-R4-15,
+P-R4-06); nach dem Deploy `update.php` wegen der Migration aus 21.3.0
+(P-R4-05); die Prüfliste in Abschnitt 4 (P-R4-06 bis P-R4-23). Q-R4-24 ist
+beantwortet (E-R4-63) und mit R4-27 erledigt.

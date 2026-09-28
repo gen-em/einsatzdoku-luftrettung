@@ -39,7 +39,16 @@ export const wege = [
         /* Die Luftansicht: Nur die Artenansichten tragen Extremwert-Kacheln,
          * „Gemischt" hat vier Kacheln ohne Einsatzbezug. */
         await k.seite.locator('#artwahl input[value="air"] + label').click();
-        await k.seite.waitForTimeout(300);
+        /* AUF DIE PINS WARTEN, NICHT AUF EINE UHR (R4-27). Seit Web 21.6.1
+         * zeichnet die Seite in Stuecken: Die Karte kommt ein Bild nach der
+         * Tabelle, und das Entschluesseln kann nach dem Klick noch laufen.
+         * Bis dahin stand hier `waitForTimeout(300)` — ein Wettlauf, den die
+         * Seite jetzt verlieren darf. Laeuft die Frist ab, liest `lies()` den
+         * Stand trotzdem, und der Vergleich unten ist rot. */
+        await k.seite.waitForFunction(() => {
+          const mitOrt = missions.filter((m) => m.kind === 'air' && m._lat != null).length;
+          return mitOrt > 200 && missions.filter((m) => m._marker).length === mitOrt;
+        }, null, { timeout: 30000 }).catch(() => {});
 
         const lies = () => k.seite.evaluate(() => ({
           zeilen: document.querySelectorAll('#rangebody tr').length,

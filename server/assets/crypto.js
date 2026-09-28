@@ -48,7 +48,18 @@ const EdCrypto = (() => {
   const fromHex = hex => new Uint8Array(
     (hex.match(/../g) || []).map(h => parseInt(h, 16)));
   const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
-  const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  /* EINE SCHLEIFE, NICHT `Uint8Array.from(atob(s), fn)` (Web 21.6.1, R4-27,
+   * Nr. 37). Die kurze Form läuft über den Iterator der Zeichenkette und ruft
+   * je Zeichen eine Funktion — beim Entschlüsseln eines Jahres mit 4071
+   * Einsätzen waren das im Messstand 1027 ms von rund 1750 ms, mehr als das
+   * Entschlüsseln selbst. Die Schleife braucht dort 123 ms, bei gleichem
+   * Ergebnis. */
+  const fromB64 = s => {
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) { out[i] = bin.charCodeAt(i); }
+    return out;
+  };
 
   function randomHex(nBytes) {
     return toHex(crypto.getRandomValues(new Uint8Array(nBytes)));

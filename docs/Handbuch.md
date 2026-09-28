@@ -1823,6 +1823,12 @@ Tabelle noch nicht stehen. Bis dahin stand jede Zeile da, und ein Jahr mit
 einigen tausend Einsätzen brauchte über eine Minute, bis die Seite fertig
 war.
 
+**Erst die Liste, dann die Karte** (seit Web 21.6.1). Bei einem großen
+Zeitraum steht zuerst die Tabelle da; Ort, Alter und Diagnose kommen hinzu,
+sobald sie entschlüsselt sind, und die Punkte der Karte einen Augenblick
+danach. Die Seite lässt sich dabei schon bedienen — rollen, sortieren, die
+Ansicht wechseln.
+
 Die Kacheln **„Längste Einsatzstrecke"** (in der Luftansicht: „Längste
 Flugstrecke") und **„Längste Einsatzdauer"** sind bedienbar, in der Luftansicht
 zusätzlich **„Höchster Einsatzort"**. Sie tragen einen kleinen Punkt oben

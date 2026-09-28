@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340 bis 346 | 26.09.2026 |
+| 340 bis 349 | `claude/schritt-17-konzept-mockups-q0yjcm` — Umsetzung 17 (reserviert mit dem Konzept, PR #93); vergeben 340 bis 347 | 26.09.2026 |
 | ab 350 | frei — höchste vergebene Nummer 341; 338 war für AR reserviert und blieb frei (`origin/main` `05dfc12`) | 26.09.2026 |
 
 ---
@@ -103,12 +103,13 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      gehalten, Spuren 3,66 statt 3 MB je 1000 Einsätze knapp verfehlt.
      Erledigt: der Deckel je Konto (P5b/AP6), die Kontenachse (P3/O9b),
      Speicher und Wartung (S2); mit R4-17 (Web 21.4.0) die Seitengrenze 200
-     der Zeitraumübersicht (4071 Einsätze: 88 s auf 9 s, erste Zeile nach
-     2,5 s) und die drei stillen Kappungen der Tageslisten (500, 120, 400),
-     die jetzt sagen, dass sie greifen.
+     der Zeitraumübersicht (4071 Einsätze: 88 s auf 9 s) und die drei
+     stillen Kappungen der Tageslisten (500, 120, 400), die jetzt sagen,
+     dass sie greifen; mit R4-27 (Web 21.6.1) das Zeichnen in Stücken — die
+     Tabelle ist nach 3,7 s zu sehen, fertig ist die Seite nach 7,0 s.
      Weg (nach v1.0, E-R4-16): Vorschneiden im Suchindex; Monatsvorwahl der
-     Zeitraumübersicht, falls die 9 s stören — sie gehen auf Entschlüsseln
-     und Layout über alle Einsätze des Jahres zurück (F-R4-58).
+     Zeitraumübersicht, falls die 7 s bis „fertig" stören — sie gehen auf
+     Entschlüsseln und Layout über alle Einsätze des Jahres zurück.
      `post_max_size` der Zielanlage steht auf Betrieb → Status.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 37.
 
@@ -1224,3 +1225,20 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `patwarn` erst nachsehen, ob `symbol.js` zur Aufrufzeit steht (die
      Immer-Liste kommt am Seitenende). *Abnahme:* Z37 **2** (nur `html.js`),
      Bilderlauf ohne Konsolenfehler.
+
+<!-- -->
+
+347. **Zweimal an einem Tag standen zwei fremde Waisen in der örtlichen Anlage — woher, ist nicht geklärt.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 28.09.2026
+     *Aufgenommen 28.09.2026 mit R4-27 (F-R4-72).* Die Jobprobe prüft,
+     dass „sechs Zeilen und ein Blob" als 7 gemeldet werden, und war zweimal
+     rot mit „vorher 2 fremde Waisen in der Anlage". Beim ersten Mal war
+     die Kopplungsprobe mitten im Lauf abgebrochen worden — dort ist die
+     Herkunft plausibel. Beim zweiten Mal nicht: davor lagen nur ein
+     Demo-Reset mitten in einem Bedienprobe-Lauf, Messläufe der
+     Browserprobe und ein Neustart des Containers. Die Jobprobe räumt die
+     Waisen selbst ab (Job `waisen`), der Wiederholungslauf war grün —
+     gesehen hat sie danach niemand mehr. *Weg:* vor dem Abräumen nennen,
+     WELCHE Waisen es sind (Tabelle, Kennung, Konto), und dann die Probe
+     oder den Weg suchen, der sie hinterlässt. *Abnahme:* die Jobprobe
+     nennt fremde Waisen mit Tabelle und Kennung; die Quelle ist gefunden
+     oder als Grenze benannt.

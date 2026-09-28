@@ -7844,5 +7844,17 @@ declare(strict_types=1);
  *   Unter NutzerInnen zwei kleine Vielfache „mit Einsatz" und „neu
  *   angelegt" statt der drei des Mockups — „aktiv" je Monat ist aus den
  *   Daten nicht zu zaehlen (F-R4-66, E-R4-55).
+ *
+ * 21.6.1 — DIE ZEITRAUMUEBERSICHT IST FRUEHER ZU SEHEN (Schritt 17, R4-27,
+ *   Nr. 37, Q-R4-24). Korrektur. Die Abnahme von R4-17 („unter 5 s") war
+ *   verfehlt, und die Betreiberin wollte sie nicht wegerklaert haben. Zwei
+ *   Gruende hatten die Seite aufgehalten: `fromB64()` in `crypto.js` lief
+ *   ueber den Iterator der Zeichenkette und kostete mehr als das
+ *   Entschluesseln selbst (1027 gegen 123 ms als Schleife), und die Seite
+ *   rechnete Entschluesseln und zweites Zeichnen in EINER Aufgabe von fast
+ *   drei Sekunden. Jetzt zeichnet sie in Stuecken; die Tabelle ist nach
+ *   3,7 statt 5,8 s zu sehen, fertig ist die Seite rund 0,7 s spaeter
+ *   (E-R4-64). Die Messung dazu ist mit berichtigt: Sie lief bis dahin ab
+ *   dem Laden der Startseite.
  */
-const WEB_VERSION = '21.6.0';
+const WEB_VERSION = '21.6.1';

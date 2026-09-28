@@ -294,6 +294,43 @@ steht nach 2,5 s. Wie das zu werten ist, steht im Konzept R4 (F-R4-58,
 Q-R4-24). Weiter hinunter führen die zwei Wege, die Nr. 37 nach v1.0 hält:
 Vorschneiden und Monatsvorwahl.
 
+## Nachmessung 28.09.2026 — die Zeitraumübersicht in Stücken (R4-27)
+
+Die Betreiberin hat Q-R4-24 mit „nachbessern" beantwortet (E-R4-63). Web
+21.6.1 zeichnet die Seite in Stücken und entschlüsselt schneller
+(`fromB64()` als Schleife); der Schritt misst seither ab `zeitraum.php` und
+nennt eine zweite Zahl (E-R4-64, F-R4-70). Gemessen **je fünf Läufe** mit
+genau diesem Schritt (ohne den Backup-Schritt), derselbe Bestand (4071
+Einsätze im Jahr 2026), derselbe Rechner, Drossel 6×, warme Anlage:
+
+| Messung | Web 21.6.0 | Web 21.6.1 | |
+|---|---|---|---|
+| Zeitraumübersicht, **sichtbar** (ab `zeitraum.php`, bis Playwright die erste Zeile sieht) | 5,68–6,19 s, Median **5,83 s** | 3,42–4,72 s, Median **3,71 s** | Ziel 5 s ✔ |
+| dieselbe, erste Zeile im DOM | 1,68–2,07 s | 1,36–1,58 s | |
+| dieselbe, **fertig** (Ende der letzten Langaufgabe) | 6,12–6,57 s, Median **6,32 s** | 6,42–7,27 s, Median **7,01 s** | **+0,7 s, bewusst** |
+| längste Aufgabe des Hauptfadens (Langaufgaben der Seite, je zwei Läufe) | 2,79 / 2,97 s | 0,61 / 0,64 s | |
+| `fromB64()` im Profil | 1027 ms | 123 ms | |
+| der alte Schritt (Startseite + Zeitraum + zwei Abfragen), zum Vergleich | 7,58 / 7,76 s | — | |
+
+**Was die Zahlen sagen.** Die Tabelle ist rund zwei Sekunden früher zu
+sehen, und die Seite nimmt schon während des Entschlüsselns Eingaben an —
+vorher stand sie in einer Aufgabe von fast drei Sekunden. **Fertig** ist sie
+rund 0,7 s später: Die Bilder, die der Browser zwischendurch zeichnen darf,
+kosten Zeit. Die Betreiberin hat das mit diesen Zahlen entschieden
+(E-R4-64). Eine Probe ohne die Pause nach dem Entschlüsseln brachte
+„fertig" nicht zurück (6,2–7,1 s) und schob „sichtbar" in drei von fünf
+Läufen über 5 s.
+
+**Die alte Messung hätte die Abnahme auch am alten Stand verfehlt.** Der
+berichtigte Schritt misst Web 21.6.0 mit 5,7 bis 6,2 s: Die Messung war
+nicht der Grund, sondern die Seite.
+
+**Die Streuung ist groß** (3,4 bis 4,7 s bei gleichem Stand): „Sichtbar"
+ist die Zeit, bis Playwright nachfragt und eine Antwort bekommt, und es
+fragt in Abständen bis 500 ms, jedes Mal auf einen freien Moment des
+gedrosselten Hauptfadens angewiesen. Deshalb steht hier der Median, und
+die Spanne daneben.
+
 ---
 
 ## Wiederholen

@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **28.09.2026 — Umsetzung abgeschlossen** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus), begonnen 26.09.2026. Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes:** der Pull Request nach Rückfrage; nach der Freigabe des Abschlusses Erledigt-Zeile, Reste nach Rahmenplan 6, Verlaufszeile, dieses Konzept löschen (6). |
-> | Entschieden | **E-R4-01 bis E-R4-62** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14), **E-R4-54, -55** (R4-22, R4-23). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52, -53, -56, -57, -58, -59, -60, -61, -62. |
-> | Offen | **Q-R4-24** (Abnahme 5 s in R4-17 — gilt sie als erfüllt? Empfehlung ja; hält nichts auf). Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-26 erledigt** (28.09.2026); Web 21.6.0, Android 0.17.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Kein Punkt trägt mehr Ziel 17. |
+> | Stand | **28.09.2026 — Umsetzung abgeschlossen** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus), begonnen 26.09.2026; PR #94 (Entwurf, E-R4-66), dazu R4-27 als Nachbesserung von R4-17 (E-R4-63). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes:** die Freigabe des Abschlusses; dann in PR #94 (E-R4-65) Erledigt-Zeile, Reste nach Rahmenplan 6, Verlaufszeile, dieses Konzept löschen (6). |
+> | Entschieden | **E-R4-01 bis E-R4-66** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14), **E-R4-54, -55** (R4-22, R4-23), **E-R4-63 bis -65** (PR, R4-27, Abschluss). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52, -53, -56, -57, -58, -59, -60, -61, -62, -66. |
+> | Offen | Keine Frage. Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
+> | Umsetzung | **R4-01 bis R4-27 erledigt** (28.09.2026); Web 21.6.1, Android 0.17.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Kein Punkt trägt mehr Ziel 17. |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. **R4-19: ein Workflow, drei Agenten** auf getrennten Dateigruppen (`referenzdatensatz/` 22, `proben/` 17, übrige Werkzeuge 13 Dateien), alle drei gleichzeitig, 229 s, 0 gescheitert, 0 offene Stellen; Ausnahmeliste der Textprobe, Doku, Gegenlesung, Neuaufbau der Anlage und Prüfstand seriell danach. |
-> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px), **F-R4-62** (R4-19 ohne CHANGELOG-Eintrag — nachgetragen), **F-R4-63** (Verbindungsprobe ließ 400 Waisen je Lauf — behoben), **F-R4-64** (Abfahrtort fehlte in der Legende — behoben), **F-R4-65** (Wiederherstellungsprobe ließ Sperrvermerke — behoben), **F-R4-66** (aktiv/angemeldet für vergangene Zeiträume nicht zählbar → Q-R4-26), **F-R4-67** (LIESMICH der App: 66 Bilder neben 72 — berichtigt), **F-R4-68** (Mockup M-R4-24 mit einer Schwelle außerhalb der Skala — auf 720 gebaut), **F-R4-69** (Änderungsverlauf und Kontraste in `Design.md` drei Fassungen alt — nachgetragen) — 2.4. |
+> | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde), **347** (R4-27: fremde Waisen in der Anlage → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px), **F-R4-62** (R4-19 ohne CHANGELOG-Eintrag — nachgetragen), **F-R4-63** (Verbindungsprobe ließ 400 Waisen je Lauf — behoben), **F-R4-64** (Abfahrtort fehlte in der Legende — behoben), **F-R4-65** (Wiederherstellungsprobe ließ Sperrvermerke — behoben), **F-R4-66** (aktiv/angemeldet für vergangene Zeiträume nicht zählbar → Q-R4-26), **F-R4-67** (LIESMICH der App: 66 Bilder neben 72 — berichtigt), **F-R4-68** (Mockup M-R4-24 mit einer Schwelle außerhalb der Skala — auf 720 gebaut), **F-R4-69** (Änderungsverlauf und Kontraste in `Design.md` drei Fassungen alt — nachgetragen), **F-R4-70** (Messschritt Zeitraum maß Startseite und Nachabfragen mit — berichtigt), **F-R4-71** (Vorabzahl „fertig nach 5,5 s" falsch gemessen — gegengemessen, neu gefragt), **F-R4-72** (zweimal fremde Waisen in der Anlage → Nr. 347) — 2.4. |
 
 
 ---
@@ -706,6 +706,30 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   und neun rechnete. Gefunden beim Gegenlesen für R4-25, nachgetragen.
   Kein Riegel sieht es: Verlauf und Kontrastliste sind von Hand geführt,
   `bestand` misst nur die erzeugten Tabellen.
+- **F-R4-70 Der Messschritt „Zeitraumübersicht" maß mehr als die
+  Zeitraumübersicht.** Seine Uhr lief ab dem Laden der Startseite — die
+  brauchte er nur, um das Jahr zu finden — und endete erst nach zwei
+  Abfragen, die auf einen freien Hauptfaden warten: am 28.09.2026 1,1 s
+  Startseite, 4,4 s bis zur Zeile, 0,9 s danach. Gefunden beim Zerlegen
+  des Schritts für R4-27. Seither misst er ab `zeitraum.php` bis zur
+  sichtbaren Zeile und nennt „fertig" als zweite Zahl (E-R4-64). Am alten
+  Stand der Seite misst auch der berichtigte Schritt 5,7 bis 6,2 s — die
+  Abnahme war nicht wegen der Messung verfehlt, sondern wegen der Seite.
+- **F-R4-71 Die Vorabzahl „fertig nach 5,5 s" war falsch gemessen.** Der
+  Vorschlag für Q-R4-24 nannte für B (in Stücken zeichnen) „fertig nach
+  5,5 s, Gesamtarbeit unverändert" — gemessen war der Zeitpunkt, zu dem
+  Playwright zwei Bilder nach der Zeile bekam, nicht das Ende der Arbeit.
+  Die Gegenmessung mit der Langaufgaben-Zahl ergab 7,0 s gegen 6,3 s am
+  alten Stand, also 0,7 s später. Der Betreiberin vor dem Weiterbauen
+  gesagt und neu gefragt; sie hat B mit dieser Zahl bestätigt (E-R4-64).
+- **F-R4-72 Zweimal standen zwei fremde Waisen in der örtlichen Anlage.**
+  Die Jobprobe war zweimal rot mit „vorher 2 fremde Waisen" — einmal nach
+  einem Abbruch mitten in der Kopplungsprobe (erklärlich), einmal im
+  Prüfstand von R4-27 ohne einen solchen Abbruch: davor lagen ein
+  Demo-Reset mitten in einem Bedienprobe-Lauf, Messläufe der Browserprobe
+  und ein Neustart des Containers. Die Probe räumt die Waisen selbst ab,
+  der Wiederholungslauf war grün; woher sie kamen, sagt sie nicht. → Nr. 347
+  (nächste Backlog-Runde).
 
 ## 3. Entscheidungen und Fragen
 
@@ -775,6 +799,10 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-60 | **Der Höchstwert steht in Orange tief, nicht in Orange.** | Umsetzung (R4-24) | Eine Säule ist eine Grafik (WCAG 1.4.11, 3 : 1); Orange auf Schnee hat 2,23 : 1, Orange tief 4,32 : 1 — derselbe Fund wie am Rückstandspunkt der App (B-S5Z-13). Die Zahl über der Säule trägt es ohnehin. |
 | E-R4-61 | **Das Säulen-SVG hat keine `viewBox`**, sondern feste Höhe und Positionen in Prozent der Breite; **der Anteilsbalken ist ein kleines SVG** (`<rect width="…%">`). | Umsetzung (R4-24) | Mit `viewBox` skaliert die Beschriftung mit dem Bild — im Handybild von M-R4-24 auf rund sechs Pixel. Ein `<div style="width:…">` fiele unter `style-src` der CSP; im PHP-Markup steht seit P5a/AP4 kein Stilattribut mehr. |
 | E-R4-62 | **Vor jedem offenen Backlog-Eintrag steht eine Trennzeile `<!-- -->`**; `Backlog-Erledigt.md` bekommt keine, und `verschieben.py` nimmt sie mit dem Eintrag heraus. | Umsetzung (R4-25) | Von den zwei Wegen aus Nr. 340 ändert die Trennzeile weder die Kopfzeile (E-SD-16) noch die Grammatik in `uebersicht.py`; die Nummer im Titel hätte jede Kopfzeile und jede Gewohnheit beim Verweisen umgestellt. Ein HTML-Kommentar beendet die Liste und ist auf GitHub unsichtbar. `Backlog-Erledigt.md` hält ihren Bestand Zeile für Zeile (E-SD-18) — wie bei Nr. 196 bleibt dort die Folge auf GitHub. |
+| E-R4-63 | Q-R4-24: **Die Abnahme „unter 5 s" gilt nicht als erfüllt; R4-17 wird nachgebessert** — als eigenes Paket R4-27 in PR #94. | Betreiberin, 28.09.2026 | gegen die Empfehlung; die Abweichung sollte behoben, nicht erklärt werden |
+| E-R4-64 | **R4-27 baut A + B + C:** `fromB64()` als Schleife; die Zeitraumübersicht zeichnet in Stücken (ein Bild vor und nach dem Entschlüsseln, die Karte ein Bild nach der Tabelle); der Messstand misst ab `zeitraum.php` bis zur sichtbaren Zeile und nennt „fertig" als zweite Zahl. **Bestätigt nach der Gegenmessung:** sichtbar 3,7 statt 5,8 s, fertig 7,0 statt 6,3 s (F-R4-71). | Betreiberin, 28.09.2026 | Wer die Seite öffnet, will zuerst die Liste; die Seite nimmt schon während des Entschlüsselns Eingaben an. Nicht gebaut: einmal zeichnen statt zweimal (greift in den Schlüsselweg, im Versuch ohne Wirkung) und Pins bei Bedarf (gegen die Entscheidung „die Karte zeigt alle Pins", Nr. 37 nach v1.0). |
+| E-R4-65 | **Der Abschluss nach `CLAUDE.md` 7 geht noch in PR #94** — Erledigt-Zeile, Reste, Verlaufszeile, Konzept löschen —, nach der Freigabe. | Betreiberin, 28.09.2026 | ein PR für den ganzen Schritt; kostet einen vollen Prüfstand mehr |
+| E-R4-66 | **PR #94 ist ein Entwurf**, bis R4-27 und der Abschluss drin sind. | Umsetzung (R4-27) | Er wurde vor der Nachbesserung geöffnet (Antwort der Betreiberin: „jetzt öffnen"); als Entwurf lässt er sich nicht versehentlich mergen. Die Betreiberin stellt ihn auf „bereit". |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -809,7 +837,7 @@ Frage mit Empfehlung stehen.
 | Q-R4-21 | Drei ältere Fehler aus dem Umbau (F-R4-33, -35, -36): was davon in R4-11? | F-R4-35 und -36 jetzt (je eine Stelle in `admin_sicherungsziele.php`), F-R4-33 als Backlog-Punkt für 18 (`adminbackup_lib.php` frei halten), die Kleinigkeiten der Installationsseite als Nr. 345. | R4-11 |
 | Q-R4-22 | Nr. 239, Weg A: Backticks direkt in `mf_spalten()` brechen vier Aufrufer, die die Namen als Schlüssel brauchen. Stattdessen in `mf_spalten_sql()`? | Ja — die Funktion, die aus der Liste SQL-Text macht; die INSERTs bauen ihre Spaltenliste darüber. | R4-12 |
 | Q-R4-23 | Nr. 76: Ab wann zählen die 30 Minuten bis zum Reset — ab der ersten Änderung oder gleitend ab der letzten? (Ab dem letzten Reset scheidet aus, F-R4-43.) | Ab der ersten Änderung (E-R4-42). | R4-14 |
-| Q-R4-24 | Nr. 37, Abnahme R4-17: „Messstand Zeitraum unter 5 s bei 3 983 Einsätzen (heute 42,61 s)". Auf diesem Rechner, der für dieselbe Seite 88 s brauchte, sind es **8,97 s** bei 4071 Einsätzen; die erste Zeile steht nach **2,51 s** (F-R4-58). Gilt die Abnahme als erfüllt? | **Empfehlung: ja** — verlangt war ein Faktor von 8,5 gegenüber dem Ausgangsmaß, gemessen sind 9,6 bis 12 auf demselben Rechner, und die erste Zeile liegt weit unter 5 s. Sonst: Monatsvorwahl vor v1.0 ziehen (E-R4-16 hält sie danach). **Offen, hält nichts auf.** | R4-17 |
+| Q-R4-24 | Nr. 37, Abnahme R4-17: „Messstand Zeitraum unter 5 s bei 3 983 Einsätzen (heute 42,61 s)". Auf diesem Rechner, der für dieselbe Seite 88 s brauchte, sind es **8,97 s** bei 4071 Einsätzen; die erste Zeile steht nach **2,51 s** (F-R4-58). Gilt die Abnahme als erfüllt? | **Empfehlung: ja** — verlangt war ein Faktor von 8,5 gegenüber dem Ausgangsmaß, gemessen sind 9,6 bis 12 auf demselben Rechner, und die erste Zeile liegt weit unter 5 s. Sonst: Monatsvorwahl vor v1.0 ziehen (E-R4-16 hält sie danach). **Beantwortet 28.09.2026: nein, nachbessern** (E-R4-63) → R4-27. | R4-17, R4-27 |
 | Q-R4-25 | Nr. 114, R4-22: Das freigegebene Mockup M-R4-22 zeigt unter dem neuen Knopf einen blauen Hinweiskasten („Der Server hat diese Pakete endgültig abgelehnt (Antwort 400). Sie werden nicht erneut gesendet und nach 30 Tagen oder beim Trennen des Geräts geräumt."). Den gibt es in der App nicht; Konzept und Mockup-LIESMICH nennen ihn nicht, die Bildunterschrift sagt „neu ist der Knopf". Mitbauen (mit `Hinweiskasten()`) oder nur Knopf und Rückfrage? | **Empfehlung: mitbauen** — er sagt, was die rote Zeile bedeutet und was ohne Zutun geschieht, und das Mockup ist die freigegebene Vorlage. **Entschieden: mitbauen (E-R4-54).** | R4-22 |
 | Q-R4-26 | Nr. 122, R4-23 und R4-24 (F-R4-66): Die Anlage kennt nur die **letzte** Anmeldung je Konto und die **letzte** Meldung je Gerät. „Aktiv", „angemeldet" und „gemeldet" lassen sich deshalb nur für Fenster zählen, die **jetzt** enden — nicht für einen eigenen Zeitraum in der Vergangenheit und nicht **je Monat** (M-R4-24, Zustand B). Was zeigen NutzerInnen und Geräte bei eigenem Zeitraum, und was wird aus den drei kleinen Vielfachen? | **Empfehlung:** Bei eigenem Zeitraum stehen nur die zählbaren Zeilen (angelegt, gekoppelt, NutzerInnen mit Einsatz); die drei anderen tragen „—" und eine Kleinzeile, warum. In M-R4-24 werden aus „Aktiv / Angemeldet / Neu angelegt je Monat" die Reihen „mit Einsatz" und „neu angelegt", aus „Geräte je Woche" „gekoppelt je Woche". Eine Anmeldegeschichte (neue Tabelle, Migration, personenbezogen) gehört nicht in eine Aufräumrunde. **Entschieden: nur Zählbares (E-R4-55).** | R4-23, R4-24 |
 
@@ -1796,6 +1824,44 @@ Bilderlauf **850** Bilder aus 85 Seiten, Überlauf **0**, Konsolenfehler
 erledigt und 10 umgehängt, dazu Nr. 340 angelegt und erledigt. Der
 Prüfstand dieses Pakets fährt Kreisläufe und Bilderlauf noch einmal; sein
 Bericht steht im Commit. **Stufe 1** zeigt erst der Pull Request.
+
+**R4-27 Zeitraumübersicht: Nachbesserung von R4-17** — Nr. 37, Q-R4-24
+(E-R4-63, E-R4-64). Nachgetragen nach R4-26, weil die Betreiberin die
+Abnahme „unter 5 s" nicht als erfüllt gelten ließ. Befund vorab, gemessen
+mit Profil und Trace (Drossel 6×, 4071 Einsätze): eine Aufgabe von 2,7 bis
+3,8 s aus Entschlüsseln und zweitem Zeichnen; darin `fromB64()` 1027 ms,
+das von `invalidateSize()` erzwungene Layout 783 ms, die Tabelle 541 ms.
+A: `fromB64()` als Schleife. B: ein Bild vor und nach dem Entschlüsseln,
+die Karte ein Bild nach der Tabelle, mit Laufzähler gegen überholte
+Karten. C: Messstand ab `zeitraum.php` bis zur sichtbaren Zeile, „fertig"
+als zweite Zahl (F-R4-70). *Abnahme:* Messstand „sichtbar" unter 5 s;
+„fertig" genannt; Bedienprobe `zeitraum-seitengrenze` grün. *Stufe:* Web
+Korrektur. *Fächerung:* keine.
+**Erledigt 28.09.2026 — mit Web 21.6.1** (Korrektur, ohne Migration).
+Vier Varianten vorher gemessen und verworfen oder übernommen: A allein
+brachte im alten Messschritt 7,6 → 7,3 s; B mit dem alten Schritt machte
+ihn **länger** (8,2 bis 9,2 s), weil die zwei Abfragen danach auf den
+Hauptfaden warten — daher C; „einmal zeichnen, wenn der Schlüssel offen
+ist" griff nicht (der Schlüssel liegt nach der Anmeldung im Vormerkfach,
+nicht in `sessionStorage`) und blieb draußen; ohne die Pause nach dem
+Entschlüsseln rutschte „sichtbar" in drei von fünf Läufen über 5 s. Auch
+das erste Zeichnen legt die Karte ein Bild nach hinten; die Zeile steht
+dadurch 0,5 s früher im DOM. Die Vorabzahl „fertig nach 5,5 s" war falsch
+gemessen (F-R4-71) — gegengemessen, gesagt, neu gefragt, bestätigt.
+*Gemessen* (je fünf Läufe, derselbe Bestand und Rechner, warme Anlage):
+sichtbar **5,68–6,19 s → 3,42–4,72 s**, Median **5,83 → 3,71 s**; erste
+Zeile im DOM 1,68–2,07 → 1,36–1,58 s; fertig **6,12–6,57 → 6,42–7,27 s**,
+Median 6,32 → **7,01 s** (+0,7 s, bewusst); längste Aufgabe 2,79 / 2,97 s →
+0,61 / 0,64 s; `fromB64()` 1027 → 123 ms. Bedienprobe
+`zeitraum-seitengrenze` **1 / 1**, Pins **456 / 456** (der Weg klickt
+„Luft", während noch entschlüsselt wird — eine überholte Karte der
+gemischten Ansicht hätte mehr Pins gezeigt). Browserprobe mit dem neuen
+Schritt zweimal Rückgabewert 0, Riegel „mehr als 200 Zeilen" bleibt nach
+der Uhr. Die Abnahme „sichtbar unter 5 s" ist **auf diesem Rechner**
+erfüllt; eine Messung an echter Hardware gibt es nicht (Prüfdokument 1).
+Der erste Prüfstand hatte `schemaprobe` „nicht gemessen" — der Container
+war neu gestartet, der Docker-Dienst weg; der zweite war rot in der
+Jobprobe (F-R4-72, Nr. 347). Beide abgebrochen, der dritte zählt.
 
 ## 5. Was bei jeder Codeänderung mitläuft
 
