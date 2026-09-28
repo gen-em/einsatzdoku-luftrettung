@@ -10,7 +10,8 @@ gilt Kapitel 2 auch für sie.
 
 > **Die technische Wahrheit steht im Stylesheet.** Was hier als Wert steht,
 > ist entweder *erzeugt* (Kapitel 4, 7, 8, 9 — `tools/erzeugen/design.py`
-> liest sie aus den Quellen) oder *Herkunft* (Kapitel 2: woher ein Markenwert
+> liest sie aus den Quellen, und `bestand` ist rot, wenn eine nicht mehr
+> stimmt) oder *Herkunft* (Kapitel 2: woher ein Markenwert
 > stammt). Im Code wird ausschließlich über die Token aus `:root` in
 > `server/assets/style.css` zugegriffen. Ein Hexwert gehört nie in eine Regel.
 
@@ -332,8 +333,11 @@ Schnee oder Rauch, nicht Weiß.
 | Primärschrift auf Orange | 5,97:1 | 4,5 | Zahl des aktiven Filters, gewählte Segmenttaste |
 | Rauch auf Dunkelblau | 12,48:1 | 4,5 | Fußzeile auf dunklem Grund |
 | Rot auf Rosa | 3,87:1 | 3,0 | Rahmen der roten Kennzahl |
+| Blau als Säule auf Schnee | 3,77:1 | 3,0 | Säule und Balken der Diagramme (9.40) |
+| Orange tief als Höchstwert auf Schnee | 4,32:1 | 3,0 | hervorgehobene Säule (9.40) |
+| Blau tief als Säule unter dem Zeiger | 7,82:1 | 3,0 | Säule unter dem Zeiger (9.40) |
 
-**33 Paare, 0 verfehlt** (Web 21.1.6). **Seit R4-08 ist die Liste nicht mehr
+**36 Paare, 0 verfehlt** (Web 21.6.0). **Seit R4-08 ist die Liste nicht mehr
 das Maß:** `kontrast.py` leitet die Paare aus den Regeln des Stylesheets ab
 (Vorder- und Hintergrund in derselben Regel, dazu jede Farbe, die allein
 steht) und meldet jedes, das weder hier noch unter den Ausnahmen steht —
@@ -341,9 +345,9 @@ Backlog Nr. 116. Der erste Lauf fand **14**: die acht Paare oben, die ihren
 Sollwert erreichen, den Strich am Vorschlag (2,09:1 — seither Orange tief)
 und fünf, die jetzt als Ausnahme stehen. Was die Ableitung nicht sieht: eine
 bekannte Schrift auf einer neuen Fläche, die eine Elternregel setzt. Hier
-standen bis Web 20.38.0 21 Paare, bis R4-08 25.
+standen bis Web 20.38.0 21 Paare, bis R4-08 25, bis R4-24 33.
 
-**Acht Ausnahmen, jede mit Grund** — sie stehen im Werkzeug selbst, damit
+**Neun Ausnahmen, jede mit Grund** — sie stehen im Werkzeug selbst, damit
 niemand sie aus Versehen weiterreicht:
 
 - **Orange als Fläche auf Schnee (2,23:1).** Orange trägt nirgends allein:
@@ -372,6 +376,10 @@ niemand sie aus Versehen weiterreicht:
   auf der Karte; die orange Fläche ist das Zeichen.
 - **Spurfarbe als Farbschlüssel.** Die Linie der Legende zeigt die Farbe der
   Spur; was sie bedeutet, sagt die Beschriftung daneben.
+- **Blau als Balken auf Linie (2,77:1).** Die Füllung eines Anteilsbalkens
+  auf seiner Spur (9.40): Zahl und Anteil stehen in derselben Zeile, der
+  Balken trägt nichts allein; die Spur in Linie ist die freigegebene Form
+  (M-R4-24).
 
 ---
 
@@ -405,32 +413,32 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--asphalt` | `#1A0500` | 24 |  |
-| `--dunkelblau` | `#1A2E4D` | 64 |  |
-| `--gedaempft` | `#6E6459` | 71 |  |
+| `--asphalt` | `#1A0500` | 26 |  |
+| `--dunkelblau` | `#1A2E4D` | 65 |  |
+| `--gedaempft` | `#6E6459` | 75 |  |
 | `--auf-dunkel` | `#FFFFFF` | 10 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 41 |  |
+| `--linie` | `#E3DAC6` | 43 |  |
 | `--linie-stark` | `var(--gedaempft)` | 12 |  |
 
 **Orange — Handeln**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--orange` | `#FF8F1F` | 30 |  |
-| `--orange-tief` | `#C25A00` | 18 |  |
+| `--orange` | `#FF8F1F` | 29 |  |
+| `--orange-tief` | `#C25A00` | 21 |  |
 | `--orange-hell` | `#FFEBD6` | 23 |  |
 
 **Blau — Auswählen und Erklären**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--blau` | `#4280E5` | 14 |  |
-| `--blau-tief` | `#1F4E9C` | 18 |  |
+| `--blau` | `#4280E5` | 16 |  |
+| `--blau-tief` | `#1F4E9C` | 19 |  |
 | `--blau-hell` | `#D9ECFD` | 6 |  |
 
 **Rot — Aufmerksamkeit**
@@ -452,11 +460,11 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-1` | `12px` | 9 |  |
-| `--groesse-2` | `13px` | 56 |  |
-| `--groesse-3` | `15px` | 15 |  |
+| `--groesse-1` | `12px` | 12 |  |
+| `--groesse-2` | `13px` | 57 |  |
+| `--groesse-3` | `15px` | 16 |  |
 | `--groesse-4` | `16px` | 16 |  |
-| `--groesse-5` | `19px` | 12 |  |
+| `--groesse-5` | `19px` | 13 |  |
 | `--groesse-6` | `24px` | 5 |  |
 | `--groesse-titel` | `28px` | 2 |  |
 | `--zeile-eng` | `1.3` | 5 | Titel, Kacheln |
@@ -467,10 +475,10 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 81 |  |
-| `--abstand-2` | `8px` | 117 |  |
-| `--abstand-3` | `12px` | 158 |  |
-| `--abstand-4` | `16px` | 65 |  |
+| `--abstand-1` | `4px` | 84 |  |
+| `--abstand-2` | `8px` | 120 |  |
+| `--abstand-3` | `12px` | 163 |  |
+| `--abstand-4` | `16px` | 67 |  |
 | `--abstand-5` | `24px` | 35 |  |
 
 **Radien**
@@ -844,11 +852,11 @@ zählt nur Breiten.
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px) and (max-height:949px)` | 1 |
 | `@media (min-width:1024px)` | 3 |
-| `@media (min-width:720px)` | 14 |
+| `@media (min-width:720px)` | 15 |
 | `@media screen and (min-width:720px)` | 1 |
-| `@media (max-width:479px)` | 1 |
+| `@media (max-width:479px)` | 3 |
 
-Zusammen 29 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 32 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -956,15 +964,15 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 32 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 14 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 15 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 20 |
 | `server.svg` | Tabler Icons „server" (MIT) | 9 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 21 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 49 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 47 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 12 |
@@ -1053,57 +1061,61 @@ für eine Rückfrage — nicht für ein neues Element.
 | Baustein | Klasse | Regel im Stylesheet | `ui.php` |
 |---|---|---|--:|
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 54 |
-| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 164 |
-| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 231 |
-| `ui_symbol()` | `.symbol` | ja (+10 Unterklassen) | 284 |
-| `ui_logo_masse()` | `.logo-masse` | **keine** | 387 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 449 |
-| `ui_geruest_start()` | `.inhalt` | ja | 541 |
-| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 612 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 636 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 686 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 915 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1076 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1148 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1235 |
-| `ui_hinweise()` | `.hinweise` | ja | 1283 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1311 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1346 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1399 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1449 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1516 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1563 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1616 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1642 |
-| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1687 |
-| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1771 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1806 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1848 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1896 |
-| `ui_zeile()` | `.zeile` | ja (+34 Unterklassen) | 1960 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2015 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2064 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2109 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2181 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2223 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2265 |
-| `ui_feld()` | `.feld` | ja (+25 Unterklassen) | 2334 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2399 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2443 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2496 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2540 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2639 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2701 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2742 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 2836 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2877 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2907 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2919 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3069 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3148 |
+| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 174 |
+| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 241 |
+| `ui_symbol()` | `.symbol` | ja (+10 Unterklassen) | 294 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 397 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 459 |
+| `ui_geruest_start()` | `.inhalt` | ja | 551 |
+| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 622 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 646 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 696 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 943 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1105 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1177 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1264 |
+| `ui_hinweise()` | `.hinweise` | ja | 1312 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1340 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1375 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1428 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1481 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1548 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1595 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1648 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1674 |
+| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1719 |
+| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1803 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1838 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1880 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1928 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 1992 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2047 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2096 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2141 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2213 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2268 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2314 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2348 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2420 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2444 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2486 |
+| `ui_feld()` | `.feld` | ja (+28 Unterklassen) | 2555 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2620 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2664 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2717 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2761 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2860 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2922 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2963 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3057 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3098 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3128 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3140 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3290 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3369 |
 
-49 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
-**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
+53 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
 
@@ -3092,7 +3104,7 @@ Laufzeit" bleibt unberührt, `docs/Lizenzen.md` auch.
 - **Kleine Vielfache** — `.kleinvielfach`: zwei Reihen verschiedener
   Größenordnung als zwei Diagramme mit eigener Skala (`klein => true`),
   untereinander, ab der Schwelle 720 nebeneinander. Das Mockup setzte
-  768 px — keine Stufe der Skala (6, F-R4-68). Nie eine Grafik mit zwei Farben
+  768 px — keine Stufe der Skala (7, F-R4-68). Nie eine Grafik mit zwei Farben
   oder zwei Achsen.
 
 **Farbe.** Eine je Diagramm: **Blau** erklärt (3,77 : 1 auf Schnee), der
@@ -3248,7 +3260,7 @@ lief, misst einen Stand, den es nicht mehr gibt.
 | `tools/quelltext/vollstaendigkeit.py` | Ist etwas verlorengegangen? Steht jeder Wert an der einen Stelle? |
 | `tools/screenshots/aufnehmen.mjs` | Sieht es in allen zehn Breiten so aus, wie es soll? Überlauf, Konsolenfehler, Knopfhöhen; rollende Behälter genannt. |
 | `tools/screenshots/kontrast.py` | Erreicht jedes Farbpaar der Token seinen Sollwert? |
-| `tools/erzeugen/design.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen. |
+| `tools/erzeugen/design.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen; `schreiben` ersetzt sie hier. Ob sie stimmen, misst `bestand` (Regel `design`, seit R4-25). |
 | `tools/quelltext/textprobe.py` | Sprechen Oberfläche und Dokumentation neutral von Land und Luft? |
 | `tools/stilvergleich/` | Hat sich am Erscheinungsbild etwas geändert, das nicht geplant war? |
 | `tools/bedienprobe/probe.mjs` | Tut ein Bedienelement, was es soll — wenn man es **bedient**? Je Weg eine Zahl. |
@@ -3315,6 +3327,10 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **28.09.2026 (R4-25, Werkzeug, keine Auslieferung)** | **4, 7, 8 und 9 neu erzeugt — alle vier Tabellen waren veraltet**: Nutzungszahlen der Token, die Schwellen, Symbolzählungen, die Zeilen der Bausteine. Seither hält `bestand` (Regel `design`) sie an den Erzeuger, und `design.py schreiben` ersetzt sie (Nr. 209). **3.4** um die Paare und die Ausnahme aus R4-24 ergänzt, **12** um die drei Fassungen darunter (F-R4-69). |
+| **Web 21.6.0 (R4-24)** | **9.40 neu — Diagramm**, freigegeben mit M-R4-24 (Q-R4-16): Säulen über die Zeit und Anteile als Balken, Inline-SVG aus PHP, ohne Bibliothek; Höchstwert in Orange tief (E-R4-60); kleine Vielfache ab der Schwelle 720 nebeneinander (F-R4-68). **7:** Die Ausnahme 479 px trägt zwei Regelblöcke mehr, keine neue Breite. **Kein neues Token, kein neuer Farbwert.** |
+| **Web 21.5.0 (R4-23)** | **9.18b neu — Zeitraumwahl**, freigegeben mit M-R4-23 (Q-R4-16): Pillen, zwei Datumsfelder und ein Knopf in einer Reihe — eine Anordnung, kein neuer Baustein. **Kein neues Token.** |
+| **Web 21.4.1 (R4-20)** | **6, Erklärtext:** Import / Export, das Einsatzformular und die Wiederherstellung tragen die Karte „Was hier gilt" nicht mehr; ihr Text steht im Handbuch (Nr. 287). **Kein neuer Baustein.** |
 | **Web 21.1.11 (R4-13)** | **Drei Meldungen aus dem Baustein 9.5 statt von Hand**: der Satz im Schneide-Bereich (Ton `fehler` für einen Grund, `info` für den Erklärtext — bis dahin immer blau und ohne Symbol, Nr. 271), die Rückmeldung über der Segmentliste und die Meldung im Entsperrdialog (ein `<p class="meldung">` ohne Symbol und ohne `role`, Nr. 272). Sichtbar: das Symbol, und ein Grund steht rot statt blau. Dazu die Dauer im Schneide-Bereich als „1h 06min" (Q-R4-06, Nr. 273). **Kein neuer Baustein, kein neues Token.** |
 | **Web 21.1.6 (R4-08)** | **Der Strich am aktiven Vorschlag ist `--orange-tief`** (9.x Vorschlagsliste): Er steht allein auf Rauch, und dort erreichte Orange 2,09:1 — die Regel aus 3.1, derselbe Tausch wie beim Reiter (E-P5c-79). **3.4 um acht Paare und fünf Ausnahmen ergänzt**: `kontrast.py` leitet die Paare seither aus dem Stylesheet ab (Nr. 116). **3.2 berichtigt**: „-tief = 4,5:1 auf Schnee" galt für Orange tief nie (4,32:1, E-R4-30). **Kein neues Token, kein neuer Farbwert, kein neuer Baustein.** |
 | **Web 20.39.0 (P5c/AP2)** | **9.37 neu — Reiter**, freigegeben mit M-P5c-01a (E-P5c-25): Wechsel zwischen gleichrangigen Sichten einer Seite, serverseitig, schmal rollend im eigenen Behälter; Seiten mit Reitern tragen keine Unterpunkte in der Leiste. Der Strich des aktiven Reiters steht in `--orange-tief` statt im `--orange` des Mockups (2,09 → 4,04 : 1 auf Rauch, E-P5c-79); Kapitel 3.4 nennt die Rolle beim Paar „Orange tief auf Rauch". **9.2 um die aufklappbare Zeile `.zeile-mehr` ergänzt** (E-P5c-26) samt Gegenregel zu `.zeile:first-child` (F-P5c-13) und dem Schlüssel `aktionsspalte`. **9.18a um die Helfer `ui_listenkopf()` und `ui_listenfuss()`** — Suche, Filterpillen (eine mit Kreuz), Auswahlfeld und Seitenwahl sind ein Weg; `admin_users.php` ist umgezogen, das Register hält die Klassen außerhalb von `ui.php` auf null (F-P5c-54). Kapitel 9.0 um drei Zeilen. **Ein neues Symbol** — `protokoll.svg`, Tabler „list" (Vorrat 57 → 58), für den Menüpunkt Verwaltung → Protokoll. **Kein neues Token, kein neuer Farbwert.** Die erzeugten Tabellen neu erzeugt: Bausteine **44 → 48** Funktionen (`ui_zeile_mehr()`, `ui_reiter()`, `ui_listenkopf()`, `ui_listenfuss()`), Medienblöcke **24 → 25** (die Protokollliste ab 720 px), Symbole **57 → 58**. In Kapitel 7 stand unter der erzeugten Schwellentabelle eine **zweite, veraltete Summenzeile** („22 Medienblöcke") — ein Rest eines früheren Einsetzens von Hand; beim Ersetzen bis zur nächsten Überschrift ist sie gefallen. |

@@ -10,7 +10,9 @@ fortgeschrieben — was sich nach der Erledigung noch ändert, ist ein neuer
 Punkt in `Backlog.md`. Der Abschnitt *Erledigt* unten ist der aus
 `docs/Backlog.md@f5bddc2`, Zeile für Zeile; seine Einrückung mit vier
 Leerzeichen bleibt, samt ihrer Folge auf GitHub (Nr. 196) — wer hier liest,
-liest die Quelle.
+liest die Quelle. Die Trennzeile, die in `Backlog.md` vor jedem Eintrag
+steht, kommt nicht mit (E-R4-62): Hier zählt GitHub die Nummern fort
+(Nr. 340); es gilt die Nummer im Text.
 
 ## Werdegang der Nummernvergabe
 
@@ -9104,3 +9106,47 @@ zutreffen.
      Balken, zwei kleine Vielfache), ohne Bibliothek und ohne fremde Quelle;
      die Tabellen bleiben. Aktiv und angemeldet nur bis heute (F-R4-66).
      Bilderlauf 60 Bilder ohne Überlauf, kontrast.py 0 verfehlt.
+
+209. **`docs/Design.md` führt die erzeugte Bausteintabelle mit falschen Zeilennummern.** · gehört zu: 17 · Stand: erledigt · seit 16.09.2026
+     Die Tabelle trägt den Vermerk „ERZEUGT von `tools/design/tabellen.py` —
+     nicht von Hand ändern", und ihre Spalte `ui.php` nennt zu jeder Funktion
+     eine Zeilennummer. Diese Nummern liegen durchgängig **rund 26 Zeilen zu
+     niedrig**: `ui_seite_start()` steht dort mit 54 und im Code bei 80.
+     Ursache ist schlicht, dass das Werkzeug seit einigen Paketen nicht
+     gelaufen ist.
+
+     **Das ist kein Schönheitsfehler:** Eine erzeugte Tabelle, die nicht mehr
+     zu ihrer Quelle passt, ist schlechter als keine — wer ihr folgt, landet
+     mitten in einer anderen Funktion und hält das für den Baustein. Abhilfe
+     ist ein Aufruf (`python3 tools/design/tabellen.py alle`); der Punkt steht
+     hier, weil dabei **alle vier** erzeugten Tabellen neu entstehen und das
+     Ergebnis gegengelesen werden will.
+
+     *Aufgenommen 16.09.2026 in P5a/AP8, gefunden bei der Bestandsaufnahme der
+     Bausteine.*
+     Erledigt 28.09.2026 mit R4-25 (Werkzeug, keine Versionsstufe): Regel
+     `design` in `bestand.py` hält die vier erzeugten Tabellen in
+     `docs/Design.md` an die Ausgabe von `tools/erzeugen/design.py`, jede
+     genau einmal; `design.py schreiben` ersetzt sie. Beim ersten Lauf waren
+     alle vier veraltet, in der Bausteintabelle 48 von 49 Zeilen; jetzt 53
+     von 53. Gegenprobe: eine Funktion in `ui.php` eingefügt, rot.
+
+340. **GitHub zählt die Backlog-Liste fort — neben jedem Eintrag außer dem ersten steht eine falsche Nummer.** · gehört zu: 17 · Stand: erledigt · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit R4-01 aus Konzept SD (F-SD-08, Q-R4-11).*
+     `cmark-gfm` macht aus den offenen Einträgen eine einzige Liste
+     `<ol start="21">`; ein Browser nummeriert sie fort und zeigt 21, 22,
+     23 … statt 21, 23, 36. Wer auf GitHub „Nr. 36" sucht, liest daneben
+     eine andere Zahl als im Markdown. Die Decke `backlog-listenpunkte`
+     (`decken.py`) zählt `<li>` gegen Einträge, nicht die Nummern — sie
+     sieht es deshalb nicht.
+     *Weg (Konzept R4, R4-25):* jeden Eintrag als eigene Liste rendern —
+     ein Element zwischen den Einträgen, das die Liste beendet, oder die
+     Nummer im Titel; beides ändert E-SD-16 und die Grammatik in
+     `uebersicht.py` und `decken.py`.
+     *Abnahme:* `cmark-gfm` liefert je Eintrag eine Liste, deren `start`
+     die Nummer des Eintrags ist; die Decke misst das.
+     Erledigt 28.09.2026 mit R4-25 (Werkzeug, keine Versionsstufe, E-R4-62):
+     vor jedem offenen Eintrag eine Trennzeile `<!-- -->`, Decke
+     `backlog-listenstart` in `decken.py`. `cmark-gfm`: vorher eine Liste
+     für 64 Einträge, danach 64 Listen, jede mit ihrer Nummer als `start`.
+     `Backlog-Erledigt.md` bleibt ohne Trennzeilen.

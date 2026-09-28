@@ -388,8 +388,10 @@ Oberflächenänderung anfängt, liest zuerst dort. Kurz:
 - Spaltenbreiten in Tabellen nie über `:nth-child` — sie zählen Spalten ab und
   rutschen beim Streichen einer Spalte still auf die falsche. Klassen benutzen.
 - Die Tabellen in `Design.md` (Token, Schwellen, Symbole, Bausteine) sind
-  **erzeugt**: `python3 tools/erzeugen/design.py alle`. Wer eine davon von Hand
-  ändert, ändert sie an der falschen Stelle.
+  **erzeugt**: `python3 tools/erzeugen/design.py schreiben` ersetzt sie dort.
+  Wer eine davon von Hand ändert, ändert sie an der falschen Stelle — und wer
+  `ui.php`, `style.css` oder ein Symbol ändert, erzeugt sie neu, sonst ist
+  Stufe 1 rot (`bestand`, Regel `design`, seit R4-25).
 
 ## 6. Prüfen
 

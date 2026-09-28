@@ -81,6 +81,19 @@ grün und im Pull Request rot, nach sechs Läufen.
              Schritt niemand (F-P5c-172). Die Datei wird gelesen, nicht
              geschrieben
 
+Seit R4-25 (Nr. 209) hält eine vierzehnte Regel die erzeugten Tabellen der
+Gestaltungsrichtlinie an ihren Erzeuger — wie `tabelle` die Tabelle in
+Pruefablauf.md 4:
+
+  design     die vier Tabellen in docs/Design.md, die tools/erzeugen/design.py
+             herstellt (Token, Schwellen, Symbole, Bausteine), stehen dort
+             genau so, wie der Erzeuger sie JETZT ausgibt, jede genau einmal,
+             und es gibt genau vier Blöcke mit seiner Marke. Eine Funktion in
+             ui.php, eine Regel in style.css, ein Symbol mehr — und die
+             Tabelle ist rot, bis sie neu erzeugt ist. Bis dahin stand in
+             CLAUDE.md 5 nur, dass man es tun soll; gemessen hat es niemand,
+             und alle vier Tabellen waren veraltet
+
 WIE ER LIEST — MIT DEN ECHTEN WERKZEUGEN, NICHT MIT NACHBAUTEN (BR-05).
 Drei Gegenprüfrunden haben gezeigt: Wer Markdown, PHP und Bash mit eigenen
 Mustern nachliest, liest jede Runde eine andere Randschreibweise anders als
@@ -151,12 +164,16 @@ LOSE_ERLAUBT = {'motor.mjs'}                 # E-BR-03 (4), beim Namen — kein 
 RUFER = ['tools/pruefstand/pruefablauf.json', 'tools/pruefstand/pruefen.sh',
          'docs/Sandbox-Setup.md']
 REGELN = ['form', 'anleitung', 'anlass', 'inventur', 'lose', 'probe', 'backlog',
-          'selbst', 'zeile', 'ablauf', 'tabelle', 'anlage', 'tor']
+          'selbst', 'zeile', 'ablauf', 'tabelle', 'anlage', 'tor', 'design']
 PROBEN_LAEUFER = 'tools/proben/proben.sh'
 QUELLTEXT = 'tools/quelltext/pruefen.sh'
 QUELLTEXT_ANLEITUNG = 'tools/quelltext/LIESMICH.md'
 ABLAUF = 'tools/pruefstand/pruefablauf.json'
 ERZEUGER_DOKU = 'tools/pruefstand/bericht.py'
+ERZEUGER_DESIGN = 'tools/erzeugen/design.py'
+DESIGN = 'docs/Design.md'
+DESIGN_TEILE = ('token', 'schwellen', 'symbole', 'bausteine')
+DESIGN_MARKE = '<!-- ERZEUGT von tools/erzeugen/design.py'
 AUSWAHL = 'tools/pruefstand/auswahl.py'
 PRUEFSTAND = 'tools/pruefstand/pruefen.sh'
 TOR = '.github/workflows/pruefung.yml'
@@ -284,6 +301,13 @@ KENNUNGEN = {
     'tor-datei': 'pruefung.yml fehlt oder ruft bericht.py lesen --alle-riegel nicht',
     'tor-fehlt': 'ein Riegel ohne --riegel im Tor',
     'tor-fremd': '--riegel für einen Namen, der kein Riegel ist',
+    'design-abbruch': 'die Gruppe design brach ab',
+    'design-erzeuger-fehlt': 'design.py fehlt',
+    'design-erzeuger-fehler': 'design.py scheitert an einem Teil',
+    'design-doku-fehlt': 'Design.md fehlt',
+    'design-marken': 'nicht genau vier Blöcke mit der Marke des Erzeugers',
+    'design-abweichung': 'eine Tabelle weicht von der Ausgabe des Erzeugers ab',
+    'design-mehrfach': 'eine Tabelle steht mehr als einmal',
 }
 
 # Nur für die Selbstprobe: Werkzeuge, die als fehlend gelten sollen, und
@@ -905,7 +929,7 @@ def messen(wurzel):
     # zu viel in der Ablaufdatei still aus (Runde 4).
     for kennung, pruefung in (('selbst-abbruch', quelltext_pruefen), ('ablauf-abbruch', ablauf_pruefen),
                               ('tabelle-abbruch', tabelle_pruefen), ('anlage-abbruch', anlage_pruefen),
-                              ('tor-abbruch', tor_pruefen)):
+                              ('tor-abbruch', tor_pruefen), ('design-abbruch', design_pruefen)):
         try:
             if kennung in _ABBRUCH:
                 raise RuntimeError('eingebauter Abbruch der Selbstprobe')
@@ -1366,6 +1390,46 @@ def tabelle_vergleichen(doku, soll):
     return aus
 
 
+def design_pruefen(wurzel, alle, zahlen, ruf):
+    """Regel `design` (Nr. 209, R4-25) — die erzeugten Tabellen in Design.md
+    sind genau die Ausgabe von design.py, jede einmal, vier Marken.
+
+    VERGLICHEN WIRD DER ROHE TEXT, als Ganzes: Der Erzeuger gibt je Teil einen
+    Block aus, mit Marke, Kopf, Zeilen und Schlusssatz, und genau dieser
+    Block steht im Dokument oder nicht. Wo er fehlt, nennt der Befund die
+    erste Zeile der Ausgabe, die im Dokument nirgends steht — meist eine
+    verschobene Zeilennummer in der Bausteintabelle."""
+    befunde = []
+    erzeuger = os.path.join(wurzel, ERZEUGER_DESIGN)
+    if not os.path.isfile(erzeuger):
+        return [bef('design-erzeuger-fehlt', f'{ERZEUGER_DESIGN} fehlt — die Tabellen in {DESIGN} sind nicht prüfbar')]
+    if not os.path.isfile(os.path.join(wurzel, DESIGN)):
+        return [bef('design-doku-fehlt', f'{DESIGN} fehlt')]
+    doku = lies(wurzel, DESIGN)
+    zeilen = set(doku.split('\n'))
+    marken = sum(1 for z in doku.split('\n') if z.startswith(DESIGN_MARKE))
+    if marken != len(DESIGN_TEILE):
+        befunde.append(bef('design-marken', f'{DESIGN}: {marken} Blöcke mit der Marke des Erzeugers, erwartet '
+                                            f'{len(DESIGN_TEILE)}'))
+    for teil in DESIGN_TEILE:
+        r = subprocess.run([sys.executable, erzeuger, teil], cwd=wurzel, capture_output=True, text=True)
+        if r.returncode != 0 or not r.stdout.strip():
+            letzte = (r.stderr.strip().splitlines() or ['(keine Ausgabe)'])[-1]
+            befunde.append(bef('design-erzeuger-fehler', f'{ERZEUGER_DESIGN} {teil} endete mit rc {r.returncode}: '
+                                                         f'{letzte[:100]}'))
+            continue
+        soll = r.stdout.rstrip('\n')
+        n = doku.count(soll)
+        if n == 0:
+            erste = next((z for z in soll.split('\n') if z and z not in zeilen), '')
+            befunde.append(bef('design-abweichung', f'{DESIGN}: die Tabelle „{teil}" weicht von der Ausgabe ab'
+                                                    + (f' (zuerst: „{erste[:60]}")' if erste else '')
+                                                    + f' — neu erzeugen: python3 {ERZEUGER_DESIGN} schreiben'))
+        elif n > 1:
+            befunde.append(bef('design-mehrfach', f'{DESIGN}: die Tabelle „{teil}" steht {n}-mal'))
+    return befunde
+
+
 def kopie_schluessel(z):
     """Woran eine Zeile der erzeugten Tabelle zu erkennen ist, auch wenn sie
     veraltet ist: eine Tabellenzeile an ihren ersten ZWEI Zellen (Berührung
@@ -1760,6 +1824,46 @@ TOR_YML = '''jobs:
 '''
 
 _TABELLE = {}
+_DESIGN = {}
+
+
+def _design_dateien():
+    """Was design.py zum Erzeugen braucht, im Kleinen — und der ECHTE
+    Erzeuger dieses Auschecks, wie bei `tabelle`: Ein nachgebauter hielte die
+    Regel an einem Format, das es nicht gibt."""
+    with open(os.path.join(WURZEL, ERZEUGER_DESIGN), encoding='utf-8') as f:
+        erzeuger = f.read()
+    return {
+        ERZEUGER_DESIGN: erzeuger,
+        'tools/erzeugen/LIESMICH.md': _anleitung('erzeugen', ERZEUGER, 'Erzeugen'),
+        'server/assets/style.css': (':root{\n  /* ---- Flaechen ---- */\n  --schnee:#FFFCFA; /* Grund */\n}\n'
+                                    '.knopf{background:var(--schnee)}\n'
+                                    '@media (max-width:479px){.knopf{padding:0}}\n'),
+        'server/ui.php': ("<?php\nfunction ui_knopf(array $o): string\n{\n    return '<button class=\"knopf\">';\n}\n"),
+        'server/assets/images/symbole/haus.svg': '<svg><!-- Quelle: Tabler Icons „home" (MIT) --></svg>\n',
+    }
+
+
+def _design_doku(name='', eingriff=None):
+    """Design.md des Grundbestands: die vier Ausgaben des Erzeugers mit Text
+    dazwischen — oder, mit `eingriff` an den Eingaben, eine VERALTETE."""
+    if name not in _DESIGN:
+        dateien = _design_dateien()
+        if eingriff:
+            eingriff(dateien)
+        d = tempfile.mkdtemp(prefix='bestand-design-')
+        try:
+            for rel, inhalt in dateien.items():
+                os.makedirs(os.path.dirname(os.path.join(d, rel)), exist_ok=True)
+                with open(os.path.join(d, rel), 'w', encoding='utf-8') as f:
+                    f.write(inhalt)
+            teile = [subprocess.run([sys.executable, os.path.join(d, ERZEUGER_DESIGN), t], cwd=d,
+                                    capture_output=True, text=True, check=True).stdout.rstrip('\n')
+                     for t in DESIGN_TEILE]
+            _DESIGN[name] = '# Gestaltung\n\n' + '\n\nText.\n\n'.join(teile) + '\n\nEnde.\n'
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+    return _DESIGN[name]
 
 
 def _pruefstand_dateien():
@@ -1828,7 +1932,9 @@ def _grundbestand():
     return {
         **_pruefstand_dateien(),
         'docs/Backlog.md': 'Kopf.\n\n1. **Eins.**\n\n2. **Zwei.**\n',
-        'docs/Sandbox-Setup.md': 'Die Anlage braucht `tools/erzeuger/bild.sh`.\n',
+        'docs/Sandbox-Setup.md': 'Die Anlage braucht `tools/erzeuger/bild.sh` und `tools/erzeugen/design.py`.\n',
+        **_design_dateien(),
+        DESIGN: _design_doku(),
         'docs/Pruefablauf.md': '# Prüfablauf\n\n## 4. Berührung\n\nText.\n\n' + _erzeugte_tabelle()
                                + '\nDanach Text.\n\n## 5. Bericht\n',
         '.gitignore': 'tools/werkzeug/ausgabe/\n',
@@ -2285,6 +2391,25 @@ FAELLE = [
     ('GEGENPROBE: der Aufruf in einer Zeile statt umbrochen', None,
      _setze(TOR, 'run: python3 tools/pruefstand/bericht.py lesen --alle-riegel --riegel q-eins=1 --riegel "q-zwei=2"\n')),
     ('tor — die Gruppe bricht ab', 'tor-abbruch', _abbruch('tor-abbruch')),
+    # design (Nr. 209, R4-25)
+    ('design — eine Funktion in ui.php eingefügt, die Tabelle nicht neu erzeugt (die Abnahme)', 'design-abweichung',
+     _mehr('server/ui.php', '<?php\n', "<?php\nfunction ui_mehr(): string { return '<b>'; }\n")),
+    ('design — eine Regel in style.css neu, die Schwellen nicht neu erzeugt', 'design-abweichung',
+     _mehr('server/assets/style.css', '@media (max-width:479px)', '@media (max-width:767px){.a{}}\n@media (max-width:479px)')),
+    ('design — ein Symbol mehr, die Tabelle nicht neu erzeugt', 'design-abweichung',
+     _setze('server/assets/images/symbole/zelt.svg', '<svg></svg>\n')),
+    ('design — eine Zelle der Tabelle von Hand geändert', 'design-abweichung',
+     _mehr(DESIGN, '| `--schnee` |', '| `--schneeweiss` |')),
+    ('design — eine Tabelle steht zweimal (eine alte Kopie unten)', ('design-mehrfach', 'design-marken'),
+     lambda b: b.__setitem__(DESIGN, b[DESIGN] + '\n' + _design_doku().split('\n\nText.\n\n')[3])),
+    ('design — die Marke über einer Tabelle gelöscht', ('design-marken', 'design-abweichung'),
+     _mehr(DESIGN, DESIGN_MARKE, '<!-- von Hand')),
+    ('design — der Erzeuger fehlt', 'design-erzeuger-fehlt', _weg(ERZEUGER_DESIGN)),
+    ('design — der Erzeuger scheitert (kein :root im Stylesheet; die übrigen drei Teile stimmen weiter)', 'design-erzeuger-fehler',
+     _mehr('server/assets/style.css', ':root{', '.wurzel{')),
+    ('design — Design.md fehlt', 'design-doku-fehlt', _weg(DESIGN)),
+    ('design — die Gruppe bricht ab', 'design-abbruch', _abbruch('design-abbruch')),
+    ('GEGENPROBE: Text zwischen den Tabellen geändert', None, _mehr(DESIGN, 'Text.', 'Anderer Text.')),
 ]
 
 

@@ -820,13 +820,13 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
 | `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen dreizehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen vierzehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 20 von 20: zehn Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
-| `tools/steuerung/` | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock; Selbstproben alle Fälle grün |
+| `tools/steuerung/` | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock, 0 offene Einträge ohne eigene Liste mit ihrer Nummer (seit R4-25); Selbstproben alle Fälle grün |
 
 PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
 Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur

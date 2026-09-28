@@ -4172,7 +4172,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 
 /* Kleine Vielfache: je Reihe ein Diagramm mit eigener Skala — untereinander,
  * ab der Schwelle 720 nebeneinander. Das Mockup setzte 768 px; das ist keine
- * Stufe der Skala (Design.md 6, F-R4-68). */
+ * Stufe der Skala (Design.md 7, F-R4-68). */
 .kleinvielfach{display:grid;grid-template-columns:1fr;gap:var(--abstand-4)}
 @media (min-width:720px){
   .kleinvielfach{grid-template-columns:repeat(2,minmax(0,1fr))}

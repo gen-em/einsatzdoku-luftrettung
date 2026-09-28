@@ -787,9 +787,46 @@ Fassung.
   Erwartungen rot — mit genau der Meldung, die Nr. 277 beschreibt.
 - **Eine Registerzeile für den JSON-Ausgang** (R4-09, Z41 in
   `tools/zaehlung/register.php`): `echo json_encode` unter `api/`, Decke 0.
+- **Ein Riegel hält die Tabellen der Gestaltungsrichtlinie an ihren
+  Erzeuger** (R4-25, Nr. 209, Regel `design` in `tools/quelltext/bestand.py`).
+  `CLAUDE.md` 5 sagt, dass die vier Tabellen in `docs/Design.md` — Token,
+  Schwellen, Symbole, Bausteine — erzeugt sind und wer eine von Hand
+  ändert, sie an der falschen Stelle ändert. Gemessen hat
+  es niemand, und `design.py` gab die Tabellen nur aus: Einfügen musste sie
+  jemand, an vier Stellen. Beim ersten Lauf der Regel waren alle vier
+  veraltet — 16 Tokenzeilen mit alten Nutzungszahlen, zwei Schwellenzeilen,
+  drei Symbolzählungen, und in der Bausteintabelle trugen 48 von 49 Zeilen
+  eine verschobene Zeilennummer, vier Bausteine fehlten ganz. Jetzt vergleicht die
+  Regel je Teil die Ausgabe des Erzeugers als Ganzes mit dem Dokument, jede
+  genau einmal, dazu genau vier Marken; der Befund nennt die erste Zeile, die
+  fehlt. Und `design.py schreiben` ersetzt die vier Blöcke selbst, von der
+  Marke bis vor die nächste Überschrift, und schreibt nichts, wenn danach
+  nicht jede Ausgabe genau einmal dasteht. Ohne den Befehl hätte der Riegel
+  jede Änderung an `style.css` oder `ui.php` mit viermal Einfügen von Hand
+  bestraft — genau der Schritt, der unterblieben war. **Preis, und so
+  gewollt:** Wer `ui.php`, `style.css` oder ein Symbol ändert, erzeugt die
+  Tabellen neu, sonst ist Stufe 1 rot. Die Selbstprobe wächst von 155 auf
+  166 Fälle, 100 von 100 Befundstellen fallen; eine Funktion in `ui.php`
+  eingefügt, ist die Regel rot.
 
 ### Geändert
 
+- **Jeder offene Backlog-Eintrag zeigt auf GitHub seine eigene Nummer**
+  (R4-25, Nr. 340, E-R4-62). `cmark-gfm` machte aus den offenen Einträgen
+  eine einzige Liste `<ol start="21">`, und der Browser zählte fort: Neben
+  Nr. 23 stand 22, neben Nr. 36 stand 23. Wer auf GitHub eine Nummer suchte,
+  las daneben eine andere. Jetzt steht vor jedem Eintrag in `Backlog.md`
+  eine Zeile `<!-- -->` — ein HTML-Kommentar beendet die Liste und ist
+  unsichtbar, der nächste Eintrag beginnt eine neue mit seiner Nummer. Der
+  andere Weg aus Nr. 340, die Nummer in den Titel zu ziehen, hätte die
+  Kopfzeile (E-SD-16), die Grammatik in `uebersicht.py` und jede Gewohnheit
+  beim Verweisen umgestellt. Die neue Decke `backlog-listenstart` in
+  `decken.py` zählt, was GitHub zeigt: je Eintrag eine Liste, deren `start`
+  seine Nummer ist (21 Decken, Selbstprobe 23 Fälle); `verschieben.py` nimmt
+  die Trennzeile mit dem Eintrag heraus. **Bewusst nicht in
+  `Backlog-Erledigt.md`:** Die Datei hält ihren Bestand Zeile für Zeile, wie
+  schon bei Nr. 196; dort zählt GitHub weiter fort, und es gilt die Nummer
+  im Text.
 - **Die Rollenmatrix führt die Betriebsseiten einzeln** (R4-18, Nr. 327).
   `docs/Technik.md` 4.99p hatte eine Zeile je Handlung auf den Seiten, die
   mehr als eine Rolle erreicht; die Seiten der BetreiberIn standen darin nur
