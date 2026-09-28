@@ -67,8 +67,6 @@ require_once __DIR__ . '/../ratelimit_lib.php';
  * und genau deshalb ist das der richtige Weg.
  */
 
-header('Content-Type: application/json; charset=utf-8');
-
 api_methode();
 csrf_check();
 
@@ -107,11 +105,9 @@ if (!$werte) {
     /* Kein Schluessel in `config.php` — dann gibt es nichts zu bestaetigen.
      * Das ist kein Fehler des Aufrufers, sondern ein Zustand der Anlage; das
      * Schluesselblatt sagt an derselben Stelle dasselbe. */
-    http_response_code(409);
-    echo json_encode(['error' => 'kein_schluessel',
-                      'text'  => 'In config.php steht noch kein Schlüssel. '
-                               . 'Unter Betrieb → Servereinstellungen anlegen.']);
-    exit;
+    json_out(['error' => 'kein_schluessel',
+              'text'  => 'In config.php steht noch kein Schlüssel. '
+                       . 'Unter Betrieb → Servereinstellungen anlegen.'], 409);
 }
 
 $aktion = (string)($_POST['aktion'] ?? '');
@@ -127,9 +123,7 @@ if ($email === '') {
 
 if ($aktion === 'stellen') {
     if (!rate_erlaubt('blatt', $email)) {
-        http_response_code(429);
-        echo json_encode(['error' => 'gesperrt', 'text' => blatt_sperrtext()]);
-        exit;
+        json_out(['error' => 'gesperrt', 'text' => blatt_sperrtext()], 429);
     }
 
     $fragen = [];
@@ -147,7 +141,7 @@ if ($aktion === 'stellen') {
     }
     $_SESSION['blatt_fragen'] = $merken;
 
-    echo json_encode([
+    json_out([
         'ok'      => true,
         'fragen'  => $fragen,
         /* DIE KENNUNG, NICHT DER WERT — die Regel des ganzen Hauses. Sie sagt,
@@ -157,31 +151,24 @@ if ($aktion === 'stellen') {
                                            'kennung' => schluessel_kennung($w['hex'])],
             $werte),
     ]);
-    exit;
 }
 
 /* ---- Pruefen ------------------------------------------------------------ */
 
 if ($aktion !== 'pruefen') {
-    http_response_code(400);
-    echo json_encode(['error' => 'aktion']);
-    exit;
+    json_out(['error' => 'aktion'], 400);
 }
 
 if (!rate_erlaubt('blatt', $email)) {
-    http_response_code(429);
-    echo json_encode(['error' => 'gesperrt', 'text' => blatt_sperrtext()]);
-    exit;
+    json_out(['error' => 'gesperrt', 'text' => blatt_sperrtext()], 429);
 }
 
 $gefragt = $_SESSION['blatt_fragen'] ?? null;
 if (!is_array($gefragt) || $gefragt === []) {
     /* Die Sitzung kennt die Frage nicht — abgelaufen, oder jemand ruft
      * `pruefen` ohne `stellen`. Kein Fehlversuch: Es wurde nichts geraten. */
-    http_response_code(409);
-    echo json_encode(['error' => 'keine_frage',
-                      'text'  => 'Die Frage ist abgelaufen. Bitte die Seite neu laden.']);
-    exit;
+    json_out(['error' => 'keine_frage',
+              'text'  => 'Die Frage ist abgelaufen. Bitte die Seite neu laden.'], 409);
 }
 
 $nachSchl = [];
@@ -213,8 +200,7 @@ if (!$gut) {
 
     protokoll_sicherheit_blatt($email, $rest);
 
-    http_response_code(403);
-    echo json_encode([
+    json_out([
         'error' => 'falsch',
         'rest'  => $rest,
         'text'  => $rest > 0
@@ -226,8 +212,7 @@ if (!$gut) {
               . ', dann sperrt die Anmeldung diesen Weg für '
               . (int)round(rate_stufe_dauer(0) / 60) . ' Minuten.'
             : 'Stimmt nicht. Dieser Weg ist jetzt für eine Weile gesperrt.',
-    ]);
-    exit;
+    ], 403);
 }
 
 /* ---- Bestaetigt --------------------------------------------------------- */
@@ -244,7 +229,7 @@ require_once __DIR__ . '/../protokoll_lib.php';
 protokoll('verwaltung', 'schluesselblatt_bestaetigt',
           'Schlüsselblatt bestätigt, von ' . $email, [], $userId);
 
-echo json_encode(['ok' => true]);
+json_out(['ok' => true]);
 
 /* ------------------------------------------------------------------------ */
 

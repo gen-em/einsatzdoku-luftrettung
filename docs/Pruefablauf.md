@@ -277,7 +277,7 @@ nichts gelesen wird, misst gegen nichts.
 | Stufe | Auslöser | Umfang |
 |---|---|---|
 | **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten, Chromium; Bedienprobe der berührten Seiten |
-| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in acht Breiten, Chromium, Bedienprobe aller Seiten; Handy- und Uhr-Bau, wenn berührt |
+| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in zehn Breiten (seit R4-08; vorher acht), Chromium, Bedienprobe aller Seiten; Handy- und Uhr-Bau, wenn berührt |
 | **haupt** | Hauptstufe `X.a.a`, **eine neue Migration** (Stufenregel `migration`, 4; seit P5c/AP4) oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Bilderlauf mit allen drei Engines über alle Seiten, Messstand, Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
 
 **Warum die Matrix in die Hauptstufe gehört und nicht in die Kette:** Der
@@ -326,6 +326,15 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
   mit in den Lauf und stellt sie davor. So fährt die Wegprobe des
   Spaltenregisters erst, wenn der Kreislauf `edbak` ihr Umlaufkonto angelegt
   hat; `auswahl.py --selbstprobe` belegt die Reihenfolge.
+- **Der Demo-Reset trifft keine Probe mehr** (`demo` in `pruefablauf.json`,
+  seit R4-04, Nr. 322). Er spielt den Demo-Bestand neu ein (seit Web 21.2.0
+  30 Minuten nach der ersten Änderung, R4-14),
+  und die Einsätze bekommen neue Kennungen; wen er traf, entschied bis dahin
+  die Reihenfolge der Muster. Jetzt schiebt der Prüfstand vor jeder Probe
+  mit `"demo": true` die Marke des letzten Resets auf „jetzt" und stellt sie
+  am Ende zurück; die Zeile steht im Lauf. Das Feld trägt, wer das
+  Demo-Konto anmeldet oder Demo-Daten über ihre Kennungen liest — heute
+  sieben Proben (`auswahl.py --selbstprobe` hält die Form).
 - **Der Prüfstand meldet, wenn eine Datei unter `server/` kein Muster
   trifft.** Gemessen am 23.09.2026: **267 versionierte Dateien, 0 ohne
   Muster**; 87 treffen nur das Auffangmuster und die beiden Stufenmuster
@@ -341,7 +350,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
-| `server/komplett_lib.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02 |
+| `server/komplett_lib.php`, `server/admin_komplettsicherung.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite |
 | `server/gpx_lib.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130 |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
 | `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |
@@ -351,7 +360,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/protokoll_lib.php`, `server/protokoll_archiv_lib.php`, `server/zip_lib.php`, `server/admin_protokoll.php`, `server/systemmeldung_lib.php` | klein | `protokollprobe`, `versandprobe` | F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39); protokollprobe Teil 7 für das Fehlerprotokoll (Nr. 248) |
 | `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
 | `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
-| `server/wartung_lib.php`, `server/auth_guard.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171 |
+| `server/wartung_lib.php`, `server/auth_guard.php`, `server/betrieb_updates.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171; betrieb_updates.php seit R4-11 (Nr. 250, F-R4-38): die Probe schaltet ueber diese Seite |
 | `server/api/health.php`, `server/speicher_lib.php` | klein | `ratenprobe`, `wartungsprobe` | E-P5c-17, -52 (Health, P5c/AP6): Token, Felder, Migration und Menge in der Ratenprobe, die Antwort aus dem Tor in der Wartungsprobe |
 | `server/db.php` | klein | `verbindungsprobe` | Nr. 210 |
 | `server/serverkrypto_lib.php`, `server/auth_salt.php`, `server/assets/unlock.js`, `server/assets/crypto.js` | klein | `anteilprobe`, `containerprobe` | S10-Kern, F-S10-AP3-03 |
@@ -364,14 +373,15 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/assets/style.css`, `tools/stilvergleich/**` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
 | `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe` | Nr. 185, 225; PS-2 |
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
-| `android/**` | klein | `android-bau` | E-PK-02 |
+| `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1` | E-PK-02 |
-| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01. |
-| `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Steht am ENDE der Muster: Die Reihenfolge der Proben ist die ihres ersten Auftretens, und Messstand und Bilderlauf weiter vorn schoben die demo-empfindlichen Proben hinter den Demo-Reset (F-P5c-127, Nr. 322) |
+| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01. |
+| `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig. |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
-| `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md` | klein | `steuerung` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. |
+| `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. |
+| `server/assets/style.css`, `server/assets/images/gen-em_logo_*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
 
 **Stufenregel `migration`:** eine neue Kennung in `server/migration_lib.php` heißt mindestens **haupt** — E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3).
 
@@ -447,7 +457,10 @@ Stand. Der Weg, der grün wird:
 1. `git fetch origin main && git merge --no-commit origin/main` — Konflikte
    lösen, nichts committen.
 2. `bash tools/pruefstand/pruefen.sh` — misst genau diesen Baum, samt allem,
-   was der Lauf selbst schreibt.
+   was der Lauf selbst schreibt. Bringt `main` Migrationen mit, ist er
+   schon beim Hochfahren **rot** mit der Kennung und dem Weg: Die Anlage
+   steht auf dem Schema davor (Nr. 332). Dann `hochfahren.sh --neu` und
+   Schritt 2 noch einmal.
 3. `git add -A`, den Merge-Commit mit dem Bericht als Nachricht schreiben,
    pushen.
 
@@ -537,6 +550,15 @@ Befundstelle hat eine Kennung, und die Selbstprobe von `bestand` schlägt an,
 wenn eine in keinem Fall fällt. Was er nicht sieht, steht im Kopf von
 `bestand.py`.
 
+**Seit R4-02 hält er den Prüfstand an das Tor** (Nr. 329), mit zwei Regeln:
+`anlage` — keine Probe mit `braucht: nichts` lädt über ihre Ladekette auf
+oberster Ebene `db.php` oder `config.php`, denn Stufe 1 hat keine Anlage;
+gelesen über `token_get_all`, ein Pfad nur aus Zeichenketten, `__DIR__`,
+`dirname()`, `realpath()` und so gebauten Variablen — und `tor` — jeder
+Riegel steht als `--riegel NAME=` im Aufruf `bericht.py lesen
+--alle-riegel` von `pruefung.yml`. Beides war örtlich grün und im Pull
+Request rot (F-P5c-171, -172).
+
 *Gemessen am 24.09.2026 mit `bestand`: 25 Anleitungen mit zusammen 972
 Zeilen, alle in der Form, 0 Befunde. Vor Konzept BR waren es 24 Anleitungen
 mit 2 144 Zeilen und 57 Befunde, am 21.09.2026 vor PK-04 47 mit 7 206.*
@@ -595,7 +617,10 @@ gemessen hat, und im Zweifel eine unabhängige Gegenprobe fahren.
 
 Das gilt auch für die Zahl, die eine Zusage belegen soll: „8 Schlösser
 gezählt" sagt nichts darüber, ob eines fehlt — beide Lücken, die Web 19.1.1
-geschlossen hat, standen neben einer richtigen Zahl (Backlog Nr. 170).
+geschlossen hat, standen neben einer richtigen Zahl (Backlog Nr. 170). Seit
+R4-06 misst `kennzeichnung` gegen eine Sollliste statt zu zählen — und fand
+beim ersten Lauf ein Feld, das in der Einsatzansicht gar keine Zeile hatte:
+den manuellen Abfahrtort (Web 21.1.5).
 
 ### 6.6 Jeder sichtbare Text läuft durch die Wortliste
 
@@ -633,7 +658,8 @@ Hand.
 
 **Rot ist nur ein NEUER Treffer.** Der Altbestand steht mit Zahl in
 `textprobe-altbestand.json`, je (Datei, Muster); wer eine Stelle bereinigt,
-zieht ihn mit `--altbestand-schreiben` nach. So hält der Lauf auf, was
+zieht ihn mit `--altbestand-schreiben --stand PAKET` nach (`--stand` seit
+R4-07; bis dahin trug jede Fassung „PK-04/1c"). So hält der Lauf auf, was
 hinzukommt, ohne bei jeder Änderung den ganzen Altbestand zu verlangen.
 
 > **Zwei Eigenschaften, ohne die eine Zahl aus dieser Probe nichts
@@ -671,9 +697,19 @@ Uhr-Ressourcen und 14 normative Dokumente. **Nicht** gemessen werden
 > unsichtbar. Die schärfste stand **sechs Zeilen unter einem Platzhalter,
 > den E-S3-13 schon berichtigt hatte**.
 >
-> **`namen = 0` heißt deshalb „null im sichtbaren Text", nicht „null im
-> Repositorium".** Die acht sind bereinigt; die Lücke im Prüfmittel ist es
-> nicht.
+> Die acht sind bereinigt worden, die Lücke im Prüfmittel blieb — und mit
+> der vollen Namensliste standen danach acht andere da (F-R4-12).
+>
+> **Seit R4-07 liest `namen` mit Kommentaren** (E-R4-19): Jedes Muster trägt
+> ein Feld `sicht`, `sichtbar` (Vorgabe) oder `mit_kommentaren`, und nur
+> `name-real` trägt das zweite. Dazu ein sechster Bereich `f`,
+> `server/assets/*.css`, der **nur** diese Klasse misst (`nur_klassen`) —
+> das Stylesheet lag in keinem Bereich, und eine der acht Stellen stand
+> dort (F-R4-27). Die acht stehen im Altbestand, bis R4-09 sie umschreibt;
+> das Fremdformat aus E-PK-39 steht unter seiner Ausnahme. **`namen = 0`
+> heißt damit „null in Text und Kommentaren der sechs Bereiche"**, nicht
+> „null im Repositorium": `tools/`, `docs/konzepte/**`, die
+> Steuerungsdokumente und der Kotlin-Quelltext bleiben ungelesen.
 
 ### 6.7 Die Prüfmittel laufen zuletzt, nicht zwischendurch
 
@@ -753,6 +789,17 @@ jedem Merge von Hand geleert werden. Bis P5c/AP1 war gebaut, was hier
 steht, nur als Null: Jede gewollte Gestaltungsänderung machte seit PK-05
 den Prüfbericht rot (Lage 5).
 
+**Jede Seite ist ein eigenes Dokument** (seit R4-08, Nr. 321). Bis dahin
+lagen alle Seiten der Seitenprobe in einem: Eine Regel für Seite A änderte
+dessen Höhe und damit `top`/`bottom` jedes absolut gesetzten Elements auf
+allen Seiten, und wuchs Seite B um ein solches Element, stand eine
+ungeplante Signatur da, ohne dass an B etwas geändert war (P5c/AP7: 38
+ungeplante und 31 geplante, nicht gemessene — 23 davon an Druckblättern,
+die niemand anfasste). Die Signatur
+nennt seither die Seite: `seiten.html[einsatz.php]`. Nachgestellt vorher
+**1 ungeplant**, nachher **0**; gegen die Änderung aus Web 21.1.3 dieselben
+13 Signaturen wie das alte Werkzeug.
+
 **Er ersetzt die Browserprüfung nicht:** Er misst statisches Markup, keine
 Bedienzustände. Er beantwortet die eine Frage, die der Bilderlauf nicht
 beantwortet — hat sich ein berechneter Stil geändert, der nicht sollte —,
@@ -769,15 +816,17 @@ hier steht, ist nur, **was grün heißt**:
 | Mittel | grün heißt |
 |---|---|
 | `tools/quelltext/` `textprobe` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
-| `tools/quelltext/` `vollstaendigkeit` | 0 Befunde — ohne Schwelle seit PK-04/5e (E-PK-16) |
-| `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1) |
+| `tools/quelltext/` `vollstaendigkeit` | 0 Befunde in sechs Prüfungen — ohne Schwelle seit PK-04/5e (E-PK-16); die sechste, Selektoren, seit R4-05 |
+| `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
+| `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen elf Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen vierzehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
-| `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
+| `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 20 von 20: zehn Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
+| `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
-| `tools/steuerung/` | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock; Selbstproben alle Fälle grün |
+| `tools/steuerung/` | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock, 0 offene Einträge ohne eigene Liste mit ihrer Nummer (seit R4-25); Selbstproben alle Fälle grün |
 
 PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
 Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur
@@ -869,7 +918,8 @@ F-BR-19) — vier davon blieben damals grün.
 
    `braucht` ist `nichts`, `installation`, `plattform`, `android` oder
    `uhr` (ein anderer Wert: `bestand`, `ablauf` — die Vorabprüfung entfiele
-   still); `nach` nur, wenn es eine andere Probe voraussetzt (4), nie im
+   still); `"demo": true`, wenn die Probe das Demo-Konto anmeldet oder
+   Demo-Daten über ihre Kennungen liest (4, Nr. 322); `nach` nur, wenn es eine andere Probe voraussetzt (4), nie im
    Kreis und nie an einem Riegel. Der
    `aufruf` darf eine Kette sein (`a && b`, wie bei `uhr-stufe1`);
    `kettenaufrufe` prüft seit BR-04 jeden Teil. Ein **neuer Schlüssel**,
@@ -895,16 +945,21 @@ F-BR-19) — vier davon blieben damals grün.
      Quelltextprüfung `--riegel "<name>=$q"` (der Schritt „Quelltext"
      fährt sie schon mit — die Zahl in seinem Namen nachziehen), sonst
      `--riegel "<name>=$(r "$X")"` mit `X: ${{ steps.<id>.outcome }}`
-     unter `env:`. Fehlt das `--riegel`, ist Stufe 1 rot (`--alle-riegel`).
+     unter `env:`. Fehlt das `--riegel`, ist Stufe 1 rot (`--alle-riegel`)
+     — und seit R4-02 schon örtlich (`bestand`, `tor`).
 
    Ein Ordner, der hier nicht steht, muss in einem Arbeitslauf, in
    `tools/pruefstand/pruefen.sh` oder in `docs/Sandbox-Setup.md` genannt
    sein (`bestand`, `inventur`).
 6. **Die Tabelle in 4 erzeugen:** `python3 tools/pruefstand/bericht.py
    erzeugen-doku`. Die Ausgabe ersetzt in Abschnitt 4 den Block von der
-   Zeile `<!-- ERZEUGT … -->` bis einschließlich der Zeile „**Die billigen
-   Riegel laufen in jeder Stufe …**". Nie von Hand (fehlt der Schritt oder
-   ist die Tabelle von Hand geändert: `bestand`, `tabelle`).
+   Zeile `<!-- ERZEUGT … -->` bis zur **letzten Zeile, die der Erzeuger
+   schreibt** — heute die Stufenregel `migration` unter der Zeile „**Die
+   billigen Riegel laufen in jeder Stufe …**". *Bis R4-03 stand hier „bis
+   einschließlich der Riegelzeile"; wörtlich befolgt, stand die Stufenregel
+   danach zweimal da (P-BR-09, F-R4-23).* Nie von Hand (fehlt der Schritt,
+   ist die Tabelle von Hand geändert oder eine Zeile doppelt: `bestand`,
+   `tabelle`).
 7. **Die Riegel grün:** `bash tools/quelltext/pruefen.sh bestand`,
    `python3 tools/kettenaufrufe/pruefen.py` und
    `bash tools/quelltext/pruefen.sh --selbstprobe`, alle **0 Befunde** bzw.

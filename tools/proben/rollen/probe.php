@@ -28,15 +28,29 @@ declare(strict_types=1);
  *     sie nicht. So läuft die Probe gefahrlos über „Stand löschen",
  *     „jetzt versenden" und „jetzt sichern".
  *
- * ZWEI PLATZHALTER (AP4): `{ziel}` ist ein Konto der Rolle `user`, `{admin}`
- * eines der Rolle `admin`. Die Kontoseite fragt die Rolle zweimal — ob die
+ * DREI PLATZHALTER (AP4, der dritte seit R4-18): `{ziel}` ist ein Konto der
+ * Rolle `user`, `{admin}` eines der Rolle `admin`, `{support}` eines der
+ * Rolle `support`. Die Kontoseite fragt die Rolle zweimal — ob die
  * Angemeldete das Zielkonto betreuen darf, dann je Handlung —, und beide
- * Tore stehen in der Matrix.
+ * Tore stehen in der Matrix. `{support}` misst, dass der Support andere
+ * Support-Konten nicht betreut (E-P5c-99); bis R4-18 stand das nur im Code
+ * (Nr. 327).
  *
  * UND WIRKUNGEN, denn `durch` sagt nur, dass eine Rolle die Handlung
  * erreicht, nicht, was sie dort tut:
+ *   - Die Verwaltung loescht ein Konto mit Spur ueber `konto_loeschen()`
+ *     (R4-10, Backlog Nr. 299): Das Konto ist fort, die Spur auch, der
+ *     Protokolleintrag nennt den Weg `verwaltung`, `mengen:<id>` in
+ *     `app_state` ist abgeraeumt — das vergass die Abschrift auf der
+ *     Kontoseite bis Web 21.1.7 — und die Sperrliste seines Geraets auch
+ *     (die raeumte bis dahin nur das Entfernen des Demo-Kontos).
  *   - Ein Rollenwechsel auf der Kontoseite schreibt genau einen Eintrag
  *     `rolle_geaendert`, ein Speichern ohne Wechsel keinen (E-P5c-38).
+ *   - Nach einer Handlung leiten die Seiten unter Verwaltung und Betrieb um
+ *     (R4-11, Backlog Nr. 250): je Seite ein harmloser Zweig, 302 auf das
+ *     genannte Ziel, die Meldung beim ersten GET einmal mehr als beim
+ *     zweiten. Dazu die zwei Fehler der Backup-Ziele, die dabei auffielen
+ *     (F-R4-35, -36).
  *   - Der Support (AP4, E-P5c-14, -40), mit GUELTIGEM Token: Menü, Liste
  *     ohne Konten mit Rechten, die Sicht aus M-P5c-02c und die
  *     Protokollreiter; der Setz-Link steht
@@ -129,10 +143,17 @@ function hole(string $pfad, ?string $sid, ?array $koerper = null, ?string $json 
         curl_setopt($ch, CURLOPT_POSTFIELDS,
                     $json !== null ? (string)json_encode($koerper) : http_build_query($koerper));
     }
+    /* `ziel` ist die Kopfzeile `Location` — seit R4-11 (Nr. 250) misst die
+     * Probe, WOHIN eine Handlung umleitet, nicht nur, dass sie es tut. */
+    $ziel = null;
+    curl_setopt($ch, CURLOPT_HEADERFUNCTION, static function ($c, string $z) use (&$ziel): int {
+        if (stripos($z, 'Location:') === 0) { $ziel = trim(substr($z, 9)); }
+        return strlen($z);
+    });
     $rumpf = (string)curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    return ['code' => $code, 'rumpf' => $rumpf];
+    return ['code' => $code, 'rumpf' => $rumpf, 'ziel' => $ziel];
 }
 
 function sitzung_ort(): string
@@ -194,8 +215,8 @@ foreach ($rollen as $rolle) {
 }
 /* Die Zielkonten — eigene Zeilen, nicht die Konten der Rollen: `ziel` für
  * den Rollenwechsel und die Handlungen an einem Konto der Rolle `user`,
- * `zieladmin` für den Platzhalter `{admin}`, `neu` für die Bestätigung einer
- * Registrierung. */
+ * `zieladmin` für den Platzhalter `{admin}`, `zielsupport` für `{support}`
+ * (R4-18), `neu` für die Bestätigung einer Registrierung. */
 function zielkonto(string $name, string $rolle, string $status = 'aktiv'): int
 {
     global $pdo;
@@ -209,6 +230,7 @@ function zielkonto(string $name, string $rolle, string $status = 'aktiv'): int
 $zielMail = 'rollenprobe-ziel@probe.invalid';
 $zielId   = zielkonto('ziel', 'user');
 $adminZiel = zielkonto('zieladmin', 'admin');
+$supportZiel = zielkonto('zielsupport', 'support');
 $neuId    = zielkonto('neu', 'user', 'unbestaetigt');
 $pdo->prepare("INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
                VALUES (?, ?, '', 'Rollenprobe', 1)")
@@ -219,10 +241,11 @@ $geraetId = (int)$pdo->lastInsertId();
 try {
     $mailVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();
 } catch (Throwable) { $mailVorher = null; }
-$platzhalter = ['{ziel}' => (string)$zielId, '{admin}' => (string)$adminZiel];
+$platzhalter = ['{ziel}' => (string)$zielId, '{admin}' => (string)$adminZiel,
+                '{support}' => (string)$supportZiel];
 
-register_shutdown_function(static function () use ($pdo, $konten, $zielId, $adminZiel, $neuId, $mailVorher): void {
-    $ids = array_merge(array_column($konten, 'id'), [$zielId, $adminZiel, $neuId]);
+register_shutdown_function(static function () use ($pdo, $konten, $zielId, $adminZiel, $supportZiel, $neuId, $mailVorher): void {
+    $ids = array_merge(array_column($konten, 'id'), [$zielId, $adminZiel, $supportZiel, $neuId]);
     $in = implode(',', array_map('intval', $ids));
     foreach ($konten as $k) { @unlink(sitzung_ort() . '/sess_' . $k['sid']); }
     try {
@@ -438,6 +461,290 @@ if ($s === null || $a === null) {
     $r = $bei($zielId, $s, ['action' => 'verifikation']);
     pruef(str_contains($r['rumpf'], 'wartet auf keine Bestätigung') && $bestaetigt($zielId) === 0,
           'Bestätigung an ein aktives Konto: abgewiesen, kein Eintrag');
+}
+
+/* ---- Die Löschung durch die Verwaltung (R4-10, Backlog Nr. 299) ----------
+ *
+ * Ein eigenes Wegwerfkonto mit einem Einsatz, drei Spurpunkten, einem Geraet
+ * mit einem Sperrvermerk und einem Mengenstand in `app_state` — genau das,
+ * was an keinem Fremdschluessel haengt und eine Abschrift des Loeschens
+ * deshalb vergessen kann. Geloescht wird es als Admin mit gueltigem Token, so wie die
+ * Kontoseite es tut. Erwartet: 302 auf die Liste, und danach steht nichts
+ * mehr davon da, dafuer ein Eintrag `konto_geloescht` mit `weg` =
+ * `verwaltung`. */
+echo "
+Löschen über konto_loeschen() (Nr. 299)
+";
+if ($a === null) {
+    pruef(false, 'Die Matrix hat keine Spalte „admin"');
+} else {
+    require_once $srv . '/spur_lib.php';
+    $loeschMail = 'rollenprobe-loeschen@probe.invalid';
+    $loeschId = zielkonto('loeschen', 'user');
+    /* Scheitert die Loeschung, darf das Konto nicht liegen bleiben. */
+    register_shutdown_function(static function () use ($pdo, $loeschId): void {
+        try { $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$loeschId]); } catch (Throwable) {}
+    });
+    $pdo->prepare("INSERT INTO missions (user_id, client_ref, started_at) VALUES (?, ?, UTC_TIMESTAMP())")
+        ->execute([$loeschId, 'rollenprobe-' . bin2hex(random_bytes(6))]);
+    $loeschEinsatz = (int)$pdo->lastInsertId();
+    $pp = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
+                         VALUES (?, ?, ?, ?, ?, ?, ?)');
+    for ($i = 0; $i < 3; $i++) {
+        $pp->execute(['mission', $loeschEinsatz, $i, 47.5 + $i / 1e4, 11.5, 700.0, 1750000000 + $i]);
+    }
+    $pdo->prepare("INSERT INTO devices (user_id, device_id, api_key_hash) VALUES (?, ?, '-')")
+        ->execute([$loeschId, 'rollenprobe-' . bin2hex(random_bytes(6))]);
+    $loeschGeraet = (int)$pdo->lastInsertId();
+    $pdo->prepare("INSERT INTO deleted_refs (device_id, owner_type, client_ref) VALUES (?, 'mission', 'rollenprobe')")
+        ->execute([$loeschGeraet]);
+    app_state_setzen('mengen:' . $loeschId, '1');
+    $spurVorher = spur_zahlen($pdo, 'mission', [$loeschEinsatz])[$loeschEinsatz] ?? 0;
+    $r = hole('admin_user.php?id=' . $loeschId, $a['sid'], ['csrf' => $a['csrf'],
+              'action' => 'user_delete', 'confirm_email' => $loeschMail, 'sicherungen_mit' => '1']);
+    $kontoDa = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE id = ' . $loeschId)->fetchColumn();
+    $spurNach = spur_zahlen($pdo, 'mission', [$loeschEinsatz])[$loeschEinsatz] ?? 0;
+    $mengeDa = app_state_lesen('mengen:' . $loeschId);
+    $sperreDa = (int)$pdo->query('SELECT COUNT(*) FROM deleted_refs WHERE device_id = ' . $loeschGeraet)->fetchColumn();
+    $st = $pdo->prepare("SELECT daten FROM protokoll_ereignisse
+                          WHERE art = 'konto_geloescht' AND betroffen_user_id = ? ORDER BY id DESC LIMIT 1");
+    $st->execute([$loeschId]);
+    $datenRoh = (string)$st->fetchColumn();
+    $wegImProtokoll = json_decode($datenRoh, true)['weg'] ?? null;
+    pruef($r['code'] === 302 && $kontoDa === 0, 'Admin löscht ein Konto: 302, das Konto ist fort',
+          'HTTP ' . $r['code'] . ', Konto ' . $kontoDa);
+    pruef($spurVorher === 3 && $spurNach === 0, 'Die Spur geht mit (spur_zahlen)',
+          $spurVorher . ' → ' . $spurNach . ' Punkte');
+    pruef($mengeDa === null, 'mengen:<id> in app_state ist abgeräumt',
+          $mengeDa === null ? '' : 'steht noch: ' . $mengeDa);
+    pruef($sperreDa === 0, 'Die Sperrliste des Geräts geht mit (deleted_refs)',
+          $sperreDa === 0 ? '' : 'stehen noch: ' . $sperreDa);
+    pruef($wegImProtokoll === 'verwaltung', 'Das Protokoll nennt den Weg', $datenRoh);
+    /* Das Konto ist fort — der Schluss braucht es nicht mehr zu loeschen,
+     * wohl aber seinen Protokolleintrag. */
+    try {
+        $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE betroffen_user_id = ?')->execute([$loeschId]);
+        $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([$loeschEinsatz]);
+        $pdo->prepare('DELETE FROM deleted_refs WHERE device_id = ?')->execute([$loeschGeraet]);
+    } catch (Throwable) {}
+}
+
+/* ---- Umleiten nach POST (R4-11, Backlog Nr. 250) --------------------------
+ *
+ * Je Seite ein Zweig, der auf einer Prüfanlage HARMLOS gelingt — dieselben
+ * Werte noch einmal speichern, eine Sperre aufheben, die es nicht gibt, ein
+ * Konto sichern, das es nicht gibt —, als BetreiberIn mit gültigem Token.
+ * Erwartet: 302 auf die genannte Adresse; das GET dorthin zeigt die Meldung
+ * (sie kam über die Sitzung, `flash_setzen()`), ein zweites GET nicht mehr.
+ * Das ist die Eigenschaft, um die es geht: Neuladen wiederholt nichts, und
+ * die Meldung steht einmal da.
+ *
+ * NICHT GEFAHREN, mit Grund: das Demo-Konto (jeder Zweig setzt es zurück,
+ * legt es an oder entfernt es — diese Probe ist nicht demo-empfindlich und
+ * soll es nicht werden); Wartung an/aus (die Wartungsprobe, Erwartung 13);
+ * ein neues Jobs-Token (es macht den Zeitplan-Eintrag ungültig); Backups,
+ * Einspielen, Freigeben und Löschen (sie schreiben oder löschen Bestand);
+ * Ziel speichern, prüfen, versenden (sie brauchen ein erreichbares Ziel). */
+echo "\nUmleiten nach POST (R4-11, Nr. 250)\n";
+$prg = static function (string $was, string $pfad, array $felder, string $ziel, string $meldung)
+    use ($b): void {
+    $r = hole($pfad, $b['sid'], ['csrf' => $b['csrf']] + $felder);
+    $zielOhneAnker = preg_replace('/#.*$/', '', (string)$r['ziel']);
+    $f1 = $r['code'] === 302 ? hole($zielOhneAnker, $b['sid']) : ['code' => 0, 'rumpf' => ''];
+    $f2 = $r['code'] === 302 ? hole($zielOhneAnker, $b['sid']) : ['code' => 0, 'rumpf' => ''];
+    /* GEZAEHLT, NICHT GESUCHT: Auf `betrieb_jobs.php` sagt ein Dauerhinweis
+     * dasselbe wie die Meldung („… angehalten bis"), solange die Pause gilt.
+     * Die Meldung ist, was das erste GET dem zweiten voraus hat — genau
+     * einmal. */
+    $n1 = substr_count(html_entity_decode($f1['rumpf']), $meldung);
+    $n2 = substr_count(html_entity_decode($f2['rumpf']), $meldung);
+    pruef($r['code'] === 302 && $r['ziel'] === $ziel && $n1 === $n2 + 1,
+          $was . ': 302, Meldung einmal',
+          'HTTP ' . $r['code'] . ' → ' . ($r['ziel'] ?? '—')
+          . ($r['code'] === 302 ? ', Treffer ' . $n1 . ' dann ' . $n2 : ''));
+};
+if ($b === null) {
+    pruef(false, 'Die Matrix hat keine Spalte „betreiberin"');
+} else {
+    require_once $srv . '/adminbackup_lib.php';
+    require_once $srv . '/komplett_lib.php';
+    require_once $srv . '/sicherungsziel_lib.php';
+    require_once $srv . '/rechtstexte_lib.php';
+    require_once $srv . '/jobs_lib.php';
+    require_once $srv . '/migration_lib.php';
+    require_once $srv . '/session_lib.php';
+
+    /* Installation: der Logo-Standard, der schon gilt — Karte k-logo. */
+    $prg('Installation · Logo-Standard', 'admin_installation.php',
+         ['action' => 'logo_standard', 'logo' => logo_standard()],
+         'admin_installation.php#k-logo', 'Standard der Installation:');
+
+    /* Rechtstexte: der erste Text, dessen gespeicherter Stand die Prüfung
+     * besteht, unverändert zurück — „Es gab nichts zu ändern". */
+    $rtSchluessel = null;
+    foreach (array_keys(RT_TEXTE) as $rk) {
+        $rt = rt_lesen($rk);
+        if (rt_pruefen($rt['inhalt'], (string)($rt['stand'] ?? '')) === null) { $rtSchluessel = $rk; break; }
+    }
+    if ($rtSchluessel === null) {
+        pruef(false, 'Rechtstexte · unverändert speichern', 'kein gespeicherter Text besteht rt_pruefen() — nicht gemessen');
+    } else {
+        $rt = rt_lesen($rtSchluessel);
+        $prg('Rechtstexte · unverändert speichern', 'admin_rechtstexte.php?t=' . $rtSchluessel,
+             ['schluessel' => $rtSchluessel, 'text' => $rt['inhalt'], 'stand' => (string)($rt['stand'] ?? '')],
+             'admin_rechtstexte.php?t=' . rawurlencode($rtSchluessel), 'Es gab nichts zu ändern.');
+    }
+
+    /* Konto-Backups: die Regeln, wie sie stehen. */
+    $prg('Konto-Backups · Regeln unverändert', 'admin_sicherungen.php',
+         ['action' => 'regeln', 'tage' => edbak_intervall(), 'pakete' => edbak_aufbewahrung(),
+          'mail' => edbak_admin_mail_an() ? '1' : ''],
+         'admin_sicherungen.php', 'Es gab nichts zu ändern.');
+
+    /* Komplett-Backup: Plan und Aufbewahrung, wie sie stehen. */
+    $prg('Komplett-Backup · Regeln unverändert', 'admin_komplettsicherung.php',
+         ['action' => 'regeln', 'plan' => komp_plan(), 'aufbewahrung' => komp_aufbewahrung()],
+         'admin_komplettsicherung.php', 'Die Regeln wurden gespeichert.');
+
+    /* Backup-Ziele: der Versandschalter, wie er steht. */
+    if (!sz_tabelle_da()) {
+        pruef(false, 'Backup-Ziele · Versandschalter', 'Tabelle backup_targets fehlt — nicht gemessen');
+    } else {
+        $prg('Backup-Ziele · Versandschalter unverändert', 'admin_sicherungsziele.php',
+             ['action' => 'versand_schalter', 'versand_auto' => sz_auto_an() ? '1' : ''],
+             'admin_sicherungsziele.php', 'Der Versand ist');
+    }
+
+    /* NutzerInnen: ein Konto sichern, das es nicht gibt — die Zahl 0, der
+     * Grund und die Restauswahl reisen über die Sitzung mit (E-R4-33). */
+    $prg('NutzerInnen · Auswahl sichern', 'admin_users.php',
+         ['action' => 'sichern_auswahl', 'auswahl' => '999999999'],
+         'admin_users.php', '0 Konto-Backups erzeugt.');
+
+    /* NutzerInnen: Konto anlegen. Ohne zugestellte Mail bleibt die Seite
+     * stehen und zeigt den Setz-Link (E-R4-33 — ein Token gehört nicht in die
+     * Sitzungsdatei); mit zugestellter Mail leitet sie um, und der Link steht
+     * nirgends. Beides ist richtig; falsch wäre der Link nach einer
+     * Umleitung oder eine 200 ohne Link. */
+    $anlageMail = 'rollenprobe-anlage@probe.invalid';
+    $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$anlageMail]);
+    $r = hole('admin_users.php', $b['sid'], ['csrf' => $b['csrf'], 'action' => 'user_add',
+              'email' => $anlageMail, 'role' => 'user', 'name' => '']);
+    $mitLink = str_contains($r['rumpf'], 'pw_handling.php?token=');
+    if ($r['code'] === 302) {
+        $f = hole(preg_replace('/#.*$/', '', (string)$r['ziel']), $b['sid']);
+        pruef(!str_contains($f['rumpf'], 'pw_handling.php?token=')
+              && str_contains($f['rumpf'], 'Setz-Link per E-Mail verschickt'),
+              'NutzerInnen · Konto anlegen (Mail zugestellt): 302, kein Link',
+              'HTTP 302 → ' . $r['ziel']);
+    } else {
+        pruef($r['code'] === 200 && $mitLink && $r['ziel'] === null,
+              'NutzerInnen · Konto anlegen (Mail nicht zugestellt): 200 mit Setz-Link',
+              'HTTP ' . $r['code'] . ($mitLink ? ', Link da' : ', Link FEHLT'));
+    }
+    /* Das Konto sofort wieder fort; die Einladung in der Warteschlange
+     * raeumt der Schluss mit den uebrigen Mails der Probe. */
+    $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$anlageMail]);
+
+    /* Jobs: anhalten und wieder freigeben — der Stand davor kommt zurück,
+     * wörtlich (eine Pause, die ein anderer Lauf gesetzt hat, bleibt). */
+    $pauseVorher = app_state_lesen(JOB_PAUSE_SCHLUESSEL);
+    try {
+        $prg('Jobs · anhalten', 'betrieb_jobs.php', ['action' => 'jobs_pause_an', 'dauer' => '900'],
+             'betrieb_jobs.php#k-zustand', 'angehalten bis');
+        $prg('Jobs · Pause aufheben', 'betrieb_jobs.php', ['action' => 'jobs_pause_aus'],
+             'betrieb_jobs.php#k-zustand', 'Die Pause ist aufgehoben');
+    } finally {
+        if ($pauseVorher === null) { app_state_loeschen(JOB_PAUSE_SCHLUESSEL); }
+        else                       { app_state_setzen(JOB_PAUSE_SCHLUESSEL, $pauseVorher); }
+    }
+
+    /* Sicherheit: eine Sperre aufheben, die es nicht gibt — Ton warn. */
+    $prg('Sicherheit · Sperre aufheben (gibt es nicht)', 'betrieb_sicherheit.php',
+         ['action' => 'aufheben', 'topf' => 'rollenprobe', 'merkmal' => 'rollenprobe'],
+         'betrieb_sicherheit.php', 'Diese Sperre gibt es nicht mehr');
+
+    /* Updates: „Ausstehende ausführen" — nur, wenn nichts aussteht; sonst
+     * liefe hier eine Migration. */
+    if ((int)migrationen_lauf($pdo, false)['offen'] !== 0) {
+        pruef(false, 'Updates · Lauf ohne Ausstehendes', 'es steht eine Migration aus — nicht gemessen');
+    } else {
+        $prg('Updates · Lauf ohne Ausstehendes', 'betrieb_updates.php', ['action' => 'migrate'],
+             'betrieb_updates.php#k-ausstehend', 'Es war nichts anzuwenden.');
+    }
+
+    /* Status: die Testmail. Ohne eingerichteten Versand ändert der Klick
+     * nichts und bleibt stehen (E-R4-35); mit Versand leitet er um.
+     *
+     * DER ZÄHLER WIRD VORHER GELEERT. Der Ratenschutz erlaubt drei Testmails
+     * je Stunde — je Konto UND je Adresse, und die Adresse ist hier immer
+     * 127.0.0.1. Wer die Probe in einer Stunde öfter fuhr, bekam „Zu viele
+     * Testmails" (200, ohne Umleitung) und ein Rot, das nichts über die
+     * Seite sagte (erster Prüfstand von R4-11). */
+    $pdo->exec("DELETE FROM rate_limits WHERE topf = 'testmail'");
+    $r = hole('betrieb_status.php', $b['sid'], ['csrf' => $b['csrf'], 'action' => 'testmail']);
+    if ($r['code'] === 302) {
+        hole('betrieb_status.php', $b['sid']);   // die Meldung abholen, damit sie nicht liegen bleibt
+        pruef($r['ziel'] === 'betrieb_status.php#k-mail',
+              'Status · Testmail (Versand eingerichtet): 302 in die Karte E-Mail',
+              'HTTP 302 → ' . $r['ziel']);
+    } else {
+        pruef($r['code'] === 200 && str_contains($r['rumpf'], 'kein SMTP eingerichtet'),
+              'Status · Testmail (ohne Versand): bleibt stehen, sagt es',
+              'HTTP ' . $r['code'] . (str_contains($r['rumpf'], 'Zu viele Testmails')
+                                      ? ', „Zu viele Testmails"' : ''));
+    }
+}
+
+/* ---- Backup-Ziele: Speichern und Nachsehen (R4-11, F-R4-35, F-R4-36) -----
+ *
+ * Zwei Fehler der Seite, die beim Umbau auf die Umleitung auffielen, beide
+ * still und beide mit Folgen für die Daten am Ziel:
+ *   - Ein Hostwechsel sollte den gespeicherten SFTP-Hostschlüssel vergessen;
+ *     die Seite las den alten Stand erst NACH dem Speichern und vergaß nie
+ *     (F-R4-36).
+ *   - Scheiterte „Nachsehen, was dort liegt" bei offenem Formular, stand der
+ *     Schalter „Auf dem Ziel aufräumen" danach auf aus — wer dann speicherte,
+ *     schaltete die Aufbewahrung ab (F-R4-35).
+ * Ein Wegwerfziel auf 127.0.0.1, Port 1 (niemand hört dort, „Nachsehen"
+ * scheitert sofort); der Schluss löscht es. */
+echo "\nBackup-Ziele: Speichern und Nachsehen (F-R4-35, -36)\n";
+if ($b === null || !sz_tabelle_da()) {
+    pruef(false, 'Backup-Ziele', 'keine BetreiberIn oder keine Tabelle backup_targets — nicht gemessen');
+} else {
+    $zielName = 'Rollenprobe-Ziel ' . bin2hex(random_bytes(3));
+    $zFelder = ['action' => 'ziel_speichern', 'id' => '0', 'name' => $zielName,
+                'protokoll' => 'sftp', 'host' => '127.0.0.1', 'port' => '1',
+                'nutzer' => 'probe', 'pfad' => '/', 'geheim' => 'rollenprobe-geheim',
+                'aufraeumen' => '1', 'behalten_konto' => '2', 'behalten_komplett' => '2'];
+    $r = hole('admin_sicherungsziele.php?neu=1', $b['sid'], ['csrf' => $b['csrf']] + $zFelder);
+    $st = $pdo->prepare('SELECT id FROM backup_targets WHERE name = ?');
+    $st->execute([$zielName]);
+    $zid = (int)$st->fetchColumn();
+    register_shutdown_function(static function () use ($pdo, $zid): void {
+        try { $pdo->prepare('DELETE FROM backup_targets WHERE id = ?')->execute([$zid]); } catch (Throwable) {}
+    });
+    pruef($r['code'] === 302 && $zid > 0, 'Ziel anlegen: 302, das Ziel steht',
+          'HTTP ' . $r['code'] . ', Kennung ' . $zid);
+    if ($zid > 0) {
+        sz_fingerabdruck_merken($zid, 'SHA256:rollenprobe');
+        $r = hole('admin_sicherungsziele.php?bearbeiten=' . $zid, $b['sid'], ['csrf' => $b['csrf']]
+                  + array_merge($zFelder, ['id' => (string)$zid, 'host' => '127.0.0.2', 'geheim' => '']));
+        $abdruck = $pdo->query('SELECT fingerabdruck FROM backup_targets WHERE id = ' . $zid)->fetchColumn();
+        $f = $r['code'] === 302 ? hole(preg_replace('/#.*$/', '', (string)$r['ziel']), $b['sid'])
+                                : ['rumpf' => ''];
+        pruef($r['code'] === 302 && $abdruck === null
+              && str_contains(html_entity_decode($f['rumpf']), 'Der Hostschlüssel wurde vergessen'),
+              'Hostwechsel vergisst den Abdruck und sagt es (F-R4-36)',
+              'HTTP ' . $r['code'] . ', Abdruck ' . var_export($abdruck, true));
+
+        $r = hole('admin_sicherungsziele.php?bearbeiten=' . $zid, $b['sid'],
+                  ['csrf' => $b['csrf'], 'action' => 'ziel_bestand', 'id' => (string)$zid]);
+        $an = (bool)preg_match('/name="aufraeumen"[^>]*checked/', $r['rumpf']);
+        pruef($r['code'] === 200 && $an,
+              'Nachsehen scheitert: „Auf dem Ziel aufräumen" bleibt an (F-R4-35)',
+              'HTTP ' . $r['code'] . ', Schalter ' . ($an ? 'an' : 'AUS'));
+    }
 }
 
 /* ---- Die Wirkung des Rückwegs: jede Rolle legt ein Paar ab (Konzept RW) ---

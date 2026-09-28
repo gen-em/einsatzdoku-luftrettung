@@ -55,7 +55,7 @@ import krypto                                   # noqa: E402
 from sitzung import Sitzung                     # noqa: E402
 
 BASIS = sys.argv[1] if len(sys.argv) > 1 else "https://127.0.0.1:8443"
-ADMIN, ADMIN_PW = "admin@gen-em.org", "pruefstandzugang2026"
+ADMIN, ADMIN_PW = "admin@example.invalid", "pruefstandzugang2026"
 DEMO, DEMO_PW = "demo@gen-em.org", "nadokudemo0815"
 DB = str(WURZEL / "server" / "db.php")
 
@@ -117,7 +117,7 @@ def demo_uhr() -> str | None:
     """Zeitpunkt des letzten Demo-Resets, oder None.
 
     DIESELBE FALLE WIE IN DER KLICKPROBE (F-S10-AP3-09). Das Demo-Konto setzt
-    sich alle 30 Minuten zurueck, und E10 misst genau dieses Konto. Faellt der
+    sich 30 Minuten nach der ersten Aenderung zurueck, und E10 misst genau dieses Konto. Faellt der
     Reset in den Lauf, verschwindet das Konto fuer den Bruchteil einer
     Sekunde, der Endpunkt antwortet 404, und der Lauf meldet **30 von 34** —
     ohne dass an der Anwendung etwas fehlt.
@@ -161,7 +161,7 @@ if _stellen.returncode != 0:
 
 s = Sitzung(BASIS).anmelden(ADMIN, ADMIN_PW)
 uid = php('$st = db()->prepare("SELECT id FROM users WHERE email = ?");'
-          '$st->execute(["admin@gen-em.org"]); echo (string)$st->fetchColumn();').strip()
+          '$st->execute(["admin@example.invalid"]); echo (string)$st->fetchColumn();').strip()
 wrap_vorher = feld("pat_wrap_pw", uid)
 chk_vorher = feld("pat_key_check", uid)
 iter_vorher = feld("kdf_iter", uid).strip()

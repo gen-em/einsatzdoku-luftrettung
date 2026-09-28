@@ -231,8 +231,16 @@ try {
         /* Liste der Diensttage. Sie traegt jetzt Kennungen und nicht mehr
          * Datumszeichenketten: Zwei Dienste am selben Kalendertag waeren sonst
          * ein Eintrag. Was die Anzeige braucht, um sie auseinanderzuhalten —
-         * Uhrzeit, Art, Rettungsmittel —, kommt mit. */
-        $tage = dt_liste($userId, 120);
+         * Uhrzeit, Art, Rettungsmittel —, kommt mit.
+         *
+         * HOECHSTENS 120, UND DIE ANTWORT SAGT ES (Web 21.4.0, R4-17, Nr. 37).
+         * Bis hierher kappte die Liste still. `grenze` nennt die Zahl,
+         * `gekappt` sagt, ob es aeltere gibt — gefragt wird dafuer nach einem
+         * mehr, wie in der Leiste (`ui_leiste_diensttage()`). */
+        $grenze = 120;
+        $tage = dt_liste($userId, $grenze + 1);
+        $gekappt = count($tage) > $grenze;
+        if ($gekappt) { $tage = array_slice($tage, 0, $grenze); }
         $liste = array_map(static function (array $t): array {
             /* Das Zeichen kommt aus dem TYP, wo einer steht — eine Funktion,
                alle Stellen (E-S9-13). Ohne den zweiten Wert zeichnete diese
@@ -259,7 +267,8 @@ try {
                 'mehrfach'     => (bool)$t['mehrfach'],
             ];
         }, $tage);
-        json_out(['days' => $liste, 'latest' => $liste[0]['id'] ?? null]);
+        json_out(['days' => $liste, 'latest' => $liste[0]['id'] ?? null,
+                  'grenze' => $grenze, 'gekappt' => $gekappt]);
     }
 
     /* AUCH BEIM LESEN MELDEN.

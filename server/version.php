@@ -1801,11 +1801,12 @@ declare(strict_types=1);
  * DER FEHLER: Standort- und Klinik-Schilder sassen umso weiter oestlich, je
  * weiter herausgezoomt wurde. Drei Glieder, jedes fuer sich richtig:
  * `.geo-schild` ist eine Flex-SPALTE (wird so breit wie ihr breitestes
- * Kind), das breiteste Kind war das NAMENSSCHILD (nowrap, bei „Klinikum
- * Immenstadt" rund 150 px statt 44), und `iconSize: null` liess Leaflet die
- * Groesse aus dem Markup nehmen -- `iconAnchor: [22, 22]` verankerte damit
- * rund 50 px links der Kastenmitte. Ein KONSTANTER Pixelversatz:
- * herausgezoomt sind dieselben 50 px Kilometer, hereingezoomt Meter.
+ * Kind), das breiteste Kind war das NAMENSSCHILD (nowrap, bei einem
+ * Kliniknamen von neunzehn Zeichen rund 150 px statt 44), und
+ * `iconSize: null` liess Leaflet die Groesse aus dem Markup nehmen --
+ * `iconAnchor: [22, 22]` verankerte damit rund 50 px links der
+ * Kastenmitte. Ein KONSTANTER Pixelversatz: herausgezoomt sind dieselben
+ * 50 px Kilometer, hereingezoomt Meter.
  *
  * Nachgemessen im Browser: 51,7 px vorher, 0,0 px nachher, ueber sechs
  * Zoomstufen unveraendert.
@@ -1836,11 +1837,12 @@ declare(strict_types=1);
  * E2E-Zusage ist unberuehrt: Gesucht wird, BEVOR aus der Eingabe ein
  * gespeicherter -- und damit verschluesselter -- Wert wird.
  *
- * PLATZHALTER TRAGEN JETZT PHANTASIENAMEN (E-S3-13). „z. B. Standort
- * Kempten" bevorzugte einen realen Ort und las sich fuer manche als die
- * erwartete Antwort, fuer andere als Auskunft darueber, wer diese Anwendung
- * betreibt. Elf Stellen getauscht, mit Namen aus der Welt des
- * Referenzdatensatzes (Talwang, Westried, Sonnenau, Alpenfalke).
+ * PLATZHALTER TRAGEN JETZT PHANTASIENAMEN (E-S3-13). Der alte Platzhalter
+ * nannte einen realen Standort, bevorzugte damit einen realen Ort und las
+ * sich fuer manche als die erwartete Antwort, fuer andere als Auskunft
+ * darueber, wer diese Anwendung betreibt. Elf Stellen getauscht, mit Namen
+ * aus der Welt des Referenzdatensatzes (Talwang, Westried, Sonnenau,
+ * Alpenfalke).
  *
  * Dazu die Wahlliste als schlichte Liste statt vier umrandeter Einzelzeilen:
  * 248 auf 224 px bei gleicher Zeilenhoehe.
@@ -3201,10 +3203,11 @@ declare(strict_types=1);
  * zweimal — zwei Akkordeonebenen, zwei Zwischenraeume —, macht also 16 px.
  *
  * GEMESSEN AN DEN DREIZEHN DATUMSANGABEN DES PRUEFBESTANDS: Dem Nebentext
- * standen 48 bis 63 px zur Verfuegung, jetzt 64 bis 79. „BW Hoch" braucht 55
- * und „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz statt an dreien
- * von zwoelf; „RTH Murnau" (76 px) an den meisten. Vorher: 13 Kurznamen,
- * 10 mit Auslassungszeichen. Nachher: 13 Kurznamen, KEINES.
+ * standen 48 bis 63 px zur Verfuegung, jetzt 64 bis 79. „BW Hoch" braucht
+ * 55 und „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz statt an
+ * dreien von zwoelf; „RTH" mit einem Ort aus sechs Buchstaben (76 px) an
+ * den meisten. Vorher: 13 Kurznamen, 10 mit Auslassungszeichen. Nachher: 13
+ * Kurznamen, KEINES.
  *
  * DER ABSTAND IST GESCOPED, DIE EINRUECKUNG NICHT. `.eintrag` tragen auch
  * der Leistenfuss, die Hauptpunkte der Schublade und jede Zeile des
@@ -7644,5 +7647,214 @@ declare(strict_types=1);
  *   passten drei Listen nicht ganz, jetzt ist die Leiste bei jeder
  *   gemessenen Hoehe auf allen 14 Seiten ohne Rollen vollstaendig.
  *   Entschieden von der Betreiberin, die Luecke hatte AP9 benannt.
+ *
+ * 21.1.4 — DER FOKUS NACH DEM ANKER (Schritt 17, R4-05, F-R4-25).
+ *   Korrekturstufe ohne Migration, die erste der Backlog-Runde 4. Wer die
+ *   Einstellungen mit einem Anker oeffnete (`?t=standorte#standorte`),
+ *   sollte im Namensfeld landen und landete im Seitenkoerper — aus zwei
+ *   Gruenden zugleich: `.focus-target` sitzt an der HUELLE, die `ui_feld()`
+ *   baut, und `focus()` auf einem `div` tut nichts; und der Browser
+ *   verarbeitet den Anker erst am Ende des Ladens und setzt den Fokus dabei
+ *   zurueck, weil die Karte selbst nicht fokussierbar ist. Jetzt nimmt
+ *   `fokus()` das Feld in der Huelle, und der erste Aufruf wartet auf
+ *   `load`. Gemessen in Chromium, Firefox und WebKit. Gefunden beim Bau der
+ *   Selektorpruefung in `vollstaendigkeit.py`: Ihr erster Entwurf meldete
+ *   `.focus-target` als von niemandem gesetzt. Gesetzt war die Klasse —
+ *   nur an der falschen Stelle, und das sieht die fertige Pruefung nicht.
+ *
+ * 21.1.5 — DER ABFAHRTORT MIT SCHLOSS (Schritt 17, R4-06, Nr. 170, E-R4-25).
+ *   Korrekturstufe ohne Migration. Der manuelle Abfahrtort liegt seit
+ *   Web 6.2.0 im verschluesselten Block, stand in der Einsatzansicht aber
+ *   nur im Kurzinfo des Kartenpunkts — ohne Beschriftung und ohne Schloss.
+ *   Jetzt hat er eine eigene Zeile „Abfahrtort" mit Schloss in der Karte
+ *   Einsatz, zwischen Beschreibung und Diagnose, sobald die Regel „Manueller
+ *   Ort" gilt und eine Adresse da ist. Gefunden hat es die neue
+ *   Kennzeichnungsprobe (`tools/quelltext/kennzeichnung.php`), die jedes
+ *   Zeichen gegen eine Sollliste haelt statt es zu zaehlen: 19 von 20 vor
+ *   der Aenderung, 20 von 20 danach. Die Betreiberin hat entschieden, die
+ *   Zeile gleich zu bauen statt sie in die naechste Runde zu legen; sie
+ *   braucht keinen neuen Baustein, nur `zeile()` und `dtGeschuetzt()`.
+ *
+ * 21.1.6 — DER STRICH AM VORSCHLAG (Schritt 17, R4-08, Nr. 116).
+ *   Korrekturstufe ohne Migration. Die markierte Zeile einer Vorschlagsliste
+ *   — unter dem Zeiger oder mit der Pfeiltaste gewaehlt — trug links einen
+ *   Strich in `--orange` auf Rauch: 2,09:1, und Rauch hebt sich von Schnee
+ *   kaum ab, der Strich stand also allein. Design.md 3.1 sagt fuer genau
+ *   diesen Fall `--orange-tief` (4,04:1), und beim Reiter ist derselbe Tausch
+ *   schon gemacht (E-P5c-79). Gefunden hat es `kontrast.py`, das die
+ *   Farbpaare seither aus den Regeln des Stylesheets ableitet, statt nur
+ *   seine Liste zu rechnen. Der zweite Fund derselben Ableitung — weisse
+ *   Schrift auf `--orange-tief` im Hover des Primaerknopfs, 4,42:1 — bleibt:
+ *   Die Betreiberin hat den Ton angenommen (E-R4-30).
+ *
+ * 21.1.7 — AUSGANG, FEHLERWEGE, KOMMENTARE (Schritt 17, R4-09).
+ *   Korrekturstufe ohne Migration, acht Backlog-Punkte und ein Beifang.
+ *   Drei Endpunkte unter `api/` antworten ueber `json_out()` und bekommen
+ *   damit `nosniff`, `no-store` und die uebrigen Kopfzeilen (Nr. 258, 19
+ *   Stellen, keine Logikzeile). Das Einspielen eines freigegebenen Backups
+ *   liest die Antwort des Vermerks: Scheitert er, heisst es „Fertig" mit
+ *   Ton warn und „unklar", statt das Einspielen als fehlgeschlagen zu
+ *   melden, das laengst durch war (Nr. 277). Die Einrichtung fragt vor dem
+ *   ersten `CREATE`, ob die Datenbank leer ist, und nennt die Zahl (Nr. 291).
+ *   Die Statusseite sagt zu einer vom Hoster abgeschalteten Funktion „nicht
+ *   messbar" statt „aus" (Nr. 266, `plattform_funktion()`). Gestrichen:
+ *   `edbak_uebersicht()`, seit Monaten ohne Aufrufer (Nr. 175). Berichtigt:
+ *   der Cron-Pfad im Kopf von `jobs.php` (Nr. 150), „beider FTPS-Schritte"
+ *   in zwei Kommentaren (Nr. 260), die Herkunft von `.geo` im Stylesheet
+ *   (Nr. 333) — und acht Kommentare mit realen Orts- und Rufnamen, die die
+ *   Textprobe seit R4-07 liest (E-R4-19).
+ *
+ * 21.1.8 — EIN WEG, EIN KONTO ZU LOESCHEN (Schritt 17, R4-10, Nr. 299).
+ *   Korrekturstufe ohne Migration. Die Kontoseite der Verwaltung loeschte
+ *   ein Konto selbst, und das Entfernen des Demo-Kontos ein drittes Mal —
+ *   drei Abschriften derselben Reihenfolge, von denen zwei schon
+ *   auseinandergelaufen waren: Die Verwaltung liess `mengen:<id>` in
+ *   `app_state` liegen, das Demo-Konto seine Konto-Backups und seinen
+ *   Protokolleintrag. Jetzt
+ *   rufen alle Wege `konto_loeschen()`, und die Funktion nimmt den Weg als
+ *   Pflichtangabe; er steht im Protokoll. Was die Kontoseite davor prueft
+ *   (eigenes Konto, letzte BetreiberIn, abgetippte Adresse), bleibt davor.
+ *   Beim Zusammenlegen fiel die eine Zeile auf, die nur die Demo-Abschrift
+ *   hatte — die Sperrvermerke in `deleted_refs` —; sie steht jetzt in
+ *   `konto_loeschen()` und gilt damit fuer jedes Konto.
+ *
+ * 21.1.9 — NEULADEN WIEDERHOLT NICHTS MEHR (Schritt 17, R4-11, Nr. 250).
+ *   Korrekturstufe ohne Migration. Elf Seiten unter Verwaltung und Betrieb
+ *   gaben ihr POST-Ergebnis selbst aus; „Neu laden" schickte die Handlung
+ *   noch einmal — ein zweites Token, eine zweite Testmail, ein zweiter Lauf.
+ *   Jetzt leiten sie um (Post/Redirect/Get), und die Meldung kommt ueber
+ *   die Sitzung. Dafuer traegt `flash_setzen()` einen Ort (die Karte, in
+ *   der geklickt wurde), die vier Toene der Oberflaeche und ein Ergebnis,
+ *   das mehr ist als ein Satz — die Schritte einer Verbindungspruefung,
+ *   den Einspielbericht, den Lauf der Migrationen (E-R4-33, -34). Bewusst
+ *   stehen bleiben: ein abgewiesener Eintrag, damit das Getippte nicht
+ *   verloren geht (E-R4-35), und der Setz-Link nach „Konto anlegen", der
+ *   nicht in die Sitzungsdatei gehoert. `betrieb_server.php` fehlt noch; es
+ *   gehoert Schritt 18. Beim Umbau gefunden und behoben: Ein Hostwechsel
+ *   vergass den SFTP-Hostschluessel nie, und ein gescheitertes „Nachsehen"
+ *   schaltete im offenen Formular die Aufbewahrung am Ziel ab. Und ein
+ *   Fehler aus 21.1.8: Das Entfernen des Demo-Kontos ist keine Transaktion
+ *   mehr, die Meldung sagte bei einem Abbruch trotzdem „nichts geaendert".
+ *
+ * 21.1.10 — SPALTENNAMEN IN BACKTICKS (Schritt 17, R4-12, Nr. 239).
+ *   Korrekturstufe ohne Migration. Vier INSERTs auf `missions` setzten ihre
+ *   Spaltenliste mit `implode()` ueber blosse Namen zusammen, der Import sein
+ *   UPDATE ebenso, und in die Liste der Sicherung fliessen Katalognamen, die
+ *   noch dazukommen. Keiner ist heute reserviert (Nr. 238) — die Bauform war
+ *   der Punkt. Jetzt macht `mission_fields_lib.php` SQL-Text aus
+ *   Spaltennamen: `mf_spalten_sql()` setzt jeden Namen in Backticks,
+ *   `mf_liste_sql()` eine selbst erweiterte Liste, `mf_bezeichner()` einen
+ *   Namen. `mf_spalten()` liefert weiter blosse Namen, weil vier Aufrufer
+ *   sie als Schluessel brauchen (Q-R4-22). Das Formular quotierte schon von
+ *   Hand; auch das geht jetzt ueber die eine Stelle.
+ *
+ * 21.1.11 — MELDUNGEN AUS DEM BAUSTEIN, DAUER AUS EdFormat (Schritt 17,
+ *   R4-13, Nr. 271, 272, 273). Korrekturstufe ohne Migration. Der Satz im
+ *   Schneide-Bereich war eine leere Huelle mit fester Klasse `meldung-info`
+ *   — ein Grund wie „Das Ende liegt vor dem Beginn." stand blau und ohne
+ *   Symbol. Jetzt fuellt `EdHtml.meldung()` einen leeren Behaelter, mit
+ *   `fehler` fuer Gruende und `info` fuer den Erklaertext; dasselbe fuer die
+ *   Rueckmeldung ueber der Segmentliste und fuer die Meldungszeile im
+ *   Entsperrdialog, die den Namen des Bausteins trug, aber keiner war. Die
+ *   Dauer dort kommt aus `EdFormat.dauer()` — „1h 06min" statt „1 h 6 min",
+ *   ohne das „60 min" bei 3599 s. `html.js` steht dafuer im Kopf jeder Seite
+ *   statt auf acht Seiten einzeln. Die Zaehlzeile Z37 sieht seither auch
+ *   `className = '…meldung'` und fand zwei weitere Nachbauten (Nr. 346).
+ *
+ * 21.2.0 — DER DEMO-RESET NUR NACH EINER AENDERUNG (Schritt 17, R4-14,
+ *   Nr. 76, 259; E-R4-10, E-R4-42). Nebenstufe ohne Migration — der Hinweis
+ *   im Demo-Konto sagt etwas Neues. Bis hierher setzte die erste Anfrage
+ *   nach 30 Minuten das Demo-Konto zurueck, ob sich etwas geaendert hatte
+ *   oder nicht; die sechseinhalb Sekunden trug, wer nur nachsehen wollte.
+ *   Jetzt haelt `demo_geaendert` in `app_state` die erste Aenderung seit dem
+ *   Reset — gesetzt bei jeder POST des Demo-Kontos mit Token
+ *   (`auth_guard.php`) und bei jedem angenommenen Upload (`ingest.php`) —,
+ *   und faellig ist der Reset 30 Minuten danach, ohne Aenderung einen Tag
+ *   nach dem letzten. Gezaehlt ab der ERSTEN Aenderung, nicht ab dem letzten
+ *   Reset: Sonst waere nach langer Ruhe schon die Umleitung nach dem ersten
+ *   Speichern faellig. Dazu ordnet die GPX-Probe den Referenzexport ueber
+ *   Art, Tag und Uhrzeit zu statt ueber die Kennung, die ein Reset neu
+ *   vergibt.
+ *
+ * 21.3.0 — DER DIENSTTAG BEKOMMT SEINEN ANKER (Schritt 17, R4-15, Nr. 158).
+ *   Nebenstufe MIT MIGRATION: `2026_09_27_days_created_at` — nach dem
+ *   Deploy muss eine Administratorin `update.php` aufrufen. Ob Geraete den
+ *   Zeitraum eines Diensttags noch fortschreiben, hing am juengsten
+ *   `created_at` seiner uebrigen Einsaetze und Ruhesegmente: zwei Tabellen
+ *   fuer eine Frage, und ein alter Tag ohne Datensaetze galt als offen. Jetzt
+ *   traegt `days` die Spalte selbst, und `ingest_tag_offen()` fragt den Tag.
+ *   Der Bestand bekommt sein `started_at` (ohne eines den Tag, 00:00),
+ *   gekappt auf 1970-01-01 00:00:01 und auf jetzt; die Wiederherstellung
+ *   setzt ihn ebenso, denn im Backup steht er nicht. Das Fenster gleitet
+ *   nicht mehr mit jedem neuen Datensatz, es zaehlt ab dem Tag.
+ *
+ * 21.3.1 — DAS DEMO-KONTO BEKOMMT EINEN NACHTDIENST (Schritt 17, R4-16,
+ *   Nr. 275, 323). Korrektur: Am Code aendert sich nichts, wohl aber die
+ *   Fixture unter `server/demo/`, und die geht mit dem Deploy hinaus. Der
+ *   Referenzbestand hatte keinen Luftdienst mit Einsaetzen vor und nach
+ *   Mitternacht ohne Zeitumstellung — genau den Fall, an dem die Sortierung
+ *   nach Beginn zu pruefen ist. Jetzt steht er da (D22, 19.06.2026, drei
+ *   Einsaetze um 19:09, 23:50 und 01:40), und Referenz und Fixture sind neu
+ *   erzeugt: Nutzlast 12 statt 11, ohne die leere Standortauswahl, und die
+ *   zwei Uebergangsregeln im Kreislauf fallen weg.
+ *
+ * 21.4.0 — DIE ZEITRAUMUEBERSICHT BEKOMMT IHRE SEITENGRENZE (Schritt 17,
+ *   R4-17, Nr. 37). Nebenstufe ohne Migration. `zeitraum.php` zeichnete jede
+ *   Zeile des Zeitraums; ein Jahr mit 4071 Einsaetzen brauchte im Messstand
+ *   88 s. Jetzt 200 wie in der Suche, mit derselben Nachladezeile; Kopfzahl,
+ *   Kennzahlen und Karte bleiben beim ganzen Zeitraum, und der Kopf sagt
+ *   „200 angezeigt". Eine Extremwert-Kachel holt ihre Zeile nach, wenn sie
+ *   jenseits der 200 steht (`zeigeEinsatz()`). Dabei gefunden: Die
+ *   Nachladezeile hing im Scrollbehaelter der Tabelle und war unter 720 px
+ *   mit ihm ausgeblendet — auf dem Handy gab es in der Suche nie einen Weg
+ *   ueber die ersten 200 Treffer hinaus. Dazu sagen die drei gedeckelten
+ *   Tageslisten (Leiste 500, `api/day.php` 120, Verschieben 400), dass sie
+ *   greifen, und fragen dafuer nach einem mehr, als sie zeigen.
+ *
+ * 21.4.1 — DIE LETZTEN DREI KARTEN „WAS HIER GILT" (Schritt 17, R4-20,
+ *   Nr. 287). Korrektur. 10c/AP9 hatte die Erklaerkarten unter Verwaltung
+ *   und Betrieb abgeraeumt (E-P5c-06: Erklaertext ins Handbuch, auf der
+ *   Seite ein Satz mit Verweis); drei Seiten ausserhalb trugen sie weiter:
+ *   Import / Export, das Einsatzformular und die Wiederherstellung. Ihr Text
+ *   steht jetzt im Handbuch 7 („Die übrigen Wege"), 4.3 („Schloss und
+ *   Klartext") und 12.6 („Der Wiederanlauf"), und die Seiten verweisen mit
+ *   einem Satz dorthin. Der Verweis der Wiederherstellung traegt auch mit
+ *   leerer Datenbank; das Handbuch braucht weder Anmeldung noch Tabellen.
+ *
+ * 21.5.0 — DIE STATISTIK WAEHLT IHREN ZEITRAUM (Schritt 17, R4-23, Nr. 122 a,
+ *   Bild M-R4-23). Nebenstufe ohne Migration. Ueber den Reitern von
+ *   Betrieb -> Statistik stehen vier Pillen (7 Tage bis 1 Jahr) fuer die
+ *   Kennzahl und die Herkunft, daneben Von und Bis fuer einen eigenen
+ *   Zeitraum; dann hat jede Tabelle eine Spalte „im Zeitraum", unter
+ *   Einsaetze mit Wochen- und Tagesschnitt. Tagesgrenzen in Ortszeit,
+ *   Abfragen mit Unter- und Obergrenze ueber `idx_missions_started`.
+ *   „Aktiv", „angemeldet" und „gemeldet" stehen nur, wenn der Zeitraum bis
+ *   heute reicht: Die Anlage kennt je Konto nur die letzte Anmeldung
+ *   (F-R4-66, E-R4-55). Die Reihe ist eine Anordnung vorhandener Bausteine
+ *   (`ui_zeitraumwahl()`, Design.md 9.18b).
+ *
+ * 21.6.0 — DIE STATISTIK ZEIGT IHRE ZAHLEN AUCH ALS BILD (Schritt 17, R4-24,
+ *   Nr. 122 b, Bild M-R4-24). Nebenstufe ohne Migration, mit einem neuen
+ *   Baustein „Diagramm" (Design.md 9.40): Saeulen je Tag, Woche oder Monat
+ *   als Inline-SVG aus PHP, Anteile als Balken — ohne Bibliothek, ohne
+ *   Skript, ohne fremde Quelle. Die Tabellen bleiben daneben. Das SVG hat
+ *   keine `viewBox`, sondern Positionen in Prozent, damit die Schrift nicht
+ *   mit dem Bild waechst. Der Hoechstwert steht in Orange tief und traegt
+ *   seine Zahl; Orange haette als Grafik auf Schnee 2,23 : 1 (E-R4-60).
+ *   Unter NutzerInnen zwei kleine Vielfache „mit Einsatz" und „neu
+ *   angelegt" statt der drei des Mockups — „aktiv" je Monat ist aus den
+ *   Daten nicht zu zaehlen (F-R4-66, E-R4-55).
+ *
+ * 21.6.1 — DIE ZEITRAUMUEBERSICHT IST FRUEHER ZU SEHEN (Schritt 17, R4-27,
+ *   Nr. 37, Q-R4-24). Korrektur. Die Abnahme von R4-17 („unter 5 s") war
+ *   verfehlt, und die Betreiberin wollte sie nicht wegerklaert haben. Zwei
+ *   Gruende hatten die Seite aufgehalten: `fromB64()` in `crypto.js` lief
+ *   ueber den Iterator der Zeichenkette und kostete mehr als das
+ *   Entschluesseln selbst (1027 gegen 123 ms als Schleife), und die Seite
+ *   rechnete Entschluesseln und zweites Zeichnen in EINER Aufgabe von fast
+ *   drei Sekunden. Jetzt zeichnet sie in Stuecken; die Tabelle ist nach
+ *   3,7 statt 5,8 s zu sehen, fertig ist die Seite rund 0,7 s spaeter
+ *   (E-R4-64). Die Messung dazu ist mit berichtigt: Sie lief bis dahin ab
+ *   dem Laden der Startseite.
  */
-const WEB_VERSION = '21.1.3';
+const WEB_VERSION = '21.6.1';

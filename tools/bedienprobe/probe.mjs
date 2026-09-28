@@ -92,7 +92,7 @@ const wert = (n, s) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] 
 
 const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
 const DEMO   = { email: wert('--demo',  'demo@gen-em.org'),  pw: wert('--demo-pw',  'nadokudemo0815') };
-const ADMIN  = { email: wert('--admin', 'admin@gen-em.org'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
+const ADMIN  = { email: wert('--admin', 'admin@example.invalid'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
 const BILDER = flag('--bilder');
@@ -207,7 +207,7 @@ async function anmelden(rolle) {
     seite.click('#loginform button[type="submit"]'),
   ]);
   /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43). Das Pruefkonto
-   * `admin@gen-em.org` ist eine BetreiberIn mit Zweitfaktor; nach dem
+   * `admin@example.invalid` ist eine BetreiberIn mit Zweitfaktor; nach dem
    * Passwort fragt `login.php` nach dem Code. `codeSchritt()` (motor.mjs)
    * geht ihn — und meldet das Einrichtungstor als Scheitern: Dessen Adresse
    * enthaelt `login.php` nicht, und ohne diese Pruefung liefe jeder Admin-Weg
@@ -330,7 +330,7 @@ async function kasten(rolle, weg, breite) {
      * Seite oeffnen und auf das Stylesheet warten (sonst misst man ungestaltet).
      *
      * MIT SITZUNGSWACHE SEIT S9/AP6 — dieselbe, die der Bilderlauf seit
-     * Web 9.10.1 hat. Das Demo-Konto setzt sich alle 30 Minuten zurueck
+     * Web 9.10.1 hat. Das Demo-Konto setzt sich 30 Minuten nach der ersten Aenderung zurueck
      * (`DEMO_RESET_SEKUNDEN`, demo_lib.php) und erhoeht dabei die
      * Sitzungs-Epoche; `auth_guard.php` beendet daraufhin jede offene Sitzung
      * dieses Kontos — auch die der Probe. Ein voller Lauf ueber zwei Breiten
@@ -348,7 +348,7 @@ async function kasten(rolle, weg, breite) {
       if (!adresse) {
         throw new Error('Adresse nicht aufgelöst — entweder ist der Bestand '
           + 'wirklich leer, oder das Demo-Konto hat sich mitten im Lauf '
-          + 'zurückgesetzt (alle 30 min, demo_lib.php). Der Bericht sagt am '
+          + 'zurückgesetzt (30 min nach der ersten Änderung, demo_lib.php). Der Bericht sagt am '
           + 'Ende, welcher der beiden Fälle vorliegt.');
       }
       await r.seite.goto(adresse, { waitUntil: 'domcontentloaded' });
@@ -357,7 +357,7 @@ async function kasten(rolle, weg, breite) {
         await r.seite.goto(adresse, { waitUntil: 'domcontentloaded' });
         if (r.seite.url().includes('login.php')) {
           throw new Error('Sitzung verloren und Neuanmeldung gescheitert — '
-            + 'das Demo-Konto setzt sich alle 30 Minuten zurück (demo_lib.php)');
+            + 'das Demo-Konto setzt sich 30 Minuten nach der ersten Änderung zurück (demo_lib.php)');
         }
       }
       await r.seite.waitForFunction(

@@ -1,40 +1,40 @@
 # Steuerung
 
-Halten Rahmenplan und Backlog ihre Decken — und trägt jeder offene Punkt ein Ziel?
-**Anlass: Nr. 177, 196, 199** — Konzept SD 1.1: 121 Berichtigungssätze im Rahmenplan, Abschnitt 5 mit 96 Zeilen gegen 113 offene Punkte.
+Halten Rahmenplan und Backlog ihre Decken, trägt jeder offene Punkt ein Ziel — und legt kein Zweig eine Nummer an, die ein anderer schon trägt?
+**Anlass: Nr. 177, 196, 199, 339, 340** — Konzept SD 1.1 (121 Berichtigungssätze, 96 Zeilen gegen 113 offene Punkte); F-BV-14 und -18 (zwei Nummernkollisionen an einem Tag).
 
 ## Aufruf
 
 ```bash
 python3 tools/steuerung/decken.py        # --stellen · --selbstprobe
 python3 tools/steuerung/uebersicht.py    # --ziel 17 · --pruefen · --selbstprobe
+python3 tools/steuerung/nummern.py       # --ohne-holen · --selbstprobe
+python3 tools/steuerung/verschieben.py NR "Erledigt TT.MM.JJJJ mit …: Beleg."  # --trocken
 ```
 
 ## Was es misst
 
-`decken.py` hält `docs/Rahmenplan.md`, `Rahmenplan-Verlauf.md`, `Backlog.md`
-und `Backlog-Erledigt.md` an **20 Decken** (Konzept SD 5): Zeilen je Datei und
-Kopf, Zeichen je Tabellenzeile, Statusvokabular, Berichtigungsmuster,
-Blockquotes, 20 Zeilen und fünf Leerzeichen je Backlog-Eintrag, Nummern in
-beiden Dateien, Rendering mit `cmark-gfm`. `uebersicht.py` hält jede Kopfzeile
-des Backlogs an die Grammatik (Konzept SD 4.6) und ihr Ziel an die Fahrplan-
-Tabelle und gibt die offenen Punkte nach Ziel aus — der Ersatz für den alten
-Rahmenplan-Abschnitt 5, erzeugt statt gepflegt.
+`decken.py` hält Rahmenplan, Verlauf und beide Backlog-Dateien an **21 Decken** (Konzept
+SD 5): Zeilen, Zeichen, Vokabular, Form, Nummern, Rendering (`cmark-gfm`, seit R4-25 auch
+eine Liste je offenem Eintrag). `uebersicht.py` hält jede Kopfzeile an Grammatik und
+Fahrplan-Ziel und gibt die offenen Punkte nach Ziel aus. `nummern.py` holt die Remote-Zweige
+und ist rot, wenn der Arbeitsbaum eine Nummer neu anlegt, die `origin/main` oder ein anderer
+Zweig auch neu anlegt (je gegen den Vorfahren mit `main` und mit `HEAD`, beide Dateien).
+`verschieben.py` misst nichts: Es verschiebt einen erledigten Punkt samt Trennzeile (E-R4-06, -62).
 
 ## Was es braucht
 
-`python3` und `cmark-gfm` (Ausbaustufe web). Rückgabe 0 = gehalten,
-1 = gerissen, 2 = nicht gelaufen (Datei oder `cmark-gfm` fehlt) — nie still grün.
+`python3`, `cmark-gfm` (Ausbaustufe web), für `nummern.py` Git und Netz zu `origin`.
+Rückgabe 0 = gehalten, 1 = gerissen, 2 = nicht gelaufen — nie still grün.
 
 ## Erwartete Zahl
 
-`decken.py`: **20 Decken, 0 gerissen**; `--selbstprobe` **22 Fälle, 0 Fehlschläge**.
-`uebersicht.py --pruefen`: **0 ohne Grammatik, 0 ohne Ziel** (105 Einträge,
-26.09.2026); `--selbstprobe` **7 Fälle, 0 Fehlschläge**. Reißt eine Decke: kürzen —
-oder sie in `decken.py` ändern und es in der Verlaufszeile begründen (E-SD-27).
+`decken.py`: **21 Decken, 0 gerissen**, Selbstprobe **23 / 0**. `uebersicht.py
+--pruefen`: **0 ohne Grammatik, 0 ohne Ziel**, Selbstprobe **7 / 0**.
+`nummern.py`: **0 Überschneidungen**, Selbstprobe **10 / 0**. Reißt eine Decke:
+kürzen — oder sie in `decken.py` ändern und begründen (E-SD-27).
 
 ## Was es nicht kann
 
-Sinn lesen: Ob ein Statussatz stimmt oder eine Kürzung etwas verschweigt,
-sieht nur ein Mensch. Eine Nummer zweimal in EINER Datei misst `bestand`
-(Regel `backlog`); was GitHub aus der Liste macht (Nr. 196), `cmark-gfm` nicht.
+Sinn lesen: Ob ein Statussatz stimmt, sieht nur ein Mensch. `nummern.py` sieht nur
+gepushte Zweige, keine Forks; die Nummern auf GitHub `decken.py` nur mit `cmark-gfm` (P-R4-22).

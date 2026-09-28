@@ -15,7 +15,7 @@
  * (`huelle_stellen.py`) — sonst misst der zweite Aufruf etwas anderes als der
  * erste, und das Prüfmittel bestätigte sich selbst.
  *
- * GEMESSEN WIRD AN `umlauf-csv@gen-em.org`, nicht am Admin-Konto: Der
+ * GEMESSEN WIRD AN `umlauf-csv@example.invalid`, nicht am Admin-Konto: Der
  * Referenzbestand liegt dort (83 Einsätze), und die Frage dieses Pakets ist
  * nicht „läuft es durch", sondern „sind die geschützten Angaben danach noch
  * lesbar". Das Admin-Konto hat 0 Einsätze und könnte diese Frage nicht
@@ -43,7 +43,7 @@ const BASIS = 'https://127.0.0.1:8443';
  * den beiden Umlauf-Konten). Gemessen wird deshalb an `umlauf-csv@…`: Es
  * trägt 83 Einsätze, steht auf `edk1:` und ist damit der einzige Bestand, an
  * dem sich „vorher lesbar / nachher lesbar" überhaupt zeigen lässt. */
-const KONTO = 'umlauf-csv@gen-em.org', KONTO_PW = 'umlaufpruefung2026';
+const KONTO = 'umlauf-csv@example.invalid', KONTO_PW = 'umlaufpruefung2026';
 const motor = motorWahl(process.argv.slice(2));
 
 let ok = 0, offen = 0, nichtGemessen = 0;

@@ -1025,7 +1025,8 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
  *
  * WARUM HOECHSTENS FUENF JE LAUF. Eine Kontoloeschung ist teuer: Sie raeumt
  * die Spuren von Hand (die Kaskade erreicht sie nicht), loescht den
- * Backup-Ordner im Dateisystem und kaskadiert ueber vierzehn Tabellen. Bei
+ * Backup-Ordner im Dateisystem und kaskadiert ueber jede Tabelle des Kontos
+ * (fuenfzehn am 26.09.2026; hier stand bis Web 21.1.8 vierzehn). Bei
  * einem grossen Konto sind das Sekunden — am Huckepack-Weg steht dafuer ein
  * Budget von drei Sekunden fuer ALLE Jobs.
  *
@@ -1051,7 +1052,7 @@ function job_konto_loeschung(PDO $pdo, array $zustand, callable $zeitLinks): arr
 
     foreach ($faellig as $k) {
         if ($zeitLinks() <= 0.0) { break; }
-        $r = konto_loeschen((int)$k['id'], true);
+        $r = konto_loeschen((int)$k['id'], true, 'loeschantrag');
         if ($r['ok']) {
             $erledigt++;
         } else {
@@ -1117,7 +1118,7 @@ function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
     $unbest = konto_verfall_unbestaetigt(JOB_KONTO_VERFALL_BLOCK);
     foreach ($unbest as $k) {
         if ($zeitLinks() <= 0.0) { break; }
-        $r = konto_loeschen((int)$k['id'], true);
+        $r = konto_loeschen((int)$k['id'], true, 'verfall');
         if ($r['ok']) {
             $erledigt++;
         } else {
@@ -1132,7 +1133,7 @@ function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
         if ($zeitLinks() <= 0.0) { break; }
         mail_einreihen('registrierung_verfallen', (string)$k['email'],
                        ['link' => app_url('/registrieren.php')]);
-        $r = konto_loeschen((int)$k['id'], true);
+        $r = konto_loeschen((int)$k['id'], true, 'verfall');
         if ($r['ok']) {
             $erledigt++;
         } else {

@@ -18,8 +18,10 @@
 #
 # DIE VORGABEN SIND NICHT BELIEBIG. Sie sind die, die die Pruefmittel ohne
 # Schalter erwarten:
-#   admin@gen-em.org / pruefstandzugang2026   kreislauf.py, aufnehmen.mjs
+#   admin@example.invalid / pruefstandzugang2026   kreislauf.py, aufnehmen.mjs
 #   demo@gen-em.org  / nadokudemo0815   Handbuch, aufnehmen.mjs, spurprobe
+#   bilderlauf-admin@probe.invalid, bilderlauf-support@probe.invalid
+#                    (pruefkonten.sh)       aufnehmen.mjs, seit R4-08
 # Wer sie aendert, gibt sie jedem Werkzeug einzeln mit.
 #
 # Aufruf:  sh tools/referenzdatensatz/einspielen/lokal_einrichten.sh
@@ -34,7 +36,7 @@ SERVER="$WURZEL/server"
 DB=${DB:-nadoku}
 DBUSER=${DBUSER:-nadoku}
 DBPASS=${DBPASS:-nadokulokal}
-ADMIN=${ADMIN:-admin@gen-em.org}
+ADMIN=${ADMIN:-admin@example.invalid}
 ADMINPW=${ADMINPW:-pruefstandzugang2026}
 ADRESSE=${ADRESSE:-127.0.0.1:8080}
 TLS_PORT=${TLS_PORT:-8443}
@@ -140,6 +142,12 @@ echo "== 6b. Zweitfaktor des Pruefkontos mit bekanntem Geheimnis"
 # abschaltet -- das Konto hat einen echten Zweitfaktor.
 php "$WURZEL/tools/zweitfaktor/pruefkonto.php" "$ADMIN"
 
+echo "== 6c. Pruefkonten der Rollen admin und support"
+# SEIT R4-08 (Nr. 297): Der Bilderlauf nimmt die reine Admin-Sicht und die
+# des Supports auf; bis dahin meldete sich seine Rolle `admin` als
+# BetreiberIn an. Dasselbe Skript ruft `hochfahren.sh` bei jedem Start.
+sh "$WURZEL/tools/referenzdatensatz/einspielen/pruefkonten.sh"
+
 echo "== 7. Demo-Konto aus der Fixture anlegen"
 # demo_anlegen() ist derselbe Weg wie der Knopf im Adminbereich
 # (admin_demo.php, Aktion demo_anlegen) -- kein zweiter Weg, den niemand pflegt.
@@ -151,3 +159,4 @@ php -r 'require_once "server/db.php"; require_once "server/demo_lib.php";
 echo "== fertig"
 echo "   https://127.0.0.1:$TLS_PORT/"
 echo "   $ADMIN / $ADMINPW   ·   demo@gen-em.org / nadokudemo0815"
+echo "   Admin- und Support-Pruefkonto: siehe pruefkonten.sh"

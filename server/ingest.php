@@ -41,12 +41,13 @@ function ingest_abweisung_vermerken(array $dev, bool $hatSpalten): void
 }
 
 /**
- * Wird an diesem Diensttag noch gearbeitet?
+ * Schreiben Geraete den Zeitraum dieses Diensttags noch fort?
  *
- * Anker ist das juengste `created_at` der ANDEREN Datensaetze des Tages --
- * der eigene, gerade angelegte zaehlt nicht mit, sonst waere jeder Tag offen,
- * an dem eben ein Paket ankam, und genau das war der Angriff. Hat der Tag
- * keine anderen Datensaetze, ist er frisch und offen.
+ * INGEST_ERSETZFENSTER_H Stunden ab dem Augenblick, in dem der Server den
+ * TAG zum ersten Mal sah: `days.created_at` (seit Web 21.3.0, Nr. 158). Ein
+ * frischer Tag ist offen, ein nachgelieferter auch — er entsteht, wenn sein
+ * erstes Paket ankommt —; ein alter nicht, und das gilt auch fuer einen
+ * alten Tag, an dem kein Datensatz mehr steht.
  *
  * NICHT die Zeiten des Tages: Die kommen vom Absender. Die erste Fassung
  * dieser Funktion hat sie benutzt und damit den nachgelieferten Dienst
@@ -54,31 +55,30 @@ function ingest_abweisung_vermerken(array $dev, bool $hatSpalten): void
  * seinem Datum ankam, bekam nie ein `ended_at`. Serverzeit gegen Serverzeit,
  * wie beim Ersetzfenster der Datensaetze selbst.
  *
- * `rest_segments.created_at` gibt es erst nach der Migration; bis dahin
- * zaehlen nur die Einsaetze. Ein Tag, der nur Ruhesegmente traegt, gilt in
- * diesem Zwischenzustand als offen -- die Zeitpruefung gegen `day` deckt den
- * Schaden ab, den das offen laesst.
+ * BIS WEB 21.2.x HING DER ANKER AN DEN DATENSAETZEN: das juengste
+ * `created_at` der uebrigen Einsaetze und Ruhesegmente des Tages, weil `days`
+ * die Spalte nicht hatte. Zwei Tabellen fuer eine Frage, und ein Tag ohne
+ * uebrige Datensaetze hatte keinen Anker und galt als offen. Der Unterschied
+ * im Verhalten: Das Fenster gleitet nicht mehr mit jedem neuen Datensatz,
+ * es zaehlt ab dem Tag (Konzept R4, F-R4-46).
+ *
+ * IM DEPLOY-FENSTER, solange `update.php` die Spalte noch nicht angelegt
+ * hat, gilt der Tag als offen — wie bei `rest_segments` vor dessen
+ * Migration: Die Zeitpruefung gegen `day` deckt den Schaden ab, den das
+ * offen laesst.
  */
-function ingest_tag_offen(PDO $pdo, int $dayId, string $eigeneTabelle, int $eigeneId): bool
+function ingest_tag_offen(PDO $pdo, int $dayId): bool
 {
     if ($dayId <= 0) { return false; }
-    $juengste = null;
-    foreach (['missions', 'rest_segments'] as $tab) {
-        if ($tab === 'rest_segments'
-            && !db_hat_spalte($pdo, 'rest_segments', 'created_at')) { continue; }
-        $sql  = "SELECT MAX(created_at) FROM `$tab` WHERE day_id = ?";
-        $args = [$dayId];
-        if ($tab === $eigeneTabelle && $eigeneId > 0) { $sql .= ' AND id <> ?'; $args[] = $eigeneId; }
-        $q = $pdo->prepare($sql);
-        $q->execute($args);
-        $wert = $q->fetchColumn();
-        if ($wert === false || $wert === null) { continue; }
-        $t = strtotime($wert . ' UTC');
-        if ($t !== false) { $juengste = max($juengste ?? 1, $t); }
-    }
-    if ($juengste === null) { return true; }
-    $juengste = max(1, min($juengste, time()));
-    return (time() - $juengste) <= INGEST_ERSETZFENSTER_H * 3600;
+    if (!db_hat_spalte($pdo, 'days', 'created_at')) { return true; }
+    $q = $pdo->prepare('SELECT created_at FROM days WHERE id = ?');
+    $q->execute([$dayId]);
+    $wert = $q->fetchColumn();
+    if ($wert === false || $wert === null) { return false; }
+    $t = strtotime($wert . ' UTC');
+    if ($t === false) { return false; }
+    $anker = max(1, min($t, time()));
+    return (time() - $anker) <= INGEST_ERSETZFENSTER_H * 3600;
 }
 
 /**
@@ -714,7 +714,7 @@ try {
          * und vergisst das Fragezeichen — und MariaDB meldet das erst zur
          * Laufzeit, beim ersten echten Paket eines Geraets. */
         $sp = mf_spalten('ingest_neu', '', false);
-        $pdo->prepare('INSERT INTO missions (' . implode(', ', $sp) . ')
+        $pdo->prepare('INSERT INTO missions (' . mf_spalten_sql('ingest_neu', '', false) . ')
                        VALUES (' . implode(',', array_fill(0, count($sp), '?')) . ')
                        ON DUPLICATE KEY UPDATE
                          ended_at   = COALESCE(VALUES(ended_at),   ended_at),
@@ -1078,12 +1078,12 @@ try {
      * einen BESTEHENDEN Datensatz. Ein Paket mit NEUEM client_ref hat keinen,
      * wird ueber `day` oder `day_ref` auf den alten Tag aufgeloest -- und
      * schrieb dessen Zeitraum genauso um, derselbe Schaden auf dem anderen
-     * Weg. Deshalb fragt ingest_tag_offen(), wann die uebrigen Datensaetze
-     * des Tages ANGELEGT wurden: Serverzeit, nicht die Zeiten des Absenders.
-     * Ein frischer Tag und ein Tag, an dem gerade nachgetragen wird, sind
-     * offen; ein Tag, dessen Datensaetze alle aelter als das Fenster sind,
-     * nicht. Der neue Datensatz wird trotzdem angelegt -- sichtbar,
-     * loeschbar, und er ueberschreibt nichts.
+     * Weg. Deshalb fragt ingest_tag_offen(), wann der TAG angelegt wurde
+     * (`days.created_at`, seit Web 21.3.0; bis dahin die uebrigen
+     * Datensaetze des Tages): Serverzeit, nicht die Zeiten des Absenders.
+     * Ein frischer Tag ist offen, ein aelterer als das Fenster nicht. Der
+     * neue Datensatz wird trotzdem angelegt -- sichtbar, loeschbar, und er
+     * ueberschreibt nichts.
      *
      * Die erste Fassung fragte den Tag nach SEINEN Zeiten, und die kommen
      * vom Absender: Ein Dienst, der spaeter als das Fenster nach seinem
@@ -1092,8 +1092,7 @@ try {
      * Grund, warum der Anker jetzt am Anlegen haengt. Was absurde Zeiten
      * angeht, sitzt der Schutz ohnehin frueher: pruef_zeit_zum_tag() weist
      * ein Paket ab, dessen Zeiten nicht zu seinem `day` passen. */
-    $eigeneTabelle = $ownerType === 'mission' ? 'missions' : 'rest_segments';
-    if (!$fensterZu && ingest_tag_offen($pdo, $dayId, $eigeneTabelle, (int)$ownerId)) {
+    if (!$fensterZu && ingest_tag_offen($pdo, $dayId)) {
         dt_zeitraum_fortschreiben($pdo, $dayId, $tagStart, $tagEnde);
     }
 
@@ -1128,6 +1127,8 @@ try {
 
     $pdo->prepare('UPDATE devices SET last_seen = NOW() WHERE id = ?')->execute([$dev['id']]);
     $pdo->commit();
+    /* Angenommen: Das Demo-Konto hat sich geaendert (Web 21.2.0, R4-14, Nr. 76). */
+    if (demo_ist_demo((int)$dev['user_id'])) { demo_aenderung_vermerken(); }
 
     if ($kind === 'mission' && $ownerType === 'mission') {
         try {

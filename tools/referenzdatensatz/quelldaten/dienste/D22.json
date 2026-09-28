@@ -1,0 +1,331 @@
+{
+  "kennung": "D22",
+  "abdeckung": [
+    "dienst-luft",
+    "dienst-ueber-mitternacht"
+  ],
+  "dienst": {
+    "day": "2026-06-19",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 1",
+    "beginn": "2026-06-19 19:00",
+    "ende": "2026-06-20 07:00",
+    "day_ref": "d-11-6394852071",
+    "besatzung": {
+      "p1": "Marion Aschenbrenner",
+      "p2": null,
+      "hems": "Kerstin Obermeier",
+      "fr": "Vitus Halbritter",
+      "other": null
+    },
+    "notizen": "Nachtdienst. Zwei Einsätze nach 23 Uhr, der erste über Mitternacht; keine Zeitumstellung."
+  },
+  "papierkorb": null,
+  "$warum": [
+    "DER KLASSISCHE FALL, DER FEHLTE (Schritt 17, R4-16, Backlog Nr. 275).",
+    "",
+    "Ein Luftdienst in der Nacht, an dem Einsätze VOR und NACH Mitternacht",
+    "beginnen — ohne Zeitumstellung. Die zwei Dienste über Mitternacht davor",
+    "(D06, D14) sind bodengebunden und liegen beide auf einer Umstellung;",
+    "ein Fehler, der nur an der Umstellung sichtbar wird, war damit belegt,",
+    "der gewöhnliche nicht.",
+    "",
+    "E1 beginnt am 19.06. um 23:50 und endet am 20.06.; E2 beginnt am 20.06.",
+    "um 01:40. Sortiert eine Liste „Beginn\" über die Zeichenkette hh:mm,",
+    "steht E2 vor E1 (AP9b in Schritt 15: 01:10 vor 23:50). Die Matrixzeile",
+    "„Luftdienst mit Einsätzen vor und nach Mitternacht\" rechnet pruefen.py",
+    "aus den Zeiten, nicht aus einer getippten Marke.",
+    "",
+    "Beide Einsätze sind aus geprüften Vorlagen verschoben (D01 m-11-3067419528,",
+    "D02 m-11-1287405639): Strecke, Dauer und Phasenabstände bleiben, damit",
+    "die Geschwindigkeitsprüfung dieselbe Aussage trifft."
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-11-2662570972",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-06-19 19:09",
+      "ende": "2026-06-19 20:40",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-06-19 19:09"
+        ],
+        [
+          3,
+          "2026-06-19 19:15"
+        ],
+        [
+          4,
+          "2026-06-19 19:28"
+        ],
+        [
+          5,
+          "2026-06-19 19:32"
+        ],
+        [
+          6,
+          "2026-06-19 19:58"
+        ],
+        [
+          7,
+          "2026-06-19 20:19"
+        ],
+        [
+          8,
+          "2026-06-19 20:28"
+        ],
+        [
+          9,
+          "2026-06-19 20:40"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Hochkreuth 71/83"
+        ],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Schlaganfall mit Halbseitensymptomatik",
+        "dob": null,
+        "age": 73,
+        "mission_no": "2026-1028",
+        "loc": {
+          "addr": "Am Bühl 24, 87477 Kaltbrunn am Hang",
+          "lat": 47.73178,
+          "lon": 10.39694
+        },
+        "site_desc": "Seniorenwohnanlage, Erdgeschoss",
+        "start": null,
+        "notes": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-11-4172630859",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-06-19 23:50",
+      "ende": "2026-06-20 01:19",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-06-19 23:50"
+        ],
+        [
+          3,
+          "2026-06-19 23:55"
+        ],
+        [
+          4,
+          "2026-06-20 00:09"
+        ],
+        [
+          5,
+          "2026-06-20 00:14"
+        ],
+        [
+          6,
+          "2026-06-20 00:40"
+        ],
+        [
+          7,
+          "2026-06-20 00:54"
+        ],
+        [
+          8,
+          "2026-06-20 01:05"
+        ],
+        [
+          9,
+          "2026-06-20 01:19"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Sonnenau",
+        "bw_info": "Ortsgruppe bereits am Hang; Übergabe an der Mittelstation",
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Sonnenau",
+          "RTW Hochkreuth 71/83"
+        ],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Polytrauma nach Pkw-Überschlag auf der Staatsstraße",
+        "dob": "1994-03-02",
+        "age": null,
+        "mission_no": "2026-0413",
+        "loc": {
+          "addr": "Bergbahnstraße 12, 87561 Sonnenau",
+          "lat": 47.421,
+          "lon": 10.343
+        },
+        "site_desc": "Talabfahrt Nord, unterhalb der Mittelstation",
+        "start": null,
+        "notes": "Nachtflug; Landung am Einsatzort mit Außenlicht der Feuerwehr."
+      },
+      "abdeckung": [
+        "herkunft-watch"
+      ]
+    },
+    {
+      "client_ref": "m-11-5283741960",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-06-20 01:40",
+      "ende": "2026-06-20 02:51",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-06-20 01:40"
+        ],
+        [
+          3,
+          "2026-06-20 01:45"
+        ],
+        [
+          4,
+          "2026-06-20 02:01"
+        ],
+        [
+          5,
+          "2026-06-20 02:06"
+        ],
+        [
+          9,
+          "2026-06-20 02:51"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Moosachtal",
+        "bw_info": "Abtransport zu Fuß mit der Bereitschaft bis zur Forststraße",
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Moosachtal"
+        ],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Hypoglykämie bei bekanntem Diabetes, nach Gabe von Glukose wach und orientiert",
+        "dob": null,
+        "age": 34,
+        "mission_no": "2026-0414",
+        "loc": {
+          "addr": "Wanderweg zur Moosalpe, 87538 Moosachtal",
+          "lat": 47.596,
+          "lon": 10.133
+        },
+        "site_desc": "Wanderweg oberhalb der Alpe, Waldgrenze",
+        "start": null,
+        "notes": "Nachtflug; Patient verbleibt nach Versorgung zu Hause, Hausarzt am Morgen informiert."
+      },
+      "abdeckung": [
+        "herkunft-watch"
+      ]
+    }
+  ],
+  "ruhesegmente": [
+    {
+      "client_ref": "r-11-7449274272",
+      "beginn": "2026-06-19 19:00",
+      "ende": "2026-06-19 19:09",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-9239582992",
+      "beginn": "2026-06-19 20:40",
+      "ende": "2026-06-19 23:50",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-8948069843",
+      "beginn": "2026-06-20 01:19",
+      "ende": "2026-06-20 01:40",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-4924242013",
+      "beginn": "2026-06-20 02:51",
+      "ende": "2026-06-20 07:00",
+      "final": true
+    }
+  ],
+  "ziel_einsaetze": 3
+}

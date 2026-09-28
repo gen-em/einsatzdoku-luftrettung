@@ -50,7 +50,10 @@
  *   `demo`, `admin`) und Pfad; `status` nennt einen erwarteten Code, wenn es
  *   nicht 200 ist; `karte: true` wartet zusaetzlich auf Leaflet; `vorher`
  *   fuehrt Bedienschritte vor der Aufnahme aus (die bekannten stehen in
- *   `vorher()`). Platzhalter in `__GROSSBUCHSTABEN__` loest der Lauf aus dem
+ *   `vorher()`); `vervielfachen: n` gibt die Einsatzliste aus
+ *   `api/range.php` n-fach in den Browser (R4-17, `einsaetzeVervielfachen()`
+ *   in `tools/motor.mjs`) — fuer Zustaende, die erst ab 200 Einsaetzen
+ *   entstehen. Platzhalter in `__GROSSBUCHSTABEN__` loest der Lauf aus dem
  *   Bestand auf — Kennungen gehoeren zu EINER Installation und stehen in
  *   keiner eingecheckten Datei.
  *
@@ -81,7 +84,8 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
-const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG } =
+const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG,
+        einsaetzeVervielfachen } =
   await import(new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
@@ -94,7 +98,17 @@ const wert = (n, s) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] 
 
 const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
 const DEMO   = { email: wert('--demo', 'demo@gen-em.org'),  pw: wert('--demo-pw', 'nadokudemo0815') };
-const ADMIN  = { email: wert('--admin', 'admin@gen-em.org'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
+const ADMIN  = { email: wert('--admin', 'admin@example.invalid'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
+/* DIE ROLLEN ADMIN UND SUPPORT (R4-08, Nr. 297). `--admin` bleibt das Konto
+ * der Rolle `betreiberin` — so hiess der Schalter schon, als das Konto
+ * admin@example.invalid BetreiberIn wurde, und die Kette kennt ihn. Die reine
+ * Admin- und die Support-Sicht haben eigene Pruefkonten, angelegt von
+ * `tools/referenzdatensatz/einspielen/pruefkonten.sh`. */
+const ROLLE_ADMIN   = { email: wert('--rolle-admin', 'bilderlauf-admin@probe.invalid'),
+                        pw: wert('--rolle-admin-pw', 'pruefstandadminsicht2026') };
+const ROLLE_SUPPORT = { email: wert('--rolle-support', 'bilderlauf-support@probe.invalid'),
+                        pw: wert('--rolle-support-pw', 'pruefstandsupportsicht2026') };
+const KONTEN = { demo: DEMO, betreiberin: ADMIN, admin: ROLLE_ADMIN, support: ROLLE_SUPPORT };
 const SKALA  = flag('--klein') ? 1 : 2;
 const FINGER = flag('--finger');
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
@@ -129,9 +143,11 @@ const ETIKETT = wert('--etikett', '');
  * der Stelle, an der er entsteht. `--motor` und sein Wert stehen in der
  * Liste, weil motorWahl() sie aus demselben argv liest. */
 const BEKANNT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
+                         '--rolle-admin', '--rolle-admin-pw', '--rolle-support', '--rolle-support-pw',
                          '--klein', '--finger', '--nur', '--stufe', '--selbstprobe',
                          '--motor', '--jobs-token', '--etikett']);
 const MIT_WERT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
+                          '--rolle-admin', '--rolle-admin-pw', '--rolle-support', '--rolle-support-pw',
                           '--nur', '--motor', '--jobs-token', '--stufe', '--etikett']);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -144,25 +160,29 @@ for (let i = 0; i < argv.length; i++) {
   if (MIT_WERT.has(a)) i++;          // den Wert ueberspringen
 }
 
-/* Acht Breiten, je mit einer realistischen Höhe. Die Höhe entscheidet nur
+/* Zehn Breiten, je mit einer realistischen Höhe. Die Höhe entscheidet nur
  * darüber, wie viel ohne Scrollen sichtbar ist — aufgenommen wird die ganze
- * Seite; sie steuert aber, was `position:sticky` und `100vh` tun. */
+ * Seite; sie steuert aber, was `position:sticky` und `100vh` tun.
+ * 1200 UND 1600 SEIT R4-08 (E-R4-23, Nr. 297): die zwei Schwellen aus
+ * Design.md 7, die bis dahin niemand knapp darüber gemessen hat. */
 const ALLE_BREITEN = [
   { b:  360, h:  800, art: 'Handy'   },
   { b:  390, h:  844, art: 'Handy'   },
   { b:  420, h:  900, art: 'Handy'   },
   { b:  768, h: 1024, art: 'Tablet'  },
   { b: 1024, h:  768, art: 'Tablet'  },
+  { b: 1200, h:  900, art: 'Desktop' },
   { b: 1280, h:  900, art: 'Desktop' },
   { b: 1440, h:  900, art: 'Desktop' },
+  { b: 1600, h:  900, art: 'Desktop' },
   { b: 1920, h: 1080, art: 'Desktop' },
 ];
 
 /* ---- Die drei Stufen (--stufe, E-PK-14) ---------------------------------
  *
  * klein  berührte Seiten (`--nur`), DREI Breiten, Chromium
- * neben  alle Seiten, acht Breiten, Chromium
- * haupt  alle Seiten, acht Breiten, ALLE DREI Engines
+ * neben  alle Seiten, zehn Breiten, Chromium
+ * haupt  alle Seiten, zehn Breiten, ALLE DREI Engines
  *
  * DIE RISIKOLISTE IST WEG, und das ist eine Entscheidung mit Preis. Sie
  * nannte zehn Seiten mit Container-Abfragen, `:has()`, `dvh` und `sticky`
@@ -172,7 +192,7 @@ const ALLE_BREITEN = [
  * einer Seite, die NICHT darauf stand. Dreißig Minuten bei einer Hauptstufe
  * sind kein Preis, der eine Liste rechtfertigt, die das Gesuchte verfehlt.
  *
- * Ohne `--stufe` bleibt es bei allen acht Breiten — so lief das Werkzeug
+ * Ohne `--stufe` bleibt es bei allen zehn Breiten — so lief das Werkzeug
  * vor PK-04, und die Kette ruft es weiter so. */
 const STUFE = wert('--stufe', '');
 if (STUFE && !['klein', 'neben', 'haupt'].includes(STUFE)) {
@@ -485,7 +505,7 @@ const KACHELMUSTER = [
  * die Seite selbst ihn traegt; `anmelden()` liest ihn dann wie bisher dort. */
 async function anmeldenAuf(seite, rolle) {
   if (rolle === 'aus') { return { ok: true }; }
-  const konto = rolle === 'admin' ? ADMIN : DEMO;
+  const konto = KONTEN[rolle];
   await seite.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
   await seite.fill('input[name="email"]', konto.email);
   await seite.fill('input[name="password"]', konto.pw);
@@ -496,7 +516,7 @@ async function anmeldenAuf(seite, rolle) {
 
   /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43, F-P5c-33).
    *
-   * Das Pruefkonto `admin@gen-em.org` ist eine BetreiberIn und hat einen
+   * Das Pruefkonto `admin@example.invalid` ist eine BetreiberIn und hat einen
    * Zweitfaktor. Nach dem Passwort steht die Seite deshalb WIEDER unter
    * `login.php` und fragt nach dem Code; die Adresspruefung darunter hielte
    * das zu Recht fuer gescheitert, und der Lauf kaeme ohne Admin-Bilder
@@ -564,7 +584,7 @@ async function anmelden(rolle) {
   const seite = await kontext.newPage();
   const drin = await anmeldenAuf(seite, rolle);
   if (!drin.ok) {
-    const konto = rolle === 'admin' ? ADMIN : DEMO;
+    const konto = KONTEN[rolle];
     /* DIE MELDUNG DER SEITE MITNEHMEN. „Anmeldung gescheitert" allein laesst
      * raten; der haeufigste Grund ist kein falsches Passwort, sondern der
      * Ratenschutz: Wer den Lauf mehrmals hintereinander startet, stolpert
@@ -632,7 +652,13 @@ async function anmelden(rolle) {
   return { kontext, seite, fehler, rolle, eingabeart, setzeAdresse: (a) => { adresse = a; } };
 }
 
-const rollen = { aus: await anmelden('aus'), demo: await anmelden('demo'), admin: await anmelden('admin') };
+/* FUENF ROLLEN SEIT R4-08 (Nr. 297). Drei davon sind Pflichtrollen mit
+ * Zweitfaktor und teilen das Geheimnis der Sandbox; weil kein Code zweimal
+ * gilt, wartet der Rechner zwischen ihren Anmeldungen bis zu einem
+ * Zeitschritt (tools/zweitfaktor/totp.php). */
+const rollen = { aus: await anmelden('aus'), demo: await anmelden('demo'),
+                 betreiberin: await anmelden('betreiberin'),
+                 admin: await anmelden('admin'), support: await anmelden('support') };
 
 /* ---- Platzhalter auflösen -------------------------------------------------
  *
@@ -717,11 +743,20 @@ async function platzhalter() {
      Modell gestrichen (R39). Er war ohnehin nie aufloesbar — der
      Referenzbestand hat keinen zentralen Standort, und die acht Aufnahmen
      fielen jedes Mal aus (F-S9-U-33). */
-  const a = rollen.admin.seite;
-  await gehZu(rollen.admin, `${BASIS}/admin_users.php`, 'admin_users.php');
+  const a = rollen.betreiberin.seite;
+  await gehZu(rollen.betreiberin, `${BASIS}/admin_users.php`, 'admin_users.php');
   const href = await a.locator('a[href*="admin_user.php?id="]').first()
                       .getAttribute('href').catch(() => null);
   p['__KONTO__'] = href || null;
+  /* EIN KONTO, DAS AUCH DER SUPPORT OEFFNEN DARF (R4-08). Seine Liste zeigt
+     keine Konten mit Rechten (E-P5c-40) — der erste Eintrag dort ist also
+     eine NutzerIn, und die Kontoseite laesst sich in allen drei Rollen
+     aufnehmen. `__KONTO__` bleibt, wie es war: das erste Konto der Liste der
+     BetreiberIn. */
+  await gehZu(rollen.support, `${BASIS}/admin_users.php`, 'admin_users.php');
+  const hrefN = await rollen.support.seite.locator('a[href*="admin_user.php?id="]').first()
+                      .getAttribute('href').catch(() => null);
+  p['__KONTO_NUTZERIN__'] = hrefN || null;
 
   /* ---- DREI SEITEN, DIE ES ERST SEIT DEM DEMO-AUSBAU GIBT ----------------
    *
@@ -789,6 +824,34 @@ async function platzhalter() {
     const i = await tagInhalt(t.id);
     const m = ((i && i.missions) || []).find((x) => x.winch === true);
     if (m) { p['__EINSATZ_WINDE__'] = `einsatz.php?id=${m.id}`; break; }
+  }
+
+  /* __TAG_SCHNITT__: ein Diensttag, dessen ERSTES Ruhesegment mit Punkten
+     mindestens 70 Minuten dauert (R4-13, Nr. 271/273). Die Bedienschritte
+     `schnitt-grund` und `schnitt-vorschau` oeffnen dessen Schneide-Bereich —
+     das erste „Schneiden" auf der Seite — und brauchen Platz fuer eine
+     Auswahl von 66 Minuten. Gesucht ueber den Inhalt, wie oben. */
+  p['__TAG_SCHNITT__'] = null;
+  for (const t of tagListe) {
+    const i = await tagInhalt(t.id);
+    const segs = ((i && i.rest_segments) || []).filter((r) => r.n > 0);
+    const erstes = segs[0];
+    if (erstes && erstes.bis_ts != null && erstes.bis_ts - erstes.von_ts >= 70 * 60
+        && !(erstes.schnitte || []).length) {
+      p['__TAG_SCHNITT__'] = `index.php?d=${t.id}`;
+      break;
+    }
+  }
+
+  /* __TAG_NACHT__: ein LUFTdienst, dessen Einsaetze an zwei Ortsdaten
+     beginnen (R4-16, Nr. 275, D22). Die Tagesansicht zeigt dann die Liste
+     ueber Mitternacht; sortiert sie „Beginn" ueber die Uhrzeit allein, steht
+     01:40 vor 23:50. `start_sort` traegt Datum UND Uhrzeit in Ortszeit. */
+  p['__TAG_NACHT__'] = null;
+  for (const t of tagListe.filter((x) => x.kind === 'air')) {
+    const i = await tagInhalt(t.id);
+    const daten = new Set(((i && i.missions) || []).map((x) => String(x.start_sort || '').slice(0, 10)));
+    if (daten.size > 1) { p['__TAG_NACHT__'] = `index.php?d=${t.id}`; break; }
   }
 
   const fehlend = Object.entries(p).filter(([, v]) => v === null).map(([k]) => k);
@@ -859,7 +922,8 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 
 async function vorher(seite, schritte, fehlerSammler) {
   const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
-                   'notfallblatt', 'code-schritt', 'codeblatt'];
+                   'notfallblatt', 'code-schritt', 'codeblatt',
+                   'schnitt-grund', 'schnitt-vorschau', 'nachladezeile'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
@@ -1003,6 +1067,58 @@ async function vorher(seite, schritte, fehlerSammler) {
       }
       continue;
     }
+    if (schritt === 'schnitt-grund' || schritt === 'schnitt-vorschau') {
+      /* DER SCHNEIDE-BEREICH MIT SEINER MELDUNG (R4-13, Nr. 271, 273).
+         `schnitt-grund`: Ende gleich Beginn — der Grund „Das Ende liegt vor
+         dem Beginn." muss als rote Meldung mit Symbol stehen.
+         `schnitt-vorschau`: Beginn des Segments bis 66 Minuten danach — der
+         Erklaertext nennt die Dauer, „1h 06min".
+         DER SCHRITT SCHREIBT NICHTS: „Einsatz erzeugen" drueckt niemand. Die
+         Seite zeichnet die Segmentliste nach dem Laden; gewartet wird auf den
+         Knopf, nicht auf eine Zeit. */
+      const auf = seite.locator('[data-schnitt-auf]').first();
+      try { await auf.waitFor({ state: 'visible', timeout: 10000 }); } catch {
+        fehlerSammler.push('Kein „Schneiden" auf der Seite — hat der Tag aus '
+                         + '__TAG_SCHNITT__ kein Ruhesegment mit Punkten mehr?');
+        continue;
+      }
+      if ((await auf.getAttribute('aria-expanded')) !== 'true') {
+        await auf.click();
+      }
+      const bereich = seite.locator('[data-schnitt-fuer]').first();
+      await bereich.waitFor({ state: 'visible', timeout: 5000 });
+      const beg = bereich.locator('input[id^="s-beg-"]');
+      const end = bereich.locator('input[id^="s-end-"]');
+      const start = await beg.inputValue();
+      let ziel = start;
+      if (schritt === 'schnitt-vorschau') {
+        const [h, m] = start.split(':').map(Number);
+        const min = (h * 60 + m + 66) % 1440;
+        ziel = String(Math.floor(min / 60)).padStart(2, '0') + ':'
+             + String(min % 60).padStart(2, '0');
+      }
+      await end.fill(ziel);
+      await end.dispatchEvent('input');
+      await seite.waitForTimeout(300);
+      continue;
+    }
+    if (schritt === 'nachladezeile') {
+      /* DIE NACHLADEZEILE MUSS IN JEDER BREITE SICHTBAR SEIN (R4-17).
+         Bis Web 21.4.0 hing sie im Scrollbehaelter der Tabelle, und der ist
+         unter 720 px ausgeblendet: Auf dem Handy gab es 200 Kacheln und
+         keinen Knopf. „Da" (im DOM, nicht `hidden`) genuegte also nicht —
+         gewartet wird auf SICHTBAR, und dann wird sie in den Ausschnitt
+         gerollt, den das Bild zeigt (`"ganzseitig": false`). */
+      const zeile = seite.locator('.mehrzeile:not([hidden])').first();
+      try { await zeile.waitFor({ state: 'visible', timeout: 15000 }); } catch {
+        fehlerSammler.push('Nachladezeile nicht sichtbar — unter 720 px im '
+                         + 'ausgeblendeten Scrollbehälter der Tabelle?');
+        continue;
+      }
+      await zeile.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await seite.waitForTimeout(200);
+      continue;
+    }
     if (schritt === 'schublade') {
       /* Die Schublade gibt es nur unter 1024 px — darueber steht die Leiste
          fest daneben, und der Menueknopf ist ausgeblendet. Ein Klick darauf
@@ -1027,7 +1143,7 @@ async function vorher(seite, schritte, fehlerSammler) {
  * mit derselben Pruefsumme.
  *
  * Die Ursache steht nicht in diesem Werkzeug, sondern in der Anwendung:
- * Das Demo-Konto setzt sich alle 30 Minuten zurueck, und dabei erhoeht
+ * Das Demo-Konto setzt sich 30 Minuten nach der ersten Aenderung zurueck, und dabei erhoeht
  * `demo_zuruecksetzen()` die Sitzungs-Epoche (server/demo_lib.php,
  * `session_epoch = session_epoch + 1`). `auth_guard.php` beendet daraufhin
  * jede offene Sitzung dieses Kontos — auch unsere. Der Lauf braucht
@@ -1300,6 +1416,13 @@ for (const eintrag of liste) {
     }
   }
 
+  /* DIE EINSATZLISTE VERVIELFACHEN, wo die Seitenliste es verlangt
+   * (R4-17): nur fuer diesen Eintrag, ueber alle Breiten, danach wieder
+   * weg. Die uebrigen Seiten sehen den echten Bestand. */
+  const aufheben = eintrag.vervielfachen
+    ? await einsaetzeVervielfachen(seite, '**/api/range.php*', eintrag.vervielfachen)
+    : null;
+
   for (const { b, h, art } of BREITEN) {
     let adresse = `${BASIS}/${pfad}`;
     rolle.fehler.length = 0;
@@ -1316,7 +1439,7 @@ for (const eintrag of liste) {
     /* ---- 404 NACH EINEM DEMO-RESET: KENNUNGEN NEU HOLEN (S8/AP7) --------
      *
      * `platzhalter()` laeuft einmal, zu Beginn. Das Demo-Konto setzt sich
-     * alle 30 Minuten zurueck, ein voller Lauf dauert laenger als das — und
+     * 30 Minuten nach der ersten Aenderung zurueck, ein voller Lauf dauert laenger als das — und
      * danach zeigen `?d=` und `?id=` auf Zeilen, die es nicht mehr gibt.
      * Gemessen am 06.09.2026: Die Einsatzseiten (frueh im Lauf) standen, die
      * sechs Tag- und Aktionsseiten dahinter antworteten mit 404; 48 von 368
@@ -1464,6 +1587,25 @@ for (const eintrag of liste) {
         .map(el => ((el.querySelector('h2, h3') || {}).textContent || '(ohne Titel)')
                     .trim().replace(/\s+/g, ' ').slice(0, 40)),
       karten: document.querySelectorAll('section.karte, details.karte').length,
+      /* BEHAELTER, DIE SELBST ROLLEN (R4-08, Nr. 297). `scrollWidth` des
+         Dokuments sieht sie nicht: Eine Tabelle in `.tabelle-scroll` laeuft
+         ueber und wird von ihrem Behaelter aufgefangen — die Seite bleibt
+         schmal. Das ist oft gewollt (eine breite Tabelle am Handy), aber es
+         ist eine Aussage ueber die Seite, und bis hierhin stand sie nirgends:
+         P5c/AP7 hat sie mit einem Skript im Arbeitsordner gemessen. Gezaehlt
+         wird jeder sichtbare Behaelter mit `overflow-x: auto|scroll`, der
+         mehr als 1 px rollt; genannt wird er mit seinem Mass. Er haelt den
+         Lauf NICHT auf (E-R4-31) — ein Behaelter, der rollen soll, rollt. */
+      rollen: Array.from(document.querySelectorAll('body *'))
+        .filter(el => {
+          const ox = getComputedStyle(el).overflowX;
+          return (ox === 'auto' || ox === 'scroll') && el.getClientRects().length > 0
+                 && el.scrollWidth - el.clientWidth > 1;
+        })
+        .map(el => el.tagName.toLowerCase()
+             + (el.className && typeof el.className === 'string'
+                ? '.' + el.className.trim().split(/\s+/).join('.') : '')
+             + ' +' + (el.scrollWidth - el.clientWidth)),
       knoepfe: Array.from(document.querySelectorAll('.knopf, .sprungziel'))
         .filter(el => el.offsetParent !== null || el.getClientRects().length > 0)
         .map(el => ({
@@ -1478,7 +1620,7 @@ for (const eintrag of liste) {
           suchzwilling: !!el.closest('.suchzeile'),
         })),
     })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null,
-                       ausbruch: [], karten: 0 }));
+                       ausbruch: [], karten: 0, rollen: [] }));
 
     const datei = join(AUSGABE, 'einzeln', `${eintrag.name}-${b}.png`);
     if (hin.abbruch) {
@@ -1552,6 +1694,7 @@ for (const eintrag of liste) {
       taeter: mass.taeter || null,
       ausbruch: mass.ausbruch || [],
       karten: mass.karten || 0,
+      rollen: mass.rollen || [],
       konsole: rolle.fehler.slice(),
     });
     /* DAS ETIKETT — je Seite und Breite, in beiden Richtungen (s. `ETIKETT`).
@@ -1582,6 +1725,7 @@ for (const eintrag of liste) {
     }
   }
 
+  if (aufheben) { await aufheben(); }
   wartungAus();
 
   await kontaktbogen(eintrag.name, bilder);
@@ -1628,6 +1772,7 @@ async function kontaktbogen(name, bilder) {
 const gesamtUeberlauf = bericht.seiten.reduce((n, s) => n + s.breiten.filter(b => b.ueberlauf).length, 0);
 const gesamtKonsole   = bericht.seiten.reduce((n, s) => n + s.breiten.reduce((m, b) => m + b.konsole.length, 0), 0);
 const bilderZahl      = bericht.seiten.length * BREITEN.length;
+const gesamtRollen    = bericht.seiten.reduce((n, s) => n + s.breiten.filter(b => b.rollen.length).length, 0);
 
 let md = `# Bildaufnahme — Bericht\n\n`;
 md += `Stand ${bericht.stand} · Basis ${BASIS} · Maßstab ${SKALA}× · `
@@ -1639,15 +1784,18 @@ md += `| Einzelbilder | ${bilderZahl} |\n`;
 md += `| Waagerechter Überlauf | **${gesamtUeberlauf}** von ${bilderZahl} |\n`;
 md += `| Konsolenfehler | **${gesamtKonsole}** |\n`;
 md += `| Knöpfe mit falscher Höhe | **${bericht.knopf.length}** |\n`;
+md += `| Bilder mit rollendem Behälter (hält nicht auf) | ${gesamtRollen} von ${bilderZahl} |\n`;
 md += `| Etikett ${ETIKETT ? '„' + ETIKETT + '“' : '(keins erwartet)'} | **${bericht.etikett.length}** Abweichungen `
    + `(${bericht.etikettGeprueft.titel} Titel, ${bericht.etikettGeprueft.kopf} Kopfleisten geprüft) |\n\n`;
-md += `## Je Seite\n\n| Seite | Gruppe | Überlauf bei | Verursacher | Konsole |\n|---|---|---|---|---|\n`;
+md += `## Je Seite\n\n| Seite | Gruppe | Überlauf bei | Verursacher | Rollt bei | Konsole |\n|---|---|---|---|---|---|\n`;
 for (const s of bericht.seiten) {
   const breit = s.breiten.filter(x => x.ueberlauf);
   const u = breit.map(x => `${x.breite} (+${x.ueberlauf})`).join(', ') || '—';
   const t = [...new Set(breit.map(x => x.taeter).filter(Boolean))].join('<br>') || '—';
   const k = s.breiten.reduce((n, x) => n + x.konsole.length, 0);
-  md += `| ${s.name} | ${s.gruppe} | ${u} | ${t} | ${k || '—'} |\n`;
+  const rollt = s.breiten.filter(x => x.rollen.length)
+    .map(x => `${x.breite}: ${[...new Set(x.rollen)].slice(0, 2).join(', ')}`).join('<br>') || '—';
+  md += `| ${s.name} | ${s.gruppe} | ${u} | ${t} | ${rollt} | ${k || '—'} |\n`;
 }
 if (gesamtKonsole) {
   md += `\n## Konsolenfehler im Wortlaut\n\n`;
@@ -1672,7 +1820,7 @@ if (verlorene.length || ausgefallen.length) {
   if (verlorene.length) {
     md += `Bei ${verlorene.length} Aufnahmen war die Sitzung fort und wurde neu `
        +  `aufgebaut; das Bild entstand danach. Im Demo-Konto ist das normal — `
-       +  `sein Reset alle 30 Minuten erhöht die Sitzungs-Epoche.\n\n`;
+       +  `sein Reset (30 Minuten nach der ersten Änderung) erhöht die Sitzungs-Epoche.\n\n`;
     for (const v of verlorene) md += `- ${v}\n`;
   }
   if (ausgefallen.length) {
@@ -1690,6 +1838,7 @@ writeFileSync(join(AUSGABE, 'bericht.json'), JSON.stringify(bericht, null, 2) + 
 console.log(`\n${bilderZahl} Einzelbilder, ${bericht.seiten.length} Kontaktbögen.`);
 console.log(`Überlauf: ${gesamtUeberlauf} · Konsolenfehler: ${gesamtKonsole}`
   + ` · Knöpfe falscher Höhe: ${bericht.knopf.length}`  + ` (${FINGER ? 'Finger, 44 px' : 'Zeiger, 44/36 px'})`);
+console.log(`Rollende Behälter: ${gesamtRollen} von ${bilderZahl} Bildern (halten nicht auf)`);
 /* DIE ZAHL NENNT, WAS SIE GEMESSEN HAT (CLAUDE.md 6): nicht „0 Ausbrüche",
    sondern „n Karten geprüft, 0 außerhalb". Eine Seite ohne Karten meldete
    sonst dieselbe Null wie eine geprüfte. */

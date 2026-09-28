@@ -137,6 +137,43 @@ function zeitraum_text(?string $vonUtc, ?string $bisUtc): string
         : $von . ' – ' . $bis;
 }
 
+/**
+ * Ein ORTSTAG kurz: '2026-09-21' → „21.09." — die Achse eines Diagramms
+ * (R4-24). Anders als die Formatierer darüber nimmt er keinen UTC-Zeitpunkt,
+ * sondern einen Tag, der schon in Ortszeit gerechnet ist: Eine zweite
+ * Umrechnung verschöbe ihn um einen Tag.
+ */
+function tag_kurz_text(string $tag): string
+{
+    return substr($tag, 8, 2) . '.' . substr($tag, 5, 2) . '.';
+}
+
+/**
+ * Zwei ORTSTAGE als Spanne: „29.08. – 28.09.2026", über einen Jahreswechsel
+ * „27.09.2025 – 28.09.2026" (R4-24) — die Schreibweise von `zeitraum_text()`,
+ * aber für Tage, die schon in Ortszeit gerechnet sind.
+ */
+function tage_spanne_text(string $von, string $bis): string
+{
+    $jahr = static fn(string $t): string => tag_kurz_text($t) . substr($t, 0, 4);
+    if ($von === $bis) { return $jahr($bis); }
+    return (substr($von, 0, 4) === substr($bis, 0, 4) ? tag_kurz_text($von) : $jahr($von))
+         . ' – ' . $jahr($bis);
+}
+
+/**
+ * Ein Monat kurz: '2026-09-01' → „Sep. 2026", ohne Jahr „Sep." (R4-24).
+ * Wie `tag_kurz_text()` mit einem Ortstag, nicht mit einem UTC-Zeitpunkt.
+ * Mai, Juni und Juli sind kurz genug und tragen keinen Punkt.
+ */
+function monat_kurz_text(string $tag, bool $mitJahr = true): string
+{
+    $namen = [1 => 'Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.',
+              'Sep.', 'Okt.', 'Nov.', 'Dez.'];
+    $text = $namen[(int)substr($tag, 5, 2)] ?? '';
+    return $mitJahr ? $text . ' ' . substr($tag, 0, 4) : $text;
+}
+
 /** Datum und volle Stunde: „22.09.2026 14". Ein Einzelfall der Statusseite. */
 function datum_stunde_text(?string $utc): string
 {

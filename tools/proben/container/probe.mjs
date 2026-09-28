@@ -106,7 +106,7 @@ try {
     const kopf = {
       format: 'einsatzdoku-backup', version: 9, app: 'einsatzdoku-notarzt',
       created_at: '2026-08-31T12:00:00+00:00',
-      user: { email: 'probe@gen-em.org', name: 'Containerprobe' },
+      user: { email: 'probe@example.invalid', name: 'Containerprobe' },
     };
 
     /* ZWEI EINTRAGSTEILE, nicht eins. Der Leser haengt die Fenster in der

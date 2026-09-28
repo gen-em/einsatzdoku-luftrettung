@@ -554,7 +554,8 @@ ui_kopf(['menue' => false]);
   <?php ui_titelzeile([
       'titel' => 'Installation wiederherstellen',
       'unter' => 'Ein Komplett-Backup in eine <strong>leere</strong> Datenbank '
-               . 'einspielen. Diese Seite arbeitet nur, solange es noch kein Konto gibt.',
+               . 'einspielen. Diese Seite arbeitet nur, solange es noch kein Konto gibt; '
+               . 'die Reihenfolge steht im <a href="hilfe.php#der-wiederanlauf">Handbuch</a>.',
   ]); ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
@@ -759,25 +760,14 @@ ui_kopf(['menue' => false]);
       <?php ui_karte_ende(); ?>
     <?php endif; ?>
 
-    <?php ui_karte_start(['titel' => 'Was hier gilt', 'vorschau' => 'Wiederanlauf']); ?>
-      <p class="feld-hinweis"><strong>Die Reihenfolge des Wiederanlaufs:</strong>
-      Datenbank anlegen (leer) · Anwendungsdateien hochladen ·
-      <code>config.php</code> aus dem Wiederanlaufpaket daneben legen ·
-      Backup-Datei nach <code>sicherungen/<?= WH_EINGANG ?>/</code> ·
-      diese Seite · anmelden · <a href="betrieb_updates.php">Updates</a>. Ausführlich steht
-      es im Runbook, <code>docs/Technik.md</code>, Abschnitt 7.</p>
-
-      <p class="feld-hinweis"><strong>Der Serverschlüssel entscheidet.</strong> Eine
-      <code>.edk</code>-Datei mit dem Vermerk „mit dem Serverschlüssel" lässt sich
-      nur mit <em>der</em> <code>config.php</code> öffnen, die beim Erzeugen galt.
-      Ist sie verloren, hilft das Backup nicht — deshalb gehört sie ins
-      Wiederanlaufpaket, getrennt vom Server aufbewahrt.</p>
-
-      <p class="feld-hinweis"><strong>Es wird nichts zurückgenommen.</strong> Scheitert
-      das Einspielen auf halbem Weg, steht die Datenbank halb da. Ein neuer Versuch
-      braucht dann eine wieder geleerte Datenbank; ein Dump über einen halben
-      Bestand zu legen ergäbe eine Mischung, die niemand mehr auseinanderbekommt.</p>
-    <?php ui_karte_ende(true); ?>
+    <?php /* Hier stand bis Web 21.4.0 eine zugeklappte Erklaerkarte mit
+             Reihenfolge, Serverschluessel und „es wird nichts
+             zurueckgenommen" (R4-20, Nr. 287). Die drei Absaetze stehen jetzt
+             im Handbuch 12.6, „Der Wiederanlauf"; die Unterzeile verweist
+             dorthin. `hilfe.php` braucht weder Anmeldung noch Tabellen —
+             gemessen am 27.09.2026 an einer leeren Datenbank: HTTP 200, das
+             ganze Handbuch. Der Verweis traegt also auch hier, wo sonst nichts
+             steht. */ ?>
   <?php endif; ?>
 
   </main>

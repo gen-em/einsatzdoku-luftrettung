@@ -17,6 +17,17 @@ Abschnitte.
     python3 tools/erzeugen/design.py symbole     # Abschnitt 8
     python3 tools/erzeugen/design.py bausteine   # Abschnitt 9
     python3 tools/erzeugen/design.py alle
+    python3 tools/erzeugen/design.py schreiben   # ersetzt die vier in Design.md
+
+SCHREIBEN (seit R4-25, Nr. 209). Die Tabellen waren von Anfang an zum
+Einfügen gedacht, und eingefügt hat sie lange niemand: Als der Bestandsriegel
+sie mit R4-25 an diesen Erzeuger hielt, waren alle vier veraltet. Seither ist
+Stufe 1 rot, sobald eine Funktion in ui.php, eine Regel in style.css oder ein
+Symbol dazukommt — und vier Blöcke von Hand zu ersetzen, jedes Mal, ist genau
+die Arbeit, die dann unterbleibt. `schreiben` ersetzt jeden Block von seiner
+Marke bis vor die nächste Überschrift; die Leerzeilen davor bleiben. Die
+Reihenfolge ist die der Kapitel (4, 7, 8, 9). Danach steht jede Ausgabe genau
+einmal im Dokument, oder der Befehl endet mit 1 und schreibt nichts.
 
 GRENZE: Es erzeugt Tabellen, keine Prosa. Was ein Token BEDEUTET, steht als
 Kommentar im Stylesheet und wird uebernommen, wenn einer da ist; wo keiner
@@ -334,6 +345,36 @@ def tabelle_bausteine() -> str:
 
 TEILE = {'token': tabelle_token, 'schwellen': tabelle_schwellen,
          'symbole': tabelle_symbole, 'bausteine': tabelle_bausteine}
+DOKU = WURZEL / 'docs' / 'Design.md'
+MARKE = '<!-- ERZEUGT von tools/erzeugen/design.py'
+
+
+def schreiben() -> int:
+    """Ersetzt die vier Blöcke in Design.md (Kopf der Datei, SCHREIBEN)."""
+    zeilen = DOKU.read_text(encoding='utf-8').split('\n')
+    marken = [i for i, z in enumerate(zeilen) if z.startswith(MARKE)]
+    if len(marken) != len(TEILE):
+        print(f'{DOKU.name}: {len(marken)} Blöcke mit der Marke, erwartet {len(TEILE)} — nichts geschrieben',
+              file=sys.stderr)
+        return 1
+    neu = {k: f() for k, f in TEILE.items()}
+    aus, pos = [], 0
+    for m, (teil, block) in zip(marken, neu.items()):
+        ende = next((i for i in range(m + 1, len(zeilen)) if zeilen[i].startswith('#')), len(zeilen))
+        while ende > m + 1 and zeilen[ende - 1] == '':
+            ende -= 1
+        alt = '\n'.join(zeilen[m:ende])
+        print(f'  {teil:10s} Zeile {m + 1}: {"unverändert" if alt == block else "neu erzeugt"}')
+        aus += zeilen[pos:m] + block.split('\n')
+        pos = ende
+    text = '\n'.join(aus + zeilen[pos:])
+    falsch = [k for k, b in neu.items() if text.count(b) != 1]
+    if falsch:
+        print(f'{DOKU.name}: danach nicht genau einmal: {", ".join(falsch)} — nichts geschrieben', file=sys.stderr)
+        return 1
+    DOKU.write_text(text, encoding='utf-8')
+    return 0
+
 
 if __name__ == '__main__':
     was = sys.argv[1] if len(sys.argv) > 1 else 'alle'
@@ -341,7 +382,9 @@ if __name__ == '__main__':
         for k, f in TEILE.items():
             print(f'\n## {k}\n')
             print(f())
+    elif was == 'schreiben':
+        sys.exit(schreiben())
     elif was in TEILE:
         print(TEILE[was]())
     else:
-        raise SystemExit(f'Unbekannt: {was}. Bekannt: {", ".join(TEILE)}, alle')
+        raise SystemExit(f'Unbekannt: {was}. Bekannt: {", ".join(TEILE)}, alle, schreiben')

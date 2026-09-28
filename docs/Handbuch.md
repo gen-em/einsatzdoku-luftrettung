@@ -714,8 +714,8 @@ es zu spät.
 Absage und behalten ihre Warteschlange. Nimmst du die Löschung zurück, kommt
 alles nach. Lässt du es laufen, ist es mit dem Konto fort.
 
-**Das Demo-Konto lässt sich nicht löschen** — es setzt sich ohnehin alle 30
-Minuten selbst zurück.
+**Das Demo-Konto lässt sich nicht löschen** — es setzt sich 30 Minuten nach
+der ersten Änderung ohnehin selbst zurück.
 
 ### 3.1f Zweitfaktor
 
@@ -832,8 +832,10 @@ Es gibt ein Konto, in dem sich alles gefahrlos ausprobieren lässt:
 **Alle Daten darin sind frei erfunden.** Die Orte, Kliniken, Rettungsmittel
 und Besatzungsnamen gibt es nicht; die Diagnosen gehören zu niemandem. Der
 Datensatz ist so gebaut, dass jede Funktion der Anwendung darin vorkommt —
-Luft- und Bodeneinsätze, Windeneinsätze, Bergwacht, Reanimationen, ein Dienst
-über Mitternacht, ein Diensttag ohne Einsatz, ein gefüllter Papierkorb.
+Luft- und Bodeneinsätze, Windeneinsätze, Bergwacht, Reanimationen, Dienste
+über Mitternacht am Boden und in der Luft (seit Web 21.3.1 ein Nachtdienst im
+Juni mit Einsätzen vor und nach Mitternacht), ein Diensttag ohne Einsatz, ein
+gefüllter Papierkorb.
 
 **Seit dem Ausbau des Bestands auch die drei Rettungsmittel-Typen im
 Betrieb** (Abschnitt 9.1a): ein **Bergwachtnotarzt am Boden** mit Winde und
@@ -857,10 +859,15 @@ der gesperrte Bereich.
 lösche welche, pflege Stammdaten, koppele eine Uhr. Es geht nichts verloren,
 was jemandem fehlen würde.
 
-**Alle 30 Minuten setzt sich das Konto selbst zurück.** Danach ist der
-Ausgangsstand wieder da und deine Änderungen sind fort — auch die, die du
-gerade noch gebraucht hättest. Ein Banner am oberen Rand erinnert daran und
-nennt, wann es das nächste Mal so weit ist.
+**30 Minuten nach der ersten Änderung setzt sich das Konto selbst
+zurück.** Danach ist der Ausgangsstand wieder da und deine Änderungen sind
+fort — auch die, die du gerade noch gebraucht hättest. Gezählt wird ab der
+ersten Änderung, nicht ab deiner letzten: Wer länger ausprobiert, wird
+mittendrin zurückgesetzt. Solange niemand etwas ändert, bleibt der Bestand
+stehen, und du wartest beim Hereinkommen auf nichts; nur einmal am Tag wird
+er auch ohne Änderung zurückgesetzt. Ein Banner am oberen Rand erinnert
+daran und nennt, sobald du etwas geändert hast, wann es so weit ist.
+*Bis Web 21.1.x setzte es sich alle 30 Minuten zurück, auch ohne Änderung.*
 
 **Was im Demo-Konto nicht geht:** E-Mail-Adresse und Passwort lassen sich
 nicht ändern, und „Passwort vergessen" führt für diese Adresse zu nichts.
@@ -872,8 +879,8 @@ Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 **gesperrt**, die Karte „Konto-Backups" fehlt dort ganz, und der Anzeigename
 lautet **„Demo NutzerIn"**. Verwaltet wird das Konto ausschließlich über den
 Reiter **Demo-Konto**: anlegen, zurücksetzen, entfernen. Der Grund ist der
-Reset — was auf der Kontoseite eingetragen würde, wäre spätestens nach dreißig
-Minuten wieder weg, und zwar ohne Hinweis. **Die Geräte bleiben offen:** Eine
+Reset — was auf der Kontoseite eingetragen würde, wäre beim nächsten Reset
+wieder weg, und zwar ohne Hinweis. **Die Geräte bleiben offen:** Eine
 Uhr zu koppeln ist gerade der Sinn dieses Kontos, und der Reset räumt das
 selbst wieder ab.
 
@@ -1134,8 +1141,12 @@ Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
    Klinik. Alles Weitere trägst du danach im Einsatz nach; zum Schneiden
    genügen Beginn und Ende.
 4. **„Einsatz erzeugen"**. Unter den Feldern steht vorher in Worten, was
-   passiert: welchen Zeitraum der Einsatz bekommt und welche Reste als
-   Ruhesegment stehen bleiben.
+   passiert: welchen Zeitraum der Einsatz bekommt, wie lange er dauert
+   (etwa „1h 06min", seit Web 21.1.11 wie überall in der Anwendung) und
+   welche Reste als Ruhesegment stehen bleiben. Passt die Auswahl nicht —
+   das Ende liegt vor dem Beginn, oder eine Zeit liegt außerhalb des
+   Segments —, steht dort stattdessen **rot**, warum, und der Knopf bleibt
+   gesperrt.
 
 **Die Punkte wandern, sie werden nicht kopiert.** Nach dem Schnitt liegt die
 Fahrt beim Einsatz und **nicht mehr** im Ruhesegment. Das ist gewollt: Sonst
@@ -1289,18 +1300,21 @@ ist danach nicht noch einmal nötig.
 **Welche Angaben geschützt sind, sagen die Karten selbst:** Die Blöcke
 **Einsatz** und **PatientIn** tragen im Kopf die blaue Plakette
 **„verschlüsselt"**, und die einzelnen geschützten Zeilen — Einsatzort,
-Beschreibung, Diagnose, Name, Geburtsdatum, Alter und die Notizen des
-Einsatzes — tragen daneben ein kleines
+Beschreibung, manueller Abfahrtort, Diagnose, Name, Geburtsdatum, Alter und
+die Notizen des Einsatzes — tragen daneben ein kleines
 **Schloss**. Die Plakette sagt „hier stehen verschlüsselte Angaben", das
 Schloss sagt „diese hier". Auch die **Einsatznummer** trägt es (seit
 Web 19.1.1) — sie ist seit langem verschlüsselt, war aber die einzige Zeile
-des Blocks ohne das Zeichen.
+des Blocks ohne das Zeichen. Der **manuelle Abfahrtort** steht seit
+Web 21.1.5 als eigene Zeile da; bis dahin nannte ihn nur das Kurzinfo des
+Punkts auf der Karte, ohne Schloss.
 
 Die Angaben selbst stehen in **vier Karten**:
 
 - **Einsatz**: Einsatzort (darunter klein Höhe — sofern luftgebunden und aus
   dem Track ermittelbar —, Luftlinie und Strecke), Beschreibung des
-  Einsatzorts, Diagnose, Notizen, weitere Rettungsmittel. Am Fuß der Karte
+  Einsatzorts, Abfahrtort (nur bei „Manueller Ort", Abschnitt 4.3),
+  Diagnose, Notizen, weitere Rettungsmittel. Am Fuß der Karte
   stehen **Plaketten**: Winde (mit Cycles), Bergwacht (mit Bereitschaft),
   Sekundär, Fehleinsatz — nur was zutrifft.
 - **PatientIn**: Einsatznummer, Name, Geburtsdatum mit Alter. Diese
@@ -1411,26 +1425,10 @@ in dieser Reihenfolge:
 6. **Notizen** — seit Web 19 **verschlüsselt** wie die Patientendaten
 7. **Einsatzphasen**
 8. **Reanimation** — zugeklappt („keine"), mit Bestand offen
-9. **Was hier gilt** — zugeklappt; die Legende zu den beiden Zeichen
 
-**Zwei Zeichen sagen dir, wer mitliest.** Ein **Schloss** neben der
-Beschriftung heißt: Dieses Feld ver- und entschlüsselt dein Browser, der Server
-sieht nur Chiffretext. Es steht an Name, Geburtsdatum, Alter, Diagnose,
-Einsatznummer, Einsatzort samt Beschreibung — und seit Web 19 an den
-**Notizen des Einsatzes**. Die Kleinzeile **„Klartext — keine
-Patientendaten"** heißt das Gegenteil: Dieses Feld wird unverschlüsselt
-gespeichert. Sie steht an den Bergwacht-Angaben, an der weiteren NotärztIn, an
-den Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
-ist. Die zugeklappte Karte **„Was hier gilt"** am Ende des Formulars erklärt
-beides in drei Sätzen.
-
-Bei den **Notizen des Einsatzes** steht das Schloss am **Kartentitel** und
-nicht am Feld: Die Karte enthält genau dieses eine Feld, und seine
-Beschriftung heißt wie die Karte — sie würde sonst zweimal dastehen.
-
-> Die Notizen des Einsatzes und die des Diensttags heißen gleich und werden
-> verschieden behandelt. Genau deshalb tragen sie verschiedene Zeichen: Wer
-> Patientenbezogenes notieren will, gehört in das Feld mit dem Schloss.
+Unter dem Titel steht ein Satz zu den beiden Zeichen an den Feldern, mit einem
+Verweis auf ihre Erklärung am Ende dieses Abschnitts (**Schloss und
+Klartext**).
 
 Windeneinsatz und Bergwacht fehlen ganz, wenn der Diensttag die jeweilige
 Fähigkeit nicht mitbringt und im Einsatz nichts dazu eingetragen ist.
@@ -1698,6 +1696,37 @@ Nach dem **Neuanlegen** eines Einsatzes zeigt die Einsatzansicht den Button
 „Weiteren Einsatz nachtragen" — er öffnet die Neuanlage direkt für denselben
 Diensttag. Beim Bearbeiten eines bestehenden Einsatzes erscheint er nicht.
 
+#### Schloss und Klartext
+
+*Bis Web 21.4.0 stand das in der zugeklappten Karte „Was hier gilt" am Ende
+des Formulars; seither trägt das Formular einen Satz mit Verweis hierher
+(R4-20).*
+
+**Zwei Zeichen sagen dir, wer mitliest.** Ein **Schloss** neben der
+Beschriftung heißt: Dieses Feld ver- und entschlüsselt dein Browser, der Server
+sieht nur Chiffretext. Es steht an Name, Geburtsdatum, Alter, Diagnose,
+Einsatznummer, Einsatzort samt Beschreibung, am **manuellen Abfahrtort** —
+und seit Web 19 an den **Notizen des Einsatzes**. Die Kleinzeile **„Klartext — keine
+Patientendaten"** heißt das Gegenteil: Dieses Feld wird unverschlüsselt
+gespeichert. Sie steht an den Bergwacht-Angaben, an der weiteren NotärztIn, an
+den Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
+ist.
+
+Bei den **Notizen des Einsatzes** steht das Schloss am **Kartentitel** und
+nicht am Feld: Die Karte enthält genau dieses eine Feld, und seine
+Beschriftung heißt wie die Karte — sie würde sonst zweimal dastehen.
+
+> Die Notizen des Einsatzes und die des Diensttags heißen gleich und werden
+> verschieden behandelt. Genau deshalb tragen sie verschiedene Zeichen: Wer
+> Patientenbezogenes notieren will, gehört in das Feld mit dem Schloss.
+
+**Der Server sieht das eine nie und das andere immer.** Er kann die
+verschlüsselten Felder weder anzeigen noch durchsuchen — deshalb findet die
+Suche sie erst, wenn du entsperrt hast. Alles Übrige — Zeiten, Phasen samt
+Koordinaten, GPS-Daten, Transportziel — liegt lesbar in der Datenbank, weil
+Auswertung und Statistik darauf angewiesen sind. Welche Felder genau
+verschlüsselt sind und warum, steht in Abschnitt 5.
+
 ### 4.4 Diensttage-Leiste, Jahres- und Monatsübersicht
 
 Die Leiste ist nach **Jahr → Monat → Tage** gruppiert. Es ist immer nur ein
@@ -1705,6 +1734,12 @@ Jahr geöffnet und darin ein Monat (standardmäßig der jüngste); ein anderes
 Jahr anzuklicken schließt das vorherige automatisch. Springst du auf einen Tag
 in einem anderen Zeitraum, klappt die Leiste automatisch dorthin auf. Auf
 schmalen Geräten liegt sie in der Schublade (Abschnitt 3).
+
+**Höchstens 500 Diensttage.** Die Leiste zeigt die 500 jüngsten. Hat dein
+Konto mehr, steht darunter „Die Leiste zeigt die 500 jüngsten Diensttage;
+ältere findest du über die Suche." — die Suche geht über den ganzen
+Bestand. Bei einem Dienst je Woche sind 500 Tage fast zehn Jahre. Bis
+Web 21.4.0 fehlte der Hinweis, und die älteren Tage fehlten still.
 
 **Die ganze Zeile klappt auf und zu** — Jahreszahl wie Monatsname. Der Weg in
 die Übersicht des Zeitraums ist das kleine Balkensymbol am rechten Rand
@@ -1728,7 +1763,7 @@ breit genug; dort steht der Name wie am großen Bildschirm.
 Ein Klick auf das **Balkensymbol** neben Jahreszahl oder Monatsname öffnet eine
 Übersicht dieses Zeitraums. Unter dem Titel steht, wie viele Diensttage er hat
 und über welche Spanne er läuft; darunter die Statistik-Kacheln, dann eine
-Karte und schließlich alle Einsätze — am Schreibtisch als Tabelle mit Datum
+Karte und schließlich die Einsätze — am Schreibtisch als Tabelle mit Datum
 statt Tagesnummer, auf schmalen Geräten als Kacheln. Die Durchschnittswerte
 rechnen mit **allen angelegten Diensttagen** des Zeitraums, auch mit
 einsatzfreien. Solange du in einer Übersicht stehst, ist der betreffende
@@ -1778,6 +1813,22 @@ nicht erklärbar.
 Die gewählte Ansicht steht im Adressteil hinter dem `#` und bleibt beim Teilen
 eines Links erhalten.
 
+**Höchstens 200 Einsätze auf einmal** (seit Web 21.4.0), wie in der Suche.
+Hat der Zeitraum mehr, stehen unter der Tabelle **„Weitere 200 anzeigen"**
+und **„Alle N anzeigen"**, und hinter der Einsatzzahl über der Tabelle steht
+„200 angezeigt". Begrenzt ist nur die Liste: Die Einsatzzahl, die
+Kilometersumme, die Kacheln und die Karte gelten weiter für den **ganzen**
+Zeitraum — die Karte zeigt also auch die Punkte der Einsätze, die in der
+Tabelle noch nicht stehen. Bis dahin stand jede Zeile da, und ein Jahr mit
+einigen tausend Einsätzen brauchte über eine Minute, bis die Seite fertig
+war.
+
+**Erst die Liste, dann die Karte** (seit Web 21.6.1). Bei einem großen
+Zeitraum steht zuerst die Tabelle da; Ort, Alter und Diagnose kommen hinzu,
+sobald sie entschlüsselt sind, und die Punkte der Karte einen Augenblick
+danach. Die Seite lässt sich dabei schon bedienen — rollen, sortieren, die
+Ansicht wechseln.
+
 Die Kacheln **„Längste Einsatzstrecke"** (in der Luftansicht: „Längste
 Flugstrecke") und **„Längste Einsatzdauer"** sind bedienbar, in der Luftansicht
 zusätzlich **„Höchster Einsatzort"**. Sie tragen einen kleinen Punkt oben
@@ -1785,7 +1836,8 @@ rechts und nennen in der Beschriftung den **Tag** des betreffenden Einsatzes
 („Längste Flugstrecke · 14.08.") — oft ist die Frage damit schon beantwortet.
 Zeigt man auf die Kachel, leuchten der zugehörige Karten-Punkt und die
 zugehörige Zeile auf; ein Klick hält die Hervorhebung fest und springt zur
-Zeile. Ein zweiter Klick auf dieselbe Kachel oder ein Klick auf eine freie
+Zeile — steht sie noch nicht in der Tabelle, lädt die Liste so weit nach,
+dass sie dabei ist. Ein zweiter Klick auf dieselbe Kachel oder ein Klick auf eine freie
 Stelle der Seite löst sie wieder.
 
 Die Hervorhebung ist seit Web 9.6.0 **orange** statt rot. Rot bedeutet in
@@ -2067,8 +2119,8 @@ Die Zeile über der Tabelle nennt deshalb unverändert die wahre Trefferzahl und
 dazu, wie viele davon gerade stehen. Welche 200 das sind, entscheidet die
 Sortierung — voreingestellt sind die neuesten zuerst. Sortierst du um, bleibt
 eine erweiterte Ansicht erweitert; änderst du einen Filter, fängt die Liste
-wieder bei den ersten 200 an. Die Zeitraum-Übersicht ist davon nicht betroffen,
-sie zeigt weiterhin jede Zeile.
+wieder bei den ersten 200 an. Die Zeitraum-Übersicht zeigt seit Web 21.4.0
+ebenso 200 Zeilen auf einmal (Abschnitt 4.4).
 
 **Gesperrte Verschlüsselung.** Sind die geschützten Angaben gesperrt
 (Abschnitt 5), werden Einsatznummer, Name, Geburtsdatum, Diagnose, Einsatzort,
@@ -2107,7 +2159,7 @@ Pflicht.
 
 > **Eine Ausnahme, und nur diese eine:** Im **Demo-Konto** (Abschnitt 3.2)
 > liegt das Schlüsselmaterial auf dem Server. Anders ließe sich das Konto
-> nicht alle 30 Minuten zurücksetzen, ohne dass die verschlüsselten Angaben
+> nicht selbsttätig zurücksetzen, ohne dass die verschlüsselten Angaben
 > danach unlesbar wären. Dort stehen ausschließlich erfundene Daten — und
 > deshalb gehören dort auch keine echten hinein.
 
@@ -2452,6 +2504,10 @@ Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deine
 neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
 hast, kann die Verwaltung sie zurücknehmen — auf deiner Kontoseite steht
 seit Web 15.2.0 sichtbar, dass eine Freigabe läuft, für wen und seit wann.
+Bricht die Verbindung genau nach dem Einspielen ab, sagt die Seite
+**„Fertig"** in Orange und dazu, dass unklar ist, ob die Freigabe noch offen
+ist (seit Web 21.1.7): Deine Daten sind dann eingespielt, ein zweites
+Einspielen ist nicht nötig.
 
 **Grenzen des Verfahrens** — sie gehören genannt, bevor man sich darauf verlässt:
 
@@ -2481,10 +2537,12 @@ Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
 Jahresliste.
 
+#### Die übrigen Wege
+
 **Der Name ist weiter gefasst als die Seite, und seit Web 19.3.0 sagt sie das
 selbst.** Hier läuft die **Einsatzliste als Ganzes** in beide Richtungen —
 mehr nicht. Die übrigen Wege für Daten hinein und hinaus liegen dort, wohin
-sie gehören, und die Seite nennt sie am Ende unter „Was hier gilt“:
+sie gehören; die Unterzeile der Seite verweist auf das Backup und hierher:
 
 | Weg | wo | Abschnitt |
 |---|---|---|
@@ -2495,7 +2553,25 @@ sie gehören, und die Seite nennt sie am Ende unter „Was hier gilt“:
 
 Bis Web 19.3.0 stand auf der Seite kein einziger Verweis auf einen dieser
 Wege. Wer den GPX-Import dort suchte, fand ihn nicht — und erfuhr auch nicht,
-wo er stattdessen steht.
+wo er stattdessen steht. Bis Web 21.4.0 nannte die Seite sie in der
+zugeklappten Karte „Was hier gilt" an ihrem Ende; seither steht das hier
+(R4-20).
+
+**Ein Export ist kein Backup.** Die Datei dieser Seite ist zum
+Weiterverarbeiten in anderen Programmen gedacht: Sie trägt die Einsatzliste,
+aber keine GPS-Daten, keine Stammdaten und keine Einstellungen. Ein
+vollständiges Backup deines Kontos — alles in einer verschlüsselten
+`.edbak`-Datei — gibt es unter Einstellungen → Backup. **Ein Backup
+einspielen** geht ebenfalls dort und nicht hier. Der Unterschied zählt: Diese
+Seite *ergänzt* Einsätze aus einer fremden Liste, ein Backup stellt deinen
+eigenen Stand wieder her.
+
+**Der GPX-Import liegt am Diensttag, mit Absicht.** Eine Aufzeichnung gehört
+immer zu *einem* Diensttag, und welcher das ist, weiß nur die Tagesübersicht.
+Solange das Konto noch keinen Diensttag hat, steht das Menü „Aktionen" dort
+nicht zur Verfügung — und damit auch kein GPX-Import.
+
+#### Der Weg einer Einsatzliste
 
 **Der Weg hat drei Schritte, und jeder ist eine eigene Karte:** *1. Datei
 wählen*, *2. Prüfen und korrigieren*, *3. Übernehmen*. Die Schritte 2 und 3
@@ -3450,11 +3526,21 @@ unberührt weiter.
 |---|---|
 | „Alles gesendet" | Der Server hat alles. |
 | „Rückstand 2 Pakete" | Zwei abgeschlossene Pakete sind noch nicht bestätigt. Darunter steht der Knopf **„Jetzt senden"**, falls es schneller gehen soll. |
-| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Es wird nicht wiederholt** — bitte melden, solange die Zeile steht: Die Daten liegen noch **30 Tage** auf dem Telefon, danach räumt die App sie weg (seit Android 0.14.0); auch das Trennen des Geräts löscht sie. Einen Weg, sie von Hand nachzureichen, gibt es noch nicht. |
+| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Es wird nicht wiederholt** — bitte melden, solange die Zeile steht: Die Daten liegen noch **30 Tage** auf dem Telefon, danach räumt die App sie weg (seit Android 0.14.0); auch das Trennen des Geräts löscht sie. Darunter steht ein blauer Kasten, der das sagt, und der Knopf **„Abgewiesene verwerfen …"** (seit Android 0.17.0). Nachreichen lässt sich ein abgewiesenes Paket nicht. |
 
 Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
 „Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu
 koppeln".
+
+**Abgewiesene verwerfen** *(seit Android 0.17.0)*. Wer nicht 30 Tage warten
+will, tippt auf „Abgewiesene verwerfen …". Die App fragt nach — „3 abgewiesene
+Pakete verwerfen?" — und sagt, was dann geschieht: Die Aufzeichnungen darin
+sind weg, der Server hat sie ohnehin nie angenommen. **„Verwerfen"** löscht
+sie, **„Behalten"** oder ein Tipp neben die Frage lässt alles, wie es ist.
+Danach steht dort, wie viele verworfen sind („3 Pakete verworfen"), bis die
+App geschlossen wird. Ein Paket, das **während eines laufenden Dienstes**
+abgewiesen wurde, wird noch beschrieben; der Knopf erscheint dafür erst nach
+dem Dienstende, die rote Zeile schon vorher.
 
 ---
 
@@ -3475,6 +3561,18 @@ ihnen:
 
 Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
 Entscheidung dazu, was mit den Konto-Backups geschieht.
+
+**Nach einer Handlung lädt die Seite neu, und Neuladen wiederholt nichts**
+(seit Web 21.1.9). Wer speichert, sichert, einspielt oder löscht, landet
+wieder auf derselben Seite — mit der Meldung dort, wo geklickt wurde, und bei
+einem Ergebnis, das mehr ist als ein Satz (etwa dem Einspielbericht), mit dem
+ganzen Ergebnis. **F5** fragt danach nicht mehr, ob das Formular noch einmal
+gesendet werden soll, und die Meldung steht nur einmal da. Zwei Fälle bleiben
+bewusst stehen: Ein **abgewiesener Eintrag** (ungültige Adresse, falsche
+Zahl) — sonst wäre das Getippte fort —, und das **Anlegen eines Kontos, wenn
+die Einladung nicht hinausging**: Der Setz-Link steht dann einmal auf der
+Seite und wird nirgends zwischengespeichert. Dasselbe gilt für die Seiten unter
+Betrieb (Kapitel 12), außer den Servereinstellungen.
 
 Alles in diesem Kapitel können **Admin und BetreiberIn** — beim Protokoll
 sieht der Admin vier der sieben Reiter (11.7). Der **Support** (seit Web
@@ -3569,7 +3667,11 @@ und Geräte endgültig — ohne Papierkorb. Vorher ist zu entscheiden, was mit d
 Konto-Backups geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts
 zurück. Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
 **Konto-Backups** als „Backup ohne Konto". Zur Bestätigung ist die
-E-Mail-Adresse abzutippen.
+E-Mail-Adresse abzutippen. Im **Protokoll** (Reiter Verwaltung) steht danach
+„Konto gelöscht"; aufgeklappt nennt der Eintrag die Wahl über die Backups und
+den Weg — `verwaltung` für diese Seite, `loeschantrag` für eine
+Selbstlöschung nach der Frist, `verfall` für ein Konto, das nie bestätigt
+oder nie freigeschaltet wurde, `demo` für das Demo-Konto.
 
 #### Mengen und Grenzen je Konto (seit Web 20.21.0)
 
@@ -4293,21 +4395,29 @@ fertiger Text.
 ### 11.6 Demo-Konto
 
 Unter **Verwaltung → Demo-Konto** wird das Demo-Konto **angelegt**,
-**zurückgesetzt** oder **entfernt**. Was es ist, wie es sich alle dreißig
-Minuten selbst zurücksetzt und was darin nicht geht, steht in Abschnitt 3.2 —
-dort aus Sicht dessen, der es benutzt.
+**zurückgesetzt** oder **entfernt**. Was es ist, wann es sich selbst
+zurücksetzt und was darin nicht geht, steht in Abschnitt 3.2 —
+dort aus Sicht dessen, der es benutzt. **Entfernen** löscht es wie jedes
+andere Konto (seit Web 21.1.8): samt Konto-Backups und mit einem Eintrag im
+Protokoll.
 
 Zwei Dinge, die nur die Verwaltung betreffen: Auf der **Kontoseite** des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
 
-Auf der Seite stehen der Zustand (Konto, letzter und nächster Reset), die
+Auf der Seite stehen der Zustand (Konto, letzter Reset, ob seither etwas
+geändert wurde, nächster Reset), die
 drei **Papierkorbzahlen** und — sobald es einen gibt — der **Bericht des
 letzten Laufs**, zugeklappt. Die Papierkorbzahlen sind die Kontrolle des
 Resets: Der Papierkorb kommt **aus der Fixture** zurück, nicht aus einem
 Nachlauf. Stehen sie auf null, ist beim Einspielen etwas übersprungen worden.
-Ausgelöst wird der Reset von der nächsten Anfrage nach Ablauf der dreißig
-Minuten, nicht von einem Zeitdienst.
+Ausgelöst wird der Reset von der nächsten Anfrage des Demo-Kontos, sobald er
+fällig ist — 30 Minuten nach der ersten Änderung, ohne Änderung einen Tag
+nach dem letzten —, nicht von einem Zeitdienst. Als Änderung zählt jedes
+Absenden im Demo-Konto und jeder angenommene Upload eines seiner Geräte;
+Änderungen aus der Verwaltung zählen nicht. **Nach einem Deploy mit neuer
+Fixture** zeigt das Demo-Konto deshalb bis zu einem Tag lang den alten
+Bestand — „Zurücksetzen" holt den neuen sofort.
 
 #### Was der Reset umfasst
 
@@ -4583,8 +4693,8 @@ und beantwortet damit die Frage, die die Zeile „SMTP" nicht beantworten kann:
 SMTP-Zugang fiel bis dahin erst auf, wenn jemand einen Einladungslink
 vermisste.
 
-Nach dem Klick sagt die Meldung oben, was passiert ist — seit Web 20.9.0
-**drei** Antworten statt zwei:
+Nach dem Klick sagt die Meldung in der Karte **E-Mail**, was passiert ist —
+seit Web 20.9.0 **drei** Antworten statt zwei:
 
 | Meldung | heißt |
 |---|---|
@@ -4758,7 +4868,7 @@ trotzdem: **Deaktiviert** unter Geräte steht orange, sobald ein Gerät
 gesperrt ist.
 
 > **Ohne Demo-Konto**, und zwar in jeder Zahl. Sein Bestand ist erfunden und
-> wird alle dreißig Minuten neu aus einer Vorlage hergestellt; ihn
+> wird nach jeder Änderung neu aus einer Vorlage hergestellt; ihn
 > mitzuzählen hieße, erfundene Einsätze als Nutzung auszugeben. „Von 11"
 > meint elf echte Konten — in jedem Zustand: Unbestätigte, wartende und
 > gesperrte zählen mit.
@@ -4768,9 +4878,10 @@ gesperrt ist.
 > Gerät je Konto; es zählt in keiner Gerätezahl.
 
 Oben stehen vier Kennzahlen — Konten, Geräte, Einsätze gesamt, Einsätze in
-30 Tagen —, jede führt in ihren Reiter. Darunter **drei Reiter** *(seit Web
-20.47.0)*; jeder hat dieselbe Form: links die Tabelle „… je Zeitraum",
-rechts eine Karte mit dem, was es gibt.
+30 Tagen —, jede führt in ihren Reiter. Darunter die **Zeitraumwahl**
+*(seit Web 21.5.0, siehe unten)* und **drei Reiter** *(seit Web 20.47.0)*;
+jeder hat dieselbe Form: links die Tabelle „… je Zeitraum", rechts eine
+Karte mit dem, was es gibt.
 
 - **NutzerInnen:** *Konten je Zeitraum* über 24 Stunden, 7 Tage, 30 Tage und
   6 Monate — **Aktiv**, **Angemeldet**, **Neu angelegt**. *Aktiv* heißt:
@@ -4782,7 +4893,7 @@ rechts eine Karte mit dem, was es gibt.
 - **Einsätze:** *Einsätze je Zeitraum* über 24 Stunden, 7 Tage, 30 Tage,
   6 Monate und 1 Jahr — die Zahl, wie viele NutzerInnen einen Einsatz
   hatten, und der Durchschnitt je NutzerIn mit Einsatz. Rechts die
-  **Herkunft der Einsätze** der letzten 30 Tage: Garmin-Uhr, Android-Handy,
+  **Herkunft der Einsätze** im gewählten Zeitraum: Garmin-Uhr, Android-Handy,
   Wear-OS-Uhr (an der Uhr begonnen, vom Handy gesendet), Formular, Import
   und Schnitt — alle sechs, auch mit 0; dazu **Andere**, wenn ein Wert
   dasteht, den diese Fassung nicht kennt.
@@ -4799,10 +4910,54 @@ rechts eine Karte mit dem, was es gibt.
 
 **Die Prozentzahl unter einer Zeile** bezieht sich auf ihre Karte: bei den
 Konten auf alle Konten, bei den Geräten auf alle Geräte, bei der Herkunft
-auf die Einsätze der letzten 30 Tage.
+auf die Einsätze des gewählten Zeitraums.
+
+**Der Zeitraum** *(seit Web 21.5.0)*. Über den Reitern stehen vier Pillen —
+**7 Tage**, **30 Tage** (die Vorgabe), **6 Monate**, **1 Jahr** — und
+daneben zwei Datumsfelder **Von** und **Bis**.
+
+- **Eine Pille** bestimmt die vierte Kennzahl („Einsätze in 6 Monaten") und
+  die Herkunft der Einsätze. Die Tabellen zeigen weiter alle Fenster
+  nebeneinander.
+- **Von und Bis** geben einen eigenen Zeitraum, etwa einen Monat. Er gilt
+  vom Beginn des ersten bis zum Ende des letzten Tages, in der Ortszeit der
+  Installation.
+  Abgeschickt wird er, sobald beide Felder gefüllt sind und du sie verlässt;
+  ohne JavaScript mit **„Anwenden"**. Er steht dann als orange Pille mit
+  Kreuz da, und ein Klick darauf nimmt ihn wieder weg. Ein Bis nach heute
+  wird auf heute gekürzt; ein Von nach heute oder nach dem Bis weist die
+  Seite mit einer Meldung ab und zeigt die 30 Tage.
+- **Mit eigenem Zeitraum hat jede Tabelle eine Spalte „im Zeitraum".**
+  Unter Einsätze stehen daneben der **Schnitt je Woche und je Tag**, damit
+  sich verschieden lange Zeiträume vergleichen lassen. Unter NutzerInnen
+  kommt die Zeile **NutzerInnen mit Einsatz** dazu.
+- **„Aktiv", „Angemeldet" und „Zuletzt gemeldet" stehen nur, wenn der
+  Zeitraum bis heute reicht**, sonst steht dort „—". Die Anwendung merkt
+  sich je Konto nur die **letzte** Anmeldung und je Gerät nur die
+  **letzte** Meldung. Für März lässt sich deshalb nicht sagen, wer im März
+  angemeldet war: Wer sich im März und wieder im September angemeldet hat,
+  fiele heraus, und die Zahl sänke, je weiter der Zeitraum zurückliegt.
+  *Neu angelegt* und *gekoppelt* stehen immer, weil ein Konto und ein Gerät
+  ihr Anlagedatum behalten.
+- Ein Wechsel des Reiters behält den Zeitraum.
+
+**Die Diagramme** *(seit Web 21.6.0)*. Über jeder Tabelle steht der
+gewählte Zeitraum als Säulen: unter Einsätze die **Einsätze**, unter Geräte
+die **gekoppelten Geräte**, unter NutzerInnen zwei kleine Diagramme —
+**Mit Einsatz** (Konten, die dort mindestens einen Einsatz begonnen haben)
+und **Neu angelegt**. Bis 31 Tage steht eine Säule je Tag, bis ein Jahr je
+Woche (ab Montag), darüber je Monat; der Satz unter dem Diagramm sagt,
+welche Einteilung gilt. Die höchste Säule ist dunkelorange und trägt ihre
+Zahl; jede andere zeigt ihre Zahl, wenn der Mauszeiger darauf steht. Am
+Handy gibt es kein Überfahren — dort steht jede Zahl in der Tabelle
+darunter, und die Tabelle bleibt auch am Schreibtisch die genaue Auskunft.
+Die **Herkunft der Einsätze** steht als Balken: je Herkunft der Anteil und
+die Zahl. *„Aktiv" und „angemeldet" gibt es nicht als Diagramm* — aus
+demselben Grund, aus dem sie für einen vergangenen Zeitraum fehlen.
 
 **Wie die Einsätze gezählt werden.** Ab dem **Beginn des Einsatzes** — ohne
-Demo-Konto, ohne Papierkorb. Jedes Fenster reicht bis *jetzt*: Ein Einsatz
+Demo-Konto, ohne Papierkorb. Jedes Fenster und jeder Zeitraum reicht
+höchstens bis *jetzt*: Ein Einsatz
 mit einem Beginn in der Zukunft (vorausgeplant, oder eine Uhr mit falscher
 Zeit) steht nur unter „gesamt". „6 Monate" sind 180 Tage, „1 Jahr" 365.
 *Bis Web 20.46.0 zählte diese Seite nach Diensttag.* Die Zahlen hier können
@@ -5502,6 +5657,28 @@ die Seite selbst führt durch sie hindurch.
 
 **Einmal im Halbjahr ausprobieren.** Ein Backup, das nie zurückgespielt
 wurde, ist eine Vermutung.
+
+#### Der Wiederanlauf
+
+*Bis Web 21.4.0 stand das in der zugeklappten Karte „Was hier gilt" auf
+`wiederherstellen.php`; seither verweist die Unterzeile der Seite hierher
+(R4-20). Die Seite erreicht das Handbuch auch mit leerer Datenbank.*
+
+**Die Reihenfolge:** Datenbank anlegen (leer) · Anwendungsdateien hochladen ·
+`config.php` aus dem Wiederanlaufpaket daneben legen · Backup-Datei nach
+`sicherungen/eingang/` ·
+`wiederherstellen.php` · anmelden · **Betrieb → Updates**. Ausführlich steht
+es im Runbook, `docs/Technik.md`, Abschnitt 7.
+
+**Der Serverschlüssel entscheidet.** Eine `.edk`-Datei mit dem Vermerk „mit
+dem Serverschlüssel" lässt sich nur mit *der* `config.php` öffnen, die beim
+Erzeugen galt. Ist sie verloren, hilft das Backup nicht — deshalb gehört sie
+ins Wiederanlaufpaket, getrennt vom Server aufbewahrt.
+
+**Es wird nichts zurückgenommen.** Scheitert das Einspielen auf halbem Weg,
+steht die Datenbank halb da. Ein neuer Versuch braucht dann eine wieder
+geleerte Datenbank; ein Dump über einen halben Bestand zu legen ergäbe eine
+Mischung, die niemand mehr auseinanderbekommt.
 
 ---
 

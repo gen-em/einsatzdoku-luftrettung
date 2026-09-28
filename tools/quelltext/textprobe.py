@@ -25,6 +25,17 @@ Aufruf (ueblich ueber den Laeufer: bash tools/quelltext/pruefen.sh textprobe):
     python3 tools/quelltext/textprobe.py --alle           # auch die erklaerten Treffer zeigen
     python3 tools/quelltext/textprobe.py --selbstprobe    # Selbstprobe des Zerlegers (auch --probe)
     python3 tools/quelltext/textprobe.py --bericht /tmp/w.txt
+    python3 tools/quelltext/textprobe.py --altbestand-schreiben --stand R4-07
+
+WAS „SICHTBAR" HEISST, ENTSCHEIDET DAS MUSTER (seit R4-07, Nr. 283). Jedes
+Muster der Sperrliste traegt ein Feld `sicht`: `sichtbar` (die Vorgabe) liest
+den Text ohne Kommentare, `mit_kommentaren` liest die Zeile, wie sie in der
+Datei steht. Die Klasse `namen` liest mit Kommentaren, die vier anderen
+ohne: E-P1-02 (keine realen Orte und Rufnamen) richtet sich gegen das
+oeffentliche Repositorium, und ein Kommentar steht darin (E-R4-19). Ein
+Luftbegriff in einem Kommentar dagegen erreicht niemanden, der die
+Anwendung bedient — dort bliebe die Null keine mehr, ohne dass etwas
+gewonnen waere.
 
 Rueckgabewert: 0 = sauber, 1 = Treffer ausserhalb der Ausnahmen oder
 ungenutzte Ausnahmen, 2 = Fehler (fehlende Datei, unbrauchbare Regel,
@@ -80,7 +91,7 @@ import zerlegen                                    # noqa: E402
 # Fall B-S4-06, der die Regel oben ueberhaupt erst noetig gemacht hat.
 BEREICHE: dict[str, dict] = {
     "a": {
-        "titel": "server/*.php, server/api/*.php (sichtbare Texte, ohne Kommentare)",
+        "titel": "server/*.php, server/api/*.php (sichtbare Texte, ohne Kommentare; `namen` mit)",
         "art": "php",
         "glob": ["server/*.php", "server/api/*.php"],
         # config.php gehoert nicht zum Repositorium (sie steht in .gitignore
@@ -90,9 +101,20 @@ BEREICHE: dict[str, dict] = {
         "ausser": ["server/config.php"],
     },
     "b": {
-        "titel": "server/assets/*.js ohne vendor/ (Zeichenketten, ohne Kommentare)",
+        "titel": "server/assets/*.js ohne vendor/ (Zeichenketten, ohne Kommentare; `namen` mit)",
         "art": "js",
         "glob": ["server/assets/*.js"],
+    },
+    # DAS STYLESHEET LAG IN KEINEM BEREICH (R4-07, F-R4-27), und in einem
+    # seiner Kommentare stand eine reale Station. Fuer die vier anderen
+    # Klassen gehoert es nicht her — es hat keinen sichtbaren Text, und ohne
+    # Kommentare bliebe `flex-basis` fuer das Muster `basis`. Deshalb
+    # `nur_klassen`: Der Bereich misst ausschliesslich `namen`.
+    "f": {
+        "titel": "server/assets/*.css ohne vendor/ (nur `namen`, mit Kommentaren)",
+        "art": "css",
+        "glob": ["server/assets/*.css"],
+        "nur_klassen": ["namen"],
     },
     "d": {
         "titel": "android/*/src/main/res/values/strings.xml (Handy und Uhr)",
@@ -232,8 +254,14 @@ KLASSE_VON: dict[str, str] = {}
 KLASSEN: dict[str, str] = {}
 
 
+SICHTEN = ("sichtbar", "mit_kommentaren")
+
+
 def lade_sperrliste(pfad: pathlib.Path) -> tuple[list[dict], list[dict]]:
-    d = json.loads(pfad.read_text(encoding="utf-8"))
+    return lade_sperrliste_aus(json.loads(pfad.read_text(encoding="utf-8")))
+
+
+def lade_sperrliste_aus(d: dict) -> tuple[list[dict], list[dict]]:
     KLASSEN.update(d.get("klassen", {}))
     muster = []
     for m in d["muster"]:
@@ -252,6 +280,10 @@ def lade_sperrliste(pfad: pathlib.Path) -> tuple[list[dict], list[dict]]:
             m["regex"] = m["regex"].replace(
                 "@@LIZENZEN@@", "|".join(re.escape(x) for x in liste_lizenzen()))
         m["_re"] = re.compile(m["regex"], flags)
+        m["_sicht"] = m.get("sicht", "sichtbar")
+        if m["_sicht"] not in SICHTEN:
+            raise SystemExit(f"Muster {m['id']}: unbekannte sicht „{m['_sicht']}“ "
+                             f"(erlaubt: {', '.join(SICHTEN)})")
         KLASSE_VON[m["id"]] = m.get("klasse", "luft")
         muster.append(m)
     fallen = []
@@ -413,6 +445,41 @@ def _art_fuer(b: dict, pfad: pathlib.Path) -> str:
     return art
 
 
+def aktive_muster(b: dict, muster: list[dict]) -> list[dict]:
+    """Die Muster, die ein Bereich misst — alle, oder nur die aus `nur_klassen`."""
+    nur = set(b.get("nur_klassen", []))
+    return [m for m in muster if not nur or KLASSE_VON.get(m["id"]) in nur]
+
+
+def _fallen_in(zeile: str, fallen: list[dict]) -> list[tuple[int, int, str]]:
+    return [(tr.start(), tr.end(), f["wort"]) for f in fallen for tr in f["_re"].finditer(zeile)]
+
+
+def _zeilen_treffer(zeilen: list[str], zeilen_roh: list[str], muster: list[dict],
+                    fallen: list[dict], fallen_zahl: dict | None = None):
+    """Je Treffer (Zeilennummer, gelesene Zeile, Muster, Fund, Fallen der Zeile).
+
+    Welche Fassung der Zeile ein Muster liest, sagt sein Feld `sicht`: ohne
+    Kommentare (`zeilen`) oder wie in der Datei (`zeilen_roh`). Der Zerleger
+    ist zeilentreu (Selbstprobe), deshalb gehoeren gleiche Nummern zur
+    gleichen Zeile. Gezaehlt werden die Fallen nur in der sichtbaren
+    Fassung — die Zahl im Bericht bleibt, was sie vor R4-07 war.
+    """
+    for nr, zeile in enumerate(zeilen, 1):
+        roh = zeilen_roh[nr - 1] if nr <= len(zeilen_roh) else zeile
+        spannen = {"sichtbar": _fallen_in(zeile, fallen)}
+        if fallen_zahl is not None:
+            for _, _, wort in spannen["sichtbar"]:
+                fallen_zahl[wort] += 1
+        for m in muster:
+            sicht = m.get("_sicht", "sichtbar")
+            gelesen = roh if sicht == "mit_kommentaren" else zeile
+            if sicht not in spannen:
+                spannen[sicht] = _fallen_in(gelesen, fallen)
+            for tr in m["_re"].finditer(gelesen):
+                yield nr, gelesen, m, tr, spannen[sicht]
+
+
 def suche(kennung: str, muster: list[dict], fallen: list[dict],
           regeln: list[dict]) -> dict:
     b = BEREICHE[kennung]
@@ -422,6 +489,8 @@ def suche(kennung: str, muster: list[dict], fallen: list[dict],
     fallen_zahl = {f["wort"]: 0 for f in fallen}
     fallen_durchgerutscht: list[str] = []
     dateien = dateien_des_bereichs(kennung)
+    nur = set(b.get("nur_klassen", []))
+    aktiv = aktive_muster(b, muster)
 
     for pfad in dateien:
         rel = str(pfad.relative_to(WURZEL))
@@ -437,32 +506,28 @@ def suche(kennung: str, muster: list[dict], fallen: list[dict],
                     continue
                 zwischenspeicher[(r["id"], rel)] = _bloecke(zeilen_roh, r)
 
-        for nr, zeile in enumerate(zeilen, 1):
-            fallen_spannen = []
-            for f in fallen:
-                for tr in f["_re"].finditer(zeile):
-                    fallen_zahl[f["wort"]] += 1
-                    fallen_spannen.append((tr.start(), tr.end(), f["wort"]))
-            for m in muster:
-                for tr in m["_re"].finditer(zeile):
-                    for a, e, wort in fallen_spannen:
-                        if a <= tr.start() and tr.end() <= e:
-                            fallen_durchgerutscht.append(
-                                f"{rel}:{nr} — Muster {m['id']} traf in der Falle „{wort}“")
-                    treffer_gesamt += 1
-                    grund = None
-                    for r in regeln:
-                        if passt(r, kennung, rel, nr, zeile, m["id"], zwischenspeicher):
-                            r["_treffer"] += 1
-                            grund = r["id"]
-                            break
-                    zeigetext = zeilen_roh[nr - 1].strip() if nr <= len(zeilen_roh) else zeile.strip()
-                    if len(zeigetext) > 150:
-                        zeigetext = zeigetext[:147] + "…"
-                    if grund:
-                        erklaert.append((rel, nr, m["id"], zeigetext, grund))
-                    else:
-                        offen.append((rel, nr, m["id"], zeigetext))
+        # Ein Bereich mit `nur_klassen` zaehlt die Fallen nicht mit: Sie
+        # gehoeren zu den Luftbegriffen, und die misst er nicht.
+        for nr, zeile, m, tr, fallen_spannen in _zeilen_treffer(
+                zeilen, zeilen_roh, aktiv, fallen, None if nur else fallen_zahl):
+            for a, e, wort in fallen_spannen:
+                if a <= tr.start() and tr.end() <= e:
+                    fallen_durchgerutscht.append(
+                        f"{rel}:{nr} — Muster {m['id']} traf in der Falle „{wort}“")
+            treffer_gesamt += 1
+            grund = None
+            for r in regeln:
+                if passt(r, kennung, rel, nr, zeile, m["id"], zwischenspeicher):
+                    r["_treffer"] += 1
+                    grund = r["id"]
+                    break
+            zeigetext = zeilen_roh[nr - 1].strip() if nr <= len(zeilen_roh) else zeile.strip()
+            if len(zeigetext) > 150:
+                zeigetext = zeigetext[:147] + "…"
+            if grund:
+                erklaert.append((rel, nr, m["id"], zeigetext, grund))
+            else:
+                offen.append((rel, nr, m["id"], zeigetext))
     return {
         "kennung": kennung,
         "titel": b["titel"],
@@ -587,6 +652,46 @@ def bericht(ergebnisse: list[dict], regeln: list[dict], alle: bool,
     return "\n".join(aus), (1 if schlecht else 0)
 
 
+def selbstprobe_sicht() -> tuple[int, int]:
+    """Liest ein Muster die Zeile, die sein Feld `sicht` sagt? (R4-07)
+
+    Vier Faelle an einer PHP-Datei mit einem erfundenen Namen im Kommentar
+    und einem in einer Zeichenkette, dazu der Bereich mit `nur_klassen`
+    und ein unbekannter Wert. Die echte Namensliste bleibt dabei aus dem
+    Spiel: Die Selbstprobe soll die Mechanik messen, nicht die Liste.
+    """
+    quelle = "<?php\n// Talwangstadt im Kommentar\n$a = 'Felsgratdorf';\n"
+    zeilen_roh = quelle.splitlines()
+    zeilen = zerlegen.ohne_kommentare(quelle, "php").splitlines()
+
+    def zaehle(sicht: str) -> int:
+        m = {"id": "probe", "_re": re.compile(r"\b(Talwangstadt|Felsgratdorf)\b"), "_sicht": sicht}
+        return sum(1 for _ in _zeilen_treffer(zeilen, zeilen_roh, [m], []))
+
+    KLASSE_VON.setdefault("probe-namen", "namen")
+    KLASSE_VON.setdefault("probe-luft", "luft")
+    aktiv = aktive_muster(BEREICHE["f"], [{"id": "probe-namen"}, {"id": "probe-luft"}])
+    try:
+        lade_sperrliste_aus({"muster": [{"id": "x", "regex": "x", "grund": "g", "sicht": "unsichtbar"}]})
+        unbekannt = "angenommen"
+    except SystemExit:
+        unbekannt = "abgewiesen"
+    faelle = [
+        ("GEGENPROBE: `sichtbar` liest die Zeichenkette, nicht den Kommentar", zaehle("sichtbar"), 1),
+        ("`mit_kommentaren` liest beides", zaehle("mit_kommentaren"), 2),
+        ("`nur_klassen` (Bereich f) laesst die Luftbegriffe weg",
+         [m["id"] for m in aktiv], ["probe-namen"]),
+        ("ein unbekannter Wert fuer `sicht` wird abgewiesen", unbekannt, "abgewiesen"),
+    ]
+    gut = 0
+    for name, ist, soll in faelle:
+        ok = ist == soll
+        gut += ok
+        melde(f"  [{'ok  ' if ok else 'FEHL'}] {name}  (erwartet {soll}, gemessen {ist})")
+    melde(f"Selbstprobe der Sicht: {gut}/{len(faelle)} bestanden.")
+    return gut, len(faelle)
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Wortliste der Phase P2")
     p.add_argument("--bereich", choices=sorted(BEREICHE), action="append",
@@ -604,6 +709,8 @@ def main() -> int:
     p.add_argument("--altbestand-schreiben", action="store_true",
                    help="den heutigen Stand als Altbestand festschreiben "
                         "(nur beim VOLLSTÄNDIGEN Lauf sinnvoll)")
+    p.add_argument("--stand", default="ohne Angabe",
+                   help="mit --altbestand-schreiben: das Paket, das ihn schreibt")
     a = p.parse_args()
 
     if a.probe:
@@ -611,13 +718,16 @@ def main() -> int:
         for f in fehler:
             melde(f)
         melde(f"Selbstprobe des Zerlegers: {gut}/{gesamt} bestanden.")
-        return 0 if gut == gesamt else 2
+        s_gut, s_gesamt = selbstprobe_sicht()
+        return 0 if gut == gesamt and s_gut == s_gesamt else 2
 
     muster, fallen = lade_sperrliste(pathlib.Path(a.sperrliste))
     regeln = lade_ausnahmen(pathlib.Path(a.ausnahmen))
     kennungen = a.bereich or sorted(BEREICHE)
 
-    melde(f"Sperrliste: {len(muster)} Muster, {len(fallen)} Fallen. "
+    mit = [m["id"] for m in muster if m["_sicht"] == "mit_kommentaren"]
+    melde(f"Sperrliste: {len(muster)} Muster, davon mit Kommentaren: "
+          f"{', '.join(mit) or 'keines'}; {len(fallen)} Fallen. "
           f"Ausnahmen: {len(regeln)} Regeln.")
     ergebnisse = [suche(k, muster, fallen, regeln) for k in kennungen]
     geprueft = [str(p.relative_to(WURZEL)) for k in kennungen
@@ -638,7 +748,7 @@ def main() -> int:
                             "Je (Datei, Muster) eine Zahl; rot ist nur, was DARUEBER "
                             "liegt — und was darunter liegt, ohne ausgetragen zu sein. "
                             "Erzeugt mit `--altbestand-schreiben`, nie von Hand.",
-            "stand": "PK-04/1c",
+            "stand": a.stand,
             "summe": sum(stellen.values()),
             "stellen": dict(sorted(stellen.items())),
         }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

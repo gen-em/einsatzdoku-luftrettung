@@ -391,14 +391,20 @@ function csrf_ok(): bool
  * des Auslesens, was die Person sieht. Ein Schluessel kann das nicht.
  */
 
-/** Erlaubte Toene — die beiden, die die drei Seiten kennen.
+/** Erlaubte Toene.
  *
- * NICHT die Toene von `ui_meldung_markup()` (`fehler`, `warn`, `ok`, `info`,
- * `schutz`, Design.md 9.5). Die Namen hier sind die der beiden entfallenen
- * Sitzungsschluessel; die aufrufende Seite entscheidet, in welchen Kasten
- * der Text geht — `notice` in den Hinweis-, `error` in den Fehlerkasten.
- * Wer einen dritten braucht, ergaenzt diese Liste UND die Seite. */
-const FLASH_TOENE = ['notice', 'error'];
+ * ZWEI FAMILIEN, UND DAS IST ABSICHT. `notice` und `error` sind die Namen der
+ * beiden entfallenen Sitzungsschluessel; die Seiten, die sie setzen, geben
+ * den Text in `ui_meldung($notice, $error)` — `notice` in den Hinweis-,
+ * `error` in den Fehlerkasten. `ok`, `fehler`, `warn` und `info` sind die
+ * Toene von `ui_meldung_markup()` (Design.md 9.5) und kamen mit Web 21.1.9
+ * dazu (R4-11, Backlog Nr. 250): Die Seiten unter Betrieb und die
+ * Installation melden in der Karte, die gehandelt hat, und mit allen vier
+ * Toenen. Sie auf zwei zu stauchen, haette aus „Die Pause ist aufgehoben"
+ * einen Hinweis und aus „Diese Sperre gibt es nicht mehr" einen Fehler
+ * gemacht. `schutz` fehlt, weil keine Handlung ihn meldet.
+ * Wer einen weiteren braucht, ergaenzt diese Liste UND die Seite. */
+const FLASH_TOENE = ['notice', 'error', 'ok', 'fehler', 'warn', 'info'];
 
 /**
  * Eine Meldung fuer die naechste Seitenansicht hinterlegen.
@@ -406,13 +412,25 @@ const FLASH_TOENE = ['notice', 'error'];
  * Ueberschreibt eine noch nicht abgeholte Meldung — das ist richtig: Wer
  * zweimal hintereinander etwas hinterlegt, ohne dass dazwischen eine Seite
  * ausgeliefert wurde, meint die zweite.
+ *
+ * @param string $ort   Die Karte, in der die Meldung erscheinen soll (ihre
+ *                      `id`, dieselbe wie der Anker der Umleitung). Leer
+ *                      heisst: oben auf der Seite. Die Seite entscheidet beim
+ *                      Abholen, was sie mit dem Ort anfaengt.
+ * @param array  $daten Ein Ergebnis, das mehr ist als ein Satz — die Schritte
+ *                      einer Verbindungspruefung, ein Einspielbericht, der
+ *                      Lauf der Migrationen, die Restauswahl beim
+ *                      Sammelsichern (E-R4-33). Es liegt bis zum Abholen in
+ *                      der Sitzungsdatei auf dem Server: KEIN GEHEIMNIS
+ *                      HIERHER — ein Setz-Link etwa bleibt auf der Seite, die
+ *                      ihn erzeugt hat, und wird nicht umgeleitet.
  */
-function flash_setzen(string $ton, string $text): void
+function flash_setzen(string $ton, string $text, string $ort = '', array $daten = []): void
 {
     if (!in_array($ton, FLASH_TOENE, true)) {
         throw new InvalidArgumentException('Unbekannter Meldungston: ' . $ton);
     }
-    $_SESSION['flash'] = ['ton' => $ton, 'text' => $text];
+    $_SESSION['flash'] = ['ton' => $ton, 'text' => $text, 'ort' => $ort, 'daten' => $daten];
 }
 
 /**
@@ -423,7 +441,7 @@ function flash_setzen(string $ton, string $text): void
  * `flash_lesen()` ohne Raeumen; wer den Wert zweimal braucht, merkt ihn sich
  * in einer Variablen.
  *
- * @return array{ton:string, text:string}|null
+ * @return array{ton:string, text:string, ort:string, daten:array}|null
  */
 function flash_holen(): ?array
 {
@@ -432,5 +450,7 @@ function flash_holen(): ?array
     if (!is_array($f) || !isset($f['ton'], $f['text'])) { return null; }
     $ton = (string)$f['ton'];
     if (!in_array($ton, FLASH_TOENE, true)) { return null; }
-    return ['ton' => $ton, 'text' => (string)$f['text']];
+    return ['ton' => $ton, 'text' => (string)$f['text'],
+            'ort' => (string)($f['ort'] ?? ''),
+            'daten' => is_array($f['daten'] ?? null) ? $f['daten'] : []];
 }

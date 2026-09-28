@@ -64,8 +64,6 @@ require_once __DIR__ . '/../ratelimit_lib.php';
  * der Anmeldung, zehn weitere hier.
  */
 
-header('Content-Type: application/json; charset=utf-8');
-
 api_methode();
 csrf_check();
 
@@ -75,26 +73,20 @@ $st = db()->prepare('SELECT email, password_hash, pat_wrap_rc FROM users WHERE i
 $st->execute([$userId]);
 $u = $st->fetch(PDO::FETCH_ASSOC);
 if (!$u) {
-    http_response_code(404);
-    echo json_encode(['error' => 'konto']);
-    exit;
+    json_out(['error' => 'konto'], 404);
 }
 
 $email = (string)$u['email'];
 if (!rate_erlaubt('login', $email)) {
-    http_response_code(429);
-    echo json_encode(['error' => 'gesperrt',
-                      'text'  => 'Zu viele Fehlversuche. Bitte später erneut.']);
-    exit;
+    json_out(['error' => 'gesperrt',
+              'text'  => 'Zu viele Fehlversuche. Bitte später erneut.'], 429);
 }
 
 $token = (string)($_POST['token'] ?? '');
 if ($token === '' || !password_verify($token, (string)$u['password_hash'])) {
     rate_misserfolg('login', $email);
-    http_response_code(403);
-    echo json_encode(['error' => 'passwort',
-                      'text'  => 'Das Passwort ist nicht korrekt.']);
-    exit;
+    json_out(['error' => 'passwort',
+              'text'  => 'Das Passwort ist nicht korrekt.'], 403);
 }
 
 /* ---- Die neue Huelle ---------------------------------------------------- */
@@ -108,9 +100,7 @@ $wrapRc = (string)($_POST['wrap_rc'] ?? '');
  * die das aufgibt, sieht man dem Feld nicht an — bis es zu spaet ist. */
 $grund = huelle_rc_pruefen($wrapRc);
 if ($grund !== null) {
-    http_response_code(400);
-    echo json_encode(['error' => 'huelle', 'text' => $grund]);
-    exit;
+    json_out(['error' => 'huelle', 'text' => $grund], 400);
 }
 
 /* KEIN ERSTVERGABE-WEG. Ein Konto ohne `pat_wrap_rc` hat sein Passwort noch
@@ -119,11 +109,9 @@ if ($grund !== null) {
  * Erstvergabe-Weg zu bauen — und zwei Wege zu derselben Ersteinrichtung sind
  * einer zu viel. */
 if ($u['pat_wrap_rc'] === null || $u['pat_wrap_rc'] === '') {
-    http_response_code(409);
-    echo json_encode(['error' => 'kein_bestand',
-                      'text'  => 'Für dieses Konto ist noch kein Schlüssel '
-                               . 'eingerichtet.']);
-    exit;
+    json_out(['error' => 'kein_bestand',
+              'text'  => 'Für dieses Konto ist noch kein Schlüssel '
+                       . 'eingerichtet.'], 409);
 }
 
 db()->prepare('UPDATE users SET pat_wrap_rc = ? WHERE id = ?')
@@ -147,4 +135,4 @@ require_once __DIR__ . '/../protokoll_lib.php';
 protokoll('verwaltung', 'schluessel_erneuert',
           'Wiederherstellungsschlüssel erneuert', [], $userId);
 
-echo json_encode(['ok' => true]);
+json_out(['ok' => true]);

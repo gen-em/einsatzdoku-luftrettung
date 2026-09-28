@@ -530,6 +530,22 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
         ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
 
     /**
+     * Wie viele der [abgewiesen]en Pakete sich **jetzt** verwerfen lassen —
+     * die abgeschlossenen (Backlog Nr. 114, R4-22).
+     *
+     * WARUM EINE ZWEITE ZAHL. [abgewieseneRaeumen] nimmt nur `final = 1`: Ein
+     * laufendes Paket, dessen Teil-Upload eine 400 bekam, wird noch
+     * beschrieben. Nennte die Rückfrage [abgewiesen], versprächen Titel und
+     * Knopf das Verwerfen eines Pakets, das danach noch dasteht — und ein
+     * zweiter Druck verwürfe nichts. Mit dieser Zahl steht der Knopf nur,
+     * wenn er etwas tut, und der Titel nennt, was er tut.
+     */
+    fun verwerfbar(): Int =
+        readableDatabase.rawQuery(
+            "SELECT COUNT(*) FROM paket WHERE fehlerhaft = 1 AND final = 1", null,
+        ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+
+    /**
      * Abgewiesene Pakete **räumen** (Backlog Nr. 114, Räumteil; Krypto-Review
      * AN-2).
      *
@@ -556,8 +572,11 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * gelöscht — nach dem Upload liest sie niemand mehr ([laufenderDienst]
      * fragt nur nach der offenen). Die laufende bleibt in jedem Fall.
      *
-     * DER BEDIENWEG (ansehen, ausleiten, verwerfen) ist damit **nicht**
-     * gebaut — er bleibt Nr. 114 in der Backlog-Runde.
+     * DER BEDIENWEG IST „VERWERFEN" (seit 0.17.0, R4-22, E-R4-09): ein Knopf
+     * unter der roten Zeile der Dienstansicht, mit Rückfrage, ruft diese
+     * Funktion ohne Frist. Ansehen und Ausleiten gibt es nicht: Der Server
+     * hat das Paket mit 400 endgültig abgelehnt, und ein Nachreichen von
+     * Hand wäre ein zweiter Weg an `validate_lib.php` vorbei.
      *
      * @param vor Zeitstempel im Format von `Zeit.iso` (UTC); geräumt wird,
      *   was vor ihm endete. `null` räumt ohne Frist.
@@ -711,10 +730,13 @@ data class Raeumung(val pakete: Int, val dienste: Int) {
         /**
          * Nach so vielen Tagen ist ein abgewiesenes Paket kein Beleg mehr,
          * sondern ein liegengebliebener Ortsdatensatz (SP-14, AN-2). Die Zahl
-         * ist **gewählt**, nicht gemessen: lang genug, dass ein Fehler am
-         * Server behoben und das Paket von Hand nachgereicht werden kann —
-         * der Bedienweg dafür fehlt noch (Nr. 114) —, und kurz genug, dass
-         * ein verlorenes Handy nicht die Spuren eines ganzen Jahres trägt.
+         * ist **gewählt**, nicht gemessen: lang genug, dass die rote Zeile
+         * gesehen und der Fehler am Server gemeldet werden kann, und kurz
+         * genug, dass ein verlorenes Handy nicht die Spuren eines ganzen
+         * Jahres trägt. Bis 0.16.1 hieß es hier „und das Paket von Hand
+         * nachgereicht werden kann — der Bedienweg dafür fehlt noch
+         * (Nr. 114)". Nachreichen gibt es nicht (E-R4-09); verwerfen lässt
+         * es sich seit 0.17.0 jederzeit von Hand.
          */
         const val FRIST_TAGE = 30L
     }

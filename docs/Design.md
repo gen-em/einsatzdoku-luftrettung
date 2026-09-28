@@ -10,7 +10,8 @@ gilt Kapitel 2 auch für sie.
 
 > **Die technische Wahrheit steht im Stylesheet.** Was hier als Wert steht,
 > ist entweder *erzeugt* (Kapitel 4, 7, 8, 9 — `tools/erzeugen/design.py`
-> liest sie aus den Quellen) oder *Herkunft* (Kapitel 2: woher ein Markenwert
+> liest sie aus den Quellen, und `bestand` ist rot, wenn eine nicht mehr
+> stimmt) oder *Herkunft* (Kapitel 2: woher ein Markenwert
 > stammt). Im Code wird ausschließlich über die Token aus `:root` in
 > `server/assets/style.css` zugegriffen. Ein Hexwert gehört nie in eine Regel.
 
@@ -263,13 +264,20 @@ Jede Kernfarbe kommt dreifach vor, und die drei sind nicht austauschbar:
 | Endung | Rolle | Beispiel |
 |---|---|---|
 | — (`--orange`) | **Fläche und Strich.** Nie Schrift. | Primärknopf, aktiver Rand |
-| `-tief` | **Schrift.** Dunkel genug für 4,5:1 auf Schnee. | Textlink, Fehlertext |
+| `-tief` | **Schrift.** Blau und Rot tief erreichen 4,5:1 auf Schnee; **Orange tief 4,32:1** — als Schrift nur groß oder fett (3.4). | Textlink, Fehlertext |
 | `-hell` | **Fläche unter Schrift.** | Meldung, Plakette |
 
 Das ist der Fund F-P3-J: Orange erreicht auf Schnee 2,2:1 und ist als Schrift
 unbenutzbar; die Marke gibt aber keinen dunkleren Ton her. Statt den
 Markenwert zu ändern, bekommt jede Farbe eine dunkle Textfassung
 (`--orange-tief` `#C25A00`, `--blau-tief` `#1F4E9C`, `--rot-tief` `#9E2226`).
+
+*Bis R4-08 stand in der Tabelle „dunkel genug für 4,5:1 auf Schnee" für
+alle drei. Für Orange tief stimmte das nie (4,32:1); das Werkzeug rechnete
+das Paar ohnehin mit 3,0 als „nur groß oder fett". Die Ableitung aus dem
+Stylesheet fand dazu die weiße Schrift auf Orange tief im Hover des
+Primärknopfs (4,42:1 bei 15 px); die BetreiberIn hat entschieden, dass der
+Ton passt, und keine Farbe geändert (E-R4-30).*
 
 ### 3.3 Zwei Linien, und der Unterschied ist keine Geschmacksfrage
 
@@ -317,12 +325,29 @@ Schnee oder Rauch, nicht Weiß.
 | Weiß auf Rot | 4,78:1 | 4,5 | Kopfleiste einer Anlage mit Etikett (9.36) |
 | Schnee auf Rot | 4,68:1 | 4,5 | Name in dieser Kopfleiste |
 | Orange hell auf Rot | 4,12:1 | 3,0 | Strich des aktiven Kopfpunkts auf Rot |
+| Asphalt auf Sand | 11,80:1 | 4,5 | Nummer eines offenen Schritts (Erststart) |
+| Blau auf Blau hell | 3,19:1 | 3,0 | Strich am Zitat im Handbuch |
+| Blau tief auf Rauch | 7,32:1 | 4,5 | Übersichtszeile der Einstellungen unter dem Zeiger |
+| Dunkelblau auf Orange | 5,97:1 | 4,5 | oranger Zähler, Zeichen im Einsatzort-Kreis |
+| Dunkelblau auf Sand | 8,15:1 | 4,5 | neutraler Zähler |
+| Primärschrift auf Orange | 5,97:1 | 4,5 | Zahl des aktiven Filters, gewählte Segmenttaste |
+| Rauch auf Dunkelblau | 12,48:1 | 4,5 | Fußzeile auf dunklem Grund |
+| Rot auf Rosa | 3,87:1 | 3,0 | Rahmen der roten Kennzahl |
+| Blau als Säule auf Schnee | 3,77:1 | 3,0 | Säule und Balken der Diagramme (9.40) |
+| Orange tief als Höchstwert auf Schnee | 4,32:1 | 3,0 | hervorgehobene Säule (9.40) |
+| Blau tief als Säule unter dem Zeiger | 7,82:1 | 3,0 | Säule unter dem Zeiger (9.40) |
 
-**25 Paare, 0 verfehlt** (Web 20.38.0). Hier standen bis dahin 21 — das
-Paar „Dunkelblau auf Orange hell" war mit Web 16.3.0 ins Werkzeug gekommen,
-aber nicht in diese Tabelle; die drei Paare auf Rot kommen mit P5c/AP1.
+**36 Paare, 0 verfehlt** (Web 21.6.0). **Seit R4-08 ist die Liste nicht mehr
+das Maß:** `kontrast.py` leitet die Paare aus den Regeln des Stylesheets ab
+(Vorder- und Hintergrund in derselben Regel, dazu jede Farbe, die allein
+steht) und meldet jedes, das weder hier noch unter den Ausnahmen steht —
+Backlog Nr. 116. Der erste Lauf fand **14**: die acht Paare oben, die ihren
+Sollwert erreichen, den Strich am Vorschlag (2,09:1 — seither Orange tief)
+und fünf, die jetzt als Ausnahme stehen. Was die Ableitung nicht sieht: eine
+bekannte Schrift auf einer neuen Fläche, die eine Elternregel setzt. Hier
+standen bis Web 20.38.0 21 Paare, bis R4-08 25, bis R4-24 33.
 
-**Drei Ausnahmen, jede mit Grund** — sie stehen im Werkzeug selbst, damit
+**Neun Ausnahmen, jede mit Grund** — sie stehen im Werkzeug selbst, damit
 niemand sie aus Versehen weiterreicht:
 
 - **Orange als Fläche auf Schnee (2,23:1).** Orange trägt nirgends allein:
@@ -339,6 +364,22 @@ niemand sie aus Versehen weiterreicht:
   ist die Auskunft, mit der ein Fehlerbericht anfängt, also ein zu *lesender*
   Text. Sie steht jetzt in `--gedaempft` (5,30:1). **Wer diese Ausnahme
   künftig weiterreicht, prüfe zuerst, ob der Text gelesen werden soll.**
+- **Weiß auf Orange tief (4,42:1)** im Hover des Primärknopfs — 15 px,
+  Gewicht 600, also normale Schrift. Die BetreiberIn hat den Ton angenommen
+  (E-R4-30); in Ruhe steht der Knopf mit 5,97:1 da.
+- **Linie auf Rauch (1,27:1).** Rahmen von Codeblock, `<pre>` und
+  Tagesgruppe des Imports — Zierrat wie „Linie auf Schnee".
+- **Orange als Strich auf Orange hell (1,97:1).** Aktiver Leisteneintrag,
+  aktive Kennzahl, Kennzahl im Ton orange: Der Strich begleitet die Fläche
+  und trägt den Zustand nicht allein — dieselbe Sprache wie oben.
+- **Orange tief auf Orange (1,93:1).** Rand des hervorgehobenen Phasenpunkts
+  auf der Karte; die orange Fläche ist das Zeichen.
+- **Spurfarbe als Farbschlüssel.** Die Linie der Legende zeigt die Farbe der
+  Spur; was sie bedeutet, sagt die Beschriftung daneben.
+- **Blau als Balken auf Linie (2,77:1).** Die Füllung eines Anteilsbalkens
+  auf seiner Spur (9.40): Zahl und Anteil stehen in derselben Zeile, der
+  Balken trägt nichts allein; die Spur in Linie ist die freigegebene Form
+  (M-R4-24).
 
 ---
 
@@ -372,32 +413,32 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--asphalt` | `#1A0500` | 24 |  |
-| `--dunkelblau` | `#1A2E4D` | 64 |  |
-| `--gedaempft` | `#6E6459` | 71 |  |
+| `--asphalt` | `#1A0500` | 26 |  |
+| `--dunkelblau` | `#1A2E4D` | 65 |  |
+| `--gedaempft` | `#6E6459` | 75 |  |
 | `--auf-dunkel` | `#FFFFFF` | 10 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 41 |  |
+| `--linie` | `#E3DAC6` | 43 |  |
 | `--linie-stark` | `var(--gedaempft)` | 12 |  |
 
 **Orange — Handeln**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--orange` | `#FF8F1F` | 30 |  |
-| `--orange-tief` | `#C25A00` | 18 |  |
+| `--orange` | `#FF8F1F` | 29 |  |
+| `--orange-tief` | `#C25A00` | 21 |  |
 | `--orange-hell` | `#FFEBD6` | 23 |  |
 
 **Blau — Auswählen und Erklären**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--blau` | `#4280E5` | 14 |  |
-| `--blau-tief` | `#1F4E9C` | 18 |  |
+| `--blau` | `#4280E5` | 16 |  |
+| `--blau-tief` | `#1F4E9C` | 19 |  |
 | `--blau-hell` | `#D9ECFD` | 6 |  |
 
 **Rot — Aufmerksamkeit**
@@ -419,11 +460,11 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-1` | `12px` | 9 |  |
-| `--groesse-2` | `13px` | 56 |  |
-| `--groesse-3` | `15px` | 15 |  |
+| `--groesse-1` | `12px` | 12 |  |
+| `--groesse-2` | `13px` | 57 |  |
+| `--groesse-3` | `15px` | 16 |  |
 | `--groesse-4` | `16px` | 16 |  |
-| `--groesse-5` | `19px` | 12 |  |
+| `--groesse-5` | `19px` | 13 |  |
 | `--groesse-6` | `24px` | 5 |  |
 | `--groesse-titel` | `28px` | 2 |  |
 | `--zeile-eng` | `1.3` | 5 | Titel, Kacheln |
@@ -434,10 +475,10 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 81 |  |
-| `--abstand-2` | `8px` | 117 |  |
-| `--abstand-3` | `12px` | 158 |  |
-| `--abstand-4` | `16px` | 65 |  |
+| `--abstand-1` | `4px` | 84 |  |
+| `--abstand-2` | `8px` | 120 |  |
+| `--abstand-3` | `12px` | 163 |  |
+| `--abstand-4` | `16px` | 67 |  |
 | `--abstand-5` | `24px` | 35 |  |
 
 **Radien**
@@ -600,7 +641,7 @@ Menüpunkt (`--unterpunkt`, 28).
 
 Es gibt weiterhin keine Kompaktvariante innerhalb einer Eingabeart — was
 kleiner ist, ist kein Knopf, sondern ein Link mit Symbol (E-P3-22). Der
-Bilderlauf misst jedes `.knopf` in allen acht Breiten **gegen den Sollwert der
+Bilderlauf misst jedes `.knopf` in allen zehn Breiten **gegen den Sollwert der
 emulierten Eingabeart**; Abweichung ist ein Fehler, kein Geschmack.
 
 **Der Fokusring ist sichtbar und liegt an der richtigen Stelle.** Zwei
@@ -667,8 +708,10 @@ Ausgenommen sind, weil sie Zustand und keine Erklärung sind: der Satz eines
 **Leerzustands** („Zurzeit keine."), die **Befundzeilen** der Statusseite
 (`status_erhebung()`, `plattform_pruefen()`), Meldungen, Dialoge und
 Kopierwerte. Der Bereich **Einstellungen** folgt der Regel noch nicht
-(E-P5c-06); drei Seiten außerhalb tragen die Karte „Was hier gilt" bis
-Schritt 17 (Nr. 287).
+(E-P5c-06). Die drei Seiten außerhalb von Verwaltung und Betrieb, die die
+Karte „Was hier gilt" noch trugen — Import / Export, das Einsatzformular und
+die Wiederherstellung —, haben sie seit Web 21.4.1 nicht mehr (R4-20,
+Nr. 287); ihr Text steht im Handbuch 4.3, 7 und 12.6.
 
 **Gezählt wird so** (E-P5c-128): S = fester Kartentext in Sätzen, Sb_max =
 die meisten bedingten Sätze, die gleichzeitig sichtbar sind; Soll
@@ -788,7 +831,10 @@ zusätzlich als `--s-*` in `:root`, damit man sie nachlesen kann.
 
 Dazu **eine** Ausnahme nach unten: `@media (max-width:479px)` lässt in der
 Wahlliste den Zusatz unter den Text rutschen — „zurzeit Hubschrauber (RTH)"
-neben „Standard der Installation" sprengt sonst jede Zeile.
+neben „Standard der Installation" sprengt sonst jede Zeile. Dieselbe Schwelle,
+keine zweite, tragen seit Web 21.5.0 die Datumsfelder der Zeitraumwahl
+(9.18b, etwas schmaler) und seit 21.6.0 die Achse der Säulen (9.40, vier
+statt acht Beschriftungen) — drei Regelblöcke, eine Breite.
 
 Und **eine Höhenschwelle** (seit Web 21.1.0, E-P5c-131; seit 21.1.3 bei
 950 statt 800 px, F-P5c-164): `@media (min-width:1024px) and
@@ -806,11 +852,11 @@ zählt nur Breiten.
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px) and (max-height:949px)` | 1 |
 | `@media (min-width:1024px)` | 3 |
-| `@media (min-width:720px)` | 14 |
+| `@media (min-width:720px)` | 15 |
 | `@media screen and (min-width:720px)` | 1 |
-| `@media (max-width:479px)` | 1 |
+| `@media (max-width:479px)` | 3 |
 
-Zusammen 29 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 32 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -918,15 +964,15 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 32 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 14 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 15 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 20 |
 | `server.svg` | Tabler Icons „server" (MIT) | 9 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 21 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 49 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 47 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 12 |
@@ -1007,63 +1053,69 @@ für eine Rückfrage — nicht für ein neues Element.
 | zwischen **gleichrangigen Sichten einer Seite** wechseln | `ui_reiter()` — serverseitig, jeder Reiter ein Verweis (9.37) | ein Segment mit sieben Wörtern oder eine zweite Reihe Filterpillen |
 | **Angaben zu einem Listeneintrag**, die nicht in den Satz passen | `ui_zeile(['daten' => [[Schlüssel, Wert], …]])` — die Zeile klappt auf (9.2) | ein Blatt mit „⋯“ oder eine zweite Zeile darunter |
 | **Suche, Filter und Seitenwahl** einer langen Liste | `ui_listenkopf()` und `ui_listenfuss()` (9.18a) | dasselbe Markup ein zweites Mal von Hand |
+| den **Zeitraum einer Auswertung** wählen — feste Fenster und Von/Bis | `ui_zeitraumwahl()` (9.18b) | Datumsfelder und Pillen von Hand, oder ein Auswahlfeld mit Monaten |
+| eine **Reihe über die Zeit** oder **Anteile** zeigen | `ui_diagramm_saeulen()`, `ui_diagramm_balken()` (9.40) — die Tabelle bleibt daneben | eine Diagrammbibliothek, ein Kreis, zwei Achsen |
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
 | Baustein | Klasse | Regel im Stylesheet | `ui.php` |
 |---|---|---|--:|
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 54 |
-| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 164 |
-| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 231 |
-| `ui_symbol()` | `.symbol` | ja (+10 Unterklassen) | 284 |
-| `ui_logo_masse()` | `.logo-masse` | **keine** | 387 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 449 |
-| `ui_geruest_start()` | `.inhalt` | ja | 541 |
-| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 612 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 636 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 686 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 915 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1076 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1148 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1235 |
-| `ui_hinweise()` | `.hinweise` | ja | 1283 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1311 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1346 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1399 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1449 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1516 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1563 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1616 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1642 |
-| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1687 |
-| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1771 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1806 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1848 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1896 |
-| `ui_zeile()` | `.zeile` | ja (+34 Unterklassen) | 1960 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2015 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2064 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2109 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2181 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2223 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2265 |
-| `ui_feld()` | `.feld` | ja (+25 Unterklassen) | 2334 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2399 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2443 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2496 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2540 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2639 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2701 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2742 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 2836 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2877 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2907 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2919 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3069 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3148 |
+| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 174 |
+| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 241 |
+| `ui_symbol()` | `.symbol` | ja (+10 Unterklassen) | 294 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 397 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 459 |
+| `ui_geruest_start()` | `.inhalt` | ja | 551 |
+| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 622 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 646 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 696 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 943 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1105 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1177 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1264 |
+| `ui_hinweise()` | `.hinweise` | ja | 1312 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1340 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1375 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1428 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1481 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1548 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1595 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1648 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1674 |
+| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1719 |
+| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1803 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1838 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1880 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1928 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 1992 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2047 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2096 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2141 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2213 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2268 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2314 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2348 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2420 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2444 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2486 |
+| `ui_feld()` | `.feld` | ja (+28 Unterklassen) | 2555 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2620 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2664 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2717 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2761 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2860 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2922 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2963 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3057 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3098 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3128 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3140 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3290 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3369 |
 
-49 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
-**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
+53 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
 
@@ -1340,16 +1392,18 @@ sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 > Regel — die Plakette steht dann ohne Hintergrund da, als bloßer Text. Genau
 > das ist passiert: `warn` wurde an drei Stellen übergeben und fiel niemandem
 > auf, weil der Klassenname zusammengesetzt wird (`'plakette-' . $ton`) und als
-> Literal nirgends auftaucht; `tools/quelltext/` (`vollstaendigkeit`) kann ihn deshalb nicht
-> finden. Behoben mit Web 10.3.0, vermerkt in Backlog Nr. 36.
+> Literal nirgends auftaucht. Behoben mit Web 10.3.0. Seit P5b/AP9 hält
+> `tools/quelltext/` (`vollstaendigkeit`) jeden übergebenen Ton gegen das
+> Stylesheet, seit R4-05 auch die Zweige einer Bedingung und die Vorgabe im
+> Baustein (Backlog Nr. 36).
 >
 > **Und es ist ein zweites Mal passiert — `ok`.** In S10/AP3 beim Gegenlesen
 > gefunden, bevor es ausgeliefert wurde: Die neue Karte „Schlüssel des
 > Servers" sollte `plakette-ok` tragen, und die Klasse gibt es im Stylesheet
 > nicht. Sie steht seit Längerem an **zwei Stellen im Bestand** und war dort
 > nie aufgefallen. Wer einen Zustand „alles in Ordnung" meint, nimmt `blau` —
-> das ist der Ton dafür (9.23). Die zwei Altstellen bleiben vorerst stehen;
-> sie sind in Backlog Nr. 36 vermerkt.
+> das ist der Ton dafür (9.23). Die zwei Altstellen sind mit P5b/AP9
+> behoben.
 
 > **Plakette und Schloss schließen einander nicht mehr aus** (S3/AP6,
 > E-S3-16). F-N1-B hatte in P3 entschieden: entweder die Plakette
@@ -1957,6 +2011,32 @@ hält die Klassen außerhalb von `ui.php` auf **null**.
   erste, letzte und die Nachbarn der aktuellen Seite, dazwischen eine
   Ellipse.
 
+### 9.18b Zeitraumwahl (`.zeitraumwahl`, seit Web 21.5.0)
+
+*Eine Anordnung, kein neuer Baustein* (R4-23, Nr. 122 a, Bild M-R4-23,
+freigegeben mit Q-R4-16). Betrieb → Statistik wählt ihren Zeitraum in einer
+Reihe zwischen Kennzahlen und Reitern: links die festen Fenster als
+**Pillen der Filterreihe** (9.18a), rechts zwei **Datumsfelder**
+(`.feld-eingabe type=date`, Beschriftung klein und gedämpft daneben statt
+darüber) und ein **neutraler Knopf** „Anwenden". Ein eigener Zeitraum steht
+als **aktive Pille mit Kreuz** hinter dem Knopf; ihr Verweis nimmt ihn weg.
+Die Reihe bricht am Ende, wie die Filterreihe.
+
+- **Ein Weg: `ui_zeitraumwahl()`** in `ui.php`. Das Register hält die
+  Klassen der Filterreihe außerhalb von `ui.php` auf null (Zeile „Listenkopf
+  und Reiter") — auch hier.
+- **Mit Skript** (`assets/listenkopf.js`) geht der Zeitraum ab, sobald der
+  Fokus das Paar der Felder verlässt und beide gefüllt sind; „Anwenden" ist
+  dann verborgen. Nicht bei jeder Änderung: Ein Datumsfeld meldet `change`
+  schon beim Tippen der Jahreszahl.
+- **Maße:** Felder 9,5 rem breit, unter 480 px 8,6 rem — ein Datum in der
+  Schreibweise des Browsers passt, und Von und Bis stehen bei 360 px in
+  einer Zeile (gemessen im Bilderlauf; die vier Pillen brechen dort nach
+  dreien um, die Pille des eigenen Zeitraums steht darunter). Höhe ist die
+  des Knopfs (`--knopf`). Kein neuer Farbwert, keine neue Schriftgröße.
+- **Die Pillen heißen wie die Spaltenköpfe** („6 Monate", „1 Jahr"), nicht
+  „180 Tage" wie im Mockup (E-R4-57): zwei Namen für eine Spalte wären einer
+  zu viel.
 
 ### 9.19 Speicherbalken (`.speicher-balken`)
 
@@ -2335,7 +2415,7 @@ Handlung.
 | `.vorschlaege` | schwebt (`position:absolute`, **`z-index:35`**); der Behälter trägt `position:relative` |
 | `.vorschlaege-gruppe` | Herkunftszeile auf Rauch, `--groesse-1`, versal — keine Bedienhöhe, sie ist nicht anzufassen |
 | `.vorschlag` | `min-height: var(--knopf)` — folgt beiden Bedienhöhen von selbst (44/36, R76) |
-| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` Orange links — **eine** Markierung für Zeiger und Pfeiltaste |
+| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` **Orange tief** links — **eine** Markierung für Zeiger und Pfeiltaste. Bis Web 21.1.5 stand dort `--orange` (2,09:1 auf Rauch); der Strich steht allein, und dann gilt 3.1 (4,04:1, R4-08) |
 | `.vorschlag-haupt` | eine Zeile, mit Ellipse; der getippte Teil in `<b>` |
 | `.vorschlag-neben` | die Herkunft, gedämpft, `--groesse-2` |
 | `.vorschlag-neu` | die freie Eingabe: `--orange-tief`, Kopfschrift — sie ist eine Handlung, kein Datensatz |
@@ -3003,6 +3083,49 @@ des Schlüsselblatts (drei Werte, Kurzname 83 Zeichen, Adresse 62) **1 Seite,
 > bekommt die Bildschirmfassung — mit A4-Mindesthöhe und Rand — und misst
 > zwei Seiten, wo eine ist.
 
+### 9.40 Diagramm (`.diagramm-saeulen`, `.diagramm-balken`, `.kleinvielfach`, seit Web 21.6.0)
+
+*Neuer Baustein mit Freigabe* (R4-24, Nr. 122 b, E-R4-07, Bild M-R4-24,
+freigegeben mit Q-R4-16, angepasst nach E-R4-55). Zwei Formen, beide aus
+PHP, **ohne Bibliothek und ohne Skript** — „keine fremde Quelle zur
+Laufzeit" bleibt unberührt, `docs/Lizenzen.md` auch.
+
+- **Säulen über die Zeit** — `ui_diagramm_saeulen()`: ein Inline-SVG mit
+  fester Höhe und Positionen in **Prozent der Breite**, **ohne `viewBox`**
+  (E-R4-61). Mit `viewBox` skalierte der Browser die Beschriftung mit dem
+  Bild: am Handy auf sechs Pixel, am breiten Schirm aufs Doppelte. Höchstens
+  fünf Gitterlinien auf runden Werten (1, 2, 5 × 10ⁿ), Nulllinie stärker,
+  höchstens acht Achsenbeschriftungen, unter 480 px vier (`.achse-breit`).
+- **Anteile als Balken** — `ui_diagramm_balken()`: je Zeile Beschriftung mit
+  Anteil, Balken, Zahl. Der Balken ist ein kleines SVG (`<rect width="…%">`),
+  kein `<div style="width:…">`: Ein Stilattribut im PHP-Markup fiele unter
+  `style-src` der CSP. Kein Kreis — Anteile an einer gemeinsamen Linie liest
+  das Auge genauer als an Winkeln.
+- **Kleine Vielfache** — `.kleinvielfach`: zwei Reihen verschiedener
+  Größenordnung als zwei Diagramme mit eigener Skala (`klein => true`),
+  untereinander, ab der Schwelle 720 nebeneinander. Das Mockup setzte
+  768 px — keine Stufe der Skala (7, F-R4-68). Nie eine Grafik mit zwei Farben
+  oder zwei Achsen.
+
+**Farbe.** Eine je Diagramm: **Blau** erklärt (3,77 : 1 auf Schnee), der
+**Höchstwert** steht in **Orange tief** (4,32 : 1) und trägt seine Zahl
+(E-R4-60). Das Mockup zeigte Orange — als Grafik verfehlt es auf Schnee mit
+2,23 : 1 die 3 : 1 aus WCAG 1.4.11, derselbe Fund wie der Rückstandspunkt
+der App (B-S5Z-13). Unter dem Zeiger wird eine Säule Blau tief und zeigt
+ihre Zahl (`:hover`, ohne Skript); jede trägt sie außerdem als `<title>`.
+Schrift nur in Asphalt und Gedämpft, Gitter in Linie. Die Füllung eines
+Balkens auf seiner Spur (Linie) hat 2,77 : 1 — ausgenommen in `kontrast.py`,
+weil Zahl und Anteil in derselben Zeile stehen.
+
+**Die Tabelle bleibt** neben jedem Diagramm. Sie ist die Tabellensicht, die
+Auskunft am Fingergerät (dort gibt es kein Überfahren) und die für alle, die
+das Bild nicht sehen; `aria-label` fasst nur zusammen („26 Säulen,
+höchstens 41 ab 06.07.").
+
+**Einteilung** (Statistik, E-R4-59): je Tag bis 31 Tage, je Woche ab Montag
+bis 366, darüber je Monat — in Ortszeit. Ein Satz unter dem Diagramm nennt
+die Einteilung und dass die Ränder angebrochen sein können.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Sechs Typen
@@ -3135,9 +3258,9 @@ lief, misst einen Stand, den es nicht mehr gibt.
 | Werkzeug | beantwortet |
 |---|---|
 | `tools/quelltext/vollstaendigkeit.py` | Ist etwas verlorengegangen? Steht jeder Wert an der einen Stelle? |
-| `tools/screenshots/aufnehmen.mjs` | Sieht es in allen acht Breiten so aus, wie es soll? Überlauf, Konsolenfehler, Knopfhöhen. |
+| `tools/screenshots/aufnehmen.mjs` | Sieht es in allen zehn Breiten so aus, wie es soll? Überlauf, Konsolenfehler, Knopfhöhen; rollende Behälter genannt. |
 | `tools/screenshots/kontrast.py` | Erreicht jedes Farbpaar der Token seinen Sollwert? |
-| `tools/erzeugen/design.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen. |
+| `tools/erzeugen/design.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen; `schreiben` ersetzt sie hier. Ob sie stimmen, misst `bestand` (Regel `design`, seit R4-25). |
 | `tools/quelltext/textprobe.py` | Sprechen Oberfläche und Dokumentation neutral von Land und Luft? |
 | `tools/stilvergleich/` | Hat sich am Erscheinungsbild etwas geändert, das nicht geplant war? |
 | `tools/bedienprobe/probe.mjs` | Tut ein Bedienelement, was es soll — wenn man es **bedient**? Je Weg eine Zahl. |
@@ -3204,6 +3327,12 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **28.09.2026 (R4-25, Werkzeug, keine Auslieferung)** | **4, 7, 8 und 9 neu erzeugt — alle vier Tabellen waren veraltet**: Nutzungszahlen der Token, die Schwellen, Symbolzählungen, die Zeilen der Bausteine. Seither hält `bestand` (Regel `design`) sie an den Erzeuger, und `design.py schreiben` ersetzt sie (Nr. 209). **3.4** um die Paare und die Ausnahme aus R4-24 ergänzt, **12** um die drei Fassungen darunter (F-R4-69). |
+| **Web 21.6.0 (R4-24)** | **9.40 neu — Diagramm**, freigegeben mit M-R4-24 (Q-R4-16): Säulen über die Zeit und Anteile als Balken, Inline-SVG aus PHP, ohne Bibliothek; Höchstwert in Orange tief (E-R4-60); kleine Vielfache ab der Schwelle 720 nebeneinander (F-R4-68). **7:** Die Ausnahme 479 px trägt zwei Regelblöcke mehr, keine neue Breite. **Kein neues Token, kein neuer Farbwert.** |
+| **Web 21.5.0 (R4-23)** | **9.18b neu — Zeitraumwahl**, freigegeben mit M-R4-23 (Q-R4-16): Pillen, zwei Datumsfelder und ein Knopf in einer Reihe — eine Anordnung, kein neuer Baustein. **Kein neues Token.** |
+| **Web 21.4.1 (R4-20)** | **6, Erklärtext:** Import / Export, das Einsatzformular und die Wiederherstellung tragen die Karte „Was hier gilt" nicht mehr; ihr Text steht im Handbuch (Nr. 287). **Kein neuer Baustein.** |
+| **Web 21.1.11 (R4-13)** | **Drei Meldungen aus dem Baustein 9.5 statt von Hand**: der Satz im Schneide-Bereich (Ton `fehler` für einen Grund, `info` für den Erklärtext — bis dahin immer blau und ohne Symbol, Nr. 271), die Rückmeldung über der Segmentliste und die Meldung im Entsperrdialog (ein `<p class="meldung">` ohne Symbol und ohne `role`, Nr. 272). Sichtbar: das Symbol, und ein Grund steht rot statt blau. Dazu die Dauer im Schneide-Bereich als „1h 06min" (Q-R4-06, Nr. 273). **Kein neuer Baustein, kein neues Token.** |
+| **Web 21.1.6 (R4-08)** | **Der Strich am aktiven Vorschlag ist `--orange-tief`** (9.x Vorschlagsliste): Er steht allein auf Rauch, und dort erreichte Orange 2,09:1 — die Regel aus 3.1, derselbe Tausch wie beim Reiter (E-P5c-79). **3.4 um acht Paare und fünf Ausnahmen ergänzt**: `kontrast.py` leitet die Paare seither aus dem Stylesheet ab (Nr. 116). **3.2 berichtigt**: „-tief = 4,5:1 auf Schnee" galt für Orange tief nie (4,32:1, E-R4-30). **Kein neues Token, kein neuer Farbwert, kein neuer Baustein.** |
 | **Web 20.39.0 (P5c/AP2)** | **9.37 neu — Reiter**, freigegeben mit M-P5c-01a (E-P5c-25): Wechsel zwischen gleichrangigen Sichten einer Seite, serverseitig, schmal rollend im eigenen Behälter; Seiten mit Reitern tragen keine Unterpunkte in der Leiste. Der Strich des aktiven Reiters steht in `--orange-tief` statt im `--orange` des Mockups (2,09 → 4,04 : 1 auf Rauch, E-P5c-79); Kapitel 3.4 nennt die Rolle beim Paar „Orange tief auf Rauch". **9.2 um die aufklappbare Zeile `.zeile-mehr` ergänzt** (E-P5c-26) samt Gegenregel zu `.zeile:first-child` (F-P5c-13) und dem Schlüssel `aktionsspalte`. **9.18a um die Helfer `ui_listenkopf()` und `ui_listenfuss()`** — Suche, Filterpillen (eine mit Kreuz), Auswahlfeld und Seitenwahl sind ein Weg; `admin_users.php` ist umgezogen, das Register hält die Klassen außerhalb von `ui.php` auf null (F-P5c-54). Kapitel 9.0 um drei Zeilen. **Ein neues Symbol** — `protokoll.svg`, Tabler „list" (Vorrat 57 → 58), für den Menüpunkt Verwaltung → Protokoll. **Kein neues Token, kein neuer Farbwert.** Die erzeugten Tabellen neu erzeugt: Bausteine **44 → 48** Funktionen (`ui_zeile_mehr()`, `ui_reiter()`, `ui_listenkopf()`, `ui_listenfuss()`), Medienblöcke **24 → 25** (die Protokollliste ab 720 px), Symbole **57 → 58**. In Kapitel 7 stand unter der erzeugten Schwellentabelle eine **zweite, veraltete Summenzeile** („22 Medienblöcke") — ein Rest eines früheren Einsetzens von Hand; beim Ersetzen bis zur nächsten Überschrift ist sie gefallen. |
 | **Web 20.38.0 (P5c/AP1)** | **9.36 neu — Streifen über dem Inhalt und Kopfleiste mit Etikett**, freigegeben mit M-P5c-02 (a). Ein Behälter `.hinweise` für bis zu vier Streifen in fester Reihenfolge (Umgebung → Ankündigung → Demo → Datenschutz), zwei Varianten vorhandener Bausteine (`.hinweis-umgebung` am Hinweisstreifen, `.meldung-ankuendigung` an der Meldung) und eine Variante der Kopfleiste (`.kopf-umgebung`, aktiver Punkt in `--orange-hell`, Variante A, E-P5c-59). Kapitel **3.4** um die drei Paare auf Rot ergänzt und um das Paar „Dunkelblau auf Orange hell", das seit Web 16.3.0 im Werkzeug stand und hier fehlte — **25 Paare, 0 verfehlt**. Kapitel 9.0 um eine Zeile. **Die vier erzeugten Tabellen neu erzeugt** — sie standen auf einem älteren Stand: Bausteine **40 → 44** Funktionen (drei aus diesem Paket, dazu `ui_tabellen_bootstrap()` aus Schritt 15, das bis dahin fehlte), Verwendungszahlen der Token und Symbole nachgezogen; `tools/erzeugen/design.py` kennt die beiden neuen Funktionen in seiner Liste der abweichenden Namen. **Kein neues Token, kein neuer Farbwert, kein neues Symbol.** |
 | **Web 20.1.0 (S10/AP3)** | **10.1 um einen sechsten Seitentyp ergänzt: die Druckseite** — und mit ihr das **erste `@media print` des Projekts** (Stylesheet, Abschnitt 26, drei Regeln). Kein neuer Baustein: Das Schlüsselblatt benutzt Lesespalte, Meldung, Wertekasten, Feldhinweis und Knopf; was es zum eigenen Typ macht, ist sein Zweck. Eine neue Klasse mit Regel — `.blatt-wert`, `.codeblock-wert` mit zwei Änderungen (darf umbrechen, bricht **nur zwischen** den Vierergruppen). **Kein neues Token, kein neuer Farbwert, kein neues Symbol:** Die Flächenregel im Druck setzt `background: none` statt eines weißen Hexwerts, weil die Skala geschlossen ist und es keinen Token für Weiß gibt. Kapitel **9.6** um den dritten durchgerutschten Plakettenton ergänzt (`ok`, zwei Altstellen ohne Regel, Backlog Nr. 36). Gemessen: Vollständigkeit **Hexfarben außerhalb `:root` 0**, Befunde 329 → 335 (die sechs sind das `→` der Pfadschreibweise *Betrieb → Servereinstellungen*); Bilderlauf `43b`, `45`, `48`, `48a` in acht Breiten, **beide Bedienhöhen**, je **0 Überlauf / 0 Knöpfe falscher Höhe**; Kontraste **22 Paare, 0 verfehlt**; Druckansicht bei 718 px (210 mm) **16 Gruppen, 0 zerschnitten, 0 Überlauf**. |

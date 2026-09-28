@@ -214,7 +214,7 @@ function status_erhebung(): array
     $kdfDemoAlt = false;
     if (count($kdfListe) > 1) {
         /* OHNE DAS DEMO-KONTO (Nachbesserung 07.09.2026, Gegenpruefung Fund
-         * 11). Es wird alle 30 Minuten aus der Fixture eingespielt -- mit der
+         * 11). Es wird bei jedem Reset aus der Fixture eingespielt -- mit der
          * Rundenzahl, die die Fixture traegt --, und die stille Anhebung
          * ueberspringt es ausdruecklich (api/kdf_upgrade.php, E-P1-19: ein
          * Upgrade passte bis zum naechsten Reset nicht mehr zu seinen
@@ -471,7 +471,7 @@ function status_erhebung(): array
          * der Liste -- das Demo-Konto koennte sich sonst nicht mehr anmelden. */
         $kdfText .= '. Das Demo-Konto steht auf der Rundenzahl seiner Fixture und '
                   . 'zieht nicht nach (die stille Anhebung überspringt es, und der Reset '
-                  . 'spielt die Fixture alle 30 Minuten neu ein) — der Altwert bleibt in '
+                  . 'spielt die Fixture jedes Mal neu ein) — der Altwert bleibt in '
                   . 'der Liste, bis der Referenzbestand neu gebaut ist (Backlog Nr. 155)';
     }
     $server[] = status_z('Schlüsselableitung', $kdfText,

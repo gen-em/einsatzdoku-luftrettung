@@ -57,10 +57,19 @@ DECKEN = {
     'backlog-schnittmenge': (0, 'Nummern in Backlog.md UND Backlog-Erledigt.md'),
     'backlog-codeblock': (0, 'Backlog-Einträge, die als Codeblock rendern (`<pre>`, cmark-gfm)'),
     'backlog-listenpunkte': (0, 'Abweichung `<li>` gegen Einträge (cmark-gfm)'),
+    'backlog-listenstart': (0, 'Einträge ohne eigene Liste mit ihrer Nummer als `start` (cmark-gfm)'),
 }
 VOKABULAR = ('offen', 'Konzept', 'freigegeben', 'Umsetzung', 'gebaut', 'gemergt', 'blockiert')
 BERICHTIGUNG = re.compile(r'hier stand|stand bis (zur )?Fassung|berichtigt mit Fassung|ÜBERHOLT')
 EINTRAG = re.compile(r'^(\d+)\. ')
+# DIE TRENNZEILE VOR JEDEM EINTRAG (Nr. 340, R4-25, E-R4-62). Ohne sie
+# rendert GitHub die Einträge als EINE Liste `<ol start="21">` und zählt fort:
+# neben Nr. 23 stand 22, neben Nr. 36 stand 23. Ein HTML-Kommentar beendet die
+# Liste und ist auf GitHub unsichtbar; der nächste Eintrag beginnt eine neue
+# mit seiner eigenen Nummer. NUR IN Backlog.md: Backlog-Erledigt.md hält den
+# alten Bestand Zeile für Zeile, samt seiner Folgen auf GitHub (Kopf dort).
+TRENNER = '<!-- -->'
+LISTE = re.compile(r'<ol(?: start="(\d+)")?>\s*<li>\s*(?:<p>)?\s*<strong>')
 
 
 class NichtGelaufen(Exception):
@@ -195,6 +204,8 @@ def messen(wurzel):
         if m:
             aktuell = [int(m.group(1)), i, 1]
             eintraege.append(aktuell)
+        elif z == TRENNER:
+            aktuell = None                  # der Eintrag davor ist zu Ende
         elif z.strip():
             if aktuell is not None:
                 aktuell[2] = i - aktuell[1] + 1
@@ -226,6 +237,31 @@ def messen(wurzel):
     setze('backlog-listenpunkte', f'{li} <li> gegen {len(eintraege)} Einträge',
           [(BACKLOG, 0, f'{li} <li>, aber {len(eintraege)} Einträge — ein Eintrag zerfällt oder eine Liste steckt in einem')]
           if li != len(eintraege) else [])
+
+    # --- Jede Nummer beginnt ihre eigene Liste (Nr. 340) ---------------------
+    # Gezählt wird, was GitHub zeigt: je Eintrag eine Liste, deren `start` seine
+    # Nummer ist (ohne `start` heißt 1). Ein Eintrag, der die Liste davor
+    # fortsetzt, fehlt in der Folge — die Folgen weichen dann ab.
+    start_befunde, gesamt = [], 0
+    for rel, zeilen in ((BACKLOG, bl),):
+        nummern = [(int(m.group(1)), i) for i, z in enumerate(zeilen, 1) for m in [EINTRAG.match(z)] if m]
+        r = subprocess.run(['cmark-gfm', '-e', 'table', '--to', 'html', os.path.join(wurzel, *rel.split('/'))],
+                           capture_output=True, text=True, encoding='utf-8')
+        if r.returncode != 0:
+            raise NichtGelaufen(f'cmark-gfm ({rel}): {r.stderr.strip()[:120]}')
+        starts = [int(m.group(1) or 1) for m in LISTE.finditer(r.stdout)]
+        gesamt += len(nummern)
+        # Vorwärts suchen, nicht Schritt für Schritt vergleichen: Eine
+        # nummerierte Aufzählung IN einem Eintrag ist auch ein `<ol>` (meist
+        # ohne `start`) und steht zwischen den Listen der Einträge.
+        k = 0
+        for nr, i in nummern:
+            p = next((x for x in range(k, len(starts)) if starts[x] == nr), None)
+            if p is None:
+                start_befunde.append((rel, i, f'Nr. {nr} beginnt keine eigene Liste — davor fehlt `{TRENNER}`'))
+            else:
+                k = p + 1
+    setze('backlog-listenstart', f'{gesamt} Einträge', start_befunde)
     return aus
 
 
@@ -326,6 +362,11 @@ def selbstprobe(wurzel):
         i = _zeile(z, r'^\d{3}\. ', z.index('## Offen')); return z[:i + 1] + ['', '    ein Codeblock'] + z[i + 1:]
     def f_li(z):
         i = _zeile(z, r'^\d+\. ', z.index('## Offen')); return z[:i + 1] + ['     - ein Unterpunkt'] + z[i + 1:]
+    def f_listenstart(z):
+        i = _zeile(z, r'^\d+\. ', z.index('## Offen'))
+        j = _zeile(z, r'^\d+\. ', i + 1)                # der zweite Eintrag: seine Trennzeile weg
+        k = max((x for x in range(i, j) if z[x] == TRENNER), default=None)
+        return z if k is None else z[:k] + z[k + 2:]   # ohne Trennzeile schon rot
 
     faelle = [
         ('rahmenplan-zeilen', RAHMENPLAN, f_zeilen), ('rahmenplan-kopf', RAHMENPLAN, f_kopf),
@@ -338,6 +379,7 @@ def selbstprobe(wurzel):
         ('backlog-eintrag', BACKLOG, f_eintrag), ('backlog-einrueckung', BACKLOG, f_einrueckung),
         ('berichtigung-backlog', BACKLOG, f_bberichtigung), ('backlog-schnittmenge', ERLEDIGT, None),
         ('backlog-codeblock', BACKLOG, f_codeblock), ('backlog-listenpunkte', BACKLOG, f_li),
+        ('backlog-listenstart', BACKLOG, f_listenstart),
     ]
     # UNABHÄNGIG VOM ZUSTAND DES BAUMS (F-SD-13): Die Selbstprobe zählt je
     # Decke die Stellen VOR und NACH dem Riss. Ein Baum, der schon rot ist,

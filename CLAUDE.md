@@ -60,7 +60,10 @@ Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
    hängen hinten an, 4, 5, 6 und 7 bleiben frei. **Wer Nummern vergeben
    könnte, reserviert zuerst eine Zehnerspanne in der Tabelle im Kopf von
    `Backlog.md` und pusht das** (E-SD-21). Kopfzeilen und Decken misst
-   `tools/steuerung/`, Doppelungen `bestand` — beides in Stufe 1.
+   `tools/steuerung/`, Doppelungen `bestand` — beides in Stufe 1. Ob eine
+   neue Nummer schon auf einem anderen Zweig steht, misst
+   `tools/steuerung/nummern.py` — nur örtlich im Prüfstand, weil Stufe 1
+   die anderen Zweige nicht sieht (Nr. 339).
 5. **Rahmenplan schreiben — an vier Anlässen, sonst nicht.** (1) Ein
    Schritt beginnt oder endet (Fahrplanzeile, Erledigt-Eintrag). (2) Eine
    Programmentscheidung fällt (R-Nummer). (3) Die Reihenfolge ändert sich.
@@ -287,7 +290,9 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   (`ui_karte_start(['geschuetzt' => true])`). **Und: Die Zahl belegt es
   nicht.** „8 Schlösser gezählt" sagt nichts darüber, ob eines fehlt — beide
   Lücken, die Web 19.1.1 geschlossen hat, standen neben einer richtigen Zahl
-  (Backlog Nr. 170).
+  (Backlog Nr. 170). Seit Web 21.1.5 hält der Riegel `kennzeichnung` jedes
+  Zeichen gegen eine Sollliste (`tools/quelltext/kennzeichnung-soll.md`);
+  wer ein Feld verschlüsselt, trägt es auch dort ein.
 - **Keine fremde Quelle zur Laufzeit.** Kein CDN, keine Google Fonts, kein
   externes Skript. Schriften und Bibliotheken liegen unter
   `server/assets/fonts/` bzw. `server/assets/vendor/`, mit Herkunft und
@@ -383,8 +388,10 @@ Oberflächenänderung anfängt, liest zuerst dort. Kurz:
 - Spaltenbreiten in Tabellen nie über `:nth-child` — sie zählen Spalten ab und
   rutschen beim Streichen einer Spalte still auf die falsche. Klassen benutzen.
 - Die Tabellen in `Design.md` (Token, Schwellen, Symbole, Bausteine) sind
-  **erzeugt**: `python3 tools/erzeugen/design.py alle`. Wer eine davon von Hand
-  ändert, ändert sie an der falschen Stelle.
+  **erzeugt**: `python3 tools/erzeugen/design.py schreiben` ersetzt sie dort.
+  Wer eine davon von Hand ändert, ändert sie an der falschen Stelle — und wer
+  `ui.php`, `style.css` oder ein Symbol ändert, erzeugt sie neu, sonst ist
+  Stufe 1 rot (`bestand`, Regel `design`, seit R4-25).
 
 ## 6. Prüfen
 

@@ -395,7 +395,8 @@ Daten erst nach Server-Bestätigung.
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel); dazu seit
 │   │                       Web 20.28.0 flash_setzen()/flash_holen() — die
-│   │                       Meldung, die eine Umleitung überdauert
+│   │                       Meldung, die eine Umleitung überdauert (seit
+│   │                       Web 21.1.9 mit Ort und Ergebnis)
 │   ├── sitzung_lib.php    WO die Sitzungen liegen — nicht, wie sie enden
 │   │                       (Schritt 16, E-SA-01 bis -07; Backlog Nr. 241).
 │   │                       Legt `.sitzungen/` mit 0700 an, richtet
@@ -509,7 +510,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      keyguard.js (Bindung/Lebensdauer des Inhaltsschlüssels),
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
 │   │                      menue.js (Einstellungsleiste: Blöcke klappen, Unterpunkte),
-│   │                      html.js (HTML-Maskierung, die eine Fassung für alle Seiten),
+│   │                      html.js (HTML-Maskierung und Meldungs-Markup, die eine
+│   │                        Fassung für alle Seiten; seit Web 21.1.11 im Kopf jeder Seite),
 │   │                      missiontable.js (gemeinsame Einsatztabelle, s. u.),
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
 │   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
@@ -707,7 +709,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      steht (Grundsatz 1). `pruefen.sh` fährt sie je
 │   │                      Stufe, `auswahl.py` wählt nach Berührung aus,
 │   │                      `bericht.py` schreibt die Zahlen (s. LIESMICH.md)
-│   ├── quelltext/         dreizehn Prüfungen, die nur Quelltext lesen und im
+│   ├── quelltext/         vierzehn Prüfungen, die nur Quelltext lesen und im
 │   │                      Tor laufen (PK-04, E-PK-24): installweiche,
 │   │                      sitzungshaertung, csp, jobregister,
 │   │                      migrationsregister, behandler (seit P5c/AP3),
@@ -716,11 +718,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      unter tools/ gegen Pruefablauf.md 6 hält, pysyntax
 │   │                      und handbuch (bis BR-03 eigene Tor-Schritte), dazu
 │   │                      seit P5c/AP9 anker (jeder Verweis hilfe.php#… trifft
-│   │                      eine Überschrift des Handbuchs). Ein
+│   │                      eine Überschrift des Handbuchs), seit R4-06
+│   │                      kennzeichnung (jedes Schloss gegen eine
+│   │                      Sollliste). Ein
 │   │                      Läufer (`pruefen.sh <name>|alle|--selbstprobe`),
 │   │                      ein LIESMICH. Vorher acht Ordner.
-│   ├── referenzdatensatz/ erfundener Beispielbestand (21 Diensttage,
-│   │   │                  106 Einsätze) — Demo-Konto UND Regressionsreferenz
+│   ├── referenzdatensatz/ erfundener Beispielbestand (22 Diensttage,
+│   │   │                  109 Einsätze) — Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei
 │   │   │                  Geräteblöcke (geraete.json), die drei Schnitte,
 │   │   │                  Schema und Prüfung (Abdeckungsmatrix, Sperrwörter
@@ -731,6 +735,8 @@ Daten erst nach Server-Bestätigung.
 │   │   │                  lokal_einrichten.sh baut eine Installation von Null
 │   │   │                  auf (install.php über HTTP, Passwort im Browser,
 │   │   │                  Demo-Konto), lokal_starten.sh fährt sie nur hoch;
+│   │   │                  pruefkonten.sh legt die Prüfkonten der Rollen
+│   │   │                  admin und support für den Bilderlauf an (R4-08);
 │   │   │                  sitzungsprobe.py misst, dass sitzung.py BEIDE
 │   │   │                  Hüllenfassungen öffnet (edk1: und edka1:, S10);
 │   │   │                  demo_kennzeichnen.php vermerkt das frische Konto als
@@ -763,11 +769,15 @@ Daten erst nach Server-Bestätigung.
 │   │                      AP5 hatte die Zweitfaktorprobe nicht nachgetragen.
 │   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
 │   │                      ein LIESMICH. Vorher zwanzig Ordner.
-│   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
-│   │                      auf, je Seite ein Kontaktbogen; misst dabei
+│   ├── screenshots/       nimmt alle Seiten in zehn Breiten von 360 bis 1920 px
+│   │                      auf (1200 und 1600 seit R4-08), je Seite ein
+│   │                      Kontaktbogen, in fünf Rollen (aus, demo,
+│   │                      betreiberin, admin, support — die letzten zwei mit
+│   │                      eigenen Prüfkonten seit R4-08); misst dabei
 │   │                      waagerechten Überlauf, Konsolenfehler, Knopfhöhen
 │   │                      und — seit Web 20.21.1 — Karten, die ausserhalb von
-│   │                      main.inhalt haengen (Nr. 225).
+│   │                      main.inhalt haengen (Nr. 225); rollende Behälter
+│   │                      nennt er, sie halten nicht auf.
 │   │                      Seit Web 9.10.1 prueft er nach JEDEM Aufruf, ob er
 │   │                      die richtige Seite vor sich hat, und meldet sich bei
 │   │                      Bedarf neu an; ein nicht aufloesbarer Platzhalter
@@ -778,7 +788,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      Klasse (Backlog Nr. 176; die Mutationsprobe dazu
 │   │                      steht in der LIESMICH).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
-│   │                      (s. LIESMICH.md)
+│   │                      und leitet die Paare seit R4-08 aus den Regeln des
+│   │                      Stylesheets ab (s. LIESMICH.md)
 │   ├── spaltenregister/   hält `schema.sql` gegen `mf_missions_register()`
 │   │                      (beide Richtungen) und misst die Vollständigkeit der
 │   │                      drei Abbildungen, die von Hand bleiben — jede muss
@@ -792,7 +803,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      (Schritt 15 AP6, E-ZE-22; s. Dateikopf)
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
-│   │                      plus berechnete Stile im Browser, 13 Breiten.
+│   │                      plus berechnete Stile im Browser, 13 Breiten; die
+│   │                      Seitenprobe je Seite als eigenes Dokument (R4-08).
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
@@ -853,7 +865,7 @@ Daten erst nach Server-Bestätigung.
 | `bw_units` | Bergwacht-Bereitschaften; `user_id` = das Konto |
 | `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` = das Konto |
 | `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id` des Kontos — ohne FK, weil es zwei Zieltabellen sind); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
-| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb. `day_capabilities` bekommt dafür keinen Satz; `day_crew` seit Web 21.0.0 **die Rollen der gewählten Betriebsart** (Nr. 169, E-P5c-47 — bis dahin keinen, F19) |
+| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). **Seit Web 21.3.0 `created_at`** (TIMESTAMP, Serverzeit des Anlegens, Nr. 158): der Anker, ob Geräte den Zeitraum des Tages noch fortschreiben (4.99a2); der Bestand hat bei der Migration `started_at` bekommen, gekappt auf jetzt, und die Wiederherstellung setzt ihn ebenso — er steht nicht im Backup. `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb. `day_capabilities` bekommt dafür keinen Satz; `day_crew` seit Web 21.0.0 **die Rollen der gewählten Betriebsart** (Nr. 169, E-P5c-47 — bis dahin keinen, F19) |
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
@@ -1204,7 +1216,7 @@ des Prüfcontainers. Steht keine mehr, darf der Altwert gestrichen werden —
 **mit einer Ausnahme, die die Zeile selbst nennt:** Das Demo-Konto zählt dort
 nicht mit. Es steht auf der Rundenzahl seiner Fixture, die stille Anhebung
 überspringt es (`api/kdf_upgrade.php`, E-P1-19), und der Reset spielt die
-Fixture alle 30 Minuten neu ein; solange die Fixture den Altwert trägt
+Fixture jedes Mal neu ein; solange die Fixture den Altwert trägt
 (heute 320 000, Backlog Nr. 155), bleibt er in `KDF_ITER_LISTE`, sonst
 könnte sich das Demo-Konto nicht mehr anmelden. Der Demo-Satz erscheint nur,
 solange dieser Wert in der Liste steht; fehlt er, ist das Demo-Konto eines
@@ -1686,6 +1698,19 @@ Fußzeile **außerhalb** von `<main>` und lädt die vier Skripte des Gerüsts.
 Drei Leisteninhalte teilen sich dasselbe Markup: `ui_leiste_diensttage()`,
 `ui_leiste_einstellungen()` und — für die Suche — der von der Seite selbst
 gefüllte Filterblock (`leiste => 'filter'`, danach `ui_leiste_ende()`).
+
+**Drei gedeckelte Tageslisten, und alle drei sagen es (seit Web 21.4.0,
+R4-17, Nr. 37).** `dt_liste()` nimmt eine Grenze, und drei Stellen setzen
+eine: die Leiste **500** (`ui_leiste_diensttage()`, darunter die Zeile „Die
+Leiste zeigt die 500 jüngsten Diensttage; ältere findest du über die
+Suche."), die Tagesliste von `api/day.php` ohne `d` **120** (die Antwort
+trägt `grenze` und `gekappt`) und der Verschiebe-Dialog **400** (Hinweis am
+Auswahlfeld). Alle drei fragen nach **einem mehr**, als sie zeigen: So
+wissen sie, ob es ältere gibt, statt es aus „genau so viele" zu schliessen.
+Bis dahin kappten die ersten zwei still, und der dritte meldete schon bei
+genau 400 Tagen, es gebe ältere. Laut waren nur die Grenzen von Import
+(3000 Einsätze, 600 Diensttage) und Export (5000), beide mit HTTP 413. Der
+Messstand prüft die Leiste mit: 500 Verweise ohne den Hinweis sind rot.
 
 **Die Grundformen des Stylesheets (Abschnitt 17, seit Web 9.12.0).** Bis dahin
 hieß dieser Abschnitt **Rohschicht** und war ausdrücklich befristet: Solange
@@ -2246,10 +2271,25 @@ verloren. (Die frühere zweite Rücksicht, `pfeilInitial: false`, gibt es seit
 M6-10 nicht mehr: Der Sortierpfeil steht auf beiden Seiten von Anfang an.)
 
 **Seitengrösse (`opts.seite`, ab Web 5.10.0).** Ohne diese Option zeichnet die
-Tabelle jede Zeile — so verhält sich `zeitraum.php` weiterhin. `suche.php`
-setzt **200**: Dort steht beim Öffnen der gesamte Bestand zur Auswahl, und
-`anwenden()` zeichnet bei **jedem** Tastendruck im Suchfeld neu; bei einigen
-tausend Einsätzen ist der Aufbau der `<tr>` die teuerste Einzelheit der Seite.
+Tabelle jede Zeile. `suche.php` setzt **200**: Dort steht beim Öffnen der
+gesamte Bestand zur Auswahl, und `anwenden()` zeichnet bei **jedem**
+Tastendruck im Suchfeld neu; bei einigen tausend Einsätzen ist der Aufbau der
+`<tr>` die teuerste Einzelheit der Seite. **`zeitraum.php` setzt seit Web
+21.4.0 ebenfalls 200** (R4-17, Nr. 37). Bis dahin zeichnete sie jede Zeile;
+der Messstand brauchte für ein Jahr mit 4071 Einsätzen 88 s bis 109 s, danach
+9 s bis „fertig" und 2,5 s bis zur ersten Zeile im DOM (Drossel 6×; die
+Zahlen in `tools/messstand/ausgangsmessung.md`). Kopfzahl, km-Summe,
+Statistik und Karte rechnen weiter über den ganzen Zeitraum — begrenzt ist
+die Liste, nicht der Zeitraum; der Kopf sagt „200 angezeigt" dazu.
+
+**`zeigeEinsatz(mid)` (seit Web 21.4.0).** Eine Seite, die zu einer Zeile
+springen will, fand sie ohne Seitengrösse immer. Mit einer steht sie
+womöglich jenseits der gezeichneten; `zeigeEinsatz()` lädt dann in ganzen
+Seiten so weit nach, dass sie dabei ist, und meldet, ob es den Einsatz in der
+Trefferliste überhaupt gibt. Aufrufer: die Extremwert-Kacheln der
+Zeitraumübersicht. Die Bedienprobe (`wege/zeitraum.mjs`) belegt es an einer
+zwölffach vervielfachten Einsatzliste; ohne den Aufruf leuchten Kachel und
+Pin, und die Zeile fehlt.
 
 Begrenzt wird ausschliesslich die Anzeige — sortiert und gezählt wird über die
 volle Liste, geschnitten wird erst danach (`sortiert.slice(0, sichtbar)`).
@@ -3044,7 +3084,10 @@ nicht laden — `no-store` steht dort trotzdem.
 > `nosniff` noch `no-store` setzen. Das ist derselbe Mangel, den Web 20.9.1
 > an sieben anderen Stellen behoben hat; diese drei arbeiten über `$_POST`
 > und sind damals niemandem als „JSON-Endpunkt" aufgefallen. Backlog
-> **Nr. 258**.
+> **Nr. 258** — **behoben mit Web 21.1.7** (R4-09): Die 19 Antworten laufen
+> über `json_out()`, die drei eigenen `Content-Type`-Zeilen sind fort, und
+> die Registerzeile Z41 (`tools/zaehlung/`) hält `echo json_encode` unter
+> `api/` auf null. Es bleiben die drei Codezeilen darüber.
 
 ### Der Eingang der Endpunkte (ab Web 20.28.0)
 
@@ -3572,7 +3615,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | Job | täglich? | was er tut |
 |---|---|---|
 | `mail` | nein | Nachrichten, deren erster Versuch scheiterte — fünf Versuche über 24 Stunden, danach steht die Nachricht als unzustellbar auf der Statusseite (4.99). Steht **ganz vorn** im Katalog: `jobs_lauf()` arbeitet ihn der Reihe nach ab, und am Huckepack-Weg sind 3 s für alle Jobs zusammen — ein Job dahinter bekäme dort regelmäßig nichts |
-| `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über vierzehn Tabellen kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
+| `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über jede Tabelle des Kontos kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
 | `aufraeumen` | ja, höchstens 1×/Kalendertag | **siebzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/quelltext/` `jobregister`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
 | `konto_verfall` | nein | Registrierungen, die nicht bestätigt wurden, und Freischaltfristen, die abgelaufen sind (P5b) — **höchstens fünf je Lauf**, aus demselben Grund wie beim Löschjob darüber |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
@@ -5064,6 +5107,15 @@ Browser), erzeugt in `einsatz_form.php`:
 Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
 `__CLEAR__` übertragen und löscht den vorhandenen.
 
+**Jeder Schlüssel trägt in der Oberfläche ein Schloss, und wo, steht in einer
+Sollliste** (seit Web 21.1.5, R4-06, Backlog Nr. 170):
+`tools/quelltext/kennzeichnung-soll.md` nennt je Feld die Stelle im Formular
+(`einsatz_form.php`) und in der Einsatzansicht (`einsatz.php`); der Riegel
+`kennzeichnung` hält den Quelltext dagegen. Wer ein Feld in den Block legt,
+ergänzt diese Tabelle, `CLAUDE.md` 4 **und** die Sollliste — ein Blobfeld des
+Katalogs ohne Zeile dort ist rot. Der manuelle Abfahrtort hat in der
+Einsatzansicht erst seit dieser Fassung eine beschriftete Zeile.
+
 > **`notes` ist das erste Feld, das über den Feldkatalog in den Block kommt.**
 > Alle Schlüssel darüber entstehen aus handgeschriebenem Markup in
 > `einsatz_form.php` mit festen Kennungen. `notes` trägt dagegen
@@ -5554,7 +5606,7 @@ Die Bausteine im Einzelnen:
 | Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_sessions.erstellt_am`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
 | Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungssitzungen). Die **Anzeige** rechnet in PHP nach `konfig('app.timezone')` um (bis Web 20.26.2: `$CFG['app']['timezone']`). |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
-| Meldung über eine Umleitung | `session_lib.php` | `flash_setzen($ton, $text)` und `flash_holen()` (liest **und** löscht), Töne `notice` und `error`, Sitzungsschlüssel `flash`. Ab Web 20.28.0; vorher setzten drei Seiten `$_SESSION['flash_notice']` und `$_SESSION['flash_error']` an 22 Stellen von Hand. **Ein** Schlüssel statt zwei: Der Ton ist eine Eigenschaft der Meldung, und bei zwei Schlüsseln entscheidet die Reihenfolge des Auslesens, was jemand sieht. |
+| Meldung über eine Umleitung | `session_lib.php` | `flash_setzen($ton, $text, $ort, $daten)` und `flash_holen()` (liest **und** löscht), Sitzungsschlüssel `flash`. Ab Web 20.28.0; vorher setzten drei Seiten `$_SESSION['flash_notice']` und `$_SESSION['flash_error']` an 22 Stellen von Hand. **Ein** Schlüssel statt zwei: Der Ton ist eine Eigenschaft der Meldung, und bei zwei Schlüsseln entscheidet die Reihenfolge des Auslesens, was jemand sieht. **Seit Web 21.1.9** (R4-11, Nr. 250) leiten alle Seiten unter Verwaltung und Betrieb nach einer Handlung um, außer `betrieb_server.php` (Schritt 18); dafür trägt der Flash einen **Ort** (die `id` der Karte, zugleich der Anker der Umleitung), die vier Töne von `ui_meldung_markup()` (`ok`, `fehler`, `warn`, `info`) neben `notice`/`error`, und **Daten** für ein Ergebnis, das mehr ist als ein Satz (E-R4-33, -34). **Kein Geheimnis in die Daten** — sie liegen bis zum Abholen in der Sitzungsdatei; der Setz-Link nach „Konto anlegen“ bleibt deshalb ohne Umleitung. Ein Eingabefehler, der nichts geändert hat, bleibt auf der Seite, damit die Eingabe stehen bleibt (E-R4-35). |
 | Eingang der Endpunkte | `db.php` | `api_methode($erlaubt)` und `api_rumpf($o)` — Methodenprüfung (405 `method`) und Rumpf als JSON-Objekt (400 `leer`/`format`). Ab Web 20.28.0. **Zwei Funktionen, weil `csrf_check()` dazwischen steht**; Einzelheiten im Abschnitt „Der Eingang der Endpunkte". |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
@@ -5568,11 +5620,11 @@ Die Bausteine im Einzelnen:
 | Ortszeit | `format_lib.php` (`fmt_local()`) | **Stand bis Web 20.31.0 in `db.php`**, Name und Verhalten unverändert — alle 113 Aufrufer in 37 Dateien merken nichts, weil `db.php` die neue Datei lädt. Umgezogen, weil `datum_text()` und `datum_zeit_text()` darauf aufbauen. `local_to_utc()` **bleibt in `db.php`**: Sie liest einen Formularwert, um damit zu rechnen — die andere Richtung. |
 | Zwei Trenner für Datum und Zeit | `format_lib.php` | `datum_zeit_text($utc, $trenner)` hängt den Trenner **nach** dem Formatieren an, statt ihn ins Format-Literal zu schreiben. Sonst würde der erste Trenner mit einem Buchstaben still zu Formatzeichen (` um ` ergäbe `u` = Mikrosekunden, `m` = Monat) — und so einer steht schon im Bestand. Drei Trenner sind im Umlauf (Leerzeichen 25×, Mittelpunkt 11×, Komma 1×); die Vereinheitlichung entscheidet 10c AP9 und findet dafür **eine** Stelle statt 41. |
 | Formatierer im Browser | `assets/format.js` (`EdFormat`) | **Zahl und Größe** (`zahl()`, `groesse()`) — dieselben Regeln wie `format_lib.php`, über 2 014 Byte-Werte Zeichen für Zeichen geprüft. **Tag, Dauer und Strecke** seit Web 20.34.0 (`tag()`, `tagKurz()`, `spanne()`, `dauer()`, `dauerUhr()`, `minuten()`, `km()`, `kmSumme()`) — dafür gibt es **keine** PHP-Entsprechung: Dort geht es um UTC-Zeitstempel mit Zonenumrechnung, hier um einen nackten Tagesstring und um Dauern, die serverseitig nicht entstehen. **Der Leerwert ist überall ein Parameter**, kein fester Wert — die Lehre aus AP7, wo ein fester Frühausstieg aus „– um –“ ein „–“ machte. Sechs verschiedene Leer-Antworten waren im Bestand gemessen worden. **Die Datei steht im `<head>`** (`ui_seite_start()`), damit die Ladereihenfolge keine Frage mehr ist. **Fünf dünne Weiterleitungen bleiben** (Z34), jede bindet einen anderen Leerwert. |
-| Spalten von `missions` | `mission_fields_lib.php` | `mf_missions_register()` führt jede der 41 Spalten **genau einmal** und sagt je Zweck, ob sie dabei ist und an welcher **Position**; `mf_spalten($zweck, $präfix, $alias)` erzeugt die Liste, `mf_spalten_sql()` den SQL-Text. Neun Zwecke: `export` · `backup` · `backup_restore` · `import_neu` · `import_aendern` · `ingest_neu` · `schnitt_neu` · `suchindex` · `range`. Die Position wird mitgeführt, weil die Listen in Menge **und** Reihenfolge eingefroren sind — eine andere Reihenfolge ändert die Spaltenfolge im CSV-Export. `mf_spalten()` verlangt je Zweck eine lückenlose Folge ab 0. Fehlt eine Spalte in einem Zweck, steht der Grund in `mf_missions_gruende()`. Ab Web 20.31.0. |
+| Spalten von `missions` | `mission_fields_lib.php` | `mf_missions_register()` führt jede der 41 Spalten **genau einmal** und sagt je Zweck, ob sie dabei ist und an welcher **Position**; `mf_spalten($zweck, $präfix, $alias)` erzeugt die Liste der **bloßen Namen** (vier Aufrufer brauchen sie als Schlüssel), `mf_spalten_sql()` den SQL-Text — **seit Web 21.1.9 mit jedem Spaltennamen in Backticks**, nicht nur dem Alias (Nr. 239). Wer eine Liste selbst erweitert (die Sicherung hängt `$extraCols` an), nimmt `mf_liste_sql()`, für einen einzelnen Namen `mf_bezeichner()`; eine Spaltenliste per `implode()` über bloße Namen zählt die Registerzeile Z42 (Decke 0). `komplett_lib.php` behält seine eigene Quotierung: Es sichert jede Tabelle, nicht den Katalog, und ein allgemeiner Helfer gehörte nach `db.php`, das für Schritt 18 frei bleibt. Neun Zwecke: `export` · `backup` · `backup_restore` · `import_neu` · `import_aendern` · `ingest_neu` · `schnitt_neu` · `suchindex` · `range`. Die Position wird mitgeführt, weil die Listen in Menge **und** Reihenfolge eingefroren sind — eine andere Reihenfolge ändert die Spaltenfolge im CSV-Export. `mf_spalten()` verlangt je Zweck eine lückenlose Folge ab 0. Fehlt eine Spalte in einem Zweck, steht der Grund in `mf_missions_gruende()`. Ab Web 20.31.0. |
 | Feste Werte in einer erzeugten Anweisung | (Aufrufseite) | Wo Werte fest im Satz stehen, hängt die Wertform an der **Spalte**, nicht an ihrer Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]`, `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer ein Feld unter die Schranke nimmt, trägt es an **einer** Stelle ein. |
 | Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, seit Web 20.41.0 `db_spalte_typ()` (der volle Spaltentyp, etwa die Werte eines ENUM — P5c/AP4), seit Web 21.0.0 `db_spalte_nullbar()` (ob die Spalte NULL zulässt — P5c/AP8) — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
 | Anfrage an den Server | `assets/api.js` (`EdApi`) | `EdApi.postJson(url, daten, o)` und `EdApi.postForm(url, felder, o)`, seit Web 20.34.0. Beide liefern `{ ok, status, daten, meldung }` und **werfen nie** — ein Netzfehler kommt als `status: 0`. Sie hängen das CSRF-Token selbst an (Kopfzeile bzw. Feld) und bauen den **einen** Satzbau `<Vorgang> ist fehlgeschlagen: <Grund>`. Vorrangkette des Grundes: `meldung` → `text` → `hinweis` → Ersatzsatz mit Kennung. **`error` steht nicht in der Kette** — es trägt Maschinenwörter, keine Sätze, und erscheint nur als Kennung in der Klammer. **`ok` ist ein Transport-Urteil**: Es prüft `daten.ok !== false`, nicht `=== true`, weil die lesenden Endpunkte gar kein `ok` schicken — wer ein fachliches `ok` braucht, prüft `a.daten.ok` mit. **Die Array-Regel von `postForm` ist sicherheitsrelevant**: Ein Feldwert, der ein Array ist, geht als `name[]` hinaus; ohne die Klammern liest PHP eine Zeichenkette, `is_array()` schlägt fehl, und die Schlüsselblatt-Rückfrage zählt einen Fehlversuch. **Die Datei steht im `<head>`** — nicht in der Immer-Liste, weil `ui_geruest_ende()` auf `einstellungen.php` und `import.php` **nach** den Seitenskripten steht und `unlock.js` dort zur Ladezeit sendet. |
-| Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Die Tonklasse wird zusammengesetzt** — `tools/quelltext/` (`vollstaendigkeit`) sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. |
+| Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Seit Web 21.1.11** (R4-13) auch der Satz im Schneide-Bereich (`fehler` für einen Grund, `info` für den Erklärtext), die Rückmeldung über der Segmentliste und die Meldung im Entsperrdialog; `html.js` steht dafür im Kopf jeder Seite. Zwei Nachbauten bleiben bis Backlog Nr. 346 (`patient.js`, der Papierkorb-Hinweis in `index.php`); die Registerzeile Z37 zählt seither auch `className = '…meldung'`. **Die Tonklasse wird zusammengesetzt** — `tools/quelltext/` (`vollstaendigkeit`) sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. |
 | Auftakt der Patientenanzeige | `assets/patient.js` (`EdPat.listeLaden`) | `EdPat.listeLaden(liste, o)`, seit Web 20.34.0: Schlüssel holen, Sperrbanner nach der Regel setzen (sichtbar genau dann, wenn kein Schlüssel da ist **und** die Liste überhaupt einen `pat_blob` enthält), entschlüsseln, zählen. Gibt `{ ck, zahl }` zurück und **entscheidet nicht**: Tagesansicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und dabei den Altersfilter sperren. `zeigeUnlesbar()` ruft der Aufrufer **nach** seiner Schleife. **`einstellungen.php` bleibt draußen** (Z36 endet bei 1): Es teilt nur den Aufruf, arbeitet mit Fenstern zu 250 aus einem Bestand von tausenden, und `hinweisUnlesbar()` wertet die **ganze** Liste aus — über ein Fenster gesagt wäre der Satz falsch. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
@@ -5701,7 +5753,9 @@ fällt. Bis dahin gilt sie wie beschrieben.*
 ### 4.99a Demo-Konto (ab Web 7.3.0)
 
 Ein Konto zum Ausprobieren: erfundene Daten, öffentliche Zugangsdaten,
-Änderungen erwünscht — und alle 30 Minuten zurück auf den Ausgangsstand.
+Änderungen erwünscht — und 30 Minuten nach der ersten Änderung zurück auf den
+Ausgangsstand, ohne Änderung einmal am Tag (seit Web 21.2.0, R4-14, Nr. 76;
+bis dahin alle 30 Minuten, ob sich etwas geändert hatte oder nicht).
 
 **Die Ausnahme, die dafür gemacht wird.** Das Projekt verspricht
 Ende-zu-Ende-Verschlüsselung: Der Server sieht die geschützten Angaben nie im
@@ -5749,21 +5803,24 @@ Backup aufbaut, aber serverseitig — dort steht `pat_blob` noch als
 Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
 Der Erzeuger bricht ab, wenn er Klartext findet.
 
-Gepackt abgelegt: roh rund 2,8 MB, im Wesentlichen 63 752 Spurpunkte als
-JSON-Zahlen. Gepackt sind es rund 860 KB, und die Datei geht bei jedem Deploy
-über FTPS mit.
+Gepackt abgelegt: roh rund 3,1 MB, im Wesentlichen 67 292 Spurpunkte als
+JSON-Zahlen (Stand R4-16, mit dem Nachtdienst D22). Gepackt sind es rund
+930 KB, und die Datei geht bei jedem Deploy über FTPS mit.
 
 **Was ein Reset kostet — gemessen, nicht geschätzt** (15.09.2026, Prüfstand
 mit MariaDB und PHP auf demselben Rechner, je drei Läufe): **6,6 s** mit dem
-heutigen Bestand (106 Einsätze, 63 752 Punkte), **5,9 s** mit dem Stand davor
-(88 Einsätze, 55 861 Punkte). Die Zeit trägt **die Besucherin**, deren Anfrage
+damaligen Bestand (106 Einsätze, 63 752 Punkte), **5,9 s** mit dem Stand davor
+(88 Einsätze, 55 861 Punkte). Mit dem heutigen Bestand (109 Einsätze,
+67 292 Punkte) sind es **7,3 s** (27.09.2026, Median aus drei Läufen,
+7,26–7,61 s) — gemessen in einer anderen Arbeitsumgebung, der Abstand zu den
+6,6 s ist deshalb nicht allein der Bestand. Die Zeit trägt **die Besucherin**, deren Anfrage
 den fälligen Reset auslöst (`demo_reset_wenn_faellig()` aus
-`auth_guard.php`) — sie sieht ihre Seite so lange nicht. Zweimal die Stunde
-ist das wenig Last und trotzdem jedes Mal ein spürbarer Aufenthalt für genau
-eine Person; ob es dabei bleibt, steht als Backlog Nr. 76 offen. **Nach einem
-Deploy mit neuer Fixture zeigt das bestehende Demo-Konto bis zum nächsten
-Reset den alten Bestand** — wer ihn sofort sehen will, drückt unter
-Verwaltung → Demo-Konto „Zurücksetzen".
+`auth_guard.php`) — sie sieht ihre Seite so lange nicht. Bis Web 21.1.x traf
+das jede, die nach einer Pause nur nachsehen wollte; seit Web 21.2.0 nur noch
+die, die nach einer Änderung kommt (unten, „Die Änderungsmarke"). **Nach
+einem Deploy mit neuer Fixture zeigt das bestehende Demo-Konto bis zum
+nächsten Reset den alten Bestand** — ohne Änderung bis zu einem Tag. Wer ihn
+sofort sehen will, drückt unter Verwaltung → Demo-Konto „Zurücksetzen".
 
 #### Zwei Riegel je Geheimnis — einer beim Erzeugen, einer beim Einspielen
 
@@ -5857,8 +5914,44 @@ wäre die Rücksetzung ein Hebel für jeden, der die Adresse kennt.
 
 Die Marke (`app_state.demo_letzter_reset`) wird **vor** der Arbeit gesetzt —
 dasselbe Vorgehen wie bei der Tageswartung: Zwei gleichzeitige Anfragen sollen
-nicht beide zurücksetzen. Höchstdrift 30 Minuten relativ zu jeder Aktivität;
-ein Zeitdienst wird nicht vorausgesetzt.
+nicht beide zurücksetzen. Ein Zeitdienst wird nicht vorausgesetzt.
+
+#### Die Änderungsmarke (seit Web 21.2.0)
+
+Fällig ist der Reset nur noch, wenn sich etwas geändert hat (Schritt 17,
+R4-14, Backlog Nr. 76, E-R4-10). `app_state.demo_geaendert` hält den
+Zeitpunkt der **ersten** Änderung seit dem letzten Reset;
+`app_state_einmalig()` schreibt nur, wo nichts steht.
+
+| Setzstelle | wann |
+|---|---|
+| `auth_guard.php` | jede POST des Demo-Kontos mit gültigem Formular-Token (`csrf_ok()`), **nach** dem Reset-Aufruf |
+| `ingest.php` | jeder angenommene Upload eines Demo-Geräts, **nach** dem `commit()` |
+
+Die Rechnung steht in `demo_reset_faellig_ab($letzter, $geaendert)`, rein
+und ohne Uhr: **mit Marke** 30 Minuten nach dem späteren von erster Änderung
+und letztem Reset, **ohne Marke** einen Tag nach dem letzten Reset
+(Pflichtreset). Drei Entscheidungen stecken darin:
+
+- **Ab der ersten Änderung, nicht ab dem letzten Reset** (Q-R4-23, E-R4-42).
+  Nach längerer Ruhe wäre sonst schon die Umleitung nach dem ersten
+  Speichern fällig, und die Änderung wäre fort, bevor die Besucherin sie
+  sieht. Wer länger als 30 Minuten ausprobiert, wird wie bisher mittendrin
+  zurückgesetzt.
+- **Der spätere Zeitpunkt zählt.** Werkzeuge halten den Reset auf, indem sie
+  `demo_letzter_reset` auf jetzt oder in die Zukunft schieben (Prüfstand,
+  `demo_kennzeichnen.php`); das bleibt so wirksam.
+- **Mit Marke gilt nur ihre Frist.** Der Pflichtreset ist das Netz für den
+  Fall ohne Marke — eine Änderung, die an keiner Setzstelle vorbeikam, eine
+  Änderung aus der Verwaltung, eine neue Fixture nach einem Deploy. Einer
+  Änderung kurz vor Ablauf des Tages kürzt er die halbe Stunde nicht.
+
+Eine POST, die nichts ändert, setzt die Marke auch: Das kostet einen Reset,
+keinen Schaden; umgekehrt stünde eine Änderung ohne Marke bis zum
+Pflichtreset da. Nach dem Reset löscht `demo_aenderung_vergessen()` die
+Marke — nur, wenn sie nicht jünger ist als sein Beginn. Gemessen von der
+Zweitfaktorprobe, Teil 6b (Rechnung als Tabelle, die Marke an `app_state`,
+die zwei Setzstellen am Quelltext).
 
 Der Reset überschreibt auch **Konto- und Schlüsselmaterial** und zählt
 `session_epoch` hoch. Damit bliebe selbst eine unerwartet gelungene Änderung
@@ -5888,7 +5981,7 @@ Alles Übrige bleibt offen — ausdrücklich auch Geräteverwaltung, Kopplung un
 Uploads. Die Anwendung soll ausprobierbar sein, das ist der Zweck.
 
 **Warum überhaupt sperren, wenn der Reset ohnehin alles zurückholt?** Weil
-zwischen zwei Rücksetzungen bis zu dreißig Minuten liegen. Wer in dieser Zeit
+eine Änderung bis zu dreißig Minuten stehen bleibt. Wer in dieser Zeit
 E-Mail oder Passwort ändert, sperrt die nächste Besucherin aus — und die
 findet ein Konto vor, dessen öffentliche Zugangsdaten nicht mehr stimmen, ohne
 zu erfahren warum.
@@ -6081,11 +6174,24 @@ sie, sondern das Ersetzfenster.
 Ein Paket mit neuem `client_ref` hat kein Fenster, wird aber über `day` oder
 `day_ref` auf den alten Tag aufgelöst und schrieb dessen Beginn und Ende
 genauso um wie Fund 1 (zweite Gegenprüfung, Wiederaufnahme). Der Zeitraum
-eines Diensttags wird deshalb nur fortgeschrieben, solange an ihm noch
-gearbeitet wird: Anker ist das **jüngste `created_at` der übrigen Datensätze
-des Tages** — Serverzeit, wie beim Fenster selbst. Der gerade angelegte zählt
-nicht mit, sonst wäre jeder Tag offen, an dem eben ein Paket ankam. Ein Tag
-ohne andere Datensätze ist frisch und offen.
+eines Diensttags wird deshalb nur **72 Stunden ab dem Anlegen des Tages**
+fortgeschrieben: Anker ist seit Web 21.3.0 **`days.created_at`** — Serverzeit,
+wie beim Fenster selbst (Schritt 17, R4-15, Nr. 158). Ein nachgelieferter
+Dienst ist offen, denn sein Tag entsteht mit dem ersten Paket. Im
+Deploy-Fenster vor `update.php` gilt ein Tag als offen, wie ein Ruhesegment
+vor seiner Migration; die Zeitprüfung gegen `day` deckt, was das offen lässt.
+
+**Bis Web 21.2.x hing der Anker an den Datensätzen:** das jüngste
+`created_at` der **übrigen** Einsätze und Ruhesegmente des Tages, der gerade
+angelegte ausgenommen. Das war eine Abfrage über zwei Tabellen für eine
+Frage, und ein Tag ohne übrige Datensätze hatte keinen Anker und galt als
+offen — auch ein alter, dessen Einsätze alle gelöscht waren. Der Unterschied
+im Verhalten ist benannt (F-R4-46): Das Fenster **gleitet nicht mehr** mit
+jedem neuen Datensatz, es zählt ab dem Tag. Ein Dienst, dessen Pakete über
+mehr als 72 Stunden nach dem ersten eintreffen, verlängert seinen Tag danach
+nicht mehr; ein von Hand angelegter Tag, zu dem ein Gerät später als 72
+Stunden danach liefert, ebenso wenig — die Datensätze kommen in beiden
+Fällen an.
 
 > **Die erste Fassung dieser Regel fragte den Tag nach *seinen* Zeiten** — und
 > die kommen vom Absender. Ein Dienst, der später als 72 Stunden nach seinem
@@ -6093,9 +6199,9 @@ ohne andere Datensätze ist frisch und offen.
 > `ended_at`: Sein Diensttag entstand in diesem Augenblick, galt aber nach
 > seinem Datum als längst geschlossen. Das war derselbe Fehler eine Ebene
 > höher als Fund 2 — gemessen an der eigenen Probe, nicht vermutet, und der
-> Grund, warum der Anker jetzt am Anlegen hängt. `days` trägt kein
-> `created_at`; die Datensätze des Tages sind der nächste ehrliche Ersatz
-> (Backlog Nr. 158).
+> Grund, warum der Anker jetzt am Anlegen hängt. `days` trug damals kein
+> `created_at`, und die Datensätze des Tages waren der nächste ehrliche
+> Ersatz — bis Web 21.3.0 (Nr. 158).
 
 Und ein
 **bestehender** Datensatz, dessen Tag inzwischen im Papierkorb liegt, wandert
@@ -6123,6 +6229,14 @@ hat die Zeitstempel der ganzen Probe auf `time()` umgestellt: Sie standen auf
 festen März-Daten, und damit prüfte die halbe Probe zweite Pakete an
 Datensätzen, die das Fenster längst verlassen hatten — zehn Erwartungen
 kippten, keine davon zu Recht.
+
+**Seit Web 21.3.0 (R4-15, Nr. 158) Fall 14:** ein alter Tag ohne
+Datensätze — der Einsatz kommt an, der Zeitraum bleibt — und derselbe Tag mit
+einem Anker von jetzt, dessen Zeitraum fortgeschrieben wird. Gegen den Stand
+vor R4-15 ist der erste rot. Fall 8b datiert seither auch `days.created_at`
+zurück: Mit dem neuen Anker galt sein in der Probe frisch entstandener Tag
+sonst als offen. Die Migration selbst fährt die Schemaprobe, Fall 6, auf den
+vier Datenbankfassungen.
 
 ### 4.99b Bedrohungsmodell der Kopplung (ab Web 13.0.0, S5)
 
@@ -6757,7 +6871,7 @@ nicht, und `edbak_ablage_bereit()` legt das Verzeichnis notfalls neu an.
 #### Was die Statistik nicht zählt
 
 **Das Demo-Konto — in keiner Zahl.** Sein Bestand ist erfunden, liegt als
-Fixture im Repositorium und wird alle dreißig Minuten daraus neu hergestellt
+Fixture im Repositorium und wird bei jedem Reset daraus neu hergestellt
 (4.99a). Jede Abfrage der Seite trägt deshalb `WHERE … <> :demo`; fehlt die
 Marke `demo_user_id`, ist der Wert 0 und die Bedingung wahr für alle —
 dieselbe Abfrage, ein Sonderfall weniger.
@@ -7311,11 +7425,13 @@ wird** — kein Komplett-Backup, keine Löschung, kein Versand. Der Preis: Dass
 die Handlung mit gültigem Token auch gelingt, zeigt die Matrix nicht; das tun
 die Bedienwege und die Proben der jeweiligen Sache.
 
-**Zwei Platzhalter** (seit Web 20.41.0, AP4): `{ziel}` ist ein Konto der
-Rolle `user`, `{admin}` eines der Rolle `admin` — beide legt die Probe an und
-räumt sie ab. Ein Konto der Rolle `support` als Ziel hat keinen Platzhalter;
-dass der Support auch andere Support-Konten nicht betreut (E-P5c-99), steht
-im Code (`rolle_darf_support()`), gemessen ist es hier nicht. Die Kontoseite
+**Drei Platzhalter** (seit Web 20.41.0, AP4; der dritte seit R4-18):
+`{ziel}` ist ein Konto der Rolle `user`, `{admin}` eines der Rolle `admin`,
+`{support}` eines der Rolle `support` — alle drei legt die Probe an und räumt
+sie ab. Mit `{support}` ist gemessen, was bis dahin nur im Code stand: Der
+Support betreut auch andere Support-Konten nicht (E-P5c-99,
+`rolle_darf_support()`), und zwar schon beim Seitenaufruf, vor jeder
+Handlung (Nr. 327). Die Kontoseite
 fragt die Rolle **dreimal**: erst, ob die Angemeldete das Zielkonto
 überhaupt betreuen darf (der Support nur Konten von NutzerInnen, E-P5c-40),
 dann je Handlung (`handlung_erlaubt()`), und seit Web 20.42.0 beim
@@ -7323,16 +7439,18 @@ Zurücksetzen des Zweitfaktors noch einmal nach der Rolle des Ziels
 (`rolle_darf_zweitfaktor_zuruecksetzen()`). Alle drei Tore stehen in der
 Matrix.
 
-**Was die Matrix nicht führt** (Gegenlesung AP11). Sie hat eine Zeile je
-Handlung auf den Seiten, die **mehr als eine Rolle** erreicht — Verwaltung,
-Protokoll, Rechtstexte — und je eine für die Seiten, die allein der
-BetreiberIn gehören. Die POST-Handlungen auf diesen BetreiberIn-Seiten
-(`betrieb_server.php`, `betrieb_jobs.php`, `betrieb_updates.php`,
-`betrieb_status.php`, `betrieb_sicherheit.php`, dazu
-`api/schluesselblatt_pruefen.php`; gezählt 25 Handlungen und 7
-Seitenaufrufe) stehen **nicht** einzeln darin: Jede liegt hinter
-`require_betreiberin()` am Kopf ihrer Datei, und das Tor der Seite misst die
-Probe. Eine Handlung, die dort vor dem Tor stünde, fände die Matrix nicht.
+**Seit R4-18 führt die Matrix auch die BetreiberIn-Seiten einzeln** (Nr. 327):
+je eine Zeile für den Aufruf von `betrieb_server.php`, `betrieb_jobs.php`,
+`betrieb_updates.php`, `betrieb_status.php`, `betrieb_sicherheit.php` und
+`betrieb_statistik.php` samt dem CSV der Gerätemodelle (und seit R4-23 dem
+eigenen Zeitraum, der eine andere Abfrage stellt), dazu jede ihrer
+26 POST-Handlungen und die zwei von `api/schluesselblatt_pruefen.php`. Bis
+dahin stand hier, dass sie **nicht** darin stehen: Jede liegt hinter
+`require_betreiberin()` am Kopf ihrer Datei, gemessen war nur das Tor der
+Seite, und eine Handlung, die vor dem Tor stünde, hätte die Probe nicht
+gefunden (Gegenlesung AP11). Die Gegenprobe dazu: eine Handlung über das
+Tor gezogen — rot. Wer auf einer Betriebsseite eine Handlung ergänzt,
+ergänzt hier ihre Zeile; die Probe liest nur, was hier steht.
 
 **Seit Web 21.1.0 (AP9) stehen die Seite Rechtstexte und ihr
 Vorschau-Endpunkt darin.** Die Zeile „Installation: Rechtstexte speichern"
@@ -7391,6 +7509,11 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch |
 | Kontoseite: Zweitfaktor zurücksetzen | `POST admin_user.php?id={ziel} action=totp_zuruecksetzen` | 403 | 403 | durch | durch |
 | Kontoseite: Zweitfaktor eines Admins zurücksetzen | `POST admin_user.php?id={admin} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch |
+| Kontoseite: Konto eines Supports | `GET admin_user.php?id={support}` | 403 | 403 | 200 | 200 |
+| Kontoseite: Setz-Link an einen Support | `POST admin_user.php?id={support} action=pw_reset` | 403 | 403 | durch | durch |
+| Kontoseite: Bestätigung an einen Support | `POST admin_user.php?id={support} action=verifikation` | 403 | 403 | durch | durch |
+| Kontoseite: Gerät eines Supports deaktivieren | `POST admin_user.php?id={support} action=device_aus` | 403 | 403 | durch | durch |
+| Kontoseite: Zweitfaktor eines Supports zurücksetzen | `POST admin_user.php?id={support} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch |
 | Konto-Backups: die Seite | `GET admin_sicherungen.php` | 403 | 403 | 200 | 200 |
 | Konto-Backups: Regeln | `POST admin_sicherungen.php action=regeln` | 403 | 403 | durch | durch |
 | Konto-Backups: alle sichern | `POST admin_sicherungen.php action=sichern_alle` | 403 | 403 | durch | durch |
@@ -7411,6 +7534,40 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch |
 | Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch |
 | Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch |
+| Betrieb · Server: die Seite | `GET betrieb_server.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Server: Ankündigung setzen | `POST betrieb_server.php action=ankuendigung` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Ankündigung als Rundmail | `POST betrieb_server.php action=rundmail` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Ankündigung entfernen | `POST betrieb_server.php action=ankuendigung_weg` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Serverschlüssel anlegen | `POST betrieb_server.php action=schluessel_sk_anlegen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Server-Anteil anlegen | `POST betrieb_server.php action=schluessel_anteil_anlegen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Serverschlüssel nachtragen | `POST betrieb_server.php action=schluessel_sk_nachtragen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Server-Anteil nachtragen | `POST betrieb_server.php action=schluessel_anteil_nachtragen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Server-Anteil wechseln | `POST betrieb_server.php action=schluessel_anteil_wechseln` | 403 | 403 | 403 | durch |
+| Betrieb · Server: alten Anteil entfernen | `POST betrieb_server.php action=schluessel_anteil_alt_entfernen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Anteil neu anfangen | `POST betrieb_server.php action=schluessel_anteil_neuanfang` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Speicher | `POST betrieb_server.php action=speicher` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Sicherheitskopfzeilen | `POST betrieb_server.php action=kopfzeilen` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Konten | `POST betrieb_server.php action=konten` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Demo-Anmeldung abschalten | `POST betrieb_server.php action=demo_aus` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Ratenschutz | `POST betrieb_server.php action=ratenschutz` | 403 | 403 | 403 | durch |
+| Betrieb · Server: Adresssuche | `POST betrieb_server.php action=geocoder` | 403 | 403 | 403 | durch |
+| Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch |
+| Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch |
+| Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch |
+| Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Updates: Wartung an | `POST betrieb_updates.php action=wartung_an` | 403 | 403 | 403 | durch |
+| Betrieb · Updates: Wartung aus | `POST betrieb_updates.php action=wartung_aus` | 403 | 403 | 403 | durch |
+| Betrieb · Updates: Migrationen anwenden | `POST betrieb_updates.php action=migrate` | 403 | 403 | 403 | durch |
+| Betrieb · Status: die Seite | `GET betrieb_status.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Status: Testmail | `POST betrieb_status.php action=testmail` | 403 | 403 | 403 | durch |
+| Betrieb · Sicherheit: die Seite | `GET betrieb_sicherheit.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Sicherheit: Sperre aufheben | `POST betrieb_sicherheit.php action=aufheben` | 403 | 403 | 403 | durch |
+| Betrieb · Statistik: die Seite | `GET betrieb_statistik.php` | 403 | 403 | 403 | 200 |
+| Betrieb · Statistik: Gerätemodelle als CSV | `GET betrieb_statistik.php?r=geraete&export=csv` | 403 | 403 | 403 | 200 |
+| Betrieb · Statistik: eigener Zeitraum | `GET betrieb_statistik.php?r=einsaetze&von=2026-03-01&bis=2026-05-31` | 403 | 403 | 403 | 200 |
+| Betrieb · Schlüsselblatt: Positionen stellen | `POST api/schluesselblatt_pruefen.php aktion=stellen` | 403 | 403 | 403 | durch |
+| Betrieb · Schlüsselblatt: prüfen | `POST api/schluesselblatt_pruefen.php aktion=pruefen` | 403 | 403 | 403 | durch |
 <!-- rollenprobe:ende -->
 
 **Daneben prüft die Probe Wirkungen**, denn eine Zelle `durch` sagt nur,
@@ -7867,6 +8024,29 @@ Konto fände dann den Mengenstand des alten vor und stünde womöglich sofort an
 seiner Grenze, ohne einen einzigen Einsatz. Genau das ist beim Prüfen
 passiert.
 
+#### Ein Weg, ein Konto zu löschen (seit Web 21.1.8)
+
+**Jede Löschung geht über `konto_loeschen($id, $mitSicherungen, $weg)`** —
+die Kontoseite der Verwaltung (`verwaltung`), der Job nach der Karenz
+(`loeschantrag`), der Verfall unbestätigter und wartender Konten
+(`verfall`), das Entfernen des Demo-Kontos (`demo`) und die Prüfmittel
+(`probe`). Der Weg steht als Angabe `weg` im Protokolleintrag
+`konto_geloescht`. `grep -rn "DELETE FROM users" server/` findet eine
+Codezeile, und die steht in `konto_lib.php`.
+
+**Bis Web 21.1.7 waren es drei Abschriften** (Backlog Nr. 299, F-R4-09):
+Die Kontoseite und `demo_entfernen()` schrieben die Reihenfolge selbst hin,
+und beide waren auseinandergelaufen — die Kontoseite vergaß die Marken oben,
+das Demo-Konto seine Konto-Backups und das Protokoll. Umgekehrt hatte nur
+die Demo-Abschrift die Sperrliste der Geräte (`deleted_refs`, ohne
+Fremdschlüssel) geräumt; die Zeile steht jetzt in der Funktion.
+
+**Was die Aufrufer davor prüfen, bleibt bei ihnen:** Die Kontoseite lehnt
+das eigene Konto, die letzte BetreiberIn und das Demo-Konto ab und verlangt
+die abgetippte Adresse; `demo_entfernen()` löscht danach nur noch seine
+Kennzeichnung in `app_state`, und nur, wenn die Löschung gelungen ist.
+Scheitert sie (Backups nicht zu entfernen), bleibt alles stehen.
+
 #### Was hier NICHT gebaut wurde
 
 **Die Umstellung der Geräteschlüssel auf SHA-256** (E-P5b-17). Sie ist seit
@@ -8263,7 +8443,8 @@ die Löschung verhindern will, um weiter mitzulesen.
 
 **Der Job löscht höchstens fünf je Lauf.** Eine Kontolöschung räumt die Spuren
 von Hand (die Kaskade erreicht sie nicht), löscht den Backup-Ordner im
-Dateisystem und kaskadiert über vierzehn Tabellen. Das Huckepack-Budget sind
+Dateisystem und kaskadiert über jede Tabelle des Kontos (fünfzehn am
+26.09.2026). Das Huckepack-Budget sind
 drei Sekunden für **alle** Jobs zusammen; einen Tag später zu löschen ist kein
 Zusagenbruch, eine hängende Anfrage schon.
 
@@ -8808,8 +8989,19 @@ Backlog Nr. 114 Räumteil, Krypto-Review AN-2): Jeder Sendelauf räumt vorher,
 was älter ist als 30 Tage (`Raeumung.FRIST_TAGE`), und das Trennen räumt ohne
 Frist — die Pakete gehören dem zurückgegebenen Konto. Gelöscht wird nur
 Abgeschlossenes, samt Punkten und Phasen in einer Transaktion; beendete
-`dienst`-Zeilen ohne Pakete gehen mit, die laufende nie. Der Bedienweg zum
-Ansehen und Ausleiten bleibt Nr. 114.
+`dienst`-Zeilen ohne Pakete gehen mit, die laufende nie.
+
+**Der Bedienweg ist „Verwerfen"** (seit Android 0.17.0, Nr. 114, R4-22,
+E-R4-09): Unter der roten Zeile steht ein neutraler Knopf, dahinter die
+`Rueckfrage` mit „Behalten" / „Verwerfen" (Rot tief), und „Verwerfen" ruft
+`abgewieseneRaeumen(null)` — denselben Weg wie das Trennen. Der Knopf hängt an
+einer zweiten Zahl, `verwerfbar()` (`fehlerhaft = 1 AND final = 1`): Ein
+laufendes Paket mit 400 zählt in `abgewiesen()` mit, wird aber noch
+beschrieben und nicht geräumt; mit der ersten Zahl versprächen Knopf und
+Rückfrage etwas, das danach noch dasteht. Die Quittung „N Pakete verworfen"
+lebt in der Oberfläche, nicht in `NAdokuApp`. Ansehen und Ausleiten gibt es
+nicht: Der Server hat mit 400 endgültig abgelehnt, und ein Nachreichen von
+Hand wäre ein zweiter Weg an `validate_lib.php` vorbei.
 
 ### Der Uhr-Spiegel
 
@@ -10177,7 +10369,7 @@ Bilderzahl, die längst nicht mehr stimmte.
 | Fassungen nennen (Web, Uhr, Android) | eine Auskunft — aber eine unlesbare Fassung ist rot |
 | `php -l` über `server/` und `tools/` | 0 Fehler, und mindestens eine Datei gelesen; die Zahl der versionierten `server/`-Dateien geht in die Gegenlesung (`syntax-php`) |
 | `cmark-gfm` bereitstellen | für die Quelltextprüfungen `handbuch` und `bestand` (seit BR-05: `bestand` liest die Tabelle der Quelltextprüfungen damit) |
-| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle dreizehn Prüfungen grün (`tools/quelltext/LIESMICH.md`) — darunter seit BR-03 Backlog-Nummern (`bestand`), Python übersetzen (`pysyntax`) und Handbuch rendern (`handbuch`), bis dahin drei eigene Schritte |
+| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle vierzehn Prüfungen grün (`tools/quelltext/LIESMICH.md`) — darunter seit BR-03 Backlog-Nummern (`bestand`), Python übersetzen (`pysyntax`) und Handbuch rendern (`handbuch`), bis dahin drei eigene Schritte |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Umgebungswert eine Ebene höher | alle sechs Namen leer (6.5, E-KH-28) |
 | `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt |
@@ -10399,7 +10591,7 @@ erklärt.
 | `memory_limit` | **512 MB** | **512 MB** — gleich |
 | `max_execution_time` | **240 s** | **300 s** |
 | `post_max_size` / `upload_max_filesize` | **256 MB / 256 MB** | **500 MB / 500 MB** |
-| OPcache | **aus** | **an** — aber nur **Dateicache** (`file_cache_only`), SHM und JIT aus. **Die Statusseite wird ihn trotzdem als „aus" melden** — siehe Kasten |
+| OPcache | **aus** | **an** — aber nur **Dateicache** (`file_cache_only`), SHM und JIT aus. **Die Statusseite meldete ihn bis Web 21.1.6 als „aus", seither „nicht messbar"** — siehe Kasten |
 | Datenbank | **MariaDB 10.11.14** | **MySQL 8.4.10** (Statusseite, 21.09.2026) — **eine andere Datenbank als Produktiv**; genau daran ist der Export bis Web 20.26.3 gescheitert (Nr. 267) |
 | `max_user_connections` | **nicht gesetzt**; es gilt `max_connections` = **151** | ⬚ |
 | Kontingent der Datenbank | Angabe 10 GB, belegt 9,8 MB (0 %) | ⬚ |
@@ -10443,8 +10635,13 @@ sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
 > Portabilitätszusage aus R81 werde von nun an wirklich geprobt statt nur
 > behauptet. Das hier ist der Beleg: ein Zuschnitt auf den einen Hoster, der
 > sechs Tage lang niemandem auffiel, weil beide Anlagen derselbe Hoster
-> waren. **Behoben wird er nicht hier** — das wäre Servercode und gehört
-> nicht in ein Dokumentationspaket; der Vorschlag steht im Prüfdokument.
+> waren. **Behoben mit Web 21.1.7** (Backlog Nr. 266): `plattform_funktion()`
+> in `plattform_lib.php` antwortet dreiwertig — aufrufbar, nicht vorhanden,
+> oder **abgeschaltet** (`disable_functions`), und dann ist der Befund
+> `null` mit dem Wort „nicht messbar". Nachgestellt mit
+> `php -d disable_functions=opcache_get_status`: vorher „aus", nachher
+> „nicht messbar"; ohne den Schalter „aus", mit `opcache.enable_cli=1`
+> „aktiv".
 
 > **Zwei Zahlen der Produktiv-Spalte sind keine Messung, und das muss
 > dabeistehen.** **Freier Platz** meldet auf geteiltem Webspace den
@@ -11225,13 +11422,15 @@ mitgelesen behandeln.
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
 der Referenzbestand liegt — dann `server/demo/fixture.json.gz` mit ausrollen
 und im Adminbereich unter **Demo-Konto → anlegen**. Die Seite zeigt danach
-die Bestandszahlen; sie müssen 15 Diensttage, 82 Einsätze, 95 Ruhesegmente,
-5 im Papierkorb und 2 Geräte nennen. Mechanik: Abschnitt 4.99a.
+die Bestandszahlen; sie müssen 21 Diensttage, 104 Einsätze, 118 Ruhesegmente
+und 2 Geräte nennen, darunter im Papierkorb 5 Einsätze, 1 Diensttag und
+5 Ruhesegmente (gemessen nach einem Reset, R4-16). Mechanik: Abschnitt 4.99a.
 
 **Demo-Konto sieht falsch aus / hängt:** Adminbereich → **Demo-Konto → Auf
 Standard zurücksetzen**. Der Vorgang ist transaktional und dauert wenige
-Sekunden. Er läuft ohnehin alle 30 Minuten von selbst — ausgelöst von der
-nächsten Anfrage, nicht von einem Zeitdienst. Bleibt die Seite leer, fehlt
+Sekunden. Er läuft ohnehin von selbst, 30 Minuten nach der ersten Änderung
+und sonst einmal am Tag — ausgelöst von der nächsten Anfrage, nicht von
+einem Zeitdienst. Bleibt die Seite leer, fehlt
 die Fixture; das sagt sie dann auch.
 
 **Demo-Konto nach einem Datensatz-Update auffrischen:** Erst den
@@ -11248,10 +11447,17 @@ sh      tools/referenzdatensatz/einspielen/lokal_starten.sh
 python3 tools/referenzdatensatz/einspielen/einspielen.py --stufen konto
 php     tools/referenzdatensatz/einspielen/demo_kennzeichnen.php
 node    tools/referenzdatensatz/einspielen/passwort_setzen.mjs '<Einrichtungslink>' nadokudemo0815 rc.json
+python3 tools/referenzdatensatz/generator/erzeugen.py
 python3 tools/referenzdatensatz/einspielen/einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
 node    tools/referenzdatensatz/browser/csv_import.mjs
 node    tools/referenzdatensatz/browser/referenz_export.mjs
 ```
+
+Der Generatorschritt ist Pflicht und nicht nachzuholen: `generator/ausgabe/`
+steht in `.gitignore`, und ohne `sendeplan.json` bricht die Stufe `ingest` ab.
+Bis R4-16 fehlte die Zeile hier und in `einspielen/LIESMICH.md` — auf einem
+Rechner, auf dem der Generator schon einmal gelaufen war, fiel das nicht auf
+(F-R4-52).
 
 Rund vier Minuten für den Bestand, dazu je Export einige Minuten für die
 GPX-Dateien. **Nicht identisch** kommen zurück: interne Kennungen (die
@@ -11263,7 +11469,7 @@ wörtlich stimmen.
 
 **Ein Konto mit 5000 Einsätzen herstellen (Mengenprüfung, S2/R35):**
 `cd tools/messstand && python3 messen.py --frisch`. Der Lauf legt das Konto
-`messstand@gen-em.org` an, vervielfältigt das Referenz-Backup zu einer Folge
+`messstand@example.invalid` an (bis R4-19 unter `gen-em.org`), vervielfältigt das Referenz-Backup zu einer Folge
 `.edbak`-Dateien und spielt sie über den **regulären** Wiederherstellungsweg im
 Browser ein — kein SQL. Dauer je nach Rechner rund zehn Minuten; danach misst
 er Suche, Tagesansicht, Sichern (Browser, CPU-Drossel 6×) sowie Tabellengrößen
@@ -12005,6 +12211,15 @@ Tabelle der Datenbank hätte leeren können. Für eine Neuinstallation auf einer
 belegten Datenbank: leere Datenbank anlegen oder die vorhandene beim Hoster
 leeren.
 
+**Seit Web 21.1.7 fragt die Einrichtung vorher** (Backlog Nr. 291): Liegen
+in der Datenbank schon Tabellen, bricht sie **vor dem ersten `CREATE`** ab
+und nennt die Zahl („enthält schon 1 Tabelle"). Bis dahin spielte sie
+`schema.sql` ein und scheiterte erst an der ersten vorhandenen Tabelle — DDL
+bestätigt in MySQL still, und eine gescheiterte Einrichtung ließ deshalb ein
+halbes Schema zurück, an dem der nächste Versuch mit derselben Meldung
+abbrach. Schema und erstes Konto melden seither je ihren eigenen Fehler; der
+Rat „eine leere Datenbank verwenden" steht nur noch dort, wo er stimmt.
+
 **Deploy schlägt fehl:** Actions-Log lesen. `ENOTFOUND` = `FTP_SERVER`-Secret
 prüfen (nur Hostname, kein Schema/Pfad). Auth-Fehler = Zugangsdaten;
 SFTP-only-Hoster brauchen einen anderen Workflow.
@@ -12251,10 +12466,11 @@ Paket, was die andere Seite noch tun muss — mit „Widerrufen". Ist das
 Zielkonto inzwischen gelöscht, sagt sie auch das: Die Freigabe läuft dann ins
 Leere.
 
-Der Grund ist nicht nur Bedienung, sondern Menge: `edbak_uebersicht()` liest
-für **jedes** Konto ein Verzeichnis und eine Begleitdatei, um eine Zeile zu
+Der Grund ist nicht nur Bedienung, sondern Menge: Die frühere Gesamtübersicht
+las für **jedes** Konto ein Verzeichnis und eine Begleitdatei, um eine Zeile zu
 zeigen — Arbeit, die mit der Zahl der Konten wächst, obwohl man immer nur ein
-Konto ansieht. `edbak_konto_stand($userzeile)` liest genau einen Ordner und
+Konto ansieht. Sie hatte seither keinen Aufrufer mehr und ist mit Web 21.1.7
+gestrichen (Backlog Nr. 175). `edbak_konto_stand($userzeile)` liest genau einen Ordner und
 liefert `stand` (`aktuell` · `ueberfaellig` · `nie` · `ohne_kennung`), die
 Pakete, die Freigabe und das Alter des jüngsten Backups.
 

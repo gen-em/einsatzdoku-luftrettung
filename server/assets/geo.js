@@ -50,7 +50,8 @@
    *  1  `.geo-schild` ist eine Flex-SPALTE mit `align-items:center`. Das
    *     Wurzelelement wird damit so breit wie sein BREITESTES Kind.
    *  2  Das breiteste Kind war das Namensschild (`white-space:nowrap`),
-   *     nicht der Kasten. Bei „Klinikum Immenstadt" rund 150 px statt 44.
+   *     nicht der Kasten. Bei einem Kliniknamen von neunzehn Zeichen rund
+   *     150 px statt 44.
    *  3  `iconSize: null` laesst Leaflet die Groesse aus dem Markup nehmen,
    *     und `iconAnchor: [22, 22]` verankerte auf 22 px vom linken Rand DES
    *     WURZELELEMENTS — also rund 50 px links der Kastenmitte.

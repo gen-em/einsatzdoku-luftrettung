@@ -37,6 +37,11 @@ declare(strict_types=1);
  *   6. Der Demo-Reset leert die Spalten (E-P5c-54) — gemessen an
  *      `demo_zweitfaktor_leeren()` und am Aufruf im Reset, nicht am Reset
  *      selbst (F-P5c-117).
+ *   6b. Der Demo-Reset kommt nur nach einer Aenderung (Nr. 76, E-R4-10,
+ *      E-R4-42): die Rechnung `demo_reset_faellig_ab()` als Tabelle, die
+ *      Marke „nur die erste zaehlt" an `app_state`, und die zwei Setzstellen
+ *      am Quelltext (POST mit Token in `auth_guard.php`, nach dem Commit in
+ *      `ingest.php`). Den Reset selbst loest sie auch hier nicht aus.
  *   7. Der Bus-Faktor (E-P5c-16, -56): Ein Konto ohne Zweitfaktor zählt nicht
  *      als handlungsfähig; dazu die Tabelle der Lagen (Rollenmix → Plakette
  *      und Ton) über `status_verwaltungszeile()` mit gesetzten Zahlen —
@@ -338,6 +343,78 @@ foreach ($marken as $i => $t) {
     }
 }
 pruefe($aufrufe === 1, 'demo_zuruecksetzen() ruft demo_zweitfaktor_leeren() genau einmal', "$aufrufe Aufrufe im Code");
+
+/* ---- 6b. Der Demo-Reset nur nach einer Aenderung -------------------------------- */
+echo "== 6b. Demo-Reset nur nach einer Änderung\n";
+/* DIE RECHNUNG ALS TABELLE, mit festen Zeitpunkten statt der Uhr. Jeder Fall
+ * nennt, was er belegt; die Grenzen stehen je einmal knapp davor und genau
+ * darauf. */
+$T = 1_700_000_000;
+$faelle = [
+    [$T, 0, $T + 1800, false, 'ohne Änderung: 30 min nach dem Reset kein neuer'],
+    [$T, 0, $T + 86399, false, 'ohne Änderung: nach 23:59 h noch keiner'],
+    [$T, 0, $T + 86400, true, 'ohne Änderung: nach 24 h der Pflichtreset'],
+    [$T, $T + 7200, $T + 8999, false, 'Änderung nach 2 h Ruhe: 29:59 min danach noch keiner'],
+    [$T, $T + 7200, $T + 9000, true, 'Änderung nach 2 h Ruhe: 30 min danach fällig'],
+    [$T, $T + 60, $T + 1860, true, 'Änderung gleich nach dem Reset: 30 min nach ihr'],
+    [$T, $T + 86000, $T + 86400, false, 'späte Änderung: der Pflichtreset kürzt ihre Frist nicht'],
+    [$T + 3600, $T, $T + 5399, false, 'Reset aufgehalten (Marke später als die Änderung)'],
+    [$T + 600, $T - 3600, $T, false, 'Marke des Resets in der Zukunft: keiner'],
+    [0, 0, $T, true, 'nie zurückgesetzt: sofort fällig'],
+];
+foreach ($faelle as [$letzter, $geaendert, $jetzt, $soll, $was]) {
+    $ist = demo_reset_faellig_ab($letzter, $geaendert) <= $jetzt;
+    pruefe($ist === $soll, 'faellig_ab: ' . $was, $ist ? 'fällig' : 'nicht fällig');
+}
+
+/* NUR DIE ERSTE AENDERUNG ZAEHLT — an `app_state`, mit einer Marke von
+ * JETZT: Eine alte machte den Reset faellig, und die naechste Anfrage des
+ * Demo-Kontos (Bilderlauf, Bedienprobe) setzte zurueck. Zurueckgestellt im
+ * selben Zug. */
+$gVor = demo_geaendert_seit();
+$jetztProbe = time() - 5;
+app_state_setzen(DEMO_K_GEAENDERT, (string)$jetztProbe);
+demo_aenderung_vermerken();
+pruefe(demo_geaendert_seit() === $jetztProbe, 'eine zweite Änderung verschiebt die Marke nicht',
+       (string)demo_geaendert_seit());
+demo_aenderung_vergessen($jetztProbe - 1);
+pruefe(demo_geaendert_seit() === $jetztProbe, 'eine Änderung während des Resets bleibt markiert');
+demo_aenderung_vergessen($jetztProbe);
+pruefe(demo_geaendert_seit() === 0, 'nach dem Reset ist die Marke fort');
+demo_aenderung_vermerken();
+pruefe(abs(demo_geaendert_seit() - time()) <= 2, 'ohne Marke setzt die erste Änderung sie auf jetzt');
+if ($gVor > 0) { app_state_setzen(DEMO_K_GEAENDERT, (string)$gVor); }
+else { app_state_loeschen(DEMO_K_GEAENDERT); }
+
+/* DIE ZWEI SETZSTELLEN, am Quelltext ohne Kommentare — wie der Aufruf in
+ * Teil 6. Je eine, und jede hinter ihrer Pruefung: in `auth_guard.php` in
+ * derselben Zeile wie POST und `csrf_ok()`, in `ingest.php` direkt nach
+ * einem `commit()`. */
+$codeZeilen = static function (string $datei): array {
+    $zeilen = [];
+    $zeile = 1;
+    foreach (token_get_all((string)file_get_contents($datei)) as $t) {
+        $text = is_array($t) ? $t[1] : $t;
+        if (!is_array($t) || !in_array($t[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+            foreach (explode("\n", $text) as $i => $stueck) {
+                if ($i > 0) { $zeile++; }
+                $zeilen[$zeile] = ($zeilen[$zeile] ?? '') . $stueck;
+            }
+        } else {
+            $zeile += substr_count($text, "\n");
+        }
+    }
+    return array_values(array_filter(array_map('trim', $zeilen), static fn($z) => $z !== ''));
+};
+$ag = $codeZeilen($srv . '/auth_guard.php');
+$treffer = array_values(array_filter($ag, static fn($z) => str_contains($z, 'demo_aenderung_vermerken(')));
+pruefe(count($treffer) === 1 && str_contains($treffer[0], "'POST'") && str_contains($treffer[0], 'csrf_ok()'),
+       'auth_guard.php: eine Setzstelle, nur bei POST mit Token', count($treffer) . ' Stelle(n)');
+$ig = $codeZeilen($srv . '/ingest.php');
+$stellen = array_keys(array_filter($ig, static fn($z) => str_contains($z, 'demo_aenderung_vermerken(')));
+$davor = count($stellen) === 1 ? ($ig[$stellen[0] - 1] ?? '') : '';
+pruefe(count($stellen) === 1 && str_contains($davor, '->commit()'),
+       'ingest.php: eine Setzstelle, nach dem Commit', count($stellen) . ' Stelle(n), davor: ' . $davor);
 
 /* ---- 7. Bus-Faktor ------------------------------------------------------------ */
 echo "== 7. Bus-Faktor\n";

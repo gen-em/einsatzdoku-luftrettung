@@ -10,6 +10,9 @@
  *   admin-rechtstexte-rueckfrage Reiterwechsel mit ungespeichertem Text fragt
  *                                nach; „Abbrechen" bleibt, „Verwerfen" wechselt
  *                                und speichert nichts
+ *   admin-rechtstexte-neuladen   Speichern ohne Änderung leitet auf den Reiter
+ *                                um; Neuladen speichert nicht noch einmal
+ *                                (R4-11, Backlog Nr. 250)
  *
  * WER DIE SEITE UND DEN ENDPUNKT ERREICHT, misst die Rollenprobe
  * (`tools/proben/rollen/`) gegen die Matrix — hier geht es um das, was nur
@@ -22,6 +25,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
+import { neuladenPruefen } from '../neuladen.mjs';
 
 const SEITE = k => `${k.basis}/admin_rechtstexte.php?t=nutzungsbedingungen`;
 const ZEILE = '\n\n## Bedienprobe-Abschnitt\n\nEin <b>Tag</b> bleibt Text.';
@@ -132,5 +136,26 @@ export const wege = [
         bemerkung: ok ? '' : 'Soll: Dialog · bleibt mit Text · t=impressum · nichts gespeichert',
       };
     },
+  },
+  {
+    name: 'admin-rechtstexte-neuladen',
+    paket: 'R4-11', punkt: 'Nr. 250', rolle: 'admin',
+    soll: 'Speichern ohne Änderung leitet auf ?t=impressum um; „Es gab nichts zu '
+        + 'ändern" steht einmal da, Neuladen ist ein GET ohne sie; kein '
+        + 'Protokolleintrag',
+    fahren: k => neuladenPruefen(k, {
+      name: 'admin-rechtstexte', seite: `${k.basis}/admin_rechtstexte.php?t=impressum`,
+      /* DIE SPEICHERN-LEISTE ERSCHEINT ERST NACH EINER ÄNDERUNG
+       * (`data-dirty-track`), und dieser Weg ändert nichts. Er schickt das
+       * Formular deshalb selbst ab — gemessen wird die Umleitung, nicht die
+       * Leiste; die Leiste misst der Bilderlauf. */
+      absenden: k => k.seite.evaluate(() => document.getElementById('rt-form').requestSubmit()),
+      meldung: 'Es gab nichts zu ändern.', ziel: 't=impressum',
+      zaehler: () => Number(execFileSync('php', ['-r',
+        'require "server/db.php"; echo db()->query("SELECT COUNT(*) FROM protokoll_ereignisse '
+        + 'WHERE art = \'rechtstext_geaendert\'")->fetchColumn();'],
+        { cwd: process.env.ED_WURZEL || '/home/user/einsatzdoku-luftrettung',
+          encoding: 'utf-8' }).trim()),
+    }),
   },
 ];

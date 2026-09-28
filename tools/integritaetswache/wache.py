@@ -178,7 +178,7 @@ def stand_kennung(pfad: Path) -> str:
     return f'{commit[:7]} ({tag})'
 
 # DIE VORGABE IST MIT AP6 GEFALLEN (Kette II, E-KH-07). Hier stand bis zum
-# 21.09.2026 `… or 'https://nadoku.gen-em.org'`, und das war die bequeme
+# 21.09.2026 ein `… or` mit der Adresse des Produktivservers, und das war die bequeme
 # Variante der gefaehrlichen Bauform: Wer `WACHE_BASIS` vergass oder
 # vertippte, bekam keine Fehlermeldung, sondern eine Wache, die IRGENDEINE
 # Anlage bewachte -- die fest eingebaute. Auf einer Selbsthoster-Installation
@@ -1050,7 +1050,7 @@ def main() -> int:
     if not basis:
         print('FEHLER: Keine Basisadresse. Erwartet wird sie als erstes Argument '
               'oder in der Umgebungsvariablen WACHE_BASIS.\n'
-              '        Bis zum 21.09.2026 sprang hier `https://nadoku.gen-em.org` '
+              '        Bis zum 21.09.2026 sprang hier die Adresse des Produktivservers '
               'ein; diese Vorgabe ist absichtlich weg (Kette II, E-KH-07),\n'
               '        weil eine vergessene Variable sonst eine Wache ergab, die '
               'die falsche Anlage bewacht -- und zwar gruen.', file=sys.stderr)

@@ -220,7 +220,8 @@
       "regex": "\\b(@@NAMEN@@)\\b",
       "ersatz": "erfundener Name oder Ort",
       "grund": "Die realen Rufnamen und Orte aus `tools/referenzdatensatz/quelldaten/pruefen.py` (`VERBOTENE_NAMEN`, E-P1-02). `@@NAMEN@@` wird BEIM LAUF von dort gelesen; eine zweite Liste ginge beim naechsten Eintrag auseinander.",
-      "quelle": "namen"
+      "quelle": "namen",
+      "sicht": "mit_kommentaren"
     }
   ],
   "fallen": [

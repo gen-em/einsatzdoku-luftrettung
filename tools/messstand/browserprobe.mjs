@@ -43,7 +43,7 @@ const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MO
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
 const ausgabe = process.argv[3] || '/tmp/messstand/browserprobe.json';
 const drossel = Number(process.argv[4] || 6);
-const konto   = process.env.MESSSTAND_KONTO || 'messstand@gen-em.org';
+const konto   = process.env.MESSSTAND_KONTO || 'messstand@example.invalid';
 const kontoPw = process.env.MESSSTAND_PASSWORT || 'messstandpruefung2026';
 const bpw     = process.env.MESSSTAND_BACKUP_PASSWORT || 'nadokudemo0815';
 
@@ -57,8 +57,32 @@ const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownl
  * auch die Aufrufe erfasst, die beim Laden passieren — und genau die sind
  * interessant, weil dort das Entsperren liegt. */
 await kontext.addInitScript(() => {
-  const z = { pbkdf2: 0, jsonMax: 0, jsonParse: 0, jsonStringify: 0 };
+  const z = { pbkdf2: 0, jsonMax: 0, jsonParse: 0, jsonStringify: 0, ersteZeile: null, lang: [] };
   window.__messstand = z;
+
+  /* DIE LANGAUFGABEN DER SEITE (R4-27): Beginn und Ende jeder Aufgabe über
+   * 50 ms. Aus ihnen liest der Zeitraumschritt, wann der Hauptfaden zur
+   * Ruhe kommt — die zweite Zahl neben „sichtbar". */
+  try {
+    new PerformanceObserver(function (liste) {
+      for (const e of liste.getEntries()) { z.lang.push([e.startTime, e.startTime + e.duration]); }
+    }).observe({ type: 'longtask', buffered: true });
+  } catch (e) { /* ohne Langaufgaben bleibt `fertig_s` leer — gesagt, nicht geraten */ }
+
+  /* DIE ERSTE TABELLENZEILE, VON DER SEITE SELBST GEMESSEN (R4-17). Die
+   * Dauer unten ist die Zeit, bis Playwright die Zeile SIEHT — und das kann
+   * es erst, wenn der gedrosselte Hauptfaden frei wird. Solange er
+   * entschluesselt und das Layout rechnet, steht die Zeile schon da. Am
+   * 27.09.2026 gemessen: Zeile im DOM nach 1,9 s, Dauer 9,2 s. Beides ist
+   * eine Auskunft („wann sieht man etwas", „wann ist die Seite fertig"),
+   * und keine ersetzt die andere. */
+  new MutationObserver(function (_, beobachter) {
+    const tb = document.getElementById('rangebody');
+    if (tb && tb.firstElementChild) {
+      z.ersteZeile = performance.now();
+      beobachter.disconnect();
+    }
+  }).observe(document, { childList: true, subtree: true });
 
   const echtDerive = crypto.subtle.deriveBits.bind(crypto.subtle);
   crypto.subtle.deriveBits = function (alg, ...rest) {
@@ -246,14 +270,26 @@ messungen.push(await messen('Anmelden', async () => {
 }));
 
 /* Gewartet wird auf den INHALT, nicht auf das Ladeereignis: Die Tagesliste
- * der Seitenleiste ist das, was die Seite benutzbar macht. `dt_liste()`
- * deckelt sie bei 500 Einträgen — auch bei 928 Diensttagen stehen also
- * höchstens 500 im Markup. */
+ * der Seitenleiste ist das, was die Seite benutzbar macht. Die Leiste
+ * deckelt sie bei 500 Einträgen — auch bei 1029 Diensttagen stehen also
+ * höchstens 500 im Markup.
+ *
+ * SEIT WEB 21.4.0 SAGT SIE ES (R4-17, Nr. 37), und das misst dieser Schritt
+ * mit: Stehen 500 Verweise da, muss der Hinweis „… 500 jüngsten
+ * Diensttage …" darunter stehen. Der Messstandbestand hat über 1000 Tage;
+ * genau 500 (dann ohne Hinweis richtig) kommen hier nicht vor. Mehr als
+ * 500 hieße, der Deckel ist fort. */
 messungen.push(await messen('Startseite (Tagesliste)', async () => {
   await seite.goto(`${basis}/index.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
   await seite.locator('aside a[href*="?d="]').first().waitFor({ state: 'attached', timeout: 180000 });
   const tage = await seite.locator('aside a[href*="?d="]').count();
-  return { tagesverweise: tage };
+  const hinweis = await seite.locator('aside .leiste-liste .leiste-leer')
+    .filter({ hasText: 'jüngsten' }).count();
+  if (tage > 500) { throw new Error(`${tage} Tagesverweise — der Deckel der Leiste fehlt`); }
+  if (tage === 500 && hinweis !== 1) {
+    throw new Error('500 Tagesverweise, aber kein Hinweis auf ältere Diensttage (Nr. 37)');
+  }
+  return { tagesverweise: tage, leistenhinweis: hinweis === 1 };
 }));
 
 /* Die Tagesansicht ist erst fertig, wenn die Spur auf der Karte liegt — sie
@@ -288,6 +324,13 @@ messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
 
 /* ---- DIE BEIDEN OFFENEN MESSUNGEN AUS BACKLOG Nr. 37 (P5a/AP9) ----------
  *
+ * SEIT WEB 21.4.0 HAT AUCH DIE ZEITRAUMUEBERSICHT IHREN DECKEL (R4-17): 200
+ * Zeilen wie die Suche. Gemessen vorher, am 27.09.2026 im Pruefstand:
+ * 88,11 s bei 4071 Einsaetzen und 4071 Zeilen (am 16.09.2026 auf einem
+ * anderen Rechner 42,61 s bei 3983). Der Schritt unten ist seither auch
+ * ein Riegel: Mehr als 200 Zeilen sind ein Fehler.
+ *
+ *
  * Nr. 37 nennt sie seit S2 als „was hier offen bleibt": die
  * Zeitraumuebersicht und die Nachbearbeitung bei 5000 Einsaetzen. Beide
  * fehlten dieser Probe, und deshalb konnte S2 sie nicht beantworten — nicht
@@ -307,12 +350,28 @@ messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
  * Einsatzzahl steht mit im Protokoll. Eine Zeit ohne die Zahl daneben waere
  * keine Auskunft (CLAUDE.md 6).
  */
-messungen.push(await messen('Zeitraumübersicht (ganzes Jahr)', async () => {
-  await seite.goto(`${basis}/index.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
-  const ziel = await seite.locator('aside a[href*="?d="]').first()
-                          .getAttribute('href').catch(() => null);
-  const jahr = (ziel && /d=(\d{4})-/.exec(ziel)?.[1]) || String(new Date().getUTCFullYear());
-  await seite.goto(`${basis}/zeitraum.php?y=${jahr}`,
+/* SEIT R4-27 LAEUFT DIE UHR NUR UEBER DAS, WAS DIE ABNAHME MEINT (Nr. 37,
+ * E-R4-64). Bis dahin begann sie mit dem Laden der STARTSEITE — die brauchte
+ * der Schritt nur, um das Jahr zu finden, und sie hat ihren eigenen Schritt
+ * (rund 1,1 s) — und endete erst nach dem Zaehlen der Zeilen, das wartet,
+ * bis der gedrosselte Hauptfaden frei wird. Am 28.09.2026 gemessen: 1,1 s
+ * Startseite, 4,4 s bis zur Zeile, dann noch 0,9 s fuer zwei Abfragen.
+ *
+ * Jetzt: das Jahr VOR der Uhr; die Dauer von `zeitraum.php` bis Playwright
+ * die erste Zeile SIEHT; danach, ohne Uhr, der Riegel und die zweite Zahl
+ * `fertig_s` — wann der Hauptfaden zur Ruhe kommt (Ende der letzten
+ * Langaufgabe, von der Seite selbst ab ihrer Navigation gemessen). Die
+ * erste ist die Abnahme, die zweite wird genannt, nicht gehalten: Die Seite
+ * zeichnet seit Web 21.6.1 in Stuecken, und dadurch ist sie frueher zu sehen
+ * (Median 3,7 statt 5,8 s), aber rund 0,7 s spaeter fertig (7,0 statt
+ * 6,3 s) — gemessen am 28.09.2026 mit genau diesem Schritt, je fuenf Laeufe. */
+await seite.goto(`${basis}/index.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
+const zeitraumZiel = await seite.locator('aside a[href*="?d="]').first()
+                                .getAttribute('href').catch(() => null);
+const zeitraumJahr = (zeitraumZiel && /d=(\d{4})-/.exec(zeitraumZiel)?.[1])
+  || String(new Date().getUTCFullYear());
+const zeitraum = await messen('Zeitraumübersicht (ganzes Jahr)', async () => {
+  await seite.goto(`${basis}/zeitraum.php?y=${zeitraumJahr}`,
                    { waitUntil: 'domcontentloaded', timeout: 300000 });
   /* Gewartet wird auf die erste ENTSCHLUESSELTE Zeile, nicht auf das
      Seitenladen: Die Tabelle entsteht im Browser aus `api/range.php`, und
@@ -322,10 +381,42 @@ messungen.push(await messen('Zeitraumübersicht (ganzes Jahr)', async () => {
                        .catch(() => { /* ein Jahr ohne Einsätze — dann zählt die Seite selbst */ });
   if (await entsperren(zeileDa)) { await zeileDa; }
   await zeileDa;
+  return { jahr: zeitraumJahr };
+});
+try {
   const zeilen = await seite.locator('#rangetable tbody tr').count();
   const zahl = (await seite.locator('#einsatzzahl').textContent().catch(() => '') || '').trim();
-  return { jahr, tabellenzeilen: zeilen, einsatzzahl: zahl };
-}));
+  /* RUHE: eine Sekunde ohne neue Langaufgabe, hoechstens 60 s gewartet. */
+  const stand = await seite.evaluate(() => new Promise((fertig) => {
+    const z = window.__messstand;
+    const bis = performance.now() + 60000;
+    let zuletzt = -1;
+    const pruefe = () => {
+      if (z.lang.length === zuletzt || performance.now() > bis) {
+        const ende = z.lang.reduce((m, l) => Math.max(m, l[1]), 0);
+        fertig({ ersteZeile: z.ersteZeile, ende: z.lang.length ? Math.max(ende, z.ersteZeile || 0) : null });
+        return;
+      }
+      zuletzt = z.lang.length;
+      setTimeout(pruefe, 1000);
+    };
+    pruefe();
+  }));
+  Object.assign(zeitraum, {
+    tabellenzeilen: zeilen, einsatzzahl: zahl,
+    erste_zeile_im_dom_s: stand.ersteZeile == null ? null : Math.round(stand.ersteZeile / 10) / 100,
+    fertig_s: stand.ende == null ? null : Math.round(stand.ende / 10) / 100,
+  });
+  if (zeilen > 200) {
+    zeitraum.fehler = zeitraum.fehler || `${zeilen} Tabellenzeilen — die Seitengrenze der Zeitraumübersicht fehlt`;
+  }
+} catch (e) {
+  zeitraum.fehler = zeitraum.fehler || String(e.message || e).slice(0, 300);
+}
+console.log(`    sichtbar ${zeitraum.dauer_s} s · erste Zeile im DOM ${zeitraum.erste_zeile_im_dom_s} s`
+  + ` · fertig ${zeitraum.fertig_s} s · ${zeitraum.einsatzzahl || '—'}`
+  + (zeitraum.fehler ? ` · FEHLER ${zeitraum.fehler}` : ''));
+messungen.push(zeitraum);
 
 /* Die Nachbearbeitung („Zuordnung nachtragen") ist das Gegenstueck: Sie
  * entsteht vollstaendig auf dem SERVER und laedt kein JSON nach. Was hier

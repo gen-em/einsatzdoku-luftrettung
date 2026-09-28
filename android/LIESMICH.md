@@ -46,7 +46,7 @@ Grund, warum die Blöcke B und C parallel zu S2/S3 laufen können.
 | | Stand | Woher |
 |---|---|---|
 | JDK | 21 (im Container), mindestens 17 | `JAVA_HOME` |
-| Android SDK | Plattform 37.0 (und 36, siehe Sandbox-Setup), Build-Tools 36.0.0 | `ANDROID_HOME` |
+| Android SDK | Plattform 37.0, Build-Tools 36.0.0 | `ANDROID_HOME` (Vorgabe `/opt/android-sdk`) |
 | Gradle | 9.7.1 (seit Android 0.16.0; bis dahin 8.14.3) | der Wrapper holt sie selbst |
 
 ```bash
@@ -105,6 +105,20 @@ lässt zwanzig `start`-Aufrufe je zehn Minuten und Absenderadresse zu
 und alle kommen von `127.0.0.1`. Ohne das Leeren läuft der erste Durchgang
 grün und der zweite meldet für jeden Fall `429` — wer das sieht, sucht den
 Fehler in der App. Genau das ist beim ersten Lauf dieses Pakets passiert.
+
+**Seit Android 0.16.1 räumt sie ab, was hochgeladen wurde** (Nr. 95, R4-21).
+Bis dahin blieben nach einem vollen Rundlauf 18 Diensttage, 10 Einsätze und
+28 Ruhesegmente samt Spur im Konto 1. `datenAbraeumen()` ruft
+`werkzeuge/rundlauf_aufraeumen.php`: Je Diensttag der Geräte des Kontos geht
+es den Weg einer NutzerIn — in den Papierkorb, dann endgültig löschen —, und
+die Spur geht über `spur_lib.php`, nicht über ein `DELETE` (`CLAUDE.md` 4).
+`SendeRundlaufTest` und `MissionRundlaufTest` rufen es **als Erstes** im
+`@After`: Das Trennen löscht das Gerät, und danach gehörte nichts mehr
+erkennbar zum Lauf. Die Kopplungstabellen bleiben auf dem `mariadb`-Weg. Der
+Aufruf braucht `php` im Pfad und die `server/config.php` der örtlichen
+Installation. Abgeräumt werden nur die Daten der Geräte, nicht das ganze
+Konto 1 — auf einer anderen örtlichen Installation ist es womöglich ein
+echtes.
 
 #### So bekommt ein Prüfling heute eine Kopplung
 
@@ -184,6 +198,15 @@ Die drei Zählungen (Web, Uhr, Android) bleiben getrennt.
 Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
+
+**Stand Android 0.17.0 (R4-22, Abgewiesene verwerfen), `./gradlew build`
+im Container, 27.09.2026 — `BUILD SUCCESSFUL in 4m 10s`:** Lint **0**
+Fehler (Handy 1 Warnung: `NewerVersionAvailable`, Robolectric 4.17 — nicht
+aus diesem Paket), Prüffälle je Bauart Handy **270**, davon 15 ohne
+Installation übersprungen, Uhr **72**, **0** Fehlschläge. **270 statt 267:**
+`AbgewieseneTest` +2 (`verwerfbar()`, Zahl nach dem Verwerfen),
+`MehrzahlTest` +1. Der Bilderlauf des Handys hat **78** Bilder
+(26 Bildschirme, vorher 24).
 
 **Stand Android 0.16.0 (Konzept AR: AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20,
 API 37), `./gradlew build --rerun-tasks` im Container, 25.09.2026 —
@@ -501,15 +524,15 @@ Reihenfolge):
 
 ```bash
 ./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  7 Bilder
-./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 72 Bilder
+./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 78 Bilder
 ```
 
 | | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
 |---|---|---|
-| Bilder | 7 — zwei Marken, laufende Ansicht, zwei Ortungszustände, „Handy nicht erreichbar" (seit 0.16.0), 227-dp-Uhr | **72** — 24 Bildschirme × 3 Breiten (360, 411, 600 dp) |
-| Bedienhöhe | 48 dp je Bild | 48 dp an **69 von 72** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall) |
+| Bilder | 7 — zwei Marken, laufende Ansicht, zwei Ortungszustände, „Handy nicht erreichbar" (seit 0.16.0), 227-dp-Uhr | **78** — 26 Bildschirme × 3 Breiten (360, 411, 600 dp); seit 0.17.0 mit „Abgewiesene verwerfen" und der Quittung (R4-22) |
+| Bedienhöhe | 48 dp je Bild | 48 dp an **75 von 78** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall; die Zusammenfassung des Laufs sagt dazu „0.0 dp bis 48.0 dp an 78 von 78") |
 | Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**; dazu der **ganze** Inhalt gegen den sichtbaren Bereich |
-| Unterscheidbarkeit | alle 7 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
+| Unterscheidbarkeit | alle 7 paarweise verschieden | alle 78 paarweise verschieden, **und je Breite** (bis 0.16.1 stand hier „66" neben 72 Bildern — eine Zahl, die kein Lauf gemeldet hat) |
 
 **Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
 Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die
@@ -598,7 +621,7 @@ unzip -q /tmp/cmdline-tools.zip -d /opt/android-sdk/cmdline-tools
 mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
 yes | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager \
-  "platform-tools" "platforms;android-37.0" "platforms;android-36" "build-tools;36.0.0"
+  "platform-tools" "platforms;android-37.0" "build-tools;36.0.0"
 ```
 
 Rund 460 MB. Die Zuarbeitenliste des Konzepts (Abschnitt 9) nennt die
@@ -974,9 +997,17 @@ einmal erzeugt und dem Auftraggeber zur Verwahrung übergeben.
 | Skript | Was es prüft | Sollstand |
 |---|---|---|
 | `farbabgleich.py` | App-Token gegen `:root` des Web | 0 Abweichungen, 0 eigene Farbwerte |
-| `kontraste.py` | Kontrast jedes Farbpaars der App — und seit 0.16.0, ob die Liste **vollständig** ist: jede Farbe, die im Quelltext eines Moduls als Schrift, Zeichen, Linie oder Fläche vorkommt, steht in der Paarliste dieses Moduls in dieser Rolle (Nr. 116). `--selbstprobe` baut die zwei historischen Lücken ein (B-S5Z-13, -15) | 0 Befunde (Paare unter Zielwert, fehlende Paare, Farben ohne erkannte Rolle); Selbstprobe 5 von 5. **Hängt an keinem Lauf** — von Hand fahren (Nr. 334) |
-| `bildmarken.sh` | Bildmarken gegen ihre Vorlagen | 0 Abweichungen |
-| `stroeme.py` | Soll-Zahlen der Ausdünnung, mit der Referenzregel aus `tools/referenzdatensatz/` nachgerechnet | 0 Abweichungen gegen die analytischen Werte |
+| `kontraste.py` | Kontrast jedes Farbpaars der App — und seit 0.16.0, ob die Liste **vollständig** ist: jede Farbe, die im Quelltext eines Moduls als Schrift, Zeichen, Linie oder Fläche vorkommt, steht in der Paarliste dieses Moduls in dieser Rolle (Nr. 116). `--selbstprobe` baut die zwei historischen Lücken ein (B-S5Z-13, -15) | 0 Befunde (Paare unter Zielwert, fehlende Paare, Farben ohne erkannte Rolle); Selbstprobe 5 von 5 |
+| `bildmarken.sh` | Bildmarken gegen ihre Vorlagen (`pruefen` schreibt nichts) | 0 Abweichungen |
+| `stroeme.py` | Soll-Zahlen der Ausdünnung, mit der Referenzregel aus `tools/referenzdatensatz/` nachgerechnet (`pruefen` vergleicht mit `stroeme.txt`, statt sie zu schreiben) | 0 Abweichungen gegen die analytischen Werte |
+
+**Seit R4-04 fährt sie der Prüfstand** (Nr. 334): als `android-kontraste`
+(mit Selbstprobe), `android-farbabgleich`, `android-bildmarken` und
+`android-stroeme` am Ende des Musters `android` — die letzten zwei im
+Prüfmodus, damit der Lauf den Baum nicht ändert —, `farbabgleich` und
+`bildmarken` dazu, wenn `server/assets/style.css` oder eine Bildmarke im
+Web berührt ist (Muster `android-quellen`). Bis dahin liefen sie nur, wenn
+jemand daran dachte.
 
 Sie sind das Gegenstück zu `tools/quelltext/` (`vollstaendigkeit`) und
 `tools/screenshots/kontrast.py` der Weboberfläche — und sie mussten eigene
@@ -1200,8 +1231,9 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   | `bild` verweigert die Benachrichtigungsleiste | `bild` prüft, ob die App im Vordergrund steht, und die Leiste ist `NotificationShade`; für ein Bild der Meldung `cmd statusbar expand-notifications`, dann `adb exec-out screencap -p` unmittelbar, danach `cmd statusbar collapse` |
 
   Und eine Beobachtung, die kein Fehler der App ist, aber eine Falle des
-  Prüfstands: Das Demo-Konto wird alle 30 Minuten aus der Fixture neu
-  eingespielt, und das nimmt seine Geräte mit. Ein Gerät, das um 21:03 an
+  Prüfstands: Das Demo-Konto wird aus der Fixture neu eingespielt — damals
+  alle 30 Minuten, seit Web 21.2.0 30 Minuten nach der ersten Änderung, und
+  Koppeln ist eine —, und das nimmt seine Geräte mit. Ein Gerät, das um 21:03 an
   das Demo-Konto gekoppelt wurde, war um 21:37 am Server weg — das Paket vom
   Dienstende bekam `401`, die App sagte „Schlüssel abgewiesen · Gerät neu
   koppeln", und ein Paket mitten im Reset bekam `500` (Fremdschlüssel 1452,
@@ -1212,6 +1244,22 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   gehen. Senden geht nicht, Trennen geht nicht, Neukoppeln setzt Trennen
   voraus: **Backlog Nr. 157**. Der Lauf endete deshalb mit `pm clear`
   statt mit „Getrennt".
+
+  **Lauf am 27.09.2026 (0.17.0, „Abgewiesene verwerfen", R4-22):**
+  `android-37.0;google_apis`, Boot **476 s**, Prüf-APK **181 s**. Gekoppelt
+  an Konto 1 der örtlichen Anlage (Code per `UPDATE pair_sessions` zugeordnet,
+  wie die Kopplungshilfe); drei abgewiesene Pakete **per `sqlite3` als Root**
+  in `puffer.db` — das Abbild hat `/system/bin/sqlite3`, `adb root` genügt,
+  die App vorher mit `am force-stop` anhalten. Bedient: Knopf, Rückfrage,
+  „Behalten" (3 bleiben), „Verwerfen" (0 Pakete, 0 Punkte, 0 Phasen), Quittung;
+  das Bild der Rückfrage liegt als `mockups/R4-handy-emulator-0.17.0-verwerfen.png`
+  bei. **Ein Stolperstein mehr:** `uiautomator dump` kam unter TCG zeitweise
+  nicht zur Verbindung (`TimeoutException` im Absturzpuffer — des Werkzeugs,
+  nicht der App), und ein Tipp auf seine Koordinaten kam nicht an. Sicherer:
+  Bild abziehen, Koordinaten daraus ablesen (Bildbreite 1080 px), tippen, am
+  Server nachsehen, ob die Anfrage kam. Abgebaut mit
+  `werkzeuge/rundlauf_aufraeumen.php 1` und dem `mariadb`-Weg der
+  Kopplungshilfe.
 
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf

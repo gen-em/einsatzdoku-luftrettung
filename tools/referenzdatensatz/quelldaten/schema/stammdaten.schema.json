@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gen-em.org/nadoku/referenzdatensatz/stammdaten.schema.json",
+  "$id": "urn:nadoku:referenzdatensatz:stammdaten",
   "title": "Stammdaten des Referenzdatensatzes",
   "type": "object",
   "required": ["standorte", "rettungsmittel", "besatzung", "zielkliniken", "bereitschaften", "weitere_rettungsmittel"],

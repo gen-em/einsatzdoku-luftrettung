@@ -231,6 +231,28 @@ function plattform_db_variable(PDO $pdo, string $name): ?string
     }
 }
 
+/**
+ * Gibt es die Funktion `$name`? Dreiwertig wie `ok` (Web 21.1.7, Nr. 266):
+ * true aufrufbar · false nicht vorhanden (die Erweiterung fehlt) · **null
+ * abgeschaltet** — der Hoster hat sie in `disable_functions`, und dann ist
+ * NICHT MESSBAR, was sie haette sagen sollen.
+ *
+ * `function_exists()` allein kennt nur zwei Antworten, und fuer eine
+ * abgeschaltete Funktion sagt es `false`. Auf Staging (lima-city) steht
+ * `opcache_get_status` in `disable_functions`; die Statusseite zeigte dort
+ * „OPcache: aus", waehrend die `phpinfo()` derselben Anlage „Up and Running"
+ * meldete (F-KH-U-05). Behauptet hatte die Anwendung etwas, das sie nicht
+ * messen konnte — das verbietet `docs/Technik.md` 5b.1.
+ */
+function plattform_funktion(string $name): ?bool
+{
+    if (function_exists($name)) {
+        return true;
+    }
+    $aus = array_map('trim', explode(',', strtolower((string)ini_get('disable_functions'))));
+    return in_array(strtolower($name), $aus, true) ? null : false;
+}
+
 /** Ein Befund. `ok`: true erfuellt · false nicht · null nicht feststellbar. */
 function plattform_befund(string $schluessel, string $name, string $stufe,
                           string $gemessen, string $soll, ?bool $ok,
@@ -327,17 +349,20 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
     }
 
     /* ---- 4 OPcache (empfohlen) -------------------------------------------- */
-    $opAn = function_exists('opcache_get_status');
-    if ($opAn) {
+    $opAn = plattform_funktion('opcache_get_status');
+    if ($opAn === true) {
         $st   = @opcache_get_status(false);
         $opAn = is_array($st) && !empty($st['opcache_enabled']);
     }
     $b[] = plattform_befund('opcache', 'OPcache', 'empfohlen',
-        $opAn ? 'aktiv' : 'aus', 'aktiv', $opAn,
-        $opAn ? 'Die Anwendung ist darauf vorbereitet: Nach jedem Schreiben in '
-              . '`config.php` läuft `opcache_invalidate()`.'
-              : 'Ohne OPcache läuft die Anwendung vollständig — jede Anfrage '
-              . 'übersetzt dann alles neu.');
+        $opAn === null ? 'nicht messbar' : ($opAn ? 'aktiv' : 'aus'), 'aktiv', $opAn,
+        $opAn === null
+            ? 'Der Hoster hat `opcache_get_status()` abgeschaltet — ob OPcache '
+              . 'läuft, lässt sich von hier aus nicht sehen, nur in seiner `phpinfo()`.'
+            : ($opAn ? 'Die Anwendung ist darauf vorbereitet: Nach jedem Schreiben in '
+                     . '`config.php` läuft `opcache_invalidate()`.'
+                     : 'Ohne OPcache läuft die Anwendung vollständig — jede Anfrage '
+                     . 'übersetzt dann alles neu.'));
 
     /* ---- 5 Schreibrechte, je mit Probedatei -------------------------------- */
     $orte = [

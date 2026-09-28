@@ -29,7 +29,14 @@ $pdo = db();
  * Ein neues Token macht das alte ungueltig. Das ist der Zweck: Wer den
  * bisherigen Zeitplan-Eintrag nicht mehr kennt oder ihn kompromittiert glaubt,
  * dreht hier ab. Die Folge — der alte Eintrag laeuft ins Leere — steht als
- * Rueckfrage daneben, damit sie niemanden ueberrascht. */
+ * Rueckfrage daneben, damit sie niemanden ueberrascht.
+ *
+ * UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Ein neues Token
+ * endet mit `flash_setzen()` und einer Umleitung in die Karte „Auslöser" —
+ * sonst erzeugt Neuladen ein zweites und macht das eben eingetragene
+ * ungueltig. Das Token selbst reist nicht mit; die Seite liest es danach
+ * frisch. Scheitert das Erzeugen, ist nichts gespeichert, und die Seite
+ * bleibt stehen. */
 $jobsMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_token_neu') {
     csrf_check();
@@ -41,6 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_
     } catch (Throwable $ex) {
         $jobsMeldung = ['fehler', 'Das Token ließ sich nicht erzeugen: '
                                 . $ex->getMessage()];
+    }
+    if ($jobsMeldung[0] === 'ok') {
+        flash_setzen($jobsMeldung[0], $jobsMeldung[1], 'k-ausloeser');
+        header('Location: betrieb_jobs.php#k-ausloeser');
+        exit;
     }
 }
 
@@ -72,6 +84,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_
 $JOB_PAUSE_DAUERN = [900 => '15 Min.', 1800 => '30 Min.',
                      3600 => '1 Std.', 7200 => '2 Std.'];
 
+/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Anhalten und
+ * Aufheben enden mit `flash_setzen()` und einer Umleitung in die Karte
+ * „Zustand" — sonst setzt Neuladen die Pause ein zweites Mal, mit neuer
+ * Frist. Eine Dauer, die nicht auf der Liste steht, aendert nichts und
+ * bleibt auf der Seite; ebenso ein Schreibfehler von `jobs_pause()`. */
 $pauseMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && in_array($_POST['action'] ?? '', ['jobs_pause_an', 'jobs_pause_aus'], true)) {
@@ -95,6 +112,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         $pauseMeldung = ['fehler', 'Die Pause ließ sich nicht setzen: '
                                 . $ex->getMessage()];
     }
+    if ($pauseMeldung[0] === 'ok') {
+        flash_setzen($pauseMeldung[0], $pauseMeldung[1], 'k-zustand');
+        header('Location: betrieb_jobs.php#k-zustand');
+        exit;
+    }
+}
+
+// Meldung aus der Umleitung in die Karte, die gehandelt hat
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ort'] === 'k-zustand')       { $pauseMeldung ??= [$flash['ton'], $flash['text']]; }
+    elseif ($flash['ort'] === 'k-ausloeser') { $jobsMeldung  ??= [$flash['ton'], $flash['text']]; }
 }
 
 $jobs      = jobs_zustand();

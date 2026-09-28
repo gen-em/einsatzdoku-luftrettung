@@ -90,11 +90,13 @@ const EdSchnitt = (() => {
     return null;
   }
 
-  function dauer(vonTs, bisTs) {
-    const s = Math.max(0, bisTs - vonTs);
-    const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60);
-    return h > 0 ? (h + ' h ' + m + ' min') : (m + ' min');
-  }
+  /* DIE DAUER KOMMT AUS EdFormat.dauer() (Web 21.1.11, Backlog Nr. 273).
+   * Hier stand eine eigene Funktion `dauer()` mit einer dritten
+   * Schreibweise — „1 h 6 min" mit Leerzeichen, waehrend der Rest der
+   * Anwendung „1h 06min" schreibt — und dem Rundungsfehler, den AP8d in
+   * EdFormat behoben hat: Stunden und Minuten getrennt gerechnet ergab
+   * 3599 s ein „60 min". Die beiden Aufrufer nehmen das Maximum mit 0 mit,
+   * damit der Leerwert von EdFormat nie erreicht wird. */
 
   /** Ende des Segments — auch wenn es noch laeuft. */
   function segBis(seg) { return seg.bis_ts != null ? seg.bis_ts : seg.von_ts + 3600; }
@@ -199,7 +201,7 @@ const EdSchnitt = (() => {
       + '</div>'
       + '<p class="feld-klein">Alle weiteren Phasenzeiten kannst du danach im '
       +   'Einsatz nachtragen — Beginn und Ende genügen zum Schneiden.</p>'
-      + '<div class="meldung meldung-info" role="status" data-vorher><p></p></div>'
+      + '<div data-vorher hidden></div>'
       + '<div class="listen-form-fuss">'
       +   '<button class="knopf knopf-primaer" type="button" data-schneiden>'
       +     '<span>Einsatz erzeugen</span></button>'
@@ -229,29 +231,43 @@ const EdSchnitt = (() => {
     return { bv, ev, bt, et, vonTs, bisTs };
   }
 
+  /* DER SATZ UNTER DEN FELDERN ist eine Meldung aus dem Baustein (Web 21.1.11,
+   * Backlog Nr. 271): `fehler` fuer einen Grund, der das Schneiden verhindert,
+   * und fuer einen Fehlschlag des Servers; `info` fuer den Erklaertext. Bis
+   * dahin stand hier eine leere Huelle mit fester Klasse `meldung-info`, die
+   * per `textContent` befuellt wurde — ohne Symbol, und „Das Ende liegt vor
+   * dem Beginn." stand in blauer Hinweisflaeche statt in roter. Der Anker
+   * `data-vorher` sitzt am Behaelter, weil `EdHtml.meldung()` sein Markup
+   * ohne fremde Attribute baut. */
+  function vorher(el, ton, text) {
+    const h = el.querySelector('[data-vorher]');
+    h.innerHTML = EdHtml.meldung(ton, text);
+    h.hidden = false;
+  }
+
   /** Vorschau und Erklärtext nach jeder Eingabe nachziehen. */
   function bereichAuffrischen(el, seg) {
     const w = wahl(el, seg);
-    const p = el.querySelector('[data-vorher] p');
     const knopf = el.querySelector('[data-schneiden]');
 
     el.querySelector('[data-vorschau]').innerHTML =
       leiste(seg, w.grund ? null : w.vonTs, w.grund ? null : w.bisTs, w.bv, w.ev);
 
-    if (w.grund) { p.textContent = w.grund; knopf.disabled = true; return; }
+    if (w.grund) { vorher(el, 'fehler', w.grund); knopf.disabled = true; return; }
     knopf.disabled = false;
 
     const reste = [];
     if (w.vonTs > seg.von_ts) { reste.push(seg.start_hhmm + ' – ' + w.bv); }
     if (w.bisTs < segBis(seg)) { reste.push(w.ev + ' – ' + segBisHhmm(seg)); }
-    p.textContent =
+    vorher(el, 'info',
       'Der Einsatz bekommt ' + w.bv + ' – ' + w.ev
-      + (w.et > w.bt ? ' (am Folgetag)' : '') + ' · ' + dauer(w.vonTs, w.bisTs) + '. '
+      + (w.et > w.bt ? ' (am Folgetag)' : '') + ' · '
+      + EdFormat.dauer(Math.max(0, w.bisTs - w.vonTs)) + '. '
       + (reste.length
           ? 'Der übrige Zeitraum bleibt als Ruhesegment stehen (' + reste.join(' und ') + ').'
           : 'Das Segment wird dabei vollständig aufgebraucht.')
       + ' Der Schnitt lässt sich rückgängig machen, solange am Einsatz nichts '
-      + 'Weiteres hängt.';
+      + 'Weiteres hängt.');
   }
 
   /* ---- Senden --------------------------------------------------------------- */
@@ -267,9 +283,8 @@ const EdSchnitt = (() => {
 
   async function schneiden(el, seg) {
     const knopf = el.querySelector('[data-schneiden]');
-    const p = el.querySelector('[data-vorher] p');
     const w = wahl(el, seg);
-    if (w.grund) { p.textContent = w.grund; return; }
+    if (w.grund) { vorher(el, 'fehler', w.grund); return; }
 
     /* PHASENZEITEN GEHEN MIT IHREM EIGENEN TAGESVERSATZ. Eine Phase um 00:10
      * an einem Einsatz, der um 23:50 beginnt, gehoert auf den Folgetag —
@@ -284,7 +299,7 @@ const EdSchnitt = (() => {
     const r = await ruf({ action: 'schneiden', rest_id: seg.id,
       beginn: w.bv, ende: w.ev, beginn_tag: w.bt, ende_tag: w.et, phasen },
       'Das Schneiden');
-    if (!r.ok) { p.textContent = r.meldung; knopf.disabled = false; return; }
+    if (!r.ok) { vorher(el, 'fehler', r.meldung); knopf.disabled = false; return; }
     const d = r.daten;
 
     /* NEU LADEN STATT NACHZIEHEN. Der Schnitt aendert die Einsatztabelle,
@@ -303,7 +318,7 @@ const EdSchnitt = (() => {
                 + d.geblieben + ' bleiben im Ruhesegment. '
                 + 'Einsatzort, Alter und Diagnose trägst du im Einsatz nach.');
     } catch (e) {
-      p.textContent = e.message;
+      vorher(el, 'fehler', e.message);
       knopf.disabled = false;
     }
   }
@@ -331,16 +346,15 @@ const EdSchnitt = (() => {
     if (!ziel) { return; }
     const alt = ziel.parentNode.querySelector('[data-schnittmeldung]');
     if (alt) { alt.remove(); }
+    /* AUS DEM BAUSTEIN (Web 21.1.11, gefunden in R4-13, F-R4-42). Hier stand
+     * die Meldung von Hand — ein Absatz, dem die Klasse per Zuweisung an
+     * className gesetzt wurde, ohne Symbol —, und das Zaehlmuster von Z37
+     * sah sie nicht, weil es nur das Attribut im Markup suchte. Der
+     * Behaelter traegt den Anker data-schnittmeldung, damit die naechste
+     * Meldung die alte findet. */
     const d = document.createElement('div');
-    /* Die Klassennamen AUSGESCHRIEBEN und nicht zusammengesetzt. Ein
-     * `'meldung-' + ton` liest kein Prüfmittel: Die Vollständigkeitsprüfung
-     * sucht Klassen im Markup und fand hier „meldung-" ohne Regel. Sie hat
-     * recht — was sie nicht sieht, kann sie auch nicht als verwaist melden,
-     * wenn die Regel eines Tages verschwindet. */
-    d.className = ton === 'ok' ? 'meldung meldung-ok' : 'meldung meldung-warn';
-    d.setAttribute('role', 'status');
     d.setAttribute('data-schnittmeldung', '');
-    d.innerHTML = '<p>' + esc(text) + '</p>';
+    d.innerHTML = EdHtml.meldung(ton === 'ok' ? 'ok' : 'warn', text);
     ziel.parentNode.insertBefore(d, ziel);
   }
 
@@ -349,7 +363,7 @@ const EdSchnitt = (() => {
   function zeile(seg) {
     const zeit = seg.start_hhmm
                + (seg.end_hhmm ? ' – ' + seg.end_hhmm : ' – offen') + ' Uhr';
-    const klein = (seg.bis_ts != null ? dauer(seg.von_ts, seg.bis_ts) + ' · ' : '')
+    const klein = (seg.bis_ts != null ? EdFormat.dauer(Math.max(0, seg.bis_ts - seg.von_ts)) + ' · ' : '')
                 + (seg.n > 0 ? seg.n + ' Punkte' : 'keine Aufzeichnung')
                 + (seg.final ? '' : ' · läuft noch');
 

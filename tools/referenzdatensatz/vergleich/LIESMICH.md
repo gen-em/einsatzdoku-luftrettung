@@ -10,7 +10,7 @@ Referenzzustand.
 python3 kreislauf.py --art csv|edbak|edbak-alt --frisch   # Konto → Einspielen → Export → Vergleich
 python3 vergleichen.py --art csv a.zip b.zip [--ausnahmen ausnahmen/csv_umlauf.json] [--bericht …]
 python3 vergleichen.py --art edbak --testabweichung a.edbak a.edbak --passwort …   # Probe aufs Exempel
-python3 pruefkonto.py anlegen|loeschen umlauf-<name>@gen-em.org   # Prüfkonto für Proben (RP-01)
+python3 pruefkonto.py anlegen|loeschen umlauf-<name>@example.invalid   # Prüfkonto für Proben (RP-01)
 ```
 
 ## Was es misst

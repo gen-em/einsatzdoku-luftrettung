@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Ingestprobe — nimmt die Uhr-Schnittstelle nach der Ausduennung noch das
  * Richtige an? (S2/AP3, E-S2-08)
  *
- * Anlass: Nr. 134 — Ersetzfenster verwarf Punkte eines laufenden Einsatzes, Antwort „ok"
+ * Anlass: Nr. 134 — Ersetzfenster verwarf Punkte eines laufenden Einsatzes, Antwort „ok"; Nr. 158 — ein Tag ohne Datensaetze hatte keinen Anker (Teil 9, Fall 14)
  *
  * WOFUER. AP3 aendert `ingest.php` an der gefaehrlichsten Stelle, die es
  * gibt: Punkte, die die Uhr schickt, werden unter bestimmten Umstaenden
@@ -71,7 +71,7 @@ function pruefe(bool $ok, string $was, string $wert = ''): void {
 
 /* ---- Konto und Geraet ---------------------------------------------------- */
 
-$email = 'ingestprobe@gen-em.org';
+$email = 'ingestprobe@example.invalid';
 
 /* DAS KONTO UND DAS GERAET ENTSTEHEN PER SQL, nicht ueber die Oberflaeche.
  * Das ist eine bewusste Abkuerzung und keine Nachlaessigkeit: Geprueft wird
@@ -818,11 +818,20 @@ pruefe($vId > 0 && ($v2['daten']['kept_points'] ?? -1) === 1,
  *     Zwei Erwartungen, weil zwei Schutzstufen greifen: absurde Zeiten
  *     kommen gar nicht an (8a), und plausible schreiben den Zeitraum eines
  *     Tages nicht fort, an dem seit dem Fenster niemand mehr etwas angelegt
- *     hat (8b). Der Tag von $fId liegt ausserhalb (created_at vor 73 h). */
+ *     hat (8b). Der Tag von $fId liegt ausserhalb (created_at vor 73 h).
+ *
+ *     SEIT WEB 21.3.0 AUCH DER TAG SELBST (R4-15, Nr. 158): Der Anker ist
+ *     `days.created_at`, nicht mehr das juengste `created_at` seiner
+ *     Datensaetze. Der Tag entstand in diesem Lauf und traegt „jetzt" —
+ *     ohne diese Zeile galt er als offen, und 8b war rot, weil die Probe den
+ *     alten Anker zurueckdatierte, nicht weil der Schutz fehlte. */
 $tq = $pdo->prepare('SELECT day_id FROM missions WHERE id = ?'); $tq->execute([$fId]);
 $fTagAlt = (int)$tq->fetchColumn();
 $pdo->prepare('UPDATE days SET started_at = ?, ended_at = ? WHERE id = ?')
     ->execute([$alt, $alt, $fTagAlt]);
+if (db_hat_spalte($pdo, 'days', 'created_at')) {
+    $pdo->prepare('UPDATE days SET created_at = ? WHERE id = ?')->execute([$alt, $fTagAlt]);
+}
 $tagVor8 = $liesTag($pdo, $fId);
 $n8 = senden(['kind' => 'mission', 'client_ref' => 'probe-fenster-neu-alt', 'day' => $tagVon($tsC),
               'started_at' => '2001-01-01T00:00:00Z', 'ended_at' => '2097-12-31T23:00:00Z', 'final' => true,
@@ -1024,6 +1033,52 @@ pruefe(($vt['daten']['ok'] ?? false) === true && isset($vt['daten']['rejected'])
        'Ein Ende vor dem Beginn: angenommen und genannt, aber es zieht den Diensttag nicht auf (Wiederaufnahme)',
        'HTTP ' . $vt['code'] . ', rejected ' . json_encode($vt['daten']['rejected'] ?? null)
        . ', Tag ' . json_encode($vtTag));
+
+/* (14) Ein alter Tag OHNE Datensaetze (Nr. 158, Web 21.3.0). Bis hierher
+ *      fragte ingest_tag_offen() die uebrigen Datensaetze des Tages; ein Tag
+ *      ohne sie hatte keinen Anker und galt als offen — ein neues Paket
+ *      schrieb seinen Zeitraum um, egal wie alt er war. Jetzt fragt sie
+ *      `days.created_at`. Der Tag entsteht hier per SQL mit einem Anker von
+ *      vor vier Tagen — der Wert, den ein so alter Tag nach der Migration
+ *      traegt. Ohne die Spalte ist der Fall nicht gemessen und rot. */
+if (!db_hat_spalte($pdo, 'days', 'created_at')) {
+    pruefe(false, 'Alter Tag ohne Datensaetze (Nr. 158)', 'Spalte days.created_at fehlt — update.php gelaufen?');
+} else {
+    $aTag = gmdate('Y-m-d', time() - 20 * 86400);
+    $pdo->prepare("INSERT INTO days (user_id, day, started_at, ended_at, created_at)
+                   VALUES (?, ?, ?, ?, UTC_TIMESTAMP() - INTERVAL 4 DAY)")
+        ->execute([$uid, $aTag, $aTag . ' 08:00:00', $aTag . ' 09:00:00']);
+    $aTagId = (int)$pdo->lastInsertId();
+    $at = senden(['kind' => 'mission', 'client_ref' => 'probe-alter-leerer-tag',
+                  'day' => $aTag,
+                  'started_at' => $aTag . 'T07:00:00Z',
+                  'ended_at'   => $aTag . 'T11:00:00Z', 'final' => true,
+                  'track' => ['seq_from' => 0, 'points' => []]]);
+    $atq = $pdo->prepare('SELECT d.id, d.started_at, d.ended_at FROM days d
+                          JOIN missions m ON m.day_id = d.id WHERE m.id = ?');
+    $atq->execute([(int)($at['daten']['id'] ?? 0)]);
+    $atZeile = $atq->fetch(PDO::FETCH_ASSOC) ?: [];
+    pruefe(($at['daten']['ok'] ?? false) === true && (int)($atZeile['id'] ?? 0) === $aTagId
+           && ($atZeile['started_at'] ?? '') === $aTag . ' 08:00:00'
+           && ($atZeile['ended_at'] ?? '') === $aTag . ' 09:00:00',
+           'Alter Tag ohne Datensaetze: der Einsatz kommt an, der Zeitraum bleibt (Nr. 158)',
+           'HTTP ' . $at['code'] . ', Tag ' . json_encode($atZeile));
+    /* UND DIE GEGENSEITE: Derselbe Tag mit einem Anker von JETZT ist offen —
+     * sonst belegte der Fall oben nur, dass nie etwas fortgeschrieben wird. */
+    $pdo->prepare('UPDATE days SET created_at = UTC_TIMESTAMP() WHERE id = ?')->execute([$aTagId]);
+    $at2 = senden(['kind' => 'mission', 'client_ref' => 'probe-alter-leerer-tag-2',
+                   'day' => $aTag,
+                   'started_at' => $aTag . 'T07:00:00Z',
+                   'ended_at'   => $aTag . 'T11:00:00Z', 'final' => true,
+                   'track' => ['seq_from' => 0, 'points' => []]]);
+    $atq->execute([(int)($at2['daten']['id'] ?? 0)]);
+    $atZeile2 = $atq->fetch(PDO::FETCH_ASSOC) ?: [];
+    pruefe(($at2['daten']['ok'] ?? false) === true && (int)($atZeile2['id'] ?? 0) === $aTagId
+           && ($atZeile2['started_at'] ?? '') === $aTag . ' 07:00:00'
+           && ($atZeile2['ended_at'] ?? '') === $aTag . ' 11:00:00',
+           'Derselbe Tag, frisch angelegt: der Zeitraum wird fortgeschrieben',
+           'HTTP ' . $at2['code'] . ', Tag ' . json_encode($atZeile2));
+}
 
 printf("  Ergebnis des Fensters: innerhalb angenommen, ausserhalb abgewiesen und genannt (%d h ab dem Anlegen)\n",
        INGEST_ERSETZFENSTER_H);

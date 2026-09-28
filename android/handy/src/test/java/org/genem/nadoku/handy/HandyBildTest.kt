@@ -169,6 +169,8 @@ class HandyBildTest {
         modus: Modus = Modus.MIT_PHASENKNOEPFEN,
         rueckstand: Int = 0,
         abgewiesen: Int = 0,
+        verwerfbar: Int = abgewiesen,
+        verworfen: Int? = null,
         sendeergebnis: Sendeergebnis? = null,
         sendelaufLaeuft: Boolean = false,
         einsatzLaeuft: Boolean = false,
@@ -203,6 +205,8 @@ class HandyBildTest {
             logoWahl = LogoWahl.LUFT,
             rueckstand = rueckstand,
             abgewiesen = abgewiesen,
+            verwerfbar = verwerfbar,
+            verworfen = verworfen,
             sendeergebnis = sendeergebnis,
             sendelaufLaeuft = sendelaufLaeuft,
             aufJetztSenden = {},
@@ -259,7 +263,14 @@ class HandyBildTest {
         ),
 
         // -- Was das Senden anzeigt (E2, E-S5Z-12) --
-        "sende-abgewiesen" to dienst(abgewiesen = 1),
+        /* VERWERFEN (R4-22, Bild M-R4-22): mit Knopf und Hinweis; ohne Knopf,
+         * wenn das abgewiesene Paket noch läuft; danach die Quittung. Die
+         * Rückfrage selbst ist ein Dialog und hier nicht zu sehen (unten). */
+        "sende-abgewiesen" to dienst(rueckstand = 2, abgewiesen = 3),
+        "sende-abgewiesen-laufend" to dienst(
+            laeuft = true, ortung = Ortungsstand.OK, abgewiesen = 1, verwerfbar = 0,
+        ),
+        "sende-verworfen" to dienst(rueckstand = 2, verworfen = 3),
         "sende-laeuft" to dienst(rueckstand = 2, sendelaufLaeuft = true),
         "sende-kein-netz" to dienst(
             rueckstand = 2,

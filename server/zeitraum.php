@@ -6,8 +6,9 @@ require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabe
 
 /**
  * Alle Einsaetze eines Jahres oder Monats: Karte, Statistiktabelle und eine
- * Tabelle aller Einsaetze — bewusst ohne Farbmarkierung und ohne Tagesnummer,
- * dafuer mit Datum. Die Daten holt der Browser von api/range.php und
+ * Tabelle der Einsaetze — bewusst ohne Farbmarkierung und ohne Tagesnummer,
+ * dafuer mit Datum, seit Web 21.4.0 mit 200 Zeilen je Seite (Karte und
+ * Kennzahlen bleiben beim ganzen Zeitraum). Die Daten holt der Browser von api/range.php und
  * entschluesselt die geschuetzten Angaben selbst (wie auf der Tagesuebersicht);
  * die Karten-Pins nutzen dieselben entschluesselten Koordinaten. Die Karte
  * bleibt ausgeblendet, wenn kein Einsatz Koordinaten hat oder der
@@ -126,7 +127,6 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
     </section>
 <?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>
-<script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole, Katalogspalten)
          — seit Schritt 15 AP9b an EINER Stelle, ui_tabellen_bootstrap() in
@@ -509,6 +509,10 @@ function verdrahteExtremKachel(tile){
     document.querySelectorAll('.kennzahl.aktiv').forEach(t => t.classList.remove('aktiv'));
     fixierteMid = mid;
     tile.classList.add('aktiv');
+    /* Die Zeile erst in die Anzeige holen (Web 21.4.0): Seit der
+       Seitengrenze steht sie nicht mehr sicher da. zeigeEinsatz() zeichnet
+       dafür neu, und onAfterDraw wendet die Festsetzung von oben an. */
+    tabelle.zeigeEinsatz(mid);
     wendeHervorhebungAn(mid);
     const zeile = document.querySelector(`#rangebody tr[data-mid="${mid}"]`);
     if (zeile) { zeile.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
@@ -566,6 +570,17 @@ const tabelle = EdMissionTable.erzeuge({
   kacheln: document.getElementById('rangekacheln'),
   kachelOpts: { artDatum: true, knapp: true },
   sortKey: 'day', sortAsc: true,
+  /* HOECHSTENS 200 ZEILEN AUF EINMAL (Web 21.4.0, R4-17, Nr. 37, E-R4-16) —
+     dieselbe Grenze wie in der Suche. Bis hierher zeichnete diese Seite
+     jede Zeile des Zeitraums: Der Messstand brauchte für ein Jahr mit
+     rund 4000 Einsätzen 42 s bis 88 s bis zur ersten Zeile, je nach
+     Rechner, und die Suche über den ganzen Bestand daneben keine 6 s.
+     Begrenzt ist nur die TABELLE (und unter 720 px die Kacheln). Die
+     Kopfzahl, die km-Summe, die Statistik-Kacheln und die Karte rechnen
+     weiter über den ganzen Zeitraum — die Karte zeichnet alle Pins, auch
+     die der Zeilen, die noch nicht dastehen. Das ist Absicht: Der Zeitraum
+     ist der Rahmen, die Tabelle nur seine Liste. */
+  seite: 200,
   /* Das mobile Sortierblatt und seine Beschriftung baut seit Schritt 15
      AP9b das Modul. Hier standen 22 Zeilen, die in suche.php zeichengleich
      noch einmal standen — und ein Klick darin stellte um, ohne dass sich
@@ -579,7 +594,10 @@ const tabelle = EdMissionTable.erzeuge({
     /* Kopf der Einsatzkarte: Zahl und km-Summe (Mockup 29/31). Anders als auf
        der Suchseite steht hier NIE „n von m": Der Zeitraum ist der Rahmen,
        nicht ein Filter über einem größeren Bestand — die Artenwahl daneben
-       sagt schon, welcher Ausschnitt gemeint ist. */
+       sagt schon, welcher Ausschnitt gemeint ist. Seit der Seitengrenze
+       (Web 21.4.0) steht wie dort „200 angezeigt" dahinter, sobald die
+       Tabelle weniger zeigt, als der Zeitraum hat: Zahl und Summe bleiben
+       die des ganzen Zeitraums, und das soll man nicht raten müssen. */
     const km = zeilen.reduce((sum, m) => sum + (m.distance_m || 0), 0);
     const teile = [String(gesamt)];
     /* Ganze Kilometer, wie in der Suche: Die Summe über Dutzende Einsätze auf
@@ -588,6 +606,7 @@ const tabelle = EdMissionTable.erzeuge({
        hier, weil die Zentrale die nackte Zahl liefert. Kein Leerwert: `km`
        ist eine Summe und steht hinter `km > 0`. */
     if (km > 0) { teile.push(EdFormat.kmSumme(km) + ' km'); }
+    if (gezeigt < gesamt) { teile.push(`${gezeigt} angezeigt`); }
     document.getElementById('einsatzzahl').textContent = teile.join(' · ');
 
     wendeHervorhebungAn(fixierteMid);
@@ -658,8 +677,47 @@ function zeichneSegment(){
   });
 }
 
-/** Alles neu zeichnen, was am Tab haengt: Kacheln, Tabelle, Karte, Hinweis. */
-function zeichne(){
+/* IN STUECKEN ZEICHNEN (Web 21.6.1, R4-27, Nr. 37, E-R4-64). Ein Jahr mit
+ * 4071 Einsaetzen war EINE Aufgabe von 2,7 bis 3,8 s (Messstand, Drossel 6×):
+ * erste Zeichnung, Entschluesseln aller Einsaetze, zweite Zeichnung mit
+ * Tabelle, Statistik und 4071 Pins. So lange stand die Seite — die erste
+ * Zeile war laengst im DOM, aber nicht zu sehen, und kein Klick kam an.
+ * Jetzt darf der Browser vor und nach dem Entschluesseln ein Bild zeichnen,
+ * und die Karte kommt jedes Mal ein Bild nach der Tabelle. Keine Aufgabe dauert
+ * mehr laenger als rund 0,7 s, und die Tabelle ist nach 3,7 s statt 5,8 s
+ * zu sehen (Median aus fuenf Laeufen). DER PREIS: Fertig ist die Seite rund
+ * 0,7 s spaeter (7,0 statt 6,3 s) — die Bilder dazwischen kosten Zeit. Das
+ * ist gewollt (E-R4-64): Wer die Seite oeffnet, will zuerst die Liste.
+ *
+ * `setTimeout(…, 100)` DANEBEN, weil ein Tab im Hintergrund kein Bild
+ * zeichnet und `requestAnimationFrame` dort nie feuert — die Seite stuende
+ * sonst still, bis jemand hinsieht. */
+function naechstesBild(){
+  return new Promise(weiter => {
+    let fertig = false;
+    const los = () => { if (!fertig) { fertig = true; setTimeout(weiter, 0); } };
+    requestAnimationFrame(los);
+    setTimeout(los, 100);
+  });
+}
+
+/* DIE KARTE EIN BILD SPAETER — und nur die letzte, die bestellt ist. Wechselt
+ * der Tab in der Luecke, zeichnet zeichne() die Karte der neuen Ansicht
+ * sofort; die bestellte kaeme danach und legte die Pins der alten darueber.
+ * Der Zaehler verwirft sie. Die Hervorhebung einer Extremwert-Kachel geht
+ * auf die neuen Pins mit: onAfterDraw hat sie auf die alten gelegt. */
+let kartenLauf = 0;
+async function karteNachBild(liste){
+  const lauf = ++kartenLauf;
+  await naechstesBild();
+  if (lauf !== kartenLauf) { return; }
+  zeichneKarte(liste);
+  if (fixierteMid != null) { wendeHervorhebungAn(fixierteMid); }
+}
+
+/** Alles neu zeichnen, was am Tab haengt: Kacheln, Tabelle, Karte, Hinweis.
+ *  `{ karteDanach: true }`: die Karte erst nach dem naechsten Bild. */
+function zeichne(o){
   const liste = gefiltert();
   zeichneSegment();
   zeigeNeutralHinweis();
@@ -680,7 +738,8 @@ function zeichne(){
     ? { winch: false, bergwacht: false } : faehig);
   tabelle.setData(liste);
   zeichneStatistik(liste, tageDerAnsicht());
-  zeichneKarte(liste);
+  if (o && o.karteDanach) { karteNachBild(liste); }
+  else { zeichneKarte(liste); }
 }
 
 /* Karte neu bestuecken. Die Pins entstehen erst nach dem Entschluesseln —
@@ -690,6 +749,7 @@ function zeichne(){
  * Bildschirmposition, und ein spaeteres setStyle() aus der Hervorhebung
  * scheiterte daran ("this._point is undefined"). */
 function zeichneKarte(liste){
+  kartenLauf++;               // eine noch bestellte Karte ist damit ueberholt
   pinLayer.clearLayers();
   missions.forEach(m => { m._marker = null; });
   const bounds = [];
@@ -838,11 +898,14 @@ function zeigeFehler(msg){
   document.getElementById('untertage').textContent =
     tageGesamt === 1 ? '1 Diensttag' : tageGesamt + ' Diensttage';
 
-  zeichne();
+  zeichne({ karteDanach: true });
   // Die Ansicht von Anfang an ins Fragment schreiben, nicht erst beim ersten
   // Wechsel: Sonst zeigte ein sofort kopierter Link auf keine bestimmte.
 
-  if (PAT_WRAP) { await entschluesselePat(); }
+  if (PAT_WRAP) {
+    await naechstesBild();   // die Tabelle erscheint, bevor alles entschluesselt wird
+    await entschluesselePat();
+  }
 })();
 
 /* Geschuetzte Angaben nachtragen. Ist der Inhaltsschluessel gesperrt, bietet
@@ -876,8 +939,10 @@ async function entschluesselePat(){
   /* Immer neu zeichnen: Die Tabelle hat jetzt Ort, Alter und Diagnose, und
      die Karte ihre Pins. Ein „nur wenn sich etwas geaendert hat" waere hier
      eine zweite Buchfuehrung ueber dieselbe Schleife — die Ersparnis ist ein
-     Neuaufbau der Tabelle, den niemand bemerkt. */
-  zeichne();
+     Neuaufbau der Tabelle, den niemand bemerkt. Zwischen Entschluesseln,
+     Tabelle und Karte zeichnet der Browser je ein Bild (naechstesBild()). */
+  await naechstesBild();
+  zeichne({ karteDanach: true });
 }
 
 document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());

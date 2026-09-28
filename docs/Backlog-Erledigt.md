@@ -10,7 +10,9 @@ fortgeschrieben — was sich nach der Erledigung noch ändert, ist ein neuer
 Punkt in `Backlog.md`. Der Abschnitt *Erledigt* unten ist der aus
 `docs/Backlog.md@f5bddc2`, Zeile für Zeile; seine Einrückung mit vier
 Leerzeichen bleibt, samt ihrer Folge auf GitHub (Nr. 196) — wer hier liest,
-liest die Quelle.
+liest die Quelle. Die Trennzeile, die in `Backlog.md` vor jedem Eintrag
+steht, kommt nicht mit (E-R4-62): Hier zählt GitHub die Nummern fort
+(Nr. 340); es gilt die Nummer im Text.
 
 ## Werdegang der Nummernvergabe
 
@@ -8145,3 +8147,1006 @@ zutreffen.
      Erledigt 26.09.2026: SD-01 bis SD-04 gemergt (PR #92, `056781c`),
      Erledigt-Zeile in Rahmenplan 8, Konzept gelöscht; damit sind Nr. 177,
      193, 196 und 199 erledigt.
+
+140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.** · gehört zu: 17 · Stand: erledigt · seit 06.09.2026
+     Befund (Krypto-Review K-16): Die FTPS-Action deployte jeden Push mit
+     Zugangsdaten aus Secrets; jedes Konto mit Push-Recht konnte `crypto.js`
+     ändern und Passwörter beim nächsten Anmelden abgreifen — der eine
+     Angriff, gegen den keine Browser-Verschlüsselung hilft. Seit S10 wiegt
+     er schwerer: Wer `server/` beschreiben kann, liefert den Server-Anteil
+     aus `config.php` mit aus (R78 (1)).
+     Entschieden (R78): Zweigschutz und 2FA sofort als Zuarbeit, das
+     Deploy-Tor mit dem Staging-Aufbau (R40 (2), nicht S10), die
+     Integritätswache im Sofortpaket.
+     Erledigt: die Wache (Web 15.6.0, `tools/integritaetswache/`,
+     `integritaet.yml`, täglich und nach jedem Deploy; 112 Dateien, ein
+     Inline-Block, ohne eingecheckte Prüfsummen); das Deploy-Tor (Web 20.4.0,
+     R67: Push auf `main` geht auf Staging, Produktiv nur über Tag und
+     Pflichtfreigabe); der Zweigschutz für `main` (21.09.2026, Rahmenplan
+     6b) und der 2FA-Zwang in der GitHub-Organisation (Durchsicht der
+     Betreiberin 26.09.2026, E-SD-34).
+     Offen ist damit nichts mehr als die Verschiebung nach Erledigt, die
+     Konzept SD nicht vornimmt; die Backlog-Runde holt sie nach.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 140.
+     Erledigt 26.09.2026 mit R4-01 (Konzept R4, F-R4-07): Wache, Deploy-Tor,
+     Zweigschutz und 2FA-Zwang stehen (F-SD-06); offen war nur noch diese
+     Verschiebung.
+
+172. **Eine Erwartung der Wartungsprobe flackert.** · gehört zu: 17 · Stand: erledigt · seit 12.09.2026
+     Befund (Web 19.1.2): Erwartung 15 („das 503 kommt schneller als die
+     Antwort ohne Wartung") vergleicht zwei Einzelmessungen mit `<` ohne
+     Spielraum; örtlich liegen beide bei rund 71 ms, und drei Läufe ergaben
+     0, 1, 0 nicht erfüllte Erwartungen (71,7 gegen 71,6 ms). Eine Probe,
+     die jeden dritten Lauf grundlos rot wird, liest nach dem dritten Mal
+     niemand mehr — und sie ist die einzige rote Zahl eines grünen Laufs.
+     Weg: mehrfach messen und Mediane vergleichen, oder die Erwartung
+     strukturell stellen — `wartung_tor()` steht in `db.php` vor jedem
+     Verbindungsaufbau, und das prüft man am Code, nicht mit der Stoppuhr.
+     Abnahme: zehn Läufe hintereinander, zehnmal dieselbe Zahl.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 172.
+     Erledigt 26.09.2026 mit R4-01 (Konzept R4, F-R4-07): Die Wartungsprobe
+     vergleicht seit P5c/AP9 den Median aus fünf Messungen (F-P5c-165,
+     `3258916`); die Nummer wurde damals nicht genannt.
+
+216. **Zwei Trennlinien hintereinander an vier Stellen des P5a-Prüfdokuments.** · gehört zu: 17 · Stand: erledigt · seit 16.09.2026
+     *Aufgenommen 16.09.2026, gleiche Durchsicht.*
+     Rein kosmetisch: `---` gefolgt von `---` erzeugt in manchen
+     Markdown-Darstellungen eine doppelte Linie, in anderen eine Überschrift.
+     Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
+     Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
+     Erledigt 26.09.2026 mit R4-01 (Konzept R4, F-R4-07): Das
+     P5a-Prüfdokument ist mit `f6cb5fd` gelöscht; in `docs/` stehen 0
+     doppelte Trennlinien (nachgemessen am 26.09.2026).
+
+295. **Der Messstand hat keinen Schritt für die Statistik.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-40), als Anlass nach der
+     Zuarbeit von Konzept BR (E-BR-07).* `tools/messstand/` misst die Seiten,
+     die es kennt; die Statistik ist keine davon, und das Konto `messstand@…`
+     fehlte auf der örtlichen Anlage (seit AP4 legt der Prüfstand es über
+     `messen.py --frisch` selbst an, F-P5c-104). 10c AP7 baut die Statistik auf eine
+     Zählung mit Obergrenze und einen neuen Index `missions(started_at)` um —
+     ohne Messstand-Schritt gäbe es für die Zeiten keinen Beleg, nur ein
+     `EXPLAIN` von Hand. *Weg:* Schritt `statistik` im Messstand (drei Reiter
+     und `EXPLAIN`, Sitzung der BetreiberIn; fehlt das Konto, legt AP7 es nach
+     E-PK-27 an). **Zuordnung: 10c AP7.**
+     Erledigt 26.09.2026 mit R4-01 (Konzept R4, F-R4-07): Der Messstand hat
+     seit P5c/AP7 den Schritt `statistik` (`schritt_statistik()` in
+     `tools/messstand/messen.py`, `d519fac`); die Nummer wurde damals nicht
+     genannt.
+
+301. **`Sandbox-Setup.md` 1 sagt, Firefox und WebKit starten im Container nicht — sie starten.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     Befund (Konzept RW, F-RW-02; Playwright 1.56): Firefox 142 und WebKit
+     26 starten, laden eine Seite über `localhost` und rechnen WebCrypto;
+     RW-04 hat die Rückwegprobe in beiden gefahren. Die Tabelle „Nicht im
+     Abbild" nennt ihre Systembibliotheken als fehlend (Nr. 183); das gilt
+     nicht mehr. Dabei gemessen (F-RW-23): Gegen `php -S` mit einem Arbeiter
+     blieb WebKit in 2 von 4 Läufen beim zweiten Anmelden 90 s ohne
+     Navigation, mit `PHP_CLI_SERVER_WORKERS=4` 3 von 3 grün.
+     Erledigt (P5c/AP11, 25.09.2026): `hochfahren.sh` startet den Server
+     mit vier Arbeitern (`lokal_starten.sh`, `lokal_einrichten.sh`, auch im
+     Behälter für PHP 8.3) — Anlass war die Bedienprobe
+     (`net::ERR_TOO_MANY_RETRIES`), nicht WebKit.
+     Offen: die Zeile in `Sandbox-Setup.md` 1 berichtigen und datieren,
+     Nr. 183 nachsehen; ob der Bilderlauf in `haupt` alle drei Motoren
+     fahren kann, gehört zu Nr. 300.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 301.
+     Erledigt 26.09.2026 mit R4-01: Die Zeile in `Sandbox-Setup.md` 1 nennt
+     jetzt die vier Bibliotheken für WebKit — nachgemessen: ohne sie startet
+     Firefox, WebKit nicht; mit ihnen alle drei. Nr. 183 ist erledigt; drei
+     Motoren im Bilderlauf der Stufe haupt bleiben bei Nr. 300.
+
+329. **Der Prüfstand fährt die Quelltextprüfungen mit eingerichteter Anlage, Stufe 1 ohne.** · gehört zu: 17 · Stand: erledigt · seit 25.09.2026
+     Befund (P5c/AP11, F-P5c-171): Die Ankerprüfung lud `doku_lib.php`, die
+     lud `db.php`, das ohne `config.php` abbricht — im Prüfstand grün, im
+     ersten Lauf auf dem Pull Request rot, nach sechs Läufen des
+     Prüfstands. Zweiter Fall derselben Lücke (F-P5c-172): `anker` stand
+     als Riegel in `pruefablauf.json`, aber nicht als `--riegel` im Schritt
+     „Prüfbericht gegenlesen" von `pruefung.yml`; `--alle-riegel` war im Tor
+     rot, örtlich fährt den Schritt niemand.
+     Erledigt: die eine Stelle (`doku_lib.php` braucht `db.php` nicht,
+     Web 21.1.2). Offen ist die Lücke: Jedes künftige Quelltextwerkzeug,
+     das eine Serverbibliothek mit `db.php` lädt, ist örtlich grün und im
+     Tor rot.
+     Weg: Der Prüfstand fährt `quelltext pruefen.sh --selbstprobe` und
+     `alle` mit beiseitegelegter `config.php` — so, wie das Tor sie sieht —
+     und `bericht.py lesen --alle-riegel` mit genau den `--riegel`, die
+     `pruefung.yml` übergibt. Abnahme: mit dem Stand vor 21.1.2 zweimal rot
+     (`anker`, fehlende Übergabe), mit dem heutigen grün.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 329.
+     Erledigt 26.09.2026 mit R4-02 (Konzept R4): Der Bestandsriegel hat die
+     Regeln `anlage` (keine Probe ohne Anlage lädt db.php oder config.php)
+     und `tor` (jeder Riegel steht als --riegel im Tor); mit dem Stand vor
+     Web 21.1.2 beide rot, heute 0; Selbstprobe 155 / 0.
+
+332. **Nach dem Aufnehmen fremder Migrationen misst der Prüfstand gegen das alte Schema.** · gehört zu: 17 · Stand: erledigt · seit 26.09.2026
+     Befund (Konzept BV, F-BV-17, beim Aufnehmen von `main` nach P5c):
+     `Pruefablauf.md` 5.3 misst nur, was die Arbeit gegen `main` ändert,
+     nicht, was `main` mitbringt (F-PK-39); ohne eigene Migration ist die
+     Stufe `klein`, und die Anlage wird nur gestartet, nicht nachgezogen.
+     Mit P5c kamen Migrationen aus fünf Paketen, die Anlage stand auf dem
+     Schema davor; `login.php` antwortete 200 mit „Fassung v21.1.2", der
+     Nachweis sah nichts. Gemessen: Rollenprobe rot mit `Data truncated for
+     column 'role'` (Rolle `support` fehlte im `ENUM`), nach
+     `hochfahren.sh --neu` 20 grün, 0 rot. Diesmal laut — eine Probe, die
+     die neuen Spalten nicht berührt, misst still gegen einen Stand, den es
+     nirgends gibt, und ein grüner Bericht trägt einen Baum, den die Anlage
+     nie hatte.
+     Weg: `pruefen.sh` fragt vor den Proben, ob die Anlage offene
+     Migrationen hat (dieselbe Frage wie der Torwächter), und ist bei
+     Rückstand rot mit dem Weg (`hochfahren.sh --neu`) — oder richtet neu
+     ein; dazu ein Satz in `Pruefablauf.md` 5.3, Schritt 2. Abnahme: Anlage
+     auf `ba2ec57`, Baum mit `main` von `29cf394` → rot vor der ersten
+     Probe, mit Ansage; nach `--neu` grün.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 332.
+     Erledigt 26.09.2026 mit R4-02 (Konzept R4): `hochfahren.sh` fragt nach
+     dem Start migrationen_lauf() ohne Ausführen und ist bei jeder offenen
+     Migration rot, mit Kennung und Weg (--neu oder update.php); gestellt
+     mit einer entfernten Registerzeile: rot, rc 1; zurückgesetzt: 0 offen.
+     Ein Satz in Pruefablauf.md 5.3, Schritt 2.
+
+335. **Der Prüfstand erkennt die Ausbaustufe `android` an der falschen Plattform.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-07, E-AR-12).*
+     `tools/pruefstand/pruefen.sh` prüft vor dem `android-bau`, ob
+     `platforms/android-36` liegt. Seit Android 0.16.0 baut die App gegen
+     **37.0**; die Zeile ist grün, wenn 36 liegt und 37.0 fehlt, und rot, wenn
+     es umgekehrt ist. `tools/sandbox/aufbauen.sh android` installiert
+     deshalb beide Plattformen, damit die Erkennung nicht fehlschlägt — das
+     ist eine Krücke, keine Messung.
+     *Weg:* die Erkennung an die Plattform hängen, die der Bau braucht (am
+     besten aus `compileSdk` gelesen statt fest geschrieben), dann Plattform
+     36 aus `aufbauen.sh` streichen. *Abnahme:* ohne `android-37.0` meldet
+     der Prüfstand „Ausbaustufe android fehlt". **Zuordnung: nach dem Merge
+     von P5c**, zusammen mit Nr. 334.
+     Erledigt 26.09.2026 mit R4-02 (Konzept R4): `pruefen.sh` liest
+     compileSdk aus android/handy/build.gradle.kts; `aufbauen.sh android`
+     holt nur noch 37.0. Mit beiseitegelegter 37.0 meldet der Prüfstand
+     „Ausbaustufe android fehlt (Plattform android-37 aus compileSdk)".
+
+339. **Eine Nummernspanne, die nur auf dem eigenen Zweig steht, sieht niemand — der Prüfstand soll neue Nummern gegen alle offenen Zweige halten.** · gehört zu: 17 · Stand: erledigt · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit dem Abschluss von Konzept BV (Q-BV-05,
+     E-BV-19).* Zweimal an einem Tag ist eine Nummer aus der Spanne von BV
+     auf `main` kollidiert (F-BV-14: 329 durch P5c/AP11; F-BV-18: 330 durch
+     PR #91), ohne dass jemand eine sichtbare Regel verletzt hätte: Der
+     Kopf des Backlogs verlangt, die Spanne vor dem ersten Push einzutragen
+     (E-SD-21) — eingetragen wird sie aber auf dem eigenen Zweig, und „auf
+     allen offenen Zweigen nachsehen" ist ein Blick, den kein Werkzeug
+     abnimmt. Jede Kollision kostet das Umnummerieren samt Verweisen in
+     Konzept, Prüfdokument und Werkzeugen, und sie fällt erst beim
+     Aufnehmen von `main` auf, also spät.
+     *Weg:* Der Prüfstand (`tools/pruefstand/pruefen.sh`) ermittelt die
+     Backlog-Nummern, die der Zweig gegen `origin/main` neu anlegt, holt
+     `docs/Backlog.md` aller offenen Remote-Zweige (`git fetch`, dann
+     `git show <zweig>:docs/Backlog.md`) und ist bei einer Überschneidung
+     rot — örtlich, weil Stufe 1 die anderen Zweige nicht sieht.
+     *Abnahme:* Eine Nummer, die ein zweiter Zweig schon trägt, färbt den
+     örtlichen Lauf rot und nennt Zweig und Nummer; eine Selbstprobe stellt
+     die Doppelung nach.
+     Erledigt 26.09.2026 mit R4-03 (Konzept R4): tools/steuerung/nummern.py
+     hält die neuen Nummern des Arbeitsbaums gegen origin/main und alle
+     Remote-Zweige (je gegen den Vorfahren mit main, beide Backlog-Dateien)
+     und nennt Zweig und Nummer; Probe nummern im Muster steuerung, nur
+     örtlich; Selbstprobe 8 / 0 mit gestellter Doppelung.
+
+322. **Welche Probe der Demo-Reset trifft, entscheidet die Reihenfolge der Muster.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 in P5c/AP7 (F-P5c-127), gemessen.* Der
+     Demo-Bestand wird alle 30 Minuten neu eingespielt, und seine Einsätze
+     bekommen neue Kennungen. Ein Prüfstand der Hauptstufe dauert rund 39
+     Minuten; der Reset fällt also in jeden Lauf. Wen er trifft, hängt davon
+     ab, welche Probe um diese Zeit läuft — und die Reihenfolge der Proben ist
+     die ihres ersten Auftretens in den Mustern von `pruefablauf.json`. Ein
+     neues Muster weit vorn mit Messstand und Bilderlauf (AP7) schob die
+     Bedienprobe (51 / 55) und die GPX-Probe (204 von 204 ohne Gegenstück)
+     hinter die Marke; am Ende eingereiht, liefen beide grün. **Die
+     Reihenfolge ist damit eine Voraussetzung, die nirgends steht**, und wer
+     ein Muster ergänzt, verschiebt sie, ohne es zu merken.
+
+     *Weg:* entweder der Prüfstand hält den Demo-Reset für die Dauer des
+     Laufs an (eine Marke, die der Job liest, wie die Sperre des Demo-Resets
+     in F-P5c-117), oder `pruefablauf.json` bekommt eine ausdrückliche
+     Reihenfolge der demo-empfindlichen Proben (`nach`), und `auswahl.py
+     --selbstprobe` prüft sie. *Abnahme:* ein Muster mit Messstand ganz vorn,
+     der Prüfstand bleibt grün. **Zuordnung: Backlog-Runde** (Prüfmittel).
+     Erledigt 26.09.2026 mit R4-04 (Konzept R4): Proben, die das Demo-Konto
+     anmelden oder Demo-Daten über ihre Kennungen lesen, tragen in
+     pruefablauf.json "demo": true (sieben, F-R4-24); der Prüfstand schiebt
+     vor jeder die Marke des letzten Resets und stellt sie am Ende zurück —
+     die Reihenfolge der Muster ist keine Voraussetzung mehr. Abnahmelauf
+     Stufe neben: Zahlen im Prüfdokument R4.
+
+334. **Die Prüfwerkzeuge der Android-App hängen an keinem Lauf.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-05, E-AR-12).*
+     `android/werkzeuge/kontraste.py`, `farbabgleich.py`, `bildmarken.sh` und
+     `stroeme.py` werden von keinem Workflow, keinem Aufruf in
+     `tools/pruefstand/pruefen.sh` und keiner Zeile in
+     `tools/pruefstand/pruefablauf.json` gerufen — gezählt am 24.09.2026:
+     0 Treffer außerhalb von `android/werkzeuge/`. Der Riegel `kontraste` im
+     Tor ist das Web-Werkzeug `tools/screenshots/kontrast.py`. Was Nr. 116 an
+     `kontraste.py` verbessert hat (Vollständigkeit je Modul und Rolle, mit
+     Selbstprobe), läuft also nur, wenn jemand daran denkt.
+     *Weg:* die vier unter das Muster `android/**` in `pruefablauf.json`
+     hängen (sie brauchen nur Python und die Quellen, `braucht: nichts`),
+     `kontraste.py --selbstprobe` dazu. Nicht in AR, weil
+     `tools/pruefstand/` während P5c dessen Gebiet ist.
+     *Abnahme:* eine Berührung unter `android/` wählt die vier im Prüfstand
+     aus, der Bericht nennt ihre Zahlen. **Zuordnung: nach dem Merge von P5c**,
+     von der Instanz, die `main` aufnimmt, oder der nächsten Backlog-Runde.
+     Erledigt 26.09.2026 mit R4-04 (Konzept R4): android-kontraste (mit
+     Selbstprobe), -farbabgleich, -bildmarken und -stroeme am Ende des
+     Musters android, die letzten zwei im Prüfmodus; farbabgleich und
+     bildmarken dazu im Muster android-quellen (style.css, Bildmarken im
+     Web). Von Hand gefahren: alle vier grün, git status android/ danach
+     leer.
+
+36. **Ein Prüfmittel für Klassennamen, die JavaScript sucht und niemand mehr vergibt.** · gehört zu: 17 · Stand: erledigt · seit 30.08.2026
+     Befund: Ein Selektor, der ins Leere greift, ist in JavaScript kein
+     Fehler, sondern eine leere Liste — in P3/O6 wirkte deshalb drei Pakete
+     lang kein Filter der Suchseite (`.filterspalte` war beim Umzug in die
+     Leiste verschwunden, F-P3-AG). Dieselbe Lücke von der anderen Seite:
+     Töne, die PHP zur Klasse zusammensetzt (`'plakette-' . $ton`), gab es
+     viermal ohne Regel im Stylesheet (`warn`, zweimal `ok`, `info`).
+     Wirkung: Die Seite sieht fast richtig aus; kein Mittel meldet es.
+     Weg: Die billige Hälfte ist gebaut (P5b/AP9, Web 20.24.0):
+     `tools/quelltext/vollstaendigkeit.py` hält die Werte von `ui_plakette`,
+     `ui_knopf`, `ui_kennzahl` und `ui_meldung_markup` gegen das Stylesheet,
+     Gegenprobe mit beiden Fehlern gefahren. Offen ist die andere Hälfte:
+     Klassennamen, die JavaScript in Selektoren nennt, und Töne, die als
+     Variable übergeben werden — dafür braucht es eine Ausnahmeliste mit
+     Begründung (Klassen, die JS selbst vergibt; zusammengesetzte Selektoren
+     sind statisch nicht auflösbar), keine Ja/Nein-Regel.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 36.
+     Erledigt 26.09.2026 mit R4-05 (Konzept R4, Web 21.1.4):
+     vollstaendigkeit.py hat die sechste Prüfung Selektoren (59 Klassen in
+     27 Dateien, 0 Befunde, 2 Leaflet-Klassen mit Grund in
+     vollstaendigkeit-selektoren.md) und liest bei Tonübergaben auch die
+     Zweige einer Bedingung und die Vorgabe im Baustein (383 geprüft, 12
+     ohne Literal als Hinweis). Gegenproben: erfundener Selektor rot,
+     entfernte Regel kennzahl-orange rot (über eine Bedingung übergeben).
+
+331. **Zusammengesetzte Klassen der übrigen Bausteine sieht die Vollständigkeitsprüfung nicht.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 in Konzept BV (BV-03, F-BV-11), notiert und nicht
+     mitgemacht.* BV-02 hat die Meldungstöne aufgelöst (Nr. 274): Ihre Liste
+     ist geschlossen und steht in zwei Bausteinen. Dieselbe Grenze trifft
+     andere Klassen, die zur Laufzeit entstehen. *(Hier stand als Beispiel
+     `c-dc-<spalte>` — die Gegenprüfung P-BV-02 hat gezeigt, dass diese Klasse
+     zwar erzeugt, aber an kein Element gesetzt wird; ein Mittel müsste genau
+     das unterscheiden.)* Von den 62 Hinweisen „Regel im Stylesheet, im Markup
+     nicht gefunden" (gemessen 24.09.2026) tragen **28** das Präfix eines
+     Bausteins (`symbol-` 9, `pwq-` 5, `kennzahl-` 4, `karte-` 3, `blatt-` 2,
+     `knopf-` 2, `zaehler-` 2, `plakette-` 1) — vermutlich zusammengesetzt,
+     nicht einzeln geprüft. Verschwände eine dieser Regeln, meldete es nur die
+     Tonprüfung am Aufruf — und die kennt vier Bausteine, und auch die nur
+     dort, wo der Wert als Literal übergeben wird. *Weg:* je Baustein prüfen,
+     ob sein Wertevorrat geschlossen ist; wo ja, wie in BV-02 lesen, wo nein,
+     bleibt es beim Hinweis. **Zuordnung: Backlog-Runde** (Prüfmittel).
+     Erledigt 26.09.2026 mit R4-05 (Konzept R4): pruefung_klassen() liest
+     Klassen an Klassen-Stellen (Option klasse, Symbol-Zusatzklasse,
+     Leaflet-Behälter, Zweig einer Bedingung u. a.) und zusammengesetzte aus
+     geschlossenem Vorrat (Tonübergaben, pwq- aus STUFEN); Hinweise 73 → 13,
+     jeder benannt, die sechs ohne Verwender als Nr. 341. Gegenprobe:
+     entfernte Regel pwq-2 rot.
+
+170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.** · gehört zu: 17 · Stand: erledigt · seit 10.09.2026
+     Befund (zwei Rückmeldungen zu Web 19.1.0, behoben mit 19.1.1): AP7
+     zählte 8 Schlösser und 9 Kleinzeilen, und die Zahlen stimmten — das
+     Schloss fehlte trotzdem an der Einsatznummer (Leseansicht) und an der
+     Karte „Notizen" (Formular). Eine Zählung ohne Sollmaß bestätigt ihre
+     eigene Liste und findet keine fehlende Zeile darin.
+     Weg: eine Probe, die Formular und Leseansicht aufruft und für jedes
+     Feld prüft, ob das erwartete Zeichen an der erwarteten Stelle steht —
+     „8 von 8" statt „8". Das Sollmaß ist noch zu bestimmen (13.09.2026):
+     Der Feldkatalog trägt nur ein Feld mit `'store' => 'pat'` (`notes`) und
+     drei mit `'hinweis'`; die acht Schlösser der Karte „PatientIn" sind
+     handgeschriebene `dtGeschuetzt()`-Aufrufe in `einsatz.php` und stehen in
+     keinem Katalog.
+     Abnahme: Die Probe wird rot, wenn ein `dtGeschuetzt()` in `einsatz.php`
+     durch einen nackten String ersetzt wird.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 170.
+     Erledigt 26.09.2026 mit R4-06 (Web 21.1.5): Riegel kennzeichnung gegen
+     die Sollliste tools/quelltext/kennzeichnung-soll.md, 20 von 20
+     Kennzeichen (zehn Felder, Formular und Leseansicht), 9
+     Klartext-Freitextfelder mit Kleinzeile; Selbstprobe 8 von 8. Die Probe
+     liest Quelltext statt die Seiten aufzurufen, damit sie im Tor läuft.
+     Abnahme: dtGeschuetzt('Einsatznummer') durch den nackten String ersetzt
+     → rot mit Feld und Datei. Ihr erster Lauf fand den manuellen Abfahrtort
+     ohne Zeile in der Leseansicht; behoben im selben Paket (E-R4-25).
+
+318. **`pysyntax` sieht ungültige Escape-Folgen nicht, und zwei Werkzeuge tragen welche.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 mit dem Abschluss von Konzept BR,
+     gefunden beim Belegen von P-BR-01 im Log des PR-Laufs 36037964804.* Im Tor
+     meldet Python (ab 3.12) `SyntaxWarning: invalid escape sequence` für
+     `tools/kettenaufrufe/pruefen.py:247` (`` \` `` im Docstring von
+     `pruefe_block()`) und `tools/referenzdatensatz/generator/erzeugen.py:94`
+     (`\d`), und `pysyntax` zählt trotzdem „57 Python-Werkzeuge geprüft, 0 mit
+     Syntaxfehler". Örtlich (Python 3.11) ist es nur eine unterdrückte
+     `DeprecationWarning`. Gemessen mit `python3 -W error`: **2 von 60**
+     versionierten Python-Dateien. Beide Stellen sind älter als BR (Nr. 217
+     und S4). Eine künftige Python-Fassung macht daraus einen
+     `SyntaxError`, und dann bricht das Werkzeug ab, statt zu prüfen.
+
+     *Weg:* beide Zeichenketten roh schreiben oder den Rückstrich
+     verdoppeln; `pysyntax` übersetzt mit Warnungen als Fehler
+     (`SyntaxWarning` und `DeprecationWarning`) und bekommt dafür einen Fall
+     in seiner Selbstprobe. *Abnahme:* die Selbstprobe rot mit einer Datei,
+     die `"\d"` enthält; `pysyntax` im Tor ohne Warnung. Klein, kein Risiko
+     für die Anwendung. **Zuordnung: Backlog-Runde** (Vorschlag; oder das
+     nächste Paket, das `tools/quelltext/` anfasst).
+     Erledigt 26.09.2026 mit R4-07: pysyntax übersetzt zweimal — wie Python
+     selbst und mit Warnungen als Fehler — und nennt beide Zahlen; 62
+     Python-Werkzeuge, 0 Syntaxfehler, 0 Warnungen. Die neue Prüfung fand
+     vor dem Rohschreiben 3: die zwei Docstrings aus dem Befund und den
+     neuen Kopf von pysyntax selbst. Selbstprobe 4/0 mit einer Datei, die
+     "\d+" enthält.
+
+116. **Das Kontrastwerkzeug misst nur, was in seiner Paarliste steht.** · gehört zu: 17 · Stand: erledigt · seit 03.09.2026
+     Befund (S5 Paket E1, B-S5Z-13/-15): Ein Farbpaar, das nicht in der
+     festen Liste steht, wird nicht gemessen und meldet keinen Fehler — so
+     standen zwei Paare unter dem Zielwert, ohne dass ein grüner Lauf etwas
+     sagte (Rückstand-Punkt 2,23 : 1, „wartet aufs Handy" 4,12 : 1).
+     Erledigt für Android (Konzept AR, 0.16.0, E-AR-09, 24.09.2026):
+     `android/werkzeuge/kontraste.py` prüft die Vollständigkeit je Modul und
+     Rolle (Schrift, Zeichen, Linie, Fläche) mit Selbstprobe; der erste Lauf
+     fand dieselben zwei Kontraste, beide behoben. Das Werkzeug hängt an
+     keinem Lauf (Nr. 334).
+     Offen für das Web: dieselbe Frage für `tools/screenshots/kontrast.py` —
+     Paare aus dem Quelltext ableiten, oder eine Vollständigkeitsprüfung, die
+     im Code vorkommende Token-Paare ohne Listeneintrag meldet (billiger,
+     fängt denselben Fehler). Zurückgestellt war es, solange P5c die Datei
+     änderte; P5c ist gemergt, der Weg ist frei.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 116.
+     Erledigt 26.09.2026 mit R4-08 (Web 21.1.6): kontrast.py leitet die
+     Paare aus den Regeln von style.css ab; jedes Paar derselben Regel und
+     jede allein stehende Farbe steht in PAARE oder AUSNAHMEN, sonst rot.
+     Erster Lauf 14 ohne Eintrag: 8 in die Liste (alle über dem Sollwert),
+     der Strich am Vorschlag (2,09:1) auf --orange-tief gesetzt, 5 Ausnahmen
+     mit Grund, darunter der Hover des Primärknopfs (4,42:1, E-R4-30).
+     Danach 33 Paare, 0 verfehlt, 32 abgeleitet, 0 ohne Eintrag; Selbstprobe
+     4/0 mit den zwei alten Fehlern im Web.
+
+321. **Der Stilvergleich meldet unveränderte Stile als ungeplant, sobald eine andere Seite Elemente dazubekommt.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     Befund (P5c/AP7, F-P5c-126, gemessen): AP7 baute die Statistikseite um
+     und ergänzte eine CSS-Regel; `gegen.sh` meldete 38 ungeplante
+     Signaturen und 31 geplante, nicht gemessene — 23 davon an den
+     Druckblättern aus AP5, die AP7 nicht anfasst. Gegenproben: neue Regel
+     mit alter Statistikseite genau eine ungeplante, sauberer Stand 0 / 0.
+     Die Signaturen hängen an der Nachbarschaft eines Elements in
+     `seiten.html`: Eine wachsende Seite verschiebt die Stückelung
+     (`chunks.py`), und dasselbe Element bekommt eine andere
+     Eigenschaftsliste. AP7 ist über `--schreiben` gelöst (139 / 139), die
+     Ursache nicht — jede Seite mit mehr Markup kann `geplant.txt` für
+     Stellen umwerfen, die sie nicht berührt.
+     Weg: jede Seite bekommt ein eigenes Stück, oder die Signatur entsteht
+     ohne geerbte Eigenschaften aus dem Stückkontext; dazu ein Fall in der
+     Selbstprobe (eine Seite um hundert Elemente verlängert, übrige
+     Signaturen unverändert). Abnahme: eine fremde Seite wächst, der
+     Vergleich bleibt 0 / 0. Anlass für `tools/stilvergleich/`.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 321.
+     Erledigt 26.09.2026 mit R4-08: stilvergleich.js misst die Seitenprobe
+     je Seite als eigenes Dokument (Trennmarke aus proben.py), die Signatur
+     nennt die Seite. Nachgestellt (Regel für Seite A, --schreiben, Seite B
+     um 25 Zeilen mit Vorlesetext verlängert): vorher 1 ungeplant, nachher
+     0, zweimal. Gegen die Änderung aus Web 21.1.3 dieselben 13 Signaturen
+     wie das alte Werkzeug; geplant.txt einmal neu (1 Signatur,
+     .vorschlag.aktiv).
+
+297. **Der Bilderlauf lässt Breiten, die Admin-Rolle und Rollbehälter aus.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 aus Konzept P5c (F-P5c-41), als Anlass nach der
+     Zuarbeit von Konzept BR (E-BR-07).* Es fehlen die Breiten 400, 1200 und
+     1366; Seiten mit `rolle: admin` meldet er als BetreiberIn an, eine reine
+     Admin-Sicht nimmt er nie auf; die Übersicht der Einstellungen steht nicht
+     in `seiten.json`; Überlauf in einem Behälter, der selbst rollt, und der
+     Vergleich mit einem früheren Stand misst er nicht. *Weg in 10c:* eigene
+     Messungen über `tools/motor.mjs`, wo eine Abnahme sie braucht (AP2
+     Zeilenhöhe bei 1440 und 390 px, AP7, AP9) — die Messungen führen diese
+     Nummer als Anlass. Der Umbau des Bilderlaufs selbst gehört nicht zu 10c.
+     **Seit Web 20.41.0 gilt dasselbe für die Rolle Support** (P5c/AP4): Ihre
+     Sicht — drei Kacheln über der Liste, eine einspaltige Kontoseite ohne
+     die Knöpfe, die der Support nicht darf, zwei Protokollreiter — nimmt der
+     Bilderlauf nicht auf; belegt ist sie nur über die Rollenprobe (Menü,
+     Liste, Reiter) und im Prüfdokument von Hand.
+     **Zuordnung: 10c (Messungen); Umbau: nächste Backlog-Runde.**
+     Erledigt 26.09.2026 mit R4-08: zehn Breiten (1200 und 1600 neu,
+     E-R4-23), fünf Rollen — die Rolle der BetreiberIn heißt betreiberin,
+     admin und support haben eigene Prüfkonten aus pruefkonten.sh (E-R4-31)
+     mit je drei Seiten —, rollende Behälter im Bericht genannt, ohne
+     aufzuhalten. Voller Lauf: 780 Bilder aus 78 Seiten, 0 Überlauf, 0
+     Konsolenfehler, 0 Knöpfe falscher Höhe, 188 Karten / 0 außerhalb, 51
+     Bilder mit rollendem Behälter, 1 170 s. Die rollenden Tabellen am
+     Schreibtisch sind Nr. 342.
+
+258. **Drei Dateien unter `api/` antworten am `json_out()` vorbei.** · gehört zu: 17 · Stand: erledigt · seit 21.09.2026
+     Befund (Schritt 15 AP3): `rueckfrage.php`, `schluessel_erneuern.php`
+     und `schluesselblatt_pruefen.php` schreiben ihre Antworten mit
+     `header('Content-Type: …')` und `echo json_encode(...); exit;` — 19
+     Stellen. `json_out()` setzt über `json_kopf()` die Kopfzeilen
+     (`nosniff`, `Referrer-Policy`, HSTS, `Cache-Control: no-store`); die
+     19 Stellen setzen nichts davon. Derselbe Mangel ist mit Web 20.9.1 an
+     sieben anderen Stellen behoben (Nr. 203); diese drei arbeiten über
+     `$_POST` und fielen als JSON-Endpunkte nicht auf. Praktische Folge
+     gering (Quittungen, Fehlerkennungen, ein Prüfergebnis), aber `nosniff`
+     ist bei `application/json` die Zeile, auf die es ankommt.
+     Erledigt: die Methodenprüfung auf `api_methode()` (AP3, Nr. 256).
+     Offen: der Umbau auf `json_out()` — nicht in AP3, weil der den Eingang
+     zentralisiert, nicht den Ausgang, und die Kopfzeilen eine sichtbare
+     Änderung sind (E-ZE-10).
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 258.
+     Erledigt 26.09.2026 mit R4-09 (Web 21.1.7): die 19 Antworten der drei
+     Endpunkte über json_out(), die drei eigenen Content-Type-Zeilen fort,
+     keine Logikzeile geändert; grep "echo json_encode" unter server/api/ →
+     0 Dateien. Registerzeile Z41 (Decke 0); Gegenprobe mit der alten
+     rueckfrage.php → 5, über der Decke.
+
+277. **`einstellungen.php` — ein `await fetch` ohne eigenes `catch` steht vor der Erfolgsmeldung.** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Gefunden bei der AP8-Vermessung am 22.09.2026 (Schritt 15), in der
+     Funktion, die den Wiederherstellungsschlüssel abschließt (bei Aufnahme
+     Zeile 4158). Der Aufruf liegt im großen `try` des Knopfes; bricht das Netz
+     genau dort, springt der Ablauf in den äußeren `catch`, und die Person
+     liest eine Fehlermeldung zu einem Vorgang, der auf dem Server bereits
+     durchgelaufen sein kann. **Nicht in Schritt 15 behoben** (E-ZE-10: das
+     Paket ändert kein Verhalten). Beim Anfassen mitzudenken: Der Satz muss
+     sagen, dass der Zustand unklar ist, nicht dass es fehlgeschlagen ist.
+     Erledigt 26.09.2026 mit R4-09 (Web 21.1.7): Die Antwort des Vermerks
+     wird gelesen; scheitert er, steht „Fertig" mit Ton warn da und der Satz
+     „eingespielt … ob die Freigabe noch offen ist, ist unklar".
+     Freigabeprobe um den Fall erweitert (Vermerk abgebrochen): 20 von 20;
+     gegen das alte Formular 2 rot mit „Die Verbindung zum Server ist
+     abgebrochen", Ton fehler, Daten trotzdem eingespielt.
+
+291. **Eine gescheiterte Einrichtung hinterlässt ein halbes Schema.** · gehört zu: 17 · Stand: erledigt · seit 23.09.2026
+     *Aufgenommen 23.09.2026 mit Web 20.37.3, gemessen.* `install.php` spielt
+     `schema.sql` ein (Z. 352) und legt danach das Konto an. Scheitert
+     danach etwas, stehen die Tabellen — `schema.sql` legt 41 von 42 ohne
+     `IF NOT EXISTS` an —, und der nächste Versuch auf derselben Datenbank
+     bricht an ihnen ab. Die Meldung rät dabei in jedem Fall „eine leere
+     Datenbank verwenden", auch beim ersten Fehlschlag, der mit der Datenbank
+     nichts zu tun hatte (so bei Nr. 288). Eine Transaktion hilft hier nicht:
+     DDL bestätigt in MySQL still.
+
+     *Weg (zu entscheiden):* entweder den Rat nur geben, wenn der Fehler vom
+     Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
+     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
+     **Zuordnung: Backlog-Runde.**
+     Erledigt 26.09.2026 mit R4-09 (Web 21.1.7): SHOW TABLES vor
+     run_sql_file(), eigener try je Schritt. Gemessen an einer Kopie von
+     server/ gegen eine Wegwerfdatenbank: mit einer fremden Tabelle Abbruch
+     „enthält schon 1 Tabelle", danach weiter 1 Tabelle, keine config.php;
+     leer: 42 Tabellen, config.php, install.lock, Setz-Link.
+
+266. **`plattform_pruefen()` sagt „aus", wo „nicht feststellbar" stehen müsste.** · gehört zu: 17 · Stand: erledigt · seit 21.09.2026
+     *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-05).*
+     Priorität: niedrig.
+
+     Steht eine geprüfte Funktion in `disable_functions`, antwortet
+     `function_exists()` mit `false` — und der Befund wird zu einem **Mangel**
+     statt zu einer **Nichtmessung**. Betroffen ist heute der **OPcache**
+     (`opcache_get_status`, auf lima-city abgeschaltet): Die Statusseite meldet
+     ihn als „aus", obwohl niemand weiß, ob er läuft.
+
+     **Die Bauform steckt in jeder weiteren Prüfung, die über
+     `function_exists()` geht**, nicht nur in dieser einen — das ist der Grund,
+     warum der Punkt aufgeschrieben wird und nicht nur der OPcache-Fall.
+
+     **Warum das mehr als Kosmetik ist:** Dreiwertigkeit ist im Projekt schon
+     einmal teuer erkauft worden. Die Zielprobe unterscheidet ausdrücklich
+     **LIEGT / FEHLT / NICHT FESTSTELLBAR** (`tools/kette/zielprobe.py`), weil
+     ein „fehlt", das in Wahrheit ein „ich konnte nicht nachsehen" war, die
+     Kette zu falschen Schlüssen brachte. Hier gilt dasselbe, nur auf der
+     Statusseite.
+     Erledigt 26.09.2026 mit R4-09 (Web 21.1.7): plattform_funktion()
+     dreiwertig (aufrufbar, fehlt, abgeschaltet); der OPcache-Befund ist bei
+     abgeschalteter Abfrage null mit „nicht messbar". Gemessen mit php -d
+     disable_functions=opcache_get_status: vorher „aus", nachher „nicht
+     messbar"; ohne Schalter „aus", mit opcache.enable_cli=1 „aktiv". Auf
+     Staging: P-R4-10.
+
+175. **`edbak_uebersicht()` hat keinen Aufrufer mehr.** · gehört zu: 17 · Stand: erledigt · seit 13.09.2026
+     *Aufgenommen 13.09.2026 als Nebenfund der Gegenprüfung zu Nr. 37;
+     angelegt auf Anweisung des Auftraggebers.* Die Funktion in
+     `adminbackup_lib.php` liest für **jedes** Konto eine Begleitdatei und
+     ein Verzeichnis — die Bauform, die E-P3-41 mit `edbak_konto_stand()` für
+     die Kontoseite und O9c mit `edbak_staende()` und `edbak_verwaiste()` für
+     die Zähler und die verwaisten Ordner abgelöst hat. Am 13.09.2026 ruft
+     sie **niemand** mehr auf, weder in `server/` noch in `tools/`; genannt
+     wird sie nur noch in `docs/Technik.md` („Die Kontoseite (E-P3-41, seit
+     Web 9.8.0)") als Begründung, warum die Kontoseite anders liest.
+     **Zu tun:** die Funktion austragen und den Satz in `Technik.md` so
+     fassen, dass er die abgelöste Bauform als Vergangenheit beschreibt.
+     *Abnahme:* `grep -rn edbak_uebersicht server/ tools/ docs/` ist leer,
+     bis auf den Changelog. Zuordnung: Backlog-Runde.
+     Erledigt 26.09.2026 mit R4-09 (Web 21.1.7): Funktion samt Docblock
+     gestrichen, zwei Kommentare in adminbackup_lib.php und die Stelle in
+     Technik.md in der Vergangenheit; grep edbak_uebersicht über server/ und
+     docs/Technik.md → 0.
+
+150. **Der Cron-Befehl für den Job-Einstieg steht mit dem Repositoriumspfad in der Dokumentation.** · gehört zu: 17 · Stand: erledigt · seit 06.09.2026
+     Befund: Der Deploy legt den Inhalt von `server/` nach `httpdocs/`; einen
+     Unterordner `server/` gibt es auf einer Anlage nicht. Wer den Befehl
+     `php …/server/jobs.php` aus Docstring oder `Technik.md` abtippt, bekommt
+     „Could not open input file" — so geschehen beim Plesk-Cron auf Produktiv.
+     Richtig war und ist der Kopier-Knopf auf Betrieb → Hintergrundjobs
+     (baut über `__DIR__`, E-S8-10).
+     Entschieden 12.09.2026: alle Stellen berichtigen, auch rückwirkend im
+     Changelog; künftig der Platzhalter `php /pfad/zur/installation/jobs.php`
+     plus ein Satz zum Kopier-Knopf.
+     Erledigt (Konzept BV, BV-04, 24.09.2026): `Technik.md` 4.97a und
+     Runbook 7, Changelog Web 10.1.0, eine fünfte Stelle (inzwischen mit dem
+     FTP-Rückbau gestrichen).
+     Offen: der Kopfkommentar von `server/jobs.php` (Zeile 13) — eine Zeile
+     unter `server/` verlangt eine Web-Stufe, und die gab es in BV nicht
+     (E-BV-18, 26.09.2026). Geht mit der nächsten Web-Stufe, die die Datei
+     ohnehin anfasst.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 150.
+     Erledigt 26.09.2026 mit R4-09 (Web 21.1.7): Kopf von server/jobs.php
+     mit dem Platzhalter php /pfad/zur/installation/jobs.php und dem Satz
+     zum Kopier-Knopf auf Betrieb → Hintergrundjobs.
+
+260. **Zwei Code-Kommentare in `server/` sagen „beider FTPS-Schritte" — seit Kette II/AP5 ist es einer.** · gehört zu: 17 · Stand: erledigt · seit 21.09.2026
+     Befund (Kette II, AP5): `server/wartung_lib.php` (Kopfkommentar zu
+     `ueberlast.json`) und `server/adminbackup_lib.php` (der
+     `ZWINGEND`-Absatz zu `sicherungen/`) behaupten im Präsens, die
+     Ausnahmeliste stehe in beiden FTPS-Schritten von `auslieferung.yml`.
+     Seit AP5 steht sie einmal, in `ausliefern-lauf.yml`.
+     Nicht im selben Paket erledigt, weil die Sätze die ausgelieferte Kette
+     beschreiben und erst falsch werden, wenn AP5 auf `main` ankommt — und
+     eine Änderung unter `server/` eine Versionsstufe verlangt, die zu dem
+     Paket gehört, das ohnehin Code bewegt. Inzwischen liegt AP5 auf `main`
+     (`ausliefern-lauf.yml` steht neben `auslieferung.yml`), und beide
+     Kommentare stehen noch (nachgesehen 26.09.2026) — sie gehen mit der
+     nächsten Web-Stufe, die die Dateien anfasst (wie Nr. 150).
+     Nicht betroffen: die zwei Stellen in `server/version.php` (Werdegang
+     der Fassungen 20.15.2 und 20.16.x — dort ist „zwei" richtig) sowie
+     Changelog, Backlog und Prüfdokumente (Protokolle werden nicht
+     rückwirkend umgeschrieben).
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 260.
+     Erledigt 26.09.2026 mit R4-09 (Web 21.1.7): beide Kommentare nennen die
+     eine Liste in ausliefern-lauf.yml und die zwei Schritte davor als
+     Vergangenheit.
+
+333. **Ein Kommentar in `style.css` nennt für die Umbenennung `.map` → `.geo` das falsche Paket.** · gehört zu: 17 · Stand: erledigt · seit 25.09.2026
+     *Aufgenommen 25.09.2026 in Konzept BV, gefunden von
+     der Gegenprüfung P-BV-02.* Der Kommentar über `.geo.map-fs` sagt „Der
+     Kartenbehaelter wurde in O1 umbenannt". Gemessen: Das Stylesheet aus O1
+     (`ecd5ff98`) enthält weder `.map` noch `.geo`; `.geo` kommt mit O2
+     (`5436e854`), zugleich mit dem Markup der drei Karten. Harmlos, aber ein
+     Satz, der eine Herkunft falsch nennt, schickt die nächste Suche in das
+     falsche Paket. **Kein eigenes Paket** — Beifang für das nächste, das
+     `server/assets/style.css` ohnehin anfasst (eine Zeile unter `server/`
+     braucht eine Web-Stufe).
+     Erledigt 26.09.2026 mit R4-09 (Web 21.1.7): der Kommentar über
+     .geo.map-fs nennt O2 und sagt, was bis dahin dastand.
+
+283. **Die Textprobe liest die Kommentare in `server/` nicht — und dort standen reale Ortsnamen.** · gehört zu: 17 · Stand: erledigt · seit 23.09.2026
+     Befund (Gegenlesung PK-04/5c): Bereich `a` der Textprobe ist
+     „`server/*.php`, `server/api/*.php` (sichtbare Texte, ohne
+     Kommentare)" — für vier der fünf Regelklassen richtig, für `namen`
+     falsch: E-P1-02 richtet sich gegen das öffentliche Repositorium, und
+     ein Kommentar steht darin. Mit `grep` gemessen: acht Stellen in
+     `server/` trugen „Kempten", „Christoph 17" oder eine Ortskennung, alle
+     in Kommentaren — die schärfste sechs Zeilen unter dem Platzhalter, den
+     E-S3-13 auf „Standort Talwang" berichtigt hatte. Die acht Stellen sind
+     bereinigt, die Lücke nicht.
+     Zu entscheiden: Bereich `a` um Kommentare erweitern (dann messen die
+     anderen vier Klassen Kommentare mit, und ihre Null ist keine mehr —
+     vermutlich ein Bereich je Klasse) oder eine eigene schmale Prüfung nur
+     für `namen` über den ganzen Baum. Bis dahin heißt `namen = 0` „null im
+     sichtbaren Text", nicht „null im Repositorium" (`Pruefablauf.md` 6.6).
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 283.
+     R4-07 (26.09.2026): gebaut nach E-R4-19 — `namen` liest mit
+     Kommentaren (Feld `sicht`), dazu `style.css` als Bereich `f`. Die acht
+     Stellen aus F-R4-12 stehen im Altbestand, bis R4-09 sie umschreibt.
+     Erledigt 26.09.2026 mit R4-07 und R4-09: Die Klasse namen liest mit
+     Kommentaren, dazu das Stylesheet (Bereich f); die acht Stellen aus
+     F-R4-12 sind umgeschrieben (Web 21.1.7), der Altbestand ist leer, die
+     Textprobe meldet 0 Treffer außerhalb der Ausnahmen. Gegenzählung mit
+     grep über server/, android/, watch/: 10 Treffer, keiner davon eine der
+     acht.
+
+299. **Die Kontoseite löscht ein Konto an `konto_loeschen()` vorbei.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-99).* Es gibt zwei
+     Wege, ein Konto zu löschen: `konto_loeschen()` in `konto_lib.php` (die
+     Selbstlöschung und der Verfall gehen darüber) und den Zweig
+     `user_delete` in `admin_user.php`. Beide räumen dasselbe ab — die
+     Konto-Backups nach der Wahl, die Spuren ausdrücklich vor der Kaskade,
+     die Sperrvermerke — und jeder schreibt es selbst. Dass es zwei sind, hat
+     schon einmal geschadet: Die Löschung durch die Verwaltung schrieb bis
+     Web 20.40.0 keinen Eintrag `konto_geloescht`, weil nur der eine Weg ihn
+     kannte. AP4 hat den Eintrag nachgetragen und den Weg stehen lassen — ein
+     Umbau des Löschens gehört nicht in das Paket einer Rolle. *Weg:* Der
+     Zweig ruft `konto_loeschen($uid, $mitSicherungen)`; was die Seite zusätzlich
+     prüft (eigenes Konto, letzte BetreiberIn, abgetippte Adresse), bleibt
+     davor. Nachweis: Rollenprobe (Konto löschen 403 beim Support) und ein
+     Löschfall mit Spuren gegen `spur_zahlen()`. **Zuordnung: Backlog-Runde.**
+     Erledigt 26.09.2026 mit R4-10 (Web 21.1.8): Die Kontoseite ruft
+     konto_loeschen($uid, $mitSicherungen, 'verwaltung'), ihre drei
+     Prüfungen bleiben davor; auch demo_entfernen() geht darüber (die dritte
+     Abschrift, F-R4-09). Die Funktion verlangt den Weg und schreibt ihn ins
+     Protokoll; die Sperrliste der Geräte, die nur die Demo-Abschrift
+     räumte, steht jetzt in ihr. Nachweis: Rollenprobe 309/309 mit dem
+     Löschfall (Spur 3 → 0, Mengenstand, Sperrliste, weg = verwaltung), rot
+     gegen die alte Kontoseite.
+
+239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php` mit.** · gehört zu: 17 · Stand: erledigt · seit 20.09.2026
+     Befund (beim Beheben von Nr. 238): `komplett_lib.php` schickt jeden
+     Tabellen- und Spaltennamen durch eine Quotierungsfunktion;
+     `backup_lib.php` setzt die Spaltenliste mit `implode(',', $cols)`
+     ungequotet zusammen — und in `$cols` fließen über `$extraCols` die
+     Namen aus dem Feldkatalog, also Namen, die noch dazukommen. Heute
+     ungefährlich, weil nach Nr. 238 kein Name reserviert ist; die Bauform
+     ist der Punkt: Genau diese Stelle hätte auf MySQL 8.4.0–8.4.10 das
+     Einspielen einer Sicherung unmöglich gemacht.
+     Weg: dieselbe Quotierung an beiden Stellen der Sicherung, und die
+     Frage, ob eine gemeinsame Helferfunktion sinnvoller ist als zwei
+     Kopien — sie wäre der Ort, an dem der nächste Schreibweg sie findet.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 239.
+     Erledigt 27.09.2026 mit R4-12 (Web 21.1.10): Weg A aus Q-R4-14, zentral
+     im Feldkatalog — mf_spalten_sql() setzt jeden Spaltennamen in
+     Backticks, mf_liste_sql() und mf_bezeichner() für selbst gebaute Listen
+     und einzelne Namen (Q-R4-22). Umgestellt: vier INSERTs (Ingest,
+     Schnitt, Import, Einspielen) und das UPDATE des Imports, dazu Formular
+     und Export. komplett_lib.php behält seine Quotierung (sichert jede
+     Tabelle, ein Helfer gehörte nach db.php, das für 18 frei bleibt).
+     Nachweis: Registerzeile Z42 0 (vorher 4), Kreisläufe edbak und csv 0
+     unerklärt, Wiederherstellungsprobe grün.
+
+271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr Ton bleibt „info", auch wenn ein Fehler darin steht.** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Gefunden bei der AP8-Vermessung (Schritt 15, 22.09.2026) in
+     `assets/schneiden.js`. Die Stelle erzeugt keine Meldung, sondern einen
+     *Platz* für eine: `<div class="meldung meldung-info" role="status"
+     data-vorher><p></p></div>`, später dreimal per `textContent` befüllt. Zwei
+     Abweichungen vom Baustein: **kein Symbol** (`EdHtml.meldung()` setzt eines
+     ein — das wäre eine sichtbare Änderung im Schnittblock), und **der Ton
+     wechselt nie**, so dass Sätze wie „Das Ende liegt vor dem Beginn." in
+     blauer Hinweisfläche stehen statt in roter. Das zweite ist fachlich
+     falsch. **Nicht in Schritt 15 behoben** (E-ZE-10: das Paket ändert kein
+     Verhalten); die Zählzeile Z37 endet deshalb bei 4 statt 0. Beim Anfassen
+     mitzudenken: Der Anker `data-vorher` hängt am Wrapper, den
+     `EdHtml.meldung()` nicht mit Attributen versieht — entweder bekommt die
+     Funktion einen Weg dafür, oder der Anker wandert nach innen.
+     Erledigt 27.09.2026 mit R4-13 (Web 21.1.11): Der Anker data-vorher
+     sitzt am leeren Behälter, eine Funktion vorher() füllt ihn über
+     EdHtml.meldung() — fehler für Gründe und Serverfehler, info für den
+     Erklärtext; die Rückmeldung über der Segmentliste (melde()) ebenso.
+     Nachweis: Bilderlauf 12a-schnitt-grund (rot, Symbol, role alert) und
+     12b-schnitt-vorschau.
+
+272. **`<p class="meldung">` im Entsperrdialog ist gar keine Meldung.** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Gefunden bei derselben Vermessung, in `assets/unlock.js`. Dort steht ein
+     Absatz mit der Klasse `meldung` — **ohne** Tonklasse, **ohne** Symbol,
+     **ohne** `role`. Er trägt den Namen des Bausteins, ist aber keiner; das
+     Zählmuster von Z37 hält ihn trotzdem für einen. Zwei Folgen: Die Zeile
+     zählt einen Nachbau, den es nicht gibt (Z37 endet bei 4), und der Absatz
+     bekommt aus `style.css` Regeln, die für einen Kasten gedacht sind.
+     **Nicht in Schritt 15 behoben:** Ihn auf den Baustein umzustellen gäbe
+     ihm einen farbigen Kasten mit Symbol — eine sichtbare Änderung im
+     Entsperrdialog, und die war nicht beauftragt.
+     Erledigt 27.09.2026 mit R4-13 (Web 21.1.11): Der Platz ist ein leerer
+     Behälter (div data-msg hidden), melde() füllt ihn über
+     EdHtml.meldung(); html.js steht dafür im Kopf jeder Seite. Nachweis im
+     Browser: Entsperren ohne Passwort zeigt meldung-fehler mit Symbol, 0
+     Seitenfehler.
+
+273. **Eine dritte Schreibweise für Dauern, die kein Zählmittel sieht.** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Gefunden in Schritt 15 AP8d, aber **nicht** von der Zählzeile Z34: Die
+     misst über eine Namensliste und kennt `dauer()` in `assets/schneiden.js`
+     nicht. Gefunden hat sie erst eine Gegenprobe über das Muster der
+     *Rechnung* (`Math.floor(s / 3600)`). Die Funktion schreibt
+     **„1 h 6 min" mit Leerzeichen**, während der Rest der Anwendung seit
+     AP8d durchgängig „1h 06min" schreibt; dazu trägt sie denselben
+     Rundungsfehler, den AP8d in `EdFormat.dauer()` behoben hat (getrennte
+     Rechnung von Stunden und Minuten erzeugt bei 3599 s ein „60min").
+     **Nicht umgestellt**, weil es eine sichtbare Änderung im Schnittblock
+     wäre und die drei sichtbaren Änderungen von AP8d einzeln freigegeben
+     wurden — diese war nicht darunter. Beim Anfassen: `EdFormat.dauer(s)`
+     genügt, der Leerwert ist dort nicht erreichbar (`Math.max(0, …)`).
+     Erledigt 27.09.2026 mit R4-13 (Web 21.1.11), freigegeben mit Q-R4-06:
+     dauer() ist fort, beide Aufrufer nehmen EdFormat.dauer(Math.max(0, …));
+     dauer steht in ZH_FORMATIERER (Z34). Nachweis: Bilderlauf
+     12b-schnitt-vorschau zeigt „1h 06min".
+
+76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert hat.** · gehört zu: 17 · Stand: erledigt · seit 02.09.2026
+     Befund: `demo_reset_wenn_faellig()` (`demo_lib.php`) setzt zeitgesteuert
+     zurück, ohne zu prüfen, ob eine Besucherin etwas verändert hat.
+     Gemessen 15.09.2026 (Prüfstand, drei Läufe): 5859 ms mit dem alten,
+     6610 ms mit dem neuen Bestand (106 Einsätze, 63 752 Spurpunkte) —
+     0,75 s mehr für 20 % mehr Einsätze.
+     Wirkung: Der Reset läuft huckepack auf einer Anfrage; die Besucherin,
+     die ihn auslöst, wartet sechseinhalb Sekunden. Das ist das Argument für
+     eine Änderungsmarke, nicht die Last. Produktiv (Datenbank auf anderem
+     Rechner) und gleichzeitige Zugriffe sind nicht gemessen.
+     Weg: entscheiden — durchlaufen lassen oder Zähler im Schreibweg des
+     Demo-Kontos, Reset nur bei gesetzter Marke.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 76.
+     Erledigt 27.09.2026 mit R4-14 (Web 21.2.0), E-R4-10 und E-R4-42: Die
+     Änderungsmarke `demo_geaendert` hält die erste Änderung seit dem Reset,
+     gesetzt bei jeder POST des Demo-Kontos mit Token und bei jedem
+     angenommenen Upload; fällig ist der Reset 30 Minuten danach, ohne
+     Änderung einen Tag nach dem letzten. Nur Ansehen kostet keine
+     sechseinhalb Sekunden mehr (im Browser: Anmeldung und sechs Seiten ohne
+     Marke, eine POST setzt sie). Zweitfaktorprobe Teil 6b, 16 Fälle.
+
+259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen fallen, ihr Kernvergleich läuft gar nicht.** · gehört zu: 17 · Stand: erledigt · seit 21.09.2026
+     Befund (Schritt 15 AP3): `tools/gpxprobe/probe.php` hält den
+     Referenzexport vom 15.09.2026 gegen die GPX-Dateien des Demo-Kontos.
+     Nach einem Demo-Reset haben die Einsätze neue Kennungen: „190 von 204
+     ohne Gegenstück", drei Folgefehler — und der punktweise Vergleich
+     meldet „0 von 204 Dateien verglichen (0 Abweichungen)": eine Null, die
+     nichts gemessen hat, neben Nullen, die etwas gemessen haben. 95/4 vor
+     und nach dem Paket identisch — der Befund liegt nicht am Code.
+     Der Reset hängt nicht an der Jobschlange, sondern an `auth_guard.php`
+     (`demo_reset_wenn_faellig()` bei jeder Anmeldung des Demo-Kontos nach
+     `DEMO_RESET_SEKUNDEN` = 1800); `jobs_pause()` hilft nicht. Das
+     richtige Mittel steht in `tools/klickprobe/LIESMICH.md`:
+     `UPDATE app_state SET v = UNIX_TIMESTAMP() WHERE k = 'demo_letzter_reset';`
+     verschiebt den nächsten Reset um 30 Minuten.
+     Weg: Die Probe hält den Reset selbst auf und setzt das Demo-Konto aus
+     der Fixture zurück, oder sie legt sich ein eigenes Konto an; jedenfalls
+     sagt sie, wenn ihr Hauptteil nichts geprüft hat. Vorbild ist die
+     Klickprobe, die einen Reset mitten im Lauf meldet (42 von 48, mit
+     Pause 48 von 48).
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 259.
+     Erledigt 27.09.2026 mit R4-14 (Web 21.2.0): Teil 2 ordnet über Art, Tag
+     und Uhrzeit aus dem Dateinamen zu, wie export.js sie schreibt, und
+     zählt Mehrdeutigkeit als eigene Erwartung. Nach einem erzwungenen Reset
+     (Kennungen ab 484 statt 1): 97 / 97, 116 Dateien verglichen; die alte
+     Fassung dort 2 rot.
+
+158. **`days` trägt kein `created_at`.** · gehört zu: 17 · Stand: erledigt · seit 08.09.2026
+     *Aufgenommen 08.09.2026 bei der Neufassung der Tagesregel (Nr. 134).* Für
+     Einsätze und Ruhesegmente ist der Anker des Ersetzfensters die Serverzeit
+     des Anlegens — genau deshalb kann eine falsch gestellte Geräteuhr das
+     Fenster nicht steuern. Für den **Diensttag** gibt es diese Spalte nicht.
+     Die Frage „wird an diesem Tag noch gearbeitet?" wird deshalb über das
+     jüngste `created_at` seiner Datensätze beantwortet (`ingest_tag_offen()`
+     in `ingest.php`). Das ist ein ehrlicher Ersatz und in der Sache meist
+     dasselbe, aber es ist eine Abfrage über zwei Tabellen statt eines
+     Spaltenwerts, und ein Tag, dessen Datensätze alle gelöscht wurden, hat gar
+     keinen Anker mehr. Behebung: `days.created_at` mit Migration (Rückfall auf
+     `started_at`, gekappt wie bei `rest_segments`), danach
+     `ingest_tag_offen()` auf einen Wert zurückführen. Kein Fehler, eine
+     Vereinfachung — und die Voraussetzung dafür, die Regel in einem Satz
+     erklären zu können. Zuordnung: Backlog-Runde.
+     Erledigt 27.09.2026 mit R4-15 (Web 21.3.0, Migration
+     2026_09_27_days_created_at, update.php nach dem Deploy):
+     days.created_at, der Bestand aus started_at gekappt; ingest_tag_offen()
+     fragt den Tag. Örtlich 1059 Tage migriert, 0 NULL; Schemaprobe Fall 6 4
+     × 40, Ingestprobe Fall 14 88 / 88, gegen den Stand davor rot. Das
+     Fenster gleitet nicht mehr (F-R4-46).
+
+207. **`gen-em.org` steht 96× in `tools/` und `.github/`.** · gehört zu: 17 · Stand: erledigt · seit 16.09.2026
+     Befund (P5a/AP7; `grep -rn "gen-em\.org" tools/ .github/ | wc -l` →
+     96, `server/` → 0 seit Web 20.9.0, Nr. 203): In den Prüfmitteln stehen
+     Prüfkonten (`ingestprobe@gen-em.org`, `demo@gen-em.org`,
+     `messstand@gen-em.org` …), Schema-`$id`s (`https://gen-em.org/nadoku/…`)
+     und Anleitungen in den `LIESMICH.md`. Kein Fehler — ein Prüfkonto ist
+     eine erfundene Adresse —, aber der Name einer realen Domain in einem
+     Repositorium, das weitergegeben werden soll.
+     Weg: `.invalid` (RFC 2606) für alle Prüfkonten — die Mailprobe benutzt
+     es bereits —, eine `urn:`-Kennung oder `example.org` für die
+     Schema-`$id`s. Mechanisch, berührt aber Bestandsdaten: Eine örtliche
+     Anlage mit `demo@gen-em.org` muss neu aufgesetzt werden, sonst greift
+     kein Kreislauf mehr. Deshalb ein Paket mit Ansage, nicht nebenbei.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 207.
+     Erledigt 27.09.2026 mit R4-19 (nur tools/ und docs/, keine
+     Versionsstufe): 45 Dateien, jede Prüfadresse außer demo@ nach
+     example.invalid, die Schema-$ids nach urn:nadoku:…, die
+     Messstand-Ausnahme der Textprobe gestrichen; im Maskierfall der
+     Kopplungsprobe steht kein Vorname mehr. git grep in tools/ ohne demo@:
+     0 (nach dem Prüfstand, der die Ausgaben der Bedienprobe neu schreibt).
+     Die örtliche Anlage ist neu aufgesetzt.
+
+275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — laut Handbuch „der klassische Fall".** · gehört zu: 17 · Stand: erledigt · seit 22.09.2026
+     Befund (Schritt 15 AP9b, in Ortszeit; Zahl berichtigt mit Konzept R4,
+     F-R4-05, nachgemessen am 26.09.2026): 2 von 20 aktiven Diensttagen des
+     Demo-Kontos haben Einsätze auf zwei Kalendertagen — beide bodengebunden
+     (NEF Talwang), beide auf einer Zeitumstellung; der Eintrag zählte 0.
+     Ein luftgebundener Nachtdienst ohne Zeitumstellung fehlt. In AP9b
+     sortierte das Einsatztabellen-Modul „Beginn" über die Zeichenkette
+     `start_hhmm` (01:10 vor 23:50) — jahrealt, von keinem Mittel zu finden,
+     weil es nichts zu messen gab; belegt mit einem im Browser gebauten
+     Nachtdienst. Ob die drei APIs `start_sort` für einen echten Nachtdienst
+     richtig rechnen, ist gelesen, nicht gefahren.
+     Weg (Konzept R4, R4-16): ein luftgebundener Nachtdienst als D22 mit
+     Einsätzen vor und nach Mitternacht über den normalen Einspielweg
+     (`tools/referenzdatensatz/`, `started_at` in UTC); `days.day` bleibt der
+     Dienstbeginn; Matrixzeile, Bilderlauf-Seite, Bedienprobe „Sortierung
+     nach Beginn".
+     Abnahme: Diensttage mit Einsätzen auf mehr als einem Kalendertag in
+     Ortszeit mindestens 3, davon einer luftgebunden ohne Zeitumstellung.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 275.
+     Erledigt 27.09.2026 mit R4-16 (Web 21.3.1): D22, ein Luftdienst vom 19.
+     auf den 20.06.2026 mit Einsätzen um 19:09, 23:50 und 01:40, ohne
+     Zeitumstellung; Matrixzeile, Bilderlauf-Seite 12c-nachtdienst,
+     Bedienprobe nachtdienst-sortierung-beginn 1 / 1, gegen die Sortierung
+     über start_hhmm rot. Abnahme gemessen: 3 Diensttage mit Einsätzen auf
+     zwei Kalendertagen, einer davon luftgebunden ohne Zeitumstellung. Die
+     offene Frage nach den drei APIs ist gefahren: start_sort aus day.php,
+     range.php und suchindex.php gleich (3 / 3 / 3), gegen range.php mit
+     dem Dienstdatum rot.
+
+323. **Referenzbestand und Demo-Fixture tragen noch Nutzlast 11.** · gehört zu: 17 · Stand: erledigt · seit 25.09.2026
+     *Aufgenommen 25.09.2026 (P5c/AP8).* Die Referenz
+     `referenz/einsatzdoku-backup-2026-09-15.edbak` und
+     `server/demo/fixture.json.gz` stammen aus der Zeit vor Nutzlast 12; beide
+     führen das leere Feld der Standortauswahl. Das ist **kein Fehler** — der
+     Rückweg überliest es, und genau das zeigt der Kreislauf. Es kostet aber
+     **zwei Übergangsregeln** in `vergleich/ausnahmen/edbak_umlauf.json`
+     (`kopf.version` 11 → 12, das fehlende Feld), und die Fixture trägt eine
+     Angabe, die keine Fassung mehr schreibt. *Zu tun:* Referenz und Fixture
+     neu erzeugen, wie mit Nr. 173; danach werden die beiden Regeln
+     ungenutzt und fallen, mit einem Satz im Änderungsverlauf. Die Regeln in
+     `edbak-alt_umlauf.json` bleiben — die Altformat-Referenz ist eingefroren
+     (Nr. 46). *Abnahme:* edbak-Kreislauf mit 0 unerklärten Abweichungen **und**
+     0 ungenutzten Regeln.
+     Erledigt 27.09.2026 mit R4-16 (Web 21.3.1): Referenz und Fixture neu
+     erzeugt (Nutzlast 12, ohne user_bases), die zwei Übergangsregeln
+     ausgetragen. Kreislauf edbak 346 763 Vergleiche, 0 unerklärt, 0
+     ungenutzt; csv 11 234, 0 unerklärt, 0 ungenutzt.
+
+327. **Die Rollenmatrix führt die Handlungen der BetreiberIn-Seiten nicht einzeln.** · gehört zu: 17 · Stand: erledigt · seit 25.09.2026
+     *Aufgenommen 25.09.2026 in P5c/AP11 (Gegenlesung AP4).*
+     `docs/Technik.md` 4.99p hat eine Zeile je Handlung auf den Seiten, die
+     mehr als eine Rolle erreicht; die 25 POST-Handlungen und 7
+     Seitenaufrufe hinter `require_betreiberin()` (`betrieb_server.php`,
+     `betrieb_jobs.php`, `betrieb_updates.php`, `betrieb_status.php`,
+     `betrieb_sicherheit.php`, `api/schluesselblatt_pruefen.php`) misst die
+     Probe nur über das Tor der Seite. Eine Handlung, die dort **vor** dem
+     Tor stünde, fände sie nicht. Dazu fehlt ein Platzhalter `{support}`: dass
+     der Support andere Support-Konten nicht betreut (E-P5c-99), steht im
+     Code, gemessen ist es nicht. *Zu tun:* die Zeilen nachtragen (Admin und
+     Support 403, BetreiberIn `durch`) und den Platzhalter anlegen. *Abnahme:*
+     Rollenprobe grün mit den neuen Zeilen; Gegenprobe: eine Handlung vor das
+     Tor gezogen → rot. *Zuordnung:* Backlog-Runde (Schritt 17).
+     Erledigt 27.09.2026 mit R4-18 (ohne Versionsstufe): 38 Zeilen in
+     Technik.md 4.99p — sechs Betriebsseiten und das CSV der Gerätemodelle,
+     26 POST-Handlungen, zwei des Schlüsselblatts, fünf am neuen Platzhalter
+     {support}; 108 Zeilen, Rollenprobe 476 / 0. Gegenproben rot: eine Zelle
+     falsch (1), die Testmail vor das Tor gezogen (3), das Konto-Tor des
+     Supports ausgebaut (6, davon 4 in den neuen Zeilen).
+
+287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.** · gehört zu: 17 · Stand: erledigt · seit 23.09.2026
+     *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
+     Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
+     Seitenende" vor. E-P5c-06 (jünger) sagt: je Karte höchstens ein Satz,
+     alles Erklärende ins Handbuch. 10c AP9 räumt die acht Karten unter
+     Verwaltung und Betrieb ab. **Drei Seiten außerhalb tragen die Karte
+     ebenfalls:** `import.php`, `einsatz_form.php`, `wiederherstellen.php`.
+     Sie liegen nicht im Umfang von 10c, und bis zu ihrer Umstellung gelten
+     dort zwei Regeln nebeneinander.
+
+     *Abnahme:* 0 Karten „Was hier gilt" in `server/`, der Inhalt im Handbuch,
+     jede Karte der drei Seiten mit Verweis auf ihre Sprungmarke. *Fehlschlag:*
+     `grep -l "Was hier gilt" server/*.php` findet eine Seite (außer
+     Kommentaren in `version.php`). **Zuordnung: Schritt 17.**
+     Erledigt 27.09.2026 mit R4-20 (Web 21.4.1): Die drei Karten sind fort,
+     ihr Text steht im Handbuch 7 („Die übrigen Wege“), 4.3 („Schloss und
+     Klartext“) und 12.6 („Der Wiederanlauf“); jede Seite verweist mit einem
+     Satz dorthin. 0 Karten mit diesem Titel in server/; erwähnt nur noch in
+     Kommentaren (admin_demo.php, betrieb_status.php, version.php). Riegel
+     anker 53 Verweise, 0 ohne Ziel; Bilderlauf der drei Seiten 30 Bilder,
+     Überlauf 0.
+
+336. **Der Baustein `Eingabefeld` des Handy-Moduls wird nirgends aufgerufen.** · gehört zu: 17 · Stand: erledigt · seit 24.09.2026
+     *Aufgenommen 24.09.2026 mit Konzept AR (AR-05).* `Eingabefeld()` in
+     `handy/.../Bausteine.kt` hat seit R63 (Android 0.11.0, feste
+     Serveradresse, Backlog Nr. 84) keinen Aufrufer mehr — das Adressfeld der
+     Kopplung war sein einziger. Aufgefallen, als AR-04 die Farbe seines
+     Cursors behob (Orange auf Schnee, 2,23 : 1) und der Emulatorlauf den
+     Cursor zeigen sollte: Es gibt ihn auf keinem Bildschirm. Lint meldet es
+     nicht, weil die Funktion öffentlich ist. Die Behebung bleibt richtig, hat
+     aber keine sichtbare Wirkung.
+     *Weg:* den Baustein austragen, oder ihn stehen lassen, wenn ein
+     Eingabefeld absehbar wiederkommt — dann mit einem Satz, warum.
+     *Abnahme:* kein unbenutzter öffentlicher Baustein in `Bausteine.kt`.
+     **Zuordnung: nächste Android-Runde.**
+     Erledigt 27.09.2026 mit R4-21 (Android 0.16.1): Eingabefeld() samt
+     Kopfkommentar ausgetragen, das Paar „Cursor im Eingabefeld“ aus
+     kontraste.py gestrichen; alle übrigen öffentlichen Bausteine in
+     Bausteine.kt haben Aufrufer. kontraste.py 0 Befunde (29 Paare, vorher
+     30), Selbstprobe 5 / 5; ./gradlew build 0 Lint-Fehler, 0 Fehlschläge.
+
+95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.** · gehört zu: 17 · Stand: erledigt · seit 03.09.2026
+     *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
+     Gemessen: **9 Diensttage, 5 Einsätze und 14 439 Spurpunkte**, die kein
+     Prüffall wieder abräumt. Sie fallen nicht auf, solange niemand das
+     Admin-Konto ansieht — und verfälschen jede Zahl, die jemand daraus zieht.
+     **Vorschlag:** Aufräumen im `@After` der betroffenen Fälle, oder ein
+     eigenes Prüfkonto, das der Lauf am Ende löscht. Gehört zum S4-Rest, weil
+     er dieselben Prüffälle anfasst.
+     **Stand 06.09.2026 (Fassung 32):** Der S4-Rest ist gemergt und hat den
+     Punkt nicht mitgenommen; Nr. 115 (aus Paket E) meldete denselben Fund und
+     ist hier aufgegangen. Zuordnung jetzt: **Backlog-Runde (Android)**.
+     Erledigt 27.09.2026 mit R4-21 (Android 0.16.1):
+     Kopplungshilfe.datenAbraeumen() ruft
+     android/werkzeuge/rundlauf_aufraeumen.php vor dem Trennen,
+     Papierkorbweg je Diensttag der Geräte des Kontos. Rundlauf 14 Fälle
+     grün, danach Konto 1 0 Diensttage, 0 Einsätze, 0 Spurpunkte, 0 Waisen;
+     ohne den Aufruf 9 / 5 / 14 439 wie bei der Aufnahme.
+
+114. **Abgewiesene Pakete sichtbar machen und ausräumen.** · gehört zu: 17 · Stand: erledigt · seit 03.09.2026
+     Befund (S5 Paket E, B-S5Z-06): Antwortet der Server auf ein Paket mit
+     400, markiert der Puffer es als `fehlerhaft = 1` und nimmt es aus
+     Warteschlange und Anzeige — die App sagt „Alles gesendet", beim Server
+     bleibt ein Segment offen. Paket E2 zeigt die Zahl („N Pakete vom Server
+     abgewiesen"); die Pakete bleiben samt GPS-Spur dauerhaft liegen
+     (Krypto-Review AN-2).
+     Erledigt (Android 0.14.0, 07.09.2026): `Puffer.abgewieseneRaeumen()`
+     löscht abgeschlossene abgewiesene Pakete samt Punkten und Phasen nach
+     30 Tagen und beim Trennen sofort; beendete `dienst`-Zeilen ohne Pakete
+     gehen mit, die laufende nie (`AbgewieseneTest`, 10 Fälle).
+     Offen ist der Bedienweg: ansehen, was drinsteht, ausleiten oder
+     verwerfen. Zu entscheiden, ob Ausleiten (als Datei zum Nachreichen von
+     Hand — braucht ein Format) oder Verwerfen mit Rückfrage (Datenverlust
+     auf Knopfdruck). Ohne Weg wird die Zahl zur Tapete.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 114.
+     Erledigt 27.09.2026 mit R4-22 (Android 0.17.0): Knopf „Abgewiesene
+     verwerfen …“ unter der roten Zeile mit Hinweiskasten, Rückfrage nach
+     dem Muster der Uhr („Behalten“ / „Verwerfen“) und Quittung; Nachreichen
+     gibt es nicht (E-R4-09). AbgewieseneTest +2, im Emulator nach
+     „Verwerfen“ 0 Pakete, 0 Punkte, 0 Phasen.
+
+122. **Freie Zeiträume und Diagramme in der Statistik.** · gehört zu: 17 · Stand: erledigt · seit 05.09.2026
+     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
+     Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
+     6 Monate — und zeigt Zahlen in Tabellen. Für den Blick auf einen
+     bestimmten Monat oder auf eine Entwicklung über ein Jahr reicht das
+     nicht. **Zu tun:** ein frei wählbarer Zeitraum (Von/Bis wie in der
+     Einsatzsuche) und eine grafische Darstellung der Entwicklung. Beides
+     sind **neue Darstellungen** und brauchen Mockup und Freigabe
+     (`CLAUDE.md` 5); die Diagrammfrage berührt außerdem die Zusage „keine
+     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
+     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
+
+     **Zuordnung (20.09.2026): Schritt 17** (Backlog-Runde 4) — nicht 10c. Entschieden mit der Freigabe des P5c-Konzepts (E-P5c-23, F-P5c-4).
+     Teil a erledigt 27.09.2026 mit R4-23 (Web 21.5.0): Pillen und Von/Bis
+     über den Reitern, je Tabelle eine Spalte „im Zeitraum", unter Einsätze
+     mit Wochen- und Tagesschnitt; aktiv, angemeldet und gemeldet nur bis
+     heute (F-R4-66, E-R4-55). Offen: Teil b, die Diagramme (R4-24).
+     Erledigt 28.09.2026 mit R4-23 (Web 21.5.0) und R4-24 (Web 21.6.0):
+     Zeitraumwahl über den Reitern mit Pillen und Von/Bis; Diagramme als
+     Inline-SVG aus PHP (Säulen je Tag, Woche oder Monat, Anteile als
+     Balken, zwei kleine Vielfache), ohne Bibliothek und ohne fremde Quelle;
+     die Tabellen bleiben. Aktiv und angemeldet nur bis heute (F-R4-66).
+     Bilderlauf 60 Bilder ohne Überlauf, kontrast.py 0 verfehlt.
+
+209. **`docs/Design.md` führt die erzeugte Bausteintabelle mit falschen Zeilennummern.** · gehört zu: 17 · Stand: erledigt · seit 16.09.2026
+     Die Tabelle trägt den Vermerk „ERZEUGT von `tools/design/tabellen.py` —
+     nicht von Hand ändern", und ihre Spalte `ui.php` nennt zu jeder Funktion
+     eine Zeilennummer. Diese Nummern liegen durchgängig **rund 26 Zeilen zu
+     niedrig**: `ui_seite_start()` steht dort mit 54 und im Code bei 80.
+     Ursache ist schlicht, dass das Werkzeug seit einigen Paketen nicht
+     gelaufen ist.
+
+     **Das ist kein Schönheitsfehler:** Eine erzeugte Tabelle, die nicht mehr
+     zu ihrer Quelle passt, ist schlechter als keine — wer ihr folgt, landet
+     mitten in einer anderen Funktion und hält das für den Baustein. Abhilfe
+     ist ein Aufruf (`python3 tools/design/tabellen.py alle`); der Punkt steht
+     hier, weil dabei **alle vier** erzeugten Tabellen neu entstehen und das
+     Ergebnis gegengelesen werden will.
+
+     *Aufgenommen 16.09.2026 in P5a/AP8, gefunden bei der Bestandsaufnahme der
+     Bausteine.*
+     Erledigt 28.09.2026 mit R4-25 (Werkzeug, keine Versionsstufe): Regel
+     `design` in `bestand.py` hält die vier erzeugten Tabellen in
+     `docs/Design.md` an die Ausgabe von `tools/erzeugen/design.py`, jede
+     genau einmal; `design.py schreiben` ersetzt sie. Beim ersten Lauf waren
+     alle vier veraltet, in der Bausteintabelle 48 von 49 Zeilen; jetzt 53
+     von 53. Gegenprobe: eine Funktion in `ui.php` eingefügt, rot.
+
+340. **GitHub zählt die Backlog-Liste fort — neben jedem Eintrag außer dem ersten steht eine falsche Nummer.** · gehört zu: 17 · Stand: erledigt · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit R4-01 aus Konzept SD (F-SD-08, Q-R4-11).*
+     `cmark-gfm` macht aus den offenen Einträgen eine einzige Liste
+     `<ol start="21">`; ein Browser nummeriert sie fort und zeigt 21, 22,
+     23 … statt 21, 23, 36. Wer auf GitHub „Nr. 36" sucht, liest daneben
+     eine andere Zahl als im Markdown. Die Decke `backlog-listenpunkte`
+     (`decken.py`) zählt `<li>` gegen Einträge, nicht die Nummern — sie
+     sieht es deshalb nicht.
+     *Weg (Konzept R4, R4-25):* jeden Eintrag als eigene Liste rendern —
+     ein Element zwischen den Einträgen, das die Liste beendet, oder die
+     Nummer im Titel; beides ändert E-SD-16 und die Grammatik in
+     `uebersicht.py` und `decken.py`.
+     *Abnahme:* `cmark-gfm` liefert je Eintrag eine Liste, deren `start`
+     die Nummer des Eintrags ist; die Decke misst das.
+     Erledigt 28.09.2026 mit R4-25 (Werkzeug, keine Versionsstufe, E-R4-62):
+     vor jedem offenen Eintrag eine Trennzeile `<!-- -->`, Decke
+     `backlog-listenstart` in `decken.py`. `cmark-gfm`: vorher eine Liste
+     für 64 Einträge, danach 64 Listen, jede mit ihrer Nummer als `start`.
+     `Backlog-Erledigt.md` bleibt ohne Trennzeilen.

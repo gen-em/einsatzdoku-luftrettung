@@ -14,8 +14,8 @@ require_once __DIR__ . '/demo_lib.php';
  *
  * „Zuruecksetzen" sieht gefaehrlich aus und ist es nicht: Der Verlust ist der
  * Zweck. Was verlorengeht, sind Besuchereingaben in einem Konto mit rein
- * erfundenen Daten — und dasselbe passiert ohnehin alle 30 Minuten von
- * selbst. „Entfernen" dagegen ist endgueltig und hat deshalb eine Rueckfrage.
+ * erfundenen Daten — und dasselbe passiert ohnehin 30 Minuten nach der
+ * ersten Aenderung von selbst. „Entfernen" dagegen ist endgueltig und hat deshalb eine Rueckfrage.
  *
  * WARUM EINE EIGENE SEITE. Die Nutzerverwaltung listet Konten; hier geht es
  * um EIN Konto mit besonderen Regeln, dessen Zustand (wann war der letzte
@@ -26,6 +26,14 @@ require_once __DIR__ . '/demo_lib.php';
 
 $notice = null; $error = null; $bericht = null;
 
+/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Jede gelungene
+ * Handlung endet mit `flash_setzen()` und einer Umleitung auf diese Seite,
+ * der Bericht des Laufs reist ueber die Sitzung mit (E-R4-33) — sonst legt
+ * Neuladen an, setzt zurueck oder entfernt ein zweites Mal. Ein Scheitern
+ * bleibt auf der Seite: Anlegen und Zuruecksetzen rollen ihre Transaktion
+ * zurueck, und `demo_entfernen()` loescht bei `ok=false` nichts
+ * (`konto_loeschen()`). Nur ein Wurf mitten im Entfernen leitet um — dann
+ * kann schon etwas fort sein (Absatz im `catch`). */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $aktion = (string)($_POST['action'] ?? '');
@@ -37,14 +45,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bericht = demo_zuruecksetzen();
             $notice = 'Demo-Konto auf den Standardzustand zurückgesetzt.';
             /* NUR DER RESET VON HAND (P5c/AP2, E-P5c-38). Der selbsttätige
-             * alle 30 Minuten schriebe rund 17 500 Einträge im Jahr in den
-             * Reiter mit der langen Frist — und verdeckte jeden anderen. */
+             * schriebe bis zu 48 Einträge am Tag in den Reiter mit der langen
+             * Frist — und verdeckte jeden anderen. */
             require_once __DIR__ . '/protokoll_lib.php';
             protokoll('verwaltung', 'demo_zurueckgesetzt',
                       'Demo-Konto von Hand auf den Standardzustand zurückgesetzt');
         } elseif ($aktion === 'demo_entfernen' && ($_POST['confirm'] ?? '') === 'ja') {
-            demo_entfernen();
-            $notice = 'Demo-Konto entfernt.';
+            $r = demo_entfernen();
+            if ($r['ok']) {
+                $notice = 'Demo-Konto entfernt.';
+            } else {
+                $error = $r['grund'];
+            }
         }
     } catch (Throwable $ex) {
         /* DREI FAELLE, UND NUR EINER DAVON DARF WOERTLICH DURCH.
@@ -57,8 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * `SQLSTATE[23000] … Duplicate entry 'manual-2' for key 'device_id'`.
          * Das ist keine Meldung, sondern ein Fund fuer jemanden, der den Code
          * kennt. Die technische Ursache gehoert ins Fehlerprotokoll, in die
-         * Seite gehoert, WAS los ist und dass nichts geaendert wurde — alle
-         * drei Handlungen laufen in einer Transaktion und rollen zurueck.
+         * Seite gehoert, WAS los ist und dass nichts geaendert wurde —
+         * Anlegen und Zuruecksetzen laufen in einer Transaktion und rollen
+         * zurueck. Das Entfernen NICHT mehr (Absatz am Ende).
          *
          * Die Kennung verbindet beides: Sie steht in der Meldung und im
          * Protokoll (fehler_kennung(), db.php).
@@ -88,7 +101,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    . 'Einzelheiten stehen im Protokoll unter der Kennung '
                    . $kennung . '.';
         }
+        /* DAS ENTFERNEN IST SEIT WEB 21.1.8 KEINE TRANSAKTION (R4-10,
+         * E-R4-32). Es geht ueber `konto_loeschen()`, und das raeumt Backups
+         * und Spuren, bevor die Kontozeile faellt. Wirft es dazwischen, ist
+         * „es wurde nichts geaendert" falsch — bis Web 21.1.8 stand genau
+         * das hier. Ein zweites „Entfernen" fuehrt es zu Ende: Was schon fort
+         * ist, findet es nicht mehr, und den Rest raeumt es. Weil schon etwas
+         * geschehen sein kann, leitet auch dieses Scheitern um (E-R4-35). */
+        if ($aktion === 'demo_entfernen') {
+            $kennung ??= fehler_kennung($ex, 'admin_demo');
+            flash_setzen('error', 'Das Entfernen ist mittendrin gescheitert — ein Teil '
+                . 'des Demo-Kontos kann schon gelöscht sein. Ein zweites „Entfernen" '
+                . 'führt es zu Ende. Einzelheiten stehen im Protokoll unter der Kennung '
+                . $kennung . '.');
+            header('Location: admin_demo.php');
+            exit;
+        }
     }
+    if ($notice !== null && $error === null) {
+        flash_setzen('notice', $notice, '', $bericht !== null ? ['bericht' => $bericht] : []);
+        header('Location: admin_demo.php');
+        exit;
+    }
+}
+
+// Meldung und Bericht aus der Umleitung uebernehmen
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ton'] === 'error') { $error = $flash['text']; }
+    else                           { $notice = $flash['text']; }
+    if (is_array($flash['daten']['bericht'] ?? null)) { $bericht = $flash['daten']['bericht']; }
 }
 
 $demoId = demo_id();
@@ -132,8 +174,9 @@ if ($demoId !== null) {
     ];
 }
 
-$letzter = demo_letzter_reset();
-$restSek = demo_reset_in();
+$letzter   = demo_letzter_reset();
+$geaendert = demo_geaendert_seit();
+$restSek   = demo_reset_in();
 
 /* ---- Anzeige --------------------------------------------------------------
  *
@@ -176,8 +219,8 @@ ui_seite_start(['titel' => 'Demo-Konto']);
 
   <?php
   /* KEINE RUECKFRAGE VOR DEM ZURUECKSETZEN: Der Verlust ist der Zweck, und
-     dasselbe passiert alle 30 Minuten von selbst. Eine Rueckfrage, die man
-     dreissigmal am Tag wegklickt, entwertet die Rueckfragen, die etwas
+     dasselbe passiert 30 Minuten nach jeder ersten Aenderung von selbst.
+     Eine Rueckfrage, die man oft am Tag wegklickt, entwertet die Rueckfragen, die etwas
      bedeuten. „Entfernen" dagegen ist endgueltig und steht deshalb im
      Aktionsmenue, hinter einer Rueckfrage. */
   $gesperrt = $fixtureDa ? '' : ' disabled';
@@ -216,7 +259,8 @@ ui_seite_start(['titel' => 'Demo-Konto']);
   <?php endif; ?>
 
   <p class="seiten-erklaerung">Ein Konto zum Ausprobieren, das sich
-     <strong>alle 30 Minuten</strong> selbst auf den Standardzustand zurücksetzt.
+     <strong>30 Minuten nach der ersten Änderung</strong> selbst auf den
+     Standardzustand zurücksetzt — ohne Änderung einmal am Tag.
      <a href="hilfe.php#11-6-demo-konto">Handbuch: Demo-Konto</a></p>
 
 <?php if ($demoId === null): ?>
@@ -249,9 +293,17 @@ ui_seite_start(['titel' => 'Demo-Konto']);
       ui_zeile(['text' => 'Konto', 'klein' => (string)$email]);
       ui_zeile(['text' => 'Letzter Reset',
                 'klein' => $letzter > 0 ? fmt_local(gmdate('Y-m-d H:i:s', $letzter)) : 'unbekannt']);
+      /* ZWEI FRISTEN SEIT WEB 21.2.0 (R4-14, Nr. 76): 30 Minuten nach der
+       * ersten Aenderung, ohne Aenderung ein Tag nach dem letzten Reset.
+       * Welche gilt, sagt die Zeile „Geändert" darueber. */
+      ui_zeile(['text' => 'Geändert',
+                'klein' => $geaendert > 0
+                    ? 'seit ' . fmt_local(gmdate('Y-m-d H:i:s', $geaendert))
+                    : 'nein — kein Reset außer dem täglichen']);
       ui_zeile(['text' => 'Nächster Reset',
-                'klein' => $restSek > 0 ? 'in ' . (int)ceil($restSek / 60) . ' Minuten'
-                                        : 'bei der nächsten Anfrage']);
+                'klein' => $restSek <= 0 ? 'bei der nächsten Anfrage'
+                    : ($restSek < 3600 ? 'in ' . (int)ceil($restSek / 60) . ' Minuten'
+                                       : 'ab ' . datum_zeit_text(gmdate('Y-m-d H:i:s', time() + $restSek)))]);
       ?>
     <?php ui_karte_ende(); ?>
 

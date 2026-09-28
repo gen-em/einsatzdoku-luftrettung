@@ -115,7 +115,7 @@ UMLAUF_PRAEFIX = "umlauf-"
 # Umlaufkonto benutzen (Wegprobe, Freigabeprobe; RP-01), sie hier lesen statt
 # sie abzuschreiben. Zugaenge einer fernen Anlage kommen nie hierher.
 UMLAUF_PASSWORT = "umlaufpruefung2026"
-ADMIN_VORGABE = ("admin@gen-em.org", "pruefstandzugang2026")
+ADMIN_VORGABE = ("admin@example.invalid", "pruefstandzugang2026")
 
 # DER ADMIN-ZUGANG IST SEIT P5c/AP5 EIN TUPEL AUS ZWEI ODER DREI STUECKEN:
 # Adresse, Passwort und -- wahlweise -- das Geheimnis des Zweitfaktors in
@@ -128,7 +128,7 @@ AdminZugang = tuple[str, ...]
 
 
 def umlauf_konto(art: str) -> str:
-    return f"{UMLAUF_PRAEFIX}{art}@gen-em.org"
+    return f"{UMLAUF_PRAEFIX}{art}@example.invalid"
 
 
 def konto_loeschen(basis: str, admin: AdminZugang, konto: str,

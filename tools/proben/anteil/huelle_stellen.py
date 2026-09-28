@@ -21,7 +21,7 @@ zu tun.
 
 Aufruf:
   python3 tools/proben/anteil/huelle_stellen.py <konto> <passwort> edk1|edka1
-  python3 tools/proben/anteil/huelle_stellen.py umlauf-csv@gen-em.org … edk1
+  python3 tools/proben/anteil/huelle_stellen.py umlauf-csv@example.invalid … edk1
   (Basisadresse ueber die Umgebungsvariable BASIS, Vorgabe https://127.0.0.1:8443)
 
 Rueckgabewert: 0 = die Huelle steht auf der gewuenschten Fassung, 1 = nicht.

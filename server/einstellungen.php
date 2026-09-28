@@ -138,8 +138,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Im Demo-Konto lassen sich E-Mail-Adresse und Passwort nicht '
                . 'ändern — sie sind öffentlich und müssen es bleiben, damit '
                . 'die nächste Besucherin hereinkommt. Alles andere darfst du '
-               . 'gern ausprobieren; spätestens nach 30 Minuten ist ohnehin '
-               . 'wieder der Ausgangszustand hergestellt.';
+               . 'gern ausprobieren; 30 Minuten nach der ersten Änderung ist '
+               . 'ohnehin wieder der Ausgangszustand hergestellt.';
         $action = '';
     }
 
@@ -311,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Server sieht das Passwort in dieser einen Anfrage, und das ist
      * derselbe Weg, den `login.php` ohnehin geht.
      *
-     * DEMO-KONTO NICHT. Es setzt sich alle 30 Minuten selbst zurueck; eine
+     * DEMO-KONTO NICHT. Es setzt sich nach jeder Aenderung selbst zurueck; eine
      * Loeschung mit 30 Tagen Karenz waere dort sinnlos und wuerde den
      * Pruefstand abraeumen. */
     if ($action === 'konto_loeschen') {
@@ -1963,7 +1963,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                           'id' => 'k-konto-loeschen']); ?>
       <?php if (demo_ist_demo($userId)): ?>
         <p class="feld-hinweis">Das Demo-Konto lässt sich nicht löschen — es setzt
-           sich ohnehin alle 30 Minuten selbst zurück.</p>
+           sich 30 Minuten nach der ersten Änderung ohnehin selbst zurück.</p>
       <?php else: ?>
         <p class="feld-hinweis"><strong>Dein Konto wird sofort gesperrt und nach
            <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht.</strong> In dieser Zeit
@@ -2865,18 +2865,17 @@ ui_seite_start(['titel' => 'Einstellungen',
 
     <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
     <script src="<?= asset('assets/locparse.js') ?>"></script>
-    <?php /* html.js (EdHtml.escape) und vorschlagsliste.js (EdVorschlaege)
-             gehoeren zur Ortsfeld-Komponente, seit die Trefferliste ein
-             eigener Baustein ist (S9/AP1, E-S9-07). Reihenfolge = Abhaengigkeit.
+    <?php /* vorschlagsliste.js (EdVorschlaege) gehoert zur Ortsfeld-
+             Komponente, seit die Trefferliste ein eigener Baustein ist
+             (S9/AP1, E-S9-07). Reihenfolge = Abhaengigkeit.
 
-             html.js STEHT IN DIESER DATEI ZWEIMAL — hier und im Reiter
-             „Backup". Das geht, weil die Reiter einander ausschliessen
-             (`elseif`), und es geht NUR deshalb: Die Datei deklariert auf
-             oberster Ebene ein `const`, und eine zweite Deklaration im selben
-             Dokument ist ein SyntaxError, der das ganze zweite Skript
-             verwirft. Genau diese Falle hat F-12 schon einmal gekostet. Wer
-             die Reiterstruktur aendert, prueft beide Stellen. */ ?>
-    <script src="<?= asset('assets/html.js') ?>"></script>
+             html.js (EdHtml.escape) STAND HIER UND IM REITER „BACKUP" — zweimal
+             in einer Datei, und das ging nur, weil die Reiter einander
+             ausschliessen: html.js deklariert auf oberster Ebene ein `const`,
+             und eine zweite Deklaration im selben Dokument ist ein
+             SyntaxError (F-12). Seit Web 21.1.11 steht es im Kopf jeder Seite
+             (ui_seite_start()), und die Falle gibt es nicht mehr — wer es
+             hier wieder einbindet, stellt sie neu auf. */ ?>
     <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
     <script src="<?= asset('assets/geocoder.js') ?>"></script>
     <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
@@ -3168,13 +3167,12 @@ ui_seite_start(['titel' => 'Einstellungen',
                                'guete' => true, 'einzug' => '    ']); ?>
     <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife
              (Baustein B8), die der Backup-Lauf seit Web 4.6.0 benutzt. */ ?>
-    <?php /* html.js liefert EdHtml.meldung() UND EdHtml.escape() -- melde()
+    <?php /* html.js (im Kopf jeder Seite) liefert EdHtml.meldung() UND EdHtml.escape() -- melde()
              baut sein Markup seit Schritt 15 AP8 darueber, und die Maskierung
              steckt dort mit drin. Dass sie noetig ist, bleibt wahr: In dem
              Satz, den melde() nach einem gescheiterten Einspielen zeigt,
              steckt eine Fehlermeldung, die aus einer fremden Datei stammen
              kann. */ ?>
-    <script src="<?= asset('assets/html.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
     <?php /* zip.js: Seit Containerfassung 4 (S2/AP5) ist ein Backup ein
              ZIP mit versiegelten Teilen — geschrieben beim Sichern, gelesen
@@ -4392,33 +4390,31 @@ ui_seite_start(['titel' => 'Einstellungen',
           s = out.stats;
         }
 
-        /* HIER WIRD EIN FEHLER BEWAHRT, NICHT BEHOBEN -- Backlog Nr. 277.
-         *
-         * Die Antwort wird auch jetzt NICHT gelesen: kein Blick auf den
-         * Status, kein Blick auf den Rumpf. Eine 500 laeuft also weiterhin
-         * durch, und die Erfolgsmeldung darunter erscheint, obwohl die
-         * Freigabe nicht als eingeloest vermerkt ist. Ein Netzfehler
-         * dagegen warf bisher aus dem `fetch` heraus in den aeusseren
-         * catch -- und meldete das Einspielen als fehlgeschlagen, obwohl
-         * es vollstaendig durchgelaufen war.
-         *
-         * EdApi wirft NIE. Damit dieses Paket kein Verhalten aendert
-         * (E-ZE-10), bildet die Stelle den alten Wurf nach: `status === 0`
-         * heisst, die Anfrage kam gar nicht durch -- genau der Fall, in dem
-         * `fetch` bisher warf. Ein HTTP-Fehler wirft weiterhin nicht.
-         * Wer Nr. 277 loest, streicht die `status === 0`-Zeile und liest
-         * stattdessen `frei.ok`. */
+        /* DIE ANTWORT WIRD GELESEN (Web 21.1.7, Backlog Nr. 277). Bis dahin
+         * lief eine 500 still durch, und ein Netzfehler warf in den
+         * aeusseren catch — der dann „Das Einspielen ist fehlgeschlagen"
+         * meldete, obwohl die Daten an dieser Stelle schon vollstaendig auf
+         * dem Server liegen. Beides war falsch, in entgegengesetzter
+         * Richtung. Jetzt steht die Fertig-Meldung in jedem Fall da, und
+         * scheitert das Vermerken, sagt sie es mit Ton `warn`: Die Daten
+         * sind eingespielt, OB die Freigabe als eingeloest gilt, ist
+         * unklar — nicht „fehlgeschlagen", denn bei einem Netzfehler kann
+         * der Server sie laengst vermerkt haben. */
         const frei = await EdApi.postJson('api/adminbackup_freigabe.php',
-                                          { eingeloest: true });
-        if (frei.status === 0) { throw new Error(frei.meldung); }
+                                          { eingeloest: true },
+                                          { vorgang: 'Das Vermerken der Freigabe' });
         const zusatz = (s.spuren_uebernommen !== undefined
                           ? ` ${s.spuren_uebernommen} Aufzeichnungen übernommen.` : '')
                      + (unlesbar
                           ? ` ACHTUNG: ${unlesbar} Einsätze liessen sich mit diesem `
                           + `Schlüssel nicht öffnen; ihre geschützten Angaben bleiben `
-                          + `hier unlesbar.` : '');
+                          + `hier unlesbar.` : '')
+                     + (frei.ok ? ''
+                          : ` Die Daten sind eingespielt. ${frei.meldung} — ob die `
+                          + `Freigabe noch offen ist, ist unklar. Ein zweites `
+                          + `Einspielen ist nicht nötig.`);
         melde(fgState, 'Fertig: ' + restoreBericht(s, zusatz),
-              unlesbar || s.spuren_ohne_ziel ? 'warn' : 'ok');
+              unlesbar || s.spuren_ohne_ziel || !frei.ok ? 'warn' : 'ok');
         document.getElementById('freigabebtn').disabled = true;
       } catch (e) {
         /* OHNE PRAEFIX (Schritt 15 AP8, R2). Den Satzanfang setzt jetzt
@@ -4875,6 +4871,13 @@ ui_seite_start(['titel' => 'Einstellungen',
     function fokus(d, rolle){
       let f = rolle ? d.querySelector('.focus-target[data-role="' + rolle + '"]') : null;
       if (!f) { f = d.querySelector('.focus-target'); }
+      /* `ui_feld()` setzt `klasse` an die HÜLLE `.feld`, nicht an das
+         Eingabefeld. `.focus-target` traf deshalb ein `div`, `focus()` tat
+         nichts, und der Rückfall darunter kam nie dran, weil `f` gefunden
+         war (R4-05, F-R4-25). Gemeint ist das Feld darin. */
+      if (f && !f.matches('input, select, textarea, button')) {
+        f = f.querySelector('input, select, textarea, button');
+      }
       if (!f) { f = d.querySelector('input[type=text], input[type=number], select, textarea'); }
       if (f) { f.focus({ preventScroll: true }); }
     }
@@ -4893,7 +4896,14 @@ ui_seite_start(['titel' => 'Einstellungen',
       d.scrollIntoView({ block: 'start' });
       fokus(d, rolle);
     }
-    if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
+    /* NACH DEM LADEN, NICHT BEIM LESEN DES SKRIPTS (R4-05, F-R4-25). Der
+       Browser verarbeitet den Anker der Adresse erst am Ende des Ladens, und
+       ist das Ziel selbst nicht fokussierbar (hier eine Karte), setzt er den
+       Fokus dabei auf den Seitenkörper zurück — gemessen in Chromium: Der
+       Aufruf kam an, der Fokus war danach weg. */
+    if (location.hash.length > 1) {
+      window.addEventListener('load', () => { setTimeout(() => oeffne(location.hash.slice(1)), 0); });
+    }
     window.addEventListener('hashchange', () => {
       if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
     });

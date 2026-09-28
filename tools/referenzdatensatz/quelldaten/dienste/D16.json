@@ -145,7 +145,7 @@
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
         "dob": "1965-04-27",
         "age": null,
-        "mission_no": "2026-1048",
+        "mission_no": "2026-1049",
         "loc": {
           "addr": "Brunnengasse 66, 87411 Auwiesen",
           "lat": 47.54338,
@@ -234,7 +234,7 @@
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
         "dob": null,
         "age": 30,
-        "mission_no": "2026-1049",
+        "mission_no": "2026-1050",
         "loc": {
           "addr": "Am Anger 39, 87411 Auwiesen",
           "lat": 47.54244,
@@ -321,7 +321,7 @@
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
         "dob": "1981-11-10",
         "age": null,
-        "mission_no": "2026-1050",
+        "mission_no": "2026-1051",
         "loc": {
           "addr": "Hirtenweg 71, 87519 Steinach im Tal",
           "lat": 47.51534,
@@ -399,7 +399,7 @@
         "dx": "Hypertensive Entgleisung",
         "dob": "1934-05-25",
         "age": null,
-        "mission_no": "2026-1051",
+        "mission_no": "2026-1052",
         "loc": {
           "addr": "Lindenplatz 39, 87561 Steinach im Tal",
           "lat": 47.51337,
@@ -488,7 +488,7 @@
         "dx": "Akutes Abdomen",
         "dob": null,
         "age": 89,
-        "mission_no": "2026-1052",
+        "mission_no": "2026-1053",
         "loc": {
           "addr": "Lärchenweg 74, 87545 Steinach im Tal",
           "lat": 47.51885,

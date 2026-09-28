@@ -97,7 +97,13 @@ require_once __DIR__ . '/mail_lib.php';
  *
  * `$wer` IST DIE KONTOKENNUNG DER HANDELNDEN. Ohne sie bliebe die Spalte
  * `wer` in `sicherheit_ereignisse` leer, und das Ereignis „aufgehoben" sagte
- * nicht, wer aufgehoben hat — also genau das, wofuer es da ist. */
+ * nicht, wer aufgehoben hat — also genau das, wofuer es da ist.
+ *
+ * UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Aufheben endet mit
+ * `flash_setzen()` und einer Umleitung auf diese Seite — sonst schickt
+ * Neuladen den Klick ein zweites Mal. Auch „gibt es nicht mehr" leitet um —
+ * das ist das Ergebnis des Versuchs, kein Eingabefehler (E-R4-34). Fehlen
+ * Topf oder Merkmal, ist nichts geschehen, und die Seite bleibt. */
 $meldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'aufheben') {
     csrf_check();
@@ -115,6 +121,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'aufhe
         $meldung = ['warn', 'Diese Sperre gibt es nicht mehr — vermutlich ist sie '
                           . 'abgelaufen, während die Seite offen stand.'];
     }
+    if ($meldung[0] !== 'fehler') {
+        flash_setzen($meldung[0], $meldung[1]);
+        header('Location: betrieb_sicherheit.php');
+        exit;
+    }
+}
+
+/* Meldung aus der Umleitung — sie steht oben auf der Seite (Ort ''). Nur die
+ * Toene von `ui_meldung_markup()`: Ein liegengebliebener `notice` einer
+ * anderen Seite traegt denselben leeren Ort, und die Funktion wirft bei ihm. */
+$flash = flash_holen();
+if ($flash !== null && $flash['ort'] === ''
+    && in_array($flash['ton'], ['ok', 'fehler', 'warn', 'info'], true)) {
+    $meldung ??= [$flash['ton'], $flash['text']];
 }
 
 /* ---- Erheben -------------------------------------------------------------

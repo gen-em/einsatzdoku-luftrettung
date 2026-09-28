@@ -16,7 +16,7 @@ höchstens 40 Zeilen, Streichliste. Drei Tage nach PK-04 standen die Zahlen
 unter den Regeln, und niemand hatte es gemerkt, weil es niemand zählte. Eine
 Regel ohne Messung ist eine Hoffnung.
 
-WAS ER MISST — elf Regeln, jede mit Namen im Befund:
+WAS ER MISST — dreizehn Regeln, jede mit Namen im Befund:
 
   form       jede LIESMICH.md unter tools/, auch in Unterordnern (E-BR-04):
              genau die fünf Abschnitte aus 6.2 in dieser Reihenfolge,
@@ -64,6 +64,36 @@ Runbooks durch Befolgen, F-BR-19):
              nirgends eine veraltete Kopie davon — erkannt an den ersten zwei
              Zellen einer Zeile oder am fetten Vorsatz, nicht an Gleichheit
 
+Die zwei letzten halten den Prüfstand an das Tor (Nr. 329, R4-02): Örtlich
+steht die Anlage, in Stufe 1 nicht — was dazwischen fällt, war im Prüfstand
+grün und im Pull Request rot, nach sechs Läufen.
+
+  anlage     keine Probe mit `braucht: nichts` lädt über ihre require-Kette
+             auf oberster Ebene server/db.php oder server/config.php — db.php
+             bricht ohne config.php ab, und Stufe 1 hat keine. Gelesen mit
+             token_get_all; Pfade werden nur aus Zeichenketten, __DIR__,
+             __FILE__, dirname(), realpath() und so gebauten Variablen
+             ausgewertet — alles andere ist „nicht auflösbar", ein Befund
+  tor        jeder Riegel aus pruefablauf.json steht als `--riegel NAME=` im
+             Aufruf `bericht.py lesen --alle-riegel` von
+             .github/workflows/pruefung.yml, und dort steht kein fremder
+             Name — sonst ist der Riegel im Tor rot, und örtlich fährt diesen
+             Schritt niemand (F-P5c-172). Die Datei wird gelesen, nicht
+             geschrieben
+
+Seit R4-25 (Nr. 209) hält eine vierzehnte Regel die erzeugten Tabellen der
+Gestaltungsrichtlinie an ihren Erzeuger — wie `tabelle` die Tabelle in
+Pruefablauf.md 4:
+
+  design     die vier Tabellen in docs/Design.md, die tools/erzeugen/design.py
+             herstellt (Token, Schwellen, Symbole, Bausteine), stehen dort
+             genau so, wie der Erzeuger sie JETZT ausgibt, jede genau einmal,
+             und es gibt genau vier Blöcke mit seiner Marke. Eine Funktion in
+             ui.php, eine Regel in style.css, ein Symbol mehr — und die
+             Tabelle ist rot, bis sie neu erzeugt ist. Bis dahin stand in
+             CLAUDE.md 5 nur, dass man es tun soll; gemessen hat es niemand,
+             und alle vier Tabellen waren veraltet
+
 WIE ER LIEST — MIT DEN ECHTEN WERKZEUGEN, NICHT MIT NACHBAUTEN (BR-05).
 Drei Gegenprüfrunden haben gezeigt: Wer Markdown, PHP und Bash mit eigenen
 Mustern nachliest, liest jede Runde eine andere Randschreibweise anders als
@@ -98,6 +128,10 @@ als Datei mit Selbstprobe — rot zu Unrecht, nicht still. Eine Endmarke unter
 der erzeugten Tabelle (wie in Design.md) zählt als zweiter Block, ebenso rot.
 Zwei Fälle der Selbstprobe ändern den Erzeuger selbst und greifen dafür in
 seinen Text; ändert der sich, melden sie „Anker fehlt", rot und benannt.
+Zur Regel `anlage`: Ein require im Rumpf einer Funktion folgt er nicht — es
+läuft erst beim Aufruf, und ob der Riegel die Funktion ruft, sieht er nicht.
+Python-Proben liest er nicht auf PHP, das sie starten. Zur Regel `tor`: ob
+der Wert hinter `NAME=` der richtige Schritt ist, liest er nicht.
 
 GELESEN WIRD, WAS `git add -A` IN DEN BAUM LEGTE: versionierte und neue,
 nicht ignorierte Dateien. Eine Ausgabe wie tools/screenshots/ausgabe/ zählt
@@ -130,14 +164,23 @@ LOSE_ERLAUBT = {'motor.mjs'}                 # E-BR-03 (4), beim Namen — kein 
 RUFER = ['tools/pruefstand/pruefablauf.json', 'tools/pruefstand/pruefen.sh',
          'docs/Sandbox-Setup.md']
 REGELN = ['form', 'anleitung', 'anlass', 'inventur', 'lose', 'probe', 'backlog',
-          'selbst', 'zeile', 'ablauf', 'tabelle']
+          'selbst', 'zeile', 'ablauf', 'tabelle', 'anlage', 'tor', 'design']
 PROBEN_LAEUFER = 'tools/proben/proben.sh'
 QUELLTEXT = 'tools/quelltext/pruefen.sh'
 QUELLTEXT_ANLEITUNG = 'tools/quelltext/LIESMICH.md'
 ABLAUF = 'tools/pruefstand/pruefablauf.json'
 ERZEUGER_DOKU = 'tools/pruefstand/bericht.py'
+ERZEUGER_DESIGN = 'tools/erzeugen/design.py'
+DESIGN = 'docs/Design.md'
+DESIGN_TEILE = ('token', 'schwellen', 'symbole', 'bausteine')
+DESIGN_MARKE = '<!-- ERZEUGT von tools/erzeugen/design.py'
 AUSWAHL = 'tools/pruefstand/auswahl.py'
 PRUEFSTAND = 'tools/pruefstand/pruefen.sh'
+TOR = '.github/workflows/pruefung.yml'
+# Was ohne config.php beim Laden abbricht (db.php prüft es in seinen ersten
+# Zeilen, Nr. 288) — erreicht eine Probe ohne Anlage eines davon, ist sie im
+# Tor rot.
+ANLAGE = ('server/db.php', 'server/config.php')
 PRUEFABLAUF = 'docs/Pruefablauf.md'
 MUSTER_FELDER = ['id', 'ab', 'pfade', 'proben', 'anlass']   # auswahl.py und erzeugen-doku lesen alle fünf
 # Die Schlüssel, die jemand liest (gemessen am Bestand 24.09.2026). Ein anderer
@@ -148,7 +191,7 @@ SCHLUESSEL = {
     # `migration`); beim Aufnehmen von BR in den P5c-Zweig eingetragen.
     'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen', 'stufenregeln'},
     'riegel': {'beschreibung', 'proben'},
-    'probe': {'aufruf', 'bemerkung', 'braucht', 'nach'},
+    'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'nach'},    # `demo`: R4-04, Nr. 322
     'muster': set(MUSTER_FELDER),
 }
 QUELLTEXT_SPRACHEN = ('.py', '.php')          # was der Riegel lesen kann — alles andere ist ein Befund
@@ -250,6 +293,21 @@ KENNUNGEN = {
     'tabelle-fortsetzung': 'Text direkt unter dem Block',
     'tabelle-abschnitt': 'Block nicht in Abschnitt 4',
     'tabelle-kopie': 'eine Zeile der Ausgabe steht ein zweites Mal',
+    'anlage-abbruch': 'die Gruppe anlage brach ab',
+    'anlage-werkzeug': 'php fehlt oder scheitert',
+    'anlage-db': 'eine Probe ohne Anlage lädt db.php oder config.php',
+    'anlage-unklar': 'ein require, dessen Ziel sich nicht auflösen lässt',
+    'tor-abbruch': 'die Gruppe tor brach ab',
+    'tor-datei': 'pruefung.yml fehlt oder ruft bericht.py lesen --alle-riegel nicht',
+    'tor-fehlt': 'ein Riegel ohne --riegel im Tor',
+    'tor-fremd': '--riegel für einen Namen, der kein Riegel ist',
+    'design-abbruch': 'die Gruppe design brach ab',
+    'design-erzeuger-fehlt': 'design.py fehlt',
+    'design-erzeuger-fehler': 'design.py scheitert an einem Teil',
+    'design-doku-fehlt': 'Design.md fehlt',
+    'design-marken': 'nicht genau vier Blöcke mit der Marke des Erzeugers',
+    'design-abweichung': 'eine Tabelle weicht von der Ausgabe des Erzeugers ab',
+    'design-mehrfach': 'eine Tabelle steht mehr als einmal',
 }
 
 # Nur für die Selbstprobe: Werkzeuge, die als fehlend gelten sollen, und
@@ -870,7 +928,8 @@ def messen(wurzel):
     # ist eine eigene Gruppe: Hing sie an `ablauf`, fiel sie mit einem Komma
     # zu viel in der Ablaufdatei still aus (Runde 4).
     for kennung, pruefung in (('selbst-abbruch', quelltext_pruefen), ('ablauf-abbruch', ablauf_pruefen),
-                              ('tabelle-abbruch', tabelle_pruefen)):
+                              ('tabelle-abbruch', tabelle_pruefen), ('anlage-abbruch', anlage_pruefen),
+                              ('tor-abbruch', tor_pruefen), ('design-abbruch', design_pruefen)):
         try:
             if kennung in _ABBRUCH:
                 raise RuntimeError('eingebauter Abbruch der Selbstprobe')
@@ -1331,6 +1390,46 @@ def tabelle_vergleichen(doku, soll):
     return aus
 
 
+def design_pruefen(wurzel, alle, zahlen, ruf):
+    """Regel `design` (Nr. 209, R4-25) — die erzeugten Tabellen in Design.md
+    sind genau die Ausgabe von design.py, jede einmal, vier Marken.
+
+    VERGLICHEN WIRD DER ROHE TEXT, als Ganzes: Der Erzeuger gibt je Teil einen
+    Block aus, mit Marke, Kopf, Zeilen und Schlusssatz, und genau dieser
+    Block steht im Dokument oder nicht. Wo er fehlt, nennt der Befund die
+    erste Zeile der Ausgabe, die im Dokument nirgends steht — meist eine
+    verschobene Zeilennummer in der Bausteintabelle."""
+    befunde = []
+    erzeuger = os.path.join(wurzel, ERZEUGER_DESIGN)
+    if not os.path.isfile(erzeuger):
+        return [bef('design-erzeuger-fehlt', f'{ERZEUGER_DESIGN} fehlt — die Tabellen in {DESIGN} sind nicht prüfbar')]
+    if not os.path.isfile(os.path.join(wurzel, DESIGN)):
+        return [bef('design-doku-fehlt', f'{DESIGN} fehlt')]
+    doku = lies(wurzel, DESIGN)
+    zeilen = set(doku.split('\n'))
+    marken = sum(1 for z in doku.split('\n') if z.startswith(DESIGN_MARKE))
+    if marken != len(DESIGN_TEILE):
+        befunde.append(bef('design-marken', f'{DESIGN}: {marken} Blöcke mit der Marke des Erzeugers, erwartet '
+                                            f'{len(DESIGN_TEILE)}'))
+    for teil in DESIGN_TEILE:
+        r = subprocess.run([sys.executable, erzeuger, teil], cwd=wurzel, capture_output=True, text=True)
+        if r.returncode != 0 or not r.stdout.strip():
+            letzte = (r.stderr.strip().splitlines() or ['(keine Ausgabe)'])[-1]
+            befunde.append(bef('design-erzeuger-fehler', f'{ERZEUGER_DESIGN} {teil} endete mit rc {r.returncode}: '
+                                                         f'{letzte[:100]}'))
+            continue
+        soll = r.stdout.rstrip('\n')
+        n = doku.count(soll)
+        if n == 0:
+            erste = next((z for z in soll.split('\n') if z and z not in zeilen), '')
+            befunde.append(bef('design-abweichung', f'{DESIGN}: die Tabelle „{teil}" weicht von der Ausgabe ab'
+                                                    + (f' (zuerst: „{erste[:60]}")' if erste else '')
+                                                    + f' — neu erzeugen: python3 {ERZEUGER_DESIGN} schreiben'))
+        elif n > 1:
+            befunde.append(bef('design-mehrfach', f'{DESIGN}: die Tabelle „{teil}" steht {n}-mal'))
+    return befunde
+
+
 def kopie_schluessel(z):
     """Woran eine Zeile der erzeugten Tabelle zu erkennen ist, auch wenn sie
     veraltet ist: eine Tabellenzeile an ihren ersten ZWEI Zellen (Berührung
@@ -1350,6 +1449,219 @@ def kopie_schluessel(z):
 
 # ------------------------------------------------------------------- Lauf
 
+# PHP liest PHP (E-BR-22): Je Datei die require/include-Stellen, ihr Ziel und
+# ob sie im Rumpf einer Funktion stehen. Ein Ziel wird nur aus einer
+# POSITIVLISTE ausgewertet — Zeichenketten, Zahlen, __DIR__, __FILE__,
+# dirname(), realpath(), `.`, Klammern und Variablen, die vorher genauso
+# gebaut wurden. Alles andere ist „nicht auflösbar", und kein eval() sieht es.
+_PHP_LADEKETTE = r"""
+$wurzel = rtrim($argv[1], '/');
+$offen = array_slice($argv, 2); $aus = []; $gesehen = [];
+function _lk_wert(array $toks, string $datei, array $vars) {
+    $code = '';
+    foreach ($toks as $x) {
+        if (is_array($x)) {
+            switch ($x[0]) {
+                case T_WHITESPACE: case T_COMMENT: case T_DOC_COMMENT: continue 2;
+                case T_DIR: $code .= var_export(dirname($datei), true); break;
+                case T_FILE: $code .= var_export($datei, true); break;
+                case T_CONSTANT_ENCAPSED_STRING: case T_LNUMBER: $code .= $x[1]; break;
+                case T_VARIABLE:
+                    if (!array_key_exists($x[1], $vars) || $vars[$x[1]] === null) { return null; }
+                    $code .= var_export($vars[$x[1]], true); break;
+                default:
+                    $f = strtolower(ltrim($x[1], '\\'));
+                    if (in_array($x[0], [T_STRING, defined('T_NAME_FULLY_QUALIFIED') ? T_NAME_FULLY_QUALIFIED : -1], true)
+                            && in_array($f, ['dirname', 'realpath'], true)) { $code .= $f; break; }
+                    return null;
+            }
+        } elseif (in_array($x, ['.', '(', ')', ','], true)) {
+            $code .= $x;
+        } else {
+            return null;
+        }
+    }
+    if ($code === '') { return null; }
+    try { $v = eval('return ' . $code . ';'); } catch (Throwable $e) { return null; }
+    return is_string($v) ? $v : null;
+}
+function _lk_norm(string $pfad): string {
+    $teile = [];
+    foreach (explode('/', $pfad) as $s) {
+        if ($s === '' || $s === '.') { continue; }
+        if ($s === '..') { array_pop($teile); continue; }
+        $teile[] = $s;
+    }
+    return '/' . implode('/', $teile);
+}
+while ($offen) {
+    $datei = _lk_norm(array_shift($offen));
+    if (isset($gesehen[$datei])) { continue; }
+    $gesehen[$datei] = true;
+    $rel = substr($datei, strlen($wurzel) + 1);
+    $aus[$rel] = [];
+    if (!is_file($datei)) { continue; }
+    $t = token_get_all(file_get_contents($datei));
+    $n = count($t); $vars = []; $stapel = []; $funk = false;
+    for ($i = 0; $i < $n; $i++) {
+        $x = $t[$i];
+        $faul = in_array('f', $stapel, true);
+        if (is_array($x) && $x[0] === T_FUNCTION) { $funk = true; continue; }
+        if ($x === ';') { $funk = false; continue; }
+        if ($x === '{' || (is_array($x) && in_array($x[0], [T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES], true))) {
+            $stapel[] = ($x === '{' && $funk) ? 'f' : 'x'; $funk = false; continue;
+        }
+        if ($x === '}') { array_pop($stapel); continue; }
+        $j = $i + 1;
+        $zuweisung = is_array($x) && $x[0] === T_VARIABLE && !$faul;
+        if ($zuweisung) {
+            while ($j < $n && is_array($t[$j]) && $t[$j][0] === T_WHITESPACE) { $j++; }
+            $zuweisung = $j < $n && $t[$j] === '=';
+        }
+        $lade = is_array($x) && in_array($x[0], [T_REQUIRE, T_REQUIRE_ONCE, T_INCLUDE, T_INCLUDE_ONCE], true);
+        if (!$zuweisung && !$lade) { continue; }
+        $start = $zuweisung ? $j + 1 : $i + 1; $tiefe = 0; $toks = [];
+        for ($k = $start; $k < $n; $k++) {
+            $y = $t[$k];
+            if ($y === '(') { $tiefe++; } elseif ($y === ')') { if ($tiefe === 0) { break; } $tiefe--; }
+            if (($y === ';' || $y === ',') && $tiefe === 0) { break; }
+            if (is_array($y) && in_array($y[0], [T_REQUIRE, T_REQUIRE_ONCE, T_INCLUDE, T_INCLUDE_ONCE], true)) { break; }
+            $toks[] = $y;
+        }
+        $wert = _lk_wert($toks, $datei, $vars);
+        if ($zuweisung) { $vars[$x[1]] = $wert; continue; }
+        $ausdruck = trim(implode('', array_map(fn($y) => is_array($y) ? $y[1] : $y, $toks)));
+        $ziel = $wert === null ? null : _lk_norm($wert !== '' && $wert[0] === '/' ? $wert : dirname($datei) . '/' . $wert);
+        $zielrel = ($ziel !== null && strpos($ziel, $wurzel . '/') === 0) ? substr($ziel, strlen($wurzel) + 1) : null;
+        $aus[$rel][] = ['ausdruck' => $ausdruck, 'ziel' => $zielrel, 'extern' => $ziel !== null && $zielrel === null,
+                        'faul' => $faul, 'zeile' => $x[2]];
+        if (!$faul && $zielrel !== null && is_file($ziel)) { $offen[] = $ziel; }
+    }
+}
+echo json_encode($aus, JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_SLASHES);
+"""
+
+
+def ladekette(wurzel, einstiege):
+    """{relativer Pfad: [{ausdruck, ziel, extern, faul, zeile}]} über alle
+    Dateien, die die Einstiege auf oberster Ebene laden — oder WerkzeugFehlt."""
+    if not einstiege:
+        return {}
+    php = _werkzeug('php')
+    w = os.path.abspath(wurzel)
+    r = subprocess.run([php, '-r', _PHP_LADEKETTE, '--', w, *[os.path.join(w, e) for e in einstiege]],
+                       capture_output=True, text=True, encoding='utf-8', errors='replace')
+    if r.returncode != 0 or not r.stdout.strip().startswith(('{', '[')):
+        raise WerkzeugFehlt(f'php (rc {r.returncode}: {(r.stderr or r.stdout).strip()[:80]})')
+    daten = json.loads(r.stdout)
+    return daten if isinstance(daten, dict) else {}
+
+
+def anlage_pruefen(wurzel, alle, zahlen, ruf):
+    """Regel `anlage` — lädt eine Probe ohne Anlage db.php oder config.php?"""
+    befunde = []
+    try:
+        a = json.loads(lies(wurzel, ABLAUF))
+    except (OSError, ValueError):
+        return []                               # die Regel `ablauf` meldet das
+    if not isinstance(a, dict) or not isinstance(a.get('proben'), dict):
+        return []                               # ebenso: oben kein Objekt, proben kein Objekt
+    namen = {}
+    for z in laeufer_liste(wurzel, QUELLTEXT, '--liste') or []:
+        teile = z.split('\t')
+        if teile[0] == 'NAME' and len(teile) >= 3:
+            namen[teile[1]] = teile[2]
+    quelle = lies(wurzel, PROBEN_LAEUFER) if os.path.isfile(os.path.join(wurzel, PROBEN_LAEUFER)) else ''
+    einstieg_je = {}                            # Probe → [PHP-Einstiege]
+    ohne = [(n, d) for n, d in a['proben'].items()
+            if isinstance(d, dict) and d.get('braucht') == 'nichts' and isinstance(d.get('aufruf'), str)]
+    for n, d in ohne:
+        aufruf = d['aufruf']
+        php = set(re.findall(r'(tools/[\w./-]+\.php)\b', aufruf))
+        for q in re.findall(re.escape(QUELLTEXT) + r'\s+([\w-]+)', aufruf):
+            php |= set(re.findall(r'(tools/[\w./-]+\.php)\b', namen.get(q, '')))
+        for q in re.findall(re.escape(PROBEN_LAEUFER) + r'\s+([\w-]+)', aufruf):
+            e = einstieg(ruf[q], quelle) if q in ruf else None
+            if e and e.endswith('.php'):
+                php.add(e)
+        einstieg_je[n] = sorted(x for x in php if x in alle)
+    try:
+        kette = ladekette(wurzel, sorted({e for v in einstieg_je.values() for e in v}))
+    except WerkzeugFehlt as e:
+        return [bef('anlage-werkzeug', f'{e} fehlt oder scheitert — die Ladeketten der Proben ohne Anlage '
+                                       f'sind nicht messbar')]
+    zahlen['anlage'] = (len(ohne), sum(len(v) for v in einstieg_je.values()), len(kette),
+                        sum(1 for d in kette if d.startswith('server/')))
+
+    def weg(start):
+        """Kürzester Weg von start zu einer Datei aus ANLAGE, oder None."""
+        vorher, offen = {start: None}, [start]
+        while offen:
+            d = offen.pop(0)
+            for s in kette.get(d, []):
+                z = s.get('ziel')
+                if s.get('faul') or not z or z in vorher:
+                    continue
+                vorher[z] = d
+                if z in ANLAGE:
+                    pfad = [z]
+                    while vorher[pfad[-1]] is not None:
+                        pfad.append(vorher[pfad[-1]])
+                    return list(reversed(pfad))
+                offen.append(z)
+        return None
+    for n, einst in sorted(einstieg_je.items()):
+        for e in einst:
+            w = weg(e)
+            if w:
+                befunde.append(bef('anlage-db', f'{n}: {" → ".join(w)} — die Probe braucht keine Anlage, lädt aber '
+                                                f'{w[-1]}; ohne config.php (Stufe 1) bricht sie ab (Nr. 329)'))
+    for d, stellen in sorted(kette.items()):
+        for s in stellen:
+            if s.get('faul'):
+                continue
+            if s.get('ziel') is None:
+                befunde.append(bef('anlage-unklar', f'{d}:{s.get("zeile")}: `{s.get("ausdruck", "")[:60]}` — '
+                                                    + ('Ziel liegt außerhalb des Repositoriums'
+                                                       if s.get('extern') else 'Ziel nicht auflösbar')
+                                                    + '; ob es die Anlage lädt, ist nicht messbar'))
+            elif s['ziel'] not in ANLAGE and not os.path.isfile(os.path.join(wurzel, s['ziel'])):
+                befunde.append(bef('anlage-unklar', f'{d}:{s.get("zeile")}: lädt {s["ziel"]}, und das gibt es nicht'))
+    return befunde
+
+
+TOR_RIEGEL_RE = re.compile(r'--riegel\s+["\']?([\w-]+)=')
+
+
+def tor_pruefen(wurzel, alle, zahlen, ruf):
+    """Regel `tor` — übergibt das Tor jeden Riegel, und nur die?"""
+    try:
+        riegel = json.loads(lies(wurzel, ABLAUF)).get('riegel', {}).get('proben', [])
+    except (OSError, ValueError, AttributeError):
+        return []                               # die Regel `ablauf` meldet das
+    if not isinstance(riegel, list):
+        return []
+    if not os.path.isfile(os.path.join(wurzel, TOR)):
+        return [bef('tor-datei', f'{TOR} fehlt — kein Riegel wird im Tor gegengelesen')]
+    # Kommentarzeilen zählen nicht; Fortsetzungszeilen (`\`) werden verbunden.
+    text = '\n'.join(z.split(' #', 1)[0] for z in lies(wurzel, TOR).split('\n') if not z.lstrip().startswith('#'))
+    text = re.sub(r'\\\n', ' ', text)
+    aufrufe = [z for z in text.split('\n') if 'bericht.py lesen' in z and '--alle-riegel' in z]
+    if not aufrufe:
+        return [bef('tor-datei', f'{TOR} ruft `bericht.py lesen --alle-riegel` nicht — kein Riegel wird '
+                                 f'im Tor gegengelesen')]
+    im_tor = set()
+    for z in aufrufe:
+        im_tor |= set(TOR_RIEGEL_RE.findall(z))
+    zahlen['tor'] = (len(riegel), len(im_tor & set(riegel)))
+    befunde = [bef('tor-fehlt', f'{n}: steht in {ABLAUF} unter riegel, aber nicht als `--riegel {n}=` in {TOR} '
+                                f'— mit --alle-riegel ist das im Tor rot, und örtlich fährt es niemand (F-P5c-172)')
+               for n in riegel if n not in im_tor]
+    befunde += [bef('tor-fremd', f'{n}: `--riegel {n}=` in {TOR}, aber kein Riegel in {ABLAUF}')
+                for n in sorted(im_tor - set(riegel))]
+    return befunde
+
+
 def bericht(befunde, zahlen):
     melde('Bestandsriegel — tools/ gegen docs/Pruefablauf.md 6 (Konzept BR)')
     melde()
@@ -1364,6 +1676,12 @@ def bericht(befunde, zahlen):
     if 'ablauf' in zahlen:
         pr, mu, ri = zahlen['ablauf']
         melde(f"  pruefablauf.json:        {pr} Proben, {mu} Muster, {ri} Riegel")
+    if 'anlage' in zahlen:
+        ohne, ein, ke, se = zahlen['anlage']
+        melde(f"  ohne Anlage:             {ohne} Proben, {ein} PHP-Einstiege, {ke} Dateien in der Ladekette "
+              f"(davon {se} unter server/)")
+    if 'tor' in zahlen:
+        melde(f"  im Tor:                  {zahlen['tor'][1]} von {zahlen['tor'][0]} Riegeln übergeben")
     melde()
     for r in REGELN:
         melde(f'  {r:<10} {sum(1 for b in befunde if b[0] == r):>3} Befunde')
@@ -1496,7 +1814,56 @@ ABLAUF_JSON = '''{
 }
 '''
 
+TOR_YML = '''jobs:
+  tor:
+    steps:
+      - run: |
+          python3 tools/pruefstand/bericht.py lesen --commit "$KOPF" --alle-riegel \\
+            --riegel "q-eins=$q" \\
+            --riegel "q-zwei=$(r "$ZWEI")" > /tmp/x.txt
+'''
+
 _TABELLE = {}
+_DESIGN = {}
+
+
+def _design_dateien():
+    """Was design.py zum Erzeugen braucht, im Kleinen — und der ECHTE
+    Erzeuger dieses Auschecks, wie bei `tabelle`: Ein nachgebauter hielte die
+    Regel an einem Format, das es nicht gibt."""
+    with open(os.path.join(WURZEL, ERZEUGER_DESIGN), encoding='utf-8') as f:
+        erzeuger = f.read()
+    return {
+        ERZEUGER_DESIGN: erzeuger,
+        'tools/erzeugen/LIESMICH.md': _anleitung('erzeugen', ERZEUGER, 'Erzeugen'),
+        'server/assets/style.css': (':root{\n  /* ---- Flaechen ---- */\n  --schnee:#FFFCFA; /* Grund */\n}\n'
+                                    '.knopf{background:var(--schnee)}\n'
+                                    '@media (max-width:479px){.knopf{padding:0}}\n'),
+        'server/ui.php': ("<?php\nfunction ui_knopf(array $o): string\n{\n    return '<button class=\"knopf\">';\n}\n"),
+        'server/assets/images/symbole/haus.svg': '<svg><!-- Quelle: Tabler Icons „home" (MIT) --></svg>\n',
+    }
+
+
+def _design_doku(name='', eingriff=None):
+    """Design.md des Grundbestands: die vier Ausgaben des Erzeugers mit Text
+    dazwischen — oder, mit `eingriff` an den Eingaben, eine VERALTETE."""
+    if name not in _DESIGN:
+        dateien = _design_dateien()
+        if eingriff:
+            eingriff(dateien)
+        d = tempfile.mkdtemp(prefix='bestand-design-')
+        try:
+            for rel, inhalt in dateien.items():
+                os.makedirs(os.path.dirname(os.path.join(d, rel)), exist_ok=True)
+                with open(os.path.join(d, rel), 'w', encoding='utf-8') as f:
+                    f.write(inhalt)
+            teile = [subprocess.run([sys.executable, os.path.join(d, ERZEUGER_DESIGN), t], cwd=d,
+                                    capture_output=True, text=True, check=True).stdout.rstrip('\n')
+                     for t in DESIGN_TEILE]
+            _DESIGN[name] = '# Gestaltung\n\n' + '\n\nText.\n\n'.join(teile) + '\n\nEnde.\n'
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+    return _DESIGN[name]
 
 
 def _pruefstand_dateien():
@@ -1565,13 +1932,16 @@ def _grundbestand():
     return {
         **_pruefstand_dateien(),
         'docs/Backlog.md': 'Kopf.\n\n1. **Eins.**\n\n2. **Zwei.**\n',
-        'docs/Sandbox-Setup.md': 'Die Anlage braucht `tools/erzeuger/bild.sh`.\n',
+        'docs/Sandbox-Setup.md': 'Die Anlage braucht `tools/erzeuger/bild.sh` und `tools/erzeugen/design.py`.\n',
+        **_design_dateien(),
+        DESIGN: _design_doku(),
         'docs/Pruefablauf.md': '# Prüfablauf\n\n## 4. Berührung\n\nText.\n\n' + _erzeugte_tabelle()
                                + '\nDanach Text.\n\n## 5. Bericht\n',
         '.gitignore': 'tools/werkzeug/ausgabe/\n',
         '.github/workflows/p.yml': ('run: python3 tools/werkzeug/lauf.py\n'
                                     'run: |\n  bash tools/quelltext/pruefen.sh --selbstprobe\n'),
         'server/zwei.php': '<?php\n',
+        TOR: TOR_YML,
         'android/app/Main.kt': 'fun main() {}\n',
         'watch/source/App.mc': 'class App {}\n',
         'tools/uhr-pruefstand/LIESMICH.md': _anleitung('uhr-pruefstand', 'Anlass: Nr. 2 — die Uhr.', 'Uhr'),
@@ -1588,7 +1958,9 @@ def _grundbestand():
         'tools/proben/zwei/probe.mjs': PROBE_MJS,
         'tools/proben/zwei/gegenstelle.py': 'print(2)\n',
         'tools/quelltext/pruefen.sh': QUELLTEXT_LAEUFER,
-        'tools/quelltext/eins.php': "<?php\nif (in_array('--selbstprobe', $argv, true)) { exit(0); }\n",
+        'tools/quelltext/eins.php': ("<?php\n$server = dirname(__DIR__, 2) . '/server';\n"
+                                     "require_once $server . '/zwei.php';\n"
+                                     "if (in_array('--selbstprobe', $argv, true)) { exit(0); }\n"),
         'tools/quelltext/zwei.py': 'print(2)  # hat keine --selbstprobe, und das ist hier richtig\n',
         'tools/quelltext/eins-ausnahmen.json': '{}\n',
         'tools/quelltext/LIESMICH.md': _anleitung('quelltext', 'Anlass: Nr. 1 — je Prüfung in der Tabelle.',
@@ -1792,7 +2164,8 @@ FAELLE = [
      _und(_mehr('.github/workflows/p.yml', '  bash tools/quelltext/pruefen.sh --selbstprobe\n', ''),
           _json(lambda a: a['proben']['q-eins'].update(aufruf='bash tools/quelltext/pruefen.sh --selbstprobe && '
                                                               'bash tools/quelltext/pruefen.sh eins')))),
-    ('selbst — php fehlt', 'selbst-werkzeug', _ohne('php')),
+    ('selbst — php fehlt (auch die Ladekette ist dann nicht messbar)', ('selbst-werkzeug', 'anlage-werkzeug'),
+     _ohne('php')),
     ('GEGENPROBE: kaputtes UTF-8 in einer PHP-Zeichenkette (json_encode scheiterte)', None,
      _setze('tools/quelltext/eins.php', b"<?php\n$x = '\xc3\x28';\nif (in_array('--selbstprobe', $argv, true)) { exit(0); }\n")),
     ('selbst — starter() startet keine Datei unter tools/', 'selbst-befehl-ohne-datei',
@@ -1990,6 +2363,53 @@ FAELLE = [
      _und(_mehr(ERZEUGER_DOKU, "    melde('| Berührung | ab Stufe | Proben | Anlass |')",
                 "    melde('```')\n    melde('x')\n    melde('```')\n    melde('| Berührung | ab Stufe | Proben | Anlass |')"),
           _doku('| Berührung | ab Stufe | Proben | Anlass |', '```\nx\n```\n| Berührung | ab Stufe | Proben | Anlass |'))),
+    # anlage — Proben ohne Anlage laden weder db.php noch config.php (R4-02, Nr. 329)
+    ('anlage — eine Quelltextprüfung lädt über eine Serverbibliothek db.php', 'anlage-db',
+     _und(_setze('server/zwei.php', "<?php\nrequire_once __DIR__ . '/db.php';\n"), _setze('server/db.php', '<?php\n'))),
+    ('anlage — eine Probe aus dem Läufer lädt config.php über eine Variable', 'anlage-db',
+     _und(_json(lambda a: a['proben']['eins'].__setitem__('braucht', 'nichts')),
+          _mehr('tools/proben/eins/probe.php', '$x = 1;',
+                "$s = dirname(__DIR__, 3) . '/server';\nrequire $s . '/config.php';\n$x = 1;"))),
+    ('anlage — nach einer Klasse mit {$x} im Text steht db.php wieder oben', 'anlage-db',
+     _und(_setze('server/zwei.php', '<?php\nclass K {\n    public function f(): string { $a = 1; return "{$a}"; }\n}\n'
+                                    "require_once __DIR__ . '/db.php';\n"), _setze('server/db.php', '<?php\n'))),
+    ('GEGENPROBE: db.php nur im Rumpf einer Funktion — es läuft erst beim Aufruf', None,
+     _setze('server/zwei.php', "<?php\nfunction verbinden(): void\n{\n    require_once __DIR__ . '/db.php';\n}\n")),
+    ('anlage — ein require mit einem Pfad, der erst zur Laufzeit feststeht', 'anlage-unklar',
+     _setze('server/zwei.php', "<?php\nrequire $irgendwas . '/x.php';\n")),
+    ('anlage — ein require auf eine Datei, die es nicht gibt', 'anlage-unklar',
+     _setze('server/zwei.php', "<?php\nrequire_once __DIR__ . '/fehlt.php';\n")),
+    ('anlage — die Gruppe bricht ab', 'anlage-abbruch', _abbruch('anlage-abbruch')),
+    # tor — jeder Riegel steht im Aufruf von bericht.py lesen (R4-02, F-P5c-172)
+    ('tor — pruefung.yml fehlt', 'tor-datei', _weg(TOR)),
+    ('tor — bericht.py lesen ohne --alle-riegel', 'tor-datei', _mehr(TOR, ' --alle-riegel', '')),
+    ('tor — ein Riegel fehlt im Tor', 'tor-fehlt', _mehr(TOR, '            --riegel "q-eins=$q" \\\n', '')),
+    ('tor — der Riegel steht nur in einer Kommentarzeile', 'tor-fehlt',
+     _mehr(TOR, '            --riegel "q-eins=$q" \\\n', '            \\\n          # --riegel "q-eins=$q"\n')),
+    ('tor — ein Name im Tor, der kein Riegel ist', 'tor-fremd',
+     _mehr(TOR, ' --alle-riegel', ' --alle-riegel --riegel "q-drei=$q"')),
+    ('GEGENPROBE: der Aufruf in einer Zeile statt umbrochen', None,
+     _setze(TOR, 'run: python3 tools/pruefstand/bericht.py lesen --alle-riegel --riegel q-eins=1 --riegel "q-zwei=2"\n')),
+    ('tor — die Gruppe bricht ab', 'tor-abbruch', _abbruch('tor-abbruch')),
+    # design (Nr. 209, R4-25)
+    ('design — eine Funktion in ui.php eingefügt, die Tabelle nicht neu erzeugt (die Abnahme)', 'design-abweichung',
+     _mehr('server/ui.php', '<?php\n', "<?php\nfunction ui_mehr(): string { return '<b>'; }\n")),
+    ('design — eine Regel in style.css neu, die Schwellen nicht neu erzeugt', 'design-abweichung',
+     _mehr('server/assets/style.css', '@media (max-width:479px)', '@media (max-width:767px){.a{}}\n@media (max-width:479px)')),
+    ('design — ein Symbol mehr, die Tabelle nicht neu erzeugt', 'design-abweichung',
+     _setze('server/assets/images/symbole/zelt.svg', '<svg></svg>\n')),
+    ('design — eine Zelle der Tabelle von Hand geändert', 'design-abweichung',
+     _mehr(DESIGN, '| `--schnee` |', '| `--schneeweiss` |')),
+    ('design — eine Tabelle steht zweimal (eine alte Kopie unten)', ('design-mehrfach', 'design-marken'),
+     lambda b: b.__setitem__(DESIGN, b[DESIGN] + '\n' + _design_doku().split('\n\nText.\n\n')[3])),
+    ('design — die Marke über einer Tabelle gelöscht', ('design-marken', 'design-abweichung'),
+     _mehr(DESIGN, DESIGN_MARKE, '<!-- von Hand')),
+    ('design — der Erzeuger fehlt', 'design-erzeuger-fehlt', _weg(ERZEUGER_DESIGN)),
+    ('design — der Erzeuger scheitert (kein :root im Stylesheet; die übrigen drei Teile stimmen weiter)', 'design-erzeuger-fehler',
+     _mehr('server/assets/style.css', ':root{', '.wurzel{')),
+    ('design — Design.md fehlt', 'design-doku-fehlt', _weg(DESIGN)),
+    ('design — die Gruppe bricht ab', 'design-abbruch', _abbruch('design-abbruch')),
+    ('GEGENPROBE: Text zwischen den Tabellen geändert', None, _mehr(DESIGN, 'Text.', 'Anderer Text.')),
 ]
 
 

@@ -25,6 +25,13 @@ langen Druck für die Kopplung. Stehen keine abgewiesenen Pakete an, tut er
 nichts. Auf der Venu 3s liegt er auf derselben Taste wie `SELECT_LONG`
 (Action, oben), das kurze und das lange Drücken sind dort unterscheidbar.
 
+**Das Handy hat denselben Weg seit Android 0.17.0** (Nr. 114, R4-22): einen
+Knopf „Abgewiesene verwerfen …" unter der roten Zeile der Dienstansicht, mit
+Rückfrage nach dem Muster der Uhr — Titel mit Zahl, „Behalten" und
+„Verwerfen". Er ist ein Knopf auf dem Touchscreen, kein Tastenereignis, und
+steht deshalb in keiner Tabelle dieses Dokuments; die Bedienung beschreibt
+das Handbuch in 10.4.
+
 Die Abschnitte 1 bis 6 gelten der **Garmin-Uhr** (Connect IQ, Monkey C).
 Abschnitt 7 kam mit S4 dazu und gilt der **Wear-OS-App** — dort ist die Lage
 grundlegend anders, und der Abschnitt beginnt damit.

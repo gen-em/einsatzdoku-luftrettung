@@ -244,7 +244,7 @@ def run_bloecke(pfad: pathlib.Path) -> list[tuple[str, str]]:
 
 
 def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[str], int]:
-    """Befunde, Hinweise und die Zahl der geprueften Aufrufe.
+    r"""Befunde, Hinweise und die Zahl der geprueften Aufrufe.
 
     ZUERST WERDEN FORTSETZUNGSZEILEN VERBUNDEN, und das ist keine Feinheit:
     Der Kreislauf-Aufruf der Kette steht ueber fuenf Zeilen, mit `\` am Ende

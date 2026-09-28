@@ -48,6 +48,10 @@ und den drei Engine-Dateien unter `/opt/pw-browsers/`, Python **3.11**
 Speicher.
 
 **Nicht im Abbild, und ohne diese steht die Hälfte der Prüfmittel:**
+*(Am 26.09.2026 brachte das Abbild MariaDB, ImageMagick und `rsvg-convert`
+schon mit — der apt-Verlauf zeigt sie am 22.09.2026, vom Sitzungshook vor
+PK-02; cmark-gfm und die vier WebKit-Bibliotheken fehlten. `aufbauen.sh`
+prüft je Paket und holt nur, was fehlt.)*
 
 | fehlt | wer es braucht |
 |---|---|
@@ -57,8 +61,8 @@ Speicher.
 | **cmark-gfm** | die Quelltextprüfungen `handbuch` — rendern Handbuch und „Was ist NAdoku"? (seit BR-03) — und `bestand`, die die Tabelle der Quelltextprüfungen so liest, wie GitHub sie zeigt (seit BR-05) |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
-| **Systembibliotheken für Firefox und WebKit** | jede Aussage über die Oberfläche, die für mehr als Chromium gelten soll (Backlog Nr. 183) |
-| **Android-SDK** (Plattformen 37.0 und 36, Build-Tools 36.0.0, `cmdline-tools` 23.0) | `./gradlew build` im Ordner `android/`; `cmdline-tools` unter 23.0 legt AVDs mit API 37 falsch an (F-AR-18) |
+| **Vier Systembibliotheken für WebKit** (`libenchant-2-2`, `libsecret-1-0`, `libwayland-server0`, `libmanette-0.2-0`) — Firefox startet ohne sie, WebKit nicht (gemessen 26.09.2026: entfernt, Start versucht, wieder geholt; Backlog Nr. 301) | jede Aussage über die Oberfläche, die auch für WebKit gelten soll (Backlog Nr. 183) |
+| **Android-SDK** (Plattform 37.0, Build-Tools 36.0.0, `cmdline-tools` 23.0) | `./gradlew build` im Ordner `android/`; `cmdline-tools` unter 23.0 legt AVDs mit API 37 falsch an (F-AR-18) |
 | **Emulator, Abbilder API 37, `lz4`, `cpio`, `libpulse0`** | `android/werkzeuge/emulator.sh` — der Emulatorlauf nach `Pruefablauf.md` 6.9 |
 | **Uhr-SDK und Gerätedateien** | `tools/uhr-pruefstand/` |
 
@@ -132,7 +136,7 @@ steht**.
 | Stufe | Enthält | Wofür |
 |---|---|---|
 | `web` | MariaDB 10.11, PHP 8.4, **drei** Engines (nachgemessen, nicht angenommen), Python-Pakete, die acht Umgebungswerte geprüft | jede Änderung unter `server/`, `docs/`, `tools/` |
-| `android` | `web` plus Android-SDK (Plattform 37.0 für den Bau, 36 für die Erkennung im Prüfstand), JDK 21 geprüft, Gradle über Googles Spiegel mit mehr Wiederholungen (5.1). **Kein Emulator-Abbild** — das holt `android/werkzeuge/emulator.sh aufbauen`, mehrere GB, nur für den Emulatorlauf. *Bis zum 24.09.2026 stand hier „Emulator-Abbild"; das Skript hat es nie geholt (Konzept AR, F-AR-02).* | Änderungen unter `android/` |
+| `android` | `web` plus Android-SDK (Plattform 37.0 — der Prüfstand erkennt die Stufe an der Plattform aus `compileSdk`, seit R4-02; bis dahin kam 36 dazu, nur für die Erkennung, Nr. 335), JDK 21 geprüft, Gradle über Googles Spiegel mit mehr Wiederholungen (5.1). **Kein Emulator-Abbild** — das holt `android/werkzeuge/emulator.sh aufbauen`, mehrere GB, nur für den Emulatorlauf. *Bis zum 24.09.2026 stand hier „Emulator-Abbild"; das Skript hat es nie geholt (Konzept AR, F-AR-02).* | Änderungen unter `android/` |
 | `emulator` | `android` plus Emulator, die Abbilder mit API 37 (Handy `google_apis`, Uhr `android-wear-signed`), die AVDs `handy37` und `uhr37` mit berichtigtem `target` und die Debug-Ramdisk der Uhr; `lz4`, `cpio`, `libpulse0`. Rund 9 GB, und der Start einer AVD verlangt **weitere 7,4 GB frei** für die Datenpartition — der Emulator bricht sonst sofort ab. Nicht in `alles` | den Emulatorlauf (`android/LIESMICH.md`, „Wear OS 7 ohne Root“) |
 | `uhr` | `web` plus Uhr-SDK, Gerätedateien, Simulator-Bibliotheken | Änderungen unter `watch/` |
 | `alles` | `web`, `android`, `uhr` plus das Modul `plattform` — **ohne** `emulator` | Hauptstufe, Abnahmen |
@@ -224,6 +228,22 @@ Datenbank, und Produktiv bedient ohnehin viele Anfragen zugleich.
 **Ohne `--neu` wird nicht neu eingerichtet.** `lokal_einrichten.sh` löscht die
 Datenbank und `config.php`; das soll niemand aus Versehen auslösen. Steht
 eine Installation, wird sie nur gestartet.
+
+**Und dann fragt er das Schema** (seit R4-02, Backlog Nr. 332): dieselbe Frage
+wie der Torwächter — `migrationen_lauf()` ohne Ausführen —, und jede offene
+Migration ist **rot** mit Kennung und Weg (`--neu`, oder `php
+server/update.php`, wenn der Bestand bleiben soll). Anlass: Nach dem
+Aufnehmen von `main` stand die Anlage auf dem Schema davor, `login.php`
+antwortete trotzdem 200, und eine Probe maß still gegen einen Stand, den es
+nirgends gab. Neu eingerichtet wird dabei **nicht** von selbst.
+
+**Zuletzt legt er die Prüfkonten der Rollen Admin und Support an** (seit
+R4-08, Backlog Nr. 297): `pruefkonten.sh` unter
+`tools/referenzdatensatz/einspielen/` nimmt dieselben Wege wie jedes Konto
+und lässt ein fertiges stehen — ohne diesen Schritt käme der Bilderlauf nicht
+über die Anmeldung seiner zwei neuen Rollen. Er löscht nichts und läuft
+deshalb bei jedem Start; eine Anlage von vor R4-08 bekommt die Konten, ohne
+`--neu`.
 
 **`--php 8.3`** beendet den PHP-Server des Containers und fährt die Anwendung
 im Abbild `nadoku-php83` weiter, im Netzwerk des Wirts, gegen dieselbe

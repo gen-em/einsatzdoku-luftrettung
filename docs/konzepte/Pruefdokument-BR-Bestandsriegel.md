@@ -150,9 +150,18 @@ Android- oder Uhr-Oberfläche.
   *Scheitern erkennbar an:* „Kein grüner Stufe-1-Lauf auf diesem Baum" bei
   einem Stand, dessen PR grün war — das Tor schließt dann (sicher), aber
   die Suche liest falsch.
-- [ ] **P-BR-09 — Die zweite Fassung des Runbooks trägt.** *Weg:* beim
+- [x] **P-BR-09 — Die zweite Fassung des Runbooks trägt.** *Weg:* beim
   nächsten neuen Prüfmittel (etwa auf P5c) nur `Pruefablauf.md` 6.12
   befolgen.
+  *Ergebnis (26.09.2026, Konzept R4, R4-03 — `tools/steuerung/nummern.py`):*
+  **ein Fund.** Schritt 6 sagte, die erzeugte Tabelle reiche „bis
+  einschließlich der Riegelzeile"; der Erzeuger schreibt seit P5c/AP4
+  darunter die Stufenregel `migration`. Wörtlich befolgt stand sie zweimal
+  da, und `bestand` war im ersten Lauf rot (`tabelle-kopie`) — gefunden
+  vom Mittel, wie 6.12 es verspricht, aber ein Schritt, den 6.12 falsch
+  beschrieb. Schritt 6 ist berichtigt (F-R4-23). Die übrigen Schritte
+  trugen: `kettenaufrufe` 0, `pruefen.sh --selbstprobe` 11 / 11, die
+  Auswahl wählt `nummern` bei einer Berührung von `docs/Backlog.md`.
   *Erwartet:* `bestand`, `kettenaufrufe` und `pruefen.sh --selbstprobe`
   beim ersten Lauf grün, und der Prüfstand wählt das Mittel aus.
   *Scheitern erkennbar an:* ein Schritt, den 6.12 nicht nennt und den erst

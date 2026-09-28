@@ -286,7 +286,7 @@ if ($pdo === null) {
     $gross = GERAETE_MODELLE + ['006-B3121-00' => ['Forerunner 745', 'uhr']];
 
     $standVorher = app_state_lesen(GM_STAND_SCHLUESSEL);
-    $email = 'geraeteprobe@gen-em.org';
+    $email = 'geraeteprobe@example.invalid';
     $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$email]);
     $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                    VALUES (?, 'Geraeteprobe', 'user', '', '', 320000)")->execute([$email]);

@@ -29,10 +29,10 @@ Zusammenhang über das Dateisystem verstreut, ohne etwas zu gewinnen.
 
 ## Handgeschrieben und erzeugt
 
-Der Datensatz umfasst **21 Dienste (8 Luft, 13 Boden) mit 103 Einsätzen**. Im
-Bestand sind es danach **106**: Die drei geschnittenen Einsätze stehen nicht
+Der Datensatz umfasst **22 Dienste (9 Luft, 13 Boden) mit 106 Einsätzen**. Im
+Bestand sind es danach **109**: Die drei geschnittenen Einsätze stehen nicht
 in den Quelldaten, sondern entstehen auf dem Server aus der Liste `schnitte`
-(unten). Deshalb zählt `pruefen.py` weiter 103.
+(unten). Deshalb zählt `pruefen.py` weiter 106.
 Er besteht aus zweierlei:
 
 - **Prüffälle**, von Hand geschrieben. Jeder belegt mindestens eine Zeile
@@ -130,7 +130,7 @@ Sperrvermerk, den Backlog Nr. 63 im Bestand haben will.
 
 **Der geschnittene Einsatz steht NICHT in den Quelldaten.** Er entsteht
 serverseitig und bekommt dort eine Kennung mit Präfix `cut-`; deshalb zählt
-`pruefen.py` weiter 103 Einsätze, der Bestand aber 106.
+`pruefen.py` weiter 106 Einsätze, der Bestand aber 109.
 
 `pruefen.py` prüft vier Randbedingungen, jede davon aus einem Fehlschlag
 gelernt: das Fenster liegt in der Spur des Segments (sonst wandert kein

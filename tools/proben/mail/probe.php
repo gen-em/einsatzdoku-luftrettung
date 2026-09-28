@@ -577,7 +577,7 @@ try {
     pruef('Genau ein Protokolleintrag', $protokollNachher - $protokollVorher === 1,
           $protokollVorher . ' -> ' . $protokollNachher);
 } finally {
-    foreach ($probeKonten as $id) { konto_loeschen($id); }
+    foreach ($probeKonten as $id) { konto_loeschen($id, true, 'probe'); }
     ankuendigung_entfernen();
     app_state_loeschen(RUNDMAIL_K_ZULETZT);
 }

@@ -57,9 +57,10 @@ RE_GPX_NAME = re.compile(r"(<name>(?:Einsatz|Ruhezeit|Ruhe) )(\d+)( )")
 # NAME bleibt verglichen — er ist die Aussage „diese Software hat die Datei
 # geschrieben" (Weg B, siehe den Kopf von server/gpx_lib.php). Die FASSUNG
 # wird maskiert, genau wie `App-Version:` in der LIESMICH: Sie steigt bei
-# jeder Auslieferung, und der Referenz-Export enthaelt 204 GPX-Dateien. Ohne
-# diese Zeile meldete der Kreislauf bei JEDER Auslieferung 204 Unterschiede —
-# und ein Werkzeug, das bei jeder Auslieferung rauscht, wird abgeschaltet.
+# jeder Auslieferung, und der Referenz-Export enthaelt ueber 200 GPX-Dateien
+# (seit R4-16 211). Ohne diese Zeile meldete der Kreislauf bei JEDER
+# Auslieferung ebenso viele Unterschiede — und ein Werkzeug, das bei jeder
+# Auslieferung rauscht, wird abgeschaltet.
 #
 # Die Fassung ist OPTIONAL im Muster, damit aeltere Referenzstaende (ohne
 # Fassung im creator) auf denselben Wert normalisieren. Sonst waere der

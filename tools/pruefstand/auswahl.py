@@ -102,6 +102,13 @@ FASSUNG_RE = re.compile(r"WEB_VERSION'?\s*[,=]\s*'([0-9]+)\.([0-9]+)\.([0-9]+)'"
 UNLESBAR = 'unlesbar'
 
 
+def demo_proben(a):
+    """Die Proben mit `"demo": true` — vor jeder schiebt der Prüfstand die
+    Marke des Demo-Resets (Nr. 322). Nur `true` zählt: Ein „ja" oder eine 1
+    wäre in der Datei ein stiller Tippfehler, der nirgends auffiele."""
+    return {n for n, d in a.get('proben', {}).items() if isinstance(d, dict) and d.get('demo') is True}
+
+
 def fassung_aus_text(t):
     m = FASSUNG_RE.search(t or '')
     return tuple(int(x) for x in m.groups()) if m else None
@@ -287,6 +294,18 @@ def selbstprobe(a):
         ('nach: die Wegprobe läuft nach dem edbak-Kreislauf',
          'spaltenregister-wegprobe' in neben
          and neben.index('kreislauf-edbak') < neben.index('spaltenregister-wegprobe'))]
+
+    # `demo` (R4-04, Nr. 322): nur true zählt, und gegen die ECHTE Datei —
+    # zwei Proben, die das Demo-Konto anmelden, tragen es, und jede, die es
+    # trägt, braucht die Anlage (sonst gäbe es keine Marke zu schieben).
+    dp = demo_proben(a)
+    grenzen += [
+        ('demo: nur true zählt, nicht „ja"',
+         demo_proben({'proben': {'x': {'demo': True}, 'y': {'demo': 'ja'}, 'z': {}}}) == {'x'}),
+        ('demo: Bedienprobe und Bilderlauf tragen es', {'bedienprobe', 'bilderlauf'} <= dp),
+        ('demo: jede Probe mit dem Feld braucht die Anlage',
+         bool(dp) and all(a['proben'][n].get('braucht') == 'installation' for n in dp)),
+    ]
 
     # Die Fassung — gegen die ECHTE Schreibweise der Datei, nicht gegen eine
     # ausgedachte. Genau das fehlte, als das Muster nie traf (F-PK-30).

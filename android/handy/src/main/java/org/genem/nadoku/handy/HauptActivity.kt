@@ -266,6 +266,11 @@ private fun GekoppelteOberflaeche(
     var abschlussFrageOffen by remember { mutableStateOf(false) }
     var akkuFrageOffen by remember { mutableStateOf(false) }
     var verbrauchFrageOffen by remember { mutableStateOf(false) }
+    var verwerfFrageOffen by remember { mutableStateOf(false) }
+    /* Die Quittung „N Pakete verworfen" (R4-22). Hier und nicht in
+     * `NAdokuApp`: Sie lebt mit der Oberfläche und ist nach einem Neustart
+     * fort — eine Antwort auf eine Handlung, kein Zustand. */
+    var verworfen by remember { mutableStateOf<Int?>(null) }
 
     /* AUCH DIE FREIGABE WIRD ABGEFRAGT, NICHT GEHALTEN (B-S5Z-17).
      *
@@ -318,6 +323,7 @@ private fun GekoppelteOberflaeche(
 
     val rueckstand = remember(takt) { app.puffer.rueckstand() }
     val abgewiesen = remember(takt) { app.puffer.abgewiesen() }
+    val verwerfbar = remember(takt) { app.puffer.verwerfbar() }
     val sendelaeuft = remember(takt) { app.sendelaufLaeuft }
     val sendeergebnis = remember(takt) { sendeergebnis(app.letzterSendebericht) }
 
@@ -408,6 +414,25 @@ private fun GekoppelteOberflaeche(
             aufNein = { beendenFrageOffen = false },
         )
     }
+    if (verwerfFrageOffen) {
+        Rueckfrage(
+            titel = androidx.compose.ui.res.pluralStringResource(
+                R.plurals.verwerfen_frage, verwerfbar, verwerfbar,
+            ),
+            text = androidx.compose.ui.res.pluralStringResource(R.plurals.verwerfen_text, verwerfbar),
+            ja = stringResource(R.string.verwerfen_ja),
+            nein = stringResource(R.string.verwerfen_nein),
+            aufJa = {
+                verwerfFrageOffen = false
+                /* DERSELBE WEG WIE BEIM TRENNEN (Nr. 114): ohne Frist, nur
+                 * abgeschlossene, samt Punkten, Phasen und leeren Dienstzeilen.
+                 * Die Quittung nennt, was tatsächlich ging. */
+                verworfen = app.puffer.abgewieseneRaeumen(null).pakete
+                takt++
+            },
+            aufNein = { verwerfFrageOffen = false },
+        )
+    }
     if (trennfrageOffen) {
         Rueckfrage(
             titel = stringResource(R.string.trennen_frage),
@@ -450,12 +475,15 @@ private fun GekoppelteOberflaeche(
             logoWahl = logoWahl,
             rueckstand = rueckstand,
             abgewiesen = abgewiesen,
+            verwerfbar = verwerfbar,
+            verworfen = verworfen,
             sendeergebnis = sendeergebnis,
             sendelaufLaeuft = sendelaeuft,
             aufJetztSenden = {
                 sendeImHintergrund(app)
                 takt++
             },
+            aufVerwerfen = { verwerfFrageOffen = true },
             aufModus = { gewaehlt ->
                 modus = gewaehlt
                 app.einstellungen.letzterModus = gewaehlt
@@ -683,6 +711,9 @@ private fun Rueckfrage(
     ja: String,
     aufJa: () -> Unit,
     aufNein: () -> Unit,
+    /* „Zurück" für die bisherigen drei Fragen; „Behalten" beim Verwerfen
+     * (R4-22), weil dort das Abbrechen etwas bewahrt, nicht zurückgeht. */
+    nein: String = stringResource(R.string.trennen_nein),
 ) {
     AlertDialog(
         onDismissRequest = aufNein,
@@ -695,7 +726,7 @@ private fun Rueckfrage(
         },
         dismissButton = {
             TextButton(onClick = aufNein) {
-                Text(stringResource(R.string.trennen_nein), color = Farbe.dunkelblau)
+                Text(nein, color = Farbe.dunkelblau)
             }
         },
         containerColor = Farbe.schnee,

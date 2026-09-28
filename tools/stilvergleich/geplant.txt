@@ -1,6 +1,7 @@
 # Stilvergleich — geplante Abweichungen (docs/Pruefablauf.md 6.10).
 # Geschrieben mit `bash tools/stilvergleich/gegen.sh --schreiben`, gegen den
-# Vergleichsstand des Laufs. Je Zeile: Probe, Element <Elternteil>, die
+# Vergleichsstand des Laufs. Je Zeile: Probe (bei seiten.html mit der Seite
+# in Klammern, seit R4-08), Element <Elternteil>, die
 # Eigenschaften, die sich aendern. Diese Datei wird im Pull Request GELESEN —
 # jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge
 # bleibt sie stehen: Der naechste Lauf findet ihre Zeilen wortgleich im
@@ -10,13 +11,104 @@
 katalog.html  body <html>  :  height
 katalog.html  div <body>  :  height
 katalog.html  div <div>  :  height
-katalog.html  div.eintrag-unterliste <div.leiste-gruppe>  :  display, height, width
-katalog.html  div.leiste-gruppe <div>  :  height
+katalog.html  div.achse <div.diagramm-saeulen>  :  fill, font, font-size, height, line-height
+katalog.html  div.achse-breit <div.diagramm-saeulen>  :  display, height, width
+katalog.html  div.achse-x <div.diagramm-saeulen>  :  text-anchor
+katalog.html  div.balken-fuellung <div>  :  fill
+katalog.html  div.balken-grund <div>  :  fill
+katalog.html  div.balken-zahl <div>  :  font, font-variant-numeric, min-width, text-align
+katalog.html  div.balken-zeile <div>  :  align-items, column-gap, display, gap, grid-template-columns, grid-template-rows
+katalog.html  div.diagramm <div>  :  margin, margin-bottom
+katalog.html  div.diagramm-balken <div>  :  column-gap, display, flex-direction, gap, margin, margin-bottom
+katalog.html  div.diagramm-saeulen <div>  :  height
+katalog.html  div.feld <div.zeitraumwahl-felder>  :  align-items, column-gap, display, gap, margin, margin-bottom, min-height, min-width, width
+katalog.html  div.feld-eingabe <div.zeitraumwahl-felder>  :  min-height, min-width, width
+katalog.html  div.feld-label <div.zeitraumwahl-felder>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, font-weight, height, line-height, margin, margin-bottom, min-height, min-width, outline, width
+katalog.html  div.gitter <div.diagramm-saeulen>  :  stroke
+katalog.html  div.hoechst <div.diagramm-saeulen>  :  height
+katalog.html  div.kartenfilter-lupe <div>  :  bottom, inset, top
+katalog.html  div.kartenfilter-x <div>  :  bottom, inset, top
+katalog.html  div.kleinvielfach <div>  :  column-gap, display, gap, grid-template-columns, grid-template-rows
+katalog.html  div.kleinvielfach-titel <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-family, margin, margin-bottom, outline
+katalog.html  div.kleinvielfach-wert <div>  :  font, font-family, font-size, font-weight, height, line-height, margin, margin-bottom
+katalog.html  div.nulllinie <div.diagramm-saeulen>  :  stroke
 katalog.html  div.nur-vorlesen <div>  :  bottom, inset, top
+katalog.html  div.saeule <div.diagramm-saeulen>  :  height
+katalog.html  div.saeule-flaeche <div.diagramm-saeulen>  :  fill
+katalog.html  div.saeule-wert <div.diagramm-saeulen>  :  fill
+katalog.html  div.saeule-wert <div.hoechst>  :  fill
+katalog.html  div.saeule-wert <div.saeule>  :  fill
+katalog.html  div.saeule-zahl <div.diagramm-saeulen>  :  fill, font, font-size, font-weight, height, line-height, text-anchor, visibility
+katalog.html  div.saeule-zahl <div.hoechst>  :  fill, font, font-size, font-weight, height, line-height, text-anchor
+katalog.html  div.saeule-zahl <div.saeule>  :  fill, font, font-size, font-weight, height, line-height, text-anchor, visibility
 katalog.html  div.suchfeld-lupe <div>  :  bottom, inset, top
 katalog.html  div.suchfeld-x <div>  :  bottom, inset, top
 katalog.html  div.vorschlaege <div>  :  bottom, inset, top
+katalog.html  div.vorschlag.aktiv <div>  :  border-color, border-left, border-left-color
+katalog.html  div.zeitraumwahl <div>  :  align-items, column-gap, display, flex-wrap, gap, margin, margin-bottom, margin-top
+katalog.html  div.zeitraumwahl-felder <div>  :  align-items, column-gap, display, flex-wrap, gap, height
 katalog.html  html <->  :  height
 katalog.html  input.schalter-box <div>  :  bottom, inset, top
 katalog.html  input.segment-box <div>  :  bottom, inset, top
 katalog.html  input.wahl-box <div>  :  bottom, inset, top
+katalog.html  span <div.kleinvielfach-wert>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, line-height, margin, margin-left, outline
+seiten.html[betrieb_statistik.php]  div <body>  :  height
+seiten.html[betrieb_statistik.php]  div <div.kleinvielfach>  :  height, min-height, min-width, width
+seiten.html[betrieb_statistik.php]  div.form-raster.form-raster-links-breit <div>  :  grid-template-rows, height
+seiten.html[betrieb_statistik.php]  div.form-spalte <div.form-raster.form-raster-links-breit>  :  height
+seiten.html[betrieb_statistik.php]  div.kleinvielfach <div.form-spalte>  :  column-gap, display, gap, grid-template-columns, grid-template-rows, height
+seiten.html[betrieb_statistik.php]  h3.kleinvielfach-titel <div>  :  font, font-size, height, line-height, margin, margin-bottom, width
+seiten.html[betrieb_statistik.php]  p.kleinvielfach-wert <div>  :  font, font-family, font-size, font-weight, height, line-height, margin, margin-bottom, width
+seiten.html[betrieb_statistik.php]  span <p.kleinvielfach-wert>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, line-height, margin, margin-left, outline
+seiten.html[ui.php]  a.<button.type= <div.aktionen>  :  font, font-variant-numeric, text-align
+seiten.html[ui.php]  a.<button.type= <div.blatt-liste>  :  font, font-variant-numeric, width
+seiten.html[ui.php]  a.<button.type= <div.rahmen.rahmen-lesespalte>  :  font, font-variant-numeric
+seiten.html[ui.php]  a.<button.type= <div.text>  :  font, font-variant-numeric
+seiten.html[ui.php]  a.<button.type= <h1>  :  font, font-variant-numeric
+seiten.html[ui.php]  a.<button.type= <h2.blatt-titel>  :  font, font-variant-numeric
+seiten.html[ui.php]  a.<button.type= <main.inhalt>  :  font, font-variant-numeric
+seiten.html[ui.php]  a.<button.type= <p.feld-klein.loc-datenschutz>  :  font, font-variant-numeric
+seiten.html[ui.php]  a.listenfilter.><span>.<div.class= <div.aktionen>  :  font, font-variant-numeric, text-align
+seiten.html[ui.php]  a.listenfilter.><span>.<div.class= <div.balken-text>  :  width
+seiten.html[ui.php]  a.listenfilter.><span>.<div.class= <div.balken-zahl>  :  font, font-variant-numeric, text-align
+seiten.html[ui.php]  a.listenfilter.><span>.<div.class= <div.balken-zeile>  :  display, min-width
+seiten.html[ui.php]  a.listenfilter.><span>.<div.class= <div.feld>  :  height, width
+seiten.html[ui.php]  button.<a.class= <a.listenfilter.><span>.<div.class=>  :  font, font-variant-numeric
+seiten.html[ui.php]  button.knopf.knopf-leise.blatt-abbrechen <a.<button.type=>  :  font, font-variant-numeric, width
+seiten.html[ui.php]  button.knopf.knopf-neutral.aktionen-knopf <a.listenfilter.><span>.<div.class=>  :  font, font-variant-numeric
+seiten.html[ui.php]  div#<div class=.aktionen.<button.type= <a.<button.type=>  :  font, font-variant-numeric, text-align, width
+seiten.html[ui.php]  div#<div class=.blatt <button.knopf.knopf-neutral.aktionen-knopf>  :  font, font-variant-numeric, inset, left
+seiten.html[ui.php]  div.aktionen <div.balken-zahl>  :  font, font-variant-numeric, height, text-align, width
+seiten.html[ui.php]  div.balken-text <div.balken-zeile>  :  height, min-height, min-width, width
+seiten.html[ui.php]  div.balken-zahl <div.balken-text>  :  font, font-variant-numeric, height, min-width, text-align, width
+seiten.html[ui.php]  div.balken-zeile <div.feld>  :  align-items, column-gap, display, gap, grid-template-columns, grid-template-rows, height, width
+seiten.html[ui.php]  div.blatt-liste <h2.blatt-titel>  :  font, font-variant-numeric, height, width
+seiten.html[ui.php]  div.codeblock-text <span.nur-vorlesen>  :  height
+seiten.html[ui.php]  div.feld <nav.seitenwahl>  :  height, width
+seiten.html[ui.php]  div.filterreihe <a.<button.class=>  :  height
+seiten.html[ui.php]  div.karte-inhalt <h2.karte-titel>  :  height
+seiten.html[ui.php]  div.rahmen.rahmen-lesespalte <div.blatt-liste>  :  font, font-variant-numeric, height, width
+seiten.html[ui.php]  div.text <main.inhalt>  :  font, font-variant-numeric, height, width
+seiten.html[ui.php]  h1 <div.text>  :  font, font-variant-numeric, height, width
+seiten.html[ui.php]  h2.blatt-titel <button.knopf.knopf-neutral.aktionen-knopf>  :  font, font-variant-numeric
+seiten.html[ui.php]  h2.blatt-titel <div.aktionen>  :  font, font-variant-numeric, height, width
+seiten.html[ui.php]  h2.karte-titel <div.codeblock-text>  :  height
+seiten.html[ui.php]  h2.karte-titel <section.<div.class=>  :  height
+seiten.html[ui.php]  label#<a class=.feld-label <a.listenfilter.><span>.<div.class=>  :  height, width
+seiten.html[ui.php]  main.inhalt <div.rahmen.rahmen-lesespalte>  :  font, font-variant-numeric, height, width
+seiten.html[ui.php]  nav.seitenwahl <div.filterreihe>  :  height, width
+seiten.html[ui.php]  p <a.<button.type=>  :  font, font-variant-numeric, width
+seiten.html[ui.php]  p.feld-klein.loc-datenschutz <h1>  :  font, font-variant-numeric, height, width
+seiten.html[ui.php]  p.kennzahl-label <a.<button.type=>  :  font, font-variant-numeric, width
+seiten.html[ui.php]  p.kennzahl-wert <a.<button.type=>  :  font, font-variant-numeric, width
+seiten.html[ui.php]  section.<div.class= <div.karte-inhalt>  :  height
+seiten.html[ui.php]  span <a.<button.type=>  :  font, font-variant-numeric
+seiten.html[ui.php]  span <a.listenfilter.><span>.<div.class=>  :  font, font-variant-numeric, text-align
+seiten.html[ui.php]  span <button.<a.class=>  :  font, font-variant-numeric
+seiten.html[ui.php]  span <button.knopf.knopf-leise.blatt-abbrechen>  :  font, font-variant-numeric
+seiten.html[ui.php]  span <div.blatt-liste>  :  font, font-variant-numeric
+seiten.html[ui.php]  span.kennzahl-einheit <p.kennzahl-wert>  :  font, font-variant-numeric
+seiten.html[ui.php]  span.kennzahl-tag <p.kennzahl-label>  :  font, font-variant-numeric
+seiten.html[ui.php]  span.zeile-klein <a.listenfilter.><span>.<div.class=>  :  height, width
+seiten.html[ui.php]  svg <span.zeile-klein>  :  display, width
+seiten.html[ui.php]  svg <span>  :  display, overflow, overflow-x, overflow-y, width

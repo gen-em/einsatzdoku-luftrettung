@@ -35,7 +35,7 @@ const MODUL = process.env.PW_MODUL || '/opt/node22/lib/node_modules/playwright/i
 const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
 
 const BASIS = process.env.ED_BASIS || 'https://127.0.0.1:8443';
-const MAIL  = process.env.ED_MAIL || 'admin@gen-em.org';
+const MAIL  = process.env.ED_MAIL || 'admin@example.invalid';
 const PW    = process.env.ED_PW   || 'pruefstandzugang2026';
 
 const befunde = [];

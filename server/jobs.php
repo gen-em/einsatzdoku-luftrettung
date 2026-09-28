@@ -10,7 +10,14 @@ declare(strict_types=1);
  *
  *   1. KOMMANDOZEILE — der empfohlene Regelfall.
  *
- *          * * * * *  php /pfad/zu/server/jobs.php
+ *          * * * * *  php /pfad/zur/installation/jobs.php
+ *
+ *      Den Pfad dieser Anlage nicht abtippen, sondern kopieren: Betrieb →
+ *      Hintergrundjobs baut die Zeile ueber `__DIR__` (E-S8-10). Einen
+ *      Unterordner `server/` gibt es auf einer Anlage nicht — der Deploy legt
+ *      dessen Inhalt in die Wurzel des Webspace, und die Zeile, die hier bis
+ *      Web 21.1.6 stand, lief beim Plesk-Cron in „Could not open input
+ *      file" (Backlog Nr. 150).
  *
  *      Jede Minute ist unbedenklich: Ein Lauf, für den nichts zu tun ist,
  *      kostet zwei Abfragen. Die tägliche Aufräumarbeit läuft trotzdem nur

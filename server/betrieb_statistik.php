@@ -31,8 +31,8 @@ require_once __DIR__ . '/format_lib.php';   // zahl_text(), prozent_text(), proz
  *
  * OHNE DEMO-KONTO — durchgaengig und ohne Ausnahme (Rueckmeldung
  * 05.09.2026). Sein Bestand ist erfunden, liegt als Fixture im Repositorium
- * und wird alle dreissig Minuten daraus neu hergestellt. Ihn in einer
- * Statistik mitzuzaehlen hiesse, 106 erfundene Einsaetze als Nutzung
+ * und wird bei jedem Reset daraus neu hergestellt. Ihn in einer
+ * Statistik mitzuzaehlen hiesse, gut hundert erfundene Einsaetze als Nutzung
  * auszugeben. Die Bezugsgroesse steht deshalb an jeder Karte: „von 11"
  * meint elf ECHTE Konten.
  *
@@ -69,6 +69,13 @@ require_once __DIR__ . '/format_lib.php';   // zahl_text(), prozent_text(), proz
  * (Die HERKUNFT „Wear-OS-Uhr" unter Einsaetze ist etwas anderes: an der Uhr
  * begonnen, vom Handy gesendet. Sie zaehlt Einsaetze, keine Geraete.)
  *
+ * DER ZEITRAUM IST WAEHLBAR (seit Web 21.5.0, R4-23, Nr. 122 a, Bild
+ * M-R4-23). Vier Pillen bestimmen Kennzahl und Herkunft, Von/Bis einen
+ * eigenen Zeitraum; dann hat jede Tabelle eine Spalte „im Zeitraum". Die
+ * Regeln stehen in `statistik_zeitraum()`, die Reihe in `ui_zeitraumwahl()`.
+ * „Aktiv", „angemeldet" und „gemeldet" gibt es dort nur bis heute
+ * (F-R4-66, E-R4-55) — Begruendung bei `$bisHeute`.
+ *
  * DIE ZEITRAEUME SIND TABELLEN, kein neuer Baustein: eine Zeile je Kennzahl,
  * eine Spalte je Fenster. „6 Monate" heisst 180 Tage, „1 Jahr" 365 — ein
  * Monat ist keine feste Laenge, und verschieden lange Monate in einer Spalte
@@ -86,6 +93,22 @@ const STAT_SPALTEN = ['modell' => 'Gerät', 'hersteller' => 'Hersteller', 'art' 
 
 $reiter = isset(STAT_REITER[(string)($_GET['r'] ?? '')]) ? (string)$_GET['r'] : 'nutzer';
 
+/* DER ZEITRAUM (R4-23, Nr. 122 a, Bild M-R4-23). Ein festes Fenster (`t`)
+ * bestimmt die Kennzahl „Einsätze in …" und die Herkunft; die Tabellen
+ * zeigen weiter jedes Fenster. Ein EIGENER Zeitraum (`von`, `bis`) macht aus
+ * jeder Tabelle eine Spalte „im Zeitraum". Die Regeln stehen in
+ * `statistik_zeitraum()`. Reiter, Kennzahlen und Pillen tragen ihn weiter. */
+$zeitraum = statistik_zeitraum($_GET);
+$eigen    = $zeitraum['art'] === 'eigen';
+$zAdresse = statistik_zeitraum_adresse($zeitraum);
+/* „AKTIV", „ANGEMELDET" UND „GEMELDET" NUR BIS HEUTE (F-R4-66, E-R4-55).
+ * Gespeichert ist je Konto nur die LETZTE Anmeldung, je Gerät nur die
+ * letzte Meldung. Reicht der Zeitraum bis heute, ist „zuletzt nach dem
+ * Beginn" dasselbe wie „im Zeitraum"; endet er früher, zählte dieselbe
+ * Rechnung nur, wer sich danach NICHT mehr gemeldet hat — und die Zahl
+ * sänke, je länger der Zeitraum zurückliegt. Dann steht „—". */
+$bisHeute = $eigen && $zeitraum['bis'] === heute_lokal();
+
 /**
  * Anteil und Erklärung zu EINER Kleinzeile — ohne führenden Gedankenstrich,
  * wenn es keinen Anteil gibt. „— Ingest gesperrt" liest sich wie ein
@@ -95,6 +118,18 @@ function stat_klein(string $anteil, string $text = ''): string
 {
     $teile = array_values(array_filter([$anteil, $text], static fn($x) => $x !== ''));
     return implode(' — ', $teile);
+}
+
+/**
+ * Liegt ein Zeitpunkt (UTC) im EIGENEN Zeitraum — Untergrenze einschließlich,
+ * Obergrenze ausschließlich, und nicht nach jetzt (R4-23)?
+ */
+function stat_im_zeitraum(?string $wann, array $z, int $jetzt): bool
+{
+    if ($wann === null || $wann === '') { return false; }
+    $t = strtotime($wann . ' UTC');
+    return $t !== false && $t <= $jetzt
+        && $t >= strtotime($z['unten'] . ' UTC') && $t < strtotime($z['oben'] . ' UTC');
 }
 
 /**
@@ -132,17 +167,100 @@ $einsaetzeGesamt = (int)$st->fetchColumn();
 
 /* Die Fenster der Einsaetze — EINE Abfrage, und dieselbe, die der Messstand
  * erklaeren laesst (`statistik_lib.php`). Die Kennzahl „in 30 Tagen" kommt
- * daraus, deshalb laeuft sie auf jedem Reiter. */
-$st = $pdo->prepare(statistik_einsaetze_sql());
-$st->execute([$demoId]);
-$r = $st->fetch() ?: [];
+ * daraus, deshalb laeuft sie auf jedem Reiter — bei einem eigenen Zeitraum
+ * nicht: Dann braucht keine Karte die festen Fenster, und die Kennzahl
+ * kommt aus der Abfrage des Zeitraums. */
 $einsaetze = []; $mitEinsatz = [];
-foreach (array_keys(STAT_FENSTER_EINSAETZE) as $tage) {
-    $einsaetze[$tage]  = (int)($r['n' . $tage] ?? 0);
-    $mitEinsatz[$tage] = (int)($r['k' . $tage] ?? 0);
+if ($eigen) {
+    $st = $pdo->prepare(statistik_zeitraum_sql($zeitraum));
+    $st->execute(array_merge([$demoId], statistik_bedingung_werte($zeitraum)));
+    $r = $st->fetch() ?: [];
+    $imZeitraum         = (int)($r['n'] ?? 0);
+    $mitEinsatzZeitraum = (int)($r['k'] ?? 0);
+    $zeitraumText       = 'im Zeitraum';
+} else {
+    $st = $pdo->prepare(statistik_einsaetze_sql());
+    $st->execute([$demoId]);
+    $r = $st->fetch() ?: [];
+    foreach (array_keys(STAT_FENSTER_EINSAETZE) as $tage) {
+        $einsaetze[$tage]  = (int)($r['n' . $tage] ?? 0);
+        $mitEinsatz[$tage] = (int)($r['k' . $tage] ?? 0);
+    }
+    $imZeitraum         = $einsaetze[$zeitraum['tage']] ?? 0;
+    $mitEinsatzZeitraum = $mitEinsatz[$zeitraum['tage']] ?? 0;
+    $zeitraumText       = STAT_WAHL[$zeitraum['t']][1];
 }
 
 /* ======================================================================== */
+/* ---- Die Diagramme (R4-24, Nr. 122 b, Bild M-R4-24) --------------------
+ *
+ * Eine Einteilung des gewählten Zeitraums in Tage, Wochen oder Monate
+ * (`statistik_einteilung()`, E-R4-59), eine Säule je Fach. Die Einsätze je
+ * Fach kommen aus EINER Abfrage je Stunde und Konto — dieselbe liefert die
+ * Konten mit Einsatz je Fach für die kleinen Vielfachen unter NutzerInnen.
+ * „Neu angelegt" und „gekoppelt" zählt PHP aus den Zeilen, die die Reiter
+ * ohnehin lesen. */
+$einteilung = statistik_einteilung($zeitraum);
+$faecher    = $einteilung['faecher'];
+$fachWort   = ['tag' => ['Tag', 'je Tag'], 'woche' => ['Woche', 'je Woche'],
+               'monat' => ['Monat', 'je Monat']][$einteilung['art']];
+$jeFach = static fn(): array => array_fill(0, count($faecher), 0);
+/* Liegt ein Zeitpunkt im gewählten Zeitraum? Das erste Fach eines festen
+ * Fensters beginnt um Mitternacht, das Fenster selbst jetzt minus N Tage —
+ * gezählt wird nur, was im Fenster liegt, wie in der Abfrage der Einsätze. */
+$imGewaehlten = static fn(?string $wann): bool => $eigen
+    ? stat_im_zeitraum($wann, $zeitraum, $jetzt)
+    : stat_im_fenster($wann, (int)$zeitraum['tage'], $jetzt);
+$einsaetzeJeFach = $jeFach(); $kontenJeFach = $jeFach();
+if ($reiter === 'einsaetze' || $reiter === 'nutzer') {
+    $st = $pdo->prepare(statistik_stunden_sql($zeitraum));
+    $st->execute(array_merge([$demoId], statistik_bedingung_werte($zeitraum)));
+    $wer = [];
+    foreach ($st->fetchAll() as $z) {
+        $f = statistik_fach($einteilung, (string)$z['stunde']);
+        if ($f === null) { continue; }
+        $einsaetzeJeFach[$f] += (int)$z['n'];
+        $wer[$f][(int)$z['user_id']] = true;
+    }
+    foreach ($wer as $f => $ids) { $kontenJeFach[$f] = count($ids); }
+}
+
+/** Die Werte eines Diagramms: je Fach [Beschriftung, Zahl]. */
+function stat_saeulen(array $faecher, array $zahlen): array
+{
+    $werte = [];
+    foreach ($faecher as $i => $f) { $werte[] = [$f['text'], (int)($zahlen[$i] ?? 0)]; }
+    return $werte;
+}
+
+/**
+ * Der Satz unter einem Diagramm: Einteilung, erster und letzter Tag des
+ * Zeitraums mit Jahreszahl, und was angebrochen sein kann. Bis R4-24 nannte
+ * er die Anfänge des ersten und letzten Fachs ohne Jahr — „22.09. bis
+ * 28.09." über ein ganzes Jahr las sich wie eine Woche.
+ */
+function stat_achsensatz(array $einteilung): string
+{
+    $spanne = tage_spanne_text($einteilung['erster'], $einteilung['letzter']);
+    $heute  = $einteilung['bis_heute'];
+    return match ($einteilung['art']) {
+        'tag'   => 'Je Tag, ' . $spanne . ($heute ? '; heute ist nicht vorbei.' : '.'),
+        'woche' => 'Je Woche ab Montag, ' . $spanne . '; die erste und die letzte Woche '
+                 . 'können angebrochen sein.',
+        default => 'Je Monat, ' . $spanne . '; der erste und der letzte Monat '
+                 . 'können angebrochen sein.',
+    };
+}
+
+/** Die Zusammenfassung für `aria-label` — die Tabelle trägt die Einzelwerte. */
+function stat_beschreibung(string $was, array $werte): string
+{
+    $h = null;
+    foreach ($werte as [$t, $w]) { if ($h === null || $w > $h[1]) { $h = [$t, $w]; } }
+    return $was . ', ' . count($werte) . ' Säulen'
+         . ($h !== null && $h[1] > 0 ? ', höchstens ' . zahl_text($h[1]) . ' ab ' . $h[0] : ', alle 0');
+}
+
 /* ---- Reiter NutzerInnen ------------------------------------------------- */
 if ($reiter === 'nutzer') {
     /* Je Konto: Rolle, Anmeldung, Anlage — und die juengste Meldung eines
@@ -171,7 +289,23 @@ if ($reiter === 'nutzer') {
     }
 
     $kontenZeit = ['aktiv' => [], 'angemeldet' => [], 'angelegt' => []];
-    foreach (array_keys(STAT_FENSTER_KONTEN) as $tage) {
+    if ($eigen) {
+        /* Eine Spalte „im Zeitraum" (R4-23). Zu „aktiv" und „angemeldet"
+         * siehe `$bisHeute` oben. */
+        $kontenZeit['aktiv']['z'] = $bisHeute ? count(array_filter($konten,
+            static fn($k) => stat_im_zeitraum($k['last_login'] ?? null, $zeitraum, $jetzt)
+                          || stat_im_zeitraum($k['geraet_zuletzt'] ?? null, $zeitraum, $jetzt))) : '—';
+        $kontenZeit['angemeldet']['z'] = $bisHeute ? count(array_filter($konten,
+            static fn($k) => stat_im_zeitraum($k['last_login'] ?? null, $zeitraum, $jetzt))) : '—';
+        $kontenZeit['angelegt']['z'] = count(array_filter($konten,
+            static fn($k) => stat_im_zeitraum($k['created_at'] ?? null, $zeitraum, $jetzt)));
+    }
+    $angelegtJeFach = $jeFach();
+    foreach ($konten as $k) {
+        $f = statistik_fach($einteilung, $k['created_at'] ?? null);
+        if ($f !== null && $imGewaehlten($k['created_at'] ?? null)) { $angelegtJeFach[$f]++; }
+    }
+    foreach ($eigen ? [] : array_keys(STAT_FENSTER_KONTEN) as $tage) {
         $kontenZeit['aktiv'][$tage] = count(array_filter($konten,
             static fn($k) => stat_im_fenster($k['last_login'] ?? null, $tage, $jetzt)
                           || stat_im_fenster($k['geraet_zuletzt'] ?? null, $tage, $jetzt)));
@@ -184,13 +318,14 @@ if ($reiter === 'nutzer') {
 
 /* ---- Reiter Einsätze ---------------------------------------------------- */
 if ($reiter === 'einsaetze') {
-    /* HERKUNFT, LETZTE 30 TAGE (E-P5c-45, Nr. 80). Summen einer vorhandenen
+    /* HERKUNFT IM GEWÄHLTEN ZEITRAUM (E-P5c-45, Nr. 80; bis Web 21.4.1 fest
+     * 30 Tage, R4-23). Summen einer vorhandenen
      * Spalte, nur fuer die BetreiberIn — keine Datenschutz-Vorbedingung,
      * anders als Nr. 80 fuer die Momentaufnahme am Einsatz verlangt. Alle
      * sechs Werte aus `HERKUNFT_WERTE`, auch mit 0: Eine fehlende Zeile saehe
      * aus wie eine Herkunft, die es nicht gibt. */
-    $st = $pdo->prepare(statistik_herkunft_sql());
-    $st->execute([$demoId]);
+    $st = $pdo->prepare(statistik_herkunft_sql($zeitraum));
+    $st->execute(array_merge([$demoId], statistik_bedingung_werte($zeitraum)));
     $herkunft = array_fill_keys(HERKUNFT_WERTE, 0);
     $herkunftAndere = 0;
     foreach ($st->fetchAll() as $h) {
@@ -216,8 +351,19 @@ if ($reiter === 'geraete') {
         if (!$g['active']) { $deaktiviert++; }
     }
 
+    $gekoppeltJeFach = $jeFach();
+    foreach ($geraete as $g) {
+        $f = statistik_fach($einteilung, $g['created_at'] ?? null);
+        if ($f !== null && $imGewaehlten($g['created_at'] ?? null)) { $gekoppeltJeFach[$f]++; }
+    }
     $geraeteZeit = ['gemeldet' => [], 'gekoppelt' => []];
-    foreach (array_keys(STAT_FENSTER_GERAETE) as $tage) {
+    if ($eigen) {
+        $geraeteZeit['gemeldet']['z'] = $bisHeute ? count(array_filter($geraete,
+            static fn($g) => stat_im_zeitraum($g['last_seen'] ?? null, $zeitraum, $jetzt))) : '—';
+        $geraeteZeit['gekoppelt']['z'] = count(array_filter($geraete,
+            static fn($g) => stat_im_zeitraum($g['created_at'] ?? null, $zeitraum, $jetzt)));
+    }
+    foreach ($eigen ? [] : array_keys(STAT_FENSTER_GERAETE) as $tage) {
         $geraeteZeit['gemeldet'][$tage] = count(array_filter($geraete,
             static fn($g) => stat_im_fenster($g['last_seen'] ?? null, $tage, $jetzt)));
         $geraeteZeit['gekoppelt'][$tage] = count(array_filter($geraete,
@@ -332,7 +478,8 @@ function stat_kopf(string $key, string $text, string $sort, string $richtung): s
  * Eine Zeitraumtabelle: eine Zeile je Kennzahl, eine Spalte je Fenster, der
  * Anteil als Kleinzeile unter der Zahl.
  *
- * @param array<int,string> $fenster  Tage => Spaltenkopf
+ * @param array<int|string,string> $fenster  Tage => Spaltenkopf; bei einem
+ *        eigenen Zeitraum (R4-23) Schlüssel wie 'z', 'w', 'd'
  * @param list<array{0:string,1:string,2:array<int,int|string>,3:?int}> $zeilen
  *        [Titel, Unterzeile, Werte je Fenster, Bezug fuer den Anteil oder null].
  *        Ein Wert als Text (der Schnitt, „—") steht so da und traegt keinen
@@ -385,21 +532,50 @@ ui_seite_start(['titel' => 'Statistik']);
 
   <div class="kennzahl-raster kennzahl-raster-4">
     <?= ui_kennzahl(['wert' => zahl_text($kontenZahl), 'label' => 'Konten',
-                     'href' => '?r=nutzer']) ?>
+                     'href' => '?r=nutzer' . $zAdresse]) ?>
     <?= ui_kennzahl(['wert' => zahl_text($geraeteZahl), 'label' => 'Geräte',
-                     'href' => '?r=geraete']) ?>
+                     'href' => '?r=geraete' . $zAdresse]) ?>
     <?= ui_kennzahl(['wert' => zahl_text($einsaetzeGesamt), 'label' => 'Einsätze gesamt',
-                     'href' => '?r=einsaetze']) ?>
-    <?= ui_kennzahl(['wert' => zahl_text($einsaetze[30] ?? 0),
-                     'label' => 'Einsätze in 30 Tagen', 'href' => '?r=einsaetze']) ?>
+                     'href' => '?r=einsaetze' . $zAdresse]) ?>
+    <?= ui_kennzahl(['wert' => zahl_text($imZeitraum),
+                     'label' => 'Einsätze ' . $zeitraumText, 'href' => '?r=einsaetze' . $zAdresse]) ?>
   </div>
 
   <?php
+  /* DIE ZEITRAUMWAHL ZWISCHEN KENNZAHLEN UND REITERN (R4-23, Bild M-R4-23):
+   * Sie gilt für alle drei Reiter, also steht sie über ihnen. */
+  $pillen = [];
+  foreach (STAT_WAHL as $t => [$pille]) {
+      $pillen[] = ['text' => $pille,
+                   'href' => '?r=' . $reiter . ($t === STAT_WAHL_VORGABE ? '' : '&t=' . $t),
+                   'aktiv' => !$eigen && $zeitraum['t'] === $t];
+  }
+  ui_zeitraumwahl([
+      'label'     => 'Zeitraum der Statistik',
+      'versteckt' => ['r' => $reiter],
+      'pillen'    => $pillen,
+      'von'       => $eigen ? $zeitraum['von'] : '',
+      'bis'       => $eigen ? $zeitraum['bis'] : '',
+      'max'       => heute_lokal(),
+      'eigen'     => $eigen ? ['text' => zeitraum_text($zeitraum['unten'], $zeitraum['bis_utc']),
+                               'href' => '?r=' . $reiter] : null,
+  ]);
+  if (isset($zeitraum['fehler'])) {
+      ui_meldung(null, $zeitraum['fehler'] . ' Gezeigt werden die ' . STAT_WAHL[STAT_WAHL_VORGABE][0] . '.');
+  }
+
   $punkte = [];
   foreach (STAT_REITER as $schluessel => $text) {
-      $punkte[] = ['text' => $text, 'href' => '?r=' . $schluessel, 'aktiv' => $reiter === $schluessel];
+      $punkte[] = ['text' => $text, 'href' => '?r=' . $schluessel . $zAdresse,
+                   'aktiv' => $reiter === $schluessel];
   }
   ui_reiter(['label' => 'Bereiche der Statistik', 'punkte' => $punkte]);
+
+  /* Die Zeile, die bei eigenem Zeitraum unter jeder Tabelle steht, die
+   * „aktiv", „angemeldet" oder „gemeldet" führt (F-R4-66, E-R4-55). */
+  $nurBisHeute = $eigen && !$bisHeute
+      ? ' „—" heißt: nur zählbar, wenn der Zeitraum bis heute reicht — gespeichert ist '
+      : '';
   ?>
 
   <div class="form-raster form-raster-links-breit">
@@ -408,13 +584,51 @@ ui_seite_start(['titel' => 'Statistik']);
   <div class="form-spalte">
     <?php ui_karte_start(['titel' => 'Konten je Zeitraum', 'id' => 'k-konten-zeit',
                           'zahl' => 'von ' . zahl_text($kontenZahl)]); ?>
-      <?php stat_zeitraumtabelle(STAT_FENSTER_KONTEN, [
-          ['Aktiv',        '', $kontenZeit['aktiv'],      $kontenZahl],
-          ['Angemeldet',   '', $kontenZeit['angemeldet'], $kontenZahl],
-          ['Neu angelegt', '', $kontenZeit['angelegt'],   $kontenZahl],
-      ]); ?>
+      <?php
+      /* ZWEI KLEINE VIELFACHE (Bild M-R4-24, Zustand B; angepasst nach
+       * E-R4-55): „mit Einsatz" und „neu angelegt" haben verschiedene
+       * Größenordnungen, also je ein Diagramm mit eigener Skala. „Aktiv" und
+       * „angemeldet" je Fach gibt es nicht — die Anlage kennt nur die letzte
+       * Anmeldung (F-R4-66). */
+      $werteM = stat_saeulen($faecher, $kontenJeFach);
+      $werteN = stat_saeulen($faecher, $angelegtJeFach);
+      ?>
+      <div class="kleinvielfach">
+        <div>
+          <h3 class="kleinvielfach-titel">Mit Einsatz</h3>
+          <p class="kleinvielfach-wert"><?= e(zahl_text($mitEinsatzZeitraum)) ?>
+             <span><?= e($zeitraumText) ?></span></p>
+          <?= ui_diagramm_saeulen(['werte' => $werteM, 'klein' => true,
+                  'beschreibung' => stat_beschreibung('Konten mit Einsatz ' . $fachWort[1], $werteM)]) ?>
+        </div>
+        <div>
+          <h3 class="kleinvielfach-titel">Neu angelegt</h3>
+          <p class="kleinvielfach-wert"><?= e(zahl_text(array_sum($angelegtJeFach))) ?>
+             <span><?= e($zeitraumText) ?></span></p>
+          <?= ui_diagramm_saeulen(['werte' => $werteN, 'klein' => true,
+                  'beschreibung' => stat_beschreibung('Neu angelegte Konten ' . $fachWort[1], $werteN)]) ?>
+        </div>
+      </div>
+      <p class="feld-klein"><?= e(stat_achsensatz($einteilung) . ' Der Höchstwert ist beschriftet; '
+          . '„mit Einsatz" zählt die Konten, die dort mindestens einen Einsatz begonnen haben.') ?></p>
+      <?php if ($eigen): ?>
+        <?php stat_zeitraumtabelle(['z' => 'im Zeitraum'], [
+            ['Aktiv',        '',            $kontenZeit['aktiv'],      $kontenZahl],
+            ['Angemeldet',   '',            $kontenZeit['angemeldet'], $kontenZahl],
+            ['Neu angelegt', '',            $kontenZeit['angelegt'],   $kontenZahl],
+            ['NutzerInnen',  'mit Einsatz', ['z' => $mitEinsatzZeitraum], $kontenZahl],
+        ]); ?>
+      <?php else: ?>
+        <?php stat_zeitraumtabelle(STAT_FENSTER_KONTEN, [
+            ['Aktiv',        '', $kontenZeit['aktiv'],      $kontenZahl],
+            ['Angemeldet',   '', $kontenZeit['angemeldet'], $kontenZahl],
+            ['Neu angelegt', '', $kontenZeit['angelegt'],   $kontenZahl],
+        ]); ?>
+      <?php endif; ?>
       <p class="feld-klein">Aktiv heißt: angemeldet <strong>oder</strong> eines der
-         Geräte hat sich gemeldet. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+         Geräte hat sich gemeldet.<?= $nurBisHeute !== ''
+             ? e($nurBisHeute . 'je Konto nur die letzte Anmeldung.') : '' ?>
+         <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
     <?php ui_karte_ende(); ?>
   </div><?php /* .form-spalte (links) */ ?>
   <div class="form-spalte">
@@ -438,8 +652,47 @@ ui_seite_start(['titel' => 'Statistik']);
 
 <?php elseif ($reiter === 'einsaetze'): ?>
   <div class="form-spalte">
+    <?php if ($eigen): ?>
+    <?php ui_karte_start(['titel' => 'Einsätze im Zeitraum', 'id' => 'k-einsaetze-zeit',
+                          'zahl' => zeitraum_text($zeitraum['unten'], $zeitraum['bis_utc'])
+                                  . ' · ' . zahl_text($zeitraum['tage'])
+                                  . ($zeitraum['tage'] === 1 ? ' Tag' : ' Tage')]); ?>
+      <?php $werteE = stat_saeulen($faecher, $einsaetzeJeFach); ?>
+      <?= ui_diagramm_saeulen([
+          'werte' => $werteE,
+          'beschreibung' => stat_beschreibung('Einsätze ' . $fachWort[1], $werteE),
+          'unter' => stat_achsensatz($einteilung),
+      ]) ?>
+      <?php
+      /* EINE SPALTE UND DER SCHNITT (Bild M-R4-23, Zustand B): Ein eigener
+       * Zeitraum ist verschieden lang, erst Wochen- und Tagesschnitt machen
+       * ihn mit einem anderen vergleichbar. Nur für die Einsätze — ein
+       * Schnitt der NutzerInnen je Tag wäre keine Zahl, die jemand fragt. */
+      $tage = $zeitraum['tage'];
+      stat_zeitraumtabelle(['z' => 'im Zeitraum', 'w' => 'Ø je Woche', 'd' => 'Ø je Tag'], [
+          ['Einsätze', '', ['z' => $imZeitraum,
+                            'w' => zahl_text($imZeitraum * 7 / $tage, 1),
+                            'd' => zahl_text($imZeitraum / $tage, 1)], null],
+          ['NutzerInnen', 'mit Einsatz', ['z' => $mitEinsatzZeitraum, 'w' => '—', 'd' => '—'],
+           $kontenZahl],
+          ['Ø je NutzerIn', 'mit Einsatz',
+           ['z' => $mitEinsatzZeitraum > 0 ? zahl_text($imZeitraum / $mitEinsatzZeitraum, 1) : '—',
+            'w' => '—', 'd' => '—'], null],
+      ]);
+      ?>
+      <p class="feld-klein">Gezählt ab dem Beginn des Einsatzes, Tagesgrenzen in
+         <?= e((string)konfig('app.timezone', 'Europe/Berlin')) ?> — ohne Demo-Konto,
+         ohne Papierkorb. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+    <?php ui_karte_ende(); ?>
+    <?php else: ?>
     <?php ui_karte_start(['titel' => 'Einsätze je Zeitraum', 'id' => 'k-einsaetze-zeit',
                           'zahl' => zahl_text($einsaetzeGesamt) . ' gesamt']); ?>
+      <?php $werteE = stat_saeulen($faecher, $einsaetzeJeFach); ?>
+      <?= ui_diagramm_saeulen([
+          'werte' => $werteE,
+          'beschreibung' => stat_beschreibung('Einsätze ' . $fachWort[1], $werteE),
+          'unter' => stat_achsensatz($einteilung),
+      ]) ?>
       <?php
       $schnitt = [];
       foreach (array_keys(STAT_FENSTER_EINSAETZE) as $tage) {
@@ -455,21 +708,22 @@ ui_seite_start(['titel' => 'Statistik']);
       <p class="feld-klein">Gezählt ab dem Beginn des Einsatzes — ohne Demo-Konto,
          ohne Papierkorb. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
     <?php ui_karte_ende(); ?>
+    <?php endif; ?>
   </div><?php /* .form-spalte (links) */ ?>
   <div class="form-spalte">
     <?php ui_karte_start(['titel' => 'Herkunft der Einsätze', 'id' => 'k-herkunft',
-                          'zahl' => zahl_text($einsaetze[30] ?? 0) . ' in 30 Tagen']); ?>
-      <?php foreach ($herkunft as $wert => $n): ?>
-        <?php ui_zeile(['text' => HERKUNFT_TEXTE[$wert]['lang'],
-                        'klein' => prozent_text($n, $einsaetze[30] ?? 0),
-                        'plaketten' => ui_plakette((string)$n)]); ?>
-      <?php endforeach; ?>
-      <?php if ($herkunftAndere > 0): ?>
-        <?php ui_zeile(['text' => 'Andere',
-                        'klein' => stat_klein(prozent_text($herkunftAndere, $einsaetze[30] ?? 0),
-                                              'Werte, die diese Fassung nicht kennt'),
-                        'plaketten' => ui_plakette((string)$herkunftAndere)]); ?>
-      <?php endif; ?>
+                          'zahl' => zahl_text($imZeitraum) . ' ' . $zeitraumText]); ?>
+      <?php
+      /* ANTEILE ALS BALKEN (R4-24, Bild M-R4-24) statt Zeilen mit Plakette:
+       * Nebeneinander an einer gemeinsamen Linie liest das Auge den Anteil
+       * genauer als an einer Zahl allein. Alle sechs Herkünfte, auch mit 0. */
+      $zeilen = [];
+      foreach ($herkunft as $wert => $n) { $zeilen[] = [HERKUNFT_TEXTE[$wert]['lang'], $n]; }
+      if ($herkunftAndere > 0) { $zeilen[] = ['Andere', $herkunftAndere]; }
+      echo ui_diagramm_balken(['zeilen' => $zeilen, 'bezug' => $imZeitraum]);
+      ?>
+      <p class="feld-klein">Anteile am gewählten Zeitraum.<?= $herkunftAndere > 0
+          ? ' „Andere" sind Werte, die diese Fassung nicht kennt.' : '' ?></p>
     <?php ui_karte_ende(); ?>
   </div><?php /* .form-spalte (rechts) */ ?>
 
@@ -477,10 +731,22 @@ ui_seite_start(['titel' => 'Statistik']);
   <div class="form-spalte">
     <?php ui_karte_start(['titel' => 'Geräte je Zeitraum', 'id' => 'k-geraete-zeit',
                           'zahl' => 'von ' . zahl_text($geraeteZahl)]); ?>
-      <?php stat_zeitraumtabelle(STAT_FENSTER_GERAETE, [
+      <?php $werteG = stat_saeulen($faecher, $gekoppeltJeFach); ?>
+      <?= ui_diagramm_saeulen([
+          'werte' => $werteG,
+          'beschreibung' => stat_beschreibung('Gekoppelte Geräte ' . $fachWort[1], $werteG),
+          'unter' => 'Gekoppelt. ' . stat_achsensatz($einteilung)
+                   . ' „Zuletzt gemeldet" gibt es nicht je ' . $fachWort[0]
+                   . ': Gespeichert ist je Gerät nur die letzte Meldung.',
+      ]) ?>
+      <?php stat_zeitraumtabelle($eigen ? ['z' => 'im Zeitraum'] : STAT_FENSTER_GERAETE, [
           ['Zuletzt gemeldet', '', $geraeteZeit['gemeldet'],  $geraeteZahl],
           ['Gekoppelt',        '', $geraeteZeit['gekoppelt'], $geraeteZahl],
       ]); ?>
+      <?php if ($nurBisHeute !== ''): ?>
+        <p class="feld-klein"><?= e(ltrim($nurBisHeute) . 'je Gerät nur die letzte Meldung.') ?>
+           <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+      <?php endif; ?>
     <?php ui_karte_ende(); ?>
   </div><?php /* .form-spalte (links) */ ?>
   <div class="form-spalte">

@@ -678,7 +678,7 @@
       "datei": "docs/Technik.md",
       "zeile": "sichtbar in Garmin Connect|die Uhr zeigt das Feld in Garmin Connect",
       "klasse": "G",
-      "begruendung": "Technik.md 5d.8 begruendet, warum die Vorgabe-Serveradresse der Uhr-App auf gen-em.org stehen BLEIBT (E-P5a-42, Auftraggeber 16.09.2026). Die Begruendung IST die Plattform: Das Feld steht in Garmin Connect und ist dort von jeder Betreiberin aenderbar — deshalb ist die Vorgabe eine Vorgabe und keine Festverdrahtung. Ohne den Namen waere der Satz „die Uhr zeigt das Feld irgendwo\" und begruendete gar nichts; die Wear-OS-Uhr hat dieses Feld ausdruecklich NICHT (E-S4-11, sie kennt weder Adresse noch Schluessel). Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `handbuch-geraete-verlust-garmin` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
+      "begruendung": "Technik.md 5d.8 begruendet, warum die Vorgabe-Serveradresse der Uhr-App auf der Adresse der Betreiberin stehen BLEIBT (E-P5a-42, Auftraggeber 16.09.2026). Die Begruendung IST die Plattform: Das Feld steht in Garmin Connect und ist dort von jeder Betreiberin aenderbar — deshalb ist die Vorgabe eine Vorgabe und keine Festverdrahtung. Ohne den Namen waere der Satz „die Uhr zeigt das Feld irgendwo\" und begruendete gar nichts; die Wear-OS-Uhr hat dieses Feld ausdruecklich NICHT (E-S4-11, sie kennt weder Adresse noch Schluessel). Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `handbuch-geraete-verlust-garmin` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
     },
     {
       "id": "mail-demo-konto",
@@ -766,17 +766,8 @@
       "muster": [
         "name-real"
       ],
-      "zeile": "exportTitle|Titelzeile in F1",
-      "begruendung": "Vom Auftraggeber entschieden am 23.09.2026: stehen lassen. Der Wert wird NIE verglichen, sondern in Zelle F1 der exportierten Excel-Datei geschrieben (`export.js` 496) -- er ist der Kopf eines Dokuments, das die Betreiberin aus dem Haus gibt, und das Profil heisst gerade deshalb so, weil es dieses eine Layout bedient. PREIS, benannt: Das oeffentliche Repositorium nennt die reale Kennung an dieser einen Stelle weiter. Der saubere Weg waere ein Wert in den Einstellungen -- das ist eine neue Funktion mit Feld, Migration und Handbuchabschnitt und gehoert in ein eigenes Paket. GILT FUER BEIDE STELLEN: den Wert in `import_profiles.js` und die Zeile in `docs/Export-Format.md`, die BESCHREIBT, was in Zelle F1 steht. Eine Doku, die einen anderen Titel nennt als die Datei traegt, ist falsch -- deshalb haengen die beiden zusammen und stehen unter derselben Ausnahme."
-    },
-    {
-      "id": "messstand-eigene-adresse",
-      "klasse": "Homonym",
-      "muster": [
-        "mail-fremd"
-      ],
-      "zeile": "messstand@gen-em\\.org",
-      "begruendung": "EINE ADRESSE DES PROJEKTS, kein Beispiel. `tools/messstand/` legt ein Konto unter dieser Adresse an, um einen Bestand von 5000 Einsaetzen herzustellen. E-PK-27 nennt `demo@gen-em.org` als die eine echte Adresse in Texten -- gemeint war damit, dass BEISPIELE keine echte Domaene nennen. Diese hier ist kein Beispiel, sondern die Angabe, welches Konto das Werkzeug benutzt; `example.invalid` waere dort schlicht falsch."
+      "zeile": "exportTitle|Titelzeile in F1|Jahresliste \"Einsatzdokumentation",
+      "begruendung": "Vom Auftraggeber entschieden am 23.09.2026: stehen lassen. Der Wert wird NIE verglichen, sondern in Zelle F1 der exportierten Excel-Datei geschrieben (`export.js` 496) -- er ist der Kopf eines Dokuments, das die Betreiberin aus dem Haus gibt, und das Profil heisst gerade deshalb so, weil es dieses eine Layout bedient. PREIS, benannt: Das oeffentliche Repositorium nennt die reale Kennung an dieser einen Stelle weiter. Der saubere Weg waere ein Wert in den Einstellungen -- das ist eine neue Funktion mit Feld, Migration und Handbuchabschnitt und gehoert in ein eigenes Paket. GILT FUER BEIDE STELLEN: den Wert in `import_profiles.js` und die Zeile in `docs/Export-Format.md`, die BESCHREIBT, was in Zelle F1 steht. Eine Doku, die einen anderen Titel nennt als die Datei traegt, ist falsch -- deshalb haengen die beiden zusammen und stehen unter derselben Ausnahme. SEIT R4-07 AUCH DER KOMMENTAR UEBER DEM PROFIL (`// Jahresliste \"Einsatzdokumentation ...\"` in `import_profiles.js`): Die Klasse `namen` liest seither Kommentare (E-R4-19), und dieser benennt dasselbe Fremdformat -- eine dritte Stelle derselben Sache, keine neue."
     },
     {
       "id": "notarzt-als-name",

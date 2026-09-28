@@ -50,7 +50,7 @@ const quelle  = process.argv[3]
   || referenzDatei(new URL('../referenz', import.meta.url).pathname);
 const bpw     = process.argv[4] || 'nadokudemo0815';
 const ordner  = process.argv[5] || '/tmp/kreislauf-edbak';
-const konto   = process.env.UMLAUF_KONTO || 'umlauf-edbak@gen-em.org';
+const konto   = process.env.UMLAUF_KONTO || 'umlauf-edbak@example.invalid';
 const kontoPw = process.env.UMLAUF_PASSWORT || 'umlaufpruefung2026';
 mkdirSync(ordner, { recursive: true });
 
