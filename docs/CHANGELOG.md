@@ -845,6 +845,16 @@ Fassung.
 
 ### Geändert
 
+- **Der Prüfstand fährt die Selbstproben von `tools/steuerung/` wie das
+  Tor** (Abschluss von Schritt 17). Der Abschluss-Commit war örtlich grün
+  und in Stufe 1 rot: Die Selbstprobe von `uebersicht.py` prüfte ihre
+  Gegenprobe „Kennung mit Paket" fest an `17 AP3`, und mit dem Abschluss war
+  die Fahrplanzeile 17 weg. Gefunden hat es nur das Tor, weil der Prüfstand
+  für `steuerung` nur `decken.py` und `uebersicht.py --pruefen` fuhr, Stufe 1
+  dazu beide `--selbstprobe` — dieselbe Lücke wie in Nr. 329, an einer
+  Stelle, die R4-02 nicht erfasst hat. Jetzt nimmt die Gegenprobe die erste
+  Kennung, die im Fahrplan steht, und der Aufruf in `pruefablauf.json` fährt
+  beide Selbstproben mit.
 - **Der Messstand misst die Zeitraumübersicht ab ihrer eigenen Adresse**
   (R4-27, Nr. 37, F-R4-70). Die Uhr des Schritts lief bis dahin ab dem
   Laden der **Startseite** — die brauchte er nur, um das Jahr zu finden,

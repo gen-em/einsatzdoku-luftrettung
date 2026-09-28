@@ -154,6 +154,13 @@ def lauf(wurzel, nur_pruefen, nur_ziel):
 # ------------------------------------------------------------- Selbstprobe
 
 def selbstprobe(wurzel):
+    # DIE KENNUNG FUER DIE GEGENPROBE „mit Paket" KOMMT AUS DEM FAHRPLAN, nicht
+    # aus dem Kopf. Hier stand bis zum Abschluss von Schritt 17 fest `17 AP3` —
+    # und mit der Fahrplanzeile 17 ging die Gegenprobe, und Stufe 1 war rot.
+    # Ein Schritt, der endet, nimmt seine Kennung mit; die erste, die noch
+    # dasteht, gilt.
+    kennung = fahrplan(wurzel)[0][0]
+
     def kopie(d):
         os.makedirs(os.path.join(d, 'docs'), exist_ok=True)
         for rel in (BACKLOG, RAHMENPLAN):
@@ -177,7 +184,7 @@ def selbstprobe(wurzel):
     def f_ziel_fremd(z):
         i = erste_kopfzeile(z); z[i] = re.sub(r' · gehört zu: [^·]+ · ', ' · gehört zu: 99 · ', z[i]); return z
     def f_ziel_paket(z):
-        i = erste_kopfzeile(z); z[i] = re.sub(r' · gehört zu: [^·]+ · ', ' · gehört zu: 17 AP3 · ', z[i]); return z
+        i = erste_kopfzeile(z); z[i] = re.sub(r' · gehört zu: [^·]+ · ', f' · gehört zu: {kennung} AP3 · ', z[i]); return z
     def f_ohne_offen(z):
         return [x for x in z if x != '## Offen']
     def f_ohne_tabelle(z):
@@ -188,7 +195,7 @@ def selbstprobe(wurzel):
         ('Kopfzeile ohne `seit` — ohne Grammatik', BACKLOG, f_seit_weg, 'grammatik'),
         ('Stand außerhalb des Vokabulars — ohne Grammatik', BACKLOG, f_stand_fremd, 'grammatik'),
         ('Ziel `99`, keine Fahrplan-Kennung — ohne Ziel', BACKLOG, f_ziel_fremd, 'ziel'),
-        ('GEGENPROBE: Kennung mit Paket (`17 AP3`) gilt', BACKLOG, f_ziel_paket, 'gleich'),
+        (f'GEGENPROBE: Kennung mit Paket (`{kennung} AP3`) gilt', BACKLOG, f_ziel_paket, 'gleich'),
         ('kein `## Offen` — nicht gelaufen', BACKLOG, f_ohne_offen, 'nicht-gelaufen'),
         ('Rahmenplan ohne Fahrplan-Tabelle — nicht gelaufen', RAHMENPLAN, f_ohne_tabelle, 'nicht-gelaufen'),
     ]
