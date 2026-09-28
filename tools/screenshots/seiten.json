@@ -515,6 +515,12 @@
       "pfad": "betrieb_statistik.php?r=nutzer&von=2026-03-01&bis=2026-05-31"
     },
     {
+      "name": "45a6-betrieb-statistik-jahr",
+      "gruppe": "Betrieb",
+      "rolle": "betreiberin",
+      "pfad": "betrieb_statistik.php?r=einsaetze&t=365"
+    },
+    {
       "name": "46-betrieb-updates",
       "gruppe": "Betrieb",
       "rolle": "betreiberin",

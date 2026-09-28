@@ -2303,6 +2303,137 @@ function ui_zeitraumwahl(array $o): void
     echo "</form>\n";
 }
 
+/**
+ * Die Skala eines Diagramms: ein runder Schritt (1, 2 oder 5 mal einer
+ * Zehnerpotenz) und höchstens fünf Gitterlinien, die den Höchstwert fassen.
+ * Bei 41 sind das 10, 20 … 50 — nicht 20, 40 … 80, bei denen die Säulen nur
+ * die halbe Fläche nutzten, und nicht 10,25er-Schritte, die niemand liest.
+ *
+ * @return array{0:int,1:int} [Schritt, Zahl der Gitterlinien]
+ */
+function ui_diagramm_skala(int $hoechst): array
+{
+    if ($hoechst <= 0) { return [1, 4]; }
+    for ($p = 1; ; $p *= 10) {
+        foreach ([1, 2, 5] as $f) {
+            $linien = (int)ceil($hoechst / ($f * $p));
+            if ($linien <= 5) { return [$f * $p, max(1, $linien)]; }
+        }
+    }
+}
+
+/**
+ * Das Diagramm „Säulen" (`.diagramm-saeulen`, R4-24, Nr. 122 b, Bild
+ * M-R4-24, Design.md 9.40): eine Reihe über die Zeit als Inline-SVG, aus
+ * PHP, ohne Bibliothek und ohne Skript.
+ *
+ * EINE FARBE, DER HÖCHSTWERT HERVORGEHOBEN UND BESCHRIFTET: Blau erklärt,
+ * Orange tief hebt hervor (E-R4-60) — und die Zahl darüber sagt es noch
+ * einmal, weil Farbe nie der einzige Träger ist. Jede andere Säule zeigt ihre
+ * Zahl beim Überfahren (`:hover`) und trägt sie als `<title>`.
+ *
+ * DIE SCHRIFT WÄCHST NICHT MIT: Das SVG hat keine `viewBox`, sondern eine
+ * feste Höhe und Positionen in Prozent der Breite. Mit einer `viewBox`
+ * skalierte der Browser die Beschriftung mit dem Bild — auf dem Handy auf
+ * sechs Pixel, am breiten Schirm auf das Doppelte.
+ *
+ * DIE TABELLE BLEIBT daneben (Design.md 9.40): Sie ist die Tabellensicht und
+ * die Auskunft für alle, die das Bild nicht sehen; `aria-label` fasst nur
+ * zusammen.
+ *
+ * $o: werte list<[text, wert]>, beschreibung (aria-label), klein (ohne
+ *     Achse und Gitterbeschriftung, für die kleinen Vielfachen),
+ *     unter (Satz unter dem Bild, optional)
+ */
+function ui_diagramm_saeulen(array $o): string
+{
+    $werte = array_values((array)($o['werte'] ?? []));
+    $n = count($werte);
+    $klein = !empty($o['klein']);
+    $hoechst = 0; $hi = -1;
+    foreach ($werte as $i => [, $w]) { if ((int)$w > $hoechst) { $hoechst = (int)$w; $hi = $i; } }
+    [$schrittWert, $linien] = ui_diagramm_skala($hoechst);
+    $skala = $schrittWert * $linien;
+    $oben = 18; $flaeche = $klein ? 80 : 150; $unten = $klein ? 4 : 22;
+    $hoehe = $oben + $flaeche + $unten;
+    $links = $klein ? 0.0 : 6.0;                       /* Prozent für die Skala */
+    $schritt = $n > 0 ? (100.0 - $links) / $n : 0.0;
+    $breite = $schritt * 0.78;
+    $pz = static fn(float $x): string => rtrim(rtrim(number_format($x, 3, '.', ''), '0'), '.') . '%';
+    $y = static fn(int $w): float => round($oben + $flaeche - ($skala > 0 ? $flaeche * $w / $skala : 0), 1);
+
+    $svg = '<svg class="diagramm-saeulen' . ($klein ? ' diagramm-klein' : '') . '" width="100%" height="'
+         . $hoehe . '" role="img" aria-label="' . ui_e((string)($o['beschreibung'] ?? '')) . '">';
+    if (!$klein) {
+        for ($g = 1; $g <= $linien; $g++) {
+            $wert = $schrittWert * $g;
+            $gy = $y($wert);
+            $svg .= '<line class="gitter" x1="' . $pz($links) . '" y1="' . $gy . '" x2="100%" y2="' . $gy . '"/>'
+                  . '<text class="achse" x="0" y="' . ($gy + 4) . '">' . ui_e(zahl_text($wert)) . '</text>';
+        }
+    }
+    $svg .= '<line class="nulllinie" x1="' . $pz($links) . '" y1="' . ($oben + $flaeche)
+          . '" x2="100%" y2="' . ($oben + $flaeche) . '"/>';
+    /* Höchstens acht Achsenbeschriftungen, unter 480 px vier (`achse-breit`). */
+    $jede = max(1, (int)ceil($n / 8));
+    foreach ($werte as $i => [$text, $w]) {
+        $w = (int)$w;
+        $x = $links + $i * $schritt + ($schritt - $breite) / 2;
+        $mitte = $x + $breite / 2;
+        $sy = $y($w);
+        $svg .= '<g class="saeule' . ($i === $hi ? ' hoechst' : '') . '">'
+              . '<title>' . ui_e((string)$text . ': ' . zahl_text($w)) . '</title>'
+              . '<rect class="saeule-flaeche" x="' . $pz($links + $i * $schritt) . '" y="0" width="'
+              . $pz($schritt) . '" height="' . ($oben + $flaeche) . '"/>'
+              . '<rect class="saeule-wert" x="' . $pz($x) . '" y="' . $sy . '" width="' . $pz($breite)
+              . '" height="' . ($oben + $flaeche - $sy) . '" rx="2"/>'
+              . '<text class="saeule-zahl" x="' . $pz($mitte) . '" y="' . ($sy - 5) . '">'
+              . ui_e(zahl_text($w)) . '</text></g>';
+        if (!$klein && $i % $jede === 0) {
+            $svg .= '<text class="achse achse-x' . (intdiv($i, $jede) % 2 === 1 ? ' achse-breit' : '')
+                  . '" x="' . $pz($mitte) . '" y="' . ($hoehe - 6) . '">' . ui_e((string)$text) . '</text>';
+        }
+    }
+    $svg .= '</svg>';
+    $unter = (string)($o['unter'] ?? '');
+    return '<figure class="diagramm">' . $svg
+         . ($unter !== '' ? '<figcaption class="feld-klein">' . ui_e($unter) . '</figcaption>' : '')
+         . '</figure>';
+}
+
+/**
+ * Das Diagramm „Balken" (`.diagramm-balken`, R4-24, Bild M-R4-24): Anteile
+ * — je Zeile Beschriftung mit Anteil, ein Balken, die Zahl. Kein Kreis:
+ * Anteile nebeneinander liest das Auge an einer gemeinsamen Linie genauer
+ * als an Winkeln.
+ *
+ * DER BALKEN IST EIN KLEINES SVG, KEIN DIV MIT STILATTRIBUT FÜR DIE BREITE:
+ * Ein Stilattribut im PHP-Markup fiele unter `style-src` der CSP, und die
+ * Seite hat keins mehr (`kopfzeilen_lib.php`, P5a/AP4; die
+ * Vollständigkeitsprüfung zählt jedes, auch in einem Kommentar). `width="53%"` an einem
+ * `<rect>` ist ein Attribut der Grafik, kein Stil — und der Balken steht
+ * damit auch ohne Skript.
+ *
+ * $o: zeilen list<[text, wert]>, bezug (die Summe, auf die sich der Anteil
+ *     bezieht)
+ */
+function ui_diagramm_balken(array $o): string
+{
+    $bezug = (int)($o['bezug'] ?? 0);
+    $m = '<div class="diagramm-balken">';
+    foreach ((array)($o['zeilen'] ?? []) as [$text, $w]) {
+        $w = (int)$w;
+        $anteil = $bezug > 0 ? min(100, max(0, prozent_wert($w, $bezug, 'kauf'))) : 0;
+        $m .= '<div class="balken-zeile"><div class="balken-text">' . ui_e((string)$text)
+            . '<span class="zeile-klein">' . ui_e(prozent_text($w, $bezug)) . '</span></div>'
+            . '<svg class="balken-spur" width="100%" height="12" aria-hidden="true">'
+            . '<rect class="balken-grund" width="100%" height="12" rx="4"/>'
+            . '<rect class="balken-fuellung" width="' . $anteil . '%" height="12" rx="4"/></svg>'
+            . '<div class="balken-zahl">' . ui_e(zahl_text($w)) . '</div></div>';
+    }
+    return $m . '</div>';
+}
+
 /* ---------------------------------------------------------------------------
  * TITELZEILE  (.titelzeile)
  *

@@ -40,14 +40,14 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-24** (Diagramme), dann R4-25 und R4-26 — R4-24 und R4-25 im Worktree vorbereitet. |
-> | Entschieden | **E-R4-01 bis E-R4-58** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14), **E-R4-54, -55** (R4-22, R4-23). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52, -53, -56, -57, -58. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-25** (Erzeuger als Riegel, Nr. 209; Backlog-Listen, Nr. 340 — im Worktree vorbereitet), dann R4-26. |
+> | Entschieden | **E-R4-01 bis E-R4-61** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14), **E-R4-54, -55** (R4-22, R4-23). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52, -53, -56, -57, -58, -59, -60, -61. |
 > | Offen | **Q-R4-24** (Abnahme 5 s in R4-17 — gilt sie als erfüllt? Empfehlung ja; hält nichts auf). Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-23 erledigt** (27.09.2026); Web 21.5.0, Android 0.17.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-24 bis R4-26 in Nummernfolge. |
+> | Umsetzung | **R4-01 bis R4-24 erledigt** (28.09.2026); Web 21.6.0, Android 0.17.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-25 und R4-26. |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. **R4-19: ein Workflow, drei Agenten** auf getrennten Dateigruppen (`referenzdatensatz/` 22, `proben/` 17, übrige Werkzeuge 13 Dateien), alle drei gleichzeitig, 229 s, 0 gescheitert, 0 offene Stellen; Ausnahmeliste der Textprobe, Doku, Gegenlesung, Neuaufbau der Anlage und Prüfstand seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
-> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px), **F-R4-62** (R4-19 ohne CHANGELOG-Eintrag — nachgetragen), **F-R4-63** (Verbindungsprobe ließ 400 Waisen je Lauf — behoben), **F-R4-64** (Abfahrtort fehlte in der Legende — behoben), **F-R4-65** (Wiederherstellungsprobe ließ Sperrvermerke — behoben), **F-R4-66** (aktiv/angemeldet für vergangene Zeiträume nicht zählbar → Q-R4-26), **F-R4-67** (LIESMICH der App: 66 Bilder neben 72 — berichtigt) — 2.4. |
+> | Befunde der Umsetzung | **F-R4-19** (Abnahmezahl R4-01 verzählt: 43, nicht 37), **F-R4-20** (Firefox startet ohne die vier Bibliotheken, WebKit nicht), **F-R4-21** (örtliche MariaDB ohne Zeitzonentabellen), **F-R4-22** (Prüfstand hielt `${ANDROID_HOME:-…}` für Pflicht — behoben in R4-02), **F-R4-23** (6.12 Schritt 6 falsch — P-BR-09, behoben in R4-03), **F-R4-24** (demo-empfindlich sind 7 Proben, nicht 29), **F-R4-25** (Fokus nach dem Anker — Web 21.1.4), **F-R4-26** (Tonprüfung mit `\b`), **F-R4-27** (`style.css` in keinem Bereich der Textprobe), **F-R4-28** (14 Farbpaare ohne Liste), **F-R4-29** (Stilvergleich maß einen Übergang), **F-R4-30** (Tabellen rollen am Schreibtisch → Nr. 342), **F-R4-31** (Docker Hub gedrosselt → Nr. 343), **F-R4-32** (Sperrliste der Geräte nur in der Demo-Abschrift), **F-R4-33 bis -39** (R4-11: Widerruf → Nr. 344, Installationsseite → Nr. 345, zwei Altfehler der Backup-Ziele behoben, Fehler aus R4-10 behoben, zwei Proben ohne ihre Seite, Nummernriegel hielt geerbte Nummern für fremde), **F-R4-40** (Demo-Reset macht die GPX-Probe rot → R4-14), **F-R4-41** (Nr. 239 breiter), **F-R4-42** (Z37 sah `className` nicht → Nr. 346), **F-R4-43** (E-R4-10 ab dem letzten Reset gelesen, hätte die erste Änderung sofort verworfen → Q-R4-23), **F-R4-44** (Riegelprobe Fall 5 wäre ohne Marke rot geworden), **F-R4-45** („alle 30 Minuten" 43-mal für den Demo-Reset, 37 umgeschrieben), **F-R4-46** (das Fenster des Tages gleitet nicht mehr), **F-R4-47** (Ingestprobe 8b datierte den alten Anker zurück), **F-R4-48** (Schemaprobe fuhr den Migrationsweg nur für drei Migrationen → Fall 6), **F-R4-49** (eine Gegenprobe widersprüchlich, nicht erklärt), **F-R4-50** (Jobprobe hing an der Größe der Anlage), **F-R4-51** (`gen-em.org` in 56 versionierten Dateien, nicht 41; `grep -rn` zählte Ausgaben mit), **F-R4-52** (Runbook ohne Generatorschritt, Demo-Zahlen zwei Ausbauten alt), **F-R4-53** (Sitzungsprobe maß auf einer frischen Anlage nichts), **F-R4-54** (26 von 44 Zählungen der csv-Regeln veraltet), **F-R4-55** (D22 verschiebt 25 erzeugte Einsatznummern), **F-R4-56** (Dateiname der CSV-Referenz aus der Adresse), **F-R4-57** (drei Zahlen, die R4-16 übersah), **F-R4-58** (Abnahme 5 s absolut nicht erreicht → Q-R4-24), **F-R4-59** (auf dem Handy kein Knopf über 200 Treffer hinaus — behoben), **F-R4-60** (Kachelsprung ins Leere — behoben), **F-R4-61** (Vollbilder bis 45 000 px), **F-R4-62** (R4-19 ohne CHANGELOG-Eintrag — nachgetragen), **F-R4-63** (Verbindungsprobe ließ 400 Waisen je Lauf — behoben), **F-R4-64** (Abfahrtort fehlte in der Legende — behoben), **F-R4-65** (Wiederherstellungsprobe ließ Sperrvermerke — behoben), **F-R4-66** (aktiv/angemeldet für vergangene Zeiträume nicht zählbar → Q-R4-26), **F-R4-67** (LIESMICH der App: 66 Bilder neben 72 — berichtigt), **F-R4-68** (Mockup M-R4-24 mit einer Schwelle außerhalb der Skala — auf 720 gebaut) — 2.4. |
 
 
 ---
@@ -689,6 +689,15 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
   gibt. Jetzt stehen dort die 78 des Laufs vom 27.09.2026 mit dem Satz, was
   vorher stand. Dieselbe Bauart wie die Zahlen, die `CLAUDE.md` 6 aus
   Dokumenten verbannt: eine Zahl an zwei Stellen, eine davon alt.
+- **F-R4-68 Das Mockup M-R4-24 setzte eine Schwelle, die es nicht gibt.**
+  `@media (max-width:767px)` legte die kleinen Vielfachen untereinander;
+  `Design.md` 6 kennt 479, 720, 1024, 1200 und 1600 px, und die Skala steht
+  als `--s-*` in `:root`. Gebaut war es wie gezeigt — gefunden erst beim
+  Vorbereiten von R4-25, als der Erzeuger die Schwellentabelle neu schrieb
+  und eine sechste Breite meldete. Jetzt: untereinander, ab 720
+  nebeneinander. Die Freigabe des Mockups (Q-R4-16) galt dem Bild, nicht
+  einer neuen Stufe; die Richtlinie geht vor. Dass es erst der Erzeuger sah,
+  ist der Anlass von R4-25 (Nr. 209) in klein.
 
 ## 3. Entscheidungen und Fragen
 
@@ -754,6 +763,9 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-56 | **Der Knopf „Abgewiesene verwerfen …" hängt an einer zweiten Zahl, `Puffer.verwerfbar()`** (`fehlerhaft = 1 AND final = 1`), nicht an `abgewiesen()`; die rote Zeile und der Hinweis bleiben an `abgewiesen()`. | Umsetzung (R4-22) | `abgewieseneRaeumen()` nimmt nur Abgeschlossenes — ein laufendes Paket mit 400 wird noch beschrieben (`AbgewieseneTest.einLaufendesAbgewiesenesPaketBleibt`). Mit `abgewiesen()` versprächen Knopf und Rückfrage im laufenden Dienst ein Verwerfen, nach dem die Zeile noch steht, und ein zweiter Druck verwürfe nichts. |
 | E-R4-57 | **Die Pillen der Zeitraumwahl heißen wie die Spaltenköpfe** — „7 Tage", „30 Tage", „6 Monate", „1 Jahr" —, nicht „180 Tage" und „365 Tage" wie in M-R4-23; die Kennzahl sagt „Einsätze in 6 Monaten". Der Reiter trägt den Zeitraum in seiner Adresse weiter, die Vorgabe (30 Tage) trägt nichts. | Umsetzung (R4-23) | Eine Pille „180 Tage" über einer Spalte „6 Monate" wären zwei Namen für eine Sache; die Spaltenköpfe stehen seit P5c und im Handbuch. Den Reiter ohne Zeitraum zu wechseln hieße, ihn nach jedem Wechsel neu einzugeben. |
 | E-R4-58 | **Reicht ein eigener Zeitraum bis heute, stehen „aktiv", „angemeldet" und „gemeldet" doch da**; nur ein früheres Ende zeigt „—". | Umsetzung (R4-23), Verfeinerung von E-R4-55 | Endet der Zeitraum heute, ist „zuletzt nach dem Beginn" dasselbe wie „im Zeitraum" — dieselbe Rechnung wie bei den festen Fenstern, die ja auch jetzt enden. Die Einschränkung aus E-R4-55 trifft nur den Fall, für den sie gedacht war. |
+| E-R4-59 | **Die Diagramme teilen den Zeitraum je Tag bis 31 Tage, je Woche (ab Montag) bis 366, darüber je Monat — in Ortszeit.** Die Karten behalten ihren Titel („Einsätze je Zeitraum"); ein Satz unter dem Diagramm nennt die Einteilung. | Umsetzung (R4-24) | Das Mockup zeigt Wochen über sechs Monate. Bei „7 Tage" wären das zwei Säulen, bei einem eigenen Zeitraum über drei Jahre 157 — beides sagt nichts. Der Kartentitel „Einsätze je Woche" des Mockups stimmte für die Tabelle darunter nicht, die weiter Fenster zeigt. |
+| E-R4-60 | **Der Höchstwert steht in Orange tief, nicht in Orange.** | Umsetzung (R4-24) | Eine Säule ist eine Grafik (WCAG 1.4.11, 3 : 1); Orange auf Schnee hat 2,23 : 1, Orange tief 4,32 : 1 — derselbe Fund wie am Rückstandspunkt der App (B-S5Z-13). Die Zahl über der Säule trägt es ohnehin. |
+| E-R4-61 | **Das Säulen-SVG hat keine `viewBox`**, sondern feste Höhe und Positionen in Prozent der Breite; **der Anteilsbalken ist ein kleines SVG** (`<rect width="…%">`). | Umsetzung (R4-24) | Mit `viewBox` skaliert die Beschriftung mit dem Bild — im Handybild von M-R4-24 auf rund sechs Pixel. Ein `<div style="width:…">` fiele unter `style-src` der CSP; im PHP-Markup steht seit P5a/AP4 kein Stilattribut mehr. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -1675,6 +1687,34 @@ Baustein „Diagramm" in `Design.md` 9; Bilderlauf in allen Breiten;
 Handbuch 12.2. Der Eintrag 122 ist danach erledigt.
 *Abnahme:* Bilderlauf ohne Überlauf in 10 Breiten; `kontrast.py` 0
 verfehlt; Rollenprobe; Handbuch. *Stufe:* Web Neben. *Fächerung:* keine.
+**Erledigt 28.09.2026 — mit Web 21.6.0** (Neben, ohne Migration). Vorher
+M-R4-24 nach E-R4-55 und E-R4-57 angepasst (zwei kleine Vielfache „Mit
+Einsatz" und „Neu angelegt", Pillen „6 Monate", „1 Jahr") und neu
+gerendert. Neuer Baustein „Diagramm" (Design.md 9.40): `ui_diagramm_saeulen()`
+als SVG ohne `viewBox`, mit Positionen in Prozent (E-R4-61), Skala in
+Schritten 1, 2, 5 × 10ⁿ mit höchstens fünf Gitterlinien, Höchstwert in
+Orange tief (E-R4-60), Zahl jeder Säule als `<title>` und beim Überfahren;
+`ui_diagramm_balken()` mit kleinen SVG-Balken statt `style="width"` (CSP).
+`statistik_einteilung()` teilt je Tag, Woche oder Monat (E-R4-59), die Zahl
+je Fach kommt aus einer Abfrage je Stunde und Konto, weil `CONVERT_TZ` mit
+Zonennamen Zeitzonentabellen braucht (F-R4-21). Die Tabellen bleiben.
+Während der Umsetzung berichtigt: Die erste Skala nahm Viererschritte und
+ließ die Säulen bei 41 die halbe Fläche nutzen; der Satz unter dem Diagramm
+nannte „22.09. bis 28.09." für ein ganzes Jahr — jetzt erster und letzter
+Tag mit Jahr (`tage_spanne_text()`); `vollstaendigkeit` fand ein
+Stilattribut — im eigenen Kommentar, der das vermiedene Muster zitierte;
+und die kleinen Vielfachen brachen bei 767 statt an der Schwelle 720 um
+(F-R4-68).
+*Gemessen:* Bilderlauf `--stufe neben --nur 45a` **60** Bilder (6 Seiten ×
+10 Breiten), Überlauf **0**, Konsolenfehler **0**, Knöpfe falscher Höhe
+**0**; 1280 und 360 px angesehen. `kontrast.py` **36** Paare, **0**
+verfehlt (drei neue: Blau als Säule 3,77, Orange tief als Höchstwert 4,32,
+Blau tief unter dem Zeiger 7,82; Balken auf Spur 2,77 als Ausnahme mit
+Grund). Messstand: sechs Aufrufe je **0,08 s**, `EXPLAIN` der Abfrage der
+Diagramme mit `idx_missions_started`; von Hand „1 Jahr" mit 54 Wochensäulen
+**0,11 s**. Bedienprobe `statistik-zeitraum` **1 / 1**. Stilvergleich
+**104** Signaturen, gelesen (drei Gruppen, `tools/stilvergleich/LIESMICH.md`).
+Nr. 122 erledigt.
 
 **R4-25 Steuerung: Erzeuger als Riegel, Liste auf GitHub** — Nr. 209, 340
 (Q-R4-11). Zuletzt, weil der Erzeuger nach der letzten Änderung an

@@ -14,6 +14,42 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.6.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-24. **Neben**, ohne Migration.
+
+### Neu
+
+- **Die Statistik zeigt ihre Zahlen auch als Bild** (Nr. 122 b, E-R4-07,
+  Bild M-R4-24). Für den Blick auf eine Entwicklung über ein Jahr reichten
+  Tabellen nicht. Über jeder Tabelle steht jetzt der gewählte Zeitraum als
+  Säulen — Einsätze, gekoppelte Geräte und unter NutzerInnen zwei kleine
+  Diagramme „mit Einsatz" und „neu angelegt" mit je eigener Skala —, die
+  Herkunft der Einsätze als Balken mit Anteil und Zahl. Bis 31 Tage eine
+  Säule je Tag, bis ein Jahr je Woche ab Montag, darüber je Monat, in
+  Ortszeit (E-R4-59); bei „7 Tage" zwei Wochensäulen oder bei drei Jahren
+  157 hätten nichts gezeigt. **Neuer Baustein „Diagramm"** (Design.md 9.40),
+  mit Mockup freigegeben: Inline-SVG aus PHP, ohne Bibliothek, ohne Skript,
+  ohne fremde Quelle — `docs/Lizenzen.md` bleibt, wie sie ist. Die Tabellen
+  bleiben daneben; am Handy, wo es kein Überfahren gibt, sind sie die
+  Auskunft über jede einzelne Säule.
+- **Die Schrift wächst nicht mit dem Bild.** Das SVG hat keine `viewBox`,
+  sondern eine feste Höhe und Positionen in Prozent der Breite (E-R4-61):
+  Mit `viewBox` hätte der Browser die Achsen am Handy auf sechs Pixel
+  verkleinert, wie im Handybild des Mockups zu sehen.
+- **Der Höchstwert steht in Orange tief, nicht in Orange** (E-R4-60).
+  Eine Säule ist eine Grafik und braucht nach WCAG 1.4.11 3 : 1 gegen die
+  Fläche; Orange hat auf Schnee 2,23 : 1 — derselbe Fund wie am
+  Rückstandspunkt der App (B-S5Z-13). Die Zahl über der Säule sagt es
+  ohnehin noch einmal.
+- **Die Balken sind kleine SVGs, keine `<div style="width:…">`.** Ein
+  Stilattribut im PHP-Markup fiele unter `style-src` der CSP, und die
+  Anwendung hat seit P5a keins mehr; `width="53%"` an einem `<rect>` ist
+  ein Attribut der Grafik und steht auch ohne Skript.
+- **Was bewusst fehlt:** „aktiv" und „angemeldet" je Monat, die das Mockup
+  zeigte (F-R4-66, E-R4-55) — die Anlage kennt je Konto nur die letzte
+  Anmeldung. Das Mockup ist vorher angepasst worden.
+
 ## [Web 21.5.0] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-23. **Neben**, ohne Migration.

@@ -7832,5 +7832,17 @@ declare(strict_types=1);
  *   heute reicht: Die Anlage kennt je Konto nur die letzte Anmeldung
  *   (F-R4-66, E-R4-55). Die Reihe ist eine Anordnung vorhandener Bausteine
  *   (`ui_zeitraumwahl()`, Design.md 9.18b).
+ *
+ * 21.6.0 — DIE STATISTIK ZEIGT IHRE ZAHLEN AUCH ALS BILD (Schritt 17, R4-24,
+ *   Nr. 122 b, Bild M-R4-24). Nebenstufe ohne Migration, mit einem neuen
+ *   Baustein „Diagramm" (Design.md 9.40): Saeulen je Tag, Woche oder Monat
+ *   als Inline-SVG aus PHP, Anteile als Balken — ohne Bibliothek, ohne
+ *   Skript, ohne fremde Quelle. Die Tabellen bleiben daneben. Das SVG hat
+ *   keine `viewBox`, sondern Positionen in Prozent, damit die Schrift nicht
+ *   mit dem Bild waechst. Der Hoechstwert steht in Orange tief und traegt
+ *   seine Zahl; Orange haette als Grafik auf Schnee 2,23 : 1 (E-R4-60).
+ *   Unter NutzerInnen zwei kleine Vielfache „mit Einsatz" und „neu
+ *   angelegt" statt der drei des Mockups — „aktiv" je Monat ist aus den
+ *   Daten nicht zu zaehlen (F-R4-66, E-R4-55).
  */
-const WEB_VERSION = '21.5.0';
+const WEB_VERSION = '21.6.0';

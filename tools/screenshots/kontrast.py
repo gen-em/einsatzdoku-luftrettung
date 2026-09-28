@@ -127,6 +127,12 @@ PAARE = [
     ('Primaerschrift auf Orange (Auswahl)', 'knopf-primaer-schrift', 'orange', 4.5, 'Zahl des aktiven Filters, gewaehlte Segmenttaste'),
     ('Rauch auf Dunkelblau (dunkler Fuss)', 'rauch',    'dunkelblau',  4.5, 'Fusszeile auf dunklem Grund'),
     ('Rot auf Rosa (rote Kennzahl)',      'rot',        'rosa',        3.0, 'Rahmen der roten Kennzahl'),
+    # R4-24 (Nr. 122 b, E-R4-60): die Diagramme der Statistik. Eine Saeule
+    # ist eine Grafik (WCAG 1.4.11, 3 : 1). Der Hoechstwert steht in Orange
+    # TIEF: Orange auf Schnee haette 2,23 : 1.
+    ('Blau als Saeule auf Schnee',        'blau',       'schnee',      3.0, 'Saeule und Balken der Diagramme'),
+    ('Orange tief als Hoechstwert auf Schnee', 'orange-tief', 'schnee', 3.0, 'hervorgehobene Saeule'),
+    ('Blau tief als Saeule unter dem Zeiger', 'blau-tief', 'schnee',   3.0, 'Saeule unter dem Zeiger'),
 ]
 
 # Diese Paare sind ausdruecklich AUSGENOMMEN, und zwar mit Grund. Ohne die
@@ -179,6 +185,10 @@ AUSNAHMEN = [
     ('Spurfarbe als Farbschluessel', 'spur-1', 'schnee',
      'Die Linie der Legende (.legende-linie) zeigt die Farbe der Spur auf der '
      'Karte; was sie bedeutet, sagt die Beschriftung daneben.'),
+    ('Blau als Balken auf Linie', 'blau', 'linie',
+     'Die Fuellung eines Anteilsbalkens auf seiner Spur (.balken-fuellung, '
+     'R4-24): Zahl und Anteil stehen in derselben Zeile, der Balken traegt '
+     'nichts allein. Die Spur in Linie ist die freigegebene Form (M-R4-24).'),
 ]
 
 

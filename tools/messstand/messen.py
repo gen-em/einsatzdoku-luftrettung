@@ -154,6 +154,8 @@ def schritt_statistik(a) -> None:
     (`statistik_zeitraum_sql()`, `statistik_herkunft_sql()` mit Grenzen). Dort
     MUSS der Index gewaehlt sein: 90 Tage sind ein Viertel des Jahres, und
     ein Tabellenscan waere der Fehler, den der Index verhindern soll.
+    Seit R4-24 dazu die Abfrage der Diagramme (`statistik_stunden_sql()`),
+    ebenfalls mit gewaehltem Index.
     """
     import sitzung as sitzungsmodul
     s = sitzungsmodul.Sitzung(a.basis).anmelden(a.admin_email, a.admin_passwort,
@@ -205,7 +207,8 @@ if ($eigen["art"] !== "eigen") { fwrite(STDERR, "Zeitraum ungueltig\n"); exit(1)
 foreach (["fenster" => [statistik_einsaetze_sql(), $fest],
           "herkunft" => [statistik_herkunft_sql($fest), $fest],
           "zeitraum" => [statistik_zeitraum_sql($eigen), $eigen],
-          "herkunft_zeitraum" => [statistik_herkunft_sql($eigen), $eigen]] as $n => [$sql, $z]) {
+          "herkunft_zeitraum" => [statistik_herkunft_sql($eigen), $eigen],
+          "stunden_zeitraum" => [statistik_stunden_sql($eigen), $eigen]] as $n => [$sql, $z]) {
     $st = $pdo->prepare("EXPLAIN " . $sql);
     $st->execute(array_merge([$demo], statistik_bedingung_werte($z)));
     $aus[$n] = $st->fetchAll(PDO::FETCH_ASSOC);
@@ -224,7 +227,8 @@ echo json_encode($aus, JSON_UNESCAPED_UNICODE), "\n";
     # Herkunft und eigener Zeitraum: der Index muss GEWAEHLT sein; Fenster:
     # er muss zur Wahl stehen (siehe oben).
     for name, feld in (("fenster", "possible_keys"), ("herkunft", "key"),
-                       ("zeitraum", "key"), ("herkunft_zeitraum", "key")):
+                       ("zeitraum", "key"), ("herkunft_zeitraum", "key"),
+                       ("stunden_zeitraum", "key")):
         zeilen = erkl[name]
         schluessel = [str(z.get("key") or "") for z in zeilen]
         moeglich = ",".join(str(z.get("possible_keys") or "") for z in zeilen)

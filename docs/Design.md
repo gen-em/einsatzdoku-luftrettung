@@ -823,7 +823,10 @@ zusätzlich als `--s-*` in `:root`, damit man sie nachlesen kann.
 
 Dazu **eine** Ausnahme nach unten: `@media (max-width:479px)` lässt in der
 Wahlliste den Zusatz unter den Text rutschen — „zurzeit Hubschrauber (RTH)"
-neben „Standard der Installation" sprengt sonst jede Zeile.
+neben „Standard der Installation" sprengt sonst jede Zeile. Dieselbe Schwelle,
+keine zweite, tragen seit Web 21.5.0 die Datumsfelder der Zeitraumwahl
+(9.18b, etwas schmaler) und seit 21.6.0 die Achse der Säulen (9.40, vier
+statt acht Beschriftungen) — drei Regelblöcke, eine Breite.
 
 Und **eine Höhenschwelle** (seit Web 21.1.0, E-P5c-131; seit 21.1.3 bei
 950 statt 800 px, F-P5c-164): `@media (min-width:1024px) and
@@ -1043,6 +1046,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | **Angaben zu einem Listeneintrag**, die nicht in den Satz passen | `ui_zeile(['daten' => [[Schlüssel, Wert], …]])` — die Zeile klappt auf (9.2) | ein Blatt mit „⋯“ oder eine zweite Zeile darunter |
 | **Suche, Filter und Seitenwahl** einer langen Liste | `ui_listenkopf()` und `ui_listenfuss()` (9.18a) | dasselbe Markup ein zweites Mal von Hand |
 | den **Zeitraum einer Auswertung** wählen — feste Fenster und Von/Bis | `ui_zeitraumwahl()` (9.18b) | Datumsfelder und Pillen von Hand, oder ein Auswahlfeld mit Monaten |
+| eine **Reihe über die Zeit** oder **Anteile** zeigen | `ui_diagramm_saeulen()`, `ui_diagramm_balken()` (9.40) — die Tabelle bleibt daneben | eine Diagrammbibliothek, ein Kreis, zwei Achsen |
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
@@ -3066,6 +3070,49 @@ des Schlüsselblatts (drei Werte, Kurzname 83 Zeichen, Adresse 62) **1 Seite,
 > zuletzt per `emulateMedia` gesetzt wurde. Wer vorher `screen` gesetzt hat,
 > bekommt die Bildschirmfassung — mit A4-Mindesthöhe und Rand — und misst
 > zwei Seiten, wo eine ist.
+
+### 9.40 Diagramm (`.diagramm-saeulen`, `.diagramm-balken`, `.kleinvielfach`, seit Web 21.6.0)
+
+*Neuer Baustein mit Freigabe* (R4-24, Nr. 122 b, E-R4-07, Bild M-R4-24,
+freigegeben mit Q-R4-16, angepasst nach E-R4-55). Zwei Formen, beide aus
+PHP, **ohne Bibliothek und ohne Skript** — „keine fremde Quelle zur
+Laufzeit" bleibt unberührt, `docs/Lizenzen.md` auch.
+
+- **Säulen über die Zeit** — `ui_diagramm_saeulen()`: ein Inline-SVG mit
+  fester Höhe und Positionen in **Prozent der Breite**, **ohne `viewBox`**
+  (E-R4-61). Mit `viewBox` skalierte der Browser die Beschriftung mit dem
+  Bild: am Handy auf sechs Pixel, am breiten Schirm aufs Doppelte. Höchstens
+  fünf Gitterlinien auf runden Werten (1, 2, 5 × 10ⁿ), Nulllinie stärker,
+  höchstens acht Achsenbeschriftungen, unter 480 px vier (`.achse-breit`).
+- **Anteile als Balken** — `ui_diagramm_balken()`: je Zeile Beschriftung mit
+  Anteil, Balken, Zahl. Der Balken ist ein kleines SVG (`<rect width="…%">`),
+  kein `<div style="width:…">`: Ein Stilattribut im PHP-Markup fiele unter
+  `style-src` der CSP. Kein Kreis — Anteile an einer gemeinsamen Linie liest
+  das Auge genauer als an Winkeln.
+- **Kleine Vielfache** — `.kleinvielfach`: zwei Reihen verschiedener
+  Größenordnung als zwei Diagramme mit eigener Skala (`klein => true`),
+  untereinander, ab der Schwelle 720 nebeneinander. Das Mockup setzte
+  768 px — keine Stufe der Skala (6, F-R4-68). Nie eine Grafik mit zwei Farben
+  oder zwei Achsen.
+
+**Farbe.** Eine je Diagramm: **Blau** erklärt (3,77 : 1 auf Schnee), der
+**Höchstwert** steht in **Orange tief** (4,32 : 1) und trägt seine Zahl
+(E-R4-60). Das Mockup zeigte Orange — als Grafik verfehlt es auf Schnee mit
+2,23 : 1 die 3 : 1 aus WCAG 1.4.11, derselbe Fund wie der Rückstandspunkt
+der App (B-S5Z-13). Unter dem Zeiger wird eine Säule Blau tief und zeigt
+ihre Zahl (`:hover`, ohne Skript); jede trägt sie außerdem als `<title>`.
+Schrift nur in Asphalt und Gedämpft, Gitter in Linie. Die Füllung eines
+Balkens auf seiner Spur (Linie) hat 2,77 : 1 — ausgenommen in `kontrast.py`,
+weil Zahl und Anteil in derselben Zeile stehen.
+
+**Die Tabelle bleibt** neben jedem Diagramm. Sie ist die Tabellensicht, die
+Auskunft am Fingergerät (dort gibt es kein Überfahren) und die für alle, die
+das Bild nicht sehen; `aria-label` fasst nur zusammen („26 Säulen,
+höchstens 41 ab 06.07.").
+
+**Einteilung** (Statistik, E-R4-59): je Tag bis 31 Tage, je Woche ab Montag
+bis 366, darüber je Monat — in Ortszeit. Ein Satz unter dem Diagramm nennt
+die Einteilung und dass die Ränder angebrochen sein können.
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 

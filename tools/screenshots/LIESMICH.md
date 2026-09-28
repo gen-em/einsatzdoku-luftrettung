@@ -27,7 +27,7 @@ Wartungsseiten `--jobs-token`. **Ohne Token bricht der Lauf ab.**
 ## Erwartete Zahl
 
 Voller Lauf: **780 Einzelbilder, 78 Kontaktbögen, Überlauf 0, Knöpfe
-falscher Höhe 0, 188 Karten / 0 außerhalb, 51 Bilder mit rollendem Behälter**, 1 170 s (26.09.2026, R4-08: zehn Breiten, sechs Seiten für Admin und Support). `kontrast.py` **33 Paare, 0 verfehlt, 32 abgeleitet, 0 ohne Eintrag**. Selbstproben offline:
+falscher Höhe 0, 188 Karten / 0 außerhalb, 51 Bilder mit rollendem Behälter**, 1 170 s (26.09.2026, R4-08: zehn Breiten, sechs Seiten für Admin und Support). `kontrast.py` **36 Paare, 0 verfehlt, 32 abgeleitet, 0 ohne Eintrag** (28.09.2026, R4-24: drei Paare der Diagramme dazu). Selbstproben offline:
 `aufnehmen.mjs` **15 von 15**, `vergleichen.py` **14 von 14**, `kontrast.py` **4 von 4**.
 
 ## Was es nicht kann

@@ -4935,6 +4935,20 @@ daneben zwei Datumsfelder **Von** und **Bis**.
   ihr Anlagedatum behalten.
 - Ein Wechsel des Reiters behält den Zeitraum.
 
+**Die Diagramme** *(seit Web 21.6.0)*. Über jeder Tabelle steht der
+gewählte Zeitraum als Säulen: unter Einsätze die **Einsätze**, unter Geräte
+die **gekoppelten Geräte**, unter NutzerInnen zwei kleine Diagramme —
+**Mit Einsatz** (Konten, die dort mindestens einen Einsatz begonnen haben)
+und **Neu angelegt**. Bis 31 Tage steht eine Säule je Tag, bis ein Jahr je
+Woche (ab Montag), darüber je Monat; der Satz unter dem Diagramm sagt,
+welche Einteilung gilt. Die höchste Säule ist dunkelorange und trägt ihre
+Zahl; jede andere zeigt ihre Zahl, wenn der Mauszeiger darauf steht. Am
+Handy gibt es kein Überfahren — dort steht jede Zahl in der Tabelle
+darunter, und die Tabelle bleibt auch am Schreibtisch die genaue Auskunft.
+Die **Herkunft der Einsätze** steht als Balken: je Herkunft der Anteil und
+die Zahl. *„Aktiv" und „angemeldet" gibt es nicht als Diagramm* — aus
+demselben Grund, aus dem sie für einen vergangenen Zeitraum fehlen.
+
 **Wie die Einsätze gezählt werden.** Ab dem **Beginn des Einsatzes** — ohne
 Demo-Konto, ohne Papierkorb. Jedes Fenster und jeder Zeitraum reicht
 höchstens bis *jetzt*: Ein Einsatz

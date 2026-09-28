@@ -9080,3 +9080,27 @@ zutreffen.
      dem Muster der Uhr („Behalten“ / „Verwerfen“) und Quittung; Nachreichen
      gibt es nicht (E-R4-09). AbgewieseneTest +2, im Emulator nach
      „Verwerfen“ 0 Pakete, 0 Punkte, 0 Phasen.
+
+122. **Freie Zeiträume und Diagramme in der Statistik.** · gehört zu: 17 · Stand: erledigt · seit 05.09.2026
+     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
+     Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
+     6 Monate — und zeigt Zahlen in Tabellen. Für den Blick auf einen
+     bestimmten Monat oder auf eine Entwicklung über ein Jahr reicht das
+     nicht. **Zu tun:** ein frei wählbarer Zeitraum (Von/Bis wie in der
+     Einsatzsuche) und eine grafische Darstellung der Entwicklung. Beides
+     sind **neue Darstellungen** und brauchen Mockup und Freigabe
+     (`CLAUDE.md` 5); die Diagrammfrage berührt außerdem die Zusage „keine
+     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
+     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
+
+     **Zuordnung (20.09.2026): Schritt 17** (Backlog-Runde 4) — nicht 10c. Entschieden mit der Freigabe des P5c-Konzepts (E-P5c-23, F-P5c-4).
+     Teil a erledigt 27.09.2026 mit R4-23 (Web 21.5.0): Pillen und Von/Bis
+     über den Reitern, je Tabelle eine Spalte „im Zeitraum", unter Einsätze
+     mit Wochen- und Tagesschnitt; aktiv, angemeldet und gemeldet nur bis
+     heute (F-R4-66, E-R4-55). Offen: Teil b, die Diagramme (R4-24).
+     Erledigt 28.09.2026 mit R4-23 (Web 21.5.0) und R4-24 (Web 21.6.0):
+     Zeitraumwahl über den Reitern mit Pillen und Von/Bis; Diagramme als
+     Inline-SVG aus PHP (Säulen je Tag, Woche oder Monat, Anteile als
+     Balken, zwei kleine Vielfache), ohne Bibliothek und ohne fremde Quelle;
+     die Tabellen bleiben. Aktiv und angemeldet nur bis heute (F-R4-66).
+     Bilderlauf 60 Bilder ohne Überlauf, kontrast.py 0 verfehlt.

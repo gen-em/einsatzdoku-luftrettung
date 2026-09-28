@@ -202,3 +202,94 @@ function statistik_zeitraum_sql(array $z): string
             WHERE m.user_id <> ? AND m.deleted_at IS NULL
               AND ' . statistik_bedingung($z);
 }
+
+/* ==========================================================================
+ * DIE EINTEILUNG DER DIAGRAMME (R4-24, Nr. 122 b, Bild M-R4-24)
+ * ======================================================================== */
+
+/**
+ * Die Fächer eines Zeitraums — eine Säule je Fach.
+ *
+ * JE TAG BIS 31 TAGE, JE WOCHE BIS 366, DARÜBER JE MONAT (E-R4-59). Das
+ * Mockup zeigt Wochen über sechs Monate; bei „7 Tage" wären das zwei
+ * Säulen, bei einem eigenen Zeitraum über drei Jahre 157 — beides sagt
+ * nichts. Die Wochen beginnen am Montag, wie der Kalender der Anwendung.
+ *
+ * IN ORTSZEIT (`app.timezone`), wie die Tagesgrenzen des Zeitraums: Ein
+ * Einsatz um 00:30 Uhr am Montag gehört in die neue Woche, auch wenn es in
+ * UTC noch Sonntag ist. Das erste und das letzte Fach können unvollständig
+ * sein — ein festes Fenster beginnt mitten in einem Tag, und heute ist
+ * nicht vorbei.
+ *
+ * @return array{art:string, faecher:list<array{von:string,text:string}>,
+ *               tag_zu_fach:array<string,int>, erster:string, letzter:string,
+ *               bis_heute:bool}
+ */
+function statistik_einteilung(array $z): array
+{
+    $zone = new DateTimeZone((string)konfig('app.timezone', 'Europe/Berlin'));
+    $heute = new DateTimeImmutable(heute_lokal(), $zone);
+    if ($z['art'] === 'eigen') {
+        $a = new DateTimeImmutable($z['von'], $zone);
+        $b = new DateTimeImmutable($z['bis'], $zone);
+    } else {
+        $a = (new DateTimeImmutable('now', $zone))->modify('-' . (int)$z['tage'] . ' days')
+                                                  ->setTime(0, 0);
+        $b = $heute;
+    }
+    $utc  = new DateTimeZone('UTC');
+    $tage = (int)(new DateTimeImmutable($a->format('Y-m-d'), $utc))
+                ->diff(new DateTimeImmutable($b->format('Y-m-d'), $utc))->days + 1;
+    $art  = $tage <= 31 ? 'tag' : ($tage <= 366 ? 'woche' : 'monat');
+
+    $faecher = []; $index = []; $zuFach = [];
+    for ($d = $a; $d <= $b; $d = $d->modify('+1 day')) {
+        $beginn = match ($art) {
+            'tag'   => $d,
+            'woche' => $d->modify('-' . ((int)$d->format('N') - 1) . ' days'),
+            'monat' => $d->modify('first day of this month'),
+        };
+        $k = $beginn->format('Y-m-d');
+        if (!isset($index[$k])) {
+            $index[$k] = count($faecher);
+            $faecher[] = ['von' => $k,
+                          'text' => $art === 'monat' ? monat_kurz_text($k) : tag_kurz_text($k)];
+        }
+        $zuFach[$d->format('Y-m-d')] = $index[$k];
+    }
+    return ['art' => $art, 'faecher' => $faecher, 'tag_zu_fach' => $zuFach,
+            'erster' => $a->format('Y-m-d'), 'letzter' => $b->format('Y-m-d'),
+            'bis_heute' => $b->format('Y-m-d') === $heute->format('Y-m-d')];
+}
+
+/**
+ * In welches Fach fällt ein Zeitpunkt (UTC, wie ihn die Datenbank führt)?
+ * `null`, wenn er vor dem ersten oder nach dem letzten Tag liegt.
+ */
+function statistik_fach(array $einteilung, ?string $utc): ?int
+{
+    if ($utc === null || $utc === '') { return null; }
+    return $einteilung['tag_zu_fach'][fmt_local($utc, 'Y-m-d')] ?? null;
+}
+
+/**
+ * Einsätze je Stunde und Konto im Zeitraum — der Stoff der Säulen (R4-24).
+ *
+ * WARUM JE STUNDE UND NICHT JE TAG. Die Fächer sind Ortstage; gruppiert die
+ * Datenbank nach UTC-Tag, landet ein Einsatz zwischen Mitternacht und
+ * 02:00 Uhr MESZ im Vortag. `CONVERT_TZ` mit Zonennamen braucht
+ * Zeitzonentabellen, die nicht jede Datenbank hat (F-R4-21). Stunden
+ * verschieben sich nur um ganze Stunden — PHP rechnet sie exakt um, und es
+ * sind höchstens so viele Zeilen wie Einsätze. JE KONTO, damit dieselbe
+ * Abfrage auch „Konten mit Einsatz" je Fach zählt. Platzhalter wie bei der
+ * Herkunft.
+ */
+function statistik_stunden_sql(array $z): string
+{
+    return "SELECT DATE_FORMAT(m.started_at, '%Y-%m-%d %H:00:00') AS stunde,
+                   m.user_id, COUNT(*) AS n
+            FROM missions m
+            WHERE m.user_id <> ? AND m.deleted_at IS NULL
+              AND " . statistik_bedingung($z) . "
+            GROUP BY stunde, m.user_id";
+}
