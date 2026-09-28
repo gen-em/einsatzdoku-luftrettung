@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 137 | 28.09.2026 | R4-26 | Fahrplanzeile 17 auf „gebaut" (R4-01 bis R4-26; Web 21.6.0 mit Migration, Android 0.17.0). Berichtigt: Registerzeile R4 nannte 21 Diensttage und 103/106 Einsätze — seit R4-16 sind es 22 und 106/109. |
 | 136 | 26.09.2026 | R4-03 | Zuarbeit erledigt: P-BR-09 (6.12 beim nächsten Prüfmittel befolgen) mit `nummern.py` gegangen — ein Fund in Schritt 6, berichtigt (F-R4-23); aus der Zeile „Prüfliste BR" in 6.1 gestrichen. |
 | 135 | 26.09.2026 | R4-01 | Umsetzung von 17 beginnt auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus); Konzept mit PR #93 gemergt und samt Fragen und Mockups freigegeben (E-R4-14 ff.). Zuarbeit in 6.1: die zwei toten Zweige löscht die Betreiberin (Q-R4-01). |
 | 134 | 26.09.2026 | 17 beginnt | Fahrplanzeile 17 auf „Konzept": `Konzept-R4-Backlog-Runde-4.md` (Kürzel R4) auf `claude/schritt-17-hl9egt`, Voraussetzung SD erfüllt, 55 Einträge mit Ziel 17; Umsetzung nach dem Merge des Konzept-PR (E-R4-02). |

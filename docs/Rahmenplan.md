@@ -1,12 +1,12 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 136 (26.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 137 (28.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `05dfc12`, gemessen 26.09.2026): Web 21.1.3 ·
 Uhr 3.1.0 · Android 0.16.0.
-**Läuft:** auf `claude/schritt-17-konzept-mockups-q0yjcm` die Umsetzung von Schritt 17 (26 Pakete) — Abschnitt 3.
+**Läuft:** Schritt 17 ist gebaut (26 Pakete auf `claude/schritt-17-konzept-mockups-q0yjcm`), der PR folgt — Abschnitt 3.
 **Als Nächstes:** PR der Umsetzung 17, dann Schritt 18 — Reihenfolge in Abschnitt 3.
 **Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 27 Posten (Abschnitt 6.1). **`update.php`:** auf Staging gelaufen (26.09.2026); auf Produktiv mit dem Tag (6.1).
@@ -119,7 +119,7 @@ Review aufgeräumte und gehärtete Seiten liest; 12a nach 12 und vor der
 | 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R78) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | 12; **vor der Öffnung** | neu, nach K1 (Skizze SP-9 in `Vorbereitung-Sicherheitspaket.md`, Vorstudie `Konzept-V1-Ortsdaten.md`) | offen — nach 12 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12a | eigenes Konzept nach K1 | offen — nach 12a |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
-| 17 | **Backlog-Runde 4** | Die kleinen Punkte seit Runde 3 — Prüfmittel, Doku-Konsistenz, Streichlisten, `days.created_at`, Demo-Reset-Takt, Statistik-Rest (Nr. 122); die Liste liefert `tools/steuerung/uebersicht.py` (55 Einträge am 26.09.2026) | Merge von SD — erfüllt 26.09.2026 | `docs/konzepte/Konzept-R4-Backlog-Runde-4.md` (kurzes Konzept mit Paketschnitt, kein Fable-Schritt) | Umsetzung — seit 26.09.2026 auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus); Konzept gemergt 26.09.2026 (PR #93), freigegeben samt Fragen und Mockups (E-R4-14 ff.) |
+| 17 | **Backlog-Runde 4** | Die kleinen Punkte seit Runde 3 — Prüfmittel, Doku-Konsistenz, Streichlisten, `days.created_at`, Demo-Reset-Takt, Statistik-Rest (Nr. 122); die Liste liefert `tools/steuerung/uebersicht.py` (55 Einträge am 26.09.2026) | Merge von SD — erfüllt 26.09.2026 | `docs/konzepte/Konzept-R4-Backlog-Runde-4.md` (kurzes Konzept mit Paketschnitt, kein Fable-Schritt) | gebaut 28.09.2026 — R4-01 bis R4-26 auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus): Web 21.6.0 mit Migration aus 21.3.0, Android 0.17.0; Konzept gemergt 26.09.2026 (PR #93), freigegeben samt Fragen und Mockups (E-R4-14 ff.) |
 | 18 | **Sicherheitsrunde II** | Sitzungsbindung per Cookie-Token (Nr. 242, dazu „Gerät merken" beim Zweitfaktor), Serverschlüssel wechseln als Vorgang (Nr. 247), TOTP-Reset der einzigen BetreiberIn ohne Blatt (Nr. 249), Rest der Betreiber-Rückfrage (Nr. 233), `ingest.php`-Deadlock (Nr. 210); Nr. 228 bleibt „nur auf Anlass" | Merge von 17 | nach K1, Fable | offen — nach 17 |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 | Kette II | **Härtung der Auslieferungskette** | Zeiger-Zweig und Integritätswache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Abbruchverhalten, Hotfix-Weg; M1 erster grüner Produktivlauf, M2 Probe-Hotfix | — | `docs/konzepte/Konzept-Kette-Haertung.md` (E-KH-01 bis -30) | gemergt 21.09.2026 (PR #65, #66, #68); **M1 erreicht 21.09.2026** (`web-v20.26.3`, Lauf 35654132667); M2 und der Abschluss sind an PK übergeben (PK-07); Zuarbeiten in 6.1 |
@@ -294,7 +294,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R1 | Rahmenplan plus Phasenkonzepte statt eines Großdokuments | gilt; seit Fassung 16 mit Archiv (R51), seit Fassung 125 mit zweitem Archiv und Verlauf-Datei (Konzept SD) | Archiv 3 |
 | R2 | Phasenfolge P0 → … → P6 mit Zwischenpaketen | überholt durch Abschnitt 3 | Archiv 3 |
 | R3 | Luftbegriffe nur ersetzen, wo sie Allgemeines meinen; Luftfahrt-Fachfelder bleiben | gilt; Wortliste in Konzept P2, 5; Prüfmittel R28 | Archiv 3 |
-| R4 | Referenzdatensatz wird generiert und über reguläre Wege eingespielt | erledigt (P1); seit 9d 21 Diensttage und 103 Einsätze in den Quelldaten, 106 im Bestand | Archiv 3 |
+| R4 | Referenzdatensatz wird generiert und über reguläre Wege eingespielt | erledigt (P1); seit R4-16 22 Diensttage und 106 Einsätze in den Quelldaten, 109 im Bestand | Archiv 3 |
 | R5 | Gespeicherte Namen bleiben; Ausnahmeliste in P7 beschließen (R71) | gilt; Liste zugeliefert und leer | Archiv 3 |
 | R6 | Backlog-Zuordnung (alt) | überholt durch die Kopfzeilen im Backlog (Abschnitt 5) | Archiv 3 |
 | R7 | Ordnerumbau vor P3 | gegenstandslos (E-A6-12) | Archiv 3 |

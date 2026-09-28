@@ -14,7 +14,7 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
-## [Web 21.6.0] — 2026-09-27
+## [Web 21.6.0] — 2026-09-28
 
 Schritt 17, Backlog-Runde 4, Paket R4-24. **Neben**, ohne Migration.
 
@@ -50,7 +50,7 @@ Schritt 17, Backlog-Runde 4, Paket R4-24. **Neben**, ohne Migration.
   zeigte (F-R4-66, E-R4-55) — die Anlage kennt je Konto nur die letzte
   Anmeldung. Das Mockup ist vorher angepasst worden.
 
-## [Web 21.5.0] — 2026-09-27
+## [Web 21.5.0] — 2026-09-28
 
 Schritt 17, Backlog-Runde 4, Paket R4-23. **Neben**, ohne Migration.
 

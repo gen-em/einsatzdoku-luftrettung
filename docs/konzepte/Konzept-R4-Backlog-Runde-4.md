@@ -40,10 +40,10 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-26** (Abschluss: Kreisläufe, Doku-Konsistenz, `uebersicht.py --ziel 17` = 0), danach die Frage nach dem Pull Request. |
+> | Stand | **28.09.2026 — Umsetzung abgeschlossen** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus), begonnen 26.09.2026. Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes:** der Pull Request nach Rückfrage; nach der Freigabe des Abschlusses Erledigt-Zeile, Reste nach Rahmenplan 6, Verlaufszeile, dieses Konzept löschen (6). |
 > | Entschieden | **E-R4-01 bis E-R4-62** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14), **E-R4-54, -55** (R4-22, R4-23). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52, -53, -56, -57, -58, -59, -60, -61, -62. |
 > | Offen | **Q-R4-24** (Abnahme 5 s in R4-17 — gilt sie als erfüllt? Empfehlung ja; hält nichts auf). Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-25 erledigt** (28.09.2026); Web 21.6.0, Android 0.17.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-26. |
+> | Umsetzung | **R4-01 bis R4-26 erledigt** (28.09.2026); Web 21.6.0, Android 0.17.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Kein Punkt trägt mehr Ziel 17. |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. **R4-19: ein Workflow, drei Agenten** auf getrennten Dateigruppen (`referenzdatensatz/` 22, `proben/` 17, übrige Werkzeuge 13 Dateien), alle drei gleichzeitig, 229 s, 0 gescheitert, 0 offene Stellen; Ausnahmeliste der Textprobe, Doku, Gegenlesung, Neuaufbau der Anlage und Prüfstand seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
@@ -1775,6 +1775,27 @@ Erledigt-Zeile, Verlaufszeile, Konzept löschen (6).
 *Abnahme:* Kreisläufe 0/0, Prüfstand `haupt` 0 rot, Stufe 1 grün, kein
 Punkt mit Ziel 17. *Stufe:* keine eigene. *Fächerung:* keine (erzählender
 Text).
+**Erledigt 28.09.2026 — ohne Versionsstufe** (nur `docs/` und die
+Anleitung des Bilderlaufs). Changelog gegengelesen: jedes Paket von R4-01
+bis R4-25 steht darin; die Daten von Web 21.5.0 und 21.6.0 standen auf dem
+27.09. — beide sind am 28.09. gebaut, berichtigt. Rahmenplan Fassung 137:
+Fahrplanzeile 17 „gebaut", die Registerzeile R4 nannte noch die Zahlen von
+9d (seit R4-16 22 Diensttage, 106 und 109 Einsätze), berichtigt mit
+Verlaufszeile. Die Anleitung des Bilderlaufs auf den Lauf von R4-25
+gezogen (sie nannte 780 Bilder aus R4-08). Doku-Konsistenz gezielt
+gelesen: die Demo-Zahlen in `Technik.md` und in der Anleitung des
+Referenzdatensatzes stimmen mit R4-16, `Pruefablauf.md` 6.11 nennt die
+Sollwerte aus R4-25; `Design.md` hat R4-25 nachgezogen (F-R4-69). Das
+Prüfdokument ist vollständig, sein Abschnitt 6 nennt, was die Runde
+übrig lässt. *Gemessen* (Prüfstand von R4-25, `281dc9b`, haupt, 58 grün):
+Kreislauf edbak **346 763** Einzelvergleiche, **0** unerklärt (22
+erwartet), Kreislauf csv **11 234**, **0** unerklärt (1 303 erwartet);
+Bilderlauf **850** Bilder aus 85 Seiten, Überlauf **0**, Konsolenfehler
+**0**, Knöpfe falscher Höhe **0**, 205 Karten, 0 außerhalb;
+`uebersicht.py --ziel 17` **0** offene Einträge — von den 55 am Beginn 45
+erledigt und 10 umgehängt, dazu Nr. 340 angelegt und erledigt. Der
+Prüfstand dieses Pakets fährt Kreisläufe und Bilderlauf noch einmal; sein
+Bericht steht im Commit. **Stufe 1** zeigt erst der Pull Request.
 
 ## 5. Was bei jeder Codeänderung mitläuft
 

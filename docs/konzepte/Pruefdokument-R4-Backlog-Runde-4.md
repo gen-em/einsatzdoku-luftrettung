@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
 Konzepts. Angelegt am 26.09.2026 mit dem Konzept (Fable); die Umsetzung
 füllt es je Paket mit Mittel **und** Zahl. Stand: **Umsetzung, R4-01 bis
-R4-25 erledigt**, Web 21.6.0, Android 0.17.0 (Migration aus 21.3.0) (28.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
+R4-26 erledigt — Umsetzung abgeschlossen**, Web 21.6.0, Android 0.17.0 (Migration aus 21.3.0) (28.09.2026, `claude/schritt-17-konzept-mockups-q0yjcm`); die
 Konzeptphase steht in 2 und 4 als erster Block. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 (K9); das Konzept wird nach der Freigabe des Abschlusses gelöscht.*
 
@@ -35,6 +35,7 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | **Die Abnahme „Zeitraum unter 5 s" in absoluten Sekunden** (R4-17, F-R4-58) | Gemessen ist dieser Rechner: 88,11 s vorher, 8,97 s nachher, erste Zeile im DOM 2,51 s. Die 5 s rechneten mit 42,61 s eines anderen Rechners; einen festen Bezugsrechner gibt es nicht. | Q-R4-24 (Wertung durch die Betreiberin); P-R4-17 auf einem echten Handy. |
 | **Die Nachladezeile an einem echten Konto mit über 200 Treffern auf einem Handy** (R4-17, F-R4-59) | Gemessen in Chromium bei 390 px an 5096 Treffern (örtlich) und mit vervielfachter Liste; im Bilderlauf auch Firefox und WebKit (Stufe haupt). Ein echtes Gerät hat es nicht gesehen. | P-R4-17. |
 | **Die Nummern auf GitHub selbst** (R4-25, Nr. 340) | Gemessen ist `cmark-gfm` 0.29.0.gfm.6 örtlich. GitHub rendert mit einer eigenen Fassung und filtert das HTML danach; dass ein HTML-Kommentar dort die Liste beendet, zeigt erst die Seite selbst. | P-R4-22 |
+| **Stufe 1 auf dem Pull Request** (R4-26) | Stufe 1 läuft auf Arbeitszweigen nur beim Pull Request; der Prüfstand hat jeden Stand örtlich gemessen, und `bericht.py lesen --commit HEAD` hat jeden Bericht angenommen — das Tor selbst hat noch keinen gesehen. | Der Pull Request der Umsetzung: Stufe 1 grün auf dem Kopf-Commit. |
 | **Eine Gegenprobe war widersprüchlich** (R4-15, F-R4-49) | Der erste Lauf der Ingestprobe gegen den alten `ingest.php` zeigte Fall 14 grün; zwei Wiederholungen mit nachgesehener Datei zeigten ihn rot. Die Ursache des ersten Laufs ist nicht gefunden. | Gezählt sind die zwei belegten Läufe; wer die Probe ändert, fährt die Gegenprobe noch einmal. |
 
 ## 2. Maschinell geprüft — Konzeptphase (R4-00)
@@ -214,6 +215,11 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | R4-25 | `python3 tools/quelltext/bestand.py` (Regel `design`), `--selbstprobe`; Gegenprobe am Baum | Abnahme „alle Zeilen der Bausteintabelle stimmen; Gegenprobe rot" | vorher **4** Befunde (Token 16 Zeilen, Schwellen 2, Symbole 3, Bausteine 48 von 49 abweichend und 4 fehlend); nach `design.py schreiben` **0** in 14 Regeln, Bausteintabelle **53 von 53**; zweiter Lauf von `schreiben` 4 × unverändert; Selbstprobe **166** Fälle / 0, **100 von 100** Befundstellen; eine Funktion in `ui.php` eingefügt → **rot** (`design-abweichung`, „bausteine"), zurückgenommen → **0** |
 | R4-25 | `cmark-gfm -e table --to html docs/Backlog.md`; `python3 tools/steuerung/decken.py` und `--selbstprobe` | Abnahme „je Eintrag eine Liste, `start` gleich der Nummer" | vorher **1** Liste `<ol start="21">` für **64** Einträge, Decke `backlog-listenstart` **63** Befunde; mit Trennzeilen **64** Listen für 64 Einträge, Folge der `start`-Werte gleich der Folge der Nummern; nach dem Verschieben von 209 und 340 **62 / 62**; **21** Decken, 0 gerissen, Selbstprobe **23 / 0** |
 | R4-25 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen` und `--selbstprobe`, `zaehlen.php`, `nummern.py`, `kontrast.py` | Riegel | erst **13 / 14**: `bestand` (`tools/erzeugen/LIESMICH.md` 43 Zeilen, `tools/steuerung/LIESMICH.md` 42, Decke 40); gekürzt, dann **14 / 14**; 21 Decken, 0 gerissen; 62 offene Einträge, 0 ohne Grammatik, Selbstprobe 7 / 0; 42 Zeilen, 0 über der Decke; 0 Überschneidungen; 36 Paare, 0 verfehlt |
+| R4-26 | Prüfstand von R4-25 (`281dc9b`, haupt), Proben `kreislauf-edbak` und `kreislauf-csv` | Abnahme „Kreisläufe 0/0" | edbak **346 763** Einzelvergleiche, **0** unerklärt, 22 erwartet; csv **11 234**, **0** unerklärt, 1 303 erwartet |
+| R4-26 | Bilderlauf im selben Prüfstand | Zahl der Anleitung (`tools/screenshots/LIESMICH.md`) | **850** Einzelbilder, **85** Kontaktbögen, Überlauf **0**, Konsolenfehler **0**, Knöpfe falscher Höhe **0**, **205** Karten / 0 außerhalb, 66 rollend, 1 352 s |
+| R4-26 | `uebersicht.py --ziel 17`; `grep -c "gehört zu: 17 "` in beiden Backlog-Dateien; Liste von `05dfc12` | Abnahme „kein Punkt mit Ziel 17" | **0** offen; **46** erledigte tragen das Ziel; von den **55** am Beginn **45** erledigt, **10** umgehängt (Abschnitt 6) |
+| R4-26 | `grep -c "R4-NN"` je Paket im Changelog | Changelog gegengelesen | **25 von 25** Paketen genannt; **2** Daten berichtigt (Web 21.5.0 und 21.6.0 → 28.09.) |
+| R4-26 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen`, `zaehlen.php`, `nummern.py` | Riegel | **14 / 14**; 21 Decken, 0 gerissen; 62 offene Einträge, 0 ohne Grammatik, 0 ohne Ziel; 42 Zeilen, 0 über der Decke; 0 Überschneidungen |
 | R4-16 | `bash tools/quelltext/pruefen.sh alle`; `decken.py`, `uebersicht.py --pruefen`, `zaehlen.php`, `nummern.py` | Riegel | erst **12 / 14**: `bestand` (`einspielen/LIESMICH.md` 41 Zeilen, Decke 40) und `textprobe` („Maschine" im neuen Runbook-Satz, Regel `luft`); beide behoben, dann **14 / 14**; 20 Decken, 0 gerissen; 70 offene Einträge, 0 ohne Grammatik; 42 Zeilen, 0 über der Decke; 0 Überschneidungen |
 
 ## 3. Im Browser geprüft
@@ -279,5 +285,32 @@ ist. Die Umsetzung hängt je Paket ihre Punkte an (P-R4-06 ff.).
 
 ## 6. Was aus der Runde offen bleibt
 
-*(wird von der Umsetzung gefüllt: Punkte, die nach 17 ein neues Ziel
-tragen, und die Reste je Paket)*
+Von den **55** Einträgen mit Ziel 17 (Stand `05dfc12`) sind **45** erledigt
+und **10** umgehängt; Nr. 340 ist in der Runde angelegt und erledigt.
+`uebersicht.py --ziel 17` zählt **0**.
+
+| Nr. | Ziel · Stand heute | Warum |
+|---|---|---|
+| 37 | nach v1.0 · teilweise | (a) und (b) in R4-17 gebaut, der Rest nach v1.0 (Q-R4-03) |
+| 62 | 13 · offen | Logodateien mit alten Farbwerten — gehört zur Umbenennung (E-R4-08) |
+| 92 | 12a · offen | `bildreihe` — erster Abnehmer ist S11 (Q-R4-12) |
+| 161 | 12a · offen | Stück aus einer Aufzeichnung löschen — 12a verlegt die Spurfunktionen in den Browser (Q-R4-12) |
+| 198 | nach v1.0 · nicht umsetzen | Beschluss trägt (E-ZE-31) (Q-R4-12) |
+| 200 | nach v1.0 · nicht umsetzen | Beschluss trägt (E-P5c-51) (Q-R4-12) |
+| 202 | Pflegeaufgabe · nur auf Anlass | Zentralisierung Paket 6, Eintrag auf Stand (Q-R4-12) |
+| 232 | 18 · nur auf Anlass | Fristen der Rückfragen — Aufrufer auf der 18-Liste (Q-R4-12) |
+| 250 | 18 · teilweise | elf Seiten in R4-11 umgestellt; `betrieb_server.php` gehört 18 |
+| 265 | PK · nur auf Anlass | `.github/`-Verweise ohne Prüfmittel — die Datei gehört der Kette (Q-R4-12) |
+
+**In der Runde neu vergeben** (Spanne 340–349): 340 erledigt; 341 → 12
+(Regeln ohne Verwender, R4-05), 342 → nächste Backlog-Runde (Tabellen
+rollen am Schreibtisch, R4-08), 343 → nächste Backlog-Runde
+(`plattform.sh` ohne Spiegel, R4-09), 344 → 18 (Widerruf in die Wurzel,
+R4-11), 345 → nächste Backlog-Runde (Installationsseite, R4-11), 346 →
+nächste Backlog-Runde (zwei Meldungen noch von Hand, R4-13); 347 bis 349
+frei.
+
+**Reste bei der Betreiberin:** Q-R4-24 (die Abnahme 5 s in R4-17 — gilt
+sie als erfüllt?); die zwei toten Zweige löschen (E-R4-15, P-R4-06); nach
+dem Deploy `update.php` wegen der Migration aus 21.3.0 (P-R4-05); die
+Prüfliste in Abschnitt 4 (P-R4-06 bis P-R4-22).
