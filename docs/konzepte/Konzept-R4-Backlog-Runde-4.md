@@ -40,10 +40,10 @@ in `konzept-r4/mockups/` (M-R4-22, -23, -24 mit LIESMICH und Bildern).
 >
 > | | |
 > |---|---|
-> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-23** (Statistik: freier Zeitraum), dann R4-24 (Diagramme) — beide mit E-R4-55 entschieden und im Worktree vorbereitet. |
-> | Entschieden | **E-R4-01 bis E-R4-56** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14), **E-R4-54, -55** (R4-22, R4-23). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52, -53, -56. |
+> | Stand | **26.09.2026 — Umsetzung läuft** auf `claude/schritt-17-konzept-mockups-q0yjcm` (Opus). Konzept mit PR #93 gemergt und von der Betreiberin freigegeben, samt aller Fragen und der drei Mockups (E-R4-14 bis -26). **Als Nächstes: R4-24** (Diagramme), dann R4-25 und R4-26 — R4-24 und R4-25 im Worktree vorbereitet. |
+> | Entschieden | **E-R4-01 bis E-R4-58** (Abschnitt 3.1). Von der Betreiberin: E-R4-01 bis -05, -07 bis -10 (Konzeptsitzung), **E-R4-14 bis -26** (Umsetzungsbeginn, 26.09.2026), **E-R4-30** (R4-08), **E-R4-33 bis -37** (R4-11), **E-R4-39** (R4-12), **E-R4-42** (R4-14), **E-R4-54, -55** (R4-22, R4-23). Aus dem Konzept: E-R4-06, -11, -12, -13; aus der Umsetzung: E-R4-27, -28, -29, -31, -32, -38, -40, -41, -43, -44, -45, -46, -47, -48, -49, -50, -51, -52, -53, -56, -57, -58. |
 > | Offen | **Q-R4-24** (Abnahme 5 s in R4-17 — gilt sie als erfüllt? Empfehlung ja; hält nichts auf). Zuarbeit der Betreiberin: die zwei toten Zweige löschen (E-R4-15, P-R4-06). |
-> | Umsetzung | **R4-01 bis R4-22 erledigt** (27.09.2026); Web 21.4.1, Android 0.17.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-23 bis R4-26 in Nummernfolge. |
+> | Umsetzung | **R4-01 bis R4-23 erledigt** (27.09.2026); Web 21.5.0, Android 0.17.0 — **mit Migration aus 21.3.0, `update.php` nach dem Deploy** (P-R4-05). Offen: R4-24 bis R4-26 in Nummernfolge. |
 > | Fable-Schritte | keine. |
 > | Fächerung | Konzept: zwei Workflows mit je drei Sichtern, drei Gegenprüfern, einer mit dem Umfeld-Agenten — nur lesend (2.1). Umsetzung: nur R4-11 und R4-19 (E-R4-14); **R4-11: ein Workflow, drei Agenten** auf getrennten Dateigruppen (Sicherung, Verwaltung, Betrieb), zwei gleichzeitig, 931 s, 0 gescheitert; Prüfarbeit und Gegenlesung seriell danach. **R4-19: ein Workflow, drei Agenten** auf getrennten Dateigruppen (`referenzdatensatz/` 22, `proben/` 17, übrige Werkzeuge 13 Dateien), alle drei gleichzeitig, 229 s, 0 gescheitert, 0 offene Stellen; Ausnahmeliste der Textprobe, Doku, Gegenlesung, Neuaufbau der Anlage und Prüfstand seriell danach. |
 > | Nummern | 340 bis 349 reserviert; vergeben: **340** (R4-01, F-SD-08), **341** (R4-05: sechs Regeln ohne Verwender, toter Fokus-Zweig → 12), **342** (R4-08: Einsatztabellen rollen am Schreibtisch → nächste Backlog-Runde), **343** (R4-09: `plattform.sh` ohne Spiegel → nächste Backlog-Runde), **344** (R4-11: Widerruf in die Wurzel → 18), **345** (R4-11: Installationsseite → nächste Backlog-Runde), **346** (R4-13: zwei Meldungen noch von Hand → nächste Backlog-Runde). Die 341 aus Q-R4-15 wurde nicht gebraucht (E-R4-25). |
@@ -752,6 +752,8 @@ Was die Sichtung **anders** fand, als die Einträge sagen (jede Zahl vom
 | E-R4-54 | Q-R4-25: **Der Hinweiskasten aus M-R4-22 wird mitgebaut**, mit `Hinweiskasten()`. | Betreiberin, 27.09.2026 | wie empfohlen — er sagt, was die rote Zeile bedeutet und was ohne Zutun geschieht, und das Mockup ist die freigegebene Vorlage. |
 | E-R4-55 | Q-R4-26: **Die Statistik zeigt bei eigenem Zeitraum nur, was sich zählen lässt**; „aktiv", „angemeldet" und „gemeldet" tragen „—" mit einer Kleinzeile, warum. In M-R4-24 werden aus „Aktiv / Angemeldet / Neu angelegt je Monat" die Reihen „mit Einsatz" und „neu angelegt", aus „Geräte je Woche" „gekoppelt je Woche"; das Mockup wird vor R4-24 angepasst (H-R4-01). Keine Anmeldegeschichte. | Betreiberin, 27.09.2026 | wie empfohlen (F-R4-66) — eine Anmeldegeschichte wäre eine neue Tabelle mit Migration und personenbezogen, und sie gälte erst ab dem Deploy. |
 | E-R4-56 | **Der Knopf „Abgewiesene verwerfen …" hängt an einer zweiten Zahl, `Puffer.verwerfbar()`** (`fehlerhaft = 1 AND final = 1`), nicht an `abgewiesen()`; die rote Zeile und der Hinweis bleiben an `abgewiesen()`. | Umsetzung (R4-22) | `abgewieseneRaeumen()` nimmt nur Abgeschlossenes — ein laufendes Paket mit 400 wird noch beschrieben (`AbgewieseneTest.einLaufendesAbgewiesenesPaketBleibt`). Mit `abgewiesen()` versprächen Knopf und Rückfrage im laufenden Dienst ein Verwerfen, nach dem die Zeile noch steht, und ein zweiter Druck verwürfe nichts. |
+| E-R4-57 | **Die Pillen der Zeitraumwahl heißen wie die Spaltenköpfe** — „7 Tage", „30 Tage", „6 Monate", „1 Jahr" —, nicht „180 Tage" und „365 Tage" wie in M-R4-23; die Kennzahl sagt „Einsätze in 6 Monaten". Der Reiter trägt den Zeitraum in seiner Adresse weiter, die Vorgabe (30 Tage) trägt nichts. | Umsetzung (R4-23) | Eine Pille „180 Tage" über einer Spalte „6 Monate" wären zwei Namen für eine Sache; die Spaltenköpfe stehen seit P5c und im Handbuch. Den Reiter ohne Zeitraum zu wechseln hieße, ihn nach jedem Wechsel neu einzugeben. |
+| E-R4-58 | **Reicht ein eigener Zeitraum bis heute, stehen „aktiv", „angemeldet" und „gemeldet" doch da**; nur ein früheres Ende zeigt „—". | Umsetzung (R4-23), Verfeinerung von E-R4-55 | Endet der Zeitraum heute, ist „zuletzt nach dem Beginn" dasselbe wie „im Zeitraum" — dieselbe Rechnung wie bei den festen Fenstern, die ja auch jetzt enden. Die Einschränkung aus E-R4-55 trifft nur den Fall, für den sie gedacht war. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -1625,6 +1627,36 @@ Anordnung vorhandener Bausteine, kein neuer).
 *Abnahme:* Messstand drei Reiter mit freiem Zeitraum unter 1 s bei 5 000
 Einsätzen, `EXPLAIN` mit Index; Bilderlauf; Rollenprobe. *Stufe:* Web
 Neben. *Fächerung:* keine.
+**Erledigt 27.09.2026 — mit Web 21.5.0** (Neben, ohne Migration). Im
+Worktree vorbereitet, während R4-21 und R4-22 im Prüfstand liefen.
+`statistik_zeitraum()` liest `t` oder `von`/`bis`, rechnet die
+Tagesgrenzen in `app.timezone` nach UTC, kürzt ein Bis nach heute und weist
+Von nach heute, Von nach Bis, ein Feld allein und ungültige Daten mit einer
+Meldung ab; die Abfragen haben Unter- und Obergrenze und „nicht nach
+jetzt". `ui_zeitraumwahl()` in `ui.php` (das Register hält die Klassen der
+Filterreihe dort), `listenkopf.js` schickt beim Verlassen des Paars ab.
+Reiter und Kennzahlen tragen den Zeitraum weiter. Drei Abweichungen vom
+Mockup, je mit Grund: Pillen „6 Monate", „1 Jahr" (E-R4-57), aktiv und
+angemeldet bis heute (E-R4-58), unter NutzerInnen die Zeile „mit Einsatz"
+(E-R4-55). Neue Prüfmittel: Weg `statistik-zeitraum` der Bedienprobe,
+Zeile „eigener Zeitraum" der Berechtigungsmatrix, zwei Bilderlauf-Seiten,
+Messstand je Reiter mit Zeitraum und `EXPLAIN` für seine zwei Abfragen.
+*Gemessen:* Bedienprobe `statistik-zeitraum` **1 / 1** (Knopf mit Skript
+fort, Von→Bis schickt nicht ab, Verlassen schickt ab; Spalten „im Zeitraum /
+Ø je Woche / Ø je Tag"; Reiter behält den Zeitraum, NutzerInnen „—"; Kreuz
+nimmt ihn weg; Von nach Bis: 1 Meldung). Rollenprobe **480** Erwartungen,
+**0** nicht erfüllt. Messstand bei 5 421 Einsätzen: sechs Reiteraufrufe je
+**0,08 s**, `EXPLAIN` mit Zeitraum `idx_missions_started`, 900 Zeilen.
+Bilderlauf `--stufe neben --nur 45a`: **50** Bilder, Überlauf **0**, Knöpfe
+falscher Höhe **0**. Der erste Lauf des Wegs war rot, weil er das Kreuz an
+einem `aria-label` suchte — `ui_symbol()` trägt es als `<title>`; der Weg
+war falsch, nicht die Seite. Der erste Prüfstand war rot im
+Stilvergleich: Die neuen Regeln standen nicht in `geplant.txt`. Neu
+geschrieben mit `gegen.sh --schreiben` und Zeile für Zeile gelesen —
+**13** Signaturen: fünf Klassen der Zeitraumwahl, drei Höhen der längeren
+Katalogseite, drei Eingaben mit `position:absolute` ohne `top`, deren
+statische Lage mit ihr rückt, und die eine aus R4-08. Der Lauf wurde im
+Bilderlauf abgebrochen (die Demo-Marke stellte die Falle zurück).
 
 **R4-24 Statistik: Diagramme als Inline-SVG** — Nr. 122 (b) (E-R4-07,
 E-R4-13, H-R4-01). Nach der Freigabe von **M-R4-24**: Baustein „Diagramm"

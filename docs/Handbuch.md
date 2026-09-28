@@ -4872,9 +4872,10 @@ gesperrt ist.
 > Gerät je Konto; es zählt in keiner Gerätezahl.
 
 Oben stehen vier Kennzahlen — Konten, Geräte, Einsätze gesamt, Einsätze in
-30 Tagen —, jede führt in ihren Reiter. Darunter **drei Reiter** *(seit Web
-20.47.0)*; jeder hat dieselbe Form: links die Tabelle „… je Zeitraum",
-rechts eine Karte mit dem, was es gibt.
+30 Tagen —, jede führt in ihren Reiter. Darunter die **Zeitraumwahl**
+*(seit Web 21.5.0, siehe unten)* und **drei Reiter** *(seit Web 20.47.0)*;
+jeder hat dieselbe Form: links die Tabelle „… je Zeitraum", rechts eine
+Karte mit dem, was es gibt.
 
 - **NutzerInnen:** *Konten je Zeitraum* über 24 Stunden, 7 Tage, 30 Tage und
   6 Monate — **Aktiv**, **Angemeldet**, **Neu angelegt**. *Aktiv* heißt:
@@ -4886,7 +4887,7 @@ rechts eine Karte mit dem, was es gibt.
 - **Einsätze:** *Einsätze je Zeitraum* über 24 Stunden, 7 Tage, 30 Tage,
   6 Monate und 1 Jahr — die Zahl, wie viele NutzerInnen einen Einsatz
   hatten, und der Durchschnitt je NutzerIn mit Einsatz. Rechts die
-  **Herkunft der Einsätze** der letzten 30 Tage: Garmin-Uhr, Android-Handy,
+  **Herkunft der Einsätze** im gewählten Zeitraum: Garmin-Uhr, Android-Handy,
   Wear-OS-Uhr (an der Uhr begonnen, vom Handy gesendet), Formular, Import
   und Schnitt — alle sechs, auch mit 0; dazu **Andere**, wenn ein Wert
   dasteht, den diese Fassung nicht kennt.
@@ -4903,10 +4904,40 @@ rechts eine Karte mit dem, was es gibt.
 
 **Die Prozentzahl unter einer Zeile** bezieht sich auf ihre Karte: bei den
 Konten auf alle Konten, bei den Geräten auf alle Geräte, bei der Herkunft
-auf die Einsätze der letzten 30 Tage.
+auf die Einsätze des gewählten Zeitraums.
+
+**Der Zeitraum** *(seit Web 21.5.0)*. Über den Reitern stehen vier Pillen —
+**7 Tage**, **30 Tage** (die Vorgabe), **6 Monate**, **1 Jahr** — und
+daneben zwei Datumsfelder **Von** und **Bis**.
+
+- **Eine Pille** bestimmt die vierte Kennzahl („Einsätze in 6 Monaten") und
+  die Herkunft der Einsätze. Die Tabellen zeigen weiter alle Fenster
+  nebeneinander.
+- **Von und Bis** geben einen eigenen Zeitraum, etwa einen Monat. Er gilt
+  vom Beginn des ersten bis zum Ende des letzten Tages, in der Ortszeit der
+  Installation.
+  Abgeschickt wird er, sobald beide Felder gefüllt sind und du sie verlässt;
+  ohne JavaScript mit **„Anwenden"**. Er steht dann als orange Pille mit
+  Kreuz da, und ein Klick darauf nimmt ihn wieder weg. Ein Bis nach heute
+  wird auf heute gekürzt; ein Von nach heute oder nach dem Bis weist die
+  Seite mit einer Meldung ab und zeigt die 30 Tage.
+- **Mit eigenem Zeitraum hat jede Tabelle eine Spalte „im Zeitraum".**
+  Unter Einsätze stehen daneben der **Schnitt je Woche und je Tag**, damit
+  sich verschieden lange Zeiträume vergleichen lassen. Unter NutzerInnen
+  kommt die Zeile **NutzerInnen mit Einsatz** dazu.
+- **„Aktiv", „Angemeldet" und „Zuletzt gemeldet" stehen nur, wenn der
+  Zeitraum bis heute reicht**, sonst steht dort „—". Die Anwendung merkt
+  sich je Konto nur die **letzte** Anmeldung und je Gerät nur die
+  **letzte** Meldung. Für März lässt sich deshalb nicht sagen, wer im März
+  angemeldet war: Wer sich im März und wieder im September angemeldet hat,
+  fiele heraus, und die Zahl sänke, je weiter der Zeitraum zurückliegt.
+  *Neu angelegt* und *gekoppelt* stehen immer, weil ein Konto und ein Gerät
+  ihr Anlagedatum behalten.
+- Ein Wechsel des Reiters behält den Zeitraum.
 
 **Wie die Einsätze gezählt werden.** Ab dem **Beginn des Einsatzes** — ohne
-Demo-Konto, ohne Papierkorb. Jedes Fenster reicht bis *jetzt*: Ein Einsatz
+Demo-Konto, ohne Papierkorb. Jedes Fenster und jeder Zeitraum reicht
+höchstens bis *jetzt*: Ein Einsatz
 mit einem Beginn in der Zukunft (vorausgeplant, oder eine Uhr mit falscher
 Zeit) steht nur unter „gesamt". „6 Monate" sind 180 Tage, „1 Jahr" 365.
 *Bis Web 20.46.0 zählte diese Seite nach Diensttag.* Die Zahlen hier können

@@ -7442,7 +7442,8 @@ Matrix.
 **Seit R4-18 führt die Matrix auch die BetreiberIn-Seiten einzeln** (Nr. 327):
 je eine Zeile für den Aufruf von `betrieb_server.php`, `betrieb_jobs.php`,
 `betrieb_updates.php`, `betrieb_status.php`, `betrieb_sicherheit.php` und
-`betrieb_statistik.php` samt dem CSV der Gerätemodelle, dazu jede ihrer
+`betrieb_statistik.php` samt dem CSV der Gerätemodelle (und seit R4-23 dem
+eigenen Zeitraum, der eine andere Abfrage stellt), dazu jede ihrer
 26 POST-Handlungen und die zwei von `api/schluesselblatt_pruefen.php`. Bis
 dahin stand hier, dass sie **nicht** darin stehen: Jede liegt hinter
 `require_betreiberin()` am Kopf ihrer Datei, gemessen war nur das Tor der
@@ -7564,6 +7565,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Betrieb · Sicherheit: Sperre aufheben | `POST betrieb_sicherheit.php action=aufheben` | 403 | 403 | 403 | durch |
 | Betrieb · Statistik: die Seite | `GET betrieb_statistik.php` | 403 | 403 | 403 | 200 |
 | Betrieb · Statistik: Gerätemodelle als CSV | `GET betrieb_statistik.php?r=geraete&export=csv` | 403 | 403 | 403 | 200 |
+| Betrieb · Statistik: eigener Zeitraum | `GET betrieb_statistik.php?r=einsaetze&von=2026-03-01&bis=2026-05-31` | 403 | 403 | 403 | 200 |
 | Betrieb · Schlüsselblatt: Positionen stellen | `POST api/schluesselblatt_pruefen.php aktion=stellen` | 403 | 403 | 403 | durch |
 | Betrieb · Schlüsselblatt: prüfen | `POST api/schluesselblatt_pruefen.php aktion=pruefen` | 403 | 403 | 403 | durch |
 <!-- rollenprobe:ende -->

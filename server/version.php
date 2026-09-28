@@ -7820,5 +7820,17 @@ declare(strict_types=1);
  *   Klartext") und 12.6 („Der Wiederanlauf"), und die Seiten verweisen mit
  *   einem Satz dorthin. Der Verweis der Wiederherstellung traegt auch mit
  *   leerer Datenbank; das Handbuch braucht weder Anmeldung noch Tabellen.
+ *
+ * 21.5.0 — DIE STATISTIK WAEHLT IHREN ZEITRAUM (Schritt 17, R4-23, Nr. 122 a,
+ *   Bild M-R4-23). Nebenstufe ohne Migration. Ueber den Reitern von
+ *   Betrieb -> Statistik stehen vier Pillen (7 Tage bis 1 Jahr) fuer die
+ *   Kennzahl und die Herkunft, daneben Von und Bis fuer einen eigenen
+ *   Zeitraum; dann hat jede Tabelle eine Spalte „im Zeitraum", unter
+ *   Einsaetze mit Wochen- und Tagesschnitt. Tagesgrenzen in Ortszeit,
+ *   Abfragen mit Unter- und Obergrenze ueber `idx_missions_started`.
+ *   „Aktiv", „angemeldet" und „gemeldet" stehen nur, wenn der Zeitraum bis
+ *   heute reicht: Die Anlage kennt je Konto nur die letzte Anmeldung
+ *   (F-R4-66, E-R4-55). Die Reihe ist eine Anordnung vorhandener Bausteine
+ *   (`ui_zeitraumwahl()`, Design.md 9.18b).
  */
-const WEB_VERSION = '21.4.1';
+const WEB_VERSION = '21.5.0';

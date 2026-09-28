@@ -2244,6 +2244,64 @@ function ui_listenfuss(array $o): void
     echo "</div>\n";
 }
 
+/**
+ * Die Zeitraumwahl (`.zeitraumwahl`, R4-23, Nr. 122 a, Bild M-R4-23,
+ * Design.md 9.18b): feste Fenster als Pillen, daneben Von/Bis und
+ * „Anwenden"; ein eigener Zeitraum steht als aktive Pille mit Kreuz, deren
+ * Verweis ihn wegnimmt.
+ *
+ * KEIN NEUER BAUSTEIN, EINE ANORDNUNG: die Pillen der Filterreihe (9.18a),
+ * zwei Datumsfelder (`.feld-eingabe`), ein neutraler Knopf. Sie steht hier
+ * und nicht in der Seite, weil das Register (`tools/zaehlung/register.php`,
+ * Zeile „Listenkopf und Reiter") die Klassen der Filterreihe außerhalb
+ * dieser Datei auf null hält.
+ *
+ * MIT SKRIPT (`assets/listenkopf.js`) geht der Zeitraum ab, sobald der
+ * Fokus das Paar der Felder verlässt und beide gefüllt sind, und der Knopf
+ * ist fort; ohne Skript steht er da. Nicht bei jeder Änderung: Ein
+ * Datumsfeld meldet `change` schon beim Tippen der Jahreszahl.
+ *
+ * $o: label, form_id, versteckt [name => wert], pillen [[text, href,
+ *     aktiv]], von, bis (JJJJ-MM-TT oder ''), max (JJJJ-MM-TT),
+ *     eigen [text, href] oder null
+ */
+function ui_zeitraumwahl(array $o): void
+{
+    $id = (string)($o['form_id'] ?? 'f-zeitraum');
+    echo '<form method="get" class="zeitraumwahl" id="' . ui_e($id) . '" aria-label="'
+       . ui_e((string)($o['label'] ?? 'Zeitraum')) . '">' . "\n";
+    foreach ((array)($o['versteckt'] ?? []) as $n => $v) {
+        if ((string)$v === '') { continue; }
+        echo '  <input type="hidden" name="' . ui_e((string)$n) . '" value="'
+           . ui_e((string)$v) . '">' . "\n";
+    }
+    echo '  <div class="filterreihe">' . "\n";
+    foreach ((array)($o['pillen'] ?? []) as $p) {
+        $aktiv = !empty($p['aktiv']);
+        echo '    <a class="listenfilter' . ($aktiv ? ' aktiv' : '') . '" href="'
+           . ui_e((string)$p['href']) . '"' . ($aktiv ? ' aria-current="true"' : '')
+           . '><span>' . ui_e((string)$p['text']) . "</span></a>\n";
+    }
+    echo "  </div>\n";
+    echo '  <div class="zeitraumwahl-felder" data-zeitraum>' . "\n";
+    foreach (['von' => 'Von', 'bis' => 'Bis'] as $name => $text) {
+        $fid = $id . '-' . $name;
+        echo '    <div class="feld"><label class="feld-label" for="' . ui_e($fid) . '">' . $text
+           . '</label><input class="feld-eingabe" type="date" id="' . ui_e($fid) . '" name="'
+           . $name . '" value="' . ui_e((string)($o[$name] ?? '')) . '"'
+           . (!empty($o['max']) ? ' max="' . ui_e((string)$o['max']) . '"' : '') . "></div>\n";
+    }
+    echo '    ' . ui_knopf(['text' => 'Anwenden', 'art' => 'neutral', 'typ' => 'submit',
+                           'attr' => ' data-absenden-knopf']) . "\n";
+    if (!empty($o['eigen'])) {
+        echo '    <a class="listenfilter aktiv" href="' . ui_e((string)$o['eigen']['href'])
+           . '" aria-current="true"><span>' . ui_e((string)$o['eigen']['text']) . '</span>'
+           . ui_symbol('schliessen', '', 'Zeitraum entfernen') . "</a>\n";
+    }
+    echo "  </div>\n";
+    echo '  <script src="' . ui_e(ui_asset('assets/listenkopf.js')) . '" defer></script>' . "\n";
+    echo "</form>\n";
+}
 
 /* ---------------------------------------------------------------------------
  * TITELZEILE  (.titelzeile)

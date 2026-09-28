@@ -4120,6 +4120,24 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 }
 .listenfilter.aktiv .listenfilter-zahl{background:var(--orange);color:var(--knopf-primaer-schrift)}
 
+/* ZEITRAUMWAHL (.zeitraumwahl, R4-23, Nr. 122 a, Bild M-R4-23) — die
+ * Filterreihe der Statistik: feste Fenster als Pillen (9.18a) und zwei
+ * Datumsfelder mit „Anwenden" in EINER Reihe, die am Ende bricht. Neu ist nur
+ * die Anordnung; Pillen, Felder und Knopf sind vorhandene Bausteine, kein
+ * neuer Farbwert, keine neue Schriftgröße (Design.md 9.18b). Die Felder sind
+ * so hoch wie ein Knopf (`.feld-eingabe`) und nur so breit, wie ein Datum es
+ * braucht. */
+.zeitraumwahl{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);
+  margin:var(--abstand-4) 0 var(--abstand-3)}
+.zeitraumwahl-felder{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2)}
+.zeitraumwahl-felder .feld{margin:0;display:flex;align-items:center;gap:var(--abstand-1)}
+.zeitraumwahl-felder .feld-label{margin:0;font-weight:400;color:var(--gedaempft);
+  font-size:var(--groesse-2)}
+.zeitraumwahl-felder .feld-eingabe{width:9.5rem}
+@media (max-width:479px){
+  .zeitraumwahl-felder .feld-eingabe{width:8.6rem}
+}
+
 
 /* ---- Kontentabelle ------------------------------------------------------- */
 /* Name und Adresse stehen untereinander in EINER Zelle (Mockup 41): Zwei

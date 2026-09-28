@@ -8,4 +8,16 @@
 # Vergleichsstand und zaehlt sie nicht, solange sie nicht gemessen werden
 # (Nr. 330). Die naechste Gestaltungsaenderung schreibt sie neu.
 
+katalog.html  body <html>  :  height
+katalog.html  div <body>  :  height
+katalog.html  div <div>  :  height
+katalog.html  div.feld <div.zeitraumwahl-felder>  :  align-items, column-gap, display, gap, margin, margin-bottom, min-height, min-width, width
+katalog.html  div.feld-eingabe <div.zeitraumwahl-felder>  :  min-height, min-width, width
+katalog.html  div.feld-label <div.zeitraumwahl-felder>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, font, font-size, font-weight, height, line-height, margin, margin-bottom, min-height, min-width, outline, width
 katalog.html  div.vorschlag.aktiv <div>  :  border-color, border-left, border-left-color
+katalog.html  div.zeitraumwahl <div>  :  align-items, column-gap, display, flex-wrap, gap, margin, margin-bottom, margin-top
+katalog.html  div.zeitraumwahl-felder <div>  :  align-items, column-gap, display, flex-wrap, gap, height
+katalog.html  html <->  :  height
+katalog.html  input.schalter-box <div>  :  bottom, inset, top
+katalog.html  input.segment-box <div>  :  bottom, inset, top
+katalog.html  input.wahl-box <div>  :  bottom, inset, top

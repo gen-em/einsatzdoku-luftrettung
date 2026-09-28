@@ -1042,6 +1042,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | zwischen **gleichrangigen Sichten einer Seite** wechseln | `ui_reiter()` — serverseitig, jeder Reiter ein Verweis (9.37) | ein Segment mit sieben Wörtern oder eine zweite Reihe Filterpillen |
 | **Angaben zu einem Listeneintrag**, die nicht in den Satz passen | `ui_zeile(['daten' => [[Schlüssel, Wert], …]])` — die Zeile klappt auf (9.2) | ein Blatt mit „⋯“ oder eine zweite Zeile darunter |
 | **Suche, Filter und Seitenwahl** einer langen Liste | `ui_listenkopf()` und `ui_listenfuss()` (9.18a) | dasselbe Markup ein zweites Mal von Hand |
+| den **Zeitraum einer Auswertung** wählen — feste Fenster und Von/Bis | `ui_zeitraumwahl()` (9.18b) | Datumsfelder und Pillen von Hand, oder ein Auswahlfeld mit Monaten |
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
@@ -1994,6 +1995,32 @@ hält die Klassen außerhalb von `ui.php` auf **null**.
   erste, letzte und die Nachbarn der aktuellen Seite, dazwischen eine
   Ellipse.
 
+### 9.18b Zeitraumwahl (`.zeitraumwahl`, seit Web 21.5.0)
+
+*Eine Anordnung, kein neuer Baustein* (R4-23, Nr. 122 a, Bild M-R4-23,
+freigegeben mit Q-R4-16). Betrieb → Statistik wählt ihren Zeitraum in einer
+Reihe zwischen Kennzahlen und Reitern: links die festen Fenster als
+**Pillen der Filterreihe** (9.18a), rechts zwei **Datumsfelder**
+(`.feld-eingabe type=date`, Beschriftung klein und gedämpft daneben statt
+darüber) und ein **neutraler Knopf** „Anwenden". Ein eigener Zeitraum steht
+als **aktive Pille mit Kreuz** hinter dem Knopf; ihr Verweis nimmt ihn weg.
+Die Reihe bricht am Ende, wie die Filterreihe.
+
+- **Ein Weg: `ui_zeitraumwahl()`** in `ui.php`. Das Register hält die
+  Klassen der Filterreihe außerhalb von `ui.php` auf null (Zeile „Listenkopf
+  und Reiter") — auch hier.
+- **Mit Skript** (`assets/listenkopf.js`) geht der Zeitraum ab, sobald der
+  Fokus das Paar der Felder verlässt und beide gefüllt sind; „Anwenden" ist
+  dann verborgen. Nicht bei jeder Änderung: Ein Datumsfeld meldet `change`
+  schon beim Tippen der Jahreszahl.
+- **Maße:** Felder 9,5 rem breit, unter 480 px 8,6 rem — ein Datum in der
+  Schreibweise des Browsers passt, und Von und Bis stehen bei 360 px in
+  einer Zeile (gemessen im Bilderlauf; die vier Pillen brechen dort nach
+  dreien um, die Pille des eigenen Zeitraums steht darunter). Höhe ist die
+  des Knopfs (`--knopf`). Kein neuer Farbwert, keine neue Schriftgröße.
+- **Die Pillen heißen wie die Spaltenköpfe** („6 Monate", „1 Jahr"), nicht
+  „180 Tage" wie im Mockup (E-R4-57): zwei Namen für eine Spalte wären einer
+  zu viel.
 
 ### 9.19 Speicherbalken (`.speicher-balken`)
 

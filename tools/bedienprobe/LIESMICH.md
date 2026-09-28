@@ -30,7 +30,7 @@ Den QR-Code liest `vendor/jsQR.js` (1.4.0, Apache-2.0, nur Prüfwerkzeug; Nr. 29
 
 ## Erwartete Zahl
 
-**69 von 69 Wegen erfüllt, 0 verfehlt** — im Prüfbericht des Commits `R4-16` (27.09.2026; R4-11 brachte zehn Wege `*-neuladen`, R4-16 `nachtdienst.mjs`); mit R4-17 (`zeitraum.mjs`) sind es **70**. Der Bericht steht in `ausgabe/bericht.md`.
+**69 von 69 Wegen erfüllt, 0 verfehlt** — im Prüfbericht des Commits `R4-16` (27.09.2026; R4-11 brachte zehn Wege `*-neuladen`, R4-16 `nachtdienst.mjs`); mit R4-17 (`zeitraum.mjs`) sind es **70**, mit R4-23 (`betrieb_statistik.mjs`, Nr. 122) **71**. Der Bericht steht in `ausgabe/bericht.md`.
 
 ## Was es nicht kann
 

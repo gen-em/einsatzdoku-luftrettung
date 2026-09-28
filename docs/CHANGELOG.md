@@ -14,6 +14,43 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.5.0] — 2026-09-27
+
+Schritt 17, Backlog-Runde 4, Paket R4-23. **Neben**, ohne Migration.
+
+### Neu
+
+- **Die Statistik wählt ihren Zeitraum** (Nr. 122 a, E-R4-07, Bild M-R4-23).
+  Betrieb → Statistik rechnete feste Fenster — für den Blick auf einen
+  bestimmten Monat reichte das nicht. Zwischen Kennzahlen und Reitern steht
+  jetzt eine Reihe: vier Pillen (**7 Tage**, **30 Tage**, **6 Monate**,
+  **1 Jahr**) bestimmen die Kennzahl „Einsätze in …" und die Herkunft, die
+  bis dahin fest 30 Tage zeigten; daneben **Von** und **Bis** für einen
+  eigenen Zeitraum. Dann hat jede Tabelle eine Spalte „im Zeitraum", unter
+  Einsätze mit **Schnitt je Woche und je Tag** — erst der macht verschieden
+  lange Zeiträume vergleichbar —, unter NutzerInnen mit der Zeile
+  „NutzerInnen mit Einsatz". Tagesgrenzen in Ortszeit, ein Bis nach heute
+  wird auf heute gekürzt, ein Von nach heute oder nach dem Bis wird mit
+  einer Meldung abgewiesen. Der Reiter behält den Zeitraum. Die Abfragen
+  haben Unter- und Obergrenze und lesen über `idx_missions_started`; der
+  Messstand fährt die drei Reiter jetzt auch mit eigenem Zeitraum und
+  verlangt dort den Index im Plan. **Keine neue Darstellung:** Die Reihe ist
+  eine Anordnung aus Pillen der Filterreihe, Datumsfeldern und einem
+  neutralen Knopf (`ui_zeitraumwahl()`, Design.md 9.18b); mit Skript geht
+  der Zeitraum ab, sobald der Fokus die zwei Felder verlässt, ohne Skript
+  mit „Anwenden".
+- **Was bewusst fehlt: „aktiv", „angemeldet" und „gemeldet" für einen
+  vergangenen Zeitraum** (F-R4-66, E-R4-55). Die Anlage speichert je Konto
+  nur die **letzte** Anmeldung und je Gerät nur die letzte Meldung. Reicht
+  der Zeitraum bis heute, ist „zuletzt nach dem Beginn" dasselbe wie „im
+  Zeitraum", und die Zahl steht da; endet er früher, steht „—" mit einem
+  Satz, warum. Dieselbe Rechnung hätte dort nur gezählt, wer sich danach
+  nicht mehr gemeldet hat, und die Zahl wäre gesunken, je weiter der
+  Zeitraum zurückliegt. Eine Anmeldegeschichte wäre eine neue Tabelle mit
+  personenbezogenen Zeitpunkten — nicht in einer Aufräumrunde.
+- **Die Pillen heißen wie die Spaltenköpfe**, „6 Monate" und „1 Jahr",
+  nicht „180 Tage" und „365 Tage" wie im Mockup (E-R4-57).
+
 ## [Android 0.17.0] — 2026-09-27
 
 Schritt 17, Backlog-Runde 4, Paket R4-22. **Neben.**
