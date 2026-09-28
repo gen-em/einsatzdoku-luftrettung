@@ -53,7 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| ab 348 | frei — höchste vergebene Nummer 347 (Schritt 17, PR #94); 348 und 349 aus dessen Spanne blieben frei, 338 aus der von AR | 28.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351, 352 | 27.09.2026 |
+| ab 360 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 28.09.2026 |
 
 ---
 
@@ -61,7 +62,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-21. **Die 43 weiteren Funde der A4-Nachlese sichten.** · gehört zu: 12 · Stand: offen · seit 23.08.2026
+21. **Die 43 weiteren Funde der A4-Nachlese sichten.** · gehört zu: 12b · Stand: offen · seit 23.08.2026
      Die Erhebung „toter Code" in P0/A4 hat mit einer zweiten, breiteren
      Methode 43 zusätzliche Kandidaten geliefert (Abschnitt 9.3 des
      P0-Konzepts). Sie sind **nicht** freigegeben und **nicht** angefasst: Ein
@@ -253,7 +254,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12 · Stand: teilweise · seit 02.09.2026
+77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12b · Stand: teilweise · seit 02.09.2026
      Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und
      weitere Betriebsangaben auf einer Fläche.
      Entschieden 05.09.2026 (E-S8-05): nicht aufteilen, sondern **auflösen** —
@@ -358,14 +359,16 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 <!-- -->
 
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.** · gehört zu: 12 · Stand: offen · seit 06.09.2026
-     Drei Fragen, keine Fehler (R78, 06.09.2026): **Argon2id statt PBKDF2**
-     (WASM-Fremdbestandteil gegen GPU-Resistenz) · **Inhaltsschlüssel als
-     nicht-extrahierbarer `CryptoKey`** statt Hex im `sessionStorage` (ein XSS
-     könnte dann entschlüsseln, den Schlüssel aber nicht mitnehmen; anderes
-     Lebensdauermodell „ein Tab, ein Schlüssel") · **Passkeys** als
-     Zweitfaktor (WebAuthn-Serverbibliothek) und Passkeys mit PRF als Ersatz
-     der Passwortableitung. Dazu die Design-Skizze für Weg B (Nr. 43, SP-9)
-     zur Prüfung. Zuordnung R17 Stück 1.
+     Zwei Fragen, keine Fehler (R78, 06.09.2026; bis 27.09.2026 drei):
+     **Argon2id statt PBKDF2** (WASM-Fremdbestandteil gegen GPU-Resistenz)
+     · **Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`** statt Hex
+     im `sessionStorage` (ein XSS könnte dann entschlüsseln, den Schlüssel
+     aber nicht mitnehmen; anderes Lebensdauermodell „ein Tab, ein
+     Schlüssel"). Dazu die Design-Skizze für Weg B (Nr. 43, SP-9) zur
+     Prüfung. Zuordnung R17 Stück 1.
+     **Passkeys** stehen seit 27.09.2026 nicht mehr hier: als zweiter Faktor
+     neben TOTP Nr. 350 (Schritt 18, SR-09); mit PRF als Ersatz der
+     Passwortableitung von der Betreiberin nicht weiterverfolgt (E-SR-28).
      Stand seit S10 (Web 20.0.0, 14.09.2026): Der erste Punkt ist messbar
      kleiner — der Datenschlüssel hängt am Server-Anteil aus `config.php`,
      ein Datenbankabzug allein reicht für einen Offline-Angriff nicht mehr;
@@ -448,7 +451,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-188. **Eine Dokumentenprobe: kein Prüfmittel misst Verweise zwischen Dokumenten.** · gehört zu: 12 · Stand: teilweise · seit 14.09.2026
+188. **Eine Dokumentenprobe: kein Prüfmittel misst Verweise zwischen Dokumenten.** · gehört zu: 12b · Stand: teilweise · seit 14.09.2026
      Befund (S10-Nachlauf): „Linkprobe 117 Verweise, 0 Abweichungen" belegt
      nichts über `docs/` — die Linkprobe liest `<seite>.php?…` in `server/`.
      Die Fahrplanzeile zu Schritt 7 nannte acht Tage lang einen Konzeptpfad,
@@ -872,6 +875,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      leiten um, `flash_setzen()` trägt Ort, Ton und Ergebnis (E-R4-33 bis
      -36). **Offen: `betrieb_server.php`** — auf der Liste von Schritt 18
      und deshalb dort (Konzept R4 2.3); der Weg ist derselbe.
+     **Zuordnung in 18 (28.09.2026):** Paket SR-02, das `betrieb_server.php`
+     ohnehin um eine Karte erweitert (Konzept SR, E-SR-37).
 
 <!-- -->
 
@@ -1123,7 +1128,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-341. **Sechs Stylesheet-Regeln ohne Verwender und ein Fokus-Zweig, den kein Element erfüllt.** · gehört zu: 12 · Stand: offen · seit 26.09.2026
+341. **Sechs Stylesheet-Regeln ohne Verwender und ein Fokus-Zweig, den kein Element erfüllt.** · gehört zu: 12b · Stand: offen · seit 26.09.2026
      *Aufgenommen 26.09.2026 mit R4-05 (Konzept R4).* Die
      Vollständigkeitsprüfung meldet nach R4-05 noch 13 Hinweise „Regel im
      Stylesheet, im Markup nicht gefunden". Sieben haben einen Grund (vier
@@ -1191,6 +1196,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `edbak_ordner_loeschen()` schon tut; die Aufrufer melden dann den
      Fehlschlag. *Abnahme:* POST `widerrufen` mit einem Handgriff aus
      Nullen → Fehlermeldung, keine Datei in der Wurzel der Ablage.
+     **Zuordnung in 18 (28.09.2026):** Paket SR-03, das `adminbackup_lib.php`
+     ohnehin offen hat; die Gegenlesung liest es mit (Konzept SR, E-SR-37).
 
 <!-- -->
 
@@ -1241,3 +1248,59 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      oder den Weg suchen, der sie hinterlässt. *Abnahme:* die Jobprobe
      nennt fremde Waisen mit Tabelle und Kennung; die Quelle ist gefunden
      oder als Grenze benannt.
+
+<!-- -->
+
+350. **Passkeys als zweiter Faktor neben TOTP.** · gehört zu: 18 · Stand: offen · seit 27.09.2026
+     *Aufgenommen 27.09.2026 in der Nachfassung des Konzepts SR (Paket
+     SR-09, E-SR-29); herausgelöst aus Nr. 146, dessen Passkey-Frage damit
+     beantwortet ist.* Ein TOTP-Code lässt sich auf einer gefälschten Seite
+     abgreifen und weiterreichen; eine WebAuthn-Signatur ist an den Ursprung
+     gebunden — der Code-Schritt wird phishingfest. **Bauform:** ohne
+     Fremdbestandteil — `rw_pruefen()` prüft schon ECDSA P-256 mit phpseclib,
+     `Crypt/RSA` liegt für RS256 daneben, es fehlt ein kleiner CBOR-Leser
+     (`passkey_lib.php`, E-SR-30); Tabelle `passkeys` (Migration); die Karte
+     „Zweitfaktor" bekommt den Abschnitt, der Code-Schritt den Knopf „Mit
+     Passkey bestätigen"; Codes und Rückweg bleiben der Notweg; Anlegen und
+     Entfernen verlangen einen frischen Code. **Prüfmittel:** Bedienweg mit
+     dem virtuellen Authenticator Chromiums (CDP `WebAuthn`), Probe mit
+     selbst erzeugten Vektoren (ES256, RS256, jede Ablehnung). **Nicht
+     dabei:** Passkeys mit PRF als Ersatz der Passwortableitung (E-SR-28).
+     *Abnahme:* Konzept SR, Paket SR-09; Prüfdokument P-SR-16.
+
+<!-- -->
+
+351. **Passkey als einziger Zweitfaktor, ohne Authenticator-App.** · gehört zu: nach v1.0 · Stand: zurückgestellt · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit Q-SR-12 (E-SR-35).* Schritt 18 baut den
+     Passkey als weiteres Verfahren neben dem eingeschalteten TOTP (Nr. 350);
+     wer keine App will, hat damit keinen Zweitfaktor. Allein tragen dürfte
+     der Passkey den Faktor erst, wenn drei Dinge umgebaut sind: die
+     Wiederherstellungscodes entstehen ohne TOTP-Geheimnis (`totp_codes_*`
+     hängen am Einrichten der App), das Einrichtungstor nimmt einen Passkey
+     als Erfüllung der Pflicht an (`totp_an()` wird ein Faktor-Begriff), und
+     der Reset-Weg (Verwaltung, Notzugang) kennt Konten ohne App.
+     **Anlass:** eine NutzerIn, die nach einem Passkey ohne App fragt — bis
+     dahin zurückgestellt, weil Support, Admin und BetreiberIn die App
+     ohnehin haben. *Abnahme:* Zweitfaktor mit Passkey allein einschaltbar,
+     Codes entstehen dabei, Rückweg und Notzugang gelten unverändert.
+
+<!-- -->
+
+352. **`nummern.py` meldet während eines offenen Merges die Nummern von `main` als Kollision.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 28.09.2026
+     *Aufgenommen 28.09.2026 beim Aufnehmen von `main` in den Konzeptzweig
+     zu 18 (Konzept SR, F-SR-14).* `Pruefablauf.md` 5.3 sagt: erst
+     `git merge --no-commit`, dann der Prüfstand über den Arbeitsbaum, dann
+     der Merge-Commit mit dem Bericht. Das Werkzeug misst den Arbeitsbaum
+     aber gegen `merge-base(HEAD, origin/main)` — vor dem Commit ist das der
+     alte Abzweigpunkt, und jede Nummer, die `main` seither vergeben hat
+     (hier vier aus Schritt 17), steht im Baum als „neu" und in
+     `origin/main` als „neu": Scheinüberschneidungen, der Bericht des
+     Merge-Commits wäre rot. Nach dem Commit ist die Basis `origin/main`,
+     und es sind null.
+     *Weg:* Liegt `MERGE_HEAD` vor, die Nummern des Arbeitsbaums zusätzlich
+     um die von `MERGE_HEAD` bereinigen (was der aufgenommene Zweig schon
+     trägt, ist nicht neu); die Selbstprobe bekommt den Fall; 5.3 verliert
+     den Satz zur Umgehung. Bis dahin: Merge-Commit ohne Bericht, der Bericht
+     im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
+     28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
+     → 0 Überschneidungen.
