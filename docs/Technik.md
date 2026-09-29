@@ -10433,7 +10433,8 @@ Ein umbenannter Job hängt alle drei still ab.
 ### 6.3 Stufe 2 — was eine Installation braucht
 
 Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync, **drei Schritte**
-(seit dem 21.09.2026, Konzept PK, E-PK-01/E-PK-17): der Griff auf
+aus Konzept PK (seit dem 21.09.2026, E-PK-01/E-PK-17) und einer aus Konzept RW
+(unten, E-PK-55): der Griff auf
 `login.php`, die Punktdatei-Sperre und der Kreislauf edbak (`--frisch`, mit
 Job-Pause, 0 unerklärt). Das ist, was nur die echte Anlage zeigt —
 Hoster-PHP, Hoster-Datenbank, Hoster-Apache. Nr. 267 fiel genau dort: Der
@@ -10441,8 +10442,10 @@ Alias `AS manual` war auf MySQL 8.4.10 reserviert, und die Sandbox hatte bis
 dahin nur MariaDB gesehen. **Der Kreislauf** braucht ein **Prüfkonto auf
 Staging** (Umgebungsgeheimnisse `STAGING_KONTO`, `STAGING_PASS`, Variable
 `STAGING_URL`); fehlt es, ist der Lauf rot und sagt warum. Zeitgrenze des
-Jobs 20 Minuten; gemessen sind 1:56 für alles zusammen (Lauf 35639445224,
-Versuch 2, damals noch mit dem csv-Kreislauf).
+Jobs 20 Minuten, **kein Aktions-Cache** (E-PK-54: rund 30 s Installation
+gegen eine elfte Fremd-Aktion in einem Job mit Geheimnissen). **Gemessen an
+Lauf 99** (28.09.2026, `fc4253d`): der ganze Job 3:16, davon Kreislauf samt
+Installation 44 s und Rückwegprobe 2:26; der Staging-Abgleich davor 35 s.
 
 **Seit Web 20.45.0 ein vierter Schritt: die Rückwegprobe gegen Staging**
 (Konzept RW, E-RW-11, -12; `tools/proben/rueckweg/probe.mjs` mit der Adresse
@@ -10453,7 +10456,12 @@ legt zwei Wegwerfkonten `umlauf-rueckweg…` an (NutzerIn und BetreiberIn,
 Wiederherstellungsschlüssel zurück und löscht die Konten wieder. Sie läuft
 **nach** dem Kreislauf und benutzt dessen Installationen (Playwright,
 Chromium, `cryptography`); fehlt `STAGING_TOTP` oder das Prüfkonto, ist der
-Schritt rot. **Gemessen ist er erst nach dem Merge** (P-RW-02).
+Schritt rot. Seit dem Merge läuft er grün mit (Lauf 99: 2:26).
+
+**Ein Platz ist benannt und leer: Nr. 234** (E-PK-21) — der Weg „Deploy,
+Anmeldung, `update.php`" in einem Zug. Er steht als Kommentar im Job
+`stufe2`, nicht als Schritt: Ein Schritt, der sich selbst überspringt, meldete
+grün, ohne gemessen zu haben (`Pruefablauf.md` 8).
 
 **Bis zum 21.09.2026 liefen hier auch der csv-Kreislauf und der Bilderlauf**
 (62 Seiten in acht Breiten). Beide messen die Anwendung, nicht die Anlage,

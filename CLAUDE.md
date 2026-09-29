@@ -181,9 +181,11 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   `server/.sitzungen/` (die PHP-Sitzungsdateien, Schritt 16, E-SA-05) liegen
   nur auf dem Server. Sie stehen in `.gitignore` **und** in der
   Ausnahmeliste des FTPS-Schritts — beides muss so bleiben.
-  **Acht Pfade sind es, und die Zahl ist der Prüfwert.** Jeder steht dort
-  zweimal, als Datei- und als Verzeichnismuster (`sicherungen/**` und
-  `sicherungen/`), weil die Aktion beides getrennt prüft.
+  **Acht Pfade sind es, und die Zahl ist der Prüfwert.** Die drei
+  Verzeichnisse stehen dort zweimal, als Datei- und als Verzeichnismuster
+  (`sicherungen/**` und `sicherungen/`), weil die Aktion beides getrennt
+  prüft; die fünf Dateien je einmal. *(Bis PK-06 stand hier „jeder steht
+  zweimal" — das galt nur für die Verzeichnisse, F-PK-11.)*
   **Seit Kette II/AP5 steht die Liste EINMAL**, in
   `.github/workflows/ausliefern-lauf.yml` (E-KH-20 (1)). Bis dahin stand sie
   zweimal, wortgleich, je einmal für Staging und Produktiv — und zwei
