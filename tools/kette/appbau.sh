@@ -40,12 +40,13 @@ ist_7z() { [ "$(head -c 6 "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n')" = 377ab
 fassung_android() { sed -n 's/^version=\([0-9.]*\)[[:space:]]*$/\1/p' "$1" | head -1; }
 fassung_uhr() { sed -n 's/.*const APP_VERSION = "\([0-9.]*\)";.*/\1/p' "$1" | head -1; }
 
-# Jede Zeile „Signer … certificate SHA-256 digest: …", gleich wie
-# nummeriert („#1" oder „(minSdkVersion=…)"): genau EIN Wert, sonst leer.
-# Derselbe Wert zweimal ist ein Unterzeichner (F-PK-56, Lauf 103).
+# Jede Zeile „… Signer … certificate SHA-256 digest: …" in den drei Formen,
+# die apksigner kennt — „Signer #1", „Signer (minSdkVersion=…)" und seit den
+# Build-Tools 37 „V3.0 Signer:" (F-PK-56, Lauf 105): genau EIN Wert, sonst
+# leer. Derselbe Wert zweimal ist ein Unterzeichner.
 zertifikat_aus() {
     local z
-    z=$(grep -E '^Signer (#[0-9]+|\([^)]*\)) certificate SHA-256 digest:' <<<"$1" \
+    z=$(grep -E '^(V[0-9]+(\.[0-9]+)? )?Signer( #[0-9]+| \([^)]*\))?:? certificate SHA-256 digest:' <<<"$1" \
         | sed -E 's/.*digest: *//' | tr -d ': ' | tr 'A-F' 'a-f' | sort -u)
     if [ -n "$z" ] && [ "$(grep -c . <<<"$z")" = 1 ]; then echo "$z"; else echo ""; fi
 }
@@ -179,6 +180,12 @@ Signer #2 certificate SHA-256 digest: 1111$(printf 'c%.0s' {1..56})2222"
     pruefe "Zertifikat aus apksigner gelesen" '[ "$(zertifikat_aus "$aus1")" = "$gut" ]'
     pruefe "Derselbe Wert zweimal → ein Unterzeichner (F-PK-56)" '[ "$(zertifikat_aus "$aus2")" = "$gut" ]'
     pruefe "Nummerierung nach minSdkVersion → gelesen" '[ "$(zertifikat_aus "$aus3")" = "$gut" ]'
+    local aus5="V3.0 Signer: certificate DN: CN=x
+V3.0 Signer: certificate SHA-256 digest: $gut
+V3.0 Signer: certificate SHA-1 digest: 00"
+    pruefe "Form der Build-Tools 37, V3.0 Signer → gelesen (Lauf 105)" '[ "$(zertifikat_aus "$aus5")" = "$gut" ]'
+    pruefe "Quellstempel zählt nicht als Unterzeichner" '[ "$(zertifikat_aus "$aus1
+Source Stamp Signer certificate SHA-256 digest: 1111$(printf "d%.0s" {1..56})2222")" = "$gut" ]'
     pruefe "Zwei verschiedene Unterzeichner → nicht lesbar" '[ -z "$(zertifikat_aus "$aus4")" ]'
     pruefe "Keine Zeile → nicht lesbar" '[ -z "$(zertifikat_aus "DOES NOT VERIFY")" ]'
     pruefe "Gleich der Variablen, Enden passen → passt" 'zertifikat_passt "$gut" "$gut"'
