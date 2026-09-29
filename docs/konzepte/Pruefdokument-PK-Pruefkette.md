@@ -7,12 +7,12 @@ und eine abhakbare Prüfliste. Angelegt mit PK-M1; fortgeschrieben mit PK-01.
 ## 0. Was nicht geprüft werden konnte
 
 **Stand nach den App-Probeläufen (29.09.2026).** Z14 ist eingetragen.
-**P-PK-40 ist erledigt**, der Garmin-Lauf grün. **P-PK-39 war rot** —
-nicht am Schlüssel, sondern am Auslesen des Zertifikats (F-PK-56); die
-Berichtigung liegt im Nachtrag, der Lauf ist nach dessen Merge neu zu
-fahren. Was die Ausgabe von `apksigner` auf dem Läufer war, ist nicht
-bekannt: Das Skript hat sie geschluckt, und die Arbeitsumgebung hat nur
-die Build-Tools 36.0.0, an denen es liest (5t).
+**P-PK-40 ist erledigt**, der Garmin-Lauf grün. **P-PK-39 war zweimal
+rot** — nicht am Schlüssel, sondern am Auslesen des Zertifikats (F-PK-56).
+Der zweite Lauf hat die Ursache gezeigt: Die Build-Tools 37.0.0 des
+Läufers schreiben „V3.0 Signer:", eine dritte Form. **Das Zertifikat ist
+das richtige** (`078c7940…82ad64`). Der zweite Nachtrag liest die Form;
+der Lauf ist nach dessen Merge neu zu fahren (5t).
 
 **Stand nach dem Merge von #96 (29.09.2026).** Der erste Lauf der
 Fassung aus PK-06 bis PK-08 ist grün (5s): **P-PK-19, -21 und -38 sind
@@ -128,7 +128,7 @@ dem PR. Die sechs PK-05-Zeilen stehen oben; darunter der Stand nach PK-03.
 | P-PK-35 | Nach einem fremden Merge: der Weg aus `Pruefablauf.md` 5.3 (E-PK-42) | wenn ein anderer PR vor diesem gemergt wird: örtlich `git merge --no-commit origin/main`, Prüfstand, Merge-Commit mit Bericht | Stufe 1 grün auf dem Merge-Commit | rot mit „Baum-Hash passt nicht" — dann misst der Prüfstand im Merge-Zustand nicht den Baum, den der Commit bekommt | **erledigt, auch auf GitHub (abgeglichen in PK-07, 29.09.2026)** — örtlich 23.09.2026 (`5671d24`, Baum = Commit, F-PK-39). Auf GitHub: `71b1c0d` (AR nimmt P5c auf, Baum `8fe7948` = Bericht), Lauf 36224991494 Stufe 1 grün, Gegenlesung **ausgeführt**; ebenso `b671c6f` (BV). **Gegenfall:** „Update branch" ergab `bdf1787`, Lauf 36232768246 **rot** an der Gegenlesung; der Bericht-Commit `b4f2a6c` auf demselben Baum machte Lauf 36233149759 grün — E-PK-42 wirkt in beide Richtungen |
 | P-PK-37 | Stufe 2 mit falschem `STAGING_PASS` ist rot, schnell und mit Grund (Abnahme PK-06) | Umgebung `staging` → Geheimnis `STAGING_PASS` vorübergehend auf einen falschen Wert, Actions → „Auslieferung" auf `main` neu starten (*Re-run*), danach den Wert zurücksetzen und noch einmal starten | Job „Prüfung Stufe 2" rot **innerhalb einer Minute** nach seinem Start, der erste rote Schritt ist „Kreislauf edbak gegen Staging" und nennt die gescheiterte Anmeldung | rot erst nach Minuten (dann hängt er irgendwo), rot mit einer Playwright- oder Python-Meldung ohne Wort zur Anmeldung, oder gar grün | **offen** — Betreiberin |
 | P-PK-38 | Die Integritätswache springt nach einem Auslieferungslauf der gekürzten Fassung an (PK-06) | nach dem Merge von PK-06: Actions → „Integritaetswache", Ereignis `workflow_run` zum Lauf von `auslieferung.yml` | ein Lauf der Wache, ausgelöst **durch** den Auslieferungslauf, grün (Vergleich gegen den Zeiger) | kein Lauf mit Ereignis `workflow_run` — dann hängt der Name nicht mehr | **erledigt 29.09.2026** — Integritätswache Lauf 143 (Run 36597255588), Ereignis `workflow_run`, ausgelöst durch Lauf 101 auf `3476e27`, grün in rund einer Minute |
-| P-PK-39 | Android-Probelauf mit dem echten Schlüssel (PK-08) | nach Z14: Actions → „Auslieferung" → *Run workflow* auf `main`, `app_probelauf: android`, Freigabe erteilen | Job „Android-Auslieferung" grün; im Protokoll zweimal `Zertifikat 078c…ad64`; in der Zusammenfassung zwei Tabellen „PROBELAUF, nichts abgelegt" mit Datei, SHA-256 und dem, was gelöscht würde; **kein** Job `staging` im Lauf | rot „trägt Zertifikat … erwartet …" (dann liegt ein anderer Schlüssel im Geheimnis oder die Variable ist falsch) · rot an einer fehlenden Variable · ein Job `staging` läuft mit (dann ist dessen Bedingung kaputt) | **rot am 29.09.2026** (Lauf 103, Run 36620187709): Z14 steht, Freigabe erteilt, kein Staging-Job im Lauf, Gradle grün in 3:36 — dann „`***-0.17.0.apk` trägt Zertifikat — nicht lesbar —" (F-PK-56). Berichtigt mit dem Nachtrag nach #97; **neu zu fahren** nach dessen Merge. Scheitert er wieder, steht jetzt die Ausgabe von `apksigner` im Protokoll |
+| P-PK-39 | Android-Probelauf mit dem echten Schlüssel (PK-08) | nach Z14: Actions → „Auslieferung" → *Run workflow* auf `main`, `app_probelauf: android`, Freigabe erteilen | Job „Android-Auslieferung" grün; im Protokoll zweimal `Zertifikat 078c…ad64`; in der Zusammenfassung zwei Tabellen „PROBELAUF, nichts abgelegt" mit Datei, SHA-256 und dem, was gelöscht würde; **kein** Job `staging` im Lauf | rot „trägt Zertifikat … erwartet …" (dann liegt ein anderer Schlüssel im Geheimnis oder die Variable ist falsch) · rot an einer fehlenden Variable · ein Job `staging` läuft mit (dann ist dessen Bedingung kaputt) | **zweimal rot, Ursache jetzt bekannt** — Lauf 103 (Run 36620187709) und Lauf 105 (Run 36622543711, nach #98): gebaut und signiert, dann „Zertifikat — nicht lesbar —". Lauf 105 zeigt die Ausgabe: Der Läufer nimmt die **Build-Tools 37.0.0**, deren `apksigner` schreibt „`V3.0 Signer: certificate SHA-256 digest: 078c7940…82ad64`" — **das richtige Zertifikat**, nur in einer dritten Form, die die Leseregel nicht kannte (F-PK-56). Berichtigt im zweiten Nachtrag; **neu zu fahren** nach dessen Merge |
 | P-PK-40 | Uhr-Probelauf (PK-08) | Actions → „Auslieferung" → *Run workflow* auf `main`, `app_probelauf: uhr`, Freigabe erteilen | Job „Uhr-Auslieferung (Garmin)" grün; Artefakt `nadoku-main` mit `nadoku-3.1.0.iq` (rund 6,6 MB) zum Herunterladen | rot beim SDK-Aufbau (Gerätedateien, `CIQ_GERAETE_URL`) · rot „kein Connect-IQ-Paket" · kein Artefakt | **erledigt 29.09.2026** — Lauf 104 (Run 36620256424): Freigabe erteilt, SDK und alle Gerätedateien in 66 s, Job grün; Artefakt `nadoku-main` (ID 11057973691, **6 601 708 Byte**) mit `nadoku-3.1.0.iq`, SHA-256 `acf0e97e3ced0fa9f3ac8abe47336d388cf2d28bcc9d4b5d2e4ff0074dacb6d8`. Hinweis im Lauf: `actions/upload-artifact` an der alten SHA läuft auf Node 20, GitHub zwingt es auf Node 24 (F-PK-57) |
 | P-PK-41 | Erster Android-Tag (PK-08) | Tag `android-v0.17.0` auf `main` setzen und pushen, Freigabe erteilen; danach Geräte-Reiter (Einstellungen → Geräte, Fach „Ohne Play Store") ansehen; auf dem S24 die Handy-Datei über eine **vorhandene** Installation installieren | Lauf grün; im Fach genau `nadoku-0.17.0.apk` und `nadoku-uhr-0.17.0.apk`, jede mit **derselben SHA-256** wie in der Zusammenfassung des Laufs; ältere Fassungen sind fort; Android installiert **als Update**, die App behält ihre Kopplung | eine SHA-256 weicht ab · eine ältere Fassung liegt noch da (dann meldet der Lauf rot „ließen sich nicht löschen") · Android verlangt Deinstallation oder meldet einen Paketkonflikt (anderes Zertifikat) | **offen** — Betreiberin |
 | P-PK-42 | Erstes Garmin-Paket (PK-08) | Tag `uhr-v3.1.0` setzen und pushen, Freigabe erteilen, Artefakt herunterladen, im Connect-IQ-Entwicklerportal hochladen | der Store nimmt das Paket an; die App erscheint mit Fassung 3.1.0 | der Store lehnt den Schlüssel ab (dann gehört das Paket zu einem anderen Entwicklerschlüssel als ein früherer Upload) | **offen** — Betreiberin |
@@ -1883,6 +1883,37 @@ Protokoll (öffentlich wie das Zertifikat selbst). Gemessen:
   Variable **rot**, die Ausgabe von `apksigner` steht darunter, der
   Ausgabeordner ist leer.
 
+**Der zweite Lauf, nach #98 (Lauf 105, Run 36622543711, `fed2a47`).**
+Gradle grün in 3:15, dann wieder „nicht lesbar" — aber diesmal mit der
+Ausgabe, die #98 ins Protokoll bringt:
+
+```
+  Build-Tools 37.0.0
+  apksigner 37.0.0 verify --print-certs:
+    V3.0 Signer: certificate DN: CN=NAdoku, OU=Einsatzdokumentation Notarzt, O=Gen-EM, C=DE
+    V3.0 Signer: certificate SHA-256 digest: 078c7940bd294e43b67f24e720c75a939a534d9c20a66413de821cf65a82ad64
+```
+
+Damit ist zweierlei belegt. **Das Geheimnis trägt den App-Signaturschlüssel**
+— die Prüfsumme beginnt mit `078c` und endet mit `ad64`, wie dokumentiert
+(E-PK-53); ein falscher Schlüssel war es nie. Und **die Ursache ist die
+Ausgabeform:** Die Build-Tools 37 schreiben „V3.0 Signer:", die Leseregel
+aus #98 kannte „Signer #1" und „Signer (minSdkVersion=…)". #98 hat die
+Ursache nicht behoben, aber sichtbar gemacht — dafür war es gebaut.
+
+**Berichtigt (zweiter Nachtrag):** Die Leseregel nimmt die drei Formen
+(`^(V[0-9]+(\.[0-9]+)? )?Signer( #n| (…))?:? certificate SHA-256 digest:`),
+eine Zeile „Source Stamp Signer" zählt nicht. Gemessen:
+
+- Selbstprobe **21 → 23 / 0**; neu: die Form der Build-Tools 37 und der
+  Quellstempel.
+- **Die echte Ausgabe aus Lauf 105 gegen beide Regeln:** die alte liest
+  nichts („passt NICHT"), die neue liest `078c7940…82ad64` und hält es gegen
+  den vollen Wert in der Schreibweise der Play Console (mit Doppelpunkten,
+  Großbuchstaben): **passt**.
+- Der Android-Weg örtlich (Build-Tools 36.0.0, Form „Signer #1") weiter
+  **grün**.
+
 **F-PK-57 — zwei Beobachtungen am Rand.** Der Name `nadoku` erscheint im
 Protokoll des Android-Jobs als `***`: `APK_SCHLUESSEL_NAME` ist ein
 Geheimnis mit dem Wert `nadoku`, und GitHub maskiert ihn überall — auch im
@@ -1982,7 +2013,7 @@ veröffentlichtes Kennwort.
 | **F-PK-53** | **Ein Tag, dessen Produktionsjob neu gestartet wird, legt auf Staging zwei Rückfallstände an.** Der Job `Rückfallstand (Staging)` hängt nicht am Tor: Bei M1 lief er in Versuch 1 grün, obwohl `produktion` am Tor scheiterte, und in Versuch 2 noch einmal (Lauf 35654132667). Bei Aufbewahrung 2 belegt ein Tag damit beide Plätze, und der Stand des vorigen Tags ist fort. | Nicht in PK behoben — PK ändert die Auslieferung nicht. Eingetragen bei Nr. 261 (die Aufbewahrung, Zuarbeit) und im Abgleich des Prüfdokuments Kette II, Punkt 26. |
 | **F-PK-54** | **Rahmenplan 6.1 führte zwei Tags als offen, die ausgeliefert waren.** „Tag `web-v21.1.3` setzen" und „Tag `web-v21.6.1` setzen" standen noch da; `web-v21.6.1` liegt seit dem 28.09.2026 auf `fc4253d` (Lauf 36428081295 grün), und der Zeiger `produktion` zeigt dorthin — er bewegt sich nur nach einem grünen Produktionsjob. | Mit dem Abschluss ausgetragen (Anlass 4 in `CLAUDE.md` 2: eine Zuarbeit ist erledigt); was davon übrig ist — `update.php` auf Produktiv —, steht in der Zeile zu #94. |
 | **F-PK-55** | **Der Statusblock des Konzepts sagte „Offen bleibt P-PK-11 zur Hälfte"**, die Prüfliste „beide erledigt 21.09.2026" mit Zahlen für beide Ausbaustufen. Der Satz stammte aus dem Stand vor dem Nachtrag. | Mit PK-07 berichtigt; die Prüfliste war richtig. |
-| **F-PK-56** | **Der Android-Probelauf war rot mit „Zertifikat nicht lesbar"** (Lauf 103), obwohl `apksigner sign` lief. `appbau.sh` hatte die Ausgabe von `apksigner verify` geschluckt, und die Leseregel hielt dieselbe Prüfsumme in zwei Zeilen für zwei Unterzeichner. | Leseregel auf „genau ein Wert", Ausgabe bei jedem Scheitern ins Protokoll; Selbstprobe 21 / 0, Gegenprobe 2 von 2; neu zu fahren (P-PK-39). |
+| **F-PK-56** | **Der Android-Probelauf war zweimal rot mit „Zertifikat nicht lesbar"** (Lauf 103 und 105), obwohl `apksigner sign` lief. `appbau.sh` hatte die Ausgabe von `apksigner verify` geschluckt; als sie sichtbar war (Lauf 105), zeigte sie die Ursache: Die Build-Tools 37.0.0 schreiben „V3.0 Signer:", die Leseregel kannte die Form nicht. Das Zertifikat war richtig (`078c7940…82ad64`). | #98: Ausgabe ins Protokoll, „genau ein Wert". Zweiter Nachtrag: die dritte Form, Selbstprobe 23 / 0, die echte Ausgabe aus Lauf 105 gegen beide Regeln (alt leer, neu passt); neu zu fahren (P-PK-39). |
 | **F-PK-57** | **`nadoku` erscheint im Android-Protokoll als `***`**, weil `APK_SCHLUESSEL_NAME` ein Geheimnis mit diesem Wert ist; dazu die Node-20-Warnung von `actions/upload-artifact`. | Nicht geändert — der Aliasname könnte eine Variable sein (Betreiberin). |
 
 ## 7. Entscheidungen der Umsetzung
