@@ -22,7 +22,7 @@ derselbe Export in Sekunden gescheitert. Nicht die Kette war falsch — der
 ## 0. Was schon gilt und was noch entsteht
 
 Dieses Dokument beschreibt die Prüfkette vollständig. **Gebaut sind die
-Stationen A, B und C**; Staging folgt mit PK-06. Die
+Stationen A bis E**, seit PK-08 samt der App-Auslieferung. Die
 Spalte **Stand** sagt bei jedem Stück, woran man ist; ein Stück ohne „gilt"
 oder „gebaut" ist eine Vorgabe an das genannte Paket, keine Beschreibung der
 Gegenwart. Wer das verwechselt, meldet eine Prüfung als gefahren, die es
@@ -42,10 +42,9 @@ nicht gibt.
 | Der Prüfbericht (5) | **gebaut mit PK-03**, seit PK-05 Selbstprobe 13 Lagen / 0 Fehlschläge |
 | Seine Gegenlesung im Tor (5.1) | **gebaut mit PK-05** |
 | Station C in der beschriebenen Form (2) | **gebaut mit PK-05** — die Schemaprobe wird Pflichtprüfung, sobald das Ruleset es trägt (E-PK-47) |
-| Station D in der beschriebenen Form (2) | entsteht mit **PK-06** |
+| Station D in der beschriebenen Form (2) | **gebaut mit PK-06** (Vorgriff PR #72 am 21.09.2026, Rest 29.09.2026) |
 
-Bis dahin gilt für Station D, was in `.github/workflows/auslieferung.yml`
-steht; Abschnitt 2.4 nennt den heutigen Umfang mit Zahl.
+Abschnitt 2.4 nennt den Umfang von Station D mit Zahl.
 
 ---
 
@@ -207,10 +206,10 @@ Pflichtprüfung still ab.
 ### 2.4 Station D — Staging
 
 Nach dem Merge, auf `main`. Die Auslieferung selbst bleibt, wie Kette II sie
-gebaut hat (`ausliefern-lauf.yml`, **17** Schritte, gemessen 49 s); PK fasst
-den Transport nicht an. Verschlankt wird, was danach misst.
+gebaut hat (`ausliefern-lauf.yml`, **17** Schritte, gemessen 49 s am
+21.09.2026 und 35 s an Lauf 99); PK fasst den Transport nicht an. Verschlankt wird, was danach misst.
 
-**Drei Schritte sollen bleiben**, weil nur die echte Anlage sie beantwortet:
+**Drei Schritte bleiben**, weil nur die echte Anlage sie beantwortet:
 antwortet `login.php` wie eine eingerichtete Installation, sind Punktdateien
 gesperrt und ist `.well-known` offen (beides Apache des Hosters), und läuft
 **ein** Kreislauf `edbak` durch — als Plattformprobe auf PHP 8.3 beim
@@ -219,10 +218,14 @@ Hoster. Dazu ein benannter leerer Platz für Backlog Nr. 234 (8).
 die Anlage die Signatur des Rückwegs prüft — über `openssl` oder in reinem
 PHP —, zeigt nur der Hoster. Sie läuft nach dem Kreislauf, im selben Job.
 
-**Heutiger Umfang:** Der Job heißt „Prüfung Stufe 2", hat **6** Schritte und
-eine Zeitgrenze von 45 Minuten; gemessen 16 min je Lauf. Bilderlauf und
-Kreislauf `csv` laufen dort heute mit und wandern mit **PK-06** nach
-Station B.
+**Heutiger Umfang** (am Quelltext gezählt 29.09.2026, PK-06): Der Job heißt
+„Prüfung Stufe 2", hat **5** Schritte (Auschecken, Antwortprobe,
+Punktdateien, Kreislauf `edbak`, Rückwegprobe) und eine Zeitgrenze von
+20 Minuten; ohne Aktions-Cache (E-PK-54). **Gemessen an Lauf 99** (28.09.2026,
+`fc4253d`): Staging 35 s, Stufe 2 **3:16** — Kreislauf samt Installation
+44 s, Rückwegprobe 2:26. Bilderlauf und Kreislauf `csv` laufen seit dem
+21.09.2026 in Station B. Der Platz für Nr. 234 ist ein benannter Kommentar
+im Job `stufe2`, kein Schritt (8).
 
 > **Staging belegt kein Plattformverhalten von Produktiv.** Seit dem
 > 20.09.2026 liegt es bei einem anderen Hoster (E-KH-04) und auf einer
@@ -245,8 +248,13 @@ signiert, hinter derselben Pflichtfreigabe, mit Schlüsseln, die als
 Geheimnisse der Umgebung `produktion` liegen. Der Grund ist derselbe, aus
 dem die Uhr keine Zugangsdaten kennt (`CLAUDE.md` 4): Ein Schlüssel, dessen
 Verlust jede spätere Fassung zu einer anderen Anwendung macht, gehört nicht
-dorthin, wo bei jedem Bau fremder Code mitläuft. Das entsteht mit **PK-08**
-und hat eine eigene Freigabe.
+dorthin, wo bei jedem Bau fremder Code mitläuft. **Gebaut mit PK-08**
+(Jobs `android` und `uhr`, `tools/kette/appbau.sh` und `apkablage.py`,
+`Technik.md` 4.97g). **Was die Kette dort prüft:** Tag gegen Fassung, das
+Zertifikat gegen `APK_ZERTIFIKAT_SHA256` und die Enden `078c…ad64`, beide
+APKs gleich signiert, Paketname und `versionName`, die abgelegte Datei
+Byte für Byte gegen die gebaute. **Was sie nicht prüft:** ob die App
+funktioniert — das sind Station B (Prüfstand, Emulator) und der Gerätetest.
 
 ---
 
@@ -1015,7 +1023,7 @@ Prüfung sucht, die es nicht gibt, findet sie hier zusammen mit dem Grund.
 
 | Was | Stand |
 |---|---|
-| **Deploy, Anmeldung, `update.php` in einem Zug** | Kein Prüfmittel fährt diesen Weg. Backlog **Nr. 234**. PK-06 legt den benannten Platz dafür in Station D an und **füllt ihn nicht** — ein leerer Platz mit Namen ist ehrlicher als ein Schritt, der sich selbst überspringt. |
+| **Deploy, Anmeldung, `update.php` in einem Zug** | Kein Prüfmittel fährt diesen Weg. Backlog **Nr. 234**. Seit PK-06 steht der benannte Platz dafür in Station D — ein Kommentar im Job `stufe2` von `auslieferung.yml`, **nicht gefüllt**: Ein leerer Platz mit Namen ist ehrlicher als ein Schritt, der sich selbst überspringt. |
 | **Echte Geräte** | Der Uhr-Simulator und der Android-Emulator sind Rechenmodelle. Der echte Data Layer, der echte Schlüsselspeicher und das Eingabeverhalten eines gekoppelten Geräts sind darin nicht enthalten; was das im Einzelnen heißt, steht in `android/LIESMICH.md` und in `Geraete-Eingabe.md`. |
 | **Echte Sicherungsziele** | Ein Ziel, das wirklich außer Haus schreibt, wird nicht angefahren. Geprüft wird die Bibliothek, nicht die Gegenstelle. |
 | **Mailversand** | Die Arbeitsumgebung erreicht nur Port 443 — kein SMTP, kein IMAP. Geprüft wird die Warteschlange und der Katalog; ob eine Nachricht ankommt, sieht nur die BetreiberIn. |

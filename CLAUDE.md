@@ -84,7 +84,7 @@ Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 **Seit Web 20.4.0 gibt es zwei Wege** (P5a/AP1, R67; Einzelheiten in
 `docs/Technik.md` 6). **Die Kette liegt seit Kette II/AP5 in zwei Dateien:**
 `.github/workflows/auslieferung.yml` sagt, **wann** ausgeliefert wird (die
-Auslöser, die vier Jobs, die Freigabe), und
+Auslöser, die Jobs, die Freigabe), und
 `.github/workflows/ausliefern-lauf.yml` sagt, **was dabei geschieht** — die
 Schrittfolge, einmal, für beide Umgebungen. Wer einen Schritt ändert, ändert
 ihn dort und damit für beide; das ist der Zweck (E-KH-14, -17).
@@ -93,6 +93,12 @@ ihn dort und damit für beide; das ist der Zweck (E-KH-14, -17).
   (`staging-nadoku.gen-em.org`). Kein Produktivserver.
 - **Tag `web-vX.Y.Z`** → nach **Pflichtfreigabe durch die Betreiberin**
   (GitHub-Umgebung `produktion`) und nach dem **Backup-Tor** auf Produktiv.
+- **Tag `android-vX.Y.Z`** → nach derselben Pflichtfreigabe: bauen, mit dem
+  App-Signaturschlüssel signieren, beide APKs nach `server/apk/` auf
+  Produktiv; dort bleibt je Gerät nur die neueste Fassung. **Tag
+  `uhr-vX.Y.Z`** → das Garmin-Paket als Artefakt des Laufs. Der Tag muss zur
+  Fassung in der Datei passen (seit PK-08, E-PK-53, -59, -60; `docs/Technik.md`
+  4.97g).
 
 **Staging liegt seit dem 20.09.2026 bei einem anderen Hoster als Produktiv**
 (lima-city, `staging-nadoku.gen-em.org`; E-KH-04). Vorher lag es im selben
@@ -165,9 +171,10 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   ab. Ein Prüfschritt, der sich selbst überspringt, meldet grün, ohne
   gemessen zu haben.
 - **Jede fremde `uses:`-Zeile hängt an einer 40-stelligen Commit-SHA**
-  (E-KH-10), die Version als Kommentar daneben — **zehn sind es** (zwölf bis
-  PK-05; mit dem Android-Bau sind `actions/setup-java` und
-  `actions/upload-artifact` aus `pruefung.yml` gegangen). Die zwei **lokalen** (`./.github/workflows/…`)
+  (E-KH-10), die Version als Kommentar daneben — **vierzehn sind es** (seit
+  PK-08: `actions/setup-java` und `actions/upload-artifact` sind mit den
+  App-Jobs zurück, an denselben SHAs wie bis PK-05, dazu je ein
+  `actions/checkout`; von PK-05 bis PK-08 waren es zehn). Die zwei **lokalen** (`./.github/workflows/…`)
   tragen keine und können es nicht: Ein lokaler Pfad nimmt keinen Ref und
   läuft immer auf dem Commit des Aufrufers. Wer eine Aktion aktualisiert,
   tauscht SHA **und** Kommentar. **Die Zahl ist kein Prüfwert, sondern eine
@@ -181,9 +188,11 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   `server/.sitzungen/` (die PHP-Sitzungsdateien, Schritt 16, E-SA-05) liegen
   nur auf dem Server. Sie stehen in `.gitignore` **und** in der
   Ausnahmeliste des FTPS-Schritts — beides muss so bleiben.
-  **Acht Pfade sind es, und die Zahl ist der Prüfwert.** Jeder steht dort
-  zweimal, als Datei- und als Verzeichnismuster (`sicherungen/**` und
-  `sicherungen/`), weil die Aktion beides getrennt prüft.
+  **Acht Pfade sind es, und die Zahl ist der Prüfwert.** Die drei
+  Verzeichnisse stehen dort zweimal, als Datei- und als Verzeichnismuster
+  (`sicherungen/**` und `sicherungen/`), weil die Aktion beides getrennt
+  prüft; die fünf Dateien je einmal. *(Bis PK-06 stand hier „jeder steht
+  zweimal" — das galt nur für die Verzeichnisse, F-PK-11.)*
   **Seit Kette II/AP5 steht die Liste EINMAL**, in
   `.github/workflows/ausliefern-lauf.yml` (E-KH-20 (1)). Bis dahin stand sie
   zweimal, wortgleich, je einmal für Staging und Produktiv — und zwei

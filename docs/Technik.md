@@ -667,7 +667,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      laeuft in Stufe 1 UND vor dem Tor. Dazu seit
 │   │                      BR-03 baumsuche.py: die EINE Suche nach gruenen
 │   │                      Stufe-1-Laeufen mit demselben Baum, fuer
-│   │                      „Schon gemessen?" und das Produktionstor (E-BR-09)
+│   │                      „Schon gemessen?" und das Produktionstor (E-BR-09).
+│   │                      Seit PK-08 appbau.sh (App bauen und signieren,
+│   │                      Android ueber apksigner nach dem Bau) und
+│   │                      apkablage.py (APK nach server/apk/, aeltere
+│   │                      Fassungen erst nach dem geprueften Ablegen weg)
 │   ├── kettenaufrufe/     haelt JEDEN Werkzeugaufruf der Arbeitslaeufe und
 │   │                      von pruefablauf.json gegen die tatsaechliche
 │   │                      Schnittstelle des aufgerufenen Werkzeugs —
@@ -836,12 +840,76 @@ Daten erst nach Server-Bestätigung.
     │                      Prüfbericht gegen (PK-05)
     ├── auslieferung.yml   WANN ausgeliefert wird: Staging (Push auf main),
     │                      Stufe 2, Produktion (Tag, Pflichtfreigabe,
-    │                      Backup-Tor), Zeiger
+    │                      Backup-Tor), Zeiger; seit PK-08 Android und Uhr
+    │                      (Tag android-v… bzw. uhr-v…, 4.97g)
     ├── ausliefern-lauf.yml WAS dabei geschieht: die Schrittfolge, EINMAL,
     │                      für beide Umgebungen (Kette II/AP5, E-KH-14)
     └── integritaet.yml    die Wache — hängt am Anzeigenamen „Auslieferung"
                           (`deploy.yml` ist mit Web 20.4.0 gelöscht worden)
 ```
+
+### 2a Die Arbeitsumgebung — und was ihre Motoren messen
+
+**Was der Wegwerf-Container mitbringt, was nachgeholt wird, welche sieben
+Umgebungswerte er braucht und was er nicht kann, steht seit PK-01 in
+`Sandbox-Setup.md`** — dort und nur dort, samt der Frage, warum alle drei
+Engines dazugehören (1.1). **Welche Probe bei welcher Berührung und in
+welcher Stufe läuft, steht in `Pruefablauf.md` 3 und 4.** Hier bleibt, was
+die drei Prüfmittel mit Browser über ihre Motoren wissen müssen.
+
+*(Bis PK-07 stand dieser Abschnitt unter Abschnitt 4, zwischen 4.99 und
+4.99a — wer die Nummer las und in Abschnitt 2 suchte, fand nichts
+(F-PK-12). Die Tabelle darunter beschrieb bis dahin den Stand vor PK-04:
+eine Risikoliste im Bilderlauf und die Klickprobe.)*
+
+**Die drei Mittel wählen den Motor selbst** (`--motor
+chromium|firefox|webkit`, Vorgabe Chromium, seit AP3b der Mockup-Runde).
+Motorwahl und Firefox-Voreinstellung stehen **an einer Stelle**,
+`tools/motor.mjs`. **Der Prüfstand fährt alle drei in Chromium**; Firefox
+und WebKit fährt von Hand, wer eine Regel ändert, die ein Motor nicht können
+könnte. Die Hauptstufe soll den Bilderlauf in allen drei Engines fahren —
+gebaut ist das nicht (Backlog Nr. 300).
+
+| Mittel | im Prüfstand | dreifach von Hand | warum |
+|---|---|---|---|
+| **Stilvergleich** | Chromium, wenn `style.css` berührt ist (`gegen.sh`) | bei jeder neuen Regel, deren Unterstützung zweifelhaft ist; 14–18 s je Motor | Berechnete Stile sind genau die Frage, bei der Motoren auseinandergehen. Die Aussage ist die **Übereinstimmung** der drei Zahlen, nicht die Zahl: Der Vergleich misst alt gegen neu *innerhalb* eines Motors, also meldet ein Motor, der eine neue Regel nicht kann, **weniger** Abweichungen. |
+| **Bilderlauf** | Chromium, nach Stufe (`--stufe klein`: drei Breiten, `neben`: zehn; E-PK-14 — die Risikoliste ist entfallen) | über die berührten Seiten (`--nur`) | Darstellung ist motorabhängig; dreimal voll wären rund 26 Minuten. |
+| **Bedienprobe** (bis PK-04 „Klickprobe") | Chromium | bei Dialogen, Blättern, Übergängen, Fokus, `<details>`, Zeigerereignissen — **und nur mit frisch eingespieltem Referenzbestand zwischen den Läufen**; ohne ihn meldeten Lauf 2 und 3 falsche Fehlschläge (gemessen 14.09.2026: 40 / 38 / 36 von 40) | Sie misst Wege, nicht Darstellung — JS-Semantik ist über Motoren hinweg weitgehend dieselbe. |
+
+**Zwei Dinge, die jeder Motorlauf wissen muss**, beide gemessen und beide in
+`tools/motor.mjs` begründet: Headless Firefox meldet ohne Voreinstellung
+„kein Zeiger, kein Hover" und misst damit den ganzen Media-Block der
+36-px-Bedienhöhe nicht (`ui.primaryPointerCapabilities` und
+`ui.allPointerCapabilities` auf `6`); und nur **Chromium** verliert die
+Eingabeart des Fingerlaufs am Vollseiten-Screenshot — Firefox und WebKit
+behalten sie, weshalb die CDP-Krücke dort weder nötig noch möglich ist.
+
+**Die vierte Zahl des Bilderlaufs: Karten außerhalb des Gerüsts** (seit Web 20.21.1,
+Backlog Nr. 225). Der Lauf zählt je Seite, wie viele `section.karte` bzw.
+`details.karte` **nicht** in `main.inhalt` hängen, und nennt sie beim Titel.
+
+Der Anlass war ein `ui_karte_ende()` zu viel auf der Profilseite: Es gab ein
+`</div></section>` ohne Gegenstück aus, der Parser nahm für das `</div>` das
+nächste offene — `div.rahmen` — und schloss damit `form`, `main.inhalt` und
+`rahmen` mitten auf der Seite. Vier Karten lagen danach direkt am `body`, über
+die volle Fensterbreite, unter der Seitenleiste hindurch. **Zehn Tage lang.**
+
+**Warum die drei älteren Zahlen das nicht sehen konnten:** `scrollWidth` blieb
+gleich `innerWidth` — es lief nichts über, es lag nur falsch. Die Konsole blieb
+still. Die Knopfhöhen stimmten. Der Lauf meldete in allen drei Engines drei
+Nullen neben einer kaputten Seite. Gemessene Gegenprobe mit wieder eingebautem
+Fehler: „Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0" **und**
+„6 Karten geprüft · 4 außerhalb von main.inhalt".
+
+Die Zahl nennt, was sie gemessen hat („n geprüft · m außerhalb") und nicht nur
+das Ergebnis — eine Seite ohne Karten meldete sonst dieselbe Null wie eine
+geprüfte.
+
+**Ein Satz von gestern ist zurückgenommen:** Firefox meldet die
+`latin-ext`-Schriftabrufe **nicht** als Konsolenfehler. Die Abbrüche
+(`NS_BINDING_ABORTED`) stammten von einem Messskript, das schneller
+weiterblätterte als die Schriften luden; im echten Lauf melden alle drei
+Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 
 ## 3. Datenmodell (MySQL)
 
@@ -4954,7 +5022,46 @@ Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
 `sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
 Datei- und Verzeichnismuster getrennt.
 
-Hochgeladen wird per FTPS durch die BetreiberIn.
+**Abgelegt wird seit PK-08 von der Kette** (E-PK-23, Job `android` in
+`.github/workflows/auslieferung.yml`); bis dahin lud die BetreiberIn per FTPS
+hoch. Der Weg:
+
+1. **Tag `android-vX.Y.Z`** — er muss zu `android/version.properties` passen,
+   sonst ist der Lauf rot, bevor gebaut wird (E-PK-60). Danach die
+   **Pflichtfreigabe** der Umgebung `produktion`.
+2. **Bauen, dann signieren** (`tools/kette/appbau.sh`): Gradle baut Handy und
+   Wear OS **unsigniert**; signiert wird danach mit `apksigner`, außerhalb von
+   Gradle, damit fremder Build-Code den Schlüssel nie sieht (E-PK-63). Der
+   Schlüssel ist der **App-Signaturschlüssel** (Zertifikat `078c…ad64`,
+   E-PK-53) — derselbe, den Play App Signing führt; nur so geht später ein
+   Update von der Seitenladung auf die Play-Fassung ohne Neuinstallation.
+   Geprüft wird: genau ein Unterzeichner, Zertifikat gleich
+   `APK_ZERTIFIKAT_SHA256` **und** mit den dokumentierten Enden, beide APKs
+   gleich signiert (der Data Layer verlangt es, E-S4-01), Paketname und
+   `versionName`.
+3. **Ablegen** (`tools/kette/apkablage.py`): `nadoku-X.Y.Z.apk` und
+   `nadoku-uhr-X.Y.Z.apk` (E-PK-58) je als `.teil` hochladen, zurückholen,
+   SHA-256 vergleichen, umbenennen — **und erst dann** ältere Fassungen
+   desselben Musters löschen: **Im Ordner bleibt je Gerät nur die neueste**
+   (E-PK-59). Scheitert ein Schritt davor, wird nichts gelöscht. Die
+   SHA-256 steht in der Zusammenfassung des Laufs; die Karte auf dem
+   Geräte-Reiter muss dieselbe zeigen.
+
+**Der Preis von E-PK-53 und -59, benannt:** Der Schlüssel, den man nicht
+zurücksetzen kann, liegt als Geheimnis in der GitHub-Umgebung `produktion`
+(hinter der Pflichtfreigabe), und die Kette darf in `server/apk/` löschen —
+nur Namen der beiden Muster, nur nach dem geprüften Ablegen. Eine ältere
+Fassung ist danach nur noch über ihren Tag wiederzubekommen.
+
+**Ein Probelauf** (Actions → „Auslieferung" → *Run workflow*,
+`app_probelauf: android`) baut und signiert mit derselben Freigabe, legt
+aber nichts ab: Die Ablage listet den Ordner und nennt, was sie ablegen und
+löschen würde.
+
+**Die Garmin-Uhr** (Tag `uhr-vX.Y.Z`, Job `uhr`) baut mit `monkeyc -e` das
+Store-Paket `nadoku-X.Y.Z.iq`, signiert mit dem Connect-IQ-Entwicklerschlüssel
+(`UHR_ENTWICKLERSCHLUESSEL_B64`), und hängt es als **Artefakt** an den Lauf
+(90 Tage); in den Connect-IQ-Store lädt es die BetreiberIn von Hand (E-PK-61).
 
 #### Der Ordner selbst ist seit Web 15.6.0 gesperrt
 
@@ -5676,79 +5783,6 @@ die Kehrseite ist, dass er die Stärke prinzipiell nicht prüfen kann. Der
 Schutz gegen einen Angreifer mit Zugriff auf die Ablaufumgebung (Hoster,
 Datenbank, Protokolle) hängt damit allein an der Passwortwahl der Person. Das
 ist eine bewusste Entscheidung und gehört genau so dokumentiert.
-
-### 2a Die Arbeitsumgebung — und was ihre Motoren messen
-
-**Was der Wegwerf-Container mitbringt, was nachgeholt wird, welche sieben
-Umgebungswerte er braucht und was er nicht kann, steht seit PK-01 in
-`Sandbox-Setup.md`** — dort und nur dort. Hier stand es bis dahin; zwei
-Beschreibungen derselben Umgebung altern getrennt, und die eine hätte den
-Umbau der Beschaffung in PK-02 nicht mitbekommen.
-
-Was hier bleibt, ist die andere Frage: **wie oft welches Prüfmittel welche
-Engine fährt, und warum.**
-
-**Seit AP3b der Mockup-Runde fahren die drei Prüfmittel sie selbst**
-(`--motor chromium|firefox|webkit`, Vorgabe Chromium). Motorwahl und die
-nötige Firefox-Voreinstellung stehen **an einer Stelle**, `tools/motor.mjs`;
-Bilderlauf, Klickprobe und Stilvergleich holen sie dort. Wie oft welches
-Mittel dreifach fährt, ist nicht für alle gleich, und der Unterschied ist
-gemessen, nicht geschätzt:
-
-| Mittel | dreifach | Kosten je Motor | warum |
-|---|---|---|---|
-| **Stilvergleich** | **immer** | 14–18 s | Berechnete Stile sind genau die Frage, bei der Motoren auseinandergehen. Die Aussage ist die **Übereinstimmung** der drei Zahlen, nicht die Zahl: Der Vergleich misst alt gegen neu *innerhalb* eines Motors, also meldet ein Motor, der eine neue Regel nicht kann, **weniger** Abweichungen. |
-| **Bilderlauf** | **gestaffelt** | rund 9 min voll | Chromium voll; Firefox und WebKit über die berührten Seiten (`--nur`) plus `--risiko` — zehn Seiten mit motorempfindlichem CSS, die Liste samt Gründen im Kopf von `aufnehmen.mjs`. Dreimal voll wären 26 Minuten nach jedem Arbeitspaket. |
-| **Klickprobe** | **nach Bedarf** | rund 3,5 min | Sie misst Wege, nicht Darstellung — JS-Semantik ist über Motoren hinweg weitgehend dieselbe. Dreifach bei Dialogen, Blättern, Übergängen, Fokus, `<details>`, Zeigerereignissen. **Und nur mit frisch eingespieltem Referenzbestand zwischen den Läufen** (8 s); ohne ihn melden Lauf 2 und 3 falsche Fehlschläge, gemessen 40 / 38 / 36 von 40. |
-
-**Zwei Dinge, die jeder Motorlauf wissen muss**, beide gemessen und beide in
-`tools/motor.mjs` begründet: Headless Firefox meldet ohne Voreinstellung
-„kein Zeiger, kein Hover" und misst damit den ganzen Media-Block der
-36-px-Bedienhöhe nicht (`ui.primaryPointerCapabilities` und
-`ui.allPointerCapabilities` auf `6`); und nur **Chromium** verliert die
-Eingabeart des Fingerlaufs am Vollseiten-Screenshot — Firefox und WebKit
-behalten sie, weshalb die CDP-Krücke dort weder nötig noch möglich ist.
-
-**Der dreifache Lauf hat am ersten Tag zwei Befunde geliefert**, und beide
-wären sonst nicht aufgefallen: `import.php` lief bei 360 px **nur in WebKit**
-um 6 px über, weil WebKit den längsten Eintrag eines Auswahlfeldes in den
-Überlauf des Kastens rechnet (Nr. 185, behoben mit
-`select.feld-eingabe{contain:paint}`); und die Klickprobe maß die Drehung der
-Richtungspfeile mit `getScreenCTM()`, das in WebKit die CSS-Transformation
-eines HTML-Vorfahren nicht enthält — ein Fehler im Prüfmittel, der wie einer
-der Anwendung aussah (Nr. 186).
-
-**Die vierte Zahl: Karten ausserhalb des Gerüsts** (seit Web 20.21.1,
-Backlog Nr. 225). Der Lauf zählt je Seite, wie viele `section.karte` bzw.
-`details.karte` **nicht** in `main.inhalt` hängen, und nennt sie beim Titel.
-
-Der Anlass war ein `ui_karte_ende()` zu viel auf der Profilseite: Es gab ein
-`</div></section>` ohne Gegenstück aus, der Parser nahm für das `</div>` das
-nächste offene — `div.rahmen` — und schloss damit `form`, `main.inhalt` und
-`rahmen` mitten auf der Seite. Vier Karten lagen danach direkt am `body`, über
-die volle Fensterbreite, unter der Seitenleiste hindurch. **Zehn Tage lang.**
-
-**Warum die drei älteren Zahlen das nicht sehen konnten:** `scrollWidth` blieb
-gleich `innerWidth` — es lief nichts über, es lag nur falsch. Die Konsole blieb
-still. Die Knopfhöhen stimmten. Der Lauf meldete in allen drei Engines drei
-Nullen neben einer kaputten Seite. Gemessene Gegenprobe mit wieder eingebautem
-Fehler: „Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0" **und**
-„6 Karten geprüft · 4 außerhalb von main.inhalt".
-
-Die Zahl nennt, was sie gemessen hat („n geprüft · m außerhalb") und nicht nur
-das Ergebnis — eine Seite ohne Karten meldete sonst dieselbe Null wie eine
-geprüfte.
-
-**Ein Satz von gestern ist zurückgenommen:** Firefox meldet die
-`latin-ext`-Schriftabrufe **nicht** als Konsolenfehler. Die Abbrüche
-(`NS_BINDING_ABORTED`) stammten von einem Messskript, das schneller
-weiterblätterte als die Schriften luden; im echten Lauf melden alle drei
-Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
-
-
-*Die Staffelung dieser Tabelle ändert sich mit PK-04 (E-PK-14): Der
-Bilderlauf wird nach Stufen abgestuft, die von Hand gepflegte Risikoliste
-fällt. Bis dahin gilt sie wie beschrieben.*
 
 ### 4.99a Demo-Konto (ab Web 7.3.0)
 
@@ -9784,10 +9818,10 @@ Auslieferung von Uhr und Android.
 Ebenso bleibt der **Paketname** `org.genem.nadoku`: Er lässt sich nicht
 ändern, ohne installierte Apps zu brechen (der Bindestrich aus `gen-em.org`
 entfällt, weil ein Paketname keinen trägt — steht in
-`android/handy/build.gradle.kts`). Und `WACHE_BASIS` in
-`.github/workflows/integritaet.yml` ist die Adresse **dieser**
-Installation — Betriebskonfiguration der Auslieferungskette, keine Eigenschaft
-der Software.
+`android/handy/build.gradle.kts`). Und `WACHE_BASIS` — eine
+Repositoriums-Variable, die `.github/workflows/integritaet.yml` liest — ist die
+Adresse **dieser** Installation: Betriebskonfiguration der
+Auslieferungskette, keine Eigenschaft der Software.
 
 ### 5e Der Ratenschutz — Leiter, Schwellen, Verlangsamung, Mengenbremse, Sicherheitsseite (P5a/AP6–AP8)
 
@@ -10204,13 +10238,15 @@ E-P5a-10.
 | Push auf `main` | **Staging** | `staging` | Stufe 1 |
 | **Handlauf auf `hotfix/*`** (ab AP7) | **Staging** | `staging` | Stufe 1 |
 | Tag `web-vX.Y.Z` | **Produktiv** | `produktion` | Stufe 1, Stufe 2, Pflichtfreigabe, Backup-Tor, **Abstammung** |
+| Tag `android-vX.Y.Z` (seit PK-08) | `server/apk/` auf **Produktiv** | `produktion` | Pflichtfreigabe, Tag gegen Fassung, Zertifikat (4.97g) |
+| Tag `uhr-vX.Y.Z` (seit PK-08) | Artefakt des Laufs (Connect-IQ-Store von Hand) | `produktion` | Pflichtfreigabe, Tag gegen Fassung |
 
 Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
 | `pruefung.yml` | **Stufe 1** — jeder Pull Request, dazu jeder Push auf `main` (seit 21.09.2026; vorher jeder Push auf jedem Zweig); seit PK-05 die Gegenlesung des Prüfberichts (6.2) |
-| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger` |
+| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger`; seit PK-08 dazu `android` und `uhr`, je in eigener `concurrency`-Gruppe (ein Lauf, der auf die Freigabe wartet, belegt seine Gruppe) |
 | `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
 
@@ -10222,10 +10258,12 @@ Produktiv jedes Mal etwas, was vorher nirgends gelaufen war.** Genau das
 verbietet E-KH-17, und genau deshalb steht die Folge jetzt einmal:
 `auslieferung.yml` ruft sie zweimal auf und reicht `umgebung` durch.
 
-**Was die Umgebung noch trennt, ist klein und begründet sich selbst:** zwei
-Schritte (der Tag-Vergleich — Staging fährt von `main` und hat keinen Tag;
-und das Tor der grünen Läufe — es fragt, ob dieser Stand auf *Staging* grün
-war, und müsste auf Staging nach sich selbst fragen) und drei Werte
+**Was die Umgebung noch trennt, ist klein und begründet sich selbst:** vier
+Schritte laufen nur auf Produktiv — der Tag-Vergleich und die Fassung nach
+dem Abgleich (Staging fährt von `main` und hat keinen Tag), das Tor der
+grünen Läufe (es fragt, ob dieser Stand auf *Staging* grün war, und müsste
+auf Staging nach sich selbst fragen) und der Adressvergleich (`WACHE_BASIS`
+beschreibt Produktiv) — und drei Werte
 (Basisadresse, Zielpfad, Pfad der Zustandsdatei), die der **erste** Schritt
 des gemeinsamen Laufs bestimmt. Alles Übrige ist gleich.
 
@@ -10433,7 +10471,8 @@ Ein umbenannter Job hängt alle drei still ab.
 ### 6.3 Stufe 2 — was eine Installation braucht
 
 Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync, **drei Schritte**
-(seit dem 21.09.2026, Konzept PK, E-PK-01/E-PK-17): der Griff auf
+aus Konzept PK (seit dem 21.09.2026, E-PK-01/E-PK-17) und einer aus Konzept RW
+(unten, E-PK-55): der Griff auf
 `login.php`, die Punktdatei-Sperre und der Kreislauf edbak (`--frisch`, mit
 Job-Pause, 0 unerklärt). Das ist, was nur die echte Anlage zeigt —
 Hoster-PHP, Hoster-Datenbank, Hoster-Apache. Nr. 267 fiel genau dort: Der
@@ -10441,8 +10480,10 @@ Alias `AS manual` war auf MySQL 8.4.10 reserviert, und die Sandbox hatte bis
 dahin nur MariaDB gesehen. **Der Kreislauf** braucht ein **Prüfkonto auf
 Staging** (Umgebungsgeheimnisse `STAGING_KONTO`, `STAGING_PASS`, Variable
 `STAGING_URL`); fehlt es, ist der Lauf rot und sagt warum. Zeitgrenze des
-Jobs 20 Minuten; gemessen sind 1:56 für alles zusammen (Lauf 35639445224,
-Versuch 2, damals noch mit dem csv-Kreislauf).
+Jobs 20 Minuten, **kein Aktions-Cache** (E-PK-54: rund 30 s Installation
+gegen eine elfte Fremd-Aktion in einem Job mit Geheimnissen). **Gemessen an
+Lauf 99** (28.09.2026, `fc4253d`): der ganze Job 3:16, davon Kreislauf samt
+Installation 44 s und Rückwegprobe 2:26; der Staging-Abgleich davor 35 s.
 
 **Seit Web 20.45.0 ein vierter Schritt: die Rückwegprobe gegen Staging**
 (Konzept RW, E-RW-11, -12; `tools/proben/rueckweg/probe.mjs` mit der Adresse
@@ -10453,7 +10494,12 @@ legt zwei Wegwerfkonten `umlauf-rueckweg…` an (NutzerIn und BetreiberIn,
 Wiederherstellungsschlüssel zurück und löscht die Konten wieder. Sie läuft
 **nach** dem Kreislauf und benutzt dessen Installationen (Playwright,
 Chromium, `cryptography`); fehlt `STAGING_TOTP` oder das Prüfkonto, ist der
-Schritt rot. **Gemessen ist er erst nach dem Merge** (P-RW-02).
+Schritt rot. Seit dem Merge läuft er grün mit (Lauf 99: 2:26).
+
+**Ein Platz ist benannt und leer: Nr. 234** (E-PK-21) — der Weg „Deploy,
+Anmeldung, `update.php`" in einem Zug. Er steht als Kommentar im Job
+`stufe2`, nicht als Schritt: Ein Schritt, der sich selbst überspringt, meldete
+grün, ohne gemessen zu haben (`Pruefablauf.md` 8).
 
 **Bis zum 21.09.2026 liefen hier auch der csv-Kreislauf und der Bilderlauf**
 (62 Seiten in acht Breiten). Beide messen die Anwendung, nicht die Anlage,
@@ -10773,8 +10819,8 @@ sondern an den **Umgebungen**:
 | Ort | Geheimnisse | Variablen |
 |---|---|---|
 | Umgebung `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
-| Umgebung `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL` |
-| Repositorium | `CIQ_GERAETE_URL` — seit PK-05 von keinem Arbeitslauf gelesen; bleibt bis PK-08 (E-PK-48) | `WACHE_BASIS` |
+| Umgebung `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN`; seit PK-08 die fünf Schlüsselwerte `APK_SPEICHER_B64`, `APK_SPEICHER_PASSWORT`, `APK_SCHLUESSEL_NAME`, `APK_SCHLUESSEL_PASSWORT`, `UHR_ENTWICKLERSCHLUESSEL_B64` (Zuarbeit Z6 des Konzepts PK) | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL`; seit PK-08 `APK_ZERTIFIKAT_SHA256` (der volle SHA-256 des App-Signaturzertifikats `078c…ad64` — öffentlich, deshalb Variable) |
+| Repositorium | `CIQ_GERAETE_URL` — von PK-05 bis PK-08 von keinem Arbeitslauf gelesen, seither vom Job `uhr` (E-PK-48) | `WACHE_BASIS` |
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
 
