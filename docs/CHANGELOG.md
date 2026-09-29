@@ -14,6 +14,136 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.12.0] — 2026-09-29
+
+Schritt 18, Sicherheitsrunde II, Paket SR-03, **der Serverschlüssel
+wechselt als Vorgang**. **Neben** — kein Schema, keine Vertragsänderung;
+nach dem Deploy ist nichts zu tun. `config.php` kennt einen Eintrag mehr,
+`server_key_alt`, und der steht nur während eines Wechsels da.
+
+### Neu
+
+- **„Serverschlüssel wechseln"** unter Betrieb → Servereinstellungen, Karte
+  „Schlüssel des Servers" (Nr. 247, E-SR-09). Bis hierher gab es keinen
+  Wechsel: Wer `server_key` von Hand änderte, machte jedes versiegelte Stück
+  stumm — die Zugänge der Backup-Ziele, die Zweitfaktor-Geheimnisse, die
+  Konto-Backups samt Begleitdatei, die Archive des Protokolls. Und wer den
+  Verdacht hatte, das Blatt sei in falsche Hände gekommen, hatte keinen
+  Weg außer diesem. Jetzt bleibt der bisherige als `server_key_alt` neben
+  dem neuen stehen, `sk_oeffnen()` versucht erst den neuen, dann den
+  bisherigen, und versiegelt wird ab dem ersten Augenblick mit dem neuen.
+- **Der Job `schluesselwechsel` hüllt in Häppchen um**, was der Server
+  erreicht — vier Zwecke in fester Reihenfolge, erst die Zeilen, dann die
+  Dateien —, und **weist danach jedes Stück mit dem neuen nach**, in einem
+  zweiten Durchgang, der nichts schreibt. Liegt dort noch etwas unter dem
+  bisherigen (etwa ein Ziel, das jemand mitten im Umhüllen neu gespeichert
+  hat), beginnt er von vorn. Der Zustand ist ein Zeiger, keine Liste
+  (E-SR-64): `jobs.zustand` fasst 64 KiB, und eine Liste aller Stücke
+  wüchse mit der Anlage. Er läuft über alle drei Auslöser; der Knopf
+  „Jetzt weiterarbeiten" nimmt denselben Rahmen mit seiner Sperre
+  (E-SR-65, Auslöser `seite`) — zwei Umhüller gleichzeitig räumten
+  einander den Arbeitsordner leer. Ein halb geschriebenes Stück bleibt im
+  Arbeitsordner `sicherungen/.schluesselwechsel/` und wird beim nächsten
+  Häppchen verworfen; ersetzt wird erst, wenn die neue Datei mit dem neuen
+  Schlüssel aufgeht und denselben Klartext liefert.
+- **Die Karte kennt die Lage „Wechsel"**: neue und bisherige Kennung, die
+  Zeile „Umhüllung" mit „noch n von m", die Zeile „Bevor der bisherige
+  gehen darf" mit „k von 3" und, wenn es welche gibt, „Mit keinem der
+  beiden zu öffnen". Der Status zeigt dieselbe Lage blau mit der Zahl.
+- **Der bisherige geht erst, wenn drei Dinge stehen** (E-SR-09): alles
+  umgehüllt und nachgewiesen, ein Komplett-Stand unter dem neuen, jünger als
+  der Beginn, und die Rückfrage zum Blatt seit dem Beginn beantwortet. Den
+  Stand stößt der Job selbst an: Ist alles nachgewiesen, merkt er einen
+  Komplett-Auftrag vor — erst dann, weil ein Stand mitten im Umhüllen Zeilen
+  unter beiden Schlüsseln trüge. Erst
+  dann steht „Alten Schlüssel entfernen" da — **und die Riegel stehen in der
+  Funktion**, nicht nur am Knopf: Ein Aufruf daneben bekommt dieselben drei
+  Sätze als Ablehnung.
+- **Das Blatt trägt während des Wechsels drei Kacheln** — der bisherige
+  als „Serverschlüssel (bisheriger)" mit dem Satz, was er öffnet, und
+  „Dieses Blatt nach dem Wechsel NICHT vernichten" (E-SR-10). Gemessen im
+  Bedienweg: eine A4-Seite.
+- **Protokoll und Post.** Drei Arten im Reiter Sicherung —
+  `serverschluessel_gewechselt` (orange), `serverschluessel_umgehuellt`
+  (blau, mit den Zahlen), `serverschluessel_alt_entfernt` —, und eine Mail an
+  **jede** BetreiberIn beim Beginn und beim Abschluss (E-SR-62), mit
+  Kennungen, nie mit Werten. Wer den Wechsel nicht selbst ausgelöst hat,
+  soll es nicht erst am Blatt merken.
+- **Der Kopf eines Komplett-Stands trägt die Kennung des Schlüssels**
+  (F-SR-11, E-SR-67). Bis hierher zeigte nur der Versuch am ersten Block,
+  wozu ein Stand gehört. Die Liste unter Betrieb → Komplett-Backup sagt jetzt
+  „bisheriger Schlüssel" oder „anderer Schlüssel", und Einspielen wie
+  Herunterladen versuchen erst den neuen, dann den bisherigen.
+
+### Geändert
+
+- **Beide Rotationen machen die Rückfrage zum Blatt sofort fällig**
+  (Nr. 233, E-SR-11). Wer den Server-Anteil wechselte, wurde bisher erst im
+  nächsten Quartal gefragt — mit einem Blatt in der Akte, das den heutigen
+  Wert nicht mehr trug. Der Dialog sagt voran: „Ein Wert hat gewechselt —
+  drucke das Blatt neu", und während eines Wechsels, welche Kennung der
+  bisherige hat.
+- **Die zwei Rotationen laufen nur nacheinander** (E-SR-60). Das Blatt
+  trüge nebeneinander vier Kacheln und zwei Seiten; mit drei passt es gerade
+  auf eine. Der Knopf „Server-Anteil wechseln" fehlt während eines
+  Wechsels, und beide Funktionen weisen einander ab.
+
+### Behoben
+
+- **„Freigabe widerrufen" mit einem Handgriff, der sich nicht auflösen
+  lässt, meldete Erfolg und legte eine versiegelte `konto.json` in die
+  Wurzel der Ablage** (Nr. 344). `edbak_begleit_schreiben()` und
+  `edbak_freigabe_widerrufen()` verlangen jetzt eine gültige Kennung wie
+  `edbak_ordner_loeschen()`; die Seite sagt „Die Freigabe liess sich nicht
+  widerrufen." Gefunden bei der Frage, was der Wechsel alles umhüllen muss:
+  eine Datei an dieser Stelle hätte er nicht gesehen.
+
+### Bewusst so
+
+- **Komplett-Stände werden nicht umgehüllt** (E-SR-21). Sie sind mit dem
+  rohen Schlüssel blockweise versiegelt und so groß wie die Datenbank; sie
+  neu zu schreiben hieße, jeden Stand einmal ganz zu lesen und zu schreiben.
+  Ein alter Stand öffnet während des Wechsels über den bisherigen, danach
+  mit dem Wert vom bisherigen Blatt — deshalb die Blatt-Regel.
+- **Was auf einem Backup-Ziel liegt, bleibt unter dem bisherigen.** Der
+  Server kann dort nichts umhüllen, was er nicht zurückholt. Ein Archiv des
+  Protokolls bekommt beim Umhüllen einen neuen Namen (die Kennung steht
+  darin), gilt dem Versand damit als „nur lokal" und geht noch einmal
+  hinaus; auf dem Ziel liegt es dann unter jedem der beiden. Deshalb ist
+  beim Start ein Haken Pflicht, dass das verstanden ist (E-SR-63) — und er
+  wird im Server geprüft, nicht nur im Formular.
+- **Was sich mit keinem der beiden öffnen lässt, wird genannt, nicht
+  gezählt als Hindernis** (E-SR-61). Es war schon vor dem Wechsel stumm,
+  und ein Wechsel, der daran hängen bliebe, ließe sich nie abschließen. Die
+  Karte nennt bis zu zwanzig Stücke, ohne Kontokennung.
+- **Kein zweiter Weg an `config.php`.** Geschrieben wird über
+  `config_eintrag_schreiben()` wie beim Anteil, erst der bisherige, dann der
+  neue; scheitert das zweite, wird das erste zurückgenommen.
+
+### Prüfmittel
+
+- **Neue Schlüsselwechselprobe** (`tools/proben/schluesselwechsel/`,
+  Anlass Nr. 247): je Zweck ein eigenes Stück unter dem Schlüssel A, dazu
+  eines unter einem fremden; die Riegel vor dem Wechsel; der Wechsel A → B
+  mit Blatt und Karte über HTTP; Häppchen mit Wiederanlauf (eine halbe
+  Nebendatei, ein Archiv zwischen Ablegen und Löschen); jedes Stück mit B
+  und demselben Klartext; die drei Bedingungen; Nr. 344 über HTTP. Danach
+  fährt sie **mit demselben Job zurück von B nach A** — der erste Wechsel hat
+  auch die Geheimnisse der Anlage selbst umgehüllt — und vergleicht jedes
+  Stück der Anlage mit dem Bild von vorher; `config.php` byte-gleich. 40
+  Erwartungen; fünf Gegenproben, jede an ihrer Stelle rot. Eine davon hat
+  beim Bau einen Fehler gefunden: Der Wiederanlauf beim Archiv verglich die
+  neue Datei mit der alten Kennung und baute ein fertiges Archiv noch einmal.
+- **Anteilprobe Teil E**: Die Rotation des Anteils löscht die Bestätigung,
+  die Rückfrage ist fällig mit dem Grund „anteil", die Antwort räumt ihn weg
+  (61 Erwartungen; Gegenprobe 3 von 3 rot).
+- **Bedienweg `betrieb-server-schluesselwechsel`**: ohne Haken abgewiesen,
+  mit Haken gewechselt, das Blatt mit drei Kacheln auf **einer** A4-Seite
+  (als PDF gezählt), „Jetzt weiterarbeiten", die Rückfrage mit dem Satz
+  voran, „Alten Schlüssel entfernen" — die Buchführung aus der Probe
+  (`--merken`, `--stand`, `--zurueck`). Die Bilder der Karte in drei Lagen
+  gehen an die Betreiberin (P-SR-05).
+
 ## [Web 21.11.2] — 2026-09-29
 
 Schritt 18, Sicherheitsrunde II, **die offenen Punkte von H-SR-08

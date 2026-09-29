@@ -324,6 +324,21 @@ function jobs_katalog(): array
             'rueckstand'   => 'protokoll_archiv_rueckstand',
             'lauf'         => 'protokoll_archiv_job',
         ],
+        /* DER SCHLUESSELWECHSEL STEHT VOR DEM VERSAND (Schritt 18, SR-03,
+         * E-SR-09): Ein umgehuelltes Archiv des Protokolls bekommt einen
+         * neuen Namen und geht so noch im selben Lauf hinaus — mit ihm hat das
+         * Ziel eine Kopie unter dem neuen Schluessel. Ohne Wechsel kostet er
+         * eine Abfrage (`serverschluessel_zustand()`) und ist fertig. */
+        'schluesselwechsel' => [
+            'titel'        => 'Serverschlüssel umhüllen',
+            'beschreibung' => 'Nur während eines Wechsels: Zugänge der Backup-Ziele, '
+                            . 'Zweitfaktor-Geheimnisse, Konto-Backups und Archive des '
+                            . 'Protokolls vom bisherigen auf den neuen Serverschlüssel '
+                            . 'umhüllen und jedes Stück mit dem neuen nachweisen',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_schluesselwechsel_rueckstand',
+            'lauf'         => 'job_schluesselwechsel',
+        ],
         /* DER VERSAND STEHT NACH DEM SICHERN UND VOR `waisen` (S2/AP7).
          * Nach dem Sichern, weil er schickt, was jenes erzeugt hat — in
          * derselben Reihenfolge kommt ein frisches Paket noch im selben Lauf
@@ -1902,4 +1917,23 @@ function job_komplett_rueckstand(PDO $pdo, array $zustand): ?int
 {
     require_once __DIR__ . '/komplett_lib.php';
     return komp_rueckstand_aus($zustand);
+}
+
+/* ---- Der Wechsel des Serverschluessels (Schritt 18, SR-03) ---------------
+ *
+ * Die Arbeit steht in `schluesselwechsel_lib.php`; hier nur der Anschluss an
+ * den Katalog, geladen erst im Rumpf wie bei den anderen schweren Jobs. */
+
+function job_schluesselwechsel(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/schluesselwechsel_lib.php';
+    $e = sw_haeppchen($pdo, $zustand, $zeitLinks);
+    return ['zustand' => $zustand, 'erledigt' => $e['erledigt'], 'fertig' => $e['fertig']];
+}
+
+/** Wie viele Stuecke stehen noch aus? `null`, wenn kein Wechsel laeuft. */
+function job_schluesselwechsel_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    require_once __DIR__ . '/schluesselwechsel_lib.php';
+    return sw_rueckstand($zustand);
 }

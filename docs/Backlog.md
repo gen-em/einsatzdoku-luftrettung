@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 355 | 27.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 356 | 27.09.2026 |
 | ab 360 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 28.09.2026 |
 
 ---
@@ -684,23 +684,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-233. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.** · gehört zu: 18 · Stand: offen · seit 17.09.2026
-     *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
-     `kdf_anteil_alt` mit auf dem Schlüsselblatt. Die Rückfrage fragt ihn
-     nicht ab — eine Frage, die je nach Betriebslage vier oder sechs Felder
-     hat, verwirrt mehr, als sie prüft.
-
-     **Was das offen lässt:** Wer sein Blatt nach einer Rotation neu druckt
-     und den alten Wert nicht mit abschreibt, merkt es nicht, solange die
-     Rückfrage schweigt. Der Wert wird aber gebraucht, bis das letzte Konto
-     sich angemeldet hat.
-
-     **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
-     dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
-     und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
-
-<!-- -->
-
 234. **Kein Prüfmittel fährt den Weg, den eine frisch ausgelieferte Anlage geht — Deploy, Anmeldung, `update.php`.** · gehört zu: PK · Stand: teilweise · seit 18.09.2026
      Befund (P5b-Deploy auf Staging; Anlass behoben in Web 20.24.1): Zwei
      SELECTs auf dem Anmeldeweg forderten Spalten an, die erst die Migration
@@ -776,26 +759,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      mit). Zuerst entscheiden, welche der beiden Fragen beantwortet werden
      soll.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 240.
-
-<!-- -->
-
-247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.** · gehört zu: 18 · Stand: offen · seit 20.09.2026
-     Befund (V4 der P5c-Vorbereitung): Es gibt keinen Wechsel. Wer
-     `server_key` von Hand ändert, macht alles Versiegelte stumm und merkt
-     es erst, wenn er es braucht.
-     Weg: ein Vorgang unter Betrieb — neuen Schlüssel erzeugen, alles
-     Versiegelte umhüllen (Adminpakete, Zugänge der Sicherungsziele,
-     Protokoll-Archive, Wiederanlaufpaket, die Zweitfaktor-Geheimnisse
-     `users.totp_geheimnis` mit Zweck `totp|<Konto>` aus P5c/AP5, Web
-     20.42.0), neues Schlüsselblatt, Protokolleintrag und der Nachweis der
-     Öffenbarkeit vor dem Verwerfen des alten Schlüssels — der Schritt,
-     dessen Fehlen den Vorgang gefährlich macht. Ein Wechsel, der die
-     Zweitfaktor-Geheimnisse nicht umhüllt, lässt jede Code-Anmeldung
-     scheitern (Notweg: Wiederherstellungscodes; Runbook `Technik.md` 7).
-     Auslöser: Verdacht, dass das Blatt in falsche Hände kam. Eigenes Paket
-     mit eigener Prüfung; bis dahin gilt im Betreiberhandbuch: Der Schlüssel
-     wird nicht gewechselt, das Blatt gehütet (Quartalsrückfrage E-P5b-10).
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 247.
 
 <!-- -->
 
@@ -1102,26 +1065,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-344. **„Freigabe widerrufen" mit unauflösbarem Handgriff schreibt eine `konto.json` in die Wurzel der Konto-Backups.** · gehört zu: 18 · Stand: offen · seit 27.09.2026
-     *Aufgenommen 27.09.2026 mit R4-11 (gefunden vom Umbau der Seite
-     Konto-Backups, F-R4-33).* `edbak_freigabe_widerrufen()` prüft die
-     Kennung nicht. Lässt sich der Handgriff eines POST nicht auflösen, ist
-     die Kennung leer, und `edbak_begleit_schreiben('')` legt eine
-     versiegelte `konto.json` in der Wurzel der Ablage an und meldet Erfolg:
-     „Freigabe widerrufen." Erreichbar ist das über `admin_sicherungen.php`
-     (dort gibt es für den Zweig kein Formular mehr, nur ein handgebautes
-     POST einer Administratorin) und über die Kontoseite. **Nicht in 17**,
-     weil `adminbackup_lib.php` für Schritt 18 frei bleiben soll (Konzept R4
-     2.3, E-R4-37). *Weg:* `edbak_freigabe_widerrufen()` und
-     `edbak_begleit_schreiben()` verlangen `edbak_kennung_gueltig()`, wie es
-     `edbak_ordner_loeschen()` schon tut; die Aufrufer melden dann den
-     Fehlschlag. *Abnahme:* POST `widerrufen` mit einem Handgriff aus
-     Nullen → Fehlermeldung, keine Datei in der Wurzel der Ablage.
-     **Zuordnung in 18 (28.09.2026):** Paket SR-03, das `adminbackup_lib.php`
-     ohnehin offen hat; die Gegenlesung liest es mit (Konzept SR, E-SR-37).
-
-<!-- -->
-
 345. **Die Installationsseite meldet Erfolg, ohne zu wissen, ob gespeichert wurde.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 27.09.2026
      *Aufgenommen 27.09.2026 mit R4-11 (F-R4-34).* Zwei kleine Lücken auf
      `admin_installation.php`, beide älter als die Umleitung nach POST:
@@ -1266,3 +1209,18 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      eine Stelle (R83) und eine Registerzeile gegen das Muster. *Abnahme:*
      jedes Feld der Anmeldeschritte als Liste → Formularfehler, keine Zeile
      im Reiter System.
+
+<!-- -->
+
+356. **Zwei Abschnitte der Karte „Schlüssel des Servers" kleben ohne Abstand am Knopffuß.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 29.09.2026
+     *Aufgenommen 29.09.2026 mit SR-03 (Konzept SR, F-SR-73; gefunden an den
+     Bildern zu P-SR-05).* „Nachtragen vom Blatt" und „Neuanfang" stehen als
+     `h3.listen-form-titel` unmittelbar hinter `.listen-form-fuss` — die
+     Überschrift hat oben keinen Abstand, und die Knöpfe darüber gehören
+     optisch zu ihr. Für den neuen Abschnitt „Serverschlüssel wechseln" ist
+     es in SR-03 behoben: Er steht in `.listen-form` (Linie und Abstand
+     darüber). Die zwei alten erscheinen nur in der Lage *abweichend* und
+     sind nicht angefasst, weil kein Bild sie in dieser Lage zeigt. *Weg:*
+     beide Formulare ebenso in `.listen-form`. *Abnahme:* Bild der Karte in
+     der Lage *abweichend* (Bilderlauf oder Bedienweg mit verstellter
+     Marke), 390 und 1280 px.

@@ -71,12 +71,28 @@ require_once __DIR__ . '/konfig_lib.php';
  * versiegeltes Komplettbackup ist Müll (das ist die schwere Folge). Das
  * Runbook in `docs/Technik.md` sagt es an der Stelle noch einmal.
  *
- * WAS PASSIERT, WENN ER SICH ÄNDERT
- * Nichts Stilles. `sk_oeffnen()` gibt `null` zurück, und jeder Aufrufer sagt
- * dann, was Sache ist: „mit einem anderen Serverschlüssel gespeichert".
- * Ein stillschweigend leeres Passwort wäre die schlechteste aller Antworten —
- * der Versand liefe in eine Anmeldung ohne Passwort und meldete „Zugang
- * verweigert", und niemand käme auf die Ursache.
+ * WAS PASSIERT, WENN ER SICH ÄNDERT — SEIT WEB 21.12.0 EIN VORGANG
+ * (Schritt 18, SR-03, Nr. 247, E-SR-08, E-SR-09). Bis dahin gab es keinen
+ * Wechsel: Wer `server_key` von Hand änderte, machte alles Versiegelte stumm.
+ * Jetzt folgt der Wechsel dem Muster der Anteil-Rotation:
+ * `serverschluessel_wechseln()` legt den bisherigen als `server_key_alt` ab
+ * und würfelt einen neuen; `sk_versiegeln()` versiegelt nur mit dem neuen,
+ * `sk_oeffnen()` öffnet mit dem neuen und dann mit dem bisherigen. Der Job
+ * `schluesselwechsel` (`schluesselwechsel_lib.php`) hüllt in Häppchen um, was
+ * der Server erreicht — Zugänge der Ziele, Zweitfaktor-Geheimnisse,
+ * Konto-Backups samt Begleitdatei, Archive des Protokolls — und weist nach,
+ * dass jedes Stück mit dem neuen aufgeht. Erst dann, mit einem frischen
+ * Komplett-Stand unter dem neuen und der beantworteten Rückfrage, darf der
+ * bisherige gehen (`serverschluessel_alt_entfernen()`, drei Riegel).
+ * **Was auf einem Backup-Ziel liegt, bleibt unter dem bisherigen** — kein
+ * Vorgang auf dem Server erreicht es (E-SR-10).
+ *
+ * Und wenn doch einer von Hand geändert wird: Nichts Stilles. `sk_oeffnen()`
+ * gibt `null` zurück, und jeder Aufrufer sagt dann, was Sache ist: „mit
+ * einem anderen Serverschlüssel gespeichert". Ein stillschweigend leeres
+ * Passwort wäre die schlechteste aller Antworten — der Versand liefe in eine
+ * Anmeldung ohne Passwort und meldete „Zugang verweigert", und niemand käme
+ * auf die Ursache.
  */
 
 /* Kennung des Formats, wie `edk1:` im Browser (crypto.js). Sie steht vorn,
@@ -149,6 +165,33 @@ function schluessel_kennung(?string $hex): ?string
 function serverschluessel_kennung(): ?string
 {
     return schluessel_kennung((string)konfig('server_key', ''));
+}
+
+/**
+ * Der BISHERIGE Serverschlüssel — gesetzt, solange ein Wechsel läuft
+ * (SR-03, E-SR-08). Wortgleich gebaut wie `serverschluessel()` und
+ * `kdf_anteil_alt()`: Ein halber Wert öffnet nichts.
+ *
+ * Er versiegelt NIE, er öffnet nur — was noch unter ihm liegt, bis der Job
+ * es umgehüllt hat, und was auf einem Backup-Ziel liegt, für immer
+ * (E-SR-10). Aus `config.php` verschwindet er erst mit
+ * `serverschluessel_alt_entfernen()`.
+ */
+function serverschluessel_alt(bool $frisch = false): ?string
+{
+    static $roh = false;
+    if ($frisch) { $roh = false; }
+    if ($roh !== false) { return $roh; }
+    $hex = (string)konfig('server_key_alt', '');
+    if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
+    $bin = hex2bin(strtolower($hex));
+    return $roh = ($bin === false ? null : $bin);
+}
+
+/** Kennung des bisherigen Serverschlüssels — oder null, wenn kein Wechsel läuft. */
+function serverschluessel_alt_kennung(): ?string
+{
+    return schluessel_kennung((string)konfig('server_key_alt', ''));
 }
 
 /**
@@ -248,17 +291,39 @@ function sk_versiegeln(string $klartext, string $zweck): string
  */
 function sk_oeffnen(string $paket, string $zweck): ?string
 {
-    $k = serverschluessel();
-    if ($k === null) { return null; }
+    $e = sk_oeffnen_mit_wem($paket, $zweck);
+    return $e === null ? null : $e['klar'];
+}
+
+/**
+ * Öffnen — und sagen, WELCHER Schlüssel es war: `['klar' => …, 'mit' =>
+ * 'neu'|'alt']` oder `null`.
+ *
+ * ERST DER NEUE, DANN DER BISHERIGE (SR-03, E-SR-08). Das Präfix `edsk1:`
+ * trägt keine Kennung (F-SR-04); ob ein Paket zum alten Schlüssel gehört,
+ * zeigt der Versuch. Die Reihenfolge ist die der Häufigkeit: Nach dem
+ * Umhüllen öffnet fast alles mit dem neuen, und ein zweiter Versuch kostet
+ * nur, solange ein Wechsel läuft.
+ *
+ * `sk_oeffnen()` gibt nur den Klartext weiter — für jeden Aufrufer ist
+ * gleich, welcher es war. Der Job des Wechsels fragt hier, weil genau das
+ * seine Frage ist: Muss dieses Stück noch umgehüllt werden?
+ */
+function sk_oeffnen_mit_wem(string $paket, string $zweck): ?array
+{
     if (!str_starts_with($paket, SK_PRAEFIX)) { return null; }
     $roh = base64_decode(substr($paket, strlen(SK_PRAEFIX)), true);
     if ($roh === false || strlen($roh) < SK_NONCE_LEN + SK_TAG_LEN) { return null; }
     $nonce = substr($roh, 0, SK_NONCE_LEN);
     $tag   = substr($roh, SK_NONCE_LEN, SK_TAG_LEN);
     $ct    = substr($roh, SK_NONCE_LEN + SK_TAG_LEN);
-    $klar = openssl_decrypt($ct, 'aes-256-gcm', $k, OPENSSL_RAW_DATA,
-                            $nonce, $tag, 'edsk1|' . $zweck);
-    return $klar === false ? null : $klar;
+    foreach (['neu' => serverschluessel(), 'alt' => serverschluessel_alt()] as $mit => $k) {
+        if ($k === null) { continue; }
+        $klar = openssl_decrypt($ct, 'aes-256-gcm', $k, OPENSSL_RAW_DATA,
+                                $nonce, $tag, 'edsk1|' . $zweck);
+        if ($klar !== false) { return ['klar' => $klar, 'mit' => $mit]; }
+    }
+    return null;
 }
 
 /**
@@ -606,7 +671,7 @@ function konto_anteile(int $userId): array
  *  Konfigurationsdatei zu schreiben — `db.dsn` etwa. Die Prüfung steht
  *  deshalb in der Funktion und nicht im Formular: Ein zweiter Aufrufer
  *  erbte sie sonst nicht. */
-const CONFIG_SCHREIBBAR = ['server_key', 'kdf_anteil', 'kdf_anteil_alt'];
+const CONFIG_SCHREIBBAR = ['server_key', 'server_key_alt', 'kdf_anteil', 'kdf_anteil_alt'];
 
 /** Die Zeile, die in `config.php` gehört — genau so, wie sie dort steht. */
 function config_eintrag_zeile(string $schluessel, string $hex): string
@@ -629,9 +694,11 @@ function config_gemerktes_verwerfen(): void
      * holten sie sich genau den Stand zurueck, den sie wegwerfen sollen. */
     konfig_verwerfen();
     serverschluessel(true);
+    serverschluessel_alt(true);
     kdf_anteil(true);
     kdf_anteil_alt(true);
     anteil_zustand(true);
+    serverschluessel_zustand(true);
 }
 
 /**
@@ -882,6 +949,15 @@ function anteil_wechseln(): array
         return [false, 'Es läuft bereits eine Rotation. Erst den alten Anteil '
                      . 'entfernen, wenn kein Konto mehr auf ihm steht.'];
     }
+    /* NICHT NEBEN EINEM WECHSEL DES SERVERSCHLÜSSELS (E-SR-60). Das Blatt
+     * trüge sonst vier Kacheln und zwei Seiten; es passt mit drei gerade auf
+     * eine (gemessen P5c/AP9: 1013 von 1017 px). Der Riegel steht hier und
+     * in `serverschluessel_wechseln()`, nicht nur am Knopf. */
+    if (serverschluessel_zustand()['stand'] === 'rotation') {
+        return [false, 'Es läuft gerade ein Wechsel des Serverschlüssels. Erst '
+                     . 'wenn er abgeschlossen ist, lässt sich der Server-Anteil '
+                     . 'wechseln. Es wurde nichts geändert.'];
+    }
     $altHex = strtolower((string)konfig('kdf_anteil', ''));
 
     [$ok, $was] = config_eintrag_schreiben('kdf_anteil_alt', $altHex);
@@ -897,6 +973,11 @@ function anteil_wechseln(): array
         return [false, $was2];
     }
     anteil_zustand(true);     // schreibt die Marke auf die neue Kennung
+    /* DAS BLATT GEHÖRT NEU GEDRUCKT (Nr. 233, E-SR-11) — die Rückfrage kommt
+     * bei der nächsten Anmeldung jeder BetreiberIn, nicht erst im nächsten
+     * Quartal. Bis Web 21.12.0 fasste die Rotation die Marke nicht an. */
+    require_once __DIR__ . '/einstieg_lib.php';
+    blatt_neu_faellig('anteil');
     return [true, (string)schluessel_kennung($was2)];
 }
 
@@ -1063,10 +1144,12 @@ function anteil_nachtragen(string $roh, bool $ersetzen): array
 /**
  * Denselben Weg für den Serverschlüssel.
  *
- * Er hat keine Rotation (E-S10-11: sie hieße, jedes versiegelte Feld und jedes
- * Paket umzusiegeln) — aber denselben Ernstfall: Nach einem Wiederanlauf steht
- * der falsche Wert in `config.php`, und die Meldung „mit einem anderen
- * Serverschlüssel gespeichert" sagt nicht, welcher der richtige wäre.
+ * Denselben Ernstfall wie beim Anteil: Nach einem Wiederanlauf steht der
+ * falsche Wert in `config.php`, und die Meldung „mit einem anderen
+ * Serverschlüssel gespeichert" sagt nicht, welcher der richtige wäre. (Bis
+ * Web 21.12.0 stand hier „er hat keine Rotation" — seit SR-03 hat er eine;
+ * nachgetragen wird trotzdem nur der AKTUELLE, gegen die Marke. Den
+ * bisherigen trägt der Wechsel selbst ein.)
  *
  * Die Marke `server_key_kennung` entsteht bei der ersten Anzeige nach S10 —
  * dieselbe Mechanik wie beim Anteil.
@@ -1097,9 +1180,20 @@ function serverschluessel_nachtragen(string $roh, bool $ersetzen): array
 /**
  * Der Zustand des Serverschlüssels — dieselben vier Lagen wie beim Anteil.
  *
- * Er kennt keine Rotation, also gibt es nur drei: `fehlt`, `bereit`,
- * `abweichend`. Die Marke wird nachgetragen, sobald ein gültiger Schlüssel
- * dasteht und noch keine Marke existiert (E-S10-U-02).
+ * Gibt zurück:
+ *   stand        'fehlt' | 'bereit' | 'rotation' | 'abweichend'
+ *   kennung      Kennung des aktuellen Schlüssels aus config.php, oder null
+ *   kennung_alt  Kennung des bisherigen (nur während eines Wechsels), oder null
+ *   erwartet     Kennung aus app_state — die, mit der versiegelt wird
+ *
+ * `rotation` GIBT ES SEIT WEB 21.12.0 (SR-03, E-SR-08). Bis dahin kannte der
+ * Serverschlüssel nur drei Lagen, weil es keinen Wechsel gab. Die Mechanik ist
+ * die des Anteils: Steht `server_key_alt` in `config.php` und nennt die Marke
+ * noch ihn, wandert die Marke auf den neuen — ab da versiegelt alles mit dem
+ * neuen, und der bisherige ist nur noch zum Öffnen da.
+ *
+ * Die Marke wird nachgetragen, sobald ein gültiger Schlüssel dasteht und noch
+ * keine Marke existiert (E-S10-U-02).
  */
 function serverschluessel_zustand(bool $frisch = false): array
 {
@@ -1107,19 +1201,31 @@ function serverschluessel_zustand(bool $frisch = false): array
     if ($frisch) { $merk = null; }
     if ($merk !== null) { return $merk; }
 
-    $kennung  = serverschluessel_kennung();
-    $erwartet = schluessel_marke_lesen('server_key_kennung');
+    $kennung    = serverschluessel_kennung();
+    $kennungAlt = serverschluessel_alt_kennung();
+    $erwartet   = schluessel_marke_lesen('server_key_kennung');
 
     if ($kennung === null) {
         return $merk = ['stand' => $erwartet === null ? 'fehlt' : 'abweichend',
-                        'kennung' => null, 'erwartet' => $erwartet];
+                        'kennung' => null, 'kennung_alt' => $kennungAlt,
+                        'erwartet' => $erwartet];
     }
     if ($erwartet === null) {
         schluessel_marke_setzen('server_key_kennung', $kennung);
         $erwartet = $kennung;
+    } elseif ($kennungAlt !== null && $erwartet === $kennungAlt && $kennungAlt !== $kennung) {
+        /* Wechsel soeben eingeleitet: Der neue Wert steht in `config.php`, die
+         * Marke nennt noch den bisherigen. Sie wandert jetzt mit. */
+        schluessel_marke_setzen('server_key_kennung', $kennung);
+        $erwartet = $kennung;
     }
-    return $merk = ['stand' => $erwartet === $kennung ? 'bereit' : 'abweichend',
-                    'kennung' => $kennung, 'erwartet' => $erwartet];
+    if ($erwartet !== $kennung) {
+        return $merk = ['stand' => 'abweichend', 'kennung' => $kennung,
+                        'kennung_alt' => $kennungAlt, 'erwartet' => $erwartet];
+    }
+    return $merk = ['stand' => $kennungAlt === null ? 'bereit' : 'rotation',
+                    'kennung' => $kennung, 'kennung_alt' => $kennungAlt,
+                    'erwartet' => $erwartet];
 }
 
 /**
@@ -1141,4 +1247,108 @@ function serverschluessel_eintragen(): array
         return [false, 'Es steht bereits ein Serverschlüssel in config.php.'];
     }
     return config_eintrag_schreiben('server_key', serverschluessel_neu());
+}
+
+/* ===========================================================================
+ * DER WECHSEL DES SERVERSCHLÜSSELS (Schritt 18, SR-03, Nr. 247, E-SR-08 bis
+ * E-SR-11, E-SR-21, E-SR-22, E-SR-60 bis -63)
+ *
+ * Zwei Handgriffe, gebaut wie beim Anteil: `config.php` schreiben und die
+ * Marke nachziehen gehören zusammen und stehen deshalb hier. Was danach
+ * geschieht — der Zustand des Jobs, die Blatt-Marke, Protokoll und Mail —,
+ * steht in `schluesselwechsel_lib.php` (`sw_beginnen()`, `sw_abschliessen()`),
+ * die erst hier geladen wird: Diese Datei liegt unter `db.php` und soll nicht
+ * hinaufgreifen.
+ * ======================================================================== */
+
+/**
+ * Den Serverschlüssel wechseln — den bisherigen als `server_key_alt` behalten,
+ * einen neuen würfeln.
+ *
+ * WARUM DER BISHERIGE STEHEN BLEIBT. Alles Versiegelte ist mit ihm gebaut, und
+ * der Job braucht ihn, um es umzuhüllen. Und was auf einem Backup-Ziel liegt,
+ * öffnet für immer nur er (E-SR-10) — deshalb der Haken: Wer wechselt, soll
+ * vorher gelesen haben, dass die Kopien dort unter dem bisherigen bleiben und
+ * das bisherige Blatt aufbewahrt wird (E-SR-63). Die Prüfung steht hier, nicht
+ * im Formular; ein zweiter Aufrufer erbte sie sonst nicht.
+ *
+ * NUR AUS DER LAGE `bereit`, UND NICHT NEBEN EINER ANTEIL-ROTATION (E-SR-60).
+ * Dieselbe Reihenfolge wie beim Anteil: erst den bisherigen sichern, dann den
+ * neuen setzen — andersherum wäre der bisherige für die Dauer eines
+ * Fehlschlags verloren, und mit ihm alles Versiegelte.
+ *
+ * @return array{0:bool, 1:string} [true, neue Kennung] oder [false, Grund]
+ */
+function serverschluessel_wechseln(bool $kopienVerstanden): array
+{
+    if (!$kopienVerstanden) {
+        return [false, 'Bitte zuerst bestätigen, dass die Kopien auf dem Backup-Ziel '
+                     . 'unter dem bisherigen Schlüssel bleiben und das bisherige Blatt '
+                     . 'aufbewahrt wird. Es wurde nichts geändert.'];
+    }
+    $z = serverschluessel_zustand(true);
+    if ($z['stand'] === 'rotation') {
+        return [false, 'Es läuft bereits ein Wechsel des Serverschlüssels. Erst den '
+                     . 'bisherigen entfernen, wenn alles umgehüllt ist.'];
+    }
+    if ($z['stand'] !== 'bereit') {
+        return [false, 'Ein Wechsel geht nur, wenn der Serverschlüssel bereit ist — '
+                     . 'der Zustand ist derzeit „' . $z['stand'] . '". Es wurde nichts '
+                     . 'geändert.'];
+    }
+    if (anteil_zustand()['stand'] === 'rotation') {
+        return [false, 'Es läuft gerade eine Rotation des Server-Anteils. Erst wenn '
+                     . 'sie abgeschlossen ist, lässt sich der Serverschlüssel wechseln. '
+                     . 'Es wurde nichts geändert.'];
+    }
+    $altHex = strtolower((string)konfig('server_key', ''));
+
+    [$ok, $was] = config_eintrag_schreiben('server_key_alt', $altHex);
+    if (!$ok) { return [false, $was]; }
+
+    [$ok2, $was2] = config_eintrag_schreiben('server_key', serverschluessel_neu(), true);
+    if (!$ok2) {
+        /* Zurücknehmen — ein `server_key_alt` neben einem unveränderten
+         * `server_key` wäre ein Wechsel, der nie stattgefunden hat. */
+        config_eintrag_schreiben('server_key_alt', null);
+        return [false, $was2];
+    }
+    $z = serverschluessel_zustand(true);      // die Marke wandert auf den neuen
+    require_once __DIR__ . '/schluesselwechsel_lib.php';
+    sw_beginnen((string)$z['kennung'], (string)$z['kennung_alt']);
+    return [true, (string)$z['kennung']];
+}
+
+/**
+ * Den bisherigen Serverschlüssel entfernen — erst, wenn drei Dinge stehen
+ * (E-SR-09): alles umgehüllt und nachgewiesen, ein Komplett-Stand unter dem
+ * neuen jünger als der Beginn, und die Rückfrage zum Blatt seit dem Beginn
+ * beantwortet.
+ *
+ * DIE DREI SIND RIEGEL IN DER FUNKTION, NICHT AM KNOPF. Ein Knopf, der nur
+ * versteckt ist, wird trotzdem gedrückt — über die Zurück-Taste, ein zweites
+ * Fenster oder ein Lesezeichen (dieselbe Linie wie `anteil_alt_entfernen()`).
+ * Und hier ist der Schaden größer: Ohne den bisherigen öffnet sich nichts
+ * mehr, was noch unter ihm liegt.
+ *
+ * @return array{0:bool, 1:string} [true, Kennung des entfernten] oder [false, Grund]
+ */
+function serverschluessel_alt_entfernen(): array
+{
+    if (serverschluessel_alt() === null) {
+        return [false, 'Es steht kein bisheriger Serverschlüssel in config.php.'];
+    }
+    require_once __DIR__ . '/schluesselwechsel_lib.php';
+    $b = sw_bedingungen();
+    if (!$b['alle']) {
+        return [false, 'Der bisherige Serverschlüssel bleibt: '
+                     . implode(' ', $b['fehlt']) . ' Es wurde nichts geändert.'];
+    }
+    $kAlt = (string)serverschluessel_alt_kennung();
+    $kNeu = (string)serverschluessel_kennung();
+    [$ok, $was] = config_eintrag_schreiben('server_key_alt', null);
+    if (!$ok) { return [false, $was]; }
+    serverschluessel_zustand(true);
+    sw_abschliessen($kNeu, $kAlt);
+    return [true, $kAlt];
 }

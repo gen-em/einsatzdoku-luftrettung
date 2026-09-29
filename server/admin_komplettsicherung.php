@@ -390,6 +390,11 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
           $kopf = komp_kopf_lesen(komp_wurzel() . '/' . $s['datei']);
           $k = $kopf['kopf'] ?? [];
           $id = 'st' . $nr;
+          /* WELCHER SCHLÜSSEL (SR-03, F-SR-11): Stände werden beim Wechsel
+             nicht umgehüllt (E-SR-21). Der erste Block entscheidet — ein
+             Block je Stand, bei einer Aufbewahrung von zwei bis zwanzig. */
+          $welcher = ($kopf !== null && ($k['kdf'] ?? null) === null)
+              ? komp_serverschluessel_fuer(komp_wurzel() . '/' . $s['datei'])[1] : 'neu';
       ?>
         <form method="post" id="f-klar-<?= $id ?>" hidden>
           <?= csrf_field() ?><input type="hidden" name="action" value="herunterladen">
@@ -414,7 +419,9 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                              ? (string)$k['migration'] : 'keiner')
                         : 'Der Dateikopf ist nicht lesbar.'),
             'plaketten' => ui_plakette(groesse_text((int)$s['groesse']), ['ton' => 'neutral'])
-                         . ($nr === 0 ? ui_plakette('jüngster', ['ton' => 'blau']) : ''),
+                         . ($nr === 0 ? ui_plakette('jüngster', ['ton' => 'blau']) : '')
+                         . ($welcher === 'alt' ? ui_plakette('bisheriger Schlüssel', ['ton' => 'blau'])
+                           : ($welcher === 'keiner' ? ui_plakette('anderer Schlüssel', ['ton' => 'orange']) : '')),
             'aktionen' => ui_zeilenaktionen(['eintraege' => [
                 ['text' => 'Herunterladen', 'symbol' => 'tausch',
                  'form' => 'f-klar-' . $id],

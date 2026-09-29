@@ -239,6 +239,9 @@ Daten erst nach Server-Bestätigung.
 │   │                         Protokolls (seit Web 20.39.0)
 │   │                       · sicherungen/eingang/ was wiederhergestellt
 │   │                         werden soll — von Hand dorthin gelegt
+│   │                       · sicherungen/.schluesselwechsel/ der
+│   │                         Arbeitsordner des Schlüsselwechsels (seit
+│   │                         Web 21.12.0); leer, wenn kein Häppchen läuft
 │   ├── sicherungsziel_lib.php  Backup-Ziele (S2/AP7): Schnittstelle
 │   │                       `Zielweg` und zwei Adapter — FTPS über ext/ftp,
 │   │                       SFTP über phpseclib. `ftp` ist seit Web 20.2.0
@@ -247,7 +250,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       Tabelle backup_targets, „Verbindung prüfen" und
 │   │                       der Versandschub
 │   ├── admin_sicherungsziele.php  BetreiberIn-Seite dazu (Nr. 286): Ziele anlegen und prüfen,
-│   │                       Serverschlüssel nachtragen, Versand ein/aus
+│   │                       Versand ein/aus; fehlt der Serverschlüssel, der
+│   │                       Weg zur Karte unter Servereinstellungen (bis
+│   │                       Web 21.12.0 stand hier „Serverschlüssel
+│   │                       nachtragen" — so war es bis S10, F-SR-03)
 │   ├── komplett_lib.php   Komplett-Backup der Installation (S2/AP8):
 │   │                       eigener SQL-Dump in Häppchen (ein Statement je
 │   │                       Zeile, INSERT-Stapel bis 1 MB, einspielbare
@@ -263,7 +269,14 @@ Daten erst nach Server-Bestätigung.
 │   ├── serverkrypto_lib.php  Der Serverschlüssel aus config.php (32 B) und
 │   │                       die Versiegelung `edsk1:` (AES-256-GCM, Zweck in
 │   │                       den Zusatzdaten). Das EINZIGE Geheimnis, das der
-│   │                       Server selbst hat — es öffnet keine Patientendaten
+│   │                       Server selbst hat — es öffnet keine Patientendaten.
+│   │                       Seit Web 21.12.0 während eines Wechsels auch der
+│   │                       bisherige (`server_key_alt`); Beginn, Lage und die
+│   │                       Riegel des Abschlusses stehen hier
+│   ├── schluesselwechsel_lib.php  der Wechsel des Serverschlüssels als Job
+│   │                       (SR-03, Nr. 247): Inventar aus vier Zwecken,
+│   │                       Häppchen mit Zeiger, Nachweis mit dem neuen, die
+│   │                       drei Bedingungen, Mail (4.97c)
 │   ├── vendor/            fremde Bibliotheken, die auf dem SERVER laufen
 │   │                       (phpseclib3, ParagonIE/ConstantTime), gesperrt per
 │   │                       .htaccess, geladen über vendor/laden.php;
@@ -760,7 +773,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
-│   ├── proben/            sechsundzwanzig Prüfungen gegen die laufende Anlage
+│   ├── proben/            siebenundzwanzig Prüfungen gegen die laufende Anlage
 │   │                      (PK-04/2, E-PK-24): ingest, spur, jobs,
 │   │                      kopplung, wartung, raten, mail, versand,
 │   │                      komplett, wiederherstellung, gpx, geraete,
@@ -775,9 +788,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      seit Web 21.7.0 sitzung (die Bindung per
 │   │                      zweitem Cookie; Schritt 18, SR-01), seit
 │   │                      Web 21.10.0 passkey (CBOR-Leser, beide
-│   │                      Zeremonien, Tabelle; SR-09).
-│   │                      Gezählt am 28.09.2026 mit `proben.sh --liste`:
-│   │                      26 — bis zum 24.09.2026 stand hier
+│   │                      Zeremonien, Tabelle; SR-09), seit Web 21.12.0
+│   │                      schluesselwechsel (A → B und zurück, jedes
+│   │                      Stück je Zweck; SR-03).
+│   │                      Gezählt am 29.09.2026 mit `proben.sh --liste`:
+│   │                      27 — bis zum 24.09.2026 stand hier
 │   │                      „zweiundzwanzig", AP5 hatte die
 │   │                      Zweitfaktorprobe nicht nachgetragen.
 │   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
@@ -897,7 +912,7 @@ Daten erst nach Server-Bestätigung.
 | `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **In die Komplettsicherung geht sie seit Web 20.39.0 ohne Zeilen** (`KOMP_OHNE_ZEILEN` in `komplett_lib.php`, P5c/AP2): nur das Schema, damit ein Einspielen die Tabelle anlegt. Die 30-Tage-Frist gilt damit auch für jeden Abzug. *Hier stand bis Web 21.1.0, sie liege in **jeder** Komplettsicherung, weil `komp_tabellen()` keine Ausnahmeliste habe — das stimmte bis Web 20.38.x.* Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **Töpfen mit Leiter** (`'leiter' => true` in `RATE_GRENZEN`; seit Web 20.42.0 sieben, mit `totp`) — die übrigen sperren ohne Protokollzeile. *Hier stand „fünf" und „neun"; seit Web 20.11.0 waren es sechs mit Leiter, gezählt am 24.09.2026* |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
-| `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
+| `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage` / `seite` (seit Web 21.12.0, der Knopf „Jetzt weiterarbeiten", 4.97a), `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTPS- oder SFTP-Gegenstelle je Zeile. **`ftp` ist seit Web 20.2.0 abgeschafft** (S10/AP4, E-S10-14) und **seit Web 21.0.0 auch aus dem `ENUM`** (Migration `2026_09_25_ftp_entfernen`, P5c/AP8, E-P5c-124). Bis dahin behielt das Schema den Wert, und ein solches Ziel trug die rote Plakette *wird übergangen*; der Weg dafür ist mit dem Wert gefallen. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
@@ -2847,13 +2862,17 @@ Nachricht, und eine Rundmail an vierzig Konten hätte den Seitenaufruf bis zu
 Prüfung, Präfix, Frist und das Schließen überholter Zeilen bleiben eine
 Stelle.
 
-**Der Katalog** (`mail_katalog()`) führt **sechsundzwanzig** Einträge mit
+**Der Katalog** (`mail_katalog()`) führt **siebenundzwanzig** Einträge mit
 `art`, `frist`, `pflicht`, `betreff` und `text` (hier stand bis Web 20.37.3
 „zehn", der Stand von Web 20.8.0 — P5b hatte neun dazugebracht, 20.38.0
 bringt `rundmail`, 20.41.0 `registrierung_erneut`, 20.42.0
 `totp_zurueckgesetzt`, 20.44.0 `rueckweg_erneuert`, 21.10.0
-`passkey_angelegt` und `passkey_entfernt`, 21.11.0 `passkey_zaehler`; bis Web 21.1.0 stand hier
-„zwanzig", bis Web 21.9.0 „dreiundzwanzig", bis Web 21.10.0 „fünfundzwanzig"). Der Name der Installation kommt aus `instanz_name()`, die
+`passkey_angelegt` und `passkey_entfernt`, 21.11.0 `passkey_zaehler`, 21.12.0
+`serverschluessel_gewechselt` — an **jede** BetreiberIn mit Passwort
+(`mail_betreiberinnen()`, E-SR-62), beim Beginn und beim Abschluss eines
+Wechsels, nur Kennungen; bis Web 21.1.0 stand hier
+„zwanzig", bis Web 21.9.0 „dreiundzwanzig", bis Web 21.10.0 „fünfundzwanzig",
+bis Web 21.11.2 „sechsundzwanzig"). Der Name der Installation kommt aus `instanz_name()`, die
 Kontaktzeile aus `instanz_kontakt()` — über `mail_rahmen()`, den alle
 benutzen. Vorher gab es acht Mailtexte mit handgeschriebener Grußformel, und
 einer davon fehlte das „Gen-EM" im Betreff.
@@ -3575,6 +3594,16 @@ Job bei *jeder* angemeldeten Anfrage, und jede Seite trüge bis zu drei
 Sekunden Wartung mit. Für `cli` und `token` gilt er nicht: Dort bestimmt der
 Zeitplan die Häufigkeit, und wer jede Minute aufruft, will das auch.
 
+**Ein vierter Auslöser ist kein Zeitgeber, sondern ein Knopf: `seite`**
+(seit Web 21.12.0, SR-03, E-SR-65). „Jetzt weiterarbeiten" in der Karte
+„Schlüssel des Servers" ruft `sw_jetzt()`, und das geht über
+`jobs_einen_lauf()` — mit der Sperre `laeuft_seit`, ohne Mindestabstand,
+mit 20 s Budget. Zwei Umhüller gleichzeitig räumten einander den
+Arbeitsordner leer; eine eigene Schleife neben dem Rahmen hätte diese
+Sperre nicht. **Die Pause (`jobs_pause()`) hält ihn nicht an** — sie steht in
+`jobs_lauf()`, und der Knopf geht daran vorbei wie „Jetzt sichern" beim
+Komplett-Backup: Wer drückt, will es jetzt.
+
 `jobs.php` lädt **ausdrücklich nicht** `auth_guard.php`. Der würde den
 Huckepack-Weg auslösen und damit den Job aus dem Job heraus starten. Der Abruf
 über die Adresse legitimiert sich mit dem Token, nicht mit einer Sitzung — ein
@@ -3639,6 +3668,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
 | `protokoll_archiv` | nein, im Regelfall eine Abfrage auf die Marke | Die Einträge eines abgelaufenen Zeitraums (Vorgabe 7 Tage) versiegelt als ZIP nach `sicherungen/protokoll/`, in Häppchen zu 500 Zeilen; Archive nach Ablauf der Aufbewahrung (Vorgabe 365 Tage) löschen (P5c/AP2, 4.99g). Steht **vor** `versand`, damit ein fertiges Archiv im selben Lauf hinausgeht |
+| `schluesselwechsel` | nein, nur während eines Wechsels des Serverschlüssels | Was noch unter dem bisherigen Serverschlüssel liegt, mit dem neuen umhüllen und danach mit ihm nachweisen — Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups samt Begleitdatei, Archive des Protokolls (Schritt 18, SR-03, 4.97c). Ohne Wechsel eine Abfrage und `fertig`. Steht **vor** `versand`, damit ein umbenanntes Archiv im selben Lauf hinausgeht |
 | `versand` | nein | Pakete auf die aktiven Backup-Ziele — und seit Web 20.14.0 die **Aufbewahrung dort** (4.97c); seit Web 20.39.0 auch die Archive des Protokolls, **ohne** Aufbewahrungsregel dort |
 | `komplett` | nein, nach Plan | Komplett-Backup der Installation (4.97d) |
 | `nachaufloesen` | nein, nur nach einer neuen Modelltabelle | Teilenummern bestehender Geräte erneut auflösen, in Blöcken von 200 (P5a/AP11, unten) |
@@ -4161,14 +4191,19 @@ Zusatzdaten: 'edsk1|<zweck>'
 ```
 
 Der Zweck in den Zusatzdaten bindet die Chiffre an **die eine Stelle**, für
-die sie gedacht ist. Vier Zwecke gibt es:
+die sie gedacht ist. **Sechs Zwecke gibt es** — bis Web 21.12.0 standen hier
+vier; `totp` und `protokollarchiv` fehlten, obwohl das Schlüsselblatt sie
+nannte (F-SR-01). Maßgeblich sind die Aufrufer von `sk_versiegeln()`, nicht
+diese Tabelle; die Schlüsselwechselprobe zählt sie nach:
 
-| Zweck | Wofür | seit |
-|---|---|---|
-| `sicherungsziel:<id>:<feld>` | Passwort und privater Schlüssel eines Backup-Ziels | Web 12.1.0 |
-| `komplett:<datei>` | das Komplett-Backup der Installation | Web 15.3.0 |
-| `adminpaket\|<konto>\|<paket>\|<teil>` | jeder Eintrag eines Konto-Backups, Fassung 3 | Web 20.2.0 |
-| `adminkonto\|<konto>` | die Begleitdatei `konto.json` neben den Paketen | Web 20.2.0 |
+| Zweck | Wofür | seit | beim Wechsel (unten) |
+|---|---|---|---|
+| `sicherungsziel:<id>:<feld>` | Passwort und privater Schlüssel eines Backup-Ziels (`sicherungsziel_lib.php`) | Web 12.1.0 | umgehüllt (`ziele`) |
+| `totp\|<konto>` | das Geheimnis des Zweitfaktors (`totp_lib.php`) | Web 20.42.0 | umgehüllt (`totp`) |
+| `adminkonto\|<kennung>` | die Begleitdatei `konto.json` neben den Paketen | Web 20.2.0 | umgehüllt (`konten`) |
+| `adminpaket\|<kennung>\|<paket>\|<teil>` | jeder Eintrag eines Konto-Backups, Fassung 3 | Web 20.2.0 | umgehüllt (`konten`); Fassung 1 und 2 tragen kein Siegel und bleiben |
+| `protokollarchiv\|<name>\|<teil>` | Manifest und Teile eines Archivs des Protokolls; die Kennung steht im Namen | Web 20.39.0 | umgehüllt unter **neuem Namen** (`archive`) |
+| Komplett-Stand `EDKOMP1` | **kein** `edsk1:`: der rohe Schlüssel je Block zu 256 KiB, Zusatzdaten `edkomp1\|<sha256 des Kopfes>\|<block>\|<letzter>` | Web 15.3.0 | **nicht** umgehüllt (E-SR-21) |
 
 Ein versiegeltes Passwort von Ziel 3 lässt sich damit nicht als Passwort von
 Ziel 7 einsetzen, obwohl beide denselben Schlüssel benutzen — und ein Teil aus
@@ -4186,7 +4221,9 @@ die schlechteste Antwort, denn der Versand liefe dann in ein „Zugang
 verweigert", und niemand käme auf die Ursache.
 
 Neue Installationen bekommen den Schlüssel vom Installer. Bestehende tragen
-ihn auf der Seite „Backup-Ziele" nach — ein Knopf, wenn `config.php`
+ihn unter **Betrieb → Servereinstellungen**, Karte „Schlüssel des Servers",
+nach — seit S10/AP3; bis Web 21.12.0 stand hier „auf der Seite
+‚Backup-Ziele'", der Ort bis S10 (F-SR-03). Ein Knopf, wenn `config.php`
 beschreibbar ist, sonst eine Zeile von Hand. Der Knopf **ergänzt und ersetzt
 nie** (ein Überschreiben machte jedes versiegelte Feld unlesbar), schreibt in
 eine Nebendatei mit Endung `.php` — eine `config.php.tmp` läge im
@@ -4195,6 +4232,77 @@ Wurzelverzeichnis des Webservers als lesbarer Text mit dem Datenbankpasswort
 schiebt sie erst dann an ihren Platz und verwirft danach den
 OPcache-Eintrag. Ohne diesen letzten Schritt zeigt die nächste Anfrage wieder
 „Serverschlüssel fehlt": OPcache prüft den Zeitstempel sekundengenau.
+
+#### Der Wechsel des Serverschlüssels (ab Web 21.12.0, Schritt 18, SR-03)
+
+**Bis Web 21.12.0 gab es keinen.** Wer `server_key` von Hand änderte, machte
+jedes versiegelte Stück stumm (Nr. 247). Jetzt ist es ein Vorgang in drei
+Lagen — `serverkrypto_lib.php` (Schreiben, Lage, Riegel) und
+`schluesselwechsel_lib.php` (Job, Nachweis, Bedingungen):
+
+| Lage | `config.php` | Marke `server_key_kennung` | was geschieht |
+|---|---|---|---|
+| `bereit` | `server_key` | dessen Kennung | — |
+| `rotation` | `server_key` (neu) **und** `server_key_alt` (bisher) | die neue | versiegelt wird mit dem neuen; `sk_oeffnen()` versucht erst den neuen, dann den bisherigen (`sk_oeffnen_mit_wem()` sagt, welcher); der Job hüllt um |
+| `bereit` | `server_key` (der neue) | die neue | der bisherige steht nur noch auf dem Blatt |
+
+**Beginn: `serverschluessel_wechseln($kopienVerstanden)`.** Ohne den Haken
+nichts (E-SR-63) — er sagt, dass die Kopien auf dem Backup-Ziel unter dem
+bisherigen bleiben. Nicht neben einer Anteil-Rotation (E-SR-60; umgekehrt
+weist `anteil_wechseln()` ab, solange ein Wechsel läuft). Geschrieben wird
+erst `server_key_alt` (der heutige), dann `server_key` (ein neuer); scheitert
+das zweite, wird das erste zurückgenommen. Danach `sw_beginnen()`: Zustand
+des Jobs, die Rückfrage zum Blatt fällig (Nr. 233, E-SR-11), Protokoll
+`serverschluessel_gewechselt`, eine Mail an jede BetreiberIn (E-SR-62) — nur
+Kennungen. Die Seite fährt gleich ein Häppchen mit acht Sekunden.
+
+**Der Job `schluesselwechsel`** (4.97a) nimmt die Zwecke in der Reihenfolge
+`ziele`, `totp`, `konten`, `archive` — erst die Zeilen, dann die Dateien.
+**Der Zustand ist ein Zeiger** (E-SR-64): Phase, Zweck, das letzte Stück
+(lexikalisch; Zeilennummern auf zehn Stellen aufgefüllt, sonst stünde „10"
+vor „9"), Zahlen. `jobs.zustand` fasst 64 KiB; eine Liste der Stücke wüchse
+mit der Anlage. Je Stück: mit dem bisherigen öffnen, mit dem neuen
+versiegeln, **mit dem neuen wieder öffnen und vergleichen**, erst dann
+ersetzen —
+
+- eine Zeile mit `UPDATE … WHERE id = ? AND feld = <gelesener Wert>`: Hat
+  jemand das Ziel inzwischen neu gespeichert, gilt das Stück als „später",
+  und der Nachweis findet es wieder;
+- eine Datei über den Arbeitsordner `sicherungen/.schluesselwechsel/` und
+  `rename`. **Er liegt außerhalb der Kontoordner**, weil die Aufbewahrung dort
+  aufräumt; jedes Häppchen leert ihn zuerst — was dort liegt, ist ein halbes
+  Stück eines abgebrochenen Laufs. Ein Konto-Backup wird Teil für Teil neu
+  gebaut und jeder Teil an der neuen Datei mit dem neuen geöffnet und gegen
+  die Prüfsumme davor gehalten; die Begleitdatei vor dem Umbenennen noch
+  einmal gelesen;
+- ein Archiv des Protokolls bekommt einen **neuen Namen** (die Kennung steht
+  darin, und der Name im Zweck jedes Teils): neue Datei bauen, ablegen,
+  nachweisen, dann die alte löschen. Liegt die neue schon da und besteht den
+  Nachweis, brach der vorige Lauf zwischen Ablegen und Löschen ab.
+
+Reserven je Stück: 0,5 s für eine Zeile, 6 s für eine Datei. Nach dem
+Umhüllen ein **Nachweis-Durchgang**, der nichts schreibt; liegt dann noch
+etwas unter dem bisherigen, beginnt das Umhüllen von vorn (höchstens dreimal
+je Häppchen). Fertig heißt: Protokoll `serverschluessel_umgehuellt` mit den
+Zahlen, und **ein Komplett-Auftrag wird vorgemerkt** (`sw_komplett_anstossen()`,
+Q-SR-03) — erst jetzt, weil ein Stand mitten im Umhüllen Zeilen unter beiden
+Schlüsseln trüge. Scheitert das Vormerken (Grenze, es läuft schon einer),
+nennt die Karte den Grund; der Wechsel hängt nicht daran. **Was mit keinem der beiden aufgeht, wird genannt und nicht
+angefasst** (E-SR-61) — es war vorher schon stumm; die Karte nennt bis zu
+zwanzig, ohne Kontokennung.
+
+**Abschluss: `serverschluessel_alt_entfernen()`** verlangt drei Dinge
+(`sw_bedingungen()`, E-SR-09) — alles nachgewiesen, ein Komplett-Stand unter
+dem neuen, jünger als der Beginn (am Kopf **und** am ersten Block geprüft,
+4.97d), und die Rückfrage zum Blatt seit dem Beginn beantwortet. Fehlt eines,
+kommen die fehlenden als Sätze zurück, und nichts ändert sich. Danach
+Protokoll `serverschluessel_alt_entfernt` und die zweite Mail.
+
+**Was er nicht erreicht.** Komplett-Stände (E-SR-21) und alles auf einem
+Backup-Ziel bleiben unter dem bisherigen. Ein umbenanntes Archiv gilt dem
+Versand als „nur lokal" und geht noch einmal hinaus; auf dem Ziel liegt es
+dann unter beiden. Deshalb die Blatt-Regel (E-SR-10): Das bisherige Blatt
+wird nicht vernichtet, solange drüben etwas liegt, das nur es öffnet.
 
 #### Der Versand
 
@@ -4464,6 +4572,22 @@ Der Schlüssel ist entweder der **Serverschlüssel** aus `config.php`
 `KDF_ITER_ZIEL` = 600 000 Runden, dieselbe Zahl wie im Browser). Was gilt,
 steht im Kopf; raten muss das niemand — und deshalb bleibt eine ältere Datei
 mit 320 000 im Kopf auch nach der Anhebung lesbar.
+
+**Seit Web 21.12.0 trägt der Kopf auch die Kennung des Serverschlüssels**
+(`kennung`, nur bei `kdf: null`; F-SR-11, E-SR-67). Sie steht über die
+Bindung in den Zusatzdaten jedes Blocks — wer sie ändert, macht die Datei
+unlesbar, statt sie einem anderen Schlüssel zuzuschreiben. **Welcher
+Schlüssel welchen Stand öffnet** (`komp_serverschluessel_fuer()`): erst der
+heutige, dann der bisherige (`server_key_alt`, nur während eines Wechsels,
+4.97c), jeweils am ersten Block versucht; die Kennung allein wäre eine
+Behauptung. Die Liste zeigt „bisheriger Schlüssel" (blau) oder „anderer
+Schlüssel" (orange); Herunterladen, versiegelt Herunterladen und Einspielen
+(`komp_schluessel_fuer()` mit dem Pfad) nehmen denselben Weg. **Stände werden
+beim Wechsel nicht umgehüllt** (E-SR-21): Nach dem Entfernen des bisherigen
+öffnet einen älteren Stand nur noch der Wert vom bisherigen Blatt — als
+`server_key_alt` von Hand eingetragen, für die Dauer des Einspielens
+(Runbook 7). Ältere Stände ohne `kennung` zeigen dieselben Plaketten; für sie
+entscheidet allein der Versuch.
 
 #### Zwei Wege heraus
 
@@ -7223,6 +7347,13 @@ mit dem Link. Und `konto_geloescht` schreibt jetzt auch die Löschung durch
 die Verwaltung auf der Kontoseite, **vor** dem `DELETE` (F-P5c-99); bis
 dahin schrieben ihn nur die Selbstlöschung und der Verfall.
 
+**Neu mit Web 21.12.0** (Schritt 18, SR-03): drei Arten im Reiter Sicherung
+für den Wechsel des Serverschlüssels (4.97c) — `serverschluessel_gewechselt`
+(orange; neue und bisherige Kennung, Zahl der Stücke),
+`serverschluessel_umgehuellt` (blau; die Zahlen des Nachweises und bis zu
+zwanzig Stücke, die mit keinem der beiden aufgingen, ohne Kontokennung) und
+`serverschluessel_alt_entfernt` (neutral). Nie ein Wert.
+
 #### Wer welchen Reiter sieht
 
 `protokoll_reiter_sichtbar()`: **BetreiberIn alle sieben und das Archiv;
@@ -7410,7 +7541,9 @@ auch im Archiv.
 (`protokollarchiv|<Name>|<Teil>`). Ein umbenanntes Archiv lässt sich nicht
 mehr öffnen, und eines von einem anderen Schlüssel erkennt die Seite am
 Namen, ohne es zu öffnen: Der Reiter Archiv zeigt es mit der Plakette
-„anderer Schlüssel" und sperrt den Download.
+„anderer Schlüssel" und sperrt den Download. Während eines Wechsels des
+Serverschlüssels trägt ein noch nicht umgehülltes Archiv diese Plakette,
+bis der Job es unter dem neuen Namen abgelegt hat (4.97c).
 
 **Der Download** (nur BetreiberIn, POST mit Token) entsiegelt in einen
 Arbeitsordner unter dem temporären Verzeichnis, packt `manifest.json` und je
@@ -8546,9 +8679,22 @@ Leiter überholt den Wert in `sperre`), Eintrag in
 Verwaltung).
 
 **Keine Schlüsselerneuerung an dieser Stelle.** Den Serverschlüssel zu wechseln
-hieße, jede versiegelte Sicherung neu zu umhüllen — ein S10-Vorgang, kein
-Knopf in einem Dialog. Wer sein Blatt verloren hat, druckt es neu; der
-Schlüssel bleibt derselbe.
+hieße, jede versiegelte Sicherung neu zu umhüllen — seit Web 21.12.0 gibt es
+diesen Vorgang (4.97c, SR-03), und er steht unter Betrieb →
+Servereinstellungen, nicht in einem Dialog. Wer sein Blatt verloren hat,
+druckt es neu; der Schlüssel bleibt derselbe.
+
+**Nach einer Rotation kommt die Frage sofort** (seit Web 21.12.0, Nr. 233,
+E-SR-11). Beide Rotationen — Anteil und Serverschlüssel — rufen
+`blatt_neu_faellig()`: Die Bestätigung wird gelöscht, und
+`app_state.schluesselblatt_neu_weil` sagt, welche es war. Der Dialog setzt
+dann den Satz voran „Ein Wert hat gewechselt — drucke das Blatt neu", und
+während eines Wechsels nennt er die Kennung des bisherigen, der mit aufs
+Blatt gehört. Gefragt werden weiter nur die **heutigen** Werte; der
+bisherige wird genannt, nicht abgefragt. Die Antwort (`blatt_bestaetigt()`)
+räumt den Grund wieder weg. Bis dahin fasste die Rotation die Marke nicht
+an, und die Frage kam im nächsten Quartal — mit einem Blatt in der Akte,
+das den heutigen Wert nicht trug.
 
 #### „Später" heißt zweierlei
 
@@ -12177,7 +12323,15 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 2. **Anwendungsdateien hochladen** (der Deploy tut das, oder von Hand).
 3. **`config.php` aus dem Wiederanlaufpaket** daneben legen. Datenbankzugang
    darin auf die neue Datenbank anpassen, den **`server_key` unverändert
-   lassen** — er ist es, der das Backup öffnet.
+   lassen** — er ist es, der das Backup öffnet. **Genauer, seit Web
+   21.12.0:** der Schlüssel, unter dem der **Stand** versiegelt ist. Sein
+   Kopf nennt die Kennung (4.97d); stammt er aus der Zeit vor einem Wechsel
+   des Serverschlüssels, ist es der Wert vom **bisherigen** Blatt — als
+   `server_key`, denn auch die Zeilen im Dump und die Marke in `app_state`
+   gehören zu ihm. Stammt er aus der Zeit **während** eines Wechsels,
+   gehören beide Werte vom Blatt dieser Zeit hinein — `server_key` der neue,
+   `server_key_alt` der bisherige —, und der Job macht nach dem Anmelden dort
+   weiter, wo der Dump ihn angetroffen hat.
 4. **Die Backup-Datei** nach `server/sicherungen/eingang/` legen — per
    FTP, SFTP oder Dateimanager des Hosters. Vom Backup-Ziel holt man sie
    sich dorthin. Erkannt werden `.edk` (versiegelt), `.sql.gz` und `.sql`.
@@ -12261,10 +12415,54 @@ Rechner, nicht im selben Backup:
 Halbjahr ein Paket vom Ziel holen und in ein Wegwerfkonto einspielen. Ein
 Backup, das nie zurückgespielt wurde, ist eine Vermutung.
 
-**Serverschlüssel nachtragen (bestehende Installation):** Adminbereich →
-**Backup-Ziele**. Ist `config.php` beschreibbar, genügt der Knopf; sonst
-zeigt die Seite die fertige Zeile zum Einfügen — **genau eine** eintragen, bei
-jedem Neuladen steht dort eine andere. Danach die Zeile ins Wiederanlaufpaket.
+**Serverschlüssel anlegen oder nachtragen (bestehende Installation):**
+Betrieb → **Servereinstellungen**, Karte „Schlüssel des Servers". Fehlt er,
+legt *Serverschlüssel anlegen* ihn an; weicht er ab (Lage *abweichend*, etwa
+nach einem Wiederanlauf), trägt *Nachtragen vom Blatt* den richtigen Wert ein
+und vergleicht vorher die Kennung. Beides schreibt `config.php`; ist sie
+nicht beschreibbar, sagt die Meldung es, und nichts ändert sich. Danach das
+Schlüsselblatt drucken. *Bis Web 21.12.0 stand hier „Adminbereich →
+Backup-Ziele" mit einer fertigen Zeile zum Einfügen — der Ort und der Weg bis
+S10 (F-SR-03).*
+
+**Serverschlüssel wechseln (seit Web 21.12.0, SR-03, Nr. 247).** *Auslöser:*
+der Verdacht, dass das Blatt oder `config.php` in falsche Hände kam — nicht
+der Kalender. *Ablauf:*
+
+1. Betrieb → Servereinstellungen, Karte „Schlüssel des Servers", Abschnitt
+   *Serverschlüssel wechseln*. Den Haken setzen („Kopien auf dem Backup-Ziel
+   bleiben unter dem bisherigen") und die Rückfrage bestätigen. Geht nicht
+   während einer Rotation des Anteils (und umgekehrt, E-SR-60).
+2. **Sofort das Blatt neu drucken** — es trägt jetzt drei Kacheln, den
+   bisherigen mit dem Satz „Dieses Blatt nach dem Wechsel NICHT vernichten".
+   Die Rückfrage zum Blatt ist ab jetzt fällig und kommt bei der nächsten
+   Anmeldung jeder BetreiberIn; jede bekommt außerdem eine Mail.
+3. Die Karte zeigt „Umhüllung: noch n von m". Der Job arbeitet über den
+   eingerichteten Auslöser; *Jetzt weiterarbeiten* fährt ein Häppchen mit
+   20 s. Auf einer kleinen Anlage ist nach dem ersten Häppchen alles
+   umgehüllt — örtlich gemessen: 13 Stücke im Häppchen von acht Sekunden,
+   das der Wechsel selbst fährt.
+4. **Der Komplett-Stand unter dem neuen.** Ist alles nachgewiesen, merkt
+   der Job selbst einen Auftrag vor (Q-SR-03); er läuft mit dem nächsten
+   Joblauf an. Ohne eingerichteten Auslöser: Komplett-Backup → *Jetzt
+   sichern* — erst nach der Umhüllung, damit er nur Zeilen unter dem neuen
+   trägt.
+5. Die Rückfrage zum Blatt beantworten (Startseite, gleich nach dem
+   Anmelden).
+6. Stehen alle drei („Bevor der bisherige gehen darf: 3 von 3"), *Alten
+   Schlüssel entfernen*. Danach steht `server_key_alt` nicht mehr in
+   `config.php`.
+
+*Die Blatt-Regel (E-SR-10):* Das Blatt mit dem bisherigen Wert **bleibt in
+der Betriebsakte**, solange auf dem Backup-Ziel oder in der Liste der
+Komplett-Stände etwas liegt, das nur er öffnet — die Liste zeigt es mit
+„anderer Schlüssel". Ein Stand von vor dem Wechsel lässt sich danach nur so
+einspielen: den bisherigen Wert als `server_key_alt` von Hand in
+`config.php` eintragen, einspielen, wieder austragen (die Karte zeigt
+dazwischen die Lage *Wechsel*; der Job findet nichts umzuhüllen). *Was
+„mit keinem der beiden zu öffnen" meldet,* war vorher schon stumm (E-SR-61):
+ein Ziel neu erfassen, ein Zweitfaktor neu einrichten (Notweg oben), ein
+Konto-Backup neu erzeugen.
 
 **Backup-Ziel einrichten:** Adminbereich → **Backup-Ziele** → *Ziel
 anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist von den

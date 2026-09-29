@@ -409,6 +409,12 @@ function edbak_begleit_lesen(string $kennung): array
 
 function edbak_begleit_schreiben(string $kennung, array $daten): bool
 {
+    /* NUR IN EINEN KONTOORDNER (Nr. 344, Schritt 18, SR-03). Mit einer leeren
+     * Kennung — etwa aus einem Handgriff, der sich nicht auflösen lässt —
+     * legte diese Funktion eine versiegelte `konto.json` in die WURZEL der
+     * Ablage und meldete Erfolg. Dieselbe Prüfung wie in
+     * `edbak_ordner_loeschen()`. */
+    if (!edbak_kennung_gueltig($kennung)) { return false; }
     $daten['account_key'] = $kennung;
     unset($daten['lesbar']);
     $pfad = edbak_ordner($kennung) . '/konto.json';
@@ -1178,6 +1184,9 @@ function edbak_freigeben(string $kennung, string $datei, int $zielUserId): bool
 /** Freigabe widerrufen, solange sie nicht eingelöst wurde (Akzeptanzkriterium 53). */
 function edbak_freigabe_widerrufen(string $kennung): bool
 {
+    /* Nr. 344: Ohne gültige Kennung gibt es keine Freigabe zu widerrufen —
+     * der Aufrufer meldet „ließ sich nicht widerrufen", statt Erfolg. */
+    if (!edbak_kennung_gueltig($kennung)) { return false; }
     $begleit = edbak_begleit_lesen($kennung);
     $begleit['freigabe'] = null;
     return edbak_begleit_schreiben($kennung, $begleit);

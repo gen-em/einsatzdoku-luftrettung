@@ -371,8 +371,11 @@ function wh_auspacken(string $datei, string $passwort, array $stand): array
     try {
         if ($gefunden['art'] === 'edk') {
             /* A1 — entsiegeln. */
+            /* MIT DER DATEI (SR-03): Während eines Wechsels öffnet ein Stand
+             * von davor mit dem bisherigen Schlüssel — der erste Block
+             * entscheidet. */
             $schluessel = komp_schluessel_fuer((array)$gefunden['kopf'],
-                                               $passwort === '' ? null : $passwort);
+                                               $passwort === '' ? null : $passwort, $quelle);
             $zh = fopen($zwischen, 'wb');
             if ($zh === false) { throw new RuntimeException('Die Zwischendatei liess sich nicht schreiben.'); }
             try {

@@ -61,6 +61,7 @@ declare -A RUF=(
   [rueckweg]="bash tools/proben/rueckweg/probe.sh"
   [sitzung]="php tools/proben/sitzung/probe.php"
   [passkey]="php tools/proben/passkey/probe.php"
+  [schluesselwechsel]="php tools/proben/schluesselwechsel/probe.php"
   [verbindung]="php tools/proben/verbindung/probe.php"
   [anteil]="php tools/proben/anteil/probe.php"
   [rechtstexte]="php tools/proben/rechtstexte/pruefen.php"

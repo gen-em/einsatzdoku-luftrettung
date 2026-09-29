@@ -361,20 +361,39 @@ function status_erhebung(): array
        SEIT S10 MIT KENNUNG — und mit einer dritten Lage: „abweichend" heisst,
        dass in `config.php` ein ANDERER Schlüssel steht als der, mit dem
        versiegelt wurde. Das sah bis dahin aus wie ein beschädigtes Backup. */
+    /* SEIT WEB 21.12.0 MIT DER LAGE `rotation` (SR-03): blau und mit der Zahl
+     * der Stücke, die noch umzuhüllen sind — ein Zustand mit Ende, wie beim
+     * Anteil. Die Zahl kommt aus dem Job (`jobs.rueckstand`), nicht aus einer
+     * zweiten Zählung. */
+    $skRest = null;
+    if ($skZustand['stand'] === 'rotation') {
+        require_once __DIR__ . '/schluesselwechsel_lib.php';
+        $skRest = sw_rueckstand(sw_zustand());
+    }
     $server[] = status_z('Serverschlüssel',
         $skZustand['stand'] === 'bereit'
             ? 'Kennung ' . $skZustand['kennung'] . ' — Komplett-Backups, '
               . 'Konto-Backups und Backup-Ziele können versiegeln'
+            : ($skZustand['stand'] === 'rotation'
+                ? 'Wechsel läuft: neu ' . $skZustand['kennung'] . ', bisher '
+                  . $skZustand['kennung_alt'] . ' — '
+                  . ($skRest !== null
+                      ? 'noch ' . $skRest . ' Stück(e) umzuhüllen'
+                      : 'alles umgehüllt und nachgewiesen; der bisherige lässt sich '
+                        . 'entfernen, sobald ein Komplett-Stand unter dem neuen da und '
+                        . 'das Blatt bestätigt ist')
             : ($skZustand['stand'] === 'fehlt'
                 ? 'Fehlt. Ohne ihn gibt es kein Komplett-Backup, kein '
                   . 'Konto-Backup und keinen Versand auf ein Backup-Ziel'
                 : 'In config.php steht Kennung ' . ($skZustand['kennung'] ?? '—')
                   . ', versiegelt wurde mit ' . $skZustand['erwartet']
                   . '. Versiegeltes lässt sich nicht öffnen, bis der richtige '
-                  . 'Wert nachgetragen ist (Blatt)'),
-        $skZustand['stand'] === 'bereit' ? 'blau' : 'rot',
-        ['bereit' => 'vorhanden', 'fehlt' => 'fehlt',
-         'abweichend' => 'abweichend'][$skZustand['stand']] ?? '?',
+                  . 'Wert nachgetragen ist (Blatt)')),
+        in_array($skZustand['stand'], ['bereit', 'rotation'], true) ? 'blau' : 'rot',
+        $skZustand['stand'] === 'rotation'
+            ? ($skRest !== null ? 'noch ' . $skRest : 'bisherigen entfernen')
+            : (['bereit' => 'vorhanden', 'fehlt' => 'fehlt',
+                'abweichend' => 'abweichend'][$skZustand['stand']] ?? '?'),
         $skZustand['stand'] === 'bereit' ? null : 'betrieb_server.php#k-schluessel');
 
     /* ---- Server-Anteil (S10, E-S10-09) ---------------------------------

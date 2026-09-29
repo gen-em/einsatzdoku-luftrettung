@@ -1391,6 +1391,17 @@ beim nächsten Schreiben von selbst.
 bricht mit Grund ab, bevor irgendetwas gelesen wird — derselbe Riegel wie beim
 Komplett-Backup.
 
+**Beim Wechsel des Serverschlüssels** (seit Web 21.12.0, `docs/Technik.md`
+4.97c) werden Paket und Begleitdatei **unter demselben Namen** umgehüllt:
+jeder versiegelte Eintrag mit dem bisherigen geöffnet, mit dem neuen
+versiegelt, das ZIP neu gebaut und jeder Eintrag daran mit dem neuen
+geöffnet und gegen die Prüfsumme davor gehalten, erst dann ersetzt. Zweck
+und Inhalt bleiben gleich; es ändert sich nur der Schlüssel. Pakete der
+Fassung 1 und 2 tragen kein Siegel und bleiben, wie sie sind. **Was schon
+auf einem Backup-Ziel liegt, bleibt unter dem bisherigen** — dieselbe Datei
+unter demselben Namen gilt dem Versand als dort vorhanden und geht nicht
+noch einmal hinaus.
+
 **Ein Paket ist seit Web 12.0.0 ein ZIP** mit dem Namen
 `<zeitstempel>_<8 Hexziffern>.zip`. Die Endung unterscheidet **einteilig von
 mehrteilig**: `.json` = die einteilige Fassung 1 (Abschnitt 5a), `.zip` =
@@ -1684,11 +1695,21 @@ Abruf über den Browser; die erste ist `sicherungen/.htaccess`.
   "zeilen":    1121802,
   "roh":       45798320,
   "block":     262144,
-  "kdf":       null
+  "kdf":       null,
+  "kennung":   "04ab5524"
 }
 ```
 
-`kdf: null` heisst **Serverschlüssel** aus `config.php`. Für die Fassung mit
+`kdf: null` heisst **Serverschlüssel** aus `config.php`. **`kennung`** (seit
+Web 21.12.0, F-SR-11) ist dessen Kennung — die ersten acht Hexzeichen von
+SHA-256 über den Schlüssel, dieselbe wie auf dem Schlüsselblatt. Sie steht
+nur bei `kdf: null`; ältere Stände haben sie nicht. Über die Bindung (6.4)
+hängt sie an jedem Block: Wer sie ändert, macht die Datei unlesbar. Sie
+**sagt**, welcher Schlüssel es war; ob er es **ist**, zeigt erst der erste
+Block. Die Anwendung versucht erst den heutigen, dann — während eines
+Wechsels — den bisherigen (`komp_serverschluessel_fuer()`); **umgehüllt
+wird ein Stand nie** (E-SR-21). Nach dem Wechsel öffnet einen Stand von
+vorher nur der Wert vom bisherigen Blatt. Für die Fassung mit
 Passphrase steht dort stattdessen:
 
 ```json
@@ -1911,6 +1932,15 @@ damit `sz_zeit_aus_dateiname()` es liest und der Name zeitlich sortiert. Die
 (`serverschluessel_kennung()`: die ersten acht Hexzeichen von SHA-256 über
 den Schlüssel — dieselbe, die das Schlüsselblatt zeigt). Ein Archiv eines anderen Schlüssels erkennt
 die Seite am Namen, ohne es zu öffnen.
+
+**Beim Wechsel des Serverschlüssels** (seit Web 21.12.0, `docs/Technik.md`
+4.97c) bekommt ein Archiv deshalb einen **neuen Namen**: gleicher Beginn,
+neue Kennung. Weil der Name im Zweck jedes Teils steht, wird jeder Teil
+unter dem neuen Namen versiegelt; im Manifest ändert sich nur `kennung`.
+Die neue Datei wird abgelegt und nachgewiesen, erst dann die alte gelöscht.
+Dem Versand gilt sie als „nur lokal" und geht noch einmal hinaus — auf dem
+Ziel liegt dann dasselbe Archiv unter beiden Schlüsseln, jedes unter seinem
+Namen.
 
 ### 7.2 Aufbau
 

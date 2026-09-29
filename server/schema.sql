@@ -888,7 +888,7 @@ CREATE TABLE jobs (
   rueckstand        INT UNSIGNED NULL,
   letzter_lauf      DATETIME NULL,
   letzter_erfolg    DATETIME NULL,
-  letzter_ausloeser VARCHAR(16) NULL,       -- cli | token | anfrage
+  letzter_ausloeser VARCHAR(16) NULL,       -- cli | token | anfrage | seite (Knopf, seit Web 21.12.0)
   letzter_fehler    TEXT NULL,
   erledigt_zuletzt  INT UNSIGNED NOT NULL DEFAULT 0,
   laeuft_seit       DATETIME NULL

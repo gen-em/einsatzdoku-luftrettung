@@ -4618,7 +4618,7 @@ bestimmten Einsatz geöffnet hat: Du kannst es nicht, und zwar mit Absicht.
 | **Sicherheit** | Sperren, Verlangsamungen, aufgehobene Sperren, blockierte Inhalte (CSP) — mit IP-Adressen | — | — | ja |
 | **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt) — **nie** Empfänger, Betreff oder Inhalt | ja | ja | ja |
 | **Jobs** | jeder Lauf eines Hintergrundjobs, Fehler rot | — | ja | ja |
-| **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt | — | ja | ja |
+| **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt; seit Web 21.12.0 der Wechsel des Serverschlüssels — gewechselt (orange), umgehüllt (blau, mit Zahlen), bisherigen entfernt | — | ja | ja |
 | **Ziele** | was auf ein Backup-Ziel ging und was dort gelöscht wurde | — | — | ja |
 | **System** | Fehler und Störungen der Anwendung, je mit Kennung | — | — | ja |
 | **Archiv** (rechts abgesetzt) | die versiegelten Archive, siehe unten | — | — | ja |
@@ -4710,7 +4710,7 @@ sagt, wer es war.
 |---|---|
 | **auf dem Ziel** | liegt auch auf einem Backup-Ziel |
 | **nur lokal** | liegt nur hier — der Versand ist aus, oder er ist noch nicht gelaufen |
-| **anderer Schlüssel** | wurde mit einem früheren Serverschlüssel versiegelt; öffnen lässt es sich nur mit dem Schlüssel von damals (Wiederanlaufpaket, Schlüsselblatt mit der genannten Kennung) |
+| **anderer Schlüssel** | wurde mit einem früheren Serverschlüssel versiegelt; öffnen lässt es sich nur mit dem Schlüssel von damals (Wiederanlaufpaket, Schlüsselblatt mit der genannten Kennung). Während eines Wechsels (12.5) steht sie kurz an Archiven, die noch nicht umgehüllt sind — sie bekommen dabei einen neuen Namen und gehen noch einmal auf das Ziel |
 
 Unter jeder Zeile stehen die **Kennung des Schlüssels** (acht Zeichen am
 Stück, so wie auf dem Schlüsselblatt — leg es zum Vergleichen daneben), die
@@ -5454,7 +5454,8 @@ Geheimnisse, und beide stehen in `config.php` — nicht in der Datenbank:
 
 - der **Serverschlüssel** versiegelt, was der Server ohne Browser lesen können
   muss: die Zugangsdaten der Backup-Ziele, das Komplett-Backup, die
-  Konto-Backups und die Archive des Protokolls;
+  Konto-Backups, die Archive des Protokolls und die Geheimnisse des
+  Zweitfaktors (die letzten fehlten hier bis Web 21.12.0);
 - der **Server-Anteil** geht in den Datenschlüssel *jedes Kontos* ein. Der
   Server kann damit trotzdem nichts öffnen — aber ein Datenbankabzug allein
   reicht nicht mehr, um ein Passwort durchzuprobieren.
@@ -5473,8 +5474,12 @@ steht das Blatt da, bei einem Griff die Karte mit dem Hinweis, ihn noch
 einmal auszulösen. „Abbrechen" führt ohne Code in die Karte zurück. Die
 Bestätigung ist auch im Wartungsmodus erreichbar.
 
-**Drucke das Schlüsselblatt, sobald du einen Anteil angelegt oder gewechselt
-hast.** Der Knopf steht auf der Karte. Was darauf steht und wohin es gehört,
+**Drucke das Schlüsselblatt, sobald du einen Wert angelegt oder gewechselt
+hast.** Der Knopf steht auf der Karte. Nach jedem Wechsel — des Anteils wie
+des Serverschlüssels — fragt die Anlage seit Web 21.12.0 **sofort** nach dem
+Blatt, bei der nächsten Anmeldung jeder BetreiberIn, und sagt voran: „Ein
+Wert hat gewechselt — drucke das Blatt neu" (unten, „Die Rückfrage"). Bis
+dahin kam die Frage erst im nächsten Quartal. Was darauf steht und wohin es gehört,
 sagt das Blatt selbst; das Wichtigste in einem Satz: **zwei Ausdrucke, zwei
 getrennte Orte** — Betriebsakte und Passwortmanager der BetreiberIn. Nicht in
 den Serverordner, nicht in dasselbe Backup. Das Blatt soll genau das
@@ -5486,7 +5491,8 @@ den Serverordner, nicht in dasselbe Backup. Das Blatt soll genau das
 |---|---|---|
 | **nicht eingerichtet** | „nicht eingerichtet" | anlegen — bis dahin läuft alles wie vor Web 20.0.0 |
 | **bereit** | Kennung | nichts; das Blatt drucken, falls noch nicht geschehen |
-| **Rotation läuft** | neue und alte Kennung, dazu wie viele Konten noch auf dem alten stehen | warten, bis die Zahl auf null steht — jedes Konto stellt beim nächsten Anmelden von selbst um —, dann „Alten Anteil entfernen" |
+| **Rotation läuft** (Anteil) | neue und alte Kennung, dazu wie viele Konten noch auf dem alten stehen | warten, bis die Zahl auf null steht — jedes Konto stellt beim nächsten Anmelden von selbst um —, dann „Alten Anteil entfernen" |
+| **Wechsel** (Serverschlüssel, seit Web 21.12.0) | neue und bisherige Kennung, „Umhüllung: noch n von m", „Bevor der bisherige gehen darf: k von 3" | den drei Punkten folgen (unten), dann „Alten Schlüssel entfernen" |
 | **abweichend** | vorhandene **und** erwartete Kennung | den richtigen Wert *Nachtragen vom Blatt*; nur wenn er unwiederbringlich weg ist: Neuanfang |
 
 **Nachtragen vom Blatt ist sicher.** Der Server rechnet die Kennung des
@@ -5498,7 +5504,33 @@ Wert ruhig in den Vierergruppen ab, in denen er auf dem Blatt steht.
 **„Server-Anteil wechseln"** legt einen neuen an und lässt den alten stehen,
 bis kein Konto mehr auf ihm steht. Danach **ein neues Blatt drucken und das
 alte vernichten**: Ein altes Blatt ist nicht nur überflüssig, es ist
-irreführend — es zeigt einen Wert, der nichts mehr öffnet.
+irreführend — es zeigt einen Wert, der nichts mehr öffnet. Während eines
+Wechsels des Serverschlüssels fehlt der Knopf: Beide Rotationen laufen
+nacheinander, sonst trüge das Blatt vier Werte und zwei Seiten.
+
+**„Serverschlüssel wechseln"** (seit Web 21.12.0) — für den Verdacht, dass
+das Blatt oder `config.php` in falsche Hände kam. **Der Vorgang in fünf
+Sätzen:** Du setzt den Haken, dass die Kopien auf dem Backup-Ziel unter dem
+bisherigen bleiben, und bestätigst; ab da versiegelt die Anlage mit einem
+neuen, und der bisherige bleibt als zweiter Wert in `config.php` stehen.
+Dann **druckst du sofort das Blatt neu** — es trägt jetzt beide. Die Anlage
+hüllt in Häppchen um, was sie erreicht (Zugänge der Ziele,
+Zweitfaktor-Geheimnisse, Konto-Backups, Archive), und weist jedes Stück mit
+dem neuen nach; *Jetzt weiterarbeiten* treibt es an. Danach merkt sie
+selbst ein Komplett-Backup vor (ohne eingerichteten Auslöser: *Jetzt
+sichern*), und du beantwortest die Rückfrage zum Blatt. Erst wenn alle
+drei stehen, erscheint *Alten Schlüssel entfernen*. Jede BetreiberIn bekommt
+beim Beginn und beim Abschluss eine Mail.
+
+**Die Blatt-Regel ist hier umgekehrt: Das bisherige Blatt NICHT
+vernichten.** Beim Anteil öffnet ein altes Blatt nichts mehr. Beim
+Serverschlüssel öffnet es alles, was vor dem Wechsel versiegelt wurde und
+nicht umgehüllt werden kann — die Komplett-Stände von vorher und alles, was
+schon auf dem Backup-Ziel liegt. Es gehört in die Betriebsakte, solange
+dort etwas liegt, das nur es öffnet; die Listen zeigen solche Stücke mit
+„anderer Schlüssel". Was sich mit **keinem** der beiden öffnen lässt,
+nennt die Karte — es war vorher schon stumm und hält den Wechsel nicht
+auf.
 
 **„Server-Anteil neu erzeugen" ist die letzte Tür.** Sie steht nur offen, wenn
 der Anteil ohnehin schon abweicht. Danach muss **jede NutzerIn** ihr Passwort
@@ -5745,7 +5777,10 @@ die Seite. Was ins Archiv geht und was nicht: 11.7.
 Die Karte „Schlüssel des Servers" druckt es mit **„Schlüsselblatt drucken"**.
 Es ist die einzige Seite, die die Werte selbst zeigt, und es passt auf genau
 **eine A4-Seite** (seit Web 21.1.0 auch mit drei Werten während einer
-Rotation). Oben stehen Bildmarke und Kurzname der Installation, rechts
+Rotation — seit Web 21.12.0 ist die dritte Kachel während eines Wechsels
+des Serverschlüssels „Serverschlüssel (bisheriger)" mit dem Satz „Dieses
+Blatt nach dem Wechsel NICHT vernichten"; die beiden Rotationen laufen nur
+nacheinander, sonst wären es vier Kacheln und zwei Seiten). Oben stehen Bildmarke und Kurzname der Installation, rechts
 Adresse und Druckzeit; auf einer Anlage mit Etikett — etwa *Staging* — steht
 darunter eine rot umrandete Zeile, die auch schwarzweiß sagt, dass das Blatt
 nicht zur Produktivanlage gehört.
@@ -5764,7 +5799,10 @@ beantwortet. **„Später"** schiebt sie bis zur nächsten Anmeldung — nur fü
 diese Sitzung, damit eine andere BetreiberIn sie nicht mit weggeschoben
 bekommt. Nach **drei** falschen Antworten ist der Weg für eine Weile gesperrt
 (die erste Sprosse der Sperrleiter, 11.4a). Ist das Blatt verlegt, druckt
-man es neu — das ändert keinen Schlüssel.
+man es neu — das ändert keinen Schlüssel. **Nach jeder Rotation kommt die
+Frage sofort** (seit Web 21.12.0), mit dem Satz voran „Ein Wert hat
+gewechselt — drucke das Blatt neu" und während eines Wechsels mit der
+Kennung des bisherigen; gefragt wird nach den **heutigen** Werten.
 
 ### 12.6 Komplett-Backup
 
@@ -5864,6 +5902,14 @@ dem Serverschlüssel" lässt sich nur mit *der* `config.php` öffnen, die beim
 Erzeugen galt. Ist sie verloren, hilft das Backup nicht — deshalb gehört sie
 ins Wiederanlaufpaket, getrennt vom Server aufbewahrt.
 
+**Nach einem Wechsel des Serverschlüssels** (12.5) werden die Stände nicht
+umgehüllt. Die Liste zeigt einen Stand von vorher mit **„bisheriger
+Schlüssel"**, solange der Wechsel läuft — er lässt sich dann weiter
+herunterladen und einspielen —, und danach mit **„anderer Schlüssel"**:
+Öffnen lässt er sich dann nur noch mit dem Wert vom bisherigen Blatt
+(Runbook, `docs/Technik.md` 7). Neue Stände tragen seit Web 21.12.0 die
+Kennung ihres Schlüssels im Kopf.
+
 **Es wird nichts zurückgenommen.** Scheitert das Einspielen auf halbem Weg,
 steht die Datenbank halb da. Ein neuer Versuch braucht dann eine wieder
 geleerte Datenbank; ein Dump über einen halben Bestand zu legen ergäbe eine
@@ -5907,6 +5953,11 @@ Was dabei zu wissen ist:
   mitgesichert wird: Wer den Datenbankdump hat, hat die Passwörter nicht.
   Ohne Serverschlüssel lässt sich kein Ziel anlegen; geht er verloren, sind
   die Zugangsdaten neu einzutragen.
+- **Ein Wechsel des Serverschlüssels (12.5) erreicht das Ziel nicht.** Die
+  Zugangsdaten hier werden umgehüllt; was **drüben** liegt, bleibt unter dem
+  bisherigen und öffnet sich nur mit dem Wert vom bisherigen Blatt. Die
+  Archive des Protokolls gehen nach dem Umhüllen unter neuem Namen noch
+  einmal hinaus — drüben liegt dann je eines unter beiden Schlüsseln.
 - **Der Versand schickt, was am Ziel fehlt** — verglichen werden Name und
   Größe. Eine abgebrochene Übertragung wird deshalb beim nächsten Lauf
   wiederholt und gilt nicht als erledigt. Wann er läuft, entscheidet der

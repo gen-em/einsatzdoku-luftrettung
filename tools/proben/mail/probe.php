@@ -180,6 +180,10 @@ $beispiel = [
     'text'       => 'Wartung am Dienstag, 20:00 bis 21:00.',
     // Seit SR-09: der Name eines Passkeys (passkey_angelegt, passkey_entfernt).
     'bezeichnung' => 'Handy',
+    // Seit SR-03: Beginn oder Abschluss eines Wechsels des Serverschluessels
+    // (serverschluessel_gewechselt; `neu` und `alt` sind dort Kennungen —
+    // die Adressen oben rendern genauso).
+    'phase'       => 'beginn',
 ];
 $fehlend = [];
 foreach ($katalog as $k => $e) {

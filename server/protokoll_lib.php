@@ -368,6 +368,13 @@ const PROTOKOLL_ARTEN = [
     'komplett_heruntergeladen'  => ['Komplett-Backup geladen', 'orange'],
     'komplett_eingespielt'      => ['Komplett-Backup eingespielt', 'orange'],
     'komplett_geloescht'        => ['Komplett-Backup gelöscht', 'neutral'],
+    /* Sicherung — neu mit Schritt 18 (SR-03, Nr. 247): der Wechsel des
+     * Serverschluessels. Orange der Beginn — ein Eingriff an allen
+     * Sicherungen, den jede BetreiberIn sehen soll; blau das Umhuellen mit
+     * Nachweis (erledigt, gut); neutral das Entfernen des bisherigen. */
+    'serverschluessel_gewechselt'   => ['Serverschlüssel gewechselt', 'orange'],
+    'serverschluessel_umgehuellt'   => ['Serverschlüssel umgehüllt', 'blau'],
+    'serverschluessel_alt_entfernt' => ['Bisheriger Serverschlüssel entfernt', 'neutral'],
     'kontobackup_eingespielt'   => ['Konto-Backup eingespielt', 'orange'],
     /* Sicherheit — Sicht auf `sicherheit_ereignisse` und `csp_berichte` */
     'sperre'                    => ['Sperre', 'orange'],
@@ -584,7 +591,9 @@ function protokoll_arten_des_reiters(string $reiter): array
         'jobs'       => ['job_lauf', 'job_fehler'],
         'sicherung'  => ['komplett_erzeugt', 'komplett_heruntergeladen',
                          'komplett_eingespielt', 'komplett_geloescht',
-                         'kontobackup_eingespielt'],
+                         'kontobackup_eingespielt',
+                         'serverschluessel_gewechselt', 'serverschluessel_umgehuellt',
+                         'serverschluessel_alt_entfernt'],
         'ziele'      => ['ziel_gesendet', 'ziel_geloescht'],
         'system'     => SYSTEM_ARTEN,
     ];

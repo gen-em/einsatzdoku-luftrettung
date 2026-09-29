@@ -347,6 +347,38 @@ function mail_katalog(): array
                 . 'verdrängt. Bitte alte Backups entfernen, die Aufbewahrung senken oder die '
                 . 'Grenze erhöhen.'),
         ],
+        /* DER WECHSEL DES SERVERSCHLUESSELS (Schritt 18, SR-03, E-SR-22,
+         * E-SR-62): bei Beginn und bei Abschluss an JEDES Konto der Rolle
+         * BetreiberIn (`mail_betreiberinnen()`), nur Kennungen, nie Werte. Wer
+         * den Wechsel nicht ausgeloest hat, erfaehrt so, dass an den
+         * Sicherungen der Anlage etwas geschehen ist — und die Regel zum
+         * bisherigen Blatt (E-SR-10) steht dort, wo sie gelesen wird, bevor
+         * jemand Papier vernichtet. */
+        'serverschluessel_gewechselt' => [
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['phase', 'neu', 'alt', 'link'],
+            'betreff' => fn(array $d): string => ($d['phase'] === 'abschluss'
+                ? 'Serverschlüssel-Wechsel abgeschlossen — ' : 'Serverschlüssel gewechselt — ') . $n,
+            'text' => fn(array $d): string => $d['phase'] === 'abschluss'
+                ? mail_rahmen('Hallo,',
+                    "der Wechsel des Serverschlüssels der " . $n . " ist abgeschlossen: Der\n"
+                    . "bisherige (Kennung " . $d['alt'] . ") steht nicht mehr in der Konfiguration, alles\n"
+                    . "auf dem Server liegt unter dem neuen (Kennung " . $d['neu'] . ").\n\n"
+                    . "Was auf dem Backup-Ziel liegt, öffnet weiterhin nur der bisherige. Das\n"
+                    . "bisherige Schlüsselblatt bleibt deshalb in der Betriebsakte — als „bisheriger\n"
+                    . "Serverschlüssel, Kennung " . $d['alt'] . "“ —, bis das Ziel nichts mehr unter\n"
+                    . "ihm trägt.\n\n"
+                    . $d['link'])
+                : mail_rahmen('Hallo,',
+                    "der Serverschlüssel der " . $n . " ist gewechselt worden: neu Kennung\n"
+                    . $d['neu'] . ", bisher " . $d['alt'] . ". Die Anlage hüllt jetzt in Häppchen um, was sie\n"
+                    . "erreicht, und weist jedes Stück mit dem neuen nach.\n\n"
+                    . "Was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen. Das bisherige\n"
+                    . "Schlüsselblatt NICHT vernichten, sondern als „bisheriger Serverschlüssel,\n"
+                    . "Kennung " . $d['alt'] . "“ in der Betriebsakte behalten. Das Blatt gehört neu\n"
+                    . "gedruckt; die Rückfrage dazu kommt bei der nächsten Anmeldung.\n\n"
+                    . $d['link'],
+                    "Warst du das nicht, sieh bitte sofort unter Betrieb → Servereinstellungen nach."),
+        ],
         'backup_faellig' => [
             'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['kern'],
             'betreff' => fn(array $d): string => 'Backups fällig — ' . $n,
@@ -626,6 +658,34 @@ function mail_betriebsziele(bool $nurAngemeldete = false): array
          . ' ORDER BY id';
     $ziele = [];
     foreach (db()->query($sql)->fetchAll(PDO::FETCH_COLUMN) as $m) {
+        if (is_string($m) && $m !== '') { $ziele[] = $m; }
+    }
+    return $ziele;
+}
+
+/**
+ * JEDES KONTO DER ROLLE BETREIBERIN — fuer die Post, die genau sie betrifft
+ * (Schritt 18, SR-03, E-SR-62).
+ *
+ * NICHT `mail_betriebsziele()`. Jene geht an die Betriebsadresse, wenn eine
+ * eingetragen ist, sonst an alle Verwaltungskonten (auch Admin). Der Wechsel
+ * des Serverschluessels ist eine Sache der BetreiberInnen: Sie halten das
+ * Blatt, und eine, die den Wechsel nicht ausgeloest hat, soll davon
+ * erfahren — auch wenn Betriebspost sonst an ein Sammelpostfach geht. Eine
+ * zweite Liste mit anderer Frage ist keine Doppelung (R83 zaehlt Wege zur
+ * selben Sache).
+ *
+ * Nur Konten mit gesetztem Passwort — eines, das noch nie angemeldet war,
+ * hat die Einladung noch offen.
+ *
+ * @return string[] Adressen
+ */
+function mail_betreiberinnen(): array
+{
+    $ziele = [];
+    foreach (db()->query("SELECT email FROM users WHERE role = 'betreiberin'
+                           AND password_hash IS NOT NULL ORDER BY id")
+                 ->fetchAll(PDO::FETCH_COLUMN) as $m) {
         if (is_string($m) && $m !== '') { $ziele[] = $m; }
     }
     return $ziele;

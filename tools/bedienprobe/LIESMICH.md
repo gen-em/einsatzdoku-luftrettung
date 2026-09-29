@@ -30,7 +30,7 @@ Den QR-Code liest `vendor/jsQR.js` (1.4.0, Apache-2.0, nur Prüfwerkzeug; Nr. 29
 
 ## Erwartete Zahl
 
-**69 von 69 Wegen erfüllt, 0 verfehlt** — im Prüfbericht des Commits `R4-16` (27.09.2026; R4-11 brachte zehn Wege `*-neuladen`, R4-16 `nachtdienst.mjs`); mit R4-17 (`zeitraum.mjs`) sind es **70**, mit R4-23 (`betrieb_statistik.mjs`, Nr. 122) **71** (zuletzt so im Prüfbericht von `SR-01`, 28.09.2026); mit SR-02 (`zweitfaktor-merken`, `betrieb-server-neuladen`) **73**, mit SR-07 (`betrieb-server-frischer-code`) **74** (so im Prüfbericht von `SR-07`, 28.09.2026 — hier stand bis SR-09 noch 73), mit SR-09 (`einstellungen-profil-passkey`, nur Chromium) **75**. Der Bericht steht in `ausgabe/bericht.md`.
+**69 von 69 Wegen erfüllt, 0 verfehlt** — im Prüfbericht des Commits `R4-16` (27.09.2026; R4-11 brachte zehn Wege `*-neuladen`, R4-16 `nachtdienst.mjs`); mit R4-17 (`zeitraum.mjs`) sind es **70**, mit R4-23 (`betrieb_statistik.mjs`, Nr. 122) **71** (zuletzt so im Prüfbericht von `SR-01`, 28.09.2026); mit SR-02 (`zweitfaktor-merken`, `betrieb-server-neuladen`) **73**, mit SR-07 (`betrieb-server-frischer-code`) **74** (so im Prüfbericht von `SR-07`, 28.09.2026 — hier stand bis SR-09 noch 73), mit SR-09 (`einstellungen-profil-passkey`, nur Chromium) **75**, mit SR-03 (`betrieb-server-schluesselwechsel`) **76**. Der Bericht steht in `ausgabe/bericht.md`.
 
 ## Was es nicht kann
 

@@ -9270,3 +9270,84 @@ zutreffen.
      × 503 in drei Runden zu 20, nachher 180 von 180 ohne 503 und 0
      Gedrängel im Fehlerprotokoll; die Schleife misst Teil 12 der
      Ingestprobe.
+
+233. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.** · gehört zu: 18 · Stand: erledigt · seit 17.09.2026
+     *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
+     `kdf_anteil_alt` mit auf dem Schlüsselblatt. Die Rückfrage fragt ihn
+     nicht ab — eine Frage, die je nach Betriebslage vier oder sechs Felder
+     hat, verwirrt mehr, als sie prüft.
+
+     **Was das offen lässt:** Wer sein Blatt nach einer Rotation neu druckt
+     und den alten Wert nicht mit abschreibt, merkt es nicht, solange die
+     Rückfrage schweigt. Der Wert wird aber gebraucht, bis das letzte Konto
+     sich angemeldet hat.
+
+     **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
+     dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
+     und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
+     Erledigt 29.09.2026 in Schritt 18, SR-03 (Web 21.12.0, E-SR-11):
+     Wie hier vorgeschlagen, sagt es der Rotationsvorgang selbst. Beide
+     Rotationen — Anteil und Serverschlüssel — löschen die Bestätigung
+     (`blatt_neu_faellig()`), die Rückfrage kommt bei der nächsten Anmeldung
+     jeder BetreiberIn mit dem Satz voran „Ein Wert hat gewechselt — drucke
+     das Blatt neu" und nennt die Kennung des bisherigen. Abgefragt werden
+     weiter nur die heutigen Werte; den bisherigen prüft der Ausdruck, der
+     ihn trägt. Anteilprobe Teil E (61 von 61; Gegenprobe 3 von 3 rot),
+     Bedienweg betrieb-server-schluesselwechsel (Rückfrage mit Satz,
+     beantwortet).
+
+247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     Befund (V4 der P5c-Vorbereitung): Es gibt keinen Wechsel. Wer
+     `server_key` von Hand ändert, macht alles Versiegelte stumm und merkt
+     es erst, wenn er es braucht.
+     Weg: ein Vorgang unter Betrieb — neuen Schlüssel erzeugen, alles
+     Versiegelte umhüllen (Adminpakete, Zugänge der Sicherungsziele,
+     Protokoll-Archive, Wiederanlaufpaket, die Zweitfaktor-Geheimnisse
+     `users.totp_geheimnis` mit Zweck `totp|<Konto>` aus P5c/AP5, Web
+     20.42.0), neues Schlüsselblatt, Protokolleintrag und der Nachweis der
+     Öffenbarkeit vor dem Verwerfen des alten Schlüssels — der Schritt,
+     dessen Fehlen den Vorgang gefährlich macht. Ein Wechsel, der die
+     Zweitfaktor-Geheimnisse nicht umhüllt, lässt jede Code-Anmeldung
+     scheitern (Notweg: Wiederherstellungscodes; Runbook `Technik.md` 7).
+     Auslöser: Verdacht, dass das Blatt in falsche Hände kam. Eigenes Paket
+     mit eigener Prüfung; bis dahin gilt im Betreiberhandbuch: Der Schlüssel
+     wird nicht gewechselt, das Blatt gehütet (Quartalsrückfrage E-P5b-10).
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 247.
+     Erledigt 29.09.2026 in Schritt 18, SR-03 (Web 21.12.0, E-SR-09 bis
+     -11, E-SR-60 bis -67): „Serverschlüssel wechseln" unter Betrieb →
+     Servereinstellungen, mit Pflicht-Haken; der bisherige bleibt als
+     server_key_alt stehen, der Job schluesselwechsel hüllt Zugänge der
+     Ziele, Zweitfaktor-Geheimnisse, Konto-Backups samt konto.json und
+     Archive des Protokolls um und weist jedes Stück mit dem neuen nach;
+     „Alten Schlüssel entfernen" erst nach Nachweis, frischem Komplett-Stand
+     und beantworteter Rückfrage, Protokoll und Mail an jede BetreiberIn.
+     Das Wiederanlaufpaket wird nicht umgehüllt — es ist Papier; an seine
+     Stelle tritt das neue Blatt mit beiden Werten. Komplett-Stände werden
+     nicht umgehüllt (E-SR-21), ihr Kopf trägt seither die Kennung.
+     Schlüsselwechselprobe 40 von 40 (A → B und mit demselben Job zurück;
+     Gegenproben 5 von 5 rot), Bedienweg in 390 und 1280 px.
+
+344. **„Freigabe widerrufen" mit unauflösbarem Handgriff schreibt eine `konto.json` in die Wurzel der Konto-Backups.** · gehört zu: 18 · Stand: erledigt · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-11 (gefunden vom Umbau der Seite
+     Konto-Backups, F-R4-33).* `edbak_freigabe_widerrufen()` prüft die
+     Kennung nicht. Lässt sich der Handgriff eines POST nicht auflösen, ist
+     die Kennung leer, und `edbak_begleit_schreiben('')` legt eine
+     versiegelte `konto.json` in der Wurzel der Ablage an und meldet Erfolg:
+     „Freigabe widerrufen." Erreichbar ist das über `admin_sicherungen.php`
+     (dort gibt es für den Zweig kein Formular mehr, nur ein handgebautes
+     POST einer Administratorin) und über die Kontoseite. **Nicht in 17**,
+     weil `adminbackup_lib.php` für Schritt 18 frei bleiben soll (Konzept R4
+     2.3, E-R4-37). *Weg:* `edbak_freigabe_widerrufen()` und
+     `edbak_begleit_schreiben()` verlangen `edbak_kennung_gueltig()`, wie es
+     `edbak_ordner_loeschen()` schon tut; die Aufrufer melden dann den
+     Fehlschlag. *Abnahme:* POST `widerrufen` mit einem Handgriff aus
+     Nullen → Fehlermeldung, keine Datei in der Wurzel der Ablage.
+     **Zuordnung in 18 (28.09.2026):** Paket SR-03, das `adminbackup_lib.php`
+     ohnehin offen hat; die Gegenlesung liest es mit (Konzept SR, E-SR-37).
+     Erledigt 29.09.2026 in Schritt 18, SR-03 (Web 21.12.0, E-SR-37,
+     E-SR-66): Beide Funktionen verlangen edbak_kennung_gueltig(); die Seite
+     sagt „Die Freigabe liess sich nicht widerrufen." Abnahme über HTTP in
+     der Schlüsselwechselprobe (Teil 7) statt in der Freigabeprobe, die als
+     NutzerIn im Browser arbeitet: POST widerrufen mit sechzehn Nullen →
+     Fehlermeldung, keine konto.json in der Wurzel. Gegenprobe ohne die
+     Prüfung rot (302, Datei lag da).

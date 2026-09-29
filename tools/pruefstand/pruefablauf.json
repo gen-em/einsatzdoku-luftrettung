@@ -289,6 +289,11 @@
       "aufruf": "bash tools/proben/proben.sh sitzung",
       "braucht": "installation",
       "bemerkung": "Schritt 18, SR-01 (Nr. 242). Ueber HTTP mit eigenem Konto: der halbe Stand und die Anmeldung sind an EDBIND gebunden, dieselbe Kennung ohne das Cookie endet mit Grund bindung (Seite und API), eine Sitzungsdatei ohne Hash ebenso, das Notfallblatt zeigt ohne Bindung keine Adresse (F-SR-15), Abmelden loescht beide Cookies. Gegenprobe beim Bau: mit herausgenommenen Pruefungen 11 von 25 rot."
+    },
+    "schluesselwechselprobe": {
+      "aufruf": "bash tools/proben/proben.sh schluesselwechsel",
+      "braucht": "installation",
+      "bemerkung": "Schritt 18, SR-03 (Nr. 247). Legt je Zweck ein Stueck unter dem Schluessel A an (Ziel, Zweitfaktor, Begleitdatei, Konto-Backup Fassung 3 und 2, Protokoll-Archiv, Komplett-Stand, dazu eines unter einem fremden Schluessel), wechselt A -> B ueber serverschluessel_wechseln(), misst Riegel (Haken, Anteil-Rotation), Blatt-Marke, Protokoll, Mail, Blatt und Karte ueber HTTP, Haeppchen mit Wiederanlauf, jedes Stueck mit B und demselben Klartext, die drei Bedingungen vor dem Entfernen und Nr. 344 ueber HTTP. Faehrt danach mit demselben Job B -> A zurueck, legt config.php byte-gleich zurueck und vergleicht jedes Stueck der Anlage mit dem Ausgangsbild. Haelt die Jobs fuer die Dauer an (jobs_pause). Gegenproben beim Bau: 5 von 5 rot."
     }
   },
   "stufenregeln": [
@@ -661,6 +666,33 @@
       "anlass": "Nr. 242 (Schritt 18, SR-01): die Sitzungsdatei allein war die Anmeldung. notfallblatt.php, weil die Probe an ihm die lesenden Seiten misst (F-SR-15)."
     },
     {
+      "id": "schluesselwechsel",
+      "ab": "klein",
+      "pfade": [
+        "server/serverkrypto_lib.php",
+        "server/schluesselwechsel_lib.php",
+        "server/komplett_lib.php",
+        "server/adminbackup_lib.php",
+        "server/protokoll_archiv_lib.php",
+        "server/sicherungsziel_lib.php",
+        "server/totp_lib.php",
+        "server/einstieg_lib.php",
+        "server/jobs_lib.php",
+        "server/betrieb_server.php",
+        "server/betrieb_schluesselblatt.php",
+        "server/admin_sicherungen.php",
+        "tools/proben/schluesselwechsel/**",
+        "tools/proben/anteil/**",
+        "tools/bedienprobe/wege/betrieb_server.mjs"
+      ],
+      "proben": [
+        "schluesselwechselprobe",
+        "anteilprobe",
+        "bedienprobe"
+      ],
+      "anlass": "Nr. 247 (Schritt 18, SR-03): Es gab keinen Wechsel des Serverschluessels -- wer server_key von Hand aenderte, machte alles Versiegelte stumm. Die Pfade sind die sechs Versiegler (F-SR-01), der Job, die Blatt-Marke (Nr. 233, E-SR-11: dafuer die Anteilprobe mit Teil E) und die Seite von Nr. 344. Die Bedienprobe faehrt den Wechsel im Browser (betrieb-server-schluesselwechsel) und misst das Blatt auf einer A4-Seite (E-SR-60)."
+    },
+    {
       "id": "kopfzeilen",
       "ab": "klein",
       "pfade": [
@@ -812,9 +844,10 @@
         "zweitfaktorprobe",
         "rueckwegprobe",
         "sitzungsprobe",
-        "passkeyprobe"
+        "passkeyprobe",
+        "schluesselwechselprobe"
       ],
-      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09."
+      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03."
     },
     {
       "id": "statistik",

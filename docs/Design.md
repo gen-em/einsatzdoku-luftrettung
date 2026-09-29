@@ -949,7 +949,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 23 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 13 |
 | `mail.svg` | Tabler Icons „mail" (MIT) | 15 |
@@ -968,14 +968,14 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 20 |
 | `server.svg` | Tabler Icons „server" (MIT) | 9 |
-| `sicherung.svg` | Tabler Icons „archive" (MIT) | 21 |
+| `sicherung.svg` | Tabler Icons „archive" (MIT) | 24 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
 | `status.svg` | Tabler Icons „activity" (MIT) | 47 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
-| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 12 |
+| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |

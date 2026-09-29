@@ -7983,5 +7983,26 @@ declare(strict_types=1);
  *   `pk_spki_laden()` haelt alle Grenzen der Registrierung, nicht nur die
  *   Groessen; nach dem Absenden sagt die Meldung immer „Seite neu laden".
  *   Kein Schema, keine Vertragsaenderung.
+ *
+ * 21.12.0 — DER SERVERSCHLUESSEL WECHSELT ALS VORGANG (Schritt 18, SR-03;
+ *   Nr. 247, 233, 344; E-SR-09 bis -11, -60 bis -67). Nebenstufe. Bis
+ *   hierher gab es keinen Wechsel: Wer `server_key` von Hand aenderte, machte
+ *   jedes versiegelte Stueck stumm — Zugaenge der Backup-Ziele,
+ *   Zweitfaktor-Geheimnisse, Konto-Backups samt Begleitdatei, Archive des
+ *   Protokolls. Jetzt steht der bisherige als `server_key_alt` neben dem
+ *   neuen, `sk_oeffnen()` versucht beide, und der Job `schluesselwechsel`
+ *   huellt in Haeppchen um, was der Server erreicht, und weist jedes Stueck
+ *   danach mit dem neuen nach. Der bisherige geht erst, wenn alles
+ *   nachgewiesen ist, ein Komplett-Stand unter dem neuen liegt und die
+ *   Rueckfrage zum Blatt beantwortet ist; die Riegel stehen in der Funktion.
+ *   Komplett-Staende werden NICHT umgehuellt (E-SR-21) — ihr Kopf traegt
+ *   seitdem die Kennung, und das Einspielen versucht neu, dann bisher.
+ *   Was auf einem Backup-Ziel liegt, bleibt unter dem bisherigen; deshalb
+ *   der Pflicht-Haken beim Start und die Blatt-Regel (E-SR-10). Beide
+ *   Rotationen machen die Rueckfrage zum Blatt sofort faellig (Nr. 233),
+ *   und sie laufen nur nacheinander (E-SR-60). `edbak_begleit_schreiben()`
+ *   und `edbak_freigabe_widerrufen()` verlangen eine gueltige Kennung
+ *   (Nr. 344). Kein Schema; `config.php` kennt einen Eintrag mehr, der nur
+ *   waehrend eines Wechsels steht.
  */
-const WEB_VERSION = '21.11.2';
+const WEB_VERSION = '21.12.0';

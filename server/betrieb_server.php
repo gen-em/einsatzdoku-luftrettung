@@ -552,7 +552,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && str_starts_with((string)($_POST['action'] ?? ''), 'schluessel_')) {
     /* EIN FRISCHER CODE VOR JEDEM GRIFF (Schritt 18, SR-07, E-SR-20) — ein
-     * Aufruf fuer alle sieben, vor dem Token wie ein Rollentor. Ein
+     * Aufruf fuer alle zehn (seit SR-03 mit den drei des Serverschluessels),
+     * vor dem Token wie ein Rollentor. Ein
      * gemerkter, unbeaufsichtigter Rechner soll fuer einen Schluesselwechsel
      * nicht reichen. */
     zweitfaktor_frisch_verlangen('schluessel');
@@ -604,6 +605,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         [$ok, $was] = anteil_alt_entfernen();
         $notice = $ok ? 'Der alte Server-Anteil ist aus config.php entfernt. '
                       . 'Die Rotation ist abgeschlossen.' : null;
+        $error  = $ok ? null : $was;
+
+    } elseif ($aktion === 'schluessel_sk_wechseln') {
+        /* DER WECHSEL DES SERVERSCHLUESSELS (SR-03, Nr. 247). Der Haken ist
+         * Pflicht und wird in der Funktion geprueft (E-SR-63). Danach gleich
+         * ein Haeppchen mit dem Budget dieser Seite — die Zeilen (Zugaenge,
+         * Zweitfaktor-Geheimnisse) sind dann meist schon umgehuellt, bevor
+         * die Seite wieder dasteht. */
+        [$ok, $was] = serverschluessel_wechseln(!empty($_POST['kopien_verstanden']));
+        if ($ok) {
+            require_once __DIR__ . '/schluesselwechsel_lib.php';
+            sw_jetzt(8.0);
+            $r = sw_rueckstand(sw_zustand());
+            $notice = 'Der Serverschlüssel ist gewechselt (neu ' . $was . '). Versiegelt wird ab '
+                    . 'jetzt mit dem neuen; der bisherige bleibt als server_key_alt stehen, bis '
+                    . 'alles umgehüllt und nachgewiesen ist'
+                    . ($r !== null && $r > 0 ? ' — noch ' . $r . ' Stück(e)' : '')
+                    . '. Jetzt das Schlüsselblatt neu drucken; das bisherige aufbewahren.';
+        }
+        $error  = $ok ? null : $was;
+        serverschluessel_zustand(true);
+
+    } elseif ($aktion === 'schluessel_sk_weiter') {
+        require_once __DIR__ . '/schluesselwechsel_lib.php';
+        $bericht = sw_jetzt();
+        $z = sw_zustand();
+        if (isset($bericht['uebersprungen'])) {
+            $error = 'Der Job läuft gerade (' . $bericht['uebersprungen'] . '). Bitte gleich '
+                   . 'noch einmal.';
+        } elseif (($bericht['fehler'] ?? null) !== null) {
+            $error = 'Das Häppchen ist gescheitert: ' . $bericht['fehler'];
+        } else {
+            $notice = ($z['phase'] ?? '') === 'fertig'
+                ? 'Alles ist umgehüllt und mit dem neuen Schlüssel nachgewiesen.'
+                : 'Ein Häppchen ist durch: ' . (int)$bericht['erledigt'] . ' Stück(e); noch '
+                  . (int)sw_rueckstand($z) . ' von ' . (int)($z['gesamt'] ?? 0)
+                  . (($z['phase'] ?? '') === 'nachweis' ? ' im Nachweis.' : '.');
+        }
+
+    } elseif ($aktion === 'schluessel_sk_alt_entfernen') {
+        [$ok, $was] = serverschluessel_alt_entfernen();
+        $notice = $ok ? 'Der bisherige Serverschlüssel (' . $was . ') ist aus config.php '
+                      . 'entfernt. Das bisherige Blatt bleibt in der Betriebsakte, solange das '
+                      . 'Backup-Ziel etwas trägt, das nur er öffnet.' : null;
         $error  = $ok ? null : $was;
 
     } elseif ($aktion === 'schluessel_anteil_neuanfang') {
@@ -912,8 +957,18 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
      * 14.09.2026. Ein `'ton' => 'ok'` ergibt eine Klasse ohne Regel, also
      * eine ungestaltete Plakette, und zwar ohne jede Fehlermeldung. Zwei
      * Stellen im Bestand tun das schon (F-15). */
-    $skTon = ['bereit' => 'blau', 'fehlt' => 'rot',
+    $skTon = ['bereit' => 'blau', 'rotation' => 'blau', 'fehlt' => 'rot',
               'abweichend' => 'rot'][$skZustand['stand']] ?? 'neutral';
+    /* DER WECHSEL DES SERVERSCHLUESSELS (SR-03): Zustand des Jobs und die drei
+     * Bedingungen vor dem Entfernen — aus derselben Quelle wie der Riegel in
+     * `serverschluessel_alt_entfernen()`, damit Karte und Funktion nicht
+     * zweierlei sagen. Nur waehrend eines Wechsels geladen. */
+    $swZ = []; $swB = null;
+    if ($skZustand['stand'] === 'rotation') {
+        require_once __DIR__ . '/schluesselwechsel_lib.php';
+        $swZ = sw_zustand();
+        $swB = sw_bedingungen();
+    }
     /* „fehlt" ist NEUTRAL, nicht rot (Design.md 9.23): Ohne Anteil arbeitet
      * alles wie vorher, es geht nichts verloren. Rot bleibt der Lage
      * vorbehalten, in der niemand mehr an seine Angaben kommt. */
@@ -943,6 +998,10 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         'klein' => $skZustand['stand'] === 'bereit'
             ? 'Kennung ' . $skZustand['kennung'] . ' — versiegelt Backup-Ziele, '
               . 'Komplett-Backup und Konto-Backups'
+            : ($skZustand['stand'] === 'rotation'
+                ? 'Wechsel läuft: neu ' . $skZustand['kennung'] . ', bisher '
+                  . $skZustand['kennung_alt'] . ' — versiegelt wird mit dem neuen, der '
+                  . 'bisherige öffnet, was noch nicht umgehüllt ist'
             : ($skZustand['stand'] === 'fehlt'
                 /* EIN SATZ (E-P5c-06): „Fehlt. Ohne ihn …" waren zwei
                    (Endzählung AP9, die einzige Kleinzeile über dem Soll). */
@@ -951,9 +1010,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                 : 'In config.php steht Kennung '
                   . ($skZustand['kennung'] ?? '—') . ', versiegelt wurde mit '
                   . $skZustand['erwartet'] . ' — bis der richtige Wert '
-                  . 'nachgetragen ist, lässt sich Versiegeltes nicht öffnen'),
+                  . 'nachgetragen ist, lässt sich Versiegeltes nicht öffnen')),
         'plaketten' => ui_plakette(
-            ['bereit' => 'vorhanden', 'fehlt' => 'fehlt',
+            ['bereit' => 'vorhanden', 'rotation' => 'Wechsel', 'fehlt' => 'fehlt',
              'abweichend' => 'abweichend'][$skZustand['stand']] ?? '?',
             ['ton' => $skTon]),
       ]);
@@ -1018,6 +1077,51 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                 ['ton' => 'blau']),
           ]);
       }
+
+      /* DER WECHSEL DES SERVERSCHLÜSSELS IN DREI ZEILEN (SR-03, E-SR-15: die
+         Lage `rotation` mit Zählung wie beim Anteil, kein neuer Baustein):
+         wie weit das Umhüllen ist, was vor dem Entfernen noch fehlt, und —
+         nur wenn es sie gibt — die Stücke, die mit keinem der beiden
+         aufgehen (E-SR-61). */
+      if ($swB !== null) {
+          $swRest   = sw_rueckstand($swZ);
+          $swPhase  = (string)($swZ['phase'] ?? '');
+          $swGesamt = (int)($swZ['gesamt'] ?? 0);
+          ui_zeile([
+            'text'  => 'Umhüllung',
+            'klein' => $swPhase === 'fertig'
+                ? 'Alles, was der Server erreicht, liegt unter dem neuen und ist mit ihm '
+                  . 'nachgewiesen — ' . (int)($swZ['umgehuellt'] ?? 0) . ' Stück(e) umgehüllt. '
+                  . 'Was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen'
+                : ($swPhase === 'nachweis'
+                    ? 'Nachweis: jedes Stück wird mit dem neuen geöffnet — noch ' . (int)$swRest
+                      . ' von ' . $swGesamt . '. Der Job arbeitet in Häppchen weiter'
+                    : 'Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups und '
+                      . 'Archive des Protokolls — noch ' . (int)$swRest . ' von ' . $swGesamt
+                      . ' Stücken. Der Job arbeitet in Häppchen weiter'),
+            'plaketten' => ui_plakette($swPhase === 'fertig' ? 'nachgewiesen'
+                                       : 'noch ' . (int)$swRest . ' von ' . $swGesamt,
+                ['ton' => 'blau']),
+          ]);
+          $swErfuellt = (int)$swB['inventar'] + (int)$swB['komplett'] + (int)$swB['blatt'];
+          ui_zeile([
+            'text'  => 'Bevor der bisherige gehen darf',
+            'klein' => $swB['alle']
+                ? 'Alles umgehüllt, ein Komplett-Stand unter dem neuen, die Rückfrage '
+                  . 'beantwortet — der bisherige lässt sich entfernen'
+                : implode(' ', $swB['fehlt']),
+            'plaketten' => ui_plakette($swErfuellt . ' von 3', ['ton' => 'blau']),
+          ]);
+          $swVerloren = (array)($swZ['verloren'] ?? []);
+          if ($swVerloren !== []) {
+              ui_zeile([
+                'text'  => 'Mit keinem der beiden zu öffnen',
+                'klein' => implode(' · ', $swVerloren) . ' — der Wechsel rührt sie nicht an; '
+                         . 'der bisherige öffnet sie ebenso wenig',
+                'plaketten' => ui_plakette((string)count($swVerloren), ['ton' => 'orange']),
+              ]);
+          }
+      }
     ?>
 
     <?php /* ---- GENAU EIN PRIMAERER KNOPF, UND ZWAR DER, DER DRAN IST ----
@@ -1065,12 +1169,28 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                       'href' => 'betrieb_schluesselblatt.php']) ?>
       <?php endif; ?>
       <?php if (in_array($anZustand['stand'], ['bereit', 'rotation'], true)
-                && $anZustand['kennung_alt'] === null): ?>
+                && $anZustand['kennung_alt'] === null
+                && $skZustand['stand'] !== 'rotation'): ?><?php /* E-SR-60: nicht
+                neben einem Wechsel des Serverschlüssels */ ?>
         <form method="post" action="betrieb_server.php"
               data-confirm="Den Server-Anteil wechseln? Der bisherige bleibt stehen, bis kein Konto mehr auf ihm steht — die Umstellung läuft je Konto beim nächsten Anmelden. Danach ist ein NEUES Schlüsselblatt zu drucken; das alte gilt nicht mehr."
               data-confirm-ok="Wechseln" data-confirm-tone="normal">
           <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_anteil_wechseln">
           <?= ui_knopf(['text' => 'Server-Anteil wechseln', 'symbol' => 'tausch']) ?>
+        </form>
+      <?php endif; ?>
+      <?php if ($swB !== null && ($swZ['phase'] ?? '') !== 'fertig'): ?>
+        <form method="post" action="betrieb_server.php">
+          <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_sk_weiter">
+          <?= ui_knopf(['text' => 'Jetzt weiterarbeiten', 'symbol' => 'tausch']) ?>
+        </form>
+      <?php endif; ?>
+      <?php if ($swB !== null && $swB['alle']): ?>
+        <form method="post" action="betrieb_server.php"
+              data-confirm="Den bisherigen Serverschlüssel aus config.php entfernen? Auf dem Server liegt nichts mehr unter ihm. Was auf dem Backup-Ziel liegt, öffnet danach nur noch der Wert vom bisherigen Blatt — das Blatt bleibt in der Betriebsakte."
+              data-confirm-ok="Entfernen" data-confirm-tone="normal">
+          <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_sk_alt_entfernen">
+          <?= ui_knopf(['text' => 'Alten Schlüssel entfernen', 'symbol' => 'korb']) ?>
         </form>
       <?php endif; ?>
       <?php if ($anZustand['kennung_alt'] !== null && $anZaehlung['alt'] === 0): ?>
@@ -1083,6 +1203,32 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php endif; ?>
     </div>
 
+
+    <?php /* ---- Serverschlüssel wechseln (SR-03, E-SR-60, E-SR-63) ---------
+             Nur aus `bereit` und nicht neben einer Anteil-Rotation — die
+             Riegel stehen in `serverschluessel_wechseln()`, hier nur, damit
+             kein Knopf dasteht, der sicher abgewiesen wird. Der Haken ist
+             Pflicht und wird in der Funktion geprüft: Der Vorgang sagt beim
+             Start, was er nicht erreicht (E-SR-10). */ ?>
+    <?php if ($skZustand['stand'] === 'bereit' && $anZustand['stand'] !== 'rotation'): ?>
+      <?php /* `.listen-form`: durch eine Linie von den Knöpfen darüber
+               abgesetzt — ohne sie klebte die Überschrift am Knopffuß (Bild
+               zu P-SR-05, F-SR-73). */ ?>
+      <form method="post" action="betrieb_server.php" class="listen-form"
+            data-confirm="Den Serverschlüssel wechseln? Die Anlage hüllt danach in Häppchen um, was sie erreicht. Was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen — das bisherige Blatt NICHT vernichten. Danach ein neues Blatt drucken."
+            data-confirm-ok="Wechseln" data-confirm-tone="normal">
+        <h3 class="listen-form-titel">Serverschlüssel wechseln <span class="feld-klein-inline">bei Verdacht, dass das Blatt in falsche Hände kam</span></h3>
+        <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_sk_wechseln">
+        <?php ui_schalter(['name' => 'kopien_verstanden',
+            'label' => 'Kopien auf dem Backup-Ziel bleiben unter dem bisherigen',
+            'an' => false,
+            'klein' => 'Mir ist klar: Was auf dem Ziel liegt, öffnet weiter nur der bisherige '
+                     . 'Schlüssel, und das bisherige Blatt wird aufbewahrt.']); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Serverschlüssel wechseln', 'symbol' => 'tausch']) ?>
+        </div>
+      </form>
+    <?php endif; ?>
 
     <?php /* ---- Nachtragen vom Blatt (E-S10-10) -------------------------- */ ?>
     <?php if ($skZustand['stand'] === 'abweichend' || $anZustand['stand'] === 'abweichend'): ?>
