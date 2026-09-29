@@ -27,8 +27,8 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | | |
 > |---|---|
 > | Stand | **29.09.2026 — PK-06 in Arbeit** auf `claude/beautiful-dirac-1tc4d0`; Reihe **PK-06 → PK-08 → PK-07** (E-PK-50). PK-01 bis PK-05 sind gemergt (PR #75, #81, #82, 23.09.2026). Stufe 2 fährt heute **vier** Schritte (Konzept RW hat die Rückwegprobe angehängt) und braucht mit Staging **rund 4 min** (Lauf 99, `fc4253d`: Staging 35 s, Stufe 2 3:16). Die Arbeitsläufe haben **2 286** Zeilen, davon **1 087** Kommentar. Offen bleibt P-PK-11 zur Hälfte (Ausbaustufe `uhr` gebaut, nicht abgenommen). |
-> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. **E-PK-34** (die Rechtstexte werden beim Binnen-I mitgenommen) und **E-PK-35** (die Fächerungszeile für PK) sind am 22.09.2026 entschieden — Abschnitt 3.1a. **E-PK-40** (die Android-Zeile aus 5b behält ihre Versionsstufe vorerst nicht) ist am 23.09.2026 angewiesen — gegen die Empfehlung der Instanz; Befund F-PK-29, Backlog Nr. 284, Abnahme P-PK-28. **Aus PK-05, alle am 23.09.2026 vom Auftraggeber entschieden:** **E-PK-41** (Fächerung: nur lesend, drei Agenten), **E-PK-42** (streng: Baum des Kopfs, Weg nach fremdem Merge), **E-PK-43** (Gegenlesung auch beim Handlauf auf einem Zweig), **E-PK-44** („gebaut" heißt gebaut, Lage 5), **E-PK-45** (die neun roten Proben vor P5c, Zuschnitt bestätigt), **E-PK-46** (nicht gemessen ist rot), **E-PK-47** (Schemaprobe wird Pflichtprüfung, Z12), **E-PK-48** (`CIQ_GERAETE_URL` bleibt bis PK-08), **E-PK-49** (337 Zeilen abgenommen) — Abschnitt 4, PK-05. **Aus dem Beginn von PK-06, am 29.09.2026 vom Auftraggeber entschieden:** **E-PK-50** (Reihe 06 → 08 → 07), **E-PK-51** (Zeilenziel verfehlt, Zahl abgenommen), **E-PK-52** (Fächerung 06–08, nur lesend), **E-PK-53** (die Kette signiert mit dem App-Signaturschlüssel; E-PK-23 ersetzt E-S4-16); **vorgeschlagen, mit dem Plan freigegeben:** **E-PK-54** (kein Aktions-Cache), **E-PK-55** (die Rückwegprobe bleibt) — Abschnitt 4, PK-06. |
-> | Nächstes | **Halt nach PK-06:** Paketbericht an den Auftraggeber, dann die eigene Freigabe für PK-08 (seine Fragen stehen vorher im Konzept). Q-PK-10 ist offen. **Offen bei der Betreiberin:** Z12 (Schemaprobe ins Ruleset) — von hier aus nicht messbar (keine Leseschnittstelle für Rulesets); PK-07 fragt nach. |
+> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. **E-PK-34** (die Rechtstexte werden beim Binnen-I mitgenommen) und **E-PK-35** (die Fächerungszeile für PK) sind am 22.09.2026 entschieden — Abschnitt 3.1a. **E-PK-40** (die Android-Zeile aus 5b behält ihre Versionsstufe vorerst nicht) ist am 23.09.2026 angewiesen — gegen die Empfehlung der Instanz; Befund F-PK-29, Backlog Nr. 284, Abnahme P-PK-28. **Aus PK-05, alle am 23.09.2026 vom Auftraggeber entschieden:** **E-PK-41** (Fächerung: nur lesend, drei Agenten), **E-PK-42** (streng: Baum des Kopfs, Weg nach fremdem Merge), **E-PK-43** (Gegenlesung auch beim Handlauf auf einem Zweig), **E-PK-44** („gebaut" heißt gebaut, Lage 5), **E-PK-45** (die neun roten Proben vor P5c, Zuschnitt bestätigt), **E-PK-46** (nicht gemessen ist rot), **E-PK-47** (Schemaprobe wird Pflichtprüfung, Z12), **E-PK-48** (`CIQ_GERAETE_URL` bleibt bis PK-08), **E-PK-49** (337 Zeilen abgenommen) — Abschnitt 4, PK-05. **Aus dem Beginn von PK-06, am 29.09.2026 vom Auftraggeber entschieden:** **E-PK-50** (Reihe 06 → 08 → 07), **E-PK-51** (Zeilenziel verfehlt, Zahl abgenommen), **E-PK-52** (Fächerung 06–08, nur lesend), **E-PK-53** (die Kette signiert mit dem App-Signaturschlüssel; E-PK-23 ersetzt E-S4-16); **vorgeschlagen, mit dem Plan freigegeben:** **E-PK-54** (kein Aktions-Cache), **E-PK-55** (die Rückwegprobe bleibt) — Abschnitt 4, PK-06. **Am 29.09.2026 auf die Fragen Q-PK-10 bis -15:** **E-PK-57** (Demo-Konto bleibt auf Staging), **E-PK-58 bis -62** (PK-08: beide APKs, nur die neueste bleibt liegen — gegen die Empfehlung —, Tag gegen Fassung, Garmin als Artefakt, zwei Aktionen an alten SHAs). |
+> | Nächstes | **Halt nach PK-06:** Paketbericht an den Auftraggeber, dann die eigene Freigabe für PK-08 — seine Fragen Q-PK-11 bis -15 sind beantwortet (E-PK-58 bis -62). **Offen bei der Betreiberin:** Z12 (Schemaprobe ins Ruleset) — von hier aus nicht messbar (keine Leseschnittstelle für Rulesets); PK-07 fragt nach. |
 > | Kette II | **M1 ist am 21.09.2026 erreicht** — Tag `web-v20.26.3` auf `a1c6494`, Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, **Migrationen von Hand ausgeführt, Wartung beendet, Status „Alles läuft"**, Zeiger `produktion` auf `a1c6494`. Im Übrigen wird Kette II nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
 > | Hakt | **Das Zeilenziel „unter 1 200" ist über Kommentare nicht erreichbar** — ohne jeden Kommentar stünden schon ~1 200 da (E-PK-51). **E-PK-17 sagte „genau drei Schritte"**, RW hat einen vierten angehängt (E-PK-55). **Der Zweig von 18 fasst dieselben Regeldokumente an** (`Technik.md`, `Pruefablauf.md`, `Rahmenplan.md`, `Backlog.md`); wer zweiter mergt, nimmt `main` nach `Pruefablauf.md` 5.3 auf. Der alte Inhalt dieser Zeile (PK-05, 23.09.2026) steht in der Historie (`docs/konzepte/Konzept-PK-Pruefkette.md@fc4253d`). |
 >
@@ -42,7 +42,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | PK-03 Prüfstand-Befehl | **erledigt 21.09.2026** | keine (nur `tools/`, `docs/`) | *wird beim Commit eingetragen* | Stufen klein/neben/haupt: **26,8 / 25 / 22 s**, je 13 Proben, 0 rot, 0 nicht gemessen · `bericht.py --selbstprobe` **6 Lagen / 0** (5 rote, 1 grüne) · `auswahl.py --selbstprobe` **11 / 0** · Abdeckung **262 Dateien, 0 ohne Muster** · `kettenaufrufe` liest die Zuordnung mit: mit eingebautem Fehler **2 Befunde**, ohne **0** (82 Aufrufe, 0 Befunde, 18 ungeprüft) · Befund **F-PK-18** |
 > | PK-04 Werkzeuge zusammenlegen und bereinigen | **erledigt (21.–23.09.2026)** | **Web 20.37.1** (Teilstück 5, die einzige Korrekturstufe des Pakets) | | `tools/quelltext/`: **8 Ausgaben bytegleich** vor und nach dem Umzug · Läufer **8 von 8 grün**, Selbstproben **5 von 5** · Ordner **49 → 41** · LIESMICH **7 191 → 6 261** Zeilen · Prüfstand klein **13 grün / 0 rot / 0 nicht gemessen** · kettenaufrufe **82 / 0 / 18**. **1b:** Vollständigkeit **398 → 18** Befunde; Symbolzählung **330 → 14** und vom Befund zum Hinweis; **32** Streichlisteneinträge; `style="…"` **10 → 0** über vier Ausnahmen, gegengeprüft (eingefügtes `left:12px` und `color:#abc` gemeldet, berechnete nicht); Backlog **227 erledigt, 269 und 270 neu**. **1c:** Sperrliste **23 → 28** Muster in **5 Regelklassen**; Altbestand **500** Treffer in **79** (Datei, Muster)-Paaren; Gegenproben in **beide** Richtungen grün (neuer Satz → 3 neue Treffer, rc 1; eine bereinigte Stelle → „Altbestand austragen", rc 1); **89 von 100** Ausnahmen waren stillschweigend auf die neuen Klassen ausgeweitet und sind jetzt an `luft` gebunden; Backlog **271** neu. **2:** 20 Werkzeuge nach `tools/proben/<name>/`, ein Läufer; Ordner **41 → 22**, LIESMICH **6 261 → 3 820** Zeilen in 21 Dateien; **kein Regress** (13 von 19 grün, dieselben 6 roten wie vorher); `kettenaufrufe` **ungeprüft 18 → 2**. **3:** sechs Erzeuger flach in `tools/erzeugen/`, ein Läufer **ohne `alle`** (sie schreiben ins Repositorium); Ordner **22 → 17**, LIESMICH **3 820 → 3 310** Zeilen in 17 Dateien. **4:** drei Zusammenlegungen (klickprobe → bedienprobe, netzprobe und eingabe-probe → uhr-pruefstand) — **Ordner 17 → 15, das Ziel aus E-PK-24 ist erreicht**; Bilderlauf mit `--stufe klein|neben|haupt` und **ohne Risikoliste** (E-PK-14), dazu die md5-Gegenprobe gegen doppelte Bilder; **alle 15 LIESMICH auf die Fünf-Abschnitte-Form**, zusammen **574 Zeilen** (von 7 206; Ziel unter 1 000). Bedienprobe **48 von 48 Wegen**. **Offen aus 4: E-PK-15** — die Wege nach Seiten ordnen  **5a:** tote Werkzeugverweise in `server/` **60 → 0** außerhalb `version.php` (dort bleiben **22** als Geschichte, benannt im Dateikopf); die Zuordnung aus `git diff -M90%` (78 Umbenennungen), neun Stellen von Hand, weil die Ordnerersetzung verliert, welches Werkzeug gemeint war. **5b:** Binnen-I **434 → 0**; 15 + 6 Eimer gefächert, je Datei ein Agent, danach Gegenlesung (**357** gegengelesene Zeilen, **8 Befunde, 3 echt**). Gegenproben gegen angefasste Bezeichner: PHP-Variablen **0/0**, Funktionsaufrufe **0/0**, Feldschlüssel **0/0**, CSS-Klassen **0/0**. **5c/5d:** Namen **38 → 0**, Adressen **9 → 0**, Netzquellen **11 → 0**; Gegenlesung fand **3 echte Fehler, zwei davon in meiner Vorgabe**, dazu **8 reale Namen in `server/`-Kommentaren**, die das Prüfmittel nicht liest (Nr. 283). **Textprobe gesamt 492 → 0**, Altbestand **0 Treffer in 0 Paaren** — E-PK-26 erreicht, keine Schwelle. **Entscheidungen E-PK-34 bis -39.**  **5e:** die 18 Klassen, je eine untersucht und unabhängig gegengeprüft (36 Agenten, 3,4 Mio. Token, 852 Werkzeugaufrufe, 61 min) — **17 von 18 Urteilen halten**, eines kippt auf das, was die eigene Messung schon gezeigt hatte. Vier Sorten statt einer: **8 toter Rest** (aus dem Markup), **6 Skriptanker** (Streichliste mit `[bleibt]`), **3 ersatzlos ersetzt**, **1 fehlende Regel** (`.feld-gesperrt`, ein vorhandenes Token, vom Auftraggeber entschieden). **Vollständigkeit 398 → 18 → 0, Schwelle entfernt** (E-PK-16). |
 > | PK-05 Tor umbauen | **erledigt 23.09.2026**, Live-Abnahme an PR #81 gefahren (P-PK-29 bis -31) | keine (nur `tools/`, `.github/`, `docs/`) | `f7f6802`, `24ad4bb`, `17fdd32`, `dba6dcd`, `5671d24` (Merge mit Bericht), `6d6d58c`, letzter mit Bericht | `bericht.py --selbstprobe` **6 → 13 Lagen / 0** · `auswahl.py --selbstprobe` **11 → 23 / 0** · Abdeckung **267 Dateien, 0 ohne Muster** · Stufe gegen 20.36.0: **„klein" → „neben"** · `kettenaufrufe` **13/13, 75 Aufrufe, 0 Befunde, 2 ungeprüft** · `uses:` **12 → 10**, alle an einer SHA · `pruefung.yml` **988 → 337** Zeilen (Ziel <250 verfehlt, abgenommen mit E-PK-49) · Tor-Schritt örtlich: ohne Bericht **rot**, falscher Baum **rot**, passend **grün** · **auf GitHub (PR #81):** mit Bericht **grün in 76 s**, ohne Bericht **rot**, Handlauf ohne Bericht **rot** · Gegenlesung von 05/3: **18 Punkte**, 2 „muss" · Merge von PR #80 auf dem neuen Weg: **18 Proben grün, Baum passt** (`5671d24`) · Nebenstufe gemessen: **36 Proben, 1 266 s, 9 rot** (F-PK-40) · Befunde **F-PK-30 bis -41** · **nach dem Merge (P-PK-32):** Push-Lauf auf `main` verweist, `Stufe 1` übersprungen |
-> | PK-06 Staging verschlanken | **gebaut 29.09.2026**, Abnahme nach dem Merge (P-PK-18, -19, -21, -37, -38) — Kommentare auf einen Satz je Falle, Platz für Nr. 234, F-PK-11; der Vorgriff (PR #72) hatte Gruppe, Zeitgrenze und Bilderlauf erledigt | keine (nur `.github/`, `CLAUDE.md`, `docs/`) | *wird beim Commit eingetragen* | Arbeitsläufe **2 286 → 1 339** Zeilen (Ziel <1 200 verfehlt, E-PK-51), Kommentar **1 087 → 140** · Vergleich YAML **107/83/23** Blätter und Rohzeilen **500/301/72** gleich, Gegenprobe rot · actionlint **0** · `uses:` **10/10** · Stufe 2 an Lauf 99: Staging **35 s** + Stufe 2 **3:16** · Befunde **F-PK-42 bis -45**, Frage **Q-PK-10** |
+> | PK-06 Staging verschlanken | **gebaut 29.09.2026**, Abnahme nach dem Merge (P-PK-18, -19, -21, -37, -38) — Kommentare auf einen Satz je Falle, Platz für Nr. 234, F-PK-11; der Vorgriff (PR #72) hatte Gruppe, Zeitgrenze und Bilderlauf erledigt | keine (nur `.github/`, `CLAUDE.md`, `docs/`) | *wird beim Commit eingetragen* | Arbeitsläufe **2 286 → 1 346** Zeilen (Ziel <1 200 verfehlt, E-PK-51), Kommentar **1 087 → 147** · Vergleich YAML **107/83/23** Blätter und Rohzeilen **500/301/72** gleich, Gegenprobe rot · actionlint **0** · `uses:` **10/10** · Stufe 2 an Lauf 99: Staging **35 s** + Stufe 2 **3:16** · Gegenlesung **58 Sätze, 10 Befunde**, alle berichtigt · Befunde **F-PK-42 bis -48**, Backlog **Nr. 360** |
 > | PK-07 Abschluss | offen — **zuletzt**, nach PK-08 (E-PK-50) | | | |
 > | PK-08 App-Auslieferung mit Signatur | offen — **nach PK-06, vor PK-07** (E-PK-50), eigene Freigabe; Schlüssel entschieden (E-PK-53) | | | |
 > | PK-M2 Erster Durchlauf der neuen Kette | offen (Betreiberin) | | | |
@@ -1177,6 +1177,15 @@ dem Plan freigegeben am 29.09.2026). E-PK-17 sagte „genau drei"; die Probe
 misst, welchen Signaturweg phpseclib beim Hoster nimmt, und das zeigt nur
 der Hoster (E-RW-11). Sie gehört damit zu dem, was E-PK-01 in Stufe 2 lässt.
 
+**E-PK-57 — das Demo-Konto bleibt auf Staging; F-PK-04 ist dort
+aufgehoben** (Auftraggeber, 29.09.2026, Q-PK-10). `Rahmenplan.md` 6a
+Schritt 8 hat es am 26.09.2026 angelegt, nach Kette II Z7 („Staging ist die
+Prüfumgebung, samt Demo-Konto"). Staging zeigt damit, was Produktiv zeigt,
+und die Demo-Funktionen sind vor der Auslieferung geprobt (E-KH-17). Das
+Kennwort ist ohnehin öffentlich (Handbuch), Staging trägt nur Testdaten.
+**Was von F-PK-04 bleibt:** Kein Prüfschritt der Kette meldet sich als
+Demo-Konto an; P-PK-19 misst genau das.
+
 **Was bleibt:**
 
 - Der **leere Platz für Nr. 234** (E-PK-21) — angelegt, nicht gefüllt.
@@ -1198,9 +1207,14 @@ der Hoster (E-RW-11). Sie gehört damit zu dem, was E-PK-01 in Stufe 2 lässt.
 
 - **Kommentare auf einen Satz je Falle** (E-PK-07): 3 lesende Agenten ordnen
   jeden Block ein (E-PK-52; 547 / 423 / 96 Kommentarzeilen, 61 Fallen), die
-  Sätze entstehen seriell. Kommentarzeilen **1 087 → 140**, Arbeitsläufe
-  **2 286 → 1 339** — das Ziel „unter 1 200" ist verfehlt und mit dieser
+  Sätze entstehen seriell. Kommentarzeilen **1 087 → 147**, Arbeitsläufe
+  **2 286 → 1 346** — das Ziel „unter 1 200" ist verfehlt und mit dieser
   Zahl abgenommen (E-PK-51).
+- **Gegenlesung** (ein lesender Agent, E-PK-52): 58 Sätze, **10 Befunde,
+  alle tragen, alle berichtigt** — darunter zwei falsche Zählungen (vier
+  statt zwei Schritte nur auf Produktiv, F-PK-46; acht Pfade samt
+  `install.php`), eine erfundene stille Falle (`--frisch`, gestrichen) und
+  zwei echte ohne Satz (F-PK-48). Nr. 360 für `STAGING_PASS` (F-PK-47).
 - **Kein Befehl geändert:** YAML-Struktur (107 / 83 / 23 Blätter) und
   Rohzeilen (500 / 301 / 72) je Datei gleich, mit Gegenprobe; actionlint
   0 Befunde, `uses:` 10 von 10 an einer SHA.
@@ -1210,7 +1224,8 @@ der Hoster (E-RW-11). Sie gehört damit zu dem, was E-PK-01 in Stufe 2 lässt.
 - **F-PK-11** in `CLAUDE.md` 3 berichtigt; `Pruefablauf.md` 0, 2.4, 8 und
   `Technik.md` 5, 6.3 nachgezogen.
 - **Kein Cache** (E-PK-54), **Rückwegprobe bleibt** (E-PK-55).
-- **Befunde F-PK-42 bis -45**, **Frage Q-PK-10** (Demo-Konto auf Staging).
+- **Befunde F-PK-42 bis -48**; **Q-PK-10** am 29.09.2026 beantwortet: Das
+  Demo-Konto bleibt auf Staging, F-PK-04 ist dort aufgehoben (E-PK-57).
 - Messprotokoll: Prüfdokument 5p.
 
 ### PK-07 — Abschluss
@@ -1239,16 +1254,37 @@ Nummern aus Abschnitt 8); Konzept wird nach der Freigabe gelöscht.
   signiert (`apksigner verify` im Lauf), legt ab; die Fassung auf der
   Geräteseite stimmt. Vorher ein Probelauf ohne Ablage.
 
-**Vor dem Beginn zu beantworten** (gestellt am 29.09.2026 nach PK-06; E-PK-53
+**Vor dem Beginn beantwortet** (gestellt am 29.09.2026 nach PK-06; E-PK-53
 hat die Schlüsselfrage schon entschieden):
 
 | Nr. | Frage | Empfehlung der Instanz |
 |---|---|---|
-| **Q-PK-11** | Legt die Kette neben dem Handy-APK auch das **Wear-OS-APK** nach `server/apk/`? `apk_liste()` zeigt jede `*.apk` im Ordner und liest die Fassung aus dem Namen (`…-X.Y.Z.apk`); die Karte auf dem Geräte-Reiter unterscheidet Handy und Uhr heute nicht. | **Ja, beide**, als `nadoku-X.Y.Z.apk` und `nadoku-uhr-X.Y.Z.apk` — die Uhr wird bis Welle 1 ebenfalls von Hand aufgespielt, und dieselbe Signatur gilt für beide (E-S4-01). Die Karte nennt dann zwei Dateien; eine Beschriftung je Gerät wäre eine Oberflächenänderung und gehört nicht in PK-08. |
-| **Q-PK-12** | Was geschieht mit älteren Fassungen im Ordner? | **Liegen lassen**, wie heute: Die Kette legt ab und löscht nichts auf dem Server (dieselbe Regel wie beim Abgleich); aufräumen bleibt ein Handgriff der Betreiberin. |
-| **Q-PK-13** | Riegel wie beim Web: Muss der Tag zur Fassung passen (`android-vX.Y.Z` = `android/version.properties`, `uhr-vX.Y.Z` = `APP_VERSION` in `watch/source/Const.mc`)? | **Ja**, rot vor dem Bau, mit der Meldung, welche Datei was sagt. |
-| **Q-PK-14** | Das Garmin-Paket: nur als **Artefakt** des Laufs (so E-PK-23), oder zusätzlich irgendwohin abgelegt? | **Nur Artefakt** — hochgeladen in den Connect-IQ-Store wird von Hand, bis es eine Schnittstelle dafür gibt. Aufbewahrung des Artefakts 90 Tage (Vorgabe von GitHub); die Betreiberin lädt es herunter. |
-| **Q-PK-15** | Zwei Fremd-Aktionen kämen zurück, die PK-05 aus `pruefung.yml` genommen hat: `actions/setup-java` (Java 21 für AGP 9) und `actions/upload-artifact` (Uhr-Paket) — an den SHAs von damals, `uses:` **10 → 12**. Einverstanden? | **Ja** — beide sind dieselben, schon einmal geprüften Fassungen; die Zahl in `CLAUDE.md` 3 zieht mit. |
+| **Q-PK-11** | Legt die Kette neben dem Handy-APK auch das **Wear-OS-APK** nach `server/apk/`? `apk_liste()` zeigt jede `*.apk` im Ordner und liest die Fassung aus dem Namen (`…-X.Y.Z.apk`); die Karte auf dem Geräte-Reiter unterscheidet Handy und Uhr heute nicht. | **Ja, beide**, als `nadoku-X.Y.Z.apk` und `nadoku-uhr-X.Y.Z.apk` — die Uhr wird bis Welle 1 ebenfalls von Hand aufgespielt, und dieselbe Signatur gilt für beide (E-S4-01). Die Karte nennt dann zwei Dateien; eine Beschriftung je Gerät wäre eine Oberflächenänderung und gehört nicht in PK-08. — **Beantwortet 29.09.2026: beide** (E-PK-58). |
+| **Q-PK-12** | Was geschieht mit älteren Fassungen im Ordner? | **Liegen lassen**, wie heute: Die Kette legt ab und löscht nichts auf dem Server (dieselbe Regel wie beim Abgleich); aufräumen bleibt ein Handgriff der Betreiberin. — **Beantwortet 29.09.2026: nur die neueste behalten** — gegen die Empfehlung (E-PK-59). |
+| **Q-PK-13** | Riegel wie beim Web: Muss der Tag zur Fassung passen (`android-vX.Y.Z` = `android/version.properties`, `uhr-vX.Y.Z` = `APP_VERSION` in `watch/source/Const.mc`)? | **Ja**, rot vor dem Bau, mit der Meldung, welche Datei was sagt. — **Beantwortet 29.09.2026: ja** (E-PK-60). |
+| **Q-PK-14** | Das Garmin-Paket: nur als **Artefakt** des Laufs (so E-PK-23), oder zusätzlich irgendwohin abgelegt? | **Nur Artefakt** — hochgeladen in den Connect-IQ-Store wird von Hand, bis es eine Schnittstelle dafür gibt. Aufbewahrung des Artefakts 90 Tage (Vorgabe von GitHub); die Betreiberin lädt es herunter. — **Beantwortet 29.09.2026: nur Artefakt** (E-PK-61). |
+| **Q-PK-15** | Zwei Fremd-Aktionen kämen zurück, die PK-05 aus `pruefung.yml` genommen hat: `actions/setup-java` (Java 21 für AGP 9) und `actions/upload-artifact` (Uhr-Paket) — an den SHAs von damals, `uses:` **10 → 12**. Einverstanden? | **Ja** — beide sind dieselben, schon einmal geprüften Fassungen; die Zahl in `CLAUDE.md` 3 zieht mit. — **Beantwortet 29.09.2026: ja, an den alten SHAs** (E-PK-62). |
+
+**Die Entscheidungen dazu** (Auftraggeber, 29.09.2026, auf die Fragen oben):
+
+- **E-PK-58 — beide APKs nach `server/apk/`:** `nadoku-X.Y.Z.apk` (Handy)
+  und `nadoku-uhr-X.Y.Z.apk` (Wear OS), beide mit dem App-Signaturschlüssel
+  (E-PK-53). Die Karte auf dem Geräte-Reiter bleibt, wie sie ist.
+- **E-PK-59 — nur die neueste Fassung bleibt liegen.** Nach erfolgreichem
+  Ablegen löscht die Kette ältere `nadoku-*.apk` bzw. `nadoku-uhr-*.apk`.
+  **Gegen die Empfehlung der Instanz** („liegen lassen"). **Preis, benannt:**
+  Die Kette bekommt zum ersten Mal ein Löschrecht auf dem Produktivserver —
+  begrenzt auf diese beiden Namensmuster in `server/apk/`, und erst **nach**
+  dem geprüften Ablegen der neuen Datei; ein Rückweg auf die Vorgängerfassung
+  geht nur noch über ihren Tag.
+- **E-PK-60 — Tag gegen Fassung, rot vor dem Bau:** `android-vX.Y.Z` gegen
+  `android/version.properties`, `uhr-vX.Y.Z` gegen `APP_VERSION` in
+  `watch/source/Const.mc`.
+- **E-PK-61 — das Garmin-Paket nur als Artefakt** des Laufs; hochgeladen in
+  den Connect-IQ-Store wird von Hand.
+- **E-PK-62 — `actions/setup-java` und `actions/upload-artifact` an den
+  SHAs, die bis PK-05 in `pruefung.yml` standen**; `uses:` 10 → 12,
+  `CLAUDE.md` 3 zieht nach.
 
 ### PK-M2 — Erster Durchlauf der neuen Kette (Betreiberin)
 
@@ -1333,6 +1369,9 @@ Abschnitt 6** — hier die Kurzfassung mit der Folge:
 | **F-PK-43** | PK-06 (Einordnung) | **Die Zusammenfassung der Integritätswache hängt am Wortlaut von `wache.py`.** Das `grep`-Muster sucht drei Zeilenanfänge der Ausgabe; ändert sich einer, bleibt die Liste wegen `|| true` still leer, und die Zusammenfassung nennt den verglichenen Stand nicht mehr — genau die grüne Zahl ohne Gegenstand, gegen die der Schritt gebaut ist. | Eine Falle ohne Kommentar; sie hat jetzt einen Satz. Einen Riegel dagegen baut PK-06 nicht (kein Befehl ändert sich). |
 | **F-PK-44** | PK-06 (Einordnung) | **`Technik.md` 5 sagte, `WACHE_BASIS` stehe in `integritaet.yml`.** Seit Kette II/AP6 liest die Datei nur `${{ vars.WACHE_BASIS }}`; die Adresse liegt in der Repositoriums-Variablen. | Berichtigt mit PK-06. |
 | **F-PK-45** | PK-06 (Einordnung) | **Eine Fehlermeldung in `stufe2` schickt zu „Rahmenplan 6a, Schritte 6 bis 8"** für eine nicht eingerichtete Anlage; Schritt 8 ist heute das Demo-Konto und hilft dort nicht. Die Meldungen nennen außerdem Kette-II-Kennungen (`AP6`, `E-KH-12`), deren Konzept PK-07 löscht. | Nicht geändert — PK-06 ändert keinen Befehl. Gehört zu Nr. 265 (Verweise aus `.github/` in die Dokumentation); PK-07 nimmt es in dessen Zuordnung mit. |
+| **F-PK-46** | PK-06 (Gegenlesung) | **Vier Schritte laufen nur auf Produktiv, nicht zwei** — Kopf von `ausliefern-lauf.yml` und `Technik.md` 6 zählten nur Tag und Tor. | Beide berichtigt mit PK-06. |
+| **F-PK-47** | PK-06 (Gegenlesung) | **Stufe 2 prüft `STAGING_PASS` nicht auf leer.** | Backlog Nr. 360. |
+| **F-PK-48** | PK-06 (Gegenlesung) | **Zwei stille Fallen ohne Satz:** das Kopieren nach `server/doku/` und `actions: read` beim Aufrufer; die Einordnung hatte den ersten Block als Begründung geführt. | Beide Sätze ergänzt. |
 
 **Fragen an die Betreiberin aus PK-05:**
 
@@ -1346,7 +1385,7 @@ Abschnitt 6** — hier die Kurzfassung mit der Folge:
 
 | Nr. | Frage | Empfehlung der Instanz |
 |---|---|---|
-| **Q-PK-10** | Nach `Rahmenplan.md` 6a Schritt 8 liegt auf Staging seit dem 26.09.2026 das Demo-Konto aus der Fixture — mit dem Kennwort aus dem Handbuch. F-PK-04 hatte entschieden, dort **kein** Konto mit Vorgabekennwort anzulegen, und P-PK-19 zählt ein solches Konto als Scheitern. War das Anlegen gewollt? | Ist es gewollt (Staging soll zeigen, was Produktiv zeigt), wird F-PK-04 an dieser Stelle aufgehoben und P-PK-19 misst nur noch, dass **Stufe 2** sich nicht als Demo-Konto anmeldet. Sonst: Konto auf Staging löschen und 6a Schritt 8 streichen. |
+| **Q-PK-10** | Nach `Rahmenplan.md` 6a Schritt 8 liegt auf Staging seit dem 26.09.2026 das Demo-Konto aus der Fixture — mit dem Kennwort aus dem Handbuch. F-PK-04 hatte entschieden, dort **kein** Konto mit Vorgabekennwort anzulegen, und P-PK-19 zählt ein solches Konto als Scheitern. War das Anlegen gewollt? | Ist es gewollt (Staging soll zeigen, was Produktiv zeigt), wird F-PK-04 an dieser Stelle aufgehoben und P-PK-19 misst nur noch, dass **Stufe 2** sich nicht als Demo-Konto anmeldet. Sonst: Konto auf Staging löschen und 6a Schritt 8 streichen. — **Beantwortet 29.09.2026: bleibt, F-PK-04 für Staging aufgehoben** (E-PK-57). |
 ---
 
 ## 7. Zuarbeiten der Betreiberin
@@ -1365,7 +1404,7 @@ Abschnitt 6** — hier die Kurzfassung mit der Folge:
 | Z9 | Kleine Entscheidung (F-PK-13): Soll `.claude/settings.local.json` in `.gitignore`? Ein Eintrag macht sie unsichtbar; kein Eintrag lässt sie wenigstens als unverfolgte Datei auffallen. Heute steht sie **nicht** darin und es gibt sie nicht | mit PK-07 | offen |
 | Z10 | **Q-PK-07 bis -09 beantworten** (Abschnitt 6): Schemaprobe als Pflichtprüfung, `CIQ_GERAETE_URL`, 337 Zeilen als Abnahme | mit dem PR von PK-05 | **erledigt 23.09.2026** — E-PK-47 bis -49 |
 | Z12 | **Ruleset „Main Protect": „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Required Checks eintragen** (E-PK-47). Die Namen genau so, samt Leerzeichen; ein anders geschriebener Name hängt die Pflicht an nichts. **Nicht** `Schema gegen ${{ matrix.db.name }}` wählen, auch wenn die Auswahlliste ihn anbietet — so heißt der Job nur, wenn er übersprungen wurde (F-PK-41) | nach dem Merge von PK-05 | offen |
-| Z13 | **Q-PK-10 beantworten** (Demo-Konto auf Staging) und nach dem Merge von PK-06 **P-PK-37** fahren (Stufe 2 mit falschem `STAGING_PASS`) | nach dem Merge von PK-06 | offen |
+| Z13 | ~~Q-PK-10 beantworten~~ (beantwortet 29.09.2026, E-PK-57); nach dem Merge von PK-06 **P-PK-37** fahren (Stufe 2 mit falschem `STAGING_PASS`) | nach dem Merge von PK-06 | offen (P-PK-37) |
 | Z11 | **Nach einem fremden Merge nicht „Update branch" drücken** (E-PK-42): örtlich mergen und den Prüfstand fahren lassen, `Pruefablauf.md` 5.3 | ab dem Merge von PK-05 | Hinweis |
 
 ---

@@ -65,11 +65,14 @@ on:
 
 permissions:
   contents: read
+  # Braucht `ausliefern-lauf.yml` (Tor der grünen Läufe); ein aufgerufener Lauf
+  # bekommt nie mehr Rechte als sein Aufrufer.
   actions: read
 
-# Ein Lauf je Umgebung, wartend statt abbrechend (ein Abbruch ließe einen halben
-# Stand bei Wartung oder eine stehende Jobpause zurück), und Tags in eigener
-# Gruppe, weil GitHub je Gruppe nur einen wartenden Lauf hält.
+# Ein Lauf je Gruppe — Tag oder nicht; ein Probelauf teilt die Gruppe mit
+# Staging —, wartend statt abbrechend (ein Abbruch ließe einen halben Stand bei
+# Wartung oder eine stehende Jobpause zurück); GitHub hält je Gruppe nur einen
+# wartenden Lauf.
 concurrency:
   group: auslieferung-${{ startsWith(github.ref, 'refs/tags/') && 'produktion' || 'staging' }}
   cancel-in-progress: false
@@ -98,8 +101,9 @@ jobs:
     # jeder weitere Lauf dieser Umgebung in seiner Gruppe.
     timeout-minutes: 20
     environment: staging
-    # GitHub setzt ein fehlendes Geheimnis still auf leer — deshalb prüft jeder
-    # Schritt seine Werte mit `-z`, bevor er sie benutzt.
+    # GitHub setzt ein fehlendes Geheimnis still auf leer — deshalb prüfen die
+    # Schritte ihre Werte mit `-z`, bevor sie sie benutzen (`STAGING_PASS` noch
+    # nicht, Nr. 360).
     env:
       STAGING_URL:   ${{ vars.STAGING_URL }}
       STAGING_KONTO: ${{ secrets.STAGING_KONTO }}
@@ -208,8 +212,6 @@ jobs:
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
           npx --yes playwright@1.56 install chromium
-          # `--frisch` ist Pflicht: In einem gefüllten Konto überspringt die
-          # Dublettenerkennung alles, und der Kreislauf wäre grün ohne Messung.
           for art in edbak; do
             echo "--- Kreislauf $art ---"
             python3 tools/referenzdatensatz/vergleich/kreislauf.py \

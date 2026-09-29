@@ -10222,10 +10222,12 @@ Produktiv jedes Mal etwas, was vorher nirgends gelaufen war.** Genau das
 verbietet E-KH-17, und genau deshalb steht die Folge jetzt einmal:
 `auslieferung.yml` ruft sie zweimal auf und reicht `umgebung` durch.
 
-**Was die Umgebung noch trennt, ist klein und begründet sich selbst:** zwei
-Schritte (der Tag-Vergleich — Staging fährt von `main` und hat keinen Tag;
-und das Tor der grünen Läufe — es fragt, ob dieser Stand auf *Staging* grün
-war, und müsste auf Staging nach sich selbst fragen) und drei Werte
+**Was die Umgebung noch trennt, ist klein und begründet sich selbst:** vier
+Schritte laufen nur auf Produktiv — der Tag-Vergleich und die Fassung nach
+dem Abgleich (Staging fährt von `main` und hat keinen Tag), das Tor der
+grünen Läufe (es fragt, ob dieser Stand auf *Staging* grün war, und müsste
+auf Staging nach sich selbst fragen) und der Adressvergleich (`WACHE_BASIS`
+beschreibt Produktiv) — und drei Werte
 (Basisadresse, Zielpfad, Pfad der Zustandsdatei), die der **erste** Schritt
 des gemeinsamen Laufs bestimmt. Alles Übrige ist gleich.
 

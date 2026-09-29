@@ -14,22 +14,21 @@ Fassung dieser Datei je einen Eintrag getragen (nachgesehen über die ganze
 Historie, E-SD-25 — der Changelog zu Web 7.2.0 behauptet anderes). Den
 Werdegang der Nummernvergabe hält `Backlog-Erledigt.md`.
 
-**Die Kopfzeile ist Pflicht** (E-SD-16), in genau dieser Form:
-`NNN. **Titel.** · gehört zu: ZIEL · Stand: STAND · seit DD.MM.YYYY`.
-ZIEL ist eine Kennung aus der Fahrplan-Tabelle des Rahmenplans (`17`, `12a`,
-`PK`, `Kette II` …, bei Bedarf mit Paket wie `10c AP7`) oder eines von
-`nächste Backlog-Runde` · `Zuarbeit` · `Pflegeaufgabe` · `nach v1.0`. STAND
-ist `offen` · `teilweise` · `zurückgestellt` · `nur auf Anlass` ·
-`nicht umsetzen`; das Letzte heißt: entschieden, nicht gebaut, und der Punkt
-bleibt hier, weil nichts erledigt wurde. Ein Eintrag hat höchstens
-**20 Zeilen**, die Kopfzeile eingeschlossen (E-SD-03); jede Folgezeile
-beginnt mit **fünf Leerzeichen** (E-SD-17 — mit vier rendert GitHub ab
-Nr. 100 einen Codeblock, Nr. 196). Vor jeder Kopfzeile stehen `<!-- -->`
-und eine Leerzeile, sonst zählt GitHub die Nummern fort (Nr. 340,
-E-R4-62). Ein gekürzter Eintrag endet mit
-`Werdegang bis DD.MM.YYYY: \`docs/Backlog.md@abc1234\`, Nr. NNN.`; dort
-steht die lange Fassung. Die Decken misst `tools/steuerung/decken.py`, und
-Stufe 1 ist rot, wenn eine reißt.
+**Die Kopfzeile ist Pflicht** (E-SD-16), in genau dieser Form: `NNN.
+**Titel.** · gehört zu: ZIEL · Stand: STAND · seit DD.MM.YYYY`. ZIEL ist eine
+Kennung aus der Fahrplan-Tabelle des Rahmenplans (`17`, `12a`, `PK`, `Kette
+II` …, bei Bedarf mit Paket wie `10c AP7`) oder eines von `nächste
+Backlog-Runde` · `Zuarbeit` · `Pflegeaufgabe` · `nach v1.0`. STAND ist `offen`
+· `teilweise` · `zurückgestellt` · `nur auf Anlass` · `nicht umsetzen`; das
+Letzte heißt: entschieden, nicht gebaut, und der Punkt bleibt hier, weil
+nichts erledigt wurde. Ein Eintrag hat höchstens **20 Zeilen**, die Kopfzeile
+eingeschlossen (E-SD-03); jede Folgezeile beginnt mit **fünf Leerzeichen**
+(E-SD-17 — mit vier rendert GitHub ab Nr. 100 einen Codeblock, Nr. 196). Vor
+jeder Kopfzeile stehen `<!-- -->` und eine Leerzeile, sonst zählt GitHub die
+Nummern fort (Nr. 340, E-R4-62). Ein gekürzter Eintrag endet mit `Werdegang
+bis DD.MM.YYYY: \`docs/Backlog.md@abc1234\`, Nr. NNN.`; dort steht die lange
+Fassung. Die Decken misst `tools/steuerung/decken.py`, und Stufe 1 ist rot,
+wenn eine reißt.
 
 **Fundstellen und Zahlen (Regel seit 13.09.2026).** Funktionsnamen statt
 Zeilennummern (`ingest_tag_nachziehen()` statt `ingest.php:623`), in
@@ -54,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351, 352 | 27.09.2026 |
-| 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); noch keine vergeben | 29.09.2026 |
+| 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); vergeben: 360 | 29.09.2026 |
 | ab 370 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 29.09.2026 |
 
 ---
@@ -1305,3 +1304,20 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
      28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
      → 0 Überschneidungen.
+
+<!-- -->
+
+360. **Stufe 2 prüft `STAGING_PASS` nicht auf leer.** · gehört zu: PK · Stand: offen · seit 29.09.2026
+     *Aufgenommen 29.09.2026 aus der Gegenlesung von PK-06.* GitHub setzt
+     ein fehlendes Geheimnis still auf leer; deshalb prüfen die Schritte von
+     `stufe2` ihre Werte mit `-z` und brechen mit einer eigenen Meldung ab
+     (E-KH-12). `STAGING_URL`, `STAGING_KONTO`, `STAGING_TOTP` und
+     `JOBS_TOKEN` werden geprüft, `STAGING_PASS` nicht — obwohl Kreislauf
+     und Rückwegprobe es benutzen und die Meldung der Rückwegprobe
+     „Prüfkonto, Passwort oder STAGING_TOTP fehlt" sagt. Fehlt es, scheitert
+     der Lauf an der Anmeldung, nicht an der erklärten Meldung. Rot ist er
+     trotzdem; es fehlt der richtige Grund.
+     *Weg:* `STAGING_PASS` in beide `-z`-Riegel aufnehmen (zwei Zeilen in
+     `.github/workflows/auslieferung.yml`); nicht in PK-06, das keinen
+     Befehl ändert. *Abnahme:* Umgebungsgeheimnis leer → „Prüfkonto auf
+     Staging fehlt" im ersten Messschritt.

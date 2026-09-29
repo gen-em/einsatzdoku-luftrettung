@@ -1,7 +1,9 @@
 name: Auslieferungslauf
 
 # Eine Schrittfolge für beide Umgebungen: Was auf Produktiv läuft, ist vorher
-# auf Staging gelaufen; nur zwei Schritte fragen nach der Umgebung.
+# auf Staging gelaufen — bis auf vier Schritte, die nur Produktiv hat
+# (Tag-Vergleich, Tor der grünen Läufe, Adressvergleich, Fassung nach dem
+# Abgleich); ein fünfter braucht einen Grund.
 
 on:
   workflow_call:
@@ -148,8 +150,8 @@ jobs:
       - name: Sind die drei Geheimnisse der Umgebung ${{ inputs.umgebung }} da?
         # Steht vor Backup und Wartung: Ein vertippter Name soll scheitern,
         # bevor die Anlage zu ist.
-        # Die Namen gehören nur an die Umgebung: Steht derselbe eine Ebene
-        # höher, greift still dessen Wert, und der Schritt geht immer auf.
+        # Die Namen gehören nur an die Umgebung: Fehlt dort einer, greift still
+        # ein gleichnamiger Wert eine Ebene höher, und der Schritt geht auf.
         env:
           UMGEBUNG:     ${{ inputs.umgebung }}
           FTP_SERVER:   ${{ secrets.FTP_SERVER }}
@@ -186,8 +188,8 @@ jobs:
 
       - name: Grüner Staging- und Stufe-1-Lauf auf diesem Stand?
         if: ${{ inputs.umgebung == 'produktion' && !inputs.probelauf }}
-        # Gefragt wird nach dem Commit, nicht nach dem Zweig: Ein Tag kann auf
-        # einem Stand sitzen, der nie auf `main` war.
+        # Staging-Läufe zählen nach Commit, nicht nach Zweig (ein Tag kann auf
+        # einem nie gemergten Stand sitzen); Stufe 1 nach dem Baum.
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -354,6 +356,9 @@ jobs:
       - name: Handbuch und „Was ist NAdoku" nach server/doku kopieren
         if: ${{ !inputs.probelauf }}
         run: |
+          # Die Aktion lädt nur `server/`; ohne diese Kopie löscht der Abgleich
+          # `server/doku/`, und Hilfe und „Über“ zeigen „Dieses Dokument fehlt“
+          # — kein Prüfschritt merkt es.
           set -euo pipefail
           mkdir -p server/doku
           cp docs/Handbuch.md docs/Was-ist-NAdoku.md server/doku/
@@ -472,10 +477,10 @@ jobs:
           # jeder Datei), je Umgebung eine eigene, im Gesprächslauf eine im
           # Probeverzeichnis; `state-name` gilt relativ zu `server-dir`.
           state-name: ${{ inputs.probelauf_gespraech && '.deploy-state-gespraech.json' || env.ZUSTANDSPFAD }}
-          # Acht Pfade, die nur auf dem Server liegen, und `install.php` (das
-          # Runbook lässt sie nach der Einrichtung löschen); die drei
-          # Verzeichnisse stehen als `x/**` und `x/`, weil die Aktion beides
-          # getrennt prüft.
+          # Sieben Pfade, die nur auf dem Server liegen, und `install.php` (das
+          # Runbook lässt sie nach der Einrichtung löschen) — acht, und die Zahl
+          # ist der Prüfwert; die drei Verzeichnisse stehen als `x/**` und `x/`,
+          # weil die Aktion beides getrennt prüft.
           exclude: |
             **/.git*
             **/.git*/**
