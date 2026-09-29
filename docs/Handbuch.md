@@ -915,6 +915,12 @@ Schau deshalb weiter auf die Adresse, auch mit Passkey.
   auf diesem Gerät"**, hast du den Dialog geschlossen, zu lange gewartet,
   oder auf diesem Gerät liegt keiner deiner Passkeys; welches davon, sagt
   der Browser nicht.
+- **Wenn das Hinzufügen nach dem Dialog scheitert**, bleibt der Knopf grau,
+  und die Meldung endet mit **„Bitte die Seite neu laden."** (seit Web
+  21.11.2). Der Passkey liegt dann womöglich schon auf deinem Gerät, ohne
+  dass die Anlage ihn kennt — ein zweiter Klick legte einen zweiten an. Lade
+  die Seite neu und schau in die Liste; steht er dort nicht, kannst du ihn
+  in der Passkey-Verwaltung deines Geräts löschen.
 - **„Der Passkey wurde abgewiesen — zuletzt auf einem anderen Gerät
   benutzt"** (seit Web 21.11.0). Jeder Passkey zählt seine Benutzungen mit;
   läuft die Zahl zurück, war womöglich eine **Kopie** im Spiel. Die Anmeldung

@@ -7971,5 +7971,17 @@ declare(strict_types=1);
  *   Commit; dazu laeuft der Rumpf bei 1205/1213 bis zu dreimal. Gemessen:
  *   180 von 180 ohne 503. Das Verschieben allein leistet es; die Schleife ist
  *   das Netz (allein: 2 von 180). Kein Schema, keine Vertragsaenderung.
+ *
+ * 21.11.2 — DIE OFFENEN PUNKTE VON H-SR-08 GEMESSEN (Schritt 18; F-SR-58
+ *   bis -67, E-SR-56 bis -59). Korrekturstufe. Vier Punkte standen nach
+ *   21.11.0 als „nur gelesen" im Pruefdokument; jetzt ist jeder gemessen: die
+ *   Einarbeitung der Nachpruefung ein drittes Mal gelesen (zwoelf Meldungen,
+ *   keine mittel), der Zaehler unter echtem Wettlauf (zwei Prozesse, genau
+ *   einer durch), Nr. 354 mit einem echten Deadlock nachgestellt (die
+ *   Beschreibung war falsch: kein gemeldeter Erfolg, sondern halb geschrieben
+ *   und ein Fehler) und der Knopf in `passkey.js` im Bedienweg. Im Code:
+ *   `pk_spki_laden()` haelt alle Grenzen der Registrierung, nicht nur die
+ *   Groessen; nach dem Absenden sagt die Meldung immer „Seite neu laden".
+ *   Kein Schema, keine Vertragsaenderung.
  */
-const WEB_VERSION = '21.11.1';
+const WEB_VERSION = '21.11.2';

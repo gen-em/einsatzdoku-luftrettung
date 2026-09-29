@@ -14,6 +14,95 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.11.2] — 2026-09-29
+
+Schritt 18, Sicherheitsrunde II, **die offenen Punkte von H-SR-08
+gemessen**. **Korrektur** — kein Schema, keine Vertragsänderung. Nach
+21.11.0 standen vier Punkte als „nur gelesen" am Anfang des Prüfdokuments:
+die Einarbeitung der Nachprüfung, der Zähler unter einem echten Wettlauf,
+der Deadlock in `protokoll()` (Nr. 354) und der Knopf in `passkey.js` nach
+einer Ablehnung. **Jetzt ist jeder gemessen**, und zwei davon haben etwas
+gefunden. Die Einarbeitung ist ein drittes Mal gelesen worden — drei Leser,
+drei Gegenprüfer: zwölf Meldungen, elf bestätigt, eine widerlegt (sie
+stand schon im Prüfdokument); keine mittel, eine niedrig.
+
+### Behoben
+
+- **Ein gespeicherter RSA-Schlüssel lädt nur noch in allen Grenzen der
+  Registrierung** (F-SR-59). Seit 21.11.0 prüfte `pk_spki_laden()` die
+  Größen — 2048 bis 4096 Bit, Exponent höchstens 64 Bit —, aber nicht, dass
+  Exponent und Modul ungerade sind und der Exponent mindestens 3. Die Texte
+  sagten „dieselben Grenzen", und nachgestellt lud ein Schlüssel mit e = 1:
+  genau der, dessen Signatur sich ohne Geheimnis rechnen lässt. Hinein kommt
+  eine solche Zeile nur mit Schreibzugriff auf die Datenbank, und wer den
+  hat, tauscht den Schlüssel gleich ganz — deshalb ein Hinweis und keine
+  Lücke. Jetzt stimmt der Satz.
+- **Nach dem Absenden sagt die Meldung beim Anlegen eines Passkeys immer
+  „Bitte die Seite neu laden"** (F-SR-62). Seit 21.11.0 bleibt der Knopf
+  aus, sobald die Antwort des Authenticators abgeschickt ist: Der Passkey
+  liegt dann schon im Gerät, und ein zweiter Klick legte einen zweiten an.
+  Kommentar und Dokumentation sagten „nach einer Antwort des Servers", und
+  „neu laden" stand nur in den zwei Antworten, die es selbst sagen. Riss das
+  Netz, oder lehnte der Server ab, bevor er prüfte (zu groß, frischer Code
+  verlangt), stand ein grauer Knopf neben einer Meldung ohne Ausweg.
+
+### Berichtigt
+
+- **Nr. 354 war falsch beschrieben** (F-SR-63). Dort stand, ein Deadlock am
+  Protokolleintrag in einer Transaktion ende mit „nichts geschrieben,
+  gemeldet als alles". **Nachgestellt mit einem echten Deadlock** in
+  `totp_abschalten()` ist es anders: InnoDB rollt die Transaktion zurück
+  und beendet sie, der Rumpf läuft weiter — **jede Anweisung danach im
+  Autocommit** —, und erst `commit()` wirft. Übrig bleiben ein Zweitfaktor,
+  der noch an ist, **gelöschte Passkeys** samt dem Protokolleintrag „mit dem
+  Zweitfaktor", eine Fehlerseite und keine Mail. Das ist nicht schlimmer als
+  beschrieben, aber etwas anderes, und die Abnahme dort — ein Auslöser mit
+  `40001` — hätte den Fall nie hergestellt: Ein `SIGNAL` bricht die
+  Anweisung ab, nicht die Transaktion. Beides ist in Nr. 354 ersetzt; die
+  Behebung bleibt dort (E-SR-53).
+- **Teil 12 der Ingestprobe ist kein echter Deadlock** (F-SR-67), und der
+  Eintrag zu 21.11.1 sagte „erzwingt den Deadlock". Er meldet 1213 per
+  `SIGNAL`; für `ingest.php` ist das gleichwertig, weil der `catch` die
+  Transaktion selbst zurückrollt, und den echten misst die Verbindungsprobe
+  (39 × 503 vorher, 0 nachher). Der Satz ist dort ersetzt.
+- **Zwei Sätze zu den 64 Bit** (F-SR-58): Im Eintrag zu 21.11.0 stand
+  neben der berichtigten Begründung noch die alte („phpseclib überlässt die
+  RS256-Prüfung OpenSSL nur bis 64 Bit"), der Absatz widersprach sich; im
+  Konzept ebenso. Beide ersetzt.
+
+### Bewusst so
+
+- **Nr. 354 bleibt offen** (E-SR-53): Die Behebung ändert `protokoll()` für
+  alle Aufrufer, und das ist ein eigenes Paket. Die Nachstellung liegt dem
+  Eintrag als Rezept bei.
+- **Ein Formularfeld als Liste gibt an 114 Stellen eine PHP-Warnung**
+  (F-SR-65) — `code[]=x` statt `code=x`. Für `passkey_antwort` ist das seit
+  21.11.0 behoben; die übrigen sind ein projektweites Muster, älter als die
+  Passkeys, und gehen als **Nr. 355** in die nächste Backlog-Runde.
+
+### Prüfmittel
+
+- **Die Passkeyprobe stellt den Wettlauf her.** Zwei Prozesse melden sich
+  mit derselben Kennung und demselben Zähler an; eine dritte Verbindung hält
+  die Zeile, bis beide am `UPDATE` stehen. Genau einer geht durch, der andere
+  gilt als Kopie. Bis 21.11.1 stand im Kopf der Probe, das lasse sich nicht
+  verlässlich herstellen. Dazu: der Lader in allen Grenzen (sechs Fälle
+  statt drei), zwei erlaubte Schreibweisen der ES256-Signatur (`81 L`, eine
+  zusätzliche Null) und `daten.weg` am Zähler-Eintrag — drei Stellen, an
+  denen ein Rückbau bis dahin grün geblieben wäre.
+- **Teil 5d der Zweitfaktorprobe schickt Liste und Übergröße auch an die
+  Bestätigungsseite** (F-SR-61), nicht nur an den Code-Schritt.
+- **Der Bedienweg `einstellungen-profil-passkey` lässt den Server
+  ablehnen** — eine zweite Seite verdrängt die Herausforderung — und das
+  Netz reißen; beide Male bleibt der Knopf aus, nach dem Neuladen geht er
+  wieder.
+- **Die Wege zum Tagesfahrzeug warten auf die Antwort, nicht auf die Uhr**
+  (F-SR-66). Im ersten Prüfstandslauf zu SR-05 lief
+  `p5c-ap8-adhoc-tag-in-der-luft` in eine Zeitüberschreitung, allein
+  wiederholt war er grün. Nachgestellt ist nur die Wirkung: ein Tag, der
+  schon auf „Anderes Rettungsmittel" steht. Ein solcher Anfang bricht jetzt
+  mit einem Satz ab, der das sagt.
+
 ## [Web 21.11.1] — 2026-09-29
 
 Schritt 18, Sicherheitsrunde II, Paket SR-05. **Korrektur** — kein Schema,
@@ -82,9 +171,11 @@ keine Vertragsänderung.
 - **Die Verbindungsprobe läuft für `ingest.php` jetzt schon in Stufe klein**
   (F-SR-08): Eine Korrektur am Deadlock hätte die Probe, die ihn misst,
   sonst erst in der Hauptstufe gefahren.
-- **Teil 12 der Ingestprobe erzwingt den Deadlock**: Ein Auslöser meldet
-  1213, solange ein Zähler in einer nicht transaktionalen Tabelle unter
-  einer Grenze liegt. Einmal — der zweite Anlauf nimmt an, der verworfene
+- **Teil 12 der Ingestprobe erzwingt die Wiederholung**: Ein Auslöser meldet
+  1213 per `SIGNAL`, solange ein Zähler in einer nicht transaktionalen
+  Tabelle unter einer Grenze liegt — kein echter Deadlock, für `ingest.php`
+  aber gleichwertig (F-SR-67; hier stand bis 21.11.2 „erzwingt den
+  Deadlock"). Einmal — der zweite Anlauf nimmt an, der verworfene
   Punkt steht einmal in `rejected`; dreimal — 503, nichts angelegt. Die
   erste Fassung setzte den Auslöser vor die Punktschleife und maß das
   Zurücksetzen damit nicht; die Gegenprobe ohne Zurücksetzen blieb grün.
@@ -117,8 +208,8 @@ bis auf einen, der eine eigene Nummer bekommt (Nr. 354).
 
 - **Ein RSA-Schlüssel hat jetzt 2048 bis 4096 Bit und einen ungeraden
   Exponenten von 3 bis 64 Bit** (F-SR-33, mittel). Bis 21.10.0 gab es nur
-  die Untergrenze. phpseclib überlässt die RS256-Prüfung OpenSSL nur bis
-  zu einem Exponenten von 64 Bit, darüber rechnet es selbst: Ein Schlüssel mit 4096 Bit
+  die Untergrenze. Über 3072 Bit Modul lehnt OpenSSL einen Exponenten über
+  64 Bit ab, und phpseclib rechnet die Potenz dann in reinem PHP: Ein Schlüssel mit 4096 Bit
   Modul und 4096 Bit Exponent kostete hier **6,2 Sekunden je Prüfung**, der
   Leser maß mit 8192 Bit 45 Sekunden. Wer ein Konto mit Zweitfaktor hat,
   konnte sich so einen Passkey anlegen und die Anlage mit parallelen
@@ -127,9 +218,10 @@ bis auf einen, der eine eigene Nummer bekommt (Nr. 354).
   sich ohne Geheimnis rechnen — aber nur für einen Schlüssel, den man sich
   selbst angelegt hat. Die Grenze 64 Bit ist die, bis zu der OpenSSL die
   Potenz für jeden erlaubten Modul übernimmt; echte Authenticatoren liefern
-  2048 Bit und 65537. Dieselben Grenzen gelten beim **Laden** eines
-  gespeicherten Schlüssels, denn die Kosten entstehen bei der Anmeldung,
-  und beide Werte müssen in der kürzesten Form stehen.
+  2048 Bit und 65537. Die Größen gelten auch beim **Laden** eines
+  gespeicherten Schlüssels, denn die Kosten entstehen bei der Anmeldung —
+  alle übrigen Grenzen dort erst seit 21.11.2 (F-SR-59) —, und beide Werte
+  müssen in der kürzesten Form stehen.
 - **Die Form einer ES256-Signatur prüft die Anlage selbst**, bevor phpseclib
   sie sieht (F-SR-45, gefunden in der Nachprüfung, mittel): eine Folge mit
   genau zwei Zahlen, höchstens 73 Byte. phpseclib liest BER, und ein
@@ -237,8 +329,9 @@ bis auf einen, der eine eigene Nummer bekommt (Nr. 354).
   einem Leerzeichen; in der Textmail fügte ein Zeilenumbruch Zeilen ein.
   **Eine abgelaufene Herausforderung** am Endpunkt heißt „Die Anfrage ist
   abgelaufen" und schreibt keine Protokollzeile (F-SR-48) — sonst sah ein
-  zweiter Reiter in der Verwaltung aus wie ein Angriff; und nach einer
-  Antwort des Servers bleibt der Knopf aus, bis die Seite neu geladen ist.
+  zweiter Reiter in der Verwaltung aus wie ein Angriff; und sobald die
+  Antwort abgeschickt ist, bleibt der Knopf aus, bis die Seite neu geladen
+  ist (bis 21.11.2 stand hier „nach einer Antwort des Servers", F-SR-62).
 - **„Abgebrochen, abgelaufen oder kein passender Passkey auf diesem Gerät"**
   statt „Abgebrochen oder abgelaufen" (F-SR-41): Der Browser sagt nicht,
   welcher der drei Fälle es war, und der dritte ist nach einem Umzug der
@@ -261,10 +354,12 @@ bis auf einen, der eine eigene Nummer bekommt (Nr. 354).
   die erste noch nicht zugestellt ist: Die Warteschlange ersetzt eine offene
   Mail derselben Vorlage an dieselbe Adresse. Selten, und die Person erfährt
   es trotzdem.
-- **`protokoll()` in einer Transaktion** verschluckt einen Deadlock, und
-  „alles oder nichts" könnte als „nichts, gemeldet als alles" enden — seit
+- **`protokoll()` in einer Transaktion** verschluckt einen Deadlock: Die
+  Transaktion ist dann fort, und was danach kommt, läuft ohne sie — seit
   21.8.0 beim Passwort, seit dieser Fassung in `totp_abschalten()`. Das ist
-  eine Frage an `protokoll()` selbst und wird Nr. 354.
+  eine Frage an `protokoll()` selbst und wird Nr. 354. (Hier stand bis
+  21.11.2 „könnte als ‚nichts, gemeldet als alles' enden"; nachgestellt ist
+  es anders, F-SR-63.)
 - **Erweiterungen mit einfachem Wert** (`hmac-secret`, `credBlob`) lehnt
   der Leser ab; `passkey.js` fordert keine an. **AT in einer Anmeldung**
   ist eine Ablehnung, strenger als WebAuthn; kein Authenticator setzt es

@@ -116,11 +116,19 @@
         if (!antw.ok) { throw Object.assign(new Error(antw.meldung), { eigen: true }); }
         window.location.reload();
       } catch (e) {
-        melden(bereich, 'fehler', e && e.eigen ? e.message : grund(e));
-        /* NACH EINER ANTWORT DES SERVERS BLEIBT DER KNOPF AUS (Nachprüfung
-         * von H-SR-08, E-1): Die Herausforderung ist dann verbraucht, und
-         * ein zweiter Klick erzeugte im Authenticator einen Passkey ohne
-         * Zeile auf dem Server. Die Meldung sagt „Seite neu laden". */
+        /* SOBALD DIE ANTWORT ABGESCHICKT IST, BLEIBT DER KNOPF AUS
+         * (Nachprüfung von H-SR-08, E-1): Der Passkey liegt dann schon im
+         * Authenticator, und ob der Server ihn bekam, weiß hier niemand —
+         * nach einem Netzfehler so wenig wie nach einer Ablehnung. Ein
+         * zweiter Klick erzeugte einen zweiten Passkey, womöglich ohne Zeile
+         * auf dem Server. Deshalb sagt die Meldung dann IMMER „Seite neu
+         * laden" — bis Web 21.11.1 stand hier „nach einer Antwort des
+         * Servers", und nur zwei der Antworten sagten es (dritte Lesung,
+         * 3B-2). Scheitert schon der Dialog des Browsers, ist nichts
+         * gesendet, und der Knopf geht wieder an. */
+        const text = e && e.eigen ? e.message : grund(e);
+        melden(bereich, 'fehler', gesendet && !/neu laden/.test(text)
+          ? `${text} Bitte die Seite neu laden.` : text);
         knopf.disabled = gesendet;
       }
     });

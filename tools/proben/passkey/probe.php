@@ -44,7 +44,12 @@ declare(strict_types=1);
  *      gesetzt, AT gesetzt, falsche Signatur (beide Verfahren), eine leere
  *      DER-Folge, unbekannte Kennung, die Kennung eines anderen Kontos und
  *      einer anderen Adresse; ein zurueckgelaufener Zaehler mit Protokoll
- *      (Name des Passkeys) und hoechstens EINER Mail je Tag (E-SR-46).
+ *      (Name des Passkeys, `daten.weg`) und hoechstens EINER Mail je Tag
+ *      (E-SR-46); ZWEI GLEICHZEITIGE Anmeldungen mit demselben Zaehler — zwei
+ *      Prozesse, von einer dritten Verbindung am `UPDATE` festgehalten —,
+ *      von denen genau eine durchgeht; eine ES256-Signatur mit `81 L` und
+ *      mit zusaetzlicher Null vor r geht durch. Der gespeicherte RSA-Schluessel
+ *      laedt in allen Grenzen der Registrierung und ausserhalb nicht.
  *   4. Die Tabelle: der elfte Passkey an einer Adresse wird abgelehnt, einer
  *      einer anderen Adresse zaehlt nicht mit; eine Kennung zweimal ebenso
  *      (ueber den Hash); ein Konto ohne Zweitfaktor bekommt keinen; die
@@ -55,9 +60,10 @@ declare(strict_types=1);
  * WAS SIE NICHT MISST: einen echten Authenticator und einen echten Browser
  * (Bedienweg `einstellungen_profil_passkey.mjs`, Chromium mit virtuellem
  * Authenticator), die Anbindung an Anmeldung und Endpunkt (Zweitfaktorprobe,
- * Teil 5d), und das atomare Fortschreiben des Zaehlers unter zwei
- * GLEICHZEITIGEN Anmeldungen — das steht im Code (`WHERE zaehler = ?`), ein
- * echter Wettlauf laesst sich hier nicht verlaesslich herstellen.
+ * Teil 5d). Bis Web 21.11.1 stand hier auch das atomare Fortschreiben des
+ * Zaehlers unter zwei GLEICHZEITIGEN Anmeldungen — „laesst sich hier nicht
+ * verlaesslich herstellen". Es liess sich: Die dritte Verbindung haelt beide
+ * am `UPDATE`, bis beide dort stehen (Nachpruefung der offenen Punkte).
  *
  * `app.base_url` WIRD FUER DEN LAUF AUF `https://localhost:8443` GESTELLT:
  * Die Sandbox steht auf einer IP-Adresse, und fuer eine IP gibt es keine
@@ -313,6 +319,18 @@ pruefe(pk_spki_laden($spki($rsaN, "\x01\x00\x01"), -257) !== null
        && pk_spki_laden($spki($rsaN, "\x01" . str_repeat("\x00", 7) . "\x01"), -257) === null
        && pk_spki_laden($spki("\x01" . $n4096, "\x01\x00\x01"), -257) === null,
        'gespeicherter RSA-Schluessel: in den Grenzen geladen, Exponent ueber 64 Bit und 4097 Bit nicht');
+/* VON INNEN UND DIE UEBRIGEN GRENZEN (dritte Lesung DA-2, DA-3): Was die
+ * Registrierung annimmt, laedt auch — 4096 Bit, Exponent 3 und 64 Bit —, und
+ * was sie ablehnt, laedt nicht: Exponent 1, gerader Exponent, gerader Modul. */
+$gerade = $rsaN; $gerade[strlen($gerade) - 1] = chr(ord($gerade[-1]) & 0xfe);
+pruefe(pk_spki_laden($spki($n4096, "\x01\x00\x01"), -257) !== null
+       && pk_spki_laden($spki($rsaN, "\x03"), -257) !== null
+       && pk_spki_laden($spki($rsaN, str_repeat("\xff", 8)), -257) !== null,
+       'gespeicherter RSA-Schluessel: 4096 Bit, Exponent 3 und Exponent mit 64 Bit geladen');
+pruefe(pk_spki_laden($spki($rsaN, "\x01"), -257) === null
+       && pk_spki_laden($spki($rsaN, "\x01\x00\x00"), -257) === null
+       && pk_spki_laden($spki($gerade, "\x01\x00\x01"), -257) === null,
+       'gespeicherter RSA-Schluessel: Exponent 1, gerader Exponent und gerader Modul nicht geladen');
 
 /* KEINE DOMAIN: die Anlage auf einer IP-Adresse (und einmal ohne HTTPS). In
  * EINEM EIGENEN PROZESS — `app_url()` merkt sich die Adresse je Anfrage, und
@@ -456,6 +474,112 @@ pruefe(!$e['ok'] && $zaehle($mailSql) === 2, 'nach mehr als einem Tag: wieder ei
 $ablage = $h();
 $e = pk_anmeldung_pruefen($uid, $ablage, pb_anmeldung($ec, $kennEc, $ablage['herausforderung'], $u, ['zaehler' => 6]));
 pruefe($e['ok'], 'danach mit hoeherem Zaehler (6) wieder durch', $e['grund'] ?? '');
+/* DER WEG STEHT IM EINTRAG (dritte Lesung C3-3): Im Code-Schritt ist noch
+ * niemand angemeldet, und `protokoll()` schreibt dann den Urheber `job` —
+ * `daten.weg` sagt der Verwaltung, woher der Versuch kam. Hier: keine Sitzung,
+ * also `anmeldung`. */
+$wegZ = json_decode((string)$pdo->query("SELECT daten FROM protokoll_ereignisse WHERE art = 'passkey_zaehler'
+                     AND betroffen_user_id = $uid ORDER BY id DESC LIMIT 1")->fetchColumn(), true);
+pruefe(($wegZ['weg'] ?? '') === 'anmeldung', 'der Eintrag passkey_zaehler traegt daten.weg „anmeldung"',
+       json_encode($wegZ));
+
+/* DIE ERLAUBTEN SCHREIBWEISEN (dritte Lesung DA-4): Eine gueltige ES256-Signatur
+ * mit der Laenge der Folge als `81 L` und mit einer zusaetzlichen Null vor r
+ * geht durch — so sagt es der Kopf der Bibliothek. Die `81 L`-Form wird so
+ * lange neu signiert, bis sie GENAU 73 Byte hat (r und s je 33 Byte, etwa
+ * jeder vierte Versuch): Nur dann faende der Fall auch einen Deckel von 72.
+ * Eine kurze Form hat hoechstens 72 Byte (phpseclib schreibt DER). */
+$umschreiben = static function (string $sig, string $wie): ?string {
+    $inhalt = substr($sig, 2);
+    if ($wie === 'l81') { return "\x30\x81" . chr(strlen($inhalt)) . $inhalt; }
+    $lr = ord($inhalt[1]);
+    if ($lr > 32) { return null; }
+    $neu = "\x02" . chr($lr + 1) . "\x00" . substr($inhalt, 2);
+    return "\x30" . chr(strlen($neu)) . $neu;
+};
+foreach (['l81' => 'Laenge der Folge als 81 L', 'null' => 'zusaetzliche Null vor r'] as $wie => $was) {
+    $zOk = null; $zLen = null;
+    for ($v = 0; $v < 60 && $zOk === null; $v++) {
+        $ablage = $h();
+        $zaehlerJetzt = (int)$pdo->query("SELECT zaehler FROM passkeys WHERE id = {$aEc['id']}")->fetchColumn() + 1;
+        $w = pb_anmeldung($ec, $kennEc, $ablage['herausforderung'], $u, ['zaehler' => $zaehlerJetzt]);
+        $neu = $umschreiben(pk_b64u_lesen($w['signature']), $wie);
+        if ($neu === null || ($wie === 'l81' && strlen($neu) !== 73)) { continue; }
+        $w['signature'] = pk_b64u($neu);
+        $zOk = pk_anmeldung_pruefen($uid, $ablage, $w);
+        $zLen = strlen($neu);
+    }
+    pruefe(($zOk['ok'] ?? false) === true, "gueltige Signatur, $was: angenommen",
+           ($zOk === null ? 'keine passende Signatur in 60 Versuchen'
+                          : ($zOk['ok'] ? 'durch' : $zOk['grund'])) . ' · ' . ($zLen ?? '—') . ' Byte');
+}
+
+/* DER ZAEHLER UNTER ECHTEM WETTLAUF (F-SR-36; nachgetragen mit der Nachpruefung
+ * der offenen Punkte von H-SR-08). Bis dahin mass diese Probe die Regel nur
+ * nacheinander, und dass zwei GLEICHZEITIGE Anmeldungen mit derselben Kennung
+ * nicht beide durchgehen, war gelesen.
+ *
+ * ZWEI PROZESSE, EINE SPERRE. Eine dritte Verbindung haelt die Zeile des
+ * Passkeys (`FOR UPDATE`). Die zwei Anmeldungen lesen ohne Sperre denselben
+ * Zaehler 5, pruefen die Signatur und bleiben am `UPDATE` haengen. Erst wenn
+ * BEIDE dort stehen — sichtbar in der eigenen PROCESSLIST —, gibt die dritte
+ * frei. Genau eine darf durchgehen; die andere findet `zaehler = 5` nicht mehr
+ * und gilt als Kopie. Stehen nach 15 Sekunden nicht beide dort, ist die Lage
+ * nicht hergestellt, und der Fall ist ROT — nicht uebersprungen.
+ *
+ * ZWEI VERSCHIEDENE ZAEHLER, 6 UND 7 — nicht zweimal 6. Mit demselben Wert in
+ * derselben Sekunde aendert das zweite `UPDATE` die Zeile nicht, MariaDB
+ * meldet 0 geaenderte Zeilen, und der Fall blieb auch OHNE `AND zaehler = ?`
+ * gruen (so gemessen in der Gegenprobe). Mit 6 und 7 aendert der zweite
+ * Schreiber die Zeile wirklich, und nur die Bedingung haelt ihn auf. */
+$wPaar = pb_paar(-7);
+$ablage = $h();
+$r = pb_registrierung($wPaar, $ablage['herausforderung'], $u);
+$wReg = pk_registrierung_pruefen($ablage, $r['antwort']);
+$wAn = pk_anlegen($uid, $wReg, 'Wettlauf');
+$wKennung = $r['kennung'];
+$pdo->prepare('UPDATE passkeys SET zaehler = 5 WHERE id = ?')->execute([(int)$wAn['id']]);
+$wPem = tempnam(sys_get_temp_dir(), 'pkwett');
+file_put_contents($wPem, $wPaar['privat']->toString('PKCS8'));
+$wSkript = 'require "' . $srv . '/db.php"; require "' . $srv . '/passkey_lib.php"; require "'
+         . __DIR__ . '/bauen.php";'
+         . '$p = ["privat" => phpseclib3\Crypt\PublicKeyLoader::load(file_get_contents('
+         . var_export($wPem, true) . ')), "alg" => -7];'
+         . '$a = []; pk_herausforderung_stellen($a);'
+         . '$z = (int)$argv[1];'
+         . '$w = pb_anmeldung($p, ' . var_export($wKennung, true) . ', $a["herausforderung"], pk_ursprung(), ["zaehler" => $z]);'
+         . 'echo json_encode(pk_anmeldung_pruefen(' . $uid . ', $a, $w) + ["z" => $z]);';
+$sperre = new PDO((string)konfig('db.dsn'), (string)konfig('db.user'), (string)konfig('db.pass'),
+                  [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$sperre->beginTransaction();
+$sperre->prepare('SELECT id FROM passkeys WHERE id = ? FOR UPDATE')->execute([(int)$wAn['id']]);
+$prozesse = [];
+for ($i = 0; $i < 2; $i++) {
+    $rohre = [];
+    $prozesse[] = [proc_open(['php', '-r', $wSkript, (string)(6 + $i)], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $rohre), $rohre];
+}
+$amUpdate = 0;
+for ($t = 0; $t < 150 && $amUpdate < 2; $t++) {
+    usleep(100000);
+    $amUpdate = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.PROCESSLIST
+                                   WHERE INFO LIKE 'UPDATE passkeys SET zaehler%'")->fetchColumn();
+}
+$sperre->commit();
+$wErg = [];
+foreach ($prozesse as [$proz, $rohre]) {
+    $wErg[] = json_decode((string)stream_get_contents($rohre[1]), true) ?? ['ok' => false, 'art' => '?',
+               'grund' => trim((string)stream_get_contents($rohre[2]))];
+    fclose($rohre[1]); fclose($rohre[2]); proc_close($proz);
+}
+@unlink($wPem);
+$wOk = count(array_filter($wErg, static fn($e) => $e['ok'] ?? false));
+$wKopie = count(array_filter($wErg, static fn($e) => ($e['art'] ?? '') === 'zaehler'));
+$wStand = (int)$pdo->query('SELECT zaehler FROM passkeys WHERE id = ' . (int)$wAn['id'])->fetchColumn();
+$wSieger = array_values(array_filter($wErg, static fn($e) => $e['ok'] ?? false))[0]['z'] ?? null;
+pruefe($amUpdate === 2 && $wOk === 1 && $wKopie === 1 && $wStand === $wSieger,
+       'Wettlauf: zwei gleichzeitige Anmeldungen (Zaehler 6 und 7, gespeichert 5) — beide am UPDATE, genau eine durch, die andere als Kopie, der Zaehler der durchgegangenen steht',
+       "am UPDATE $amUpdate von 2, durch $wOk, Kopie $wKopie, Zaehler $wStand · " . json_encode($wErg));
+pk_entfernen($uid, (int)$wAn['id']);
 
 /* ---- 4. Die Tabelle -------------------------------------------------------- */
 echo "== 4. Tabelle\n";

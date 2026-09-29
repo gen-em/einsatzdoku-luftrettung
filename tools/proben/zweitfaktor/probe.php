@@ -806,6 +806,23 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo) || !db_hat_spalte($pdo
                "Anmeldung {$a['code']}, Endpunkt {$api['code']} " . substr($api['rumpf'], 0, 60));
         $b = http('GET', 'betrieb_schluesselblatt.php');
         $seite = http('GET', $b['ort']);
+        /* 5a. AUCH DIE BESTAETIGUNGSSEITE nimmt das Feld als Liste und ueber
+         *     dem Deckel ohne PHP-Warnung (dritte Lesung 3B-1): bis dahin nur
+         *     am Code-Schritt gemessen. Jede Einsendung verbraucht die
+         *     Herausforderung; die naechste Seite stellt eine neue. */
+        $vorS = $systemZeilen();
+        $vorV = $versuche();
+        $bl = http('POST', $b['ort'], ['csrf' => csrf_von($seite['rumpf']), 'passkey_antwort' => ['x']]);
+        $seite = http('GET', $b['ort']);
+        $bg = http('POST', $b['ort'], ['csrf' => csrf_von($seite['rumpf']),
+                                       'passkey_antwort' => str_repeat('A', PK_ANTWORT_MAX + 1)]);
+        pruefe($bl['code'] === 200 && $bg['code'] === 200
+               && str_contains(html_entity_decode($bl['rumpf']), 'nicht angenommen')
+               && str_contains(html_entity_decode($bg['rumpf']), 'nicht angenommen')
+               && $versuche() === $vorV + 2 && $systemZeilen() === $vorS,
+               'Bestätigungsseite: Feld als Liste und über dem Deckel abgewiesen, je ein Fehlversuch, keine Zeile im Reiter System',
+               "HTTP {$bl['code']}/{$bg['code']}, Versuche $vorV → " . $versuche() . ", System $vorS → " . $systemZeilen());
+        $seite = http('GET', $b['ort']);
         $k = $knopf($seite['rumpf'], 'data-passkey-bestaetigen');
         $best = http('POST', $b['ort'], ['csrf' => csrf_von($seite['rumpf']), 'passkey_antwort' => $antwort($k)]);
         $b2 = http('GET', 'betrieb_schluesselblatt.php');

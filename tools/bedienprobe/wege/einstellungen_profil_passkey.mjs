@@ -4,9 +4,14 @@
  * Entstanden mit SR-09 (E-SR-29 bis -32, Nr. 350). Nach der SEITE benannt
  * (E-PK-15), wie `einstellungen_profil_rueckweg.mjs` daneben.
  *
- *   einstellungen-profil-passkey   Code bestätigen → Passkey hinzufügen mit
- *                                  Bezeichnung → die Karte zeigt ihn →
- *                                  abmelden → anmelden → „Mit Passkey
+ *   einstellungen-profil-passkey   Code bestätigen → eine zweite Seite
+ *                                  verdrängt die Herausforderung, der Server
+ *                                  lehnt ab, der Knopf bleibt aus; das Netz
+ *                                  reißt nach dem Absenden, der Knopf bleibt
+ *                                  aus und die Meldung sagt „neu laden"
+ *                                  (beides seit Web 21.11.2) → Passkey
+ *                                  hinzufügen mit Bezeichnung → die Karte
+ *                                  zeigt ihn → abmelden → anmelden → „Mit Passkey
  *                                  bestätigen" mit „Gerät merken" →
  *                                  angemeldet, das Gerät zählt, „Hinzufügen"
  *                                  steht ohne neuen Code da (frisch) →
@@ -69,7 +74,10 @@ export const wege = [
   {
     name: 'einstellungen-profil-passkey',
     paket: 'SR-09', punkt: 'E-SR-32', rolle: 'demo',
-    soll: 'hinzufügen mit Bezeichnung → Karte 1 von 10; Anmeldung „Mit Passkey bestätigen" '
+    soll: 'eine verdrängte Herausforderung: „abgelaufen", der Knopf bleibt aus, keine Zeile „abgewiesen", '
+        + 'nach dem Neuladen wieder an; reißt das Netz nach dem Absenden: Knopf aus, die Meldung sagt '
+        + '„neu laden"; hinzufügen mit Bezeichnung → Karte 1 von 10; '
+        + 'Anmeldung „Mit Passkey bestätigen" '
         + '→ index.php, Gerät gemerkt, Hinzufügen ohne neuen Code; entfernt → 0 von 10; '
         + 'über das Gerät: Verweis; neuer Browser: Code, kein Knopf',
     async fahren(k) {
@@ -109,11 +117,6 @@ export const wege = [
         ]);
         await s.goto(`${basisL}/einstellungen.php?t=profil#k-zweitfaktor`, { waitUntil: 'domcontentloaded' });
         await s.waitForSelector('[data-passkey-anlegen]:not([hidden])', { timeout: 10000 });
-        await s.fill('input[name="pk_bezeichnung"]', 'Bedienprobe');
-        await Promise.all([
-          s.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-          s.locator('[data-passkey-anlegen] [data-passkey-knopf]').click(),
-        ]);
         const karte = async () => s.evaluate(() => {
           const zeilen = [...document.querySelectorAll('#k-zweitfaktor .zeile')];
           const haupt = e => e.querySelector('.zeile-haupt')?.textContent.trim();
@@ -126,6 +129,82 @@ export const wege = [
               .some(a => a.textContent.includes('Zuerst Code bestätigen')),
           };
         });
+
+        /* 1b. DIE HERAUSFORDERUNG VERDRÄNGT (Nachprüfung von H-SR-08, E-1;
+           nachgetragen mit der Nachprüfung der offenen Punkte). Eine zweite
+           Seite derselben Sitzung lädt die Karte und stellt eine neue
+           Herausforderung. Legt die erste danach an, erzeugt der Browser den
+           Passkey, und der Server antwortet 400 „abgelaufen" — ohne Zeile
+           „abgewiesen" im Protokoll. DER KNOPF MUSS DANN AUS BLEIBEN: Ein
+           zweiter Klick erzeugte im Authenticator noch einen Passkey ohne Zeile
+           hier. Nach dem Neuladen geht er wieder.
+
+           VOR DEM ERSTEN GÜLTIGEN ANLEGEN, nicht danach: Die Seite schließt die
+           Passkeys aus, die der Server schon kennt (`excludeCredentials`), und
+           ein Authenticator, der einen davon trägt, legt keinen weiteren an
+           (`InvalidStateError`) — der Server würde nie gefragt. So lief die
+           erste Fassung dieses Schritts in eine Zeitüberschreitung. */
+        const zweiteSeite = await kontext.newPage();
+        await zweiteSeite.goto(`${basisL}/einstellungen.php?t=profil#k-zweitfaktor`,
+                               { waitUntil: 'domcontentloaded' });
+        await zweiteSeite.close();
+        const abgewiesenVorher = Number(php(`echo (int)db()->query("SELECT COUNT(*) FROM protokoll_ereignisse
+            WHERE art = 'passkey_abgewiesen' AND betroffen_user_id =
+            (SELECT id FROM users WHERE email = '${ADRESSE}')")->fetchColumn();`));
+        await s.fill('input[name="pk_bezeichnung"]', 'Verdrängt');
+        await s.locator('[data-passkey-anlegen] [data-passkey-knopf]').click();
+        await s.waitForFunction(() => {
+          /* Nicht der Hinweis vor dem Dialog („Der Browser fragt jetzt …"),
+             sondern die Meldung danach — gleich welche; der Weg misst sie. */
+          const z = (document.querySelector('[data-passkey-anlegen] [data-passkey-zustand]')
+            ?.textContent || '').trim();
+          return z !== '' && !z.includes('fragt jetzt');
+        }, null, { timeout: 30000 });
+        const verdraengt = await s.evaluate(() => {
+          const z = document.querySelector('[data-passkey-anlegen] [data-passkey-zustand]').textContent.trim();
+          return { aus: document.querySelector('[data-passkey-anlegen] [data-passkey-knopf]').disabled,
+                   abgelaufen: /abgelaufen/.test(z), text: z };
+        });
+        const abgewiesenNachher = Number(php(`echo (int)db()->query("SELECT COUNT(*) FROM protokoll_ereignisse
+            WHERE art = 'passkey_abgewiesen' AND betroffen_user_id =
+            (SELECT id FROM users WHERE email = '${ADRESSE}')")->fetchColumn();`));
+        await s.reload({ waitUntil: 'domcontentloaded' });
+        await s.waitForSelector('[data-passkey-anlegen]:not([hidden])', { timeout: 10000 });
+        const nachNeuladen = {
+          an: !(await s.locator('[data-passkey-anlegen] [data-passkey-knopf]').isDisabled()),
+          karte: await karte(),
+        };
+
+        /* 1c. DAS NETZ REISST NACH DEM ABSENDEN (dritte Lesung, 3B-2). Die
+           Anfrage kommt nie an, und ob der Server sie bekam, weiß der Browser
+           nicht — der Passkey liegt aber schon im Authenticator. Der Knopf
+           bleibt aus, und die Meldung sagt „neu laden"; bis Web 21.11.1 sagte
+           sie es nur bei den zwei Antworten des Servers, die es selbst sagen. */
+        await s.route('**/api/passkey_anlegen.php', r => r.abort());
+        await s.fill('input[name="pk_bezeichnung"]', 'Abgerissen');
+        await s.locator('[data-passkey-anlegen] [data-passkey-knopf]').click();
+        await s.waitForFunction(() => {
+          /* Nicht der Hinweis vor dem Dialog („Der Browser fragt jetzt …"),
+             sondern die Meldung danach — gleich welche; der Weg misst sie. */
+          const z = (document.querySelector('[data-passkey-anlegen] [data-passkey-zustand]')
+            ?.textContent || '').trim();
+          return z !== '' && !z.includes('fragt jetzt');
+        }, null, { timeout: 30000 });
+        const abgerissen = await s.evaluate(() => {
+          const z = document.querySelector('[data-passkey-anlegen] [data-passkey-zustand]').textContent;
+          return { aus: document.querySelector('[data-passkey-anlegen] [data-passkey-knopf]').disabled,
+                   netz: /Verbindung/.test(z), neuLaden: /neu laden/.test(z), text: z.trim() };
+        });
+        await s.unroute('**/api/passkey_anlegen.php');
+        await s.reload({ waitUntil: 'domcontentloaded' });
+        await s.waitForSelector('[data-passkey-anlegen]:not([hidden])', { timeout: 10000 });
+
+        /* 1. Der gültige Passkey */
+        await s.fill('input[name="pk_bezeichnung"]', 'Bedienprobe');
+        await Promise.all([
+          s.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+          s.locator('[data-passkey-anlegen] [data-passkey-knopf]').click(),
+        ]);
         const nachAnlegen = await karte();
         const zeileP = s.locator('#k-zweitfaktor .zeile', { hasText: 'Bedienprobe' }).first();
         if (await zeileP.count()) { await zeileP.scrollIntoViewIfNeeded(); }
@@ -173,18 +252,30 @@ export const wege = [
 
         const ok = knopfVorher === 0
                 && nachAnlegen.plakette === '1 von 10' && nachAnlegen.probe
+                && verdraengt.abgelaufen && verdraengt.aus && abgewiesenNachher === abgewiesenVorher
+                && nachNeuladen.an && nachNeuladen.karte.plakette === '0 von 10'
+                && abgerissen.netz && abgerissen.aus && abgerissen.neuLaden
                 && nachPasskey === 'index.php' && geraet && frisch.anlegen && !frisch.verweis
                 && nachEntfernen.plakette === '0 von 10' && !nachEntfernen.probe
                 && ueberGeraet === 'index.php' && !unfrisch.anlegen && unfrisch.verweis
                 && code2 === 1 && knopf2 === 0;
         return {
           ist: `vorher Knopf ${knopfVorher} · Karte ${nachAnlegen.plakette ?? '—'}`
-             + `${nachAnlegen.probe ? ' mit Zeile' : ' OHNE Zeile'} · Passkey → ${nachPasskey}`
+             + `${nachAnlegen.probe ? ' mit Zeile' : ' OHNE Zeile'}`
+             + ` · verdrängt: ${verdraengt.abgelaufen ? '„abgelaufen"' : `„${verdraengt.text.slice(0, 80)}"`}, `
+             + `Knopf ${verdraengt.aus ? 'aus' : 'AN'}, „abgewiesen" `
+             + `${abgewiesenNachher - abgewiesenVorher}, neu geladen ${nachNeuladen.an ? 'an' : 'AUS'} `
+             + `${nachNeuladen.karte.plakette ?? '—'} · Netz gerissen: `
+             + `${abgerissen.netz ? '' : `„${abgerissen.text.slice(0, 80)}", `}Knopf `
+             + `${abgerissen.aus ? 'aus' : 'AN'}, ${abgerissen.neuLaden ? '„neu laden"' : 'OHNE „neu laden"'}`
+             + ` · Passkey → ${nachPasskey}`
              + ` · Gerät ${geraet ? 'gemerkt' : 'NICHT gemerkt'} · danach ${frisch.anlegen ? 'Hinzufügen' : 'kein Hinzufügen'}`
              + ` · entfernt ${nachEntfernen.plakette ?? '—'} · über Gerät ${ueberGeraet}, `
              + `${unfrisch.verweis ? 'Verweis' : 'KEIN Verweis'} · neuer Browser: Code ${code2}, Knopf ${knopf2}`,
           ok,
-          bemerkung: ok ? '' : 'Soll: 0 · 1 von 10 mit Zeile · index.php · gemerkt · Hinzufügen · '
+          bemerkung: ok ? '' : 'Soll: 0 · 1 von 10 mit Zeile · verdrängt: „abgelaufen", aus, 0, an 0 von 10 · '
+                             + 'Netz gerissen: aus, „neu laden" · '
+                             + 'index.php · gemerkt · Hinzufügen · '
                              + '0 von 10 · index.php, Verweis · Code 1, Knopf 0',
         };
       } finally {

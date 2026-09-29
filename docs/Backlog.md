@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351, 352, 353 | 27.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 355 | 27.09.2026 |
 | ab 360 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 28.09.2026 |
 
 ---
@@ -1232,17 +1232,37 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-354. **`protokoll()` schluckt in einer Transaktion einen Deadlock — „alles oder nichts" endet als „nichts, gemeldet als alles".** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 29.09.2026
+354. **`protokoll()` schluckt in einer Transaktion einen Deadlock — der Rest des Rumpfs läuft ohne Transaktion weiter.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 29.09.2026
      *Aufgenommen 29.09.2026 in H-SR-08 (Konzept SR, F-SR-50, Nachprüfung
-     D-3).* `protokoll()` fängt jede Ausnahme und gibt `false` zurück. Steht
-     es im Rumpf von `db_transaktion()` — seit Web 21.8.0 beim Passwort
-     (E-SR-40), seit 21.11.0 in `totp_abschalten()` —, und bricht der INSERT
-     mit einem Deadlock ab, rollt InnoDB die GANZE Transaktion zurück; der
-     Rumpf merkt es nicht, `commit()` bestätigt den Rest, und der Aufrufer
-     meldet Erfolg (Reset-Mail, „Passwort gewechselt"), obwohl nichts oder
-     nur ein Teil geschrieben ist. Selten (ein Deadlock an einem INSERT ohne
-     Fremdschlüssel), gelesen, nicht nachgestellt. *Weg:* `protokoll()` wirft
-     innerhalb einer offenen Transaktion, statt zu schlucken, oder die
-     Einträge wandern hinter den Commit. *Abnahme:* ein Auslöser, der den
-     INSERT in `protokoll_ereignisse` mit `40001` scheitern lässt → der
-     Aufrufer sieht den Fehler, nichts ist geschrieben.
+     D-3); am selben Tag nachgestellt und berichtigt (F-SR-63).* `protokoll()`
+     fängt jede Ausnahme. Steht es im Rumpf von `db_transaktion()`, und
+     bricht sein INSERT mit einem Deadlock ab, rollt InnoDB die GANZE
+     Transaktion zurück und beendet sie; **jede weitere Anweisung läuft im
+     Autocommit und bleibt**, erst `commit()` wirft. Nachgestellt in
+     `totp_abschalten()` (MariaDB 10.11): Faktor an, Codes und Geräte
+     zurück, **die Passkeys gelöscht** samt Eintrag „mit dem Zweitfaktor",
+     Fehlerseite, keine Mail. Beim Passwort (E-SR-40) ist der Eintrag die
+     letzte Anweisung — dort bleibt nichts (gelesen). Bis zur Berichtigung
+     stand hier „der Aufrufer meldet Erfolg"; das tritt nicht ein. *Weg:*
+     `protokoll()` wirft in einer offenen Transaktion, oder die Einträge
+     wandern hinter den Commit. *Abnahme:* ein ECHTER Deadlock — eine zweite
+     Verbindung (die schwerere) sperrt die Lücke hinter der letzten Zeile von
+     `protokoll_ereignisse`, dann die Kontozeile — → nichts bleibt stehen.
+     Ein Auslöser mit `SIGNAL` stellt den Fall nicht her.
+
+<!-- -->
+
+355. **Ein Formularfeld als Liste gibt eine PHP-Warnung — `(string)$_POST[…]` an 114 Stellen.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 29.09.2026
+     *Aufgenommen 29.09.2026 mit der dritten Lesung von H-SR-08 (Konzept SR,
+     F-SR-65).* Aus `code[]=x` statt `code=x` macht
+     `(string)($_POST['code'] ?? '')` den Text „Array" mit der Warnung
+     „Array to string conversion", und der Behandler schreibt sie in den
+     Reiter System — höchstens eine Zeile je Stelle und Anfrage. Für
+     `passkey_antwort` ist das seit Web 21.11.0 behoben (F-SR-47); das
+     Nachbarfeld `code` in `login.php` und `zweitfaktor.php`, `signatur` und
+     `tokens` in `login.php` haben es noch — `tokens` im ersten Schritt, ohne
+     Passwort, hinter dem Anmelde-Topf. `grep -rn '(string)($_POST['` über
+     `server/` zählt 114 Stellen. *Weg:* ein Helfer `post_text()` als die
+     eine Stelle (R83) und eine Registerzeile gegen das Muster. *Abnahme:*
+     jedes Feld der Anmeldeschritte als Liste → Formularfehler, keine Zeile
+     im Reiter System.

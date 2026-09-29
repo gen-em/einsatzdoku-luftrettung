@@ -27,7 +27,8 @@ Fable-Schritt**; SR-03 bekommt vor dem PR eine **Gegenlesung durch Fable**
 **Fächerung (`CLAUDE.md` 7):** keine, in keinem Paket. Alle Pakete
 schreiben `server/`, und jedes trägt erzählenden Text; die Konzeptsitzung
 hat nicht gefächert (2.1). **Die Gegenlesung H-SR-08** lief auf Wunsch der
-Betreiberin als lesender Workflow (E-SR-44) — eine Messung, kein Paket.
+Betreiberin als lesender Workflow (E-SR-44) — eine Messung, kein Paket;
+ebenso ihre Nachprüfung und die dritte Lesung (E-SR-57).
 **Versionsstufe:** legt die Umsetzung fest (K3). Je Paket in Abschnitt 4
 vermerkt: SR-05 Korrektur; SR-01, SR-03, SR-04, SR-07, SR-08 Neben; SR-02
 und SR-09 Neben **mit Migration** — der Prüfstand fährt dafür `haupt` (Stufenregel `migration`),
@@ -55,13 +56,13 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **29.09.2026 — SR-05 gebaut (Web 21.11.1): `ingest.php` ohne Deadlock, 180 von 180 ohne 503.** Davor am selben Tag: **H-SR-08 durchlaufen: Gegenlesung von SR-09 (41 Befunde, F-SR-33 bis -44) behoben in Web 21.11.0, die Behebung nachgeprüft (23 weitere, F-SR-45 bis -52, eingearbeitet bis auf Nr. 354)**; E-SR-42 bestätigt, Q-SR-14 bis -18 beantwortet. Gebaut sind SR-01, SR-02, SR-07 und SR-09 (Web 21.7.0 bis 21.10.0), gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). **Als Nächstes: SR-03** (danach Halt H-SR-06, Fable-Gegenlesung). Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (E-SR-29, -35, -36) — **neun Pakete** (4). **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
-> | Entschieden | **E-SR-01 bis E-SR-55** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (SR-02), E-SR-41 (SR-07), E-SR-42 (Ursprung aus `app.base_url`, SR-09 — **von der Betreiberin bestätigt** bei H-SR-08), E-SR-43 (SR-09). **Bei H-SR-08:** E-SR-44 (Gegenlesung als Workflow) und E-SR-45 bis -49 (Q-SR-14 bis -18) von der Betreiberin am 28.09.2026; E-SR-50 (Fehlversuche), E-SR-51 (Migration an Ort und Stelle), E-SR-52 (der Preis von E-SR-50) und E-SR-53 (Nr. 354) aus der Umsetzung. **Aus SR-05:** E-SR-54 (`last_seen` hinter den Commit), E-SR-55 (Verbindungsprobe: zweite Lage, ab klein). |
+> | Stand | **29.09.2026 — die offenen Punkte von H-SR-08 gemessen (Web 21.11.2):** dritte Lesung (zwölf Meldungen, F-SR-58 bis -67), der Zähler unter echtem Wettlauf, Nr. 354 mit echtem Deadlock nachgestellt und berichtigt, der Knopf in `passkey.js` im Bedienweg. Davor **SR-05 gebaut (Web 21.11.1): `ingest.php` ohne Deadlock, 180 von 180 ohne 503.** Davor am selben Tag: **H-SR-08 durchlaufen: Gegenlesung von SR-09 (41 Befunde, F-SR-33 bis -44) behoben in Web 21.11.0, die Behebung nachgeprüft (23 weitere, F-SR-45 bis -52, eingearbeitet bis auf Nr. 354)**; E-SR-42 bestätigt, Q-SR-14 bis -18 beantwortet. Gebaut sind SR-01, SR-02, SR-07 und SR-09 (Web 21.7.0 bis 21.10.0), gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). **Als Nächstes: SR-03** (danach Halt H-SR-06, Fable-Gegenlesung). Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (E-SR-29, -35, -36) — **neun Pakete** (4). **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
+> | Entschieden | **E-SR-01 bis E-SR-59** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (SR-02), E-SR-41 (SR-07), E-SR-42 (Ursprung aus `app.base_url`, SR-09 — **von der Betreiberin bestätigt** bei H-SR-08), E-SR-43 (SR-09). **Bei H-SR-08:** E-SR-44 (Gegenlesung als Workflow) und E-SR-45 bis -49 (Q-SR-14 bis -18) von der Betreiberin am 28.09.2026; E-SR-50 (Fehlversuche), E-SR-51 (Migration an Ort und Stelle), E-SR-52 (der Preis von E-SR-50) und E-SR-53 (Nr. 354) aus der Umsetzung. **Aus SR-05:** E-SR-54 (`last_seen` hinter den Commit), E-SR-55 (Verbindungsprobe: zweite Lage, ab klein). **Nachtrag zu H-SR-08:** E-SR-56 (Nr. 354 nur messen, Antwort (a)) und E-SR-57 (dritte Lesung sofort, ohne Last) von der Betreiberin am 29.09.2026; E-SR-58 (Meldung „neu laden") und E-SR-59 (Nr. 355) aus der Umsetzung. |
 > | Offen | **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). Die Fable-Gegenlesung von SR-03 (H-SR-06) steht noch aus. |
-> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). **SR-09 erledigt** 28.09.2026 (Web 21.10.0, Migration `2026_09_28_passkeys`; Befunde F-SR-28 bis -32; Nr. 350 erledigt, Nr. 353 neu). **H-SR-08 durchlaufen** 29.09.2026 (Web 21.11.0; Befunde F-SR-33 bis -52, E-SR-44 bis -53, Nr. 354 neu; Migration `2026_09_28_passkeys` an Ort und Stelle geändert). **SR-05 erledigt** 29.09.2026 (Web 21.11.1; Befunde F-SR-53 bis -57; Nr. 210 erledigt). |
+> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). **SR-09 erledigt** 28.09.2026 (Web 21.10.0, Migration `2026_09_28_passkeys`; Befunde F-SR-28 bis -32; Nr. 350 erledigt, Nr. 353 neu). **H-SR-08 durchlaufen** 29.09.2026 (Web 21.11.0; Befunde F-SR-33 bis -52, E-SR-44 bis -53, Nr. 354 neu; Migration `2026_09_28_passkeys` an Ort und Stelle geändert). **SR-05 erledigt** 29.09.2026 (Web 21.11.1; Befunde F-SR-53 bis -57; Nr. 210 erledigt). **Nachtrag zu H-SR-08 erledigt** 29.09.2026 (Web 21.11.2; die vier offenen Punkte gemessen, dritte Lesung; Befunde F-SR-58 bis -67; Nr. 354 berichtigt, Nr. 355 neu). |
 > | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) — offen — und SR-09 (H-SR-08, E-SR-36) — **durchlaufen**, als Workflow (E-SR-44). |
-> | Fächerung | keine in den Paketen; die **Gegenlesung H-SR-08** und ihre Nachprüfung liefen als lesender Workflow (E-SR-44). |
-> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`), **353** (Schemaprobe vergleicht migriert und frisch nicht, F-SR-28, `nächste Backlog-Runde`), **354** (`protokoll()` schluckt in einer Transaktion einen Deadlock, F-SR-50, `nächste Backlog-Runde`). |
+> | Fächerung | keine in den Paketen; die **Gegenlesung H-SR-08**, ihre Nachprüfung und die dritte Lesung liefen als lesender Workflow (E-SR-44, E-SR-57). |
+> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`), **353** (Schemaprobe vergleicht migriert und frisch nicht, F-SR-28, `nächste Backlog-Runde`), **354** (`protokoll()` schluckt in einer Transaktion einen Deadlock, F-SR-50, berichtigt mit F-SR-63, `nächste Backlog-Runde`), **355** (Formularfeld als Liste gibt eine PHP-Warnung, F-SR-65, `nächste Backlog-Runde`). |
 
 ---
 
@@ -563,9 +564,9 @@ erlaubt, ohne den eigenen Passkey hineinzukommen; der CBOR-Leser hat an 81
 gezielten Eingaben kein Längenfeld falsch gelesen.
 
 - **F-SR-33 RSA-Schlüssel hatten nur eine Untergrenze** (M1 mittel, M2).
-  `pk_cose_laden()` prüfte die Bitlänge ab 2048 und sonst nichts. phpseclib
-  überlässt RS256 OpenSSL nur bis zu einem Exponenten von 64 Bit und rechnet
-  darüber selbst: Ein Schlüssel mit 4096 Bit Modul und 4096 Bit Exponent
+  `pk_cose_laden()` prüfte die Bitlänge ab 2048 und sonst nichts. Über 3072
+  Bit Modul lehnt OpenSSL einen Exponenten über 64 Bit ab, und phpseclib
+  rechnet die Potenz dann in reinem PHP (berichtigt mit F-SR-58): Ein Schlüssel mit 4096 Bit Modul und 4096 Bit Exponent
   kostete **6,2 s je Prüfung** (nachgestellt, weil der Gegenprüfer von M1
   ausfiel), 8192/8192 Bit beim Leser 45 s — wer ein Konto mit Zweitfaktor
   hat, legt sich so einen Passkey an und lastet die Anlage mit parallelen
@@ -728,9 +729,13 @@ M12, M25, N2-1 (je eine Textstelle).
   `daten.weg` (`anmeldung` oder `bestaetigung`).
 - **F-SR-50 `protokoll()` schluckt in einer Transaktion einen Deadlock**
   (D-3, vom Gegenprüfer „unklar"). Bricht der INSERT mit 1213 ab, rollt
-  InnoDB die ganze Transaktion zurück, der Rumpf merkt es nicht, und
-  `totp_abschalten()` meldet Erfolg. Seit SR-02 gilt dasselbe beim Passwort
-  (E-SR-40). **Nicht hier gelöst:** Nr. 354 (E-SR-53).
+  InnoDB die ganze Transaktion zurück und beendet sie; der Rumpf merkt es
+  nicht, die folgenden Anweisungen laufen im Autocommit, und erst `commit()`
+  wirft. Seit SR-02 steht `protokoll()` auch beim Passwort in einer
+  Transaktion (E-SR-40), dort als letzte Anweisung. **Nicht hier gelöst:**
+  Nr. 354 (E-SR-53). *Bis zur dritten Lesung stand hier „`totp_abschalten()`
+  meldet Erfolg" — nachgestellt ist es ein Fehler mit halbem Stand
+  (F-SR-63).*
 - **F-SR-51 Was die Proben der Behebung nicht maßen** (A-3, B-4, C-3, D-4,
   E-4). Die RSA-Grenzen nur von außen, die Signaturform nur mit der leeren
   Folge, `BS` ohne `BE` nur bei der Registrierung, der Deckel an keinem
@@ -766,8 +771,9 @@ M12, M25, N2-1 (je eine Textstelle).
 - **F-SR-55 Nach dem Umbau misst die Verbindungsprobe die Schleife nicht
   mehr** — es gibt kein Gedränge, also keine Wiederholung; und damit auch
   nicht, ob ein zweiter Anlauf die Antwortfelder doppelt füllt. **Gelöst in
-  SR-05:** Teil 12 der Ingestprobe erzwingt den Deadlock über einen
-  Auslöser und eine MEMORY-Tabelle (ihr Stand überlebt den Rollback). Die
+  SR-05:** Teil 12 der Ingestprobe erzwingt die Wiederholung über einen
+  Auslöser (1213 per `SIGNAL` — kein echter Deadlock, F-SR-67) und eine
+  MEMORY-Tabelle (ihr Stand überlebt den Rollback). Die
   erste Fassung setzte den Auslöser an das Einfügen des Einsatzes, **vor**
   die Punktschleife, und maß das Zurücksetzen der Prüfliste nicht — die
   Gegenprobe ohne Zurücksetzen blieb grün; der Auslöser sitzt jetzt am
@@ -785,6 +791,77 @@ M12, M25, N2-1 (je eine Textstelle).
   Schnittvermerken (S4/A2), nicht zum Ablauf der Annahme. **Gelöst in
   SR-05:** Die Schleife steht in 5e.1, wo das Gedränge steht; der
   Schnittabschnitt bleibt, wie er ist.
+- **F-SR-58 Zwei alte Sätze zu den 64 Bit** (dritte Lesung DA-1). Im
+  CHANGELOG-Eintrag zu 21.11.0 stand neben der berichtigten Begründung noch
+  die alte („phpseclib überlässt die RS256-Prüfung OpenSSL nur bis zu einem
+  Exponenten von 64 Bit"), und F-SR-33 hier trug denselben Satz — F-SR-52
+  meldete „alle Stellen". **Gelöst in 21.11.2:** beide ersetzt.
+- **F-SR-59 `pk_spki_laden()` prüfte die Größen, nicht alle Grenzen**
+  (DA-2). Der Lader nahm e = 1, gerade Exponenten und einen geraden Modul;
+  die Texte sagten „dieselben Grenzen". Keine Kostenwirkung, und eine solche
+  Zeile kommt nur per Schreibzugriff auf die Datenbank. **Gelöst in
+  21.11.2:** Exponent ungerade und mindestens 3, Modul ungerade — wie
+  `pk_cose_laden()`; die kürzeste Form entfällt, das SPKI ist schon
+  kanonisch.
+- **F-SR-60 Drei Einarbeitungen ohne Beleg** (DA-3, DA-4, C3-3). Vom Lader
+  maß die Probe einen der neun Fälle in den Grenzen; von der Signaturform
+  keine der erlaubten Schreibweisen (`81 L`, zusätzliche Null), obwohl der
+  Kopf der Bibliothek sie zusagt; `daten.weg` am Zähler-Eintrag gar nicht.
+  Ein Rückbau jeder der drei Stellen wäre grün geblieben. **Gelöst in
+  21.11.2:** als Fälle der Passkeyprobe.
+- **F-SR-61 Die Bestätigungsseite: Liste und Deckel nur gelesen** (3B-1).
+  Teil 5d schickte beides an den Code-Schritt von `login.php`, nicht an
+  `zweitfaktor.php`; F-SR-47 und F-SR-51 sagten „in beiden" und „gemessen".
+  Der Code beider Dateien ist gleich und richtig. **Gelöst in 21.11.2:** Fall
+  5a in Teil 5d.
+- **F-SR-62 Der Knopf sperrt nach dem Absenden, beschrieben war „nach einer
+  Antwort des Servers"** (3B-2). `gesendet` steht vor dem `postJson()`; nach
+  einem Netzfehler, einem 413 oder einem 403 `zweitfaktor_frisch` blieb der
+  Knopf aus, und die Meldung sagte nicht „neu laden" — das stand nur in den
+  zwei Antworten 400 `abgelaufen` und `passkey`. Das Verhalten ist richtig
+  (der Passkey liegt schon im Authenticator), die Texte nicht. **Gelöst in
+  21.11.2** (E-SR-58): Nach dem Absenden hängt `passkey.js` „Bitte die Seite
+  neu laden." an jede Meldung, die es nicht schon sagt; Kommentar,
+  CHANGELOG, `Technik.md` 4.99q und Prüfdokument sagen „nach dem Absenden".
+- **F-SR-63 Nr. 354 war falsch beschrieben, und seine Abnahme stellte den
+  Fall nicht her** (C3-1, C3-4). Nach einem Deadlock beendet InnoDB die
+  Transaktion, die folgenden Anweisungen derselben Verbindung laufen im
+  Autocommit, und `commit()` wirft „There is no active transaction" — der
+  Aufrufer meldet also keinen Erfolg, sondern einen Fehler, und was nach dem
+  Eintrag kam, steht. Ein `SIGNAL` im Auslöser bricht nur die Anweisung ab.
+  **Nachgestellt** mit einem echten Deadlock (Prüfdokument 2): in
+  `totp_abschalten()` Faktor an, Codes und Geräte zurück, die Passkeys
+  gelöscht samt Eintrag „mit dem Zweitfaktor", keine Mail. Nicht schlimmer
+  als beschrieben, aber anders (E-SR-56). **Gelöst in 21.11.2:** Nr. 354,
+  F-SR-50 und Prüfdokument 1 berichtigt; die Behebung bleibt Nr. 354.
+- **F-SR-64 Die Zählung der Nachprüfung ging nicht auf** (C3-2).
+  Prüfdokument 2: „23 Befunde: 1 mittel, 6 niedrig, 17 Hinweise" — das sind
+  24, und die Klammer nannte fünf. Je Meldung gezählt sind es 24 (1, 6, 17),
+  je Befund 23 (1, 5, 17). **Gelöst in 21.11.2:** beide Zählungen
+  ausgeschrieben.
+- **F-SR-65 Ein Formularfeld als Liste gibt eine PHP-Warnung — außerhalb
+  der Passkeys** (3B-4). `(string)($_POST['code'] ?? '')` im selben
+  Formular wie `passkey_antwort`, dazu `signatur` und `tokens`; projektweit
+  114 Stellen. Älter als SR-09, nicht Gegenstand von H-SR-08. **Nicht
+  hier gelöst:** Nr. 355 (E-SR-59).
+- **F-SR-66 Ein Bedienweg lief im ersten Prüfstand zu SR-05 in eine
+  Zeitüberschreitung** — `p5c-ap8-adhoc-tag-in-der-luft`, im `finally` an
+  `#basesel`, 30 s unsichtbar. Unsichtbar ist es genau dann, wenn der Tag
+  auf „Anderes Rettungsmittel" steht; der Weg las also schon einen
+  umgestellten Tag als Anfang. Allein wiederholt war er grün, ebenso der
+  zweite ganze Lauf. Die Erklärung, die passt — der Weg davor stellte
+  denselben Tag zurück und wartete eine feste Zeit auf die Antwort —, ist
+  **nicht belegt**; nachgestellt ist die Wirkung (ein Vorschritt stellt den
+  Tag um, die alte Fassung läuft in dieselbe Zeitüberschreitung). **Gelöst in 21.11.2:**
+  Die Wege in `ap6.mjs` warten auf die Antwort von `api/day.php`, und ein
+  Anfang auf „Anderes Rettungsmittel" bricht mit einem Satz ab, der das sagt.
+- **F-SR-67 Teil 12 der Ingestprobe hieß „erzwingt den Deadlock"** — C3-4
+  gilt auch dort: Der Auslöser meldet 1213 per `SIGNAL`, InnoDB rollt
+  nichts zurück. Für `ingest.php` ist das gleichwertig, weil der `catch` die
+  Transaktion selbst zurückrollt und der Rumpf nichts schluckt (der innere
+  `catch` der Punktschleife reicht alles außer Dubletten weiter); den echten
+  Deadlock misst die Verbindungsprobe. **Gelöst in 21.11.2:** die Sätze im
+  Kopf von Teil 12, in `Technik.md` 5e.1, im CHANGELOG und hier (F-SR-55).
 
 ## 3. Entscheidungen und Fragen
 
@@ -847,6 +924,10 @@ M12, M25, N2-1 (je eine Textstelle).
 | E-SR-53 | **F-SR-50 wird nicht in H-SR-08 behoben, sondern Nr. 354** (`nächste Backlog-Runde`). | Umsetzung, 29.09.2026 (Nachprüfung) | Die Ursache ist `protokoll()` selbst, und sie trifft seit SR-02 auch E-SR-40. Ein `protokoll()`, das in einer Transaktion wirft, ändert alle Aufrufer; zwei Einträge hinter den Commit zu legen, hieße, E-SR-40 und diese Stelle verschieden zu bauen. Beides verdient ein eigenes Paket mit eigener Probe (ein Auslöser mit `40001`). Selten: ein Deadlock an einem INSERT ohne Fremdschlüssel. |
 | E-SR-54 | **`UPDATE devices SET last_seen` wandert mit `dt_zeitraum_fortschreiben()` hinter den Commit**, in dieselbe kurze Anweisung mit eigenem Wiederholungsrahmen. Scheitert sie nach drei Anläufen, antwortet die Anfrage 503, obwohl der Datensatz steht; die Uhr liefert nach, und das ist eine Wiederholung. | Umsetzung, 29.09.2026 (SR-05, F-SR-53) | Gemessen, nicht vermutet: 10 der 39 Deadlocks standen dort. Dasselbe Muster wie der Diensttag (geteilte Sperre über den Fremdschlüssel, später die exklusive), und `last_seen` ist eine Anzeige, die niemand innerhalb der Transaktion braucht. Die Messung danach: Das Verschieben beider Zeilen allein bringt 180 von 180. |
 | E-SR-55 | **Die Verbindungsprobe bekommt eine zweite Lage** (ohne Enge, `--frei` ≥ belegte Plätze: eine Runde, 0 × 503 verlangt) statt eines eigenen Werkzeugs; **für `ingest.php` und `wartung_lib.php` läuft sie ab Stufe klein** (F-SR-08 beantwortet: ja, über das vorhandene Muster `datenbank`). Der Rahmen bleibt in `ingest.php` (Empfehlung des Pakets). | Umsetzung, 29.09.2026 (SR-05, F-SR-54) | Die Probe stellt die Lage schon her; eine zweite Probe für dieselbe Lage wäre Grundsatz 1 zuwider. In `klein`, weil die Probe den Fehler misst, den eine Korrektur an `ingest.php` beheben oder zurückbringen kann — sie braucht die Wurzel der Datenbank und läuft nur örtlich, wie `nummern`. |
+| E-SR-56 | **Nr. 354 wird gemessen und festgehalten, nicht behoben** — Antwort (a); fiele die Messung schlimmer aus als beschrieben, wird neu gefragt. | Betreiberin, 29.09.2026 (Nachprüfung der offenen Punkte) | Die Behebung ändert `protokoll()` für alle Aufrufer und ist ein eigenes Paket (E-SR-53). **Gemessen:** anders, nicht schlimmer (F-SR-63) — statt eines gemeldeten Erfolgs ein Fehler mit halbem Stand; ein zweiter Versuch schließt ab. Kein Anlass für die Rückfrage. |
+| E-SR-57 | **Die vier offenen Punkte von H-SR-08 werden gemessen, die Einarbeitung ein drittes Mal gelesen** — sofort, parallel zum Prüfstand von SR-05, ohne Last- und Kostentests (Fable, lesend, drei Leser, drei Gegenprüfer). | Betreiberin, 29.09.2026 | „Nur gelesen" am Anfang des Prüfdokuments ist ein Zustand, kein Ziel. Ohne Last, weil der Prüfstand zeitkritische Proben fuhr; wo ein Beleg Last braucht, rechnen die Leser und sagen es. |
+| E-SR-58 | **Nach dem Absenden sagt die Meldung immer „Bitte die Seite neu laden"**, statt nur Kommentar und Texte auf das Verhalten zu verengen. | Umsetzung, 29.09.2026 (F-SR-62) | Ein grauer Knopf neben einer Meldung ohne Ausweg ist eine Sackgasse. Der Satz stimmt in jedem Fall nach dem Absenden — ob der Server den Passkey bekam, weiß der Browser dann nicht. |
+| E-SR-59 | **F-SR-65 wird Nr. 355** (`nächste Backlog-Runde`), nicht hier behoben. | Umsetzung, 29.09.2026 | 114 Stellen, projektweit, älter als die Passkeys. Eine Stelle je Sache (R83) mit Registerzeile ist ein eigenes Paket; hier eine Hälfte davon zu bauen, hieße zwei Wege für dieselbe Sache. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -916,7 +997,9 @@ Zeile** → E-SR-48; Q-SR-18 wie empfohlen → E-SR-49. Kein Q ist offen.
   (E-SR-44), 41 Befunde (F-SR-33 bis -44), E-SR-42 bestätigt, Q-SR-14 bis
   -18 beantwortet, behoben in Web 21.11.0 (Abschnitt 4, nach SR-09), die
   Behebung von Fable nachgeprüft (F-SR-45 bis -52) und eingearbeitet bis
-  auf Nr. 354.
+  auf Nr. 354. **Nachtrag 29.09.2026 (Web 21.11.2):** die vier offenen
+  Punkte gemessen, die Einarbeitung ein drittes Mal gelesen (F-SR-58 bis
+  -67, E-SR-56 bis -59).
 - **H-SR-05 mit dem Merge:** Die Migrationen `vertraute_geraete` (SR-02)
   und `passkeys` (SR-09) stehen aus,
   bis eine Administratorin `update.php` ruft — die Kette lässt den
@@ -1358,8 +1441,9 @@ ohne Protokoll bei abgelaufener Herausforderung und `passkey.js` mit
 gesperrtem Knopf, `daten.weg` am Zähler-Eintrag, die Texte; die Proben um
 18 und 2 Fälle (zwei bestehende geschärft), darunter die Atomarität von `totp_abschalten()` mit einem
 Auslöser. F-SR-50 ist Nr. 354 (E-SR-53). **Eine dritte Lesung gab es
-nicht** — die Einarbeitung der Nachprüfung belegen die Proben und zehn
-Gegenproben (Prüfdokument 2). Zahlen im Prüfdokument 2.
+zunächst nicht** — die Einarbeitung belegten die Proben und zehn
+Gegenproben; nachgeholt am selben Tag (E-SR-57, Nachtrag nach SR-05).
+Zahlen im Prüfdokument 2.
 
 **SR-05 `ingest.php` ohne Deadlock** — Nr. 210 (E-SR-12). `ingest.php`:
 Schleife um `beginTransaction()`/`try` (höchstens drei Anläufe, Abstand
@@ -1412,6 +1496,45 @@ Ingestprobe (F-SR-55), Z33 (F-SR-56). **Abweichung:** Die Schleife steht in
 Commit von H-SR-08 und danach) — Anlage und Plattform jeweils neu
 hochgefahren, nichts verloren. Die zwei `usleep()` des ersten Einbaus
 rissen Z33. Zahlen im Prüfdokument 2.
+
+**H-SR-08, Nachtrag: die offenen Punkte gemessen** — erledigt 29.09.2026
+(Web 21.11.2; E-SR-56 bis -59, F-SR-58 bis -67). Nach 21.11.0 standen vier
+Punkte als „nur gelesen" am Anfang des Prüfdokuments; die Betreiberin wollte
+sie gemessen (E-SR-57). **Die dritte Lesung** (Fable, drei Leser nach den
+Blöcken der Nachprüfung, drei Gegenprüfer, lesend, ohne Last) fand an der
+Einarbeitung zwölf Meldungen, elf bestätigt, eine widerlegt (3B-3: die
+Lücke stand schon im Prüfdokument); keine mittel, eine niedrig (C3-1). Von
+den 23 geprüften Einarbeitungen: 19 behoben, 4 teilweise (A-4,
+B-4/E-4, D-3, der Rest von N1-2) — die vier sind F-SR-58, -61, -63, -60.
+**Der Zähler unter echtem Wettlauf:** ein Fall der Passkeyprobe mit zwei
+Prozessen und einer dritten Verbindung, die beide am `UPDATE` festhält
+(F-SR-60). **Nr. 354:** mit einem echten Deadlock nachgestellt (eine zweite,
+schwerere Transaktion sperrt die Lücke hinter der letzten Protokollzeile,
+dann die Kontozeile; InnoDB opfert `totp_abschalten()`): Faktor an, Codes
+und Geräte zurück, Passkeys gelöscht samt Eintrag, `commit()` wirft „There
+is no active transaction", keine Mail — zweimal, gleich (F-SR-63, E-SR-56).
+**Der Knopf:** Schritt 1b und 1c des Bedienwegs `einstellungen-profil-passkey`
+(verdrängte Herausforderung, gerissenes Netz). Im Code: `pk_spki_laden()`
+mit allen Grenzen (F-SR-59), `passkey.js` mit „Bitte die Seite neu laden."
+nach dem Absenden (F-SR-62, E-SR-58). Dazu die Wege in `ap6.mjs`, die auf
+die Antwort warten (F-SR-66), und die Texte zu Teil 12 (F-SR-67). **Probleme
+beim Bau:** Die Gegenprobe zum Wettlauf blieb zuerst grün — beide Prozesse
+schrieben Zähler 6 in derselben Sekunde, MariaDB zählt eine unveränderte
+Zeile nicht, und `rowCount()` 0 machte die zweite auch ohne Bedingung zur
+Kopie; mit 6 und 7 ist sie rot (Zähler danach 6 — ein verlorenes Update).
+Der erste 81-L-Fall baute eine Signatur von 72 Byte und hätte einen Deckel
+von 72 nicht gefunden; er signiert jetzt, bis er 73 Byte hat. Und PHP machte
+aus dem Schlüssel `'81'` eine Zahl — die Probe brach mit einem `TypeError`
+ab; die zwei Zeilen im Reiter System (dazu eine eigene Abfrage mit falschem
+Spaltennamen) sind von Hand gelöscht. Der Bedienweg maß zweimal nichts:
+Schritt 1b lief zuerst nach dem gültigen Anlegen, und der Authenticator
+verweigerte einen zweiten Passkey, weil die Seite den ersten ausschließt
+(`excludeCredentials`) — der Server wurde nie gefragt; 1b und 1c laufen
+jetzt davor. Danach las der Weg den Hinweis „Der Browser fragt jetzt …"
+statt der Meldung danach. Zur Nachstellung von F-SR-66 stellte ein
+Vorschritt den Tag auf „Anderes Rettungsmittel": die alte `ap6.mjs` lief
+in dieselbe Zeitüberschreitung wie der rote Lauf, die neue bricht mit dem
+Satz ab. Zahlen im Prüfdokument 2.
 
 **SR-03 Serverschlüssel wechseln als Vorgang** — Nr. 247, Nr. 233; Q-SR-03,
 -04, -09 entschieden (H-SR-02). `serverkrypto_lib.php`: `server_key_alt`

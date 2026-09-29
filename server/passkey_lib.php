@@ -415,7 +415,11 @@ function pk_cose_laden(mixed $cose): array
  * Den gespeicherten Schluessel (SPKI als PEM) laden — oder null. DIE GRENZEN
  * VON F-SR-33 GELTEN AUCH HIER (Nachpruefung A-6): Die Kosten entstehen bei
  * der Anmeldung, nicht beim Anlegen; eine Zeile ausserhalb der Grenzen (aus
- * einem Bestand vor Web 21.11.0 oder von Hand geschrieben) laedt nicht.
+ * einem Bestand vor Web 21.11.0 oder von Hand geschrieben) laedt nicht. ALLE
+ * GRENZEN, nicht nur die Groessen (seit Web 21.11.2, dritte Lesung DA-2): Ein
+ * Exponent 1 machte die Signatur ohne Geheimnis rechenbar — gerade an der
+ * Stelle, an der sie geprueft wird. Ein fuehrendes Nullbyte kann ein
+ * gespeicherter Schluessel nicht tragen; das SPKI ist schon kanonisch.
  */
 function pk_spki_laden(string $pem, int $alg): EC\PublicKey|RSA\PublicKey|null
 {
@@ -425,7 +429,10 @@ function pk_spki_laden(string $pem, int $alg): EC\PublicKey|RSA\PublicKey|null
         if ($alg === -257 && $k instanceof RSA\PublicKey
             && $k->getLength() >= PK_RSA_BITS_MIN && $k->getLength() <= PK_RSA_BITS_MAX
             && ($roh = $k->toString('Raw')) && ($roh['e'] ?? null) instanceof BigInteger
-            && strlen($roh['e']->toBytes()) <= PK_RSA_E_BYTES_MAX) {
+            && ($roh['n'] ?? null) instanceof BigInteger
+            && strlen($roh['e']->toBytes()) <= PK_RSA_E_BYTES_MAX
+            && $roh['e']->isOdd() && $roh['e']->compare(new BigInteger(3)) >= 0
+            && $roh['n']->isOdd()) {
             return $k;
         }
     } catch (Throwable) {
