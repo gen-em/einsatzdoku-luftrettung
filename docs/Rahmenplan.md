@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 149 (29.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 150 (29.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `fc4253d`, gemessen 29.09.2026): Web 21.6.1 ·
+**Stand `origin/main`** (Commit `3476e27`, gemessen 29.09.2026): Web 21.6.1 ·
 Uhr 3.1.0 · Android 0.17.0.
 **Läuft:** die Umsetzung von 18 auf `claude/pr95-stufe-18-ztactt` — Abschnitt 3. PK und Kette II sind abgeschlossen (Abschnitt 8).
 **Als Nächstes:** der PR der Umsetzung 18; **vor dem 19.10.2026 Nr. 236** (`ubuntu-latest` wird Ubuntu 26, die Kette zieht mit) — Reihenfolge in Abschnitt 3.
-**Offene PRs:** #96 (PK-06 bis PK-08, Abschluss von PK und Kette II).
+**Offene PRs:** keiner außer dem Nachtrag zu PK (P-PK-19, -21, -38 nach dem Merge von #96).
 **Fällig bei der Betreiberin:** 34 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nachsehen — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert, die Migrationen aus 10c und Web 21.3.0 können ausstehen (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -213,7 +213,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
 | **`APK_ZERTIFIKAT_SHA256`** als Variable der Umgebung `produktion` (voller SHA-256 von `078c…ad64`, Play Console → App-Integrität); dann je ein App-Probelauf, dann die ersten Tags | PK-08 | 29.09.2026 | `Technik.md` 4.97g; P-PK-39 bis -42 |
-| **Nach dem Merge von #96:** P-PK-21 (ein Lauf, Staging und Stufe 2 grün, unter zehn Minuten) und P-PK-38 (die Wache springt an) — damit gilt PK-M2 (E-PK-65); P-PK-37 (`STAGING_PASS` falsch und leer: rot mit Grund); -18, -19 bei Gelegenheit | PK | 29.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1 |
+| **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1, 5s |
 | **Prüfliste PK ohne Merge:** P-PK-24, -25 (Rettungsmittel, Excel), -26 (GuteSeele-Import) im Browser; -27 mit Netzzugang (Nr. 280); Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1 |
 | **`app.umgebung` in die `config.php` von Staging** (`name` Staging, `farbe` rot) — nie auf Produktiv; danach Betrieb → Status, Zeile „Umgebung" | 10c AP1 (E-P5c-05) | 23.09.2026 | Runbook „Eine Testanlage kennzeichnen"; P-P5c-01 |
 | **`betrieb.health_token`** in die `config.php` beider Anlagen, das Monitoring auf `/api/health.php?token=…` richten — ohne Eintrag antwortet der Endpunkt jedem mit 403 | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
@@ -449,7 +449,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | 17 — Backlog-Runde 4 (Konzept R4) | Web 21.1.4–21.6.1, Android 0.16.1–0.17.0 | 28.09.2026 · PR #94 | gelöscht 28.09.2026 (`a6908a8`) | `Pruefdokument-R4-Backlog-Runde-4.md` (P-R4-05 bis -23 offen, 6.1) | 27 Pakete; Ziel 17: 45 erledigt, 10 umgehängt, neu 340–347; Nummernriegel, Erzeuger als Riegel, `days.created_at`, Statistik mit Diagrammen, Zeitraumübersicht schneller |
 | SD — Steuerungsdokumente schneiden | nur Werkzeug | 26.09.2026 · PR #92 | gelöscht 26.09.2026 (`831e3e7`) | `Pruefdokument-SD-Steuerungsdokumente.md` (3.1–3.5 offen; P-SD-20 in Konzept 17) | Rahmenplan in drei Dateien (Kopf 15 Zeilen), Backlog mit Kopfzeilen und Erledigt-Datei (keiner über 20 Zeilen), `tools/steuerung/` als Riegel in Stufe 1 (20 Decken); Nr. 177, 193, 196, 199, 294 |
 | Kette II — Härtung der Auslieferungskette | nur Werkzeug; dazu Android 0.15.1 | 21.09.2026 · PR #65, #66, #68 | gelöscht 29.09.2026 (`8854b86`) | `Pruefdokument-Kette-Haertung.md` (2c, 4a, 9, 27, 28 offen, 6.1) | Zeiger `produktion` und Wache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Überspringen ist rot, Hotfix-Weg; M1 21.09.2026 (`web-v20.26.3`) |
-| PK — Prüfkette | Web 20.37.1 (PK-04), sonst nur Werkzeug | 29.09.2026 · PR #67, #70–#72, #75, #81, #82, #96 | gelöscht 29.09.2026 (`80efce0`) | `Pruefdokument-PK-Pruefkette.md` (Abnahmen nach dem Merge, 6.1) | Station B mit Prüfstand und Bericht, Stufe 1 liest ihn gegen, Werkzeuge 49 → 15 Ordner, Stufe 2 schlank, Apps über Tag mit Signatur; PK-M2 offen (E-PK-65) |
+| PK — Prüfkette | Web 20.37.1 (PK-04), sonst nur Werkzeug | 29.09.2026 · PR #67, #70–#72, #75, #81, #82, #96 | gelöscht 29.09.2026 (`80efce0`) | `Pruefdokument-PK-Pruefkette.md` (Abnahmen nach dem Merge, 6.1) | Station B mit Prüfstand und Bericht, Stufe 1 liest ihn gegen, Werkzeuge 49 → 15 Ordner, Stufe 2 schlank, Apps über Tag mit Signatur; PK-M2 29.09.2026 (Lauf 101) |
 
 ## 9. Pflege dieses Dokuments
 
