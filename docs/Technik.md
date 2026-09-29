@@ -5035,10 +5035,13 @@ hoch. Der Weg:
    Schlüssel ist der **App-Signaturschlüssel** (Zertifikat `078c…ad64`,
    E-PK-53) — derselbe, den Play App Signing führt; nur so geht später ein
    Update von der Seitenladung auf die Play-Fassung ohne Neuinstallation.
-   Geprüft wird: genau ein Unterzeichner, Zertifikat gleich
+   Geprüft wird: genau ein Unterzeichnerzertifikat (dieselbe Prüfsumme in
+   mehreren Zeilen von `apksigner` zählt einmal), gleich
    `APK_ZERTIFIKAT_SHA256` **und** mit den dokumentierten Enden, beide APKs
    gleich signiert (der Data Layer verlangt es, E-S4-01), Paketname und
-   `versionName`.
+   `versionName`. Scheitert die Prüfung, steht die Ausgabe von
+   `apksigner verify --print-certs` im Protokoll — sie ist öffentlich wie
+   das Zertifikat selbst (F-PK-56).
 3. **Ablegen** (`tools/kette/apkablage.py`): `nadoku-X.Y.Z.apk` und
    `nadoku-uhr-X.Y.Z.apk` (E-PK-58) je als `.teil` hochladen, zurückholen,
    SHA-256 vergleichen, umbenennen — **und erst dann** ältere Fassungen

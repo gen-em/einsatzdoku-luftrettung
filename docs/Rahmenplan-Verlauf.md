@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 151 | 29.09.2026 | PK-08, Zuarbeit | Z14 eingetragen; Uhr-Probelauf grün (P-PK-40), Android-Probelauf rot am Auslesen des Zertifikats (F-PK-56) — berichtigt, neu zu fahren. Die Zeile in 6.1 sagt es. |
 | 150 | 29.09.2026 | PK, Nachtrag | Nach dem Merge von #96: Lauf 101 grün in 4:07 (P-PK-21), die Wache sprang an (P-PK-38), Stufe 2 ohne Demo-Konto (P-PK-19) — PK-M2 erreicht (E-PK-65). Die Zeile in 6.1 hält nur noch P-PK-37 und -18. |
 | 149 | 29.09.2026 | PK-07, R67 | PK und Kette II abgeschlossen (E-PK-64): Erledigt-Zeilen, Fahrplanzeilen fort, Reste in 6.1, R67 nachgezogen. Berichtigt: 6.1 führte `web-v21.1.3` und `web-v21.6.1` als offen — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert (F-PK-54). |
 | 148 | 29.09.2026 | PK-08, R65 | PK-06 und PK-08 gebaut; R65: das Seitenladungs-APK signiert die Kette mit dem App-Signaturschlüssel (E-PK-53). Neue Zuarbeit in 6.1: `APK_ZERTIFIKAT_SHA256`, App-Probeläufe, erste Tags. |

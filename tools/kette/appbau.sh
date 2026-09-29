@@ -40,12 +40,14 @@ ist_7z() { [ "$(head -c 6 "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n')" = 377ab
 fassung_android() { sed -n 's/^version=\([0-9.]*\)[[:space:]]*$/\1/p' "$1" | head -1; }
 fassung_uhr() { sed -n 's/.*const APP_VERSION = "\([0-9.]*\)";.*/\1/p' "$1" | head -1; }
 
-# „Signer #1 certificate SHA-256 digest: …" — genau EIN Unterzeichner.
+# Jede Zeile „Signer … certificate SHA-256 digest: …", gleich wie
+# nummeriert („#1" oder „(minSdkVersion=…)"): genau EIN Wert, sonst leer.
+# Derselbe Wert zweimal ist ein Unterzeichner (F-PK-56, Lauf 103).
 zertifikat_aus() {
     local z
-    z=$(grep -E '^Signer #[0-9]+ certificate SHA-256 digest:' <<<"$1")
-    [ "$(grep -c . <<<"$z")" = 1 ] || { echo ""; return; }
-    sed -E 's/.*digest: *//' <<<"$z" | tr -d ': ' | tr 'A-F' 'a-f'
+    z=$(grep -E '^Signer (#[0-9]+|\([^)]*\)) certificate SHA-256 digest:' <<<"$1" \
+        | sed -E 's/.*digest: *//' | tr -d ': ' | tr 'A-F' 'a-f' | sort -u)
+    if [ -n "$z" ] && [ "$(grep -c . <<<"$z")" = 1 ]; then echo "$z"; else echo ""; fi
 }
 
 # Passt der gemessene Wert zur Variablen UND zu den dokumentierten Enden?
@@ -67,7 +69,7 @@ fassung_pruefen() {     # fassung_pruefen <soll|datei> <gelesen> <datei>
 }
 
 android_bauen() {
-    local soll="$1" aus="$2" f bt tmp m name roh ist erster=""
+    local soll="$1" aus="$2" f bt tmp m name roh pruef ist erster=""
     f=$(fassung_pruefen "$soll" "$(fassung_android "$WURZEL/android/version.properties")" \
         android/version.properties) || return 1
     for v in ANDROID_HOME APK_SPEICHER_B64 APK_SPEICHER_PASSWORT APK_SCHLUESSEL_NAME \
@@ -85,6 +87,7 @@ android_bauen() {
         || { fehler "Gradle-Bau gescheitert."; return 1; }
     bt=$(ls -d "$ANDROID_HOME"/build-tools/* 2>/dev/null | sort -V | tail -1)
     [ -x "$bt/apksigner" ] || { fehler "apksigner fehlt unter $ANDROID_HOME/build-tools."; return 1; }
+    sag "  Build-Tools $(basename "$bt")"
     mkdir -p "$aus"
     tmp=$(mktemp -d); chmod 700 "$tmp"
     trap 'rm -rf "$tmp"' RETURN
@@ -100,9 +103,17 @@ android_bauen() {
             --ks-pass env:APK_SPEICHER_PASSWORT --key-pass env:APK_SCHLUESSEL_PASSWORT \
             --v4-signing-enabled false --out "$aus/$name" "$tmp/$m.apk" \
             || { fehler "apksigner sign ($m) gescheitert."; return 1; }
-        ist=$(zertifikat_aus "$("$bt/apksigner" verify --print-certs "$aus/$name" 2>&1)")
+        # Die Ausgabe ist öffentlich (Zertifikat und Prüfsummen stehen in jeder
+        # APK) und kommt bei jedem Scheitern ins Protokoll — ohne sie war
+        # Lauf 103 nicht zu deuten (F-PK-56).
+        pruef=$("$bt/apksigner" verify --print-certs "$aus/$name" 2>&1) || {
+            fehler "apksigner verify ($m) gescheitert:"; sed 's/^/    /' <<<"$pruef" >&2
+            rm -f "$aus/$name"; return 1; }
+        ist=$(zertifikat_aus "$pruef")
         if ! zertifikat_passt "$ist" "$APK_ZERTIFIKAT_SHA256"; then
             fehler "$name trägt Zertifikat ${ist:-— nicht lesbar —}; erwartet ist APK_ZERTIFIKAT_SHA256 mit den Enden $DOKU_ANFANG…$DOKU_ENDE. Das Paket wäre eine andere App."
+            echo "  apksigner $(basename "$bt") verify --print-certs:" >&2
+            sed 's/^/    /' <<<"$pruef" >&2
             rm -f "$aus/$name"; return 1
         fi
         [ -z "$erster" ] && erster="$ist"
@@ -161,8 +172,15 @@ Signer #1 certificate SHA-256 digest: $gut
 Signer #1 certificate SHA-1 digest: 00"
     local aus2="$aus1
 Signer #2 certificate SHA-256 digest: $gut"
+    local aus3="Signer (minSdkVersion=24, maxSdkVersion=32) certificate SHA-256 digest: $gut
+Signer (minSdkVersion=33, maxSdkVersion=2147483647) certificate SHA-256 digest: $gut"
+    local aus4="$aus1
+Signer #2 certificate SHA-256 digest: 1111$(printf 'c%.0s' {1..56})2222"
     pruefe "Zertifikat aus apksigner gelesen" '[ "$(zertifikat_aus "$aus1")" = "$gut" ]'
-    pruefe "Zwei Unterzeichner → nicht lesbar" '[ -z "$(zertifikat_aus "$aus2")" ]'
+    pruefe "Derselbe Wert zweimal → ein Unterzeichner (F-PK-56)" '[ "$(zertifikat_aus "$aus2")" = "$gut" ]'
+    pruefe "Nummerierung nach minSdkVersion → gelesen" '[ "$(zertifikat_aus "$aus3")" = "$gut" ]'
+    pruefe "Zwei verschiedene Unterzeichner → nicht lesbar" '[ -z "$(zertifikat_aus "$aus4")" ]'
+    pruefe "Keine Zeile → nicht lesbar" '[ -z "$(zertifikat_aus "DOES NOT VERIFY")" ]'
     pruefe "Gleich der Variablen, Enden passen → passt" 'zertifikat_passt "$gut" "$gut"'
     pruefe "Variable mit Doppelpunkten und Großbuchstaben → passt" \
         'zertifikat_passt "$gut" "$(sed -E "s/(..)/\1:/g; s/:$//" <<<"$gut" | tr a-f A-F)"'
