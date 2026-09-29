@@ -667,7 +667,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      laeuft in Stufe 1 UND vor dem Tor. Dazu seit
 │   │                      BR-03 baumsuche.py: die EINE Suche nach gruenen
 │   │                      Stufe-1-Laeufen mit demselben Baum, fuer
-│   │                      „Schon gemessen?" und das Produktionstor (E-BR-09)
+│   │                      „Schon gemessen?" und das Produktionstor (E-BR-09).
+│   │                      Seit PK-08 appbau.sh (App bauen und signieren,
+│   │                      Android ueber apksigner nach dem Bau) und
+│   │                      apkablage.py (APK nach server/apk/, aeltere
+│   │                      Fassungen erst nach dem geprueften Ablegen weg)
 │   ├── kettenaufrufe/     haelt JEDEN Werkzeugaufruf der Arbeitslaeufe und
 │   │                      von pruefablauf.json gegen die tatsaechliche
 │   │                      Schnittstelle des aufgerufenen Werkzeugs —
@@ -4954,7 +4958,46 @@ Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
 `sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
 Datei- und Verzeichnismuster getrennt.
 
-Hochgeladen wird per FTPS durch die BetreiberIn.
+**Abgelegt wird seit PK-08 von der Kette** (E-PK-23, Job `android` in
+`.github/workflows/auslieferung.yml`); bis dahin lud die BetreiberIn per FTPS
+hoch. Der Weg:
+
+1. **Tag `android-vX.Y.Z`** — er muss zu `android/version.properties` passen,
+   sonst ist der Lauf rot, bevor gebaut wird (E-PK-60). Danach die
+   **Pflichtfreigabe** der Umgebung `produktion`.
+2. **Bauen, dann signieren** (`tools/kette/appbau.sh`): Gradle baut Handy und
+   Wear OS **unsigniert**; signiert wird danach mit `apksigner`, außerhalb von
+   Gradle, damit fremder Build-Code den Schlüssel nie sieht (E-PK-63). Der
+   Schlüssel ist der **App-Signaturschlüssel** (Zertifikat `078c…ad64`,
+   E-PK-53) — derselbe, den Play App Signing führt; nur so geht später ein
+   Update von der Seitenladung auf die Play-Fassung ohne Neuinstallation.
+   Geprüft wird: genau ein Unterzeichner, Zertifikat gleich
+   `APK_ZERTIFIKAT_SHA256` **und** mit den dokumentierten Enden, beide APKs
+   gleich signiert (der Data Layer verlangt es, E-S4-01), Paketname und
+   `versionName`.
+3. **Ablegen** (`tools/kette/apkablage.py`): `nadoku-X.Y.Z.apk` und
+   `nadoku-uhr-X.Y.Z.apk` (E-PK-58) je als `.teil` hochladen, zurückholen,
+   SHA-256 vergleichen, umbenennen — **und erst dann** ältere Fassungen
+   desselben Musters löschen: **Im Ordner bleibt je Gerät nur die neueste**
+   (E-PK-59). Scheitert ein Schritt davor, wird nichts gelöscht. Die
+   SHA-256 steht in der Zusammenfassung des Laufs; die Karte auf dem
+   Geräte-Reiter muss dieselbe zeigen.
+
+**Der Preis von E-PK-53 und -59, benannt:** Der Schlüssel, den man nicht
+zurücksetzen kann, liegt als Geheimnis in der GitHub-Umgebung `produktion`
+(hinter der Pflichtfreigabe), und die Kette darf in `server/apk/` löschen —
+nur Namen der beiden Muster, nur nach dem geprüften Ablegen. Eine ältere
+Fassung ist danach nur noch über ihren Tag wiederzubekommen.
+
+**Ein Probelauf** (Actions → „Auslieferung" → *Run workflow*,
+`app_probelauf: android`) baut und signiert mit derselben Freigabe, legt
+aber nichts ab: Die Ablage listet den Ordner und nennt, was sie ablegen und
+löschen würde.
+
+**Die Garmin-Uhr** (Tag `uhr-vX.Y.Z`, Job `uhr`) baut mit `monkeyc -e` das
+Store-Paket `nadoku-X.Y.Z.iq`, signiert mit dem Connect-IQ-Entwicklerschlüssel
+(`UHR_ENTWICKLERSCHLUESSEL_B64`), und hängt es als **Artefakt** an den Lauf
+(90 Tage); in den Connect-IQ-Store lädt es die BetreiberIn von Hand (E-PK-61).
 
 #### Der Ordner selbst ist seit Web 15.6.0 gesperrt
 
@@ -10204,13 +10247,15 @@ E-P5a-10.
 | Push auf `main` | **Staging** | `staging` | Stufe 1 |
 | **Handlauf auf `hotfix/*`** (ab AP7) | **Staging** | `staging` | Stufe 1 |
 | Tag `web-vX.Y.Z` | **Produktiv** | `produktion` | Stufe 1, Stufe 2, Pflichtfreigabe, Backup-Tor, **Abstammung** |
+| Tag `android-vX.Y.Z` (seit PK-08) | `server/apk/` auf **Produktiv** | `produktion` | Pflichtfreigabe, Tag gegen Fassung, Zertifikat (4.97g) |
+| Tag `uhr-vX.Y.Z` (seit PK-08) | Artefakt des Laufs (Connect-IQ-Store von Hand) | `produktion` | Pflichtfreigabe, Tag gegen Fassung |
 
 Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
 | `pruefung.yml` | **Stufe 1** — jeder Pull Request, dazu jeder Push auf `main` (seit 21.09.2026; vorher jeder Push auf jedem Zweig); seit PK-05 die Gegenlesung des Prüfberichts (6.2) |
-| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger` |
+| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger`; seit PK-08 dazu `android` und `uhr`, je in eigener `concurrency`-Gruppe (ein Lauf, der auf die Freigabe wartet, belegt seine Gruppe) |
 | `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
 
@@ -10783,8 +10828,8 @@ sondern an den **Umgebungen**:
 | Ort | Geheimnisse | Variablen |
 |---|---|---|
 | Umgebung `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
-| Umgebung `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL` |
-| Repositorium | `CIQ_GERAETE_URL` — seit PK-05 von keinem Arbeitslauf gelesen; bleibt bis PK-08 (E-PK-48) | `WACHE_BASIS` |
+| Umgebung `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN`; seit PK-08 die fünf Schlüsselwerte `APK_SPEICHER_B64`, `APK_SPEICHER_PASSWORT`, `APK_SCHLUESSEL_NAME`, `APK_SCHLUESSEL_PASSWORT`, `UHR_ENTWICKLERSCHLUESSEL_B64` (Zuarbeit Z6 des Konzepts PK) | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL`; seit PK-08 `APK_ZERTIFIKAT_SHA256` (der volle SHA-256 des App-Signaturzertifikats `078c…ad64` — öffentlich, deshalb Variable) |
+| Repositorium | `CIQ_GERAETE_URL` — von PK-05 bis PK-08 von keinem Arbeitslauf gelesen, seither vom Job `uhr` (E-PK-48) | `WACHE_BASIS` |
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
 

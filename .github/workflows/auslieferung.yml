@@ -8,7 +8,7 @@ on:
   # getaggten Commit, und auch `docs/` geht hinaus (als `server/doku/`).
   push:
     branches: [ main ]
-    tags: [ 'web-v*' ]
+    tags: [ 'web-v*', 'android-v*', 'uhr-v*' ]
   workflow_dispatch:
     inputs:
       probelauf:
@@ -62,6 +62,15 @@ on:
           entfernt (Prüfdokument, Prüfpunkt 18a).
         type: boolean
         default: false
+      app_probelauf:
+        description: >-
+          APP-PROBELAUF (PK-08) — `android` oder `uhr` bauen und signieren,
+          hinter der Pflichtfreigabe, aber NICHTS ablegen: Die APK-Ablage
+          nennt nur, was sie ablegen und löschen würde. `aus` ist der
+          gewöhnliche Lauf.
+        type: choice
+        options: [ aus, android, uhr ]
+        default: aus
 
 permissions:
   contents: read
@@ -69,12 +78,18 @@ permissions:
   # bekommt nie mehr Rechte als sein Aufrufer.
   actions: read
 
-# Ein Lauf je Gruppe — Tag oder nicht; ein Probelauf teilt die Gruppe mit
-# Staging —, wartend statt abbrechend (ein Abbruch ließe einen halben Stand bei
-# Wartung oder eine stehende Jobpause zurück); GitHub hält je Gruppe nur einen
-# wartenden Lauf.
+# Ein Lauf je Gruppe — Web-Tag, Android, Uhr, sonst Staging; ein Web-Probelauf
+# teilt die Gruppe mit Staging —, wartend statt abbrechend (ein Abbruch ließe
+# einen halben Stand bei Wartung oder eine stehende Jobpause zurück); GitHub
+# hält je Gruppe nur einen wartenden Lauf. Die Apps haben eigene Gruppen, weil
+# ein Lauf, der auf die Freigabe wartet, seine Gruppe so lange belegt.
 concurrency:
-  group: auslieferung-${{ startsWith(github.ref, 'refs/tags/') && 'produktion' || 'staging' }}
+  group: >-
+    auslieferung-${{
+      (startsWith(github.ref, 'refs/tags/android-v') || inputs.app_probelauf == 'android') && 'android'
+      || (startsWith(github.ref, 'refs/tags/uhr-v') || inputs.app_probelauf == 'uhr') && 'uhr'
+      || startsWith(github.ref, 'refs/tags/') && 'produktion'
+      || 'staging' }}
   cancel-in-progress: false
 
 # GitHub fährt `run:` ohne `pipefail` — eine Pipe meldet dann nur ihr letztes
@@ -86,9 +101,9 @@ defaults:
 jobs:
   staging:
     name: staging
-    # `!inputs.probelauf` gehört dazu: Ein Probelauf fährt ohne Tag und lieferte
-    # sonst nach Staging aus, samt Wartung und Komplett-Backup.
-    if: ${{ !startsWith(github.ref, 'refs/tags/') && !inputs.probelauf }}
+    # Beide Probeläufe gehören dazu: Sie fahren ohne Tag und lieferten sonst
+    # nach Staging aus, samt Wartung und Komplett-Backup.
+    if: ${{ !startsWith(github.ref, 'refs/tags/') && !inputs.probelauf && (inputs.app_probelauf || 'aus') == 'aus' }}
     uses: ./.github/workflows/ausliefern-lauf.yml
     with:
       umgebung: staging
@@ -369,3 +384,128 @@ jobs:
             echo
             echo 'Die Integritaetswache vergleicht ab jetzt gegen diesen Stand.'
           } >> "$GITHUB_STEP_SUMMARY"
+  # ---------------------------------------------------------------------------
+  android:
+    name: Android-Auslieferung
+    # Einmal je Fassung, hinter der Pflichtfreigabe der Umgebung `produktion`
+    # (E-PK-23); nicht `staging…` heißen, sonst zählte das Tor der grünen Läufe
+    # diesen Job mit.
+    if: startsWith(github.ref, 'refs/tags/android-v') || inputs.app_probelauf == 'android'
+    runs-on: ubuntu-latest
+    environment: produktion
+    timeout-minutes: 45
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Java 21 für AGP 9
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Selbstproben von Bau und Ablage
+        run: |
+          bash tools/kette/appbau.sh --selbstprobe
+          python3 tools/kette/apkablage.py --selbstprobe
+
+      - name: Bauen, signieren, Zertifikat prüfen
+        # Gradle baut unsigniert; signiert wird danach mit `apksigner`, damit
+        # fremder Build-Code den Schlüssel nie zu sehen bekommt (E-PK-63).
+        env:
+          APK_SPEICHER_B64:        ${{ secrets.APK_SPEICHER_B64 }}
+          APK_SPEICHER_PASSWORT:   ${{ secrets.APK_SPEICHER_PASSWORT }}
+          APK_SCHLUESSEL_NAME:     ${{ secrets.APK_SCHLUESSEL_NAME }}
+          APK_SCHLUESSEL_PASSWORT: ${{ secrets.APK_SCHLUESSEL_PASSWORT }}
+          APK_ZERTIFIKAT_SHA256:   ${{ vars.APK_ZERTIFIKAT_SHA256 }}
+        run: |
+          case "$GITHUB_REF" in
+            refs/tags/android-v*) fassung="${GITHUB_REF_NAME#android-v}" ;;
+            *)                    fassung=datei ;;
+          esac
+          bash tools/kette/appbau.sh android "$fassung" ausgabe
+
+      - name: Nach server/apk/ ablegen, ältere Fassungen löschen
+        # Gelöscht wird erst, wenn die neue Datei zurückgeholt und gleich ist
+        # und ihren Namen trägt — nie davor (E-PK-59).
+        env:
+          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_ZIELPFAD: ${{ vars.FTP_ZIELPFAD }}
+          PROBELAUF:    ${{ inputs.app_probelauf == 'android' }}
+        run: |
+          for v in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_ZIELPFAD; do
+            if [ -z "${!v:-}" ]; then
+              echo "::error::$v der Umgebung produktion fehlt — nichts abgelegt."
+              exit 1
+            fi
+          done
+          schalter=""
+          if [ "$PROBELAUF" = "true" ]; then schalter="--probelauf"; fi
+          zahl=0
+          for datei in ausgabe/nadoku-[0-9]*.apk ausgabe/nadoku-uhr-*.apk; do
+            case "$datei" in
+              ausgabe/nadoku-uhr-*) art=uhr ;;
+              *)                    art=handy ;;
+            esac
+            if [ ! -f "$datei" ]; then
+              echo "::error::$datei fehlt — der Bau hat nicht beide APKs hinterlassen."
+              exit 1
+            fi
+            python3 tools/kette/apkablage.py --art "$art" --datei "$datei" \
+                --ftp-server "$FTP_SERVER" --ftp-konto "$FTP_USERNAME" \
+                --ftp-pass "$FTP_PASSWORD" --ftp-pfad "$FTP_ZIELPFAD" \
+                --zusammenfassung "$GITHUB_STEP_SUMMARY" $schalter
+            zahl=$((zahl + 1))
+          done
+          if [ "$zahl" != 2 ]; then
+            echo "::error::$zahl APKs statt 2 (Handy und Wear OS)."
+            exit 1
+          fi
+  # ---------------------------------------------------------------------------
+  uhr:
+    name: Uhr-Auslieferung (Garmin)
+    # Das Paket bleibt ein Artefakt dieses Laufs; in den Connect-IQ-Store lädt
+    # es die Betreiberin von Hand (E-PK-61).
+    if: startsWith(github.ref, 'refs/tags/uhr-v') || inputs.app_probelauf == 'uhr'
+    runs-on: ubuntu-latest
+    environment: produktion
+    timeout-minutes: 90
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Connect-IQ-SDK und alle Gerätedateien
+        # `CIQ_ZIELE=alle`: `monkeyc -e` baut für jedes Gerät im Manifest, und
+        # ein fehlendes Gerät bricht das Paket ab.
+        env:
+          CIQ_GERAETE_URL: ${{ secrets.CIQ_GERAETE_URL }}
+        run: |
+          if [ -z "${CIQ_GERAETE_URL:-}" ]; then
+            echo "::error::CIQ_GERAETE_URL fehlt — ohne Gerätedateien kein Paket."
+            exit 1
+          fi
+          CIQ_ZIELE=alle bash tools/uhr-pruefstand/pruefstand.sh aufbau-uebersetzen
+
+      - name: Selbstprobe des Baus
+        run: bash tools/kette/appbau.sh --selbstprobe
+
+      - name: Store-Paket bauen und signieren
+        env:
+          UHR_ENTWICKLERSCHLUESSEL_B64: ${{ secrets.UHR_ENTWICKLERSCHLUESSEL_B64 }}
+        run: |
+          export PATH="$HOME/.ciq-pruefstand/sdk/bin:$PATH"
+          case "$GITHUB_REF" in
+            refs/tags/uhr-v*) fassung="${GITHUB_REF_NAME#uhr-v}" ;;
+            *)                fassung=datei ;;
+          esac
+          bash tools/kette/appbau.sh uhr "$fassung" ausgabe
+
+      - name: Paket als Artefakt
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: nadoku-${{ github.ref_name }}
+          path: ausgabe/*.iq
+          if-no-files-found: error
+          retention-days: 90

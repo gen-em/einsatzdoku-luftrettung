@@ -22,7 +22,7 @@ derselbe Export in Sekunden gescheitert. Nicht die Kette war falsch — der
 ## 0. Was schon gilt und was noch entsteht
 
 Dieses Dokument beschreibt die Prüfkette vollständig. **Gebaut sind die
-Stationen A bis D**; die App-Auslieferung in Station E folgt mit PK-08. Die
+Stationen A bis E**, seit PK-08 samt der App-Auslieferung. Die
 Spalte **Stand** sagt bei jedem Stück, woran man ist; ein Stück ohne „gilt"
 oder „gebaut" ist eine Vorgabe an das genannte Paket, keine Beschreibung der
 Gegenwart. Wer das verwechselt, meldet eine Prüfung als gefahren, die es
@@ -248,8 +248,13 @@ signiert, hinter derselben Pflichtfreigabe, mit Schlüsseln, die als
 Geheimnisse der Umgebung `produktion` liegen. Der Grund ist derselbe, aus
 dem die Uhr keine Zugangsdaten kennt (`CLAUDE.md` 4): Ein Schlüssel, dessen
 Verlust jede spätere Fassung zu einer anderen Anwendung macht, gehört nicht
-dorthin, wo bei jedem Bau fremder Code mitläuft. Das entsteht mit **PK-08**
-und hat eine eigene Freigabe.
+dorthin, wo bei jedem Bau fremder Code mitläuft. **Gebaut mit PK-08**
+(Jobs `android` und `uhr`, `tools/kette/appbau.sh` und `apkablage.py`,
+`Technik.md` 4.97g). **Was die Kette dort prüft:** Tag gegen Fassung, das
+Zertifikat gegen `APK_ZERTIFIKAT_SHA256` und die Enden `078c…ad64`, beide
+APKs gleich signiert, Paketname und `versionName`, die abgelegte Datei
+Byte für Byte gegen die gebaute. **Was sie nicht prüft:** ob die App
+funktioniert — das sind Station B (Prüfstand, Emulator) und der Gerätetest.
 
 ---
 

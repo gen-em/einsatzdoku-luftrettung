@@ -1,40 +1,40 @@
 # Kette — die Werkzeuge der Auslieferung
 
-Fünf Befehle, die die Kette braucht und die niemand von Hand fährt.
-**Anlass: Nr. 219** — ein Kettenschritt, der nur gegen die eigene Anlage ging.
+Sieben Befehle der Kette, die niemand von Hand fährt.
+**Anlass: Nr. 219** (Kettenschritt nur gegen die eigene Anlage), **Nr. 100** (Apps von Hand).
 
 ## Aufruf
 
 ```bash
 python3 tools/kette/tor.py backup|pause|zustand|wartung-an|wartung-aus --basis <url> --token <t>
 python3 tools/kette/freigabe.py            # --selbstprobe | urteil --laeufe … --baum … --stufe1-laeufe …
-python3 tools/kette/zielprobe.py <url>     # --selbstprobe
-python3 tools/kette/zustand.py             # --selbstprobe
+python3 tools/kette/zielprobe.py <url>  ·  python3 tools/kette/zustand.py   # je --selbstprobe
 python3 tools/kette/baumsuche.py --baum <sha> --fenster <n> [--ereignis pull_request] [--erster | --ausgabe f.json]
+bash tools/kette/appbau.sh android|uhr <fassung|datei> <ausgabe>   # --selbstprobe
+python3 tools/kette/apkablage.py --art handy|uhr --datei <apk> --ftp-server … [--probelauf]  # --selbstprobe
 ```
 
 ## Was es misst
 
-**`tor.py`** hält die Hintergrundjobs an und wartet, bis ein Komplett-Backup
-**fertig** und **neu** ist — ein Backup von gestern meldet auch „fertig".
-**`freigabe.py`** entscheidet, ob ein Stand auf Produktiv darf: Stufe 1
-**nach Baum** (ein grüner PR-Lauf mit grünem Job `Stufe 1` zählt, Konzept
-TB), Staging **nach Commit und Herkunft**. **`zielprobe.py`** unterscheidet
-liegt / fehlt / nicht feststellbar; **`zustand.py`** legt die Zustandsdatei
-der Auslieferungsaktion hin, wenn sie fehlt. **`baumsuche.py`** findet die
-grünen Stufe-1-Läufe mit demselben Baum — für „Schon gemessen?" (Fenster 30)
-und für `freigabe.py` (Fenster 50, E-BR-09).
+`tor.py` wartet auf ein **fertiges und neues** Komplett-Backup; `freigabe.py`:
+darf ein Stand auf Produktiv (Stufe 1 **nach Baum**, Staging **nach Commit**);
+`zielprobe.py`: liegt / fehlt / nicht feststellbar; `zustand.py` legt die
+fehlende Zustandsdatei hin; `baumsuche.py`: grüne Stufe-1-Läufe desselben
+Baums. `appbau.sh` baut und signiert (Android über `apksigner` nach dem Bau,
+Zertifikat gegen `APK_ZERTIFIKAT_SHA256` und `078c…ad64`; Garmin `monkeyc -e`);
+`apkablage.py` lädt hoch, vergleicht, benennt um, **erst dann** löscht sie.
 
 ## Was es braucht
 
-Eine erreichbare Anlage und ihr `JOBS_TOKEN`; `baumsuche.py` `gh` und `GH_TOKEN`.
+Anlage und `JOBS_TOKEN`; `gh` und `GH_TOKEN`; Android-SDK bzw. `monkeyc` und
+die Schlüssel als Umgebungswerte (`appbau.sh`); `curl` (Zielprobe, Ablage).
 
 ## Erwartete Zahl
 
-`freigabe.py --selbstprobe` **52 / 0**, `baumsuche.py --selbstprobe` **11 / 0**.
-Jedes der fünf hat eine Selbstprobe; Stufe 1 oder die Kette fährt sie.
+Selbstproben: `freigabe.py` **52 / 0**, `baumsuche.py` **11 / 0**, `appbau.sh`
+**18 / 0**, `apkablage.py` **25 / 0**; Stufe 1 oder die Kette fährt jede.
 
 ## Was es nicht kann
 
-Nichts über den **Inhalt** der Auslieferung sagen — dafür die
-Integritätswache. `tor.py` wartet oder bricht ab, schneller macht es nichts.
+Nichts über den **Inhalt** sagen (dafür die Integritätswache); `appbau.sh`
+prüft, **womit** signiert ist, nicht, ob die App funktioniert.

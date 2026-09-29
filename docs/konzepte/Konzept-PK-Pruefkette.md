@@ -26,9 +26,9 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 >
 > | | |
 > |---|---|
-> | Stand | **29.09.2026 — PK-06 in Arbeit** auf `claude/beautiful-dirac-1tc4d0`; Reihe **PK-06 → PK-08 → PK-07** (E-PK-50). PK-01 bis PK-05 sind gemergt (PR #75, #81, #82, 23.09.2026). Stufe 2 fährt heute **vier** Schritte (Konzept RW hat die Rückwegprobe angehängt) und braucht mit Staging **rund 4 min** (Lauf 99, `fc4253d`: Staging 35 s, Stufe 2 3:16). Die Arbeitsläufe haben **2 286** Zeilen, davon **1 087** Kommentar. Offen bleibt P-PK-11 zur Hälfte (Ausbaustufe `uhr` gebaut, nicht abgenommen). |
-> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. **E-PK-34** (die Rechtstexte werden beim Binnen-I mitgenommen) und **E-PK-35** (die Fächerungszeile für PK) sind am 22.09.2026 entschieden — Abschnitt 3.1a. **E-PK-40** (die Android-Zeile aus 5b behält ihre Versionsstufe vorerst nicht) ist am 23.09.2026 angewiesen — gegen die Empfehlung der Instanz; Befund F-PK-29, Backlog Nr. 284, Abnahme P-PK-28. **Aus PK-05, alle am 23.09.2026 vom Auftraggeber entschieden:** **E-PK-41** (Fächerung: nur lesend, drei Agenten), **E-PK-42** (streng: Baum des Kopfs, Weg nach fremdem Merge), **E-PK-43** (Gegenlesung auch beim Handlauf auf einem Zweig), **E-PK-44** („gebaut" heißt gebaut, Lage 5), **E-PK-45** (die neun roten Proben vor P5c, Zuschnitt bestätigt), **E-PK-46** (nicht gemessen ist rot), **E-PK-47** (Schemaprobe wird Pflichtprüfung, Z12), **E-PK-48** (`CIQ_GERAETE_URL` bleibt bis PK-08), **E-PK-49** (337 Zeilen abgenommen) — Abschnitt 4, PK-05. **Aus dem Beginn von PK-06, am 29.09.2026 vom Auftraggeber entschieden:** **E-PK-50** (Reihe 06 → 08 → 07), **E-PK-51** (Zeilenziel verfehlt, Zahl abgenommen), **E-PK-52** (Fächerung 06–08, nur lesend), **E-PK-53** (die Kette signiert mit dem App-Signaturschlüssel; E-PK-23 ersetzt E-S4-16); **vorgeschlagen, mit dem Plan freigegeben:** **E-PK-54** (kein Aktions-Cache), **E-PK-55** (die Rückwegprobe bleibt) — Abschnitt 4, PK-06. **Am 29.09.2026 auf die Fragen Q-PK-10 bis -15:** **E-PK-57** (Demo-Konto bleibt auf Staging), **E-PK-58 bis -62** (PK-08: beide APKs, nur die neueste bleibt liegen — gegen die Empfehlung —, Tag gegen Fassung, Garmin als Artefakt, zwei Aktionen an alten SHAs). |
-> | Nächstes | **Halt nach PK-06:** Paketbericht an den Auftraggeber, dann die eigene Freigabe für PK-08 — seine Fragen Q-PK-11 bis -15 sind beantwortet (E-PK-58 bis -62). **Offen bei der Betreiberin:** Z12 (Schemaprobe ins Ruleset) — von hier aus nicht messbar (keine Leseschnittstelle für Rulesets); PK-07 fragt nach. |
+> | Stand | **29.09.2026 — PK-06 und PK-08 gebaut** auf `claude/beautiful-dirac-1tc4d0`; Reihe **PK-06 → PK-08 → PK-07** (E-PK-50). PK-01 bis PK-05 sind gemergt (PR #75, #81, #82, 23.09.2026). PK-06: Kette auf einen Satz je Falle, 2 286 → 1 346 Zeilen (`8b0b10a`). PK-08: Jobs `android` und `uhr`, `appbau.sh` und `apkablage.py`, örtlich mit Wegwerfschlüsseln und gegen einen echten FTPS-Server geprobt. Offen bleibt P-PK-11 zur Hälfte (Ausbaustufe `uhr` gebaut, nicht abgenommen). |
+> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. **E-PK-34** (die Rechtstexte werden beim Binnen-I mitgenommen) und **E-PK-35** (die Fächerungszeile für PK) sind am 22.09.2026 entschieden — Abschnitt 3.1a. **E-PK-40** (die Android-Zeile aus 5b behält ihre Versionsstufe vorerst nicht) ist am 23.09.2026 angewiesen — gegen die Empfehlung der Instanz; Befund F-PK-29, Backlog Nr. 284, Abnahme P-PK-28. **Aus PK-05, alle am 23.09.2026 vom Auftraggeber entschieden:** **E-PK-41** (Fächerung: nur lesend, drei Agenten), **E-PK-42** (streng: Baum des Kopfs, Weg nach fremdem Merge), **E-PK-43** (Gegenlesung auch beim Handlauf auf einem Zweig), **E-PK-44** („gebaut" heißt gebaut, Lage 5), **E-PK-45** (die neun roten Proben vor P5c, Zuschnitt bestätigt), **E-PK-46** (nicht gemessen ist rot), **E-PK-47** (Schemaprobe wird Pflichtprüfung, Z12), **E-PK-48** (`CIQ_GERAETE_URL` bleibt bis PK-08), **E-PK-49** (337 Zeilen abgenommen) — Abschnitt 4, PK-05. **Aus dem Beginn von PK-06, am 29.09.2026 vom Auftraggeber entschieden:** **E-PK-50** (Reihe 06 → 08 → 07), **E-PK-51** (Zeilenziel verfehlt, Zahl abgenommen), **E-PK-52** (Fächerung 06–08, nur lesend), **E-PK-53** (die Kette signiert mit dem App-Signaturschlüssel; E-PK-23 ersetzt E-S4-16); **vorgeschlagen, mit dem Plan freigegeben:** **E-PK-54** (kein Aktions-Cache), **E-PK-55** (die Rückwegprobe bleibt) — Abschnitt 4, PK-06. **Am 29.09.2026 auf die Fragen Q-PK-10 bis -15:** **E-PK-57** (Demo-Konto bleibt auf Staging), **E-PK-58 bis -62** (PK-08: beide APKs, nur die neueste bleibt liegen — gegen die Empfehlung —, Tag gegen Fassung, Garmin als Artefakt, zwei Aktionen an alten SHAs). **In der Umsetzung von PK-08 entschieden:** **E-PK-63** (Android signiert `apksigner` nach dem Bau, nicht Gradle — der Schlüssel kommt nie an fremden Build-Code). |
+> | Nächstes | **Halt nach PK-08:** Paketbericht an den Auftraggeber. Vor dem ersten Tag Z14 (`APK_ZERTIFIKAT_SHA256`) und die App-Probeläufe (P-PK-39, -40); dann **PK-07**, der Abschluss. |
 > | Kette II | **M1 ist am 21.09.2026 erreicht** — Tag `web-v20.26.3` auf `a1c6494`, Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, **Migrationen von Hand ausgeführt, Wartung beendet, Status „Alles läuft"**, Zeiger `produktion` auf `a1c6494`. Im Übrigen wird Kette II nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
 > | Hakt | **Das Zeilenziel „unter 1 200" ist über Kommentare nicht erreichbar** — ohne jeden Kommentar stünden schon ~1 200 da (E-PK-51). **E-PK-17 sagte „genau drei Schritte"**, RW hat einen vierten angehängt (E-PK-55). **Der Zweig von 18 fasst dieselben Regeldokumente an** (`Technik.md`, `Pruefablauf.md`, `Rahmenplan.md`, `Backlog.md`); wer zweiter mergt, nimmt `main` nach `Pruefablauf.md` 5.3 auf. Der alte Inhalt dieser Zeile (PK-05, 23.09.2026) steht in der Historie (`docs/konzepte/Konzept-PK-Pruefkette.md@fc4253d`). |
 >
@@ -44,7 +44,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | PK-05 Tor umbauen | **erledigt 23.09.2026**, Live-Abnahme an PR #81 gefahren (P-PK-29 bis -31) | keine (nur `tools/`, `.github/`, `docs/`) | `f7f6802`, `24ad4bb`, `17fdd32`, `dba6dcd`, `5671d24` (Merge mit Bericht), `6d6d58c`, letzter mit Bericht | `bericht.py --selbstprobe` **6 → 13 Lagen / 0** · `auswahl.py --selbstprobe` **11 → 23 / 0** · Abdeckung **267 Dateien, 0 ohne Muster** · Stufe gegen 20.36.0: **„klein" → „neben"** · `kettenaufrufe` **13/13, 75 Aufrufe, 0 Befunde, 2 ungeprüft** · `uses:` **12 → 10**, alle an einer SHA · `pruefung.yml` **988 → 337** Zeilen (Ziel <250 verfehlt, abgenommen mit E-PK-49) · Tor-Schritt örtlich: ohne Bericht **rot**, falscher Baum **rot**, passend **grün** · **auf GitHub (PR #81):** mit Bericht **grün in 76 s**, ohne Bericht **rot**, Handlauf ohne Bericht **rot** · Gegenlesung von 05/3: **18 Punkte**, 2 „muss" · Merge von PR #80 auf dem neuen Weg: **18 Proben grün, Baum passt** (`5671d24`) · Nebenstufe gemessen: **36 Proben, 1 266 s, 9 rot** (F-PK-40) · Befunde **F-PK-30 bis -41** · **nach dem Merge (P-PK-32):** Push-Lauf auf `main` verweist, `Stufe 1` übersprungen |
 > | PK-06 Staging verschlanken | **gebaut 29.09.2026**, Abnahme nach dem Merge (P-PK-18, -19, -21, -37, -38) — Kommentare auf einen Satz je Falle, Platz für Nr. 234, F-PK-11; der Vorgriff (PR #72) hatte Gruppe, Zeitgrenze und Bilderlauf erledigt | keine (nur `.github/`, `CLAUDE.md`, `docs/`) | *wird beim Commit eingetragen* | Arbeitsläufe **2 286 → 1 346** Zeilen (Ziel <1 200 verfehlt, E-PK-51), Kommentar **1 087 → 147** · Vergleich YAML **107/83/23** Blätter und Rohzeilen **500/301/72** gleich, Gegenprobe rot · actionlint **0** · `uses:` **10/10** · Stufe 2 an Lauf 99: Staging **35 s** + Stufe 2 **3:16** · Gegenlesung **58 Sätze, 10 Befunde**, alle berichtigt · Befunde **F-PK-42 bis -48**, Backlog **Nr. 360** |
 > | PK-07 Abschluss | offen — **zuletzt**, nach PK-08 (E-PK-50) | | | |
-> | PK-08 App-Auslieferung mit Signatur | offen — **nach PK-06, vor PK-07** (E-PK-50), eigene Freigabe; Schlüssel entschieden (E-PK-53) | | | |
+> | PK-08 App-Auslieferung mit Signatur | **gebaut 29.09.2026** nach der Freigabe; Abnahme bei der Betreiberin (Z14, P-PK-39 bis -42) | keine (nur `.github/`, `tools/`, `docs/`, `CLAUDE.md`, `android/LIESMICH.md`) | *wird beim Commit eingetragen* | siehe Prüfdokument 5q |
 > | PK-M2 Erster Durchlauf der neuen Kette | offen (Betreiberin) | | | |
 
 ---
@@ -1286,6 +1286,36 @@ hat die Schlüsselfrage schon entschieden):
   SHAs, die bis PK-05 in `pruefung.yml` standen**; `uses:` 10 → 12,
   `CLAUDE.md` 3 zieht nach.
 
+#### Umsetzung (29.09.2026, nach der Freigabe des Auftraggebers)
+
+- **Zwei Jobs in `auslieferung.yml`:** `android` (Tag `android-v*`) und `uhr`
+  (Tag `uhr-v*`), beide in der Umgebung `produktion` hinter der
+  Pflichtfreigabe, je in eigener `concurrency`-Gruppe. Dazu der Schalter
+  `app_probelauf` (`aus`/`android`/`uhr`): bauen und signieren, nichts
+  ablegen. Der Staging-Job kennt ihn und läuft dann nicht.
+- **`tools/kette/appbau.sh`** baut und signiert. Android: Gradle baut
+  **unsigniert**, danach `zipalign` und `apksigner` mit dem
+  App-Signaturschlüssel — **E-PK-63, entschieden in der Umsetzung:** Z6
+  hatte eine im Lauf erzeugte `signatur.properties` vorgesehen, also
+  Signieren durch Gradle; dann läge der Schlüssel auf der Platte, während
+  fremder Build-Code läuft. So bekommt ihn nur `apksigner`. Geprüft:
+  Tag gegen Fassung (E-PK-60), genau ein Unterzeichner, Zertifikat gleich
+  `APK_ZERTIFIKAT_SHA256` **und** mit den Enden `078c…ad64`, beide APKs
+  gleich signiert, Paketname und `versionName`. Uhr: `monkeyc -e -r`
+  mit dem Entwicklerschlüssel; das Paket ist ein **7-Zip-Archiv**, kein
+  ZIP (F-PK-50).
+- **`tools/kette/apkablage.py`** legt ab: `.teil` hochladen, zurückholen,
+  SHA-256 vergleichen, umbenennen, **erst dann** ältere Fassungen desselben
+  Musters löschen (E-PK-59). Der FTPS-Weg ist der der Zielprobe
+  (`curl_ftp`, Maskierung — übernommen, nicht nachgebaut).
+- **Eine Variable neu:** `APK_ZERTIFIKAT_SHA256` (Umgebung `produktion`).
+  Im Repositorium stand das Zertifikat nur als `078c…ad64`; der volle Wert
+  ist öffentlich, gehört aber nicht geraten — Zuarbeit Z14.
+- **`uses:` 10 → 14 Zeilen** — zwei neue Aktionen (E-PK-62) und zwei
+  `actions/checkout` an der vorhandenen SHA. In Q-PK-15 stand „10 → 12";
+  das zählte Aktionen, der Prüfwert zählt Zeilen.
+- Befunde **F-PK-49 bis -52**; Messprotokoll im Prüfdokument 5q.
+
 ### PK-M2 — Erster Durchlauf der neuen Kette (Betreiberin)
 
 Ein echtes Paket einer anderen Instanz geht A → B → C → D: Prüfstand,
@@ -1372,6 +1402,10 @@ Abschnitt 6** — hier die Kurzfassung mit der Folge:
 | **F-PK-46** | PK-06 (Gegenlesung) | **Vier Schritte laufen nur auf Produktiv, nicht zwei** — Kopf von `ausliefern-lauf.yml` und `Technik.md` 6 zählten nur Tag und Tor. | Beide berichtigt mit PK-06. |
 | **F-PK-47** | PK-06 (Gegenlesung) | **Stufe 2 prüft `STAGING_PASS` nicht auf leer.** | Backlog Nr. 360. |
 | **F-PK-48** | PK-06 (Gegenlesung) | **Zwei stille Fallen ohne Satz:** das Kopieren nach `server/doku/` und `actions: read` beim Aufrufer; die Einordnung hatte den ersten Block als Begründung geführt. | Beide Sätze ergänzt. |
+| **F-PK-49** | PK-08 | **Die Kommentare in beiden `build.gradle.kts` nennen E-R45-9 („signiert wird außerhalb der CI").** Seit E-PK-53 stimmt das nicht mehr. | Stehen gelassen: Die Datei zu ändern hieße eine Android-Stufe ohne eine Zeile am APK. `android/LIESMICH.md` 5 sagt es richtig; der Kommentar geht mit dem nächsten Android-Paket (oder dem Kommentardurchgang in 12b). |
+| **F-PK-50** | PK-08 | **Das Connect-IQ-Paket ist ein 7-Zip-Archiv, kein ZIP.** Die erste Fassung von `appbau.sh` prüfte es mit `unzip -l` und hätte jedes echte Paket rot gemeldet. Gefunden am örtlichen Probebau (`file`: „7-zip archive data"). | Geprüft wird die 7z-Kennung am Dateianfang; drei Fälle in der Selbstprobe. |
+| **F-PK-51** | PK-08 | **Ohne eigene Gruppe blockierte ein App-Lauf, der auf die Freigabe wartet, seine Nachbarn:** Ein Android-Tag teilte die Gruppe mit den Web-Tags, ein App-Probelauf die mit Staging. | Eigene Gruppen `android` und `uhr`. |
+| **F-PK-52** | PK-08 | **`apksigner` legt ohne Schalter eine `.idsig` (v4-Signatur) daneben**, und nach einem roten Lauf blieb sie liegen. | `--v4-signing-enabled false`; die Seitenladung braucht sie nicht. |
 
 **Fragen an die Betreiberin aus PK-05:**
 
@@ -1405,6 +1439,7 @@ Abschnitt 6** — hier die Kurzfassung mit der Folge:
 | Z10 | **Q-PK-07 bis -09 beantworten** (Abschnitt 6): Schemaprobe als Pflichtprüfung, `CIQ_GERAETE_URL`, 337 Zeilen als Abnahme | mit dem PR von PK-05 | **erledigt 23.09.2026** — E-PK-47 bis -49 |
 | Z12 | **Ruleset „Main Protect": „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Required Checks eintragen** (E-PK-47). Die Namen genau so, samt Leerzeichen; ein anders geschriebener Name hängt die Pflicht an nichts. **Nicht** `Schema gegen ${{ matrix.db.name }}` wählen, auch wenn die Auswahlliste ihn anbietet — so heißt der Job nur, wenn er übersprungen wurde (F-PK-41) | nach dem Merge von PK-05 | offen |
 | Z13 | ~~Q-PK-10 beantworten~~ (beantwortet 29.09.2026, E-PK-57); nach dem Merge von PK-06 **P-PK-37** fahren (Stufe 2 mit falschem `STAGING_PASS`) | nach dem Merge von PK-06 | offen (P-PK-37) |
+| Z14 | **`APK_ZERTIFIKAT_SHA256`** als Variable der Umgebung `produktion` eintragen — der volle SHA-256 des App-Signaturzertifikats (`078c…ad64`), zu finden in der Play Console unter App-Integrität → App-Signatur. Danach **P-PK-39 bis -42** | vor dem ersten Tag `android-v…` | offen |
 | Z11 | **Nach einem fremden Merge nicht „Update branch" drücken** (E-PK-42): örtlich mergen und den Prüfstand fahren lassen, `Pruefablauf.md` 5.3 | ab dem Merge von PK-05 | Hinweis |
 
 ---

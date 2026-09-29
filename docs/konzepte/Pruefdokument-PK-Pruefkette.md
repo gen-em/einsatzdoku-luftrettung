@@ -6,6 +6,20 @@ und eine abhakbare Prüfliste. Angelegt mit PK-M1; fortgeschrieben mit PK-01.
 
 ## 0. Was nicht geprüft werden konnte
 
+**Stand nach PK-08 (29.09.2026).** Die App-Auslieferung ist örtlich ganz
+durchgefahren — mit **Wegwerfschlüsseln** und gegen einen **örtlichen**
+FTPS-Server (5q). Was nur der echte Lauf zeigt, steht in den ersten sechs
+Zeilen; darunter der Stand nach PK-06.
+
+| Was | Warum nicht | Wann dann |
+|---|---|---|
+| **PK-08: Der echte App-Signaturschlüssel** | Er liegt nur in der Umgebung `produktion` (E-PK-23); die Arbeitsumgebung sieht ihn nicht und soll es nicht. Geprüft ist der Weg mit einem Wegwerfschlüssel: gut signiert grün, **mit falschem Schlüssel rot** („Das Paket wäre eine andere App"). Ob das Geheimnis wirklich `078c…ad64` trägt, zeigt erst der Probelauf. | P-PK-39 |
+| **PK-08: `APK_ZERTIFIKAT_SHA256`** | Den vollen Wert gibt es im Repositorium nicht, nur die Enden; die Variable trägt die Betreiberin ein. Ohne sie ist der Android-Lauf rot, bevor gebaut wird. | Z14, P-PK-39 |
+| **PK-08: Der Ablagepfad auf Produktiv** | Geprüft gegen einen örtlichen FTPS-Server (pyftpdlib 2.2.0, TLS auf Steuer- und Datenkanal Pflicht) — nicht gegen den Hoster. `FTP_ZIELPFAD` + `apk` ist dieselbe Rechnung wie beim Abgleich; ob der Hoster `RNFR`/`RNTO` so beantwortet wie der Prüfserver, zeigt erst der erste Tag. Der Probelauf listet den echten Ordner, ohne zu schreiben. | P-PK-39, P-PK-41 |
+| **PK-08: Die Jobs auf einem GitHub-Läufer** | `auslieferung.yml` läuft nur beim Tag oder von Hand. Örtlich belegt: actionlint 0, `kettenaufrufe` ohne Widerspruch, beide Wege von `appbau.sh` mit denselben Befehlen wie im Job. Ob der Läufer passende Build-Tools (`apksigner`, `zipalign -P`, `aapt2`) und für Garmin genug Platz hat, zeigt erst der Probelauf. | P-PK-39, P-PK-40 |
+| **PK-08: Update auf dem Gerät** | Dass die Seitenladungs-Fassung eine installierte App **ohne Neuinstallation** ersetzt, belegt nur ein Gerät. | P-PK-41 |
+| **PK-08: Das Garmin-Paket im Store** | Ob der Connect-IQ-Store das Paket mit dem neuen Entwicklerschlüssel annimmt, zeigt nur der Store. | P-PK-42 |
+
 **Stand nach PK-06 (29.09.2026).** PK-06 ändert in den drei Arbeitsläufen
 der Auslieferung nur Kommentare — örtlich belegt über zwei unabhängige
 Vergleiche (5p). Was nur ein echter Lauf zeigt, steht in den ersten fünf
@@ -84,6 +98,10 @@ dem PR. Die sechs PK-05-Zeilen stehen oben; darunter der Stand nach PK-03.
 | P-PK-35 | Nach einem fremden Merge: der Weg aus `Pruefablauf.md` 5.3 (E-PK-42) | wenn ein anderer PR vor diesem gemergt wird: örtlich `git merge --no-commit origin/main`, Prüfstand, Merge-Commit mit Bericht | Stufe 1 grün auf dem Merge-Commit | rot mit „Baum-Hash passt nicht" — dann misst der Prüfstand im Merge-Zustand nicht den Baum, den der Commit bekommt | **örtlich erledigt 23.09.2026** — PR #80 wurde während PK-05 gemergt; Merge-Commit `5671d24` mit Bericht, **Baum `b12426a` = Baum des Commits**, 18 Proben grün in 706 s, Tor-Schritt örtlich grün. Dabei gefunden: F-PK-39. Auf GitHub belegt es P-PK-29 |
 | P-PK-37 | Stufe 2 mit falschem `STAGING_PASS` ist rot, schnell und mit Grund (Abnahme PK-06) | Umgebung `staging` → Geheimnis `STAGING_PASS` vorübergehend auf einen falschen Wert, Actions → „Auslieferung" auf `main` neu starten (*Re-run*), danach den Wert zurücksetzen und noch einmal starten | Job „Prüfung Stufe 2" rot **innerhalb einer Minute** nach seinem Start, der erste rote Schritt ist „Kreislauf edbak gegen Staging" und nennt die gescheiterte Anmeldung | rot erst nach Minuten (dann hängt er irgendwo), rot mit einer Playwright- oder Python-Meldung ohne Wort zur Anmeldung, oder gar grün | **offen** — Betreiberin |
 | P-PK-38 | Die Integritätswache springt nach einem Auslieferungslauf der gekürzten Fassung an (PK-06) | nach dem Merge von PK-06: Actions → „Integritaetswache", Ereignis `workflow_run` zum Lauf von `auslieferung.yml` | ein Lauf der Wache, ausgelöst **durch** den Auslieferungslauf, grün (Vergleich gegen den Zeiger) | kein Lauf mit Ereignis `workflow_run` — dann hängt der Name nicht mehr | **offen** — nach dem Merge |
+| P-PK-39 | Android-Probelauf mit dem echten Schlüssel (PK-08) | nach Z14: Actions → „Auslieferung" → *Run workflow* auf `main`, `app_probelauf: android`, Freigabe erteilen | Job „Android-Auslieferung" grün; im Protokoll zweimal `Zertifikat 078c…ad64`; in der Zusammenfassung zwei Tabellen „PROBELAUF, nichts abgelegt" mit Datei, SHA-256 und dem, was gelöscht würde; **kein** Job `staging` im Lauf | rot „trägt Zertifikat … erwartet …" (dann liegt ein anderer Schlüssel im Geheimnis oder die Variable ist falsch) · rot an einer fehlenden Variable · ein Job `staging` läuft mit (dann ist dessen Bedingung kaputt) | **offen** — Betreiberin |
+| P-PK-40 | Uhr-Probelauf (PK-08) | Actions → „Auslieferung" → *Run workflow* auf `main`, `app_probelauf: uhr`, Freigabe erteilen | Job „Uhr-Auslieferung (Garmin)" grün; Artefakt `nadoku-main` mit `nadoku-3.1.0.iq` (rund 6,6 MB) zum Herunterladen | rot beim SDK-Aufbau (Gerätedateien, `CIQ_GERAETE_URL`) · rot „kein Connect-IQ-Paket" · kein Artefakt | **offen** — Betreiberin |
+| P-PK-41 | Erster Android-Tag (PK-08) | Tag `android-v0.17.0` auf `main` setzen und pushen, Freigabe erteilen; danach Geräte-Reiter (Einstellungen → Geräte, Fach „Ohne Play Store") ansehen; auf dem S24 die Handy-Datei über eine **vorhandene** Installation installieren | Lauf grün; im Fach genau `nadoku-0.17.0.apk` und `nadoku-uhr-0.17.0.apk`, jede mit **derselben SHA-256** wie in der Zusammenfassung des Laufs; ältere Fassungen sind fort; Android installiert **als Update**, die App behält ihre Kopplung | eine SHA-256 weicht ab · eine ältere Fassung liegt noch da (dann meldet der Lauf rot „ließen sich nicht löschen") · Android verlangt Deinstallation oder meldet einen Paketkonflikt (anderes Zertifikat) | **offen** — Betreiberin |
+| P-PK-42 | Erstes Garmin-Paket (PK-08) | Tag `uhr-v3.1.0` setzen und pushen, Freigabe erteilen, Artefakt herunterladen, im Connect-IQ-Entwicklerportal hochladen | der Store nimmt das Paket an; die App erscheint mit Fassung 3.1.0 | der Store lehnt den Schlüssel ab (dann gehört das Paket zu einem anderen Entwicklerschlüssel als ein früherer Upload) | **offen** — Betreiberin |
 | P-PK-36 | Die Schemaprobe hält einen Merge auf (E-PK-47, Z12) | nach Z12: in „Main Protect" die Required Checks ansehen; beim nächsten PR die Merge-Schaltfläche, solange „Schema gegen …" läuft | beide Namen stehen genau so im Ruleset — **„Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6", nicht `Schema gegen ${{ matrix.db.name }}`** (F-PK-41); der Merge ist gesperrt, bis beide grün sind | der Merge ist frei, während ein Schemalauf noch läuft oder rot ist — dann steht ein Name anders im Ruleset als im Lauf; oder ein PR wartet ewig auf „Expected" — dann steht der unaufgelöste Name drin | **offen** — nach Z12 |
 
 ## 2. Messprotokoll P-PK-01 (21.09.2026)
@@ -1616,6 +1634,87 @@ Rohzeilen 500 / 301 / 72 gleich, actionlint 0, `uses:` 10 von 10, keine
 Kommentarzeile mit einem einzelnen Wort.
 
 
+## 5q. Messprotokoll PK-08 — App-Auslieferung mit Signatur (29.09.2026)
+
+Nach der Freigabe des Auftraggebers („Go", 29.09.2026). Arbeitsumgebung mit
+den Ausbaustufen `android` (Build-Tools 36.0.0) und `uhr` (SDK 9.2.0, 173
+Gerätedateien) — beide mit `aufbauen.sh` rc 0.
+
+### Die Selbstproben
+
+| Werkzeug | erfüllt / nicht | Gegenproben |
+|---|---|---|
+| `tools/kette/apkablage.py --selbstprobe` | **25 / 0** | Reihenfolge (löschen erst nach Umbenennen, umbenennen erst nach Vergleich), kaputte Rückholung, gescheitertes Hochladen, gescheitertes Löschen, Probelauf, falsche Art, Maskierung — gegen eine Attrappe, die über den Ordner Buch führt |
+| `tools/kette/appbau.sh --selbstprobe` | **18 / 0** | Riegel `signatur.properties` ausgebaut → **1 rot**; Prüfung der Zertifikatsenden ausgebaut → **1 rot** |
+
+Beim Schärfen der Selbstprobe fiel meine eigene Probe unter `pipefail`: Die
+Pipe `( … ) | grep -q` trug den Rückgabewert 1 des Riegels, auch wenn `grep`
+traf — dieselbe Falle, die die Kette in ihren Kommentaren beschreibt. Die
+Ausgabe wird jetzt ohne Pipe gelesen.
+
+### Android, örtlich mit Wegwerfschlüssel
+
+Gradle `:handy:assembleRelease :uhr:assembleRelease`: **BUILD SUCCESSFUL in
+4:33 min**, unsigniert 9 199 558 und 22 743 506 Byte. Wegwerfschlüssel RSA 2048,
+Zertifikat `8c36…ddec`.
+
+| Lauf | Ergebnis |
+|---|---|
+| `appbau.sh android 0.17.0` (echtes Skript) | **rot**, rc 1: „trägt Zertifikat 8c36…; erwartet … `078c…ad64`. Das Paket wäre eine andere App." — genau die Lage „falscher Schlüssel im Geheimnis" |
+| `appbau.sh android 0.18.0` | **rot vor dem Bau**: „Der Tag sagt 0.18.0, android/version.properties sagt 0.17.0" |
+| Kopie mit den Enden des Wegwerfschlüssels, `0.17.0` und `datei` | **grün**: `nadoku-0.17.0.apk` (9 221 617 Byte) und `nadoku-uhr-0.17.0.apk` (22 768 093 Byte), beide dasselbe Zertifikat, Paket `org.genem.nadoku`, Fassung 0.17.0; `apksigner verify`: v2 und v3 bestätigt |
+
+Zweimal gebaut, **SHA-256 beide Male gleich** (`cc1d…6f5c`, `713b…6254`): Der
+Bau ist bei gleicher Eingabe reproduzierbar. Beim ersten Lauf lag eine
+`.idsig` daneben (F-PK-52), beim zweiten nicht mehr.
+
+### Garmin, örtlich mit Wegwerfschlüssel
+
+`appbau.sh uhr 3.1.0`: **grün in 3:31 min**, `nadoku-3.1.0.iq` 6 623 795 Byte,
+165 Gerätevarianten gebaut. Das Paket ist ein **7-Zip-Archiv** (F-PK-50) —
+die erste Fassung der Prüfung (`unzip -l`) hätte es rot gemeldet.
+
+### Die Ablage gegen einen echten FTPS-Server
+
+pyftpdlib 2.2.0 mit pyOpenSSL 26.4.0 auf `localhost:2121`, TLS auf Steuer- und
+Datenkanal Pflicht, eigenes Zertifikat über `CURL_CA_BUNDLE`. Im Ordner
+vorher: `nadoku-0.16.0.apk`, `nadoku-uhr-0.16.0.apk`,
+`nadoku-0.15.0.apk.teil`, `liesmich.txt`.
+
+| Lauf | danach im Ordner | rc |
+|---|---|---|
+| Probelauf handy | unverändert; „würde löschen: nadoku-0.16.0.apk" | 0 |
+| Ablage handy | `liesmich.txt`, `nadoku-0.17.0.apk`, `nadoku-uhr-0.16.0.apk` — alte Handy-Fassung und `.teil`-Rest fort, Uhr und fremde Datei stehen | 0 |
+| Ablage uhr | `liesmich.txt`, `nadoku-0.17.0.apk`, `nadoku-uhr-0.17.0.apk` | 0 |
+| derselbe Tag noch einmal | eine `nadoku-0.17.0.apk`, die neue | 0 |
+| Ordner `apk/` fehlt (Zielpfad `/neu`) | Probelauf: „leer oder fehlt"; Ablage legt ihn an | 0 / 0 |
+| falsches Passwort | unverändert; „Hochladen gescheitert (curl 67) … NICHTS gelöscht" | **1** |
+
+Auf dem Server gleichen die SHA-256 beider Dateien den gebauten Byte für Byte.
+Die Zusammenfassung (`--zusammenfassung`) schreibt eine Tabelle mit Datei,
+Größe, SHA-256 in Vierergruppen und den gelöschten Namen.
+
+### Die übrigen Riegel
+
+- **actionlint 1.7.7:** 0 Befunde (ohne Shell-Prüfung; `shellcheck` fehlt).
+- **`uses:` an einer SHA:** **14 von 14** (vorher 10): zwei Aktionen neu
+  (E-PK-62), zwei `actions/checkout` an der vorhandenen SHA. Q-PK-15 hatte
+  „10 → 12" gesagt und dabei Aktionen gezählt; der Prüfwert zählt Zeilen.
+- **`kettenaufrufe`:** kein Aufruf widerspricht der Schnittstelle — die
+  neuen Aufrufe von `appbau.sh` und `apkablage.py` eingeschlossen.
+- **`tools/steuerung/`:** 21 Decken, 0 gerissen.
+- **Der erste Prüfstandlauf war rot, 2 von 28** (393 s, `android-bau` grün
+  in 329 s): **`bestand`** — `tools/kette/LIESMICH.md` hatte 55 Zeilen,
+  erlaubt sind 40, und nach dem Kürzen stand „Anlass:" nicht mehr am
+  Zeilenanfang; **`textprobe`** — vier neue Stellen in `Technik.md`, die
+  „Garmin" und „Connect IQ" nennen. Die LIESMICH ist auf 40 Zeilen gebracht;
+  für die Garmin-Stellen steht eine begründete Ausnahme
+  (`technik-appauslieferung-garmin`, Klasse G wie
+  `technik-abgrenzung-beide-uhren`): Wo zwei Uhren mit zwei Tags
+  nebeneinanderstehen, wäre „Uhr" allein zweideutig. Danach 0 und 0.
+- **Der Prüfstand** läuft zuletzt; sein Bericht steht am Commit.
+
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in
@@ -1700,6 +1799,10 @@ veröffentlichtes Kennwort.
 | **F-PK-46** | **Die gemeinsame Schrittfolge trennt vier Schritte nach der Umgebung, nicht zwei.** Kopf von `ausliefern-lauf.yml` (alt wie neu) und `Technik.md` 6 zählten nur Tag-Vergleich und Tor; Adressvergleich und „Fassung nach dem Abgleich" laufen ebenfalls nur auf Produktiv. Gefunden von der Gegenlesung. | Beide Stellen berichtigt mit PK-06. |
 | **F-PK-47** | **Stufe 2 prüft `STAGING_PASS` nicht auf leer**, anders als die vier übrigen Werte. | Backlog **Nr. 360**; PK-06 ändert keinen Befehl. |
 | **F-PK-48** | **Zwei stille Fallen hatten keinen oder einen falsch eingeordneten Satz:** das Kopieren nach `server/doku/` (ohne es löscht der Abgleich die Hilfe) und `actions: read` beim Aufrufer (ein aufgerufener Lauf bekommt nie mehr Rechte). Die lesende Einordnung hatte den ersten Block als Begründung geführt — ein Fehler der Fächerung, den erst die Gegenlesung fand. | Beide Sätze ergänzt. |
+| **F-PK-49** | **Beide `build.gradle.kts` nennen in ihrem Kommentar noch E-R45-9** („signiert wird außerhalb der CI"). | Stehen gelassen — eine Änderung wäre eine Android-Stufe ohne eine Zeile am APK; `android/LIESMICH.md` 5 sagt es richtig. |
+| **F-PK-50** | **Das Connect-IQ-Paket ist ein 7-Zip-Archiv, kein ZIP**; die erste Prüfung mit `unzip -l` hätte jedes echte Paket rot gemeldet. | 7z-Kennung, drei Fälle in der Selbstprobe. |
+| **F-PK-51** | **Ein App-Lauf, der auf die Freigabe wartet, hätte seine Gruppe belegt** — Web-Tags oder Staging hätten gewartet. | Eigene Gruppen `android` und `uhr`. |
+| **F-PK-52** | **`apksigner` legt eine `.idsig` (v4) daneben**, die nach einem roten Lauf liegen blieb. | `--v4-signing-enabled false`. |
 
 ## 7. Entscheidungen der Umsetzung
 
@@ -1708,6 +1811,7 @@ veröffentlichtes Kennwort.
 | **E-PK-50 bis -55** | **Aus dem Beginn von PK-06 (29.09.2026):** Reihe PK-06 → PK-08 → PK-07 (-50), Zeilenziel verfehlt und mit Zahl abgenommen (-51), Fächerung 06–08 nur lesend (-52), die Kette signiert mit dem App-Signaturschlüssel und E-PK-23 ersetzt E-S4-16 (-53), kein Aktions-Cache (-54), die Rückwegprobe bleibt (-55). -50 bis -53 vom Auftraggeber entschieden, -54 und -55 mit dem Plan freigegeben. | Wortlaut und Gründe: Konzept, Abschnitt 4, PK-06 „Beginn". |
 | **E-PK-56** | **Der Platz für Nr. 234 ist ein Kommentar, keine Zeile in der Zusammenfassung.** Der Plan hatte beides vorgesehen. | Eine Zeile in der Zusammenfassung hätte einen `run:`-Block geändert oder einen Schritt gebraucht, der nichts misst; so bleibt die Zusage „kein Befehl ändert sich" mit zwei Vergleichen belegbar. `Pruefablauf.md` 8 beschreibt den Platz so. |
 | **E-PK-57 bis -62** | **Am 29.09.2026 vom Auftraggeber beantwortet:** Q-PK-10 → das Demo-Konto bleibt auf Staging, F-PK-04 ist dort aufgehoben (-57); Q-PK-11 → beide APKs, Handy und Wear OS, nach `server/apk/` (-58); Q-PK-12 → **nur die neueste Fassung bleibt liegen** — gegen die Empfehlung der Instanz (-59); Q-PK-13 → Tag gegen Fassung, rot vor dem Bau (-60); Q-PK-14 → Garmin-Paket nur als Artefakt (-61); Q-PK-15 → `setup-java` und `upload-artifact` an den alten SHAs, `uses:` 10 → 12 (-62). | Wortlaut, Empfehlung und Preis: Konzept, Abschnitt 4, PK-08, und Abschnitt 6. |
+| **E-PK-63** | **Android signiert `apksigner` nach dem Bau, nicht Gradle.** Z6 hatte eine im Lauf erzeugte `signatur.properties` vorgesehen. | Dann läge der Schlüssel auf der Platte, während Gradle und seine Plugins laufen — genau der fremde Code, gegen den E-PK-23 die Sandbox ausschließt. So sieht ihn nur `apksigner`, nach dem Bau; eine liegende `signatur.properties` macht den Lauf rot. |
 | **E-PK-40** | **Die Android-Zeile aus 5b bleibt stehen; Versionsstufe, Changelog-Zeile und Emulatorlauf werden nicht in diesem PR nachgezogen, sondern als Befund festgehalten.** Angewiesen vom Auftraggeber am 23.09.2026. | Die Instanz hatte drei Wege vorgelegt und das Nachziehen im selben PR empfohlen; der Auftraggeber hat den dritten gewählt. **Der Preis ist benannt und angenommen** (F-PK-29, Nr. 284): Zwei Stände des Handy-Moduls tragen dieselbe Nummer `0.15.1`, und ein APK aus diesem Stand ist am Versionsnamen nicht von einem APK des vorherigen zu unterscheiden. Dafür bleibt der PR bei einem Auslieferungsstrang — Web — statt zwei, und das Android-Paket zieht Nummer, Kopfabsatz, Changelog und Emulatorlauf in einem Zug nach, statt eine Korrekturnummer für eine einzelne Zeile zu verbrauchen. |
 | **E-PK-33** | **Das Muster `station` fällt aus der Sperrliste**, zusammen mit der Ausnahme, die PK-01 dafür angelegt hatte. Angewiesen vom Auftraggeber am 21.09.2026. | Konzept PK gliedert die Prüfkette in fünf „Stationen" — Haltepunkte auf dem Weg zum Produktivserver, nicht Standorte eines Rettungsmittels. Eine Ausnahme je Datei hätte das Wort für jedes neue Dokument neu begründen müssen. **Der Preis, benannt:** „Station" im Sinn des Luftrettungs-Standorts fällt jetzt durch **kein** Muster mehr; `basis` deckt den Geschwisterbegriff weiter ab. Sperrliste 24 → **23** Muster, Ausnahmen 100 → **99** Regeln; Lauf danach **0/0/0**, 99 von 99 Regeln gegriffen. |
 | **E-PK-32** | **Das Modul `plattform` nimmt Docker für alle vier Fassungen** statt des in E-PK-30 vorgesehenen Umwegs über Ubuntu-Pakete unter `/opt`. | E-PK-30 begründet den Umweg mit der Drosselung von Docker Hub. Die tritt bei vier Abbildern nicht ein (F-PK-16). Der Umweg wäre aufwendiger, zerbrechlicher und löste ein Problem, das es nicht gibt. **Gemessen: `alles` in 29,7 s, 4 × 19/0.** **Bestätigt vom Auftraggeber am 21.09.2026.** |

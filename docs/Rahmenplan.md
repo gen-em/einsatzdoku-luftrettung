@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 147 (29.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 148 (29.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `fc4253d`, gemessen 29.09.2026): Web 21.6.1 ·
 Uhr 3.1.0 · Android 0.17.0.
-**Läuft:** die Umsetzung von 18 auf `claude/pr95-stufe-18-ztactt`; daneben PK-06 auf `claude/beautiful-dirac-1tc4d0` (Kette, E-PK-50) — Abschnitt 3.
-**Als Nächstes:** der PR der Umsetzung 18; bei PK die Reihe PK-06 → PK-08 → PK-07 — Reihenfolge in Abschnitt 3.
+**Läuft:** die Umsetzung von 18 auf `claude/pr95-stufe-18-ztactt`; daneben PK auf `claude/beautiful-dirac-1tc4d0` (Kette; PK-06 und PK-08 gebaut, PK-07 folgt) — Abschnitt 3.
+**Als Nächstes:** der PR der Umsetzung 18; bei PK der Abschluss PK-07 (E-PK-50) — Reihenfolge in Abschnitt 3.
 **Offene PRs:** keine (Konzept-PR 18 gemergt, PR #95).
-**Fällig bei der Betreiberin:** 31 Posten (Abschnitt 6.1). **`update.php`:** auf Staging fällig (#94 gemergt am 28.09.2026, Migration aus Web 21.3.0), auf Produktiv mit dem Tag (6.1).
+**Fällig bei der Betreiberin:** 32 Posten (Abschnitt 6.1). **`update.php`:** auf Staging fällig (#94 gemergt am 28.09.2026, Migration aus Web 21.3.0), auf Produktiv mit dem Tag (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -129,7 +129,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzt.
 | 18 | **Sicherheitsrunde II** | Sitzungsbindung (Nr. 242), „Gerät merken" mit frischem Code, Passkeys als Zweitfaktor (Nr. 350), Serverschlüssel wechseln (Nr. 247), Notzugang der einzigen BetreiberIn (Nr. 249), Betreiber-Rückfrage (Nr. 233), `ingest.php`-Deadlock (Nr. 210), Proof-of-Work (Nr. 228); dazu Nr. 232, 251 | Merge von 17 (erfüllt 28.09.2026, PR #94) | `docs/konzepte/Konzept-SR-Sicherheitsrunde-II.md` (Kürzel SR, nach K1; Konzept Fable, Umsetzung Opus) | freigegeben — Konzept am 27.09.2026 freigegeben (E-SR-27), Nachfassung SR-09 Passkeys (E-SR-29, -35, -36); Konzept-PR seit 28.09.2026 offen (`claude/gallant-mccarthy-yacnzk`, Fable); Umsetzung nach dem Merge auf eigenem Zweig (Opus) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 | Kette II | **Härtung der Auslieferungskette** | Zeiger-Zweig und Integritätswache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Abbruchverhalten, Hotfix-Weg; M1 erster grüner Produktivlauf, M2 Probe-Hotfix | — | `docs/konzepte/Konzept-Kette-Haertung.md` (E-KH-01 bis -30) | gemergt 21.09.2026 (PR #65, #66, #68); **M1 erreicht 21.09.2026** (`web-v20.26.3`, Lauf 35654132667); M2 und der Abschluss sind an PK übergeben (PK-07); Zuarbeiten in 6.1 |
-| PK | **Prüfkette — jede Prüfung einmal, an ihrer Stelle** | Arbeitsumgebung als Station B mit Prüfstand und Bericht, Stufe 1 liest den Bericht gegen, Staging verschlanken, App-Auslieferung mit Signatur; PK-M2 erster Durchlauf der neuen Kette | — | `docs/konzepte/Konzept-PK-Pruefkette.md` (E-PK-01 bis -49) | Umsetzung — PK-01 bis PK-05 gemergt (23.09.2026); **PK-06 in Arbeit** seit 29.09.2026 auf `claude/beautiful-dirac-1tc4d0`; Reihe PK-06 → PK-08 → PK-07 (E-PK-50), dann PK-M2 |
+| PK | **Prüfkette — jede Prüfung einmal, an ihrer Stelle** | Arbeitsumgebung als Station B mit Prüfstand und Bericht, Stufe 1 liest den Bericht gegen, Staging verschlanken, App-Auslieferung mit Signatur; PK-M2 erster Durchlauf der neuen Kette | — | `docs/konzepte/Konzept-PK-Pruefkette.md` (E-PK-01 bis -49) | Umsetzung — PK-01 bis PK-05 gemergt (23.09.2026); PK-06 und PK-08 gebaut 29.09.2026 auf `claude/beautiful-dirac-1tc4d0`; zuletzt PK-07 (E-PK-50), dann PK-M2 |
 
 ### Schritt 12 — P6, Stück 1: das Bedrohungsmodell
 
@@ -215,6 +215,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
+| **`APK_ZERTIFIKAT_SHA256`** als Variable der Umgebung `produktion` (voller SHA-256 von `078c…ad64`, Play Console → App-Integrität); dann je ein App-Probelauf, dann die ersten Tags | PK-08 | 29.09.2026 | `Technik.md` 4.97g; P-PK-39 bis -42 |
 | **`app.umgebung` in die `config.php` von Staging** (`name` Staging, `farbe` rot) — nie auf Produktiv; danach Betrieb → Status, Zeile „Umgebung" | 10c AP1 (E-P5c-05) | 23.09.2026 | Runbook „Eine Testanlage kennzeichnen"; P-P5c-01 |
 | **Tag `web-v21.1.3` setzen** — die Auslieferung von 10c auf Produktiv, nach `STAGING_TOTP` und `update.php` auf Staging; danach `update.php` auf Produktiv | 10c | 26.09.2026 | `Technik.md` 6; Prüfdokument P5c |
 | **`betrieb.health_token`** in die `config.php` beider Anlagen, das Monitoring auf `/api/health.php?token=…` richten — ohne Eintrag antwortet der Endpunkt jedem mit 403 | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
@@ -379,7 +380,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R62 | Konzeptablage `docs/konzepte/` mit Lebenszyklus: Statusblock und Push je Paket; Erledigt-Zeile und Löschung nach der Freigabe; Prüfdokument bis zur Prüfliste | gilt; Regel in 2.2; Erledigt-Zeile seit Fassung 125 als Tabellenzeile, Prüfzahlen im Prüfdokument (E-SD-10) | Archiv-2 7 |
 | R63 | Android-App kennt nur `nadoku.gen-em.org`; Adressfeld, Adress-QR und Adresswahl entfallen; Handy-App „Gen-EM NAdoku", Wear-Uhr „NAdoku" | erledigt (Android 0.11.0, Nr. 84 bis 86) | Archiv-2 7 |
 | R64 | Herkunft und Gerät je Einsatz: Momentaufnahme an `missions` und `rest_segments`, `origin` mit sechs Werten, sichtbar im Dashboard | erledigt: Speicherung Web 14.0.0 (Nutzlast 9), Dashboard Web 20.47.0 (10c AP7); die Kachel Nr. 88 ist am 12.09.2026 verworfen | Archiv-2 7 |
-| R65 | Store-Verteilung in zwei Stufen: Organisationskonto (D-U-N-S), interner Test-Track ab Schritt 6, Produktionsfreigabe als Welle 1; Play App Signing | gilt; Organisationskonto und Play App Signing erledigt 26.09.2026, Track mit Schritt 6 Teil C, Produktion im Betriebsübergang | `Konzept-Planung-v1.0.md`, E-PV-1 |
+| R65 | Store-Verteilung in zwei Stufen: Organisationskonto (D-U-N-S), interner Test-Track ab Schritt 6, Produktionsfreigabe als Welle 1; Play App Signing | gilt; Konto und Play App Signing 26.09.2026, Track mit 6 Teil C, Produktion im Betriebsübergang; Seitenladung signiert die Kette (E-PK-53) | `Konzept-Planung-v1.0.md`, E-PV-1 |
 | R66 | Update-Weg ab v1.0: keine Selbstprüfung, kein Selbst-Update, Produktion nur auf Auslösung; Register beginnt bei v1.0 neu | gilt; Ausgeführte seit Web 20.39.0 im Protokoll (Q-P5c-53); `git pull` auf dem Server verworfen (E-KH-02); Neubeginn in P8 | `Konzept-Planung-v1.0.md`, E-PV-2 |
 | R67 | Auslieferungskette: `main` → Staging, Tag → Produktion nach Pflichtfreigabe und Backup-Tor; Prüftor in Stufen; Rollback = voriger Tag | gilt; gebaut P5a, gehärtet Kette II (E-KH-01 bis -30), erster grüner Produktivlauf M1 am 21.09.2026 (`web-v20.26.3`); Rest bei PK | `Konzept-Planung-v1.0.md`, E-PV-3; Konzept Kette II |
 | R68 | Ein Repositorium, frisch, öffentlich: `gen-em/nadoku` (AGPL-3.0) ohne Historie; Altrepositorium archiviert und verweist | gilt; Umzug in P8 mit dem Neuaufsetzen | `Konzept-Planung-v1.0.md`, E-PV-4 |
