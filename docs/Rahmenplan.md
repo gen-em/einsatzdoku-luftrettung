@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 145 (28.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 147 (29.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `f4ac705`, gemessen 28.09.2026): Web 21.6.1 ·
+**Stand `origin/main`** (Commit `fc4253d`, gemessen 29.09.2026): Web 21.6.1 ·
 Uhr 3.1.0 · Android 0.17.0.
-**Läuft:** auf `claude/gallant-mccarthy-yacnzk` der Konzept-PR zu Schritt 18 (Konzept SR, freigegeben; nur `docs/`) — Abschnitt 3.
-**Als Nächstes:** Merge des Konzept-PR 18 und `update.php` auf Staging (#94), dann die Umsetzung von 18 auf eigenem Zweig von `main` (Opus, neun Pakete) — Reihenfolge in Abschnitt 3.
-**Offene PRs:** der Konzept-PR zu 18 (dieser Zweig, `docs/` allein).
+**Läuft:** die Umsetzung von 18 auf `claude/pr95-stufe-18-ztactt`; daneben PK-06 auf `claude/beautiful-dirac-1tc4d0` (Kette, E-PK-50) — Abschnitt 3.
+**Als Nächstes:** der PR der Umsetzung 18; bei PK die Reihe PK-06 → PK-08 → PK-07 — Reihenfolge in Abschnitt 3.
+**Offene PRs:** keine (Konzept-PR 18 gemergt, PR #95).
 **Fällig bei der Betreiberin:** 31 Posten (Abschnitt 6.1). **`update.php`:** auf Staging fällig (#94 gemergt am 28.09.2026, Migration aus Web 21.3.0), auf Produktiv mit dem Tag (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -106,8 +106,8 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
 **Die Reihenfolge der offenen Schritte ist:** **18** → 12 → 12a → 12b →
 13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
-der Reihe: **PK-06 bis PK-08** (die Kette gehört PK, dort endet auch
-Kette II), die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
+der Reihe: **PK-06, PK-08, PK-07** in dieser Folge (die Kette gehört PK,
+dort endet auch Kette II; E-PK-50), die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** 18 vor 12, wie 17 davor, damit der Review aufgeräumte
 und gehärtete Seiten liest. P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12) vor S11 (12a)**, weil es dessen Entwurfsfragen
@@ -129,7 +129,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzt.
 | 18 | **Sicherheitsrunde II** | Sitzungsbindung (Nr. 242), „Gerät merken" mit frischem Code, Passkeys als Zweitfaktor (Nr. 350), Serverschlüssel wechseln (Nr. 247), Notzugang der einzigen BetreiberIn (Nr. 249), Betreiber-Rückfrage (Nr. 233), `ingest.php`-Deadlock (Nr. 210), Proof-of-Work (Nr. 228); dazu Nr. 232, 251 | Merge von 17 (erfüllt 28.09.2026, PR #94) | `docs/konzepte/Konzept-SR-Sicherheitsrunde-II.md` (Kürzel SR, nach K1; Konzept Fable, Umsetzung Opus) | freigegeben — Konzept am 27.09.2026 freigegeben (E-SR-27), Nachfassung SR-09 Passkeys (E-SR-29, -35, -36); Konzept-PR seit 28.09.2026 offen (`claude/gallant-mccarthy-yacnzk`, Fable); Umsetzung nach dem Merge auf eigenem Zweig (Opus) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 | Kette II | **Härtung der Auslieferungskette** | Zeiger-Zweig und Integritätswache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Abbruchverhalten, Hotfix-Weg; M1 erster grüner Produktivlauf, M2 Probe-Hotfix | — | `docs/konzepte/Konzept-Kette-Haertung.md` (E-KH-01 bis -30) | gemergt 21.09.2026 (PR #65, #66, #68); **M1 erreicht 21.09.2026** (`web-v20.26.3`, Lauf 35654132667); M2 und der Abschluss sind an PK übergeben (PK-07); Zuarbeiten in 6.1 |
-| PK | **Prüfkette — jede Prüfung einmal, an ihrer Stelle** | Arbeitsumgebung als Station B mit Prüfstand und Bericht, Stufe 1 liest den Bericht gegen, Staging verschlanken, App-Auslieferung mit Signatur; PK-M2 erster Durchlauf der neuen Kette | — | `docs/konzepte/Konzept-PK-Pruefkette.md` (E-PK-01 bis -49) | Umsetzung — PK-01 bis PK-05 gemergt (PR #75, #81, #82, 23.09.2026); offen PK-06, PK-07 (übernimmt den Abschluss von Kette II), PK-08, PK-M2; Buchführung hier erst nach dem SD-Merge |
+| PK | **Prüfkette — jede Prüfung einmal, an ihrer Stelle** | Arbeitsumgebung als Station B mit Prüfstand und Bericht, Stufe 1 liest den Bericht gegen, Staging verschlanken, App-Auslieferung mit Signatur; PK-M2 erster Durchlauf der neuen Kette | — | `docs/konzepte/Konzept-PK-Pruefkette.md` (E-PK-01 bis -49) | Umsetzung — PK-01 bis PK-05 gemergt (PR #75, #81, #82, 23.09.2026); **PK-06 in Arbeit** seit 29.09.2026 auf `claude/beautiful-dirac-1tc4d0` (Opus); danach PK-08 (eigene Freigabe), zuletzt PK-07 mit dem Abschluss von Kette II (E-PK-50); PK-M2 |
 
 ### Schritt 12 — P6, Stück 1: das Bedrohungsmodell
 
