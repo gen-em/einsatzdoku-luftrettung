@@ -32,7 +32,7 @@ die Schlüssel als Umgebungswerte (`appbau.sh`); `curl` (Zielprobe, Ablage).
 ## Erwartete Zahl
 
 Selbstproben: `freigabe.py` **52 / 0**, `baumsuche.py` **11 / 0**, `appbau.sh`
-**18 / 0**, `apkablage.py` **25 / 0**; Stufe 1 oder die Kette fährt jede.
+**21 / 0**, `apkablage.py` **25 / 0**; Stufe 1 oder die Kette fährt jede.
 
 ## Was es nicht kann
 

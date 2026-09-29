@@ -6,6 +6,14 @@ und eine abhakbare Prüfliste. Angelegt mit PK-M1; fortgeschrieben mit PK-01.
 
 ## 0. Was nicht geprüft werden konnte
 
+**Stand nach den App-Probeläufen (29.09.2026).** Z14 ist eingetragen.
+**P-PK-40 ist erledigt**, der Garmin-Lauf grün. **P-PK-39 war rot** —
+nicht am Schlüssel, sondern am Auslesen des Zertifikats (F-PK-56); die
+Berichtigung liegt im Nachtrag, der Lauf ist nach dessen Merge neu zu
+fahren. Was die Ausgabe von `apksigner` auf dem Läufer war, ist nicht
+bekannt: Das Skript hat sie geschluckt, und die Arbeitsumgebung hat nur
+die Build-Tools 36.0.0, an denen es liest (5t).
+
 **Stand nach dem Merge von #96 (29.09.2026).** Der erste Lauf der
 Fassung aus PK-06 bis PK-08 ist grün (5s): **P-PK-19, -21 und -38 sind
 erledigt, damit gilt PK-M2** (E-PK-65). Offen bei der Betreiberin bleiben
@@ -120,8 +128,8 @@ dem PR. Die sechs PK-05-Zeilen stehen oben; darunter der Stand nach PK-03.
 | P-PK-35 | Nach einem fremden Merge: der Weg aus `Pruefablauf.md` 5.3 (E-PK-42) | wenn ein anderer PR vor diesem gemergt wird: örtlich `git merge --no-commit origin/main`, Prüfstand, Merge-Commit mit Bericht | Stufe 1 grün auf dem Merge-Commit | rot mit „Baum-Hash passt nicht" — dann misst der Prüfstand im Merge-Zustand nicht den Baum, den der Commit bekommt | **erledigt, auch auf GitHub (abgeglichen in PK-07, 29.09.2026)** — örtlich 23.09.2026 (`5671d24`, Baum = Commit, F-PK-39). Auf GitHub: `71b1c0d` (AR nimmt P5c auf, Baum `8fe7948` = Bericht), Lauf 36224991494 Stufe 1 grün, Gegenlesung **ausgeführt**; ebenso `b671c6f` (BV). **Gegenfall:** „Update branch" ergab `bdf1787`, Lauf 36232768246 **rot** an der Gegenlesung; der Bericht-Commit `b4f2a6c` auf demselben Baum machte Lauf 36233149759 grün — E-PK-42 wirkt in beide Richtungen |
 | P-PK-37 | Stufe 2 mit falschem `STAGING_PASS` ist rot, schnell und mit Grund (Abnahme PK-06) | Umgebung `staging` → Geheimnis `STAGING_PASS` vorübergehend auf einen falschen Wert, Actions → „Auslieferung" auf `main` neu starten (*Re-run*), danach den Wert zurücksetzen und noch einmal starten | Job „Prüfung Stufe 2" rot **innerhalb einer Minute** nach seinem Start, der erste rote Schritt ist „Kreislauf edbak gegen Staging" und nennt die gescheiterte Anmeldung | rot erst nach Minuten (dann hängt er irgendwo), rot mit einer Playwright- oder Python-Meldung ohne Wort zur Anmeldung, oder gar grün | **offen** — Betreiberin |
 | P-PK-38 | Die Integritätswache springt nach einem Auslieferungslauf der gekürzten Fassung an (PK-06) | nach dem Merge von PK-06: Actions → „Integritaetswache", Ereignis `workflow_run` zum Lauf von `auslieferung.yml` | ein Lauf der Wache, ausgelöst **durch** den Auslieferungslauf, grün (Vergleich gegen den Zeiger) | kein Lauf mit Ereignis `workflow_run` — dann hängt der Name nicht mehr | **erledigt 29.09.2026** — Integritätswache Lauf 143 (Run 36597255588), Ereignis `workflow_run`, ausgelöst durch Lauf 101 auf `3476e27`, grün in rund einer Minute |
-| P-PK-39 | Android-Probelauf mit dem echten Schlüssel (PK-08) | nach Z14: Actions → „Auslieferung" → *Run workflow* auf `main`, `app_probelauf: android`, Freigabe erteilen | Job „Android-Auslieferung" grün; im Protokoll zweimal `Zertifikat 078c…ad64`; in der Zusammenfassung zwei Tabellen „PROBELAUF, nichts abgelegt" mit Datei, SHA-256 und dem, was gelöscht würde; **kein** Job `staging` im Lauf | rot „trägt Zertifikat … erwartet …" (dann liegt ein anderer Schlüssel im Geheimnis oder die Variable ist falsch) · rot an einer fehlenden Variable · ein Job `staging` läuft mit (dann ist dessen Bedingung kaputt) | **offen** — Betreiberin |
-| P-PK-40 | Uhr-Probelauf (PK-08) | Actions → „Auslieferung" → *Run workflow* auf `main`, `app_probelauf: uhr`, Freigabe erteilen | Job „Uhr-Auslieferung (Garmin)" grün; Artefakt `nadoku-main` mit `nadoku-3.1.0.iq` (rund 6,6 MB) zum Herunterladen | rot beim SDK-Aufbau (Gerätedateien, `CIQ_GERAETE_URL`) · rot „kein Connect-IQ-Paket" · kein Artefakt | **offen** — Betreiberin |
+| P-PK-39 | Android-Probelauf mit dem echten Schlüssel (PK-08) | nach Z14: Actions → „Auslieferung" → *Run workflow* auf `main`, `app_probelauf: android`, Freigabe erteilen | Job „Android-Auslieferung" grün; im Protokoll zweimal `Zertifikat 078c…ad64`; in der Zusammenfassung zwei Tabellen „PROBELAUF, nichts abgelegt" mit Datei, SHA-256 und dem, was gelöscht würde; **kein** Job `staging` im Lauf | rot „trägt Zertifikat … erwartet …" (dann liegt ein anderer Schlüssel im Geheimnis oder die Variable ist falsch) · rot an einer fehlenden Variable · ein Job `staging` läuft mit (dann ist dessen Bedingung kaputt) | **rot am 29.09.2026** (Lauf 103, Run 36620187709): Z14 steht, Freigabe erteilt, kein Staging-Job im Lauf, Gradle grün in 3:36 — dann „`***-0.17.0.apk` trägt Zertifikat — nicht lesbar —" (F-PK-56). Berichtigt mit dem Nachtrag nach #97; **neu zu fahren** nach dessen Merge. Scheitert er wieder, steht jetzt die Ausgabe von `apksigner` im Protokoll |
+| P-PK-40 | Uhr-Probelauf (PK-08) | Actions → „Auslieferung" → *Run workflow* auf `main`, `app_probelauf: uhr`, Freigabe erteilen | Job „Uhr-Auslieferung (Garmin)" grün; Artefakt `nadoku-main` mit `nadoku-3.1.0.iq` (rund 6,6 MB) zum Herunterladen | rot beim SDK-Aufbau (Gerätedateien, `CIQ_GERAETE_URL`) · rot „kein Connect-IQ-Paket" · kein Artefakt | **erledigt 29.09.2026** — Lauf 104 (Run 36620256424): Freigabe erteilt, SDK und alle Gerätedateien in 66 s, Job grün; Artefakt `nadoku-main` (ID 11057973691, **6 601 708 Byte**) mit `nadoku-3.1.0.iq`, SHA-256 `acf0e97e3ced0fa9f3ac8abe47336d388cf2d28bcc9d4b5d2e4ff0074dacb6d8`. Hinweis im Lauf: `actions/upload-artifact` an der alten SHA läuft auf Node 20, GitHub zwingt es auf Node 24 (F-PK-57) |
 | P-PK-41 | Erster Android-Tag (PK-08) | Tag `android-v0.17.0` auf `main` setzen und pushen, Freigabe erteilen; danach Geräte-Reiter (Einstellungen → Geräte, Fach „Ohne Play Store") ansehen; auf dem S24 die Handy-Datei über eine **vorhandene** Installation installieren | Lauf grün; im Fach genau `nadoku-0.17.0.apk` und `nadoku-uhr-0.17.0.apk`, jede mit **derselben SHA-256** wie in der Zusammenfassung des Laufs; ältere Fassungen sind fort; Android installiert **als Update**, die App behält ihre Kopplung | eine SHA-256 weicht ab · eine ältere Fassung liegt noch da (dann meldet der Lauf rot „ließen sich nicht löschen") · Android verlangt Deinstallation oder meldet einen Paketkonflikt (anderes Zertifikat) | **offen** — Betreiberin |
 | P-PK-42 | Erstes Garmin-Paket (PK-08) | Tag `uhr-v3.1.0` setzen und pushen, Freigabe erteilen, Artefakt herunterladen, im Connect-IQ-Entwicklerportal hochladen | der Store nimmt das Paket an; die App erscheint mit Fassung 3.1.0 | der Store lehnt den Schlüssel ab (dann gehört das Paket zu einem anderen Entwicklerschlüssel als ein früherer Upload) | **offen** — Betreiberin |
 | P-PK-36 | Die Schemaprobe hält einen Merge auf (E-PK-47, Z12) | nach Z12: in „Main Protect" die Required Checks ansehen; beim nächsten PR die Merge-Schaltfläche, solange „Schema gegen …" läuft | beide Namen stehen genau so im Ruleset — **„Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6", nicht `Schema gegen ${{ matrix.db.name }}`** (F-PK-41); der Merge ist gesperrt, bis beide grün sind | der Merge ist frei, während ein Schemalauf noch läuft oder rot ist — dann steht ein Name anders im Ruleset als im Lauf; oder ein PR wartet ewig auf „Expected" — dann steht der unaufgelöste Name drin | **offen** — nach Z12. **Abgleich in PK-07 (29.09.2026):** Z12 nirgends als erledigt vermerkt, `Pruefablauf.md` 2.3 nennt als Pflichtprüfung nur `Stufe 1`; die beiden Namen sind an echten PR-Läufen bestätigt (Lauf 301, 307, 322). Das Ruleset liest keines der Werkzeuge |
@@ -1836,6 +1844,53 @@ Merge). Nicht gemessen hat dieser Lauf, was er nicht berührt: die App-Jobs
 (P-PK-39 bis -42), den Riegel mit falschem oder leerem `STAGING_PASS`
 (P-PK-37) und zwei Merges in einer Minute (P-PK-18).
 
+## 5t. Messprotokoll — die App-Probeläufe (29.09.2026)
+
+Nach Z14 hat die Betreiberin beide Probeläufe von Hand gestartet
+(`workflow_dispatch` auf `main`, `d3031e9`) und freigegeben.
+
+| Lauf | Ergebnis | Zahlen |
+|---|---|---|
+| 104, Uhr (Run 36620256424) | **grün** — P-PK-40 | SDK und Gerätedateien 66 s; `nadoku-3.1.0.iq`, SHA-256 `acf0e97e…6d8`; Artefakt `nadoku-main` 6 601 708 Byte, 90 Tage |
+| 103, Android (Run 36620187709) | **rot** — P-PK-39 | Gradle `BUILD SUCCESSFUL in 3m 36s` (98 Aufgaben), zwei Sekunden später „`***-0.17.0.apk` trägt Zertifikat — nicht lesbar —" |
+
+**F-PK-56 — warum „nicht lesbar".** `apksigner sign` lief ohne Fehler;
+gescheitert ist das Auslesen der Prüfsumme aus `apksigner verify
+--print-certs`. Ein falscher Schlüssel hätte eine andere Prüfsumme gezeigt,
+nicht keine. Welche Zeilen `apksigner` auf dem Läufer schrieb, weiß niemand:
+`appbau.sh` hat die Ausgabe geschluckt — das ist der eigentliche Fehler.
+Und die Leseregel war enger als nötig: Sie verlangte **genau eine** Zeile
+„Signer #n certificate SHA-256 digest" und hielt zwei Zeilen mit
+**derselben** Prüfsumme für zwei Unterzeichner; die Selbstprobe hatte genau
+das als „nicht lesbar" festgeschrieben. Eine neuere Fassung der Build-Tools
+(`sort -V | tail -1` nimmt die höchste des Läufers, die Arbeitsumgebung hat
+nur 36.0.0) kann den Unterzeichner zweimal oder als „Signer
+(minSdkVersion=…)" nennen.
+
+**Berichtigt:** Die Leseregel nimmt jede Zeile „Signer … certificate
+SHA-256 digest", gleich wie nummeriert, und verlangt genau **einen Wert**;
+verschiedene Werte bleiben rot. Scheitert die Prüfung, schreibt `appbau.sh`
+die Ausgabe von `apksigner verify` und die Fassung der Build-Tools ins
+Protokoll (öffentlich wie das Zertifikat selbst). Gemessen:
+
+- Selbstprobe **18 → 21 / 0**; neu: derselbe Wert zweimal, die
+  minSdkVersion-Form, zwei verschiedene Werte, keine Zeile.
+- **Gegenprobe:** Die alte Leseregel liefert für „derselbe Wert zweimal"
+  und für die minSdkVersion-Form **nichts** — beide neuen Fälle wären gegen
+  sie rot.
+- Der ganze Android-Weg örtlich mit einem neuen Wegwerfschlüssel (Build-Tools
+  36.0.0): richtige Variable **grün**, beide APKs gleich signiert; falsche
+  Variable **rot**, die Ausgabe von `apksigner` steht darunter, der
+  Ausgabeordner ist leer.
+
+**F-PK-57 — zwei Beobachtungen am Rand.** Der Name `nadoku` erscheint im
+Protokoll des Android-Jobs als `***`: `APK_SCHLUESSEL_NAME` ist ein
+Geheimnis mit dem Wert `nadoku`, und GitHub maskiert ihn überall — auch im
+Dateinamen. Der Aliasname ist nicht geheim; als Variable statt Geheimnis
+wäre das Protokoll lesbar (Entscheidung der Betreiberin, nicht geändert).
+Und `actions/upload-artifact` läuft an der alten SHA (E-PK-62) auf Node 20,
+das GitHub inzwischen auf Node 24 zwingt — eine Warnung, kein Fehler.
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in
@@ -1927,6 +1982,8 @@ veröffentlichtes Kennwort.
 | **F-PK-53** | **Ein Tag, dessen Produktionsjob neu gestartet wird, legt auf Staging zwei Rückfallstände an.** Der Job `Rückfallstand (Staging)` hängt nicht am Tor: Bei M1 lief er in Versuch 1 grün, obwohl `produktion` am Tor scheiterte, und in Versuch 2 noch einmal (Lauf 35654132667). Bei Aufbewahrung 2 belegt ein Tag damit beide Plätze, und der Stand des vorigen Tags ist fort. | Nicht in PK behoben — PK ändert die Auslieferung nicht. Eingetragen bei Nr. 261 (die Aufbewahrung, Zuarbeit) und im Abgleich des Prüfdokuments Kette II, Punkt 26. |
 | **F-PK-54** | **Rahmenplan 6.1 führte zwei Tags als offen, die ausgeliefert waren.** „Tag `web-v21.1.3` setzen" und „Tag `web-v21.6.1` setzen" standen noch da; `web-v21.6.1` liegt seit dem 28.09.2026 auf `fc4253d` (Lauf 36428081295 grün), und der Zeiger `produktion` zeigt dorthin — er bewegt sich nur nach einem grünen Produktionsjob. | Mit dem Abschluss ausgetragen (Anlass 4 in `CLAUDE.md` 2: eine Zuarbeit ist erledigt); was davon übrig ist — `update.php` auf Produktiv —, steht in der Zeile zu #94. |
 | **F-PK-55** | **Der Statusblock des Konzepts sagte „Offen bleibt P-PK-11 zur Hälfte"**, die Prüfliste „beide erledigt 21.09.2026" mit Zahlen für beide Ausbaustufen. Der Satz stammte aus dem Stand vor dem Nachtrag. | Mit PK-07 berichtigt; die Prüfliste war richtig. |
+| **F-PK-56** | **Der Android-Probelauf war rot mit „Zertifikat nicht lesbar"** (Lauf 103), obwohl `apksigner sign` lief. `appbau.sh` hatte die Ausgabe von `apksigner verify` geschluckt, und die Leseregel hielt dieselbe Prüfsumme in zwei Zeilen für zwei Unterzeichner. | Leseregel auf „genau ein Wert", Ausgabe bei jedem Scheitern ins Protokoll; Selbstprobe 21 / 0, Gegenprobe 2 von 2; neu zu fahren (P-PK-39). |
+| **F-PK-57** | **`nadoku` erscheint im Android-Protokoll als `***`**, weil `APK_SCHLUESSEL_NAME` ein Geheimnis mit diesem Wert ist; dazu die Node-20-Warnung von `actions/upload-artifact`. | Nicht geändert — der Aliasname könnte eine Variable sein (Betreiberin). |
 
 ## 7. Entscheidungen der Umsetzung
 
