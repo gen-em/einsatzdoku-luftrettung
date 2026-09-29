@@ -88,11 +88,15 @@ return [
 
 ['kennung' => 'Z33', 'paket' => 'AP1',
  'beschreibung' => 'Gegenprobe P3: usleep( ausserhalb ratelimit_lib.php',
- 'grund' => 'P5a: sieben inline verzoegerte Antworten wurden rate_gleiche_dauer().',
+ 'grund' => 'P5a: sieben inline verzoegerte Antworten wurden rate_gleiche_dauer(). '
+          . 'EINE Stelle mehr seit Web 21.11.1 (Schritt 18, SR-05): gedraengel_abstand() '
+          . 'in wartung_lib.php, der Abstand zwischen zwei Anlaeufen nach einem Deadlock '
+          . 'in ingest.php — keine verzoegerte Antwort, sondern Warten auf die Datenbank; '
+          . 'es steht bei gedraengel_erkannt(), der Stelle fuer das Gedraengel.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/ratelimit_lib.php'],
  'regel' => ['art' => 'aufruf', 'namen' => ['usleep']],
- 'start' => 0, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+ 'start' => 0, 'decke_jetzt' => 1, 'decke_ziel' => 1],
 
 /* ---- AP2: Konfiguration und Sitzung ------------------------------------- */
 
@@ -267,8 +271,9 @@ return [
           . 'db.php, umgezogen wegen Nr. 288). NEUN namentliche Ausnahmen, '
           . 'freigegeben vom Auftraggeber am 22.09.2026 (H-ZE-4 ausgesetzt; das '
           . 'Konzept liess acht zu). DREI wegen GROESSE oder Vertrag: ingest.php '
-          . '(Geraetevertrag, Deadlock-Behandlung Nr. 210 in Schritt 18; vorab '
-          . 'gesetzt), backup_lib.php (Rumpf 1153 Zeilen, 145 Variablen) und '
+          . '(Geraetevertrag; seit Web 21.11.1 mit eigener Deadlock-Behandlung, '
+          . 'Nr. 210, Schritt 18/SR-05 — ein beginTransaction() in einer '
+          . 'Schleife, weiter EINE Stelle), backup_lib.php (Rumpf 1153 Zeilen, 145 Variablen) und '
           . 'api/import_commit.php (542 Zeilen, 78 Variablen) — eine use-Liste '
           . 'mit 145 Eintraegen ist kein Zentralisieren, sondern ein Rewrite. '
           . 'SECHS wegen BAUFORM: pair.php (Geraetevertrag; commit UND rollBack '

@@ -551,28 +551,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-210. **`ingest.php` läuft bei gleichzeitigen Uploads auf denselben Diensttag in einen Deadlock.** · gehört zu: 18 · Stand: teilweise · seit 16.09.2026
-     Befund (P5a/AP9, `tools/verbindungsprobe/`, 16.09.2026): Zwanzig
-     Pakete desselben Geräts gleichzeitig ergaben zwölf `SQLSTATE[40001]
-     1213 Deadlock`. Ursache ist die gemeinsame Zeile: Jeder Upload schreibt
-     `days.started_at`/`ended_at` in derselben Transaktion fort, in der er
-     seinen Einsatz anlegt (`dt_zeitraum_fortschreiben()` und der
-     `INSERT … ON DUPLICATE KEY` auf `missions`); zwei Uploads halten Sperren
-     in umgekehrter Reihenfolge.
-     Erledigt ist die halbe Miete (E-P5a-52): Die Antwort ist 503
-     `ausgelastet` statt 500, alle zwanzig Pakete kommen in der Probe an.
-     Offen ist die Vermeidung: den Transaktionsrumpf in eine Schleife mit
-     zwei bis drei Anläufen fassen und klären, was dazwischen neu gelesen
-     werden muss (Umriss der Spur, Fortsetzungsmarke); prüfen, ob die
-     idempotente `days`-Fortschreibung hinter den Commit kann. Nicht Teil
-     von Schritt 15 (E-ZE-20): `db_transaktion()` ändert, wie Transaktionen
-     geschrieben werden, nicht, was bei einem Deadlock geschieht.
-     Abnahme: `php tools/verbindungsprobe/probe.php --frei 20` meldet 0 × 503
-     und 0 Gedrängel im Fehlerprotokoll.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 210.
-
-<!-- -->
-
 213. **Die Zustandsdatei der Auslieferungskette lag im Webroot.** · gehört zu: PK · Stand: teilweise · seit 16.09.2026
      Befund (Durchsicht des Auftraggebers; behoben am selben Tag, Web
      20.15.1): `SamKirkland/FTP-Deploy-Action` legte

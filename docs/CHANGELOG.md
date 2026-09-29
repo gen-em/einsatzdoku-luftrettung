@@ -14,6 +14,82 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.11.1] — 2026-09-29
+
+Schritt 18, Sicherheitsrunde II, Paket SR-05. **Korrektur** — kein Schema,
+keine Vertragsänderung.
+
+### Behoben
+
+- **Gleichzeitige Uploads eines Geräts laufen nicht mehr in Deadlocks**
+  (Nr. 210, E-SR-12). Seit P5a/AP9 wusste die Verbindungsprobe es: Zwanzig
+  Pakete desselben Geräts gleichzeitig, und ein Teil davon scheiterte mit
+  `1213 Deadlock`. Seit Web 20.13.0 hieß die Antwort 503 statt 500, und das
+  Gerät kam beim nächsten Versuch durch — die halbe Miete. Gemessen vor
+  diesem Paket, bei allen freien Verbindungen: in drei Runden zu 20 Paketen
+  **39 × 503**. Die Ursache sind zwei Zeilen, die **alle** Pakete teilen:
+  die des Diensttags (`days`, Beginn und Ende werden fortgeschrieben) und
+  die des Geräts (`devices.last_seen`). Jeder Upload nimmt über die
+  Fremdschlüssel eine geteilte Sperre auf beide, weil er einen Einsatz
+  daran hängt, und wollte sie später in derselben Transaktion exklusiv —
+  zwei solche warten aufeinander, und InnoDB bricht einen ab. **Beide Zeilen
+  werden jetzt hinter dem Commit geschrieben**, als eigene kurze
+  Anweisungen; sie sind idempotent (früher Beginn, später Ende, `NOW()`) und
+  brauchen den Rumpf nicht. **Dazu läuft der Rumpf bei 1205 und 1213 bis zu
+  drei Mal**, mit 50 bis 200 ms Zufallsabstand, damit zwei Verlierer nicht im
+  selben Takt wieder zusammenstoßen. Was der Rumpf für die Antwort nur
+  ergänzt — die Liste der verworfenen Werte, die übergangenen Listen, der
+  Zähler neuer Einsätze, die Punktzähler —, geht am Anfang jedes Anlaufs auf
+  Anfang; sonst meldete ein zweiter Anlauf jeden verworfenen Wert zweimal.
+  **Gemessen nachher: 180 von 180 ohne 503**, kein Gedrängel im
+  Fehlerprotokoll.
+- **Das Konzept hatte nur die `days`-Zeile gesehen** (E-SR-12); die Messung
+  zeigte die Geräte-Zeile daneben (E-SR-54). Und sie zeigte, wer was
+  leistet: Das Verschieben der zwei Zeilen allein bringt 180 von 180; die
+  Schleife allein, mit den Zeilen in der Transaktion, 178. Die Schleife ist
+  das Netz, nicht die Regel.
+
+### Bewusst so
+
+- **Die 503 bleibt**, für den Fall, dass auch der dritte Anlauf scheitert,
+  und für die Verbindungsgrenze (1226), die die Schleife nicht wiederholt —
+  eine volle Datenbank wird nicht voller dadurch, dass man sie gleich noch
+  einmal fragt. Das Gedrängel steht erst nach dem letzten Anlauf im
+  Fehlerprotokoll.
+- **Der Rahmen steht in `ingest.php`**, nicht als
+  `db_transaktion_wiederholt()` in `transaktion_lib.php`: Es gibt einen
+  Verbraucher, und zentralisiert wird beim zweiten (R83). Der Rumpf bleibt,
+  wo er ist — ihn in eine Funktion mit zwei Dutzend durchgereichten
+  Variablen zu heben, wäre die Art Umbau, bei der eine still stehen bleibt.
+- **Scheitern die zwei Zeilen hinter dem Commit endgültig, antwortet die
+  Anfrage 503**, obwohl der Datensatz schon steht. Die Uhr liefert dann
+  unverändert nach, und das ist eine Wiederholung: Upsert und Punkte ändern
+  nichts, die zwei Zeilen holen es nach.
+
+### Prüfmittel
+
+- **Die Verbindungsprobe kennt zwei Lagen.** Mit wenigen freien Plätzen
+  (Vorgabe) trifft die Enge die Verbindungen; mit allen frei (`--frei 20`,
+  die Abnahme von Nr. 210) gibt es nur das Gedrängel, und dann verlangt sie
+  0 × 503. Bis dahin stand in diesem Fall eine Erwartung offen, die dort
+  nicht gefragt ist. Neu in beiden: kein 503 aus dem Gedrängel, und kein
+  Gedrängel im Fehlerprotokoll des eigenen Servers.
+- **Registerzeile Z33 hat Decke 1**: Der Abstand zwischen zwei Anläufen
+  (`gedraengel_abstand()`, bei den übrigen Gedränge-Funktionen in
+  `wartung_lib.php`) ist das eine `usleep()` außerhalb von
+  `ratelimit_lib.php`. Dort gehört jede verzögerte Antwort hin; dies ist
+  keine, es wartet auf die Datenbank.
+- **Die Verbindungsprobe läuft für `ingest.php` jetzt schon in Stufe klein**
+  (F-SR-08): Eine Korrektur am Deadlock hätte die Probe, die ihn misst,
+  sonst erst in der Hauptstufe gefahren.
+- **Teil 12 der Ingestprobe erzwingt den Deadlock**: Ein Auslöser meldet
+  1213, solange ein Zähler in einer nicht transaktionalen Tabelle unter
+  einer Grenze liegt. Einmal — der zweite Anlauf nimmt an, der verworfene
+  Punkt steht einmal in `rejected`; dreimal — 503, nichts angelegt. Die
+  erste Fassung setzte den Auslöser vor die Punktschleife und maß das
+  Zurücksetzen damit nicht; die Gegenprobe ohne Zurücksetzen blieb grün.
+  Seit der Auslöser hinter der Schleife sitzt, wird sie rot.
+
 ## [Web 21.11.0] — 2026-09-29
 
 Schritt 18, Sicherheitsrunde II, **Halt H-SR-08: die Gegenlesung der

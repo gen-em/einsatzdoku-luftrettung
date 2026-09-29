@@ -10367,8 +10367,30 @@ Web 20.40.0 trägt, schadet nicht; nach ihr fragt nur niemand. Und er zählt
 `max_user_connections` zu eng?", und ein Gedrängel um eine Tabellenzeile
 beantwortet sie nicht.
 
-**Die eigentliche Abhilfe steht aus** — die Transaktion zu wiederholen, statt
-sie dem Aufrufer zurückzugeben. Backlog Nr. 210.
+**Die eigentliche Abhilfe steht seit Web 21.11.1 in `ingest.php`** (Schritt
+18, SR-05, Nr. 210; bis dahin stand hier „steht aus"). Gemessen vorher, mit
+der Verbindungsprobe bei allen freien Plätzen (`--frei 20`): in drei Runden
+zu 20 Paketen **39 × 503**, an drei Stellen — dem `UPDATE days` in
+`dt_zeitraum_fortschreiben()` (16), dem Upsert auf `missions` (12) und
+`UPDATE devices SET last_seen` (10). Die erste und die dritte Zeile teilen
+**alle** Pakete eines Tags bzw. eines Geräts: Jeder Upload nimmt über die
+Fremdschlüssel eine geteilte Sperre auf sie und wollte sie später in
+derselben Transaktion exklusiv. Zwei solche warten aufeinander. Zwei Teile:
+
+| | |
+|---|---|
+| Hinter dem Commit | `dt_zeitraum_fortschreiben()` samt der Frage `ingest_tag_offen()` und `last_seen` des Geräts stehen **hinter** dem `commit()`, als eigene kurze Anweisungen mit eigenem Wiederholungsrahmen (E-SR-12, E-SR-54). Beide sind idempotent (min/max, `NOW()`). Scheitern sie nach dem letzten Anlauf, antwortet die Anfrage 503 — der Datensatz steht dann schon, und die Uhr liefert unverändert nach: Upsert und Punkte sind Wiederholungen |
+| Die Schleife | Der Rumpf läuft bei 1205 und 1213 bis zu **drei Mal** (`INGEST_ANLAEUFE`), mit 50 bis 200 ms Zufallsabstand (`gedraengel_abstand()` in `wartung_lib.php` — seither das eine `usleep()` außerhalb von `ratelimit_lib.php`, Registerzeile Z33 mit Decke 1). Am Anfang jedes Anlaufs geht auf Anfang, was der Rumpf nur ergänzt und die Antwort liest: die Prüfliste (von einem Abzug vor der Transaktion), `$behalten`, `$einsatzNeu` und die drei Punktzähler. Wiederholt wird nur, was nicht bestätigt ist — die zwei frühen `commit()` der Dublettenzweige beenden die Anfrage. Der Rahmen steht in `ingest.php` und nicht als `db_transaktion_wiederholt()` in `transaktion_lib.php`, solange es den einen Verbraucher gibt (R83: zentralisiert wird beim zweiten) |
+| Was bleibt | nach dem dritten Anlauf 503 `ausgelastet` wie an der Grenze; **erst dann** steht das Gedrängel im Fehlerprotokoll (`ingest_scheitern()`). Die Verbindungsgrenze (1226) wiederholt die Schleife nicht |
+
+Gemessen nachher: **180 von 180 Paketen ohne 503**, 0 Gedrängel im
+Fehlerprotokoll (drei Läufe zu drei Runden). **Das Verschieben leistet es
+allein** (ohne Schleife ebenfalls 180 von 180), die Schleife ist das Netz
+(allein, mit den Zeilen in der Transaktion: 178 von 180). Gegen die
+Verbindungsgrenze bleibt die 503 (`--frei 1`: 15 × 503, alle von der
+Grenze). Die Schleife selbst misst Teil 12 der Ingestprobe: ein Auslöser, der
+1213 meldet, solange ein Zähler in einer nicht transaktionalen Tabelle unter
+einer Grenze liegt.
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 

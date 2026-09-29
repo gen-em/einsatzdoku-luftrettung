@@ -62,8 +62,13 @@ declare(strict_types=1);
  * steht er einmal.
  *
  * DIE AUSNAHME, NAMENTLICH: `ingest.php`. Sein Rahmen spannt sich ueber 670
- * Zeilen, gehoert zum Geraetevertrag und bekommt in Schritt 18 eine
- * Deadlock-Behandlung (Backlog Nr. 210). Schritt 15 fasst ihn nicht an.
+ * Zeilen, gehoert zum Geraetevertrag und hat seit Web 21.11.1 eine
+ * Deadlock-Behandlung (Schritt 18, SR-05, Backlog Nr. 210): eine Schleife mit
+ * hoechstens drei Anlaeufen um `beginTransaction()`/`try`, die zwei Zeilen,
+ * die alle Pakete teilen, hinter dem Commit. Der Rahmen steht dort und nicht
+ * hier als `db_transaktion_wiederholt()`, solange es den einen Verbraucher
+ * gibt (R83: zentralisiert wird beim zweiten). Schritt 15 hat ihn nicht
+ * angefasst.
  */
 
 /**

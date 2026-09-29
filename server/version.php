@@ -7962,5 +7962,14 @@ declare(strict_types=1);
  *   phpseclib 356 MiB kostete — die Form prueft jetzt `pk_es256_form()`
  *   vorher. Eingearbeitet bis auf `protokoll()` in einer Transaktion
  *   (Nr. 354).
+ *
+ * 21.11.1 — `ingest.php` OHNE DEADLOCK (Schritt 18, SR-05; Nr. 210,
+ *   E-SR-12, E-SR-54). Korrekturstufe. Zwanzig gleichzeitige Pakete eines
+ *   Geraets ergaben in der Verbindungsprobe 39 von 60 Antworten 503 — an
+ *   `days` (16), am Upsert auf `missions` (12) und an `devices.last_seen`
+ *   (10). Die zwei Zeilen, die alle Pakete teilen, stehen jetzt hinter dem
+ *   Commit; dazu laeuft der Rumpf bei 1205/1213 bis zu dreimal. Gemessen:
+ *   180 von 180 ohne 503. Das Verschieben allein leistet es; die Schleife ist
+ *   das Netz (allein: 2 von 180). Kein Schema, keine Vertragsaenderung.
  */
-const WEB_VERSION = '21.11.0';
+const WEB_VERSION = '21.11.1';

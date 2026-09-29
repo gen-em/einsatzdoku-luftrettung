@@ -55,10 +55,10 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **29.09.2026 — H-SR-08 durchlaufen: Gegenlesung von SR-09 (41 Befunde, F-SR-33 bis -44) behoben in Web 21.11.0, die Behebung nachgeprüft (23 weitere, F-SR-45 bis -52, eingearbeitet bis auf Nr. 354)**; E-SR-42 bestätigt, Q-SR-14 bis -18 beantwortet. Gebaut sind SR-01, SR-02, SR-07 und SR-09 (Web 21.7.0 bis 21.10.0), gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). **Als Nächstes: SR-05.** Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (E-SR-29, -35, -36) — **neun Pakete** (4). **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
-> | Entschieden | **E-SR-01 bis E-SR-53** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (SR-02), E-SR-41 (SR-07), E-SR-42 (Ursprung aus `app.base_url`, SR-09 — **von der Betreiberin bestätigt** bei H-SR-08), E-SR-43 (SR-09). **Bei H-SR-08:** E-SR-44 (Gegenlesung als Workflow) und E-SR-45 bis -49 (Q-SR-14 bis -18) von der Betreiberin am 28.09.2026; E-SR-50 (Fehlversuche), E-SR-51 (Migration an Ort und Stelle), E-SR-52 (der Preis von E-SR-50) und E-SR-53 (Nr. 354) aus der Umsetzung. |
+> | Stand | **29.09.2026 — SR-05 gebaut (Web 21.11.1): `ingest.php` ohne Deadlock, 180 von 180 ohne 503.** Davor am selben Tag: **H-SR-08 durchlaufen: Gegenlesung von SR-09 (41 Befunde, F-SR-33 bis -44) behoben in Web 21.11.0, die Behebung nachgeprüft (23 weitere, F-SR-45 bis -52, eingearbeitet bis auf Nr. 354)**; E-SR-42 bestätigt, Q-SR-14 bis -18 beantwortet. Gebaut sind SR-01, SR-02, SR-07 und SR-09 (Web 21.7.0 bis 21.10.0), gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). **Als Nächstes: SR-03** (danach Halt H-SR-06, Fable-Gegenlesung). Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (E-SR-29, -35, -36) — **neun Pakete** (4). **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
+> | Entschieden | **E-SR-01 bis E-SR-55** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (SR-02), E-SR-41 (SR-07), E-SR-42 (Ursprung aus `app.base_url`, SR-09 — **von der Betreiberin bestätigt** bei H-SR-08), E-SR-43 (SR-09). **Bei H-SR-08:** E-SR-44 (Gegenlesung als Workflow) und E-SR-45 bis -49 (Q-SR-14 bis -18) von der Betreiberin am 28.09.2026; E-SR-50 (Fehlversuche), E-SR-51 (Migration an Ort und Stelle), E-SR-52 (der Preis von E-SR-50) und E-SR-53 (Nr. 354) aus der Umsetzung. **Aus SR-05:** E-SR-54 (`last_seen` hinter den Commit), E-SR-55 (Verbindungsprobe: zweite Lage, ab klein). |
 > | Offen | **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). Die Fable-Gegenlesung von SR-03 (H-SR-06) steht noch aus. |
-> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). **SR-09 erledigt** 28.09.2026 (Web 21.10.0, Migration `2026_09_28_passkeys`; Befunde F-SR-28 bis -32; Nr. 350 erledigt, Nr. 353 neu). **H-SR-08 durchlaufen** 29.09.2026 (Web 21.11.0; Befunde F-SR-33 bis -52, E-SR-44 bis -53, Nr. 354 neu; Migration `2026_09_28_passkeys` an Ort und Stelle geändert). |
+> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). **SR-09 erledigt** 28.09.2026 (Web 21.10.0, Migration `2026_09_28_passkeys`; Befunde F-SR-28 bis -32; Nr. 350 erledigt, Nr. 353 neu). **H-SR-08 durchlaufen** 29.09.2026 (Web 21.11.0; Befunde F-SR-33 bis -52, E-SR-44 bis -53, Nr. 354 neu; Migration `2026_09_28_passkeys` an Ort und Stelle geändert). **SR-05 erledigt** 29.09.2026 (Web 21.11.1; Befunde F-SR-53 bis -57; Nr. 210 erledigt). |
 > | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) — offen — und SR-09 (H-SR-08, E-SR-36) — **durchlaufen**, als Workflow (E-SR-44). |
 > | Fächerung | keine in den Paketen; die **Gegenlesung H-SR-08** und ihre Nachprüfung liefen als lesender Workflow (E-SR-44). |
 > | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`), **353** (Schemaprobe vergleicht migriert und frisch nicht, F-SR-28, `nächste Backlog-Runde`), **354** (`protokoll()` schluckt in einer Transaktion einen Deadlock, F-SR-50, `nächste Backlog-Runde`). |
@@ -747,6 +747,44 @@ M12, M25, N2-1 (je eine Textstelle).
   Datenschutz-Baustein, `intl` als Voraussetzung für Umlaut-Namen nicht
   genannt, und dass zwei Zähler-Warnungen zu einer Mail werden können.
   **Gelöst:** alle Stellen.
+- **F-SR-53 Das Gedränge hatte drei Stellen, nicht eine.** Das Konzept
+  (E-SR-12) sah die `days`-Zeile. Die Messung zu SR-05 — Verbindungsprobe
+  mit `--frei 20`, das Serverprotokoll nach Datei und Zeile gezählt — ergab
+  in drei Runden zu 20 **39 × 503**: 16 am `UPDATE days`, 12 am Upsert auf
+  `missions`, 10 an `UPDATE devices SET last_seen`. Die Geräte-Zeile ist
+  derselbe Kreuzungspunkt wie der Diensttag: `missions.device_id` hat einen
+  Fremdschlüssel, jeder Upload nimmt die geteilte Sperre und wollte später
+  die exklusive. Der Upsert war die Folge der beiden: Ohne sie verschwand er
+  aus der Zählung. **Gelöst in SR-05** (E-SR-54): beide Zeilen hinter dem
+  Commit.
+- **F-SR-54 Die Verbindungsprobe kannte die Lage „alle Plätze frei" nicht.**
+  Die Abnahme von Nr. 210 und dieses Konzepts ist `--frei 20`; dort stand
+  die Erwartung „Die Enge schlägt durch" immer offen, weil es keine Enge
+  gibt, und die Probe endete rot, auch mit 0 × 503. **Gelöst in SR-05**
+  (E-SR-55): zwei Lagen, eine Runde ohne Enge, dazu zwei neue Erwartungen
+  in beiden — kein 503 aus dem Gedränge, keines im Serverprotokoll.
+- **F-SR-55 Nach dem Umbau misst die Verbindungsprobe die Schleife nicht
+  mehr** — es gibt kein Gedränge, also keine Wiederholung; und damit auch
+  nicht, ob ein zweiter Anlauf die Antwortfelder doppelt füllt. **Gelöst in
+  SR-05:** Teil 12 der Ingestprobe erzwingt den Deadlock über einen
+  Auslöser und eine MEMORY-Tabelle (ihr Stand überlebt den Rollback). Die
+  erste Fassung setzte den Auslöser an das Einfügen des Einsatzes, **vor**
+  die Punktschleife, und maß das Zurücksetzen der Prüfliste nicht — die
+  Gegenprobe ohne Zurücksetzen blieb grün; der Auslöser sitzt jetzt am
+  `UPDATE … letzter_punkt_am` dahinter. Und eine Gegenprobe über HTTP, die
+  unmittelbar nach dem Ändern von `ingest.php` lief, maß den alten Stand
+  (OPcache der Sandbox); mit vier Sekunden Pause wurde sie rot (Prüfdokument).
+- **F-SR-56 Ein `usleep()` außerhalb von `ratelimit_lib.php` ist ein
+  Registerbefund** (Z33, Decke 0 — jede verzögerte Antwort gehört zu
+  `rate_gleiche_dauer()`). Der erste Einbau hatte zwei. **Gelöst in SR-05:**
+  `gedraengel_abstand()` in `wartung_lib.php` bei den übrigen
+  Gedränge-Funktionen, Z33 mit Decke 1 und ausgeschriebenem Grund: Es wartet
+  auf die Datenbank, nicht vor einer Antwort.
+- **F-SR-57 Der Paketstext nennt einen Abschnitt, der etwas anderes
+  beschreibt.** „Der Weg durch `ingest.php`" in `Technik.md` gehört zu den
+  Schnittvermerken (S4/A2), nicht zum Ablauf der Annahme. **Gelöst in
+  SR-05:** Die Schleife steht in 5e.1, wo das Gedränge steht; der
+  Schnittabschnitt bleibt, wie er ist.
 
 ## 3. Entscheidungen und Fragen
 
@@ -807,6 +845,8 @@ M12, M25, N2-1 (je eine Textstelle).
 | E-SR-51 | **Die Migration `2026_09_28_passkeys` wird an Ort und Stelle geändert**, nicht durch eine zweite ergänzt; ihre Kennung und `'web' => '21.10'` bleiben. | Umsetzung, 28.09.2026 (H-SR-08) | 21.10.0 ist nirgends ausgeliefert — nicht auf `main`, nicht auf Staging; eine zweite Migration hätte eine Tabelle umgebaut, die es auf keiner Anlage gibt, und `migration_lib.php` um einen Katalogeintrag ohne Gegenstand verlängert. Örtlich ist die Tabelle neu eingespielt, migriert gegen frisch zeichengleich (Prüfdokument). **Preis:** Wer 21.10.0 örtlich eingespielt hat, spielt die Tabelle neu ein. |
 | E-SR-52 | **Eine Ablehnung der Art `zaehler` bleibt ungezählt**; der Preis — eine Kopie holt ohne Bremse auf, jeder Versuch schreibt eine orange Zeile — ist benannt (CHANGELOG, `Technik.md` 4.99q), kein eigener Topf. | Umsetzung, 29.09.2026 (Nachprüfung, F-SR-49) | Der Zähler ist gegen eine Kopie des privaten Schlüssels keine Hürde: Wer den Schlüssel hat, signiert den Zähler, den er will. Eine Bremse hielte nur die Betroffene auf, deren Original nach dem Gebrauch einer Kopie zurückliegt — genau der Fall, den N1-2 beanstandet hat. Die orangen Zeilen kann nur erzeugen, wer Passwort und Schlüssel hat; der könnte sich auch anmelden. |
 | E-SR-53 | **F-SR-50 wird nicht in H-SR-08 behoben, sondern Nr. 354** (`nächste Backlog-Runde`). | Umsetzung, 29.09.2026 (Nachprüfung) | Die Ursache ist `protokoll()` selbst, und sie trifft seit SR-02 auch E-SR-40. Ein `protokoll()`, das in einer Transaktion wirft, ändert alle Aufrufer; zwei Einträge hinter den Commit zu legen, hieße, E-SR-40 und diese Stelle verschieden zu bauen. Beides verdient ein eigenes Paket mit eigener Probe (ein Auslöser mit `40001`). Selten: ein Deadlock an einem INSERT ohne Fremdschlüssel. |
+| E-SR-54 | **`UPDATE devices SET last_seen` wandert mit `dt_zeitraum_fortschreiben()` hinter den Commit**, in dieselbe kurze Anweisung mit eigenem Wiederholungsrahmen. Scheitert sie nach drei Anläufen, antwortet die Anfrage 503, obwohl der Datensatz steht; die Uhr liefert nach, und das ist eine Wiederholung. | Umsetzung, 29.09.2026 (SR-05, F-SR-53) | Gemessen, nicht vermutet: 10 der 39 Deadlocks standen dort. Dasselbe Muster wie der Diensttag (geteilte Sperre über den Fremdschlüssel, später die exklusive), und `last_seen` ist eine Anzeige, die niemand innerhalb der Transaktion braucht. Die Messung danach: Das Verschieben beider Zeilen allein bringt 180 von 180. |
+| E-SR-55 | **Die Verbindungsprobe bekommt eine zweite Lage** (ohne Enge, `--frei` ≥ belegte Plätze: eine Runde, 0 × 503 verlangt) statt eines eigenen Werkzeugs; **für `ingest.php` und `wartung_lib.php` läuft sie ab Stufe klein** (F-SR-08 beantwortet: ja, über das vorhandene Muster `datenbank`). Der Rahmen bleibt in `ingest.php` (Empfehlung des Pakets). | Umsetzung, 29.09.2026 (SR-05, F-SR-54) | Die Probe stellt die Lage schon her; eine zweite Probe für dieselbe Lage wäre Grundsatz 1 zuwider. In `klein`, weil die Probe den Fehler misst, den eine Korrektur an `ingest.php` beheben oder zurückbringen kann — sie braucht die Wurzel der Datenbank und läuft nur örtlich, wie `nummern`. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -1350,6 +1390,28 @@ Nr. 210); dazu einmal mit `--frei 1` gegen die Verbindungsgrenze → 503
 wie bisher (die Schleife wiederholt kein 1226); Ingestprobe unverändert
 grün; Textprobe 0 neu.
 *Stufe:* Web Korrektur. *Fächerung:* keine.
+*Erledigt 29.09.2026 (Web 21.11.1):* gebaut wie beschrieben — die Schleife
+um `beginTransaction()`/`try` in `ingest.php` (`INGEST_ANLAEUFE` = 3,
+`gedraengel_abstand()` 50–200 ms), am Anlaufbeginn zurückgesetzt: die
+Prüfliste aus einem Abzug vor der Transaktion (`clone`), `$behalten`,
+`$einsatzNeu`, `$stored`, `$verworfen`, `$gesperrt` — **sechs** Variablen,
+gezählt an dem, was der Rumpf nur ergänzt und die Antwort liest; alles
+andere, was die Antwort liest, setzt der Rumpf auf jedem Weg neu. Die
+frühen `commit()` der Dublettenzweige bleiben. `dt_zeitraum_fortschreiben()`
+samt `ingest_tag_offen()` **und `last_seen`** (E-SR-54) hinter dem Commit,
+mit eigenem Rahmen; `ingest_scheitern()` als eine Stelle für 503 und 500
+(das Gedrängel erst nach dem letzten Anlauf im Protokoll). Wiederholt wird
+nur, was nicht bestätigt ist (`$bestaetigt`); der Vermerk der Demo-Änderung
+steht weiter unmittelbar hinter dem Commit — die Zweitfaktorprobe prüft das
+an der Zeile davor. `transaktion_lib.php` und `wartung_lib.php` sprechen in
+der Gegenwart, das Register Z16 auch. **Dazu, nicht im Konzept:** die Geräte-
+Zeile (F-SR-53), zwei Lagen der Verbindungsprobe (F-SR-54), Teil 12 der
+Ingestprobe (F-SR-55), Z33 (F-SR-56). **Abweichung:** Die Schleife steht in
+`Technik.md` 5e.1, nicht im Abschnitt „Der Weg durch `ingest.php`"
+(F-SR-57). **Probleme beim Bau:** Die Maschine startete zweimal neu (vor dem
+Commit von H-SR-08 und danach) — Anlage und Plattform jeweils neu
+hochgefahren, nichts verloren. Die zwei `usleep()` des ersten Einbaus
+rissen Z33. Zahlen im Prüfdokument 2.
 
 **SR-03 Serverschlüssel wechseln als Vorgang** — Nr. 247, Nr. 233; Q-SR-03,
 -04, -09 entschieden (H-SR-02). `serverkrypto_lib.php`: `server_key_alt`

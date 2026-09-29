@@ -571,12 +571,15 @@
       "id": "datenbank",
       "ab": "klein",
       "pfade": [
-        "server/db.php"
+        "server/db.php",
+        "server/ingest.php",
+        "server/wartung_lib.php",
+        "tools/proben/verbindung/**"
       ],
       "proben": [
         "verbindungsprobe"
       ],
-      "anlass": "Nr. 210"
+      "anlass": "Nr. 210. Seit Schritt 18 (SR-05, F-SR-08) auch ingest.php, wartung_lib.php und die Probe selbst: Sie misst das Gedraengel gleichzeitiger Uploads und lief bis dahin fuer eine Aenderung an ingest.php erst in haupt -- eine Korrektur am Deadlock haette die Probe, die ihn misst, nicht gefahren."
     },
     {
       "id": "krypto",

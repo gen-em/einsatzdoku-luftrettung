@@ -362,7 +362,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
 | `server/wartung_lib.php`, `server/auth_guard.php`, `server/betrieb_updates.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171; betrieb_updates.php seit R4-11 (Nr. 250, F-R4-38): die Probe schaltet ueber diese Seite |
 | `server/api/health.php`, `server/speicher_lib.php` | klein | `ratenprobe`, `wartungsprobe` | E-P5c-17, -52 (Health, P5c/AP6): Token, Felder, Migration und Menge in der Ratenprobe, die Antwort aus dem Tor in der Wartungsprobe |
-| `server/db.php` | klein | `verbindungsprobe` | Nr. 210 |
+| `server/db.php`, `server/ingest.php`, `server/wartung_lib.php`, `tools/proben/verbindung/**` | klein | `verbindungsprobe` | Nr. 210. Seit Schritt 18 (SR-05, F-SR-08) auch ingest.php, wartung_lib.php und die Probe selbst: Sie misst das Gedraengel gleichzeitiger Uploads und lief bis dahin fuer eine Aenderung an ingest.php erst in haupt -- eine Korrektur am Deadlock haette die Probe, die ihn misst, nicht gefahren. |
 | `server/serverkrypto_lib.php`, `server/auth_salt.php`, `server/assets/unlock.js`, `server/assets/crypto.js` | klein | `anteilprobe`, `containerprobe` | S10-Kern, F-S10-AP3-03 |
 | `server/*freigabe*.php`, `server/*schluessel*.php` | klein | `freigabeprobe` | F-S2-F |
 | `server/sitzung_lib.php`, `server/session_lib.php`, `server/assets/keyguard.js` | klein | `fristprobe`, `abmelde-probe`, `sitzungshaertung` | R44; Nr. 22; Nr. 205 |
