@@ -1715,7 +1715,13 @@ ui_seite_start(['titel' => 'Einstellungen',
         require_once __DIR__ . '/passkey_lib.php';
         $pkDa = pk_verfuegbar();
         if ($pkDa) {
-            $pkListe = pk_liste($userId);
+            /* NUR DIE DER HEUTIGEN ADRESSE ZAEHLEN UND GELTEN (E-SR-48,
+               F-SR-41). Passkeys einer frueheren Adresse (nach einem Umzug
+               oder einem Komplett-Stand von anderswo) stehen darunter, als
+               nicht nutzbar gekennzeichnet, mit „Entfernen". */
+            $pkAlle  = pk_liste($userId);
+            $pkListe = array_values(array_filter($pkAlle, static fn(array $p): bool => $p['hier']));
+            $pkFremd = array_values(array_filter($pkAlle, static fn(array $p): bool => !$p['hier']));
             ui_zeile(['text' => 'Passkeys',
                       'klein' => $pkListe
                           ? 'ersetzen bei der Anmeldung den Code — mit Fingerabdruck, Gesicht, PIN oder Sicherheitsschlüssel'
@@ -1732,6 +1738,16 @@ ui_seite_start(['titel' => 'Einstellungen',
                           'aktionen' => ui_knopf(['text' => 'Entfernen', 'art' => 'leise',
                               'attr' => ' form="f-pk-' . $pk['id'] . '" data-confirm="Passkey „'
                                       . e($pkName) . '" entfernen? Die Anmeldung fragt dort danach wieder nach dem Code." '
+                                      . 'data-confirm-ok="Entfernen" data-confirm-tone="normal"'])]);
+            }
+            foreach ($pkFremd as $pk) {
+                $pkName = pk_anzeigename($pk);
+                ui_zeile(['text' => $pkName,
+                          'klein' => 'gilt für ' . $pk['rp_id'] . ' — hier nicht nutzbar',
+                          'plaketten' => ui_plakette('andere Adresse'),
+                          'aktionen' => ui_knopf(['text' => 'Entfernen', 'art' => 'leise',
+                              'attr' => ' form="f-pk-' . $pk['id'] . '" data-confirm="Passkey „'
+                                      . e($pkName) . '" entfernen? Er gilt nur für ' . e($pk['rp_id']) . '." '
                                       . 'data-confirm-ok="Entfernen" data-confirm-tone="normal"'])]);
             }
             if (count($pkListe) < PK_HOECHSTENS && zweitfaktor_frisch()) {
@@ -1764,13 +1780,21 @@ ui_seite_start(['titel' => 'Einstellungen',
         }
         /* DAS GEHEIMNIS IST NICHT ZU OEFFNEN, wenn die Anlage einen anderen
            Serverschluessel hat als bei der Einrichtung (Wiederanlauf,
-           eingespieltes Komplett-Backup). Die Anmeldung geht dann nur noch
-           mit Wiederherstellungscodes; das soll hier stehen und nicht erst
-           beim naechsten Anmelden auffallen. */
+           eingespieltes Komplett-Backup). Die Anmeldung geht dann mit
+           Wiederherstellungscodes und Passkeys (E-SR-49); das soll hier
+           stehen und nicht erst beim naechsten Anmelden auffallen. */
         if (totp_geheimnis($userId) === null) {
-            ui_meldung(null, $zfPflicht
+            /* PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL (E-SR-49) — sie
+               bleiben hier der Weg hinein; Ausschalten oder Zuruecksetzen
+               nimmt sie aber mit (H-SR-08, F-SR-38), und das soll man
+               vorher lesen. */
+            $pkNoch = !empty($pkListe);
+            ui_meldung(null, ($zfPflicht
                 ? 'Die Verwaltung muss ihn zurücksetzen; danach richtest du ihn neu ein.'
-                : 'Schalte ihn aus und richte ihn neu ein.', 'info', '      ',
+                : 'Schalte ihn aus und richte ihn neu ein.')
+                . ($pkNoch ? ' Bis dahin meldest du dich mit deinem Passkey an; das '
+                           . ($zfPflicht ? 'Zurücksetzen' : 'Ausschalten') . ' nimmt ihn mit — lege ihn danach neu an.' : ''),
+                'info', '      ',
                 ['auftakt_fehler' => 'Das Geheimnis lässt sich auf dieser Anlage nicht öffnen.']);
         }
         if ($zfPflicht): ?>
@@ -1791,7 +1815,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?php if (!$zfPflicht): ?>
           <?= ui_knopf(['text' => 'Ausschalten', 'art' => 'leise', 'name' => 'action',
                         'wert' => 'zf_ausschalten',
-                        'attr' => ' data-confirm="Zweitfaktor ausschalten? Die Anmeldung fragt danach wieder nur nach dem Passwort; die Codes werden ungültig." data-confirm-ok="Ausschalten"']) ?>
+                        'attr' => ' data-confirm="Zweitfaktor ausschalten? Die Anmeldung fragt danach wieder nur nach dem Passwort; die Codes und deine Passkeys werden ungültig." data-confirm-ok="Ausschalten"']) ?>
           <?php endif; ?>
         </div>
       </form>
@@ -1800,7 +1824,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         <?= csrf_field() ?><input type="hidden" name="action" value="zf_geraete_vergessen">
       </form>
       <?php endif; ?>
-      <?php if ($pkDa): foreach ($pkListe as $pk): ?>
+      <?php if ($pkDa): foreach ($pkAlle as $pk): ?>
       <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor" id="f-pk-<?= (int)$pk['id'] ?>" hidden>
         <?= csrf_field() ?><input type="hidden" name="action" value="passkey_entfernen">
         <input type="hidden" name="id" value="<?= (int)$pk['id'] ?>">

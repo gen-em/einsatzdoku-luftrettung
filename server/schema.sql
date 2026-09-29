@@ -130,21 +130,30 @@ CREATE TABLE vertraute_geraete (
 -- Ein weiteres Verfahren desselben Faktors: nur neben eingeschaltetem TOTP.
 -- credential_id: die Kennung des Authenticators, Base64url — ascii_bin, weil
 -- Base64url Gross- und Kleinschreibung unterscheidet; 1364 Zeichen fassen die
--- 1023 Bytes, die WebAuthn hoechstens erlaubt. oeffentlich: SPKI als PEM,
--- bei der Registrierung aus COSE ueberfuehrt. alg: -7 (ES256) oder -257
--- (RS256). Kein User-Agent, keine AAGUID (E-SR-31).
+-- 1023 Bytes, die WebAuthn hoechstens erlaubt. credential_hash: SHA-256 der
+-- Kennung (hex) — der eindeutige Schluessel liegt hier und nicht auf der
+-- Kennung selbst, damit kein Index ueber 767 Byte reicht (H-SR-08, F-SR-42).
+-- rp_id: die Adresse, fuer die der Passkey entstand (H-SR-08, F-SR-41) —
+-- angeboten und geprueft wird nur, was zur heutigen passt. oeffentlich: SPKI
+-- als PEM, bei der Registrierung aus COSE ueberfuehrt. alg: -7 (ES256) oder
+-- -257 (RS256). gewarnt_am: die letzte Mail wegen eines zurueckgelaufenen
+-- Zaehlers (hoechstens eine je Tag, F-SR-36). Kein User-Agent, keine AAGUID
+-- (E-SR-31).
 CREATE TABLE passkeys (
-  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id       INT UNSIGNED NOT NULL,
-  credential_id VARCHAR(1364) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  oeffentlich   TEXT NOT NULL,
-  alg           SMALLINT NOT NULL,
-  zaehler       INT UNSIGNED NOT NULL DEFAULT 0,
-  bezeichnung   VARCHAR(40) NOT NULL DEFAULT '',
-  angelegt_am   DATETIME NOT NULL,
-  zuletzt_am    DATETIME NULL,
-  UNIQUE KEY uq_passkeys_credential (credential_id),
-  KEY idx_konto (user_id),
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id         INT UNSIGNED NOT NULL,
+  credential_id   VARCHAR(1364) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  credential_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  rp_id           VARCHAR(253) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  oeffentlich     TEXT NOT NULL,
+  alg             SMALLINT NOT NULL,
+  zaehler         INT UNSIGNED NOT NULL DEFAULT 0,
+  bezeichnung     VARCHAR(40) NOT NULL DEFAULT '',
+  angelegt_am     DATETIME NOT NULL,
+  zuletzt_am      DATETIME NULL,
+  gewarnt_am      DATETIME NULL,
+  UNIQUE KEY uq_passkeys_credential (credential_hash),
+  KEY idx_konto (user_id, rp_id),
   CONSTRAINT fk_passkeys_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

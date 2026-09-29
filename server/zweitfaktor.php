@@ -66,13 +66,20 @@ if (isset($_GET['bestaetigen'])) {
         csrf_check();
         /* DER PASSKEY ZAEHLT WIE EIN CODE (SR-09, E-SR-32): Antwort im Feld
          * `passkey_antwort`, Herausforderung in `passkey_best` (einmal). */
-        $mitPk = !$mitRc && ($_POST['passkey_antwort'] ?? '') !== '';
+        /* Ein Feld, das kein Text ist, ist eine leere Antwort (Nachpruefung
+         * von H-SR-08, B-1: sonst eine PHP-Warnung im Reiter System). */
+        $pkFeld = $_POST['passkey_antwort'] ?? '';
+        $mitPk = !$mitRc && $pkFeld !== '';
         if ($mitPk) {
             $pkAblage = is_array($_SESSION['passkey_best'] ?? null) ? $_SESSION['passkey_best'] : [];
             unset($_SESSION['passkey_best']);
-            $pkAntwort = json_decode((string)$_POST['passkey_antwort'], true);
+            /* Das Fach traegt das Konto wie die beiden anderen (H-SR-08,
+             * F-SR-39), und die Antwort hat einen Deckel (F-SR-35). */
+            if (!pk_ablage_passt($pkAblage, $userId)) { $pkAblage = []; }
+            $pkRoh = is_string($pkFeld) ? $pkFeld : '';
+            $pkAntwort = strlen($pkRoh) <= PK_ANTWORT_MAX ? json_decode($pkRoh, true) : null;
             $pkR = pk_anmeldung_pruefen($userId, $pkAblage, is_array($pkAntwort) ? $pkAntwort : []);
-            $pr = $pkR['ok'] ? ['ok' => true, 'art' => 'passkey'] : ['ok' => false, 'art' => null, 'passkey' => true];
+            $pr = $pkR['ok'] ? ['ok' => true, 'art' => 'passkey'] : ['ok' => false, 'art' => null, 'passkey' => $pkR['art']];
         } else {
             $pr = totp_anmeldung_pruefen($userId, (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''),
                                          $mitRc ? 'code' : 'app');
@@ -97,15 +104,30 @@ if (isset($_GET['bestaetigen'])) {
             header('Location: ' . $zurueck, true, 303);
             exit;
         }
-        rate_misserfolg('totp', null, $merkmale);
+        /* Kein Fehlversuch: eine abgelaufene oder verdraengte Herausforderung
+         * und ein zurueckgelaufener Zaehler bei gueltiger Signatur
+         * (H-SR-08, F-SR-37 — dieselbe Regel wie im Code-Schritt). */
+        if (!in_array($pr['passkey'] ?? '', ['herausforderung', 'zaehler'], true)) {
+            rate_misserfolg('totp', null, $merkmale);
+        }
         $gesperrt = !rate_erlaubt('totp', null, $merkmale);
-        if (!$gesperrt && !empty($pr['passkey'])) {
+        if (!$gesperrt && ($pr['passkey'] ?? '') === 'herausforderung') {
+            $bAuftakt = 'Die Anfrage ist abgelaufen.';
+            $bFehler  = 'Bitte noch einmal „Mit Passkey bestätigen" — oder den Code aus der App nehmen.';
+        } elseif (!$gesperrt && ($pr['passkey'] ?? '') === 'zaehler') {
+            $bAuftakt = 'Der Passkey wurde abgewiesen.';
+            $bFehler  = 'Er wurde zuletzt auf einem anderen Gerät benutzt — vielleicht eine Kopie. Nimm den '
+                      . 'Code aus der App; warst du das nicht, entferne ihn unter Einstellungen → Profil.';
+        } elseif (!$gesperrt && !empty($pr['passkey'])) {
             $bAuftakt = 'Der Passkey wurde nicht angenommen.';
             $bFehler  = 'Nimm den Code aus der App — oder versuche es noch einmal.';
         } elseif (!$gesperrt && !empty($pr['geheimnis_fehlt'])) {
+            /* Passkeys haengen nicht am Serverschluessel (E-SR-49). */
             $bAuftakt = 'Der Code lässt sich hier nicht prüfen.';
             $bFehler  = 'Der Zweitfaktor wurde mit einem anderen Serverschlüssel eingerichtet. '
-                      . 'Nimm einen Wiederherstellungscode.';
+                      . (pk_verfuegbar() && pk_zahl($userId) > 0
+                           ? 'Nimm deinen Passkey oder einen Wiederherstellungscode.'
+                           : 'Nimm einen Wiederherstellungscode.');
         } elseif (!$gesperrt) {
             $bAuftakt = 'Der Code passt nicht.';
             $bFehler  = $mitRc ? 'Jeder Wiederherstellungscode gilt einmal — ein benutzter ist verbraucht.'
@@ -125,7 +147,7 @@ if (isset($_GET['bestaetigen'])) {
     $pkBest = null;
     if (!$gesperrt && !$mitRc && pk_verfuegbar() && pk_zahl($userId) > 0) {
         $pkAblage = [];
-        pk_herausforderung_stellen($pkAblage, 300);
+        pk_herausforderung_stellen($pkAblage, 300, $userId);
         $_SESSION['passkey_best'] = $pkAblage;
         $pkBest = ['herausforderung' => $pkAblage['herausforderung'], 'rp_id' => pk_ursprung()['rp_id'],
                    'kennungen' => pk_kennungen($userId)];

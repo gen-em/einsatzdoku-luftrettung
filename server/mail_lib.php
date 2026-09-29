@@ -461,7 +461,8 @@ function mail_katalog(): array
                     . "fragt ab jetzt nur nach dem Passwort; deine\n"
                     : "die Verwaltung der " . $n . " hat den Zweitfaktor deines Kontos\n"
                     . "zurückgesetzt. Die Anmeldung fragt ab jetzt nur nach dem Passwort; deine\n")
-                . "Wiederherstellungscodes und ein gedrucktes Codeblatt gelten nicht mehr.\n\n"
+                . "Wiederherstellungscodes, ein gedrucktes Codeblatt und deine Passkeys gelten\n"
+                . "nicht mehr.\n\n"
                 . "Richte ihn nach der nächsten Anmeldung unter Einstellungen → Profil neu ein —\n"
                 . "für Support, Admin und BetreiberIn geschieht das beim Anmelden von selbst:\n\n"
                 . $d['link'],
@@ -512,6 +513,28 @@ function mail_katalog(): array
                 . $d['link'],
                 "Falls du das nicht warst, ändere bitte umgehend dein Passwort und melde dich\n"
                 . "bei der Verwaltung."),
+        ],
+
+        /* EIN PASSKEY MIT ZURUECKGELAUFENEM ZAEHLER (H-SR-08, E-SR-46,
+         * F-SR-36). Ausloesen kann das nur, wer einen gueltigen Schluessel hat
+         * und im Code-Schritt vorher das Passwort — das staerkste Zeichen fuer
+         * ein erbeutetes Konto, das die Anlage kennt. Den Reiter Verwaltung
+         * sieht die Rolle `user` nicht; ohne diese Mail erfuhr sie davon
+         * nichts. Hoechstens eine je Passkey und Tag (`gewarnt_am`). */
+        'passkey_zaehler' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'bezeichnung'],
+            'betreff' => fn(array $d): string => 'Passkey abgewiesen — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " ist eine Anmeldung mit dem Passkey\n"
+                . "„" . $d['bezeichnung'] . "“ abgewiesen worden: Sein Zähler lag nicht über dem\n"
+                . "zuletzt gesehenen. Das heißt, dieser Passkey wurde zuletzt auf einem anderen\n"
+                . "Gerät benutzt — es gibt eine Kopie, oder ein Gerät wurde aus einer Sicherung\n"
+                . "zurückgespielt. Wer das war, kannte dein Passwort oder war schon angemeldet.\n\n"
+                . "Warst du das nicht: Entferne den Passkey unter Einstellungen → Profil, ändere\n"
+                . "umgehend dein Passwort und melde dich bei der Verwaltung. Hast du ein Gerät\n"
+                . "zurückgespielt: Entferne ihn und lege ihn neu an.\n\n"
+                . $d['link'],
+                "Bis dahin geht die Anmeldung mit dem Code aus der App."),
         ],
 
         'registrierung_verfallen' => [

@@ -1251,3 +1251,20 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `SHOW CREATE TABLE` jeder Tabelle mit der frisch angelegten; eine
      Abweichung ist rot. *Abnahme:* eine absichtlich abweichende Spalte in
      einer Migration → rot.
+
+<!-- -->
+
+354. **`protokoll()` schluckt in einer Transaktion einen Deadlock — „alles oder nichts" endet als „nichts, gemeldet als alles".** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 29.09.2026
+     *Aufgenommen 29.09.2026 in H-SR-08 (Konzept SR, F-SR-50, Nachprüfung
+     D-3).* `protokoll()` fängt jede Ausnahme und gibt `false` zurück. Steht
+     es im Rumpf von `db_transaktion()` — seit Web 21.8.0 beim Passwort
+     (E-SR-40), seit 21.11.0 in `totp_abschalten()` —, und bricht der INSERT
+     mit einem Deadlock ab, rollt InnoDB die GANZE Transaktion zurück; der
+     Rumpf merkt es nicht, `commit()` bestätigt den Rest, und der Aufrufer
+     meldet Erfolg (Reset-Mail, „Passwort gewechselt"), obwohl nichts oder
+     nur ein Teil geschrieben ist. Selten (ein Deadlock an einem INSERT ohne
+     Fremdschlüssel), gelesen, nicht nachgestellt. *Weg:* `protokoll()` wirft
+     innerhalb einer offenen Transaktion, statt zu schlucken, oder die
+     Einträge wandern hinter den Commit. *Abnahme:* ein Auslöser, der den
+     INSERT in `protokoll_ereignisse` mit `40001` scheitern lässt → der
+     Aufrufer sieht den Fehler, nichts ist geschrieben.

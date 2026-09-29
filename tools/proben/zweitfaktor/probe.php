@@ -51,11 +51,14 @@ declare(strict_types=1);
  *      frischen Code → Bestätigung, zurück nur auf eine Seite der Liste.
  *   5d. Passkeys an der Anlage (SR-09, E-SR-31, -32): der Knopf im
  *      Code-Schritt, Anmeldung mit Passkey zählt wie ein App-Code (Gerät
- *      merken, frischer Code), eine falsche Signatur und eine zweimal
- *      geschickte Antwort nicht; die Bestätigungsseite nimmt ihn; der
- *      Endpunkt ohne frischen Code 403 JSON, mit frischem Code legt er an
- *      (Protokoll, Mail); Entfernen über die Karte. Die Prüfung selbst misst
- *      die Passkeyprobe — hier geht es um die Anbindung.
+ *      merken, frischer Code), eine falsche Signatur nicht; eine alte
+ *      Herausforderung mit frischer Signatur und ein zurückgelaufener Zähler
+ *      werden abgewiesen, aber nicht als Fehlversuch gezählt, der Zähler mit
+ *      eigenem Text und einer Mail (seit H-SR-08); die Bestätigungsseite nimmt
+ *      ihn; der Endpunkt ohne frischen Code 403 JSON, mit frischem Code legt
+ *      er an (Protokoll, Mail); Entfernen über die Karte (Protokoll, Mail).
+ *      Die Prüfung selbst misst die Passkeyprobe — hier geht es um die
+ *      Anbindung.
  *   7. Der Bus-Faktor (E-P5c-16, -56): Ein Konto ohne Zweitfaktor zählt nicht
  *      als handlungsfähig; dazu die Tabelle der Lagen (Rollenmix → Plakette
  *      und Ton) über `status_verwaltungszeile()` mit gesetzten Zahlen —
@@ -673,8 +676,8 @@ if (!zweitfaktor_geraete_da($pdo)) {
  * DAS KONTO WIRD BETREIBERIN wie in 5c — das Schluesselblatt zeigt die
  * Frische an der Seite selbst. */
 echo "== 5d. Passkeys an der Anlage (SR-09)\n";
-if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo)) {
-    pruefe(false, 'Passkeys an der Anlage', 'die Tabelle passkeys fehlt — update.php, nicht gemessen');
+if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo) || !db_hat_spalte($pdo, 'passkeys', 'rp_id')) {
+    pruefe(false, 'Passkeys an der Anlage', 'die Tabelle passkeys fehlt oder ist alt — update.php, nicht gemessen');
 } else {
     $pkU = ['ursprung' => 'https://localhost:8443', 'rp_id' => 'localhost'];
     $app = (array)konfig('app');
@@ -688,9 +691,10 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo)) {
     } catch (Throwable) { $mailVorher = null; }
     $paar = pb_paar(-7);
     $kennung = random_bytes(32);
-    $pdo->prepare("INSERT INTO passkeys (user_id, credential_id, oeffentlich, alg, zaehler, bezeichnung, angelegt_am)
-                   VALUES (?, ?, ?, -7, 0, 'Zweitfaktorprobe', UTC_TIMESTAMP())")
-        ->execute([$uid, pk_b64u($kennung), $paar['privat']->getPublicKey()->toString('PKCS8')]);
+    $pdo->prepare("INSERT INTO passkeys (user_id, credential_id, credential_hash, rp_id, oeffentlich, alg, zaehler,
+                                         bezeichnung, angelegt_am)
+                   VALUES (?, ?, ?, 'localhost', ?, -7, 0, 'Zweitfaktorprobe', UTC_TIMESTAMP())")
+        ->execute([$uid, pk_b64u($kennung), hash('sha256', $kennung), $paar['privat']->getPublicKey()->toString('PKCS8')]);
     $pkId = (int)$pdo->lastInsertId();
     $zaehler = 0;
     /** Den Bereich des Knopfs aus einer Seite lesen: Herausforderung, rp.id, Kennungen. */
@@ -719,12 +723,35 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo)) {
                'Code-Schritt: Knopf „Mit Passkey bestätigen" mit Herausforderung, rp.id localhost und der Kennung',
                $k === null ? 'kein Knopf' : 'rp.id ' . $k['rp-id']);
 
-        // 2. Eine falsche Signatur zählt nicht
+        // 2. Eine falsche Signatur gilt nicht und ZAEHLT als Fehlversuch
+        //    (E-SR-50 — die Haelfte, die bis zur Nachpruefung C-3 niemand mass)
+        $versuche = static fn(): int => (int)$pdo->query("SELECT COALESCE(SUM(versuche), 0) FROM rate_limits
+                                                           WHERE topf = 'totp' AND merkmal = " . $pdo->quote($merkmal))->fetchColumn();
+        $systemZeilen = static fn(): int => (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse
+                                                               WHERE reiter = 'system'")->fetchColumn();
+        $vorV = $versuche();
         $f = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'schritt' => 'code',
                                         'passkey_antwort' => $antwort($k, ['falsch' => true])]);
         pruefe($f['code'] === 200 && str_contains(html_entity_decode($f['rumpf']), 'Der Passkey wurde nicht angenommen')
-               && http('GET', 'api/range.php')['code'] === 401,
-               'falsche Signatur: bleibt im Code-Schritt, Meldung, nicht angemeldet', "HTTP {$f['code']}");
+               && http('GET', 'api/range.php')['code'] === 401 && $versuche() === $vorV + 1,
+               'falsche Signatur: bleibt im Code-Schritt, Meldung, nicht angemeldet, ein Fehlversuch',
+               "HTTP {$f['code']}, Versuche $vorV → " . $versuche());
+
+        // 2b. Das Feld als Liste (Nachpruefung B-1) und ueber dem Deckel
+        //     (B-4): abgewiesen und gezaehlt, ohne PHP-Warnung im Reiter System
+        $vorS = $systemZeilen();
+        $vorV = $versuche();
+        $f = http('POST', 'login.php', ['csrf' => csrf_von($f['rumpf']), 'schritt' => 'code',
+                                        'passkey_antwort' => ['x']]);
+        $f2 = http('POST', 'login.php', ['csrf' => csrf_von($f['rumpf']), 'schritt' => 'code',
+                                         'passkey_antwort' => str_repeat('A', PK_ANTWORT_MAX + 1)]);
+        pruefe($f['code'] === 200 && $f2['code'] === 200
+               && str_contains(html_entity_decode($f['rumpf']), 'Der Passkey wurde nicht angenommen')
+               && str_contains(html_entity_decode($f2['rumpf']), 'Der Passkey wurde nicht angenommen')
+               && $versuche() === $vorV + 2 && $systemZeilen() === $vorS,
+               'Feld als Liste und über dem Deckel: abgewiesen, je ein Fehlversuch, keine Zeile im Reiter System',
+               "HTTP {$f['code']}/{$f2['code']}, Versuche $vorV → " . $versuche() . ", System $vorS → " . $systemZeilen());
+        $f = $f2;
 
         // 3. Mit Passkey angemeldet, „Gerät merken" gesetzt
         $k = $knopf($f['rumpf'], 'data-passkey-bestaetigen');
@@ -739,15 +766,33 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo)) {
                "Anmeldung {$r['code']}, Gerät " . (isset($keks['EDGERAET']) ? 'ja' : 'nein')
                . ", Zähler {$zeile['zaehler']}, Blatt {$b['code']}");
 
-        // 4. Dieselbe Antwort noch einmal: die Herausforderung gilt einmal
+        // 4. Die Herausforderung gilt einmal — GETRENNT vom Zaehler gemessen
+        //    (H-SR-08, F-SR-43): eine frisch signierte Antwort mit hoeherem
+        //    Zaehler, aber der Herausforderung von Schritt 3. Sie scheitert
+        //    nur an der Herausforderung, und das zaehlt nicht als Fehlversuch
+        //    (F-SR-37).
         $g = $keks['EDGERAET'] ?? null;
         $keks = [];
         passwort();
+        $vorV = $versuche();
         $s = http('GET', 'login.php');
         $w = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'schritt' => 'code',
-                                        'passkey_antwort' => $gut1]);
-        pruefe($w['code'] === 200 && http('GET', 'api/range.php')['code'] === 401,
-               'dieselbe Antwort noch einmal (neue Anmeldung): abgewiesen', "HTTP {$w['code']}");
+                                        'passkey_antwort' => $antwort($k)]);
+        pruefe($w['code'] === 200 && http('GET', 'api/range.php')['code'] === 401
+               && str_contains(html_entity_decode($w['rumpf']), 'Die Anfrage ist abgelaufen') && $versuche() === $vorV,
+               'alte Herausforderung, frische Signatur: abgewiesen, kein Fehlversuch', "HTTP {$w['code']}, Versuche $vorV → " . $versuche());
+
+        // 4b. Zaehler zurueck (eine Kopie): abgewiesen, eigener Text, kein
+        //     Fehlversuch, eine Mail an die Kontoadresse (E-SR-46)
+        $k = $knopf($w['rumpf'], 'data-passkey-bestaetigen');
+        $w = http('POST', 'login.php', ['csrf' => csrf_von($w['rumpf']), 'schritt' => 'code',
+                                        'passkey_antwort' => $antwort($k, ['zaehler' => 1])]);
+        $zMail = $mailVorher === null ? -1 : (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange
+                  WHERE id > $mailVorher AND schluessel = 'passkey_zaehler'")->fetchColumn();
+        pruefe($w['code'] === 200 && str_contains(html_entity_decode($w['rumpf']), 'zuletzt auf einem anderen Gerät benutzt')
+               && $versuche() === $vorV && $zMail === 1,
+               'Zaehler zurueck: abgewiesen mit eigenem Text, kein Fehlversuch, eine Mail',
+               "HTTP {$w['code']}, Versuche " . $versuche() . ", Mail $zMail");
 
         // 5. Über das gemerkte Gerät, dann die Bestätigungsseite mit Passkey
         $keks = $g !== null ? ['EDGERAET' => $g] : [];
@@ -774,6 +819,19 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo)) {
         $kr = $knopf($e['rumpf'], 'data-passkey-anlegen');
         $neu = pb_paar(-257);
         $reg = pb_registrierung($neu, (string)($kr['herausforderung'] ?? ''), $pkU);
+        // 6a. Rumpf ueber dem Deckel, Bezeichnung als Liste, 41 Zeichen: je
+        //     abgewiesen, OHNE die Herausforderung zu verbrauchen — das gueltige
+        //     Anlegen danach nimmt dieselbe (F-SR-39, Nachpruefung E-4, B-4)
+        $gross = http('POST', 'api/passkey_anlegen.php', [], str_repeat(' ', PK_ANTWORT_MAX + 1), csrf_von($e['rumpf']));
+        $liste = http('POST', 'api/passkey_anlegen.php', [],
+                      (string)json_encode(['antwort' => $reg['antwort'], 'bezeichnung' => ['x']]), csrf_von($e['rumpf']));
+        $zuLang = http('POST', 'api/passkey_anlegen.php', [],
+                       (string)json_encode(['antwort' => $reg['antwort'], 'bezeichnung' => str_repeat('x', 41)]), csrf_von($e['rumpf']));
+        pruefe($gross['code'] === 413 && (json_decode($gross['rumpf'], true)['error'] ?? '') === 'zu_gross'
+               && $liste['code'] === 400 && (json_decode($liste['rumpf'], true)['error'] ?? '') === 'bezeichnung'
+               && $zuLang['code'] === 400 && (json_decode($zuLang['rumpf'], true)['error'] ?? '') === 'bezeichnung',
+               'Endpunkt: Rumpf über dem Deckel 413, Bezeichnung als Liste und mit 41 Zeichen 400 (Herausforderung bleibt)',
+               "HTTP {$gross['code']}/{$liste['code']}/{$zuLang['code']}");
         $an = http('POST', 'api/passkey_anlegen.php', [],
                    (string)json_encode(['antwort' => $reg['antwort'], 'bezeichnung' => 'Probe RSA']), csrf_von($e['rumpf']));
         $zahl = (int)$pdo->query('SELECT COUNT(*) FROM passkeys WHERE user_id = ' . $uid)->fetchColumn();
@@ -787,8 +845,25 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo)) {
                "Abschnitt " . ($kr !== null ? 'ja' : 'nein') . ", HTTP {$an['code']}, Zahl $zahl, Protokoll $prot, Mail $post");
         $noch = http('POST', 'api/passkey_anlegen.php', [],
                      (string)json_encode(['antwort' => $reg['antwort'], 'bezeichnung' => '']), csrf_von($e['rumpf']));
-        pruefe($noch['code'] === 400, 'dieselbe Registrierung noch einmal: 400 (Herausforderung verbraucht)',
-               "HTTP {$noch['code']}");
+        $abgew = (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse WHERE betroffen_user_id = $uid
+                                    AND art = 'passkey_abgewiesen'")->fetchColumn();
+        pruefe($noch['code'] === 400 && (json_decode($noch['rumpf'], true)['error'] ?? '') === 'abgelaufen' && $abgew === 0,
+               'dieselbe Registrierung noch einmal: 400 „abgelaufen" (Herausforderung verbraucht), keine Zeile „abgewiesen"',
+               "HTTP {$noch['code']} " . substr($noch['rumpf'], 0, 60) . ", abgewiesen $abgew");
+        // 6b. Eine Kennung, die es schon gibt, mit NEUER Herausforderung:
+        //     nach aussen dieselbe Meldung wie jede andere Ablehnung, der
+        //     Grund steht im Protokoll (E-SR-45, F-SR-39)
+        $e = http('GET', 'einstellungen.php?t=profil');
+        $kr2 = $knopf($e['rumpf'], 'data-passkey-anlegen');
+        $reg2 = pb_registrierung($neu, (string)($kr2['herausforderung'] ?? ''), $pkU, ['kennung' => $reg['kennung']]);
+        $vorh = http('POST', 'api/passkey_anlegen.php', [],
+                     (string)json_encode(['antwort' => $reg2['antwort'], 'bezeichnung' => '']), csrf_von($e['rumpf']));
+        $grund = (string)$pdo->query("SELECT text FROM protokoll_ereignisse WHERE betroffen_user_id = $uid
+                                       AND art = 'passkey_abgewiesen' ORDER BY id DESC LIMIT 1")->fetchColumn();
+        pruefe($vorh['code'] === 400 && str_contains((string)(json_decode($vorh['rumpf'], true)['meldung'] ?? ''), 'nicht angenommen')
+               && str_contains($grund, 'gibt es schon'),
+               'Kennung gibt es schon: 400 „nicht angenommen", der Grund im Protokoll',
+               "HTTP {$vorh['code']}, Protokoll: $grund");
 
         // 7. Entfernen über die Karte
         $e = http('GET', 'einstellungen.php?t=profil');
@@ -810,7 +885,7 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo)) {
         $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([$merkmal]);
         if ($mailVorher !== null) {
             $pdo->exec("DELETE FROM mail_warteschlange WHERE id > $mailVorher
-                           AND schluessel IN ('passkey_angelegt', 'passkey_entfernt')");
+                           AND schluessel IN ('passkey_angelegt', 'passkey_entfernt', 'passkey_zaehler')");
         }
         $pkZurueck();
         usleep(3200000);

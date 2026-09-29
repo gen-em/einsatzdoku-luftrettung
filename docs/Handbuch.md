@@ -820,9 +820,13 @@ Notfallblatt fehlt.
 
 **Nach einem Umzug der Anlage auf einen anderen Serverschlüssel** — etwa nach
 einer Wiederherstellung aus einem Komplett-Backup — lässt sich das Geheimnis
-nicht mehr öffnen. Die Anmeldung sagt es und nimmt dann nur noch
-Wiederherstellungscodes; die Karte im Profil sagt es auch. Richte ihn danach
-neu ein (bei Pflichtrollen: erst zurücksetzen lassen).
+nicht mehr öffnen. Die Anmeldung sagt es und nimmt dann
+Wiederherstellungscodes und — seit Web 21.10.0 — deine **Passkeys**; beide
+hängen nicht am Serverschlüssel. Die Karte im Profil sagt es auch. Richte ihn
+danach neu ein (bei Pflichtrollen: erst zurücksetzen lassen). **Ausschalten
+und Zurücksetzen löschen auch die Passkeys** — auch den, mit dem du gerade
+hereingekommen bist. Also: ausschalten (oder zurücksetzen lassen), mit der
+App neu einrichten, dann die Passkeys neu hinzufügen.
 
 **Was er schützt und was nicht.** Er schützt die **Anmeldung** gegen ein
 gestohlenes Passwort. Gegen den Angriff auf eine gestohlene Datenbank hilft
@@ -869,7 +873,9 @@ Gesicht oder PIN des Geräts, oder mit einem Sicherheitsschlüssel am USB.
 Der Browser fragt danach, und die Antwort passt **nur zu dieser Adresse**:
 Eine nachgemachte Anmeldeseite unter einer anderen Adresse bekommt nichts,
 womit sie etwas anfangen kann — anders als ein Code, den man dort abtippen
-könnte.
+könnte. **Der Code aus der App bleibt aber daneben:** Wer auf einer
+nachgemachten Seite statt des Passkeys den Code eintippt, gibt ihn preis.
+Schau deshalb weiter auf die Adresse, auch mit Passkey.
 
 - **Für wen.** Für alle mit eingeschaltetem Zweitfaktor — ein Passkey kommt
   **zusätzlich** zur App, nicht an ihre Stelle. Codes, Codeblatt und
@@ -881,7 +887,8 @@ könnte.
   hinzufügen"** und der Dialog deines Browsers. Weil ein neuer zweiter Faktor
   am Konto hängt, fragt die Seite vorher nach einem **frischen Code**
   (oben): Steht dort **„Zuerst Code bestätigen"**, führt der Verweis auf die
-  Seite „Code bestätigen" und zurück. Höchstens **zehn** je Konto. Eine Mail
+  Seite „Code bestätigen" und zurück. Höchstens **zehn** je Konto und
+  Adresse. Eine Mail
   an deine Adresse sagt, dass einer dazugekommen ist — hat das jemand
   anderes getan, erfährst du es so.
 - **Anmelden.** Nach dem Passwort steht im Code-Schritt über dem Codefeld
@@ -894,14 +901,38 @@ könnte.
   und mit dem Wiederherstellungsschlüssel.
 - **Nur für diese Adresse.** Ein Passkey gehört zu der Adresse, unter der die
   Anlage läuft. Unter einer anderen Adresse — einer Testanlage neben der
-  echten, nach einem Umzug — gibt es ihn nicht, und die Anmeldung fragt nach
-  dem Code. Läuft die Anlage unter einer bloßen IP-Adresse oder ohne HTTPS,
-  gibt es keine Passkeys, und der Abschnitt fehlt.
+  echten — gibt es ihn nicht, und die Anmeldung fragt nach dem Code. **Nach
+  einem Umzug** auf eine neue Adresse bietet die Anmeldung die alten Passkeys
+  nicht mehr an; die Karte zeigt sie mit der Plakette **„andere Adresse"**
+  und dem Satz „gilt für … — hier nicht nutzbar", und du kannst sie dort
+  entfernen (seit Web 21.11.0). Läuft die Anlage unter einer bloßen
+  IP-Adresse oder ohne HTTPS — oder unter einem Namen mit Umlaut auf einem
+  Server ohne die PHP-Erweiterung `intl` —, gibt es keine Passkeys, und der
+  Abschnitt fehlt.
 - **Wenn der Knopf fehlt:** Der Browser kennt keine Passkeys, JavaScript ist
-  aus, oder das Konto hat keinen — dann bleibt der Code.
+  aus, oder das Konto hat keinen für diese Adresse — dann bleibt der Code.
+  Meldet der Browser **„Abgebrochen, abgelaufen oder kein passender Passkey
+  auf diesem Gerät"**, hast du den Dialog geschlossen, zu lange gewartet,
+  oder auf diesem Gerät liegt keiner deiner Passkeys; welches davon, sagt
+  der Browser nicht.
+- **„Der Passkey wurde abgewiesen — zuletzt auf einem anderen Gerät
+  benutzt"** (seit Web 21.11.0). Jeder Passkey zählt seine Benutzungen mit;
+  läuft die Zahl zurück, war womöglich eine **Kopie** im Spiel. Die Anmeldung
+  weist ihn dann ab, du bekommst eine Mail (höchstens eine am Tag je
+  Passkey), und der Passkey bleibt stehen — du entscheidest. Melde dich mit
+  dem Code an; warst du es nicht, entferne ihn unter Einstellungen → Profil
+  und wechsle dein Passwort, denn wer ihn benutzt hat, kannte es. Passkeys,
+  die über Apple oder Google zwischen deinen Geräten wandern, zählen nicht
+  mit und lösen das nie aus. Ein solcher Fall zählt, wie eine abgelaufene
+  Anfrage, **nicht** als Fehlversuch.
 - Gespeichert wird der **öffentliche** Teil des Schlüssels, seine Kennung,
-  die Bezeichnung und wann er angelegt und zuletzt benutzt wurde; der geheime
-  Teil verlässt dein Gerät nicht. Kein Gerätename, kein Hersteller.
+  die Adresse, für die er gilt, die Bezeichnung und wann er angelegt und
+  zuletzt benutzt wurde; der geheime Teil verlässt dein Gerät nicht. Kein
+  Gerätename, kein Hersteller. **Dein Gerät** (oder der Schlüsselbund, der
+  deine Passkeys verwaltet) kann seinerseits die Adresse der Anlage, deine
+  Kontoadresse als Namen des Passkeys und eine Nutzerkennung speichern — das
+  ist deine Kontonummer, sonst nichts. Ein Sicherheitsschlüssel ohne eigenen
+  Speicher für Passkeys legt keinen Namen ab.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -3677,7 +3708,7 @@ Darunter:
 | Karte | Was dort steht |
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** in den Reiter Verwaltung, eingegrenzt auf dieses Konto — als Handelnde oder als Betroffene (11.7); was andere Reiter über das Konto führen, etwa ein eingespieltes Konto-Backup im Reiter Sicherung, zeigt dieser Filter nicht. |
-| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind, seit Web 21.10.0 dazu die **Zahl der Passkeys** (nur die Zahl — welche es sind und wie sie heißen, sieht nur die Person selbst). **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg — seit Web 21.8.0 auch die gemerkten Geräte, seit Web 21.10.0 die Passkeys (3.1f); die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
+| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind, seit Web 21.10.0 dazu die **Zahl der Passkeys** (nur die Zahl, auch die einer früheren Adresse — welche es sind und wie sie heißen, sieht nur die Person selbst). **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg — seit Web 21.8.0 auch die gemerkten Geräte, seit Web 21.10.0 die Passkeys (3.1f); die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
@@ -4419,12 +4450,15 @@ Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 > ## Passkeys
 >
 > Wer beim Zweitfaktor einen Passkey hinzufügt, hinterlegt auf dem Server
-> dessen öffentlichen Schlüssel, eine vom Gerät vergebene Kennung, eine
-> selbst gewählte Bezeichnung und die Zeitpunkte des Anlegens und der
-> letzten Benutzung. Der geheime Teil des Schlüssels verlässt das Gerät
+> dessen öffentlichen Schlüssel, eine vom Gerät vergebene Kennung, die
+> Adresse des Dienstes, für die er gilt, eine selbst gewählte Bezeichnung
+> und die Zeitpunkte des Anlegens und der letzten Benutzung. Der geheime Teil des Schlüssels verlässt das Gerät
 > nicht. Gerätename, Hersteller und Modell werden nicht erhoben. Die
 > Angaben werden gelöscht, wenn der Passkey entfernt, der Zweitfaktor
-> ausgeschaltet oder das Konto gelöscht wird.
+> ausgeschaltet oder das Konto gelöscht wird. Das Gerät oder ein
+> Schlüsselbund (etwa bei Apple oder Google) kann dazu die Adresse des
+> Dienstes, die E-Mail-Adresse als Namen und die Kontonummer als
+> Nutzerkennung speichern; darauf hat der Dienst keinen Zugriff.
 > ```
 
 **Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:

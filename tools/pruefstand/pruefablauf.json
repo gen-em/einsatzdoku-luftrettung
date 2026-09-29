@@ -283,7 +283,7 @@
     "passkeyprobe": {
       "aufruf": "bash tools/proben/proben.sh passkey",
       "braucht": "installation",
-      "bemerkung": "Schritt 18, SR-09 (Nr. 350). Ohne Browser und ohne HTTP: baut mit phpseclib Schluesselpaare, attestationObject, clientDataJSON und Assertions selbst und misst passkey_lib.php -- CBOR-Leser (Fliesszahl, Marke, unbestimmte Laenge, neun Ebenen abgelehnt), Registrierung und Anmeldung ES256 und RS256 samt Ablehnungen, Zaehlerregel, Tabelle (elfter Passkey, Kaskade ueber totp_abschalten). Stellt app.base_url fuer den Lauf auf https://localhost:8443 (E-SR-42) und legt config.php byte-gleich zurueck."
+      "bemerkung": "Schritt 18, SR-09 (Nr. 350). Ohne Browser und ohne HTTP: baut mit phpseclib Schluesselpaare, attestationObject, clientDataJSON und Assertions selbst und misst passkey_lib.php -- CBOR-Leser (Fliesszahl, Marke, unbestimmte Laenge, neun Ebenen abgelehnt), Registrierung und Anmeldung ES256 und RS256 samt Ablehnungen, Zaehlerregel, Tabelle (elfter Passkey, Kaskade ueber totp_abschalten). Seit H-SR-08 (Web 21.11.0) prueft jede Ablehnung ihren Grund und bei der Anmeldung ihre Art (herausforderung, zaehler, pruefung); dazu RSA-Grenzen, COSE-Labels, Textschluessel, Felddeckel, Adresse je Zeile, Zaehler-Mail mit Tagesdeckel und verwaiste Passkeys. Stellt app.base_url fuer den Lauf auf https://localhost:8443 (E-SR-42) und legt config.php byte-gleich zurueck."
     },
     "sitzungsprobe": {
       "aufruf": "bash tools/proben/proben.sh sitzung",
@@ -640,7 +640,7 @@
         "rollenprobe",
         "bedienprobe"
       ],
-      "anlass": "Nr. 350 (Schritt 18, SR-09): Passkeys ohne WebAuthn-Bibliothek -- ein eigener CBOR-Leser und eine eigene Pruefung beider Zeremonien (E-SR-30, -36)."
+      "anlass": "Nr. 350 (Schritt 18, SR-09): Passkeys ohne WebAuthn-Bibliothek -- ein eigener CBOR-Leser und eine eigene Pruefung beider Zeremonien (E-SR-30, -36); die Gegenlesung H-SR-08 fand 41 Befunde, die die Probe bis dahin nicht sah (F-SR-43)."
     },
     {
       "id": "sitzungsbindung",

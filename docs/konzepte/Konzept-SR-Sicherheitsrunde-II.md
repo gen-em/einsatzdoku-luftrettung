@@ -26,7 +26,8 @@ Fable-Schritt**; SR-03 bekommt vor dem PR eine **Gegenlesung durch Fable**
 (Q-SR-13, E-SR-36, H-SR-08).
 **Fächerung (`CLAUDE.md` 7):** keine, in keinem Paket. Alle Pakete
 schreiben `server/`, und jedes trägt erzählenden Text; die Konzeptsitzung
-hat nicht gefächert (2.1).
+hat nicht gefächert (2.1). **Die Gegenlesung H-SR-08** lief auf Wunsch der
+Betreiberin als lesender Workflow (E-SR-44) — eine Messung, kein Paket.
 **Versionsstufe:** legt die Umsetzung fest (K3). Je Paket in Abschnitt 4
 vermerkt: SR-05 Korrektur; SR-01, SR-03, SR-04, SR-07, SR-08 Neben; SR-02
 und SR-09 Neben **mit Migration** — der Prüfstand fährt dafür `haupt` (Stufenregel `migration`),
@@ -54,13 +55,13 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **28.09.2026 — Umsetzung hält an H-SR-08: SR-01, SR-02, SR-07 und SR-09 gebaut (Web 21.7.0, 21.8.0, 21.9.0, 21.10.0)**, gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). **Jetzt: Fable-Gegenlesung von `passkey_lib.php`** (E-SR-36), dazu E-SR-42 zur Bestätigung; danach SR-05. Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (Betreiberin, E-SR-29; ihre zwei Fragen beantwortet, E-SR-35, -36) — **neun Pakete** (4). Befund an neun Punkten und sechs Themen, gelesen am Stand R4-10 (2); die Klickrunde hat zwei Pakete dazugebracht (SR-07, SR-08), die Nachfassung eines. **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; `nummern` grün (F-SR-12 erledigt); aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
-> | Entschieden | **E-SR-01 bis E-SR-37** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (das Vergessen in der Transaktion des Passworts, SR-02), E-SR-41 (ein Abbruchziel für Handlungen, die eine Seite sind, SR-07), E-SR-42 (Ursprung aus `app.base_url`, SR-09 — **weicht vom Konzept ab, zur Bestätigung**), E-SR-43 (kein Schloss an den Passkey-Knöpfen, SR-09). |
-> | Offen | **H-SR-08:** Fable liest `passkey_lib.php` gegen das Konzept; die Betreiberin bestätigt E-SR-42 oder entscheidet anders. **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). |
-> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). **SR-09 erledigt** 28.09.2026 (Web 21.10.0, Migration `2026_09_28_passkeys`; Befunde F-SR-28 bis -32; Nr. 350 erledigt, Nr. 353 neu). **Halt H-SR-08.** |
-> | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) und SR-09 (H-SR-08, E-SR-36). |
-> | Fächerung | keine. |
-> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`), **353** (Schemaprobe vergleicht migriert und frisch nicht, F-SR-28, `nächste Backlog-Runde`). |
+> | Stand | **29.09.2026 — H-SR-08 durchlaufen: Gegenlesung von SR-09 (41 Befunde, F-SR-33 bis -44) behoben in Web 21.11.0, die Behebung nachgeprüft (23 weitere, F-SR-45 bis -52, eingearbeitet bis auf Nr. 354)**; E-SR-42 bestätigt, Q-SR-14 bis -18 beantwortet. Gebaut sind SR-01, SR-02, SR-07 und SR-09 (Web 21.7.0 bis 21.10.0), gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). **Als Nächstes: SR-05.** Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (E-SR-29, -35, -36) — **neun Pakete** (4). **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
+> | Entschieden | **E-SR-01 bis E-SR-53** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (SR-02), E-SR-41 (SR-07), E-SR-42 (Ursprung aus `app.base_url`, SR-09 — **von der Betreiberin bestätigt** bei H-SR-08), E-SR-43 (SR-09). **Bei H-SR-08:** E-SR-44 (Gegenlesung als Workflow) und E-SR-45 bis -49 (Q-SR-14 bis -18) von der Betreiberin am 28.09.2026; E-SR-50 (Fehlversuche), E-SR-51 (Migration an Ort und Stelle), E-SR-52 (der Preis von E-SR-50) und E-SR-53 (Nr. 354) aus der Umsetzung. |
+> | Offen | **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). Die Fable-Gegenlesung von SR-03 (H-SR-06) steht noch aus. |
+> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). **SR-09 erledigt** 28.09.2026 (Web 21.10.0, Migration `2026_09_28_passkeys`; Befunde F-SR-28 bis -32; Nr. 350 erledigt, Nr. 353 neu). **H-SR-08 durchlaufen** 29.09.2026 (Web 21.11.0; Befunde F-SR-33 bis -52, E-SR-44 bis -53, Nr. 354 neu; Migration `2026_09_28_passkeys` an Ort und Stelle geändert). |
+> | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) — offen — und SR-09 (H-SR-08, E-SR-36) — **durchlaufen**, als Workflow (E-SR-44). |
+> | Fächerung | keine in den Paketen; die **Gegenlesung H-SR-08** und ihre Nachprüfung liefen als lesender Workflow (E-SR-44). |
+> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`), **353** (Schemaprobe vergleicht migriert und frisch nicht, F-SR-28, `nächste Backlog-Runde`), **354** (`protokoll()` schluckt in einer Transaktion einen Deadlock, F-SR-50, `nächste Backlog-Runde`). |
 
 ---
 
@@ -96,7 +97,9 @@ an seinen richtigen Ort gehängt.
 7. **Passkeys als zweiter Faktor neben TOTP** (Nr. 350, Nachfassung vom
    27.09.2026, E-SR-29): Der Code-Schritt wird phishingfest — eine
    WebAuthn-Signatur ist an den Ursprung gebunden, ein abgefischter Code
-   nicht. Codes und Rückweg bleiben der Notweg.
+   nicht. *Berichtigt mit H-SR-08 (F-SR-44): Phishingfest ist die
+   Passkey-Antwort, nicht der Schritt — der App-Code daneben bleibt
+   abfischbar.* Codes und Rückweg bleiben der Notweg.
 
 Dazu zwei Reste aus 17, die mit dessen Merge am 28.09.2026 hierher kamen
 (E-R4-37, E-SR-37): **Nr. 250** — `betrieb_server.php` leitet nach POST um
@@ -551,6 +554,200 @@ ein Satz mehr, und der Review misst ihn.
   Wert steht im Beispielsatz, Mailprobe 51 Prüfungen, 0 Befunde, danach der
   Prüfstand neu.
 
+**Aus der Gegenlesung H-SR-08** (28.09.2026, Stand `dca31f1`, E-SR-44):
+sieben Fable-Leser, je Befund eine oder zwei Gegenprüfungen, ein Kritiker —
+**41 Befunde, alle bestätigt: 0 hoch, 1 mittel, 19 niedrig, 21 Hinweise.**
+Hier nach Themen zu zwölf zusammengefasst; die Einzelkennungen (M1 bis M35,
+N1-1 bis N2-3) und ihre Belege stehen im Prüfdokument 2. Kein Befund
+erlaubt, ohne den eigenen Passkey hineinzukommen; der CBOR-Leser hat an 81
+gezielten Eingaben kein Längenfeld falsch gelesen.
+
+- **F-SR-33 RSA-Schlüssel hatten nur eine Untergrenze** (M1 mittel, M2).
+  `pk_cose_laden()` prüfte die Bitlänge ab 2048 und sonst nichts. phpseclib
+  überlässt RS256 OpenSSL nur bis zu einem Exponenten von 64 Bit und rechnet
+  darüber selbst: Ein Schlüssel mit 4096 Bit Modul und 4096 Bit Exponent
+  kostete **6,2 s je Prüfung** (nachgestellt, weil der Gegenprüfer von M1
+  ausfiel), 8192/8192 Bit beim Leser 45 s — wer ein Konto mit Zweitfaktor
+  hat, legt sich so einen Passkey an und lastet die Anlage mit parallelen
+  Anmeldeversuchen aus. Mit **e = 1** ist die Signatur das Bild der
+  Nachricht und ohne Geheimnis rechenbar; e = 0, 2, gerade und ein gerades
+  Modul gingen ebenso durch — alles nur für den eigenen Schlüssel. **Gelöst
+  mit H-SR-08:** Modul 2048 bis 4096 Bit und ungerade, Exponent ungerade,
+  3 bis 64 Bit.
+- **F-SR-34 Der Leser war nachgiebiger, als sein Kopf sagte** (M3, M4, M8,
+  M16, M17, M21, M22, M23). PHP machte aus dem Textschlüssel „1" den
+  Schlüssel 1, und ein COSE-Schlüssel mit lauter Textlabels ging durch;
+  verbotene Zusatzlabels (auch `d`) wurden überlesen; Karte und Liste waren
+  nach dem Lesen nicht zu unterscheiden, die Erweiterungen mussten keine
+  Karte sein; die Tiefe zählte Werte mit; Base64url nahm einen Zeilenumbruch
+  am Ende und nicht-kanonische Endzeichen; eine leere Herausforderung in der
+  Ablage wäre durchgegangen, `crossOrigin` zählte nur als Bool, `topOrigin`
+  wurde nicht gelesen; eine leere DER-Folge endete in einem TypeError; ein
+  EC-Punkt mit x ≥ p wurde still reduziert; `BS` ohne `BE` ging durch.
+  **Gelöst mit H-SR-08:** numerische Textschlüssel und fremde Labels sind
+  eine Ablehnung, `pk_cbor_art()` prüft das Kopfbyte, wo eine Karte
+  verlangt ist, die Tiefe zählt Behälter, Base64url mit `\z` und
+  Rückprobe, Herausforderung mindestens 43 Zeichen, `crossOrigin` muss
+  fehlen oder `false` sein, `topOrigin` ist eine Ablehnung, die Signatur
+  wird vorher als ASN.1-Folge gelesen, x und y liegen unter p, `BS` verlangt
+  `BE`.
+- **F-SR-35 Kein Deckel, keine Typen** (M6, M7). Der Endpunkt nahm jede
+  Rumpfgröße, und eine Liste aus 1,4 MB leerer Ketten brach im
+  Speicherfehler ab statt in einer Ablehnung; Felder vom falschen JSON-Typ
+  gingen durch `(string)` — eine PHP-Warnung je Anfrage im Reiter System,
+  für jeden auslösbar, der das Passwort hat, und eine Bezeichnung als Liste
+  hieß „Array". **Gelöst mit H-SR-08:** `pk_feld()` (Text, kanonisch,
+  dekodiert höchstens `PK_FELD_MAX` = 32 KiB), `PK_ANTWORT_MAX` (192 KiB)
+  im Endpunkt und in beiden Formularwegen, die Bezeichnung als Text.
+- **F-SR-36 Der Zähler — nicht atomar, und seine Warnung erreichte
+  niemanden** (M11, N1-1, N1-3). Zwei gleichzeitige Anmeldungen mit
+  derselben Kennung wurden beide angenommen. Der Eintrag `passkey_zaehler`
+  steht im Reiter Protokoll, den die Rolle `user` nicht sieht; die Meldung
+  „versuche es noch einmal" ließ den einzigen Hinweis nach einem Klick
+  verschwinden, und der Eintrag nannte eine Nummer, die niemand einem
+  Passkey zuordnen kann — E-SR-33 baut aber darauf, dass die Betroffene
+  sieht und entscheidet. **Gelöst mit H-SR-08:** `UPDATE … WHERE id = ? AND
+  zaehler = ?` (bei beiden 0 nur `zuletzt_am`); Mail `passkey_zaehler` mit
+  Deckel über `gewarnt_am` (E-SR-46); Meldung „zuletzt auf einem anderen
+  Gerät benutzt — vielleicht eine Kopie"; Protokoll mit dem Namen.
+- **F-SR-37 Fehlversuche ohne Fehler** (M14, N1-2). Eine Passkey-Antwort
+  ohne, mit abgelaufener oder verdrängter Herausforderung zählte im Topf
+  `totp`, ebenso jede Ablehnung wegen des Zählers — nach dem Gebrauch einer
+  Kopie auch die des Originals mit gültiger Signatur; fünf in 15 Minuten
+  sperrten das Konto mit „Zu viele falsche Codes". Der Rückweg zählt
+  denselben Fall nicht. **Gelöst mit H-SR-08** (E-SR-50): `PkFehler` trägt
+  einen Code, `pk_anmeldung_pruefen()` eine Art, und nur `pruefung` zählt.
+- **F-SR-38 Der Lebenszyklus hatte Lücken** (M15, M30, N2-3).
+  `totp_abschalten()` löschte die Passkeys **hinter** seiner Transaktion;
+  scheiterte das, galten sie nach dem Wiedereinschalten weiter, und keine
+  Einrichtung räumte sie. Reset-Mail und die zwei Rückfragen sagten nicht,
+  dass die Passkeys mitgehen, und der SQL-Notweg im Runbook ließ sie und
+  die gemerkten Geräte stehen — genau der Weg der einzigen BetreiberIn.
+  **Gelöst mit H-SR-08:** Geräte und Passkeys in der Transaktion, das
+  Einrichten räumt verwaiste (`weg` `einrichtung`), `pk_anlegen()` liest
+  `totp_seit` unter `FOR UPDATE`, die Texte, zwei Zeilen SQL im Runbook.
+- **F-SR-39 Endpunkt und Ablagen** (M26, M27, M28, M32). „Diesen Passkey
+  gibt es hier schon" antwortete für die Kennungen **aller** Konten — mit
+  Attestation `none` frei wählbar, also ein kleines Orakel —, und ein
+  Wettlauf zweier Konten endete in 500. `passkey_best` trug kein Konto. Der
+  Endpunkt verbrauchte die Herausforderung vor der Prüfung der Bezeichnung:
+  Nach einem 400 blieb ein Passkey im Authenticator ohne Zeile. Steuerzeichen
+  in der Bezeichnung fügten in der Textmail Zeilen ein. **Gelöst mit
+  H-SR-08:** nach außen „nicht angenommen" (E-SR-45), `23000` → dieselbe
+  Antwort, alle drei Ablagen mit Konto (`pk_ablage_passt()`), Rumpf und
+  Bezeichnung vor der Entnahme und im Browser vor dem Dialog,
+  `pk_bezeichnung_saeubern()`.
+- **F-SR-40 Ein Umlaut-Name oder ein Punkt am Ende von `app.base_url`**
+  (M5) ergab einen Ursprung, den kein Browser schickt: Knopf da, jede
+  Zeremonie gescheitert. **Gelöst mit H-SR-08:** `idn_to_ascii()` (UTS 46),
+  der Punkt fällt weg.
+- **F-SR-41 Eine andere Adresse ließ tote Passkeys stehen** (M13, M29).
+  Nach einem Umzug oder einem Komplett-Stand auf einer anderen Adresse
+  bot die Anmeldung Passkeys an, die dort nie gelten, der Browser meldete
+  „abgebrochen", und die Zeilen zählten zur Zehnergrenze; Handbuch und
+  Backup-Format sagten „gibt es ihn nicht". Unter einem zweiten Namen der
+  Anlage erschien der Knopf ebenso ins Leere (M13). **Gelöst mit H-SR-08:**
+  `rp_id` je Zeile (E-SR-48), die Karte zeigt fremde mit Plakette, der Text
+  des Browsers nennt den dritten Fall. M13 bleibt: Keine Anlage läuft unter
+  einem zweiten Namen (E-SR-42).
+- **F-SR-42 Der erste Index über 767 Byte** (M31). `uq_passkeys_credential`
+  über `VARCHAR(1364)` scheitert unter einem COMPACT-Zeilenformat, wie es
+  manche Hoster noch fahren, und die Schemaprobe sieht es nicht. **Gelöst mit H-SR-08:** eindeutig über `credential_hash CHAR(64)`
+  (E-SR-47), die Migration an Ort und Stelle (E-SR-51).
+- **F-SR-43 Die Passkeyprobe maß „nicht angenommen", nie den Grund** (M9,
+  M10, M33, M34). Ob ein Fall an der behaupteten Stelle scheiterte, sah sie
+  nicht; den ED-Pfad, AT in der Anmeldung, `crossOrigin`, Kennungslängen,
+  Rest hinter den Daten, Base64url-Fehlformen und die Kontobindung maß sie
+  gar nicht, die Ablehnungen nur mit ES256; Teil 5d „dieselbe Antwort noch
+  einmal" hätte auch der Zähler abgewiesen. **Gelöst mit H-SR-08:** jede
+  Ablehnung mit Grund-Stück, bei der Anmeldung mit Art; die fehlenden
+  Fälle; RS256-Ablehnungen; 5d mit alter Herausforderung und frischer
+  Signatur — 104 Prüfungen (57).
+- **F-SR-44 Texte, die mehr versprachen als der Code** (M12, M18, M19, M20,
+  M24, M25, M35, N2-1, N2-2). „Der Code-Schritt wird phishingfest" (E-SR-29,
+  CHANGELOG, Handbuch): Solange der App-Code daneben steht, weicht eine
+  nachgemachte Seite auf ihn aus. Die Begründung von E-SR-42 über den
+  „Proxy mit eigenem Namen" trug so nicht. Was bewusst so bleibt (BER-Lesung
+  der ES256-Signatur, Erweiterungen mit einfachem Wert, AT in der Anmeldung)
+  stand nirgends; was der Schlüsselbund speichert, auch nicht; zwei kleine
+  Abweichungen vom Paketstext (der Abschnitt nur in `einstellungen.php`,
+  Klick-Handler statt `anlegen()`/`bestaetigen()`) nannte der Erledigt-Block
+  nicht. Im Zustand „Geheimnis lässt sich nicht öffnen" meldet ein Passkey
+  weiter an, fünf Texte sagten „nur noch Wiederherstellungscodes", und der
+  empfohlene Weg „ausschalten und neu einrichten" löscht die Passkeys, ohne
+  dass es dasteht. **Gelöst mit H-SR-08:** Kopf der Bibliothek mit „Was
+  bewusst so bleibt", E-SR-42 berichtigt, E-SR-49, die Texte in `login.php`,
+  `zweitfaktor.php`, `einstellungen.php`, Handbuch 3.1f und `Technik.md`;
+  21.10.0 im CHANGELOG mit Vermerk berichtigt.
+
+**Aus der Nachprüfung der Behebung** (29.09.2026, E-SR-44): fünf Fable-Leser
+über die geänderten Stellen, je ein Gegenprüfer — **24 Meldungen, davon zwei
+derselbe Befund (B-1, C-2); 23 bestätigt, einer unklar (D-3): 1 mittel,
+6 niedrig, 17 Hinweise.** Zusammengefasst zu acht; die Einzelkennungen
+(A-1 bis E-6) stehen im Prüfdokument 2. Je Themenblock das Urteil der Leser:
+RSA-Grenzen, Leser, Zähler, Speicherung und Endpunkt behoben; teilweise
+M21 (Signaturform), M6 (das Formularfeld), N1-2 (Urheber), F-SR-40 (ß),
+M12, M25, N2-1 (je eine Textstelle).
+
+- **F-SR-45 Die ES256-Signatur hatte keinen Formdeckel** (A-1 mittel, A-2).
+  Das Feld `signature` durfte 32 KiB groß sein, und phpseclib liest BER:
+  geschachtelte unbestimmte Längen kopiert es je Ebene — **356 MiB und
+  2,1 s je Anfrage**, auf 128 MB Speicher ein Fatal Error, erreichbar mit
+  Passwort und eigenem ES256-Passkey vor der Zählung. Die ASN.1-Vorprüfung
+  aus F-SR-34 fing nur die leere Folge; eine Zeitangabe mit Nullbyte endete
+  in einem ValueError, ein fremdes Etikett an Stelle von r in einem
+  TypeError trotz Vorprüfung, eine konstruierte Bitkette in einer
+  PHP-Warnung. Nicht neu eingeführt (der alte Weg rechnete dasselbe), aber
+  in der geänderten Stelle. **Gelöst:** `pk_es256_form()` prüft die Form
+  selbst — Folge mit genau zwei INTEGER zu 1 bis 33 Byte, höchstens 73
+  Byte —, dahinter `instanceof BigInteger` für r und s; eine RS256-Signatur
+  muss so lang sein wie der Modul.
+- **F-SR-46 Kleine Strengen der Behebung** (A-5, A-6, B-2, B-3, D-1). n und
+  e mit führenden Nullbytes wurden angenommen und still gekürzt (RFC 8230
+  verlangt die kürzeste Form — dieselbe „Reparatur statt Ablehnung" wie bei
+  den Koordinaten); `pk_spki_laden()` lud RSA jeder Größe, die Grenzen
+  galten nur beim Anlegen; der Felddeckel ließ 32 770 statt 32 768 Byte zu;
+  `attStmt` durfte eine Liste sein; die IDN-Umschrift lief mit
+  Übergangsregeln (`straße` → `strasse`, der Browser schickt
+  `xn--strae-oqa`). **Gelöst:** alle fünf, je mit Probenfall.
+- **F-SR-47 Das Formularfeld selbst** (B-1, C-2). `passkey_antwort[]=x`
+  machte aus dem Feld eine Liste, und `(string)` warf die PHP-Warnung, die
+  F-SR-35 für die Felder darin abgestellt hatte. **Gelöst:** Text oder leer,
+  in `login.php` und `zweitfaktor.php`; gemessen über HTTP.
+- **F-SR-48 Der Endpunkt protokollierte, was er nicht geprüft hatte** (E-1).
+  Jede Einsendung ohne gültige Herausforderung schrieb „Passkey
+  abgewiesen" — ohne Ratentopf, auch für einen zweiten Reiter oder einen
+  zweiten Klick, der zudem einen Passkey im Authenticator ohne Zeile
+  hinterließ. **Gelöst:** Art `herausforderung` → 400 `abgelaufen` ohne
+  Protokoll (die Regel von E-SR-50); `passkey.js` lässt den Knopf nach einer
+  Antwort des Servers aus.
+- **F-SR-49 Der Preis von E-SR-50, und der Urheber** (C-1, N1-2-Rest). Eine
+  Kopie mit zurückliegendem Zähler holt ohne Bremse auf, und jeder Versuch
+  schreibt eine orange Zeile; im Code-Schritt trägt der Eintrag den Urheber
+  `job`. **Gelöst:** der Preis benannt (E-SR-52), der Eintrag trägt
+  `daten.weg` (`anmeldung` oder `bestaetigung`).
+- **F-SR-50 `protokoll()` schluckt in einer Transaktion einen Deadlock**
+  (D-3, vom Gegenprüfer „unklar"). Bricht der INSERT mit 1213 ab, rollt
+  InnoDB die ganze Transaktion zurück, der Rumpf merkt es nicht, und
+  `totp_abschalten()` meldet Erfolg. Seit SR-02 gilt dasselbe beim Passwort
+  (E-SR-40). **Nicht hier gelöst:** Nr. 354 (E-SR-53).
+- **F-SR-51 Was die Proben der Behebung nicht maßen** (A-3, B-4, C-3, D-4,
+  E-4). Die RSA-Grenzen nur von außen, die Signaturform nur mit der leeren
+  Folge, `BS` ohne `BE` nur bei der Registrierung, der Deckel an keinem
+  Eingang über HTTP, die Hälfte „`pruefung` zählt" von E-SR-50 gar nicht,
+  die Atomarität von `totp_abschalten()` nur im Erfolgsfall, und dass ein
+  400 am Endpunkt die Herausforderung stehen lässt. **Gelöst:** alle als
+  Fälle — die Atomarität mit einem Auslöser, der das Löschen scheitern
+  lässt; Passkeyprobe 122, Teil 5d 13 Fälle.
+- **F-SR-52 Texte** (A-4, C-4, D-2, E-2, E-3, E-5, E-6). Die Begründung der
+  64 Bit (OpenSSL rechnet die Potenz, nicht die Prüfung, und die Grenze gilt
+  nur über 3072 Bit), zwei Code-Kommentare „nur noch
+  Wiederherstellungscodes", 413 statt 400 in `Technik.md`, „phishingfest" in
+  Zeile 98 und E-SR-29 ohne Vermerk, der Schlüsselbund nicht im
+  Datenschutz-Baustein, `intl` als Voraussetzung für Umlaut-Namen nicht
+  genannt, und dass zwei Zähler-Warnungen zu einer Mail werden können.
+  **Gelöst:** alle Stellen.
+
 ## 3. Entscheidungen und Fragen
 
 ### 3.1 Entscheidungen
@@ -585,7 +782,7 @@ ein Satz mehr, und der Review misst ihn.
 | E-SR-26 | Q-SR-07: **Nr. 228 wird gebaut — fest, ohne Anlass, ohne Schalter** (Paket SR-08). Der Server stellt beim Laden der Registrierungsseite eine Aufgabe (32 Zufallsbyte, Sitzung, zehn Minuten, einmal gültig); ein Worker im Browser rechnet ab dem Laden, **während die Person tippt**, SHA-256 über WebCrypto, ohne Fremdbestandteil (`assets/pow.js`); der Absendeknopf wartet nur, wenn die Person schneller ist als der Worker („Sicherheitsprüfung läuft …"). Der Server prüft **eine** SHA-256 (unter einer Millisekunde), **vor** jeder Adressprüfung, im selben Fehlerpfad wie Honeypot und Mindestausfülldauer — die Antwortzeitgleichheit aus E-P5b-13 bleibt (Δ < 50 ms). **Die Schwierigkeit ist eine Konstante**, die SR-08 misst und festlegt: Ziel ist der Median **unter einer Sekunde auf einem aktuellen Handy** und unter drei Sekunden auf dem alten Diensthandy (Chromium mit vierfacher CPU-Drosselung als Ersatz im Prüfstand); die gemessenen Hashraten und die gewählte Bitzahl stehen im Prüfdokument. | Betreiberin, 27.09.2026 („Bauen wir einfach fest ein") | Die Frage „wie viel Verzögerung" beantwortet die Bauform: Die Rechnung läuft nebenher, solange jemand Adresse und Passwort tippt (zehn bis dreißig Sekunden), und ist dann in aller Regel fertig — spürbar wird sie nur bei einem Skript, das das Formular sofort abschickt, und genau das ist der Zweck. Ohne JavaScript geht die Registrierung ohnehin nicht (E-P5b-13). Kein Schalter, weil ein Schalter, den niemand umlegt, eine zweite Wahrheit ist (R74). |
 | E-SR-27 | **Konzept freigegeben.** Die Umsetzung beginnt nach dem Merge von 17 und des Konzept-PR auf einem eigenen Zweig von `main` (Opus), arbeitet die acht Pakete in der Reihenfolge aus E-SR-14 durch und hält nur an: H-SR-05 (die Migration und das einmalige Neuanmelden ansagen), H-SR-06 (Gegenlesung von SR-03 durch Fable), bei Problemen und vor dem PR (H-SR-04). Keine Fächerung. | Betreiberin, 27.09.2026 („Freigabe") | K5, K6: alle Q sind entschieden, der Paketschnitt steht; `CLAUDE.md` 7: ohne Fächerungszeile keine Fächerung. *Ergänzt 27.09.2026: dazu der Halt H-SR-08 nach SR-09 (E-SR-36).* |
 | E-SR-28 | **Passkeys mit PRF als Ersatz der Passwortableitung werden nicht weiterverfolgt.** Nr. 146 verliert den Satz; Schritt 12 stellt die Frage nicht neu, es sei denn, das Bedrohungsmodell wirft sie selbst auf. | Betreiberin, 27.09.2026 („Stufe B lassen wir") | Das Geheimnis, aus dem der Datenschlüssel entstünde, läge bei synchronisierten Passkeys im Schlüsselbund von Apple oder Google — eine Frage an die Zusage der Ende-zu-Ende-Verschlüsselung, nicht an ein Paket; PRF gibt es nicht auf jedem Authenticator, also blieben zwei Ableitungswege je Konto; Rang Haupt in der Größe von S10 (Verschlüsselung, Anmeldung, Reset, Schlüsselerneuerung, Anhebelauf). |
-| E-SR-29 | **Passkeys als zweiter Faktor neben TOTP — Paket SR-09, in Schritt 18** (Nachfassung des freigegebenen Konzepts; Nr. 350 aus der eigenen Spanne). Ein Passkey ist ein **weiteres Verfahren desselben Faktors**: Voraussetzung ist der eingeschaltete Zweitfaktor, Codes und Rückweg bleiben der Notweg, `totp_abschalten()` nimmt die Passkeys mit — auf jedem Weg. Ob ein Passkey den Faktor auch allein tragen darf, fragt Q-SR-12 — beantwortet: nein (E-SR-35). | Betreiberin, 27.09.2026 („Stufe A geht ins Paket 18. Nachfassung ist ok") | Ein TOTP-Code lässt sich auf einer gefälschten Seite abgreifen und weiterreichen; eine WebAuthn-Signatur ist an den Ursprung gebunden — der Code-Schritt wird phishingfest, und das ist der Gewinn für Support, Admin und BetreiberIn (K-5). In 18 statt als eigener Schritt, weil die Anmeldedateien hier ohnehin offen sind und 12b den Code danach liest (R86). Nicht als Ersatz von TOTP, weil Einrichtungstor, Codes und Rückweg am TOTP-Verfahren hängen — das wäre ein Umbau der Anmeldung, nicht ein Verfahren mehr. |
+| E-SR-29 | **Passkeys als zweiter Faktor neben TOTP — Paket SR-09, in Schritt 18** (Nachfassung des freigegebenen Konzepts; Nr. 350 aus der eigenen Spanne). Ein Passkey ist ein **weiteres Verfahren desselben Faktors**: Voraussetzung ist der eingeschaltete Zweitfaktor, Codes und Rückweg bleiben der Notweg, `totp_abschalten()` nimmt die Passkeys mit — auf jedem Weg. Ob ein Passkey den Faktor auch allein tragen darf, fragt Q-SR-12 — beantwortet: nein (E-SR-35). | Betreiberin, 27.09.2026 („Stufe A geht ins Paket 18. Nachfassung ist ok") | Ein TOTP-Code lässt sich auf einer gefälschten Seite abgreifen und weiterreichen; eine WebAuthn-Signatur ist an den Ursprung gebunden — der Code-Schritt wird phishingfest, und das ist der Gewinn für Support, Admin und BetreiberIn (K-5). *Berichtigt mit H-SR-08 (F-SR-44): phishingfest ist die Passkey-Antwort, nicht der Schritt — der App-Code daneben bleibt abfischbar.* In 18 statt als eigener Schritt, weil die Anmeldedateien hier ohnehin offen sind und 12b den Code danach liest (R86). Nicht als Ersatz von TOTP, weil Einrichtungstor, Codes und Rückweg am TOTP-Verfahren hängen — das wäre ein Umbau der Anmeldung, nicht ein Verfahren mehr. |
 | E-SR-30 | **Bauform ohne Fremdbestandteil:** `passkey_lib.php` mit eigenem CBOR-Leser für die Teilmenge, die Registrierung und COSE brauchen (Ganzzahlen, Byte- und Textketten, Listen und Karten bestimmter Länge; alles andere ist eine Ablehnung); Signaturen über phpseclib (`Crypt/EC` ES256 wie der Rückweg, `Crypt/RSA` RS256 PKCS#1 v1.5); **Attestation `none`** wird verlangt und nicht geprüft; erlaubt sind genau zwei Algorithmen (-7, -257); `rp.id` ist der Host, der Ursprung wird gegen den eigenen geprüft; **UP** muss gesetzt sein, **UV** ist `preferred` und wird nicht verlangt. Der öffentliche Schlüssel wird bei der Registrierung nach SPKI überführt und so gespeichert. | Konzept (F-SR-13) | Was SP-11 als Fremdbibliothek ansah, liegt zu vier Fünfteln im Haus: `rw_pruefen()` ist der Kern einer Assertion. Ein CBOR-Leser für vier Typen ist klein und lesbar; eine WebAuthn-Bibliothek brächte Attestation-Ketten, Metadaten-Dienste und ein Dutzend Formate mit, die hier niemand braucht. Attestation sagt, welcher Hersteller den Authenticator gebaut hat — für einen zweiten Faktor nach dem Passwort ohne Wert und mit Datenschutzpreis (R36). UV nicht verlangt, weil das Passwort das Wissen ist und der Passkey den Besitz beweist; wer UV verlangte, schlösse Hardware-Schlüssel ohne PIN aus. SPKI, weil der Anmeldeweg dann ohne CBOR auskommt und `PublicKeyLoader` die eine Stelle bleibt (R83). |
 | E-SR-31 | **Ort: der Abschnitt „Passkeys" in der Karte „Zweitfaktor"** (Einstellungen → Profil), keine eigene Karte; „Passkey hinzufügen" und „Entfernen" stehen in `ZF_FRISCH_HANDLUNGEN` (E-SR-20) — die Karte zeigt den Knopf nur bei frischem Code, sonst den Verweis „Zuerst Code bestätigen", und der Endpunkt prüft es noch einmal (403). Bezeichnung optional, bis 40 Zeichen, sonst „Passkey vom <Datum>"; **kein** User-Agent, **keine** AAGUID; höchstens zehn je Konto. | Konzept | R74: ein Faktor, eine Karte. Wer eine fremde Sitzung erbeutet hat, darf sich damit keinen dauerhaften zweiten Faktor anlegen — genau der Fall, für den E-SR-20 gebaut ist; der Verweis statt eines 403 im Browser, weil die Person die Reihenfolge sehen soll, bevor der Plattform-Dialog aufgeht. Eine Bezeichnung braucht die Liste, sobald zwei Einträge darin stehen (Handy, Laptop) — anders als das Gerätecookie, das niemand sieht (E-SR-07); die AAGUID ist bei Attestation `none` ohnehin null. |
 | E-SR-32 | **Im Code-Schritt ist der Passkey der dritte Weg neben App-Code und Wiederherstellungscode:** Knopf „Mit Passkey bestätigen" über dem Codefeld, nur wenn das Konto Passkeys hat und der Browser `PublicKeyCredential` kennt; die Herausforderung liegt im halben Stand wie die des Rückwegs; die Antwort geht als Formularfeld an `login.php` (kein eigener Endpunkt), gezählt im Topf `totp`. **Ein Passkey zählt wie ein App-Code:** Haken „Gerät merken" (E-SR-18) und `zf_frisch_bis` (E-SR-20); dasselbe auf `zweitfaktor.php?bestaetigen=1`. Ohne JavaScript bleibt der Codeweg. | Konzept | Der Rückweg hat den Weg vorgezeichnet (RW-03): Herausforderung im halben Stand, Signatur als Feld, Prüfung vor `anmeldung_vollenden()` — ein zweiter Weg daneben, nicht ein zweiter Mechanismus. Ein Passkey beweist Gerätebesitz mit Nutzergeste, mindestens so stark wie ein App-Code; ihn schwächer zu zählen hieße, den sichereren Weg unbequemer zu machen. |
@@ -598,8 +795,18 @@ ein Satz mehr, und der Review misst ihn.
 | E-SR-39 | **F-SR-15 wird in SR-01 gebaut:** Die lesenden Seiten prüfen die Bindung zentral in `sitzung_starten('lesend')` und sehen eine ungebundene Anmeldung nicht; verworfen wird ohne Schreiben, beendet wird sie erst von der nächsten angemeldeten Seite. | Betreiberin, 28.09.2026 (Rückfrage vor SR-01, wie empfohlen) | Ziel 1 des Konzepts heißt „eine gelesene Sitzungsdatei ist wertlos"; vier Seiten, die mit ihr noch Kopf und Adresse zeigten, ließen den Satz halb wahr. Eine Stelle statt vier (R83). Nicht beendet, weil eine lesende Seite lesbar bleiben und nicht abmelden soll. |
 | E-SR-40 | **Das Vergessen gemerkter Geräte beim Passwortwechsel und -reset steht in derselben Transaktion wie das Passwort** (`einstellungen.php`, `pw_handling.php`), nicht dahinter. | Umsetzung, 28.09.2026 (SR-02) | Der erste Entwurf setzte es hinter die Transaktion, „weil es ins Protokoll schreibt". Ein Fehler dort hätte dann ein gewechseltes Passwort mit der Meldung „Es wurde nichts geändert" gezeigt, der Browser hätte den neuen Schlüssel nicht übernommen (M2-07), und der gemerkte Browser des Fremden hätte weiter gegolten. In der Transaktion gilt beides oder keines; `db_transaktion()` hängt sich an die laufende an, `protokoll()` fängt seine eigenen Fehler. |
 | E-SR-41 | **Eine Handlung der Liste, die eine Seite ist, trägt ein eigenes Abbruchziel** (`'abbruch'` in `ZF_FRISCH_HANDLUNGEN`; heute nur das Schlüsselblatt → `betrieb_server.php#k-schluessel`); es reist als `abbruch` mit und wird wie `zurueck` geprüft. | Umsetzung, 28.09.2026 (SR-07) | Bei einem POST ist der Rücksprung die Karte, aus der geklickt wurde; bei einer Seite ist es die Seite selbst — und „Abbrechen" dorthin schickte wieder auf die Bestätigung, eine Schleife (gefunden beim Schreiben des Bedienwegs). Ein eigenes Feld statt einer Regel „bei GET woanders hin", weil nur die Liste weiß, woher eine Seite kommt. |
-| E-SR-42 | **Der eigene Ursprung und die `rp.id` kommen aus `app.base_url`, nicht aus der `Host`-Kopfzeile** (`pk_ursprung()` in `passkey_lib.php`). Folge: keine Passkeys für eine IP-Adresse, ohne HTTPS (außer `localhost`) und unter jeder anderen Adresse als der eingetragenen. **Weicht vom Konzept ab** (SR-09: „`pk_ursprung()` nimmt die Stelle in `kopfzeilen_lib.php`, die den Host schon liest"). **Zur Bestätigung durch die Betreiberin bei H-SR-08.** | Umsetzung, 28.09.2026 (SR-09) | Den `Host` setzt, wer die Anfrage schickt. Antwortet die Anlage auch unter einem fremden Namen, ließe ein Proxy, der mit seinem eigenen Namen weiterreicht, seinen Ursprung als den eigenen gelten — genau das, wogegen WebAuthn schützt. Die Stelle in `kopfzeilen_lib.php` ist für den Berichtsendpunkt der CSP richtig (dort muss es der Name der laufenden Anfrage sein) und für diese Frage falsch. Preis: Die Sandbox auf 127.0.0.1 zeigt keine Passkeys; die Proben stellen die Adresse für ihren Lauf auf `localhost`. |
+| E-SR-42 | **Der eigene Ursprung und die `rp.id` kommen aus `app.base_url`, nicht aus der `Host`-Kopfzeile** (`pk_ursprung()` in `passkey_lib.php`). Folge: keine Passkeys für eine IP-Adresse, ohne HTTPS (außer `localhost`) und unter jeder anderen Adresse als der eingetragenen. **Weicht vom Konzept ab** (SR-09: „`pk_ursprung()` nimmt die Stelle in `kopfzeilen_lib.php`, die den Host schon liest"). **Bestätigt von der Betreiberin am 28.09.2026 bei H-SR-08** (Weg B gegen A „aus der Anfrage" und C „mehrere erlaubte Adressen"); **keine Anlage läuft unter einer zweiten Adresse** — deshalb wird der Knopf unter einem fremden Namen nicht eigens ausgeblendet (M13, F-SR-41). | Umsetzung, 28.09.2026 (SR-09); bestätigt von der Betreiberin, 28.09.2026 | **Berichtigt mit H-SR-08 (F-SR-44, M24):** Hier stand, ein Proxy, der mit seinem eigenen Namen weiterreicht, ließe seinen Ursprung als den eigenen gelten. Das trug so nicht — vor einer nachgemachten Seite schützt vor allem der **Browser**, der einen Passkey für diese Adresse unter einer anderen gar nicht herausgibt, und ein Proxy, der die Anlage beim Hoster erreichen will, muss ohnehin ihren echten Namen in `Host` schicken. Den Ausschlag geben drei Dinge: WebAuthn gleicht mit dem Ursprung ab, den die Anlage **erwartet**, nicht mit dem, den die Anfrage über sich behauptet; eine `rp.id` muss über Jahre dieselbe bleiben, und unter einem zufällig benutzten zweiten Namen entstünde einer, der unter dem Hauptnamen nie gilt; und keine Kopfzeile muss bewertet werden (`Host` oder hinter einem Vermittler `X-Forwarded-Host`). `app_url()` ist die vorhandene Stelle für die eigene Adresse (R83); die Host-Stelle in `kopfzeilen_lib.php` bleibt für den CSP-Bericht richtig. Preis: Die Sandbox auf 127.0.0.1 zeigt keine Passkeys; die Proben stellen die Adresse für ihren Lauf auf `localhost`. |
 | E-SR-43 | **Die Passkey-Knöpfe tragen kein Schloss**; „Passkey hinzufügen" trägt das Plus, „Mit Passkey bestätigen" kein Zeichen. | Umsetzung, 28.09.2026 (SR-09) | Das Schloss ist in dieser Anwendung das Zeichen für ein Ende-zu-Ende-verschlüsseltes Feld (`CLAUDE.md` 4, Riegel `kennzeichnung`); ein Schloss an einem Anmeldeknopf verwässerte es. Der erste Entwurf trug es an allen drei Knöpfen. |
+| E-SR-44 | **Die Gegenlesung H-SR-08 läuft als lesender Fable-Workflow**, nicht als eigene Fable-Instanz: sieben Leser nach Blickwinkel (CBOR, COSE, Registrierung, Anmeldung, Anbindung, Speicherung, Konzepttreue), je Befund eine oder zwei Gegenprüfungen, ein Kritiker mit Nachlesern — 53 Agenten; nach der Behebung eine **Nachprüfung** der geänderten Stellen, lesend, höchstens zehn Agenten. Weicht von „Fächerung: keine" im Kopf ab. | Betreiberin, 28.09.2026 („Kannst du das selbst umstellen? Starte gerne, wenn das geht"; Nachprüfung mit dem Plan bestätigt) | Eine Fable-Instanz hätte die Betreiberin umstellen müssen; die Workflow-Agenten laufen auf dem Modell, das der Aufruf nennt. `CLAUDE.md` 7 nimmt Prüfarbeit und erzählenden Text von der Fächerung aus — eine Lesung ist **Messung** (lesend, ohne Nebenwirkung) und damit gut gefächert. Keiner der Agenten schreibt; Behebung, Proben und Texte macht die Umsetzungsinstanz seriell. |
+| E-SR-45 | Q-SR-14: **Eine abgewiesene Registrierung heißt nach außen „nicht angenommen"** — auch „diese Kennung gibt es schon"; der Grund steht im Protokoll (`passkey_abgewiesen`, neutral). Ein Wettlauf zweier Konten (`23000`) endet in derselben Antwort. | Betreiberin, 28.09.2026 (wie empfohlen) | Mit Attestation `none` ist die Kennung frei wählbar; die eigene Antwort darauf verriet, ob eine Kennung irgendwo auf der Anlage liegt (M26). Die Verwaltung braucht den Grund, die Person nicht. |
+| E-SR-46 | Q-SR-15: **Ein zurückgelaufener Zähler löst eine Mail an die Kontoadresse aus**, Vorlage `passkey_zaehler`, **höchstens eine je Passkey und Tag** (Spalte `gewarnt_am`); die Meldung im Code-Schritt sagt, was es heißen kann, und der Protokolleintrag nennt den Passkey beim Namen. | Betreiberin, 28.09.2026 (wie empfohlen) | E-SR-33 lässt den Passkey stehen, weil die Betroffene sieht und entscheidet — die Rolle `user` sah nichts (N1-1). Der Deckel, weil jeder weitere Versuch mit der Kopie sonst eine weitere Mail wäre; auslösen kann ihn nur, wer einen gültigen Schlüssel hat. |
+| E-SR-47 | Q-SR-16: **Eindeutig über den SHA-256 der Kennung** (`credential_hash CHAR(64)`, `ascii_bin`); die Kennung selbst steht daneben ohne Index, die Anmeldung sucht über den Hash. | Betreiberin, 28.09.2026 (wie empfohlen) | Der Index über `VARCHAR(1364)` war der erste des Schemas über 767 Byte und scheitert unter COMPACT (M31). Die Migration war noch nirgends ausgeliefert, die Änderung also billig (E-SR-51). |
+| E-SR-48 | Q-SR-17: **Jede Zeile trägt ihre `rp_id`**; Code-Schritt und Bestätigung bieten nur Passkeys der heutigen Adresse an, die Zehnergrenze zählt je Adresse, die Karte zeigt die übrigen mit der Plakette „andere Adresse" (entfernbar), die Kontoseite der Verwaltung zählt alle. | Betreiberin, 28.09.2026 (**abweichend** von der Empfehlung „nur Doku und bessere Meldung") | Nach einem Umzug stand sonst ein Knopf, der ins Leere führt, und tote Zeilen belegten die Grenze (M29). Die Spalte kostet eine Zeile in der Migration, solange sie nirgends ausgeliefert ist. |
+| E-SR-49 | Q-SR-18: **Ein Passkey hängt nicht am Serverschlüssel — gewollt.** Lässt sich das App-Geheimnis nach einem Wiederanlauf mit anderem Schlüssel nicht öffnen, meldet ein Passkey weiter an; die Texte (Code-Schritt, Bestätigung, Karte, Handbuch, Runbook) sagen es und nennen die Reihenfolge danach: ausschalten oder zurücksetzen lassen, neu einrichten, Passkeys neu anlegen. | Betreiberin, 28.09.2026 (wie empfohlen) | Der Passkey ist der bequemste Weg durch genau diese Lage, und er ist nicht schwächer als ein Wiederherstellungscode (N2-1). Ihn dort zu sperren hieße, einen funktionierenden Faktor abzuschalten, weil ein anderer Teil nicht öffnet. |
+| E-SR-50 | **Eine Passkey-Ablehnung zählt nur als Fehlversuch, wenn geprüft wurde**: Art `pruefung` ja; `herausforderung` (keine, abgelaufen, verdrängt) und `zaehler` nein. | Umsetzung, 28.09.2026 (H-SR-08, F-SR-37) | Der Topf `totp` bremst das Raten von Codes; eine abgelaufene Anfrage und ein zurückgelaufener Zähler sind kein Raten — nach dem Gebrauch einer Kopie sperrte sonst das Original mit gültiger Signatur das eigene Konto. Der Rückweg zählt denselben Fall schon nicht. |
+| E-SR-51 | **Die Migration `2026_09_28_passkeys` wird an Ort und Stelle geändert**, nicht durch eine zweite ergänzt; ihre Kennung und `'web' => '21.10'` bleiben. | Umsetzung, 28.09.2026 (H-SR-08) | 21.10.0 ist nirgends ausgeliefert — nicht auf `main`, nicht auf Staging; eine zweite Migration hätte eine Tabelle umgebaut, die es auf keiner Anlage gibt, und `migration_lib.php` um einen Katalogeintrag ohne Gegenstand verlängert. Örtlich ist die Tabelle neu eingespielt, migriert gegen frisch zeichengleich (Prüfdokument). **Preis:** Wer 21.10.0 örtlich eingespielt hat, spielt die Tabelle neu ein. |
+| E-SR-52 | **Eine Ablehnung der Art `zaehler` bleibt ungezählt**; der Preis — eine Kopie holt ohne Bremse auf, jeder Versuch schreibt eine orange Zeile — ist benannt (CHANGELOG, `Technik.md` 4.99q), kein eigener Topf. | Umsetzung, 29.09.2026 (Nachprüfung, F-SR-49) | Der Zähler ist gegen eine Kopie des privaten Schlüssels keine Hürde: Wer den Schlüssel hat, signiert den Zähler, den er will. Eine Bremse hielte nur die Betroffene auf, deren Original nach dem Gebrauch einer Kopie zurückliegt — genau der Fall, den N1-2 beanstandet hat. Die orangen Zeilen kann nur erzeugen, wer Passwort und Schlüssel hat; der könnte sich auch anmelden. |
+| E-SR-53 | **F-SR-50 wird nicht in H-SR-08 behoben, sondern Nr. 354** (`nächste Backlog-Runde`). | Umsetzung, 29.09.2026 (Nachprüfung) | Die Ursache ist `protokoll()` selbst, und sie trifft seit SR-02 auch E-SR-40. Ein `protokoll()`, das in einer Transaktion wirft, ändert alle Aufrufer; zwei Einträge hinter den Commit zu legen, hieße, E-SR-40 und diese Stelle verschieden zu bauen. Beides verdient ein eigenes Paket mit eigener Probe (ein Auslöser mit `40001`). Selten: ein Deadlock an einem INSERT ohne Fremdschlüssel. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -620,6 +827,11 @@ Jede mit Empfehlung; „alles wie empfohlen" ist eine gültige Antwort.
 | Q-SR-11 | *(aus der Rückfrage der Betreiberin zu Q-SR-01)* **Kritische Aktionen trotz gemerktem Gerät — ein „frischer Code"?** Kurze Liste · nur der Betrieb · keiner. | **Ja, kurze Liste** (Schlüssel-Griffe, Schlüsselblatt, Rolle ändern, fremden Zweitfaktor zurücksetzen, Konto löschen, eigenen Zweitfaktor ausschalten); 15 Minuten; ein Paket. | SR-07 |
 | Q-SR-12 | *(aus der Nachfassung 27.09.2026)* **Darf ein Passkey den Zweitfaktor auch allein tragen** — ohne TOTP-App —, oder nur zusätzlich zum eingeschalteten TOTP? | **Nur zusätzlich** (E-SR-29). Allein hieße: Wiederherstellungscodes ohne TOTP-Geheimnis, ein Einrichtungstor, das einen Passkey annimmt, ein Reset-Weg ohne App — die Anmeldung würde umgebaut, nicht erweitert. Wer es allein will, bekommt einen eigenen Backlog-Punkt für später. Alternative: allein erlaubt — dann wächst SR-09 um etwa die Hälfte. | SR-09 |
 | Q-SR-13 | *(aus der Nachfassung 27.09.2026)* **Bekommt SR-09 dieselbe Fable-Gegenlesung wie SR-03** (E-SR-23), oder baut Opus es ohne? | **Ja, Gegenlesung** (H-SR-08): Ein selbst geschriebener CBOR-Leser und eine Signaturprüfung sind die Art Code, bei der ein falsch gelesenes Längenfeld einen fremden Schlüssel annimmt — und die Probe misst nur die Fälle, die jemand vorhergesehen hat. Preis: eine zweite Lesung. Alternative: Opus allein, die Passkeyprobe als einziger Beleg. | SR-09 |
+| Q-SR-14 | *(aus H-SR-08, M26)* **Soll der Endpunkt nach außen nur „nicht angenommen" sagen**, auch wenn es die Kennung schon gibt — oder so bleiben? | **Nur „nicht angenommen"**, der Grund ins Protokoll. | H-SR-08 |
+| Q-SR-15 | *(aus H-SR-08, N1-1)* **Eine Mail bei zurückgelaufenem Zähler** (`passkey_zaehler`, höchstens eine je Passkey und Tag), oder nur das Protokoll? | **Mail.** Ohne sie erfährt die Rolle `user` nie von einer möglichen Kopie. | H-SR-08 |
+| Q-SR-16 | *(aus H-SR-08, M31)* **Eindeutigkeit über einen SHA-256 der Kennung**, oder den Index über 767 Byte lassen und die Voraussetzung dokumentieren? | **Hash**, `CHAR(64)` — die Migration ist noch nirgends ausgeliefert. | H-SR-08 |
+| Q-SR-17 | *(aus H-SR-08, M29)* **Alte Passkeys nach einem Umzug:** nur Doku und eine bessere Meldung, oder die `rp.id` je Zeile speichern und nur passende anbieten? | **Nur Doku und Meldung** — kein Umzug geplant. | H-SR-08 |
+| Q-SR-18 | *(aus H-SR-08, N2-1)* **Passkey bei unlesbarem App-Geheimnis:** gewollt, Texte berichtigen — oder Passkeys in diesem Zustand sperren? | **Gewollt**, Texte berichtigen. | H-SR-08 |
 
 **Beantwortet am 27.09.2026** in der Konzeptsitzung (Klickrunde mit
 Erklärung je Frage): Q-SR-01 „alle Rollen, aber einstellbare Dauer" →
@@ -631,7 +843,11 @@ Q-SR-10 wie empfohlen → E-SR-17; Q-SR-11 wie empfohlen → E-SR-20.
 
 **Beantwortet am 27.09.2026 (Nachfassung, Klickrunde):** Q-SR-12 wie
 empfohlen → E-SR-35 (dazu Nr. 351); Q-SR-13 wie empfohlen → E-SR-36.
-Kein Q ist offen.
+
+**Beantwortet am 28.09.2026 bei H-SR-08:** E-SR-42 bestätigt (Weg B, keine
+zweite Adresse); Q-SR-14 wie empfohlen → E-SR-45; Q-SR-15 wie empfohlen →
+E-SR-46; Q-SR-16 wie empfohlen → E-SR-47; Q-SR-17 **abweichend: `rp_id` je
+Zeile** → E-SR-48; Q-SR-18 wie empfohlen → E-SR-49. Kein Q ist offen.
 
 ### 3.3 Haltepunkte
 
@@ -656,7 +872,11 @@ Kein Q ist offen.
   Zähler, die Frische an Karte und Endpunkt); Befunde als F-SR-NN, Behebung
   durch Opus, dann SR-05. **Erreicht 28.09.2026** nach dem Commit `SR-09`;
   dazu E-SR-42 (Ursprung aus der Konfiguration, Abweichung vom Konzept) zur
-  Bestätigung.
+  Bestätigung. **Durchlaufen 28./29.09.2026:** gelesen als Workflow
+  (E-SR-44), 41 Befunde (F-SR-33 bis -44), E-SR-42 bestätigt, Q-SR-14 bis
+  -18 beantwortet, behoben in Web 21.11.0 (Abschnitt 4, nach SR-09), die
+  Behebung von Fable nachgeprüft (F-SR-45 bis -52) und eingearbeitet bis
+  auf Nr. 354.
 - **H-SR-05 mit dem Merge:** Die Migrationen `vertraute_geraete` (SR-02)
   und `passkeys` (SR-09) stehen aus,
   bis eine Administratorin `update.php` ruft — die Kette lässt den
@@ -1043,6 +1263,63 @@ App-Code → Teil 5d rot (Gerät nicht gemerkt). Beim Gegenlesen vor dem
 Prüfstand war Teil 5d in einem von zwei Läufen rot — die Wartezeit nach dem
 Stellen der Adresse war zu kurz (F-SR-31). Der erste Prüfstand war rot an
 der Mailprobe (F-SR-32). Zahlen im Prüfdokument 2.
+
+**H-SR-08 Gegenlesung und Behebung** (kein Paket, ein Halt; E-SR-36).
+*Erledigt 29.09.2026 (Web 21.11.0):* gelesen als lesender Fable-Workflow
+(E-SR-44) am Stand `dca31f1`, 41 Befunde (F-SR-33 bis -44), alle behoben
+oder als bewusst benannt; die Betreiberin hat E-SR-42 bestätigt und Q-SR-14
+bis -18 beantwortet (E-SR-45 bis -49). **Gebaut:** in `passkey_lib.php` die
+RSA-Grenzen, der strengere Leser (`pk_cbor_art()`, Labels, Textschlüssel,
+Tiefe, `pk_b64u_lesen()` kanonisch, `pk_feld()`, x und y unter p, `BS`/`BE`,
+ASN.1-Vorprüfung, `crossOrigin`/`topOrigin`, Herausforderung ≥ 43 Zeichen),
+`PkFehler` mit Code und `art` in der Antwort der Anmeldung, der atomare
+Zähler, `pk_zaehler_warnen()`, `rp_id` und `credential_hash` in Registrierung,
+Suche, Liste (`hier`), Zahl (`pk_zahl($id, $alle)`) und Grenze,
+`pk_ablage_passt()` für alle drei Ablagen, `pk_bezeichnung_saeubern()`,
+`pk_anlegen()` mit `totp_seit` unter Sperre und `23000` → `vorhanden`,
+`pk_alle_entfernen()` mit `weg` `einrichtung`; Tabelle und Migration
+(`credential_hash`, `rp_id`, `gewarnt_am`, Index `idx_konto (user_id,
+rp_id)`) an Ort und Stelle (E-SR-51); `totp_abschalten()` mit Geräten und
+Passkeys in der Transaktion, `totp_einrichtung_beginnen()` räumt verwaiste;
+`login.php` und `zweitfaktor.php` mit Deckel, Konto an der Ablage, Zählung
+nur bei `pruefung` und drei Meldungen (abgelaufen, abgewiesen, nicht
+angenommen); `api/passkey_anlegen.php` mit Deckel, Bezeichnung vor der
+Entnahme und `$abweisen` (400 „nicht angenommen", Protokoll
+`passkey_abgewiesen`); die Karte mit fremden Zeilen; `passkey.js` mit
+geprüfter Bezeichnung und dem dritten Fall im Text; Mailvorlage
+`passkey_zaehler`, der Passkey-Satz in `totp_zurueckgesetzt`, die zwei
+Rückfragen; der Kopf der Bibliothek mit „Was bewusst so bleibt" und der
+berichtigten Begründung von E-SR-42. **Prüfmittel:** Passkeyprobe mit
+Grund je Ablehnung (104 nach der Behebung, 122 nach der Nachprüfung, vorher
+57), Teil 5d der Zweitfaktorprobe mit drei Fällen mehr (und nach der
+Nachprüfung noch einmal zwei, zwei geschärft), der Bauhelfer mit Option `client`. **Abweichungen vom Plan,
+den die Betreiberin bestätigt hat:** Web **21.11.0** statt 21.10.1 — mit
+E-SR-46 (Mail) und E-SR-48 (Adresse je Zeile) kamen neue Funktionen dazu;
+**zwölf** Befunde statt elf (F-SR-44 für die Texte eigens). **M13 nicht
+gebaut** (keine zweite Adresse, E-SR-42). **Die zwei Abweichungen aus M35**
+bleiben, wie sie sind, und stehen jetzt hier: Der Abschnitt „Passkeys"
+steht nur in `einstellungen.php` (die Karte hat keine zweite Stelle), und
+`passkey.js` bindet Klick-Handler an `data-`-Merkmale statt zwei Funktionen
+`anlegen()`/`bestaetigen()` auszuliefern — die CSP verbietet Inline-Aufrufe
+ohnehin. **Probleme beim Bau:** `fetchColumn()` liefert bei fehlender
+Kontozeile `false`, nicht `null` — `pk_anlegen()` prüft beides. Ein
+Probenfall „abgeschnitten in einer Liste" war falsch gebaut (`82 01`
+scheiterte schon an „Liste länger als der Rest") — jetzt `81 19 01`. Zwei
+Gegenproben maßen zuerst nichts: Die Mutation am Exponenten ließ die
+Prüfung stehen (`false && A || B`), und der Tagesdeckel blieb grün, weil
+beide Fälle in derselben Sekunde liefen und das `UPDATE` nichts änderte —
+die Probe stellt `gewarnt_am` vor dem zweiten Fall eine Stunde zurück.
+**Die Nachprüfung** (E-SR-44; fünf Leser, fünf Gegenprüfer) fand 23 weitere
+Befunde an den geänderten Stellen (F-SR-45 bis -52); eingearbeitet sind
+`pk_es256_form()` und die RS256-Länge, die kürzeste Form und die Grenzen in
+`pk_spki_laden()`, der Felddeckel auf das Byte, `attStmt` als Karte, die
+IDN-Umschrift ohne Übergangsregeln, das Formularfeld als Text, der Endpunkt
+ohne Protokoll bei abgelaufener Herausforderung und `passkey.js` mit
+gesperrtem Knopf, `daten.weg` am Zähler-Eintrag, die Texte; die Proben um
+18 und 2 Fälle (zwei bestehende geschärft), darunter die Atomarität von `totp_abschalten()` mit einem
+Auslöser. F-SR-50 ist Nr. 354 (E-SR-53). **Eine dritte Lesung gab es
+nicht** — die Einarbeitung der Nachprüfung belegen die Proben und zehn
+Gegenproben (Prüfdokument 2). Zahlen im Prüfdokument 2.
 
 **SR-05 `ingest.php` ohne Deadlock** — Nr. 210 (E-SR-12). `ingest.php`:
 Schleife um `beginTransaction()`/`try` (höchstens drei Anläufe, Abstand

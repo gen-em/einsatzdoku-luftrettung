@@ -86,14 +86,15 @@ function pb_signieren(array $paar, string $daten): string
 /**
  * Eine Registrierung bauen. `$o` verstellt einzelne Teile fuer die
  * Ablehnungsfaelle: `art`, `herausforderung`, `ursprung`, `rp_id`, `flags`,
- * `cose` (roh, als PbKarte oder PbRoh), `rawId`, `zaehler`.
+ * `cose` (roh, als PbKarte oder PbRoh), `rawId`, `zaehler`, `client` (weitere
+ * Felder in `clientDataJSON`, etwa `crossOrigin` — seit H-SR-08).
  *
  * @return array{antwort: array, kennung: string}
  */
 function pb_registrierung(array $paar, string $herausforderung, array $u, array $o = []): array
 {
     $kennung = $o['kennung'] ?? random_bytes(32);
-    $client = json_encode(['type' => $o['art'] ?? 'webauthn.create',
+    $client = json_encode(($o['client'] ?? []) + ['type' => $o['art'] ?? 'webauthn.create',
                            'challenge' => $o['herausforderung'] ?? $herausforderung,
                            'origin' => $o['ursprung'] ?? $u['ursprung'], 'crossOrigin' => false],
                           JSON_UNESCAPED_SLASHES);
@@ -114,11 +115,11 @@ function pb_registrierung(array $paar, string $herausforderung, array $u, array 
 /**
  * Eine Anmeldung (Assertion) bauen. `$o`: `art`, `herausforderung`,
  * `ursprung`, `rp_id`, `flags`, `zaehler`, `rawId`, `falsch` (Signatur ueber
- * andere Daten).
+ * andere Daten), `client` (weitere Felder in `clientDataJSON`).
  */
 function pb_anmeldung(array $paar, string $kennung, string $herausforderung, array $u, array $o = []): array
 {
-    $client = (string)json_encode(['type' => $o['art'] ?? 'webauthn.get',
+    $client = (string)json_encode(($o['client'] ?? []) + ['type' => $o['art'] ?? 'webauthn.get',
                                    'challenge' => $o['herausforderung'] ?? $herausforderung,
                                    'origin' => $o['ursprung'] ?? $u['ursprung'], 'crossOrigin' => false],
                                   JSON_UNESCAPED_SLASHES);

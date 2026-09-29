@@ -7934,5 +7934,33 @@ declare(strict_types=1);
  *   ein zuruecklaufender Signaturzaehler als orange Meldung — der Passkey
  *   bleibt. Keine Passkeys im Demo-Konto und im Konto-Backup; im
  *   Komplett-Stand reisen sie mit.
+ *
+ * 21.11.0 — DIE GEGENLESUNG DER PASSKEYS (Schritt 18, H-SR-08; F-SR-33 bis
+ *   -52, E-SR-44 bis -53). Nebenstufe; die Migration `2026_09_28_passkeys`
+ *   ist AN ORT UND STELLE geaendert, weil 21.10.0 nirgends ausgeliefert war
+ *   (E-SR-51) — nach dem Deploy weiterhin `update.php`. Fable hat
+ *   `passkey_lib.php` und die Anbindung gegengelesen: 41 Befunde, keiner
+ *   hoch. Der schwerste: RSA-Schluessel hatten nur eine Untergrenze, und ein
+ *   selbst gebauter Schluessel mit riesigem Exponenten kostete je Pruefung
+ *   Sekunden bis Minuten Rechenzeit; mit e = 1 liess sich die Signatur ohne
+ *   Geheimnis rechnen. Jetzt 2048 bis 4096 Bit, e ungerade, 3 bis 64 Bit.
+ *   Dazu ein strengerer Leser (Textschluessel wie Zahlen, genau die
+ *   COSE-Labels, Karten am Kopfbyte, Koordinaten unter p, kanonisches
+ *   Base64url, Tiefe nur fuer Behaelter), ein Deckel auf die Antwort, Felder
+ *   vom falschen Typ ohne PHP-Warnung, ein atomar fortgeschriebener Zaehler
+ *   und bei zurueckgelaufenem Zaehler eine Mail an die Kontoadresse
+ *   (hoechstens eine je Tag; E-SR-46). Eine abgelaufene Herausforderung und
+ *   ein zurueckgelaufener Zaehler zaehlen nicht mehr als Fehlversuch. Die
+ *   Tabelle traegt je Zeile ihre Adresse (`rp_id`, E-SR-48) und den
+ *   eindeutigen Schluessel auf einem SHA-256 der Kennung (E-SR-47); nach
+ *   aussen heisst jede abgewiesene Registrierung „nicht angenommen", der
+ *   Grund steht im Protokoll (E-SR-45). `totp_abschalten()` nimmt Geraete
+ *   und Passkeys in derselben Transaktion mit; das Einrichten raeumt
+ *   verwaiste. Passkeys haengen nicht am Serverschluessel (E-SR-49).
+ *   Die Behebung ist ein zweites Mal gelesen worden: 23 weitere Befunde,
+ *   darunter eine ES256-Signatur aus 32 KiB unbestimmter Laengen, die
+ *   phpseclib 356 MiB kostete — die Form prueft jetzt `pk_es256_form()`
+ *   vorher. Eingearbeitet bis auf `protokoll()` in einer Transaktion
+ *   (Nr. 354).
  */
-const WEB_VERSION = '21.10.0';
+const WEB_VERSION = '21.11.0';

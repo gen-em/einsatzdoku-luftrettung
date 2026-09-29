@@ -3542,9 +3542,16 @@ function migrationen_katalog(): array
         'web'   => '21.10',
         'label' => 'passkeys — Passkeys als zweiter Faktor (Schritt 18, SR-09)',
         /* PASSKEYS (Schritt 18, SR-09, E-SR-29 bis -33). Eine Zeile je
-         * Authenticator: die Kennung (Base64url, ascii_bin, eindeutig), der
-         * oeffentliche Schluessel als SPKI, das Verfahren, der Zaehler, eine
-         * Bezeichnung, zwei Zeitpunkte. Mit dem Konto weg (Kaskade).
+         * Authenticator: die Kennung (Base64url, ascii_bin) mit ihrem SHA-256
+         * als eindeutigem Schluessel, die Adresse (`rp_id`), der oeffentliche
+         * Schluessel als SPKI, das Verfahren, der Zaehler, eine Bezeichnung,
+         * drei Zeitpunkte. Mit dem Konto weg (Kaskade).
+         *
+         * GEAENDERT AN ORT UND STELLE mit der Gegenlesung H-SR-08 (Web
+         * 21.11.0): `credential_hash`, `rp_id`, `gewarnt_am` dazu, der
+         * eindeutige Schluessel vom Text auf den Hash (F-SR-41, -42, -36).
+         * Erlaubt, weil 21.10.0 nirgends ausgeliefert war — keine Anlage
+         * traegt die erste Fassung; die oertliche ist neu eingespielt.
          *
          * DERSELBE TEXT WIE IN `schema.sql`, Zeichen fuer Zeichen in Spalten,
          * Schluesseln und Fremdschluessel. KEINE PROBE HAELT DAS FEST: Die
@@ -3556,17 +3563,20 @@ function migrationen_katalog(): array
         'skip'  => fn(PDO $pdo): bool => db_hat_tabelle($pdo, 'passkeys'),
         'run'   => function (PDO $pdo): void {
             $pdo->exec("CREATE TABLE IF NOT EXISTS passkeys (
-              id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-              user_id       INT UNSIGNED NOT NULL,
-              credential_id VARCHAR(1364) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-              oeffentlich   TEXT NOT NULL,
-              alg           SMALLINT NOT NULL,
-              zaehler       INT UNSIGNED NOT NULL DEFAULT 0,
-              bezeichnung   VARCHAR(40) NOT NULL DEFAULT '',
-              angelegt_am   DATETIME NOT NULL,
-              zuletzt_am    DATETIME NULL,
-              UNIQUE KEY uq_passkeys_credential (credential_id),
-              KEY idx_konto (user_id),
+              id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              user_id         INT UNSIGNED NOT NULL,
+              credential_id   VARCHAR(1364) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+              credential_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+              rp_id           VARCHAR(253) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+              oeffentlich     TEXT NOT NULL,
+              alg             SMALLINT NOT NULL,
+              zaehler         INT UNSIGNED NOT NULL DEFAULT 0,
+              bezeichnung     VARCHAR(40) NOT NULL DEFAULT '',
+              angelegt_am     DATETIME NOT NULL,
+              zuletzt_am      DATETIME NULL,
+              gewarnt_am      DATETIME NULL,
+              UNIQUE KEY uq_passkeys_credential (credential_hash),
+              KEY idx_konto (user_id, rp_id),
               CONSTRAINT fk_passkeys_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         },

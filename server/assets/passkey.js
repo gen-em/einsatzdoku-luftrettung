@@ -59,10 +59,12 @@
     if (z) { z.innerHTML = EdHtml.meldung(ton, text); }
   }
 
-  /** Was der Browser meldet, in einem Satz, den man versteht. */
+  /** Was der Browser meldet, in einem Satz, den man versteht. NotAllowedError
+   *  heißt auch „auf diesem Gerät liegt kein passender Passkey" — der Browser
+   *  unterscheidet das mit Absicht nicht (H-SR-08, F-SR-41). */
   function grund(e) {
     if (e && e.name === 'NotAllowedError') {
-      return 'Abgebrochen oder abgelaufen — nichts geändert.';
+      return 'Abgebrochen, abgelaufen oder kein passender Passkey auf diesem Gerät — nichts geändert.';
     }
     if (e && e.name === 'InvalidStateError') {
       return 'Dieser Passkey ist hier schon angelegt.';
@@ -77,7 +79,17 @@
     const knopf = bereich.querySelector('[data-passkey-knopf]');
     if (!knopf) { return; }
     knopf.addEventListener('click', async () => {
+      /* DIE BEZEICHNUNG VOR DEM DIALOG PRÜFEN (H-SR-08, F-SR-39): Lehnte erst
+         der Server sie ab, läge im Gerät schon ein Passkey ohne Zeile hier.
+         Gezählt in Zeichen wie mb_strlen(), nicht in UTF-16-Einheiten. */
+      const feldVorab = bereich.querySelector('input[name="pk_bezeichnung"]');
+      const max = Number(feldVorab && feldVorab.getAttribute('maxlength')) || 40;
+      if (feldVorab && Array.from(feldVorab.value.trim()).length > max) {
+        melden(bereich, 'fehler', 'Die Bezeichnung hat höchstens ' + max + ' Zeichen.');
+        return;
+      }
       knopf.disabled = true;
+      let gesendet = false;
       melden(bereich, 'info', 'Der Browser fragt jetzt nach dem Passkey …');
       try {
         const d = bereich.dataset;
@@ -92,6 +104,7 @@
           excludeCredentials: kennungen(bereich),
         } });
         const feld = bereich.querySelector('input[name="pk_bezeichnung"]');
+        gesendet = true;
         const antw = await EdApi.postJson('api/passkey_anlegen.php', {
           antwort: {
             rawId: b64u.zu(cred.rawId),
@@ -104,7 +117,11 @@
         window.location.reload();
       } catch (e) {
         melden(bereich, 'fehler', e && e.eigen ? e.message : grund(e));
-        knopf.disabled = false;
+        /* NACH EINER ANTWORT DES SERVERS BLEIBT DER KNOPF AUS (Nachprüfung
+         * von H-SR-08, E-1): Die Herausforderung ist dann verbraucht, und
+         * ein zweiter Klick erzeugte im Authenticator einen Passkey ohne
+         * Zeile auf dem Server. Die Meldung sagt „Seite neu laden". */
+        knopf.disabled = gesendet;
       }
     });
   });

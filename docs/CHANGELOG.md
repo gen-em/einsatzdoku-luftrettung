@@ -14,6 +14,214 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.11.0] — 2026-09-29
+
+Schritt 18, Sicherheitsrunde II, **Halt H-SR-08: die Gegenlesung der
+Passkeys** (E-SR-36). **Neben**; die Migration `2026_09_28_passkeys` aus
+21.10.0 ist **an Ort und Stelle geändert** (E-SR-51) — 21.10.0 ist nirgends
+ausgeliefert, eine zweite Migration hätte nur eine Tabelle umgebaut, die es
+auf keiner Anlage gibt. **Nach dem Deploy muss eine Administratorin
+`update.php` aufrufen**, wie für 21.10.0 angekündigt.
+
+Fable hat `passkey_lib.php` und ihre Anbindung gelesen, in sieben
+Blickwinkeln und mit je einer Gegenprüfung jedes Befunds (E-SR-44): **41
+Befunde, keiner hoch, einer mittel, 19 niedrig, 21 Hinweise** — alle
+bestätigt, zusammengefasst zu F-SR-33 bis -44. Kein Befund erlaubt, ohne
+den eigenen Passkey hineinzukommen, und der CBOR-Leser hat an 81 gezielten
+Eingaben kein Längenfeld falsch gelesen. Die Schwächen lagen am Rand: was
+ein Passkey kosten darf, was der Leser durchgehen ließ, was eine Warnung
+erreicht, und wo Texte mehr versprachen als der Code. Hier sollte ursprünglich
+eine Korrekturstufe stehen; die Zähler-Mail und die Adresse je Passkey sind
+neue Funktionen, deshalb Neben. **Die Behebung ist danach noch einmal gelesen
+worden** — fünf Leser, je ein Gegenprüfer, zehn Agenten: 23 weitere Befunde
+an den geänderten Stellen, einer mittel (F-SR-45 bis -52), eingearbeitet
+bis auf einen, der eine eigene Nummer bekommt (Nr. 354).
+
+### Sicherheit
+
+- **Ein RSA-Schlüssel hat jetzt 2048 bis 4096 Bit und einen ungeraden
+  Exponenten von 3 bis 64 Bit** (F-SR-33, mittel). Bis 21.10.0 gab es nur
+  die Untergrenze. phpseclib überlässt die RS256-Prüfung OpenSSL nur bis
+  zu einem Exponenten von 64 Bit, darüber rechnet es selbst: Ein Schlüssel mit 4096 Bit
+  Modul und 4096 Bit Exponent kostete hier **6,2 Sekunden je Prüfung**, der
+  Leser maß mit 8192 Bit 45 Sekunden. Wer ein Konto mit Zweitfaktor hat,
+  konnte sich so einen Passkey anlegen und die Anlage mit parallelen
+  Anmeldeversuchen auslasten. Schlimmer im Prinzip, harmlos in der Wirkung:
+  **Mit e = 1 ist die Signatur das Bild der Nachricht selbst** und ließ
+  sich ohne Geheimnis rechnen — aber nur für einen Schlüssel, den man sich
+  selbst angelegt hat. Die Grenze 64 Bit ist die, bis zu der OpenSSL die
+  Potenz für jeden erlaubten Modul übernimmt; echte Authenticatoren liefern
+  2048 Bit und 65537. Dieselben Grenzen gelten beim **Laden** eines
+  gespeicherten Schlüssels, denn die Kosten entstehen bei der Anmeldung,
+  und beide Werte müssen in der kürzesten Form stehen.
+- **Die Form einer ES256-Signatur prüft die Anlage selbst**, bevor phpseclib
+  sie sieht (F-SR-45, gefunden in der Nachprüfung, mittel): eine Folge mit
+  genau zwei Zahlen, höchstens 73 Byte. phpseclib liest BER, und ein
+  Signaturfeld aus 32 KiB geschachtelter unbestimmter Längen kostete dort
+  **356 MiB Speicher und zwei Sekunden** — auf einem Webspace mit 128 MB ein
+  Abbruch je Anfrage, auslösbar mit Passwort und eigenem Passkey. Drei andere
+  Formen endeten in einer Ausnahme oder einer PHP-Warnung. Eine RS256-Signatur
+  muss so lang sein wie ihr Modul.
+- **Eine zu große Antwort endet in einer Ablehnung, nicht im
+  Speicherfehler** (F-SR-35). Der Endpunkt nimmt höchstens 192 KiB, jedes
+  dekodierte Feld höchstens 32 KiB; eine Liste aus 1,4 MB leerer Ketten
+  brach bis dahin mit einem Fatal Error ab. Ein Feld vom falschen
+  JSON-Typ (eine Liste, wo Text stehen muss) ist eine Ablehnung mit Grund
+  statt einer PHP-Warnung im Reiter System, die jeder mit Passwort
+  auslösen konnte; eine Bezeichnung als Liste hieß bis dahin „Array". Das
+  gilt auch für das Formularfeld selbst (`passkey_antwort[]=…`, F-SR-47).
+- **Der Signaturzähler wird atomar fortgeschrieben** (F-SR-36): nur, wenn
+  der Stand noch der gelesene ist. Zwei gleichzeitige Anmeldungen mit
+  derselben Kennung — Original und Kopie — wurden vorher beide angenommen,
+  ohne dass einer Zeile etwas auffiel.
+- **Wer einen Passkey mit zurückgelaufenem Zähler vorlegt, löst eine Mail
+  an die Kontoadresse aus**, höchstens eine je Passkey und Tag (E-SR-46,
+  Vorlage `passkey_zaehler`). E-SR-33 ließ den Passkey stehen, weil die
+  Betroffene den Eintrag sieht und entscheidet — aber den Reiter Protokoll
+  sieht eine Nutzerin der Rolle `user` nicht, und der Fehlertext „versuche
+  es noch einmal" ließ den einzigen Hinweis nach einem Klick verschwinden.
+  Jetzt sagt die Meldung, dass der Passkey zuletzt auf einem anderen Gerät
+  benutzt wurde, die Mail nennt ihn beim Namen, und der Protokolleintrag
+  auch (bis dahin eine Nummer, die niemand zuordnen konnte). Der Deckel,
+  weil jeder weitere Versuch mit der Kopie sonst eine weitere Mail wäre.
+
+### Geändert
+
+- **Eine abgelaufene Herausforderung und ein zurückgelaufener Zähler sind
+  kein Fehlversuch mehr** (E-SR-50, F-SR-37). Fünf Fälle in 15 Minuten
+  sperrten das Konto mit „Zu viele falsche Codes", ohne dass ein Code
+  eingegeben war — nach dem Gebrauch einer Kopie auch für das Original mit
+  gültiger Signatur. Der Rückweg zählt denselben Fall schon bisher nicht.
+  Eine falsche Signatur zählt weiter. **Der Preis** (F-SR-49, E-SR-52): Eine
+  Kopie mit zurückliegendem Zähler holt ungebremst auf, und jeder Versuch
+  schreibt eine orange Zeile. Das nehmen wir hin — wer den privaten Schlüssel
+  kopiert hat, setzt den Zähler ohnehin selbst, und eine Bremse hielte nur
+  die Betroffene auf.
+- **Nach außen heißt jede abgewiesene Registrierung „nicht angenommen"**
+  (E-SR-45). Der Endpunkt antwortete auf eine Kennung, die es schon gab,
+  mit „Diesen Passkey gibt es hier schon" — für die Kennungen **aller**
+  Konten. Mit Attestation `none` ist die Kennung frei wählbar, also ein
+  kleines Orakel. Der Grund steht jetzt im Protokoll (`passkey_abgewiesen`),
+  und ein Wettlauf zweier Konten um dieselbe Kennung endet in derselben
+  Antwort statt in einem 500.
+- **Jeder Passkey trägt die Adresse, für die er entstand** (`rp_id`,
+  E-SR-48). Nach einem Umzug oder einem Komplett-Stand auf einer anderen
+  Adresse boten Anmeldung und Bestätigung bis dahin Passkeys an, die dort
+  nie gelten können: Der Knopf stand da, der Browser meldete „abgebrochen",
+  und die Zeilen zählten zur Zehnergrenze. Jetzt bietet der Code-Schritt
+  nur die der heutigen Adresse an, die Grenze zählt je Adresse, und die
+  Karte zeigt die übrigen mit der Plakette „andere Adresse" — entfernen
+  lassen sie sich dort. Die Verwaltung zählt alle.
+- **Der eindeutige Schlüssel der Tabelle steht auf einem SHA-256 der
+  Kennung** (`credential_hash`, `CHAR(64)`, E-SR-47). Der Index über die
+  Kennung selbst war mit 1364 Byte der erste des Schemas über 767 Byte —
+  unter einem älteren Zeilenformat, wie es manche Hoster noch fahren,
+  scheitert die Migration daran. Die Anmeldung sucht über den Hash.
+- **Das Ausschalten des Zweitfaktors nimmt gemerkte Geräte und Passkeys in
+  derselben Transaktion mit** (F-SR-38). Bis dahin lag das Löschen dahinter:
+  Scheiterte es, war der Faktor aus und die Passkeys standen — nach dem
+  Wiedereinschalten galten sie weiter, auch nach einem Zurücksetzen. Das
+  Einrichten räumt jetzt verwaiste Passkeys, und `pk_anlegen()` prüft unter
+  Sperre, ob der Faktor noch an ist. Reset-Mail und die zwei Rückfragen
+  (Ausschalten, Zurücksetzen) sagen, dass die Passkeys mitgehen; der
+  SQL-Notweg im Runbook löscht sie mit.
+- **Passkeys hängen nicht am Serverschlüssel — das ist gewollt, und die
+  Texte sagen es jetzt** (E-SR-49). Lässt sich das App-Geheimnis nach einem
+  Wiederanlauf mit anderem Serverschlüssel nicht öffnen, meldet ein Passkey
+  weiter an; fünf Texte sagten „nur noch Wiederherstellungscodes", und der
+  Passkey-Knopf stand direkt unter der Meldung. Dazu der Satz, dass
+  Ausschalten und Neueinrichten die Passkeys löschen, und in welcher
+  Reihenfolge man danach vorgeht.
+- **Der Leser ist so streng, wie sein Kopf sagt** (F-SR-34). Textschlüssel,
+  die wie eine Zahl aussehen, sind eine Ablehnung — PHP machte aus dem
+  Text „1" den Schlüssel 1, und ein COSE-Schlüssel mit lauter Textlabels
+  ging durch. Ein COSE-Schlüssel trägt genau die Labels, die sein Verfahren
+  braucht (auch kein `d`, den privaten Teil). Wo eine Karte verlangt ist,
+  muss eine stehen, auch bei den Erweiterungen. Koordinaten liegen unter
+  p. Die Tiefe zählt nur Behälter; bis dahin zählten Werte mit, und acht
+  Ebenen gingen nur mit einer leeren innersten Liste. Base64url muss
+  kanonisch sein, ein Zeilenumbruch am Ende geht nicht mehr durch. `BS`
+  ohne `BE` ist eine Ablehnung (WebAuthn L3 7.1). Eine leere DER-Folge als
+  Signatur endete in einem TypeError aus phpseclib; jetzt ist sie eine
+  Ablehnung mit Grund. Und `crossOrigin` muss fehlen oder `false` sein,
+  `topOrigin` ist eine Ablehnung.
+- **Ein Umlaut-Name oder ein Punkt am Ende von `app.base_url`** ergab
+  einen Ursprung, den kein Browser so schickt (F-SR-40): Der Knopf erschien,
+  jede Zeremonie scheiterte. Die Adresse wird jetzt in Punycode
+  geschrieben — ohne die Übergangsregeln, wie der Browser: „straße" wird
+  „xn--strae-oqa", nicht „strasse" (F-SR-46) —, der Punkt fällt weg. Ohne
+  die PHP-Erweiterung `intl` gibt es unter einem Umlaut-Namen keine
+  Passkeys.
+- **Die Bestätigungsseite bindet ihre Herausforderung an das Konto** wie
+  Anmeldung und Registrierung (F-SR-39); der Endpunkt prüft Rumpf und
+  Bezeichnung, **bevor** er die Herausforderung verbraucht, und der Browser
+  prüft die Länge der Bezeichnung, bevor der Dialog aufgeht — bis dahin
+  blieb nach einem 400 ein Passkey im Authenticator ohne Zeile auf dem
+  Server. Steuerzeichen und Unicode-Weißraum in der Bezeichnung werden zu
+  einem Leerzeichen; in der Textmail fügte ein Zeilenumbruch Zeilen ein.
+  **Eine abgelaufene Herausforderung** am Endpunkt heißt „Die Anfrage ist
+  abgelaufen" und schreibt keine Protokollzeile (F-SR-48) — sonst sah ein
+  zweiter Reiter in der Verwaltung aus wie ein Angriff; und nach einer
+  Antwort des Servers bleibt der Knopf aus, bis die Seite neu geladen ist.
+- **„Abgebrochen, abgelaufen oder kein passender Passkey auf diesem Gerät"**
+  statt „Abgebrochen oder abgelaufen" (F-SR-41): Der Browser sagt nicht,
+  welcher der drei Fälle es war, und der dritte ist nach einem Umzug der
+  häufigste.
+
+### Bewusst so
+
+- **Die `rp.id` kommt aus `app.base_url`** — E-SR-42 ist von der
+  Betreiberin bestätigt, die Begründung berichtigt (F-SR-44, oben unter
+  21.10.0). Keine Anlage läuft unter einer zweiten Adresse; deshalb zeigt
+  der Knopf dort nichts Besonderes an.
+- **Der Code-Schritt ist nicht phishingfest**, nur die Passkey-Antwort:
+  Der App-Code daneben bleibt abfischbar (F-SR-44). Handbuch, Kopf der
+  Bibliothek und 21.10.0 sagten es anders.
+- **Eine führende Null in r oder s einer ES256-Signatur bleibt erlaubt**,
+  ebenso die Länge der Folge als `81 L`: Die Form prüft die Anlage, das
+  Lesen macht phpseclib, und eine zweite Schreibweise derselben gültigen
+  Signatur ist kein Angriff, weil jede Herausforderung einmal gilt.
+- **Zwei Zähler-Warnungen am selben Tag können zu einer Mail werden**, wenn
+  die erste noch nicht zugestellt ist: Die Warteschlange ersetzt eine offene
+  Mail derselben Vorlage an dieselbe Adresse. Selten, und die Person erfährt
+  es trotzdem.
+- **`protokoll()` in einer Transaktion** verschluckt einen Deadlock, und
+  „alles oder nichts" könnte als „nichts, gemeldet als alles" enden — seit
+  21.8.0 beim Passwort, seit dieser Fassung in `totp_abschalten()`. Das ist
+  eine Frage an `protokoll()` selbst und wird Nr. 354.
+- **Erweiterungen mit einfachem Wert** (`hmac-secret`, `credBlob`) lehnt
+  der Leser ab; `passkey.js` fordert keine an. **AT in einer Anmeldung**
+  ist eine Ablehnung, strenger als WebAuthn; kein Authenticator setzt es
+  dort.
+- **Was der Schlüsselbund speichert**, steht jetzt im Handbuch: die
+  Kontoadresse als Name, die Adresse der Anlage und die Kontonummer als
+  Nutzerkennung.
+
+### Prüfmittel
+
+- **Die Passkeyprobe prüft bei jeder Ablehnung den Grund** (F-SR-43). Bis
+  21.10.0 maß sie nur „nicht angenommen" — ob ein Fall an der behaupteten
+  Stelle scheiterte oder schon eine Zeile davor, sah sie nicht. Bei der
+  Anmeldung prüft sie dazu die Art (`herausforderung`, `zaehler`,
+  `pruefung`), an der die Zählung der Fehlversuche hängt. Neu gemessen:
+  der Erweiterungsweg, AT in der Anmeldung, `crossOrigin`, Kennungslängen,
+  Rest hinter den Daten, Base64url-Fehlformen, die Kontobindung der
+  Ablagen, die RSA-Grenzen, die Labels, die Tabelle mit Hash und Adresse,
+  die Zähler-Mail samt Deckel, verwaiste Passkeys, und die Ablehnungen auch
+  mit RS256, die Form der Signatur, die Grenzen von innen (4096 Bit,
+  Exponent 3 und 64 Bit), die Kante des Felddeckels, und — mit einem
+  Auslöser, der das Löschen scheitern lässt — dass `totp_abschalten()` dann
+  nichts ändert. **122 Prüfungen** (21.10.0: 57); jede neue Prüfung der
+  Bibliothek ist einmal herausgenommen worden, und die Probe wurde rot.
+- **Teil 5d der Zweitfaktorprobe** trennt die Einmaligkeit der
+  Herausforderung vom Zähler (eine alte Herausforderung mit frischer
+  Signatur), misst, dass sie keinen Fehlversuch zählt, eine falsche
+  Signatur aber einen, den Zähler zurück mit Mail und eigenem Text, das
+  Feld als Liste und über dem Deckel ohne Zeile im Reiter System, am
+  Endpunkt Deckel und Bezeichnung, ohne die Herausforderung zu verbrauchen,
+  und die abgewiesene Registrierung mit Protokoll.
+- **Die Mailprobe** kennt die Vorlage `passkey_zaehler`; der Katalog hat 26.
+
 ## [Web 21.10.0] — 2026-09-28
 
 Schritt 18, Sicherheitsrunde II, Paket SR-09. **Neben, mit Migration**
@@ -27,7 +235,10 @@ Schritt 18, Sicherheitsrunde II, Paket SR-09. **Neben, mit Migration**
   Anmeldeseite abfischen und sofort weiterreichen; eine WebAuthn-Signatur
   ist an die Adresse gebunden, für die sie entstand, und nützt dort nichts.
   Für Support, Admin und BetreiberIn — die den Zweitfaktor tragen müssen —
-  wird der Code-Schritt damit phishingfest. **Ein Passkey ist ein weiteres
+  lässt sich die **Passkey-Antwort** damit nicht mehr abfischen; *der
+  Code-Schritt als Ganzes wird es nicht, solange der App-Code daneben steht
+  — berichtigt mit 21.11.0 (F-SR-44), hier stand „wird phishingfest".*
+  **Ein Passkey ist ein weiteres
   Verfahren desselben Faktors, kein eigener:** Er setzt den eingeschalteten
   Zweitfaktor voraus, Codes, Codeblatt und Rückweg bleiben der Notweg, und
   jedes Ausschalten oder Zurücksetzen nimmt die Passkeys mit. Ein Passkey
@@ -76,7 +287,12 @@ Schritt 18, Sicherheitsrunde II, Paket SR-09. **Neben, mit Migration**
   das Konzept sah die Stelle in `kopfzeilen_lib.php` vor, die den Host der
   Anfrage liest). Ein Ursprung, der sich nach dem Host-Kopf richtet, nähme
   jede Adresse hin, unter der die Anlage zufällig erreichbar ist; die
-  eingetragene Adresse ist die, unter der Passkeys entstehen sollen. **Preis:**
+  eingetragene Adresse ist die, unter der Passkeys entstehen sollen. *Die
+  Begründung ist mit 21.11.0 berichtigt (E-SR-42 bestätigt, F-SR-44): Vor
+  einer nachgemachten Seite schützt vor allem der Browser; den Ausschlag
+  geben die feste Erwartung, die WebAuthn verlangt, eine `rp.id`, die über
+  Jahre dieselbe bleibt, und dass keine Kopfzeile bewertet werden muss.*
+  **Preis:**
   Unter einer anderen Adresse gibt es keine Passkeys, für eine IP-Adresse
   und ohne HTTPS gar keine — die Sandbox auf 127.0.0.1 zeigt den Abschnitt
   nicht. Staging und Produktiv sind zwei Adressen, ein Passkey gilt auf einer.

@@ -352,6 +352,9 @@ const PROTOKOLL_ARTEN = [
     'passkey_angelegt'          => ['Passkey angelegt', 'neutral'],
     'passkey_entfernt'          => ['Passkey entfernt', 'neutral'],
     'passkey_zaehler'           => ['Passkey-Zähler', 'orange'],
+    /* H-SR-08 (E-SR-45): eine abgewiesene Registrierung mit ihrem Grund —
+     * nach aussen heisst jede nur „nicht angenommen". */
+    'passkey_abgewiesen'        => ['Passkey abgewiesen', 'neutral'],
     'geraet_umgeschaltet'       => ['Gerät umgeschaltet', 'neutral'],
     'geraet_geloescht'          => ['Gerät gelöscht', 'neutral'],
     'wartung_an'                => ['Wartung an', 'orange'],
@@ -567,6 +570,7 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'rueckweg_angelegt', 'rueckweg_erneuert',
                          'zweitfaktor_geraet_gemerkt', 'zweitfaktor_geraete_vergessen',
                          'passkey_angelegt', 'passkey_entfernt', 'passkey_zaehler',
+                         'passkey_abgewiesen',
                          'rechtstext_geaendert', 'schluessel_erneuert',
                          'schluesselblatt_bestaetigt', 'geraet_umgeschaltet',
                          'geraet_geloescht', 'wartung_an', 'wartung_aus',

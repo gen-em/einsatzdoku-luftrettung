@@ -421,17 +421,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * selben Topf `totp`, und der Erfolg laeuft durch denselben Zweig —
          * Art `passkey` zaehlt unten wie `app` (Geraet merken, frischer
          * Code). Die Herausforderung liegt im halben Stand und gilt einmal. */
-        $mitPk    = !$mitRc && ($_POST['passkey_antwort'] ?? '') !== '';
+        /* Ein Feld, das kein Text ist (`passkey_antwort[]=x`), ist eine leere
+         * Antwort — kein `(string)` mit PHP-Warnung im Reiter System
+         * (Nachpruefung von H-SR-08, B-1). */
+        $pkFeld   = $_POST['passkey_antwort'] ?? '';
+        $mitPk    = !$mitRc && $pkFeld !== '';
         $pr = ['ok' => false];
         if (rate_erlaubt('totp', null, $merkmale)) {
             if ($mitPk) {
                 require_once __DIR__ . '/passkey_lib.php';
                 $pkAblage = is_array($halb['passkey'] ?? null) ? $halb['passkey'] : [];
                 unset($_SESSION['totp_halb']['passkey']);
-                $pkAntwort = json_decode((string)$_POST['passkey_antwort'], true);
+                if (!pk_ablage_passt($pkAblage, $kontoId)) { $pkAblage = []; }
+                /* HOECHSTENS PK_ANTWORT_MAX (H-SR-08, F-SR-35): Eine riesige
+                 * Antwort endete sonst im Speicherfehler statt in einer
+                 * Ablehnung — vor der Signaturpruefung, fuer jeden mit dem
+                 * Passwort. */
+                $pkRoh = is_string($pkFeld) ? $pkFeld : '';
+                $pkAntwort = strlen($pkRoh) <= PK_ANTWORT_MAX ? json_decode($pkRoh, true) : null;
                 $pkR = pk_anmeldung_pruefen($kontoId, $pkAblage, is_array($pkAntwort) ? $pkAntwort : []);
                 $pr = $pkR['ok'] ? ['ok' => true, 'art' => 'passkey']
-                                 : ['ok' => false, 'art' => null, 'passkey' => true];
+                                 : ['ok' => false, 'art' => null, 'passkey' => $pkR['art']];
             } else {
                 $pr = totp_anmeldung_pruefen($kontoId,
                         (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''), $mitRc ? 'code' : 'app');
@@ -471,7 +481,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                     }
                     header('Location: index.php'); exit;
                 }
-            } else {
+            } elseif (!in_array($pr['passkey'] ?? '', ['herausforderung', 'zaehler'], true)) {
+                /* KEIN FEHLVERSUCH (H-SR-08, F-SR-37): eine abgelaufene oder
+                 * von einem zweiten Reiter verdraengte Herausforderung — hier
+                 * wurde nichts geprueft, wie beim Rueckweg — und ein
+                 * zurueckgelaufener Zaehler bei GUELTIGER Signatur. Zaehlte
+                 * das, sperrten fuenf solche Faelle das Konto mit „zu viele
+                 * falsche Codes", ohne dass jemand einen Code getippt hat. */
                 rate_misserfolg('totp', null, $merkmale);
             }
         }
@@ -484,9 +500,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $halb = null;
             $vergessen = true;
         } elseif (!$pr['ok'] && !empty($pr['geheimnis_fehlt'])) {
+            /* PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL (E-SR-49, F-SR-44):
+             * Hat das Konto einen fuer diese Adresse, ist er hier der
+             * bequemste Weg hinein — der Satz sagt es. */
+            require_once __DIR__ . '/passkey_lib.php';
             $fehlerAuftakt = 'Der Code lässt sich hier nicht prüfen.';
             $error = 'Der Zweitfaktor wurde mit einem anderen Serverschlüssel eingerichtet. '
-                   . 'Nimm einen Wiederherstellungscode oder bitte die Verwaltung, ihn zurückzusetzen.';
+                   . (pk_verfuegbar() && pk_zahl($kontoId) > 0
+                        ? 'Nimm deinen Passkey oder einen Wiederherstellungscode — oder bitte die Verwaltung, ihn zurückzusetzen.'
+                        : 'Nimm einen Wiederherstellungscode oder bitte die Verwaltung, ihn zurückzusetzen.');
+        } elseif (!$pr['ok'] && ($pr['passkey'] ?? '') === 'herausforderung') {
+            $fehlerAuftakt = 'Die Anfrage ist abgelaufen.';
+            $error = 'Bitte noch einmal „Mit Passkey bestätigen" — oder den Code aus der App nehmen.';
+        } elseif (!$pr['ok'] && ($pr['passkey'] ?? '') === 'zaehler') {
+            $fehlerAuftakt = 'Der Passkey wurde abgewiesen.';
+            $error = 'Er wurde zuletzt auf einem anderen Gerät benutzt — vielleicht eine Kopie. Nimm den Code '
+                   . 'aus der App; warst du das nicht, entferne ihn unter Einstellungen → Profil.';
         } elseif (!$pr['ok'] && !empty($pr['passkey'])) {
             $fehlerAuftakt = 'Der Passkey wurde nicht angenommen.';
             $error = 'Nimm den Code aus der App — oder versuche es noch einmal.';
@@ -865,7 +894,7 @@ if ($halb !== null && !$rwWeg && ($_GET['art'] ?? $_POST['art'] ?? '') !== 'rc')
     require_once __DIR__ . '/passkey_lib.php';
     if (pk_verfuegbar() && pk_zahl((int)$halb['konto']) > 0) {
         $pkAblage = [];
-        pk_herausforderung_stellen($pkAblage, 300);
+        pk_herausforderung_stellen($pkAblage, 300, (int)$halb['konto']);
         $_SESSION['totp_halb']['passkey'] = $pkAblage;
         $halb = $_SESSION['totp_halb'];
         $pkLogin = ['herausforderung' => $pkAblage['herausforderung'],

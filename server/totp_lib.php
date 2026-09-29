@@ -240,6 +240,12 @@ function totp_einrichtung_beginnen(int $userId): array
     if (demo_ist_demo($userId)) { return ['ok' => false, 'grund' => 'demo']; }
     if (totp_an($userId)) { return ['ok' => false, 'grund' => 'an']; }
     if (serverschluessel() === null) { return ['ok' => false, 'grund' => 'serverschluessel']; }
+    /* VERWAISTE PASSKEYS RAEUMEN (H-SR-08, F-SR-38): Ein Faktor, der aus ist,
+     * hat keine — steht trotzdem einer da (ein Weg an `totp_abschalten()`
+     * vorbei, etwa das SQL des Notwegs), wuerde er mit dem neuen Faktor
+     * wieder gelten. */
+    require_once __DIR__ . '/passkey_lib.php';
+    pk_alle_entfernen($userId, 'einrichtung');
     $roh = random_bytes(TOTP_GEHEIMNIS_BYTES);
     db()->prepare('UPDATE users SET totp_geheimnis = ?, totp_seit = NULL, totp_schritt = NULL
                     WHERE id = ?')
@@ -326,8 +332,9 @@ function totp_codes_erneuern(int $userId): ?array
  *
  * @return array{ok:bool, art:?string, codes_offen?:int, geheimnis_fehlt?:bool}
  *         `art`: 'app' oder 'code'. `geheimnis_fehlt`: Das Geheimnis lässt
- *         sich nicht öffnen (anderer Serverschlüssel) — dann helfen nur noch
- *         Wiederherstellungscodes und die Verwaltung.
+ *         sich nicht öffnen (anderer Serverschlüssel) — dann helfen
+ *         Wiederherstellungscodes, Passkeys (sie hängen nicht am Schlüssel,
+ *         E-SR-49) und die Verwaltung. Es entsteht nur im Zweig des App-Codes.
  */
 function totp_anmeldung_pruefen(int $userId, string $eingabe, ?string $nur = null): array
 {
@@ -380,21 +387,28 @@ function totp_anmeldung_pruefen(int $userId, string $eingabe, ?string $nur = nul
  * Faktor, der aus ist, hat keine Geraete, die ihn ersetzen; und wer ihn
  * zuruecksetzen laesst, weil das Handy weg ist, will auch den Laptop nicht
  * mehr als bekannt gelten lassen, auf dem jemand anders sitzen koennte.
+ *
+ * IN DERSELBEN TRANSAKTION (seit Web 21.11.0, H-SR-08, F-SR-38): Bis dahin
+ * liefen Geraete und Passkeys nach dem Commit. Brach das Loeschen ab, war der
+ * Faktor aus und die Passkeys standen noch — und beim naechsten Einschalten
+ * galten sie wieder. Jetzt gilt alles oder nichts, wie beim Passwortwechsel
+ * (E-SR-40); die Protokolleintraege stehen mit in der Transaktion.
  */
 function totp_abschalten(int $userId, string $weg): bool
 {
     if (!totp_spalten_da()) { return false; }
     $vorher = totp_zustand($userId);
-    db_transaktion(db(), static function (PDO $pdo) use ($userId): void {
+    require_once __DIR__ . '/passkey_lib.php';
+    db_transaktion(db(), static function (PDO $pdo) use ($userId, $weg): void {
         $pdo->prepare('UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL, totp_schritt = NULL
                         WHERE id = ?')->execute([$userId]);
         $pdo->prepare('DELETE FROM totp_codes WHERE user_id = ?')->execute([$userId]);
+        zweitfaktor_geraete_vergessen($userId, 'zweitfaktor_' . $weg);
+        /* DIE PASSKEYS GEHEN MIT, auf jedem Weg (SR-09, E-SR-29): Ein
+         * Passkey ist ein Verfahren DIESES Faktors; ein Faktor, der aus ist,
+         * hat keine. */
+        pk_alle_entfernen($userId, 'zweitfaktor_' . $weg);
     });
-    zweitfaktor_geraete_vergessen($userId, 'zweitfaktor_' . $weg);
-    /* DIE PASSKEYS GEHEN MIT, auf jedem Weg (SR-09, E-SR-29): Ein Passkey ist
-     * ein Verfahren DIESES Faktors; ein Faktor, der aus ist, hat keine. */
-    require_once __DIR__ . '/passkey_lib.php';
-    pk_alle_entfernen($userId, 'zweitfaktor_' . $weg);
     if ($vorher['an']) {
         require_once __DIR__ . '/protokoll_lib.php';
         protokoll('verwaltung', $weg === 'selbst' ? 'totp_ausgeschaltet' : 'totp_zurueckgesetzt',

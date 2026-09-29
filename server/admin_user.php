@@ -1143,7 +1143,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                  entfernen kann sie die Person selbst, und „Zurücksetzen"
                  nimmt sie über totp_abschalten() mit. */
               require_once __DIR__ . '/passkey_lib.php';
-              $zfPk = pk_zahl($uid);   // vor update.php: 0
+              $zfPk = pk_zahl($uid, true);   // alle Adressen; vor update.php: 0
               ui_zeile(['text' => 'Eingeschaltet',
             'klein' => 'seit ' . datum_zeit_text($zfZ['seit']) . ' · Wiederherstellungscodes: '
                      . $zfZ['codes_offen'] . ' von ' . $zfZ['codes_alle']
@@ -1156,7 +1156,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
             <?= ui_knopf(['text' => 'Zurücksetzen …', 'art' => 'neutral',
                 'attr' => ' data-confirm-titel="Zweitfaktor zurücksetzen?" data-confirm-ok="Zurücksetzen"'
                         . ' data-confirm-tone="normal" data-confirm="' . e($zfWer . ' meldet sich danach nur '
-                        . 'mit dem Passwort an und richtet den Zweitfaktor neu ein. Die alten Codes und '
+                        . 'mit dem Passwort an und richtet den Zweitfaktor neu ein. Die alten Codes, die Passkeys und '
                         . 'das Blatt gelten nicht mehr. Die Person bekommt eine Mail, und der Schritt '
                         . 'steht im Protokoll.') . '"']) ?>
           </div>
