@@ -5,8 +5,8 @@ welchem Mittel und mit welcher **Zahl**; **was konnte nicht geprüft werden und
 warum**; welche Funde sind aufgetreten; und als Kernstück die **Prüfliste für
 die Betreiberin** — alles, was nur an der laufenden Anlage geht.
 
-Das Konzept liegt daneben (`Konzept-Kette-Haertung.md`) und trägt den
-Statusblock der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste
+Das Konzept (`Konzept-Kette-Haertung.md`) ist am 29.09.2026 mit PK-07
+gelöscht worden (letzter Stand `8854b86`, Rahmenplan 8). Dieses Dokument bleibt, bis seine Prüfliste
 abgehakt ist (R62).
 
 > **Dieses Paket ist anders geprüft als die üblichen**, und der Grund gehört

@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 149 | 29.09.2026 | PK-07, R67 | PK und Kette II abgeschlossen (E-PK-64): Erledigt-Zeilen, Fahrplanzeilen fort, Reste in 6.1, R67 nachgezogen. Berichtigt: 6.1 führte `web-v21.1.3` und `web-v21.6.1` als offen — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert (F-PK-54). |
 | 148 | 29.09.2026 | PK-08, R65 | PK-06 und PK-08 gebaut; R65: das Seitenladungs-APK signiert die Kette mit dem App-Signaturschlüssel (E-PK-53). Neue Zuarbeit in 6.1: `APK_ZERTIFIKAT_SHA256`, App-Probeläufe, erste Tags. |
 | 147 | 29.09.2026 | PK-06 beginnt | PK-06 auf `claude/beautiful-dirac-1tc4d0` (Opus), Reihe PK-06 → PK-08 → PK-07 (E-PK-50); Spanne 360–369. Berichtigt: Der Kopf nannte den Konzept-PR 18 offen, er ist seit dem 28.09.2026 gemergt; 146 trägt der Zweig von 18. |
 | 145 | 28.09.2026 | 18, Konzept-PR | `main` aufgenommen (17 gemergt, PR #94, `f4ac705`), Konzept-PR zu 18 gestellt; Nr. 250 nach SR-02, Nr. 344 nach SR-03 (E-SR-37). Berichtigt: Die Fassungen 137 bis 142 dieses Zweigs heißen seit dem Merge 139 bis 144 — 17 hatte 137 und 138 auch vergeben. |

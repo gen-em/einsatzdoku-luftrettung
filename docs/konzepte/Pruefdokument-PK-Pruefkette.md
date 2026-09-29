@@ -1,6 +1,6 @@
 # Prüfdokument PK — Prüfkette
 
-Gehört zu `Konzept-PK-Pruefkette.md`. Nach `CLAUDE.md` 7: Was wurde
+Gehörte zu `Konzept-PK-Pruefkette.md`; das Konzept ist mit PK-07 am 29.09.2026 gelöscht (letzter Stand `80efce0`, Rahmenplan 8). Nach `CLAUDE.md` 7: Was wurde
 maschinell geprüft (Mittel und Zahl), was im Browser, was nicht und warum,
 und eine abhakbare Prüfliste. Angelegt mit PK-M1; fortgeschrieben mit PK-01.
 

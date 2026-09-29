@@ -9150,3 +9150,46 @@ zutreffen.
      `backlog-listenstart` in `decken.py`. `cmark-gfm`: vorher eine Liste
      für 64 Einträge, danach 64 Listen, jede mit ihrer Nummer als `start`.
      `Backlog-Erledigt.md` bleibt ohne Trennzeilen.
+
+227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole mehr.** · gehört zu: PK · Stand: erledigt · seit 17.09.2026
+     Befund (P5b-Zweig, 17.09.2026): `tools/vollstaendigkeit/` prüft
+     „Unicode-Zeichen als Symbol im Markup", zählte aber `…` und `→` mit —
+     in diesem Projekt Satzzeichen („Betrieb → Servereinstellungen"). Von
+     319 Befunden waren 299 Hausstil und 20 tatsächlich Zeichen statt
+     Symbol; die 20 echten fielen zwischen den 299 niemandem auf, und die
+     Schwelle in `pruefung.yml` wuchs mit jeder Phase (366 in `Technik.md`,
+     377, 387 in der Kette — eine Zahl an zwei Stellen, Nebenbefund).
+     Vorschlag: Zeichenliste in Ikonenzeichen (0 geduldet) und Typografie
+     (nicht gezählt) teilen.
+     Umgesetzt 22.09.2026 mit PK-04/1b: Die Typografie ist aus der Liste,
+     von 330 Treffern blieben 14 (sie stehen als Nr. 279); Symbol- und
+     Emoji-Zählung sind Hinweis statt Befund, weil die Prüfung Kommentare
+     nicht trennen kann, solange Nr. 184 offen ist. Der Eintrag bleibt nach
+     Konzept SD (4.7, Schritt 6) mit `Stand: teilweise` stehen, bis die
+     Prüfliste abgehakt ist; nach Erledigt verschiebt ihn die Backlog-Runde.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 227.
+     Erledigt 29.09.2026 mit PK-07 (Werkzeug, keine Versionsstufe): Der
+     Befund aus dem Titel ist behoben, Nr. 279 und Nr. 184 sind erledigt;
+     die Zählung meldet heute 6 Symbole und 0 Emoji. Der Vorschlag „0
+     geduldet" ist bewusst nicht gebaut — die Zählung bleibt ein Hinweis
+     (Begründung in `tools/quelltext/vollstaendigkeit.py` bei
+     `pruefung_symbole`).
+
+360. **Stufe 2 prüft `STAGING_PASS` nicht auf leer.** · gehört zu: PK · Stand: erledigt · seit 29.09.2026
+     *Aufgenommen 29.09.2026 aus der Gegenlesung von PK-06.* GitHub setzt
+     ein fehlendes Geheimnis still auf leer; deshalb prüfen die Schritte von
+     `stufe2` ihre Werte mit `-z` und brechen mit einer eigenen Meldung ab
+     (E-KH-12). `STAGING_URL`, `STAGING_KONTO`, `STAGING_TOTP` und
+     `JOBS_TOKEN` werden geprüft, `STAGING_PASS` nicht — obwohl Kreislauf
+     und Rückwegprobe es benutzen und die Meldung der Rückwegprobe
+     „Prüfkonto, Passwort oder STAGING_TOTP fehlt" sagt. Fehlt es, scheitert
+     der Lauf an der Anmeldung, nicht an der erklärten Meldung. Rot ist er
+     trotzdem; es fehlt der richtige Grund.
+     *Weg:* `STAGING_PASS` in beide `-z`-Riegel aufnehmen (zwei Zeilen in
+     `.github/workflows/auslieferung.yml`); nicht in PK-06, das keinen
+     Befehl ändert. *Abnahme:* Umgebungsgeheimnis leer → „Prüfkonto auf
+     Staging fehlt" im ersten Messschritt.
+     Erledigt 29.09.2026 mit PK-07 (E-PK-66, Werkzeug, keine
+     Versionsstufe): `STAGING_PASS` steht in beiden `-z`-Riegeln, der Satz
+     am Job ist fort. Örtlich 6 von 6; die Fassung davor ließ ein leeres
+     Geheimnis in 2 von 2 Schritten durch. Auf GitHub: P-PK-37.
