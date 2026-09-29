@@ -9784,10 +9784,10 @@ Auslieferung von Uhr und Android.
 Ebenso bleibt der **Paketname** `org.genem.nadoku`: Er lässt sich nicht
 ändern, ohne installierte Apps zu brechen (der Bindestrich aus `gen-em.org`
 entfällt, weil ein Paketname keinen trägt — steht in
-`android/handy/build.gradle.kts`). Und `WACHE_BASIS` in
-`.github/workflows/integritaet.yml` ist die Adresse **dieser**
-Installation — Betriebskonfiguration der Auslieferungskette, keine Eigenschaft
-der Software.
+`android/handy/build.gradle.kts`). Und `WACHE_BASIS` — eine
+Repositoriums-Variable, die `.github/workflows/integritaet.yml` liest — ist die
+Adresse **dieser** Installation: Betriebskonfiguration der
+Auslieferungskette, keine Eigenschaft der Software.
 
 ### 5e Der Ratenschutz — Leiter, Schwellen, Verlangsamung, Mengenbremse, Sicherheitsseite (P5a/AP6–AP8)
 

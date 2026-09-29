@@ -6,6 +6,11 @@ und eine abhakbare Prüfliste. Angelegt mit PK-M1; fortgeschrieben mit PK-01.
 
 ## 0. Was nicht geprüft werden konnte
 
+**Stand nach PK-06 (29.09.2026).** PK-06 ändert in den drei Arbeitsläufen
+der Auslieferung nur Kommentare — örtlich belegt über zwei unabhängige
+Vergleiche (5p). Was nur ein echter Lauf zeigt, steht in den ersten fünf
+Zeilen der Tabelle; darunter der Stand nach PK-05.
+
 **Stand nach PK-05.** PK-05 ändert die Kette selbst (`pruefung.yml`), und
 genau das lässt sich in der Arbeitsumgebung nur zur Hälfte belegen: Die
 Schritte sind örtlich nachgestellt, der echte Lauf auf GitHub kommt erst mit
@@ -13,6 +18,11 @@ dem PR. Die sechs PK-05-Zeilen stehen oben; darunter der Stand nach PK-03.
 
 | Was | Warum nicht | Wann dann |
 |---|---|---|
+| **PK-06: Die gekürzten Arbeitsläufe auf GitHub** | `auslieferung.yml` läuft nur auf `main` und beim Tag. Örtlich belegt ist, dass sich außer Kommentaren nichts geändert hat (YAML-Struktur und Rohzeilen gleich, 5p); dass GitHub die Dateien genauso liest, zeigt erst der Lauf nach dem Merge. | nach dem Merge (P-PK-21, P-PK-38) |
+| **PK-06: Stufe 2 mit falschem `STAGING_PASS`** | Braucht ein geändertes Umgebungsgeheimnis — Sache der Betreiberin, und nicht ohne einen roten Staging-Lauf zu haben. | P-PK-37 |
+| **PK-06: Zwei Merges in einer Minute** | Braucht zwei PRs und zwei Merges durch die Betreiberin. | P-PK-18 |
+| **PK-06: actionlint ohne Shell-Prüfung** | `actionlint` 1.7.7 (Release-Binärdatei, nur in der Arbeitsumgebung) lief, `shellcheck` fehlt im Container (`which shellcheck` leer) — die Shell-Prüfung der `run:`-Blöcke ist damit **nicht** gelaufen. Da sich kein `run:`-Befehl geändert hat, hätte sie nur den Altbestand gemessen. | nicht nötig für PK-06 |
+| **PK-06: Die Integritätswache nach der Kürzung** | Ihr Auslöser hängt am Namen „Auslieferung" (unverändert); ob sie nach dem ersten Lauf wirklich anspringt, zeigt erst GitHub. | P-PK-38 |
 | ~~PK-05: Stufe 1 auf GitHub, mit Bericht und ohne~~ | **Nachgeholt am 23.09.2026 an PR #81:** mit Bericht grün in 76 s (P-PK-29), ohne Bericht rot (P-PK-30), Handlauf ohne Bericht rot (P-PK-31) — `steps.*.outcome` und `head.sha \|\| github.sha` wertet GitHub aus wie örtlich nachgestellt. **Nicht auf GitHub gesehen:** der Umgebungswert-Schritt im belegten Fall (örtlich nachgestellt) und „falscher Baum" (örtlich nachgestellt). | erledigt |
 | **PK-05: Die Lücke „Handlauf auf dem PR-Zweig"** | Geschlossen auf Verdacht (E-PK-43). Ob das Ruleset den jüngeren Check genommen hätte, ist **nicht gemessen** — und nach der Änderung auch nicht mehr messbar, weil der Handlauf jetzt selbst gegenliest. Messbar bleibt, dass er es tut. | am eigenen PR (P-PK-31) |
 | **PK-05: Der Push-Weg auf `main`** | Erst nach dem Merge durch die Betreiberin zu sehen. | nach dem Merge (P-PK-32) |
@@ -31,7 +41,7 @@ dem PR. Die sechs PK-05-Zeilen stehen oben; darunter der Stand nach PK-03.
 | **Der rote Versuch 1 von Lauf 35639445224** | Die Lauf-API liefert zu einem Lauf den **jüngsten Versuch**; das Protokoll von Versuch 1 (Backup-Tor, 40 Aufrufe, 13 min) ist über das benutzte Werkzeug nicht erreichbar. Was dort steht, ist **berichtet, nicht nachgemessen** — F-PK-03 sagt es an der Stelle noch einmal. | wenn jemand mit Zugang zur Oberfläche das Protokoll des Versuchs 1 liest |
 | ~~Eine grüne Stufe 2 nach einem Merge~~ | **Erledigt am 21.09.2026 mit dem Vorgriff auf PK-06** (PR #72): Der Bilderlauf ist aus Stufe 2 heraus, die drei verbliebenen Schritte messen nur noch, was die Anlage zeigt. **Gemessen: Run 72 auf `a1c6494`, Stufe 2 als Ganzes grün in 107 s.** Abnahme durch die Betreiberin: P-PK-21. | erledigt |
 | **Der Emulator zur Android-Änderung in 5b** | `docs/Pruefablauf.md` 6.9 verlangt ihn bei **jeder** Änderung an einem der beiden Module — und in 5b ist eine gegangen (`strings.xml`, eine Zeile). Er ist **nicht gelaufen und nicht versucht worden**; es gibt deshalb nicht einmal einen Befund mit Zahl, den die Regel für den Fehlschlag vorsieht. Dass es unterblieb, hat kein Prüfmittel gemeldet, sondern die Nachfrage des Auftraggebers. | beim nächsten Android-Paket (P-PK-28, E-PK-40) |
-| **Die Zahlen der Kette in `Pruefablauf.md` 2.3/2.4** | Schrittzahlen und Jobnamen sind am Quelltext gezählt, nicht an einem Lauf gemessen. Die Dauerangaben (49 s Staging, 16 min Stufe 2) sind aus dem Konzept übernommen und hier **nicht** nachgemessen. | PK-05, PK-06 |
+| ~~Die Zahlen der Kette in `Pruefablauf.md` 2.3/2.4~~ | **Für 2.4 nachgemessen mit PK-06** an Lauf 99 (28.09.2026, `fc4253d`): Staging 35 s, Stufe 2 3:16 — die „16 min" aus dem Konzept waren der Stand vor dem Vorgriff. Die Schrittzahl 5 ist am Quelltext gezählt. | erledigt (PK-06) |
 
 ## 1. Prüfliste
 
@@ -54,9 +64,9 @@ dem PR. Die sechs PK-05-Zeilen stehen oben; darunter der Stand nach PK-03.
 | P-PK-20 | Die vier roten Proben aus 5.7 trennen: veraltete Erwartung oder Fehler der Anwendung (F-PK-18, F-PK-22) | je Probe den Befund nachvollziehen, Referenzbestand erneuern, erneut fahren | jede Probe nennt danach entweder eine behobene Anwendung oder eine berichtigte Erwartung — mit Zahl | eine Probe bleibt rot, ohne dass jemand sagen kann, woran | **offen** — eigene Korrekturstufe, kein PK-Paket |
 | P-PK-16 | Der offene Befund der Wiederherstellungsprobe | Sicherungsziel eintragen, `php tools/wiederherstellungs-probe/probe.php` | 110 Erwartungen, 0 nicht erfüllt | die zwei Befunde bleiben auch mit Sicherungsziel stehen (dann ist es die Anwendung) | **offen** — siehe F-PK-18 |
 | P-PK-11 | Ausbaustufen `android` und `uhr` (PK-02) | `aufbauen.sh android` → `./gradlew build`; `aufbauen.sh uhr` → `pruefstand.sh reihe` | 0 Lint-Fehler, 0 Fehlschläge bzw. Reihe grün | ein Fehlschlag, oder das SDK fehlt | **beide erledigt 21.09.2026.** android: BUILD SUCCESSFUL in 7m 19s, **0 Lint-Fehler**, **670 Prüffälle / 0**. uhr: `aufbauen.sh uhr` rc 0 mit Gegenstand — SDK **9.2.0**, **1332** Schriftdateien, **99 von 99** Manifest-Geräten, **173** Geräte mit `compiler.json`, **0** fehlende Simulatorbibliotheken, Nachweis **15 Stücke ok** (darunter die zwei neuen Uhr-Zeilen), **8 von 8** Umgebungswerten. Stufe I danach über alle Geräte: **99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei**, rc 0. **Der Bedienweg oben war unvollständig** — siehe F-PK-21 |
-| P-PK-18 | Zwei Merges kurz hintereinander erzeugen keine sich störenden Läufe mehr (F-PK-02, F-PK-03) | nach PK-06: zwei PRs innerhalb einer Minute nach `main` mergen; die Läufe von `auslieferung.yml` ansehen | der zweite Lauf **bricht den ersten ab** oder wartet; **kein** Backup-Tor läuft in die Job-Pause des Nachbarn; der Produktivlauf wird **nie** abgebrochen | ein Lauf steht 13 min im Backup-Tor, oder ein Produktivlauf wird abgebrochen (dann ist die Gruppe falsch herum gebaut) | **offen** — gehört zur Abnahme von PK-06 |
-| P-PK-19 | Stufe 2 kommt ohne Konto mit Vorgabekennwort aus (F-PK-04) | nach PK-06: Push auf `main`, Stufe 2 ansehen | Stufe 2 grün; der Bilderlauf läuft im **Prüfstand** gegen die örtliche Anlage (Demo-Konto aus der Fixture) | Stufe 2 meldet wieder `Anmeldung als demo@gen-em.org gescheitert`, oder jemand hat das Konto auf Staging angelegt | **offen** — bis dahin ist Stufe 2 nach einem Merge **planmäßig rot am Schritt 6** |
-| P-PK-21 | Ein Push auf `main` erzeugt genau **einen** Auslieferungslauf, dessen Stufe 2 **als Ganzes** grün ist (Folge aus F-PK-02 bis -04) | auf `main` mergen, dann die Läufe von `auslieferung.yml` zu diesem Commit ansehen | **genau 1 Lauf**; Stufe 2 grün in **unter drei Minuten** (gemessen 21.09.2026: Run 72 auf `a1c6494`, **107 s**) | zwei gleichzeitig laufende Staging-Läufe · ein Stufe-2-Job mit **mehr als vier** Schritten inkl. Checkout · ein rotes Backup-Tor mit „angehalten bis" | **offen** — misst die Betreiberin |
+| P-PK-18 | Zwei Merges kurz hintereinander erzeugen keine sich störenden Läufe mehr (F-PK-02, F-PK-03) | nach PK-06: zwei PRs innerhalb einer Minute nach `main` mergen; die Läufe von `auslieferung.yml` ansehen | der zweite Lauf **wartet**, bis der erste fertig ist (Gruppe `auslieferung-staging`, `cancel-in-progress: false`); **kein** Backup-Tor läuft in die Job-Pause des Nachbarn; der Produktivlauf wird **nie** abgebrochen | ein Lauf steht 13 min im Backup-Tor, ein Lauf wird abgebrochen, oder beide laufen gleichzeitig | **offen** — gehört zur Abnahme von PK-06. *Bis PK-06 stand hier „bricht den ersten ab oder wartet"; abbrechen ist seit dem Vorgriff ausgeschlossen (E-KH-11).* |
+| P-PK-19 | Stufe 2 kommt ohne Konto mit Vorgabekennwort aus (F-PK-04) | nach PK-06: Push auf `main`, Stufe 2 ansehen | Stufe 2 grün; im Protokoll des Jobs meldet sich nichts als `demo@gen-em.org` an; der Bilderlauf läuft im **Prüfstand** gegen die örtliche Anlage (Demo-Konto aus der Fixture) | Stufe 2 meldet wieder `Anmeldung als demo@gen-em.org gescheitert` oder meldet sich überhaupt als Demo-Konto an | **teilweise** — Lauf 99 grün ohne Bilderlauf; **offen ist Q-PK-10**: Nach `Rahmenplan.md` 6a Schritt 8 liegt das Demo-Konto seit dem 26.09.2026 auf Staging, F-PK-04 hatte das ausgeschlossen |
+| P-PK-21 | Ein Push auf `main` erzeugt genau **einen** Auslieferungslauf, dessen Stufe 2 **als Ganzes** grün ist (Folge aus F-PK-02 bis -04) | auf `main` mergen, dann die Läufe von `auslieferung.yml` zu diesem Commit ansehen | **genau 1 Lauf**; Staging und Stufe 2 grün, **zusammen unter zehn Minuten** (Abnahme PK-06; gemessen 21.09.2026: Run 72, Stufe 2 **107 s**; 28.09.2026: Lauf 99, Staging 35 s + Stufe 2 **3:16** mit Rückwegprobe) | zwei gleichzeitig laufende Staging-Läufe · ein Stufe-2-Job mit **mehr als fünf** Schritten inkl. Checkout · ein rotes Backup-Tor mit „angehalten bis" | **offen** — misst die Betreiberin am ersten Lauf nach dem Merge von PK-06. *Bis PK-06 stand hier „unter drei Minuten" und „mehr als vier Schritte" — beides vor der Rückwegprobe.* |
 | P-PK-06 | Die neuen Dokumente laufen durch die Wortliste (B-S4-06) | `wortliste.py --bereich c`; nachsehen, dass beide Dateien in `BEREICHE["c"]` stehen | beide Dateien werden gelesen, 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | der Lauf meldet 0 und hat keine Zeile der neuen Dokumente angesehen | **erledigt 21.09.2026** (3.3) |
 | P-PK-22 | Das Spaltenregister aus Schritt 15 wird in Stufe 1 grün (F-PK-27, Backlog Nr. 282) | `php tools/spaltenregister/pruefen.php --selbstprobe` und ohne Schalter, auf `main` nach dem Merge von PR #74 | Selbstprobe **16 von 16**, Lauf **0 Befunde** | `start_sort` fehlt weiter im Register, oder der Fall „mf_spalten: Alias an" bleibt rot — dann ist Stufe 1 rot und die Kette liefert nicht aus | **erledigt 23.09.2026** — von Schritt 15 selbst behoben (`f1bc9e6`), nachgemessen 16/16 und 0 Befunde, beide rc 0 (5h) |
 | P-PK-23 | Die vier Schlüssellagen-Proben laufen nach dem Merge von PR #74 auf `main` (F-PK-24) | `php tools/proben/anteil/probe.php`, `…/komplett/probe.php`, `…/wiederherstellung/probe.php`, `…/versand/probe.php <wurzel>` | anteil 55/55 · komplett 64/0 · wiederherstellung 110/2 (unverändert F-PK-18) · versand wie vor dem Merge | eine Probe stirbt mit `Failed opening required …konfig_stellen.php` — dann ist die Pfadtiefe wieder falsch | **drei erledigt 22.09.2026 im Arbeitszweig** (5h); `versand` steht aus, sie braucht den Wurzelpfad der Gegenstellen als Argument |
@@ -72,6 +82,8 @@ dem PR. Die sechs PK-05-Zeilen stehen oben; darunter der Stand nach PK-03.
 | P-PK-33 | Die Nebenstufe gegen eine echte `server/`-Änderung (PK-05/1) | `bash tools/pruefstand/pruefen.sh` auf dem ersten Zweig mit Nebensprung (P5c AP1) | Stufe „neben" ohne `--stufe` erkannt; 36 Proben; Bericht ohne rote Probe | „klein" (dann liest die Stufe nicht aus dem Arbeitsbestand) oder eine rote Probe, die niemand erklären kann | **offen** — Vorab-Messung 23.09.2026 (5o): 36 Proben, **9 rot**, 1 266 s; zuerst das Korrekturpaket (E-PK-45, Nr. 292), dann mit P5c AP1 |
 | P-PK-34 | „gebaut" nach einem echten Bau (E-PK-44) | beim ersten PR mit `android/` oder `watch/`: Prüfstand mit SDK fahren, Bericht ansehen, Stufe 1 ansehen | Bericht `handy=gebaut` bzw. `uhr=gebaut`, Tor grün; ohne SDK „nicht-gemessen" und Tor rot | „gebaut" ohne Bau, oder Tor grün mit „nicht-gemessen" | **offen** |
 | P-PK-35 | Nach einem fremden Merge: der Weg aus `Pruefablauf.md` 5.3 (E-PK-42) | wenn ein anderer PR vor diesem gemergt wird: örtlich `git merge --no-commit origin/main`, Prüfstand, Merge-Commit mit Bericht | Stufe 1 grün auf dem Merge-Commit | rot mit „Baum-Hash passt nicht" — dann misst der Prüfstand im Merge-Zustand nicht den Baum, den der Commit bekommt | **örtlich erledigt 23.09.2026** — PR #80 wurde während PK-05 gemergt; Merge-Commit `5671d24` mit Bericht, **Baum `b12426a` = Baum des Commits**, 18 Proben grün in 706 s, Tor-Schritt örtlich grün. Dabei gefunden: F-PK-39. Auf GitHub belegt es P-PK-29 |
+| P-PK-37 | Stufe 2 mit falschem `STAGING_PASS` ist rot, schnell und mit Grund (Abnahme PK-06) | Umgebung `staging` → Geheimnis `STAGING_PASS` vorübergehend auf einen falschen Wert, Actions → „Auslieferung" auf `main` neu starten (*Re-run*), danach den Wert zurücksetzen und noch einmal starten | Job „Prüfung Stufe 2" rot **innerhalb einer Minute** nach seinem Start, der erste rote Schritt ist „Kreislauf edbak gegen Staging" und nennt die gescheiterte Anmeldung | rot erst nach Minuten (dann hängt er irgendwo), rot mit einer Playwright- oder Python-Meldung ohne Wort zur Anmeldung, oder gar grün | **offen** — Betreiberin |
+| P-PK-38 | Die Integritätswache springt nach einem Auslieferungslauf der gekürzten Fassung an (PK-06) | nach dem Merge von PK-06: Actions → „Integritaetswache", Ereignis `workflow_run` zum Lauf von `auslieferung.yml` | ein Lauf der Wache, ausgelöst **durch** den Auslieferungslauf, grün (Vergleich gegen den Zeiger) | kein Lauf mit Ereignis `workflow_run` — dann hängt der Name nicht mehr | **offen** — nach dem Merge |
 | P-PK-36 | Die Schemaprobe hält einen Merge auf (E-PK-47, Z12) | nach Z12: in „Main Protect" die Required Checks ansehen; beim nächsten PR die Merge-Schaltfläche, solange „Schema gegen …" läuft | beide Namen stehen genau so im Ruleset — **„Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6", nicht `Schema gegen ${{ matrix.db.name }}`** (F-PK-41); der Merge ist gesperrt, bis beide grün sind | der Merge ist frei, während ein Schemalauf noch läuft oder rot ist — dann steht ein Name anders im Ruleset als im Lauf; oder ein PR wartet ewig auf „Expected" — dann steht der unaufgelöste Name drin | **offen** — nach Z12 |
 
 ## 2. Messprotokoll P-PK-01 (21.09.2026)
@@ -1485,6 +1497,96 @@ Die Messung hat eine Datei im Repositorium verändert
 (`tools/proben/csp-browser/kopfzeilen.png`); sie ist zurückgesetzt, weil sie
 nicht zu PK-05 gehört.
 
+## 5p. Messprotokoll PK-06 — Staging verschlanken (29.09.2026)
+
+Zweig `claude/beautiful-dirac-1tc4d0`, Basis `origin/main` `fc4253d`.
+Der Vorgriff (PR #72) hatte Gruppe, Zeitgrenze und Bilderlauf schon
+erledigt; PK-06 fasst deshalb nur noch Kommentare, den Platz für Nr. 234,
+F-PK-11 und die Dokumente an. **Kein Schritt, keine Bedingung, kein Befehl
+der Arbeitsläufe hat sich geändert** — das ist die Zusage des Pakets, und
+die beiden Vergleiche unten sind ihr Beleg.
+
+### Stufe 2 heute, gemessen an Lauf 99
+
+Lauf 36422332912 (28.09.2026, Merge von PR #95, `fc4253d`), Schrittzeiten
+aus der Lauf-Schnittstelle: Job `staging / ausliefern` **35 s** (FTPS-Abgleich
+4 s), Job „Prüfung Stufe 2" **3:16** — Antwortprobe 1 s, Punktdateien 1 s,
+Kreislauf `edbak` samt pip, npm und Chromium **44 s**, Rückwegprobe **2:26**.
+Zusammen rund **4 min**: Das Ziel „unter zehn Minuten" ist erfüllt, bevor
+PK-06 etwas geändert hat. Die Installation kostet gut die Hälfte des
+Kreislaufschritts; ein Cache spräche höchstens 30 s ein (E-PK-54).
+
+### Die Einordnung, gefächert (E-PK-52)
+
+Drei lesende Agenten, je ein Arbeitslauf, **514 115 Token, 95
+Werkzeugaufrufe, 14:42 min**. Jede Kommentarzeile liegt in genau einem Block
+— nachgezählt: Blocksummen **547 / 423 / 96** gegen dieselben Zahlen aus
+`grep -cE '^\s*#'`.
+
+| Datei | Blöcke | davon Falle | Geschichte | Begründung | Trenner/Kopf |
+|---|---|---|---|---|---|
+| `ausliefern-lauf.yml` | 74 | 29 | 7 | 33 | 5 |
+| `auslieferung.yml` | 57 | 24 | 8 | 22 | 3 |
+| `integritaet.yml` | 19 | 8 | 4 | 7 | 0 |
+
+Die Sätze sind danach **seriell** geschrieben, mit den Vorschlägen der
+Agenten als Vorlage: zusammengehörige Fallen zu einem Satz gelegt (Zähl-
+regel des Tors, Zustandsdatei, Schutzliste, Gruppe), zwei Sätze an den
+Ort verlegt, an den sie gehören (`defaults` statt `permissions`; der
+Riegel „fehlendes Geheimnis heißt leer" an das `env:` von `stufe2`), eine
+Falle neu benannt, die bisher keinen Kommentar hatte (F-PK-43).
+
+### Zeilen
+
+| Datei | Zeilen vorher | nachher | Kommentar vorher | nachher |
+|---|---|---|---|---|
+| `ausliefern-lauf.yml` | 1 072 | 579 | 547 | 53 |
+| `auslieferung.yml` | 743 | 369 | 423 | 49 |
+| `integritaet.yml` | 177 | 97 | 96 | 17 |
+| `pruefung.yml` (unberührt) | 294 | 294 | 21 | 21 |
+| **zusammen** | **2 286** | **1 339** | **1 087** | **140** |
+
+**Das Ziel „unter 1 200" ist verfehlt, um 139 Zeilen** (E-PK-51). Ohne
+jeden Kommentar stünden 1 199 da. Geschätzt hatte ich beim Beginn
+„1 250 bis 1 300"; es sind 1 339, weil ein Satz bei acht bis zehn Zeichen
+Einrückung und 80 Spalten fast immer zwei Zeilen braucht.
+
+### Kein Befehl geändert — zwei Vergleiche
+
+`vergleich.py` (Arbeitsumgebung, nicht im Repositorium) misst je Datei
+zweimal unabhängig: **(1)** beide Fassungen mit PyYAML 6.0.1 laden, in
+jeder mehrzeiligen Zeichenkette Shell-Kommentar- und Leerzeilen streichen,
+die Strukturen als JSON vergleichen; **(2)** alle Zeilen ohne Kommentar- und
+Leerzeilen in ihrer Reihenfolge vergleichen.
+
+| Datei | YAML | verglichene Blätter | Rohzeilen |
+|---|---|---|---|
+| `ausliefern-lauf.yml` | gleich | 107 | 500 = 500 |
+| `auslieferung.yml` | gleich | 83 | 301 = 301 |
+| `integritaet.yml` | gleich | 23 | 72 = 72 |
+
+**Gegenprobe, damit „gleich" ein Beleg ist:** eine Kopie mit
+`timeout-minutes: 21` statt 20 und einem `exit 2` statt `exit 1` —
+beide Dateien in **beiden** Vergleichen „VERSCHIEDEN".
+
+### Die übrigen Riegel
+
+- **actionlint 1.7.7** (Release-Binärdatei, nur in der Arbeitsumgebung):
+  **0 Befunde** vorher und nachher, ohne Shell-Prüfung — `shellcheck` fehlt
+  (Abschnitt 0).
+- **`uses:` an einer SHA:** 10 von 10 fremden Zeilen (Zählbefehl aus
+  `CLAUDE.md` 3), unverändert.
+- **`bestand`:** 0 Befunde; die Inventur liest die Arbeitsläufe samt
+  Kommentaren, und kein Werkzeugordner hing an einem gestrichenen Satz.
+- **`kettenaufrufe`:** kein Aufruf widerspricht seiner Schnittstelle.
+- **Verweise auf gestrichene Kommentare:** zwei im Prüfdokument Kette II
+  (`Kommentar im Job zeiger`, „der Kommentar dort begründet das
+  ausführlich") — beide Stellen tragen weiter einen Satz, der die Sache
+  nennt; einer im Konzept PK selbst (geht mit PK-07). Das Prüfdokument
+  Kette II ist Protokoll und wird nicht umgeschrieben.
+- **Der Prüfstand** läuft zuletzt; sein Bericht steht am Commit.
+
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in
@@ -1562,11 +1664,17 @@ veröffentlichtes Kennwort.
 | **F-PK-27** | **Zwei neue Prüfungen hingen in der Kette, aber nicht im Prüfablauf.** Schritt 15 hat `zaehlung` und `spaltenregister` als Schritte in `pruefung.yml` eingehängt; in `tools/pruefstand/pruefablauf.json` standen sie nicht. Damit sind sie **örtlich nicht zu fahren** — Grundsatz 2 sagt das Gegenteil: Was Fehler findet, läuft in der Arbeitsumgebung; das Tor liest gegen. | **Behoben**: beide als Riegel eingetragen (14 statt 12), dazu `spaltenregister-wegprobe` als eigene Probe mit `braucht: installation` — sie schreibt und gehört an ein Wegwerfkonto. `kettenaufrufe` hat den ersten Anlauf **abgelehnt** („verlangt --konto, der Aufruf übergibt es nicht") und damit selbst belegt, dass es misst: 88 Aufrufe, 0 Befunde nach der Berichtigung. Die zwei Zugangswerte stehen in `docs/Sandbox-Setup.md` 4.1 — als Namen, nie als Werte. |
 | **F-PK-28** | **Schritt 15 bringt zwei Werkzeugordner mit und weicht E-PK-24 und -25 auf.** `tools/zaehlung/` und `tools/spaltenregister/` machen aus 15 Ordnern **17**, dazu `tools/konfig_stellen.php` als zweite flache Datei neben `motor.mjs`. `tools/zaehlung/LIESMICH.md` hat **154 Zeilen und 6 Abschnitte** (E-PK-25: höchstens 40 und fünf), `tools/spaltenregister/` hat **gar keine**. | **Nicht behoben, und zwar bewusst.** Ein frisch gelandetes, durchdokumentiertes Paket im Merge wieder auseinanderzunehmen steht in keinem Verhältnis; und die Zahl 15 ist ein Ziel, kein Riegel. Entschieden wird es in **Teilstück 5**: entweder wandern beide nach `tools/quelltext/` (dort stehen `migrationsregister` und `jobregister`, dieselbe Bauform) — dann sind es wieder 15 —, oder E-PK-24 bekommt die 17 mit Begründung. `konfig_stellen.php` bleibt flach: Das ist die Bauform von `motor.mjs` und in Schritt 15 begründet. |
 | **F-PK-29** | **Eine ausgelieferte Android-Zeile ist ohne Versionsstufe, Changelog-Zeile und Emulatorlauf in den PR gegangen.** Aufgefallen am 23.09.2026 auf die Nachfrage des Auftraggebers „Warum Android/Uhr? Hast du den Code verändert?" — nicht durch ein Prüfmittel. `android/handy/src/main/res/values/strings.xml` trägt seit 5b `recht_hinweis` in der Hausform; das ist **ausgelieferter Code**, und damit greift `CLAUDE.md` 2. Gemessen: `android/version.properties` steht unverändert auf **0.15.1**, der Changelog führt **nur `[Web 20.37.1]`**, der Emulator ist **nicht gelaufen** (`docs/Pruefablauf.md` 6.9). **`watch/` ist mit 0 Dateien unberührt** — die Uhr-Zählung war nie fällig. **Warum keine Prüfung anschlug:** Die Fächerung von 5b lief über Wort-Eimer, nicht über Auslieferungsbereiche; die Textprobe misst Bereich `d` mit und ist grün, weil sie das Wort prüft und nicht die Versionspflicht. Ein Pflichtenabgleich über alle 250 Dateien fand sonst nichts Offenes (Web/`WEB_VERSION`, Changelog, Design.md, Technik.md, Backup-Format, Backlog je erfüllt; ein Treffer auf `server/api/` war ein Fehlalarm — `kdf_upgrade.php` ändert nur einen Werkzeugpfad im Kommentar). | **Die Zeile bleibt stehen, die drei Pflichten werden nachgezogen** — entschieden vom Auftraggeber am 23.09.2026 (**E-PK-40**) gegen die Empfehlung der Instanz, die für das Nachziehen im selben PR plädiert hatte. Festgehalten als **Backlog Nr. 284**, Abnahme als **P-PK-28**. Der Preis steht dort: Zwei Stände des Handy-Moduls tragen dieselbe Nummer. |
+| **F-PK-42** | **Der Schlussschritt behauptete „KEIN `-e` HIER", und das stimmte nie.** `defaults` startet jeden `run:`-Block mit `bash -eo pipefail`; `set -uo pipefail` im Schritt hebt `-e` nicht auf. Nachgemessen: `bash -eo pipefail -c 'set -uo pipefail; false; echo weiter'` endet mit rc 1, ohne „weiter". | Ohne Folge, weil jede Abfrage dort ein `|| echo unbekannt` trägt. Der neue Satz sagt es richtig herum: `-e` gilt, jede Abfrage braucht ihren Rückfall. |
+| **F-PK-43** | **Die Zusammenfassung der Integritätswache hängt am Wortlaut von `wache.py`.** Das `grep`-Muster sucht drei Zeilenanfänge der Ausgabe; ändert sich einer, bleibt die Liste wegen `|| true` still leer, und die Zusammenfassung nennt den verglichenen Stand nicht mehr — genau die grüne Zahl ohne Gegenstand, gegen die der Schritt gebaut ist. | Eine Falle ohne Kommentar; sie hat jetzt einen Satz. Einen Riegel dagegen baut PK-06 nicht (kein Befehl ändert sich). |
+| **F-PK-44** | **`Technik.md` 5 sagte, `WACHE_BASIS` stehe in `integritaet.yml`.** Seit Kette II/AP6 liest die Datei nur `${{ vars.WACHE_BASIS }}`; die Adresse liegt in der Repositoriums-Variablen. | Berichtigt mit PK-06. |
+| **F-PK-45** | **Eine Fehlermeldung in `stufe2` schickt zu „Rahmenplan 6a, Schritte 6 bis 8"** für eine nicht eingerichtete Anlage; Schritt 8 ist heute das Demo-Konto und hilft dort nicht. Die Meldungen nennen außerdem Kette-II-Kennungen (`AP6`, `E-KH-12`), deren Konzept PK-07 löscht. | Nicht geändert — PK-06 ändert keinen Befehl. Gehört zu Nr. 265 (Verweise aus `.github/` in die Dokumentation); PK-07 nimmt es in dessen Zuordnung mit. |
 
 ## 7. Entscheidungen der Umsetzung
 
 | Nr. | Entscheidung | Grund |
 |---|---|---|
+| **E-PK-50 bis -55** | **Aus dem Beginn von PK-06 (29.09.2026):** Reihe PK-06 → PK-08 → PK-07 (-50), Zeilenziel verfehlt und mit Zahl abgenommen (-51), Fächerung 06–08 nur lesend (-52), die Kette signiert mit dem App-Signaturschlüssel und E-PK-23 ersetzt E-S4-16 (-53), kein Aktions-Cache (-54), die Rückwegprobe bleibt (-55). -50 bis -53 vom Auftraggeber entschieden, -54 und -55 mit dem Plan freigegeben. | Wortlaut und Gründe: Konzept, Abschnitt 4, PK-06 „Beginn". |
+| **E-PK-56** | **Der Platz für Nr. 234 ist ein Kommentar, keine Zeile in der Zusammenfassung.** Der Plan hatte beides vorgesehen. | Eine Zeile in der Zusammenfassung hätte einen `run:`-Block geändert oder einen Schritt gebraucht, der nichts misst; so bleibt die Zusage „kein Befehl ändert sich" mit zwei Vergleichen belegbar. `Pruefablauf.md` 8 beschreibt den Platz so. |
 | **E-PK-40** | **Die Android-Zeile aus 5b bleibt stehen; Versionsstufe, Changelog-Zeile und Emulatorlauf werden nicht in diesem PR nachgezogen, sondern als Befund festgehalten.** Angewiesen vom Auftraggeber am 23.09.2026. | Die Instanz hatte drei Wege vorgelegt und das Nachziehen im selben PR empfohlen; der Auftraggeber hat den dritten gewählt. **Der Preis ist benannt und angenommen** (F-PK-29, Nr. 284): Zwei Stände des Handy-Moduls tragen dieselbe Nummer `0.15.1`, und ein APK aus diesem Stand ist am Versionsnamen nicht von einem APK des vorherigen zu unterscheiden. Dafür bleibt der PR bei einem Auslieferungsstrang — Web — statt zwei, und das Android-Paket zieht Nummer, Kopfabsatz, Changelog und Emulatorlauf in einem Zug nach, statt eine Korrekturnummer für eine einzelne Zeile zu verbrauchen. |
 | **E-PK-33** | **Das Muster `station` fällt aus der Sperrliste**, zusammen mit der Ausnahme, die PK-01 dafür angelegt hatte. Angewiesen vom Auftraggeber am 21.09.2026. | Konzept PK gliedert die Prüfkette in fünf „Stationen" — Haltepunkte auf dem Weg zum Produktivserver, nicht Standorte eines Rettungsmittels. Eine Ausnahme je Datei hätte das Wort für jedes neue Dokument neu begründen müssen. **Der Preis, benannt:** „Station" im Sinn des Luftrettungs-Standorts fällt jetzt durch **kein** Muster mehr; `basis` deckt den Geschwisterbegriff weiter ab. Sperrliste 24 → **23** Muster, Ausnahmen 100 → **99** Regeln; Lauf danach **0/0/0**, 99 von 99 Regeln gegriffen. |
 | **E-PK-32** | **Das Modul `plattform` nimmt Docker für alle vier Fassungen** statt des in E-PK-30 vorgesehenen Umwegs über Ubuntu-Pakete unter `/opt`. | E-PK-30 begründet den Umweg mit der Drosselung von Docker Hub. Die tritt bei vier Abbildern nicht ein (F-PK-16). Der Umweg wäre aufwendiger, zerbrechlicher und löste ein Problem, das es nicht gibt. **Gemessen: `alles` in 29,7 s, 4 × 19/0.** **Bestätigt vom Auftraggeber am 21.09.2026.** |
