@@ -840,12 +840,76 @@ Daten erst nach Server-Bestätigung.
     │                      Prüfbericht gegen (PK-05)
     ├── auslieferung.yml   WANN ausgeliefert wird: Staging (Push auf main),
     │                      Stufe 2, Produktion (Tag, Pflichtfreigabe,
-    │                      Backup-Tor), Zeiger
+    │                      Backup-Tor), Zeiger; seit PK-08 Android und Uhr
+    │                      (Tag android-v… bzw. uhr-v…, 4.97g)
     ├── ausliefern-lauf.yml WAS dabei geschieht: die Schrittfolge, EINMAL,
     │                      für beide Umgebungen (Kette II/AP5, E-KH-14)
     └── integritaet.yml    die Wache — hängt am Anzeigenamen „Auslieferung"
                           (`deploy.yml` ist mit Web 20.4.0 gelöscht worden)
 ```
+
+### 2a Die Arbeitsumgebung — und was ihre Motoren messen
+
+**Was der Wegwerf-Container mitbringt, was nachgeholt wird, welche sieben
+Umgebungswerte er braucht und was er nicht kann, steht seit PK-01 in
+`Sandbox-Setup.md`** — dort und nur dort, samt der Frage, warum alle drei
+Engines dazugehören (1.1). **Welche Probe bei welcher Berührung und in
+welcher Stufe läuft, steht in `Pruefablauf.md` 3 und 4.** Hier bleibt, was
+die drei Prüfmittel mit Browser über ihre Motoren wissen müssen.
+
+*(Bis PK-07 stand dieser Abschnitt unter Abschnitt 4, zwischen 4.99 und
+4.99a — wer die Nummer las und in Abschnitt 2 suchte, fand nichts
+(F-PK-12). Die Tabelle darunter beschrieb bis dahin den Stand vor PK-04:
+eine Risikoliste im Bilderlauf und die Klickprobe.)*
+
+**Die drei Mittel wählen den Motor selbst** (`--motor
+chromium|firefox|webkit`, Vorgabe Chromium, seit AP3b der Mockup-Runde).
+Motorwahl und Firefox-Voreinstellung stehen **an einer Stelle**,
+`tools/motor.mjs`. **Der Prüfstand fährt alle drei in Chromium**; Firefox
+und WebKit fährt von Hand, wer eine Regel ändert, die ein Motor nicht können
+könnte. Die Hauptstufe soll den Bilderlauf in allen drei Engines fahren —
+gebaut ist das nicht (Backlog Nr. 300).
+
+| Mittel | im Prüfstand | dreifach von Hand | warum |
+|---|---|---|---|
+| **Stilvergleich** | Chromium, wenn `style.css` berührt ist (`gegen.sh`) | bei jeder neuen Regel, deren Unterstützung zweifelhaft ist; 14–18 s je Motor | Berechnete Stile sind genau die Frage, bei der Motoren auseinandergehen. Die Aussage ist die **Übereinstimmung** der drei Zahlen, nicht die Zahl: Der Vergleich misst alt gegen neu *innerhalb* eines Motors, also meldet ein Motor, der eine neue Regel nicht kann, **weniger** Abweichungen. |
+| **Bilderlauf** | Chromium, nach Stufe (`--stufe klein`: drei Breiten, `neben`: zehn; E-PK-14 — die Risikoliste ist entfallen) | über die berührten Seiten (`--nur`) | Darstellung ist motorabhängig; dreimal voll wären rund 26 Minuten. |
+| **Bedienprobe** (bis PK-04 „Klickprobe") | Chromium | bei Dialogen, Blättern, Übergängen, Fokus, `<details>`, Zeigerereignissen — **und nur mit frisch eingespieltem Referenzbestand zwischen den Läufen**; ohne ihn meldeten Lauf 2 und 3 falsche Fehlschläge (gemessen 14.09.2026: 40 / 38 / 36 von 40) | Sie misst Wege, nicht Darstellung — JS-Semantik ist über Motoren hinweg weitgehend dieselbe. |
+
+**Zwei Dinge, die jeder Motorlauf wissen muss**, beide gemessen und beide in
+`tools/motor.mjs` begründet: Headless Firefox meldet ohne Voreinstellung
+„kein Zeiger, kein Hover" und misst damit den ganzen Media-Block der
+36-px-Bedienhöhe nicht (`ui.primaryPointerCapabilities` und
+`ui.allPointerCapabilities` auf `6`); und nur **Chromium** verliert die
+Eingabeart des Fingerlaufs am Vollseiten-Screenshot — Firefox und WebKit
+behalten sie, weshalb die CDP-Krücke dort weder nötig noch möglich ist.
+
+**Die vierte Zahl des Bilderlaufs: Karten außerhalb des Gerüsts** (seit Web 20.21.1,
+Backlog Nr. 225). Der Lauf zählt je Seite, wie viele `section.karte` bzw.
+`details.karte` **nicht** in `main.inhalt` hängen, und nennt sie beim Titel.
+
+Der Anlass war ein `ui_karte_ende()` zu viel auf der Profilseite: Es gab ein
+`</div></section>` ohne Gegenstück aus, der Parser nahm für das `</div>` das
+nächste offene — `div.rahmen` — und schloss damit `form`, `main.inhalt` und
+`rahmen` mitten auf der Seite. Vier Karten lagen danach direkt am `body`, über
+die volle Fensterbreite, unter der Seitenleiste hindurch. **Zehn Tage lang.**
+
+**Warum die drei älteren Zahlen das nicht sehen konnten:** `scrollWidth` blieb
+gleich `innerWidth` — es lief nichts über, es lag nur falsch. Die Konsole blieb
+still. Die Knopfhöhen stimmten. Der Lauf meldete in allen drei Engines drei
+Nullen neben einer kaputten Seite. Gemessene Gegenprobe mit wieder eingebautem
+Fehler: „Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0" **und**
+„6 Karten geprüft · 4 außerhalb von main.inhalt".
+
+Die Zahl nennt, was sie gemessen hat („n geprüft · m außerhalb") und nicht nur
+das Ergebnis — eine Seite ohne Karten meldete sonst dieselbe Null wie eine
+geprüfte.
+
+**Ein Satz von gestern ist zurückgenommen:** Firefox meldet die
+`latin-ext`-Schriftabrufe **nicht** als Konsolenfehler. Die Abbrüche
+(`NS_BINDING_ABORTED`) stammten von einem Messskript, das schneller
+weiterblätterte als die Schriften luden; im echten Lauf melden alle drei
+Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 
 ## 3. Datenmodell (MySQL)
 
@@ -5719,79 +5783,6 @@ die Kehrseite ist, dass er die Stärke prinzipiell nicht prüfen kann. Der
 Schutz gegen einen Angreifer mit Zugriff auf die Ablaufumgebung (Hoster,
 Datenbank, Protokolle) hängt damit allein an der Passwortwahl der Person. Das
 ist eine bewusste Entscheidung und gehört genau so dokumentiert.
-
-### 2a Die Arbeitsumgebung — und was ihre Motoren messen
-
-**Was der Wegwerf-Container mitbringt, was nachgeholt wird, welche sieben
-Umgebungswerte er braucht und was er nicht kann, steht seit PK-01 in
-`Sandbox-Setup.md`** — dort und nur dort. Hier stand es bis dahin; zwei
-Beschreibungen derselben Umgebung altern getrennt, und die eine hätte den
-Umbau der Beschaffung in PK-02 nicht mitbekommen.
-
-Was hier bleibt, ist die andere Frage: **wie oft welches Prüfmittel welche
-Engine fährt, und warum.**
-
-**Seit AP3b der Mockup-Runde fahren die drei Prüfmittel sie selbst**
-(`--motor chromium|firefox|webkit`, Vorgabe Chromium). Motorwahl und die
-nötige Firefox-Voreinstellung stehen **an einer Stelle**, `tools/motor.mjs`;
-Bilderlauf, Klickprobe und Stilvergleich holen sie dort. Wie oft welches
-Mittel dreifach fährt, ist nicht für alle gleich, und der Unterschied ist
-gemessen, nicht geschätzt:
-
-| Mittel | dreifach | Kosten je Motor | warum |
-|---|---|---|---|
-| **Stilvergleich** | **immer** | 14–18 s | Berechnete Stile sind genau die Frage, bei der Motoren auseinandergehen. Die Aussage ist die **Übereinstimmung** der drei Zahlen, nicht die Zahl: Der Vergleich misst alt gegen neu *innerhalb* eines Motors, also meldet ein Motor, der eine neue Regel nicht kann, **weniger** Abweichungen. |
-| **Bilderlauf** | **gestaffelt** | rund 9 min voll | Chromium voll; Firefox und WebKit über die berührten Seiten (`--nur`) plus `--risiko` — zehn Seiten mit motorempfindlichem CSS, die Liste samt Gründen im Kopf von `aufnehmen.mjs`. Dreimal voll wären 26 Minuten nach jedem Arbeitspaket. |
-| **Klickprobe** | **nach Bedarf** | rund 3,5 min | Sie misst Wege, nicht Darstellung — JS-Semantik ist über Motoren hinweg weitgehend dieselbe. Dreifach bei Dialogen, Blättern, Übergängen, Fokus, `<details>`, Zeigerereignissen. **Und nur mit frisch eingespieltem Referenzbestand zwischen den Läufen** (8 s); ohne ihn melden Lauf 2 und 3 falsche Fehlschläge, gemessen 40 / 38 / 36 von 40. |
-
-**Zwei Dinge, die jeder Motorlauf wissen muss**, beide gemessen und beide in
-`tools/motor.mjs` begründet: Headless Firefox meldet ohne Voreinstellung
-„kein Zeiger, kein Hover" und misst damit den ganzen Media-Block der
-36-px-Bedienhöhe nicht (`ui.primaryPointerCapabilities` und
-`ui.allPointerCapabilities` auf `6`); und nur **Chromium** verliert die
-Eingabeart des Fingerlaufs am Vollseiten-Screenshot — Firefox und WebKit
-behalten sie, weshalb die CDP-Krücke dort weder nötig noch möglich ist.
-
-**Der dreifache Lauf hat am ersten Tag zwei Befunde geliefert**, und beide
-wären sonst nicht aufgefallen: `import.php` lief bei 360 px **nur in WebKit**
-um 6 px über, weil WebKit den längsten Eintrag eines Auswahlfeldes in den
-Überlauf des Kastens rechnet (Nr. 185, behoben mit
-`select.feld-eingabe{contain:paint}`); und die Klickprobe maß die Drehung der
-Richtungspfeile mit `getScreenCTM()`, das in WebKit die CSS-Transformation
-eines HTML-Vorfahren nicht enthält — ein Fehler im Prüfmittel, der wie einer
-der Anwendung aussah (Nr. 186).
-
-**Die vierte Zahl: Karten ausserhalb des Gerüsts** (seit Web 20.21.1,
-Backlog Nr. 225). Der Lauf zählt je Seite, wie viele `section.karte` bzw.
-`details.karte` **nicht** in `main.inhalt` hängen, und nennt sie beim Titel.
-
-Der Anlass war ein `ui_karte_ende()` zu viel auf der Profilseite: Es gab ein
-`</div></section>` ohne Gegenstück aus, der Parser nahm für das `</div>` das
-nächste offene — `div.rahmen` — und schloss damit `form`, `main.inhalt` und
-`rahmen` mitten auf der Seite. Vier Karten lagen danach direkt am `body`, über
-die volle Fensterbreite, unter der Seitenleiste hindurch. **Zehn Tage lang.**
-
-**Warum die drei älteren Zahlen das nicht sehen konnten:** `scrollWidth` blieb
-gleich `innerWidth` — es lief nichts über, es lag nur falsch. Die Konsole blieb
-still. Die Knopfhöhen stimmten. Der Lauf meldete in allen drei Engines drei
-Nullen neben einer kaputten Seite. Gemessene Gegenprobe mit wieder eingebautem
-Fehler: „Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0" **und**
-„6 Karten geprüft · 4 außerhalb von main.inhalt".
-
-Die Zahl nennt, was sie gemessen hat („n geprüft · m außerhalb") und nicht nur
-das Ergebnis — eine Seite ohne Karten meldete sonst dieselbe Null wie eine
-geprüfte.
-
-**Ein Satz von gestern ist zurückgenommen:** Firefox meldet die
-`latin-ext`-Schriftabrufe **nicht** als Konsolenfehler. Die Abbrüche
-(`NS_BINDING_ABORTED`) stammten von einem Messskript, das schneller
-weiterblätterte als die Schriften luden; im echten Lauf melden alle drei
-Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
-
-
-*Die Staffelung dieser Tabelle ändert sich mit PK-04 (E-PK-14): Der
-Bilderlauf wird nach Stufen abgestuft, die von Hand gepflegte Risikoliste
-fällt. Bis dahin gilt sie wie beschrieben.*
 
 ### 4.99a Demo-Konto (ab Web 7.3.0)
 
