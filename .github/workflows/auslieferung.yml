@@ -117,8 +117,7 @@ jobs:
     timeout-minutes: 20
     environment: staging
     # GitHub setzt ein fehlendes Geheimnis still auf leer — deshalb prüfen die
-    # Schritte ihre Werte mit `-z`, bevor sie sie benutzen (`STAGING_PASS` noch
-    # nicht, Nr. 360).
+    # Schritte ihre Werte mit `-z`, bevor sie sie benutzen.
     env:
       STAGING_URL:   ${{ vars.STAGING_URL }}
       STAGING_KONTO: ${{ secrets.STAGING_KONTO }}
@@ -204,7 +203,7 @@ jobs:
 
       - name: Kreislauf edbak gegen Staging
         run: |
-          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ]; then
+          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ] || [ -z "${STAGING_PASS:-}" ]; then
             echo "::error::Prüfkonto auf Staging fehlt — der Kreislauf kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Erwartet werden STAGING_KONTO und STAGING_PASS in der Umgebung staging."
             echo '**Kreislauf: NICHT GEMESSEN** (kein Prüfkonto) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
@@ -243,7 +242,7 @@ jobs:
         # Lebt von den Installationen des Kreislaufs und steht deshalb dahinter;
         # `PLAYWRIGHT_MODUL` überlebt keinen Schritt und wird neu gesetzt.
         run: |
-          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ] || [ -z "${STAGING_TOTP:-}" ]; then
+          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ] || [ -z "${STAGING_PASS:-}" ] || [ -z "${STAGING_TOTP:-}" ]; then
             echo "::error::Prüfkonto, Passwort oder STAGING_TOTP fehlt — die Rückwegprobe kann nicht messen, und ÜBERSPRINGEN IST ROT (E-KH-12)."
             echo '**Rückwegprobe: NICHT GEMESSEN** — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1

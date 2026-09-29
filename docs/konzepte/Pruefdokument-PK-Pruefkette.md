@@ -1732,6 +1732,77 @@ Größe, SHA-256 in Vierergruppen und den gelöschten Namen.
   der volle Bau mit 329 s steht im ersten Lauf darüber.
 
 
+## 5r. Messprotokoll PK-07 — Abschluss (29.09.2026)
+
+PK-07 ändert an der Kette zwei Riegel (Nr. 360) und sonst nichts; das Paket
+ist ein **Abgleich**: Was seit dem 23.09.2026 gelaufen ist, gegen das, was
+in den Prüflisten von PK und Kette II und im PK-Backlog als offen stand.
+
+### Der Abgleich, gefächert (E-PK-52)
+
+Vier lesende Agenten, keiner schreibt: zwei über die offenen Prüfpunkte
+(je sieben), einer über die elf Backlog-Punkte „gehört zu: PK", einer über
+Kette II. Zusammen **277 Werkzeugaufrufe, rund 1,0 Mio. Token**. Ein fünfter
+— der erste Backlog-Abgleich — ging beim Neustart des Containers verloren
+und ist neu gestartet worden; seine Zahlen fehlen in der Summe. Jedes Urteil
+trägt eine Fundstelle; „erledigt" nur, wo der Beleg das Erwartete des
+Prüfpunkts zeigt. **Nicht lesbar waren** die Protokolle der Jobs (das
+Werkzeug dafür ist nicht freigegeben), das Ruleset „Main Protect" und alles
+auf den Anlagen.
+
+### Die Prüfpunkte von PK
+
+| Urteil | Punkte | Beleg (Einzelheiten in der Prüfliste) |
+|---|---|---|
+| **erledigt** | P-PK-16, -20, -23 | Konzept RP (PR #83, Nr. 292), Schritt 15 (Nr. 254), BR-02; Bericht haupt `b251e5b` |
+| **erledigt** | P-PK-33 | P5c AP1 (`5e501ae`): „neben" ohne Schalter, **37** grün (nicht 36 — `style.css` war mitberührt) |
+| **erledigt** | P-PK-35 | auch auf GitHub, in beide Richtungen (Lauf 36224991494 grün; „Update branch" rot, Lauf 36232768246) |
+| **zur Hälfte** | P-PK-25 | CSV maschinell belegt; Einstellungen und Excel im Browser offen |
+| **zur Hälfte** | P-PK-34 | „gebaut" auf GitHub belegt (PR #85, #88); der rote Gegenfall nur örtlich und über die Selbstprobe |
+| **bei der Betreiberin** | P-PK-18, -19, -21 | an der Fassung vor PK-06 gemessen: **21 Pushes → 21 Läufe**, kleinster Abstand zweier Merges 11:58 min, 18 von 21 im ersten Versuch grün, höchstens 4:03 |
+| **bei der Betreiberin** | P-PK-24, -26, -27, -36 | Browser, Importlauf, Netzzugang, Ruleset — nichts davon aus der Arbeitsumgebung |
+| **nach dem Merge** | P-PK-37 bis -42 | brauchen die Fassung aus PK-06 und PK-08 auf GitHub |
+
+### Kette II
+
+Die Prüfliste stand auf **17 abgehakt, 5 teilweise, 13 offen**. Zwölf
+Punkte waren durch Läufe seit dem 21.09.2026 belegt (8: Wache-Lauf
+35817300122, 128 gleich, während `main` 15 Dateien voraus war) oder durch
+ihren erledigten Zweck überholt (die F3-Suche, die Bedienregeln bis AP6,
+die fünf Messschritte von AP1). Nachgezählt mit `grep -c` über die
+Kästchen: **29 abgehakt, 1 teilweise, 5 offen** (2c, 4a, 9, 27, 28). Dabei
+F-PK-53: Ein neu gestarteter Tag legt auf Staging zwei Rückfallstände an.
+
+### Der Backlog
+
+| Nr. | Urteil | Ziel danach |
+|---|---|---|
+| 227 | **erledigt** — die Typografie ist aus der Liste (PK-04/1b), Nr. 279 und 184 sind erledigt, heute **6** Symbole und **0** Emoji als Hinweis | Backlog-Erledigt |
+| 360 | **erledigt in PK-07** (E-PK-66) | Backlog-Erledigt |
+| 213 | Rest ist Handarbeit per FTP | Zuarbeit · teilweise |
+| 234 | Platz benannt (PK-06), Schritt ungebaut | nächste Backlog-Runde · teilweise |
+| 236 | Datum 19.10.2026; alle **10** `runs-on`-Zeilen auf `ubuntu-latest` | Pflegeaufgabe · offen (E-PK-67) |
+| 237, 240, 290, 300 | ungebaut, Werkzeugarbeit an Station B | nächste Backlog-Runde · offen |
+| 264 | kein Auslöser eingetreten | Pflegeaufgabe · nur auf Anlass |
+| 265 | Auslöser eingetreten: F-PK-45 und die Kette-II-Kennungen in den Meldungen | nächste Backlog-Runde · offen |
+
+### Nr. 360, gebaut
+
+`STAGING_PASS` steht jetzt in beiden `-z`-Riegeln von `stufe2` (Kreislauf
+und Rückwegprobe); der Satz „`STAGING_PASS` noch nicht, Nr. 360" am Job ist
+fort. **Örtlich gefahren:** der Anfang beider `run:`-Blöcke, aus dem YAML
+gelesen, mit drei Belegungen — alle gesetzt, `STAGING_PASS` leer,
+`STAGING_PASS` fehlt: **6 von 6** wie erwartet (grün, rot mit der Meldung
+„Prüfkonto auf Staging fehlt" bzw. „Prüfkonto, Passwort oder STAGING_TOTP
+fehlt", rot). **Gegenprobe** mit der Fassung vor PK-07: leeres
+`STAGING_PASS` kam in **2 von 2** Schritten durch (rc 0). actionlint
+1.7.7: **0**. Ob GitHub die Riegel genauso fährt, zeigt P-PK-37 in
+abgewandelter Form — mit leerem statt falschem Geheimnis.
+
+### Die übrigen Riegel
+
+Der Prüfstand läuft zuletzt; sein Bericht steht am Commit.
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in
@@ -1828,6 +1899,7 @@ veröffentlichtes Kennwort.
 
 | Nr. | Entscheidung | Grund |
 |---|---|---|
+| **E-PK-64 bis -69** | **Zum Abschluss (29.09.2026, Auftraggeber):** Freigabe des Abschlusses (-64); PK-M2 gilt erst mit dem ersten grünen Lauf nach dem Merge (-65, **gegen die Empfehlung**, ihn mit #83 bis #95 als erreicht zu werten); Nr. 360 in PK-07 gebaut (-66); Nr. 236 bleibt Pflegeaufgabe mit Datum (-67, **gegen die Empfehlung**, auf `ubuntu-24.04` festzunageln); Z9: `.claude/settings.local.json` nicht in `.gitignore` (-68); der Z4-Rest aus Kette II wird Zuarbeit, samt Tag `web-v*` (-69) | Konzept, Abschnitt 4, PK-07 |
 | **E-PK-50 bis -55** | **Aus dem Beginn von PK-06 (29.09.2026):** Reihe PK-06 → PK-08 → PK-07 (-50), Zeilenziel verfehlt und mit Zahl abgenommen (-51), Fächerung 06–08 nur lesend (-52), die Kette signiert mit dem App-Signaturschlüssel und E-PK-23 ersetzt E-S4-16 (-53), kein Aktions-Cache (-54), die Rückwegprobe bleibt (-55). -50 bis -53 vom Auftraggeber entschieden, -54 und -55 mit dem Plan freigegeben. | Wortlaut und Gründe: Konzept, Abschnitt 4, PK-06 „Beginn". |
 | **E-PK-56** | **Der Platz für Nr. 234 ist ein Kommentar, keine Zeile in der Zusammenfassung.** Der Plan hatte beides vorgesehen. | Eine Zeile in der Zusammenfassung hätte einen `run:`-Block geändert oder einen Schritt gebraucht, der nichts misst; so bleibt die Zusage „kein Befehl ändert sich" mit zwei Vergleichen belegbar. `Pruefablauf.md` 8 beschreibt den Platz so. |
 | **E-PK-57 bis -62** | **Am 29.09.2026 vom Auftraggeber beantwortet:** Q-PK-10 → das Demo-Konto bleibt auf Staging, F-PK-04 ist dort aufgehoben (-57); Q-PK-11 → beide APKs, Handy und Wear OS, nach `server/apk/` (-58); Q-PK-12 → **nur die neueste Fassung bleibt liegen** — gegen die Empfehlung der Instanz (-59); Q-PK-13 → Tag gegen Fassung, rot vor dem Bau (-60); Q-PK-14 → Garmin-Paket nur als Artefakt (-61); Q-PK-15 → `setup-java` und `upload-artifact` an den alten SHAs, `uses:` 10 → 12 (-62). | Wortlaut, Empfehlung und Preis: Konzept, Abschnitt 4, PK-08, und Abschnitt 6. |
@@ -1839,4 +1911,4 @@ veröffentlichtes Kennwort.
 
 ---
 
-*PK-01 abgeschlossen am 21.09.2026. Nächstes Paket: PK-02 (Sandbox-Setup).*
+*PK abgeschlossen am 29.09.2026 mit PK-07 (E-PK-64). Das Konzept ist gelöscht; dieses Dokument bleibt, bis seine Prüfliste abgehakt ist. Bis PK-07 stand hier noch der Satz vom Ende von PK-01.*
