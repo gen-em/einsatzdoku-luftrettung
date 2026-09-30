@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 151 (29.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 152 (30.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `d3031e9`, gemessen 29.09.2026): Web 21.6.1 ·
+**Stand `origin/main`** (Commit `e33a97c`, gemessen 30.09.2026): Web 21.6.1 ·
 Uhr 3.1.0 · Android 0.17.0.
 **Läuft:** die Umsetzung von 18 auf `claude/pr95-stufe-18-ztactt` — Abschnitt 3. PK und Kette II sind abgeschlossen (Abschnitt 8).
 **Als Nächstes:** der PR der Umsetzung 18; **vor dem 19.10.2026 Nr. 236** (`ubuntu-latest` wird Ubuntu 26, die Kette zieht mit) — Reihenfolge in Abschnitt 3.
-**Offene PRs:** keiner außer der Korrektur des Android-Probelaufs (F-PK-56).
-**Fällig bei der Betreiberin:** 34 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nachsehen — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert, die Migrationen aus 10c und Web 21.3.0 können ausstehen (6.1).
+**Offene PRs:** keiner außer dem Nachtrag zu den ersten App-Tags.
+**Fällig bei der Betreiberin:** 33 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nachsehen — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert, die Migrationen aus 10c und Web 21.3.0 können ausstehen (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -212,7 +212,6 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
-| **Android-Probelauf wiederholen** nach dem Merge der Korrektur — Lauf 103 war rot am Auslesen des Zertifikats (F-PK-56); Z14 steht, der Uhr-Lauf ist grün (P-PK-40). Danach die ersten Tags `android-v…` und `uhr-v…` | PK-08 | 29.09.2026 | `Technik.md` 4.97g; P-PK-39, -41, -42 |
 | **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1, 5s |
 | **Prüfliste PK ohne Merge:** P-PK-24, -25 (Rettungsmittel, Excel), -26 (GuteSeele-Import) im Browser; -27 mit Netzzugang (Nr. 280); Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1 |
 | **`app.umgebung` in die `config.php` von Staging** (`name` Staging, `farbe` rot) — nie auf Produktiv; danach Betrieb → Status, Zeile „Umgebung" | 10c AP1 (E-P5c-05) | 23.09.2026 | Runbook „Eine Testanlage kennzeichnen"; P-P5c-01 |
@@ -251,6 +250,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
+| **Garmin-Paket in den Connect-IQ-Store** (P-PK-42), sobald die App im Portal angelegt ist — das Artefakt aus Lauf 110 hält bis 29.12.2026, danach ein neuer Tag `uhr-v…` | Betriebsübergang | 30.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1, 5u |
 | **Demo-Video des Vordergrunddienstes auf echtem Gerät** für die Standort-Deklaration — falls der interne Track sie verlangt (beim Einrichten prüfen) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Datensicherheitsformular der Play Console** — setzt die Datenschutzerklärung voraus (6.3) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Wear-OS-Uhr für den Gerätetest**, die Wear-OS-Prüfrunde und den Installationstest aus dem Track | 6 Teil C; Prüfliste AR | 31.08.2026 | `Pruefdokument-AR-Android-Runde.md` |
