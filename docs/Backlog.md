@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351, 352 | 27.09.2026 |
-| 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); vergeben: 360 | 29.09.2026 |
+| 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); vergeben: 360, 361 | 29.09.2026 |
 | ab 370 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 29.09.2026 |
 
 ---
@@ -1290,3 +1290,23 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
      28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
      → 0 Überschneidungen.
+
+<!-- -->
+
+361. **Die APK-Karte unterscheidet Handy und Wear-OS-Uhr nicht.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 30.09.2026
+     *Aufgenommen 30.09.2026 nach dem ersten Tag `android-v0.17.0`
+     (F-PK-58, Prüfdokument PK 5u).* Seit PK-08 legt die Kette zwei
+     APKs nach `server/apk/` (E-PK-58). Einstellungen → Geräte, „Ohne Play
+     Store", zeigt beide als „NAdoku 0.17.0"; nur die Größe verrät, welche
+     die Uhr-App ist, und die steht oben, weil `apk_liste()` nach
+     Ablagezeit sortiert. Wer auf den ersten Knopf tippt, lädt aufs Handy
+     die Wear-OS-App. Q-PK-11 hatte das vorhergesagt und bewusst nicht in
+     PK-08 gelöst: Es ist eine Oberflächenänderung.
+     *Weg:* `apk_liste()` liest das Gerät aus dem Namen (`nadoku-uhr-…` →
+     Wear-OS-Uhr, sonst Handy) und sortiert Handy vor Uhr; die Karte
+     nennt es („NAdoku 0.17.0 · Handy"). Dieselbe Liste liest
+     `betrieb_updates.php` und `apk.php` — beide mitprüfen. Eine
+     Web-Nebenstufe.
+     *Abnahme:* zwei Dateien im Ordner → die Karte zeigt Handy zuerst,
+     jede mit ihrem Gerät; eine Datei ohne Muster (Altbestand) steht
+     unverändert da.
