@@ -14,6 +14,87 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.12.2] — 2026-10-04
+
+Schritt 18, Sicherheitsrunde II, **Nachmessung zu H-SR-06**. **Korrektur** —
+kein Schema, keine Vertragsänderung; nach dem Deploy ist nichts zu tun. Das
+Prüfdokument von 21.12.1 nannte vier Punkte „gelesen, nicht gemessen". Die
+Betreiberin wollte sie gemessen haben, bevor SR-04 beginnt (E-SR-80). Zwei
+davon zeigten, dass eine Auskunft nicht stimmte (F-SR-88).
+
+### Behoben
+
+- **Über der Decke von 20 zeigte die Karte zwischen den Häppchen wieder
+  nur 20.** Wenn mehr als zwanzig Stücke beim Umhüllen werfen (volle Platte,
+  ein kaputter Arbeitsordner), zählt `fehler_mehr` die übrigen. Die Zahl
+  wurde aber bei jedem Neustart des Umhüllens geleert, und genau dort endet
+  jedes Häppchen. Gemessen mit 23 werfenden Stücken: Während der Frist sagte
+  die Karte „· und 3 weitere", Plakette 23, danach 20 ohne Zusatz; der Satz
+  vor dem Entfernen zählte die drei nie mit. Jetzt zählt ein Durchgang in
+  `fehler_mehr_lauf`, `fehler_mehr` hält die Zahl des letzten ganzen, und
+  Karte, Riegeltext und die Meldung von „Jetzt weiterarbeiten" nehmen die
+  größere von beiden (`sw_fehler_zahl()`). Die erste Fassung dieser Behebung
+  nahm nur den letzten ganzen Durchgang — die lesende Gegenprüfung der
+  Nachmessung fand, dass die Karte dann mitten im ersten Durchgang wieder
+  „20" sagte, und der dauert auf einer Anlage mit vielen Konto-Backups viele
+  Häppchen. Gemessen mit einem Häppchen, das vor den Archiven endet:
+  Plakette 22 und „22 Stück(e)", mit der ersten Fassung 20.
+- **„Noch 0 von 0", solange nichts gezählt war.** Wirft das Inventar beim
+  Beginn eines Wechsels, hält das den Wechsel seit 21.12.1 nicht mehr auf;
+  das erste Häppchen zählt nach. Bis dahin sagten Karte, Statuszeile und
+  der Satz vor dem Entfernen „noch 0 von 0 Stücken" — gemessen, mit einem
+  Inventar, das absichtlich warf; die Statuszeile sagte „noch 0 Stück(e)",
+  Plakette „noch 0". Jetzt heißt es „die Zahl der Stücke zählt das erste
+  Häppchen", die Plakette „wird gezählt" (`sw_gezaehlt()`), auch in der
+  Meldung von „Jetzt weiterarbeiten". `sw_rueckstand()` gibt ungezählt
+  `null` statt 0 — die Jobzeile meldete sonst „Rückstand 0".
+
+### Gemessen (ohne Änderung am Verhalten)
+
+- **Der gefährliche Gegenfall zur Probe** (F-SR-84): die Behebung der Probe
+  zurückgebaut, beide Kinder des Wettlaufs abgewiesen, der Hauptlauf
+  wechselt selbst. Vorher die Anlage gesichert (Datenbank, `config.php`,
+  `sicherungen/`). Ergebnis wie vorhergesagt: Der neue Schlüssel stand
+  danach weder in `config.php` noch in der Stand-Datei, und alle zwölf
+  Stücke der Anlage lagen unter ihm — ohne Rückweg. Danach alles aus der
+  Sicherung zurück, der Abzug der Datenbank byte-gleich. Mit der Behebung
+  hält die Probe an und legt zurück (seit 21.12.1 gemessen). Ein zweiter
+  Lauf belegt, dass der Pfad erreichbar ist, ohne die Kinder per Hand
+  abzuweisen: Eine echte Sperre, die nach neun Sekunden verfällt, wies beide
+  ab („… arbeitet gerade"), und der dritte Wechsel wartete den Verfall ab
+  und ging durch.
+- **Der Beginn über die Karte, dessen Zustand sich nicht schreiben lässt**:
+  Die Karte sagt „nicht begonnen" und zeigt den Knopf. Das erste Häppchen
+  holt den Beginn mit dem Text „von Hand eingetragen — oder der Beginn über
+  die Karte ist gescheitert" nach, die Mails gehen an den Mailjob, und es
+  tut sonst nichts.
+- **Die Schlüsselwechselprobe misst seither fest**, was bis dahin nur
+  gelesen war: den Knopf bei einem Zustand, der nicht zum Schlüsselpaar
+  passt, und einen Komplett-Stand unter einem dritten Schlüssel — ein Glied
+  der Kleinzeile, kein Herunterladen, kein Passphrase-Formular, der Download
+  ohne Eintrag abgewiesen; und die zwei Auskünfte aus F-SR-88 („und 3
+  weitere" mitten im ersten Durchgang, „wird gezählt"). Die Prüfung auf den
+  Knopf „Jetzt weiterarbeiten"
+  sucht jetzt seine Aktion, nicht das Wort: Das Wort steht auch in der
+  Kleinzeile, und eine Karte ohne Knopf blieb grün. Ebenso liest die Probe
+  „nicht begonnen" an der Zeile „Umhüllung" selbst (Kleintext und Plakette)
+  — dasselbe Wort steht in der Zeile „Bevor der bisherige gehen darf".
+- **Nachgeprüft.** Ein lesender Workflow (sechs Agenten) hat jede Messung
+  gegen den Code gehalten: drei belegt, drei teilweise. Was er fand — das
+  Fenster mitten im ersten Durchgang, der lose Anker, die Meldung von „Jetzt
+  weiterarbeiten", Läufe auf dem Baum vor der Behebung —, ist eingearbeitet
+  und auf dem jetzigen Baum neu gemessen.
+
+### Was bewusst bleibt
+
+- Der Ablauf über der Decke von 20 und bei den Ausfällen beim Beginn ist
+  einmalig gemessen, mit Verfälschungen, die nicht im Repositorium liegen
+  (E-SR-80). Die zwei Auskünfte aus F-SR-88 hält die Schlüsselwechselprobe
+  dagegen fest — sie setzt dafür nur den Zustand und liest die Karte.
+- Über der Decke schreibt jedes Häppchen, das umhüllt, eine Zeile „Mehr als
+  20 …" in den Reiter System — ein festsitzender Wechsel soll sichtbar
+  bleiben.
+
 ## [Web 21.12.1] — 2026-10-04
 
 Schritt 18, Sicherheitsrunde II, **Halt H-SR-06: die Gegenlesung von SR-03

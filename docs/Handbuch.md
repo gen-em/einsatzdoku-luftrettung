@@ -5496,7 +5496,7 @@ den Serverordner, nicht in dasselbe Backup. Das Blatt soll genau das
 | **nicht eingerichtet** | „nicht eingerichtet" | anlegen — bis dahin läuft alles wie vor Web 20.0.0 |
 | **bereit** | Kennung | nichts; das Blatt drucken, falls noch nicht geschehen |
 | **Rotation läuft** (Anteil) | neue und alte Kennung, dazu wie viele Konten noch auf dem alten stehen | warten, bis die Zahl auf null steht — jedes Konto stellt beim nächsten Anmelden von selbst um —, dann „Alten Anteil entfernen" |
-| **Wechsel** (Serverschlüssel, seit Web 21.12.0) | neue und bisherige Kennung, „Umhüllung: noch n von m", „Bevor der bisherige gehen darf: k von 3" | den drei Punkten folgen (unten), dann „Alten Schlüssel entfernen" |
+| **Wechsel** (Serverschlüssel, seit Web 21.12.0) | neue und bisherige Kennung, „Umhüllung: noch n von m" (ganz am Anfang auch „wird gezählt"), „Bevor der bisherige gehen darf: k von 3" | den drei Punkten folgen (unten), dann „Alten Schlüssel entfernen" |
 | **abweichend** | vorhandene **und** erwartete Kennung | den richtigen Wert *Nachtragen vom Blatt*; nur wenn er unwiederbringlich weg ist: Neuanfang |
 
 **Nachtragen vom Blatt ist sicher.** Der Server rechnet die Kennung des
@@ -5532,7 +5532,8 @@ beim Beginn und beim Abschluss eine Mail. Zum Schluss gehört eine frische
 Wechsel — so lange kann ein Vorgang, der vorher begann, noch mit dem
 bisherigen Schlüssel versiegeln, und der Nachweis soll ihn sehen. Bis dahin
 zeigt die Karte „Nachweis ab HH:MM". Ein Stück, das sich nicht umhüllen
-lässt, steht mit Grund in der Zeile **„Ließen sich nicht umhüllen"**; es
+lässt, steht mit Grund in der Zeile **„Ließen sich nicht umhüllen"** (die
+ersten zwanzig mit Namen, dahinter „und n weitere"); es
 liegt noch unter dem bisherigen, die Anlage versucht es immer wieder, und
 der bisherige bleibt, bis es umgehüllt oder fort ist. Ein kaputtes
 Konto-Backup darfst du löschen und neu erzeugen. Steht ein Wechsel von

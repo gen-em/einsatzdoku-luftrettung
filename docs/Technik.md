@@ -4308,7 +4308,11 @@ der neue Schlüssel schon in `config.php` und versiegelt; ein Rückbau risse
 ihn aus dem, was er schon versiegelt hat. Der Fehler geht in den Reiter
 System, und der Job holt den Beginn nach (F-SR-80). Ein Inventar, das wirft,
 hält den Beginn seit der Nachprüfung nicht mehr auf: Der Zustand steht dann
-ohne Stückzahl, und das erste Häppchen zählt. Scheitert auch das Schreiben
+ohne Stückzahl, und das erste Häppchen zählt. Bis dahin sagen Karte,
+Statuszeile und der Satz vor dem Entfernen „die Zahl der Stücke zählt das
+erste Häppchen" (`sw_gezaehlt()`), und `sw_rueckstand()` gibt `null` statt
+0 — sonst stünde „Rückstand 0" in der Jobzeile. Bis zur Nachmessung stand
+überall „noch 0 von 0" (F-SR-88). Scheitert auch das Schreiben
 des Zustands (die Datenbank ist weg), holt das Häppchen den Beginn **als
 Handeintrag** nach. Protokoll und Mail sagen dann „von Hand eingetragen —
 oder der Beginn über die Karte ist gescheitert" (F-SR-86); bis dahin
@@ -4373,7 +4377,12 @@ Zustand von vor dem Häppchen zurück, und das nächste stieß wieder auf
 dasselbe Stück, ohne Ende und ohne Namen. Jetzt wird es mit Grund im Zustand
 vermerkt (`fehler`, bis zu zwanzig; darüber zählt `fehler_mehr` weiter, und
 der Reiter System bekommt eine Zeile je Häppchen statt einer je Stück und
-Runde), einmal in den Reiter System gemeldet,
+Runde; `fehler_mehr` hält die Zahl des letzten ganzen Umhüll-Durchgangs,
+gezählt wird in `fehler_mehr_lauf`, und Karte, Riegeltext und Meldung nehmen
+die größere von beiden, `sw_fehler_zahl()` — bis zur Nachmessung wurde die
+Zahl beim Neustart geleert, und die Karte zeigte zwischen den Häppchen
+wieder nur zwanzig; mit nur dem letzten ganzen Durchgang zeigte sie es
+mitten im ersten, F-SR-88), einmal in den Reiter System gemeldet,
 übersprungen — und zählt im Nachweis wie `alt`: Es liegt ja noch unter dem
 bisherigen, und Bedingung 1 bleibt zu, bis es umgehüllt oder fort ist. Die
 Karte zeigt es in der Zeile „Ließen sich nicht umhüllen". Besteht der Rest

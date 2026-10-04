@@ -644,11 +644,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
             $notice = 'Umgehüllt ist, was der Server erreicht. Der Nachweis mit dem neuen '
                     . 'Schlüssel beginnt um ' . fmt_local(gmdate('Y-m-d H:i:s', $w)) . ' Uhr.';
         } else {
-            $nF = count((array)($z['fehler'] ?? [])) + (int)($z['fehler_mehr'] ?? 0);
+            $nF = sw_fehler_zahl($z);
             $notice = ($z['phase'] ?? '') === 'fertig'
                 ? 'Alles ist umgehüllt und mit dem neuen Schlüssel nachgewiesen.'
-                : 'Ein Häppchen ist durch: ' . (int)$bericht['erledigt'] . ' Stück(e); noch '
-                  . (int)sw_rueckstand($z) . ' von ' . (int)($z['gesamt'] ?? 0)
+                : 'Ein Häppchen ist durch: ' . (int)$bericht['erledigt'] . ' Stück(e); '
+                  . (sw_gezaehlt($z) ? 'noch ' . (int)sw_rueckstand($z) . ' von ' . (int)$z['gesamt']
+                                     : 'die Zahl der Stücke zählt das nächste Häppchen')
                   . (($z['phase'] ?? '') === 'nachweis' ? ' im Nachweis' : '')
                   . ($nF > 0 ? '; ' . $nF . ' Stück(e) ließen sich nicht umhüllen' : '') . '.';
         }
@@ -1104,6 +1105,10 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
              keiner — das Häppchen legt einen neuen an (F-SR-80). */
           $swPhase  = sw_zustand_passt($swZ, $skZustand) ? (string)($swZ['phase'] ?? '') : '';
           $swGesamt = (int)($swZ['gesamt'] ?? 0);
+          /* Warf das Inventar beim Beginn, ist noch nichts gezählt — nicht
+             „noch 0 von 0" (Nachmessung H-SR-06, F-SR-88). */
+          $swNoch = sw_gezaehlt($swZ) ? 'noch ' . (int)$swRest . ' von ' . $swGesamt
+                                      : 'die Zahl der Stücke zählt das erste Häppchen';
           $swWartet = $swPhase === '' ? null : sw_nachweis_wartet($swZ);
           /* OHNE AUSLÖSER GEHEN DATEIEN NUR MIT DEM KNOPF VORAN (H-SR-06,
              F-SR-82): Am Huckepack-Weg (3 s) fängt der Job keine Datei an.
@@ -1126,16 +1131,16 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                       . ' Uhr, damit er auch sieht, was ein vor dem Wechsel begonnener Vorgang '
                       . 'noch mit dem bisherigen versiegelt'
                 : ($swPhase === 'nachweis'
-                    ? 'Nachweis: jedes Stück wird mit dem neuen geöffnet — noch ' . (int)$swRest
-                      . ' von ' . $swGesamt . $swWeiter
+                    ? 'Nachweis: jedes Stück wird mit dem neuen geöffnet — ' . $swNoch . $swWeiter
                     : 'Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups und '
-                      . 'Archive des Protokolls — noch ' . (int)$swRest . ' von ' . $swGesamt
-                      . ' Stücken' . $swWeiter))),
+                      . 'Archive des Protokolls — ' . $swNoch
+                      . (sw_gezaehlt($swZ) ? ' Stücken' : '') . $swWeiter))),
             'plaketten' => ui_plakette($swPhase === 'fertig' ? 'nachgewiesen'
                                        : ($swPhase === '' ? 'nicht begonnen'
                                        : ($swWartet !== null ? 'Nachweis ab '
                                             . fmt_local(gmdate('Y-m-d H:i:s', $swWartet))
-                                       : 'noch ' . (int)$swRest . ' von ' . $swGesamt)),
+                                       : (sw_gezaehlt($swZ) ? 'noch ' . (int)$swRest . ' von ' . $swGesamt
+                                                                : 'wird gezählt'))),
                 ['ton' => 'blau']),
           ]);
           $swErfuellt = (int)$swB['inventar'] + (int)$swB['komplett'] + (int)$swB['blatt'];
@@ -1152,7 +1157,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           $swFehler = array_values((array)($swZ['fehler'] ?? []));
           /* Über der Decke von 20 zählt der Job weiter, nennt aber nicht
              (Nachprüfung H-SR-06, F-SR-85). */
-          $swFehlerMehr = (int)($swZ['fehler_mehr'] ?? 0);
+          $swFehlerMehr = sw_fehler_zahl($swZ) - count($swFehler);
           if ($swFehler !== []) {
               ui_zeile([
                 'text'  => 'Ließen sich nicht umhüllen',

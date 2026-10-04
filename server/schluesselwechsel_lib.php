@@ -145,10 +145,32 @@ function sw_zustand_setzen(array $z): void
         ->execute([json_encode($z), sw_rueckstand($z), SW_JOB]);
 }
 
-/** Wie viele Stücke stehen noch aus? `null`, wenn kein Wechsel läuft. */
+/** Ist die Zahl der Stücke gezählt? Nicht, wenn das Inventar beim Beginn
+ *  warf — dann zählt das erste Häppchen. Bis dahin stand auf Karte,
+ *  Statuszeile und im Riegel „noch 0 von 0" (Nachmessung H-SR-06, F-SR-88). */
+function sw_gezaehlt(array $z): bool
+{
+    return ($z['gesamt'] ?? null) !== null;
+}
+
+/** Wie viele Stücke ließen sich nicht umhüllen? Die Liste (bis zwanzig mit
+ *  Namen) und darüber die Zahl: die des letzten ganzen Durchgangs oder, wenn
+ *  der laufende schon mehr gefunden hat, die laufende. Nur den letzten ganzen
+ *  zu nehmen hieß mitten im ersten Durchgang „20" ohne die übrigen — und der
+ *  dauert auf einer Anlage mit vielen Konto-Backups viele Häppchen
+ *  (Gegenprüfung der Nachmessung H-SR-06, F-SR-88). */
+function sw_fehler_zahl(array $z): int
+{
+    return count((array)($z['fehler'] ?? []))
+         + max((int)($z['fehler_mehr'] ?? 0), (int)($z['fehler_mehr_lauf'] ?? 0));
+}
+
+/** Wie viele Stücke stehen noch aus? `null`, wenn kein Wechsel läuft — oder
+ *  die Zahl noch nicht gezählt ist (`sw_gezaehlt()`): Dann schrieb der Job
+ *  „Rückstand 0" in die Jobzeile, als wäre nichts mehr zu tun. */
 function sw_rueckstand(array $z): ?int
 {
-    if (($z['phase'] ?? '') === '' || $z['phase'] === 'fertig') { return null; }
+    if (($z['phase'] ?? '') === '' || $z['phase'] === 'fertig' || !sw_gezaehlt($z)) { return null; }
     return max(0, (int)($z['gesamt'] ?? 0) - (int)($z['erledigt'] ?? 0));
 }
 
@@ -837,10 +859,17 @@ function sw_haeppchen(PDO $pdo, array &$z, callable $zeitLinks): array
             /* Ein Durchgang ist durch. */
             sw_verloren_durchgang_ende($z);
             if ($z['phase'] === 'umhuellen') {
+                /* `fehler_mehr` ist die Zahl des LETZTEN GANZEN Umhüll-Durchgangs;
+                 * gezählt wird in `fehler_mehr_lauf`. Bis zur Nachmessung wurde
+                 * `fehler_mehr` beim Neustart geleert — und weil jedes Häppchen
+                 * genau dort endet, zeigte die Karte zwischen den Häppchen 20
+                 * statt 23 (Nachmessung H-SR-06, F-SR-88). */
                 $z = array_merge($z, ['phase' => 'nachweis', 'zweck' => SW_ZWECKE[0],
                                       'cursor' => null, 'erledigt' => 0, 'zahlen' => [],
                                       'nachweis_alt' => 0, 'nachweis_fehler' => 0,
                                       'nachweis_begonnen' => null,
+                                      'fehler_mehr' => (int)($z['fehler_mehr_lauf'] ?? 0),
+                                      'fehler_mehr_lauf' => 0,
                                       'gesamt' => sw_inventar()['summe']]);
                 $listen = [];
                 if (sw_nachweis_wartet($z) !== null) {
@@ -861,7 +890,7 @@ function sw_haeppchen(PDO $pdo, array &$z, callable $zeitLinks): array
                 $z = array_merge($z, ['phase' => 'umhuellen', 'zweck' => SW_ZWECKE[0],
                                       'cursor' => null, 'erledigt' => 0, 'zahlen' => [],
                                       'nachweis_alt' => 0, 'nachweis_fehler' => 0,
-                                      'nachweis_begonnen' => null, 'fehler_mehr' => 0,
+                                      'nachweis_begonnen' => null, 'fehler_mehr_lauf' => 0,
                                       'gesamt' => sw_inventar()['summe']]);
                 $listen = [];
                 if ($nurFehler || ++$runden > 3) {
@@ -907,7 +936,7 @@ function sw_haeppchen(PDO $pdo, array &$z, callable $zeitLinks): array
                  * Kurzschaltung „nur Fehler" nie, und jedes Häppchen lief
                  * viermal durch. Gemeldet wird einmal je Häppchen, nicht je
                  * Stück und Runde. */
-                if (!$nurPruefen) { $z['fehler_mehr'] = (int)($z['fehler_mehr'] ?? 0) + 1; }
+                if (!$nurPruefen) { $z['fehler_mehr_lauf'] = (int)($z['fehler_mehr_lauf'] ?? 0) + 1; }
                 if (!$mehrGemeldet) {
                     system_melden('schluesselwechsel', 'Mehr als ' . SW_VERLOREN_MAX
                         . ' Stücke ließen sich nicht umhüllen — die Karte nennt die ersten', $ex);
@@ -999,7 +1028,8 @@ function sw_zustand_neu(string $neu, string $alt, string $weg = 'oberflaeche'): 
             'phase' => 'umhuellen', 'zweck' => SW_ZWECKE[0], 'cursor' => null,
             'erledigt' => 0, 'gesamt' => $gesamt,
             'zahlen' => [], 'umgehuellt' => 0, 'verloren' => [], 'verloren_durchgang' => [],
-            'fehler' => [], 'fehler_mehr' => 0, 'nachweis_alt' => 0, 'nachweis_fehler' => 0];
+            'fehler' => [], 'fehler_mehr' => 0, 'fehler_mehr_lauf' => 0,
+            'nachweis_alt' => 0, 'nachweis_fehler' => 0];
 }
 
 /** Der Nachweis ist durch — ein Protokolleintrag mit den Zahlen. */
@@ -1101,14 +1131,15 @@ function sw_bedingungen(): array
     }
     if ($rotation && !$inventar) {
         $wartet = sw_nachweis_wartet($z);
-        $nFehler = count((array)($z['fehler'] ?? []));
+        $nFehler = sw_fehler_zahl($z);
         $fehlt[] = ($wartet !== null
                 ? 'Umgehüllt; der Nachweis mit dem neuen Schlüssel beginnt um '
                   . fmt_local(gmdate('Y-m-d H:i:s', $wartet)) . ' Uhr — so lange kann ein '
                   . 'Vorgang, der vor dem Wechsel begann, noch mit dem bisherigen versiegeln'
                 : 'Noch ist nicht alles umgehüllt und mit dem neuen Schlüssel nachgewiesen'
-                  . (($r = sw_rueckstand($z)) !== null ? ' (noch ' . $r . ' von '
-                     . (int)($z['gesamt'] ?? 0) . ' Stücken)' : ''))
+                  . (!sw_gezaehlt($z) ? ' (die Zahl der Stücke zählt das erste Häppchen)'
+                     : (($r = sw_rueckstand($z)) !== null ? ' (noch ' . $r . ' von '
+                        . (int)$z['gesamt'] . ' Stücken)' : '')))
                  . ($nFehler > 0 ? '; ' . $nFehler . ' Stück(e) ließen sich nicht umhüllen '
                                    . 'und liegen noch unter dem bisherigen' : '') . '.';
     }
@@ -1246,7 +1277,8 @@ function sw_nach_einspielen(PDO $pdo): void
     $z = array_merge($z, ['phase' => 'nachweis', 'zweck' => SW_ZWECKE[0], 'cursor' => null,
                           'erledigt' => 0, 'zahlen' => [], 'nachweis_alt' => 0,
                           'nachweis_fehler' => 0, 'nachweis_begonnen' => null, 'fehler' => [],
-                          'fehler_mehr' => 0, 'verloren' => [], 'verloren_durchgang' => [],
+                          'fehler_mehr' => 0, 'fehler_mehr_lauf' => 0, 'verloren' => [],
+                          'verloren_durchgang' => [],
                           'umgehuellt' => 0]);
     unset($z['nachweis_am'], $z['komplett_auftrag']);
     $pdo->prepare('UPDATE jobs SET zustand = ?, laeuft_seit = NULL WHERE job = ?')

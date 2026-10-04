@@ -8029,5 +8029,14 @@ declare(strict_types=1);
  *   und ein Nachweis ohne Stueck liessen den Job kreisen — behoben im
  *   selben Zug, mit der Waise beim Anteil und einer Sperrmeldung, die sagt,
  *   bis wann (F-SR-84 bis -87). Kein Schema.
+ *
+ * 21.12.2 — DIE NACHMESSUNG ZU H-SR-06 (Schritt 18; F-SR-88, E-SR-80).
+ *   Korrekturstufe. Was das Pruefdokument „gelesen, nicht gemessen" nannte,
+ *   ist jetzt gemessen — und zwei Auskuenfte stimmten dabei nicht: Ueber der
+ *   Decke von 20 werfenden Stuecken zeigte die Karte zwischen den Haeppchen
+ *   wieder 20 statt aller (`fehler_mehr` wurde beim Neustart geleert), und
+ *   warf das Inventar beim Beginn, stand bis zum ersten Haeppchen „noch 0
+ *   von 0" (`sw_gezaehlt()`). Der gefaehrliche Gegenfall zur Probe ist mit
+ *   einer Sicherung der Anlage gefahren und zurueckgelegt. Kein Schema.
  */
-const WEB_VERSION = '21.12.1';
+const WEB_VERSION = '21.12.2';

@@ -368,14 +368,19 @@ function status_erhebung(): array
     $skRest = null;
     $skPhase = '';
     $skWartet = null;
+    $skGezaehlt = true;
     if ($skZustand['stand'] === 'rotation') {
         require_once __DIR__ . '/schluesselwechsel_lib.php';
         $skZ = sw_zustand();
-        /* `null` heißt bei `sw_rueckstand()` „fertig" ODER „kein Zustand" —
+        /* `null` heißt bei `sw_rueckstand()` „fertig", „kein Zustand" ODER
+         * (seit der Nachmessung) „noch nicht gezählt" —
          * hier getrennt (H-SR-06, F-SR-80): Ohne Zustand ist nichts umgehüllt,
          * und „alles umgehüllt" wäre eine falsche Auskunft. */
         $skPhase = sw_zustand_passt($skZ, $skZustand) ? (string)($skZ['phase'] ?? '') : '';
         $skRest = $skPhase === '' ? null : sw_rueckstand($skZ);
+        /* Ungezählt (das Inventar warf beim Beginn) ist nicht „noch 0"
+         * (Nachmessung H-SR-06, F-SR-88). */
+        $skGezaehlt = $skPhase === '' || sw_gezaehlt($skZ);
         $skWartet = $skPhase === '' ? null : sw_nachweis_wartet($skZ);
     }
     $server[] = status_z('Serverschlüssel',
@@ -390,11 +395,13 @@ function status_erhebung(): array
                       : ($skWartet !== null
                       ? 'umgehüllt; der Nachweis beginnt um '
                         . fmt_local(gmdate('Y-m-d H:i:s', $skWartet)) . ' Uhr'
+                      : (!$skGezaehlt
+                      ? 'die Umhüllung läuft; die Zahl der Stücke zählt das erste Häppchen'
                       : ($skRest !== null
                       ? 'noch ' . $skRest . ' Stück(e) umzuhüllen oder nachzuweisen'
                       : 'alles umgehüllt und nachgewiesen; der bisherige lässt sich '
                         . 'entfernen, sobald ein Komplett-Stand unter dem neuen da und '
-                        . 'das Blatt bestätigt ist')))
+                        . 'das Blatt bestätigt ist'))))
             : ($skZustand['stand'] === 'fehlt'
                 ? 'Fehlt. Ohne ihn gibt es kein Komplett-Backup, kein '
                   . 'Konto-Backup und keinen Versand auf ein Backup-Ziel'
@@ -406,7 +413,8 @@ function status_erhebung(): array
         $skZustand['stand'] === 'rotation'
             ? ($skPhase === '' ? 'nicht begonnen'
                : ($skWartet !== null ? 'Nachweis ab ' . fmt_local(gmdate('Y-m-d H:i:s', $skWartet))
-               : ($skRest !== null ? 'noch ' . $skRest : 'bisherigen entfernen')))
+               : (!$skGezaehlt ? 'wird gezählt'
+               : ($skRest !== null ? 'noch ' . $skRest : 'bisherigen entfernen'))))
             : (['bereit' => 'vorhanden', 'fehlt' => 'fehlt',
                 'abweichend' => 'abweichend'][$skZustand['stand']] ?? '?'),
         $skZustand['stand'] === 'bereit' ? null : 'betrieb_server.php#k-schluessel');

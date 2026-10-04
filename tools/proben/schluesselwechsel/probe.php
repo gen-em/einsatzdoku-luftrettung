@@ -43,10 +43,18 @@ declare(strict_types=1);
  *      steht in der Fehlerliste, nicht unter „mit keinem der beiden"; ein
  *      Nachweis ohne Stück wird einmal fertig, nicht in jedem Häppchen; eine
  *      Lage „abweichend" lässt den Zustand stehen (Nachprüfung H-SR-06,
- *      F-SR-85).
+ *      F-SR-85). Ein Zustand eines anderen Schlüsselpaars in der Phase
+ *      „fertig" heißt „nicht begonnen", und der Knopf steht da (F-SR-87).
+ *      Die Karte zählt über der Decke auch mitten im Durchgang mit („und 3
+ *      weitere") und sagt ungezählt „wird gezählt", nicht „noch 0 von 0"
+ *      (F-SR-88, seit der Nachmessung).
  *   6. Der Abschluss: ohne frischen Stand und ohne Rückfrage verweigert; mit
  *      beiden entfernt; danach öffnet alles mit B, der alte Stand nur noch
- *      mit dem Wert A („vom Blatt").
+ *      mit dem Wert A („vom Blatt"). Dieser Stand liegt jetzt unter einem
+ *      DRITTEN Schlüssel: Die Liste sagt es in einem Glied der Kleinzeile und
+ *      bietet weder Herunterladen noch Passphrase an, der Download weist vor
+ *      Protokoll und Kopfzeilen ab (F-SR-82, F-SR-87; bis zur Nachmessung
+ *      gelesen).
  *   7. Nr. 344, über HTTP: „Freigabe widerrufen" mit einem Handgriff aus
  *      Nullen meldet einen Fehler und legt KEINE `konto.json` in die Wurzel
  *      der Ablage. (Das Konzept nannte die Freigabeprobe; die arbeitet als
@@ -122,6 +130,9 @@ foreach (array_slice($argv, 1) as $a) {
 $pdo = db();
 $gut = 0; $schlecht = 0;
 const SWP_DATEI = 'schluesselwechselprobe.json';
+/** Der Knopf „Jetzt weiterarbeiten", an seiner Aktion erkannt: Das Wort allein
+ *  steht auch in der Kleinzeile der Zeile „Umhüllung" (Nachmessung H-SR-06). */
+const SWP_KNOPF_WEITER = 'value="schluessel_sk_weiter"';
 const SWP_MARKEN = ['server_key_kennung', 'kdf_anteil_kennung', 'schluesselblatt_bestaetigt_am',
                     'schluesselblatt_neu_weil', JOB_PAUSE_SCHLUESSEL];
 
@@ -421,7 +432,8 @@ function rueckweg(array $s): array
                        $zeile['letzter_erfolg'], $zeile['letzter_ausloeser'], $zeile['letzter_fehler'],
                        $zeile['erledigt_zuletzt'], $zeile['laeuft_seit'], $job]);
     }
-    db()->prepare("DELETE FROM protokoll_ereignisse WHERE id > ? AND art LIKE 'serverschluessel_%'")
+    db()->prepare("DELETE FROM protokoll_ereignisse WHERE id > ?
+                     AND (art LIKE 'serverschluessel_%' OR art = 'komplett_heruntergeladen')")
         ->execute([(int)$s['max_prot']]);
     db()->prepare("DELETE FROM mail_warteschlange WHERE id > ?
                      AND schluessel IN ('serverschluessel_gewechselt', 'serverschluessel_abgeschlossen')")
@@ -927,7 +939,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
         "HTTP {$blatt['code']}: " . implode(' | ', $kachel));
     $karte = hole('betrieb_server.php', $sitz);
     pruefe($karte['code'] === 200 && str_contains($karte['rumpf'], 'Wechsel läuft: neu ' . $Bkenn)
-        && str_contains($karte['rumpf'], 'Umhüllung') && str_contains($karte['rumpf'], 'Jetzt weiterarbeiten')
+        && str_contains($karte['rumpf'], 'Umhüllung') && str_contains($karte['rumpf'], SWP_KNOPF_WEITER)
         && !str_contains($karte['rumpf'], 'Alten Schlüssel entfernen')
         && !str_contains($karte['rumpf'], 'Server-Anteil wechseln'),
         'Karte: Wechsel läuft, Umhüllung, „Jetzt weiterarbeiten", kein Entfernen, kein Anteil-Wechsel',
@@ -1012,7 +1024,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     $karte = hole('betrieb_server.php', $sitz);
     pruefe($karte['code'] === 200 && str_contains($karte['rumpf'], 'Nachweis ab')
         && str_contains($karte['rumpf'], 'Ließen sich nicht umhüllen')
-        && !str_contains($karte['rumpf'], 'Jetzt weiterarbeiten'),
+        && !str_contains($karte['rumpf'], SWP_KNOPF_WEITER),
         'Karte: „Nachweis ab …", die Zeile mit dem Stück, kein „Jetzt weiterarbeiten" während der Frist',
         "HTTP {$karte['code']}");
     swp_frist_kuerzen();
@@ -1172,6 +1184,70 @@ echo json_encode(["ok" => $ok, "was" => $was]);
         'Lage „abweichend" im Wechsel: Zustand bleibt, nach der Reparatur kein zweiter Beginn (F-SR-85)',
         "Lage $lageAb, Beginn " . (($zAb2['begonnen'] ?? null) === ($zAb['begonnen'] ?? 'x') ? 'gleich' : 'NEU'));
 
+    /* EIN ZUSTAND EINES ANDEREN SCHLÜSSELPAARS IN DER PHASE „fertig"
+     * (Nachprüfung H-SR-06, F-SR-87; gemessen seit der Nachmessung): Die Zeile
+     * „Umhüllung" sagt „nicht begonnen … oder mit Jetzt weiterarbeiten" — dann
+     * muss der Knopf auch dastehen. Bis zur Nachprüfung hing er am rohen
+     * Zustand und fehlte. Die Jobs stehen still; kein Häppchen fasst den
+     * Zustand während des Abrufs an. */
+    $zK = sw_zustand();
+    sw_zustand_setzen(array_merge($zK, ['kennung_neu' => 'deadbeef', 'phase' => 'fertig']));
+    try {
+        $karteK = hole('betrieb_server.php', $sitz);
+    } finally {
+        sw_zustand_setzen($zK);
+    }
+    /* An der Zeile „Umhüllung" selbst — ihr Kleintext und ihre Plakette.
+     * „nicht begonnen" allein stünde auch in der Zeile „Bevor der bisherige
+     * gehen darf" (aus `sw_bedingungen()`), und eine Zeile „Umhüllung" am
+     * rohen Zustand bliebe grün (Gegenprüfung der Nachmessung). */
+    $plaketteUmh = preg_match('/Umhüllung<\/span>.*?zeile-plaketten">(.*?)<\/div>/su', $karteK['rumpf'], $mU)
+        ? trim(strip_tags($mU[1])) : '';
+    pruefe($karteK['code'] === 200 && str_contains($karteK['rumpf'], 'die Umhüllung hat noch nicht begonnen')
+        && $plaketteUmh === 'nicht begonnen'
+        && str_contains($karteK['rumpf'], SWP_KNOPF_WEITER),
+        'Karte: Zustand eines anderen Schlüsselpaars („fertig") — „nicht begonnen" und der Knopf dazu (F-SR-87)',
+        "HTTP {$karteK['code']}, Plakette „{$plaketteUmh}\"");
+
+    /* F-SR-88 FEST (Nachmessung zu H-SR-06): zwei Auskünfte, die bis dahin nur
+     * eine einmalige Messung mit Verfälschung belegte — ein Rückbau bliebe
+     * sonst in jedem Prüfmittel grün (Gegenprüfung der Nachmessung). Gesetzt
+     * wird nur der Zustand, die Jobs stehen still. (1) Zwanzig Stücke in der
+     * Liste, drei laufend darüber, der erste Durchgang noch nicht durch.
+     * (2) Ungezählt — das Inventar warf beim Beginn. */
+    $zF = sw_zustand();
+    $liste20 = [];
+    for ($fi = 0; $fi < SW_VERLOREN_MAX; $fi++) {
+        $liste20['konten|probe/' . $fi] = ['name' => 'Probestück ' . $fi, 'grund' => 'Probe'];
+    }
+    sw_zustand_setzen(array_merge($zF, ['phase' => 'umhuellen', 'fehler' => $liste20, 'fehler_mehr' => 0,
+                                        'fehler_mehr_lauf' => 3, 'nachweis_begonnen' => null]));
+    try {
+        $karteF1 = hole('betrieb_server.php', $sitz);
+    } finally {
+        sw_zustand_setzen($zF);
+    }
+    sw_zustand_setzen(array_merge($zF, ['phase' => 'umhuellen', 'gesamt' => null, 'fehler' => [],
+                                        'nachweis_begonnen' => null]));
+    try {
+        $karteF2 = hole('betrieb_server.php', $sitz);
+        $statusF2 = hole('betrieb_status.php', $sitz);
+    } finally {
+        sw_zustand_setzen($zF);
+    }
+    $plaketteF1 = preg_match('/Ließen sich nicht umhüllen<\/span>.*?zeile-plaketten">(.*?)<\/div>/su', $karteF1['rumpf'], $mF1)
+        ? trim(strip_tags($mF1[1])) : '';
+    $plaketteF2 = preg_match('/Umhüllung<\/span>.*?zeile-plaketten">(.*?)<\/div>/su', $karteF2['rumpf'], $mF2)
+        ? trim(strip_tags($mF2[1])) : '';
+    pruefe($karteF1['code'] === 200 && str_contains($karteF1['rumpf'], '· und 3 weitere') && $plaketteF1 === '23',
+        'Karte über der Decke mitten im ersten Durchgang: „und 3 weitere", Plakette 23 (F-SR-88)',
+        "HTTP {$karteF1['code']}, Plakette „{$plaketteF1}\"");
+    pruefe($karteF2['code'] === 200 && str_contains($karteF2['rumpf'], 'die Zahl der Stücke zählt das erste Häppchen')
+        && $plaketteF2 === 'wird gezählt' && !str_contains($karteF2['rumpf'], 'noch 0 von 0')
+        && str_contains($statusF2['rumpf'], 'die Zahl der Stücke zählt das erste Häppchen'),
+        'Karte und Statuszeile ungezählt: „wird gezählt", nicht „noch 0 von 0" (F-SR-88)',
+        "HTTP {$karteF2['code']}/{$statusF2['code']}, Plakette „{$plaketteF2}\"");
+
     /* ---- 6. Abschluss --------------------------------------------------------- */
     teil('6. Abschluss');
     [$ok, $was] = serverschluessel_alt_entfernen();
@@ -1205,6 +1281,36 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     pruefe(komp_serverschluessel_fuer(komp_wurzel() . '/' . $standA)[1] === 'keiner'
         && komp_erster_block_oeffnet(komp_wurzel() . '/' . $standA, (string)hex2bin($A)),
         'der alte Stand: mit keinem Schlüssel der Anlage — mit dem Wert A vom Blatt schon');
+    /* … UND SO STEHT ER IN DER LISTE (F-SR-82, F-SR-87; bis zur Nachmessung
+     * gelesen). Gelesen wird die Zeile des Stands bis zur nächsten Zeile oder
+     * zum Ende der Karte — dort stünde ein Passphrase-Formular. OPcache sieht
+     * die config.php ohne `server_key_alt` erst nach revalidate_freq
+     * (F-SR-31): Ohne die drei Sekunden hieß der Stand dort noch „bisheriger
+     * Schlüssel", und der Download ging durch (Nachmessung, erster Lauf). */
+    sleep(3);
+    $liste = hole('admin_komplettsicherung.php', $sitz);
+    $zeileA = '';
+    $posA = strpos($liste['rumpf'], $standA . ' · ');
+    if ($posA !== false) {
+        $enden = array_filter([strpos($liste['rumpf'], 'zeile-haupt', $posA),
+                               strpos($liste['rumpf'], '</section>', $posA),
+                               strpos($liste['rumpf'], '</details>', $posA)], static fn($x): bool => $x !== false);
+        $zeileA = substr($liste['rumpf'], $posA, ($enden === [] ? strlen($liste['rumpf']) : min($enden)) - $posA);
+    }
+    pruefe($liste['code'] === 200
+        && str_contains($zeileA, ' · öffnet nur mit dem Serverschlüssel vom Blatt, das damals galt')
+        && str_contains($zeileA, 'anderer Schlüssel')
+        && !str_contains($zeileA, 'Herunterladen') && !str_contains($zeileA, 'name="passphrase"')
+        && !str_contains($zeileA, 'feld-hinweis'),
+        'Liste der Komplett-Stände: der Stand unter drittem Schlüssel — ein Glied der Kleinzeile, '
+        . 'kein Herunterladen, keine Passphrase, kein Absatz (F-SR-82, F-SR-87)',
+        "HTTP {$liste['code']}" . ($zeileA === '' ? ' — Zeile nicht gefunden' : ', ' . strlen($zeileA) . ' Zeichen gelesen'));
+    $dlVor = $prot('komplett_heruntergeladen');
+    $dl = hole('admin_komplettsicherung.php', $sitz, ['action' => 'herunterladen', 'art' => 'klar', 'datei' => $standA]);
+    pruefe($dl['code'] === 200 && str_contains($dl['rumpf'], 'Es wurde nichts heruntergeladen')
+        && $prot('komplett_heruntergeladen') === $dlVor,
+        'Download dieses Stands: abgewiesen, ohne Eintrag „heruntergeladen" (F-SR-82)',
+        "HTTP {$dl['code']}, Einträge " . ($prot('komplett_heruntergeladen') - $dlVor));
 
     /* ---- 7. Nr. 344 ----------------------------------------------------------- */
     teil('7. Freigabe widerrufen ohne gültige Kennung (Nr. 344)');
