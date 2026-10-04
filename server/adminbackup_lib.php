@@ -389,6 +389,11 @@ function edbak_begleit_lesen(string $kennung): array
     $vorgabe = ['lesbar' => false, 'email' => null, 'name' => null,
                 'account_key' => $kennung, 'letzte_sicherung' => null,
                 'sicherungen' => [], 'freigabe' => null];
+    /* OHNE GÜLTIGE KENNUNG NICHTS LESEN (H-SR-06, F-SR-82) — wie beim
+     * Schreiben seit Nr. 344. Eine leere Kennung ergäbe die Wurzel, und eine
+     * `konto.json`, die dort aus der Zeit vor Nr. 344 liegt, gälte sonst als
+     * Begleitdatei eines Kontos. */
+    if (!edbak_kennung_gueltig($kennung)) { return $vorgabe; }
     if (!is_file($pfad)) { return $vorgabe; }
     $roh = @file_get_contents($pfad);
     if ($roh === false) { return $vorgabe; }

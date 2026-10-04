@@ -4710,13 +4710,17 @@ sagt, wer es war.
 |---|---|
 | **auf dem Ziel** | liegt auch auf einem Backup-Ziel |
 | **nur lokal** | liegt nur hier — der Versand ist aus, oder er ist noch nicht gelaufen |
-| **anderer Schlüssel** | wurde mit einem früheren Serverschlüssel versiegelt; öffnen lässt es sich nur mit dem Schlüssel von damals (Wiederanlaufpaket, Schlüsselblatt mit der genannten Kennung). Während eines Wechsels (12.5) steht sie kurz an Archiven, die noch nicht umgehüllt sind — sie bekommen dabei einen neuen Namen und gehen noch einmal auf das Ziel |
+| **bisheriger Schlüssel** | nur während eines Wechsels des Serverschlüssels (12.5): liegt noch unter dem bisherigen, bis der Job es umgehüllt hat — dann bekommt es einen neuen Namen und geht noch einmal auf das Ziel. Bis dahin kein Knopf „Herunterladen"; ohne eingerichteten Auslöser treibt es nur *Jetzt weiterarbeiten* voran (seit Web 21.12.1) |
+| **anderer Schlüssel** | wurde mit einem früheren Serverschlüssel versiegelt; öffnen lässt es sich nur mit dem Schlüssel von damals (Wiederanlaufpaket, Schlüsselblatt mit der genannten Kennung) |
 
 Unter jeder Zeile stehen die **Kennung des Schlüssels** (acht Zeichen am
 Stück, so wie auf dem Schlüsselblatt — leg es zum Vergleichen daneben), die
 Zahl der Einträge und die Größe. Trägt ein Archiv einen **anderen
 Schlüssel**, steht über der Liste eine Warnung mit der Kennung, und die Zeile
-hat keinen Knopf „Herunterladen" — hier ließe sich nichts öffnen. Ein Archiv
+hat keinen Knopf „Herunterladen" — hier ließe sich nichts öffnen. Liegt es
+während eines Wechsels noch unter dem **bisherigen**, steht dort statt der
+Warnung ein Hinweis: Der Job hüllt es um, danach lässt es sich wieder
+herunterladen. Ein Archiv
 fasst höchstens **32 MB** Text; was darüber hinausginge — praktisch nur bei
 einem Angriff, der Zehntausende Sperren schreibt —, wird nicht archiviert.
 Das steht dann in der Übersicht im ZIP, nicht auf der Seite. Der
@@ -5516,11 +5520,34 @@ neuen, und der bisherige bleibt als zweiter Wert in `config.php` stehen.
 Dann **druckst du sofort das Blatt neu** — es trägt jetzt beide. Die Anlage
 hüllt in Häppchen um, was sie erreicht (Zugänge der Ziele,
 Zweitfaktor-Geheimnisse, Konto-Backups, Archive), und weist jedes Stück mit
-dem neuen nach; *Jetzt weiterarbeiten* treibt es an. Danach merkt sie
+dem neuen nach; *Jetzt weiterarbeiten* treibt es an — und ist ohne
+eingerichteten Auslöser der einzige Weg für Konto-Backups und Archive. Danach merkt sie
 selbst ein Komplett-Backup vor (ohne eingerichteten Auslöser: *Jetzt
 sichern*), und du beantwortest die Rückfrage zum Blatt. Erst wenn alle
 drei stehen, erscheint *Alten Schlüssel entfernen*. Jede BetreiberIn bekommt
-beim Beginn und beim Abschluss eine Mail.
+beim Beginn und beim Abschluss eine Mail. Zum Schluss gehört eine frische
+`config.php` ins Wiederanlaufpaket (12.6).
+
+**Seit Web 21.12.1** beginnt der Nachweis erst **zehn Minuten** nach dem
+Wechsel — so lange kann ein Vorgang, der vorher begann, noch mit dem
+bisherigen Schlüssel versiegeln, und der Nachweis soll ihn sehen. Bis dahin
+zeigt die Karte „Nachweis ab HH:MM". Ein Stück, das sich nicht umhüllen
+lässt, steht mit Grund in der Zeile **„Ließen sich nicht umhüllen"**; es
+liegt noch unter dem bisherigen, die Anlage versucht es immer wieder, und
+der bisherige bleibt, bis es umgehüllt oder fort ist. Ein kaputtes
+Konto-Backup darfst du löschen und neu erzeugen. Steht ein Wechsel von
+Hand in `config.php` — jemand hat den Wert dort eingetragen, ohne diese
+Karte —, behandelt die Anlage ihn wie einen über die Karte: Eintrag im
+Protokoll, Mail an jede BetreiberIn, die Rückfrage zum Blatt. Die Mail sagt
+dann: von Hand eingetragen — oder der Beginn über die Karte ist gescheitert;
+im zweiten Fall steht es im Reiter System.
+
+**„Der Job Schlüsselwechsel arbeitet gerade …"** heißt: Ein anderer Griff an
+die Schlüssel oder ein Häppchen des Jobs hält die Sperre. Meist ist sie nach
+Sekunden frei. Ist ein Häppchen an der Zeitgrenze des Hosters gestorben,
+bleibt sie bis zu einer Stunde stehen — die Meldung nennt, seit wann, und
+wann sie spätestens frei ist. Bis dahin lässt sich an den Schlüsseln nichts
+ändern, auch nicht nachtragen.
 
 **Die Blatt-Regel ist hier umgekehrt: Das bisherige Blatt NICHT
 vernichten.** Beim Anteil öffnet ein altes Blatt nichts mehr. Beim
@@ -5777,9 +5804,10 @@ die Seite. Was ins Archiv geht und was nicht: 11.7.
 Die Karte „Schlüssel des Servers" druckt es mit **„Schlüsselblatt drucken"**.
 Es ist die einzige Seite, die die Werte selbst zeigt, und es passt auf genau
 **eine A4-Seite** (seit Web 21.1.0 auch mit drei Werten während einer
-Rotation — seit Web 21.12.0 ist die dritte Kachel während eines Wechsels
-des Serverschlüssels „Serverschlüssel (bisheriger)" mit dem Satz „Dieses
-Blatt nach dem Wechsel NICHT vernichten"; die beiden Rotationen laufen nur
+Rotation — seit Web 21.12.0 kommt während eines Wechsels des
+Serverschlüssels die Kachel „Serverschlüssel (bisheriger)" dazu, mit dem
+Satz „Dieses Blatt nach dem Wechsel NICHT vernichten": drei Kacheln, zwei
+auf einer Anlage ohne Server-Anteil; die beiden Rotationen laufen nur
 nacheinander, sonst wären es vier Kacheln und zwei Seiten). Oben stehen Bildmarke und Kurzname der Installation, rechts
 Adresse und Druckzeit; auf einer Anlage mit Etikett — etwa *Staging* — steht
 darunter eine rot umrandete Zeile, die auch schwarzweiß sagt, dass das Blatt
@@ -5852,7 +5880,9 @@ Backup-Ziel. Das alles zusammen heisst **Wiederanlaufpaket**, und ohne es
 nützt das beste Backup nichts.
 
 **Seit Web 19.7.0 hat es vier Stücke, nicht drei** — der **Server-Anteil** ist
-dazugekommen (12.5). Die vier:
+dazugekommen (12.5). **Nach einem Wechsel des Serverschlüssels** gehört eine
+frische `config.php` hinein; die alte trägt den bisherigen Schlüssel und wird
+als „bisherig" gekennzeichnet. Die vier:
 
 1. die Datei `config.php` selbst,
 2. der **Serverschlüssel** darin — er öffnet das Komplett-Backup,
@@ -5867,7 +5897,8 @@ Wiederherstellungsschlüssel wieder herein und vergibt dabei ein neues
 Passwort. Lästig für alle, aber kein Datenverlust.
 
 Beide stehen auf dem **Schlüsselblatt** (12.5) — drucken, sobald ein Anteil
-angelegt oder gewechselt wurde, zweimal und an zwei Orten.
+angelegt oder gewechselt wurde oder der Serverschlüssel gewechselt hat,
+zweimal und an zwei Orten.
 
 **Der Schnappschuss ist nicht scharf.** Der Dump entsteht über mehrere Läufe
 hinweg; eine Zeile, die währenddessen entsteht, kann enthalten sein oder
@@ -5907,8 +5938,11 @@ umgehüllt. Die Liste zeigt einen Stand von vorher mit **„bisheriger
 Schlüssel"**, solange der Wechsel läuft — er lässt sich dann weiter
 herunterladen und einspielen —, und danach mit **„anderer Schlüssel"**:
 Öffnen lässt er sich dann nur noch mit dem Wert vom bisherigen Blatt
-(Runbook, `docs/Technik.md` 7). Neue Stände tragen seit Web 21.12.0 die
-Kennung ihres Schlüssels im Kopf.
+(Runbook, `docs/Technik.md` 7); hier herunterladen lässt er sich dann nicht
+mehr, nur löschen. Neue Stände tragen seit Web 21.12.0 die Kennung ihres
+Schlüssels im Kopf. Wechselt der Schlüssel, während ein Stand gerade
+versiegelt wird, fängt die Anlage das Versiegeln mit dem neuen von vorn an
+(seit Web 21.12.1).
 
 **Es wird nichts zurückgenommen.** Scheitert das Einspielen auf halbem Weg,
 steht die Datenbank halb da. Ein neuer Versuch braucht dann eine wieder

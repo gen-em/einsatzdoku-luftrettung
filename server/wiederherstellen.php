@@ -533,6 +533,17 @@ function wh_einspielen(array $stand, callable $zeitLinks): array
          * ohnehin. */
         require_once __DIR__ . '/migration_lib.php';
         migrationen_tor_zuruecksetzen($pdo);
+        /* DER ZUSTAND DES SCHLÜSSELWECHSELS GILT HIER NICHT ALS NACHWEIS
+         * (H-SR-06, F-SR-80). Der Dump bringt `jobs.zustand` mit — samt
+         * „fertig" und Zeitpunkt des Nachweises der Anlage, die ihn schrieb.
+         * Deren Dateien sind nicht die hiesigen; der Nachweis beginnt hier
+         * von vorn. Scheitert das, bleibt das Einspielen trotzdem fertig. */
+        try {
+            require_once __DIR__ . '/schluesselwechsel_lib.php';
+            sw_nach_einspielen($pdo);
+        } catch (Throwable $ex) {
+            system_melden('wiederherstellen', 'Zustand des Schlüsselwechsels nicht zurückgesetzt', $ex);
+        }
         /* DER KLARTEXT WIRD SOFORT GELÖSCHT. Er ist eine vollständige,
          * unverschlüsselte Abschrift jeder Tabelle und hat auf der Platte
          * nichts verloren, sobald er drin ist. */

@@ -180,10 +180,13 @@ $beispiel = [
     'text'       => 'Wartung am Dienstag, 20:00 bis 21:00.',
     // Seit SR-09: der Name eines Passkeys (passkey_angelegt, passkey_entfernt).
     'bezeichnung' => 'Handy',
-    // Seit SR-03: Beginn oder Abschluss eines Wechsels des Serverschluessels
-    // (serverschluessel_gewechselt; `neu` und `alt` sind dort Kennungen —
-    // die Adressen oben rendern genauso).
-    'phase'       => 'beginn',
+    // Seit SR-03: Beginn und Abschluss eines Wechsels des Serverschluessels
+    // (serverschluessel_gewechselt, seit Web 21.12.1 dazu
+    // serverschluessel_abgeschlossen; `neu` und `alt` sind dort Kennungen —
+    // die Adressen oben rendern genauso). `weg` ist kein Pflichtwert: ohne ihn
+    // der Wechsel ueber die Karte, mit 'hand' einer, der von Hand in
+    // config.php stand (E-SR-74) — die Schluesselwechselprobe reiht ihn ein.
+    'weg'         => 'oberflaeche',
 ];
 $fehlend = [];
 foreach ($katalog as $k => $e) {

@@ -14,6 +14,185 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.12.1] — 2026-10-04
+
+Schritt 18, Sicherheitsrunde II, **Halt H-SR-06: die Gegenlesung von SR-03
+behoben**. **Korrektur** — kein Schema, keine Vertragsänderung; nach dem
+Deploy ist nichts zu tun. Eine zweite Lesung des Wechsels (lesender
+Workflow, vier Leser und vier Gegenprüfer, die auch nachgerechnet und im
+Container gemessen haben, E-SR-71) brachte 42 Meldungen: 29 bestätigt, 10
+teilweise, 3 widerlegt; zwei davon hoch. Sie sind in sechs Befunden
+zusammengefasst (F-SR-78 bis -83) — die Befundnummern des Konzepts sind
+zweistellig, und SR-04, SR-08 und SR-06 brauchen auch noch welche. Die
+Behebung hat eine zweite lesende Runde nachgeprüft (acht Agenten, wieder
+mit Rechnungen): Jede Behebung hielt, zwei nur zur Hälfte, und sie fand
+neue Stellen — eine hoch in der Probe, zwei mittel im Job (F-SR-84 bis
+-87). Auch sie sind in dieser Fassung behoben.
+
+### Behoben
+
+- **Zwei Wechsel gleichzeitig konnten einen Schlüssel überschreiben, unter
+  dem schon Zeilen lagen** (hoch, F-SR-78). `serverschluessel_wechseln()`
+  lief ohne Sperre. Zwei gleichzeitig abgeschickte — ein Doppelklick, zwei
+  Fenster, zwei BetreiberInnen — lasen beide die Lage „bereit"; schrieb der
+  zweite seinen neuen Wert über den des ersten, nachdem ein Häppchen schon
+  unter dem ersten umgehüllt hatte, öffnete diese Zeilen danach kein
+  Schlüssel mehr. **Jetzt läuft jeder Griff an einen Schlüssel in
+  `config.php`** — Anlegen, Eintragen, Nachtragen, Wechseln, Entfernen,
+  Neuanfang, für Serverschlüssel und Anteil — **unter der Sperre der
+  Jobzeile `schluesselwechsel`**, demselben bedingten `UPDATE` wie im
+  Jobrahmen. Damit schließen sich die Griffe und jedes Häppchen gegenseitig
+  aus. Keine Sperrdatei, weil sie ein neunter Pfad wäre, den die Kette nicht
+  ausliefern darf. Dazu `server_key` nur noch, wenn dort noch der gesicherte
+  Wert steht, und „steht dort schon ein gültiger Eintrag?" zählt jetzt die
+  Datei, nicht den Stand, den der Prozess beim Start gemerkt hat. Die
+  Schlüsselwechselprobe startet zwei Wechsel aus zwei Prozessen; die
+  Gegenproben zeigen, dass schon jeder der beiden Riegel für sich hält, und
+  ohne beide genau den Schaden aus der Lesung. Beiläufig gemessen: Zwei
+  gleichzeitige Schreiber teilten sich die Nebendatei `config.neu.php`.
+  Ein `server_key_alt` gleich dem heutigen — so bleibt ein Wechsel stehen,
+  der zwischen seinen zwei Schreibschritten abbricht — ist jetzt „bereit",
+  nicht ein Wechsel des Schlüssels mit sich selbst.
+- **Der Rückweg der Schlüsselwechselprobe warf im eigenen Fehlerfall den
+  Schlüssel weg** (hoch, F-SR-83). Wurde der Job B → A nicht fertig — ein
+  Fehler, eine stehengebliebene Jobsperre nach einem Abbruch mitten im
+  Häppchen, ein zweites `--zurueck` —, legte er `config.php` trotzdem auf
+  A zurück und löschte die Stand-Datei, die B als einzige noch kannte. Was
+  noch unter B lag — nach dem ersten Wechsel auch die Zweitfaktoren der
+  Prüfkonten —, war dann ohne Rückweg. Jetzt legt er nichts zurück, solange
+  der Job nicht fertig ist: A und B bleiben in `config.php`, die Datei
+  bleibt, er sagt mit Zahl, was noch unter B liegt, und ein zweites
+  `--zurueck` macht weiter. Gegenprobe: ein Rückweg, der nach einem Lauf
+  aufhört, dann ein zweites `--zurueck` — sauber. Die Stand-Datei entsteht
+  jetzt vom ersten Byte an mit 0600; sie lag bis zum `chmod` einen
+  Augenblick mit 0644 da.
+- **Ein Prozess, der vor dem Wechsel begann, versiegelte danach weiter mit
+  dem bisherigen — und nach „fertig" sah ihn niemand mehr** (F-SR-79).
+  Jeder Prozess hält `config.php` und den Schlüssel in einer `static`; ein
+  CLI-Lauf bis zu 300 s, eine Anfrage bis zur Laufzeitgrenze. Der Nachweis
+  war örtlich nach acht Sekunden durch, und das Entfernen war erlaubt.
+  **Jetzt beginnt der Nachweis frühestens zehn Minuten nach dem Beginn**
+  (E-SR-73), und Bedingung 1 verlangt, dass er so spät begann. Die Karte
+  sagt „Nachweis ab HH:MM". Jedes Häppchen liest `config.php` zuerst neu.
+  **Ein Komplett-Stand, dessen Versiegelung über den Wechsel lief,** trug
+  Blöcke unter beiden Schlüsseln und ließ sich nicht einspielen; jetzt
+  beginnt die Versiegelung neu, sobald die Kennung im Kopf nicht mehr die
+  heutige ist (E-SR-72) — wie der Archivjob. Der Wechsel wartet bewusst
+  nicht auf das Backup: Im Ernstfall zählt jede Minute.
+- **Ein Wechsel ohne Beginn** (F-SR-80). Stand der Wechsel von Hand in
+  `config.php` — der Weg, den das Runbook für das Einspielen eines älteren
+  Stands beschrieb —, legte der Job still einen Zustand an: kein Protokoll
+  „gewechselt", keine Mail, keine fällige Rückfrage, und der Abschluss blieb
+  bis zum nächsten Quartal zu. **Jetzt bekommt er denselben Beginn wie einer
+  über die Karte** (E-SR-74), mit eigenem Betreff in der Mail. Der
+  Runbook-Satz „wieder austragen — der Job findet nichts umzuhüllen" war
+  falsch: Der Dump bringt Zeilen unter dem bisherigen mit, und wer vor dem
+  nächsten Häppchen austrug, machte sie stumm. Abgeschlossen wird jetzt über
+  die Karte. Wirft der Beginn nach dem Schreiben von `config.php`, bleibt der
+  Wechsel, und der Job holt den Beginn nach. Ein Zustand, der zu einem
+  anderen Schlüsselpaar gehört, zählt nicht. Und nach dem Einspielen eines
+  Komplett-Stands beginnt der Nachweis von vorn — der mitgebrachte Zustand
+  gehörte zu den Dateien der Anlage, die den Dump schrieb.
+- **Der Wechsel konnte hängen bleiben** (F-SR-81). Ein Stück, das beim
+  Umhüllen eine Ausnahme warf, brach jedes Häppchen an derselben Stelle ab,
+  ohne Ende und ohne Namen. Jetzt wird es mit Grund genannt (Karte: „Ließen
+  sich nicht umhüllen"), einmal im Reiter System gemeldet, übersprungen und
+  im nächsten Häppchen erneut versucht; es hält Bedingung 1 zu, weil es noch
+  unter dem bisherigen liegt. Ein Konto-Backup, dessen Manifest unter dem
+  bisherigen aufgeht, ein Teil aber mit keinem, nannte das Umhüllen
+  „verloren", der Nachweis „alt" — und der Durchgang begann in jedem
+  Häppchen von vorn. Der Nachweis ist jetzt so scharf wie das Umhüllen. Ein
+  Archiv mit einer dritten Kennung im Namen hieß „verloren", obwohl der
+  bisherige es öffnete; es wird jetzt umgehüllt. Ein neu versiegelter Wert,
+  der den Nachweis nicht besteht, heißt nicht mehr „verloren" — er öffnet
+  mit dem bisherigen. Dazu: Archive werden vor dem Ablegen nachgewiesen,
+  leere `zeilen`/`gekuerzt` bleiben Objekte, und die Stückliste wird je
+  Häppchen einmal gebildet statt je Stück.
+- **Auskünfte, die nicht stimmten** (F-SR-82). Die Abschluss-Mail setzte eine
+  noch offene Beginn-Mail auf „überholt" — gerade die mit „Warst du das
+  nicht"; Beginn und Abschluss haben jetzt je eine Vorlage. Statuszeile und
+  Karte sagten in der Lage „Wechsel" ohne Zustand „alles umgehüllt". Ein
+  Komplett-Stand unter einem dritten Schlüssel ließ sich „herunterladen" —
+  der Browser bekam eine leere Datei, das Protokoll sagte „heruntergeladen";
+  jetzt weist der Download vorher ab, und die Liste bietet ihn nicht an.
+  Der Reiter Archiv verwies während eines Wechsels auf „den Schlüssel von
+  damals". Die Karte sagte „Der Job arbeitet in Häppchen weiter", auch wo
+  ohne Auslöser keine Datei je vorankommt. Das Runbook nannte nicht, dass
+  das Wiederanlaufpaket nach einem Wechsel eine frische `config.php`
+  braucht; jetzt Schritt 7, Handbuch und Abschluss-Mail. „Jetzt
+  weiterarbeiten" leitet auch nach einem Fehlschlag um. Auch der Neuanfang
+  des Anteils macht das Blatt fällig. `edbak_begleit_lesen()` liest ohne
+  gültige Kennung nichts.
+- **Nachprüfung: Die Probe merkte sich A als B** (hoch, F-SR-84). Kam beim
+  Wettlauf der zwei Wechsel keiner durch — etwa weil eine stehengebliebene
+  Jobsperre beide abwies —, schrieb die Probe den unveränderten
+  Serverschlüssel als B in ihre Stand-Datei. Der Rückweg stellte dann A und
+  A ein, die Lage hieß „bereit", der Job tat nichts, und jedes `--zurueck`
+  endete mit „nicht fertig". Wechselte der Hauptlauf danach selbst, stand
+  sein Schlüssel nirgends sonst — dieselbe Klasse wie der Rückweg, der B
+  wegwarf. Jetzt gilt nur ein Wert als B, der nicht A ist. Kommt keiner
+  durch, hält die Probe an, und der Rückweg legt byte-gleich zurück
+  (gemessen). Die Kinder starten mit `PHP_BINARY` statt mit `php` aus dem
+  Suchpfad. Eine stehende Sperre des Jobs ist eine Vorbedingung, und ein
+  liegengebliebener Rückweg wird vor der Lage genannt, die er hinterlässt.
+  `--zurueck` hält die Jobs an und löst nur eine alte Sperre.
+- **Nachprüfung: Zwei Stellen, an denen der Job kreiste** (mittel,
+  F-SR-85). Ein Archiv, dessen Teil sich nicht in den Arbeitsordner
+  schreiben ließ (volle Platte), hieß „mit keinem der beiden zu öffnen".
+  Der Nachweis sagte „alt", und der Durchgang begann in jedem Häppchen von
+  vorn — dasselbe Muster wie beim Paket mit kaputtem Teil, nur mit anderem
+  Auslöser. Jetzt wirft es wie das Konto-Backup und steht mit Grund in der
+  Fehlerliste. Und ein Nachweis-Durchgang, der kein Stück fand — eine Anlage
+  ohne Ziel, Zweitfaktor, Konto-Backup und Archiv —, setzte seinen Beginn
+  nie: Bedingung 1 ging nicht auf, und jedes Häppchen schrieb erneut
+  „umgehüllt" ins Protokoll. Jetzt beginnt der Nachweis beim Eintritt. Dazu
+  aus derselben Runde: Nach dem Beginn eines Handeintrags endet das
+  Häppchen, denn eine Ausnahme danach hätte einen zweiten Beginn mit zweiter
+  Mail ausgelöst. Eine Lage „abweichend" mitten im Wechsel leert den Zustand
+  nicht mehr. Über der Decke von 20 zählt die Fehlerliste weiter, und der
+  Reiter System bekommt dann eine Zeile je Häppchen statt vier je Stück.
+  „Mit keinem der beiden" gilt je Durchgang und nach dem Einspielen von
+  vorn. Ein Inventar, das beim Beginn wirft, hält ihn nicht mehr auf.
+- **Nachprüfung: Griffe, Lage, Auskünfte** (F-SR-86, F-SR-87). Die Waise
+  beim Anteil (`kdf_anteil_alt` = `kdf_anteil`) heißt jetzt wie beim
+  Serverschlüssel „bereit" und sperrt dessen Wechsel nicht mehr; das Blatt
+  druckt keine Waise als „bisherigen". Die Rücknahme eines halben Griffs
+  räumt den gesicherten Eintrag nur noch weg, wenn die Datei noch den
+  eigenen halben Zustand trägt. Hatte jemand an der Sperre vorbei
+  geschrieben, war er der einzige, der das Alte noch öffnet. Eine stehende
+  Sperre sagt, seit wann und bis wann höchstens. Der nachgeholte Beginn
+  sagt ehrlich „von Hand eingetragen — oder der Beginn über die Karte ist
+  gescheitert", statt einen Handeintrag zu behaupten. Die Mail dazu trägt
+  der Mailjob hinaus, nicht die Anfrage einer beliebigen angemeldeten
+  Person. „Jetzt weiterarbeiten" hängt an denselben Größen wie die Zeile
+  darüber. Die Kleinzeilen der Karte und der Liste der Komplett-Stände sind
+  wieder ein Satz (`docs/Design.md`). `komp_kopf_angleichen()` nimmt die
+  Kennung aus dem Schlüssel, mit dem es siegelt, nicht aus `konfig()`.
+  Die Anteilprobe misst jetzt auch den Neuanfang; bis dahin wäre ein
+  Rückbau der fälligen Rückfrage dort grün geblieben.
+
+### Was bewusst bleibt
+
+- Die Nachzügler-Frist kostet zehn Minuten bis Bedingung 1. Sie ist so
+  bemessen, dass sie länger ist als jeder Prozess, der vor dem Wechsel
+  begonnen haben kann; die Probe kürzt sie, weil sie die Jobs anhält.
+- Was auf einem Backup-Ziel liegt, bleibt unter dem bisherigen (E-SR-10);
+  Komplett-Stände werden weiterhin nicht umgehüllt (E-SR-21).
+- Der Fehlertext jedes Jobs trägt den Klassennamen der Ausnahme — für alle
+  Jobs, nicht nur diesen: Nr. 357. Dazu gehört auch der Grund in der Zeile
+  „Ließen sich nicht umhüllen": Er ist der Ausnahmetext.
+- Eine Sperre, die ein an der Zeit- oder Speichergrenze gestorbenes Häppchen
+  hinterlässt, verfällt erst nach einer Stunde. Bis dahin weist jeder Griff an
+  die Schlüssel ab. Die Zeile teilen sich Job und Griffe; eine kürzere Frist
+  nur für die Griffe gäbe es nur mit einer zweiten Sperre. Die Meldung nennt
+  jetzt die Uhrzeit.
+- Scheitert beim Beginn über die Karte auch das Schreiben des Zustands (die
+  Datenbank ist weg), holt der Job den Beginn als Handeintrag nach. Protokoll
+  und Mail nennen dann beide Möglichkeiten.
+- Die Stand-Datei der Probe liegt im Temp-Verzeichnis, mit 0600 vom ersten
+  Byte an. Ein eigener Ordner wäre sicherer gegen ein Aufräumen von `/tmp`,
+  hätte aber eine Stelle mehr zum Vergessen.
+
 ## [Web 21.12.0] — 2026-09-29
 
 Schritt 18, Sicherheitsrunde II, Paket SR-03, **der Serverschlüssel

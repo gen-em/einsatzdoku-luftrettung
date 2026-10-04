@@ -353,31 +353,53 @@ function mail_katalog(): array
          * den Wechsel nicht ausgeloest hat, erfaehrt so, dass an den
          * Sicherungen der Anlage etwas geschehen ist — und die Regel zum
          * bisherigen Blatt (E-SR-10) steht dort, wo sie gelesen wird, bevor
-         * jemand Papier vernichtet. */
+         * jemand Papier vernichtet.
+         *
+         * ZWEI SCHLUESSEL SEIT WEB 21.12.1 (H-SR-06, F-SR-82): Eine offene
+         * Mail desselben Schluessels an dieselbe Adresse gilt beim
+         * Einreihen als ueberholt. Mit einem gemeinsamen verschwand eine
+         * Beginn-Mail, die noch auf ihren naechsten Versuch wartete, mit dem
+         * Abschluss — gerade die mit „Warst du das nicht". `weg` sagt, ob
+         * der Wechsel ueber die Karte kam oder von Hand in config.php stand
+         * (E-SR-74). */
         'serverschluessel_gewechselt' => [
-            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['phase', 'neu', 'alt', 'link'],
-            'betreff' => fn(array $d): string => ($d['phase'] === 'abschluss'
-                ? 'Serverschlüssel-Wechsel abgeschlossen — ' : 'Serverschlüssel gewechselt — ') . $n,
-            'text' => fn(array $d): string => $d['phase'] === 'abschluss'
-                ? mail_rahmen('Hallo,',
-                    "der Wechsel des Serverschlüssels der " . $n . " ist abgeschlossen: Der\n"
-                    . "bisherige (Kennung " . $d['alt'] . ") steht nicht mehr in der Konfiguration, alles\n"
-                    . "auf dem Server liegt unter dem neuen (Kennung " . $d['neu'] . ").\n\n"
-                    . "Was auf dem Backup-Ziel liegt, öffnet weiterhin nur der bisherige. Das\n"
-                    . "bisherige Schlüsselblatt bleibt deshalb in der Betriebsakte — als „bisheriger\n"
-                    . "Serverschlüssel, Kennung " . $d['alt'] . "“ —, bis das Ziel nichts mehr unter\n"
-                    . "ihm trägt.\n\n"
-                    . $d['link'])
-                : mail_rahmen('Hallo,',
-                    "der Serverschlüssel der " . $n . " ist gewechselt worden: neu Kennung\n"
-                    . $d['neu'] . ", bisher " . $d['alt'] . ". Die Anlage hüllt jetzt in Häppchen um, was sie\n"
-                    . "erreicht, und weist jedes Stück mit dem neuen nach.\n\n"
-                    . "Was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen. Das bisherige\n"
-                    . "Schlüsselblatt NICHT vernichten, sondern als „bisheriger Serverschlüssel,\n"
-                    . "Kennung " . $d['alt'] . "“ in der Betriebsakte behalten. Das Blatt gehört neu\n"
-                    . "gedruckt; die Rückfrage dazu kommt bei der nächsten Anmeldung.\n\n"
-                    . $d['link'],
-                    "Warst du das nicht, sieh bitte sofort unter Betrieb → Servereinstellungen nach."),
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['neu', 'alt', 'link'],
+            'betreff' => fn(array $d): string => (($d['weg'] ?? 'oberflaeche') === 'hand'
+                ? 'Serverschlüssel-Wechsel in config.php vorgefunden — '
+                : 'Serverschlüssel gewechselt — ') . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                (($d['weg'] ?? 'oberflaeche') === 'hand'
+                    ? "in der Konfiguration der " . $n . " steht ein Wechsel des Serverschlüssels,\n"
+                      . "dessen Beginn nicht über die Karte vermerkt ist: neu Kennung " . $d['neu'] . ",\n"
+                      . "bisher " . $d['alt'] . ". Entweder hat ihn jemand von Hand in config.php\n"
+                      . "eingetragen, oder der Beginn über die Karte ist gescheitert — dann steht es\n"
+                      . "im Reiter System.\n"
+                    : "der Serverschlüssel der " . $n . " ist gewechselt worden: neu Kennung\n"
+                      . $d['neu'] . ", bisher " . $d['alt'] . ".\n")
+                . "Die Anlage hüllt jetzt in Häppchen um, was sie erreicht, und weist jedes\n"
+                . "Stück mit dem neuen nach.\n\n"
+                . "Was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen. Das bisherige\n"
+                . "Schlüsselblatt NICHT vernichten, sondern als „bisheriger Serverschlüssel,\n"
+                . "Kennung " . $d['alt'] . "“ in der Betriebsakte behalten. Das Blatt gehört neu\n"
+                . "gedruckt; die Rückfrage dazu kommt bei der nächsten Anmeldung.\n\n"
+                . $d['link'],
+                "Warst du das nicht, sieh bitte sofort unter Betrieb → Servereinstellungen nach."),
+        ],
+        'serverschluessel_abgeschlossen' => [
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['neu', 'alt', 'link'],
+            'betreff' => fn(array $d): string => 'Serverschlüssel-Wechsel abgeschlossen — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "der Wechsel des Serverschlüssels der " . $n . " ist abgeschlossen: Der\n"
+                . "bisherige (Kennung " . $d['alt'] . ") steht nicht mehr in der Konfiguration, alles\n"
+                . "auf dem Server liegt unter dem neuen (Kennung " . $d['neu'] . ").\n\n"
+                . "Was auf dem Backup-Ziel liegt, öffnet weiterhin nur der bisherige. Das\n"
+                . "bisherige Schlüsselblatt bleibt deshalb in der Betriebsakte — als „bisheriger\n"
+                . "Serverschlüssel, Kennung " . $d['alt'] . "“ —, bis das Ziel nichts mehr unter\n"
+                . "ihm trägt.\n\n"
+                . "Das Wiederanlaufpaket gehört erneuert: Die config.php darin trägt noch den\n"
+                . "bisherigen Schlüssel. Eine frische hineinlegen und die alte als „bisherig“\n"
+                . "kennzeichnen.\n\n"
+                . $d['link']),
         ],
         'backup_faellig' => [
             'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['kern'],

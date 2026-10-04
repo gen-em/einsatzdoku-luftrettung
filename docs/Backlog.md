@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 356 | 27.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 357 | 27.09.2026 |
 | ab 360 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 28.09.2026 |
 
 ---
@@ -1224,3 +1224,22 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      beide Formulare ebenso in `.listen-form`. *Abnahme:* Bild der Karte in
      der Lage *abweichend* (Bilderlauf oder Bedienweg mit verstellter
      Marke), 390 und 1280 px.
+
+<!-- -->
+
+357. **Der Fehlertext eines Jobs trägt den Klassennamen der Ausnahme.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 04.10.2026
+     *Aufgenommen 04.10.2026 mit H-SR-06 (Konzept SR, F-SR-82; Nebenbefund
+     der Gegenlesung zu O-7).* `jobs_einen_lauf()` schreibt
+     `get_class($ex) . ': ' . $ex->getMessage()` nach `letzter_fehler` und in
+     den Bericht; „Jetzt weiterarbeiten" (Karte „Schlüssel des Servers") und
+     die Karte „Jobs" zeigen ihn so der BetreiberIn —
+     „RuntimeException: …" ist Technik, keine Auskunft. Betrifft alle Jobs,
+     nicht nur den Schlüsselwechsel; deshalb nicht in H-SR-06 geändert. Im
+     Reiter System steht die Klasse ohnehin in den Daten (`klasse`). *Weg:*
+     im Bericht und in `letzter_fehler` nur die Meldung, die Klasse bleibt
+     im Reiter System. *Abnahme:* ein Job, der wirft (Probe mit
+     verfälschtem Häppchen) — die Karte zeigt die Meldung ohne Klasse, der
+     Reiter System die Klasse. *Dazu (Nachprüfung H-SR-06, F-SR-87):* der
+     Grund in der Zeile „Ließen sich nicht umhüllen" ist ebenfalls der rohe
+     Ausnahmetext; eine PDOException trüge den Datenbanknamen, ein
+     TypeError Pfade. Dieselbe Kürzung an derselben Stelle.

@@ -523,6 +523,11 @@ function anteil_zustand(bool $frisch = false): array
     $kennung    = schluessel_kennung((string)konfig('kdf_anteil', ''));
     $kennungAlt = schluessel_kennung((string)konfig('kdf_anteil_alt', ''));
     $erwartet   = schluessel_marke_lesen('kdf_anteil_kennung');
+    /* Derselbe Wert zweimal ist keine Rotation, sondern eine Waise — wie beim
+     * Serverschlüssel (F-SR-78; beim Anteil nachgezogen mit der Nachprüfung
+     * von H-SR-06, F-SR-86). Sonst sperrte sie den Wechsel des
+     * Serverschlüssels, bis jemand „alten Anteil entfernen" drückt. */
+    if ($kennungAlt !== null && $kennungAlt === $kennung) { $kennungAlt = null; }
 
     if ($kennung === null) {
         /* Kein Wert. Ohne Marke ist das „noch nicht eingerichtet", MIT Marke
@@ -701,6 +706,132 @@ function config_gemerktes_verwerfen(): void
     serverschluessel_zustand(true);
 }
 
+/** Die Jobzeile, deren Sperre jeden Griff an einen Schlüssel in `config.php`
+ *  schützt — dieselbe wie `SW_JOB` in `schluesselwechsel_lib.php`. */
+const SCHLUESSEL_SPERRE_JOB = 'schluesselwechsel';
+
+/** So lange wartet ein Griff auf die Sperre, bevor er ablehnt. Ein Häppchen
+ *  am Huckepack-Weg dauert drei Sekunden; „Jetzt weiterarbeiten" zwanzig. */
+const SCHLUESSEL_SPERRE_WARTEN_S = 5.0;
+
+/**
+ * Eine Arbeit an den Schlüsseln in `config.php` UNTER DER SPERRE DES JOBS
+ * `schluesselwechsel` (H-SR-06, F-SR-78).
+ *
+ * WARUM. Bis Web 21.12.0 lief `serverschluessel_wechseln()` ohne Sperre, und
+ * die Gegenlesung hat den Schaden ausgerechnet (K-1): Zwei Wechsel, die
+ * gleichzeitig abgeschickt werden — ein Doppelklick, zwei Fenster, zwei
+ * BetreiberInnen —, lesen beide die Lage `bereit` und schreiben beide. Je
+ * nach Verschränkung überschreibt der zweite den frisch gewürfelten
+ * Schlüssel des ersten, nachdem ein Häppchen schon Zeilen unter ihm
+ * umgehüllt hat; diese Zeilen öffnet danach kein Schlüssel mehr. Und ein
+ * Häppchen des Jobs, das neben dem Wechsel lief, schrieb an seinem Ende
+ * seinen eigenen, alten Zustand über den, den `sw_beginnen()` gerade
+ * angelegt hatte.
+ *
+ * Und zwei gleichzeitige Schreiber teilen sich die Nebendatei
+ * `config.neu.php` (`config_eintrag_schreiben()`): Der zweite überschreibt
+ * die des ersten, und im ungünstigen Fall wird SEIN Inhalt unter dem Namen
+ * des ersten an ihren Platz geschoben. Gemessen in der Gegenprobe zu
+ * F-SR-78 — dort scheiterte der zweite am Umbenennen.
+ *
+ * WARUM DIE JOBZEILE UND KEINE DATEI. Die Sperre ist dasselbe bedingte
+ * `UPDATE … laeuft_seit` wie in `jobs_einen_lauf()` — damit schließen sich
+ * JEDER Griff an einen Schlüssel (Anlegen, Eintragen, Nachtragen, Wechseln,
+ * Entfernen, Neuanfang, für Serverschlüssel und Anteil) UND jedes Häppchen
+ * des Jobs gegenseitig aus, ohne eine zweite Mechanik. Eine Sperrdatei läge im
+ * Webverzeichnis oder unter `sicherungen/` und wäre ein neunter Pfad, den die
+ * Kette nicht ausliefern darf (CLAUDE.md 3: acht, und die Zahl ist der
+ * Prüfwert). `letzter_ausloeser` bleibt unberührt: Die Karte „Jobs" soll
+ * nicht behaupten, der Job sei gelaufen.
+ *
+ * NACH DEM NEHMEN WIRD config.php NEU GELESEN. Die Prüfungen der Arbeit
+ * sollen gegen die Datei laufen, wie sie JETZT ist — nicht gegen den Stand,
+ * den dieser Prozess beim Start gemerkt hat.
+ *
+ * @param callable(): array{0:bool, 1:string} $arbeit
+ * @return array{0:bool, 1:string}
+ */
+function schluessel_unter_sperre(callable $arbeit): array
+{
+    $pdo = db();
+    $pdo->prepare('INSERT IGNORE INTO jobs (job) VALUES (?)')->execute([SCHLUESSEL_SPERRE_JOB]);
+    $verfall = defined('JOB_SPERRE_VERFALL_S') ? (int)constant('JOB_SPERRE_VERFALL_S') : 3600;
+    $ende = microtime(true) + SCHLUESSEL_SPERRE_WARTEN_S;
+    while (true) {
+        $st = $pdo->prepare('UPDATE jobs SET laeuft_seit = UTC_TIMESTAMP()
+                              WHERE job = ?
+                                AND (laeuft_seit IS NULL
+                                     OR laeuft_seit < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? SECOND))');
+        $st->execute([SCHLUESSEL_SPERRE_JOB, $verfall]);
+        if ($st->rowCount() === 1) { break; }
+        if (microtime(true) >= $ende) {
+            /* SEIT WANN, UND WIE LANGE HÖCHSTENS (Nachprüfung H-SR-06,
+             * F-SR-86). Stirbt ein Häppchen an der Zeit- oder Speichergrenze,
+             * läuft kein `finally`, und die Sperre steht, bis sie verfällt —
+             * „gleich noch einmal" allein ließe dann eine Stunde lang raten. */
+            $seit = $pdo->prepare('SELECT laeuft_seit FROM jobs WHERE job = ?');
+            $seit->execute([SCHLUESSEL_SPERRE_JOB]);
+            $seitWert = $seit->fetchColumn();
+            $seitText = is_string($seitWert) && $seitWert !== ''
+                ? ' (seit ' . fmt_local($seitWert) . ' Uhr; bricht ein Lauf ab, ohne sie zu lösen, '
+                  . 'ist die Sperre spätestens ' . fmt_local(gmdate('Y-m-d H:i:s',
+                      (int)strtotime($seitWert . ' UTC') + $verfall)) . ' Uhr frei)'
+                : '';
+            return [false, 'Der Job „Schlüsselwechsel" arbeitet gerade, oder ein anderer '
+                         . 'Griff an den Schlüsseln läuft' . $seitText . '. Bitte gleich noch '
+                         . 'einmal — es wurde nichts geändert.'];
+        }
+        /* Warten auf die Datenbank, nicht auf eine Uhr — die eine Stelle
+         * dafür ist `gedraengel_abstand()` (Registerzeile Z33). */
+        require_once __DIR__ . '/wartung_lib.php';
+        gedraengel_abstand();
+    }
+    try {
+        config_gemerktes_verwerfen();
+        return $arbeit();
+    } finally {
+        $pdo->prepare('UPDATE jobs SET laeuft_seit = NULL WHERE job = ?')
+            ->execute([SCHLUESSEL_SPERRE_JOB]);
+    }
+}
+
+/**
+ * Den ersten von zwei Schritten zurücknehmen — aber nur, wenn die Datei noch
+ * den EIGENEN halben Zustand trägt: `$schluessel` steht noch auf `$altHex`
+ * (Nachprüfung H-SR-06, F-SR-86). Scheiterte der zweite Schritt, weil dort
+ * inzwischen ein anderer Wert steht, hat jemand an der Sperre vorbei
+ * geschrieben (FTP, Editor) — etwa denselben Wechsel von Hand. Dann gehört der
+ * gesicherte bisherige gerade NICHT weg; ohne ihn öffnete nichts mehr, was
+ * unter ihm liegt. Gibt die Meldung für die Oberfläche zurück.
+ */
+function config_halbes_zuruecknehmen(string $schluessel, string $altSchluessel,
+                                     string $altHex, string $meldung): string
+{
+    $inhalt = (string)@file_get_contents(__DIR__ . '/config.php');
+    if (config_eintrag_in_datei($inhalt, $schluessel) === $altHex) {
+        config_eintrag_schreiben($altSchluessel, null);
+        return $meldung;
+    }
+    system_melden('schluesselwechsel', 'config.php wurde während eines Schlüsselgriffs von außen '
+        . 'geändert', $schluessel . ' trägt nicht mehr den gesicherten Wert; '
+        . $altSchluessel . ' bleibt stehen.');
+    return 'In config.php steht für ' . $schluessel . ' inzwischen ein anderer Wert — jemand hat '
+         . 'dazwischen geschrieben. Der bisherige Wert bleibt als ' . $altSchluessel . ' stehen, '
+         . 'damit sich weiter öffnen lässt, was unter ihm liegt. Bitte config.php ansehen.';
+}
+
+/** Der Wert eines Eintrags, wie er in der DATEI steht (nicht im Gemerkten). */
+function config_eintrag_in_datei(string $inhalt, string $schluessel): ?string
+{
+    $m = [];
+    if (preg_match('/^[ \t]*([\'"])' . preg_quote($schluessel, '/')
+                   . '\1\s*=>\s*([\'"])([0-9a-fA-F]{64})\2/m', $inhalt, $m) !== 1) {
+        return null;
+    }
+    return strtolower($m[3]);
+}
+
 /**
  * Einen Hexwert in `config.php` eintragen — wenn die Datei beschreibbar ist.
  *
@@ -744,9 +875,19 @@ function config_gemerktes_verwerfen(): void
  *   2. Die Nebendatei wird VOR dem Umbenennen eingelesen und geprüft: Sie
  *      muss ein Feld ergeben, das JEDEN anderen Abschnitt unverändert enthält
  *      und den neuen Wert dazu. Erst dann ersetzt sie das Original.
+ *
+ * BEDINGTES ERSETZEN (seit Web 21.12.1, H-SR-06, F-SR-78). `$erwartet` ist
+ * der Wert, der beim Ersetzen noch in der DATEI stehen muss — gelesen aus
+ * dem Text, den diese Funktion gleich umschreibt, nicht aus dem, was der
+ * Prozess beim Start gemerkt hat. Steht dort inzwischen ein anderer, hat
+ * jemand dazwischen geschrieben, und die Funktion lehnt ab, statt dessen
+ * Wert zu überschreiben. Ebenso zählt für „steht dort ein gültiger Wert?"
+ * jetzt auch die Datei: Ein Prozess, der `config.php` vor dem Schreiben
+ * eines anderen gemerkt hatte, hielt den Eintrag sonst für leer.
  */
 function config_eintrag_schreiben(string $schluessel, ?string $hex,
-                                  bool $ersetzen = false): array
+                                  bool $ersetzen = false,
+                                  ?string $erwartet = null): array
 {
     if (!in_array($schluessel, CONFIG_SCHREIBBAR, true)) {
         return [false, 'Dieser Eintrag darf nicht geschrieben werden.'];
@@ -774,8 +915,14 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
     $zeilenMuster = '/^[ \t]*([\'"])' . preg_quote($schluessel, '/')
                   . '\1\s*=>.*\R?/m';
     $vorhanden = preg_match($zeilenMuster, $inhalt) === 1;
-    $gueltig   = preg_match('/^[0-9a-fA-F]{64}$/',
-                            (string)konfig($schluessel, '')) === 1;
+    $inDatei   = config_eintrag_in_datei($inhalt, $schluessel);
+    $gueltig   = $inDatei !== null
+              || preg_match('/^[0-9a-fA-F]{64}$/', (string)konfig($schluessel, '')) === 1;
+    if ($erwartet !== null && $inDatei !== strtolower($erwartet)) {
+        return [false, 'In config.php steht für ' . $schluessel . ' inzwischen ein anderer '
+            . 'Wert als beim Beginn dieses Schritts — jemand hat dazwischen geschrieben. '
+            . 'Es wurde nichts geändert.'];
+    }
 
     if ($hex === null && !$vorhanden) {
         return [true, ''];                      // schon fort — nichts zu tun
@@ -913,16 +1060,20 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
  */
 function anteil_anlegen(): array
 {
-    if (kdf_anteil() !== null) {
-        return [false, 'Es steht bereits ein Server-Anteil in config.php.'];
-    }
-    [$ok, $was] = config_eintrag_schreiben('kdf_anteil', kdf_anteil_neu());
-    if (!$ok) { return [false, $was]; }
-    /* Die Marke setzt `anteil_zustand()` beim ersten Lesen nach (E-S10-U-02) —
-     * hier wird sie nur ausgelöst, damit die Karte gleich den Endzustand
-     * zeigt und nicht erst nach dem nächsten Aufruf. */
-    anteil_zustand(true);
-    return [true, (string)schluessel_kennung($was)];
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
+     * (H-SR-06, F-SR-78). */
+    return schluessel_unter_sperre(static function (): array {
+        if (kdf_anteil() !== null) {
+            return [false, 'Es steht bereits ein Server-Anteil in config.php.'];
+        }
+        [$ok, $was] = config_eintrag_schreiben('kdf_anteil', kdf_anteil_neu());
+        if (!$ok) { return [false, $was]; }
+        /* Die Marke setzt `anteil_zustand()` beim ersten Lesen nach (E-S10-U-02) —
+         * hier wird sie nur ausgelöst, damit die Karte gleich den Endzustand
+         * zeigt und nicht erst nach dem nächsten Aufruf. */
+        anteil_zustand(true);
+        return [true, (string)schluessel_kennung($was)];
+    });
 }
 
 /**
@@ -940,45 +1091,55 @@ function anteil_anlegen(): array
  */
 function anteil_wechseln(): array
 {
-    $jetzt = kdf_anteil();
-    if ($jetzt === null) {
-        return [false, 'Es steht kein Server-Anteil in config.php, der zu '
-                     . 'wechseln wäre.'];
-    }
-    if (kdf_anteil_alt() !== null) {
-        return [false, 'Es läuft bereits eine Rotation. Erst den alten Anteil '
-                     . 'entfernen, wenn kein Konto mehr auf ihm steht.'];
-    }
-    /* NICHT NEBEN EINEM WECHSEL DES SERVERSCHLÜSSELS (E-SR-60). Das Blatt
-     * trüge sonst vier Kacheln und zwei Seiten; es passt mit drei gerade auf
-     * eine (gemessen P5c/AP9: 1013 von 1017 px). Der Riegel steht hier und
-     * in `serverschluessel_wechseln()`, nicht nur am Knopf. */
-    if (serverschluessel_zustand()['stand'] === 'rotation') {
-        return [false, 'Es läuft gerade ein Wechsel des Serverschlüssels. Erst '
-                     . 'wenn er abgeschlossen ist, lässt sich der Server-Anteil '
-                     . 'wechseln. Es wurde nichts geändert.'];
-    }
-    $altHex = strtolower((string)konfig('kdf_anteil', ''));
+    /* Unter derselben Sperre wie der Wechsel des Serverschlüssels: Der Riegel
+     * E-SR-60 gilt in beide Richtungen, und zwei Rotationen, die einander
+     * gleichzeitig die Lage `bereit` ablesen, ließe er sonst beide durch
+     * (H-SR-06, F-SR-78). */
+    return schluessel_unter_sperre(static function (): array {
+        $jetzt = kdf_anteil();
+        if ($jetzt === null) {
+            return [false, 'Es steht kein Server-Anteil in config.php, der zu '
+                         . 'wechseln wäre.'];
+        }
+        $altHex = strtolower((string)konfig('kdf_anteil', ''));
+        /* Eine Waise (`kdf_anteil_alt` = `kdf_anteil`, eine Rotation, die
+         * zwischen den beiden Schritten abbrach) ist keine laufende Rotation
+         * und wird überschrieben — mit demselben Wert (Nachprüfung H-SR-06,
+         * F-SR-86, wie F-SR-78 beim Serverschlüssel). */
+        $waise = strtolower((string)konfig('kdf_anteil_alt', '')) === $altHex;
+        if (kdf_anteil_alt() !== null && !$waise) {
+            return [false, 'Es läuft bereits eine Rotation. Erst den alten Anteil '
+                         . 'entfernen, wenn kein Konto mehr auf ihm steht.'];
+        }
+        /* NICHT NEBEN EINEM WECHSEL DES SERVERSCHLÜSSELS (E-SR-60). Das Blatt
+         * trüge sonst vier Kacheln und zwei Seiten; es passt mit drei gerade auf
+         * eine (gemessen P5c/AP9: 1013 von 1017 px). Der Riegel steht hier und
+         * in `serverschluessel_wechseln()`, nicht nur am Knopf. */
+        if (serverschluessel_zustand()['stand'] === 'rotation') {
+            return [false, 'Es läuft gerade ein Wechsel des Serverschlüssels. Erst '
+                         . 'wenn er abgeschlossen ist, lässt sich der Server-Anteil '
+                         . 'wechseln. Es wurde nichts geändert.'];
+        }
+        [$ok, $was] = config_eintrag_schreiben('kdf_anteil_alt', $altHex, $waise);
+        if (!$ok) { return [false, $was]; }
 
-    [$ok, $was] = config_eintrag_schreiben('kdf_anteil_alt', $altHex);
-    if (!$ok) { return [false, $was]; }
-
-    [$ok2, $was2] = config_eintrag_schreiben('kdf_anteil', kdf_anteil_neu(), true);
-    if (!$ok2) {
-        /* Zurücknehmen, damit kein halber Zustand stehen bleibt: ein
-         * `kdf_anteil_alt` neben einem unveränderten `kdf_anteil` wäre eine
-         * Rotation, die nie stattgefunden hat — und die Statuszeile zählte ab
-         * sofort gegen eine Kennung, die niemand trägt. */
-        config_eintrag_schreiben('kdf_anteil_alt', null);
-        return [false, $was2];
-    }
-    anteil_zustand(true);     // schreibt die Marke auf die neue Kennung
-    /* DAS BLATT GEHÖRT NEU GEDRUCKT (Nr. 233, E-SR-11) — die Rückfrage kommt
-     * bei der nächsten Anmeldung jeder BetreiberIn, nicht erst im nächsten
-     * Quartal. Bis Web 21.12.0 fasste die Rotation die Marke nicht an. */
-    require_once __DIR__ . '/einstieg_lib.php';
-    blatt_neu_faellig('anteil');
-    return [true, (string)schluessel_kennung($was2)];
+        [$ok2, $was2] = config_eintrag_schreiben('kdf_anteil', kdf_anteil_neu(), true,
+                                                 $altHex);
+        if (!$ok2) {
+            /* Zurücknehmen, damit kein halber Zustand stehen bleibt: ein
+             * `kdf_anteil_alt` neben einem unveränderten `kdf_anteil` wäre eine
+             * Rotation, die nie stattgefunden hat — und die Statuszeile zählte ab
+             * sofort gegen eine Kennung, die niemand trägt. */
+            return [false, config_halbes_zuruecknehmen('kdf_anteil', 'kdf_anteil_alt', $altHex, $was2)];
+        }
+        anteil_zustand(true);     // schreibt die Marke auf die neue Kennung
+        /* DAS BLATT GEHÖRT NEU GEDRUCKT (Nr. 233, E-SR-11) — die Rückfrage kommt
+         * bei der nächsten Anmeldung jeder BetreiberIn, nicht erst im nächsten
+         * Quartal. Bis Web 21.12.0 fasste die Rotation die Marke nicht an. */
+        require_once __DIR__ . '/einstieg_lib.php';
+        blatt_neu_faellig('anteil');
+        return [true, (string)schluessel_kennung($was2)];
+    });
 }
 
 /**
@@ -991,16 +1152,18 @@ function anteil_wechseln(): array
  */
 function anteil_alt_entfernen(): array
 {
-    if (kdf_anteil_alt() === null) {
-        return [false, 'Es steht kein alter Server-Anteil in config.php.'];
-    }
-    $z = anteil_zaehlung();
-    if ($z['alt'] > 0) {
-        return [false, $z['alt'] . ' Konto/Konten tragen noch eine Hülle auf dem '
-                     . 'alten Anteil. Würde er jetzt entfernt, kämen sie nicht '
-                     . 'mehr an ihre geschützten Angaben. Es wurde nichts geändert.'];
-    }
-    return config_eintrag_schreiben('kdf_anteil_alt', null);
+    return schluessel_unter_sperre(static function (): array {
+        if (kdf_anteil_alt() === null) {
+            return [false, 'Es steht kein alter Server-Anteil in config.php.'];
+        }
+        $z = anteil_zaehlung();
+        if ($z['alt'] > 0) {
+            return [false, $z['alt'] . ' Konto/Konten tragen noch eine Hülle auf dem '
+                         . 'alten Anteil. Würde er jetzt entfernt, kämen sie nicht '
+                         . 'mehr an ihre geschützten Angaben. Es wurde nichts geändert.'];
+        }
+        return config_eintrag_schreiben('kdf_anteil_alt', null);
+    });
 }
 
 /**
@@ -1022,34 +1185,43 @@ function anteil_alt_entfernen(): array
  */
 function anteil_neuanfang(): array
 {
-    /* NUR AUS DER LAGE „abweichend" HERAUS. Der Knopf steht auch nur dort —
-     * aber ein Knopf, der bloss verborgen ist, wird trotzdem gedrückt: über
-     * die Zurück-Taste, ein zweites Fenster oder ein F5 nach dem Absenden.
-     * Ohne diesen Riegel erzeugte jedes Neuladen einen WEITEREN Anteil, und
-     * jeder davon wäre wieder der falsche für die Hüllen, die inzwischen
-     * gebaut wurden. Der Riegel gehört in die Funktion, nicht in die Seite. */
-    $stand = anteil_zustand()['stand'];
-    if ($stand !== 'abweichend') {
-        return [false, 'Ein Neuanfang ist nur nötig, wenn der Server-Anteil '
-                     . 'nicht zu den vorhandenen Hüllen passt. Der Zustand ist '
-                     . 'derzeit „' . $stand . '" — es wurde nichts geändert.'];
-    }
-    if (kdf_anteil_alt() !== null) {
-        [$ok, $was] = config_eintrag_schreiben('kdf_anteil_alt', null);
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
+     * (H-SR-06, F-SR-78). */
+    return schluessel_unter_sperre(static function (): array {
+        /* NUR AUS DER LAGE „abweichend" HERAUS. Der Knopf steht auch nur dort —
+         * aber ein Knopf, der bloss verborgen ist, wird trotzdem gedrückt: über
+         * die Zurück-Taste, ein zweites Fenster oder ein F5 nach dem Absenden.
+         * Ohne diesen Riegel erzeugte jedes Neuladen einen WEITEREN Anteil, und
+         * jeder davon wäre wieder der falsche für die Hüllen, die inzwischen
+         * gebaut wurden. Der Riegel gehört in die Funktion, nicht in die Seite. */
+        $stand = anteil_zustand()['stand'];
+        if ($stand !== 'abweichend') {
+            return [false, 'Ein Neuanfang ist nur nötig, wenn der Server-Anteil '
+                         . 'nicht zu den vorhandenen Hüllen passt. Der Zustand ist '
+                         . 'derzeit „' . $stand . '" — es wurde nichts geändert.'];
+        }
+        if (kdf_anteil_alt() !== null) {
+            [$ok, $was] = config_eintrag_schreiben('kdf_anteil_alt', null);
+            if (!$ok) { return [false, $was]; }
+        }
+        $neu = kdf_anteil_neu();
+        [$ok, $was] = config_eintrag_schreiben('kdf_anteil', $neu,
+                                               kdf_anteil() !== null);
         if (!$ok) { return [false, $was]; }
-    }
-    $neu = kdf_anteil_neu();
-    [$ok, $was] = config_eintrag_schreiben('kdf_anteil', $neu,
-                                           kdf_anteil() !== null);
-    if (!$ok) { return [false, $was]; }
-    /* DIE MARKE WIRD HIER AUSDRÜCKLICH ÜBERSCHRIEBEN und nicht nachgetragen.
-     * Beim Neuanfang ist genau das der Vorgang: Die Installation erklärt, dass
-     * ab jetzt mit diesem Wert gearbeitet wird — auch wenn die vorhandenen
-     * Hüllen zu einem anderen gehören. Ohne diese Zeile bliebe der Zustand
-     * „abweichend" bestehen, und der Neuanfang täte nichts. */
-    schluessel_marke_setzen('kdf_anteil_kennung', (string)schluessel_kennung($neu));
-    anteil_zustand(true);
-    return [true, (string)schluessel_kennung($neu)];
+        /* DIE MARKE WIRD HIER AUSDRÜCKLICH ÜBERSCHRIEBEN und nicht nachgetragen.
+         * Beim Neuanfang ist genau das der Vorgang: Die Installation erklärt, dass
+         * ab jetzt mit diesem Wert gearbeitet wird — auch wenn die vorhandenen
+         * Hüllen zu einem anderen gehören. Ohne diese Zeile bliebe der Zustand
+         * „abweichend" bestehen, und der Neuanfang täte nichts. */
+        schluessel_marke_setzen('kdf_anteil_kennung', (string)schluessel_kennung($neu));
+        anteil_zustand(true);
+        /* AUCH DER NEUANFANG MACHT DAS BLATT FÄLLIG (H-SR-06, F-SR-82): Der
+         * Anteil auf dem Blatt ist ab jetzt ein anderer, genau wie nach einer
+         * Rotation (Nr. 233). Bis Web 21.12.0 tat es nur `anteil_wechseln()`. */
+        require_once __DIR__ . '/einstieg_lib.php';
+        blatt_neu_faellig('anteil');
+        return [true, (string)schluessel_kennung($neu)];
+    });
 }
 
 /**
@@ -1117,28 +1289,32 @@ function anteil_zaehlung(): array
  */
 function anteil_nachtragen(string $roh, bool $ersetzen): array
 {
-    $hex = schluessel_eingabe_normalisieren($roh);
-    if ($hex === null) {
-        return [false, 'Das sind keine 64 Hexzeichen. Leerzeichen und '
-                     . 'Bindestriche dürfen drinstehen, andere Zeichen nicht.'];
-    }
-    $soll = schluessel_marke_lesen('kdf_anteil_kennung');
-    if ($soll === null) {
-        return [false, 'Diese Installation hat noch nie mit einem Server-Anteil '
-                     . 'gearbeitet — es gibt keine Kennung, gegen die sich der '
-                     . 'Wert prüfen ließe. Bitte „Server-Anteil anlegen" '
-                     . 'benutzen.'];
-    }
-    $ist = (string)schluessel_kennung($hex);
-    if ($ist !== $soll) {
-        return [false, 'Die Kennung dieses Werts ist ' . $ist . ', erwartet ist '
-                     . $soll . ' — das ist nicht der Wert, mit dem die Hüllen '
-                     . 'gebaut wurden. Es wurde nichts geändert.'];
-    }
-    [$ok, $was] = config_eintrag_schreiben('kdf_anteil', $hex, $ersetzen);
-    if (!$ok) { return [false, $was]; }
-    anteil_zustand(true);
-    return [true, $ist];
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
+     * (H-SR-06, F-SR-78). */
+    return schluessel_unter_sperre(static function () use ($roh, $ersetzen): array {
+        $hex = schluessel_eingabe_normalisieren($roh);
+        if ($hex === null) {
+            return [false, 'Das sind keine 64 Hexzeichen. Leerzeichen und '
+                         . 'Bindestriche dürfen drinstehen, andere Zeichen nicht.'];
+        }
+        $soll = schluessel_marke_lesen('kdf_anteil_kennung');
+        if ($soll === null) {
+            return [false, 'Diese Installation hat noch nie mit einem Server-Anteil '
+                         . 'gearbeitet — es gibt keine Kennung, gegen die sich der '
+                         . 'Wert prüfen ließe. Bitte „Server-Anteil anlegen" '
+                         . 'benutzen.'];
+        }
+        $ist = (string)schluessel_kennung($hex);
+        if ($ist !== $soll) {
+            return [false, 'Die Kennung dieses Werts ist ' . $ist . ', erwartet ist '
+                         . $soll . ' — das ist nicht der Wert, mit dem die Hüllen '
+                         . 'gebaut wurden. Es wurde nichts geändert.'];
+        }
+        [$ok, $was] = config_eintrag_schreiben('kdf_anteil', $hex, $ersetzen);
+        if (!$ok) { return [false, $was]; }
+        anteil_zustand(true);
+        return [true, $ist];
+    });
 }
 
 /**
@@ -1156,25 +1332,29 @@ function anteil_nachtragen(string $roh, bool $ersetzen): array
  */
 function serverschluessel_nachtragen(string $roh, bool $ersetzen): array
 {
-    $hex = schluessel_eingabe_normalisieren($roh);
-    if ($hex === null) {
-        return [false, 'Das sind keine 64 Hexzeichen. Leerzeichen und '
-                     . 'Bindestriche dürfen drinstehen, andere Zeichen nicht.'];
-    }
-    $soll = schluessel_marke_lesen('server_key_kennung');
-    if ($soll === null) {
-        return [false, 'Diese Installation hat noch nie mit einem '
-                     . 'Serverschlüssel versiegelt — es gibt keine Kennung, '
-                     . 'gegen die sich der Wert prüfen ließe.'];
-    }
-    $ist = (string)schluessel_kennung($hex);
-    if ($ist !== $soll) {
-        return [false, 'Die Kennung dieses Werts ist ' . $ist . ', erwartet ist '
-                     . $soll . ' — das ist nicht der Schlüssel, mit dem '
-                     . 'versiegelt wurde. Es wurde nichts geändert.'];
-    }
-    [$ok, $was] = config_eintrag_schreiben('server_key', $hex, $ersetzen);
-    return $ok ? [true, $ist] : [false, $was];
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
+     * (H-SR-06, F-SR-78). */
+    return schluessel_unter_sperre(static function () use ($roh, $ersetzen): array {
+        $hex = schluessel_eingabe_normalisieren($roh);
+        if ($hex === null) {
+            return [false, 'Das sind keine 64 Hexzeichen. Leerzeichen und '
+                         . 'Bindestriche dürfen drinstehen, andere Zeichen nicht.'];
+        }
+        $soll = schluessel_marke_lesen('server_key_kennung');
+        if ($soll === null) {
+            return [false, 'Diese Installation hat noch nie mit einem '
+                         . 'Serverschlüssel versiegelt — es gibt keine Kennung, '
+                         . 'gegen die sich der Wert prüfen ließe.'];
+        }
+        $ist = (string)schluessel_kennung($hex);
+        if ($ist !== $soll) {
+            return [false, 'Die Kennung dieses Werts ist ' . $ist . ', erwartet ist '
+                         . $soll . ' — das ist nicht der Schlüssel, mit dem '
+                         . 'versiegelt wurde. Es wurde nichts geändert.'];
+        }
+        [$ok, $was] = config_eintrag_schreiben('server_key', $hex, $ersetzen);
+        return $ok ? [true, $ist] : [false, $was];
+    });
 }
 
 /**
@@ -1204,6 +1384,13 @@ function serverschluessel_zustand(bool $frisch = false): array
     $kennung    = serverschluessel_kennung();
     $kennungAlt = serverschluessel_alt_kennung();
     $erwartet   = schluessel_marke_lesen('server_key_kennung');
+    /* EIN `server_key_alt` GLEICH DEM HEUTIGEN IST KEIN WECHSEL (H-SR-06,
+     * F-SR-78). So bleibt es stehen, wenn ein Wechsel zwischen seinen beiden
+     * Schreibschritten abbricht. Bis Web 21.12.0 hieß das Lage `rotation` —
+     * ein Wechsel des Schlüssels mit sich selbst, mit Job, Protokoll und
+     * vorgemerktem Komplett-Stand. Er öffnet nichts, was der heutige nicht
+     * öffnet; der nächste Wechsel überschreibt ihn. */
+    if ($kennungAlt !== null && $kennungAlt === $kennung) { $kennungAlt = null; }
 
     if ($kennung === null) {
         return $merk = ['stand' => $erwartet === null ? 'fehlt' : 'abweichend',
@@ -1243,10 +1430,14 @@ function serverschluessel_zustand(bool $frisch = false): array
  */
 function serverschluessel_eintragen(): array
 {
-    if (serverschluessel_da()) {
-        return [false, 'Es steht bereits ein Serverschlüssel in config.php.'];
-    }
-    return config_eintrag_schreiben('server_key', serverschluessel_neu());
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
+     * (H-SR-06, F-SR-78). */
+    return schluessel_unter_sperre(static function (): array {
+        if (serverschluessel_da()) {
+            return [false, 'Es steht bereits ein Serverschlüssel in config.php.'];
+        }
+        return config_eintrag_schreiben('server_key', serverschluessel_neu());
+    });
 }
 
 /* ===========================================================================
@@ -1286,37 +1477,59 @@ function serverschluessel_wechseln(bool $kopienVerstanden): array
                      . 'unter dem bisherigen Schlüssel bleiben und das bisherige Blatt '
                      . 'aufbewahrt wird. Es wurde nichts geändert.'];
     }
-    $z = serverschluessel_zustand(true);
-    if ($z['stand'] === 'rotation') {
-        return [false, 'Es läuft bereits ein Wechsel des Serverschlüssels. Erst den '
-                     . 'bisherigen entfernen, wenn alles umgehüllt ist.'];
-    }
-    if ($z['stand'] !== 'bereit') {
-        return [false, 'Ein Wechsel geht nur, wenn der Serverschlüssel bereit ist — '
-                     . 'der Zustand ist derzeit „' . $z['stand'] . '". Es wurde nichts '
-                     . 'geändert.'];
-    }
-    if (anteil_zustand()['stand'] === 'rotation') {
-        return [false, 'Es läuft gerade eine Rotation des Server-Anteils. Erst wenn '
-                     . 'sie abgeschlossen ist, lässt sich der Serverschlüssel wechseln. '
-                     . 'Es wurde nichts geändert.'];
-    }
-    $altHex = strtolower((string)konfig('server_key', ''));
+    /* UNTER DER SPERRE (H-SR-06, F-SR-78): Die Prüfungen unten lesen die Lage,
+     * und zwischen Lesen und Schreiben darf niemand sonst schreiben — kein
+     * zweiter Wechsel und kein Häppchen des Jobs. */
+    return schluessel_unter_sperre(static function (): array {
+        $z = serverschluessel_zustand(true);
+        if ($z['stand'] === 'rotation') {
+            return [false, 'Es läuft bereits ein Wechsel des Serverschlüssels. Erst den '
+                         . 'bisherigen entfernen, wenn alles umgehüllt ist.'];
+        }
+        if ($z['stand'] !== 'bereit') {
+            return [false, 'Ein Wechsel geht nur, wenn der Serverschlüssel bereit ist — '
+                         . 'der Zustand ist derzeit „' . $z['stand'] . '". Es wurde nichts '
+                         . 'geändert.'];
+        }
+        if (anteil_zustand()['stand'] === 'rotation') {
+            return [false, 'Es läuft gerade eine Rotation des Server-Anteils. Erst wenn '
+                         . 'sie abgeschlossen ist, lässt sich der Serverschlüssel wechseln. '
+                         . 'Es wurde nichts geändert.'];
+        }
+        $altHex = strtolower((string)konfig('server_key', ''));
 
-    [$ok, $was] = config_eintrag_schreiben('server_key_alt', $altHex);
-    if (!$ok) { return [false, $was]; }
+        /* Steht noch ein `server_key_alt` gleich dem heutigen (ein Wechsel,
+         * der zwischen den beiden Schritten abbrach, F-SR-78), wird er
+         * überschrieben — mit demselben Wert. Einen ANDEREN überschreibt
+         * dieser Schritt nie: Die Lage wäre dann `rotation`, und die ist oben
+         * abgewiesen. */
+        $waise = strtolower((string)konfig('server_key_alt', '')) === $altHex;
+        [$ok, $was] = config_eintrag_schreiben('server_key_alt', $altHex, $waise);
+        if (!$ok) { return [false, $was]; }
 
-    [$ok2, $was2] = config_eintrag_schreiben('server_key', serverschluessel_neu(), true);
-    if (!$ok2) {
-        /* Zurücknehmen — ein `server_key_alt` neben einem unveränderten
-         * `server_key` wäre ein Wechsel, der nie stattgefunden hat. */
-        config_eintrag_schreiben('server_key_alt', null);
-        return [false, $was2];
-    }
-    $z = serverschluessel_zustand(true);      // die Marke wandert auf den neuen
-    require_once __DIR__ . '/schluesselwechsel_lib.php';
-    sw_beginnen((string)$z['kennung'], (string)$z['kennung_alt']);
-    return [true, (string)$z['kennung']];
+        /* BEDINGT ERSETZEN: nur, wenn in der Datei noch der Wert steht, der
+         * gerade als `server_key_alt` gesichert wurde (F-SR-78). */
+        [$ok2, $was2] = config_eintrag_schreiben('server_key', serverschluessel_neu(), true,
+                                                 $altHex);
+        if (!$ok2) {
+            /* Zurücknehmen — ein `server_key_alt` neben einem unveränderten
+             * `server_key` wäre ein Wechsel, der nie stattgefunden hat. */
+            return [false, config_halbes_zuruecknehmen('server_key', 'server_key_alt', $altHex, $was2)];
+        }
+        $z = serverschluessel_zustand(true);      // die Marke wandert auf den neuen
+        require_once __DIR__ . '/schluesselwechsel_lib.php';
+        /* DER BEGINN DARF DEN WECHSEL NICHT ZURÜCKNEHMEN (F-SR-80). Wenn
+         * `sw_beginnen()` wirft, steht der neue Schlüssel schon in
+         * `config.php` und versiegelt — ein Rückbau risse ihn aus dem, was er
+         * schon versiegelt hat. Den fehlenden Beginn holt der Job nach: Er
+         * trifft die Lage `rotation` ohne Zustand an und beginnt selbst. */
+        try {
+            sw_beginnen((string)$z['kennung'], (string)$z['kennung_alt'], 'oberflaeche');
+        } catch (Throwable $ex) {
+            system_melden('schluesselwechsel', 'Beginn des Wechsels nicht vollständig vermerkt', $ex);
+        }
+        return [true, (string)$z['kennung']];
+    });
 }
 
 /**
@@ -1335,20 +1548,22 @@ function serverschluessel_wechseln(bool $kopienVerstanden): array
  */
 function serverschluessel_alt_entfernen(): array
 {
-    if (serverschluessel_alt() === null) {
-        return [false, 'Es steht kein bisheriger Serverschlüssel in config.php.'];
-    }
-    require_once __DIR__ . '/schluesselwechsel_lib.php';
-    $b = sw_bedingungen();
-    if (!$b['alle']) {
-        return [false, 'Der bisherige Serverschlüssel bleibt: '
-                     . implode(' ', $b['fehlt']) . ' Es wurde nichts geändert.'];
-    }
-    $kAlt = (string)serverschluessel_alt_kennung();
-    $kNeu = (string)serverschluessel_kennung();
-    [$ok, $was] = config_eintrag_schreiben('server_key_alt', null);
-    if (!$ok) { return [false, $was]; }
-    serverschluessel_zustand(true);
-    sw_abschliessen($kNeu, $kAlt);
-    return [true, $kAlt];
+    return schluessel_unter_sperre(static function (): array {
+        if (serverschluessel_alt() === null) {
+            return [false, 'Es steht kein bisheriger Serverschlüssel in config.php.'];
+        }
+        require_once __DIR__ . '/schluesselwechsel_lib.php';
+        $b = sw_bedingungen();
+        if (!$b['alle']) {
+            return [false, 'Der bisherige Serverschlüssel bleibt: '
+                         . implode(' ', $b['fehlt']) . ' Es wurde nichts geändert.'];
+        }
+        $kAlt = (string)serverschluessel_alt_kennung();
+        $kNeu = (string)serverschluessel_kennung();
+        [$ok, $was] = config_eintrag_schreiben('server_key_alt', null);
+        if (!$ok) { return [false, $was]; }
+        serverschluessel_zustand(true);
+        sw_abschliessen($kNeu, $kAlt);
+        return [true, $kAlt];
+    });
 }

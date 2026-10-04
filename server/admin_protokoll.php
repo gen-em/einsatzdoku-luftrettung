@@ -138,6 +138,28 @@ ui_seite_start(['titel' => 'Protokoll']);
        Server die Einträge des Zeitraums als ZIP — ohne IP-Adressen,
        aufbewahrt <?= protokoll_archiv_behalten() ?> Tage.
        <a href="hilfe.php#das-archiv-nur-betreiberin">Handbuch: Archiv des Protokolls</a></p>
+    <?php
+    /* WÄHREND EINES WECHSELS (H-SR-06, F-SR-82): Ein Archiv unter dem
+     * BISHERIGEN ist nicht verloren — der Job hüllt es um und benennt es
+     * neu, dann lässt es sich wieder herunterladen. Bis Web 21.12.0 stand
+     * auch dafür der Satz „nur mit dem Schlüssel von damals". */
+    $kBisher = serverschluessel_alt_kennung();
+    $umzuhuellen = array_values(array_filter($fremd,
+        static fn(array $a): bool => $kBisher !== null && $a['kennung'] === $kBisher));
+    $fremd = array_values(array_filter($fremd,
+        static fn(array $a): bool => $kBisher === null || $a['kennung'] !== $kBisher));
+    ?>
+    <?php if ($umzuhuellen): ?>
+      <?php ui_meldung('Der Serverschlüssel wird gerade gewechselt. Der Job hüllt '
+          . (count($umzuhuellen) === 1 ? 'es' : 'sie') . ' um und benennt '
+          . (count($umzuhuellen) === 1 ? 'es' : 'sie') . ' neu; danach lässt sich '
+          . (count($umzuhuellen) === 1 ? 'es' : 'jedes') . ' wieder herunterladen. Ohne '
+          . 'eingerichteten Auslöser geht das nur über „Jetzt weiterarbeiten" unter Betrieb → '
+          . 'Servereinstellungen.', null, 'info', '',
+          ['auftakt' => count($umzuhuellen) === 1
+              ? 'Ein Archiv liegt noch unter dem bisherigen Serverschlüssel.'
+              : count($umzuhuellen) . ' Archive liegen noch unter dem bisherigen Serverschlüssel.']); ?>
+    <?php endif; ?>
     <?php if ($fremd): ?>
       <?php ui_meldung('Öffnen lässt es sich nur mit dem Schlüssel von damals — er steht '
           . 'im Wiederanlaufpaket und auf dem Schlüsselblatt mit der Kennung '
@@ -171,7 +193,9 @@ ui_seite_start(['titel' => 'Protokoll']);
                  . ' · ' . groesse_text($a['bytes']);
           $formId = 'f-archiv-' . $i;
           $plakette = !$a['passt']
-              ? ui_plakette('anderer Schlüssel', ['ton' => 'orange'])
+              ? ($kBisher !== null && $a['kennung'] === $kBisher
+                  ? ui_plakette('bisheriger Schlüssel', ['ton' => 'blau'])
+                  : ui_plakette('anderer Schlüssel', ['ton' => 'orange']))
               : (isset($aufZiel[$a['datei']])
                   ? ui_plakette('auf dem Ziel', ['ton' => 'blau'])
                   : ui_plakette('nur lokal', ['ton' => 'orange']));

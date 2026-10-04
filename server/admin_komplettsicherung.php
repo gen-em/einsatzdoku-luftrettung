@@ -46,8 +46,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     $art   = (string)($_POST['art'] ?? 'klar');
     $pw    = (string)($_POST['passphrase'] ?? '');
     $pfad  = komp_wurzel() . '/' . $datei;
+    $kopfDl = komp_name_gueltig($datei) && is_file($pfad) ? komp_kopf_lesen($pfad) : null;
     if (!komp_name_gueltig($datei) || !is_file($pfad)) {
         $error = 'Diesen Stand gibt es nicht (mehr).';
+    } elseif ($kopfDl !== null && ($kopfDl['kopf']['kdf'] ?? null) === null
+              && komp_serverschluessel_fuer($pfad)[1] === 'keiner') {
+        /* VOR PROTOKOLL UND KOPFZEILEN (H-SR-06, F-SR-82). Bis Web 21.12.0
+         * stellte erst das Entsiegeln fest, dass der Stand unter einem
+         * dritten Schlüssel liegt — nach dem Eintrag „heruntergeladen" und
+         * nach den Kopfzeilen: Der Browser bekam eine leere Datei, der Satz
+         * dazu landete nur im Reiter System. Ein Block, 256 KiB. */
+        $error = 'Dieser Stand ist mit einem anderen Serverschlüssel versiegelt — weder dem '
+               . 'heutigen noch dem bisherigen. Er öffnet nur mit dem Wert vom Blatt, das damals '
+               . 'galt. Es wurde nichts heruntergeladen.';
     } elseif ($art === 'pw' && strlen($pw) < 8) {
         $error = 'Die Passphrase muss mindestens 8 Zeichen haben. '
                . 'Es wurde nichts heruntergeladen.';
@@ -417,19 +428,31 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                           . (string)($k['web'] ?? '?') . ' · Migrationsstand '
                           . ((string)($k['migration'] ?? '') !== ''
                              ? (string)$k['migration'] : 'keiner')
-                        : 'Der Dateikopf ist nicht lesbar.'),
+                        : 'Der Dateikopf ist nicht lesbar.')
+                     /* Der Satz zum dritten Schlüssel als Glied der
+                      * Kleinzeile, nicht als Absatz je Stand — eine Warnung
+                      * ist kein Absatz (Design.md; Nachprüfung H-SR-06,
+                      * F-SR-87). */
+                     . ($welcher === 'keiner'
+                        ? ' · öffnet nur mit dem Serverschlüssel vom Blatt, das damals galt, '
+                          . 'und lässt sich hier nicht herunterladen'
+                        : ''),
             'plaketten' => ui_plakette(groesse_text((int)$s['groesse']), ['ton' => 'neutral'])
                          . ($nr === 0 ? ui_plakette('jüngster', ['ton' => 'blau']) : '')
                          . ($welcher === 'alt' ? ui_plakette('bisheriger Schlüssel', ['ton' => 'blau'])
                            : ($welcher === 'keiner' ? ui_plakette('anderer Schlüssel', ['ton' => 'orange']) : '')),
-            'aktionen' => ui_zeilenaktionen(['eintraege' => [
-                ['text' => 'Herunterladen', 'symbol' => 'tausch',
-                 'form' => 'f-klar-' . $id],
+            /* Ein Stand unter einem DRITTEN Schlüssel lässt sich hier nicht
+             * entsiegeln — weder heruntergeladen noch unter einer Passphrase
+             * (H-SR-06, F-SR-82). Löschen bleibt. */
+            'aktionen' => ui_zeilenaktionen(['eintraege' => array_values(array_filter([
+                $welcher === 'keiner' ? null
+                    : ['text' => 'Herunterladen', 'symbol' => 'tausch', 'form' => 'f-klar-' . $id],
                 ['text' => 'Löschen', 'symbol' => 'korb', 'art' => 'gefahr',
                  'form' => 'f-weg-' . $id],
-            ]]),
+            ]))]),
         ]);
         ?>
+        <?php if ($welcher !== 'keiner'): ?>
         <form method="post" class="listen-form">
           <?= csrf_field() ?><input type="hidden" name="action" value="herunterladen">
           <input type="hidden" name="art" value="pw">
@@ -452,6 +475,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                           'art' => 'neutral']) ?>
           </div>
         </form>
+        <?php endif; ?>
       <?php endforeach; ?>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>

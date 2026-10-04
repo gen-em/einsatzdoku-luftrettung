@@ -366,9 +366,17 @@ function status_erhebung(): array
      * Anteil. Die Zahl kommt aus dem Job (`jobs.rueckstand`), nicht aus einer
      * zweiten Zählung. */
     $skRest = null;
+    $skPhase = '';
+    $skWartet = null;
     if ($skZustand['stand'] === 'rotation') {
         require_once __DIR__ . '/schluesselwechsel_lib.php';
-        $skRest = sw_rueckstand(sw_zustand());
+        $skZ = sw_zustand();
+        /* `null` heißt bei `sw_rueckstand()` „fertig" ODER „kein Zustand" —
+         * hier getrennt (H-SR-06, F-SR-80): Ohne Zustand ist nichts umgehüllt,
+         * und „alles umgehüllt" wäre eine falsche Auskunft. */
+        $skPhase = sw_zustand_passt($skZ, $skZustand) ? (string)($skZ['phase'] ?? '') : '';
+        $skRest = $skPhase === '' ? null : sw_rueckstand($skZ);
+        $skWartet = $skPhase === '' ? null : sw_nachweis_wartet($skZ);
     }
     $server[] = status_z('Serverschlüssel',
         $skZustand['stand'] === 'bereit'
@@ -377,11 +385,16 @@ function status_erhebung(): array
             : ($skZustand['stand'] === 'rotation'
                 ? 'Wechsel läuft: neu ' . $skZustand['kennung'] . ', bisher '
                   . $skZustand['kennung_alt'] . ' — '
-                  . ($skRest !== null
-                      ? 'noch ' . $skRest . ' Stück(e) umzuhüllen'
+                  . ($skPhase === ''
+                      ? 'in config.php eingetragen, die Umhüllung beginnt mit dem nächsten Joblauf'
+                      : ($skWartet !== null
+                      ? 'umgehüllt; der Nachweis beginnt um '
+                        . fmt_local(gmdate('Y-m-d H:i:s', $skWartet)) . ' Uhr'
+                      : ($skRest !== null
+                      ? 'noch ' . $skRest . ' Stück(e) umzuhüllen oder nachzuweisen'
                       : 'alles umgehüllt und nachgewiesen; der bisherige lässt sich '
                         . 'entfernen, sobald ein Komplett-Stand unter dem neuen da und '
-                        . 'das Blatt bestätigt ist')
+                        . 'das Blatt bestätigt ist')))
             : ($skZustand['stand'] === 'fehlt'
                 ? 'Fehlt. Ohne ihn gibt es kein Komplett-Backup, kein '
                   . 'Konto-Backup und keinen Versand auf ein Backup-Ziel'
@@ -391,7 +404,9 @@ function status_erhebung(): array
                   . 'Wert nachgetragen ist (Blatt)')),
         in_array($skZustand['stand'], ['bereit', 'rotation'], true) ? 'blau' : 'rot',
         $skZustand['stand'] === 'rotation'
-            ? ($skRest !== null ? 'noch ' . $skRest : 'bisherigen entfernen')
+            ? ($skPhase === '' ? 'nicht begonnen'
+               : ($skWartet !== null ? 'Nachweis ab ' . fmt_local(gmdate('Y-m-d H:i:s', $skWartet))
+               : ($skRest !== null ? 'noch ' . $skRest : 'bisherigen entfernen')))
             : (['bereit' => 'vorhanden', 'fehlt' => 'fehlt',
                 'abweichend' => 'abweichend'][$skZustand['stand']] ?? '?'),
         $skZustand['stand'] === 'bereit' ? null : 'betrieb_server.php#k-schluessel');

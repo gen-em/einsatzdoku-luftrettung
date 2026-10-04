@@ -13,10 +13,10 @@ bash tools/proben/proben.sh <name> [zusatz…]   # alle · --liste
 `ingest` Annahme und Prüfschicht, seit SR-05 der erzwungene Deadlock · `spur` beide Spurablagen · `jobs` Hintergrundjobs und Register · `kopplung` Handy und Uhr ·
 `wartung` Wartungsmodus und Torwächter · `raten` Ratenschutz · `mail` Versand, Fehlerweg und Rundmail · `versand` Sicherungsziele ·
 `komplett` Komplettsicherung · `wiederherstellung` Rückweg · `gpx` Export gegen das Schema · `geraete` Gerätevertrag ·
-`verbindung` Verbindungsgrenze und Gedränge (`--frei 20`: ohne Enge, Nr. 210) · `anteil` Server-Anteil, seit SR-03 die Rückfrage nach der Rotation · `rechtstexte` Texte gegen die Quelle · `freigabe` Schlüsselweitergabe ·
+`verbindung` Verbindungsgrenze und Gedränge (`--frei 20`: ohne Enge, Nr. 210) · `anteil` Server-Anteil, seit SR-03 die Rückfrage nach der Rotation, seit H-SR-06 auch nach dem Neuanfang und die Waise · `rechtstexte` Texte gegen die Quelle · `freigabe` Schlüsselweitergabe ·
 `container` Format der Sicherungsdatei · `frist` Inhaltsschlüssel · `abmelden` was liegen bleibt · `csp-browser` Richtlinie zur Laufzeit ·
 `rollen` Matrix aus `Technik.md` 4.99p · `protokoll` Archiv, Fehlerprotokoll · `zweitfaktor` Code-Schritt, Einrichtungstor, RFC-Vektoren, Demo-Reset nur nach Änderung, Gerät merken (SR-02), frischer Code (SR-07), Passkeys an der Anlage (SR-09) · `sitzung` Bindung per zweitem Cookie ·
-`passkey` CBOR-Leser, beide WebAuthn-Zeremonien und die Tabelle, ohne Browser und ohne HTTP (SR-09; seit H-SR-08 jede Ablehnung mit Grund; seit Web 21.11.2 zwei gleichzeitige Anmeldungen in zwei Prozessen) · `schluesselwechsel` Serverschlüssel A → B und zurück, jedes Stück je Zweck, Nr. 344 (SR-03) ·
+`passkey` CBOR-Leser, beide WebAuthn-Zeremonien und die Tabelle, ohne Browser und ohne HTTP (SR-09; seit H-SR-08 jede Ablehnung mit Grund; seit Web 21.11.2 zwei gleichzeitige Anmeldungen in zwei Prozessen) · `schluesselwechsel` Serverschlüssel A → B (zweimal gleichzeitig) und zurück, jedes Stück je Zweck, Frist, Stück-Fehler, Nr. 344 (SR-03; seit H-SR-06 ein Rückweg, der nichts wegwirft — auch nach einem Wettlauf ohne Sieger) ·
 `rueckweg` Rückweg beim Zweitfaktor, zwei Teile hinter `probe.sh`: `probe.php` (Signaturen, Selbsttest, Marke, der Prüfzweig am Code-Schritt samt Abzug-Gegenprobe) und `probe.mjs` (der Weg im Browser, NutzerIn und BetreiberIn — auch gegen Staging, mit `--basis`, `--admin`, `--admin-pw`, `--admin-totp`; von Hand in Firefox und WebKit mit `--motor`).
 
 **Anlass: Nr. 31, 130, 171, 210** — je Probe im Kopfkommentar ihrer Datei.

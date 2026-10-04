@@ -617,11 +617,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         if ($ok) {
             require_once __DIR__ . '/schluesselwechsel_lib.php';
             sw_jetzt(8.0);
-            $r = sw_rueckstand(sw_zustand());
+            $swNach = sw_zustand();
+            $r = sw_rueckstand($swNach);
+            $w = sw_nachweis_wartet($swNach);
             $notice = 'Der Serverschlüssel ist gewechselt (neu ' . $was . '). Versiegelt wird ab '
                     . 'jetzt mit dem neuen; der bisherige bleibt als server_key_alt stehen, bis '
                     . 'alles umgehüllt und nachgewiesen ist'
-                    . ($r !== null && $r > 0 ? ' — noch ' . $r . ' Stück(e)' : '')
+                    . ($w !== null
+                        ? ' — der Nachweis beginnt um ' . fmt_local(gmdate('Y-m-d H:i:s', $w)) . ' Uhr'
+                        : ($r !== null && $r > 0 ? ' — noch ' . $r . ' Stück(e)' : ''))
                     . '. Jetzt das Schlüsselblatt neu drucken; das bisherige aufbewahren.';
         }
         $error  = $ok ? null : $was;
@@ -636,12 +640,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
                    . 'noch einmal.';
         } elseif (($bericht['fehler'] ?? null) !== null) {
             $error = 'Das Häppchen ist gescheitert: ' . $bericht['fehler'];
+        } elseif (($w = sw_nachweis_wartet($z)) !== null) {
+            $notice = 'Umgehüllt ist, was der Server erreicht. Der Nachweis mit dem neuen '
+                    . 'Schlüssel beginnt um ' . fmt_local(gmdate('Y-m-d H:i:s', $w)) . ' Uhr.';
         } else {
+            $nF = count((array)($z['fehler'] ?? [])) + (int)($z['fehler_mehr'] ?? 0);
             $notice = ($z['phase'] ?? '') === 'fertig'
                 ? 'Alles ist umgehüllt und mit dem neuen Schlüssel nachgewiesen.'
                 : 'Ein Häppchen ist durch: ' . (int)$bericht['erledigt'] . ' Stück(e); noch '
                   . (int)sw_rueckstand($z) . ' von ' . (int)($z['gesamt'] ?? 0)
-                  . (($z['phase'] ?? '') === 'nachweis' ? ' im Nachweis.' : '.');
+                  . (($z['phase'] ?? '') === 'nachweis' ? ' im Nachweis' : '')
+                  . ($nF > 0 ? '; ' . $nF . ' Stück(e) ließen sich nicht umhüllen' : '') . '.';
         }
 
     } elseif ($aktion === 'schluessel_sk_alt_entfernen') {
@@ -732,7 +741,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'demo_aus' => 'k-konten', 'konten' => 'k-konten', 'anmeldung' => 'k-anmeldung',
     ][$bsAktion] ?? '');
     $bsRundmailFehler = $bsAktion === 'rundmail' && $error !== null && $ankForm === null;
-    if ($bsOrt !== '' && (($notice !== null && $error === null) || $bsRundmailFehler)) {
+    /* „Jetzt weiterarbeiten" ist eine Handlung mit Ergebnis, keine abgewiesene
+     * Eingabe — auch ein Fehlschlag wird umgeleitet, sonst schickte F5 den
+     * POST noch einmal (H-SR-06, F-SR-82; dieselbe Linie wie die Rundmail,
+     * E-R4-34). */
+    $bsWeiterFehler = $bsAktion === 'schluessel_sk_weiter' && $error !== null;
+    if ($bsOrt !== '' && (($notice !== null && $error === null) || $bsRundmailFehler
+                          || $bsWeiterFehler)) {
         flash_setzen($error === null ? 'ok' : 'fehler', (string)($error ?? $notice), $bsOrt,
                      $demoFrage ? ['demo_frage' => true] : []);
         /* 302 wie die elf Seiten aus R4-11, nicht 303: Ein Muster, und die
@@ -1085,22 +1100,42 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
          aufgehen (E-SR-61). */
       if ($swB !== null) {
           $swRest   = sw_rueckstand($swZ);
-          $swPhase  = (string)($swZ['phase'] ?? '');
+          /* Ein Zustand, der zu einem anderen Schlüsselpaar gehört, zählt wie
+             keiner — das Häppchen legt einen neuen an (F-SR-80). */
+          $swPhase  = sw_zustand_passt($swZ, $skZustand) ? (string)($swZ['phase'] ?? '') : '';
           $swGesamt = (int)($swZ['gesamt'] ?? 0);
+          $swWartet = $swPhase === '' ? null : sw_nachweis_wartet($swZ);
+          /* OHNE AUSLÖSER GEHEN DATEIEN NUR MIT DEM KNOPF VORAN (H-SR-06,
+             F-SR-82): Am Huckepack-Weg (3 s) fängt der Job keine Datei an.
+             Ein Halbsatz, kein zweiter Satz — eine Kleinzeile bleibt eine
+             Zeile (Design.md, Nachprüfung H-SR-06, F-SR-87). */
+          $swWeiter = '; der Job arbeitet in Häppchen weiter, Konto-Backups und Archive nur '
+                    . 'mit eingerichtetem Auslöser oder über „Jetzt weiterarbeiten"';
           ui_zeile([
             'text'  => 'Umhüllung',
-            'klein' => $swPhase === 'fertig'
+            'klein' => $swPhase === ''
+                ? 'Der Wechsel steht in config.php, die Umhüllung hat noch nicht begonnen — sie '
+                  . 'beginnt mit dem nächsten Joblauf oder mit „Jetzt weiterarbeiten"'
+                : ($swPhase === 'fertig'
                 ? 'Alles, was der Server erreicht, liegt unter dem neuen und ist mit ihm '
-                  . 'nachgewiesen — ' . (int)($swZ['umgehuellt'] ?? 0) . ' Stück(e) umgehüllt. '
-                  . 'Was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen'
+                  . 'nachgewiesen — ' . (int)($swZ['umgehuellt'] ?? 0) . ' Stück(e) umgehüllt; '
+                  . 'was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen'
+                : ($swWartet !== null
+                    ? 'Umgehüllt — ' . (int)($swZ['umgehuellt'] ?? 0) . ' Stück(e); der Nachweis '
+                      . 'mit dem neuen beginnt um ' . fmt_local(gmdate('Y-m-d H:i:s', $swWartet))
+                      . ' Uhr, damit er auch sieht, was ein vor dem Wechsel begonnener Vorgang '
+                      . 'noch mit dem bisherigen versiegelt'
                 : ($swPhase === 'nachweis'
                     ? 'Nachweis: jedes Stück wird mit dem neuen geöffnet — noch ' . (int)$swRest
-                      . ' von ' . $swGesamt . '. Der Job arbeitet in Häppchen weiter'
+                      . ' von ' . $swGesamt . $swWeiter
                     : 'Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups und '
                       . 'Archive des Protokolls — noch ' . (int)$swRest . ' von ' . $swGesamt
-                      . ' Stücken. Der Job arbeitet in Häppchen weiter'),
+                      . ' Stücken' . $swWeiter))),
             'plaketten' => ui_plakette($swPhase === 'fertig' ? 'nachgewiesen'
-                                       : 'noch ' . (int)$swRest . ' von ' . $swGesamt,
+                                       : ($swPhase === '' ? 'nicht begonnen'
+                                       : ($swWartet !== null ? 'Nachweis ab '
+                                            . fmt_local(gmdate('Y-m-d H:i:s', $swWartet))
+                                       : 'noch ' . (int)$swRest . ' von ' . $swGesamt)),
                 ['ton' => 'blau']),
           ]);
           $swErfuellt = (int)$swB['inventar'] + (int)$swB['komplett'] + (int)$swB['blatt'];
@@ -1112,6 +1147,25 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                 : implode(' ', $swB['fehlt']),
             'plaketten' => ui_plakette($swErfuellt . ' von 3', ['ton' => 'blau']),
           ]);
+          /* STÜCKE, DIE BEIM UMHÜLLEN WARFEN (H-SR-06, F-SR-81): Sie liegen
+             noch unter dem bisherigen und halten Bedingung 1 zu. */
+          $swFehler = array_values((array)($swZ['fehler'] ?? []));
+          /* Über der Decke von 20 zählt der Job weiter, nennt aber nicht
+             (Nachprüfung H-SR-06, F-SR-85). */
+          $swFehlerMehr = (int)($swZ['fehler_mehr'] ?? 0);
+          if ($swFehler !== []) {
+              ui_zeile([
+                'text'  => 'Ließen sich nicht umhüllen',
+                'klein' => implode(' · ', array_map(
+                               static fn(array $f): string => (string)($f['name'] ?? '?') . ' ('
+                                   . (string)($f['grund'] ?? '') . ')', $swFehler))
+                         . ($swFehlerMehr > 0 ? ' · und ' . $swFehlerMehr . ' weitere' : '')
+                         . ' — sie liegen noch unter dem bisherigen; der Job versucht es mit jedem '
+                         . 'Häppchen neu, und der bisherige bleibt, bis sie umgehüllt oder fort sind',
+                'plaketten' => ui_plakette((string)(count($swFehler) + $swFehlerMehr),
+                                           ['ton' => 'orange']),
+              ]);
+          }
           $swVerloren = (array)($swZ['verloren'] ?? []);
           if ($swVerloren !== []) {
               ui_zeile([
@@ -1179,7 +1233,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           <?= ui_knopf(['text' => 'Server-Anteil wechseln', 'symbol' => 'tausch']) ?>
         </form>
       <?php endif; ?>
-      <?php if ($swB !== null && ($swZ['phase'] ?? '') !== 'fertig'): ?>
+      <?php /* An DENSELBEN Größen wie die Zeile „Umhüllung" — sonst versprach
+               ihr Text einen Knopf, der fehlte (Nachprüfung H-SR-06, F-SR-87). */ ?>
+      <?php if ($swB !== null && $swPhase !== 'fertig' && $swWartet === null): ?>
         <form method="post" action="betrieb_server.php">
           <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_sk_weiter">
           <?= ui_knopf(['text' => 'Jetzt weiterarbeiten', 'symbol' => 'tausch']) ?>

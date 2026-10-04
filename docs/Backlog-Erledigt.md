@@ -9314,7 +9314,7 @@ zutreffen.
      wird nicht gewechselt, das Blatt gehütet (Quartalsrückfrage E-P5b-10).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 247.
      Erledigt 29.09.2026 in Schritt 18, SR-03 (Web 21.12.0, E-SR-09 bis
-     -11, E-SR-60 bis -67): „Serverschlüssel wechseln" unter Betrieb →
+     -11, E-SR-60 bis -70): „Serverschlüssel wechseln" unter Betrieb →
      Servereinstellungen, mit Pflicht-Haken; der bisherige bleibt als
      server_key_alt stehen, der Job schluesselwechsel hüllt Zugänge der
      Ziele, Zweitfaktor-Geheimnisse, Konto-Backups samt konto.json und

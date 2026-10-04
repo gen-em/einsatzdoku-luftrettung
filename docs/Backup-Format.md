@@ -1709,7 +1709,11 @@ hängt sie an jedem Block: Wer sie ändert, macht die Datei unlesbar. Sie
 Block. Die Anwendung versucht erst den heutigen, dann — während eines
 Wechsels — den bisherigen (`komp_serverschluessel_fuer()`); **umgehüllt
 wird ein Stand nie** (E-SR-21). Nach dem Wechsel öffnet einen Stand von
-vorher nur der Wert vom bisherigen Blatt. Für die Fassung mit
+vorher nur der Wert vom bisherigen Blatt. **Kopf und Blöcke hängen an
+EINEM Schlüssel:** Wechselt er, während ein Stand versiegelt wird, beginnt
+die Versiegelung seit Web 21.12.1 mit neuem Kopf von vorn
+(`komp_kopf_angleichen()`); bis dahin konnten die ersten Blöcke unter dem
+bisherigen, die übrigen unter dem neuen liegen. Für die Fassung mit
 Passphrase steht dort stattdessen:
 
 ```json
@@ -1936,8 +1940,13 @@ die Seite am Namen, ohne es zu öffnen.
 **Beim Wechsel des Serverschlüssels** (seit Web 21.12.0, `docs/Technik.md`
 4.97c) bekommt ein Archiv deshalb einen **neuen Namen**: gleicher Beginn,
 neue Kennung. Weil der Name im Zweck jedes Teils steht, wird jeder Teil
-unter dem neuen Namen versiegelt; im Manifest ändert sich nur `kennung`.
-Die neue Datei wird abgelegt und nachgewiesen, erst dann die alte gelöscht.
+unter dem neuen Namen versiegelt; im Manifest ändert sich nur `kennung` —
+leere `zeilen` und `gekuerzt` bleiben `{}` (bis Web 21.12.0 wurden sie beim
+Umhüllen zu `[]`). Seit Web 21.12.1 wird die neue Datei **im Arbeitsordner
+nachgewiesen, dann abgelegt**, erst dann die alte gelöscht; bis dahin wurde
+sie abgelegt und danach nachgewiesen. Umgehüllt wird jedes Archiv, dessen
+Manifest mit dem bisherigen aufgeht, auch wenn im Namen eine dritte Kennung
+steht.
 Dem Versand gilt sie als „nur lokal" und geht noch einmal hinaus — auf dem
 Ziel liegt dann dasselbe Archiv unter beiden Schlüsseln, jedes unter seinem
 Namen.

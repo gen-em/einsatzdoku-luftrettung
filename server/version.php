@@ -7985,7 +7985,7 @@ declare(strict_types=1);
  *   Kein Schema, keine Vertragsaenderung.
  *
  * 21.12.0 — DER SERVERSCHLUESSEL WECHSELT ALS VORGANG (Schritt 18, SR-03;
- *   Nr. 247, 233, 344; E-SR-09 bis -11, -60 bis -67). Nebenstufe. Bis
+ *   Nr. 247, 233, 344; E-SR-09 bis -11, -60 bis -70). Nebenstufe. Bis
  *   hierher gab es keinen Wechsel: Wer `server_key` von Hand aenderte, machte
  *   jedes versiegelte Stueck stumm — Zugaenge der Backup-Ziele,
  *   Zweitfaktor-Geheimnisse, Konto-Backups samt Begleitdatei, Archive des
@@ -8004,5 +8004,30 @@ declare(strict_types=1);
  *   und `edbak_freigabe_widerrufen()` verlangen eine gueltige Kennung
  *   (Nr. 344). Kein Schema; `config.php` kennt einen Eintrag mehr, der nur
  *   waehrend eines Wechsels steht.
+ *
+ * 21.12.1 — DIE GEGENLESUNG VON SR-03 BEHOBEN (Schritt 18, Halt H-SR-06;
+ *   F-SR-78 bis -87, E-SR-71 bis -79). Korrekturstufe. Eine zweite
+ *   Lesung hat 42 Meldungen gebracht, zwei davon hoch: Zwei Wechsel, die
+ *   gleichzeitig abgeschickt werden, konnten einen frisch gewuerfelten
+ *   Schluessel ueberschreiben, nachdem schon Zeilen unter ihm lagen — und
+ *   der Rueckweg der Schluesselwechselprobe warf im eigenen Fehlerfall den
+ *   Schluessel weg, unter dem die Stuecke der oertlichen Anlage lagen. Jeder
+ *   Griff an einen Schluessel in `config.php` laeuft jetzt unter der Sperre
+ *   der Jobzeile `schluesselwechsel`, und `server_key` wird nur ersetzt,
+ *   wenn dort noch der gesicherte Wert steht. Der Nachweis beginnt
+ *   fruehestens zehn Minuten nach dem Beginn (E-SR-73), damit er auch sieht,
+ *   was ein Prozess mit dem bisherigen Schluessel im Speicher noch
+ *   versiegelt hat; ein Komplett-Stand, dessen Versiegelung ueber den
+ *   Wechsel laeuft, beginnt sie neu (E-SR-72). Ein Wechsel, der von Hand in
+ *   `config.php` steht, bekommt denselben Beginn wie einer ueber die Karte
+ *   (E-SR-74). Ein Stueck, das beim Umhuellen wirft, haelt den Wechsel nicht
+ *   mehr an, sondern wird genannt; der Nachweis ist so scharf wie das
+ *   Umhuellen und kann nicht mehr endlos kreisen. Beginn und Abschluss
+ *   haben je eine Mailvorlage. Die Nachpruefung der Behebung fand noch drei
+ *   Stellen mit Gewicht: Die Probe merkte sich nach einem Wettlauf ohne
+ *   Sieger den alten Schluessel als neuen, ein Archiv mit Schreibfehler
+ *   und ein Nachweis ohne Stueck liessen den Job kreisen — behoben im
+ *   selben Zug, mit der Waise beim Anteil und einer Sperrmeldung, die sagt,
+ *   bis wann (F-SR-84 bis -87). Kein Schema.
  */
-const WEB_VERSION = '21.12.0';
+const WEB_VERSION = '21.12.1';

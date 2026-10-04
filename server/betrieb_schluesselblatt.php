@@ -86,8 +86,11 @@ if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
 /* DER BISHERIGE SERVERSCHLÜSSEL (SR-03, E-SR-10) — nur während eines
  * Wechsels, und mit dem Satz, der das alte Blatt vor dem Reißwolf bewahrt:
  * Was auf einem Backup-Ziel liegt, öffnet für immer nur er. Das Datum ist der
- * Beginn des Wechsels; Stände von davor gehören zu ihm. */
-if (preg_match('/^[0-9a-f]{64}$/i', $skAlt)) {
+ * Beginn des Wechsels; Stände von davor gehören zu ihm. Eine Waise
+ * (`server_key_alt` = `server_key`, ein Wechsel, der zwischen seinen beiden
+ * Schritten abbrach) ist keiner und bekommt keine zweite Kachel mit derselben
+ * Kennung (Nachprüfung H-SR-06, F-SR-86). */
+if (preg_match('/^[0-9a-f]{64}$/i', $skAlt) && strcasecmp($skAlt, $skHex) !== 0) {
     require_once __DIR__ . '/schluesselwechsel_lib.php';
     $swBeginn = sw_zeit((string)(sw_zustand()['begonnen'] ?? ''));
     $eintraege[] = ['name' => 'Serverschlüssel (bisheriger)',
@@ -106,7 +109,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $anHex)) {
                             . 'jede NutzerIn ihr Passwort über den '
                             . 'Wiederherstellungsschlüssel neu. Kein Datenverlust.'];
 }
-if (preg_match('/^[0-9a-f]{64}$/i', $anAlt)) {
+if (preg_match('/^[0-9a-f]{64}$/i', $anAlt) && strcasecmp($anAlt, $anHex) !== 0) {
     $eintraege[] = ['name' => 'Server-Anteil (bisheriger)',
                     'eintrag' => 'kdf_anteil_alt',
                     'hex' => $anAlt,

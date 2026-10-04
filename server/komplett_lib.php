@@ -1416,6 +1416,53 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
     }
 }
 
+/**
+ * Passt der gemerkte Kopf noch zum Schlüssel, der jetzt in `config.php`
+ * steht? Wenn nicht: Kopf mit der heutigen Kennung neu, Versiegelung von vorn.
+ *
+ * WECHSELT DER SCHLÜSSEL ZWISCHEN ZWEI SIEGEL-HÄPPCHEN (H-SR-06, F-SR-79,
+ * E-SR-72). Jedes Häppchen ist ein eigener Prozess und nimmt den Schlüssel,
+ * der gerade in `config.php` steht; der Kopf mit der Kennung entstand beim
+ * Übergang vom Dump. Bis Web 21.12.0 lagen danach die ersten Blöcke unter dem
+ * bisherigen, die übrigen unter dem neuen, und der Kopf nannte den
+ * bisherigen: Die Liste zeigte „bisheriger Schlüssel", das Einspielen brach
+ * mitten in der Datei ab, und die Aufbewahrung verdrängte für diesen Stand
+ * einen lesbaren. Fiel der Wechsel genau zwischen Dump und erstes
+ * Siegel-Häppchen, log der Kopf. Der Wechsel wartet nicht auf das Backup —
+ * im Ernstfall zählt jede Minute —; das Backup fängt die Versiegelung neu
+ * an, wie der Archivjob es auch tut. Der Dump bleibt: Er ist Klartext und
+ * hängt an keinem Schlüssel. Ein Kopf mit Passphrase (`kdf`) trägt keine
+ * Kennung und bleibt, wie er ist.
+ *
+ * Eine eigene Funktion, damit die Schlüsselwechselprobe genau diese Stelle
+ * misst, ohne die ganze Datenbank abzuschreiben.
+ *
+ * DIE KENNUNG KOMMT VOM AUFRUFER, AUS DEM SCHLÜSSEL, MIT DEM ER SIEGELT
+ * (Nachprüfung H-SR-06, F-SR-87) — nicht aus `konfig()`. Beide sagen heute
+ * dasselbe, aber nur, weil `config_gemerktes_verwerfen()` beide zugleich
+ * verwirft; ein Kopf mit der neuen Kennung über Blöcken unter dem alten wäre
+ * ein Kopf, der lügt.
+ *
+ * @return bool true, wenn neu begonnen wird
+ */
+function komp_kopf_angleichen(array &$z, string $kennungJetzt): bool
+{
+    $kopf = json_decode(rtrim((string)($z['kopfzeile'] ?? ''), "\n"), true);
+    if (!is_array($kopf) || ($kopf['kdf'] ?? null) !== null
+        || ($kopf['kennung'] ?? null) === $kennungJetzt) {
+        return false;
+    }
+    $kopf['kennung'] = $kennungJetzt;
+    $j = json_encode($kopf, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($j === false) {
+        throw new RuntimeException('Der Dateikopf liess sich nicht neu bilden.');
+    }
+    $z['kopfzeile'] = $j . "\n";
+    $z['siegel_i'] = 0;
+    $z['siegel_bytes'] = 0;
+    return true;
+}
+
 /** Der eigentliche Lauf; `komp_schub()` raeumt darum herum auf. */
 function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserve): array
 {
@@ -1475,6 +1522,7 @@ function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
             throw new RuntimeException('Der Serverschlüssel ist verschwunden; '
                 . 'das Backup lässt sich nicht versiegeln.');
         }
+        komp_kopf_angleichen($z, (string)schluessel_kennung(bin2hex($schluessel)));
         $ziel = $bauPfad . '/ziel.edk';
         $e = komp_siegel_schub($roh, $ziel, $schluessel, (string)$z['kopfzeile'],
                                $z, $zeitLinks, $reserve);

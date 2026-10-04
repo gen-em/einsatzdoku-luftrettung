@@ -272,11 +272,14 @@ Daten erst nach Server-Bestätigung.
 │   │                       Server selbst hat — es öffnet keine Patientendaten.
 │   │                       Seit Web 21.12.0 während eines Wechsels auch der
 │   │                       bisherige (`server_key_alt`); Beginn, Lage und die
-│   │                       Riegel des Abschlusses stehen hier
+│   │                       Riegel des Abschlusses stehen hier; seit Web
+│   │                       21.12.1 die Sperre um jeden Griff an einen
+│   │                       Schlüssel in config.php
 │   ├── schluesselwechsel_lib.php  der Wechsel des Serverschlüssels als Job
 │   │                       (SR-03, Nr. 247): Inventar aus vier Zwecken,
-│   │                       Häppchen mit Zeiger, Nachweis mit dem neuen, die
-│   │                       drei Bedingungen, Mail (4.97c)
+│   │                       Häppchen mit Zeiger, Nachweis mit dem neuen (nach
+│   │                       einer Frist von zehn Minuten), die drei
+│   │                       Bedingungen, Mail (4.97c)
 │   ├── vendor/            fremde Bibliotheken, die auf dem SERVER laufen
 │   │                       (phpseclib3, ParagonIE/ConstantTime), gesperrt per
 │   │                       .htaccess, geladen über vendor/laden.php;
@@ -789,8 +792,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      zweitem Cookie; Schritt 18, SR-01), seit
 │   │                      Web 21.10.0 passkey (CBOR-Leser, beide
 │   │                      Zeremonien, Tabelle; SR-09), seit Web 21.12.0
-│   │                      schluesselwechsel (A → B und zurück, jedes
-│   │                      Stück je Zweck; SR-03).
+│   │                      schluesselwechsel (A → B zweimal gleichzeitig
+│   │                      und zurück, jedes Stück je Zweck; SR-03,
+│   │                      seit Web 21.12.1 mit den Fällen aus H-SR-06).
 │   │                      Gezählt am 29.09.2026 mit `proben.sh --liste`:
 │   │                      27 — bis zum 24.09.2026 stand hier
 │   │                      „zweiundzwanzig", AP5 hatte die
@@ -2862,17 +2866,19 @@ Nachricht, und eine Rundmail an vierzig Konten hätte den Seitenaufruf bis zu
 Prüfung, Präfix, Frist und das Schließen überholter Zeilen bleiben eine
 Stelle.
 
-**Der Katalog** (`mail_katalog()`) führt **siebenundzwanzig** Einträge mit
+**Der Katalog** (`mail_katalog()`) führt **achtundzwanzig** Einträge mit
 `art`, `frist`, `pflicht`, `betreff` und `text` (hier stand bis Web 20.37.3
 „zehn", der Stand von Web 20.8.0 — P5b hatte neun dazugebracht, 20.38.0
 bringt `rundmail`, 20.41.0 `registrierung_erneut`, 20.42.0
 `totp_zurueckgesetzt`, 20.44.0 `rueckweg_erneuert`, 21.10.0
 `passkey_angelegt` und `passkey_entfernt`, 21.11.0 `passkey_zaehler`, 21.12.0
 `serverschluessel_gewechselt` — an **jede** BetreiberIn mit Passwort
-(`mail_betreiberinnen()`, E-SR-62), beim Beginn und beim Abschluss eines
-Wechsels, nur Kennungen; bis Web 21.1.0 stand hier
+(`mail_betreiberinnen()`, E-SR-62), nur Kennungen —, 21.12.1
+`serverschluessel_abgeschlossen` für den Abschluss desselben Wechsels; bis
+dahin trugen Beginn und Abschluss einen Schlüssel, und der Abschluss setzte
+eine noch offene Beginn-Mail auf „überholt" (F-SR-82). Bis Web 21.1.0 stand hier
 „zwanzig", bis Web 21.9.0 „dreiundzwanzig", bis Web 21.10.0 „fünfundzwanzig",
-bis Web 21.11.2 „sechsundzwanzig"). Der Name der Installation kommt aus `instanz_name()`, die
+bis Web 21.11.2 „sechsundzwanzig", bis Web 21.12.0 „siebenundzwanzig"). Der Name der Installation kommt aus `instanz_name()`, die
 Kontaktzeile aus `instanz_kontakt()` — über `mail_rahmen()`, den alle
 benutzen. Vorher gab es acht Mailtexte mit handgeschriebener Grußformel, und
 einer davon fehlte das „Gen-EM" im Betreff.
@@ -4246,15 +4252,87 @@ Lagen — `serverkrypto_lib.php` (Schreiben, Lage, Riegel) und
 | `rotation` | `server_key` (neu) **und** `server_key_alt` (bisher) | die neue | versiegelt wird mit dem neuen; `sk_oeffnen()` versucht erst den neuen, dann den bisherigen (`sk_oeffnen_mit_wem()` sagt, welcher); der Job hüllt um |
 | `bereit` | `server_key` (der neue) | die neue | der bisherige steht nur noch auf dem Blatt |
 
+Ein `server_key_alt` **gleich** dem heutigen ist seit Web 21.12.1 kein
+Wechsel, sondern `bereit` — so bleibt ein Wechsel stehen, der zwischen seinen
+beiden Schreibschritten abbrach. Bis dahin hieß das `rotation`: ein Wechsel
+des Schlüssels mit sich selbst, samt Job und vorgemerktem Komplett-Stand. Der
+nächste Wechsel überschreibt die Waise (F-SR-78); bis dahin steht sie in der
+Datei, aber nicht auf dem Blatt. Dasselbe gilt seit der Nachprüfung beim
+Anteil (`kdf_anteil_alt` = `kdf_anteil`): `bereit`, keine zweite Kachel, und
+die nächste Rotation überschreibt sie. Bis dahin hieß diese Waise `rotation`
+und sperrte den Wechsel des Serverschlüssels (F-SR-86).
+
 **Beginn: `serverschluessel_wechseln($kopienVerstanden)`.** Ohne den Haken
 nichts (E-SR-63) — er sagt, dass die Kopien auf dem Backup-Ziel unter dem
 bisherigen bleiben. Nicht neben einer Anteil-Rotation (E-SR-60; umgekehrt
 weist `anteil_wechseln()` ab, solange ein Wechsel läuft). Geschrieben wird
 erst `server_key_alt` (der heutige), dann `server_key` (ein neuer); scheitert
-das zweite, wird das erste zurückgenommen. Danach `sw_beginnen()`: Zustand
+das zweite, wird das erste zurückgenommen — **aber nur, wenn die Datei noch
+den eigenen halben Zustand trägt** (`config_halbes_zuruecknehmen()`, seit der
+Nachprüfung, F-SR-86). Steht in `server_key` nicht mehr der gesicherte Wert,
+hat jemand an der Sperre vorbei geschrieben (FTP, Editor). Dann bleibt
+`server_key_alt` stehen, denn er ist der einzige Eintrag, der das Alte noch
+öffnet, und die Meldung sagt es. Beim Anteil gilt dasselbe. Danach `sw_beginnen()`: Zustand
 des Jobs, die Rückfrage zum Blatt fällig (Nr. 233, E-SR-11), Protokoll
 `serverschluessel_gewechselt`, eine Mail an jede BetreiberIn (E-SR-62) — nur
 Kennungen. Die Seite fährt gleich ein Häppchen mit acht Sekunden.
+
+**Unter einer Sperre (seit Web 21.12.1, F-SR-78).** Bis dahin lief der
+Wechsel ohne; zwei gleichzeitig abgeschickte — ein Doppelklick, zwei
+Fenster, zwei BetreiberInnen — konnten einen frisch gewürfelten Schlüssel
+überschreiben, nachdem ein Häppchen schon Zeilen unter ihm umgehüllt hatte.
+Jetzt läuft **jeder Griff an einen Schlüssel in `config.php`** (Anlegen,
+Eintragen, Nachtragen, Wechseln, Entfernen, Neuanfang — Serverschlüssel wie
+Anteil) über `schluessel_unter_sperre()`: dasselbe bedingte
+`UPDATE … laeuft_seit` wie in `jobs_einen_lauf()`, auf der Jobzeile
+`schluesselwechsel`. Damit schließen sich die Griffe und jedes Häppchen des
+Jobs gegenseitig aus; wer die Sperre nicht binnen 5 s bekommt, hört „gleich
+noch einmal", und nichts ändert sich. **Stirbt ein Häppchen an der Zeit- oder
+Speichergrenze, läuft kein `finally`**, und die Sperre steht, bis sie nach
+`JOB_SPERRE_VERFALL_S` (einer Stunde) verfällt. So lange weist jeder Griff an
+die Schlüssel ab, auch „Nachtragen vom Blatt". Die Meldung nennt deshalb seit
+der Nachprüfung, seit wann sie steht und wann sie spätestens frei ist
+(F-SR-86). Eine kürzere Frist nur für die Griffe gibt es nicht: Job und
+Griffe teilen sich die Zeile. Keine Sperrdatei: Sie wäre ein neunter
+Pfad, den die Kette nicht ausliefern darf. Nach dem Nehmen wird `config.php`
+neu gelesen. Dazu zwei Riegel in `config_eintrag_schreiben()`: Ob ein
+gültiger Eintrag dasteht, zählt jetzt auch die **Datei**, nicht nur der beim
+Start gemerkte Stand, und `server_key` wird nur ersetzt, wenn dort noch der
+gesicherte Wert steht (`$erwartet`). Die Gegenproben zeigen, was jedes Stück
+trägt (Prüfdokument). **Beiläufig gemessen:** Zwei gleichzeitige Schreiber
+teilen sich die Nebendatei `config.neu.php` — der zweite überschreibt die des
+ersten; auch das schließt die Sperre aus.
+
+**Scheitert der Beginn, bleibt der Wechsel.** Wirft `sw_beginnen()`, steht
+der neue Schlüssel schon in `config.php` und versiegelt; ein Rückbau risse
+ihn aus dem, was er schon versiegelt hat. Der Fehler geht in den Reiter
+System, und der Job holt den Beginn nach (F-SR-80). Ein Inventar, das wirft,
+hält den Beginn seit der Nachprüfung nicht mehr auf: Der Zustand steht dann
+ohne Stückzahl, und das erste Häppchen zählt. Scheitert auch das Schreiben
+des Zustands (die Datenbank ist weg), holt das Häppchen den Beginn **als
+Handeintrag** nach. Protokoll und Mail sagen dann „von Hand eingetragen —
+oder der Beginn über die Karte ist gescheitert" (F-SR-86); bis dahin
+behaupteten sie einen Handeintrag.
+
+**Ein Wechsel von Hand** — `server_key` und `server_key_alt` in
+`config.php` eingetragen, ohne die Karte; ebenso ein Zustand, der zu einem
+anderen Schlüsselpaar gehört (aus einem Dump, von einem früheren
+Handeintrag): Das Häppchen beginnt ihn **wie einen über die Karte** —
+Protokoll mit „von Hand eingetragen", Mail an jede BetreiberIn mit eigenem
+Betreff, die Rückfrage zum Blatt sofort fällig (E-SR-74). Bis Web 21.12.0
+legte es dort still einen Zustand an; die Rückfrage kam dann erst im
+nächsten Quartal, und der Abschluss blieb so lange zu (F-SR-80). **Nach dem
+Beginn endet das Häppchen.** Der Jobrahmen schreibt bei einer Ausnahme den
+Zustand von vor dem Häppchen zurück, und hier war das keiner; das nächste
+hätte noch einmal begonnen, mit einer zweiten Mail. Die Mails des
+Handeintrags trägt der Mailjob hinaus (`sofort = false`), denn am
+Huckepack-Weg liefe das Häppchen in der Anfrage irgendeiner angemeldeten
+Person (F-SR-85, F-SR-87). Eine Lage `abweichend` oder `fehlt` mitten im
+Wechsel — eine Marke aus einem älteren Dump, ein Tippfehler in
+`config.php` — leert den Zustand nicht. Geleert wird nur bei `bereit`; nach
+dem Nachtragen geht es weiter, ohne zweiten Beginn (F-SR-85). Jedes
+Häppchen liest `config.php` zuerst neu: Ein CLI-Lauf, der vor dem Wechsel
+begann, hielt sonst die Lage `bereit` und leerte den Zustand (F-SR-79).
 
 **Der Job `schluesselwechsel`** (4.97a) nimmt die Zwecke in der Reihenfolge
 `ziele`, `totp`, `konten`, `archive` — erst die Zeilen, dann die Dateien.
@@ -4276,14 +4354,84 @@ ersetzen —
   die Prüfsumme davor gehalten; die Begleitdatei vor dem Umbenennen noch
   einmal gelesen;
 - ein Archiv des Protokolls bekommt einen **neuen Namen** (die Kennung steht
-  darin, und der Name im Zweck jedes Teils): neue Datei bauen, ablegen,
-  nachweisen, dann die alte löschen. Liegt die neue schon da und besteht den
-  Nachweis, brach der vorige Lauf zwischen Ablegen und Löschen ab.
+  darin, und der Name im Zweck jedes Teils): neue Datei im Arbeitsordner
+  bauen, **dort nachweisen, dann ablegen** und die alte löschen (bis Web
+  21.12.0 erst abgelegt, dann nachgewiesen). Liegt die neue schon da und
+  besteht den Nachweis, brach der vorige Lauf zwischen Ablegen und Löschen
+  ab. Seit Web 21.12.1 wird jedes Archiv umgehüllt, dessen Manifest mit dem
+  bisherigen aufgeht, gleich welche Kennung im Namen steht — bis dahin hieß
+  eines mit einer dritten Kennung im Namen `verloren`, obwohl der bisherige
+  es öffnete (F-SR-81). Leere `zeilen` und `gekuerzt` bleiben Objekte
+  (Backup-Format 7.1); verschwindet das Archiv mitten im Bau, entsteht keines
+  aus einem gelöschten.
 
-Reserven je Stück: 0,5 s für eine Zeile, 6 s für eine Datei. Nach dem
-Umhüllen ein **Nachweis-Durchgang**, der nichts schreibt; liegt dann noch
-etwas unter dem bisherigen, beginnt das Umhüllen von vorn (höchstens dreimal
-je Häppchen). Fertig heißt: Protokoll `serverschluessel_umgehuellt` mit den
+**Ein Stück, das beim Umhüllen wirft** (seit Web 21.12.1, F-SR-81) — ein
+Schreibfehler, ein ZIP, das sich nicht bauen lässt, ein neu versiegelter
+Wert, der den Nachweis nicht besteht —, hält nicht mehr den ganzen Wechsel
+an. Bis dahin brach die Ausnahme das Häppchen ab, der Jobrahmen schrieb den
+Zustand von vor dem Häppchen zurück, und das nächste stieß wieder auf
+dasselbe Stück, ohne Ende und ohne Namen. Jetzt wird es mit Grund im Zustand
+vermerkt (`fehler`, bis zu zwanzig; darüber zählt `fehler_mehr` weiter, und
+der Reiter System bekommt eine Zeile je Häppchen statt einer je Stück und
+Runde), einmal in den Reiter System gemeldet,
+übersprungen — und zählt im Nachweis wie `alt`: Es liegt ja noch unter dem
+bisherigen, und Bedingung 1 bleibt zu, bis es umgehüllt oder fort ist. Die
+Karte zeigt es in der Zeile „Ließen sich nicht umhüllen". Besteht der Rest
+eines Nachweises nur aus solchen Stücken, wartet der neue Versuch aufs
+nächste Häppchen. Was mit **keinem** der beiden aufgeht, bleibt `verloren`
+(E-SR-61) — ein Wert, der nur den Nachweis nach dem Neuversiegeln nicht
+bestand, gehört nicht dazu, ebenso wenig ein Teil eines Archivs, der sich
+nicht in den Arbeitsordner schreiben ließ: Das Archiv öffnet mit dem
+bisherigen und steht seit der Nachprüfung in der Fehlerliste. Bis dahin hieß
+es `verloren`, der Nachweis sagte `alt`, und der Durchgang kreiste (F-SR-85).
+Die Liste `verloren` gilt **je Durchgang**: Am Ende eines Durchgangs steht
+darin nur, was dieser so fand. Bis zur Nachprüfung wurde sie nur verlängert,
+und ein gelöschtes kaputtes Konto-Backup stand bis zum Abschluss auf der
+Karte.
+
+Reserven je Stück: 0,5 s für eine Zeile, 6 s für eine Datei **beim
+Umhüllen**; im Nachweis 0,5 s auch für eine Datei, denn bei einer
+umgehüllten liest er nur das Manifest. Findet er eine Datei noch unter dem
+bisherigen (ein Stück aus der Fehlerliste, ein Nachzügler), liest er jeden
+Teil, und das Häppchen läuft wie beim Umhüllen über sein Budget hinaus, bis
+das Stück durch ist: Die Reserve regelt den Anfang eines Stücks, nicht sein
+Ende. **Am Huckepack-Weg (3 s) werden
+Dateien deshalb nie umgehüllt, wohl aber nachgewiesen** — ohne Cron oder
+Token bringt nur *Jetzt weiterarbeiten* (20 s) Konto-Backups und Archive
+voran (F-SR-82). Steht der Verdichtungsjob mit Rückstand im Katalog vor ihm,
+bleibt ihm am Huckepack-Weg oft gar keine Zeit; dasselbe wie beim Mailjob.
+Nach dem Umhüllen ein **Nachweis-Durchgang**, der nichts schreibt; liegt dann
+noch etwas unter dem bisherigen, beginnt das Umhüllen von vorn (höchstens
+dreimal je Häppchen). Liegt das Manifest eines Konto-Backups oder Archivs
+noch unter dem bisherigen, versucht er **jeden Teil** — so scharf wie das
+Umhüllen, das ein Paket mit einem unlesbaren Teil `verloren` nennt und
+liegen lässt. Bis Web 21.12.0 sagte der Nachweis dazu `alt`, und der Wechsel
+wurde nie fertig (F-SR-81).
+
+**Der Nachweis beginnt frühestens zehn Minuten nach dem Beginn** (seit Web
+21.12.1, `SW_NACHZUEGLER_S`, `nachweis_ab` im Zustand, E-SR-73). Jeder
+Prozess hält `config.php` und den Schlüssel in einer `static`; einer, der vor
+dem Wechsel startete, versiegelt bis zu seinem Ende mit dem bisherigen — ein
+CLI-Lauf bis zu 300 s, eine Anfrage bis zur Laufzeitgrenze (240 s Produktiv,
+300 s Staging). Ein Nachweis, der früher durch war, sah solche Nachzügler
+nicht mehr, und das Entfernen war erlaubt (F-SR-79). Bis zur Frist ruht das
+Häppchen; Karte und Statuszeile sagen „Nachweis ab HH:MM", *Jetzt
+weiterarbeiten* steht dann nicht da. Bedingung 1 verlangt zusätzlich, dass
+der Nachweis nach der Frist **begann**. Dieser Zeitpunkt wird beim
+**Eintritt** in den Durchgang gesetzt, nicht vor dem ersten Stück. Bis zur
+Nachprüfung blieb er bei einem Durchgang ohne Stück leer. Bedingung 1 ging
+dann nie auf, und jedes Häppchen schrieb erneut „umgehüllt" ins Protokoll
+(F-SR-85). Ein Zustand von vor Web 21.12.1 mit „fertig" ohne diesen
+Zeitpunkt wird einmal neu nachgewiesen.
+
+**Nach dem Einspielen eines Komplett-Stands** (`wiederherstellen.php` ruft
+`sw_nach_einspielen()`) gilt ein mitgebrachter Zustand nicht als Nachweis:
+Phase und Zeiger gehen zurück auf „Nachweis von vorn", der Beginn bleibt;
+die Listen `fehler` und `verloren` und die Zahl `umgehuellt` beginnen neu.
+Der Dump stammt von der Anlage, die ihn schrieb; deren Dateien sind nicht
+die hiesigen (F-SR-80, F-SR-85).
+
+Fertig heißt: Protokoll `serverschluessel_umgehuellt` mit den
 Zahlen, und **ein Komplett-Auftrag wird vorgemerkt** (`sw_komplett_anstossen()`,
 Q-SR-03) — erst jetzt, weil ein Stand mitten im Umhüllen Zeilen unter beiden
 Schlüsseln trüge. Scheitert das Vormerken (Grenze, es läuft schon einer),
@@ -4296,7 +4444,9 @@ zwanzig, ohne Kontokennung.
 dem neuen, jünger als der Beginn (am Kopf **und** am ersten Block geprüft,
 4.97d), und die Rückfrage zum Blatt seit dem Beginn beantwortet. Fehlt eines,
 kommen die fehlenden als Sätze zurück, und nichts ändert sich. Danach
-Protokoll `serverschluessel_alt_entfernt` und die zweite Mail.
+Protokoll `serverschluessel_alt_entfernt` und die zweite Mail — seit Web
+21.12.1 unter eigenem Schlüssel (`serverschluessel_abgeschlossen`), damit sie
+eine noch offene Beginn-Mail nicht überholt (F-SR-82).
 
 **Was er nicht erreicht.** Komplett-Stände (E-SR-21) und alles auf einem
 Backup-Ziel bleiben unter dem bisherigen. Ein umbenanntes Archiv gilt dem
@@ -4582,12 +4732,34 @@ heutige, dann der bisherige (`server_key_alt`, nur während eines Wechsels,
 4.97c), jeweils am ersten Block versucht; die Kennung allein wäre eine
 Behauptung. Die Liste zeigt „bisheriger Schlüssel" (blau) oder „anderer
 Schlüssel" (orange); Herunterladen, versiegelt Herunterladen und Einspielen
-(`komp_schluessel_fuer()` mit dem Pfad) nehmen denselben Weg. **Stände werden
-beim Wechsel nicht umgehüllt** (E-SR-21): Nach dem Entfernen des bisherigen
-öffnet einen älteren Stand nur noch der Wert vom bisherigen Blatt — als
-`server_key_alt` von Hand eingetragen, für die Dauer des Einspielens
-(Runbook 7). Ältere Stände ohne `kennung` zeigen dieselben Plaketten; für sie
-entscheidet allein der Versuch.
+(`komp_schluessel_fuer()` mit dem Pfad) nehmen denselben Weg. Ein Stand
+unter einem **dritten** Schlüssel lässt sich hier seit Web 21.12.1 gar nicht
+erst herunterladen: Die Liste bietet nur *Löschen* an und sagt, warum, und
+der Download weist ab, **bevor** er Protokoll und Kopfzeilen schreibt — bis
+dahin bekam der Browser eine leere Datei, das Protokoll sagte
+„heruntergeladen", und der Satz dazu stand nur im Reiter System (F-SR-82).
+**Stände werden beim Wechsel nicht umgehüllt** (E-SR-21): Nach dem Entfernen
+des bisherigen öffnet einen älteren Stand nur noch der Wert vom bisherigen
+Blatt (Runbook 7, „Einen Stand von vor dem Wechsel einspielen"). Ältere
+Stände ohne `kennung` zeigen dieselben Plaketten; für sie entscheidet allein
+der Versuch.
+
+**Wechselt der Schlüssel, während ein Stand versiegelt wird** (seit Web
+21.12.1, E-SR-72): Jedes Siegel-Häppchen ist ein eigener Prozess und nimmt
+den Schlüssel, der gerade in `config.php` steht; der Kopf mit der Kennung
+entstand beim Übergang vom Dump. Bis dahin lagen danach die ersten Blöcke
+unter dem bisherigen, die übrigen unter dem neuen, und der Kopf nannte den
+bisherigen — die Liste zeigte „bisheriger Schlüssel", das Einspielen brach
+mitten in der Datei ab, und die Aufbewahrung verdrängte für ihn einen
+lesbaren Stand (F-SR-79). Jetzt hält `komp_kopf_angleichen()` vor jedem
+Siegel-Häppchen die Kennung im gemerkten Kopf gegen die heutige und beginnt
+bei einer Abweichung die Versiegelung mit neuem Kopf von vorn — wie der
+Archivjob. Der Dump bleibt; er ist Klartext. Der Wechsel wartet nicht auf
+das Backup: Im Ernstfall zählt jede Minute. **Die Kennung kommt vom
+Aufrufer**, aus dem Schlüssel, mit dem das Häppchen siegelt, nicht aus
+`konfig()` (Nachprüfung, F-SR-87). Beide sagen heute dasselbe, aber nur,
+weil `config_gemerktes_verwerfen()` beide zugleich verwirft. Ein Kopf mit der
+neuen Kennung über Blöcken unter dem alten wäre ein Kopf, der lügt.
 
 #### Zwei Wege heraus
 
@@ -7352,7 +7524,10 @@ für den Wechsel des Serverschlüssels (4.97c) — `serverschluessel_gewechselt`
 (orange; neue und bisherige Kennung, Zahl der Stücke),
 `serverschluessel_umgehuellt` (blau; die Zahlen des Nachweises und bis zu
 zwanzig Stücke, die mit keinem der beiden aufgingen, ohne Kontokennung) und
-`serverschluessel_alt_entfernt` (neutral). Nie ein Wert.
+`serverschluessel_alt_entfernt` (neutral). Nie ein Wert. Seit Web 21.12.1
+schreibt `serverschluessel_gewechselt` auch ein Wechsel, den der Job in
+`config.php` vorfindet, ohne dass er über die Karte begann — mit „von Hand
+eingetragen" im Text und `weg: hand` in den Daten (E-SR-74).
 
 #### Wer welchen Reiter sieht
 
@@ -7542,8 +7717,11 @@ auch im Archiv.
 mehr öffnen, und eines von einem anderen Schlüssel erkennt die Seite am
 Namen, ohne es zu öffnen: Der Reiter Archiv zeigt es mit der Plakette
 „anderer Schlüssel" und sperrt den Download. Während eines Wechsels des
-Serverschlüssels trägt ein noch nicht umgehülltes Archiv diese Plakette,
-bis der Job es unter dem neuen Namen abgelegt hat (4.97c).
+Serverschlüssels trägt ein noch nicht umgehülltes Archiv seit Web 21.12.1
+die Plakette „bisheriger Schlüssel" (blau) — der Download bleibt gesperrt,
+bis der Job es unter dem neuen Namen abgelegt hat (4.97c), und die Meldung
+darüber sagt das, statt auf den Schlüssel von damals zu verweisen
+(F-SR-82).
 
 **Der Download** (nur BetreiberIn, POST mit Token) entsiegelt in einen
 Arbeitsordner unter dem temporären Verzeichnis, packt `manifest.json` und je
@@ -12328,10 +12506,15 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
    Kopf nennt die Kennung (4.97d); stammt er aus der Zeit vor einem Wechsel
    des Serverschlüssels, ist es der Wert vom **bisherigen** Blatt — als
    `server_key`, denn auch die Zeilen im Dump und die Marke in `app_state`
-   gehören zu ihm. Stammt er aus der Zeit **während** eines Wechsels,
-   gehören beide Werte vom Blatt dieser Zeit hinein — `server_key` der neue,
-   `server_key_alt` der bisherige —, und der Job macht nach dem Anmelden dort
-   weiter, wo der Dump ihn angetroffen hat.
+   gehören zu ihm. Das gilt für die **leere** Anlage dieses Runbooks: Auf
+   ihr liegt noch nichts unter einem neueren Schlüssel. (Auf einer
+   **laufenden** Anlage, die Konto-Backups und Archive schon unter dem neuen
+   trägt, ist es der andere Weg — „Einen Stand von vor dem Wechsel
+   einspielen" weiter unten.) Stammt der Stand aus der Zeit **während**
+   eines Wechsels, gehören beide Werte vom Blatt dieser Zeit hinein —
+   `server_key` der neue, `server_key_alt` der bisherige. Seit Web 21.12.1
+   beginnt der Nachweis dann auf dieser Anlage von vorn
+   (`sw_nach_einspielen()`, 4.97c); der Beginn bleibt der des Dumps.
 4. **Die Backup-Datei** nach `server/sicherungen/eingang/` legen — per
    FTP, SFTP oder Dateimanager des Hosters. Vom Backup-Ziel holt man sie
    sich dorthin. Erkannt werden `.edk` (versiegelt), `.sql.gz` und `.sql`.
@@ -12357,7 +12540,7 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 | „Diese Installation ist noch nicht eingerichtet" | keine `config.php` | Schritt 3 nachholen |
 | „Die Datenbank antwortet nicht" | Zugangsdaten in `config.php` passen nicht, oder die Datenbank existiert nicht | Schritt 1 und 3 prüfen |
 | „Diese Installation ist in Betrieb" | in der Datenbank stehen schon Konten | Datenbank leeren (bewusste Handlung beim Hoster) oder einzelne Konten über *Backups* zurückholen |
-| „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` in `config.php` ist nicht der, mit dem versiegelt wurde | den richtigen aus dem Wiederanlaufpaket eintragen |
+| „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` in `config.php` ist nicht der, mit dem versiegelt wurde | den richtigen aus dem Wiederanlaufpaket eintragen — nach einem Wechsel des Serverschlüssels den vom Blatt, dessen Kennung der Kopf des Stands nennt (die `config.php` im Paket kann noch die bisherige tragen, wenn sie danach nicht erneuert wurde) |
 | „Dieses Backup ist unvollständig — die Endmarke fehlt" | der Lauf ist beim Erzeugen abgebrochen | einen älteren Stand nehmen |
 | „gescheitert an Anweisung *n*" | halb eingespielt; es wurde **nichts** zurückgenommen | Datenbank leeren und von vorn |
 | „Der Server-Anteil der Verschlüsselung fehlt oder ist nicht der, mit dem die Hüllen gebaut wurden" (seit Web 19.7.0) | **der Regelfall nach Schritt 5**, siehe unten | den `kdf_anteil` aus dem Wiederanlaufpaket eintragen |
@@ -12384,7 +12567,10 @@ vierten Stück).** Getrennt von der Anwendung aufbewahren — auf einem anderen
 Rechner, nicht im selben Backup:
 
 1. **`server/config.php`.** Sie steht in `.gitignore` **und** in der
-   Ausnahmeliste des Deploys; es gibt sie also nur auf dem Server.
+   Ausnahmeliste des Deploys; es gibt sie also nur auf dem Server. **Nach
+   jedem Wechsel des Serverschlüssels eine frische hineinlegen** und die alte
+   als „bisherig" kennzeichnen — die alte trägt den bisherigen Schlüssel
+   (seit Web 21.12.1 sagt es auch die Abschluss-Mail, F-SR-82).
 2. **Der Serverschlüssel** darin (`'server_key' => '…'`, 64 Hexzeichen).
    Er versiegelt die Zugangsdaten der Backup-Ziele und — ab AP8 — das
    Komplettbackup. **Ohne ihn** sind die Zugangsdaten der Ziele neu
@@ -12433,15 +12619,23 @@ der Kalender. *Ablauf:*
    *Serverschlüssel wechseln*. Den Haken setzen („Kopien auf dem Backup-Ziel
    bleiben unter dem bisherigen") und die Rückfrage bestätigen. Geht nicht
    während einer Rotation des Anteils (und umgekehrt, E-SR-60).
-2. **Sofort das Blatt neu drucken** — es trägt jetzt drei Kacheln, den
-   bisherigen mit dem Satz „Dieses Blatt nach dem Wechsel NICHT vernichten".
-   Die Rückfrage zum Blatt ist ab jetzt fällig und kommt bei der nächsten
-   Anmeldung jeder BetreiberIn; jede bekommt außerdem eine Mail.
+2. **Sofort das Blatt neu drucken** — es trägt jetzt drei Kacheln (zwei
+   ohne Server-Anteil), den bisherigen mit dem Satz „Dieses Blatt nach dem
+   Wechsel NICHT vernichten". Die Rückfrage zum Blatt ist ab jetzt fällig und
+   kommt bei der nächsten Anmeldung jeder BetreiberIn; jede bekommt außerdem
+   eine Mail.
 3. Die Karte zeigt „Umhüllung: noch n von m". Der Job arbeitet über den
    eingerichteten Auslöser; *Jetzt weiterarbeiten* fährt ein Häppchen mit
-   20 s. Auf einer kleinen Anlage ist nach dem ersten Häppchen alles
+   20 s. **Ohne Cron oder Token gehen Konto-Backups und Archive nur mit
+   diesem Knopf voran** — am Huckepack-Weg fängt der Job keine Datei an
+   (F-SR-82). Auf einer kleinen Anlage ist nach dem ersten Häppchen alles
    umgehüllt — örtlich gemessen: 13 Stücke im Häppchen von acht Sekunden,
-   das der Wechsel selbst fährt.
+   das der Wechsel selbst fährt. **Der Nachweis beginnt zehn Minuten nach
+   dem Wechsel** (E-SR-73); bis dahin zeigt die Karte „Nachweis ab HH:MM".
+   Steht eine Zeile „Ließen sich nicht umhüllen" da, nennt sie Stück und
+   Grund; der Job versucht es mit jedem Häppchen neu, und der bisherige
+   bleibt, bis es umgehüllt oder fort ist (ein kaputtes Konto-Backup darf
+   man löschen und neu erzeugen).
 4. **Der Komplett-Stand unter dem neuen.** Ist alles nachgewiesen, merkt
    der Job selbst einen Auftrag vor (Q-SR-03); er läuft mit dem nächsten
    Joblauf an. Ohne eingerichteten Auslöser: Komplett-Backup → *Jetzt
@@ -12452,14 +12646,30 @@ der Kalender. *Ablauf:*
 6. Stehen alle drei („Bevor der bisherige gehen darf: 3 von 3"), *Alten
    Schlüssel entfernen*. Danach steht `server_key_alt` nicht mehr in
    `config.php`.
+7. **Das Wiederanlaufpaket erneuern:** eine frische `config.php` hinein, die
+   alte als „bisherig" kennzeichnen (F-SR-82). Bis Web 21.12.1 stand dieser
+   Schritt nirgends.
 
 *Die Blatt-Regel (E-SR-10):* Das Blatt mit dem bisherigen Wert **bleibt in
 der Betriebsakte**, solange auf dem Backup-Ziel oder in der Liste der
 Komplett-Stände etwas liegt, das nur er öffnet — die Liste zeigt es mit
-„anderer Schlüssel". Ein Stand von vor dem Wechsel lässt sich danach nur so
-einspielen: den bisherigen Wert als `server_key_alt` von Hand in
-`config.php` eintragen, einspielen, wieder austragen (die Karte zeigt
-dazwischen die Lage *Wechsel*; der Job findet nichts umzuhüllen). *Was
+„anderer Schlüssel".
+
+*Einen Stand von vor dem Wechsel einspielen* (auf der laufenden Anlage; für
+die leere gilt Wiederanlauf Schritt 3): den bisherigen Wert als
+`server_key_alt` von Hand in `config.php` eintragen — `server_key` bleibt
+der neue —, einspielen, und dann **den Wechsel über die Karte zu Ende
+bringen, nicht von Hand austragen**. Der eingespielte Dump bringt die Zeilen
+unter dem bisherigen zurück (Zugänge der Ziele, Zweitfaktor-Geheimnisse)
+und die Marke dazu; die Lage ist *Wechsel*, und der Job hüllt diese Zeilen
+um. Er beginnt den Wechsel wie einen über die Karte — Protokoll „von Hand
+eingetragen", Mail, Rückfrage zum Blatt (E-SR-74) — und merkt nach dem
+Nachweis einen Komplett-Stand vor. Abgeschlossen wird mit *Alten Schlüssel
+entfernen*: Der Knopf hat die drei Riegel, die Hand nicht. **Bis Web 21.12.1
+stand hier „wieder austragen — der Job findet nichts umzuhüllen". Das war
+falsch:** Wer vor dem nächsten Häppchen austrug, machte jedes
+Zweitfaktor-Geheimnis und jeden Zugang eines Ziels aus dem Dump stumm
+(F-SR-80). *Was
 „mit keinem der beiden zu öffnen" meldet,* war vorher schon stumm (E-SR-61):
 ein Ziel neu erfassen, ein Zweitfaktor neu einrichten (Notweg oben), ein
 Konto-Backup neu erzeugen.

@@ -356,11 +356,14 @@ export const wege = [
         schritte.push('Karte ' + (lageWechsel ? 'Lage Wechsel' : 'NICHT in der Lage Wechsel'));
         await k.bild('betrieb-server-schluessel-wechsel', s);
 
-        /* 3. Das Blatt: drei Kacheln, EINE A4-Seite (E-SR-60: vier passten
-         *    nicht; gemessen P5c/AP9 mit drei 1013 von 1017 px — und die
-         *    Zeile „Wann neu" ist in der Lage Wechsel länger). */
+        /* 3. Das Blatt: drei Kacheln — zwei ohne Server-Anteil (H-SR-06,
+         *    F-SR-82) —, EINE A4-Seite (E-SR-60: vier passten nicht; gemessen
+         *    P5c/AP9 mit drei 1013 von 1017 px — und die Zeile „Wann neu" ist
+         *    in der Lage Wechsel länger). */
         await s.goto(`${k.basis}/betrieb_schluesselblatt.php`, { waitUntil: 'domcontentloaded' });
         const kacheln = await s.locator('.blatt-kachel-name').allInnerTexts();
+        const sollKacheln = Number(phpK('require_once "server/serverkrypto_lib.php"; '
+          + 'echo anteil_zustand(true)["kennung"] !== null ? 3 : 2;'));
         await k.bild('schluesselblatt-wechsel', s);
         const pdf = await s.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
         const seiten = (pdf.toString('latin1').match(/\/Type\s*\/Page(?![s\w])/g) || []).length;
@@ -371,9 +374,14 @@ export const wege = [
          *    mit acht Sekunden), und der Knopf stünde nie da. Deshalb beginnt
          *    der Durchgang hier von vorn — dieselbe Lage wie nach einem
          *    abgebrochenen Lauf, und jedes Stück ist dann schon „neu". */
+        /* Dazu die Frist vor dem Nachweis (zehn Minuten, E-SR-73) gekürzt —
+         * wie die Probe: Die Jobs stehen still, außer dem Bedienweg
+         * versiegelt niemand. */
         phpK('require_once "server/schluesselwechsel_lib.php"; $z = sw_zustand(); '
            + 'sw_zustand_setzen(array_merge($z, ["phase" => "umhuellen", "zweck" => SW_ZWECKE[0], '
-           + '"cursor" => null, "erledigt" => 0, "zahlen" => [], "nachweis_alt" => 0]));');
+           + '"cursor" => null, "erledigt" => 0, "zahlen" => [], "nachweis_alt" => 0, '
+           + '"nachweis_fehler" => 0, "nachweis_begonnen" => null, '
+           + '"nachweis_ab" => gmdate("Y-m-d H:i:s", time() - 1)]));');
         let klicks = 0;
         for (let i = 0; i < 20 && phase() !== 'fertig'; i++) {
           await karte();
@@ -430,10 +438,10 @@ export const wege = [
         const zurueckOk = zurueck.status === 0 && zustand().kennung === A;
         schritte.push('Rückweg ' + (zurueckOk ? `auf ${A}` : 'NICHT sauber: ' + (zurueck.stdout || zurueck.stderr).trim()));
 
-        const ok = ohneHaken && gewechselt && lageWechsel && kacheln.length === 3 && seiten === 1
+        const ok = ohneHaken && gewechselt && lageWechsel && kacheln.length === sollKacheln && seiten === 1
                 && fertig && satz && beantwortet && st.status === 0 && entfernenDa && entfernt && zurueckOk;
         return { ist: schritte.join(' · '), ok,
-                 bemerkung: ok ? '' : 'Soll: abgewiesen · gewechselt · Lage Wechsel · 3 Kacheln auf 1 Seite · '
+                 bemerkung: ok ? '' : `Soll: abgewiesen · gewechselt · Lage Wechsel · ${sollKacheln} Kacheln auf 1 Seite · `
                                    + 'nachgewiesen · Rückfrage mit Satz beantwortet · entfernt · Rückweg sauber' };
       } finally {
         await kontext.close();

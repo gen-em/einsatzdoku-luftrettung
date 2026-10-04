@@ -5,7 +5,9 @@ declare(strict_types=1);
  * DER WECHSEL DES SERVERSCHLÜSSELS — der Job, der umhüllt (Schritt 18, SR-03)
  * ===========================================================================
  *
- *     sw_beginnen($neu, $alt)          // aus serverschluessel_wechseln()
+ *     sw_beginnen($neu, $alt, $weg)    // aus serverschluessel_wechseln() — oder
+ *                                      // aus dem Häppchen, wenn der Wechsel
+ *                                      // von Hand in config.php steht
  *     sw_haeppchen($pdo, $z, $zeitLinks)  // Jobkatalog: ein Häppchen
  *     sw_bedingungen()                 // die drei Riegel vor dem Entfernen
  *     sw_abschliessen($neu, $alt)      // aus serverschluessel_alt_entfernen()
@@ -17,7 +19,8 @@ declare(strict_types=1);
  * macht: den Nachweis der Öffenbarkeit vor dem Verwerfen des alten Schlüssels.
  *
  * DAS INVENTAR KOMMT AUS DEN AUFRUFERN, NICHT AUS DER DOKU (F-SR-01). Gezählt
- * an `sk_versiegeln(` in `server/`: sieben Aufrufe, fünf Zweck-Familien —
+ * an `sk_versiegeln(` in `server/`: sieben Aufrufe in den Zwecken, dazu der
+ * eine dieser Datei beim Umhüllen (`sw_umsiegeln()`) — fünf Zweck-Familien:
  *
  *   ziele    `sicherungsziel:<id>:geheim|schluessel`   Zeile in backup_targets
  *   totp     `totp|<konto>`                            Zeile in users
@@ -50,7 +53,18 @@ declare(strict_types=1);
  * `nachweis` öffnet danach JEDES Stück noch einmal und zählt, was nicht mit
  * dem neuen aufgeht. Bleibt dabei eines unter dem bisherigen — etwa weil eine
  * Datei während des Umhüllens neu geschrieben wurde —, beginnt der erste
- * Durchgang von vorn. Erst ein Nachweis ohne Rest setzt `fertig`.
+ * Durchgang von vorn. Erst ein Nachweis ohne Rest setzt `fertig`. Bei Zeilen
+ * und Begleitdatei liest der Nachweis den Wert neu; bei Konto-Backup und
+ * Archiv das Manifest — und, liegt es noch unter dem bisherigen, jeden Teil
+ * (H-SR-06, F-SR-81). Die Teile einer UMGEHÜLLTEN Datei sind schon beim Bau
+ * an der neuen Datei nachgewiesen, bevor sie die alte ersetzt.
+ *
+ * DER NACHWEIS BEGINNT FRÜHESTENS ZEHN MINUTEN NACH DEM BEGINN (H-SR-06,
+ * E-SR-73). Jeder Prozess hält `config.php` und den Schlüssel in einer
+ * `static`; einer, der vor dem Wechsel startete, versiegelt bis zu seinem
+ * Ende mit dem bisherigen — ein CLI-Lauf bis zu 300 s, eine Anfrage bis zur
+ * Laufzeitgrenze (240 s Produktiv, 300 s Staging). Ein Nachweis, der früher
+ * durch ist, sähe solche Nachzügler nicht mehr.
  *
  * WAS SICH MIT KEINEM DER BEIDEN ÖFFNEN LÄSST (E-SR-61), wird gezählt,
  * genannt und nicht angefasst: Es ist heute schon unlesbar, und der bisherige
@@ -79,12 +93,28 @@ const SW_JOB = 'schluesselwechsel';
 const SW_ZWECKE = ['ziele', 'totp', 'konten', 'archive'];
 
 /** So viel Zeit muss übrig sein, damit ein Stück angefangen wird. Eine Zeile
- *  kostet Millisekunden; eine Datei kann ein Konto-Backup von 90 MB sein. Am
- *  Huckepack-Weg (3 s) werden deshalb nur Zeilen umgehüllt. */
+ *  kostet Millisekunden; eine Datei kann ein Konto-Backup sein — beim
+ *  Messstand des 5000er-Kontos rund 15 MB in Fassung 3 (die oft genannten
+ *  94 MB sind Fassung 1, die an keinem Schlüssel hängt), im Container in
+ *  0,3 s umgehüllt. Am Huckepack-Weg (3 s) werden deshalb nur Zeilen
+ *  UMGEHÜLLT; Dateien nur mit eingerichtetem Auslöser oder über „Jetzt
+ *  weiterarbeiten". Der NACHWEIS liest bei einer umgehüllten Datei nur das
+ *  Manifest und nimmt die kleine Reserve — er läuft auch huckepack. Findet er
+ *  eine Datei noch unter dem bisherigen (ein Stück aus der Fehlerliste, ein
+ *  Nachzügler), liest er jeden Teil — dann läuft das Häppchen wie beim
+ *  Umhüllen über sein Budget hinaus, bis das Stück durch ist (Nachprüfung
+ *  H-SR-06, F-SR-87). Die Reserve regelt den Anfang eines Stücks, nicht sein
+ *  Ende. */
 const SW_RESERVE_ZEILE_S = 0.5;
 const SW_RESERVE_DATEI_S = 6.0;
 
-/** So viele unlesbare Stücke werden mit Namen gemerkt; gezählt werden alle. */
+/** Die Frist vor dem Nachweis (E-SR-73): länger als jeder Prozess, der vor
+ *  dem Wechsel gestartet sein kann. */
+const SW_NACHZUEGLER_S = 600;
+
+/** So viele unlesbare — und so viele gescheiterte — Stücke werden mit Namen
+ *  gemerkt; gezählt werden alle (die gescheiterten über der Decke in
+ *  `fehler_mehr`). */
 const SW_VERLOREN_MAX = 20;
 
 /** Budget des Knopfs „Jetzt weiterarbeiten" — dieselbe Überlegung wie bei
@@ -252,13 +282,25 @@ function sw_inventar(): array
 const SW_RANG = ['verloren' => 6, 'alt' => 5, 'spaeter' => 4, 'umgehuellt' => 3,
                  'neu' => 2, 'unversiegelt' => 1, 'weg' => 0];
 
-/** Ein versiegelter Wert: neu versiegeln und NACHWEISEN, bevor er ersetzt wird. */
-function sw_umsiegeln(string $klar, string $zweck): ?string
+/**
+ * Ein versiegelter Wert: neu versiegeln und NACHWEISEN, bevor er ersetzt wird.
+ *
+ * BESTEHT ER DEN NACHWEIS NICHT, WIRFT SIE (H-SR-06, F-SR-81). Bis Web
+ * 21.12.0 gab sie `null` zurück, und die Aufrufer nannten das Stück
+ * `verloren` — „mit keinem der beiden zu öffnen". Das war falsch: Es öffnet
+ * mit dem bisherigen und bleibt unangetastet unter ihm. Jetzt landet es bei
+ * den Stücken, die beim Umhüllen scheitern: genannt, mit Grund, Bedingung 1
+ * bleibt zu, und das nächste Häppchen versucht es wieder.
+ */
+function sw_umsiegeln(string $klar, string $zweck): string
 {
     $neu = sk_versiegeln($klar, $zweck);
     $probe = sk_oeffnen_mit_wem($neu, $zweck);
-    return ($probe !== null && $probe['mit'] === 'neu' && hash_equals($klar, $probe['klar']))
-        ? $neu : null;
+    if ($probe === null || $probe['mit'] !== 'neu' || !hash_equals($klar, $probe['klar'])) {
+        throw new RuntimeException('Der neu versiegelte Wert hat den Nachweis mit dem neuen '
+            . 'Schlüssel nicht bestanden; das Stück bleibt unter dem bisherigen.');
+    }
+    return $neu;
 }
 
 /** Eine Zeile mit versiegelten Spalten (`backup_targets`, `users`). */
@@ -281,17 +323,13 @@ function sw_zeile(string $tabelle, array $felder, int $id, callable $zweck, bool
             $was = 'alt';
         } else {
             $neu = sw_umsiegeln($e['klar'], $zweck($feld));
-            if ($neu === null) {
-                $was = 'verloren';
-            } else {
-                /* BEDINGT: Nur wenn dort noch steht, was gelesen wurde. Hat
-                 * jemand das Ziel inzwischen neu gespeichert, ist sein Wert
-                 * schon unter dem neuen, und dieser hier wäre der ältere. */
-                $up = db()->prepare('UPDATE ' . $tabelle . ' SET ' . $feld . ' = ?
-                                      WHERE id = ? AND ' . $feld . ' = ?');
-                $up->execute([$neu, $id, $wert]);
-                $was = $up->rowCount() === 1 ? 'umgehuellt' : 'spaeter';
-            }
+            /* BEDINGT: Nur wenn dort noch steht, was gelesen wurde. Hat
+             * jemand das Ziel inzwischen neu gespeichert, ist sein Wert
+             * schon unter dem neuen, und dieser hier wäre der ältere. */
+            $up = db()->prepare('UPDATE ' . $tabelle . ' SET ' . $feld . ' = ?
+                                  WHERE id = ? AND ' . $feld . ' = ?');
+            $up->execute([$neu, $id, $wert]);
+            $was = $up->rowCount() === 1 ? 'umgehuellt' : 'spaeter';
         }
         if (SW_RANG[$was] > SW_RANG[$ergebnis]) { $ergebnis = $was; }
     }
@@ -311,7 +349,6 @@ function sw_begleit(string $kennung, bool $nurPruefen): string
     if ($e['mit'] === 'neu') { return 'neu'; }
     if ($nurPruefen) { return 'alt'; }
     $neu = sw_umsiegeln($e['klar'], $zweck);
-    if ($neu === null) { return 'verloren'; }
     $tmp = sw_arbeit() . '/' . $kennung . '-konto.json';
     if (@file_put_contents($tmp, $neu) === false) {
         throw new RuntimeException('Die Nebendatei im Arbeitsordner ließ sich nicht schreiben.');
@@ -348,7 +385,15 @@ function sw_paket(string $kennung, string $datei, bool $nurPruefen): string
     $m = sk_oeffnen_mit_wem($mRoh, edbak_teil_zweck($kennung, $datei, 'manifest.json'));
     if ($m === null) { return 'verloren'; }
     if ($m['mit'] === 'neu') { return 'neu'; }
-    if ($nurPruefen) { return 'alt'; }
+    if ($nurPruefen) {
+        /* SO SCHARF WIE DAS UMHÜLLEN (H-SR-06, F-SR-81). Bis Web 21.12.0
+         * entschied der Nachweis allein am Manifest. Das Umhüllen nennt ein
+         * Paket aber `verloren`, sobald EIN Teil mit keinem der beiden
+         * aufgeht, und lässt es liegen (E-SR-61) — der Nachweis sagte dann
+         * `alt`, der Durchgang begann von vorn, und so in jedem Häppchen:
+         * Der Wechsel wurde nie fertig. */
+        return sw_paket_teile_lesbar($pfad, $kennung, $datei) ? 'alt' : 'verloren';
+    }
 
     $namen = zip_namen($pfad);
     $zip = zip_oeffnen($pfad);
@@ -358,17 +403,16 @@ function sw_paket(string $kennung, string $datei, bool $nurPruefen): string
         $zip->close();
         throw new RuntimeException('Der Arbeitsordner für ein Konto-Backup ließ sich nicht anlegen.');
     }
-    $teile = []; $pruef = [];
+    $teile = []; $pruef = []; $verloren = false;
     try {
         foreach ($namen as $nr => $name) {
             $roh = $zip->getFromName($name);
-            if ($roh === false) { return 'verloren'; }
+            if ($roh === false) { $verloren = true; break; }
             if (sk_versiegelt($roh)) {
                 $zw = edbak_teil_zweck($kennung, $datei, $name);
                 $e = sk_oeffnen_mit_wem($roh, $zw);
-                if ($e === null) { return 'verloren'; }
+                if ($e === null) { $verloren = true; break; }
                 $aus = $e['mit'] === 'neu' ? $roh : sw_umsiegeln($e['klar'], $zw);
-                if ($aus === null) { return 'verloren'; }
                 $pruef[$name] = hash('sha256', $e['klar']);
             } else {
                 $aus = $roh;
@@ -383,6 +427,13 @@ function sw_paket(string $kennung, string $datei, bool $nurPruefen): string
         }
     } finally {
         $zip->close();
+    }
+    if ($verloren) {
+        /* Den halben Bau gleich räumen, nicht erst im nächsten Häppchen —
+         * sonst läge er im selben Häppchen noch da, wenn es `fertig` setzt. */
+        foreach ($teile as $f) { @unlink($f); }
+        @rmdir($bau);
+        return 'verloren';
     }
     $tmp = sw_arbeit() . '/' . $kennung . '-' . $datei;
     $ok = zip_bauen($tmp, $teile);
@@ -421,6 +472,26 @@ function sw_paket(string $kennung, string $datei, bool $nurPruefen): string
     return 'umgehuellt';
 }
 
+/** Geht jeder versiegelte Teil eines Konto-Backups mit einem der beiden auf? */
+function sw_paket_teile_lesbar(string $pfad, string $kennung, string $datei): bool
+{
+    $namen = zip_namen($pfad);
+    if ($namen === null) { return false; }
+    $gut = false;
+    $offen = zip_lesen($pfad, static function (callable $eintrag) use ($namen, $kennung, $datei, &$gut): void {
+        foreach ($namen as $name) {
+            $roh = $eintrag((string)$name);
+            if ($roh === null) { return; }
+            if (sk_versiegelt($roh)
+                && sk_oeffnen_mit_wem($roh, edbak_teil_zweck($kennung, $datei, (string)$name)) === null) {
+                return;
+            }
+        }
+        $gut = true;
+    });
+    return $offen && $gut;
+}
+
 /**
  * Ein Archiv des Protokolls. DIE KENNUNG STEHT IM NAMEN, und der Name im
  * Zweck jedes Teils — umgehüllt wird deshalb in eine Datei mit NEUEM Namen,
@@ -428,7 +499,7 @@ function sw_paket(string $kennung, string $datei, bool $nurPruefen): string
  * lokal" und schickt sie hinaus; auf dem Ziel liegt dann eine Kopie unter
  * jedem der beiden Schlüssel.
  */
-function sw_archiv(string $name, string $neu, string $alt, bool $nurPruefen): string
+function sw_archiv(string $name, string $neu, bool $nurPruefen): string
 {
     $w = protokoll_archiv_wurzel();
     $pfad = $w . '/' . $name;
@@ -439,23 +510,48 @@ function sw_archiv(string $name, string $neu, string $alt, bool $nurPruefen): st
     $m = sk_oeffnen_mit_wem($mRoh, protokoll_archiv_zweck($name, 'manifest.json'));
     if ($m === null) { return 'verloren'; }
     if ($m['mit'] === 'neu' && $k === $neu) { return 'neu'; }
-    if ($k !== $alt) { return 'verloren'; }       // weder Name noch Schlüssel passen zusammen
-    if ($nurPruefen) { return 'alt'; }
-
-    $von = protokoll_archiv_von($name);
+    /* GEHT DAS MANIFEST AUF, WIRD UMGEHÜLLT — gleich, welche Kennung im
+     * Namen steht (H-SR-06, F-SR-81). Bis Web 21.12.0 hieß ein Archiv mit
+     * einer dritten Kennung im Namen `verloren`, auch wenn der bisherige es
+     * öffnete; nach dem Entfernen des bisherigen wäre es das gewesen. */
     $manifest = json_decode($m['klar'], true);
+    $von = protokoll_archiv_von($name);
     if ($von === null || !is_array($manifest)) { return 'verloren'; }
+    if ($nurPruefen) {
+        /* Wie beim Konto-Backup (F-SR-81): `alt` nur, wenn sich jeder Teil
+         * mit einem der beiden öffnen lässt — sonst bleibt es liegen. */
+        $gut = false;
+        zip_lesen($pfad, static function (callable $eintrag) use ($manifest, $name, &$gut): void {
+            foreach ((array)($manifest['teile'] ?? []) as $teil) {
+                $roh = $eintrag($teil . '.sk');
+                if ($roh === null
+                    || sk_oeffnen_mit_wem($roh, protokoll_archiv_zweck($name, (string)$teil)) === null) {
+                    return;
+                }
+            }
+            $gut = true;
+        });
+        return $gut ? 'alt' : 'verloren';
+    }
+
     $neuName = protokoll_archiv_name($von, $neu);
     $ziel = $w . '/' . $neuName;
     /* Das Soll trägt die NEUE Kennung — vor dem Wiederanlauf gesetzt, sonst
      * verglich der Nachweis die neue Datei mit der alten Kennung und warf
      * ein fertiges Archiv weg, um es noch einmal zu bauen. */
     $manifest['kennung'] = $neu;
+    /* `zeilen` und `gekuerzt` sind im Format OBJEKTE (Backup-Format 7.1) —
+     * `json_decode(…, true)` macht aus einem leeren `{}` ein leeres Feld, und
+     * das schriebe sich als `[]` zurück (H-SR-06, F-SR-81). */
+    foreach (['zeilen', 'gekuerzt'] as $f) {
+        if (array_key_exists($f, $manifest)) { $manifest[$f] = (object)(array)$manifest[$f]; }
+    }
 
     /* WIEDERANLAUF: Liegt die neue Datei schon da und besteht den Nachweis,
-     * brach der vorige Lauf zwischen Umbenennen und Löschen ab. */
-    if (is_file($ziel)) {
-        if (sw_archiv_nachweis($neuName, $manifest)) {
+     * brach der vorige Lauf zwischen Umbenennen und Löschen ab. Nicht, wenn
+     * der neue Name der alte ist — dann IST die Datei dort die alte. */
+    if ($ziel !== $pfad && is_file($ziel)) {
+        if (sw_archiv_nachweis($ziel, $neuName, $manifest)) {
             @unlink($pfad);
             return 'umgehuellt';
         }
@@ -468,17 +564,37 @@ function sw_archiv(string $name, string $neu, string $alt, bool $nurPruefen): st
     }
     $teile = [];
     $fehlt = false;
-    zip_lesen($pfad, static function (callable $eintrag) use ($manifest, $name, $neuName, $bau, &$teile, &$fehlt): void {
-        foreach ((array)($manifest['teile'] ?? []) as $nr => $teil) {
-            $roh = $eintrag($teil . '.sk');
-            $e = $roh === null ? null : sk_oeffnen_mit_wem($roh, protokoll_archiv_zweck($name, (string)$teil));
-            $aus = $e === null ? null : sw_umsiegeln($e['klar'], protokoll_archiv_zweck($neuName, (string)$teil));
-            if ($aus === null) { $fehlt = true; return; }
-            $f = $bau . '/' . $nr;
-            if (@file_put_contents($f, $aus) === false) { $fehlt = true; return; }
-            $teile[$teil . '.sk'] = $f;
-        }
-    });
+    /* `$fehlt` heißt NUR „ein Teil geht mit keinem der beiden auf". Ein Teil,
+     * der sich nicht in den Arbeitsordner schreiben lässt (volle Platte),
+     * wirft — wie beim Konto-Backup: Das Archiv öffnet ja mit dem bisherigen,
+     * es gehört in die Fehlerliste, nicht unter „mit keinem der beiden"
+     * (Nachprüfung H-SR-06, F-SR-85). */
+    try {
+        $offen = zip_lesen($pfad, static function (callable $eintrag) use ($manifest, $name, $neuName, $bau, &$teile, &$fehlt): void {
+            foreach ((array)($manifest['teile'] ?? []) as $nr => $teil) {
+                $roh = $eintrag($teil . '.sk');
+                $e = $roh === null ? null : sk_oeffnen_mit_wem($roh, protokoll_archiv_zweck($name, (string)$teil));
+                if ($e === null) { $fehlt = true; return; }
+                $aus = sw_umsiegeln($e['klar'], protokoll_archiv_zweck($neuName, (string)$teil));
+                $f = $bau . '/' . $nr;
+                if (@file_put_contents($f, $aus) === false) {
+                    throw new RuntimeException('Ein Teil ließ sich nicht in den Arbeitsordner schreiben.');
+                }
+                $teile[$teil . '.sk'] = $f;
+            }
+        });
+    } catch (Throwable $ex) {
+        foreach ($teile as $f) { @unlink($f); }
+        @rmdir($bau);
+        throw $ex;
+    }
+    /* Verschwand das Archiv zwischen dem Lesen des Manifests und hier — die
+     * Aufbewahrung räumt im selben Lauf —, entsteht kein Archiv aus einem
+     * gelöschten (H-SR-06, F-SR-81). */
+    if (!$offen) {
+        @rmdir($bau);
+        return is_file($pfad) ? 'verloren' : 'weg';
+    }
     $mNeu = $fehlt ? null : sw_umsiegeln(
         (string)json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         protokoll_archiv_zweck($neuName, 'manifest.json'));
@@ -496,32 +612,37 @@ function sw_archiv(string $name, string $neu, string $alt, bool $nurPruefen): st
     foreach ($teile as $f) { @unlink($f); }
     @rmdir($bau);
     if ($ok !== true) { throw new RuntimeException('Das umgehüllte Archiv ließ sich nicht bauen: ' . $ok); }
+    /* DER NACHWEIS AN DER NEUEN DATEI, BEVOR SIE ABGELEGT WIRD — wie beim
+     * Konto-Backup. Bis Web 21.12.0 wurde erst abgelegt und dann
+     * nachgewiesen; trägt die neue Datei denselben Namen wie die alte
+     * (F-SR-81), wäre die alte dabei schon ersetzt gewesen. */
+    if (!sw_archiv_nachweis($tmp, $neuName, $manifest)) {
+        @unlink($tmp);
+        throw new RuntimeException('Das umgehüllte Archiv ' . $neuName . ' hat den Nachweis nicht '
+            . 'bestanden. Das bisherige bleibt, wie es ist.');
+    }
     if (!@rename($tmp, $ziel)) {
         @unlink($tmp);
         throw new RuntimeException('Das Archiv ' . $neuName . ' ließ sich nicht ablegen.');
     }
-    if (!sw_archiv_nachweis($neuName, $manifest)) {
-        @unlink($ziel);
-        throw new RuntimeException('Das umgehüllte Archiv ' . $neuName . ' hat den Nachweis nicht '
-            . 'bestanden. Das bisherige bleibt, wie es ist.');
-    }
-    @unlink($pfad);
+    if ($ziel !== $pfad) { @unlink($pfad); }
     return 'umgehuellt';
 }
 
-/** Öffnet sich jeder Teil des Archivs mit dem NEUEN, und sagt das Manifest
- *  dasselbe wie das bisherige (bis auf die Kennung)? */
-function sw_archiv_nachweis(string $neuName, array $manifestSoll): bool
+/** Öffnet sich jeder Teil des Archivs unter `$pfad` mit dem NEUEN, und sagt
+ *  das Manifest dasselbe wie das bisherige (bis auf die Kennung)? `$neuName`
+ *  ist der Name, unter dem es liegen WIRD — er steht im Zweck jedes Teils. */
+function sw_archiv_nachweis(string $pfad, string $neuName, array $manifestSoll): bool
 {
-    $pfad = protokoll_archiv_wurzel() . '/' . $neuName;
+    $soll = json_decode((string)json_encode($manifestSoll), true);
     $gut = false;
-    zip_lesen($pfad, static function (callable $eintrag) use ($neuName, $manifestSoll, &$gut): void {
+    zip_lesen($pfad, static function (callable $eintrag) use ($neuName, $soll, &$gut): void {
         $m = $eintrag('manifest.json.sk');
         $e = $m === null ? null : sk_oeffnen_mit_wem($m, protokoll_archiv_zweck($neuName, 'manifest.json'));
         $ist = $e === null ? null : json_decode($e['klar'], true);
         if ($e === null || $e['mit'] !== 'neu' || !is_array($ist)
-            || ($ist['teile'] ?? null) !== ($manifestSoll['teile'] ?? null)
-            || ($ist['kennung'] ?? null) !== ($manifestSoll['kennung'] ?? null)) { return; }
+            || ($ist['teile'] ?? null) !== ($soll['teile'] ?? null)
+            || ($ist['kennung'] ?? null) !== ($soll['kennung'] ?? null)) { return; }
         foreach ((array)($ist['teile'] ?? []) as $teil) {
             $roh = $eintrag($teil . '.sk');
             $t = $roh === null ? null : sk_oeffnen_mit_wem($roh, protokoll_archiv_zweck($neuName, (string)$teil));
@@ -551,7 +672,10 @@ function sw_stueck(string $zweck, string $schluessel, array $z, bool $nurPruefen
         return $datei === 'konto.json' ? sw_begleit($kennung, $nurPruefen)
                                        : sw_paket($kennung, $datei, $nurPruefen);
     }
-    return sw_archiv($schluessel, (string)$z['kennung_neu'], (string)$z['kennung_alt'], $nurPruefen);
+    /* Die Kennung des Schlüssels, mit dem `sw_umsiegeln()` gleich versiegelt —
+     * nicht die im Zustand (H-SR-06, F-SR-80). Beide sind dieselbe, solange
+     * der Zustand zum Schlüsselpaar passt; das Häppchen sorgt dafür. */
+    return sw_archiv($schluessel, (string)(serverschluessel_kennung() ?? $z['kennung_neu']), $nurPruefen);
 }
 
 /** Wie ein Stück in der Liste der Unlesbaren heißt. KEINE KONTOKENNUNG — sie
@@ -572,37 +696,136 @@ function sw_stueck_name(string $zweck, string $schluessel): string
 /* ---- Das Häppchen -------------------------------------------------------- */
 
 /**
+ * Gehört der Zustand zum Schlüsselpaar, das jetzt in `config.php` steht?
+ * Ein Zustand aus einem eingespielten Dump oder von einem früheren
+ * Handeintrag kann zu einem anderen gehören (H-SR-06, F-SR-80).
+ */
+function sw_zustand_passt(array $z, array $sk): bool
+{
+    return ($z['phase'] ?? '') !== ''
+        && ($z['kennung_neu'] ?? null) === $sk['kennung']
+        && ($z['kennung_alt'] ?? null) === $sk['kennung_alt'];
+}
+
+/** Bis wann wartet der Nachweis noch (Sekunden, UTC)? `null`, wenn nicht. */
+function sw_nachweis_wartet(array $z): ?int
+{
+    if (($z['phase'] ?? '') !== 'nachweis' || ($z['nachweis_begonnen'] ?? null) !== null) {
+        return null;
+    }
+    $ab = sw_nachweis_ab($z);
+    return $ab !== null && time() < $ab ? $ab : null;
+}
+
+/** Ab wann darf der Nachweis beginnen (Sekunden, UTC)? Aus dem Zustand; ein
+ *  Zustand von vor der Frist (Web 21.12.0) rechnet sie vom Beginn. */
+function sw_nachweis_ab(array $z): ?int
+{
+    $ab = sw_zeit((string)($z['nachweis_ab'] ?? ''));
+    if ($ab !== null) { return $ab; }
+    $b = sw_zeit((string)($z['begonnen'] ?? ''));
+    return $b === null ? null : $b + SW_NACHZUEGLER_S;
+}
+
+/** Die Stücke, die beim Umhüllen warfen, ohne die, die es nicht mehr gibt —
+ *  ein gelöschtes Paket soll nicht auf der Karte stehen bleiben. */
+function sw_fehler_bereinigen(array $fehler): array
+{
+    $aus = [];
+    $listen = [];
+    foreach ($fehler as $schl => $f) {
+        $teile = explode('|', (string)$schl, 2);
+        if (count($teile) !== 2 || !in_array($teile[0], SW_ZWECKE, true)) { continue; }
+        $listen[$teile[0]] ??= sw_stuecke($teile[0]);
+        if (in_array($teile[1], $listen[$teile[0]], true)) { $aus[$schl] = $f; }
+    }
+    return $aus;
+}
+
+/**
  * Ein Häppchen des Jobs — der Katalog ruft es über `job_schluesselwechsel()`.
  *
  * @return array{erledigt:int, fertig:bool}
  */
 function sw_haeppchen(PDO $pdo, array &$z, callable $zeitLinks): array
 {
+    /* ERST config.php NEU LESEN (H-SR-06, F-SR-79). Ein CLI-Lauf, der vor
+     * dem Wechsel begann, hielt sonst den bisherigen Stand: Er sah die Lage
+     * `bereit`, leerte den Zustand des Wechsels — und versiegelte mit dem
+     * bisherigen. */
+    config_gemerktes_verwerfen();
     $sk = serverschluessel_zustand(true);
-    if ($sk['stand'] !== 'rotation' || ($z['phase'] ?? '') === '') {
-        /* Kein Wechsel, oder einer ohne Zustand (von Hand in config.php
-         * eingetragen). Ohne Zustand fehlt der Beginn, gegen den der
-         * frische Komplett-Stand und die Rückfrage gemessen werden — er wird
-         * hier gesetzt, nicht erraten. */
-        if ($sk['stand'] === 'rotation') {
-            $z = sw_zustand_neu((string)$sk['kennung'], (string)$sk['kennung_alt']);
-        } else {
-            $z = [];
-            return ['erledigt' => 0, 'fertig' => true];
-        }
+    if ($sk['stand'] !== 'rotation') {
+        /* GELEERT WIRD NUR BEI `bereit` (Nachprüfung H-SR-06, F-SR-85). Eine
+         * Lage `abweichend` oder `fehlt` mitten im Wechsel — eine Marke aus
+         * einem älteren Dump, ein Tippfehler in config.php — ist ein
+         * Zwischenzustand, den „Nachtragen vom Blatt" behebt. Bis zur
+         * Nachprüfung wischte das Häppchen hier auch dann den Zustand, und nach
+         * der Reparatur begann der Wechsel ein zweites Mal, als Handeintrag,
+         * mit einer Mail, die etwas Falsches behauptete. */
+        if ($sk['stand'] === 'bereit') { $z = []; }
+        return ['erledigt' => 0, 'fertig' => true];
+    }
+    if (!sw_zustand_passt($z, $sk)) {
+        /* EIN WECHSEL OHNE ZUSTAND — oder mit einem, der zu einem anderen
+         * Schlüsselpaar gehört — STEHT VON HAND IN config.php (E-SR-74).
+         * Er bekommt denselben Beginn wie einer über die Karte: Protokoll,
+         * Mail an jede BetreiberIn, das Blatt sofort fällig. Bis Web 21.12.0
+         * legte das Häppchen hier still einen Zustand an; die Rückfrage kam
+         * dann erst im nächsten Quartal, und Bedingung 3 blieb so lange zu
+         * (H-SR-06, F-SR-80). Der Wechsel über die Karte kommt hier nicht
+         * an: Er hält die Sperre dieses Jobs, bis sein Zustand steht.
+         *
+         * NACH DEM BEGINN ENDET DAS HÄPPCHEN (Nachprüfung H-SR-06, F-SR-85).
+         * Der Zustand steht schon in der Datenbank; der Jobrahmen schreibt
+         * bei einer Ausnahme aber den Zustand von VOR dem Häppchen zurück —
+         * hier keinen —, und das nächste Häppchen begänne noch einmal, mit
+         * einer zweiten Mail. Zwischen Beginn und Rückgabe steht deshalb
+         * nichts, was werfen kann. */
+        $z = sw_beginnen((string)$sk['kennung'], (string)$sk['kennung_alt'], 'hand');
+        return ['erledigt' => 0, 'fertig' => false];
+    }
+    if ($z['phase'] === 'fertig' && ($z['nachweis_begonnen'] ?? null) === null) {
+        /* Ein Nachweis aus der Zeit vor der Frist (Web 21.12.0) zählt nicht —
+         * er wird einmal wiederholt. Seit der Nachprüfung setzt jeder
+         * Nachweis-Durchgang `nachweis_begonnen` beim Eintritt; ein `fertig`
+         * ohne ihn kommt nur noch aus 21.12.0. */
+        $z = array_merge($z, ['phase' => 'nachweis', 'zweck' => SW_ZWECKE[0], 'cursor' => null,
+                              'erledigt' => 0, 'zahlen' => [], 'nachweis_alt' => 0,
+                              'nachweis_fehler' => 0,
+                              'nachweis_ab' => gmdate('Y-m-d H:i:s', sw_nachweis_ab($z) ?? time())]);
+        unset($z['nachweis_am']);
     }
     if ($z['phase'] === 'fertig') { return ['erledigt' => 0, 'fertig' => true]; }
+    if (sw_nachweis_wartet($z) !== null) { return ['erledigt' => 0, 'fertig' => false]; }
+    /* DER NACHWEIS BEGINNT BEIM EINTRITT, nicht vor dem ersten Stück
+     * (Nachprüfung H-SR-06, F-SR-85). Fand ein Durchgang kein Stück — eine
+     * Anlage ohne Ziel-Zugang, Zweitfaktor, Konto-Backup und Archiv —, blieb
+     * `nachweis_begonnen` leer: Bedingung 1 ging nie auf, und jedes Häppchen
+     * hielt den Zustand für einen aus 21.12.0 und schrieb erneut
+     * „umgehüllt" ins Protokoll. */
+    if ($z['phase'] === 'nachweis' && ($z['nachweis_begonnen'] ?? null) === null) {
+        $z['nachweis_begonnen'] = gmdate('Y-m-d H:i:s');
+    }
 
     sw_arbeit_leeren();
+    if (($z['gesamt'] ?? null) === null) { $z['gesamt'] = sw_inventar()['summe']; }
     $erledigt = 0;
     $runden = 0;
+    $mehrGemeldet = false;
+    /* DIE STÜCKLISTE EINMAL JE ZWECK UND HÄPPCHEN (H-SR-06, F-SR-81). Bis
+     * Web 21.12.0 wurde sie je Stück neu gebildet — bei den Konto-Backups ein
+     * `scandir` jedes Kontoordners je Stück, gemessen 4,35 s je Durchgang bei
+     * 300 Konten. Was während des Häppchens dazukommt, findet der nächste
+     * Durchgang; was verschwindet, meldet sich als `weg`. */
+    $listen = [];
     while (true) {
         $zweck = (string)$z['zweck'];
-        $liste = sw_stuecke($zweck);
+        $liste = $listen[$zweck] ??= sw_stuecke($zweck);
         $cursor = $z['cursor'] ?? null;
         $naechstes = null;
-        foreach ($liste as $s) {
-            if ($cursor === null || strcmp($s, (string)$cursor) > 0) { $naechstes = $s; break; }
+        foreach ($liste as $st) {
+            if ($cursor === null || strcmp($st, (string)$cursor) > 0) { $naechstes = $st; break; }
         }
         if ($naechstes === null) {
             $i = array_search($zweck, SW_ZWECKE, true);
@@ -612,24 +835,38 @@ function sw_haeppchen(PDO $pdo, array &$z, callable $zeitLinks): array
                 continue;
             }
             /* Ein Durchgang ist durch. */
+            sw_verloren_durchgang_ende($z);
             if ($z['phase'] === 'umhuellen') {
-                $z['phase'] = 'nachweis';
-                $z['zweck'] = SW_ZWECKE[0];
-                $z['cursor'] = null;
-                $z['erledigt'] = 0;
-                $z['zahlen'] = [];
-                $z['nachweis_alt'] = 0;
-                $z['gesamt'] = sw_inventar()['summe'];
+                $z = array_merge($z, ['phase' => 'nachweis', 'zweck' => SW_ZWECKE[0],
+                                      'cursor' => null, 'erledigt' => 0, 'zahlen' => [],
+                                      'nachweis_alt' => 0, 'nachweis_fehler' => 0,
+                                      'nachweis_begonnen' => null,
+                                      'gesamt' => sw_inventar()['summe']]);
+                $listen = [];
+                if (sw_nachweis_wartet($z) !== null) {
+                    return ['erledigt' => $erledigt, 'fertig' => false];
+                }
+                $z['nachweis_begonnen'] = gmdate('Y-m-d H:i:s');
                 continue;
             }
+            $z['fehler'] = sw_fehler_bereinigen((array)($z['fehler'] ?? []));
             if ((int)($z['nachweis_alt'] ?? 0) > 0) {
                 /* Etwas liegt noch unter dem bisherigen — von vorn. Höchstens
-                 * dreimal in einem Häppchen; danach wartet es aufs nächste. */
-                if (++$runden > 3) { return ['erledigt' => $erledigt, 'fertig' => false]; }
+                 * dreimal in einem Häppchen; danach wartet es aufs nächste.
+                 * BESTEHT DER REST NUR AUS STÜCKEN, DIE BEIM UMHÜLLEN WARFEN
+                 * (F-SR-81), gleich aufs nächste: Ein Fehler, der im selben
+                 * Häppchen dreimal kommt, kommt auch ein viertes Mal. */
+                $nurFehler = (int)$z['nachweis_alt']
+                    <= (int)($z['nachweis_fehler'] ?? 0) + (int)($z['fehler_mehr'] ?? 0);
                 $z = array_merge($z, ['phase' => 'umhuellen', 'zweck' => SW_ZWECKE[0],
                                       'cursor' => null, 'erledigt' => 0, 'zahlen' => [],
-                                      'nachweis_alt' => 0,
+                                      'nachweis_alt' => 0, 'nachweis_fehler' => 0,
+                                      'nachweis_begonnen' => null, 'fehler_mehr' => 0,
                                       'gesamt' => sw_inventar()['summe']]);
+                $listen = [];
+                if ($nurFehler || ++$runden > 3) {
+                    return ['erledigt' => $erledigt, 'fertig' => false];
+                }
                 continue;
             }
             $z['phase'] = 'fertig';
@@ -639,13 +876,53 @@ function sw_haeppchen(PDO $pdo, array &$z, callable $zeitLinks): array
             return ['erledigt' => $erledigt, 'fertig' => true];
         }
 
-        $reserve = in_array($zweck, ['konten', 'archive'], true)
+        $nurPruefen = $z['phase'] === 'nachweis';
+        $reserve = !$nurPruefen && in_array($zweck, ['konten', 'archive'], true)
             ? SW_RESERVE_DATEI_S : SW_RESERVE_ZEILE_S;
         if ($zeitLinks() < $reserve || sw_speicher_knapp()) {
             return ['erledigt' => $erledigt, 'fertig' => false];
         }
-        $nurPruefen = $z['phase'] === 'nachweis';
-        $was = sw_stueck($zweck, $naechstes, $z, $nurPruefen);
+        $name = sw_stueck_name($zweck, $naechstes);
+        $fKey = $zweck . '|' . $naechstes;
+        /* EIN STÜCK, DAS WIRFT, HÄLT NICHT DEN GANZEN WECHSEL AN (H-SR-06,
+         * F-SR-81). Bis Web 21.12.0 brach die Ausnahme das Häppchen ab, der
+         * Jobrahmen schrieb den Zustand von VOR dem Häppchen zurück, und das
+         * nächste stieß wieder auf dasselbe Stück — ohne Ende und ohne Namen.
+         * Jetzt wird es genannt und übersprungen; es liegt noch unter dem
+         * bisherigen und zählt deshalb im Nachweis wie `alt`: Bedingung 1
+         * bleibt zu, bis es umgehüllt oder fort ist. */
+        try {
+            $was = sw_stueck($zweck, $naechstes, $z, $nurPruefen);
+        } catch (Throwable $ex) {
+            $was = 'fehler';
+            $fehler = (array)($z['fehler'] ?? []);
+            if (array_key_exists($fKey, $fehler) || count($fehler) < SW_VERLOREN_MAX) {
+                if (!array_key_exists($fKey, $fehler)) {
+                    system_melden('schluesselwechsel', $name . ' ließ sich nicht umhüllen', $ex);
+                }
+                $fehler[$fKey] = ['name' => $name, 'grund' => mb_substr($ex->getMessage(), 0, 200)];
+            } else {
+                /* ÜBER DER DECKE (Nachprüfung H-SR-06, F-SR-85): Das Stück
+                 * steht nicht in der Liste, zählt aber — sonst griff die
+                 * Kurzschaltung „nur Fehler" nie, und jedes Häppchen lief
+                 * viermal durch. Gemeldet wird einmal je Häppchen, nicht je
+                 * Stück und Runde. */
+                if (!$nurPruefen) { $z['fehler_mehr'] = (int)($z['fehler_mehr'] ?? 0) + 1; }
+                if (!$mehrGemeldet) {
+                    system_melden('schluesselwechsel', 'Mehr als ' . SW_VERLOREN_MAX
+                        . ' Stücke ließen sich nicht umhüllen — die Karte nennt die ersten', $ex);
+                    $mehrGemeldet = true;
+                }
+            }
+            $z['fehler'] = $fehler;
+        }
+        /* Aus der Liste geht ein Stück erst, wenn es NICHT MEHR unter dem
+         * bisherigen liegt — im Nachweis sagt ein gescheitertes `alt`, und
+         * das ist kein Erfolg. */
+        $warFehler = isset($z['fehler'][$fKey]);
+        if ($warFehler && !in_array($was, ['fehler', 'alt', 'spaeter'], true)) {
+            unset($z['fehler'][$fKey]);
+        }
         $z['cursor'] = $naechstes;
         $z['erledigt'] = (int)($z['erledigt'] ?? 0) + 1;
         $erledigt++;
@@ -657,16 +934,39 @@ function sw_haeppchen(PDO $pdo, array &$z, callable $zeitLinks): array
         $zahlen[$was] = (int)($zahlen[$was] ?? 0) + 1;
         $z['zahlen'] = $zahlen;
         if ($was === 'umgehuellt') { $z['umgehuellt'] = (int)($z['umgehuellt'] ?? 0) + 1; }
-        if ($nurPruefen && ($was === 'alt' || $was === 'spaeter')) {
+        if ($nurPruefen && in_array($was, ['alt', 'spaeter', 'fehler'], true)) {
             $z['nachweis_alt'] = (int)($z['nachweis_alt'] ?? 0) + 1;
+            /* Im Nachweis wirft ein solches Stück nicht — es sagt `alt`. Ob
+             * es eines ist, das beim Umhüllen warf, sagt die Liste. */
+            if ($was === 'fehler' || $warFehler) {
+                $z['nachweis_fehler'] = (int)($z['nachweis_fehler'] ?? 0) + 1;
+            }
         }
         if ($was === 'verloren') {
-            $liste = (array)($z['verloren'] ?? []);
-            $name = sw_stueck_name($zweck, $naechstes);
-            if (!in_array($name, $liste, true) && count($liste) < SW_VERLOREN_MAX) { $liste[] = $name; }
-            $z['verloren'] = $liste;
+            foreach (['verloren', 'verloren_durchgang'] as $f) {
+                $verl = (array)($z[$f] ?? []);
+                if (!in_array($name, $verl, true) && count($verl) < SW_VERLOREN_MAX) { $verl[] = $name; }
+                $z[$f] = $verl;
+            }
         }
     }
+}
+
+/**
+ * Am Ende eines Durchgangs gilt als „mit keinem der beiden zu öffnen" nur,
+ * was DIESER Durchgang so fand (Nachprüfung H-SR-06, F-SR-85). Bis dahin
+ * wurde die Liste nur verlängert: Ein gelöschtes kaputtes Konto-Backup stand
+ * bis zum Abschluss auf der Karte und im Protokoll. Während des Durchgangs
+ * zeigt die Karte beide Listen zusammen — die alte, bis der Durchgang sie
+ * bestätigt hat. Ein Zustand von vor der Nachprüfung hat noch keine
+ * Durchgangsliste; er behält einmal die alte.
+ */
+function sw_verloren_durchgang_ende(array &$z): void
+{
+    if (array_key_exists('verloren_durchgang', $z)) {
+        $z['verloren'] = array_values((array)$z['verloren_durchgang']);
+    }
+    $z['verloren_durchgang'] = [];
 }
 
 /** Das Speicherbudget — `jobs_speicher_knapp()`, wenn der Rahmen geladen ist
@@ -676,14 +976,30 @@ function sw_speicher_knapp(): bool
     return function_exists('jobs_speicher_knapp') && jobs_speicher_knapp();
 }
 
-/** Der Anfangszustand eines Wechsels. */
-function sw_zustand_neu(string $neu, string $alt): array
+/** Der Anfangszustand eines Wechsels. `$weg`: `oberflaeche` (der Knopf auf der Karte) oder `hand`
+ *  (in `config.php` vorgefunden, E-SR-74). */
+function sw_zustand_neu(string $neu, string $alt, string $weg = 'oberflaeche'): array
 {
-    return ['kennung_neu' => $neu, 'kennung_alt' => $alt,
-            'begonnen' => gmdate('Y-m-d H:i:s'),
+    $jetzt = time();
+    /* DAS INVENTAR DARF DEN BEGINN NICHT AUFHALTEN (Nachprüfung H-SR-06,
+     * F-SR-85). Warf es, stand kein Zustand, und das Häppchen holte den
+     * Beginn eines Wechsels über die Karte als Handeintrag nach — mit einer
+     * Mail an jede BetreiberIn, die etwas Falsches behauptete. Die Zahl holt
+     * das erste Häppchen nach. */
+    try {
+        $gesamt = sw_inventar()['summe'];
+    } catch (Throwable $ex) {
+        $gesamt = null;
+        system_melden('schluesselwechsel', 'Inventar beim Beginn nicht gezählt', $ex);
+    }
+    return ['kennung_neu' => $neu, 'kennung_alt' => $alt, 'weg' => $weg,
+            'begonnen' => gmdate('Y-m-d H:i:s', $jetzt),
+            'nachweis_ab' => gmdate('Y-m-d H:i:s', $jetzt + SW_NACHZUEGLER_S),
+            'nachweis_begonnen' => null,
             'phase' => 'umhuellen', 'zweck' => SW_ZWECKE[0], 'cursor' => null,
-            'erledigt' => 0, 'gesamt' => sw_inventar()['summe'],
-            'zahlen' => [], 'umgehuellt' => 0, 'verloren' => [], 'nachweis_alt' => 0];
+            'erledigt' => 0, 'gesamt' => $gesamt,
+            'zahlen' => [], 'umgehuellt' => 0, 'verloren' => [], 'verloren_durchgang' => [],
+            'fehler' => [], 'fehler_mehr' => 0, 'nachweis_alt' => 0, 'nachweis_fehler' => 0];
 }
 
 /** Der Nachweis ist durch — ein Protokolleintrag mit den Zahlen. */
@@ -707,21 +1023,45 @@ function sw_nachweis_melden(array $z): void
 /**
  * Was nach dem Schreiben von `config.php` zum Beginn gehört: Zustand, die
  * Blatt-Marke (Nr. 233, E-SR-11), Protokoll und die Mail an jede BetreiberIn
- * (E-SR-22, E-SR-62). Gerufen aus `serverschluessel_wechseln()`.
+ * (E-SR-22, E-SR-62). Gerufen aus `serverschluessel_wechseln()` (`oberflaeche`)
+ * und aus dem Häppchen, wenn der Wechsel von Hand in `config.php` steht
+ * (`hand`, E-SR-74).
+ *
+ * DER ZUSTAND ZUERST, DER REST EINZELN GESCHÜTZT (H-SR-06, F-SR-80). Ohne
+ * Zustand begänne der Job den Wechsel ein zweites Mal; eine Blatt-Marke, ein
+ * Protokolleintrag oder eine Mail, die scheitert, darf ihn nicht aufhalten —
+ * sie steht im Reiter System.
+ *
+ * @return array der neue Zustand
  */
-function sw_beginnen(string $neu, string $alt): void
+function sw_beginnen(string $neu, string $alt, string $weg = 'oberflaeche'): array
 {
-    $z = sw_zustand_neu($neu, $alt);
+    $z = sw_zustand_neu($neu, $alt, $weg);
     sw_zustand_setzen($z);
-    require_once __DIR__ . '/einstieg_lib.php';
-    blatt_neu_faellig('serverschluessel');
-    require_once __DIR__ . '/protokoll_lib.php';
-    protokoll('sicherung', 'serverschluessel_gewechselt',
-        'Serverschlüssel gewechselt — neu ' . $neu . ', bisher ' . $alt . '; '
-        . (int)$z['gesamt'] . ' Stück(e) umzuhüllen. Was auf einem Backup-Ziel liegt, '
-        . 'bleibt unter dem bisherigen.',
-        ['neu' => $neu, 'alt' => $alt, 'stuecke' => (int)$z['gesamt']]);
-    sw_mail('beginn', $neu, $alt);
+    try {
+        require_once __DIR__ . '/einstieg_lib.php';
+        blatt_neu_faellig('serverschluessel');
+    } catch (Throwable $ex) {
+        system_melden('schluesselwechsel', 'Rückfrage zum Blatt nicht fällig gemacht', $ex);
+    }
+    try {
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll('sicherung', 'serverschluessel_gewechselt',
+            ($weg === 'hand'
+                ? 'Serverschlüssel-Wechsel in config.php vorgefunden, ohne dass ein Beginn über '
+                  . 'die Karte vermerkt ist (von Hand eingetragen — oder der Beginn über die Karte '
+                  . 'ist gescheitert, dann steht es im Reiter System) — neu '
+                : 'Serverschlüssel gewechselt — neu ')
+            . $neu . ', bisher ' . $alt . '; '
+            . ($z['gesamt'] === null ? 'die Zahl der Stücke zählt das erste Häppchen'
+                                     : (int)$z['gesamt'] . ' Stück(e) umzuhüllen')
+            . '. Was auf einem Backup-Ziel liegt, bleibt unter dem bisherigen.',
+            ['neu' => $neu, 'alt' => $alt, 'stuecke' => $z['gesamt'], 'weg' => $weg]);
+    } catch (Throwable $ex) {
+        system_melden('schluesselwechsel', 'Beginn nicht ins Protokoll geschrieben', $ex);
+    }
+    sw_mail('beginn', $neu, $alt, $weg);
+    return $z;
 }
 
 /**
@@ -735,22 +1075,42 @@ function sw_bedingungen(): array
     $z = sw_zustand();
     $sk = serverschluessel_zustand();
     $beginn = sw_zeit((string)($z['begonnen'] ?? ''));
-    $rotation = $sk['stand'] === 'rotation' && $beginn !== null;
+    $passt = sw_zustand_passt($z, $sk);
+    $rotation = $sk['stand'] === 'rotation' && $beginn !== null && $passt;
 
+    /* DER NACHWEIS ZÄHLT ERST, WENN ER NACH DER FRIST BEGANN (E-SR-73) —
+     * hier noch einmal gemessen, nicht nur im Häppchen: Ein Zustand aus einem
+     * eingespielten Dump ist nicht im Häppchen entstanden. */
+    $nachweisBeginn = sw_zeit((string)($z['nachweis_begonnen'] ?? ''));
+    $nachweisAb = sw_nachweis_ab($z);
     $inventar = $rotation && ($z['phase'] ?? '') === 'fertig'
              && sw_zeit((string)($z['nachweis_am'] ?? '')) !== null
-             && sw_zeit((string)$z['nachweis_am']) >= $beginn;
+             && sw_zeit((string)$z['nachweis_am']) >= $beginn
+             && $nachweisBeginn !== null && $nachweisAb !== null && $nachweisBeginn >= $nachweisAb;
     $komplett = $rotation && sw_komplett_unter_neuem($beginn);
     require_once __DIR__ . '/einstieg_lib.php';
     $bestaetigt = sw_zeit(app_state_lesen(BLATT_BESTAETIGT_K));
     $blatt = $rotation && $bestaetigt !== null && $bestaetigt >= $beginn;
 
     $fehlt = [];
-    if (!$rotation) { $fehlt[] = 'Es läuft kein Wechsel des Serverschlüssels.'; }
+    if (!$rotation) {
+        $fehlt[] = $sk['stand'] === 'rotation'
+            ? 'Der Wechsel ist in config.php eingetragen, aber noch nicht begonnen — der '
+              . 'Job beginnt ihn mit dem nächsten Lauf oder mit „Jetzt weiterarbeiten".'
+            : 'Es läuft kein Wechsel des Serverschlüssels.';
+    }
     if ($rotation && !$inventar) {
-        $fehlt[] = 'Noch ist nicht alles umgehüllt und mit dem neuen Schlüssel nachgewiesen'
-                 . (($r = sw_rueckstand($z)) !== null ? ' (noch ' . $r . ' von '
-                    . (int)($z['gesamt'] ?? 0) . ' Stücken)' : '') . '.';
+        $wartet = sw_nachweis_wartet($z);
+        $nFehler = count((array)($z['fehler'] ?? []));
+        $fehlt[] = ($wartet !== null
+                ? 'Umgehüllt; der Nachweis mit dem neuen Schlüssel beginnt um '
+                  . fmt_local(gmdate('Y-m-d H:i:s', $wartet)) . ' Uhr — so lange kann ein '
+                  . 'Vorgang, der vor dem Wechsel begann, noch mit dem bisherigen versiegeln'
+                : 'Noch ist nicht alles umgehüllt und mit dem neuen Schlüssel nachgewiesen'
+                  . (($r = sw_rueckstand($z)) !== null ? ' (noch ' . $r . ' von '
+                     . (int)($z['gesamt'] ?? 0) . ' Stücken)' : ''))
+                 . ($nFehler > 0 ? '; ' . $nFehler . ' Stück(e) ließen sich nicht umhüllen '
+                                   . 'und liegen noch unter dem bisherigen' : '') . '.';
     }
     if ($rotation && !$komplett) {
         $auftrag = (string)($z['komplett_auftrag'] ?? '');
@@ -836,21 +1196,61 @@ function sw_abschliessen(string $neu, string $alt): void
     sw_mail('abschluss', $neu, $alt);
 }
 
-/** Die Mail an jede BetreiberIn — nur Kennungen, nie Werte (E-SR-22, E-SR-62). */
-function sw_mail(string $phase, string $neu, string $alt): void
+/** Die Mail an jede BetreiberIn — nur Kennungen, nie Werte (E-SR-22, E-SR-62).
+ *
+ * ZWEI SCHLÜSSEL, NICHT EINER (H-SR-06, F-SR-82). `mail_einreihen()` setzt
+ * jede offene Mail desselben Schlüssels an dieselbe Adresse auf „überholt".
+ * Bis Web 21.12.0 trugen Beginn und Abschluss denselben — und eine
+ * Beginn-Mail, die noch auf ihren nächsten Versuch wartete, verschwand mit
+ * dem Abschluss. Gerade sie trägt den Satz „Warst du das nicht …". */
+function sw_mail(string $phase, string $neu, string $alt, string $weg = 'oberflaeche'): void
 {
     try {
         require_once __DIR__ . '/mail_lib.php';
+        $schluessel = $phase === 'abschluss' ? 'serverschluessel_abgeschlossen'
+                                             : 'serverschluessel_gewechselt';
+        /* Der Beginn von Hand läuft im Häppchen — am Huckepack-Weg in der
+         * Anfrage irgendeiner angemeldeten Person. Dort trägt der Mailjob die
+         * Zeilen hinaus, nicht die Anfrage (Nachprüfung H-SR-06, F-SR-87;
+         * dasselbe wie die Rundmail, F-P5c-29). */
+        $sofort = $weg !== 'hand';
         foreach (mail_betreiberinnen() as $an) {
-            mail_einreihen('serverschluessel_gewechselt', $an,
-                ['phase' => $phase, 'neu' => $neu, 'alt' => $alt,
-                 'link' => app_url('/betrieb_server.php#k-schluessel')]);
+            mail_einreihen($schluessel, $an,
+                ['neu' => $neu, 'alt' => $alt, 'weg' => $weg,
+                 'link' => app_url('/betrieb_server.php#k-schluessel')], $sofort);
         }
     } catch (Throwable $ex) {
         /* Die Mail ist nicht der Vorgang — ein Wechsel, der an einer
          * Warteschlange scheitert, wäre schlechter als einer ohne Mail. */
         system_melden('schluesselwechsel', 'Mail nicht eingereiht', $ex);
     }
+}
+
+/**
+ * Nach dem Einspielen eines Komplett-Stands: Ein mitgebrachter Zustand des
+ * Jobs gilt auf DIESER Anlage nicht als Nachweis (H-SR-06, F-SR-80). Er
+ * stammt von der Anlage, die den Dump schrieb — deren Dateien sind nicht
+ * die hiesigen. Phase und Zeiger gehen zurück auf „Nachweis von vorn"; der
+ * Beginn bleibt, damit ein eingespielter Stand unter dem neuen die
+ * Bedingung „jünger als der Beginn" weiter erfüllt. Findet der Nachweis
+ * etwas unter dem bisherigen, hüllt der Job es um.
+ */
+function sw_nach_einspielen(PDO $pdo): void
+{
+    $st = $pdo->prepare('SELECT zustand FROM jobs WHERE job = ?');
+    $st->execute([SW_JOB]);
+    $z = json_decode((string)($st->fetchColumn() ?: '{}'), true);
+    if (!is_array($z) || !in_array($z['phase'] ?? '', ['umhuellen', 'nachweis', 'fertig'], true)) {
+        return;
+    }
+    $z = array_merge($z, ['phase' => 'nachweis', 'zweck' => SW_ZWECKE[0], 'cursor' => null,
+                          'erledigt' => 0, 'zahlen' => [], 'nachweis_alt' => 0,
+                          'nachweis_fehler' => 0, 'nachweis_begonnen' => null, 'fehler' => [],
+                          'fehler_mehr' => 0, 'verloren' => [], 'verloren_durchgang' => [],
+                          'umgehuellt' => 0]);
+    unset($z['nachweis_am'], $z['komplett_auftrag']);
+    $pdo->prepare('UPDATE jobs SET zustand = ?, laeuft_seit = NULL WHERE job = ?')
+        ->execute([json_encode($z), SW_JOB]);
 }
 
 /**

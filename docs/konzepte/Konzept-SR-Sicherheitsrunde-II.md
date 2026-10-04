@@ -56,13 +56,13 @@ vor jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 >
 > | | |
 > |---|---|
-> | Stand | **29.09.2026 — SR-03 gebaut (Web 21.12.0): Der Serverschlüssel wechselt als Vorgang** — der bisherige bleibt als `server_key_alt`, der Job `schluesselwechsel` hüllt vier Zwecke um und weist sie nach, der bisherige geht erst nach Nachweis, frischem Stand und Rückfrage; beide Rotationen machen das Blatt sofort fällig (Nr. 233), Nr. 344 behoben. **Als Nächstes: Halt H-SR-06** — die Fable-Gegenlesung von SR-03; danach SR-04. Davor am selben Tag: **die offenen Punkte von H-SR-08 gemessen (Web 21.11.2):** dritte Lesung (zwölf Meldungen, F-SR-58 bis -67), der Zähler unter echtem Wettlauf, Nr. 354 mit echtem Deadlock nachgestellt und berichtigt, der Knopf in `passkey.js` im Bedienweg. Davor **SR-05 gebaut (Web 21.11.1): `ingest.php` ohne Deadlock, 180 von 180 ohne 503.** Davor am selben Tag: **H-SR-08 durchlaufen: Gegenlesung von SR-09 (41 Befunde, F-SR-33 bis -44) behoben in Web 21.11.0, die Behebung nachgeprüft (23 weitere, F-SR-45 bis -52, eingearbeitet bis auf Nr. 354)**; E-SR-42 bestätigt, Q-SR-14 bis -18 beantwortet. Gebaut sind SR-01, SR-02, SR-07 und SR-09 (Web 21.7.0 bis 21.10.0), gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (E-SR-29, -35, -36) — **neun Pakete** (4). **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
-> | Entschieden | **E-SR-01 bis E-SR-70** (Abschnitt 3.1). Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (SR-02), E-SR-41 (SR-07), E-SR-42 (Ursprung aus `app.base_url`, SR-09 — **von der Betreiberin bestätigt** bei H-SR-08), E-SR-43 (SR-09). **Bei H-SR-08:** E-SR-44 (Gegenlesung als Workflow) und E-SR-45 bis -49 (Q-SR-14 bis -18) von der Betreiberin am 28.09.2026; E-SR-50 (Fehlversuche), E-SR-51 (Migration an Ort und Stelle), E-SR-52 (der Preis von E-SR-50) und E-SR-53 (Nr. 354) aus der Umsetzung. **Aus SR-05:** E-SR-54 (`last_seen` hinter den Commit), E-SR-55 (Verbindungsprobe: zweite Lage, ab klein). **Nachtrag zu H-SR-08:** E-SR-56 (Nr. 354 nur messen, Antwort (a)) und E-SR-57 (dritte Lesung sofort, ohne Last) von der Betreiberin am 29.09.2026; E-SR-58 (Meldung „neu laden") und E-SR-59 (Nr. 355) aus der Umsetzung. **Aus SR-03:** E-SR-60 bis -63 von der Betreiberin am 29.09.2026 vor dem Paket (Rotationen nacheinander, Unlesbares melden statt blockieren, Mail an jedes BetreiberIn-Konto, Pflicht-Haken mit Rückfrage); E-SR-64 bis -70 aus der Umsetzung (Zeiger, Rahmen für den Knopf, Nr. 344 in der Schlüsselwechselprobe, Kennung im Kopf, Anstoß nach dem Nachweis, Rückweg der Probe, bedingtes `UPDATE`). |
-> | Offen | **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). **Die Fable-Gegenlesung von SR-03 (H-SR-06) steht jetzt an** — die Umsetzung hält hier. |
-> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). **SR-09 erledigt** 28.09.2026 (Web 21.10.0, Migration `2026_09_28_passkeys`; Befunde F-SR-28 bis -32; Nr. 350 erledigt, Nr. 353 neu). **H-SR-08 durchlaufen** 29.09.2026 (Web 21.11.0; Befunde F-SR-33 bis -52, E-SR-44 bis -53, Nr. 354 neu; Migration `2026_09_28_passkeys` an Ort und Stelle geändert). **SR-05 erledigt** 29.09.2026 (Web 21.11.1; Befunde F-SR-53 bis -57; Nr. 210 erledigt). **Nachtrag zu H-SR-08 erledigt** 29.09.2026 (Web 21.11.2; die vier offenen Punkte gemessen, dritte Lesung; Befunde F-SR-58 bis -67; Nr. 354 berichtigt, Nr. 355 neu). **SR-03 erledigt** 29.09.2026 (Web 21.12.0; Befunde F-SR-68 bis -77; Nr. 233, 247 und 344 erledigt, Nr. 356 neu). |
-> | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) — **steht an** — und SR-09 (H-SR-08, E-SR-36) — **durchlaufen**, als Workflow (E-SR-44). |
-> | Fächerung | keine in den Paketen; die **Gegenlesung H-SR-08**, ihre Nachprüfung und die dritte Lesung liefen als lesender Workflow (E-SR-44, E-SR-57). |
-> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`), **353** (Schemaprobe vergleicht migriert und frisch nicht, F-SR-28, `nächste Backlog-Runde`), **354** (`protokoll()` schluckt in einer Transaktion einen Deadlock, F-SR-50, berichtigt mit F-SR-63, `nächste Backlog-Runde`), **355** (Formularfeld als Liste gibt eine PHP-Warnung, F-SR-65, `nächste Backlog-Runde`), **356** (zwei Abschnitte der Karte „Schlüssel des Servers" ohne Abstand, F-SR-73, `nächste Backlog-Runde`). |
+> | Stand | **04.10.2026 — H-SR-06 durchlaufen: die Gegenlesung von SR-03 (42 Meldungen, zwei hoch; F-SR-78 bis -83) behoben in Web 21.12.1, die Behebung nachgeprüft (26 weitere, eine hoch, zwei mittel; F-SR-84 bis -87) und eingearbeitet** — jeder Griff an einen Schlüssel unter einer Sperre, der Nachweis erst nach zehn Minuten, ein Wechsel von Hand mit dem Beginn eines Wechsels, ein Komplett-Stand über den Wechsel neu versiegelt, ein Stück, das wirft, genannt statt den Wechsel anzuhalten, und ein Rückweg der Probe, der nichts wegwirft — auch nicht nach einem Wettlauf ohne Sieger. **Als Nächstes: SR-04** (Notzugang). Davor: **29.09.2026 — SR-03 gebaut (Web 21.12.0): Der Serverschlüssel wechselt als Vorgang** — der bisherige bleibt als `server_key_alt`, der Job `schluesselwechsel` hüllt vier Zwecke um und weist sie nach, der bisherige geht erst nach Nachweis, frischem Stand und Rückfrage; beide Rotationen machen das Blatt sofort fällig (Nr. 233), Nr. 344 behoben. Davor am selben Tag: **die offenen Punkte von H-SR-08 gemessen (Web 21.11.2):** dritte Lesung (zwölf Meldungen, F-SR-58 bis -67), der Zähler unter echtem Wettlauf, Nr. 354 mit echtem Deadlock nachgestellt und berichtigt, der Knopf in `passkey.js` im Bedienweg. Davor **SR-05 gebaut (Web 21.11.1): `ingest.php` ohne Deadlock, 180 von 180 ohne 503.** Davor am selben Tag: **H-SR-08 durchlaufen: Gegenlesung von SR-09 (41 Befunde, F-SR-33 bis -44) behoben in Web 21.11.0, die Behebung nachgeprüft (23 weitere, F-SR-45 bis -52, eingearbeitet bis auf Nr. 354)**; E-SR-42 bestätigt, Q-SR-14 bis -18 beantwortet. Gebaut sind SR-01, SR-02, SR-07 und SR-09 (Web 21.7.0 bis 21.10.0), gestapelt auf dem offenen Konzept-PR #95 (E-SR-38). Davor: **27.09.2026 — Konzept freigegeben** (Betreiberin, E-SR-27); **Nachfassung am selben Tag: SR-09 Passkeys** (E-SR-29, -35, -36) — **neun Pakete** (4). **28.09.2026: 17 gemergt (PR #94), `main` aufgenommen, Konzept-PR gestellt**; aus 17 kamen Nr. 250 und 344 mit Ziel 18 dazu (E-SR-37). |
+> | Entschieden | **E-SR-01 bis E-SR-79** (Abschnitt 3.1); **E-SR-71 bis -75 von der Betreiberin am 04.10.2026** (H-SR-06: Lesung mit Rechnungen, Komplett-Stand neu versiegeln, Frist zehn Minuten, Handeintrag wie ein Wechsel, Web 21.12.1), E-SR-76 bis -78 aus der Behebung, E-SR-79 aus der Nachprüfung. Von der Betreiberin am 27.09.2026: E-SR-02 (Ausgangsstand), E-SR-17 bis -26 (die Antworten der Klickrunde, Q-SR-01 bis -11), E-SR-27 (Freigabe), E-SR-28 und -29 (Nachfassung: kein PRF, Passkeys als SR-09), E-SR-35 und -36 (Q-SR-12, -13); die übrigen aus dem Konzept, E-SR-37 am 28.09.2026 nach dem Merge von 17. **Aus der Umsetzung:** E-SR-38 (Stapeln auf PR #95) und E-SR-39 (lesende Seiten in SR-01), beide von der Betreiberin am 28.09.2026; E-SR-40 (SR-02), E-SR-41 (SR-07), E-SR-42 (Ursprung aus `app.base_url`, SR-09 — **von der Betreiberin bestätigt** bei H-SR-08), E-SR-43 (SR-09). **Bei H-SR-08:** E-SR-44 (Gegenlesung als Workflow) und E-SR-45 bis -49 (Q-SR-14 bis -18) von der Betreiberin am 28.09.2026; E-SR-50 (Fehlversuche), E-SR-51 (Migration an Ort und Stelle), E-SR-52 (der Preis von E-SR-50) und E-SR-53 (Nr. 354) aus der Umsetzung. **Aus SR-05:** E-SR-54 (`last_seen` hinter den Commit), E-SR-55 (Verbindungsprobe: zweite Lage, ab klein). **Nachtrag zu H-SR-08:** E-SR-56 (Nr. 354 nur messen, Antwort (a)) und E-SR-57 (dritte Lesung sofort, ohne Last) von der Betreiberin am 29.09.2026; E-SR-58 (Meldung „neu laden") und E-SR-59 (Nr. 355) aus der Umsetzung. **Aus SR-03:** E-SR-60 bis -63 von der Betreiberin am 29.09.2026 vor dem Paket (Rotationen nacheinander, Unlesbares melden statt blockieren, Mail an jedes BetreiberIn-Konto, Pflicht-Haken mit Rückfrage); E-SR-64 bis -70 aus der Umsetzung (Zeiger, Rahmen für den Knopf, Nr. 344 in der Schlüsselwechselprobe, Kennung im Kopf, Anstoß nach dem Nachweis, Rückweg der Probe, bedingtes `UPDATE`). |
+> | Offen | **Der Konzept-PR #95 wartet auf den Merge**; der PR der Umsetzung wird erst danach gestellt (sonst zeigte er das Konzept als eigenen Unterschied). **H-SR-06 ist durchlaufen** (Web 21.12.1); als Nächstes SR-04. |
+> | Umsetzung | **SR-00 erledigt** (Konzept, Spanne, Fahrplanzeile — Rahmenplan Fassungen 139, 140, 143 bis 145 — bis zum Merge von 17 als 137 bis 142 gezählt, weil 17 dieselben Nummern vergeben hatte). **SR-01 erledigt** 28.09.2026 (Web 21.7.0; Befunde F-SR-15 bis -18; Rahmenplan Fassung 146: Schritt beginnt). **SR-02 erledigt** 28.09.2026 (Web 21.8.0, Migration `2026_09_28_vertraute_geraete`; Befunde F-SR-19 bis -23; Nr. 250 erledigt). **SR-07 erledigt** 28.09.2026 (Web 21.9.0; Befunde F-SR-24 bis -27). **SR-09 erledigt** 28.09.2026 (Web 21.10.0, Migration `2026_09_28_passkeys`; Befunde F-SR-28 bis -32; Nr. 350 erledigt, Nr. 353 neu). **H-SR-08 durchlaufen** 29.09.2026 (Web 21.11.0; Befunde F-SR-33 bis -52, E-SR-44 bis -53, Nr. 354 neu; Migration `2026_09_28_passkeys` an Ort und Stelle geändert). **SR-05 erledigt** 29.09.2026 (Web 21.11.1; Befunde F-SR-53 bis -57; Nr. 210 erledigt). **Nachtrag zu H-SR-08 erledigt** 29.09.2026 (Web 21.11.2; die vier offenen Punkte gemessen, dritte Lesung; Befunde F-SR-58 bis -67; Nr. 354 berichtigt, Nr. 355 neu). **SR-03 erledigt** 29.09.2026 (Web 21.12.0; Befunde F-SR-68 bis -77; Nr. 233, 247 und 344 erledigt, Nr. 356 neu). **H-SR-06 durchlaufen** 04.10.2026 (Web 21.12.1; Befunde F-SR-78 bis -83, Nachprüfung F-SR-84 bis -87, E-SR-71 bis -79; Nr. 357 neu). |
+> | Fable-Schritte | keine; **zwei Fable-Gegenlesungen** vor dem PR: SR-03 (H-SR-06, E-SR-23) — **durchlaufen**, als Workflow mit Rechnungen (E-SR-71) — und SR-09 (H-SR-08, E-SR-36) — **durchlaufen**, als Workflow (E-SR-44). |
+> | Fächerung | keine in den Paketen; die **Gegenlesung H-SR-08**, ihre Nachprüfung und die dritte Lesung liefen als lesender Workflow (E-SR-44, E-SR-57), die **Gegenlesung H-SR-06** und ihre Nachprüfung ebenso (E-SR-71). |
+> | Nummern | 350 bis 359 reserviert; vergeben: **350** (Passkeys als zweiter Faktor, SR-09), **351** (Passkey allein, `nach v1.0`, E-SR-35), **352** (`nummern.py` im offenen Merge, F-SR-14, `nächste Backlog-Runde`), **353** (Schemaprobe vergleicht migriert und frisch nicht, F-SR-28, `nächste Backlog-Runde`), **354** (`protokoll()` schluckt in einer Transaktion einen Deadlock, F-SR-50, berichtigt mit F-SR-63, `nächste Backlog-Runde`), **355** (Formularfeld als Liste gibt eine PHP-Warnung, F-SR-65, `nächste Backlog-Runde`), **356** (zwei Abschnitte der Karte „Schlüssel des Servers" ohne Abstand, F-SR-73, `nächste Backlog-Runde`), **357** (Klassenname im Fehlertext der Jobs, F-SR-82, `nächste Backlog-Runde`). |
 
 ---
 
@@ -920,6 +920,204 @@ M12, M25, N2-1 (je eine Textstelle).
   das Runbook mit einer „fertigen Zeile zum Einfügen", die es seit S10
   nicht mehr gibt. **Gelöst** mit F-SR-03.
 
+**Aus der Gegenlesung H-SR-06** (04.10.2026, Stand `9977172`, E-SR-71):
+vier Fable-Leser nach Blickwinkel (Krypto-Kern und Wettläufe, Job und
+Nachweis, Oberfläche und Betrieb, Doku und Probe), je Leser ein
+Gegenprüfer; die Leser haben die Punkte, die das Prüfdokument „nicht
+geprüft" nannte, nachgerechnet oder im Container mit künstlichen Daten
+gemessen. **42 Meldungen: 29 bestätigt, 10 teilweise, 3 widerlegt; nach
+der Gegenprüfung 2 hoch, 8 mittel, 13 niedrig, 16 Hinweise.** Hier zu
+sechs Befunden zusammengefasst (E-SR-78); die Einzelkennungen (K-1 bis
+K-9, J-1 bis J-13, O-1 bis O-9, D-1 bis D-11) mit Belegen, Rechnungen und
+Gegenprüfung stehen im Prüfdokument. Widerlegt: J-4 (ein kurzes Schreiben
+gibt bei einer Zeichenkette `false`, gemessen), J-6 (der Zustand wird
+außerhalb eines Wechsels geleert), J-8 (bewusst so, E-SR-68). Die Leitfragen
+aus E-SR-23 beantworteten alle vier mit „ja, mit Einschränkungen" — die
+Einschränkungen sind die Befunde.
+
+- **F-SR-78 Der Wechsel schützte sich nicht gegen sich selbst** (K-1 hoch,
+  K-6, D-4). Zwei gleichzeitig abgeschickte Wechsel liefen ohne Sperre;
+  ein Prozess, der `config.php` vor dem Schreiben des anderen gemerkt
+  hatte, hielt den Eintrag für leer und konnte den frisch gewürfelten
+  Schlüssel überschreiben — nachdem ein Häppchen schon Zeilen unter ihm
+  umgehüllt hatte. Ein Häppchen neben dem Wechsel schrieb an seinem Ende
+  den alten Zustand über den neuen. Ein Abbruch zwischen den beiden
+  Schreibschritten hinterließ `server_key_alt` = `server_key`, und das hieß
+  „Wechsel" — mit sich selbst. Die Probe maß die Riegel „läuft bereits"
+  und „nur aus bereit" nie. **Gelöst mit H-SR-06:** jeder Griff an einen
+  Schlüssel in `config.php` unter der Sperre der Jobzeile
+  (`schluessel_unter_sperre()`, E-SR-76), `config.php` danach neu gelesen;
+  `server_key` nur ersetzt, wenn dort noch der gesicherte Wert steht; „ein
+  gültiger Eintrag steht da" zählt die Datei; alt = neu ist `bereit`. Die
+  Probe startet zwei Wechsel aus zwei Prozessen und ruft einen dritten.
+  **Beim Bau gemessen:** Die Gegenprobe ohne Sperre blieb zunächst grün —
+  die Kinder lasen `config.php` erst nach dem Startschuss, also frisch;
+  jetzt vorher. Dann fing die vorhandene Gegenprobe in
+  `config_eintrag_schreiben()` die Verschränkung ab, und in einer dritten
+  scheiterte der zweite am Umbenennen, weil beide Schreiber dieselbe
+  Nebendatei `config.neu.php` benutzen — auch das schließt die Sperre aus.
+  Erst mit 150 ms Versatz und einer Pause zwischen den Schreibschritten
+  stellte die Gegenprobe den Fall aus K-1 her (beide durch, der zweite
+  Schlüssel über dem ersten); mit nur einem der beiden Riegel blieb sie
+  grün.
+- **F-SR-79 Prozesse mit dem bisherigen Schlüssel im Speicher** (J-2
+  mittel, K-2/J-3/O-1 mittel). Jeder Prozess hält `config.php` und den
+  Schlüssel in einer `static`. Ein CLI-Lauf (bis 300 s) oder eine Anfrage,
+  die vor dem Wechsel begann, versiegelte bis zu ihrem Ende mit dem
+  bisherigen; der Nachweis war örtlich nach acht Sekunden durch, danach sah
+  niemand die Nachzügler, und das Entfernen war erlaubt. Ein CLI-Lauf sah
+  im Häppchen noch die Lage `bereit` und leerte den Zustand. Ein
+  Komplett-Stand, dessen Versiegelung über den Wechsel lief, trug Blöcke
+  unter beiden Schlüsseln (Kopf: der bisherige), ließ sich nicht einspielen
+  und verdrängte einen lesbaren; fiel der Wechsel zwischen Dump und erstes
+  Siegel-Häppchen, log der Kopf (Leser und Gegenprüfer haben beides
+  nachgebaut). **Gelöst mit H-SR-06:** Frist von zehn Minuten vor dem
+  Nachweis (E-SR-73), im Riegel nachgemessen; jedes Häppchen liest
+  `config.php` neu; `komp_kopf_angleichen()` beginnt die Versiegelung bei
+  einer anderen Kennung von vorn (E-SR-72).
+- **F-SR-80 Ein Wechsel ohne Beginn** (K-3 mittel, O-2 mittel, D-6 mittel,
+  K-5, J-7, O-4, K-7, O-3). Stand der Wechsel von Hand in `config.php` —
+  der Weg, den das Runbook für das Einspielen eines Stands von vorher
+  beschrieb —, legte das Häppchen still einen Zustand an: kein Protokoll
+  „gewechselt", keine Mail, keine fällige Rückfrage; Bedingung 3 blieb bis
+  zum nächsten Quartal zu, und der einzige Ausgang war das Austragen von
+  Hand. Der Runbook-Satz „der Job findet nichts umzuhüllen" war falsch:
+  Der Dump bringt Zeilen unter dem bisherigen mit, und wer vor dem nächsten
+  Häppchen austrug, machte Zweitfaktor-Geheimnisse und Zugänge stumm. Warf
+  `sw_beginnen()`, stand der neue Schlüssel ohne Zustand da. Statuszeile und
+  Karte sagten ohne Zustand „alles umgehüllt" und zugleich „es läuft kein
+  Wechsel". Der Zustand wurde ohne Abgleich mit dem Schlüsselpaar geglaubt,
+  auch einer aus einem eingespielten Dump. **Gelöst mit H-SR-06:** der
+  Beginn wie über die Karte, mit Vermerk und eigenem Betreff (E-SR-74);
+  ein Fehler im Beginn nimmt den Wechsel nicht zurück; fremdes
+  Schlüsselpaar = kein Zustand; `sw_nach_einspielen()` aus
+  `wiederherstellen.php`; Runbook berichtigt; Karte und Statuszeile mit der
+  Lage „nicht begonnen".
+- **F-SR-81 Der Job konnte hängen bleiben oder falsch zählen** (K-4
+  mittel, J-1 mittel, K-8, J-9, J-10, J-11, J-12). Ein Stück, das warf,
+  brach jedes Häppchen an derselben Stelle ab, ohne Namen. Ein Paket mit
+  lesbarem Manifest und unlesbarem Teil hieß im Umhüllen `verloren`, im
+  Nachweis `alt` — der Durchgang begann in jedem Häppchen von vorn. Ein
+  Archiv mit dritter Kennung im Namen hieß `verloren`, obwohl der bisherige
+  es öffnete. Die Stückliste wurde je Stück neu gebildet (gemessen 4,35 s je
+  Durchgang bei 300 Konten); `zip_lesen()` wurde nicht ausgewertet; leere
+  Objekte im Archiv-Manifest wurden `[]`. **Gelöst mit H-SR-06:** ein
+  Stück, das wirft, wird genannt und hält Bedingung 1 zu (E-SR-77); der
+  Nachweis versucht bei einem Manifest unter dem bisherigen jeden Teil;
+  Archive werden nach dem Manifest umgehüllt und vor dem Ablegen
+  nachgewiesen. **Beim Bau gefunden, alle drei von der eigenen Probe:**
+  (1) der Nachweis trug ein gescheitertes Stück aus der Fehlerliste aus,
+  weil es dort `alt` sagt — jede Runde meldete es neu (zwölf Zeilen im
+  Reiter System); (2) `sw_paket()` ließ bei `verloren` den halben Bau im
+  Arbeitsordner liegen, bis zum nächsten Häppchen; (3) ein neu versiegelter
+  Wert, der den Nachweis nicht bestand, hieß `verloren` — er öffnet aber
+  mit dem bisherigen; `sw_umsiegeln()` wirft jetzt.
+- **F-SR-82 Auskünfte, die nicht stimmten** (O-5, O-6, O-7, O-8, O-9, D-5,
+  D-11, J-5, J-13, K-9). Die Abschluss-Mail überholte eine offene
+  Beginn-Mail (gemeinsamer Schlüssel) — **gelöst:**
+  `serverschluessel_abgeschlossen`. Ein Komplett-Stand unter einem dritten
+  Schlüssel ließ sich „herunterladen" (leere Datei, Protokoll „heruntergeladen")
+  — **gelöst:** Abweisung vor Protokoll und Kopfzeilen, kein Angebot in der
+  Liste. Der Reiter Archiv verwies während eines Wechsels auf den Schlüssel
+  von damals — **gelöst:** eigene Meldung und Plakette „bisheriger
+  Schlüssel". Karte und Runbook sagten „der Job arbeitet weiter", auch wo
+  ohne Auslöser keine Datei je vorankommt — **gelöst:** gesagt; der
+  Nachweis nimmt die kleine Reserve und läuft huckepack. Das
+  Wiederanlaufpaket nach einem Wechsel stand nirgends — **gelöst:**
+  Runbook Schritt 7, Handbuch, Abschluss-Mail. „Jetzt weiterarbeiten"
+  leitete nach einem Fehlschlag nicht um — **gelöst** (wie die Rundmail).
+  `anteil_neuanfang()` machte das Blatt nicht fällig, `edbak_begleit_lesen()`
+  las mit leerer Kennung die Wurzel, „drei Kacheln" setzte einen Anteil
+  voraus, „94 MB" war Fassung 1 (Fassung 3 ≈ 15 MB, im Container in 0,28 s
+  umgehüllt) — **gelöst**. Der Klassenname im Fehlertext jedes Jobs:
+  **Nr. 357**.
+- **F-SR-83 Die Probe** (D-1 hoch, D-2, D-3, D-7, D-8, D-9, D-10). Ihr
+  Rückweg legte `config.php` auch dann auf A zurück und löschte die
+  Stand-Datei, wenn der Job B → A nicht fertig war — nach einem Fehler,
+  einer stehengebliebenen Jobsperre oder beim zweiten `--zurueck` —, und
+  B stand danach nirgends mehr; dazu legte die Abbruchsicherung von
+  `konfig_stellen()` aus Teil 3 nach einem Fatal den Text ohne B zurück.
+  Die Stand-Datei lag beim ersten Schreiben bis zum `chmod` mit 0644 da. Sie
+  maß Endzustände, nicht den Nachweis vor dem Ersetzen; ihr Zähler sah
+  `\sk_versiegeln(` nicht; ohne SMTP meldete sie die Mail-Zeilen grün.
+  **Gelöst mit H-SR-06:** Rückweg nur nach „fertig", sonst A und B stehen
+  lassen, Datei behalten, mit Zahl melden, ein zweites `--zurueck` macht
+  weiter; Teil 3 ohne `konfig_stellen()`; `umask(0077)`; G6 mit einem
+  Versiegler, der für einen Zweck lügt; `T_NAME_FULLY_QUALIFIED`; ohne SMTP
+  „nicht gemessen" (rot); Zahlen im Prüfdokument berichtigt. **Beim Bau
+  gefunden:** Die Zeile „Paket mit kaputtem Teil … trotzdem fertig" maß das
+  „fertig" nicht (ihre Gegenprobe wurde nur an Folgestellen rot) — jetzt
+  schon.
+
+**Aus der Nachprüfung von H-SR-06** (04.10.2026, Workflow `wf_663b2eba-579`,
+lesend, vier Leser und vier Gegenprüfer, mit Rechnungen; E-SR-71): Jede der
+42 Meldungen ist behoben, D-2 und D-7 nur zur Hälfte. Neu kamen 26 Meldungen
+dazu (23 bestätigt, 3 teilweise) — nach der Gegenprüfung eine hoch, zwei
+mittel, zwölf niedrig, elf Hinweise; eine Teilbehauptung widerlegt (der
+zweite Auslöser in ND/NA-1). Sie stehen als
+vier Befunde im Konzept (E-SR-79), die Einzelkennungen im Prüfdokument.
+
+- **F-SR-84 Der Rückweg der Probe nach einem Wettlauf ohne Sieger**
+  (ND/NA-1 hoch, ND/NA-2, -3, -6). Kam keines der zwei Kinder durch — eine
+  stehengebliebene Jobsperre wies beide ab —, schrieb die Probe den
+  unveränderten Schlüssel A als B in die Stand-Datei. Der Rückweg stellte A
+  und A ein (Lage `bereit`), der Job tat nichts, jedes `--zurueck` endete
+  „nicht fertig". Wechselte der Hauptlauf danach selbst (sein dritter
+  Wechsel ging dann durch), stand sein B' nirgends sonst — dieselbe Klasse
+  wie D-1. Dazu: Die Kinder starteten `php` aus dem Suchpfad; nach einem
+  nicht fertigen Rückweg nannte der Hauptlauf die Lage statt des
+  Rückwegs; `--zurueck` hielt die Jobs nicht an und löste die Sperre
+  bedingungslos; der Titel „sieben Stücke" maß sechs. **Gelöst:** B ist nur
+  ein Wert, der nicht A ist (an beiden Stellen); ohne Sieger hält die Probe
+  an; `PHP_BINARY`; die Stand-Datei vor der Lage; eine stehende Sperre ist
+  eine Vorbedingung; `--zurueck` pausiert die Jobs und löst nur eine alte
+  Sperre; „sechs Stücke". **Widerlegt:** „`php` nicht im Pfad" führt nicht
+  zum Hänger — `proc_open()` gibt dann `false`, und der Rückweg findet A/A
+  in der Datei und legt zurück (gemessen von der Gegenprüfung).
+- **F-SR-85 Der Job kreiste oder sagte Falsches** (NB-1 mittel, NB-2
+  mittel, NB-3, -4, -5, -6, NC/NA-1, -2, NA/NA-6). Ein Archivteil, der sich
+  nicht in den Arbeitsordner schreiben ließ, hieß `verloren`, der Nachweis
+  sagte `alt`, der Durchgang kreiste. Ein Nachweis-Durchgang ohne Stück
+  setzte `nachweis_begonnen` nie: Bedingung 1 blieb zu, jedes Häppchen
+  schrieb „umgehüllt" ins Protokoll (gemessen: 1, 2, 3, 4). Eine Ausnahme
+  nach dem Selbstanlauf ließ den Rahmen den leeren Zustand zurückschreiben —
+  zweiter Beginn, zweite Mail (gemessen). Über der Decke von 20 griff die
+  Kurzschaltung „nur Fehler" nicht, und der Reiter System bekam vier Zeilen
+  je Stück und Häppchen (gemessen: 24, dann 28). Ein Beginn über die Karte,
+  dessen Inventar oder Zustand scheiterte, wurde als Handeintrag nachgeholt
+  — Protokoll und Mail behaupteten etwas Falsches. Die Lage `abweichend`
+  wischte den Zustand. `verloren` wurde nie bereinigt, auch nicht beim
+  Einspielen. **Gelöst:** `sw_archiv()` wirft beim Schreibfehler;
+  `nachweis_begonnen` beim Eintritt; nach dem Selbstanlauf zurück;
+  `fehler_mehr` und eine Systemzeile je Häppchen; das Inventar hält den
+  Beginn nicht auf, und der Text des nachgeholten Beginns nennt beide
+  Möglichkeiten; geleert nur bei `bereit`; `verloren` je Durchgang
+  (`sw_verloren_durchgang_ende()`), beim Einspielen leer.
+- **F-SR-86 Griffe und Lage** (NA/NA-1, -2, -3, -4, -5, NB-7). Das Blatt
+  druckte die Waise als „bisherigen"; die Rücknahme eines halben Griffs
+  räumte einen `server_key_alt` weg, auch wenn jemand an der Sperre vorbei
+  `server_key` geändert hatte (gemessen im Nachbau: danach Lage
+  `abweichend`, das Alte ohne Eintrag); eine stehengebliebene Sperre sperrt
+  bis zu einer Stunde jeden Griff, und die Meldung sagte „gleich noch
+  einmal"; die Waise beim Anteil hieß `rotation` und sperrte den Wechsel des
+  Serverschlüssels; der Neuanfang des Anteils war nicht gemessen.
+  **Gelöst:** Blatt-Kachel nur bei verschiedenem Wert (beide Schlüssel);
+  `config_halbes_zuruecknehmen()`; die Meldung nennt „seit" und
+  „spätestens … frei" (die Stunde selbst bleibt, E-SR-79); die Waise beim
+  Anteil wie beim Serverschlüssel, auch in `anteil_wechseln()`; Anteilprobe
+  (8a), (E6) bis (E9).
+- **F-SR-87 Auskünfte und Beschreibung** (NC/NA-3, -4, -5, -6, -7,
+  ND/NA-4, -5). Der Knopf „Jetzt weiterarbeiten" hing am rohen Zustand, die
+  Zeile darüber am gefilterten; `komp_kopf_angleichen()` las die Kennung aus
+  `konfig()`, den Schlüssel aus einer anderen `static`; der Grund auf der
+  Karte ist der rohe Ausnahmetext; zwei Kleinzeilen hatten zwei Sätze und
+  die Liste der Komplett-Stände einen Absatz je Stand (`Design.md`); die
+  Mail eines Handeintrags ging in der Anfrage einer beliebigen Person
+  hinaus; Technik und Dateikopf sagten nicht, dass der Nachweis eine Datei
+  unter dem bisherigen ganz liest; `Backlog-Erledigt.md` nannte für SR-03
+  „E-SR-60 bis -67". **Gelöst:** alle, bis auf den Grund (zu Nr. 357
+  gelegt, E-SR-79).
+
 ## 3. Entscheidungen und Fragen
 
 ### 3.1 Entscheidungen
@@ -996,6 +1194,15 @@ M12, M25, N2-1 (je eine Textstelle).
 | E-SR-68 | **Der frische Komplett-Stand wird nach dem Nachweis angestoßen** (`sw_komplett_anstossen()`), nicht beim Beginn (Q-SR-03, F-SR-74). | Umsetzung, 29.09.2026 | Ein Stand mitten im Umhüllen trüge Zeilen unter beiden Schlüsseln und verlangte beim Einspielen beide. Ein von Hand früher angelegter Stand erfüllt die Bedingung trotzdem (sie sagt „jünger als der Beginn", E-SR-09) — das Runbook sagt, erst danach. |
 | E-SR-69 | **Die Probe fährt den Rückweg mit demselben Job** (B → A) und vergleicht danach jedes Stück der Anlage mit dem Bild von vorher; sie hält die Jobs an. Der Bedienweg benutzt ihre Buchführung (`--merken`, `--stand`, `--zurueck`). | Umsetzung, 29.09.2026 (F-SR-75) | Der erste Wechsel hüllt auch die Geheimnisse der Anlage selbst um (Zweitfaktor der Prüfkonten); `config.php` byte-gleich zurückzulegen machte sie unlesbar. Zwei Buchführungen für denselben Vorgang liefen auseinander. |
 | E-SR-70 | **Eine Zeile wird mit einem bedingten `UPDATE … WHERE id = ? AND feld = <gelesen>` ersetzt**, nicht in einer Transaktion je Zeile (E-SR-09). | Umsetzung, 29.09.2026 (F-SR-70) | Eine Anweisung ist atomar; die Bedingung fängt zusätzlich, was eine Transaktion nicht fängt — einen Wert, der zwischen Lesen und Schreiben neu gespeichert wurde. Dann „später", und der Nachweis findet ihn. |
+| E-SR-71 | **Die Gegenlesung H-SR-06 läuft als lesender Fable-Workflow wie H-SR-08**: vier Leser, je Leser ein Gegenprüfer; die Leser rechnen oder messen die Punkte, die das Prüfdokument „nicht geprüft" nennt (künstliche Daten, gekennzeichnet). **Opus behebt die bestätigten Befunde im selben Zug**; danach eine Nachprüfung der Behebung, lesend, höchstens zehn Agenten. | Betreiberin, 04.10.2026 („Workflow wie H-SR-08", „Ja, rechnen") | Dasselbe Mittel wie bei H-SR-08 (E-SR-44); das Rechnen nimmt dem Prüfdokument die Zeilen „nicht geprüft", die sich ohne Staging beantworten lassen. |
+| E-SR-72 | **Ein Komplett-Stand, dessen Versiegelung über einen Wechsel läuft, wird neu versiegelt; der Wechsel wartet nicht.** | Betreiberin, 04.10.2026 (F-SR-79) | Im Ernstfall — Verdacht auf einen kompromittierten Schlüssel — darf ein laufendes Backup den Wechsel nicht um Stunden aufhalten. Der Dump ist Klartext; nur das Versiegeln beginnt von vorn, wie beim Archivjob. |
+| E-SR-73 | **Der Nachweis beginnt frühestens zehn Minuten nach dem Beginn**, und Bedingung 1 verlangt das. | Betreiberin, 04.10.2026 (F-SR-79) | Länger als jeder Prozess, der vor dem Wechsel begonnen haben kann (CLI 300 s, Anfrage 240/300 s). Ein Riegel „kein Wechsel, solange ein Job läuft" deckte die Anfragen nicht, die ebenfalls versiegeln. Preis: zehn Minuten bis Bedingung 1. |
+| E-SR-74 | **Ein Wechsel, der von Hand in `config.php` steht, bekommt den Beginn eines Wechsels über die Karte** — Protokoll mit Vermerk, Mail an jede BetreiberIn, die Rückfrage sofort fällig; abgeschlossen wird über die Karte. | Betreiberin, 04.10.2026 (F-SR-80) | Ein Schlüssel, den jemand an der Karte vorbei einträgt, ist genau das, was die zweite BetreiberIn erfahren soll; und ohne die fällige Rückfrage blieb der Abschluss bis zu einem Quartal zu. |
+| E-SR-75 | **Die Behebung ist Web 21.12.1, Korrekturstufe.** | Betreiberin, 04.10.2026 | Fehlerbehebung an der eben eingeführten Funktion; kein Schema, keine neue Funktion im eigentlichen Sinn. |
+| E-SR-76 | **Die Sperre ist die der Jobzeile `schluesselwechsel` und steht um jeden Griff an einen Schlüssel in `config.php`**; dazu bedingtes Ersetzen und „gültiger Eintrag" aus der Datei. | Umsetzung, 04.10.2026 (F-SR-78) | Dasselbe bedingte `UPDATE` wie im Jobrahmen schließt Griffe und Häppchen gegenseitig aus, ohne zweite Mechanik. Eine Sperrdatei wäre ein neunter Pfad, den die Kette nicht ausliefern darf (`CLAUDE.md` 3); `GET_LOCK` ist auf Produktiv nie gemessen. Die beiden Riegel in `config_eintrag_schreiben()` halten auch für einen Schreiber, der die Sperre nicht nimmt — die Gegenproben zeigen jeden für sich. |
+| E-SR-77 | **Ein Stück, das beim Umhüllen wirft, wird genannt und übersprungen und hält Bedingung 1 zu**; der nächste Versuch kommt mit dem nächsten Häppchen. `sw_umsiegeln()` wirft, statt `null` zu geben. | Umsetzung, 04.10.2026 (F-SR-81) | Es liegt noch unter dem bisherigen — anders als ein `verloren`es (E-SR-61), das schon vorher stumm war. Ein Stück darf den Wechsel nicht anhalten, aber auch nicht seinen bisherigen Schlüssel verlieren. |
+| E-SR-78 | **Die 42 Meldungen von H-SR-06 stehen als sechs Befunde im Konzept**, die Einzelkennungen im Prüfdokument. | Umsetzung, 04.10.2026 | Befundnummern sind zweistellig (`Pruefablauf.md` 7); nach F-SR-77 bleiben 22, und SR-04, SR-08 und SR-06 brauchen noch welche. H-SR-08 hat dasselbe getan (41 Meldungen, zwölf Befunde). |
+| E-SR-79 | **Die Funde der Nachprüfung von H-SR-06 stehen als vier Befunde (F-SR-84 bis -87) und werden im selben Zug behoben** — bis auf drei, die bewusst bleiben: die Stunde, die eine stehengebliebene Sperre die Griffe sperrt (die Meldung nennt jetzt die Zeit), der Grund als Ausnahmetext (zu Nr. 357) und die Stand-Datei der Probe im Temp-Verzeichnis (D-2, 0600). Die Waise beim Anteil heißt wie beim Serverschlüssel `bereit`. | Umsetzung, 04.10.2026 | E-SR-71 sagt „im selben Zug". Die Sperre teilen Job und Griffe; eine kürzere Frist nur für die Griffe brauchte eine zweite Sperre, und ein Häppchen, das an der Zeitgrenze stirbt, ist selten. Nr. 357 betrifft jeden Job. Ein eigener Ordner für die Stand-Datei wäre eine Stelle mehr zum Vergessen; 0600 vom ersten Byte an steht. Nach F-SR-87 bleiben zwölf Befundnummern. |
 
 ### 3.2 Fragen an die Betreiberin
 
@@ -1052,7 +1259,11 @@ Zeile** → E-SR-48; Q-SR-18 wie empfohlen → E-SR-49. Kein Q ist offen.
 - **H-SR-06 nach SR-03 (E-SR-23):** Die Umsetzungsinstanz hält an und sagt
   es; eine Fable-Instanz liest SR-03 gegen das Konzept (Inventar, Nachweis,
   die drei Bedingungen als Riegel, `sk_oeffnen()` mit zwei Schlüsseln, das
-  Blatt); Befunde als F-SR-NN, Behebung durch Opus, dann SR-04.
+  Blatt); Befunde als F-SR-NN, Behebung durch Opus, dann SR-04. **Erreicht
+  29.09.2026** nach dem Commit `SR-03`. **Durchlaufen 04.10.2026:** gelesen
+  als Workflow mit Rechnungen (E-SR-71), 42 Meldungen (F-SR-78 bis -83),
+  E-SR-72 bis -75 von der Betreiberin, behoben in Web 21.12.1 (Abschnitt 4,
+  nach SR-03).
 - **H-SR-07 vor SR-09:** Q-SR-12, -13 entschieden — **erfüllt
   27.09.2026** (E-SR-35, -36).
 - **H-SR-08 nach SR-09 (E-SR-36):** wie H-SR-06 — Fable liest
@@ -1739,6 +1950,72 @@ Bilderlauf ab. Der dritte war bis auf zwei Wege der Bedienprobe am
 Demo-Konto grün (fehlende Stammdaten-Vorschläge; nach einem Demo-Reset
 einzeln grün, Ursache vermutlich der abgebrochene Lauf, nicht belegt); der
 vierte steht in der Commit-Nachricht. Zahlen im Prüfdokument 2.
+
+**H-SR-06 Gegenlesung und Behebung** (kein Paket, ein Halt; E-SR-23).
+*Erledigt 04.10.2026 (Web 21.12.1):* gelesen als lesender Fable-Workflow
+mit Rechnungen (E-SR-71) am Stand `9977172`, 42 Meldungen (F-SR-78 bis -83),
+die Betreiberin hat E-SR-72 bis -75 entschieden. **Gebaut:** in
+`serverkrypto_lib.php` `schluessel_unter_sperre()` um jeden Griff an einen
+Schlüssel (neun Funktionen), `config_eintrag_in_datei()`, bedingtes
+Ersetzen und „gültig" aus der Datei in `config_eintrag_schreiben()`, alt =
+neu als `bereit`, der Beginn, der den Wechsel nicht zurücknimmt, das Blatt
+beim Neuanfang des Anteils; in `schluesselwechsel_lib.php` der Beginn mit
+Weg (`oberflaeche`/`hand`), `sw_zustand_passt()`, die Frist (`SW_NACHZUEGLER_S`,
+`sw_nachweis_ab()`, `sw_nachweis_wartet()`), die Fehlerliste mit
+`sw_fehler_bereinigen()`, der Nachweis an den Teilen
+(`sw_paket_teile_lesbar()`, Archiv), `sw_archiv()` neu (Nachweis vor dem
+Ablegen, Kennung aus `config.php`, Objekte, `zip_lesen()`), die Stückliste
+je Häppchen, `sw_umsiegeln()` wirft, `sw_nach_einspielen()`, zwei
+Mailschlüssel; `komp_kopf_angleichen()` in `komplett_lib.php`;
+`wiederherstellen.php` ruft den Rücksatz; Karte und Statuszeile mit „nicht
+begonnen", „Nachweis ab", „Ließen sich nicht umhüllen", Umleitung auch nach
+einem Fehlschlag; der Download eines Stands unter drittem Schlüssel weist
+vorher ab; der Reiter Archiv mit „bisheriger Schlüssel";
+`edbak_begleit_lesen()` verlangt eine gültige Kennung. **Prüfmittel:**
+Schlüsselwechselprobe mit sicherem Rückweg (der den Handeintrag misst) und
+neuen Fällen (54, vorher 40); Gegenproben GH-1a bis GH-9 je Behebung,
+G6 mit lügendem Versiegler (Prüfdokument); Mailprobe mit der neuen
+Vorlage; Bedienweg mit gekürzter Frist und der Kachelzahl aus der Lage des
+Anteils. **Nicht im Plan, dazu:** die übrigen Schlüsselgriffe unter
+derselben Sperre (der Plan nannte drei; „jeder Griff" stimmt nur mit allen),
+`sw_umsiegeln()` wirft (beim Planen von G6 gefunden), Nr. 357.
+**Abweichungen:** keine von den Entscheidungen; die 42 Meldungen als sechs
+Befunde (E-SR-78). **Probleme beim Bau:** Der Container war neu gestartet —
+Anlage mit `hochfahren.sh` wieder hoch, nichts verloren. Der erste Lauf der
+neuen Probe war 3 rot: zwölf Zeilen im Reiter System (die Fehlerliste im
+Nachweis ausgetragen), ein liegengebliebener Bauordner, und ein Prüfausdruck
+`?? 'x'`, der einen Zeiger `null` als fehlend las — alle drei behoben
+(F-SR-81). Die Gegenprobe ohne Sperre blieb zweimal grün, bevor sie den Fall
+aus K-1 herstellte (F-SR-78); die zur Frage „Paket mit kaputtem Teil" traf
+ihre eigene Zeile nicht (F-SR-83). Die Befundnummern reichten nicht für
+eine Nummer je Meldung (E-SR-78).
+
+**Nachprüfung der Behebung** (E-SR-71): lesender Fable-Workflow
+`wf_663b2eba-579`, acht Agenten (vier Leser, vier Gegenprüfer), 0
+ausgefallen, rund 3290 s, 394 Werkzeugaufrufe. Jede Behebung hielt, D-2 und
+D-7 zur Hälfte; 26 neue Meldungen, eine hoch, zwei mittel (F-SR-84 bis -87,
+E-SR-79). **Eingearbeitet:** `sw_archiv()` wirft beim Schreibfehler;
+`nachweis_begonnen` beim Eintritt; das Häppchen endet nach dem
+Selbstanlauf; `fehler_mehr`; „abweichend" leert nicht; `verloren` je
+Durchgang (`sw_verloren_durchgang_ende()`) und beim Einspielen leer; das
+Inventar hält den Beginn nicht auf; der nachgeholte Beginn nennt beide
+Möglichkeiten; Handeintrags-Mails für den Mailjob; Waise beim Anteil und
+auf dem Blatt; `config_halbes_zuruecknehmen()`; die Sperrmeldung mit Zeit;
+der Knopf an `$swPhase`; `komp_kopf_angleichen()` mit Kennung aus dem
+Schlüssel; Kleinzeilen mit einem Satz. **Prüfmittel:** Schlüsselwechselprobe
+60 (vorher 54) — Rückweg ohne A als B, Abbruch ohne Sieger, `PHP_BINARY`,
+Vorbedingungen in neuer Reihenfolge mit Sperre, `--zurueck` pausiert; neue
+Zeilen für Sperrmeldung, Rücknahme, Waise auf dem Blatt,
+Archiv-Schreibfehler, leeren Nachweis, „abweichend", `verloren` nach dem
+Einspielen, Handeintrag ohne Arbeit und ohne Sofortversand. Anteilprobe 66
+(vorher 61). Gegenproben GH-10 bis GH-22 (Prüfdokument). **Probleme beim
+Bau:** Der erste Lauf der Probe war 4 rot — der neue Fall „Rücknahme"
+schrieb „X neu, A bisher", und `konfig_stellen_schreiben()` ließ dabei die
+Marke zu X wandern (so liest die Lage einen soeben begonnenen Wechsel);
+danach hieß die Waise `abweichend`, beide Kinder hörten „nur aus bereit",
+und die Probe hielt — wie jetzt vorgesehen — an. Der Rückweg legte
+byte-gleich zurück. Behoben in der Probe (Marke zurück auf A); in der
+Anwendung ist das Wandern richtig. Prüfstand: im Prüfdokument.
 
 **SR-04 Notzugang der einzigen BetreiberIn** — Nr. 249; Q-SR-05 = (B)
 (H-SR-03). `nachweis_lib.php` (neu, aus `install.php` und
