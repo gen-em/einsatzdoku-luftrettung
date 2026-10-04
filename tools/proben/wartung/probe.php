@@ -576,6 +576,15 @@ $a11 = hole('wiederherstellen.php', $sidAdmin);
 pruefe($a11['code'] !== 503, '11  wiederherstellen.php mit Admin-Sitzung: nicht 503',
        'HTTP ' . $a11['code']);
 
+/* 11a  DER NOTZUGANG DER EINZIGEN BETREIBERIN (Schritt 18, SR-04). Im
+ * Wartungsmodus steht sie, die den Zweitfaktor verloren hat, am haeufigsten
+ * davor — nach einem Deploy, bis `update.php` gelaufen ist. Ohne Sitzung,
+ * wie sie ankommt; und mit dem Formular, das sie braucht. */
+$a11a = hole('zweitfaktor_notweg.php');
+pruefe($a11a['code'] === 200 && str_contains($a11a['rumpf'], 'id="notwegform"'),
+       '11a zweitfaktor_notweg.php ohne Sitzung: 200 mit Formular (SR-04)',
+       'HTTP ' . $a11a['code']);
+
 $a12 = hole('assets/style.css');
 pruefe($a12['code'] === 200, '12  assets/style.css -> 200 (statisch, ungetort)',
        'HTTP ' . $a12['code']);
@@ -727,14 +736,14 @@ $sollAusnahmen = ['betrieb_status.php', 'betrieb_sicherheit.php',
                   'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
                   'betrieb_schluesselblatt.php',
                   'admin_komplettsicherung.php', 'admin_sicherungsziele.php',
-                  'zweitfaktor.php',
+                  'zweitfaktor.php', 'zweitfaktor_notweg.php',
                   'update.php', 'wiederherstellen.php', 'jobs.php',
                   'login.php', 'auth_salt.php', 'logout.php', 'install.php'];
 sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8 + P5c/AP9 + SR-07',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8 + P5c/AP9 + SR-07 + SR-04',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer

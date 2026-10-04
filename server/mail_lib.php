@@ -505,24 +505,44 @@ function mail_katalog(): array
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Zweitfaktor zurückgesetzt — ' . $n,
             /* DER ERSTE SATZ HÄNGT AM WEG (Konzept RW, RW-03, E-RW-14): Die
-             * Verwaltung (E-P5c-42) oder der Wiederherstellungsschlüssel am
-             * Code-Schritt. `weg` ist kein Pflichtwert — fehlt er, bleibt der
-             * Satz der Verwaltung stehen, wörtlich wie seit Web 20.42.0. */
+             * Verwaltung (E-P5c-42), der Wiederherstellungsschlüssel am
+             * Code-Schritt oder — seit Schritt 18, SR-04 — der Notzugang der
+             * einzigen BetreiberIn. `weg` ist kein Pflichtwert — fehlt er,
+             * bleibt der Satz der Verwaltung stehen, wörtlich wie seit
+             * Web 20.42.0. Der Notzugang nennt, was er verlangt hat: Wer die
+             * Mail bekommt, ohne es gewesen zu sein, weiß dann, dass jemand
+             * Webspace, Datenbank UND Passwort hatte. */
             'text' => fn(array $d): string => mail_rahmen('Hallo,',
-                (($d['weg'] ?? '') === 'schluessel'
-                    ? "der Zweitfaktor deines Kontos bei der " . $n . " ist mit dem\n"
-                    . "Wiederherstellungsschlüssel vom Notfallblatt zurückgesetzt worden. Die Anmeldung\n"
-                    . "fragt ab jetzt nur nach dem Passwort; deine\n"
-                    : "die Verwaltung der " . $n . " hat den Zweitfaktor deines Kontos\n"
-                    . "zurückgesetzt. Die Anmeldung fragt ab jetzt nur nach dem Passwort; deine\n")
+                match ($d['weg'] ?? '') {
+                    'schluessel' => "der Zweitfaktor deines Kontos bei der " . $n . " ist mit dem\n"
+                        . "Wiederherstellungsschlüssel vom Notfallblatt zurückgesetzt worden. Die Anmeldung\n"
+                        . "fragt ab jetzt nur nach dem Passwort; deine\n",
+                    'notweg'     => "der Zweitfaktor deines Kontos bei der " . $n . " ist über den\n"
+                        . "Notzugang zurückgesetzt worden — mit einer Datei im Anwendungsverzeichnis,\n"
+                        . "dem Wert aus der Datenbank und deinem Passwort. Die Anmeldung fragt ab\n"
+                        . "jetzt nur nach dem Passwort; deine\n",
+                    default      => "die Verwaltung der " . $n . " hat den Zweitfaktor deines Kontos\n"
+                        . "zurückgesetzt. Die Anmeldung fragt ab jetzt nur nach dem Passwort; deine\n",
+                }
                 . "Wiederherstellungscodes, ein gedrucktes Codeblatt und deine Passkeys gelten\n"
                 . "nicht mehr.\n\n"
                 . "Richte ihn nach der nächsten Anmeldung unter Einstellungen → Profil neu ein —\n"
                 . "für Support, Admin und BetreiberIn geschieht das beim Anmelden von selbst:\n\n"
                 . $d['link'],
-                (($d['weg'] ?? '') === 'schluessel' ? "Falls du das nicht warst" : "Falls du darum nicht gebeten hast")
-                . ", melde dich bitte umgehend bei der Verwaltung\n"
-                . "und ändere dein Passwort."),
+                /* BEIM NOTZUGANG GIBT ES KEINE VERWALTUNG, BEI DER MAN SICH
+                 * MELDEN KOENNTE — er steht nur offen, wenn es genau eine
+                 * BetreiberIn gibt, und das ist die Empfaengerin. Wer die Mail
+                 * bekommt, ohne es gewesen zu sein, muss stattdessen wissen,
+                 * welche drei Zugaenge offen lagen. */
+                match ($d['weg'] ?? '') {
+                    'notweg'     => "Falls du das nicht warst: Jemand hatte Zugang zum Webspace, zur\n"
+                        . "Datenbank und zu deinem Passwort. Ändere sofort dein Passwort und die\n"
+                        . "Zugänge beim Hoster.",
+                    'schluessel' => "Falls du das nicht warst, melde dich bitte umgehend bei der Verwaltung\n"
+                        . "und ändere dein Passwort.",
+                    default      => "Falls du darum nicht gebeten hast, melde dich bitte umgehend bei der Verwaltung\n"
+                        . "und ändere dein Passwort.",
+                }),
         ],
 
         /* DER RÜCKWEG IST ERNEUERT (Konzept RW, RW-02, E-RW-06). Nur beim

@@ -385,8 +385,12 @@ abschnitt('10  Welche Toepfe eine Leiter haben — und welche ausdruecklich nich
  *
  * `totp` (Code-Schritt der Anmeldung, P5c/AP5, E-P5c-53) hat eine: Fuenf
  * falsche Codes je Konto, dann waechst die Sperre — sechs Ziffern duerfen
- * nicht zu erraten sein. */
-const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'salt', 'totp'];
+ * nicht zu erraten sein.
+ *
+ * `notweg` (Notzugang der einzigen BetreiberIn, Schritt 18, SR-04) hat eine:
+ * Fuenf Versuche je Stunde und eingetippter Adresse — wer Datei,
+ * Datenbankwert und Passwort hat, braucht keine fuenf. */
+const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'notweg', 'salt', 'totp'];
 
 $mitLeiter = []; $ohne = [];
 foreach (RATE_GRENZEN as $topf => $g) {

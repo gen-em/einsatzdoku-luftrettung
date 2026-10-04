@@ -160,6 +160,13 @@ const WARTUNG_AUSNAHMEN = [
      * Konto ohne Verwaltungsrolle kommt in der Wartung ohnehin nicht herein
      * (`login.php`, E-S5W-09). */
     'zweitfaktor.php',
+    /* SEIT SR-04 (Schritt 18, E-SR-13): der Notzugang der einzigen
+     * BetreiberIn. Im Wartungsmodus steht sie, die den Zweitfaktor verloren
+     * hat, am haeufigsten davor — nach einem Deploy ist die Wartung an, bis
+     * `update.php` gelaufen ist, und dafuer muss sie hinein. Die Seite meldet
+     * niemanden an; sie schaltet nur den Faktor ab, und die Anmeldung danach
+     * laesst in der Wartung ohnehin nur Verwaltungsrollen herein. */
+    'zweitfaktor_notweg.php',
     'update.php',
     'wiederherstellen.php',
     'jobs.php',

@@ -818,6 +818,16 @@ Unterschrift gerade nicht prüfen (Betrieb → Status, „Rückweg-Prüfung") �
 setzt die Verwaltung zurück, wie bisher. Dasselbe gilt, wenn auch das
 Notfallblatt fehlt.
 
+**Und wenn es niemanden gibt, der zurücksetzen könnte?** Bist du die
+**einzige** BetreiberIn deiner Anlage und fehlen Gerät, Codes und
+Notfallblatt, gibt es seit Web 21.13.0 einen **Notzugang**: die Seite
+`zweitfaktor_notweg.php` deiner Anlage. Er verlangt drei Dinge — eine Datei,
+die du per FTP ins Anwendungsverzeichnis legst (den Namen nennt die Seite),
+einen Wert aus der Datenbank (im Datenbankwerkzeug deines Hosters) und dein
+Passwort. Wie das im Einzelnen geht, steht in 12.1 unter **„Wenn die einzige
+BetreiberIn den Zweitfaktor verliert"**. Gibt es eine zweite BetreiberIn,
+setzt sie zurück — dann bleibt der Notzugang zu.
+
 **Nach einem Umzug der Anlage auf einen anderen Serverschlüssel** — etwa nach
 einer Wiederherstellung aus einem Komplett-Backup — lässt sich das Geheimnis
 nicht mehr öffnen. Die Anmeldung sagt es und nimmt dann
@@ -4225,10 +4235,11 @@ Sperre läuft von selbst ab, und wer sein Passwort neu setzt, ist danach
 ohnehin nicht mehr gesperrt. Es kommt eine Rückfrage, und der Vorgang wird
 **mit deinem Namen** vermerkt — er steht danach in den Ereignissen.
 
-> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die sieben
+> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die acht
 > Töpfe mit Sperrleiter: Anmeldung, Anschluss, Schlüsselableitung, die
-> beiden der Mengenbremse, das Prüfen des Schlüsselblatts und der Code des
-> Zweitfaktors. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
+> beiden der Mengenbremse, das Prüfen des Schlüsselblatts, der Code des
+> Zweitfaktors und — seit Web 21.13.0 — der Notzugang der einzigen
+> BetreiberIn. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
 > CSP-Berichte sperren ebenfalls, schreiben aber keine Zeile — dort eskaliert
 > nichts, und ein Protokoll jedes Tippfehlers würde die Liste zudecken.
 
@@ -4838,6 +4849,9 @@ BetreiberInnen. **Orange und nicht rot**, weil jede neue Anlage mit genau
 einer BetreiberIn beginnt — es arbeitet ja. Der Zähler am Menüpunkt „Status"
 zählt die Zeile mit und steht deshalb auf einer Anlage mit einer BetreiberIn
 dauerhaft auf mindestens 1; das ist gewollt, bis eine Vertretung da ist.
+Verliert die einzige BetreiberIn den Zweitfaktor samt Codes und Notfallblatt,
+hilft seit Web 21.13.0 der Notzugang (unten) — er ersetzt die Vertretung
+nicht, die Zeile bleibt deshalb orange.
 
 **Die Zeile „Rückweg-Prüfung"** (seit Web 20.43.0) sagt, ob diese Anlage den
 Rückweg beim Zweitfaktor prüfen kann — den Weg, auf dem jemand mit dem
@@ -4922,6 +4936,53 @@ die Servereinstellungen.*
 Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
 Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; die
 Zeile „Datenbank" sagt, wann sie entstanden ist.
+
+#### Wenn die einzige BetreiberIn den Zweitfaktor verliert (seit Web 21.13.0)
+
+Gerät weg, Wiederherstellungscodes weg, Notfallblatt weg — und es gibt keine
+zweite BetreiberIn, die auf der Kontoseite zurücksetzen könnte. Dafür gibt es
+die Seite **`zweitfaktor_notweg.php`** deiner Anlage (ohne Anmeldung
+erreichbar, auch im Wartungsmodus). Sie verlangt drei Dinge, die nur du hast:
+
+1. **Eine Datei im Anwendungsverzeichnis.** Die Seite nennt einen Namen wie
+   `zweitfaktor-notweg-3f9c….txt`. Lege mit deinem FTP-Programm oder dem
+   Dateimanager des Hosters eine Datei mit **genau diesem Namen** in das
+   Verzeichnis, in dem auch `config.php` liegt. Was darin steht, spielt
+   keine Rolle; eine leere Datei genügt. Der Name gehört zu diesem
+   Browserfenster — schließt du den Browser oder bleibt die Seite lange
+   liegen, zeigt sie danach einen anderen Namen, und du benennst die Datei
+   um.
+2. **Den Wert aus der Datenbank.** Im Datenbankwerkzeug deines Hosters
+   (meist phpMyAdmin) die Abfrage
+   `SELECT v FROM app_state WHERE k = 'notzugang_geheim';` ausführen und die
+   64 Zeichen abschreiben oder hineinkopieren. Leerzeichen und Bindestriche
+   zählen nicht. Der Wert steht nirgends in der Anwendung, auch nicht auf dem
+   Schlüsselblatt.
+3. **Deine Adresse und dein Passwort.**
+
+Dann „Zweitfaktor zurücksetzen". Danach ist der Zweitfaktor aus, die Datei ist
+gelöscht, der Wert ist neu gewürfelt (der alte gilt nicht mehr), eine Mail
+geht an deine Adresse, und der Schritt steht im Protokoll. Du landest auf der
+Anmeldung, meldest dich mit dem Passwort an und richtest den Zweitfaktor
+sofort neu ein.
+
+**Die Seite sagt nicht, was nicht stimmte.** Ob die Datei fehlt, der Wert
+falsch ist, das Passwort nicht passt oder es eine zweite BetreiberIn gibt —
+die Antwort ist immer derselbe Satz: „Der Notzugang steht für dieses Konto
+nicht bereit." Sonst könnte jeder, der die Adresse kennt, ausprobieren, wie
+deine Anlage aussieht. Nach fünf Versuchen in einer Stunde ist die Adresse
+gesperrt; die Seite sagt, bis wann.
+
+**Was er schützt und was nicht.** Wer nur Dateien deines Webspace **lesen**
+kann — etwa aus einer Sicherung des Hosters —, kommt ohne den Wert aus der
+Datenbank nicht hinein; wer nur die Datenbank hat, nicht ohne die Datei. Wer
+auf deinem Webspace **schreiben** kann, kann dort aber auch ein eigenes
+Programm ablegen und hat damit alles — dagegen hilft keine Seite der
+Anwendung. Halte deshalb die Zugänge beim Hoster so sicher wie dein
+Passwort. **Und:** Hast du auch den Zugang zur Datenbank verloren, hilft der
+Notzugang nicht — dann führt der Weg über den Hoster und das
+Wiederanlaufpaket. Das Runbook in `docs/Technik.md` 7 nennt alle vier Wege in
+ihrer Reihenfolge, als letzten das SQL von Hand.
 
 #### Die Zeile „Verbindungen" (seit Web 20.13.0)
 

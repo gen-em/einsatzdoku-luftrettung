@@ -574,4 +574,19 @@ return [
  'regel' => ['art' => 'eigen', 'name' => 'frischer_code'],
  'start' => 0, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+/* ---- Schritt 18, SR-04: die Nachweisdatei (R83) ------------------------- */
+
+['kennung' => 'Z44', 'paket' => 'SR-04',
+ 'beschreibung' => 'Nachweisdatei-Mechanik ausserhalb nachweis_lib.php',
+ 'grund' => 'Konzept SR, SR-04: install.php und wiederherstellen.php trugen '
+          . 'dieselbe Mechanik wortgleich (glob auf das Muster, Kennung aus dem '
+          . 'Namen per Regex), und der Notzugang waere die dritte Kopie '
+          . 'geworden. Gezaehlt werden die zwei Literale, an denen jede Kopie '
+          . 'haengt: das Glob-Muster *.txt und das Regex-Stueck {32})\.txt. '
+          . 'Start 4 = je zwei in den beiden alten Seiten.',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/nachweis_lib.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~[\'"]\*\.txt[\'"]|\{32\}\)\\\\\.txt~'],
+ 'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 ];

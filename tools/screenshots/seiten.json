@@ -120,6 +120,12 @@
       "pfad": "wiederherstellen.php"
     },
     {
+      "name": "06b-zweitfaktor-notweg",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "zweitfaktor_notweg.php"
+    },
+    {
       "name": "03-abbruchseite",
       "gruppe": "Öffentlich",
       "rolle": "demo",

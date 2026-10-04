@@ -8038,5 +8038,20 @@ declare(strict_types=1);
  *   warf das Inventar beim Beginn, stand bis zum ersten Haeppchen „noch 0
  *   von 0" (`sw_gezaehlt()`). Der gefaehrliche Gegenfall zur Probe ist mit
  *   einer Sicherung der Anlage gefahren und zurueckgelegt. Kein Schema.
+ *
+ * 21.13.0 — DER NOTZUGANG DER EINZIGEN BETREIBERIN (Schritt 18, SR-04;
+ *   Nr. 249; E-SR-13, E-SR-24, E-SR-81 bis -87). Nebenstufe. Hatte die
+ *   einzige BetreiberIn Zweitgeraet, Codes und Notfallblatt verloren, fuehrte
+ *   kein Weg ueber die Oberflaeche zurueck — nur SQL im Datenbankwerkzeug,
+ *   an der Anwendung vorbei. `zweitfaktor_notweg.php` ist der vierte Weg und
+ *   verlangt drei Dinge: eine Datei, deren Namen die Seite nennt und die die
+ *   BetreiberIn per FTP anlegt (Schreibnachweis; der Name haengt an der
+ *   Sitzung), den Wert `app_state.notzugang_geheim` aus der Datenbank und
+ *   das Passwort. Jede andere Lage antwortet gleich und gleich lang; der Wert
+ *   wird nach jedem Gebrauch neu gewuerfelt, in derselben Transaktion wie
+ *   das Abschalten. Die Mechanik der Nachweisdatei steht seitdem einmal, in
+ *   `nachweis_lib.php` — `install.php` und `wiederherstellen.php` hatten sie
+ *   wortgleich. Wer auch den Datenbankzugang verloren hat, bleibt beim
+ *   Wiederanlauf: so entschieden (E-SR-24). Kein Schema.
  */
-const WEB_VERSION = '21.12.2';
+const WEB_VERSION = '21.13.0';

@@ -100,6 +100,22 @@ const imMarkup = await seite.evaluate(() => {
 ok('Inline-Skripte der Anmeldeseite tragen alle einen Nonce',
    imMarkup.ohne === 0, `${imMarkup.zahl} Bloecke, ${imMarkup.ohne} ohne`);
 
+/* DIE SEITE DES NOTZUGANGS (Schritt 18, SR-04) — die zweite Seite ohne
+ * Sitzung, auf der ein Passwort getippt wird. Ihr Inline-Skript leitet das
+ * Token ab wie das der Anmeldeseite und muss denselben Nonce tragen. Danach
+ * zurueck auf die Anmeldeseite: Schritt 2 fuellt deren Formular. */
+const nwAntw = await seite.goto(`${BASIS}/zweitfaktor_notweg.php`, { waitUntil: 'domcontentloaded' });
+const nwKopf = nwAntw.headers();
+const nwMarkup = await seite.evaluate(() => {
+  const s = [...document.querySelectorAll('script:not([src])')];
+  return { zahl: s.length, ohne: s.filter(x => !x.nonce && !x.getAttribute('nonce')).length };
+});
+ok('Notzugang (SR-04): schickt eine CSP, jedes Inline-Skript traegt einen Nonce',
+   !!(nwKopf['content-security-policy-report-only'] || nwKopf['content-security-policy'])
+     && nwMarkup.zahl > 0 && nwMarkup.ohne === 0,
+   `${nwMarkup.zahl} Bloecke, ${nwMarkup.ohne} ohne`);
+await seite.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
+
 /* ---- 2. Anmelden -------------------------------------------------------- */
 await seite.fill('input[name="email"]', ADMIN.email);
 await seite.fill('input[name="password"]', ADMIN.pw);

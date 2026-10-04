@@ -88,6 +88,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       die Tabelle `passkeys` (4.99q)
 │   ├── zweitfaktor.php    Das Einrichtungstor für Pflichtrollen, in der
 │   │                       Anmeldehülle (E-P5c-61)
+│   ├── zweitfaktor_notweg.php  Der Notzugang der EINZIGEN BetreiberIn ohne
+│   │                       Gerät, Codes und Notfallblatt (Schritt 18, SR-04,
+│   │                       4.99q): Nachweisdatei per FTP, Wert aus der
+│   │                       Datenbank, Passwort. Unangemeldet, meldet niemanden an
 │   ├── zweitfaktor_teile.php  QR, Geheimnis, Codefeld und Codeliste — EIN
 │   │                       Markup für Tor und Profilkarte
 │   ├── codeblatt.php      die zehn Wiederherstellungscodes auf Papier
@@ -266,6 +270,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       und update.php. Nur bei LEERER Datenbank, mit
 │   │                       Nachweisdatei, liest aus sicherungen/eingang/,
 │   │                       spielt in Durchgängen ein. Kein Hochladen
+│   ├── nachweis_lib.php   Die Nachweisdatei, EINMAL (seit Web 21.13.0, SR-04):
+│   │                       Lesenachweis für install.php und
+│   │                       wiederherstellen.php, Schreibnachweis für den
+│   │                       Notzugang (Register Z44)
 │   ├── serverkrypto_lib.php  Der Serverschlüssel aus config.php (32 B) und
 │   │                       die Versiegelung `edsk1:` (AES-256-GCM, Zweck in
 │   │                       den Zusatzdaten). Das EINZIGE Geheimnis, das der
@@ -6653,7 +6661,7 @@ geändert** (E-S5W-08).
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript in `JSON_SKRIPTE_AUSSERHALB_API` steht — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php`. Die vier liegen nicht unter `/api/` und brauchen trotzdem JSON. **Für den Wartungsmodus zählen nur die ersten beiden**, weil die anderen zwei in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt; die Liste ist in P5a/AP9 für die **Überlast** gewachsen, die keine Ausnahmen kennt (Abschnitt 5e) |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
-| Ausnahmen | **siebzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `admin_komplettsicherung.php`, `admin_sicherungsziele.php`, `zweitfaktor.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Komplett-Backup und Backup-Ziele seit Web 21.1.0** (P5c/AP9, E-P5c-134): Schloss der Torwächter, führte der Knopf „Komplett-Backup" der Seite Updates in die Sperre, und die Vorbedingung der FTP-Migration nannte die gesperrten Backup-Ziele als Weg. **`zweitfaktor.php` seit Web 21.9.0** (Schritt 18, SR-07): die Bestätigung des frischen Codes — Schlüsselgriffe und Blatt liegen in der Wartung offen und verlangen ihn; ohne die Zeile führte ihr Umweg auf eine 503. **Das Tor fragt nie nach der Rolle** — bis Web 21.1.0 sagten Karte und Handbuch „für alle außer Verwaltung und Betrieb" (F-P5c-158); jede Seite unter Verwaltung antwortet 503. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Ausnahmen | **achtzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `admin_komplettsicherung.php`, `admin_sicherungsziele.php`, `zweitfaktor.php`, `zweitfaktor_notweg.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Komplett-Backup und Backup-Ziele seit Web 21.1.0** (P5c/AP9, E-P5c-134): Schloss der Torwächter, führte der Knopf „Komplett-Backup" der Seite Updates in die Sperre, und die Vorbedingung der FTP-Migration nannte die gesperrten Backup-Ziele als Weg. **`zweitfaktor.php` seit Web 21.9.0** (Schritt 18, SR-07): die Bestätigung des frischen Codes — Schlüsselgriffe und Blatt liegen in der Wartung offen und verlangen ihn; ohne die Zeile führte ihr Umweg auf eine 503. **`zweitfaktor_notweg.php` seit Web 21.13.0** (Schritt 18, SR-04): der Notzugang der einzigen BetreiberIn — nach einem Deploy ist die Wartung an, bis `update.php` gelaufen ist, und genau dann steht sie, die den Zweitfaktor verloren hat, davor. **Das Tor fragt nie nach der Rolle** — bis Web 21.1.0 sagten Karte und Handbuch „für alle außer Verwaltung und Betrieb" (F-P5c-158); jede Seite unter Verwaltung antwortet 503. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
@@ -6733,7 +6741,7 @@ es darf nichts mehr ausstehen, und die Wartung muss noch stehen.
 **Nicht Umfang:** eine eigene Wartungsmeldung auf Uhr und Handy ist
 Backlog-Kandidat.
 
-**Nachweis:** `php tools/proben/wartung/probe.php` — **69 Erwartungen** (gezählt 25.09.2026, Web 21.1.0), beide
+**Nachweis:** `php tools/proben/wartung/probe.php` — **70 Erwartungen** (gezählt 04.10.2026, Web 21.13.0: dazu 11a, der Notzugang im Wartungsmodus), beide
 Richtungen (zu wenig gesperrt / zu viel gesperrt), einschließlich der drei
 Regeln aus E-S5W-09 am Code und seit Web 20.6.0 **Teil 7**: der Torwächter
 schließt, nennt den Grund, gibt `ingest.php` sein JSON-503, lässt Betrieb →
@@ -7783,6 +7791,14 @@ hinzufügen und entfernen.
 Dass jede Handlung der Liste genau **einen** Aufruf im Code hat, zählt das
 Register (`tools/zaehlung/`, Z43).
 
+**Eine Seite ohne Rolle** (seit Web 21.13.0, Schritt 18, SR-04): Der
+Notzugang `zweitfaktor_notweg.php` hat kein Rollentor — er ist für die da,
+die nicht hineinkommt. Seine Zeile sagt deshalb `200` in jeder Spalte, und
+das ist die Aussage: Eine Sitzung, gleich welcher Rolle, macht ihn nicht zu
+einem Weg ohne Datei, Wert und Passwort. Das misst nicht die Matrix (sie
+schickt nur ein falsches Token), sondern die Zweitfaktorprobe in Teil 8 —
+angemeldet als Admin, ohne Datei: dieselbe eine Antwort wie unangemeldet.
+
 **Drei Platzhalter** (seit Web 20.41.0, AP4; der dritte seit R4-18):
 `{ziel}` ist ein Konto der Rolle `user`, `{admin}` eines der Rolle `admin`,
 `{support}` eines der Rolle `support` — alle drei legt die Probe an und räumt
@@ -7893,6 +7909,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch | — |
 | Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch | — |
 | Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch | — |
+| Notzugang (SR-04): die Seite | `GET zweitfaktor_notweg.php` | 200 | 200 | 200 | 200 | — |
 | Betrieb · Server: die Seite | `GET betrieb_server.php` | 403 | 403 | 403 | 200 | — |
 | Betrieb · Server: Ankündigung setzen | `POST betrieb_server.php action=ankuendigung` | 403 | 403 | 403 | durch | — |
 | Betrieb · Server: Ankündigung als Rundmail | `POST betrieb_server.php action=rundmail` | 403 | 403 | 403 | durch | — |
@@ -8301,6 +8318,67 @@ NutzerIn nichts kann.
 Die Migration heißt `2026_09_24_rueckweg_schluesselpaar` (drei Spalten an
 `users`).
 
+**Der Notzugang der einzigen BetreiberIn (ab Web 21.13.0, Schritt 18, SR-04;
+Nr. 249; E-SR-13, -24, -81 bis -87).** Wer den Zweitfaktor verliert, hat
+seither **vier** Wege zurück: die Wiederherstellungscodes, den Rückweg mit dem
+Notfallblatt (oben), das Zurücksetzen durch die Verwaltung — und, nur für die
+**einzige** BetreiberIn, `zweitfaktor_notweg.php`. Die Seite ist
+unangemeldet, steht in `WARTUNG_AUSNAHMEN` und verlangt **drei** Dinge:
+
+1. **Eine Datei im Anwendungsverzeichnis** (Schreibnachweis, E-SR-81). Die
+   Seite nennt `zweitfaktor-notweg-<32 Hexzeichen>.txt`, die BetreiberIn legt
+   eine Datei dieses Namens per FTP an, die Seite prüft nur, ob sie liegt
+   (`nachweis_steht()`). Der Name hängt an der **Sitzung** (E-SR-82): Eine
+   liegengebliebene Datei aus einem abgebrochenen Versuch gilt nicht mehr.
+   Die Anwendung **schreibt** hier nie eine Datei — anders als `install.php`
+   und `wiederherstellen.php`, die den Lesenachweis führen (die Seite legt an,
+   der Mensch tippt den Namen ab). Beide Richtungen stehen in
+   `nachweis_lib.php`; die Register-Zeile Z44 hält fest, dass es keine zweite
+   Mechanik gibt.
+2. **Den Wert `app_state.notzugang_geheim`** (E-SR-24): 32 Zufallsbyte hex,
+   angelegt von der Migration `2026_09_28_vertraute_geraete` (SR-02) und, auf
+   einer frischen Anlage, beim ersten Aufruf der Seite. Er steht **nirgends**
+   in der Oberfläche und nicht auf dem Schlüsselblatt; gelesen wird er im
+   Datenbankwerkzeug des Hosters mit
+   `SELECT v FROM app_state WHERE k = 'notzugang_geheim';`. Eingegeben darf
+   er in Vierergruppen werden (`schluessel_eingabe_normalisieren()`),
+   verglichen wird mit `hash_equals()`. Er liegt in jedem Komplett-Stand mit
+   — wer einen geöffneten Stand hat, hat ohnehin die Datenbank.
+3. **Das Passwort**, als Token wie bei der Anmeldung (E-SR-84): Salz über
+   `auth_salt.php`, je Rundenzahl `EdCrypto.deriveKeys()`, der Server nimmt
+   das Token zur `kdf_iter` des Kontos und prüft mit `password_verify()` —
+   bei unbekannter Adresse gegen `AUTH_VERGLEICHSWERT`. Die
+   Browser-Ableitung steht damit ein zweites Mal da, weil `login.php` für
+   Schritt 18 zu ist (E-SR-14); Backlog Nr. 358.
+
+**Die Tür ist eng** (E-SR-13, -85): Rolle BetreiberIn, `status = 'aktiv'`,
+Zweitfaktor an — und `betreiberinnen_zahl() === 1`, die **jedes** Konto der
+Rolle zählt, auch ein gesperrtes oder eingeladenes. Bei zweien setzt die
+andere zurück. **Jede andere Lage antwortet gleich** — derselbe Satz („Der
+Notzugang steht für dieses Konto nicht bereit."), derselbe Rumpf, dieselbe
+Dauer (`rate_gleiche_dauer()`); dafür laufen immer alle Prüfungen ohne frühe
+Rückkehr. Eigene Sätze haben nur das abgelaufene Formular (zählt nicht) und
+die Sperre des Topfes `notweg` (fünf je Stunde und eingetippter Adresse, mit
+Leiter; sie hängt an der Adresse, nicht am Konto, und verrät deshalb nichts).
+
+**Gelingt es**, laufen in **einer** Transaktion der neue Wert und
+`totp_abschalten($id, 'notweg')` (Geräte und Passkeys gehen mit); danach
+gehen alle Dateien des Musters, der Topf wird geleert, die Mail
+`totp_zurueckgesetzt` (`weg = notweg`) nennt die drei Zugänge, und die Seite
+schickt auf `login.php?ende=notweg`. **Sie meldet niemanden an** (E-SR-87):
+Die BetreiberIn meldet sich mit dem Passwort an und landet im
+Einrichtungstor. Der Protokolleintrag trägt deshalb den Urheber `job` — wie
+der Passwort-Reset über den Mail-Link (E-SR-86); Text und `daten.weg` sagen,
+was es war.
+
+**Ehrlich dazu (E-SR-24):** Der Datenbankwert schützt gegen den, der Dateien
+nur **lesen** kann (ein Webspace-Backup), und gegen den, der nur die
+Datenbank hat. Wer auf dem Webspace **schreiben** kann, kann eine PHP-Datei
+hochladen und hat damit auch die Datenbank — gegen ihn hilft kein Wert, und
+das gilt für jeden Weg, den die Anwendung selbst anbietet. **Und:** Wer auch
+den Zugang zur Datenbank verloren hat, kommt hier nicht weiter; das bleibt
+ein Wiederanlauf-Fall (Runbook 7).
+
 **Stumm nur ohne Spalten — ein Fehler ist kein Nein** (F-P5c-166, seit Web
 21.1.1). Zwischen Deploy und `update.php` gibt es die Spalten nicht, und dann
 schweigen Code-Schritt, Einrichtungstor und Rückweg (E-P5c-36, -53). Bis Web
@@ -8332,7 +8410,10 @@ Konfigurationsschalter**, der die Pflicht abschaltet.
 
 **Nachweis:** `bash tools/proben/proben.sh zweitfaktor` — RFC-Vektoren 6/6,
 Code-Schritt über HTTP, Tor, Rückzug der Selbstlöschung, Demo-Reset,
-Bus-Faktor samt der Tabelle seiner Lagen. Dazu zwei Bedienwege
+Bus-Faktor samt der Tabelle seiner Lagen, und seit Web 21.13.0 in Teil 8 der
+Notzugang: elf Lagen, in denen die Tür zu bleibt, mit einem Rumpf und einer
+Dauer; der Erfolg mit Protokoll, Mail, neuem Wert und Einrichtungstor; der
+alte Wert danach abgewiesen; ein Aufruf schreibt keine Datei. Dazu zwei Bedienwege
 (`tools/bedienprobe/wege/zweitfaktor.mjs`: QR-Code mit jsQR gelesen gleich
 der angezeigten Adresse; `wege/einstellungen_profil.mjs`: einschalten,
 falscher, wiederholter und richtiger Code, Vormerkfach nach dem Abbruch
@@ -10574,14 +10655,18 @@ Handelnden; ohne sie bliebe die Spalte `wer` leer, und das Ereignis
 
 ##### Was **nicht** protokolliert wird, und warum das auf der Karte steht
 
-Ein Sperrereignis entsteht nur an den **sieben Töpfen mit Leiter** — `login`,
-`login_ip`, `salt`, `ingest`, `ingest_ip`, `blatt`, `totp` (bis Web 21.1.0
+Ein Sperrereignis entsteht nur an den **acht Töpfen mit Leiter** — `login`,
+`login_ip`, `salt`, `ingest`, `ingest_ip`, `blatt`, `totp` und seit Web
+21.13.0 `notweg`, der Notzugang der einzigen BetreiberIn (bis Web 21.1.0
 stand hier „fünf"; `blatt` und `totp` waren beim Nachtragen der Leiter nicht
-mitgezählt worden). Die übrigen neun (`reset`, die drei
-Kopplungstöpfe, `demo`, `demog`, `testmail`, `csp`) sperren über den
-Rückfallweg **ohne** Protokollzeile. Ohne diesen Satz auf der Karte liest sich
-eine kurze Liste als „es war fast nichts", obwohl neun Töpfe gar nicht
-berichten.
+mitgezählt worden). Die übrigen dreizehn (`reset`, die drei Kopplungstöpfe,
+`demo`, `demog`, `testmail`, `csp`, `health`, `rt_vorschau` und die drei der
+Registrierung) sperren über den Rückfallweg **ohne** Protokollzeile;
+`global` sperrt nie. Ohne diesen Satz auf der Karte liest sich eine kurze
+Liste als „es war fast nichts", obwohl die meisten Töpfe gar nicht
+berichten. *Bis Web 21.13.0 stand hier „die übrigen neun" mit fünf Namen —
+`health`, `rt_vorschau` und die Registrierung waren dazugekommen, ohne dass
+der Satz mitwuchs.*
 
 Und die Karte „Verlangsamung" zeigt **Anstiege, keine Phasen**: Vermerkt wird,
 wenn die Stufe steigt; ein Ende hat kein eigenes Ereignis.
@@ -11898,14 +11983,16 @@ nie stand. Dass `.sitzungen/` trotzdem in die Ausnahmeliste gehört (Kette II,
 E-KH-20), hat einen anderen Grund; er steht in 6.5.
 
 **Was währenddessen erreichbar bleibt** (E-S5W-04; maßgeblich ist
-`WARTUNG_AUSNAHMEN`, siebzehn seit Web 21.9.0): die **sieben**
+`WARTUNG_AUSNAHMEN`, achtzehn seit Web 21.13.0): die **sieben**
 Betriebsseiten `betrieb_status.php`, `betrieb_sicherheit.php`,
 `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`,
 `betrieb_server.php` und — seit S10 — `betrieb_schluesselblatt.php` (die
 Lage, in der man das Blatt braucht, ist genau eine Wartungslage),
 Komplett-Backup und Backup-Ziele (seit Web 21.1.0), die Bestätigung des
 frischen Codes `zweitfaktor.php` (seit Web 21.9.0 — Schlüsselgriffe und Blatt
-verlangen ihn), dazu `update.php` und
+verlangen ihn), der Notzugang `zweitfaktor_notweg.php` (seit Web 21.13.0 —
+die einzige BetreiberIn ohne Zweitfaktor steht nach einem Deploy genau hier
+davor), dazu `update.php` und
 `wiederherstellen.php` (die Arbeit selbst und der Rückweg), `jobs.php` mit
 Token — das Komplett-Backup der Kette läuft **während** der Wartung, genau
 dann ist es konsistent —, `login.php` mit `auth_salt.php` (ohne den
@@ -11956,10 +12043,10 @@ für das sie da ist.
 
 **Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
 (1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
-(neben `db.php`)? (2) Ist die aufgerufene Seite eine der Ausnahmen (`WARTUNG_AUSNAHMEN`, seit Web 21.9.0 siebzehn, von 21.1.0 an sechzehn; hier stand bis dahin „dreizehn", es waren vierzehn)?
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der Ausnahmen (`WARTUNG_AUSNAHMEN`, seit Web 21.13.0 achtzehn, von 21.9.0 an siebzehn, von 21.1.0 an sechzehn; hier stand bis dahin „dreizehn", es waren vierzehn)?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/proben/wartung/probe.php` (**69 Erwartungen**, gezählt 25.09.2026; seit Web 15.5.2 misst
+`php tools/proben/wartung/probe.php` (**70 Erwartungen**, gezählt 04.10.2026; seit Web 15.5.2 misst
 ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, seit
 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot wird,
 Nr. 140, seit S10 mit 6a, dass das **Schluesselblatt** erreichbar bleibt —
@@ -12414,37 +12501,73 @@ gibt es auf einfachem Webspace nicht. **So kommt man heraus:**
 > BetreiberIn kommt also ohne Zweitfaktor an Betrieb → Updates.
 
 **Notweg: Die einzige BetreiberIn hat Handy und Codes verloren** (seit Web
-20.42.0, E-P5c-42). **Seit Web 20.45.0 zuerst den Rückweg nehmen** (Konzept
-RW, E-RW-08): Mit Passwort und Notfallblatt setzt sie ihn am Code-Schritt
-selbst zurück („Gerät und Codes verloren?") und landet im Einrichtungstor —
-mit Protokoll und Mail. Das geht, wenn Betrieb → Status „Rückweg-Prüfung"
-blau zeigt und das Konto ein Paar hat (die Karte „Zweitfaktor" im Profil sagt
-„eingerichtet"). **Fehlt eines davon oder das Notfallblatt**, kann nur eine
-**andere** BetreiberIn zurücksetzen — gibt es keine, führt kein Weg über die
-Oberfläche hinein. Im Datenbankwerkzeug des Hosters, mit der Kennung des
-Kontos:
+20.42.0, E-P5c-42; neu geordnet mit Web 21.13.0, Schritt 18, SR-04). Vier
+Wege, **in dieser Reihenfolge** — der erste, der geht, ist der richtige:
 
-```sql
-UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL, totp_schritt = NULL
- WHERE id = <Kennung>;
-DELETE FROM totp_codes WHERE user_id = <Kennung>;
-DELETE FROM vertraute_geraete WHERE user_id = <Kennung>;
-DELETE FROM passkeys WHERE user_id = <Kennung>;
-```
+1. **Der Rückweg** (seit Web 20.45.0, Konzept RW, E-RW-08): Mit Passwort und
+   Notfallblatt setzt sie den Zweitfaktor am Code-Schritt selbst zurück
+   („Gerät und Codes verloren?") und landet im Einrichtungstor — mit
+   Protokoll und Mail. Das geht, wenn Betrieb → Status „Rückweg-Prüfung"
+   blau zeigt und das Konto ein Paar hat (die Karte „Zweitfaktor" im Profil
+   sagt „eingerichtet").
+2. **Eine zweite BetreiberIn** setzt auf der Kontoseite zurück (E-P5c-42).
+3. **Der Notzugang** `zweitfaktor_notweg.php` (seit Web 21.13.0, 4.99q) —
+   nur, wenn es **genau eine** BetreiberIn gibt. Er verlangt drei Dinge:
+   (a) die Seite aufrufen und den Dateinamen ablesen, der dort steht
+   (`zweitfaktor-notweg-<32 Hexzeichen>.txt`; er gehört zu diesem
+   Browserfenster), und per FTP eine Datei dieses Namens ins
+   Anwendungsverzeichnis legen — neben `config.php`, eine leere genügt;
+   (b) im Datenbankwerkzeug des Hosters den Wert lesen:
 
-Die letzten zwei Zeilen stehen hier seit Web 21.11.0 (F-SR-38): Ohne sie
-galten gemerkte Geräte und Passkeys nach der Neueinrichtung weiter — genau
-das, was `totp_abschalten()` auf jedem anderen Weg verhindert. Auf einer
-Anlage vor Web 21.8.0 bzw. 21.10.0 fehlt die Tabelle, und die Zeile meldet
-einen Fehler, der nichts ändert.
+   ```sql
+   SELECT v FROM app_state WHERE k = 'notzugang_geheim';
+   ```
 
-Danach mit dem Passwort anmelden; das Einrichtungstor verlangt sofort einen
-neuen Zweitfaktor. **Im Protokoll steht dieser Weg nicht** — er geht an der
-Anwendung vorbei. Wer ihn benutzt, trägt es in die Betriebsakte ein. Der
-Fall, dass die einzige BetreiberIn **auch** den Datenbankzugang verloren hat,
-ist Backlog Nr. 249 (Schritt 18) — seit RW-03 nur noch, wenn sie zugleich ihr
-Notfallblatt verloren hat. Die Bus-Faktor-Zeile auf Betrieb → Status
-steht genau deshalb orange, bis es eine zweite BetreiberIn gibt.
+   (c) Adresse, Wert und Passwort auf der Seite eingeben. Danach ist der
+   Zweitfaktor aus, Datei und Wert sind verbraucht (der Wert wird neu
+   gewürfelt), eine Mail geht an die Adresse, und der Eintrag steht im
+   Protokoll (`totp_zurueckgesetzt`, `weg = notweg`, Urheber `job`). Mit dem
+   Passwort anmelden; das Einrichtungstor verlangt sofort einen neuen
+   Zweitfaktor. Gibt die Seite nur „Der Notzugang steht für dieses Konto
+   nicht bereit." zurück, ist eines der drei falsch, oder es gibt eine zweite
+   BetreiberIn — die Seite sagt bewusst nicht, welches. Fehlt der Wert in
+   `app_state` (eine sehr alte Anlage ohne die Migration von SR-02), legt
+   ihn der erste Aufruf der Seite an. Liegt die Datei danach noch da (die
+   Anwendung durfte sie nicht löschen), von Hand entfernen; sie gilt ohnehin
+   nicht mehr.
+   **Was der Wert schützt und was nicht (E-SR-24):** Er schützt gegen den,
+   der Dateien nur **lesen** kann, und gegen den, der nur die Datenbank hat.
+   Wer auf dem Webspace **schreiben** kann, kann eine PHP-Datei hochladen und
+   hat damit auch die Datenbank — gegen ihn hilft kein Wert auf dem Server,
+   und das gilt für jeden Weg, den die Anwendung selbst anbietet.
+4. **SQL im Datenbankwerkzeug** — an der Anwendung vorbei, als letzter Weg.
+   Mit der Kennung des Kontos:
+
+   ```sql
+   UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL, totp_schritt = NULL
+    WHERE id = <Kennung>;
+   DELETE FROM totp_codes WHERE user_id = <Kennung>;
+   DELETE FROM vertraute_geraete WHERE user_id = <Kennung>;
+   DELETE FROM passkeys WHERE user_id = <Kennung>;
+   ```
+
+   Die letzten zwei Zeilen stehen hier seit Web 21.11.0 (F-SR-38): Ohne sie
+   galten gemerkte Geräte und Passkeys nach der Neueinrichtung weiter —
+   genau das, was `totp_abschalten()` auf jedem anderen Weg verhindert. Auf
+   einer Anlage vor Web 21.8.0 bzw. 21.10.0 fehlt die Tabelle, und die Zeile
+   meldet einen Fehler, der nichts ändert. Danach mit dem Passwort anmelden;
+   das Einrichtungstor verlangt sofort einen neuen Zweitfaktor. **Im
+   Protokoll steht dieser Weg nicht** — er geht an der Anwendung vorbei. Wer
+   ihn benutzt, trägt es in die **Betriebsakte** ein.
+
+**Wer auch den Zugang zur Datenbank verloren hat**, kommt über keinen der
+vier Wege hinein — Weg 3 verlangt den Wert aus der Datenbank, Weg 4 das
+Werkzeug. Das ist ein Wiederanlauf-Fall beim Hoster, so entschieden
+(E-SR-24). *Bis Web 21.13.0 stand hier, dieser Fall sei Backlog Nr. 249 —
+Nr. 249 ist mit dem Notzugang erledigt, und der verlangt den Datenbankwert
+gerade.* Die Bus-Faktor-Zeile auf Betrieb → Status bleibt orange, bis es eine
+zweite BetreiberIn gibt: Der Notzugang ersetzt sie nicht, er ist der Weg,
+wenn sie fehlt.
 
 **Notweg: Nach einem Wiederanlauf mit anderem Serverschlüssel** lässt sich
 kein Zweitfaktor-Geheimnis mehr öffnen (es ist mit dem alten versiegelt). Die
@@ -12855,6 +12978,17 @@ Die Kennung hängt an der **Datei**, nicht an der Sitzung: Eine vorhandene wird
 niemand wüsste mehr, welche gilt. Nach erfolgreicher Einrichtung wird die Datei
 gelöscht; sie darf auch jederzeit von Hand entfernt werden (der nächste Aufruf
 legt eine neue an).
+
+**Seit Web 21.13.0 steht die Mechanik einmal** — in `nachweis_lib.php`
+(Schritt 18, SR-04, R83). Bis dahin stand sie wortgleich hier und in
+`wiederherstellen.php`, und der Notzugang wäre die dritte Kopie geworden.
+Die Bibliothek kennt beide Richtungen: den **Lesenachweis** dieser Seite und
+von `wiederherstellen.php` (die Seite legt an, der Mensch tippt ab) und den
+**Schreibnachweis** des Notzugangs (die Seite nennt den Namen, der Mensch
+legt an; 4.99q). Die Register-Zeile Z44 zählt jede Kopie der Mechanik
+außerhalb der Bibliothek; ihre Decke ist 0. Die drei Muster
+(`install-nachweis-`, `wiederher-nachweis-`, `zweitfaktor-notweg-`) sperrt
+die `.htaccess` und schließt `.gitignore` aus.
 
 Ein Häkchen „Vorhandene Tabellen vorher löschen“ gibt es **nicht mehr** — es
 war die einzige Stelle im Projekt, an der ein unangemeldeter Aufruf jede

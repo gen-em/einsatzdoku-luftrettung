@@ -14,6 +14,120 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.13.0] — 2026-10-04
+
+Schritt 18, Sicherheitsrunde II, Paket SR-04, **der Notzugang der einzigen
+BetreiberIn** (Nr. 249). **Neben** — kein Schema, keine Migration, keine
+Vertragsänderung; nach dem Deploy ist nichts zu tun. Den Wert, den der
+Notzugang verlangt, hat die Migration von SR-02 schon angelegt.
+
+### Neu
+
+- **`zweitfaktor_notweg.php` — der vierte Weg zurück zum Zweitfaktor**
+  (E-SR-13, E-SR-24). Wer den Zweitfaktor verliert, hatte drei Wege: die
+  Wiederherstellungscodes, den Rückweg mit dem Notfallblatt und eine zweite
+  BetreiberIn, die zurücksetzt. Hatte die **einzige** BetreiberIn alle drei
+  nicht, blieb SQL im Datenbankwerkzeug des Hosters — an der Anwendung
+  vorbei, ohne Protokoll, ohne Mail, mit vier Zeilen, die man richtig
+  abschreiben muss. Die neue Seite verlangt drei Dinge: eine **Datei** im
+  Anwendungsverzeichnis, deren Namen sie nennt und die die BetreiberIn per
+  FTP anlegt; den **Wert** `app_state.notzugang_geheim` aus der Datenbank;
+  und das **Passwort**. Dann schaltet sie den Zweitfaktor ab — mit Geräten
+  und Passkeys, mit Protokoll und Mail —, würfelt den Wert neu und schickt
+  auf die Anmeldung; von dort geht es ins Einrichtungstor.
+- **Die Tür ist eng und sagt nichts.** Sie öffnet nur für ein aktives Konto
+  der Rolle BetreiberIn mit eingeschaltetem Zweitfaktor, und nur, wenn es
+  genau eine BetreiberIn gibt. Jede andere Lage — keine Datei, falscher
+  Wert, falsches Passwort, zwei BetreiberInnen, ein Admin-Konto, eine
+  erfundene Adresse — antwortet mit demselben Satz in derselben Zeit. Dafür
+  laufen immer alle Prüfungen, auch wenn die erste schon fehlschlägt. Der
+  neue Topf `notweg` sperrt nach fünf Versuchen je Stunde und eingetippter
+  Adresse, mit Leiter.
+- **`nachweis_lib.php`** — die Nachweisdatei steht einmal (R83, Register
+  Z44). `install.php` und `wiederherstellen.php` trugen dieselbe Mechanik
+  wortgleich; der Notzugang wäre die dritte Kopie geworden. Die Bibliothek
+  kennt beide Richtungen: den Lesenachweis der beiden alten Seiten und den
+  Schreibnachweis des Notzugangs.
+
+### Geändert
+
+- **Die Mail „Zweitfaktor zurückgesetzt" hat eine dritte Fassung.** Beim
+  Notzugang nennt sie die drei Zugänge, die jemand hatte, und schickt nicht
+  „zur Verwaltung" — es gibt keine andere, sonst wäre die Tür zu. Wer die Mail
+  bekommt, ohne es gewesen zu sein, liest stattdessen: Passwort und Zugänge
+  beim Hoster sofort ändern.
+- **Betrieb → Sicherheit** sagt „acht Töpfe mit Sperrleiter"; der Kommentar
+  darüber stand noch auf fünf und neun. Die Wartungsausnahmen sind achtzehn.
+
+### Bewusst so
+
+- **Schreibnachweis, nicht Lesenachweis** (E-SR-81, F-SR-89). Das Konzept
+  widersprach sich hier: „Muster `install.php`" hieße, die Seite legt die
+  Datei an und man tippt ihren Namen ab; der Prüfpunkt P-SR-10 und die
+  Begründung („wer die Nachweisdatei anlegen kann, hat den Webspace")
+  beschreiben das Umgekehrte. Es gilt das Umgekehrte. So schreibt die
+  Anwendung auf einen unangemeldeten Aufruf **nie** eine Datei auf einer
+  laufenden Anlage — und wer nur lesen kann, kommt schon an der Datei nicht
+  vorbei. Der Name hängt an der **Sitzung** (E-SR-82): Eine Datei aus einem
+  abgebrochenen Versuch gilt später nicht mehr.
+- **Der Wert schützt gegen Lesen, nicht gegen Schreiben** (E-SR-24). Wer auf
+  dem Webspace schreiben kann, kann eine PHP-Datei hochladen und hat damit
+  die Datenbank. Gegen ihn hilft kein Wert auf dem Server; das steht so im
+  Runbook. Und wer auch den Datenbankzugang verloren hat, kommt hier nicht
+  weiter — das bleibt ein Wiederanlauf-Fall, so entschieden.
+- **Die Seite meldet niemanden an** (E-SR-86, -87). Danach geht es über die
+  Anmeldung mit dem Passwort; der Protokolleintrag trägt deshalb den
+  Urheber `job`, wie der Passwort-Reset über den Mail-Link, und der Text
+  sagt, welcher Weg es war. Ein eigener Urheber hätte ein Schema gebraucht.
+- **Das Passwort geht denselben Weg wie bei der Anmeldung, aber nicht durch
+  dieselbe Zeile** (E-SR-84, F-SR-90). `login.php` ist für Schritt 18 zu
+  (E-SR-14), und `login_zeile()` ist dort eine lokale Funktion. Die Seite
+  leitet das Token deshalb mit einer zweiten Kopie der rund zwanzig Zeilen
+  ab; Backlog Nr. 358 hält fest, dass sie zusammengehören — und dass die
+  Integritätswache diese zweite Passwortseite erst vergleichen kann, wenn
+  sie ausgeliefert ist.
+- **`betreiberinnen_zahl()` zählt jedes Konto der Rolle** (E-SR-85), auch
+  ein gesperrtes oder eingeladenes. Steht ein solches daneben, bleibt die
+  Tür zu, und der SQL-Weg im Runbook bleibt der letzte.
+- **Kein Verweis aus der Anmeldung.** Die Seite ist für einen Fall im Leben
+  einer Anlage; gefunden wird sie über das Handbuch (3.1f, 12.1) und das
+  Runbook, die sie beim Namen nennen.
+
+### Prüfmittel
+
+- **Zweitfaktorprobe Teil 8** (139 Prüfungen, vorher 106): jede Sitzung ihr
+  Name, ein Aufruf schreibt keine Datei, der fehlende Wert entsteht beim
+  Aufruf; elf Lagen, in denen die Tür zu bleibt — ohne Datei, Datei einer
+  anderen Sitzung, ohne Wert, falscher Wert, zwei BetreiberInnen, falsches
+  Passwort, Admin-Konto, unbekannte Adresse, gesperrt, Zweitfaktor aus,
+  angemeldet als Admin —, alle mit **einem** Rumpf (bis auf Token, Nonce und
+  Namen) und gleicher Dauer (0,354 bis 0,356 s); richtig → Zweitfaktor aus,
+  Protokoll, Mail, beide Dateien weg, Wert neu, Einrichtungstor; der alte Wert
+  danach abgewiesen; Felder als Liste statt als Text → dieselbe Antwort,
+  keine Warnung; sechs Fehlversuche → Sperre. Die übrigen BetreiberInnen
+  sind für den Teil Admin und werden auch nach einem Abbruch zurückgestellt.
+  **Dreizehn Gegenproben**, jede eine verfälschte Stelle im Code: zwölf rot an
+  der erwarteten Zeile; eine — eine frühe Rückkehr ohne Passwortprüfung — bleibt
+  grün, weil die Mindestdauer von 0,35 s sie zudeckt. Das ist eine Grenze
+  der Probe und steht im Prüfdokument. Eine der zwölf hat die Probe selbst
+  verbessert: Ohne die Rollenprüfung blieb der Fall „Admin-Konto" zuerst
+  grün, weil es daneben gar keine BetreiberIn gab und schon die Zählung die
+  Tür zuhielt.
+- **Register Z44** „Nachweisdatei-Mechanik außerhalb `nachweis_lib.php`":
+  Start 4 (je zwei Literale in den beiden alten Seiten), Decke 0. Beim Bau
+  hat die Zählung einen Rollenvergleich von Hand in der neuen Seite gefunden
+  (Z13) — jetzt `rolle_ist_betreiberin()`.
+- Ratenprobe (`notweg` unter den Töpfen mit Leiter, 63), Wartungsprobe (die
+  Seite im Wartungsmodus, 70), Rollenprobe (eine Zeile ohne Rollentor in der
+  Matrix, 534), Mailprobe (drei Fassungen der Mail, 53), CSP-Browserprobe
+  (die zweite Seite ohne Sitzung, auf der ein Passwort getippt wird), der
+  Bilderlauf (`06b-zweitfaktor-notweg`).
+- **Die Umstellung von `install.php` und `wiederherstellen.php`** ist an
+  einer Kopie von `server/` mit eigenen Datenbanken gemessen, nicht an der
+  Anlage: Einrichtung mit Nachweis bis zum Schema, Wiederherstellung auf
+  leerer und belegter Datenbank (13 von 13). Keine Probe hält das dauerhaft
+  fest — die Einrichtung führt nur der Referenzdatensatz.
+
 ## [Web 21.12.2] — 2026-10-04
 
 Schritt 18, Sicherheitsrunde II, **Nachmessung zu H-SR-06**. **Korrektur** —

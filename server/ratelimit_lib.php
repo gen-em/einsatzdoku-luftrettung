@@ -271,6 +271,19 @@ const RATE_GRENZEN = [
      * denselben Topf — sonst waere er mit ihnen zu umgehen. */
     'totp' => ['max' => 5, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
+    /* DER NOTZUGANG DER EINZIGEN BETREIBERIN (Schritt 18, SR-04, E-SR-13).
+     *
+     * FUENF JE STUNDE JE EINGETIPPTER ADRESSE, MIT LEITER. Die Seite
+     * verlangt Datei, Datenbankwert und Passwort; wer alle drei hat,
+     * braucht keine fuenf Versuche, und wer rät, soll es nicht lange
+     * koennen. Die Stunde statt der Viertelstunde der Anmeldung: Der Weg
+     * wird im Leben einer Anlage vielleicht einmal gebraucht.
+     *
+     * JE ADRESSE UND NICHT JE KONTO. Gezaehlt wird die EINGETIPPTE Adresse
+     * (`rate_merkmal_kennung()`), auch eine erfundene — sonst waere die
+     * Sperre selbst eine Auskunft darueber, ob es das Konto gibt. */
+    'notweg' => ['max' => 5, 'fenster' => 3600, 'sperre' => 3600, 'leiter' => true],
+
     /* DER GLOBALE ZAEHLER SPERRT NIE (E-P5a-05). `max` steht auf der
      * groesstmoeglichen Zahl, damit die Sperrbedingung in `rate_misserfolg()`
      * fuer diesen Topf niemals wahr wird — eine globale Sperre waere ein

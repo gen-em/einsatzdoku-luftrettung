@@ -972,7 +972,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 47 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 48 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
@@ -3135,7 +3135,7 @@ die Einteilung und dass die Ränder angebrochen sein können.
 | **Inhaltsseite** | `ui_geruest_start(['leiste' => 'diensttage'])` | Diensttage | Tagesübersicht, Einsatzansicht, Formular, Papierkorb, Zeitraum |
 | **Einstellungsseite** | `ui_geruest_start(['leiste' => 'einstellungen'])` | Einstellungsmenü | Profil, Standorte, Geräte, Konto-Backups, Installation, Betrieb |
 | **Suchseite** | `ui_geruest_start(['leiste' => 'filter'])` | Filter, von der Seite gefüllt | Suche |
-| **Öffentliche Lesespalte** | `ui_kopf(['menue' => false])` + `.rahmen rahmen-lesespalte` | keine | Impressum, Datenschutz, Abbruchseite, Einrichter (seit O10; bis Web 20.37.2 stand er hier fälschlich unter der Anmeldehülle) |
+| **Öffentliche Lesespalte** | `ui_kopf(['menue' => false])` + `.rahmen rahmen-lesespalte` | keine | Impressum, Datenschutz, Abbruchseite, Einrichter (seit O10; bis Web 20.37.2 stand er hier fälschlich unter der Anmeldehülle), Wiederherstellung, Notzugang zum Zweitfaktor (seit Web 21.13.0, Schritt 18, SR-04 — vorhandene Bausteine, kein Mockup, E-SR-15) |
 | **Anmeldehülle** | `.anmeldung-body` + `<main class="anmeldung">` | keine | Anmeldung, Passwort vergessen, Passwort setzen, Registrierung und Bestätigung, Abmeldeseite |
 | **Druckseite** | `.blatt-seite` + `.rahmen rahmen-lesespalte` | keine | Schlüsselblatt (`betrieb_schluesselblatt.php`) |
 

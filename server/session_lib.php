@@ -173,6 +173,15 @@ function session_ende_text(?string $grund): string
                       . 'wurde beendet. Das geschieht einmal nach einem Update der '
                       . 'Anwendung und wenn die Cookies dieser Seite gelöscht wurden. '
                       . 'Bitte melde dich neu an.',
+        /* NACH DEM NOTZUGANG (Schritt 18, SR-04, E-SR-87). Die Seite meldet
+         * niemanden an; sie schickt hierher. Der Satz steht hier und nicht
+         * in `login.php`, weil `login.php` fuer Schritt 18 zu ist (E-SR-14)
+         * — und weil er dorthin gehoert, wo die anderen Gruende stehen. Er
+         * verraet nichts: Wer die Adresse mit `?ende=notweg` aufruft, liest
+         * einen Satz, den das Handbuch auch enthaelt. */
+        'notweg'     => 'Der Zweitfaktor ist über den Notzugang zurückgesetzt. Melde '
+                      . 'dich mit deinem Passwort an — danach richtest du ihn sofort '
+                      . 'neu ein.',
         default      => '',
     };
 }

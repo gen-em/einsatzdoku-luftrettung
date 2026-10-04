@@ -9351,3 +9351,29 @@ zutreffen.
      NutzerIn im Browser arbeitet: POST widerrufen mit sechzehn Nullen →
      Fehlermeldung, keine konto.json in der Wurzel. Gegenprobe ohne die
      Prüfung rot (302, Datei lag da).
+
+249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
+     Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
+
+     10c macht den Zweitfaktor für Admin, BetreiberIn und Support zur
+     Pflicht. Der Reset durch eine **zweite** BetreiberIn ist damit gelöst —
+     der Fall „es gibt nur eine, und sie hat beides verloren" ist es nicht.
+
+     Das ist ein **Wiederanlauf-Fall** und gehört zum S10-Runbook, nicht in
+     10c: Er wird nicht über die Oberfläche gelöst, sondern über das
+     Wiederanlaufpaket. Hier nur benannt, damit er nicht erst auffällt, wenn
+     er eintritt.
+
+     **Teilweise gelöst mit Konzept RW (E-RW-08, 24.09.2026; gebaut als 10c
+     AP5b, Web 20.43.0 bis 20.45.0):** Hat die einzige BetreiberIn Passwort
+     und Notfallblatt, setzt sie den Zweitfaktor am Code-Schritt selbst
+     zurück. Der Wiederanlauf-Fall bleibt für den Rest: ohne Zettel, ohne
+     Passwort, oder wenn der Rückweg ausgeschaltet ist (Statuszeile
+     „Rückweg-Prüfung" orange).
+     Erledigt 04.10.2026 in Schritt 18, SR-04 (Web 21.13.0, E-SR-13,
+     E-SR-24, E-SR-81 bis -87): Notzugang zweitfaktor_notweg.php mit
+     Nachweisdatei (Schreibnachweis, Name an der Sitzung), Datenbankwert und
+     Passwort; jede andere Lage gleiche Antwort, gleiche Dauer; Wert danach
+     neu. Gemessen in der Zweitfaktorprobe Teil 8. Bleibt bewusst: Wer auch
+     den Datenbankzugang verloren hat, ist ein Wiederanlauf-Fall (E-SR-24).

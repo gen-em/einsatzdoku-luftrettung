@@ -53,8 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 357 | 27.09.2026 |
-| ab 360 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 28.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 358 | 27.09.2026 |
+| ab 360 | frei — höchste vergebene Nummer 358; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 28.09.2026 |
 
 ---
 
@@ -544,7 +544,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `einstellungen.php` (sechs Speicher- und Löschpaare), Auftakt der
      Verwaltungsseiten (`ui_meldung` in 12 Dateien gleich komponiert),
      Umfangsliste mit Zahl-Plakette (3× wortgleich), Nachweisdatei-Mechanik
-     in `install.php` und `wiederherstellen.php`, Ablage mit Zeitstempel
+     (erledigt mit SR-04: `nachweis_lib.php`, Z44), Ablage mit Zeitstempel
      (dreimal `gmdate('Y-m-d\TH-i-s\Z')`). Seit 26.09.2026 Ziel
      `Pflegeaufgabe` (R4-01, Q-R4-12): Jeder Anlass träfe Dateien von 18.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 202.
@@ -759,28 +759,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      mit). Zuerst entscheiden, welche der beiden Fragen beantwortet werden
      soll.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 240.
-
-<!-- -->
-
-249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
-     *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
-     Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
-
-     10c macht den Zweitfaktor für Admin, BetreiberIn und Support zur
-     Pflicht. Der Reset durch eine **zweite** BetreiberIn ist damit gelöst —
-     der Fall „es gibt nur eine, und sie hat beides verloren" ist es nicht.
-
-     Das ist ein **Wiederanlauf-Fall** und gehört zum S10-Runbook, nicht in
-     10c: Er wird nicht über die Oberfläche gelöst, sondern über das
-     Wiederanlaufpaket. Hier nur benannt, damit er nicht erst auffällt, wenn
-     er eintritt.
-
-     **Teilweise gelöst mit Konzept RW (E-RW-08, 24.09.2026; gebaut als 10c
-     AP5b, Web 20.43.0 bis 20.45.0):** Hat die einzige BetreiberIn Passwort
-     und Notfallblatt, setzt sie den Zweitfaktor am Code-Schritt selbst
-     zurück. Der Wiederanlauf-Fall bleibt für den Rest: ohne Zettel, ohne
-     Passwort, oder wenn der Rückweg ausgeschaltet ist (Statuszeile
-     „Rückweg-Prüfung" orange).
 
 <!-- -->
 
@@ -1243,3 +1221,22 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Grund in der Zeile „Ließen sich nicht umhüllen" ist ebenfalls der rohe
      Ausnahmetext; eine PDOException trüge den Datenbanknamen, ein
      TypeError Pfade. Dieselbe Kürzung an derselben Stelle.
+
+<!-- -->
+
+358. **Die zweite Passwortseite: Token-Ableitung an einer Stelle, und die Wache vergleicht sie mit.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 04.10.2026
+     *Aufgenommen 04.10.2026 mit SR-04 (Konzept SR, F-SR-90, E-SR-84).*
+     Der Notzugang `zweitfaktor_notweg.php` leitet das Passwort-Token ab wie
+     `login.php` (Salz über `auth_salt.php`, je Rundenzahl
+     `EdCrypto.deriveKeys()`) — mit einer zweiten Kopie der rund zwanzig
+     Zeilen, weil `login.php` für Schritt 18 zu ist (E-SR-14) und dort auch
+     die Prüfung (`login_zeile()`, Token je `kdf_iter`, Blindvergleich) als
+     lokaler Code steht. Dazu: Die Integritätswache vergleicht die
+     Inline-Skripte der Seiten, auf denen ein Passwort getippt wird
+     (`tools/integritaetswache/wache.py`, `SEITEN`) — dort steht nur
+     `login.php`. Die neue Seite vorher einzutragen, machte die Wache rot,
+     solange die Anlage sie nicht hat. *Weg:* eine Funktion in `crypto.js`
+     (Salz holen, Token je Rundenzahl) für beide Seiten, die Prüfung als
+     Funktion neben `AUTH_VERGLEICHSWERT`; nach der Auslieferung von
+     Web 21.13.0 `zweitfaktor_notweg.php` in `SEITEN`. *Abnahme:* ein
+     `fetch('auth_salt.php'` im Quelltext; die Wache misst zwei Seiten.

@@ -86,6 +86,15 @@ RewriteRule "(^|/)\.(?!well-known/)" - [F,L]
   Require all denied
 </FilesMatch>
 
+# Und fuer den Notzugang der einzigen BetreiberIn (Schritt 18, SR-04). Hier
+# ist die Richtung umgekehrt: Die Seite NENNT den Namen, die BetreiberIn legt
+# die Datei per FTP an (Schreibnachweis, E-SR-81). Der Name ist also kein
+# Geheimnis -- gesperrt wird trotzdem, weil in der Datei steht, was die
+# BetreiberIn hineinlegt, und das soll der Webserver niemandem ausliefern.
+<FilesMatch "^zweitfaktor-notweg-.*\.txt$">
+  Require all denied
+</FilesMatch>
+
 # Security-Header -- SEIT WEB 20.7.0 NUR NOCH FUER DAS, WAS NICHT DURCH PHP
 # LAEUFT (P5a/AP4, E-P5a-15).
 #

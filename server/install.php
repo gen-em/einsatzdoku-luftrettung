@@ -208,40 +208,25 @@ $setupLink = '';
  * Sitzungsfassung geoeffnet haette: Wer die Datei bei jedem Aufruf neu
  * schreiben liesse, koennte einer BetreiberIn mitten in der Einrichtung die
  * Kennung unter den Haenden wegziehen.
+ *
+ * DIE MECHANIK STEHT SEIT WEB 21.13.0 IN `nachweis_lib.php` (Schritt 18,
+ * SR-04): Hier und in `wiederherstellen.php` stand sie wortgleich, und der
+ * Notzugang waere die dritte Kopie geworden. Was hier bleibt, ist der Text
+ * der Datei und die Entscheidung, wann sie geht.
  */
+require_once __DIR__ . '/nachweis_lib.php';
 $nachweisMuster = 'install-nachweis-';
-$nachweisOk     = true;
-$nachweis       = '';
+$nachweis       = nachweis_finden_oder_wuerfeln($nachweisMuster);
 
-$vorhanden = glob(__DIR__ . '/' . $nachweisMuster . '*.txt') ?: [];
-sort($vorhanden);
-foreach ($vorhanden as $i => $datei) {
-    if (!preg_match('/' . preg_quote($nachweisMuster, '/') . '([0-9a-f]{32})\.txt$/',
-                    $datei, $tr)) { continue; }
-    if ($nachweis === '') { $nachweis = $tr[1]; }
-    elseif ($tr[1] !== $nachweis) { @unlink($datei); }   // Rest aus alten Staenden
-}
-if ($nachweis === '') { $nachweis = bin2hex(random_bytes(16)); }   // 128 Bit
-
-$nachweisDatei = __DIR__ . '/' . $nachweisMuster . $nachweis . '.txt';
-
-if (!is_writable(__DIR__)) {
-    // Ohne Schreibrecht kann die Einrichtung ohnehin keine config.php
-    // anlegen. Das gehoert an den Anfang und nicht ans Ende.
-    $nachweisOk = false;
-} elseif (!file_exists($nachweisDatei)) {
-    $inhalt = $nachweis . "\n\n"
-            . "Diese Datei gehoert zur Ersteinrichtung von " . INSTANZ_KURZ_VORGABE . ".\n"
-            . "Die Zeichenfolge oben ist im Einrichtungsformular einzutragen.\n"
-            . "Sie beweist, dass die einrichtende Person Zugriff auf dieses\n"
-            . "Verzeichnis hat. Nach der Einrichtung wird die Datei geloescht;\n"
-            . "sie kann auch jederzeit von Hand geloescht werden.\n";
-    if (@file_put_contents($nachweisDatei, $inhalt, LOCK_EX) === false) {
-        $nachweisOk = false;
-    } else {
-        @chmod($nachweisDatei, 0640);
-    }
-}
+/* Ohne Schreibrecht kann die Einrichtung ohnehin keine config.php anlegen —
+ * `nachweis_anlegen()` sagt dann `false`, und das gehoert an den Anfang und
+ * nicht ans Ende. */
+$nachweisOk = nachweis_anlegen($nachweisMuster, $nachweis,
+      "Diese Datei gehoert zur Ersteinrichtung von " . INSTANZ_KURZ_VORGABE . ".\n"
+    . "Die Zeichenfolge oben ist im Einrichtungsformular einzutragen.\n"
+    . "Sie beweist, dass die einrichtende Person Zugriff auf dieses\n"
+    . "Verzeichnis hat. Nach der Einrichtung wird die Datei geloescht;\n"
+    . "sie kann auch jederzeit von Hand geloescht werden.\n");
 
 /* ---- Formular verarbeiten ---------------------------------------------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -272,10 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      *
      * Grosszuegig beim Format: Wer statt der Zeichenfolge den ganzen
      * Dateinamen hineinkopiert, hat verstanden, was gemeint war. */
-    $eingabe = strtolower(trim($in('nachweis')));
-    $eingabe = preg_replace('/^' . preg_quote($nachweisMuster, '/') . '/', '', $eingabe);
-    $eingabe = preg_replace('/\.txt$/', '', (string)$eingabe);
-    if (!hash_equals($nachweis, (string)$eingabe)) {
+    if (!nachweis_eingabe_passt($nachweisMuster, $nachweis, $in('nachweis'))) {
         $errors[] = 'Der Nachweis stimmt nicht. Bitte die Zeichenfolge aus dem '
                   . 'Dateinamen im Anwendungsverzeichnis eintragen (siehe unten).';
     }
@@ -486,7 +468,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Nachweisdatei hat ihren Zweck erfuellt (M1-11). Sie bleibt nicht
             // liegen — eine Datei mit einem Geheimnis im Namen soll nicht
             // laenger existieren als noetig.
-            @unlink($nachweisDatei);
+            nachweis_entfernen($nachweisMuster, $nachweis);
             $done = true;
         }
     }

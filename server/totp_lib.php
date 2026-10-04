@@ -375,12 +375,19 @@ function totp_anmeldung_pruefen(int $userId, string $eingabe, ?string $nur = nul
  * Den Zweitfaktor eines Kontos abschalten: Geheimnis, Zeitschritt, Codes weg.
  *
  * `$weg` sagt, wer es tat: 'selbst' (Profil, nur ohne Pflicht),
- * 'verwaltung' (Kontoseite, E-P5c-42) oder — seit Konzept RW, RW-03 —
- * 'schluessel' (der Rückweg am Code-Schritt, `login.php` hinter dem Tor).
- * Verwaltung und Schlüssel sind beide ein ZURÜCKSETZEN und schreiben
+ * 'verwaltung' (Kontoseite, E-P5c-42), — seit Konzept RW, RW-03 —
+ * 'schluessel' (der Rückweg am Code-Schritt, `login.php` hinter dem Tor)
+ * oder — seit Schritt 18, SR-04 — 'notweg' (der Notzugang der einzigen
+ * BetreiberIn, `zweitfaktor_notweg.php`: Nachweisdatei, Datenbankwert,
+ * Passwort). Alle außer 'selbst' sind ein ZURÜCKSETZEN und schreiben
  * `totp_zurueckgesetzt`; `daten.weg` unterscheidet sie (E-RW-14). Die Mail
- * an die Kontoadresse verschickt der Aufrufer. EINE Funktion, drei
- * Aufrufer — RW baut das Zurücksetzen nicht ein zweites Mal (3.3).
+ * an die Kontoadresse verschickt der Aufrufer. EINE Funktion, vier
+ * Aufrufer — weder RW noch der Notzugang bauen das Zurücksetzen ein zweites
+ * Mal (3.3).
+ *
+ * BEIM NOTZUGANG IST NIEMAND ANGEMELDET (E-SR-86): Der Eintrag trägt dann
+ * den Urheber `job`, wie beim Passwort-Reset über den Mail-Link; der Text
+ * sagt, welcher Weg es war.
  *
  * DIE GEMERKTEN GERAETE UND DIE PASSKEYS GEHEN MIT, auf jedem Weg (SR-02,
  * E-SR-07; SR-09, E-SR-29). Zu den Geraeten: Ein
@@ -415,6 +422,8 @@ function totp_abschalten(int $userId, string $weg): bool
                   match ($weg) {
                       'verwaltung' => 'Zweitfaktor durch die Verwaltung zurückgesetzt',
                       'schluessel' => 'Zweitfaktor mit dem Wiederherstellungsschlüssel zurückgesetzt',
+                      'notweg'     => 'Zweitfaktor über den Notzugang zurückgesetzt '
+                                    . '(Nachweisdatei, Datenbankwert, Passwort)',
                       default      => 'Zweitfaktor ausgeschaltet',
                   },
                   ['weg' => $weg], $userId);

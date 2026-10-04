@@ -168,17 +168,19 @@ try {
 
 /* ---- Schranke 2: der Nachweis ------------------------------------------- *
  *
- * Wortgleich zur Bauart in `install.php`, nur mit eigenem Präfix: Die Kennung
+ * Dieselbe Bauart wie in `install.php`, nur mit eigenem Präfix: Die Kennung
  * steht im DATEINAMEN, nicht nur im Inhalt — bei Einfachhosting liegt dieses
  * Verzeichnis im Web-Wurzelverzeichnis, und eine Datei mit festem Namen wäre
  * über die Adresszeile abrufbar. Ein Name aus 128 Bit Zufall lässt sich nur
  * nennen, wer das Verzeichnis SIEHT. Die Kennung hängt an der Datei und nicht
  * an der Sitzung: Sonst läge nach jedem Aufruf — auch dem eines Neugierigen —
  * eine weitere Datei da, und niemand wüsste, welche die seine ist.
+ *
+ * Seit Web 21.13.0 nicht mehr wortgleich abgeschrieben, sondern dieselbe
+ * Stelle: `nachweis_lib.php` (Schritt 18, SR-04, R83).
  */
+require_once __DIR__ . '/nachweis_lib.php';
 $nachweisMuster = 'wiederher-nachweis-';
-$nachweisOk = true;
-$nachweis = '';
 
 /* ER ENTSTEHT NUR, WENN DIESE SEITE UEBERHAUPT ETWAS TUN KANN.
  *
@@ -197,28 +199,15 @@ $darfNachweis = ($dbFehler === null)
     && ($leer || in_array((string)(wh_stand_lesen()['phase'] ?? ''),
                           ['einspielen', 'fertig'], true));
 
-foreach (glob(__DIR__ . '/' . $nachweisMuster . '*.txt') ?: [] as $datei) {
-    if (!preg_match('/' . preg_quote($nachweisMuster, '/') . '([0-9a-f]{32})\.txt$/',
-                    $datei, $tr)) { continue; }
-    if ($nachweis === '') { $nachweis = $tr[1]; }
-    elseif ($tr[1] !== $nachweis) { @unlink($datei); }
-}
-if ($nachweis === '') { $nachweis = bin2hex(random_bytes(16)); }
-$nachweisDatei = __DIR__ . '/' . $nachweisMuster . $nachweis . '.txt';
-if (!$darfNachweis) {
-    $nachweisOk = file_exists($nachweisDatei);
-} elseif (!is_writable(__DIR__)) {
-    $nachweisOk = false;
-} elseif (!file_exists($nachweisDatei)) {
-    $inhalt = $nachweis . "\n\n"
-            . "Diese Datei gehoert zur Wiederherstellung von " . instanz_kurz() . ".\n"
-            . "Die Zeichenfolge oben ist im Formular einzutragen. Sie beweist,\n"
-            . "dass die wiederherstellende Person Zugriff auf dieses Verzeichnis\n"
-            . "hat. Nach getaner Arbeit wird die Datei geloescht; sie kann auch\n"
-            . "jederzeit von Hand geloescht werden.\n";
-    if (@file_put_contents($nachweisDatei, $inhalt, LOCK_EX) === false) { $nachweisOk = false; }
-    else { @chmod($nachweisDatei, 0640); }
-}
+$nachweis = nachweis_finden_oder_wuerfeln($nachweisMuster);
+$nachweisOk = $darfNachweis
+    ? nachweis_anlegen($nachweisMuster, $nachweis,
+          "Diese Datei gehoert zur Wiederherstellung von " . instanz_kurz() . ".\n"
+        . "Die Zeichenfolge oben ist im Formular einzutragen. Sie beweist,\n"
+        . "dass die wiederherstellende Person Zugriff auf dieses Verzeichnis\n"
+        . "hat. Nach getaner Arbeit wird die Datei geloescht; sie kann auch\n"
+        . "jederzeit von Hand geloescht werden.\n")
+    : nachweis_steht($nachweisMuster, $nachweis);
 
 $notice = null; $error = null;
 $stand = wh_stand_lesen();
@@ -247,10 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
     if (!hash_equals((string)($_SESSION['wh_csrf'] ?? ''), (string)($_POST['csrf'] ?? ''))) {
         $error = 'Ungültiges Formular-Token. Bitte die Seite neu laden.';
     } else {
-        $eingabe = strtolower(trim((string)($_POST['nachweis'] ?? '')));
-        $eingabe = preg_replace('/^' . preg_quote($nachweisMuster, '/') . '/', '', $eingabe);
-        $eingabe = (string)preg_replace('/\.txt$/', '', (string)$eingabe);
-        if (!hash_equals($nachweis, $eingabe)) {
+        if (!nachweis_eingabe_passt($nachweisMuster, $nachweis, (string)($_POST['nachweis'] ?? ''))) {
             $error = 'Der Nachweis stimmt nicht. Bitte die Zeichenfolge aus dem '
                    . 'Dateinamen im Anwendungsverzeichnis eintragen (siehe unten).';
         } else {
@@ -317,7 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                         . 'bleibt liegen.';
             } elseif ($aktion === 'aufraeumen') {
                 wh_arbeit_weg();
-                @unlink($nachweisDatei);
+                nachweis_entfernen($nachweisMuster, $nachweis);
                 $stand = [];
                 $notice = 'Aufgeräumt: ausgepackter Klartext und Nachweisdatei sind weg.';
                 $nachweisOk = false;

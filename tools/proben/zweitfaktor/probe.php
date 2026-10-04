@@ -63,6 +63,16 @@ declare(strict_types=1);
  *      als handlungsfähig; dazu die Tabelle der Lagen (Rollenmix → Plakette
  *      und Ton) über `status_verwaltungszeile()` mit gesetzten Zahlen —
  *      der Bestand der Anlage zeigt immer nur eine davon (F-P5c-114).
+ *   8. Der Notzugang der einzigen BetreiberIn (Schritt 18, SR-04, E-SR-13,
+ *      -24, -81 bis -87): jede Sitzung ihr Name, ein Aufruf schreibt keine
+ *      Datei, der fehlende Wert entsteht beim Aufruf; zehn Lagen, in denen die
+ *      Tür zu bleibt (ohne Datei, Datei einer anderen Sitzung, ohne Wert,
+ *      falscher Wert, zwei BetreiberInnen, falsches Passwort, Admin-Konto,
+ *      unbekannte Adresse, gesperrt, Zweitfaktor aus), dazu angemeldet als
+ *      Admin — alle derselbe Rumpf, dieselbe Dauer, nichts geändert; richtig
+ *      → Zweitfaktor aus, Protokoll, Mail, Dateien weg, Wert neu, danach
+ *      Einrichtungstor; der alte Wert gilt nicht mehr; sechs Fehlversuche →
+ *      Topf `notweg`. Die übrigen BetreiberInnen sind dafür kurz Admin.
  *
  * WAS SIE NICHT MISST: den Ablauf der fünf Minuten des halben Standes (sie
  * wartet nicht; eine Sitzung mit abgelaufener Frist stellt die Wartungsprobe
@@ -71,7 +81,9 @@ declare(strict_types=1);
  * Werkzeug selbst).
  *
  * SIE RÄUMT AUF: ihre Konten, deren Protokoll- und Ratenzeilen — im Schluss,
- * auch nach einem Abbruch.
+ * auch nach einem Abbruch. Teil 8 stellt dazu die Rolle der übrigen
+ * BetreiberInnen, den Wert in `app_state` und das Anwendungsverzeichnis
+ * zurück (ohne Nachweisdatei).
  *
  * Aufruf:  php tools/proben/zweitfaktor/probe.php [basisadresse]   (Vorgabe http://127.0.0.1:8080)
  * Rückgabewert: 0 = alles erfüllt, 1 = mindestens eine Erwartung nicht.
@@ -1069,6 +1081,307 @@ foreach ($faelle as [[$v, $b, $a], [$plakette, $ton, $fall]]) {
                                   'betreiberinnen_aktiv' => $a]);
     pruefe($z['plakette'] === $plakette && $z['ton'] === $ton,
            "Fall „{$fall}\" → {$plakette} / {$ton}", $z['plakette'] . ' / ' . $z['ton']);
+}
+
+/* ---- 8. Der Notzugang der einzigen BetreiberIn (SR-04) -----------------------
+ *
+ * WAS ER ZUSAGT (E-SR-13, E-SR-24, E-SR-81 bis -87): Datei, deren Namen die
+ * Seite nennt und die an der Sitzung hängt, Datenbankwert und Passwort — und
+ * nur für das eine aktive BetreiberIn-Konto mit Zweitfaktor. Jede andere Lage
+ * antwortet GLEICH (derselbe Rumpf, bis auf Token, Nonce und Dateinamen) und
+ * GLEICH LANG; nichts ändert sich. Ein Aufruf schreibt keine Datei.
+ *
+ * DIE ÜBRIGEN BETREIBERINNEN WERDEN FÜR DIESEN TEIL ADMIN — örtlich Konto 1.
+ * Anders lässt sich „genau eine" nicht herstellen. Zurückgestellt wird im
+ * `finally` UND im Schluss-Handler (auch nach einem Abbruch der Probe); nur
+ * ein hartes Beenden (`kill -9`) liesse sie als Admin stehen — dann steht
+ * ihre Kennung oben in der Ausgabe. Die Konten aus Teil 7 gehen vorher.
+ *
+ * DER WERT IN `app_state` STEHT AM ENDE WIEDER WIE VORHER — der Erfolgsfall
+ * würfelt ihn neu, und die örtliche Anlage soll den Wert behalten, den sie
+ * vor der Probe hatte. */
+echo "== 8. Notzugang der einzigen BetreiberIn (SR-04)\n";
+$pdo->exec("DELETE FROM users WHERE email LIKE 'zweitfaktor-bf-%@probe.invalid'");
+$nwMail = 'zweitfaktor-notweg@probe.invalid';
+$nwZwei = 'zweitfaktor-notweg-zwei@probe.invalid';
+$nwNiemand = 'zweitfaktor-notweg-niemand@probe.invalid';
+$nwPw = 'Probe-Notweg-' . bin2hex(random_bytes(6));
+$nwSalz = bin2hex(random_bytes(16));
+$nwToken = bin2hex(substr(hash_pbkdf2('sha256', $nwPw, hex2bin($nwSalz), $iter, 64, true), 32, 32));
+$nwFalsch = bin2hex(substr(hash_pbkdf2('sha256', $nwPw . 'x', hex2bin($nwSalz), $iter, 64, true), 32, 32));
+$nwMuster = $srv . '/zweitfaktor-notweg-';
+$nwWertVorher = app_state_lesen('notzugang_geheim');
+$nwMailVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();
+$nwProtVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse')->fetchColumn();
+$nwAndere = array_map('intval', $pdo->query("SELECT id FROM users WHERE role = 'betreiberin'")
+                                     ->fetchAll(PDO::FETCH_COLUMN));
+echo "  (vorübergehend Admin: Konto " . implode(', ', $nwAndere) . ")\n";
+$nwAufraeumen = static function () use ($pdo, $nwAndere, $nwMail, $nwZwei, $nwNiemand, $nwMuster,
+                                        $nwWertVorher, $nwMailVorher, $nwProtVorher): void {
+    static $erledigt = false;
+    if ($erledigt) { return; }
+    $erledigt = true;
+    foreach ($nwAndere as $id) {
+        $pdo->prepare("UPDATE users SET role = 'betreiberin' WHERE id = ?")->execute([$id]);
+    }
+    $ids = $pdo->query("SELECT id FROM users WHERE email IN ('$nwMail', '$nwZwei')")
+               ->fetchAll(PDO::FETCH_COLUMN);
+    foreach ($ids as $id) {
+        $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE betroffen_user_id = ?')->execute([$id]);
+        $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
+    }
+    /* '' dabei: Teil d2 schickt die Adresse als Liste, und die Seite zählt
+     * den Versuch dann unter der leeren Adresse. */
+    foreach ([$nwMail, $nwZwei, $nwNiemand, ''] as $m) {
+        $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([rate_merkmal_kennung($m)]);
+        $pdo->prepare("DELETE FROM sicherheit_ereignisse WHERE topf = 'notweg' AND merkmal = ?")
+            ->execute([rate_merkmal_kennung($m)]);
+    }
+    $pdo->prepare("DELETE FROM mail_warteschlange WHERE id > ? AND empfaenger IN (?, ?)")
+        ->execute([$nwMailVorher, $nwMail, $nwZwei]);
+    foreach (glob($nwMuster . '*.txt') ?: [] as $d) { @unlink($d); }
+    if ($nwWertVorher !== null) { app_state_setzen('notzugang_geheim', $nwWertVorher); }
+};
+register_shutdown_function($nwAufraeumen);
+
+try {
+    foreach ([$nwMail, $nwZwei] as $m) { $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$m]); }
+    $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
+                   VALUES (?, 'Notwegprobe', 'betreiberin', ?, ?, ?)")
+        ->execute([$nwMail, password_hash($nwToken, PASSWORD_DEFAULT), $nwSalz, $iter]);
+    $nwId = (int)$pdo->lastInsertId();
+    foreach ($nwAndere as $id) {
+        $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ?")->execute([$id]);
+    }
+    $beg = totp_einrichtung_beginnen($nwId);
+    $ein = ($beg['ok'] ?? false)
+         ? totp_einrichtung_abschliessen($nwId, totp_code((string)$beg['geheimnis'], time())) : ['ok' => false];
+    pruefe(($ein['ok'] ?? false) && totp_an($nwId) && betreiberinnen_zahl($pdo) === 1,
+           'Ausgang: eine BetreiberIn (die der Probe), Zweitfaktor an', json_encode($beg['grund'] ?? $ein['grund'] ?? ''));
+
+    /* Eine eigene Sitzung je Fall — ein eigener Keksbehälter. */
+    $nwSitzung = static function (): array {
+        global $keks;
+        $keks = [];
+        $g = http('GET', 'zweitfaktor_notweg.php');
+        $k = preg_match('/zweitfaktor-notweg-([0-9a-f]{32})\.txt/', $g['rumpf'], $m) ? $m[1] : '';
+        return ['keks' => $keks, 'kennung' => $k, 'csrf' => csrf_von($g['rumpf']), 'get' => $g];
+    };
+    $nwSenden = static function (array $s, array $felder): array {
+        global $keks;
+        $keks = $s['keks'];
+        $t = microtime(true);
+        $r = http('POST', 'zweitfaktor_notweg.php', $felder + ['csrf' => $s['csrf']]);
+        $r['dauer'] = microtime(true) - $t;
+        return $r;
+    };
+    $nwGleich = static fn(string $h): string => (string)preg_replace(
+        ['/zweitfaktor-notweg-[0-9a-f]{32}/', '/value="[0-9a-f]{64}"/', '/nonce="[^"]*"/'],
+        ['zweitfaktor-notweg-X', 'value="X"', 'nonce="X"'], $h);
+    $nwDatei = static fn(string $k): string => $nwMuster . $k . '.txt';
+    $nwWert = static fn(): string => (string)app_state_lesen('notzugang_geheim');
+    $nwRichtig = static fn(): array => ['email' => $nwMail,
+        'tokens' => json_encode([(string)$iter => $nwToken]),
+        'wert' => implode(' ', str_split(strtoupper($nwWert()), 4))];   // in Vierergruppen, groß
+    $nwZurueck = static function () use ($pdo, $nwMail, $nwNiemand, $nwZwei): void {
+        foreach ([$nwMail, $nwNiemand, $nwZwei, ''] as $m) {
+            $pdo->prepare("DELETE FROM rate_limits WHERE topf = 'notweg' AND merkmal = ?")
+                ->execute([rate_merkmal_kennung($m)]);
+        }
+    };
+    $nwZurueckgesetzt = static fn(): int => (int)$pdo->query(
+        "SELECT COUNT(*) FROM protokoll_ereignisse WHERE id > $nwProtVorher
+           AND art = 'totp_zurueckgesetzt' AND betroffen_user_id = $nwId")->fetchColumn();
+
+    // a) Die Seite: zwei Sitzungen, zwei Namen; gleicher Rumpf; keine Datei geschrieben.
+    $txtVorher = glob($srv . '/*.txt') ?: [];
+    $s1 = $nwSitzung();
+    $s2 = $nwSitzung();
+    pruefe($s1['get']['code'] === 200 && $s1['kennung'] !== '' && $s2['kennung'] !== ''
+           && $s1['kennung'] !== $s2['kennung'],
+           'GET: 200, jede Sitzung bekommt ihren eigenen Namen (E-SR-82)',
+           $s1['get']['code'] . ' ' . $s1['kennung'] . ' / ' . $s2['kennung']);
+    pruefe($nwGleich($s1['get']['rumpf']) === $nwGleich($s2['get']['rumpf']),
+           'GET: der Rumpf ist bis auf Token, Nonce und Namen gleich');
+    $s1b = http('GET', 'zweitfaktor_notweg.php');   // $keks steht noch auf $s2
+    pruefe(str_contains($s1b['rumpf'], $s2['kennung']), 'GET in derselben Sitzung: derselbe Name');
+    pruefe((glob($srv . '/*.txt') ?: []) === $txtVorher,
+           'GET schreibt keine Datei ins Anwendungsverzeichnis (E-SR-81)');
+    pruefe(str_contains($s1['get']['rumpf'], "SELECT v FROM app_state WHERE k = 'notzugang_geheim'")
+           && !str_contains($s1['get']['rumpf'], $nwWert()),
+           'GET nennt die Abfrage, aber nie den Wert');
+
+    // b) Der Wert entsteht beim ersten Aufruf, wenn er fehlt.
+    $pdo->exec("DELETE FROM app_state WHERE k = 'notzugang_geheim'");
+    $nwSitzung();
+    $neuWert = $nwWert();
+    pruefe(preg_match('/^[0-9a-f]{64}$/', $neuWert) === 1 && $neuWert !== (string)$nwWertVorher,
+           'fehlt der Wert, legt der erste Aufruf ihn an (64 Hexzeichen)', strlen($neuWert) . ' Zeichen');
+
+    // c) Jede Lage, in der die Tür zu bleibt: gleiche Antwort, gleiche Dauer, nichts geändert.
+    $faelle = [
+        'ohne Datei' => static fn(array $s): array => [],
+        'Datei einer anderen Sitzung' => static function (array $s) use ($nwSitzung, $nwDatei): array {
+            $fremd = $nwSitzung();
+            file_put_contents($nwDatei($fremd['kennung']), '');
+            return ['_ohne_eigene' => true];
+        },
+        'ohne Wert' => static fn(array $s): array => ['wert' => ''],
+        'falscher Wert' => static fn(array $s): array => ['wert' => bin2hex(random_bytes(32))],
+        'zwei BetreiberInnen' => static function (array $s) use ($pdo, $nwZwei): array {
+            $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
+                           VALUES (?, 'Notwegprobe 2', 'betreiberin', '', '', 310000)")->execute([$nwZwei]);
+            return [];
+        },
+        'falsches Passwort' => static fn(array $s): array => ['tokens' => json_encode([(string)$GLOBALS['iter'] => $GLOBALS['nwFalsch']])],
+        /* DANEBEN GENAU EINE ANDERE BETREIBERIN: Ohne sie gäbe es gar keine,
+         * und die Zählung hielte die Tür zu, bevor die Rolle gefragt wird —
+         * der Fall mäße dann die Rolle nicht (gefunden mit der Gegenprobe,
+         * die die Rollenprüfung entfernt: Sie blieb grün). */
+        'Admin-Konto' => static function (array $s) use ($pdo, $nwId, $nwZwei): array {
+            $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ?")->execute([$nwId]);
+            $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
+                           VALUES (?, 'Notwegprobe 2', 'betreiberin', '', '', 310000)")->execute([$nwZwei]);
+            return [];
+        },
+        'unbekannte Adresse' => static fn(array $s): array => ['email' => $GLOBALS['nwNiemand']],
+        'gesperrtes Konto' => static function (array $s) use ($pdo, $nwId): array {
+            $pdo->prepare("UPDATE users SET status = 'gesperrt' WHERE id = ?")->execute([$nwId]);
+            return [];
+        },
+        'Zweitfaktor aus' => static function (array $s) use ($pdo, $nwId): array {
+            $pdo->prepare('UPDATE users SET totp_seit = NULL WHERE id = ?')->execute([$nwId]);
+            return [];
+        },
+    ];
+    $rumpfe = []; $dauern = [];
+    foreach ($faelle as $name => $lage) {
+        $nwZurueck();
+        $s = $nwSitzung();
+        $mehr = $lage($s);
+        $eigene = empty($mehr['_ohne_eigene']) && $name !== 'ohne Datei';
+        unset($mehr['_ohne_eigene']);
+        if ($eigene) { file_put_contents($nwDatei($s['kennung']), ''); }
+        $wertDavor = $nwWert();
+        $r = $nwSenden($s, $mehr + $nwRichtig());
+        $rumpfe[$name] = $nwGleich($r['rumpf']);
+        $dauern[$name] = $r['dauer'];
+        /* zurück in die offene Lage */
+        $pdo->prepare("UPDATE users SET role = 'betreiberin', status = 'aktiv',
+                                        totp_seit = COALESCE(totp_seit, UTC_TIMESTAMP()) WHERE id = ?")
+            ->execute([$nwId]);
+        $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$nwZwei]);
+        $unveraendert = totp_an($nwId) && $nwZurueckgesetzt() === 0 && $nwWert() === $wertDavor
+                     && (!$eigene || is_file($nwDatei($s['kennung'])));
+        pruefe($r['code'] === 200 && str_contains($r['rumpf'], 'Der Notzugang steht für dieses Konto nicht bereit.')
+               && $unveraendert,
+               "{$name}: die eine Antwort, nichts geändert", $r['code'] . sprintf(', %.2f s', $r['dauer']));
+        foreach (glob($nwMuster . '*.txt') ?: [] as $d) { @unlink($d); }
+    }
+    // dazu: angemeldet als Admin (das Hauptkonto der Probe), ohne Datei
+    $nwZurueck();
+    passwort();   // Hauptkonto, Zweitfaktor seit Teil 7 aus → angemeldet
+    $g = http('GET', 'zweitfaktor_notweg.php');
+    $s = ['keks' => $keks, 'csrf' => csrf_von($g['rumpf'])];
+    $r = $nwSenden($s, $nwRichtig());
+    $rumpfe['angemeldet als Admin'] = $nwGleich($r['rumpf']);
+    $dauern['angemeldet als Admin'] = $r['dauer'];
+    pruefe(str_contains($r['rumpf'], 'Der Notzugang steht für dieses Konto nicht bereit.') && totp_an($nwId),
+           'angemeldet als Admin, ohne Datei: dieselbe Antwort — die Seite kennt keine Rolle');
+    $verschiedene = count(array_unique($rumpfe));
+    pruefe($verschiedene === 1, count($rumpfe) . ' Lagen, ' . $verschiedene . ' Rumpf (bis auf Token, Nonce, Namen)',
+           implode(', ', array_keys($rumpfe)));
+    $min = min($dauern); $max = max($dauern);
+    pruefe($min >= 0.35 && $max - $min < 0.15,
+           sprintf('gleiche Dauer: %.3f bis %.3f s (mindestens 0,35 s, Spanne unter 0,15 s)', $min, $max));
+
+    // d) Formular-Token falsch: eigener Satz, zählt nichts.
+    $nwZurueck();
+    $s = $nwSitzung();
+    $r = $nwSenden($s, ['csrf' => 'falsch'] + $nwRichtig());
+    $gezaehlt = (int)$pdo->query("SELECT COALESCE(SUM(versuche), 0) FROM rate_limits WHERE topf = 'notweg'
+                                    AND merkmal = " . $pdo->quote(rate_merkmal_kennung($nwMail)))->fetchColumn();
+    pruefe(str_contains($r['rumpf'], 'Das Formular ist abgelaufen') && $gezaehlt === 0 && totp_an($nwId),
+           'falsches Formular-Token: „abgelaufen", kein Versuch gezählt', (string)$gezaehlt);
+
+    // d2) Felder als Liste statt als Zeichenkette: die eine Antwort, keine Warnung, kein Abbruch.
+    $nwZurueck();
+    $s = $nwSitzung();
+    $r = $nwSenden($s, ['email' => [$nwMail], 'wert' => ['x'], 'tokens' => ['y']]);
+    $warnungen = (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse WHERE id > $nwProtVorher
+                                     AND art IN ('php_warnung', 'php_hinweis', 'ausnahme')")->fetchColumn();
+    pruefe($r['code'] === 200 && str_contains($r['rumpf'], 'Der Notzugang steht für dieses Konto nicht bereit.')
+           && $warnungen === 0 && totp_an($nwId),
+           'Felder als Liste: die eine Antwort, keine Warnung und kein Abbruch im Reiter System',
+           $r['code'] . ', ' . $warnungen . ' Systemzeilen');
+
+    // e) Richtig: Zweitfaktor aus, Protokoll, Mail, Dateien weg, Wert neu.
+    $nwZurueck();
+    $s = $nwSitzung();
+    file_put_contents($nwDatei($s['kennung']), '');
+    $rest = $nwSitzung();
+    file_put_contents($nwDatei($rest['kennung']), '');   // ein liegengebliebener Versuch
+    $wertAlt = $nwWert();
+    $r = $nwSenden($s, $nwRichtig());
+    pruefe($r['code'] === 303 && str_ends_with($r['ort'], 'login.php?ende=notweg'),
+           'richtig: 303 auf login.php?ende=notweg', $r['code'] . ' ' . $r['ort']);
+    pruefe(!totp_an($nwId), 'der Zweitfaktor ist aus');
+    $prot = $pdo->query("SELECT urheber_art, text, daten FROM protokoll_ereignisse WHERE id > $nwProtVorher
+                           AND art = 'totp_zurueckgesetzt' AND betroffen_user_id = $nwId")->fetchAll(PDO::FETCH_ASSOC);
+    pruefe(count($prot) === 1 && (json_decode((string)$prot[0]['daten'], true)['weg'] ?? '') === 'notweg'
+           && $prot[0]['urheber_art'] === 'job' && str_contains((string)$prot[0]['text'], 'Notzugang'),
+           'Protokoll „totp_zurueckgesetzt": weg = notweg, Urheber job (E-SR-86), Text nennt den Notzugang',
+           json_encode($prot));
+    $mails = $pdo->prepare("SELECT text FROM mail_warteschlange WHERE id > ? AND schluessel = 'totp_zurueckgesetzt'
+                              AND empfaenger = ?");
+    $mails->execute([$nwMailVorher, $nwMail]);
+    $mt = $mails->fetchAll(PDO::FETCH_COLUMN);
+    pruefe(count($mt) === 1 && str_contains((string)$mt[0], 'Notzugang zurückgesetzt worden'),
+           'Mail „totp_zurueckgesetzt" eingereiht, mit dem Satz des Notzugangs', (string)count($mt));
+    pruefe(!is_file($nwDatei($s['kennung'])) && !is_file($nwDatei($rest['kennung'])),
+           'beide Dateien des Musters sind weg, auch die liegengebliebene');
+    $wertNeu = $nwWert();
+    pruefe(preg_match('/^[0-9a-f]{64}$/', $wertNeu) === 1 && $wertNeu !== $wertAlt,
+           'in app_state steht ein anderer Wert als davor');
+    $l = http('GET', 'login.php?ende=notweg');
+    pruefe(str_contains($l['rumpf'], 'über den Notzugang zurückgesetzt'), 'die Anmeldung sagt, was geschah');
+    $keks = [];
+    $lg = http('GET', 'login.php');
+    $a = http('POST', 'login.php', ['csrf' => csrf_von($lg['rumpf']), 'email' => $nwMail,
+                                    'tokens' => json_encode([(string)$iter => $nwToken])]);
+    $b = http('GET', 'index.php');
+    pruefe($a['code'] === 302 && $b['code'] === 302 && str_ends_with($b['ort'], 'zweitfaktor.php'),
+           'danach: Anmeldung mit dem Passwort, dann das Einrichtungstor', $a['code'] . ' / ' . $b['code'] . ' ' . $b['ort']);
+
+    // f) Der alte Wert gilt nicht mehr.
+    $beg = totp_einrichtung_beginnen($nwId);
+    totp_einrichtung_abschliessen($nwId, totp_code((string)($beg['geheimnis'] ?? ''), time()));
+    $nwZurueck();
+    $s = $nwSitzung();
+    file_put_contents($nwDatei($s['kennung']), '');
+    $r = $nwSenden($s, ['wert' => $wertAlt] + $nwRichtig());
+    pruefe(totp_an($nwId) && str_contains($r['rumpf'], 'Der Notzugang steht für dieses Konto nicht bereit.'),
+           'derselbe Weg mit dem ALTEN Wert: abgewiesen, Zweitfaktor bleibt an');
+
+    // g) Sechs Fehlversuche → der Topf sperrt.
+    $nwZurueck();
+    $letzte = null;
+    for ($i = 0; $i < 6; $i++) {
+        $s = $nwSitzung();
+        $letzte = $nwSenden($s, ['wert' => ''] + $nwRichtig());
+    }
+    $gesperrt = (int)$pdo->query("SELECT COUNT(*) FROM rate_limits WHERE topf = 'notweg' AND gesperrt_bis > UTC_TIMESTAMP()
+                                    AND merkmal = " . $pdo->quote(rate_merkmal_kennung($nwMail)))->fetchColumn();
+    pruefe($gesperrt === 1 && str_contains((string)$letzte['rumpf'], 'Zu viele Versuche für diese Adresse'),
+           'sechs Fehlversuche: Topf „notweg" sperrt, die Seite sagt bis wann', (string)$gesperrt);
+} finally {
+    $nwAufraeumen();
+    $rollen = $nwAndere === [] ? [] : $pdo->query('SELECT role FROM users WHERE id IN ('
+                                                  . implode(',', $nwAndere) . ')')->fetchAll(PDO::FETCH_COLUMN);
+    pruefe(array_unique($rollen) === ($nwAndere === [] ? [] : ['betreiberin'])
+           && app_state_lesen('notzugang_geheim') === $nwWertVorher
+           && (glob($nwMuster . '*.txt') ?: []) === [],
+           'aufgeräumt: BetreiberInnen zurück, Wert wie vorher, keine Datei');
 }
 
 echo "\n$gut ok, $schlecht fehlen\n";
