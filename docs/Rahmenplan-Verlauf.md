@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 153 | 05.10.2026 | 18-Abschluss | Erledigt-Zeile 18 (PR #95, #101, `0cbc19d`), Fahrplan ohne 18, Konzept gelöscht; 6.1: `update.php`, Tag `web-v21.14.0`, Prüfliste SR. Berichtigt: Als offen nannten der Fahrplan #95, der Kopf #100 und 6.1 Migrationen auf Staging — dort gelaufen (Lauf 101). |
 | 152 | 30.09.2026 | PK-08, Zuarbeit | Erste App-Tags: `android-v0.17.0` liegt auf Produktiv und installiert sich als Update (P-PK-39, -41); `uhr-v3.1.0` gebaut, der Store-Upload wartet auf den Portal-Eintrag (P-PK-42, jetzt 6.2). Nr. 361 neu. |
 | 151 | 29.09.2026 | PK-08, Zuarbeit | Z14 eingetragen; Uhr-Probelauf grün (P-PK-40), Android-Probelauf rot am Auslesen des Zertifikats (F-PK-56) — berichtigt, neu zu fahren. Die Zeile in 6.1 sagt es. |
 | 150 | 29.09.2026 | PK, Nachtrag | Nach dem Merge von #96: Lauf 101 grün in 4:07 (P-PK-21), die Wache sprang an (P-PK-38), Stufe 2 ohne Demo-Konto (P-PK-19) — PK-M2 erreicht (E-PK-65). Die Zeile in 6.1 hält nur noch P-PK-37 und -18. |
