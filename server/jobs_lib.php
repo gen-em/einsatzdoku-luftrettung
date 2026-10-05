@@ -324,6 +324,21 @@ function jobs_katalog(): array
             'rueckstand'   => 'protokoll_archiv_rueckstand',
             'lauf'         => 'protokoll_archiv_job',
         ],
+        /* DER SCHLUESSELWECHSEL STEHT VOR DEM VERSAND (Schritt 18, SR-03,
+         * E-SR-09): Ein umgehuelltes Archiv des Protokolls bekommt einen
+         * neuen Namen und geht so noch im selben Lauf hinaus — mit ihm hat das
+         * Ziel eine Kopie unter dem neuen Schluessel. Ohne Wechsel kostet er
+         * eine Abfrage (`serverschluessel_zustand()`) und ist fertig. */
+        'schluesselwechsel' => [
+            'titel'        => 'Serverschlüssel umhüllen',
+            'beschreibung' => 'Nur während eines Wechsels: Zugänge der Backup-Ziele, '
+                            . 'Zweitfaktor-Geheimnisse, Konto-Backups und Archive des '
+                            . 'Protokolls vom bisherigen auf den neuen Serverschlüssel '
+                            . 'umhüllen und jedes Stück mit dem neuen nachweisen',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_schluesselwechsel_rueckstand',
+            'lauf'         => 'job_schluesselwechsel',
+        ],
         /* DER VERSAND STEHT NACH DEM SICHERN UND VOR `waisen` (S2/AP7).
          * Nach dem Sichern, weil er schickt, was jenes erzeugt hat — in
          * derselben Reihenfolge kommt ein frisches Paket noch im selben Lauf
@@ -712,6 +727,14 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             require_once __DIR__ . '/sitzung_lib.php';
             $zahlen['sitzungen'] = sitzung_aufraeumen(
                 SESSION_TIMEOUT_S + SITZUNG_KARENZ_S);
+        },
+        /* GEMERKTE GERAETE (Schritt 18, SR-02, E-SR-07). Hygiene, kein
+         * Schutz: Eine abgelaufene Zeile oeffnet ohnehin nichts mehr, weil
+         * `zweitfaktor_geraet_erkannt()` die Dauer beim Pruefen rechnet
+         * (E-SR-17). Die Arbeit steht in `totp_lib.php`, neben dem Rest. */
+        'Gemerkte Geräte' => function (PDO $pdo) use (&$zahlen): void {
+            require_once __DIR__ . '/totp_lib.php';
+            $zahlen['geraete'] = zweitfaktor_geraete_aufraeumen($pdo);
         },
         'Sperrliste gelöschter Kennungen' => function (PDO $pdo): void {
             $pdo->exec('DELETE FROM deleted_refs
@@ -1894,4 +1917,23 @@ function job_komplett_rueckstand(PDO $pdo, array $zustand): ?int
 {
     require_once __DIR__ . '/komplett_lib.php';
     return komp_rueckstand_aus($zustand);
+}
+
+/* ---- Der Wechsel des Serverschluessels (Schritt 18, SR-03) ---------------
+ *
+ * Die Arbeit steht in `schluesselwechsel_lib.php`; hier nur der Anschluss an
+ * den Katalog, geladen erst im Rumpf wie bei den anderen schweren Jobs. */
+
+function job_schluesselwechsel(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/schluesselwechsel_lib.php';
+    $e = sw_haeppchen($pdo, $zustand, $zeitLinks);
+    return ['zustand' => $zustand, 'erledigt' => $e['erledigt'], 'fertig' => $e['fertig']];
+}
+
+/** Wie viele Stuecke stehen noch aus? `null`, wenn kein Wechsel laeuft. */
+function job_schluesselwechsel_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    require_once __DIR__ . '/schluesselwechsel_lib.php';
+    return sw_rueckstand($zustand);
 }

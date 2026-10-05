@@ -11,6 +11,7 @@ require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
  * auth_guard.php und muss die beiden Bibliotheken deshalb selbst holen. */
 require_once __DIR__ . '/serverkrypto_lib.php';
 require_once __DIR__ . '/demo_lib.php';
+require_once __DIR__ . '/totp_lib.php';      // zweitfaktor_geraete_vergessen() (SR-02)
 
 /**
  * Passwort setzen — die einzige Stelle, an der ein Passwort ueber einen
@@ -222,6 +223,15 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
              * anders drin ist. */
             $pdo->prepare('UPDATE users SET session_epoch = session_epoch + 1 WHERE id = ?')
                 ->execute([(int)$row['user_id']]);
+            /* DIE GEMERKTEN GERAETE GEHEN MIT (Schritt 18, SR-02, E-SR-07) —
+             * derselbe Anlass wie der Zaehler darueber, und in derselben
+             * Transaktion: Scheitert das Loeschen, ist auch das Passwort
+             * nicht gesetzt, und „Speichern fehlgeschlagen" stimmt. Hinter
+             * der Transaktion hiesse ein Fehler hier: Passwort neu, Meldung
+             * falsch, und der gemerkte Browser des Fremden gilt weiter.
+             * `db_transaktion()` haengt sich an die laufende an, und
+             * `protokoll()` faengt seine eigenen Fehler. */
+            zweitfaktor_geraete_vergessen((int)$row['user_id'], 'passwort_reset');
             });
             $done = true;
 

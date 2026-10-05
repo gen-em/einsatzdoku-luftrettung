@@ -3491,6 +3491,96 @@ function migrationen_katalog(): array
                           MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP");
         },
     ],
+    [
+        'id'    => '2026_09_28_vertraute_geraete',
+        'web'   => '21.8',
+        'label' => 'vertraute_geraete — „Gerät merken" beim Zweitfaktor (Schritt 18, SR-02); dazu der Wert des Notzugangs',
+        /* GEMERKTE GERAETE (Schritt 18, SR-02, E-SR-07). Eine Zeile je
+         * gemerktem Browser: der SHA-256 des Cookies `EDGERAET`, das Konto,
+         * wann gemerkt, wann zuletzt benutzt. KEIN User-Agent, KEIN
+         * Geraetename (R36). Gueltig ist eine Zeile, solange `angelegt_am`
+         * plus die heutige Dauer der Rollengruppe in der Zukunft liegt
+         * (E-SR-17); der Aufraeumjob loescht die abgelaufenen.
+         *
+         * DERSELBE TEXT WIE IN `schema.sql`, Zeichen fuer Zeichen in Spalten,
+         * Schluesseln und Fremdschluessel. KEINE PROBE HAELT DAS FEST: Die
+         * Schemaprobe spielt `schema.sql` auf vier Fassungen ein und prueft
+         * die Vorabliste, vergleicht aber migriert und frisch nicht (hier
+         * stand bis Web 21.10.0 das Gegenteil, F-SR-28; Nr. 353). Gemessen
+         * wurde es beim Bau von Hand — `SHOW CREATE TABLE` ohne den Zaehler
+         * `AUTO_INCREMENT`, zeichengleich (Pruefdokument SR).
+         *
+         * UND DER WERT DES NOTZUGANGS (E-SR-24): `app_state.notzugang_geheim`,
+         * 32 Zufallsbyte hex. Er gehoert zu SR-04 und steht hier, damit jenes
+         * Paket ohne eigene Migration auskommt — so hat es das Konzept
+         * entschieden. Eine frische Anlage (Migration `skipped`) legt ihn beim
+         * ersten Aufruf des Notzugangs an. `INSERT IGNORE`: Ein vorhandener
+         * Wert wird nie ueberschrieben. */
+        'skip'  => function (PDO $pdo): bool {
+            if (!db_hat_tabelle($pdo, 'vertraute_geraete')) { return false; }
+            $st = $pdo->prepare('SELECT COUNT(*) FROM app_state WHERE k = ?');
+            $st->execute(['notzugang_geheim']);
+            return (int)$st->fetchColumn() === 1;
+        },
+        'run'   => function (PDO $pdo): void {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS vertraute_geraete (
+                id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                user_id     INT UNSIGNED NOT NULL,
+                token_hash  CHAR(64) NOT NULL,
+                angelegt_am DATETIME NOT NULL,
+                zuletzt_am  DATETIME NULL,
+                UNIQUE KEY uq_vertraute_geraete_token (token_hash),
+                KEY idx_konto (user_id),
+                CONSTRAINT fk_vertraute_geraete_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            $pdo->prepare('INSERT IGNORE INTO app_state (k, v) VALUES (?, ?)')
+                ->execute(['notzugang_geheim', bin2hex(random_bytes(32))]);
+        },
+    ],
+    [
+        'id'    => '2026_09_28_passkeys',
+        'web'   => '21.10',
+        'label' => 'passkeys — Passkeys als zweiter Faktor (Schritt 18, SR-09)',
+        /* PASSKEYS (Schritt 18, SR-09, E-SR-29 bis -33). Eine Zeile je
+         * Authenticator: die Kennung (Base64url, ascii_bin) mit ihrem SHA-256
+         * als eindeutigem Schluessel, die Adresse (`rp_id`), der oeffentliche
+         * Schluessel als SPKI, das Verfahren, der Zaehler, eine Bezeichnung,
+         * drei Zeitpunkte. Mit dem Konto weg (Kaskade).
+         *
+         * GEAENDERT AN ORT UND STELLE mit der Gegenlesung H-SR-08 (Web
+         * 21.11.0): `credential_hash`, `rp_id`, `gewarnt_am` dazu, der
+         * eindeutige Schluessel vom Text auf den Hash (F-SR-41, -42, -36).
+         * Erlaubt, weil 21.10.0 nirgends ausgeliefert war — keine Anlage
+         * traegt die erste Fassung; die oertliche ist neu eingespielt.
+         *
+         * DERSELBE TEXT WIE IN `schema.sql`, Zeichen fuer Zeichen in Spalten,
+         * Schluesseln und Fremdschluessel. KEINE PROBE HAELT DAS FEST: Die
+         * Schemaprobe spielt `schema.sql` auf vier Fassungen ein und prueft
+         * die Vorabliste, vergleicht aber migriert und frisch nicht (hier
+         * stand bis Web 21.10.0 das Gegenteil, F-SR-28; Nr. 353). Gemessen
+         * wurde es beim Bau von Hand — `SHOW CREATE TABLE` ohne den Zaehler
+         * `AUTO_INCREMENT`, zeichengleich (Pruefdokument SR). */
+        'skip'  => fn(PDO $pdo): bool => db_hat_tabelle($pdo, 'passkeys'),
+        'run'   => function (PDO $pdo): void {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS passkeys (
+              id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              user_id         INT UNSIGNED NOT NULL,
+              credential_id   VARCHAR(1364) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+              credential_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+              rp_id           VARCHAR(253) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+              oeffentlich     TEXT NOT NULL,
+              alg             SMALLINT NOT NULL,
+              zaehler         INT UNSIGNED NOT NULL DEFAULT 0,
+              bezeichnung     VARCHAR(40) NOT NULL DEFAULT '',
+              angelegt_am     DATETIME NOT NULL,
+              zuletzt_am      DATETIME NULL,
+              gewarnt_am      DATETIME NULL,
+              UNIQUE KEY uq_passkeys_credential (credential_hash),
+              KEY idx_konto (user_id, rp_id),
+              CONSTRAINT fk_passkeys_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        },
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

@@ -57,6 +57,11 @@ server/ueberlast.json
 server/.sitzungen/
 server/install-nachweis-*.txt
 server/wiederher-nachweis-*.txt
+# Die Nachweisdatei des Notzugangs (Schritt 18, SR-04) legt die BetreiberIn
+# per FTP an; die Zweitfaktorprobe legt sie oertlich an. Ohne diese Zeile
+# ginge eine liegengebliebene Datei mit `git add -A` in den Baum des
+# Pruefberichts ein, und Bericht und Commit gingen auseinander.
+server/zweitfaktor-notweg-*.txt
 
 # Arbeitsablage fuer Workflow-Skripte (Bestandsaufnahmen). Sie muessen im
 # Arbeitsverzeichnis liegen, damit das Werkzeug sie lesen darf — gehoeren aber

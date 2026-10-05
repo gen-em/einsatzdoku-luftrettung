@@ -15,15 +15,21 @@ declare(strict_types=1);
  * `app_state` von Hand verstellt. Hier werden sie hergestellt, gemessen und
  * wieder zurueckgestellt.
  *
- * SIE FASST DIE INSTALLATION AN — ZWEIMAL, UND BEIDES WIRD ZURUECKGELEGT:
+ * SIE FASST DIE INSTALLATION AN — DREIMAL, UND ALLES WIRD ZURUECKGELEGT:
  *
  *   1. `app_state.kdf_anteil_kennung`. Der Wert wird vor dem Lauf gelesen und
  *      im `finally` wiederhergestellt — auch bei einem Abbruch. War er vorher
  *      nicht da, wird die Zeile geloescht.
- *   2. `server/config.php`. Nur Teil D (Schreibweg) fasst sie an, und nur
- *      dann, wenn `--schreiben` mitgegeben wird. Vorher wird eine Kopie
- *      angelegt, hinterher wird sie zurueckgeschoben und byteweise
- *      verglichen; die Probe sagt die Zahl.
+ *   2. `server/config.php`. Die Teile B, C und E stellen ihre Lagen IN DER
+ *      DATEI her (`konfig_stellen()`, seit Schritt 15 — bis zum 29.09.2026
+ *      stand hier „nur Teil D", und das stimmte seitdem nicht mehr); das
+ *      `finally` legt sie byte-gleich zurueck. Teil E ruft
+ *      `anteil_wechseln()` und `anteil_neuanfang()` (seit der Nachpruefung
+ *      von H-SR-06, F-SR-86), die ueber den Schreibweg der Anwendung schreiben
+ *      (`config_eintrag_schreiben()`); Teil D prueft diesen Schreibweg
+ *      selbst, und nur mit `--schreiben`.
+ *   3. Die zwei Marken des Schluesselblatts (`schluesselblatt_bestaetigt_am`,
+ *      `schluesselblatt_neu_weil`) — Teil E, im `finally` zurueck.
  *
  * **Auf einer Installation mit Betrieb nicht fahren.** Fuer die Dauer des
  * Laufs steht in `app_state` eine fremde Kennung, und angemeldete Sitzungen
@@ -50,6 +56,7 @@ $schreib = in_array('--schreiben', array_slice($argv, 1), true);
 require_once $wurzel . '/db.php';
 require_once __DIR__ . '/../../sandbox/konfig_stellen.php';
 require_once $wurzel . '/serverkrypto_lib.php';
+require_once $wurzel . '/einstieg_lib.php';
 
 /* ---- Buchfuehrung -------------------------------------------------------- */
 
@@ -79,6 +86,8 @@ const B_HEX = 'ffeeddccbbaa99887766554433221100'
             . 'ffeeddccbbaa99887766554433221100';
 
 $merke = schluessel_marke_lesen('kdf_anteil_kennung');
+$merkeBlatt = [BLATT_BESTAETIGT_K => app_state_lesen(BLATT_BESTAETIGT_K),
+               BLATT_NEU_WEIL_K   => app_state_lesen(BLATT_NEU_WEIL_K)];
 printf("Anteilprobe — %s\n", date('c'));
 printf("  app_state.kdf_anteil_kennung vorher: %s\n",
        $merke === null ? '(nicht gesetzt)' : $merke);
@@ -286,6 +295,62 @@ stelle(A_HEX, null); marke($kA);
 pruefe('(8) ohne alten Wert ist es schlicht bereit',
        anteil_zustand(true)['stand'], 'bereit');
 
+/* DERSELBE WERT ZWEIMAL IST EINE WAISE, KEINE ROTATION (Nachpruefung H-SR-06,
+ * F-SR-86) — eine Rotation, die zwischen ihren beiden Schreibschritten
+ * abbrach. Bis dahin hiess sie „Rotation" mit sich selbst und sperrte den
+ * Wechsel des Serverschluessels. */
+stelle(A_HEX, A_HEX); marke($kA);
+$zw = anteil_zustand(true);
+pruefe('(8a) kdf_anteil_alt = kdf_anteil: bereit, ohne alte Kennung',
+       [$zw['stand'], $zw['kennung_alt']], ['bereit', null]);
+
+/* ---- E. Die Rotation macht das Blatt faellig (Nr. 233, E-SR-11) ---------- */
+
+teil('E. anteil_wechseln() setzt die Rueckfrage zum Blatt zurueck');
+
+/* BIS WEB 21.12.0 FASSTE DIE ROTATION DIE MARKE NICHT AN: Wer den Anteil
+ * wechselte, wurde erst im naechsten Quartal gefragt, ob das neue Blatt
+ * gedruckt ist — mit einem alten Blatt in der Akte, das den heutigen Wert
+ * nicht mehr traegt. Hergestellt wird hier „Blatt eben bestaetigt", dann
+ * die Rotation ueber die Funktion der Anwendung (sie schreibt config.php;
+ * das `finally` legt die Datei zurueck). */
+stelle(A_HEX, null); marke($kA);
+anteil_zustand(true);
+app_state_setzen(BLATT_BESTAETIGT_K, gmdate('Y-m-d H:i:s'));
+app_state_loeschen(BLATT_NEU_WEIL_K);
+pruefe('(E0) vorher: Blatt bestaetigt, nicht faellig', blatt_faellig(), false);
+[$okE, $wasE] = anteil_wechseln();
+pruefe('(E1) anteil_wechseln() gelingt', $okE, true);
+pruefe('(E2) danach ist die Bestaetigung geloescht', app_state_lesen(BLATT_BESTAETIGT_K), null);
+pruefe('(E3) und die Rueckfrage faellig', blatt_faellig(), true);
+pruefe('(E4) mit dem Grund „anteil"', blatt_neu_weil(), 'anteil');
+blatt_bestaetigt();
+pruefe('(E5) die Antwort raeumt den Grund weg', blatt_neu_weil(), null);
+
+/* EINE WAISE WIRD UEBERSCHRIEBEN (F-SR-86): Die Rotation geht durch, der
+ * bisherige ist der Wert von vorher. */
+stelle(A_HEX, A_HEX); marke($kA);
+anteil_zustand(true);
+[$okW, $wasW] = anteil_wechseln();
+pruefe('(E6) anteil_wechseln() ueber einer Waise gelingt, der bisherige ist A',
+       [$okW, strtolower((string)konfig('kdf_anteil_alt', ''))], [true, A_HEX]);
+blatt_bestaetigt();
+
+/* AUCH DER NEUANFANG MACHT DAS BLATT FAELLIG (F-SR-82; gemessen erst mit der
+ * Nachpruefung von H-SR-06, F-SR-86 — bis dahin bliebe ein Rueckbau der
+ * Zeile gruen). Hergestellt wird die Lage „abweichend" ueber die Marke. */
+stelle(A_HEX, null); marke('deadbeef');
+pruefe('(E7) vorher: Lage abweichend', anteil_zustand(true)['stand'], 'abweichend');
+app_state_setzen(BLATT_BESTAETIGT_K, gmdate('Y-m-d H:i:s'));
+app_state_loeschen(BLATT_NEU_WEIL_K);
+[$okN, $wasN] = anteil_neuanfang();
+pruefe('(E8) anteil_neuanfang() gelingt', $okN, true);
+pruefe('(E9) danach: Bestaetigung geloescht, Grund „anteil", Marke auf dem neuen',
+       [app_state_lesen(BLATT_BESTAETIGT_K), blatt_neu_weil(),
+        schluessel_marke_lesen('kdf_anteil_kennung') === $wasN],
+       [null, 'anteil', true]);
+blatt_bestaetigt();
+
 /* ---- D. Der Schreibweg in config.php ------------------------------------- */
 
 if ($schreib) {
@@ -348,7 +413,7 @@ if ($schreib) {
     }
 } else {
     teil('D. config_eintrag_schreiben() — NICHT gefahren');
-    echo "  (ohne --schreiben wird config.php nicht angefasst)\n";
+    echo "  (ohne --schreiben wird der Schreibweg nicht eigens geprueft)\n";
 }
 
 } finally {
@@ -357,6 +422,9 @@ if ($schreib) {
      * Sitzung von ihrem Anteil aus — und zwar still. */
     $zurueckKonfig();
     marke($merke);
+    foreach ($merkeBlatt as $k => $v) {
+        if ($v === null) { app_state_loeschen($k); } else { app_state_setzen($k, $v); }
+    }
     printf("\napp_state.kdf_anteil_kennung zurueckgestellt auf: %s\n",
            $merke === null ? '(nicht gesetzt)' : $merke);
 }

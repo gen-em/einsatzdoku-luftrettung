@@ -117,6 +117,17 @@ $koppelSitzung = null; $koppelWarten = null;
 $dlgFehler = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    /* EIN FRISCHER CODE VOR DEM AUSSCHALTEN (Schritt 18, SR-07, E-SR-20), vor
+     * dem Token wie ein Rollentor. Nur, wo Ausschalten ueberhaupt geht: Einer
+     * Pflichtrolle erst den Code abzuverlangen und dann „Pflicht" zu sagen,
+     * waere ein Umweg ins Nein. */
+    if (($_POST['action'] ?? '') === 'zf_ausschalten' && !rolle_braucht_zweitfaktor($userRole)) {
+        zweitfaktor_frisch_verlangen('totp_ausschalten');
+    }
+    /* Ebenso vor dem Entfernen eines Passkeys (SR-09, E-SR-31). */
+    if (($_POST['action'] ?? '') === 'passkey_entfernen') {
+        zweitfaktor_frisch_verlangen('passkey_entfernen');
+    }
     csrf_check();
     $action = $_POST['action'] ?? '';
 
@@ -404,6 +415,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $zfZurueck = ['error', 'Der Zweitfaktor ist nicht eingeschaltet.'];
             }
+        } elseif ($action === 'zf_geraete_vergessen') {
+            /* „ALLE VERGESSEN" (SR-02, E-SR-07): nur am eigenen Konto — die
+             * Kontoseite der Verwaltung setzt den Zweitfaktor zurueck, und
+             * das vergisst mit. Das Cookie dieses Browsers geht mit; ohne
+             * Zeile ist es ohnehin nur noch ein Zufallswert. */
+            $n = zweitfaktor_geraete_vergessen($userId, 'vergessen');
+            sitzung_cookie_loeschen('geraet');
+            $zfZurueck = ['notice', $n > 0
+                ? 'Gemerkte Geräte vergessen (' . $n . '). Die nächste Anmeldung fragt '
+                  . 'überall wieder nach dem Code.'
+                : 'Es war kein Gerät gemerkt.'];
         } elseif ($action === 'zf_ausschalten') {
             if ($zfPflicht) {
                 $zfZurueck = ['error', 'Für deine Rolle ist der Zweitfaktor Pflicht — '
@@ -419,6 +441,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: einstellungen.php?t=profil#k-zweitfaktor');
             exit;
         }
+    }
+
+    /* ---- Einen Passkey entfernen (Schritt 18, SR-09, E-SR-31, -33) --------
+     *
+     * NUR AM EIGENEN KONTO — `pk_entfernen()` fragt Kennung UND Konto. Die
+     * Verwaltung entfernt keine einzelnen: Ihr „Zweitfaktor zurücksetzen"
+     * nimmt alle mit (`totp_abschalten()`). Protokoll und Mail wie beim
+     * Anlegen: Ein Faktor, der verschwindet, soll nicht still verschwinden. */
+    if ($action === 'passkey_entfernen') {
+        require_once __DIR__ . '/passkey_lib.php';
+        $pkId = (int)($_POST['id'] ?? 0);
+        $pkZeile = array_values(array_filter(pk_liste($userId), static fn(array $p): bool => $p['id'] === $pkId));
+        if ($pkZeile !== [] && pk_entfernen($userId, $pkId)) {
+            $pkName = pk_anzeigename($pkZeile[0]);
+            require_once __DIR__ . '/protokoll_lib.php';
+            protokoll('verwaltung', 'passkey_entfernt', 'Passkey entfernt: ' . $pkName,
+                      ['weg' => 'selbst', 'passkey' => $pkId], $userId);
+            require_once __DIR__ . '/mail_lib.php';
+            mail_einreihen('passkey_entfernt', (string)($row['email'] ?? ''),
+                           ['link' => app_url('/einstellungen.php?t=profil'), 'bezeichnung' => $pkName]);
+            flash_setzen('notice', 'Passkey „' . $pkName . '" entfernt.');
+        } else {
+            flash_setzen('error', 'Diesen Passkey gibt es nicht (mehr).');
+        }
+        header('Location: einstellungen.php?t=profil#k-zweitfaktor');
+        exit;
     }
 
     if ($action === 'password') {
@@ -497,8 +545,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Passwort und Huelle gemeinsam — sonst entstuende ein Konto, das
             // sich zwar anmelden laesst, dessen Angaben aber unlesbar waeren.
             try {
+                require_once __DIR__ . '/totp_lib.php';
+                $geraeteWeg = 0;
                 $_SESSION['epoch'] = db_transaktion(db(), function (PDO $pdo) use (
-                        $newTok, $newSalt, $newIter, $userId, $patReady, $wrapPw, $keyChk): int {
+                        $newTok, $newSalt, $newIter, $userId, $patReady, $wrapPw, $keyChk,
+                        &$geraeteWeg): int {
                 /* Sitzungszaehler mit erhoehen (M1-09/D6).
                  *
                  * Wer sein Passwort wechselt, weil er Missbrauch vermutet,
@@ -547,6 +598,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                WHERE user_id = ? AND used_at IS NULL')
                     ->execute([$userId]);
 
+                /* DIE GEMERKTEN GERAETE GEHEN MIT (Schritt 18, SR-02,
+                 * E-SR-07), aus demselben Grund wie der Zaehler oben: Wer
+                 * sein Passwort wechselt, weil er Missbrauch vermutet, will
+                 * den anderen draussen haben — ein gemerkter Browser des
+                 * Fremden ueberdauerte den Wechsel sonst, wie einst die
+                 * Sitzung (M1-09).
+                 *
+                 * IN DERSELBEN TRANSAKTION, damit „Es wurde nichts geaendert"
+                 * stimmt, wenn es scheitert: Hinter der Transaktion hiesse ein
+                 * Fehler hier, dass das Passwort gewechselt ist, die Seite das
+                 * Gegenteil meldet und der Browser den neuen Schluessel nicht
+                 * uebernimmt. `db_transaktion()` haengt sich an die laufende
+                 * an, und `protokoll()` faengt seine eigenen Fehler. */
+                $geraeteWeg = zweitfaktor_geraete_vergessen($userId, 'passwort');
+
                 /* Die EIGENE Sitzung zieht den neuen Stand mit und bleibt
                  * bestehen (Abnahmekriterium A5: "alle ANDEREN Sitzungen").
                  * Der Browser hat den neuen Datenschluessel in diesem Moment
@@ -557,9 +623,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return (int)$st2->fetchColumn();
                 });
 
+                /* Auch das Geraetecookie DIESES Browsers: Er hat sich mit
+                 * dem alten Passwort als bekannt ausgewiesen. */
+                sitzung_cookie_loeschen('geraet');
                 $notice = 'Passwort geändert. Alle anderen offenen Sitzungen dieses '
                         . 'Kontos sind damit beendet; noch offene Links zum '
-                        . 'Zurücksetzen sind ungültig.';
+                        . 'Zurücksetzen sind ungültig.'
+                        . ($geraeteWeg > 0 ? ' Gemerkte Geräte sind vergessen — die nächste '
+                                           . 'Anmeldung fragt wieder nach dem Code.' : '');
                 /* Signal fuer das Browser-Skript (M2-07): Erst JETZT darf es
                  * den neuen Datenschluessel uebernehmen. */
                 $pwGewechselt = true;
@@ -1597,6 +1668,24 @@ ui_seite_start(['titel' => 'Einstellungen',
                   'klein' => $zfLeer($zfBenutzt) . ' benutzt — neue Codes machen die alten ungültig',
                   'plaketten' => ui_plakette($zf['codes_offen'] . ' von ' . $zf['codes_alle'],
                                              ['ton' => 'blau'])]);
+        /* GEMERKTE GERAETE (SR-02, E-SR-07, -15, -17): Zahl und „Alle
+           vergessen". Der Knopf gehoert zum Formular `f-zf-geraete` unter
+           der Karte (`form=`), weil die Zeile in keinem Formular steht.
+           Vor `update.php` fehlt die Zeile — die Tabelle gibt es noch nicht. */
+        if (zweitfaktor_geraete_da()) {
+            $zfTage = zweitfaktor_geraet_dauer($userRole);
+            ui_zeile(['text' => 'Gemerkte Geräte',
+                      'klein' => $zfTage > 0
+                          ? 'dort fragt die Anmeldung ' . $zfTage . ($zfTage === 1 ? ' Tag' : ' Tage')
+                            . ' lang keinen Code — der Haken steht im Code-Schritt'
+                          : 'auf dieser Anlage für deine Rolle abgeschaltet',
+                      'plaketten' => ui_plakette((string)$zf['geraete'],
+                                                 ['ton' => $zf['geraete'] > 0 ? 'blau' : 'neutral']),
+                      'aktionen' => $zf['geraete'] > 0
+                          ? ui_knopf(['text' => 'Alle vergessen', 'art' => 'leise',
+                                      'attr' => ' form="f-zf-geraete" data-confirm="Alle gemerkten Geräte vergessen? Die nächste Anmeldung fragt dort wieder nach dem Code — auch an diesem." data-confirm-ok="Vergessen" data-confirm-tone="normal"'])
+                          : '']);
+        }
         /* DER RUECKWEG (Konzept RW, E-RW-07; M-RW-01 Bild 4): die dritte
            Zeile. Nur hier, bei eingeschaltetem Zweitfaktor — ausgeschaltet
            hat das Paar keinen Verbraucher. Vor `update.php` ('spalten')
@@ -1613,15 +1702,99 @@ ui_seite_start(['titel' => 'Einstellungen',
                                . 'die Verwaltung zurück',
                       'plaketten' => ui_plakette('ab der nächsten Anmeldung')]);
         }
+        /* PASSKEYS (Schritt 18, SR-09; E-SR-29, -31): ein weiteres Verfahren
+           dieses Faktors, deshalb hier und nur bei eingeschaltetem
+           Zweitfaktor. Vorhandene Bausteine (E-SR-15): eine Zeile je
+           Passkey, ein Feld, ein Knopf. „Hinzufügen" nur mit FRISCHEM Code —
+           sonst der Verweis auf die Bestätigung, damit die Reihenfolge zu
+           sehen ist, bevor der Dialog der Plattform aufgeht (E-SR-31); der
+           Endpunkt prüft es noch einmal. Die Herausforderung entsteht hier,
+           beim Aufbau, und gilt zehn Minuten einmal. Ohne taugliche Adresse
+           (keine Domain, kein HTTPS) oder vor `update.php` fehlt der
+           Abschnitt ganz (E-SR-42). */
+        require_once __DIR__ . '/passkey_lib.php';
+        $pkDa = pk_verfuegbar();
+        if ($pkDa) {
+            /* NUR DIE DER HEUTIGEN ADRESSE ZAEHLEN UND GELTEN (E-SR-48,
+               F-SR-41). Passkeys einer frueheren Adresse (nach einem Umzug
+               oder einem Komplett-Stand von anderswo) stehen darunter, als
+               nicht nutzbar gekennzeichnet, mit „Entfernen". */
+            $pkAlle  = pk_liste($userId);
+            $pkListe = array_values(array_filter($pkAlle, static fn(array $p): bool => $p['hier']));
+            $pkFremd = array_values(array_filter($pkAlle, static fn(array $p): bool => !$p['hier']));
+            ui_zeile(['text' => 'Passkeys',
+                      'klein' => $pkListe
+                          ? 'ersetzen bei der Anmeldung den Code — mit Fingerabdruck, Gesicht, PIN oder Sicherheitsschlüssel'
+                          : 'noch keiner — ein Passkey ersetzt bei der Anmeldung den Code',
+                      'plaketten' => ui_plakette(count($pkListe) . ' von ' . PK_HOECHSTENS,
+                                                 ['ton' => $pkListe ? 'blau' : 'neutral'])]);
+            foreach ($pkListe as $pk) {
+                $pkName = pk_anzeigename($pk);
+                ui_zeile(['text' => $pkName,
+                          'klein' => 'hinzugefügt ' . datum_text($pk['angelegt_am'])
+                                   . ($pk['zuletzt_am'] !== null
+                                        ? ' · zuletzt benutzt ' . datum_zeit_text($pk['zuletzt_am'])
+                                        : ' · noch nicht benutzt'),
+                          'aktionen' => ui_knopf(['text' => 'Entfernen', 'art' => 'leise',
+                              'attr' => ' form="f-pk-' . $pk['id'] . '" data-confirm="Passkey „'
+                                      . e($pkName) . '" entfernen? Die Anmeldung fragt dort danach wieder nach dem Code." '
+                                      . 'data-confirm-ok="Entfernen" data-confirm-tone="normal"'])]);
+            }
+            foreach ($pkFremd as $pk) {
+                $pkName = pk_anzeigename($pk);
+                ui_zeile(['text' => $pkName,
+                          'klein' => 'gilt für ' . $pk['rp_id'] . ' — hier nicht nutzbar',
+                          'plaketten' => ui_plakette('andere Adresse'),
+                          'aktionen' => ui_knopf(['text' => 'Entfernen', 'art' => 'leise',
+                              'attr' => ' form="f-pk-' . $pk['id'] . '" data-confirm="Passkey „'
+                                      . e($pkName) . '" entfernen? Er gilt nur für ' . e($pk['rp_id']) . '." '
+                                      . 'data-confirm-ok="Entfernen" data-confirm-tone="normal"'])]);
+            }
+            if (count($pkListe) < PK_HOECHSTENS && zweitfaktor_frisch()) {
+                $pkAblage = ['konto' => $userId];
+                pk_herausforderung_stellen($pkAblage);
+                $_SESSION['passkey_reg'] = $pkAblage;
+                $pkU = pk_ursprung(); ?>
+      <div data-passkey-anlegen hidden
+           data-pk-herausforderung="<?= e($pkAblage['herausforderung']) ?>"
+           data-pk-rp-id="<?= e($pkU['rp_id']) ?>" data-pk-rp-name="<?= e(instanz_kurz()) ?>"
+           data-pk-nutzer="<?= e(pk_b64u(pack('J', $userId))) ?>"
+           data-pk-name="<?= e((string)($row['email'] ?? '')) ?>"
+           data-pk-kennungen="<?= e((string)json_encode(array_column($pkListe, 'kennung'))) ?>">
+        <?php ui_feld(['name' => 'pk_bezeichnung', 'label' => 'Bezeichnung (optional)',
+                       'platzhalter' => 'z. B. Handy oder Laptop',
+                       'attr' => ' maxlength="' . PK_BEZEICHNUNG_MAX . '" autocomplete="off"']); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Passkey hinzufügen', 'art' => 'neutral', 'typ' => 'button',
+                        'symbol' => 'plus', 'attr' => ' data-passkey-knopf']) ?>
+        </div>
+        <div data-passkey-zustand></div>
+      </div>
+<?php
+            } elseif (count($pkListe) < PK_HOECHSTENS) { ?>
+      <p class="feld-klein"><a href="zweitfaktor.php?bestaetigen=1&amp;zurueck=<?=
+        e(rawurlencode('einstellungen.php?t=profil#k-zweitfaktor')) ?>">Zuerst Code bestätigen</a> —
+        dann lässt sich ein Passkey hinzufügen (15 Minuten lang).</p>
+<?php
+            }
+        }
         /* DAS GEHEIMNIS IST NICHT ZU OEFFNEN, wenn die Anlage einen anderen
            Serverschluessel hat als bei der Einrichtung (Wiederanlauf,
-           eingespieltes Komplett-Backup). Die Anmeldung geht dann nur noch
-           mit Wiederherstellungscodes; das soll hier stehen und nicht erst
-           beim naechsten Anmelden auffallen. */
+           eingespieltes Komplett-Backup). Die Anmeldung geht dann mit
+           Wiederherstellungscodes und Passkeys (E-SR-49); das soll hier
+           stehen und nicht erst beim naechsten Anmelden auffallen. */
         if (totp_geheimnis($userId) === null) {
-            ui_meldung(null, $zfPflicht
+            /* PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL (E-SR-49) — sie
+               bleiben hier der Weg hinein; Ausschalten oder Zuruecksetzen
+               nimmt sie aber mit (H-SR-08, F-SR-38), und das soll man
+               vorher lesen. */
+            $pkNoch = !empty($pkListe);
+            ui_meldung(null, ($zfPflicht
                 ? 'Die Verwaltung muss ihn zurücksetzen; danach richtest du ihn neu ein.'
-                : 'Schalte ihn aus und richte ihn neu ein.', 'info', '      ',
+                : 'Schalte ihn aus und richte ihn neu ein.')
+                . ($pkNoch ? ' Bis dahin meldest du dich mit deinem Passkey an; das '
+                           . ($zfPflicht ? 'Zurücksetzen' : 'Ausschalten') . ' nimmt ihn mit — lege ihn danach neu an.' : ''),
+                'info', '      ',
                 ['auftakt_fehler' => 'Das Geheimnis lässt sich auf dieser Anlage nicht öffnen.']);
         }
         if ($zfPflicht): ?>
@@ -1642,10 +1815,21 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?php if (!$zfPflicht): ?>
           <?= ui_knopf(['text' => 'Ausschalten', 'art' => 'leise', 'name' => 'action',
                         'wert' => 'zf_ausschalten',
-                        'attr' => ' data-confirm="Zweitfaktor ausschalten? Die Anmeldung fragt danach wieder nur nach dem Passwort; die Codes werden ungültig." data-confirm-ok="Ausschalten"']) ?>
+                        'attr' => ' data-confirm="Zweitfaktor ausschalten? Die Anmeldung fragt danach wieder nur nach dem Passwort; die Codes und deine Passkeys werden ungültig." data-confirm-ok="Ausschalten"']) ?>
           <?php endif; ?>
         </div>
       </form>
+      <?php if (zweitfaktor_geraete_da() && $zf['geraete'] > 0): ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor" id="f-zf-geraete" hidden>
+        <?= csrf_field() ?><input type="hidden" name="action" value="zf_geraete_vergessen">
+      </form>
+      <?php endif; ?>
+      <?php if ($pkDa): foreach ($pkAlle as $pk): ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor" id="f-pk-<?= (int)$pk['id'] ?>" hidden>
+        <?= csrf_field() ?><input type="hidden" name="action" value="passkey_entfernen">
+        <input type="hidden" name="id" value="<?= (int)$pk['id'] ?>">
+      </form>
+      <?php endforeach; endif; ?>
 <?php elseif (demo_ist_demo($userId)): ?>
       <p class="feld-hinweis">Im Demo-Konto lässt sich der Zweitfaktor nicht einschalten — die Zugangsdaten sind öffentlich und müssen es bleiben.</p>
 <?php else: ?>
@@ -1662,6 +1846,9 @@ ui_seite_start(['titel' => 'Einstellungen',
     <?php foreach (ZF_SKRIPTE as $zfSkript): ?>
     <script src="<?= asset($zfSkript) ?>"></script>
     <?php endforeach; ?>
+    <?php if (!empty($pkDa)): ?>
+    <script src="<?= asset('assets/passkey.js') ?>"></script>
+    <?php endif; ?>
 <?php endif; ?>
 
     <dialog class="dialog" id="dlg-schluessel" data-schluessel>

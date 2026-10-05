@@ -476,6 +476,19 @@ function demo_zweitfaktor_leeren(PDO $pdo, int $id): void
         $pdo->prepare('UPDATE users SET rw_oeffentlich = NULL, rw_privat = NULL,
                               rw_seit = NULL WHERE id = ?')->execute([$id]);
     }
+    /* DIE GEMERKTEN GERAETE (Schritt 18, SR-02, E-SR-07) — dieselbe
+     * Ueberlegung: Das Demo-Konto hat keinen Zweitfaktor, also nichts zu
+     * merken; steht trotzdem etwas da, raeumt der Reset es ab. Eigene
+     * Vorabfrage, weil die Tabelle mit einer eigenen Migration kommt. */
+    if (db_hat_tabelle($pdo, 'vertraute_geraete')) {
+        $pdo->prepare('DELETE FROM vertraute_geraete WHERE user_id = ?')->execute([$id]);
+    }
+    /* DIE PASSKEYS (SR-09, E-SR-29) — ein Verfahren desselben Faktors, also
+     * dieselbe Regel: Der Endpunkt nimmt vom Demo-Konto keinen an; steht
+     * trotzdem einer da, raeumt der Reset ihn ab. */
+    if (db_hat_tabelle($pdo, 'passkeys')) {
+        $pdo->prepare('DELETE FROM passkeys WHERE user_id = ?')->execute([$id]);
+    }
 }
 
 /**

@@ -86,6 +86,18 @@ $fehlerAuftakt = '';
 $rwWeg = ($_GET['weg'] ?? '') === 'schluessel';
 $rwErfolg = false;
 $rwZustellung = null;
+/* DER HALBE STAND IST GEBUNDEN (Schritt 18, SR-01, E-SR-04, Nr. 242). Er
+ * traegt Konto, Adresse, fuenf Minuten Passwortnachweis und die
+ * Herausforderung des Rueckwegs — eine gelesene Sitzungsdatei darf auch ihn
+ * nicht tragen. Ohne passende Bindung endet er wie ein abgelaufener: Stand
+ * weg, Vormerkfach raeumen, Hinweis. Das deckt Code- und Schluesselschritt
+ * zugleich, weil beide erst unten ueber `$halb` gehen. */
+if ($halb !== null && !sitzung_bindung_ok()) {
+    $hinweis = $abgelaufen;
+    unset($_SESSION['totp_halb']);
+    $halb = null;
+    $vergessen = true;
+}
 if ($halb !== null && (isset($_GET['abbrechen']) || (int)($halb['bis'] ?? 0) < time())) {
     if (!isset($_GET['abbrechen'])) { $hinweis = $abgelaufen; }
     unset($_SESSION['totp_halb']);
@@ -255,6 +267,10 @@ function login_zugang(array $u, float $t0, bool $vollstaendig): void
 function anmeldung_vollenden(array $u, bool $istDemoAdresse): void
 {
     session_regenerate_id(true);
+    /* DIE BINDUNG WECHSELT MIT DER KENNUNG (Schritt 18, SR-01, E-SR-04):
+     * neu gewuerfelt, nicht die des halben Stands weitergereicht. Erst Cookie
+     * und Hash machen die Sitzung zur Anmeldung — die Datei allein nicht. */
+    sitzung_binden();
     /* Auch das Formular-Token wird neu gezogen (Backlog Nr. 127). Die
        Sitzungskennung wechselt eine Zeile darueber gegen die
        Sitzungsuebernahme; ein Token, das der Angreifer vor der
@@ -274,6 +290,11 @@ function anmeldung_vollenden(array $u, bool $istDemoAdresse): void
     // Alte Sitzungsbremse aufraeumen: Auf Rechnern, die vor dieser
     // Fassung angemeldet waren, liegen die beiden Werte noch herum.
     unset($_SESSION['login_fails'], $_SESSION['login_last'], $_SESSION['role']);
+    /* DER FRISCHE CODE BEGINNT BEI NULL (Schritt 18, SR-07, E-SR-20). Nur der
+     * Code-Schritt setzt ihn, NACH dieser Funktion; eine Anmeldung ueber ein
+     * gemerktes Geraet oder den Rueckweg erbt keine Frist aus einer frueheren
+     * Anmeldung in derselben Sitzungsdatei. */
+    unset($_SESSION['zf_frisch_bis']);
     /* DIE ANKUENDIGUNG KOMMT MIT JEDER ANMELDUNG WIEDER (P5c/AP1,
      * E-P5c-13). Wer sie auf DIESER Seite geschlossen hat, schloss sie
      * fuer die Sitzung vor dem Anmelden — und `session_regenerate_id()`
@@ -395,10 +416,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         $kontoId  = (int)$halb['konto'];
         $merkmale = [rate_merkmal_kennung((string)$halb['email'])];
         $mitRc    = ($_POST['art'] ?? '') === 'rc';
+        /* DER PASSKEY IST DER DRITTE WEG (Schritt 18, SR-09, E-SR-32): Die
+         * Antwort kommt als Feld `passkey_antwort` in denselben Schritt, im
+         * selben Topf `totp`, und der Erfolg laeuft durch denselben Zweig —
+         * Art `passkey` zaehlt unten wie `app` (Geraet merken, frischer
+         * Code). Die Herausforderung liegt im halben Stand und gilt einmal. */
+        /* Ein Feld, das kein Text ist (`passkey_antwort[]=x`), ist eine leere
+         * Antwort — kein `(string)` mit PHP-Warnung im Reiter System
+         * (Nachpruefung von H-SR-08, B-1). */
+        $pkFeld   = $_POST['passkey_antwort'] ?? '';
+        $mitPk    = !$mitRc && $pkFeld !== '';
         $pr = ['ok' => false];
         if (rate_erlaubt('totp', null, $merkmale)) {
-            $pr = totp_anmeldung_pruefen($kontoId,
-                    (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''), $mitRc ? 'code' : 'app');
+            if ($mitPk) {
+                require_once __DIR__ . '/passkey_lib.php';
+                $pkAblage = is_array($halb['passkey'] ?? null) ? $halb['passkey'] : [];
+                unset($_SESSION['totp_halb']['passkey']);
+                if (!pk_ablage_passt($pkAblage, $kontoId)) { $pkAblage = []; }
+                /* HOECHSTENS PK_ANTWORT_MAX (H-SR-08, F-SR-35): Eine riesige
+                 * Antwort endete sonst im Speicherfehler statt in einer
+                 * Ablehnung — vor der Signaturpruefung, fuer jeden mit dem
+                 * Passwort. */
+                $pkRoh = is_string($pkFeld) ? $pkFeld : '';
+                $pkAntwort = strlen($pkRoh) <= PK_ANTWORT_MAX ? json_decode($pkRoh, true) : null;
+                $pkR = pk_anmeldung_pruefen($kontoId, $pkAblage, is_array($pkAntwort) ? $pkAntwort : []);
+                $pr = $pkR['ok'] ? ['ok' => true, 'art' => 'passkey']
+                                 : ['ok' => false, 'art' => null, 'passkey' => $pkR['art']];
+            } else {
+                $pr = totp_anmeldung_pruefen($kontoId,
+                        (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''), $mitRc ? 'code' : 'app');
+            }
             if ($pr['ok']) {
                 rate_erfolg('totp', null, $merkmale);
                 $u = login_zeile('id', $kontoId);
@@ -406,6 +453,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                     login_zugang($u, $t0, true);
                     unset($_SESSION['totp_halb']);
                     anmeldung_vollenden($u, !empty($halb['demo']));
+                    /* GERAET MERKEN NUR NACH EINEM CODE AUS DER APP (SR-02,
+                     * E-SR-18): Ein Wiederherstellungscode heisst, das Handy
+                     * fehlte — dann ist der Browser vor der Betroffenen nicht
+                     * als ihrer ausgewiesen. Der Haken steht deshalb nur im
+                     * App-Formular, und diese Zeile fragt die Art noch einmal:
+                     * ein handgebautes `merken=1` am anderen Feld zaehlt nicht.
+                     * Ein Passkey zaehlt wie ein App-Code (SR-09, E-SR-32). */
+                    if (in_array($pr['art'], ['app', 'passkey'], true) && ($_POST['merken'] ?? '') === '1') {
+                        zweitfaktor_geraet_merken($kontoId);
+                    }
+                    /* DER CODE IST FRISCH (SR-07, E-SR-20) — nach App-Code,
+                     * Wiederherstellungscode und Passkey gleich (E-SR-32):
+                     * Alle drei zeigen, dass gerade jemand den Faktor in der
+                     * Hand hat. Die Liste der
+                     * Handlungen, die ihn verlangen, steht in `db.php`. */
+                    $_SESSION['zf_frisch_bis'] = time() + ZF_FRISCH_S;
                     if ($pr['art'] === 'code') {
                         /* Ein Wiederherstellungscode heisst: Das Handy fehlte.
                          * Das gehoert ins Protokoll — nach dem Anlegen der
@@ -418,7 +481,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                     }
                     header('Location: index.php'); exit;
                 }
-            } else {
+            } elseif (!in_array($pr['passkey'] ?? '', ['herausforderung', 'zaehler'], true)) {
+                /* KEIN FEHLVERSUCH (H-SR-08, F-SR-37): eine abgelaufene oder
+                 * von einem zweiten Reiter verdraengte Herausforderung — hier
+                 * wurde nichts geprueft, wie beim Rueckweg — und ein
+                 * zurueckgelaufener Zaehler bei GUELTIGER Signatur. Zaehlte
+                 * das, sperrten fuenf solche Faelle das Konto mit „zu viele
+                 * falsche Codes", ohne dass jemand einen Code getippt hat. */
                 rate_misserfolg('totp', null, $merkmale);
             }
         }
@@ -431,9 +500,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $halb = null;
             $vergessen = true;
         } elseif (!$pr['ok'] && !empty($pr['geheimnis_fehlt'])) {
+            /* PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL (E-SR-49, F-SR-44):
+             * Hat das Konto einen fuer diese Adresse, ist er hier der
+             * bequemste Weg hinein — der Satz sagt es. */
+            require_once __DIR__ . '/passkey_lib.php';
             $fehlerAuftakt = 'Der Code lässt sich hier nicht prüfen.';
             $error = 'Der Zweitfaktor wurde mit einem anderen Serverschlüssel eingerichtet. '
-                   . 'Nimm einen Wiederherstellungscode oder bitte die Verwaltung, ihn zurückzusetzen.';
+                   . (pk_verfuegbar() && pk_zahl($kontoId) > 0
+                        ? 'Nimm deinen Passkey oder einen Wiederherstellungscode — oder bitte die Verwaltung, ihn zurückzusetzen.'
+                        : 'Nimm einen Wiederherstellungscode oder bitte die Verwaltung, ihn zurückzusetzen.');
+        } elseif (!$pr['ok'] && ($pr['passkey'] ?? '') === 'herausforderung') {
+            $fehlerAuftakt = 'Die Anfrage ist abgelaufen.';
+            $error = 'Bitte noch einmal „Mit Passkey bestätigen" — oder den Code aus der App nehmen.';
+        } elseif (!$pr['ok'] && ($pr['passkey'] ?? '') === 'zaehler') {
+            $fehlerAuftakt = 'Der Passkey wurde abgewiesen.';
+            $error = 'Er wurde zuletzt auf einem anderen Gerät benutzt — vielleicht eine Kopie. Nimm den Code '
+                   . 'aus der App; warst du das nicht, entferne ihn unter Einstellungen → Profil.';
+        } elseif (!$pr['ok'] && !empty($pr['passkey'])) {
+            $fehlerAuftakt = 'Der Passkey wurde nicht angenommen.';
+            $error = 'Nimm den Code aus der App — oder versuche es noch einmal.';
         } elseif (!$pr['ok'] && $mitRc) {
             $fehlerAuftakt = 'Der Code passt nicht.';
             $error = 'Jeder Wiederherstellungscode gilt einmal — ein benutzter ist verbraucht.';
@@ -727,8 +812,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * Stand gar nicht erst: Er liefe nach fünf Minuten ab, die Sperre
              * erst nach fünfzehn. Die Meldung sagt es gleich hier. */
             $mitCode = totp_an((int)$u['id']);
-            login_zugang($u, $t0, !$mitCode);
-            if (!$mitCode) {
+            /* EIN GEMERKTES GERAET ERSETZT DEN CODE (Schritt 18, SR-02,
+             * E-SR-07, -17). Nach dem Passwort und VOR dem halben Stand:
+             * `zweitfaktor_geraet_erkannt()` verlangt das Cookie `EDGERAET`,
+             * eine Zeile DIESES Kontos und eine Dauer, die heute noch gilt —
+             * gerechnet beim Pruefen, so dass „aus" sofort aus ist. Die
+             * Anmeldung ist damit vollstaendig: Passwort und Besitz. */
+            $gemerkt = $mitCode && zweitfaktor_geraet_erkannt((int)$u['id']);
+            login_zugang($u, $t0, !$mitCode || $gemerkt);
+            if (!$mitCode || $gemerkt) {
                 anmeldung_vollenden($u, $istDemoAdresse);
                 header('Location: index.php'); exit;
             }
@@ -737,6 +829,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                 $_SESSION['totp_halb'] = ['konto' => (int)$u['id'], 'email' => $email,
                                           'bis' => time() + TOTP_HALB_FRIST_S,
                                           'demo' => $istDemoAdresse];
+                sitzung_binden();   // SR-01: auch der halbe Stand (Kopf der Datei)
                 header('Location: login.php', true, 303); exit;
             }
             [$error, $sperreRest] = login_code_sperre($merkmale);
@@ -790,6 +883,24 @@ if ($halb !== null && $rwWeg && $rwAngeboten) {
     $halb = $_SESSION['totp_halb'];
 } else {
     $rwWeg = false;
+}
+/* DER PASSKEY IM CODE-SCHRITT (Schritt 18, SR-09, E-SR-32): nur im Formular
+ * des App-Codes (dort steht der Haken „Geraet merken"), nur wenn das Konto
+ * Passkeys hat und die Anlage eine taugliche Adresse. Die Herausforderung
+ * liegt im halben Stand wie die des Rueckwegs, neu bei jedem Aufbau, fuenf
+ * Minuten — so lange wie der halbe Stand selbst. */
+$pkLogin = null;
+if ($halb !== null && !$rwWeg && ($_GET['art'] ?? $_POST['art'] ?? '') !== 'rc') {
+    require_once __DIR__ . '/passkey_lib.php';
+    if (pk_verfuegbar() && pk_zahl((int)$halb['konto']) > 0) {
+        $pkAblage = [];
+        pk_herausforderung_stellen($pkAblage, 300, (int)$halb['konto']);
+        $_SESSION['totp_halb']['passkey'] = $pkAblage;
+        $halb = $_SESSION['totp_halb'];
+        $pkLogin = ['herausforderung' => $pkAblage['herausforderung'],
+                    'rp_id' => pk_ursprung()['rp_id'],
+                    'kennungen' => pk_kennungen((int)$halb['konto'])];
+    }
 }
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
 ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
@@ -872,6 +983,17 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
     <p class="feld-hinweis">Angemeldet als <strong><?= e((string)$halb['email']) ?></strong> — <?=
       $rc ? 'kein Handy zur Hand?' : 'es fehlt noch der Code aus deiner App.' ?></p>
     <?php ui_meldung(null, $error, 'info', '    ', ['auftakt_fehler' => $fehlerAuftakt]); ?>
+    <?php if ($pkLogin !== null): /* SR-09: verborgen, bis passkey.js den Browser kennt */ ?>
+    <div data-passkey-bestaetigen hidden data-pk-formular="passkeyform"
+         data-pk-herausforderung="<?= e($pkLogin['herausforderung']) ?>"
+         data-pk-rp-id="<?= e($pkLogin['rp_id']) ?>"
+         data-pk-kennungen="<?= e((string)json_encode($pkLogin['kennungen'])) ?>">
+      <?= ui_knopf(['text' => 'Mit Passkey bestätigen', 'art' => 'neutral', 'breit' => true,
+                    'typ' => 'button', 'attr' => ' data-passkey-knopf']) ?>
+      <div data-passkey-zustand></div>
+      <p class="feld-klein">oder der Code aus der App:</p>
+    </div>
+    <?php endif; ?>
     <?php if ($rc) {
         ui_feld(['name' => 'rc', 'label' => 'Wiederherstellungscode', 'klasse' => 'feld-code',
                  'platzhalter' => 'XXXX XXXX',
@@ -882,11 +1004,28 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
         ui_feld(['name' => 'code', 'label' => 'Code aus der App', 'klasse' => 'feld-code',
                  'platzhalter' => '000 000',
                  'attr' => ' inputmode="numeric" autocomplete="one-time-code" autofocus required']);
+        /* DER HAKEN „GERAET MERKEN" (SR-02, E-SR-15, -17, -18): nur hier,
+           im Formular des App-Codes, und nur, wenn die Rollengruppe eine
+           Dauer hat. Die Zahl steht im Text — sie ist die Einstellung der
+           Anlage fuer diese Rolle, nicht eine Wahl der Person. */
+        $zfTage = zweitfaktor_geraete_da() ? zweitfaktor_geraet_dauer_konto((int)$halb['konto']) : 0;
+        if ($zfTage > 0) {
+            ui_schalter(['name' => 'merken', 'id' => 'sw-merken',
+                         'label' => 'Dieses Gerät ' . $zfTage . ($zfTage === 1 ? ' Tag' : ' Tage') . ' merken',
+                         'klein' => 'Dann fragt die Anmeldung hier keinen Code. Nicht an einem Rechner, '
+                                  . 'den andere mitbenutzen.']);
+        }
     } ?>
     <div class="listen-form-fuss">
       <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
     </div>
   </form>
+  <?php if ($pkLogin !== null): ?>
+  <form method="post" id="passkeyform" hidden>
+    <?= csrf_field() ?><input type="hidden" name="schritt" value="code">
+    <input type="hidden" name="passkey_antwort" value=""><input type="hidden" name="merken" value="">
+  </form>
+  <?php endif; ?>
   <?php /* DER DRITTE VERWEIS (Konzept RW, E-RW-01; M-RW-01 Bild 1) — auch
            aus dem Schritt „Wiederherstellungscode", weil dort steht, wer
            die Codes nicht mehr hat. Nur, wenn der Weg angeboten wird; sonst
@@ -1177,4 +1316,4 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
 <?php /* Fusszeile auf JEDER Seite, auch vor der Anmeldung (R32, E-P3-14) —
          dunkel, weil sie hier auf der dunkelblauen Flaeche liegt. */ ?>
 <?php ui_fuss_seite(['dunkel' => true]); ?>
-<?php ui_seite_ende(); ?>
+<?php ui_seite_ende(['skripte' => $pkLogin !== null ? ['assets/passkey.js'] : []]); ?>

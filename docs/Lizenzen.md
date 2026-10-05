@@ -106,7 +106,7 @@ Pfaden gehört nicht ins Repositorium.
 
 | Bibliothek | Version | Lizenz | Verzeichnis | wofür |
 |---|---|---|---|---|
-| **phpseclib** | 3.0.57 | MIT | `vendor/phpseclib3/` | Der SFTP-Adapter der Backup-Ziele (S2/AP7); seit Web 20.43.0 **zweiter Verwender**: die Prüfung der Signaturen des Rückwegs beim Zweitfaktor (`rueckweg_lib.php`, ECDSA P-256 aus `Crypt/EC/`, Konzept RW) |
+| **phpseclib** | 3.0.57 | MIT | `vendor/phpseclib3/` | Der SFTP-Adapter der Backup-Ziele (S2/AP7); seit Web 20.43.0 **zweiter Verwender**: die Prüfung der Signaturen des Rückwegs beim Zweitfaktor (`rueckweg_lib.php`, ECDSA P-256 aus `Crypt/EC/`, Konzept RW); seit Web 21.10.0 **dritter**: die Passkeys (`passkey_lib.php`, WebAuthn — `Crypt/EC/` für ES256, `Crypt/RSA/` für RS256, COSE → SPKI über `PublicKeyLoader`; Schritt 18, SR-09). Keine Datei mehr im Paket als vorher (338) |
 | **constant_time_encoding** | 2.7.0 | MIT | `vendor/ParagonIE/ConstantTime/` | Von phpseclib vorausgesetzt (genau eine Stelle: `Common/Functions/Strings.php`); seit Web 20.42.0 auch unmittelbar: Base32 des Zweitfaktor-Geheimnisses (`totp_lib.php`, P5c/AP5) |
 | **Parsedown** | 1.7.4 | MIT | `vendor/Parsedown.php` | Rendert `docs/Handbuch.md` und `docs/Was-ist-NAdoku.md` für `hilfe.php` und `ueber.php` (P5b/AP8) |
 
@@ -132,10 +132,16 @@ Verschärfung: Eine Liste prüft jede Datei, ein Kopfkommentar behauptet etwas
 **Warum überhaupt eine Fremdbibliothek und nicht `ext/ssh2`:** Die Erweiterung
 ist auf geteiltem Webspace praktisch nie vorhanden und lässt sich dort nicht
 nachinstallieren. phpseclib ist reines PHP und läuft überall, wo diese
-Anwendung läuft. Geladen wird der Lader `vendor/laden.php` von **drei**
+Anwendung läuft. Geladen wird der Lader `vendor/laden.php` von **vier**
 Stellen: dem SFTP-Adapter (`sicherungsziel_lib.php`, erst beim Aufbau einer
-Verbindung), `totp_lib.php` (Base32, seit Web 20.42.0) und
-`rueckweg_lib.php` (ECDSA, seit Web 20.43.0). Bis Web 20.42.0 stand hier
+Verbindung), `totp_lib.php` (Base32, seit Web 20.42.0),
+`rueckweg_lib.php` (ECDSA, seit Web 20.43.0) und `passkey_lib.php`
+(WebAuthn, seit Web 21.10.0). **Warum für die Passkeys keine
+WebAuthn-Bibliothek:** Was dafür gebraucht wird, lag zu vier Fünfteln schon
+im Haus — `rw_pruefen()` ist der Kern einer Assertion; es fehlte ein
+CBOR-Leser für vier Typen. Eine WebAuthn-Bibliothek brächte
+Attestation-Ketten, Metadaten-Dienste und ein Dutzend Formate mit, die hier
+niemand braucht (Konzept SR, E-SR-30). Bis Web 20.42.0 stand hier
 „nur vom SFTP-Adapter" — AP5 hatte den zweiten Lader nicht nachgetragen
 (Konzept RW, F-RW-11). **Warum phpseclib und nicht `openssl_verify()`
 unmittelbar für den Rückweg:** phpseclib nimmt `openssl`, wo es geht, und

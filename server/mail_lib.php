@@ -347,6 +347,60 @@ function mail_katalog(): array
                 . 'verdrängt. Bitte alte Backups entfernen, die Aufbewahrung senken oder die '
                 . 'Grenze erhöhen.'),
         ],
+        /* DER WECHSEL DES SERVERSCHLUESSELS (Schritt 18, SR-03, E-SR-22,
+         * E-SR-62): bei Beginn und bei Abschluss an JEDES Konto der Rolle
+         * BetreiberIn (`mail_betreiberinnen()`), nur Kennungen, nie Werte. Wer
+         * den Wechsel nicht ausgeloest hat, erfaehrt so, dass an den
+         * Sicherungen der Anlage etwas geschehen ist — und die Regel zum
+         * bisherigen Blatt (E-SR-10) steht dort, wo sie gelesen wird, bevor
+         * jemand Papier vernichtet.
+         *
+         * ZWEI SCHLUESSEL SEIT WEB 21.12.1 (H-SR-06, F-SR-82): Eine offene
+         * Mail desselben Schluessels an dieselbe Adresse gilt beim
+         * Einreihen als ueberholt. Mit einem gemeinsamen verschwand eine
+         * Beginn-Mail, die noch auf ihren naechsten Versuch wartete, mit dem
+         * Abschluss — gerade die mit „Warst du das nicht". `weg` sagt, ob
+         * der Wechsel ueber die Karte kam oder von Hand in config.php stand
+         * (E-SR-74). */
+        'serverschluessel_gewechselt' => [
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['neu', 'alt', 'link'],
+            'betreff' => fn(array $d): string => (($d['weg'] ?? 'oberflaeche') === 'hand'
+                ? 'Serverschlüssel-Wechsel in config.php vorgefunden — '
+                : 'Serverschlüssel gewechselt — ') . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                (($d['weg'] ?? 'oberflaeche') === 'hand'
+                    ? "in der Konfiguration der " . $n . " steht ein Wechsel des Serverschlüssels,\n"
+                      . "dessen Beginn nicht über die Karte vermerkt ist: neu Kennung " . $d['neu'] . ",\n"
+                      . "bisher " . $d['alt'] . ". Entweder hat ihn jemand von Hand in config.php\n"
+                      . "eingetragen, oder der Beginn über die Karte ist gescheitert — dann steht es\n"
+                      . "im Reiter System.\n"
+                    : "der Serverschlüssel der " . $n . " ist gewechselt worden: neu Kennung\n"
+                      . $d['neu'] . ", bisher " . $d['alt'] . ".\n")
+                . "Die Anlage hüllt jetzt in Häppchen um, was sie erreicht, und weist jedes\n"
+                . "Stück mit dem neuen nach.\n\n"
+                . "Was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen. Das bisherige\n"
+                . "Schlüsselblatt NICHT vernichten, sondern als „bisheriger Serverschlüssel,\n"
+                . "Kennung " . $d['alt'] . "“ in der Betriebsakte behalten. Das Blatt gehört neu\n"
+                . "gedruckt; die Rückfrage dazu kommt bei der nächsten Anmeldung.\n\n"
+                . $d['link'],
+                "Warst du das nicht, sieh bitte sofort unter Betrieb → Servereinstellungen nach."),
+        ],
+        'serverschluessel_abgeschlossen' => [
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['neu', 'alt', 'link'],
+            'betreff' => fn(array $d): string => 'Serverschlüssel-Wechsel abgeschlossen — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "der Wechsel des Serverschlüssels der " . $n . " ist abgeschlossen: Der\n"
+                . "bisherige (Kennung " . $d['alt'] . ") steht nicht mehr in der Konfiguration, alles\n"
+                . "auf dem Server liegt unter dem neuen (Kennung " . $d['neu'] . ").\n\n"
+                . "Was auf dem Backup-Ziel liegt, öffnet weiterhin nur der bisherige. Das\n"
+                . "bisherige Schlüsselblatt bleibt deshalb in der Betriebsakte — als „bisheriger\n"
+                . "Serverschlüssel, Kennung " . $d['alt'] . "“ —, bis das Ziel nichts mehr unter\n"
+                . "ihm trägt.\n\n"
+                . "Das Wiederanlaufpaket gehört erneuert: Die config.php darin trägt noch den\n"
+                . "bisherigen Schlüssel. Eine frische hineinlegen und die alte als „bisherig“\n"
+                . "kennzeichnen.\n\n"
+                . $d['link']),
+        ],
         'backup_faellig' => [
             'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['kern'],
             'betreff' => fn(array $d): string => 'Backups fällig — ' . $n,
@@ -451,23 +505,44 @@ function mail_katalog(): array
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Zweitfaktor zurückgesetzt — ' . $n,
             /* DER ERSTE SATZ HÄNGT AM WEG (Konzept RW, RW-03, E-RW-14): Die
-             * Verwaltung (E-P5c-42) oder der Wiederherstellungsschlüssel am
-             * Code-Schritt. `weg` ist kein Pflichtwert — fehlt er, bleibt der
-             * Satz der Verwaltung stehen, wörtlich wie seit Web 20.42.0. */
+             * Verwaltung (E-P5c-42), der Wiederherstellungsschlüssel am
+             * Code-Schritt oder — seit Schritt 18, SR-04 — der Notzugang der
+             * einzigen BetreiberIn. `weg` ist kein Pflichtwert — fehlt er,
+             * bleibt der Satz der Verwaltung stehen, wörtlich wie seit
+             * Web 20.42.0. Der Notzugang nennt, was er verlangt hat: Wer die
+             * Mail bekommt, ohne es gewesen zu sein, weiß dann, dass jemand
+             * Webspace, Datenbank UND Passwort hatte. */
             'text' => fn(array $d): string => mail_rahmen('Hallo,',
-                (($d['weg'] ?? '') === 'schluessel'
-                    ? "der Zweitfaktor deines Kontos bei der " . $n . " ist mit dem\n"
-                    . "Wiederherstellungsschlüssel vom Notfallblatt zurückgesetzt worden. Die Anmeldung\n"
-                    . "fragt ab jetzt nur nach dem Passwort; deine\n"
-                    : "die Verwaltung der " . $n . " hat den Zweitfaktor deines Kontos\n"
-                    . "zurückgesetzt. Die Anmeldung fragt ab jetzt nur nach dem Passwort; deine\n")
-                . "Wiederherstellungscodes und ein gedrucktes Codeblatt gelten nicht mehr.\n\n"
+                match ($d['weg'] ?? '') {
+                    'schluessel' => "der Zweitfaktor deines Kontos bei der " . $n . " ist mit dem\n"
+                        . "Wiederherstellungsschlüssel vom Notfallblatt zurückgesetzt worden. Die Anmeldung\n"
+                        . "fragt ab jetzt nur nach dem Passwort; deine\n",
+                    'notweg'     => "der Zweitfaktor deines Kontos bei der " . $n . " ist über den\n"
+                        . "Notzugang zurückgesetzt worden — mit einer Datei im Anwendungsverzeichnis,\n"
+                        . "dem Wert aus der Datenbank und deinem Passwort. Die Anmeldung fragt ab\n"
+                        . "jetzt nur nach dem Passwort; deine\n",
+                    default      => "die Verwaltung der " . $n . " hat den Zweitfaktor deines Kontos\n"
+                        . "zurückgesetzt. Die Anmeldung fragt ab jetzt nur nach dem Passwort; deine\n",
+                }
+                . "Wiederherstellungscodes, ein gedrucktes Codeblatt und deine Passkeys gelten\n"
+                . "nicht mehr.\n\n"
                 . "Richte ihn nach der nächsten Anmeldung unter Einstellungen → Profil neu ein —\n"
                 . "für Support, Admin und BetreiberIn geschieht das beim Anmelden von selbst:\n\n"
                 . $d['link'],
-                (($d['weg'] ?? '') === 'schluessel' ? "Falls du das nicht warst" : "Falls du darum nicht gebeten hast")
-                . ", melde dich bitte umgehend bei der Verwaltung\n"
-                . "und ändere dein Passwort."),
+                /* BEIM NOTZUGANG GIBT ES KEINE VERWALTUNG, BEI DER MAN SICH
+                 * MELDEN KOENNTE — er steht nur offen, wenn es genau eine
+                 * BetreiberIn gibt, und das ist die Empfaengerin. Wer die Mail
+                 * bekommt, ohne es gewesen zu sein, muss stattdessen wissen,
+                 * welche drei Zugaenge offen lagen. */
+                match ($d['weg'] ?? '') {
+                    'notweg'     => "Falls du das nicht warst: Jemand hatte Zugang zum Webspace, zur\n"
+                        . "Datenbank und zu deinem Passwort. Ändere sofort dein Passwort und die\n"
+                        . "Zugänge beim Hoster.",
+                    'schluessel' => "Falls du das nicht warst, melde dich bitte umgehend bei der Verwaltung\n"
+                        . "und ändere dein Passwort.",
+                    default      => "Falls du darum nicht gebeten hast, melde dich bitte umgehend bei der Verwaltung\n"
+                        . "und ändere dein Passwort.",
+                }),
         ],
 
         /* DER RÜCKWEG IST ERNEUERT (Konzept RW, RW-02, E-RW-06). Nur beim
@@ -486,6 +561,54 @@ function mail_katalog(): array
                 . $d['link'],
                 "Falls du das nicht warst, ändere bitte umgehend dein Passwort und melde dich\n"
                 . "bei der Verwaltung."),
+        ],
+
+        /* PASSKEYS (Schritt 18, SR-09, E-SR-33) — nach dem Muster
+         * `rueckweg_erneuert`: Ein neuer zweiter Faktor an einem erbeuteten
+         * Konto bliebe sonst still. Die Anmeldung mit Passkey schreibt keine
+         * Mail (je Anmeldung waere Rauschen). */
+        'passkey_angelegt' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'bezeichnung'],
+            'betreff' => fn(array $d): string => 'Passkey hinzugefügt — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " ist ein Passkey hinzugefügt worden:\n"
+                . "„" . $d['bezeichnung'] . "“. Er ersetzt bei der Anmeldung den Code aus der App.\n\n"
+                . $d['link'],
+                "Falls du das nicht warst, entferne ihn dort, ändere umgehend dein Passwort\n"
+                . "und melde dich bei der Verwaltung."),
+        ],
+
+        'passkey_entfernt' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'bezeichnung'],
+            'betreff' => fn(array $d): string => 'Passkey entfernt — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " ist ein Passkey entfernt worden:\n"
+                . "„" . $d['bezeichnung'] . "“. Die Anmeldung fragt dort wieder nach dem Code.\n\n"
+                . $d['link'],
+                "Falls du das nicht warst, ändere bitte umgehend dein Passwort und melde dich\n"
+                . "bei der Verwaltung."),
+        ],
+
+        /* EIN PASSKEY MIT ZURUECKGELAUFENEM ZAEHLER (H-SR-08, E-SR-46,
+         * F-SR-36). Ausloesen kann das nur, wer einen gueltigen Schluessel hat
+         * und im Code-Schritt vorher das Passwort — das staerkste Zeichen fuer
+         * ein erbeutetes Konto, das die Anlage kennt. Den Reiter Verwaltung
+         * sieht die Rolle `user` nicht; ohne diese Mail erfuhr sie davon
+         * nichts. Hoechstens eine je Passkey und Tag (`gewarnt_am`). */
+        'passkey_zaehler' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'bezeichnung'],
+            'betreff' => fn(array $d): string => 'Passkey abgewiesen — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " ist eine Anmeldung mit dem Passkey\n"
+                . "„" . $d['bezeichnung'] . "“ abgewiesen worden: Sein Zähler lag nicht über dem\n"
+                . "zuletzt gesehenen. Das heißt, dieser Passkey wurde zuletzt auf einem anderen\n"
+                . "Gerät benutzt — es gibt eine Kopie, oder ein Gerät wurde aus einer Sicherung\n"
+                . "zurückgespielt. Wer das war, kannte dein Passwort oder war schon angemeldet.\n\n"
+                . "Warst du das nicht: Entferne den Passkey unter Einstellungen → Profil, ändere\n"
+                . "umgehend dein Passwort und melde dich bei der Verwaltung. Hast du ein Gerät\n"
+                . "zurückgespielt: Entferne ihn und lege ihn neu an.\n\n"
+                . $d['link'],
+                "Bis dahin geht die Anmeldung mit dem Code aus der App."),
         ],
 
         'registrierung_verfallen' => [
@@ -577,6 +700,34 @@ function mail_betriebsziele(bool $nurAngemeldete = false): array
          . ' ORDER BY id';
     $ziele = [];
     foreach (db()->query($sql)->fetchAll(PDO::FETCH_COLUMN) as $m) {
+        if (is_string($m) && $m !== '') { $ziele[] = $m; }
+    }
+    return $ziele;
+}
+
+/**
+ * JEDES KONTO DER ROLLE BETREIBERIN — fuer die Post, die genau sie betrifft
+ * (Schritt 18, SR-03, E-SR-62).
+ *
+ * NICHT `mail_betriebsziele()`. Jene geht an die Betriebsadresse, wenn eine
+ * eingetragen ist, sonst an alle Verwaltungskonten (auch Admin). Der Wechsel
+ * des Serverschluessels ist eine Sache der BetreiberInnen: Sie halten das
+ * Blatt, und eine, die den Wechsel nicht ausgeloest hat, soll davon
+ * erfahren — auch wenn Betriebspost sonst an ein Sammelpostfach geht. Eine
+ * zweite Liste mit anderer Frage ist keine Doppelung (R83 zaehlt Wege zur
+ * selben Sache).
+ *
+ * Nur Konten mit gesetztem Passwort — eines, das noch nie angemeldet war,
+ * hat die Einladung noch offen.
+ *
+ * @return string[] Adressen
+ */
+function mail_betreiberinnen(): array
+{
+    $ziele = [];
+    foreach (db()->query("SELECT email FROM users WHERE role = 'betreiberin'
+                           AND password_hash IS NOT NULL ORDER BY id")
+                 ->fetchAll(PDO::FETCH_COLUMN) as $m) {
         if (is_string($m) && $m !== '') { $ziele[] = $m; }
     }
     return $ziele;

@@ -153,6 +153,20 @@ const WARTUNG_AUSNAHMEN = [
      * zeigen den Balken. */
     'admin_komplettsicherung.php',
     'admin_sicherungsziele.php',
+    /* SEIT SR-07 (Schritt 18, E-SR-20): die Bestaetigung des frischen Codes.
+     * Die Schluesselgriffe und das Blatt oben liegen im Wartungsmodus offen
+     * und verlangen einen frischen Code; ohne diese Zeile fuehrte ihr Umweg
+     * auf eine 503 — derselbe Griff ins Leere wie beim Schluesselblatt. Ein
+     * Konto ohne Verwaltungsrolle kommt in der Wartung ohnehin nicht herein
+     * (`login.php`, E-S5W-09). */
+    'zweitfaktor.php',
+    /* SEIT SR-04 (Schritt 18, E-SR-13): der Notzugang der einzigen
+     * BetreiberIn. Im Wartungsmodus steht sie, die den Zweitfaktor verloren
+     * hat, am haeufigsten davor — nach einem Deploy ist die Wartung an, bis
+     * `update.php` gelaufen ist, und dafuer muss sie hinein. Die Seite meldet
+     * niemanden an; sie schaltet nur den Faktor ab, und die Anmeldung danach
+     * laesst in der Wartung ohnehin nur Verwaltungsrollen herein. */
+    'zweitfaktor_notweg.php',
     'update.php',
     'wiederherstellen.php',
     'jobs.php',
@@ -922,7 +936,8 @@ function ueberlast_seite_html(): string
  * `SQLSTATE[40001] 1213 Deadlock found when trying to get lock; try
  * restarting transaction`, an zwei Stellen: dem `UPDATE days` in
  * `dt_zeitraum_fortschreiben()` und dem `INSERT ... ON DUPLICATE KEY` auf
- * `missions` in `ingest.php`. Alle Uploads eines Diensttags fassen dieselbe
+ * `missions` in `ingest.php`. Die Messung zu SR-05 (29.09.2026) fand eine
+ * dritte: `UPDATE devices SET last_seen`. Alle Uploads eines Diensttags fassen dieselbe
  * `days`-Zeile an; InnoDB bricht dann eine der beteiligten Transaktionen ab,
  * um den Kreis zu loesen.
  *
@@ -939,11 +954,13 @@ function ueberlast_seite_html(): string
  * erneut", und genau das tut sie seit S4. Es aendert sich, was die Meldung
  * BEHAUPTET.
  *
- * NICHT getan wird die eigentliche Abhilfe: die Transaktion selbst zu
- * wiederholen, statt sie dem Aufrufer zurueckzugeben. Das ist ein Eingriff
- * in den Ablauf von `ingest.php` und gehoert in ein eigenes Paket —
- * **Backlog Nr. 210**. Bis dahin kostet ein Gedraengel einen zweiten Anlauf
- * des Geraets, und der kommt von selbst.
+ * DIE EIGENTLICHE ABHILFE STEHT SEIT WEB 21.11.1 IN `ingest.php` (Schritt
+ * 18, SR-05, Nr. 210): Die zwei Zeilen, die alle Pakete teilen (`days` und
+ * `devices.last_seen`), stehen hinter dem Commit, und der Rumpf laeuft bei
+ * 1205 und 1213 bis zu drei Mal. Die Verbindungsprobe misst bei zwanzig
+ * freien Plaetzen 0 Gedraengel. Die 503 bleibt fuer den Fall, dass auch der
+ * dritte Anlauf scheitert — und erst dann steht das Gedraengel im
+ * Fehlerprotokoll.
  *
  * DIESE VORFAELLE ZAEHLT `ueberlast.json` NICHT. Der Zaehler beantwortet die
  * Frage „steht `max_user_connections` zu eng?", und ein Gedraengel um eine
@@ -987,4 +1004,21 @@ function gedraengel_vermerken(Throwable $ex, string $bereich): void
 {
     require_once __DIR__ . '/systemmeldung_lib.php';
     system_rueckfall('gedraengel', $bereich, $ex);
+}
+
+/**
+ * Der Abstand vor dem naechsten Anlauf nach einem Gedraengel (seit Web
+ * 21.11.1, Schritt 18, SR-05): 50 bis 200 ms, zufaellig — damit zwei
+ * Verlierer desselben Deadlocks nicht im selben Takt wieder zusammenstossen.
+ * Kurz, weil der andere Anlauf in der Regel gleich fertig ist; die Uhr
+ * wartet auf die Antwort.
+ *
+ * DIE EINE STELLE FUER DIESES WARTEN (Registerzeile Z33): Ein `usleep()`
+ * ausserhalb von `ratelimit_lib.php` war bis dahin ausgeschlossen, weil jede
+ * verzoegerte ANTWORT dort hingehoert (`rate_gleiche_dauer()`). Dies ist
+ * keine — es wartet auf die Datenbank, nicht auf die Uhr eines Angreifers.
+ */
+function gedraengel_abstand(): void
+{
+    usleep(random_int(50, 200) * 1000);
 }

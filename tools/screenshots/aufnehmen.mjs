@@ -1190,6 +1190,26 @@ async function gehZu(rolle, adresse, zielPfad) {
       rolle.fehler.push('laden: ' + e.message);
       return { status, verloren };
     }
+    /* DER FRISCHE CODE (Schritt 18, SR-07, E-SR-20). Der Lauf dauert laenger
+       als die 15 Minuten, die ein Code frisch bleibt, und das
+       Schluesselblatt schickt danach auf die Bestaetigung. Sie hat dasselbe
+       Formular wie der Code-Schritt der Anmeldung; `codeSchritt()` geht sie,
+       danach wird die gemeinte Seite neu geladen. Ohne diese Zeilen hiesse
+       das Bild „Schluesselblatt" und zeigte die Bestaetigung. */
+    if (/\/zweitfaktor\.php\?bestaetigen=1/.test(seite.url()) && !zielPfad.startsWith('zweitfaktor.php')) {
+      const zf = await codeSchritt(seite);
+      if (!zf.ok) {
+        rolle.fehler.push(`Code bestätigen: ${zf.meldung} — kein Bild aufgenommen`);
+        return { status, verloren, abbruch: true, grund: 'Bestätigung des frischen Codes gescheitert' };
+      }
+      try {
+        const antwort = await seite.goto(adresse, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        status = antwort ? antwort.status() : 0;
+      } catch (e) {
+        rolle.fehler.push('laden nach der Bestätigung: ' + e.message);
+        return { status, verloren };
+      }
+    }
     /* DAS EINRICHTUNGSTOR DES ZWEITFAKTORS (P5c/AP5, F-P5c-33). Eine
        Pflichtrolle ohne Zweitfaktor kommt auf keine andere Seite, und die
        Adresse enthaelt `login.php` nicht — `istAnmeldung()` sieht es also

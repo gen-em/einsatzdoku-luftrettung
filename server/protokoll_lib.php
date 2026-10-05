@@ -343,6 +343,18 @@ const PROTOKOLL_ARTEN = [
     /* Verwaltung — neu mit Konzept RW (RW-02, E-RW-14) */
     'rueckweg_angelegt'         => ['Rückweg eingerichtet', 'neutral'],
     'rueckweg_erneuert'         => ['Rückweg erneuert', 'neutral'],
+    /* Verwaltung — neu mit Schritt 18 (SR-02, E-SR-07, -17) */
+    'zweitfaktor_geraet_gemerkt'    => ['Gerät gemerkt', 'neutral'],
+    'zweitfaktor_geraete_vergessen' => ['Geräte vergessen', 'neutral'],
+    'einstellungen_anmeldung'   => ['Einstellungen', 'neutral'],
+    /* Verwaltung — neu mit Schritt 18 (SR-09, E-SR-33). Der Zaehler ist
+     * orange: ein Klon-Verdacht, den die Betroffene sehen soll. */
+    'passkey_angelegt'          => ['Passkey angelegt', 'neutral'],
+    'passkey_entfernt'          => ['Passkey entfernt', 'neutral'],
+    'passkey_zaehler'           => ['Passkey-Zähler', 'orange'],
+    /* H-SR-08 (E-SR-45): eine abgewiesene Registrierung mit ihrem Grund —
+     * nach aussen heisst jede nur „nicht angenommen". */
+    'passkey_abgewiesen'        => ['Passkey abgewiesen', 'neutral'],
     'geraet_umgeschaltet'       => ['Gerät umgeschaltet', 'neutral'],
     'geraet_geloescht'          => ['Gerät gelöscht', 'neutral'],
     'wartung_an'                => ['Wartung an', 'orange'],
@@ -356,6 +368,13 @@ const PROTOKOLL_ARTEN = [
     'komplett_heruntergeladen'  => ['Komplett-Backup geladen', 'orange'],
     'komplett_eingespielt'      => ['Komplett-Backup eingespielt', 'orange'],
     'komplett_geloescht'        => ['Komplett-Backup gelöscht', 'neutral'],
+    /* Sicherung — neu mit Schritt 18 (SR-03, Nr. 247): der Wechsel des
+     * Serverschluessels. Orange der Beginn — ein Eingriff an allen
+     * Sicherungen, den jede BetreiberIn sehen soll; blau das Umhuellen mit
+     * Nachweis (erledigt, gut); neutral das Entfernen des bisherigen. */
+    'serverschluessel_gewechselt'   => ['Serverschlüssel gewechselt', 'orange'],
+    'serverschluessel_umgehuellt'   => ['Serverschlüssel umgehüllt', 'blau'],
+    'serverschluessel_alt_entfernt' => ['Bisheriger Serverschlüssel entfernt', 'neutral'],
     'kontobackup_eingespielt'   => ['Konto-Backup eingespielt', 'orange'],
     /* Sicherheit — Sicht auf `sicherheit_ereignisse` und `csp_berichte` */
     'sperre'                    => ['Sperre', 'orange'],
@@ -556,11 +575,15 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'totp_eingerichtet', 'totp_codes_erneuert', 'totp_ausgeschaltet',
                          'totp_zurueckgesetzt', 'totp_code_benutzt',
                          'rueckweg_angelegt', 'rueckweg_erneuert',
+                         'zweitfaktor_geraet_gemerkt', 'zweitfaktor_geraete_vergessen',
+                         'passkey_angelegt', 'passkey_entfernt', 'passkey_zaehler',
+                         'passkey_abgewiesen',
                          'rechtstext_geaendert', 'schluessel_erneuert',
                          'schluesselblatt_bestaetigt', 'geraet_umgeschaltet',
                          'geraet_geloescht', 'wartung_an', 'wartung_aus',
                          'demo_zurueckgesetzt', 'migration_ausgefuehrt',
-                         'einstellungen_konten', 'frist_geaendert', 'rundmail',
+                         'einstellungen_konten', 'einstellungen_anmeldung',
+                         'frist_geaendert', 'rundmail',
                          'archiv_heruntergeladen'],
         'sicherheit' => ['sperre', 'verlangsamung', 'aufgehoben', 'csp_bericht'],
         'email'      => ['mail_offen', 'mail_zugestellt', 'mail_unzustellbar',
@@ -568,7 +591,9 @@ function protokoll_arten_des_reiters(string $reiter): array
         'jobs'       => ['job_lauf', 'job_fehler'],
         'sicherung'  => ['komplett_erzeugt', 'komplett_heruntergeladen',
                          'komplett_eingespielt', 'komplett_geloescht',
-                         'kontobackup_eingespielt'],
+                         'kontobackup_eingespielt',
+                         'serverschluessel_gewechselt', 'serverschluessel_umgehuellt',
+                         'serverschluessel_alt_entfernt'],
         'ziele'      => ['ziel_gesendet', 'ziel_geloescht'],
         'system'     => SYSTEM_ARTEN,
     ];

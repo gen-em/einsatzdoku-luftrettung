@@ -9151,6 +9151,262 @@ zutreffen.
      für 64 Einträge, danach 64 Listen, jede mit ihrer Nummer als `start`.
      `Backlog-Erledigt.md` bleibt ohne Trennzeilen.
 
+242. **Sitzungsbindung per Cookie-Token — benannt, nicht mitgenommen.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     *Aufgenommen 20.09.2026 (E-SA-09 des Konzepts Sitzungsablage).*
+     Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
+
+     Ein Zufallstoken nur im Cookie, dessen Hash in der Sitzung liegt, macht
+     eine gelesene Sitzungsdatei wertlos — auch eine aus einem gefundenen
+     Backup. Das ist der Schutz, den Nr. 241 **nicht** leistet: 241 verlegt
+     den Ort, 242 entwertet die Datei.
+
+     **Warum getrennt:** Das ist ein Sicherheitsumbau mit eigener Prüfung
+     (Cookie-Handling — Uhr und Handy sind nicht betroffen, nur der Browser;
+     Reset-Fluss; Wechselwirkung mit `users.session_epoch`) und gehört nicht
+     in einen Verzeichniswechsel.
+     Erledigt 28.09.2026 mit SR-01 (Web 21.7.0, E-SR-04, -05): Cookie EDBIND
+     mit 32 Zufallsbyte, SHA-256 in der Sitzung; gebunden werden der halbe
+     Stand und die Anmeldung, geprüft in auth_guard.php (Grund bindung, api/
+     401), login.php und sitzung_starten('lesend') (F-SR-15). Alte Sitzungen
+     werden nicht übernommen. Sitzungsprobe 25 ok, 0 fehlen; mit
+     herausgenommenen Prüfungen 11 von 25 rot.
+
+251. **Cookie-Attribut `secure` der Sitzung ist in zwei Arten HTTPS-abhängig, in zwei fest.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-12).* Zugeordnet:
+     **Schritt 18**, zusammen mit der Sitzungsbindung (Nr. 242).
+
+     Vier Stellen setzen das Attribut, und sie setzen es verschieden: zweimal
+     abhängig davon, ob die Anfrage über HTTPS kam, zweimal fest. Nach
+     Schritt 15 AP2 stehen sie alle in `sitzung_lib.php` — dann ist es eine
+     Tabelle und keine Suche, und dann lässt sich entscheiden, welche der
+     vier Arten die richtige ist.
+
+     **Eingetreten am 21.09.2026 (Web 20.27.0, Schritt 15 AP2).** Die Tabelle
+     heißt `SITZUNG_ARTEN` und steht in `sitzung_lib.php` neben
+     `sitzung_starten()`. Fest auf `true`: `app` und `passwort`. Von HTTPS
+     abhängig: `lesend` und `einrichtung` — also die beiden Arten, die auf
+     einer Anlage laufen können, deren HTTPS-Lage die Einrichterin erst
+     herstellt. Die Entscheidung für Schritt 18 ist damit **eine Zeile in
+     einer Tabelle**, nicht mehr eine Suche über neun Dateien.
+     Erledigt 28.09.2026 mit SR-01 (Web 21.7.0, E-SR-06): lesend setzt
+     secure fest; einrichtung bleibt HTTPS-abhängig, weil sie läuft, bevor
+     HTTPS steht (F-SR-06, Kommentar an der Tabelle).
+
+250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
+     `post_ende()`).* Zugeordnet: **Schritt 17**.
+
+     Ein POST, der seine Seite selbst ausgibt statt umzuleiten, hinterlässt
+     im Browser ein Formular, das sich beim Neuladen wiederholt. Ein Teil der
+     Admin-Seiten macht es richtig, ein Teil nicht.
+
+     **Nicht in Schritt 15**, obwohl der Befund dort entstanden ist: Schritt
+     15 verschiebt Code an eine Stelle und ändert keine Wege durch die
+     Anwendung. Umleiten nach POST ist ein geänderter Weg — er gehört in eine
+     Runde, die Wege ändern darf.
+     **Teilweise erledigt 27.09.2026 mit R4-11 (Web 21.1.9):** elf Seiten
+     leiten um, `flash_setzen()` trägt Ort, Ton und Ergebnis (E-R4-33 bis
+     -36). **Offen: `betrieb_server.php`** — auf der Liste von Schritt 18
+     und deshalb dort (Konzept R4 2.3); der Weg ist derselbe.
+     **Zuordnung in 18 (28.09.2026):** Paket SR-02, das `betrieb_server.php`
+     ohnehin um eine Karte erweitert (Konzept SR, E-SR-37).
+     Erledigt 28.09.2026 mit Schritt 18, SR-02 (Web 21.8.0):
+     betrieb_server.php leitet nach jedem erfolgreichen POST um — eine
+     Stelle für zehn Zweige, flash_setzen() mit dem Ort der Karte, die
+     Meldung steht in ihr; eine abgewiesene Eingabe bleibt stehen, die
+     Rundmail leitet auch nach einem Fehlschlag um (E-R4-34). Beleg:
+     Rollenprobe (Umleitung an vier Karten, 492 Erwartungen) und Bedienweg
+     betrieb-server-neuladen.
+
+350. **Passkeys als zweiter Faktor neben TOTP.** · gehört zu: 18 · Stand: erledigt · seit 27.09.2026
+     *Aufgenommen 27.09.2026 in der Nachfassung des Konzepts SR (Paket
+     SR-09, E-SR-29); herausgelöst aus Nr. 146, dessen Passkey-Frage damit
+     beantwortet ist.* Ein TOTP-Code lässt sich auf einer gefälschten Seite
+     abgreifen und weiterreichen; eine WebAuthn-Signatur ist an den Ursprung
+     gebunden — der Code-Schritt wird phishingfest. **Bauform:** ohne
+     Fremdbestandteil — `rw_pruefen()` prüft schon ECDSA P-256 mit phpseclib,
+     `Crypt/RSA` liegt für RS256 daneben, es fehlt ein kleiner CBOR-Leser
+     (`passkey_lib.php`, E-SR-30); Tabelle `passkeys` (Migration); die Karte
+     „Zweitfaktor" bekommt den Abschnitt, der Code-Schritt den Knopf „Mit
+     Passkey bestätigen"; Codes und Rückweg bleiben der Notweg; Anlegen und
+     Entfernen verlangen einen frischen Code. **Prüfmittel:** Bedienweg mit
+     dem virtuellen Authenticator Chromiums (CDP `WebAuthn`), Probe mit
+     selbst erzeugten Vektoren (ES256, RS256, jede Ablehnung). **Nicht
+     dabei:** Passkeys mit PRF als Ersatz der Passwortableitung (E-SR-28).
+     *Abnahme:* Konzept SR, Paket SR-09; Prüfdokument P-SR-16.
+     Erledigt 28.09.2026 mit SR-09 (Web 21.10.0, E-SR-29 bis -36, -42):
+     passkey_lib.php mit eigenem CBOR-Leser und beiden Zeremonien über
+     phpseclib (ES256, RS256), ohne Fremdbestandteil; Tabelle passkeys
+     (Migration), Abschnitt in der Karte Zweitfaktor, Knopf im Code-Schritt
+     und auf der Bestätigung, api/passkey_anlegen.php und assets/passkey.js;
+     rp.id aus app.base_url (E-SR-42). Passkeyprobe 57 ok, 0 fehlen;
+     Zweitfaktorprobe Teil 5d 9 ok; Bedienweg einstellungen-profil-passkey
+     (Chromium). Die Fable-Gegenlesung (H-SR-08) steht bei Abschluss dieses
+     Eintrags aus.
+
+210. **`ingest.php` läuft bei gleichzeitigen Uploads auf denselben Diensttag in einen Deadlock.** · gehört zu: 18 · Stand: erledigt · seit 16.09.2026
+     Befund (P5a/AP9, `tools/verbindungsprobe/`, 16.09.2026): Zwanzig
+     Pakete desselben Geräts gleichzeitig ergaben zwölf `SQLSTATE[40001]
+     1213 Deadlock`. Ursache ist die gemeinsame Zeile: Jeder Upload schreibt
+     `days.started_at`/`ended_at` in derselben Transaktion fort, in der er
+     seinen Einsatz anlegt (`dt_zeitraum_fortschreiben()` und der
+     `INSERT … ON DUPLICATE KEY` auf `missions`); zwei Uploads halten Sperren
+     in umgekehrter Reihenfolge.
+     Erledigt ist die halbe Miete (E-P5a-52): Die Antwort ist 503
+     `ausgelastet` statt 500, alle zwanzig Pakete kommen in der Probe an.
+     Offen ist die Vermeidung: den Transaktionsrumpf in eine Schleife mit
+     zwei bis drei Anläufen fassen und klären, was dazwischen neu gelesen
+     werden muss (Umriss der Spur, Fortsetzungsmarke); prüfen, ob die
+     idempotente `days`-Fortschreibung hinter den Commit kann. Nicht Teil
+     von Schritt 15 (E-ZE-20): `db_transaktion()` ändert, wie Transaktionen
+     geschrieben werden, nicht, was bei einem Deadlock geschieht.
+     Abnahme: `php tools/verbindungsprobe/probe.php --frei 20` meldet 0 × 503
+     und 0 Gedrängel im Fehlerprotokoll.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 210.
+     Erledigt 29.09.2026 in Schritt 18, SR-05 (Web 21.11.1, E-SR-12,
+     E-SR-54): Die zwei Zeilen, die alle Pakete teilen (days und
+     devices.last_seen), stehen hinter dem Commit, und der Rumpf läuft bei
+     1205/1213 bis zu dreimal. Die Verbindungsprobe mit --frei 20: vorher 39
+     × 503 in drei Runden zu 20, nachher 180 von 180 ohne 503 und 0
+     Gedrängel im Fehlerprotokoll; die Schleife misst Teil 12 der
+     Ingestprobe.
+
+233. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.** · gehört zu: 18 · Stand: erledigt · seit 17.09.2026
+     *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
+     `kdf_anteil_alt` mit auf dem Schlüsselblatt. Die Rückfrage fragt ihn
+     nicht ab — eine Frage, die je nach Betriebslage vier oder sechs Felder
+     hat, verwirrt mehr, als sie prüft.
+
+     **Was das offen lässt:** Wer sein Blatt nach einer Rotation neu druckt
+     und den alten Wert nicht mit abschreibt, merkt es nicht, solange die
+     Rückfrage schweigt. Der Wert wird aber gebraucht, bis das letzte Konto
+     sich angemeldet hat.
+
+     **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
+     dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
+     und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
+     Erledigt 29.09.2026 in Schritt 18, SR-03 (Web 21.12.0, E-SR-11):
+     Wie hier vorgeschlagen, sagt es der Rotationsvorgang selbst. Beide
+     Rotationen — Anteil und Serverschlüssel — löschen die Bestätigung
+     (`blatt_neu_faellig()`), die Rückfrage kommt bei der nächsten Anmeldung
+     jeder BetreiberIn mit dem Satz voran „Ein Wert hat gewechselt — drucke
+     das Blatt neu" und nennt die Kennung des bisherigen. Abgefragt werden
+     weiter nur die heutigen Werte; den bisherigen prüft der Ausdruck, der
+     ihn trägt. Anteilprobe Teil E (61 von 61; Gegenprobe 3 von 3 rot),
+     Bedienweg betrieb-server-schluesselwechsel (Rückfrage mit Satz,
+     beantwortet).
+
+247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     Befund (V4 der P5c-Vorbereitung): Es gibt keinen Wechsel. Wer
+     `server_key` von Hand ändert, macht alles Versiegelte stumm und merkt
+     es erst, wenn er es braucht.
+     Weg: ein Vorgang unter Betrieb — neuen Schlüssel erzeugen, alles
+     Versiegelte umhüllen (Adminpakete, Zugänge der Sicherungsziele,
+     Protokoll-Archive, Wiederanlaufpaket, die Zweitfaktor-Geheimnisse
+     `users.totp_geheimnis` mit Zweck `totp|<Konto>` aus P5c/AP5, Web
+     20.42.0), neues Schlüsselblatt, Protokolleintrag und der Nachweis der
+     Öffenbarkeit vor dem Verwerfen des alten Schlüssels — der Schritt,
+     dessen Fehlen den Vorgang gefährlich macht. Ein Wechsel, der die
+     Zweitfaktor-Geheimnisse nicht umhüllt, lässt jede Code-Anmeldung
+     scheitern (Notweg: Wiederherstellungscodes; Runbook `Technik.md` 7).
+     Auslöser: Verdacht, dass das Blatt in falsche Hände kam. Eigenes Paket
+     mit eigener Prüfung; bis dahin gilt im Betreiberhandbuch: Der Schlüssel
+     wird nicht gewechselt, das Blatt gehütet (Quartalsrückfrage E-P5b-10).
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 247.
+     Erledigt 29.09.2026 in Schritt 18, SR-03 (Web 21.12.0, E-SR-09 bis
+     -11, E-SR-60 bis -70): „Serverschlüssel wechseln" unter Betrieb →
+     Servereinstellungen, mit Pflicht-Haken; der bisherige bleibt als
+     server_key_alt stehen, der Job schluesselwechsel hüllt Zugänge der
+     Ziele, Zweitfaktor-Geheimnisse, Konto-Backups samt konto.json und
+     Archive des Protokolls um und weist jedes Stück mit dem neuen nach;
+     „Alten Schlüssel entfernen" erst nach Nachweis, frischem Komplett-Stand
+     und beantworteter Rückfrage, Protokoll und Mail an jede BetreiberIn.
+     Das Wiederanlaufpaket wird nicht umgehüllt — es ist Papier; an seine
+     Stelle tritt das neue Blatt mit beiden Werten. Komplett-Stände werden
+     nicht umgehüllt (E-SR-21), ihr Kopf trägt seither die Kennung.
+     Schlüsselwechselprobe 40 von 40 (A → B und mit demselben Job zurück;
+     Gegenproben 5 von 5 rot), Bedienweg in 390 und 1280 px.
+
+344. **„Freigabe widerrufen" mit unauflösbarem Handgriff schreibt eine `konto.json` in die Wurzel der Konto-Backups.** · gehört zu: 18 · Stand: erledigt · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-11 (gefunden vom Umbau der Seite
+     Konto-Backups, F-R4-33).* `edbak_freigabe_widerrufen()` prüft die
+     Kennung nicht. Lässt sich der Handgriff eines POST nicht auflösen, ist
+     die Kennung leer, und `edbak_begleit_schreiben('')` legt eine
+     versiegelte `konto.json` in der Wurzel der Ablage an und meldet Erfolg:
+     „Freigabe widerrufen." Erreichbar ist das über `admin_sicherungen.php`
+     (dort gibt es für den Zweig kein Formular mehr, nur ein handgebautes
+     POST einer Administratorin) und über die Kontoseite. **Nicht in 17**,
+     weil `adminbackup_lib.php` für Schritt 18 frei bleiben soll (Konzept R4
+     2.3, E-R4-37). *Weg:* `edbak_freigabe_widerrufen()` und
+     `edbak_begleit_schreiben()` verlangen `edbak_kennung_gueltig()`, wie es
+     `edbak_ordner_loeschen()` schon tut; die Aufrufer melden dann den
+     Fehlschlag. *Abnahme:* POST `widerrufen` mit einem Handgriff aus
+     Nullen → Fehlermeldung, keine Datei in der Wurzel der Ablage.
+     **Zuordnung in 18 (28.09.2026):** Paket SR-03, das `adminbackup_lib.php`
+     ohnehin offen hat; die Gegenlesung liest es mit (Konzept SR, E-SR-37).
+     Erledigt 29.09.2026 in Schritt 18, SR-03 (Web 21.12.0, E-SR-37,
+     E-SR-66): Beide Funktionen verlangen edbak_kennung_gueltig(); die Seite
+     sagt „Die Freigabe liess sich nicht widerrufen." Abnahme über HTTP in
+     der Schlüsselwechselprobe (Teil 7) statt in der Freigabeprobe, die als
+     NutzerIn im Browser arbeitet: POST widerrufen mit sechzehn Nullen →
+     Fehlermeldung, keine konto.json in der Wurzel. Gegenprobe ohne die
+     Prüfung rot (302, Datei lag da).
+
+249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert.** · gehört zu: 18 · Stand: erledigt · seit 20.09.2026
+     *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
+     Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
+
+     10c macht den Zweitfaktor für Admin, BetreiberIn und Support zur
+     Pflicht. Der Reset durch eine **zweite** BetreiberIn ist damit gelöst —
+     der Fall „es gibt nur eine, und sie hat beides verloren" ist es nicht.
+
+     Das ist ein **Wiederanlauf-Fall** und gehört zum S10-Runbook, nicht in
+     10c: Er wird nicht über die Oberfläche gelöst, sondern über das
+     Wiederanlaufpaket. Hier nur benannt, damit er nicht erst auffällt, wenn
+     er eintritt.
+
+     **Teilweise gelöst mit Konzept RW (E-RW-08, 24.09.2026; gebaut als 10c
+     AP5b, Web 20.43.0 bis 20.45.0):** Hat die einzige BetreiberIn Passwort
+     und Notfallblatt, setzt sie den Zweitfaktor am Code-Schritt selbst
+     zurück. Der Wiederanlauf-Fall bleibt für den Rest: ohne Zettel, ohne
+     Passwort, oder wenn der Rückweg ausgeschaltet ist (Statuszeile
+     „Rückweg-Prüfung" orange).
+     Erledigt 04.10.2026 in Schritt 18, SR-04 (Web 21.13.0, E-SR-13,
+     E-SR-24, E-SR-81 bis -87): Notzugang zweitfaktor_notweg.php mit
+     Nachweisdatei (Schreibnachweis, Name an der Sitzung), Datenbankwert und
+     Passwort; jede andere Lage gleiche Antwort, gleiche Dauer; Wert danach
+     neu. Gemessen in der Zweitfaktorprobe Teil 8. Bleibt bewusst: Wer auch
+     den Datenbankzugang verloren hat, ist ein Wiederanlauf-Fall (E-SR-24).
+
+228. **Proof-of-Work im Browser als dritte Stufe gegen Registrierungs-Spam.** · gehört zu: 18 · Stand: erledigt · seit 17.09.2026
+     Befund (Konzept P5b, R37 (4) „notfalls"): R37 schließt ein CAPTCHA aus
+     (fremde Quelle zur Laufzeit) und setzt zwei billige Mittel — Honeypot-
+     Feld und Mindestausfülldauer vier Sekunden — neben drei
+     Ratenschutz-Töpfe (`reg` je IP 10/h, `regg` global 100/h mit
+     Verlangsamung, `regz` je Zieladresse 3/24 h). Reicht das nicht, bliebe
+     eine Rechenaufgabe im Browser; gebaut ist sie mit Absicht nicht.
+     Warum niedrig: Ein Proof-of-Work kostet am meisten auf dem alten
+     Diensthandy und bremst jede ehrliche Registrierung. Die drei Mittel
+     sind ungemessen; erst bauen, dann messen. Kein Ausschluss ohne
+     JavaScript, weil die Registrierung den Schlüssel ohnehin im Browser
+     ableitet (E-P5b-13).
+     Auslöser: der Zähler der je Woche über `konto_verfall` verfallenen,
+     nie bestätigten Konten. Bleibt er klein, ist der Eintrag erledigt, ohne
+     dass etwas gebaut wurde. Abnahme, falls doch: SHA-256 über WebCrypto in
+     einem Worker, ohne Fremdbestandteil, und die Antwortzeit der
+     Registrierung bleibt unabhängig davon, ob die Adresse frei, bekannt
+     oder Wegwerf ist (Enumerationsschutz E-P5b-13, Δ < 50 ms).
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 228.
+     Erledigt 05.10.2026 in Schritt 18, SR-08 (Web 21.14.0, E-SR-26, E-SR-88
+     bis -95): fest eingebaut statt auf Anlass, per Entscheidung der
+     Betreiberin (Q-SR-07). SHA-256 im Worker über WebCrypto, ohne
+     Fremdbestandteil; die Aufgabe liegt in der Sitzung der offenen
+     Registrierung, gilt einmal und zwei Stunden; 16 Bit, gemessen: Median
+     0,47 s ungedrosselt, 1,71 s auf einem Viertel der CPU. Antwortzeit
+     gleich über sechs Lagen, Spanne der Mediane 1,0 ms (Ratenprobe
+     Abschnitt 12). Bleibt offen: die Zahl auf dem alten Diensthandy
+     (P-SR-14).
+
 227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole mehr.** · gehört zu: PK · Stand: erledigt · seit 17.09.2026
      Befund (P5b-Zweig, 17.09.2026): `tools/vollstaendigkeit/` prüft
      „Unicode-Zeichen als Symbol im Markup", zählte aber `…` und `→` mit —

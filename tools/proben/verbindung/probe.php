@@ -38,7 +38,17 @@ declare(strict_types=1);
  *   Teil 2  Null verlorene Uploads. Ein Teil der Verbindungen bleibt frei,
  *           mehrere Pakete laufen gleichzeitig; was 503 bekommt, wird
  *           wiederholt, wie die Uhr es tut. Am Ende muss JEDES Paket in der
- *           Datenbank stehen.
+ *           Datenbank stehen. Und seit Web 21.11.1 (Schritt 18, SR-05,
+ *           Nr. 210): KEIN 503 aus dem Gedraengel um dieselbe Zeile, und
+ *           keines im Fehlerprotokoll des eigenen Servers.
+ *
+ * ZWEI LAGEN IN TEIL 2. Mit wenigen freien Plaetzen (Vorgabe `--frei 2`)
+ * trifft die Enge die Verbindungen — die 503 kommen dann von der Grenze, und
+ * die Probe verlangt, dass es welche gibt. Laesst `--frei` alle Plaetze frei
+ * (`--frei 20`, die Abnahme von Nr. 210), gibt es keine Enge, nur das
+ * Gedraengel: Dann laeuft EINE Runde, und verlangt sind 0 x 503. Die
+ * Erwartung „Die Enge schlaegt durch" ist in dieser Lage nicht gefragt und
+ * steht als solche da, nicht als erfuellt.
  *
  * EIGENER WEBSERVER, MIT ARBEITERN. Ohne `PHP_CLI_SERVER_WORKERS` bedient
  * der eingebaute PHP-Server genau eine Anfrage nach der anderen — dann gaebe
@@ -65,6 +75,7 @@ declare(strict_types=1);
  * Aufruf:
  *   php tools/proben/verbindung/probe.php [--grenze 10] [--pakete 20]
  *                                        [--arbeiter 8] [--basis http://…]
+ *                                        [--frei 2]
  *
  * Rueckgabewert: 0 = alles erfuellt, 1 = mindestens eine Erwartung nicht.
  */
@@ -417,6 +428,9 @@ echo "\n  Teil 2 — Enge statt Sperre: $pakete Pakete gleichzeitig\n";
  * GEMESSENE Belegung aus Teil 1, nicht gegen `$grenze` — siehe
  * `belegen_bis_voll()`. */
 while (count($gehalten) > max(0, $b['belegt'] - $frei2)) { array_pop($gehalten); }
+/* Keine Enge: Die Probe haelt keinen Platz mehr, und jede Anfrage bekommt
+ * eine Verbindung. Gemessen wird dann allein das Gedraengel (Nr. 210). */
+$ohneEnge = count($gehalten) === 0;
 echo "    " . count($gehalten) . " von " . $b['belegt'] . " belegt, "
    . ($b['belegt'] - count($gehalten)) . " frei, $arbeiter Arbeiter, "
    . "$pakete Pakete gleichzeitig\n";
@@ -471,7 +485,7 @@ do {
     $nachTeil2 = (int)((json_decode((string)@file_get_contents($zaehlDatei), true)
                         ?: ['ges' => 0])['ges'] ?? 0);
     $ausGrenze += $nachTeil2 - $vorTeil2;
-} while ($ausGrenze === 0 && $runden < 3);
+} while (!$ohneEnge && $ausGrenze === 0 && $runden < 3);
 
 $ok503 = $ok200 = $sonst = 0;
 $nachzuholen = [];
@@ -493,9 +507,32 @@ echo "    Ergebnis in $runden Runde(n) zu $pakete: $ok200 x 200, $ok503 x 503"
    . ($sonst > 0 ? ", $sonst anderes ($andereText)" : '') . "\n";
 echo "    Davon aus der Verbindungsgrenze: $ausGrenze, aus Gedraengel um "
    . "dieselbe Zeile: " . max(0, $ok503 - $ausGrenze) . "\n";
-pruefe($ausGrenze > 0,
-       'Die Enge schlaegt tatsaechlich auf die Verbindungen durch',
-       "$ausGrenze Abweisungen am Zaehler");
+if ($ohneEnge) {
+    echo "    [--]   Die Enge schlaegt auf die Verbindungen durch — nicht gefragt: "
+       . "--frei $frei2 laesst alle {$b['belegt']} Plaetze frei\n";
+} else {
+    pruefe($ausGrenze > 0,
+           'Die Enge schlaegt tatsaechlich auf die Verbindungen durch',
+           "$ausGrenze Abweisungen am Zaehler");
+}
+/* KEIN GEDRAENGEL UM DIESELBE ZEILE (Nr. 210, Schritt 18, SR-05). Bis Web
+ * 21.11.0 kamen hier in drei Runden zu 20 bei allen freien Plaetzen 39 x 503
+ * heraus, an `days`, `missions` und `devices`. Seither stehen die zwei
+ * gemeinsamen Zeilen hinter dem Commit, und der Rumpf laeuft bei 1205/1213
+ * bis zu dreimal. Was dann noch 503 bekommt, kommt von der Grenze. */
+pruefe($ok503 - $ausGrenze === 0, 'Kein 503 aus Gedraengel um dieselbe Zeile (Nr. 210)',
+       ($ok503 - $ausGrenze) . " von $ok503");
+/* UND NICHTS IM FEHLERPROTOKOLL: Ein Gedraengel steht dort erst nach dem
+ * letzten Anlauf (`gedraengel_vermerken()`); ein Eintrag hiesse, dass auch
+ * die Wiederholung nicht gereicht hat. Nur am eigenen Server lesbar. */
+if (isset($log) && is_string($log)) {
+    $protokollGedraengel = substr_count((string)@file_get_contents($log), 'gedraengel:');
+    pruefe($protokollGedraengel === 0, '... und kein Gedraengel im Fehlerprotokoll des Servers',
+           "$protokollGedraengel Zeile(n)");
+} else {
+    echo "    [--]   Gedraengel im Fehlerprotokoll — nicht gemessen: fremde Basis, "
+       . "das Protokoll liegt beim Server dort\n";
+}
 /* DIE 0 IST DIE AUSSAGE. Jede andere Zahl hiesse, dass die Enge einen
  * Ausgang hat, den der JSON-Vertrag nicht kennt — eine 500 etwa waere fuer
  * die Uhr ein Defekt und kein „gleich noch einmal". */

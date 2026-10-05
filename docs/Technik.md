@@ -82,8 +82,16 @@ Daten erst nach Server-Bestätigung.
 │   │                       (phpseclib), Nachricht, Selbsttest mit Marke,
 │   │                       Stand des Paars je Konto (rw_zustand(); Konzept
 │   │                       RW, 4.99q)
+│   ├── passkey_lib.php    Passkeys als Verfahren des Zweitfaktors (Schritt
+│   │                       18, SR-09): eigener CBOR-Leser, beide
+│   │                       WebAuthn-Zeremonien, Signaturen über phpseclib,
+│   │                       die Tabelle `passkeys` (4.99q)
 │   ├── zweitfaktor.php    Das Einrichtungstor für Pflichtrollen, in der
 │   │                       Anmeldehülle (E-P5c-61)
+│   ├── zweitfaktor_notweg.php  Der Notzugang der EINZIGEN BetreiberIn ohne
+│   │                       Gerät, Codes und Notfallblatt (Schritt 18, SR-04,
+│   │                       4.99q): Nachweisdatei per FTP, Wert aus der
+│   │                       Datenbank, Passwort. Unangemeldet, meldet niemanden an
 │   ├── zweitfaktor_teile.php  QR, Geheimnis, Codefeld und Codeliste — EIN
 │   │                       Markup für Tor und Profilkarte
 │   ├── codeblatt.php      die zehn Wiederherstellungscodes auf Papier
@@ -235,6 +243,9 @@ Daten erst nach Server-Bestätigung.
 │   │                         Protokolls (seit Web 20.39.0)
 │   │                       · sicherungen/eingang/ was wiederhergestellt
 │   │                         werden soll — von Hand dorthin gelegt
+│   │                       · sicherungen/.schluesselwechsel/ der
+│   │                         Arbeitsordner des Schlüsselwechsels (seit
+│   │                         Web 21.12.0); leer, wenn kein Häppchen läuft
 │   ├── sicherungsziel_lib.php  Backup-Ziele (S2/AP7): Schnittstelle
 │   │                       `Zielweg` und zwei Adapter — FTPS über ext/ftp,
 │   │                       SFTP über phpseclib. `ftp` ist seit Web 20.2.0
@@ -243,7 +254,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       Tabelle backup_targets, „Verbindung prüfen" und
 │   │                       der Versandschub
 │   ├── admin_sicherungsziele.php  BetreiberIn-Seite dazu (Nr. 286): Ziele anlegen und prüfen,
-│   │                       Serverschlüssel nachtragen, Versand ein/aus
+│   │                       Versand ein/aus; fehlt der Serverschlüssel, der
+│   │                       Weg zur Karte unter Servereinstellungen (bis
+│   │                       Web 21.12.0 stand hier „Serverschlüssel
+│   │                       nachtragen" — so war es bis S10, F-SR-03)
 │   ├── komplett_lib.php   Komplett-Backup der Installation (S2/AP8):
 │   │                       eigener SQL-Dump in Häppchen (ein Statement je
 │   │                       Zeile, INSERT-Stapel bis 1 MB, einspielbare
@@ -256,10 +270,24 @@ Daten erst nach Server-Bestätigung.
 │   │                       und update.php. Nur bei LEERER Datenbank, mit
 │   │                       Nachweisdatei, liest aus sicherungen/eingang/,
 │   │                       spielt in Durchgängen ein. Kein Hochladen
+│   ├── nachweis_lib.php   Die Nachweisdatei, EINMAL (seit Web 21.13.0, SR-04):
+│   │                       Lesenachweis für install.php und
+│   │                       wiederherstellen.php, Schreibnachweis für den
+│   │                       Notzugang (Register Z44)
 │   ├── serverkrypto_lib.php  Der Serverschlüssel aus config.php (32 B) und
 │   │                       die Versiegelung `edsk1:` (AES-256-GCM, Zweck in
 │   │                       den Zusatzdaten). Das EINZIGE Geheimnis, das der
-│   │                       Server selbst hat — es öffnet keine Patientendaten
+│   │                       Server selbst hat — es öffnet keine Patientendaten.
+│   │                       Seit Web 21.12.0 während eines Wechsels auch der
+│   │                       bisherige (`server_key_alt`); Beginn, Lage und die
+│   │                       Riegel des Abschlusses stehen hier; seit Web
+│   │                       21.12.1 die Sperre um jeden Griff an einen
+│   │                       Schlüssel in config.php
+│   ├── schluesselwechsel_lib.php  der Wechsel des Serverschlüssels als Job
+│   │                       (SR-03, Nr. 247): Inventar aus vier Zwecken,
+│   │                       Häppchen mit Zeiger, Nachweis mit dem neuen (nach
+│   │                       einer Frist von zehn Minuten), die drei
+│   │                       Bedingungen, Mail (4.97c)
 │   ├── vendor/            fremde Bibliotheken, die auf dem SERVER laufen
 │   │                       (phpseclib3, ParagonIE/ConstantTime), gesperrt per
 │   │                       .htaccess, geladen über vendor/laden.php;
@@ -501,6 +529,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      in den verschlüsselten Block, ab Web 19.0.0 — siehe 4.98d) ·
 │   │                      rueckweg_anlegen.php (das Schlüsselpaar des Rückwegs
 │   │                      ablegen, nur mit Passwortnachweis; Konzept RW, 4.99q) ·
+│   │                      passkey_anlegen.php (einen Passkey ablegen, nur mit
+│   │                      frischem Code; Schritt 18, SR-09, 4.99q) ·
 │   │                      rechtstext_vorschau.php (rendert das Getippte mit
 │   │                      rt_html(), speichert nichts; Admin und BetreiberIn,
 │   │                      Topf rt_vorschau — P5c/AP9)
@@ -531,7 +561,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      symbol.js (edSymbol() — dieselbe Zeichenkette wie ui_symbol()
 │   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code),
 │   │                      rueckweg.js (EdRueckweg: das Schlüsselpaar des Rückwegs
-│   │                       erzeugen, verpacken, senden — Konzept RW, 4.99q)
+│   │                       erzeugen, verpacken, senden — Konzept RW, 4.99q),
+│   │                      passkey.js (Passkey anlegen und bestätigen über
+│   │                       navigator.credentials, ohne Fremdbestandteil — SR-09, 4.99q),
+│   │                      pow.js + pow-worker.js (die Rechenaufgabe der Registrierung:
+│   │                       Worker mit WebCrypto, gesperrter Knopf — SR-08, 4.99m)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
 │   │                      qrcode.js — qrcode-generator 2.0.4, MIT (nur die Modulmatrix
@@ -756,7 +790,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
-│   ├── proben/            vierundzwanzig Prüfungen gegen die laufende Anlage
+│   ├── proben/            siebenundzwanzig Prüfungen gegen die laufende Anlage
 │   │                      (PK-04/2, E-PK-24): ingest, spur, jobs,
 │   │                      kopplung, wartung, raten, mail, versand,
 │   │                      komplett, wiederherstellung, gpx, geraete,
@@ -767,10 +801,18 @@ Daten erst nach Server-Bestätigung.
 │   │                      (Quellen, Archiv, Siegel), seit Web 20.42.0
 │   │                      zweitfaktor (RFC-Vektoren, Code-Schritt, Tor),
 │   │                      seit Web 20.43.0 rueckweg (Signaturen des
-│   │                      Rückwegs, Selbsttest, Marke; Konzept RW).
-│   │                      Gezählt am 24.09.2026 mit `proben.sh --liste`:
-│   │                      24 — bis dahin stand hier „zweiundzwanzig",
-│   │                      AP5 hatte die Zweitfaktorprobe nicht nachgetragen.
+│   │                      Rückwegs, Selbsttest, Marke; Konzept RW),
+│   │                      seit Web 21.7.0 sitzung (die Bindung per
+│   │                      zweitem Cookie; Schritt 18, SR-01), seit
+│   │                      Web 21.10.0 passkey (CBOR-Leser, beide
+│   │                      Zeremonien, Tabelle; SR-09), seit Web 21.12.0
+│   │                      schluesselwechsel (A → B zweimal gleichzeitig
+│   │                      und zurück, jedes Stück je Zweck; SR-03,
+│   │                      seit Web 21.12.1 mit den Fällen aus H-SR-06).
+│   │                      Gezählt am 29.09.2026 mit `proben.sh --liste`:
+│   │                      27 — bis zum 24.09.2026 stand hier
+│   │                      „zweiundzwanzig", AP5 hatte die
+│   │                      Zweitfaktorprobe nicht nachgetragen.
 │   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
 │   │                      ein LIESMICH. Vorher zwanzig Ordner.
 │   ├── screenshots/       nimmt alle Seiten in zehn Breiten von 360 bis 1920 px
@@ -916,6 +958,8 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.99q. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.99q) |
+| `vertraute_geraete` | „Gerät merken" beim Zweitfaktor (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07): `user_id` (`ON DELETE CASCADE`), `token_hash` (SHA-256 des Cookies `EDGERAET`, eindeutig), `angelegt_am`, `zuletzt_am` (fortgeschrieben bei jeder Anmeldung ohne Code, ohne Protokoll). **Kein User-Agent, kein Gerätename** (R36). **Gültig ist eine Zeile, solange `angelegt_am` plus die heutige Dauer ihrer Rollengruppe in der Zukunft liegt** — gerechnet beim Prüfen, nicht beim Merken (E-SR-17); der Aufräumjob löscht abgelaufene. Reist im Komplett-Stand mit (nur Hashes), **nicht** im Konto-Backup: Ein Cookie gehört zu einem Browser, nicht zu einem Konto. Mehr in 4.99q |
+| `passkeys` | Passkeys als Verfahren des Zweitfaktors (seit Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33): `user_id` (`ON DELETE CASCADE`), `credential_id` (Base64url der Kennung, höchstens 1023 Byte → `VARCHAR(1364)`, `ascii_bin`), `credential_hash` (SHA-256 der Kennung, `CHAR(64)`, **eindeutig** — seit Web 21.11.0, E-SR-47: Ein Index über die Kennung selbst reichte über 767 Byte und scheiterte unter einem älteren Zeilenformat), `rp_id` (die Adresse, für die der Passkey entstand, seit Web 21.11.0, E-SR-48; Index `idx_konto` über `user_id, rp_id`), `oeffentlich` (der öffentliche Schlüssel als SPKI-PEM — bei der Registrierung aus COSE überführt, damit die Anmeldung ohne CBOR auskommt), `alg` (-7 ES256 oder -257 RS256), `zaehler` (Signaturzähler, E-SR-33), `bezeichnung` (bis 40 Zeichen oder leer), `angelegt_am`, `zuletzt_am`, `gewarnt_am` (letzte Mail wegen eines zurückgelaufenen Zählers, höchstens eine je Tag, E-SR-46). **Kein User-Agent, keine AAGUID, kein Gerätename** (E-SR-31, R36); höchstens zehn je Konto **und Adresse** (`PK_HOECHSTENS`, geprüft unter `FOR UPDATE`). Reist im Komplett-Stand mit, **nicht** im Konto-Backup: Ein Passkey gilt nur für die Adresse, an der er entstand (Backup-Format 4, 6.11). Mehr in 4.99q |
 | `totp_codes` | Die Wiederherstellungscodes des Zweitfaktors (seit Web 20.42.0, P5c/AP5): `user_id`, `hash` (`password_hash()`), `benutzt_am` (NULL = offen). **Nicht am Serverschlüssel** (E-P5c-42) — sie sind der Rückweg für genau den Fall, dass das Geheimnis nicht mehr zu öffnen ist. `ON DELETE CASCADE` mit dem Konto. Angenommen wird atomar (`UPDATE … WHERE benutzt_am IS NULL`, gültig bei `rowCount() = 1`) |
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
@@ -950,7 +994,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **In die Komplettsicherung geht sie seit Web 20.39.0 ohne Zeilen** (`KOMP_OHNE_ZEILEN` in `komplett_lib.php`, P5c/AP2): nur das Schema, damit ein Einspielen die Tabelle anlegt. Die 30-Tage-Frist gilt damit auch für jeden Abzug. *Hier stand bis Web 21.1.0, sie liege in **jeder** Komplettsicherung, weil `komp_tabellen()` keine Ausnahmeliste habe — das stimmte bis Web 20.38.x.* Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **Töpfen mit Leiter** (`'leiter' => true` in `RATE_GRENZEN`; seit Web 20.42.0 sieben, mit `totp`) — die übrigen sperren ohne Protokollzeile. *Hier stand „fünf" und „neun"; seit Web 20.11.0 waren es sechs mit Leiter, gezählt am 24.09.2026* |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
-| `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
+| `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage` / `seite` (seit Web 21.12.0, der Knopf „Jetzt weiterarbeiten", 4.97a), `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTPS- oder SFTP-Gegenstelle je Zeile. **`ftp` ist seit Web 20.2.0 abgeschafft** (S10/AP4, E-S10-14) und **seit Web 21.0.0 auch aus dem `ENUM`** (Migration `2026_09_25_ftp_entfernen`, P5c/AP8, E-P5c-124). Bis dahin behielt das Schema den Wert, und ein solches Ziel trug die rote Plakette *wird übergangen*; der Weg dafür ist mit dem Wert gefallen. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
@@ -2813,7 +2857,8 @@ dagegen mit Nr. 127 erledigt: Die Prüfung läuft jetzt über `csrf_ok()`, und
 die castet.
 
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
-HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) — **seit
+HttpOnly/Secure/SameSite=Strict, **seit Web 21.7.0 an ein zweites Cookie
+gebunden** (`EDBIND`, 4.99q „Die Sitzungsbindung"), CSRF für Formulare (`csrf_field`) — **seit
 Web 15.6.0 auch am Anmeldeformular** (Backlog Nr. 127) — und für
 JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
 Passwörter/Schlüssel nur als Hash, Ratenschutz an **allen** ohne Anmeldung
@@ -2899,12 +2944,19 @@ Nachricht, und eine Rundmail an vierzig Konten hätte den Seitenaufruf bis zu
 Prüfung, Präfix, Frist und das Schließen überholter Zeilen bleiben eine
 Stelle.
 
-**Der Katalog** (`mail_katalog()`) führt **dreiundzwanzig** Einträge mit
+**Der Katalog** (`mail_katalog()`) führt **achtundzwanzig** Einträge mit
 `art`, `frist`, `pflicht`, `betreff` und `text` (hier stand bis Web 20.37.3
 „zehn", der Stand von Web 20.8.0 — P5b hatte neun dazugebracht, 20.38.0
 bringt `rundmail`, 20.41.0 `registrierung_erneut`, 20.42.0
-`totp_zurueckgesetzt`, 20.44.0 `rueckweg_erneuert`; bis Web 21.1.0 stand
-hier „zwanzig"). Der Name der Installation kommt aus `instanz_name()`, die
+`totp_zurueckgesetzt`, 20.44.0 `rueckweg_erneuert`, 21.10.0
+`passkey_angelegt` und `passkey_entfernt`, 21.11.0 `passkey_zaehler`, 21.12.0
+`serverschluessel_gewechselt` — an **jede** BetreiberIn mit Passwort
+(`mail_betreiberinnen()`, E-SR-62), nur Kennungen —, 21.12.1
+`serverschluessel_abgeschlossen` für den Abschluss desselben Wechsels; bis
+dahin trugen Beginn und Abschluss einen Schlüssel, und der Abschluss setzte
+eine noch offene Beginn-Mail auf „überholt" (F-SR-82). Bis Web 21.1.0 stand hier
+„zwanzig", bis Web 21.9.0 „dreiundzwanzig", bis Web 21.10.0 „fünfundzwanzig",
+bis Web 21.11.2 „sechsundzwanzig", bis Web 21.12.0 „siebenundzwanzig"). Der Name der Installation kommt aus `instanz_name()`, die
 Kontaktzeile aus `instanz_kontakt()` — über `mail_rahmen()`, den alle
 benutzen. Vorher gab es acht Mailtexte mit handgeschriebener Grußformel, und
 einer davon fehlte das „Gen-EM" im Betreff.
@@ -3626,6 +3678,16 @@ Job bei *jeder* angemeldeten Anfrage, und jede Seite trüge bis zu drei
 Sekunden Wartung mit. Für `cli` und `token` gilt er nicht: Dort bestimmt der
 Zeitplan die Häufigkeit, und wer jede Minute aufruft, will das auch.
 
+**Ein vierter Auslöser ist kein Zeitgeber, sondern ein Knopf: `seite`**
+(seit Web 21.12.0, SR-03, E-SR-65). „Jetzt weiterarbeiten" in der Karte
+„Schlüssel des Servers" ruft `sw_jetzt()`, und das geht über
+`jobs_einen_lauf()` — mit der Sperre `laeuft_seit`, ohne Mindestabstand,
+mit 20 s Budget. Zwei Umhüller gleichzeitig räumten einander den
+Arbeitsordner leer; eine eigene Schleife neben dem Rahmen hätte diese
+Sperre nicht. **Die Pause (`jobs_pause()`) hält ihn nicht an** — sie steht in
+`jobs_lauf()`, und der Knopf geht daran vorbei wie „Jetzt sichern" beim
+Komplett-Backup: Wer drückt, will es jetzt.
+
 `jobs.php` lädt **ausdrücklich nicht** `auth_guard.php`. Der würde den
 Huckepack-Weg auslösen und damit den Job aus dem Job heraus starten. Der Abruf
 über die Adresse legitimiert sich mit dem Token, nicht mit einer Sitzung — ein
@@ -3684,12 +3746,13 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 |---|---|---|
 | `mail` | nein | Nachrichten, deren erster Versuch scheiterte — fünf Versuche über 24 Stunden, danach steht die Nachricht als unzustellbar auf der Statusseite (4.99). Steht **ganz vorn** im Katalog: `jobs_lauf()` arbeitet ihn der Reihe nach ab, und am Huckepack-Weg sind 3 s für alle Jobs zusammen — ein Job dahinter bekäme dort regelmäßig nichts |
 | `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über jede Tabelle des Kontos kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | **siebzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/quelltext/` `jobregister`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | **achtzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), **Gemerkte Geräte** (Schritt 18, SR-02 — abgelaufene Zeilen aus `vertraute_geraete`, je Rolle mit der Dauer ihrer Gruppe), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/quelltext/` `jobregister`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
 | `konto_verfall` | nein | Registrierungen, die nicht bestätigt wurden, und Freischaltfristen, die abgelaufen sind (P5b) — **höchstens fünf je Lauf**, aus demselben Grund wie beim Löschjob darüber |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
 | `protokoll_archiv` | nein, im Regelfall eine Abfrage auf die Marke | Die Einträge eines abgelaufenen Zeitraums (Vorgabe 7 Tage) versiegelt als ZIP nach `sicherungen/protokoll/`, in Häppchen zu 500 Zeilen; Archive nach Ablauf der Aufbewahrung (Vorgabe 365 Tage) löschen (P5c/AP2, 4.99g). Steht **vor** `versand`, damit ein fertiges Archiv im selben Lauf hinausgeht |
+| `schluesselwechsel` | nein, nur während eines Wechsels des Serverschlüssels | Was noch unter dem bisherigen Serverschlüssel liegt, mit dem neuen umhüllen und danach mit ihm nachweisen — Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups samt Begleitdatei, Archive des Protokolls (Schritt 18, SR-03, 4.97c). Ohne Wechsel eine Abfrage und `fertig`. Steht **vor** `versand`, damit ein umbenanntes Archiv im selben Lauf hinausgeht |
 | `versand` | nein | Pakete auf die aktiven Backup-Ziele — und seit Web 20.14.0 die **Aufbewahrung dort** (4.97c); seit Web 20.39.0 auch die Archive des Protokolls, **ohne** Aufbewahrungsregel dort |
 | `komplett` | nein, nach Plan | Komplett-Backup der Installation (4.97d) |
 | `nachaufloesen` | nein, nur nach einer neuen Modelltabelle | Teilenummern bestehender Geräte erneut auflösen, in Blöcken von 200 (P5a/AP11, unten) |
@@ -4212,14 +4275,19 @@ Zusatzdaten: 'edsk1|<zweck>'
 ```
 
 Der Zweck in den Zusatzdaten bindet die Chiffre an **die eine Stelle**, für
-die sie gedacht ist. Vier Zwecke gibt es:
+die sie gedacht ist. **Sechs Zwecke gibt es** — bis Web 21.12.0 standen hier
+vier; `totp` und `protokollarchiv` fehlten, obwohl das Schlüsselblatt sie
+nannte (F-SR-01). Maßgeblich sind die Aufrufer von `sk_versiegeln()`, nicht
+diese Tabelle; die Schlüsselwechselprobe zählt sie nach:
 
-| Zweck | Wofür | seit |
-|---|---|---|
-| `sicherungsziel:<id>:<feld>` | Passwort und privater Schlüssel eines Backup-Ziels | Web 12.1.0 |
-| `komplett:<datei>` | das Komplett-Backup der Installation | Web 15.3.0 |
-| `adminpaket\|<konto>\|<paket>\|<teil>` | jeder Eintrag eines Konto-Backups, Fassung 3 | Web 20.2.0 |
-| `adminkonto\|<konto>` | die Begleitdatei `konto.json` neben den Paketen | Web 20.2.0 |
+| Zweck | Wofür | seit | beim Wechsel (unten) |
+|---|---|---|---|
+| `sicherungsziel:<id>:<feld>` | Passwort und privater Schlüssel eines Backup-Ziels (`sicherungsziel_lib.php`) | Web 12.1.0 | umgehüllt (`ziele`) |
+| `totp\|<konto>` | das Geheimnis des Zweitfaktors (`totp_lib.php`) | Web 20.42.0 | umgehüllt (`totp`) |
+| `adminkonto\|<kennung>` | die Begleitdatei `konto.json` neben den Paketen | Web 20.2.0 | umgehüllt (`konten`) |
+| `adminpaket\|<kennung>\|<paket>\|<teil>` | jeder Eintrag eines Konto-Backups, Fassung 3 | Web 20.2.0 | umgehüllt (`konten`); Fassung 1 und 2 tragen kein Siegel und bleiben |
+| `protokollarchiv\|<name>\|<teil>` | Manifest und Teile eines Archivs des Protokolls; die Kennung steht im Namen | Web 20.39.0 | umgehüllt unter **neuem Namen** (`archive`) |
+| Komplett-Stand `EDKOMP1` | **kein** `edsk1:`: der rohe Schlüssel je Block zu 256 KiB, Zusatzdaten `edkomp1\|<sha256 des Kopfes>\|<block>\|<letzter>` | Web 15.3.0 | **nicht** umgehüllt (E-SR-21) |
 
 Ein versiegeltes Passwort von Ziel 3 lässt sich damit nicht als Passwort von
 Ziel 7 einsetzen, obwohl beide denselben Schlüssel benutzen — und ein Teil aus
@@ -4237,7 +4305,9 @@ die schlechteste Antwort, denn der Versand liefe dann in ein „Zugang
 verweigert", und niemand käme auf die Ursache.
 
 Neue Installationen bekommen den Schlüssel vom Installer. Bestehende tragen
-ihn auf der Seite „Backup-Ziele" nach — ein Knopf, wenn `config.php`
+ihn unter **Betrieb → Servereinstellungen**, Karte „Schlüssel des Servers",
+nach — seit S10/AP3; bis Web 21.12.0 stand hier „auf der Seite
+‚Backup-Ziele'", der Ort bis S10 (F-SR-03). Ein Knopf, wenn `config.php`
 beschreibbar ist, sonst eine Zeile von Hand. Der Knopf **ergänzt und ersetzt
 nie** (ein Überschreiben machte jedes versiegelte Feld unlesbar), schreibt in
 eine Nebendatei mit Endung `.php` — eine `config.php.tmp` läge im
@@ -4246,6 +4316,230 @@ Wurzelverzeichnis des Webservers als lesbarer Text mit dem Datenbankpasswort
 schiebt sie erst dann an ihren Platz und verwirft danach den
 OPcache-Eintrag. Ohne diesen letzten Schritt zeigt die nächste Anfrage wieder
 „Serverschlüssel fehlt": OPcache prüft den Zeitstempel sekundengenau.
+
+#### Der Wechsel des Serverschlüssels (ab Web 21.12.0, Schritt 18, SR-03)
+
+**Bis Web 21.12.0 gab es keinen.** Wer `server_key` von Hand änderte, machte
+jedes versiegelte Stück stumm (Nr. 247). Jetzt ist es ein Vorgang in drei
+Lagen — `serverkrypto_lib.php` (Schreiben, Lage, Riegel) und
+`schluesselwechsel_lib.php` (Job, Nachweis, Bedingungen):
+
+| Lage | `config.php` | Marke `server_key_kennung` | was geschieht |
+|---|---|---|---|
+| `bereit` | `server_key` | dessen Kennung | — |
+| `rotation` | `server_key` (neu) **und** `server_key_alt` (bisher) | die neue | versiegelt wird mit dem neuen; `sk_oeffnen()` versucht erst den neuen, dann den bisherigen (`sk_oeffnen_mit_wem()` sagt, welcher); der Job hüllt um |
+| `bereit` | `server_key` (der neue) | die neue | der bisherige steht nur noch auf dem Blatt |
+
+Ein `server_key_alt` **gleich** dem heutigen ist seit Web 21.12.1 kein
+Wechsel, sondern `bereit` — so bleibt ein Wechsel stehen, der zwischen seinen
+beiden Schreibschritten abbrach. Bis dahin hieß das `rotation`: ein Wechsel
+des Schlüssels mit sich selbst, samt Job und vorgemerktem Komplett-Stand. Der
+nächste Wechsel überschreibt die Waise (F-SR-78); bis dahin steht sie in der
+Datei, aber nicht auf dem Blatt. Dasselbe gilt seit der Nachprüfung beim
+Anteil (`kdf_anteil_alt` = `kdf_anteil`): `bereit`, keine zweite Kachel, und
+die nächste Rotation überschreibt sie. Bis dahin hieß diese Waise `rotation`
+und sperrte den Wechsel des Serverschlüssels (F-SR-86).
+
+**Beginn: `serverschluessel_wechseln($kopienVerstanden)`.** Ohne den Haken
+nichts (E-SR-63) — er sagt, dass die Kopien auf dem Backup-Ziel unter dem
+bisherigen bleiben. Nicht neben einer Anteil-Rotation (E-SR-60; umgekehrt
+weist `anteil_wechseln()` ab, solange ein Wechsel läuft). Geschrieben wird
+erst `server_key_alt` (der heutige), dann `server_key` (ein neuer); scheitert
+das zweite, wird das erste zurückgenommen — **aber nur, wenn die Datei noch
+den eigenen halben Zustand trägt** (`config_halbes_zuruecknehmen()`, seit der
+Nachprüfung, F-SR-86). Steht in `server_key` nicht mehr der gesicherte Wert,
+hat jemand an der Sperre vorbei geschrieben (FTP, Editor). Dann bleibt
+`server_key_alt` stehen, denn er ist der einzige Eintrag, der das Alte noch
+öffnet, und die Meldung sagt es. Beim Anteil gilt dasselbe. Danach `sw_beginnen()`: Zustand
+des Jobs, die Rückfrage zum Blatt fällig (Nr. 233, E-SR-11), Protokoll
+`serverschluessel_gewechselt`, eine Mail an jede BetreiberIn (E-SR-62) — nur
+Kennungen. Die Seite fährt gleich ein Häppchen mit acht Sekunden.
+
+**Unter einer Sperre (seit Web 21.12.1, F-SR-78).** Bis dahin lief der
+Wechsel ohne; zwei gleichzeitig abgeschickte — ein Doppelklick, zwei
+Fenster, zwei BetreiberInnen — konnten einen frisch gewürfelten Schlüssel
+überschreiben, nachdem ein Häppchen schon Zeilen unter ihm umgehüllt hatte.
+Jetzt läuft **jeder Griff an einen Schlüssel in `config.php`** (Anlegen,
+Eintragen, Nachtragen, Wechseln, Entfernen, Neuanfang — Serverschlüssel wie
+Anteil) über `schluessel_unter_sperre()`: dasselbe bedingte
+`UPDATE … laeuft_seit` wie in `jobs_einen_lauf()`, auf der Jobzeile
+`schluesselwechsel`. Damit schließen sich die Griffe und jedes Häppchen des
+Jobs gegenseitig aus; wer die Sperre nicht binnen 5 s bekommt, hört „gleich
+noch einmal", und nichts ändert sich. **Stirbt ein Häppchen an der Zeit- oder
+Speichergrenze, läuft kein `finally`**, und die Sperre steht, bis sie nach
+`JOB_SPERRE_VERFALL_S` (einer Stunde) verfällt. So lange weist jeder Griff an
+die Schlüssel ab, auch „Nachtragen vom Blatt". Die Meldung nennt deshalb seit
+der Nachprüfung, seit wann sie steht und wann sie spätestens frei ist
+(F-SR-86). Eine kürzere Frist nur für die Griffe gibt es nicht: Job und
+Griffe teilen sich die Zeile. Keine Sperrdatei: Sie wäre ein neunter
+Pfad, den die Kette nicht ausliefern darf. Nach dem Nehmen wird `config.php`
+neu gelesen. Dazu zwei Riegel in `config_eintrag_schreiben()`: Ob ein
+gültiger Eintrag dasteht, zählt jetzt auch die **Datei**, nicht nur der beim
+Start gemerkte Stand, und `server_key` wird nur ersetzt, wenn dort noch der
+gesicherte Wert steht (`$erwartet`). Die Gegenproben zeigen, was jedes Stück
+trägt (Prüfdokument). **Beiläufig gemessen:** Zwei gleichzeitige Schreiber
+teilen sich die Nebendatei `config.neu.php` — der zweite überschreibt die des
+ersten; auch das schließt die Sperre aus.
+
+**Scheitert der Beginn, bleibt der Wechsel.** Wirft `sw_beginnen()`, steht
+der neue Schlüssel schon in `config.php` und versiegelt; ein Rückbau risse
+ihn aus dem, was er schon versiegelt hat. Der Fehler geht in den Reiter
+System, und der Job holt den Beginn nach (F-SR-80). Ein Inventar, das wirft,
+hält den Beginn seit der Nachprüfung nicht mehr auf: Der Zustand steht dann
+ohne Stückzahl, und das erste Häppchen zählt. Bis dahin sagen Karte,
+Statuszeile und der Satz vor dem Entfernen „die Zahl der Stücke zählt das
+erste Häppchen" (`sw_gezaehlt()`), und `sw_rueckstand()` gibt `null` statt
+0 — sonst stünde „Rückstand 0" in der Jobzeile. Bis zur Nachmessung stand
+überall „noch 0 von 0" (F-SR-88). Scheitert auch das Schreiben
+des Zustands (die Datenbank ist weg), holt das Häppchen den Beginn **als
+Handeintrag** nach. Protokoll und Mail sagen dann „von Hand eingetragen —
+oder der Beginn über die Karte ist gescheitert" (F-SR-86); bis dahin
+behaupteten sie einen Handeintrag.
+
+**Ein Wechsel von Hand** — `server_key` und `server_key_alt` in
+`config.php` eingetragen, ohne die Karte; ebenso ein Zustand, der zu einem
+anderen Schlüsselpaar gehört (aus einem Dump, von einem früheren
+Handeintrag): Das Häppchen beginnt ihn **wie einen über die Karte** —
+Protokoll mit „von Hand eingetragen", Mail an jede BetreiberIn mit eigenem
+Betreff, die Rückfrage zum Blatt sofort fällig (E-SR-74). Bis Web 21.12.0
+legte es dort still einen Zustand an; die Rückfrage kam dann erst im
+nächsten Quartal, und der Abschluss blieb so lange zu (F-SR-80). **Nach dem
+Beginn endet das Häppchen.** Der Jobrahmen schreibt bei einer Ausnahme den
+Zustand von vor dem Häppchen zurück, und hier war das keiner; das nächste
+hätte noch einmal begonnen, mit einer zweiten Mail. Die Mails des
+Handeintrags trägt der Mailjob hinaus (`sofort = false`), denn am
+Huckepack-Weg liefe das Häppchen in der Anfrage irgendeiner angemeldeten
+Person (F-SR-85, F-SR-87). Eine Lage `abweichend` oder `fehlt` mitten im
+Wechsel — eine Marke aus einem älteren Dump, ein Tippfehler in
+`config.php` — leert den Zustand nicht. Geleert wird nur bei `bereit`; nach
+dem Nachtragen geht es weiter, ohne zweiten Beginn (F-SR-85). Jedes
+Häppchen liest `config.php` zuerst neu: Ein CLI-Lauf, der vor dem Wechsel
+begann, hielt sonst die Lage `bereit` und leerte den Zustand (F-SR-79).
+
+**Der Job `schluesselwechsel`** (4.97a) nimmt die Zwecke in der Reihenfolge
+`ziele`, `totp`, `konten`, `archive` — erst die Zeilen, dann die Dateien.
+**Der Zustand ist ein Zeiger** (E-SR-64): Phase, Zweck, das letzte Stück
+(lexikalisch; Zeilennummern auf zehn Stellen aufgefüllt, sonst stünde „10"
+vor „9"), Zahlen. `jobs.zustand` fasst 64 KiB; eine Liste der Stücke wüchse
+mit der Anlage. Je Stück: mit dem bisherigen öffnen, mit dem neuen
+versiegeln, **mit dem neuen wieder öffnen und vergleichen**, erst dann
+ersetzen —
+
+- eine Zeile mit `UPDATE … WHERE id = ? AND feld = <gelesener Wert>`: Hat
+  jemand das Ziel inzwischen neu gespeichert, gilt das Stück als „später",
+  und der Nachweis findet es wieder;
+- eine Datei über den Arbeitsordner `sicherungen/.schluesselwechsel/` und
+  `rename`. **Er liegt außerhalb der Kontoordner**, weil die Aufbewahrung dort
+  aufräumt; jedes Häppchen leert ihn zuerst — was dort liegt, ist ein halbes
+  Stück eines abgebrochenen Laufs. Ein Konto-Backup wird Teil für Teil neu
+  gebaut und jeder Teil an der neuen Datei mit dem neuen geöffnet und gegen
+  die Prüfsumme davor gehalten; die Begleitdatei vor dem Umbenennen noch
+  einmal gelesen;
+- ein Archiv des Protokolls bekommt einen **neuen Namen** (die Kennung steht
+  darin, und der Name im Zweck jedes Teils): neue Datei im Arbeitsordner
+  bauen, **dort nachweisen, dann ablegen** und die alte löschen (bis Web
+  21.12.0 erst abgelegt, dann nachgewiesen). Liegt die neue schon da und
+  besteht den Nachweis, brach der vorige Lauf zwischen Ablegen und Löschen
+  ab. Seit Web 21.12.1 wird jedes Archiv umgehüllt, dessen Manifest mit dem
+  bisherigen aufgeht, gleich welche Kennung im Namen steht — bis dahin hieß
+  eines mit einer dritten Kennung im Namen `verloren`, obwohl der bisherige
+  es öffnete (F-SR-81). Leere `zeilen` und `gekuerzt` bleiben Objekte
+  (Backup-Format 7.1); verschwindet das Archiv mitten im Bau, entsteht keines
+  aus einem gelöschten.
+
+**Ein Stück, das beim Umhüllen wirft** (seit Web 21.12.1, F-SR-81) — ein
+Schreibfehler, ein ZIP, das sich nicht bauen lässt, ein neu versiegelter
+Wert, der den Nachweis nicht besteht —, hält nicht mehr den ganzen Wechsel
+an. Bis dahin brach die Ausnahme das Häppchen ab, der Jobrahmen schrieb den
+Zustand von vor dem Häppchen zurück, und das nächste stieß wieder auf
+dasselbe Stück, ohne Ende und ohne Namen. Jetzt wird es mit Grund im Zustand
+vermerkt (`fehler`, bis zu zwanzig; darüber zählt `fehler_mehr` weiter, und
+der Reiter System bekommt eine Zeile je Häppchen statt einer je Stück und
+Runde; `fehler_mehr` hält die Zahl des letzten ganzen Umhüll-Durchgangs,
+gezählt wird in `fehler_mehr_lauf`, und Karte, Riegeltext und Meldung nehmen
+die größere von beiden, `sw_fehler_zahl()` — bis zur Nachmessung wurde die
+Zahl beim Neustart geleert, und die Karte zeigte zwischen den Häppchen
+wieder nur zwanzig; mit nur dem letzten ganzen Durchgang zeigte sie es
+mitten im ersten, F-SR-88), einmal in den Reiter System gemeldet,
+übersprungen — und zählt im Nachweis wie `alt`: Es liegt ja noch unter dem
+bisherigen, und Bedingung 1 bleibt zu, bis es umgehüllt oder fort ist. Die
+Karte zeigt es in der Zeile „Ließen sich nicht umhüllen". Besteht der Rest
+eines Nachweises nur aus solchen Stücken, wartet der neue Versuch aufs
+nächste Häppchen. Was mit **keinem** der beiden aufgeht, bleibt `verloren`
+(E-SR-61) — ein Wert, der nur den Nachweis nach dem Neuversiegeln nicht
+bestand, gehört nicht dazu, ebenso wenig ein Teil eines Archivs, der sich
+nicht in den Arbeitsordner schreiben ließ: Das Archiv öffnet mit dem
+bisherigen und steht seit der Nachprüfung in der Fehlerliste. Bis dahin hieß
+es `verloren`, der Nachweis sagte `alt`, und der Durchgang kreiste (F-SR-85).
+Die Liste `verloren` gilt **je Durchgang**: Am Ende eines Durchgangs steht
+darin nur, was dieser so fand. Bis zur Nachprüfung wurde sie nur verlängert,
+und ein gelöschtes kaputtes Konto-Backup stand bis zum Abschluss auf der
+Karte.
+
+Reserven je Stück: 0,5 s für eine Zeile, 6 s für eine Datei **beim
+Umhüllen**; im Nachweis 0,5 s auch für eine Datei, denn bei einer
+umgehüllten liest er nur das Manifest. Findet er eine Datei noch unter dem
+bisherigen (ein Stück aus der Fehlerliste, ein Nachzügler), liest er jeden
+Teil, und das Häppchen läuft wie beim Umhüllen über sein Budget hinaus, bis
+das Stück durch ist: Die Reserve regelt den Anfang eines Stücks, nicht sein
+Ende. **Am Huckepack-Weg (3 s) werden
+Dateien deshalb nie umgehüllt, wohl aber nachgewiesen** — ohne Cron oder
+Token bringt nur *Jetzt weiterarbeiten* (20 s) Konto-Backups und Archive
+voran (F-SR-82). Steht der Verdichtungsjob mit Rückstand im Katalog vor ihm,
+bleibt ihm am Huckepack-Weg oft gar keine Zeit; dasselbe wie beim Mailjob.
+Nach dem Umhüllen ein **Nachweis-Durchgang**, der nichts schreibt; liegt dann
+noch etwas unter dem bisherigen, beginnt das Umhüllen von vorn (höchstens
+dreimal je Häppchen). Liegt das Manifest eines Konto-Backups oder Archivs
+noch unter dem bisherigen, versucht er **jeden Teil** — so scharf wie das
+Umhüllen, das ein Paket mit einem unlesbaren Teil `verloren` nennt und
+liegen lässt. Bis Web 21.12.0 sagte der Nachweis dazu `alt`, und der Wechsel
+wurde nie fertig (F-SR-81).
+
+**Der Nachweis beginnt frühestens zehn Minuten nach dem Beginn** (seit Web
+21.12.1, `SW_NACHZUEGLER_S`, `nachweis_ab` im Zustand, E-SR-73). Jeder
+Prozess hält `config.php` und den Schlüssel in einer `static`; einer, der vor
+dem Wechsel startete, versiegelt bis zu seinem Ende mit dem bisherigen — ein
+CLI-Lauf bis zu 300 s, eine Anfrage bis zur Laufzeitgrenze (240 s Produktiv,
+300 s Staging). Ein Nachweis, der früher durch war, sah solche Nachzügler
+nicht mehr, und das Entfernen war erlaubt (F-SR-79). Bis zur Frist ruht das
+Häppchen; Karte und Statuszeile sagen „Nachweis ab HH:MM", *Jetzt
+weiterarbeiten* steht dann nicht da. Bedingung 1 verlangt zusätzlich, dass
+der Nachweis nach der Frist **begann**. Dieser Zeitpunkt wird beim
+**Eintritt** in den Durchgang gesetzt, nicht vor dem ersten Stück. Bis zur
+Nachprüfung blieb er bei einem Durchgang ohne Stück leer. Bedingung 1 ging
+dann nie auf, und jedes Häppchen schrieb erneut „umgehüllt" ins Protokoll
+(F-SR-85). Ein Zustand von vor Web 21.12.1 mit „fertig" ohne diesen
+Zeitpunkt wird einmal neu nachgewiesen.
+
+**Nach dem Einspielen eines Komplett-Stands** (`wiederherstellen.php` ruft
+`sw_nach_einspielen()`) gilt ein mitgebrachter Zustand nicht als Nachweis:
+Phase und Zeiger gehen zurück auf „Nachweis von vorn", der Beginn bleibt;
+die Listen `fehler` und `verloren` und die Zahl `umgehuellt` beginnen neu.
+Der Dump stammt von der Anlage, die ihn schrieb; deren Dateien sind nicht
+die hiesigen (F-SR-80, F-SR-85).
+
+Fertig heißt: Protokoll `serverschluessel_umgehuellt` mit den
+Zahlen, und **ein Komplett-Auftrag wird vorgemerkt** (`sw_komplett_anstossen()`,
+Q-SR-03) — erst jetzt, weil ein Stand mitten im Umhüllen Zeilen unter beiden
+Schlüsseln trüge. Scheitert das Vormerken (Grenze, es läuft schon einer),
+nennt die Karte den Grund; der Wechsel hängt nicht daran. **Was mit keinem der beiden aufgeht, wird genannt und nicht
+angefasst** (E-SR-61) — es war vorher schon stumm; die Karte nennt bis zu
+zwanzig, ohne Kontokennung.
+
+**Abschluss: `serverschluessel_alt_entfernen()`** verlangt drei Dinge
+(`sw_bedingungen()`, E-SR-09) — alles nachgewiesen, ein Komplett-Stand unter
+dem neuen, jünger als der Beginn (am Kopf **und** am ersten Block geprüft,
+4.97d), und die Rückfrage zum Blatt seit dem Beginn beantwortet. Fehlt eines,
+kommen die fehlenden als Sätze zurück, und nichts ändert sich. Danach
+Protokoll `serverschluessel_alt_entfernt` und die zweite Mail — seit Web
+21.12.1 unter eigenem Schlüssel (`serverschluessel_abgeschlossen`), damit sie
+eine noch offene Beginn-Mail nicht überholt (F-SR-82).
+
+**Was er nicht erreicht.** Komplett-Stände (E-SR-21) und alles auf einem
+Backup-Ziel bleiben unter dem bisherigen. Ein umbenanntes Archiv gilt dem
+Versand als „nur lokal" und geht noch einmal hinaus; auf dem Ziel liegt es
+dann unter beiden. Deshalb die Blatt-Regel (E-SR-10): Das bisherige Blatt
+wird nicht vernichtet, solange drüben etwas liegt, das nur es öffnet.
 
 #### Der Versand
 
@@ -4515,6 +4809,44 @@ Der Schlüssel ist entweder der **Serverschlüssel** aus `config.php`
 `KDF_ITER_ZIEL` = 600 000 Runden, dieselbe Zahl wie im Browser). Was gilt,
 steht im Kopf; raten muss das niemand — und deshalb bleibt eine ältere Datei
 mit 320 000 im Kopf auch nach der Anhebung lesbar.
+
+**Seit Web 21.12.0 trägt der Kopf auch die Kennung des Serverschlüssels**
+(`kennung`, nur bei `kdf: null`; F-SR-11, E-SR-67). Sie steht über die
+Bindung in den Zusatzdaten jedes Blocks — wer sie ändert, macht die Datei
+unlesbar, statt sie einem anderen Schlüssel zuzuschreiben. **Welcher
+Schlüssel welchen Stand öffnet** (`komp_serverschluessel_fuer()`): erst der
+heutige, dann der bisherige (`server_key_alt`, nur während eines Wechsels,
+4.97c), jeweils am ersten Block versucht; die Kennung allein wäre eine
+Behauptung. Die Liste zeigt „bisheriger Schlüssel" (blau) oder „anderer
+Schlüssel" (orange); Herunterladen, versiegelt Herunterladen und Einspielen
+(`komp_schluessel_fuer()` mit dem Pfad) nehmen denselben Weg. Ein Stand
+unter einem **dritten** Schlüssel lässt sich hier seit Web 21.12.1 gar nicht
+erst herunterladen: Die Liste bietet nur *Löschen* an und sagt, warum, und
+der Download weist ab, **bevor** er Protokoll und Kopfzeilen schreibt — bis
+dahin bekam der Browser eine leere Datei, das Protokoll sagte
+„heruntergeladen", und der Satz dazu stand nur im Reiter System (F-SR-82).
+**Stände werden beim Wechsel nicht umgehüllt** (E-SR-21): Nach dem Entfernen
+des bisherigen öffnet einen älteren Stand nur noch der Wert vom bisherigen
+Blatt (Runbook 7, „Einen Stand von vor dem Wechsel einspielen"). Ältere
+Stände ohne `kennung` zeigen dieselben Plaketten; für sie entscheidet allein
+der Versuch.
+
+**Wechselt der Schlüssel, während ein Stand versiegelt wird** (seit Web
+21.12.1, E-SR-72): Jedes Siegel-Häppchen ist ein eigener Prozess und nimmt
+den Schlüssel, der gerade in `config.php` steht; der Kopf mit der Kennung
+entstand beim Übergang vom Dump. Bis dahin lagen danach die ersten Blöcke
+unter dem bisherigen, die übrigen unter dem neuen, und der Kopf nannte den
+bisherigen — die Liste zeigte „bisheriger Schlüssel", das Einspielen brach
+mitten in der Datei ab, und die Aufbewahrung verdrängte für ihn einen
+lesbaren Stand (F-SR-79). Jetzt hält `komp_kopf_angleichen()` vor jedem
+Siegel-Häppchen die Kennung im gemerkten Kopf gegen die heutige und beginnt
+bei einer Abweichung die Versiegelung mit neuem Kopf von vorn — wie der
+Archivjob. Der Dump bleibt; er ist Klartext. Der Wechsel wartet nicht auf
+das Backup: Im Ernstfall zählt jede Minute. **Die Kennung kommt vom
+Aufrufer**, aus dem Schlüssel, mit dem das Häppchen siegelt, nicht aus
+`konfig()` (Nachprüfung, F-SR-87). Beide sagen heute dasselbe, aber nur,
+weil `config_gemerktes_verwerfen()` beide zugleich verwirft. Ein Kopf mit der
+neuen Kennung über Blöcken unter dem alten wäre ein Kopf, der lügt.
 
 #### Zwei Wege heraus
 
@@ -5716,10 +6048,11 @@ Die Bausteine im Einzelnen:
 | Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_sessions.erstellt_am`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
 | Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungssitzungen). Die **Anzeige** rechnet in PHP nach `konfig('app.timezone')` um (bis Web 20.26.2: `$CFG['app']['timezone']`). |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
-| Meldung über eine Umleitung | `session_lib.php` | `flash_setzen($ton, $text, $ort, $daten)` und `flash_holen()` (liest **und** löscht), Sitzungsschlüssel `flash`. Ab Web 20.28.0; vorher setzten drei Seiten `$_SESSION['flash_notice']` und `$_SESSION['flash_error']` an 22 Stellen von Hand. **Ein** Schlüssel statt zwei: Der Ton ist eine Eigenschaft der Meldung, und bei zwei Schlüsseln entscheidet die Reihenfolge des Auslesens, was jemand sieht. **Seit Web 21.1.9** (R4-11, Nr. 250) leiten alle Seiten unter Verwaltung und Betrieb nach einer Handlung um, außer `betrieb_server.php` (Schritt 18); dafür trägt der Flash einen **Ort** (die `id` der Karte, zugleich der Anker der Umleitung), die vier Töne von `ui_meldung_markup()` (`ok`, `fehler`, `warn`, `info`) neben `notice`/`error`, und **Daten** für ein Ergebnis, das mehr ist als ein Satz (E-R4-33, -34). **Kein Geheimnis in die Daten** — sie liegen bis zum Abholen in der Sitzungsdatei; der Setz-Link nach „Konto anlegen“ bleibt deshalb ohne Umleitung. Ein Eingabefehler, der nichts geändert hat, bleibt auf der Seite, damit die Eingabe stehen bleibt (E-R4-35). |
+| Meldung über eine Umleitung | `session_lib.php` | `flash_setzen($ton, $text, $ort, $daten)` und `flash_holen()` (liest **und** löscht), Sitzungsschlüssel `flash`. Ab Web 20.28.0; vorher setzten drei Seiten `$_SESSION['flash_notice']` und `$_SESSION['flash_error']` an 22 Stellen von Hand. **Ein** Schlüssel statt zwei: Der Ton ist eine Eigenschaft der Meldung, und bei zwei Schlüsseln entscheidet die Reihenfolge des Auslesens, was jemand sieht. **Seit Web 21.1.9** (R4-11, Nr. 250) leiten die Seiten unter Verwaltung und Betrieb nach einer Handlung um, **seit Web 21.8.0 auch `betrieb_server.php`** (Schritt 18, SR-02 — eine Stelle für zehn Zweige, die Meldung in der Karte); dafür trägt der Flash einen **Ort** (die `id` der Karte, zugleich der Anker der Umleitung), die vier Töne von `ui_meldung_markup()` (`ok`, `fehler`, `warn`, `info`) neben `notice`/`error`, und **Daten** für ein Ergebnis, das mehr ist als ein Satz (E-R4-33, -34). **Kein Geheimnis in die Daten** — sie liegen bis zum Abholen in der Sitzungsdatei; der Setz-Link nach „Konto anlegen“ bleibt deshalb ohne Umleitung. Ein Eingabefehler, der nichts geändert hat, bleibt auf der Seite, damit die Eingabe stehen bleibt (E-R4-35). |
 | Eingang der Endpunkte | `db.php` | `api_methode($erlaubt)` und `api_rumpf($o)` — Methodenprüfung (405 `method`) und Rumpf als JSON-Objekt (400 `leer`/`format`). Ab Web 20.28.0. **Zwei Funktionen, weil `csrf_check()` dazwischen steht**; Einzelheiten im Abschnitt „Der Eingang der Endpunkte". |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
+| Frischer Code | `db.php`, `auth_guard.php` | Die Liste `ZF_FRISCH_HANDLUNGEN` steht in `db.php` neben den Rollen, das Tor `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, vor `csrf_check()`. Jede Handlung der Liste hat **genau einen** Aufruf mit ihrem Namen als fester Zeichenkette — das zählt das Register (Z43). Ab Web 21.9.0 (Schritt 18, SR-07); Einzelheiten in 4.99q. |
 | Schlüssel/Wert-Ablage | `db.php` | `app_state_lesen()`, `app_state_setzen()`, dazu ab Web 20.29.0 `app_state_mehrere()` (eine Abfrage statt n), `app_state_setzen_mehrere()`, `app_state_loeschen()` und `app_state_einmalig()` (`INSERT IGNORE`, dann zurücklesen — für die beiden Servergeheimnisse, bei denen von zwei gleichzeitigen Anfragen nur **eine** gewinnen darf). Die Längenprüfung gegen `APP_STATE_MAX` steht in `app_state_zu_lang()`. **Zwei Stellen fragen weiter selbst:** `jobs.php` (Gerätevertrag — es antwortet `500 datenbank`, wo der Helfer `null` liefert) und `job_aufraeumen_schritte()` (Verbund auf `users`). |
 | Virtuelles Gerät | `db.php` | `geraet_virtuell_sicherstellen($pdo, $userId)` — holen oder anlegen, an einer Stelle statt an vier. Dazu `geraet_virtuell_kennung()`, `geraet_virtuell()` (für Listen im Speicher), `GERAETE_ECHT_SQL` und `geraete_echt_sql($alias)` für Abfragen mit Tabellenalias sowie `GERAET_VIRTUELL_MUSTER` für die eine Abfrage, die das `LIKE`-Muster bindet. Ab Web 20.29.0. |
 | Einsatz laden | `einsatz_lib.php` | `einsatz_laden($id, $userId, ['spalten' => …, 'papierkorb' => 'nein'\|'ja'\|'egal'])`. Die Besitzprüfung steht **in** der Abfrage; die drei Fehlerfälle (gibt es nicht · gehört jemand anderem · falsche Seite des Papierkorbs) sind bewusst nicht unterscheidbar. Ab Web 20.29.0; zwei Stellen bleiben namentlich außen vor (siehe Dateikopf). |
@@ -6367,7 +6700,7 @@ geändert** (E-S5W-08).
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript in `JSON_SKRIPTE_AUSSERHALB_API` steht — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php`. Die vier liegen nicht unter `/api/` und brauchen trotzdem JSON. **Für den Wartungsmodus zählen nur die ersten beiden**, weil die anderen zwei in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt; die Liste ist in P5a/AP9 für die **Überlast** gewachsen, die keine Ausnahmen kennt (Abschnitt 5e) |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
-| Ausnahmen | **sechzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `admin_komplettsicherung.php`, `admin_sicherungsziele.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Komplett-Backup und Backup-Ziele seit Web 21.1.0** (P5c/AP9, E-P5c-134): Schloss der Torwächter, führte der Knopf „Komplett-Backup" der Seite Updates in die Sperre, und die Vorbedingung der FTP-Migration nannte die gesperrten Backup-Ziele als Weg. **Das Tor fragt nie nach der Rolle** — bis Web 21.1.0 sagten Karte und Handbuch „für alle außer Verwaltung und Betrieb" (F-P5c-158); jede Seite unter Verwaltung antwortet 503. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Ausnahmen | **achtzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `admin_komplettsicherung.php`, `admin_sicherungsziele.php`, `zweitfaktor.php`, `zweitfaktor_notweg.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Komplett-Backup und Backup-Ziele seit Web 21.1.0** (P5c/AP9, E-P5c-134): Schloss der Torwächter, führte der Knopf „Komplett-Backup" der Seite Updates in die Sperre, und die Vorbedingung der FTP-Migration nannte die gesperrten Backup-Ziele als Weg. **`zweitfaktor.php` seit Web 21.9.0** (Schritt 18, SR-07): die Bestätigung des frischen Codes — Schlüsselgriffe und Blatt liegen in der Wartung offen und verlangen ihn; ohne die Zeile führte ihr Umweg auf eine 503. **`zweitfaktor_notweg.php` seit Web 21.13.0** (Schritt 18, SR-04): der Notzugang der einzigen BetreiberIn — nach einem Deploy ist die Wartung an, bis `update.php` gelaufen ist, und genau dann steht sie, die den Zweitfaktor verloren hat, davor. **Das Tor fragt nie nach der Rolle** — bis Web 21.1.0 sagten Karte und Handbuch „für alle außer Verwaltung und Betrieb" (F-P5c-158); jede Seite unter Verwaltung antwortet 503. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
@@ -6447,7 +6780,7 @@ es darf nichts mehr ausstehen, und die Wartung muss noch stehen.
 **Nicht Umfang:** eine eigene Wartungsmeldung auf Uhr und Handy ist
 Backlog-Kandidat.
 
-**Nachweis:** `php tools/proben/wartung/probe.php` — **69 Erwartungen** (gezählt 25.09.2026, Web 21.1.0), beide
+**Nachweis:** `php tools/proben/wartung/probe.php` — **70 Erwartungen** (gezählt 04.10.2026, Web 21.13.0: dazu 11a, der Notzugang im Wartungsmodus), beide
 Richtungen (zu wenig gesperrt / zu viel gesperrt), einschließlich der drei
 Regeln aus E-S5W-09 am Code und seit Web 20.6.0 **Teil 7**: der Torwächter
 schließt, nennt den Grund, gibt `ingest.php` sein JSON-503, lässt Betrieb →
@@ -7242,6 +7575,16 @@ mit dem Link. Und `konto_geloescht` schreibt jetzt auch die Löschung durch
 die Verwaltung auf der Kontoseite, **vor** dem `DELETE` (F-P5c-99); bis
 dahin schrieben ihn nur die Selbstlöschung und der Verfall.
 
+**Neu mit Web 21.12.0** (Schritt 18, SR-03): drei Arten im Reiter Sicherung
+für den Wechsel des Serverschlüssels (4.97c) — `serverschluessel_gewechselt`
+(orange; neue und bisherige Kennung, Zahl der Stücke),
+`serverschluessel_umgehuellt` (blau; die Zahlen des Nachweises und bis zu
+zwanzig Stücke, die mit keinem der beiden aufgingen, ohne Kontokennung) und
+`serverschluessel_alt_entfernt` (neutral). Nie ein Wert. Seit Web 21.12.1
+schreibt `serverschluessel_gewechselt` auch ein Wechsel, den der Job in
+`config.php` vorfindet, ohne dass er über die Karte begann — mit „von Hand
+eingetragen" im Text und `weg: hand` in den Daten (E-SR-74).
+
 #### Wer welchen Reiter sieht
 
 `protokoll_reiter_sichtbar()`: **BetreiberIn alle sieben und das Archiv;
@@ -7429,7 +7772,12 @@ auch im Archiv.
 (`protokollarchiv|<Name>|<Teil>`). Ein umbenanntes Archiv lässt sich nicht
 mehr öffnen, und eines von einem anderen Schlüssel erkennt die Seite am
 Namen, ohne es zu öffnen: Der Reiter Archiv zeigt es mit der Plakette
-„anderer Schlüssel" und sperrt den Download.
+„anderer Schlüssel" und sperrt den Download. Während eines Wechsels des
+Serverschlüssels trägt ein noch nicht umgehülltes Archiv seit Web 21.12.1
+die Plakette „bisheriger Schlüssel" (blau) — der Download bleibt gesperrt,
+bis der Job es unter dem neuen Namen abgelegt hat (4.97c), und die Meldung
+darüber sagt das, statt auf den Schlüssel von damals zu verweisen
+(F-SR-82).
 
 **Der Download** (nur BetreiberIn, POST mit Token) entsiegelt in einen
 Arbeitsordner unter dem temporären Verzeichnis, packt `manifest.json` und je
@@ -7462,6 +7810,34 @@ wird** — kein Komplett-Backup, keine Löschung, kein Versand. Der Preis: Dass
 die Handlung mit gültigem Token auch gelingt, zeigt die Matrix nicht; das tun
 die Bedienwege und die Proben der jeweiligen Sache.
 
+**Die letzte Spalte „frischer Code"** (seit Web 21.9.0, Schritt 18, SR-07,
+E-SR-20) ist keine Rolle, sondern eine Markierung: `ja` heißt, die Handlung
+steht in `ZF_FRISCH_HANDLUNGEN` (`db.php`) und verlangt einen Code, der
+höchstens 15 Minuten alt ist; `—` heißt, sie steht nicht darin. Die Zellen
+der Rollen messen jede Zeile **mit** frischem Code — die Sitzungen der Probe
+tragen `zf_frisch_bis` wie nach dem Code-Schritt. Den Umweg **ohne** ihn misst
+ein eigener Teil an jeder `ja`-Zeile: dieselbe Anfrage mit dem Konto der
+kleinsten Rolle, die die Handlung darf, erwartet 303 auf
+`zweitfaktor.php?bestaetigen=1` mit dem Rücksprung auf ihre Seite (nach einem
+POST mit `nochmal=1`) — bei einem Endpunkt unter `api/` stattdessen 403 mit
+dem JSON-Fehler `zweitfaktor_frisch` (seit Web 21.10.0, SR-09: der erste
+Endpunkt der Liste ist `api/passkey_anlegen.php`) —, dazu einmal der
+Durchlass für ein Konto ohne Zweitfaktor. Dafür sind drei Zeilen
+dazugekommen: der Rollenwechsel (`action=konto&role=…` — nur ein wirklicher
+Wechsel verlangt den Code), die Anzeige des Schlüsselblatts und das
+Ausschalten des eigenen Zweitfaktors; mit SR-09 zwei weitere, Passkey
+hinzufügen und entfernen.
+Dass jede Handlung der Liste genau **einen** Aufruf im Code hat, zählt das
+Register (`tools/zaehlung/`, Z43).
+
+**Eine Seite ohne Rolle** (seit Web 21.13.0, Schritt 18, SR-04): Der
+Notzugang `zweitfaktor_notweg.php` hat kein Rollentor — er ist für die da,
+die nicht hineinkommt. Seine Zeile sagt deshalb `200` in jeder Spalte, und
+das ist die Aussage: Eine Sitzung, gleich welcher Rolle, macht ihn nicht zu
+einem Weg ohne Datei, Wert und Passwort. Das misst nicht die Matrix (sie
+schickt nur ein falsches Token), sondern die Zweitfaktorprobe in Teil 8 —
+angemeldet als Admin, ohne Datei: dieselbe eine Antwort wie unangemeldet.
+
 **Drei Platzhalter** (seit Web 20.41.0, AP4; der dritte seit R4-18):
 `{ziel}` ist ein Konto der Rolle `user`, `{admin}` eines der Rolle `admin`,
 `{support}` eines der Rolle `support` — alle drei legt die Probe an und räumt
@@ -7478,10 +7854,10 @@ Matrix.
 
 **Seit R4-18 führt die Matrix auch die BetreiberIn-Seiten einzeln** (Nr. 327):
 je eine Zeile für den Aufruf von `betrieb_server.php`, `betrieb_jobs.php`,
-`betrieb_updates.php`, `betrieb_status.php`, `betrieb_sicherheit.php` und
-`betrieb_statistik.php` samt dem CSV der Gerätemodelle (und seit R4-23 dem
+`betrieb_updates.php`, `betrieb_status.php`, `betrieb_sicherheit.php`,
+`betrieb_statistik.php` und — seit SR-07 — `betrieb_schluesselblatt.php` samt dem CSV der Gerätemodelle (und seit R4-23 dem
 eigenen Zeitraum, der eine andere Abfrage stellt), dazu jede ihrer
-26 POST-Handlungen und die zwei von `api/schluesselblatt_pruefen.php`. Bis
+27 POST-Handlungen (seit SR-02 mit der Karte „Anmeldung"; bis dahin 26) und die zwei von `api/schluesselblatt_pruefen.php`. Bis
 dahin stand hier, dass sie **nicht** darin stehen: Jede liegt hinter
 `require_betreiberin()` am Kopf ihrer Datei, gemessen war nur das Tor der
 Seite, und eine Handlung, die vor dem Tor stünde, hätte die Probe nicht
@@ -7494,117 +7870,125 @@ Vorschau-Endpunkt darin.** Die Zeile „Installation: Rechtstexte speichern"
 ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 
 <!-- rollenprobe:anfang -->
-| Handlung | Aufruf | user | support | admin | betreiberin |
-|---|---|---|---|---|---|
-| Protokoll: die Seite | `GET admin_protokoll.php` | 403 | 200 | 200 | 200 |
-| Protokoll: Reiter Verwaltung | `GET admin_protokoll.php?r=verwaltung` | 403 | 200 | 200 | 200 |
-| Protokoll: Reiter Sicherheit | `GET admin_protokoll.php?r=sicherheit` | 403 | 403 | 403 | 200 |
-| Protokoll: Reiter E-Mail | `GET admin_protokoll.php?r=email` | 403 | 200 | 200 | 200 |
-| Protokoll: Reiter Jobs | `GET admin_protokoll.php?r=jobs` | 403 | 403 | 200 | 200 |
-| Protokoll: Reiter Sicherung | `GET admin_protokoll.php?r=sicherung` | 403 | 403 | 200 | 200 |
-| Protokoll: Reiter Ziele | `GET admin_protokoll.php?r=ziele` | 403 | 403 | 403 | 200 |
-| Protokoll: Reiter System | `GET admin_protokoll.php?r=system` | 403 | 403 | 403 | 200 |
-| Protokoll: Archiv | `GET admin_protokoll.php?r=archiv` | 403 | 403 | 403 | 200 |
-| Protokoll: Archiv herunterladen | `POST admin_protokoll.php action=archiv_laden` | 403 | 403 | 403 | durch |
-| Protokoll: Fehlerkennung wechselt auf System | `GET admin_protokoll.php?q=0badc0de` | 403 | 200 | 200 | 303 |
-| Protokoll: unbekannter Reiter | `GET admin_protokoll.php?r=gibtesnicht` | 403 | 404 | 404 | 404 |
-| Protokoll: Fristen und Archiv einstellen | `POST betrieb_server.php action=protokoll` | 403 | 403 | 403 | durch |
-| Komplett-Backup: die Seite | `GET admin_komplettsicherung.php` | 403 | 403 | 403 | 200 |
-| Komplett-Backup: herunterladen | `POST admin_komplettsicherung.php action=herunterladen` | 403 | 403 | 403 | durch |
-| Komplett-Backup: jetzt sichern | `POST admin_komplettsicherung.php action=jetzt_sichern` | 403 | 403 | 403 | durch |
-| Komplett-Backup: fortsetzen | `POST admin_komplettsicherung.php action=fortsetzen` | 403 | 403 | 403 | durch |
-| Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | 403 | durch |
-| Komplett-Backup: Regeln | `POST admin_komplettsicherung.php action=regeln` | 403 | 403 | 403 | durch |
-| Komplett-Backup: Stand löschen | `POST admin_komplettsicherung.php action=stand_loeschen` | 403 | 403 | 403 | durch |
-| Backup-Ziele: die Seite | `GET admin_sicherungsziele.php` | 403 | 403 | 403 | 200 |
-| Backup-Ziele: Ziel speichern | `POST admin_sicherungsziele.php action=ziel_speichern` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Ziel löschen | `POST admin_sicherungsziele.php action=ziel_loeschen` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Abdruck vergessen | `POST admin_sicherungsziele.php action=abdruck_vergessen` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Versand an oder aus | `POST admin_sicherungsziele.php action=versand_schalter` | 403 | 403 | 403 | durch |
-| Backup-Ziele: jetzt versenden | `POST admin_sicherungsziele.php action=jetzt_versenden` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Ziel prüfen | `POST admin_sicherungsziele.php action=ziel_pruefen` | 403 | 403 | 403 | durch |
-| Backup-Ziele: Bestand ansehen | `POST admin_sicherungsziele.php action=ziel_bestand` | 403 | 403 | 403 | durch |
-| NutzerInnen: die Liste | `GET admin_users.php` | 403 | 200 | 200 | 200 |
-| NutzerInnen: Konto anlegen | `POST admin_users.php action=user_add` | 403 | 403 | durch | durch |
-| NutzerInnen: Auswahl sichern | `POST admin_users.php action=sichern_auswahl` | 403 | 403 | durch | durch |
-| Kontoseite: Konto einer NutzerIn | `GET admin_user.php?id={ziel}` | 403 | 200 | 200 | 200 |
-| Kontoseite: Konto eines Admins | `GET admin_user.php?id={admin}` | 403 | 403 | 200 | 200 |
-| Kontoseite: Rolle, Name, Adresse | `POST admin_user.php?id={ziel} action=konto` | 403 | 403 | durch | durch |
-| Kontoseite: Mengengrenzen | `POST admin_user.php?id={ziel} action=konto_grenzen` | 403 | 403 | durch | durch |
-| Kontoseite: Status | `POST admin_user.php?id={ziel} action=konto_status` | 403 | 403 | durch | durch |
-| Kontoseite: Setz-Link senden | `POST admin_user.php?id={ziel} action=pw_reset` | 403 | durch | durch | durch |
-| Kontoseite: Bestätigung erneut senden | `POST admin_user.php?id={ziel} action=verifikation` | 403 | durch | durch | durch |
-| Kontoseite: Konto-Backup erzeugen | `POST admin_user.php?id={ziel} action=sichern` | 403 | 403 | durch | durch |
-| Kontoseite: Konto-Backup einspielen | `POST admin_user.php?id={ziel} action=einspielen` | 403 | 403 | durch | durch |
-| Kontoseite: Backup freigeben | `POST admin_user.php?id={ziel} action=freigeben` | 403 | 403 | durch | durch |
-| Kontoseite: Freigabe widerrufen | `POST admin_user.php?id={ziel} action=widerrufen` | 403 | 403 | durch | durch |
-| Kontoseite: Backup löschen | `POST admin_user.php?id={ziel} action=paket_loeschen` | 403 | 403 | durch | durch |
-| Kontoseite: Konto löschen | `POST admin_user.php?id={ziel} action=user_delete` | 403 | 403 | durch | durch |
-| Kontoseite: Gerät an oder aus | `POST admin_user.php?id={ziel} action=device_toggle` | 403 | 403 | durch | durch |
-| Kontoseite: Gerät deaktivieren | `POST admin_user.php?id={ziel} action=device_aus` | 403 | durch | durch | durch |
-| Kontoseite: Gerät entkoppeln | `POST admin_user.php?id={ziel} action=device_delete` | 403 | 403 | durch | durch |
-| Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch |
-| Kontoseite: Zweitfaktor zurücksetzen | `POST admin_user.php?id={ziel} action=totp_zuruecksetzen` | 403 | 403 | durch | durch |
-| Kontoseite: Zweitfaktor eines Admins zurücksetzen | `POST admin_user.php?id={admin} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch |
-| Kontoseite: Konto eines Supports | `GET admin_user.php?id={support}` | 403 | 403 | 200 | 200 |
-| Kontoseite: Setz-Link an einen Support | `POST admin_user.php?id={support} action=pw_reset` | 403 | 403 | durch | durch |
-| Kontoseite: Bestätigung an einen Support | `POST admin_user.php?id={support} action=verifikation` | 403 | 403 | durch | durch |
-| Kontoseite: Gerät eines Supports deaktivieren | `POST admin_user.php?id={support} action=device_aus` | 403 | 403 | durch | durch |
-| Kontoseite: Zweitfaktor eines Supports zurücksetzen | `POST admin_user.php?id={support} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch |
-| Konto-Backups: die Seite | `GET admin_sicherungen.php` | 403 | 403 | 200 | 200 |
-| Konto-Backups: Regeln | `POST admin_sicherungen.php action=regeln` | 403 | 403 | durch | durch |
-| Konto-Backups: alle sichern | `POST admin_sicherungen.php action=sichern_alle` | 403 | 403 | durch | durch |
-| Konto-Backups: einspielen | `POST admin_sicherungen.php action=einspielen` | 403 | 403 | durch | durch |
-| Konto-Backups: freigeben | `POST admin_sicherungen.php action=freigeben` | 403 | 403 | durch | durch |
-| Konto-Backups: Freigabe widerrufen | `POST admin_sicherungen.php action=widerrufen` | 403 | 403 | durch | durch |
-| Konto-Backups: Paket löschen | `POST admin_sicherungen.php action=paket_loeschen` | 403 | 403 | durch | durch |
-| Konto-Backups: Ordner löschen | `POST admin_sicherungen.php action=ordner_loeschen` | 403 | 403 | durch | durch |
-| Installation: die Seite | `GET admin_installation.php` | 403 | 403 | 200 | 200 |
-| Installation: Name | `POST admin_installation.php action=instanz_name` | 403 | 403 | durch | durch |
-| Installation: Adressen | `POST admin_installation.php action=instanz_adressen` | 403 | 403 | durch | durch |
-| Installation: Logo | `POST admin_installation.php action=logo_standard` | 403 | 403 | durch | durch |
-| Rechtstexte: die Seite | `GET admin_rechtstexte.php` | 403 | 403 | 200 | 200 |
-| Rechtstexte: speichern | `POST admin_rechtstexte.php` | 403 | 403 | durch | durch |
-| Rechtstexte: Vorschau beim Tippen | `POST api/rechtstext_vorschau.php` | 403 | 403 | durch | durch |
-| Demo-Konto: die Seite | `GET admin_demo.php` | 403 | 403 | 200 | 200 |
-| Demo-Konto: anlegen | `POST admin_demo.php action=demo_anlegen` | 403 | 403 | durch | durch |
-| Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch |
-| Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch |
-| Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch |
-| Betrieb · Server: die Seite | `GET betrieb_server.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Server: Ankündigung setzen | `POST betrieb_server.php action=ankuendigung` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Ankündigung als Rundmail | `POST betrieb_server.php action=rundmail` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Ankündigung entfernen | `POST betrieb_server.php action=ankuendigung_weg` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Serverschlüssel anlegen | `POST betrieb_server.php action=schluessel_sk_anlegen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Server-Anteil anlegen | `POST betrieb_server.php action=schluessel_anteil_anlegen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Serverschlüssel nachtragen | `POST betrieb_server.php action=schluessel_sk_nachtragen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Server-Anteil nachtragen | `POST betrieb_server.php action=schluessel_anteil_nachtragen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Server-Anteil wechseln | `POST betrieb_server.php action=schluessel_anteil_wechseln` | 403 | 403 | 403 | durch |
-| Betrieb · Server: alten Anteil entfernen | `POST betrieb_server.php action=schluessel_anteil_alt_entfernen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Anteil neu anfangen | `POST betrieb_server.php action=schluessel_anteil_neuanfang` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Speicher | `POST betrieb_server.php action=speicher` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Sicherheitskopfzeilen | `POST betrieb_server.php action=kopfzeilen` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Konten | `POST betrieb_server.php action=konten` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Demo-Anmeldung abschalten | `POST betrieb_server.php action=demo_aus` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Ratenschutz | `POST betrieb_server.php action=ratenschutz` | 403 | 403 | 403 | durch |
-| Betrieb · Server: Adresssuche | `POST betrieb_server.php action=geocoder` | 403 | 403 | 403 | durch |
-| Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch |
-| Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch |
-| Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch |
-| Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Updates: Wartung an | `POST betrieb_updates.php action=wartung_an` | 403 | 403 | 403 | durch |
-| Betrieb · Updates: Wartung aus | `POST betrieb_updates.php action=wartung_aus` | 403 | 403 | 403 | durch |
-| Betrieb · Updates: Migrationen anwenden | `POST betrieb_updates.php action=migrate` | 403 | 403 | 403 | durch |
-| Betrieb · Status: die Seite | `GET betrieb_status.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Status: Testmail | `POST betrieb_status.php action=testmail` | 403 | 403 | 403 | durch |
-| Betrieb · Sicherheit: die Seite | `GET betrieb_sicherheit.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Sicherheit: Sperre aufheben | `POST betrieb_sicherheit.php action=aufheben` | 403 | 403 | 403 | durch |
-| Betrieb · Statistik: die Seite | `GET betrieb_statistik.php` | 403 | 403 | 403 | 200 |
-| Betrieb · Statistik: Gerätemodelle als CSV | `GET betrieb_statistik.php?r=geraete&export=csv` | 403 | 403 | 403 | 200 |
-| Betrieb · Statistik: eigener Zeitraum | `GET betrieb_statistik.php?r=einsaetze&von=2026-03-01&bis=2026-05-31` | 403 | 403 | 403 | 200 |
-| Betrieb · Schlüsselblatt: Positionen stellen | `POST api/schluesselblatt_pruefen.php aktion=stellen` | 403 | 403 | 403 | durch |
-| Betrieb · Schlüsselblatt: prüfen | `POST api/schluesselblatt_pruefen.php aktion=pruefen` | 403 | 403 | 403 | durch |
+| Handlung | Aufruf | user | support | admin | betreiberin | frischer Code |
+|---|---|---|---|---|---|---|
+| Protokoll: die Seite | `GET admin_protokoll.php` | 403 | 200 | 200 | 200 | — |
+| Protokoll: Reiter Verwaltung | `GET admin_protokoll.php?r=verwaltung` | 403 | 200 | 200 | 200 | — |
+| Protokoll: Reiter Sicherheit | `GET admin_protokoll.php?r=sicherheit` | 403 | 403 | 403 | 200 | — |
+| Protokoll: Reiter E-Mail | `GET admin_protokoll.php?r=email` | 403 | 200 | 200 | 200 | — |
+| Protokoll: Reiter Jobs | `GET admin_protokoll.php?r=jobs` | 403 | 403 | 200 | 200 | — |
+| Protokoll: Reiter Sicherung | `GET admin_protokoll.php?r=sicherung` | 403 | 403 | 200 | 200 | — |
+| Protokoll: Reiter Ziele | `GET admin_protokoll.php?r=ziele` | 403 | 403 | 403 | 200 | — |
+| Protokoll: Reiter System | `GET admin_protokoll.php?r=system` | 403 | 403 | 403 | 200 | — |
+| Protokoll: Archiv | `GET admin_protokoll.php?r=archiv` | 403 | 403 | 403 | 200 | — |
+| Protokoll: Archiv herunterladen | `POST admin_protokoll.php action=archiv_laden` | 403 | 403 | 403 | durch | — |
+| Protokoll: Fehlerkennung wechselt auf System | `GET admin_protokoll.php?q=0badc0de` | 403 | 200 | 200 | 303 | — |
+| Protokoll: unbekannter Reiter | `GET admin_protokoll.php?r=gibtesnicht` | 403 | 404 | 404 | 404 | — |
+| Protokoll: Fristen und Archiv einstellen | `POST betrieb_server.php action=protokoll` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: die Seite | `GET admin_komplettsicherung.php` | 403 | 403 | 403 | 200 | — |
+| Komplett-Backup: herunterladen | `POST admin_komplettsicherung.php action=herunterladen` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: jetzt sichern | `POST admin_komplettsicherung.php action=jetzt_sichern` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: fortsetzen | `POST admin_komplettsicherung.php action=fortsetzen` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: Regeln | `POST admin_komplettsicherung.php action=regeln` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: Stand löschen | `POST admin_komplettsicherung.php action=stand_loeschen` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: die Seite | `GET admin_sicherungsziele.php` | 403 | 403 | 403 | 200 | — |
+| Backup-Ziele: Ziel speichern | `POST admin_sicherungsziele.php action=ziel_speichern` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Ziel löschen | `POST admin_sicherungsziele.php action=ziel_loeschen` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Abdruck vergessen | `POST admin_sicherungsziele.php action=abdruck_vergessen` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Versand an oder aus | `POST admin_sicherungsziele.php action=versand_schalter` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: jetzt versenden | `POST admin_sicherungsziele.php action=jetzt_versenden` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Ziel prüfen | `POST admin_sicherungsziele.php action=ziel_pruefen` | 403 | 403 | 403 | durch | — |
+| Backup-Ziele: Bestand ansehen | `POST admin_sicherungsziele.php action=ziel_bestand` | 403 | 403 | 403 | durch | — |
+| NutzerInnen: die Liste | `GET admin_users.php` | 403 | 200 | 200 | 200 | — |
+| NutzerInnen: Konto anlegen | `POST admin_users.php action=user_add` | 403 | 403 | durch | durch | — |
+| NutzerInnen: Auswahl sichern | `POST admin_users.php action=sichern_auswahl` | 403 | 403 | durch | durch | — |
+| Kontoseite: Konto einer NutzerIn | `GET admin_user.php?id={ziel}` | 403 | 200 | 200 | 200 | — |
+| Kontoseite: Konto eines Admins | `GET admin_user.php?id={admin}` | 403 | 403 | 200 | 200 | — |
+| Kontoseite: Rolle, Name, Adresse | `POST admin_user.php?id={ziel} action=konto` | 403 | 403 | durch | durch | — |
+| Kontoseite: Rolle wechseln | `POST admin_user.php?id={ziel} action=konto&role=support` | 403 | 403 | durch | durch | ja |
+| Kontoseite: Mengengrenzen | `POST admin_user.php?id={ziel} action=konto_grenzen` | 403 | 403 | durch | durch | — |
+| Kontoseite: Status | `POST admin_user.php?id={ziel} action=konto_status` | 403 | 403 | durch | durch | — |
+| Kontoseite: Setz-Link senden | `POST admin_user.php?id={ziel} action=pw_reset` | 403 | durch | durch | durch | — |
+| Kontoseite: Bestätigung erneut senden | `POST admin_user.php?id={ziel} action=verifikation` | 403 | durch | durch | durch | — |
+| Kontoseite: Konto-Backup erzeugen | `POST admin_user.php?id={ziel} action=sichern` | 403 | 403 | durch | durch | — |
+| Kontoseite: Konto-Backup einspielen | `POST admin_user.php?id={ziel} action=einspielen` | 403 | 403 | durch | durch | — |
+| Kontoseite: Backup freigeben | `POST admin_user.php?id={ziel} action=freigeben` | 403 | 403 | durch | durch | — |
+| Kontoseite: Freigabe widerrufen | `POST admin_user.php?id={ziel} action=widerrufen` | 403 | 403 | durch | durch | — |
+| Kontoseite: Backup löschen | `POST admin_user.php?id={ziel} action=paket_loeschen` | 403 | 403 | durch | durch | — |
+| Kontoseite: Konto löschen | `POST admin_user.php?id={ziel} action=user_delete` | 403 | 403 | durch | durch | ja |
+| Kontoseite: Gerät an oder aus | `POST admin_user.php?id={ziel} action=device_toggle` | 403 | 403 | durch | durch | — |
+| Kontoseite: Gerät deaktivieren | `POST admin_user.php?id={ziel} action=device_aus` | 403 | durch | durch | durch | — |
+| Kontoseite: Gerät entkoppeln | `POST admin_user.php?id={ziel} action=device_delete` | 403 | 403 | durch | durch | — |
+| Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch | — |
+| Kontoseite: Zweitfaktor zurücksetzen | `POST admin_user.php?id={ziel} action=totp_zuruecksetzen` | 403 | 403 | durch | durch | ja |
+| Kontoseite: Zweitfaktor eines Admins zurücksetzen | `POST admin_user.php?id={admin} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch | ja |
+| Kontoseite: Konto eines Supports | `GET admin_user.php?id={support}` | 403 | 403 | 200 | 200 | — |
+| Kontoseite: Setz-Link an einen Support | `POST admin_user.php?id={support} action=pw_reset` | 403 | 403 | durch | durch | — |
+| Kontoseite: Bestätigung an einen Support | `POST admin_user.php?id={support} action=verifikation` | 403 | 403 | durch | durch | — |
+| Kontoseite: Gerät eines Supports deaktivieren | `POST admin_user.php?id={support} action=device_aus` | 403 | 403 | durch | durch | — |
+| Kontoseite: Zweitfaktor eines Supports zurücksetzen | `POST admin_user.php?id={support} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch | ja |
+| Konto-Backups: die Seite | `GET admin_sicherungen.php` | 403 | 403 | 200 | 200 | — |
+| Konto-Backups: Regeln | `POST admin_sicherungen.php action=regeln` | 403 | 403 | durch | durch | — |
+| Konto-Backups: alle sichern | `POST admin_sicherungen.php action=sichern_alle` | 403 | 403 | durch | durch | — |
+| Konto-Backups: einspielen | `POST admin_sicherungen.php action=einspielen` | 403 | 403 | durch | durch | — |
+| Konto-Backups: freigeben | `POST admin_sicherungen.php action=freigeben` | 403 | 403 | durch | durch | — |
+| Konto-Backups: Freigabe widerrufen | `POST admin_sicherungen.php action=widerrufen` | 403 | 403 | durch | durch | — |
+| Konto-Backups: Paket löschen | `POST admin_sicherungen.php action=paket_loeschen` | 403 | 403 | durch | durch | — |
+| Konto-Backups: Ordner löschen | `POST admin_sicherungen.php action=ordner_loeschen` | 403 | 403 | durch | durch | — |
+| Installation: die Seite | `GET admin_installation.php` | 403 | 403 | 200 | 200 | — |
+| Installation: Name | `POST admin_installation.php action=instanz_name` | 403 | 403 | durch | durch | — |
+| Installation: Adressen | `POST admin_installation.php action=instanz_adressen` | 403 | 403 | durch | durch | — |
+| Installation: Logo | `POST admin_installation.php action=logo_standard` | 403 | 403 | durch | durch | — |
+| Rechtstexte: die Seite | `GET admin_rechtstexte.php` | 403 | 403 | 200 | 200 | — |
+| Rechtstexte: speichern | `POST admin_rechtstexte.php` | 403 | 403 | durch | durch | — |
+| Rechtstexte: Vorschau beim Tippen | `POST api/rechtstext_vorschau.php` | 403 | 403 | durch | durch | — |
+| Demo-Konto: die Seite | `GET admin_demo.php` | 403 | 403 | 200 | 200 | — |
+| Demo-Konto: anlegen | `POST admin_demo.php action=demo_anlegen` | 403 | 403 | durch | durch | — |
+| Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch | — |
+| Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch | — |
+| Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch | — |
+| Notzugang (SR-04): die Seite | `GET zweitfaktor_notweg.php` | 200 | 200 | 200 | 200 | — |
+| Betrieb · Server: die Seite | `GET betrieb_server.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Server: Ankündigung setzen | `POST betrieb_server.php action=ankuendigung` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Ankündigung als Rundmail | `POST betrieb_server.php action=rundmail` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Ankündigung entfernen | `POST betrieb_server.php action=ankuendigung_weg` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Serverschlüssel anlegen | `POST betrieb_server.php action=schluessel_sk_anlegen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Server-Anteil anlegen | `POST betrieb_server.php action=schluessel_anteil_anlegen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Serverschlüssel nachtragen | `POST betrieb_server.php action=schluessel_sk_nachtragen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Server-Anteil nachtragen | `POST betrieb_server.php action=schluessel_anteil_nachtragen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Server-Anteil wechseln | `POST betrieb_server.php action=schluessel_anteil_wechseln` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: alten Anteil entfernen | `POST betrieb_server.php action=schluessel_anteil_alt_entfernen` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Anteil neu anfangen | `POST betrieb_server.php action=schluessel_anteil_neuanfang` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Server: Speicher | `POST betrieb_server.php action=speicher` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Sicherheitskopfzeilen | `POST betrieb_server.php action=kopfzeilen` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Konten | `POST betrieb_server.php action=konten` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Demo-Anmeldung abschalten | `POST betrieb_server.php action=demo_aus` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Ratenschutz | `POST betrieb_server.php action=ratenschutz` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Adresssuche | `POST betrieb_server.php action=geocoder` | 403 | 403 | 403 | durch | — |
+| Betrieb · Server: Anmeldung (Gerät merken) | `POST betrieb_server.php action=anmeldung` | 403 | 403 | 403 | durch | — |
+| Profil: gemerkte Geräte vergessen (nur das eigene Konto) | `POST einstellungen.php?t=profil action=zf_geraete_vergessen` | durch | durch | durch | durch | — |
+| Profil: Zweitfaktor ausschalten (nur ohne Pflicht) | `POST einstellungen.php?t=profil action=zf_ausschalten` | durch | durch | durch | durch | ja |
+| Profil: Passkey hinzufügen (SR-09) | `POST api/passkey_anlegen.php` | durch | durch | durch | durch | ja |
+| Profil: Passkey entfernen (SR-09) | `POST einstellungen.php?t=profil action=passkey_entfernen` | durch | durch | durch | durch | ja |
+| Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch | — |
+| Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch | — |
+| Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch | — |
+| Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Updates: Wartung an | `POST betrieb_updates.php action=wartung_an` | 403 | 403 | 403 | durch | — |
+| Betrieb · Updates: Wartung aus | `POST betrieb_updates.php action=wartung_aus` | 403 | 403 | 403 | durch | — |
+| Betrieb · Updates: Migrationen anwenden | `POST betrieb_updates.php action=migrate` | 403 | 403 | 403 | durch | — |
+| Betrieb · Status: die Seite | `GET betrieb_status.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Status: Testmail | `POST betrieb_status.php action=testmail` | 403 | 403 | 403 | durch | — |
+| Betrieb · Sicherheit: die Seite | `GET betrieb_sicherheit.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Sicherheit: Sperre aufheben | `POST betrieb_sicherheit.php action=aufheben` | 403 | 403 | 403 | durch | — |
+| Betrieb · Statistik: die Seite | `GET betrieb_statistik.php` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Statistik: Gerätemodelle als CSV | `GET betrieb_statistik.php?r=geraete&export=csv` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Statistik: eigener Zeitraum | `GET betrieb_statistik.php?r=einsaetze&von=2026-03-01&bis=2026-05-31` | 403 | 403 | 403 | 200 | — |
+| Betrieb · Schlüsselblatt: Positionen stellen | `POST api/schluesselblatt_pruefen.php aktion=stellen` | 403 | 403 | 403 | durch | — |
+| Betrieb · Schlüsselblatt: prüfen | `POST api/schluesselblatt_pruefen.php aktion=pruefen` | 403 | 403 | 403 | durch | — |
+| Betrieb · Schlüsselblatt: die Seite | `GET betrieb_schluesselblatt.php` | 403 | 403 | 403 | 200 | ja |
 <!-- rollenprobe:ende -->
 
 **Daneben prüft die Probe Wirkungen**, denn eine Zelle `durch` sagt nur,
@@ -7640,7 +8024,9 @@ richtigen Passwort setzt `login.php` für ein Konto mit Zweitfaktor **nicht**
 `user_id`, sondern den halben Stand `$_SESSION['totp_halb']` (Konto, Adresse,
 Frist **fünf Minuten**) und leitet mit 303 auf sich selbst um; die Seite zeigt
 dann den Code-Schritt. `user_id` und `session_regenerate_id()` kommen erst
-mit einem gültigen Code (`anmeldung_vollenden()`). Damit ist die halbe
+mit einem gültigen Code (`anmeldung_vollenden()`). **Seit Web 21.7.0 ist der
+halbe Stand gebunden** (Absatz „Die Sitzungsbindung" unten): Ohne das Cookie
+`EDBIND` endet er wie ein abgelaufener. Damit ist die halbe
 Anmeldung für jede andere Seite und jeden Endpunkt schlicht „nicht
 angemeldet" — **ohne dass einer von ihnen davon weiß**. Seit derselben
 Fassung antwortet `auth_guard.php` einem API-Aufruf ohne `user_id` mit
@@ -7674,6 +8060,128 @@ Konto, nicht je Adresse — wer hier steht, hat das Passwort schon. App-Code und
 Wiederherstellungscode zählen in denselben Topf. Ist er gesperrt, entsteht der
 halbe Stand gar nicht erst.
 
+**Die Sitzungsbindung (ab Web 21.7.0, Schritt 18, SR-01; Backlog Nr. 242,
+251; E-SR-04 bis -06, E-SR-39).** Bis Web 21.6.1 war der Dateiname die
+Sitzung: Wer `sess_<id>` las — aus `server/.sitzungen/`, aus einem
+Webspace-Backup des Hosters —, war angemeldet. Schritt 16 hatte den **Ort**
+gesichert, die Bindung nimmt der Datei den **Wert**:
+
+| | |
+|---|---|
+| Cookie | `EDBIND`, 32 Zufallsbyte (hex); `Secure`, `HttpOnly`, `SameSite=Strict`, Pfad `/`, bis der Browser schließt — dieselben Parameter wie das Sitzungscookie der Art `app`, damit beide immer zusammen reisen |
+| in der Sitzungsdatei | nur `hash('sha256', Wert)` unter `bindung` — die Datei ist das, was jemand gelesen haben könnte |
+| gesetzt | `sitzung_binden()` beim Anlegen des halben Stands (`totp_halb`) **und** in `anmeldung_vollenden()` nach `session_regenerate_id()`, neu gewürfelt |
+| geprüft | `auth_guard.php` unmittelbar nach `user_id` (Grund `bindung`, `api/` 401 JSON); `login.php` beim Lesen des halben Stands (verworfen wie abgelaufen); `sitzung_starten('lesend')` für Handbuch, Rechtstexte, Notfall- und Codeblatt — dort gilt die Sitzung als leer, verworfen ohne Schreiben (F-SR-15) |
+| gelöscht | `session_beenden()` und `session_verwerfen()`, also beim Abmelden und bei jedem Sitzungsende |
+
+**Alte Sitzungen werden nicht übernommen** (E-SR-04): Eine Sitzung von vor
+Web 21.7.0 trägt keinen Hash, genau wie eine gelesene Datei; wer die eine
+gelten ließe, ließe die andere gelten. Nach dem Ausrollen meldet sich jede
+Angemeldete einmal neu an (Runbook 7). **Die Sitzung endet dabei auf dem
+Server**, nicht nur für die Anfrage: Eine Kennung, zu der jemand ohne Cookie
+kommt, gilt als gelesen. Die Anmeldeseite nennt den Grund mit den zwei
+harmlosen Anlässen (Update, gelöschte Cookies).
+
+**Alle Cookie-Parameter stehen in `sitzung_lib.php`** (E-SR-05):
+`SITZUNG_ARTEN` für die vier Sitzungsarten, `SITZUNG_COOKIES` für die
+Zusatzcookies daneben, gesetzt und gelöscht über `sitzung_cookie_setzen()`
+und `sitzung_cookie_loeschen()`. Die Sitzungshärtung
+(`tools/quelltext/sitzungshaertung.php`) zählt `setcookie()` außerhalb von
+`sitzung_lib.php` und `session_lib.php` als Befund. **Nr. 251:** Die Art
+`lesend` setzt `secure` seither fest; `einrichtung` bleibt an HTTPS gebunden,
+weil sie läuft, bevor HTTPS steht (F-SR-06).
+
+**Was die Bindung nicht leistet:** Wer das Cookie selbst abgreift — mit der
+Hand am entsperrten Rechner, mit Schadcode im Browser —, hat beides. Gegen
+Skript in der Seite hilft `HttpOnly`, gegen fremde Seiten `SameSite=Strict`;
+gegen jemanden, der auf dem Webspace **schreiben** kann, hilft kein Cookie.
+Der Reset-Token in der Sitzungsdatei des Passwort-Wegs ist davon unberührt
+(Art `passwort`; 4.98, „Klartext-Reste außerhalb der Datenbank", Zeile
+„Reset-Token", in M1-06 anerkannt).
+Nachweis: `tools/proben/sitzung/` (Anlass Nr. 242).
+
+**Gerät merken (ab Web 21.8.0, Schritt 18, SR-02; Rest aus Nr. 141; E-SR-07,
+-15, -17, -18, -34).** Nach einem Code aus der App kann der Browser gemerkt
+werden; dort fragt die Anmeldung danach keinen Code, bis die Dauer abläuft.
+
+| | |
+|---|---|
+| Cookie | `EDGERAET`, 32 Zufallsbyte; dieselben Parameter wie die Bindung (`SITZUNG_COOKIES`), Ablauf = Dauer der Rollengruppe beim Merken |
+| Tabelle | `vertraute_geraete` (Abschnitt 3): der SHA-256, das Konto, `angelegt_am`, `zuletzt_am` — kein User-Agent, kein Gerätename |
+| Dauer | je Rollengruppe in `app_state`: `zf_geraet_tage_user` (Vorgabe 30), `zf_geraet_tage_verwaltung` für Support, Admin und BetreiberIn (Vorgabe 7); Wahl aus 0, 1, 7, 14, 30, 90 — **0 heißt: kein Haken, und kein Gerät gilt**. Eingestellt unter Betrieb → Servereinstellungen, Karte „Anmeldung" |
+| gemerkt | in `login.php` nach `totp_anmeldung_pruefen()` mit Art `app` und Haken — **nur nach einem App-Code** (E-SR-18) **oder, seit Web 21.10.0, einem Passkey** (Art `passkey`, E-SR-32); nach Wiederherstellungscode und Rückweg nicht, auch nicht mit handgebautem `merken=1` |
+| erkannt | `zweitfaktor_geraet_erkannt()` nach dem Passwort und vor dem halben Stand: Cookie → Hash → Zeile **dieses** Kontos, deren `angelegt_am` plus die **heutige** Dauer in der Zukunft liegt; dann `anmeldung_vollenden()` ohne Code |
+| vergessen | beim Passwortwechsel und -reset — **in derselben Transaktion** wie Passwort und `session_epoch`, damit „Es wurde nichts geändert“ stimmt, wenn es scheitert —, in `totp_abschalten()` auf jedem Weg, mit dem Konto (Kaskade), im Demo-Reset, mit „Alle vergessen" im Profil; abgelaufene im Aufräumjob (Schritt „Gemerkte Geräte") |
+| Protokoll | `zweitfaktor_geraet_gemerkt` und `zweitfaktor_geraete_vergessen` (mit `daten.weg`), beide neutral — nicht je Anmeldung |
+
+**Die Dauer wird beim Prüfen gerechnet, nicht beim Merken** (E-SR-17): Wer
+sie verkürzt, meldet ältere Geräte sofort ab, und „aus" ist sofort aus — sonst
+hieße „aus" erst in 30 Tagen aus. **Was es nicht ist:** kein zweiter Faktor
+aus eigenem Recht. Ein gemerktes Gerät ist Passwort plus Besitz eines
+Browsers, den die Person selbst als ihren ausgewiesen hat; ein Rechner, den
+andere mitbenutzen, gehört nicht gemerkt, und der Haken sagt es.
+Nachweis: `tools/proben/zweitfaktor/` Teil 5b (22 Fälle; Rest aus Nr. 141),
+im Browser der Bedienweg `zweitfaktor-merken`.
+
+**Frischer Code (ab Web 21.9.0, Schritt 18, SR-07, E-SR-20).** Ein
+gemerkter, unbeaufsichtigter Rechner mit bekanntem Passwort soll für einen
+Schlüsselwechsel nicht reichen. Vor einer kurzen Liste von Handlungen fragt
+die Anwendung deshalb noch einmal nach dem Code, wenn der letzte älter als
+15 Minuten ist.
+
+| | |
+|---|---|
+| frisch | `$_SESSION['zf_frisch_bis']`, gesetzt nach einem App- oder Wiederherstellungscode — seit Web 21.10.0 auch nach einem Passkey (E-SR-32) — im Code-Schritt von `login.php` und auf der Bestätigungsseite; `ZF_FRISCH_S` = 900. Eine Anmeldung über ein gemerktes Gerät und der Rückweg setzen nichts, `anmeldung_vollenden()` räumt eine alte Frist weg. Ein Konto **ohne** Zweitfaktor hat nichts zu bestätigen: `zweitfaktor_frisch()` ist dort ein Durchlass |
+| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle), seit Web 21.10.0 `passkey_anlegen` (`api/passkey_anlegen.php` — der erste Endpunkt der Liste) und `passkey_entfernen` (`einstellungen.php`, E-SR-31). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
+| das Tor | `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, **vor** `csrf_check()` wie ein Rollentor (E-P5c-85). Nicht frisch: Seiten bekommen 303 auf `zweitfaktor.php?bestaetigen=1&zurueck=…` (nach einem POST mit `nochmal=1`), die API 403 JSON `zweitfaktor_frisch`. Ein Name, der nicht in der Liste steht, wirft — ein Tippfehler darf kein Durchlass sein |
+| die Bestätigung | `zweitfaktor.php?bestaetigen=1`: Codefeld wie im Code-Schritt (App-Code oder Wiederherstellungscode, seit Web 21.10.0 daneben „Mit Passkey bestätigen" mit eigener Herausforderung in `$_SESSION['passkey_best']`; Topf `totp` mit dem Merkmal des Kontos, fünf Fehlversuche sperren), bei Erfolg die Frist und 303 auf `zurueck`; nach einem POST steht in der Karte „Code bestätigt — bitte die Handlung noch einmal auslösen." Die Handlung wird **nicht nachgespielt** (ein gespeicherter POST samt Token wäre ein Zwischenspeicher, der beim nächsten Umbau falsch abgespielt wird). Steht in `WARTUNG_AUSNAHMEN` |
+| der Rücksprung | `zweitfaktor_zurueck()`: nur ein relativer Pfad auf eine Seite der Liste, die Abfrage nur mit harmlosen Zeichen (sonst fällt sie weg); alles andere wird `index.php` — sonst wäre die Seite ein offener Umleiter mit dem Vertrauen dieser Anwendung |
+
+Nachweis: `tools/proben/zweitfaktor/` Teil 5c, die Rollenprobe (Spalte
+„frischer Code" der Matrix, 4.99p), das Register (Z43: jede Handlung genau
+ein Aufruf), im Browser der Bedienweg `betrieb-server-frischer-code`.
+
+**Passkeys (ab Web 21.10.0, Schritt 18, SR-09; Nr. 350; E-SR-28 bis -36,
+-42; gegengelesen mit H-SR-08 in Web 21.11.0, F-SR-33 bis -52, E-SR-44 bis
+-53).** Ein Passkey ist ein **weiteres Verfahren desselben Faktors**, kein
+eigener Faktor: Er setzt den eingeschalteten Zweitfaktor voraus, Codes und
+Rückweg bleiben der Notweg, und `totp_abschalten()` nimmt ihn mit — auf
+jedem Weg und seit Web 21.11.0 in derselben Transaktion (E-SR-29, -35,
+F-SR-38). Der Gewinn ist die Bindung an den Ursprung: Einen Code kann eine
+gefälschte Seite abgreifen und weiterreichen, eine WebAuthn-Signatur nicht.
+**Der Code-Schritt wird dadurch nicht phishingfest** — der App-Code daneben
+bleibt abfischbar, und eine nachgemachte Seite weicht auf ihn aus (F-SR-44;
+bis Web 21.10.0 stand es anders). **Er hängt nicht am Serverschlüssel**
+(E-SR-49): Lässt sich das TOTP-Geheimnis nach einem Wiederanlauf nicht
+öffnen, meldet ein Passkey weiter an.
+
+| | |
+|---|---|
+| Bibliothek | `passkey_lib.php` — die eine Stelle für WebAuthn (R83). **Kein Fremdbestandteil** (E-SR-30): ein eigener CBOR-Leser (`pk_cbor_lesen()`) für genau die Teilmenge, die Registrierung und COSE brauchen — Ganzzahlen, Byte- und Textketten, Listen und Karten bestimmter Länge; Fließzahl, Marke, einfacher Wert, unbestimmte Länge, doppelter Schlüssel, ein Textschlüssel, der wie eine Zahl aussieht, Rest hinter dem Element und mehr als acht **Behälter** (Werte zählen nicht) sind eine Ablehnung. Wo eine Karte verlangt ist (`attestationObject`, COSE, Erweiterungen), prüft `pk_cbor_art()` das Kopfbyte. Jedes Feld der Antwort ist Text in kanonischem Base64url, dekodiert höchstens 32 KiB (`pk_feld()`, `PK_FELD_MAX`), die ganze Antwort höchstens 192 KiB (`PK_ANTWORT_MAX`); ein Feld vom falschen Typ ist eine Ablehnung, keine PHP-Warnung (F-SR-34, -35). Signaturen über phpseclib (`Crypt/EC` wie der Rückweg; die **Form** der ES256-Signatur prüft `pk_es256_form()` vorher selbst — eine Folge mit genau zwei INTEGER zu 1 bis 33 Byte, höchstens 73 Byte, F-SR-45: phpseclib liest BER, und 32 KiB geschachtelter unbestimmter Längen kosteten dort 356 MiB; `Crypt/RSA` PKCS#1 v1.5 mit SHA-256, die Signatur so lang wie der Modul) |
+| Ursprung | `pk_ursprung()` aus `app.base_url` (E-SR-42): `rp.id` = der Hostname, der Ursprung = Schema, Host und ein Port außer dem Standardport. Ein Umlaut-Name wird in Punycode geschrieben — nach UTS 46 **ohne Übergangsregeln**, wie der Browser („straße" → `xn--strae-oqa`, F-SR-46) —, ein Punkt am Ende fällt weg (F-SR-40); ohne die Erweiterung `intl` gibt es unter einem Umlaut-Namen keine Passkeys (sie ist keine Voraussetzung der Anwendung). **Keine Passkeys** für eine IP-Adresse, ohne HTTPS (außer `localhost`) und vor `update.php` (`pk_verfuegbar()`) — dann fehlt der Abschnitt in der Karte, und der Code-Schritt zeigt keinen Knopf. Weil die `rp.id` der Hostname ist, gilt ein Passkey **nur für diese Adresse**: Staging und Produktiv sind zwei. **Jede Zeile trägt ihre `rp_id`** (E-SR-48): Code-Schritt und Bestätigung bieten nur die der heutigen Adresse an, die Grenze zählt je Adresse, die Karte zeigt die übrigen mit der Plakette „andere Adresse" (entfernbar), die Kontoseite der Verwaltung zählt alle. **Bestätigt am 28.09.2026**; der Ausschlag: WebAuthn verlangt den Abgleich mit dem Ursprung, den die Anlage erwartet, eine `rp.id` muss über Jahre dieselbe bleiben, und keine Kopfzeile muss bewertet werden — vor einer nachgemachten Seite schützt vor allem der Browser (F-SR-44) |
+| Registrierung | `pk_registrierung_pruefen($ablage, $antwort)`: `clientDataJSON` mit `type` `webauthn.create`, der gestellten Herausforderung (einmal, zehn Minuten, `$_SESSION['passkey_reg']`, an das Konto gebunden) und dem eigenen Ursprung; `authData` mit `rpIdHash` = SHA-256 der `rp.id`, Flags UP und AT, `BS` nur mit `BE`, `rawId` = Kennung; COSE-Schlüssel nur EC2/P-256 mit `alg` -7 (genau die Labels 1, 3, -1, -2, -3; x und y unter p) oder RSA mit `alg` -257 (genau 1, 3, -1, -2; Modul **2048 bis 4096 Bit** und ungerade, Exponent ungerade, **3 bis 64 Bit**, beide ohne führendes Nullbyte — F-SR-33: ohne Obergrenze kostete eine Prüfung Sekunden bis Minuten, mit e = 1 ließ sich die Signatur ohne Geheimnis rechnen; `pk_spki_laden()` hält dieselben Grenzen beim Laden — die kürzeste Form hält das SPKI selbst; bis Web 21.11.1 nur die Größen, F-SR-46, F-SR-59). `attStmt` muss eine Karte sein und wird nicht gelesen. **`fmt` wird gelesen und nicht geprüft** (E-SR-30): Attestation sagt, wer den Authenticator gebaut hat — für einen zweiten Faktor nach dem Passwort ohne Wert, mit Datenschutzpreis. Der Schlüssel wird nach SPKI überführt und so gespeichert |
+| Anmeldung | `pk_anmeldung_pruefen($userId, $ablage, $antwort)`: `type` `webauthn.get`, Herausforderung (einmal, fünf Minuten — im halben Stand `totp_halb['passkey']` bzw. in `$_SESSION['passkey_best']`), Ursprung, `rpIdHash`, **UP muss gesetzt sein, UV nicht** (das Passwort ist das Wissen; wer UV verlangte, schlösse Schlüssel ohne PIN aus), kein AT, eine Kennung **dieses** Kontos und **dieser** Adresse (gesucht über `credential_hash`), die Signatur über `authData ‖ SHA-256(clientDataJSON)` mit `PublicKeyLoader` aus dem SPKI. Jede Ablage (`passkey_reg`, `totp_halb['passkey']`, `passkey_best`) trägt das Konto (`pk_ablage_passt()`). Eine Ablehnung trägt eine **Art** — `herausforderung` (keine, abgelaufen, verdrängt), `zaehler` oder `pruefung` —, und nur `pruefung` zählt als Fehlversuch im Topf `totp` (E-SR-50, F-SR-37) |
+| Zähler | E-SR-33: neu > alt oder beide 0 → gut (synchronisierte Passkeys melden dauerhaft 0); sonst Ablehnung und Protokoll `passkey_zaehler` (orange, mit dem Namen des Passkeys und `daten.weg` `anmeldung` oder `bestaetigung` — im Code-Schritt ist noch niemand angemeldet, der Urheber heißt dort `job`), **der Passkey bleibt** — ein Löschen bei Klon-Verdacht sperrte die Betroffene aus. **Fortgeschrieben atomar** (`UPDATE … WHERE zaehler = <gelesen>`, F-SR-36): Von zwei gleichzeitigen Anmeldungen mit derselben Kennung gilt eine. **Dazu eine Mail an die Kontoadresse** (`passkey_zaehler`, höchstens eine je Passkey und Tag über `gewarnt_am`, E-SR-46) — den Reiter Protokoll sieht die Rolle `user` nicht. Zwei Warnungen am selben Tag können zu einer Mail werden, solange die erste nicht zugestellt ist (die Warteschlange ersetzt eine offene Mail derselben Vorlage an dieselbe Adresse). **Der Preis von E-SR-50** (E-SR-52): Eine Kopie holt ungebremst auf, jeder Versuch schreibt eine Zeile — der Zähler ist gegen eine Schlüsselkopie ohnehin keine Hürde, sie setzt ihn selbst |
+| Oberfläche | Karte „Zweitfaktor" (Einstellungen → Profil), Abschnitt „Passkeys" nur bei eingeschaltetem Zweitfaktor: je Passkey eine Zeile mit „Entfernen", darunter Bezeichnung und „Passkey hinzufügen" — **nur mit frischem Code**, sonst der Verweis „Zuerst Code bestätigen" (E-SR-31). Im Code-Schritt von `login.php` und auf `zweitfaktor.php?bestaetigen=1` über dem Codefeld „Mit Passkey bestätigen" (E-SR-32). Beides ist `hidden`, bis `assets/passkey.js` den Browser kennt; ohne JavaScript bleibt der Codeweg |
+| zählt wie | ein App-Code (E-SR-32): „Gerät merken" und `zf_frisch_bis`; Topf `totp` wie der Code |
+| Endpunkt | `api/passkey_anlegen.php`: `zweitfaktor_frisch_verlangen('passkey_anlegen')` **vor** dem Token (403 JSON `zweitfaktor_frisch`), dann Token, Demo-Konto 403, Zweitfaktor aus 409, Anlage ohne Passkeys 409; Rumpf höchstens `PK_ANTWORT_MAX` (**413** `zu_gross`), Bezeichnung als Text (400 `bezeichnung`) — beides **vor** der Entnahme der Herausforderung, die dann stehen bleibt. Keine, eine abgelaufene oder verdrängte Herausforderung: 400 `abgelaufen`, **ohne** Protokollzeile (F-SR-48, dieselbe Regel wie E-SR-50); `passkey.js` lässt den Knopf aus, sobald die Antwort abgeschickt ist — der Passkey liegt dann schon im Authenticator —, und die Meldung sagt dann immer „Bitte die Seite neu laden" (seit Web 21.11.2, F-SR-62, E-SR-58; bis dahin stand hier „nach einer Antwort des Servers", und „neu laden" sagten nur `abgelaufen` und `passkey`). Jede Ablehnung der Prüfung **und eine Kennung, die es schon gibt**, heißt nach außen „nicht angenommen" (400) — der Grund steht im Protokoll `passkey_abgewiesen` (E-SR-45: Mit Attestation `none` ist die Kennung frei wählbar, die eigene Antwort wäre ein Orakel über alle Konten). Das Formularfeld `passkey_antwort` im Code-Schritt und auf der Bestätigung ist Text oder leer — eine Liste ist eine Ablehnung ohne PHP-Warnung (F-SR-47). Der elfte der Adresse und ein inzwischen ausgeschalteter Faktor (unter Sperre geprüft) 409 |
+| Protokoll, Mail | `passkey_angelegt`, `passkey_entfernt` (neutral, `daten.weg`: `selbst`, `zweitfaktor_<weg>` oder `einrichtung` für verwaiste), `passkey_abgewiesen` (neutral, mit Grund, seit Web 21.11.0), `passkey_zaehler` (orange); Mails `passkey_angelegt` und `passkey_entfernt` an die Kontoadresse beim Anlegen und beim einzelnen Entfernen (E-SR-33), `passkey_zaehler` beim zurückgelaufenen Zähler (E-SR-46). Die Anmeldung mit Passkey schreibt nichts außer `zuletzt_am` und dem Zähler |
+| nicht | **kein PRF** (E-SR-28): Der Passkey leitet keinen Datenschlüssel ab — das Geheimnis läge bei synchronisierten Passkeys im Schlüsselbund eines Plattformanbieters, eine Frage an die Zusage der Ende-zu-Ende-Verschlüsselung. **Kein Passkey allein** (E-SR-35, Nr. 351). **Kein Konto-Backup** (Backup-Format 4). **Bewusst so** (F-SR-44): eine führende Null in r oder s und die Länge der Folge als `81 L` (r und s im Bereich; jede Herausforderung gilt einmal); Erweiterungen mit einfachem Wert (`hmac-secret`, `credBlob`) und AT in einer Anmeldung sind eine Ablehnung, `passkey.js` fordert keine Erweiterung an |
+
+Nachweis: `tools/proben/passkey/` (ohne Browser: CBOR, beide Zeremonien in
+ES256 und RS256 samt Ablehnungen — seit Web 21.11.0 jede mit ihrem Grund und
+bei der Anmeldung ihrer Art —, RSA-Grenzen von beiden Seiten, die Form der
+Signatur, Zähler samt Mail, Adresse je Zeile, Tabelle, und mit einem
+Auslöser, der das Löschen scheitern lässt, dass `totp_abschalten()` dann
+nichts ändert), `tools/proben/zweitfaktor/` Teil 5d (die Anbindung über
+HTTP, dazu: eine alte Herausforderung zählt keinen Fehlversuch, eine falsche
+Signatur einen, Zähler zurück mit Mail, das Feld als Liste und über dem
+Deckel ohne Zeile im Reiter System, Deckel und Bezeichnung am Endpunkt ohne
+Verbrauch der Herausforderung, eine abgewiesene Registrierung mit Protokoll), die Rollenprobe (zwei Zeilen der Matrix,
+der Endpunkt ohne Frische), im Browser der Bedienweg
+`einstellungen-profil-passkey` (nur Chromium: virtueller Authenticator über
+das DevTools-Protokoll).
+
 **Das Einrichtungstor** (`auth_guard.php`, E-P5c-61): Eine Pflichtrolle ohne
 `totp_seit` landet auf `zweitfaktor.php` — einer eigenen Seite in der
 Anmeldehülle, nicht im Gerüst —, die API antwortet 403 JSON. Offen bleiben
@@ -7688,7 +8196,9 @@ die BetreiberIn aus, die ihn nachtragen soll).
 **Einrichten** (Tor und Profilkarte, gemeinsame Teile in
 `zweitfaktor_teile.php`): `totp_einrichtung_beginnen()` legt ein neues
 Geheimnis versiegelt ab, **ohne** `totp_seit`; eine angefangene Einrichtung
-behält ihr Geheimnis beim Neuladen. `totp_einrichtung_abschliessen()` setzt
+behält ihr Geheimnis beim Neuladen. Seit Web 21.11.0 räumt sie dabei
+verwaiste Passkeys (`pk_alle_entfernen(…, 'einrichtung')`, F-SR-38): Ein
+Faktor, der aus ist, hat keine. `totp_einrichtung_abschliessen()` setzt
 `totp_seit` erst mit einem passenden Code und liefert die zehn Codes — sie
 stehen **genau einmal** in der Antwort auf diesen POST. Der QR-Code entsteht
 im Browser (`assets/qr.js` aus `qrcode-generator`, 9.38 in `Design.md`),
@@ -7699,11 +8209,17 @@ speichert nichts.
 **Zurücksetzen** (Kontoseite, E-P5c-42): die BetreiberIn für alle Rollen, ein
 Admin nur für Konten der Rolle user (`rolle_darf_zweitfaktor_zuruecksetzen()`,
 geprüft **vor** dem Formular-Token wie jedes Rollentor, E-P5c-85); das eigene
-Konto nicht. `totp_abschalten()` leert Geheimnis, Zeitschritt und Codes und
-schreibt `totp_zurueckgesetzt`; die Mail `totp_zurueckgesetzt` geht an die
+Konto nicht. `totp_abschalten()` leert Geheimnis, Zeitschritt und Codes —
+seit Web 21.8.0 vergisst es die gemerkten Geräte, seit Web 21.10.0 entfernt
+es die Passkeys (`pk_alle_entfernen()`, Protokoll `passkey_entfernt` mit
+`daten.weg`), beides seit Web 21.11.0 **in derselben Transaktion** (F-SR-38:
+bis dahin dahinter, und ein Passkey konnte ein Zurücksetzen überleben; ein
+Deadlock am Protokolleintrag darin ist Nr. 354: nachgestellt bleiben Faktor,
+Codes und Geräte, die Passkeys gehen, und die Seite zeigt einen Fehler) —
+und schreibt `totp_zurueckgesetzt`; die Mail `totp_zurueckgesetzt` geht an die
 Kontoadresse. **Selbst ausschalten** geht nur ohne Pflicht. Der Demo-Reset
-leert die Spalten (`demo_zweitfaktor_leeren()`, gerufen aus
-`demo_zuruecksetzen()`).
+leert die Spalten, die gemerkten Geräte und die Passkeys
+(`demo_zweitfaktor_leeren()`, gerufen aus `demo_zuruecksetzen()`).
 
 **Der Rückweg über den Wiederherstellungsschlüssel entsteht in vier Paketen**
 (Konzept RW, E-P5c-104, F-P5c-106): E-P5c-42 sah ihn gegen `pat_key_check`
@@ -7841,6 +8357,67 @@ NutzerIn nichts kann.
 Die Migration heißt `2026_09_24_rueckweg_schluesselpaar` (drei Spalten an
 `users`).
 
+**Der Notzugang der einzigen BetreiberIn (ab Web 21.13.0, Schritt 18, SR-04;
+Nr. 249; E-SR-13, -24, -81 bis -87).** Wer den Zweitfaktor verliert, hat
+seither **vier** Wege zurück: die Wiederherstellungscodes, den Rückweg mit dem
+Notfallblatt (oben), das Zurücksetzen durch die Verwaltung — und, nur für die
+**einzige** BetreiberIn, `zweitfaktor_notweg.php`. Die Seite ist
+unangemeldet, steht in `WARTUNG_AUSNAHMEN` und verlangt **drei** Dinge:
+
+1. **Eine Datei im Anwendungsverzeichnis** (Schreibnachweis, E-SR-81). Die
+   Seite nennt `zweitfaktor-notweg-<32 Hexzeichen>.txt`, die BetreiberIn legt
+   eine Datei dieses Namens per FTP an, die Seite prüft nur, ob sie liegt
+   (`nachweis_steht()`). Der Name hängt an der **Sitzung** (E-SR-82): Eine
+   liegengebliebene Datei aus einem abgebrochenen Versuch gilt nicht mehr.
+   Die Anwendung **schreibt** hier nie eine Datei — anders als `install.php`
+   und `wiederherstellen.php`, die den Lesenachweis führen (die Seite legt an,
+   der Mensch tippt den Namen ab). Beide Richtungen stehen in
+   `nachweis_lib.php`; die Register-Zeile Z44 hält fest, dass es keine zweite
+   Mechanik gibt.
+2. **Den Wert `app_state.notzugang_geheim`** (E-SR-24): 32 Zufallsbyte hex,
+   angelegt von der Migration `2026_09_28_vertraute_geraete` (SR-02) und, auf
+   einer frischen Anlage, beim ersten Aufruf der Seite. Er steht **nirgends**
+   in der Oberfläche und nicht auf dem Schlüsselblatt; gelesen wird er im
+   Datenbankwerkzeug des Hosters mit
+   `SELECT v FROM app_state WHERE k = 'notzugang_geheim';`. Eingegeben darf
+   er in Vierergruppen werden (`schluessel_eingabe_normalisieren()`),
+   verglichen wird mit `hash_equals()`. Er liegt in jedem Komplett-Stand mit
+   — wer einen geöffneten Stand hat, hat ohnehin die Datenbank.
+3. **Das Passwort**, als Token wie bei der Anmeldung (E-SR-84): Salz über
+   `auth_salt.php`, je Rundenzahl `EdCrypto.deriveKeys()`, der Server nimmt
+   das Token zur `kdf_iter` des Kontos und prüft mit `password_verify()` —
+   bei unbekannter Adresse gegen `AUTH_VERGLEICHSWERT`. Die
+   Browser-Ableitung steht damit ein zweites Mal da, weil `login.php` für
+   Schritt 18 zu ist (E-SR-14); Backlog Nr. 358.
+
+**Die Tür ist eng** (E-SR-13, -85): Rolle BetreiberIn, `status = 'aktiv'`,
+Zweitfaktor an — und `betreiberinnen_zahl() === 1`, die **jedes** Konto der
+Rolle zählt, auch ein gesperrtes oder eingeladenes. Bei zweien setzt die
+andere zurück. **Jede andere Lage antwortet gleich** — derselbe Satz („Der
+Notzugang steht für dieses Konto nicht bereit."), derselbe Rumpf, dieselbe
+Dauer (`rate_gleiche_dauer()`); dafür laufen immer alle Prüfungen ohne frühe
+Rückkehr. Eigene Sätze haben nur das abgelaufene Formular (zählt nicht) und
+die Sperre des Topfes `notweg` (fünf je Stunde und eingetippter Adresse, mit
+Leiter; sie hängt an der Adresse, nicht am Konto, und verrät deshalb nichts).
+
+**Gelingt es**, laufen in **einer** Transaktion der neue Wert und
+`totp_abschalten($id, 'notweg')` (Geräte und Passkeys gehen mit); danach
+gehen alle Dateien des Musters, der Topf wird geleert, die Mail
+`totp_zurueckgesetzt` (`weg = notweg`) nennt die drei Zugänge, und die Seite
+schickt auf `login.php?ende=notweg`. **Sie meldet niemanden an** (E-SR-87):
+Die BetreiberIn meldet sich mit dem Passwort an und landet im
+Einrichtungstor. Der Protokolleintrag trägt deshalb den Urheber `job` — wie
+der Passwort-Reset über den Mail-Link (E-SR-86); Text und `daten.weg` sagen,
+was es war.
+
+**Ehrlich dazu (E-SR-24):** Der Datenbankwert schützt gegen den, der Dateien
+nur **lesen** kann (ein Webspace-Backup), und gegen den, der nur die
+Datenbank hat. Wer auf dem Webspace **schreiben** kann, kann eine PHP-Datei
+hochladen und hat damit auch die Datenbank — gegen ihn hilft kein Wert, und
+das gilt für jeden Weg, den die Anwendung selbst anbietet. **Und:** Wer auch
+den Zugang zur Datenbank verloren hat, kommt hier nicht weiter; das bleibt
+ein Wiederanlauf-Fall (Runbook 7).
+
 **Stumm nur ohne Spalten — ein Fehler ist kein Nein** (F-P5c-166, seit Web
 21.1.1). Zwischen Deploy und `update.php` gibt es die Spalten nicht, und dann
 schweigen Code-Schritt, Einrichtungstor und Rückweg (E-P5c-36, -53). Bis Web
@@ -7872,7 +8449,10 @@ Konfigurationsschalter**, der die Pflicht abschaltet.
 
 **Nachweis:** `bash tools/proben/proben.sh zweitfaktor` — RFC-Vektoren 6/6,
 Code-Schritt über HTTP, Tor, Rückzug der Selbstlöschung, Demo-Reset,
-Bus-Faktor samt der Tabelle seiner Lagen. Dazu zwei Bedienwege
+Bus-Faktor samt der Tabelle seiner Lagen, und seit Web 21.13.0 in Teil 8 der
+Notzugang: elf Lagen, in denen die Tür zu bleibt, mit einem Rumpf und einer
+Dauer; der Erfolg mit Protokoll, Mail, neuem Wert und Einrichtungstor; der
+alte Wert danach abgewiesen; ein Aufruf schreibt keine Datei. Dazu zwei Bedienwege
 (`tools/bedienprobe/wege/zweitfaktor.mjs`: QR-Code mit jsQR gelesen gleich
 der angezeigten Adresse; `wege/einstellungen_profil.mjs`: einschalten,
 falscher, wiederholter und richtiger Code, Vormerkfach nach dem Abbruch
@@ -8094,11 +8674,13 @@ nichts bremst". Das Konzept beschreibt in 1.3 einen Stand von vor Web 13.0.0.
 
 ### 4.99m Die Selbstregistrierung (ab Web 20.22.0, P5b/AP3)
 
-*E-P5b-01, -02, -03, -13, -23. Code: `server/registrieren.php`,
+*E-P5b-01, -02, -03, -13, -23; seit Web 21.14.0 E-SR-26, E-SR-88 bis -93
+(Schritt 18, SR-08). Code: `server/registrieren.php`,
 `server/bestaetigen.php`, `server/konten_einstellungen_lib.php`
 (`wegwerf_trifft()`), `server/ratelimit_lib.php` (drei Töpfe),
 `server/konto_lib.php` (Verfall, Sammelmeldung), `server/jobs_lib.php`
-(`konto_verfall`), `server/wegwerfdomains.txt`.*
+(`konto_verfall`), `server/wegwerfdomains.txt`, `server/assets/pow.js` und
+`server/assets/pow-worker.js` (Rechenaufgabe).*
 
 **Der Weg in fünf Schritten.**
 
@@ -8134,15 +8716,65 @@ belegte, keine an die übrigen. Die Dauer ist angeglichen
 (`rate_gleiche_dauer($t0, REG_MINDESTDAUER)`, 0,5 s Boden) und der Versand
 läuft **nach** `antwort_abschliessen()`; ohne beides wäre die Dauer die
 Auskunft, die der gleiche Text verhindert (M1-07). Gemessen über 120 Aufrufe:
-Spanne der Mediane **0,2 ms**.
+Spanne der Mediane **0,2 ms**; seit Web 21.14.0 mit der Rechenaufgabe die
+Ratenprobe, Abschnitt 12: sechs Lagen je fünfmal (ohne Lösung, falsche
+Lösung, abgelaufen, belegt, Wegwerf, frei), Spanne der Mediane **1,0 ms** (1,0 bis 1,5 ms über drei Läufe).
 
-**Die drei Bremsen.**
+**Die vier Bremsen** (die vierte seit Web 21.14.0; geprüft wird sie zuerst).
 
 | | was | warum still |
 |---|---|---|
+| Rechenaufgabe | Proof-of-Work: SHA-256 über Aufgabe und Zahl mit `POW_BITS` = 16 Nullbits, gelöst im Worker, geprüft mit einer Rechnung (`pow_ok()`); eine Aufgabe je Absendung, zwei Stunden gültig | eine Meldung „Aufgabe falsch" sagte einem Skript, woran es scheitert |
 | Honeypot | Feld `website` in `.nur-vorlesen`, mit `aria-hidden` und `tabindex="-1"` | `display:none` füllt kein Bot; ohne `aria-hidden` wäre es eine Falle für Bildschirmleser |
 | Mindestdauer | signierter Zeitstempel, 4 s bis 2 h gültig (`reg_stempel()`) | ohne Signatur bestimmt der Absender die Zahl selbst |
 | Töpfe | `reg` 10/h je IP · `regg` 100/h global · `regz` **3/24 h je Zieladresse** | eine Meldung „Honeypot gefüllt" wäre eine Bauanleitung |
+
+**Die Rechenaufgabe im Einzelnen** (SR-08, Nr. 228, E-SR-26).
+
+- **Aufgabe.** `pow_aufgabe_neu()` würfelt beim Zeichnen des Formulars 32
+  Byte (Hex) und legt sie mit ihrem Verfall als ganze Zahl in die Sitzung:
+  `$_SESSION['pow'][<aufgabe>] = <bis>`. Abgelaufene fallen beim nächsten
+  Aufruf weg, und es bleiben höchstens fünf, die jüngsten (E-SR-89) — ein
+  zweiter Reiter oder ein nach einem sichtbaren Fehler neu gezeichnetes
+  Formular entwertet die erste nicht. Die Frist ist `REG_FORMULAR_GILT_S`,
+  dieselbe Zahl wie die des Zeitstempels (zwei Stunden, E-SR-93).
+- **Sitzung nur bei offener Registrierung** (E-SR-92). Die Seite ruft
+  `https_tor()` und `sitzung_starten('app')` nur, wenn `konten_reg_offen()`;
+  eine Anlage „nur auf Einladung" setzt hier weiter kein Cookie. Einmal
+  gültig geht nur mit einer Ablage auf dem Server — ein signierter Wert
+  wie der Zeitstempel ließe sich innerhalb seiner Frist beliebig oft
+  vorzeigen. Die Sitzungsdatei arbeitet zwei Absendungen derselben Sitzung
+  nacheinander ab.
+- **Worker.** `assets/pow.js` startet beim Laden `assets/pow-worker.js`; die
+  Adresse (mit Erkennungswert aus `asset()`) und die Bitzahl kommen als
+  `data-pow-worker` und `data-pow-bits` aus derselben Konstante (E-SR-90).
+  Der Worker hängt die Zahl als Dezimalziffern an die Aufgabe und rechnet
+  `crypto.subtle.digest()` in Bündeln von 64; die Lösung kommt ins Feld
+  `pow_loesung`. Erlaubt ist er durch `worker-src 'self' blob:`, nicht durch
+  `script-src`. Wer schneller abschickt, als er rechnet, sieht den Knopf
+  gesperrt und „Sicherheitsprüfung läuft …"; das Formular geht von selbst
+  ab. Kann der Browser nicht rechnen, sagt die Zustandszeile es und das
+  Formular geht nicht ab. **Ohne JavaScript** steht dort der Satz „Ohne
+  JavaScript lässt sich hier kein Konto anlegen." (F-SR-92).
+- **Prüfung.** `pow_ok()` steht im stillen Teil an erster Stelle, hinter den
+  zwei sichtbaren Fehlern (Häkchen, Adressformat — E-SR-88). Sie verbraucht
+  die Aufgabe immer, ob sie gelingt oder nicht, verlangt eine Dezimalzahl
+  mit höchstens zwölf Stellen (E-SR-91) und rechnet eine SHA-256. Ein
+  Fehlschlag nimmt den Weg der anderen Bremsen: dieselbe Karte, dieselbe
+  Dauer, Zählung in `reg` und `regg`.
+- **Die Zahl.** 16 Bit, gemessen am 05.10.2026 in Chromium 141 (je 30
+  Läufe): ungedrosselt 158 343 Versuche/s, Median 0,47 s, höchstens 1,34 s;
+  auf ein Viertel der CPU begrenzt 34 875 Versuche/s, Median 1,71 s,
+  höchstens 6,0 s. Die Drosselung der Entwicklerwerkzeuge
+  (`Emulation.setCPUThrottlingRate`) erreicht keinen Worker (F-SR-95);
+  gemessen hat eine CPU-Quote des Betriebssystems. Eine Stufe weniger
+  halbiert die Zeit (P-SR-14).
+- **Was sie nicht kann.** Ein Skript, das SHA-256 in Maschinencode rechnet,
+  braucht für 16 Bit Millisekunden. Die Aufgabe verteuert das massenhafte
+  Absenden; die Grenze bleiben die Töpfe.
+- **Felder nur als Text** (seit Web 21.14.0, F-SR-96): `$feld()` nimmt
+  `email`, `name`, `website`, `zeit` und die beiden Felder der Aufgabe nur
+  als Zeichenkette; eine Liste gilt als leer.
 
 `regz` ist der wichtigste: Ohne ihn verschickt die Seite an **jede**
 eingetippte Adresse eine Mail, ohne dass der Absender sie besitzen muss. Sein
@@ -8406,9 +9038,22 @@ Leiter überholt den Wert in `sperre`), Eintrag in
 Verwaltung).
 
 **Keine Schlüsselerneuerung an dieser Stelle.** Den Serverschlüssel zu wechseln
-hieße, jede versiegelte Sicherung neu zu umhüllen — ein S10-Vorgang, kein
-Knopf in einem Dialog. Wer sein Blatt verloren hat, druckt es neu; der
-Schlüssel bleibt derselbe.
+hieße, jede versiegelte Sicherung neu zu umhüllen — seit Web 21.12.0 gibt es
+diesen Vorgang (4.97c, SR-03), und er steht unter Betrieb →
+Servereinstellungen, nicht in einem Dialog. Wer sein Blatt verloren hat,
+druckt es neu; der Schlüssel bleibt derselbe.
+
+**Nach einer Rotation kommt die Frage sofort** (seit Web 21.12.0, Nr. 233,
+E-SR-11). Beide Rotationen — Anteil und Serverschlüssel — rufen
+`blatt_neu_faellig()`: Die Bestätigung wird gelöscht, und
+`app_state.schluesselblatt_neu_weil` sagt, welche es war. Der Dialog setzt
+dann den Satz voran „Ein Wert hat gewechselt — drucke das Blatt neu", und
+während eines Wechsels nennt er die Kennung des bisherigen, der mit aufs
+Blatt gehört. Gefragt werden weiter nur die **heutigen** Werte; der
+bisherige wird genannt, nicht abgefragt. Die Antwort (`blatt_bestaetigt()`)
+räumt den Grund wieder weg. Bis dahin fasste die Rotation die Marke nicht
+an, und die Frage kam im nächsten Quartal — mit einem Blatt in der Akte,
+das den heutigen Wert nicht trug.
 
 #### „Später" heißt zweierlei
 
@@ -9204,8 +9849,13 @@ E-SA-04) · vertrauenswürdige Proxys eingetragen (reine Auskunft).
 >
 > **Muss und nicht Empfohlen**, obwohl es einen Rückfall gibt: Nur Muss wird
 > auf der Statusseite rot. Eine Sitzungsdatei trägt kein Schlüsselmaterial,
-> aber ihr **Dateiname ist die Sitzungskennung** — wer sie liest, ist
-> angemeldet und sieht die Klartextliste. Dass Muss die Einrichtung sperren
+> aber ihr **Dateiname ist die Sitzungskennung**. Bis Web 21.6.1 hieß das:
+> Wer sie liest, ist angemeldet und sieht die Klartextliste. **Seit Web
+> 21.7.0 genügt die Datei allein nicht mehr** — zur Sitzung gehört das
+> Cookie `EDBIND`, in der Datei steht nur sein SHA-256 (4.99q, „Die
+> Sitzungsbindung"). Der Punkt bleibt Muss: Die Datei trägt weiter
+> `totp_halb`, Marken und Rückfragen, und ein fremdes Verzeichnis ist ein
+> fremdes Verzeichnis. Dass Muss die Einrichtung sperren
 > kann, ist bedacht und fällt praktisch aus: `install.php` ruft
 > `sitzung_ablage()` lange vor der Prüfung, und wer die Wurzel beschreiben
 > darf (selbst ein Muss), kann `.sitzungen/` anlegen. Ist die Wurzel nicht
@@ -10096,14 +10746,18 @@ Handelnden; ohne sie bliebe die Spalte `wer` leer, und das Ereignis
 
 ##### Was **nicht** protokolliert wird, und warum das auf der Karte steht
 
-Ein Sperrereignis entsteht nur an den **sieben Töpfen mit Leiter** — `login`,
-`login_ip`, `salt`, `ingest`, `ingest_ip`, `blatt`, `totp` (bis Web 21.1.0
+Ein Sperrereignis entsteht nur an den **acht Töpfen mit Leiter** — `login`,
+`login_ip`, `salt`, `ingest`, `ingest_ip`, `blatt`, `totp` und seit Web
+21.13.0 `notweg`, der Notzugang der einzigen BetreiberIn (bis Web 21.1.0
 stand hier „fünf"; `blatt` und `totp` waren beim Nachtragen der Leiter nicht
-mitgezählt worden). Die übrigen neun (`reset`, die drei
-Kopplungstöpfe, `demo`, `demog`, `testmail`, `csp`) sperren über den
-Rückfallweg **ohne** Protokollzeile. Ohne diesen Satz auf der Karte liest sich
-eine kurze Liste als „es war fast nichts", obwohl neun Töpfe gar nicht
-berichten.
+mitgezählt worden). Die übrigen dreizehn (`reset`, die drei Kopplungstöpfe,
+`demo`, `demog`, `testmail`, `csp`, `health`, `rt_vorschau` und die drei der
+Registrierung) sperren über den Rückfallweg **ohne** Protokollzeile;
+`global` sperrt nie. Ohne diesen Satz auf der Karte liest sich eine kurze
+Liste als „es war fast nichts", obwohl die meisten Töpfe gar nicht
+berichten. *Bis Web 21.13.0 stand hier „die übrigen neun" mit fünf Namen —
+`health`, `rt_vorschau` und die Registrierung waren dazugekommen, ohne dass
+der Satz mitwuchs.*
 
 Und die Karte „Verlangsamung" zeigt **Anstiege, keine Phasen**: Vermerkt wird,
 wenn die Stufe steigt; ein Ende hat kein eigenes Ereignis.
@@ -10223,8 +10877,37 @@ Web 20.40.0 trägt, schadet nicht; nach ihr fragt nur niemand. Und er zählt
 `max_user_connections` zu eng?", und ein Gedrängel um eine Tabellenzeile
 beantwortet sie nicht.
 
-**Die eigentliche Abhilfe steht aus** — die Transaktion zu wiederholen, statt
-sie dem Aufrufer zurückzugeben. Backlog Nr. 210.
+**Die eigentliche Abhilfe steht seit Web 21.11.1 in `ingest.php`** (Schritt
+18, SR-05, Nr. 210; bis dahin stand hier „steht aus"). Gemessen vorher, mit
+der Verbindungsprobe bei allen freien Plätzen (`--frei 20`): in drei Runden
+zu 20 Paketen **39 × 503**, an drei Stellen — dem `UPDATE days` in
+`dt_zeitraum_fortschreiben()` (16), dem Upsert auf `missions` (12) und
+`UPDATE devices SET last_seen` (10). Die erste und die dritte Zeile teilen
+**alle** Pakete eines Tags bzw. eines Geräts: Jeder Upload nimmt über die
+Fremdschlüssel eine geteilte Sperre auf sie und wollte sie später in
+derselben Transaktion exklusiv. Zwei solche warten aufeinander. Zwei Teile:
+
+| | |
+|---|---|
+| Hinter dem Commit | `dt_zeitraum_fortschreiben()` samt der Frage `ingest_tag_offen()` und `last_seen` des Geräts stehen **hinter** dem `commit()`, als eigene kurze Anweisungen mit eigenem Wiederholungsrahmen (E-SR-12, E-SR-54). Beide sind idempotent (min/max, `NOW()`). Scheitern sie nach dem letzten Anlauf, antwortet die Anfrage 503 — der Datensatz steht dann schon, und die Uhr liefert unverändert nach: Upsert und Punkte sind Wiederholungen |
+| Die Schleife | Der Rumpf läuft bei 1205 und 1213 bis zu **drei Mal** (`INGEST_ANLAEUFE`), mit 50 bis 200 ms Zufallsabstand (`gedraengel_abstand()` in `wartung_lib.php` — seither das eine `usleep()` außerhalb von `ratelimit_lib.php`, Registerzeile Z33 mit Decke 1). Am Anfang jedes Anlaufs geht auf Anfang, was der Rumpf nur ergänzt und die Antwort liest: die Prüfliste (von einem Abzug vor der Transaktion), `$behalten`, `$einsatzNeu` und die drei Punktzähler. Wiederholt wird nur, was nicht bestätigt ist — die zwei frühen `commit()` der Dublettenzweige beenden die Anfrage. Der Rahmen steht in `ingest.php` und nicht als `db_transaktion_wiederholt()` in `transaktion_lib.php`, solange es den einen Verbraucher gibt (R83: zentralisiert wird beim zweiten) |
+| Was bleibt | nach dem dritten Anlauf 503 `ausgelastet` wie an der Grenze; **erst dann** steht das Gedrängel im Fehlerprotokoll (`ingest_scheitern()`). Die Verbindungsgrenze (1226) wiederholt die Schleife nicht |
+
+Gemessen nachher: **180 von 180 Paketen ohne 503**, 0 Gedrängel im
+Fehlerprotokoll (drei Läufe zu drei Runden). **Das Verschieben leistet es
+allein** (ohne Schleife ebenfalls 180 von 180), die Schleife ist das Netz
+(allein, mit den Zeilen in der Transaktion: 178 von 180). Gegen die
+Verbindungsgrenze bleibt die 503 (`--frei 1`: 15 × 503, alle von der
+Grenze). Die Schleife selbst misst Teil 12 der Ingestprobe: ein Auslöser, der
+1213 meldet, solange ein Zähler in einer nicht transaktionalen Tabelle unter
+einer Grenze liegt. **Das ist kein echter Deadlock** (F-SR-67): Ein `SIGNAL`
+bricht die Anweisung ab, InnoDB beendet die Transaktion nicht. Für
+`ingest.php` ist es gleichwertig, weil der `catch` selbst zurückrollt und der
+Rumpf keinen Fehler schluckt — der innere `catch` der Punktschleife reicht
+alles außer Dubletten weiter. Den echten Deadlock misst die
+Verbindungsprobe. Wo ein Rumpf einen Fehler schluckt, ist es nicht
+gleichwertig: Dann läuft nach einem echten Deadlock der Rest ohne
+Transaktion weiter (Nr. 354).
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 
@@ -10724,8 +11407,9 @@ sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
 > sich darauf verlässt, ohne es zu prüfen, trägt nicht:** Auf Produktiv ist
 > derselbe Wert nicht erhoben, und für Selbsthoster ist er offen. Eine
 > Sitzungsdatei führt zwar kein Schlüsselmaterial — ihr **Dateiname ist die
-> Sitzungs-ID**, und wer sie auflisten kann, ist angemeldet. Vorschlag im
-> Prüfdokument, Abschnitt 4.
+> Sitzungs-ID**, und wer sie auflisten konnte, war bis Web 21.6.1
+> angemeldet; seit Web 21.7.0 braucht es dazu das Cookie `EDBIND` (4.99q).
+> Vorschlag im Prüfdokument, Abschnitt 4.
 > **(3) `open_basedir` ist leer** und `allow_url_fopen` an. Beides ist die
 > Voreinstellung vieler Hoster und kein Mangel der Anwendung; es steht hier,
 > damit der Vergleich später nicht bei null anfängt.
@@ -11357,6 +12041,14 @@ Ort noch einmal ändert — etwa wenn die Probe nach einer Stunde ein anderes
 Ergebnis liefert (E-SA-02). Ein Mischbetrieb zweier Ablagen wäre das
 Schlimmere; ein sauberer Schnitt ist deshalb gewollt.
 
+**Und noch einmal mit Web 21.7.0** (Schritt 18, SR-01, E-SR-04): Jede Sitzung
+braucht seither das Cookie `EDBIND`, und keine ältere trägt es. Beim ersten
+Aufruf nach dem Ausrollen endet jede offene Sitzung mit dem Grund `bindung`;
+die Anmeldeseite sagt, dass das nach einem Update einmal geschieht. **Vorher
+eine Ankündigung setzen** (Betrieb → Servereinstellungen, Karte
+„Ankündigung": „Nach dem Update einmal neu anmelden."). Geräte sind nicht
+betroffen — sie haben keine Sitzung, sondern Kennung und Schlüssel.
+
 **Danach: Betrieb → Status, Zeile „Sitzungsablage" ansehen** (seit Web
 20.26.1). Steht sie **blau**, liegt alles richtig. Steht sie **rot**, sagt der
 Satz daneben, was zu tun ist — er rät nicht mehr:
@@ -11393,11 +12085,17 @@ seine Löschliste nur aus der eigenen Zustandsdatei entsteht und der Ordner dort
 nie stand. Dass `.sitzungen/` trotzdem in die Ausnahmeliste gehört (Kette II,
 E-KH-20), hat einen anderen Grund; er steht in 6.5.
 
-**Was währenddessen erreichbar bleibt** (E-S5W-04): die **sechs**
-Betriebsseiten `betrieb_status.php`, `betrieb_statistik.php`,
-`betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php` und — seit
-S10 — `betrieb_schluesselblatt.php` (die Lage, in der man das Blatt braucht,
-ist genau eine Wartungslage), dazu `update.php` und
+**Was währenddessen erreichbar bleibt** (E-S5W-04; maßgeblich ist
+`WARTUNG_AUSNAHMEN`, achtzehn seit Web 21.13.0): die **sieben**
+Betriebsseiten `betrieb_status.php`, `betrieb_sicherheit.php`,
+`betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`,
+`betrieb_server.php` und — seit S10 — `betrieb_schluesselblatt.php` (die
+Lage, in der man das Blatt braucht, ist genau eine Wartungslage),
+Komplett-Backup und Backup-Ziele (seit Web 21.1.0), die Bestätigung des
+frischen Codes `zweitfaktor.php` (seit Web 21.9.0 — Schlüsselgriffe und Blatt
+verlangen ihn), der Notzugang `zweitfaktor_notweg.php` (seit Web 21.13.0 —
+die einzige BetreiberIn ohne Zweitfaktor steht nach einem Deploy genau hier
+davor), dazu `update.php` und
 `wiederherstellen.php` (die Arbeit selbst und der Rückweg), `jobs.php` mit
 Token — das Komplett-Backup der Kette läuft **während** der Wartung, genau
 dann ist es konsistent —, `login.php` mit `auth_salt.php` (ohne den
@@ -11448,10 +12146,10 @@ für das sie da ist.
 
 **Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
 (1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
-(neben `db.php`)? (2) Ist die aufgerufene Seite eine der Ausnahmen (`WARTUNG_AUSNAHMEN`, seit Web 21.1.0 sechzehn; hier stand bis dahin „dreizehn", es waren vierzehn)?
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der Ausnahmen (`WARTUNG_AUSNAHMEN`, seit Web 21.13.0 achtzehn, von 21.9.0 an siebzehn, von 21.1.0 an sechzehn; hier stand bis dahin „dreizehn", es waren vierzehn)?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/proben/wartung/probe.php` (**69 Erwartungen**, gezählt 25.09.2026; seit Web 15.5.2 misst
+`php tools/proben/wartung/probe.php` (**70 Erwartungen**, gezählt 04.10.2026; seit Web 15.5.2 misst
 ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, seit
 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot wird,
 Nr. 140, seit S10 mit 6a, dass das **Schluesselblatt** erreichbar bleibt —
@@ -11906,34 +12604,80 @@ gibt es auf einfachem Webspace nicht. **So kommt man heraus:**
 > BetreiberIn kommt also ohne Zweitfaktor an Betrieb → Updates.
 
 **Notweg: Die einzige BetreiberIn hat Handy und Codes verloren** (seit Web
-20.42.0, E-P5c-42). **Seit Web 20.45.0 zuerst den Rückweg nehmen** (Konzept
-RW, E-RW-08): Mit Passwort und Notfallblatt setzt sie ihn am Code-Schritt
-selbst zurück („Gerät und Codes verloren?") und landet im Einrichtungstor —
-mit Protokoll und Mail. Das geht, wenn Betrieb → Status „Rückweg-Prüfung"
-blau zeigt und das Konto ein Paar hat (die Karte „Zweitfaktor" im Profil sagt
-„eingerichtet"). **Fehlt eines davon oder das Notfallblatt**, kann nur eine
-**andere** BetreiberIn zurücksetzen — gibt es keine, führt kein Weg über die
-Oberfläche hinein. Im Datenbankwerkzeug des Hosters, mit der Kennung des
-Kontos:
+20.42.0, E-P5c-42; neu geordnet mit Web 21.13.0, Schritt 18, SR-04). Vier
+Wege, **in dieser Reihenfolge** — der erste, der geht, ist der richtige:
 
-```sql
-UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL, totp_schritt = NULL
- WHERE id = <Kennung>;
-DELETE FROM totp_codes WHERE user_id = <Kennung>;
-```
+1. **Der Rückweg** (seit Web 20.45.0, Konzept RW, E-RW-08): Mit Passwort und
+   Notfallblatt setzt sie den Zweitfaktor am Code-Schritt selbst zurück
+   („Gerät und Codes verloren?") und landet im Einrichtungstor — mit
+   Protokoll und Mail. Das geht, wenn Betrieb → Status „Rückweg-Prüfung"
+   blau zeigt und das Konto ein Paar hat (die Karte „Zweitfaktor" im Profil
+   sagt „eingerichtet").
+2. **Eine zweite BetreiberIn** setzt auf der Kontoseite zurück (E-P5c-42).
+3. **Der Notzugang** `zweitfaktor_notweg.php` (seit Web 21.13.0, 4.99q) —
+   nur, wenn es **genau eine** BetreiberIn gibt. Er verlangt drei Dinge:
+   (a) die Seite aufrufen und den Dateinamen ablesen, der dort steht
+   (`zweitfaktor-notweg-<32 Hexzeichen>.txt`; er gehört zu diesem
+   Browserfenster), und per FTP eine Datei dieses Namens ins
+   Anwendungsverzeichnis legen — neben `config.php`, eine leere genügt;
+   (b) im Datenbankwerkzeug des Hosters den Wert lesen:
 
-Danach mit dem Passwort anmelden; das Einrichtungstor verlangt sofort einen
-neuen Zweitfaktor. **Im Protokoll steht dieser Weg nicht** — er geht an der
-Anwendung vorbei. Wer ihn benutzt, trägt es in die Betriebsakte ein. Der
-Fall, dass die einzige BetreiberIn **auch** den Datenbankzugang verloren hat,
-ist Backlog Nr. 249 (Schritt 18) — seit RW-03 nur noch, wenn sie zugleich ihr
-Notfallblatt verloren hat. Die Bus-Faktor-Zeile auf Betrieb → Status
-steht genau deshalb orange, bis es eine zweite BetreiberIn gibt.
+   ```sql
+   SELECT v FROM app_state WHERE k = 'notzugang_geheim';
+   ```
+
+   (c) Adresse, Wert und Passwort auf der Seite eingeben. Danach ist der
+   Zweitfaktor aus, Datei und Wert sind verbraucht (der Wert wird neu
+   gewürfelt), eine Mail geht an die Adresse, und der Eintrag steht im
+   Protokoll (`totp_zurueckgesetzt`, `weg = notweg`, Urheber `job`). Mit dem
+   Passwort anmelden; das Einrichtungstor verlangt sofort einen neuen
+   Zweitfaktor. Gibt die Seite nur „Der Notzugang steht für dieses Konto
+   nicht bereit." zurück, ist eines der drei falsch, oder es gibt eine zweite
+   BetreiberIn — die Seite sagt bewusst nicht, welches. Fehlt der Wert in
+   `app_state` (eine sehr alte Anlage ohne die Migration von SR-02), legt
+   ihn der erste Aufruf der Seite an. Liegt die Datei danach noch da (die
+   Anwendung durfte sie nicht löschen), von Hand entfernen; sie gilt ohnehin
+   nicht mehr.
+   **Was der Wert schützt und was nicht (E-SR-24):** Er schützt gegen den,
+   der Dateien nur **lesen** kann, und gegen den, der nur die Datenbank hat.
+   Wer auf dem Webspace **schreiben** kann, kann eine PHP-Datei hochladen und
+   hat damit auch die Datenbank — gegen ihn hilft kein Wert auf dem Server,
+   und das gilt für jeden Weg, den die Anwendung selbst anbietet.
+4. **SQL im Datenbankwerkzeug** — an der Anwendung vorbei, als letzter Weg.
+   Mit der Kennung des Kontos:
+
+   ```sql
+   UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL, totp_schritt = NULL
+    WHERE id = <Kennung>;
+   DELETE FROM totp_codes WHERE user_id = <Kennung>;
+   DELETE FROM vertraute_geraete WHERE user_id = <Kennung>;
+   DELETE FROM passkeys WHERE user_id = <Kennung>;
+   ```
+
+   Die letzten zwei Zeilen stehen hier seit Web 21.11.0 (F-SR-38): Ohne sie
+   galten gemerkte Geräte und Passkeys nach der Neueinrichtung weiter —
+   genau das, was `totp_abschalten()` auf jedem anderen Weg verhindert. Auf
+   einer Anlage vor Web 21.8.0 bzw. 21.10.0 fehlt die Tabelle, und die Zeile
+   meldet einen Fehler, der nichts ändert. Danach mit dem Passwort anmelden;
+   das Einrichtungstor verlangt sofort einen neuen Zweitfaktor. **Im
+   Protokoll steht dieser Weg nicht** — er geht an der Anwendung vorbei. Wer
+   ihn benutzt, trägt es in die **Betriebsakte** ein.
+
+**Wer auch den Zugang zur Datenbank verloren hat**, kommt über keinen der
+vier Wege hinein — Weg 3 verlangt den Wert aus der Datenbank, Weg 4 das
+Werkzeug. Das ist ein Wiederanlauf-Fall beim Hoster, so entschieden
+(E-SR-24). *Bis Web 21.13.0 stand hier, dieser Fall sei Backlog Nr. 249 —
+Nr. 249 ist mit dem Notzugang erledigt, und der verlangt den Datenbankwert
+gerade.* Die Bus-Faktor-Zeile auf Betrieb → Status bleibt orange, bis es eine
+zweite BetreiberIn gibt: Der Notzugang ersetzt sie nicht, er ist der Weg,
+wenn sie fehlt.
 
 **Notweg: Nach einem Wiederanlauf mit anderem Serverschlüssel** lässt sich
 kein Zweitfaktor-Geheimnis mehr öffnen (es ist mit dem alten versiegelt). Die
-Anmeldung nimmt dann nur noch Wiederherstellungscodes — sie hängen nicht am
-Schlüssel (E-P5c-42). Wer keine mehr hat, nimmt den Rückweg mit dem
+Anmeldung nimmt dann Wiederherstellungscodes und — seit Web 21.10.0 — Passkeys;
+beide hängen nicht am Schlüssel (E-P5c-42, E-SR-49). **Ausschalten und neu
+einrichten löscht die Passkeys** (F-SR-38): danach zuerst den Zweitfaktor neu
+einrichten, dann die Passkeys neu anlegen. Wer keine mehr hat, nimmt den Rückweg mit dem
 Notfallblatt — er hängt ebenfalls nicht am Serverschlüssel —, sonst setzt
 eine BetreiberIn zurück, die einzige BetreiberIn über den SQL-Weg oben.
 
@@ -11992,7 +12736,20 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 2. **Anwendungsdateien hochladen** (der Deploy tut das, oder von Hand).
 3. **`config.php` aus dem Wiederanlaufpaket** daneben legen. Datenbankzugang
    darin auf die neue Datenbank anpassen, den **`server_key` unverändert
-   lassen** — er ist es, der das Backup öffnet.
+   lassen** — er ist es, der das Backup öffnet. **Genauer, seit Web
+   21.12.0:** der Schlüssel, unter dem der **Stand** versiegelt ist. Sein
+   Kopf nennt die Kennung (4.97d); stammt er aus der Zeit vor einem Wechsel
+   des Serverschlüssels, ist es der Wert vom **bisherigen** Blatt — als
+   `server_key`, denn auch die Zeilen im Dump und die Marke in `app_state`
+   gehören zu ihm. Das gilt für die **leere** Anlage dieses Runbooks: Auf
+   ihr liegt noch nichts unter einem neueren Schlüssel. (Auf einer
+   **laufenden** Anlage, die Konto-Backups und Archive schon unter dem neuen
+   trägt, ist es der andere Weg — „Einen Stand von vor dem Wechsel
+   einspielen" weiter unten.) Stammt der Stand aus der Zeit **während**
+   eines Wechsels, gehören beide Werte vom Blatt dieser Zeit hinein —
+   `server_key` der neue, `server_key_alt` der bisherige. Seit Web 21.12.1
+   beginnt der Nachweis dann auf dieser Anlage von vorn
+   (`sw_nach_einspielen()`, 4.97c); der Beginn bleibt der des Dumps.
 4. **Die Backup-Datei** nach `server/sicherungen/eingang/` legen — per
    FTP, SFTP oder Dateimanager des Hosters. Vom Backup-Ziel holt man sie
    sich dorthin. Erkannt werden `.edk` (versiegelt), `.sql.gz` und `.sql`.
@@ -12018,7 +12775,7 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 | „Diese Installation ist noch nicht eingerichtet" | keine `config.php` | Schritt 3 nachholen |
 | „Die Datenbank antwortet nicht" | Zugangsdaten in `config.php` passen nicht, oder die Datenbank existiert nicht | Schritt 1 und 3 prüfen |
 | „Diese Installation ist in Betrieb" | in der Datenbank stehen schon Konten | Datenbank leeren (bewusste Handlung beim Hoster) oder einzelne Konten über *Backups* zurückholen |
-| „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` in `config.php` ist nicht der, mit dem versiegelt wurde | den richtigen aus dem Wiederanlaufpaket eintragen |
+| „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` in `config.php` ist nicht der, mit dem versiegelt wurde | den richtigen aus dem Wiederanlaufpaket eintragen — nach einem Wechsel des Serverschlüssels den vom Blatt, dessen Kennung der Kopf des Stands nennt (die `config.php` im Paket kann noch die bisherige tragen, wenn sie danach nicht erneuert wurde) |
 | „Dieses Backup ist unvollständig — die Endmarke fehlt" | der Lauf ist beim Erzeugen abgebrochen | einen älteren Stand nehmen |
 | „gescheitert an Anweisung *n*" | halb eingespielt; es wurde **nichts** zurückgenommen | Datenbank leeren und von vorn |
 | „Der Server-Anteil der Verschlüsselung fehlt oder ist nicht der, mit dem die Hüllen gebaut wurden" (seit Web 19.7.0) | **der Regelfall nach Schritt 5**, siehe unten | den `kdf_anteil` aus dem Wiederanlaufpaket eintragen |
@@ -12045,7 +12802,10 @@ vierten Stück).** Getrennt von der Anwendung aufbewahren — auf einem anderen
 Rechner, nicht im selben Backup:
 
 1. **`server/config.php`.** Sie steht in `.gitignore` **und** in der
-   Ausnahmeliste des Deploys; es gibt sie also nur auf dem Server.
+   Ausnahmeliste des Deploys; es gibt sie also nur auf dem Server. **Nach
+   jedem Wechsel des Serverschlüssels eine frische hineinlegen** und die alte
+   als „bisherig" kennzeichnen — die alte trägt den bisherigen Schlüssel
+   (seit Web 21.12.1 sagt es auch die Abschluss-Mail, F-SR-82).
 2. **Der Serverschlüssel** darin (`'server_key' => '…'`, 64 Hexzeichen).
    Er versiegelt die Zugangsdaten der Backup-Ziele und — ab AP8 — das
    Komplettbackup. **Ohne ihn** sind die Zugangsdaten der Ziele neu
@@ -12076,10 +12836,78 @@ Rechner, nicht im selben Backup:
 Halbjahr ein Paket vom Ziel holen und in ein Wegwerfkonto einspielen. Ein
 Backup, das nie zurückgespielt wurde, ist eine Vermutung.
 
-**Serverschlüssel nachtragen (bestehende Installation):** Adminbereich →
-**Backup-Ziele**. Ist `config.php` beschreibbar, genügt der Knopf; sonst
-zeigt die Seite die fertige Zeile zum Einfügen — **genau eine** eintragen, bei
-jedem Neuladen steht dort eine andere. Danach die Zeile ins Wiederanlaufpaket.
+**Serverschlüssel anlegen oder nachtragen (bestehende Installation):**
+Betrieb → **Servereinstellungen**, Karte „Schlüssel des Servers". Fehlt er,
+legt *Serverschlüssel anlegen* ihn an; weicht er ab (Lage *abweichend*, etwa
+nach einem Wiederanlauf), trägt *Nachtragen vom Blatt* den richtigen Wert ein
+und vergleicht vorher die Kennung. Beides schreibt `config.php`; ist sie
+nicht beschreibbar, sagt die Meldung es, und nichts ändert sich. Danach das
+Schlüsselblatt drucken. *Bis Web 21.12.0 stand hier „Adminbereich →
+Backup-Ziele" mit einer fertigen Zeile zum Einfügen — der Ort und der Weg bis
+S10 (F-SR-03).*
+
+**Serverschlüssel wechseln (seit Web 21.12.0, SR-03, Nr. 247).** *Auslöser:*
+der Verdacht, dass das Blatt oder `config.php` in falsche Hände kam — nicht
+der Kalender. *Ablauf:*
+
+1. Betrieb → Servereinstellungen, Karte „Schlüssel des Servers", Abschnitt
+   *Serverschlüssel wechseln*. Den Haken setzen („Kopien auf dem Backup-Ziel
+   bleiben unter dem bisherigen") und die Rückfrage bestätigen. Geht nicht
+   während einer Rotation des Anteils (und umgekehrt, E-SR-60).
+2. **Sofort das Blatt neu drucken** — es trägt jetzt drei Kacheln (zwei
+   ohne Server-Anteil), den bisherigen mit dem Satz „Dieses Blatt nach dem
+   Wechsel NICHT vernichten". Die Rückfrage zum Blatt ist ab jetzt fällig und
+   kommt bei der nächsten Anmeldung jeder BetreiberIn; jede bekommt außerdem
+   eine Mail.
+3. Die Karte zeigt „Umhüllung: noch n von m". Der Job arbeitet über den
+   eingerichteten Auslöser; *Jetzt weiterarbeiten* fährt ein Häppchen mit
+   20 s. **Ohne Cron oder Token gehen Konto-Backups und Archive nur mit
+   diesem Knopf voran** — am Huckepack-Weg fängt der Job keine Datei an
+   (F-SR-82). Auf einer kleinen Anlage ist nach dem ersten Häppchen alles
+   umgehüllt — örtlich gemessen: 13 Stücke im Häppchen von acht Sekunden,
+   das der Wechsel selbst fährt. **Der Nachweis beginnt zehn Minuten nach
+   dem Wechsel** (E-SR-73); bis dahin zeigt die Karte „Nachweis ab HH:MM".
+   Steht eine Zeile „Ließen sich nicht umhüllen" da, nennt sie Stück und
+   Grund; der Job versucht es mit jedem Häppchen neu, und der bisherige
+   bleibt, bis es umgehüllt oder fort ist (ein kaputtes Konto-Backup darf
+   man löschen und neu erzeugen).
+4. **Der Komplett-Stand unter dem neuen.** Ist alles nachgewiesen, merkt
+   der Job selbst einen Auftrag vor (Q-SR-03); er läuft mit dem nächsten
+   Joblauf an. Ohne eingerichteten Auslöser: Komplett-Backup → *Jetzt
+   sichern* — erst nach der Umhüllung, damit er nur Zeilen unter dem neuen
+   trägt.
+5. Die Rückfrage zum Blatt beantworten (Startseite, gleich nach dem
+   Anmelden).
+6. Stehen alle drei („Bevor der bisherige gehen darf: 3 von 3"), *Alten
+   Schlüssel entfernen*. Danach steht `server_key_alt` nicht mehr in
+   `config.php`.
+7. **Das Wiederanlaufpaket erneuern:** eine frische `config.php` hinein, die
+   alte als „bisherig" kennzeichnen (F-SR-82). Bis Web 21.12.1 stand dieser
+   Schritt nirgends.
+
+*Die Blatt-Regel (E-SR-10):* Das Blatt mit dem bisherigen Wert **bleibt in
+der Betriebsakte**, solange auf dem Backup-Ziel oder in der Liste der
+Komplett-Stände etwas liegt, das nur er öffnet — die Liste zeigt es mit
+„anderer Schlüssel".
+
+*Einen Stand von vor dem Wechsel einspielen* (auf der laufenden Anlage; für
+die leere gilt Wiederanlauf Schritt 3): den bisherigen Wert als
+`server_key_alt` von Hand in `config.php` eintragen — `server_key` bleibt
+der neue —, einspielen, und dann **den Wechsel über die Karte zu Ende
+bringen, nicht von Hand austragen**. Der eingespielte Dump bringt die Zeilen
+unter dem bisherigen zurück (Zugänge der Ziele, Zweitfaktor-Geheimnisse)
+und die Marke dazu; die Lage ist *Wechsel*, und der Job hüllt diese Zeilen
+um. Er beginnt den Wechsel wie einen über die Karte — Protokoll „von Hand
+eingetragen", Mail, Rückfrage zum Blatt (E-SR-74) — und merkt nach dem
+Nachweis einen Komplett-Stand vor. Abgeschlossen wird mit *Alten Schlüssel
+entfernen*: Der Knopf hat die drei Riegel, die Hand nicht. **Bis Web 21.12.1
+stand hier „wieder austragen — der Job findet nichts umzuhüllen". Das war
+falsch:** Wer vor dem nächsten Häppchen austrug, machte jedes
+Zweitfaktor-Geheimnis und jeden Zugang eines Ziels aus dem Dump stumm
+(F-SR-80). *Was
+„mit keinem der beiden zu öffnen" meldet,* war vorher schon stumm (E-SR-61):
+ein Ziel neu erfassen, ein Zweitfaktor neu einrichten (Notweg oben), ein
+Konto-Backup neu erzeugen.
 
 **Backup-Ziel einrichten:** Adminbereich → **Backup-Ziele** → *Ziel
 anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist von den
@@ -12253,6 +13081,17 @@ Die Kennung hängt an der **Datei**, nicht an der Sitzung: Eine vorhandene wird
 niemand wüsste mehr, welche gilt. Nach erfolgreicher Einrichtung wird die Datei
 gelöscht; sie darf auch jederzeit von Hand entfernt werden (der nächste Aufruf
 legt eine neue an).
+
+**Seit Web 21.13.0 steht die Mechanik einmal** — in `nachweis_lib.php`
+(Schritt 18, SR-04, R83). Bis dahin stand sie wortgleich hier und in
+`wiederherstellen.php`, und der Notzugang wäre die dritte Kopie geworden.
+Die Bibliothek kennt beide Richtungen: den **Lesenachweis** dieser Seite und
+von `wiederherstellen.php` (die Seite legt an, der Mensch tippt ab) und den
+**Schreibnachweis** des Notzugangs (die Seite nennt den Namen, der Mensch
+legt an; 4.99q). Die Register-Zeile Z44 zählt jede Kopie der Mechanik
+außerhalb der Bibliothek; ihre Decke ist 0. Die drei Muster
+(`install-nachweis-`, `wiederher-nachweis-`, `zweitfaktor-notweg-`) sperrt
+die `.htaccess` und schließt `.gitignore` aus.
 
 Ein Häkchen „Vorhandene Tabellen vorher löschen“ gibt es **nicht mehr** — es
 war die einzige Stelle im Projekt, an der ein unangemeldeter Aufruf jede
@@ -12755,6 +13594,16 @@ Adminrolle würde sonst bis zur nächsten Anmeldung weitergelten.
 >
 > **Wer Dateien in `.sitzungen/` zählt, rechnet das ein:** Die Zahl auf der
 > Statusseite fällt seither, ohne dass jemand etwas gelöscht hätte.
+
+> **Und sie prüft seit Web 21.7.0 die Bindung** (Schritt 18, SR-01, F-SR-15,
+> E-SR-39). Die vier Seiten der Art `lesend` — `rechtstext_seite.php`,
+> `doku_seite.php`, `notfallblatt.php`, `codeblatt.php` — lesen `user_id`
+> ohne `auth_guard.php`. Eine gelesene Sitzungsdatei hätte hier sonst auch
+> nach der Bindung den angemeldeten Kopf und die Kontoadresse gezeigt.
+> `sitzung_starten('lesend')` verwirft eine Sitzung mit `user_id`, aber ohne
+> passende Bindung, **ohne zu schreiben**; die Seite sieht dann niemanden.
+> Beendet wird sie hier nicht — das tut die nächste angemeldete Seite mit
+> Grund (4.99q, „Die Sitzungsbindung").
 
 Ohne `config.php` leitet sie auf `install.php` um, wie `login.php` es tut. Ein
 Impressum ist das erste, was jemand auf einer frischen Installation aufruft — es

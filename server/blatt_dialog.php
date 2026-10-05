@@ -32,8 +32,9 @@ declare(strict_types=1);
  *
  * Und kein Knopf „Schluessel erneuern". E-P5b-10 sagt, warum: Den
  * Serverschluessel zu wechseln hiesse, jede versiegelte Sicherung neu zu
- * umhuellen — ein S10-Vorgang, kein Dialog. Wer sein Blatt verloren hat,
- * druckt es neu; der Schluessel bleibt derselbe.
+ * umhuellen — seit Web 21.12.0 gibt es diesen Vorgang (SR-03), und er steht
+ * unter Betrieb → Servereinstellungen, nicht in einem Dialog. Wer sein Blatt
+ * verloren hat, druckt es neu; der Schluessel bleibt derselbe.
  */
 ?>
 <dialog class="dialog" id="dlg-blatt" data-blatt-dialog>
@@ -44,6 +45,21 @@ declare(strict_types=1);
   <div class="dialog-inhalt">
     <p class="meldung meldung-fehler" data-blatt-fehler role="alert" hidden></p>
 
+    <?php
+      /* DER SATZ VORAN, WENN EINE ROTATION DIE FRAGE AUSGELÖST HAT (Nr. 233,
+         E-SR-11). Gefragt werden weiter nur die AKTUELLEN Werte; der
+         bisherige wird genannt, nicht abgefragt — dass er auf dem Blatt
+         steht, prüft der Ausdruck selbst: Er druckt ihn. */
+      require_once __DIR__ . '/einstieg_lib.php';
+      require_once __DIR__ . '/serverkrypto_lib.php';
+      $blattWeil = blatt_neu_weil();
+      $blattBisher = $blattWeil === 'serverschluessel' ? serverschluessel_alt_kennung()
+                   : ($blattWeil === 'anteil' ? anteil_zustand()['kennung_alt'] : null);
+    ?>
+    <?php if ($blattWeil !== null): ?>
+    <p><strong>Ein Wert hat gewechselt — drucke das Blatt neu.</strong><?php if ($blattBisher !== null): ?>
+       Während der Rotation gehört auch der bisherige (Kennung <?= e($blattBisher) ?>) darauf.<?php endif; ?></p>
+    <?php endif; ?>
     <p>Alle drei Monate: Bitte trage vier Gruppen vom
        <strong>Schlüsselblatt</strong> ein <span data-blatt-kennung></span>.
        Die Werte stehen nur auf dem Blatt — der Server zeigt sie nie.</p>

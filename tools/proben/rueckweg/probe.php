@@ -469,19 +469,24 @@ $basis = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
 $ort = is_dir(sitzung_ablage_pfad()) ? sitzung_ablage_pfad() : (string)(session_save_path() ?: sys_get_temp_dir());
 $sid = 'rueckwegprobe' . bin2hex(random_bytes(10));
 $csrf = bin2hex(random_bytes(16));
+/* DIE BINDUNG (seit Web 21.7.0, Schritt 18, SR-01): `login.php` verwirft
+ * einen halben Stand, dessen Hash nicht zum Cookie `EDBIND` passt — ohne sie
+ * mäße B8 den Verwurf statt des Rückwegs. */
+$bind = bin2hex(random_bytes(32));
 $sitzungB = $ort . '/sess_' . $sid;
 /* DIE SITZUNGSDATEI WIRD UNMITTELBAR GESCHRIEBEN, im Format des Standard-
  * Serialisierers `php` (`schluessel|serialize(wert)`). `session_start()`
  * ginge hier nicht mehr: Die Probe hat schon ausgegeben, und danach legt PHP
  * keine Sitzung mehr an (die Rollenprobe legt ihre deshalb VOR jeder Ausgabe
  * an). Eine halbe Sitzung, wie `login.php` sie nach dem Passwort hinterlässt. */
-$halbSetzen = static function (?string $herausforderung = null) use ($sitzungB, $csrf, $idB, $adresseB): void {
+$halbSetzen = static function (?string $herausforderung = null) use ($sitzungB, $csrf, $bind, $idB, $adresseB): void {
     $h = ['konto' => $idB, 'email' => $adresseB, 'bis' => time() + 300];
     if ($herausforderung !== null) {
         $h['rw_herausforderung'] = $herausforderung;
         $h['rw_bis'] = time() + RW_HERAUSFORDERUNG_S;
     }
-    file_put_contents($sitzungB, 'csrf|' . serialize($csrf) . 'totp_halb|' . serialize($h));
+    file_put_contents($sitzungB, 'csrf|' . serialize($csrf) . 'totp_halb|' . serialize($h)
+                                 . 'bindung|' . serialize(hash('sha256', $bind)));
     chmod($sitzungB, 0600);
 };
 /* Eine gelungene Anmeldung zieht eine neue Sitzungskennung
@@ -490,10 +495,11 @@ $neueSitzungen = [];
 register_shutdown_function(static function () use ($ort, &$neueSitzungen): void {
     foreach ($neueSitzungen as $n) { @unlink($ort . '/sess_' . $n); }
 });
-$hole = static function (string $pfad, ?array $koerper = null) use ($basis, $sid, &$neueSitzungen): array {
+$hole = static function (string $pfad, ?array $koerper = null) use ($basis, $sid, $bind, &$neueSitzungen): array {
     $ch = curl_init("$basis/$pfad");
+    $keks = 'Cookie: PHPSESSID=' . $sid . '; ' . SITZUNG_COOKIES['bindung']['name'] . '=' . $bind;
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => false,
-        CURLOPT_HTTPHEADER => ['Cookie: PHPSESSID=' . $sid], CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '',
+        CURLOPT_HTTPHEADER => [$keks], CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '',
         CURLOPT_HEADERFUNCTION => static function ($ch, string $zeile) use ($sid, &$neueSitzungen): int {
             if (preg_match('/^Set-Cookie:\s*PHPSESSID=([A-Za-z0-9,-]+)/i', $zeile, $m) && $m[1] !== $sid) {
                 $neueSitzungen[] = $m[1];

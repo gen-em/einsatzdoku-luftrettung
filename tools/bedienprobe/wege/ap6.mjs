@@ -64,8 +64,43 @@ async function zurueck(k, veh, base) {
   await k.seite.waitForTimeout(500);
   await k.seite.selectOption('#basesel', base);
   await k.seite.waitForTimeout(400);
+  await absenden(k);
+}
+
+/** Das Formular „Diensttag-Daten" absenden und auf die ANTWORT warten.
+ *
+ * BIS WEB 21.11.2 WARTETE JEDER WEG HIER EINE FESTE ZEIT (1,2 bis 1,5 s) und
+ * ging dann auf die nächste Seite. Im ersten Prüfstandslauf zu SR-05
+ * (29.09.2026, F-SR-66) reichte das nicht: `p5c-ap8-adhoc-tag-in-der-luft`
+ * scheiterte im `finally` an `#basesel`, 30 s unsichtbar. Unsichtbar ist es
+ * genau dann, wenn der Tag auf „Anderes Rettungsmittel" steht
+ * (`adhocAnpassen()` in `index.php`) — der Weg las also schon als Anfang
+ * einen umgestellten Tag. Die Erklärung, die dazu passt: Der Weg davor
+ * stellt einen Tag im `finally` zurück; kam dessen Antwort nach der festen
+ * Zeit, las der nächste Weg den Tag noch vor dem Zurückstellen. BELEGT IST
+ * SIE NICHT — allein wiederholt war der Weg grün, und welcher Tag es war,
+ * sagt das Protokoll des Laufs nicht. Nachgestellt ist nur die Wirkung: ein
+ * Tag, der schon so steht, gibt dieselbe Zeitüberschreitung. */
+async function absenden(k) {
+  const antwort = k.seite.waitForResponse(
+    r => r.url().includes('api/day.php') && r.request().method() === 'POST', { timeout: 30000 });
+  antwort.catch(() => {});   // scheitert schon das Absenden, bleibt sie sonst unbehandelt liegen
   await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit());
-  await k.seite.waitForTimeout(1200);
+  await antwort;
+  await k.seite.waitForTimeout(400);
+}
+
+/** Den Anfang lesen — und abbrechen, wenn der Weg von dort nicht zurückfände.
+ *  Ein Tag, der schon auf „Anderes Rettungsmittel" steht, hat kein sichtbares
+ *  Standortfeld, und `zurueck()` wartete darauf 30 s (F-SR-66). Die Meldung
+ *  sagt, was los ist, statt einer Zeitüberschreitung im `finally`. */
+async function anfangLesen(k) {
+  const anfang = await stand(k);
+  if (anfang.veh === 'adhoc') {
+    throw new Error('Der Tag steht schon auf „Anderes Rettungsmittel" — ein Weg davor hat ihn '
+                  + 'nicht zurückgestellt, und dieser Weg fände nicht zurück (F-SR-66)');
+  }
+  return anfang;
 }
 
 
@@ -138,7 +173,7 @@ export const wege = [
     soll: 'Rollenzahl je Rettungsmittel wie `vehicle_roles`; die Zuordnung in der Datenbank unverändert',
     async fahren(k) {
       const tag = await formularAuf(k);
-      const anfang = await stand(k);
+      const anfang = await anfangLesen(k);
       try {
         /* Die Auswahl selbst liefert die Prüfmenge: jedes Rettungsmittel des
            Kontos, gefahren in der Reihenfolge, in der es dasteht. */
@@ -185,7 +220,7 @@ export const wege = [
     soll: 'Felder auf, ohne Betriebsart 0 Rollenfelder und ein Satz dazu; Veranstaltung → luftgebunden gesperrt, Boden gesetzt, Rollen des Bodens (Nr. 169)',
     async fahren(k) {
       await formularAuf(k);
-      const anfang = await stand(k);
+      const anfang = await anfangLesen(k);
       try {
         await k.seite.selectOption('#vehsel', 'adhoc');
         await k.seite.waitForTimeout(450);
@@ -229,7 +264,7 @@ export const wege = [
     async fahren(k) {
       const NAME = 'KP Aushilfe 12/1';
       await formularAuf(k);
-      const anfang = await stand(k);
+      const anfang = await anfangLesen(k);
       try {
         await k.seite.selectOption('#vehsel', 'adhoc');
         await k.seite.waitForTimeout(400);
@@ -252,8 +287,7 @@ export const wege = [
         await k.seite.waitForTimeout(300);
         const kennung = await k.seite.inputValue('#adhoc-base-id');
 
-        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit());
-        await k.seite.waitForTimeout(1500);
+        await absenden(k);
 
         await k.gehZu(SEITE(k));
         await k.seite.waitForSelector('#tagdatenknopf', { timeout: 20000 });
@@ -333,8 +367,7 @@ export const wege = [
         await k.seite.waitForTimeout(600);
         await k.seite.fill('#adhoc-name', 'KP Umweg');
         await k.seite.check(`#adhocfelder .vehkind-radio[value=${art}]`, { force: true });
-        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit());
-        await k.seite.waitForTimeout(1400);
+        await absenden(k);
 
         await k.gehZu(`${k.basis}/index.php?d=${tag.id}`);
         await k.seite.waitForSelector('#tagdatenknopf', { timeout: 20000 });
@@ -343,8 +376,7 @@ export const wege = [
         await k.seite.waitForTimeout(400);
         await k.seite.selectOption('#vehsel', anfang.veh);
         await k.seite.waitForTimeout(600);
-        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit());
-        await k.seite.waitForTimeout(1400);
+        await absenden(k);
 
         await k.gehZu(`${k.basis}/index.php?d=${tag.id}`);
         await k.seite.waitForTimeout(700);
@@ -361,9 +393,7 @@ export const wege = [
       } finally {
         await k.seite.selectOption('#vehsel', anfang.veh).catch(() => {});
         await k.seite.waitForTimeout(500);
-        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit())
-          .catch(() => {});
-        await k.seite.waitForTimeout(1200);
+        await absenden(k).catch(() => {});
       }
     },
   },
@@ -410,8 +440,7 @@ export const wege = [
         await k.seite.waitForTimeout(600);
         await k.seite.fill('#adhoc-name', 'KP Frage 11');
         await k.seite.check(`#adhocfelder .vehkind-radio[value=${art}]`, { force: true });
-        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit());
-        await k.seite.waitForTimeout(1400);
+        await absenden(k);
 
         const nachher = await rollenImEinsatzformular(k, tag.id);
 
@@ -443,9 +472,7 @@ export const wege = [
         await k.seite.waitForTimeout(400);
         await k.seite.selectOption('#vehsel', anfang.veh).catch(() => {});
         await k.seite.waitForTimeout(600);
-        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit())
-          .catch(() => {});
-        await k.seite.waitForTimeout(1200);
+        await absenden(k).catch(() => {});
       }
     },
   },
@@ -464,7 +491,7 @@ export const wege = [
          (`einsatz_form.php`). Stimmt einer nicht mit den anderen, sähe die
          Seite vor und nach dem Speichern verschieden aus. */
       const tag = await formularAuf(k);
-      const anfang = await stand(k);
+      const anfang = await anfangLesen(k);
       try {
         await k.seite.selectOption('#vehsel', 'adhoc');
         await k.seite.waitForTimeout(400);
@@ -475,8 +502,7 @@ export const wege = [
         await k.seite.waitForTimeout(800);
         const vorschau = (await stand(k)).rollen;
 
-        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit());
-        await k.seite.waitForTimeout(1500);
+        await absenden(k);
 
         await k.gehZu(`${k.basis}/index.php?d=${tag}`);
         await k.seite.waitForSelector('#tagdatenknopf', { timeout: 20000 });

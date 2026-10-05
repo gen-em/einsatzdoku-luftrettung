@@ -178,6 +178,15 @@ $beispiel = [
     'speicher'   => '412 MB von 500 MB',
     // Seit P5c/AP1: der Text der Ankuendigung fuer die Rundmail.
     'text'       => 'Wartung am Dienstag, 20:00 bis 21:00.',
+    // Seit SR-09: der Name eines Passkeys (passkey_angelegt, passkey_entfernt).
+    'bezeichnung' => 'Handy',
+    // Seit SR-03: Beginn und Abschluss eines Wechsels des Serverschluessels
+    // (serverschluessel_gewechselt, seit Web 21.12.1 dazu
+    // serverschluessel_abgeschlossen; `neu` und `alt` sind dort Kennungen —
+    // die Adressen oben rendern genauso). `weg` ist kein Pflichtwert: ohne ihn
+    // der Wechsel ueber die Karte, mit 'hand' einer, der von Hand in
+    // config.php stand (E-SR-74) — die Schluesselwechselprobe reiht ihn ein.
+    'weg'         => 'oberflaeche',
 ];
 $fehlend = [];
 foreach ($katalog as $k => $e) {
@@ -196,6 +205,21 @@ foreach ($katalog as $k => $e) {
 }
 pruef('Kein Eintrag erzeugt leeren Betreff oder Text', $leer === [],
       count($katalog) . ' Eintraege gerendert');
+
+/* SEIT SR-04 (Schritt 18): Die Mail `totp_zurueckgesetzt` hat drei Fassungen
+ * — Verwaltung, Wiederherstellungsschluessel, Notzugang. Der Notzugang steht
+ * nur offen, wenn es genau eine BetreiberIn gibt; ein Verweis „melde dich
+ * bei der Verwaltung" ginge an die Empfaengerin selbst. */
+$zr = $katalog['totp_zurueckgesetzt'];
+$fassungen = [];
+foreach (['verwaltung', 'schluessel', 'notweg'] as $w) {
+    $fassungen[$w] = ($zr['text'])(['weg' => $w] + $beispiel);
+}
+pruef('totp_zurueckgesetzt: drei Wege, drei Fassungen', count(array_unique($fassungen)) === 3, '');
+pruef('... der Notzugang nennt Datei, Datenbank und Passwort und schickt nicht zur Verwaltung',
+      str_contains($fassungen['notweg'], 'über den' . "\n" . 'Notzugang')
+      && str_contains($fassungen['notweg'], 'Datenbank')
+      && !str_contains($fassungen['notweg'], 'Verwaltung'), '');
 
 /* ======================================================================== */
 abschnitt('2  Rahmen — Name und Kontakt kommen aus den Einstellungen');

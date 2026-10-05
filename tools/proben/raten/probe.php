@@ -44,6 +44,11 @@ declare(strict_types=1);
  * Probe in `config.php` (`tools/sandbox/konfig_stellen.php`) und legt den
  * vorigen Stand zurueck.
  *
+ * SEIT SR-08 AUCH DIE REGISTRIERUNG, EBENSO UEBER HTTP (Abschnitt 12): die
+ * Rechenaufgabe als vierte stille Bremse von `registrieren.php`. Die Probe
+ * rechnet die Loesung in PHP; ob der WORKER im Browser sie findet, misst der
+ * Bedienweg `registrieren` der Bedienprobe, nicht diese Probe.
+ *
  * SIE RAEUMT HINTER SICH AUF. Angelegt werden Zeilen in `rate_limits`,
  * `sicherheit_ereignisse` und `mail_warteschlange` unter eigenen Merkmalen
  * (Praefix `probe-`); am Ende sind sie weg, und die Zahl davor und danach
@@ -385,8 +390,12 @@ abschnitt('10  Welche Toepfe eine Leiter haben — und welche ausdruecklich nich
  *
  * `totp` (Code-Schritt der Anmeldung, P5c/AP5, E-P5c-53) hat eine: Fuenf
  * falsche Codes je Konto, dann waechst die Sperre — sechs Ziffern duerfen
- * nicht zu erraten sein. */
-const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'salt', 'totp'];
+ * nicht zu erraten sein.
+ *
+ * `notweg` (Notzugang der einzigen BetreiberIn, Schritt 18, SR-04) hat eine:
+ * Fuenf Versuche je Stunde und eingetippter Adresse — wer Datei,
+ * Datenbankwert und Passwort hat, braucht keine fuenf. */
+const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'notweg', 'salt', 'totp'];
 
 $mitLeiter = []; $ohne = [];
 foreach (RATE_GRENZEN as $topf => $g) {
@@ -554,12 +563,336 @@ pruef('Der Topf `health` hat keine Leiter (60 je Minute, eine Minute Sperre)',
       json_encode(RATE_GRENZEN['health']));
 
 /* ======================================================================== */
+abschnitt('12  Registrierung ueber HTTP — die Rechenaufgabe (SR-08)');
+
+/* DIE VIERTE BREMSE VON `registrieren.php` (Schritt 18, SR-08, E-SR-26,
+ * E-SR-88 bis -93). Ueber HTTP, weil sie aus Seite, Sitzung und Formular
+ * besteht: Die Probe holt die Seite, liest Aufgabe und Bitzahl aus dem
+ * Markup, rechnet die Loesung selbst (in PHP, dieselbe Rechnung wie der
+ * Worker) und schickt ab. Gemessen wird, was ein Absender sieht — die
+ * Danke-Karte, und zwar in JEDEM Fall — und was er nicht sieht: ob ein Konto
+ * entstand und ob eine Mail in die Schlange ging.
+ *
+ * DIE MINDESTAUSFUELLDAUER (4 s) wartet die Probe nicht ab: Sie bildet den
+ * Stempel mit `reg_secret` selbst, fuenf Sekunden alt. DIE TOEPFE `reg*`
+ * leert sie vor jeder Absendung — zehn je Stunde aus 127.0.0.1 waeren sonst
+ * nach dem zehnten Fall still voll, und alles danach waere gruen, ohne
+ * gemessen zu sein. DIE BETRIEBSART stellt sie auf `offen` und legt die
+ * vorige zurueck, auch im Schluss-Handler.
+ *
+ * DIE DAUER: je Lage fuenf Absendungen, verglichen werden die Mediane der
+ * stillen Faelle — ohne Loesung, falsche Loesung, abgelaufen, belegte,
+ * Wegwerf- und freie Adresse. Soll: Spanne unter 50 ms (E-P5b-13).
+ */
+$REG_MUSTER = 'pow-%@probe.invalid';
+$regVorArt = _tor_lesen($pdo, 'konten_reg_art');
+$regSids = [];
+$regMailStart = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();
+$regRaeumen = static function () use (&$regSids, $regVorArt, $regMailStart): void {
+    $pdo = db();
+    $st = $pdo->query("SELECT id FROM users WHERE email LIKE 'pow-%@probe.invalid'
+                          OR email LIKE 'pow-%@mailinator.com'");
+    foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $id) {
+        $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE betroffen_user_id = ?')->execute([$id]);
+        $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
+    }
+    /* NACH DER NUMMER, NICHT NUR NACH DER ADRESSE: Eine Mail, die eine
+     * juengere an dieselbe Adresse ueberholt, verliert ihren Empfaenger
+     * (`ueberholt`, Empfaenger leer) — nach der Adresse fiele sie durch. */
+    $pdo->prepare("DELETE FROM mail_warteschlange
+                    WHERE empfaenger LIKE 'pow-%@probe.invalid' OR empfaenger LIKE 'pow-%@mailinator.com'
+                       OR (id > ? AND schluessel IN ('registrierung', 'registrierung_bekannt'))")
+        ->execute([$regMailStart]);
+    $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('reg', 'regg', 'regz')");
+    if ($regVorArt === null) { $pdo->exec("DELETE FROM app_state WHERE k = 'konten_reg_art'"); }
+    else { app_state_setzen('konten_reg_art', $regVorArt); }
+    foreach (array_unique($regSids) as $sid) { @unlink(sitzung_ablage_pfad() . '/sess_' . $sid); }
+};
+register_shutdown_function($regRaeumen);
+
+/** Eine Anfrage mit eigenem Cookiebehaelter `$keks` (das Sitzungscookie
+ *  traegt `Secure`; curl schickte es ueber HTTP nicht zurueck). */
+$regHttp = static function (string $methode, array &$keks, array $felder = [])
+    use ($basis, &$regSids): array {
+    $paare = [];
+    foreach ($keks as $n => $v) { $paare[] = $n . '=' . $v; }
+    $ch = curl_init($basis . '/registrieren.php');
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true,
+        CURLOPT_FOLLOWLOCATION => false, CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '',
+        CURLOPT_HTTPHEADER => $paare !== [] ? ['Cookie: ' . implode('; ', $paare)] : []]);
+    if ($methode === 'POST') {
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($felder));
+    }
+    $t = microtime(true);
+    $roh = (string)curl_exec($ch);
+    $dauer = microtime(true) - $t;
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $kl = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    curl_close($ch);
+    if (preg_match_all('/^Set-Cookie:\s*([^=;\s]+)=([^;\r\n]*)/mi', substr($roh, 0, $kl), $m, PREG_SET_ORDER)) {
+        foreach ($m as $c) {
+            if ($c[2] !== '' && $c[2] !== 'deleted') { $keks[$c[1]] = $c[2]; $regSids[] = $c[2]; }
+        }
+    }
+    return ['code' => $code, 'rumpf' => substr($roh, $kl), 'dauer' => $dauer];
+};
+
+/** Die Seite holen: Aufgabe, Bitzahl, Haekchen. */
+$regHolen = static function (array &$keks) use ($regHttp): array {
+    $r = $regHttp('GET', $keks);
+    preg_match('/name="pow_aufgabe" value="([0-9a-f]{64})"/', $r['rumpf'], $a);
+    preg_match('/data-pow-bits="(\d+)"/', $r['rumpf'], $b);
+    preg_match_all('/name="ew\[([a-z_]+)\]"/', $r['rumpf'], $ew);
+    return ['code' => $r['code'], 'aufgabe' => $a[1] ?? '', 'bits' => (int)($b[1] ?? 0),
+            'ew' => array_fill_keys($ew[1], '1'), 'rumpf' => $r['rumpf']];
+};
+
+/** Wie viele fuehrende Nullbits hat SHA-256(aufgabe . n)? */
+$regNullbits = static function (string $aufgabe, string $n): int {
+    $h = hash('sha256', $aufgabe . $n, true);
+    $z = 0;
+    for ($i = 0; $i < 32; $i++) {
+        $b = ord($h[$i]);
+        if ($b === 0) { $z += 8; continue; }
+        while (($b & 0x80) === 0) { $z++; $b <<= 1; }
+        break;
+    }
+    return $z;
+};
+/** Dieselbe Rechnung wie `pow-worker.js`: die kleinste Zahl mit genug Nullbits
+ *  (`$art = 'gut'`), die kleinste ohne (`'falsch'`) — oder die kleinste mit
+ *  GENAU einem Nullbit zu wenig (`'knapp'`): Sie faellt nur durch, wenn der
+ *  Server wirklich so viele Bits prueft, wie die Seite verlangt. */
+$regLoesen = static function (string $aufgabe, int $bits, string $art = 'gut') use ($regNullbits): string {
+    for ($n = 0; ; $n++) {
+        $z = $regNullbits($aufgabe, (string)$n);
+        if (($art === 'gut' && $z >= $bits) || ($art === 'falsch' && $z < $bits)
+            || ($art === 'knapp' && $z === $bits - 1)) {
+            return (string)$n;
+        }
+    }
+};
+
+/** Absenden: Stempel fuenf Sekunden alt, Honeypot leer, alle Haekchen. */
+$regSchicken = static function (array &$keks, string $email, array $pow, array $ew)
+    use ($regHttp, $pdo): array {
+    $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('reg', 'regg', 'regz')");
+    $t = (string)(time() - 5);
+    $felder = ['email' => $email, 'name' => 'Ratenprobe', 'website' => '',
+               'zeit' => $t . '.' . hash_hmac('sha256', $t, (string)app_state_lesen('reg_secret')),
+               'ew' => $ew] + $pow;
+    $r = $regHttp('POST', $keks, $felder);
+    $r['danke'] = str_contains($r['rumpf'], 'Danke.') && !str_contains($r['rumpf'], 'meldung-fehler');
+    return $r;
+};
+$regKonto = static function (string $email) use ($pdo): ?string {
+    $st = $pdo->prepare('SELECT status FROM users WHERE email = ?');
+    $st->execute([$email]);
+    $v = $st->fetchColumn();
+    return $v === false ? null : (string)$v;
+};
+/* DIE MAIL KOMMT NACH DER ANTWORT (`antwort_abschliessen()`, dann
+ * `mail_einreihen()`): Wer sofort nachsieht, sieht sie noch nicht. Deshalb
+ * wartet die Abfrage bis zu drei Sekunden, wenn sie eine erwartet — und
+ * fragt sonst einmal. */
+$regMails = static function (string $email, bool $erwartet = false) use ($pdo): array {
+    $st = $pdo->prepare("SELECT schluessel FROM mail_warteschlange WHERE empfaenger = ? ORDER BY id");
+    $bis = microtime(true) + ($erwartet ? 3.0 : 0.0);
+    do {
+        $st->execute([$email]);
+        $liste = $st->fetchAll(PDO::FETCH_COLUMN);
+        if ($liste !== [] || microtime(true) >= $bis) { return $liste; }
+        usleep(100000);
+    } while (true);
+};
+
+$regRaeumen();
+/* NUR AUF EINLADUNG: KEINE SITZUNG (E-SR-92). Vor dem Oeffnen — eine Anlage,
+ * die keine Registrierung anbietet, setzt hier weiter kein Cookie. */
+$pdo->exec("DELETE FROM app_state WHERE k = 'konten_reg_art'");
+$kZu = [];
+$zu = $regHttp('GET', $kZu);
+pruef('nur auf Einladung: kein Sitzungscookie, keine Aufgabe, kein Skript (E-SR-92)',
+      $zu['code'] === 200 && $kZu === [] && !str_contains($zu['rumpf'], 'pow_aufgabe')
+      && !str_contains($zu['rumpf'], 'pow.js'),
+      'HTTP ' . $zu['code'] . ' · Cookies ' . json_encode(array_keys($kZu)));
+app_state_setzen('konten_reg_art', 'offen');
+$regVorArt2 = $regVorArt;   // fuer den Bericht
+try {
+    /* a. Die Seite selbst: Aufgabe, Bitzahl, Sitzung — und fuenf GETs in
+     *    derselben Sitzung halten hoechstens fuenf Aufgaben (E-SR-89). */
+    $k = [];
+    $s = $regHolen($k);
+    pruef('GET registrieren.php: 200, Aufgabe (64 hex), Bitzahl, Sitzungscookie',
+          $s['code'] === 200 && $s['aufgabe'] !== '' && $s['bits'] >= 8 && isset($k[session_name()]),
+          'HTTP ' . $s['code'] . ' · Bits ' . $s['bits'] . ' · Cookie ' . (isset($k[session_name()]) ? 'ja' : 'nein'));
+    pruef('… der Worker kommt mit Erkennungswert, und ohne Skript steht der Satz da',
+          (bool)preg_match('/data-pow-worker="assets\/pow-worker\.js\?v=\d+"/', $s['rumpf'])
+          && str_contains($s['rumpf'], 'Ohne JavaScript lässt sich hier kein Konto anlegen.'),
+          '');
+    $aufgaben = [$s['aufgabe']];
+    for ($i = 0; $i < 6; $i++) { $aufgaben[] = $regHolen($k)['aufgabe']; }
+    $datei = (string)@file_get_contents(sitzung_ablage_pfad() . '/sess_' . ($k[session_name()] ?? ''));
+    preg_match_all('/s:64:"([0-9a-f]{64})";i:\d+;/', $datei, $inSitzung);
+    pruef('… sieben Formulare in einer Sitzung: die juengsten fuenf Aufgaben gelten (E-SR-89)',
+          $inSitzung[1] === array_slice($aufgaben, -5),
+          count($inSitzung[1]) . ' in der Sitzung');
+
+    /* b. Die Faelle. Jede Absendung braucht ihre eigene Aufgabe. */
+    $faelle = [];
+    $einFall = static function (string $name, string $email, callable $pow)
+        use ($regHolen, $regSchicken, $regKonto, $regMails): array {
+        $k = [];
+        $s = $regHolen($k);
+        $r = $regSchicken($k, $email, $pow($s, $k), $s['ew']);
+        return ['name' => $name, 'danke' => $r['danke'], 'code' => $r['code'], 'dauer' => $r['dauer'],
+                'konto' => $regKonto($email), 'mails' => $regMails($email), 'keks' => $k, 'aufgabe' => $s];
+    };
+    $richtig = static fn (array $s): array =>
+        ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => $regLoesen($s['aufgabe'], $s['bits'])];
+
+    $A = $einFall('richtige Loesung', 'pow-frei-0@probe.invalid', $richtig);
+    $A['mails'] = $regMails('pow-frei-0@probe.invalid', true);
+    pruef('richtige Loesung, freie Adresse → Danke, Konto unbestaetigt, Mail `registrierung`',
+          $A['danke'] && $A['konto'] === 'unbestaetigt' && $A['mails'] === ['registrierung'],
+          'Konto ' . var_export($A['konto'], true) . ' · Mails ' . json_encode($A['mails']));
+
+    $schlecht = [
+        'ohne Loesung'   => static fn (array $s): array => ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => ''],
+        'falsche Loesung' => static fn (array $s): array =>
+            ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => $regLoesen($s['aufgabe'], $s['bits'], 'falsch')],
+        'ein Nullbit zu wenig' => static fn (array $s): array =>
+            ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => $regLoesen($s['aufgabe'], $s['bits'], 'knapp')],
+        'abgelaufene Aufgabe' => static function (array $s, array $k) use ($regLoesen): array {
+            $f = sitzung_ablage_pfad() . '/sess_' . ($k[session_name()] ?? '');
+            $roh = (string)@file_get_contents($f);
+            $neu = preg_replace('/(s:64:"' . $s['aufgabe'] . '";i:)\d+;/', '${1}' . (time() - 1) . ';', $roh, 1, $n);
+            if ($n !== 1 || file_put_contents($f, $neu) === false) { return ['pow_aufgabe' => 'gestellt-nicht']; }
+            return ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => $regLoesen($s['aufgabe'], $s['bits'])];
+        },
+        'Aufgabe ohne Sitzung (kein Cookie)' => static function (array $s, array &$k) use ($regLoesen): array {
+            $k = [];
+            return ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => $regLoesen($s['aufgabe'], $s['bits'])];
+        },
+        'Aufgabe einer anderen Sitzung' => static function (array $s, array &$k) use ($regHolen, $regLoesen): array {
+            $fremd = [];
+            $f = $regHolen($fremd);
+            return ['pow_aufgabe' => $f['aufgabe'], 'pow_loesung' => $regLoesen($f['aufgabe'], $f['bits'])];
+        },
+        'Aufgabe und Loesung als Liste' => static fn (array $s): array =>
+            ['pow_aufgabe' => [$s['aufgabe']], 'pow_loesung' => ['1']],
+        'Loesung mit 13 Stellen' => static fn (array $s): array =>
+            ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => '0000000000000'],
+    ];
+    $i = 0;
+    foreach ($schlecht as $name => $pow) {
+        $i++;
+        $email = 'pow-schlecht-' . $i . '@probe.invalid';
+        $k = [];
+        $s = $regHolen($k);
+        $r = $regSchicken($k, $email, $pow($s, $k), $s['ew']);
+        pruef($name . ' → Danke, kein Konto, keine Mail',
+              $r['code'] === 200 && $r['danke'] && $regKonto($email) === null && $regMails($email) === [],
+              'HTTP ' . $r['code'] . ' · Konto ' . var_export($regKonto($email), true));
+    }
+
+    /* Zweimal dieselbe: Die erste geht durch, die zweite (andere Adresse,
+     * dieselbe Sitzung, dieselbe Aufgabe und Loesung) nicht. */
+    $k = [];
+    $s = $regHolen($k);
+    $pow = $richtig($s);
+    $r1 = $regSchicken($k, 'pow-zweimal-1@probe.invalid', $pow, $s['ew']);
+    $r2 = $regSchicken($k, 'pow-zweimal-2@probe.invalid', $pow, $s['ew']);
+    pruef('zweimal dieselbe Aufgabe → die erste durch, die zweite Danke ohne Konto',
+          $r1['danke'] && $regKonto('pow-zweimal-1@probe.invalid') === 'unbestaetigt'
+          && $r2['danke'] && $regKonto('pow-zweimal-2@probe.invalid') === null,
+          var_export($regKonto('pow-zweimal-1@probe.invalid'), true) . ' / '
+          . var_export($regKonto('pow-zweimal-2@probe.invalid'), true));
+
+    /* Eine aeltere Aufgabe derselben Sitzung (zweiter Reiter) geht noch. */
+    $k = [];
+    $s1 = $regHolen($k);
+    $regHolen($k);
+    $r = $regSchicken($k, 'pow-reiter@probe.invalid', $richtig($s1), $s1['ew']);
+    pruef('die Aufgabe eines aelteren Reiters derselben Sitzung gilt noch (E-SR-89)',
+          $r['danke'] && $regKonto('pow-reiter@probe.invalid') === 'unbestaetigt',
+          var_export($regKonto('pow-reiter@probe.invalid'), true));
+
+    /* Felder als Liste — auch die alten: keine 500, keine Warnung (F-SR-96). */
+    $k = [];
+    $s = $regHolen($k);
+    $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('reg', 'regg', 'regz')");
+    $vorW = (int)$pdo->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")->fetchColumn();
+    $codes = [];
+    foreach ([['email' => ['x']], ['email' => 'pow-liste@probe.invalid', 'name' => ['x']],
+              ['email' => 'pow-liste@probe.invalid', 'website' => ['x']],
+              ['email' => 'pow-liste@probe.invalid', 'zeit' => ['x']]] as $felder) {
+        $codes[] = $regHttp('POST', $k, $felder + ['ew' => $s['ew']])['code'];
+    }
+    $st = $pdo->prepare("SELECT COUNT(*) FROM protokoll_ereignisse
+                          WHERE id > ? AND art IN ('ausnahme', 'abbruch', 'php_warnung', 'php_hinweis')");
+    $st->execute([$vorW]);
+    $warn = (int)$st->fetchColumn();
+    pruef('email[], name[], website[], zeit[] → je 200, keine Ausnahme, keine Warnung (F-SR-96)',
+          $codes === [200, 200, 200, 200] && $warn === 0,
+          json_encode($codes) . ' · ' . $warn . ' Zeilen im Reiter System');
+
+    /* c. Die Dauer. Fuenf Absendungen je Lage, verglichen werden Mediane. */
+    $lagen = [
+        'ohne Loesung'    => [static fn (int $n): string => 'pow-d-ohne-' . $n . '@probe.invalid',
+                              static fn (array $s): array => ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => '']],
+        'falsche Loesung' => [static fn (int $n): string => 'pow-d-falsch-' . $n . '@probe.invalid',
+                              $schlecht['falsche Loesung']],
+        'abgelaufen'      => [static fn (int $n): string => 'pow-d-ab-' . $n . '@probe.invalid',
+                              $schlecht['abgelaufene Aufgabe']],
+        'belegte Adresse' => [static fn (int $n): string => 'pow-frei-0@probe.invalid', $richtig],
+        'Wegwerfadresse'  => [static fn (int $n): string => 'pow-d-' . $n . '@mailinator.com', $richtig],
+        'freie Adresse'   => [static fn (int $n): string => 'pow-d-frei-' . $n . '@probe.invalid', $richtig],
+    ];
+    $mediane = [];
+    $alleDanke = true;
+    foreach ($lagen as $name => [$adresse, $pow]) {
+        $d = [];
+        for ($n = 0; $n < 5; $n++) {
+            $k = [];
+            $s = $regHolen($k);
+            $r = $regSchicken($k, $adresse($n), $pow($s, $k), $s['ew']);
+            $alleDanke = $alleDanke && $r['danke'];
+            $d[] = $r['dauer'];
+        }
+        sort($d);
+        $mediane[$name] = $d[2];
+    }
+    $spanne = max($mediane) - min($mediane);
+    pruef('Dauer: sechs Lagen je fuenfmal, alle Danke, Spanne der Mediane unter 50 ms (E-P5b-13)',
+          $alleDanke && $spanne < 0.050 && min($mediane) >= 0.5,
+          implode(' · ', array_map(static fn (string $n, float $m): string
+              => $n . ' ' . number_format($m * 1000, 1, ',', '') . ' ms', array_keys($mediane), $mediane))
+          . ' · Spanne ' . number_format($spanne * 1000, 1, ',', '') . ' ms');
+    pruef('… und nur die freien Adressen haben ein Konto, nur gelungene Faelle eine Mail',
+          $regKonto('pow-d-frei-0@probe.invalid') === 'unbestaetigt'
+          && $regKonto('pow-d-ohne-0@probe.invalid') === null && $regKonto('pow-d-ab-0@probe.invalid') === null
+          && $regMails('pow-d-falsch-0@probe.invalid') === []
+          && in_array('registrierung_bekannt', $regMails('pow-frei-0@probe.invalid', true), true),
+          'belegt: ' . json_encode($regMails('pow-frei-0@probe.invalid')));
+} finally {
+    usleep(1500000);   // die letzte Mail ist nach der Antwort unterwegs
+    $regRaeumen();
+}
+$st = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email LIKE ? OR email LIKE 'pow-%@mailinator.com'");
+$st->execute([$REG_MUSTER]);
+pruef('… und hinterher keine Probenkonten, Betriebsart wie vorher',
+      (int)$st->fetchColumn() === 0 && _tor_lesen($pdo, 'konten_reg_art') === $regVorArt2,
+      'Betriebsart ' . var_export(_tor_lesen($pdo, 'konten_reg_art'), true));
+
+/* ======================================================================== */
 aufraeumen();
 $nachher  = (int)$pdo->query('SELECT COUNT(*) FROM rate_limits')->fetchColumn();
 $nachherE = (int)$pdo->query('SELECT COUNT(*) FROM sicherheit_ereignisse')->fetchColumn();
 $nachherM = (int)$pdo->query('SELECT COUNT(*) FROM mail_warteschlange')->fetchColumn();
 
-abschnitt('12  Die Probe hinterlaesst nichts');
+abschnitt('13  Die Probe hinterlaesst nichts');
 pruef('rate_limits unveraendert', $nachher <= $vorher, $vorher . ' -> ' . $nachher);
 pruef('sicherheit_ereignisse unveraendert', $nachherE <= $vorherE, $vorherE . ' -> ' . $nachherE);
 pruef('mail_warteschlange unveraendert', $nachherM <= $vorherM, $vorherM . ' -> ' . $nachherM);

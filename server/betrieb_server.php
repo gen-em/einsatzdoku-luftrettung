@@ -551,6 +551,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && str_starts_with((string)($_POST['action'] ?? ''), 'schluessel_')) {
+    /* EIN FRISCHER CODE VOR JEDEM GRIFF (Schritt 18, SR-07, E-SR-20) — ein
+     * Aufruf fuer alle zehn (seit SR-03 mit den drei des Serverschluessels),
+     * vor dem Token wie ein Rollentor. Ein
+     * gemerkter, unbeaufsichtigter Rechner soll fuer einen Schluesselwechsel
+     * nicht reichen. */
+    zweitfaktor_frisch_verlangen('schluessel');
     csrf_check();
     $aktion   = (string)$_POST['action'];
     $ersetzen = !empty($_POST['ersetzen']);
@@ -601,6 +607,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
                       . 'Die Rotation ist abgeschlossen.' : null;
         $error  = $ok ? null : $was;
 
+    } elseif ($aktion === 'schluessel_sk_wechseln') {
+        /* DER WECHSEL DES SERVERSCHLUESSELS (SR-03, Nr. 247). Der Haken ist
+         * Pflicht und wird in der Funktion geprueft (E-SR-63). Danach gleich
+         * ein Haeppchen mit dem Budget dieser Seite — die Zeilen (Zugaenge,
+         * Zweitfaktor-Geheimnisse) sind dann meist schon umgehuellt, bevor
+         * die Seite wieder dasteht. */
+        [$ok, $was] = serverschluessel_wechseln(!empty($_POST['kopien_verstanden']));
+        if ($ok) {
+            require_once __DIR__ . '/schluesselwechsel_lib.php';
+            sw_jetzt(8.0);
+            $swNach = sw_zustand();
+            $r = sw_rueckstand($swNach);
+            $w = sw_nachweis_wartet($swNach);
+            $notice = 'Der Serverschlüssel ist gewechselt (neu ' . $was . '). Versiegelt wird ab '
+                    . 'jetzt mit dem neuen; der bisherige bleibt als server_key_alt stehen, bis '
+                    . 'alles umgehüllt und nachgewiesen ist'
+                    . ($w !== null
+                        ? ' — der Nachweis beginnt um ' . fmt_local(gmdate('Y-m-d H:i:s', $w)) . ' Uhr'
+                        : ($r !== null && $r > 0 ? ' — noch ' . $r . ' Stück(e)' : ''))
+                    . '. Jetzt das Schlüsselblatt neu drucken; das bisherige aufbewahren.';
+        }
+        $error  = $ok ? null : $was;
+        serverschluessel_zustand(true);
+
+    } elseif ($aktion === 'schluessel_sk_weiter') {
+        require_once __DIR__ . '/schluesselwechsel_lib.php';
+        $bericht = sw_jetzt();
+        $z = sw_zustand();
+        if (isset($bericht['uebersprungen'])) {
+            $error = 'Der Job läuft gerade (' . $bericht['uebersprungen'] . '). Bitte gleich '
+                   . 'noch einmal.';
+        } elseif (($bericht['fehler'] ?? null) !== null) {
+            $error = 'Das Häppchen ist gescheitert: ' . $bericht['fehler'];
+        } elseif (($w = sw_nachweis_wartet($z)) !== null) {
+            $notice = 'Umgehüllt ist, was der Server erreicht. Der Nachweis mit dem neuen '
+                    . 'Schlüssel beginnt um ' . fmt_local(gmdate('Y-m-d H:i:s', $w)) . ' Uhr.';
+        } else {
+            $nF = sw_fehler_zahl($z);
+            $notice = ($z['phase'] ?? '') === 'fertig'
+                ? 'Alles ist umgehüllt und mit dem neuen Schlüssel nachgewiesen.'
+                : 'Ein Häppchen ist durch: ' . (int)$bericht['erledigt'] . ' Stück(e); '
+                  . (sw_gezaehlt($z) ? 'noch ' . (int)sw_rueckstand($z) . ' von ' . (int)$z['gesamt']
+                                     : 'die Zahl der Stücke zählt das nächste Häppchen')
+                  . (($z['phase'] ?? '') === 'nachweis' ? ' im Nachweis' : '')
+                  . ($nF > 0 ? '; ' . $nF . ' Stück(e) ließen sich nicht umhüllen' : '') . '.';
+        }
+
+    } elseif ($aktion === 'schluessel_sk_alt_entfernen') {
+        [$ok, $was] = serverschluessel_alt_entfernen();
+        $notice = $ok ? 'Der bisherige Serverschlüssel (' . $was . ') ist aus config.php '
+                      . 'entfernt. Das bisherige Blatt bleibt in der Betriebsakte, solange das '
+                      . 'Backup-Ziel etwas trägt, das nur er öffnet.' : null;
+        $error  = $ok ? null : $was;
+
     } elseif ($aktion === 'schluessel_anteil_neuanfang') {
         [$ok, $was] = anteil_neuanfang();
         $notice = $ok ? 'Ein neuer Server-Anteil ist eingetragen (Kennung ' . $was
@@ -611,6 +671,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         $error  = $ok ? null : $was;
     }
 }
+
+/* ---- Anmeldung: „Gerät merken" (Schritt 18, SR-02, E-SR-17) --------------
+ *
+ * ZWEI ZAHLEN, KEINE DRITTE. Eine fuer NutzerInnen (Vorgabe 30 Tage), eine
+ * fuer Support, Admin und BetreiberIn (Vorgabe 7) — die Verwaltung soll
+ * kuerzer laufen als der Dienst. Keine persoenliche Wahl im Profil: Eine
+ * Einstellung, die kaum jemand aendert, kostet nur Pflege (Q-SR-10).
+ *
+ * GERECHNET WIRD BEIM PRUEFEN, nicht beim Merken (`totp_lib.php`): Wer hier
+ * von 30 auf 7 Tage geht, meldet jedes aeltere Geraet sofort ab, und „aus"
+ * ist sofort aus. Die Karte sagt das, bevor gespeichert wird.
+ *
+ * NUR WERTE AUS DER WAHL. Ein handgebautes „365" ist eine Ablehnung, kein
+ * stilles Runden. */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'anmeldung') {
+    csrf_check();
+    require_once __DIR__ . '/totp_lib.php';
+    require_once __DIR__ . '/protokoll_lib.php';
+    $neuTage = [];
+    foreach (['user' => ZF_GERAET_K_USER, 'verwaltung' => ZF_GERAET_K_VERWALTUNG] as $gruppe => $k) {
+        $v = (string)($_POST[$k] ?? '');
+        if (!ctype_digit($v) || !in_array((int)$v, ZF_GERAET_TAGE_WAHL, true)) {
+            $error = 'Gerät merken: bitte eine der vorgegebenen Dauern wählen.';
+            break;
+        }
+        $neuTage[$gruppe] = [$k, (int)$v];
+    }
+    if ($error === null) {
+        $geaendert = [];
+        foreach ($neuTage as $gruppe => [$k, $tage]) {
+            if (zweitfaktor_geraet_tage($gruppe) === $tage && app_state_lesen($k) !== null) { continue; }
+            app_state_setzen($k, (string)$tage);
+            $geaendert[] = ['user' => 'NutzerInnen', 'verwaltung' => 'Support, Admin, BetreiberIn'][$gruppe]
+                         . ' ' . ($tage === 0 ? 'aus' : $tage . ($tage === 1 ? ' Tag' : ' Tage'));
+        }
+        if ($geaendert) {
+            protokoll('verwaltung', 'einstellungen_anmeldung',
+                      'Gerät merken: ' . implode(' · ', $geaendert),
+                      ['geaendert' => $geaendert]);
+        }
+        $notice = $geaendert ? 'Gerät merken: ' . implode(' · ', $geaendert) . '.'
+                             : 'Es gab nichts zu ändern.';
+    }
+}
+
+/* ---- UMLEITEN NACH DEM POST (Schritt 18, SR-02, Backlog Nr. 250, E-SR-37) --
+ *
+ * JEDER ERFOLG DIESER SEITE LEITET UM, mit `flash_setzen()` und dem Ort der
+ * Karte, in der geklickt wurde — der Weg aus R4-11. Bis Web 21.7.0 gab die
+ * Seite ihr POST-Ergebnis selbst aus, und „Neu laden" schickte die Handlung
+ * noch einmal: einen zweiten Schluesselwechsel, eine zweite Rundmail.
+ *
+ * EINE STELLE UND NICHT ZEHN. Die Zweige oben setzen weiter `$notice` und
+ * `$error`; hier entscheidet sich, ob umgeleitet wird. Eine abgewiesene
+ * Eingabe bleibt stehen — die Seite zeigt das Getippte wieder (E-R4-35).
+ * Die Rundmail ist der eine Zweig, in dem auch ein Fehlschlag ein ERGEBNIS
+ * ist: Die Ankuendigung ist dann schon gespeichert, und ein Neuladen haette
+ * den Versand wiederholt (E-R4-34) — sie leitet deshalb auch mit `fehler` um.
+ *
+ * DIE RUECKFRAGE ZUR DEMO-ANMELDUNG reist in den Daten der Meldung mit
+ * (`demo_frage`), statt die Umleitung aufzuhalten. */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $bsAktion = (string)($_POST['action'] ?? '');
+    $bsOrt = str_starts_with($bsAktion, 'schluessel_') ? 'k-schluessel' : ([
+        'ankuendigung' => 'k-ankuendigung', 'rundmail' => 'k-ankuendigung',
+        'ankuendigung_weg' => 'k-ankuendigung', 'speicher' => 'k-speicher',
+        'kopfzeilen' => 'k-kopfzeilen', 'ratenschutz' => 'k-ratenschutz',
+        'protokoll' => 'k-protokoll', 'geocoder' => 'k-adresssuche',
+        'demo_aus' => 'k-konten', 'konten' => 'k-konten', 'anmeldung' => 'k-anmeldung',
+    ][$bsAktion] ?? '');
+    $bsRundmailFehler = $bsAktion === 'rundmail' && $error !== null && $ankForm === null;
+    /* „Jetzt weiterarbeiten" ist eine Handlung mit Ergebnis, keine abgewiesene
+     * Eingabe — auch ein Fehlschlag wird umgeleitet, sonst schickte F5 den
+     * POST noch einmal (H-SR-06, F-SR-82; dieselbe Linie wie die Rundmail,
+     * E-R4-34). */
+    $bsWeiterFehler = $bsAktion === 'schluessel_sk_weiter' && $error !== null;
+    if ($bsOrt !== '' && (($notice !== null && $error === null) || $bsRundmailFehler
+                          || $bsWeiterFehler)) {
+        flash_setzen($error === null ? 'ok' : 'fehler', (string)($error ?? $notice), $bsOrt,
+                     $demoFrage ? ['demo_frage' => true] : []);
+        /* 302 wie die elf Seiten aus R4-11, nicht 303: Ein Muster, und die
+         * Rollenprobe misst es fuer alle mit derselben Zeile. */
+        header('Location: betrieb_server.php#' . $bsOrt);
+        exit;
+    }
+}
+
+/* Die Meldung aus der Umleitung steht in der Karte, in der geklickt wurde —
+ * die Umleitung springt dorthin, und oben saehe sie niemand. */
+$bsFlash = flash_holen();
+if ($bsFlash !== null && !in_array($bsFlash['ton'], ['ok', 'fehler', 'warn', 'info'], true)) {
+    $bsFlash = null;
+}
+if ($bsFlash !== null && $bsFlash['ort'] === 'k-konten' && !empty($bsFlash['daten']['demo_frage'])) {
+    $demoFrage = true;
+}
+$kartenMeldung = static function (string $id) use ($bsFlash): string {
+    return ($bsFlash !== null && $bsFlash['ort'] === $id)
+        ? '    ' . ui_meldung_markup($bsFlash['ton'], $bsFlash['text']) . "\n" : '';
+};
 
 $sp = speicher_uebersicht();
 $skZustand  = serverschluessel_zustand();
@@ -737,6 +897,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
               ? ui_plakette('abgelaufen', ['ton' => 'neutral'])
               : ui_plakette('sichtbar bis ' . datum_zeit_text(iso_utc($ankGesp['bis'])),
                             ['ton' => $ankGesp['ton'] === 'warn' ? 'orange' : 'blau']))]); ?>
+  <?= $kartenMeldung('k-ankuendigung') ?>
     <p class="feld-hinweis">Ein Streifen über jeder Seite, bis er abläuft —
        als Rundmail höchstens einmal je Tag.
        <a href="hilfe.php#12-8-ankuendigung-und-rundmail">Wie er wirkt</a></p>
@@ -812,8 +973,18 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
      * 14.09.2026. Ein `'ton' => 'ok'` ergibt eine Klasse ohne Regel, also
      * eine ungestaltete Plakette, und zwar ohne jede Fehlermeldung. Zwei
      * Stellen im Bestand tun das schon (F-15). */
-    $skTon = ['bereit' => 'blau', 'fehlt' => 'rot',
+    $skTon = ['bereit' => 'blau', 'rotation' => 'blau', 'fehlt' => 'rot',
               'abweichend' => 'rot'][$skZustand['stand']] ?? 'neutral';
+    /* DER WECHSEL DES SERVERSCHLUESSELS (SR-03): Zustand des Jobs und die drei
+     * Bedingungen vor dem Entfernen — aus derselben Quelle wie der Riegel in
+     * `serverschluessel_alt_entfernen()`, damit Karte und Funktion nicht
+     * zweierlei sagen. Nur waehrend eines Wechsels geladen. */
+    $swZ = []; $swB = null;
+    if ($skZustand['stand'] === 'rotation') {
+        require_once __DIR__ . '/schluesselwechsel_lib.php';
+        $swZ = sw_zustand();
+        $swB = sw_bedingungen();
+    }
     /* „fehlt" ist NEUTRAL, nicht rot (Design.md 9.23): Ohne Anteil arbeitet
      * alles wie vorher, es geht nichts verloren. Rot bleibt der Lage
      * vorbehalten, in der niemand mehr an seine Angaben kommt. */
@@ -831,6 +1002,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                   : ($anZustand['stand'] === 'fehlt'
                       ? ui_plakette('nicht eingerichtet', ['ton' => 'neutral'])
                       : ui_plakette('Übergang läuft', ['ton' => 'blau']))))]); ?>
+  <?= $kartenMeldung('k-schluessel') ?>
 
     <p class="feld-hinweis">Zwei Geheimnisse in <code>config.php</code>, nicht
        in der Datenbank — gedruckt gehören beide auf das Schlüsselblatt.
@@ -842,6 +1014,10 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         'klein' => $skZustand['stand'] === 'bereit'
             ? 'Kennung ' . $skZustand['kennung'] . ' — versiegelt Backup-Ziele, '
               . 'Komplett-Backup und Konto-Backups'
+            : ($skZustand['stand'] === 'rotation'
+                ? 'Wechsel läuft: neu ' . $skZustand['kennung'] . ', bisher '
+                  . $skZustand['kennung_alt'] . ' — versiegelt wird mit dem neuen, der '
+                  . 'bisherige öffnet, was noch nicht umgehüllt ist'
             : ($skZustand['stand'] === 'fehlt'
                 /* EIN SATZ (E-P5c-06): „Fehlt. Ohne ihn …" waren zwei
                    (Endzählung AP9, die einzige Kleinzeile über dem Soll). */
@@ -850,9 +1026,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                 : 'In config.php steht Kennung '
                   . ($skZustand['kennung'] ?? '—') . ', versiegelt wurde mit '
                   . $skZustand['erwartet'] . ' — bis der richtige Wert '
-                  . 'nachgetragen ist, lässt sich Versiegeltes nicht öffnen'),
+                  . 'nachgetragen ist, lässt sich Versiegeltes nicht öffnen')),
         'plaketten' => ui_plakette(
-            ['bereit' => 'vorhanden', 'fehlt' => 'fehlt',
+            ['bereit' => 'vorhanden', 'rotation' => 'Wechsel', 'fehlt' => 'fehlt',
              'abweichend' => 'abweichend'][$skZustand['stand']] ?? '?',
             ['ton' => $skTon]),
       ]);
@@ -917,6 +1093,94 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                 ['ton' => 'blau']),
           ]);
       }
+
+      /* DER WECHSEL DES SERVERSCHLÜSSELS IN DREI ZEILEN (SR-03, E-SR-15: die
+         Lage `rotation` mit Zählung wie beim Anteil, kein neuer Baustein):
+         wie weit das Umhüllen ist, was vor dem Entfernen noch fehlt, und —
+         nur wenn es sie gibt — die Stücke, die mit keinem der beiden
+         aufgehen (E-SR-61). */
+      if ($swB !== null) {
+          $swRest   = sw_rueckstand($swZ);
+          /* Ein Zustand, der zu einem anderen Schlüsselpaar gehört, zählt wie
+             keiner — das Häppchen legt einen neuen an (F-SR-80). */
+          $swPhase  = sw_zustand_passt($swZ, $skZustand) ? (string)($swZ['phase'] ?? '') : '';
+          $swGesamt = (int)($swZ['gesamt'] ?? 0);
+          /* Warf das Inventar beim Beginn, ist noch nichts gezählt — nicht
+             „noch 0 von 0" (Nachmessung H-SR-06, F-SR-88). */
+          $swNoch = sw_gezaehlt($swZ) ? 'noch ' . (int)$swRest . ' von ' . $swGesamt
+                                      : 'die Zahl der Stücke zählt das erste Häppchen';
+          $swWartet = $swPhase === '' ? null : sw_nachweis_wartet($swZ);
+          /* OHNE AUSLÖSER GEHEN DATEIEN NUR MIT DEM KNOPF VORAN (H-SR-06,
+             F-SR-82): Am Huckepack-Weg (3 s) fängt der Job keine Datei an.
+             Ein Halbsatz, kein zweiter Satz — eine Kleinzeile bleibt eine
+             Zeile (Design.md, Nachprüfung H-SR-06, F-SR-87). */
+          $swWeiter = '; der Job arbeitet in Häppchen weiter, Konto-Backups und Archive nur '
+                    . 'mit eingerichtetem Auslöser oder über „Jetzt weiterarbeiten"';
+          ui_zeile([
+            'text'  => 'Umhüllung',
+            'klein' => $swPhase === ''
+                ? 'Der Wechsel steht in config.php, die Umhüllung hat noch nicht begonnen — sie '
+                  . 'beginnt mit dem nächsten Joblauf oder mit „Jetzt weiterarbeiten"'
+                : ($swPhase === 'fertig'
+                ? 'Alles, was der Server erreicht, liegt unter dem neuen und ist mit ihm '
+                  . 'nachgewiesen — ' . (int)($swZ['umgehuellt'] ?? 0) . ' Stück(e) umgehüllt; '
+                  . 'was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen'
+                : ($swWartet !== null
+                    ? 'Umgehüllt — ' . (int)($swZ['umgehuellt'] ?? 0) . ' Stück(e); der Nachweis '
+                      . 'mit dem neuen beginnt um ' . fmt_local(gmdate('Y-m-d H:i:s', $swWartet))
+                      . ' Uhr, damit er auch sieht, was ein vor dem Wechsel begonnener Vorgang '
+                      . 'noch mit dem bisherigen versiegelt'
+                : ($swPhase === 'nachweis'
+                    ? 'Nachweis: jedes Stück wird mit dem neuen geöffnet — ' . $swNoch . $swWeiter
+                    : 'Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups und '
+                      . 'Archive des Protokolls — ' . $swNoch
+                      . (sw_gezaehlt($swZ) ? ' Stücken' : '') . $swWeiter))),
+            'plaketten' => ui_plakette($swPhase === 'fertig' ? 'nachgewiesen'
+                                       : ($swPhase === '' ? 'nicht begonnen'
+                                       : ($swWartet !== null ? 'Nachweis ab '
+                                            . fmt_local(gmdate('Y-m-d H:i:s', $swWartet))
+                                       : (sw_gezaehlt($swZ) ? 'noch ' . (int)$swRest . ' von ' . $swGesamt
+                                                                : 'wird gezählt'))),
+                ['ton' => 'blau']),
+          ]);
+          $swErfuellt = (int)$swB['inventar'] + (int)$swB['komplett'] + (int)$swB['blatt'];
+          ui_zeile([
+            'text'  => 'Bevor der bisherige gehen darf',
+            'klein' => $swB['alle']
+                ? 'Alles umgehüllt, ein Komplett-Stand unter dem neuen, die Rückfrage '
+                  . 'beantwortet — der bisherige lässt sich entfernen'
+                : implode(' ', $swB['fehlt']),
+            'plaketten' => ui_plakette($swErfuellt . ' von 3', ['ton' => 'blau']),
+          ]);
+          /* STÜCKE, DIE BEIM UMHÜLLEN WARFEN (H-SR-06, F-SR-81): Sie liegen
+             noch unter dem bisherigen und halten Bedingung 1 zu. */
+          $swFehler = array_values((array)($swZ['fehler'] ?? []));
+          /* Über der Decke von 20 zählt der Job weiter, nennt aber nicht
+             (Nachprüfung H-SR-06, F-SR-85). */
+          $swFehlerMehr = sw_fehler_zahl($swZ) - count($swFehler);
+          if ($swFehler !== []) {
+              ui_zeile([
+                'text'  => 'Ließen sich nicht umhüllen',
+                'klein' => implode(' · ', array_map(
+                               static fn(array $f): string => (string)($f['name'] ?? '?') . ' ('
+                                   . (string)($f['grund'] ?? '') . ')', $swFehler))
+                         . ($swFehlerMehr > 0 ? ' · und ' . $swFehlerMehr . ' weitere' : '')
+                         . ' — sie liegen noch unter dem bisherigen; der Job versucht es mit jedem '
+                         . 'Häppchen neu, und der bisherige bleibt, bis sie umgehüllt oder fort sind',
+                'plaketten' => ui_plakette((string)(count($swFehler) + $swFehlerMehr),
+                                           ['ton' => 'orange']),
+              ]);
+          }
+          $swVerloren = (array)($swZ['verloren'] ?? []);
+          if ($swVerloren !== []) {
+              ui_zeile([
+                'text'  => 'Mit keinem der beiden zu öffnen',
+                'klein' => implode(' · ', $swVerloren) . ' — der Wechsel rührt sie nicht an; '
+                         . 'der bisherige öffnet sie ebenso wenig',
+                'plaketten' => ui_plakette((string)count($swVerloren), ['ton' => 'orange']),
+              ]);
+          }
+      }
     ?>
 
     <?php /* ---- GENAU EIN PRIMAERER KNOPF, UND ZWAR DER, DER DRAN IST ----
@@ -964,12 +1228,30 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                       'href' => 'betrieb_schluesselblatt.php']) ?>
       <?php endif; ?>
       <?php if (in_array($anZustand['stand'], ['bereit', 'rotation'], true)
-                && $anZustand['kennung_alt'] === null): ?>
+                && $anZustand['kennung_alt'] === null
+                && $skZustand['stand'] !== 'rotation'): ?><?php /* E-SR-60: nicht
+                neben einem Wechsel des Serverschlüssels */ ?>
         <form method="post" action="betrieb_server.php"
               data-confirm="Den Server-Anteil wechseln? Der bisherige bleibt stehen, bis kein Konto mehr auf ihm steht — die Umstellung läuft je Konto beim nächsten Anmelden. Danach ist ein NEUES Schlüsselblatt zu drucken; das alte gilt nicht mehr."
               data-confirm-ok="Wechseln" data-confirm-tone="normal">
           <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_anteil_wechseln">
           <?= ui_knopf(['text' => 'Server-Anteil wechseln', 'symbol' => 'tausch']) ?>
+        </form>
+      <?php endif; ?>
+      <?php /* An DENSELBEN Größen wie die Zeile „Umhüllung" — sonst versprach
+               ihr Text einen Knopf, der fehlte (Nachprüfung H-SR-06, F-SR-87). */ ?>
+      <?php if ($swB !== null && $swPhase !== 'fertig' && $swWartet === null): ?>
+        <form method="post" action="betrieb_server.php">
+          <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_sk_weiter">
+          <?= ui_knopf(['text' => 'Jetzt weiterarbeiten', 'symbol' => 'tausch']) ?>
+        </form>
+      <?php endif; ?>
+      <?php if ($swB !== null && $swB['alle']): ?>
+        <form method="post" action="betrieb_server.php"
+              data-confirm="Den bisherigen Serverschlüssel aus config.php entfernen? Auf dem Server liegt nichts mehr unter ihm. Was auf dem Backup-Ziel liegt, öffnet danach nur noch der Wert vom bisherigen Blatt — das Blatt bleibt in der Betriebsakte."
+              data-confirm-ok="Entfernen" data-confirm-tone="normal">
+          <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_sk_alt_entfernen">
+          <?= ui_knopf(['text' => 'Alten Schlüssel entfernen', 'symbol' => 'korb']) ?>
         </form>
       <?php endif; ?>
       <?php if ($anZustand['kennung_alt'] !== null && $anZaehlung['alt'] === 0): ?>
@@ -982,6 +1264,32 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php endif; ?>
     </div>
 
+
+    <?php /* ---- Serverschlüssel wechseln (SR-03, E-SR-60, E-SR-63) ---------
+             Nur aus `bereit` und nicht neben einer Anteil-Rotation — die
+             Riegel stehen in `serverschluessel_wechseln()`, hier nur, damit
+             kein Knopf dasteht, der sicher abgewiesen wird. Der Haken ist
+             Pflicht und wird in der Funktion geprüft: Der Vorgang sagt beim
+             Start, was er nicht erreicht (E-SR-10). */ ?>
+    <?php if ($skZustand['stand'] === 'bereit' && $anZustand['stand'] !== 'rotation'): ?>
+      <?php /* `.listen-form`: durch eine Linie von den Knöpfen darüber
+               abgesetzt — ohne sie klebte die Überschrift am Knopffuß (Bild
+               zu P-SR-05, F-SR-73). */ ?>
+      <form method="post" action="betrieb_server.php" class="listen-form"
+            data-confirm="Den Serverschlüssel wechseln? Die Anlage hüllt danach in Häppchen um, was sie erreicht. Was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen — das bisherige Blatt NICHT vernichten. Danach ein neues Blatt drucken."
+            data-confirm-ok="Wechseln" data-confirm-tone="normal">
+        <h3 class="listen-form-titel">Serverschlüssel wechseln <span class="feld-klein-inline">bei Verdacht, dass das Blatt in falsche Hände kam</span></h3>
+        <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_sk_wechseln">
+        <?php ui_schalter(['name' => 'kopien_verstanden',
+            'label' => 'Kopien auf dem Backup-Ziel bleiben unter dem bisherigen',
+            'an' => false,
+            'klein' => 'Mir ist klar: Was auf dem Ziel liegt, öffnet weiter nur der bisherige '
+                     . 'Schlüssel, und das bisherige Blatt wird aufbewahrt.']); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Serverschlüssel wechseln', 'symbol' => 'tausch']) ?>
+        </div>
+      </form>
+    <?php endif; ?>
 
     <?php /* ---- Nachtragen vom Blatt (E-S10-10) -------------------------- */ ?>
     <?php if ($skZustand['stand'] === 'abweichend' || $anZustand['stand'] === 'abweichend'): ?>
@@ -1048,6 +1356,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           ? ui_plakette($sp['backups']['prozent'] . ' %',
                         ['ton' => speicher_ton($sp['backups']['prozent'], $sp['schwellen'])])
           : '']); ?>
+  <?= $kartenMeldung('k-speicher') ?>
 
     <?php if ($sp['stand'] === null): ?>
       <?= ui_meldung_markup('info', 'Datenbank und Dateien sind noch nicht gemessen. '
@@ -1168,6 +1477,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => kopf_csp_scharf()
           ? ui_plakette('CSP scharf', ['ton' => 'blau'])
           : ui_plakette('CSP meldet nur', ['ton' => 'orange'])]); ?>
+  <?= $kartenMeldung('k-kopfzeilen') ?>
     <p class="feld-hinweis">Die Content-Security-Policy sagt dem Browser, woher
        er etwas laden darf — erst beobachten, dann scharf schalten.
        <a href="hilfe.php#karte-sicherheitskopfzeilen-seit-web-20-7-0">Handbuch: Sicherheitskopfzeilen</a></p>
@@ -1222,6 +1532,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
            'freischaltung' => 'mit Freischaltung',
            'einladung' => 'nur auf Einladung'][konten_reg_art()],
           ['ton' => konten_reg_art() === 'offen' ? 'orange' : 'blau'])]); ?>
+  <?= $kartenMeldung('k-konten') ?>
     <?php if ($demoFrage): ?>
       <?php /* Kein neuer Baustein: `.meldung` mit einem Knopf darin, wie ihn
                die Anwendung an mehreren Stellen fuehrt (`index.php`,
@@ -1308,6 +1619,47 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </form>
   <?php ui_karte_ende(); ?>
 
+  <?php /* ---- Anmeldung (Schritt 18, SR-02, E-SR-15, -17; Q-SR-01, -10) -----
+     *
+     * NACH DEN KONTEN: Wie lange ein Browser als bekannt gilt, ist eine Frage
+     * an die Konten dieser Installation, keine an die Abwehr darunter. Aus
+     * vorhandenen Bausteinen (E-SR-15): zwei Auswahlfelder, ein Knopf.
+     * ------------------------------------------------------------------- */
+        require_once __DIR__ . '/totp_lib.php';
+        $zfTageText = static fn(int $t): string => $t === 0 ? 'aus' : $t . ($t === 1 ? ' Tag' : ' Tage');
+        $zfWahl = [];
+        foreach (ZF_GERAET_TAGE_WAHL as $t) { $zfWahl[(string)$t] = $zfTageText($t); }
+        $zfTageU = zweitfaktor_geraet_tage('user');
+        $zfTageV = zweitfaktor_geraet_tage('verwaltung'); ?>
+  <?php ui_karte_start(['titel' => 'Anmeldung', 'id' => 'k-anmeldung',
+      'plakette' => ui_plakette('Gerät merken ' . $zfTageText($zfTageU) . ' / ' . $zfTageText($zfTageV),
+                                ['ton' => 'neutral'])]); ?>
+  <?= $kartenMeldung('k-anmeldung') ?>
+    <p class="feld-hinweis">Nach einem Code aus der App kann ein Browser gemerkt
+       werden; dort fragt die Anmeldung dann so lange keinen Code. Kürzer
+       stellen wirkt sofort — auch für schon gemerkte Geräte, „aus" meldet alle ab.
+       <a href="hilfe.php#karte-anmeldung-seit-web-21-8-0">Handbuch: Anmeldung</a></p>
+    <?php if (!zweitfaktor_geraete_da()): ?>
+      <?= ui_meldung_markup('warn', 'Die Tabelle für gemerkte Geräte fehlt noch — eine '
+          . 'AdministratorIn muss update.php aufrufen. Bis dahin fragt die Anmeldung '
+          . 'bei jedem Mal nach dem Code.') ?>
+    <?php endif; ?>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="anmeldung">
+      <?php ui_feld(['name' => ZF_GERAET_K_USER, 'label' => 'Gerät merken — NutzerInnen',
+          'art' => 'select', 'optionen' => $zfWahl, 'wert' => (string)$zfTageU,
+          'klein' => 'Vorgabe ' . ZF_GERAET_VORGABE_USER . ' Tage. Gilt nur für Konten mit '
+                   . 'eingeschaltetem Zweitfaktor.']); ?>
+      <?php ui_feld(['name' => ZF_GERAET_K_VERWALTUNG, 'label' => 'Gerät merken — Support, Admin, BetreiberIn',
+          'art' => 'select', 'optionen' => $zfWahl, 'wert' => (string)$zfTageV,
+          'klein' => 'Vorgabe ' . ZF_GERAET_VORGABE_VERWALTUNG . ' Tage — kürzer als für '
+                   . 'NutzerInnen, weil diese Konten mehr dürfen.']); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+  <?php ui_karte_ende(); ?>
+
   <?php /* ---- Protokoll: Frist und Archiv (P5c/AP2, E-P5c-02, -03, -24) ----
            Die Frist der Verwaltungseinträge stand bis Web 20.38.0 in der
            Karte „Konten". Sie gehört zu dem, was sie begrenzt: dem
@@ -1319,6 +1671,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => ui_plakette(count($archive) . (count($archive) === 1 ? ' Archiv' : ' Archive'),
                                 ['ton' => $archive ? 'blau' : 'neutral']),
       'aktion' => ['text' => 'Protokoll lesen', 'href' => 'admin_protokoll.php']]); ?>
+  <?= $kartenMeldung('k-protokoll') ?>
     <p class="feld-hinweis">Was hier steht, begrenzt, wie lange Betriebsereignisse
        liegen — in der Datenbank und im versiegelten Archiv.
        <a href="hilfe.php#das-archiv-nur-betreiberin">Wie das Archiv arbeitet</a></p>
@@ -1364,6 +1717,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => $vBr['stufe'] > 0
           ? ui_plakette('Verlangsamung Stufe ' . $vBr['stufe'], ['ton' => 'orange'])
           : ui_plakette('ruhig', ['ton' => 'blau'])]); ?>
+  <?= $kartenMeldung('k-ratenschutz') ?>
     <p class="feld-hinweis">Eine Sperre dauert beim zweiten Mal länger und
        zählt am eingetippten Namen, nicht am Konto.
        <a href="hilfe.php#11-4a-ratenschutz-was-jemanden-aufhaelt-der-es-von-aussen-versucht">Handbuch: Ratenschutz</a></p>
@@ -1435,6 +1789,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'plakette' => geocoder_installation_an()
           ? ui_plakette('an', ['ton' => 'blau'])
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
+  <?= $kartenMeldung('k-adresssuche') ?>
     <p class="feld-hinweis">Beim Tippen in einem Ortsfeld und nach jeder Wahl auf
        der Karte gehen der getippte Text und die Koordinate an einen Adressdienst.
        <a href="hilfe.php#karte-adresssuche-seit-web-15-8-0">Handbuch: Adresssuche</a></p>

@@ -1279,7 +1279,7 @@ und ein Gerät schriebe seinen Zeitraum danach drei Tage lang wieder fort.
 **Was im Backup gar nicht vorkommt — und deshalb nach einer
 Wiederherstellung fehlt:**
 
-Der Abschnitt oben zählt Spalten auf. Diese drei sind ganze Bereiche, und ihr
+Der Abschnitt oben zählt Spalten auf. Diese vier sind ganze Bereiche, und ihr
 Fehlen fällt erst auf, wenn man danach sucht:
 
 - **Geräte.** Eine Uhr trägt einen API-Schlüssel; ein mitgesichertes Gerät
@@ -1316,6 +1316,22 @@ Fehlen fällt erst auf, wenn man danach sucht:
   füllt damit die Sperrliste nicht (`trash_block_ref()` verlangt eine
   Gerätekennung). Das ist dasselbe „Geräte weg → Sperrliste leer" wie oben,
   keine zusätzliche Lücke.
+- **Gemerkte Geräte** (`vertraute_geraete`, seit Web 21.8.0, Schritt 18,
+  SR-02). Eine Zeile gehört zu einem Cookie, und ein Cookie gehört zu
+  **einem Browser an einer Adresse** — nicht zum Konto. In einer anderen
+  Installation gäbe es den Browser nicht, der das Cookie trägt; in derselben
+  gilt die Zeile ohnehin weiter. Nach dem Einspielen fragt die Anmeldung also
+  wieder nach dem Code, und der Haken merkt das Gerät neu. Dasselbe gilt für
+  das Konto-Backup in Abschnitt 5.
+- **Passkeys** (`passkeys`, seit Web 21.10.0, Schritt 18, SR-09). Ein
+  Passkey gilt nur für die **Adresse, an der er entstand**: Seine `rp.id` ist
+  der Hostname aus `app.base_url` (E-SR-42) und steht seit Web 21.11.0 in der
+  Zeile (`rp_id`), und ein Browser bietet ihn einer anderen Adresse gar nicht
+  erst an — auch nicht Staging neben Produktiv. In
+  einer anderen Installation wäre die Zeile ein Schloss ohne Tür. Nach dem
+  Einspielen gilt dort der Code aus der App, und wer mag, legt den Passkey an
+  der neuen Adresse neu an. Dasselbe gilt für das Konto-Backup in
+  Abschnitt 5 — es trägt die Tabelle **nicht**.
 
 **Der Papierkorb steht seit Version 7 in der Datei** und stand bis Version 6
 in keiner. Der Absatz, der ihn hier als fehlend führte, ist damit gegenstandslos;
@@ -1374,6 +1390,17 @@ beim nächsten Schreiben von selbst.
 **Ohne Serverschlüssel entsteht kein Paket.** `edbak_sicherung_erzeugen()`
 bricht mit Grund ab, bevor irgendetwas gelesen wird — derselbe Riegel wie beim
 Komplett-Backup.
+
+**Beim Wechsel des Serverschlüssels** (seit Web 21.12.0, `docs/Technik.md`
+4.97c) werden Paket und Begleitdatei **unter demselben Namen** umgehüllt:
+jeder versiegelte Eintrag mit dem bisherigen geöffnet, mit dem neuen
+versiegelt, das ZIP neu gebaut und jeder Eintrag daran mit dem neuen
+geöffnet und gegen die Prüfsumme davor gehalten, erst dann ersetzt. Zweck
+und Inhalt bleiben gleich; es ändert sich nur der Schlüssel. Pakete der
+Fassung 1 und 2 tragen kein Siegel und bleiben, wie sie sind. **Was schon
+auf einem Backup-Ziel liegt, bleibt unter dem bisherigen** — dieselbe Datei
+unter demselben Namen gilt dem Versand als dort vorhanden und geht nicht
+noch einmal hinaus.
 
 **Ein Paket ist seit Web 12.0.0 ein ZIP** mit dem Namen
 `<zeitstempel>_<8 Hexziffern>.zip`. Die Endung unterscheidet **einteilig von
@@ -1668,11 +1695,25 @@ Abruf über den Browser; die erste ist `sicherungen/.htaccess`.
   "zeilen":    1121802,
   "roh":       45798320,
   "block":     262144,
-  "kdf":       null
+  "kdf":       null,
+  "kennung":   "04ab5524"
 }
 ```
 
-`kdf: null` heisst **Serverschlüssel** aus `config.php`. Für die Fassung mit
+`kdf: null` heisst **Serverschlüssel** aus `config.php`. **`kennung`** (seit
+Web 21.12.0, F-SR-11) ist dessen Kennung — die ersten acht Hexzeichen von
+SHA-256 über den Schlüssel, dieselbe wie auf dem Schlüsselblatt. Sie steht
+nur bei `kdf: null`; ältere Stände haben sie nicht. Über die Bindung (6.4)
+hängt sie an jedem Block: Wer sie ändert, macht die Datei unlesbar. Sie
+**sagt**, welcher Schlüssel es war; ob er es **ist**, zeigt erst der erste
+Block. Die Anwendung versucht erst den heutigen, dann — während eines
+Wechsels — den bisherigen (`komp_serverschluessel_fuer()`); **umgehüllt
+wird ein Stand nie** (E-SR-21). Nach dem Wechsel öffnet einen Stand von
+vorher nur der Wert vom bisherigen Blatt. **Kopf und Blöcke hängen an
+EINEM Schlüssel:** Wechselt er, während ein Stand versiegelt wird, beginnt
+die Versiegelung seit Web 21.12.1 mit neuem Kopf von vorn
+(`komp_kopf_angleichen()`); bis dahin konnten die ersten Blöcke unter dem
+bisherigen, die übrigen unter dem neuen liegen. Für die Fassung mit
 Passphrase steht dort stattdessen:
 
 ```json
@@ -1832,6 +1873,43 @@ zurück; eine laufende Sperre ist nach dem Einspielen aufgehoben.
 **Ältere Stände** (vor Web 20.39.0) tragen die Zeilen noch und werden
 unverändert eingespielt — die Tabellen verfallen danach wie gewohnt.
 
+### 6.10 Gemerkte Geräte (seit Web 21.8.0)
+
+`vertraute_geraete` reist **mit Zeilen** im Komplett-Stand (Schritt 18,
+SR-02). Sie tragen keinen Gerätenamen und keinen Browsertyp, nur den SHA-256
+eines Cookies, das Konto und zwei Zeitpunkte — ein Stand, der außer Haus
+geht, verrät damit nicht, womit sich jemand anmeldet. **Nach einem
+Wiederanlauf auf derselben Adresse** gelten die Zeilen weiter, solange ihre
+Dauer läuft (sie wird beim Prüfen aus der Einstellung der Anlage gerechnet,
+nicht aus dem Stand); **auf einer anderen Adresse** schickt kein Browser das
+Cookie, und sie verfallen mit dem Aufräumjob. Anders als die zwei Tabellen
+in 6.9 halten sie keine IP- oder E-Mail-Adressen, und ihr Fehlen hätte nur
+einen Code-Schritt mehr gekostet — ein Grund, sie ohne Zeilen mitzunehmen,
+fehlt.
+
+### 6.11 Passkeys (seit Web 21.10.0)
+
+`passkeys` reist **mit Zeilen** im Komplett-Stand (Schritt 18, SR-09) — die
+Komplettsicherung nimmt jede Tabelle mit, die nicht in `KOMP_OHNE_ZEILEN`
+steht, und für einen Eintrag dort gibt es keinen Grund. Eine Zeile trägt den
+**öffentlichen** Schlüssel (SPKI als PEM), seine Kennung (`credential_id`,
+Base64url) und deren SHA-256 (`credential_hash`, der eindeutige Schlüssel der
+Tabelle), die Adresse, für die er entstand (`rp_id`), den Algorithmus, den
+Zähler, die selbst gewählte Bezeichnung und drei Zeitpunkte (angelegt,
+zuletzt benutzt, zuletzt wegen des Zählers gewarnt) — `credential_hash`,
+`rp_id` und `gewarnt_am` seit Web 21.11.0 (H-SR-08). **Nichts davon meldet
+jemanden an:** Der private Teil hat das Gerät nie verlassen; ein Stand, der
+außer Haus geht, verrät, dass es einen Passkey gibt, für welche Adresse und
+wann er zuletzt benutzt wurde, mehr nicht. Die Zeilen hängen **nicht** am
+Serverschlüssel. **Nach einem Wiederanlauf auf derselben Adresse** gelten sie
+weiter; **auf einer anderen Adresse** passt die `rp_id` nicht: Die Anmeldung
+bietet sie seit Web 21.11.0 gar nicht erst an und fragt nach dem Code
+(Abschnitt 4), die Karte „Zweitfaktor" zeigt sie mit der Plakette „andere
+Adresse", und sie zählen nicht zur Grenze von zehn (E-SR-48). Bis dahin stand
+der Knopf „Mit Passkey bestätigen" auch dort, und der Browser meldete
+„abgebrochen". Die Zeilen bleiben stehen, bis die NutzerIn sie entfernt oder
+der Zweitfaktor ausgeschaltet wird.
+
 ---
 
 ## 7. Archiv des Protokolls (seit Web 20.39.0)
@@ -1858,6 +1936,20 @@ damit `sz_zeit_aus_dateiname()` es liest und der Name zeitlich sortiert. Die
 (`serverschluessel_kennung()`: die ersten acht Hexzeichen von SHA-256 über
 den Schlüssel — dieselbe, die das Schlüsselblatt zeigt). Ein Archiv eines anderen Schlüssels erkennt
 die Seite am Namen, ohne es zu öffnen.
+
+**Beim Wechsel des Serverschlüssels** (seit Web 21.12.0, `docs/Technik.md`
+4.97c) bekommt ein Archiv deshalb einen **neuen Namen**: gleicher Beginn,
+neue Kennung. Weil der Name im Zweck jedes Teils steht, wird jeder Teil
+unter dem neuen Namen versiegelt; im Manifest ändert sich nur `kennung` —
+leere `zeilen` und `gekuerzt` bleiben `{}` (bis Web 21.12.0 wurden sie beim
+Umhüllen zu `[]`). Seit Web 21.12.1 wird die neue Datei **im Arbeitsordner
+nachgewiesen, dann abgelegt**, erst dann die alte gelöscht; bis dahin wurde
+sie abgelegt und danach nachgewiesen. Umgehüllt wird jedes Archiv, dessen
+Manifest mit dem bisherigen aufgeht, auch wenn im Namen eine dritte Kennung
+steht.
+Dem Versand gilt sie als „nur lokal" und geht noch einmal hinaus — auf dem
+Ziel liegt dann dasselbe Archiv unter beiden Schlüsseln, jedes unter seinem
+Namen.
 
 ### 7.2 Aufbau
 

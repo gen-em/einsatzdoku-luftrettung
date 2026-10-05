@@ -110,6 +110,53 @@ CREATE TABLE totp_codes (
   CONSTRAINT fk_totp_codes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Gemerkte Geraete des Zweitfaktors (Web 21.8.0, Schritt 18, SR-02, E-SR-07).
+-- Im Browser liegt ein Zufallswert im Cookie EDGERAET, hier nur sein SHA-256.
+-- Kein User-Agent, kein Geraetename. Gueltig ist eine Zeile, solange
+-- angelegt_am plus die HEUTIGE Dauer der Rollengruppe in der Zukunft liegt
+-- (E-SR-17) — gerechnet beim Pruefen, nicht beim Merken.
+CREATE TABLE vertraute_geraete (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT UNSIGNED NOT NULL,
+  token_hash  CHAR(64) NOT NULL,
+  angelegt_am DATETIME NOT NULL,
+  zuletzt_am  DATETIME NULL,
+  UNIQUE KEY uq_vertraute_geraete_token (token_hash),
+  KEY idx_konto (user_id),
+  CONSTRAINT fk_vertraute_geraete_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Passkeys als zweiter Faktor (Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33).
+-- Ein weiteres Verfahren desselben Faktors: nur neben eingeschaltetem TOTP.
+-- credential_id: die Kennung des Authenticators, Base64url — ascii_bin, weil
+-- Base64url Gross- und Kleinschreibung unterscheidet; 1364 Zeichen fassen die
+-- 1023 Bytes, die WebAuthn hoechstens erlaubt. credential_hash: SHA-256 der
+-- Kennung (hex) — der eindeutige Schluessel liegt hier und nicht auf der
+-- Kennung selbst, damit kein Index ueber 767 Byte reicht (H-SR-08, F-SR-42).
+-- rp_id: die Adresse, fuer die der Passkey entstand (H-SR-08, F-SR-41) —
+-- angeboten und geprueft wird nur, was zur heutigen passt. oeffentlich: SPKI
+-- als PEM, bei der Registrierung aus COSE ueberfuehrt. alg: -7 (ES256) oder
+-- -257 (RS256). gewarnt_am: die letzte Mail wegen eines zurueckgelaufenen
+-- Zaehlers (hoechstens eine je Tag, F-SR-36). Kein User-Agent, keine AAGUID
+-- (E-SR-31).
+CREATE TABLE passkeys (
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id         INT UNSIGNED NOT NULL,
+  credential_id   VARCHAR(1364) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  credential_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  rp_id           VARCHAR(253) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  oeffentlich     TEXT NOT NULL,
+  alg             SMALLINT NOT NULL,
+  zaehler         INT UNSIGNED NOT NULL DEFAULT 0,
+  bezeichnung     VARCHAR(40) NOT NULL DEFAULT '',
+  angelegt_am     DATETIME NOT NULL,
+  zuletzt_am      DATETIME NULL,
+  gewarnt_am      DATETIME NULL,
+  UNIQUE KEY uq_passkeys_credential (credential_hash),
+  KEY idx_konto (user_id, rp_id),
+  CONSTRAINT fk_passkeys_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE password_resets (
   id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id    INT UNSIGNED NOT NULL,
@@ -841,7 +888,7 @@ CREATE TABLE jobs (
   rueckstand        INT UNSIGNED NULL,
   letzter_lauf      DATETIME NULL,
   letzter_erfolg    DATETIME NULL,
-  letzter_ausloeser VARCHAR(16) NULL,       -- cli | token | anfrage
+  letzter_ausloeser VARCHAR(16) NULL,       -- cli | token | anfrage | seite (Knopf, seit Web 21.12.0)
   letzter_fehler    TEXT NULL,
   erledigt_zuletzt  INT UNSIGNED NOT NULL DEFAULT 0,
   laeuft_seit       DATETIME NULL
@@ -1087,4 +1134,10 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_25_ftp_entfernen', 'skipped'),
   ('2026_09_25_tagesrettungsmittel_rollen', 'skipped'),
   -- days.created_at steht oben schon im Schema (Web 21.3.0, Nr. 158).
-  ('2026_09_27_days_created_at', 'skipped');
+  ('2026_09_27_days_created_at', 'skipped'),
+  -- vertraute_geraete steht oben schon im Schema (Web 21.8.0, SR-02). Der
+  -- Wert `notzugang_geheim`, den dieselbe Migration im Bestand anlegt, entsteht
+  -- auf einer frischen Anlage beim ersten Aufruf des Notzugangs (E-SR-24).
+  ('2026_09_28_vertraute_geraete', 'skipped'),
+  -- passkeys steht oben schon im Schema (Web 21.10.0, SR-09).
+  ('2026_09_28_passkeys', 'skipped');

@@ -88,6 +88,11 @@ return [
     // und Adminpakete. Ohne ihn laeuft die Anwendung, aber nichts verlaesst
     // versiegelt das Haus.
     'server_key' => '',
+    // server_key_alt steht nur waehrend eines Wechsels daneben (seit Web
+    // 21.12.0, Betrieb -> Servereinstellungen) und verschwindet, sobald alles
+    // umgehuellt ist. Was auf dem Backup-Ziel liegt, oeffnet danach nur noch
+    // der Wert vom bisherigen Schluesselblatt.
+    // 'server_key_alt' => '',
     // kdf_anteil geht in den Datenschluessel JEDES Kontos ein (S10). Ohne
     // ihn laeuft alles wie vor S10 — der Schutz gegen den Datenbankabzug
     // fehlt dann. Ein ANDERER Wert als der, mit dem die Huellen gebaut

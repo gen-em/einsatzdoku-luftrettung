@@ -703,6 +703,100 @@ function zh_regel_js_formatierer(string $rel, array $sichten, string $quelle): a
  * verlangt (Aufruf im Kommentar, Aufruf in einer Zeichenkette, Methodenaufruf
  * `->date(`), und die Fallen, an denen ein `grep` scheitert.
  */
+/**
+ * Die Aufrufe von `zweitfaktor_frisch_verlangen()` in einer Quelle — je
+ * Aufruf die Zeile und der Name, wenn er als EINE feste Zeichenkette dasteht
+ * (sonst `null`). Kommentare, die Definition und ein Name in einer
+ * Zeichenkette zaehlen nicht (dieselbe Lesart wie `zh_aufrufe()`).
+ *
+ * @return list<array{0:int,1:?string}>
+ */
+function zh_frisch_aufrufe(string $quelle): array
+{
+    /* Ueber die Tokens, nicht ueber die Zeilen aus `zh_aufrufe()`: Zwei
+     * Aufrufe auf einer Zeile waeren sonst je zweimal gezaehlt worden (die
+     * erste Gegenprobe fand 5 statt 3). Die Ausschluesse sind dieselben. */
+    $tok = @token_get_all($quelle);
+    $aus = [];
+    foreach ($tok as $i => $t) {
+        if (!is_array($t) || $t[0] !== T_STRING
+            || strtolower($t[1]) !== 'zweitfaktor_frisch_verlangen') { continue; }
+        $vor = $i - 1;
+        while ($vor >= 0 && is_array($tok[$vor]) && $tok[$vor][0] === T_WHITESPACE) { $vor--; }
+        if ($vor >= 0 && is_array($tok[$vor])
+            && in_array($tok[$vor][0], [T_FUNCTION, T_OBJECT_OPERATOR, T_DOUBLE_COLON, T_NEW], true)) { continue; }
+        $folge = [];
+        for ($k = $i + 1; isset($tok[$k]) && count($folge) < 3; $k++) {
+            if (!(is_array($tok[$k]) && $tok[$k][0] === T_WHITESPACE)) { $folge[] = $tok[$k]; }
+        }
+        if (($folge[0] ?? null) !== '(') { continue; }
+        $name = (is_array($folge[1] ?? null) && $folge[1][0] === T_CONSTANT_ENCAPSED_STRING
+                 && ($folge[2] ?? null) === ')') ? substr($folge[1][1], 1, -1) : null;
+        $aus[] = [$t[2], $name];
+    }
+    return $aus;
+}
+
+/**
+ * Z43 — der frische Code (Schritt 18, SR-07, E-SR-20).
+ *
+ * `ZF_FRISCH_HANDLUNGEN` in `db.php` ist die Liste, und JEDE HANDLUNG HAT
+ * GENAU EINEN AUFRUF mit ihrem Namen als fester Zeichenkette. Gezaehlt wird,
+ * was davon abweicht:
+ *   - in jeder Datei ein Aufruf ohne feste Zeichenkette oder mit einem Namen,
+ *     der nicht in der Liste steht;
+ *   - in `db.php`, an der Zeile des Eintrags, jede Handlung mit null oder mit
+ *     mehr als einem Aufruf. Dafuer zaehlt die Regel dort den GANZEN Bestand
+ *     unter `server/` selbst — sie kann sich nicht darauf verlassen, dass die
+ *     Dateien mit den Aufrufen vor `db.php` an der Reihe sind.
+ * Fehlt die Liste in `db.php`, ist das ein Befund an Zeile 1.
+ *
+ * WARUM NICHT `grep -c`: Das Konzept nannte als Abnahme „Treffer von
+ * `grep -rn 'zweitfaktor_frisch_verlangen('` gleich Laenge der Liste" — grep
+ * zaehlt aber die Definition und jeden Kommentar mit, der den Namen nennt,
+ * und sieht nicht, ob der Name im Aufruf in der Liste steht.
+ */
+function zh_frisch_liste(string $quelle): ?array
+{
+    if (!preg_match('/^const ZF_FRISCH_HANDLUNGEN = \[(.*?)^\];/ms', $quelle, $m, PREG_OFFSET_CAPTURE)) {
+        return null;
+    }
+    $liste = [];
+    /* Ein Eintrag ist `'name' => [` am Zeilenanfang — nicht jeder Schluessel:
+     * `'abbruch' => …` steht beim Blatt auf einer Fortsetzungszeile. */
+    if (preg_match_all("/^\s*'([a-z_]+)'\s*=>\s*\[/m", $m[1][0], $e, PREG_OFFSET_CAPTURE)) {
+        foreach ($e[1] as [$name, $off]) { $liste[$name] = zh_zeile($quelle, $m[1][1] + $off); }
+    }
+    return $liste;
+}
+
+function zh_regel_frischer_code(string $rel, array $sichten, string $quelle): array
+{
+    static $liste = false;
+    if ($liste === false) {
+        $liste = zh_frisch_liste((string)@file_get_contents(ZH_SERVER . '/db.php')) ?? [];
+    }
+    $nummern = [];
+    foreach (zh_frisch_aufrufe($quelle) as [$zeile, $name]) {
+        if ($name === null || !isset($liste[$name])) { $nummern[] = $zeile; }
+    }
+    if ($rel !== 'server/db.php') { return $nummern; }
+
+    if (zh_frisch_liste($quelle) === null) { return array_merge($nummern, [1]); }
+    $zahl = array_fill_keys(array_keys($liste), 0);
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(realpath(ZH_SERVER)));
+    foreach ($it as $f) {
+        if (!$f->isFile() || $f->getExtension() !== 'php' || str_contains($f->getPathname(), '/vendor/')) { continue; }
+        foreach (zh_frisch_aufrufe((string)file_get_contents($f->getPathname())) as [, $name]) {
+            if ($name !== null && isset($zahl[$name])) { $zahl[$name]++; }
+        }
+    }
+    foreach ($zahl as $name => $n) {
+        if ($n !== 1) { $nummern[] = $liste[$name]; }
+    }
+    return $nummern;
+}
+
 function zh_selbstprobe(): int
 {
     $faelle = [

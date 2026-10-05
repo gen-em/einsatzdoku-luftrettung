@@ -327,13 +327,14 @@ ui_seite_start(['titel' => 'Sicherheit']);
       'zahl' => $ereign['gesamt'] > 0 ? (string)$ereign['gesamt'] : null,
       'aktion' => ['text' => 'Im Protokoll', 'href' => 'admin_protokoll.php?r=sicherheit']]); ?>
     <?php /* WAS HIER NICHT STEHT, UND ZWAR AUSDRUECKLICH: Ein Sperrereignis
-             entsteht nur an den fuenf Toepfen MIT LEITER — `login`,
-             `login_ip`, `salt`, `ingest`, `ingest_ip`. Die uebrigen neun
-             (Kopplung, Reset, Demo, Testmail, CSP) sperren ueber den
+             entsteht nur an den acht Toepfen MIT LEITER — `login`,
+             `login_ip`, `salt`, `ingest`, `ingest_ip`, `blatt`, `totp` und
+             seit Schritt 18, SR-04, `notweg`. Die uebrigen sperren ueber den
              Rueckfallweg OHNE Protokollzeile. Ohne diesen Satz liest sich
-             eine kurze Liste als „es war fast nichts", obwohl neun Toepfe gar
-             nicht berichten. */ ?>
-    <p class="feld-hinweis">Vermerkt werden nur die sieben Töpfe mit Sperrleiter,
+             eine kurze Liste als „es war fast nichts", obwohl die meisten
+             Toepfe gar nicht berichten. (Hier stand bis Web 21.13.0 „fuenf"
+             und „neun" — die Zahl im Satz darunter war laengst sieben.) */ ?>
+    <p class="feld-hinweis">Vermerkt werden nur die acht Töpfe mit Sperrleiter,
        nicht jede Sperre.
        <a href="hilfe.php#11-4b-sicherheit-wer-ausgesperrt-ist-und-wie-man-ihn-wieder-hereinlaesst">Handbuch: welche Töpfe</a></p>
     <?php if ($ereign['zeilen'] === []): ?>

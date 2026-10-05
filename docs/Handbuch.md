@@ -445,6 +445,15 @@ Angebot — alles dazu in 3.1f. **Handy und Codes verloren?** Seit Web 20.45.0
 genügt am Code-Schritt der Wiederherstellungsschlüssel vom Notfallblatt
 („Gerät und Codes verloren?", ebenfalls 3.1f).
 
+**Deine Anmeldung hängt an zwei Cookies** (seit Web 21.7.0). Das eine nennt
+die Sitzung, das zweite bestätigt, dass sie zu **diesem** Browser gehört. So
+nützt es niemandem, eine Sitzungsdatei auf dem Server gelesen zu haben — ohne
+das zweite Cookie ist die Sitzung beendet. Beide verschwinden beim Abmelden
+und wenn der Browser schließt. **Nach dem Update auf 21.7.0 meldest du dich
+einmal neu an**; die Anmeldeseite sagt dann „Die Sitzung ließ sich diesem
+Browser nicht zuordnen". Dasselbe siehst du, wenn du die Cookies dieser Seite
+gelöscht hast. Beides ist harmlos: Es geht nichts verloren.
+
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
 den Browser: Ein anderes Gerät oder ein neues Fenster hilft nicht. Sobald die
@@ -607,6 +616,14 @@ führte sonst auf eine Seite, die absagt.
 2. **Die Seite antwortet immer gleich** — „wenn die Adresse frei ist, ist eine
    Mail unterwegs". Das ist Absicht: Sonst könnte jeder durch Ausprobieren
    herausfinden, wer hier ein Konto hat.
+
+   **Während du tippst, löst dein Browser eine kleine Rechenaufgabe** (seit
+   Web 21.14.0). Sie schützt vor Massenanmeldungen und braucht kein Zutun —
+   meist ist sie fertig, bevor du auf „Konto anlegen" drückst. Bist du
+   schneller, steht unter dem Knopf kurz **„Sicherheitsprüfung läuft …"**,
+   und das Formular geht von selbst ab. **Ohne JavaScript geht es nicht**;
+   dann steht dort genau das. Bleibt das Formular länger als zwei Stunden
+   offen, lade die Seite neu, bevor du absendest.
 3. **Den Link aus der Mail anklicken.** Er gilt **48 Stunden**. Dort legst du
    dein Passwort fest; dabei entsteht dein **Wiederherstellungsschlüssel** und
    wird einmalig angezeigt — notiere ihn, ohne ihn kommt nach einem
@@ -809,16 +826,137 @@ Unterschrift gerade nicht prüfen (Betrieb → Status, „Rückweg-Prüfung") �
 setzt die Verwaltung zurück, wie bisher. Dasselbe gilt, wenn auch das
 Notfallblatt fehlt.
 
+**Und wenn es niemanden gibt, der zurücksetzen könnte?** Bist du die
+**einzige** BetreiberIn deiner Anlage und fehlen Gerät, Codes und
+Notfallblatt, gibt es seit Web 21.13.0 einen **Notzugang**: die Seite
+`zweitfaktor_notweg.php` deiner Anlage. Er verlangt drei Dinge — eine Datei,
+die du per FTP ins Anwendungsverzeichnis legst (den Namen nennt die Seite),
+einen Wert aus der Datenbank (im Datenbankwerkzeug deines Hosters) und dein
+Passwort. Wie das im Einzelnen geht, steht in 12.1 unter **„Wenn die einzige
+BetreiberIn den Zweitfaktor verliert"**. Gibt es eine zweite BetreiberIn,
+setzt sie zurück — dann bleibt der Notzugang zu.
+
 **Nach einem Umzug der Anlage auf einen anderen Serverschlüssel** — etwa nach
 einer Wiederherstellung aus einem Komplett-Backup — lässt sich das Geheimnis
-nicht mehr öffnen. Die Anmeldung sagt es und nimmt dann nur noch
-Wiederherstellungscodes; die Karte im Profil sagt es auch. Richte ihn danach
-neu ein (bei Pflichtrollen: erst zurücksetzen lassen).
+nicht mehr öffnen. Die Anmeldung sagt es und nimmt dann
+Wiederherstellungscodes und — seit Web 21.10.0 — deine **Passkeys**; beide
+hängen nicht am Serverschlüssel. Die Karte im Profil sagt es auch. Richte ihn
+danach neu ein (bei Pflichtrollen: erst zurücksetzen lassen). **Ausschalten
+und Zurücksetzen löschen auch die Passkeys** — auch den, mit dem du gerade
+hereingekommen bist. Also: ausschalten (oder zurücksetzen lassen), mit der
+App neu einrichten, dann die Passkeys neu hinzufügen.
 
 **Was er schützt und was nicht.** Er schützt die **Anmeldung** gegen ein
 gestohlenes Passwort. Gegen den Angriff auf eine gestohlene Datenbank hilft
-er nicht — dagegen steht der Server-Anteil (Abschnitt 5). Ein „Gerät 30 Tage
-merken" gibt es nicht; der Code wird bei jeder Anmeldung gefragt.
+er nicht — dagegen steht der Server-Anteil (Abschnitt 5).
+
+**Dieses Gerät merken** (seit Web 21.8.0). Im Code-Schritt steht unter dem
+Feld der Haken **„Dieses Gerät n Tage merken"**. Gibst du den Code aus der
+App mit Haken ein, fragt die Anmeldung an diesem Browser danach so viele
+Tage keinen Code — nur noch das Passwort. Wie viele Tage es sind, stellt die
+BetreiberIn ein, je Rolle: für NutzerInnen sind es von Haus aus 30, für
+Support, Admin und BetreiberIn 7 (Betrieb → Servereinstellungen, Karte
+„Anmeldung", 12.5). Steht dort „aus", gibt es keinen Haken.
+
+- **Nur nach einem Code aus der App oder einem Passkey** (unten). Mit einem
+  Wiederherstellungscode oder dem Wiederherstellungsschlüssel gibt es keinen
+  Haken — dann fehlte gerade das Handy.
+- **Nicht an einem Rechner, den andere mitbenutzen.** Ein gemerkter Browser
+  ist so gut wie dein Handy: Wer dort dein Passwort kennt, ist drin.
+- **Vergessen:** Einstellungen → Profil, Karte „Zweitfaktor", Zeile
+  „Gemerkte Geräte" → **„Alle vergessen"**. Von selbst vergessen werden alle
+  gemerkten Geräte, wenn du dein **Passwort wechselst oder zurücksetzt**, wenn
+  der Zweitfaktor **ausgeschaltet oder zurückgesetzt** wird, und wenn die
+  BetreiberIn die Dauer **kürzer** stellt, als dein Gerät schon gemerkt ist.
+- Der Browser merkt sich das mit einem Cookie; auf dem Server liegt nur ein
+  Prüfwert davon, kein Gerätename und kein Browsertyp.
+
+**Noch einmal den Code — vor wenigen Handlungen** (seit Web 21.9.0). Ein paar
+Handlungen verlangen einen Code, der höchstens **15 Minuten** alt ist: die
+Griffe an den Schlüsseln des Servers und das Schlüsselblatt, auf der
+Kontoseite einer anderen Person Rolle wechseln, Zweitfaktor zurücksetzen und
+Konto löschen, das Ausschalten deines eigenen Zweitfaktors und — seit Web
+21.10.0 — einen Passkey hinzufügen oder entfernen. Hast du dich eben mit dem
+Code oder einem Passkey angemeldet, merkst du davon nichts. Kamst du über ein
+gemerktes Gerät herein oder ist die Anmeldung älter, erscheint die Seite
+**„Code bestätigen"** — Code aus der App (oder ein Wiederherstellungscode)
+eingeben oder **„Mit Passkey bestätigen"**, danach geht es zurück. Eine abgeschickte Handlung wird dabei **nicht
+nachgeholt**: Die Seite sagt „Code bestätigt — bitte die Handlung noch einmal
+auslösen", und ein zweiter Klick tut es. Danach gilt der Code 15 Minuten lang
+auch für die übrigen. Ohne Zweitfaktor fragt nichts nach.
+
+**Passkeys** (seit Web 21.10.0). Statt den Code aus der App abzutippen,
+kannst du die Anmeldung mit einem **Passkey** bestätigen — mit Fingerabdruck,
+Gesicht oder PIN des Geräts, oder mit einem Sicherheitsschlüssel am USB.
+Der Browser fragt danach, und die Antwort passt **nur zu dieser Adresse**:
+Eine nachgemachte Anmeldeseite unter einer anderen Adresse bekommt nichts,
+womit sie etwas anfangen kann — anders als ein Code, den man dort abtippen
+könnte. **Der Code aus der App bleibt aber daneben:** Wer auf einer
+nachgemachten Seite statt des Passkeys den Code eintippt, gibt ihn preis.
+Schau deshalb weiter auf die Adresse, auch mit Passkey.
+
+- **Für wen.** Für alle mit eingeschaltetem Zweitfaktor — ein Passkey kommt
+  **zusätzlich** zur App, nicht an ihre Stelle. Codes, Codeblatt und
+  Wiederherstellungsschlüssel bleiben der Weg, wenn das Gerät fehlt. Das
+  Demo-Konto hat keine.
+- **Hinzufügen.** Einstellungen → Profil, Karte „Zweitfaktor", Abschnitt
+  **„Passkeys"**: eine Bezeichnung, wenn du magst („Handy", „Laptop"; bis
+  40 Zeichen — sonst heißt er „Passkey vom <Datum>"), dann **„Passkey
+  hinzufügen"** und der Dialog deines Browsers. Weil ein neuer zweiter Faktor
+  am Konto hängt, fragt die Seite vorher nach einem **frischen Code**
+  (oben): Steht dort **„Zuerst Code bestätigen"**, führt der Verweis auf die
+  Seite „Code bestätigen" und zurück. Höchstens **zehn** je Konto und
+  Adresse. Eine Mail
+  an deine Adresse sagt, dass einer dazugekommen ist — hat das jemand
+  anderes getan, erfährst du es so.
+- **Anmelden.** Nach dem Passwort steht im Code-Schritt über dem Codefeld
+  **„Mit Passkey bestätigen"**. Er zählt wie ein Code aus der App: Der Haken
+  „Dieses Gerät merken" gilt auch für ihn, und die 15 Minuten des frischen
+  Codes beginnen. Der Code aus der App geht daneben weiter.
+- **Entfernen.** In der Liste je Passkey **„Entfernen"** (mit Rückfrage, auch
+  hier mit frischem Code); eine Mail sagt es. Mit dem Zweitfaktor gehen alle
+  Passkeys: beim **Ausschalten**, beim **Zurücksetzen** durch die Verwaltung
+  und mit dem Wiederherstellungsschlüssel.
+- **Nur für diese Adresse.** Ein Passkey gehört zu der Adresse, unter der die
+  Anlage läuft. Unter einer anderen Adresse — einer Testanlage neben der
+  echten — gibt es ihn nicht, und die Anmeldung fragt nach dem Code. **Nach
+  einem Umzug** auf eine neue Adresse bietet die Anmeldung die alten Passkeys
+  nicht mehr an; die Karte zeigt sie mit der Plakette **„andere Adresse"**
+  und dem Satz „gilt für … — hier nicht nutzbar", und du kannst sie dort
+  entfernen (seit Web 21.11.0). Läuft die Anlage unter einer bloßen
+  IP-Adresse oder ohne HTTPS — oder unter einem Namen mit Umlaut auf einem
+  Server ohne die PHP-Erweiterung `intl` —, gibt es keine Passkeys, und der
+  Abschnitt fehlt.
+- **Wenn der Knopf fehlt:** Der Browser kennt keine Passkeys, JavaScript ist
+  aus, oder das Konto hat keinen für diese Adresse — dann bleibt der Code.
+  Meldet der Browser **„Abgebrochen, abgelaufen oder kein passender Passkey
+  auf diesem Gerät"**, hast du den Dialog geschlossen, zu lange gewartet,
+  oder auf diesem Gerät liegt keiner deiner Passkeys; welches davon, sagt
+  der Browser nicht.
+- **Wenn das Hinzufügen nach dem Dialog scheitert**, bleibt der Knopf grau,
+  und die Meldung endet mit **„Bitte die Seite neu laden."** (seit Web
+  21.11.2). Der Passkey liegt dann womöglich schon auf deinem Gerät, ohne
+  dass die Anlage ihn kennt — ein zweiter Klick legte einen zweiten an. Lade
+  die Seite neu und schau in die Liste; steht er dort nicht, kannst du ihn
+  in der Passkey-Verwaltung deines Geräts löschen.
+- **„Der Passkey wurde abgewiesen — zuletzt auf einem anderen Gerät
+  benutzt"** (seit Web 21.11.0). Jeder Passkey zählt seine Benutzungen mit;
+  läuft die Zahl zurück, war womöglich eine **Kopie** im Spiel. Die Anmeldung
+  weist ihn dann ab, du bekommst eine Mail (höchstens eine am Tag je
+  Passkey), und der Passkey bleibt stehen — du entscheidest. Melde dich mit
+  dem Code an; warst du es nicht, entferne ihn unter Einstellungen → Profil
+  und wechsle dein Passwort, denn wer ihn benutzt hat, kannte es. Passkeys,
+  die über Apple oder Google zwischen deinen Geräten wandern, zählen nicht
+  mit und lösen das nie aus. Ein solcher Fall zählt, wie eine abgelaufene
+  Anfrage, **nicht** als Fehlversuch.
+- Gespeichert wird der **öffentliche** Teil des Schlüssels, seine Kennung,
+  die Adresse, für die er gilt, die Bezeichnung und wann er angelegt und
+  zuletzt benutzt wurde; der geheime Teil verlässt dein Gerät nicht. Kein
+  Gerätename, kein Hersteller. **Dein Gerät** (oder der Schlüsselbund, der
+  deine Passkeys verwaltet) kann seinerseits die Adresse der Anlage, deine
+  Kontoadresse als Namen des Passkeys und eine Nutzerkennung speichern — das
+  ist deine Kontonummer, sonst nichts. Ein Sicherheitsschlüssel ohne eigenen
+  Speicher für Passkeys legt keinen Namen ab.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -3596,10 +3734,12 @@ Darunter:
 | Karte | Was dort steht |
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** in den Reiter Verwaltung, eingegrenzt auf dieses Konto — als Handelnde oder als Betroffene (11.7); was andere Reiter über das Konto führen, etwa ein eingespieltes Konto-Backup im Reiter Sicherung, zeigt dieser Filter nicht. |
-| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg; die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
+| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind, seit Web 21.10.0 dazu die **Zahl der Passkeys** (nur die Zahl, auch die einer früheren Adresse — welche es sind und wie sie heißen, sieht nur die Person selbst). **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg — seit Web 21.8.0 auch die gemerkten Geräte, seit Web 21.10.0 die Passkeys (3.1f); die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich beim nächsten Seitenaufruf. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine BetreiberIn zurück, bei der BetreiberIn eine andere. Der Support sieht die Karte nicht. Seit Web 20.45.0 kann die Person es mit ihrem Notfallblatt auch selbst, am Code-Schritt der Anmeldung (3.1f); die Verwaltung bleibt der Weg, wenn auch das Blatt fehlt. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
+
+**Rolle wechseln, Zweitfaktor zurücksetzen und Konto löschen verlangen seit Web 21.9.0 einen frischen Code** (höchstens 15 Minuten alt, 3.1f). Ist er älter — etwa nach einer Anmeldung über ein gemerktes Gerät —, führt der Knopf zuerst auf „Code bestätigen"; danach steht die Kontoseite wieder da, mit dem Hinweis, die Handlung noch einmal auszulösen. Name und Adresse speichern ohne Rollenwechsel fragt nicht.
 
 > Die Karte **„Abonnement · ab P5"** gibt es seit Web 15.2.0 nicht mehr. Sie
 > war ein reservierter Platz und hat auf jeder Kontoseite eine Zusage
@@ -4105,10 +4245,11 @@ Sperre läuft von selbst ab, und wer sein Passwort neu setzt, ist danach
 ohnehin nicht mehr gesperrt. Es kommt eine Rückfrage, und der Vorgang wird
 **mit deinem Namen** vermerkt — er steht danach in den Ereignissen.
 
-> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die sieben
+> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die acht
 > Töpfe mit Sperrleiter: Anmeldung, Anschluss, Schlüsselableitung, die
-> beiden der Mengenbremse, das Prüfen des Schlüsselblatts und der Code des
-> Zweitfaktors. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
+> beiden der Mengenbremse, das Prüfen des Schlüsselblatts, der Code des
+> Zweitfaktors und — seit Web 21.13.0 — der Notzugang der einzigen
+> BetreiberIn. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
 > CSP-Berichte sperren ebenfalls, schreiben aber keine Zeile — dort eskaliert
 > nichts, und ein Protokoll jedes Tippfehlers würde die Liste zudecken.
 
@@ -4309,6 +4450,48 @@ Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 >
 > Wer die Zeilen ändert, sollte den letzten Absatz stehen lassen: Er ist der
 > Grund, warum die anderen beiden dastehen.
+>
+> **Ein zweiter Absatz, seit Web 21.8.0: die Cookies** (Schritt 18, SR-01
+> und SR-02). Auch er ist eine technische Tatsache und keine Rechtsauskunft;
+> ob ein Hinweis darauf in die Datenschutzerklärung gehört, entscheidet die
+> BetreiberIn. Zum Übernehmen:
+>
+> ```
+> ## Welche Cookies diese Anwendung setzt
+>
+> Die Anwendung setzt nur Cookies, die für die Anmeldung nötig sind, und
+> keine zur Analyse oder Werbung. Das Sitzungscookie hält die Anmeldung,
+> ein zweites bindet sie an diesen Browser; beide enden, wenn der Browser
+> geschlossen oder man abgemeldet wird. Wer beim Zweitfaktor „Dieses Gerät
+> merken" wählt, bekommt ein drittes Cookie, das so viele Tage gilt, wie die
+> BetreiberIn eingestellt hat; auf dem Server liegt davon nur ein Prüfwert,
+> kein Gerätename und kein Browsertyp. Beim Setzen eines Passworts kommt für
+> diesen einen Vorgang ein eigenes Sitzungscookie dazu. Steht die
+> Registrierung offen, setzt auch die Registrierungsseite das Sitzungscookie:
+> Es hält die kleine Rechenaufgabe, die der Browser gegen Massenanmeldungen
+> löst, bis das Formular abgeschickt ist.
+> ```
+>
+> *Der letzte Satz kam mit Web 21.14.0 dazu (Schritt 18, SR-08, E-SR-92).*
+>
+> **Ein dritter Absatz, seit Web 21.10.0: Passkeys** (Schritt 18, SR-09).
+> Ebenso eine technische Tatsache; ob sie in die Datenschutzerklärung
+> gehört, entscheidet die BetreiberIn. Zum Übernehmen:
+>
+> ```
+> ## Passkeys
+>
+> Wer beim Zweitfaktor einen Passkey hinzufügt, hinterlegt auf dem Server
+> dessen öffentlichen Schlüssel, eine vom Gerät vergebene Kennung, die
+> Adresse des Dienstes, für die er gilt, eine selbst gewählte Bezeichnung
+> und die Zeitpunkte des Anlegens und der letzten Benutzung. Der geheime Teil des Schlüssels verlässt das Gerät
+> nicht. Gerätename, Hersteller und Modell werden nicht erhoben. Die
+> Angaben werden gelöscht, wenn der Passkey entfernt, der Zweitfaktor
+> ausgeschaltet oder das Konto gelöscht wird. Das Gerät oder ein
+> Schlüsselbund (etwa bei Apple oder Google) kann dazu die Adresse des
+> Dienstes, die E-Mail-Adresse als Namen und die Kontonummer als
+> Nutzerkennung speichern; darauf hat der Dienst keinen Zugriff.
+> ```
 
 **Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:
 
@@ -4461,7 +4644,7 @@ bestimmten Einsatz geöffnet hat: Du kannst es nicht, und zwar mit Absicht.
 | **Sicherheit** | Sperren, Verlangsamungen, aufgehobene Sperren, blockierte Inhalte (CSP) — mit IP-Adressen | — | — | ja |
 | **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt) — **nie** Empfänger, Betreff oder Inhalt | ja | ja | ja |
 | **Jobs** | jeder Lauf eines Hintergrundjobs, Fehler rot | — | ja | ja |
-| **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt | — | ja | ja |
+| **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt; seit Web 21.12.0 der Wechsel des Serverschlüssels — gewechselt (orange), umgehüllt (blau, mit Zahlen), bisherigen entfernt | — | ja | ja |
 | **Ziele** | was auf ein Backup-Ziel ging und was dort gelöscht wurde | — | — | ja |
 | **System** | Fehler und Störungen der Anwendung, je mit Kennung | — | — | ja |
 | **Archiv** (rechts abgesetzt) | die versiegelten Archive, siehe unten | — | — | ja |
@@ -4553,13 +4736,17 @@ sagt, wer es war.
 |---|---|
 | **auf dem Ziel** | liegt auch auf einem Backup-Ziel |
 | **nur lokal** | liegt nur hier — der Versand ist aus, oder er ist noch nicht gelaufen |
+| **bisheriger Schlüssel** | nur während eines Wechsels des Serverschlüssels (12.5): liegt noch unter dem bisherigen, bis der Job es umgehüllt hat — dann bekommt es einen neuen Namen und geht noch einmal auf das Ziel. Bis dahin kein Knopf „Herunterladen"; ohne eingerichteten Auslöser treibt es nur *Jetzt weiterarbeiten* voran (seit Web 21.12.1) |
 | **anderer Schlüssel** | wurde mit einem früheren Serverschlüssel versiegelt; öffnen lässt es sich nur mit dem Schlüssel von damals (Wiederanlaufpaket, Schlüsselblatt mit der genannten Kennung) |
 
 Unter jeder Zeile stehen die **Kennung des Schlüssels** (acht Zeichen am
 Stück, so wie auf dem Schlüsselblatt — leg es zum Vergleichen daneben), die
 Zahl der Einträge und die Größe. Trägt ein Archiv einen **anderen
 Schlüssel**, steht über der Liste eine Warnung mit der Kennung, und die Zeile
-hat keinen Knopf „Herunterladen" — hier ließe sich nichts öffnen. Ein Archiv
+hat keinen Knopf „Herunterladen" — hier ließe sich nichts öffnen. Liegt es
+während eines Wechsels noch unter dem **bisherigen**, steht dort statt der
+Warnung ein Hinweis: Der Job hüllt es um, danach lässt es sich wieder
+herunterladen. Ein Archiv
 fasst höchstens **32 MB** Text; was darüber hinausginge — praktisch nur bei
 einem Angriff, der Zehntausende Sperren schreibt —, wird nicht archiviert.
 Das steht dann in der Übersicht im ZIP, nicht auf der Seite. Der
@@ -4677,6 +4864,9 @@ BetreiberInnen. **Orange und nicht rot**, weil jede neue Anlage mit genau
 einer BetreiberIn beginnt — es arbeitet ja. Der Zähler am Menüpunkt „Status"
 zählt die Zeile mit und steht deshalb auf einer Anlage mit einer BetreiberIn
 dauerhaft auf mindestens 1; das ist gewollt, bis eine Vertretung da ist.
+Verliert die einzige BetreiberIn den Zweitfaktor samt Codes und Notfallblatt,
+hilft seit Web 21.13.0 der Notzugang (unten) — er ersetzt die Vertretung
+nicht, die Zeile bleibt deshalb orange.
 
 **Die Zeile „Rückweg-Prüfung"** (seit Web 20.43.0) sagt, ob diese Anlage den
 Rückweg beim Zweitfaktor prüfen kann — den Weg, auf dem jemand mit dem
@@ -4761,6 +4951,53 @@ die Servereinstellungen.*
 Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
 Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; die
 Zeile „Datenbank" sagt, wann sie entstanden ist.
+
+#### Wenn die einzige BetreiberIn den Zweitfaktor verliert (seit Web 21.13.0)
+
+Gerät weg, Wiederherstellungscodes weg, Notfallblatt weg — und es gibt keine
+zweite BetreiberIn, die auf der Kontoseite zurücksetzen könnte. Dafür gibt es
+die Seite **`zweitfaktor_notweg.php`** deiner Anlage (ohne Anmeldung
+erreichbar, auch im Wartungsmodus). Sie verlangt drei Dinge, die nur du hast:
+
+1. **Eine Datei im Anwendungsverzeichnis.** Die Seite nennt einen Namen wie
+   `zweitfaktor-notweg-3f9c….txt`. Lege mit deinem FTP-Programm oder dem
+   Dateimanager des Hosters eine Datei mit **genau diesem Namen** in das
+   Verzeichnis, in dem auch `config.php` liegt. Was darin steht, spielt
+   keine Rolle; eine leere Datei genügt. Der Name gehört zu diesem
+   Browserfenster — schließt du den Browser oder bleibt die Seite lange
+   liegen, zeigt sie danach einen anderen Namen, und du benennst die Datei
+   um.
+2. **Den Wert aus der Datenbank.** Im Datenbankwerkzeug deines Hosters
+   (meist phpMyAdmin) die Abfrage
+   `SELECT v FROM app_state WHERE k = 'notzugang_geheim';` ausführen und die
+   64 Zeichen abschreiben oder hineinkopieren. Leerzeichen und Bindestriche
+   zählen nicht. Der Wert steht nirgends in der Anwendung, auch nicht auf dem
+   Schlüsselblatt.
+3. **Deine Adresse und dein Passwort.**
+
+Dann „Zweitfaktor zurücksetzen". Danach ist der Zweitfaktor aus, die Datei ist
+gelöscht, der Wert ist neu gewürfelt (der alte gilt nicht mehr), eine Mail
+geht an deine Adresse, und der Schritt steht im Protokoll. Du landest auf der
+Anmeldung, meldest dich mit dem Passwort an und richtest den Zweitfaktor
+sofort neu ein.
+
+**Die Seite sagt nicht, was nicht stimmte.** Ob die Datei fehlt, der Wert
+falsch ist, das Passwort nicht passt oder es eine zweite BetreiberIn gibt —
+die Antwort ist immer derselbe Satz: „Der Notzugang steht für dieses Konto
+nicht bereit." Sonst könnte jeder, der die Adresse kennt, ausprobieren, wie
+deine Anlage aussieht. Nach fünf Versuchen in einer Stunde ist die Adresse
+gesperrt; die Seite sagt, bis wann.
+
+**Was er schützt und was nicht.** Wer nur Dateien deines Webspace **lesen**
+kann — etwa aus einer Sicherung des Hosters —, kommt ohne den Wert aus der
+Datenbank nicht hinein; wer nur die Datenbank hat, nicht ohne die Datei. Wer
+auf deinem Webspace **schreiben** kann, kann dort aber auch ein eigenes
+Programm ablegen und hat damit alles — dagegen hilft keine Seite der
+Anwendung. Halte deshalb die Zugänge beim Hoster so sicher wie dein
+Passwort. **Und:** Hast du auch den Zugang zur Datenbank verloren, hilft der
+Notzugang nicht — dann führt der Weg über den Hoster und das
+Wiederanlaufpaket. Das Runbook in `docs/Technik.md` 7 nennt alle vier Wege in
+ihrer Reihenfolge, als letzten das SQL von Hand.
 
 #### Die Zeile „Verbindungen" (seit Web 20.13.0)
 
@@ -5275,6 +5512,12 @@ verwerfen sollte.
 
 ### 12.5 Servereinstellungen
 
+**Nach dem Speichern steht die Meldung in der Karte, in der du geklickt
+hast**, und die Seite springt dorthin (seit Web 21.8.0). „Neu laden" schickt
+danach nichts noch einmal ab — bis dahin wiederholte es die Handlung, etwa
+eine Rundmail. Hat die Seite eine Eingabe abgewiesen, bleibt sie mit dem
+Getippten stehen, und die Meldung steht oben.
+
 #### Karte „Ankündigung" (seit Web 20.38.0)
 
 Ganz oben: Hier setzt du den Streifen, der über jeder Seite steht, und
@@ -5291,7 +5534,8 @@ Geheimnisse, und beide stehen in `config.php` — nicht in der Datenbank:
 
 - der **Serverschlüssel** versiegelt, was der Server ohne Browser lesen können
   muss: die Zugangsdaten der Backup-Ziele, das Komplett-Backup, die
-  Konto-Backups und die Archive des Protokolls;
+  Konto-Backups, die Archive des Protokolls und die Geheimnisse des
+  Zweitfaktors (die letzten fehlten hier bis Web 21.12.0);
 - der **Server-Anteil** geht in den Datenschlüssel *jedes Kontos* ein. Der
   Server kann damit trotzdem nichts öffnen — aber ein Datenbankabzug allein
   reicht nicht mehr, um ein Passwort durchzuprobieren.
@@ -5303,8 +5547,19 @@ Kennung auf dem Ausdruck in der Betriebsakte mit der auf dem Bildschirm
 steht, landet früher oder später in einem Screenshot. Die einzige Seite, die
 den Wert zeigt, ist das Schlüsselblatt.
 
-**Drucke das Schlüsselblatt, sobald du einen Anteil angelegt oder gewechselt
-hast.** Der Knopf steht auf der Karte. Was darauf steht und wohin es gehört,
+**Jeder Griff an den Schlüsseln und das Schlüsselblatt verlangen einen
+frischen Code** (seit Web 21.9.0) — einen, der höchstens 15 Minuten alt ist
+(3.1f). Ist er älter, führt der Knopf auf „Code bestätigen"; nach dem Code
+steht das Blatt da, bei einem Griff die Karte mit dem Hinweis, ihn noch
+einmal auszulösen. „Abbrechen" führt ohne Code in die Karte zurück. Die
+Bestätigung ist auch im Wartungsmodus erreichbar.
+
+**Drucke das Schlüsselblatt, sobald du einen Wert angelegt oder gewechselt
+hast.** Der Knopf steht auf der Karte. Nach jedem Wechsel — des Anteils wie
+des Serverschlüssels — fragt die Anlage seit Web 21.12.0 **sofort** nach dem
+Blatt, bei der nächsten Anmeldung jeder BetreiberIn, und sagt voran: „Ein
+Wert hat gewechselt — drucke das Blatt neu" (unten, „Die Rückfrage"). Bis
+dahin kam die Frage erst im nächsten Quartal. Was darauf steht und wohin es gehört,
 sagt das Blatt selbst; das Wichtigste in einem Satz: **zwei Ausdrucke, zwei
 getrennte Orte** — Betriebsakte und Passwortmanager der BetreiberIn. Nicht in
 den Serverordner, nicht in dasselbe Backup. Das Blatt soll genau das
@@ -5316,7 +5571,8 @@ den Serverordner, nicht in dasselbe Backup. Das Blatt soll genau das
 |---|---|---|
 | **nicht eingerichtet** | „nicht eingerichtet" | anlegen — bis dahin läuft alles wie vor Web 20.0.0 |
 | **bereit** | Kennung | nichts; das Blatt drucken, falls noch nicht geschehen |
-| **Rotation läuft** | neue und alte Kennung, dazu wie viele Konten noch auf dem alten stehen | warten, bis die Zahl auf null steht — jedes Konto stellt beim nächsten Anmelden von selbst um —, dann „Alten Anteil entfernen" |
+| **Rotation läuft** (Anteil) | neue und alte Kennung, dazu wie viele Konten noch auf dem alten stehen | warten, bis die Zahl auf null steht — jedes Konto stellt beim nächsten Anmelden von selbst um —, dann „Alten Anteil entfernen" |
+| **Wechsel** (Serverschlüssel, seit Web 21.12.0) | neue und bisherige Kennung, „Umhüllung: noch n von m" (ganz am Anfang auch „wird gezählt"), „Bevor der bisherige gehen darf: k von 3" | den drei Punkten folgen (unten), dann „Alten Schlüssel entfernen" |
 | **abweichend** | vorhandene **und** erwartete Kennung | den richtigen Wert *Nachtragen vom Blatt*; nur wenn er unwiederbringlich weg ist: Neuanfang |
 
 **Nachtragen vom Blatt ist sicher.** Der Server rechnet die Kennung des
@@ -5328,7 +5584,57 @@ Wert ruhig in den Vierergruppen ab, in denen er auf dem Blatt steht.
 **„Server-Anteil wechseln"** legt einen neuen an und lässt den alten stehen,
 bis kein Konto mehr auf ihm steht. Danach **ein neues Blatt drucken und das
 alte vernichten**: Ein altes Blatt ist nicht nur überflüssig, es ist
-irreführend — es zeigt einen Wert, der nichts mehr öffnet.
+irreführend — es zeigt einen Wert, der nichts mehr öffnet. Während eines
+Wechsels des Serverschlüssels fehlt der Knopf: Beide Rotationen laufen
+nacheinander, sonst trüge das Blatt vier Werte und zwei Seiten.
+
+**„Serverschlüssel wechseln"** (seit Web 21.12.0) — für den Verdacht, dass
+das Blatt oder `config.php` in falsche Hände kam. **Der Vorgang in fünf
+Sätzen:** Du setzt den Haken, dass die Kopien auf dem Backup-Ziel unter dem
+bisherigen bleiben, und bestätigst; ab da versiegelt die Anlage mit einem
+neuen, und der bisherige bleibt als zweiter Wert in `config.php` stehen.
+Dann **druckst du sofort das Blatt neu** — es trägt jetzt beide. Die Anlage
+hüllt in Häppchen um, was sie erreicht (Zugänge der Ziele,
+Zweitfaktor-Geheimnisse, Konto-Backups, Archive), und weist jedes Stück mit
+dem neuen nach; *Jetzt weiterarbeiten* treibt es an — und ist ohne
+eingerichteten Auslöser der einzige Weg für Konto-Backups und Archive. Danach merkt sie
+selbst ein Komplett-Backup vor (ohne eingerichteten Auslöser: *Jetzt
+sichern*), und du beantwortest die Rückfrage zum Blatt. Erst wenn alle
+drei stehen, erscheint *Alten Schlüssel entfernen*. Jede BetreiberIn bekommt
+beim Beginn und beim Abschluss eine Mail. Zum Schluss gehört eine frische
+`config.php` ins Wiederanlaufpaket (12.6).
+
+**Seit Web 21.12.1** beginnt der Nachweis erst **zehn Minuten** nach dem
+Wechsel — so lange kann ein Vorgang, der vorher begann, noch mit dem
+bisherigen Schlüssel versiegeln, und der Nachweis soll ihn sehen. Bis dahin
+zeigt die Karte „Nachweis ab HH:MM". Ein Stück, das sich nicht umhüllen
+lässt, steht mit Grund in der Zeile **„Ließen sich nicht umhüllen"** (die
+ersten zwanzig mit Namen, dahinter „und n weitere"); es
+liegt noch unter dem bisherigen, die Anlage versucht es immer wieder, und
+der bisherige bleibt, bis es umgehüllt oder fort ist. Ein kaputtes
+Konto-Backup darfst du löschen und neu erzeugen. Steht ein Wechsel von
+Hand in `config.php` — jemand hat den Wert dort eingetragen, ohne diese
+Karte —, behandelt die Anlage ihn wie einen über die Karte: Eintrag im
+Protokoll, Mail an jede BetreiberIn, die Rückfrage zum Blatt. Die Mail sagt
+dann: von Hand eingetragen — oder der Beginn über die Karte ist gescheitert;
+im zweiten Fall steht es im Reiter System.
+
+**„Der Job Schlüsselwechsel arbeitet gerade …"** heißt: Ein anderer Griff an
+die Schlüssel oder ein Häppchen des Jobs hält die Sperre. Meist ist sie nach
+Sekunden frei. Ist ein Häppchen an der Zeitgrenze des Hosters gestorben,
+bleibt sie bis zu einer Stunde stehen — die Meldung nennt, seit wann, und
+wann sie spätestens frei ist. Bis dahin lässt sich an den Schlüsseln nichts
+ändern, auch nicht nachtragen.
+
+**Die Blatt-Regel ist hier umgekehrt: Das bisherige Blatt NICHT
+vernichten.** Beim Anteil öffnet ein altes Blatt nichts mehr. Beim
+Serverschlüssel öffnet es alles, was vor dem Wechsel versiegelt wurde und
+nicht umgehüllt werden kann — die Komplett-Stände von vorher und alles, was
+schon auf dem Backup-Ziel liegt. Es gehört in die Betriebsakte, solange
+dort etwas liegt, das nur es öffnet; die Listen zeigen solche Stücke mit
+„anderer Schlüssel". Was sich mit **keinem** der beiden öffnen lässt,
+nennt die Karte — es war vorher schon stumm und hält den Wechsel nicht
+auf.
 
 **„Server-Anteil neu erzeugen" ist die letzte Tür.** Sie steht nur offen, wenn
 der Anteil ohnehin schon abweicht. Danach muss **jede NutzerIn** ihr Passwort
@@ -5536,6 +5842,23 @@ Demo-Konto zum Vorzeigen haben.
 **Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht;** die
 Zugangsdaten stehen in diesem Handbuch und im README.
 
+#### Karte „Anmeldung" (seit Web 21.8.0)
+
+Wie lange ein Browser nach einem Code aus der App als bekannt gilt — **„Gerät
+merken"** beim Zweitfaktor (3.1f). Zwei Auswahlfelder, eines für
+**NutzerInnen** (von Haus aus 30 Tage) und eines für **Support, Admin und
+BetreiberIn** (7 Tage — wer mehr darf, soll öfter den Code zeigen). Zur Wahl
+stehen aus, 1, 7, 14, 30 und 90 Tage.
+
+**Kürzer stellen wirkt sofort**, auch für Geräte, die schon gemerkt sind: Wer
+von 30 auf 7 Tage geht, meldet jedes Gerät ab, das älter als 7 Tage ist.
+**„aus"** meldet alle gemerkten Geräte der Gruppe auf einmal ab und nimmt den
+Haken aus dem Code-Schritt. Eine Änderung steht im Protokoll (Verwaltung,
+„Einstellungen").
+
+**Einen Wert je Person gibt es nicht** — eine Einstellung, die kaum jemand
+ändert, ist die Pflege nicht wert.
+
 #### Karte „Protokoll" (seit Web 20.39.0)
 
 Wie lange Betriebsereignisse liegen — in der Datenbank und im Archiv. Bis Web
@@ -5558,7 +5881,11 @@ die Seite. Was ins Archiv geht und was nicht: 11.7.
 Die Karte „Schlüssel des Servers" druckt es mit **„Schlüsselblatt drucken"**.
 Es ist die einzige Seite, die die Werte selbst zeigt, und es passt auf genau
 **eine A4-Seite** (seit Web 21.1.0 auch mit drei Werten während einer
-Rotation). Oben stehen Bildmarke und Kurzname der Installation, rechts
+Rotation — seit Web 21.12.0 kommt während eines Wechsels des
+Serverschlüssels die Kachel „Serverschlüssel (bisheriger)" dazu, mit dem
+Satz „Dieses Blatt nach dem Wechsel NICHT vernichten": drei Kacheln, zwei
+auf einer Anlage ohne Server-Anteil; die beiden Rotationen laufen nur
+nacheinander, sonst wären es vier Kacheln und zwei Seiten). Oben stehen Bildmarke und Kurzname der Installation, rechts
 Adresse und Druckzeit; auf einer Anlage mit Etikett — etwa *Staging* — steht
 darunter eine rot umrandete Zeile, die auch schwarzweiß sagt, dass das Blatt
 nicht zur Produktivanlage gehört.
@@ -5577,7 +5904,10 @@ beantwortet. **„Später"** schiebt sie bis zur nächsten Anmeldung — nur fü
 diese Sitzung, damit eine andere BetreiberIn sie nicht mit weggeschoben
 bekommt. Nach **drei** falschen Antworten ist der Weg für eine Weile gesperrt
 (die erste Sprosse der Sperrleiter, 11.4a). Ist das Blatt verlegt, druckt
-man es neu — das ändert keinen Schlüssel.
+man es neu — das ändert keinen Schlüssel. **Nach jeder Rotation kommt die
+Frage sofort** (seit Web 21.12.0), mit dem Satz voran „Ein Wert hat
+gewechselt — drucke das Blatt neu" und während eines Wechsels mit der
+Kennung des bisherigen; gefragt wird nach den **heutigen** Werten.
 
 ### 12.6 Komplett-Backup
 
@@ -5627,7 +5957,9 @@ Backup-Ziel. Das alles zusammen heisst **Wiederanlaufpaket**, und ohne es
 nützt das beste Backup nichts.
 
 **Seit Web 19.7.0 hat es vier Stücke, nicht drei** — der **Server-Anteil** ist
-dazugekommen (12.5). Die vier:
+dazugekommen (12.5). **Nach einem Wechsel des Serverschlüssels** gehört eine
+frische `config.php` hinein; die alte trägt den bisherigen Schlüssel und wird
+als „bisherig" gekennzeichnet. Die vier:
 
 1. die Datei `config.php` selbst,
 2. der **Serverschlüssel** darin — er öffnet das Komplett-Backup,
@@ -5642,7 +5974,8 @@ Wiederherstellungsschlüssel wieder herein und vergibt dabei ein neues
 Passwort. Lästig für alle, aber kein Datenverlust.
 
 Beide stehen auf dem **Schlüsselblatt** (12.5) — drucken, sobald ein Anteil
-angelegt oder gewechselt wurde, zweimal und an zwei Orten.
+angelegt oder gewechselt wurde oder der Serverschlüssel gewechselt hat,
+zweimal und an zwei Orten.
 
 **Der Schnappschuss ist nicht scharf.** Der Dump entsteht über mehrere Läufe
 hinweg; eine Zeile, die währenddessen entsteht, kann enthalten sein oder
@@ -5676,6 +6009,17 @@ es im Runbook, `docs/Technik.md`, Abschnitt 7.
 dem Serverschlüssel" lässt sich nur mit *der* `config.php` öffnen, die beim
 Erzeugen galt. Ist sie verloren, hilft das Backup nicht — deshalb gehört sie
 ins Wiederanlaufpaket, getrennt vom Server aufbewahrt.
+
+**Nach einem Wechsel des Serverschlüssels** (12.5) werden die Stände nicht
+umgehüllt. Die Liste zeigt einen Stand von vorher mit **„bisheriger
+Schlüssel"**, solange der Wechsel läuft — er lässt sich dann weiter
+herunterladen und einspielen —, und danach mit **„anderer Schlüssel"**:
+Öffnen lässt er sich dann nur noch mit dem Wert vom bisherigen Blatt
+(Runbook, `docs/Technik.md` 7); hier herunterladen lässt er sich dann nicht
+mehr, nur löschen. Neue Stände tragen seit Web 21.12.0 die Kennung ihres
+Schlüssels im Kopf. Wechselt der Schlüssel, während ein Stand gerade
+versiegelt wird, fängt die Anlage das Versiegeln mit dem neuen von vorn an
+(seit Web 21.12.1).
 
 **Es wird nichts zurückgenommen.** Scheitert das Einspielen auf halbem Weg,
 steht die Datenbank halb da. Ein neuer Versuch braucht dann eine wieder
@@ -5720,6 +6064,11 @@ Was dabei zu wissen ist:
   mitgesichert wird: Wer den Datenbankdump hat, hat die Passwörter nicht.
   Ohne Serverschlüssel lässt sich kein Ziel anlegen; geht er verloren, sind
   die Zugangsdaten neu einzutragen.
+- **Ein Wechsel des Serverschlüssels (12.5) erreicht das Ziel nicht.** Die
+  Zugangsdaten hier werden umgehüllt; was **drüben** liegt, bleibt unter dem
+  bisherigen und öffnet sich nur mit dem Wert vom bisherigen Blatt. Die
+  Archive des Protokolls gehen nach dem Umhüllen unter neuem Namen noch
+  einmal hinaus — drüben liegt dann je eines unter beiden Schlüsseln.
 - **Der Versand schickt, was am Ziel fehlt** — verglichen werden Name und
   Größe. Eine abgebrochene Übertragung wird deshalb beim nächsten Lauf
   wiederholt und gilt nicht als erledigt. Wann er läuft, entscheidet der

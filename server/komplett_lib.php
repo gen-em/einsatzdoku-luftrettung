@@ -942,6 +942,18 @@ function komp_kopf_bauen(array $angaben, ?array $kdf): string
         'block'    => KOMP_BLOCK,
         'kdf'      => $kdf,
     ];
+    /* DIE KENNUNG DES SERVERSCHLÜSSELS (seit Web 21.12.0, SR-03, F-SR-11,
+     * E-SR-67). Bis dahin zeigte nur der Versuch am ersten Block, ob ein
+     * Stand zum heutigen oder zum bisherigen Schlüssel gehört. Mit ihr liest
+     * sich die Liste ohne Öffnen, und die Bedingung „ein Stand unter dem
+     * neuen" des Wechsels hat etwas, woran sie ansetzt. Sie steht im Kopf und
+     * damit über die Bindung in den Zusatzdaten jedes Blocks: Wer sie ändert,
+     * macht die Datei unlesbar, statt sie einem anderen Schlüssel
+     * zuzuschreiben. Ein Stand mit Passphrase trägt keine — er hängt an
+     * keinem Schlüssel dieser Anlage. */
+    if ($kdf === null) {
+        $kopf['kennung'] = $angaben['kennung'] ?? serverschluessel_kennung();
+    }
     $j = json_encode($kopf, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($j === false || str_contains($j, "\n")) {
         throw new RuntimeException('Der Dateikopf liess sich nicht bilden.');
@@ -1134,6 +1146,57 @@ function komp_oeffnen(string $pfad, string $schluessel, callable $hinaus): int
     }
     if ($i === 0) { throw new RuntimeException('Die Datei enthält keinen einzigen Block.'); }
     return $i;
+}
+
+/**
+ * Lässt sich der ERSTE Block dieser Datei mit diesem Schlüssel öffnen?
+ *
+ * Die Antwort auf „welcher Schlüssel gehört zu diesem Stand", wenn der Kopf
+ * keine Kennung trägt (Stände von vor Web 21.12.0) — und die Probe hinter
+ * der Kennung, wenn er eine trägt: Ein Kopf ist eine Behauptung, der erste
+ * Block der Beweis. Kostet einen Block (256 KiB), nicht die Datei.
+ */
+function komp_erster_block_oeffnet(string $pfad, string $schluessel): bool
+{
+    $k = komp_kopf_lesen($pfad);
+    if ($k === null) { return false; }
+    $fh = @fopen($pfad, 'rb');
+    if ($fh === false) { return false; }
+    try {
+        fseek($fh, $k['ab']);
+        $laengeRoh = fread($fh, 4);
+        if ($laengeRoh === false || strlen($laengeRoh) < 4) { return false; }
+        $n = (int)(unpack('N', $laengeRoh)[1] ?? 0);
+        if ($n <= 0 || $n > KOMP_BLOCK) { return false; }
+        $nonce   = (string)fread($fh, KOMP_NONCE_LEN);
+        $tag     = (string)fread($fh, KOMP_TAG_LEN);
+        $chiffre = (string)fread($fh, $n);
+        $letzte  = ftell($fh) >= (int)filesize($pfad);
+    } finally {
+        fclose($fh);
+    }
+    return openssl_decrypt($chiffre, 'aes-256-gcm', $schluessel, OPENSSL_RAW_DATA,
+                           $nonce, $tag, komp_aad($k['bindung'], 0, $letzte)) !== false;
+}
+
+/**
+ * Welcher Serverschlüssel öffnet diesen Stand — der aktuelle, der bisherige
+ * (während eines Wechsels) oder keiner?
+ *
+ * ERST DER NEUE, DANN DER BISHERIGE — dieselbe Reihenfolge wie
+ * `sk_oeffnen()` (SR-03, E-SR-08). Komplett-Stände werden nicht umgehüllt
+ * (E-SR-21); ein Stand von vor dem Wechsel öffnet deshalb mit dem
+ * bisherigen, solange er in `config.php` steht, und danach nur noch mit dem
+ * Wert vom bisherigen Blatt (E-SR-10).
+ *
+ * @return array{0:?string, 1:string} [Schlüssel oder null, 'neu'|'alt'|'keiner']
+ */
+function komp_serverschluessel_fuer(string $pfad): array
+{
+    foreach (['neu' => serverschluessel(), 'alt' => serverschluessel_alt()] as $welcher => $s) {
+        if ($s !== null && komp_erster_block_oeffnet($pfad, $s)) { return [$s, $welcher]; }
+    }
+    return [null, 'keiner'];
 }
 
 /* ---- Der Auftrag: ein Lauf in Haeppchen ------------------------------------ */
@@ -1353,6 +1416,53 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
     }
 }
 
+/**
+ * Passt der gemerkte Kopf noch zum Schlüssel, der jetzt in `config.php`
+ * steht? Wenn nicht: Kopf mit der heutigen Kennung neu, Versiegelung von vorn.
+ *
+ * WECHSELT DER SCHLÜSSEL ZWISCHEN ZWEI SIEGEL-HÄPPCHEN (H-SR-06, F-SR-79,
+ * E-SR-72). Jedes Häppchen ist ein eigener Prozess und nimmt den Schlüssel,
+ * der gerade in `config.php` steht; der Kopf mit der Kennung entstand beim
+ * Übergang vom Dump. Bis Web 21.12.0 lagen danach die ersten Blöcke unter dem
+ * bisherigen, die übrigen unter dem neuen, und der Kopf nannte den
+ * bisherigen: Die Liste zeigte „bisheriger Schlüssel", das Einspielen brach
+ * mitten in der Datei ab, und die Aufbewahrung verdrängte für diesen Stand
+ * einen lesbaren. Fiel der Wechsel genau zwischen Dump und erstes
+ * Siegel-Häppchen, log der Kopf. Der Wechsel wartet nicht auf das Backup —
+ * im Ernstfall zählt jede Minute —; das Backup fängt die Versiegelung neu
+ * an, wie der Archivjob es auch tut. Der Dump bleibt: Er ist Klartext und
+ * hängt an keinem Schlüssel. Ein Kopf mit Passphrase (`kdf`) trägt keine
+ * Kennung und bleibt, wie er ist.
+ *
+ * Eine eigene Funktion, damit die Schlüsselwechselprobe genau diese Stelle
+ * misst, ohne die ganze Datenbank abzuschreiben.
+ *
+ * DIE KENNUNG KOMMT VOM AUFRUFER, AUS DEM SCHLÜSSEL, MIT DEM ER SIEGELT
+ * (Nachprüfung H-SR-06, F-SR-87) — nicht aus `konfig()`. Beide sagen heute
+ * dasselbe, aber nur, weil `config_gemerktes_verwerfen()` beide zugleich
+ * verwirft; ein Kopf mit der neuen Kennung über Blöcken unter dem alten wäre
+ * ein Kopf, der lügt.
+ *
+ * @return bool true, wenn neu begonnen wird
+ */
+function komp_kopf_angleichen(array &$z, string $kennungJetzt): bool
+{
+    $kopf = json_decode(rtrim((string)($z['kopfzeile'] ?? ''), "\n"), true);
+    if (!is_array($kopf) || ($kopf['kdf'] ?? null) !== null
+        || ($kopf['kennung'] ?? null) === $kennungJetzt) {
+        return false;
+    }
+    $kopf['kennung'] = $kennungJetzt;
+    $j = json_encode($kopf, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($j === false) {
+        throw new RuntimeException('Der Dateikopf liess sich nicht neu bilden.');
+    }
+    $z['kopfzeile'] = $j . "\n";
+    $z['siegel_i'] = 0;
+    $z['siegel_bytes'] = 0;
+    return true;
+}
+
 /** Der eigentliche Lauf; `komp_schub()` raeumt darum herum auf. */
 function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserve): array
 {
@@ -1412,6 +1522,7 @@ function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
             throw new RuntimeException('Der Serverschlüssel ist verschwunden; '
                 . 'das Backup lässt sich nicht versiegeln.');
         }
+        komp_kopf_angleichen($z, (string)schluessel_kennung(bin2hex($schluessel)));
         $ziel = $bauPfad . '/ziel.edk';
         $e = komp_siegel_schub($roh, $ziel, $schluessel, (string)$z['kopfzeile'],
                                $z, $zeitLinks, $reserve);
@@ -1526,9 +1637,14 @@ function komp_kdf_runden(): int
 function komp_ausgeben_klar(string $datei, callable $hinaus): int
 {
     if (!komp_name_gueltig($datei)) { throw new RuntimeException('Unbekanntes Backup.'); }
-    $schluessel = serverschluessel();
-    if ($schluessel === null) {
+    if (serverschluessel() === null) {
         throw new RuntimeException('Ohne Serverschlüssel lässt sich das Backup nicht öffnen.');
+    }
+    [$schluessel] = komp_serverschluessel_fuer(komp_wurzel() . '/' . $datei);
+    if ($schluessel === null) {
+        throw new RuntimeException('Dieser Stand ist mit einem anderen Serverschlüssel versiegelt — '
+            . 'weder dem heutigen noch dem bisherigen. Er öffnet nur mit dem Wert vom Blatt, '
+            . 'das damals galt.');
     }
     return komp_oeffnen(komp_wurzel() . '/' . $datei, $schluessel,
                         function (string $klar) use ($hinaus): void { $hinaus($klar); });
@@ -1557,11 +1673,15 @@ function komp_ausgeben_passphrase(string $datei, string $passwort, callable $hin
     if (strlen($passwort) < 8) {
         throw new RuntimeException('Die Passphrase muss mindestens 8 Zeichen haben.');
     }
-    $schluessel = serverschluessel();
-    if ($schluessel === null) {
+    if (serverschluessel() === null) {
         throw new RuntimeException('Ohne Serverschlüssel lässt sich das Backup nicht öffnen.');
     }
     $quelle = komp_wurzel() . '/' . $datei;
+    [$schluessel] = komp_serverschluessel_fuer($quelle);
+    if ($schluessel === null) {
+        throw new RuntimeException('Dieser Stand ist mit einem anderen Serverschlüssel versiegelt — '
+            . 'weder dem heutigen noch dem bisherigen.');
+    }
     $alt = komp_kopf_lesen($quelle);
     if ($alt === null) { throw new RuntimeException('Das ist kein Komplett-Backup im Format EDKOMP1.'); }
 
@@ -1595,7 +1715,7 @@ function komp_ausgeben_passphrase(string $datei, string $passwort, callable $hin
  * Passphrase. Wer das raten muesste, raete beim Wiederanlauf — also an dem
  * einen Tag, an dem niemand Zeit zum Raten hat.
  */
-function komp_schluessel_fuer(array $kopf, ?string $passwort): string
+function komp_schluessel_fuer(array $kopf, ?string $passwort, ?string $pfad = null): string
 {
     $kdf = $kopf['kdf'] ?? null;
     if ($kdf === null) {
@@ -1603,6 +1723,13 @@ function komp_schluessel_fuer(array $kopf, ?string $passwort): string
         if ($s === null) {
             throw new RuntimeException('Diese Datei ist mit dem Serverschlüssel versiegelt; '
                 . 'er steht aber nicht in config.php. Er gehört ins Wiederanlaufpaket.');
+        }
+        /* WÄHREND EINES WECHSELS (SR-03) auch der bisherige — am ersten Block
+         * entschieden, wenn die Datei bekannt ist. Ohne Datei bleibt es der
+         * aktuelle; `komp_oeffnen()` sagt dann, dass er nicht passt. */
+        if ($pfad !== null) {
+            [$passend] = komp_serverschluessel_fuer($pfad);
+            if ($passend !== null) { return $passend; }
         }
         return $s;
     }

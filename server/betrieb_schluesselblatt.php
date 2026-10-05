@@ -4,6 +4,10 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/instanz_lib.php';
 require_once __DIR__ . '/umgebung_lib.php';   // Vorsatz im Titel (P5c/AP1, E-P5c-70)
 require_betreiberin();
+/* EIN FRISCHER CODE VOR DEM BLATT (Schritt 18, SR-07, E-SR-20): Die Seite
+ * zeigt die Geheimnisse selbst. Vor jeder Ausgabe, damit der Umweg noch eine
+ * Kopfzeile setzen kann. */
+zweitfaktor_frisch_verlangen('schluesselblatt');
 require_once __DIR__ . '/serverkrypto_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitmarke des Blatts
 /* `ui.php` SEIT P5c/AP9 — nicht für das Gerüst (es gibt keins), sondern für
@@ -61,6 +65,7 @@ header('Referrer-Policy: no-referrer');
 header('X-Robots-Tag: noindex, nofollow, noarchive');
 
 $skHex = (string)konfig('server_key', '');
+$skAlt = (string)konfig('server_key_alt', '');
 $anHex = (string)konfig('kdf_anteil', '');
 $anAlt = (string)konfig('kdf_anteil_alt', '');
 
@@ -78,6 +83,24 @@ if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
                             . 'Zugänge der Backup-Ziele, Archive des Protokolls und die '
                             . 'Geheimnisse des Zweitfaktors.'];
 }
+/* DER BISHERIGE SERVERSCHLÜSSEL (SR-03, E-SR-10) — nur während eines
+ * Wechsels, und mit dem Satz, der das alte Blatt vor dem Reißwolf bewahrt:
+ * Was auf einem Backup-Ziel liegt, öffnet für immer nur er. Das Datum ist der
+ * Beginn des Wechsels; Stände von davor gehören zu ihm. Eine Waise
+ * (`server_key_alt` = `server_key`, ein Wechsel, der zwischen seinen beiden
+ * Schritten abbrach) ist keiner und bekommt keine zweite Kachel mit derselben
+ * Kennung (Nachprüfung H-SR-06, F-SR-86). */
+if (preg_match('/^[0-9a-f]{64}$/i', $skAlt) && strcasecmp($skAlt, $skHex) !== 0) {
+    require_once __DIR__ . '/schluesselwechsel_lib.php';
+    $swBeginn = sw_zeit((string)(sw_zustand()['begonnen'] ?? ''));
+    $eintraege[] = ['name' => 'Serverschlüssel (bisheriger)',
+                    'eintrag' => 'server_key_alt',
+                    'hex' => $skAlt,
+                    'wozu' => 'Öffnet alles, was vor dem Wechsel'
+                            . ($swBeginn !== null ? ' am ' . datum_zeit_text(gmdate('Y-m-d H:i:s', $swBeginn)) : '')
+                            . ' versiegelt wurde — auch die Kopien auf dem Backup-Ziel, für immer. '
+                            . 'Dieses Blatt nach dem Wechsel NICHT vernichten.'];
+}
 if (preg_match('/^[0-9a-f]{64}$/i', $anHex)) {
     $eintraege[] = ['name' => 'Server-Anteil',
                     'eintrag' => 'kdf_anteil',
@@ -86,7 +109,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $anHex)) {
                             . 'jede NutzerIn ihr Passwort über den '
                             . 'Wiederherstellungsschlüssel neu. Kein Datenverlust.'];
 }
-if (preg_match('/^[0-9a-f]{64}$/i', $anAlt)) {
+if (preg_match('/^[0-9a-f]{64}$/i', $anAlt) && strcasecmp($anAlt, $anHex) !== 0) {
     $eintraege[] = ['name' => 'Server-Anteil (bisheriger)',
                     'eintrag' => 'kdf_anteil_alt',
                     'hex' => $anAlt,
@@ -165,7 +188,10 @@ kopfzeilen_seite();
 <p><?= $h($e['wozu']) ?></p></section>
 <?php endforeach; ?>
 <h2>Was damit zu tun ist</h2>
-<p><strong>Wann neu.</strong> Nach jeder Rotation des Server-Anteils und nach jedem Neuanfang — alte Blätter vernichten.</p>
+<?php /* ZWEI REGELN, NICHT EINE (SR-03, E-SR-10, F-SR-05). Bis Web 21.12.0
+         hieß es „alte Blätter vernichten" für alles — beim Serverschlüssel
+         vernichtete das den einzigen Schlüssel zu den Ständen auf dem Ziel. */ ?>
+<p><strong>Wann neu.</strong> Nach jeder Rotation — des Anteils oder des Serverschlüssels — und nach jedem Neuanfang. Alte Blätter des Anteils vernichten; das alte Blatt des Serverschlüssels behalten, bis das Backup-Ziel nichts mehr unter ihm trägt.</p>
 <p><strong>Zurücktragen.</strong> Betrieb → Servereinstellungen, „Nachtragen vom Blatt"; geschrieben wird nur, wenn die Kennung stimmt. Leerzeichen und Groß/Klein sind egal.</p>
 <?php /* KNAPP, WEIL ES SONST NICHT AUF EINE SEITE PASST (gemessen, P5c/AP9):
          Im Härtefall — drei Werte, Kurzname 83 Zeichen, Adresse 62, dazu die

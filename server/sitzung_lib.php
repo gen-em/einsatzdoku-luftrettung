@@ -15,9 +15,19 @@ declare(strict_types=1);
  *
  * WAS AUF DEM SPIEL STEHT, NUECHTERN. Eine Sitzungsdatei traegt KEIN
  * Schluesselmaterial; die Zusage der Ende-zu-Ende-Verschluesselung ist nicht
- * beruehrt. Sie traegt aber die Sitzung selbst, und ihr DATEINAME IST DIE
- * SITZUNGSKENNUNG. Wer sie liest, ist angemeldet und sieht die Klartextliste
- * aus `CLAUDE.md` 4; bei `role = admin` die Verwaltung.
+ * beruehrt. Ihr DATEINAME IST DIE SITZUNGSKENNUNG — aber seit Web 21.7.0
+ * (Schritt 18, SR-01, Backlog Nr. 242) ist er allein keine Anmeldung mehr.
+ * Zur Sitzung gehoert ein zweites Cookie, die BINDUNG (`sitzung_binden()`
+ * unten): 32 Zufallsbyte im Browser, in der Datei nur ihr SHA-256. Wer die
+ * Datei liest — aus dem Verzeichnis, aus einem Webspace-Backup des Hosters —,
+ * kennt die Kennung und den Hash, nicht das Cookie; `auth_guard.php` beendet
+ * eine solche Sitzung mit dem Grund `bindung`, `login.php` verwirft einen
+ * halben Stand ohne sie, und die lesenden Seiten behandeln sie als „nicht
+ * angemeldet". Bis Web 21.6.1 stand hier: „Wer sie liest, ist angemeldet und
+ * sieht die Klartextliste aus `CLAUDE.md` 4; bei `role = admin` die
+ * Verwaltung." Das war der Stand, den dieser Absatz beschrieb, und der Grund
+ * fuer Schritt 16, den ORT zu sichern — die Bindung nimmt der Datei den
+ * WERT.
  *
  * EINE AUFRUFSTELLE, NICHT NEUN — UND SEIT WEB 20.27.0 AUCH NICHT MEHR ZWEI
  * (E-SA-02, dann Schritt 15 AP2/E-ZE-06). Bis Web 20.26.3 standen neun
@@ -441,16 +451,26 @@ const PW_SESSION_NAME = 'EDPWSESS';
  *
  * `secure => null` heisst „haengt an HTTPS" (`!empty($_SERVER['HTTPS'])`).
  *
- * DIE DRIFT BLEIBT, WIE SIE IST, UND DAS IST EINE ENTSCHEIDUNG (E-ZE-12):
- * `app` und `passwort` setzen `secure` FEST, `lesend` und `einrichtung`
- * machen es von HTTPS abhaengig. Das anzugleichen waere eine
- * Sicherheitsentscheidung und keine Zentralisierung — sie gehoert zu
- * Schritt 18, zusammen mit der Sitzungsbindung (Backlog Nr. 251). Was
- * Schritt 15 tut, ist den Unterschied an EINE Stelle zu holen, wo man ihn
- * sieht. Vorher stand er in neun Dateien, und niemand konnte ihn zaehlen.
+ * DREI ARTEN SETZEN `secure` FEST, EINE NICHT — seit Web 21.7.0 (Schritt 18,
+ * SR-01, Backlog Nr. 251, E-SR-06). Schritt 15 hatte den Unterschied an diese
+ * Stelle geholt und ausdruecklich NICHT entschieden (E-ZE-12): `app` und
+ * `passwort` fest, `lesend` und `einrichtung` von HTTPS abhaengig.
  *
- * `nur_mit_cookie` ist F-ZE-2 und die einzige Verhaltensaenderung dieses
- * Pakets — siehe `sitzung_starten()`.
+ *   `lesend`       jetzt FEST. Die Art startet nur mit einem vorhandenen
+ *                  Cookie (F-ZE-2), und dieses Cookie setzt die Art `app` —
+ *                  mit `secure`. Ueber HTTP kaeme es ohnehin nie an; das
+ *                  feste `secure` aendert am Verhalten nichts und nimmt den
+ *                  Unterschied aus der Tabelle.
+ *   `einrichtung`  BLEIBT HTTPS-ABHAENGIG, und das ist Absicht (F-SR-06).
+ *                  Die Art laeuft auf einer Anlage, deren HTTPS-Lage die
+ *                  Einrichterin erst herstellt (`install.php` sagt es vor
+ *                  seinem Aufruf). Ein festes `secure` sperrte genau diese
+ *                  Einrichtung — still: Der Browser sendete das Cookie ueber
+ *                  HTTP nicht zurueck, und der Nachweis scheiterte ohne
+ *                  Auskunft.
+ *
+ * `nur_mit_cookie` ist F-ZE-2 und war die einzige Verhaltensaenderung von
+ * Schritt 15 AP2 — siehe `sitzung_starten()`.
  */
 const SITZUNG_ARTEN = [
     'app' => [
@@ -458,10 +478,11 @@ const SITZUNG_ARTEN = [
         'still'  => false, 'nur_mit_cookie' => false,
     ],
     'lesend' => [
-        'secure' => null,  'samesite' => 'Strict', 'name' => null,
+        'secure' => true,  'samesite' => 'Strict', 'name' => null,
         'still'  => true,  'nur_mit_cookie' => true,
     ],
     'einrichtung' => [
+        /* HTTPS-abhaengig mit Absicht — F-SR-06, Absatz oben. */
         'secure' => null,  'samesite' => 'Lax',    'name' => null,
         'still'  => false, 'nur_mit_cookie' => false,
     ],
@@ -499,6 +520,19 @@ const SITZUNG_ARTEN = [
  * 5. Cookie-Parameter aus der Tabelle oben.
  * 6. `session.use_strict_mode` — unmittelbar davor, nicht irgendwo.
  * 7. `session_start()`, bei `lesend` mit `@`.
+ * 8. Bei `lesend`: eine Anmeldung ohne Bindung gilt als keine (F-SR-15).
+ *
+ * F-SR-15 — DIE LESENDEN SEITEN PRUEFEN DIE BINDUNG HIER (seit Web 21.7.0,
+ * Schritt 18, SR-01, E-SR-39). Handbuch, Rechtstexte, Notfall- und Codeblatt
+ * laden kein `auth_guard.php` und lesen `user_id` selbst — fuer den
+ * angemeldeten Kopf und die Kontoadresse auf dem Blatt. Eine gelesene
+ * Sitzungsdatei haette dort auch nach SR-01 Kopf und Adresse gezeigt. Statt
+ * vier Seiten je eine Pruefung zu geben, prueft sie der eine Start: Traegt
+ * die Sitzung eine Anmeldung und passt die Bindung nicht, wird sie
+ * VERWORFEN, OHNE ZU SCHREIBEN (`session_abort()`), und die Seite sieht eine
+ * leere Sitzung. Beendet wird sie hier nicht — das tut die naechste
+ * angemeldete Seite mit Grund (`auth_guard.php`); eine lesende Seite soll
+ * lesbar bleiben und nicht abmelden.
  *
  * F-ZE-2 — DIE EINZIGE VERHALTENSAENDERUNG DIESES PAKETS. Handbuch,
  * „Was ist NAdoku" und die Rechtstexte sind ohne Anmeldung erreichbar und
@@ -579,5 +613,143 @@ function sitzung_starten(string $art): bool
     ini_set('session.use_strict_mode', '1');
     $lief = session_start();
     if ($maske !== null) { error_reporting($maske); }
+
+    /* F-SR-15 (Kopf dieser Funktion): nur `lesend`, weil die Art `app` ihre
+     * Pruefung mit Grund in `auth_guard.php` und `login.php` hat. */
+    if ($lief && $art === 'lesend' && !empty($_SESSION['user_id']) && !sitzung_bindung_ok()) {
+        session_abort();
+        $_SESSION = [];
+        return false;
+    }
     return $lief;
+}
+
+/* ===========================================================================
+ * DIE ZUSATZCOOKIES — Bindung (SR-01) und das gemerkte Geraet (SR-02)
+ * ======================================================================== */
+
+/**
+ * Die Cookies neben dem Sitzungscookie und ihre Parameter (Schritt 18,
+ * SR-01, E-SR-05).
+ *
+ * EINE TABELLE NEBEN `SITZUNG_ARTEN`, NICHT EIN `setcookie()` IN DER SEITE.
+ * Neun Sitzungsstarts in vier Fassungen sind entstanden, weil jeder
+ * abschrieb, was in der Naehe stand (Schritt 15). Ein drittes Cookie mit
+ * eigenen Parametern in `login.php` waere der Anfang derselben Geschichte.
+ * Gesetzt und geloescht wird jedes Cookie hier ueber je eine Funktion, und
+ * die Sitzungshaertung zaehlt `setcookie()` ausserhalb dieser Datei und
+ * `session_lib.php` als Befund.
+ *
+ * `bindung` TRAEGT DIESELBEN PARAMETER WIE DAS SITZUNGSCOOKIE DER ART `app`
+ * — `secure` fest, `Strict`, `httponly`, Pfad `/`, Lebensdauer 0 (bis der
+ * Browser schliesst). Das ist die Bedingung dafuer, dass beide immer
+ * zusammen reisen: Ein Cookie, das der Browser in einer Lage schickt und das
+ * andere nicht, beendete Sitzungen ohne Grund.
+ */
+const SITZUNG_COOKIES = [
+    'bindung' => [
+        'name' => 'EDBIND', 'secure' => true, 'samesite' => 'Strict',
+        'httponly' => true, 'dauer_s' => 0,
+    ],
+    /* „GERAET MERKEN" (SR-02, E-SR-07). Dieselben Parameter wie die Bindung,
+     * bis auf die Lebensdauer: Die setzt `zweitfaktor_geraet_merken()` je
+     * Anmeldung aus der Dauer der Rollengruppe (`$dauerS`). `Strict` reicht,
+     * obwohl ein Verweis aus einer Mail seitenfremd ankommt: Geprueft wird
+     * das Cookie beim POST des Passworts, und der kommt von dieser Seite. */
+    'geraet' => [
+        'name' => 'EDGERAET', 'secure' => true, 'samesite' => 'Strict',
+        'httponly' => true, 'dauer_s' => 0,
+    ],
+];
+
+/** Ein Zusatzcookie setzen — und in `$_COOKIE` nachtragen, damit dieselbe
+ *  Anfrage es schon sieht. `$dauerS` ueberschreibt die Tabelle (SR-02). */
+function sitzung_cookie_setzen(string $art, string $wert, ?int $dauerS = null): void
+{
+    if (!isset(SITZUNG_COOKIES[$art])) {
+        throw new InvalidArgumentException('Unbekanntes Zusatzcookie: ' . $art);
+    }
+    $c = SITZUNG_COOKIES[$art];
+    $dauer = $dauerS ?? $c['dauer_s'];
+    setcookie($c['name'], $wert, [
+        'expires'  => $dauer > 0 ? time() + $dauer : 0,
+        'path'     => '/',
+        'secure'   => $c['secure'],
+        'httponly' => $c['httponly'],
+        'samesite' => $c['samesite'],
+    ]);
+    $_COOKIE[$c['name']] = $wert;
+}
+
+/** Ein Zusatzcookie im Browser loeschen (abgelaufen, leer). */
+function sitzung_cookie_loeschen(string $art): void
+{
+    if (!isset(SITZUNG_COOKIES[$art])) {
+        throw new InvalidArgumentException('Unbekanntes Zusatzcookie: ' . $art);
+    }
+    $c = SITZUNG_COOKIES[$art];
+    if (!headers_sent()) {
+        setcookie($c['name'], '', [
+            'expires'  => time() - 42000,
+            'path'     => '/',
+            'secure'   => $c['secure'],
+            'httponly' => $c['httponly'],
+            'samesite' => $c['samesite'],
+        ]);
+    }
+    unset($_COOKIE[$c['name']]);
+}
+
+/** Der Wert eines Zusatzcookies aus der Anfrage — nur als Zeichenkette.
+ *  `EDBIND[]=x` macht aus dem Wert ein Feld; das ist hier „kein Cookie". */
+function sitzung_cookie_lesen(string $art): ?string
+{
+    $v = $_COOKIE[SITZUNG_COOKIES[$art]['name'] ?? ''] ?? null;
+    return is_string($v) && $v !== '' ? $v : null;
+}
+
+/**
+ * Die laufende Sitzung an diesen Browser binden (E-SR-04, Nr. 242).
+ *
+ * 32 Zufallsbyte ins Cookie, ihr SHA-256 in die Sitzung. Gerufen an ZWEI
+ * Stellen in `login.php`: beim Anlegen des halben Stands (`totp_halb`) —
+ * er traegt die Herausforderung des Rueckwegs und fuenf Minuten
+ * Passwortnachweis, und eine gelesene Datei darf auch ihn nicht tragen — und
+ * in `anmeldung_vollenden()` unmittelbar nach `session_regenerate_id()`,
+ * NEU GEWUERFELT wie die Kennung.
+ *
+ * WARUM DER HASH UND NICHT DER WERT IN DER DATEI: Genau die Datei ist das,
+ * was jemand gelesen haben koennte. Stuende der Wert darin, waere die
+ * Bindung ein zweites Feld derselben Datei und schuetzte nichts.
+ */
+function sitzung_binden(): void
+{
+    $wert = bin2hex(random_bytes(32));
+    sitzung_cookie_setzen('bindung', $wert);
+    $_SESSION['bindung'] = hash('sha256', $wert);
+}
+
+/**
+ * Gehoert die laufende Sitzung zu diesem Browser?
+ *
+ * FALSCH, WENN EINES VON BEIDEN FEHLT — und das ist der Punkt (E-SR-04):
+ * Eine Sitzung, die vor Web 21.7.0 entstanden ist, traegt keinen Hash und
+ * gilt NICHT weiter. Eine Uebernahme („ohne Hash gilt sie weiter") waere
+ * genau das Loch, das die Bindung schliesst: Die gelesene Datei haette
+ * keinen Hash. Deshalb meldet sich nach dem Ausrollen jede Angemeldete
+ * einmal neu an — dasselbe hat Schritt 16 getan (E-SA-08).
+ */
+function sitzung_bindung_ok(): bool
+{
+    $soll = $_SESSION['bindung'] ?? null;
+    $wert = sitzung_cookie_lesen('bindung');
+    if (!is_string($soll) || $soll === '' || $wert === null) { return false; }
+    return hash_equals($soll, hash('sha256', $wert));
+}
+
+/** Bindung aufheben: Cookie loeschen, Hash aus der Sitzung nehmen. */
+function sitzung_bindung_loeschen(): void
+{
+    sitzung_cookie_loeschen('bindung');
+    unset($_SESSION['bindung']);
 }

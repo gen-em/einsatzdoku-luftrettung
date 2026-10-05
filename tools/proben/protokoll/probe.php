@@ -90,11 +90,18 @@ if (db_hat_spalte($pdo, 'users', 'totp_seit')) {
 $epoch = (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $uid)->fetchColumn();
 $sid = 'protokollprobe' . bin2hex(random_bytes(10));
 $csrf = bin2hex(random_bytes(16));
+/* DIE BINDUNG (seit Web 21.7.0, Schritt 18, SR-01): Ohne das zweite Cookie
+ * beendet `auth_guard.php` diese Sitzung mit dem Grund `bindung`. Ihr Wert
+ * steht unten auch unter den Marken, die das Fehlerprotokoll nicht tragen
+ * darf — er ist ein Geheimnis der Sitzung wie ihre Kennung. */
+$bind = bin2hex(random_bytes(32));
+$keks = 'Cookie: PHPSESSID=' . $sid . '; ' . SITZUNG_COOKIES['bindung']['name'] . '=' . $bind;
 $ort = is_dir(sitzung_ablage_pfad()) ? sitzung_ablage_pfad() : (string)(session_save_path() ?: sys_get_temp_dir());
 session_save_path($ort);
 session_id($sid);
 session_start();
-$_SESSION = ['user_id' => $uid, 'epoch' => $epoch, 'last_seen' => time(), 'csrf' => $csrf];
+$_SESSION = ['user_id' => $uid, 'epoch' => $epoch, 'last_seen' => time(), 'csrf' => $csrf,
+             'bindung' => hash('sha256', $bind)];
 session_write_close();
 
 /* ---- Ausgangszustand merken, Gegenstände anlegen ------------------------- */
@@ -250,7 +257,7 @@ $zaehle = static function () use ($pdo): int {
 $vorDl = $zaehle();
 $ch = curl_init($basis . '/admin_protokoll.php?r=archiv');
 curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_PROXY => '',
-    CURLOPT_HTTPHEADER => ['Cookie: PHPSESSID=' . $sid], CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [$keks], CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => http_build_query(['csrf' => $csrf, 'action' => 'archiv_laden',
                                             'datei' => $erstes])]);
 $zip = (string)curl_exec($ch);
@@ -297,10 +304,10 @@ register_shutdown_function(static function () use (&$srvProz, &$kennungenCli, $p
 $fr = 'http://127.0.0.1:' . $anschluss;
 for ($i = 0; $i < 50 && @fsockopen('127.0.0.1', $anschluss) === false; $i++) { usleep(100000); }
 
-$abruf = static function (string $adresse) use ($sid): array {
+$abruf = static function (string $adresse) use ($keks): array {
     $ch = curl_init($adresse);
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_PROXY => '',
-        CURLOPT_HTTPHEADER => ['Cookie: PHPSESSID=' . $sid, 'X-Probe: KOPFMARKE',
+        CURLOPT_HTTPHEADER => [$keks, 'X-Probe: KOPFMARKE',
                                'X-Forwarded-For: 203.0.113.77']]);
     $rumpf = (string)curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -330,7 +337,7 @@ pruef($z1 !== null && $z1['art'] === 'ausnahme' && (int)$z1['urheber_user_id'] =
       $z1 === null ? 'kein Eintrag' : $z1['art'] . ', Urheber ' . $z1['urheber_user_id']);
 $roh = $z1 === null ? '' : $z1['text'] . ' ' . $z1['daten'];
 $marken = ['protokollprobe-geheim', '@probe.invalid', '198.51.100.9', 'ANFRAGEMARKE',
-           'KOPFMARKE', '203.0.113.77', '127.0.0.1', 'SITZUNGSMARKE', $sid];
+           'KOPFMARKE', '203.0.113.77', '127.0.0.1', 'SITZUNGSMARKE', $sid, $bind];
 $gefunden = array_values(array_filter($marken, static fn($mk) => str_contains($roh, $mk)));
 pruef($z1 !== null && $gefunden === [] && str_contains($z1['text'], "Wert '…'"),
       '…ohne Wert, Adresse, Anfrage, Kopfzeilen, IP und Sitzung — der Wert ersetzt',

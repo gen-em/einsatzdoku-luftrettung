@@ -1330,8 +1330,91 @@ if ($ze !== null) {
                     AND JSON_UNQUOTE(JSON_EXTRACT(daten, '$.kennung')) = ?")->execute([$kf]);
 }
 
+/* ---- Teil 12 — Der Deadlock und die Wiederholung (Schritt 18, SR-05) -----
+ *
+ * Anlass: Nr. 210. Seit Web 21.11.1 laeuft der Rumpf von `ingest.php` bei
+ * 1205 und 1213 bis zu dreimal. Die Verbindungsprobe zeigt, dass es seither
+ * kein Gedraengel mehr gibt — und misst die Schleife damit gar nicht: Sie
+ * wird nicht mehr gebraucht. HIER WIRD SIE ERZWUNGEN. Ein Ausloeser auf
+ * `missions` meldet 1213, solange ein Zaehler in einer MEMORY-Tabelle unter
+ * einer Grenze liegt; die Tabelle ist nicht transaktional, ihr Stand
+ * ueberlebt also den Rollback, den der Deadlock ausloest. Damit laesst sich
+ * sagen: im ersten Anlauf ein Deadlock, im zweiten nicht.
+ *
+ * DER AUSLOESER SITZT AM `UPDATE … letzter_punkt_am`, HINTER DER
+ * PUNKTSCHLEIFE — nicht am Einfuegen des Einsatzes. Die erste Fassung sass
+ * dort und mass das Zuruecksetzen der Pruefliste nicht: Der verworfene
+ * Punkt wird erst in der Schleife gemeldet, und ein Deadlock davor liess
+ * nichts zum Doppeln uebrig (die Gegenprobe ohne Zuruecksetzen blieb
+ * gruen).
+ *
+ * WAS DER ZWEITE ANLAUF NICHT DUERFEN SOLL: einen verworfenen Wert zweimal
+ * melden. Die Pruefliste traegt die Befunde von vor der Transaktion und
+ * bekommt im Rumpf neue dazu; ohne das Zuruecksetzen am Anlaufbeginn staende
+ * derselbe Punkt zweimal in `rejected`. */
+echo "\nTeil 12 — Der Deadlock: wiederholt, und ohne Doppelungen (Nr. 210)\n";
+$pdo->exec('DROP TRIGGER IF EXISTS ingestprobe_deadlock');
+$pdo->exec('DROP TABLE IF EXISTS ingestprobe_anlauf');
+$pdo->exec('CREATE TABLE ingestprobe_anlauf (n INT NOT NULL, bis INT NOT NULL) ENGINE=MEMORY');
+$pdo->exec("CREATE TRIGGER ingestprobe_deadlock BEFORE UPDATE ON missions FOR EACH ROW
+            BEGIN
+              IF NEW.client_ref LIKE 'probe-deadlock-%'
+                 AND NOT (NEW.letzter_punkt_am <=> OLD.letzter_punkt_am) THEN
+                UPDATE ingestprobe_anlauf SET n = n + 1;
+                IF (SELECT n FROM ingestprobe_anlauf) <= (SELECT bis FROM ingestprobe_anlauf) THEN
+                  SIGNAL SQLSTATE '40001' SET MYSQL_ERRNO = 1213,
+                    MESSAGE_TEXT = 'Ingestprobe: Deadlock found when trying to get lock';
+                END IF;
+              END IF;
+            END");
+$anlaeufe = static fn(): int => (int)$pdo->query('SELECT n FROM ingestprobe_anlauf')->fetchColumn();
+try {
+    /* EIN Deadlock: Der zweite Anlauf nimmt an. Ein Punkt mit Breite 999
+     * wird verworfen und muss GENAU EINMAL in `rejected` stehen. */
+    $pdo->exec('DELETE FROM ingestprobe_anlauf');
+    $pdo->exec('INSERT INTO ingestprobe_anlauf VALUES (0, 1)');
+    $p = paket('probe-deadlock-1', 0, 4, true);
+    $p['track']['points'][1][0] = 999;
+    $d1 = senden($p);
+    $rej = (array)($d1['daten']['rejected'] ?? []);
+    $zeile = $pdo->query("SELECT id FROM missions WHERE client_ref = 'probe-deadlock-1'")->fetchColumn();
+    pruefe($d1['code'] === 200 && $anlaeufe() === 2 && $zeile !== false
+           && (int)($d1['daten']['stored_points'] ?? -1) === 3,
+           'Ein Deadlock im ersten Anlauf: der zweite nimmt an (200, zwei Anlaeufe, 3 Punkte)',
+           'HTTP ' . $d1['code'] . ', Anlaeufe ' . $anlaeufe() . ', gespeichert '
+           . ($d1['daten']['stored_points'] ?? '—'));
+    pruefe(array_sum($rej) === 1 && count($rej) === 1,
+           '... und der verworfene Punkt steht EINMAL in rejected, nicht zweimal',
+           json_encode($rej, JSON_UNESCAPED_UNICODE));
+    pruefe($zeile !== false && zeilen($pdo, (int)$zeile) === 3,
+           '... und die Spur hat 3 Punkte, keine doppelt',
+           $zeile === false ? 'kein Einsatz' : zeilen($pdo, (int)$zeile) . ' Zeilen');
+
+    /* DREI Deadlocks: Nach dem dritten Anlauf die 503 wie an der Grenze, und
+     * nichts ist angelegt — die Uhr liefert unveraendert nach. */
+    $pdo->exec('DELETE FROM ingestprobe_anlauf');
+    $pdo->exec('INSERT INTO ingestprobe_anlauf VALUES (0, 99)');
+    $d3 = senden(paket('probe-deadlock-3', 0, 2, true));
+    pruefe($d3['code'] === 503 && ($d3['daten']['error'] ?? '') === 'ausgelastet' && $anlaeufe() === 3
+           && (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE client_ref = 'probe-deadlock-3'")->fetchColumn() === 0,
+           'Drei Deadlocks: 503 ausgelastet nach genau drei Anlaeufen, nichts angelegt',
+           'HTTP ' . $d3['code'] . ', Anlaeufe ' . $anlaeufe());
+    /* Und wieder frei: dasselbe Paket kommt an. */
+    $pdo->exec('DELETE FROM ingestprobe_anlauf');
+    $pdo->exec('INSERT INTO ingestprobe_anlauf VALUES (0, 0)');
+    $d4 = senden(paket('probe-deadlock-3', 0, 2, true));
+    pruefe($d4['code'] === 200
+           && (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE client_ref = 'probe-deadlock-3'")->fetchColumn() === 1,
+           '... und dasselbe Paket kommt beim naechsten Versuch an', 'HTTP ' . $d4['code']);
+} finally {
+    $pdo->exec('DROP TRIGGER IF EXISTS ingestprobe_deadlock');
+    $pdo->exec('DROP TABLE IF EXISTS ingestprobe_anlauf');
+}
+
 } finally {
     $pdo->exec('DROP TRIGGER IF EXISTS ingestprobe_fehlfall');
+    $pdo->exec('DROP TRIGGER IF EXISTS ingestprobe_deadlock');
+    $pdo->exec('DROP TABLE IF EXISTS ingestprobe_anlauf');
     jobs_pause(0);
     /* Aufraeumen: das Konto und alles daran. Die Kaskade nimmt missions mit;
      * Spuren haengen an keinem Fremdschluessel und muessen ausdruecklich weg

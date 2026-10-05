@@ -33,6 +33,15 @@
  */
 /* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
 import { codeSchritt } from '../../motor.mjs';
+import { execFileSync } from 'node:child_process';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/* Die Betriebsart der Registrierung stellt die Probe ueber PHP, wie die
+ * Bedienprobe (`probekonto.mjs`) — Abschnitt 6, Rechenaufgabe (SR-08). */
+const WURZEL = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const php = code => execFileSync('php', ['-r', 'require "server/db.php"; ' + code],
+                                 { cwd: WURZEL, encoding: 'utf-8' }).trim();
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
@@ -99,6 +108,22 @@ const imMarkup = await seite.evaluate(() => {
 });
 ok('Inline-Skripte der Anmeldeseite tragen alle einen Nonce',
    imMarkup.ohne === 0, `${imMarkup.zahl} Bloecke, ${imMarkup.ohne} ohne`);
+
+/* DIE SEITE DES NOTZUGANGS (Schritt 18, SR-04) — die zweite Seite ohne
+ * Sitzung, auf der ein Passwort getippt wird. Ihr Inline-Skript leitet das
+ * Token ab wie das der Anmeldeseite und muss denselben Nonce tragen. Danach
+ * zurueck auf die Anmeldeseite: Schritt 2 fuellt deren Formular. */
+const nwAntw = await seite.goto(`${BASIS}/zweitfaktor_notweg.php`, { waitUntil: 'domcontentloaded' });
+const nwKopf = nwAntw.headers();
+const nwMarkup = await seite.evaluate(() => {
+  const s = [...document.querySelectorAll('script:not([src])')];
+  return { zahl: s.length, ohne: s.filter(x => !x.nonce && !x.getAttribute('nonce')).length };
+});
+ok('Notzugang (SR-04): schickt eine CSP, jedes Inline-Skript traegt einen Nonce',
+   !!(nwKopf['content-security-policy-report-only'] || nwKopf['content-security-policy'])
+     && nwMarkup.zahl > 0 && nwMarkup.ohne === 0,
+   `${nwMarkup.zahl} Bloecke, ${nwMarkup.ohne} ohne`);
+await seite.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
 
 /* ---- 2. Anmelden -------------------------------------------------------- */
 await seite.fill('input[name="email"]', ADMIN.email);
@@ -240,6 +265,41 @@ await seite.goto(`${BASIS}/import.php`, { waitUntil: 'domcontentloaded' });
 await seite.waitForTimeout(1500);
 const sheet = await seite.evaluate(() => typeof window.XLSX !== 'undefined');
 ok('import.php: SheetJS geladen und ausgefuehrt', sheet, sheet ? 'XLSX da' : 'XLSX fehlt');
+
+/* Die Rechenaufgabe der Registrierung unter der scharfen Richtlinie (SR-08).
+ * Der Worker kommt aus eigener Quelle und ist durch `worker-src 'self'`
+ * gedeckt — die Tokenizer-Probe sieht ihn nicht, weil sie keine Skripte
+ * liest. Erlaubnis UND Gegenprobe: Der eigene Worker liefert eine Loesung,
+ * und kein „Refused to create a worker" steht in der Konsole; ein Worker aus
+ * `data:` wird abgewiesen. Die Betriebsart wird dafuer auf `offen` gestellt
+ * und zurueckgelegt. */
+const vorArt = php('echo (string)app_state_lesen("konten_reg_art");');
+php('app_state_setzen("konten_reg_art", "offen");');
+try {
+  const vorher = verstoesse.length;
+  await seite.goto(`${BASIS}/registrieren.php`, { waitUntil: 'domcontentloaded' });
+  let loesung = '';
+  try {
+    await seite.waitForFunction(() => document.querySelector('input[name="pow_loesung"]')?.value !== '',
+                                null, { timeout: 30000 });
+    loesung = await seite.$eval('input[name="pow_loesung"]', i => i.value);
+  } catch (e) { loesung = ''; }
+  const workerVerstoss = verstoesse.slice(vorher).filter(t => /worker/i.test(t));
+  ok('registrieren.php: der eigene Worker liefert unter scharfer CSP eine Loesung',
+     loesung !== '' && workerVerstoss.length === 0,
+     loesung !== '' ? 'Loesung ' + loesung : 'keine Loesung · ' + workerVerstoss.join(' | ').slice(0, 160));
+  const fremd = await seite.evaluate(() => new Promise(aufl => {
+    let w;
+    try { w = new Worker('data:text/javascript,postMessage(1)'); } catch (e) { aufl('blockiert'); return; }
+    w.onmessage = () => aufl('lief');
+    w.onerror = () => aufl('blockiert');
+    setTimeout(() => aufl('blockiert'), 3000);
+  }));
+  ok('… ein Worker aus data: wird abgewiesen (Gegenprobe)', fremd === 'blockiert', fremd);
+} finally {
+  if (vorArt === '') { php('db()->exec("DELETE FROM app_state WHERE k = \'konten_reg_art\'");'); }
+  else { php(`app_state_setzen("konten_reg_art", ${JSON.stringify(vorArt)});`); }
+}
 
 /* Zurueck auf Report-Only — der Auslieferungszustand */
 await seite.goto(`${BASIS}/betrieb_server.php`, { waitUntil: 'domcontentloaded' });

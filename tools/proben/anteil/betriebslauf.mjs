@@ -27,7 +27,7 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import('file://' + MODUL);
 const pw = PW.default ?? PW;
-const { motorWahl, starten, nachDemPasswort } = await import(
+const { motorWahl, starten, nachDemPasswort, codeSchritt } = await import(
   'file:///home/user/einsatzdoku-luftrettung/tools/motor.mjs');
 
 const WURZEL = '/home/user/einsatzdoku-luftrettung';
@@ -125,8 +125,21 @@ ctx.on('console', m => {
 });
 const p = await ctx.newPage();
 
+/* DER FRISCHE CODE (Schritt 18, SR-07, E-SR-20). Das Blatt und jeder
+ * Schluesselgriff verlangen einen Code, der hoechstens 15 Minuten alt ist.
+ * Der Lauf meldet sich mit Code an und ist in der Regel frueher fertig; wird
+ * er einmal langsamer, fuehrt das Blatt auf die Bestaetigung. `oeffne()` geht
+ * sie wie den Code-Schritt und laedt die Seite neu; ein GRIFF, der dort
+ * landet, bricht ab (`handlung()`), statt still eine Karte zu messen, die
+ * sich nie geaendert hat. */
+const aufBestaetigung = () => /\/zweitfaktor\.php\?bestaetigen=1/.test(p.url());
 async function oeffne(pfad) {
   await p.goto(BASIS + pfad, { waitUntil: 'domcontentloaded' });
+  if (aufBestaetigung() && !pfad.startsWith('/zweitfaktor.php')) {
+    const zf = await codeSchritt(p);
+    if (!zf.ok) { throw new Error('Code bestätigen gescheitert — ' + zf.meldung); }
+    await p.goto(BASIS + pfad, { waitUntil: 'domcontentloaded' });
+  }
   await p.waitForTimeout(350);
 }
 const text = () => p.evaluate(() => document.body.innerText.replace(/\s+/g, ' '));
@@ -203,6 +216,9 @@ async function handlung(aktion, rueckfrage) {
     await p.click('dialog[open] [data-act="yes"]');
   }
   await p.waitForTimeout(1500);
+  if (aufBestaetigung()) {
+    throw new Error(`Griff ${aktion}: der Code ist nicht mehr frisch — der Lauf dauerte länger als 15 Minuten`);
+  }
 }
 
 copyFileSync(CONFIG, SICHER);

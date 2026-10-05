@@ -345,4 +345,38 @@ function blatt_faellig(): bool
 function blatt_bestaetigt(): void
 {
     app_state_setzen(BLATT_BESTAETIGT_K, gmdate('Y-m-d H:i:s'));
+    app_state_loeschen(BLATT_NEU_WEIL_K);
+}
+
+/** Schluessel in `app_state`: WARUM die Rueckfrage vorzeitig faellig ist. */
+const BLATT_NEU_WEIL_K = 'schluesselblatt_neu_weil';
+
+/**
+ * Ein Wert hat gewechselt — das Blatt gehoert neu gedruckt (Nr. 233, E-SR-11).
+ *
+ * GERUFEN AUS BEIDEN ROTATIONEN, dem Anteil und dem Serverschluessel. Bis Web
+ * 21.12.0 fasste keine von beiden das Datum der letzten Bestaetigung an: Die
+ * Rueckfrage kam erst mit dem naechsten Quartal, und dann ohne den Wert, der
+ * inzwischen dazugekommen war. Nr. 233 sagt selbst, wo es zu schliessen ist:
+ * „Der Rotationsvorgang selbst sollte sagen, dass das Blatt neu gedruckt
+ * gehoert — er ist die Stelle, an der es auffaellt."
+ *
+ * DIE MARKE WIRD GELOESCHT, NICHT ZURUECKDATIERT. Kein Datum heisst faellig
+ * (`blatt_faellig()`), und ein erfundenes Datum stuende genau in dem Feld,
+ * das die Frage beantwortet. Der Grund steht daneben, damit der Dialog seinen
+ * Satz voranstellen kann; `blatt_bestaetigt()` raeumt ihn wieder weg.
+ *
+ * @param string $grund 'serverschluessel' | 'anteil'
+ */
+function blatt_neu_faellig(string $grund): void
+{
+    app_state_loeschen(BLATT_BESTAETIGT_K);
+    app_state_setzen(BLATT_NEU_WEIL_K, $grund);
+}
+
+/** Warum die Rueckfrage vorzeitig kommt — oder null (das Quartal ist um). */
+function blatt_neu_weil(): ?string
+{
+    $g = app_state_lesen(BLATT_NEU_WEIL_K);
+    return in_array($g, ['serverschluessel', 'anteil'], true) ? $g : null;
 }

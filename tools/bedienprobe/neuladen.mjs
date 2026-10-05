@@ -3,9 +3,10 @@
  *
  * WOZU: Backlog Nr. 250. Eine Seite, die ihr POST-Ergebnis selbst ausgibt,
  * hinterlässt ein Formular im Verlauf des Browsers; „Neu laden" schickt es
- * noch einmal ab. Seit Web 21.1.9 leiten alle Seiten unter Verwaltung und
- * Betrieb nach einer Handlung um (außer `betrieb_server.php`, Schritt 18),
- * und die Meldung kommt über die Sitzung an (`flash_setzen()`).
+ * noch einmal ab. Seit Web 21.1.9 leiten die Seiten unter Verwaltung und
+ * Betrieb nach einer Handlung um, seit Web 21.8.0 auch `betrieb_server.php`
+ * (Schritt 18, SR-02), und die Meldung kommt über die Sitzung an
+ * (`flash_setzen()`).
  *
  * WAS EIN WEG HIER MISST — drei Dinge, die nur ein Browser zeigt:
  *   1. Die Antwort auf das Absenden ist eine UMLEITUNG aus einem POST

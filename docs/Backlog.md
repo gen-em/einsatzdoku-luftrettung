@@ -52,9 +52,9 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350, 351, 352 | 27.09.2026 |
+| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 358 | 27.09.2026 |
 | 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); vergeben: 360, 361 | 29.09.2026 |
-| ab 370 | frei — höchste vergebene Nummer 352; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 29.09.2026 |
+| ab 370 | frei — höchste vergebene Nummer 361; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 05.10.2026 |
 
 ---
 
@@ -544,32 +544,10 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `einstellungen.php` (sechs Speicher- und Löschpaare), Auftakt der
      Verwaltungsseiten (`ui_meldung` in 12 Dateien gleich komponiert),
      Umfangsliste mit Zahl-Plakette (3× wortgleich), Nachweisdatei-Mechanik
-     in `install.php` und `wiederherstellen.php`, Ablage mit Zeitstempel
+     (erledigt mit SR-04: `nachweis_lib.php`, Z44), Ablage mit Zeitstempel
      (dreimal `gmdate('Y-m-d\TH-i-s\Z')`). Seit 26.09.2026 Ziel
      `Pflegeaufgabe` (R4-01, Q-R4-12): Jeder Anlass träfe Dateien von 18.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 202.
-
-<!-- -->
-
-210. **`ingest.php` läuft bei gleichzeitigen Uploads auf denselben Diensttag in einen Deadlock.** · gehört zu: 18 · Stand: teilweise · seit 16.09.2026
-     Befund (P5a/AP9, `tools/verbindungsprobe/`, 16.09.2026): Zwanzig
-     Pakete desselben Geräts gleichzeitig ergaben zwölf `SQLSTATE[40001]
-     1213 Deadlock`. Ursache ist die gemeinsame Zeile: Jeder Upload schreibt
-     `days.started_at`/`ended_at` in derselben Transaktion fort, in der er
-     seinen Einsatz anlegt (`dt_zeitraum_fortschreiben()` und der
-     `INSERT … ON DUPLICATE KEY` auf `missions`); zwei Uploads halten Sperren
-     in umgekehrter Reihenfolge.
-     Erledigt ist die halbe Miete (E-P5a-52): Die Antwort ist 503
-     `ausgelastet` statt 500, alle zwanzig Pakete kommen in der Probe an.
-     Offen ist die Vermeidung: den Transaktionsrumpf in eine Schleife mit
-     zwei bis drei Anläufen fassen und klären, was dazwischen neu gelesen
-     werden muss (Umriss der Spur, Fortsetzungsmarke); prüfen, ob die
-     idempotente `days`-Fortschreibung hinter den Commit kann. Nicht Teil
-     von Schritt 15 (E-ZE-20): `db_transaktion()` ändert, wie Transaktionen
-     geschrieben werden, nicht, was bei einem Deadlock geschieht.
-     Abnahme: `php tools/verbindungsprobe/probe.php --frei 20` meldet 0 × 503
-     und 0 Gedrängel im Fehlerprotokoll.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 210.
 
 <!-- -->
 
@@ -593,28 +571,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      seit Kette II/AP6, E-KH-07); (3) die `.htaccess` gilt nur auf Apache
      (wie Nr. 129).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 213.
-
-<!-- -->
-
-228. **Proof-of-Work im Browser als dritte Stufe gegen Registrierungs-Spam.** · gehört zu: 18 · Stand: nur auf Anlass · seit 17.09.2026
-     Befund (Konzept P5b, R37 (4) „notfalls"): R37 schließt ein CAPTCHA aus
-     (fremde Quelle zur Laufzeit) und setzt zwei billige Mittel — Honeypot-
-     Feld und Mindestausfülldauer vier Sekunden — neben drei
-     Ratenschutz-Töpfe (`reg` je IP 10/h, `regg` global 100/h mit
-     Verlangsamung, `regz` je Zieladresse 3/24 h). Reicht das nicht, bliebe
-     eine Rechenaufgabe im Browser; gebaut ist sie mit Absicht nicht.
-     Warum niedrig: Ein Proof-of-Work kostet am meisten auf dem alten
-     Diensthandy und bremst jede ehrliche Registrierung. Die drei Mittel
-     sind ungemessen; erst bauen, dann messen. Kein Ausschluss ohne
-     JavaScript, weil die Registrierung den Schlüssel ohnehin im Browser
-     ableitet (E-P5b-13).
-     Auslöser: der Zähler der je Woche über `konto_verfall` verfallenen,
-     nie bestätigten Konten. Bleibt er klein, ist der Eintrag erledigt, ohne
-     dass etwas gebaut wurde. Abnahme, falls doch: SHA-256 über WebCrypto in
-     einem Worker, ohne Fremdbestandteil, und die Antwortzeit der
-     Registrierung bleibt unabhängig davon, ob die Adresse frei, bekannt
-     oder Wegwerf ist (Enumerationsschutz E-P5b-13, Δ < 50 ms).
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 228.
 
 <!-- -->
 
@@ -664,7 +620,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-232. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.** · gehört zu: 18 · Stand: nur auf Anlass · seit 17.09.2026
+232. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.** · gehört zu: nächste Backlog-Runde · Stand: nur auf Anlass · seit 17.09.2026
      *Aufgenommen 17.09.2026 (P5b/AP9).* Die Konto-Rückfrage fragt nach 30
      Tagen, 6 Monaten und dann jährlich; die Betreiber-Rückfrage alle drei
      Monate. Geprüft wurde mit **gestelltem** `rueckfrage_naechste` — die
@@ -681,25 +637,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      müsste `einstieg_lib.php` eine Zeit hereingereicht bekommen, statt sie zu
      holen. Lohnt sich, wenn die nächste Frist dazukommt; für zwei Fristen ist
      der Umbau teurer als der Fehler.
-     Ziel 18 seit 26.09.2026 (R4-01, Q-R4-12): Alle Aufrufer von
-     `einstieg_lib.php` liegen in Dateien, die Schritt 18 umbaut (Nr. 233).
-
-<!-- -->
-
-233. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.** · gehört zu: 18 · Stand: offen · seit 17.09.2026
-     *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
-     `kdf_anteil_alt` mit auf dem Schlüsselblatt. Die Rückfrage fragt ihn
-     nicht ab — eine Frage, die je nach Betriebslage vier oder sechs Felder
-     hat, verwirrt mehr, als sie prüft.
-
-     **Was das offen lässt:** Wer sein Blatt nach einer Rotation neu druckt
-     und den alten Wert nicht mit abschreibt, merkt es nicht, solange die
-     Rückfrage schweigt. Der Wert wird aber gebraucht, bis das letzte Konto
-     sich angemeldet hat.
-
-     **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
-     dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
-     und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
+     Ziel 18 vom 26.09. bis 05.10.2026 (R4-01, Q-R4-12); umgehängt mit SR-06
+     (E-SR-25): SR-03 gab `einstieg_lib.php` einen Anlass, keine dritte Frist.
 
 <!-- -->
 
@@ -782,105 +721,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      mit). Zuerst entscheiden, welche der beiden Fragen beantwortet werden
      soll.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 240.
-
-<!-- -->
-
-242. **Sitzungsbindung per Cookie-Token — benannt, nicht mitgenommen.** · gehört zu: 18 · Stand: offen · seit 20.09.2026
-     *Aufgenommen 20.09.2026 (E-SA-09 des Konzepts Sitzungsablage).*
-     Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
-
-     Ein Zufallstoken nur im Cookie, dessen Hash in der Sitzung liegt, macht
-     eine gelesene Sitzungsdatei wertlos — auch eine aus einem gefundenen
-     Backup. Das ist der Schutz, den Nr. 241 **nicht** leistet: 241 verlegt
-     den Ort, 242 entwertet die Datei.
-
-     **Warum getrennt:** Das ist ein Sicherheitsumbau mit eigener Prüfung
-     (Cookie-Handling — Uhr und Handy sind nicht betroffen, nur der Browser;
-     Reset-Fluss; Wechselwirkung mit `users.session_epoch`) und gehört nicht
-     in einen Verzeichniswechsel.
-
-<!-- -->
-
-247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.** · gehört zu: 18 · Stand: offen · seit 20.09.2026
-     Befund (V4 der P5c-Vorbereitung): Es gibt keinen Wechsel. Wer
-     `server_key` von Hand ändert, macht alles Versiegelte stumm und merkt
-     es erst, wenn er es braucht.
-     Weg: ein Vorgang unter Betrieb — neuen Schlüssel erzeugen, alles
-     Versiegelte umhüllen (Adminpakete, Zugänge der Sicherungsziele,
-     Protokoll-Archive, Wiederanlaufpaket, die Zweitfaktor-Geheimnisse
-     `users.totp_geheimnis` mit Zweck `totp|<Konto>` aus P5c/AP5, Web
-     20.42.0), neues Schlüsselblatt, Protokolleintrag und der Nachweis der
-     Öffenbarkeit vor dem Verwerfen des alten Schlüssels — der Schritt,
-     dessen Fehlen den Vorgang gefährlich macht. Ein Wechsel, der die
-     Zweitfaktor-Geheimnisse nicht umhüllt, lässt jede Code-Anmeldung
-     scheitern (Notweg: Wiederherstellungscodes; Runbook `Technik.md` 7).
-     Auslöser: Verdacht, dass das Blatt in falsche Hände kam. Eigenes Paket
-     mit eigener Prüfung; bis dahin gilt im Betreiberhandbuch: Der Schlüssel
-     wird nicht gewechselt, das Blatt gehütet (Quartalsrückfrage E-P5b-10).
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 247.
-
-<!-- -->
-
-249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
-     *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
-     Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
-
-     10c macht den Zweitfaktor für Admin, BetreiberIn und Support zur
-     Pflicht. Der Reset durch eine **zweite** BetreiberIn ist damit gelöst —
-     der Fall „es gibt nur eine, und sie hat beides verloren" ist es nicht.
-
-     Das ist ein **Wiederanlauf-Fall** und gehört zum S10-Runbook, nicht in
-     10c: Er wird nicht über die Oberfläche gelöst, sondern über das
-     Wiederanlaufpaket. Hier nur benannt, damit er nicht erst auffällt, wenn
-     er eintritt.
-
-     **Teilweise gelöst mit Konzept RW (E-RW-08, 24.09.2026; gebaut als 10c
-     AP5b, Web 20.43.0 bis 20.45.0):** Hat die einzige BetreiberIn Passwort
-     und Notfallblatt, setzt sie den Zweitfaktor am Code-Schritt selbst
-     zurück. Der Wiederanlauf-Fall bleibt für den Rest: ohne Zettel, ohne
-     Passwort, oder wenn der Rückweg ausgeschaltet ist (Statuszeile
-     „Rückweg-Prüfung" orange).
-
-<!-- -->
-
-250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
-     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
-     `post_ende()`).* Zugeordnet: **Schritt 17**.
-
-     Ein POST, der seine Seite selbst ausgibt statt umzuleiten, hinterlässt
-     im Browser ein Formular, das sich beim Neuladen wiederholt. Ein Teil der
-     Admin-Seiten macht es richtig, ein Teil nicht.
-
-     **Nicht in Schritt 15**, obwohl der Befund dort entstanden ist: Schritt
-     15 verschiebt Code an eine Stelle und ändert keine Wege durch die
-     Anwendung. Umleiten nach POST ist ein geänderter Weg — er gehört in eine
-     Runde, die Wege ändern darf.
-     **Teilweise erledigt 27.09.2026 mit R4-11 (Web 21.1.9):** elf Seiten
-     leiten um, `flash_setzen()` trägt Ort, Ton und Ergebnis (E-R4-33 bis
-     -36). **Offen: `betrieb_server.php`** — auf der Liste von Schritt 18
-     und deshalb dort (Konzept R4 2.3); der Weg ist derselbe.
-     **Zuordnung in 18 (28.09.2026):** Paket SR-02, das `betrieb_server.php`
-     ohnehin um eine Karte erweitert (Konzept SR, E-SR-37).
-
-<!-- -->
-
-251. **Cookie-Attribut `secure` der Sitzung ist in zwei Arten HTTPS-abhängig, in zwei fest.** · gehört zu: 18 · Stand: teilweise · seit 20.09.2026
-     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-12).* Zugeordnet:
-     **Schritt 18**, zusammen mit der Sitzungsbindung (Nr. 242).
-
-     Vier Stellen setzen das Attribut, und sie setzen es verschieden: zweimal
-     abhängig davon, ob die Anfrage über HTTPS kam, zweimal fest. Nach
-     Schritt 15 AP2 stehen sie alle in `sitzung_lib.php` — dann ist es eine
-     Tabelle und keine Suche, und dann lässt sich entscheiden, welche der
-     vier Arten die richtige ist.
-
-     **Eingetreten am 21.09.2026 (Web 20.27.0, Schritt 15 AP2).** Die Tabelle
-     heißt `SITZUNG_ARTEN` und steht in `sitzung_lib.php` neben
-     `sitzung_starten()`. Fest auf `true`: `app` und `passwort`. Von HTTPS
-     abhängig: `lesend` und `einrichtung` — also die beiden Arten, die auf
-     einer Anlage laufen können, deren HTTPS-Lage die Einrichterin erst
-     herstellt. Die Entscheidung für Schritt 18 ist damit **eine Zeile in
-     einer Tabelle**, nicht mehr eine Suche über neun Dateien.
 
 <!-- -->
 
@@ -1167,26 +1007,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-344. **„Freigabe widerrufen" mit unauflösbarem Handgriff schreibt eine `konto.json` in die Wurzel der Konto-Backups.** · gehört zu: 18 · Stand: offen · seit 27.09.2026
-     *Aufgenommen 27.09.2026 mit R4-11 (gefunden vom Umbau der Seite
-     Konto-Backups, F-R4-33).* `edbak_freigabe_widerrufen()` prüft die
-     Kennung nicht. Lässt sich der Handgriff eines POST nicht auflösen, ist
-     die Kennung leer, und `edbak_begleit_schreiben('')` legt eine
-     versiegelte `konto.json` in der Wurzel der Ablage an und meldet Erfolg:
-     „Freigabe widerrufen." Erreichbar ist das über `admin_sicherungen.php`
-     (dort gibt es für den Zweig kein Formular mehr, nur ein handgebautes
-     POST einer Administratorin) und über die Kontoseite. **Nicht in 17**,
-     weil `adminbackup_lib.php` für Schritt 18 frei bleiben soll (Konzept R4
-     2.3, E-R4-37). *Weg:* `edbak_freigabe_widerrufen()` und
-     `edbak_begleit_schreiben()` verlangen `edbak_kennung_gueltig()`, wie es
-     `edbak_ordner_loeschen()` schon tut; die Aufrufer melden dann den
-     Fehlschlag. *Abnahme:* POST `widerrufen` mit einem Handgriff aus
-     Nullen → Fehlermeldung, keine Datei in der Wurzel der Ablage.
-     **Zuordnung in 18 (28.09.2026):** Paket SR-03, das `adminbackup_lib.php`
-     ohnehin offen hat; die Gegenlesung liest es mit (Konzept SR, E-SR-37).
-
-<!-- -->
-
 345. **Die Installationsseite meldet Erfolg, ohne zu wissen, ob gespeichert wurde.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 27.09.2026
      *Aufgenommen 27.09.2026 mit R4-11 (F-R4-34).* Zwei kleine Lücken auf
      `admin_installation.php`, beide älter als die Umleitung nach POST:
@@ -1233,26 +1053,9 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      WELCHE Waisen es sind (Tabelle, Kennung, Konto), und dann die Probe
      oder den Weg suchen, der sie hinterlässt. *Abnahme:* die Jobprobe
      nennt fremde Waisen mit Tabelle und Kennung; die Quelle ist gefunden
-     oder als Grenze benannt.
-
-<!-- -->
-
-350. **Passkeys als zweiter Faktor neben TOTP.** · gehört zu: 18 · Stand: offen · seit 27.09.2026
-     *Aufgenommen 27.09.2026 in der Nachfassung des Konzepts SR (Paket
-     SR-09, E-SR-29); herausgelöst aus Nr. 146, dessen Passkey-Frage damit
-     beantwortet ist.* Ein TOTP-Code lässt sich auf einer gefälschten Seite
-     abgreifen und weiterreichen; eine WebAuthn-Signatur ist an den Ursprung
-     gebunden — der Code-Schritt wird phishingfest. **Bauform:** ohne
-     Fremdbestandteil — `rw_pruefen()` prüft schon ECDSA P-256 mit phpseclib,
-     `Crypt/RSA` liegt für RS256 daneben, es fehlt ein kleiner CBOR-Leser
-     (`passkey_lib.php`, E-SR-30); Tabelle `passkeys` (Migration); die Karte
-     „Zweitfaktor" bekommt den Abschnitt, der Code-Schritt den Knopf „Mit
-     Passkey bestätigen"; Codes und Rückweg bleiben der Notweg; Anlegen und
-     Entfernen verlangen einen frischen Code. **Prüfmittel:** Bedienweg mit
-     dem virtuellen Authenticator Chromiums (CDP `WebAuthn`), Probe mit
-     selbst erzeugten Vektoren (ES256, RS256, jede Ablehnung). **Nicht
-     dabei:** Passkeys mit PRF als Ersatz der Passwortableitung (E-SR-28).
-     *Abnahme:* Konzept SR, Paket SR-09; Prüfdokument P-SR-16.
+     oder als Grenze benannt. *Drittes Mal 28.09.2026 (SR-01), wieder zwei:*
+     davor frische Anlage, einzeln Zweitfaktor-, Rollen-, Wartungs-,
+     Protokoll-, Rückweg-, Sitzungsprobe, dann `proben.sh alle` bis `ingest`.
 
 <!-- -->
 
@@ -1290,6 +1093,120 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
      28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
      → 0 Überschneidungen.
+
+<!-- -->
+
+353. **Die Schemaprobe vergleicht eine migrierte Tabelle nicht mit der frisch angelegten.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 28.09.2026
+     *Aufgenommen 28.09.2026 in SR-09 (Konzept SR, F-SR-28).* Die Kommentare
+     der Migrationen `2026_09_28_vertraute_geraete` und `2026_09_28_passkeys`
+     sagten, die Schemaprobe halte fest, dass `schema.sql` und die Migration
+     dieselbe Tabelle bauen. Sie tut es nicht: Sie spielt `schema.sql` auf
+     vier Fassungen ein und prüft die Vorabliste. Ob eine Migration auf einem
+     Altbestand dieselben Spalten, Schlüssel, Zeichensätze und Fremdschlüssel
+     erzeugt wie die frische Anlage, misst niemand — eine abweichende
+     Sortierfolge oder ein vergessener Index fiele erst auf einer migrierten
+     Anlage auf, und dort erst, wenn eine Abfrage daran scheitert. Die
+     Kommentare sind berichtigt; für die zwei Tabellen dieser Runde ist es
+     von Hand gemessen (`SHOW CREATE TABLE` ohne `AUTO_INCREMENT`,
+     zeichengleich, Prüfdokument SR).
+     *Weg:* Die Plattformmatrix spielt je Fassung zusätzlich einen älteren
+     Stand von `schema.sql` ein, führt die Migrationen aus und vergleicht
+     `SHOW CREATE TABLE` jeder Tabelle mit der frisch angelegten; eine
+     Abweichung ist rot. *Abnahme:* eine absichtlich abweichende Spalte in
+     einer Migration → rot.
+
+<!-- -->
+
+354. **`protokoll()` schluckt in einer Transaktion einen Deadlock — der Rest des Rumpfs läuft ohne Transaktion weiter.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 29.09.2026
+     *Aufgenommen 29.09.2026 in H-SR-08 (Konzept SR, F-SR-50, Nachprüfung
+     D-3); am selben Tag nachgestellt und berichtigt (F-SR-63).* `protokoll()`
+     fängt jede Ausnahme. Steht es im Rumpf von `db_transaktion()`, und
+     bricht sein INSERT mit einem Deadlock ab, rollt InnoDB die GANZE
+     Transaktion zurück und beendet sie; **jede weitere Anweisung läuft im
+     Autocommit und bleibt**, erst `commit()` wirft. Nachgestellt in
+     `totp_abschalten()` (MariaDB 10.11): Faktor an, Codes und Geräte
+     zurück, **die Passkeys gelöscht** samt Eintrag „mit dem Zweitfaktor",
+     Fehlerseite, keine Mail. Beim Passwort (E-SR-40) ist der Eintrag die
+     letzte Anweisung — dort bleibt nichts (gelesen). Bis zur Berichtigung
+     stand hier „der Aufrufer meldet Erfolg"; das tritt nicht ein. *Weg:*
+     `protokoll()` wirft in einer offenen Transaktion, oder die Einträge
+     wandern hinter den Commit. *Abnahme:* ein ECHTER Deadlock — eine zweite
+     Verbindung (die schwerere) sperrt die Lücke hinter der letzten Zeile von
+     `protokoll_ereignisse`, dann die Kontozeile — → nichts bleibt stehen.
+     Ein Auslöser mit `SIGNAL` stellt den Fall nicht her.
+
+<!-- -->
+
+355. **Ein Formularfeld als Liste gibt eine PHP-Warnung — `(string)$_POST[…]` an 114 Stellen.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 29.09.2026
+     *Aufgenommen 29.09.2026 mit der dritten Lesung von H-SR-08 (Konzept SR,
+     F-SR-65).* Aus `code[]=x` statt `code=x` macht
+     `(string)($_POST['code'] ?? '')` den Text „Array" mit der Warnung
+     „Array to string conversion", und der Behandler schreibt sie in den
+     Reiter System — höchstens eine Zeile je Stelle und Anfrage. Für
+     `passkey_antwort` ist das seit Web 21.11.0 behoben (F-SR-47); das
+     Nachbarfeld `code` in `login.php` und `zweitfaktor.php`, `signatur` und
+     `tokens` in `login.php` haben es noch — `tokens` im ersten Schritt, ohne
+     Passwort, hinter dem Anmelde-Topf. `grep -rn '(string)($_POST['` über
+     `server/` zählt 114 Stellen. *Weg:* ein Helfer `post_text()` als die
+     eine Stelle (R83) und eine Registerzeile gegen das Muster. *Abnahme:*
+     jedes Feld der Anmeldeschritte als Liste → Formularfehler, keine Zeile
+     im Reiter System. *Seit Web 21.14.0 (SR-08, F-SR-96)* nimmt
+     `registrieren.php` seine Felder über eine lokale Hülle `$feld` — dort
+     war `email[]` sogar eine 500; jetzt 109 Stellen, und `$feld` steht mit
+     `zweitfaktor_notweg.php` zweimal: beide gehen in `post_text()` auf.
+
+<!-- -->
+
+356. **Zwei Abschnitte der Karte „Schlüssel des Servers" kleben ohne Abstand am Knopffuß.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 29.09.2026
+     *Aufgenommen 29.09.2026 mit SR-03 (Konzept SR, F-SR-73; gefunden an den
+     Bildern zu P-SR-05).* „Nachtragen vom Blatt" und „Neuanfang" stehen als
+     `h3.listen-form-titel` unmittelbar hinter `.listen-form-fuss` — die
+     Überschrift hat oben keinen Abstand, und die Knöpfe darüber gehören
+     optisch zu ihr. Für den neuen Abschnitt „Serverschlüssel wechseln" ist
+     es in SR-03 behoben: Er steht in `.listen-form` (Linie und Abstand
+     darüber). Die zwei alten erscheinen nur in der Lage *abweichend* und
+     sind nicht angefasst, weil kein Bild sie in dieser Lage zeigt. *Weg:*
+     beide Formulare ebenso in `.listen-form`. *Abnahme:* Bild der Karte in
+     der Lage *abweichend* (Bilderlauf oder Bedienweg mit verstellter
+     Marke), 390 und 1280 px.
+
+<!-- -->
+
+357. **Der Fehlertext eines Jobs trägt den Klassennamen der Ausnahme.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 04.10.2026
+     *Aufgenommen 04.10.2026 mit H-SR-06 (Konzept SR, F-SR-82; Nebenbefund
+     der Gegenlesung zu O-7).* `jobs_einen_lauf()` schreibt
+     `get_class($ex) . ': ' . $ex->getMessage()` nach `letzter_fehler` und in
+     den Bericht; „Jetzt weiterarbeiten" (Karte „Schlüssel des Servers") und
+     die Karte „Jobs" zeigen ihn so der BetreiberIn —
+     „RuntimeException: …" ist Technik, keine Auskunft. Betrifft alle Jobs,
+     nicht nur den Schlüsselwechsel; deshalb nicht in H-SR-06 geändert. Im
+     Reiter System steht die Klasse ohnehin in den Daten (`klasse`). *Weg:*
+     im Bericht und in `letzter_fehler` nur die Meldung, die Klasse bleibt
+     im Reiter System. *Abnahme:* ein Job, der wirft (Probe mit
+     verfälschtem Häppchen) — die Karte zeigt die Meldung ohne Klasse, der
+     Reiter System die Klasse. *Dazu (Nachprüfung H-SR-06, F-SR-87):* der
+     Grund in der Zeile „Ließen sich nicht umhüllen" ist ebenfalls der rohe
+     Ausnahmetext; eine PDOException trüge den Datenbanknamen, ein
+     TypeError Pfade. Dieselbe Kürzung an derselben Stelle.
+
+<!-- -->
+
+358. **Die zweite Passwortseite: Token-Ableitung an einer Stelle, und die Wache vergleicht sie mit.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 04.10.2026
+     *Aufgenommen 04.10.2026 mit SR-04 (Konzept SR, F-SR-90, E-SR-84).*
+     Der Notzugang `zweitfaktor_notweg.php` leitet das Passwort-Token ab wie
+     `login.php` (Salz über `auth_salt.php`, je Rundenzahl
+     `EdCrypto.deriveKeys()`) — mit einer zweiten Kopie der rund zwanzig
+     Zeilen, weil `login.php` für Schritt 18 zu ist (E-SR-14) und dort auch
+     die Prüfung (`login_zeile()`, Token je `kdf_iter`, Blindvergleich) als
+     lokaler Code steht. Dazu: Die Integritätswache vergleicht die
+     Inline-Skripte der Seiten, auf denen ein Passwort getippt wird
+     (`tools/integritaetswache/wache.py`, `SEITEN`) — dort steht nur
+     `login.php`. Die neue Seite vorher einzutragen, machte die Wache rot,
+     solange die Anlage sie nicht hat. *Weg:* eine Funktion in `crypto.js`
+     (Salz holen, Token je Rundenzahl) für beide Seiten, die Prüfung als
+     Funktion neben `AUTH_VERGLEICHSWERT`; nach der Auslieferung von
+     Web 21.13.0 `zweitfaktor_notweg.php` in `SEITEN`. *Abnahme:* ein
+     `fetch('auth_salt.php'` im Quelltext; die Wache misst zwei Seiten.
 
 <!-- -->
 

@@ -10,6 +10,11 @@
  *                               otpauth-Adresse; mit dem Code eingeschaltet
  *                               stehen zehn Codes da, und „Weiter" wird erst
  *                               mit dem Haken frei
+ *   zweitfaktor-merken          „Dieses Gerät n Tage merken" (Schritt 18,
+ *                               SR-02): der Haken nennt die Dauer der
+ *                               Rollengruppe; angehakt fragt die nächste
+ *                               Anmeldung im selben Browser keinen Code, und
+ *                               das Profil zählt ein Gerät
  *
  * EIN EIGENES KONTO, KEINE DER BEIDEN ROLLEN DES LÄUFERS: Das Prüfkonto hat
  * seinen Zweitfaktor schon, und das Demo-Konto darf keinen haben. Der Weg
@@ -28,14 +33,16 @@
 import { readFileSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { naechsterCode, zaehlerdatei } from '../../zweitfaktor/totp.mjs';
-import { probekontoAnlegen, probekontoRaeumen, eigenerKontext, passwortSchicken }
+import { execFileSync } from 'node:child_process';
+import { naechsterCode, zaehlerdatei, SANDBOX } from '../../zweitfaktor/totp.mjs';
+import { probekontoAnlegen, probekontoRaeumen, eigenerKontext, passwortSchicken, php, WURZEL }
   from '../probekonto.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const JSQR = readFileSync(join(HIER, '..', 'vendor', 'jsQR.js'), 'utf-8');
 const ADRESSE = 'bedienprobe-zweitfaktor@probe.invalid';
 const PASSWORT = 'Bedienprobe-Zweitfaktor-Anker-Glas-7';
+const ADRESSE_M = 'bedienprobe-merken@probe.invalid';
 
 export const wege = [
   {
@@ -55,7 +62,7 @@ export const wege = [
         const adresse = await s.locator('.zweitfaktor-einrichtung a.knopf').getAttribute('href');
         geheimnis = (await s.locator('.zweitfaktor-einrichtung .codeblock-wert').textContent())
           .replace(/\s+/g, '');
-        await k.bild('zweitfaktor-tor');
+        await k.bild('zweitfaktor-tor', s);
         const abzug = (await s.locator('svg.qr').screenshot()).toString('base64');
 
         /* jsQR auf einer leeren Seite: ohne CSP, ohne die Anwendung. */
@@ -85,7 +92,7 @@ export const wege = [
         const vorher = await s.locator('[data-zf-weiter]').isDisabled();
         await s.check('[data-zf-gesichert]');
         const nachher = await s.locator('[data-zf-weiter]').isDisabled();
-        await k.bild('zweitfaktor-codes');
+        await k.bild('zweitfaktor-codes', s);
         await Promise.all([
           s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
           s.locator('[data-zf-weiter]').click(),
@@ -108,6 +115,77 @@ export const wege = [
         /* Der Zähler gehört zu einem Geheimnis, das es nach dem Lauf nicht
            mehr gibt. */
         if (geheimnis) { try { unlinkSync(zaehlerdatei(geheimnis)); } catch { /* nie angelegt */ } }
+      }
+    },
+  },
+  {
+    name: 'zweitfaktor-merken',
+    paket: 'SR-02', punkt: 'E-SR-18', rolle: 'demo',
+    soll: 'Haken „Dieses Gerät 30 Tage merken" (NutzerIn); angehakt: zweite Anmeldung '
+        + 'ohne Code; Profil: „Gemerkte Geräte" 1',
+    async fahren(k) {
+      /* EIN KONTO DER ROLLE user MIT DEM GEHEIMNIS DER SANDBOX
+       * (`tools/zweitfaktor/pruefkonto.php`, dieselben Funktionen wie das
+       * Tor). Die Dauer der NutzerInnen steht fest auf 30 und nachher wieder
+       * auf dem Stand von vorher. */
+      probekontoAnlegen(ADRESSE_M, PASSWORT, 'user', 'Bedienprobe Merken');
+      execFileSync('php', ['tools/zweitfaktor/pruefkonto.php', ADRESSE_M], { cwd: WURZEL });
+      const vorher = php('echo (string)app_state_lesen("zf_geraet_tage_user");');
+      php('app_state_setzen("zf_geraet_tage_user", "30");');
+      const kontext = await eigenerKontext(k);
+      try {
+        const s = await kontext.newPage();
+        await passwortSchicken(s, k.basis, ADRESSE_M, PASSWORT);
+        await s.waitForSelector('#codeform', { timeout: 90000 });
+        const text = (await s.locator('#codeform .schalter-text').first().textContent() || '')
+          .replace(/\s+/g, ' ').trim();
+        await s.fill('input[name="code"]', await naechsterCode(SANDBOX));
+        await s.locator('#codeform label[for="sw-merken"]').click();
+        /* Der Schalter gleitet; ohne das Warten zeigte das Bild ihn auf dem
+         * Weg, also scheinbar aus, obwohl er an war. */
+        await s.evaluate(() => Promise.all(document.getAnimations().map(a => a.finished)));
+        await k.bild('zweitfaktor-code-merken', s);
+        await Promise.all([
+          s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+          s.locator('#codeform button[type="submit"]').click(),
+        ]);
+        const nachCode = new URL(s.url()).pathname.split('/').pop();
+        await s.goto(`${k.basis}/logout.php`, { waitUntil: 'domcontentloaded' });
+        await passwortSchicken(s, k.basis, ADRESSE_M, PASSWORT);
+        /* NICHT AUF `login.php` WARTEN: Dort steht die Seite schon, bevor das
+         * Formular abgeschickt ist (das Passwort wird im Browser erst
+         * abgeleitet) — die erste Fassung las den Stand davor und meldete
+         * „MIT Code". Gewartet wird auf eines der beiden Ziele. */
+        await Promise.race([
+          s.waitForURL(/index\.php/, { timeout: 90000 }),
+          s.waitForSelector('#codeform', { timeout: 90000 }),
+        ]);
+        await s.waitForLoadState('domcontentloaded');
+        const zweite = new URL(s.url()).pathname.split('/').pop();
+        const ohneCode = zweite === 'index.php' && (await s.locator('#codeform').count()) === 0;
+        await s.goto(`${k.basis}/einstellungen.php?t=profil#k-zweitfaktor`,
+                     { waitUntil: 'domcontentloaded' });
+        const zeile = await s.evaluate(() => {
+          const z = [...document.querySelectorAll('#k-zweitfaktor .zeile')]
+            .find(e => e.textContent.includes('Gemerkte Geräte'));
+          return z ? z.querySelector('.plakette')?.textContent.trim() : null;
+        });
+        const zeileZf = s.locator('#k-zweitfaktor .zeile', { hasText: 'Gemerkte Geräte' }).first();
+        if (await zeileZf.count()) { await zeileZf.scrollIntoViewIfNeeded(); }
+        await k.bild('einstellungen-zweitfaktor-geraete', s);
+        const ok = text.startsWith('Dieses Gerät 30 Tage merken') && nachCode === 'index.php'
+                && ohneCode && zeile === '1';
+        return {
+          ist: `Haken „${text.slice(0, 30)}…" · nach Code ${nachCode} · zweite Anmeldung `
+             + `${ohneCode ? 'ohne Code' : 'MIT Code'} · Profil ${zeile ?? '—'}`,
+          ok,
+          bemerkung: ok ? '' : 'Soll: 30 Tage · index.php · ohne Code · 1',
+        };
+      } finally {
+        await kontext.close();
+        probekontoRaeumen(ADRESSE_M);
+        php(vorher === '' ? 'app_state_loeschen("zf_geraet_tage_user");'
+                          : 'app_state_setzen("zf_geraet_tage_user", ' + JSON.stringify(vorher) + ');');
       }
     },
   },

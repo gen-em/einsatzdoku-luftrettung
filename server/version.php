@@ -7856,5 +7856,217 @@ declare(strict_types=1);
  *   3,7 statt 5,8 s zu sehen, fertig ist die Seite rund 0,7 s spaeter
  *   (E-R4-64). Die Messung dazu ist mit berichtigt: Sie lief bis dahin ab
  *   dem Laden der Startseite.
+ *
+ * 21.7.0 — EINE GELESENE SITZUNGSDATEI IST WERTLOS (Schritt 18, SR-01,
+ *   Nr. 242, 251; E-SR-04 bis -06, E-SR-39). Nebenstufe ohne Migration —
+ *   aber mit einer Folge fuer alle: Nach dem Ausrollen meldet sich jede
+ *   Angemeldete einmal neu an. Bis hierher war der Dateiname die Sitzung;
+ *   wer `sess_<id>` las, aus dem Verzeichnis oder einem Webspace-Backup,
+ *   war angemeldet. Schritt 16 hatte den ORT gesichert, jetzt verliert die
+ *   Datei ihren WERT: Ein zweites Cookie `EDBIND` traegt 32 Zufallsbyte, die
+ *   Sitzung nur ihren SHA-256. Gebunden werden der halbe Stand vor dem Code
+ *   und die Anmeldung (neu gewuerfelt mit der Kennung); `auth_guard.php`
+ *   beendet eine Sitzung ohne passende Bindung mit dem Grund `bindung`,
+ *   `login.php` verwirft einen ungebundenen halben Stand, und die lesenden
+ *   Seiten — Handbuch, Rechtstexte, Notfall- und Codeblatt — sehen dann
+ *   keine Anmeldung. Alte Sitzungen werden bewusst nicht uebernommen: Sie
+ *   tragen keinen Hash, genau wie eine gelesene Datei. Beide Cookies stehen
+ *   in `sitzung_lib.php` (`SITZUNG_COOKIES` neben `SITZUNG_ARTEN`), und die
+ *   Sitzungshaertung zaehlt `setcookie()` ausserhalb dieser Datei und
+ *   `session_lib.php` als Befund. Dazu Nr. 251: Die Art `lesend` setzt
+ *   `secure` jetzt fest; `einrichtung` bleibt an HTTPS gebunden, weil sie
+ *   laeuft, bevor HTTPS steht (F-SR-06).
+ *
+ * 21.8.0 — „GERAET MERKEN" BEIM ZWEITFAKTOR (Schritt 18, SR-02; Rest aus
+ *   Nr. 141, dazu Nr. 250; E-SR-07, -15, -17, -18, -34, -37). Nebenstufe MIT
+ *   MIGRATION: `2026_09_28_vertraute_geraete` — nach dem Deploy muss eine
+ *   Administratorin `update.php` aufrufen. Nach einem Code aus der App kann
+ *   ein Browser gemerkt werden; dort fragt die Anmeldung dann keinen Code.
+ *   Das Cookie `EDGERAET` traegt 32 Zufallsbyte, die Tabelle nur ihren Hash —
+ *   kein User-Agent, kein Geraetename. Die Dauer stellt die BetreiberIn je
+ *   Rollengruppe ein (Betrieb -> Servereinstellungen, Karte „Anmeldung":
+ *   NutzerInnen 30, Verwaltung 7 Tage, 0 heisst aus), und GERECHNET WIRD SIE
+ *   BEIM PRUEFEN: Kuerzer gestellt gilt sofort, auch fuer schon gemerkte
+ *   Geraete. Gemerkt wird nur nach einem App-Code, nie nach
+ *   Wiederherstellungscode oder Rueckweg; vergessen beim Passwortwechsel und
+ *   -reset, bei jedem Abschalten des Zweitfaktors, mit dem Konto, im
+ *   Demo-Reset, mit „Alle vergessen" im Profil und — abgelaufen — im
+ *   Aufraeumjob (achtzehn Schritte). Dieselbe Migration legt
+ *   `app_state.notzugang_geheim` an, den Wert, den der Notzugang aus SR-04
+ *   verlangt (E-SR-24). Und `betrieb_server.php` leitet jetzt nach jedem
+ *   erfolgreichen POST um, mit der Meldung in der Karte (Nr. 250) — sie war
+ *   die letzte Seite unter Betrieb, die ihr Ergebnis selbst ausgab.
+ *
+ * 21.9.0 — DER FRISCHE CODE (Schritt 18, SR-07; E-SR-20, Q-SR-11). Neben,
+ *   ohne Migration. Vor einer kurzen Liste von Handlungen fragt die Anwendung
+ *   noch einmal nach dem Code, wenn der letzte aelter als 15 Minuten ist:
+ *   die sieben Schluesselgriffe und das Schluesselblatt, Rolle wechseln,
+ *   fremden Zweitfaktor zuruecksetzen, Konto loeschen, den eigenen
+ *   Zweitfaktor ausschalten. Die Liste steht in `db.php`
+ *   (`ZF_FRISCH_HANDLUNGEN`), das Tor in `auth_guard.php`
+ *   (`zweitfaktor_frisch_verlangen()`, vor dem Token), die Bestaetigung ist
+ *   ein zweiter Modus von `zweitfaktor.php` und steht in
+ *   `WARTUNG_AUSNAHMEN`. Frisch macht nur ein Code — ein gemerktes Geraet und
+ *   der Rueckweg nicht. Die Handlung wird nicht nachgespielt; die Seite sagt,
+ *   dass sie noch einmal auszuloesen ist. Das Register zaehlt nach, dass jede
+ *   Handlung genau einen Aufruf hat (Z43).
+ *
+ * 21.10.0 — PASSKEYS ALS ZWEITER FAKTOR (Schritt 18, SR-09; Nr. 350;
+ *   E-SR-28 bis -36, -42). Nebenstufe MIT MIGRATION: `2026_09_28_passkeys` —
+ *   nach dem Deploy muss eine Administratorin `update.php` aufrufen. Ein
+ *   Passkey ist ein weiteres Verfahren DESSELBEN Faktors, nicht ein eigener:
+ *   Er setzt den eingeschalteten Zweitfaktor voraus, Codes und Rueckweg
+ *   bleiben der Notweg, und `totp_abschalten()` nimmt ihn auf jedem Weg mit.
+ *   Der Gewinn ist die Bindung an den Ursprung — einen Code kann eine
+ *   gefaelschte Seite weiterreichen, eine WebAuthn-Signatur nicht. Gebaut
+ *   OHNE Fremdbestandteil (E-SR-30): `passkey_lib.php` mit eigenem
+ *   CBOR-Leser fuer die Teilmenge, die Registrierung und COSE brauchen,
+ *   Signaturen ueber das schon vendorierte phpseclib (ES256, RS256),
+ *   Attestation gelesen und nicht geprueft, der Schluessel als SPKI
+ *   gespeichert. Die `rp.id` ist der Hostname aus `app.base_url` (E-SR-42) —
+ *   fuer eine IP-Adresse oder ohne HTTPS gibt es keine Passkeys, und ein
+ *   Passkey gilt nur fuer die Adresse, an der er entstand. Anlegen und
+ *   Entfernen in der Karte „Zweitfaktor" nur mit frischem Code (zwei
+ *   Handlungen mehr in `ZF_FRISCH_HANDLUNGEN`, die erste davon ein Endpunkt:
+ *   `api/passkey_anlegen.php`); im Code-Schritt und auf der Bestaetigung
+ *   „Mit Passkey bestaetigen", und er zaehlt wie ein App-Code (Geraet
+ *   merken, frischer Code). Protokoll und Mail bei Anlegen und Entfernen,
+ *   ein zuruecklaufender Signaturzaehler als orange Meldung — der Passkey
+ *   bleibt. Keine Passkeys im Demo-Konto und im Konto-Backup; im
+ *   Komplett-Stand reisen sie mit.
+ *
+ * 21.11.0 — DIE GEGENLESUNG DER PASSKEYS (Schritt 18, H-SR-08; F-SR-33 bis
+ *   -52, E-SR-44 bis -53). Nebenstufe; die Migration `2026_09_28_passkeys`
+ *   ist AN ORT UND STELLE geaendert, weil 21.10.0 nirgends ausgeliefert war
+ *   (E-SR-51) — nach dem Deploy weiterhin `update.php`. Fable hat
+ *   `passkey_lib.php` und die Anbindung gegengelesen: 41 Befunde, keiner
+ *   hoch. Der schwerste: RSA-Schluessel hatten nur eine Untergrenze, und ein
+ *   selbst gebauter Schluessel mit riesigem Exponenten kostete je Pruefung
+ *   Sekunden bis Minuten Rechenzeit; mit e = 1 liess sich die Signatur ohne
+ *   Geheimnis rechnen. Jetzt 2048 bis 4096 Bit, e ungerade, 3 bis 64 Bit.
+ *   Dazu ein strengerer Leser (Textschluessel wie Zahlen, genau die
+ *   COSE-Labels, Karten am Kopfbyte, Koordinaten unter p, kanonisches
+ *   Base64url, Tiefe nur fuer Behaelter), ein Deckel auf die Antwort, Felder
+ *   vom falschen Typ ohne PHP-Warnung, ein atomar fortgeschriebener Zaehler
+ *   und bei zurueckgelaufenem Zaehler eine Mail an die Kontoadresse
+ *   (hoechstens eine je Tag; E-SR-46). Eine abgelaufene Herausforderung und
+ *   ein zurueckgelaufener Zaehler zaehlen nicht mehr als Fehlversuch. Die
+ *   Tabelle traegt je Zeile ihre Adresse (`rp_id`, E-SR-48) und den
+ *   eindeutigen Schluessel auf einem SHA-256 der Kennung (E-SR-47); nach
+ *   aussen heisst jede abgewiesene Registrierung „nicht angenommen", der
+ *   Grund steht im Protokoll (E-SR-45). `totp_abschalten()` nimmt Geraete
+ *   und Passkeys in derselben Transaktion mit; das Einrichten raeumt
+ *   verwaiste. Passkeys haengen nicht am Serverschluessel (E-SR-49).
+ *   Die Behebung ist ein zweites Mal gelesen worden: 23 weitere Befunde,
+ *   darunter eine ES256-Signatur aus 32 KiB unbestimmter Laengen, die
+ *   phpseclib 356 MiB kostete — die Form prueft jetzt `pk_es256_form()`
+ *   vorher. Eingearbeitet bis auf `protokoll()` in einer Transaktion
+ *   (Nr. 354).
+ *
+ * 21.11.1 — `ingest.php` OHNE DEADLOCK (Schritt 18, SR-05; Nr. 210,
+ *   E-SR-12, E-SR-54). Korrekturstufe. Zwanzig gleichzeitige Pakete eines
+ *   Geraets ergaben in der Verbindungsprobe 39 von 60 Antworten 503 — an
+ *   `days` (16), am Upsert auf `missions` (12) und an `devices.last_seen`
+ *   (10). Die zwei Zeilen, die alle Pakete teilen, stehen jetzt hinter dem
+ *   Commit; dazu laeuft der Rumpf bei 1205/1213 bis zu dreimal. Gemessen:
+ *   180 von 180 ohne 503. Das Verschieben allein leistet es; die Schleife ist
+ *   das Netz (allein: 2 von 180). Kein Schema, keine Vertragsaenderung.
+ *
+ * 21.11.2 — DIE OFFENEN PUNKTE VON H-SR-08 GEMESSEN (Schritt 18; F-SR-58
+ *   bis -67, E-SR-56 bis -59). Korrekturstufe. Vier Punkte standen nach
+ *   21.11.0 als „nur gelesen" im Pruefdokument; jetzt ist jeder gemessen: die
+ *   Einarbeitung der Nachpruefung ein drittes Mal gelesen (zwoelf Meldungen,
+ *   keine mittel), der Zaehler unter echtem Wettlauf (zwei Prozesse, genau
+ *   einer durch), Nr. 354 mit einem echten Deadlock nachgestellt (die
+ *   Beschreibung war falsch: kein gemeldeter Erfolg, sondern halb geschrieben
+ *   und ein Fehler) und der Knopf in `passkey.js` im Bedienweg. Im Code:
+ *   `pk_spki_laden()` haelt alle Grenzen der Registrierung, nicht nur die
+ *   Groessen; nach dem Absenden sagt die Meldung immer „Seite neu laden".
+ *   Kein Schema, keine Vertragsaenderung.
+ *
+ * 21.12.0 — DER SERVERSCHLUESSEL WECHSELT ALS VORGANG (Schritt 18, SR-03;
+ *   Nr. 247, 233, 344; E-SR-09 bis -11, -60 bis -70). Nebenstufe. Bis
+ *   hierher gab es keinen Wechsel: Wer `server_key` von Hand aenderte, machte
+ *   jedes versiegelte Stueck stumm — Zugaenge der Backup-Ziele,
+ *   Zweitfaktor-Geheimnisse, Konto-Backups samt Begleitdatei, Archive des
+ *   Protokolls. Jetzt steht der bisherige als `server_key_alt` neben dem
+ *   neuen, `sk_oeffnen()` versucht beide, und der Job `schluesselwechsel`
+ *   huellt in Haeppchen um, was der Server erreicht, und weist jedes Stueck
+ *   danach mit dem neuen nach. Der bisherige geht erst, wenn alles
+ *   nachgewiesen ist, ein Komplett-Stand unter dem neuen liegt und die
+ *   Rueckfrage zum Blatt beantwortet ist; die Riegel stehen in der Funktion.
+ *   Komplett-Staende werden NICHT umgehuellt (E-SR-21) — ihr Kopf traegt
+ *   seitdem die Kennung, und das Einspielen versucht neu, dann bisher.
+ *   Was auf einem Backup-Ziel liegt, bleibt unter dem bisherigen; deshalb
+ *   der Pflicht-Haken beim Start und die Blatt-Regel (E-SR-10). Beide
+ *   Rotationen machen die Rueckfrage zum Blatt sofort faellig (Nr. 233),
+ *   und sie laufen nur nacheinander (E-SR-60). `edbak_begleit_schreiben()`
+ *   und `edbak_freigabe_widerrufen()` verlangen eine gueltige Kennung
+ *   (Nr. 344). Kein Schema; `config.php` kennt einen Eintrag mehr, der nur
+ *   waehrend eines Wechsels steht.
+ *
+ * 21.12.1 — DIE GEGENLESUNG VON SR-03 BEHOBEN (Schritt 18, Halt H-SR-06;
+ *   F-SR-78 bis -87, E-SR-71 bis -79). Korrekturstufe. Eine zweite
+ *   Lesung hat 42 Meldungen gebracht, zwei davon hoch: Zwei Wechsel, die
+ *   gleichzeitig abgeschickt werden, konnten einen frisch gewuerfelten
+ *   Schluessel ueberschreiben, nachdem schon Zeilen unter ihm lagen — und
+ *   der Rueckweg der Schluesselwechselprobe warf im eigenen Fehlerfall den
+ *   Schluessel weg, unter dem die Stuecke der oertlichen Anlage lagen. Jeder
+ *   Griff an einen Schluessel in `config.php` laeuft jetzt unter der Sperre
+ *   der Jobzeile `schluesselwechsel`, und `server_key` wird nur ersetzt,
+ *   wenn dort noch der gesicherte Wert steht. Der Nachweis beginnt
+ *   fruehestens zehn Minuten nach dem Beginn (E-SR-73), damit er auch sieht,
+ *   was ein Prozess mit dem bisherigen Schluessel im Speicher noch
+ *   versiegelt hat; ein Komplett-Stand, dessen Versiegelung ueber den
+ *   Wechsel laeuft, beginnt sie neu (E-SR-72). Ein Wechsel, der von Hand in
+ *   `config.php` steht, bekommt denselben Beginn wie einer ueber die Karte
+ *   (E-SR-74). Ein Stueck, das beim Umhuellen wirft, haelt den Wechsel nicht
+ *   mehr an, sondern wird genannt; der Nachweis ist so scharf wie das
+ *   Umhuellen und kann nicht mehr endlos kreisen. Beginn und Abschluss
+ *   haben je eine Mailvorlage. Die Nachpruefung der Behebung fand noch drei
+ *   Stellen mit Gewicht: Die Probe merkte sich nach einem Wettlauf ohne
+ *   Sieger den alten Schluessel als neuen, ein Archiv mit Schreibfehler
+ *   und ein Nachweis ohne Stueck liessen den Job kreisen — behoben im
+ *   selben Zug, mit der Waise beim Anteil und einer Sperrmeldung, die sagt,
+ *   bis wann (F-SR-84 bis -87). Kein Schema.
+ *
+ * 21.12.2 — DIE NACHMESSUNG ZU H-SR-06 (Schritt 18; F-SR-88, E-SR-80).
+ *   Korrekturstufe. Was das Pruefdokument „gelesen, nicht gemessen" nannte,
+ *   ist jetzt gemessen — und zwei Auskuenfte stimmten dabei nicht: Ueber der
+ *   Decke von 20 werfenden Stuecken zeigte die Karte zwischen den Haeppchen
+ *   wieder 20 statt aller (`fehler_mehr` wurde beim Neustart geleert), und
+ *   warf das Inventar beim Beginn, stand bis zum ersten Haeppchen „noch 0
+ *   von 0" (`sw_gezaehlt()`). Der gefaehrliche Gegenfall zur Probe ist mit
+ *   einer Sicherung der Anlage gefahren und zurueckgelegt. Kein Schema.
+ *
+ * 21.13.0 — DER NOTZUGANG DER EINZIGEN BETREIBERIN (Schritt 18, SR-04;
+ *   Nr. 249; E-SR-13, E-SR-24, E-SR-81 bis -87). Nebenstufe. Hatte die
+ *   einzige BetreiberIn Zweitgeraet, Codes und Notfallblatt verloren, fuehrte
+ *   kein Weg ueber die Oberflaeche zurueck — nur SQL im Datenbankwerkzeug,
+ *   an der Anwendung vorbei. `zweitfaktor_notweg.php` ist der vierte Weg und
+ *   verlangt drei Dinge: eine Datei, deren Namen die Seite nennt und die die
+ *   BetreiberIn per FTP anlegt (Schreibnachweis; der Name haengt an der
+ *   Sitzung), den Wert `app_state.notzugang_geheim` aus der Datenbank und
+ *   das Passwort. Jede andere Lage antwortet gleich und gleich lang; der Wert
+ *   wird nach jedem Gebrauch neu gewuerfelt, in derselben Transaktion wie
+ *   das Abschalten. Die Mechanik der Nachweisdatei steht seitdem einmal, in
+ *   `nachweis_lib.php` — `install.php` und `wiederherstellen.php` hatten sie
+ *   wortgleich. Wer auch den Datenbankzugang verloren hat, bleibt beim
+ *   Wiederanlauf: so entschieden (E-SR-24). Kein Schema.
+ *
+ * 21.14.0 — DIE RECHENAUFGABE VOR DER REGISTRIERUNG (Schritt 18, SR-08;
+ *   Nr. 228; E-SR-26, E-SR-88 bis -95). Nebenstufe. Zu Honeypot,
+ *   Mindestausfuelldauer und den drei Toepfen kommt eine vierte stille
+ *   Bremse: ein Proof-of-Work. Der Server stellt beim Zeichnen des Formulars
+ *   eine Aufgabe und merkt sie sich in der Sitzung, ein Worker im Browser
+ *   rechnet SHA-256, waehrend die Person tippt, und der Server prueft mit
+ *   EINER Rechnung, ob der Hash mit 16 Nullbits beginnt. Jede Aufgabe gilt
+ *   einmal und zwei Stunden. Dafuer hat die Seite jetzt eine Sitzung — nur
+ *   bei offener Registrierung. Die Bitzahl ist gemessen, nicht geschaetzt
+ *   (Median 0,47 s ungedrosselt, 1,71 s auf einem Viertel der CPU); die
+ *   Drosselung der Entwicklerwerkzeuge erreicht keinen Worker, deshalb mass
+ *   eine CPU-Quote des Betriebssystems (F-SR-95). Ohne JavaScript laesst
+ *   sich hier kein Konto mehr anlegen, und der Satz unter dem Knopf sagt es.
+ *   Kein Schema.
  */
-const WEB_VERSION = '21.6.1';
+const WEB_VERSION = '21.14.0';

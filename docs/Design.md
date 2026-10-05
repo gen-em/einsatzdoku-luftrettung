@@ -938,7 +938,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 38 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 39 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 3 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 37 |
@@ -949,7 +949,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 23 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 13 |
 | `mail.svg` | Tabler Icons „mail" (MIT) | 15 |
@@ -957,10 +957,10 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 22 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 23 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
-| `protokoll.svg` | Tabler Icons „list" (MIT) | 20 |
+| `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 32 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
@@ -968,14 +968,14 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 20 |
 | `server.svg` | Tabler Icons „server" (MIT) | 9 |
-| `sicherung.svg` | Tabler Icons „archive" (MIT) | 21 |
+| `sicherung.svg` | Tabler Icons „archive" (MIT) | 24 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 47 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 48 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
-| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 12 |
+| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
@@ -985,7 +985,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 32 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 33 |
 
 58 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
@@ -3135,7 +3135,7 @@ die Einteilung und dass die Ränder angebrochen sein können.
 | **Inhaltsseite** | `ui_geruest_start(['leiste' => 'diensttage'])` | Diensttage | Tagesübersicht, Einsatzansicht, Formular, Papierkorb, Zeitraum |
 | **Einstellungsseite** | `ui_geruest_start(['leiste' => 'einstellungen'])` | Einstellungsmenü | Profil, Standorte, Geräte, Konto-Backups, Installation, Betrieb |
 | **Suchseite** | `ui_geruest_start(['leiste' => 'filter'])` | Filter, von der Seite gefüllt | Suche |
-| **Öffentliche Lesespalte** | `ui_kopf(['menue' => false])` + `.rahmen rahmen-lesespalte` | keine | Impressum, Datenschutz, Abbruchseite, Einrichter (seit O10; bis Web 20.37.2 stand er hier fälschlich unter der Anmeldehülle) |
+| **Öffentliche Lesespalte** | `ui_kopf(['menue' => false])` + `.rahmen rahmen-lesespalte` | keine | Impressum, Datenschutz, Abbruchseite, Einrichter (seit O10; bis Web 20.37.2 stand er hier fälschlich unter der Anmeldehülle), Wiederherstellung, Notzugang zum Zweitfaktor (seit Web 21.13.0, Schritt 18, SR-04 — vorhandene Bausteine, kein Mockup, E-SR-15) |
 | **Anmeldehülle** | `.anmeldung-body` + `<main class="anmeldung">` | keine | Anmeldung, Passwort vergessen, Passwort setzen, Registrierung und Bestätigung, Abmeldeseite |
 | **Druckseite** | `.blatt-seite` + `.rahmen rahmen-lesespalte` | keine | Schlüsselblatt (`betrieb_schluesselblatt.php`) |
 

@@ -122,8 +122,16 @@ foreach (explode("\n", trim($t[1])) as $z) {
     }
     $zeilen[] = array_combine($spalten, $zellen);
 }
-$rollen = array_slice($spalten ?? [], 2);
+/* ROLLEN SIND DIE SPALTEN, DIE ROLLEN HEISSEN (seit SR-07). Die letzte Spalte
+ * „frischer Code" ist keine Rolle, sondern eine Markierung: `ja` heisst, die
+ * Handlung steht in `ZF_FRISCH_HANDLUNGEN` — der Teil „Frischer Code" unten
+ * misst an genau diesen Zeilen den Umweg. */
+$rollen = array_values(array_intersect(array_slice($spalten ?? [], 2), array_keys(ROLLEN)));
 if ($zeilen === [] || $rollen === []) { fwrite(STDERR, "Die Matrix ist leer.\n"); exit(2); }
+if (!in_array('frischer Code', $spalten, true)) {
+    fwrite(STDERR, "Die Matrix hat keine Spalte „frischer Code\" (SR-07).\n");
+    exit(2);
+}
 
 /* ---- HTTP und Sitzungen (Muster: tools/proben/wartung/) -------------------- */
 
@@ -133,7 +141,7 @@ function hole(string $pfad, ?string $sid, ?array $koerper = null, ?string $json 
 {
     global $basis;
     $ch = curl_init("$basis/$pfad");
-    $kopf = $sid !== null ? ['Cookie: PHPSESSID=' . $sid] : [];
+    $kopf = $sid !== null ? ['Cookie: PHPSESSID=' . $sid . bindung_keks($sid)] : [];
     if ($json !== null) { $kopf[] = 'Content-Type: application/json'; $kopf[] = 'X-CSRF: ' . $json; }
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => false,
         CURLOPT_FOLLOWLOCATION => false, CURLOPT_HTTPHEADER => $kopf,
@@ -162,17 +170,40 @@ function sitzung_ort(): string
     return is_dir($eigen) ? $eigen : (string)(session_save_path() ?: sys_get_temp_dir());
 }
 
-/** Eine Sitzung, wie `login.php` sie hinterlässt. VOR jeder Ausgabe anlegen. */
-function sitzung_anlegen(int $uid, int $epoch): array
+/** Die Bindung je angelegter Sitzung — Kennung → Cookiewert (seit Web 21.7.0,
+ *  Schritt 18, SR-01). Ohne sie beendet `auth_guard.php` jede Sitzung dieser
+ *  Probe mit dem Grund `bindung`, und jede Zelle der Matrix stuende auf 200
+ *  der Abmeldeseite statt auf dem Rollentor. */
+$BINDUNGEN = [];
+
+/** Der Anhang an den `Cookie:`-Kopf: `; EDBIND=…`, wenn die Sitzung eine hat. */
+function bindung_keks(string $sid): string
+{
+    $w = $GLOBALS['BINDUNGEN'][$sid] ?? null;
+    return $w !== null ? '; ' . SITZUNG_COOKIES['bindung']['name'] . '=' . $w : '';
+}
+
+/** Eine Sitzung, wie `login.php` sie hinterlässt — mit Bindung (SR-01).
+ *  VOR jeder Ausgabe anlegen.
+ *
+ *  FRISCH ALS VORGABE (seit SR-07): `login.php` setzt nach dem Code-Schritt
+ *  `zf_frisch_bis`, und so misst die Matrix das Rollentor und das Token —
+ *  den Umweg ohne frischen Code misst der eigene Teil darunter, mit
+ *  `$frisch = false`. */
+function sitzung_anlegen(int $uid, int $epoch, bool $frisch = true): array
 {
     $sid  = 'rollenprobe' . bin2hex(random_bytes(10));
     $csrf = bin2hex(random_bytes(16));
+    $bind = bin2hex(random_bytes(32));
     if (session_status() === PHP_SESSION_ACTIVE) { session_write_close(); }
     session_save_path(sitzung_ort());
     session_id($sid);
     session_start();
-    $_SESSION = ['user_id' => $uid, 'epoch' => $epoch, 'last_seen' => time(), 'csrf' => $csrf];
+    $_SESSION = ['user_id' => $uid, 'epoch' => $epoch, 'last_seen' => time(), 'csrf' => $csrf,
+                 'bindung' => hash('sha256', $bind)]
+              + ($frisch ? ['zf_frisch_bis' => time() + 3600] : []);
     session_write_close();
+    $GLOBALS['BINDUNGEN'][$sid] = $bind;
     return ['sid' => $sid, 'csrf' => $csrf];
 }
 
@@ -211,7 +242,13 @@ foreach ($rollen as $rolle) {
         $pdo->prepare('UPDATE users SET totp_seit = UTC_TIMESTAMP() WHERE id = ?')->execute([$id]);
     }
     $epoch = (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $id)->fetchColumn();
-    $konten[$rolle] = ['id' => $id, 'mail' => $mail] + sitzung_anlegen($id, $epoch);
+    /* ZWEI SITZUNGEN JE ROLLE, beide jetzt — `session_start()` geht nur vor
+     * der ersten Ausgabe: die frische fuer die Matrix, die unfrische fuer den
+     * Teil „Frischer Code" (SR-07). Die erste Fassung legte die zweite erst
+     * dort an, nach der Ausgabe der Matrix; jede Anfrage landete auf
+     * `login.php`. */
+    $konten[$rolle] = ['id' => $id, 'mail' => $mail] + sitzung_anlegen($id, $epoch)
+                    + ['unfrisch' => sitzung_anlegen($id, $epoch, false)];
 }
 /* Die Zielkonten — eigene Zeilen, nicht die Konten der Rollen: `ziel` für
  * den Rollenwechsel und die Handlungen an einem Konto der Rolle `user`,
@@ -318,6 +355,84 @@ foreach ($zeilen as $z) {
         pruef($ist === $soll, $z['Handlung'] . ' · ' . $rolle, 'soll ' . $soll . ', ist ' . $ist);
     }
 }
+
+/* ---- Der frische Code: der Umweg ohne ihn (Schritt 18, SR-07, E-SR-20) ------
+ *
+ * JE ZEILE MIT `ja` EINE ANFRAGE, mit dem Konto der KLEINSTEN Rolle, die die
+ * Handlung darf — und einer Sitzung ohne `zf_frisch_bis`. Erwartet: 303 auf
+ * `zweitfaktor.php?bestaetigen=1&zurueck=<die Seite der Handlung>`, nach einem
+ * POST mit `nochmal=1`; bei einem Endpunkt unter `api/` 403 mit dem
+ * JSON-Fehler `zweitfaktor_frisch` (SR-09 — ein Endpunkt springt nicht um,
+ * der Browser meldet es). Mit frischem Code (die Matrix darueber) geht
+ * dieselbe Anfrage durch.
+ *
+ * DAS TOKEN IST ABSICHTLICH FALSCH. Fehlt das Tor, endet die Anfrage an der
+ * Token-Ablehnung — ein „Konto löschen" ohne Tor loescht dann nichts.
+ *
+ * Die Pflichtrollen haben `totp_seit`; die NutzerIn bekommt ihn fuer diesen
+ * Teil, sonst waere die Frage bei ihr ein Durchlass (kein Zweitfaktor, nichts
+ * zu bestaetigen), und das Ausschalten des eigenen Zweitfaktors liesse sich
+ * nicht messen. Danach steht er wieder, wie er war. */
+echo "\nFrischer Code: der Umweg ohne ihn (SR-07, E-SR-20)\n";
+$frischZeilen = array_values(array_filter($zeilen, static fn(array $z): bool => $z['frischer Code'] === 'ja'));
+/* ERST DER DURCHLASS: Ein Konto ohne Zweitfaktor hat nichts zu bestaetigen.
+ * Die NutzerIn der Probe hat keinen — ihr Ausschalten geht ohne frische
+ * Sitzung bis zur Token-Ablehnung, ohne Umweg. */
+if (isset($konten['user'])) {
+    $ohne = $mitZweitfaktor
+        ? $pdo->query('SELECT totp_seit IS NULL FROM users WHERE id = ' . $konten['user']['id'])->fetchColumn() : '1';
+    pruef((string)$ohne === '1'
+          && messen('`POST einstellungen.php?t=profil action=zf_ausschalten`', $konten['user']['unfrisch']) === 'durch',
+          'Konto ohne Zweitfaktor, Sitzung nicht frisch: kein Umweg (durch)');
+}
+$totpVorher = [];
+foreach ($rollen as $rolle) {
+    $totpVorher[$rolle] = $mitZweitfaktor
+        ? $pdo->query('SELECT totp_seit FROM users WHERE id = ' . $konten[$rolle]['id'])->fetchColumn() : null;
+    if ($mitZweitfaktor && $totpVorher[$rolle] === null) {
+        $pdo->prepare('UPDATE users SET totp_seit = UTC_TIMESTAMP() WHERE id = ?')->execute([$konten[$rolle]['id']]);
+    }
+}
+try {
+    foreach ($frischZeilen as $z) {
+        $wer = null;
+        foreach (['user', 'support', 'admin', 'betreiberin'] as $r) {
+            if (in_array($z[$r] ?? '', ['durch', '200'], true)) { $wer = $r; break; }
+        }
+        if ($wer === null) { pruef(false, $z['Handlung'], 'keine Rolle darf sie — Zeile falsch markiert'); continue; }
+        $aufruf = strtr(trim($z['Aufruf'], '` '), $platzhalter);
+        preg_match('/^(GET|POST)\s+(\S+)(?:\s+(\S+))?$/', $aufruf, $a);
+        $felder = [];
+        if (!empty($a[3])) { parse_str($a[3], $felder); }
+        $sz = $konten[$wer]['unfrisch'];
+        $r = $a[1] === 'GET' ? hole($a[2], $sz['sid'])
+                             : hole($a[2], $sz['sid'], $felder + ['csrf' => 'absichtlich-falsch']);
+        if (str_starts_with($a[2], 'api/')) {
+            $fehler = (string)(json_decode($r['rumpf'], true)['error'] ?? '');
+            pruef($r['code'] === 403 && $fehler === 'zweitfaktor_frisch',
+                  $z['Handlung'] . ' · ' . $wer . ' ohne frischen Code: 403 JSON',
+                  'HTTP ' . $r['code'] . ', error ' . ($fehler !== '' ? $fehler : '—'));
+            continue;
+        }
+        $ziel = (string)($r['ziel'] ?? '');
+        parse_str((string)parse_url($ziel, PHP_URL_QUERY), $q);
+        $seite = basename((string)parse_url($a[2], PHP_URL_PATH));
+        $zurueckSeite = basename((string)parse_url((string)($q['zurueck'] ?? ''), PHP_URL_PATH));
+        $ok = $r['code'] === 303 && str_starts_with($ziel, 'zweitfaktor.php?bestaetigen=1&')
+           && $zurueckSeite === $seite && (isset($q['nochmal']) === ($a[1] === 'POST'));
+        pruef($ok, $z['Handlung'] . ' · ' . $wer . ' ohne frischen Code: Umweg',
+              'HTTP ' . $r['code'] . ' → ' . ($ziel !== '' ? $ziel : '—'));
+    }
+} finally {
+    foreach ($rollen as $rolle) {
+        if ($mitZweitfaktor && $totpVorher[$rolle] === null) {
+            $pdo->prepare('UPDATE users SET totp_seit = NULL WHERE id = ?')->execute([$konten[$rolle]['id']]);
+        }
+    }
+}
+pruef(count($frischZeilen) >= count(ZF_FRISCH_HANDLUNGEN),
+      'Jede Handlung der Liste hat mindestens eine Zeile mit „ja"',
+      count($frischZeilen) . ' Zeilen, ' . count(ZF_FRISCH_HANDLUNGEN) . ' Handlungen');
 
 /* ---- Die Wirkung: ein Rollenwechsel, genau ein Eintrag ---------------------- */
 
@@ -658,6 +773,47 @@ if ($b === null) {
         if ($pauseVorher === null) { app_state_loeschen(JOB_PAUSE_SCHLUESSEL); }
         else                       { app_state_setzen(JOB_PAUSE_SCHLUESSEL, $pauseVorher); }
     }
+
+    /* Servereinstellungen (Schritt 18, SR-02, Nr. 250, E-SR-37): bis Web
+     * 21.7.0 die eine Betriebsseite ohne Umleitung. Zwei Karten, beide mit
+     * dem Stand, der schon gilt — „Es gab nichts zu ändern", in der Karte.
+     * Die Karte „Anmeldung" wird vorher einmal gespeichert: Beim ersten Mal
+     * legt sie ihre zwei Werte in `app_state` an, und die Meldung waere eine
+     * andere. */
+    require_once $srv . '/totp_lib.php';
+    require_once $srv . '/kopfzeilen_lib.php';
+    $anmFelder = ['action' => 'anmeldung',
+                  ZF_GERAET_K_USER => (string)zweitfaktor_geraet_tage('user'),
+                  ZF_GERAET_K_VERWALTUNG => (string)zweitfaktor_geraet_tage('verwaltung')];
+    $vor = hole('betrieb_server.php', $b['sid'], ['csrf' => $b['csrf']] + $anmFelder);
+    if ($vor['code'] === 302) { hole('betrieb_server.php', $b['sid']); }   // Meldung abholen
+    $prg('Servereinstellungen · Anmeldung unverändert', 'betrieb_server.php', $anmFelder,
+         'betrieb_server.php#k-anmeldung', 'Es gab nichts zu ändern.');
+    $prg('Servereinstellungen · Kopfzeilen unverändert', 'betrieb_server.php',
+         ['action' => 'kopfzeilen', 'hsts_tage' => (string)kopf_hsts_tage()]
+         + (kopf_csp_scharf() ? ['csp_scharf' => '1'] : []),
+         'betrieb_server.php#k-kopfzeilen', 'Es gab nichts zu ändern.');
+    /* Zwei Karten mehr (Nr. 250 sagt „jeder POST"): Protokoll und
+     * Adresssuche, wieder mit dem Stand, der gilt. Beide werden vorher einmal
+     * gespeichert, aus demselben Grund wie die Anmeldung — die Adresssuche
+     * zählt die Vorgabe beim ersten Mal als Änderung. */
+    require_once $srv . '/protokoll_archiv_lib.php';
+    require_once $srv . '/geocoder_lib.php';
+    $protFelder = ['action' => 'protokoll',
+                   'protokoll_frist' => (string)protokoll_frist_verwaltung(),
+                   'archiv_tage' => (string)protokoll_archiv_tage(),
+                   'archiv_behalten' => (string)protokoll_archiv_behalten()]
+                + (protokoll_archiv_versand() ? ['archiv_versand' => '1'] : []);
+    $geoFelder = ['action' => 'geocoder', 'dienst' => geocoder_dienst()]
+               + (geocoder_installation_an() ? ['adresssuche' => '1'] : []);
+    foreach ([$protFelder, $geoFelder] as $f) {
+        $vor = hole('betrieb_server.php', $b['sid'], ['csrf' => $b['csrf']] + $f);
+        if ($vor['code'] === 302) { hole('betrieb_server.php', $b['sid']); }
+    }
+    $prg('Servereinstellungen · Protokoll unverändert', 'betrieb_server.php', $protFelder,
+         'betrieb_server.php#k-protokoll', 'Es gab nichts zu ändern.');
+    $prg('Servereinstellungen · Adresssuche unverändert', 'betrieb_server.php', $geoFelder,
+         'betrieb_server.php#k-adresssuche', 'Es gab nichts zu ändern.');
 
     /* Sicherheit: eine Sperre aufheben, die es nicht gibt — Ton warn. */
     $prg('Sicherheit · Sperre aufheben (gibt es nicht)', 'betrieb_sicherheit.php',

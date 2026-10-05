@@ -37,6 +37,27 @@ if (empty($_SESSION['user_id'])) {
 }
 $userId = (int)$_SESSION['user_id'];
 
+/* ---- DIE BINDUNG (Schritt 18, SR-01, E-SR-04, Backlog Nr. 242) -----------
+ *
+ * UNMITTELBAR NACH `user_id`, VOR JEDER ANDEREN FRAGE. Bis Web 21.6.1 war
+ * die Sitzungsdatei allein die Anmeldung: Wer `sess_<id>` las — aus dem
+ * Verzeichnis, aus einem Webspace-Backup —, war angemeldet. Jetzt gehoert
+ * das Cookie `EDBIND` dazu, dessen SHA-256 in der Sitzung liegt
+ * (`sitzung_binden()` in `login.php`). Fehlt es oder passt es nicht, endet
+ * die Sitzung mit dem Grund `bindung` — als Seite mit Raeumung im Browser,
+ * fuer `api/` als 401 JSON.
+ *
+ * KEINE UEBERNAHME ALTER SITZUNGEN, und das ist Absicht (E-SR-04): Eine
+ * Sitzung von vor Web 21.7.0 traegt keinen Hash, genau wie eine gelesene
+ * Datei. Wer sie weiter gelten liesse, liesse auch die Datei gelten. Nach
+ * dem Ausrollen meldet sich deshalb jede Angemeldete einmal neu an (Runbook,
+ * `docs/Technik.md` 7). Die Sitzung wird dabei auf dem Server BEENDET, nicht
+ * nur abgewiesen: Eine Kennung, zu der jemand ohne Cookie kommt, gilt als
+ * gelesen. */
+if (!sitzung_bindung_ok()) {
+    sitzung_beenden_passend('bindung');
+}
+
 /* ---- DER TORWAECHTER (P5a/AP3, E-P5a-20; R40 (4), Backlog Nr. 54) --------
  *
  * STEHT EINE MIGRATION AUS, SCHLIESST DIE ANWENDUNG SICH SELBST. Zwischen
@@ -491,6 +512,93 @@ function rollen_auswahl(): array
     $o = ['user' => ROLLEN['user'], 'support' => ROLLEN['support'], 'admin' => ROLLEN['admin']];
     if (ist_betreiberin()) { $o['betreiberin'] = ROLLEN['betreiberin']; }
     return $o;
+}
+
+/* ===========================================================================
+ * DER FRISCHE CODE (Schritt 18, SR-07, E-SR-20)
+ * ===========================================================================
+ *
+ * Die Liste und die Frist stehen in `db.php` (`ZF_FRISCH_HANDLUNGEN`,
+ * `ZF_FRISCH_S`), neben den Rollen; hier stehen die zwei Fragen, die eine
+ * Sitzung brauchen. Gesetzt wird die Frist an zwei Stellen: im Code-Schritt
+ * von `login.php` und auf der Bestaetigungsseite `zweitfaktor.php`.
+ *
+ * WIE EIN ROLLENTOR, also VOR `csrf_check()` (E-P5c-85): Die Rollenprobe soll
+ * den Umweg von der Token-Ablehnung unterscheiden koennen.
+ */
+
+/**
+ * Ist der Code dieser Sitzung frisch?
+ *
+ * EIN KONTO OHNE ZWEITFAKTOR HAT NICHTS ZU BESTAETIGEN — dort ist die Frage
+ * ein Durchlass. Die Liste trifft ohnehin nur Verwaltungshandlungen (deren
+ * Rollen den Zweitfaktor haben muessen) und das eigene Ausschalten.
+ */
+function zweitfaktor_frisch(): bool
+{
+    global $userId;
+    require_once __DIR__ . '/totp_lib.php';
+    if (!totp_an((int)$userId)) { return true; }
+    return (int)($_SESSION['zf_frisch_bis'] ?? 0) > time();
+}
+
+/**
+ * Vor einer Handlung der Liste: frisch → weiter; sonst der Umweg.
+ *
+ * Seiten bekommen eine 303 auf `zweitfaktor.php?bestaetigen=1&zurueck=…` —
+ * zurueck auf die Seite der Handlung mit ihrer Abfrage und ihrer Karte aus
+ * der Liste. Nach einem POST kommt `nochmal=1` dazu: Die Handlung wird nicht
+ * nachgespielt, die Seite sagt nach der Bestaetigung, dass sie noch einmal
+ * auszuloesen ist. Traegt die Handlung ein eigenes Abbruchziel (eine Seite
+ * wie das Blatt), reist es als `abbruch` mit. Die API bekommt 403 JSON
+ * `zweitfaktor_frisch`.
+ *
+ * EINE HANDLUNG, DIE NICHT IN DER LISTE STEHT, IST EIN FEHLER DES AUFRUFERS,
+ * kein Durchlass: Sonst liesse ein Tippfehler im Namen die Handlung ohne Code
+ * durch, und niemand saehe es.
+ */
+function zweitfaktor_frisch_verlangen(string $handlung): void
+{
+    if (!isset(ZF_FRISCH_HANDLUNGEN[$handlung])) {
+        throw new LogicException('„' . $handlung . '" steht nicht in ZF_FRISCH_HANDLUNGEN (db.php).');
+    }
+    if (zweitfaktor_frisch()) { return; }
+    if (ist_api_aufruf()) {
+        json_out(['error'   => 'zweitfaktor_frisch',
+                  'meldung' => 'Für diese Handlung fragt NAdoku noch einmal nach dem Code. '
+                             . 'Bitte zuerst den Code bestätigen.'], 403);
+    }
+    $ziel    = ZF_FRISCH_HANDLUNGEN[$handlung];
+    $abfrage = (string)($_SERVER['QUERY_STRING'] ?? '');
+    $zurueck = $ziel['seite'] . ($abfrage !== '' ? '?' . $abfrage : '')
+             . ($ziel['ort'] !== '' ? '#' . $ziel['ort'] : '');
+    $nochmal = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+    $abbruch = (string)($ziel['abbruch'] ?? '');
+    header('Location: zweitfaktor.php?bestaetigen=1&zurueck=' . rawurlencode(zweitfaktor_zurueck($zurueck))
+           . ($nochmal ? '&nochmal=1' : '')
+           . ($abbruch !== '' ? '&abbruch=' . rawurlencode(zweitfaktor_zurueck($abbruch)) : ''), true, 303);
+    exit;
+}
+
+/**
+ * Der Ruecksprung nach der Bestaetigung — nur eine Seite aus der Liste.
+ *
+ * NUR EIN RELATIVER PFAD, UND NUR EINE SEITE, AUF DER EINE HANDLUNG DER LISTE
+ * STEHT. Alles andere wird zu `index.php`: `zurueck` steht in der Adresse, und
+ * eine Bestaetigungsseite, die danach auf eine beliebige Adresse springt, waere
+ * ein offener Umleiter mit dem Vertrauen dieser Anwendung. Die Abfrage darf
+ * nur harmlose Zeichen tragen; mit anderen faellt sie weg, die Seite bleibt.
+ */
+function zweitfaktor_zurueck(string $roh): string
+{
+    $seiten = array_unique(array_column(ZF_FRISCH_HANDLUNGEN, 'seite'));
+    if (!preg_match('/^([a-z_]+\.php)(\?[^#]*)?(#[a-z0-9-]+)?$/', $roh, $m)
+        || !in_array($m[1], $seiten, true)) {
+        return 'index.php';
+    }
+    $abfrage = $m[2] ?? '';
+    if ($abfrage !== '' && !preg_match('/^\?[A-Za-z0-9_=&%.-]*$/', $abfrage)) { $abfrage = ''; }
+    return $m[1] . $abfrage . ($m[3] ?? '');
 }
 
 /* csrf_token(), csrf_field() und csrf_ok() stehen seit Web 15.6.0 in
