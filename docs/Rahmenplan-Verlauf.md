@@ -9,6 +9,12 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 152 | 30.09.2026 | PK-08, Zuarbeit | Erste App-Tags: `android-v0.17.0` liegt auf Produktiv und installiert sich als Update (P-PK-39, -41); `uhr-v3.1.0` gebaut, der Store-Upload wartet auf den Portal-Eintrag (P-PK-42, jetzt 6.2). Nr. 361 neu. |
+| 151 | 29.09.2026 | PK-08, Zuarbeit | Z14 eingetragen; Uhr-Probelauf grün (P-PK-40), Android-Probelauf rot am Auslesen des Zertifikats (F-PK-56) — berichtigt, neu zu fahren. Die Zeile in 6.1 sagt es. |
+| 150 | 29.09.2026 | PK, Nachtrag | Nach dem Merge von #96: Lauf 101 grün in 4:07 (P-PK-21), die Wache sprang an (P-PK-38), Stufe 2 ohne Demo-Konto (P-PK-19) — PK-M2 erreicht (E-PK-65). Die Zeile in 6.1 hält nur noch P-PK-37 und -18. |
+| 149 | 29.09.2026 | PK-07, R67 | PK und Kette II abgeschlossen (E-PK-64): Erledigt-Zeilen, Fahrplanzeilen fort, Reste in 6.1, R67 nachgezogen. Berichtigt: 6.1 führte `web-v21.1.3` und `web-v21.6.1` als offen — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert (F-PK-54). |
+| 148 | 29.09.2026 | PK-08, R65 | PK-06 und PK-08 gebaut; R65: das Seitenladungs-APK signiert die Kette mit dem App-Signaturschlüssel (E-PK-53). Neue Zuarbeit in 6.1: `APK_ZERTIFIKAT_SHA256`, App-Probeläufe, erste Tags. |
+| 147 | 29.09.2026 | PK-06 beginnt | PK-06 auf `claude/beautiful-dirac-1tc4d0` (Opus), Reihe PK-06 → PK-08 → PK-07 (E-PK-50); Spanne 360–369. Berichtigt: Der Kopf nannte den Konzept-PR 18 offen, er ist seit dem 28.09.2026 gemergt; 146 trägt der Zweig von 18. |
 | 146 | 28.09.2026 | 18, SR-01 | Umsetzung von 18 beginnt auf `claude/pr95-stufe-18-ztactt` (Opus), auf Wunsch der Betreiberin gestapelt auf dem offenen Konzept-PR #95 statt nach dessen Merge (E-SR-38). |
 | 145 | 28.09.2026 | 18, Konzept-PR | `main` aufgenommen (17 gemergt, PR #94, `f4ac705`), Konzept-PR zu 18 gestellt; Nr. 250 nach SR-02, Nr. 344 nach SR-03 (E-SR-37). Berichtigt: Die Fassungen 137 bis 142 dieses Zweigs heißen seit dem Merge 139 bis 144 — 17 hatte 137 und 138 auch vergeben. |
 | 144 | 27.09.2026 | 18, Q-SR-12/-13 | Nachfassung beantwortet: Passkey nur zusätzlich zu TOTP (E-SR-35; Nr. 351 „Passkey allein" nach v1.0), Fable-Gegenlesung auch für SR-09 (E-SR-36, H-SR-08); das Konzept hat keine offene Frage. Entscheidung der Betreiberin am 27.09.2026. |

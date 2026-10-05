@@ -983,9 +983,21 @@ schluesselName=nadoku
 schluesselPasswort=…
 ```
 
-Fehlt sie, entsteht ein **unsigniertes** Release — genau so läuft es im
-Container und später im CI-Prüftor (E-R45-9: signiert wird außerhalb der CI,
-weil der Schlüssel dort nichts verloren hat).
+Fehlt sie, entsteht ein **unsigniertes** Release — so läuft es im Container
+und in der Kette.
+
+**Signiert wird seit PK-08 in der Kette, aber nicht von Gradle** (E-PK-23,
+-53, -63). Beim Tag `android-vX.Y.Z` baut der Job `android` in
+`.github/workflows/auslieferung.yml` unsigniert und signiert danach mit
+`apksigner` — mit dem **App-Signaturschlüssel** (`078c…ad64`), den Play App
+Signing seit dem 26.09.2026 führt, damit Seitenladung und Play-Fassung
+dasselbe Zertifikat tragen. Der Schlüssel liegt als Geheimnis der Umgebung
+`produktion` hinter der Pflichtfreigabe und kommt nie an Gradle: Fremder
+Build-Code läuft, bevor er auf der Platte liegt. Bis PK-08 galt E-R45-9
+(„signiert wird außerhalb der CI"); die Kommentare in beiden
+`build.gradle.kts` nennen es noch — sie ändern hieße eine Android-Stufe ohne
+eine Zeile am APK (F-PK-49). Das Werkzeug ist `tools/kette/appbau.sh`, der
+Weg steht in `docs/Technik.md` 4.97g.
 
 **Jede spätere Fassung muss mit demselben Schlüssel signiert sein.** Android
 erkennt eine App an Paketname **und** Signatur; ein Wechsel bedeutet für

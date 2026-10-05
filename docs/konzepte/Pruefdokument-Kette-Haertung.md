@@ -5,8 +5,8 @@ welchem Mittel und mit welcher **Zahl**; **was konnte nicht geprüft werden und
 warum**; welche Funde sind aufgetreten; und als Kernstück die **Prüfliste für
 die Betreiberin** — alles, was nur an der laufenden Anlage geht.
 
-Das Konzept liegt daneben (`Konzept-Kette-Haertung.md`) und trägt den
-Statusblock der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste
+Das Konzept (`Konzept-Kette-Haertung.md`) ist am 29.09.2026 mit PK-07
+gelöscht worden (letzter Stand `8854b86`, Rahmenplan 8). Dieses Dokument bleibt, bis seine Prüfliste
 abgehakt ist (R62).
 
 > **Dieses Paket ist anders geprüft als die üblichen**, und der Grund gehört
@@ -27,8 +27,34 @@ abgehakt ist (R62).
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
 > | Funde | **41** (Abschnitt 2): F-KH-U-01 bis F-KH-U-42 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben. **Zuletzt F-KH-U-39: der Schlussschritt von AP6 ist zweimal gelaufen** — einmal bei eingeschalteter, einmal bei ausgeschalteter Wartung, und die beiden Wortlaute unterscheiden sich an genau der einen Stelle, an der sie sich unterscheiden müssen. Aus AP7: **F-KH-U-40** (Staging bewahrt **zwei** Komplett-Stände auf — die vom Konzept verlangte Messung, und sie fällt negativ aus) und **F-KH-U-41** (das Tor erkannte den Staging-Job am Namensanfang; AP7 hätte den Riegel aus B5 von hinten wieder geöffnet). **Zuletzt F-KH-U-42: der Botschutz ist weg — und dahinter steht ein Fehler, den niemand sehen konnte.** Stufe 2 kommt jetzt bis zum Export und scheitert dort; der erste vollständige Import gegen lima-city ist gelaufen (106 Einsätze) |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
-> | Prüfliste | **35** Punkte: **17 abgehakt**, 5 teilweise, **13 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu am 21.09.2026: **25c** (der Rückbau von Staging — er ist eine eigene Prüfung, kein Aufräumen, und solange er offen ist, ist Staging nicht benutzbar). Abgehakt am selben Tag: **24**, **25a**, **25b** und **25c** — **Prüfpunkt 25 ist damit vollständig**. Aus AP7 neu: **26** (der Rückfallstand bei einer echten Auslieferung), **27** (ein Hotfix über den ganzen Weg, M2) und **28** (die Aufbewahrung festlegen) — alle drei hängen an M1 |
+> | Prüfliste | **35** Punkte: **29 abgehakt**, 1 teilweise (26), **5 offen** (2c, 4a, 9, 27, 28) — nach dem Abgleich in PK-07 am 29.09.2026, maschinell nachgezählt. Bis dahin stand hier „17 abgehakt, 5 teilweise, 13 offen"; zwölf Punkte waren durch spätere Läufe belegt oder durch ihren erledigten Zweck überholt, eingetragen hatte es niemand |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
+
+
+## Abgleich in PK-07 (29.09.2026)
+
+Konzept PK hat den Abschluss von Kette II übernommen (Konzept PK,
+Abschnitt 9) und die offenen Punkte gegen das gehalten, was seit dem
+21.09.2026 gelaufen ist. **Das Konzept Kette II wird mit PK-07 gelöscht;
+dieses Prüfdokument bleibt, bis die fünf offenen Punkte abgehakt sind.**
+Sie stehen auch in Rahmenplan 6.1.
+
+| Punkt | Urteil | Beleg |
+|---|---|---|
+| 1 (AP1) | überholt, in veränderter Form abgenommen | Die „fünf Messschritte" gibt es seit dem Vorgriff auf PK-06 (PR #72) nicht mehr. Stufe 2 als Ganzes ist seit dem 23.09.2026 in 18 von 21 Push-Läufen im ersten Versuch grün, z. B. Lauf 99 (Staging 35 s, Stufe 2 3:17) |
+| 3 | erledigt mit Punkt 24 | Seit AP6 hat die Kette keine Vorgabewerte; eine fehlende Variable wäre rot. M1 und alle Läufe danach grün; Rahmenplan 6a, Schritt 4 ☑ |
+| 5 | überholt | Die Ursache war der Botschutz (F-KH-U-10), er ist aufgehoben (F-KH-U-42); der Kreislauf meldet sich seither mit dem Prüfkonto an, grün in jedem grünen Stufe-2-Lauf |
+| 6 | erledigt | P5b hat seine Erledigt-Zeile in Rahmenplan 8 |
+| 7 | abgelaufen | Die Regeln galten „bis AP3", „bis AP6" und „bis E-KH-09"; alle drei sind erreicht |
+| 8 (AP2) | erledigt | Wache-Lauf 35817300122 (23.09.2026): Vergleichsstand `a1c6494 (web-v20.26.3)`, Teil 1 **128 gleich, 0 abweichend, 0 nicht erreichbar**, „Kein Unterschied" — während `main` (`6e94e0a`) in `server/assets/` und `login.php` 15 Dateien vor dem Zeiger lag |
+| 10, 11, 12, 15, 16, 18 | überholt | Die Suche nach F3; F3 ist gefunden (F-KH-U-25) und behoben (AP4, Punkte 18a und 21). Die Zielprobe gegen Produktiv ist im M1-Lauf grün |
+| 26 | erste Hälfte belegt | M1 (Lauf 35654132667, Versuch 2): „Rückfallstand auf Staging: `2026-09-21T21-43-32Z_bb04b21f.edk`"; `web-v21.6.1` (Lauf 36428081295) wieder grün. **Offen:** E-KH-30 — Staging nicht erreichbar, der Lauf rot und trotzdem ausgeliefert. **Dabei gesehen (F-PK-53):** Der Job lief auch in Versuch 1 grün, obwohl `produktion` am Tor scheiterte; ein neu gestarteter Tag legt so zwei Stände an und belegt bei Aufbewahrung 2 beide Plätze (Punkt 28, Nr. 261) |
+| 2c, 4a, 9, 27, 28 | **offen** | Anlagenwerte und Einstellungen, die nur die Betreiberin sieht; 27 ist der Hotfix-Weg, der laut Konzept PK 9 beim ersten echten Hotfix geprobt wird. Dazu aus dem Konzept Z4 der Rest: die Umgebung `staging` auf `main` und `hotfix/*` beschränken — „erst nach M1, M2 und AP7"; M2 entfällt, die Bedingung ist damit neu zu entscheiden (Rahmenplan 6.1) |
+
+Die Nachweise aus GitHub stammen aus einem lesenden Abgleich (Läufe und
+Zusammenfassungen, nicht die Protokolle der Jobs); nicht gemessen sind der
+Schutz des Zweigs `produktion`, `info.php` auf Staging, der Wert der
+Aufbewahrung und `.deploy-state-produktion.json` auf Produktiv.
 
 ---
 
@@ -2436,7 +2462,7 @@ nicht sehen.** Der nächste Kettenlauf sagt sie.
 Was nur an der laufenden Anlage geht. Je Punkt: der Bedienweg, das erwartete
 Ergebnis, und **woran ein Scheitern zu erkennen ist**.
 
-- [~] **1 — Die Abnahme von AP1: der erste Kettenlauf gegen lima-city.**
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **1 — Die Abnahme von AP1: der erste Kettenlauf gegen lima-city.**
   **Gefahren am 20.09.2026 als Handlauf** (Lauf 21, Abschnitt 1.4) — **nicht
   bestanden, aber weit gekommen.** `staging` **grün** (12 Dateien, 1,13 MB,
   12 s); in `stufe2` sind **zwei von fünf** Messschritten gelaufen und
@@ -2506,7 +2532,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   „Empfohlen"-Zeilen zeigt die Karte gar nicht an** — fehlt eine, heißt das
   *erfüllt*; die Schlusszeile „x von y erfüllt" löst es auf.
 
-- [ ] **3 — `FTP_ZIELPFAD` und `FTP_STATE_PFAD` in beiden Umgebungen
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **3 — `FTP_ZIELPFAD` und `FTP_STATE_PFAD` in beiden Umgebungen
   ausdrücklich setzen** (Zuarbeit Z4, vorgezogen — der Grund ist AP1).
   *Stand 20.09.2026, nachgesehen:* `FTP_ZIELPFAD` steht in **beiden**
   Umgebungen auf `/`; **`FTP_STATE_PFAD` fehlt in beiden**.
@@ -2553,7 +2579,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   die lima-city-Kennungen. Sie stehen **nicht** im Repositorium; die Sitzung
   gehört trotzdem verworfen (abmelden genügt).
 
-- [ ] **5 — Warum weist `login.php` das Prüfkonto ab? Drei Kandidaten, eine
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **5 — Warum weist `login.php` das Prüfkonto ab? Drei Kandidaten, eine
   Antwort.**
   *Gemessen:* Lauf 21 **und** Lauf 22 (nach Aktualisierung beider
   Geheimnisse) scheitern gleich — `Anmeldung gescheitert: unbekannt`. **Von
@@ -2626,7 +2652,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   Selbsthoster ist sie offen. Die Abhilfe, die das grundsätzlich löst, steht
   als Vorschlag in Abschnitt 4.
 
-- [ ] **6 — Fremdaufgabe, hier nur gemeldet: P5b hat keine Erledigt-Zeile.**
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **6 — Fremdaufgabe, hier nur gemeldet: P5b hat keine Erledigt-Zeile.**
   Gemessen am 20.09.2026: PR #57 ist seit dem 18.09.2026 auf `main`
   (`eec41e1`), der Rahmenplan führte P5b bis Fassung 80 als „liegt zum Merge
   bereit".
@@ -2637,7 +2663,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   den Kopf liest und einen Stand für bare Münze nimmt, den es seit zwei Tagen
   nicht mehr gibt. Genau so ist dieser Fund entstanden.
 
-- [ ] **7 — Die Bedienregeln aus Konzept Abschnitt 5 gelten weiter.**
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **7 — Die Bedienregeln aus Konzept Abschnitt 5 gelten weiter.**
   Kein Hand-Backup in den Minuten vor einer Freigabe (bis AP3); nach jedem
   roten Produktivlauf *Betrieb → Updates* ansehen und die Wartung
   gegebenenfalls von Hand beenden (bis AP6); keine offene FTP-Sitzung auf dem
@@ -2648,7 +2674,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
 
 ---
 
-- [ ] **8 — Die Abnahme von AP2: die Wache gegen den Zeiger, an einem Stand,
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **8 — Die Abnahme von AP2: die Wache gegen den Zeiger, an einem Stand,
   der es beweist.** *Fällig, sobald sich unter `server/assets/` etwas geändert
   hat, das noch nicht ausgeliefert ist* — heute ist der Unterschied zwischen
   Zeiger und `main` dort **0 Dateien**, ein grüner Lauf belegte also nichts.
@@ -2677,7 +2703,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Warum es nicht gebaut ist:* Das sind Repositoriumseinstellungen, keine
   Datei — aus der Umsetzung heraus nicht setzbar.
 
-- [~] **10 — Probelauf** (Abnahme von AP3, erster Teil). **Gefahren am
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **10 — Probelauf** (Abnahme von AP3, erster Teil). **Gefahren am
   20.09.2026 gegen PRODUKTIV** (Lauf 35531806339, von der Betreiberin) —
   **die Mechanik hält, die Zielprobe ist rot mit Befund.**
   *Gemessen:* „PROBELAUF — was dieser Lauf NICHT tut" gelaufen; Tag, Tor der
@@ -2778,13 +2804,13 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   zeigt weiter `9f62d55`. Oder im Browser: Branches → `produktion` →
   der jüngste Commit ist nicht „Merge pull request #59".
 
-- [ ] **11 — Vor dem Trennversuch: keine zweite FTP-Sitzung offen.**
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **11 — Vor dem Trennversuch: keine zweite FTP-Sitzung offen.**
   *Weg:* WinSCP schließen, den Dateimanager im Plesk-Panel schließen, jeden
   anderen FTP-Zugang beenden.
   *Warum:* Manche Server begrenzen gleichzeitige Sitzungen je Konto und
   schneiden die zweite ab — das sähe aus wie F3 und wäre keines.
 
-- [~] **12 — Der Trennversuch gegen Produktiv** — **GEFAHREN am 20.09.2026,
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **12 — Der Trennversuch gegen Produktiv** — **GEFAHREN am 20.09.2026,
   vier Läufe, je zweimal. Ergebnis: die TLS-Sitzungswiederverwendung ist es
   NICHT** (F-KH-U-16). Beide Betriebsarten gelingen.
   **Aber er hat die falsche Stelle gemessen** (F-KH-U-17): Die Probe schrieb
@@ -2811,7 +2837,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   ausgeschlossen (Abschnitt 1.5 … 1.6), und der Abbruch steht bei der
   **ersten Datenverbindung** des Laufs.
 
-- [~] **15 — Der Probelauf mit dem VERZEICHNIS-Rundlauf** — **GEFAHREN am
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **15 — Der Probelauf mit dem VERZEICHNIS-Rundlauf** — **GEFAHREN am
   20.09.2026: BEIDE Rundläufe gelingen** (F-KH-U-18). Auch `ensureDir` ist
   nicht die Ursache. **Offen und neu: Prüfpunkt 16.**
   *Der ursprüngliche Text:* (die eigentliche
@@ -2834,7 +2860,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   Bleibt nach einem Abbruch ein `zielprobe-…`-Verzeichnis liegen, nimmt es
   der nächste Lauf mit.
 
-- [~] **16 — Ein Probelauf, der den Weg zum Datenkanal nennt** — **GEFAHREN am
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **16 — Ein Probelauf, der den Weg zum Datenkanal nennt** — **GEFAHREN am
   20.09.2026: zweimal sauberes `EPSV` mit Port** (F-KH-U-20). Auch der Weg
   zum Datenkanal ist nicht die Ursache. **Offen und neu: Prüfpunkt 17.**
   *Der ursprüngliche Text:* (die nächste F3-Messung).
@@ -2897,7 +2923,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   1 bis 500 ebenso. Ein Tag-Lauf hat das Feld gar nicht.
 
 
-- [ ] **18 — Die Auslieferungsaktion selbst reden lassen** (`log-level:
+- [x] *(abgehakt in PK-07, 29.09.2026 — Abgleich oben)* **18 — Die Auslieferungsaktion selbst reden lassen** (`log-level:
   verbose`). **Zur Entscheidung, nicht zur Ausführung — sie kostet einen
   echten Auslieferungslauf.**
   *Warum:* Nach sieben Messungen ist der Vorrat an Vermutungen erschöpft, den
@@ -3460,7 +3486,7 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
 > Schlussschritt melden soll (Wartung an), und nicht der Weg dorthin
 > nachgestellt.
 
-- [ ] **26 — Der Rückfallstand auf Staging, bei einer echten
+- [~] *(erste Hälfte belegt in PK-07, 29.09.2026 — Abgleich oben)* **26 — Der Rückfallstand auf Staging, bei einer echten
   Produktiv-Auslieferung** (Abnahme von AP7, zweite Hälfte, E-KH-16).
   **Hängt an M1 und ist bis dahin nicht fahrbar** — der Job löst nur bei
   einem Tag-Push aus, und M1 ist am Botschutz blockiert (F-KH-U-10/-36).

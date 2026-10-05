@@ -14,22 +14,21 @@ Fassung dieser Datei je einen Eintrag getragen (nachgesehen über die ganze
 Historie, E-SD-25 — der Changelog zu Web 7.2.0 behauptet anderes). Den
 Werdegang der Nummernvergabe hält `Backlog-Erledigt.md`.
 
-**Die Kopfzeile ist Pflicht** (E-SD-16), in genau dieser Form:
-`NNN. **Titel.** · gehört zu: ZIEL · Stand: STAND · seit DD.MM.YYYY`.
-ZIEL ist eine Kennung aus der Fahrplan-Tabelle des Rahmenplans (`17`, `12a`,
-`PK`, `Kette II` …, bei Bedarf mit Paket wie `10c AP7`) oder eines von
-`nächste Backlog-Runde` · `Zuarbeit` · `Pflegeaufgabe` · `nach v1.0`. STAND
-ist `offen` · `teilweise` · `zurückgestellt` · `nur auf Anlass` ·
-`nicht umsetzen`; das Letzte heißt: entschieden, nicht gebaut, und der Punkt
-bleibt hier, weil nichts erledigt wurde. Ein Eintrag hat höchstens
-**20 Zeilen**, die Kopfzeile eingeschlossen (E-SD-03); jede Folgezeile
-beginnt mit **fünf Leerzeichen** (E-SD-17 — mit vier rendert GitHub ab
-Nr. 100 einen Codeblock, Nr. 196). Vor jeder Kopfzeile stehen `<!-- -->`
-und eine Leerzeile, sonst zählt GitHub die Nummern fort (Nr. 340,
-E-R4-62). Ein gekürzter Eintrag endet mit
-`Werdegang bis DD.MM.YYYY: \`docs/Backlog.md@abc1234\`, Nr. NNN.`; dort
-steht die lange Fassung. Die Decken misst `tools/steuerung/decken.py`, und
-Stufe 1 ist rot, wenn eine reißt.
+**Die Kopfzeile ist Pflicht** (E-SD-16), in genau dieser Form: `NNN.
+**Titel.** · gehört zu: ZIEL · Stand: STAND · seit DD.MM.YYYY`. ZIEL ist eine
+Kennung aus der Fahrplan-Tabelle des Rahmenplans (`17`, `12a`, `PK`, `Kette
+II` …, bei Bedarf mit Paket wie `10c AP7`) oder eines von `nächste
+Backlog-Runde` · `Zuarbeit` · `Pflegeaufgabe` · `nach v1.0`. STAND ist `offen`
+· `teilweise` · `zurückgestellt` · `nur auf Anlass` · `nicht umsetzen`; das
+Letzte heißt: entschieden, nicht gebaut, und der Punkt bleibt hier, weil
+nichts erledigt wurde. Ein Eintrag hat höchstens **20 Zeilen**, die Kopfzeile
+eingeschlossen (E-SD-03); jede Folgezeile beginnt mit **fünf Leerzeichen**
+(E-SD-17 — mit vier rendert GitHub ab Nr. 100 einen Codeblock, Nr. 196). Vor
+jeder Kopfzeile stehen `<!-- -->` und eine Leerzeile, sonst zählt GitHub die
+Nummern fort (Nr. 340, E-R4-62). Ein gekürzter Eintrag endet mit `Werdegang
+bis DD.MM.YYYY: \`docs/Backlog.md@abc1234\`, Nr. NNN.`; dort steht die lange
+Fassung. Die Decken misst `tools/steuerung/decken.py`, und Stufe 1 ist rot,
+wenn eine reißt.
 
 **Fundstellen und Zahlen (Regel seit 13.09.2026).** Funktionsnamen statt
 Zeilennummern (`ingest_tag_nachziehen()` statt `ingest.php:623`), in
@@ -54,7 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 358 | 27.09.2026 |
-| ab 360 | frei — höchste vergebene Nummer 358; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 28.09.2026 |
+| 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); vergeben: 360, 361 | 29.09.2026 |
+| ab 370 | frei — höchste vergebene Nummer 361; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 05.10.2026 |
 
 ---
 
@@ -551,7 +551,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-213. **Die Zustandsdatei der Auslieferungskette lag im Webroot.** · gehört zu: PK · Stand: teilweise · seit 16.09.2026
+213. **Die Zustandsdatei der Auslieferungskette lag im Webroot.** · gehört zu: Zuarbeit · Stand: teilweise · seit 16.09.2026
      Befund (Durchsicht des Auftraggebers; behoben am selben Tag, Web
      20.15.1): `SamKirkland/FTP-Deploy-Action` legte
      `.ftp-deploy-sync-state.json` in den Webroot, über HTTP abrufbar — je
@@ -571,26 +571,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      seit Kette II/AP6, E-KH-07); (3) die `.htaccess` gilt nur auf Apache
      (wie Nr. 129).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 213.
-
-<!-- -->
-
-227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole mehr.** · gehört zu: PK · Stand: teilweise · seit 17.09.2026
-     Befund (P5b-Zweig, 17.09.2026): `tools/vollstaendigkeit/` prüft
-     „Unicode-Zeichen als Symbol im Markup", zählte aber `…` und `→` mit —
-     in diesem Projekt Satzzeichen („Betrieb → Servereinstellungen"). Von
-     319 Befunden waren 299 Hausstil und 20 tatsächlich Zeichen statt
-     Symbol; die 20 echten fielen zwischen den 299 niemandem auf, und die
-     Schwelle in `pruefung.yml` wuchs mit jeder Phase (366 in `Technik.md`,
-     377, 387 in der Kette — eine Zahl an zwei Stellen, Nebenbefund).
-     Vorschlag: Zeichenliste in Ikonenzeichen (0 geduldet) und Typografie
-     (nicht gezählt) teilen.
-     Umgesetzt 22.09.2026 mit PK-04/1b: Die Typografie ist aus der Liste,
-     von 330 Treffern blieben 14 (sie stehen als Nr. 279); Symbol- und
-     Emoji-Zählung sind Hinweis statt Befund, weil die Prüfung Kommentare
-     nicht trennen kann, solange Nr. 184 offen ist. Der Eintrag bleibt nach
-     Konzept SD (4.7, Schritt 6) mit `Stand: teilweise` stehen, bis die
-     Prüfliste abgehakt ist; nach Erledigt verschiebt ihn die Backlog-Runde.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 227.
 
 <!-- -->
 
@@ -662,7 +642,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-234. **Kein Prüfmittel fährt den Weg, den eine frisch ausgelieferte Anlage geht — Deploy, Anmeldung, `update.php`.** · gehört zu: PK · Stand: teilweise · seit 18.09.2026
+234. **Kein Prüfmittel fährt den Weg, den eine frisch ausgelieferte Anlage geht — Deploy, Anmeldung, `update.php`.** · gehört zu: nächste Backlog-Runde · Stand: teilweise · seit 18.09.2026
      Befund (P5b-Deploy auf Staging; Anlass behoben in Web 20.24.1): Zwei
      SELECTs auf dem Anmeldeweg forderten Spalten an, die erst die Migration
      anlegt — HTTP 500 auf der Anmeldeseite, gefunden von der Betreiberin,
@@ -678,14 +658,18 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      was die Betreiberin tut — Migrationen zurücksetzen oder zweite Anlage,
      anmelden, `update.php`, wieder anmelden — vor dem Kreislauftest, dessen
      Meldung („Anmeldung gescheitert: unbekannt") das Schema nicht nennt.
-     Kette II hat den Weg von Hand gefahren (`Technik.md` 6); das
-     Prüfmittel fehlt.
+     Kette II fuhr den Weg von Hand (`Technik.md` 6); das Prüfmittel
+     fehlt, sein Platz steht seit PK-06 als Kommentar am Ende von `stufe2`.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 234.
 
 <!-- -->
 
-236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.** · gehört zu: PK · Stand: offen · seit 18.09.2026
+236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 18.09.2026
      *Aufgenommen 18.09.2026, Merkposten mit Datum.*
+     *Stand 29.09.2026 (PK-07, E-PK-67):* Alle zehn `runs-on`-Zeilen der
+     Kette stehen auf `ubuntu-latest`; Stufe 1 nimmt das PHP des Läufers,
+     seit PK-08 der Job `android` dessen Build-Tools. Wer vor dem
+     19.10.2026 dran ist, misst die Kette einmal auf Ubuntu 26.
 
      GitHub meldet als Hinweis: *„The `ubuntu-latest` label will migrate to
      Ubuntu 26 beginning October 19, 2026."* Betrifft **alle fünf Jobs**.
@@ -701,7 +685,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-237. **Der Täter-Finder des Bilderlaufs findet den Täter nicht.** · gehört zu: PK · Stand: offen · seit 18.09.2026
+237. **Der Täter-Finder des Bilderlaufs findet den Täter nicht.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 18.09.2026
      Befund (beim Beheben von Nr. 221): Der Bericht trägt seit Web 20.16.2
      eine Spalte `Verursacher`, und beim ersten Fall, der sie gebraucht
      hätte, stand dort `—`. Gemessen örtlich (`05-datenschutz`, 360 px,
@@ -721,7 +705,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-240. **Der Rundlauf-Prüffall des Handy-Moduls läuft in der Kette nie.** · gehört zu: PK · Stand: offen · seit 20.09.2026
+240. **Der Rundlauf-Prüffall des Handy-Moduls läuft in der Kette nie.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 20.09.2026
      Befund (beim Beheben des Robolectric-Downloads): `showStandardStreams`
      hängt an `rundlauf.isNotBlank()`, und in Stufe 1 ist `rundlauf` leer —
      `.github/` setzt `-Pnadoku.rundlauf` nirgends. Die drei
@@ -774,6 +758,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Staging auf 5 setzen; wie viele Tags man rückwirkend reparieren können
      will, weiß nur sie.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 261.
+     Dazu (PK-07, F-PK-53): Der Job hängt nicht am Tor — ein neu
+     gestarteter Tag legt zwei Stände an (M1: Versuch 1 und 2).
 
 <!-- -->
 
@@ -822,7 +808,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-264. **Die Fremd-Aktion des Transports ablösen.** · gehört zu: PK · Stand: nur auf Anlass · seit 21.09.2026
+264. **Die Fremd-Aktion des Transports ablösen.** · gehört zu: Pflegeaufgabe · Stand: nur auf Anlass · seit 21.09.2026
      Befund (Kette II, Einschub Abschnitt 8): Der Transport läuft über
      `SamKirkland/FTP-Deploy-Action`; Kette II/AP4 hat sich gegen eine
      Ablösung und für den kleinsten Eingriff entschieden (die Zustandsdatei
@@ -841,7 +827,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-265. **Verweise von `.github/` in die Dokumentation hält kein Prüfmittel nach.** · gehört zu: PK · Stand: nur auf Anlass · seit 21.09.2026
+265. **Verweise von `.github/` in die Dokumentation hält kein Prüfmittel nach.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 21.09.2026
      *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-02).*
      Priorität: niedrig. Auslöser: eine weitere Neufassung von Rahmenplan 6a.
 
@@ -859,8 +845,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
      **Zu tun:** ein Prüfschritt, der die in `.github/` genannten
      Dokumentstellen gegen die Überschriften hält, die es wirklich gibt.
-     Ziel PK seit 26.09.2026 (R4-01, Q-R4-12): `auslieferung.yml` gehört der
-     Kette (PK-06 bis PK-08).
+     Auslöser da (PK-07, F-PK-45): Meldungen nennen „Schritte 6 bis 8" (8 ist
+     das Demo-Konto) und Kette-II-Kennungen, deren Konzept gelöscht ist.
 
 <!-- -->
 
@@ -904,7 +890,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-290. **Keine Stufe der Kette richtet eine Anlage ein.** · gehört zu: PK · Stand: offen · seit 23.09.2026
+290. **Keine Stufe der Kette richtet eine Anlage ein.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 23.09.2026
      *Aufgenommen 23.09.2026 mit Web 20.37.3 (Anlass: Nr. 288).* Nr. 288 hat
      elf Fassungen lang (20.30.0 bis 20.37.2) jede Neueinrichtung gebrochen,
      und keine Stufe hat es gesehen: Stufe 1 richtet keine Anlage ein, Stufe 2
@@ -922,7 +908,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-300. **Die Hauptstufe des Prüfstands fährt die Plattformmatrix nur zur Hälfte.** · gehört zu: PK · Stand: offen · seit 24.09.2026
+300. **Die Hauptstufe des Prüfstands fährt die Plattformmatrix nur zur Hälfte.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 24.09.2026
      Befund (Konzept P5c AP4, F-P5c-103): `Pruefablauf.md` 3 verspricht für
      `haupt` PHP 8.3 und 8.4, je Paar mit vier Datenbanken Schemaprobe und
      Kreislauf `edbak`, dazu Uhr-Stufe II. `pruefablauf.json` gibt `haupt`
@@ -940,7 +926,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `kreislauf.py` bekommt eine Datenbankwahl aus `plattform.sh`, der
      Bericht nennt je Paar eine Zahl — oder `Pruefablauf.md` 3 wird auf das
      Gebaute zurückgenommen, mit Begründung. Nicht beides offen lassen.
-     Zuordnung PK-06 ff.; bis dahin je Paket von Hand.
+     PK-06 bis PK-08 haben es nicht angefasst; bis dahin je Paket von Hand.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 300.
 
 <!-- -->
@@ -1221,3 +1207,23 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Funktion neben `AUTH_VERGLEICHSWERT`; nach der Auslieferung von
      Web 21.13.0 `zweitfaktor_notweg.php` in `SEITEN`. *Abnahme:* ein
      `fetch('auth_salt.php'` im Quelltext; die Wache misst zwei Seiten.
+
+<!-- -->
+
+361. **Die APK-Karte unterscheidet Handy und Wear-OS-Uhr nicht.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 30.09.2026
+     *Aufgenommen 30.09.2026 nach dem ersten Tag `android-v0.17.0`
+     (F-PK-58, Prüfdokument PK 5u).* Seit PK-08 legt die Kette zwei
+     APKs nach `server/apk/` (E-PK-58). Einstellungen → Geräte, „Ohne Play
+     Store", zeigt beide als „NAdoku 0.17.0"; nur die Größe verrät, welche
+     die Uhr-App ist, und die steht oben, weil `apk_liste()` nach
+     Ablagezeit sortiert. Wer auf den ersten Knopf tippt, lädt aufs Handy
+     die Wear-OS-App. Q-PK-11 hatte das vorhergesagt und bewusst nicht in
+     PK-08 gelöst: Es ist eine Oberflächenänderung.
+     *Weg:* `apk_liste()` liest das Gerät aus dem Namen (`nadoku-uhr-…` →
+     Wear-OS-Uhr, sonst Handy) und sortiert Handy vor Uhr; die Karte
+     nennt es („NAdoku 0.17.0 · Handy"). Dieselbe Liste liest
+     `betrieb_updates.php` und `apk.php` — beide mitprüfen. Eine
+     Web-Nebenstufe.
+     *Abnahme:* zwei Dateien im Ordner → die Karte zeigt Handy zuerst,
+     jede mit ihrem Gerät; eine Datei ohne Muster (Altbestand) steht
+     unverändert da.

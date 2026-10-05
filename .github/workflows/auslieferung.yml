@@ -1,79 +1,14 @@
 name: Auslieferung
 
-# ZWEI WEGE, ZWEI UMGEBUNGEN (Konzept P5a, E-P5a-10; Rahmenplan R67/E-PV-3).
-#
-# Bis zu dieser Fassung hiess diese Datei `deploy.yml` und hatte genau einen
-# Weg: Push auf `main` mit Änderung unter `server/` → FTPS auf **Produktiv**.
-# Keine Zwischenstufe, kein Prüftor, kein Rollback-Weg — in `CLAUDE.md` 3
-# stand dazu der Satz „Es gibt keine Zwischenstufe und keine Testumgebung".
-# Das endet hier.
-#
-#   staging      Push auf `main`   → Umgebung `staging`, danach Stufe 2
-#   produktion   Tag `web-vX.Y.Z`  → Umgebung `produktion` mit
-#                                    PFLICHTFREIGABE, davor das Backup-Tor
-#
-# WARUM KEIN `paths`-FILTER MEHR. Der alte Lauf beschränkte sich auf
-# Änderungen unter `server/**`. Ein `on.push` kann Zweige UND Tags auslösen,
-# aber `paths` gilt dann für beides — und für einen Tag-Push ist „welche
-# Dateien haben sich geändert" keine sinnvolle Frage. Der Filter fällt
-# deshalb weg. Er kostet wenig: Die FTPS-Aktion überträgt ohnehin nur, was
-# sich geändert hat, und **Staging soll `main` spiegeln**, auch wenn nur
-# `docs/` gewandert ist.
-#
-# WAS DIE PFLICHTFREIGABE LEISTET UND WAS NICHT. Sie ist eine Eigenschaft der
-# GitHub-Umgebung („required reviewers"), nicht dieser Datei — wer sie dort
-# abschaltet, hat sie abgeschaltet. Sie leistet: Zwischen „Tag gesetzt" und
-# „Dateien auf Produktiv" steht ein Mensch. Sie leistet nicht: irgendeine
-# Aussage über den Inhalt. Dafür sind die Prüftore da.
-#
-# DAS BACKUP-TOR STEHT IN `tools/kette/tor.py` und nicht hier (E-P5a-12).
-# Eine Bedingung, die einen Deploy verhindern soll, gehört dorthin, wo eine
-# `--selbstprobe` sie nachweisen kann — genau das verlangt die Abnahme von
-# AP1. Fünf Lagen prüft sie für das Backup-Tor selbst, darunter „meldet nie
-# fertig" und „Stand ist von gestern"; die ganze Selbstprobe fährt elf — die
-# übrigen gehören zum Unterbefehl `pause` und zur Fehlerantwort. Sie läuft
-# seit Web 20.16.1 in Stufe 1 und hier noch einmal, unmittelbar vor dem Tor.
-#
-# ROLLBACK ist ein Lauf mit dem vorigen Tag (E-PV-3 (d)). Deshalb trägt der
-# Tag die Fassung und nicht die Uhrzeit.
-#
-# WER DIESEN LAUF UMBENENNT, LIEST `integritaet.yml`. Sie hängt per
-# `workflow_run` am NAMEN dieses Laufs. Eine Umbenennung hier hängt sie ab —
-# still, ohne Fehlermeldung (Fund F4 des Konzepts).
-#
-# ------------------------------------------------------------------------
-# DIE DREI GEHEIMNISSE HEISSEN IN BEIDEN UMGEBUNGEN GLEICH
-# ------------------------------------------------------------------------
-#
-# `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` — und die UMGEBUNG entscheidet,
-# welcher Wert ankommt. Das ist die Bauart, fuer die es Umgebungen gibt, und
-# sie hat einen Vorzug, den sprechende Namen nicht haben: **Ein Job kann die
-# Zugangsdaten der falschen Seite nicht erwischen, weil es die anderen in
-# seiner Umgebung gar nicht gibt.** Mit `NADOKU_STAGING_*` und
-# `NADOKU_PRODUKTION_*` waere ein kopierter Job, der den falschen Praefix
-# stehen laesst, ein Deploy auf die falsche Anlage — und niemand saehe es,
-# bis er es sieht.
-#
-# SIE GEHOEREN AN DIE UMGEBUNG, NICHT AN DIE ORGANISATION. Ein
-# Organisationsgeheimnis mit "All repositories" ist von jedem Arbeitslauf in
-# jedem Repositorium der Organisation lesbar; die Pflichtfreigabe an
-# `produktion` waere damit eine Formalie.
-#
-# DER RIEGEL UNTEN IST DER WICHTIGERE TEIL. GitHub setzt ein Geheimnis, das es
-# nicht gibt, auf LEER und bricht nicht ab. Die FTPS-Aktion lief damit mit
-# leerem Benutzernamen los und scheiterte erst an der Gegenstelle — mit einer
-# Meldung ueber die Anmeldung, nicht ueber den fehlenden Eintrag. Wer den
-# Namen eines Geheimnisses vertippt, sucht den Fehler dann beim Hoster.
-#
-# UND `FTP_SERVER` HEISST SO, WEIL DER WERT EIN HOSTNAME IST. Ein Feld namens
-# `..._URL` laedt dazu ein, `ftps://…/staging` einzutragen; die Aktion setzt
-# den Wert unveraendert als Server ein, und die Namensaufloesung gelingt nie.
-# Der Riegel prueft es deshalb mit.
+# Der Name ist eine Kupplung: `integritaet.yml` hängt per `workflow_run` an
+# „Auslieferung“, und eine Umbenennung hängt die Wache still ab.
 
 on:
+  # Kein `paths`-Filter: Das Tor verlangt einen grünen Lauf auf genau dem
+  # getaggten Commit, und auch `docs/` geht hinaus (als `server/doku/`).
   push:
     branches: [ main ]
-    tags: [ 'web-v*' ]
+    tags: [ 'web-v*', 'android-v*', 'uhr-v*' ]
   workflow_dispatch:
     inputs:
       probelauf:
@@ -127,57 +62,38 @@ on:
           entfernt (Prüfdokument, Prüfpunkt 18a).
         type: boolean
         default: false
+      app_probelauf:
+        description: >-
+          APP-PROBELAUF (PK-08) — `android` oder `uhr` bauen und signieren,
+          hinter der Pflichtfreigabe, aber NICHTS ablegen: Die APK-Ablage
+          nennt nur, was sie ablegen und löschen würde. `aus` ist der
+          gewöhnliche Lauf.
+        type: choice
+        options: [ aus, android, uhr ]
+        default: aus
 
 permissions:
   contents: read
+  # Braucht `ausliefern-lauf.yml` (Tor der grünen Läufe); ein aufgerufener Lauf
+  # bekommt nie mehr Rechte als sein Aufrufer.
   actions: read
 
-# EIN LAUF JE UMGEBUNG, IN REIHE — NICHT ABGEBROCHEN (21.09.2026, gemessen;
-# Konzept PK, Vorgriff auf PK-06).
-#
-# Zwei Merges innerhalb einer Minute (PR #70 um 18:35:47, PR #69 um 18:36:15)
-# erzeugten zwei Staging-Läufe zugleich. Der erste hielt für seinen Kreislauf
-# die Hintergrundjobs auf Staging 1800 s an; der zweite wartete am Backup-Tor
-# vierzig Aufrufe auf „fertig", bekam „angehalten bis 19:06:50" und schloss
-# nach dreizehn Minuten — rot, ohne eine Datei übertragen zu haben.
-#
-# WARUM WARTEN UND NICHT ABBRECHEN: Ein Abbruch mitten im FTPS-Abgleich
-# hinterlässt einen halben Stand bei eingeschalteter Wartung, und ein Abbruch
-# mitten im Kreislauf lässt die Jobpause bis zu 30 Minuten stehen, weil das
-# `finally` des Werkzeugs nicht mehr läuft. Der jüngere Lauf wartet deshalb.
-# GitHub hält je Gruppe EINEN wartenden Lauf; kommt ein dritter, fällt der
-# mittlere weg, bevor er die Anlage berührt hat — sein Commit steht dann nie
-# auf Staging, und ein Tag darauf bleibt am Tor hängen: den nächsten Commit
-# taggen.
-#
-# ZWEI GRUPPEN, weil ein Tag-Lauf nie hinter einem Merge warten und nie von
-# einem verdrängt werden soll. Preis: Ein Tag WÄHREND eines laufenden
-# Staging-Laufs trifft mit `Rückfallstand (Staging)` auf dessen Jobpause —
-# dann rot am Backup-Schritt, und der Lauf wird nach dem Ende des
-# Staging-Laufs neu gestartet.
+# Ein Lauf je Gruppe — Web-Tag, Android, Uhr, sonst Staging; ein Web-Probelauf
+# teilt die Gruppe mit Staging —, wartend statt abbrechend (ein Abbruch ließe
+# einen halben Stand bei Wartung oder eine stehende Jobpause zurück); GitHub
+# hält je Gruppe nur einen wartenden Lauf. Die Apps haben eigene Gruppen, weil
+# ein Lauf, der auf die Freigabe wartet, seine Gruppe so lange belegt.
 concurrency:
-  group: auslieferung-${{ startsWith(github.ref, 'refs/tags/') && 'produktion' || 'staging' }}
+  group: >-
+    auslieferung-${{
+      (startsWith(github.ref, 'refs/tags/android-v') || inputs.app_probelauf == 'android') && 'android'
+      || (startsWith(github.ref, 'refs/tags/uhr-v') || inputs.app_probelauf == 'uhr') && 'uhr'
+      || startsWith(github.ref, 'refs/tags/') && 'produktion'
+      || 'staging' }}
   cancel-in-progress: false
 
-# ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
-#
-# GitHub faehrt run-Bloecke mit `bash -e {0}` — OHNE pipefail. Der
-# Rueckgabewert einer Pipe ist damit der des LETZTEN Glieds, und ein
-# gescheitertes erstes Glied faellt lautlos durch. Im Schritt "Wortliste"
-# stand `python3 wortliste.py | tee /tmp/wortliste.txt`: `tee` gibt immer 0,
-# also konnte dieser Schritt NIE ROT WERDEN. Nachgemessen:
-# `bash -e -c 'python3 -c "import sys;sys.exit(1)" | tee /dev/null; echo $?'`
-# ergibt 0.
-#
-# Ein Pruefmittel, das nicht scheitern kann, ist kein Pruefmittel — es ist
-# eine gruene Zahl ohne Aussage. Deshalb hier, an EINER Stelle je Lauf, und
-# nicht als Flicken an der einen Pipe: Die naechste Pipe kommt bestimmt.
-#
-# GEMESSEN, WAS DADURCH ROT WIRD: von zehn Pipes in den drei Laeufen trifft
-# es genau eine — `grep -oE "WEB_VERSION..." | head -1` im Schritt
-# "Fassungen nennen". Die war ohnehin kaputt (das Muster verlangte ein Komma
-# hinter dem Namen, `version.php` schreibt `const WEB_VERSION = '…'`) und ist
-# im selben Zug berichtigt.
+# GitHub fährt `run:` ohne `pipefail` — eine Pipe meldet dann nur ihr letztes
+# Glied, und `prüfe | tee datei` kann nie rot werden.
 defaults:
   run:
     shell: bash -eo pipefail {0}
@@ -185,43 +101,9 @@ defaults:
 jobs:
   staging:
     name: staging
-    # DER STAGING-WEG: jeder Push auf `main`, ohne Freigabe, ohne Tag.
-    #
-    # **UND NICHT IM PROBELAUF** (seit AP5). Das ist eine Berichtigung und
-    # keine Feinheit:
-    #
-    # Bisher lief dieser Job bei JEDEM Probelauf mit -- `github.ref` zeigt
-    # dann auf den Arbeitszweig, also nicht auf ein Tag, also war die
-    # Bedingung erfuellt. Gemessen im Lauf 35547147256 (Abnahme AP4): Der
-    # Schritt "server/ per FTPS auf Staging synchronisieren" ist dort GRUEN
-    # DURCHGELAUFEN. **Ein Probelauf hat also ausgeliefert** -- nach Staging,
-    # aber ausgeliefert --, waehrend er oben "es wird nichts ausgeliefert"
-    # in die Zusammenfassung schrieb. Die Zusage galt nur fuer Produktiv.
-    #
-    # MIT AP5 WAERE DAS TEUER GEWORDEN: Staging faehrt jetzt dieselben
-    # vierzehn Schritte, also haette jeder Probelauf Staging in den
-    # WARTUNGSMODUS geschaltet und ein abgeschlossenes Komplett-Backup
-    # verlangt. Eine Messung, die die Testanlage zusperrt, ist keine.
-    #
-    # Beides faellt mit derselben Zeile.
-    if: ${{ !startsWith(github.ref, 'refs/tags/') && !inputs.probelauf }}
-    # SEIT AP5 DIESELBE SCHRITTFOLGE WIE PRODUKTIV (E-KH-14, -17).
-    #
-    # Vorher standen hier vier Schritte -- auschecken, Geheimnisse pruefen,
-    # doku kopieren, hochladen. Kein Backup-Tor, keine Zielprobe, kein
-    # Wartungsmodus, keine Migrationsabfrage. **Damit lief auf Produktiv
-    # jedes Mal etwas, was vorher nirgends gelaufen war.** Jetzt faehrt
-    # Staging bei jedem Push dieselben dreizehn Schritte; was hier gruen
-    # wird, ist auf Produktiv geprobt.
-    #
-    # WAS DAS KOSTET, OFFEN GESAGT: einen Klick je Push MIT Migration. Steht
-    # auf Staging eine aus, bleibt die Wartung an, und Stufe 2 sagt es
-    # (E-KH-14). Das ist das ehrliche Abbild von Produktiv und nicht ein
-    # Sonderweg, der den Ernstfall nicht kennt.
-    #
-    # `secrets: inherit` REICHT DIE WERTE DURCH; welche ankommen, entscheidet
-    # das `environment:` IM aufgerufenen Lauf -- gemessen, nicht angenommen
-    # (F-KH-U-31).
+    # Beide Probeläufe gehören dazu: Sie fahren ohne Tag und lieferten sonst
+    # nach Staging aus, samt Wartung und Komplett-Backup.
+    if: ${{ !startsWith(github.ref, 'refs/tags/') && !inputs.probelauf && (inputs.app_probelauf || 'aus') == 'aus' }}
     uses: ./.github/workflows/ausliefern-lauf.yml
     with:
       umgebung: staging
@@ -230,65 +112,25 @@ jobs:
     name: Prüfung Stufe 2
     needs: staging
     runs-on: ubuntu-latest
-    # ZEITGRENZE 20 MINUTEN (E-PK-17), WEIL DIE VORGABE SECHS STUNDEN IST.
-    #
-    # ANLASS: Der Kreislauf `edbak` hing am 21.09.2026 fuenfzehn Minuten an
-    # einem Download, der nie kam (Nr. 267) — und haette ohne die interne
-    # Zeitgrenze des Browserschritts (900 s) bis zum Abend laufen duerfen.
-    # Bis zum 21.09. standen hier 45 Minuten, weil der gute Fall nie zu Ende
-    # gelaufen war. Seither ist er gemessen: Antwortprobe, Punktdateien und
-    # beide Kreislaeufe zusammen in 1:56 (Lauf 35639445224, Versuch 2).
-    # Zwanzig Minuten begrenzen das Haengen und schneiden keinen arbeitenden
-    # Lauf ab.
+    # Ohne Zeitgrenze liefe ein hängender Job sechs Stunden, und so lange wartet
+    # jeder weitere Lauf dieser Umgebung in seiner Gruppe.
     timeout-minutes: 20
     environment: staging
+    # GitHub setzt ein fehlendes Geheimnis still auf leer — deshalb prüfen die
+    # Schritte ihre Werte mit `-z`, bevor sie sie benutzen.
     env:
       STAGING_URL:   ${{ vars.STAGING_URL }}
       STAGING_KONTO: ${{ secrets.STAGING_KONTO }}
       STAGING_PASS:  ${{ secrets.STAGING_PASS }}
-      # DAS GEHEIMNIS DES ZWEITFAKTORS DES PRUEFKONTOS (P5c/AP5, E-P5c-43),
-      # Base32, wie es das Einrichtungstor auf Staging zeigt. Das Pruefkonto
-      # hat Verwaltungsrechte, und fuer sie ist der Zweitfaktor Pflicht; ohne
-      # das Geheimnis kaeme der Kreislauf nicht ueber den Code-Schritt. Kein
-      # Schalter, der die Pflicht abschaltet — der Kreislauf rechnet den Code.
       STAGING_TOTP:  ${{ secrets.STAGING_TOTP }}
-      # DERSELBE NAME WIE IM JOB `produktion`, ANDERER WERT. Beide Jobs lesen
-      # ihn aus IHRER Umgebung (`environment:`) — `stufe2` aus `staging`,
-      # `produktion` aus `produktion`. Das Token gehoert der jeweiligen
-      # INSTALLATION (`app_state.jobs_token`, sichtbar unter Betrieb ->
-      # Hintergrundjobs), nicht dem Repositorium; zwei Installationen haben
-      # zwei Tokens. Gleicher Name, damit die beiden Zeilen sich lesen lassen.
       JOBS_TOKEN:    ${{ secrets.JOBS_TOKEN }}
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Antwortet Staging wie eine eingerichtete Installation?
-        # SEIT DEM 16.09.2026, UND ZWAR AUS EINEM KONKRETEN ANLASS: Solange
-        # `STAGING_KONTO` leer war, uebersprangen die beiden Schritte unten
-        # und sagten es. Sobald das Geheimnis eingetragen ist — und es wird
-        # eingetragen, BEVOR die Anlage steht —, greift der Zweig nicht mehr,
-        # und die Kreislaeufe laufen gegen eine Adresse, die noch nichts
-        # ausliefert. Sie scheitern dann mit einem Python-Rueckverfolg ueber
-        # eine fehlende Anmeldeseite, und niemand liest daraus, dass schlicht
-        # `install.php` noch nicht gelaufen ist.
-        #
-        # ER UEBERSPRINGT NICHT, ER BRICHT AB. Ein Stand, der auf Staging
-        # nicht laeuft, ist nicht freigabefaehig — das ist die Aussage von
-        # Stufe 2, und sie soll rot sein. Neu ist nur, dass sie sagt, WARUM.
-        #
-        # ER FRAGT `login.php` UND NICHT `/`. Eine frische Subdomain liefert
-        # beim Hoster eine „Domain Default page" mit HTTP 200 aus — gemessen
-        # am 16.09.2026 an `staging.nadoku.gen-em.org`, der DAMALIGEN
-        # Staging-Anlage im Produktiv-Webspace. Seit dem 20.09.2026 liegt
-        # Staging bei einem anderen Hoster (`staging-nadoku.gen-em.org`,
-        # lima-city, E-KH-04); die Messung ist Geschichte, der Befund nicht.
-        # Wer nur den Code prueft, haelt eine leere Subdomain fuer eine
-        # laufende Anwendung.
-        # Derselbe Griff faengt den teuersten Einrichtungsfehler mit:
-        # **ein falscher `FTP_ZIELPFAD`.** Liegen die Dateien im falschen
-        # Verzeichnis, gibt es dort keine `login.php`, und das faellt hier auf
-        # und nicht erst, wenn jemand die fremde Seite sucht.
+        # Gefragt wird `login.php` samt Fußzeile, nicht `/`: Eine leere
+        # Subdomain liefert beim Hoster eine Standardseite mit HTTP 200.
         run: |
           if [ -z "${STAGING_URL:-}" ]; then
             echo "::error::STAGING_URL fehlt — Stufe 2 kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Eintragen unter Settings -> Environments -> staging -> Variables."
@@ -302,13 +144,6 @@ jobs:
           echo "login.php: HTTP $code · gelandet bei $ziel"
           case "$ziel" in
             *install.php*)
-              # SEIT NR. 214 GIBT ES HIER ZWEI FAELLE, UND SIE BRAUCHEN ZWEI
-              # ANTWORTEN. `install.php` steht seither in der Ausnahmeliste
-              # (das Runbook sagt "danach loeschen", und die Kette machte das
-              # jedes Mal rueckgaengig). Der Preis: Eine LEERE Anlage laesst
-              # sich nicht mehr allein ueber die Kette einrichten. Ohne diese
-              # Unterscheidung faende man an dieser Stelle einen 404 vor und
-              # suchte den Fehler im FTP-Zielpfad -- im falschen Ort.
               icode=$(curl -sS -o /dev/null --max-time 20 -w '%{http_code}' "$STAGING_URL/install.php" || echo '000')
               if [ "$icode" = "404" ]; then
                 echo "::error::Die Anlage ist noch nicht eingerichtet, und install.php liegt nicht oben — sie steht seit Nr. 214 in der Ausnahmeliste und wird bewusst NICHT ausgeliefert. Für eine leere Anlage die Datei server/install.php EINMAL von Hand per FTP hochladen, einrichten, danach wieder löschen. Rahmenplan 6a, Schritte 6 bis 8."
@@ -332,23 +167,9 @@ jobs:
           echo "Staging liefert die Anmeldeseite der Anwendung aus."
 
       - name: Punktdateien gesperrt, .well-known offen?
-        # WARUM DIESER SCHRITT ES BEWEIST UND EIN BLOSSER 404 ES NICHT TAT
-        # (Nr. 213, 16.09.2026).
-        #
-        # `RewriteRule ... [F]` antwortet **403, ob die Datei da ist oder
-        # nicht** -- mod_rewrite laeuft vor der Dateisuche. Genau daran
-        # haengt die Aussagekraft: Ein 404 hiesse nur „dort liegt nichts"
-        # und wuerde auch von einer leeren Subdomain kommen. Der Befund, der
-        # diesen Schritt ausgeloest hat, wurde zuerst genau so
-        # fehlgedeutet -- die Abfrage gegen ein noch leeres Staging gab 404,
-        # und das sah nach Entwarnung aus.
-        #
-        # DIE ZWEITE ZEILE IST DIE WICHTIGERE. `.well-known/` traegt die
-        # ACME-Herausforderung. Antwortet sie 403, ist die
-        # Zertifikatserneuerung tot -- und zwar lautlos, bis das Zertifikat
-        # in bis zu 90 Tagen ablaeuft. Diese Pruefung ist das einzige, was
-        # zwischen einer zu breiten Sperre und einer abgelaufenen Anlage
-        # steht.
+        # Erwartet wird 403, nicht 404 (die Sperre greift vor der Dateisuche,
+        # ein 404 käme auch von einer leeren Adresse), und `.well-known/` muss
+        # offen bleiben, sonst stirbt die Zertifikatserneuerung lautlos.
         run: |
           if [ -z "${STAGING_URL:-}" ]; then
             echo "::error::STAGING_URL fehlt — die Punktdatei-Prüfung kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Eintragen unter Settings -> Environments -> staging -> Variables."
@@ -381,11 +202,8 @@ jobs:
           echo "Punktdateien gesperrt, .well-known offen."
 
       - name: Kreislauf edbak gegen Staging
-        # BRAUCHT EIN PRÜFKONTO auf Staging (Umgebungsgeheimnis). Fehlt es,
-        # wird der Schritt ÜBERSPRUNGEN UND GESAGT — ein Lauf, der ohne
-        # Zugangsdaten grün meldet, hat nichts gemessen (`CLAUDE.md` 6).
         run: |
-          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ]; then
+          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ] || [ -z "${STAGING_PASS:-}" ]; then
             echo "::error::Prüfkonto auf Staging fehlt — der Kreislauf kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Erwartet werden STAGING_KONTO und STAGING_PASS in der Umgebung staging."
             echo '**Kreislauf: NICHT GEMESSEN** (kein Prüfkonto) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
@@ -395,72 +213,19 @@ jobs:
             echo '**Kreislauf: NICHT GEMESSEN** (kein `STAGING_TOTP`) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          # ALLE RIEGEL VOR DER ERSTEN INSTALLATION. Der JOBS_TOKEN-Riegel
-          # stand zuerst hinter pip, npm und dem Chromium-Download: Fehlte das
-          # Token UND brach der Download ab (Netz, Spiegel, Rate-Limit), wurde
-          # der Schritt ROT mit einer Playwright-Meldung, obwohl eine Zeile
-          # weiter „übersprungen, nicht gemessen" gestanden hätte. Man sucht
-          # dann am falschen Ort. Begründung zum Token selbst weiter unten.
           if [ -z "${JOBS_TOKEN:-}" ]; then
             echo "::error::JOBS_TOKEN der Umgebung staging fehlt — der Kreislauf kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Der Wert steht auf Staging unter Betrieb -> Hintergrundjobs."
             echo '**Kreislauf: NICHT GEMESSEN** (kein `JOBS_TOKEN`) — der Lauf ist deshalb rot. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           pip -q install cffi cryptography
-          # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
-          # `aufnehmen.mjs` und `kreislauf.py` laden es ueber einen PFAD
-          # (`PLAYWRIGHT_MODUL`, Vorgabe /opt/node22/... — der Pfad der
-          # Arbeitsumgebung dieses Projekts). Auf einem Laeufer gibt es den
-          # nicht. `npx playwright install` holt nur die BROWSER, nicht das
-          # Modul an diesen Pfad. Also lokal installieren und den Pfad sagen.
+          # `npx playwright install` holt nur Browser; das Modul laden die
+          # Werkzeuge über `PLAYWRIGHT_MODUL`, darum hier installieren.
           npm install --no-save --silent playwright@1.56
           export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
           npx --yes playwright@1.56 install chromium
-          # DREI FEHLER IN EINER ZEILE, gefunden beim ERSTEN Lauf dieses
-          # Schritts am 16.09.2026 (er war in AP1 geschrieben und nie
-          # gelaufen):
-          #
-          #   `--art` FEHLTE, und es ist ein Pflichtargument. Der Lauf brach
-          #   mit "the following arguments are required: --art" ab.
-          #
-          #   `--passwort` GIBT ES NICHT. Das Werkzeug kennt
-          #   `--konto-passwort` (das Umlaufkonto, das es selbst anlegt),
-          #   `--backup-passwort` und `--admin-passwort` (der Zugang, mit dem
-          #   es das Umlaufkonto anlegt und wieder loescht). Das Pruefkonto
-          #   der Umgebung ist das ADMIN-Konto — also `--admin-email` und
-          #   `--admin-passwort`, nicht `--konto`/`--passwort`.
-          #
-          #   EIN Aufruf, obwohl der Schrittname "csv UND edbak" versprach.
-          #   Vom 16. bis 21.09.2026 waren es zwei; seit Konzept PK
-          #   (E-PK-01, E-PK-17) ist es wieder EINER, und zwar bewusst: Der
-          #   csv-Kreislauf misst die Anwendung, nicht die Anlage, und
-          #   laeuft in der Sandbox. Hier bleibt, was nur die echte
-          #   Installation zeigt — der edbak-Weg ueber Hoster-PHP und
-          #   Hoster-Datenbank (Nr. 267 fiel genau dort).
-          #
-          # `--frisch` ist Pflicht und keine Bequemlichkeit: Ein Umlauf in ein
-          # GEFUELLTES Konto misst nichts, weil die Dublettenerkennung alles
-          # ueberspringt (steht so im Kopf von kreislauf.py). Der Schalter
-          # loescht ein vorhandenes Umlaufkonto ueber den Adminbereich.
-          # DIE JOB-PAUSE BRAUCHT DAS TOKEN (17.09.2026, Backlog Nr. 219).
-          #
-          # `kreislauf.py` haelt die Hintergrundjobs an, bevor es ein Backup
-          # in ein frisches Konto spielt — sonst duennt der Verdichtungsjob
-          # die wiederhergestellten Spuren aus, und der Vergleich misst
-          # „hat der Job dazwischen zugeschlagen" statt „kommt zurueck, was
-          # hineinging". Nachgemessen: ein Lauf ohne Pause verdichtete 125
-          # Spuren des Umlaufkontos.
-          #
-          # Bis Web 20.16.0 ging das NUR ueber die Kommandozeile, also nur
-          # auf dem Rechner der Installation. Hier laeuft ein Laeufer gegen
-          # ein fernes Staging: keine `config.php`, kein Weg. Genau daran ist
-          # der erste echte Lauf dieses Schritts gescheitert.
-          #
-          # OHNE TOKEN WIRD NICHT GEMESSEN, statt still auf den lokalen Weg
-          # zurueckzufallen: Der schlaegt hier fehl, und ein Kreislauf ohne
-          # Pause waere eine gruene Zahl ohne Aussage (`CLAUDE.md` 6).
           for art in edbak; do
             echo "--- Kreislauf $art ---"
             python3 tools/referenzdatensatz/vergleich/kreislauf.py \
@@ -474,24 +239,10 @@ jobs:
           done
 
       - name: Rückwegprobe gegen Staging
-        # DER RÜCKWEG BEIM ZWEITFAKTOR AUF DER ECHTEN ANLAGE (Konzept RW,
-        # RW-03; E-RW-11, -12). Die Signatur prüft phpseclib über `openssl`
-        # oder in reinem PHP — welcher Weg es beim Hoster wird, zeigt nur der
-        # Hoster. Der Browser-Teil der Rückwegprobe legt zwei Wegwerfkonten
-        # an (NutzerIn und BetreiberIn, Präfix `umlauf-`), schaltet ihren
-        # Zweitfaktor ein und setzt ihn mit dem Wiederherstellungsschlüssel
-        # wieder zurück; danach löscht er sie.
-        #
-        # LÄUFT NACH DEM KREISLAUF, UND DAS IST EINE ABHÄNGIGKEIT: Dort sind
-        # Playwright (unter `node_modules/`), Chromium und `cryptography`
-        # installiert worden. Ein eigener Schritt holt nur den Pfad des
-        # Moduls neu — Umgebungswerte überleben einen Schritt nicht. Ist der
-        # Kreislauf rot, läuft dieser Schritt ohnehin nicht.
-        #
-        # ÜBERSPRINGEN IST ROT (E-KH-12): Ohne Prüfkonto oder Geheimnis bricht
-        # er ab, statt grün zu melden.
+        # Lebt von den Installationen des Kreislaufs und steht deshalb dahinter;
+        # `PLAYWRIGHT_MODUL` überlebt keinen Schritt und wird neu gesetzt.
         run: |
-          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ] || [ -z "${STAGING_TOTP:-}" ]; then
+          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ] || [ -z "${STAGING_PASS:-}" ] || [ -z "${STAGING_TOTP:-}" ]; then
             echo "::error::Prüfkonto, Passwort oder STAGING_TOTP fehlt — die Rückwegprobe kann nicht messen, und ÜBERSPRINGEN IST ROT (E-KH-12)."
             echo '**Rückwegprobe: NICHT GEMESSEN** — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
@@ -503,45 +254,20 @@ jobs:
                --admin-pw "$STAGING_PASS" --admin-totp "$STAGING_TOTP" \
             || { echo "::error::Rückwegprobe gegen Staging gescheitert."; exit 1; }
 
-      # BILDERLAUF UND MESSSTAND-HINWEIS STANDEN HIER BIS ZUM 21.09.2026
-      # (Konzept PK, E-PK-01/E-PK-17, Vorgriff auf PK-06). Der Bilderlauf
-      # misst Markup und CSS, nicht die Anlage, und laeuft in der Sandbox;
-      # auf der neuen Staging-Anlage kam er nie ueber die Anmeldung des
-      # Demo-Kontos hinaus — und weil das Tor der gruenen Laeufe einen ALS
-      # GANZES gruenen Staging-Lauf verlangt, kam damit kein Tag durch
-      # (Lauf 35646453443, Nr. 268). Der Messstand laeuft seit P5a/AP9
-      # nirgends in der Kette (Nr. 206); seine Zahlen stehen in
-      # `tools/messstand/ausgangsmessung.md`.
+      # Ein roter Schritt hier hält jeden Tag auf: Das Tor der grünen Läufe
+      # verlangt den ganzen Auslieferungslauf grün, nicht nur `staging`.
+      #
+      # PLATZ FÜR NR. 234 — „Deploy, Anmeldung, `update.php`“ in einem Zug gegen
+      # Staging (E-PK-21). Benannt und nicht gebaut; ein Schritt, der sich
+      # selbst überspringt, meldete grün ohne Messung (`Pruefablauf.md` 8).
 
   produktion:
     name: produktion
-    # NEBEN DEM TAG AUCH DER PROBELAUF (E-KH-08). Er faehrt dieselbe
-    # Schrittfolge mit derselben Pflichtfreigabe — und damit auch von `main`,
-    # wo kein Tag steht. Was er NICHT tut, steht an jedem einzelnen Schritt
-    # im aufgerufenen Lauf: kein Tag-Vergleich, kein Backup, keine Wartung,
-    # kein Schreiben ausser der Probe- und der Zustandsdatei, und der
-    # Abgleich als Trockenlauf.
-    #
-    # Ein eigener Job waere der bequeme Weg und der falsche: Dann pruefte der
-    # Probelauf eine Schrittfolge, die es so nicht gibt.
     if: >-
       startsWith(github.ref, 'refs/tags/web-v')
       || inputs.probelauf
-    # DIE UMGEBUNG UND DAMIT DIE PFLICHTFREIGABE STEHEN IM AUFGERUFENEN LAUF
-    # (AP5, E-KH-27). Ein Job, der einen Arbeitslauf aufruft, kann selbst
-    # kein `environment:` tragen -- das ist keine Wahl, sondern die Bauform.
-    #
-    # **DARAN HAENGT DAS TOR, UND DESHALB STEHT ES HIER NOCH EINMAL:**
-    # Gemessen ist beides -- dass die Umgebung dort BINDET (F-KH-U-31) und
-    # dass die PFLICHTFREIGABE mitwandert: **Lauf 35566000648 vom 21.09.2026
-    # hat die Freigabe angefordert und gestanden, bis sie erteilt war**
-    # (F-KH-U-34, Pruefpunkt 23).
-    #
-    # **WER DIE STRUKTUR WIEDER ANFASST, MISST ES NEU.** Zeigte das
-    # `environment:` drueben ins Leere, liefe dieser Job ohne Umgebung und
-    # damit ohne Freigabe -- gruen, nur eben ungefragt, und ein Tag-Push
-    # ginge unbemerkt auf Produktiv. Der Nachweis ist ein Probelauf und ein
-    # Klick; er liefert nichts aus.
+    # Die Pflichtfreigabe hängt am `environment:` in `ausliefern-lauf.yml`;
+    # fehlt es dort, geht ein Tag ungefragt auf Produktiv (Probelauf zeigt es).
     uses: ./.github/workflows/ausliefern-lauf.yml
     with:
       umgebung: produktion
@@ -551,39 +277,12 @@ jobs:
       probelauf_sitzungsprobe: ${{ inputs.probelauf_sitzungsprobe || false }}
       probelauf_gespraech:     ${{ inputs.probelauf_gespraech     || false }}
     secrets: inherit
-  # ---------------------------------------------------------------------------
   rueckfall:
-    # DER RUECKFALLSTAND AUF STAGING (AP7, E-KH-16).
-    #
-    # WOZU. Ein Hotfix wird vom Zeiger `produktion` abgezweigt und auf Staging
-    # geprobt. Dafuer muss Staging den Stand des ausgelieferten Tags zeigen
-    # koennen -- und Staging spiegelt sonst `main`, das dem Tag vorausgeeilt
-    # ist. Also braucht es einen Stand, den man einspielen kann. Dieser Job
-    # legt ihn bei JEDER Produktiv-Auslieferung an und nennt seinen Dateinamen
-    # neben dem Tag: Beim Zuruecksetzen muss klar sein, WELCHEN Stand man
-    # nimmt. Wer den falschen einspielt, probt seinen Hotfix gegen etwas
-    # anderes als das, was draussen laeuft.
-    #
-    # ER HEISST NICHT `staging...`, UND DAS IST KEINE GESCHMACKSFRAGE. Das Tor
-    # der gruenen Laeufe in `ausliefern-lauf.yml` erkennt den Staging-Job am
-    # Namen. Hiesse dieser Job `staging-sicherung`, zaehlte ein Tag-Lauf, in
-    # dem `staging` uebersprungen wurde, sich selbst als Nachweis „stand auf
-    # Staging" -- der Riegel aus B5 (F-KH-U-35) waere von hinten wieder offen.
-    # Das Tor vergleicht seit AP7 zusaetzlich auf GLEICHHEIT statt auf den
-    # Namensanfang; beide Riegel stehen, weil einer davon irgendwann jemand
-    # „aufraeumt".
-    #
-    # ER BLOCKIERT DIE AUSLIEFERUNG NICHT (E-KH-30), und das ist die
-    # unbequeme, aber richtige Wahl. Ein Hotfix wird gebraucht, WEIL etwas
-    # kaputt ist. Haenge die Produktiv-Auslieferung daran, dass Staging
-    # erreichbar ist, dann sperrt eine kranke Testumgebung die Reparatur der
-    # echten -- genau verkehrt herum. Scheitert dieser Job, ist der LAUF rot
-    # und sagt, dass der Rueckfallstand fehlt; ausgeliefert wird trotzdem.
-    # **Still uebersprungen wird er nicht** -- das waere B5 noch einmal.
+    # Heißt nie `staging…`: Das Tor der grünen Läufe erkennt den Staging-Job am
+    # Namen, und ein Tag-Lauf zählte sich sonst selbst als Nachweis.
     name: Rückfallstand (Staging)
-    # NUR BEI EINER ECHTEN AUSLIEFERUNG. Ein Probelauf veraendert nichts und
-    # braucht keinen Rueckfallstand; ein Komplett-Backup je Probelauf waere
-    # teuer und verdraengte obendrein die Staende, um die es hier geht.
+    # `!inputs.probelauf` bleibt: Ein Komplett-Backup je Probelauf verdrängte
+    # auf Staging still die Rückfallstände echter Auslieferungen.
     if: ${{ startsWith(github.ref, 'refs/tags/web-v') && !inputs.probelauf }}
     runs-on: ubuntu-latest
     environment: staging
@@ -597,8 +296,6 @@ jobs:
           JOBS_TOKEN:  ${{ secrets.JOBS_TOKEN }}
         run: |
           set -euo pipefail
-          # KEIN VORGABEWERT, wie ueberall seit AP6 (E-KH-07): Eine leere
-          # Adresse ist rot und nicht „dann eben Staging raten".
           if [ -z "${STAGING_URL:-}" ]; then
             echo "::error::Die Variable STAGING_URL ist leer. Ohne sie kann kein Rückfallstand auf Staging angelegt werden."
             exit 1
@@ -616,6 +313,8 @@ jobs:
           JOBS_TOKEN:  ${{ secrets.JOBS_TOKEN }}
         run: |
           set -euo pipefail
+          # Eigene Zuweisung, damit `set -e` den Rückgabewert von `tor.py`
+          # trägt; sonst stünde „unbekannt“ grün neben dem Tag.
           datei=$(python3 tools/kette/tor.py zustand --basis "$STAGING_URL" \
                     --token "$JOBS_TOKEN" --frage komplett)
           tag="${GITHUB_REF_NAME}"
@@ -640,83 +339,30 @@ jobs:
             echo 'braucht, lädt ihn jetzt herunter.'
           } >> "$GITHUB_STEP_SUMMARY"
 
-        # STEHT `unbekannt` DA, IST DER SCHRITT ROT. Ein Rückfallstand, dessen
-        # Namen niemand kennt, ist keiner -- und eine Zusammenfassung, die
-        # „unbekannt" neben den Tag schreibt und gruen meldet, waere genau die
-        # gruene Zahl ohne Aussage, vor der `CLAUDE.md` 6 warnt. `tor.py`
-        # liefert dafuer den Rueckgabewert 1, und `set -e` traegt ihn nach
-        # aussen.
-  # ---------------------------------------------------------------------------
   zeiger:
     name: zeiger
-    # DER ZEIGER SAGT, WAS AUF PRODUKTIV LIEGT (AP2/E-KH-13).
-    #
-    # WOGEGEN. Die Integritaetswache vergleicht den Produktivserver mit einem
-    # Stand aus dem Repositorium. Bis zum 20.09.2026 nahm sie dafuer `main` --
-    # und `main` ist fast immer weiter als das, was ausgeliefert wurde. Sie
-    # wurde deshalb seit dem 17.09. taeglich rot, zuletzt mit 2 abweichenden
-    # und 6 nicht erreichbaren Dateien, allesamt aus P5a und P5b (Befund B6).
-    # Eine Wache, die regelmaessig grundlos rot wird, wird abgeschaltet; dann
-    # ist der Angriff, gegen den es sie gibt, unbeobachtet.
-    #
-    # WARUM NICHT DAS JUENGSTE `web-v*`-TAG. Es ist nicht der ausgelieferte
-    # Stand: Ein Tag kann gesetzt und die Freigabe nie erteilt worden sein,
-    # das Backup-Tor kann zugegangen sein, und nach einem Ruecksetzen liegt
-    # ein AELTERER Stand oben als der juengste Tag. Der Zeiger bewegt sich
-    # ausschliesslich, wenn tatsaechlich ausgeliefert wurde -- rueckwaerts
-    # eingeschlossen, denn ein Ruecksetzen ist eine Auslieferung.
     needs: produktion
-    # ZWEI BEDINGUNGEN, UND DIE ZWEITE IST TEUER BEZAHLT.
-    #
-    # (1) `needs` ALLEIN REICHT NICHT: Ein uebersprungener Job gilt GitHub als
-    # erfuellte Abhaengigkeit. Ohne `result == 'success'` bewegte ein Lauf
-    # ohne Tag den Zeiger auf einen Stand, der nie auf Produktiv war.
-    #
-    # (2) EIN PROBELAUF IST AUCH ERFOLGREICH -- UND LIEFERT NICHTS AUS.
-    # Genau das ist am 20.09.2026 passiert (Lauf 35534695781): Der Probelauf
-    # lief durch, `produktion` meldete `success`, und der Zeiger wanderte auf
-    # `9f62d55` -- einen Commit, der nie auf dem Server lag. Die
-    # Integritaetswache haette am naechsten Morgen Produktiv gegen 20.26.0
-    # gehalten, waehrend dort 20.24.2 liegt: taeglicher Falschalarm, also
-    # genau der Zustand, den AP2 beseitigt hat.
-    #
-    # DER KOMMENTAR UEBER (1) STAND SCHON DA, ALS (2) GEBAUT WURDE. Die
-    # Bedingung war gegen den uebersprungenen Job gerichtet; der Probelauf kam
-    # ein Paket spaeter und ging durch die Tuer daneben. Wer hier etwas
-    # hinzufuegt, das `produktion` erfolgreich beenden laesst, ohne
-    # auszuliefern, ergaenzt diese Zeile -- sonst wiederholt sich derselbe
-    # Fehler ein drittes Mal.
+    # Auch ein Probelauf endet mit `success`: Jeder Weg ohne Auslieferung gehört
+    # in diese Bedingung, sonst zeigt der Zeiger auf nie Ausgeliefertes.
     if: needs.produktion.result == 'success' && !inputs.probelauf
     runs-on: ubuntu-latest
-    # HIER UND NUR HIER `contents: write`. Der Job mit den FTPS-Geheimnissen
-    # (`produktion`) bleibt bei `read`: Er darf ausliefern, aber nichts ins
-    # Repositorium schreiben. Dieser hier darf schreiben, kennt aber weder
-    # Zugangsdaten noch Umgebung -- es gibt kein `environment:`, weil die
-    # Freigabe schon vor `produktion` eingeholt wurde und ein zweites Tor
-    # nach getaner Auslieferung den Zeiger nur hinter dem Stand zurueckliesse.
-    #
-    # KEINE FREMD-AKTION in diesem Job ausser `checkout`. Ein Schreibrecht
-    # auf das Repositorium ist das Einzige, was diese Kette zu vergeben hat.
+    # Nur dieser Job schreibt ins Repositorium; deshalb keine Fremd-Aktion außer
+    # `checkout`, und `produktion` mit den FTPS-Geheimnissen bleibt bei `read`.
     permissions:
       contents: write
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          # Volle Historie: Ohne sie kennt der Laeufer den bisherigen Zeiger
-          # nicht und koennte nicht sagen, wohin er sich bewegt.
+          # Voll, weil ein flacher Checkout `origin/produktion` nicht kennt.
           fetch-depth: 0
 
       - name: Zeiger `produktion` auf diesen Stand setzen
         env:
           ZIEL: ${{ github.sha }}
         run: |
-          # ZWEITER RIEGEL AN DER STELLE, WO DER SCHADEN ENTSTEHT.
-          # Die `if`-Zeile des Jobs sollte das schon verhindern — sie hat es
-          # am 20.09.2026 nicht getan, weil sie den Probelauf nicht kannte.
-          # Ein Riegel an der Bedingung UND einer an der Tat: Wer die
-          # Bedingung kuenftig erweitert und diese Zeile vergisst, bekommt
-          # einen roten Lauf statt eines falschen Zeigers.
+          # Zweiter Riegel neben dem `if` des Jobs: Wer die Bedingung erweitert
+          # und diesen vergisst, bekommt Rot statt eines falschen Zeigers.
           if [ "${{ inputs.probelauf }}" = "true" ]; then
             echo "::error::Der Zeiger wird im PROBELAUF NICHT bewegt — es ist nichts ausgeliefert worden. Dass dieser Schritt überhaupt läuft, heißt: die Bedingung des Jobs ist kaputt."
             exit 1
@@ -724,12 +370,8 @@ jobs:
           vorher=$(git rev-parse --verify --quiet origin/produktion || echo 'keiner')
           echo "Zeiger vorher:  $vorher"
           echo "Zeiger nachher: $ZIEL  (Tag: ${GITHUB_REF_NAME})"
-          # ERZWUNGEN IST HIER RICHTIG UND SONST NIRGENDS. Ein Ruecksetzen
-          # legt einen AELTEREN Commit auf den Server; ein Push ohne Zwang
-          # lehnte das als Rueckschritt ab, und der Zeiger bliebe auf einem
-          # Stand stehen, der nicht mehr oben liegt. Genau dann waere die
-          # Wache blind fuer den Unterschied. Auf diesem Zweig entwickelt
-          # niemand -- es gibt nichts zu ueberschreiben als den Zeiger selbst.
+          # `--force` ist hier richtig und sonst nirgends: Ein Zurücksetzen legt
+          # einen älteren Commit oben auf, und ohne Zwang lehnte Git das ab.
           git push --force origin "$ZIEL:refs/heads/produktion"
           {
             echo '## Zeiger `produktion` bewegt'
@@ -741,3 +383,128 @@ jobs:
             echo
             echo 'Die Integritaetswache vergleicht ab jetzt gegen diesen Stand.'
           } >> "$GITHUB_STEP_SUMMARY"
+  # ---------------------------------------------------------------------------
+  android:
+    name: Android-Auslieferung
+    # Einmal je Fassung, hinter der Pflichtfreigabe der Umgebung `produktion`
+    # (E-PK-23); nicht `staging…` heißen, sonst zählte das Tor der grünen Läufe
+    # diesen Job mit.
+    if: startsWith(github.ref, 'refs/tags/android-v') || inputs.app_probelauf == 'android'
+    runs-on: ubuntu-latest
+    environment: produktion
+    timeout-minutes: 45
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Java 21 für AGP 9
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Selbstproben von Bau und Ablage
+        run: |
+          bash tools/kette/appbau.sh --selbstprobe
+          python3 tools/kette/apkablage.py --selbstprobe
+
+      - name: Bauen, signieren, Zertifikat prüfen
+        # Gradle baut unsigniert; signiert wird danach mit `apksigner`, damit
+        # fremder Build-Code den Schlüssel nie zu sehen bekommt (E-PK-63).
+        env:
+          APK_SPEICHER_B64:        ${{ secrets.APK_SPEICHER_B64 }}
+          APK_SPEICHER_PASSWORT:   ${{ secrets.APK_SPEICHER_PASSWORT }}
+          APK_SCHLUESSEL_NAME:     ${{ secrets.APK_SCHLUESSEL_NAME }}
+          APK_SCHLUESSEL_PASSWORT: ${{ secrets.APK_SCHLUESSEL_PASSWORT }}
+          APK_ZERTIFIKAT_SHA256:   ${{ vars.APK_ZERTIFIKAT_SHA256 }}
+        run: |
+          case "$GITHUB_REF" in
+            refs/tags/android-v*) fassung="${GITHUB_REF_NAME#android-v}" ;;
+            *)                    fassung=datei ;;
+          esac
+          bash tools/kette/appbau.sh android "$fassung" ausgabe
+
+      - name: Nach server/apk/ ablegen, ältere Fassungen löschen
+        # Gelöscht wird erst, wenn die neue Datei zurückgeholt und gleich ist
+        # und ihren Namen trägt — nie davor (E-PK-59).
+        env:
+          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_ZIELPFAD: ${{ vars.FTP_ZIELPFAD }}
+          PROBELAUF:    ${{ inputs.app_probelauf == 'android' }}
+        run: |
+          for v in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_ZIELPFAD; do
+            if [ -z "${!v:-}" ]; then
+              echo "::error::$v der Umgebung produktion fehlt — nichts abgelegt."
+              exit 1
+            fi
+          done
+          schalter=""
+          if [ "$PROBELAUF" = "true" ]; then schalter="--probelauf"; fi
+          zahl=0
+          for datei in ausgabe/nadoku-[0-9]*.apk ausgabe/nadoku-uhr-*.apk; do
+            case "$datei" in
+              ausgabe/nadoku-uhr-*) art=uhr ;;
+              *)                    art=handy ;;
+            esac
+            if [ ! -f "$datei" ]; then
+              echo "::error::$datei fehlt — der Bau hat nicht beide APKs hinterlassen."
+              exit 1
+            fi
+            python3 tools/kette/apkablage.py --art "$art" --datei "$datei" \
+                --ftp-server "$FTP_SERVER" --ftp-konto "$FTP_USERNAME" \
+                --ftp-pass "$FTP_PASSWORD" --ftp-pfad "$FTP_ZIELPFAD" \
+                --zusammenfassung "$GITHUB_STEP_SUMMARY" $schalter
+            zahl=$((zahl + 1))
+          done
+          if [ "$zahl" != 2 ]; then
+            echo "::error::$zahl APKs statt 2 (Handy und Wear OS)."
+            exit 1
+          fi
+  # ---------------------------------------------------------------------------
+  uhr:
+    name: Uhr-Auslieferung (Garmin)
+    # Das Paket bleibt ein Artefakt dieses Laufs; in den Connect-IQ-Store lädt
+    # es die Betreiberin von Hand (E-PK-61).
+    if: startsWith(github.ref, 'refs/tags/uhr-v') || inputs.app_probelauf == 'uhr'
+    runs-on: ubuntu-latest
+    environment: produktion
+    timeout-minutes: 90
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Connect-IQ-SDK und alle Gerätedateien
+        # `CIQ_ZIELE=alle`: `monkeyc -e` baut für jedes Gerät im Manifest, und
+        # ein fehlendes Gerät bricht das Paket ab.
+        env:
+          CIQ_GERAETE_URL: ${{ secrets.CIQ_GERAETE_URL }}
+        run: |
+          if [ -z "${CIQ_GERAETE_URL:-}" ]; then
+            echo "::error::CIQ_GERAETE_URL fehlt — ohne Gerätedateien kein Paket."
+            exit 1
+          fi
+          CIQ_ZIELE=alle bash tools/uhr-pruefstand/pruefstand.sh aufbau-uebersetzen
+
+      - name: Selbstprobe des Baus
+        run: bash tools/kette/appbau.sh --selbstprobe
+
+      - name: Store-Paket bauen und signieren
+        env:
+          UHR_ENTWICKLERSCHLUESSEL_B64: ${{ secrets.UHR_ENTWICKLERSCHLUESSEL_B64 }}
+        run: |
+          export PATH="$HOME/.ciq-pruefstand/sdk/bin:$PATH"
+          case "$GITHUB_REF" in
+            refs/tags/uhr-v*) fassung="${GITHUB_REF_NAME#uhr-v}" ;;
+            *)                fassung=datei ;;
+          esac
+          bash tools/kette/appbau.sh uhr "$fassung" ausgabe
+
+      - name: Paket als Artefakt
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: nadoku-${{ github.ref_name }}
+          path: ausgabe/*.iq
+          if-no-files-found: error
+          retention-days: 90

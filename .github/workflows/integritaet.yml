@@ -1,78 +1,22 @@
 name: Integritaetswache
 
-# Laeuft die ausgelieferte Fassung noch der aus dem Repositorium?
-#
-# WOGEGEN (SP-6, F-SP-9, Backlog Nr. 140). Der eine Angriff, gegen den keine
-# Verschluesselung im Browser hilft, ist ein Server, der VERAENDERTEN CODE
-# ausliefert: eine Zeile in `crypto.js`, und das naechste Passwort geht mit.
-# Verhindern laesst sich das nur durch Zugangsschutz; ERKENNEN hier.
-#
-# WARUM ES KEINE EIGENE MAILADRESSE BRAUCHT: Ein fehlgeschlagener Lauf loest
-# die gewoehnliche GitHub-Benachrichtigung aus (Einstellung "Actions" in den
-# Benachrichtigungen). Eine eigene Adresse braeuchte es nur, wenn die Meldung
-# woanders ankommen soll.
-#
-# KEIN SERVERZUGRIFF, NUR HTTPS -- die Wache holt oeffentliche Dateien und die
-# Anmeldeseite. Sie hat keine Zugangsdaten und soll keine bekommen.
-
 on:
   schedule:
-    # Taeglich um 04:17 UTC. Krumme Minute mit Absicht: Zur vollen Stunde
-    # stehen bei GitHub Millionen Jobs an, und der Lauf verschoebe sich
-    # unvorhersehbar.
+    # Krumme Minute mit Absicht: Zur vollen Stunde stauen sich die geplanten
+    # Läufe bei GitHub, und dieser verschöbe sich oder entfiele.
     - cron: '17 4 * * *'
-  # Nach jedem Deploy: Genau dann aendert sich die Auslieferung, und genau
-  # dann will man wissen, ob sie so ankam, wie sie losgeschickt wurde.
-  #
-  # SEIT AP2 LAEUFT DIE WACHE BEI JEDEM AUSLOESER DURCH (E-KH-13). Bis zum
-  # 20.09.2026 stand weiter unten ein Riegel, der nach einem `workflow_run`
-  # erst fragte, ob der Job `produktion` erfolgreich war -- sonst hielt sie
-  # still. Der Riegel war noetig, solange sie gegen `main` verglich: Nach
-  # einem Staging-Deploy haette sie Produktiv gegen einen Stand gehalten, der
-  # dort gar nicht liegt. Jetzt vergleicht sie gegen den ZEIGER, und der
-  # aendert sich nur bei einer Produktiv-Auslieferung. Damit ist der Riegel
-  # nicht nur entbehrlich, sondern schaedlich -- er liess die Wache nach
-  # einem Staging-Deploy schweigen, obwohl der Vergleich jetzt gueltig waere.
-  #
-  # DER NAME IST DIE KUPPLUNG, UND SIE IST ZERBRECHLICH (P5a/AP1, Fund F4).
-  # Bis Web 20.3.0 stand hier "Server per FTP hochladen" — der Anzeigename des
-  # alten `deploy.yml`. Wer einen Lauf umbenennt, haengt diese Wache ab, und
-  # zwar STILL: Kein Fehler, keine rote Zeile, nur ein Auslöser, der nie mehr
-  # feuert. Mit der Auslieferungskette (E-P5a-10) heisst der Lauf
-  # "Auslieferung"; steht der Name hier und dort nicht wortgleich, ist die
-  # Wache blind.
+  # Der Name „Auslieferung“ ist die Kupplung: Heißt der Lauf dort anders, feuert
+  # dieser Auslöser nie mehr — ohne Fehler, ohne rote Zeile.
   workflow_run:
     workflows: ["Auslieferung"]
     types: [completed]
   workflow_dispatch:
 
-# `actions: read` IST MIT AP2 ENTFALLEN. Es gab diese Berechtigung nur fuer
-# den `gh api`-Aufruf des alten Riegels ("hat der Job `produktion` in diesem
-# Lauf geklappt?"). Der Riegel ist weg, der Aufruf auch -- und eine
-# Berechtigung, die niemand mehr braucht, wird ausgetragen und nicht
-# aufbewahrt. `contents: read` reicht fuer beide Auschecken.
 permissions:
   contents: read
 
-# ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
-#
-# GitHub faehrt run-Bloecke mit `bash -e {0}` — OHNE pipefail. Der
-# Rueckgabewert einer Pipe ist damit der des LETZTEN Glieds, und ein
-# gescheitertes erstes Glied faellt lautlos durch. Im Schritt "Wortliste"
-# stand `python3 wortliste.py | tee /tmp/wortliste.txt`: `tee` gibt immer 0,
-# also konnte dieser Schritt NIE ROT WERDEN. Nachgemessen:
-# `bash -e -c 'python3 -c "import sys;sys.exit(1)" | tee /dev/null; echo $?'`
-# ergibt 0.
-#
-# Ein Pruefmittel, das nicht scheitern kann, ist kein Pruefmittel — es ist
-# eine gruene Zahl ohne Aussage. Deshalb hier, an EINER Stelle je Lauf, und
-# nicht als Flicken an der einen Pipe: Die naechste Pipe kommt bestimmt.
-#
-# GEMESSEN, WAS DADURCH ROT WIRD: von zehn Pipes in den drei Laeufen trifft
-# es genau eine — `grep -oE "WEB_VERSION..." | head -1` im Schritt
-# "Fassungen nennen". Die war ohnehin kaputt (das Muster verlangte ein Komma
-# hinter dem Namen, `version.php` schreibt `const WEB_VERSION = '…'`) und ist
-# im selben Zug berichtigt.
+# GitHub fährt `run:` ohne `pipefail` — eine Pipe meldet dann nur ihr letztes
+# Glied, und `prüfe | tee datei` kann nie rot werden.
 defaults:
   run:
     shell: bash -eo pipefail {0}
@@ -82,18 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Werkzeug auschecken
-        # DAS WERKZEUG KOMMT VON HIER, DER VERGLEICHSSTAND VOM ZEIGER
-        # (E-KH-13). Beides aus dem Zeigerzweig zu nehmen waere falsch: Dann
-        # liefe eine Wache, die so alt ist wie die Auslieferung, und eine
-        # Verbesserung an ihr griffe erst nach dem naechsten Deploy.
+        # Werkzeug von hier, nur der Vergleichsstand vom Zeiger — sonst griffe
+        # jede Verbesserung an der Wache erst nach dem nächsten Deploy.
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Gibt es den Zeiger `produktion` ueberhaupt?
-        # FEHLENDER ZEIGER IST ROT MIT ANSAGE, NIE STILL GRUEN (E-KH-13).
-        # `actions/checkout` scheiterte zwar auch von selbst, aber mit
-        # "couldn't find remote ref" -- einer Meldung, die nicht sagt, was
-        # das fuer diese Anlage bedeutet. Hier steht es in unseren Worten,
-        # samt dem Weg, ihn anzulegen.
         run: |
           if [ -z "$(git ls-remote --heads origin produktion)" ]; then
             echo "::error::Der Zeigerzweig 'produktion' fehlt — die Wache hat NICHT verglichen."
@@ -116,33 +53,21 @@ jobs:
         with:
           ref: produktion
           path: zeiger
-          # `fetch-tags`, DAMIT DIE ZUSAMMENFASSUNG DAS TAG NENNEN KANN. Ohne
-          # Tags meldet `git describe --exact-match` nichts, und die Wache
-          # schriebe "kein Tag" an einen Stand, der sehr wohl eines traegt --
-          # eine Auskunft, die in die Irre fuehrt.
+          # `fetch-tags`, sonst findet `git describe` kein Tag, und die
+          # Zusammenfassung meldete „kein Tag“ an einem Stand, der eines trägt.
           fetch-depth: 1
           fetch-tags: true
 
       - name: Selbstprobe — erkennt die Wache eine Abweichung ueberhaupt?
-        # ZUERST, und das ist kein Formalismus: Ein gruener Lauf einer Wache,
-        # die immer gruen meldet, sieht genauso aus wie einer, der nichts
-        # gefunden hat. Die Selbstprobe rechnet ohne Netz und braucht eine
-        # Sekunde.
+        # Selbstprobe zuerst — eine taube Wache sähe sonst grün aus.
         run: python3 tools/integritaetswache/wache.py --selbstprobe
 
       - name: Auslieferung gegen den Zeiger `produktion`
-        # NICHT MEHR "gegen das Repositorium" (AP2/E-KH-13): Verglichen wird
-        # gegen den AUSGELIEFERTEN Stand, und der liegt im Zeigerzweig. Dass
-        # `main` weiter ist, ist der Normalfall und kein Befund mehr.
         env:
-          # Ueber eine Repository-Variable umstellbar, damit ein Selbsthoster
-          # die Datei nicht anfassen muss.
           WACHE_BASIS: ${{ vars.WACHE_BASIS }}
         run: |
-          # KEINE VORGABE MEHR (AP6, E-KH-07). Hier stand
-          # `${WACHE_BASIS:-https://nadoku.gen-em.org}` -- eine vergessene
-          # Variable ergab damit eine Wache, die die fest eingebaute Anlage
-          # bewachte und zur eigentlichen schwieg. Gruen, und wertlos.
+          # Keine Vorgabe: Ein fest eingebauter Wert ließe die Wache bei
+          # vergessener Variable eine andere Anlage bewachen und grün melden.
           if [ -z "${WACHE_BASIS:-}" ]; then
             echo "::error::Die Repositoriums-Variable WACHE_BASIS ist leer. Ohne sie weiss die Wache nicht, welche Anlage sie messen soll — und eine Vorgabe gibt es seit AP6 absichtlich nicht mehr. Eintragen unter Settings -> Secrets and variables -> Actions -> Variables."
             exit 1
@@ -153,18 +78,13 @@ jobs:
           python3 tools/integritaetswache/wache.py "$BASIS" --stand zeiger \
             > /tmp/wache.txt 2>&1 || rc=$?
           cat /tmp/wache.txt
-          # DIE ZUSAMMENFASSUNG NENNT, WAS GEMESSEN WURDE (E-KH-13: Commit,
-          # Tag und Dateizahl). Ein "Kein Unterschied" ohne den verglichenen
-          # Stand ist eine gruene Zahl ohne Aussage -- genau die Sorte, vor
-          # der `CLAUDE.md` 6 warnt.
-          #
-          # `|| rc=$?` UND NICHT `| tee`: Ohne das haette `bash -e` hier
-          # abgebrochen, und die Zusammenfassung bliebe leer -- ausgerechnet
-          # im roten Lauf, in dem man sie braucht. Dieselbe Falle wie bei der
-          # Wortliste am 16.09.2026, nur andersherum.
+          # Erst zusammenfassen, dann scheitern: `|| rc=$?` statt `| tee`, sonst
+          # bräche `bash -e` ab, und die Zusammenfassung fehlte im roten Lauf.
           {
             echo '## Integritaetswache'
             echo
+            # Das Muster hängt am Wortlaut von `wache.py`; ändert der sich,
+            # bleibt diese Liste wegen `|| true` still leer.
             grep -E '^(Integritaetswache gegen|Vergleichsstand:|  Teil )' /tmp/wache.txt \
               | sed 's/^/- /' || true
             echo

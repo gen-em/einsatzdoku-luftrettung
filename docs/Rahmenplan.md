@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 146 (28.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 152 (30.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `f4ac705`, gemessen 28.09.2026): Web 21.6.1 ·
+**Stand `origin/main`** (Commit `e33a97c`, gemessen 30.09.2026): Web 21.6.1 ·
 Uhr 3.1.0 · Android 0.17.0.
-**Läuft:** auf `claude/pr95-stufe-18-ztactt` die Umsetzung von Schritt 18 (Konzept SR, neun Pakete), gestapelt auf dem offenen Konzept-PR (E-SR-38) — Abschnitt 3.
-**Als Nächstes:** Merge des Konzept-PR 18 und `update.php` auf Staging (#94); der PR der Umsetzung 18 folgt nach dem Merge — Reihenfolge in Abschnitt 3.
-**Offene PRs:** der Konzept-PR zu 18 (#95, `claude/gallant-mccarthy-yacnzk`, `docs/` allein).
-**Fällig bei der Betreiberin:** 31 Posten (Abschnitt 6.1). **`update.php`:** auf Staging fällig (#94 gemergt am 28.09.2026, Migration aus Web 21.3.0), auf Produktiv mit dem Tag (6.1).
+**Läuft:** die Umsetzung von 18 auf `claude/pr95-stufe-18-ztactt` — Abschnitt 3. PK und Kette II sind abgeschlossen (Abschnitt 8).
+**Als Nächstes:** der PR der Umsetzung 18; **vor dem 19.10.2026 Nr. 236** (`ubuntu-latest` wird Ubuntu 26, die Kette zieht mit) — Reihenfolge in Abschnitt 3.
+**Offene PRs:** keiner außer dem Nachtrag zu den ersten App-Tags.
+**Fällig bei der Betreiberin:** 33 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nachsehen — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert, die Migrationen aus 10c und Web 21.3.0 können ausstehen (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -106,8 +106,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
 **Die Reihenfolge der offenen Schritte ist:** **18** → 12 → 12a → 12b →
 13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
-der Reihe: **PK-06 bis PK-08** (die Kette gehört PK, dort endet auch
-Kette II), die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
+der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** 18 vor 12, wie 17 davor, damit der Review aufgeräumte
 und gehärtete Seiten liest. P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12) vor S11 (12a)**, weil es dessen Entwurfsfragen
@@ -128,8 +127,6 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzt.
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
 | 18 | **Sicherheitsrunde II** | Sitzungsbindung (Nr. 242), „Gerät merken" mit frischem Code, Passkeys als Zweitfaktor (Nr. 350), Serverschlüssel wechseln (Nr. 247), Notzugang der einzigen BetreiberIn (Nr. 249), Betreiber-Rückfrage (Nr. 233), `ingest.php`-Deadlock (Nr. 210), Proof-of-Work (Nr. 228); dazu Nr. 232, 251 | Merge von 17 (erfüllt 28.09.2026, PR #94) | `docs/konzepte/Konzept-SR-Sicherheitsrunde-II.md` (Kürzel SR, nach K1; Konzept Fable, Umsetzung Opus) | Umsetzung — seit 28.09.2026 auf `claude/pr95-stufe-18-ztactt` (Opus), gestapelt auf dem offenen Konzept-PR #95 (E-SR-38) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
-| Kette II | **Härtung der Auslieferungskette** | Zeiger-Zweig und Integritätswache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Abbruchverhalten, Hotfix-Weg; M1 erster grüner Produktivlauf, M2 Probe-Hotfix | — | `docs/konzepte/Konzept-Kette-Haertung.md` (E-KH-01 bis -30) | gemergt 21.09.2026 (PR #65, #66, #68); **M1 erreicht 21.09.2026** (`web-v20.26.3`, Lauf 35654132667); M2 und der Abschluss sind an PK übergeben (PK-07); Zuarbeiten in 6.1 |
-| PK | **Prüfkette — jede Prüfung einmal, an ihrer Stelle** | Arbeitsumgebung als Station B mit Prüfstand und Bericht, Stufe 1 liest den Bericht gegen, Staging verschlanken, App-Auslieferung mit Signatur; PK-M2 erster Durchlauf der neuen Kette | — | `docs/konzepte/Konzept-PK-Pruefkette.md` (E-PK-01 bis -49) | Umsetzung — PK-01 bis PK-05 gemergt (PR #75, #81, #82, 23.09.2026); offen PK-06, PK-07 (übernimmt den Abschluss von Kette II), PK-08, PK-M2; Buchführung hier erst nach dem SD-Merge |
 
 ### Schritt 12 — P6, Stück 1: das Bedrohungsmodell
 
@@ -188,7 +185,7 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; PK-06 bis PK-08 (Kette) zu 18 (`server/`); ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 12 → 12a → 12b → 13 → 14 nacheinander, nichts parallel (R71, R86) |
+| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 12 → 12a → 12b → 13 → 14 nacheinander, nichts parallel (R71, R86) |
 | — | S11 (12a) baut auf `store => 'pat'` (E-S9-01) auf, nicht daneben |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
@@ -215,8 +212,9 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
+| **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1, 5s |
+| **Prüfliste PK ohne Merge:** P-PK-24, -25 (Rettungsmittel, Excel), -26 (GuteSeele-Import) im Browser; -27 mit Netzzugang (Nr. 280); Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1 |
 | **`app.umgebung` in die `config.php` von Staging** (`name` Staging, `farbe` rot) — nie auf Produktiv; danach Betrieb → Status, Zeile „Umgebung" | 10c AP1 (E-P5c-05) | 23.09.2026 | Runbook „Eine Testanlage kennzeichnen"; P-P5c-01 |
-| **Tag `web-v21.1.3` setzen** — die Auslieferung von 10c auf Produktiv, nach `STAGING_TOTP` und `update.php` auf Staging; danach `update.php` auf Produktiv | 10c | 26.09.2026 | `Technik.md` 6; Prüfdokument P5c |
 | **`betrieb.health_token`** in die `config.php` beider Anlagen, das Monitoring auf `/api/health.php?token=…` richten — ohne Eintrag antwortet der Endpunkt jedem mit 403 | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
 | **Vorhandene Komplett-Backups auf Produktiv öffnen** (`gzip -t`) — ein Stand, der sich nicht öffnen lässt, ist kein Rückfallstand (Nr. 328). War vor dem Merge fällig; der Merge ist gelaufen, der Punkt steht aus | 10c AP11 | 25.09.2026 | P-P5c-45 |
 | **Prüfliste P5c/AP1:** Staging rot nach dem Merge, Produktiv blau nach dem Tag, Rundmail in einem echten Postfach, Ankündigung am Handy | 10c AP1 | 23.09.2026 | P-P5c-01 bis -04 |
@@ -231,10 +229,11 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.97a), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefdokument-BV-Backlog-Vorgriff.md` |
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefdokument-BR-Bestandsriegel.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md`, P-R4-06 |
-| **`update.php` nach dem Merge von #94** — erst Staging, nach dem Tag Produktiv: Migration `2026_09_27_days_created_at` (Web 21.3.0); bis dahin bleibt die Wartung an | 17 (R4-15) | 28.09.2026 | `Technik.md` 6; P-R4-05 |
-| **Tag `web-v21.6.1` setzen** — die Auslieferung von 17 auf Produktiv; sie schließt `web-v21.1.3` ein, falls der noch aussteht | 17 | 28.09.2026 | `Technik.md` 6 |
+| **`update.php` auf Staging und Produktiv** — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert (Lauf 36428081295); ausstehen können die Migrationen aus 10c und `2026_09_27_days_created_at` (Web 21.3.0), bis dahin bleibt die Wartung an | 10c, 17 (R4-15) | 28.09.2026 | `Technik.md` 6; P-R4-05 |
 | **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md` 4 |
-| **Zuarbeiten aus Kette II:** der Rückfallstand bei einer echten Auslieferung, der Hotfix über den ganzen Weg, die Aufbewahrung der Komplett-Stände auf Staging (Nr. 261: Vorgabe 2, Vorschlag 5) | Kette II, PK-07 | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, Prüfpunkte 26 bis 28 |
+| **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, 4a, 9, 27, 28 |
+| **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefdokument-Kette-Haertung.md`, Abgleich |
+| **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 6.3a; Prüfpunkt 2c |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |
 | **Schlüsselblatt drucken** — zwei Ausdrucke, zwei Orte (Betriebsakte, Passwortmanager); Ablageort in der Betriebsakte vermerken | S10 | 14.09.2026 | Archiv-2 6 |
 | **Einmal anmelden und auf Status nachsehen** — die Zeile „Server-Anteil" zählt die stille Umstellung je Konto mit | S10 | 14.09.2026 | Archiv-2 6 |
@@ -251,6 +250,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
+| **Garmin-Paket in den Connect-IQ-Store** (P-PK-42), sobald die App im Portal angelegt ist — das Artefakt aus Lauf 110 hält bis 29.12.2026, danach ein neuer Tag `uhr-v…` | Betriebsübergang | 30.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1, 5u |
 | **Demo-Video des Vordergrunddienstes auf echtem Gerät** für die Standort-Deklaration — falls der interne Track sie verlangt (beim Einrichten prüfen) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Datensicherheitsformular der Play Console** — setzt die Datenschutzerklärung voraus (6.3) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Wear-OS-Uhr für den Gerätetest**, die Wear-OS-Prüfrunde und den Installationstest aus dem Track | 6 Teil C; Prüfliste AR | 31.08.2026 | `Pruefdokument-AR-Android-Runde.md` |
@@ -379,9 +379,9 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R62 | Konzeptablage `docs/konzepte/` mit Lebenszyklus: Statusblock und Push je Paket; Erledigt-Zeile und Löschung nach der Freigabe; Prüfdokument bis zur Prüfliste | gilt; Regel in 2.2; Erledigt-Zeile seit Fassung 125 als Tabellenzeile, Prüfzahlen im Prüfdokument (E-SD-10) | Archiv-2 7 |
 | R63 | Android-App kennt nur `nadoku.gen-em.org`; Adressfeld, Adress-QR und Adresswahl entfallen; Handy-App „Gen-EM NAdoku", Wear-Uhr „NAdoku" | erledigt (Android 0.11.0, Nr. 84 bis 86) | Archiv-2 7 |
 | R64 | Herkunft und Gerät je Einsatz: Momentaufnahme an `missions` und `rest_segments`, `origin` mit sechs Werten, sichtbar im Dashboard | erledigt: Speicherung Web 14.0.0 (Nutzlast 9), Dashboard Web 20.47.0 (10c AP7); die Kachel Nr. 88 ist am 12.09.2026 verworfen | Archiv-2 7 |
-| R65 | Store-Verteilung in zwei Stufen: Organisationskonto (D-U-N-S), interner Test-Track ab Schritt 6, Produktionsfreigabe als Welle 1; Play App Signing | gilt; Organisationskonto und Play App Signing erledigt 26.09.2026, Track mit Schritt 6 Teil C, Produktion im Betriebsübergang | `Konzept-Planung-v1.0.md`, E-PV-1 |
+| R65 | Store-Verteilung in zwei Stufen: Organisationskonto (D-U-N-S), interner Test-Track ab Schritt 6, Produktionsfreigabe als Welle 1; Play App Signing | gilt; Konto und Play App Signing 26.09.2026, Track mit 6 Teil C, Produktion im Betriebsübergang; Seitenladung signiert die Kette (E-PK-53) | `Konzept-Planung-v1.0.md`, E-PV-1 |
 | R66 | Update-Weg ab v1.0: keine Selbstprüfung, kein Selbst-Update, Produktion nur auf Auslösung; Register beginnt bei v1.0 neu | gilt; Ausgeführte seit Web 20.39.0 im Protokoll (Q-P5c-53); `git pull` auf dem Server verworfen (E-KH-02); Neubeginn in P8 | `Konzept-Planung-v1.0.md`, E-PV-2 |
-| R67 | Auslieferungskette: `main` → Staging, Tag → Produktion nach Pflichtfreigabe und Backup-Tor; Prüftor in Stufen; Rollback = voriger Tag | gilt; gebaut P5a, gehärtet Kette II (E-KH-01 bis -30), erster grüner Produktivlauf M1 am 21.09.2026 (`web-v20.26.3`); Rest bei PK | `Konzept-Planung-v1.0.md`, E-PV-3; Konzept Kette II |
+| R67 | Auslieferungskette: `main` → Staging, Tag → Produktion nach Pflichtfreigabe und Backup-Tor; Prüftor in Stufen; Rollback = voriger Tag | gilt; gebaut P5a, gehärtet Kette II (M1 21.09.2026), Prüfkette PK: Stufe 1 liest den Prüfbericht, Apps über `android-v`/`uhr-v` (E-PK-53) | `Konzept-Planung-v1.0.md`, E-PV-3; Konzepte Kette II und PK (Abschnitt 8) |
 | R68 | Ein Repositorium, frisch, öffentlich: `gen-em/nadoku` (AGPL-3.0) ohne Historie; Altrepositorium archiviert und verweist | gilt; Umzug in P8 mit dem Neuaufsetzen | `Konzept-Planung-v1.0.md`, E-PV-4 |
 | R69 | R17-Review liest alles in zwölf Stücken mit Fable; Stück 1 Bedrohungsmodell; Funde in `Review-R17.md`, kritisch → Sofortpaket | gilt; Stück 1 als Schritt 12 vor S11, Stücke 2 bis 12 als Schritt 12b danach (R86) | `Konzept-Planung-v1.0.md`, E-PV-5 |
 | R70 | Web-App-Manifest allein, kein Service Worker; in P7 mit der Umbenennung; Nachweis am S24 und am iPhone | gilt; P7 | `Konzept-Planung-v1.0.md`, E-PV-6 |
@@ -398,8 +398,8 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R81 | Plattformprofil hosterneutral in zwei Stufen (Muss, Empfohlen); `install.php` und Status prüfen es | gilt; gebaut in P5a AP2 | `Vorbereitung-P5-Plattformprofil.md`, E-PP-01 bis -04 |
 | R82 | Schritt 10 (P5) in drei Teilkonzepten 10a, 10b, 10c mit je eigener Freigabe und eigenem Prüfdokument | erledigt (10a PR #50, 10b PR #57, 10c PR #89) | Archiv-2 7 |
 | R83 | Zentralisiert wird beim zweiten echten Verbraucher; Bibliothek statt Seite | gilt; Schritt 15 erledigt, das Register `tools/zaehlung/` misst es in Stufe 1 | Archiv-2 7 |
-| R84 | Kein Schritt der Auslieferungskette geht ungeprobt auf Produktiv; wer einen Schritt hinzufügt, sagt, wodurch er geprobt wird | gilt | `Konzept-Kette-Haertung.md`, E-KH-17 |
-| R85 | Die Kette des Tags N spricht mit dem Server der Fassung N−1; ein unbekanntes Feld ist `unbekannt`, nie eine erfundene Null | gilt | `Konzept-Kette-Haertung.md`, E-KH-19 |
+| R84 | Kein Schritt der Auslieferungskette geht ungeprobt auf Produktiv; wer einen Schritt hinzufügt, sagt, wodurch er geprobt wird | gilt | Konzept Kette II (gelöscht, `8854b86`), E-KH-17 |
+| R85 | Die Kette des Tags N spricht mit dem Server der Fassung N−1; ein unbekanntes Feld ist `unbekannt`, nie eine erfundene Null | gilt | Konzept Kette II (gelöscht, `8854b86`), E-KH-19 |
 | R86 | P6 in zwei Hälften um S11: Bedrohungsmodell als 12 vor 12a, Code-Review als 12b danach — S11 wird gegengelesen, der Code einmal, in Endfassung | gilt; entschieden 27.09.2026 (Betreiberin, Konzeptsitzung SR) | Abschnitt 3 („Warum so", Blöcke 12 und 12b) |
 
 ## 8. Erledigt
@@ -448,6 +448,8 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | AR — Android-Runde | Android 0.16.0 | 26.09.2026 · PR #88 | gelöscht 26.09.2026 (`956c370`) | `Pruefdokument-AR-Android-Runde.md` (Gerätetests offen, 6.1) | AGP 9.4.1, Kotlin 2.4.20, API 37 in beiden Modulen, Lint 0/0 (vorher 14); `kontraste.py` prüft seine Vollständigkeit (Nr. 116, Android-Hälfte); Nr. 284 nachgereicht (P-PK-28); Emulator für Handy und Wear OS 7 (Nr. 337); E-AR-01 bis -14 |
 | 17 — Backlog-Runde 4 (Konzept R4) | Web 21.1.4–21.6.1, Android 0.16.1–0.17.0 | 28.09.2026 · PR #94 | gelöscht 28.09.2026 (`a6908a8`) | `Pruefdokument-R4-Backlog-Runde-4.md` (P-R4-05 bis -23 offen, 6.1) | 27 Pakete; Ziel 17: 45 erledigt, 10 umgehängt, neu 340–347; Nummernriegel, Erzeuger als Riegel, `days.created_at`, Statistik mit Diagrammen, Zeitraumübersicht schneller |
 | SD — Steuerungsdokumente schneiden | nur Werkzeug | 26.09.2026 · PR #92 | gelöscht 26.09.2026 (`831e3e7`) | `Pruefdokument-SD-Steuerungsdokumente.md` (3.1–3.5 offen; P-SD-20 in Konzept 17) | Rahmenplan in drei Dateien (Kopf 15 Zeilen), Backlog mit Kopfzeilen und Erledigt-Datei (keiner über 20 Zeilen), `tools/steuerung/` als Riegel in Stufe 1 (20 Decken); Nr. 177, 193, 196, 199, 294 |
+| Kette II — Härtung der Auslieferungskette | nur Werkzeug; dazu Android 0.15.1 | 21.09.2026 · PR #65, #66, #68 | gelöscht 29.09.2026 (`8854b86`) | `Pruefdokument-Kette-Haertung.md` (2c, 4a, 9, 27, 28 offen, 6.1) | Zeiger `produktion` und Wache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Überspringen ist rot, Hotfix-Weg; M1 21.09.2026 (`web-v20.26.3`) |
+| PK — Prüfkette | Web 20.37.1 (PK-04), sonst nur Werkzeug | 29.09.2026 · PR #67, #70–#72, #75, #81, #82, #96 | gelöscht 29.09.2026 (`80efce0`) | `Pruefdokument-PK-Pruefkette.md` (Abnahmen nach dem Merge, 6.1) | Station B mit Prüfstand und Bericht, Stufe 1 liest ihn gegen, Werkzeuge 49 → 15 Ordner, Stufe 2 schlank, Apps über Tag mit Signatur; PK-M2 29.09.2026 (Lauf 101) |
 
 ## 9. Pflege dieses Dokuments
 

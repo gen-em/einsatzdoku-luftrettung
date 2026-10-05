@@ -3508,8 +3508,10 @@ Play-Tests und die Adresse der Uhr-App im Store liegen noch nicht vor. Ein
 Knopf, der ins Leere führte, wäre schlechter als keiner.
 
 **Ohne Play Store: das APK von Hand.** Darunter klappt ein Fach auf, in dem
-die App-Datei liegt, sofern die BetreiberIn eine hinterlegt hat: Fassung,
-Größe, Stand und die **SHA-256-Prüfsumme** mit einem Knopf „Kopieren" — wer
+die App-Dateien liegen, sofern die BetreiberIn eine Fassung ausgeliefert hat —
+`nadoku-X.Y.Z.apk` fürs Handy, `nadoku-uhr-X.Y.Z.apk` für die Wear-OS-Uhr, je
+nur die neueste: Fassung, Größe, Stand und die **SHA-256-Prüfsumme** mit einem
+Knopf „Kopieren" — wer
 der Seite nicht traut, rechnet sie an der heruntergeladenen Datei nach. Beim
 ersten Öffnen fragt Android nach, ob Installationen aus dieser Quelle erlaubt
 sind; das ist bei einer Verteilung ohne Store der vorgesehene Weg. **Updates

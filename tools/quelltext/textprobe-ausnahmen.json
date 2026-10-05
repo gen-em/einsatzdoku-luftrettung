@@ -789,6 +789,13 @@
       ],
       "zeile": "`Betreiber` \\+ `In`|`BetreiberIn`|`Betreiberin`|`betreiberin`|`\\$nutzer`",
       "begruendung": "EIN WORT, DAS ALS WORT GENANNT WIRD (E-PK-37, vom Auftraggeber bestaetigt). `docs/Pruefablauf.md` 6.6 erklaert, warum `BetreiberIn` als `Betreiber`+`In` durch ein Muster ohne `gross` rutscht. Wird diese Stelle gegendert, sagt der Satz etwas anderes als das, was er beschreibt -- und die Erklaerung wird unlesbar. Dasselbe gilt ueberall, wo ein Text die GEFUNDENE Form aufzaehlt."
+    },
+    {
+      "id": "technik-appauslieferung-garmin",
+      "datei": "docs/Technik.md",
+      "zeile": "\\*\\*Die Garmin-Uhr\\*\\* \\(Tag `uhr-vX|Store-Paket `nadoku-X\\.Y\\.Z\\.iq`, signiert mit dem Connect-IQ|in den Connect-IQ-Store lädt es die BetreiberIn|Artefakt des Laufs \\(Connect-IQ-Store von Hand\\)",
+      "klasse": "G",
+      "begruendung": "Die App-Auslieferung (PK-08, Technik.md 4.97g und 6.1) hat ZWEI Uhren mit zwei Tags: Die Wear-OS-Uhr kommt mit dem Tag android-v* als APK, die Garmin-Uhr mit uhr-v* als Connect-IQ-Paket (monkeyc -e, .iq, Store von Hand). Ein bloßes „Uhr\" wäre genau an dieser Stelle zweideutig; genannt wird die Plattform dort, wo sie die Sache IST — dieselbe Überlegung wie technik-abgrenzung-beide-uhren und E-P2-15. Aufgenommen 29.09.2026 mit PK-08."
     }
   ]
 }
