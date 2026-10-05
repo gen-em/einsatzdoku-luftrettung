@@ -52,9 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 350 bis 359 | `claude/gallant-mccarthy-yacnzk` — Konzept 18, Sicherheitsrunde II (Kürzel SR); vergeben: 350 bis 358 | 27.09.2026 |
 | 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); vergeben: 360, 361 | 29.09.2026 |
-| ab 370 | frei — höchste vergebene Nummer 361; 348 und 349 aus der Spanne von 17 blieben frei, 338 aus der von AR | 05.10.2026 |
+| ab 370 | frei — höchste vergebene Nummer 361; 359 aus der Spanne von 18 blieb frei (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 05.10.2026 |
 
 ---
 

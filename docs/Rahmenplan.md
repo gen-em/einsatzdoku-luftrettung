@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 152 (30.09.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 153 (05.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `e33a97c`, gemessen 30.09.2026): Web 21.6.1 ·
+**Stand `origin/main`** (Commit `822b3b5`, gemessen 05.10.2026): Web 21.14.0 ·
 Uhr 3.1.0 · Android 0.17.0.
-**Läuft:** die Umsetzung von 18 auf `claude/pr95-stufe-18-ztactt` — Abschnitt 3. PK und Kette II sind abgeschlossen (Abschnitt 8).
-**Als Nächstes:** der PR der Umsetzung 18; **vor dem 19.10.2026 Nr. 236** (`ubuntu-latest` wird Ubuntu 26, die Kette zieht mit) — Reihenfolge in Abschnitt 3.
-**Offene PRs:** keiner außer dem Nachtrag zu den ersten App-Tags.
-**Fällig bei der Betreiberin:** 33 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nachsehen — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert, die Migrationen aus 10c und Web 21.3.0 können ausstehen (6.1).
+**Läuft:** kein Schritt — 18 ist gemergt (PR #101) und abgeschlossen (Abschnitt 8).
+**Als Nächstes:** `update.php` auf Staging, dann Schritt 12; **vor dem 19.10.2026 Nr. 236** (`ubuntu-latest` wird Ubuntu 26, die Kette zieht mit) — Reihenfolge in Abschnitt 3.
+**Offene PRs:** keiner außer dem Abschluss von 18 (nur `docs/`).
+**Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging fällig seit dem Merge von #101 (Wartung an, Migrationen aus Web 21.8.0 und 21.10.0), auf Produktiv mit dem Tag; dort die aus 10c und Web 21.3.0 nachsehen (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -104,10 +104,10 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** **18** → 12 → 12a → 12b →
+**Die Reihenfolge der offenen Schritte ist:** **12** → 12a → 12b →
 13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
-frei). **Warum so:** 18 vor 12, wie 17 davor, damit der Review aufgeräumte
+frei). **Warum so:** 12 nach 17 und 18, damit der Review aufgeräumte
 und gehärtete Seiten liest. P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12) vor S11 (12a)**, weil es dessen Entwurfsfragen
 beantwortet — was Klartext bleiben darf, wie der Schlüssel aufs Gerät kommt,
@@ -125,7 +125,6 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzt.
 | 12b | **P6 — Stücke 2 bis 12: Review und Bereinigung** | Bug- und Sicherheitsreview mit Fable über den Stand nach S11 (R17, R69, R86) — auch Uhr- und Android-Krypto, SPUR2, Browser-Spurfunktionen; Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); R5-Ausnahmeliste | 12a gemergt | `docs/konzepte/Review-R17.md` (Fortsetzung aus 12); Paketschnitt nach der Freigaberunde | offen — nach 12a |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
-| 18 | **Sicherheitsrunde II** | Sitzungsbindung (Nr. 242), „Gerät merken" mit frischem Code, Passkeys als Zweitfaktor (Nr. 350), Serverschlüssel wechseln (Nr. 247), Notzugang der einzigen BetreiberIn (Nr. 249), Betreiber-Rückfrage (Nr. 233), `ingest.php`-Deadlock (Nr. 210), Proof-of-Work (Nr. 228); dazu Nr. 232, 251 | Merge von 17 (erfüllt 28.09.2026, PR #94) | `docs/konzepte/Konzept-SR-Sicherheitsrunde-II.md` (Kürzel SR, nach K1; Konzept Fable, Umsetzung Opus) | Umsetzung — seit 28.09.2026 auf `claude/pr95-stufe-18-ztactt` (Opus), gestapelt auf dem offenen Konzept-PR #95 (E-SR-38) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
 ### Schritt 12 — P6, Stück 1: das Bedrohungsmodell
@@ -229,8 +228,11 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.97a), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefdokument-BV-Backlog-Vorgriff.md` |
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefdokument-BR-Bestandsriegel.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md`, P-R4-06 |
-| **`update.php` auf Staging und Produktiv** — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert (Lauf 36428081295); ausstehen können die Migrationen aus 10c und `2026_09_27_days_created_at` (Web 21.3.0), bis dahin bleibt die Wartung an | 10c, 17 (R4-15) | 28.09.2026 | `Technik.md` 6; P-R4-05 |
+| **`update.php` auf Produktiv nachsehen** — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert (Lauf 36428081295); ausstehen können die Migrationen aus 10c und `…_days_created_at` (Web 21.3.0); auf Staging gelaufen (Stufe 2 grün, Lauf 101) | 10c, 17 (R4-15) | 28.09.2026 | `Technik.md` 6; P-R4-05 |
 | **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md` 4 |
+| **`update.php` auf Staging, nach dem Tag auf Produktiv** — seit dem Merge von #101 steht Staging in Wartung: Migrationen `…_vertraute_geraete` (Web 21.8.0) und `…_passkeys` (Web 21.10.0); danach Stufe 2 neu starten (Nr. 234) | 18 (SR-02, SR-09) | 05.10.2026 | `Technik.md` 6; P-SR-06 |
+| **Tag `web-v21.14.0` setzen** — die Auslieferung von 18 auf Produktiv; **davor** die Ankündigung „Nach dem Update einmal neu anmelden." — mit SR-01 landet jede Sitzung einmal auf der Anmeldeseite; auf Staging ist das mit dem Merge geschehen | 18 (SR-01) | 05.10.2026 | `Technik.md` 6; P-SR-04 |
+| **Prüfliste SR:** auf Staging P-SR-05, -07, -08 (mit -20 zuerst), -10, -11, -13, -14, -16 bis -19 — Gerät merken, Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefdokument-SR-Sicherheitsrunde-II.md` 4 |
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, 4a, 9, 27, 28 |
 | **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefdokument-Kette-Haertung.md`, Abgleich |
 | **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 6.3a; Prüfpunkt 2c |
@@ -351,8 +353,8 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R34 | Zwischenpaket S2 | erledigt | Archiv 3 |
 | R35 | Prüfmittel Messstand | gilt, dauerhaft; aus der Kette gestrichen (P5a AP9, Nr. 206), läuft örtlich vor einer Auslieferung | Archiv 3 |
 | R36 | Zielbild Dienstbetrieb, keine Telemetrie, Hosting-Entscheidung vor P5 | gilt; Hosting entschieden 15.09.2026 (R81) | Archiv 3 |
-| R37 | Konto-Lebenszyklus und Registrierungs-Sicherheitspaket (elf Punkte) | erledigt: (8), (9) in P5a; (1) bis (7), (10), (11) in 10b (Web 20.17.0 bis 20.24.0); der Proof-of-Work aus (4) ist nicht gebaut (Nr. 228) | Archiv 3 |
-| R38 | Support-Rolle, Admin-TOTP, Audit, Dashboard im Minimalumfang | erledigt mit 10c (Web 20.38.0 bis 21.1.1; E-P5c-13 bis -18, -41, -42, -44); „Gerät merken" erst mit Nr. 242 in Schritt 18 | Archiv 3 |
+| R37 | Konto-Lebenszyklus und Registrierungs-Sicherheitspaket (elf Punkte) | erledigt: (8), (9) in P5a; (1) bis (7), (10), (11) in 10b (Web 20.17.0 bis 20.24.0); der Proof-of-Work aus (4) mit 18 (Web 21.14.0, Nr. 228) | Archiv 3 |
+| R38 | Support-Rolle, Admin-TOTP, Audit, Dashboard im Minimalumfang | erledigt mit 10c (Web 20.38.0 bis 21.1.1; E-P5c-13 bis -18, -41, -42, -44); „Gerät merken" mit 18 (Web 21.8.0, Rest aus Nr. 141) | Archiv 3 |
 | R39 | Zentrale Stammdaten entfallen; Regionen-Modell verworfen | erledigt mit 10c AP8 (Web 21.0.0): jeder Stammdatensatz gehört einem Konto, `user_bases` ist fort; Regionen als Nr. 71 festgehalten | Archiv 3 |
 | R40 | Deploy-Umbau: Staging ab P5, Neuaufsetzen am P8-Schnitt, CI-Prüftor, Torwächter | (1) und (2) erledigt (Web 20.4.0, präzisiert durch R67); (3) und (4) in P8 | Archiv 3 |
 | R41 | Recht und Betreiberorganisation vor der Öffnung; Öffnung in Wellen | gilt; Prüfung in P8 (R71); MDR-Abgrenzung vor Welle 1 (R65); Betreiberhandbuch generisch mit Notfall-FAQ (R72) | Archiv 3 |
@@ -450,6 +452,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | SD — Steuerungsdokumente schneiden | nur Werkzeug | 26.09.2026 · PR #92 | gelöscht 26.09.2026 (`831e3e7`) | `Pruefdokument-SD-Steuerungsdokumente.md` (3.1–3.5 offen; P-SD-20 in Konzept 17) | Rahmenplan in drei Dateien (Kopf 15 Zeilen), Backlog mit Kopfzeilen und Erledigt-Datei (keiner über 20 Zeilen), `tools/steuerung/` als Riegel in Stufe 1 (20 Decken); Nr. 177, 193, 196, 199, 294 |
 | Kette II — Härtung der Auslieferungskette | nur Werkzeug; dazu Android 0.15.1 | 21.09.2026 · PR #65, #66, #68 | gelöscht 29.09.2026 (`8854b86`) | `Pruefdokument-Kette-Haertung.md` (2c, 4a, 9, 27, 28 offen, 6.1) | Zeiger `produktion` und Wache, Tor und Zielprobe, F3 behoben, eine Schrittfolge für beide Umgebungen, Überspringen ist rot, Hotfix-Weg; M1 21.09.2026 (`web-v20.26.3`) |
 | PK — Prüfkette | Web 20.37.1 (PK-04), sonst nur Werkzeug | 29.09.2026 · PR #67, #70–#72, #75, #81, #82, #96 | gelöscht 29.09.2026 (`80efce0`) | `Pruefdokument-PK-Pruefkette.md` (Abnahmen nach dem Merge, 6.1) | Station B mit Prüfstand und Bericht, Stufe 1 liest ihn gegen, Werkzeuge 49 → 15 Ordner, Stufe 2 schlank, Apps über Tag mit Signatur; PK-M2 29.09.2026 (Lauf 101) |
+| 18 — Sicherheitsrunde II (Konzept SR) | Web 21.7.0–21.14.0 | 05.10.2026 · PR #95, #101 | gelöscht 05.10.2026 (`0cbc19d`) | `Pruefdokument-SR-Sicherheitsrunde-II.md` (P-SR-04 bis -20 außer -15 offen, 6.1) | 9 Pakete, 2 Fable-Lesungen: Sitzungsbindung, Gerät merken, frischer Code, Passkeys, Schlüsselwechsel, Notzugang, `ingest.php` ohne Deadlock, Rechenaufgabe; Ziel 18: 10 erledigt, 1 umgehängt |
 
 ## 9. Pflege dieses Dokuments
 
