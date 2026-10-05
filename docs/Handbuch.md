@@ -616,6 +616,14 @@ führte sonst auf eine Seite, die absagt.
 2. **Die Seite antwortet immer gleich** — „wenn die Adresse frei ist, ist eine
    Mail unterwegs". Das ist Absicht: Sonst könnte jeder durch Ausprobieren
    herausfinden, wer hier ein Konto hat.
+
+   **Während du tippst, löst dein Browser eine kleine Rechenaufgabe** (seit
+   Web 21.14.0). Sie schützt vor Massenanmeldungen und braucht kein Zutun —
+   meist ist sie fertig, bevor du auf „Konto anlegen" drückst. Bist du
+   schneller, steht unter dem Knopf kurz **„Sicherheitsprüfung läuft …"**,
+   und das Formular geht von selbst ab. **Ohne JavaScript geht es nicht**;
+   dann steht dort genau das. Bleibt das Formular länger als zwei Stunden
+   offen, lade die Seite neu, bevor du absendest.
 3. **Den Link aus der Mail anklicken.** Er gilt **48 Stunden**. Dort legst du
    dein Passwort fest; dabei entsteht dein **Wiederherstellungsschlüssel** und
    wird einmalig angezeigt — notiere ihn, ohne ihn kommt nach einem
@@ -4456,8 +4464,13 @@ Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 > merken" wählt, bekommt ein drittes Cookie, das so viele Tage gilt, wie die
 > BetreiberIn eingestellt hat; auf dem Server liegt davon nur ein Prüfwert,
 > kein Gerätename und kein Browsertyp. Beim Setzen eines Passworts kommt für
-> diesen einen Vorgang ein eigenes Sitzungscookie dazu.
+> diesen einen Vorgang ein eigenes Sitzungscookie dazu. Steht die
+> Registrierung offen, setzt auch die Registrierungsseite das Sitzungscookie:
+> Es hält die kleine Rechenaufgabe, die der Browser gegen Massenanmeldungen
+> löst, bis das Formular abgeschickt ist.
 > ```
+>
+> *Der letzte Satz kam mit Web 21.14.0 dazu (Schritt 18, SR-08, E-SR-92).*
 >
 > **Ein dritter Absatz, seit Web 21.10.0: Passkeys** (Schritt 18, SR-09).
 > Ebenso eine technische Tatsache; ob sie in die Datenschutzerklärung

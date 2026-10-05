@@ -908,10 +908,15 @@ if ($db13 === null) {
           is_int($zid13) ? "Kennung $zid13" : implode(' ', (array)$zid13));
     $zid13 = (int)$zid13;
 
+    /* NUR DIE EIGENEN ARCHIVE (Jahr 2020) — seit SR-08 (F-SR-97). Der
+     * Versand schickt JEDES Archiv im Ordner, auch ein echtes, das der Job
+     * auf der Sandbox angelegt hat, sobald eine Woche voll ist. Am
+     * 05.10.2026 lag eins da (Woche ab 28.09.), und die Zahl war 4 statt 3,
+     * ohne dass ein Archiv fehlte. `$drueben13` filterte schon so. */
     $zaehle13 = static function (string $datei = '') use ($db13, $zid13): int {
         $st = $db13->prepare('SELECT COUNT(*) FROM sicherungsziel_dateien
                                WHERE ziel_id = ? AND ordner = ? AND geloescht_am IS NULL'
-                             . ($datei !== '' ? ' AND datei = ?' : ''));
+                             . ($datei !== '' ? ' AND datei = ?' : " AND datei LIKE '2020-%'"));
         $st->execute($datei !== '' ? [$zid13, PROTOKOLL_ARCHIV_ORDNER, $datei]
                                    : [$zid13, PROTOKOLL_ARCHIV_ORDNER]);
         return (int)$st->fetchColumn();

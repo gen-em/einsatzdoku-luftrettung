@@ -1254,8 +1254,11 @@ try {
             return [];
         },
     ];
-    $rumpfe = []; $dauern = [];
-    foreach ($faelle as $name => $lage) {
+    /* EINE LAGE, EINMAL GEFAHREN — als Funktion, weil die Dauer einer Lage
+     * nachgemessen werden kann (unten). */
+    $nwLage = static function (string $name, callable $lage) use (
+        $nwZurueck, $nwSitzung, $nwDatei, $nwWert, $nwSenden, $nwRichtig, $nwGleich,
+        $nwZurueckgesetzt, $nwMuster, $pdo, $nwId, $nwZwei): array {
         $nwZurueck();
         $s = $nwSitzung();
         $mehr = $lage($s);
@@ -1264,8 +1267,6 @@ try {
         if ($eigene) { file_put_contents($nwDatei($s['kennung']), ''); }
         $wertDavor = $nwWert();
         $r = $nwSenden($s, $mehr + $nwRichtig());
-        $rumpfe[$name] = $nwGleich($r['rumpf']);
-        $dauern[$name] = $r['dauer'];
         /* zurück in die offene Lage */
         $pdo->prepare("UPDATE users SET role = 'betreiberin', status = 'aktiv',
                                         totp_seit = COALESCE(totp_seit, UTC_TIMESTAMP()) WHERE id = ?")
@@ -1273,17 +1274,29 @@ try {
         $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$nwZwei]);
         $unveraendert = totp_an($nwId) && $nwZurueckgesetzt() === 0 && $nwWert() === $wertDavor
                      && (!$eigene || is_file($nwDatei($s['kennung'])));
-        pruefe($r['code'] === 200 && str_contains($r['rumpf'], 'Der Notzugang steht für dieses Konto nicht bereit.')
-               && $unveraendert,
-               "{$name}: die eine Antwort, nichts geändert", $r['code'] . sprintf(', %.2f s', $r['dauer']));
         foreach (glob($nwMuster . '*.txt') ?: [] as $d) { @unlink($d); }
+        return ['r' => $r, 'unveraendert' => $unveraendert];
+    };
+    $rumpfe = []; $dauern = [];
+    foreach ($faelle as $name => $lage) {
+        $e = $nwLage($name, $lage);
+        $r = $e['r'];
+        $rumpfe[$name] = $nwGleich($r['rumpf']);
+        $dauern[$name] = $r['dauer'];
+        pruefe($r['code'] === 200 && str_contains($r['rumpf'], 'Der Notzugang steht für dieses Konto nicht bereit.')
+               && $e['unveraendert'],
+               "{$name}: die eine Antwort, nichts geändert", $r['code'] . sprintf(', %.2f s', $r['dauer']));
     }
     // dazu: angemeldet als Admin (das Hauptkonto der Probe), ohne Datei
-    $nwZurueck();
-    passwort();   // Hauptkonto, Zweitfaktor seit Teil 7 aus → angemeldet
-    $g = http('GET', 'zweitfaktor_notweg.php');
-    $s = ['keks' => $keks, 'csrf' => csrf_von($g['rumpf'])];
-    $r = $nwSenden($s, $nwRichtig());
+    $nwAdmin = static function () use ($nwZurueck, $nwSenden, $nwRichtig): array {
+        global $keks;
+        $nwZurueck();
+        passwort();   // Hauptkonto, Zweitfaktor seit Teil 7 aus → angemeldet
+        $g = http('GET', 'zweitfaktor_notweg.php');
+        $s = ['keks' => $keks, 'csrf' => csrf_von($g['rumpf'])];
+        return $nwSenden($s, $nwRichtig());
+    };
+    $r = $nwAdmin();
     $rumpfe['angemeldet als Admin'] = $nwGleich($r['rumpf']);
     $dauern['angemeldet als Admin'] = $r['dauer'];
     pruefe(str_contains($r['rumpf'], 'Der Notzugang steht für dieses Konto nicht bereit.') && totp_an($nwId),
@@ -1291,9 +1304,28 @@ try {
     $verschiedene = count(array_unique($rumpfe));
     pruefe($verschiedene === 1, count($rumpfe) . ' Lagen, ' . $verschiedene . ' Rumpf (bis auf Token, Nonce, Namen)',
            implode(', ', array_keys($rumpfe)));
+    /* NACHGEMESSEN WIRD NUR NACH OBEN, UND NUR DREIMAL (seit SR-08, F-SR-98).
+     * bcrypt mit Kosten 12 braucht hier 0,23 bis 0,28 s, der Boden ist 0,35 s
+     * — es bleiben rund 70 ms Luft. Eine Lage, die einmal mehr braucht, weil
+     * gerade etwas anderes den Kern hat, färbte die Spanne rot: am 05.10.2026
+     * 0,354 bis 0,523 s, ohne dass eine Lage anders arbeitete. Rauschen kommt
+     * nur obendrauf; deshalb gilt je Lage die KLEINSTE von bis zu drei
+     * Messungen. Eine Lage, die wirklich mehr tut, braucht auch beim dritten
+     * Mal mehr und bleibt rot. Was nachgemessen wurde, steht in der Zeile. */
+    $nach = [];
+    for ($runde = 0; $runde < 2 && max($dauern) - min($dauern) >= 0.15; $runde++) {
+        foreach ($dauern as $name => $d) {
+            if ($d - min($dauern) < 0.15) { continue; }
+            $neu = isset($faelle[$name]) ? $nwLage($name, $faelle[$name])['r']['dauer'] : $nwAdmin()['dauer'];
+            $nach[] = sprintf('%s %.3f→%.3f', $name, $d, $neu);
+            $dauern[$name] = min($d, $neu);
+        }
+    }
+    if ($nach !== []) { echo '  (nachgemessen: ' . implode(', ', $nach) . ")\n"; }
     $min = min($dauern); $max = max($dauern);
     pruefe($min >= 0.35 && $max - $min < 0.15,
-           sprintf('gleiche Dauer: %.3f bis %.3f s (mindestens 0,35 s, Spanne unter 0,15 s)', $min, $max));
+           sprintf('gleiche Dauer: %.3f bis %.3f s (mindestens 0,35 s, Spanne unter 0,15 s)', $min, $max),
+           $nach === [] ? 'ohne Nachmessung' : 'nachgemessen: ' . implode(', ', $nach));
 
     // d) Formular-Token falsch: eigener Satz, zählt nichts.
     $nwZurueck();

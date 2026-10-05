@@ -8053,5 +8053,20 @@ declare(strict_types=1);
  *   `nachweis_lib.php` — `install.php` und `wiederherstellen.php` hatten sie
  *   wortgleich. Wer auch den Datenbankzugang verloren hat, bleibt beim
  *   Wiederanlauf: so entschieden (E-SR-24). Kein Schema.
+ *
+ * 21.14.0 — DIE RECHENAUFGABE VOR DER REGISTRIERUNG (Schritt 18, SR-08;
+ *   Nr. 228; E-SR-26, E-SR-88 bis -95). Nebenstufe. Zu Honeypot,
+ *   Mindestausfuelldauer und den drei Toepfen kommt eine vierte stille
+ *   Bremse: ein Proof-of-Work. Der Server stellt beim Zeichnen des Formulars
+ *   eine Aufgabe und merkt sie sich in der Sitzung, ein Worker im Browser
+ *   rechnet SHA-256, waehrend die Person tippt, und der Server prueft mit
+ *   EINER Rechnung, ob der Hash mit 16 Nullbits beginnt. Jede Aufgabe gilt
+ *   einmal und zwei Stunden. Dafuer hat die Seite jetzt eine Sitzung — nur
+ *   bei offener Registrierung. Die Bitzahl ist gemessen, nicht geschaetzt
+ *   (Median 0,47 s ungedrosselt, 1,71 s auf einem Viertel der CPU); die
+ *   Drosselung der Entwicklerwerkzeuge erreicht keinen Worker, deshalb mass
+ *   eine CPU-Quote des Betriebssystems (F-SR-95). Ohne JavaScript laesst
+ *   sich hier kein Konto mehr anlegen, und der Satz unter dem Knopf sagt es.
+ *   Kein Schema.
  */
-const WEB_VERSION = '21.13.0';
+const WEB_VERSION = '21.14.0';

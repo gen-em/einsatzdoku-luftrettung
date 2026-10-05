@@ -14,6 +14,139 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 21.14.0] — 2026-10-05
+
+Schritt 18, Sicherheitsrunde II, Paket SR-08, **die Rechenaufgabe vor der
+Registrierung** (Nr. 228). **Neben** — kein Schema, keine Migration, keine
+Vertragsänderung; nach dem Deploy ist nichts zu tun.
+
+### Neu
+
+- **Ein Proof-of-Work als vierte stille Bremse von `registrieren.php`**
+  (E-SR-26). Neben Honeypot, Mindestausfülldauer und den drei Töpfen `reg`,
+  `regg` und `regz` stellt der Server beim Zeichnen des Formulars eine
+  Aufgabe: 32 Zufallsbyte. Ein Worker im Browser (`assets/pow-worker.js`)
+  sucht eine Zahl, mit der SHA-256 über Aufgabe und Zahl mit **16 Nullbits**
+  beginnt — im Mittel 65 536 Versuche. Der Server prüft das mit **einer**
+  Rechnung. Die Rechnung beginnt beim Laden der Seite und läuft, während
+  jemand Adresse und Namen tippt; spürbar wird sie für ein Skript, das das
+  Formular sofort und tausendfach abschickt, und genau das ist der Zweck.
+  Die Betreiberin hat am 27.09.2026 entschieden, sie fest einzubauen, statt
+  auf den Anlass zu warten, den R37 (4) mit „notfalls" meinte.
+- **Wer schneller abschickt, als der Worker rechnet**, sieht den Knopf
+  gesperrt und unter ihm „Sicherheitsprüfung läuft …"; das Formular geht
+  von selbst ab, sobald die Lösung da ist. Kann der Browser gar nicht
+  rechnen — kein Worker, kein WebCrypto —, sagt die Zeile es, statt still zu
+  warten (`assets/pow.js`).
+- **Die Seite hat eine Sitzung — aber nur, wenn die Registrierung offen
+  ist** (E-SR-92, Q-SR-19). Eine Aufgabe gilt **einmal**, und das weiß nur,
+  wer sie sich gemerkt hat: Ein signierter Wert wie der Zeitstempel ließe
+  sich innerhalb seiner Frist beliebig oft vorzeigen, und die Rechnung wäre
+  einmal bezahlt statt je Absendung. Deshalb startet die Seite die Sitzung
+  der Anwendung wie die Anmeldeseite, mit dem HTTPS-Tor davor. Eine Anlage
+  „nur auf Einladung" setzt hier weiter kein Cookie und legt keine
+  Sitzungsdatei an.
+
+### Geändert
+
+- **Ohne JavaScript lässt sich kein Konto mehr anlegen**, und unter dem
+  Knopf steht genau dieser Satz, bis das Skript ihn wegnimmt (F-SR-92). Für
+  den ganzen Weg galt das schon immer — das Passwort entsteht in
+  `pw_handling.php` im Browser —, für diese Seite nicht: Sie lief bisher
+  ohne Skript, und eine Absendung ohne Lösung bekäme die Danke-Karte und
+  keine Mail. Ein Satz ist besser als eine Mail, die nie kommt.
+- **Die Felder des Formulars werden nur als Text genommen** (F-SR-96). Bis
+  hierher endete `email[]=…` in einem TypeError mit einer 500, `name[]`,
+  `website[]` und `zeit[]` in je einer PHP-Warnung im Reiter System — ohne
+  Auskunft, aber eine Einladung, den Reiter mit Zeilen zu füllen. Gefunden
+  beim Bau der neuen Felder, die es von Anfang an so machen.
+- **Der Cookie-Baustein im Handbuch** (11.5a) sagt jetzt, dass die offene
+  Registrierungsseite das Sitzungscookie für ihre Rechenaufgabe setzt.
+
+### Bewusst so
+
+- **16 Bit, gemessen und nicht geschätzt.** In Chromium 141 löste der Worker
+  ungedrosselt im Median nach **0,47 s** (höchstens 1,34 s, 158 343 Versuche
+  je Sekunde), auf ein Viertel der CPU begrenzt nach **1,71 s** (höchstens
+  6,0 s, 34 875 je Sekunde) — je 30 Läufe. Ziel war der Median unter einer
+  Sekunde und, für das alte Diensthandy, unter drei. 17 Bit hätten
+  gedrosselt rund 2,6 s ergeben: unter drei, aber ohne Spielraum für ein
+  Ersatzmodell, das ein echtes Handy nur nähert. Der Wert steht mit seiner
+  Herkunft in `registrieren.php`; P-SR-14 misst auf dem Handy selbst.
+- **Gedrosselt über das Betriebssystem, nicht über die Entwicklerwerkzeuge**
+  (F-SR-95). Das Konzept sah vierfache CPU-Drosselung über
+  `setCPUThrottlingRate` vor. Die erreicht keinen Worker: Die Hashrate blieb
+  gleich (152 717 gegen 137 906 je Sekunde), und am Worker selbst lehnt
+  Chromium den Befehl ab („only supported for pages, not workers"). Eine
+  Lage, die nur die Seite drosselt, hätte eine grüne Zahl ohne Gegenstand
+  geliefert. Gemessen hat stattdessen eine CPU-Quote auf ein Viertel dessen,
+  was der Lauf ungedrosselt verbraucht (1,1 Kerne → 0,27).
+- **Zwei Stunden statt zehn Minuten** (E-SR-93, Q-SR-20). Wer länger am
+  Formular sitzt — etwa die Nutzungsbedingungen liest —, bekäme sonst die
+  Danke-Karte und keine Mail. Die Frist ist jetzt dieselbe Zahl wie die des
+  Zeitstempels; jede Aufgabe gilt weiter nur einmal.
+- **Bis zu fünf offene Aufgaben je Sitzung** (E-SR-89). Ein zweiter Reiter
+  oder ein nach einem sichtbaren Fehler neu gezeichnetes Formular entwertet
+  die erste Aufgabe nicht still. Verbraucht wird eine Aufgabe bei jeder
+  Prüfung, ob sie gelingt oder nicht.
+- **Die Rechenaufgabe eröffnet den stillen Teil** (E-SR-88). Das Konzept
+  stellte sie vor jede Prüfung; die zwei sichtbaren — fehlendes Häkchen,
+  Adresse, die keine ist — sind aber ein Vertipper und keine Bremse
+  (E-P5b-05). Sie bleiben vorn, und dahinter steht die Aufgabe vor Honeypot,
+  Stempel und Töpfen. Gezählt wird ein Fehlschlag in `reg` und `regg` wie
+  jeder stille Fall.
+- **Gegen ein entschlossenes Skript hilft das wenig, und das ist bekannt.**
+  Wer SHA-256 in Maschinencode rechnet, braucht für 16 Bit Millisekunden.
+  Die Aufgabe verteuert das massenhafte Absenden, sie verhindert es nicht;
+  die Töpfe bleiben die Grenze.
+- **Kein Fremdbestandteil** — WebCrypto ist alles. `docs/Lizenzen.md` bleibt
+  unverändert, und nichts verlässt das Gerät außer der Lösung.
+
+### Prüfmittel
+
+- **Ratenprobe, Abschnitt 12** (über HTTP, 19 Prüfungen; 82 statt 63): die
+  Seite mit Aufgabe, Bitzahl, Worker mit Erkennungswert und dem Satz ohne
+  Skript; nur auf Einladung kein Cookie; sieben Formulare in einer Sitzung halten die jüngsten fünf
+  Aufgaben; richtige Lösung → Konto `unbestaetigt` und Mail; ohne Lösung,
+  falsche Lösung, ein Nullbit zu wenig, abgelaufene Aufgabe, ohne Sitzungscookie, Aufgabe einer
+  anderen Sitzung, Felder als Liste, 13 Stellen → je die Danke-Karte, kein
+  Konto, keine Mail; dieselbe Aufgabe zweimal → die zweite nicht; ein
+  älterer Reiter → geht; `email[]`, `name[]`, `website[]`, `zeit[]` → je 200
+  ohne Zeile im Reiter System. **Die Dauer**: sechs Lagen je fünfmal,
+  Spanne der Mediane **1,0 ms** im letzten Lauf, 1,0 bis 1,5 ms über drei
+  (Soll unter 50 ms, E-P5b-13). Die Lösung
+  rechnet die Probe in PHP; die Mindestausfülldauer stempelt sie selbst.
+- **Bedienweg `registrieren`** (77 Wege statt 76): neun Mal bis zur Lösung,
+  Median 0,40 bis 0,65 s je Lauf, höchstens 1,7 s; abgeschickt → Konto; mit einem
+  Worker, der sieben Sekunden zu spät kommt → Knopf gesperrt, der Satz, dann
+  von selbst ab; keine Konsolenfehler. Nur ungedrosselt (F-SR-95).
+- **CSP-Browserprobe**: Unter der scharfen Richtlinie liefert der eigene
+  Worker eine Lösung, und ein Worker aus `data:` wird abgewiesen (37 statt
+  35). Die Tokenizer-Probe `cspprobe` liest keine Skripte und sieht einen
+  Worker nicht.
+- **Prüfablauf**: Muster `registrierung` (`registrieren.php`, die beiden
+  Skripte, der Bedienweg) → Ratenprobe, CSP-Browserprobe, Bedienprobe.
+- **Zwölf Gegenproben**, jede eine verfälschte Stelle: Hash nicht geprüft,
+  Ablauf nicht geprüft, Aufgabe nicht verbraucht, nicht an die Sitzung
+  gebunden, ein Bit weniger geprüft, frühe Rückkehr ohne Mindestdauer,
+  Sitzung auch auf Einladung, Felder ungeprüft, Aufgabe nicht im stillen
+  Pfad (je Ratenprobe), `pow.js` schickt ohne Lösung ab, `pow.js` leert die
+  Zeile nicht (je Bedienweg), `worker-src` ohne `'self'` (CSP-Browserprobe)
+  — **zwölf rot an der erwarteten Zeile**. Zwei Fälle der Probe sind erst
+  dabei entstanden: „ein Nullbit zu wenig" und „nur auf Einladung kein
+  Cookie" — ohne sie wären die Gegenproben 5 und 7 grün geblieben.
+- **Versandprobe, Teil 13** zählt nur noch ihre eigenen Archive (F-SR-97).
+  Sobald auf der Sandbox eine Woche voll ist, legt der Job ein echtes
+  Archiv des Protokolls an; der Versand schickt es zu Recht mit, und die
+  Probe zählte 4 statt 3 — rot, ohne dass ein Archiv fehlte. Gefunden im
+  ersten Prüfstand dieses Pakets, mit der alten Fassung nachgestellt.
+- **Zweitfaktorprobe, Teil 8** misst die Dauer des Notzugangs nach, wenn die
+  Spanne der Lagen über 0,15 s liegt (F-SR-98): bis zu zweimal, je Lage die
+  kleinste Zeit. bcrypt braucht hier 0,23 bis 0,28 s von 0,35 s Boden; eine
+  Lage, die einmal 0,523 s brauchte, färbte den zweiten Prüfstand rot, ohne
+  dass sich an der Seite etwas geändert hatte. Eine Lage, die wirklich
+  länger braucht, bleibt rot — gemessen mit einer Gegenprobe (+250 ms).
+
 ## [Web 21.13.0] — 2026-10-04
 
 Schritt 18, Sicherheitsrunde II, Paket SR-04, **der Notzugang der einzigen

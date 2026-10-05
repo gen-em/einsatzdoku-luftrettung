@@ -594,28 +594,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-228. **Proof-of-Work im Browser als dritte Stufe gegen Registrierungs-Spam.** · gehört zu: 18 · Stand: nur auf Anlass · seit 17.09.2026
-     Befund (Konzept P5b, R37 (4) „notfalls"): R37 schließt ein CAPTCHA aus
-     (fremde Quelle zur Laufzeit) und setzt zwei billige Mittel — Honeypot-
-     Feld und Mindestausfülldauer vier Sekunden — neben drei
-     Ratenschutz-Töpfe (`reg` je IP 10/h, `regg` global 100/h mit
-     Verlangsamung, `regz` je Zieladresse 3/24 h). Reicht das nicht, bliebe
-     eine Rechenaufgabe im Browser; gebaut ist sie mit Absicht nicht.
-     Warum niedrig: Ein Proof-of-Work kostet am meisten auf dem alten
-     Diensthandy und bremst jede ehrliche Registrierung. Die drei Mittel
-     sind ungemessen; erst bauen, dann messen. Kein Ausschluss ohne
-     JavaScript, weil die Registrierung den Schlüssel ohnehin im Browser
-     ableitet (E-P5b-13).
-     Auslöser: der Zähler der je Woche über `konto_verfall` verfallenen,
-     nie bestätigten Konten. Bleibt er klein, ist der Eintrag erledigt, ohne
-     dass etwas gebaut wurde. Abnahme, falls doch: SHA-256 über WebCrypto in
-     einem Worker, ohne Fremdbestandteil, und die Antwortzeit der
-     Registrierung bleibt unabhängig davon, ob die Adresse frei, bekannt
-     oder Wegwerf ist (Enumerationsschutz E-P5b-13, Δ < 50 ms).
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 228.
-
-<!-- -->
-
 229. **Die Uhr sagt „abgemeldet", wo „gesperrt" steht — und der Ausweg, den sie nennt, ist versperrt.** · gehört zu: 13 · Stand: zurückgestellt · seit 17.09.2026
      Befund (Konzept P5b, E-P5b-12): `ingest.php` antwortet 403 bei
      abgeschaltetem Gerät (`device_disabled`) und seit Web 20.17.0 bei
@@ -1186,7 +1164,10 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `server/` zählt 114 Stellen. *Weg:* ein Helfer `post_text()` als die
      eine Stelle (R83) und eine Registerzeile gegen das Muster. *Abnahme:*
      jedes Feld der Anmeldeschritte als Liste → Formularfehler, keine Zeile
-     im Reiter System.
+     im Reiter System. *Seit Web 21.14.0 (SR-08, F-SR-96)* nimmt
+     `registrieren.php` seine Felder über eine lokale Hülle `$feld` — dort
+     war `email[]` sogar eine 500; jetzt 109 Stellen, und `$feld` steht mit
+     `zweitfaktor_notweg.php` zweimal: beide gehen in `post_text()` auf.
 
 <!-- -->
 

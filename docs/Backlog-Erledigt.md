@@ -9377,3 +9377,32 @@ zutreffen.
      Passwort; jede andere Lage gleiche Antwort, gleiche Dauer; Wert danach
      neu. Gemessen in der Zweitfaktorprobe Teil 8. Bleibt bewusst: Wer auch
      den Datenbankzugang verloren hat, ist ein Wiederanlauf-Fall (E-SR-24).
+
+228. **Proof-of-Work im Browser als dritte Stufe gegen Registrierungs-Spam.** · gehört zu: 18 · Stand: erledigt · seit 17.09.2026
+     Befund (Konzept P5b, R37 (4) „notfalls"): R37 schließt ein CAPTCHA aus
+     (fremde Quelle zur Laufzeit) und setzt zwei billige Mittel — Honeypot-
+     Feld und Mindestausfülldauer vier Sekunden — neben drei
+     Ratenschutz-Töpfe (`reg` je IP 10/h, `regg` global 100/h mit
+     Verlangsamung, `regz` je Zieladresse 3/24 h). Reicht das nicht, bliebe
+     eine Rechenaufgabe im Browser; gebaut ist sie mit Absicht nicht.
+     Warum niedrig: Ein Proof-of-Work kostet am meisten auf dem alten
+     Diensthandy und bremst jede ehrliche Registrierung. Die drei Mittel
+     sind ungemessen; erst bauen, dann messen. Kein Ausschluss ohne
+     JavaScript, weil die Registrierung den Schlüssel ohnehin im Browser
+     ableitet (E-P5b-13).
+     Auslöser: der Zähler der je Woche über `konto_verfall` verfallenen,
+     nie bestätigten Konten. Bleibt er klein, ist der Eintrag erledigt, ohne
+     dass etwas gebaut wurde. Abnahme, falls doch: SHA-256 über WebCrypto in
+     einem Worker, ohne Fremdbestandteil, und die Antwortzeit der
+     Registrierung bleibt unabhängig davon, ob die Adresse frei, bekannt
+     oder Wegwerf ist (Enumerationsschutz E-P5b-13, Δ < 50 ms).
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 228.
+     Erledigt 05.10.2026 in Schritt 18, SR-08 (Web 21.14.0, E-SR-26, E-SR-88
+     bis -95): fest eingebaut statt auf Anlass, per Entscheidung der
+     Betreiberin (Q-SR-07). SHA-256 im Worker über WebCrypto, ohne
+     Fremdbestandteil; die Aufgabe liegt in der Sitzung der offenen
+     Registrierung, gilt einmal und zwei Stunden; 16 Bit, gemessen: Median
+     0,47 s ungedrosselt, 1,71 s auf einem Viertel der CPU. Antwortzeit
+     gleich über sechs Lagen, Spanne der Mediane 1,0 ms (Ratenprobe
+     Abschnitt 12). Bleibt offen: die Zahl auf dem alten Diensthandy
+     (P-SR-14).

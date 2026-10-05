@@ -563,7 +563,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      rueckweg.js (EdRueckweg: das Schlüsselpaar des Rückwegs
 │   │                       erzeugen, verpacken, senden — Konzept RW, 4.99q),
 │   │                      passkey.js (Passkey anlegen und bestätigen über
-│   │                       navigator.credentials, ohne Fremdbestandteil — SR-09, 4.99q)
+│   │                       navigator.credentials, ohne Fremdbestandteil — SR-09, 4.99q),
+│   │                      pow.js + pow-worker.js (die Rechenaufgabe der Registrierung:
+│   │                       Worker mit WebCrypto, gesperrter Knopf — SR-08, 4.99m)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
 │   │                      qrcode.js — qrcode-generator 2.0.4, MIT (nur die Modulmatrix
@@ -8635,11 +8637,13 @@ nichts bremst". Das Konzept beschreibt in 1.3 einen Stand von vor Web 13.0.0.
 
 ### 4.99m Die Selbstregistrierung (ab Web 20.22.0, P5b/AP3)
 
-*E-P5b-01, -02, -03, -13, -23. Code: `server/registrieren.php`,
+*E-P5b-01, -02, -03, -13, -23; seit Web 21.14.0 E-SR-26, E-SR-88 bis -93
+(Schritt 18, SR-08). Code: `server/registrieren.php`,
 `server/bestaetigen.php`, `server/konten_einstellungen_lib.php`
 (`wegwerf_trifft()`), `server/ratelimit_lib.php` (drei Töpfe),
 `server/konto_lib.php` (Verfall, Sammelmeldung), `server/jobs_lib.php`
-(`konto_verfall`), `server/wegwerfdomains.txt`.*
+(`konto_verfall`), `server/wegwerfdomains.txt`, `server/assets/pow.js` und
+`server/assets/pow-worker.js` (Rechenaufgabe).*
 
 **Der Weg in fünf Schritten.**
 
@@ -8675,15 +8679,65 @@ belegte, keine an die übrigen. Die Dauer ist angeglichen
 (`rate_gleiche_dauer($t0, REG_MINDESTDAUER)`, 0,5 s Boden) und der Versand
 läuft **nach** `antwort_abschliessen()`; ohne beides wäre die Dauer die
 Auskunft, die der gleiche Text verhindert (M1-07). Gemessen über 120 Aufrufe:
-Spanne der Mediane **0,2 ms**.
+Spanne der Mediane **0,2 ms**; seit Web 21.14.0 mit der Rechenaufgabe die
+Ratenprobe, Abschnitt 12: sechs Lagen je fünfmal (ohne Lösung, falsche
+Lösung, abgelaufen, belegt, Wegwerf, frei), Spanne der Mediane **1,0 ms** (1,0 bis 1,5 ms über drei Läufe).
 
-**Die drei Bremsen.**
+**Die vier Bremsen** (die vierte seit Web 21.14.0; geprüft wird sie zuerst).
 
 | | was | warum still |
 |---|---|---|
+| Rechenaufgabe | Proof-of-Work: SHA-256 über Aufgabe und Zahl mit `POW_BITS` = 16 Nullbits, gelöst im Worker, geprüft mit einer Rechnung (`pow_ok()`); eine Aufgabe je Absendung, zwei Stunden gültig | eine Meldung „Aufgabe falsch" sagte einem Skript, woran es scheitert |
 | Honeypot | Feld `website` in `.nur-vorlesen`, mit `aria-hidden` und `tabindex="-1"` | `display:none` füllt kein Bot; ohne `aria-hidden` wäre es eine Falle für Bildschirmleser |
 | Mindestdauer | signierter Zeitstempel, 4 s bis 2 h gültig (`reg_stempel()`) | ohne Signatur bestimmt der Absender die Zahl selbst |
 | Töpfe | `reg` 10/h je IP · `regg` 100/h global · `regz` **3/24 h je Zieladresse** | eine Meldung „Honeypot gefüllt" wäre eine Bauanleitung |
+
+**Die Rechenaufgabe im Einzelnen** (SR-08, Nr. 228, E-SR-26).
+
+- **Aufgabe.** `pow_aufgabe_neu()` würfelt beim Zeichnen des Formulars 32
+  Byte (Hex) und legt sie mit ihrem Verfall als ganze Zahl in die Sitzung:
+  `$_SESSION['pow'][<aufgabe>] = <bis>`. Abgelaufene fallen beim nächsten
+  Aufruf weg, und es bleiben höchstens fünf, die jüngsten (E-SR-89) — ein
+  zweiter Reiter oder ein nach einem sichtbaren Fehler neu gezeichnetes
+  Formular entwertet die erste nicht. Die Frist ist `REG_FORMULAR_GILT_S`,
+  dieselbe Zahl wie die des Zeitstempels (zwei Stunden, E-SR-93).
+- **Sitzung nur bei offener Registrierung** (E-SR-92). Die Seite ruft
+  `https_tor()` und `sitzung_starten('app')` nur, wenn `konten_reg_offen()`;
+  eine Anlage „nur auf Einladung" setzt hier weiter kein Cookie. Einmal
+  gültig geht nur mit einer Ablage auf dem Server — ein signierter Wert
+  wie der Zeitstempel ließe sich innerhalb seiner Frist beliebig oft
+  vorzeigen. Die Sitzungsdatei arbeitet zwei Absendungen derselben Sitzung
+  nacheinander ab.
+- **Worker.** `assets/pow.js` startet beim Laden `assets/pow-worker.js`; die
+  Adresse (mit Erkennungswert aus `asset()`) und die Bitzahl kommen als
+  `data-pow-worker` und `data-pow-bits` aus derselben Konstante (E-SR-90).
+  Der Worker hängt die Zahl als Dezimalziffern an die Aufgabe und rechnet
+  `crypto.subtle.digest()` in Bündeln von 64; die Lösung kommt ins Feld
+  `pow_loesung`. Erlaubt ist er durch `worker-src 'self' blob:`, nicht durch
+  `script-src`. Wer schneller abschickt, als er rechnet, sieht den Knopf
+  gesperrt und „Sicherheitsprüfung läuft …"; das Formular geht von selbst
+  ab. Kann der Browser nicht rechnen, sagt die Zustandszeile es und das
+  Formular geht nicht ab. **Ohne JavaScript** steht dort der Satz „Ohne
+  JavaScript lässt sich hier kein Konto anlegen." (F-SR-92).
+- **Prüfung.** `pow_ok()` steht im stillen Teil an erster Stelle, hinter den
+  zwei sichtbaren Fehlern (Häkchen, Adressformat — E-SR-88). Sie verbraucht
+  die Aufgabe immer, ob sie gelingt oder nicht, verlangt eine Dezimalzahl
+  mit höchstens zwölf Stellen (E-SR-91) und rechnet eine SHA-256. Ein
+  Fehlschlag nimmt den Weg der anderen Bremsen: dieselbe Karte, dieselbe
+  Dauer, Zählung in `reg` und `regg`.
+- **Die Zahl.** 16 Bit, gemessen am 05.10.2026 in Chromium 141 (je 30
+  Läufe): ungedrosselt 158 343 Versuche/s, Median 0,47 s, höchstens 1,34 s;
+  auf ein Viertel der CPU begrenzt 34 875 Versuche/s, Median 1,71 s,
+  höchstens 6,0 s. Die Drosselung der Entwicklerwerkzeuge
+  (`Emulation.setCPUThrottlingRate`) erreicht keinen Worker (F-SR-95);
+  gemessen hat eine CPU-Quote des Betriebssystems. Eine Stufe weniger
+  halbiert die Zeit (P-SR-14).
+- **Was sie nicht kann.** Ein Skript, das SHA-256 in Maschinencode rechnet,
+  braucht für 16 Bit Millisekunden. Die Aufgabe verteuert das massenhafte
+  Absenden; die Grenze bleiben die Töpfe.
+- **Felder nur als Text** (seit Web 21.14.0, F-SR-96): `$feld()` nimmt
+  `email`, `name`, `website`, `zeit` und die beiden Felder der Aufgabe nur
+  als Zeichenkette; eine Liste gilt als leer.
 
 `regz` ist der wichtigste: Ohne ihn verschickt die Seite an **jede**
 eingetippte Adresse eine Mail, ohne dass der Absender sie besitzen muss. Sein

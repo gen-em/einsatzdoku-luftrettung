@@ -549,6 +549,22 @@
       "anlass": "Stufe fiel nie zurueck"
     },
     {
+      "id": "registrierung",
+      "ab": "klein",
+      "pfade": [
+        "server/registrieren.php",
+        "server/assets/pow.js",
+        "server/assets/pow-worker.js",
+        "tools/bedienprobe/wege/registrieren.mjs"
+      ],
+      "proben": [
+        "ratenprobe",
+        "browserprobe-csp",
+        "bedienprobe"
+      ],
+      "anlass": "Nr. 228 (SR-08, E-SR-26): die Rechenaufgabe vor der Registrierung -- Faelle und Dauer in der Ratenprobe (Abschnitt 12), der Worker unter scharfer Richtlinie in der CSP-Browserprobe, Zeit bis zur Loesung und gesperrter Knopf im Bedienweg registrieren; F-SR-96 (Felder als Liste)"
+    },
+    {
       "id": "wartung",
       "ab": "klein",
       "pfade": [
