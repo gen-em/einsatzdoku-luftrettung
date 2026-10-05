@@ -620,7 +620,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-232. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.** · gehört zu: 18 · Stand: nur auf Anlass · seit 17.09.2026
+232. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.** · gehört zu: nächste Backlog-Runde · Stand: nur auf Anlass · seit 17.09.2026
      *Aufgenommen 17.09.2026 (P5b/AP9).* Die Konto-Rückfrage fragt nach 30
      Tagen, 6 Monaten und dann jährlich; die Betreiber-Rückfrage alle drei
      Monate. Geprüft wurde mit **gestelltem** `rueckfrage_naechste` — die
@@ -637,8 +637,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      müsste `einstieg_lib.php` eine Zeit hereingereicht bekommen, statt sie zu
      holen. Lohnt sich, wenn die nächste Frist dazukommt; für zwei Fristen ist
      der Umbau teurer als der Fehler.
-     Ziel 18 seit 26.09.2026 (R4-01, Q-R4-12): Alle Aufrufer von
-     `einstieg_lib.php` liegen in Dateien, die Schritt 18 umbaut (Nr. 233).
+     Ziel 18 vom 26.09. bis 05.10.2026 (R4-01, Q-R4-12); umgehängt mit SR-06
+     (E-SR-25): SR-03 gab `einstieg_lib.php` einen Anlass, keine dritte Frist.
 
 <!-- -->
 
