@@ -3,7 +3,7 @@
 *Gehört zu `Review-R17.md`. Beantwortet „was muss **ich** noch tun?" — das
 Protokoll „ist es belegt?" steht im Statusblock und in Abschnitt 5 des
 Konzepts. Angelegt am 11.10.2026 mit R17-00 (Fable); jedes Paket füllt es
-mit Mittel **und** Zahl. Stand: **R17-02 erledigt**, R17-03 und R17-04
+mit Mittel **und** Zahl. Stand: **R17-03 gestellt** (acht Fragen, Konzept 2.2), R17-04
 offen. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist (K9); ob
 12b es fortschreibt oder ein eigenes anlegt, entscheidet 12b.*
 
@@ -33,8 +33,8 @@ Commit-Nachricht.
 | `python3 tools/quelltext/textprobe.py --bereich c` | das neue Dokument im Bereich `c` — Land und Luft, Hausform, Adressen, Netz, Namen | erster Lauf 52 Treffer in 29 Zeilen (43 `luft`, 9 `hausform`); nach Korrektur der Hausform (9 × BetreiberIn) und zwei Ausnahmen mit Begründung (`spur-fachdokument-bedrohungsmodell`, `bedrohungsmodell-plattformen`): **0 außerhalb der Ausnahmen, 0 durchgerutschte Fallen**; ein Rest (`fenix5`) umformuliert |
 | `textprobe.py --selbstprobe` | die Probe prüft sich selbst | 4/4 |
 | `decken.py` · `bestand.py` · `linkprobe.py` · `pysyntax.py` | Form der Steuerung, des Werkzeugbestands, der Verweise, der Python-Werkzeuge | 21/0 · 0 Befunde · 150/0 · 63/0 |
-| Lesung gegen die Gliederung (Konzept 3.1) | jeder der sechs Abschnitte vorhanden, jede I-Nummer des Inventars einem Abschnitt zugeordnet, jeder F-Befund an mindestens einer Stelle genannt | 6 von 6 Abschnitte; 31 von 31 Befunde genannt (gezählt mit `grep -o 'F-R17-[0-9]*'`, siehe Commit) |
-| `bash tools/pruefstand/pruefen.sh --stufe klein` | die billigen Riegel | *Bericht in der Commit-Nachricht von R17-02; Zahl hier mit R17-03* |
+| Lesung gegen die Gliederung (Konzept 3.1) | jeder der sechs Abschnitte vorhanden, jede I-Nummer des Inventars einem Abschnitt zugeordnet, jeder F-Befund an mindestens einer Stelle genannt | 6 von 6 Abschnitte; **28 von 31** Befunde genannt (gezählt mit `grep -o`) — die drei Sammelbefunde F-R17-29 bis -31 (Doku-Altstände, veraltete Krypto-Review, Hinweise) nennt das Modell nicht einzeln. *Bis R17-03 stand hier „31 von 31" — die Zahl war geschätzt, nicht gezählt (berichtigt).* |
+| `bash tools/pruefstand/pruefen.sh --stufe klein` | die billigen Riegel | 23 Riegel grün (die Ausnahmenliste bringt den Riegel `wortliste` dazu), 0 rot, 0 nicht gemessen, 63 s; Baum `60bfe49…` = Baum von `8a4c163` |
 
 ### R17-01 Bestandsaufnahme (11.10.2026)
 
@@ -71,7 +71,7 @@ ist. Abhaken, wenn geprüft.
 | Nr. | Bedienweg | Erwartung | Scheitern erkennbar an | ☐ |
 |---|---|---|---|---|
 | P-R17-01 | `docs/Bedrohungsmodell.md` von vorn bis hinten lesen, mit dem eigenen Bild der Anlage daneben: Welche Lage fehlt? Welche Zusage steht dort anders, als Sie sie geben würden? | Keine Lage fehlt, keine Zusage ist zu weit; jede Grenze, die Sie kennen, steht benannt. | Eine Angreiferlage oder ein Klartextfeld, das Ihnen einfällt und im Modell nicht steht. | ☐ |
-| P-R17-02 | Die Fragen aus R17-03 (Q-R17-NN im Konzept 2.2) beantworten. | Jede Frage hat eine Antwort, die als E-R17-NN eingetragen ist. | Eine Frage ohne E-Nummer nach dem Abschluss. | ☐ |
+| P-R17-02 | Die acht Fragen Q-R17-01 bis -08 (Konzept 2.2) beantworten — je Zeile die Empfehlung annehmen oder anders entscheiden. | Jede Frage hat eine Antwort, die als E-R17-NN eingetragen ist und im Modell 6 steht. | Eine Frage ohne E-Nummer nach dem Abschluss; eine Antwort, die im Modell fehlt. | ☐ |
 | P-R17-04 | In GitHub: Settings → Environments → `produktion` und `staging`: Stehen Pflichtprüfer und eine Zweigbeschränkung (Deployment branches and tags)? Organisation `gen-em` → Authentication security: Ist der Zweitfaktor erzwungen? Auf Produktiv: Betrieb → Status, Zeile *Server-Anteil*; Betrieb → Servereinstellungen, CSP und HSTS. | Pflichtprüfer gesetzt, Zweige auf `main` und die drei Tag-Muster beschränkt; 2FA erzwungen; Anteil angelegt; CSP scharf, HSTS mindestens 180 Tage. | Eine fehlende Beschränkung bestätigt F-R17-04; ein fehlender Anteil F-R17-05. | ☐ |
 | P-R17-03 | Nach dem Merge: `docs/Bedrohungsmodell.md` ist aus `README.md` und `docs/Technik.md` erreichbar; die Links führen hin. | Beide Verweise öffnen das Modell. | 404 oder ein Verweis auf eine andere Datei. | ☐ |
 
