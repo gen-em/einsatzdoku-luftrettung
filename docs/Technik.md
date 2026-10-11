@@ -27,7 +27,9 @@ Daten erst nach Server-Bestätigung.
 
 ```
 <repo>/
-├── docs/                  Handbuch, Technik, Changelog, Backlog (offen) und
+├── docs/                  Handbuch, Technik, Bedrohungsmodell (Schutzziele,
+│                          Angreifer, Zusagen und Grenzen — die Referenz),
+│                          Changelog, Backlog (offen) und
 │                          Backlog-Erledigt, JSON-Vertrag,
 │                          Design (Gestaltungsrichtlinie: Token, Schwellen,
 │                          Symbole, Bausteine, Seitentypen — verbindlich),
@@ -5524,6 +5526,11 @@ echtes APK.
 
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 
+> **Gegen wen das hält und gegen wen nicht, sagt `docs/Bedrohungsmodell.md`**
+> (seit Schritt 12): Schutzziele in 1, die Angreiferlagen in 2, die Zusage mit
+> ihrer Grenze in 3 (G1 bis G3), die vollständige Klartextliste über
+> `Review-R17.md` 3.2, I-07. Dieser Abschnitt bleibt die Liste der Blobfelder.
+
 Der Server kann `missions.pat_blob` nicht lesen. Genau deshalb muss an einer
 Stelle stehen, **welche Felder darin liegen**: Wer das nicht weiß, kann weder
 eine Auskunft nach Datenschutzrecht beantworten noch beurteilen, was ein
@@ -6609,6 +6616,11 @@ sonst als offen. Die Migration selbst fährt die Schemaprobe, Fall 6, auf den
 vier Datenbankfassungen.
 
 ### 4.99b Bedrohungsmodell der Kopplung (ab Web 13.0.0, S5)
+
+> Dieser Abschnitt ist das Modell **einer** Stelle, der Kopplung. Das Modell
+> der ganzen Anwendung — Werte, Lagen, Zusagen, Bausteine, Restrisiken — steht
+> seit Schritt 12 in `docs/Bedrohungsmodell.md`; die Kopplung ist dort Baustein
+> 4.3, mit Verweis hierher.
 
 Die Kopplung ist die eine Stelle, an der ein fremdes Gerät in ein fremdes
 Konto geraten kann. Sie war es vor S5 und ist es danach — nur ist der Weg

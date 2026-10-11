@@ -164,6 +164,10 @@ BEREICHE: dict[str, dict] = {
             # Datei jung ist, sondern weil ihn niemand eingetragen hat.
             "docs/Pruefablauf.md",
             "docs/Sandbox-Setup.md",
+            # DAS BEDROHUNGSMODELL, seit Schritt 12 (Review R17, Stueck 1,
+            # E-R17-01): normative Dokumentation neben Technik.md, eingetragen
+            # im selben Paket, in dem es entstanden ist (R17-02).
+            "docs/Bedrohungsmodell.md",
             # `Was-ist-NAdoku.md` STEHT HIER SEIT PK-04/5, und dass sie gefehlt
             # hat, ist derselbe Fehler noch einmal: Sie wird AUSGELIEFERT --
             # `hochfahren.sh` kopiert sie nach `server/doku/`, `doku_lib.php`

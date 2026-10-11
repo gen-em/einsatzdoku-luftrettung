@@ -796,6 +796,26 @@
       "zeile": "\\*\\*Die Garmin-Uhr\\*\\* \\(Tag `uhr-vX|Store-Paket `nadoku-X\\.Y\\.Z\\.iq`, signiert mit dem Connect-IQ|in den Connect-IQ-Store lädt es die BetreiberIn|Artefakt des Laufs \\(Connect-IQ-Store von Hand\\)",
       "klasse": "G",
       "begruendung": "Die App-Auslieferung (PK-08, Technik.md 4.97g und 6.1) hat ZWEI Uhren mit zwei Tags: Die Wear-OS-Uhr kommt mit dem Tag android-v* als APK, die Garmin-Uhr mit uhr-v* als Connect-IQ-Paket (monkeyc -e, .iq, Store von Hand). Ein bloßes „Uhr\" wäre genau an dieser Stelle zweideutig; genannt wird die Plattform dort, wo sie die Sache IST — dieselbe Überlegung wie technik-abgrenzung-beide-uhren und E-P2-15. Aufgenommen 29.09.2026 mit PK-08."
+    },
+    {
+      "id": "spur-fachdokument-bedrohungsmodell",
+      "bereich": "c",
+      "datei": "docs/Bedrohungsmodell.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/Bedrohungsmodell.md (Schritt 12, Review R17 Stueck 1, E-R17-01) beschreibt wie Technik.md das Verfahren, nicht die Bedienung: Es sagt, in welcher Tabelle die Spur liegt, wer sie lesen kann und was S11 daran aendert. Dieselbe Begruendung wie `spur-fachdokument-technik`."
+    },
+    {
+      "id": "bedrohungsmodell-plattformen",
+      "bereich": "c",
+      "datei": "docs/Bedrohungsmodell.md",
+      "muster": [
+        "garmin",
+        "connect-iq",
+        "garmin-connect"
+      ],
+      "klasse": "G",
+      "begruendung": "DAS MODELL UNTERSCHEIDET DIE ZWEI UHREN AN IHREN SICHERHEITSEIGENSCHAFTEN, und die sind die Plattform selbst: Die Garmin-Uhr haelt den Geraeteschluessel im Klartext, puffert Spur und Reanimation unverschluesselt, bekommt ihre Serveradresse aus Garmin Connect und schickt jede Anfrage durch die Begleit-App; die Wear-OS-Uhr kennt keine Zugangsdaten (G7). Ein geraetefreies „Uhr“ legte die beiden Gegenteile uebereinander — und genau die Angreiferlagen H, L und M entstehen aus dem Unterschied. Dieselbe Begruendung wie `handbuch-geraete-verlust-garmin`: keine Plattformnennung aus Bequemlichkeit, sondern die Sache selbst (Schritt 12, R17-02)."
     }
   ]
 }

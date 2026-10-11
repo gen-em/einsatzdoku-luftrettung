@@ -4,7 +4,7 @@
 Muster wie `Vorbereitung-S9-Problemsammlung.md`: die Sammlung mit Optionen,
 Preisen und den offenen Entscheidungen, aus der nach dem Go des
 Auftraggebers ein Konzept nach K1 entsteht. **Anlass:** Frage vom
-06.09.2026 zu `Review-Krypto-Sicherheit.md`: *„Kann man diese Punkte
+06.09.2026 zum Krypto-Review vom 05.09.2026 (`Review-Krypto-Sicherheit.md`, gelöscht 11.10.2026 mit Schritt 12, E-R17-13; Stand je Befund in `Review-R17.md` 3.4): *„Kann man diese Punkte
 angehen? Oder sind sie schon adressiert? Was sind deine Vorschläge?"*
 **Status:** Vorschläge, nichts umgesetzt. **Alle zehn Entscheidungen sind
 am 06.09.2026 gefallen (Abschnitt 6a); Abschnitt 6b hält die Erklärungen

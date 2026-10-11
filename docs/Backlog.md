@@ -53,7 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); vergeben: 360, 361 | 29.09.2026 |
-| ab 370 | frei — höchste vergebene Nummer 361; 359 aus der Spanne von 18 blieb frei (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 05.10.2026 |
+| 370 bis 379 | `claude/exciting-brown-0n9et2` — Schritt 12, Bedrohungsmodell (Review R17, Stück 1); vergeben: 370, 371 | 11.10.2026 |
+| ab 380 | frei — höchste vergebene Nummer 361; 359 aus der Spanne von 18 blieb frei (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
 
 ---
 
@@ -354,27 +355,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      weil nach Play App Signing der Upload-Schlüssel der zurücksetzbare ist;
      E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
      ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
-
-<!-- -->
-
-146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.** · gehört zu: 12 · Stand: offen · seit 06.09.2026
-     Zwei Fragen, keine Fehler (R78, 06.09.2026; bis 27.09.2026 drei):
-     **Argon2id statt PBKDF2** (WASM-Fremdbestandteil gegen GPU-Resistenz)
-     · **Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`** statt Hex
-     im `sessionStorage` (ein XSS könnte dann entschlüsseln, den Schlüssel
-     aber nicht mitnehmen; anderes Lebensdauermodell „ein Tab, ein
-     Schlüssel"). Dazu die Design-Skizze für Weg B (Nr. 43, SP-9) zur
-     Prüfung. Zuordnung R17 Stück 1.
-     **Passkeys** stehen seit 27.09.2026 nicht mehr hier: als zweiter Faktor
-     neben TOTP Nr. 350 (Schritt 18, SR-09); mit PRF als Ersatz der
-     Passwortableitung von der Betreiberin nicht weiterverfolgt (E-SR-28).
-     Stand seit S10 (Web 20.0.0, 14.09.2026): Der erste Punkt ist messbar
-     kleiner — der Datenschlüssel hängt am Server-Anteil aus `config.php`,
-     ein Datenbankabzug allein reicht für einen Offline-Angriff nicht mehr;
-     Argon2id verteidigte gegen einen Angreifer, der ohnehin beides hat. Der
-     zweite Punkt ist unberührt: Der Anteil schützt die Hülle, nicht den
-     entpackten Schlüssel im `sessionStorage`.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 146.
 
 <!-- -->
 
@@ -784,7 +764,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.** · gehört zu: 12 · Stand: offen · seit 21.09.2026
+263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.** · gehört zu: 12b · Stand: offen · seit 21.09.2026
      *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Priorität:
      niedrig. **Abhilfe offen — hier wird die Grenze benannt, nicht
      geschlossen.**
@@ -800,10 +780,10 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Frontend — und genau das ist öffentlich abrufbar und wird verglichen.
 
      **Warum die Abhilfe offen bleibt:** Sie hieße, dem Server eine Schnittstelle
-     zu geben, die eigenen Quelldateien auszuliefern oder zu hashen. Das ist
-     ein neuer Angriffsweg für ein Problem, das der Vergleich nur teilweise
-     löst — die Entscheidung gehört in einen eigenen Durchgang, nicht in einen
-     Nachtrag.
+     zum Hashen der eigenen Quelldateien zu geben — ein neuer Angriffsweg für
+     ein Problem, das der Vergleich nur teilweise löst.
+     Stand 11.10.2026 (Schritt 12, E-R17-12): Das Bedrohungsmodell benennt die
+     Grenze (G5, 6.6); Stück 10 des Reviews (12b) liest die Wache und entscheidet.
 
 <!-- -->
 
@@ -1226,3 +1206,35 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Abnahme:* zwei Dateien im Ordner → die Karte zeigt Handy zuerst,
      jede mit ihrem Gerät; eine Datei ohne Muster (Altbestand) steht
      unverändert da.
+
+<!-- -->
+
+370. **Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`.** · gehört zu: 12b · Stand: offen · seit 11.10.2026
+     *Aufgenommen 11.10.2026 aus Schritt 12 (Bedrohungsmodell, E-R17-08; aus
+     Nr. 146, Teil 2).* Heute liegen Daten- und Inhaltsschlüssel als Hex im
+     `sessionStorage` (`crypto.js`, `setDataKey()`/`getContentKey()`). Ein
+     XSS kann sie mitnehmen — und weil der Inhaltsschlüssel nie rotiert wird
+     (F-R17-10), öffnet ein einmal gestohlener alle späteren Blöcke. Als
+     `CryptoKey` mit `extractable: false` in IndexedDB könnte ein XSS zwar
+     weiter entschlüsseln lassen, den Schlüssel aber nicht mitnehmen.
+     Umfang: IndexedDB statt `sessionStorage`, anderes Lebensdauermodell
+     („ein Tab, ein Schlüssel", Handbuch 5; die Frist aus `keyguard.js`
+     räumt den Eintrag selbst), alle `getContentKey`-Aufrufer, das
+     `aesKey()`-Fach, `tools/proben/frist/`. **Nach** der scharfen CSP
+     (F-R17-23): Die CSP ist die erste Linie, der `CryptoKey` die zweite.
+     Fable-Schritt in 12b; Begründung im Bedrohungsmodell 6.5.
+
+<!-- -->
+
+371. **Ein Admin darf BetreiberIn-Konten nicht sperren, löschen oder umadressieren.** · gehört zu: 12b · Stand: offen · seit 11.10.2026
+     *Aufgenommen 11.10.2026 aus Schritt 12 (Bedrohungsmodell, F-R17-07,
+     E-R17-11).* `admin_user.php` kennt gegenüber einem BetreiberIn-Konto
+     nur zwei Riegel: den Rollenwechsel und die letzte BetreiberIn. Ein Konto
+     der Rolle admin kann ein **zweites** BetreiberIn-Konto über
+     `konto_status` sperren, über `user_delete` löschen (mit frischem Code)
+     oder über `konto` die Anmeldeadresse ändern und es so aussperren. Die
+     Berechtigungsmatrix (`Technik.md` 4.99p) und die Rollenprobe messen nur
+     `{ziel}` = `user`. Entschieden: nicht erlaubt — Riegel in
+     `admin_user.php` (admin ⊂ betreiberin heißt auch: nach oben kein Griff),
+     eine Zeile in 4.99p, ein Fall in `tools/proben/rollen/`. Kleines Paket
+     in 12b.
