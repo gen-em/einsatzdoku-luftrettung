@@ -106,12 +106,95 @@ def schritt_einspielen(a) -> None:
               "MESSSTAND_BACKUP_PASSWORT": BACKUP_PW})
 
 
+def ziele_ermitteln() -> dict:
+    """Die Gegenstaende der vier S11-Messungen (S11-01). Anlass: Nr. 43.
+
+    WAS. Fuer „Einsatz mit Spur oeffnen" der Einsatz des Messstandkontos mit
+    den MEISTEN Spurpunkten; fuer „Diensttag mit Ruhe-Spuren oeffnen" der
+    Diensttag mit den meisten Punkten in Ruhe-Segmenten. Beides ist der
+    ungünstigste Fall des Bestands, nicht ein typischer: Die Leistungsgrenze
+    aus E-S11-15 gilt fuer JEDE Einzelansicht, also muss die teuerste sie
+    halten. Die Punktzahl steht mit im Protokoll — eine Zeit ohne den
+    Gegenstand daneben waere keine Auskunft (CLAUDE.md 6).
+
+    WARUM HIER UND NICHT IM BROWSER. Die Wahl braucht Punktzahlen ueber den
+    ganzen Bestand, und die gibt es nur ueber `spur_zahlen()` — Spuren nur
+    ueber `spur_lib.php` (CLAUDE.md 4), auch im Pruefmittel. Nach S11 zaehlt
+    dieselbe Funktion Klartextzahlen je Stueck (E-S11-18); die Wahl bleibt
+    dieselbe, und damit vergleicht S11-11 denselben Einsatz und denselben Tag.
+
+    ROT, NICHT LEER. Findet sich kein Einsatz mit Spur oder kein Tag mit
+    Ruhe-Spur, bricht der Schritt ab, statt die Messung auszulassen.
+    """
+    skript = r"""
+$wurzel = getenv("EDOKU_WURZEL");
+require_once $wurzel . "/config.php";
+require_once $wurzel . "/db.php";
+require_once $wurzel . "/spur_lib.php";
+$pdo = db();
+$q = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+$q->execute([getenv("EDOKU_KONTO")]);
+$uid = (int)$q->fetchColumn();
+if (!$uid) { fwrite(STDERR, "Messstandkonto fehlt\n"); exit(1); }
+$m = $pdo->prepare("SELECT id, day_id FROM missions WHERE user_id = ? AND deleted_at IS NULL");
+$m->execute([$uid]);
+$einsaetze = $m->fetchAll(PDO::FETCH_KEY_PAIR);
+$mz = spur_zahlen($pdo, "mission", array_keys($einsaetze));
+arsort($mz);
+$r = $pdo->prepare("SELECT id, day_id FROM rest_segments
+                     WHERE user_id = ? AND deleted_at IS NULL AND day_id IS NOT NULL");
+$r->execute([$uid]);
+$ruhe = $r->fetchAll(PDO::FETCH_KEY_PAIR);
+$rz = spur_zahlen($pdo, "rest", array_keys($ruhe));
+$tage = [];
+foreach ($rz as $id => $n) {
+    $d = (int)$ruhe[$id];
+    $tage[$d] = $tage[$d] ?? ["ruhe_punkte" => 0, "ruhe_segmente" => 0];
+    $tage[$d]["ruhe_punkte"] += $n;
+    $tage[$d]["ruhe_segmente"]++;
+}
+uasort($tage, fn($a, $b) => $b["ruhe_punkte"] <=> $a["ruhe_punkte"]);
+$aus = ["einsaetze_mit_spur" => count(array_filter($mz)), "tage_mit_ruhe" => count($tage)];
+if ($mz) {
+    $id = (int)array_key_first($mz);
+    $aus["einsatz"] = ["id" => $id, "punkte" => (int)$mz[$id]];
+    $alle = array_values(array_filter($mz));
+    sort($alle);
+    $aus["punkte_je_spur_median"] = $alle[intdiv(count($alle), 2)];
+}
+if ($tage) {
+    $d = (int)array_key_first($tage);
+    $ids = array_keys(array_filter($einsaetze, fn($t) => (int)$t === $d));
+    $aus["tag"] = ["id" => $d] + $tage[$d]
+        + ["einsaetze" => count($ids),
+           "einsatz_punkte" => array_sum(array_intersect_key($mz, array_flip($ids)))];
+}
+echo json_encode($aus), "\n";
+"""
+    server = WERKZEUGE.parent / "server"
+    e = subprocess.run(["php", "-r", skript], capture_output=True, text=True,
+                       env={**os.environ, "EDOKU_WURZEL": str(server), "EDOKU_KONTO": KONTO})
+    if e.returncode != 0:
+        raise RuntimeError(f"Ziele der S11-Messungen: {e.stderr.strip()[:400]}")
+    ziele = json.loads(e.stdout)
+    if "einsatz" not in ziele or "tag" not in ziele:
+        raise RuntimeError(f"Ziele der S11-Messungen unvollstaendig: {ziele}")
+    melde(f"  Einsatz {ziele['einsatz']['id']} ({ziele['einsatz']['punkte']} Punkte, "
+          f"Median aller Spuren {ziele['punkte_je_spur_median']}); "
+          f"Diensttag {ziele['tag']['id']} ({ziele['tag']['ruhe_segmente']} Ruhe-Segmente, "
+          f"{ziele['tag']['ruhe_punkte']} Ruhe-Punkte, {ziele['tag']['einsaetze']} Einsaetze)")
+    return ziele
+
+
 def schritt_browser(a) -> None:
+    ziele = ziele_ermitteln()
     lauf(["node", str(HIER / "browserprobe.mjs"), a.basis,
           str(pathlib.Path(a.ausgabe) / "browserprobe.json"), str(a.drossel)],
          env={**os.environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT,
               "MESSSTAND_KONTO": KONTO, "MESSSTAND_PASSWORT": KONTO_PW,
-              "MESSSTAND_BACKUP_PASSWORT": BACKUP_PW})
+              "MESSSTAND_BACKUP_PASSWORT": BACKUP_PW,
+              "MESSSTAND_ZIELE": json.dumps(ziele),
+              "MESSSTAND_WIEDERHOLUNGEN": str(a.wiederholungen)})
 
 
 def schritt_server(a) -> None:
@@ -274,6 +357,9 @@ def main() -> int:
     p.add_argument("--einsaetze", type=int, default=5000)
     p.add_argument("--runden-je-datei", type=int, default=3)
     p.add_argument("--drossel", type=int, default=6)
+    # Laeufe je Einzelansicht der S11-Messungen; gezaehlt wird der Median
+    # (S11-01, E-S11-15). Die Massenwege laufen einmal.
+    p.add_argument("--wiederholungen", type=int, default=5)
     p.add_argument("--frisch", action="store_true",
                    help="Messstandkonto vorher löschen (nur mit Präfix "
                         f"'{PRAEFIX}')")

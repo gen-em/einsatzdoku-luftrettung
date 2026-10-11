@@ -57,7 +57,8 @@ const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownl
  * auch die Aufrufe erfasst, die beim Laden passieren — und genau die sind
  * interessant, weil dort das Entsperren liegt. */
 await kontext.addInitScript(() => {
-  const z = { pbkdf2: 0, jsonMax: 0, jsonParse: 0, jsonStringify: 0, ersteZeile: null, lang: [] };
+  const z = { pbkdf2: 0, jsonMax: 0, jsonParse: 0, jsonStringify: 0, ersteZeile: null, lang: [],
+              dokument: Math.random() };
   window.__messstand = z;
 
   /* DIE LANGAUFGABEN DER SEITE (R4-27): Beginn und Ende jeder Aufgabe über
@@ -198,7 +199,11 @@ async function messen(name, tun) {
     schritt: name,
     dauer_s: Math.round(dauer * 100) / 100,
     halde_spitze_mb: Math.max(spitze, await halde()),
-    pbkdf2: nachher && vorher ? nachher.pbkdf2 - vorher.pbkdf2 : null,
+    /* Die Zaehler leben je DOKUMENT (S11-01, F-S11-14): Navigiert der Schritt,
+     * beginnt die neue Seite bei null, und „nachher − vorher" kam als -1
+     * heraus. Hat das Dokument gewechselt, zaehlt allein die neue Seite. */
+    pbkdf2: !nachher ? null
+      : (vorher && vorher.dokument === nachher.dokument ? nachher.pbkdf2 - vorher.pbkdf2 : nachher.pbkdf2),
     json_groesste_mb: nachher ? Math.round(nachher.jsonMax / 1024 / 1024 * 100) / 100 : null,
     antwort_mb: Math.round(antwortBytes / 1024 / 1024 * 100) / 100,
     post_groesste_mb: Math.round(postGroesste / 1024 / 1024 * 100) / 100,
@@ -450,6 +455,153 @@ messungen.push(await messen('Backup erstellen', async () => {
   return { datei: ziel,
            datei_mb: Math.round(statSync(ziel).size / 1024 / 1024 * 100) / 100 };
 }));
+
+/* ---- DIE VIER MESSUNGEN VON S11 (S11-01, E-S11-15) — Anlass: Nr. 43 ------
+ *
+ * WOFUER. S11 verschliesst Spur, Phasenkoordinaten und Reanimation in
+ * Geraetehuellen, die nur der Browser oeffnet. Damit wandert Arbeit vom
+ * Server in den Browser, und E-S11-15 setzt eine Grenze: keine Einzelansicht
+ * mehr als 1,5-mal langsamer als vorher und keine ueber 1 s; die Massenwege
+ * werden gemessen und benannt. Eine Grenze „gegen vorher" braucht ein
+ * Vorher — gemessen auf dem heutigen Code, BEVOR sich etwas aendert, und
+ * nach S11 mit genau diesen Schritten auf derselben Maschine noch einmal
+ * (S11-11).
+ *
+ * DIE VIERTE MESSUNG, „Backup erzeugen", steht nicht hier: Es ist der
+ * Schritt „Backup erstellen" darueber, seit S2 im Messstand, und dazu die
+ * Speicherspitzen von `edbak_build()` in der Serverprobe. Ein zweiter
+ * Schritt fuer dasselbe waere eine zweite Stelle fuer eine Pruefung
+ * (Pruefablauf.md 1, Grundsatz 1).
+ *
+ * WELCHER EINSATZ, WELCHER TAG. Nicht geraten und nicht der erste der
+ * Liste: `messen.py` waehlt den Einsatz mit den meisten Spurpunkten und den
+ * Diensttag mit den meisten Ruhe-Punkten (`MESSSTAND_ZIELE`). Fehlt die
+ * Angabe, ist der Schritt ROT — ein uebersprungener Schritt meldete gruen,
+ * ohne gemessen zu haben (CLAUDE.md 6).
+ *
+ * WIEDERHOLT. Die Einzelansichten laufen `MESSSTAND_WIEDERHOLUNGEN`-mal
+ * (Vorgabe 5); gezaehlt wird der Median, die Spanne steht daneben. Der
+ * Vergleich „1,5-mal" an einem einzelnen Lauf waere ein Vergleich zweier
+ * Zufaelle — die Streuung der Zeitraumuebersicht lag am 28.09.2026 bei
+ * 3,4 bis 4,7 s fuer denselben Stand.
+ *
+ * WANN „FERTIG". Einsatz: die Spur liegt auf der Karte UND die Phasenzeilen
+ * stehen. Diensttag: eine Spur liegt auf der Karte (alle Linien eines Tages
+ * entstehen in derselben Aufgabe). Nach S11 kommen beide erst nach dem
+ * Oeffnen der Huelle — das ist die Mehrarbeit, die gemessen werden soll.
+ * Das Entsperren selbst rennt gegen die Abschlussbedingung (`entsperren()`),
+ * zaehlt also nur, wenn es wirklich noetig ist. */
+const ziele = (() => {
+  try { return JSON.parse(process.env.MESSSTAND_ZIELE || ''); } catch { return null; }
+})();
+const wiederholungen = Math.max(1, Number(process.env.MESSSTAND_WIEDERHOLUNGEN || 5));
+
+async function wiederholt(name, tun) {
+  const laeufe = [];
+  for (let i = 0; i < wiederholungen; i++) { laeufe.push(await messen(`${name} [${i + 1}]`, tun)); }
+  const zeiten = laeufe.map(l => l.dauer_s).sort((a, b) => a - b);
+  const zusammen = {
+    schritt: name,
+    dauer_s: zeiten[Math.floor(zeiten.length / 2)],
+    dauer_min_s: zeiten[0], dauer_max_s: zeiten[zeiten.length - 1],
+    laeufe: laeufe.length,
+    halde_spitze_mb: Math.max(...laeufe.map(l => l.halde_spitze_mb)),
+    json_groesste_mb: Math.max(...laeufe.map(l => l.json_groesste_mb || 0)),
+    antwort_mb: laeufe[laeufe.length - 1].antwort_mb,
+    pbkdf2: laeufe.reduce((s, l) => s + (l.pbkdf2 || 0), 0),
+    fehler: laeufe.map(l => l.fehler).find(Boolean) || null,
+    einzeln: laeufe,
+  };
+  for (const k of ['adresse', 'spurlinien', 'phasenzeilen']) {
+    if (laeufe[0][k] !== undefined) { zusammen[k] = laeufe[0][k]; }
+  }
+  console.log(`  ${name}: Median ${zusammen.dauer_s} s (${zusammen.dauer_min_s}–${zusammen.dauer_max_s} s,`
+    + ` ${laeufe.length} Läufe)` + (zusammen.fehler ? ` · FEHLER ${zusammen.fehler}` : ''));
+  return zusammen;
+}
+
+if (!ziele || !ziele.einsatz || !ziele.tag) {
+  messungen.push({ schritt: 'S11-Messungen', fehler: 'MESSSTAND_ZIELE fehlt — '
+    + 'die Probe wird über messen.py gerufen, nicht allein (S11-01)' });
+} else {
+  const einsatz = await wiederholt('Einsatz mit Spur öffnen', async () => {
+    await seite.goto(`${basis}/einsatz.php?id=${ziele.einsatz.id}`,
+                     { waitUntil: 'domcontentloaded', timeout: 180000 });
+    const fertig = Promise.all([
+      seite.locator('.leaflet-overlay-pane path').first().waitFor({ state: 'attached', timeout: 180000 }),
+      seite.locator('#phasebody .phasen-zeile').first().waitFor({ state: 'attached', timeout: 180000 }),
+    ]);
+    if (await entsperren(fertig)) { await fertig; }
+    await fertig;
+    return { adresse: seite.url().replace(basis, ''),
+             spurlinien: await seite.locator('.leaflet-overlay-pane path').count(),
+             phasenzeilen: await seite.locator('#phasebody .phasen-zeile').count() };
+  });
+  Object.assign(einsatz, { einsatz_id: ziele.einsatz.id, spurpunkte: ziele.einsatz.punkte,
+                           punkte_je_spur_median: ziele.punkte_je_spur_median });
+  messungen.push(einsatz);
+
+  const tag = await wiederholt('Diensttag mit Ruhe-Spuren öffnen', async () => {
+    await seite.goto(`${basis}/index.php?d=${ziele.tag.id}`,
+                     { waitUntil: 'domcontentloaded', timeout: 180000 });
+    const fertig = seite.locator('.leaflet-overlay-pane path').first()
+                        .waitFor({ state: 'attached', timeout: 180000 });
+    if (await entsperren(fertig)) { await fertig; }
+    await fertig;
+    return { adresse: seite.url().replace(basis, ''),
+             spurlinien: await seite.locator('.leaflet-overlay-pane path').count() };
+  });
+  Object.assign(tag, { tag_id: ziele.tag.id, ruhe_segmente: ziele.tag.ruhe_segmente,
+                       ruhe_punkte: ziele.tag.ruhe_punkte, einsaetze: ziele.tag.einsaetze,
+                       einsatz_punkte: ziele.tag.einsatz_punkte });
+  messungen.push(tag);
+
+  /* GPX UEBER EINEN ZEITRAUM — der Export (Import/Export → Export, Profil B
+   * „CSV" mit „GPX-Tracks einschließen"). Er ist heute der einzige Weg, der
+   * die Spuren eines Zeitraums in EINER Datei liefert; `gpx.php` kennt nur
+   * eine Spur oder die Auswahl eines Diensttags. Zeitraum: das ganze Jahr
+   * des neuesten Diensttags, wie die Zeitraumuebersicht. Personenbezogene
+   * Angaben an (sonst gibt es keine Spuren, A9), Passwortschutz wie
+   * vorbelegt an — gemessen wird der Weg, den eine NutzerIn geht. */
+  const gpx = await messen('GPX über einen Zeitraum (Export Profil B)', async () => {
+    await seite.goto(`${basis}/import.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
+    await seite.locator('#exp_go').waitFor({ state: 'visible', timeout: 180000 });
+    await seite.fill('#exp_von', `${zeitraumJahr}-01-01`);
+    await seite.fill('#exp_bis', `${zeitraumJahr}-12-31`);
+    await seite.selectOption('#exp_fmt', 'b');
+    /* Die Schalter (`ui_schalter()`) tragen ein verborgenes Kaestchen; geklickt
+     * wird, wie eine NutzerIn klickt, auf das Etikett. */
+    const schalten = async (id) => {
+      if (!(await seite.locator(`#${id}`).isChecked())) {
+        await seite.click(`label[for="${id}"]`);
+      }
+      if (!(await seite.locator(`#${id}`).isChecked())) { throw new Error(`Schalter ${id} bleibt aus`); }
+    };
+    await schalten('exp_pat');
+    await seite.locator('#exp_gpx_row').waitFor({ state: 'visible', timeout: 10000 });
+    await schalten('exp_gpx');
+    await schalten('exp_pw');
+    await seite.fill('#exp_pw1', bpw);
+    await seite.fill('#exp_pw2', bpw);
+    const warten = seite.waitForEvent('download', { timeout: 1800000 });
+    await seite.click('#exp_go');
+    for (let i = 0; i < 8; i++) {
+      const ja = seite.locator('dialog[open] button[data-act="yes"]');
+      try { await ja.first().waitFor({ state: 'visible', timeout: 5000 }); } catch { break; }
+      await ja.first().click();
+      await seite.waitForTimeout(400);
+    }
+    const dl = await warten;
+    const ziel = `/tmp/messstand/${dl.suggestedFilename()}`;
+    await dl.saveAs(ziel);
+    const meldung = (await seite.locator('#exp_state').textContent().catch(() => '') || '').trim();
+    const spuren = Number(/(\d+) GPX-Tracks enthalten/.exec(meldung)?.[1] || 0);
+    if (!spuren) { throw new Error(`Export ohne GPX-Tracks: „${meldung.slice(0, 160)}"`); }
+    return { jahr: zeitraumJahr, datei: ziel, gpx_spuren: spuren, meldung: meldung.slice(0, 200),
+             datei_mb: Math.round(statSync(ziel).size / 1024 / 1024 * 100) / 100 };
+  });
+  messungen.push(gpx);
+}
 
 const bestand = await seite.evaluate(() => document.title).catch(() => '');
 const ergebnis = {

@@ -331,6 +331,64 @@ fragt in Abständen bis 500 ms, jedes Mal auf einen freien Moment des
 gedrosselten Hauptfadens angewiesen. Deshalb steht hier der Median, und
 die Spanne daneben.
 
+## Grundlinie 11.10.2026 — vor S11 (S11-01)
+
+**Wofür.** S11 verschließt Spur, Phasenkoordinaten und Reanimation in
+Gerätehüllen, die nur der Browser öffnet; Arbeit wandert vom Server in den
+Browser. E-S11-15 setzt die Grenze: keine Einzelansicht mehr als 1,5-mal
+langsamer als vorher und keine über 1 s; die Massenwege werden gemessen und
+benannt. Diese Zahlen sind das **Vorher**. S11-11 misst mit denselben
+Schritten auf derselben Maschine das Nachher.
+
+**Was gemessen wurde:** Web **21.14.0** (Zweig `ccr-dd33b6e8-ismfm0`, Code
+gleich `dbca560`), frische Anlage, `messen.py --frisch`; Bestand **5096
+Einsätze**, **2 874 650** Spurpunkte im Messstandkonto, Median **423** Punkte
+je Spur. Maschine: Container mit 4 Kernen (Intel Xeon 2,10 GHz), 15 GB, PHP
+8.4.19, MariaDB 10.11, Chromium aus Playwright 1.56. Zwei Läufe: Drossel
+**6×** (Referenzgerät Z3, die Vorgabe des Messstands) mit allen Schritten,
+dann **ungedrosselt** (`--drossel 1`) nur der Schritt `browser`.
+
+**Zuerst, was nicht gemessen werden konnte:**
+
+- **Ein echtes Telefon.** Wie oben: Die Drossel stellt die Rechenzeit nach,
+  nicht Speicher, Grafik und Leitung. Der Vergleich vorher/nachher gilt nur
+  auf dieser Maschine (E-S11-15).
+- **Wartungslauf und Einmalwerkzeug** gibt es noch nicht; sie haben kein
+  Vorher. Gemessen werden sie mit S11-07 und S11-10.
+- **Die Kartenkacheln** — gesperrt wie in jeder Messung hier.
+
+| Messung | Gegenstand | Drossel 6× | ungedrosselt |
+|---|---|---|---|
+| **Einsatz mit Spur öffnen** (Karte und Phasen stehen) | Einsatz 141, 1356 Punkte (der größte des Bestands), 8 Phasen | Median **1,28 s** (1,18–1,44 s, 5 Läufe), Halde ≤ 13 MB | Median **0,45 s** (0,41–0,48 s) |
+| **Diensttag mit Ruhe-Spuren öffnen** (Spur auf der Karte) | Diensttag 30: 8 Ruhe-Segmente mit 1471 Punkten (die meisten des Bestands), 7 Einsätze, 15 Linien | Median **1,71 s** (1,69–2,03 s), Halde ≤ 25 MB | Median **0,47 s** (0,44–0,49 s) |
+| **Backup erzeugen** (Schritt „Backup erstellen", seit S2) | ganzes Konto, `.edbak` | **58,54 s**, Datei 12,01 MB, Halde 52 MB, 1 PBKDF2 | **44,05 s**, 11,95 MB, Halde 68 MB |
+| dazu Serverprobe `edbak_build()` | in Fenstern zu 250 / am Stück | 3,8 s, Spitze 12 MB / 13,41 s, 133,24 MB Paket, Spitze 2079 MB | — |
+| **GPX über einen Zeitraum** (Export Profil B mit GPX, Passwort an) | Jahr 2026: 4071 Einsätze, **8174** GPX-Spuren | **329,6 s**, Datei 31,95 MB, **Halde 389 MB** | **74,62 s**, 31,61 MB, Halde 392 MB |
+
+Daneben, aus demselben Lauf mit Drossel 6× und zum Bezug: Tagesansicht
+1,19 s, Suche 3,55 s, Zeitraumübersicht sichtbar 3,43 s (fertig 4,93 s),
+Statistik je Reiter 0,07–0,08 s, 0 Konsolenfehler. Rückgabewert beider
+Läufe 0.
+
+**Was die Zahlen sagen.**
+
+- **Unter Drossel 6× liegt schon das Vorher über 1 s** — beide
+  Einzelansichten, 1,28 s und 1,71 s. Ungedrosselt liegen sie bei 0,45 und
+  0,47 s. E-S11-15 sagt nicht, unter welcher Drossel die Sekunde gilt; das
+  ist die Frage Q-S11-16 im Konzept.
+- **Der GPX-Export über ein Jahr braucht 389 MB Halde**, viermal das
+  Gerätebudget aus Z3 (100 MB) — heute schon, ohne eine Hülle zu öffnen.
+  Es ist ein Massenweg; E-S11-15 verlangt dort Messen und Benennen, keine
+  Grenze. Steht als F-S11-16 im Konzept.
+- **Der Einsatz ist der größte, nicht der typische.** 1356 Punkte gegen
+  einen Median von 423: Die Grenze gilt für jede Einzelansicht, also misst
+  der Schritt die teuerste.
+
+**Am Prüfmittel berichtigt** (F-S11-14): Die Zähler der Browserprobe leben
+je Dokument. Ein Schritt, der navigiert, rechnete „nachher − vorher" über
+zwei Seiten und meldete im ersten Lauf **PBKDF2 = −1**. Seit S11-01 zählt
+nach einem Seitenwechsel allein die neue Seite.
+
 ---
 
 ## Wiederholen
