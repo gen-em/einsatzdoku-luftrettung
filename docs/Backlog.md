@@ -52,9 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); vergeben: 360, 361 | 29.09.2026 |
-| 370 bis 379 | `claude/exciting-brown-0n9et2` — Schritt 12, Bedrohungsmodell (Review R17, Stück 1); vergeben: 370, 371 | 11.10.2026 |
-| ab 380 | frei — höchste vergebene Nummer 361; 359 aus der Spanne von 18 blieb frei (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
+| 380 bis 389 | `ccr-dd33b6e8-ismfm0` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: keine | 11.10.2026 |
+| ab 390 | frei — höchste vergebene Nummer 371; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
 
 ---
 
