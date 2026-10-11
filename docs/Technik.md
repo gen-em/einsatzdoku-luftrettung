@@ -11073,8 +11073,11 @@ Vergleich.
 
 **Der Tag ist die Fassung** (F-P5a-1, entschieden 15.09.2026): `web-vX.Y.Z`,
 gleich `WEB_VERSION` in `server/version.php`. Der Produktionslauf verweigert,
-wenn beides nicht übereinstimmt. Uhr und Android bekommen keine
-Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
+wenn beides nicht übereinstimmt. **Seit PK-08 gilt dasselbe für die Apps:**
+`android-vX.Y.Z` gegen `android/version.properties`, `uhr-vX.Y.Z` gegen
+`watch/source/Const.mc` (E-PK-60, Tabelle oben, 4.97g). *(Bis PK-08 stand
+hier, Uhr und Android bekämen keine Auslieferungs-Tags, weil ihre Signatur
+außerhalb der CI lag (E-S4-16) — berichtigt mit Nr. 236.)*
 **Rollback ist ein Lauf mit dem vorigen Tag.**
 
 ### 6.1a Der Läufer — ein festes Abbild statt `ubuntu-latest` (Nr. 236)
