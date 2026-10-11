@@ -215,8 +215,16 @@ SEITEN = ['login.php']
 # Wiederherstellungsschluessel NICHT entgegen -- sein Feld hat keinen Namen,
 # gesendet wird eine Signatur --, und seine Skripte stehen immer in der
 # Seite, damit die Wache sie vergleicht.
+#
+# SEIT WEB 21.10.0 (SR-09) steht das Passkey-Formular im selben Schritt, und
+# nur, wenn das Konto einen Passkey hat. Es sendet eine Signatur, kein
+# Passwort. Nachgetragen erst mit Nr. 236 (11.10.2026): Bis dahin war die
+# Wache seit der Auslieferung von Web 21.14.0 jeden Tag rot, mit genau
+# diesem Formular als einziger Abweichung — ein Fehlalarm, der jeden echten
+# verdeckt haette.
 BEDINGTE_FORMULARE = {'login.php': ['<form method="post" id="codeform">',
-                                    '<form method="post" id="schluesselform">']}
+                                    '<form method="post" id="schluesselform">',
+                                    '<form method="post" id="passkeyform" hidden>']}
 
 # Ein Attributname beginnt nach Leerraum, nicht nach einem Bindestrich: `\bsrc`
 # traf auch `data-src` -- die Wortgrenze liegt am Bindestrich --, und ein
