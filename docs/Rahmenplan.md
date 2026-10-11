@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 159 (11.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 160 (11.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `dbca560`, gemessen 11.10.2026): Web 21.14.0 ·
+**Stand `origin/main`** (Commit `329566a`, gemessen 11.10.2026): Web 21.14.0 ·
 Uhr 3.1.0 · Android 0.17.0.
 **Läuft:** 12a — Konzept S11 auf `ccr-dd33b6e8-ismfm0`, freigegeben am 11.10.2026.
-**Als Nächstes:** Merge von #104 (Nr. 236: die Kette auf `ubuntu-26.04`, **vor dem 19.10.2026**), danach dessen Nachmessung (6.1); dann das Konzept S11 (12a, Fable) — Reihenfolge in Abschnitt 3.
-**Offene PRs:** #104 (Nr. 236, nur `.github/`, `tools/` und `docs/`; dazu die Integritätswache, Fehlalarm seit Web 21.14.0).
-**Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging erledigt (11.10.2026); auf Produktiv seit dem Tag `web-v21.14.0` nachsehen, dort auch die aus 10c und Web 21.3.0 (6.1).
+**Als Nächstes:** S11-01 (Messstand, Grundlinie) auf dem Zweig von 12a — Reihenfolge in Abschnitt 3. Die Kette läuft seit #104 auf `ubuntu-26.04` (Nr. 236 erledigt).
+**Offene PRs:** der Abschluss von Nr. 236 (nur `docs/`).
+**Fällig bei der Betreiberin:** 37 Posten (Abschnitt 6.1). **`update.php`:** auf Staging erledigt (11.10.2026); auf Produktiv seit dem Tag `web-v21.14.0` nachsehen, dort auch die aus 10c und Web 21.3.0 (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -221,7 +221,6 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, 4a, 9, 27, 28 |
 | **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefdokument-Kette-Haertung.md`, Abgleich |
 | **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-04 |
-| **Nr. 236 nachmessen:** nach dem Merge von #104 im Lauf „Auslieferung" `staging` und Stufe 2 grün auf `ubuntu-26.04`; dann je ein APP-PROBELAUF `android` und `uhr` (legt nichts ab) | Nr. 236 | 11.10.2026 | Backlog Nr. 236; `Technik.md` 6.1a |
 | **Prüfliste R17:** P-R17-03 (Verweise auf das Modell nach dem Merge), -04 (Server-Anteil, CSP und HSTS auf Produktiv), -05 (Berechtigungen der Wear-Release-APK mit `aapt2`) | 12 | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
 | **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 6.3a; Prüfpunkt 2c |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |

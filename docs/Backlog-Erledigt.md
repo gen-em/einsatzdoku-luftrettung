@@ -9475,3 +9475,26 @@ zutreffen.
      `CryptoKey` wird gebaut, als Paket in 12b nach der scharfen CSP
      (Nr. 370). Begründung: `docs/Bedrohungsmodell.md` 6.5. Die Skizze SP-9
      ist gegen das Modell gelesen (F-R17-13, E-R17-09, -10).
+
+236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.** · gehört zu: Zuarbeit · Stand: erledigt · seit 18.09.2026
+     *Stand 11.10.2026 (Entscheidung der Betreiberin: umstellen):* Alle
+     zehn `runs-on` stehen auf `ubuntu-26.04`, nicht mehr `ubuntu-latest`
+     (`docs/Technik.md` 6.1a). Drei Stellen hingen am Abbild und sind
+     festgelegt: `--skip-ssl` für den Klienten `mariadb` in der
+     Schemaprobe (Klient 11.8 verlangt TLS, rot gemessen), der
+     Playwright-Schalter in Stufe 2 (1.56 verweigert Chromium auf 26.04),
+     Java 17 im Uhr-Job (26.04 bringt 25). Gemessen auf 26.04: Stufe 1 und
+     beide Schemaproben per Handlauf, Selbstproben und Uhr-Store-Paket
+     örtlich im Container.
+
+     **Offen, erst nach dem Merge messbar:** (1) der erste Push auf `main`
+     — Job `staging` und Stufe 2 grün auf `ubuntu-26.04`; (2) je ein
+     App-Probelauf `android` und `uhr` (`app_probelauf`, Freigabe
+     `produktion`). Ist beides grün, ist der Punkt erledigt. Wird Stufe 2
+     rot, hält das Tor jeden `web-v`-Tag auf — dann zuerst hier nachsehen.
+     Werdegang bis 29.09.2026: `docs/Backlog.md@dbca560`, Nr. 236.
+     Erledigt 11.10.2026 nach dem Merge von #104 (Werkzeug, keine
+     Versionsstufe): alles auf `ubuntu-26.04` grün — Auslieferung mit
+     Staging und Stufe 2 (Lauf 38159702364), Integritätswache (38160018474),
+     APP-PROBELAUF `android` (38161339219) und `uhr` (38161372112, Java 17,
+     Store-Paket als Artefakt).

@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 160 | 11.10.2026 | Nr. 236 erledigt | Zuarbeit „Nr. 236 nachmessen" aus 6.1 fort: Auslieferung, Stufe 2, Wache und beide App-Probeläufe grün auf `ubuntu-26.04`; Kopf auf S11-01. |
 | 159 | 11.10.2026 | Nr. 236 | Zuarbeit 6.1: Nachmessung auf `ubuntu-26.04` nach dem Merge von #104. Berichtigt: Der Kopf nannte #103 offen und `update.php` auf Staging fällig — beides erledigt; 6.1 führte den Tag `web-v21.14.0` als offen, er ist seit dem 05.10.2026 ausgeliefert (Lauf 114). |
 | 156 | 11.10.2026 | 12-Abschluss | Erledigt-Zeile 12 (PR #103, Freigabe 11.10.2026), Fahrplanzeile und Block 12 heraus, Reihenfolge ab 12a; 6.1: Prüfliste R17 (P-R17-03 bis -05). `Review-R17.md` bleibt für 12b (E-R17-02). |
 | 155 | 11.10.2026 | R17-04 | Zuarbeit: Umgebung `produktion` auf `main` und die drei Tag-Muster beschränken (F-R17-04), dazu Pflichtprüfer und Org-Zweitfaktor nachsehen. Fahrplanzeile 12 und R78: der Krypto-Review ist im Bedrohungsmodell aufgegangen und gelöscht (E-R17-13). |
