@@ -80,7 +80,8 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 |---|---|---|---|---|
 | P-S11-01 | erledigt 11.10.2026 | Konzept lesen, Freigabe erteilen | Freigabe im Chat — **erteilt 11.10.2026** | — |
 | P-S11-10 | erledigt 11.10.2026 | Frage Q-S11-16 im Konzept beantworten | **beantwortet:** Drossel 6×, Faktor 2 (E-S11-26) | — |
-| P-S11-11 | vor S11-04 | Frage Q-S11-17 im Konzept beantworten (absolute Grenze neben Faktor 2?) | Antwort im Chat | — |
+| P-S11-11 | erledigt 11.10.2026 | Frage Q-S11-17 im Konzept beantworten (absolute Grenze neben Faktor 2?) | **beantwortet:** unter 3 s bei 6×, unter 1 s ungedrosselt (E-S11-29) | — |
+| P-S11-13 | vor S11-04 | Frage Q-S11-18 beantworten (was misst „Seitenaufbau“, für welche Seiten?) | Antwort im Chat | — |
 | P-S11-12 | in S11-04 | Mockup der Ladeanzeige (E-S11-27) ansehen und freigeben | Freigabe im Chat | — |
 | **P-S11-02** | **jetzt** (Halt) | 1. In VS Code mit Monkey-C-Erweiterung den Ordner `tools/uhr-pruefstand/krypto-probe/` öffnen. 2. Je Uhr „Monkey C: Build for Device", Gerät wählen. 3. Die `.prg` per USB nach `GARMIN/APPS/` kopieren, Uhr trennen. 4. „Krypto-Probe" starten, rund 10 s warten, bis `ERGEBNIS …` steht. 5. Mit Hoch/Runter (Venu 3s: wischen) blättern und **alle Zeilen** abschreiben oder fotografieren — besonders `ECDH …`, `T-PAAR …` und die vier `T-…`-Zeilen. 6. Für Simulator-Vergleich auf dem Arbeitsplatz dasselbe mit F5. Danach die App von der Uhr löschen. | je Uhr `ERGEBNIS 7 gut, 0 Fehler`; `ECDH gut (little-endian, umgedreht)` wie im Simulator; `PACKEN nicht vorhanden` | eine Zeile `FEHLER`, ein Absturz (IQ-Symbol), `ERGEBNIS` erscheint nicht; oder `ECDH gut (big-endian)` — dann rechnet die Uhr anders als der Simulator, und S11-08 muss beide Fälle kennen |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
