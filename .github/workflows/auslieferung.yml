@@ -111,7 +111,7 @@ jobs:
   stufe2:
     name: Prüfung Stufe 2
     needs: staging
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Ohne Zeitgrenze liefe ein hängender Job sechs Stunden, und so lange wartet
     # jeder weitere Lauf dieser Umgebung in seiner Gruppe.
     timeout-minutes: 20
@@ -284,7 +284,7 @@ jobs:
     # `!inputs.probelauf` bleibt: Ein Komplett-Backup je Probelauf verdrängte
     # auf Staging still die Rückfallstände echter Auslieferungen.
     if: ${{ startsWith(github.ref, 'refs/tags/web-v') && !inputs.probelauf }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: staging
     steps:
       - name: Code auschecken
@@ -345,7 +345,7 @@ jobs:
     # Auch ein Probelauf endet mit `success`: Jeder Weg ohne Auslieferung gehört
     # in diese Bedingung, sonst zeigt der Zeiger auf nie Ausgeliefertes.
     if: needs.produktion.result == 'success' && !inputs.probelauf
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Nur dieser Job schreibt ins Repositorium; deshalb keine Fremd-Aktion außer
     # `checkout`, und `produktion` mit den FTPS-Geheimnissen bleibt bei `read`.
     permissions:
@@ -390,7 +390,7 @@ jobs:
     # (E-PK-23); nicht `staging…` heißen, sonst zählte das Tor der grünen Läufe
     # diesen Job mit.
     if: startsWith(github.ref, 'refs/tags/android-v') || inputs.app_probelauf == 'android'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: produktion
     timeout-minutes: 45
     steps:
@@ -468,7 +468,7 @@ jobs:
     # Das Paket bleibt ein Artefakt dieses Laufs; in den Connect-IQ-Store lädt
     # es die Betreiberin von Hand (E-PK-61).
     if: startsWith(github.ref, 'refs/tags/uhr-v') || inputs.app_probelauf == 'uhr'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: produktion
     timeout-minutes: 90
     steps:
