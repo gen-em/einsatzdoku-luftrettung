@@ -124,6 +124,11 @@ jobs:
       STAGING_PASS:  ${{ secrets.STAGING_PASS }}
       STAGING_TOTP:  ${{ secrets.STAGING_TOTP }}
       JOBS_TOKEN:    ${{ secrets.JOBS_TOKEN }}
+      # Playwright 1.56 kennt Ubuntu 26.04 nicht und verweigert Chromium
+      # („does not support chromium on ubuntu26.04-x64", Nr. 236). Es bleibt
+      # bei 1.56, weil der Prüfstand dieselbe Fassung fährt; die Bibliotheken
+      # liegen auf dem Läufer, weil er Chrome mitbringt.
+      PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu24.04-x64
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -474,6 +479,15 @@ jobs:
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # `monkeyc` nimmt das Java vom PATH; ohne Festlegung wechselte es mit dem
+      # Abbild (24.04: 17, 26.04: 25). 17 ist das, womit `uhr-v3.1.0` gebaut
+      # wurde (Nr. 236).
+      - name: Java 17 für das Connect-IQ-SDK
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
 
       - name: Connect-IQ-SDK und alle Gerätedateien
         # `CIQ_ZIELE=alle`: `monkeyc -e` baut für jedes Gerät im Manifest, und

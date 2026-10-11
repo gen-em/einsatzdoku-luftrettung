@@ -11077,6 +11077,53 @@ wenn beides nicht übereinstimmt. Uhr und Android bekommen keine
 Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 **Rollback ist ein Lauf mit dem vorigen Tag.**
 
+### 6.1a Der Läufer — ein festes Abbild statt `ubuntu-latest` (Nr. 236)
+
+**Alle zehn `runs-on`-Zeilen der Kette nennen seit dem 11.10.2026
+`ubuntu-26.04`**, nicht `ubuntu-latest`. Das Label `ubuntu-latest` wandert
+vom 19.10. bis 19.11.2026 schrittweise von 24.04 auf 26.04; ein Lauf hätte
+in diesem Monat zufällig auf dem einen oder dem anderen Abbild gestanden,
+und ein Wechsel an einem Tag, an dem niemand etwas geändert hat, sucht man
+im eigenen Code. Ein ausdrückliches Label wechselt nur mit einem Commit.
+
+Was das Abbild der Kette mitgibt und was sich dabei geändert hat (gemessen
+11.10.2026, Abbild 24.04 `20261004.327.1` gegen 26.04 `20260927.149.1`):
+
+| | 24.04 | 26.04 | wer es nimmt |
+|---|---|---|---|
+| PHP | 8.3.6 | 8.5.4 | Stufe 1, Schemaprobe |
+| Python | 3.12.3 | 3.14.4 | Stufe 1, Stufe 2, Kette |
+| Node | 22.23.3 | 24.21.0 | Stufe 1, Stufe 2 |
+| Java (Vorgabe) | 17 | 25 | — seither festgesetzt, siehe unten |
+| `mariadb-client` (apt) | 10.11 | 11.8.6 | Schemaprobe MariaDB |
+| Android-SDK | Build-Tools 37.0.0, Plattform 37 | gleich | Android-Job |
+
+**Drei Stellen hingen am Abbild und sind seither festgelegt:**
+
+- **Schemaprobe gegen MariaDB 10.6:** Der Klient 11.8 verlangt TLS als
+  Vorgabe und bricht gegen den Dienstcontainer ab (`ERROR 2026: SSL is
+  required`). `tools/schemaprobe/probe.php` ruft den Klienten `mariadb`
+  deshalb mit `--skip-ssl` auf, den Klienten `mysql` nicht.
+- **Stufe 2:** Playwright 1.56 verweigert Chromium auf `ubuntu26.04-x64`.
+  Der Job setzt `PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64`;
+  Playwright bleibt auf 1.56, weil der Prüfstand dieselbe Fassung fährt
+  (`docs/Sandbox-Setup.md`) und Stufe 2 sonst mit einem anderen Chromium
+  mäße als der Bilderlauf.
+- **Uhr-Job:** `monkeyc` nahm das Java vom PATH, und das wechselte mit dem
+  Abbild. Der Job setzt jetzt Java 17 per `actions/setup-java` fest — das
+  Java, mit dem `uhr-v3.1.0` gebaut wurde. (Örtlich gemessen: das
+  Store-Paket baut auch mit Java 25, 165 von 165 Geräten.)
+
+**Der Preis:** `php -l` in Stufe 1 prüft mit 8.5, Produktiv läuft 8.4, die
+Untergrenze ist 8.2 (`PLATTFORM_PHP_MIN`). Syntax, die erst 8.5 kennt,
+käme durch Stufe 1. Das war mit 8.3 schon so für die Untergrenze; der
+Abstand ist größer geworden. Und `pip install` in Stufe 2 geht nur, weil
+das Abbild `break-system-packages = true` in `/etc/pip.conf` schreibt
+(PEP 668) — das Bauskript von runner-images tut es für 24.04 und 26.04.
+
+**Wer das Abbild wechselt**, misst vorher — wie, steht in
+`docs/Pruefablauf.md` 6.8.
+
 ### 6.2 Stufe 1 — was ohne Installation messbar ist
 
 `pruefung.yml`, **bei jedem Pull Request und bei jedem Push auf `main`**.

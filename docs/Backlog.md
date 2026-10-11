@@ -643,24 +643,23 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 18.09.2026
-     *Aufgenommen 18.09.2026, Merkposten mit Datum.*
-     *Stand 29.09.2026 (PK-07, E-PK-67):* Alle zehn `runs-on`-Zeilen der
-     Kette stehen auf `ubuntu-latest`; Stufe 1 nimmt das PHP des Läufers,
-     seit PK-08 der Job `android` dessen Build-Tools. Wer vor dem
-     19.10.2026 dran ist, misst die Kette einmal auf Ubuntu 26.
+236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.** · gehört zu: Zuarbeit · Stand: teilweise · seit 18.09.2026
+     *Stand 11.10.2026 (Entscheidung der Betreiberin: umstellen):* Alle
+     zehn `runs-on` stehen auf `ubuntu-26.04`, nicht mehr `ubuntu-latest`
+     (`docs/Technik.md` 6.1a). Drei Stellen hingen am Abbild und sind
+     festgelegt: `--skip-ssl` für den Klienten `mariadb` in der
+     Schemaprobe (Klient 11.8 verlangt TLS, rot gemessen), der
+     Playwright-Schalter in Stufe 2 (1.56 verweigert Chromium auf 26.04),
+     Java 17 im Uhr-Job (26.04 bringt 25). Gemessen auf 26.04: Stufe 1 und
+     beide Schemaproben per Handlauf, Selbstproben und Uhr-Store-Paket
+     örtlich im Container.
 
-     GitHub meldet als Hinweis: *„The `ubuntu-latest` label will migrate to
-     Ubuntu 26 beginning October 19, 2026."* Betrifft **alle fünf Jobs**.
-
-     An der Läufer-Umgebung hängen die **PHP-Fassung** (das Plattformprofil
-     verlangt ≥ 8.2), das **vorinstallierte Android-SDK** und die
-     **Bibliotheken, die der Uhr-Prüfstand nachlädt**. Der Wechsel passiert
-     **still**, an einem Tag, an dem niemand etwas geändert hat — und dann
-     sucht man den Fehler im eigenen Code.
-
-     Zu tun: **vor dem Datum** einmal gegen ein `ubuntu-26`-Label gegenprüfen,
-     solange es beide gibt.
+     **Offen, erst nach dem Merge messbar:** (1) der erste Push auf `main`
+     — Job `staging` und Stufe 2 grün auf `ubuntu-26.04`; (2) je ein
+     App-Probelauf `android` und `uhr` (`app_probelauf`, Freigabe
+     `produktion`). Ist beides grün, ist der Punkt erledigt. Wird Stufe 2
+     rot, hält das Tor jeden `web-v`-Tag auf — dann zuerst hier nachsehen.
+     Werdegang bis 29.09.2026: `docs/Backlog.md@dbca560`, Nr. 236.
 
 <!-- -->
 

@@ -171,10 +171,11 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   ab. Ein Prüfschritt, der sich selbst überspringt, meldet grün, ohne
   gemessen zu haben.
 - **Jede fremde `uses:`-Zeile hängt an einer 40-stelligen Commit-SHA**
-  (E-KH-10), die Version als Kommentar daneben — **vierzehn sind es** (seit
+  (E-KH-10), die Version als Kommentar daneben — **fünfzehn sind es** (seit
   PK-08: `actions/setup-java` und `actions/upload-artifact` sind mit den
   App-Jobs zurück, an denselben SHAs wie bis PK-05, dazu je ein
-  `actions/checkout`; von PK-05 bis PK-08 waren es zehn). Die zwei **lokalen** (`./.github/workflows/…`)
+  `actions/checkout`; von PK-05 bis PK-08 waren es zehn, bis Nr. 236
+  vierzehn — seither setzt auch der Uhr-Job sein Java fest). Die zwei **lokalen** (`./.github/workflows/…`)
   tragen keine und können es nicht: Ein lokaler Pfad nimmt keinen Ref und
   läuft immer auf dem Commit des Aufrufers. Wer eine Aktion aktualisiert,
   tauscht SHA **und** Kommentar. **Die Zahl ist kein Prüfwert, sondern eine

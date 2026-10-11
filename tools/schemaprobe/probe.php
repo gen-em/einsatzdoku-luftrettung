@@ -179,9 +179,16 @@ function frisch(): PDO
 function schema_einspielen(): void
 {
     global $opt, $DB, $WURZEL;
+    /* `--skip-ssl` NUR FUER DEN MARIADB-KLIENTEN (Nr. 236, gemessen 11.10.2026):
+     * Ab Klient 11.4 verlangt `mariadb` TLS als Vorgabe; der von Ubuntu 26.04
+     * (11.8.6) bricht gegen den Dienstcontainer mariadb:10.6, der keines
+     * anbietet, mit „ERROR 2026: SSL is required" ab. Die Probe misst das
+     * Schema, nicht den Transport. Der `mysql`-Klient bekommt den Schalter
+     * nicht — er wurde dort nicht gemessen, und er braucht ihn nicht. */
+    $ohne_tls = basename($opt['--klient']) === 'mariadb' ? '--skip-ssl' : '';
     $cmd = sprintf(
-        '%s -h%s -P%s -u%s %s %s < %s 2>&1',
-        escapeshellcmd($opt['--klient']),
+        '%s %s -h%s -P%s -u%s %s %s < %s 2>&1',
+        escapeshellcmd($opt['--klient']), $ohne_tls,
         escapeshellarg($opt['--host']), escapeshellarg($opt['--port']),
         escapeshellarg($opt['--benutzer']),
         $opt['--passwort'] !== '' ? '-p' . escapeshellarg($opt['--passwort']) : '',
