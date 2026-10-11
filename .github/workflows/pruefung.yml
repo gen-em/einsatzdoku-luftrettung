@@ -24,7 +24,7 @@ defaults:
 jobs:
   schon-gemessen:
     name: Schon gemessen?
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       actions: read       # die Läufe und ihre Jobs lesen; ohne das Recht kann die Abfrage scheitern, und jeder Push auf main misst still neu
@@ -77,7 +77,7 @@ jobs:
     needs: schon-gemessen
     # Ein per `if` übersprungener Job gilt dem Ruleset als grün — darum !cancelled() und != 'nein'.
     if: ${{ !cancelled() && needs.schon-gemessen.outputs.messen != 'nein' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -233,7 +233,7 @@ jobs:
     needs: schon-gemessen
     # Wie bei Stufe 1: scheitert „Schon gemessen?", misst dieser Job trotzdem, statt still zu entfallen.
     if: ${{ !cancelled() && needs.schon-gemessen.outputs.messen != 'nein' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:

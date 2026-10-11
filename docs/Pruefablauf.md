@@ -745,6 +745,16 @@ Shell-Syntax (Backlog Nr. 217). Wer einen Aufruf in der Kette ändert, fährt
 das Werkzeug davor; wer ein Werkzeug umbenennt oder seine Schalter ändert,
 ebenfalls.
 
+**Wer das Läuferabbild wechselt** (die `runs-on`-Zeilen, `docs/Technik.md`
+6.1a), misst vorher dreifach, weil kein Teil allein reicht (Nr. 236):
+Stufe 1 und die Schemaprobe per Handlauf von `pruefung.yml` auf dem
+Arbeitszweig mit dem neuen Label; die Selbstproben der Kette und den
+Uhr-Bau örtlich in einem Container der neuen Ubuntu-Fassung; Stufe 2, die
+Auslieferung und die App-Bauläufe erst auf `main` oder über einen
+`hotfix/*`-Zweig — die Umgebung `staging` nimmt einen Arbeitszweig nicht
+an, und der Handlauf wird ohne Läufer abgewiesen. Was davon bis zum Merge
+nicht gemessen ist, steht im Pull Request.
+
 ### 6.9 Die Bauläufe der beiden Anwendungen
 
 - **Uhr** (`watch/`): `tools/uhr-pruefstand/` — Stufe I übersetzt für alle

@@ -30,9 +30,9 @@ legt den Urstand bytegleich zurück, auch bei Abbruch.
 
 ## Erwartete Zahl
 
-**30 Prüfungen, 0 Fehlschläge** je Fassung. Die Matrix aus vier Fassungen
-meldet folglich **4 × 30/0** (gemessen 25.09.2026, P5c/AP8: Fall 5 mit elf
-Prüfungen zum Rückbau von R39 und FTP; bis dahin 19).
+**40 Prüfungen, 0 Fehlschläge** je Fassung, die Matrix **4 × 40/0**
+(gemessen 11.10.2026 gegen MariaDB 10.6; seit R4-15 mit Fall 6 — hier stand
+bis Nr. 236 noch 30, der Stand von P5c/AP8; davor 19).
 
 ## Was es nicht kann
 
