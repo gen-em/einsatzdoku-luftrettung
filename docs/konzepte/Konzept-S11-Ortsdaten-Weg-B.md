@@ -32,11 +32,11 @@ jeder Vergabe).
 >
 > | | |
 > |---|---|
-> | Stand | **11.10.2026 — S11-01 erledigt** (Grundlinie im Messstand, vor jeder Codeänderung). **In Arbeit: S11-02** (Probe-App und Prüfvektoren); danach **Halt** für die Probe auf den drei Uhren. |
+> | Stand | **11.10.2026 — HALT nach S11-02.** Probe-App, Prüfvektoren und Browserprobe stehen; im Simulator auf allen drei Uhren 7 gut, 0 Fehler. **Wartet auf P-S11-02:** die Betreiberin fährt die Probe auf Fenix 6 Pro, Forerunner 945 und Venu 3s. Danach werden Stückgröße, Innenform und „ein flüchtiges Paar je Hülle" festgelegt (Vorschlag in 3.2a) und S11-03 beginnt. |
 > | Entschieden | E-S11-01 bis E-S11-25 (Abschnitt 2.1). E-S11-02 bis -15 und -25 sind die Antworten der Betreiberin auf Q-S11-01 bis -15 vom 11.10.2026; die Folgerung in E-S11-09 (einmal neu koppeln) und E-S11-22 (Nr. 92 und 161 in S11) hat sie am selben Tag bestätigt. E-S11-17 bis -21 und -23 stehen ohne Widerspruch. |
-> | Offen | **Q-S11-16** (unter welcher Drossel gilt die Sekunde aus E-S11-15?) — das Vorher liegt unter Drossel 6× schon über 1 s (F-S11-15). Hält S11-02 nicht auf; gebraucht ab S11-04. |
-> | Umsetzung | **S11-00 erledigt** 11.10.2026: Spanne 380–389, Fahrplanzeile, dieses Dokument, Prüfdokument; Fragen Q-S11-01 bis -15 beantwortet, Freigabe erteilt. **S11-01 erledigt** 11.10.2026: drei neue Schritte im Messstand (Einsatz, Diensttag mit Ruhe-Spuren, GPX über ein Jahr), das Backup aus dem Bestand des Messstands; Grundlinie bei Drossel 6× und ungedrosselt in `tools/messstand/ausgangsmessung.md`; ein Zählfehler des Prüfmittels behoben (F-S11-14). S11-02 bis S11-12 offen. |
-> | Halt | nach S11-02 (Ergebnis der Probe-App auf den drei Uhren bestimmt die Hüllenparameter); vor S11-12 (das Einmalwerkzeug muss auf Produktiv gelaufen sein). |
+> | Offen | **P-S11-02** (Probe auf den drei echten Uhren, Zuarbeit). **Q-S11-16** (unter welcher Drossel gilt die Sekunde aus E-S11-15?) — gebraucht ab S11-04. |
+> | Umsetzung | **S11-00 erledigt** 11.10.2026: Spanne 380–389, Fahrplanzeile, dieses Dokument, Prüfdokument; Fragen Q-S11-01 bis -15 beantwortet, Freigabe erteilt. **S11-01 erledigt** 11.10.2026: drei neue Schritte im Messstand (Einsatz, Diensttag mit Ruhe-Spuren, GPX über ein Jahr), das Backup aus dem Bestand des Messstands; Grundlinie bei Drossel 6× und ungedrosselt in `tools/messstand/ausgangsmessung.md`; ein Zählfehler des Prüfmittels behoben (F-S11-14). **S11-02 bis zum Halt** 11.10.2026: Hüllenformat Fassung 1 in `tools/proben/huelle/referenz.py` mit 6 Vektoren und 8 Störungen; WebCrypto-Umsetzung `huelle.js` (Vorlage für `crypto.js`) byte-gleich, 39/0; Probe-App `tools/uhr-pruefstand/krypto-probe/` im Simulator 3 von 3 Uhren 7/0, für 99 Geräte übersetzt; Befunde F-S11-18 bis -21. S11-03 bis S11-12 offen. |
+> | Halt | **jetzt**, nach S11-02 (Ergebnis der Probe-App auf den drei Uhren bestimmt die Hüllenparameter); vor S11-12 (das Einmalwerkzeug muss auf Produktiv gelaufen sein). |
 > | Fable-Schritte | keine (E-S11-01). |
 > | Fächerung | Konzept: drei lesende Leser (Opus), siehe Kopf. Umsetzung: nach Abschnitt 5. |
 > | Nummern | 380 bis 389 reserviert; vergeben: keine. |
@@ -162,6 +162,10 @@ Die Leistungsgrenze aus E-S11-15 hält.
 | F-S11-15 | mittel | E-S11-15; `tools/messstand/ausgangsmessung.md` (Grundlinie 11.10.2026) | **Die Sekunde aus E-S11-15 ist unter Drossel 6× schon vor S11 gerissen:** Einsatz 1,28 s, Diensttag 1,71 s (Median aus fünf). Ungedrosselt 0,45 und 0,47 s. Die Entscheidung sagt nicht, unter welcher Drossel gemessen wird; der Messstand drosselt in der Vorgabe 6× (Z3). | Q-S11-16. |
 | F-S11-16 | Hinweis | Export Profil B mit GPX (`assets/export.js`) | Der GPX-Export über ein Jahr (4071 Einsätze, 8174 Spuren) braucht **389 MB Halde** — das Vierfache des Gerätebudgets Z3 (100 MB) — und 330 s unter Drossel 6×, schon vor S11. | Massenweg: gemessen und benannt (E-S11-15), keine Grenze. Nach S11 kommt das Öffnen der Hüllen dazu; S11-05 sieht nach, ob der Export in Portionen öffnen muss. |
 | F-S11-17 | Hinweis | Abschnitt 5, S11-01 („vier neue Messungen … Backup erzeugen") | Das Backup misst der Messstand seit S2 („Backup erstellen" in der Browserprobe, `edbak_build()` in der Serverprobe). Ein vierter, neuer Schritt wäre eine zweite Stelle für dieselbe Prüfung. | S11-01 baut drei neue Schritte und nimmt das Backup aus dem Bestand in die Grundlinie. |
+| F-S11-18 | mittel | `Toybox.Cryptography` (SDK 9.2.0); Probe-App, Simulator | **Garmin liefert das ECDH-Geheimnis little-endian**, WebCrypto und Python big-endian. Die Schlüssel sind je Koordinate byte-vertauscht und ohne 0x04 (so dokumentiert); für Z sagt die Dokumentation nichts. Gemessen im Simulator auf allen drei Uhren: Erst umgedreht stimmt Z mit dem Vektor. Ohne die Umdrehung leitet die Uhr andere Schlüssel ab, und keine ihrer Hüllen ginge im Browser auf. | Die Probe ermittelt die Ordnung und meldet sie (`ECDH gut (little-endian, umgedreht)`); **auf der echten Uhr zu bestätigen** (P-S11-02). S11-08 übernimmt die Umrechnung. |
+| F-S11-19 | Hinweis | `api.mir` des SDK 9.2.0; Probe-App | **Kein `deflate` auf der Uhr** — bestätigt F-S11-07 am SDK (das Wort kommt nur bei Bildformaten vor) und im Simulator (`PACKEN nicht vorhanden`). | Stücke kommen ungepackt; gepackt wird im Wartungslauf (E-S11-05). |
+| F-S11-20 | niedrig | Arbeitsumgebung; `docs/Sandbox-Setup.md` 1 | **Firefox und WebKit fehlen im Abbild vom 11.10.2026**: `/opt/pw-browsers` hält nur `chromium-1194`; `aufbauen.sh uhr` meldet beide als FEHLT, die Hüllenprobe bricht mit „Executable doesn't exist" ab (rc 2). `Sandbox-Setup.md` sagt, die Engine-Dateien lägen im Abbild. | Die Browserprobe ist nur in Chromium gelaufen; im Prüfdokument an erster Stelle. Ob WebCrypto in Firefox und WebKit dieselben Bytes schreibt, prüft S11-04 gegen die Browserliste. |
+| F-S11-21 | Hinweis | `Toybox.Cryptography.createPublicKey()` (SDK 9.2.0) | Die Signatur nennt als ersten Parameter `HashAlgorithm`, gemeint ist `KeyPairAlgorithm` (die Beschreibung sagt es). | Im Code mit einem Cast und einem Kommentar; S11-08 übernimmt das. |
 
 ---
 
@@ -203,6 +207,31 @@ nachgetragen.
 - **Prüfvektoren:** ein Satz fester Eingaben mit erwarteten Hüllen unter
   `tools/proben/huelle/`, gegen den Browser, Android-Prüffälle und die
   Probe-App der Uhr laufen. **Anlass: Nr. 43.**
+
+### 3.2a Ergebnis der Probe (S11-02) und Vorschlag
+
+**Format Fassung 1** steht im Kopf von `tools/proben/huelle/referenz.py`, und
+nur dort: Kennbyte 0x01 · EPK 65 Byte (SEC1) · IV 16 · AES-256-CBC mit PKCS#7
+· HMAC-SHA256 über Kopf, Chiffretext und Bindung. Z ist die X-Koordinate
+big-endian; HKDF-SHA256 mit `salt = EPK` und `info = "nadoku-huelle-1" ‖
+Empfänger (SEC1)` liefert `k_enc ‖ k_mac`. Die Bindung ist je Feld zwei Byte
+Länge plus UTF-8: Art, `client_ref`, Platz (`seq_from:punkte` oder leer) —
+`client_ref` ist freier Text bis 64 Zeichen, ein Trennzeichen hätte nicht
+getragen. Geprüft: Python und WebCrypto byte-gleich (39/0), die Uhr im
+Simulator byte-gleich (3 × 7/0).
+
+**Was die Uhr anders macht** (F-S11-18): Schlüssel je Koordinate
+little-endian ohne 0x04, das Geheimnis Z little-endian. Die Uhr rechnet um;
+Server und Browser sehen nur SEC1.
+
+**Vorschlag zur Entscheidung nach P-S11-02** (Zahlen bisher nur aus dem
+Simulator, also vom Rechner, nicht von der Uhr):
+
+| Frage | Simulator (Fenix 6 Pro · FR 945 · Venu 3s) | Vorschlag |
+|---|---|---|
+| Innenform | binär 14 B/Punkt: 200 Punkte 2800 B, +5 kB, bauen 4–5 ms · JSON ~32 B/Punkt: 6385 B, +18 kB, bauen 10–14 ms; bei 500 Punkten 7000 gegen 16 285 B, +13 gegen +47 kB | **binär** — gut ein Drittel des Speichers und der Bytes, auf dem Gerät mit dem knappsten Speicher (128 kB) der Unterschied zwischen geht und geht nicht |
+| ein flüchtiges Paar je Hülle | 0–2 ms je Paar | **ja**, wenn die echte Uhr unter rund 200 ms bleibt; sonst ein Paar je Anfrage mit getrenntem `info` je Hülle |
+| Stückgröße | Verschließen 2–3 ms für 200 wie für 500 Punkte | nach den Zahlen der echten Uhr; Obergrenze ist der Speicher, nicht die Zeit |
 
 ### 3.3 Speicher (Server)
 
@@ -341,7 +370,7 @@ Eines nach dem anderen. Jedes Paket trägt seine Dokumente selbst nach
 |---|---|---|---|
 | **S11-00 Buchführung** | Spanne 380–389, Fahrplanzeile 12a auf „Konzept", Berichtigungen im Rahmenplan (F-S11-03, -05), dieses Dokument, Prüfdokument. | Opus · Konzeptlesung gefächert (drei Leser), Rest seriell | Werkzeuge der Steuerung grün; gepusht. **Erledigt 11.10.2026.** |
 | **S11-01 Messstand: Grundlinie** | Vier neue Messungen im Messstand: Einsatz mit Spur öffnen, Diensttag mit Ruhe-Spuren öffnen, Backup erzeugen, GPX über einen Zeitraum. Grundlinie auf dem heutigen Code, **bevor** sich etwas ändert; Zahlen in `ausgangsmessung.md`. Keine Auslieferung. | Opus · seriell (Prüfarbeit) | Vier Zahlen je Messung mit Maschine und Datum; Messstand rc 0. **Erledigt 11.10.2026** — drei neue Schritte, das Backup aus dem Bestand (F-S11-17); Zahlen bei 6× und ungedrosselt. |
-| **S11-02 Probe-App und Prüfvektoren** | Probe-App unter `tools/` (nicht ausgeliefert) mit genau den Aufrufen: Schlüsselpaar, ECDH, HKDF über HMAC, AES-256-CBC (Polsterung), HMAC; Packen vorhanden?; Laufzeit und Speicherspitze für 200 und 500 Punkte. Prüfvektoren in `tools/proben/huelle/` und eine Browserprobe dagegen. Stufe I übersetzt für alle 99. **Halt:** Die Betreiberin fährt die Probe auf den drei Uhren (Zuarbeit); das Ergebnis legt Stückgröße, Innenform und „ein flüchtiges Paar je Hülle" fest. | Opus · seriell | Probe auf drei Uhren im Simulator und echt, je mit Zahl; Vektoren stimmen im Browser; 99/0 übersetzt. |
+| **S11-02 Probe-App und Prüfvektoren** | Probe-App unter `tools/` (nicht ausgeliefert) mit genau den Aufrufen: Schlüsselpaar, ECDH, HKDF über HMAC, AES-256-CBC (Polsterung), HMAC; Packen vorhanden?; Laufzeit und Speicherspitze für 200 und 500 Punkte. Prüfvektoren in `tools/proben/huelle/` und eine Browserprobe dagegen. Stufe I übersetzt für alle 99. **Halt:** Die Betreiberin fährt die Probe auf den drei Uhren (Zuarbeit); das Ergebnis legt Stückgröße, Innenform und „ein flüchtiges Paar je Hülle" fest. | Opus · seriell | Probe auf drei Uhren im Simulator und echt, je mit Zahl; Vektoren stimmen im Browser; 99/0 übersetzt. **Bis zum Halt 11.10.2026:** Simulator 3 × 7/0, Browser 39/0, 99/0 übersetzt; echt steht aus (P-S11-02). |
 | **S11-03 Schlüsselpaar und Hülle im Web** | Schlüsselpaar (3.1) mit Migration an `users`, Siegel, Abgleich beim Entsperren; Öffnen und Verschließen in `crypto.js`; Kopplungsantworten (3.4); `JSON-Vertrag.md` 1a; Bedrohungsmodell 4.1. | Opus · seriell | Prüfvektoren im Browser; Kopplung gibt den Schlüssel nur mit gültigem Siegel aus (Probe mit verfälschtem Wert); Abgleich meldet eine Abweichung. |
 | **S11-04 Speicher, Eingang, Ansichten** | Tabelle der Spurstücke, Einsatzhülle, `spur_lib.php` auf Hüllen (E-S11-23), `pruef_huelle()`, `ingest.php` mit Abweisung von Klartext, `api/mission.php` und `api/day.php` liefern Hüllen, Browser zeichnet Karte, Phasen, Reanimation, Tagesspuren. Browserliste gegen `CompressionStream`. | Opus · seriell | Probe: Ingest mit Hülle gespeichert, mit Klartext abgewiesen; Einsatz und Diensttag zeigen dieselbe Karte wie vorher (Bilderlauf); Leistung gegen S11-01. |
 | **S11-05 Browserwege** | Einsatzformular mit Phasenkoordinaten (F-S11-02); Transportziel und Ortshöhe in den Feldkatalog; Schneiden und Rücknahme; ein Stück löschen (Nr. 161, Mockup falls neue Darstellung); GPX-Abruf und -Einlesen; CSV-Export und -Import; Suche; Abfahrt „letzte Zielklinik"; Zeitverschiebung über Klartextzeiten. | Opus · Umbau getrennter Dateien darf auf zwei Agenten gefächert werden (Formular und Feldkatalog · Schneiden und GPX), Doku seriell | Je Weg ein Durchgang im Browser mit Vorher-nachher-Vergleich; Kennzeichnung (`kennzeichnung-soll.md`) um die neuen Schlösser ergänzt. |
@@ -368,6 +397,7 @@ Betreiberin steht im Prüfdokument.
 |---|---|---|---|
 | S11-00 | drei Leser (Opus, lesend) · Nachprüfung am Quelltext · `decken.py` · `uebersicht.py --ziel 12a` · `nummern.py` · `textprobe.py` · `bestand.py` · `linkprobe.py` · Prüfstand `klein` | 13 Befunde, davon F-S11-01 und -02 am Quelltext und F-S11-05 in `Backup-Format.md` nachgeprüft · 21/0 · 4 Einträge zu 12a · 0 Überschneidungen · 0 Treffer · 0 Befunde · 150/0 · Prüfstand 22 grün, Bericht in der Commit-Nachricht | 11.10.2026 |
 | S11-01 | `messen.py --frisch` (Drossel 6×) · `messen.py --schritte browser --drossel 1` · Prüfstand `klein` | Einsatz 141 (1356 Punkte): Median 1,28 s / 0,45 s · Diensttag 30 (8 Ruhe-Segmente): 1,71 s / 0,47 s · Backup 58,54 s / 44,05 s · GPX Jahr 2026 (8174 Spuren): 329,6 s / 74,62 s, Halde 389 MB · 0 Konsolenfehler, rc 0 · Prüfstand erst 1 rot (`bestand`: Anleitung 42 statt 40 Zeilen), nach der Kürzung 22 grün, Bericht in der Commit-Nachricht | 11.10.2026 |
+| S11-02 | `referenz.py --selbstprobe` und `pruefen` · `proben.sh huelle` (Chromium, Drossel 1 und 6) · `pruefstand.sh kryptoprobe` (Simulator) · `kryptoreihe` (99 Geräte) · Gegenprobe mit verfälschtem Vektor · `bestand` · `kettenaufrufe` · Prüfstand | 5/0 · 6 Fälle, 8 Störungen, 0 Abweichungen · 39 Prüfungen, 0 Abweichungen · 3 von 3 Uhren je 7 gut, 0 Fehler · 99 übersetzt, 0 fehlgeschlagen, 48 Warnungen (alle Launcher-Icon) · verfälschter Prüfwert: 5 gut, 2 Fehler, rc 1 · 0 Befunde · 0 Widersprüche · Bericht in der Commit-Nachricht · Firefox/WebKit nicht gelaufen (F-S11-20) | 11.10.2026 |
 
 ---
 

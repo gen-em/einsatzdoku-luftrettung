@@ -455,6 +455,10 @@ reihe() {
     # fehlt dann einfach. Geraete, deren Icon exakt passt, bauen durch; der
     # Ausfall sieht deshalb nach einem Geraeteproblem aus und ist keins.
     export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
+    # CIQ_JUNGLE uebersetzt ein anderes Projekt fuer dieselbe Liste — die
+    # Krypto-Probe (S11-02) laeuft so ueber alle Geraete der App. Ohne den
+    # Wert bleibt es die App selbst.
+    local jungle="${CIQ_JUNGLE:-$WURZEL/watch/monkey.jungle}"
     local ok=0 mangel=0 fehlend=0
     printf '%-26s %5s %6s %10s  %s\n' "Gerät" "Warn" "Fehler" "Größe" "Anmerkung"
     printf '%s\n' "----------------------------------------------------------------------"
@@ -465,7 +469,7 @@ reihe() {
             fehlend=$((fehlend+1)); continue
         fi
         local log="$BASIS/reihe_$g.txt"
-        monkeyc -f "$WURZEL/watch/monkey.jungle" -d "$g" -o "$AUSGABE/$g.prg" \
+        monkeyc -f "$jungle" -d "$g" -o "$AUSGABE/$g.prg" \
                 -y "$SCHLUESSEL" -w "$@" >"$log" 2>&1 || true
         sed -i '/JAVA_TOOL_OPTIONS/d' "$log" 2>/dev/null || true
         local w e sz
@@ -486,6 +490,37 @@ reihe() {
     printf 'übersetzt: %s   fehlgeschlagen: %s   ohne Gerätedatei: %s\n' \
            "$ok" "$mangel" "$fehlend"
     [ "$mangel" -eq 0 ] && [ "$fehlend" -eq 0 ]
+}
+
+# ---- Krypto-Probe (S11-02, Anlass: Nr. 43) -----------------------------------
+#
+# `kryptoreihe <liste>` uebersetzt die Probe aus krypto-probe/ fuer dieselbe
+# Liste wie Stufe I. `kryptoprobe [geraet…]` laedt sie in den Simulator,
+# wartet auf die Zeile ERGEBNIS und ist nur gruen, wenn jedes Geraet
+# „0 Fehler" meldet. Eine Probe, die nicht zu Ende kommt (Absturz, Waechter),
+# ist rot, nicht ausgelassen. monkeydo wird ueber seine Prozessnummer beendet,
+# nicht ueber `pkill -f monkeydo` — das Muster trifft jede Shell, deren
+# Befehlszeile das Wort enthaelt, auch die aufrufende.
+KRYPTO_JUNGLE="$WURZEL/tools/uhr-pruefstand/krypto-probe/monkey.jungle"
+
+kryptoreihe() { CIQ_JUNGLE="$KRYPTO_JUNGLE" reihe "$@"; }
+
+kryptoprobe() {
+    local geraete="${*:-$ZIEL_GERAETE}" schlecht=0 g pid log
+    umgebung; simulator_starten
+    for g in $geraete; do
+        bauen "$g" "$KRYPTO_JUNGLE" >/dev/null 2>&1 || { echo "== $g: nicht uebersetzt"; schlecht=$((schlecht+1)); continue; }
+        log="$BASIS/krypto_$g.txt"; : >"$log"
+        setsid monkeydo "$AUSGABE/$g.prg" "$g" >"$log" 2>&1 </dev/null &
+        pid=$!
+        for _ in $(seq 1 60); do grep -q 'ERGEBNIS\|Error' "$log" && break; sleep 2; done
+        kill -- "-$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true
+        sed -i '/JAVA_TOOL_OPTIONS/d' "$log"
+        echo "== $g"; cat "$log"
+        grep -q 'ERGEBNIS [0-9]* gut, 0 Fehler' "$log" || schlecht=$((schlecht+1))
+    done
+    echo "Krypto-Probe: $(( $(wc -w <<<"$geraete") - schlecht )) von $(wc -w <<<"$geraete") Geraeten ohne Fehler"
+    [ "$schlecht" -eq 0 ]
 }
 
 # ---- Stufe II: im Simulator starten, je Geraet ein Abbild --------------------
@@ -694,6 +729,8 @@ Befehle:
   bauen <geraet> [jungle]    uebersetzen (weitere Schalter werden durchgereicht)
   alle [schalter]            aufbauen und alle Zielgeraete uebersetzen
   starten <geraet> [sek]     Simulator starten und App laden (Vorgabe 25 s)
+  kryptoreihe <liste>        Krypto-Probe (S11-02) fuer alle Geraete der Liste uebersetzen
+  kryptoprobe [geraet…]      Krypto-Probe im Simulator, je Geraet bis ERGEBNIS
   konsole                    Ausgabe des Simulators nachlesen
   abbild [datei]             Bildschirmabzug des Simulatorfensters
   tippen <x> <y>             Touch-Tipp
@@ -716,13 +753,14 @@ Umgebungsvariablen:
                     "alle" holt beim Aufbau den ganzen Geraetebestand —
                     noetig fuer reihe und geraeteklassen.py
   CIQ_WARTEZEIT     Sekunden je Geraet in bildreihe (Vorgabe 26)
+  CIQ_JUNGLE        anderes Projekt fuer reihe (Vorgabe watch/monkey.jungle)
   CIQ_BASIS         Ablage (Vorgabe ~/.ciq-pruefstand)
 ENDE
 }
 
 befehl="${1:-hilfe}"; shift || true
 case "$befehl" in
-    aufbau|pruefen|bauen|alle|reihe|bildreihe|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
+    aufbau|pruefen|bauen|alle|reihe|kryptoreihe|kryptoprobe|bildreihe|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
         "$befehl" "$@" ;;
     aufbau-uebersetzen)
         aufbau_uebersetzen ;;

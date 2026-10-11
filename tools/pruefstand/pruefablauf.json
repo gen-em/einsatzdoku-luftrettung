@@ -172,6 +172,16 @@
       "aufruf": "bash tools/proben/proben.sh container",
       "braucht": "installation"
     },
+    "huellenprobe": {
+      "aufruf": "bash tools/proben/proben.sh huelle",
+      "braucht": "nichts",
+      "bemerkung": "S11-02: Referenz gegen ihre Vektoren, dann die WebCrypto-Umsetzung im Browser dagegen. Braucht keine Anlage; die Seite beantwortet die Probe selbst."
+    },
+    "uhr-krypto": {
+      "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoreihe /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoprobe",
+      "braucht": "uhr",
+      "bemerkung": "S11-02: die Krypto-Probe fuer alle Geraete der App uebersetzen und auf den drei Uhren der Betreiberin im Simulator fahren (E-S11-16). Zeiten des Simulators sind die des Rechners."
+    },
     "browserprobe-csp": {
       "aufruf": "bash tools/proben/proben.sh csp-browser",
       "braucht": "installation"
@@ -815,6 +825,19 @@
         "android-stroeme"
       ],
       "anlass": "E-PK-02"
+    },
+    {
+      "id": "huelle",
+      "ab": "klein",
+      "pfade": [
+        "tools/proben/huelle/**",
+        "tools/uhr-pruefstand/krypto-probe/**"
+      ],
+      "proben": [
+        "huellenprobe",
+        "uhr-krypto"
+      ],
+      "anlass": "Nr. 43"
     },
     {
       "id": "uhr",

@@ -20,14 +20,14 @@ bash tools/uhr-pruefstand/pruefstand.sh bildreihe vertreter.txt bilder
 **Stufe I** übersetzt für **alle** Zielgeräte und fängt fehlende
 API-Funktionen, fehlende Ressourcen und Speicherbedarf. **Stufe II** startet
 den Simulator für die Vertreter je Geräteklasse und nimmt Bilder auf.
-Daneben: `netzprobe/` (erreicht der Simulator 127.0.0.1?) und
-`eingabe-probe/` (welche Tasten kommen an?), je mit eigener Anleitung.
+Daneben: `netzprobe/` (erreicht der Simulator 127.0.0.1?), `eingabe-probe/`
+(welche Tasten kommen an?) und `krypto-probe/` (Gerätehülle, S11-02:
+`kryptoreihe`, `kryptoprobe`), je mit eigener Anleitung.
 
 ## Was es braucht
 
-`CIQ_GERAETE_URL` mit den Archiven `devices.tar` und `fonts.tar` — wie sie
-gepackt werden und was bei einem fehlenden gilt: `docs/Technik.md` 5.2b.
-Das SDK holt es selbst; Stufe II zusätzlich `Xvfb`.
+`CIQ_GERAETE_URL` mit den Archiven `devices.tar` und `fonts.tar` (Packen und
+Rückfall: `docs/Technik.md` 5.2b); das SDK holt es selbst; Stufe II `Xvfb`.
 
 ## Erwartete Zahl
 

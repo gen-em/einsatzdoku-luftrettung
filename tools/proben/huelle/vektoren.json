@@ -1,0 +1,178 @@
+{
+  "format": "nadoku-huelle-1",
+  "hinweis": "Erzeugt von tools/proben/huelle/referenz.py — nicht von Hand ändern.",
+  "empfaenger": {
+    "privat_hex": "c198b466783194c6745ac43d980f1440e03b220fa43c78b5b0f383ed7d885334",
+    "oeffentlich_hex": "0482a159c5275ab66f5e8040402858faa31bd98b6023c73fdd3efea64955ac34e07736aaa8b3e1179e92b7b8e3a5c63098c44813f834d231eff9a6e899ce0595e5"
+  },
+  "faelle": [
+    {
+      "name": "leer",
+      "art": "einsatz",
+      "client_ref": "w-20261011-0001",
+      "platz": "",
+      "klartext_hex": "",
+      "fluechtig_privat_hex": "078ab3716f88369cc6de44c48bc0736c4f39882dbd861e4dc7d1a68abbe6b8e9",
+      "iv_hex": "45620f44a5a86058185d0e3c3af3efd3",
+      "epk_hex": "042cb0cb3520a323de4df003cf8b7d1960af4d2b42ce3a1ec9dfe820fc9388510bb65bdf0b3c72cfc4acd42c64b99404b118f69c0d3827c36513ae80c3c389154a",
+      "z_hex": "7ac419d25da25188d68b01c475d97ee54cbfa02210aa87308332fd845fd6de3c",
+      "k_enc_hex": "213aa35329f7c15e909b90ce151efadba3b1a5f146b127994f0a1797a1545c53",
+      "k_mac_hex": "c2dc152f0fdc2bddebdac48ad8882952c8095a8b542bf690952453d435e47989",
+      "bindung_hex": "000765696e7361747a000f772d32303236313031312d303030310000",
+      "ct_hex": "92d031530e4ac4fa1bf5ee86db58813e",
+      "tag_hex": "06d8f9551dbf16ff66279e71a2ccfa8687a8934c8531bba036025c39c347de8c",
+      "huelle_b64": "AQQssMs1IKMj3k3wA8+LfRlgr00rQs46Hsnf6CD8k4hRC7Zb3ws8cs/ErNQsZLmUBLEY9pwNOCfDZROugMPDiRVKRWIPRKWoYFgYXQ48OvPv05LQMVMOSsT6G/XuhttYgT4G2PlVHb8W/2YnnnGizPqGh6iTTIUxu6A2Alw5w0fejA=="
+    },
+    {
+      "name": "kurz",
+      "art": "einsatz",
+      "client_ref": "w-20261011-0001",
+      "platz": "",
+      "klartext_hex": "6e61646f6b75",
+      "fluechtig_privat_hex": "c90cc8d685603883b319ae66224c482ba25c04ed8c6791e54fe73e717297358b",
+      "iv_hex": "f9311e61d3a8a65cddf99241ed458e78",
+      "epk_hex": "04269824f778b8173321a50e4135ac49da5407be84c5406f6c19960e223ec90f38623c2600c30e2de929779a9e0d00704f3bc841a01431a525b13ab541f003cd1e",
+      "z_hex": "d8d464361a393e726e062eece724299949ca1005afc197720bacf860155a6b4f",
+      "k_enc_hex": "83f690bafd9295a7efeb4b9c09aef85245794831bbc0d3ac5d46cb97be63527b",
+      "k_mac_hex": "cc13941a575803bffa69462e651bb78e62a0322c692407685a513a8397b049e7",
+      "bindung_hex": "000765696e7361747a000f772d32303236313031312d303030310000",
+      "ct_hex": "70e6dfcd972873ef66bf47418fb85b07",
+      "tag_hex": "6ed77097ded12162cf4d74d37d960be940c9fc441cc39f0ec75ad14d80d429ab",
+      "huelle_b64": "AQQmmCT3eLgXMyGlDkE1rEnaVAe+hMVAb2wZlg4iPskPOGI8JgDDDi3pKXeang0AcE87yEGgFDGlJbE6tUHwA80e+TEeYdOoplzd+ZJB7UWOeHDm382XKHPvZr9HQY+4Wwdu13CX3tEhYs9NdNN9lgvpQMn8RBzDnw7HWtFNgNQpqw=="
+    },
+    {
+      "name": "ein-block",
+      "art": "spur",
+      "client_ref": "w-20261011-0002",
+      "platz": "0:1",
+      "klartext_hex": "30313233343536373839616263646566",
+      "fluechtig_privat_hex": "f140a0942a32547f572d290a8f0f40c5633b7dfa0c0e005070a6f463d1892425",
+      "iv_hex": "78525bc4daac3f4763386ef11b144363",
+      "epk_hex": "049212bd8f936aa0162d7736588858670987d8ec04b63f5d81af0b39fc6baadc08fb4963e1e75edf666e27e13d19abaa03523f585dd9e7d1a720af17e7c201b373",
+      "z_hex": "bb5243bbddf2bce5b7838a951e96e29d6f766b92817c2b964e4d51fbd8f85d62",
+      "k_enc_hex": "4fb5719e257949d496d42a279fa0234fbb8e984c6ac72a18ee9febba139b60db",
+      "k_mac_hex": "bb722202035a6c54ba86dd6e00a385582baec204e2439ba8b5ff1dc5b4f361a4",
+      "bindung_hex": "000473707572000f772d32303236313031312d303030320003303a31",
+      "ct_hex": "8752a88dd30acb61309b00b9ad5c19a723567ac64ec3b39718f982a335016387",
+      "tag_hex": "654f9f810cbd4fd38ea46c6f9baf6183036313468096c8fa8f4b36450613cde3",
+      "huelle_b64": "AQSSEr2Pk2qgFi13NliIWGcJh9jsBLY/XYGvCzn8a6rcCPtJY+HnXt9mbifhPRmrqgNSP1hd2efRpyCvF+fCAbNzeFJbxNqsP0djOG7xGxRDY4dSqI3TCsthMJsAua1cGacjVnrGTsOzlxj5gqM1AWOHZU+fgQy9T9OOpGxvm69hgwNjE0aAlsj6j0s2RQYTzeM="
+    },
+    {
+      "name": "spur-binaer-3",
+      "art": "spur",
+      "client_ref": "w-20261011-0002",
+      "platz": "120:3",
+      "klartext_hex": "1c726cc8062614d81a54000000001c7278e4062627341a5b000000051c728500062639901a620000000a",
+      "fluechtig_privat_hex": "96f66d587dda037989eb28541186d221bce1b50d5deee48aebc664e18eb2d962",
+      "iv_hex": "1f8674e63f44a9ed9857721dc8597824",
+      "epk_hex": "0405eb4d60e0796cb6cf4920aec75516a3f621a312242baa3a293064a3795380b43b8a6c88237b5558fa37abd9287b78167b2a3310cef7a66b33038bcd658cacdd",
+      "z_hex": "6bfb97cd7ac2361409bda9c41989086c5213dc7f328190db13683dddad6d7a4c",
+      "k_enc_hex": "02844ef494aa55c5bfdd0e618c5a33d2b0fd938eb436816cff1e708fd08746b9",
+      "k_mac_hex": "99a6992de6c06f91c3e0e4136c255a107f31270f42aee3d6bb450135d46ad394",
+      "bindung_hex": "000473707572000f772d32303236313031312d3030303200053132303a33",
+      "ct_hex": "b893f236489ead36bed7e2e72e784820952e09671fe06ba2d39459232ff88af611f47adc592cbf048b4092648b4999cc",
+      "tag_hex": "a25d80d9681ffeacdb57e6ee6005aced8ff632c86490fbb1595a8dbf233b9eee",
+      "huelle_b64": "AQQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdH4Z05j9Eqe2YV3IdyFl4JLiT8jZInq02vtfi5y54SCCVLglnH+BrotOUWSMv+Ir2EfR63FksvwSLQJJki0mZzKJdgNloH/6s21fm7mAFrO2P9jLIZJD7sVlajb8jO57u"
+    },
+    {
+      "name": "ruhe-json-3",
+      "art": "ruhe",
+      "client_ref": "r-20261011-0007",
+      "platz": "0:3",
+      "klartext_hex": "7b2270223a5b5b34372e373236312c31302e333135392c3637342e302c305d2c5b34372e37323634312c31302e33313633372c3637342e372c355d2c5b34372e37323637322c31302e33313638342c3637352e342c31305d5d7d",
+      "fluechtig_privat_hex": "55db83a3e8b5497d29730de9f487f87892c3a3123b74bfd784d70a3e02113b03",
+      "iv_hex": "47576be0ef960f5ed61f0ad3f00a97cd",
+      "epk_hex": "0488f5136ae76e37189ff8548008962a2222d2097dbb534e6c44d1448b06522442776e911a83db82405149f697f25a621edf461496d74121702859d1381a7de989",
+      "z_hex": "a7c61dc85f2db756490211ae0207b5a0f92863ec9274bf59728dd170277fa39d",
+      "k_enc_hex": "bd006cc8804c4b1eda602cdb0eeb36bef32bc1efa1b54eec81c51e4db897b6bd",
+      "k_mac_hex": "4622083ac847650666e6f9dc66b538ffc1208f9aa935122c12a92e4ca1079138",
+      "bindung_hex": "000472756865000f722d32303236313031312d303030370003303a33",
+      "ct_hex": "d6cea359fb9bcfc9181259a64c95f93c5d118c0d08fc4297bdbfc984a004a842a5780f9a1dd9006fef0055b726e0893989da053aa00b81cc1c40265529b31b2edefacaaa159e8838a4f4063b46695a97b7575ff639a8379f1c7e207e9f05e0ca",
+      "tag_hex": "945e8bea9165999b0bb77b325faa979b8dbcfaa07d33fe67d19083087d29e389",
+      "huelle_b64": "AQSI9RNq5243GJ/4VIAIlioiItIJfbtTTmxE0USLBlIkQndukRqD24JAUUn2l/JaYh7fRhSW10EhcChZ0TgafemJR1dr4O+WD17WHwrT8AqXzdbOo1n7m8/JGBJZpkyV+TxdEYwNCPxCl72/yYSgBKhCpXgPmh3ZAG/vAFW3JuCJOYnaBTqgC4HMHEAmVSmzGy7e+sqqFZ6IOKT0BjtGaVqXt1df9jmoN58cfiB+nwXgypRei+qRZZmbC7d7Ml+ql5uNvPqgfTP+Z9GQgwh9KeOJ"
+    },
+    {
+      "name": "umlaut-ref",
+      "art": "einsatz",
+      "client_ref": "Prüf-ß-€",
+      "platz": "",
+      "klartext_hex": "7b227068223a7b2234223a5b34372e372c31302e335d7d7d",
+      "fluechtig_privat_hex": "677156af552abc6a44c4141fad824650227c0ac983c6caf1ec76b7d4aa00e8ed",
+      "iv_hex": "4e96a5379bbe318d209bf2eb9965a138",
+      "epk_hex": "045a1f399a46cbfff56aa0e5ac9ce6b106fa5121bdaa008093e614b47f8e24e385beca758ea0e2490de11280b5f099b4c7d2fa1017dd00a3c4c9865b1ee2479957",
+      "z_hex": "c67fff31606adc66b49512023f75c0dace09dd33d2ab13341eda7c70fad44810",
+      "k_enc_hex": "fadf161e0112a29956bde6116910e22b3d74a40643f56be9ced345ffbae98053",
+      "k_mac_hex": "6dba8b18f476d4ed505ea44bb4d29dde40bdc69fa42f2451bc9571c7534c5757",
+      "bindung_hex": "000765696e7361747a000c5072c3bc662dc39f2de282ac0000",
+      "ct_hex": "6f122e833e868d02a83d4993858c33fe59be03b7e39f580aa87dec0222893f88",
+      "tag_hex": "530b62d5830cc55544cba9a91276494d3194f0a7965f330b22560c956b1def9b",
+      "huelle_b64": "AQRaHzmaRsv/9Wqg5ayc5rEG+lEhvaoAgJPmFLR/jiTjhb7KdY6g4kkN4RKAtfCZtMfS+hAX3QCjxMmGWx7iR5lXTpalN5u+MY0gm/LrmWWhOG8SLoM+ho0CqD1Jk4WMM/5ZvgO3459YCqh97AIiiT+IUwti1YMMxVVEy6mpEnZJTTGU8KeWXzMLIlYMlWsd75s="
+    }
+  ],
+  "stoerungen": [
+    {
+      "name": "tag-gekippt",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261011-0002",
+      "platz": "120:3",
+      "huelle_b64": "AQQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdH4Z05j9Eqe2YV3IdyFl4JLiT8jZInq02vtfi5y54SCCVLglnH+BrotOUWSMv+Ir2EfR63FksvwSLQJJki0mZzKJdgNloH/6s21fm7mAFrO2P9jLIZJD7sVlajb8jO57v"
+    },
+    {
+      "name": "ct-gekippt",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261011-0002",
+      "platz": "120:3",
+      "huelle_b64": "AQQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdH4Z05j9Eqe2YV3IdyFl4JLmT8jZInq02vtfi5y54SCCVLglnH+BrotOUWSMv+Ir2EfR63FksvwSLQJJki0mZzKJdgNloH/6s21fm7mAFrO2P9jLIZJD7sVlajb8jO57u"
+    },
+    {
+      "name": "iv-gekippt",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261011-0002",
+      "platz": "120:3",
+      "huelle_b64": "AQQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdHoZ05j9Eqe2YV3IdyFl4JLiT8jZInq02vtfi5y54SCCVLglnH+BrotOUWSMv+Ir2EfR63FksvwSLQJJki0mZzKJdgNloH/6s21fm7mAFrO2P9jLIZJD7sVlajb8jO57u"
+    },
+    {
+      "name": "andere-ref",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261011-0002x",
+      "platz": "120:3",
+      "huelle_b64": "AQQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdH4Z05j9Eqe2YV3IdyFl4JLiT8jZInq02vtfi5y54SCCVLglnH+BrotOUWSMv+Ir2EfR63FksvwSLQJJki0mZzKJdgNloH/6s21fm7mAFrO2P9jLIZJD7sVlajb8jO57u"
+    },
+    {
+      "name": "anderer-platz",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261011-0002",
+      "platz": "121:3",
+      "huelle_b64": "AQQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdH4Z05j9Eqe2YV3IdyFl4JLiT8jZInq02vtfi5y54SCCVLglnH+BrotOUWSMv+Ir2EfR63FksvwSLQJJki0mZzKJdgNloH/6s21fm7mAFrO2P9jLIZJD7sVlajb8jO57u"
+    },
+    {
+      "name": "andere-art",
+      "grund": "pruefwert",
+      "art": "ruhe",
+      "client_ref": "w-20261011-0002",
+      "platz": "120:3",
+      "huelle_b64": "AQQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdH4Z05j9Eqe2YV3IdyFl4JLiT8jZInq02vtfi5y54SCCVLglnH+BrotOUWSMv+Ir2EfR63FksvwSLQJJki0mZzKJdgNloH/6s21fm7mAFrO2P9jLIZJD7sVlajb8jO57u"
+    },
+    {
+      "name": "fassung-2",
+      "grund": "fassung",
+      "art": "spur",
+      "client_ref": "w-20261011-0002",
+      "platz": "120:3",
+      "huelle_b64": "AgQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdH4Z05j9Eqe2YV3IdyFl4JLiT8jZInq02vtfi5y54SCCVLglnH+BrotOUWSMv+Ir2EfR63FksvwSLQJJki0mZzKJdgNloH/6s21fm7mAFrO2P9jLIZJD7sVlajb8jO57u"
+    },
+    {
+      "name": "gekuerzt",
+      "grund": "laenge",
+      "art": "spur",
+      "client_ref": "w-20261011-0002",
+      "platz": "120:3",
+      "huelle_b64": "AQQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdH4Z05j9Eqe2YV3IdyFl4JLiT8jZInq02vtfi5y54SCCVLglnH+BrotOUWSMv+Ir2EfR63FksvwSLQJJki0mZzKJdgNloH/6s21fm7mAFrO2P9jLIZJD7sVlajb8jO54="
+    }
+  ]
+}

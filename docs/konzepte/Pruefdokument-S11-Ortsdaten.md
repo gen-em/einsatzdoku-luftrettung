@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); in Arbeit S11-02.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-02 bis zum Halt** — es wartet auf P-S11-02 (Probe auf den echten Uhren).*
 
 ---
 
@@ -14,7 +14,8 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
-| **Ob die Garmin-Uhr die Krypto kann.** ECDH auf P-256, AES-256-CBC samt Polsterung, HMAC-SHA256 und ob es ein Packen gibt, sind gelesen (SP-9, Connect-IQ-Dokumentation vom 06.09.2026), nicht gemessen. | Im Code steht heute keine Krypto; die Ausbaustufe `uhr` der Arbeitsumgebung ist gebaut, aber nicht gemessen (`docs/Sandbox-Setup.md`). | S11-02, Probe-App; Halt, bis das Ergebnis auf den drei Uhren vorliegt. |
+| **Ob die echte Garmin-Uhr die Krypto kann.** Im **Simulator** gemessen (S11-02): Fenix 6 Pro, Forerunner 945, Venu 3s je 7 gut, 0 Fehler. Ob der Simulator rechnet wie die Uhr — gerade bei der Byteordnung des ECDH-Geheimnisses (F-S11-18) —, ist unbelegt. Zeiten und Speicher des Simulators sind die des Rechners. | Keine Uhr in der Arbeitsumgebung. | P-S11-02; Halt, bis das Ergebnis vorliegt. |
+| **Firefox und WebKit.** Die Hüllenprobe lief nur in Chromium (39/0). | Beide fehlen im Abbild vom 11.10.2026 (F-S11-20): `/opt/pw-browsers` hält nur `chromium-1194`; die Probe bricht mit rc 2 ab. | S11-04 (Browserliste); bis dahin offen. |
 | **Ob die Krypto auf den übrigen 96 Zielgeräten läuft.** | E-S11-16: Laufzeit nur auf Fenix 6 Pro, Forerunner 945, Venu 3s. Stufe I übersetzt für alle 99; Übersetzen ist nicht Laufen, und der kleinste App-Speicher (128 kB) liegt unter dem der drei. | Erst wenn ein anderes Gerät in Betrieb geht. |
 | **Ob die Grundlinie für ein Telefon gilt.** S11-01 hat auf einem Container mit vier Kernen gemessen, einmal mit Drossel 6× (Nachbildung des Referenzgeräts Z3), einmal ohne. | Kein echtes Gerät in der Arbeitsumgebung; die Drossel bildet Rechenzeit nach, nicht Speicher, Grafik und Leitung. | Der Vergleich vorher/nachher in S11-11 gilt nur auf derselben Maschine (E-S11-15). |
 | **Wartungslauf und Einmalwerkzeug haben kein Vorher.** | Es gibt sie erst mit S11-07 und S11-10. | Sie werden dort gemessen und benannt, nicht gegen eine Grundlinie gehalten. |
@@ -51,6 +52,19 @@ Einzelheiten und Maschine in `tools/messstand/ausgangsmessung.md`
 **Was daraus folgt:** Unter Drossel 6× liegen beide Einzelansichten schon
 heute über der Sekunde aus E-S11-15 (F-S11-15, Frage Q-S11-16 im Konzept).
 
+### S11-02 Probe-App und Prüfvektoren (11.10.2026, bis zum Halt)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `referenz.py --selbstprobe` | die Referenz erkennt verfälschte Vektoren, Gegenproben bleiben grün | 5 Fälle, 0 Fehlschläge |
+| `referenz.py pruefen` | jeder Vektor neu gerechnet, jede Hülle geöffnet, jede Störung abgewiesen | 6 Fälle geöffnet, 8 Störungen abgewiesen, 0 Abweichungen |
+| `proben.sh huelle` (Chromium) | WebCrypto gegen die Vektoren: Z, HKDF, Bindung, Hülle byte-gleich, Öffnen, Abweisungsgrund, Rundlauf | 39 Prüfungen, 0 Abweichungen; ebenso bei Drossel 6× |
+| dieselbe, Zeiten | Verschließen/Öffnen eines Spurstücks | ≤ 0,3 ms ungedrosselt, ≤ 2,9 ms bei 6× (500 Punkte JSON) |
+| `pruefstand.sh kryptoprobe` | Probe-App im Simulator auf den drei Uhren | 3 von 3, je 7 gut, 0 Fehler; ECDH-Geheimnis little-endian (F-S11-18); `PACKEN nicht vorhanden` |
+| Gegenprobe | ein Byte im Prüfwert von `Vektoren.mc` verfälscht | 5 gut, 2 Fehler (HMAC, HÜLLE kurz), rc 1 |
+| `pruefstand.sh kryptoreihe` | Probe für alle Geräte der App übersetzt | 99 übersetzt, 0 fehlgeschlagen; 48 Warnungen, alle zur Skalierung des Launcher-Icons |
+| `bestand` · `kettenaufrufe` | neue Prüfmittel in der Form, Aufrufe gegen ihre Werkzeuge | 0 Befunde · 0 Widersprüche |
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
@@ -65,7 +79,7 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 |---|---|---|---|---|
 | P-S11-01 | erledigt 11.10.2026 | Konzept lesen, Freigabe erteilen | Freigabe im Chat — **erteilt 11.10.2026** | — |
 | P-S11-10 | jetzt | Frage Q-S11-16 im Konzept beantworten | Antwort im Chat | — |
-| P-S11-02 | nach S11-02 | Probe-App auf Fenix 6 Pro, Forerunner 945 und Venu 3s starten, Anzeige ablesen | jede Probe „gut", Laufzeiten und Speicherspitze angezeigt | eine Probe „Fehler" oder ein Absturz der App |
+| **P-S11-02** | **jetzt** (Halt) | 1. In VS Code mit Monkey-C-Erweiterung den Ordner `tools/uhr-pruefstand/krypto-probe/` öffnen. 2. Je Uhr „Monkey C: Build for Device", Gerät wählen. 3. Die `.prg` per USB nach `GARMIN/APPS/` kopieren, Uhr trennen. 4. „Krypto-Probe" starten, rund 10 s warten, bis `ERGEBNIS …` steht. 5. Mit Hoch/Runter (Venu 3s: wischen) blättern und **alle Zeilen** abschreiben oder fotografieren — besonders `ECDH …`, `T-PAAR …` und die vier `T-…`-Zeilen. 6. Für Simulator-Vergleich auf dem Arbeitsplatz dasselbe mit F5. Danach die App von der Uhr löschen. | je Uhr `ERGEBNIS 7 gut, 0 Fehler`; `ECDH gut (little-endian, umgedreht)` wie im Simulator; `PACKEN nicht vorhanden` | eine Zeile `FEHLER`, ein Absturz (IQ-Symbol), `ERGEBNIS` erscheint nicht; oder `ECDH gut (big-endian)` — dann rechnet die Uhr anders als der Simulator, und S11-08 muss beide Fälle kennen |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen, einmal neu koppeln, einen Probeeinsatz aufzeichnen und senden | Einsatz im Web mit Karte nach dem Entsperren | Uhr zeigt „Neu koppeln" weiter oder parkt |
