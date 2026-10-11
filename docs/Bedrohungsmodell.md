@@ -59,9 +59,10 @@ Schritt 12a (S11) begründet.
 
 ## 2. Angreifer — wer greift an, was hat er, was erreicht er
 
-Die neun Lagen A bis I stammen aus `Review-Krypto-Sicherheit.md` 2
-(05.09.2026) und sind hier auf den Stand von Web 21.14.0 gebracht; J bis P
-sind neu. **Fett** ist, was eine Zusage aus Abschnitt 1 bricht. „Erreicht"
+Die neun Lagen A bis I stammen aus dem Krypto-Review vom 05.09.2026
+(Abschnitt 2 jener Datei; sie ist mit R17-04 gelöscht, die Git-Historie
+behält sie, der Stand je Befund steht in `Review-R17.md` 3.4) und sind
+hier auf den Stand von Web 21.14.0 gebracht; J bis P sind neu. **Fett** ist, was eine Zusage aus Abschnitt 1 bricht. „Erreicht"
 meint: ohne weiteren Fehler der Anwendung, nur mit dem, was die Lage ihm
 gibt.
 
@@ -187,20 +188,20 @@ dort entschieden).
 
 | Nr. | Restrisiko | Zuordnung |
 |---|---|---|
-| R1 | Die Vertraulichkeit von W1 ist so stark wie das Passwort; der Server kann die Passwortqualität nur im Browser prüfen (`pwquality.js`) | hingenommen — Bauform; Handbuch und Einweisung sagen es. Argon2id ist nach S10 eine Frage, kein Fehler (Abschnitt 6, Nr. 146) |
-| R2 | Offline-Raten gegen `password_hash` aus dem Abzug; die Zusage sagt das Gegenteil | **Befund** F-R17-01: Zusage berichtigen; Pfeffer vor bcrypt als Paket |
+| R1 | Die Vertraulichkeit von W1 ist so stark wie das Passwort; der Server kann die Passwortqualität nur im Browser prüfen (`pwquality.js`) | hingenommen — Bauform; Handbuch und Einweisung sagen es. Argon2id ist **entschieden: nein** (E-R17-07, Abschnitt 6.5) |
+| R2 | Offline-Raten gegen `password_hash` aus dem Abzug; die Zusage sagt das Gegenteil | **Befund** F-R17-01 — Freigaberunde 12b (E-R17-06: kein Sofortpaket); bis dahin gilt bei Abweichung dieses Modell (`CLAUDE.md` 4) |
 | R3 | Der Einsatzort ist aus W2 rekonstruierbar — Datenbank, Backup, Paket, Upload, Gerät | **S11** (R78); bis dahin hingenommen und offen gesagt (G3) |
 | R4 | Geschützte Ortsangaben gehen an Photon und Kacheldienste | hingenommen — Schalter vorhanden, Handbuch 12.5 sagt es; die Zusage-Texte nennen es nicht: **Befund** F-R17-09 |
-| R5 | Ein Admin liest über die Freigabe den Klartext jedes Kontos ohne Spur; mit `pat_key_check` übernimmt er die Anmeldung eines `user`-Kontos | **Befund** F-R17-02, F-R17-06 |
+| R5 | Ein Admin liest über die Freigabe den Klartext jedes Kontos ohne Spur; mit `pat_key_check` übernimmt er die Anmeldung eines `user`-Kontos; ein zweites BetreiberIn-Konto kann er sperren oder umadressieren | **Befund** F-R17-02, F-R17-06 — Freigaberunde 12b (E-R17-06); der Riegel gegen BetreiberIn-Konten ist **entschieden** (E-R17-11, Nr. 371) |
 | R6 | Die BetreiberIn hält den Klartext-Dump ohne frischen Code | **Befund** F-R17-08 |
 | R7 | Ein einmal abgeflossener Inhaltsschlüssel gilt für alle späteren Blöcke; ein Passwortwechsel heilt nichts | **Befund** F-R17-10 (Mail bei `schluessel_erneuern`); eine Umschlüsselung des Bestands ist **S11**-Material |
-| R8 | XSS ist ohne scharfe CSP ungebremst; der Schlüssel liegt als Hex im `sessionStorage` | **Befund** F-R17-23 (Stand auf Produktiv); nicht-extrahierbarer `CryptoKey` ist eine Frage (Abschnitt 6, Nr. 146) |
+| R8 | XSS ist ohne scharfe CSP ungebremst; der Schlüssel liegt als Hex im `sessionStorage` | **Befund** F-R17-23 (Stand auf Produktiv); der nicht-extrahierbare `CryptoKey` ist **entschieden: Paket in 12b nach der scharfen CSP** (E-R17-08, Nr. 370) |
 | R9 | Der Zweitfaktor schützt die Anmeldung, nicht den Datenschlüssel; sein Geheimnis liegt unter dem Serverschlüssel | hingenommen — E-SR-28 (kein PRF); Lage B hat ohnehin `config.php` |
 | R10 | Zwischen Push-Recht und Produktiv steht ein Klick; der Zeiger ist ungeschützt; App-Tags haben kein Tor; die Lieferkette in `run:` ist ungepinnt | **Befund** F-R17-04, -14, -17, -20 — Zuarbeiten der BetreiberIn (Zweigbeschränkung, Ruleset) und ein Kettenpaket |
 | R11 | Gradle sieht den App-Signaturschlüssel; Google hält ihn ebenfalls | **Befund** F-R17-03 (Kette); Google: hingenommen — R65, Play App Signing ist die Bedingung des Stores |
-| R12 | Die Wache sieht keinen PHP-Code; ihre Anleitung ist falsch; ihr Alarmweg ist unbelegt | hingenommen für den Sichtbereich (Nr. 263, eigener Durchgang); **Befund** F-R17-15 für Anleitung und Alarmweg |
-| R13 | Garmin-Uhr: Schlüssel und Klartextpuffer samt Reanimation ohne Frist; Adresse in Garmin Connect; Transport durch die Begleit-App; `http://` möglich | hingenommen für Speicher und Begleit-App (Plattform); **Befund** F-R17-11, -12, -28 für Adresse, Alt-Weg, Frist, Modell |
-| R14 | Handy: Puffer im Klartext; Keystore-Schlüssel ohne Entsperrpflicht | hingenommen — Dateiverschlüsselung des Geräts und Sandbox; **S11** entscheidet, ob beim Schreiben verschlüsselt wird (Abschnitt 6) |
+| R12 | Die Wache sieht keinen PHP-Code; ihre Anleitung ist falsch; ihr Alarmweg ist unbelegt | Sichtbereich: **offen für 12b** (Nr. 263, E-R17-12 — Stück 10 liest die Wache und entscheidet); **Befund** F-R17-15 für Anleitung und Alarmweg |
+| R13 | Garmin-Uhr: Schlüssel und Klartextpuffer samt Reanimation ohne Frist; Adresse in Garmin Connect; Transport durch die Begleit-App; `http://` möglich | hingenommen für Speicher und Begleit-App (Plattform); **S11 hat den Zweck Server** (E-R17-09) und gibt geparkten Paketen eine Frist; **Befund** F-R17-11, -12, -28 für Adresse, Alt-Weg, Frist |
+| R14 | Handy: Puffer im Klartext; Keystore-Schlüssel ohne Entsperrpflicht | hingenommen — Dateiverschlüsselung des Geräts und Sandbox; **entschieden:** S11 verschlüsselt vor dem Upload, nicht beim Schreiben (E-R17-09); „beim Schreiben" wäre ein eigener späterer Schritt |
 | R15 | Die Pflichtstücke des Wiederanlaufs sind offen; kein Stand je geöffnet; keine Probe-Wiederherstellung | **Befund** F-R17-05 — Zuarbeit, kein Code |
 | R16 | Alles hängt an einer Person; bei ihrem Ausfall steht die Anlage still | hingenommen bis zur Betriebsübergabe (Rahmenplan, zweiter Admin in der Betriebsakte offen) |
 | R17 | Tokens in URLs und Mailrümpfen landen in Hoster-Logs und Komplett-Ständen; die Logdauer der Hoster ist unbekannt | **Befund** F-R17-22; Logdauer in die Betriebsakte |
@@ -214,8 +215,9 @@ S11 (Schritt 12a, R78, Skizze SP-9) verschlüsselt Spur, Phasenkoordinaten,
 Reanimationsverlauf und Transportziel mit einem Konto-Schlüsselpaar: Der
 öffentliche Teil geht aufs Gerät, das Gerät verschlüsselt, der Browser
 entschlüsselt. Dieses Modell sagt dem Konzept, was es vorfindet und was es
-entscheiden muss. **Die Antworten der BetreiberIn stehen in
-`Review-R17.md` 2.1 (E-R17-NN); bis dahin stehen hier Empfehlungen.**
+entscheiden muss. **Die BetreiberIn hat am 11.10.2026 entschieden**
+(`Review-R17.md` 2.1, E-R17-07 bis -12); die Entscheidung steht je Frage
+fett, die Lage davor bleibt als Begründung.
 
 **6.1 Was Klartext bleiben darf.** Serverseitig gerechnet wird mit den
 Koordinaten nichts (`Konzept-V1-Ortsdaten.md` 3.1); der Server braucht
@@ -225,10 +227,10 @@ Anstieg** (von der Uhr gerechnet, nur Zahlen) und die **Zählung** je Klinik
 und je Reanimation, wenn die Statistik bleiben soll (F-SP-7). Klartext
 bleiben müssen damit: Zeiten, `seq`, Kennungen, Diensttag- und
 Standortdaten (Stammdaten), Besatzung und Einsatzmittel (nicht Teil von
-R78). **Empfehlung:** Strecke und Anstieg bleiben Klartext (sie verraten
-ohne Koordinaten wenig); die Zählung je Klinik wandert in den Browser,
-sonst bleibt das Transportziel ein Klartextfeld — und R78 hat es
-ausdrücklich in den Umfang genommen.
+R78). **Entschieden (E-R17-10):** Zeiten, `seq`, Kennungen, Strecke, Anstieg,
+Stammdaten, Besatzung und Einsatzmittel bleiben Klartext; Spur,
+Phasenkoordinaten, Reanimationsverlauf und das Transportziel werden
+verschlüsselt, und die Zählung je Klinik wandert in den Browser (F-SP-7).
 
 **6.2 Was der Schlüssel aufs Gerät erreicht — und was nicht (F-R17-13).**
 SP-9 verschlüsselt **vor dem Upload**. Das schließt A, B, O, M und I für
@@ -239,9 +241,8 @@ nicht mehr") gilt nur, wenn **beim Schreiben** verschlüsselt wird — das
 baut `Track.readPoints()` (Polylinie, Teil-Chunk) und
 `Puffer.punktNaheZeit()` (Phasenkoordinate aus Klartextpunkten) um und
 verlangt, dass das Gerät nichts von dem zurücklesen kann, was es
-geschrieben hat. **Frage an die BetreiberIn (Q):** Zweck „Server" oder
-„Server und Gerät"? **Empfehlung:** S11 schließt Server und Transport
-(Zweck Server) und benennt H als Restrisiko mit Frist für geparkte Pakete
+geschrieben hat. **Entschieden (E-R17-09): Zweck Server.** S11 schließt Server und
+Transport und benennt H als Restrisiko mit Frist für geparkte Pakete
 (F-R17-28); „beim Schreiben" ist ein eigener, späterer Schritt, weil er die
 Anzeige der Uhr umbaut.
 
@@ -269,15 +270,16 @@ GCM).
 
 **6.5 Die zwei Fragen aus Nr. 146.**
 
-| Frage | Lage nach S10 | Empfehlung |
+| Frage | Lage nach S10 | Entschieden (11.10.2026) |
 |---|---|---|
-| **Argon2id statt PBKDF2** | Der Gewinn war gedacht gegen Lage A beim Raten. Nach S10 kostet das Raten je Kandidat PBKDF2 plus bcrypt und bringt ohne Anmeldung keinen Datenschlüssel; **mit F-R17-01 (Pfeffer vor bcrypt) braucht das Raten `config.php`** — dann verteidigte Argon2id nur noch gegen Lage B, die ohnehin alles hat. Preis: WASM-Fremdbestandteil, 64 MB je Ableitung auf alten Telefonen, dritter Ableitungsweg | **Nein**, nicht weiterverfolgen; stattdessen F-R17-01 (b). Nr. 146 damit erledigt, sobald entschieden |
-| **Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`** | Ein XSS könnte weiter entschlüsseln, den Schlüssel aber nicht mitnehmen; nach dem Schließen der Lücke ist der Angreifer draußen — und **das ist mit F-R17-10 wichtiger als gedacht**, weil ein mitgenommener CK dauerhaft gilt. Preis: IndexedDB statt `sessionStorage`, anderes Lebensdauermodell, Umbau aller `getContentKey`-Aufrufer | **Ja, als Paket in 12b** (Fable-Schritt), nach der scharfen CSP (F-R17-23) — die CSP ist die erste Linie, der `CryptoKey` die zweite |
+| **Argon2id statt PBKDF2** | Der Gewinn war gedacht gegen Lage A beim Raten. Nach S10 kostet das Raten je Kandidat PBKDF2 plus bcrypt und bringt ohne Anmeldung keinen Datenschlüssel; **mit F-R17-01 (Pfeffer vor bcrypt) braucht das Raten `config.php`** — dann verteidigte Argon2id nur noch gegen Lage B, die ohnehin alles hat. Preis: WASM-Fremdbestandteil, 64 MB je Ableitung auf alten Telefonen, dritter Ableitungsweg | **Nein, nicht weiterverfolgen** (E-R17-07); F-R17-01 (b) geht in die Freigaberunde 12b. Nr. 146 erledigt |
+| **Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`** | Ein XSS könnte weiter entschlüsseln, den Schlüssel aber nicht mitnehmen; nach dem Schließen der Lücke ist der Angreifer draußen — und **das ist mit F-R17-10 wichtiger als gedacht**, weil ein mitgenommener CK dauerhaft gilt. Preis: IndexedDB statt `sessionStorage`, anderes Lebensdauermodell, Umbau aller `getContentKey`-Aufrufer | **Ja, als Paket in 12b** (E-R17-08, Backlog Nr. 370; Fable-Schritt), nach der scharfen CSP (F-R17-23) — die CSP ist die erste Linie, der `CryptoKey` die zweite |
 
 **6.6 Nr. 263 — die Grenze der Integritätswache.** Sie bleibt benannt (G5).
 Eine Abhilfe hieße, dem Server eine Schnittstelle zum Hashen der eigenen
 Quelldateien zu geben — ein neuer Angriffsweg für ein Problem, das der
-Vergleich nur teilweise löst. **Empfehlung:** Stand `nicht umsetzen`,
-Begründung hier; stattdessen F-R17-15 (Anleitung, Alarmweg) und F-R17-18
+Vergleich nur teilweise löst. **Entschieden (E-R17-12): offen für 12b** — Stück 10 liest die Wache
+und entscheidet über die Abhilfe; Fable hatte `nicht umsetzen` empfohlen.
+Unabhängig davon stehen F-R17-15 (Anleitung, Alarmweg) und F-R17-18
 (lesende Probe gegen Produktiv) als die zwei Dinge, die die Wache heute
 wirklich besser machen.

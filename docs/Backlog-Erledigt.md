@@ -9449,3 +9449,29 @@ zutreffen.
      Versionsstufe): `STAGING_PASS` steht in beiden `-z`-Riegeln, der Satz
      am Job ist fort. Örtlich 6 von 6; die Fassung davor ließ ein leeres
      Geheimnis in 2 von 2 Schritten durch. Auf GitHub: P-PK-37.
+
+146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.** · gehört zu: 12 · Stand: offen · seit 06.09.2026
+     Zwei Fragen, keine Fehler (R78, 06.09.2026; bis 27.09.2026 drei):
+     **Argon2id statt PBKDF2** (WASM-Fremdbestandteil gegen GPU-Resistenz)
+     · **Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`** statt Hex
+     im `sessionStorage` (ein XSS könnte dann entschlüsseln, den Schlüssel
+     aber nicht mitnehmen; anderes Lebensdauermodell „ein Tab, ein
+     Schlüssel"). Dazu die Design-Skizze für Weg B (Nr. 43, SP-9) zur
+     Prüfung. Zuordnung R17 Stück 1.
+     **Passkeys** stehen seit 27.09.2026 nicht mehr hier: als zweiter Faktor
+     neben TOTP Nr. 350 (Schritt 18, SR-09); mit PRF als Ersatz der
+     Passwortableitung von der Betreiberin nicht weiterverfolgt (E-SR-28).
+     Stand seit S10 (Web 20.0.0, 14.09.2026): Der erste Punkt ist messbar
+     kleiner — der Datenschlüssel hängt am Server-Anteil aus `config.php`,
+     ein Datenbankabzug allein reicht für einen Offline-Angriff nicht mehr;
+     Argon2id verteidigte gegen einen Angreifer, der ohnehin beides hat. Der
+     zweite Punkt ist unberührt: Der Anteil schützt die Hülle, nicht den
+     entpackten Schlüssel im `sessionStorage`.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 146.
+     Erledigt 11.10.2026 in Schritt 12 (Bedrohungsmodell, R17-03/R17-04,
+     E-R17-07 und E-R17-08): Argon2id wird nicht weiterverfolgt — nach S10
+     und mit dem Pfeffer aus F-R17-01 verteidigte es nur noch gegen Lage B,
+     die ohnehin alles hat; der Inhaltsschlüssel als nicht-extrahierbarer
+     `CryptoKey` wird gebaut, als Paket in 12b nach der scharfen CSP
+     (Nr. 370). Begründung: `docs/Bedrohungsmodell.md` 6.5. Die Skizze SP-9
+     ist gegen das Modell gelesen (F-R17-13, E-R17-09, -10).
