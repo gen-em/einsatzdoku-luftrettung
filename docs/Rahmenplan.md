@@ -1,12 +1,12 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 158 (11.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 159 (11.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `dbca560`, gemessen 11.10.2026): Web 21.14.0 ·
 Uhr 3.1.0 · Android 0.17.0.
-**Läuft:** kein Schritt auf `main` — 12 ist abgeschlossen und gemergt (PR #103, Abschnitt 8); das Konzept S11 (12a) entsteht auf eigenem Zweig.
+**Läuft:** 12a — Konzept S11 auf `ccr-dd33b6e8-ismfm0`, freigegeben am 11.10.2026.
 **Als Nächstes:** Merge von #104 (Nr. 236: die Kette auf `ubuntu-26.04`, **vor dem 19.10.2026**), danach dessen Nachmessung (6.1); dann das Konzept S11 (12a, Fable) — Reihenfolge in Abschnitt 3.
 **Offene PRs:** #104 (Nr. 236, nur `.github/`, `tools/` und `docs/`; dazu die Integritätswache, Fehlalarm seit Web 21.14.0).
 **Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging erledigt (11.10.2026); auf Produktiv seit dem Tag `web-v21.14.0` nachsehen, dort auch die aus 10c und Web 21.3.0 (6.1).
