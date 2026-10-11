@@ -3,8 +3,8 @@
 *Gehört zu `Konzept-S11-Ortsdaten-Weg-B.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
-Paket füllt es mit Mittel **und** Zahl. Stand: **S11-00 erledigt, das Konzept
-wartet auf die Freigabe** (P-S11-01) und auf die Antwort zu Q-S11-15.*
+Paket füllt es mit Mittel **und** Zahl. Stand: **S11-00 erledigt, alle Fragen
+beantwortet; das Konzept wartet auf die Freigabe** (P-S11-01).*
 
 ---
 
@@ -44,7 +44,7 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 
 | Nr. | Wann | Bedienweg | Erwartet | Scheitern erkennbar an |
 |---|---|---|---|---|
-| P-S11-01 | jetzt | Konzept lesen, Q-S11-15 beantworten, Freigabe erteilen | Freigabe im Chat | — |
+| P-S11-01 | jetzt | Konzept lesen, Freigabe erteilen (Q-S11-15 ist am 11.10.2026 beantwortet, E-S11-25) | Freigabe im Chat | — |
 | P-S11-02 | nach S11-02 | Probe-App auf Fenix 6 Pro, Forerunner 945 und Venu 3s starten, Anzeige ablesen | jede Probe „gut", Laufzeiten und Speicherspitze angezeigt | eine Probe „Fehler" oder ein Absturz der App |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
