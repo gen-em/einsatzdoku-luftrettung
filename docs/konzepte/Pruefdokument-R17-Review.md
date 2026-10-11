@@ -3,7 +3,7 @@
 *Gehört zu `Review-R17.md`. Beantwortet „was muss **ich** noch tun?" — das
 Protokoll „ist es belegt?" steht im Statusblock und in Abschnitt 5 des
 Konzepts. Angelegt am 11.10.2026 mit R17-00 (Fable); jedes Paket füllt es
-mit Mittel **und** Zahl. Stand: **R17-01 erledigt**, R17-02 bis R17-04
+mit Mittel **und** Zahl. Stand: **R17-02 erledigt**, R17-03 und R17-04
 offen. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist (K9); ob
 12b es fortschreibt oder ein eigenes anlegt, entscheidet 12b.*
 
@@ -26,6 +26,16 @@ nächsten Paket — eine Zeile hier ändert den Baum, den der Prüfstand gemesse
 hat (`Pruefablauf.md` 5.1); der Bericht eines Pakets steht in **seiner**
 Commit-Nachricht.
 
+### R17-02 Das Modell (11.10.2026)
+
+| Mittel | Was gemessen | Zahl |
+|---|---|---|
+| `python3 tools/quelltext/textprobe.py --bereich c` | das neue Dokument im Bereich `c` — Land und Luft, Hausform, Adressen, Netz, Namen | erster Lauf 52 Treffer in 29 Zeilen (43 `luft`, 9 `hausform`); nach Korrektur der Hausform (9 × BetreiberIn) und zwei Ausnahmen mit Begründung (`spur-fachdokument-bedrohungsmodell`, `bedrohungsmodell-plattformen`): **0 außerhalb der Ausnahmen, 0 durchgerutschte Fallen**; ein Rest (`fenix5`) umformuliert |
+| `textprobe.py --selbstprobe` | die Probe prüft sich selbst | 4/4 |
+| `decken.py` · `bestand.py` · `linkprobe.py` · `pysyntax.py` | Form der Steuerung, des Werkzeugbestands, der Verweise, der Python-Werkzeuge | 21/0 · 0 Befunde · 150/0 · 63/0 |
+| Lesung gegen die Gliederung (Konzept 3.1) | jeder der sechs Abschnitte vorhanden, jede I-Nummer des Inventars einem Abschnitt zugeordnet, jeder F-Befund an mindestens einer Stelle genannt | 6 von 6 Abschnitte; 31 von 31 Befunde genannt (gezählt mit `grep -o 'F-R17-[0-9]*'`, siehe Commit) |
+| `bash tools/pruefstand/pruefen.sh --stufe klein` | die billigen Riegel | *Bericht in der Commit-Nachricht von R17-02; Zahl hier mit R17-03* |
+
 ### R17-01 Bestandsaufnahme (11.10.2026)
 
 | Mittel | Was gemessen | Zahl |
@@ -35,7 +45,7 @@ Commit-Nachricht.
 | `gh api` (lesend) | `rules/branches/produktion`; Rulesets | `[]` — keine Regel auf dem Zeiger; Umgebungen und Organisation 403 |
 | Zählung `uses:` | der Handbefehl aus `CLAUDE.md` 3 (beide Zählungen) | 14 von 14 |
 | `decken.py` · `uebersicht.py --ziel 12` · `nummern.py` · `textprobe.py --bereich c` · `bestand.py` · `linkprobe.py` | wie R17-00 | 21/0 · 62/0/0, 2 zu Ziel 12 · 0 Überschneidungen · 0 neue Treffer · 0 Befunde · 150/0 |
-| `bash tools/pruefstand/pruefen.sh --stufe klein` | die billigen Riegel | *Bericht in der Commit-Nachricht von R17-01; Zahl hier mit R17-02* |
+| `bash tools/pruefstand/pruefen.sh --stufe klein` | die billigen Riegel | 22 Riegel grün, 0 rot, 0 nicht gemessen, 53 s; Baum `63fef5e…` = Baum von `3b6f330` |
 
 ### R17-00 Buchführung (11.10.2026)
 

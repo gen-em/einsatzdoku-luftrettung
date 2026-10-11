@@ -49,6 +49,7 @@ wird nur der Weg hinein.
 |---|---|
 | [`docs/Handbuch.md`](docs/Handbuch.md) | Vorstellung und Bedienung aller Funktionen (Uhr + Web) |
 | [`docs/Technik.md`](docs/Technik.md) | Architektur, Datenmodell, Abläufe, Build, Deployment, **Betrieb/Runbook** |
+| [`docs/Bedrohungsmodell.md`](docs/Bedrohungsmodell.md) | Was die Anwendung schützt, gegen wen, womit — und wo die Grenzen liegen; die Referenz für Review, S11 und die Rechtstexte |
 | [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Änderungshistorie |
 | [`docs/JSON-Vertrag.md`](docs/JSON-Vertrag.md) | Schnittstelle Uhr/Fremdquellen → Server |
 | [`docs/Backup-Format.md`](docs/Backup-Format.md) | Aufbau der `.edbak` und was **nicht** darin steht |

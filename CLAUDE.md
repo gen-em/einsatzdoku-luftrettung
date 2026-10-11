@@ -302,6 +302,14 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   (Backlog Nr. 170). Seit Web 21.1.5 hält der Riegel `kennzeichnung` jedes
   Zeichen gegen eine Sollliste (`tools/quelltext/kennzeichnung-soll.md`);
   wer ein Feld verschlüsselt, trägt es auch dort ein.
+  **Gegen wen das alles hält und gegen wen nicht, steht an einer Stelle:
+  `docs/Bedrohungsmodell.md`** (Schritt 12, Review R17 Stück 1) — Schutzziele,
+  Angreiferlagen A bis P, jede Zusage mit ihrer Grenze, die Bausteine, die
+  Restrisiken. Wo dieser Absatz und das Modell auseinandergehen, gilt das
+  Modell; die Abweichung steht als Befund in `docs/konzepte/Review-R17.md`
+  2.3, bis die Freigaberunde den Absatz nachzieht. Wer die Verschlüsselung,
+  die Anmeldung, die Schlüsselablage eines Geräts oder die Kette ändert,
+  schreibt das Modell fort.
 - **Keine fremde Quelle zur Laufzeit.** Kein CDN, keine Google Fonts, kein
   externes Skript. Schriften und Bibliotheken liegen unter
   `server/assets/fonts/` bzw. `server/assets/vendor/`, mit Herkunft und
