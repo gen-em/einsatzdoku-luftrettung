@@ -48,6 +48,7 @@ Einzelheiten und Maschine in `tools/messstand/ausgangsmessung.md`
 | Schritt `browser`, ungedrosselt | dieselben | Median 0,45 s (0,41–0,48) · Median 0,47 s (0,44–0,49) · 44,05 s · 74,62 s, Halde 392 MB; 0 Konsolenfehler |
 | Schritt `server` | `edbak_build()` in Fenstern / am Stück | 3,8 s, Spitze 12 MB / 13,41 s, Spitze 2079 MB |
 | Schritt `statistik` | drei Reiter, je mit und ohne Zeitraum | 0,07–0,08 s je Reiter, Index gewählt |
+| Nachtrag: Schritt `browser`, 6× und ungedrosselt | Monat 03/2026 (588 Einsätze) · GPX Jahr mit/ohne Passwort, in Abschnitten · Wiederholung der Einzelansichten | sichtbar 2,38 s / 0,45 s · 329,6 s (Packen 208,5 s) / 69,8 s, ohne Passwort 270,2 s / 55,7 s · Diensttag 2,35 s statt 1,71 s (F-S11-22); 0 Konsolenfehler, rc 0 |
 
 **Was daraus folgt:** Unter Drossel 6× liegen beide Einzelansichten schon
 heute über der Sekunde aus E-S11-15 (F-S11-15, Frage Q-S11-16 im Konzept).
@@ -78,7 +79,9 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | Nr. | Wann | Bedienweg | Erwartet | Scheitern erkennbar an |
 |---|---|---|---|---|
 | P-S11-01 | erledigt 11.10.2026 | Konzept lesen, Freigabe erteilen | Freigabe im Chat — **erteilt 11.10.2026** | — |
-| P-S11-10 | jetzt | Frage Q-S11-16 im Konzept beantworten | Antwort im Chat | — |
+| P-S11-10 | erledigt 11.10.2026 | Frage Q-S11-16 im Konzept beantworten | **beantwortet:** Drossel 6×, Faktor 2 (E-S11-26) | — |
+| P-S11-11 | vor S11-04 | Frage Q-S11-17 im Konzept beantworten (absolute Grenze neben Faktor 2?) | Antwort im Chat | — |
+| P-S11-12 | in S11-04 | Mockup der Ladeanzeige (E-S11-27) ansehen und freigeben | Freigabe im Chat | — |
 | **P-S11-02** | **jetzt** (Halt) | 1. In VS Code mit Monkey-C-Erweiterung den Ordner `tools/uhr-pruefstand/krypto-probe/` öffnen. 2. Je Uhr „Monkey C: Build for Device", Gerät wählen. 3. Die `.prg` per USB nach `GARMIN/APPS/` kopieren, Uhr trennen. 4. „Krypto-Probe" starten, rund 10 s warten, bis `ERGEBNIS …` steht. 5. Mit Hoch/Runter (Venu 3s: wischen) blättern und **alle Zeilen** abschreiben oder fotografieren — besonders `ECDH …`, `T-PAAR …` und die vier `T-…`-Zeilen. 6. Für Simulator-Vergleich auf dem Arbeitsplatz dasselbe mit F5. Danach die App von der Uhr löschen. | je Uhr `ERGEBNIS 7 gut, 0 Fehler`; `ECDH gut (little-endian, umgedreht)` wie im Simulator; `PACKEN nicht vorhanden` | eine Zeile `FEHLER`, ein Absturz (IQ-Symbol), `ERGEBNIS` erscheint nicht; oder `ECDH gut (big-endian)` — dann rechnet die Uhr anders als der Simulator, und S11-08 muss beide Fälle kennen |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |

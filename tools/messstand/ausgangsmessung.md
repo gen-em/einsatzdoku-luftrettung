@@ -384,6 +384,46 @@ Läufe 0.
   einen Median von 423: Die Grenze gilt für jede Einzelansicht, also misst
   der Schritt die teuerste.
 
+**Zweiter Lauf, am selben Tag und auf derselben Maschine** — mit zwei
+Messungen, die die Betreiberin dazu haben wollte: die **Zeitraumübersicht
+für einen Monat** und der **GPX-Export, zerlegt in seine Abschnitte**, je
+einmal mit und ohne Passwort. Seither schreibt die Probe den Prozessor in
+jedes Protokoll (E-S11-28). Prozessor: Intel Xeon 2,10 GHz, 4 Kerne.
+
+| Messung | Drossel 6× | ungedrosselt |
+|---|---|---|
+| Einsatz mit Spur öffnen | Median **1,33 s** (1,27–1,86) | Median **0,45 s** (0,42–0,52) |
+| Diensttag mit Ruhe-Spuren öffnen | Median **2,35 s** (1,78–2,38) | Median **0,51 s** (0,45–0,74) |
+| Zeitraumübersicht, **ein Monat** (03/2026, 588 Einsätze) | sichtbar Median **2,38 s**, fertig **4,04 s** | sichtbar **0,45 s**, fertig 0,53 s¹ |
+| Zeitraumübersicht, ganzes Jahr (4071 Einsätze) | sichtbar 2,85 s, fertig 5,75 s | sichtbar 0,77 s, fertig 0,87 s |
+| Backup erzeugen | 56,49 s | 40,01 s |
+| **GPX-Export Jahr, Passwort an** | **329,6 s**, Halde 372 MB | **69,8 s**, Halde 364 MB |
+| — Daten laden · Patientendaten entschlüsseln | 1,8 s · 0,4 s | 1,1 s · 0,05 s |
+| — Spuren laden (328 Anfragen zu je 25) und 8174 GPX bauen | 115,8 s | 19,3 s |
+| — Archiv packen mit AES (32 MB) | **208,5 s** | **47,9 s** |
+| **GPX-Export Jahr, Passwort aus** | **270,2 s**, Halde 329 MB | **55,7 s**, Halde 323 MB |
+| — Spuren laden und GPX bauen · Archiv packen | 85,5 s · 178,8 s | 18,0 s · 35,7 s |
+
+¹ Ungedrosselt meldete der Monat in vier von fünf Läufen keine Aufgabe über
+50 ms; „fertig" ist dort nicht messbar und liegt bei „sichtbar". Die Zahl
+stammt aus dem einen Lauf, der eine meldete.
+
+**Was die Zahlen zusätzlich sagen.**
+
+- **Zwei Drittel des GPX-Exports sind das Packen des Archivs im Browser**,
+  nicht die Spuren; die AES-Verschlüsselung des Archivs kostet bei 6× rund
+  30 s davon. S11 fügt beim Laden der Spuren das Öffnen der Hüllen hinzu
+  (im Browser 0,2 bis 3 ms je Stück, `tools/proben/huelle/`).
+- **Die Zeitraumübersicht lädt keine Spur.** `api/range.php` liefert keine
+  Spurpunkte, keine Phasenkoordinaten und kein Transportziel, nur
+  `site_ele_m` und die Standorte der Dienste. Nach S11 liegt die Ortshöhe im
+  `pat_blob`, der hier ohnehin für jeden Einsatz entschlüsselt wird; eine
+  Gerätehülle öffnet die Seite nicht.
+- **Die Streuung zwischen zwei Läufen ist groß.** Derselbe Code, dieselbe
+  Maschine, derselbe Tag: Diensttag 1,71 s im ersten Lauf, 2,35 s im
+  zweiten (je Median aus fünf). Ein Vergleich gegen den Faktor 2 aus
+  E-S11-26 braucht deshalb mehrere Läufe vorher und nachher (F-S11-22).
+
 **Am Prüfmittel berichtigt** (F-S11-14): Die Zähler der Browserprobe leben
 je Dokument. Ein Schritt, der navigiert, rechnete „nachher − vorher" über
 zwei Seiten und meldete im ersten Lauf **PBKDF2 = −1**. Seit S11-01 zählt

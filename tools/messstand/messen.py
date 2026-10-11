@@ -169,6 +169,18 @@ if ($tage) {
         + ["einsaetze" => count($ids),
            "einsatz_punkte" => array_sum(array_intersect_key($mz, array_flip($ids)))];
 }
+/* Der Monat mit den meisten Einsaetzen im Jahr des neuesten Diensttags —
+ * dasselbe Jahr, das die Browserprobe fuer die Zeitraumuebersicht nimmt. */
+$j = $pdo->prepare("SELECT YEAR(MAX(day)) FROM days WHERE user_id = ?");
+$j->execute([$uid]);
+$jahr = (int)$j->fetchColumn();
+$mo = $pdo->prepare("SELECT MONTH(started_at) m, COUNT(*) n FROM missions
+                      WHERE user_id = ? AND deleted_at IS NULL AND YEAR(started_at) = ?
+                      GROUP BY m ORDER BY n DESC, m LIMIT 1");
+$mo->execute([$uid, $jahr]);
+if ($zeile = $mo->fetch(PDO::FETCH_ASSOC)) {
+    $aus["monat"] = ["jahr" => $jahr, "monat" => (int)$zeile["m"], "einsaetze" => (int)$zeile["n"]];
+}
 echo json_encode($aus), "\n";
 """
     server = WERKZEUGE.parent / "server"
@@ -177,12 +189,13 @@ echo json_encode($aus), "\n";
     if e.returncode != 0:
         raise RuntimeError(f"Ziele der S11-Messungen: {e.stderr.strip()[:400]}")
     ziele = json.loads(e.stdout)
-    if "einsatz" not in ziele or "tag" not in ziele:
+    if "einsatz" not in ziele or "tag" not in ziele or "monat" not in ziele:
         raise RuntimeError(f"Ziele der S11-Messungen unvollstaendig: {ziele}")
     melde(f"  Einsatz {ziele['einsatz']['id']} ({ziele['einsatz']['punkte']} Punkte, "
           f"Median aller Spuren {ziele['punkte_je_spur_median']}); "
           f"Diensttag {ziele['tag']['id']} ({ziele['tag']['ruhe_segmente']} Ruhe-Segmente, "
-          f"{ziele['tag']['ruhe_punkte']} Ruhe-Punkte, {ziele['tag']['einsaetze']} Einsaetze)")
+          f"{ziele['tag']['ruhe_punkte']} Ruhe-Punkte, {ziele['tag']['einsaetze']} Einsaetze); "
+          f"Monat {ziele['monat']['monat']:02d}/{ziele['monat']['jahr']} ({ziele['monat']['einsaetze']} Einsaetze)")
     return ziele
 
 

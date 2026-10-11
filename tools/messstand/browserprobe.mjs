@@ -35,6 +35,7 @@
  * Umgebung: MESSSTAND_KONTO, MESSSTAND_PASSWORT, MESSSTAND_BACKUP_PASSWORT
  */
 import { writeFileSync, statSync } from 'node:fs';
+import { cpus, totalmem } from 'node:os';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
@@ -58,8 +59,20 @@ const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownl
  * interessant, weil dort das Entsperren liegt. */
 await kontext.addInitScript(() => {
   const z = { pbkdf2: 0, jsonMax: 0, jsonParse: 0, jsonStringify: 0, ersteZeile: null, lang: [],
-              dokument: Math.random() };
+              dokument: Math.random(), zustand: [] };
   window.__messstand = z;
+
+  /* DIE ZUSTANDSZEILE DES EXPORTS MIT ZEITSTEMPEL (S11-01): Jeder neue Text
+   * unter dem Exportknopf ist ein Abschnitt („Daten werden geladen…",
+   * „Tracks 25 / 8174", „Archiv wird … gepackt…"). Daraus zerlegt der
+   * GPX-Schritt seine Dauer. */
+  new MutationObserver(function () {
+    const e = document.getElementById('exp_state');
+    if (!e) { return; }
+    const t = e.textContent.trim();
+    const l = z.zustand[z.zustand.length - 1];
+    if (!l || l[1] !== t) { z.zustand.push([performance.now(), t]); }
+  }).observe(document, { childList: true, subtree: true, characterData: true });
 
   /* DIE LANGAUFGABEN DER SEITE (R4-27): Beginn und Ende jeder Aufgabe über
    * 50 ms. Aus ihnen liest der Zeitraumschritt, wann der Hauptfaden zur
@@ -258,7 +271,8 @@ async function entsperren(fertig) {
 }
 
 // ---------------------------------------------------------------- Ablauf
-console.log(`Browserprobe gegen ${basis}, Drossel ${drossel}×, Konto ${konto}`);
+console.log(`Browserprobe gegen ${basis}, Drossel ${drossel}×, Konto ${konto}, `
+  + `Prozessor ${cpus()[0]?.model || '?'} (${cpus().length} Kerne)`);
 const messungen = [];
 
 messungen.push(await messen('Anmelden', async () => {
@@ -375,8 +389,11 @@ const zeitraumZiel = await seite.locator('aside a[href*="?d="]').first()
                                 .getAttribute('href').catch(() => null);
 const zeitraumJahr = (zeitraumZiel && /d=(\d{4})-/.exec(zeitraumZiel)?.[1])
   || String(new Date().getUTCFullYear());
-const zeitraum = await messen('Zeitraumübersicht (ganzes Jahr)', async () => {
-  await seite.goto(`${basis}/zeitraum.php?y=${zeitraumJahr}`,
+/* SEIT S11-01 EINE FUNKTION FUER JAHR UND MONAT — derselbe Weg, dieselben
+ * zwei Zahlen (sichtbar, fertig); der Monat kommt in den S11-Messungen dazu. */
+async function zeitraumMessen(name, abfrage, zusatz) {
+const zeitraum = await messen(name, async () => {
+  await seite.goto(`${basis}/zeitraum.php?${abfrage}`,
                    { waitUntil: 'domcontentloaded', timeout: 300000 });
   /* Gewartet wird auf die erste ENTSCHLUESSELTE Zeile, nicht auf das
      Seitenladen: Die Tabelle entsteht im Browser aus `api/range.php`, und
@@ -386,7 +403,7 @@ const zeitraum = await messen('Zeitraumübersicht (ganzes Jahr)', async () => {
                        .catch(() => { /* ein Jahr ohne Einsätze — dann zählt die Seite selbst */ });
   if (await entsperren(zeileDa)) { await zeileDa; }
   await zeileDa;
-  return { jahr: zeitraumJahr };
+  return { ...zusatz };
 });
 try {
   const zeilen = await seite.locator('#rangetable tbody tr').count();
@@ -421,7 +438,10 @@ try {
 console.log(`    sichtbar ${zeitraum.dauer_s} s · erste Zeile im DOM ${zeitraum.erste_zeile_im_dom_s} s`
   + ` · fertig ${zeitraum.fertig_s} s · ${zeitraum.einsatzzahl || '—'}`
   + (zeitraum.fehler ? ` · FEHLER ${zeitraum.fehler}` : ''));
-messungen.push(zeitraum);
+return zeitraum;
+}
+messungen.push(await zeitraumMessen('Zeitraumübersicht (ganzes Jahr)', `y=${zeitraumJahr}`,
+                                    { jahr: zeitraumJahr }));
 
 /* Die Nachbearbeitung („Zuordnung nachtragen") ist das Gegenstueck: Sie
  * entsteht vollstaendig auf dem SERVER und laedt kein JSON nach. Was hier
@@ -563,7 +583,10 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
    * des neuesten Diensttags, wie die Zeitraumuebersicht. Personenbezogene
    * Angaben an (sonst gibt es keine Spuren, A9), Passwortschutz wie
    * vorbelegt an — gemessen wird der Weg, den eine NutzerIn geht. */
-  const gpx = await messen('GPX über einen Zeitraum (Export Profil B)', async () => {
+  /* Zweimal: mit Passwort (vorbelegt, der Weg einer NutzerIn) und ohne —
+   * der Unterschied ist die AES-Verschlüsselung des Archivs (S11-01). */
+  for (const pwOn of [true, false]) {
+  const gpx = await messen(`GPX über einen Zeitraum (Export Profil B, Passwort ${pwOn ? 'an' : 'aus'})`, async () => {
     await seite.goto(`${basis}/import.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
     await seite.locator('#exp_go').waitFor({ state: 'visible', timeout: 180000 });
     await seite.fill('#exp_von', `${zeitraumJahr}-01-01`);
@@ -580,9 +603,9 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
     await schalten('exp_pat');
     await seite.locator('#exp_gpx_row').waitFor({ state: 'visible', timeout: 10000 });
     await schalten('exp_gpx');
-    await schalten('exp_pw');
-    await seite.fill('#exp_pw1', bpw);
-    await seite.fill('#exp_pw2', bpw);
+    if (pwOn) { await schalten('exp_pw'); }
+    else if (await seite.locator('#exp_pw').isChecked()) { await seite.click('label[for="exp_pw"]'); }
+    if (pwOn) { await seite.fill('#exp_pw1', bpw); await seite.fill('#exp_pw2', bpw); }
     const warten = seite.waitForEvent('download', { timeout: 1800000 });
     await seite.click('#exp_go');
     for (let i = 0; i < 8; i++) {
@@ -596,16 +619,62 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
     await dl.saveAs(ziel);
     const meldung = (await seite.locator('#exp_state').textContent().catch(() => '') || '').trim();
     const spuren = Number(/(\d+) GPX-Tracks enthalten/.exec(meldung)?.[1] || 0);
+    /* Abschnitte (S11-01): ab „Daten werden geladen…" bis „Fertig". Die
+     * Zeilen „Tracks n / m" zählen zusammen als „Spuren laden und GPX bauen". */
+    const zustand = await seite.evaluate(() => window.__messstand.zustand);
+    const abschnitte = {};
+    const beginn = zustand.findIndex(z => z[1].startsWith('Daten werden geladen'));
+    for (let i = Math.max(0, beginn); i < zustand.length - 1; i++) {
+      const t = zustand[i][1];
+      const n = t.startsWith('Tracks') ? 'Spuren laden und GPX bauen'
+        : t.startsWith('Daten werden geladen') ? 'Daten laden'
+        : t.startsWith('Geschützte Angaben') ? 'Patientendaten entschlüsseln'
+        : t.startsWith('Archiv') ? 'Archiv packen' + (pwOn ? ' (mit AES)' : '')
+        : t.startsWith('Einsätze werden aufbereitet') ? 'Einsätze aufbereiten' : t.slice(0, 40);
+      abschnitte[n] = Math.round(((abschnitte[n] || 0) + (zustand[i + 1][0] - zustand[i][0]) / 1000) * 100) / 100;
+    }
+    console.log('    Abschnitte: ' + Object.entries(abschnitte).map(([k, v]) => `${k} ${v} s`).join(' · '));
     if (!spuren) { throw new Error(`Export ohne GPX-Tracks: „${meldung.slice(0, 160)}"`); }
     return { jahr: zeitraumJahr, datei: ziel, gpx_spuren: spuren, meldung: meldung.slice(0, 200),
+             abschnitte_s: abschnitte,
              datei_mb: Math.round(statSync(ziel).size / 1024 / 1024 * 100) / 100 };
   });
   messungen.push(gpx);
+  }
+
+  /* DER MONAT IN DER ZEITRAUMUEBERSICHT (S11-01): der Monat mit den meisten
+   * Einsaetzen im Jahr des neuesten Diensttags, gewaehlt von `messen.py`.
+   * Wiederholt wie die Einzelansichten; Median von „sichtbar" und „fertig". */
+  if (ziele.monat) {
+    const laeufe = [];
+    const q = `y=${ziele.monat.jahr}&m=${String(ziele.monat.monat).padStart(2, '0')}`;
+    for (let i = 0; i < wiederholungen; i++) {
+      laeufe.push(await zeitraumMessen(`Zeitraumübersicht (ein Monat) [${i + 1}]`, q, {}));
+    }
+    const med = (k) => { const a = laeufe.map(l => l[k]).filter(x => x != null).sort((x, y) => x - y);
+                         return a.length ? a[Math.floor(a.length / 2)] : null; };
+    const monat = { schritt: 'Zeitraumübersicht (ein Monat)', dauer_s: med('dauer_s'),
+                    fertig_s: med('fertig_s'), laeufe: laeufe.length,
+                    dauer_min_s: Math.min(...laeufe.map(l => l.dauer_s)),
+                    dauer_max_s: Math.max(...laeufe.map(l => l.dauer_s)),
+                    halde_spitze_mb: Math.max(...laeufe.map(l => l.halde_spitze_mb)),
+                    einsatzzahl: laeufe[0].einsatzzahl, monat: ziele.monat,
+                    fehler: laeufe.map(l => l.fehler).find(Boolean) || null, einzeln: laeufe };
+    console.log(`  ${monat.schritt}: Median sichtbar ${monat.dauer_s} s, fertig ${monat.fertig_s} s`);
+    messungen.push(monat);
+  } else {
+    messungen.push({ schritt: 'Zeitraumübersicht (ein Monat)', fehler: 'MESSSTAND_ZIELE ohne Monat' });
+  }
 }
 
 const bestand = await seite.evaluate(() => document.title).catch(() => '');
 const ergebnis = {
   basis, konto, drossel, gemessen_am: new Date().toISOString(),
+  /* DIE MASCHINE (S11-01): Die Drossel bremst relativ zum Prozessor, auf dem
+   * die Probe laeuft. Ein Vorher-nachher-Vergleich gilt nur bei gleichem
+   * Prozessor — deshalb steht er in jedem Protokoll. */
+  maschine: { prozessor: cpus()[0]?.model || '?', kerne: cpus().length,
+              speicher_gb: Math.round(totalmem() / 1024 ** 3) },
   messungen, konsolenfehler: konsole, titel: bestand,
   gescheiterte_anfragen: [...new Set(gescheitert)],
   budgets_z3: { json_mb: 10, halde_mb: 100, pbkdf2_je_vorgang: 1, post_mb: 2 },
