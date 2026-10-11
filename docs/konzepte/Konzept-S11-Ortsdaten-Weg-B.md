@@ -32,10 +32,10 @@ jeder Vergabe).
 >
 > | | |
 > |---|---|
-> | Stand | **11.10.2026 — S11-00 erledigt, alle Fragen beantwortet; das Konzept wartet auf die Freigabe** (P-S11-01). Danach Fahrplanzeile auf „freigegeben", dann S11-01. |
+> | Stand | **11.10.2026 — Konzept freigegeben** durch die Betreiberin (P-S11-01); Fahrplanzeile 12a auf „freigegeben" (Rahmenplan Fassung 158). **Als Nächstes: S11-01** (Messstand, Grundlinie) in einer Umsetzungssitzung mit Opus auf diesem Zweig. |
 > | Entschieden | E-S11-01 bis E-S11-25 (Abschnitt 2.1). E-S11-02 bis -15 und -25 sind die Antworten der Betreiberin auf Q-S11-01 bis -15 vom 11.10.2026; die Folgerung in E-S11-09 (einmal neu koppeln) und E-S11-22 (Nr. 92 und 161 in S11) hat sie am selben Tag bestätigt. E-S11-17 bis -21 und -23 stehen ohne Widerspruch. |
-> | Offen | keine Frage; die Freigabe des Konzepts. |
-> | Umsetzung | **S11-00 erledigt** 11.10.2026: Spanne 380–389, Fahrplanzeile, dieses Dokument, Prüfdokument. |
+> | Offen | keine Frage. |
+> | Umsetzung | **S11-00 erledigt** 11.10.2026: Spanne 380–389, Fahrplanzeile, dieses Dokument, Prüfdokument; Fragen Q-S11-01 bis -15 beantwortet, Freigabe erteilt. S11-01 bis S11-12 offen. |
 > | Halt | nach S11-02 (Ergebnis der Probe-App auf den drei Uhren bestimmt die Hüllenparameter); vor S11-12 (das Einmalwerkzeug muss auf Produktiv gelaufen sein). |
 > | Fable-Schritte | keine (E-S11-01). |
 > | Fächerung | Konzept: drei lesende Leser (Opus), siehe Kopf. Umsetzung: nach Abschnitt 5. |

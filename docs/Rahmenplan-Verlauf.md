@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 158 | 11.10.2026 | 12a freigegeben | Konzept S11 von der Betreiberin freigegeben; Fahrplanzeile 12a auf „freigegeben", Kopf: als Nächstes S11-01. Alle Fragen beantwortet, zuletzt Q-S11-15 (ausgedünnt wird nach 31 Tagen, E-S11-25). |
 | 157 | 11.10.2026 | S11-00 | 12a beginnt: Konzept S11 (Opus, E-S11-01) auf `ccr-dd33b6e8-ismfm0`, Spanne 380–389; Nr. 236 parallel (E-S11-24). Berichtigt: Gerätedaten passen nicht in den `pat_blob` (F-S11-03); „Backup Fassung 4" meinte die nächste Nutzlastfassung (F-S11-05). |
 | 156 | 11.10.2026 | 12-Abschluss | Erledigt-Zeile 12 (PR #103, Freigabe 11.10.2026), Fahrplanzeile und Block 12 heraus, Reihenfolge ab 12a; 6.1: Prüfliste R17 (P-R17-03 bis -05). `Review-R17.md` bleibt für 12b (E-R17-02). |
 | 155 | 11.10.2026 | R17-04 | Zuarbeit: Umgebung `produktion` auf `main` und die drei Tag-Muster beschränken (F-R17-04), dazu Pflichtprüfer und Org-Zweitfaktor nachsehen. Fahrplanzeile 12 und R78: der Krypto-Review ist im Bedrohungsmodell aufgegangen und gelöscht (E-R17-13). |
