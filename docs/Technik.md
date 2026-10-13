@@ -959,7 +959,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.99q. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.99q) |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.99q. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.99q). **Seit Web 22.0.0 das Schlüsselpaar des Kontos** (S11-03): `kp_oeffentlich` (öffentlicher Teil eines ECDH-P-256-Paars, SPKI, **versiegelt** mit `sk_versiegeln()`, Zweck `kontopaar|<user_id>`), `kp_privat` (privater Teil unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:`), `kp_seit`. Leer heißt: noch kein Paar. Siehe 4.99s |
 | `vertraute_geraete` | „Gerät merken" beim Zweitfaktor (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07): `user_id` (`ON DELETE CASCADE`), `token_hash` (SHA-256 des Cookies `EDGERAET`, eindeutig), `angelegt_am`, `zuletzt_am` (fortgeschrieben bei jeder Anmeldung ohne Code, ohne Protokoll). **Kein User-Agent, kein Gerätename** (R36). **Gültig ist eine Zeile, solange `angelegt_am` plus die heutige Dauer ihrer Rollengruppe in der Zukunft liegt** — gerechnet beim Prüfen, nicht beim Merken (E-SR-17); der Aufräumjob löscht abgelaufene. Reist im Komplett-Stand mit (nur Hashes), **nicht** im Konto-Backup: Ein Cookie gehört zu einem Browser, nicht zu einem Konto. Mehr in 4.99q |
 | `passkeys` | Passkeys als Verfahren des Zweitfaktors (seit Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33): `user_id` (`ON DELETE CASCADE`), `credential_id` (Base64url der Kennung, höchstens 1023 Byte → `VARCHAR(1364)`, `ascii_bin`), `credential_hash` (SHA-256 der Kennung, `CHAR(64)`, **eindeutig** — seit Web 21.11.0, E-SR-47: Ein Index über die Kennung selbst reichte über 767 Byte und scheiterte unter einem älteren Zeilenformat), `rp_id` (die Adresse, für die der Passkey entstand, seit Web 21.11.0, E-SR-48; Index `idx_konto` über `user_id, rp_id`), `oeffentlich` (der öffentliche Schlüssel als SPKI-PEM — bei der Registrierung aus COSE überführt, damit die Anmeldung ohne CBOR auskommt), `alg` (-7 ES256 oder -257 RS256), `zaehler` (Signaturzähler, E-SR-33), `bezeichnung` (bis 40 Zeichen oder leer), `angelegt_am`, `zuletzt_am`, `gewarnt_am` (letzte Mail wegen eines zurückgelaufenen Zählers, höchstens eine je Tag, E-SR-46). **Kein User-Agent, keine AAGUID, kein Gerätename** (E-SR-31, R36); höchstens zehn je Konto **und Adresse** (`PK_HOECHSTENS`, geprüft unter `FOR UPDATE`). Reist im Komplett-Stand mit, **nicht** im Konto-Backup: Ein Passkey gilt nur für die Adresse, an der er entstand (Backup-Format 4, 6.11). Mehr in 4.99q |
 | `totp_codes` | Die Wiederherstellungscodes des Zweitfaktors (seit Web 20.42.0, P5c/AP5): `user_id`, `hash` (`password_hash()`), `benutzt_am` (NULL = offen). **Nicht am Serverschlüssel** (E-P5c-42) — sie sind der Rückweg für genau den Fall, dass das Geheimnis nicht mehr zu öffnen ist. `ON DELETE CASCADE` mit dem Konto. Angenommen wird atomar (`UPDATE … WHERE benutzt_am IS NULL`, gültig bei `rowCount() = 1`) |
@@ -5627,6 +5627,14 @@ folgt nichts über den Block. Wie `pat_wrap_rc` hängt `rw_privat` **nicht** am
 Server-Anteil (`RW_PRIVAT_RE` weist `edka1:` ab), weil er mit dem
 Wiederherstellungsschlüssel allein aufgehen muss.
 
+**Seit Web 22.0.0 auch der private Teil des Kontopaars** (`users.kp_privat`,
+`edk1:`, S11-03, 4.99s) — mit derselben Begründung: Er muss mit dem
+Wiederherstellungsschlüssel allein aufgehen, sonst gingen mit dem Anteil
+alle Ortsdaten des Kontos verloren (`KP_PRIVAT_RE` weist `edka1:` ab). Der
+öffentliche Teil (`kp_oeffentlich`) ist nicht geheim, liegt aber
+**versiegelt**: nicht um ihn zu verbergen, sondern damit ihn niemand ohne
+den Serverschlüssel austauschen kann.
+
 #### Klartext-Reste außerhalb der Datenbank (Backlog Nr. 133, K-13)
 
 Drei Stellen, an denen geschützte oder halbgeschützte Angaben **vorübergehend
@@ -8552,6 +8560,57 @@ Dauer, 200 mit genau diesen Feldern, 503 bei ausstehender Migration,
 `speicher_pct` gestellt, ohne Messung und nach `speicher_messen()` gegen die
 Balken der Karte „Speicher", 60 durch und die 61. mit 429) und Wartungsprobe Fall 5a (503 `maintenance` aus dem
 Tor, mit falschem und ohne Token, der Topf zählt nichts).
+
+### 4.99s Das Schlüsselpaar des Kontos und die Gerätehülle (ab Web 22.0.0, S11-03)
+
+*Konzept S11 3.1, 3.2, 3.2a; E-S11-12, -14, -17, -31.* Die Grundlage von S11:
+Uhr und Handy verschließen Spur, Phasenkoordinaten und Reanimation vor dem
+Upload in eine **Gerätehülle**, und nur der Browser öffnet sie. Dafür hat
+jedes Konto ein **ECDH-Paar auf P-256**.
+
+| Stück | Wo | Was es ist |
+|---|---|---|
+| öffentlicher Teil | `users.kp_oeffentlich` | SPKI in Base64, **versiegelt** (`sk_versiegeln()`, Zweck `kontopaar|<id>`) |
+| privater Teil | `users.kp_privat` | PKCS8 unter dem Inhaltsschlüssel, `edk1:` (`KP_PRIVAT_RE`) |
+| Zeitpunkt | `users.kp_seit` | wann es entstand |
+| Bibliothek | `kontopaar_lib.php` | Siegel, Prüfung (P-256 über denselben Lader wie der Rückweg), Zustand, Ablegen, SEC1 für Geräte |
+| Endpunkt | `api/kontopaar.php` | `anlegen` (mit Passwortnachweis) und `abweichung` |
+| Browser | `assets/kontopaar.js`, `assets/crypto.js` | Paar erzeugen, Abgleich, privater Teil als nicht extrahierbarer `CryptoKey`; `geraetehuelleVerschliessen`/`-Oeffnen` |
+
+**Es entsteht still, beim ersten Entsperren nach einer Anmeldung**
+(`unlock.js`, `kontopaarPflegen()`), mit dem Token aus dem Vormerkfach als
+Nachweis des Passworts — dieselbe Stelle und derselbe Grund wie beim Rückweg
+(4.99q): Wer das Paar ablegt, bestimmt, für wen die Geräte verschließen.
+`api/kontopaar.php` legt nur ab, wenn noch keins da ist (409 sonst); ersetzt
+wird nicht, weil ein neues Paar jede Hülle unter dem alten unlesbar machte.
+
+**Der öffentliche Teil geht nur mit gültigem Siegel hinaus** — an die Seite
+(`KP_OEFFENTLICH`, `ui_krypto_bootstrap()`) und bei der Kopplung an das
+Gerät (`kontoschluessel` in `bestaetigen` und `status`, JSON-Vertrag 1a.3a,
+als 65 Byte SEC1). Geht das Siegel nicht auf, ist `KP_STAND` `'siegel'`, das
+Gerät bekommt `null`, und `kp_oeffentlich_lesen()` meldet es im Reiter
+System. Das hält gegen jemanden, der nur die Datenbank beschreiben kann;
+gegen den, der den Server übernimmt, nicht (Bedrohungsmodell 4.1).
+
+**Beim Entsperren gleicht der Browser ab** (`EdKontopaar.abgleichen()`):
+Er leitet aus dem privaten Teil den öffentlichen ab und vergleicht. Bei einer
+Abweichung steht oben auf der Seite eine Meldung, und `api/kontopaar.php`
+schreibt `kontopaar_abweichung` ins Protokoll und meldet im Reiter System
+(Topf `kontopaar`, fünf je Stunde).
+
+**Der Schlüsselwechsel hüllt das Siegel um** (`schluesselwechsel_lib.php`,
+Zweck `kontopaar`); die Schlüsselwechselprobe zählt es mit.
+
+**Das Format der Gerätehülle** steht an einer Stelle, im Kopf von
+`tools/proben/huelle/referenz.py` (Fassung 1): Kennbyte, flüchtiger
+öffentlicher Schlüssel (SEC1), IV, AES-256-CBC mit PKCS#7, HMAC-SHA256 über
+Kopf, Chiffretext und eine Bindung aus Art, `client_ref` und Platz. Ein
+flüchtiges Paar je Hülle, Innenform binär mit 14 Byte je Punkt, höchstens
+500 Punkte je Stück (E-S11-31). Garmin rechnet Schlüssel und Geheimnis in
+der anderen Byteordnung und rechnet um (F-S11-18). Die Hüllenprobe hält
+`crypto.js` byte-gleich gegen die Vektoren.
+
+**Nach dem Deploy:** `update.php` (Migration `2026_10_13_kontopaar`).
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 

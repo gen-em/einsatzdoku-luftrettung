@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Proben gegen die örtliche Installation — ein Läufer für die achtundzwanzig
+# Proben gegen die örtliche Installation — ein Läufer für die neunundzwanzig
 # Prüfungen, die eine Bibliothek oder einen Endpunkt messen (E-PK-24).
 #
 # Aufruf:  bash tools/proben/proben.sh <name> [zusatz…]
@@ -71,6 +71,7 @@ declare -A RUF=(
   [abmelden]="node tools/proben/abmelden/pruefe.mjs"
   [csp-browser]="node tools/proben/csp-browser/browserprobe.mjs"
   [huelle]="bash tools/proben/huelle/probe.sh"
+  [kontopaar]="node tools/proben/kontopaar/probe.mjs"
 )
 
 # Proben, die `alle` NICHT fährt, mit dem Grund daneben. Kein stilles

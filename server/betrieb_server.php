@@ -1013,7 +1013,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         'text'  => 'Serverschlüssel',
         'klein' => $skZustand['stand'] === 'bereit'
             ? 'Kennung ' . $skZustand['kennung'] . ' — versiegelt Backup-Ziele, '
-              . 'Komplett-Backup und Konto-Backups'
+              . 'Komplett-Backup, Konto-Backups und Kontoschlüssel'
             : ($skZustand['stand'] === 'rotation'
                 ? 'Wechsel läuft: neu ' . $skZustand['kennung'] . ', bisher '
                   . $skZustand['kennung_alt'] . ' — versiegelt wird mit dem neuen, der '
@@ -1132,8 +1132,8 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                       . 'noch mit dem bisherigen versiegelt'
                 : ($swPhase === 'nachweis'
                     ? 'Nachweis: jedes Stück wird mit dem neuen geöffnet — ' . $swNoch . $swWeiter
-                    : 'Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups und '
-                      . 'Archive des Protokolls — ' . $swNoch
+                    : 'Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Kontoschlüssel, '
+                      . 'Konto-Backups und Archive des Protokolls — ' . $swNoch
                       . (sw_gezaehlt($swZ) ? ' Stücken' : '') . $swWeiter))),
             'plaketten' => ui_plakette($swPhase === 'fertig' ? 'nachgewiesen'
                                        : ($swPhase === '' ? 'nicht begonnen'

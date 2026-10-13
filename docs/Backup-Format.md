@@ -1641,6 +1641,16 @@ Das Konto-Backup (Abschnitte 1 bis 5) und die Freigabe tragen sie **nicht** —
 beide dienen dem Einspielen in ein anderes Konto, dessen Paar an seinem
 eigenen Inhaltsschlüssel hängt.
 
+**Ebenso das Schlüsselpaar des Kontos** (seit Web 22.0.0, S11-03):
+`users.kp_oeffentlich`, `kp_privat` und `kp_seit` stehen im Dump wie jede
+Spalte; Konto-Backup und Freigabe tragen sie nicht, aus demselben Grund.
+**`kp_oeffentlich` ist mit dem Serverschlüssel versiegelt**, an die
+Kontonummer gebunden: Ein Stand geht nur auf einer Anlage mit demselben
+Serverschlüssel und denselben Kontonummern wieder auf — mit dem
+Wiederanlaufpaket also. Auf einer Anlage mit anderem Serverschlüssel gibt
+der Server den Schlüssel nicht aus (`KP_STAND` `'siegel'`, Reiter System),
+wie das Geheimnis des Zweitfaktors.
+
 ### 6.1 Drei Schichten
 
     1. SQL-Text     ein Statement je Zeile, INSERT-Stapel bis 1 MB

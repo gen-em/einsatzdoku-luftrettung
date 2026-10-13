@@ -372,6 +372,13 @@ const RATE_GRENZEN = [
      * eine Zeile mit einem Zaehler. */
     'csp' => ['max' => 200, 'fenster' => 3600, 'sperre' => 3600],
 
+    /* ABWEICHUNG DES KONTOSCHLUESSELS ZAEHLT DIE MENGE (S11-03,
+     * `api/kontopaar.php`). Der Browser meldet, wenn der oeffentliche Teil
+     * nicht zum privaten passt — einmal je Entsperren. Fuenf je Stunde und
+     * Adresse reichen fuer jeden echten Fall; die Meldung soll den Reiter
+     * System nicht fluten koennen. */
+    'kontopaar' => ['max' => 5, 'fenster' => 3600, 'sperre' => 3600],
+
     /* HEALTH ZAEHLT EBENSO DIE MENGE (P5c/AP6, E-P5c-17, -52).
      *
      * `api/health.php` ist ohne Sitzung erreichbar; der Token schuetzt die

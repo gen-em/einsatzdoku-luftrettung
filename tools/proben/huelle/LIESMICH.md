@@ -14,8 +14,8 @@ python3 tools/proben/huelle/referenz.py erzeugen   # nach einer Formatänderung
 
 `referenz.py` (Python, `cryptography`) ist die Referenz: Format im Kopf,
 `vektoren.json` und `Vektoren.mc` für die Uhr erzeugt sie, `pruefen` rechnet
-jeden Fall nach. `probe.mjs` lädt `huelle.js` (WebCrypto; ab S11-03 in
-`crypto.js`) und prüft je Fall Z, HKDF, Bindung, die Hülle byte-gleich und das
+jeden Fall nach. `probe.mjs` lädt `server/assets/crypto.js` (WebCrypto, seit
+S11-03) und prüft je Fall Z, HKDF, Bindung, die Hülle byte-gleich und das
 Öffnen, je Störung den Grund der Abweisung, dazu einen Rundlauf; Zeiten für
 200 und 500 Punkte stehen dabei, ohne Abnahme. Die Uhr prüft
 `pruefstand.sh kryptoprobe` (`tools/uhr-pruefstand/krypto-probe/`).

@@ -3581,6 +3581,31 @@ function migrationen_katalog(): array
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         },
     ],
+    [
+        'id'    => '2026_10_13_kontopaar',
+        'web'   => '22.0',
+        'label' => 'Schlüsselpaar des Kontos für die Gerätehülle (S11-03)',
+        /* DAS PAAR DES KONTOS (Konzept S11 3.1, S11-03). Drei Spalten an
+         * `users`, wie beim Rückweg: `kp_oeffentlich` ist der oeffentliche
+         * Teil (SPKI, Base64) VERSIEGELT mit dem Serverschluessel (Zweck
+         * `kontopaar|<id>`, rund 210 Zeichen), `kp_privat` der private unter
+         * dem Inhaltsschluessel (`edk1:`), `kp_seit` der Zeitpunkt. Leer heisst:
+         * noch kein Paar — es entsteht beim naechsten Entsperren nach einer
+         * Anmeldung (`assets/unlock.js`). TEXT fuer das Siegel, weil seine
+         * Laenge am Format des Siegels haengt, nicht am Schluessel.
+         *
+         * EINE ANWEISUNG FUER ALLE DREI; `skip` fragt nach der letzten. Nichts
+         * wird geloescht — die Migration ist nicht zerstoerend. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_spalte($pdo, 'users', 'kp_seit');
+        },
+        'sql'   => [
+            "ALTER TABLE users
+               ADD COLUMN kp_oeffentlich TEXT NULL,
+               ADD COLUMN kp_privat      TEXT NULL,
+               ADD COLUMN kp_seit        DATETIME NULL",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

@@ -8068,5 +8068,34 @@ declare(strict_types=1);
  *   eine CPU-Quote des Betriebssystems (F-SR-95). Ohne JavaScript laesst
  *   sich hier kein Konto mehr anlegen, und der Satz unter dem Knopf sagt es.
  *   Kein Schema.
+ *
+ * 22.0.0 IST DIE HAUPTNUMMER VON S11 — DIE ORTSDATEN WERDEN VERSCHLUESSELT
+ *   (Schritt 12a, R78; Konzept S11, Weg B). Bis hierher lagen Spur,
+ *   Koordinate jeder Phase, Reanimationsverlauf und Transportziel im
+ *   Klartext, und aus Spur und Phasenkoordinaten liess sich der Einsatzort
+ *   rekonstruieren, obwohl seine Adresse verschluesselt war. S11 schliesst
+ *   das: Uhr und Handy verschliessen vor dem Upload in eine GERAETEHUELLE
+ *   (ECDH auf P-256, HKDF, AES-256-CBC, HMAC — ein Format fuer Garmin,
+ *   Android und Browser, festgelegt in `tools/proben/huelle/referenz.py`),
+ *   und nur der Browser oeffnet. Die Hauptnummer steht fuer das Ganze:
+ *   Datenmodell, Verschluesselung, Migration. Wie bei S9 zaehlen die
+ *   weiteren Pakete an der Korrekturstelle weiter, bis der Umbau steht.
+ *
+ *   22.0.0 selbst ist das Paket S11-03: DAS SCHLUESSELPAAR DES KONTOS. Ein
+ *   ECDH-Paar je Konto, erzeugt im Browser beim ersten Entsperren nach einer
+ *   Anmeldung — nur mit dem Nachweis des Passworts, wie der Rueckweg. Der
+ *   private Teil liegt unter dem Inhaltsschluessel (`edk1:`, nie `edka1:`:
+ *   der Wiederherstellungsschluessel muss ihn allein oeffnen). Der
+ *   oeffentliche Teil liegt VERSIEGELT mit dem Serverschluessel, gebunden an
+ *   das Konto; ausgegeben wird er nur mit gueltigem Siegel — an die Seite und
+ *   bei der Kopplung an das Geraet (`kontoschluessel` in `bestaetigen` und
+ *   `status`). Wer nur die Datenbank beschreiben kann, kann ihn so nicht
+ *   gegen seinen eigenen tauschen. Der zweite Riegel ist der Abgleich beim
+ *   Entsperren: Passt der oeffentliche nicht zum privaten, sagt es die Seite
+ *   und der Server meldet es. Der Schluesselwechsel huellt das Siegel mit um
+ *   (neuer Zweck `kontopaar`). Die Geraetehuelle selbst steht in
+ *   `crypto.js`; verschlossen wird mit ihr noch nichts — das beginnt mit
+ *   S11-04. SCHEMA: drei Spalten an `users` (`kp_oeffentlich`, `kp_privat`,
+ *   `kp_seit`) — nach dem Deploy `update.php` aufrufen.
  */
-const WEB_VERSION = '21.14.0';
+const WEB_VERSION = '22.0.0';

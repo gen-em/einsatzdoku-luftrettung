@@ -7,7 +7,7 @@ Format byte-gleich schreiben und lesen.
 WOFUER. Die Hülle entsteht an drei Stellen und wird an einer geöffnet. Ob
 drei Umsetzungen dasselbe tun, zeigt nur ein gemeinsamer Satz fester Eingaben
 mit erwarteten Ausgaben: diese Datei. Sie ist die Referenz, gegen die die
-Browserprobe (`probe.mjs`), die Probe-App der Uhr
+Browserprobe (`probe.mjs`, gegen `server/assets/crypto.js`), die Probe-App der Uhr
 (`tools/uhr-pruefstand/krypto-probe/`) und später die Android-Prüffälle
 laufen. Wer das Format ändert, ändert es HIER und erzeugt die Vektoren neu.
 

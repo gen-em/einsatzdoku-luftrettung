@@ -80,8 +80,8 @@ if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
                      * NICHT an ihm hängen, und das Zurücksetzen durch die
                      * Verwaltung. */
                     'wozu' => 'Öffnet alles Versiegelte: Komplett-Backup, Konto-Backups, '
-                            . 'Zugänge der Backup-Ziele, Archive des Protokolls und die '
-                            . 'Geheimnisse des Zweitfaktors.'];
+                            . 'Zugänge der Backup-Ziele, Archive des Protokolls, die '
+                            . 'Geheimnisse des Zweitfaktors und die Siegel der Kontoschlüssel.'];
 }
 /* DER BISHERIGE SERVERSCHLÜSSEL (SR-03, E-SR-10) — nur während eines
  * Wechsels, und mit dem Satz, der das alte Blatt vor dem Reißwolf bewahrt:

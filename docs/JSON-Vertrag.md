@@ -203,7 +203,7 @@ Antwort `200`, drei Zustände:
 |---|---|
 | `{"zustand":"offen","rest_s":540}` | noch hat niemand den Code eingegeben; `rest_s` ist die Restgültigkeit in Sekunden |
 | `{"zustand":"beansprucht","konto":"ph***@gen-em.org","rest_s":300}` | ein Konto hat den Code eingegeben. `konto` ist die **maskierte E-Mail-Adresse** dieses Kontos: die ersten zwei Zeichen des lokalen Teils, `***`, die volle Domain, alles klein geschrieben. Sie ist nur für den Dialog auf dem Gerät bestimmt und wird dort **nicht gespeichert** |
-| `{"zustand":"gekoppelt"}` | zu diesen Kopfzeilen gibt es bereits ein Gerät — **ohne** `rest_s`, denn eine Sitzung gibt es nicht mehr. Das ist der Fall, wenn die Antwort auf `bestaetigen ja` verlorenging: Das Gerät darf die Zugangsdaten als gültig speichern |
+| `{"zustand":"gekoppelt","kontoschluessel":"BBcf…"}` | zu diesen Kopfzeilen gibt es bereits ein Gerät — **ohne** `rest_s`, denn eine Sitzung gibt es nicht mehr. Das ist der Fall, wenn die Antwort auf `bestaetigen ja` verlorenging: Das Gerät darf die Zugangsdaten als gültig speichern. Seit Web 22.0.0 mit dem **Kontoschlüssel** (1a.3a) |
 
 **Warum die Adresse maskiert ist und die Domain trotzdem voll.** Der Zweck
 des Feldes ist, dass die Trägerin ihr eigenes Konto **erkennt** — an einer
@@ -246,7 +246,7 @@ Mit Kopfzeilen. `antwort` ist Pflicht und lautet `ja` oder `nein`:
 
 | Antwort | Bedeutung |
 |---|---|
-| `200 {"ok":true}` (nach `ja`) | **Das Gerät existiert jetzt** und ist aktiv; die Sitzung ist beendet. Das Gerät speichert Kennung und Schlüssel dauerhaft. Die Kontoinhaberin bekommt eine E-Mail — dieselbe wie bisher beim Koppeln. Eine Wiederholung derselben Anfrage antwortet ebenfalls `200`: Das Gerät gibt es schon |
+| `200 {"ok":true,"kontoschluessel":"BBcf…"}` (nach `ja`) | **Das Gerät existiert jetzt** und ist aktiv; die Sitzung ist beendet. Das Gerät speichert Kennung und Schlüssel dauerhaft — seit Web 22.0.0 auch den **Kontoschlüssel** (1a.3a). Die Kontoinhaberin bekommt eine E-Mail — dieselbe wie bisher beim Koppeln. Eine Wiederholung derselben Anfrage antwortet ebenfalls `200` mit dem Kontoschlüssel: Das Gerät gibt es schon |
 | `200 {"ok":true}` (nach `nein`) | die Sitzung samt Zugangsdaten ist gelöscht. `nein` ist in **jedem** Zustand erlaubt, auch `offen` und auch nach Fristablauf — so bricht ein Gerät ab, das zurück auf seine Sync-Seite geht |
 | `400 {"error":"payload"}` | `antwort` fehlt oder lautet etwas anderes als `ja` oder `nein`. Zählt **nicht** im Ratenschutz: Hier rät niemand, hier ist ein Client falsch gebaut |
 | `401 {"error":"auth"}` | Kennung unbekannt oder Schlüssel falsch — wie in 1a.2 |
@@ -288,6 +288,34 @@ gelöscht, die Antwort ist `200 {"ok":true}`. Es gibt kein Gerät, das sich
 trennen ließe, und die Sitzung braucht danach niemand mehr. Die Alternative —
 ein Fehler — hinterließe eine Sitzung, die bis zum Fristende Platz belegt,
 und zwar für einen Aufruf, der genau das Richtige wollte.
+
+### 1a.3a Der Kontoschlüssel — seit Web 22.0.0 (S11-03)
+
+Wer gekoppelt ist, bekommt in der Antwort auf `bestaetigen` (`ja`, auch
+wiederholt) und auf `status` (`gekoppelt`) das Feld `kontoschluessel`: den
+**öffentlichen Schlüssel des Kontos**, ein Punkt auf P-256 als 65 Byte SEC1
+(`0x04 ‖ X ‖ Y`, big-endian) in Base64 — 88 Zeichen. Damit verschließt das
+Gerät Spur, Phasenkoordinaten und Reanimation vor dem Upload in eine
+**Gerätehülle** (Format: Kopf von `tools/proben/huelle/referenz.py`); nur der
+Browser des Kontos kann sie öffnen.
+
+| Wert | Bedeutung / Verhalten des Geräts |
+|---|---|
+| Base64, 88 Zeichen | speichern, neben Kennung und Schlüssel; ab jetzt damit verschließen |
+| `null` | das Konto hat noch kein Schlüsselpaar (es entsteht beim ersten Entsperren nach einer Anmeldung im Browser), **oder** sein Siegel geht auf dem Server nicht auf. Das Gerät sendet keine Ortsdaten und zeigt „Neu koppeln“ (E-S11-09) |
+
+**Beide Antworten tragen ihn, weil beide Geräte die Kopplung auch über
+`status` abschließen** (die Antwort auf `ja` kann verlorengehen, 1a.2).
+
+**Garmin rechnet anders herum.** `Toybox.Cryptography` erwartet Schlüssel je
+Koordinate byte-vertauscht (little-endian) und ohne `0x04`; das gemeinsame
+Geheimnis kommt little-endian. Die Uhr rechnet um; auf der Leitung steht
+immer SEC1 (Konzept S11, F-S11-18).
+
+**Ein Gerät der alten Fassung übergeht das Feld.** Bis S11-08 (Garmin) und
+S11-09 (Android) wertet es niemand aus; mit der Hauptauslieferung von S11
+nimmt der Server keine Klartext-Ortsdaten mehr an, und ein Gerät ohne
+Schlüssel muss einmal neu gekoppelt werden (E-S11-09).
 
 ### 1a.4 Zwei Formen des Blocks `geraet` — Uhr und Handy
 

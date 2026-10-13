@@ -2456,6 +2456,17 @@ Zwei Dinge sind dabei wichtig:
   der Import gesperrt und der Export nur ohne personenbezogene Angaben
   möglich.
 
+**Der Schlüssel für Uhr und Handy (seit Web 22.0.0).** Beim ersten
+Entsperren nach einer Anmeldung legt die Anwendung still ein zweites
+Schlüsselpaar für dein Konto an. Uhr und Handy bekommen davon den
+öffentlichen Teil beim Koppeln; damit werden sie künftig GPS-Daten, Ortsangaben
+der Phasen und Reanimation verschlüsseln, bevor sie etwas senden — öffnen
+kann es nur dein Browser. Du musst dafür nichts tun. Steht oben auf einer
+Seite **„Der Schlüssel, mit dem Uhr und Handy für dieses Konto verschlüsseln,
+passt nicht zu deinem privaten Schlüssel"**, koppel bitte kein neues Gerät und
+gib der BetreiberIn Bescheid: Dann hat jemand den Schlüssel verändert, oder
+es ist ein Fehler aufgetreten. Die Meldung ist bereits an sie gegangen.
+
 **Alter aus Geburtsdatum:** Das Alter berechnet die Anwendung aus dem
 Geburtsdatum, bezogen auf den **Einsatztag**, nicht auf heute — ein Einsatz von
 vor Jahren zeigt weiterhin das damalige Alter. Bei gesetztem Geburtsdatum ist

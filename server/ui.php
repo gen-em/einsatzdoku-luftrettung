@@ -3403,6 +3403,20 @@ function ui_krypto_bootstrap(array $o = []): void
         array_splice($skripte, (int)$unlockAn, 0, ['assets/rueckweg.js']);
     }
 
+    /* DAS SCHLÜSSELPAAR DES KONTOS (S11-03, Konzept S11 3.1): 'da', 'fehlt',
+     * 'spalten' oder 'siegel' (das Siegel geht nicht auf — dann wird der
+     * öffentliche Teil nicht ausgegeben, `kp_oeffentlich_lesen()` meldet es).
+     * `kontopaar.js` kommt mit, sobald es etwas zu tun gibt: anlegen bei
+     * 'fehlt', abgleichen bei 'da' — vor `unlock.js`, das beides ruft.
+     * KP_PRIVAT ist Chiffretext unter dem Inhaltsschlüssel, wie PAT_WRAP. */
+    require_once __DIR__ . '/kontopaar_lib.php';
+    $kp = isset($userId) ? kp_zustand((int)$userId)
+                         : ['stand' => 'spalten', 'oeffentlich' => null, 'privat' => null];
+    $unlockAn = array_search('assets/unlock.js', $skripte, true);
+    if (in_array($kp['stand'], ['da', 'fehlt'], true) && $unlockAn !== false) {
+        array_splice($skripte, (int)$unlockAn, 0, ['assets/kontopaar.js']);
+    }
+
     $zeilen = [];
     foreach ($skripte as $s) {
         $zeilen[] = '<script src="' . ui_asset((string)$s) . '"></script>';
@@ -3430,6 +3444,9 @@ function ui_krypto_bootstrap(array $o = []): void
     $zeilen[] = 'const ANTEIL_KENNUNG = ' . json_js($anteilKennung ?? null) . ';';
     $zeilen[] = 'const ANTEIL_STAND   = ' . json_js($anteilStand ?? 'fehlt') . ';';
     $zeilen[] = 'const RW_STAND       = ' . json_js($rwStand) . ';';
+    $zeilen[] = 'const KP_STAND       = ' . json_js($kp['stand']) . ';';
+    $zeilen[] = 'const KP_OEFFENTLICH = ' . json_js($kp['oeffentlich']) . ';';
+    $zeilen[] = 'const KP_PRIVAT      = ' . json_js($kp['privat']) . ';';
     /* CSRF IMMER, NICHT AUF ANFRAGE (Backlog Nr. 136, Fund F-9a-01).
      *
      * Bis zum Sofortpaket Sicherheit war das ein Schalter, und drei von sieben

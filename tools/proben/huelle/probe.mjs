@@ -2,8 +2,9 @@
  *
  * Anlass: Nr. 43 — drei Umsetzungen eines Formats müssen byte-gleich sein.
  *
- * WAS. Lädt `huelle.js` (bis S11-03; danach `server/assets/crypto.js`) in eine
- * Seite und prüft gegen `vektoren.json` aus `referenz.py`:
+ * WAS. Lädt `server/assets/crypto.js` (seit S11-03; bis dahin die Vorlage
+ * `huelle.js`) in eine Seite und prüft dessen Gerätehülle gegen
+ * `vektoren.json` aus `referenz.py`:
  *   je Fall    Z (ECDH), k_enc und k_mac (HKDF), die ganze Hülle byte-gleich
  *              bei festem flüchtigem Schlüssel und IV, und das Öffnen
  *   je Störung das Öffnen scheitert, und zwar mit dem erwarteten Grund
@@ -35,7 +36,7 @@ const motor = motorWahl(process.argv);
 const di = process.argv.indexOf('--drossel');
 const drossel = di >= 0 ? Number(process.argv[di + 1]) : 1;
 const vektoren = JSON.parse(readFileSync(path.join(HIER, 'vektoren.json'), 'utf-8'));
-const quelle = readFileSync(path.join(HIER, 'huelle.js'), 'utf-8');
+const quelle = readFileSync(path.join(HIER, '../../../server/assets/crypto.js'), 'utf-8');
 
 let browser;
 try { browser = await starten(pw, motor); }
@@ -56,7 +57,20 @@ const ergebnis = await seite.evaluate(async (v) => {
   const hex = (h) => new Uint8Array((h.match(/../g) || []).map((x) => parseInt(x, 16)));
   const zuHex = (b) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
   const ausB64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
-  const H = window.EdHuelle;
+  /* Die Gerätehülle aus crypto.js; den privaten Schlüssel aus d baut die
+   * Probe selbst (JWK) — die Anwendung holt ihn aus seiner Hülle. */
+  const E = EdCrypto;
+  const b64url = (b) => btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const H = {
+    privat: (d, pub) => crypto.subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', d: b64url(d),
+      x: b64url(pub.slice(1, 33)), y: b64url(pub.slice(33, 65)), ext: true },
+      { name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']),
+    bindung: E.geraetehuelleBindung,
+    ableiten: E.geraetehuelleAbleiten,
+    verschliessen: async (klar, pub, art, ref, platz, fest) => E.geraetehuelleVerschliessen(klar, pub, art, ref, platz,
+      fest ? { privat: await H.privat(fest.fluechtigD, fest.fluechtigPub), epk: fest.fluechtigPub, iv: fest.iv } : undefined),
+    oeffnen: E.geraetehuelleOeffnen,
+  };
   const zeilen = [];
   let schlecht = 0;
   const melde = (gut, text) => { zeilen.push(`  ${gut ? 'ok  ' : 'FEHL'}  ${text}`); if (!gut) { schlecht++; } };

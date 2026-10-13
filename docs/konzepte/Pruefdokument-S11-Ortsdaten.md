@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-02 erledigt** (13.10.2026); in Arbeit S11-13 (Messpaket Seitenaufbau).*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); als Nächstes S11-04 mit dem Mockup der Ladeanzeige.*
 
 ---
 
@@ -16,6 +16,8 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 |---|---|---|
 | **Forerunner 945 und Venu 3s auf der echten Uhr.** Nur im Simulator (je 7 gut, 0 Fehler) und im Übersetzen geprüft; die Betreiberin nimmt an, dass sie wie die Fenix 6 Pro rechnen (E-S11-30). | Die Uhren standen am 13.10.2026 nicht zur Verfügung. | Rechnet eine anders, gehen ihre Hüllen im Browser nicht auf — sichtbar bei P-S11-05; S11-08 prüft die Byteordnung beim Start der App gegen einen eingebauten Vektor. |
 | **Ob die echte Garmin-Uhr die Krypto kann.** Im **Simulator** gemessen (S11-02): Fenix 6 Pro, Forerunner 945, Venu 3s je 7 gut, 0 Fehler. Ob der Simulator rechnet wie die Uhr — gerade bei der Byteordnung des ECDH-Geheimnisses (F-S11-18) —, ist unbelegt. Zeiten und Speicher des Simulators sind die des Rechners. | Keine Uhr in der Arbeitsumgebung. | P-S11-02; Halt, bis das Ergebnis vorliegt. |
+| **Die Schlüsselwechselprobe als Ganzes.** Ein Fall in Teil 4 (Komplett-Stand über den Wechsel) ist rot — mit und ohne S11-03 gleich (F-S11-26). | Vorhandener Fehler, nicht dieses Pakets; Backlog Nr. 383. | Die Teile, die S11-03 betreffen (Inventar, Kontoschlüssel unter A, nach B umgehüllt), sind grün. |
+| **Die Komplettprobe als Ganzes.** Zwei Fälle in Teil 4 (Siegel über Häppchen) sind rot — mit S11-03 und auf dem Stand davor gleich, 73 von 75 (F-S11-28). | Vorhandener Fehler, nicht dieses Pakets; zu Backlog Nr. 383 gelegt. | Die Teile über Dump, Kopf, Passphrase und Geheimnisse sind grün; die Spalten `kp_*` fahren im Dump mit. |
 | **Firefox und WebKit.** Die Hüllenprobe lief nur in Chromium (39/0). | Beide fehlen im Abbild vom 11.10.2026 (F-S11-20): `/opt/pw-browsers` hält nur `chromium-1194`; die Probe bricht mit rc 2 ab. | S11-04 (Browserliste); bis dahin offen. |
 | **Ob die Krypto auf den übrigen 96 Zielgeräten läuft.** | E-S11-16: Laufzeit nur auf Fenix 6 Pro, Forerunner 945, Venu 3s. Stufe I übersetzt für alle 99; Übersetzen ist nicht Laufen, und der kleinste App-Speicher (128 kB) liegt unter dem der drei. | Erst wenn ein anderes Gerät in Betrieb geht. |
 | **Ob die Grundlinie für ein Telefon gilt.** S11-01 hat auf einem Container mit vier Kernen gemessen, einmal mit Drossel 6× (Nachbildung des Referenzgeräts Z3), einmal ohne. | Kein echtes Gerät in der Arbeitsumgebung; die Drossel bildet Rechenzeit nach, nicht Speicher, Grafik und Leitung. | Der Vergleich vorher/nachher in S11-11 gilt nur auf derselben Maschine (E-S11-15). |
@@ -78,6 +80,17 @@ heute über der Sekunde aus E-S11-15 (F-S11-15, Frage Q-S11-16 im Konzept).
 **Nicht geklärt:** die lange Serverzeit von Startseite und Anmelden bei 6×
 (0,93 und 2,15 s; ungedrosselt 0,07 und 0,13 s) — Einzelläufe, Vorschlag V4.
 
+### S11-03 Schlüsselpaar und Hülle im Web (13.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `proben.sh huelle` | die Gerätehülle in `server/assets/crypto.js` gegen die Vektoren | 39 Prüfungen, 0 Abweichungen |
+| `proben.sh kopplung` | `pair.php` samt Kontoschlüssel: ohne Paar `null` (K1), mit Paar SEC1 in `status` und `bestaetigen` (K5, K6), Siegel umgehängt (K7) und unversiegelt (K8) → `null`, beides gemeldet (K9) | 85 Erwartungen, 0 nicht erfüllt |
+| `proben.sh kontopaar` (neu) | Browser: Paar entsteht still, Siegel und `edk1:` in der Datenbank, Abgleich passt, Rundlauf einer Hülle, privater Schlüssel nicht extrahierbar, vertauschter privater Teil gemeldet (Seite, Protokoll, Reiter System), kaputtes Siegel → `KP_STAND` siegel | 14 ok, 0 fehlen |
+| `proben.sh schluesselwechsel` | Inventar mit Zweck `kontopaar`; Kontoschlüssel unter A angelegt, nach B umgehüllt | 65 ok, 1 fehlt (F-S11-26, auch ohne S11) |
+| `proben.sh komplett` | Komplettsicherung mit den neuen Spalten | 73 von 75 (F-S11-28, auch ohne S11) |
+| `proben.sh rollen` (einzeln, nach F-S11-29) | Rollen an allen Seiten und Endpunkten | 534 Erwartungen, 0 offen |
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
@@ -95,6 +108,7 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-11 | erledigt 11.10.2026 | Frage Q-S11-17 im Konzept beantworten (absolute Grenze neben Faktor 2?) | **beantwortet:** unter 3 s bei 6×, unter 1 s ungedrosselt (E-S11-29) | — |
 | P-S11-13 | erledigt 13.10.2026 | Frage Q-S11-18 beantworten (was misst „Seitenaufbau“, für welche Seiten?) | **beantwortet:** „sichtbar“, alle Seiten, so schnell wie möglich (E-S11-32) | — |
 | P-S11-12 | in S11-04 | Mockup der Ladeanzeige (E-S11-27) ansehen und freigeben | Freigabe im Chat | — |
+| P-S11-14 | nach dem Merge auf Staging | `update.php` aufrufen; mit einem eigenen Konto anmelden, eine Einsatzseite öffnen; in Betrieb → Protokoll, Reiter Verwaltung nachsehen | ein Eintrag „Kontoschlüssel angelegt“ für das Konto, keine Meldung oben auf der Seite | kein Eintrag, oder oben „…passt nicht zu deinem privaten Schlüssel“, oder ein Eintrag „kontopaar“ im Reiter System |
 | **P-S11-02** | **jetzt** (Halt) · Fenix 6 Pro erster Lauf 13.10.2026: 6/6 Vektoren gut, ECDH little-endian, `T-PAAR 73/55/54 ms`, Zeitzeilen abgeschnitten (F-S11-23) → zweiter Lauf mit Fassung 2 der `.prg` · FR 945 und Venu 3s offen | 1. In VS Code mit Monkey-C-Erweiterung den Ordner `tools/uhr-pruefstand/krypto-probe/` öffnen. 2. Je Uhr „Monkey C: Build for Device", Gerät wählen. 3. Die `.prg` per USB nach `GARMIN/APPS/` kopieren, Uhr trennen. 4. „Krypto-Probe" starten, rund 10 s warten, bis `ERGEBNIS …` steht. 5. Mit Hoch/Runter (Venu 3s: wischen) blättern und **alle Zeilen** abschreiben oder fotografieren — besonders `ECDH …`, `T-PAAR …` und die vier `T-…`-Zeilen. 6. Für Simulator-Vergleich auf dem Arbeitsplatz dasselbe mit F5. Danach die App von der Uhr löschen. | je Uhr `ERGEBNIS 7 gut, 0 Fehler`; `ECDH gut (little-endian, umgedreht)` wie im Simulator; `PACKEN nicht vorhanden` | eine Zeile `FEHLER`, ein Absturz (IQ-Symbol), `ERGEBNIS` erscheint nicht; oder `ECDH gut (big-endian)` — dann rechnet die Uhr anders als der Simulator, und S11-08 muss beide Fälle kennen |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |

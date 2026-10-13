@@ -177,6 +177,11 @@
       "braucht": "nichts",
       "bemerkung": "S11-02: Referenz gegen ihre Vektoren, dann die WebCrypto-Umsetzung im Browser dagegen. Braucht keine Anlage; die Seite beantwortet die Probe selbst."
     },
+    "kontopaarprobe": {
+      "aufruf": "bash tools/proben/proben.sh kontopaar",
+      "braucht": "installation",
+      "bemerkung": "S11-03: das Schluesselpaar des Kontos im Browser — still anlegen nach der Anmeldung, Abgleich, Rundlauf einer Geraetehuelle, vertauschter privater Teil, Siegel. Legt ein Wegwerfkonto umlauf-kontopaar an und loescht es."
+    },
     "uhr-krypto": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoreihe /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoprobe",
       "braucht": "uhr",
@@ -827,11 +832,27 @@
       "anlass": "E-PK-02"
     },
     {
+      "id": "kontopaar",
+      "ab": "klein",
+      "pfade": [
+        "server/kontopaar_lib.php",
+        "server/api/kontopaar.php",
+        "server/assets/kontopaar.js",
+        "server/assets/unlock.js",
+        "tools/proben/kontopaar/**"
+      ],
+      "proben": [
+        "kontopaarprobe"
+      ],
+      "anlass": "Nr. 43"
+    },
+    {
       "id": "huelle",
       "ab": "klein",
       "pfade": [
         "tools/proben/huelle/**",
-        "tools/uhr-pruefstand/krypto-probe/**"
+        "tools/uhr-pruefstand/krypto-probe/**",
+        "server/assets/crypto.js"
       ],
       "proben": [
         "huellenprobe",

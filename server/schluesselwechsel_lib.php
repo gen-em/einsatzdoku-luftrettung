@@ -19,16 +19,19 @@ declare(strict_types=1);
  * macht: den Nachweis der Öffenbarkeit vor dem Verwerfen des alten Schlüssels.
  *
  * DAS INVENTAR KOMMT AUS DEN AUFRUFERN, NICHT AUS DER DOKU (F-SR-01). Gezählt
- * an `sk_versiegeln(` in `server/`: sieben Aufrufe in den Zwecken, dazu der
- * eine dieser Datei beim Umhüllen (`sw_umsiegeln()`) — fünf Zweck-Familien:
+ * an `sk_versiegeln(` in `server/`: acht Aufrufe in den Zwecken, dazu der
+ * eine dieser Datei beim Umhüllen (`sw_umsiegeln()`) — sechs Zweck-Familien:
  *
- *   ziele    `sicherungsziel:<id>:geheim|schluessel`   Zeile in backup_targets
- *   totp     `totp|<konto>`                            Zeile in users
+ *   ziele      `sicherungsziel:<id>:geheim|schluessel`   Zeile in backup_targets
+ *   totp       `totp|<konto>`                            Zeile in users
+ *   kontopaar  `kontopaar|<konto>`                       Zeile in users (S11-03:
+ *              das Siegel des öffentlichen Kontoschlüssels — geht es nicht
+ *              auf, bekommt kein Gerät mehr einen Schlüssel)
  *   konten   `adminkonto|<kennung>` (konto.json) und
  *            `adminpaket|<kennung>|<paket>|<teil>`     Dateien unter sicherungen/<kennung>/
  *   archive  `protokollarchiv|<name>|<teil>`           sicherungen/protokoll/*.zip
  *
- * — und als sechster Zweck der Komplett-Stand, der mit dem ROHEN Schlüssel
+ * — und als siebter Zweck der Komplett-Stand, der mit dem ROHEN Schlüssel
  * versiegelt ist. Er wird NICHT umgehüllt (E-SR-21): Ein Stand ist eine
  * Momentaufnahme, ein frischer unter dem neuen ersetzt das Umhüllen alter, und
  * die Aufbewahrung räumt die alten wie bisher. Ein frischer Stand ist dafür
@@ -90,7 +93,7 @@ const SW_JOB = 'schluesselwechsel';
  *  kleinen Zeilen, dann die Dateien. Eine Anmeldung mit Code braucht das
  *  Zweitfaktor-Geheimnis — es ist nach wenigen Häppchen umgehüllt, auch wenn
  *  hinter ihm hundert Konto-Backups warten. */
-const SW_ZWECKE = ['ziele', 'totp', 'konten', 'archive'];
+const SW_ZWECKE = ['ziele', 'totp', 'kontopaar', 'konten', 'archive'];
 
 /** So viel Zeit muss übrig sein, damit ein Stück angefangen wird. Eine Zeile
  *  kostet Millisekunden; eine Datei kann ein Konto-Backup sein — beim
@@ -236,6 +239,14 @@ function sw_stuecke(string $zweck): array
         require_once __DIR__ . '/totp_lib.php';
         if (totp_spalten_da()) {
             foreach (db()->query('SELECT id FROM users WHERE totp_geheimnis IS NOT NULL
+                                  ORDER BY id')->fetchAll(PDO::FETCH_COLUMN) as $id) {
+                $aus[] = sprintf('%010d', (int)$id);
+            }
+        }
+    } elseif ($zweck === 'kontopaar') {
+        require_once __DIR__ . '/kontopaar_lib.php';
+        if (db_hat_spalte(db(), 'users', 'kp_seit')) {
+            foreach (db()->query('SELECT id FROM users WHERE kp_oeffentlich IS NOT NULL
                                   ORDER BY id')->fetchAll(PDO::FETCH_COLUMN) as $id) {
                 $aus[] = sprintf('%010d', (int)$id);
             }
@@ -675,7 +686,7 @@ function sw_archiv_nachweis(string $pfad, string $neuName, array $manifestSoll):
     return $gut;
 }
 
-/** Ein Stück bearbeiten — der Verteiler über die vier Zwecke. */
+/** Ein Stück bearbeiten — der Verteiler über die fünf Zwecke. */
 function sw_stueck(string $zweck, string $schluessel, array $z, bool $nurPruefen): string
 {
     if ($zweck === 'ziele') {
@@ -688,6 +699,12 @@ function sw_stueck(string $zweck, string $schluessel, array $z, bool $nurPruefen
         $id = (int)ltrim($schluessel, '0');
         return sw_zeile('users', ['totp_geheimnis'], $id,
                         static fn(string $feld): string => 'totp|' . $id, $nurPruefen);
+    }
+    if ($zweck === 'kontopaar') {
+        require_once __DIR__ . '/kontopaar_lib.php';
+        $id = (int)ltrim($schluessel, '0');
+        return sw_zeile('users', ['kp_oeffentlich'], $id,
+                        static fn(string $feld): string => kp_zweck($id), $nurPruefen);
     }
     if ($zweck === 'konten') {
         [$kennung, $datei] = explode('/', $schluessel, 2);
@@ -706,6 +723,7 @@ function sw_stueck_name(string $zweck, string $schluessel): string
 {
     if ($zweck === 'ziele')  { return 'Zugang des Backup-Ziels Nr. ' . (int)ltrim($schluessel, '0'); }
     if ($zweck === 'totp')   { return 'Zweitfaktor-Geheimnis des Kontos Nr. ' . (int)ltrim($schluessel, '0'); }
+    if ($zweck === 'kontopaar') { return 'Öffentlicher Kontoschlüssel des Kontos Nr. ' . (int)ltrim($schluessel, '0'); }
     if ($zweck === 'konten') {
         [$kennung, $datei] = explode('/', $schluessel, 2);
         return $datei === 'konto.json'

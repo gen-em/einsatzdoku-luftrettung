@@ -91,6 +91,14 @@ CREATE TABLE users (
   rw_oeffentlich VARCHAR(255) NULL,
   rw_privat      TEXT NULL,
   rw_seit        DATETIME NULL,
+  -- SCHLUESSELPAAR DES KONTOS (S11-03, Konzept S11 3.1). ECDH auf P-256 fuer
+  -- die Geraetehuelle: der oeffentliche Teil (SPKI, Base64) VERSIEGELT mit dem
+  -- Serverschluessel (Zweck `kontopaar|<id>`), der private als Chiffretext
+  -- unter dem Inhaltsschluessel (`edk1:`, nie `edka1:`). `kp_seit`: wann es
+  -- entstand.
+  kp_oeffentlich TEXT NULL,
+  kp_privat      TEXT NULL,
+  kp_seit        DATETIME NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Fuer die Verfalljobs, nicht fuer die Anzeige: „alle Konten in einem
   -- Zustand, deren Frist abgelaufen ist" waere sonst ein Vollscan je Joblauf.
@@ -1140,4 +1148,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- auf einer frischen Anlage beim ersten Aufruf des Notzugangs (E-SR-24).
   ('2026_09_28_vertraute_geraete', 'skipped'),
   -- passkeys steht oben schon im Schema (Web 21.10.0, SR-09).
-  ('2026_09_28_passkeys', 'skipped');
+  ('2026_09_28_passkeys', 'skipped'),
+  -- users.kp_* stehen oben schon im Schema (S11-03).
+  ('2026_10_13_kontopaar', 'skipped');

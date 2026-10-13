@@ -180,6 +180,21 @@ const RW_OEFFENTLICH_RE = '#^[A-Za-z0-9+/]{100,200}={0,2}$#';
 const RW_PRIVAT_RE      = WRAP_RC_RE;
 
 /**
+ * Das Schlüsselpaar des Kontos (S11-03, Konzept S11 3.1; E-S11-12, -14).
+ *
+ * Dieselben Formen wie beim Rückweg, aus demselben Grund: Der öffentliche
+ * Teil ist SPKI in Base64 (ECDH auf P-256 hat dieselbe SPKI wie ECDSA), der
+ * private liegt unter dem INHALTSSCHLÜSSEL (`edk1:`) und muss mit dem
+ * Wiederherstellungsschlüssel allein aufgehen. Eine `edka1:`-Fassung hinge
+ * am Server-Anteil — ginge der verloren, wären mit dem Paar alle Spuren,
+ * Phasenkoordinaten und Reanimationen des Kontos verloren (`CLAUDE.md` 4).
+ * Zwei Namen statt eines geteilten: Wer eines der Paare ändert, soll das
+ * andere nicht mitändern.
+ */
+const KP_OEFFENTLICH_RE = '#^[A-Za-z0-9+/]{100,200}={0,2}$#';
+const KP_PRIVAT_RE      = WRAP_RC_RE;
+
+/**
  * Mengenbegrenzungen je Einsatz.
  *
  * Zur Phasenzahl: Mehrfache Eintraege derselben Phasennummer sind

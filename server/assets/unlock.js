@@ -472,9 +472,30 @@ const EdUnlock = (() => {
   function rueckwegAnlegen(ck) {
     const token = rwToken;
     rwToken = null;
+    kontopaarPflegen(ck, token);
     if (!token || !ck || typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt'
         || !window.EdRueckweg) { return; }
     window.EdRueckweg.anlegen(ck, token);
+  }
+
+  /* ---- Das Schlüsselpaar des Kontos (S11-03, Konzept S11 3.1) -----------
+   *
+   * DIESELBE STELLE WIE DER RÜCKWEG, weil es dasselbe braucht: den
+   * Inhaltsschlüssel und — zum Anlegen — das Anmelde-Token als Nachweis des
+   * Passworts. Das Token teilen sich beide; `rueckwegAnlegen()` reicht es
+   * weiter, bevor es vergessen wird.
+   *
+   *   KP_STAND 'fehlt'  mit Token: still anlegen (`EdKontopaar.anlegen`)
+   *   KP_STAND 'da'     abgleichen (`EdKontopaar.abgleichen`) — einmal je
+   *                     Seite; eine Abweichung sagt die Seite und meldet der
+   *                     Server (E-S11-14, zweiter Riegel)
+   *
+   * Niemand wartet darauf, wie beim Rückweg: kein `await`, kein Fehler nach
+   * außen. */
+  function kontopaarPflegen(ck, token) {
+    if (!ck || typeof KP_STAND === 'undefined' || !window.EdKontopaar) { return; }
+    if (KP_STAND === 'fehlt' && token) { window.EdKontopaar.anlegen(ck, token); }
+    if (KP_STAND === 'da') { window.EdKontopaar.abgleichen(ck); }
   }
 
   async function ensureContentKey(wrap, kdfSalt, kdfIter) {
@@ -534,7 +555,10 @@ const EdUnlock = (() => {
    * `kdf_upgrade.php`, und der zweite setzte danach den alten
    * Datenschlüssel wieder ein. */
   async function nachDerAnmeldung() {
-    if (typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt') { return; }
+    /* SEIT S11-03 AUCH FÜR DAS SCHLÜSSELPAAR DES KONTOS: Fehlt es, braucht
+     * es dasselbe Token aus dem Vormerkfach wie der Rückweg. */
+    const kpFehlt = typeof KP_STAND !== 'undefined' && KP_STAND === 'fehlt';
+    if ((typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt') && !kpFehlt) { return; }
     if (typeof PAT_WRAP === 'undefined' || !PAT_WRAP || typeof KDF_ITER === 'undefined') { return; }
     if (EdCrypto.getDataKey() || !EdCrypto.holeAbleitungen()) { return; }
     try {

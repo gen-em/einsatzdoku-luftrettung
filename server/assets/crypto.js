@@ -953,6 +953,140 @@ const EdCrypto = (() => {
     return dateiArt(bytes) !== null;
   }
 
+  /* ======================================================================
+   * DIE GERÄTEHÜLLE, Fassung 1 (S11-03; Konzept S11 3.2, 3.2a, E-S11-17)
+   * ======================================================================
+   *
+   * Uhr, Handy und Browser verschließen Spur, Phasenkoordinaten und
+   * Reanimation mit dem ÖFFENTLICHEN Schlüssel des Kontos; nur der Browser
+   * öffnet mit dem privaten. Das Format steht im Kopf von
+   * `tools/proben/huelle/referenz.py` und nur dort; die Hüllenprobe hält
+   * diese Funktionen gegen dessen Vektoren (byte-gleich).
+   *
+   *   Kennbyte 0x01 · EPK 65 Byte (SEC1) · IV 16 · AES-256-CBC (PKCS#7)
+   *   · HMAC-SHA256 über Kopf, Chiffretext und Bindung
+   *   Z = ECDH (X-Koordinate), HKDF-SHA256(salt = EPK,
+   *   info = "nadoku-huelle-1" ‖ Empfänger) → k_enc ‖ k_mac
+   *
+   * NICHT VERWECHSELN mit `huelleOeffnen()`/`huelleBauen()` darüber: Das ist
+   * die Hülle des Inhaltsschlüssels unter dem Datenschlüssel (S10). Diese
+   * hier heißt deshalb durchweg „Gerätehülle“.
+   *
+   * ERST PRÜFEN, DANN ENTSCHLÜSSELN: `geraetehuelleOeffnen()` vergleicht den
+   * Prüfwert in fester Zeit, bevor es AES anfasst. Ein Fehler trägt `.grund`
+   * ('laenge', 'fassung', 'schluessel', 'pruefwert', 'polsterung',
+   * 'bindung-zu-lang') — die Ansicht nennt ihn am Einsatz (E-S11-13).
+   */
+  const GH_FASSUNG = 1;
+  const GH_KOPF = 1 + 65 + 16;
+  const GH_TAG = 32;
+  const GH_INFO = te.encode('nadoku-huelle-1');
+
+  function ghFehler(grund) {
+    const e = new Error('Gerätehülle geht nicht auf: ' + grund);
+    e.grund = grund;
+    return e;
+  }
+
+  function ghVerbinde(...teile) {
+    const aus = new Uint8Array(teile.reduce((a, t) => a + t.length, 0));
+    let o = 0;
+    for (const t of teile) { aus.set(t, o); o += t.length; }
+    return aus;
+  }
+
+  /** Die Bindung: je Feld 2 Byte Länge (big-endian) ‖ UTF-8 — Art,
+   *  client_ref des Eigentümers, Platz (`seq_from:punkte` oder leer). */
+  function geraetehuelleBindung(art, ref, platz) {
+    const teile = [];
+    for (const feld of [art, ref, platz || '']) {
+      const b = te.encode(feld);
+      if (b.length > 0xffff) { throw ghFehler('bindung-zu-lang'); }
+      teile.push(new Uint8Array([b.length >> 8, b.length & 0xff]), b);
+    }
+    return ghVerbinde(...teile);
+  }
+
+  async function ghOeffentlich(roh) {
+    if (!roh || roh.length !== 65 || roh[0] !== 4) { throw ghFehler('schluessel'); }
+    try {
+      return await crypto.subtle.importKey('raw', roh, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+    } catch (e) { throw ghFehler('schluessel'); }
+  }
+
+  async function ghAbleiten(privKey, pubKey, epk, empfPub) {
+    const z = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: pubKey }, privKey, 256));
+    const ikm = await crypto.subtle.importKey('raw', z, 'HKDF', false, ['deriveBits']);
+    const okm = new Uint8Array(await crypto.subtle.deriveBits(
+      { name: 'HKDF', hash: 'SHA-256', salt: epk, info: ghVerbinde(GH_INFO, empfPub) }, ikm, 512));
+    return { z, kEnc: okm.slice(0, 32), kMac: okm.slice(32) };
+  }
+
+  async function ghHmac(k, daten) {
+    const key = await crypto.subtle.importKey('raw', k, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return new Uint8Array(await crypto.subtle.sign('HMAC', key, daten));
+  }
+
+  /**
+   * Verschließen mit dem öffentlichen Schlüssel des Kontos (SEC1, 65 Byte).
+   * `fest` NUR für Prüfvektoren: { privat: CryptoKey (ECDH), epk, iv }.
+   * @returns {Promise<Uint8Array>} die Hülle
+   */
+  async function geraetehuelleVerschliessen(klar, empfPub, art, ref, platz, fest) {
+    const empf = await ghOeffentlich(empfPub);
+    let eph, epk;
+    if (fest) {
+      eph = fest.privat;
+      epk = fest.epk;
+    } else {
+      const paar = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
+      eph = paar.privateKey;
+      epk = new Uint8Array(await crypto.subtle.exportKey('raw', paar.publicKey));
+    }
+    const iv = fest ? fest.iv : crypto.getRandomValues(new Uint8Array(16));
+    const k = await ghAbleiten(eph, empf, epk, empfPub);
+    const aes = await crypto.subtle.importKey('raw', k.kEnc, 'AES-CBC', false, ['encrypt']);
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, aes, klar));
+    const kopf = ghVerbinde(new Uint8Array([GH_FASSUNG]), epk, iv);
+    const tag = await ghHmac(k.kMac, ghVerbinde(kopf, ct, geraetehuelleBindung(art, ref, platz)));
+    return ghVerbinde(kopf, ct, tag);
+  }
+
+  /**
+   * Öffnen mit dem privaten Schlüssel des Kontos (CryptoKey, ECDH) und dem
+   * öffentlichen (SEC1). Erst der Prüfwert, dann AES. Wirft mit `.grund`.
+   * @returns {Promise<Uint8Array>} der Klartext
+   */
+  async function geraetehuelleOeffnen(huelle, privKey, empfPub, art, ref, platz) {
+    if (huelle.length < GH_KOPF + 16 + GH_TAG || (huelle.length - GH_KOPF - GH_TAG) % 16) {
+      throw ghFehler('laenge');
+    }
+    if (huelle[0] !== GH_FASSUNG) { throw ghFehler('fassung'); }
+    const epk = huelle.slice(1, 66), iv = huelle.slice(66, GH_KOPF);
+    const ct = huelle.slice(GH_KOPF, huelle.length - GH_TAG);
+    const tag = huelle.slice(huelle.length - GH_TAG);
+    const k = await ghAbleiten(privKey, await ghOeffentlich(epk), epk, empfPub);
+    const soll = await ghHmac(k.kMac, ghVerbinde(huelle.slice(0, huelle.length - GH_TAG),
+                                                 geraetehuelleBindung(art, ref, platz)));
+    let d = 0;
+    for (let i = 0; i < GH_TAG; i++) { d |= soll[i] ^ tag[i]; }   // feste Zeit
+    if (d) { throw ghFehler('pruefwert'); }
+    const aes = await crypto.subtle.importKey('raw', k.kEnc, 'AES-CBC', false, ['decrypt']);
+    try {
+      return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, aes, ct));
+    } catch (e) { throw ghFehler('polsterung'); }
+  }
+
+  /** Der öffentliche Teil als 65 Byte SEC1 aus SPKI (Base64) — die letzten
+   *  65 Byte; für P-256 ist das der Punkt. Null, wenn es keiner ist. */
+  function spkiZuSec1(spkiB64) {
+    try {
+      const der = fromB64(spkiB64);
+      const punkt = der.slice(der.length - 65);
+      return der.length >= 65 && punkt[0] === 4 ? punkt : null;
+    } catch (e) { return null; }
+  }
+
   return { deriveKeys, encrypt, decrypt, randomHex,
            /* Server-Anteil und Hüllen (S10) */
            datenschluessel, datenschluesselZu,
@@ -968,5 +1102,9 @@ const EdCrypto = (() => {
            /* Containerfassung 4 (S2/AP5) */
            CONTAINER_VERSION_4, backupSchluessel, aadManifest, aadTeil,
            sealTeil, openTeil, sealTeilJson, openTeilJson, teilKopf,
-           toB64Gross, fromB64Gross, sha256Hex, dateiArt };
+           toB64Gross, fromB64Gross, sha256Hex, dateiArt,
+           /* Gerätehülle (S11-03) */
+           geraetehuelleVerschliessen, geraetehuelleOeffnen, geraetehuelleBindung,
+           geraetehuelleAbleiten: ghAbleiten,
+           spkiZuSec1 };
 })();

@@ -14,6 +14,63 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.0.0] — unveröffentlicht
+
+Schritt 12a, **S11 — Ortsdaten verschlüsselt (Weg B)**, Paket S11-03, **das
+Schlüsselpaar des Kontos**. **Haupt** — die Hauptnummer gehört dem ganzen
+Umbau von S11; die weiteren Pakete zählen an der Korrekturstelle weiter, bis
+er steht. **Schema: drei Spalten an `users` — nach dem Deploy `update.php`
+aufrufen.** Ausgeliefert wird erst mit dem Ende von S11 (Hauptauslieferung).
+
+### Neu
+
+- **Jedes Konto bekommt ein ECDH-Schlüsselpaar** auf P-256, erzeugt im
+  Browser beim ersten Entsperren nach einer Anmeldung, ohne Zutun
+  (`assets/kontopaar.js`, `api/kontopaar.php`). Es ist die Grundlage von S11:
+  Uhr und Handy werden Spur, Phasenkoordinaten und Reanimation mit dem
+  öffentlichen Teil verschließen, und nur der Browser öffnet sie mit dem
+  privaten. Der private Teil liegt unter dem Inhaltsschlüssel, und zwar wie
+  beim Rückweg ausdrücklich **nicht** am Server-Anteil: Der
+  Wiederherstellungsschlüssel muss ihn allein öffnen, sonst gingen mit dem
+  Anteil alle Ortsdaten eines Kontos verloren. Angelegt wird nur mit dem
+  Nachweis des Passworts (dem Token aus dem Vormerkfach der Anmeldung) —
+  wer das Paar ablegt, bestimmt, für wen die Geräte verschließen, und eine
+  übernommene Sitzung soll das nicht können.
+- **Der öffentliche Teil liegt versiegelt** mit dem Serverschlüssel, gebunden
+  an das Konto (`kontopaar|<Kontonummer>`), und wird nur mit gültigem Siegel
+  ausgegeben. Der Grund ist ein Angriff, den eine verschlüsselte Spur sonst
+  offen ließe: Wer nur die Datenbank beschreiben kann, trüge seinen eigenen
+  Schlüssel ein, und jedes danach gekoppelte Gerät verschlösse für ihn. Ein
+  Siegel, das nicht aufgeht — umgehängt, von Hand eingetragen, ein
+  vergessener Schlüsselwechsel —, liefert keinen Schlüssel und steht im
+  Reiter System. Gegen jemanden, der den Server selbst übernimmt, hilft das
+  nicht; er hätte den Serverschlüssel und tauschte `crypto.js` mit. Diese
+  Grenze nennt das Bedrohungsmodell.
+- **Der Abgleich beim Entsperren** ist der zweite Riegel: Der Browser leitet
+  aus dem privaten Teil den öffentlichen ab und vergleicht ihn mit dem, den
+  der Server ausliefert. Weicht er ab, steht oben auf der Seite eine
+  Meldung, und der Server protokolliert `kontopaar_abweichung` und meldet es
+  im Reiter System.
+- **Die Kopplung liefert den Schlüssel an das Gerät** (`pair.php`,
+  JSON-Vertrag 1a): `kontoschluessel` in der Antwort auf `bestaetigen` und
+  auf `status` (`gekoppelt`), 65 Byte SEC1 in Base64, oder `null`, solange
+  das Konto noch kein Paar hat. Beide Antworten tragen ihn, weil beide Geräte
+  die Kopplung auch über `status` abschließen. Uhr und Handy werten das Feld
+  erst mit S11-08 und S11-09 aus; heutige Fassungen übergehen es.
+- **Die Gerätehülle steht in `crypto.js`** (`geraetehuelleVerschliessen`,
+  `geraetehuelleOeffnen`), byte-gleich mit der Referenz aus S11-02. Noch
+  verschließt sie nichts; das beginnt mit S11-04.
+- **Der Schlüsselwechsel hüllt das Siegel mit um** — ein neuer Zweck
+  `kontopaar` neben Zweitfaktor, Backup-Zielen, Konto-Backups und Archiven.
+  Die Betriebsseiten nennen die Kontoschlüssel unter dem, was der
+  Serverschlüssel versiegelt.
+
+### Bewusst so
+
+- **Ersetzt wird ein Paar nicht.** Ein zweites machte jede Hülle unter dem
+  ersten unlesbar; `api/kontopaar.php` antwortet 409. Einen Weg zum
+  Ersetzen gibt es erst, wenn ein Anlass ihn verlangt.
+
 ## [Web 21.14.0] — 2026-10-05
 
 Schritt 18, Sicherheitsrunde II, Paket SR-08, **die Rechenaufgabe vor der
