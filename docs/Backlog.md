@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 380 bis 389 | `ccr-dd33b6e8-ismfm0` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 383 | 11.10.2026 |
+| 380 bis 389 | `ccr-dd33b6e8-ismfm0` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 384 | 11.10.2026 |
 | ab 390 | frei — höchste vergebene Nummer 371; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
 
 ---
@@ -1284,21 +1284,38 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-383. **Schlüsselwechsel- und Komplettprobe sind rot: das Siegel über Häppchen.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 13.10.2026
-     *Aufgenommen 13.10.2026 mit S11-03 (F-S11-26).* `proben.sh
-     schluesselwechsel`, Teil 4: Die Prüfung „neu versiegelt, Kopf mit B,
-     ganz unter B, derselbe Inhalt (E-SR-72)" scheitert mit „neu begonnen" —
-     auf dem Stand mit S11-03 (65 ok, 1 fehlt) **und** auf dem Stand ohne
-     (`git stash`, 64 ok, 1 fehlt). S11 ist es also nicht. Gemessen auf der
-     örtlichen Anlage nach einem Neustart des Containers, PHP **8.3.6** als
-     Kommandozeile (`Sandbox-Setup.md` nennt 8.4.19). Welche der drei
-     Bedingungen nach `komp_kopf_angleichen()` und `komp_siegel_schub()`
-     verfehlt wird, sagt die Probe nicht.
-     *Weg:* die drei Bedingungen einzeln ausgeben; dann klären, ob der
-     Komplett-Stand über einen Schlüsselwechsel wirklich nicht aufgeht
-     (ein Fehler der Sicherung) oder die Probe nicht passt; unter PHP 8.4
-     gegenmessen. **Dazu die Komplettprobe** (F-S11-28): Teil 4, „über drei
-     Häppchen versiegelt … öffnet" und „Zieldatei verschwindet" scheitern
-     mit „verändert oder unvollständig (Block 1)" — mit S11-03 und auf HEAD
-     davor (Worktree), je 73 von 75. Vermutlich derselbe Siegelschub.
-     *Abnahme:* beide Proben grün, oder der Fehler im Code behoben und benannt.
+383. **Komplett- und Schlüsselwechselprobe rot unter dem PHP 8.3.6 aus Ubuntu.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-03 (F-S11-26, -28, -33).* Unter dem
+     PHP **8.3.6** aus Ubuntu 24.04 (OpenSSL 3.0.13, zlib 1.3) scheitern
+     drei Fälle, die alle ein Komplett-Siegel über mehrere Häppchen
+     schreiben: Komplettprobe Teil 4 „über drei Häppchen versiegelt …
+     öffnet" und „Zieldatei verschwindet" (73 von 75, „verändert oder
+     unvollständig (Block 1)"), Schlüsselwechselprobe Teil 4 „Komplett-Stand
+     über den Wechsel" (65 ok, 1 fehlt). Auf dem Stand vor S11-03 ebenso.
+     **Grün** unter PHP 8.3.33 (`nadoku-php83`) und 8.4.19 (75/0, 66/0) —
+     gegen dieselbe Datenbank. S11 ist es nicht; ein Fehler der Probe wohl
+     auch nicht, sonst wäre er überall rot.
+     **Warum es zählt:** 8.3.6 ist die Vorgabe von Ubuntu 24.04 LTS. Steht
+     eine Anlage darauf, geht ihre Komplettsicherung vielleicht nicht auf.
+     *Weg:* den Siegelschub (`komp_siegel_schub()`) unter 8.3.6 Block für
+     Block mit 8.4 vergleichen; Ursache benennen (PHP-Fehler, der bis
+     8.3.33 behoben ist, oder Bibliothek); dann entweder umgehen oder eine
+     Mindestfassung in `Technik.md` und im Installer festschreiben.
+     *Abnahme:* die Ursache benannt, und unter 8.3.6 grün oder abgewiesen.
+
+<!-- -->
+
+384. **Das Abbild bringt PHP 8.3.6 statt 8.4.19 — `aufbauen.sh` merkt es nicht.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-03 (F-S11-32).* Nach einem Neustart
+     des Containers war `php` das 8.3.6 aus Ubuntu; `Sandbox-Setup.md` 1
+     nennt 8.4.19, und `aufbauen.sh web` prüft die Fassung nicht. Docker
+     Hub antwortete mit 429; `mirror.gcr.io/library/…` lieferte dieselben
+     offiziellen Abbilder, die PPA von ondrej sperrt der Proxy (403).
+     Behelf in S11-03: PHP 8.4.19 aus `php:8.4.19-cli` plus 14
+     Erweiterungen gebaut, nach `/opt/php84` gezogen, mit `patchelf` auf
+     eigene Bibliotheken gestellt, als `/usr/local/bin/php` vorgeschaltet;
+     damit Komplett-, Schlüsselwechsel- und Schemaprobe grün.
+     *Weg:* den Behelf als Teil `php84` in `aufbauen.sh` übernehmen, die
+     Fassung nach dem Aufbau prüfen (rot unter 8.4), den Spiegel als
+     Rückfall in `plattform.sh`. *Abnahme:* ein frischer Container steht mit
+     einem Befehl auf 8.4, und ein falsches PHP ist rot.
