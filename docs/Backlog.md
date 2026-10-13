@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 380 bis 389 | `ccr-dd33b6e8-ismfm0` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: keine | 11.10.2026 |
+| 380 bis 389 | `ccr-dd33b6e8-ismfm0` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380, 381, 382 | 11.10.2026 |
 | ab 390 | frei — höchste vergebene Nummer 371; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
 
 ---
@@ -1237,3 +1237,47 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `admin_user.php` (admin ⊂ betreiberin heißt auch: nach oben kein Griff),
      eine Zeile in 4.99p, ein Fall in `tools/proben/rollen/`. Kleines Paket
      in 12b.
+
+<!-- -->
+
+380. **Seitenaufbau: die Skripte jeder Seite kosten bei Drossel 6× 0,7 bis 1,5 s, bevor Daten geholt werden.** · gehört zu: 12b · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V2,
+     E-S11-33).* Gemessen am Messstand (`tools/messstand/ausgangsmessung.md`,
+     „Zerlegung des Seitenaufbaus"): Das HTML ist nach 0,04 bis 0,10 s da,
+     `DOMContentLoaded` erst nach 0,9 bis 1,5 s (Startseite 2,05 s) — 15 bis
+     22 einzelne Skriptdateien je Seite. Ziel nach E-S11-32: „sichtbar" so
+     schnell wie möglich, Richtung unter 3 s bei 6× und unter 1 s ungedrosselt.
+     *Weg:* zuerst eine Seite profilieren (Laden, Übersetzen oder Ausführen?),
+     dann Skripte zusammenfassen oder je Seite nur laden, was sie braucht.
+     Ein Bauschritt wäre neu. Geschätzt 20 bis 35 % je Seite.
+     *Abnahme:* Zerlegung vorher und nachher mit Eichlauf (F-S11-25);
+     Bilderlauf und Proben grün. Unmittelbar nach S11 (Betreiberin).
+
+<!-- -->
+
+381. **Suche und Zeitraumübersicht verarbeiten alle Einsätze, bevor sie 200 anzeigen.** · gehört zu: 12b · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V3,
+     E-S11-33).* Gemessen bei Drossel 6×: Suche 4,25 s sichtbar, 5,4 MB aus
+     `api/`, 4852 Entschlüsselungen, 2,96 s belegter Hauptfaden; Zeitraum
+     Jahr 5,56 s, 2,4 MB, 3876 Entschlüsselungen, 5,49 s Hauptfaden.
+     *Weg:* zuerst die angezeigten 200 entschlüsseln und zeigen, den Rest in
+     Portionen; Gesamtzahl, Kilometer, Kacheln und Freitext füllen sich mit
+     Ladeanzeige nach (E-S11-27). Weniger Daten vom Server nur ohne
+     Freitextfilter — verschlüsselte Felder kann er nicht durchsuchen. Nr. 51
+     gehört dazu. Geschätzt Suche 50 bis 65 %, Zeitraum Jahr 45 bis 55 %.
+     *Abnahme:* Zerlegung vorher und nachher mit Eichlauf; Trefferzahl und
+     Reihenfolge gleich. Unmittelbar nach S11 (Betreiberin).
+
+<!-- -->
+
+382. **Startseite und Anmelden warten bei Drossel 6× lange auf die erste Antwort des Servers.** · gehört zu: 12b · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V4,
+     E-S11-33).* Zerlegung bei 6×: erste Antwort nach 0,93 s (Startseite)
+     und 2,15 s (Anmelden), ungedrosselt 0,07 und 0,13 s. Ob die Seite so
+     lange braucht oder die Messung die Weiterleitung nach der Anmeldung
+     mitzählt, ist offen — es waren Einzelläufe.
+     *Weg:* zuerst nachmessen, mehrfach und getrennt nach Weiterleitung;
+     erst danach entscheiden, ob etwas zu bauen ist. Die Ableitung des
+     Passworts (PBKDF2) bleibt absichtlich langsam.
+     *Abnahme:* eine Zahl je Seite mit Eichlauf und ein Satz, woran es liegt.
+     Unmittelbar nach S11 (Betreiberin).
