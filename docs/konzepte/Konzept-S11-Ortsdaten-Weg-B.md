@@ -253,14 +253,23 @@ Seitenaufbaus“). Ziel nach E-S11-32: so schnell wie möglich, „sichtbar“,
 alle Seiten. **Die Auswahl trifft die Betreiberin**; bis dahin ist nichts
 davon beschlossen.
 
-| Nr. | Vorschlag | betrifft | Hebel bei 6× (geschätzt aus der Zerlegung) | in S11? |
+Gewinn ist **geschätzt aus den Zeitmarken der Zerlegung**, nicht gemessen:
+der Anteil an „sichtbar“ bei 6×, der wegfiele, wenn der Abschnitt kürzer
+würde oder parallel liefe. Die Effekte überlappen sich; sie addieren sich
+nicht.
+
+| Nr. | Vorschlag | Gewinn (geschätzt, 6×) | Nachteile | in S11? (Vorschlag) |
 |---|---|---|---|---|
-| V1 | Die Anfrage an `api/` sofort im Kopf der Seite starten, parallel zum Laden der Skripte, statt nach `DOMContentLoaded` | Einsatz, Diensttag, Tagesansicht, Suche, Zeitraum | bis etwa die Dauer der `api/`-Anfrage, bei Einsatz und Diensttag rund 0,3 s | ja für Einsatz und Diensttag (S11-04 baut genau diese Ladewege um) |
-| V2 | Skripte zusammenfassen oder nur laden, was die Seite braucht; vorher profilieren, ob Laden, Übersetzen oder Ausführen kostet | alle Seiten | 0,7 bis 1,5 s je Seite stehen vor dem ersten Datenabruf | nein — eigenes Paket; berührt die Auslieferung der Skripte jeder Seite, nicht die Gestaltung |
-| V3 | Suche und Zeitraum: zuerst die angezeigten 200 Einsätze entschlüsseln und zeigen, den Rest danach in Portionen; weniger Daten aus `api/` | Suche, Zeitraum | bis 3 bzw. 5,5 s belegter Hauptfaden | nein — eigenes Paket (Backlog Nr. 51 gehört dazu) |
-| V4 | Startseite und Anmelden: die lange Serverzeit bei 6× nachmessen und klären | Startseite, Anmelden | 0,9 bzw. 2,2 s bis zur ersten Antwort | nein — zuerst eine Messung |
-| V5 | GPX-Export: das Archiv mit niedrigerer Packstufe oder im Hintergrund packen | GPX-Export | zwei Drittel der Exportzeit | ja, wenn gewünscht — S11-05 baut den GPX-Weg ohnehin um |
-| V6 | Hüllen in einem Web Worker öffnen | Einzelansichten | nach der Messung klein (Krypto unter 10 ms je Ansicht) | **nicht nötig** für Einzelansichten; für Wartungslauf und Export in S11-05/-07 prüfen |
+| V1 | Die Anfrage an `api/` sofort beim Laden der Seite starten, parallel zu den Skripten, statt nach `DOMContentLoaded` | Einsatz ~15–18 % (2,11 → ~1,75 s), Diensttag ~13 %, Tagesansicht ~20 %, Zeitraum Jahr bis ~20 %, Suche ~10 % | Anfrage beginnt vor der fertigen Seite: Fehler (abgemeldet, gesperrt) an zwei Stellen behandeln; wegen CSP in eine eigene kleine Datei statt inline; engere Kopplung zwischen Seite und Skript | ja, für Einsatz und Diensttag (S11-04 baut diese Ladewege um) |
+| V2 | Skripte bündeln oder nur laden, was die Seite braucht; zuerst profilieren, ob Laden, Übersetzen oder Ausführen kostet | bei halber Skriptzeit 0,4–0,7 s je Seite, ~20–35 % (unsicherste Schätzung) | Bündeln braucht einen Bauschritt, den es nicht gibt; die milde Form heißt eine Skriptliste je Seite pflegen; berührt jede Seite, voller Prüfaufwand | nein — eigenes Paket |
+| V3 | Suche und Zeitraum: zuerst die angezeigten 200 Einsätze entschlüsseln und zeigen, den Rest danach in Portionen | Suche ~50–65 % (4,25 → ~1,5–2 s), Zeitraum Jahr ~45–55 % (5,56 → ~2,5–3 s) | Freitextsuche, Gesamtzahl, Kilometer, Kacheln und Statistik brauchen weiter alle Einsätze und füllen sich nach; die Liste kann sich beim Nachladen ändern; weniger Daten vom Server nur ohne Freitext (der Server kann Verschlüsseltes nicht durchsuchen); mehr Logik in zwei Seiten | nein — eigenes Paket (mit Backlog Nr. 51) |
+| V4 | Die lange Serverzeit von Startseite und Anmelden bei 6× nachmessen und klären | falls echt: Startseite bis ~30 %, Anmelden bis ~35 %; falls Messeffekt der Weiterleitung: 0 % | nur Messaufwand; PBKDF2 bleibt absichtlich langsam | nein — zuerst eine Messung |
+| V5 | GPX-Export: Archiv mit niedrigerer Packstufe (oder im Hintergrund) packen | niedrige Stufe ~30–45 % der Gesamtzeit, ohne Packen ~55–60 %; im Hintergrund: Zeit gleich, Seite bedienbar | größere Datei: niedrige Stufe geschätzt +20–40 %, ohne Packen ein Mehrfaches der heutigen 32 MB; im Hintergrund mehr Code | ja, in S11-05 (niedrige Stufe; Dateigröße wird vorher gemessen und vorgelegt) |
+| V6 | Hüllen in einem Web Worker öffnen | Einzelansichten unter 1 % (Krypto unter 10 ms je Ansicht) | mehr Code, ein zweiter Ort des Schlüssels im Speicher | nicht nötig; für Wartungslauf und Export in S11-05/-07 prüfen |
+
+Zusammen geschätzt: Einsatz und Diensttag bei 6× von 2,1–2,2 s auf rund
+1,2–1,5 s; Suche und Zeitraum Jahr etwa auf die Hälfte, unter 3 s; die
+Startseite hängt an V4.
 
 ### 3.3 Speicher (Server)
 
