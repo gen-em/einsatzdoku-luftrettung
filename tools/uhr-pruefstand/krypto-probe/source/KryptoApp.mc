@@ -18,7 +18,8 @@
 //   T-<form>-<n>  Spurstueck zu n Punkten in der Innenform binaer/json:
 //           Bauen und Verschliessen in ms, Groesse, Speicher (Zuwachs in kB
 //           gegen den Stand vor dem Schritt, solange alles lebt)
-//   ERGEBNIS  N gut, M Fehler
+//   ERGEBNIS  N gut, M Fehler — am Ende und zusaetzlich als erste Zeile
+//   Die T-Zeilen stehen je Angabe in einer eigenen Zeile (rundes Display).
 import Toybox.Application;
 import Toybox.Graphics;
 import Toybox.Lang;
@@ -60,8 +61,8 @@ module Probe {
         var d = System.getDeviceSettings();
         var s = System.getSystemStats();
         var v = d.monkeyVersion;
-        melde("Geraet " + d.partNumber + " CIQ " + v[0] + "." + v[1] + "." + v[2]
-              + " Speicher " + (s.totalMemory / 1024) + " kB");
+        melde("Geraet " + d.partNumber);
+        melde("CIQ " + v[0] + "." + v[1] + "." + v[2] + ", " + (s.totalMemory / 1024) + " kB");
         uhr = new Timer.Timer();
         (uhr as Timer.Timer).start(new Lang.Method(Probe, :weiter), 100, false);
     }
@@ -77,7 +78,13 @@ module Probe {
     function weiter() as Void {
         try {
             if (!lauf(schritt)) {
-                melde("ERGEBNIS " + gut + " gut, " + fehler + " Fehler");
+                // Das Ergebnis steht am Ende (fuer die Konsole) UND oben, damit
+                // es auf der Uhr ohne Blaettern zu sehen ist.
+                var e = "ERGEBNIS " + gut + " gut, " + fehler + " Fehler";
+                melde(e);
+                zeilen = [e].addAll(zeilen) as Array<String>;
+                oben = 0;
+                WatchUi.requestUpdate();
                 return;
             }
         } catch (e instanceof Lang.Exception) {
@@ -200,9 +207,13 @@ module Probe {
         var t2 = System.getTimer();
         var nach = System.getSystemStats().usedMemory;
         var spitze = (mitte > nach ? mitte : nach) - vor;
-        melde("T-" + (json ? "json" : "binaer") + "-" + n + " bauen " + (t1 - t0)
-              + " ms, verschl. " + (t2 - t1) + " ms, " + innen.size() + "/" + h.size()
-              + " B, +" + (spitze / 1024) + " kB");
+        // KURZE ZEILEN (S11-02, Foto der Fenix 6 Pro vom 13.10.2026): Eine
+        // Zeile mit allen Zahlen lief auf dem runden Display links und rechts
+        // ueber den Rand. Je Angabe eine Zeile.
+        melde("T-" + (json ? "json" : "binaer") + "-" + n);
+        melde("bauen " + (t1 - t0) + " ms");
+        melde("verschl. " + (t2 - t1) + " ms");
+        melde(innen.size() + "/" + h.size() + " B +" + (spitze / 1024) + " kB");
     }
 }
 
