@@ -429,6 +429,59 @@ je Dokument. Ein Schritt, der navigiert, rechnete „nachher − vorher" über
 zwei Seiten und meldete im ersten Lauf **PBKDF2 = −1**. Seit S11-01 zählt
 nach einem Seitenwechsel allein die neue Seite.
 
+## Zerlegung des Seitenaufbaus 13.10.2026 (S11-13)
+
+**Wofür.** Die Betreiberin will jede Seite so schnell wie möglich, mit
+„Inhalt sichtbar“ als Maß und unter 3 s bei 6× bzw. 1 s ungedrosselt als
+Zielrichtung (E-S11-29, -32). Bevor jemand optimiert, steht hier, wo die
+Zeit hingeht. Die Browserprobe zerlegt seit S11-13 jeden Schritt anhand der
+Zeitmarken des Browsers, in ms ab Beginn der Navigation: Antwort des
+Servers, HTML geladen, `DOMContentLoaded` (alle Skripte geladen und
+ausgeführt), letzte `api/`-Antwort, Spanne der Krypto-Aufrufe, Summe der
+Aufgaben über 50 ms auf dem Hauptfaden.
+
+**Gemessen** auf Web 21.14.0, Messstandbestand wie oben, nach einem Neustart
+des Containers (Prozessorname gleich). Einsatz und Diensttag Median aus fünf
+Läufen, die übrigen je ein Lauf. Drossel 6×:
+
+| Seite | sichtbar | HTML | Skripte fertig (DOM) | `api/` fertig | Krypto | Hauptfaden belegt |
+|---|---|---|---|---|---|---|
+| Einsatz mit Spur | 2,11 s | 0,04 s | 1,43 s (17 Skripte) | 1,81 s (31 kB) | 2 Aufrufe | 0,76 s |
+| Diensttag mit Ruhe-Spuren | 2,24 s | 0,04 s | 1,54 s (22) | 1,83 s (142 kB) | 8 | 0,75 s |
+| Tagesansicht | 1,53 s | 0,09 s | 0,92 s (22) | 1,27 s | 7 | 0,54 s |
+| Startseite | 3,02 s | 0,99 s | 2,05 s (22) | 2,72 s | 11 | 1,25 s |
+| Suche | 4,25 s | 0,07 s | 0,50 s (15) | 3,36 s (**5,4 MB**) | **4852** | **2,96 s** |
+| Zeitraum Monat | 3,36 s | 0,08 s | 0,95 s (17) | 2,38 s (344 kB) | 548 | 2,78 s |
+| Zeitraum Jahr | 5,56 s | 0,10 s | 1,20 s (17) | 4,00 s (**2,4 MB**) | **3876** | **5,49 s** |
+| Nachbearbeitung | 0,86 s | 0,07 s | 0,70 s (8) | — | — | 0,06 s |
+| Anmelden | 5,82 s | 2,21 s | 3,89 s (22) | — | — | 0,64 s |
+
+Ungedrosselt liegt jede Seite außer Anmelden (1,36 s) unter 1 s: Einsatz
+0,44 s, Diensttag 0,49 s, Startseite 0,56 s, Suche 0,87 s, Zeitraum Jahr
+0,90 s, Monat 0,47 s.
+
+**Was die Zahlen sagen.**
+
+- **Bei 6× gehen auf jeder Seite 0,7 bis 1,5 s in die Skripte, bevor
+  irgendetwas geholt wird.** Das HTML ist nach 0,04 bis 0,10 s da; erst nach
+  `DOMContentLoaded` holt die Seite ihre Daten aus `api/`. 15 bis 22 einzelne
+  Skriptdateien je Seite.
+- **Suche und Zeitraum Jahr ertrinken in Menge**: 5,4 bzw. 2,4 MB JSON,
+  3876 bis 4852 Entschlüsselungen, 3 bis 5,5 s belegter Hauptfaden — für eine
+  Anzeige von 200 Zeilen.
+- **Die Krypto der Einzelansichten kostet fast nichts**: zwei bis acht
+  Aufrufe in unter 10 ms. Was S11 dort an Hüllen dazubringt, liegt nach der
+  Browserprobe (0,2 bis 3 ms je Hülle bei 6×) im selben Bereich.
+- **Startseite und Anmelden warten bei 6× lange auf den Server** (0,93 bzw.
+  2,15 s bis zur ersten Antwort), ungedrosselt 0,07 bzw. 0,13 s. Ob das an
+  der Seite liegt oder an der Weiterleitung nach der Anmeldung, die
+  mitgezählt wird, ist nicht geklärt — Einzelläufe, nachzumessen.
+- **Dieser Lauf ist langsamer als der vom 11.10.2026** (Einsatz 2,11 statt
+  1,33 s, GPX 414 statt 330 s) bei gleichem Code und gleichem
+  Prozessornamen. Seither misst die Probe einen **Eichlauf** (F-S11-25): 100
+  Mio. Runden Ganzzahlrechnung, gemessen 146–153 ms ungedrosselt und
+  898–987 ms bei 6×.
+
 ---
 
 ## Wiederholen

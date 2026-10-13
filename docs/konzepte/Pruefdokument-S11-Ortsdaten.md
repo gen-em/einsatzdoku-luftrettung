@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-02 bis zum Halt** — es wartet auf P-S11-02 (Probe auf den echten Uhren).*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-02 erledigt** (13.10.2026); in Arbeit S11-13 (Messpaket Seitenaufbau).*
 
 ---
 
@@ -67,6 +67,17 @@ heute über der Sekunde aus E-S11-15 (F-S11-15, Frage Q-S11-16 im Konzept).
 | `pruefstand.sh kryptoreihe` | Probe für alle Geräte der App übersetzt | 99 übersetzt, 0 fehlgeschlagen; 48 Warnungen, alle zur Skalierung des Launcher-Icons |
 | `bestand` · `kettenaufrufe` | neue Prüfmittel in der Form, Aufrufe gegen ihre Werkzeuge | 0 Befunde · 0 Widersprüche |
 
+### S11-13 Messpaket Seitenaufbau (13.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `messen.py --schritte browser`, 6× und ungedrosselt | Zeitmarken je Seite: Server, HTML, Skripte, `api/`, Krypto, Hauptfaden | 9 Seiten, 0 Konsolenfehler, rc 0; Tabelle in `tools/messstand/ausgangsmessung.md` |
+| Eichlauf (feste Rechenaufgabe, je fünfmal) | wie schnell die Maschine an diesem Tag ist | 146–153 ms ungedrosselt, 898–987 ms bei 6× |
+| Vergleich mit dem 11.10.2026 | derselbe Code nach einem Neustart des Containers | Einsatz 2,11 statt 1,33 s, GPX 414 statt 330 s (F-S11-25) |
+
+**Nicht geklärt:** die lange Serverzeit von Startseite und Anmelden bei 6×
+(0,93 und 2,15 s; ungedrosselt 0,07 und 0,13 s) — Einzelläufe, Vorschlag V4.
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
@@ -82,7 +93,7 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-01 | erledigt 11.10.2026 | Konzept lesen, Freigabe erteilen | Freigabe im Chat — **erteilt 11.10.2026** | — |
 | P-S11-10 | erledigt 11.10.2026 | Frage Q-S11-16 im Konzept beantworten | **beantwortet:** Drossel 6×, Faktor 2 (E-S11-26) | — |
 | P-S11-11 | erledigt 11.10.2026 | Frage Q-S11-17 im Konzept beantworten (absolute Grenze neben Faktor 2?) | **beantwortet:** unter 3 s bei 6×, unter 1 s ungedrosselt (E-S11-29) | — |
-| P-S11-13 | vor S11-04 | Frage Q-S11-18 beantworten (was misst „Seitenaufbau“, für welche Seiten?) | Antwort im Chat | — |
+| P-S11-13 | erledigt 13.10.2026 | Frage Q-S11-18 beantworten (was misst „Seitenaufbau“, für welche Seiten?) | **beantwortet:** „sichtbar“, alle Seiten, so schnell wie möglich (E-S11-32) | — |
 | P-S11-12 | in S11-04 | Mockup der Ladeanzeige (E-S11-27) ansehen und freigeben | Freigabe im Chat | — |
 | **P-S11-02** | **jetzt** (Halt) · Fenix 6 Pro erster Lauf 13.10.2026: 6/6 Vektoren gut, ECDH little-endian, `T-PAAR 73/55/54 ms`, Zeitzeilen abgeschnitten (F-S11-23) → zweiter Lauf mit Fassung 2 der `.prg` · FR 945 und Venu 3s offen | 1. In VS Code mit Monkey-C-Erweiterung den Ordner `tools/uhr-pruefstand/krypto-probe/` öffnen. 2. Je Uhr „Monkey C: Build for Device", Gerät wählen. 3. Die `.prg` per USB nach `GARMIN/APPS/` kopieren, Uhr trennen. 4. „Krypto-Probe" starten, rund 10 s warten, bis `ERGEBNIS …` steht. 5. Mit Hoch/Runter (Venu 3s: wischen) blättern und **alle Zeilen** abschreiben oder fotografieren — besonders `ECDH …`, `T-PAAR …` und die vier `T-…`-Zeilen. 6. Für Simulator-Vergleich auf dem Arbeitsplatz dasselbe mit F5. Danach die App von der Uhr löschen. | je Uhr `ERGEBNIS 7 gut, 0 Fehler`; `ECDH gut (little-endian, umgedreht)` wie im Simulator; `PACKEN nicht vorhanden` | eine Zeile `FEHLER`, ein Absturz (IQ-Symbol), `ERGEBNIS` erscheint nicht; oder `ECDH gut (big-endian)` — dann rechnet die Uhr anders als der Simulator, und S11-08 muss beide Fälle kennen |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |

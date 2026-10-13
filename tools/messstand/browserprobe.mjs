@@ -98,6 +98,22 @@ await kontext.addInitScript(() => {
     }
   }).observe(document, { childList: true, subtree: true });
 
+  /* DIE KRYPTO-ZEIT (S11-13): jeder Aufruf von decrypt, encrypt, deriveBits,
+   * deriveKey und importKey mit Beginn und Ende. Die Aufrufe laufen
+   * nebeneinander; gemeldet wird deshalb die Spanne vom ersten Beginn bis
+   * zum letzten Ende und die Zahl, nicht eine Summe. */
+  z.krypto = { n: 0, von: null, bis: null };
+  for (const name of ['decrypt', 'encrypt', 'deriveBits', 'deriveKey', 'importKey']) {
+    const echt = crypto.subtle[name].bind(crypto.subtle);
+    crypto.subtle[name] = function (...args) {
+      const t = performance.now();
+      z.krypto.n++;
+      if (z.krypto.von === null) { z.krypto.von = t; }
+      const fertig = () => { z.krypto.bis = Math.max(z.krypto.bis || 0, performance.now()); };
+      return echt(...args).then((r) => { fertig(); return r; }, (e) => { fertig(); throw e; });
+    };
+  }
+
   const echtDerive = crypto.subtle.deriveBits.bind(crypto.subtle);
   crypto.subtle.deriveBits = function (alg, ...rest) {
     if (alg && (alg.name === 'PBKDF2' || alg === 'PBKDF2')) { z.pbkdf2++; }
@@ -223,9 +239,39 @@ async function messen(name, tun) {
     fehler,
   };
   if (ergebnis && typeof ergebnis === 'object') { Object.assign(messung, ergebnis); }
+  /* DIE ZERLEGUNG (S11-13): Zeitmarken der zuletzt geladenen Seite, in ms ab
+   * ihrem Navigationsbeginn. Wofür: „sichtbar“ ist eine Zahl; wo sie
+   * entsteht — Server, Skripte, api/, Entschlüsseln, belegter Hauptfaden —,
+   * sagt erst diese Zeile. Gilt für die letzte Navigation des Schritts. */
+  messung.zerlegung = await seite.evaluate(() => {
+    const r = (x) => (x == null ? null : Math.round(x));
+    const nav = performance.getEntriesByType('navigation')[0] || {};
+    const res = performance.getEntriesByType('resource');
+    const api = res.filter((e) => e.name.includes('/api/'));
+    const skripte = res.filter((e) => e.initiatorType === 'script');
+    const z = window.__messstand || {};
+    const lang = (z.lang || []);
+    return {
+      server_ms: r(nav.responseStart), html_ms: r(nav.responseEnd),
+      dom_ms: r(nav.domContentLoadedEventEnd),
+      skripte: skripte.length, skripte_ende_ms: r(Math.max(0, ...skripte.map((e) => e.responseEnd))),
+      api: api.length, api_ms: r(api.reduce((a, e) => a + e.duration, 0)),
+      api_ende_ms: r(Math.max(0, ...api.map((e) => e.responseEnd))),
+      api_kb: Math.round(api.reduce((a, e) => a + (e.encodedBodySize || 0), 0) / 1024),
+      krypto_n: z.krypto ? z.krypto.n : null,
+      krypto_von_ms: r(z.krypto && z.krypto.von), krypto_bis_ms: r(z.krypto && z.krypto.bis),
+      lang_n: lang.length, lang_ms: r(lang.reduce((a, l) => a + (l[1] - l[0]), 0)),
+    };
+  }).catch(() => null);
   console.log(`  ${name}: ${messung.dauer_s} s · Halde ${messung.halde_spitze_mb} MB`
     + ` · JSON ${messung.json_groesste_mb} MB · PBKDF2 ${messung.pbkdf2}`
     + (fehler ? ` · FEHLER ${fehler}` : ''));
+  const zl = messung.zerlegung;
+  if (zl) {
+    console.log(`    Zerlegung: Server ${zl.server_ms} · HTML ${zl.html_ms} · DOM ${zl.dom_ms} ms`
+      + ` · ${zl.skripte} Skripte bis ${zl.skripte_ende_ms} · ${zl.api} api/ (${zl.api_kb} kB) bis ${zl.api_ende_ms}`
+      + ` · Krypto ${zl.krypto_n}× ${zl.krypto_von_ms}–${zl.krypto_bis_ms} · Hauptfaden ${zl.lang_n} Aufgaben ${zl.lang_ms} ms`);
+  }
   return messung;
 }
 
@@ -274,6 +320,29 @@ async function entsperren(fertig) {
 console.log(`Browserprobe gegen ${basis}, Drossel ${drossel}×, Konto ${konto}, `
   + `Prozessor ${cpus()[0]?.model || '?'} (${cpus().length} Kerne)`);
 const messungen = [];
+
+/* DER EICHLAUF (S11-13, F-S11-25): eine feste Rechenaufgabe im Browser unter
+ * derselben Drossel, dreimal, gezählt der Median. Wofür: Am 11. und
+ * 13.10.2026 lieferte derselbe Code auf einem Prozessor desselben Namens
+ * 1,33 und 2,11 s für dieselbe Seite — der Container lief nach einem
+ * Neustart offenbar auf einem anderen Wirt. Ohne eine feste Aufgabe daneben
+ * ist nicht zu sagen, ob die Anwendung langsamer wurde oder die Maschine.
+ * Die Aufgabe: 100 Mio. Runden Ganzzahlrechnung, ohne Speicher und Netz
+ * (gemessen 146–153 ms ungedrosselt, 898–987 ms bei 6×; 2 Mio. ergaben 5 ms,
+ * zu kurz fuer eine Zahl). */
+await seite.goto(`${basis}/login.php`, { waitUntil: 'domcontentloaded' });
+const eichzeiten = [];
+for (let i = 0; i < 3; i++) {
+  eichzeiten.push(await seite.evaluate(() => {
+    const t = performance.now();
+    let h = 2166136261;
+    for (let k = 0; k < 100000000; k++) { h = Math.imul(h ^ (k & 0xff), 16777619) >>> 0; }
+    window.__eich = h;
+    return performance.now() - t;
+  }));
+}
+const eichung_ms = Math.round(eichzeiten.sort((a, b) => a - b)[1]);
+console.log(`  Eichlauf: ${eichung_ms} ms (Median aus 3, Drossel ${drossel}×)`);
 
 messungen.push(await messen('Anmelden', async () => {
   await seite.goto(`${basis}/logout.php`, { waitUntil: 'domcontentloaded' }).catch(() => {});
@@ -673,7 +742,7 @@ const ergebnis = {
   /* DIE MASCHINE (S11-01): Die Drossel bremst relativ zum Prozessor, auf dem
    * die Probe laeuft. Ein Vorher-nachher-Vergleich gilt nur bei gleichem
    * Prozessor — deshalb steht er in jedem Protokoll. */
-  maschine: { prozessor: cpus()[0]?.model || '?', kerne: cpus().length,
+  maschine: { prozessor: cpus()[0]?.model || '?', kerne: cpus().length, eichung_ms,
               speicher_gb: Math.round(totalmem() / 1024 ** 3) },
   messungen, konsolenfehler: konsole, titel: bestand,
   gescheiterte_anfragen: [...new Set(gescheitert)],
