@@ -3606,6 +3606,45 @@ function migrationen_katalog(): array
                ADD COLUMN kp_seit        DATETIME NULL",
         ],
     ],
+    [
+        'id'    => '2026_10_13_ortshuellen',
+        'web'   => '22.0',
+        'label' => 'Spurstuecke und Einsatzhuelle als Geraetehuellen (S11-04a)',
+        /* DER SPEICHER FUER VERSCHLOSSENE ORTSDATEN (Konzept S11 3.3). Eine
+         * neue Tabelle `track_stuecke` (Spurstuecke, SPUR2) und eine Spalte
+         * `missions.ort_huelle` (Phasenkoordinaten und Reanimation, E-S11-36).
+         * Beide nehmen ab dieser Fassung auf, was `ingest.php` von Uhr und Handy
+         * bekommt; Klartext nimmt der Eingang nicht mehr an (E-S11-09).
+         *
+         * NICHT ZERSTOEREND. `track_points`, `track_blobs`, die Koordinaten in
+         * `mission_phases` und die Reanimationstabellen bleiben stehen, bis das
+         * Einmalwerkzeug (S11-10) den Bestand umgehuellt hat; geloescht werden
+         * sie erst mit der Aufraeumauslieferung (S11-12, E-S11-19).
+         *
+         * `skip` fragt nach beiden. Nach einem abgebrochenen ersten Lauf
+         * ueberspringt der zweite, was schon steht (1050, 1060). */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_tabelle($pdo, 'track_stuecke') && db_hat_spalte($pdo, 'missions', 'ort_huelle');
+        },
+        'sql'   => [
+            "CREATE TABLE IF NOT EXISTS track_stuecke (
+               owner_type   ENUM('mission','rest') NOT NULL,
+               owner_id     INT UNSIGNED NOT NULL,
+               seq_from     INT UNSIGNED NOT NULL,
+               punkte       INT UNSIGNED NOT NULL,
+               n_original   INT UNSIGNED NOT NULL,
+               ts_von       INT UNSIGNED NOT NULL,
+               ts_bis       INT UNSIGNED NOT NULL,
+               stufe        TINYINT UNSIGNED NOT NULL,
+               huelle       MEDIUMBLOB NOT NULL,
+               erstellt_am  DATETIME NOT NULL,
+               geaendert_am DATETIME NOT NULL,
+               PRIMARY KEY (owner_type, owner_id, seq_from),
+               KEY stufe_ende (stufe, ts_bis)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            "ALTER TABLE missions ADD COLUMN ort_huelle MEDIUMBLOB NULL AFTER pat_blob",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

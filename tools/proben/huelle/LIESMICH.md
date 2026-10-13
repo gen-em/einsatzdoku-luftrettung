@@ -1,6 +1,6 @@
 # Hüllenprobe
 
-Die Gerätehülle (S11, Fassung 1) in drei Umsetzungen gegen Prüfvektoren.
+Die Gerätehülle (S11, Fassung 1) in vier Umsetzungen gegen Prüfvektoren.
 **Anlass: Nr. 43** — Garmin, Android und Browser müssen dieselben Bytes schreiben.
 
 ## Aufruf
@@ -12,13 +12,13 @@ python3 tools/proben/huelle/referenz.py erzeugen   # nach einer Formatänderung
 
 ## Was es misst
 
-`referenz.py` (Python, `cryptography`) ist die Referenz: Format im Kopf,
-`vektoren.json` und `Vektoren.mc` für die Uhr erzeugt sie, `pruefen` rechnet
-jeden Fall nach. `probe.mjs` lädt `server/assets/crypto.js` (WebCrypto, seit
-S11-03) und prüft je Fall Z, HKDF, Bindung, die Hülle byte-gleich und das
-Öffnen, je Störung den Grund der Abweisung, dazu einen Rundlauf; Zeiten für
-200 und 500 Punkte stehen dabei, ohne Abnahme. Die Uhr prüft
-`pruefstand.sh kryptoprobe` (`tools/uhr-pruefstand/krypto-probe/`).
+`referenz.py` ist die Referenz (Format im Kopf, erzeugt `vektoren.json` und
+`Vektoren.mc`). `probe_server.php` hält `server/geraetehuelle_lib.php`
+byte-gleich dagegen, samt Rundlauf und Innenform ohne Höhe (-32768).
+`probe.mjs` prüft `server/assets/crypto.js`: Z, HKDF, Bindung, Hülle, Öffnen,
+Störungen, Rundlauf, Zeiten ohne Abnahme. Die Uhr: `pruefstand.sh kryptoprobe`.
+`geraet.php` (für Python `geraet_cli.php`) ist die **Gerätehilfe der Proben**:
+Paket im alten Format → wie ein Gerät ab Web 22; öffnet Hüllen, nie im Server.
 
 ## Was es braucht
 
@@ -28,8 +28,9 @@ Python mit `cryptography`, Node mit Playwright und einen Browser aus
 ## Erwartete Zahl
 
 Selbstprobe **5 Fälle, 0 Fehlschläge** · `pruefen` **6 Fälle geöffnet,
-8 Störungen abgewiesen, 0 Abweichungen** · Browser **39 Prüfungen,
-0 Abweichungen** (Chromium, 11.10.2026).
+8 Störungen abgewiesen, 0 Abweichungen** · Server **14 Prüfungen,
+0 Abweichungen** (13.10.2026) · Browser **39 Prüfungen, 0 Abweichungen**
+(Chromium, 11.10.2026).
 
 ## Was es nicht kann
 

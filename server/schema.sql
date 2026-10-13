@@ -523,6 +523,11 @@ CREATE TABLE missions (
   other_resources VARCHAR(190) NULL,
   crew_override TINYINT(1) NOT NULL DEFAULT 0,     -- abweichende Besatzung (z. B. Rollenwechsel im Dienst)
   pat_blob   TEXT NULL,                              -- E2E-verschluesselt: Diagnose, Alter, Einsatzort (Server: nur Chiffretext)
+  -- Die Einsatzhuelle (S11-04a, E-S11-36): Phasenkoordinaten und Reanimation
+  -- als Geraetehuelle unter dem oeffentlichen Schluessel des Kontos (Format:
+  -- tools/proben/huelle/referenz.py, Art `einsatz`, innen JSON). Der Server
+  -- kann sie nicht oeffnen; er prueft nur die Form (pruef_huelle()).
+  ort_huelle MEDIUMBLOB NULL,
   notes      TEXT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted_at       DATETIME NULL,
@@ -883,6 +888,40 @@ CREATE TABLE track_cuts (
   KEY konto (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Spurstuecke als Geraetehuellen (S11-04a, Konzept S11 3.3, Format SPUR2).
+--
+-- Seit S11 kommt keine Koordinate, keine Hoehe und keine Punktzeit mehr im
+-- Klartext an. Ein Stueck ist das, was das Geraet in einer Anfrage schickt
+-- (hoechstens 500 Punkte, E-S11-31), verschlossen mit dem oeffentlichen
+-- Schluessel des Kontos; oeffnen kann es nur der Browser. Klartext bleiben
+-- nur die Zahlen, mit denen der Server rechnet: wo das Stueck in der Spur
+-- steht (`seq_from`, `punkte`), welchen Zeitraum es abdeckt (`ts_von`,
+-- `ts_bis`) und in welcher Stufe es ist (1 Geraetestueck, 2 zusammengefuegt,
+-- 3 ausgeduennt — den Wartungslauf baut S11-07).
+--
+-- DIE BINDUNG DER HUELLE (E-S11-17): Art (`spur` beim Einsatz, `ruhe` beim
+-- Ruhesegment), `client_ref` des Eigentuemers, Platz `<seq_from>:<punkte>`.
+-- Eine Huelle, die jemand in eine andere Zeile kopiert, geht dort nicht auf.
+--
+-- WIE `track_points` OHNE FREMDSCHLUESSEL (polymorph), gelesen und geschrieben
+-- nur ueber `spur_lib.php` (CLAUDE.md 4). `track_points` und `track_blobs`
+-- tragen bis zur Aufraeumauslieferung (S11-12) nur noch Altbestand.
+CREATE TABLE track_stuecke (
+  owner_type   ENUM('mission','rest') NOT NULL,
+  owner_id     INT UNSIGNED NOT NULL,
+  seq_from     INT UNSIGNED NOT NULL,
+  punkte       INT UNSIGNED NOT NULL,             -- Punkte in der Huelle
+  n_original   INT UNSIGNED NOT NULL,             -- vor der Ausduennung (sonst = punkte)
+  ts_von       INT UNSIGNED NOT NULL,             -- Unix-Epoche (s, UTC)
+  ts_bis       INT UNSIGNED NOT NULL,
+  stufe        TINYINT UNSIGNED NOT NULL,         -- 1 Geraet · 2 zusammengefuegt · 3 ausgeduennt
+  huelle       MEDIUMBLOB NOT NULL,
+  erstellt_am  DATETIME NOT NULL,
+  geaendert_am DATETIME NOT NULL,
+  PRIMARY KEY (owner_type, owner_id, seq_from),
+  KEY stufe_ende (stufe, ts_bis)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Zustand der Hintergrundjobs (S2, jobs.php). Eine Zeile je Job.
 --
 -- Mehr als ein Zeitstempel: Sobald Arbeit in HAEPPCHEN anfaellt, braucht
@@ -1150,4 +1189,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- passkeys steht oben schon im Schema (Web 21.10.0, SR-09).
   ('2026_09_28_passkeys', 'skipped'),
   -- users.kp_* stehen oben schon im Schema (S11-03).
-  ('2026_10_13_kontopaar', 'skipped');
+  ('2026_10_13_kontopaar', 'skipped'),
+  -- track_stuecke und missions.ort_huelle stehen oben schon im Schema (S11-04a).
+  ('2026_10_13_ortshuellen', 'skipped');

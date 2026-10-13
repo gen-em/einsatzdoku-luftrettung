@@ -252,6 +252,24 @@ const LIMIT_SCHNITTE    = 200;
 const LIMIT_TRACKPUNKTE_ANFRAGE = 2000;
 const LIMIT_TRACKPUNKTE_SPUR    = 50000;
 
+/* DIE GERAETEHUELLE IN DER PRUEFSCHICHT (S11-04a, E-S11-13). Was der Server
+ * nicht lesen kann, kann er nicht pruefen: Form und Groesse ja, Inhalt nein.
+ * Den Inhalt pruefen das Geraet beim Erzeugen und der Browser beim Oeffnen.
+ * Das Format steht in `tools/proben/huelle/referenz.py`:
+ *
+ *   Kennbyte 1 · EPK 65 · IV 16 · Chiffretext 16·n (n >= 1) · TAG 32
+ *
+ * also mindestens 130 Byte, und die Laenge ohne Kopf und TAG ein Vielfaches
+ * von 16. Die Obergrenzen folgen aus den Mengengrenzen darueber, nicht aus
+ * dem Gefuehl: Ein Spurstueck traegt hoechstens LIMIT_TRACKPUNKTE_ANFRAGE
+ * Punkte zu 14 Byte (E-S11-31), dazu Polsterung und Kopf. Die Einsatzhuelle
+ * traegt JSON mit hoechstens LIMIT_PHASEN Phasen und LIMIT_REA_SESSION
+ * Sitzungen zu LIMIT_REA_EREIGN Ereignissen; 256 KB sind das Vierfache des
+ * groessten denkbaren Inhalts. */
+const GH_MIN_BYTE         = 130;
+const GH_STUECK_MAX_BYTE  = LIMIT_TRACKPUNKTE_ANFRAGE * 14 + 16 + 130;
+const GH_EINSATZ_MAX_BYTE = 262144;
+
 /** Wertebereich der Phasennummern. Phase 1 ist "Frei" (kein Zeitstempel),
  *  Phase 10 wurde mit 2026_07_19_phase10_entfernen abgeschafft. */
 const PHASE_MIN = 2;
@@ -749,6 +767,32 @@ function pruef_pat_blob($wert, string $feld = 'Patientenblock', ?Pruefliste $p =
         return null;
     }
     return $s;
+}
+
+/**
+ * Eine Geraetehuelle aus der Nutzlast (Base64) — als Binaerwert, oder null.
+ *
+ * Geprueft wird die FORM: Base64 ohne fremde Zeichen, Laenge zwischen
+ * GH_MIN_BYTE und `$maxByte`, Chiffretext ein Vielfaches von 16, Kennbyte der
+ * Fassung 1, ein unkomprimierter Punkt als fluechtiger Schluessel. Ob die
+ * Huelle aufgeht, kann nur der Browser sagen (E-S11-13).
+ */
+function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste $p = null): ?string
+{
+    if ($wert === null) { return null; }
+    if (!is_string($wert) || !preg_match('#^[A-Za-z0-9+/]+={0,2}$#', $wert)) {
+        $p?->melde($feld, 'kein Base64');
+        return null;
+    }
+    $roh = base64_decode($wert, true);
+    if ($roh === false) { $p?->melde($feld, 'kein Base64'); return null; }
+    $n = strlen($roh);
+    if ($n < GH_MIN_BYTE) { $p?->melde($feld, 'kuerzer als ' . GH_MIN_BYTE . ' Byte'); return null; }
+    if ($n > $maxByte) { $p?->melde($feld, 'laenger als ' . $maxByte . ' Byte'); return null; }
+    if (($n - 82 - 32) % 16 !== 0) { $p?->melde($feld, 'Chiffretext kein Vielfaches von 16'); return null; }
+    if ($roh[0] !== "\x01") { $p?->melde($feld, 'unbekannte Fassung ' . ord($roh[0])); return null; }
+    if ($roh[1] !== "\x04") { $p?->melde($feld, 'kein unkomprimierter Schluessel'); return null; }
+    return $roh;
 }
 
 /**

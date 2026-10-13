@@ -869,7 +869,7 @@ function spur_naechste_seq(PDO $pdo, string $ownerType, int $ownerId): int
     $q->execute([$ownerType, $ownerId]);
     $ausZeilen = (int)$q->fetchColumn();
 
-    return max($ausBlob, $ausZeilen);
+    return max($ausBlob, $ausZeilen, spur2_stand($pdo, $ownerType, $ownerId)['naechste_seq']);
 }
 
 /**
@@ -901,14 +901,20 @@ function spur_stand(PDO $pdo, string $ownerType, int $ownerId): array
     $q->execute([$ownerType, $ownerId]);
     $ausZeilen = (int)$q->fetchColumn();
 
+    /* SEIT S11-04a ZAEHLEN DIE STUECKE MIT (SPUR2). Ein Bestand traegt bis zum
+     * Einmalwerkzeug (S11-10) Altzeilen und Stuecke nebeneinander; die Marke
+     * ist das Groessere aus beidem, die Stufe die hoehere. */
+    $s2 = spur2_stand($pdo, $ownerType, $ownerId);
     if (!$r) {
-        return ['stufe' => 1, 'n_original' => 0, 'n_gespeichert' => 0,
-                'naechste_seq' => $ausZeilen];
+        return ['stufe' => max(1, $s2['stufe']), 'n_original' => $s2['n_original'],
+                'n_gespeichert' => 0,
+                'naechste_seq' => max($ausZeilen, $s2['naechste_seq'])];
     }
     $nOriginal = (int)$r['n_original'];
-    return ['stufe' => (int)$r['stufe'], 'n_original' => $nOriginal,
+    return ['stufe' => max((int)$r['stufe'], $s2['stufe']),
+            'n_original' => max($nOriginal, $s2['n_original']),
             'n_gespeichert' => (int)$r['n_gespeichert'],
-            'naechste_seq' => max($nOriginal, $ausZeilen)];
+            'naechste_seq' => max($nOriginal, $ausZeilen, $s2['naechste_seq'])];
 }
 
 /**
@@ -1101,6 +1107,13 @@ function spur_bytes(PDO $pdo, string $ownerType, array $ids): int
         $summe += (int)$r['n'] * SPUR_ZEILE_BYTE;
     }
 
+    /* SPUR2 (S11-04a): die Huellen, wie sie liegen. */
+    foreach (sql_in_bloecken($pdo,
+        'SELECT COALESCE(SUM(LENGTH(huelle)), 0) AS b FROM track_stuecke
+          WHERE owner_type = ? AND owner_id IN ({IDS})', $ids, [$ownerType]) as $r) {
+        $summe += (int)$r['b'];
+    }
+
     return $summe;
 }
 
@@ -1123,6 +1136,12 @@ function spur_loeschen(PDO $pdo, string $ownerType, array $ids): array
         $zeilen += $q->rowCount();
 
         $q = $pdo->prepare("DELETE FROM track_blobs
+                             WHERE owner_type = ? AND owner_id IN ($platz)");
+        $q->execute(array_merge([$ownerType], $block));
+        $blobs += $q->rowCount();
+
+        /* SPUR2 (S11-04a): Stuecke zaehlen wie Blobs — je Zeile eine Huelle. */
+        $q = $pdo->prepare("DELETE FROM track_stuecke
                              WHERE owner_type = ? AND owner_id IN ($platz)");
         $q->execute(array_merge([$ownerType], $block));
         $blobs += $q->rowCount();
@@ -1989,4 +2008,107 @@ function spur_blob_pruefen(string $blob, ?int $erwartetN = null): ?string
         }
     }
     return null;
+}
+
+
+/* ===========================================================================
+ * SPUR2 — SPURSTUECKE ALS GERAETEHUELLE (S11-04a, Konzept S11 3.3, E-S11-23)
+ * ===========================================================================
+ *
+ * Seit S11 bringt das Geraet keine Koordinaten mehr, sondern verschlossene
+ * Stuecke: hoechstens 500 Punkte, verschlossen mit dem oeffentlichen
+ * Schluessel des Kontos (Format: `tools/proben/huelle/referenz.py`). Der
+ * Server sieht von einem Stueck nur, wo es steht (`seq_from`, `punkte`) und
+ * welchen Zeitraum es abdeckt (`ts_von`, `ts_bis`). Damit rechnet er die
+ * Fortsetzungsmarke und die Sperren; die Punkte selbst sieht nur der Browser.
+ *
+ * DIE REGELN AUS SPUR1 GELTEN WEITER, NUR JE STUECK STATT JE PUNKT:
+ *
+ *   Wiederholung    dasselbe `seq_from` noch einmal: still uebergehen (der
+ *                   Primaerschluessel faengt es ab).
+ *   unter der Marke das ganze Stueck unter `n_original` einer zusammengefuegten
+ *                   oder ausgeduennten Spur: uebergehen — die Punkte stehen
+ *                   schon im zusammengefuegten Stueck. Ragt es darueber, wird
+ *                   es abgelegt; die Ueberlappung loest der Browser ueber die
+ *                   Sequenznummer auf (Punkt i hat `seq_from` + i).
+ *   ausgeduennt     Stufe 3: den Teil oberhalb der Marke verwerfen und zaehlen
+ *                   (E-S2-08).
+ *   geschnitten     liegt das GANZE Stueck in einem gesperrten Zeitraum,
+ *                   verwerfen und zaehlen. Liegt es nur TEILWEISE darin, wird
+ *                   es gespeichert, und der Browser blendet die gesperrten
+ *                   Punkte beim Oeffnen aus — die Sperrzeiten sind Klartext.
+ *                   Endgueltig fallen sie beim Zusammenfuegen (S11-07,
+ *                   E-S11-37).
+ */
+
+/** Stufe eines Stuecks, wie es vom Geraet kommt. */
+const SPUR2_STUFE_GERAET = 1;
+
+/**
+ * Stand der Stuecke einer Spur: hoechste Stufe, `n_original` der
+ * zusammengefuegten Stuecke, naechste Sequenznummer.
+ *
+ * @return array{stufe:int,n_original:int,naechste_seq:int,stuecke:int}
+ */
+function spur2_stand(PDO $pdo, string $ownerType, int $ownerId): array
+{
+    $q = $pdo->prepare('SELECT COUNT(*) AS n, COALESCE(MAX(stufe), 0) AS stufe,
+                               COALESCE(MAX(seq_from + punkte), 0) AS weiter,
+                               COALESCE(MAX(CASE WHEN stufe > 1 THEN seq_from + n_original END), 0) AS n_orig
+                          FROM track_stuecke WHERE owner_type = ? AND owner_id = ?');
+    $q->execute([$ownerType, $ownerId]);
+    $r = $q->fetch(PDO::FETCH_ASSOC) ?: [];
+    return ['stufe' => (int)($r['stufe'] ?? 0), 'n_original' => (int)($r['n_orig'] ?? 0),
+            'naechste_seq' => max((int)($r['weiter'] ?? 0), (int)($r['n_orig'] ?? 0)),
+            'stuecke' => (int)($r['n'] ?? 0)];
+}
+
+/**
+ * Liegt der ganze Zeitraum [von, bis] in EINEM gesperrten Bereich?
+ * Beide Grenzen gehoeren dazu, wie bei `schnitt_gesperrt()`.
+ *
+ * @param list<array{von_ts:int,bis_ts:int}> $schnitte aus schnitte_lesen()
+ */
+function schnitt_bereich_gesperrt(array $schnitte, int $von, int $bis): bool
+{
+    foreach ($schnitte as $s) {
+        if ($von >= $s['von_ts'] && $bis <= $s['bis_ts']) { return true; }
+    }
+    return false;
+}
+
+/**
+ * Ein Stueck vom Geraet ablegen (Stufe 1). Gibt 1 zurueck, wenn es neu
+ * abgelegt wurde, 0 bei einer Wiederholung desselben `seq_from`.
+ *
+ * Die Huelle kommt GEPRUEFT an (`pruef_huelle()`); diese Funktion prueft nur
+ * noch, was sie selbst wissen muss.
+ */
+function spur2_stueck_schreiben(PDO $pdo, string $ownerType, int $ownerId, int $seqFrom,
+                                int $punkte, int $tsVon, int $tsBis, string $huelle): int
+{
+    if ($punkte < 1 || $tsBis < $tsVon || $seqFrom < 0) {
+        throw new InvalidArgumentException('Spurstueck mit unmoeglichen Zahlen');
+    }
+    $ins = $pdo->prepare('INSERT INTO track_stuecke
+        (owner_type, owner_id, seq_from, punkte, n_original, ts_von, ts_bis, stufe, huelle,
+         erstellt_am, geaendert_am)
+        VALUES (?,?,?,?,?,?,?,?,?, UTC_TIMESTAMP(), UTC_TIMESTAMP())');
+    try {
+        $ins->bindValue(1, $ownerType);
+        $ins->bindValue(2, $ownerId, PDO::PARAM_INT);
+        $ins->bindValue(3, $seqFrom, PDO::PARAM_INT);
+        $ins->bindValue(4, $punkte, PDO::PARAM_INT);
+        $ins->bindValue(5, $punkte, PDO::PARAM_INT);
+        $ins->bindValue(6, $tsVon, PDO::PARAM_INT);
+        $ins->bindValue(7, $tsBis, PDO::PARAM_INT);
+        $ins->bindValue(8, SPUR2_STUFE_GERAET, PDO::PARAM_INT);
+        $ins->bindValue(9, $huelle, PDO::PARAM_LOB);
+        $ins->execute();
+        return $ins->rowCount() > 0 ? 1 : 0;
+    } catch (PDOException $ex) {
+        require_once __DIR__ . '/email_lib.php';      // ist_dublettenfehler()
+        if (!ist_dublettenfehler($ex)) { throw $ex; }
+        return 0;
+    }
 }

@@ -14,6 +14,76 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.0.1] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-04a — Speicher, Prüfschicht, Eingang**. Der
+erste von vier Teilen des Pakets S11-04 (E-S11-36). **Schema: eine Tabelle
+und eine Spalte — nach dem Deploy `update.php` aufrufen.** Ausgeliefert wird
+erst mit dem Ende von S11.
+
+### Geändert
+
+- **`ingest.php` nimmt Ortsdaten nur noch verschlossen an.** Spur,
+  Koordinate jeder Phase und Reanimation kommen seit dieser Fassung als
+  Gerätehülle (Format in `tools/proben/huelle/referenz.py`), verschlossen mit
+  dem Kontoschlüssel aus der Kopplung. Ein Paket mit Punkten, einer Phase mit
+  Koordinate oder einer Reanimation im Klartext weist der Server ab — ganz,
+  mit `400 klartext`. Halb anzunehmen wäre schlimmer gewesen: Was der Server
+  quittiert, löscht das Gerät, und verworfene Ortsdaten wären nirgends
+  geblieben. Einen Übergang gibt es nicht (E-S11-09); die Uhr- und
+  Handy-Fassungen, die verschließen, kommen mit S11-08 und S11-09. **Bis
+  dahin kann kein Gerät senden.** Das ist der Plan, keine Panne — vor der
+  Auslieferung wird alles gesendet, was noch auf der Uhr liegt (Konzept 3.8).
+- **Spurstücke statt Punkte.** Ein Gerät schickt je Anfrage ein Stück: wo es
+  in der Spur steht (`seq_from`, `punkte`), welchen Zeitraum es abdeckt
+  (`ts_von`, `ts_bis`) und die Hülle. Mehr sieht der Server nicht, und mehr
+  braucht er nicht: Fortsetzungsmarke, Wiederholung, Ausdünnung und
+  Ersetzfenster gelten wie bisher, nur je Stück statt je Punkt. Neu ist eine
+  Lage, die es je Punkt nicht gab: Ein nachgeliefertes Stück, das nur zum
+  Teil in einen herausgeschnittenen Zeitraum fällt, wird abgelegt, und der
+  Browser blendet die gesperrten Punkte beim Öffnen aus — die Sperrzeiten
+  sind Klartext (E-S11-37). Liegt es ganz darin, wird es wie bisher
+  verworfen und als `cut_points` gemeldet.
+- **Die Einsatzhülle geht mit den Phasen.** Koordinaten der Phasen und
+  Reanimation liegen in `missions.ort_huelle`, Innenform JSON mit Zeiten
+  relativ zum Einsatzbeginn (E-S11-40). Ob ein Paket weniger weiß als der
+  gespeicherte Stand, sieht der Server nur noch an der Phasenliste; mit ihr
+  ersetzt oder behält er die Hülle (E-S11-38). Die Reanimation zählt er nicht
+  mehr — ob es eine gab, soll er nicht sehen (E-S11-02). Darum gibt es
+  `kept_resus` nicht mehr, und `kept_ort` sagt nur: die Hülle blieb.
+  **Bewusst in Kauf genommen:** Ein Gerät, das nach Speicherverlust denselben
+  Einsatz mit gleich vielen Phasen, aber weniger Reanimationsereignissen neu
+  schickt, überschreibt die vollständigere Hülle.
+- **Die Prüfschicht prüft an einer Hülle die Form** (`pruef_huelle()`):
+  Base64, Mindest- und Höchstlänge aus den Mengengrenzen, Fassung, Kennbyte
+  des flüchtigen Schlüssels. Den Inhalt prüfen Gerät und Browser; der Server
+  kann ihn nicht lesen (E-S11-13).
+- **Ein Punkt ohne Höhe** trägt in der binären Innenform `-32768`
+  (E-S11-39). Das Format aus E-S11-31 kannte dafür keinen Wert, die Spalte
+  `ele` darf aber leer sein.
+
+### Neu
+
+- **Verschließen auf dem Server** (`geraetehuelle_lib.php`), byte-gleich mit
+  Referenz und Browser gegen dieselben Prüfvektoren. Gebraucht wird es für
+  die Proben, die den Eingang wie ein Gerät bedienen, und für das
+  Demo-Zurücksetzen (S11-06). Ein Öffnen gibt es dort **mit Absicht nicht**.
+- Tabelle **`track_stuecke`** (SPUR2) und Spalte **`missions.ort_huelle`**
+  (Migration `2026_10_13_ortshuellen`, nicht zerstörend). Löschen,
+  Papierkorb, Waisenjob, Kontingent und Demo-Zurücksetzen nehmen die Stücke
+  mit. `track_points`, `track_blobs`, die Koordinaten in `mission_phases` und
+  die Reanimationstabellen tragen nur noch Altbestand, bis das
+  Einmalwerkzeug (S11-10) ihn umgehüllt hat.
+
+### Was noch nicht geht
+
+- **Die Ansichten lesen die Hüllen noch nicht** — das bauen S11-04b und
+  S11-04c. Ein neu angekommener Einsatz zeigt bis dahin keine Karte, keine
+  Phasenorte und keine Reanimation. Weil es keinen Übergang gibt, gilt das
+  ab S11-04c auch für den Altbestand, bis S11-10 ihn umgehüllt hat.
+- Die Ortshöhe rechnet der Server nicht mehr: Er sieht weder Spur noch
+  Phasenkoordinate. Sie kommt mit S11-05 in den Browser (E-S11-03).
+
 ## [Web 22.0.0] — unveröffentlicht
 
 Schritt 12a, **S11 — Ortsdaten verschlüsselt (Weg B)**, Paket S11-03, **das

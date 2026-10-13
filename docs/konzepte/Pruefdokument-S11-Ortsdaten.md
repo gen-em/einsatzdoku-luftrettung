@@ -17,6 +17,8 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | **Forerunner 945 und Venu 3s auf der echten Uhr.** Nur im Simulator (je 7 gut, 0 Fehler) und im Übersetzen geprüft; die Betreiberin nimmt an, dass sie wie die Fenix 6 Pro rechnen (E-S11-30). | Die Uhren standen am 13.10.2026 nicht zur Verfügung. | Rechnet eine anders, gehen ihre Hüllen im Browser nicht auf — sichtbar bei P-S11-05; S11-08 prüft die Byteordnung beim Start der App gegen einen eingebauten Vektor. |
 | **Ob die echte Garmin-Uhr die Krypto kann.** Im **Simulator** gemessen (S11-02): Fenix 6 Pro, Forerunner 945, Venu 3s je 7 gut, 0 Fehler. Ob der Simulator rechnet wie die Uhr — gerade bei der Byteordnung des ECDH-Geheimnisses (F-S11-18) —, ist unbelegt. Zeiten und Speicher des Simulators sind die des Rechners. | Keine Uhr in der Arbeitsumgebung. | P-S11-02; Halt, bis das Ergebnis vorliegt. |
 | **Komplett- und Schlüsselwechselprobe unter dem PHP 8.3.6 aus Ubuntu.** Dort scheitern drei Fälle, die ein Komplett-Siegel über Häppchen schreiben — mit und ohne S11-03 gleich (F-S11-26, -28, -33). | Kein Fehler von S11; unter PHP 8.3.33 und 8.4.19 grün. Die Ursache unter 8.3.6 ist nicht gefunden: Backlog Nr. 383. | Eine Anlage auf PHP 8.3.6 könnte eine Komplettsicherung schreiben, die nicht aufgeht. |
+| **Der volle Einspiellauf des Referenzbestands mit Hüllen** (`einspielen.py`, S11-04a). | Er braucht eine leer eingerichtete Datenbank; `lokal_einrichten.sh` löscht den Bestand dieser Anlage, auf dem Messstand und Bilderlauf rechnen. Geprüft sind die beiden neuen Teile einzeln: der Umbau aller 638 Pakete und das Anlegen des Kontopaars. | Beim nächsten Neuaufbau einer Anlage (`hochfahren.sh --neu`) oder auf Staging: rot, wenn ein Paket mit `400` zurückkommt. |
+| **Ob ein Gerät überhaupt senden kann.** Seit S11-04a weist der Server Klartext ab; Uhr und Handy verschließen erst ab S11-08/-09. | So geplant (E-S11-09); geprüft ist nur die Abweisung. | P-S11-05 nach der Hauptauslieferung. |
 | **Firefox und WebKit.** Die Hüllenprobe lief nur in Chromium (39/0). | Beide fehlen im Abbild vom 11.10.2026 (F-S11-20): `/opt/pw-browsers` hält nur `chromium-1194`; die Probe bricht mit rc 2 ab. | S11-04 (Browserliste); bis dahin offen. |
 | **Ob die Krypto auf den übrigen 96 Zielgeräten läuft.** | E-S11-16: Laufzeit nur auf Fenix 6 Pro, Forerunner 945, Venu 3s. Stufe I übersetzt für alle 99; Übersetzen ist nicht Laufen, und der kleinste App-Speicher (128 kB) liegt unter dem der drei. | Erst wenn ein anderes Gerät in Betrieb geht. |
 | **Ob die Grundlinie für ein Telefon gilt.** S11-01 hat auf einem Container mit vier Kernen gemessen, einmal mit Drossel 6× (Nachbildung des Referenzgeräts Z3), einmal ohne. | Kein echtes Gerät in der Arbeitsumgebung; die Drossel bildet Rechenzeit nach, nicht Speicher, Grafik und Leitung. | Der Vergleich vorher/nachher in S11-11 gilt nur auf derselben Maschine (E-S11-15). |
@@ -90,6 +92,23 @@ heute über der Sekunde aus E-S11-15 (F-S11-15, Frage Q-S11-16 im Konzept).
 | `proben.sh komplett` | Komplettsicherung mit den neuen Spalten | 75 von 75 unter PHP 8.4.19 (unter Ubuntu-8.3.6: 73 von 75, auch ohne S11 — F-S11-33) |
 | `proben.sh rollen` (einzeln, nach F-S11-29) | Rollen an allen Seiten und Endpunkten | 534 Erwartungen, 0 offen |
 
+### S11-04a Speicher, Prüfschicht, Eingang (13.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `proben.sh huelle` | Referenz, **Server** (`geraetehuelle_lib.php`, neu) und Browser gegen die Vektoren; Server-Hülle von der Referenz geöffnet; Innenform ohne Höhe (-32768) | Server 14/0, Browser 39/0 |
+| `proben.sh ingest` | Stücke statt Punkte: Marke, Wiederholung, Stufe 2/3 über ein zusammengefügtes Stück, Ersetzfenster, Einsatzhülle mit den Phasen; Klartext (Punkte, Phase mit Koordinate, Reanimation) → `400 klartext`, nichts angelegt; kaputte Hülle → 400; abgelegte Hülle geht unter ihrer Bindung auf, an einem anderen Einsatz nicht | 97 Erwartungen, 0 offen |
+| `proben.sh kopplung` · `verbindung` · `raten` · `spur` · `wartung` · `zweitfaktor` · `jobs` | senden über die Gerätehilfe | 85/0 · 26/26 · 82/0 · 45/0 · 70/0 · 139/0 · 36/0 |
+| `proben.sh komplett` · `wiederherstellung` | Dump mit `track_stuecke` und `ort_huelle` | 75/75 · 115/0 |
+| `plattform.sh alles` | Schema mit neuer Tabelle und Spalte auf vier Datenbankfassungen | 4 × 40 Prüfungen, 0 Fehlschläge |
+| Umbau des Sendeplans (`geraet_cli.php`) | alle Pakete des Referenzbestands, verschlossen mit einem Wegwerfschlüssel und mit der Referenz geöffnet | 638 Pakete, 0 mit Klartext; 638 Stücke mit richtiger Punktzahl, 314 Einsatzhüllen geöffnet; `pruef_huelle()` 60/60 |
+| `Sitzung.kontoschluessel()` | Python legt das Kontopaar an wie der Browser (Wegwerfkonto) | Stand „fehlt" → „da"; Siegel `edsk1:`, privat `edk1:`; privater Teil passt zum öffentlichen |
+
+**Nicht gelaufen:** der volle Einspiellauf des Referenzbestands
+(`einspielen.py`) — er braucht eine leer eingerichtete Datenbank, und
+`lokal_einrichten.sh` löscht den Bestand dieser Anlage. Geprüft sind seine
+beiden neuen Teile einzeln (Zeilen darüber); der ganze Lauf steht in 1.
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
@@ -109,6 +128,7 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-12 | in S11-04 | Mockup der Ladeanzeige (E-S11-27) ansehen und freigeben | Freigabe im Chat | — |
 | P-S11-14 | nach dem Merge auf Staging | `update.php` aufrufen; mit einem eigenen Konto anmelden, eine Einsatzseite öffnen; in Betrieb → Protokoll, Reiter Verwaltung nachsehen | ein Eintrag „Kontoschlüssel angelegt“ für das Konto, keine Meldung oben auf der Seite | kein Eintrag, oder oben „…passt nicht zu deinem privaten Schlüssel“, oder ein Eintrag „kontopaar“ im Reiter System |
 | **P-S11-02** | **jetzt** (Halt) · Fenix 6 Pro erster Lauf 13.10.2026: 6/6 Vektoren gut, ECDH little-endian, `T-PAAR 73/55/54 ms`, Zeitzeilen abgeschnitten (F-S11-23) → zweiter Lauf mit Fassung 2 der `.prg` · FR 945 und Venu 3s offen | 1. In VS Code mit Monkey-C-Erweiterung den Ordner `tools/uhr-pruefstand/krypto-probe/` öffnen. 2. Je Uhr „Monkey C: Build for Device", Gerät wählen. 3. Die `.prg` per USB nach `GARMIN/APPS/` kopieren, Uhr trennen. 4. „Krypto-Probe" starten, rund 10 s warten, bis `ERGEBNIS …` steht. 5. Mit Hoch/Runter (Venu 3s: wischen) blättern und **alle Zeilen** abschreiben oder fotografieren — besonders `ECDH …`, `T-PAAR …` und die vier `T-…`-Zeilen. 6. Für Simulator-Vergleich auf dem Arbeitsplatz dasselbe mit F5. Danach die App von der Uhr löschen. | je Uhr `ERGEBNIS 7 gut, 0 Fehler`; `ECDH gut (little-endian, umgedreht)` wie im Simulator; `PACKEN nicht vorhanden` | eine Zeile `FEHLER`, ein Absturz (IQ-Symbol), `ERGEBNIS` erscheint nicht; oder `ECDH gut (big-endian)` — dann rechnet die Uhr anders als der Simulator, und S11-08 muss beide Fälle kennen |
+| P-S11-15 | nach dem Merge auf Staging | `update.php` aufrufen; eine gekoppelte Uhr der alten Fassung einen Einsatz senden lassen | Die Uhr parkt das Paket und meldet einen Fehler; im Web erscheint **kein** Einsatz; in Betrieb → System keine Meldung „ingest" mit Kennung | der Einsatz erscheint (dann nahm der Server Klartext an), oder die Uhr verwirft das Paket |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen, einmal neu koppeln, einen Probeeinsatz aufzeichnen und senden | Einsatz im Web mit Karte nach dem Entsperren | Uhr zeigt „Neu koppeln" weiter oder parkt |

@@ -176,7 +176,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      der Tabelle, Stand in `app_state`, `gm_nachaufloesen()`
 │   │                      in Blöcken. Job UND Skript benutzen dieselbe Fassung
 │   ├── spur_lib.php       Spurpunkte lesen und schreiben — die EINZIGE Stelle,
-│   │                       die `track_points`/`track_blobs` anfasst (4.97)
+│   │                       die `track_points`/`track_blobs` anfasst (4.97);
+│   │                       seit Web 22.0.1 auch `track_stuecke` (SPUR2, 4.99s)
+│   ├── geraetehuelle_lib.php  Die Gerätehülle VERSCHLIESSEN (S11-04a) — für
+│   │                       Proben und Demo; byte-gleich mit Browser und
+│   │                       Referenz. Ein Öffnen gibt es hier mit Absicht nicht
+│   ├── kontopaar_lib.php  Das Schlüsselpaar des Kontos (S11-03): Siegel,
+│   │                       Zustand, Ablegen, SEC1 für die Kopplung (4.99s)
 │   ├── gpx_lib.php        GPX 1.1 aus einer oder mehreren Spuren — die
 │   │                       EINZIGE Stelle, die GPX schreibt (4.97b)
 │   ├── gpx.php            der Abruf. Bewusst NICHT unter api/: Ein Link, den
@@ -966,11 +972,12 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`uhr_gesperrt`** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; hieß bis Web 20.24.2 `manual` und brach damit die Einrichtung auf MySQL 8.4.0–8.4.10 (reserviertes Wort, Backlog Nr. 238) — **in Sicherungs- und Exportdatei heißt das Feld weiter `manual`**, abgebildet per Alias; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes, seit Web 6.2.0 auch der manuelle Abfahrtort, seit Web 19.0.0 auch die Notizen des Einsatzes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr; der ganze Katalog steht in 4.98) |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`uhr_gesperrt`** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; hieß bis Web 20.24.2 `manual` und brach damit die Einrichtung auf MySQL 8.4.0–8.4.10 (reserviertes Wort, Backlog Nr. 238) — **in Sicherungs- und Exportdatei heißt das Feld weiter `manual`**, abgebildet per Alias; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes, seit Web 6.2.0 auch der manuelle Abfahrtort, seit Web 19.0.0 auch die Notizen des Einsatzes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr; der ganze Katalog steht in 4.98); **`ort_huelle`** (seit Web 22.0.1, S11-04a) = die **Einsatzhülle**: Koordinaten der Phasen und Reanimation als Gerätehülle unter dem Kontoschlüssel, Innenform JSON — geschrieben nur von `ingest.php`, gelesen nur vom Browser (4.99s) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → der Job `waisen` entfernt Waisen (4.97a). **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
+| `track_stuecke` | **Seit Web 22.0.1 (S11-04a) die Spur, wie sie ankommt: verschlossene Stücke** (SPUR2), eine Zeile je Stück, PK `(owner_type, owner_id, seq_from)`. Klartext nur `punkte`, `n_original`, `ts_von`, `ts_bis`, `stufe` (1 Gerät, 2 zusammengefügt, 3 ausgedünnt); die Punkte stehen in `huelle` (Gerätehülle, Art `spur`/`ruhe`, Platz `<seq_from>:<punkte>`). Wie `track_points` ohne FK; gelesen und geschrieben nur über `spur_lib.php` — 4.99s |
 | `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Job `waisen` ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
 | `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Welches Rettungsmittel Fähigkeiten führen darf, entscheidet seit Web 20.3.0 `veh_caps_erlaubt()` (`db.php`) aus Typ UND Betriebsart** — `kind = 'air'` bei `standard`/`veranstaltung`/`sonstiges` (E29), beide Betriebsarten beim Typ `bergwacht`. Die Spalte `faehigkeiten` in `VEHICLE_TYPEN` ist die Quelle; das Schema führt die Regel nicht. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` = das Konto, seit Web 21.0.0 `NOT NULL` — siehe den Hinweis unter der Tabelle |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
@@ -3334,6 +3341,14 @@ Deshalb liegen die Punkte seit S2 in drei Stufen:
 | 2 | verlustfreier Blob in `track_blobs` | sobald das Paket abgeschlossen ist |
 | 3 | ausgedünnter Blob | sechs Monate nach Einsatzende |
 
+> **Seit Web 22.0.1 (S11-04a) kommt nichts mehr in `track_points` an.**
+> Uhr und Handy schicken verschlossene Stücke, und `ingest.php` legt sie in
+> `track_stuecke` ab (SPUR2, 4.99s). Die drei Stufen bleiben als Begriff —
+> `stufe` steht an jedem Stück —, aber Zusammenfügen und Ausdünnen macht ab
+> S11-07 der Browser, weil der Server die Punkte nicht mehr sieht. Was hier
+> über `track_points` und `track_blobs` steht, gilt für den Altbestand, bis
+> das Einmalwerkzeug (S11-10) ihn umgehüllt hat.
+
 Stufe 1 bleibt, und zwar aus einem Grund: Der Upload der Uhr kommt in
 Teilstücken, ist idempotent und wiederholbar. Dafür ist eine Zeilentabelle
 richtig; ein Blob müsste bei jedem Teilstück neu geschrieben werden.
@@ -5536,6 +5551,14 @@ Stelle stehen, **welche Felder darin liegen**: Wer das nicht weiß, kann weder
 eine Auskunft nach Datenschutzrecht beantworten noch beurteilen, was ein
 Datenbank-Abzug preisgibt — und niemand kann prüfen, ob ein neues Feld
 versehentlich im Klartext gelandet ist.
+
+> **Seit Web 22.0.1 gibt es eine zweite verschlüsselte Ablage neben dem
+> Block:** die **Gerätehülle** (4.99s). Spurstücke (`track_stuecke.huelle`)
+> und die Einsatzhülle (`missions.ort_huelle` — Koordinaten der Phasen,
+> Reanimation) verschließen Uhr und Handy mit dem öffentlichen Kontoschlüssel,
+> weil sie den Inhaltsschlüssel nicht haben (E-S11-12). Sie gehören nicht in
+> diese Liste der Blobfelder, aber in jede Antwort auf die Frage, was ein
+> Datenbankabzug preisgibt.
 
 **Im verschlüsselten Block** (`pat_blob`, AES-256-GCM, Schlüssel nur im
 Browser), erzeugt in `einsatz_form.php`:
@@ -8611,6 +8634,50 @@ der anderen Byteordnung und rechnet um (F-S11-18). Die Hüllenprobe hält
 `crypto.js` byte-gleich gegen die Vektoren.
 
 **Nach dem Deploy:** `update.php` (Migration `2026_10_13_kontopaar`).
+
+#### Der Eingang nimmt nur noch Hüllen an (ab Web 22.0.1, S11-04a)
+
+*E-S11-09, -13, -36 bis -40; JSON-Vertrag 2, 3, 3.4, 5.* `ingest.php` weist
+Ortsdaten im Klartext ab — `track.points`, eine Phase mit `lat`/`lon`, eine
+Reanimation — mit `400 klartext`, und zwar ganz: Was der Server quittiert,
+löscht das Gerät. Angenommen wird:
+
+| Was | Wo | Klartext daneben |
+|---|---|---|
+| ein Spurstück (`track.huelle`) | `track_stuecke.huelle` | `seq_from`, `punkte`, `ts_von`, `ts_bis`, `stufe` |
+| die Einsatzhülle (`ort_huelle`) | `missions.ort_huelle` | `mission_phases` mit Nummer und Zeit, `lat`/`lon` leer |
+
+**Die Prüfschicht prüft die Form** (`pruef_huelle()` in `validate_lib.php`):
+Base64, Länge zwischen `GH_MIN_BYTE` und `GH_STUECK_MAX_BYTE` bzw.
+`GH_EINSATZ_MAX_BYTE`, Chiffretext ein Vielfaches von 16, Fassung 1,
+unkomprimierter Punkt. Den Inhalt prüfen Gerät und Browser.
+
+**Die Regeln je Punkt gelten jetzt je Stück** (`spur2_*` in `spur_lib.php`):
+Ein Stück ganz unter der Marke `n_original` ist eine Wiederholung; bei Stufe
+3 zählt der Teil darüber als `dropped_points`; ein Stück ganz in einem
+herausgeschnittenen Zeitraum ist `cut_points`, ein teilweise darin liegendes
+wird abgelegt, und der Browser blendet die gesperrten Punkte aus
+(E-S11-37). Ein Stück, das unter der Marke beginnt und darüber hinausragt,
+wird abgelegt; die Überlappung löst der Browser über die Sequenznummer
+(Punkt i hat `seq_from` + i). **Die Einsatzhülle geht mit der Phasenliste**
+(E-S11-38): ersetzt, wenn mindestens so viele Phasen kommen wie gespeichert
+sind; die Reanimation zählt der Server nicht.
+
+**Innenformen** (E-S11-31, -39, -40): Spurstück binär, 14 Byte je Punkt,
+Höhe `-32768` = keine; Einsatzhülle JSON mit Zeiten seit `started_at`. Die
+genaue Form steht im JSON-Vertrag 3.4.
+
+**Verschließen auf dem Server** (`geraetehuelle_lib.php`): nur für Proben und
+das Demo-Zurücksetzen, byte-gleich gegen die Prüfvektoren (Hüllenprobe,
+Teil Server). **Öffnen kann der Server nicht** — die Funktion gibt es dort
+nicht, nur im Prüfwerkzeug (`tools/proben/huelle/geraet.php`), mit dem die
+Proben wie ein Gerät senden und das Ergebnis nachlesen.
+
+**Mitgeführt:** `spur_loeschen()`, Waisenjob, Kontingent (`spur_bytes()`) und
+Demo-Zurücksetzen zählen die Stücke mit. **Noch nicht:** Ansichten, Export,
+Sicherung und Import lesen sie ab S11-04b bis S11-06.
+
+**Nach dem Deploy:** `update.php` (Migration `2026_10_13_ortshuellen`).
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 

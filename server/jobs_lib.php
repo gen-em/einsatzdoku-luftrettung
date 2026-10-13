@@ -1224,6 +1224,13 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
             $st->execute([$typ, $marke]);
             foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $i) { $ids[(int)$i] = true; }
 
+            /* Und die Spurstuecke (SPUR2, S11-04a) — dritter Ort einer Waise. */
+            $st = $pdo->prepare('SELECT DISTINCT owner_id FROM track_stuecke
+                                  WHERE owner_type = ? AND owner_id > ?
+                                  ORDER BY owner_id LIMIT ' . JOB_WAISEN_BLOCK);
+            $st->execute([$typ, $marke]);
+            foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $i) { $ids[(int)$i] = true; }
+
             if (!$ids) {
                 /* Ende der Tabelle. Die Marke faengt wieder von vorn an: Das
                  * hier ist ein Sicherheitsnetz, kein Hauptweg — seit AP1

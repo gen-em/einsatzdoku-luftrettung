@@ -852,7 +852,8 @@
       "pfade": [
         "tools/proben/huelle/**",
         "tools/uhr-pruefstand/krypto-probe/**",
-        "server/assets/crypto.js"
+        "server/assets/crypto.js",
+        "server/geraetehuelle_lib.php"
       ],
       "proben": [
         "huellenprobe",

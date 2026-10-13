@@ -159,6 +159,7 @@ class Sitzung:
             import urllib3
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.email: str | None = None
+        self.token: str | None = None
         self.csrf: str | None = None
         self.data_key: str | None = None
         self.inhaltsschluessel: str | None = None
@@ -285,6 +286,10 @@ class Sitzung:
         self.csrf = self.konstante(html, "CSRF")
         self.kdf_iter = int(self.konstante(html, "KDF_ITER") or runden_liste[0])
         self.haelfte = self.ableitungen.get(self.kdf_iter, data_key)
+        # Das Token zur Rundenzahl dieses Kontos: der Passwortnachweis, den
+        # `api/kontopaar.php` beim Anlegen verlangt (S11-04a) -- derselbe, den
+        # der Browser aus dem Vormerkfach der Anmeldung nimmt.
+        self.token = token_nach.get(str(self.kdf_iter))
 
         # ---- Der Server-Anteil (S10, E-S10-04) ---------------------------
         #
@@ -374,6 +379,42 @@ class Sitzung:
         if csrf_von or not self.csrf:
             self.csrf_auffrischen(csrf_von or pfad)
         return self.post(pfad, {**daten, "csrf": self.csrf})
+
+    def kontoschluessel(self) -> bytes:
+        """Der oeffentliche Schluessel des Kontos (SEC1, 65 Byte) -- und, wenn
+        das Konto noch keinen hat, das Paar anlegen (S11-04a).
+
+        WIE DER BROWSER (`assets/kontopaar.js`): ECDH P-256, der oeffentliche
+        Teil als SPKI, der private als PKCS8 in Base64, verschluesselt mit dem
+        Inhaltsschluessel (`edk1:`, AES-GCM wie `EdCrypto.encrypt`), angelegt
+        ueber `api/kontopaar.php` mit dem Passwortnachweis. Kein Sonderzugang:
+        Der Server versiegelt den oeffentlichen Teil selbst, und der Browser
+        oeffnet den privaten spaeter wie einen, den er selbst angelegt hat.
+        """
+        import base64
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives import serialization as ser
+        html = self.get("index.php").text
+        stand = self.konstante(html, "KP_STAND")
+        if stand == "da":
+            spki = base64.b64decode(self.konstante(html, "KP_OEFFENTLICH"))
+            return spki[-65:]
+        if stand != "fehlt":
+            raise RuntimeError(f"Kontoschluessel: Stand {stand!r} -- "
+                               "fehlt die Migration (update.php) oder geht das Siegel nicht auf?")
+        if not self.inhaltsschluessel or not self.token:
+            raise RuntimeError("Kontoschluessel: ohne Inhaltsschluessel und Token kein Paar")
+        k = ec.generate_private_key(ec.SECP256R1())
+        spki = k.public_key().public_bytes(ser.Encoding.DER, ser.PublicFormat.SubjectPublicKeyInfo)
+        pkcs8 = k.private_bytes(ser.Encoding.DER, ser.PrivateFormat.PKCS8, ser.NoEncryption())
+        a = self.json_post("api/kontopaar.php", {
+            "aktion": "anlegen", "token": self.token,
+            "oeffentlich": base64.b64encode(spki).decode("ascii"),
+            "privat": krypto.verschluesseln(base64.b64encode(pkcs8).decode("ascii"),
+                                            self.inhaltsschluessel)})
+        if a.status_code != 200:
+            raise RuntimeError(f"api/kontopaar.php anlegen: HTTP {a.status_code} {a.text[:200]}")
+        return spki[-65:]
 
     def json_post(self, pfad: str, koerper: dict) -> requests.Response:
         """POST mit JSON-Koerper und X-CSRF — der Weg der api/-Endpunkte."""

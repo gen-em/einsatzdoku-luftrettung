@@ -595,6 +595,14 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
     $pdo->prepare("DELETE tb FROM track_blobs tb
                    JOIN rest_segments r ON r.id = tb.owner_id
                    WHERE tb.owner_type = 'rest' AND r.user_id = ?")->execute([$id]);
+    // Und die Spurstuecke (S11-04a): Ein gekoppeltes Geraet des Demo-Kontos
+    // legt seit Web 22 Huellen hier ab, keine Zeilen mehr.
+    $pdo->prepare("DELETE ts FROM track_stuecke ts
+                   JOIN missions m ON m.id = ts.owner_id
+                   WHERE ts.owner_type = 'mission' AND m.user_id = ?")->execute([$id]);
+    $pdo->prepare("DELETE ts FROM track_stuecke ts
+                   JOIN rest_segments r ON r.id = ts.owner_id
+                   WHERE ts.owner_type = 'rest' AND r.user_id = ?")->execute([$id]);
 
     /* UND DIE SPERRVERMERKE DES SCHNITTS (Web 14.2.0, R64).
      *

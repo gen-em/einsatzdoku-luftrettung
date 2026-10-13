@@ -61,7 +61,7 @@ def main() -> int:
     bytes_ = [e["bytes"] for e in m]
     fehler = [e for e in m if e["status"] != 200]
     verworfen = [e for e in m if e.get("rejected")]
-    uebergangen = [e for e in m if e.get("kept_phases") or e.get("kept_resus")]
+    uebergangen = [e for e in m if e.get("kept_phases") or e.get("kept_resus") or e.get("kept_ort")]
 
     protokoll = {
         "grundlage": "Soll-Sendeplan des Generators; Auslöser wie watch/source/Uploader.mc",

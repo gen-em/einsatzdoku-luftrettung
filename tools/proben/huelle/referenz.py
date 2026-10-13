@@ -151,11 +151,17 @@ def oeffnen(huelle: bytes, empf_priv: ec.EllipticCurvePrivateKey, art: str,
 
 # ------------------------------------------------------------- Vektoren
 
-def innen_binaer(punkte: list[tuple[float, float, float, int]]) -> bytes:
-    """Kandidat A der Innenform (S11-02 entscheidet): je Punkt 14 Byte —
+HOEHE_UNBEKANNT = -32768
+
+
+def innen_binaer(punkte: list[tuple[float, float, float | None, int]]) -> bytes:
+    """Die Innenform eines Spurstücks (E-S11-31): je Punkt 14 Byte —
     Breite und Länge in 1e-7 Grad (int32), Höhe in Dezimetern (int16), Zeit
-    in Sekunden relativ zu ts_von (uint32), alles big-endian."""
-    return b"".join(struct.pack(">iihI", round(la * 1e7), round(lo * 1e7), round(h * 10), t)
+    in Sekunden relativ zu ts_von (uint32), alles big-endian. Ein Punkt ohne
+    Höhe trägt HOEHE_UNBEKANNT (-32768, E-S11-39); jede echte Höhe liegt
+    zwischen -3276,7 und 3276,7 m."""
+    return b"".join(struct.pack(">iihI", round(la * 1e7), round(lo * 1e7),
+                                HOEHE_UNBEKANNT if h is None else round(h * 10), t)
                     for la, lo, h, t in punkte)
 
 

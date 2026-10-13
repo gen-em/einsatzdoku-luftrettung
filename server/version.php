@@ -8097,5 +8097,23 @@ declare(strict_types=1);
  *   `crypto.js`; verschlossen wird mit ihr noch nichts — das beginnt mit
  *   S11-04. SCHEMA: drei Spalten an `users` (`kp_oeffentlich`, `kp_privat`,
  *   `kp_seit`) — nach dem Deploy `update.php` aufrufen.
+ *
+ * 22.0.1 — S11-04a: DER EINGANG NIMMT ORTSDATEN NUR NOCH VERSCHLOSSEN AN.
+ *   `ingest.php` speichert Spurstuecke als Geraetehuellen in der neuen
+ *   Tabelle `track_stuecke` (SPUR2) und die Koordinaten der Phasen samt
+ *   Reanimation als Einsatzhuelle in `missions.ort_huelle`. Klartext —
+ *   Punkte, eine Phase mit Koordinate, eine Reanimation — weist er ab, ganz
+ *   und mit eigenem Fehlercode (`400 klartext`); einen Uebergang gibt es
+ *   nicht (E-S11-09). Der Server prueft an einer Huelle nur die Form
+ *   (`pruef_huelle()` in der gemeinsamen Pruefschicht) und rechnet mit dem,
+ *   was Klartext bleibt: Platz und Zeitraum eines Stuecks, Nummer und Zeit
+ *   einer Phase. Die alten Regeln je Punkt gelten jetzt je Stueck. NEU AUF DEM
+ *   SERVER ist das Verschliessen (`geraetehuelle_lib.php`) — fuer die Proben
+ *   und das Demo-Zuruecksetzen, byte-gleich mit Browser und Referenz; ein
+ *   Oeffnen gibt es dort mit Absicht nicht. Die Ansichten lesen die Huellen
+ *   erst ab S11-04b/-04c; bis dahin zeigt ein neuer Einsatz keine Karte.
+ *   Korrekturstelle, weil S11 als Ganzes die Hauptnummer traegt (22.0.0).
+ *   SCHEMA: Tabelle `track_stuecke`, Spalte `missions.ort_huelle` — nach dem
+ *   Deploy `update.php` aufrufen.
  */
-const WEB_VERSION = '22.0.0';
+const WEB_VERSION = '22.0.1';

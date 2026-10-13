@@ -54,6 +54,7 @@ require_once $wurzel . '/kopplung_lib.php';
 require_once $wurzel . '/spur_lib.php';
 require_once $wurzel . '/jobs_lib.php';
 require_once $wurzel . '/kontopaar_lib.php';   // S11-03: der Kontoschluessel in den Antworten
+require_once dirname(__DIR__) . '/huelle/geraet.php';   // S11-04a: senden wie ein Geraet ab Web 22
 
 $basis     = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
 $pdo       = db();
@@ -269,6 +270,8 @@ $paket = ['kind' => 'mission', 'client_ref' => 'kopplungsprobe-1', 'day' => '202
           'final' => true,
           'track' => ['seq_from' => 0, 'points' => [[47.0, 11.0, 700.0, 1750000000],
                                                     [47.001, 11.001, 701.0, 1750000010]]]];
+/* Seit S11-04a verschlossen, wie ein Geraet ab Web 22 sendet (geraet.php). */
+$paket = gh_probe_koerper($paket, gh_probe_paar()['sec1']);
 $i1 = anfrage($paket, $dev, $key, 'POST', 'ingest.php');
 pruefe($i1['code'] === 401, '14a ingest.php mit schwebenden Zugangsdaten -> 401', "HTTP {$i1['code']}");
 

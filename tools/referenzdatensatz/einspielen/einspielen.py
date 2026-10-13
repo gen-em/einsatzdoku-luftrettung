@@ -23,9 +23,11 @@ Stufen einzeln aufrufbar:
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import pathlib
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -402,16 +404,33 @@ def stufe_ingest(lauf: Lauf) -> None:
     """
     plan = json.loads((AUSGABE / "sendeplan.json").read_text("utf-8"))
     geraete = lauf.zustand["geraete"]
-    s = lauf.demo_sitzung()          # nur fuer die Basisadresse; Ingest ist tokenfrei
+    s = lauf.demo_sitzung()          # Basisadresse und Kontoschluessel; Ingest ist tokenfrei
     bereits = set(lauf.zustand.get("ingest_erledigt", []))
     messung: list[dict] = []
     fehler = 0
+
+    # SEIT WEB 22 VERSCHLOSSEN (S11-04a, E-S11-09). Der Sendeplan liegt im
+    # alten Format vor (Punkte, Koordinaten und Reanimation im Klartext);
+    # `ingest.php` nimmt das nicht mehr an. Umgebaut wird mit DERSELBEN
+    # Geraetehilfe wie in den Proben (`tools/proben/huelle/geraet.php`), in
+    # einem Aufruf fuer alle offenen Pakete, verschlossen mit dem
+    # Kontoschluessel des Demokontos -- den legt die Sitzung an, wenn das
+    # Konto noch keinen hat, so wie der Browser beim Entsperren.
+    offen = [e for e in plan if e["datei"] not in bereits]
+    sec1 = s.kontoschluessel()
+    roh = [json.loads((AUSGABE / e["datei"]).read_text("utf-8")) for e in offen]
+    umbau = subprocess.run(
+        ["php", str(HIER.parents[2] / "tools" / "proben" / "huelle" / "geraet_cli.php")],
+        input=json.dumps({"sec1": base64.b64encode(sec1).decode("ascii"), "pakete": roh}),
+        capture_output=True, text=True, check=True)
+    verschlossen = dict(zip((e["datei"] for e in offen), json.loads(umbau.stdout)))
+    melde(f"  {len(offen)} Pakete verschlossen (Kontoschlüssel {sec1[:4].hex()}…).")
 
     for eintrag in plan:
         datei = eintrag["datei"]
         if datei in bereits:
             continue
-        koerper = json.loads((AUSGABE / datei).read_text("utf-8"))
+        koerper = verschlossen[datei]
         geraet = geraete[eintrag["ref"].split("-")[1]]
         t0 = time.monotonic()
         antwort = s.s.post(f"{lauf.basis}/ingest.php", data=json.dumps(koerper),
@@ -437,7 +456,7 @@ def stufe_ingest(lauf: Lauf) -> None:
             "status": antwort.status_code, "dauer_ms": dauer_ms,
             "stored_points": erg.get("stored_points"), "next_seq": erg.get("next_seq"),
             "rejected": erg.get("rejected"), "kept_phases": erg.get("kept_phases"),
-            "kept_resus": erg.get("kept_resus"),
+            "kept_ort": erg.get("kept_ort"),
         })
         bereits.add(datei)
         if len(messung) % 100 == 0:
