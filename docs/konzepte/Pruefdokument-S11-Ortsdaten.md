@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); als Nächstes S11-04 mit dem Mockup der Ladeanzeige.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); als Nächstes S11-05.*
 
 ---
 
@@ -14,6 +14,9 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **Ob Einsatz und Diensttag dieselbe Karte zeigen wie vor S11-04, und wie schnell** (Abnahme von S11-04: Bilderlauf, Messung gegen S11-01). **Bedienprobe, Stilvergleich, Bilderlauf und GPX-Probe sind im Prüfstand rot** seit S11-04c. | Der Prüfbestand (Demo, Referenz) liegt bis zum Einmalwerkzeug im Klartext; ohne Übergang (E-S11-36) zeigen die Ansichten dort keine Karte, eine Messung hätte nichts geöffnet. Die BetreiberIn hat rote Berichte bis S11-10 angenommen und ein Vorab-Werkzeug abgelehnt (E-S11-41). | S11-10 (Bilderlauf, die vier Proben wieder grün) und S11-11 (Messung, E-S11-26). Bleibt eine davon dort rot, ist es ein Befund und keine Folge von E-S11-41 mehr. |
+| **Wie der Ladeplatz bei Drossel 6× aussieht und ob V1 die Zeit verkürzt.** | Aus demselben Grund; die Ortsdatenprobe öffnet zehn Punkte, nicht einen Bestand. | S11-11. |
+| **Die Browserliste gegen `CompressionStream`** (E-S11-21). | Es gibt keine Liste in `docs/Technik.md`, und S11-04 packt nicht (F-S11-38). | Im ersten Paket, in dem der Browser packt. |
 | **Forerunner 945 und Venu 3s auf der echten Uhr.** Nur im Simulator (je 7 gut, 0 Fehler) und im Übersetzen geprüft; die Betreiberin nimmt an, dass sie wie die Fenix 6 Pro rechnen (E-S11-30). | Die Uhren standen am 13.10.2026 nicht zur Verfügung. | Rechnet eine anders, gehen ihre Hüllen im Browser nicht auf — sichtbar bei P-S11-05; S11-08 prüft die Byteordnung beim Start der App gegen einen eingebauten Vektor. |
 | **Ob die echte Garmin-Uhr die Krypto kann.** Im **Simulator** gemessen (S11-02): Fenix 6 Pro, Forerunner 945, Venu 3s je 7 gut, 0 Fehler. Ob der Simulator rechnet wie die Uhr — gerade bei der Byteordnung des ECDH-Geheimnisses (F-S11-18) —, ist unbelegt. Zeiten und Speicher des Simulators sind die des Rechners. | Keine Uhr in der Arbeitsumgebung. | P-S11-02; Halt, bis das Ergebnis vorliegt. |
 | **Komplett- und Schlüsselwechselprobe unter dem PHP 8.3.6 aus Ubuntu.** Dort scheitern drei Fälle, die ein Komplett-Siegel über Häppchen schreiben — mit und ohne S11-03 gleich (F-S11-26, -28, -33). | Kein Fehler von S11; unter PHP 8.3.33 und 8.4.19 grün. Die Ursache unter 8.3.6 ist nicht gefunden: Backlog Nr. 383. | Eine Anlage auf PHP 8.3.6 könnte eine Komplettsicherung schreiben, die nicht aufgeht. |
@@ -123,7 +126,20 @@ beiden neuen Teile einzeln (Zeilen darüber); der ganze Lauf steht in 1.
 
 **Nicht geprüft in 04c:** wie der Ladeplatz bei Drossel 6× tatsächlich
 aussieht (erscheint er, bevor die Karte steht?) und ob V1 die Zeit verkürzt —
-beides misst S11-04d mit Bilderlauf und Messstand.
+beides misst S11-11 (E-S11-41; ursprünglich S11-04d).
+
+### S11-04d Meldung einer Hülle, die nicht aufgeht (14.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `proben.sh ortsdaten` (Schritt 9 neu) | eine Einsatzhülle in der Datenbank um ein Byte verändert (letztes Byte, Prüfwert): die Ansicht zeigt eine Meldung und keinen Ladeplatz; `api/kontopaar.php` antwortet 200; im Reiter System **genau eine** neue Zeile `ortsdaten: … (Einsatz N, einsatz, Grund pruefwert)` | 25 ok, 0 fehlen (davon 2 neu) |
+| `pruefstand.sh kryptoprobe fenix6pro` mit verwaister Sperre (PID 999999) | `simulator_starten()` räumt sie ab und der Simulator kommt hoch (F-S11-39) | 7 gut, 0 Fehler; Meldung „verwaiste Simulator-Sperre entfernt" |
+| Prüfstand | wie S11-04c: Bedienprobe, Stilvergleich, Bilderlauf, GPX-Probe rot (E-S11-41) | Bericht in der Commit-Nachricht |
+
+**Nicht geprüft in 04d:** die Meldung aus der Tagesübersicht und aus
+`tag_spuren.php` (gleicher Helfer, andere Aufrufstelle; nur gelesen) und der
+Topf von fünf Meldungen je Stunde (derselbe wie bei der Abweichung, in der
+Kontopaarprobe gemessen).
 
 ## 3. Im Browser geprüft
 
@@ -146,6 +162,7 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | **P-S11-02** | **jetzt** (Halt) · Fenix 6 Pro erster Lauf 13.10.2026: 6/6 Vektoren gut, ECDH little-endian, `T-PAAR 73/55/54 ms`, Zeitzeilen abgeschnitten (F-S11-23) → zweiter Lauf mit Fassung 2 der `.prg` · FR 945 und Venu 3s offen | 1. In VS Code mit Monkey-C-Erweiterung den Ordner `tools/uhr-pruefstand/krypto-probe/` öffnen. 2. Je Uhr „Monkey C: Build for Device", Gerät wählen. 3. Die `.prg` per USB nach `GARMIN/APPS/` kopieren, Uhr trennen. 4. „Krypto-Probe" starten, rund 10 s warten, bis `ERGEBNIS …` steht. 5. Mit Hoch/Runter (Venu 3s: wischen) blättern und **alle Zeilen** abschreiben oder fotografieren — besonders `ECDH …`, `T-PAAR …` und die vier `T-…`-Zeilen. 6. Für Simulator-Vergleich auf dem Arbeitsplatz dasselbe mit F5. Danach die App von der Uhr löschen. | je Uhr `ERGEBNIS 7 gut, 0 Fehler`; `ECDH gut (little-endian, umgedreht)` wie im Simulator; `PACKEN nicht vorhanden` | eine Zeile `FEHLER`, ein Absturz (IQ-Symbol), `ERGEBNIS` erscheint nicht; oder `ECDH gut (big-endian)` — dann rechnet die Uhr anders als der Simulator, und S11-08 muss beide Fälle kennen |
 | P-S11-15 | nach dem Merge auf Staging | `update.php` aufrufen; eine gekoppelte Uhr der alten Fassung einen Einsatz senden lassen | Die Uhr parkt das Paket und meldet einen Fehler; im Web erscheint **kein** Einsatz; in Betrieb → System keine Meldung „ingest" mit Kennung | der Einsatz erscheint (dann nahm der Server Klartext an), oder die Uhr verwirft das Paket |
 | P-S11-16 | nach dem Merge auf Staging | einen neu gesendeten Einsatz öffnen, einmal gesperrt (Abmelden, wieder anmelden) und einmal entsperrt | gesperrt: kurz „Wartet auf dein Passwort", nach dem Entsperren Karte, Phasen, Reanimation; entsperrt: Ring höchstens kurz, dann alles | die Karte bleibt leer ohne Meldung, oder rote Meldung „lassen sich nicht öffnen" |
+| P-S11-17 | nach dem Merge auf Staging | Als Administratorin in der Datenbank von Staging bei einem eigenen, neu gesendeten Einsatz ein Byte von `missions.ort_huelle` ändern; den Einsatz öffnen und entsperren; danach Betrieb → System | in der Ansicht „Die Ortsdaten dieses Einsatzes lassen sich nicht öffnen"; im Reiter System eine Meldung `ortsdaten` mit Einsatznummer und Grund, ohne Ortsangabe | keine Meldung im Reiter System, oder eine Meldung mit Koordinaten oder Adresse |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen, einmal neu koppeln, einen Probeeinsatz aufzeichnen und senden | Einsatz im Web mit Karte nach dem Entsperren | Uhr zeigt „Neu koppeln" weiter oder parkt |

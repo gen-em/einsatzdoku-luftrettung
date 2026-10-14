@@ -8597,7 +8597,7 @@ jedes Konto ein **ECDH-Paar auf P-256**.
 | privater Teil | `users.kp_privat` | PKCS8 unter dem Inhaltsschlüssel, `edk1:` (`KP_PRIVAT_RE`) |
 | Zeitpunkt | `users.kp_seit` | wann es entstand |
 | Bibliothek | `kontopaar_lib.php` | Siegel, Prüfung (P-256 über denselben Lader wie der Rückweg), Zustand, Ablegen, SEC1 für Geräte |
-| Endpunkt | `api/kontopaar.php` | `anlegen` (mit Passwortnachweis) und `abweichung` |
+| Endpunkt | `api/kontopaar.php` | `anlegen` (mit Passwortnachweis), `abweichung` und — seit Web 22.0.4 — `oeffnen_fehler` |
 | Browser | `assets/kontopaar.js`, `assets/crypto.js` | Paar erzeugen, Abgleich, privater Teil als nicht extrahierbarer `CryptoKey`; `geraetehuelleVerschliessen`/`-Oeffnen` |
 
 **Es entsteht still, beim ersten Entsperren nach einer Anmeldung**
@@ -8620,6 +8620,19 @@ Er leitet aus dem privaten Teil den öffentlichen ab und vergleicht. Bei einer
 Abweichung steht oben auf der Seite eine Meldung, und `api/kontopaar.php`
 schreibt `kontopaar_abweichung` ins Protokoll und meldet im Reiter System
 (Topf `kontopaar`, fünf je Stunde).
+
+**Geht eine Gerätehülle im Browser nicht auf, erfährt es die BetreiberIn**
+(seit Web 22.0.4, S11-04d, M-S11-01 Zustand d). Die Ansicht zeigt an der
+Stelle der Karte eine Meldung, und `EdOrtsdaten.melden()` schickt
+`{aktion:'oeffnen_fehler', art, id, grund}` an `api/kontopaar.php`; der
+schreibt im Reiter System den Bereich `ortsdaten` mit Art (`spur`, `ruhe`,
+`einsatz`), Kennung des Einsatzes oder Ruhesegments und Grund aus
+`crypto.js` (`laenge`, `fassung`, `schluessel`, `pruefwert`, `polsterung`,
+sonst `unbekannt`) — **nie Inhalt**. Ein fehlendes Kontopaar (`kein_paar`)
+ist kein Befund über die Hülle und wird nicht gemeldet. Derselbe Topf wie die
+Abweichung, damit eine Seite mit vielen kaputten Hüllen nicht ebenso viele
+Meldungen schreibt. Ursache ist entweder ein Gerät, das falsch verschließt,
+oder ein Eingriff in die Datenbank (vertauschte oder veränderte Hülle).
 
 **Der Schlüsselwechsel hüllt das Siegel um** (`schluesselwechsel_lib.php`,
 Zweck `kontopaar`); die Schlüsselwechselprobe zählt es mit.

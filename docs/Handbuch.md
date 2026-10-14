@@ -1400,7 +1400,10 @@ Reanimation erst nach dem Entsperren. Dauert das einen Moment, steht an ihrer
 Stelle ein kleiner drehender Ring mit einem Satz: „Ortsdaten werden geladen …",
 „Wartet auf dein Passwort" (der Ring steht dann still, bis du entsperrst),
 „Ortsdaten werden geöffnet …". Lassen sie sich nicht öffnen, steht dort eine
-rote Meldung; die übrigen Angaben des Einsatzes stimmen trotzdem. Dasselbe
+rote Meldung; die übrigen Angaben des Einsatzes stimmen trotzdem. Die
+Administration erfährt davon von selbst (seit Web 22.0.4): Im Reiter System
+erscheint eine Meldung mit der Nummer des Einsatzes und dem Grund — nie mit
+dem Inhalt. Dasselbe
 gilt für die Karte der Tagesübersicht und für „GPS-Daten des Diensttages"
 (4.1a). **Einsätze, die vor dieser Fassung aufgezeichnet wurden, zeigen
 vorübergehend keine Karte**, bis ihre Ortsdaten einmal umgestellt sind — das

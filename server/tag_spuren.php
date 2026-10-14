@@ -297,14 +297,17 @@ async function linienZeichnen() {
   const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
   if (!ck) { lade.weg(); return; }
   lade.zeige('GPS-Daten werden geöffnet …');
+  let jetzt = null;   // was gerade geöffnet wird — für die Meldung, wenn es nicht aufgeht
   try {
     const k = await EdOrtsdaten.schluessel(ck);
     for (const s of SPUREN) {
+      jetzt = s;
       s.track = (await EdOrtsdaten.spur(s.spur_stuecke, s.art === 'mission' ? 'spur' : 'ruhe',
                                         s.client_ref, s.sperren, k)).map(p => [p.lat, p.lon]);
     }
   } catch (e) {
     lade.weg();
+    if (jetzt) { EdOrtsdaten.melden(e, jetzt.art === 'mission' ? 'spur' : 'ruhe', jetzt.id); }
     const box = document.createElement('div');
     box.dataset.ortsdaten = 'fehler';
     box.innerHTML = EdHtml.meldung('fehler', 'Die GPS-Daten dieses Tages lassen sich nicht öffnen.');

@@ -8137,5 +8137,13 @@ declare(strict_types=1);
  *   „wartet auf das Passwort". Die Anfrage an `api/` beginnt schon im Kopf der
  *   Seite (`assets/vorladen.js`, V1). `EdFormat.uhrzeit()` formatiert die
  *   Zeiten der Reanimation, die nur der Browser kennt. Kein Schema.
+ * 22.0.4 — S11-04d: EINE HUELLE, DIE NICHT AUFGEHT, WIRD GEMELDET. Bis dahin
+ *   sah es nur die Nutzerin; jetzt schickt `EdOrtsdaten.melden()` Art,
+ *   Kennung und Grund (nie Inhalt) an `api/kontopaar.php` (`oeffnen_fehler`),
+ *   und der Reiter System hat eine Meldung im Bereich `ortsdaten` — weil eine
+ *   solche Huelle ein falsch verschliessendes Geraet oder ein Eingriff in die
+ *   Datenbank ist. Die Messung gegen S11-01 rueckt nach S11-10/-11
+ *   (E-S11-41): Ohne verschlossenen Pruefbestand haette sie nichts gemessen.
+ *   Kein Schema.
  */
-const WEB_VERSION = '22.0.3';
+const WEB_VERSION = '22.0.4';

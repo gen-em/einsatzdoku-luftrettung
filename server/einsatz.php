@@ -864,6 +864,7 @@ async function ortsdatenOeffnen(m){
   try {
     await EdOrtsdaten.fuerAnsicht(m, ck);
   } catch (e) {
+    EdOrtsdaten.melden(e, 'einsatz', m.id);
     const box = document.createElement('div');
     box.dataset.ortsdaten = 'fehler';
     box.innerHTML = EdHtml.meldung('fehler',

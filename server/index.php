@@ -1064,19 +1064,23 @@ async function spurenOeffnen(d, bounds){
   if (lauf !== tagLauf) { return; }
   if (!ck) { LADE_SPUREN.weg(); return; }
   LADE_SPUREN.zeige('GPS-Daten des Tages werden geöffnet …');
+  let jetzt = null;   // was gerade geöffnet wird — für die Meldung, wenn es nicht aufgeht
   try {
     const k = await EdOrtsdaten.schluessel(ck);
     for (const seg of d.rest_segments) {
+      jetzt = ['ruhe', seg.id];
       const sperren = (seg.schnitte || []).map(c => ({ von: c.von_ts, bis: c.bis_ts }));
       seg.track = (await EdOrtsdaten.spur(seg.spur_stuecke, 'ruhe', seg.client_ref, sperren, k))
         .map(p => [p.lat, p.lon]);
     }
     for (const m of d.missions) {
+      jetzt = ['spur', m.id];
       m.track = (await EdOrtsdaten.spur(m.spur_stuecke, 'spur', m.client_ref, [], k))
         .map(p => [p.lat, p.lon]);
     }
   } catch (e) {
     LADE_SPUREN.weg();
+    if (jetzt) { EdOrtsdaten.melden(e, jetzt[0], jetzt[1]); }
     if (lauf !== tagLauf) { return; }
     const box = document.createElement('div');
     box.dataset.ortsdaten = 'fehler';

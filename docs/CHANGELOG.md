@@ -14,6 +14,48 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.0.4] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-04d — eine Hülle, die nicht aufgeht, wird
+gemeldet**. Letzter von vier Teilen von S11-04. Kein Schema.
+
+### Neu
+
+- **Geht eine Gerätehülle im Browser nicht auf, steht es im Reiter System.**
+  Bis 22.0.3 sah das nur die Nutzerin — „Die Ortsdaten dieses Einsatzes
+  lassen sich nicht öffnen" —, und die BetreiberIn erfuhr nichts. Eine
+  solche Hülle ist aber kein Alltag, sondern einer von zwei Befunden: ein
+  Gerät, das falsch verschließt, oder ein Eingriff in die Datenbank, bei dem
+  jemand eine Hülle verändert oder vertauscht hat. Beides will die
+  BetreiberIn wissen, und zwar ohne dass die Nutzerin es ihr sagen muss
+  (M-S11-01, Zustand d). `EdOrtsdaten.melden()` schickt Art, Kennung und
+  den Grund aus `crypto.js` an `api/kontopaar.php` (neues Anliegen
+  `oeffnen_fehler`), der im Bereich `ortsdaten` meldet. **Kein Inhalt geht
+  mit** — der Server erfährt, dass und warum, nicht was darin stand. Ein
+  Konto ohne Schlüsselpaar wird nicht gemeldet: Das ist kein Befund über
+  eine Hülle, sondern ein Konto, das noch nie entsperrt hat. Die Meldungen
+  laufen durch denselben Topf wie die Abweichung beim Kontopaar (fünf je
+  Stunde), damit eine Seite mit dreißig kaputten Hüllen nicht dreißig
+  Meldungen schreibt. Die Ortsdatenprobe verdirbt dafür eine Hülle um ein
+  Byte und sieht nach.
+
+### Bewusst nicht
+
+- **Keine Messung gegen S11-01 in diesem Paket** (E-S11-41). Das Konzept
+  sah sie hier vor, aber der Messstand misst den Demo- und Referenzbestand,
+  und dessen Ortsdaten liegen bis zum Einmalwerkzeug (S11-10) im Klartext —
+  die Ansichten zeigen dort also keine Karte und hätten nichts zu öffnen.
+  Eine Zahl daraus wäre schneller als vorher und hieße nichts. Statt eines
+  eigenen Werkzeugs, das den Prüfbestand vorab verschließt, wird gemessen,
+  wenn das Einmalwerkzeug ihn verschlossen hat. Bis dahin sind
+  Bedienprobe, Stilvergleich, Bilderlauf und GPX-Probe im Prüfstand rot;
+  das ist so entschieden.
+- **Die Browserliste gegen `CompressionStream`** (E-S11-21) prüft dieses
+  Paket nicht: Die Hüllen der Geräte sind ungepackt (F-S11-07, -19), und
+  `docs/Technik.md` führt keine Browserliste, gegen die man sie halten
+  könnte (F-S11-38). Gepackt wird erst beim Zusammenfügen; dort gehört die
+  Prüfung hin.
+
 ## [Web 22.0.3] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-04c — die Ansichten öffnen die Hüllen**.
@@ -40,7 +82,8 @@ Dritter von vier Teilen von S11-04. Kein Schema.
 - **Die Anfrage beginnt im Kopf der Seite** (V1 aus dem Messpaket S11-13):
   `assets/vorladen.js` startet `api/mission.php` bzw. `api/day.php`, während
   der Browser noch Skripte lädt. Geschätzt waren 13 bis 18 % des
-  Seitenaufbaus bei Drossel 6×; gemessen wird in S11-04d. Eine eigene
+  Seitenaufbaus bei Drossel 6×; gemessen wird, sobald verschlossene Daten
+  in Menge da sind — in S11-10/S11-11 (E-S11-41). Eine eigene
   kleine Datei, weil die CSP Inline-Code im Kopf nicht zulässt.
 
 ### Neu

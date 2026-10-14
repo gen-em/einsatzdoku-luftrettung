@@ -17,6 +17,9 @@
  *   EdOrtsdaten.fuerAnsicht(m, ck)        füllt m.track, m.phases, m.resus
  *   EdOrtsdaten.ladeplatz(el)             der Ladeplatz (ui_ladeplatz) mit
  *                                         300 ms Schwelle
+ *   EdOrtsdaten.melden(e, art, id)        eine Hülle, die nicht aufging, an
+ *                                         den Reiter System (S11-04d); die
+ *                                         Art aus dem Fehler geht vor
  *
  * REGELN BEIM ÖFFNEN (E-S11-37, Konzept 3.4): Punkt i eines Stücks hat die
  * Sequenznummer `seq_from + i`; doppelte Nummern (ein Gerät, das seine Marke
@@ -59,7 +62,8 @@
     const nach = new Map();
     for (const st of stuecke || []) {
       const innen = await EdCrypto.geraetehuelleOeffnen(b64(st.huelle), k.priv, k.pub, art, ref,
-                                                        st.seq_from + ':' + st.punkte);
+                                                        st.seq_from + ':' + st.punkte)
+        .catch((e) => { e.art = art; throw e; });
       const dv = new DataView(innen.buffer, innen.byteOffset, innen.byteLength);
       const n = Math.floor(innen.byteLength / 14);
       for (let i = 0; i < n; i++) {
@@ -78,7 +82,8 @@
   async function einsatz(m, k) {
     if (!m.ort_huelle) { return null; }
     const innen = await EdCrypto.geraetehuelleOeffnen(b64(m.ort_huelle), k.priv, k.pub,
-                                                      'einsatz', m.client_ref, '');
+                                                      'einsatz', m.client_ref, '')
+      .catch((e) => { e.art = 'einsatz'; throw e; });
     return JSON.parse(new TextDecoder().decode(innen));
   }
 
@@ -152,6 +157,24 @@
     };
   }
 
+  /**
+   * Eine Hülle ging nicht auf — das soll die BetreiberIn erfahren (M-S11-01,
+   * Zustand d; S11-04d): ein Gerät, das falsch verschließt, oder ein Eingriff
+   * in die Datenbank. Gemeldet wird nur Art, Kennung und Grund, nie Inhalt.
+   * Ein fehlendes Schlüsselpaar ist kein Befund über die Hülle und wird nicht
+   * gemeldet; ein Fehler ohne benannten Grund heißt `unbekannt`. Die Seite
+   * wartet nicht darauf, und ein Fehlschlag der Meldung bleibt still.
+   */
+  const GRUENDE = ['laenge', 'fassung', 'schluessel', 'pruefwert', 'polsterung'];
+  function melden(e, art, id) {
+    if (e && e.grund === 'kein_paar') { return; }
+    if (typeof EdApi === 'undefined' || !id) { return; }
+    const grund = e && GRUENDE.includes(e.grund) ? e.grund : 'unbekannt';
+    EdApi.postJson('api/kontopaar.php', { aktion: 'oeffnen_fehler', art: (e && e.art) || art, id: id,
+                                          grund: grund })
+      .catch(() => {});
+  }
+
   window.EdOrtsdaten = { schluessel: schluessel, spur: spur, einsatz: einsatz,
-                         fuerAnsicht: fuerAnsicht, ladeplatz: ladeplatz };
+                         fuerAnsicht: fuerAnsicht, ladeplatz: ladeplatz, melden: melden };
 })();

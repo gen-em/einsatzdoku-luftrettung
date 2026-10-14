@@ -22,6 +22,9 @@
  *   7. die Diensttagsansicht öffnet die Stücke; die gesperrten Punkte des
  *      Ruhesegments fehlen (E-S11-37)
  *   8. die Spurenseite des Diensttags (`tag_spuren.php`) zeichnet beide Linien
+ *   9. eine Einsatzhülle, in der Datenbank um ein Byte verändert, geht nicht
+ *      auf: die Ansicht sagt es, und der Reiter System hat eine Meldung mit
+ *      Art, Kennung und Grund — ohne Inhalt (S11-04d, M-S11-01 d)
  *
  * Nur örtlich, weil sie die Datenbank liest und verändert.
  *
@@ -256,6 +259,25 @@ try {
   }));
   pruefe(e8.linien >= 2 && e8.zeilen === 2 && e8.lade === 0,
          '8  tag_spuren.php: zwei Zeilen, zwei Linien, kein Ladeplatz', JSON.stringify(e8));
+  /* 9 — eine verdorbene Einsatzhülle: das letzte Byte (Prüfwert) gekippt */
+  php(`db()->exec("UPDATE missions SET ort_huelle = CONCAT(LEFT(ort_huelle, LENGTH(ort_huelle) - 1),
+       CHAR(ASCII(RIGHT(ort_huelle, 1)) ^ 1)) WHERE id = ${mid}");`);
+  const vorher = Number(php(`echo (int)db()->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")->fetchColumn();`));
+  const meldung = s.waitForResponse(r => r.url().includes('/api/kontopaar.php'), { timeout: 30000 })
+                   .catch(() => null);
+  await s.goto(`${BASIS}/einsatz.php?id=${mid}`, { waitUntil: 'networkidle' });
+  const antwort = await meldung;
+  const e9 = await s.evaluate(() => ({
+    fehlerkasten: document.querySelectorAll('[data-ortsdaten="fehler"]').length,
+    lade: [...document.querySelectorAll('.ladeplatz')].filter(e => !e.hidden).length,
+  }));
+  pruefe(e9.fehlerkasten === 1 && e9.lade === 0, '9  verdorbene Hülle: die Ansicht sagt es, kein Ladeplatz',
+         JSON.stringify(e9));
+  const zeile = php(`$st = db()->prepare("SELECT text FROM protokoll_ereignisse WHERE id > ? AND reiter = 'system'
+    AND text LIKE 'ortsdaten:%'"); $st->execute([${vorher}]); echo json_encode($st->fetchAll(PDO::FETCH_COLUMN));`);
+  pruefe(antwort && antwort.status() === 200 && /Einsatz \d+, einsatz, Grund pruefwert/.test(zeile)
+         && JSON.parse(zeile).length === 1,
+         '9  Reiter System: eine Meldung mit Art, Kennung und Grund', zeile.slice(0, 80));
   pruefe(fehler.length === 0, '   keine Skriptfehler in der Seite', fehler.join(' | ').slice(0, 80));
   await kontext.close();
 } catch (e) {

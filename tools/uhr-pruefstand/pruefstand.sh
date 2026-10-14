@@ -401,6 +401,19 @@ simulator_starten() {
     # zehn Abzuege waren deshalb leer. `pgrep -x` prueft den Prozessnamen und
     # ist gegen den Aufrufpfad unempfindlich.
     pgrep -x simulator >/dev/null && { melde "Simulator laeuft bereits"; return; }
+    # DIE EINZELINSTANZ-SPERRE UEBERLEBT DEN CONTAINER (Anlass: Nr. 43,
+    # F-S11-39). Der Simulator legt `~/Sim-<Nutzer>` mit seiner PID an und
+    # beendet sich mit 255, OHNE Meldung, solange die Datei steht. Nach einem
+    # Neustart des Containers steht sie mit der PID eines Prozesses, den es
+    # nicht mehr gibt — gemessen am 14.10.2026: Krypto-Probe 0 von 3, „Unable
+    # to connect to simulator", Ursache erst mit strace gefunden. Weg nur,
+    # wenn die PID nicht laeuft; ein laufender Simulator ist oben schon erkannt.
+    local sperre="$HOME/Sim-$(id -un)" pid
+    if [ -f "$sperre" ]; then
+        pid=$(tr -dc 0-9 < "$sperre")
+        { [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; } \
+            && { rm -f "$sperre"; melde "verwaiste Simulator-Sperre entfernt"; }
+    fi
     melde "Simulator starten"
     (cd "$SDK_DIR/bin" && setsid nohup ./simulator >"$BASIS/simulator.log" 2>&1 </dev/null &)
     sleep 18
