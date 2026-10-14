@@ -141,6 +141,17 @@ beides misst S11-11 (E-S11-41; ursprünglich S11-04d).
 Topf von fünf Meldungen je Stunde (derselbe wie bei der Abweichung, in der
 Kontopaarprobe gemessen).
 
+### S11-05a Packstufe des GPX-Archivs (14.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| Messskript im Notizordner (Playwright, Chromium, zip.js 2.8.34) | Größe und Packzeit des echten Jahresexports (8174 GPX-Spuren) je Packstufe, mit und ohne Passwort | Drossel 6×, Passwort an: Stufe 6 30,2 MB / 209,5 s, Stufe 1 35,5 MB / 209,0 s · Passwort aus: Stufe 6 29,8 MB / 191,9 s, Stufe 1 35,1 MB / 203,2 s, ungepackt 215,6 MB / 191,6 s |
+
+Ergebnis: Die Packstufe spart keine Zeit (F-S11-40); V5 entfällt (E-S11-44).
+**Grenze:** eine Messung je Variante, keine Streuung; Unterschiede unter 10 %
+zwischen zwei Läufen sind Rauschen (F-S11-22). Für die Entscheidung genügt
+das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
