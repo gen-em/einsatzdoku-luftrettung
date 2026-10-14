@@ -115,6 +115,16 @@ beiden neuen Teile einzeln (Zeilen darüber); der ganze Lauf steht in 1.
 |---|---|---|
 | `proben.sh ortsdaten` (neu) | Wegwerfkonto mit Kontopaar; ein Gerät sendet Einsatz (2 Stücke, 3 Phasen, 1 Reanimation) und Ruhesegment verschlossen; der Browser holt `api/mission.php` und `api/day.php` und öffnet mit seinem privaten Schlüssel; Punkt für Punkt gegen das Gesendete; fremde Bindung; Sperrzeit eines Schnitts; keine Klartextzeile in der Datenbank | 16 ok, 0 fehlen |
 
+### S11-04c Die Ansichten öffnen die Hüllen (14.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `proben.sh ortsdaten` (Schritte 6 bis 8 neu) | Einsatzansicht: Spur aus den Stücken gezeichnet, Phasen und Reanimation aus der Hülle, Ladeplatz danach fort, keine Meldung · Tagesübersicht: Einsatz- und Ruhespur, gesperrte Punkte fehlen (E-S11-37) · `tag_spuren.php`: Zeilen und Linien · keine Skriptfehler | 23 ok, 0 fehlen |
+
+**Nicht geprüft in 04c:** wie der Ladeplatz bei Drossel 6× tatsächlich
+aussieht (erscheint er, bevor die Karte steht?) und ob V1 die Zeit verkürzt —
+beides misst S11-04d mit Bilderlauf und Messstand.
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
@@ -135,6 +145,7 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-14 | nach dem Merge auf Staging | `update.php` aufrufen; mit einem eigenen Konto anmelden, eine Einsatzseite öffnen; in Betrieb → Protokoll, Reiter Verwaltung nachsehen | ein Eintrag „Kontoschlüssel angelegt“ für das Konto, keine Meldung oben auf der Seite | kein Eintrag, oder oben „…passt nicht zu deinem privaten Schlüssel“, oder ein Eintrag „kontopaar“ im Reiter System |
 | **P-S11-02** | **jetzt** (Halt) · Fenix 6 Pro erster Lauf 13.10.2026: 6/6 Vektoren gut, ECDH little-endian, `T-PAAR 73/55/54 ms`, Zeitzeilen abgeschnitten (F-S11-23) → zweiter Lauf mit Fassung 2 der `.prg` · FR 945 und Venu 3s offen | 1. In VS Code mit Monkey-C-Erweiterung den Ordner `tools/uhr-pruefstand/krypto-probe/` öffnen. 2. Je Uhr „Monkey C: Build for Device", Gerät wählen. 3. Die `.prg` per USB nach `GARMIN/APPS/` kopieren, Uhr trennen. 4. „Krypto-Probe" starten, rund 10 s warten, bis `ERGEBNIS …` steht. 5. Mit Hoch/Runter (Venu 3s: wischen) blättern und **alle Zeilen** abschreiben oder fotografieren — besonders `ECDH …`, `T-PAAR …` und die vier `T-…`-Zeilen. 6. Für Simulator-Vergleich auf dem Arbeitsplatz dasselbe mit F5. Danach die App von der Uhr löschen. | je Uhr `ERGEBNIS 7 gut, 0 Fehler`; `ECDH gut (little-endian, umgedreht)` wie im Simulator; `PACKEN nicht vorhanden` | eine Zeile `FEHLER`, ein Absturz (IQ-Symbol), `ERGEBNIS` erscheint nicht; oder `ECDH gut (big-endian)` — dann rechnet die Uhr anders als der Simulator, und S11-08 muss beide Fälle kennen |
 | P-S11-15 | nach dem Merge auf Staging | `update.php` aufrufen; eine gekoppelte Uhr der alten Fassung einen Einsatz senden lassen | Die Uhr parkt das Paket und meldet einen Fehler; im Web erscheint **kein** Einsatz; in Betrieb → System keine Meldung „ingest" mit Kennung | der Einsatz erscheint (dann nahm der Server Klartext an), oder die Uhr verwirft das Paket |
+| P-S11-16 | nach dem Merge auf Staging | einen neu gesendeten Einsatz öffnen, einmal gesperrt (Abmelden, wieder anmelden) und einmal entsperrt | gesperrt: kurz „Wartet auf dein Passwort", nach dem Entsperren Karte, Phasen, Reanimation; entsperrt: Ring höchstens kurz, dann alles | die Karte bleibt leer ohne Meldung, oder rote Meldung „lassen sich nicht öffnen" |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen, einmal neu koppeln, einen Probeeinsatz aufzeichnen und senden | Einsatz im Web mit Karte nach dem Entsperren | Uhr zeigt „Neu koppeln" weiter oder parkt |

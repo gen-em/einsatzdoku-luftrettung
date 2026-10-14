@@ -17,6 +17,11 @@
  *   4. `api/day.php` liefert dasselbe für den Diensttag; ein Schnitt im
  *      Ruhesegment steht als Sperrzeit daneben (E-S11-37)
  *   5. ein Stück an einem anderen Einsatz geht nicht auf (Bindung)
+ *   6. die Einsatzansicht öffnet selbst: Spur, Phasen, Reanimation, kein
+ *      Ladeplatz und keine Fehlermeldung danach (S11-04c)
+ *   7. die Diensttagsansicht öffnet die Stücke; die gesperrten Punkte des
+ *      Ruhesegments fehlen (E-S11-37)
+ *   8. die Spurenseite des Diensttags (`tag_spuren.php`) zeichnet beide Linien
  *
  * Nur örtlich, weil sie die Datenbank liest und verändert.
  *
@@ -204,6 +209,53 @@ try {
     WHERE m.user_id = ${id} AND (p.lat IS NOT NULL OR p.lon IS NOT NULL)")->fetchColumn()
     + (int)db()->query("SELECT COUNT(*) FROM resus_sessions r JOIN missions m ON m.id = r.mission_id WHERE m.user_id = ${id}")->fetchColumn();`);
   pruefe(klar === '0', '2  keine Koordinate und keine Reanimation im Klartext', `${klar} Zeilen`);
+  /* 6 — die Einsatzansicht öffnet selbst (S11-04c): Spur gezeichnet, Phasen
+   * und Reanimation aus der Hülle, der Ladeplatz wieder fort */
+  await s.goto(`${BASIS}/einsatz.php?id=${mid}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => document.querySelectorAll('#phasebody .phasen-zeile').length > 0,
+                          null, { timeout: 30000 }).catch(() => null);
+  const e6 = await s.evaluate(() => ({
+    linien: document.querySelectorAll('#map .leaflet-overlay-pane path').length,
+    phasen: document.querySelectorAll('#phasebody .phasen-zeile').length,
+    rea: document.getElementById('resus-section').hidden ? 0
+       : document.querySelectorAll('#resus-tables .phasen-zeile').length,
+    lade: [...document.querySelectorAll('.ladeplatz')].filter(e => !e.hidden).length,
+    fehlerkasten: document.querySelectorAll('[data-ortsdaten]').length,
+    spur: (typeof M !== 'undefined' && M.spur_punkte) ? M.spur_punkte.length : -1,
+  }));
+  pruefe(e6.linien >= 1 && e6.spur === 10, '6  Einsatzansicht: Spur aus den Stücken gezeichnet',
+         `${e6.linien} Linie(n), ${e6.spur} Punkte`);
+  pruefe(e6.phasen === 3 && e6.rea === 3, '6  Einsatzansicht: 3 Phasen, Reanimation mit 3 Zeilen',
+         `${e6.phasen} Phasen, ${e6.rea} Reanimationszeilen`);
+  pruefe(e6.lade === 0 && e6.fehlerkasten === 0, '6  kein Ladeplatz mehr sichtbar, keine Fehlermeldung',
+         `${e6.lade} sichtbar, ${e6.fehlerkasten} Fehler`);
+  /* 7 — die Diensttagsansicht öffnet die Stücke (S11-04c): Einsatz- und
+   * Ruhespur gezeichnet, der Schnitt blendet Punkte aus */
+  await s.goto(`${BASIS}/index.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => document.querySelectorAll('#map .leaflet-overlay-pane path').length >= 2,
+                          null, { timeout: 30000 }).catch(() => null);
+  const e7 = await s.evaluate(() => ({
+    linien: document.querySelectorAll('#map .leaflet-overlay-pane path').length,
+    lade: [...document.querySelectorAll('.ladeplatz')].filter(e => !e.hidden).length,
+    ruhe: (typeof dayRest !== 'undefined' && dayRest[0]) ? dayRest[0].track.length : -1,
+    einsatz: (typeof dayMissions !== 'undefined' && dayMissions[0]) ? dayMissions[0].track.length : -1,
+  }));
+  pruefe(e7.linien >= 2 && e7.einsatz === 10, '7  Diensttag: Einsatzspur und Ruhespur gezeichnet',
+         `${e7.linien} Linien, Einsatz ${e7.einsatz} Punkte`);
+  pruefe(e7.ruhe === 3, '7  Diensttag: die zwei gesperrten Punkte des Ruhesegments fehlen',
+         `${e7.ruhe} von 5 Punkten`);
+  pruefe(e7.lade === 0, '7  kein Ladeplatz mehr sichtbar', `${e7.lade}`);
+  /* 8 — die Spurenseite des Diensttags (tag_spuren.php) */
+  await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => document.querySelectorAll('#map .leaflet-overlay-pane path').length >= 2,
+                          null, { timeout: 30000 }).catch(() => null);
+  const e8 = await s.evaluate(() => ({
+    linien: document.querySelectorAll('#map .leaflet-overlay-pane path').length,
+    zeilen: document.querySelectorAll('.spur-zeile').length,
+    lade: [...document.querySelectorAll('.ladeplatz')].filter(e => !e.hidden).length,
+  }));
+  pruefe(e8.linien >= 2 && e8.zeilen === 2 && e8.lade === 0,
+         '8  tag_spuren.php: zwei Zeilen, zwei Linien, kein Ladeplatz', JSON.stringify(e8));
   pruefe(fehler.length === 0, '   keine Skriptfehler in der Seite', fehler.join(' | ').slice(0, 80));
   await kontext.close();
 } catch (e) {

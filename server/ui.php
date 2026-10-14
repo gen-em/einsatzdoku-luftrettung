@@ -1687,6 +1687,28 @@ function ui_plakette(string $text, array $o = []): string
 
 
 /* ---------------------------------------------------------------------------
+ * LADEPLATZ  (.ladeplatz) — seit Web 22.0.3 (S11-04c, M-S11-01, E-S11-35)
+ *
+ * Ring und Satz an der Stelle eines Inhalts, den der Browser noch holt oder
+ * oeffnet. Ausgegeben wird er VERBORGEN; `EdOrtsdaten.ladeplatz()` zeigt ihn
+ * nach 300 ms, wechselt den Satz (lädt · wartet auf das Passwort · öffnet)
+ * und nimmt ihn wieder weg. `role="status"` und `aria-live="polite"` sagen
+ * den Satz an, der Ring ist Schmuck.
+ *
+ * Optionen: `still` (Ring steht, Zustand „wartet"), `sichtbar` (sofort
+ * zeigen), `attr` (rohe Attribute, z. B. eine id).
+ * ------------------------------------------------------------------------ */
+function ui_ladeplatz(string $text, array $o = []): string
+{
+    return '<div class="ladeplatz' . (!empty($o['still']) ? ' ladeplatz-still' : '') . '"'
+        . ' role="status" aria-live="polite"' . (string)($o['attr'] ?? '')
+        . (empty($o['sichtbar']) ? ' hidden' : '') . '>'
+        . '<span class="ladeplatz-ring" aria-hidden="true"></span>'
+        . '<span class="ladeplatz-text">' . ui_e($text) . '</span></div>';
+}
+
+
+/* ---------------------------------------------------------------------------
  * KARTE  (.karte) — der Inhaltsblock
  *
  * Jeder Inhaltsblock ist eine Karte mit Titel in Bricolage, optionaler Zahl

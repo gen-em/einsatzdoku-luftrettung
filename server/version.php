@@ -8125,5 +8125,17 @@ declare(strict_types=1);
  *   weiter den Altbestand im Klartext; neu ist, dass der Browser die Huellen
  *   bekommt. Die Ortsdatenprobe belegt die Kette Geraet -> Server -> Browser
  *   Punkt fuer Punkt. Kein Schema.
+ *
+ * 22.0.3 — S11-04c: DIE ANSICHTEN OEFFNEN DIE HUELLEN SELBST. Einsatzansicht,
+ *   Tagesuebersicht und „GPS-Daten des Diensttages" bekommen die Spur, die
+ *   Koordinaten der Phasen und die Reanimation nur noch als Geraetehuellen
+ *   und oeffnen sie im Browser (`assets/ortsdaten.js`, die eine Stelle dafuer);
+ *   `api/mission.php`, `api/day.php` und `tag_spuren.php` lesen keine
+ *   Ortsdaten im Klartext mehr. Kein Uebergang (E-S11-36): Altbestand zeigt
+ *   bis zum Einmalwerkzeug (S11-10) keine Karte. Neuer Baustein `.ladeplatz`
+ *   (M-S11-01, E-S11-35): Ring und Satz, erst nach 300 ms, mit dem Zustand
+ *   „wartet auf das Passwort". Die Anfrage an `api/` beginnt schon im Kopf der
+ *   Seite (`assets/vorladen.js`, V1). `EdFormat.uhrzeit()` formatiert die
+ *   Zeiten der Reanimation, die nur der Browser kennt. Kein Schema.
  */
-const WEB_VERSION = '22.0.2';
+const WEB_VERSION = '22.0.3';

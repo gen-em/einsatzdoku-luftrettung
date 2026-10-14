@@ -1393,6 +1393,19 @@ Rettungsmittel und Standort:
 | **importiert** | Über Import/Export eingespielt |
 | **Schnitt** | Aus einer Ruhezeit herausgeschnitten (Abschnitt 4.1b) |
 
+**GPS-Daten, Phasenorte und Reanimation öffnet dein Browser** (seit
+Web 22.0.3). Uhr und Handy schicken sie verschlüsselt, und nur dein Browser
+hat den Schlüssel dazu — deshalb erscheinen Karte, Einsatzphasen und
+Reanimation erst nach dem Entsperren. Dauert das einen Moment, steht an ihrer
+Stelle ein kleiner drehender Ring mit einem Satz: „Ortsdaten werden geladen …",
+„Wartet auf dein Passwort" (der Ring steht dann still, bis du entsperrst),
+„Ortsdaten werden geöffnet …". Lassen sie sich nicht öffnen, steht dort eine
+rote Meldung; die übrigen Angaben des Einsatzes stimmen trotzdem. Dasselbe
+gilt für die Karte der Tagesübersicht und für „GPS-Daten des Diensttages"
+(4.1a). **Einsätze, die vor dieser Fassung aufgezeichnet wurden, zeigen
+vorübergehend keine Karte**, bis ihre Ortsdaten einmal umgestellt sind — das
+geschieht bei der Umstellung des Servers in einem Durchgang.
+
 **Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
 einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
 geschnittener als „manuell" — die Anzeige konnte es nicht besser wissen, weil

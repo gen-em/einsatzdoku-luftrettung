@@ -130,74 +130,29 @@ try {
     $no->execute([$userId, $dayId, $m['started_at']]);
     $dayNo = (int)$no->fetchColumn();
 
-    /* SPUR UEBER spur_lib.php (S2/AP1) — Zeilen und Blob zusammen. Die
-     * Zeitstempel werden weiter gebraucht: Sie bestimmen unten je Phase den
-     * naechstliegenden Punkt (`track_idx`). */
-    $spur = spur_lesen(db(), 'mission', $id);
-    $punkte = array_map(fn($p) => ['lat' => $p[1], 'lon' => $p[2], 'ts' => $p[4]], $spur);
-    $track = array_map(fn($p) => [$p[1], $p[2]], $spur);
-
-    /* Je Phase der naechstliegende TRACKPUNKT (nach Zeitstempel): Die
-     * Einsatzansicht hebt zum angetippten Eintrag sein Teilstueck der Spur
-     * hervor (E-P3-33). Die Phasen der Uhr tragen nur dort eigene
-     * Koordinaten, wo sie GPS-Fix hatte — der Zeitvergleich funktioniert
-     * immer, und ein Index je Phase wiegt nichts gegen 700 Zeitstempel im
-     * Track. */
-    /* ts ist der Unix-Zeitstempel der Uhr (ingest.php speichert (int)$pt[3]);
-     * occurred_at der Phasen dagegen ein DATETIME — beide auf Epochensekunden
-     * bringen. */
-    $tsListe = array_map(fn($p) => $p['ts'] !== null ? (int)$p['ts'] : null, $punkte);
-    $trackIndexZu = function (?string $wann) use ($tsListe): ?int {
-        if ($wann === null || $tsListe === []) { return null; }
-        /* occurred_at liegt als UTC-DATETIME in der Datenbank (fmt_local
-         * rechnet erst fuer die ANZEIGE um) — hier ausdruecklich als UTC
-         * lesen, nicht in der Server-Zeitzone. */
-        try { $ziel = (new DateTime($wann, new DateTimeZone('UTC')))->getTimestamp(); }
-        catch (Exception $e) { return null; }
-        $best = null; $abstand = PHP_INT_MAX;
-        foreach ($tsListe as $i => $ts) {
-            if ($ts === null) { continue; }
-            $d = abs($ts - $ziel);
-            if ($d < $abstand) { $abstand = $d; $best = $i; }
-        }
-        return $best;
-    };
-
-    $ph = db()->prepare('SELECT phase, occurred_at, lat, lon FROM mission_phases
+    /* DIE SPUR LIEST DER BROWSER (S11-04c). Bis Web 22.0.2 stand hier
+     * `spur_lesen()` mit den Punkten im Klartext, dazu je Phase der Index des
+     * zeitlich naechsten Punkts (`track_idx`). Seit S11 kommen die Punkte nur
+     * noch verschlossen an; `assets/ortsdaten.js` oeffnet die Stuecke und
+     * rechnet `track_idx` dort, wo die Punkte sind. Kein Uebergang (E-S11-36):
+     * Altbestand im Klartext zeigt diese Antwort nicht mehr. */
+    $ph = db()->prepare('SELECT phase, occurred_at FROM mission_phases
                          WHERE mission_id = ? ORDER BY occurred_at');
     $ph->execute([$id]);
     $phases = array_map(fn($p) => [
         'phase' => (int)$p['phase'],
         'label' => PHASE_LABELS[(int)$p['phase']] ?? ('Phase ' . $p['phase']),
         'time'  => fmt_local($p['occurred_at']),
-        'track_idx' => $trackIndexZu($p['occurred_at'] !== null ? (string)$p['occurred_at'] : null),
         /* Seit S11-04b die Zeit auch als Epoche: Der Browser ordnet damit die
          * Phasen der Einsatzhuelle zu (Zeiten dort relativ zum Beginn). */
         'ts'    => $p['occurred_at'] !== null
                    ? (new DateTime((string)$p['occurred_at'], new DateTimeZone('UTC')))->getTimestamp() : null,
-        'lat'   => $p['lat'] !== null ? (float)$p['lat'] : null,
-        'lon'   => $p['lon'] !== null ? (float)$p['lon'] : null,
     ], $ph->fetchAll());
 
-    $resus = null;
-    $rs = db()->prepare('SELECT id, started_at FROM resus_sessions
-                         WHERE mission_id = ? ORDER BY started_at');
-    $rs->execute([$id]);
-    $sessions = $rs->fetchAll();
-    if ($sessions) {
-        $ev = db()->prepare('SELECT type, occurred_at FROM resus_events
-                             WHERE session_id = ? ORDER BY occurred_at');
-        $resus = [];
-        foreach ($sessions as $sess) {
-            $ev->execute([(int)$sess['id']]);
-            $events = [['label' => RESUS_LABELS['beginn'], 'time' => fmt_local($sess['started_at'])]];
-            foreach ($ev->fetchAll() as $e2) {
-                $events[] = ['label' => RESUS_LABELS[$e2['type']] ?? $e2['type'],
-                             'time'  => fmt_local($e2['occurred_at'])];
-            }
-            $resus[] = $events;   // eine Tabelle je Reanimation
-        }
-    }
+    /* DIE REANIMATION STEHT IN DER EINSATZHUELLE (E-S11-02). Bis Web 22.0.2
+     * las der Server sie hier aus `resus_sessions`/`resus_events`; seit
+     * S11-04c baut der Browser die Ereignislisten aus der Huelle. Die
+     * Beschriftungen und die Zeitzone liefert die Antwort mit. */
 
     /* Der Diensttag des Einsatzes — fuer die Anzeige mit seinen EINGEFRORENEN
      * Angaben (E8). `day` bleibt als Datum in der Antwort, weil die
@@ -320,7 +275,9 @@ try {
         'crew_effektiv' => (object)$crewEff,
         'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
         'pat_wrap'   => $patWrapPw,
-        'track' => $track, 'phases' => $phases, 'resus' => $resus,
+        'phases' => $phases,
+        'reanimationsarten' => RESUS_LABELS,
+        'zeitzone'     => (string)konfig('app.timezone', 'Europe/Berlin'),
         /* ---- DIE ORTSDATEN ALS GERAETEHUELLEN (S11-04b, Konzept S11 3.5) ----
          *
          * Seit Web 22.0.1 kommen Spur, Phasenkoordinaten und Reanimation nur
@@ -330,8 +287,8 @@ try {
          * der Einsatzhuelle zaehlen von dort, E-S11-40) und die Sperrzeiten
          * aus Schnitten (E-S11-37: gesperrte Punkte blendet der Browser aus).
          *
-         * `track`, `phases[].lat/lon` und `resus` oben lesen bis S11-04c
-         * weiter den Altbestand im Klartext; dann wechselt die Ansicht. */
+         * `track`, `phases[].lat/lon/track_idx` und `resus` setzt seit S11-04c
+         * der Browser (`assets/ortsdaten.js`). */
         'client_ref'   => (string)$m['client_ref'],
         'started_ts'   => (new DateTime((string)$m['started_at'], new DateTimeZone('UTC')))->getTimestamp(),
         'spur_stuecke' => spur2_lesen(db(), 'mission', $id),

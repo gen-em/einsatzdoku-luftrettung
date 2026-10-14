@@ -177,6 +177,23 @@
       return zwei(Math.floor(m / 60)) + ':' + zwei(m % 60);
     },
 
+    /**
+     * Uhrzeit 'HH:MM' eines Zeitpunkts in Epochensekunden, in der Zeitzone
+     * der Anlage (`tz`, `app.timezone`) -- wie `fmt_local()` auf dem Server.
+     *
+     * SEIT S11-04c: Die Zeiten der Reanimation stehen in der Einsatzhuelle
+     * (relativ zum Beginn), und nur der Browser kennt sie; frueher formatierte
+     * sie der Server. Eine Stelle fuer diese Rechnung, nicht eine je Seite.
+     */
+    uhrzeit: function (epochSekunden, tz, leer) {
+      if (epochSekunden == null || isNaN(Number(epochSekunden))) {
+        return leer === undefined ? '' : leer;
+      }
+      return new Intl.DateTimeFormat('de-DE', {
+        timeZone: tz || undefined, hour: '2-digit', minute: '2-digit', hour12: false
+      }).format(new Date(Number(epochSekunden) * 1000));
+    },
+
     /** Dauer als nackte Minutenzahl -- ebenfalls fuer Ausgabedateien. */
     minuten: function (sekunden, leer) {
       if (sekunden == null || !(sekunden >= 0)) {

@@ -12,7 +12,13 @@ $mRumpf = einsatz_laden($mid, $userId, ['spalten' => 'day_id']);
 if ($mRumpf === null) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
 $missionDayId = $mRumpf['day_id'] === null ? null : (int)$mRumpf['day_id'];
 $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
-ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
+/* DIE ANFRAGE BEGINNT SCHON IM KOPF (S11-04c, V1, E-S11-33): `vorladen.js`
+ * startet `api/mission.php`, waehrend der Browser noch Skripte laedt; `init()`
+ * holt die Antwort spaeter ab. Eine eigene kleine Datei und kein Inline-Skript,
+ * weil die CSP Inline-Code nur mit Nonce zulaesst und der Kopf keinen traegt. */
+ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
+                'kopf' => '<script src="' . ui_e(ui_asset('assets/vorladen.js')) . '"'
+                        . ' data-vorladen="api/mission.php?id=' . $mid . '"></script>']);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $missionDayId]); ?>
@@ -124,8 +130,9 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
            entsperrt, unlesbar. */ ?>
   <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
     <?= ui_symbol('schloss', 'symbol-gross') ?>
-    <p>Geschützte Angaben sind gesperrt — Einsatzort, PatientIn, Diagnose und
-       Notizen bleiben verborgen, bis die Verschlüsselung entsperrt ist.</p>
+    <p>Geschützte Angaben sind gesperrt — Einsatzort, GPS-Daten, PatientIn,
+       Diagnose und Notizen bleiben verborgen, bis die Verschlüsselung
+       entsperrt ist.</p>
     <div class="meldung-aktion">
       <?= ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
                     'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
@@ -196,8 +203,10 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
     </section>
 
     <div class="einsatz-neben">
-      <div class="geo-spalte"><div id="map" class="geo"></div></div>
-      <section class="karte karte-block-phasen" id="phasen-karte" hidden>
+      <?php /* Der Ladeplatz liegt IN der Kartenflaeche (M-S11-01, A); die
+               Phasenkarte steht sofort da und traegt ihren eigenen (E-S11-35). */ ?>
+      <div class="geo-spalte"><div id="map" class="geo"><?= ui_ladeplatz('Ortsdaten werden geladen …', ['attr' => ' id="ortsdaten-lade"']) ?></div></div>
+      <section class="karte karte-block-phasen" id="phasen-karte">
         <div class="karte-kopf">
           <h2 class="karte-titel">Einsatzphasen</h2>
           <span class="karte-zahl" id="phasendauer"></span>
@@ -206,7 +215,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
                  in der Uhr-App heisst es durchgaengig Einsatzphase, und eine
                  Ueberschrift, die anders heisst als die Sache, kostet bei
                  jedem Hinsehen einen Gedanken. */ ?>
-        <div class="phasen" id="phasebody"></div>
+        <div class="phasen" id="phasebody"><?= ui_ladeplatz('Phasen werden geladen …', ['attr' => ' id="phasen-lade"']) ?></div>
       </section>
     </div>
 
@@ -232,6 +241,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
          OHNE PAT_WRAP: Diese Seite bekommt die Huelle aus der API-Antwort
          (m.pat_wrap), nicht aus PHP. */ ?>
 <?php ui_krypto_bootstrap(['wrap' => false]); ?>
+<script src="<?= asset('assets/ortsdaten.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
@@ -530,7 +540,9 @@ function minutenDiff(a, b){
 }
 
 async function init(){
-  const res = await fetch('api/mission.php?id=' + MID);
+  LADE_KARTE.zeige('Ortsdaten werden geladen …');
+  LADE_PHASEN.zeige('Phasen werden geladen …');
+  const res = await EdVorladen.holen('api/mission.php?id=' + MID);
   const txt = await res.text();
   let m;
   try { m = JSON.parse(txt); }
@@ -686,6 +698,8 @@ async function init(){
    * die Spur beginnt oder endet, sonst als eigener Ringpunkt. Der Standort
    * kommt als Haus-Schild aus den eingefrorenen Tageskoordinaten, das
    * Transportziel als Klinik-Schild (Klartext wie sein Name, E40, A13o). */
+  await ortsdatenOeffnen(m);
+
   const bounds = [];
   const NAH_M = 200;   // naeher als das gilt als „am Schild"
   const start = m.track.length > 1 ? m.track[0] : null;
@@ -761,8 +775,10 @@ async function init(){
     pb.appendChild(row);
     vorige = p.time;
   });
+  /* Die Phasenkarte stand seit dem Laden mit Ladeplatz da (E-S11-35);
+     ohne Phasen geht sie jetzt, wie jede leere Karte dieser Seite. */
+  document.getElementById('phasen-karte').hidden = !m.phases.length;
   if (m.phases.length) {
-    document.getElementById('phasen-karte').hidden = false;
     /* Dieselbe Frage wie oben, dieselbe Antwort: Die Zahl im Kopf der
        Phasenkarte rechnet ohnehin von Beginn bis Ende des Einsatzes, nicht
        von Phase zu Phase — sie hing nur an Phase 9 als Stellvertreter. */
@@ -818,6 +834,47 @@ async function init(){
  * EdUnlock den Entsperrdialog an; bei Abbruch bleibt die Sperr-Meldung
  * stehen, deren Knopf diese Funktion erneut aufruft (E-P3-33: der Zustand
  * steht als Meldung ueber den Karten, nicht als Zeile in der Liste). */
+/* ---- Ortsdaten öffnen (S11-04c, E-S11-35) --------------------------------
+ *
+ * Spur, Koordinaten der Phasen und Reanimation kommen als Gerätehüllen
+ * (`api/mission.php`, S11-04b). `EdOrtsdaten.fuerAnsicht()` öffnet sie mit dem
+ * privaten Schlüssel des Kontos und legt sie dort ab, wo das Zeichnen sie
+ * schon immer gesucht hat (`m.track`, `m.phases[].lat/lon/track_idx`,
+ * `m.resus`). Der Ladeplatz sagt dabei, worauf gewartet wird: auf das
+ * Passwort (Ring steht), auf das Öffnen. Geht eine Hülle nicht auf, steht an
+ * seiner Stelle die Meldung; die übrigen Angaben des Einsatzes bleiben. */
+const LADE_KARTE  = EdOrtsdaten.ladeplatz(document.getElementById('ortsdaten-lade'));
+const LADE_PHASEN = EdOrtsdaten.ladeplatz(document.getElementById('phasen-lade'));
+async function ortsdatenOeffnen(m){
+  m.track = []; m.resus = null;
+  (m.phases || []).forEach(p => { p.lat = null; p.lon = null; p.track_idx = null; });
+  const hatOrt = (m.spur_stuecke && m.spur_stuecke.length) || m.ort_huelle;
+  if (!hatOrt) { LADE_KARTE.weg(); LADE_PHASEN.weg(); return; }
+  LADE_KARTE.zeige('Wartet auf dein Passwort', true);
+  LADE_PHASEN.zeige('Wartet auf dein Passwort', true);
+  const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
+  if (!ck) {
+    m.ortsdatenGesperrt = true;
+    LADE_KARTE.weg(); LADE_PHASEN.weg();
+    document.getElementById('lockbanner').hidden = false;
+    return;
+  }
+  LADE_KARTE.zeige('Ortsdaten werden geöffnet …');
+  LADE_PHASEN.zeige('Phasen werden geöffnet …');
+  try {
+    await EdOrtsdaten.fuerAnsicht(m, ck);
+  } catch (e) {
+    const box = document.createElement('div');
+    box.dataset.ortsdaten = 'fehler';
+    box.innerHTML = EdHtml.meldung('fehler',
+      e && e.grund === 'kein_paar'
+        ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — die Ortsdaten lassen sich nicht öffnen.'
+        : 'Die Ortsdaten dieses Einsatzes lassen sich nicht öffnen. Die übrigen Angaben stimmen.');
+    document.getElementById('map').appendChild(box);
+  }
+  LADE_KARTE.weg(); LADE_PHASEN.weg();
+}
+
 async function zeigePat(m, bounds){
   const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
   if (!ck) {
@@ -1003,8 +1060,17 @@ async function zeichneLuftlinie(m, o, ck, bounds){
     { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
 }
 
-document.getElementById('unlockbtn').addEventListener('click', () => {
-  if (M) { zeigePat(M, []); }
+document.getElementById('unlockbtn').addEventListener('click', async () => {
+  if (!M) { return; }
+  /* Blieben die Ortsdaten gesperrt, zeichnet die Seite neu: Karte, Phasen und
+     Reanimation entstehen in init(), nicht in zeigePat(). Der Schlüssel liegt
+     danach im Fach des Entsperrens und wird nicht noch einmal erfragt. */
+  if (M.ortsdatenGesperrt) {
+    const ck = await EdUnlock.ensureContentKey(M.pat_wrap, KDF_SALT, KDF_ITER);
+    if (ck) { location.reload(); }
+    return;
+  }
+  zeigePat(M, []);
 });
 
 init();

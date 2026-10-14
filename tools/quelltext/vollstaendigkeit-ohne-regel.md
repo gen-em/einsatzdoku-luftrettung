@@ -29,6 +29,7 @@ gegen die sie schützt.
 |---|---|
 | `loc-datenschutz` | [bleibt] Anker, keine Gestaltung. Die Kleinzeile unter dem Ortsfeld (`ui_geocoder_hinweis()`, S9/AP2) trägt ihr Aussehen von `.feld-klein`; diese zweite Klasse steht nur da, damit die Klickprobe sie zählen kann (`ap2-kontoschalter-aus-keine-anfrage`: 0 Hinweiszeilen bei ausgeschalteter Suche). Eine eigene Regel gäbe ihr ein Aussehen, das sie nicht haben soll. |
 | `art` | [bleibt] Kein Klassenname, sondern eine **Variable**: `geo.js:81` baut `'geo-ringpunkt-' + art`. Das Werkzeug liest Zeichenketten, nicht ausgeführten Code, und nimmt das Bruchstück vor dem `+` für einen Namen. |
+| `ladeplatz-text` | [bleibt] Anker, keine Gestaltung. Der Satz im Ladeplatz (`ui_ladeplatz()`, S11-04c, Design 9.41) trägt sein Aussehen von `.ladeplatz`; die Klasse steht nur da, damit `EdOrtsdaten.ladeplatz()` den Satz austauschen kann, ohne den Ring anzufassen. |
 | `k` | [bleibt] Dasselbe: `geo.js:49` und `missiontable.js:160` bauen `'<span class="' + k + '">'`. |
 | `klasse` | [bleibt] Dasselbe: `import_ui.js:359` und `:459` setzen `class="' + klasse + '"`. |
 | `ton` | [bleibt] Dasselbe: `'meldung meldung-' + ton` (import_ui.js:48, missiontable.js:188, einstellungen.php:1776). Die Regeln heißen `.meldung-info`, `.meldung-ok`, `.meldung-warn`, `.meldung-fehler` und sind alle da. |

@@ -184,12 +184,12 @@
       "punkt": "P-05",
       "was": "Der Kartendialog öffnet aus allen vier Einbauorten, mit Karte darin",
       "soll": "4 von 4",
-      "ist": "4 von 4",
+      "ist": "1 von 4",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": true,
-      "bemerkung": ""
+      "ok": false,
+      "bemerkung": "Einsatzort: Der Bestand hat nicht beides — Einsatz mit Aufzeichnung (keiner) und o; Manueller Abfahrtort: Der Bestand hat nicht beides — Einsatz mit Aufzeichnung (keiner) und o; Transportziel: Der Bestand hat nicht beides — Einsatz mit Aufzeichnung (keiner) und o"
     },
     {
       "name": "ap2-treffer-setzt-nur-das-kreuz",
@@ -197,12 +197,12 @@
       "punkt": "P-05",
       "was": "Ein Suchtreffer im Dialog verschiebt die Karte; erst „Übernehmen\" schreibt",
       "soll": "Feld leer nach dem Treffer, Koordinate nach „Übernehmen\"",
-      "ist": "nach Treffer: Feld „\", 0 Chips, Suchfeld „Klinik Talwang, Bergstra…\" · nach Übernehmen: 1 Chip",
+      "ist": "—",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": true,
-      "bemerkung": ""
+      "ok": false,
+      "bemerkung": "nicht gefahren: Der Bestand hat nicht beides — Einsatz mit Aufzeichnung (keiner) und ohne (5311). Referenzbestand neu einspielen."
     },
     {
       "name": "ap2-spur-im-dialog",
@@ -210,12 +210,12 @@
       "punkt": "P-07",
       "was": "Die Aufzeichnung liegt im Dialog; bei leerem Feld passt die Karte auf sie",
       "soll": "Linie + Ringpunkte, Legende sichtbar, keine Pfeile",
-      "ist": "1 Linie(n) aus 309 Punkten · 4 Ringpunkte (2 Karte + 2 Legende) · Legende sichtbar · 0 Pfeile",
+      "ist": "—",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": true,
-      "bemerkung": ""
+      "ok": false,
+      "bemerkung": "nicht gefahren: Der Bestand hat nicht beides — Einsatz mit Aufzeichnung (keiner) und ohne (5311). Referenzbestand neu einspielen."
     },
     {
       "name": "ap2-kontoschalter-aus-keine-anfrage",
@@ -223,12 +223,12 @@
       "punkt": "P-06",
       "was": "Kontoschalter aus: keine Anfrage an den Adressdienst, kein Suchfeld, kein Hinweis",
       "soll": "an: >0 Anfragen · aus: 0 Anfragen, 0 Suchfelder, 0 Hinweiszeilen",
-      "ist": "an: 2 Anfragen an photon.komoot.io, 2 Vorschläge, 1 Suchfeld · aus: 0 Anfragen, 0 Vorschläge, 0 Suchfelder, 0 Hinweiszeilen",
+      "ist": "—",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": true,
-      "bemerkung": ""
+      "ok": false,
+      "bemerkung": "nicht gefahren: Der Bestand hat nicht beides — Einsatz mit Aufzeichnung (keiner) und ohne (5311). Referenzbestand neu einspielen."
     },
     {
       "name": "ap2-installation-graut-konto-aus",
@@ -249,12 +249,12 @@
       "punkt": "P-32",
       "was": "Der Hinweis unter dem Ortsfeld steht genau einmal je Seite und nennt den Dienst",
       "soll": "1 Hinweis bei mehreren Ortsfeldern, Dienstname darin",
-      "ist": "1 Hinweis bei 3 Ortsfeldern · „Vorschläge und Umkehrsuche kommen von photon.komoot.…\"",
+      "ist": "—",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": true,
-      "bemerkung": ""
+      "ok": false,
+      "bemerkung": "nicht gefahren: Der Bestand hat nicht beides — Einsatz mit Aufzeichnung (keiner) und ohne (5311). Referenzbestand neu einspielen."
     },
     {
       "name": "ap3-schildmasse",
@@ -262,12 +262,12 @@
       "punkt": "P-08",
       "was": "Die Kartenzeichen nach M-S9-01 V1 — Außenmaß einschließlich der Ringe",
       "soll": "ohne 32 · Start 32 · Ende 32 · beide 38 · Kreis 28 · Ringpunkt 14 · Ring beide 20 px",
-      "ist": "ohne 32 · Start 32 · Ende 32 · beide 38 · Kreis 28 · Ringpunkt 14 · Ring beide 20 px · Symbol im Schild 18, im Kreis 16 px · Antippfläche des Ringpunkts 24 px (gemessen an Einsatz 5303)",
+      "ist": "—",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": true,
-      "bemerkung": ""
+      "ok": false,
+      "bemerkung": "nicht gefahren: Kein Einsatz mit Aufzeichnung im Bestand"
     },
     {
       "name": "ap3-pfeile-drehen",
@@ -275,12 +275,12 @@
       "punkt": "P-10",
       "was": "Die Richtungspfeile drehen sich — einmal ganz herum in 30-Grad-Schritten",
       "soll": "12 von 12 auf 0,1 Grad, 8 von 8 schrägen mit größerem Umriss, dazu jeder Pfeil auf der Spur — Pfeile erwartet, sobald die Spur am Bildschirm länger als 280 px ist (geo.js, ABSTAND_PX × 2)",
-      "ist": "12 von 12 in der Aufstellung · 8 von 8 schräge Pfeile mit größerem Umriss (20 px ungedreht) · 2 von 2 auf der Spur des Einsatzes · Spur am Bildschirm 358 px",
+      "ist": "—",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": true,
-      "bemerkung": ""
+      "ok": false,
+      "bemerkung": "nicht gefahren: Kein Einsatz mit Aufzeichnung im Bestand"
     },
     {
       "name": "ap3-geo-punkt-sichtbar",
@@ -288,12 +288,12 @@
       "punkt": "Nr. 162",
       "was": "Der Abfahrtort-Punkt hat einen Kasten und zeigt seine Spurfarbe",
       "soll": "12 × 12 px, Farbe sichtbar",
-      "ist": "12 × 12 px · display block · Fläche rgb(31, 78, 156)",
+      "ist": "—",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": true,
-      "bemerkung": ""
+      "ok": false,
+      "bemerkung": "nicht gefahren: Kein Einsatz mit Aufzeichnung im Bestand"
     },
     {
       "name": "ap3-artzeichen-sechs",
@@ -327,12 +327,12 @@
       "punkt": "P-12",
       "was": "Wo die NutzerIn liest, steht „GPS-Daten\" — nicht „Spur\"",
       "soll": "0 sichtbare „Spur\" auf vier Seiten (eine Ausnahme: der GPX-Fachbegriff)",
-      "ist": "0 Seite(n) mit „Spur\" · 7 Nennungen „GPS-Daten\"",
+      "ist": "—",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": true,
-      "bemerkung": ""
+      "ok": false,
+      "bemerkung": "nicht gefahren: Kein Einsatz mit Aufzeichnung im Bestand"
     },
     {
       "name": "ap4-typen-anlegen",
@@ -509,7 +509,7 @@
       "punkt": "E-S9-19",
       "was": "Anlegen im Dialog führt auf die neue Zeile, hervorgehoben, ohne zusätzliche Meldung",
       "soll": "Adresse endet auf #td-<id> · Zeile orange-hell · keine Meldung am Seitenkopf",
-      "ist": "Dialog „Zielklinik anlegen\" / „Standort Bergwachtstation Sonnenau\" / Knopf „Anlegen\" → Adresse „#td-1621\", Zeile gefunden: true, Fläche rgb(255, 235, 214), Meldungen am Seitenkopf: 0",
+      "ist": "Dialog „Zielklinik anlegen\" / „Standort Bergwachtstation Sonnenau\" / Knopf „Anlegen\" → Adresse „#td-1852\", Zeile gefunden: true, Fläche rgb(255, 235, 214), Meldungen am Seitenkopf: 0",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
@@ -561,7 +561,7 @@
       "punkt": "E-S9-19",
       "was": "Eine Besatzungs-Vorbelegung lässt sich mit Rolle anlegen und landet auf ihrer Zeile",
       "soll": "Landung auf #crew-<id>, Zeile orange-hell, 0 Fehlermeldungen",
-      "ist": "Adresse „#crew-2004\", Zeile gefunden: true, Fläche rgb(255, 235, 214), Fehlermeldungen 0",
+      "ist": "Adresse „#crew-2290\", Zeile gefunden: true, Fläche rgb(255, 235, 214), Fehlermeldungen 0",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
@@ -574,7 +574,7 @@
       "punkt": "M-S9-10 (b)",
       "was": "Rettungsmittel ohne Standortpflicht überleben das Löschen ihres Standorts",
       "soll": "Rückfrage trennt die Zahl und nennt den Namen · nachher unter „Ohne Standort\", hervorgehoben · Standort weg",
-      "ist": "Rückfrage: „Standort „KP Löschprobe“ löschen? 2 eigene Stammdatensätze dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden …\" · nachher Adresse „#veh-1495\", Zeile „KP Bergwacht Probe Bergwacht B\", Fläche rgb(255, 235, 214), Karte offen true, 5 Einträge unter „Ohne Standort\", Standort weg: true",
+      "ist": "Rückfrage: „Standort „KP Löschprobe“ löschen? 2 eigene Stammdatensätze dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden …\" · nachher Adresse „#veh-1702\", Zeile „KP Bergwacht Probe Bergwacht B\", Fläche rgb(255, 235, 214), Karte offen true, 5 Einträge unter „Ohne Standort\", Standort weg: true",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
@@ -688,7 +688,7 @@
       "paket": "P5c-AP1",
       "punkt": "E-P5c-13",
       "soll": "Die Rückfrage nennt die Zahl der erreichbaren Konten; Abbrechen sendet nichts und schreibt nichts ins Protokoll",
-      "ist": "Rückfrage „…6 erreichbare Konten…\" · Protokoll 6 → 6",
+      "ist": "Rückfrage „…6 erreichbare Konten…\" · Protokoll 7 → 7",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
@@ -700,7 +700,7 @@
       "paket": "SR-02",
       "punkt": "Nr. 250",
       "soll": "Karte „Anmeldung\" speichern: POST → umgeleitet auf #k-anmeldung, Meldung einmal, Neuladen GET, kein zweiter Protokolleintrag",
-      "ist": "POST → umgeleitet · Meldung 1×, nach dem Neuladen 0× · Neuladen GET · Zähler 8 → 8",
+      "ist": "POST → umgeleitet · Meldung 1×, nach dem Neuladen 0× · Neuladen GET · Zähler 9 → 9",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
@@ -724,7 +724,7 @@
       "paket": "SR-03",
       "punkt": "E-SR-63",
       "soll": "ohne Haken abgewiesen; mit Haken gewechselt (Lage Wechsel); Blatt mit drei Kacheln auf einer A4-Seite; alles nachgewiesen; Rückfrage mit „Ein Wert hat gewechselt\" beantwortet; nach frischem Stand „Alten Schlüssel entfernen\" → Lage bereit mit dem neuen; der Rückweg der Probe stellt alles wieder her",
-      "ist": "ohne Haken abgewiesen · mit Haken gewechselt bac944d3 → dc6eff34 · Karte Lage Wechsel · Blatt 3 Kacheln, 1 Seite(n) · nachgewiesen ja (1× weiterarbeiten) · Rückfrage mit Satz, beantwortet · Stand gebaut · entfernen angeboten · danach bereit dc6eff34 · Rückweg auf bac944d3",
+      "ist": "ohne Haken abgewiesen · mit Haken gewechselt bac944d3 → 1a8743fb · Karte Lage Wechsel · Blatt 3 Kacheln, 1 Seite(n) · nachgewiesen ja (1× weiterarbeiten) · Rückfrage mit Satz, beantwortet · Stand gebaut · entfernen angeboten · danach bereit 1a8743fb · Rückweg auf bac944d3",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
@@ -760,7 +760,7 @@
       "paket": "R4-11",
       "punkt": "Nr. 250",
       "soll": "Die Testmail leitet nach #k-mail um; die Meldung steht einmal da, Neuladen ist ein GET ohne sie und reiht keine zweite Mail ein",
-      "ist": "POST → umgeleitet · Meldung 1×, nach dem Neuladen 0× · Neuladen GET · Zähler 15 → 15",
+      "ist": "POST → umgeleitet · Meldung 1×, nach dem Neuladen 0× · Neuladen GET · Zähler 18 → 18",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
@@ -772,7 +772,7 @@
       "paket": "R4-11",
       "punkt": "Nr. 250",
       "soll": "Ein- und Ausschalten leiten je nach #k-wartungsmodus um; die Meldung steht je einmal da, Neuladen ist ein GET ohne sie und ohne Eintrag",
-      "ist": "an: POST → umgeleitet · Meldung 1×, nach dem Neuladen 0× · Neuladen GET · Zähler 36 → 36 | aus: POST → umgeleitet · Meldung 1×, nach dem Neuladen 0× · Neuladen GET · Zähler 37 → 37",
+      "ist": "an: POST → umgeleitet · Meldung 1×, nach dem Neuladen 0× · Neuladen GET · Zähler 41 → 41 | aus: POST → umgeleitet · Meldung 1×, nach dem Neuladen 0× · Neuladen GET · Zähler 42 → 42",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
@@ -935,7 +935,7 @@
       "paket": "SR-08",
       "punkt": "Nr. 228",
       "soll": "Lösung ungedrosselt im Median unter 1 s; abgeschickt → Danke, Konto unbestaetigt; schneller als der Worker → Knopf gesperrt, „Sicherheitsprüfung läuft …\", dann von selbst ab; keine Konsolenfehler",
-      "ist": "Lösung nach Median 415 ms, höchstens 1032 ms (9 Läufe: 415, 382, 247, 482, 599, 1032, 382, 381, 482); abgeschickt → Danke, Konto unbestaetigt; zu schnell → „Sicherheitsprüfung läuft …\", Knopf gesperrt, danach Konto unbestaetigt; 0 Konsolenfehler",
+      "ist": "Lösung nach Median 483 ms, höchstens 1116 ms (9 Läufe: 257, 281, 931, 350, 182, 1116, 1031, 731, 483); abgeschickt → Danke, Konto unbestaetigt; zu schnell → „Sicherheitsprüfung läuft …\", Knopf gesperrt, danach Konto unbestaetigt; 0 Konsolenfehler",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,

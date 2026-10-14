@@ -405,7 +405,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--schnee` | `#FFFCFA` | 37 |  |
+| `--schnee` | `#FFFCFA` | 38 |  |
 | `--rauch` | `#F7F5ED` | 39 |  |
 | `--sand` | `#D4C7AD` | 15 |  |
 
@@ -415,14 +415,14 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 26 |  |
 | `--dunkelblau` | `#1A2E4D` | 65 |  |
-| `--gedaempft` | `#6E6459` | 75 |  |
+| `--gedaempft` | `#6E6459` | 76 |  |
 | `--auf-dunkel` | `#FFFFFF` | 10 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 43 |  |
+| `--linie` | `#E3DAC6` | 45 |  |
 | `--linie-stark` | `var(--gedaempft)` | 12 |  |
 
 **Orange — Handeln**
@@ -430,7 +430,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--orange` | `#FF8F1F` | 29 |  |
-| `--orange-tief` | `#C25A00` | 21 |  |
+| `--orange-tief` | `#C25A00` | 23 |  |
 | `--orange-hell` | `#FFEBD6` | 23 |  |
 
 **Blau — Auswählen und Erklären**
@@ -461,7 +461,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 12 |  |
-| `--groesse-2` | `13px` | 57 |  |
+| `--groesse-2` | `13px` | 58 |  |
 | `--groesse-3` | `15px` | 16 |  |
 | `--groesse-4` | `16px` | 16 |  |
 | `--groesse-5` | `19px` | 13 |  |
@@ -476,8 +476,8 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 84 |  |
-| `--abstand-2` | `8px` | 120 |  |
-| `--abstand-3` | `12px` | 163 |  |
+| `--abstand-2` | `8px` | 122 |  |
+| `--abstand-3` | `12px` | 166 |  |
 | `--abstand-4` | `16px` | 67 |  |
 | `--abstand-5` | `24px` | 35 |  |
 
@@ -486,7 +486,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 29 | Plakette, Kästchen, Eingabefeld |
-| `--radius` | `10px` | 20 | Knopf, Meldung |
+| `--radius` | `10px` | 21 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 8 | Karte, Blatt, Dialog |
 
 **Maße**
@@ -507,14 +507,14 @@ auseinanderlaufen kann.
 | `--listensuche-breit` | `36rem` | 1 | Höchstbreite des Suchfelds einer Liste |
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
-| `--symbol-klein` | `16px` | 6 | Zusatzzeichen an einer Beschriftung |
+| `--symbol-klein` | `16px` | 9 | Zusatzzeichen an einer Beschriftung |
 | `--symbol-winzig` | `calc(var(--symbol-klein) - var(--abstand-1))` | 4 | 12 px, im Chip |
 | `--ziel-chip` | `calc(var(--symbol-gross) + var(--abstand-1))` | 2 | 28 px, Treffziel |
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 57 | Haarlinie |
-| `--strich-stark` | `2px` | 36 | Aktivstrich, Randstrich, Fokus |
+| `--strich` | `1px` | 58 | Haarlinie |
+| `--strich-stark` | `2px` | 37 | Aktivstrich, Randstrich, Fokus |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
@@ -961,7 +961,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 43 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 44 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 15 |
@@ -972,7 +972,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 48 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 50 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
@@ -1055,6 +1055,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | **Suche, Filter und Seitenwahl** einer langen Liste | `ui_listenkopf()` und `ui_listenfuss()` (9.18a) | dasselbe Markup ein zweites Mal von Hand |
 | den **Zeitraum einer Auswertung** wählen — feste Fenster und Von/Bis | `ui_zeitraumwahl()` (9.18b) | Datumsfelder und Pillen von Hand, oder ein Auswahlfeld mit Monaten |
 | eine **Reihe über die Zeit** oder **Anteile** zeigen | `ui_diagramm_saeulen()`, `ui_diagramm_balken()` (9.40) — die Tabelle bleibt daneben | eine Diagrammbibliothek, ein Kreis, zwei Achsen |
+| sagen, dass der Browser **noch holt oder öffnet** | `ui_ladeplatz()` (9.41), gesteuert über `EdOrtsdaten.ladeplatz()` | eine leere Fläche, ein eigener Kreisel, ein Ladetext ohne Ring |
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
@@ -1083,38 +1084,39 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1595 |
 | `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1648 |
 | `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1674 |
-| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1719 |
-| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1803 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1838 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1880 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1928 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 1992 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2047 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2096 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2141 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2213 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2268 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2314 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2348 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2420 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2444 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2486 |
-| `ui_feld()` | `.feld` | ja (+28 Unterklassen) | 2555 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2620 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2664 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2717 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2761 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2860 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2922 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2963 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3057 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3098 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3128 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3140 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3290 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3369 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1701 |
+| `ui_karte_start()` | `.karte` | ja (+38 Unterklassen) | 1741 |
+| `ui_karte_ende()` | `.karte` | ja (+38 Unterklassen) | 1825 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1860 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1902 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1950 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2014 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2069 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2118 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2163 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2235 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2290 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2336 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2370 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2442 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2466 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2508 |
+| `ui_feld()` | `.feld` | ja (+28 Unterklassen) | 2577 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2642 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2686 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2739 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2783 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2882 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2944 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2985 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3079 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3120 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3150 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3162 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3312 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3391 |
 
-53 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
@@ -3125,6 +3127,41 @@ höchstens 41 ab 06.07.").
 **Einteilung** (Statistik, E-R4-59): je Tag bis 31 Tage, je Woche ab Montag
 bis 366, darüber je Monat — in Ortszeit. Ein Satz unter dem Diagramm nennt
 die Einteilung und dass die Ränder angebrochen sein können.
+
+### 9.41 Ladeplatz (`.ladeplatz`, `.ladeplatz-ring`, `.ladeplatz-still`, seit Web 22.0.3)
+
+*Neuer Baustein mit Freigabe* (S11-04c, Mockup M-S11-01, Variante A,
+freigegeben am 13.10.2026, E-S11-35). **Zweck:** sagen, dass etwas kommt,
+solange der Browser Ortsdaten holt oder öffnet — Spur, Phasen und
+Reanimation liegen seit Web 22 verschlossen auf dem Server, und eine graue
+Karte sah nach zwei Sekunden aus wie „keine GPS-Daten".
+
+- **Ring und Satz** — `ui_ladeplatz($text, $o)`: ein Ring 16 px (Strich
+  `--strich-stark`, `--linie` mit einem Viertel `--orange-tief`, dreht in
+  900 ms) und ein Satz in `--gedaempft`, `--groesse-2`. In der
+  Kartenfläche (`.geo .ladeplatz`) mittig auf einem Schnee-Kästchen mit Rand
+  `--linie`, in einer Karte als Zeile an der Stelle des Inhalts.
+- **Vier Zustände an derselben Stelle:** lädt · wartet auf das Passwort
+  (`.ladeplatz-still`, der Ring steht — es passiert nichts, bis jemand etwas
+  tut) · öffnet · Fehler (dann die vorhandene Meldung, `.geo >
+  [data-ortsdaten]`, mittig in der Karte).
+- **Erst nach 300 ms** (`EdOrtsdaten.ladeplatz()`), damit eine schnelle
+  Ansicht nicht flackert. Ausgegeben wird er verborgen; das Skript zeigt ihn.
+- **Bewegung reduziert:** Die allgemeine Regel hält die Drehung an; der Satz
+  trägt die Auskunft allein.
+- `role="status"`, `aria-live="polite"` am Baustein, der Ring ist
+  `aria-hidden`.
+
+**Keine neue Farbe, keine neue Schriftgröße.** Kontrast (nachgerechnet im
+Mockup): `--gedaempft` auf `--schnee` 5,7 : 1, auf `--rauch` 5,3 : 1;
+`--orange-tief` auf `--schnee` 4,3 : 1, auf `--linie` 3,2 : 1 — für eine
+Grafik genügt 3 : 1 (WCAG 1.4.11).
+
+**Verwender (Web 22.0.3):** Einsatzansicht (Karte und Phasenkarte, die dabei
+sofort sichtbar ist), Diensttag (Karte), GPS-Daten des Diensttags
+(`tag_spuren.php`). **Der Balken mit Zahl** für lange Läufe (Export,
+GPX-Archiv, Wartungslauf) ist mit demselben Mockup freigegeben und entsteht
+mit seinem ersten Verwender (S11-05).
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 

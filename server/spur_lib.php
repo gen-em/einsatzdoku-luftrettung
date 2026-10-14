@@ -843,6 +843,18 @@ function spur_zahlen(PDO $pdo, string $ownerType, array $ids): array
             $aus[(int)$r['owner_id']] = ($aus[(int)$r['owner_id']] ?? 0) + (int)$r['n'];
         }
     }
+
+    /* SPUR2 (S11-04c): die Punkte der Stuecke, aus der Klartextzahl `punkte`.
+     * Ueberlappen zwei Stuecke (ein Geraet, das seine Marke verloren hat),
+     * zaehlt die Ueberlappung doppelt; der Browser entdoppelt beim Oeffnen.
+     * Fuer die Fragen, die hier gestellt werden — gibt es eine Spur, wie gross
+     * ist sie ungefaehr —, ist das ohne Belang. */
+    foreach (sql_in_bloecken($pdo,
+        'SELECT owner_id, SUM(punkte) n FROM track_stuecke
+          WHERE owner_type = ? AND owner_id IN ({IDS})
+          GROUP BY owner_id', $ids, [$ownerType]) as $r) {
+        $aus[(int)$r['owner_id']] = ($aus[(int)$r['owner_id']] ?? 0) + (int)$r['n'];
+    }
     return $aus;
 }
 

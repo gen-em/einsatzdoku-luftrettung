@@ -8688,6 +8688,18 @@ Chiffretext mit den Klartextzahlen:
 Die Ortsdatenprobe (`tools/proben/ortsdaten/`) fährt die Kette Gerät →
 Server → Browser und vergleicht Punkt für Punkt.
 
+**Seit Web 22.0.3 (S11-04c) öffnet der Browser, und nur er.** `api/mission.php`
+liefert `track`, `phases[].lat/lon/track_idx` und `resus` nicht mehr; dafür
+`reanimationsarten` und `zeitzone`. `api/day.php` und `tag_spuren.php` liefern
+keine Punkte mehr, nur Stücke. Die eine Stelle zum Öffnen ist
+`assets/ortsdaten.js` (`EdOrtsdaten`): `spur()` öffnet Stücke, entdoppelt nach
+Sequenznummer und lässt gesperrte Punkte fort; `einsatz()` öffnet die
+Einsatzhülle; `fuerAnsicht()` füllt eine Antwort von `api/mission.php` so, wie
+die Einsatzansicht sie schon immer las; `ladeplatz()` steuert den Baustein
+`.ladeplatz` (Design 9.41) mit 300 ms Schwelle. **Kein Übergang** (E-S11-36):
+Altbestand im Klartext zeigt bis S11-10 keine Karte. Die Anfrage startet
+`assets/vorladen.js` schon im Kopf (V1, `EdVorladen.holen()`).
+
 **Nach dem Deploy:** `update.php` (Migration `2026_10_13_ortshuellen`).
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)

@@ -14,6 +14,57 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.0.3] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-04c — die Ansichten öffnen die Hüllen**.
+Dritter von vier Teilen von S11-04. Kein Schema.
+
+### Geändert
+
+- **Einsatzansicht, Tagesübersicht und „GPS-Daten des Diensttages" öffnen
+  Spur, Phasenorte und Reanimation selbst.** Die Antworten des Servers
+  tragen sie seit 22.0.2 als Gerätehüllen; jetzt liest der Server sie dort
+  gar nicht mehr im Klartext. Geöffnet wird an einer Stelle,
+  `assets/ortsdaten.js`, mit dem privaten Schlüssel des Kontos — und daraus
+  entsteht, was das Zeichnen der Seiten schon immer gelesen hat. Das hält
+  den Eingriff in drei große Seitenskripte klein: Karte, Phasenliste und
+  Reanimationstabellen sind dieselben geblieben. Doppelte Punkte (ein Gerät,
+  das seine Marke verloren hat) zählen einmal; Punkte in einem
+  herausgeschnittenen Zeitraum fallen weg (E-S11-37).
+- **Kein Übergang** (E-S11-36): Einsätze, deren Ortsdaten noch im Klartext
+  liegen, zeigen bis zum Einmalwerkzeug (S11-10) keine Karte, keine
+  Phasenorte und keine Reanimation. Das ist beschlossen, kein Fehler. Auf
+  Produktiv betrifft es die Zeit zwischen der Hauptauslieferung und dem Lauf
+  des Werkzeugs (Konzept 3.8, Schritte 3 bis 5); auf Staging und örtlich
+  gilt es, bis das Werkzeug dort gelaufen ist.
+- **Die Anfrage beginnt im Kopf der Seite** (V1 aus dem Messpaket S11-13):
+  `assets/vorladen.js` startet `api/mission.php` bzw. `api/day.php`, während
+  der Browser noch Skripte lädt. Geschätzt waren 13 bis 18 % des
+  Seitenaufbaus bei Drossel 6×; gemessen wird in S11-04d. Eine eigene
+  kleine Datei, weil die CSP Inline-Code im Kopf nicht zulässt.
+
+### Neu
+
+- **Der Ladeplatz** (`ui_ladeplatz()`, `Design.md` 9.41; Mockup M-S11-01,
+  Variante A): ein Ring und ein Satz an der Stelle, an der gleich Karte oder
+  Phasen stehen — „Ortsdaten werden geladen …", „Wartet auf dein Passwort"
+  (der Ring steht still), „Ortsdaten werden geöffnet …". Er erscheint erst
+  nach 300 ms, damit eine schnelle Seite nicht flackert. Die Phasenkarte der
+  Einsatzansicht steht dabei sofort da (E-S11-35). Keine neue Farbe, keine
+  neue Schriftgröße.
+- `EdFormat.uhrzeit()` — die Uhrzeit eines Zeitpunkts in der Zeitzone der
+  Anlage. Die Zeiten der Reanimation stehen nur noch in der Hülle; die
+  Rechnung gehört an die eine Stelle für Zahlen und Zeiten, nicht in eine
+  Seite.
+
+### Was noch nicht geht
+
+- Das **Einsatzformular** zeigt im Kartendialog keine Spur mehr und kennt die
+  Phasenorte nicht; das baut S11-05 mit dem Formularweg um.
+- Geht eine Hülle nicht auf, steht die Meldung in der Karte — **gemeldet an
+  den Reiter System wird das noch nicht**, wie M-S11-01 es vorsieht. Das holt
+  S11-04d nach.
+
 ## [Web 22.0.2] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-04b — die Schnittstellen liefern die Hüllen

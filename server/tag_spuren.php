@@ -39,9 +39,11 @@ require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Diensttag i
  * Sammelleiste erscheint erst, wenn etwas ausgewaehlt ist — und das entscheidet
  * das Skript. Die GPX-Verweise in den Zeilen sind davon unberuehrt.
  *
- * KEINE GESCHUETZTEN ANGABEN. Der Einsatzort liegt im `pat_blob`; diese Seite
- * fasst ihn nicht an. Was sie zeigt, sind laufende Nummern, Uhrzeiten und die
- * Spur selbst — Klartext, wie auf der Tageskarte auch.
+ * DIE SPUR IST SEIT S11 VERSCHLOSSEN (S11-04c). Bis Web 22.0.2 gingen ihre
+ * Punkte hier im Klartext an den Browser. Jetzt bekommt er die Stuecke als
+ * Geraetehuellen und oeffnet sie mit dem privaten Schluessel des Kontos
+ * (`assets/ortsdaten.js`); die Zeilen der Liste stehen sofort da, die Linien
+ * entstehen danach. Den `pat_blob` fasst die Seite weiter nicht an.
  */
 
 $dayId = (int)($_GET['d'] ?? 0);
@@ -55,13 +57,13 @@ $pdo = db();
 
 /* Einsaetze nach Beginn — dieselbe Reihenfolge wie in der Tagesansicht, damit
  * Nummer und Farbe dort und hier dasselbe meinen. */
-$st = $pdo->prepare('SELECT id, started_at, ended_at FROM missions
+$st = $pdo->prepare('SELECT id, client_ref, started_at, ended_at FROM missions
                       WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                       ORDER BY started_at, id');
 $st->execute([$userId, $dayId]);
 $einsaetze = $st->fetchAll(PDO::FETCH_ASSOC);
 
-$st = $pdo->prepare('SELECT id, started_at, ended_at FROM rest_segments
+$st = $pdo->prepare('SELECT id, client_ref, started_at, ended_at FROM rest_segments
                       WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                       ORDER BY started_at, id');
 $st->execute([$userId, $dayId]);
@@ -71,22 +73,26 @@ $spuren = [];
 $nr = 0;
 foreach ([['mission', $einsaetze], ['rest', $ruhe]] as [$art, $liste]) {
     $ids = array_map(fn($r) => (int)$r['id'], $liste);
-    $punkteAlle = $ids ? spur_lesen_viele($pdo, $art, $ids) : [];
+    /* Die Stuecke als Huellen (S11-04c) — Platz, Zeitraum, Punktzahl im
+     * Klartext, die Punkte verschlossen. */
+    $stueckeAlle = $ids ? spur2_lesen_viele($pdo, $art, $ids) : [];
     foreach ($liste as $r) {
         $id = (int)$r['id'];
         if ($art === 'mission') { $nr++; }
-        $punkte = $punkteAlle[$id] ?? [];
-        $stand  = $punkte ? spur_stand($pdo, $art, $id)
-                          : ['stufe' => 0, 'n_original' => 0];
+        $stuecke = $stueckeAlle[$id] ?? [];
+        $stand  = $stuecke ? spur_stand($pdo, $art, $id)
+                           : ['stufe' => 0, 'n_original' => 0];
         $spuren[] = [
             'art' => $art, 'id' => $id,
             'nr' => $art === 'mission' ? $nr : null,
             'von' => $r['started_at'], 'bis' => $r['ended_at'],
-            'stufe' => (int)$stand['stufe'], 'n' => count($punkte),
+            'stufe' => (int)$stand['stufe'],
+            'n' => array_sum(array_column($stuecke, 'punkte')),
             'n_original' => (int)$stand['n_original'],
-            // Nur Ort: Die Karte braucht weder Hoehe noch Zeit, und was sie
-            // nicht braucht, wird nicht uebertragen.
-            'track' => array_map(fn($p) => [$p[1], $p[2]], $punkte),
+            'client_ref' => (string)$r['client_ref'],
+            'spur_stuecke' => $stuecke,
+            'sperren' => array_map(fn($c) => ['von' => $c['von_ts'], 'bis' => $c['bis_ts']],
+                                   schnitte_lesen($pdo, $art, $id)),
         ];
     }
 }
@@ -153,7 +159,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
         . 'Einsatz noch ein Ruhesegment.') ?>
   <?php else: ?>
 
-  <div class="geo-spalte"><div id="map" class="geo"></div></div>
+  <div class="geo-spalte"><div id="map" class="geo"><?= ui_ladeplatz('GPS-Daten werden geladen …', ['attr' => ' id="spuren-lade"']) ?></div></div>
 
   <?php ui_karte_start(['titel' => 'GPS-Daten', 'zahl' => (string)count($spuren)]); ?>
     <?php /* WARUM EIN HINWEIS UEBER DER LISTE: Eine GPX-Datei traegt den Weg
@@ -265,6 +271,8 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
          steht weiter oben; die eigene Zeile hier waere ein zweiter Abruf
          derselben Datei. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
+<?php ui_krypto_bootstrap(); ?>
+<script src="<?= asset('assets/ortsdaten.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 const SPUREN = <?= json_js($spuren, JSON_UNESCAPED_UNICODE) ?>;
 
@@ -276,24 +284,52 @@ const linien = [];
 const bounds = [];
 let nrFarbe = 0;
 
-SPUREN.forEach((s, i) => {
-  if (s.track.length < 2) { linien.push(null); return; }
-  /* Dieselben Farben wie in der Tagesansicht: Einsaetze bekommen der Reihe
-     nach eine eigene, Ruhesegmente sind schwarz und dezent. Wer von dort
-     kommt, erkennt die Linien wieder. */
-  const farbe = s.art === 'mission' ? EdGeo.spurFarbe(nrFarbe++) : EdGeo.ruheFarbe();
-  const linie = L.polyline(s.track, {
-    color: farbe, weight: s.art === 'mission' ? 4 : 3,
-    opacity: 0.9, smoothFactor: 0,
-  }).addTo(map);
-  linien.push(linie);
-  s.track.forEach(p => bounds.push(p));
-});
+SPUREN.forEach(() => linien.push(null));
 
-if (bounds.length) {
-  const px = map.getSize();
-  map.fitBounds(L.latLngBounds(bounds),
-    { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
+/* DIE LINIEN ENTSTEHEN NACH DEM OEFFNEN (S11-04c). Bis Web 22.0.2 lagen die
+   Punkte schon in SPUREN; jetzt oeffnet `EdOrtsdaten.spur()` die Stuecke mit
+   dem privaten Schluessel des Kontos, gesperrte Zeitraeume fallen weg. Die
+   Liste darunter steht derweil schon und reagiert, sobald eine Linie da ist. */
+async function linienZeichnen() {
+  const lade = EdOrtsdaten.ladeplatz(document.getElementById('spuren-lade'));
+  if (!SPUREN.some(s => s.spur_stuecke && s.spur_stuecke.length)) { lade.weg(); return; }
+  lade.zeige('Wartet auf dein Passwort', true);
+  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+  if (!ck) { lade.weg(); return; }
+  lade.zeige('GPS-Daten werden geöffnet …');
+  try {
+    const k = await EdOrtsdaten.schluessel(ck);
+    for (const s of SPUREN) {
+      s.track = (await EdOrtsdaten.spur(s.spur_stuecke, s.art === 'mission' ? 'spur' : 'ruhe',
+                                        s.client_ref, s.sperren, k)).map(p => [p.lat, p.lon]);
+    }
+  } catch (e) {
+    lade.weg();
+    const box = document.createElement('div');
+    box.dataset.ortsdaten = 'fehler';
+    box.innerHTML = EdHtml.meldung('fehler', 'Die GPS-Daten dieses Tages lassen sich nicht öffnen.');
+    document.getElementById('map').appendChild(box);
+    return;
+  }
+  lade.weg();
+  SPUREN.forEach((s, i) => {
+    if (!s.track || s.track.length < 2) { return; }
+    /* Dieselben Farben wie in der Tagesansicht: Einsaetze bekommen der Reihe
+       nach eine eigene, Ruhesegmente sind schwarz und dezent. Wer von dort
+       kommt, erkennt die Linien wieder. */
+    const farbe = s.art === 'mission' ? EdGeo.spurFarbe(nrFarbe++) : EdGeo.ruheFarbe();
+    linien[i] = L.polyline(s.track, {
+      color: farbe, weight: s.art === 'mission' ? 4 : 3,
+      opacity: 0.9, smoothFactor: 0,
+    }).addTo(map);
+    s.track.forEach(p => bounds.push(p));
+  });
+  if (bounds.length) {
+    const px = map.getSize();
+    map.fitBounds(L.latLngBounds(bounds),
+      { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
+  }
+  malen();
 }
 
 /* DIE VERBINDUNG ZWISCHEN LISTE UND KARTE.
@@ -355,7 +391,6 @@ function hervorheben(idx) { zeigt = idx; malen(); }
 
 zeilen.forEach(z => {
   const idx = Number(z.dataset.spur);
-  const linie = linien[idx];
   z.addEventListener('mouseenter', () => hervorheben(idx));
   z.addEventListener('focus',      () => hervorheben(idx));
   z.addEventListener('mouseleave', () => hervorheben(null));
@@ -364,6 +399,7 @@ zeilen.forEach(z => {
     /* Der GPX-Verweis in der Zeile soll herunterladen, nicht zoomen — und das
        Auswahlkaestchen soll auswaehlen, nicht zoomen. */
     if (e.target.closest('a') || e.target.closest('[data-spurwahl]')) { return; }
+    const linie = linien[idx];   // erst beim Klick: die Linien entstehen nach dem Oeffnen
     if (linie) { map.fitBounds(linie.getBounds(), { padding: L.point(30, 30), maxZoom: 16 }); }
   });
 });
@@ -377,6 +413,7 @@ document.querySelectorAll('[data-spurwahl]').forEach(box => {
 });
 
 malen();
+linienZeichnen();
 </script>
 <?php endif; ?>
 
