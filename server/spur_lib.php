@@ -2112,3 +2112,41 @@ function spur2_stueck_schreiben(PDO $pdo, string $ownerType, int $ownerId, int $
         return 0;
     }
 }
+
+/**
+ * Die Stuecke mehrerer Spuren, wie sie liegen — fuer den Browser, der sie
+ * oeffnet (S11-04b). Je Eigentuemer eine Liste, aufsteigend nach `seq_from`;
+ * die Huelle als Base64, damit sie unveraendert in eine JSON-Antwort geht.
+ *
+ * DER SERVER OEFFNET NICHTS. Was hier herausgeht, ist Chiffretext mit den
+ * Klartextzahlen, die der Browser fuer die Bindung braucht (`seq_from`,
+ * `punkte`) und fuer die Zeiten (`ts_von`: die Punktzeiten in der Huelle
+ * stehen relativ dazu, E-S11-18).
+ *
+ * @param list<int> $ids
+ * @return array<int, list<array{seq_from:int,punkte:int,n_original:int,ts_von:int,ts_bis:int,stufe:int,huelle:string}>>
+ */
+function spur2_lesen_viele(PDO $pdo, string $ownerType, array $ids): array
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    $aus = [];
+    if (!$ids) { return $aus; }
+    require_once __DIR__ . '/db.php';
+    foreach (sql_in_bloecken($pdo,
+        'SELECT owner_id, seq_from, punkte, n_original, ts_von, ts_bis, stufe, huelle
+           FROM track_stuecke WHERE owner_type = ? AND owner_id IN ({IDS})
+          ORDER BY owner_id, seq_from', $ids, [$ownerType]) as $r) {
+        $aus[(int)$r['owner_id']][] = [
+            'seq_from' => (int)$r['seq_from'], 'punkte' => (int)$r['punkte'],
+            'n_original' => (int)$r['n_original'],
+            'ts_von' => (int)$r['ts_von'], 'ts_bis' => (int)$r['ts_bis'],
+            'stufe' => (int)$r['stufe'], 'huelle' => base64_encode((string)$r['huelle'])];
+    }
+    return $aus;
+}
+
+/** Die Stuecke EINER Spur — siehe spur2_lesen_viele(). */
+function spur2_lesen(PDO $pdo, string $ownerType, int $ownerId): array
+{
+    return spur2_lesen_viele($pdo, $ownerType, [$ownerId])[$ownerId] ?? [];
+}

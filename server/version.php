@@ -8115,5 +8115,15 @@ declare(strict_types=1);
  *   Korrekturstelle, weil S11 als Ganzes die Hauptnummer traegt (22.0.0).
  *   SCHEMA: Tabelle `track_stuecke`, Spalte `missions.ort_huelle` — nach dem
  *   Deploy `update.php` aufrufen.
+ *
+ * 22.0.2 — S11-04b: DIE SCHNITTSTELLEN LIEFERN DIE HUELLEN AUS.
+ *   `api/mission.php` gibt die Spurstuecke, die Einsatzhuelle, `client_ref`
+ *   (fuer die Bindung), den Beginn und die Phasenzeiten als Epoche und die
+ *   Sperrzeiten aus Schnitten heraus; `api/day.php` die Stuecke je Einsatz
+ *   und Ruhesegment. Der Server oeffnet dabei nichts (`spur2_lesen_viele()`
+ *   gibt Chiffretext und Klartextzahlen). Die Ansichten lesen bis S11-04c
+ *   weiter den Altbestand im Klartext; neu ist, dass der Browser die Huellen
+ *   bekommt. Die Ortsdatenprobe belegt die Kette Geraet -> Server -> Browser
+ *   Punkt fuer Punkt. Kein Schema.
  */
-const WEB_VERSION = '22.0.1';
+const WEB_VERSION = '22.0.2';

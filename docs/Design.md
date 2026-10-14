@@ -961,7 +961,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 40 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 43 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 15 |

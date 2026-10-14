@@ -109,6 +109,12 @@ heute über der Sekunde aus E-S11-15 (F-S11-15, Frage Q-S11-16 im Konzept).
 `lokal_einrichten.sh` löscht den Bestand dieser Anlage. Geprüft sind seine
 beiden neuen Teile einzeln (Zeilen darüber); der ganze Lauf steht in 1.
 
+### S11-04b Schnittstellen liefern die Hüllen (13.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `proben.sh ortsdaten` (neu) | Wegwerfkonto mit Kontopaar; ein Gerät sendet Einsatz (2 Stücke, 3 Phasen, 1 Reanimation) und Ruhesegment verschlossen; der Browser holt `api/mission.php` und `api/day.php` und öffnet mit seinem privaten Schlüssel; Punkt für Punkt gegen das Gesendete; fremde Bindung; Sperrzeit eines Schnitts; keine Klartextzeile in der Datenbank | 16 ok, 0 fehlen |
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.

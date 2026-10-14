@@ -14,6 +14,41 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.0.2] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-04b — die Schnittstellen liefern die Hüllen
+aus**. Zweiter von vier Teilen von S11-04. Kein Schema.
+
+### Neu
+
+- **`api/mission.php` und `api/day.php` geben die Ortsdaten als
+  Gerätehüllen heraus**, wie sie liegen: die Spurstücke mit Platz, Punktzahl
+  und Zeitraum, beim Einsatz dazu die Einsatzhülle. Mit dabei ist, was der
+  Browser zum Öffnen und Einordnen braucht und was ohnehin Klartext ist:
+  `client_ref` für die Bindung, der Beginn und die Zeit jeder Phase als
+  Epoche (die Zeiten in der Hülle zählen von dort, E-S11-40) und die
+  Sperrzeiten aus Schnitten (E-S11-37). Der Server öffnet dabei nichts.
+- **Die Ortsdatenprobe** fährt die ganze Kette im echten Browser: Ein Gerät
+  sendet verschlossen mit dem Kontoschlüssel, die Schnittstellen liefern aus,
+  der Browser öffnet mit seinem privaten Schlüssel und vergleicht Punkt für
+  Punkt — auch eine fehlende Höhe, die Phasen, die Reanimation und eine
+  Hülle unter fremder Bindung, die nicht aufgehen darf.
+
+### Geändert
+
+- **Die Spaltenliste der Einsätze eines Diensttags kommt aus dem
+  Spaltenregister** (neuer Zweck `tag`). Mit `client_ref` wäre sie in
+  `api/day.php` eine Liste von zehn Spaltennamen von Hand geworden — genau
+  das, was das Register seit Schritt 15 verhindern soll, und die Zählung
+  (Z18) schlug im ersten Prüfstandlauf an.
+
+### Was noch nicht geht
+
+- **Die Ansichten zeigen die Hüllen noch nicht** — sie lesen bis S11-04c den
+  Altbestand im Klartext (`track`, `phases[].lat/lon`, `resus`). Das bleibt so
+  lange in den Antworten, damit die Seiten zwischen den beiden Teilen
+  bedienbar sind; S11-04c nimmt es heraus.
+
 ## [Web 22.0.1] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-04a — Speicher, Prüfschicht, Eingang**. Der

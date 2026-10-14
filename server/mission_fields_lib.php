@@ -395,29 +395,29 @@ function mf_gates_erfuellt(array $f, array $rollen, ?string $kind, array $faehig
 function mf_missions_register(): array
 {
     return [
-    'id' => ['export' => 0, 'suchindex' => 0, 'range' => 0],
+    'id' => ['export' => 0, 'suchindex' => 0, 'range' => 0, 'tag' => 0],
     'user_id' => ['import_neu' => 0, 'ingest_neu' => 0, 'schnitt_neu' => 0,
                   'backup_restore' => 0],
     'device_id' => ['import_neu' => 1, 'ingest_neu' => 1, 'schnitt_neu' => 1],
     'client_ref' => ['backup' => 0, 'import_neu' => 2, 'ingest_neu' => 2, 'schnitt_neu' => 2,
-                     'backup_restore' => 1],
+                     'backup_restore' => 1, 'tag' => 1],
     'day_id' => ['export' => 1, 'backup' => 1, 'import_neu' => 3, 'import_aendern' => 0,
                  'suchindex' => 1, 'range' => 1, 'ingest_neu' => 3, 'schnitt_neu' => 3,
                  'backup_restore' => 2],
     'started_at' => ['export' => 2, 'backup' => 2, 'import_neu' => 4, 'import_aendern' => 1,
                      'suchindex' => 2, 'range' => 2, 'ingest_neu' => 4, 'schnitt_neu' => 4,
-                     'backup_restore' => 3],
+                     'backup_restore' => 3, 'tag' => 2],
     'ended_at' => ['export' => 3, 'backup' => 3, 'import_neu' => 5, 'import_aendern' => 2,
                    'suchindex' => 20, 'range' => 3, 'ingest_neu' => 5, 'schnitt_neu' => 5,
-                   'backup_restore' => 4],
+                   'backup_restore' => 4, 'tag' => 3],
     'distance_m' => ['export' => 4, 'backup' => 4, 'import_neu' => 14, 'import_aendern' => 9,
-                     'suchindex' => 3, 'range' => 4, 'ingest_neu' => 6, 'backup_restore' => 9],
+                     'suchindex' => 3, 'range' => 4, 'ingest_neu' => 6, 'backup_restore' => 9, 'tag' => 4],
     'ascent_m' => ['export' => 5, 'backup' => 5, 'import_neu' => 15, 'import_aendern' => 10,
                    'ingest_neu' => 7, 'backup_restore' => 10],
     'site_ele_m' => ['export' => 28, 'backup' => 6, 'import_neu' => 13, 'import_aendern' => 8,
                      'range' => 10],
     'final' => ['export' => 6, 'backup' => 7, 'import_neu' => 6, 'import_aendern' => 3,
-                'ingest_neu' => 8, 'schnitt_neu' => 6, 'backup_restore' => 8],
+                'ingest_neu' => 8, 'schnitt_neu' => 6, 'backup_restore' => 8, 'tag' => 5],
     'letzter_punkt_am' => [],
     'uhr_gesperrt' => ['export' => [7, 'manual'], 'backup' => [8, 'manual'], 'import_neu' => 7,
                        'import_aendern' => 26, 'schnitt_neu' => 7, 'backup_restore' => 5],
@@ -434,13 +434,13 @@ function mf_missions_register(): array
                     'suchindex' => 5],
     'transport_dest' => ['export' => 12, 'backup' => 13, 'import_neu' => 9,
                          'import_aendern' => 4, 'suchindex' => 6],
-    'dest_lat' => ['export' => 18, 'backup' => 18, 'import_neu' => 28, 'import_aendern' => 23],
-    'dest_lon' => ['export' => 19, 'backup' => 19, 'import_neu' => 29, 'import_aendern' => 24],
+    'dest_lat' => ['export' => 18, 'backup' => 18, 'import_neu' => 28, 'import_aendern' => 23, 'tag' => 8],
+    'dest_lon' => ['export' => 19, 'backup' => 19, 'import_neu' => 29, 'import_aendern' => 24, 'tag' => 9],
     'schockraum' => ['export' => 26, 'backup' => 26, 'import_neu' => 16, 'import_aendern' => 11,
                      'suchindex' => 7],
     'false_alarm' => ['export' => 16, 'backup' => 16, 'import_neu' => 27,
                       'import_aendern' => 22, 'suchindex' => 8, 'range' => 9],
-    'start_src' => ['export' => 17, 'backup' => 17, 'import_neu' => 30, 'import_aendern' => 25],
+    'start_src' => ['export' => 17, 'backup' => 17, 'import_neu' => 30, 'import_aendern' => 25, 'tag' => 7],
     'winch' => ['export' => 13, 'backup' => 20, 'import_neu' => 10, 'import_aendern' => 5,
                 'suchindex' => 9, 'range' => 5],
     'winch_cycles' => ['export' => 20, 'backup' => 21, 'import_neu' => 18,
@@ -463,7 +463,7 @@ function mf_missions_register(): array
     'crew_override' => ['export' => 27, 'backup' => 30, 'import_neu' => 11,
                         'import_aendern' => 6, 'suchindex' => 18],
     'pat_blob' => ['export' => 31, 'backup' => 31, 'import_neu' => 12, 'import_aendern' => 7,
-                   'suchindex' => 19, 'range' => 11],
+                   'suchindex' => 19, 'range' => 11, 'tag' => 6],
     'ort_huelle' => [],
     'notes' => [],
     'created_at' => ['backup' => 32],
@@ -525,7 +525,7 @@ function mf_missions_gruende(): array
  * Die Spaltenliste eines Zwecks — fertig fuer ein `SELECT`, `INSERT` oder `UPDATE`.
  *
  * @param string $zweck `export` · `backup` · `import_neu` · `import_aendern` ·
- *                      `suchindex` · `range`
+ *                      `suchindex` · `range` · `tag`
  * @param string $praefix Tabellenalias mit Punkt (`'x.'`, `'m.'`) oder leer
  * @param bool   $alias   Alias mitschreiben (`uhr_gesperrt AS manual`) — fuer
  *                        `INSERT`/`UPDATE` ist er falsch und muss weg

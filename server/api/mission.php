@@ -171,6 +171,10 @@ try {
         'label' => PHASE_LABELS[(int)$p['phase']] ?? ('Phase ' . $p['phase']),
         'time'  => fmt_local($p['occurred_at']),
         'track_idx' => $trackIndexZu($p['occurred_at'] !== null ? (string)$p['occurred_at'] : null),
+        /* Seit S11-04b die Zeit auch als Epoche: Der Browser ordnet damit die
+         * Phasen der Einsatzhuelle zu (Zeiten dort relativ zum Beginn). */
+        'ts'    => $p['occurred_at'] !== null
+                   ? (new DateTime((string)$p['occurred_at'], new DateTimeZone('UTC')))->getTimestamp() : null,
         'lat'   => $p['lat'] !== null ? (float)$p['lat'] : null,
         'lon'   => $p['lon'] !== null ? (float)$p['lon'] : null,
     ], $ph->fetchAll());
@@ -317,6 +321,23 @@ try {
         'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
         'pat_wrap'   => $patWrapPw,
         'track' => $track, 'phases' => $phases, 'resus' => $resus,
+        /* ---- DIE ORTSDATEN ALS GERAETEHUELLEN (S11-04b, Konzept S11 3.5) ----
+         *
+         * Seit Web 22.0.1 kommen Spur, Phasenkoordinaten und Reanimation nur
+         * noch verschlossen an; der Server liefert sie hier aus, wie sie
+         * liegen, und oeffnet nichts. Dazu, was der Browser zum Oeffnen und
+         * Einordnen braucht: `client_ref` (Bindung), `started_ts` (die Zeiten
+         * der Einsatzhuelle zaehlen von dort, E-S11-40) und die Sperrzeiten
+         * aus Schnitten (E-S11-37: gesperrte Punkte blendet der Browser aus).
+         *
+         * `track`, `phases[].lat/lon` und `resus` oben lesen bis S11-04c
+         * weiter den Altbestand im Klartext; dann wechselt die Ansicht. */
+        'client_ref'   => (string)$m['client_ref'],
+        'started_ts'   => (new DateTime((string)$m['started_at'], new DateTimeZone('UTC')))->getTimestamp(),
+        'spur_stuecke' => spur2_lesen(db(), 'mission', $id),
+        'spur_sperren' => array_map(fn($x) => ['von' => $x['von_ts'], 'bis' => $x['bis_ts']],
+                                    schnitte_lesen(db(), 'mission', $id)),
+        'ort_huelle'   => ($m['ort_huelle'] ?? null) !== null ? base64_encode((string)$m['ort_huelle']) : null,
     ]);
 } catch (Throwable $ex) {
     // Statt eines leeren HTTP 500 eine lesbare Fehlermeldung.

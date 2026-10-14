@@ -182,6 +182,11 @@
       "braucht": "installation",
       "bemerkung": "S11-03: das Schluesselpaar des Kontos im Browser — still anlegen nach der Anmeldung, Abgleich, Rundlauf einer Geraetehuelle, vertauschter privater Teil, Siegel. Legt ein Wegwerfkonto umlauf-kontopaar an und loescht es."
     },
+    "ortsdatenprobe": {
+      "aufruf": "bash tools/proben/proben.sh ortsdaten",
+      "braucht": "installation",
+      "bemerkung": "S11-04b: die Kette Geraet -> Server -> Browser — ein Geraet sendet verschlossen, api/mission.php und api/day.php liefern Stuecke, Einsatzhuelle und Sperrzeiten, der Browser oeffnet sie und vergleicht Punkt fuer Punkt. Legt ein Wegwerfkonto umlauf-ortsdaten an und loescht es."
+    },
     "uhr-krypto": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoreihe /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoprobe",
       "braucht": "uhr",
@@ -843,6 +848,24 @@
       ],
       "proben": [
         "kontopaarprobe"
+      ],
+      "anlass": "Nr. 43"
+    },
+    {
+      "id": "ortsdaten",
+      "ab": "klein",
+      "pfade": [
+        "server/ingest.php",
+        "server/spur_lib.php",
+        "server/api/mission.php",
+        "server/api/day.php",
+        "server/geraetehuelle_lib.php",
+        "tools/proben/ortsdaten/**",
+        "tools/proben/huelle/geraet.php",
+        "tools/proben/huelle/geraet_cli.php"
+      ],
+      "proben": [
+        "ortsdatenprobe"
       ],
       "anlass": "Nr. 43"
     },

@@ -408,13 +408,20 @@ try {
      * Vorgaenger-Regeln geschieht im Browser — er hat die Einsaetze des Tages
      * ohnehin gemeinsam vorliegen und entschluesselt sie dort, wo der Server es
      * gar nicht koennte (Konzept 4.6.1). */
-    $st = db()->prepare('SELECT id, started_at, ended_at, distance_m, final,
-                           pat_blob, start_src, dest_lat, dest_lon' . $spaltenSql . '
+    /* DIE SPALTEN AUS DEM REGISTER, Zweck `tag` (S11-04b). Bis Web 22.0.1
+     * stand die Liste hier von Hand; mit `client_ref` fuer die Bindung der
+     * Huellen wurde sie zur Handliste von zehn Spalten, und die Zaehlung
+     * (Z18, E-ZE-22) schlug zu Recht an. */
+    $st = db()->prepare('SELECT ' . mf_spalten_sql('tag') . $spaltenSql . '
                          FROM missions WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                          ORDER BY started_at');
     $st->execute([$userId, $dayId]);
     $missionZeilen = $st->fetchAll();
     $spurEinsatz = $spurLaden('mission',
+        array_map(static fn($m) => (int)$m['id'], $missionZeilen));
+    /* DIE STUECKE ALS GERAETEHUELLEN (S11-04b) — fuer den Browser, der sie
+     * oeffnet. `track` oben liest bis S11-04c weiter den Altbestand. */
+    $stueckeEinsatz = spur2_lesen_viele(db(), 'mission',
         array_map(static fn($m) => (int)$m['id'], $missionZeilen));
 
     $missions = [];
@@ -466,6 +473,8 @@ try {
             'hat_ende'   => $m['ended_at'] !== null,
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
             'track'      => $spurEinsatz[(int)$m['id']] ?? [],
+            'client_ref' => (string)$m['client_ref'],
+            'spur_stuecke' => $stueckeEinsatz[(int)$m['id']] ?? [],
             'start_src'  => $m['start_src'] !== null ? (string)$m['start_src'] : null,
             'dest_lat'   => $m['dest_lat'] !== null ? (float)$m['dest_lat'] : null,
             'dest_lon'   => $m['dest_lon'] !== null ? (float)$m['dest_lon'] : null,
@@ -496,7 +505,7 @@ try {
      * `track` BLEIBT AN SEINEM PLATZ IM OBJEKT, damit die Karte sich nicht
      * aendern muss — sie liest jetzt `.track` statt des Eintrags selbst. Der
      * Umbau ist klein und steht in `index.php` an einer Stelle. */
-    $st = db()->prepare('SELECT id, started_at, ended_at, device_id, final
+    $st = db()->prepare('SELECT id, client_ref, started_at, ended_at, device_id, final
                            FROM rest_segments
                           WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                           ORDER BY started_at');
@@ -504,6 +513,7 @@ try {
     $restZeilen = $st->fetchAll();
     $restIds  = array_map(static fn($r) => (int)$r['id'], $restZeilen);
     $spurRuhe = $spurLaden('rest', $restIds);
+    $stueckeRuhe = spur2_lesen_viele(db(), 'rest', $restIds);   // S11-04b, wie oben
 
     /* DIE GESPERRTEN BEREICHE JE SEGMENT (E-S4-53), damit die Bedienung
      * anzeigen kann, was schon herausgeschnitten ist. Ohne diese Angabe
@@ -566,8 +576,15 @@ try {
             'bis_ts'     => $ende !== null ? (int)strtotime($ende . ' UTC') : null,
             'final'      => (int)$r['final'] === 1,
             'device'     => $r['device_id'] !== null ? (int)$r['device_id'] : null,
-            'n'          => count($track),
+            /* Punkte im Klartext-Altbestand UND in den Stuecken (S11-04b) —
+             * sonst stuende ein neu angekommenes Segment als leer da. */
+            'n'          => count($track) + array_sum(array_column($stueckeRuhe[$rid] ?? [], 'punkte')),
             'track'      => $track,
+            /* S11-04b: die Stuecke als Huellen; `schnitte` darunter sind
+             * zugleich die Sperrzeiten, die der Browser beim Oeffnen
+             * ausblendet (E-S11-37). */
+            'client_ref' => (string)$r['client_ref'],
+            'spur_stuecke' => $stueckeRuhe[$rid] ?? [],
             'schnitte'   => $sn,
         ];
     }
