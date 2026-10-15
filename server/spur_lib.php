@@ -1129,8 +1129,14 @@ function spur_bytes(PDO $pdo, string $ownerType, array $ids): int
     return $summe;
 }
 
-function spur_loeschen(PDO $pdo, string $ownerType, array $ids): array
+function spur_loeschen(PDO $pdo, string $ownerType, array $ids, array $o = []): array
 {
+    /* `stuecke => false` (S11-05c, F-S11-50): nur den Klartextbestand
+     * (SPUR1) loeschen und die verschlossenen Stuecke stehen lassen. Das
+     * braucht `spur_teilen()`, das einen Altbestand umschreibt — ohne den
+     * Schalter loeschte es jedes Stueck, das inzwischen am selben Segment
+     * angekommen ist, ohne es neu zu schreiben (es kann sie nicht lesen). */
+    $mitStuecken = ($o['stuecke'] ?? true) !== false;
     $ids = array_values(array_unique(array_map('intval', $ids)));
     if (!$ids) { return ['zeilen' => 0, 'blobs' => 0]; }
     require_once __DIR__ . '/db.php';
@@ -1153,10 +1159,12 @@ function spur_loeschen(PDO $pdo, string $ownerType, array $ids): array
         $blobs += $q->rowCount();
 
         /* SPUR2 (S11-04a): Stuecke zaehlen wie Blobs — je Zeile eine Huelle. */
-        $q = $pdo->prepare("DELETE FROM track_stuecke
-                             WHERE owner_type = ? AND owner_id IN ($platz)");
-        $q->execute(array_merge([$ownerType], $block));
-        $blobs += $q->rowCount();
+        if ($mitStuecken) {
+            $q = $pdo->prepare("DELETE FROM track_stuecke
+                                 WHERE owner_type = ? AND owner_id IN ($platz)");
+            $q->execute(array_merge([$ownerType], $block));
+            $blobs += $q->rowCount();
+        }
     }
     return ['zeilen' => $zeilen, 'blobs' => $blobs];
 }
@@ -1424,12 +1432,12 @@ function spur_teilen(PDO $pdo, string $quelleTyp, int $quelleId,
         /* ERST DAS ZIEL, DANN DIE QUELLE. Bricht es dazwischen ab, steht der
          * Einsatz mit seiner Spur da und das Segment traegt sie noch —
          * doppelt, aber vollstaendig. Umgekehrt waeren die Punkte weg. */
-        spur_loeschen($pdo, $zielTyp, [$zielId]);
+        spur_loeschen($pdo, $zielTyp, [$zielId], ['stuecke' => false]);
         spur_blob_schreiben($pdo, $zielTyp, $zielId,
             spur_kodieren($zielPunkte, $zielStufe, $zielOriginal),
             $zielStufe, $zielOriginal, count($zielPunkte));
 
-        spur_loeschen($pdo, $quelleTyp, [$quelleId]);
+        spur_loeschen($pdo, $quelleTyp, [$quelleId], ['stuecke' => false]);
 
         /* AUCH WENN NICHTS BLEIBT, WIRD GESCHRIEBEN — ein Blob mit null
          * Punkten. Er kostet 21 Byte (gemessen) und traegt die
@@ -1483,10 +1491,13 @@ function spur_teilen(PDO $pdo, string $quelleTyp, int $quelleId,
  * ob er aus einer Datei kommt (dann `pruef_utc_oder_sql()`) oder aus dem
  * eigenen Programm (dann nicht).
  *
+ * `$missionId` NULL (seit S11-05c): ein GELOESCHTER Zeitraum (Nr. 161) — die
+ * Sperre gegen eine erneute Lieferung ohne Einsatz dahinter.
+ *
  * @param string|null $erstelltAm UTC `Y-m-d H:i:s`, oder null fuer „jetzt"
  */
 function schnitt_vermerken(PDO $pdo, int $userId, string $quelleTyp, int $quelleId,
-                           int $missionId, int $vonTs, int $bisTs, int $nPunkte,
+                           ?int $missionId, int $vonTs, int $bisTs, int $nPunkte,
                            ?string $erstelltAm = null): int
 {
     $wann = $erstelltAm === null ? 'UTC_TIMESTAMP()' : '?';
@@ -1663,7 +1674,10 @@ function schnitte_lesen(PDO $pdo, string $ownerType, int $ownerId): array
     $q->execute([$ownerType, $ownerId]);
     $aus = [];
     foreach ($q->fetchAll() as $r) {
-        $aus[] = ['mission_id' => (int)$r['mission_id'],
+        /* `mission_id` NULL heisst: geloescht, nicht geschnitten (S11-05c,
+         * Nr. 161). Die Sperre gilt genauso; nur gibt es keinen Einsatz, zu
+         * dem sie fuehrt, und keine Ruecknahme. */
+        $aus[] = ['mission_id' => $r['mission_id'] !== null ? (int)$r['mission_id'] : null,
                   'von_ts' => (int)$r['von_ts'], 'bis_ts' => (int)$r['bis_ts']];
     }
     return $aus;
@@ -2123,6 +2137,68 @@ function spur2_stueck_schreiben(PDO $pdo, string $ownerType, int $ownerId, int $
         if (!ist_dublettenfehler($ex)) { throw $ex; }
         return 0;
     }
+}
+
+/**
+ * Hat dieser Eigentuemer noch Punkte im KLARTEXT (SPUR1, `track_points` oder
+ * `track_blobs`)? Fuer die Schreibwege des Browsers (S11-05c): Er sieht nur
+ * die Stuecke; einen Altbestand kann er weder loeschen noch mitnehmen.
+ */
+function spur1_vorhanden(PDO $pdo, string $ownerType, int $ownerId): bool
+{
+    foreach (['track_points', 'track_blobs'] as $tab) {
+        $q = $pdo->prepare("SELECT 1 FROM `$tab` WHERE owner_type = ? AND owner_id = ? LIMIT 1");
+        $q->execute([$ownerType, $ownerId]);
+        if ($q->fetchColumn() !== false) { return true; }
+    }
+    return false;
+}
+
+/**
+ * DIE STUECKE EINES EIGENTUEMERS ERSETZEN — nur bei unveraendertem Stand
+ * (S11-05c; derselbe Tausch dient S11-07 dem Wartungslauf).
+ *
+ * Der Browser hat die Stuecke gelesen, geoeffnet, veraendert und neu
+ * verschlossen; dazwischen kann ein Geraet weitere gesendet haben. `$stand`
+ * ist die Liste `[seq_from, punkte]`, die er gelesen hat; weicht der Bestand
+ * davon ab, wird NICHTS getauscht und `false` zurueckgegeben — die Seite laedt
+ * neu und faengt von vorn an, statt ein eben angekommenes Stueck zu verlieren.
+ *
+ * NUR STUFE 1. Zusammengefuegte und ausgeduennte Stuecke (Stufe 2, 3) tragen
+ * mit `n_original` eine Marke, die ein Tausch auf Stufe 1 verloere; die gibt
+ * es erst ab S11-07, und der Wartungslauf erweitert diese Funktion dann.
+ * Bis dahin: `false` mit Grund `stufe`.
+ *
+ * Die Transaktion gehoert dem Aufrufer (`db_transaktion()`); die Zeilen
+ * werden mit `FOR UPDATE` gesperrt.
+ *
+ * @param list<array{0:int,1:int}> $stand
+ * @param list<array{seq_from:int,punkte:int,ts_von:int,ts_bis:int,huelle:string}> $neu
+ * @return array{ok:bool,grund?:string,weg?:int,neu?:int}
+ */
+function spur2_tauschen(PDO $pdo, string $ownerType, int $ownerId, array $stand, array $neu): array
+{
+    $q = $pdo->prepare('SELECT seq_from, punkte, stufe FROM track_stuecke
+                         WHERE owner_type = ? AND owner_id = ? ORDER BY seq_from FOR UPDATE');
+    $q->execute([$ownerType, $ownerId]);
+    $ist = [];
+    foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        if ((int)$r['stufe'] > SPUR2_STUFE_GERAET) { return ['ok' => false, 'grund' => 'stufe']; }
+        $ist[] = [(int)$r['seq_from'], (int)$r['punkte']];
+    }
+    $soll = array_map(static fn($x) => [(int)$x[0], (int)$x[1]], $stand);
+    usort($soll, static fn($a, $b) => $a[0] <=> $b[0]);
+    if ($ist !== $soll) { return ['ok' => false, 'grund' => 'stand']; }
+
+    $del = $pdo->prepare('DELETE FROM track_stuecke WHERE owner_type = ? AND owner_id = ?');
+    $del->execute([$ownerType, $ownerId]);
+    $weg = $del->rowCount();
+    $n = 0;
+    foreach ($neu as $st) {
+        $n += spur2_stueck_schreiben($pdo, $ownerType, $ownerId, $st['seq_from'], $st['punkte'],
+                                     $st['ts_von'], $st['ts_bis'], $st['huelle']);
+    }
+    return ['ok' => true, 'weg' => $weg, 'neu' => $n];
 }
 
 /**

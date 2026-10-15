@@ -567,8 +567,12 @@ try {
         ];
     }
 
+    /* `zeitzone` (S11-05c): Der Browser schneidet und loescht seit S11-05c
+     * selbst und rechnet Uhrzeiten des Diensttags dafuer so in Zeitpunkte um
+     * wie `pruef_ortszeit_zu_utc()` (EdFormat.ortszeitZuEpoch). */
     $antwort = ['day_id' => $dayId, 'day' => (string)$tag['day'], 'meta' => $meta,
-                'missions' => $missions, 'rest_segments' => $rest];
+                'missions' => $missions, 'rest_segments' => $rest,
+                'zeitzone' => (string)konfig('app.timezone', 'Europe/Berlin')];
     // Zustand nennen statt ihn als "nichts eingetragen" erscheinen zu lassen.
     if ($dayDeletedAt !== null) {
         $antwort['day_deleted_at'] = $dayDeletedAt;

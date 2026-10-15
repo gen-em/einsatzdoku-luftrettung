@@ -796,6 +796,33 @@ function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste 
 }
 
 /**
+ * Ein Spurstueck (SPUR2): `seq_from`, `punkte`, `ts_von`, `ts_bis` im
+ * Klartext und die Huelle. Gibt es geprueft zurueck (Huelle binaer) oder
+ * null. EINE Stelle fuer den Eingang der Geraete (`ingest.php`) und die
+ * Schreibwege des Browsers (`api/schneiden.php`, S11-05c) — dieselben
+ * Grenzen fuer beide, wie es die gemeinsame Pruefschicht verlangt.
+ *
+ * @return array{seq_from:int,punkte:int,ts_von:int,ts_bis:int,huelle:string}|null
+ */
+function pruef_spurstueck($t, string $feld = 'track', ?Pruefliste $p = null): ?array
+{
+    if (!is_array($t)) { $p?->melde($feld, 'kein Stueck'); return null; }
+    $seqFrom = (int)($t['seq_from'] ?? -1);
+    $n       = (int)($t['punkte'] ?? 0);
+    $tsVon   = (int)($t['ts_von'] ?? -1);
+    $tsBis   = (int)($t['ts_bis'] ?? -1);
+    $huelle  = pruef_huelle($t['huelle'] ?? null, GH_STUECK_MAX_BYTE, $feld . '.huelle', $p);
+    if ($seqFrom < 0 || $n < 1 || $n > LIMIT_TRACKPUNKTE_ANFRAGE
+        || $tsVon < 0 || $tsBis < $tsVon || $huelle === null) {
+        /* Keine eigene Meldung fuer die Zahlen: Der Aufrufer nennt dann
+         * „Stueck unvollstaendig" (so seit S11-04a im Eingang). */
+        return null;
+    }
+    return ['seq_from' => $seqFrom, 'punkte' => $n, 'ts_von' => $tsVon,
+            'ts_bis' => $tsBis, 'huelle' => $huelle];
+}
+
+/**
  * Mengenbegrenzung einer Liste.
  *
  * Schneidet ab und meldet. Ein stilles Abschneiden waere hier besonders

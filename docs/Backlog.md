@@ -402,7 +402,9 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      (CLAUDE.md 4), mit Rückfrage und einer Zeile im Protokoll.
      Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): S11 verlegt die
      Spurfunktionen in den Browser (Nr. 43); ein Schnitt über `spur_lib.php`
-     davor wäre dort neu zu bauen.
+     davor wäre dort neu zu bauen. **Gebaut in S11-05c** (Web 22.2.0, auf dem
+     Arbeitszweig): „Zeitraum löschen" im Schneide-Bereich; wandert mit dem
+     Abschluss von S11 nach `Backlog-Erledigt.md`.
 
 <!-- -->
 

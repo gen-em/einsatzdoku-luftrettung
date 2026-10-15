@@ -14,6 +14,53 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.2.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-05c — Schneiden, Rücknahme, ein Stück
+löschen**. Dritter von fünf Teilen von S11-05. **Mit Schema:** Migration
+`2026_10_15_loeschvermerk` — nach dem Deploy `update.php` aufrufen.
+
+### Behoben
+
+- **Schneiden ging seit S11-04 nicht mehr** (F-S11-50). Der Server verschob
+  die Punkte eines Ruhesegments selbst, und seit sie verschlossen ankommen,
+  fand er keine: Jeder Schnitt endete mit „kein einziger Punkt". Schlimmer
+  stand es bei einem Segment, das alte Klartextpunkte und neue Stücke zugleich
+  trug: Dort hätte das Verschieben die neuen Stücke still gelöscht. Jetzt
+  schneidet der Browser — er öffnet das Segment, nimmt die Punkte im
+  gewählten Zeitraum und verschließt sie als Spur des neuen Einsatzes. Das
+  Segment bleibt dabei, wie es ist, und der Zeitraum wird dort gesperrt, so
+  dass er beim Öffnen nicht mehr erscheint. Dadurch ist die Rücknahme
+  verlustfrei: Einsatz und Sperre gehen, und die Punkte waren im Segment nie
+  fort — auch dann nicht, wenn zwischendurch weitere Daten angekommen sind
+  (E-S11-47). Der Preis: Bis der Wartungslauf (S11-07) das Segment neu packt,
+  liegen die Punkte doppelt verschlüsselt, und die Punktzahl an der Zeile
+  zählt den gesperrten Zeitraum mit.
+
+### Neu
+
+- **Ein Stück einer Aufzeichnung löschen** (Backlog Nr. 161). Ein vergessener
+  Dienst zeichnet auch den Weg nach Hause auf, und bisher ließ sich das nur
+  mit dem ganzen Diensttag loswerden. Im Schneide-Bereich steht jetzt neben
+  „Einsatz erzeugen" der Knopf „Zeitraum löschen": Nach einer Rückfrage
+  verschließt der Browser die Punkte außerhalb des Zeitraums neu, und der
+  Server ersetzt die Stücke des Segments — nur, wenn sie noch so liegen, wie
+  der Browser sie gelesen hat; sonst kommt die Bitte, neu zu laden, statt
+  eben angekommene Daten zu verlieren. Hier wird wirklich gelöscht, nicht
+  gesperrt (E-S11-48). Ein Vermerk ohne Einsatz sperrt den Zeitraum gegen
+  eine erneute Lieferung, und das Protokoll bekommt eine Zeile. Die ganze
+  Aufzeichnung lässt sich so nicht löschen (dafür der Papierkorb), eine aus
+  der Zeit vor der Verschlüsselung erst nach der Umstellung.
+- `pruef_spurstueck()` — die Prüfung eines Spurstücks, jetzt an einer Stelle
+  für den Eingang der Geräte und die Schreibwege des Browsers.
+
+### Bewusst nicht
+
+- Die Sicherung nimmt einen Löschvermerk nicht mit (F-S11-52); nach dem
+  Einspielen fehlt dann nur die Sperre gegen eine erneute Lieferung, die
+  Punkte selbst sind ohnehin fort. S11-06 baut die Sicherung um.
+- Der Schneideschritt des Einspielwerkzeugs bleibt mit F-S11-43 bei S11-06.
+
 ## [Web 22.1.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-05b — Formular und Feldkatalog**. Zweiter von

@@ -982,7 +982,7 @@ async function loadDay(dayId){
       seg.track.forEach(p => bounds.push(p));
     }
   });
-  EdSchnitt.setzen(dayRest);
+  EdSchnitt.setzen(dayRest, { tag: d.day, tz: d.zeitzone });
 
   /* Welche Faehigkeiten dieser Tag auswerten laesst -- VOR
      renderMissionTable(), weil das Modul sie beim Zeichnen liest. */

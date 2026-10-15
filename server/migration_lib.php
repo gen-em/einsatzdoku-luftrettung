@@ -3645,6 +3645,26 @@ function migrationen_katalog(): array
             "ALTER TABLE missions ADD COLUMN ort_huelle MEDIUMBLOB NULL AFTER pat_blob",
         ],
     ],
+    [
+        'id'    => '2026_10_15_loeschvermerk',
+        'web'   => '22.2',
+        'label' => 'Sperrvermerk ohne Einsatz: ein geloeschtes Stueck (S11-05c, Nr. 161)',
+        /* EIN ZEITRAUM, DER GELOESCHT IST, BLEIBT GESPERRT. Seit S11-05c laesst
+         * sich aus einem Ruhesegment ein Stueck loeschen (Backlog Nr. 161): Der
+         * Browser verschliesst die uebrigen Punkte neu, der Server ersetzt die
+         * Stuecke. Eine Uhr, die ihre Marke verloren hat, koennte den Zeitraum
+         * aber erneut senden — und die geloeschten Punkte waeren wieder da. Der
+         * Sperrvermerk haelt das auf, wie beim Schnitt (E-S11-37), nur ohne
+         * Ziel: `mission_id` wird dafuer NULL-faehig. NULL heisst geloescht.
+         *
+         * NICHT ZERSTOEREND: Eine Spalte wird nur nachgiebiger. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_spalte_nullbar($pdo, 'track_cuts', 'mission_id') === true;
+        },
+        'sql'   => [
+            "ALTER TABLE track_cuts MODIFY mission_id INT UNSIGNED NULL",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

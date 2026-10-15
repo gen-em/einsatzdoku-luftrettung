@@ -25,6 +25,8 @@
  *   EdOrtsdaten.einsatzInnen(z, orte)     Innenform der Einsatzhülle
  *   EdOrtsdaten.einsatzVerschliessen(i, ref)  verschließen, Base64
  *   EdOrtsdaten.ortshoehe(punkte, phasen) Höhe des Einsatzorts (S11-05b)
+ *   EdOrtsdaten.stueckeBauen(punkte, art, ref, {neu})  Punkte → Stücke
+ *                                         (S11-05c: Schneiden, Löschen)
  *
  * REGELN BEIM ÖFFNEN (E-S11-37, Konzept 3.4): Punkt i eines Stücks hat die
  * Sequenznummer `seq_from + i`; doppelte Nummern (ein Gerät, das seine Marke
@@ -328,19 +330,72 @@
     return Math.sign(hoehe) * Math.round(Math.abs(hoehe));
   }
 
+  /** Uint8Array → Base64, in Blöcken (große Stücke sprengen sonst den Stapel). */
+  function zuB64(h) {
+    let s = '';
+    for (let i = 0; i < h.length; i += 0x8000) { s += String.fromCharCode.apply(null, h.subarray(i, i + 0x8000)); }
+    return btoa(s);
+  }
+
+  /** Rundung wie PHPs `round()`: von der Null weg. */
+  const runde = (x) => Math.sign(x) * Math.round(Math.abs(x));
+
+  /**
+   * PUNKTE ZU STÜCKEN (S11-05c) — die Gegenrichtung zu `spur()`, für die
+   * Schreibwege des Browsers: Schneiden (die Punkte im Zeitraum als Spur des
+   * neuen Einsatzes) und Löschen (die übrigen Punkte des Segments neu).
+   * Innenform wie `gh_spur_innen()` und `referenz.py`: je Punkt 14 Byte,
+   * big-endian, Höhe -32768 = keine (E-S11-39).
+   *
+   * `neu: true` nummeriert ab 0 durch (ein neuer Einsatz hat eine eigene
+   * Zählung); sonst bleiben die Sequenznummern, und ein Stück endet an jeder
+   * Lücke — Punkt i eines Stücks muss `seq_from + i` sein. Höchstens 2000
+   * Punkte je Stück (`LIMIT_TRACKPUNKTE_ANFRAGE`).
+   *
+   * @param {Array} punkte  aus `spur()`: {seq, lat, lon, ele, ts}, sortiert
+   * @returns {Promise<Array>} [{seq_from, punkte, ts_von, ts_bis, huelle}]
+   */
+  async function stueckeBauen(punkte, art, ref, o) {
+    o = o || {};
+    const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
+    if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
+    const liste = punkte.map((p, i) => Object.assign({}, p, { seq: o.neu ? i : p.seq }));
+    const gruppen = [];
+    for (const p of liste) {
+      const g = gruppen[gruppen.length - 1];
+      if (g && p.seq === g[g.length - 1].seq + 1 && g.length < 2000) { g.push(p); } else { gruppen.push([p]); }
+    }
+    const aus = [];
+    for (const g of gruppen) {
+      const tsVon = Math.min.apply(null, g.map((p) => p.ts));
+      const innen = new Uint8Array(g.length * 14);
+      const dv = new DataView(innen.buffer);
+      g.forEach((p, i) => {
+        dv.setInt32(i * 14, runde(p.lat * 1e7));
+        dv.setInt32(i * 14 + 4, runde(p.lon * 1e7));
+        dv.setInt16(i * 14 + 8, p.ele == null ? HOEHE_UNBEKANNT : runde(p.ele * 10));
+        dv.setUint32(i * 14 + 10, Math.max(0, p.ts - tsVon));
+      });
+      const platz = g[0].seq + ':' + g.length;
+      const h = await EdCrypto.geraetehuelleVerschliessen(innen, pub, art, ref, platz);
+      aus.push({ seq_from: g[0].seq, punkte: g.length, ts_von: tsVon,
+                 ts_bis: Math.max.apply(null, g.map((p) => p.ts)), huelle: zuB64(h) });
+    }
+    return aus;
+  }
+
   /** Die Einsatzhülle verschließen — mit dem öffentlichen Kontoschlüssel. */
   async function einsatzVerschliessen(innen, ref) {
     const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
     if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
     const h = await EdCrypto.geraetehuelleVerschliessen(
       new TextEncoder().encode(JSON.stringify(innen)), pub, 'einsatz', ref, '');
-    let s = '';
-    for (let i = 0; i < h.length; i += 0x8000) { s += String.fromCharCode.apply(null, h.subarray(i, i + 0x8000)); }
-    return btoa(s);
+    return zuB64(h);
   }
 
   window.EdOrtsdaten = { schluessel: schluessel, spur: spur, einsatz: einsatz,
                          fuerAnsicht: fuerAnsicht, ladeplatz: ladeplatz, melden: melden,
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
-                         einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe };
+                         einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
+                         stueckeBauen: stueckeBauen };
 })();

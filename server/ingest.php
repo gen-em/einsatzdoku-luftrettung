@@ -507,18 +507,13 @@ if ($klartext) {
 $stueck = null;
 $seqFrom = 0;
 if (isset($b['track']) && $b['track'] !== null) {
-    $t = $b['track'];
-    $seqFrom = is_array($t) ? (int)($t['seq_from'] ?? -1) : -1;
-    $nPunkte = is_array($t) ? (int)($t['punkte'] ?? 0) : 0;
-    $tsVon   = is_array($t) ? (int)($t['ts_von'] ?? -1) : -1;
-    $tsBis   = is_array($t) ? (int)($t['ts_bis'] ?? -1) : -1;
-    $huelle  = is_array($t) ? pruef_huelle($t['huelle'] ?? null, GH_STUECK_MAX_BYTE, 'track.huelle', $pruef) : null;
-    if ($seqFrom < 0 || $nPunkte < 1 || $nPunkte > LIMIT_TRACKPUNKTE_ANFRAGE
-        || $tsVon < 0 || $tsBis < $tsVon || $huelle === null) {
+    /* Die Pruefung steht seit S11-05c in `pruef_spurstueck()`, weil der
+     * Browser beim Schneiden und Loeschen dieselben Stuecke schreibt. */
+    $stueck = pruef_spurstueck($b['track'], 'track', $pruef);
+    if ($stueck === null) {
         json_out(['error' => 'payload', 'grund' => 'track: ' . ($pruef->text() ?: 'Stueck unvollstaendig')], 400);
     }
-    $stueck = ['seq_from' => $seqFrom, 'punkte' => $nPunkte, 'ts_von' => $tsVon,
-               'ts_bis' => $tsBis, 'huelle' => $huelle];
+    $seqFrom = $stueck['seq_from'];
 }
 /* Fuer die Stellen weiter unten, die nach der ANZAHL der gesendeten Punkte
  * fragen (Fortsetzungsmarke, `kept_points`). */

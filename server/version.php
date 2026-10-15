@@ -8155,5 +8155,14 @@ declare(strict_types=1);
  *   Einsatzorts (`ortshoehe`, im Browser gerechnet) liegen im `pat_blob`; Pin,
  *   Linie zur letzten Zielklinik und Suche erst nach dem Entsperren. Kein
  *   Schema.
+ * 22.2.0 — S11-05c: SCHNEIDEN IM BROWSER, EIN STUECK LOESCHEN. Seit S11-04 fand
+ *   der Server beim Schneiden keine Punkte mehr; jetzt nimmt der Browser die
+ *   Punkte des Zeitraums, verschliesst sie als Spur des neuen Einsatzes, und
+ *   das Segment bleibt, mit gesperrtem Zeitraum — die Ruecknahme ist
+ *   verlustfrei (E-S11-47). Neu: einen Zeitraum endgueltig loeschen (Nr. 161):
+ *   der Browser verschliesst den Rest neu, `spur2_tauschen()` ersetzt bei
+ *   unveraendertem Stand, ein Vermerk ohne Einsatz sperrt (E-S11-48).
+ *   `pruef_spurstueck()` fuer Eingang und Browser. Schema: Migration
+ *   `2026_10_15_loeschvermerk` (track_cuts.mission_id NULL) — update.php.
  */
-const WEB_VERSION = '22.1.0';
+const WEB_VERSION = '22.2.0';

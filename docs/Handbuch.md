@@ -1286,9 +1286,14 @@ Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
    Segments —, steht dort stattdessen **rot**, warum, und der Knopf bleibt
    gesperrt.
 
-**Die Punkte wandern, sie werden nicht kopiert.** Nach dem Schnitt liegt die
-Fahrt beim Einsatz und **nicht mehr** im Ruhesegment. Das ist gewollt: Sonst
-zeigte die Ruhezeit später eine Fahrt über 40 km.
+**Die Punkte wandern.** Nach dem Schnitt liegt die Fahrt beim Einsatz und
+erscheint **nicht mehr** im Ruhesegment. Das ist gewollt: Sonst zeigte die
+Ruhezeit später eine Fahrt über 40 km. Seit Web 22.2.0 schneidet dein
+Browser — die GPS-Daten sind verschlüsselt, und nur er kann sie öffnen. Du
+musst dafür entsperrt sein; sonst fragt die Anwendung zuerst nach dem
+Passwort. Im Ruhesegment ist der Zeitraum danach gesperrt und wird nicht
+mehr gezeigt; die Punktzahl an der Zeile zählt ihn trotzdem noch mit, bis die
+Aufzeichnung einmal neu gepackt ist.
 
 **Was danach noch fehlt:** Einsatzort, Alter und Diagnose. Die sind
 verschlüsselt und können nur im Browser entstehen — der geschnittene Einsatz
@@ -1296,7 +1301,8 @@ ist zunächst ein Einsatz mit Zeiten, Phasen und GPS-Daten. Öffne ihn und trag 
 Rest wie gewohnt nach (Abschnitt 4.3).
 
 **Rückgängig** steht an derselben Segmentzeile, neben einer Plakette mit dem
-geschnittenen Zeitraum. Es holt die Punkte zurück und löscht den Einsatz.
+geschnittenen Zeitraum. Es löscht den Einsatz, und der Zeitraum gehört
+wieder zum Ruhesegment.
 
 > **Es geht nur, solange am Einsatz nichts hängt.** Hast du inzwischen
 > Einsatzort, Diagnose, eine abweichende Besatzung oder eine Reanimation
@@ -1317,6 +1323,34 @@ geschnittenen Zeitraums kommt normal an; die Aufzeichnung läuft über den
 Schnitt hinweg weiter, und ein Dienst, der um 09:30 geschnitten wurde, zeichnet
 um 09:31 weiter auf. Nimmst du den Schnitt zurück, ist auch die Sperre wieder
 weg.
+
+#### Ein Stück einer Aufzeichnung löschen
+
+*Seit Web 22.2.0.*
+
+Ein vergessener Dienst zeichnet weiter auf — auch den Weg nach Hause. Solche
+GPS-Daten willst du nicht behalten, den echten Dienst daneben aber schon.
+Dafür steht im selben aufgeklappten Bereich neben „Einsatz erzeugen" der rote
+Knopf **„Zeitraum löschen"**:
+
+1. **„Schneiden"** an der Zeile des Segments, Beginn und Ende des Zeitraums
+   eintragen — wie beim Schneiden.
+2. **„Zeitraum löschen"**. Die Anwendung fragt nach und nennt, wie viele
+   Punkte zwischen welchen Uhrzeiten wegfallen.
+3. Nach **„Löschen"** sind diese Punkte **endgültig** fort; es gibt kein
+   Rückgängig. Die übrigen Punkte bleiben, die Punktzahl an der Zeile sinkt.
+   Im Protokoll steht eine Zeile dazu.
+
+Der gelöschte Zeitraum bleibt **gesperrt**: Sendet ein Gerät ihn noch einmal,
+kommt er nicht zurück. Ein paar Grenzen:
+
+- **Die ganze Aufzeichnung** lässt sich so nicht löschen — dafür ist der
+  Papierkorb da (den Diensttag löschen, Abschnitt 8).
+- **Aufzeichnungen aus der Zeit vor der Verschlüsselung** lassen sich erst
+  nach der Umstellung des Servers stückweise löschen; die Anwendung sagt es.
+- **Kommen gerade neue GPS-Daten an**, während du löschst, tut die Anwendung
+  nichts und bittet dich, die Seite neu zu laden — sonst ginge das Neue
+  verloren.
 
 ### 4.1c GPX-Datei importieren
 

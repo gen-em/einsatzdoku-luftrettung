@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a und -05b erledigt** (15.10.2026, Web 22.1.0); als Nächstes S11-05c.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); als Nächstes S11-05d.*
 
 ---
 
@@ -15,6 +15,7 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
 | **Der Kartendialog im Formular mit Spur, die Luftlinie zur „letzten Zielklinik" (Einsatz- und Tagesansicht), der Filter „Transportziel" der Suche und die Kachel „Höchster Einsatzort" der Zeitraumübersicht** (S11-05b). | Die Ortsdatenprobe fährt Formular, Einsatzansicht und Blob, aber nicht diese vier Wege; sie sind gelesen, nicht gemessen. Bilderlauf und Bedienprobe, die sie berührten, sind bis S11-10 rot (E-S11-41). | P-S11-18 bis -20; S11-10 (Bilderlauf grün). |
+| **Schneiden und Löschen an einem Segment mit Klartextpunkten oder mit Stücken der Stufe 2/3; eine teilweise überlappende Nachlieferung nach dem Löschen** (S11-05c). | Altbestand-Segmente zeigt die Tagesansicht nicht zum Schneiden (`n` = 0); Stufe 2/3 gibt es erst ab S11-07. Die Probe liefert nach dem Löschen nur das ganze Stück erneut (Dublette), nicht ein teilweise überlappendes. | S11-07 (Stufen), S11-10 (Altbestand); die Abweisungen `409 altbestand` und `409 stufe` sind gelesen, nicht gemessen. |
 | **Das Einspielwerkzeug des Referenzbestands** über das Formular (F-S11-43). | Es bedient das Formular noch im alten Format; seit 22.1.0 lehnt das Formular das ab. Der volle Einspiellauf gehört nicht zum Prüfstand. | Beim nächsten Neuaufbau einer Anlage: Abbruch in der Stufe „nachtragen". Behoben in S11-06. |
 | **Ob Einsatz und Diensttag dieselbe Karte zeigen wie vor S11-04, und wie schnell** (Abnahme von S11-04: Bilderlauf, Messung gegen S11-01). **Bedienprobe, Stilvergleich, Bilderlauf und GPX-Probe sind im Prüfstand rot** seit S11-04c. | Der Prüfbestand (Demo, Referenz) liegt bis zum Einmalwerkzeug im Klartext; ohne Übergang (E-S11-36) zeigen die Ansichten dort keine Karte, eine Messung hätte nichts geöffnet. Die BetreiberIn hat rote Berichte bis S11-10 angenommen und ein Vorab-Werkzeug abgelehnt (E-S11-41). | S11-10 (Bilderlauf, die vier Proben wieder grün) und S11-11 (Messung, E-S11-26). Bleibt eine davon dort rot, ist es ein Befund und keine Folge von E-S11-41 mehr. |
 | **Wie der Ladeplatz bei Drossel 6× aussieht und ob V1 die Zeit verkürzt.** | Aus demselben Grund; die Ortsdatenprobe öffnet zehn Punkte, nicht einen Bestand. | S11-11. |
@@ -168,6 +169,17 @@ das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 | Prüfstand, erster Lauf | 8 rot: dazu `vollstaendigkeit` (drei Ankerklassen ohne Eintrag), `bestand` (Design-Tabelle der Symbole nicht neu erzeugt), `kreislauf-edbak` (Datenverlust beim Einspielen, F-S11-48), `messstand` (F-S11-49) | behoben bzw. erklärt; `kreislauf.py --art edbak` danach 346 763 Einzelvergleiche, 0 unerklärt |
 | Prüfstand, zweiter Lauf | Bedienprobe, Stilvergleich, Bilderlauf, GPX-Probe und — neu — Messstand rot (E-S11-41, F-S11-49) | Bericht in der Commit-Nachricht |
 
+### S11-05c Schneiden, Rücknahme, ein Stück löschen (15.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `proben.sh ortsdaten` Schritt 13 | Zweites Ruhesegment, 10 Punkte je Minute; Zeitraum 4. bis 6. Minute über die Bedienung der Tagesansicht. **Schnitt:** Einsatz `origin = schnitt`, `cut-`+16 Hex, 2 verschlossene Punkte, 1 Vermerk; Stücke des Segments Byte für Byte (MD5) unverändert; Einsatzansicht zeigt 2 Punkte; Tagesansicht zeigt 8 von 10. **Rücknahme** über den Knopf: Einsatz, Stücke, Vermerk 0/0/0, Segment unverändert. **Gegenprobe:** gültige Stücke mit falschem Stand → „neu laden", nichts getauscht. **Löschen** mit Rückfrage: Segment 8 Punkte, Vermerk mit `mission_id` NULL, 1 Protokollzeile. **Gegenprobe:** dasselbe Paket noch einmal über `ingest.php` → weiter 8 Punkte | 8 ok |
+| Ortsdatenprobe gesamt | Schritte 1 bis 14 | 47 ok, 0 fehlen |
+| `tools/proben/spur/probe.php` | `spur_teilen()` mit dem neuen Schalter, Altbestand | 45 Erwartungen, 0 nicht erfüllt |
+| `proben.sh ingest` | Eingang mit `pruef_spurstueck()` | 97 Erwartungen, 0 nicht erfüllt |
+| `spaltenregister/wegprobe.py` | Schnitt mit eigenem verschlossenem Stück (3 Punkte), INSERT aus dem Register | 34 Erwartungen, 0 nicht erfüllt |
+| `migrationsregister.php` | `2026_10_15_loeschvermerk` eingetragen, auf der Anlage angewendet | 0 Befunde |
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
@@ -193,6 +205,8 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-18 | nach dem Merge auf Staging | Einen Einsatz mit Reanimation im Formular öffnen — einmal gesperrt (abmelden, anmelden, nicht entsperren), einmal entsperrt; eine Phasenzeit ändern, speichern | gesperrt: Reanimationskarte mit Schloss, Felder gesperrt, „Speichern" bietet zuerst das Entsperren an; entsperrt: Reanimation steht da, nach dem Speichern in der Ansicht unverändert, Phasenorte auf der Karte wie vorher | gespeichert ohne Entsperren, Reanimation fehlt nach dem Speichern, oder rote Meldung „ließen sich im Browser nicht gleich rechnen" |
 | P-S11-19 | nach dem Merge auf Staging | Einen Einsatz mit Zielklinik samt Koordinate öffnen, dann den folgenden mit Abfahrt „Letzte Zielklinik" ohne GPS-Aufzeichnung; in der Suche nach der Zielklinik filtern | Klinik-Pin und Zeile „Transportziel" (Schloss) erst nach dem Entsperren; Luftlinie beginnt an der Klinik des Vorgängers; Filter findet den Einsatz nur entsperrt | Pin ohne Entsperren sichtbar, Luftlinie fehlt, Filter leer trotz Entsperren |
 | P-S11-20 | nach dem Merge auf Staging | Formular eines Einsatzes mit GPS-Aufzeichnung, Einsatzort leer, Pin-Knopf → „Auf der Karte wählen" | Die Spur steht im Dialog, die Karte passt sich ihr an | Dialog ohne Spur (F-S11-42 nicht behoben) |
+| P-S11-21 | nach dem Merge auf Staging (nach `update.php`) | Einen Diensttag mit Ruhezeit nach einer echten Uhrfahrt öffnen, entsperren; „Schneiden", einen Zeitraum wählen, „Einsatz erzeugen"; danach „Schnitt zurücknehmen" | Einsatz mit Spur entsteht, im Segment fehlt der Zeitraum; nach der Rücknahme ist der Zeitraum wieder da, der Einsatz weg | Meldung „kein einziger Punkt" trotz Aufzeichnung, Spur am Einsatz leer, oder nach der Rücknahme fehlen Punkte |
+| P-S11-22 | nach dem Merge auf Staging | Im Schneide-Bereich einen Zeitraum wählen, „Zeitraum löschen", die Rückfrage bestätigen; Betrieb → Protokoll, Reiter Verwaltung | Die Punkte des Zeitraums sind fort, die Punktzahl sinkt, Protokollzeile „GPS-Daten eines Ruhesegments gelöscht" | Punkte noch da, keine Rückfrage, oder „neu laden", obwohl nichts ankam |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen, einmal neu koppeln, einen Probeeinsatz aufzeichnen und senden | Einsatz im Web mit Karte nach dem Entsperren | Uhr zeigt „Neu koppeln" weiter oder parkt |

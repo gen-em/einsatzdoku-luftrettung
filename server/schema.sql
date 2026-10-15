@@ -878,7 +878,7 @@ CREATE TABLE track_cuts (
   user_id      INT UNSIGNED NOT NULL,
   owner_type   ENUM('mission','rest') NOT NULL,   -- Quelle des Schnitts
   owner_id     INT UNSIGNED NOT NULL,
-  mission_id   INT UNSIGNED NOT NULL,             -- Ziel: der geschnittene Einsatz
+  mission_id   INT UNSIGNED NULL,                 -- Ziel: der geschnittene Einsatz; NULL = geloescht (S11-05c)
   von_ts       BIGINT NOT NULL,
   bis_ts       BIGINT NOT NULL,
   n_punkte     INT UNSIGNED NOT NULL,             -- gewanderte Punkte, fuer die Rueckmeldung
@@ -1191,4 +1191,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- users.kp_* stehen oben schon im Schema (S11-03).
   ('2026_10_13_kontopaar', 'skipped'),
   -- track_stuecke und missions.ort_huelle stehen oben schon im Schema (S11-04a).
-  ('2026_10_13_ortshuellen', 'skipped');
+  ('2026_10_13_ortshuellen', 'skipped'),
+  -- track_cuts.mission_id ist oben schon NULL-faehig (S11-05c).
+  ('2026_10_15_loeschvermerk', 'skipped');

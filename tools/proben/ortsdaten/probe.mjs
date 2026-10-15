@@ -34,7 +34,12 @@
  *      gesetzt und gespeichert, Klartextspalten leer, in keiner Antwort des
  *      Servers im Klartext, in der Ansicht nach dem Entsperren; Höhe aus der
  *      Spur zur Phase 5; „ambulant" speichert kein Ziel
- *  13. eine Einsatzhülle, in der Datenbank um ein Byte verändert, geht nicht
+ *  13. Schneiden, Rücknahme und ein Stück löschen in der Tagesansicht
+ *      (S11-05c): der Einsatz bekommt verschlossene Stücke, das Segment bleibt
+ *      unberührt und gesperrt; die Rücknahme gibt alles frei; das Löschen
+ *      schreibt das Segment ohne den Zeitraum neu, sperrt ihn und
+ *      protokolliert; Gegenproben: veralteter Stand, erneute Lieferung
+ *  14. eine Einsatzhülle, in der Datenbank um ein Byte verändert, geht nicht
  *      auf: die Ansicht sagt es, und der Reiter System hat eine Meldung mit
  *      Art, Kennung und Grund — ohne Inhalt (S11-04d, M-S11-01 d); das
  *      Formular verweigert dann das Speichern
@@ -104,6 +109,13 @@ const einsatz = {
   track: { seq_from: 0, points: spurA } };
 const nachtrag = { kind: 'mission', client_ref: 'm-ortsdaten-1', day: tag, day_ref: 'd-ortsdaten-1',
   started_at: iso(jetzt), final: false, track: { seq_from: 5, points: spurB } };
+/* Ein zweites Ruhesegment für Schneiden und Löschen (S11-05c): zehn Punkte,
+   einer je Minute, damit ein Zeitraum aus Uhrzeiten eindeutig Punkte trifft. */
+const ruhe2Punkte = Array.from({ length: 10 }, (_, s) =>
+  [47.70 + s * 0.001, 10.30 + s * 0.001, 700 + s, jetzt + 1000 + s * 60]);
+const ruhe2 = { kind: 'rest_segment', client_ref: 'r-ortsdaten-2', day: tag, day_ref: 'd-ortsdaten-1',
+  started_at: iso(jetzt + 990), ended_at: iso(jetzt + 1600), final: true,
+  track: { seq_from: 0, points: ruhe2Punkte } };
 const ruhe = { kind: 'rest_segment', client_ref: 'r-ortsdaten-1', day: tag, day_ref: 'd-ortsdaten-1',
   started_at: iso(jetzt - 600), ended_at: iso(jetzt - 10), final: true,
   track: { seq_from: 0, points: punkte(20) } };
@@ -139,7 +151,7 @@ try {
   php(`db()->prepare("INSERT INTO devices (user_id, device_id, api_key_hash, label, active, geraet_art, geraet_modell)
        VALUES (?,?,?,?,1,'uhr','fēnix 6 Pro')")->execute([${id}, '${devId}', geraet_schluessel_hash('${devKey}'), 'Ortsdatenprobe']);`);
   const pakete = JSON.parse(execFileSync('php', [join(WURZEL, 'tools/proben/huelle/geraet_cli.php')],
-    { input: JSON.stringify({ sec1, pakete: [einsatz, nachtrag, ruhe] }), encoding: 'utf8' }));
+    { input: JSON.stringify({ sec1, pakete: [einsatz, nachtrag, ruhe, ruhe2] }), encoding: 'utf8' }));
   const antworten = [];
   for (const p of pakete) {
     antworten.push(await s.evaluate(async ([k, d, key]) => {
@@ -149,10 +161,11 @@ try {
     }, [p, devId, devKey]));
   }
   pruefe(antworten.every(a => a.code === 200 && a.daten && a.daten.ok),
-         '2  drei Pakete angenommen (Einsatz, Nachtrag, Ruhesegment)',
+         '2  vier Pakete angenommen (Einsatz, Nachtrag, zwei Ruhesegmente)',
          antworten.map(a => `${a.code}/${a.daten && a.daten.stored_points}`).join(' '));
   const mid = Number(antworten[0].daten && antworten[0].daten.id);
   const rid = Number(antworten[2].daten && antworten[2].daten.id);
+  const rid2 = Number(antworten[3].daten && antworten[3].daten.id);
   const dayId = Number(php(`echo (int)db()->query("SELECT day_id FROM missions WHERE id = ${mid}")->fetchColumn();`));
   /* Ein Schnitt im Ruhesegment: die mittleren Punkte gesperrt (E-S11-37). */
   php(`db()->prepare("INSERT INTO track_cuts (user_id, owner_type, owner_id, mission_id, von_ts, bis_ts, n_punkte, erstellt_am)
@@ -270,8 +283,8 @@ try {
     zeilen: document.querySelectorAll('.spur-zeile').length,
     lade: [...document.querySelectorAll('.ladeplatz')].filter(e => !e.hidden).length,
   }));
-  pruefe(e8.linien >= 2 && e8.zeilen === 2 && e8.lade === 0,
-         '8  tag_spuren.php: zwei Zeilen, zwei Linien, kein Ladeplatz', JSON.stringify(e8));
+  pruefe(e8.linien >= 3 && e8.zeilen === 3 && e8.lade === 0,
+         '8  tag_spuren.php: drei Zeilen, drei Linien, kein Ladeplatz', JSON.stringify(e8));
   /* 9 — die Zeitrechnung des Browsers gegen PHP (S11-05b). Fälle: ein
    * Sommertag, beide Zeitumstellungen direkt und über „+1 Tag". */
   const faelle = [['2026-07-01', '23:50', 0], ['2026-07-01', '00:10', 1], ['2026-03-29', '02:30', 0],
@@ -471,7 +484,94 @@ try {
   pruefe(!amb12.transport_dest && amb12.ortshoehe === hoeheSoll, '12 „ambulant": kein Ziel im Blob, Höhe bleibt',
          JSON.stringify(amb12).slice(0, 70));
 
-  /* 13 — eine verdorbene Einsatzhülle: das letzte Byte (Prüfwert) gekippt */
+  /* 13 — Schneiden, Rücknahme, ein Stück löschen (S11-05c). Zeitraum: die
+   * Minute des vierten bis die des sechsten Punkts; erwartet sind die Punkte,
+   * deren Zeit in [Minutenanfang 4., Minutenanfang 6.] liegt — gerechnet wie
+   * der Server aus „HH:MM". */
+  const hhmm = t => new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit',
+    minute: '2-digit', hour12: false }).format(new Date(t * 1000));
+  const von13 = ruhe2Punkte[3][3] - (ruhe2Punkte[3][3] % 60);
+  const bis13 = ruhe2Punkte[5][3] - (ruhe2Punkte[5][3] % 60);
+  const soll13 = ruhe2Punkte.filter(p => p[3] >= von13 && p[3] <= bis13).length;
+  const stand13 = () => php(`echo json_encode(db()->query("SELECT seq_from, punkte, MD5(huelle) h FROM track_stuecke
+    WHERE owner_type = 'rest' AND owner_id = ${rid2} ORDER BY seq_from")->fetchAll(PDO::FETCH_NUM));`);
+  const segVorher = stand13();
+  const tagAuf = async () => {
+    await s.goto(`${BASIS}/index.php?d=${dayId}`, { waitUntil: 'networkidle' });
+    await s.click(`[data-schnitt-auf="${rid2}"]`);
+    await s.fill(`#s-beg-${rid2}`, hhmm(von13));
+    await s.fill(`#s-end-${rid2}`, hhmm(bis13));
+    await s.dispatchEvent(`#s-end-${rid2}`, 'input');
+  };
+  await tagAuf();
+  await Promise.all([s.waitForSelector('[data-schnittmeldung]', { timeout: 60000 }).catch(() => null),
+                     s.click('[data-schneiden]')]);
+  const schnitt13 = JSON.parse(php(`echo json_encode(db()->query("SELECT m.id, m.origin, m.client_ref,
+    (SELECT COALESCE(SUM(punkte), 0) FROM track_stuecke WHERE owner_type = 'mission' AND owner_id = m.id) p,
+    (SELECT COUNT(*) FROM track_cuts WHERE mission_id = m.id) v
+    FROM missions m WHERE m.user_id = ${id} AND m.origin = 'schnitt'")->fetchAll(PDO::FETCH_ASSOC));`));
+  const cut = schnitt13[0] || {};
+  pruefe(schnitt13.length === 1 && Number(cut.p) === soll13 && Number(cut.v) === 1 && /^cut-[0-9a-f]{16}$/.test(cut.client_ref),
+         '13 Schnitt: Einsatz mit verschlossenen Stücken, ein Vermerk', `${cut.p} von ${soll13} Punkten, ${JSON.stringify(cut).slice(0, 60)}`);
+  pruefe(stand13() === segVorher, '13 Schnitt: das Segment bleibt Byte für Byte, wie es war', '');
+  await s.goto(`${BASIS}/einsatz.php?id=${cut.id}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => typeof M !== 'undefined' && M.spur_punkte, null, { timeout: 30000 }).catch(() => null);
+  const e13 = await s.evaluate(() => (typeof M !== 'undefined' && M.spur_punkte) ? M.spur_punkte.length : -1);
+  pruefe(e13 === soll13, '13 geschnittener Einsatz zeigt seine Spur', `${e13} Punkte`);
+  await s.goto(`${BASIS}/index.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction((r) => (typeof dayRest !== 'undefined') && dayRest.some(x => x.id === r && x.track.length),
+                          rid2, { timeout: 30000 }).catch(() => null);
+  const gesperrt13 = await s.evaluate((r) => dayRest.find(x => x.id === r).track.length, rid2);
+  pruefe(gesperrt13 === 10 - soll13, '13 Tagesansicht: der Zeitraum fehlt im Ruhesegment', `${gesperrt13} von 10`);
+  /* Rücknahme über den Knopf am Segment */
+  await Promise.all([s.waitForSelector('[data-schnittmeldung]', { timeout: 60000 }).catch(() => null),
+                     s.click(`[data-rueck="${cut.id}"]`)]);
+  const rueck13 = php(`echo (int)db()->query("SELECT COUNT(*) FROM missions WHERE id = ${cut.id}")->fetchColumn()
+    . '/' . (int)db()->query("SELECT COUNT(*) FROM track_stuecke WHERE owner_type = 'mission' AND owner_id = ${cut.id}")->fetchColumn()
+    . '/' . (int)db()->query("SELECT COUNT(*) FROM track_cuts WHERE owner_type = 'rest' AND owner_id = ${rid2}")->fetchColumn();`);
+  pruefe(rueck13 === '0/0/0' && stand13() === segVorher, '13 Rücknahme: Einsatz, Stücke, Vermerk fort; Segment unverändert', rueck13);
+  /* Gegenprobe: ein veralteter Stand wird nicht getauscht — gültige
+   * Stücke, aber ein Stand, den es so nicht gibt. */
+  await s.goto(`${BASIS}/index.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction((r) => (typeof dayRest !== 'undefined') && dayRest.some(x => x.id === r && x.track.length),
+                          rid2, { timeout: 30000 }).catch(() => null);
+  const alt13 = await s.evaluate(async (r) => {
+    const seg = dayRest.find(x => x.id === r.id);
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    const k = await EdOrtsdaten.schluessel(ck);
+    const pk = await EdOrtsdaten.spur(seg.spur_stuecke, 'ruhe', seg.client_ref, [], k);
+    const rest = pk.filter(p => p.ts < r.von || p.ts > r.bis);
+    const stuecke = await EdOrtsdaten.stueckeBauen(rest, 'ruhe', seg.client_ref);
+    const a = await EdApi.postJson('api/schneiden.php', { action: 'loeschen', rest_id: r.id, beginn: r.b,
+      ende: r.e, beginn_tag: 0, ende_tag: 0, stand: [[0, 3]], geloescht: pk.length - rest.length, stuecke });
+    return { ok: a.ok, meldung: a.meldung, status: a.status };
+  }, { id: rid2, b: hhmm(von13), e: hhmm(bis13), von: von13, bis: bis13 });
+  pruefe(!alt13.ok && /neu laden/.test(String(alt13.meldung)) && stand13() === segVorher,
+         '13 Gegenprobe: veralteter Stand → nichts getauscht', String(alt13.meldung || '').slice(0, 60));
+  /* Löschen mit Rückfrage */
+  await tagAuf();
+  await s.click('[data-zeitraum-loeschen]');
+  await s.locator('dialog[open] [data-act="yes"]').click({ timeout: 30000 });
+  await s.waitForSelector('[data-schnittmeldung]', { timeout: 60000 }).catch(() => null);
+  const nach13 = JSON.parse(php(`echo json_encode(['p' => (int)db()->query("SELECT COALESCE(SUM(punkte),0) FROM track_stuecke
+    WHERE owner_type = 'rest' AND owner_id = ${rid2}")->fetchColumn(),
+    'v' => db()->query("SELECT mission_id IS NULL n, n_punkte FROM track_cuts WHERE owner_type = 'rest' AND owner_id = ${rid2}")->fetchAll(PDO::FETCH_ASSOC),
+    'log' => (int)db()->query("SELECT COUNT(*) FROM protokoll_ereignisse WHERE art = 'spur_stueck_geloescht' AND betroffen_user_id = ${id}")->fetchColumn()]);`));
+  pruefe(nach13.p === 10 - soll13 && nach13.v.length === 1 && String(nach13.v[0].n) === '1' && nach13.log === 1,
+         '13 Löschen: Segment neu ohne den Zeitraum, Löschvermerk, Protokollzeile', JSON.stringify(nach13));
+  /* Gegenprobe: dieselbe Lieferung noch einmal — die Punkte kommen nicht zurück */
+  const neu13 = JSON.parse(execFileSync('php', [join(WURZEL, 'tools/proben/huelle/geraet_cli.php')],
+    { input: JSON.stringify({ sec1, pakete: [ruhe2] }), encoding: 'utf8' }))[0];
+  await s.evaluate(async ([k, d, key]) => fetch('ingest.php', { method: 'POST', body: JSON.stringify(k),
+    headers: { 'Content-Type': 'application/json', 'X-Device-Id': d, 'X-Api-Key': key } }), [neu13, devId, devKey]);
+  await s.goto(`${BASIS}/index.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction((r) => (typeof dayRest !== 'undefined') && dayRest.some(x => x.id === r && x.track.length),
+                          rid2, { timeout: 30000 }).catch(() => null);
+  const wieder13 = await s.evaluate((r) => dayRest.find(x => x.id === r).track.length, rid2);
+  pruefe(wieder13 === 10 - soll13, '13 Gegenprobe: erneute Lieferung bringt die gelöschten Punkte nicht zurück',
+         `${wieder13} Punkte sichtbar`);
+
+  /* 14 — eine verdorbene Einsatzhülle: das letzte Byte (Prüfwert) gekippt */
   php(`db()->exec("UPDATE missions SET ort_huelle = CONCAT(LEFT(ort_huelle, LENGTH(ort_huelle) - 1),
        CHAR(ASCII(RIGHT(ort_huelle, 1)) ^ 1)) WHERE id = ${mid}");`);
   /* Der Topf `kontopaar` zählt je Adresse, fünf in der Stunde — dieselbe
@@ -488,13 +588,13 @@ try {
     fehlerkasten: document.querySelectorAll('[data-ortsdaten="fehler"]').length,
     lade: [...document.querySelectorAll('.ladeplatz')].filter(e => !e.hidden).length,
   }));
-  pruefe(e9.fehlerkasten === 1 && e9.lade === 0, '13 verdorbene Hülle: die Ansicht sagt es, kein Ladeplatz',
+  pruefe(e9.fehlerkasten === 1 && e9.lade === 0, '14 verdorbene Hülle: die Ansicht sagt es, kein Ladeplatz',
          JSON.stringify(e9));
   const zeile = php(`$st = db()->prepare("SELECT text FROM protokoll_ereignisse WHERE id > ? AND reiter = 'system'
     AND text LIKE 'ortsdaten:%'"); $st->execute([${vorher}]); echo json_encode($st->fetchAll(PDO::FETCH_COLUMN));`);
   pruefe(antwort && antwort.status() === 200 && /Einsatz \d+, einsatz, Grund pruefwert/.test(zeile)
          && JSON.parse(zeile).length === 1,
-         '13 Reiter System: eine Meldung mit Art, Kennung und Grund', zeile.slice(0, 80));
+         '14 Reiter System: eine Meldung mit Art, Kennung und Grund', zeile.slice(0, 80));
   /* … und das Formular speichert dann nicht (es ersetzte sonst die Hülle). */
   await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
   await s.waitForSelector('#ortfehler', { timeout: 30000 }).catch(() => null);
@@ -503,7 +603,7 @@ try {
   await s.waitForTimeout(1500);
   const huelleNach = php(`echo md5((string)db()->query("SELECT ort_huelle FROM missions WHERE id = ${mid}")->fetchColumn());`);
   pruefe(/einsatz_form\.php/.test(s.url()) && huelleVor === huelleNach && await s.locator('#ortfehler').count() === 1,
-         '13 Formular mit verdorbener Hülle: Speichern gesperrt, Hülle unverändert', s.url().replace(BASIS, ''));
+         '14 Formular mit verdorbener Hülle: Speichern gesperrt, Hülle unverändert', s.url().replace(BASIS, ''));
   pruefe(fehler.length === 0, '   keine Skriptfehler in der Seite', fehler.join(' | ').slice(0, 80));
   await kontext.close();
 } catch (e) {

@@ -381,7 +381,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      viermal erweitert (AP2, AP9, AP10, AP11)
 │   ├── site_elevation_lib.php
 │   │                       Höhe über dem Einsatzort (`site_ele_m`) — seit
-│   │                       Web 22.1.0 nur noch für Schneiden, GPX-Einlesen,
+│   │                       Web 22.2.0 nur noch für GPX-Einlesen und
 │   │                       Sicherung; die Regel rechnet sonst der Browser
 │   │                       (`EdOrtsdaten.ortshoehe()`, 4.99s)
 │   ├── betrieb_updates.php  Betrieb → Updates (S8/AP2): Wartungsmodus,
@@ -1000,7 +1000,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 5d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
-| `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
+| `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz (seit Web 22.2.0 NULL-fähig: NULL = ein gelöschter Zeitraum, Backlog Nr. 161), `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der die Protokollseite filtert; Wort und Ton dazu im Katalog `PROTOKOLL_ARTEN`), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Die Seite Verwaltung → Protokoll (seit Web 20.39.0) liest sie zusammen mit fünf weiteren Tabellen, der Job `protokoll_archiv` archiviert sie. Siehe 4.99g |
 | `konto_einwilligungen` | Welche Fassung eines Rechtstextes dieses Konto angenommen hat (seit Web 20.19.0, P5b/AP4). `(user_id, schluessel)` als Primärschlüssel — **eine Zeile je Konto und Dokument, nicht je Annahme**; eine neue überschreibt die alte. `stand_am` ist die **angenommene** Fassung, der Vergleich gegen `rechtstexte.stand_am` ist die ganze Prüfung. Der Verlauf steht im Protokoll und überlebt dort die Kontolöschung; `ON DELETE CASCADE` ist hier richtig, weil eine Einwilligung ohne Konto keinen Gegenstand hat. Siehe 4.99j |
 | `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **In die Komplettsicherung geht sie seit Web 20.39.0 ohne Zeilen** (`KOMP_OHNE_ZEILEN` in `komplett_lib.php`, P5c/AP2): nur das Schema, damit ein Einspielen die Tabelle anlegt. Die 30-Tage-Frist gilt damit auch für jeden Abzug. *Hier stand bis Web 21.1.0, sie liege in **jeder** Komplettsicherung, weil `komp_tabellen()` keine Ausnahmeliste habe — das stimmte bis Web 20.38.x.* Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **Töpfen mit Leiter** (`'leiter' => true` in `RATE_GRENZEN`; seit Web 20.42.0 sieben, mit `totp`) — die übrigen sperren ohne Protokollzeile. *Hier stand „fünf" und „neun"; seit Web 20.11.0 waren es sechs mit Leiter, gezählt am 24.09.2026* |
@@ -5037,6 +5037,46 @@ nicht gelöst: Die **Spur** des Einsatzes liegt im Ruhesegment, in dem das
 Gerät zu der Zeit aufgezeichnet hat. Das Schneidewerkzeug holt sie dort
 heraus.
 
+> **Seit Web 22.2.0 (S11-05c, E-S11-47, -48) schneidet der Browser, und das
+> Segment bleibt.** Der Server sieht die Punkte eines Segments nicht mehr
+> (`track_stuecke`, 4.99s); seit S11-04 fand `spur_teilen()` dort keine und
+> antwortete „kein einziger Punkt" (F-S11-50). Jetzt öffnet `schneiden.js`
+> das Segment ohne seine Sperrzeiten, nimmt die Punkte in [von, bis] — den
+> Zeitraum rechnet es wie `pruef_ortszeit_zu_utc()` über
+> `EdFormat.ortszeitZuEpoch()` — und verschließt sie mit
+> `EdOrtsdaten.stueckeBauen()` als Spur des neuen Einsatzes (Art `spur`,
+> Kennung `cut-` + 16 Hex, die der Browser vergibt). `api/schneiden.php`
+> prüft die Stücke (`pruef_spurstueck()`, jedes ganz im Zeitraum), legt
+> Einsatz, Phasen und Stücke an und vermerkt den Zeitraum am Segment — **die
+> Stücke des Segments bleiben unberührt**; beim Öffnen fallen die Punkte im
+> gesperrten Zeitraum weg (E-S11-37). Damit ist die Rücknahme verlustfrei:
+> Einsatz, seine Stücke und der Vermerk gehen, sonst nichts. Die doppelt
+> liegenden verschlossenen Punkte fallen erst, wenn der Wartungslauf (S11-07)
+> das Segment neu packt. **Preis:** Die Punktzahl an der Segmentzeile zählt
+> den gesperrten Zeitraum bis dahin mit.
+>
+> **`spur_teilen()` bleibt für den Altbestand** — die Rücknahme eines
+> Schnitts aus der Zeit vor S11 verschiebt dessen Klartextpunkte zurück.
+> `spur_loeschen()` hat dafür seit 22.2.0 den Schalter `['stuecke' => false]`:
+> Ohne ihn löschte `spur_teilen()` jedes verschlossene Stück, das inzwischen am
+> selben Segment angekommen war (F-S11-50).
+>
+> **Ein Stück löschen (Backlog Nr. 161, Aktion `loeschen`).** Endgültig: Der
+> Browser verschließt die Punkte **außerhalb** des Zeitraums neu (Art `ruhe`,
+> Kennung des Segments, ihre Sequenznummern bleiben; ein Stück endet an jeder
+> Lücke), schickt den gelesenen Stand `[[seq_from, punkte], …]` mit, und
+> `spur2_tauschen()` ersetzt die Stücke nur, wenn sie noch so liegen (`FOR
+> UPDATE`; sonst `409 stand`). Ein Vermerk **ohne Einsatz** (`track_cuts.
+> mission_id` NULL, Migration `2026_10_15_loeschvermerk`) sperrt den Zeitraum
+> gegen eine erneute Lieferung. Abgewiesen werden: ein Segment mit
+> Klartextpunkten (`409 altbestand`, bis S11-10), das Löschen aller Punkte
+> (`409 alles`, dafür der Papierkorb), Stücke der Stufe 2 oder 3 (`409 stufe`,
+> bis S11-07). Eine Zeile im Protokoll (`spur_stueck_geloescht`, Reiter
+> Verwaltung). **Grenze:** Die Sicherung nimmt Vermerke über ihren Einsatz mit
+> und einen Löschvermerk deshalb nicht (F-S11-52, S11-06).
+>
+> Was unten steht, beschreibt den Weg bis Web 22.1.0.
+
 #### Die Punkte wandern
 
 `spur_teilen($pdo, $quelleTyp, $quelleId, $zielTyp, $zielId, $vonTs, $bisTs)`
@@ -5142,11 +5182,13 @@ Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei Phasenzeiten
 
 | Aktion | Nutzlast | tut |
 |---|---|---|
-| `schneiden` | `rest_id`, `beginn`, `ende` (`hh:mm`), `beginn_tag`/`ende_tag`, `phasen` | legt den Einsatz an, verschiebt die Punkte, vermerkt den Schnitt |
-| `rueckgaengig` | `mission_id` | gibt die Punkte zurück, löscht Vermerk und Einsatz |
+| `schneiden` | `rest_id`, `beginn`, `ende` (`hh:mm`), `beginn_tag`/`ende_tag`, `phasen`; seit 22.2.0 `client_ref`, `stuecke` | legt den Einsatz an, legt seine Stücke ab, vermerkt den Schnitt |
+| `rueckgaengig` | `mission_id` | löscht Vermerk, Stücke und Einsatz; Klartextpunkte eines alten Schnitts gehen zurück |
+| `loeschen` (seit 22.2.0) | `rest_id`, Zeitraum wie oben, `stand`, `stuecke`, `geloescht` | ersetzt die Stücke des Segments ohne den Zeitraum, Löschvermerk, Protokollzeile |
 
 Der Einsatz entsteht auf dem **Bestandsweg** — virtuelles Gerät
-`manual-<userId>`, `origin = 'manual'`, `uhr_gesperrt = 1`, `client_ref` mit Präfix
+`manual-<userId>`, `origin = 'schnitt'` (seit Web 14.0.0; hier stand bis
+22.2.0 noch `'manual'`), `uhr_gesperrt = 1`, `client_ref` mit Präfix
 `cut-`, wörtlich wie in `einsatz_form.php`. Daran hängt, ob er durch
 Backup, Export und Papierkorb kommt (R24), und ob `ingest.php` seine Phasen
 später noch anfasst. Alles läuft in **einer** Transaktion; `spur_teilen()`
@@ -8763,8 +8805,8 @@ ein vorhandener Wert. Sobald der Blob steht, leert das Formular `transport_dest`
 Tages-, Zeitraumansicht und Suche lesen sie nach dem Entsperren aus dem Blob.
 Für „letzte Zielklinik" geht der Blob des Vorgängers mit (`start_prev_blob`),
 wie bei `prev_site`. `ingest.php` und das Formular rufen `compute_site_elevation()`
-nicht mehr auf; Schneiden, GPX-Einlesen und Sicherung tun es noch, bis
-S11-05c, -05d und S11-06 sie umbauen. **Kein Übergang** (E-S11-42): Der
+nicht mehr auf, seit 22.2.0 auch das Schneiden nicht; GPX-Einlesen und
+Sicherung tun es noch, bis S11-05d und S11-06 sie umbauen. **Kein Übergang** (E-S11-42): Der
 Altbestand zeigt bis S11-10 kein Transportziel und keine Höhe.
 
 **Kein Schema.** Die Spalten bleiben bis zur Aufräumauslieferung.

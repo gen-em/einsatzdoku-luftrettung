@@ -114,10 +114,28 @@ def teil_schnitt(s, uid: int) -> None:
     hh, mm = (int(x) for x in beginn.split(":"))
     bis = hh * 60 + mm + 20
     ende = f"{bis // 60:02d}:{bis % 60:02d}"
+    # SEIT S11-05c SCHNEIDET DER BROWSER: Er schickt die Punkte des Zeitraums
+    # als verschlossene Stuecke mit, gebunden an die Kennung des neuen
+    # Einsatzes. Die Probe misst den INSERT aus dem Register, nicht die
+    # Auswahl der Punkte; sie verschliesst deshalb drei eigene Punkte im
+    # Zeitraum mit derselben Geraetehilfe wie die uebrigen Proben.
+    import base64
+    import secrets
+    ref = "cut-" + secrets.token_hex(8)
+    von = int(treffer[0]["von_ts"])
+    paket = {"kind": "mission", "client_ref": ref, "started_at": "", "track": {
+        "seq_from": 0, "points": [[47.7, 10.3, 700.0, von + 60 * i] for i in (1, 2, 3)]}}
+    umbau = subprocess.run(
+        ["php", str(WURZEL / "tools" / "proben" / "huelle" / "geraet_cli.php")],
+        input=json.dumps({"sec1": base64.b64encode(s.kontoschluessel()).decode("ascii"),
+                          "pakete": [paket]}),
+        capture_output=True, text=True, check=True)
+    stueck = json.loads(umbau.stdout)[0]["track"]
     a = s.json_post("api/schneiden.php", {
         "action": "schneiden", "rest_id": int(seg["id"]),
         "beginn": beginn, "ende": ende, "beginn_tag": 0, "ende_tag": 0,
         "phasen": {"3": beginn, "4": ende},
+        "client_ref": ref, "stuecke": [stueck],
     })
     pruefe("HTTP-Code des Schnitts", a.status_code, 200)
     if a.status_code != 200:
@@ -132,7 +150,7 @@ def teil_schnitt(s, uid: int) -> None:
     pruefe("user_id",                    int(z["user_id"]), uid)
     pruefe("day_id",                     int(z["day_id"]), int(seg["day_id"]))
     pruefe("keine verworfenen Angaben",  o.get("rejected") or [], [])
-    pruefe("GPS-Punkte gewandert",       int(o.get("genommen", 0)) > 0, True)
+    pruefe("GPS-Punkte gewandert",       int(o.get("genommen", 0)), 3)
     dev = sql(f"SELECT device_id FROM devices WHERE id = {int(z['device_id'])}")[0]
     pruefe("Geraet ist das virtuelle",   dev["device_id"].startswith("manual-"), True)
     # Gegenprobe: Der Schnitt fuellt KEINE Einsatzfelder. Stuende hier etwas,
