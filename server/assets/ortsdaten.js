@@ -20,6 +20,11 @@
  *   EdOrtsdaten.melden(e, art, id)        eine Hülle, die nicht aufging, an
  *                                         den Reiter System (S11-04d); die
  *                                         Art aus dem Fehler geht vor
+ *   EdOrtsdaten.einsatzZeiten(e)          die Zeiten des Formulars, wie der
+ *                                         Server sie rechnet (S11-05b)
+ *   EdOrtsdaten.einsatzInnen(z, orte)     Innenform der Einsatzhülle
+ *   EdOrtsdaten.einsatzVerschliessen(i, ref)  verschließen, Base64
+ *   EdOrtsdaten.ortshoehe(punkte, phasen) Höhe des Einsatzorts (S11-05b)
  *
  * REGELN BEIM ÖFFNEN (E-S11-37, Konzept 3.4): Punkt i eines Stücks hat die
  * Sequenznummer `seq_from + i`; doppelte Nummern (ein Gerät, das seine Marke
@@ -175,6 +180,167 @@
       .catch(() => {});
   }
 
+  /**
+   * DIE ZEITEN DES FORMULARS, IM BROWSER GERECHNET (S11-05b, E-S11-45).
+   *
+   * Warum hier: Die Reanimation steht nur in der Einsatzhülle, und die
+   * verschließt der Browser; ihre Zeiten (Sekunden seit Einsatzbeginn,
+   * E-S11-40) muss er deshalb selbst rechnen. Die Regeln sind die von
+   * `einsatz_form.php` beim Speichern, Zeile für Zeile:
+   *   - Phasen: Nummer 2 bis 9, eine Zeile ohne Zeit zählt nicht; sortiert
+   *     nach Nummer, bei gleicher Nummer nach Eingabereihenfolge.
+   *   - Tageswechsel nur beim Nachtragen: Liegt die erste Phase vor dem
+   *     Dienstbeginn, gehört der Einsatz zum Folgetag.
+   *   - Mitternacht: Liegt eine Phase vor der vorigen, ein Tag weiter.
+   *   - Reanimation: Beginn nie vor dem Einsatzbeginn, jedes Ereignis nie
+   *     vor dem vorigen — sonst Folgetag.
+   * Die Phasenzeiten gehen im Klartext mit, und der Server vergleicht sie
+   * mit seiner Rechnung: Laufen die beiden je auseinander, wird nichts
+   * gespeichert, statt eine Hülle mit verschobenen Zeiten abzulegen.
+   *
+   * @param {object} e  { tag, neu, dienstbeginn ('HH:MM'|null), tz,
+   *                      phasen: [[nr, 'HH:MM'], …],
+   *                      reas: [{ start, ev: [{ typ, zeit }] }],
+   *                      grenzen: { sitzungen, ereignisse }, arten: {…} }
+   * @returns {{ fehler: string|null, tag: string, phasen: number[][],
+   *             beginn: number|null, rea: object[] }}
+   */
+  function einsatzZeiten(e) {
+    const aus = { fehler: null, tag: e.tag, phasen: [], beginn: null, rea: [] };
+    const minuten = (w) => {
+      const m = /^(\d{1,2}):(\d{2})$/.exec(String(w || '').trim());
+      return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+    };
+    const zeit = (hhmm, versatz) => EdFormat.ortszeitZuEpoch(aus.tag, hhmm, versatz, e.tz);
+    const gesammelt = [];
+    (e.phasen || []).forEach(([nr, t], idx) => {
+      t = String(t || '').trim();
+      nr = parseInt(nr, 10);
+      if (t === '' || !(nr >= 2 && nr <= 9)) { return; }
+      gesammelt.push({ nr: nr, t: t, idx: idx });
+    });
+    gesammelt.sort((a, b) => (a.nr - b.nr) || (a.idx - b.idx));
+    const erst = gesammelt.length ? minuten(gesammelt[0].t) : null;
+    const grenze = e.dienstbeginn != null ? minuten(e.dienstbeginn) : null;
+    if (e.neu && erst !== null && grenze !== null && erst < grenze) {
+      const d = new Date(aus.tag + 'T00:00:00Z');
+      d.setUTCDate(d.getUTCDate() + 1);
+      aus.tag = d.toISOString().slice(0, 10);
+    }
+    let vorher = null, versatz = 0;
+    for (const z of gesammelt) {
+      let ts = zeit(z.t, versatz);
+      if (ts !== null && vorher !== null && ts < vorher) { versatz += 1; ts = zeit(z.t, versatz); }
+      if (ts === null) { aus.fehler = 'Ungültige Uhrzeit in den Phasen.'; return aus; }
+      aus.phasen.push([z.nr, ts]);
+      vorher = ts;
+    }
+    if (!aus.phasen.length) { aus.fehler = 'Mindestens eine Phase mit Uhrzeit eintragen.'; return aus; }
+    aus.beginn = aus.phasen[0][1];
+
+    const reas = e.reas || [];
+    if (reas.length > e.grenzen.sitzungen) {
+      aus.fehler = 'Zu viele Reanimationen (höchstens ' + e.grenzen.sitzungen + ').';
+      return aus;
+    }
+    const reaZeit = (hhmm, nichtVor) => {
+      const ts = zeit(hhmm, 0);
+      if (ts === null) { return null; }
+      return ts < nichtVor ? zeit(hhmm, 1) : ts;
+    };
+    for (const s of reas) {
+      const start = String(s.start || '').trim();
+      const getippt = (s.ev || []).map((x) => [String(x.typ || '').trim(), String(x.zeit || '').trim()])
+        .filter((x) => x[1] !== '');
+      if (start === '' && !getippt.length) { continue; }
+      if (start === '') { aus.fehler = 'Zu einer Reanimation fehlt der Reanimationsbeginn.'; return aus; }
+      if (getippt.length > e.grenzen.ereignisse) {
+        aus.fehler = 'Zu viele Ereignisse in einer Reanimation (höchstens ' + e.grenzen.ereignisse + ').';
+        return aus;
+      }
+      const rStart = reaZeit(start, aus.beginn);
+      if (rStart === null) { aus.fehler = 'Ungültige Uhrzeit beim Reanimationsbeginn.'; return aus; }
+      let vor = rStart;
+      const ereignisse = [];
+      for (const [art, t] of getippt) {
+        if (!Object.prototype.hasOwnProperty.call(e.arten, art) || art === 'beginn') {
+          aus.fehler = 'Unbekannte Art eines Reanimationsereignisses.';
+          return aus;
+        }
+        const ts = reaZeit(t, vor);
+        if (ts === null) { aus.fehler = 'Ungültige Uhrzeit bei einem Reanimationsereignis.'; return aus; }
+        ereignisse.push({ art: art, t: ts - aus.beginn });
+        vor = ts;
+      }
+      aus.rea.push({ t: rStart - aus.beginn, ereignisse: ereignisse });
+    }
+    return aus;
+  }
+
+  /**
+   * Die Innenform der Einsatzhülle (E-S11-40) aus gerechneten Zeiten und den
+   * Orten der Phasen. `orte` ist eine Liste {phase, lat, lon} in der
+   * bisherigen Reihenfolge; je Phasennummer wird der Reihe nach vergeben —
+   * dieselbe Regel wie beim Rückimport (`api/import_commit.php`): Wer eine
+   * Zeit ändert, behält den Ort seiner Phase.
+   */
+  function einsatzInnen(z, orte) {
+    const vorrat = new Map();
+    (orte || []).forEach((o) => {
+      if (!vorrat.has(o.phase)) { vorrat.set(o.phase, []); }
+      vorrat.get(o.phase).push(o);
+    });
+    const phasen = z.phasen.map(([nr, ts]) => {
+      const o = (vorrat.get(nr) || []).shift();
+      return { phase: nr, t: ts - z.beginn,
+               lat: o && o.lat != null ? Number(o.lat) : null,
+               lon: o && o.lon != null ? Number(o.lon) : null };
+    });
+    return { fassung: 1, phasen: phasen, rea: z.rea };
+  }
+
+  /**
+   * DIE HÖHE DES EINSATZORTS (S11-05b) — die Regel von
+   * `compute_site_elevation()` (`site_elevation_lib.php`), die der Server
+   * seit S11 nicht mehr rechnen kann, weil er die Spur nicht sieht:
+   *   - Bezug: die früheste Phase 5, sonst die früheste Phase 6;
+   *   - Wert: die Höhe des zeitlich nächsten Punkts, höchstens 300 s
+   *     entfernt, und er muss selbst eine haben — kein Ausweichen auf
+   *     Nachbarn; gerundet wie PHPs `round()` (von der Null weg).
+   *   - Liefert `null`, wenn es keinen gibt. Ob ein vorhandener Wert dann
+   *     stehen bleibt (ausgedünnte Spur), entscheidet der Aufrufer.
+   * @param {Array} punkte  aus `spur()`: {ts, ele}
+   * @param {Array} phasen  [[nr, ts], …]
+   */
+  function ortshoehe(punkte, phasen) {
+    let bezug = null;
+    for (const nr of [5, 6]) {
+      const t = phasen.filter((p) => p[0] === nr).map((p) => p[1]).sort((a, b) => a - b);
+      if (t.length) { bezug = t[0]; break; }
+    }
+    if (bezug === null) { return null; }
+    let abstand = Infinity, hoehe = null;
+    for (const p of punkte || []) {
+      const d = Math.abs(p.ts - bezug);
+      if (d < abstand) { abstand = d; hoehe = p.ele; }
+    }
+    if (hoehe == null || abstand > 300) { return null; }
+    return Math.sign(hoehe) * Math.round(Math.abs(hoehe));
+  }
+
+  /** Die Einsatzhülle verschließen — mit dem öffentlichen Kontoschlüssel. */
+  async function einsatzVerschliessen(innen, ref) {
+    const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
+    if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
+    const h = await EdCrypto.geraetehuelleVerschliessen(
+      new TextEncoder().encode(JSON.stringify(innen)), pub, 'einsatz', ref, '');
+    let s = '';
+    for (let i = 0; i < h.length; i += 0x8000) { s += String.fromCharCode.apply(null, h.subarray(i, i + 0x8000)); }
+    return btoa(s);
+  }
+
   window.EdOrtsdaten = { schluessel: schluessel, spur: spur, einsatz: einsatz,
-                         fuerAnsicht: fuerAnsicht, ladeplatz: ladeplatz, melden: melden };
+                         fuerAnsicht: fuerAnsicht, ladeplatz: ladeplatz, melden: melden,
+                         einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
+                         einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe };
 })();

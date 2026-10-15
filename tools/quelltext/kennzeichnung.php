@@ -153,6 +153,21 @@ function kz_pruefen(string $form, string $lese, string $ui, array $katalog, stri
                                  preg_match("~'titel'\s*=>\s*'" . preg_quote($wert, '~') . "'~", $a)
                                  && preg_match("~'geschuetzt'\s*=>\s*true~", $a)),
                 'dt'      => (bool)preg_match('~\bzeile\([^;]*?\bdtGeschuetzt\(\s*\'' . preg_quote($wert, '~') . '\'\s*\)~s', $text),
+                /* Seit S11-05b (Anlass: Nr. 43): das Ortsfeld eines Katalogfelds
+                 * im Blob — das Formular zeichnet es mit Variablen
+                 * (`'geschuetzt' => $pat`), nicht mit einem Literal. */
+                'katalogort' => ($katalog[$wert]['store'] ?? null) === 'pat'
+                             && ($katalog[$wert]['type'] ?? '') === 'loc'
+                             && (bool)preg_match('~\$pat\s*=\s*!mf_ist_spalte\(\s*\$f\s*\)~', $text)
+                             && (bool)array_filter(kz_arrays($text, 'ui_ortsfeld'), fn($a) =>
+                                    preg_match("~'geschuetzt'\s*=>\s*\\\$pat~", $a)),
+                /* Ein von Hand gesetzter Kartentitel mit dem Zeichen (S11-05b,
+                 * die Reanimation der Leseansicht). */
+                'titel'   => (bool)preg_match('~<h2 class="karte-titel">\s*' . preg_quote($wert, '~')
+                                 . '\s*<\?=\s*ui_symbol\(\s*\'schloss\'~', $text),
+                /* Das Feld gibt es an dieser Stelle nicht (die Ortshoehe wird
+                 * gerechnet, nicht eingegeben). */
+                'keins'   => true,
                 'katalog' => ($katalog[$wert]['store'] ?? null) === 'pat'
                              && (bool)preg_match('~\bdtGeschuetzt\(\s*PAT_KAT\[\w+\]\.label\s*\)~', $text)
                              && (bool)preg_match('~PAT_KAT\s*=\s*<\?=\s*json_js\(\s*mf_pat_felder\(\)\s*\)~', $text),

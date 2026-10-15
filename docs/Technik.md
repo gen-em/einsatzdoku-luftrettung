@@ -380,7 +380,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      Server, Backups, Plattform, Sicherheit. In P5a
 │   │                      viermal erweitert (AP2, AP9, AP10, AP11)
 │   ├── site_elevation_lib.php
-│   │                       Höhe über dem Einsatzort (`site_ele_m`)
+│   │                       Höhe über dem Einsatzort (`site_ele_m`) — seit
+│   │                       Web 22.1.0 nur noch für Schneiden, GPX-Einlesen,
+│   │                       Sicherung; die Regel rechnet sonst der Browser
+│   │                       (`EdOrtsdaten.ortshoehe()`, 4.99s)
 │   ├── betrieb_updates.php  Betrieb → Updates (S8/AP2): Wartungsmodus,
 │   │                       ausstehende Migrationen mit Vorschau und Lauf,
 │   │                       ausgeführte Migrationen, Fassung
@@ -2063,8 +2066,9 @@ ist.
 Hunderttausende Koordinaten. Die Karte der Zeitraumansicht (Einsatzort-Pins)
 nutzt stattdessen die Koordinaten im `pat_blob`, die der Browser für die
 Tabellenspalten ohnehin entschlüsselt — keine zweite Entschlüsselung, keine
-Serveränderung nötig. Zusätzlich liefert die API `winch_cycles` und
-`site_ele_m` je Einsatz (Grundlage der Statistiktabelle) sowie `tage` neu aus
+Serveränderung nötig. Zusätzlich liefert die API `winch_cycles` je Einsatz
+(Grundlage der Statistiktabelle; `site_ele_m` stand bis Web 22.1.0 daneben und
+liegt seither als `ortshoehe` im `pat_blob`) sowie `tage` neu aus
 der `days`-Tabelle statt `COUNT(DISTINCT day)` aus `missions` — zählt also
 auch einsatzfreie Diensttage mit (Divisor der Durchschnittswerte). Gezählt
 werden **Zeilen, nicht Kalendertage**: Zwei Dienste an einem Tag sind seit
@@ -2194,7 +2198,8 @@ gerettet hat (Konzept, Berichtigung B6).
 
 Seit Web 6.2.0 führt der Index zusätzlich `transport_mode`, `na_escort` und
 `false_alarm` — die Klartextfelder der Etappe 2, **soweit die Suche sie
-auswertet**. `dest_lat`/`dest_lon` und `start_src` bleiben draußen: Nach einer
+auswertet**. *(`transport_dest` stand bis Web 22.1.0 ebenfalls hier; seither
+liegt es im `pat_blob`, und die Suche liest es nach dem Entsperren.)* `dest_lat`/`dest_lon` und `start_src` bleiben draußen: Nach einer
 Koordinate oder nach der Herkunft eines Abfahrtorts wird nicht gefiltert, und
 der Index führt grundsätzlich nur, was die Suche auch benutzt.
 
@@ -5595,7 +5600,9 @@ Einsatzansicht erst seit dieser Fassung eine beschriftete Zeile.
 > von selbst aus jedem `SELECT`, `INSERT` und `UPDATE` auf `missions`, und
 > `mf_pat_felder()` ist die eine Liste, aus der Formular, Anzeige und Suche
 > schöpfen. Ein weiteres solches Feld (S11: Zielklinik) braucht nur den
-> Katalogeintrag.
+> Katalogeintrag. *(Seit Web 22.1.0 ist es da: `transport_dest`, als erstes
+> Ortsfeld im Blob — `{addr, lat, lon}` wie `loc`; dazu `ortshoehe`, gerechnet
+> und ohne Katalogeintrag, 4.99s.)*
 >
 > **Der Altbestand zieht beim Entsperren um** — `api/pat_anheben.php`, siehe
 > Abschnitt 4.98d. Ein Konto, das sich nie entsperrt, behält seinen Klartext
@@ -5828,7 +5835,7 @@ hängt daran — und mit ihr, ob sie im Klartext steht:
 | Regel | Quelle | Sichtbarkeit | Wer löst auf |
 |---|---|---|---|
 | `base` | `days.base_lat/base_lon` (eingefroren) | Klartext | Server |
-| `prev_dest` | `dest_lat/dest_lon` des Vorgängers | Klartext | Server |
+| `prev_dest` | Transportziel des Vorgängers (`pat_blob.transport_dest`, seit Web 22.1.0) | verschlüsselt | Browser |
 | `prev_site` | Einsatzort des Vorgängers | verschlüsselt | Browser |
 | `manual` | `pat_blob.start` | verschlüsselt | Browser |
 
@@ -8714,6 +8721,53 @@ Altbestand im Klartext zeigt bis S11-10 keine Karte. Die Anfrage startet
 `assets/vorladen.js` schon im Kopf (V1, `EdVorladen.holen()`).
 
 **Nach dem Deploy:** `update.php` (Migration `2026_10_13_ortshuellen`).
+
+#### Das Formular schreibt die Einsatzhülle (ab Web 22.1.0, S11-05b)
+
+*E-S11-45, -46; F-S11-02, -41 bis -46.* Bis Web 22.0.4 sah das
+Einsatzformular die Reanimation im Klartext (`rea[…]`) und schrieb sie in
+`resus_sessions`; die Phasen ersetzte es ohne Koordinaten. Seit 22.1.0:
+
+- **Der Browser rechnet die Zeiten und verschließt.** `EdOrtsdaten.einsatzZeiten()`
+  bildet die Zeitregeln des Formulars nach (Sortierung nach Phasennummer,
+  Tageswechsel beim Nachtragen, Mitternacht, Reanimation nie vor ihrem Bezug),
+  `EdFormat.ortszeitZuEpoch()` die Umrechnung von `local_to_utc()` samt deren
+  Eigenheiten an der Zeitumstellung. `einsatzInnen()` legt die Orte der Phasen
+  dazu — je Phasennummer der Reihe nach, wie beim Rückimport —, und
+  `einsatzVerschliessen()` verschließt mit dem öffentlichen Kontoschlüssel.
+  Die Felder der Reanimation haben keinen `name` mehr.
+- **Der Wächter.** Der Browser schickt seine Phasenzeiten (`ort_phasen`, Klartext
+  wie die Phasen selbst) mit; weichen sie von der Rechnung des Servers ab, wird
+  nichts gespeichert und im Reiter System gemeldet (Bereich `ortsdaten`).
+- **Ohne Schlüssel kein Speichern.** Die Hülle muss bei jedem Speichern neu
+  verschlossen werden; das Formular verlangt das Entsperren vor dem Absenden.
+  Geht die vorhandene Hülle nicht auf, ist Speichern gesperrt — es ersetzte sie
+  sonst durch eine ohne Orte und Reanimation.
+- **Der Altbestand zieht beim Speichern um** — dasselbe Muster wie `PAT_ALT`:
+  Phasenorte (`mission_phases.lat/lon`) und Reanimation (`resus_*`) eines
+  Einsatzes ohne Hülle gehen dem Formular mit, der Browser legt sie in die
+  Hülle, der Server löscht die Zeilen.
+- **Die Kennung eines neuen Einsatzes** vergibt der Server beim Aufbau der Seite
+  (`man-` und 16 Hexziffern), weil die Hülle an `client_ref` gebunden ist und vor
+  der Zeile entsteht.
+
+**Transportziel, Zielkoordinate und Höhe des Einsatzorts liegen im `pat_blob`**
+(R78, E-S11-12). `transport_dest` trägt `'store' => 'pat'` und liegt als
+`{addr, lat, lon}` im Blob; `ortshoehe` (ganze Meter) ist kein Katalogfeld,
+sondern gerechnet: `EdOrtsdaten.ortshoehe()` bildet `compute_site_elevation()`
+nach (früheste Phase 5, sonst 6; nächster Punkt höchstens 300 s entfernt, mit
+Höhe), beim Speichern im Formular; ohne Spur oder auf einer ausgedünnten bleibt
+ein vorhandener Wert. Sobald der Blob steht, leert das Formular `transport_dest`,
+`dest_lat`, `dest_lon` und `site_ele_m`. `api/mission.php`, `api/day.php`,
+`api/range.php` und `api/suchindex.php` liefern die vier nicht mehr; Einsatz-,
+Tages-, Zeitraumansicht und Suche lesen sie nach dem Entsperren aus dem Blob.
+Für „letzte Zielklinik" geht der Blob des Vorgängers mit (`start_prev_blob`),
+wie bei `prev_site`. `ingest.php` und das Formular rufen `compute_site_elevation()`
+nicht mehr auf; Schneiden, GPX-Einlesen und Sicherung tun es noch, bis
+S11-05c, -05d und S11-06 sie umbauen. **Kein Übergang** (E-S11-42): Der
+Altbestand zeigt bis S11-10 kein Transportziel und keine Höhe.
+
+**Kein Schema.** Die Spalten bleiben bis zur Aufräumauslieferung.
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 

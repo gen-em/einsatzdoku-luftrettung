@@ -1772,8 +1772,15 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
          * Wenn P8 die Spalte entfernt (R60), faellt dieser Eintrag mit ihr —
          * und mit ihm die Faehigkeit, eine 10er-Datei vollstaendig
          * einzuspielen. Das gehoert dann ausdruecklich entschieden. */
+        /* `transport_dest` AUS DEMSELBEN GRUND (S11-05b, F-S11-48). Seit es
+         * im `pat_blob` liegt, sagt mf_ist_spalte() nein, und jede
+         * Sicherungsdatei traegt die Zielklinik bis S11-06 noch im Klartext
+         * in dieser Spalte — ohne diesen Eintrag verloere das Einspielen sie
+         * still. Ihre Koordinaten laufen oben ueber mf_ort_spalten() mit. Das
+         * Formular nimmt sie beim naechsten Speichern in den Blob; den Umbau
+         * der Sicherung selbst macht S11-06. */
         $extraCols = array_merge($extraCols,
-                                 ['start_src', 'pat_blob', 'notes', 'created_at']);
+                                 ['start_src', 'pat_blob', 'notes', 'transport_dest', 'created_at']);
 
         foreach (($data['missions'] ?? []) as $m) {
             if (!is_array($m)) { $stats['missions_skipped']++; $grund['aufbau']++; continue; }

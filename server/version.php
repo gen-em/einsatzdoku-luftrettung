@@ -8145,5 +8145,15 @@ declare(strict_types=1);
  *   Datenbank ist. Die Messung gegen S11-01 rueckt nach S11-10/-11
  *   (E-S11-41): Ohne verschlossenen Pruefbestand haette sie nichts gemessen.
  *   Kein Schema.
+ * 22.1.0 — S11-05b: DAS FORMULAR SCHREIBT DIE EINSATZHUELLE. Phasenorte und
+ *   Reanimation verschliesst der Browser beim Speichern im Formular; die Zeiten
+ *   rechnet er wie der Server (`EdOrtsdaten.einsatzZeiten()`,
+ *   `EdFormat.ortszeitZuEpoch()`), und der Server vergleicht die Phasenzeiten
+ *   und speichert nur bei Gleichheit. Speichern verlangt das Entsperren. Der
+ *   Altbestand eines Einsatzes zieht beim Speichern in die Huelle um.
+ *   Transportziel samt Koordinate (`'store' => 'pat'`) und die Hoehe des
+ *   Einsatzorts (`ortshoehe`, im Browser gerechnet) liegen im `pat_blob`; Pin,
+ *   Linie zur letzten Zielklinik und Suche erst nach dem Entsperren. Kein
+ *   Schema.
  */
-const WEB_VERSION = '22.0.4';
+const WEB_VERSION = '22.1.0';

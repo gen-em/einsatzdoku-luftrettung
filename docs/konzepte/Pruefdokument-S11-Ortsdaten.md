@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); als Nächstes S11-05.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a und -05b erledigt** (15.10.2026, Web 22.1.0); als Nächstes S11-05c.*
 
 ---
 
@@ -14,6 +14,8 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **Der Kartendialog im Formular mit Spur, die Luftlinie zur „letzten Zielklinik" (Einsatz- und Tagesansicht), der Filter „Transportziel" der Suche und die Kachel „Höchster Einsatzort" der Zeitraumübersicht** (S11-05b). | Die Ortsdatenprobe fährt Formular, Einsatzansicht und Blob, aber nicht diese vier Wege; sie sind gelesen, nicht gemessen. Bilderlauf und Bedienprobe, die sie berührten, sind bis S11-10 rot (E-S11-41). | P-S11-18 bis -20; S11-10 (Bilderlauf grün). |
+| **Das Einspielwerkzeug des Referenzbestands** über das Formular (F-S11-43). | Es bedient das Formular noch im alten Format; seit 22.1.0 lehnt das Formular das ab. Der volle Einspiellauf gehört nicht zum Prüfstand. | Beim nächsten Neuaufbau einer Anlage: Abbruch in der Stufe „nachtragen". Behoben in S11-06. |
 | **Ob Einsatz und Diensttag dieselbe Karte zeigen wie vor S11-04, und wie schnell** (Abnahme von S11-04: Bilderlauf, Messung gegen S11-01). **Bedienprobe, Stilvergleich, Bilderlauf und GPX-Probe sind im Prüfstand rot** seit S11-04c. | Der Prüfbestand (Demo, Referenz) liegt bis zum Einmalwerkzeug im Klartext; ohne Übergang (E-S11-36) zeigen die Ansichten dort keine Karte, eine Messung hätte nichts geöffnet. Die BetreiberIn hat rote Berichte bis S11-10 angenommen und ein Vorab-Werkzeug abgelehnt (E-S11-41). | S11-10 (Bilderlauf, die vier Proben wieder grün) und S11-11 (Messung, E-S11-26). Bleibt eine davon dort rot, ist es ein Befund und keine Folge von E-S11-41 mehr. |
 | **Wie der Ladeplatz bei Drossel 6× aussieht und ob V1 die Zeit verkürzt.** | Aus demselben Grund; die Ortsdatenprobe öffnet zehn Punkte, nicht einen Bestand. | S11-11. |
 | **Die Browserliste gegen `CompressionStream`** (E-S11-21). | Es gibt keine Liste in `docs/Technik.md`, und S11-04 packt nicht (F-S11-38). | Im ersten Paket, in dem der Browser packt. |
@@ -152,6 +154,20 @@ Ergebnis: Die Packstufe spart keine Zeit (F-S11-40); V5 entfällt (E-S11-44).
 zwischen zwei Läufen sind Rauschen (F-S11-22). Für die Entscheidung genügt
 das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 
+### S11-05b Formular und Feldkatalog (15.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `proben.sh ortsdaten` Schritt 9 | `EdFormat.ortszeitZuEpoch()` gegen `local_to_utc()` — Sommertag, beide Zeitumstellungen direkt und über „+1 Tag", Jahreswechsel, zwei ungültige Eingaben | 11 Fälle, 0 abweichend |
+| … Schritt 10 | Formular öffnet die Hülle (1 Reanimation, 2 Ereignisse, kein Feld mit `name`); unverändert gespeichert → Phasenorte und Reanimation gleich, 0 Klartextzeilen; **Gegenprobe**: Phasenzeiten auf dem Weg um 60 s verfälscht → Meldung, Hülle unverändert; Altbestand (2 Phasenorte, 1 Reanimation im Klartext) → in der Hülle, 0 Klartextzeilen | 5 ok |
+| … Schritt 11 | Nachtrag mit Reanimation: `client_ref` `man-`+16 Hex, Hülle da, 0 Zeilen in `resus_sessions`, Reanimation 10:05 in der Ansicht | 1 ok |
+| … Schritt 12 | Transportziel gesetzt, Phase 5 ergänzt: Spalten `transport_dest`, `dest_lat`, `dest_lon`, `site_ele_m` NULL; Blob `transport_dest` {addr, lat, lon}; `ortshoehe` = Höhe des nächsten gesendeten Punkts (679 m); „Klinikum Probe" weder in `api/mission.php` noch im Markup von `einsatz.php`; in der Ansicht nach dem Entsperren; „ambulant" → kein Ziel im Blob, Höhe bleibt | 6 ok |
+| Ortsdatenprobe gesamt | Schritte 1 bis 13 | 39 ok, 0 fehlen |
+| `kennzeichnung.php` | Sollliste um Transportziel, Reanimation, Ortshöhe ergänzt; drei neue Prüfformen | 26 von 26 Kennzeichen; Gegenprobe: Schloss am Transportziel bzw. am Titel der Reanimation entfernt → je 1 Befund |
+| `spaltenregister/pruefen.php` | `dest_lat`, `dest_lon` aus `tag`, `site_ele_m` aus `range`, `transport_dest` aus `suchindex`, Positionen neu | 0 Befunde |
+| Prüfstand, erster Lauf | 8 rot: dazu `vollstaendigkeit` (drei Ankerklassen ohne Eintrag), `bestand` (Design-Tabelle der Symbole nicht neu erzeugt), `kreislauf-edbak` (Datenverlust beim Einspielen, F-S11-48), `messstand` (F-S11-49) | behoben bzw. erklärt; `kreislauf.py --art edbak` danach 346 763 Einzelvergleiche, 0 unerklärt |
+| Prüfstand, zweiter Lauf | Bedienprobe, Stilvergleich, Bilderlauf, GPX-Probe und — neu — Messstand rot (E-S11-41, F-S11-49) | Bericht in der Commit-Nachricht |
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
@@ -174,6 +190,9 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-15 | nach dem Merge auf Staging | `update.php` aufrufen; eine gekoppelte Uhr der alten Fassung einen Einsatz senden lassen | Die Uhr parkt das Paket und meldet einen Fehler; im Web erscheint **kein** Einsatz; in Betrieb → System keine Meldung „ingest" mit Kennung | der Einsatz erscheint (dann nahm der Server Klartext an), oder die Uhr verwirft das Paket |
 | P-S11-16 | nach dem Merge auf Staging | einen neu gesendeten Einsatz öffnen, einmal gesperrt (Abmelden, wieder anmelden) und einmal entsperrt | gesperrt: kurz „Wartet auf dein Passwort", nach dem Entsperren Karte, Phasen, Reanimation; entsperrt: Ring höchstens kurz, dann alles | die Karte bleibt leer ohne Meldung, oder rote Meldung „lassen sich nicht öffnen" |
 | P-S11-17 | nach dem Merge auf Staging | Als Administratorin in der Datenbank von Staging bei einem eigenen, neu gesendeten Einsatz ein Byte von `missions.ort_huelle` ändern; den Einsatz öffnen und entsperren; danach Betrieb → System | in der Ansicht „Die Ortsdaten dieses Einsatzes lassen sich nicht öffnen"; im Reiter System eine Meldung `ortsdaten` mit Einsatznummer und Grund, ohne Ortsangabe | keine Meldung im Reiter System, oder eine Meldung mit Koordinaten oder Adresse |
+| P-S11-18 | nach dem Merge auf Staging | Einen Einsatz mit Reanimation im Formular öffnen — einmal gesperrt (abmelden, anmelden, nicht entsperren), einmal entsperrt; eine Phasenzeit ändern, speichern | gesperrt: Reanimationskarte mit Schloss, Felder gesperrt, „Speichern" bietet zuerst das Entsperren an; entsperrt: Reanimation steht da, nach dem Speichern in der Ansicht unverändert, Phasenorte auf der Karte wie vorher | gespeichert ohne Entsperren, Reanimation fehlt nach dem Speichern, oder rote Meldung „ließen sich im Browser nicht gleich rechnen" |
+| P-S11-19 | nach dem Merge auf Staging | Einen Einsatz mit Zielklinik samt Koordinate öffnen, dann den folgenden mit Abfahrt „Letzte Zielklinik" ohne GPS-Aufzeichnung; in der Suche nach der Zielklinik filtern | Klinik-Pin und Zeile „Transportziel" (Schloss) erst nach dem Entsperren; Luftlinie beginnt an der Klinik des Vorgängers; Filter findet den Einsatz nur entsperrt | Pin ohne Entsperren sichtbar, Luftlinie fehlt, Filter leer trotz Entsperren |
+| P-S11-20 | nach dem Merge auf Staging | Formular eines Einsatzes mit GPS-Aufzeichnung, Einsatzort leer, Pin-Knopf → „Auf der Karte wählen" | Die Spur steht im Dialog, die Karte passt sich ihr an | Dialog ohne Spur (F-S11-42 nicht behoben) |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen, einmal neu koppeln, einen Probeeinsatz aufzeichnen und senden | Einsatz im Web mit Karte nach dem Entsperren | Uhr zeigt „Neu koppeln" weiter oder parkt |

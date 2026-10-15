@@ -22,9 +22,22 @@
  *   7. die Diensttagsansicht öffnet die Stücke; die gesperrten Punkte des
  *      Ruhesegments fehlen (E-S11-37)
  *   8. die Spurenseite des Diensttags (`tag_spuren.php`) zeichnet beide Linien
- *   9. eine Einsatzhülle, in der Datenbank um ein Byte verändert, geht nicht
+ *   9. die Zeitrechnung des Browsers (`EdFormat.ortszeitZuEpoch`,
+ *      `EdOrtsdaten.einsatzZeiten`) gleich der des Servers (`local_to_utc`),
+ *      auch an beiden Zeitumstellungen (S11-05b)
+ *  10. das Formular öffnet die Hülle, zeigt die Reanimation, speichert
+ *      unverändert: Orte der Phasen und Reanimation bleiben, nichts im
+ *      Klartext (F-S11-02, -41)
+ *  11. ein im Formular nachgetragener Einsatz mit Reanimation: alles in der
+ *      Hülle, keine Zeile in `resus_sessions`
+ *  12. Transportziel und Höhe des Einsatzorts im Blob (S11-05b): im Formular
+ *      gesetzt und gespeichert, Klartextspalten leer, in keiner Antwort des
+ *      Servers im Klartext, in der Ansicht nach dem Entsperren; Höhe aus der
+ *      Spur zur Phase 5; „ambulant" speichert kein Ziel
+ *  13. eine Einsatzhülle, in der Datenbank um ein Byte verändert, geht nicht
  *      auf: die Ansicht sagt es, und der Reiter System hat eine Meldung mit
- *      Art, Kennung und Grund — ohne Inhalt (S11-04d, M-S11-01 d)
+ *      Art, Kennung und Grund — ohne Inhalt (S11-04d, M-S11-01 d); das
+ *      Formular verweigert dann das Speichern
  *
  * Nur örtlich, weil sie die Datenbank liest und verändert.
  *
@@ -259,9 +272,213 @@ try {
   }));
   pruefe(e8.linien >= 2 && e8.zeilen === 2 && e8.lade === 0,
          '8  tag_spuren.php: zwei Zeilen, zwei Linien, kein Ladeplatz', JSON.stringify(e8));
-  /* 9 — eine verdorbene Einsatzhülle: das letzte Byte (Prüfwert) gekippt */
+  /* 9 — die Zeitrechnung des Browsers gegen PHP (S11-05b). Fälle: ein
+   * Sommertag, beide Zeitumstellungen direkt und über „+1 Tag". */
+  const faelle = [['2026-07-01', '23:50', 0], ['2026-07-01', '00:10', 1], ['2026-03-29', '02:30', 0],
+                  ['2026-03-28', '02:30', 1], ['2026-10-25', '02:30', 0], ['2026-10-24', '02:30', 1],
+                  ['2026-10-25', '01:59', 0], ['2026-10-25', '03:00', 0], ['2026-12-31', '23:59', 1],
+                  ['2026-02-30', '10:00', 0], ['2026-07-01', '24:00', 0]];
+  const phpZeiten = JSON.parse(php(`echo json_encode(array_map(fn($f) => ($u = local_to_utc($f[0], $f[1], $f[2]))
+    === null ? null : strtotime($u . ' UTC'), ${JSON.stringify(faelle)}));`));
+  const jsZeiten = await s.evaluate(f => f.map(([d, h, v]) => EdFormat.ortszeitZuEpoch(d, h, v, 'Europe/Berlin')), faelle);
+  const abw9 = faelle.filter((f, i) => phpZeiten[i] !== jsZeiten[i] && !(phpZeiten[i] === null && jsZeiten[i] === null)
+    && !(f[0] === '2026-02-30'));
+  pruefe(abw9.length === 0, '9  Ortszeit → UTC: Browser gleich PHP, auch an der Zeitumstellung',
+         `${faelle.length} Fälle, ${abw9.length} abweichend ${JSON.stringify(abw9).slice(0, 60)}`);
+
+  /* 10 — das Formular: öffnen, Reanimation da, unverändert speichern */
+  const vorherOrt = await s.evaluate(async (mid) => {
+    const m = await (await fetch('api/mission.php?id=' + mid)).json();
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    await EdOrtsdaten.fuerAnsicht(m, ck);
+    /* Ohne Sekunden: Das Formular rechnet in ganzen Minuten (wie seit jeher),
+     * die Probe sendet drei Phasen in derselben Minute. Verglichen werden
+     * Nummer, Ort und Reanimation. */
+    return { phasen: m.phases.map(p => [p.phase, p.lat, p.lon]), rea: m.resus };
+  }, mid);
+  await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => document.querySelectorAll('#rearows .rea-sitzung').length > 0,
+                          null, { timeout: 30000 }).catch(() => null);
+  const f10 = await s.evaluate(() => ({
+    sitzungen: document.querySelectorAll('#rearows .rea-sitzung').length,
+    ereignisse: document.querySelectorAll('#rearows .rea-zeit').length,
+    namen: document.querySelectorAll('#rearows [name]').length,
+    start: (document.querySelector('#rearows .rea-start') || {}).value,
+  }));
+  pruefe(f10.sitzungen === 1 && f10.ereignisse === 2 && f10.namen === 0,
+         '10 Formular: Reanimation aus der Hülle, Felder ohne name', JSON.stringify(f10));
+  await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
+                     s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
+  await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  const nachherOrt = await s.evaluate(async (mid) => {
+    const m = await (await fetch('api/mission.php?id=' + mid)).json();
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    await EdOrtsdaten.fuerAnsicht(m, ck);
+    /* Ohne Sekunden: Das Formular rechnet in ganzen Minuten (wie seit jeher),
+     * die Probe sendet drei Phasen in derselben Minute. Verglichen werden
+     * Nummer, Ort und Reanimation. */
+    return { phasen: m.phases.map(p => [p.phase, p.lat, p.lon]), rea: m.resus };
+  }, mid);
+  pruefe(JSON.stringify(nachherOrt) === JSON.stringify(vorherOrt),
+         '10 nach dem Speichern: Phasenorte und Reanimation unverändert', JSON.stringify(nachherOrt.phasen).slice(0, 70));
+  const klar10 = php(`echo (int)db()->query("SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ${mid}")->fetchColumn()
+    + (int)db()->query("SELECT COUNT(*) FROM mission_phases WHERE mission_id = ${mid} AND lat IS NOT NULL")->fetchColumn();`);
+  pruefe(klar10 === '0', '10 nach dem Speichern: nichts im Klartext', `${klar10} Zeilen`);
+
+  /* 10 — Gegenprobe zum Wächter: die Phasenzeiten des Browsers auf dem Weg
+   * verfälscht (eine Minute später). Der Server muss ablehnen und melden. */
+  const vorWaechter = php(`echo md5((string)db()->query("SELECT ort_huelle FROM missions WHERE id = ${mid}")->fetchColumn());`);
+  await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK, null, { timeout: 30000 }).catch(() => null);
+  await s.route(/einsatz_form\.php/, async (route) => {
+    const req = route.request();
+    if (req.method() !== 'POST') { return route.continue(); }
+    const form = new URLSearchParams(req.postData() || '');
+    const z = JSON.parse(form.get('ort_phasen') || '[]');
+    if (z[0]) { z[0][1] += 60; }
+    form.set('ort_phasen', JSON.stringify(z));
+    return route.continue({ postData: form.toString() });
+  });
+  await Promise.all([s.waitForLoadState('networkidle'),
+                     s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
+  await s.waitForTimeout(1500);
+  await s.unroute(/einsatz_form\.php/);
+  const textW = (await s.locator('main').textContent().catch(() => '')) || '';
+  const nachWaechter = php(`echo md5((string)db()->query("SELECT ort_huelle FROM missions WHERE id = ${mid}")->fetchColumn());`);
+  pruefe(/nicht gleich rechnen/.test(textW) && vorWaechter === nachWaechter,
+         '10 Gegenprobe: verfälschte Phasenzeiten → nichts gespeichert', `${/nicht gleich rechnen/.test(textW)}, Hülle ${vorWaechter === nachWaechter ? 'gleich' : 'GEÄNDERT'}`);
+
+  /* 10 — Altbestand: Orte und Reanimation im Klartext, keine Hülle. Das
+   * Formular übernimmt sie beim Speichern in die Hülle (E-S11-45). */
+  const altId = Number(php(`$pdo = db(); require_once "server/geraete_lib.php";
+    $dev = geraet_virtuell_sicherstellen($pdo, ${id});
+    $pdo->prepare("INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at, final, uhr_gesperrt, origin)
+      VALUES (?, ?, 'man-alt0000000000001', ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?), 1, 1, 'manual')")
+      ->execute([${id}, $dev, ${dayId}, ${jetzt + 3600}, ${jetzt + 4200}]);
+    $m = (int)$pdo->lastInsertId();
+    $pdo->prepare("INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon) VALUES (?,2,FROM_UNIXTIME(?),47.5,10.5),(?,4,FROM_UNIXTIME(?),47.6,10.6)")
+      ->execute([$m, ${jetzt + 3600}, $m, ${jetzt + 4200}]);
+    $pdo->prepare("INSERT INTO resus_sessions (mission_id, started_at) VALUES (?, FROM_UNIXTIME(?))")->execute([$m, ${jetzt + 3900}]);
+    $sid = (int)$pdo->lastInsertId();
+    $pdo->prepare("INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?, 'rosc', FROM_UNIXTIME(?))")->execute([$sid, ${jetzt + 4000}]);
+    echo $m;`));
+  await s.goto(`${BASIS}/einsatz_form.php?id=${altId}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK, null, { timeout: 30000 }).catch(() => null);
+  await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
+                     s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
+  await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  const alt10 = await s.evaluate(async (id) => {
+    const m = await (await fetch('api/mission.php?id=' + id)).json();
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    await EdOrtsdaten.fuerAnsicht(m, ck);
+    return { phasen: m.phases.map(p => [p.phase, p.lat, p.lon]), rea: (m.resus || []).map(r => r.map(e => e.label)) };
+  }, altId);
+  const klarAlt = php(`echo (int)db()->query("SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ${altId}")->fetchColumn()
+    + (int)db()->query("SELECT COUNT(*) FROM mission_phases WHERE mission_id = ${altId} AND lat IS NOT NULL")->fetchColumn();`);
+  pruefe(JSON.stringify(alt10.phasen) === '[[2,47.5,10.5],[4,47.6,10.6]]' && alt10.rea.length === 1
+         && alt10.rea[0].length === 2 && klarAlt === '0',
+         '10 Altbestand: Orte und Reanimation in die Hülle übernommen, Klartext fort',
+         `${JSON.stringify(alt10).slice(0, 60)} · ${klarAlt} Klartextzeilen`);
+
+  /* 11 — ein Einsatz, im Formular nachgetragen, mit Reanimation */
+  await s.goto(`${BASIS}/einsatz_form.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK, null, { timeout: 30000 }).catch(() => null);
+  await s.evaluate(() => {
+    const z = document.querySelector('#phaserows .phasen-eingabe .zeitfeld'); z.value = '10:00';
+    document.getElementById('addrea').click();
+    document.querySelector('#rearows .rea-start').value = '10:05';
+  });
+  await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
+                     s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
+  const neuId = Number(new URL(s.url()).searchParams.get('id'));
+  const n11 = JSON.parse(php(`echo json_encode(db()->query("SELECT client_ref, ort_huelle IS NOT NULL h,
+    (SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ${neuId}) r FROM missions WHERE id = ${neuId}")->fetch(PDO::FETCH_ASSOC));`));
+  await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  const rea11 = await s.evaluate(async (id) => {
+    const m = await (await fetch('api/mission.php?id=' + id)).json();
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    await EdOrtsdaten.fuerAnsicht(m, ck);
+    return m.resus;
+  }, neuId);
+  pruefe(neuId > 0 && /^man-[0-9a-f]{16}$/.test(n11.client_ref) && String(n11.h) === '1' && String(n11.r) === '0'
+         && rea11 && rea11[0] && rea11[0][0].time === '10:05',
+         '11 Nachtrag: Reanimation in der Hülle, keine Klartextzeile', JSON.stringify({ n11, rea: rea11 }).slice(0, 80));
+
+  /* 12 — Transportziel und Ortshöhe im Blob (S11-05b). Phase 5 auf die
+   * Minute von Phase 4 (früher läge sie nach der Mitternachtsregel am
+   * Folgetag); erwartet ist die Höhe des zeitlich nächsten gesendeten Punkts,
+   * gerechnet wie `compute_site_elevation()`. */
+  const ts5 = Math.floor((jetzt + 90) / 60) * 60;
+  const hhmm5 = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit',
+    minute: '2-digit', hour12: false }).format(new Date(ts5 * 1000));
+  const naechster5 = [...spurA, ...spurB].reduce((b, p) => Math.abs(p[3] - ts5) < Math.abs(b[3] - ts5) ? p : b);
+  const hoeheSoll = naechster5[2] === null ? null : Math.round(naechster5[2]);
+  await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK, null, { timeout: 30000 }).catch(() => null);
+  await s.evaluate((hhmm) => {
+    const sel = document.querySelector('select[name="f_transport_mode"]');
+    sel.value = 'air'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    ORTSFELD_PAT.transport_dest.steuer.setzen({ addr: 'Klinikum Probe', lat: 47.8, lon: 10.2 });
+    document.getElementById('addrow').click();
+    const zeilen = document.querySelectorAll('#phaserows .phasen-eingabe');
+    const z = zeilen[zeilen.length - 1];
+    z.querySelector('select').value = '5';
+    z.querySelector('.zeitfeld').value = hhmm;
+  }, hhmm5);
+  await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
+                     s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
+  const spalten12 = JSON.parse(php(`echo json_encode(db()->query("SELECT transport_dest, dest_lat, dest_lon, site_ele_m
+    FROM missions WHERE id = ${mid}")->fetch(PDO::FETCH_ASSOC));`));
+  const roh12 = await s.evaluate(async (mid) => (await (await fetch('api/mission.php?id=' + mid)).text())
+    + (await (await fetch('einsatz.php?id=' + mid)).text()), mid);
+  await s.waitForFunction(() => /Klinikum Probe/.test(document.querySelector('main').textContent),
+                          null, { timeout: 30000 }).catch(() => null);
+  const ansicht12 = await s.evaluate(() => ({
+    ziel: /Klinikum Probe/.test(document.querySelector('main').textContent),
+    hoehe: (document.querySelector('main').textContent.match(/Höhe (Einsatzort )?(\d+) m/) || [])[2] || null,
+  }));
+  await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  const blob12 = await s.evaluate(async (mid) => {
+    const m = await (await fetch('api/mission.php?id=' + mid)).json();
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    return JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob));
+  }, mid);
+  pruefe(Object.values(spalten12).every(v => v === null), '12 Transportziel, Koordinate, Höhe: Klartextspalten leer',
+         JSON.stringify(spalten12));
+  pruefe(blob12.transport_dest && blob12.transport_dest.addr === 'Klinikum Probe' && blob12.transport_dest.lat === 47.8,
+         '12 im Blob: transport_dest {addr, lat, lon}', JSON.stringify(blob12.transport_dest));
+  pruefe(hoeheSoll !== null && blob12.ortshoehe === hoeheSoll, '12 im Blob: ortshoehe aus der Spur zur Phase 5',
+         `${blob12.ortshoehe} (Soll ${hoeheSoll})`);
+  pruefe(!/Klinikum Probe/.test(roh12), '12 kein Klartext in api/mission.php und im Markup von einsatz.php',
+         /Klinikum Probe/.test(roh12) ? 'GEFUNDEN' : 'nicht gefunden');
+  pruefe(ansicht12.ziel, '12 Ansicht: Transportziel nach dem Entsperren', JSON.stringify(ansicht12));
+  /* … und „ambulant" speichert kein Ziel (das Feld ist dann ausgeblendet). */
+  await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK
+    && document.getElementById('f_transport_dest_addr').value !== '', null, { timeout: 30000 }).catch(() => null);
+  await s.evaluate(() => {
+    const sel = document.querySelector('select[name="f_transport_mode"]');
+    sel.value = 'ambulant'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
+                     s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
+  await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  const amb12 = await s.evaluate(async (mid) => {
+    const m = await (await fetch('api/mission.php?id=' + mid)).json();
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    return JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob));
+  }, mid);
+  pruefe(!amb12.transport_dest && amb12.ortshoehe === hoeheSoll, '12 „ambulant": kein Ziel im Blob, Höhe bleibt',
+         JSON.stringify(amb12).slice(0, 70));
+
+  /* 13 — eine verdorbene Einsatzhülle: das letzte Byte (Prüfwert) gekippt */
   php(`db()->exec("UPDATE missions SET ort_huelle = CONCAT(LEFT(ort_huelle, LENGTH(ort_huelle) - 1),
        CHAR(ASCII(RIGHT(ort_huelle, 1)) ^ 1)) WHERE id = ${mid}");`);
+  /* Der Topf `kontopaar` zählt je Adresse, fünf in der Stunde — dieselbe
+   * Grenze, die auch die Kontopaarprobe vor ihrem Schritt leert. Zwei Läufe
+   * in einer Stunde hätten ihn sonst gefüllt, und die Meldung bliebe aus,
+   * ohne dass am Code etwas falsch wäre. */
+  php(`db()->exec("DELETE FROM rate_limits WHERE topf = 'kontopaar'");`);
   const vorher = Number(php(`echo (int)db()->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")->fetchColumn();`));
   const meldung = s.waitForResponse(r => r.url().includes('/api/kontopaar.php'), { timeout: 30000 })
                    .catch(() => null);
@@ -271,13 +488,22 @@ try {
     fehlerkasten: document.querySelectorAll('[data-ortsdaten="fehler"]').length,
     lade: [...document.querySelectorAll('.ladeplatz')].filter(e => !e.hidden).length,
   }));
-  pruefe(e9.fehlerkasten === 1 && e9.lade === 0, '9  verdorbene Hülle: die Ansicht sagt es, kein Ladeplatz',
+  pruefe(e9.fehlerkasten === 1 && e9.lade === 0, '13 verdorbene Hülle: die Ansicht sagt es, kein Ladeplatz',
          JSON.stringify(e9));
   const zeile = php(`$st = db()->prepare("SELECT text FROM protokoll_ereignisse WHERE id > ? AND reiter = 'system'
     AND text LIKE 'ortsdaten:%'"); $st->execute([${vorher}]); echo json_encode($st->fetchAll(PDO::FETCH_COLUMN));`);
   pruefe(antwort && antwort.status() === 200 && /Einsatz \d+, einsatz, Grund pruefwert/.test(zeile)
          && JSON.parse(zeile).length === 1,
-         '9  Reiter System: eine Meldung mit Art, Kennung und Grund', zeile.slice(0, 80));
+         '13 Reiter System: eine Meldung mit Art, Kennung und Grund', zeile.slice(0, 80));
+  /* … und das Formular speichert dann nicht (es ersetzte sonst die Hülle). */
+  await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
+  await s.waitForSelector('#ortfehler', { timeout: 30000 }).catch(() => null);
+  const huelleVor = php(`echo md5((string)db()->query("SELECT ort_huelle FROM missions WHERE id = ${mid}")->fetchColumn());`);
+  await s.evaluate(() => document.getElementById('missionform').requestSubmit());
+  await s.waitForTimeout(1500);
+  const huelleNach = php(`echo md5((string)db()->query("SELECT ort_huelle FROM missions WHERE id = ${mid}")->fetchColumn());`);
+  pruefe(/einsatz_form\.php/.test(s.url()) && huelleVor === huelleNach && await s.locator('#ortfehler').count() === 1,
+         '13 Formular mit verdorbener Hülle: Speichern gesperrt, Hülle unverändert', s.url().replace(BASIS, ''));
   pruefe(fehler.length === 0, '   keine Skriptfehler in der Seite', fehler.join(' | ').slice(0, 80));
   await kontext.close();
 } catch (e) {

@@ -1181,10 +1181,15 @@ async function entschluesselePat(){
      * zu erkennen, welche zu welchem gehört. Gestrichelt bleibt sie überall —
      * das ist die Unterscheidung zum aufgezeichneten Track. */
     const vor = i > 0 ? dayMissions[i - 1] : null;
+    /* DAS TRANSPORTZIEL AUS DEM BLOB (S11-05b): bis dahin `dest_lat`/`dest_lon`
+       im Klartext aus `api/day.php`. Jetzt liegt es als {addr, lat, lon} im
+       `pat_blob`, der hier ohnehin entschluesselt vorliegt — fuer diesen
+       Einsatz (`o`) wie fuer den Vorgaenger. */
+    const zielAus = (p) => (p && p.transport_dest && p.transport_dest.lat != null && p.transport_dest.lon != null)
+      ? { lat: Number(p.transport_dest.lat), lon: Number(p.transport_dest.lon) } : null;
     const abfahrt = EdLuftlinie.abfahrt(m.start_src, {
       base: currentBase,
-      prevDest: (vor && vor.dest_lat != null && vor.dest_lon != null)
-        ? { lat: vor.dest_lat, lon: vor.dest_lon } : null,
+      prevDest: (vor && vor._patState === 'ok') ? zielAus(vor._pat) : null,
       prevSite: (vor && vor._patState === 'ok' && vor._pat && vor._pat.loc)
         ? vor._pat.loc : null,
       manual: o.start
@@ -1193,8 +1198,7 @@ async function entschluesselePat(){
       hatTrack: m.track.length > 1,
       abfahrt: abfahrt,
       ort: o.loc,
-      ziel: (m.dest_lat != null && m.dest_lon != null)
-        ? { lat: m.dest_lat, lon: m.dest_lon } : null
+      ziel: zielAus(o)
     });
     if (punkte.length) {
       EdLuftlinie.zeichne(map, punkte,

@@ -227,9 +227,14 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
              Reanimation eine Karte Aufmerksamkeit fuer die Auskunft, dass
              nichts passiert ist. Das Skript blendet sie ein, wenn es eine
              Sitzung gibt. */ ?>
+    <?php /* DAS SCHLOSS AM TITEL (S11-05b): Die Reanimation liegt seit S11-04 nur
+             in der Einsatzhuelle und steht hier erst nach dem Entsperren. Von
+             Hand statt ueber `ui_karte_start()`, weil die Karte versteckt
+             beginnt und ihre Zahl eine Kennung braucht — beides kann der
+             Baustein nicht. Das Zeichen ist dasselbe. */ ?>
     <section class="karte karte-block-reanimation" id="resus-section" hidden>
       <div class="karte-kopf">
-        <h2 class="karte-titel">Reanimation</h2>
+        <h2 class="karte-titel">Reanimation<?= ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt') ?></h2>
         <span class="karte-zahl" id="resus-zahl"></span>
       </div>
       <div id="resus-tables" hidden></div>
@@ -667,18 +672,6 @@ async function init(){
     box.closest('.karte').hidden = false;
   }
 
-  /* HOEHE DES EINSATZORTS — nur luftgebunden (A13, Konzept 4.6). Sie gehoert
-   * in die Kleinzeile des Einsatzortes (Mockup 19); solange der verschluesselt
-   * ist, traegt eine eigene Zeile sie trotzdem: Die Hoehe selbst liegt im
-   * Klartext, sie zu verschweigen waere kein Gewinn. Bodengebunden ist sie
-   * die Hoehe der Strasse und bleibt verborgen; bei einem noch nicht
-   * zugeordneten Diensttag (day_kind === null, E26) ebenso. */
-  hoeheZeigen = m.site_ele_m != null && m.day_kind === 'air';
-  hoeheWert = m.site_ele_m;
-  if (hoeheZeigen) {
-    zeile('einsatz', RANG.pat_loc, 'Höhe Einsatzort', `${m.site_ele_m} m`);
-    markiere(RANG.pat_loc, 'hoehe');
-  }
 
   // Besatzung: Tagescrew, einzelne Rollen ggf. durch den Einsatz ueberschrieben
   // (Server hat die COALESCE-Regel bereits angewandt, siehe api/mission.php).
@@ -697,8 +690,24 @@ async function init(){
    * Spur sind Ringe: blau = Start, rot = Ende — am Schild des Ortes, an dem
    * die Spur beginnt oder endet, sonst als eigener Ringpunkt. Der Standort
    * kommt als Haus-Schild aus den eingefrorenen Tageskoordinaten, das
-   * Transportziel als Klinik-Schild (Klartext wie sein Name, E40, A13o). */
+   * Transportziel als Klinik-Schild — seit S11-05b erst nach dem Entsperren,
+   * weil es im `pat_blob` liegt (`zielUndHoeheOeffnen()`). */
   await ortsdatenOeffnen(m);
+  await zielUndHoeheOeffnen(m);
+
+  /* HOEHE DES EINSATZORTS — nur luftgebunden (A13, Konzept 4.6). Sie gehoert
+   * in die Kleinzeile des Einsatzortes (Mockup 19); ohne Einsatzort-Zeile
+   * traegt eine eigene Zeile sie. Seit S11-05b liegt sie im `pat_blob`
+   * (`ortshoehe`) und steht deshalb erst nach dem Entsperren da — mit
+   * Schloss. Bodengebunden ist sie die Hoehe der Strasse und bleibt
+   * verborgen; bei einem noch nicht zugeordneten Diensttag
+   * (day_kind === null, E26) ebenso. */
+  hoeheZeigen = m.site_ele_m != null && m.day_kind === 'air';
+  hoeheWert = m.site_ele_m;
+  if (hoeheZeigen) {
+    zeile('einsatz', RANG.pat_loc, dtGeschuetzt('Höhe Einsatzort'), `${m.site_ele_m} m`);
+    markiere(RANG.pat_loc, 'hoehe');
+  }
 
   const bounds = [];
   const NAH_M = 200;   // naeher als das gilt als „am Schild"
@@ -876,6 +885,36 @@ async function ortsdatenOeffnen(m){
   LADE_KARTE.weg(); LADE_PHASEN.weg();
 }
 
+/* TRANSPORTZIEL, ORTSHOEHE UND LETZTE ZIELKLINIK AUS DEM BLOB (S11-05b).
+ * Bis dahin lieferte `api/mission.php` `dest_lat`, `dest_lon`, `dest_name`,
+ * `site_ele_m` und `start_prev_dest` im Klartext. Jetzt liegen sie im
+ * `pat_blob` dieses Einsatzes bzw. seines Vorgaengers, und diese Funktion
+ * setzt sie nach dem Entsperren in genau diese Felder — Karte, Kleinzeile und
+ * Luftlinie lesen sie wie vorher. Ohne Schluessel bleiben sie leer: kein
+ * Klinik-Pin, keine Hoehe, keine Linie zur letzten Zielklinik. */
+async function zielUndHoeheOeffnen(m){
+  m.dest_lat = null; m.dest_lon = null; m.dest_name = null;
+  m.site_ele_m = null; m.start_prev_dest = null;
+  if (!m.pat_blob && !m.start_prev_blob) { return; }
+  const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
+  if (!ck) { return; }
+  const r = await EdPat.entschluessle(ck, m.pat_blob);
+  const o = (r.zustand === 'ok' && r.daten) || {};
+  const z = o.transport_dest;
+  if (z && typeof z === 'object') {
+    m.dest_name = z.addr || null;
+    if (z.lat != null && z.lon != null) { m.dest_lat = Number(z.lat); m.dest_lon = Number(z.lon); }
+  }
+  if (o.ortshoehe != null) { m.site_ele_m = Number(o.ortshoehe); }
+  if (m.start_src === 'prev_dest' && m.start_prev_blob) {
+    const v = await EdPat.entschluessle(ck, m.start_prev_blob);
+    const vz = v.zustand === 'ok' && v.daten && v.daten.transport_dest;
+    if (vz && vz.lat != null && vz.lon != null) {
+      m.start_prev_dest = { lat: Number(vz.lat), lon: Number(vz.lon) };
+    }
+  }
+}
+
 async function zeigePat(m, bounds){
   const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
   if (!ck) {
@@ -986,7 +1025,10 @@ async function zeigePat(m, bounds){
      drei Zeilen als eine da. `esc()` laeuft VORHER — was hier durchkommt, ist
      ausschliesslich das <br>, das dieser Code selbst schreibt. */
   for (const col of Object.keys(PAT_KAT)) {
-    const wert = o[PAT_KAT[col].blob];
+    let wert = o[PAT_KAT[col].blob];
+    /* Ein Ortsfeld (seit S11-05b das Transportziel) liegt als {addr, lat,
+       lon} im Blob; gezeigt wird die Bezeichnung, der Ort ist der Pin. */
+    if (wert && typeof wert === 'object') { wert = wert.addr; }
     if (wert == null || String(wert).trim() === '') { continue; }
     zeile(KARTE_ZIEL[col] || 'einsatz', RANG[col] ?? RANG_SONST,
           dtGeschuetzt(PAT_KAT[col].label),

@@ -375,10 +375,20 @@ return [
                 'vorbelegt_bei' => ['transport_mode' => 'air'],
             ],
             /* ZIELKLINIK ALS ORTSFELD (E37/E38/E40). Freitext und
-             * Vorschlagsliste bleiben unveraendert; neu ist die optionale
-             * Koordinate. Sie liegt im KLARTEXT (`dest_lat`/`dest_lon`) wie der
-             * Name selbst — ihr Pin ist damit ohne Freischalten sichtbar,
-             * anders als der Einsatzort.
+             * Vorschlagsliste, dazu die optionale Koordinate.
+             *
+             * SEIT S11-05b VERSCHLUESSELT ('store' => 'pat', R78, E-S11-12).
+             * Bis dahin lagen Name und Koordinate im KLARTEXT
+             * (`dest_lat`/`dest_lon`), und ihr Pin war ohne Freischalten
+             * sichtbar. Jetzt stehen sie im `pat_blob` unter
+             * `transport_dest` als {addr, lat, lon} — derselbe Aufbau wie der
+             * Einsatzort `loc`. Die Spalten bleiben bis zur
+             * Aufraeumauslieferung stehen und tragen nur noch den Altbestand;
+             * das Formular nimmt ihn beim naechsten Speichern in den Blob mit
+             * (`PAT_ALT`) und leert sie. Die Vorschlagsliste der Zielkliniken
+             * (`transport_dests`) bleibt Stammdatum im Klartext: Sie sagt, wohin
+             * man fliegen KANN, nicht wohin jemand geflogen ist. Der Haken
+             * „Schockraum" darunter bleibt Klartext — er ist kein Ort.
              *
              * EINGEFROREN AM EINSATZ, nicht ueber den Namen aufgeloest: Das
              * Feld ist Freitext, und eine Aufloesung ueber Namensgleichheit
@@ -389,6 +399,7 @@ return [
                 'placeholder' => 'z. B. Klinikum Westried',
                 'suggest_src' => 'transport_dests',
                 'lat_col' => 'dest_lat', 'lon_col' => 'dest_lon',
+                'store' => 'pat',
                 /* PIN-KNOPF UND KARTE (S9/AP2, E-S9-06 d; PS-7). Ein per
                  * Karte gewaehltes Ziel ist ein AD-HOC-WERT DIESES EINSATZES
                  * und kein Stammdatensatz — die Koordinate wird am Einsatz

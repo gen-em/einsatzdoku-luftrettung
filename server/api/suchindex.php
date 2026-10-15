@@ -197,7 +197,9 @@ try {
              * grundsaetzlich nur, was die Suche auch benutzt (siehe Kopf). */
             'transport_mode' => $m['transport_mode'] !== null ? (string)$m['transport_mode'] : null,
             'na_escort'   => (int)$m['na_escort'] === 1,
-            'transport_dest' => $m['transport_dest'] !== null ? (string)$m['transport_dest'] : null,
+            /* `transport_dest` steht hier NICHT mehr (S11-05b): Es liegt im
+             * `pat_blob`, und die Suchseite liest es nach dem Entsperren
+             * von dort — gesperrt findet die Suche keine Klinik. */
             'schockraum'  => (int)$m['schockraum'] === 1,
             'false_alarm' => (int)$m['false_alarm'] === 1,
             'winch'       => (int)$m['winch'] === 1,

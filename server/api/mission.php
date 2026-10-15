@@ -32,7 +32,15 @@ try {
          * Erreichbar sind sie hier ohnehin nicht — die Besatzung bekommt unten
          * ihren eigenen Block —, aber die Bedingung steht da, damit ein
          * kuenftiges Feld mit eigener Ablage nicht als leerer Wert erscheint. */
-        if (!mf_ist_spalte($f) && $type !== 'resources') { return; }
+        if (!mf_ist_spalte($f) && $type !== 'resources') {
+            /* DIE KINDER GEHEN TROTZDEM DURCH (S11-05b). Seit das
+             * Transportziel im Blob liegt, ist es das erste verschluesselte
+             * Feld MIT Kindern — und der Haken „Schockraum" darunter ist
+             * Klartext. Ein blosses `return` haette ihn aus der Ansicht
+             * genommen. */
+            foreach (($f['children'] ?? []) as $cc => $cf) { $collect($cc, $cf); }
+            return;
+        }
         $v = $m[$col] ?? null;
         if ($type === 'resources') {
             // Eigene Tabelle: jedes Rettungsmittel ist eine eigene Zeile
@@ -173,14 +181,14 @@ try {
      * und damit auch, ob sie ueberhaupt hierher gehoert:
      *
      *   base       days.base_lat/base_lon, eingefroren beim Anlegen  Klartext
-     *   prev_dest  dest_lat/dest_lon des vorherigen Einsatzes        Klartext
+     *   prev_dest  Transportziel des vorherigen Einsatzes            verschlüsselt (seit S11-05b)
      *   prev_site  Einsatzort des vorherigen Einsatzes               verschlüsselt
      *   manual     pat_blob.start DIESES Einsatzes                   verschlüsselt
      *
-     * Die beiden Klartextfaelle loest der Server auf, die beiden anderen der
-     * Browser: 'manual' steht ohnehin im eigenen Blob, fuer 'prev_site' geht der
-     * Blob des Vorgaengers mit — anders ist er nicht lesbar, der Server kann es
-     * nicht.
+     * Den Klartextfall loest der Server auf, die drei anderen der Browser:
+     * 'manual' steht ohnehin im eigenen Blob, fuer 'prev_site' und 'prev_dest'
+     * geht der Blob des Vorgaengers mit — anders ist er nicht lesbar, der
+     * Server kann es nicht.
      *
      * GELIEFERT WIRD NUR, WAS DIE GEWAEHLTE REGEL BRAUCHT. Den Blob eines
      * anderen Einsatzes mitzuschicken, wo niemand ihn auswertet, waere eine
@@ -191,28 +199,27 @@ try {
      * bleibt die Quelle leer und es entsteht keine Linie — es wird NICHT auf
      * eine andere ausgewichen (A13i). */
     $startSrc = $m['start_src'] !== null ? (string)$m['start_src'] : null;
-    $startBase = null; $startPrevDest = null; $startPrevBlob = null;
+    $startBase = null; $startPrevBlob = null;
 
     if ($startSrc === 'base' && $tag !== null
         && $tag['base_lat'] !== null && $tag['base_lon'] !== null) {
         $startBase = ['lat' => (float)$tag['base_lat'], 'lon' => (float)$tag['base_lon']];
     }
+    /* SEIT S11-05b AUCH BEI 'prev_dest' NUR DER BLOB (F-S11-11). Bis dahin
+     * rechnete der Server die letzte Zielklinik aus `dest_lat`/`dest_lon` des
+     * Vorgaengers und gab sie als `start_prev_dest` aus. Das Transportziel
+     * liegt jetzt im `pat_blob`; der Server kann es nicht mehr lesen und
+     * reicht den Blob des Vorgaengers durch wie bei 'prev_site'. Die
+     * Einsatzansicht liest daraus `transport_dest`. */
     if (($startSrc === 'prev_dest' || $startSrc === 'prev_site') && $dayId > 0) {
-        $vq = db()->prepare('SELECT dest_lat, dest_lon, pat_blob FROM missions
+        $vq = db()->prepare('SELECT pat_blob FROM missions
                               WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                                 AND started_at < ?
                               ORDER BY started_at DESC, id DESC LIMIT 1');
         $vq->execute([$userId, $dayId, $m['started_at']]);
         $vor = $vq->fetch();
-        if ($vor) {
-            if ($startSrc === 'prev_dest'
-                && $vor['dest_lat'] !== null && $vor['dest_lon'] !== null) {
-                $startPrevDest = ['lat' => (float)$vor['dest_lat'],
-                                  'lon' => (float)$vor['dest_lon']];
-            }
-            if ($startSrc === 'prev_site' && !empty($vor['pat_blob'])) {
-                $startPrevBlob = (string)$vor['pat_blob'];
-            }
+        if ($vor && !empty($vor['pat_blob'])) {
+            $startPrevBlob = (string)$vor['pat_blob'];
         }
     }
 
@@ -244,7 +251,9 @@ try {
          * ist das Profil der geflogenen Strecke, keine Aussage ueber den
          * Einsatz. Erhalten bleibt sie ueberall sonst — in der Spalte, im
          * Export (`hoehenmeter_m`), im Import und im Backup. */
-        'site_ele_m' => $m['site_ele_m'] !== null ? (int)$m['site_ele_m'] : null,
+        /* `site_ele_m` steht hier NICHT mehr (S11-05b). Die Hoehe des
+         * Einsatzorts liegt im `pat_blob` (`ortshoehe`); die Einsatzansicht
+         * liest sie nach dem Entsperren von dort. */
         'origin'     => (string)($m['origin'] ?? 'watch'),
         'edited'     => (int)($m['edited'] ?? 0) === 1,
         'day_no'     => $dayNo,
@@ -256,20 +265,13 @@ try {
          * das, was gemeint ist -- und die eigene Abfrage nach Phase 9 ist
          * damit ersatzlos entfallen: Sie hatte keinen zweiten Verwender. */
         'hat_ende'   => $m['ended_at'] !== null,
-        /* Zielklinik-Koordinate: KLARTEXT wie ihr Name (E40). Ihr Pin ist damit
-         * ohne Freischalten sichtbar — anders als Einsatzort und Linie, deren
-         * mittlerer Stuetzpunkt verschluesselt ist (A13o). */
-        'dest_lat'   => $m['dest_lat'] !== null ? (float)$m['dest_lat'] : null,
-        'dest_lon'   => $m['dest_lon'] !== null ? (float)$m['dest_lon'] : null,
-        /* Der Name daneben, damit der Pin sich benennen kann. Er steht zwar
-         * auch in 'fields' — dort aber als Beschriftung/Wert-Paar fuer die
-         * Anzeigeliste, und ihn von dort ueber seine Beschriftung
-         * zurueckzusuchen waere eine Kopplung an einen Anzeigetext. */
-        'dest_name'  => ($m['transport_dest'] ?? null) !== null && $m['transport_dest'] !== ''
-                        ? (string)$m['transport_dest'] : null,
+        /* `dest_lat`, `dest_lon`, `dest_name` und `start_prev_dest` stehen hier
+         * NICHT mehr (S11-05b). Das Transportziel liegt im `pat_blob`
+         * (`transport_dest` = {addr, lat, lon}); sein Pin erscheint erst nach
+         * dem Entsperren. Bis dahin war er Klartext und ohne Freischalten
+         * sichtbar (E40) — das kehrt R78 um. */
         'start_src'        => $startSrc,
         'start_base'       => $startBase,
-        'start_prev_dest'  => $startPrevDest,
         'start_prev_blob'  => $startPrevBlob,
         'fields'     => $fields,
         'crew_effektiv' => (object)$crewEff,

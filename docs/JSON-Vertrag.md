@@ -730,6 +730,14 @@ Hülle nicht ungültig macht:
 `lat` und `lon` dürfen `null` sein (Phase ohne Ortung). `rea[]` ist die
 Liste der Sitzungen, `art` eine Reanimationsart aus 3.3.
 
+**Auch das Einsatzformular schreibt sie** (seit Web 22.1.0, S11-05b): Der
+Browser verschließt eine Einsatzhülle desselben Formats, wenn ein Einsatz im
+Web gespeichert wird — bei einem dort angelegten Einsatz gebunden an eine
+`client_ref` der Form `man-` und 16 Hexziffern. Die Zeiten rechnet er wie der
+Server (`docs/Technik.md` 4.99s); einem Gerät gegenüber ändert sich nichts.
+Ein so gespeicherter Einsatz trägt `uhr_gesperrt = 1`, und eine nachliefernde
+Uhr ersetzt seine Hülle nicht.
+
 ## 4. Nachricht `rest_segment` (Ruhe-Track-Segment)
 
 Periodisch (z. B. stündlich bzw. bei Verbindung) und beim Beenden des Segments (Einsatzbeginn oder „Einsatztag beenden") mit `final: true`.

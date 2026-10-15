@@ -1233,15 +1233,13 @@ for ($anlauf = 1; ; $anlauf++) {
 }
 
 try {
-    if ($kind === 'mission' && $ownerType === 'mission') {
-        try {
-            require_once __DIR__ . '/site_elevation_lib.php';
-            compute_site_elevation($pdo, $ownerId);
-        } catch (Throwable $ex) {
-            // Hoehe ist ein Komfortwert; ein Fehler hier darf den Upload von
-            // der Uhr nicht gefaehrden (bewusst still, wie run_cleanup_if_due).
-        }
-    }
+    /* HIER STAND `compute_site_elevation()` (bis Web 22.0.4). Seit S11 sieht
+     * der Server die Spur nicht mehr und kann die Hoehe des Einsatzorts nicht
+     * rechnen; sie liegt im `pat_blob` und entsteht im Browser — beim
+     * Speichern im Formular (S11-05b) und im Wartungslauf (S11-07). Der Aufruf
+     * hatte zuletzt eine Nebenwirkung, die schlimmer war als keine Hoehe: Bei
+     * einem Einsatz des Altbestands las er die Klartextspur und schrieb die
+     * Spalte neu, die das Formular gerade geleert hatte. */
 
     run_cleanup_if_due();   // taegliche Wartung, huckepack auf Uhr-Uploads
 

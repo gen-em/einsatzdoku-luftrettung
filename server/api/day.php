@@ -388,9 +388,10 @@ try {
     $spaltenSql = '';
     foreach ($tagesSpalten as $dc) { $spaltenSql .= ', ' . $dc['col']; }
 
-    /* `start_src`, `dest_lat` und `dest_lon` stehen FEST im SELECT und nicht im
-     * Katalog: Sie sind keine Spalten der Tagestabelle, sondern die Zutaten der
-     * Luftlinie auf der Tageskarte (E34/E35). Die Aufloesung der beiden
+    /* `start_src` steht im SELECT, obwohl es keine Spalte der Tagestabelle
+     * ist: Es ist die Zutat der Luftlinie auf der Tageskarte (E34/E35). Bis
+     * S11-05b standen `dest_lat` und `dest_lon` daneben; das Transportziel liegt
+     * seither im `pat_blob`, den der Browser hier ohnehin entschluesselt. Die Aufloesung der beiden
      * Vorgaenger-Regeln geschieht im Browser — er hat die Einsaetze des Tages
      * ohnehin gemeinsam vorliegen und entschluesselt sie dort, wo der Server es
      * gar nicht koennte (Konzept 4.6.1). */
@@ -459,8 +460,6 @@ try {
             'client_ref' => (string)$m['client_ref'],
             'spur_stuecke' => $stueckeEinsatz[(int)$m['id']] ?? [],
             'start_src'  => $m['start_src'] !== null ? (string)$m['start_src'] : null,
-            'dest_lat'   => $m['dest_lat'] !== null ? (float)$m['dest_lat'] : null,
-            'dest_lon'   => $m['dest_lon'] !== null ? (float)$m['dest_lon'] : null,
         ];
         /* Die Spalten aus 'day_col' stehen unter ihrem eigenen Namen in der
          * Antwort — bisher hiessen sie dort schon 'winch', 'bergwacht' und

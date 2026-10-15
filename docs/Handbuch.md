@@ -1407,7 +1407,12 @@ dem Inhalt. Dasselbe
 gilt für die Karte der Tagesübersicht und für „GPS-Daten des Diensttages"
 (4.1a). **Einsätze, die vor dieser Fassung aufgezeichnet wurden, zeigen
 vorübergehend keine Karte**, bis ihre Ortsdaten einmal umgestellt sind — das
-geschieht bei der Umstellung des Servers in einem Durchgang.
+geschieht bei der Umstellung des Servers in einem Durchgang. Seit Web 22.1.0
+gilt dasselbe für die **Zielklinik** (Zeile, Pin, Linie zur letzten
+Zielklinik) und die **Höhe des Einsatzorts**: Beides steht erst nach dem
+Entsperren da. Ältere Einsätze zeigen beides bis zur Umstellung nicht —
+außer du speicherst einen davon einmal im Formular: Dann nimmt dein Browser
+Zielklinik, Phasenorte und Reanimation gleich verschlüsselt mit.
 
 **Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
 einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
@@ -1631,8 +1636,15 @@ ohne Maus — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
 
 **Geschützte Angaben** (Abschnitt 5) stehen gesammelt in der Karte
 „PatientIn" — Person, Diagnose, Einsatzort, Beschreibung, manueller
-Abfahrtort. Ist der Schlüssel in dieser Sitzung gesperrt, sind alle diese
-Felder gesperrt — die übrigen bleiben bedienbar. Beim Geburtsdatum reicht
+Abfahrtort; dazu, mit Schloss an ihrer Stelle, das **Transportziel** und die
+Karte **Reanimation** (seit Web 22.1.0). Ist der Schlüssel in dieser Sitzung
+gesperrt, sind alle diese Felder gesperrt — die übrigen bleiben bedienbar.
+**Speichern geht seit Web 22.1.0 erst nach dem Entsperren:** Orte der
+Einsatzphasen und Reanimation werden bei jedem Speichern neu verschlüsselt,
+und das kann nur dein Browser mit offenem Schlüssel. Wer gesperrt auf
+Speichern tippt, bekommt zuerst den Entsperren-Dialog. Lassen sich die
+Ortsdaten eines Einsatzes nicht öffnen, steht oben eine rote Meldung, und
+Speichern bleibt gesperrt — es würde sie sonst überschreiben. Beim Geburtsdatum reicht
 auch eine zweistellige Jahreszahl (z. B. „23.04.33") — die Anwendung ergänzt
 automatisch das plausible Jahrhundert. Der Einsatzort sucht beim Tippen: Ab
 drei Buchstaben erscheinen Adressvorschläge (OpenStreetMap); die Auswahl
@@ -1764,7 +1776,11 @@ dieselbe Größe.
 **Transport.** Die **Transportart** (Luft, Boden, Ambulant) — bis Web 6.3.0
 schlicht „Transport" — steuert, was darunter erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
 Koordinaten und den **Schockraum**; bei „Ambulant" — die PatientIn wurde nicht
-transportiert — entfallen alle drei. Ein zuvor eingetragenes Transportziel wird
+transportiert — entfallen alle drei. Die Zielklinik ist seit Web 22.1.0
+verschlüsselt (Schloss): Sie steht erst nach dem Entsperren im Feld, ihr Pin
+erscheint auf den Karten erst nach dem Entsperren, und die Suche findet einen
+Einsatz über die Zielklinik nur entsperrt. Die Vorschlagsliste der Zielkliniken
+aus den Stammdaten bleibt, wie sie ist. Ein zuvor eingetragenes Transportziel wird
 dabei geleert, und die Änderung ist sichtbar: Ein Transportziel an einem Einsatz
 ohne Transport wäre ein Widerspruch in den Daten.
 
@@ -1824,6 +1840,10 @@ darunter „+ Ereignis hinzufügen" für jedes weitere Ereignis, jeweils Art
 (Zugang, Adrenalingabe, Rhythmuskontrolle, Defibrillation, Intubation,
 Amiodaron, Sonographie, ROSC, Tod) und Uhrzeit. Das Kreuz am Beginn entfernt
 die ganze Reanimation, das Kreuz an einer Ereigniszeile nur diese.
+
+Die Reanimation ist seit Web 22.1.0 **verschlüsselt** (Schloss am Titel): Ihre
+Zeilen erscheinen erst nach dem Entsperren und werden nur verschlüsselt
+gespeichert.
 
 Gab es an einem Einsatz **mehrere Reanimationen**, legst du einfach mehrere
 Blöcke an. Eine Zeile ohne Uhrzeit wird nicht gespeichert — du musst eine

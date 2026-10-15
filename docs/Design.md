@@ -966,8 +966,8 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 15 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 20 |
-| `server.svg` | Tabler Icons „server" (MIT) | 9 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
+| `server.svg` | Tabler Icons „server" (MIT) | 10 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 24 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |

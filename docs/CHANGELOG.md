@@ -14,6 +14,75 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.1.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-05b — Formular und Feldkatalog**. Zweiter von
+fünf Teilen von S11-05 (E-S11-43). Kein Schema.
+
+### Geändert
+
+- **Das Einsatzformular verschlüsselt Phasenorte und Reanimation selbst.**
+  Bis 22.0.4 schickte es die Reanimation als gewöhnliche Formularfelder, und
+  der Server schrieb sie im Klartext in `resus_sessions` — auch nachdem S11-04
+  sie aus dem Eingang der Geräte genommen hatte. Wer im Web eine Reanimation
+  nachtrug, legte sie damit genau dort ab, wo sie nicht mehr stehen sollte, und
+  nichts zeigte es (F-S11-41). Und jedes Speichern ersetzte die Phasen ohne
+  ihre Koordinaten (F-S11-02). Jetzt öffnet das Formular die Einsatzhülle nach
+  dem Entsperren, zeigt die Reanimation daraus und verschließt beim Speichern
+  eine neue — mit denselben Orten je Phase und der Reanimation aus der Karte.
+  Die Zeiten dafür rechnet der Browser nach denselben Regeln wie der Server,
+  bis in die Eigenheiten von PHP an der Zeitumstellung; damit die beiden
+  Rechnungen nie still auseinanderlaufen, schickt er seine Phasenzeiten mit,
+  und der Server speichert nur, wenn sie gleich sind. Einen Einsatz aus der
+  Zeit davor nimmt das Formular beim Speichern mit: Orte und Reanimation aus
+  den alten Zeilen gehen in die Hülle, und die Zeilen werden gelöscht —
+  dasselbe Muster wie bei den Notizen.
+- **Speichern im Formular verlangt jetzt das Entsperren.** Die Hülle muss bei
+  jedem Speichern neu verschlossen werden, weil sich Phasenzeiten geändert
+  haben können; ohne Schlüssel geht das nicht. Bisher ließ sich gesperrt
+  speichern, und die geschützten Angaben blieben, wie sie waren. Geht die
+  vorhandene Hülle nicht auf, ist Speichern gesperrt, statt sie durch eine
+  leere zu ersetzen.
+- **Transportziel, Zielkoordinate und Höhe des Einsatzorts sind verschlüsselt**
+  (R78). Die Zielklinik trägt im Feldkatalog `'store' => 'pat'` und liegt als
+  `{addr, lat, lon}` im `pat_blob`; ihr Pin, ihre Zeile, die Linie zur letzten
+  Zielklinik und der Filter der Suche erscheinen erst nach dem Entsperren. Das
+  kehrt die Klartext-Entscheidung zur Zielklinik (E40) um. Die Höhe des
+  Einsatzorts rechnet der Browser beim Speichern nach der Regel, die bisher der
+  Server anwandte, und legt sie als `ortshoehe` in den Blob; ohne Spur oder auf
+  einer ausgedünnten bleibt ein vorhandener Wert. Der Haken „Schockraum" bleibt
+  Klartext, ebenso die Vorschlagsliste der Zielkliniken in den Stammdaten.
+- **Kein Übergang** (E-S11-42): Einsätze, deren Zielklinik und Höhe noch in den
+  Klartextspalten liegen, zeigen beides bis zum Einmalwerkzeug (S11-10) nicht —
+  es sei denn, jemand speichert sie im Formular.
+
+### Behoben
+
+- **Der Kartendialog im Formular zeigte keine Spur mehr** (F-S11-42). Er las
+  `track` aus `api/mission.php`, und das gibt es seit 22.0.3 nicht mehr; jetzt
+  öffnet er die Stücke wie die Einsatzansicht.
+- **Zwei Stellen hätten die Ortshöhe wieder in Klartext geschrieben** (F-S11-45):
+  `ingest.php` und das Formular riefen nach jedem Upload bzw. Speichern
+  `compute_site_elevation()`, und das liest bei einem Einsatz des Altbestands die
+  Klartextspur. Beide Aufrufe sind fort.
+- **Das Einspielen einer Sicherung hätte das Transportziel verloren**
+  (F-S11-48). Es nimmt die Katalogfelder, die Spalten sind, und die
+  Zielklinik ist keine mehr; jede Sicherungsdatei trägt sie aber bis S11-06
+  im Klartext. Sie steht jetzt von Hand in der Liste, wie die Notizen seit S9 —
+  gefunden vom Kreislauf `.edbak` im Prüfstand, nicht beim Schreiben.
+- **„Schockraum" wäre aus der Einsatzansicht verschwunden** (F-S11-44):
+  `api/mission.php` übersprang die Kinder eines verschlüsselten Katalogfelds,
+  und die Zielklinik ist das erste mit einem Kind.
+
+### Bewusst nicht
+
+- Export, CSV-Import und Zeitverschiebung lesen die Zielklinik bis S11-05e
+  weiter aus den Spalten, Sicherung und Demo bis S11-06; Schneiden und
+  GPX-Einlesen rechnen die Höhe bis S11-05c/-05d noch am Server. Und das
+  Einspielwerkzeug des Referenzbestands bedient das Formular noch im alten
+  Format (F-S11-43, in S11-06). Alles davon liegt auf dem Arbeitszweig und
+  geht erst mit S11 hinaus.
+
 ## [Web 22.0.4] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-04d — eine Hülle, die nicht aufgeht, wird
