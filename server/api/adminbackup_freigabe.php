@@ -97,6 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'fassung'       => $fassung,
         'pat_wrap_rc'   => $paket['schluessel']['pat_wrap_rc'] ?? null,
         'pat_key_check' => $paket['schluessel']['pat_key_check'] ?? null,
+        /* Der private Teil des Ursprungskontos (S11-06c), unter dessen
+         * Inhaltsschluessel — der Browser oeffnet ihn mit dem, was
+         * `pat_wrap_rc` hergibt, und damit Huellen und Stuecke. */
+        'kp_privat'     => $paket['schluessel']['kp_privat'] ?? null,
     ];
     if ($fassung >= 2) {
         $antwort['eintragsteile'] = (int)($paket['eintragsteile'] ?? 0);

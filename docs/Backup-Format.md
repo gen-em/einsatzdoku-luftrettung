@@ -88,7 +88,7 @@ nichts:
 | `manifest.edbak` | Teileliste mit SHA-256 je Teil, Backup-Kennung, Erzeugungszeit, Web-Version |
 | `kopf.edbak` | Stammdaten, Diensttage, `eintraege_gesamt` — die Nutzlast (Abschnitt 2) **ohne** Einträge |
 | `eintraege/0001.edbak`, `eintraege/0002.edbak`, … | je 250 Einträge (Einsätze **und** Ruhesegmente) **ohne** Punktlisten |
-| `spuren/0001.edbak`, `spuren/0002.edbak`, … | je Teil eine Liste `{spur_ref, blob}` — SPUR1, Base64, Ziel 250 000 Punkte |
+| `spuren/0001.edbak`, `spuren/0002.edbak`, … | je Teil eine Liste `{spur_ref, punkte}` — Punktlisten, Ziel 100 000 Punkte (seit Nutzlast 13; bis 12 `{spur_ref, blob}` mit SPUR1, Ziel 250 000) |
 
 **Warum 250 Einträge je Fenster.** Die Zahl kommt von der strengsten
 verbreiteten Servergrenze, nicht aus dem Gefühl: `client_max_body_size` steht
@@ -114,7 +114,7 @@ Das Manifest im Klartext:
   "kennung": "9f3c…",              // 16 Byte Zufall, hex — bindet die Teile
   "erzeugt_am": "2026-08-31T12:00:00.000Z",
   "web_version": "11.1.0",
-  "nutzlast": 12,                  // Fassung der Nutzlast, s. Abschnitt 2
+  "nutzlast": 13,                  // Fassung der Nutzlast, s. Abschnitt 2
   "teile": [
     { "name": "kopf.edbak",          "art": "kopf",      "sha256": "…" },
     { "name": "eintraege/0001.edbak","art": "eintraege", "sha256": "…" },
@@ -126,7 +126,8 @@ Das Manifest im Klartext:
   "spuren": 182,                   // wie viele Spuren die Datei trägt
   "punkte": 55861,                 // und wie viele Punkte darin stecken
   "pat_key_check": "3f2a…",        // wie bisher, s. Abschnitt 2
-  "unlesbar": 0                    // s. unten
+  "unlesbar": 0,                   // s. unten
+  "ort_unlesbar": 0                // seit Nutzlast 13, s. unten
 }
 ```
 
@@ -144,6 +145,13 @@ dieser Zahl — er kann sie nicht selbst ermitteln, ohne alle Eintragsteile zu
 (Datei aus einem Stand vor Web 11.1.0), wird gewarnt: „nicht erhoben" ist
 etwas anderes als „keine".
 
+**`ort_unlesbar`** (seit Nutzlast 13) zählt die Einsätze, deren
+**Einsatzhülle** (Orte der Phasen, Reanimation) sich beim Sichern nicht
+öffnen ließ. Sie liegt dann als Chiffretext in `ort_huelle`, mit dem
+Kennzeichen `ort_unlesbar: true` — wie ein unlesbares `pat_blob`, und aus
+demselben Grund: Mit dem Schlüsselpaar des Kontos, aus dem die Sicherung
+stammt, geht sie später noch auf; verworfen wäre sie verloren.
+
 Ein Eintragsteil im Klartext:
 
 ```jsonc
@@ -153,23 +161,39 @@ Ein Eintragsteil im Klartext:
 }
 ```
 
-Ein Spurteil im Klartext:
+Ein Spurteil im Klartext, seit Nutzlast 13:
 
 ```jsonc
 {
   "spuren": [
-    { "spur_ref": 1, "blob": "<SPUR1, Base64>",
+    { "spur_ref": 1, "punkte": [ [0, 47.72, 10.31, 712.5, 1721383200], … ],
       "stufe": 2, "n_original": 443, "n": 443 }
   ]
 }
 ```
 
+**Punktlisten statt SPUR1 (E-S11-56).** Seit S11 liegt eine Spur auf dem
+Server verschlossen in Stücken, die nur der Browser öffnet; der Server kann
+daraus kein SPUR1 mehr bauen. Der Browser holt je Spur den Altbestand als
+Punkte und die Stücke (`api/backup_spuren.php`, Form `punkte`), öffnet sie
+und schreibt die Spur als Liste `[seq, lat, lon, ele, ts]` — dieselbe Form wie
+`track` bis Nutzlast 7. **Die Sperrzeiten gehen dabei nicht ein:** Die
+Sperrvermerke reisen am Einsatz (`schnitte`) und am Segment (`loeschungen`)
+mit und sperren nach dem Einspielen dieselben Punkte wieder. **Gemessen am
+16.10.2026** am Referenzbestand (221 Spuren, 67 292 Punkte): 280 KB als
+Nutzlast 12 mit SPUR1, **880 KB** als Nutzlast 13 — Faktor 3,1. An einer
+Zufallsspur von 250 000 Punkten: 11,8 MB JSON, 3,07 MB nach gzip, 12,3 Byte je
+Punkt gegen 3,56 als SPUR1.
+
+Bis Nutzlast 12 trug der Spurteil `{"spur_ref", "blob": "<SPUR1, Base64>",
+"stufe", "n_original", "n"}`; der Einspielweg liest beide Formen.
+
 **Geschnitten wird an Spurgrenzen.** Eine Spur liegt ganz in einem Teil; eine
 über die Grenze gestückelte wäre nur mit beiden Teilen brauchbar, und dann
 hätte die Teilung nichts gebracht. Die Einteilung steht **vor** dem ersten
-Abruf fest (250 000 Punkte je Teil), weil die Zusatzdaten `<nr>/<gesamt>`
-tragen — die Gesamtzahl muss bekannt sein, bevor das erste Teil versiegelt
-wird.
+Abruf fest (100 000 Punkte je Teil seit Nutzlast 13, bis dahin 250 000 —
+beides rund 1,2 MB je Teil), weil die Zusatzdaten `<nr>/<gesamt>` tragen —
+die Gesamtzahl muss bekannt sein, bevor das erste Teil versiegelt wird.
 
 ### 1.3 Jedes Teil ist ein Container
 
@@ -375,6 +399,37 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
+**Nutzlastversion 13 (seit Web 22.5.0, S11-06).** Wie 12, mit drei
+Unterschieden — alle aus demselben Grund: Seit S11 liegen Orte der Phasen,
+Reanimation und Spur auf dem Server nur noch verschlossen, und der Browser
+öffnet sie beim Sichern.
+
+1. **Orte und Reanimation stehen wieder offen im Kern.** Der Browser öffnet
+   die Einsatzhülle und füllt `phases[].lat/lon` und `resus` daraus — der Kern
+   ist mit dem Sicherungspasswort verschlossen, und die Datei soll sich auch
+   in ein Konto mit anderem Schlüsselpaar einspielen lassen. Geht eine Hülle
+   nicht auf, steht sie als `ort_huelle` (Base64) mit `ort_unlesbar: true` in
+   der Datei. Transportziel und Ortshöhe stehen seit Web 22.1.0 im `pat`-Block
+   (`transport_dest` als `{addr, lat, lon}`, `ortshoehe`); die Spalten
+   `transport_dest`, `dest_lat`, `dest_lon` und `site_ele_m` tragen nur noch
+   den Altbestand.
+2. **Die Spuren stehen als Punktlisten im Spurteil**, nicht als SPUR1
+   (Abschnitt 1.2, E-S11-56).
+3. **Jedes Ruhesegment trägt seine Löschvermerke** (`loeschungen`, leer
+   erlaubt): Zeiträume, die aus seiner Spur gelöscht wurden und gegen eine
+   erneute Lieferung gesperrt sind (Backlog Nr. 161, F-S11-52). Bis Web 22.4.0
+   fehlten sie in jeder Sicherung.
+
+*Bis Web 22.4.0 fehlten Orte, Reanimation und Spur jedes Einsatzes, der seit
+S11-04 verschlossen eingegangen war, in jeder Sicherung* (F-S11-63): Der Kern
+las Phasen und Reanimation aus den Tabellen, in denen sie nicht mehr stehen,
+und die Spurteile nur SPUR1.
+
+*Rückwärts:* Nutzlast 6 bis 12 bleiben lesbar. Der Einspielweg verschließt
+jede Fassung gleich, bevor er sendet (Abschnitt 3). `NUTZLAST_HOECHSTENS`
+steht auf 13; ein Stand vor Web 22.5.0 weist eine 13er-Datei ab — er kennt die
+Punktlisten im Spurteil nicht und liefe still ohne Spuren.
+
 **Nutzlastversion 12 (seit Web 21.0.0, P5c/AP8).** Wie 11, mit zwei
 Unterschieden. **Die Auswahl zentraler Standorte fehlt unter `stammdaten`.**
 Das Feld war seit Web 18.0.0 immer leer. Mit der Migration
@@ -394,7 +449,7 @@ nach.
 ohne Schaden. Ihr fehlte ein Feld, das sie überliest, und die Rollen blendete
 sie aus. Die Nummer sagt aber, was in der Datei stehen **kann**. Und hinter
 Web 21.0.0 führt ohnehin kein Weg zurück, denn Code davor läuft auf diesem
-Schema nicht. `NUTZLAST_HOECHSTENS` steht auf 12. Die geschriebene Zahl steht
+Schema nicht. `NUTZLAST_HOECHSTENS` stand bis Web 22.4.0 auf 12. Die geschriebene Zahl steht
 seit Web 21.0.0 an **einer** Stelle, `EDBAK_NUTZLAST` in `backup_lib.php`.
 Bis dahin stand sie viermal, und drei davon — das Manifest der
 Admin-Sicherung und die zwei Wege, die Eintragsteile einspielen — sagten 10.
@@ -667,7 +722,8 @@ seit Web 4.1.2 auch:
     "origin": "watch", "edited": 0,        // seit Version 4 (Herkunft/Bearbeitungsstatus)
     "created_at": "2026-07-19 08:16:12",   // Anlegezeitpunkt der ZEILE (UTC)
     "distance_m": 38400, "ascent_m": 550,
-    "site_ele_m": 712,                    // NICHT uebernommen (s. Hinweis unten)
+    "site_ele_m": null,                   // Altbestand; seit Web 22.1.0 im pat-Block
+                                          // (`ortshoehe`), s. Abschnitt 3
 
     // PAPIERKORB (seit Version 7). deleted_with_day = 1 heisst: mit dem
     // ganzen Diensttag gelöscht, erscheint nicht einzeln im Papierkorb und
@@ -679,7 +735,8 @@ seit Web 4.1.2 auch:
     // ENUM('air','ground','ambulant'); bei "ambulant" entfallen Zielklinik,
     // Schockraum und NA-Begleitung.
     "transport_mode": "ground", "na_escort": 1, "false_alarm": 0,
-    "transport_dest": "…", "dest_lat": 47.72, "dest_lon": 10.31,
+    // Transportziel: seit Web 22.1.0 im pat-Block, die Spalten nur Altbestand.
+    "transport_dest": null, "dest_lat": null, "dest_lon": null,
     "schockraum": 0, "secondary": 0,
 
     // Regel, aus der der Abfahrtort abgeleitet wird — nicht die Koordinate:
@@ -711,14 +768,17 @@ seit Web 4.1.2 auch:
                       "lat": 47.72, "lon": 10.31 },
              "site_desc": "Zufahrt über Forstweg, letzte 300 m zu Fuß",
              "notes": "Landeplatz durch die Feuerwehr freigeräumt.\nRTW …",
-             "start": { "addr": "Wache Hochkreuth", "lat": 47.72, "lon": 10.31 } },
+             "start": { "addr": "Wache Hochkreuth", "lat": 47.72, "lon": 10.31 },
+             "transport_dest": { "addr": "Klinikum …", "lat": 47.72, "lon": 10.31 },
+             "ortshoehe": 712 },
                                             // site_desc seit Version 5,
                                             // start seit Version 6 (manueller
                                             // Abfahrtort, nur bei
                                             // start_src = "manual"),
                                             // notes seit Nutzlast 11 — die
                                             // Notiz des Einsatzes, mit ihren
-                                            // Zeilenumbrüchen
+                                            // Zeilenumbrüchen; transport_dest
+                                            // und ortshoehe seit Web 22.1.0
     // Ließ sich ein Einsatz beim Export NICHT entschlüsseln, steht statt
     // `pat` das Kennzeichen `pat_unreadable` und — seit Web 4.1.0 — der
     // unveränderte Chiffretext `pat_blob` in der Datei:
@@ -738,6 +798,11 @@ seit Web 4.1.2 auch:
                                "occurred_at": "2026-07-19 08:43:00" } ] } ],
     "resources": [ "RTW 1", "First Responder" ],   // Namen aus den Stammdaten
 
+    // SEIT NUTZLAST 13 stehen `lat`/`lon` der Phasen und `resus` wieder offen
+    // hier — der Browser hat sie aus der Einsatzhülle geholt. Ging die Hülle
+    // nicht auf, steht sie statt dessen unverändert da:
+    // "ort_huelle": "<Gerätehülle, Base64>", "ort_unlesbar": true
+
     // AB NUTZLAST 8: ein Verweis statt der Punkte. Die Spur selbst steht als
     // SPUR1-Blob im Spurteil (Abschnitt 1.2). `spur_ref` ist eine laufende
     // Nummer DIESES Exportvorgangs und sonst nichts — die Datenbankkennung
@@ -756,7 +821,10 @@ seit Web 4.1.2 auch:
     "client_ref": "r-…", "day_id": 17,
     "started_at": "…", "ended_at": "…", "final": 1,
     "deleted_at": null, "deleted_with_day": 0,   // Papierkorb, seit Version 7
-    "spur_ref": 82, "stufe": 2, "n_original": 129, "n": 129
+    "spur_ref": 82, "stufe": 2, "n_original": 129, "n": 129,
+    // Löschvermerke seit Nutzlast 13 (F-S11-52), leer erlaubt:
+    "loeschungen": [ { "von_ts": 1721390000, "bis_ts": 1721390600,
+                       "n_punkte": 37, "erstellt_am": "2026-07-19 10:00:00" } ]
   } ]
 }
 ```
@@ -765,9 +833,11 @@ seit Web 4.1.2 auch:
 
 Serverseitig liegen die Punkte seit Web 10.0.0 nicht mehr nur als Zeilen in
 `track_points`, sondern je nach Alter als **Blob** in `track_blobs` (Format
-SPUR1, `docs/Technik.md` 4.97). **Seit Web 11.0.0 gibt das Backup sie
-genauso weiter**, statt sie auszupacken: Der Spurteil trägt den Blob, wie er
-liegt.
+SPUR1, `docs/Technik.md` 4.97). **Von Web 11.0.0 bis 22.4.0 gab das Backup
+sie genauso weiter**, statt sie auszupacken: Der Spurteil trug den Blob, wie
+er liegt. **Seit Nutzlast 13 (Web 22.5.0) steht im Spurteil die Punktliste**
+— der Browser setzt Altbestand und geöffnete Stücke zusammen (Abschnitt 1.2);
+was dieser Abschnitt über Stufen sagt, gilt für Dateien bis Nutzlast 12.
 
 **Eine Zusage hat sich dabei geändert, und das gehört gesagt.** Bis Web 10.3.0
 hieß es hier: „das Backup nimmt den Datenbankstand und kodiert nicht neu".
@@ -1022,8 +1092,47 @@ zweiten Einspielen derselben Datei: Der Einsatz war schon da und wurde
 übersprungen, also gibt es für seine Spur keine neue Kennung. Gezählt und
 gemeldet wird es trotzdem.
 
-**Die Höhe des Einsatzortes entsteht erst im dritten Zug**, weil sie aus der
-Spur gerechnet wird und die dann erst da ist.
+**Die Höhe des Einsatzortes rechnet der Rückweg seit Web 22.5.0 nicht mehr**
+(F-S11-45): Sie steht im `pat`-Block (`ortshoehe`), den der Browser aus der
+Datei füllt — aus `site_ele_m` einer älteren Datei, wenn der Block sie noch
+nicht trägt. Bis dahin entstand sie erst im dritten Zug aus der Spur.
+
+### Ortsdaten nur verschlossen (seit Web 22.5.0, S11-06)
+
+Der Server nimmt Orte der Phasen, Reanimation und Spur nur noch verschlossen
+an, Transportziel und Ortshöhe nur im `pat_blob` — wie der Eingang der Geräte
+(`ingest.php`) und der CSV-Import. **Der Browser bringt jede Fassung von 6 bis
+13 in diese Form, bevor er sendet** (`einstellungen.php`, Helfer `rw…`):
+
+| In der Datei | Was der Browser sendet |
+|---|---|
+| `phases[].lat/lon`, `resus` | `ort_huelle` — Einsatzhülle, verschlossen mit dem öffentlichen Schlüssel des Zielkontos, gebunden an die `client_ref`; die Phasen ohne Ort, `resus` leer |
+| `transport_dest`, `dest_lat`, `dest_lon`, `site_ele_m` | im `pat`-Block (`transport_dest` als `{addr, lat, lon}`, `ortshoehe`), dann verschlüsselt; die Spalten leer |
+| `track` im Eintrag (Nutzlast 6, 7) | `spur_stuecke` — verschlossene Stücke im Eintrag |
+| Spurteil mit `blob` (8 bis 12) oder `punkte` (13) | Stücke an `api/backup_spuren_restore.php`, eine lange Spur über mehrere Anfragen (`fortsetzung`) |
+| `ort_huelle` mit `ort_unlesbar` | unverändert |
+
+Eine Datei ohne `client_ref` bekommt sie jetzt vom Browser (`bak-` + 24 Hex):
+Die Hülle ist an sie gebunden, und eine Kennung, die erst der Server vergäbe,
+passte nicht dazu. **Geht ein `pat_blob` nicht auf**, kann der Browser
+Transportziel und Ortshöhe nicht hineinlegen; sie fehlen dann im Zielkonto,
+und die Abschlussmeldung nennt die Zahl.
+
+**Was der Server dennoch im Klartext bekommt, weist er ab**:
+`edbak_klartext_fund()` sucht vor der Transaktion die erste solche Stelle, und
+der Endpunkt antwortet `400 klartext` — es ist dann nichts geschrieben. Im
+Spurweg genügt ein `blob` in der Anfrage.
+
+**Der direkte Weg der Verwaltung** (Konto-Backup ins selbe Konto, Abschnitt 5)
+und der Demo-Reset haben die Daten auf dem Server ohnehin im Klartext; dort
+verschließt der Server selbst (E-S11-57, E-S11-20). Transportziel und
+Ortshöhe bleiben auf dem direkten Weg Altbestand in ihren Spalten — der
+`pat_blob` hängt am Inhaltsschlüssel, den der Server nicht hat. Nur der
+Demo-Reset kennt ihn, weil das Passwort des Demo-Kontos öffentlich ist.
+
+**Löschvermerke** (`loeschungen` am Segment, Nutzlast 13) werden wie die
+Schnitte mit ihrem Zeitpunkt aus der Datei angelegt; ein unbrauchbarer zählt
+unter `schnitte.verworfen`.
 
 ### Allgemein
 
@@ -1240,18 +1349,14 @@ automatisch in jedem Backup, ohne dass das jemand entschieden hätte.
 
 **In der Datei, kommt beim Einspielen aber nicht zurück:**
 
-- `site_ele_m` (Einsatzort-Höhe). Der Einspielweg schreibt die Felder aus
-  `mission_fields.php` plus `pat_blob`; die Höhe steht dort nicht, weil sie
-  beim Uhr-Upload aus dem Track gerechnet und nicht eingegeben wird. Sie bleibt
-  in der Datei, damit diese den Bestand vollständig abbildet — der Wert aus der
-  Datei wird aber **nicht übernommen**, sondern nach dem Einspielen aus den
-  gerade eingespielten Phasen und Spurpunkten neu berechnet
-  (`site_elevation_lib.php`).
-
-  Diese Berechnung läuft seit Web 4.6.0 **nach** dem Abschluss der Transaktion
-  und je Einsatz eingefasst: Ein Fehler darin darf die Wiederherstellung nicht
-  kosten. Scheitert sie, bleibt das Feld leer und die Antwort nennt die Zahl
-  der betroffenen Einsätze als `hoehe_fehler`.
+- `site_ele_m` (Einsatzort-Höhe) als SPALTE. Seit Web 22.5.0 legt der
+  Browser den Wert aus der Datei in den `pat`-Block (`ortshoehe`), und die
+  Spalte bleibt leer (Abschnitt 3). Bis Web 22.4.0 wurde er nicht übernommen,
+  sondern nach dem Einspielen aus Phasen und Spurpunkten neu berechnet
+  (`site_elevation_lib.php`) — das kann der Server nicht mehr, er sieht die
+  Spur nicht. Nur der direkte Weg der Verwaltung rechnet sie noch, aus den
+  Punkten, die er gleich verschließt; scheitert das, nennt die Antwort die
+  Zahl als `hoehe_fehler`.
 
 **`created_at` kommt seit Version 7 zurück** und steht deshalb nicht mehr in
 dieser Liste. Bis dahin galt: gesichert ja, eingespielt nein — nach einer
@@ -1416,7 +1521,7 @@ die 3.
 | `manifest.json` | Umfang, Schlüsselhüllen, Teileliste, `geschuetzte` |
 | `kopf.json` | Stammdaten, Diensttage, `eintraege_gesamt` |
 | `eintraege/0001.json` … | je 250 Einträge (Einsätze **und** Ruhesegmente) ohne Punktlisten |
-| `spuren/0001.json` … | je Teil `{spur_ref, blob, stufe, n_original, n}` — SPUR1, Base64 |
+| `spuren/0001.json` … | je Teil eine Liste: `{spur_ref, blob, stufe, n_original, n}` — SPUR1, Base64, der Altbestand — und `{spur_ref, stuecke, stufe, n, fortsetzung?}` — die verschlossenen Stücke, wie sie liegen (seit Web 22.5.0) |
 
 **Ungepackt im ZIP, aber gzip davor.** Bis Fassung 2 packte das ZIP die Teile
 (sie waren blankes JSON). Ein Siegel ist Zufallsrauschen — darüber bringt ein
@@ -1458,16 +1563,18 @@ Ruhesegmente).
   "erzeugt":     "2026-09-01T04:53:17Z",
   "web_version": "12.0.0",
   "konto":  { "account_key": "…16 Hexziffern…", "email": "…", "name": "…" },
-  "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…" },
+  "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…",
+                  "kp_privat": "edk1:…" },   // seit Web 22.5.0, s. unten
   "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3,
               "papierkorb": { "einsaetze": 5, "diensttage": 1, "ruhezeiten": 5 } },
-  "nutzlast":      12,         // Fassung des Kerns, s. Abschnitt 2 (EDBAK_NUTZLAST)
+  "nutzlast":      13,         // Fassung des Kerns, s. Abschnitt 2 (EDBAK_NUTZLAST)
   "eintraege":     45,         // Einsätze und Ruhesegmente zusammen
   "eintragsteile": 1,
   "spurteile":     1,
   "spuren":        40,
   "punkte":        12345,
   "geschuetzte":   38,         // s. unten
+  "ortsdaten_verschlossen": 61, // seit Web 22.5.0: Einsatzhüllen und Spuren aus Stücken
   "teile":     ["kopf.json", "eintraege/0001.json", "spuren/0001.json"],
   "abgelehnt": []              // Spuren, die der Server nicht kodieren konnte
 }
@@ -1480,6 +1587,27 @@ die Zahl hätte die Funktion still `false` geliefert und damit die Sperre aus
 E20 ausgehebelt: Ein Paket mit unlesbaren Angaben wäre als „direkt
 einspielbar" durchgegangen. **Fehlt das Feld** in einem Fassung-2-Paket, wird
 vorsichtig entschieden — der teurere Weg ist hier der sichere.
+
+**Verschlossene Ortsdaten (seit Web 22.5.0, S11-06c).** Der Kern trägt die
+Einsatzhülle als `ort_huelle` (Base64), und die Spurteile tragen die Stücke,
+wie sie liegen — der Server kann beides nicht öffnen und muss es nicht. Hat
+eine Spur Altbestand **und** Stücke, stehen zwei Einträge mit derselben
+`spur_ref` im Teil, der zweite mit `fortsetzung`. Hülle und Stücke sind an
+das **Schlüsselpaar des Kontos** gebunden; deshalb:
+
+- **`ortsdaten_verschlossen`** zählt Einsätze mit Hülle und Spuren mit
+  Stücken, und `edbak_paket_hat_geschuetzte()` nimmt die Zahl mit. Ein Paket,
+  das sie trägt, geht nie direkt in ein **anderes** Konto (E20), sondern über
+  den Freigabeweg.
+- **`schluessel.kp_privat`** ist der private Teil des Paars, verschlüsselt
+  unter dem Inhaltsschlüssel — derselbe Chiffretext wie `users.kp_privat`. Auf
+  dem Freigabeweg öffnet ihn der Browser des Zielkontos mit dem, was
+  `pat_wrap_rc` hergibt, öffnet damit Hüllen und Stücke und verschließt sie für
+  das eigene Paar neu. Der Server sieht dabei nichts, was er nicht schon hat.
+- **Der direkte Weg ins selbe Konto** lässt Hüllen und Stücke, wie sie sind,
+  und **verschließt** den Klartext eines älteren Pakets — Orte, Reanimation,
+  SPUR1 — mit dem öffentlichen Schlüssel des Kontos (E-S11-57). Hat das Konto
+  kein Paar, wird abgewiesen, bevor etwas geschrieben ist.
 
 **Ein Fassung-2-Kern darf nicht durch den einteiligen Rückweg.** Er trägt
 Nutzlast 9 (bis Web 14.1.0: 8); die Punkte stehen in eigenen Teilen. Wer ihn an `edbak_restore()`

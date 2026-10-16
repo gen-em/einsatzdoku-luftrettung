@@ -471,7 +471,7 @@ function mf_missions_register(): array
                         'import_aendern' => 6, 'suchindex' => 17],
     'pat_blob' => ['export' => 31, 'backup' => 31, 'import_neu' => 12, 'import_aendern' => 7,
                    'suchindex' => 18, 'range' => 10, 'tag' => 6],
-    'ort_huelle' => ['export' => 33],
+    'ort_huelle' => ['export' => 33, 'backup' => 35],
     'notes' => [],
     'created_at' => ['backup' => 32],
     'deleted_at' => ['backup' => 33, 'backup_restore' => 13],
@@ -512,7 +512,7 @@ function mf_missions_gruende(): array
         'ort_huelle' =>
             'Die Einsatzhuelle (S11-04a): Phasenkoordinaten und Reanimation, verschlossen mit dem oeffentlichen Schluessel des Kontos. '
           . 'Geschrieben nur von ingest.php, das sie mit den Phasen ersetzt (eigene Anweisung, nicht im INSERT). '
-          . 'Gelesen ab S11-04b von api/mission.php; seit S11-05e im Export (nur mit personenbezogenen Angaben, der Browser oeffnet sie); Backup und Import nehmen sie mit S11-05e und S11-06 auf.',
+          . 'Gelesen ab S11-04b von api/mission.php; seit S11-05e im Export (nur mit personenbezogenen Angaben, der Browser oeffnet sie) und im Import; seit S11-06a im Backup (als Base64, edbak_build()), dort oeffnet sie der Browser und legt Orte und Reanimation offen in den verschlossenen Container.',
         'origin' =>
             'Beim Aendern nicht: Ein Import einer Jahresliste darf die Herkunft eines bestehenden Einsatzes nicht ueberschreiben.',
         'edited' =>

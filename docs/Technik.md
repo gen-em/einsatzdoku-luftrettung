@@ -179,7 +179,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       die `track_points`/`track_blobs` anfasst (4.97);
 │   │                       seit Web 22.0.1 auch `track_stuecke` (SPUR2, 4.99s)
 │   ├── geraetehuelle_lib.php  Die Gerätehülle VERSCHLIESSEN (S11-04a) — für
-│   │                       Proben und Demo; byte-gleich mit Browser und
+│   │                       Proben, Demo und den direkten Rückweg der
+│   │                       Verwaltung (S11-06c); byte-gleich mit Browser und
 │   │                       Referenz. Ein Öffnen gibt es hier mit Absicht nicht
 │   ├── kontopaar_lib.php  Das Schlüsselpaar des Kontos (S11-03): Siegel,
 │   │                       Zustand, Ablegen, SEC1 für die Kopplung (4.99s)
@@ -1660,8 +1661,10 @@ Einmal-Link.
 Einträge, `?teil=eintraege&ab=…&anzahl=250` dann Fenster von Einsätzen und
 Ruhesegmenten — ohne Punktlisten, geschützte Angaben weiterhin als
 Chiffretext. Er entschlüsselt sie je Fenster mit dem Inhaltsschlüssel, ersetzt
-sie durch Klartext, holt die Spuren blockweise als SPUR1-Blobs
-(`api/backup_spuren.php`, 25 Kennungen je Anfrage) und schreibt daraus ein ZIP
+sie durch Klartext, öffnet die Einsatzhüllen (Orte der Phasen, Reanimation —
+seit Web 22.5.0, S11-06a), holt die Spuren blockweise als Altbestand und
+verschlossene Stücke (`api/backup_spuren.php`, Form `punkte`, 25 Kennungen je
+Anfrage), öffnet die Stücke und schreibt daraus ein ZIP
 mit versiegelten Teilen (**Containerfassung 4**, seit Web 11.1.0):
 `manifest.edbak`, `kopf.edbak`, `eintraege/NNNN.edbak`, `spuren/NNNN.edbak`.
 Jedes Teil ist ein AES-GCM-Container; die Zusatzdaten binden
@@ -1680,8 +1683,20 @@ Beim Einspielen öffnet der Browser Manifest und Kopf, schickt den Kopf an
 (`day_map`). Dann gehen die Eintragsfenster an
 `api/backup_eintraege_restore.php` — die Angaben vorher mit dem Schlüssel des
 **Zielkontos** neu verschlüsselt —, und der Server antwortet je Fenster mit
-der Zuordnung `spur_ref` → angelegter Datensatz. Zuletzt gehen die Blobs an
-`api/backup_spuren_restore.php` — geprüft, und Vorhandenes übersprungen.
+der Zuordnung `spur_ref` → angelegter Datensatz samt `client_ref`. Zuletzt
+gehen die Spuren an `api/backup_spuren_restore.php` — geprüft, und
+Vorhandenes übersprungen.
+
+**Seit Web 22.5.0 (S11-06b) verschließt der Browser vor dem Senden**, aus
+jeder Nutzlast von 6 bis 13 gleich: Orte und Reanimation in die Einsatzhülle,
+Transportziel und Ortshöhe in den `pat_blob`, Spuren — Punktliste im Eintrag,
+SPUR1-Blob oder Punktliste im Spurteil — in Stücke unter dem öffentlichen
+Schlüssel des Zielkontos (`einstellungen.php`, Helfer `rw…`; SPUR1 liest
+`EdOrtsdaten.spur1Lesen()`). `edbak_restore(…, 'browser')` weist Klartext ab,
+bevor etwas liegt (`edbak_klartext_fund()`, `400 klartext`). Der direkte Weg
+der Verwaltung und der Demo-Reset rufen `'server'`: Dort verschließt der
+Server selbst (`geraetehuelle_lib.php`, E-S11-57, E-S11-20). Aufbau und
+Tabelle: `docs/Backup-Format.md` 3.
 
 **Die Warnung vor unlesbaren Angaben steht vor dem ersten Schreiben.** Ob es
 etwas zu warnen gibt, kann der Einspielweg bei Fassung 4 nicht mehr selbst
@@ -3403,8 +3418,8 @@ sechs sind umgestellt:
 | Einsatzansicht (`api/mission.php`) | `spur_lesen()` | `[lat, lon]` + `ts` für `track_idx` |
 | Export (`api/export_data.php`) | `spur_lesen_viele()`, `spur2_lesen_viele()`, `spur_zahlen()` | `[lat, lon, ele, ts]` + Stücke (seit Web 22.4.0) |
 | Backup, Nutzlast ≤ 7 (`backup_lib.php`) | `spur_lesen_viele()` | `[seq, lat, lon, ele, ts]` |
-| Backup, Fassung 4 (`api/backup_spuren.php`) | `spur_fuer_sicherung_viele()` | SPUR1-Blob, roh |
-| Rückweg der Fassung 4 (`api/backup_spuren_restore.php`) | `spur_blob_pruefen()`, `spur_blob_schreiben()` | — |
+| Backup, Fassung 4 (`api/backup_spuren.php`) | `spur_lesen_viele()`, `spur2_lesen_viele()` (Form `punkte`, seit Web 22.5.0); `spur_fuer_sicherung_viele()` (Form `blob`, Konto-Backup) | Punkte + Stücke; SPUR1-Blob, roh |
+| Rückweg der Fassung 4 (`api/backup_spuren_restore.php`, `edbak_spuren_schreiben()`) | `spur2_stueck_schreiben()`; im direkten Weg `spur_blob_pruefen()`, `spur_dekodieren()` | — |
 | Einsatzort-Höhe (`site_elevation_lib.php`) | `spur_lesen()` | ein Punkt |
 | Umdatierung (`tageszuordnung_lib.php`) | `spur_min_ts()`, `spur_zeit_verschieben()` | — |
 
@@ -6350,6 +6365,23 @@ Eine Erweiterung war dafür nötig, in `backup_lib.php`:
   Transaktionen, könnte ein Fehler in der Mitte ein Konto mit halbem Bestand
   hinterlassen — und der Reset läuft unbeaufsichtigt.
 
+#### Der Demobestand verschlossen (seit Web 22.5.0, S11-06d)
+
+Der Reset spielt die Fixture über `edbak_restore(…, 'server', $blobZiel)` ein:
+Orte der Phasen, Reanimation und Spur verschließt der Server mit dem
+öffentlichen Schlüssel des Demo-Kontos (E-S11-20). **Transportziel und
+Ortshöhe legt er in den `pat_blob`** — dafür braucht er den Inhaltsschlüssel,
+und den rechnet er aus dem Passwort des Demo-Kontos (`DEMO_PASSWORT`,
+`demo_inhaltsschluessel()`), das im Handbuch steht. **Hat das Demo-Konto noch
+kein Schlüsselpaar, legt er eines an** (`demo_paar_sicherstellen()`,
+E-S11-58), wie `EdKontopaar.anlegen()` es täte. Beides gilt nur für das
+Demo-Konto; jede der Funktionen prüft `demo_ist_demo()`. Ohne diesen Weg
+blieben im Demobestand Klartext-Ortsdaten, und die Aufräummigration (S11-12)
+verweigerte auf jeder Anlage mit Demo-Konto. Gemessen am 16.10.2026: 109
+Einsätze, 14 Hüllen, 221 Spuren mit 67 292 Punkten in Stücken, 0
+Klartextzeilen, Transportziel in 84 und Ortshöhe in 93 Blobs — so viele, wie
+die Fixture trägt; 1,5 s.
+
 Eine zweite gab es bis Web 7.3.1: `edbak_build($userId, $mitPapierkorb)`. Sie
 ist entfallen, weil der Papierkorb seit Web 8.0.0 ohnehin in jedem Backup
 steht (`docs/Backup-Format.md` 2).
@@ -8765,15 +8797,19 @@ sind; die Reanimation zählt der Server nicht.
 Höhe `-32768` = keine; Einsatzhülle JSON mit Zeiten seit `started_at`. Die
 genaue Form steht im JSON-Vertrag 3.4.
 
-**Verschließen auf dem Server** (`geraetehuelle_lib.php`): nur für Proben und
-das Demo-Zurücksetzen, byte-gleich gegen die Prüfvektoren (Hüllenprobe,
-Teil Server). **Öffnen kann der Server nicht** — die Funktion gibt es dort
+**Verschließen auf dem Server** (`geraetehuelle_lib.php`): für Proben, das
+Demo-Zurücksetzen und den direkten Rückweg einer Kontosicherung der Verwaltung
+(`gh_einsatz_verschliessen()`, `gh_stuecke_bauen()`, S11-06c), byte-gleich
+gegen die Prüfvektoren (Hüllenprobe, Teil Server). **Öffnen kann der Server nicht** — die Funktion gibt es dort
 nicht, nur im Prüfwerkzeug (`tools/proben/huelle/geraet.php`), mit dem die
 Proben wie ein Gerät senden und das Ergebnis nachlesen.
 
 **Mitgeführt:** `spur_loeschen()`, Waisenjob, Kontingent (`spur_bytes()`) und
-Demo-Zurücksetzen zählen die Stücke mit. **Noch nicht:** Ansichten, Export,
-Sicherung und Import lesen sie ab S11-04c bis S11-06.
+Demo-Zurücksetzen zählen die Stücke mit. Ansichten (S11-04c), Export und
+Import (S11-05e) und die Sicherung (S11-06) lesen sie; eine Kontosicherung
+trägt sie, wie sie liegen, und auf dem Freigabeweg in ein anderes Konto
+verschließt der Browser sie mit dem privaten Teil des Ursprungskontos aus dem
+Paket neu (`schluessel.kp_privat`, `docs/Backup-Format.md` 5).
 
 **Ausgeliefert seit Web 22.0.2 (S11-04b)** über `spur2_lesen_viele()`, als
 Chiffretext mit den Klartextzahlen:

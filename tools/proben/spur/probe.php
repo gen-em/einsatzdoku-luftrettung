@@ -16,9 +16,18 @@ declare(strict_types=1);
  * ziehen ihre Punkte seither ueber `spur_lib.php`; wenn dort etwas anders
  * herauskommt, faellt es hier auf und nicht erst in der Karte.
  *
- * ES AENDERT NICHTS. Der Verdichtungsteil laeuft in einer Transaktion, die am
- * Ende zurueckgerollt wird. Das Werkzeug laesst sich damit auch gegen einen
+ * ES AENDERT NICHTS. Der ganze Lauf steht in einer Transaktion, die am Ende
+ * zurueckgerollt wird; Teil 3 und Teil 6 rollen ihre eigenen Schritte ueber
+ * Sicherungspunkte zurueck. Das Werkzeug laesst sich damit auch gegen einen
  * Bestand fahren, den man behalten will — etwa das Referenzkonto.
+ *
+ * SEIT S11-06 SETZT ES SEINEN KLARTEXT SELBST AUF. Es misst SPUR1 — Zeilen,
+ * Blob, Verdichtung, Ausduennung —, und das Demo-Konto traegt seit dem
+ * verschlossenen Reset (E-S11-20) keine Klartextspur mehr, sondern nur
+ * Stuecke. Findet die Probe im Konto keine Punkte, legt sie die Spuren der
+ * Demo-Fixture als Zeilen an die Einsaetze und Segmente desselben Kontos
+ * (ueber `client_ref`), nimmt die Stuecke fuer die Dauer des Laufs heraus und
+ * rollt am Ende alles zurueck. Bis S11-07 und S11-12 gibt es SPUR1 noch.
  *
  * Aufruf:
  *   php tools/proben/spur/probe.php [konto]
@@ -71,8 +80,41 @@ $punkteGesamt = 0;
 foreach ($vorher as $liste) {
     foreach ($liste as $p) { $punkteGesamt += count($p); }
 }
+/* DIE AEUSSERE KLAMMER: alles, was dieser Lauf schreibt, rollt am Ende
+ * zurueck — der aufgesetzte Klartext eingeschlossen. */
+$pdo->beginTransaction();
+$ausFixture = false;
+if ($punkteGesamt === 0) {
+    require_once $wurzel . '/demo_lib.php';
+    $fx = demo_fixture_vorhanden() ? demo_fixture_laden()['daten'] : ['missions' => [], 'rest_segments' => []];
+    $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
+                          VALUES (?,?,?,?,?,?,?)');
+    foreach (['missions' => ['mission', 'missions'], 'rest_segments' => ['rest', 'rest_segments']]
+             as $zweig => [$typ, $tab]) {
+        $idVon = $pdo->prepare("SELECT id FROM `$tab` WHERE user_id = ? AND client_ref = ?");
+        foreach ($fx[$zweig] ?? [] as $e) {
+            if (empty($e['track'])) { continue; }
+            $idVon->execute([$uid, (string)$e['client_ref']]);
+            $id = (int)$idVon->fetchColumn();
+            if (!$id) { continue; }
+            $pdo->prepare('DELETE FROM track_stuecke WHERE owner_type = ? AND owner_id = ?')
+                ->execute([$typ, $id]);
+            foreach ($e['track'] as $p) { $ins->execute([$typ, $id, $p[0], $p[1], $p[2], $p[3], $p[4]]); }
+            $ausFixture = true;
+        }
+    }
+    $vorher = [
+        'mission' => spur_lesen_viele($pdo, 'mission', $mIds),
+        'rest'    => spur_lesen_viele($pdo, 'rest', $rIds),
+    ];
+    $punkteGesamt = 0;
+    foreach ($vorher as $liste) {
+        foreach ($liste as $p) { $punkteGesamt += count($p); }
+    }
+}
 $spurenGesamt = count($vorher['mission']) + count($vorher['rest']);
-echo "  $spurenGesamt Spuren, $punkteGesamt Punkte\n\n";
+echo "  $spurenGesamt Spuren, $punkteGesamt Punkte"
+   . ($ausFixture ? ' (Klartext aus der Demo-Fixture aufgesetzt, wird zurueckgerollt)' : '') . "\n\n";
 pruefe($punkteGesamt > 0, 'Der Bestand hat ueberhaupt Spuren',
        "$punkteGesamt Punkte");
 
@@ -154,7 +196,7 @@ foreach ($vorher as $typ => $liste) {
 
 $backupVorher = edbak_build($uid);
 
-$pdo->beginTransaction();
+$pdo->exec('SAVEPOINT teil3');
 try {
     $verdichtet = 0;
     foreach ($vorher as $typ => $liste) {
@@ -254,7 +296,7 @@ try {
                "Einsatz $probeId");
     }
 } finally {
-    $pdo->rollBack();
+    $pdo->exec('ROLLBACK TO SAVEPOINT teil3');
 }
 
 /* Nach dem Rollback muss der Bestand sein, was er war. */
@@ -465,7 +507,7 @@ pruefe($hatSchnitte, 'Tabelle track_cuts vorhanden',
        $hatSchnitte ? '' : 'Migrationslauf ueber Betrieb -> Updates (2026_09_02_schnitte)');
 
 if ($hatSchnitte) {
-    $pdo->beginTransaction();
+    $pdo->exec('SAVEPOINT teil6');
     try {
         $t0 = 1756700000;          // fest, damit die Zahlen reproduzierbar sind
         $pdo->prepare('INSERT INTO days (user_id, day) VALUES (?, ?)')
@@ -609,13 +651,18 @@ if ($hatSchnitte) {
                'und die Fortsetzungsmarke bleibt trotzdem stehen (leerer Blob)',
                'naechste_seq = ' . spur_naechste_seq($pdo, 'rest', $segId));
 
-        $pdo->rollBack();
-        pruefe(!$pdo->inTransaction(), 'Der Prueffall ist rueckstandslos zurueckgerollt', '');
+        $pdo->exec('ROLLBACK TO SAVEPOINT teil6');
+        $uebrig = (int)$pdo->query("SELECT COUNT(*) FROM rest_segments WHERE id = $segId")->fetchColumn()
+                + (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE id = $misId")->fetchColumn();
+        pruefe($uebrig === 0, 'Der Prueffall ist rueckstandslos zurueckgerollt', '');
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
         throw $e;
     }
 }
+
+/* Die aeussere Klammer: auch der aufgesetzte Klartext geht wieder. */
+if ($pdo->inTransaction()) { $pdo->rollBack(); }
 
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $erwartungen, $offen);
 exit($offen === 0 ? 0 : 1);

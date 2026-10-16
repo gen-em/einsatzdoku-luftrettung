@@ -533,7 +533,7 @@ function edbak_sicherung_erzeugen(int $userId): array
     [$platz, $grundPlatz] = edbak_grenze_pruefen();
     if (!$platz) { return [false, $grundPlatz, null]; }
 
-    $st = db()->prepare('SELECT id, email, name, account_key, pat_wrap_rc, pat_key_check
+    $st = db()->prepare('SELECT id, email, name, account_key, pat_wrap_rc, pat_key_check, kp_privat
                          FROM users WHERE id = ?');
     $st->execute([$userId]);
     $u = $st->fetch();
@@ -678,6 +678,11 @@ function edbak_sicherung_erzeugen(int $userId): array
      * einspielbar" durchgegangen. Der Erzeuger zaehlt es deshalb hier und
      * schreibt es ins Manifest. */
     $geschuetzte = 0;
+    /* Einsaetze mit Einsatzhuelle und Spuren aus Stuecken (S11-06c). Sie sind
+     * an das Schluesselpaar DIESES Kontos gebunden und in einem anderen nur
+     * ueber den Freigabeweg lesbar — sie zaehlen deshalb fuer die Sperre aus
+     * E20 mit (`edbak_paket_hat_geschuetzte()`). */
+    $verschlossen = 0;
     $index = [];
     $eintragsteile = 0;
 
@@ -711,6 +716,7 @@ function edbak_sicherung_erzeugen(int $userId): array
             if (is_array($m) && ($m['pat_blob'] ?? null) !== null && $m['pat_blob'] !== '') {
                 $geschuetzte++;
             }
+            if (is_array($m) && !empty($m['ort_huelle'])) { $verschlossen++; }
         }
 
         $eintragsteile++;
@@ -740,28 +746,62 @@ function edbak_sicherung_erzeugen(int $userId): array
             $block = array_slice($dieser, $k, EDBAK_ADMIN_SPUR_BLOCK);
             $refNach = [];
             foreach ($block as $e) { $refNach[(int)$e['id']] = $e['spur_ref']; }
-            foreach (spur_fuer_sicherung_viele($pdo, $art, array_keys($refNach)) as $id => $sp) {
-                if (!empty($sp['leer'])) { continue; }
-                if (!empty($sp['fehler'])) {
-                    $abgelehnt[] = $art . ' ' . $id . ': ' . ($sp['grund'] ?? 'unbekannt');
-                    continue;
-                }
-                if ($laufend && $laufendePunkte + (int)$sp['n'] > EDBAK_ADMIN_TEIL_PUNKTE) {
-                    if (!$spurteilSchreiben($laufend)) {
-                        return $abbruch('Ein Spurteil liess sich nicht schreiben.');
-                    }
+            /* ZWEI QUELLEN JE SPUR (S11-06c): der Altbestand als SPUR1-Blob
+             * und die verschlossenen Stuecke, WIE SIE LIEGEN — der Server
+             * kann sie nicht oeffnen und muss es nicht. Hat eine Spur beides,
+             * stehen zwei Eintraege mit derselben `spur_ref` im Teil; der
+             * zweite traegt `fortsetzung`, damit der Rueckweg die Spur einmal
+             * zaehlt. Bis Web 22.4.0 kam nur der Blob mit, und eine Spur aus
+             * Stuecken fehlte in jeder Kontosicherung (F-S11-63). */
+            $ids = array_keys($refNach);
+            $stueckeNach = spur2_lesen_viele($pdo, $art, $ids);
+            $anhaengen = function (array $eintrag, int $n) use (&$laufend, &$laufendePunkte,
+                                                                $spurteilSchreiben): bool {
+                if ($laufend && $laufendePunkte + $n > EDBAK_ADMIN_TEIL_PUNKTE) {
+                    if (!$spurteilSchreiben($laufend)) { return false; }
                     $laufend = []; $laufendePunkte = 0;
                 }
-                $laufend[] = [
-                    'spur_ref'   => $refNach[$id],
-                    'stufe'      => (int)$sp['stufe'],
-                    'n_original' => (int)$sp['n_original'],
-                    'n'          => (int)$sp['n'],
-                    'blob'       => base64_encode($sp['blob']),
-                ];
-                $laufendePunkte += (int)$sp['n'];
-                $spurenGesamt++; $punkteGesamt += (int)$sp['n'];
+                $laufend[] = $eintrag;
+                $laufendePunkte += $n;
+                return true;
+            };
+            $sicherung = spur_fuer_sicherung_viele($pdo, $art, $ids);
+            foreach ($ids as $id) {
+                $sp = $sicherung[$id] ?? ['leer' => true];
+                $hatBlob = false;
+                if (!empty($sp['fehler'])) {
+                    $abgelehnt[] = $art . ' ' . $id . ': ' . ($sp['grund'] ?? 'unbekannt');
+                } elseif (empty($sp['leer'])) {
+                    if (!$anhaengen(['spur_ref'   => $refNach[$id],
+                                     'stufe'      => (int)$sp['stufe'],
+                                     'n_original' => (int)$sp['n_original'],
+                                     'n'          => (int)$sp['n'],
+                                     'blob'       => base64_encode($sp['blob'])], (int)$sp['n'])) {
+                        return $abbruch('Ein Spurteil liess sich nicht schreiben.');
+                    }
+                    $hatBlob = true;
+                    $punkteGesamt += (int)$sp['n'];
+                }
+                $st = $stueckeNach[$id] ?? [];
+                if ($st) {
+                    $n = array_sum(array_column($st, 'punkte'));
+                    $eintrag = ['spur_ref' => $refNach[$id],
+                                'stufe'    => max(array_column($st, 'stufe')),
+                                'n'        => $n,
+                                'stuecke'  => array_map(static fn($x) => [
+                                    'seq_from' => $x['seq_from'], 'punkte' => $x['punkte'],
+                                    'n_original' => $x['n_original'], 'ts_von' => $x['ts_von'],
+                                    'ts_bis' => $x['ts_bis'], 'huelle' => $x['huelle']], $st)];
+                    if ($hatBlob) { $eintrag['fortsetzung'] = true; }
+                    $verschlossen++;
+                    if (!$anhaengen($eintrag, $n)) {
+                        return $abbruch('Ein Spurteil liess sich nicht schreiben.');
+                    }
+                    $punkteGesamt += $n;
+                }
+                if ($hatBlob || $st) { $spurenGesamt++; }
             }
+            unset($stueckeNach, $sicherung);
         }
     }
     if (!$spurteilSchreiben($laufend)) {
@@ -787,6 +827,12 @@ function edbak_sicherung_erzeugen(int $userId): array
         'schluessel'  => [
             'pat_wrap_rc'   => $u['pat_wrap_rc'],
             'pat_key_check' => $u['pat_key_check'],
+            /* Der private Teil des Schluesselpaars (S11-06c), verschluesselt
+             * unter dem Inhaltsschluessel wie `pat_wrap_rc` ihn oeffnet. Mit
+             * ihm oeffnet der Browser eines ANDEREN Kontos auf dem
+             * Freigabeweg Huellen und Stuecke und verschliesst sie neu; der
+             * Server kann ihn nicht oeffnen. */
+            'kp_privat'     => $u['kp_privat'] ?? null,
         ],
         'umfang'        => $umfang,
         'nutzlast'      => EDBAK_NUTZLAST,
@@ -796,6 +842,7 @@ function edbak_sicherung_erzeugen(int $userId): array
         'spuren'        => $spurenGesamt,
         'punkte'        => $punkteGesamt,
         'geschuetzte'   => $geschuetzte,
+        'ortsdaten_verschlossen' => $verschlossen,
         'teile'         => array_map(static fn($t) => $t['name'], $teile),
         'abgelehnt'     => $abgelehnt,
     ];
@@ -1113,12 +1160,17 @@ function edbak_paket_hat_geschuetzte(array $paket): bool
      * Manifest. Fehlt der Schluessel bei einem Fassung-2-Paket, wird
      * VORSICHTIG entschieden — „nicht erhoben" ist etwas anderes als „keine",
      * und der teurere der beiden Wege ist hier der sichere. */
+    /* SEIT S11-06c ZAEHLEN VERSCHLOSSENE ORTSDATEN MIT: Einsatzhuelle und
+     * Spurstuecke sind an das Schluesselpaar des Ursprungskontos gebunden,
+     * und ein anderes Konto oeffnet sie nur ueber den Freigabeweg. Ein Paket,
+     * das sie traegt, darf darum nicht direkt in ein fremdes Konto. */
     if ((int)($paket['version'] ?? 1) >= 2) {
         return !array_key_exists('geschuetzte', $paket)
-            || (int)$paket['geschuetzte'] > 0;
+            || (int)$paket['geschuetzte'] > 0
+            || (int)($paket['ortsdaten_verschlossen'] ?? 0) > 0;
     }
     foreach ($paket['daten']['missions'] ?? [] as $m) {
-        if (!empty($m['pat_blob'])) { return true; }
+        if (!empty($m['pat_blob']) || !empty($m['ort_huelle'])) { return true; }
     }
     return false;
 }
@@ -2272,7 +2324,9 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     };
 
     try {
-        $stats = edbak_restore($zielUserId, $kopf);
+        /* 'server' (E-S11-57): Der direkte Weg hat die Daten im Klartext vor
+         * sich und verschliesst Orte, Reanimation und Spur selbst. */
+        $stats = edbak_restore($zielUserId, $kopf, null, 'server');
         $dayMap = $stats['day_map'] ?? [];
         $karte  = $stats['spur_karte'] ?? [];
         unset($stats['day_map'], $stats['spur_karte']);
@@ -2299,7 +2353,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
              * nehmen — den mit Spurverweisen — und die Felder der spaeteren
              * Fassungen samt und sonders optional sind. */
             $f['version'] = EDBAK_NUTZLAST;
-            $s2 = edbak_restore($zielUserId, $f, $dayMap);
+            $s2 = edbak_restore($zielUserId, $f, $dayMap, 'server');
             foreach ((array)($s2['spur_karte'] ?? []) as $ref => $ziel) {
                 $karte[(int)$ref] = $ziel;
             }
@@ -2323,13 +2377,20 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
             foreach ((array)($t['spuren'] ?? []) as $e) {
                 $ziel = $karte[(int)($e['spur_ref'] ?? -1)] ?? null;
                 if ($ziel === null) { $spuren['ohne_ziel']++; continue; }
-                $liste[] = ['owner_type' => $ziel['art'], 'owner_id' => $ziel['id'],
-                            'blob' => (string)($e['blob'] ?? ''),
-                            'n' => isset($e['n']) ? (int)$e['n'] : null];
+                /* Zwei Formen seit S11-06c: verschlossene Stuecke, wie sie
+                 * liegen, oder ein SPUR1-Blob des Altbestands, den
+                 * `edbak_spuren_schreiben()` hier verschliesst. */
+                $liste[] = isset($e['stuecke'])
+                    ? ['owner_type' => $ziel['art'], 'owner_id' => $ziel['id'],
+                       'stuecke' => (array)$e['stuecke'], 'stufe' => $e['stufe'] ?? null,
+                       'fortsetzung' => !empty($e['fortsetzung'])]
+                    : ['owner_type' => $ziel['art'], 'owner_id' => $ziel['id'],
+                       'blob' => (string)($e['blob'] ?? ''),
+                       'n' => isset($e['n']) ? (int)$e['n'] : null];
             }
             unset($t);
             if ($liste) {
-                $e = edbak_spuren_schreiben(db(), $zielUserId, $liste);
+                $e = edbak_spuren_schreiben(db(), $zielUserId, $liste, 'server');
                 $spuren['geschrieben']   += $e['geschrieben'];
                 $spuren['uebersprungen'] += $e['uebersprungen'];
                 foreach ($e['abgelehnt'] as $a) { $spuren['abgelehnt'][] = $a; }
@@ -2358,12 +2419,23 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
  */
 function edbak_paket_zurueckspielen(string $kennung, string $datei, int $zielUserId): array
 {
+    /* OHNE SCHLUESSELPAAR KEIN EINSPIELEN (E-S11-57). Der direkte Weg
+     * verschliesst Orte, Reanimation und Spur mit dem oeffentlichen Schluessel
+     * des Zielkontos; ohne ihn lagen sie wieder offen. Gefragt wird VOR dem
+     * ersten Schreiben — sonst stuenden die Diensttage schon, und die
+     * Einsaetze fehlten. */
+    require_once __DIR__ . '/kontopaar_lib.php';
+    if (kp_fuer_geraet(db(), $zielUserId) === null) {
+        return [false, 'Das Zielkonto hat noch kein Schlüsselpaar. Es entsteht beim ersten '
+                     . 'Entsperren nach einer Anmeldung; danach lässt sich das Backup '
+                     . 'einspielen. Es wurde nichts geändert.', null];
+    }
     if (edbak_paket_fassung($datei) === 2) {
         return edbak_paket_einspielen($kennung, $datei, $zielUserId);
     }
     $paket = edbak_paket_lesen($kennung, $datei);
     if ($paket === null) { return [false, 'Das Backup liess sich nicht lesen.', null]; }
-    return [true, null, edbak_restore($zielUserId, $paket['daten'] ?? [])];
+    return [true, null, edbak_restore($zielUserId, $paket['daten'] ?? [], null, 'server')];
 }
 
 /**

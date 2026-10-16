@@ -254,6 +254,10 @@ function zeilen(PDO $pdo, int $id): int {
  *  Zufall unter der richtigen Bindung; der Server sieht ohnehin nur die Form. */
 function stueck_zusammenfuegen(PDO $pdo, int $id, string $ref, int $nOriginal, int $punkte, int $stufe): void {
     global $ghPaar;
+    /* OHNE EINSATZ KEIN STUECK (S11-06, F-S11-69). Fand die Probe ihren
+     * Einsatz nicht, schrieb sie hier ein Stueck an `owner_id` 0 — eine Waise,
+     * die kein Aufraeumen findet und die die Jobprobe spaeter als fremd zaehlt. */
+    if ($id <= 0) { throw new RuntimeException("stueck_zusammenfuegen(): kein Einsatz zu '$ref'"); }
     $pdo->prepare("DELETE FROM track_stuecke WHERE owner_type='mission' AND owner_id=?")->execute([$id]);
     $h = gh_verschliessen(random_bytes($punkte * 14), $ghPaar['sec1'], 'spur', $ref, '0:' . $punkte);
     $q = $pdo->prepare("INSERT INTO track_stuecke (owner_type, owner_id, seq_from, punkte, n_original,

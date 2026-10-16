@@ -183,11 +183,15 @@ def pat_blob(geschuetzt: dict, inhaltsschluessel_hex: str) -> str | None:
     if not geschuetzt:
         return None
     o: dict = {}
-    for schluessel in ("dx", "dob", "age", "mission_no", "site_desc"):
+    # `notes` (seit S9/AP7 im Blob) und `ortshoehe` (seit S11-05b) fehlten
+    # hier bis S11-06e: Was nicht in dieser Liste stand, fiel still heraus --
+    # 85 Notizen des Referenzbestands kamen nie an (F-S11-66).
+    for schluessel in ("dx", "dob", "age", "mission_no", "site_desc", "notes", "ortshoehe"):
         wert = geschuetzt.get(schluessel)
         if wert not in (None, ""):
             o[schluessel] = wert
-    for schluessel in ("loc", "start"):
+    # `transport_dest` ist seit S11-05b ein Ortsfeld im Blob, wie `loc`.
+    for schluessel in ("loc", "start", "transport_dest"):
         wert = geschuetzt.get(schluessel)
         if wert and (wert.get("addr") or wert.get("lat") is not None):
             teil = {}

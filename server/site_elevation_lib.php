@@ -22,7 +22,10 @@ const SITE_ELE_TOLERANCE_S = 300;
 
 require_once __DIR__ . '/spur_lib.php';
 
-function compute_site_elevation(PDO $pdo, int $missionId): void {
+/* `$punkte` (S11-06c): die Spur, wenn der Aufrufer sie schon in der Hand hat
+ * und sie gleich verschliesst — das direkte Einspielen einer Kontosicherung.
+ * Danach liegt sie nur noch in Stuecken, die der Server nicht lesen kann. */
+function compute_site_elevation(PDO $pdo, int $missionId, ?array $punkte = null): void {
     $ph = $pdo->prepare('SELECT occurred_at FROM mission_phases
                          WHERE mission_id = ? AND phase = ? ORDER BY occurred_at LIMIT 1');
     $ref = null;
@@ -53,7 +56,7 @@ function compute_site_elevation(PDO $pdo, int $missionId): void {
         $refTs = (new DateTime($ref, new DateTimeZone('UTC')))->getTimestamp();
         $besterAbstand = PHP_INT_MAX;
         $besteHoehe = null;
-        foreach (spur_lesen($pdo, 'mission', $missionId) as $p) {
+        foreach ($punkte ?? spur_lesen($pdo, 'mission', $missionId) as $p) {
             $d = abs($p[4] - $refTs);
             if ($d < $besterAbstand) {
                 $besterAbstand = $d;

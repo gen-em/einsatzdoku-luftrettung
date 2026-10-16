@@ -1630,6 +1630,37 @@ function schnitte_zu_einsaetzen(PDO $pdo, int $userId, array $missionIds,
 }
 
 /**
+ * Die LOESCHVERMERKE vieler Quellen auf einmal — fuer die Sicherung (S11-06b,
+ * F-S11-52). Ein Loeschvermerk ist ein Sperrvermerk ohne Ziel
+ * (`mission_id` NULL, seit S11-05c): Ein Zeitraum wurde aus einer Spur
+ * geloescht, und eine erneute Lieferung derselben Punkte soll ihn nicht
+ * wieder auffuellen. `schnitte_zu_einsaetzen()` geht ueber das Ziel und sieht
+ * ihn deshalb nicht; bis Web 22.4.0 fehlte er in jeder Sicherung.
+ *
+ * Er reist an seiner QUELLE mit, nicht an einem Einsatz — es gibt keinen.
+ * Dieselbe feste Sortierung wie oben (`owner_id, id`).
+ *
+ * @param list<int> $ids Quellen dieser Art
+ * @return array<int, list<array{von_ts:int,bis_ts:int,n_punkte:int,erstellt_am:string}>>
+ */
+function loeschvermerke_zu_quellen(PDO $pdo, int $userId, string $ownerType, array $ids): array
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    if (!$ids) { return []; }
+    require_once __DIR__ . '/db.php';
+    $aus = [];
+    foreach (sql_in_bloecken($pdo,
+        'SELECT owner_id, von_ts, bis_ts, n_punkte, erstellt_am FROM track_cuts
+          WHERE user_id = ? AND owner_type = ? AND mission_id IS NULL AND owner_id IN ({IDS})
+          ORDER BY owner_id, id', $ids, [$userId, $ownerType]) as $r) {
+        $aus[(int)$r['owner_id']][] = ['von_ts' => (int)$r['von_ts'], 'bis_ts' => (int)$r['bis_ts'],
+                                       'n_punkte' => (int)$r['n_punkte'],
+                                       'erstellt_am' => (string)$r['erstellt_am']];
+    }
+    return $aus;
+}
+
+/**
  * Die Zeitfenster der Sperrvermerke einer Quelle mitverschieben
  * (Web 14.2.0, R64).
  *
@@ -2092,6 +2123,12 @@ function spur_blob_pruefen(string $blob, ?int $erwartetN = null): ?string
 
 /** Stufe eines Stuecks, wie es vom Geraet kommt. */
 const SPUR2_STUFE_GERAET = 1;
+/** Stufe eines ausgeduennten Stuecks. Bis S11-07 entsteht sie nur beim
+ *  Einspielen einer Sicherung, die eine ausgeduennte Spur traegt (S11-06b):
+ *  `n_original` reicht dann ueber `punkte` hinaus, und zwar am LETZTEN Stueck
+ *  bis zur Originalzahl der Spur — so lesen es `spur2_stand()` (naechste
+ *  Nummer) und `spur2_umriss()` (Summe) beide richtig. */
+const SPUR2_STUFE_DUENN = 3;
 
 /**
  * Stand der Stuecke einer Spur: hoechste Stufe, `n_original` der
@@ -2130,13 +2167,20 @@ function schnitt_bereich_gesperrt(array $schnitte, int $von, int $bis): bool
  * Ein Stueck vom Geraet ablegen (Stufe 1). Gibt 1 zurueck, wenn es neu
  * abgelegt wurde, 0 bei einer Wiederholung desselben `seq_from`.
  *
+ * `$stufe` und `$nOriginal` nur beim Einspielen einer Sicherung (S11-06b):
+ * Eine ausgeduennte Spur kommt als Stufe 3 zurueck, damit sie nach dem
+ * Einspielen nicht als vollstaendig gilt.
+ *
  * Die Huelle kommt GEPRUEFT an (`pruef_huelle()`); diese Funktion prueft nur
  * noch, was sie selbst wissen muss.
  */
 function spur2_stueck_schreiben(PDO $pdo, string $ownerType, int $ownerId, int $seqFrom,
-                                int $punkte, int $tsVon, int $tsBis, string $huelle): int
+                                int $punkte, int $tsVon, int $tsBis, string $huelle,
+                                int $stufe = SPUR2_STUFE_GERAET, ?int $nOriginal = null): int
 {
-    if ($punkte < 1 || $tsBis < $tsVon || $seqFrom < 0) {
+    $nOriginal ??= $punkte;
+    if ($punkte < 1 || $tsBis < $tsVon || $seqFrom < 0 || $nOriginal < $punkte
+        || !in_array($stufe, [SPUR2_STUFE_GERAET, SPUR2_STUFE_DUENN], true)) {
         throw new InvalidArgumentException('Spurstueck mit unmoeglichen Zahlen');
     }
     $ins = $pdo->prepare('INSERT INTO track_stuecke
@@ -2148,10 +2192,10 @@ function spur2_stueck_schreiben(PDO $pdo, string $ownerType, int $ownerId, int $
         $ins->bindValue(2, $ownerId, PDO::PARAM_INT);
         $ins->bindValue(3, $seqFrom, PDO::PARAM_INT);
         $ins->bindValue(4, $punkte, PDO::PARAM_INT);
-        $ins->bindValue(5, $punkte, PDO::PARAM_INT);
+        $ins->bindValue(5, $nOriginal, PDO::PARAM_INT);
         $ins->bindValue(6, $tsVon, PDO::PARAM_INT);
         $ins->bindValue(7, $tsBis, PDO::PARAM_INT);
-        $ins->bindValue(8, SPUR2_STUFE_GERAET, PDO::PARAM_INT);
+        $ins->bindValue(8, $stufe, PDO::PARAM_INT);
         $ins->bindValue(9, $huelle, PDO::PARAM_LOB);
         $ins->execute();
         return $ins->rowCount() > 0 ? 1 : 0;
@@ -2222,6 +2266,29 @@ function spur2_tauschen(PDO $pdo, string $ownerType, int $ownerId, array $stand,
                                      $st['ts_von'], $st['ts_bis'], $st['huelle']);
     }
     return ['ok' => true, 'weg' => $weg, 'neu' => $n];
+}
+
+/**
+ * Der Umriss der Stuecke je Spur (S11-06a): hoechste Stufe, Summe der
+ * Originalzahlen, Summe der gespeicherten Punkte — ohne eine Huelle zu lesen.
+ * Fuer die Angaben im Kern einer Sicherung (`edbak_build()`).
+ *
+ * @param list<int> $ids
+ * @return array<int, array{stufe:int, n_original:int, n:int}>
+ */
+function spur2_umriss(PDO $pdo, string $ownerType, array $ids): array
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    $aus = [];
+    if (!$ids) { return $aus; }
+    require_once __DIR__ . '/db.php';
+    foreach (sql_in_bloecken($pdo,
+        'SELECT owner_id, MAX(stufe) s, SUM(n_original) o, SUM(punkte) n FROM track_stuecke
+          WHERE owner_type = ? AND owner_id IN ({IDS}) GROUP BY owner_id', $ids, [$ownerType]) as $r) {
+        $aus[(int)$r['owner_id']] = ['stufe' => (int)$r['s'], 'n_original' => (int)$r['o'],
+                                     'n' => (int)$r['n']];
+    }
+    return $aus;
 }
 
 /**

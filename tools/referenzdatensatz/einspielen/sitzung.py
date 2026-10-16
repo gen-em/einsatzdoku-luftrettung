@@ -398,6 +398,9 @@ class Sitzung:
         stand = self.konstante(html, "KP_STAND")
         if stand == "da":
             spki = base64.b64decode(self.konstante(html, "KP_OEFFENTLICH"))
+            chiffre = self.konstante(html, "KP_PRIVAT")
+            if chiffre and self.inhaltsschluessel:
+                self.paar_privat = krypto.entschluesseln(chiffre, self.inhaltsschluessel)
             return spki[-65:]
         if stand != "fehlt":
             raise RuntimeError(f"Kontoschluessel: Stand {stand!r} -- "
@@ -414,7 +417,19 @@ class Sitzung:
                                             self.inhaltsschluessel)})
         if a.status_code != 200:
             raise RuntimeError(f"api/kontopaar.php anlegen: HTTP {a.status_code} {a.text[:200]}")
+        self.paar_privat = base64.b64encode(pkcs8).decode("ascii")
         return spki[-65:]
+
+    def kontopaar(self):
+        """Oeffentlicher (SEC1) und privater Schluessel des Kontos (S11-06e) --
+        wie der Browser nach dem Entsperren: der private Teil aus `KP_PRIVAT`,
+        mit dem Inhaltsschluessel geoeffnet. Das Werkzeug oeffnet damit Huellen
+        und Stuecke, wo ein Browser sie oeffnen wuerde (`ortsdaten.py`)."""
+        import ortsdaten
+        sec1 = self.kontoschluessel()
+        if not getattr(self, "paar_privat", None):
+            raise RuntimeError("Kontopaar: der private Teil fehlt -- ohne Entsperren kein Oeffnen")
+        return sec1, ortsdaten.privat_laden(self.paar_privat)
 
     def json_post(self, pfad: str, koerper: dict) -> requests.Response:
         """POST mit JSON-Koerper und X-CSRF — der Weg der api/-Endpunkte."""

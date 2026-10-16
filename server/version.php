@@ -8180,5 +8180,16 @@ declare(strict_types=1);
  *   (E-S11-52). Transportziel und Reanimation neuer Einsaetze nur noch mit
  *   Haken (E-S11-53, -54). Die Umdatierung nimmt die Stuecke mit (F-S11-58).
  *   Kein Schema.
+ * 22.5.0 — S11-06: DIE SICHERUNG MIT DEN HUELLEN. Seit S11-04 fehlten in jeder
+ *   Sicherung Orte, Reanimation und Spur aller verschlossen eingegangenen
+ *   Einsaetze (F-S11-63). Jetzt oeffnet der Browser Huelle und Stuecke und
+ *   legt sie offen in den verschlossenen Kern, die Spuren als Punktlisten
+ *   (Nutzlast 13, E-S11-56); beim Einspielen verschliesst er jede Fassung
+ *   von 6 bis 13 neu, und der Server weist Klartext ab. Die Kontosicherung
+ *   traegt Huellen und Stuecke, wie sie liegen, dazu den privaten Teil des
+ *   Paars fuer die Freigabe in ein anderes Konto; der direkte Weg verschliesst
+ *   aeltere Pakete selbst (E-S11-57). Der Demo-Reset verschliesst ebenso und
+ *   legt dem Demokonto ein Paar an (E-S11-20, -58). Loeschvermerke reisen mit
+ *   (F-S11-52). Kein Schema.
  */
-const WEB_VERSION = '22.4.0';
+const WEB_VERSION = '22.5.0';

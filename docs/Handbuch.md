@@ -2626,6 +2626,24 @@ Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
 einspielen: Beim Import werden die geschützten Angaben automatisch mit dem
 Schlüssel des Zielkontos neu verschlüsselt.
 
+**Orte, Reanimation und GPS-Daten gehören seit Web 22.5.0 dazu.** Sie liegen
+im Konto verschlüsselt, und das Backup holt sie beim Sichern im Browser
+heraus: Die Datei enthält die Orte der Phasen, den Reanimationsverlauf, das
+Transportziel und die GPS-Daten jedes Einsatzes — geschützt wie alles andere
+nur durch das Backup-Passwort. **Bis Web 22.4.0 fehlten sie bei allen
+Einsätzen, die seit Web 22.0.1 von Uhr oder Handy kamen.** Wer in dieser Zeit
+ein Backup angelegt hat, legt am besten ein neues an. Beim Einspielen
+verschlüsselt dein Browser sie wieder für das Zielkonto, bevor er sie sendet —
+auch aus jedem älteren Backup. Deshalb muss die Seite dafür **entsperrt**
+sein, wie beim Sichern. Lässt sich bei einem Einsatz die Verschlüsselung von
+Orten und Reanimation beim Sichern nicht öffnen, sagt die Abschlussmeldung das
+in Orange. Solche Einsätze liegen dann verschlüsselt in der Datei und gehen
+nur im selben Konto wieder auf.
+
+Die Datei wird dadurch größer: Die GPS-Daten stehen jetzt als Liste von
+Punkten in ihr und nicht mehr gepackt, wie der Server sie früher ablegte —
+gemessen am Beispielbestand **880 KB statt 280 KB**.
+
 **Eine Rückfrage vor dem Einspielen — aber nur, wenn es etwas zu fragen gibt.**
 Enthält ein Backup Einsätze, deren geschützte Angaben schon beim
 *Erstellen* nicht zu entschlüsseln waren, kommen sie hier ebenfalls unlesbar
@@ -2730,7 +2748,11 @@ hängen am alten Inhaltsschlüssel, und den öffnet allein dein
 dein Konto **frei**. Unter **Einstellungen → „Backup"** erscheint danach ein
 Abschnitt *Für dich freigegebenes Backup*: Dort gibst du deinen
 Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deinen
-neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
+neuen Schlüssel um und spielt sie ein. Seit Web 22.5.0 gilt das auch für Orte,
+Reanimation und GPS-Daten: Sie hängen am Schlüsselpaar des alten Kontos, und
+dein Browser öffnet sie mit dessen privatem Teil aus dem Paket — wieder nur
+mit deinem Wiederherstellungsschlüssel — und verschlüsselt sie für dein neues
+Konto. Solange du eine Freigabe nicht eingelöst
 hast, kann die Verwaltung sie zurücknehmen — auf deiner Kontoseite steht
 seit Web 15.2.0 sichtbar, dass eine Freigabe läuft, für wen und seit wann.
 Bricht die Verbindung genau nach dem Einspielen ab, sagt die Seite
@@ -4246,6 +4268,20 @@ ein Paket für ein Konto frei, und einspielen kann es nur die NutzerIn selbst,
 in ihrem Backup-Bereich, mit ihrem **Wiederherstellungsschlüssel**. Der liegt
 ausschließlich bei ihr — auch die Verwaltung hat ihn nicht, und ohne ihn
 öffnen sich die geschützten Angaben des Pakets nicht.
+
+**Seit Web 22.5.0 zählen Orte, Reanimation und GPS-Daten mit.** Sie liegen im
+Paket so verschlüsselt, wie sie im Konto lagen, gebunden an dessen
+Schlüsselpaar. Ein Paket mit solchen Daten geht deshalb nie unmittelbar in
+ein Konto mit anderer Kennung, sondern über die Freigabe. Dort öffnet der
+Browser der NutzerIn sie und verschlüsselt sie neu. **Beim unmittelbaren
+Einspielen verlangt die Anwendung ein Schlüsselpaar im Zielkonto.** Es
+entsteht, wenn sich die NutzerIn einmal anmeldet und die Seite entsperrt.
+Fehlt es, wird abgewiesen, bevor etwas geschrieben ist. Ein älteres Paket
+trägt Orte und GPS-Daten noch offen. Der Server verschlüsselt sie beim
+Einspielen selbst, mit dem öffentlichen Schlüssel des Kontos — er hat sie ja
+ohnehin vor sich. Transportziel und Ortshöhe kann er nicht in die geschützten
+Angaben legen. Sie bleiben im alten Feld, bis der Einsatz das nächste Mal im
+Formular gespeichert wird.
 
 #### Drei Backups, drei Namen
 

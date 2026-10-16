@@ -293,8 +293,13 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
                 eintraege["missions"].extend(inhalt.get("missions", []))
                 eintraege["rest_segments"].extend(inhalt.get("rest_segments", []))
             else:
+                # ZWEI FORMEN: SPUR1-Blob bis Nutzlast 12, Punktliste seit 13
+                # (S11-06a, E-S11-56) — dieselbe Form [seq, lat, lon, ele, ts]
+                # wie die `track`-Liste einer einteiligen Datei.
                 for eintrag in inhalt.get("spuren", []):
-                    spuren[int(eintrag["spur_ref"])] = base64.b64decode(eintrag["blob"])
+                    spuren[int(eintrag["spur_ref"])] = (
+                        eintrag["punkte"] if "punkte" in eintrag
+                        else base64.b64decode(eintrag["blob"]))
 
         # Fremde Eintraege im Archiv sind ein Befund, kein Achselzucken.
         ueberzaehlig = sorted(set(namen) - {"manifest.edbak"}
@@ -335,7 +340,7 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
                     ohne_blob.append(f"{schluessel_name}#{ref}")
                 obj["track"] = []
                 continue
-            obj["track"] = spur1_lesen(blob)
+            obj["track"] = blob if isinstance(blob, list) else spur1_lesen(blob)
 
     kern["$container"] = {
         "fassung": 4,

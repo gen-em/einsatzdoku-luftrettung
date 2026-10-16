@@ -91,11 +91,18 @@ try {
     const code = EdCrypto.newRecoveryCode();
     const ck   = EdCrypto.randomHex(32);
     const rc   = await EdCrypto.recoveryKeyHex(code);
+    /* Das Schlüsselpaar der Quelle (S11-06c), wie `EdKontopaar.anlegen()`
+       es baut: SPKI offen, PKCS8 unter dem Inhaltsschlüssel. */
+    const kp = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true,
+                                               ['deriveBits']);
+    const b64 = (b) => btoa(String.fromCharCode(...new Uint8Array(b)));
     return {
       code,
       wrap:  await EdCrypto.encrypt(rc, ck),
       check: await EdCrypto.contentKeyCheck(ck),
       blob:  await EdCrypto.encrypt(ck, JSON.stringify(klar)),
+      spki:  b64(await crypto.subtle.exportKey('spki', kp.publicKey)),
+      kp_privat: await EdCrypto.encrypt(ck, b64(await crypto.subtle.exportKey('pkcs8', kp.privateKey))),
     };
   }, KLARTEXT);
   pruefe(typeof mat.code === 'string' && mat.code.length > 0
@@ -117,6 +124,8 @@ try {
   pruefe(q.begleit_versiegelt === true,
          'Auch die Begleitdatei konto.json ist versiegelt',
          q.begleit_versiegelt ? 'edsk1:' : 'im Klartext');
+  pruefe(q.verschlossen === 2, 'Das Manifest zählt Hülle und Spur der Quelle als verschlossen (S11-06c)',
+         `${q.verschlossen} (erwartet 2: Einsatzhülle und Stücke)`);
   pruefe(q.geschuetzte === 1, 'Das Manifest zählt den Einsatz mit geschützten Angaben',
          'geschuetzte=' + q.geschuetzte);
 
@@ -210,6 +219,21 @@ try {
          && nach.pat_blob !== q.quelle_blob,
          'Der Chiffretext ist ein ANDERER als in der Quelle',
          'umgeschlüsselt, nicht durchgereicht');
+
+  /* ---- 5b. Hülle und Spur gehen mit dem Paar DIESES Kontos auf (S11-06c) -
+   * Die Quelle hat sie mit IHREM Paar verschlossen. Ohne Umschlüsseln kämen
+   * sie hier als Chiffretext an, den niemand öffnen kann. */
+  const ort = await seite.evaluate(async (n) => {
+    try {
+      const k = await EdOrtsdaten.schluessel(await EdCrypto.getContentKey());
+      const innen = await EdOrtsdaten.einsatz({ ort_huelle: n.ort_huelle, client_ref: n.client_ref }, k);
+      const punkte = await EdOrtsdaten.spur(n.stuecke, 'spur', n.client_ref, [], k);
+      return { lat: innen.phasen[0].lat, rea: innen.rea.length, punkte: punkte.length };
+    } catch (e) { return { fehler: String(e.message || e) }; }
+  }, nach);
+  pruefe(ort.lat === 47.15 && ort.rea === 1 && ort.punkte === 2,
+         'Hülle und Spur öffnen sich mit dem Paar DIESES Kontos',
+         ort.fehler || `Phase 4 bei ${ort.lat}, ${ort.rea} Reanimation, ${ort.punkte} Punkte`);
 
   /* ---- 6. Und der Klartext ist derselbe --------------------------------- */
   const klarZurueck = await seite.evaluate(async (blob) => {

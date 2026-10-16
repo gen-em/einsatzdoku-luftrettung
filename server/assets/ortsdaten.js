@@ -27,6 +27,11 @@
  *   EdOrtsdaten.ortshoehe(punkte, phasen) Höhe des Einsatzorts (S11-05b)
  *   EdOrtsdaten.stueckeBauen(punkte, art, ref, {neu})  Punkte → Stücke
  *                                         (S11-05c: Schneiden, Löschen)
+ *   EdOrtsdaten.schluesselAus(pkcs8)      ein FREMDES Paar aus seinem privaten
+ *                                         Teil (Freigabe, S11-06c)
+ *   EdOrtsdaten.spur1Lesen(b64)           ein SPUR1-Blob einer Sicherung
+ *                                         (Nutzlast 8 bis 12) → Punkte
+ *                                         (S11-06b)
  *
  * REGELN BEIM ÖFFNEN (E-S11-37, Konzept 3.4): Punkt i eines Stücks hat die
  * Sequenznummer `seq_from + i`; doppelte Nummern (ein Gerät, das seine Marke
@@ -402,9 +407,83 @@
     return zuB64(h);
   }
 
+  /**
+   * EIN FREMDES SCHLÜSSELPAAR (S11-06c) — für den Freigabeweg: Ein Paket der
+   * Verwaltung aus einem anderen Konto trägt dessen privaten Teil (PKCS8,
+   * unter dem alten Inhaltsschlüssel). Geliefert wird dieselbe Form wie von
+   * `schluessel()`: {priv, pub}, `pub` als SEC1 — die Hülle bindet ihn ein.
+   * @param {Uint8Array} der  PKCS8
+   */
+  async function schluesselAus(der) {
+    const alg = { name: 'ECDH', namedCurve: 'P-256' };
+    const jwk = await crypto.subtle.exportKey('jwk',
+      await crypto.subtle.importKey('pkcs8', der, alg, true, ['deriveBits']));
+    const roh = (t) => b64(t.replace(/-/g, '+').replace(/_/g, '/')
+      + '='.repeat((4 - t.length % 4) % 4));
+    const pub = new Uint8Array(65);
+    pub[0] = 4; pub.set(roh(jwk.x), 1); pub.set(roh(jwk.y), 33);
+    return { priv: await crypto.subtle.importKey('pkcs8', der, alg, false, ['deriveBits']), pub: pub };
+  }
+
+  /**
+   * EIN SPUR1-BLOB ZU PUNKTEN (S11-06b) — das Gegenstück zu
+   * `spur_dekodieren()` in `spur_lib.php`, für das Einspielen einer
+   * Sicherung der Nutzlast 8 bis 12. Bis Web 22.4.0 ging der Blob roh an den
+   * Server; seit S11 nimmt er Punkte nur noch verschlossen an, und der
+   * Browser muss sie vorher lesen.
+   *
+   * Format (Technik 4.97): Kopf 13 Byte — „SP", Fassung 1, Stufe,
+   * Auflösung 1, Originalzahl und Punktzahl (je uint32, little-endian) —,
+   * dann ein zlib-Strom mit vier Differenzreihen (int32, little-endian):
+   * Breite und Länge in 1e-6 Grad, ein Bitfeld „hat Höhe", die Höhen in
+   * Dezimetern, die Zeiten in Sekunden. Die Punktnummer ist die Stelle.
+   *
+   * @returns {Promise<{stufe:number, nOriginal:number, punkte:Array}>}
+   *          punkte: [[seq, lat, lon, ele|null, ts], …]
+   */
+  async function spur1Lesen(b64Text) {
+    const roh = b64(b64Text);
+    if (roh.length < 13 || roh[0] !== 0x53 || roh[1] !== 0x50) {
+      throw fehler('spur1', 'Kein SPUR-Blob (Signatur fehlt).');
+    }
+    if (roh[2] !== 1 || roh[4] !== 1) {
+      throw fehler('spur1', 'SPUR-Blob in unbekannter Fassung oder Auflösung.');
+    }
+    const kopf = new DataView(roh.buffer, roh.byteOffset, 13);
+    const stufe = roh[3], nOriginal = kopf.getUint32(5, true), n = kopf.getUint32(9, true);
+    if (n === 0) { return { stufe: stufe, nOriginal: nOriginal, punkte: [] }; }
+    const strom = new Blob([roh.subarray(13)]).stream()
+      .pipeThrough(new DecompressionStream('deflate'));
+    const nutz = new Uint8Array(await new Response(strom).arrayBuffer());
+    const dv = new DataView(nutz.buffer, nutz.byteOffset, nutz.byteLength);
+    let pos = 0;
+    const reihe = (k) => {
+      if (pos + 4 * k > nutz.length) { throw fehler('spur1', 'SPUR-Blob ist zu kurz.'); }
+      const a = new Array(k);
+      let lauf = 0;
+      for (let i = 0; i < k; i++) { lauf += dv.getInt32(pos, true); pos += 4; a[i] = lauf; }
+      return a;
+    };
+    const lat = reihe(n), lon = reihe(n);
+    const bitLen = (n + 7) >> 3;
+    const bits = nutz.subarray(pos, pos + bitLen);
+    pos += bitLen;
+    const hat = (i) => (bits[i >> 3] & (1 << (i & 7))) !== 0;
+    let mit = 0;
+    for (let i = 0; i < n; i++) { if (hat(i)) { mit++; } }
+    const hoehen = reihe(mit), ts = reihe(n);
+    const punkte = new Array(n);
+    let h = 0;
+    for (let i = 0; i < n; i++) {
+      punkte[i] = [i, lat[i] / 1e6, lon[i] / 1e6, hat(i) ? hoehen[h++] / 10 : null, ts[i]];
+    }
+    return { stufe: stufe, nOriginal: nOriginal, punkte: punkte };
+  }
+
   window.EdOrtsdaten = { schluessel: schluessel, spur: spur, einsatz: einsatz,
                          fuerAnsicht: fuerAnsicht, ladeplatz: ladeplatz, melden: melden,
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
                          einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
-                         stueckeBauen: stueckeBauen };
+                         stueckeBauen: stueckeBauen, spur1Lesen: spur1Lesen,
+                         schluesselAus: schluesselAus };
 })();

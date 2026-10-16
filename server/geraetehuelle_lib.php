@@ -13,9 +13,12 @@ declare(strict_types=1);
  * WARUM DER SERVER ÜBERHAUPT VERSCHLIESST. Verschließen braucht nur den
  * ÖFFENTLICHEN Schlüssel des Kontos; öffnen kann nur, wer den privaten hat,
  * und den hat nur der Browser nach dem Entsperren. Der Server verschließt an
- * genau zwei Stellen, an denen die Daten ohnehin aus dem Repositorium kommen
- * und erfunden sind: beim Zurücksetzen des Demobestands (E-S11-20, S11-06) und
- * in den Proben, die den Eingang wie ein Gerät bedienen. **Eine Funktion zum
+ * drei Stellen: beim Zurücksetzen des Demobestands (E-S11-20, S11-06), in
+ * den Proben, die den Eingang wie ein Gerät bedienen — dort sind die Daten
+ * erfunden und kommen aus dem Repositorium —, und beim direkten Einspielen
+ * einer Kontosicherung durch die Verwaltung (E-S11-57, S11-06c): Dort hat er
+ * die Daten ohnehin im Klartext vor sich, und danach liegen sie nicht mehr
+ * offen. **Eine Funktion zum
  * Öffnen gibt es hier mit Absicht nicht** — wer sie schriebe, gäbe dem
  * Server einen Weg, den er nach der Zusage aus `CLAUDE.md` 4 nicht hat.
  *
@@ -128,6 +131,69 @@ function gh_spur_innen(array $punkte, int $tsVon): string
             (int)round((float)$p[1] * 1e7) & 0xFFFFFFFF,
             $ele & 0xFFFF,
             max(0, (int)$p[3] - $tsVon));
+    }
+    return $aus;
+}
+
+/**
+ * Die Einsatzhülle aus Klartext bauen (S11-06c) — Innenform wie der Browser
+ * (`EdOrtsdaten.einsatzInnen()`) und die Gerätehilfe der Proben:
+ * {"fassung":1, "phasen":[{phase,t,lat,lon}], "rea":[{t, ereignisse:[{art,t}]}]},
+ * alle Zeiten in Sekunden seit `$beginn` (E-S11-18, -40).
+ *
+ * @param list<array{phase:int, ts:int, lat:?float, lon:?float}> $phasen
+ * @param list<array{ts:int, ereignisse:list<array{art:string, ts:int}>}> $reas
+ * @return string die Hülle, binär
+ */
+function gh_einsatz_verschliessen(string $sec1, string $ref, int $beginn,
+                                  array $phasen, array $reas): string
+{
+    $innen = ['fassung' => 1, 'phasen' => [], 'rea' => []];
+    foreach ($phasen as $p) {
+        $innen['phasen'][] = ['phase' => (int)$p['phase'], 't' => (int)$p['ts'] - $beginn,
+                              'lat' => $p['lat'] === null ? null : (float)$p['lat'],
+                              'lon' => $p['lon'] === null ? null : (float)$p['lon']];
+    }
+    foreach ($reas as $r) {
+        $ev = [];
+        foreach ($r['ereignisse'] as $e) {
+            $ev[] = ['art' => (string)$e['art'], 't' => (int)$e['ts'] - $beginn];
+        }
+        $innen['rea'][] = ['t' => (int)$r['ts'] - $beginn, 'ereignisse' => $ev];
+    }
+    return gh_verschliessen(json_encode($innen, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                            $sec1, 'einsatz', $ref, '');
+}
+
+/**
+ * Punkte zu verschlossenen Stücken (S11-06c) — die Regel von
+ * `EdOrtsdaten.stueckeBauen()`: Ein Stück endet an jeder Lücke der
+ * Punktnummern und nach höchstens 2000 Punkten (`LIMIT_TRACKPUNKTE_ANFRAGE`),
+ * Punkt i eines Stücks ist `seq_from + i`.
+ *
+ * @param list<array{0:int,1:float,2:float,3:?float,4:int}> $punkte
+ *        [seq, lat, lon, ele, ts], nach `seq` sortiert, ohne Dubletten
+ * @return list<array{seq_from:int, punkte:int, ts_von:int, ts_bis:int, huelle:string}>
+ */
+function gh_stuecke_bauen(string $sec1, string $art, string $ref, array $punkte): array
+{
+    $gruppen = [];
+    foreach ($punkte as $p) {
+        $g = count($gruppen) - 1;
+        if ($g >= 0 && (int)$p[0] === (int)end($gruppen[$g])[0] + 1 && count($gruppen[$g]) < 2000) {
+            $gruppen[$g][] = $p;
+        } else {
+            $gruppen[] = [$p];
+        }
+    }
+    $aus = [];
+    foreach ($gruppen as $g) {
+        $ts = array_map(static fn($p) => (int)$p[4], $g);
+        $von = min($ts);
+        $innen = gh_spur_innen(array_map(static fn($p) => [$p[1], $p[2], $p[3], (int)$p[4]], $g), $von);
+        $aus[] = ['seq_from' => (int)$g[0][0], 'punkte' => count($g), 'ts_von' => $von,
+                  'ts_bis' => max($ts),
+                  'huelle' => gh_verschliessen($innen, $sec1, $art, $ref, $g[0][0] . ':' . count($g))];
     }
     return $aus;
 }

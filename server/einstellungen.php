@@ -3361,6 +3361,10 @@ ui_seite_start(['titel' => 'Einstellungen',
              steckt eine Fehlermeldung, die aus einer fremden Datei stammen
              kann. */ ?>
     <script src="<?= asset('assets/patient.js') ?>"></script>
+    <?php /* ortsdaten.js oeffnet beim Sichern die Einsatzhuellen und die
+             Spurstuecke (S11-06a); kontopaar.js dazu bringt der Baustein
+             oben mit. */ ?>
+    <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
     <?php /* zip.js: Seit Containerfassung 4 (S2/AP5) ist ein Backup ein
              ZIP mit versiegelten Teilen — geschrieben beim Sichern, gelesen
              beim Einspielen. Dieselbe vendorierte Bibliothek, die der Export
@@ -3386,6 +3390,222 @@ ui_seite_start(['titel' => 'Einstellungen',
     }
     const expState = document.getElementById('expstate');
     const impState = document.getElementById('impstate');
+
+    /* ---- Ortsdaten beim Einspielen verschließen (S11-06b, E-S11-55) -----
+     *
+     * Seit S11 nimmt der Server Orte der Phasen, Reanimation und Spur nur
+     * noch verschlossen an, Transportziel und Ortshöhe nur im `pat_blob`.
+     * Eine Sicherung trägt beides offen in ihrem verschlossenen Container —
+     * jede Fassung von 6 bis 13, und eine Freigabe der Verwaltung ebenso.
+     * Diese Helfer bringen es vor dem Senden in die Form, die der Server
+     * annimmt, an EINER Stelle für beide Rückwege. Was er trotzdem im
+     * Klartext bekommt, weist er mit 400 ab (`edbak_klartext_fund()`).
+     *
+     * Die Hülle wird an die `client_ref` gebunden, unter der der Eintrag
+     * angelegt wird. Fehlt sie in der Datei, vergibt der Browser sie jetzt
+     * selbst (bis Web 22.4.0 tat es der Server) — sonst passte die Bindung
+     * nicht zur Kennung, die der Server erfände. */
+    const rwZahl = (v) => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v)))
+      ? null : Number(v);
+    /* Zeitpunkt der Datei → Sekunden: SQL-Form (UTC) oder ISO; ohne Zone gilt
+       UTC wie beim Server (`pruef_utc_oder_sql()`). */
+    const rwSekunden = (z) => {
+      let t = String(z || '').trim().replace(' ', 'T');
+      if (/T\d\d:\d\d(:\d\d(\.\d+)?)?$/.test(t)) { t += 'Z'; }
+      return Math.floor(Date.parse(t) / 1000);
+    };
+    const rwRef = (x) => {
+      const r = typeof x.client_ref === 'string' ? x.client_ref.trim() : '';
+      x.client_ref = (r && r.length <= 64) ? r : 'bak-' + EdCrypto.randomHex(12);
+      return x.client_ref;
+    };
+
+    /** Punkte [[seq, lat, lon, ele, ts], …] → verschlossene Stücke. */
+    async function rwStuecke(liste, art, ref, stufe, nOriginal) {
+      const nach = new Map();
+      for (const p of (liste || [])) {
+        if (!Array.isArray(p) || p.length < 5) { continue; }
+        const q = { seq: Number(p[0]), lat: Number(p[1]), lon: Number(p[2]),
+                    ele: rwZahl(p[3]), ts: Number(p[4]) };
+        if (!Number.isInteger(q.seq) || q.seq < 0 || !Number.isInteger(q.ts) || q.ts < 0
+            || !(Math.abs(q.lat) <= 90) || !(Math.abs(q.lon) <= 180)) { continue; }
+        if (!nach.has(q.seq)) { nach.set(q.seq, q); }
+      }
+      const punkte = [...nach.values()].sort((a, b) => a.seq - b.seq);
+      if (!punkte.length) { return []; }
+      const st = await EdOrtsdaten.stueckeBauen(punkte, art, ref);
+      /* Eine ausgedünnte Spur bleibt ausgedünnt: Die Originalzahl steht am
+         letzten Stück bis zum Ende der Originalspur (SPUR2_STUFE_DUENN). */
+      if (Number(stufe) === 3 && nOriginal) {
+        const l = st[st.length - 1];
+        l.n_original = Math.max(l.punkte, nOriginal - l.seq_from);
+      }
+      return st;
+    }
+
+    /**
+     * Ein Einsatz der Datei → verschlossen. `z` zählt mit:
+     * verschlossen, mitgebracht (Hülle schon in der Datei), zielVerloren.
+     */
+    async function rwEinsatz(m, z) {
+      const ref = rwRef(m);
+      /* Transportziel und Ortshöhe in den Blob (wie der CSV-Import, S11-05e).
+         Ein Blob, den der Browser nicht öffnen kann, nimmt nichts auf — die
+         Angaben gehen dann verloren und werden gezählt. */
+      const ziel = (typeof m.transport_dest === 'string' && m.transport_dest.trim())
+        ? m.transport_dest : null;
+      const zLat = rwZahl(m.dest_lat), zLon = rwZahl(m.dest_lon), hoehe = rwZahl(m.site_ele_m);
+      if (ziel !== null || zLat !== null || hoehe !== null) {
+        if (!m.pat && m.pat_blob) {
+          z.zielVerloren++;
+        } else {
+          m.pat = m.pat || {};
+          if (!m.pat.transport_dest && (ziel !== null || zLat !== null)) {
+            m.pat.transport_dest = { addr: ziel || '' };
+            if (zLat !== null && zLon !== null) {
+              m.pat.transport_dest.lat = zLat; m.pat.transport_dest.lon = zLon;
+            }
+          }
+          if (m.pat.ortshoehe == null && hoehe !== null) { m.pat.ortshoehe = hoehe; }
+        }
+      }
+      m.transport_dest = null; m.dest_lat = null; m.dest_lon = null; m.site_ele_m = null;
+
+      const phasen = Array.isArray(m.phases) ? m.phases.filter((p) => p && typeof p === 'object') : [];
+      const reas = Array.isArray(m.resus) ? m.resus : [];
+      const offen = reas.length || phasen.some((p) => rwZahl(p.lat) !== null || rwZahl(p.lon) !== null);
+      const beginn = rwSekunden(m.started_at);
+      if (m.ort_huelle) {
+        z.mitgebracht++;
+      } else if (offen && !isNaN(beginn)) {
+        const innen = {
+          fassung: 1,
+          phasen: phasen.filter((p) => !isNaN(rwSekunden(p.occurred_at))).map((p) => ({
+            phase: Number(p.phase), t: rwSekunden(p.occurred_at) - beginn,
+            lat: rwZahl(p.lat), lon: rwZahl(p.lon) })),
+          rea: reas.filter((r) => r && !isNaN(rwSekunden(r.started_at))).map((r) => ({
+            t: rwSekunden(r.started_at) - beginn,
+            ereignisse: (r.events || []).filter((e) => e && e.type && !isNaN(rwSekunden(e.occurred_at)))
+              .map((e) => ({ art: e.type, t: rwSekunden(e.occurred_at) - beginn })) })),
+        };
+        m.ort_huelle = await EdOrtsdaten.einsatzVerschliessen(innen, ref);
+        z.verschlossen++;
+      }
+      for (const p of phasen) { delete p.lat; delete p.lon; }
+      m.resus = [];
+      delete m.ort_unlesbar;
+      /* Nutzlast 6 und 7: die Punkte im Eintrag. */
+      if (Array.isArray(m.track)) {
+        if (m.track.length) { m.spur_stuecke = await rwStuecke(m.track, 'spur', ref); }
+        delete m.track;
+      }
+    }
+
+    /** Ein Ruhesegment der Datei → verschlossen (nur die Spur). */
+    async function rwRuhe(r) {
+      const ref = rwRef(r);
+      if (Array.isArray(r.track)) {
+        if (r.track.length) { r.spur_stuecke = await rwStuecke(r.track, 'ruhe', ref); }
+        delete r.track;
+      }
+    }
+
+    async function rwEintraege(teil, z) {
+      for (const m of (teil.missions || [])) { await rwEinsatz(m, z); }
+      for (const r of (teil.rest_segments || [])) { await rwRuhe(r); }
+    }
+
+    /**
+     * Ein Spurteil verschlossen übertragen. Drei Formen kommen an: Punkte
+     * (Nutzlast 13), SPUR1-Blob (8 bis 12) und Stücke, wie sie in einer
+     * Kontosicherung ab S11-06c liegen. `karte` nennt je `spur_ref` Art,
+     * Kennung und `client_ref` im Zielkonto (`edbak_restore()`).
+     *
+     * ZWEI GRENZEN, NICHT EINE. Die Größe deckelt der POST (Z3: 2 MB); die
+     * ANZAHL deckelt der Endpunkt (BACKUP_SPUREN_RESTORE_MAX in
+     * api/backup_spuren_restore.php), weil je Spur Arbeit anfällt. Die
+     * Größe liegt bei 800 kB, also unter nginx' Vorgabe von 1 MB. DIE ZAHL
+     * STEHT AN ZWEI ORTEN, und das ist bekannt: hier und im Endpunkt.
+     * `tools/proben/wiederherstellung/` hält sie zusammen.
+     *
+     * Eine lange Spur geht seit S11-06b über mehrere Anfragen (ein Punkt
+     * kostet verschlossen rund 19 Byte statt 4,8 als SPUR1); die Fortsetzung
+     * trägt `fortsetzung`, damit der Server sie nicht zweimal zählt.
+     */
+    async function rwSpurteil(teil, karte, z, stueckeUm) {
+      const HAPPEN = 800 * 1024;      // unter nginx' Vorgabe von 1 MB
+      const HAPPEN_ZAHL = 500;
+      let happen = [], groesse = 0;
+      const senden = async () => {
+        if (!happen.length) { return; }
+        const a = await EdApi.postJson('api/backup_spuren_restore.php', { spuren: happen },
+                                       { vorgang: 'Das Übertragen der GPS-Daten' });
+        if (!a.ok) {
+          /* Zustandsbericht, kein Fehlertext -- bleibt beim Aufrufer. */
+          throw new Error(a.meldung + ' Der übrige Bestand ist bereits eingespielt.');
+        }
+        const o = a.daten;
+        z.geschrieben += o.geschrieben || 0;
+        z.uebersprungen += o.uebersprungen || 0;
+        for (const x of (o.abgelehnt || [])) {
+          z.abgelehnt.push(`${x.owner_type} ${x.owner_id}: ${x.grund}`);
+        }
+        happen = []; groesse = 0;
+      };
+      for (const e of (teil.spuren || [])) {
+        const ziel = karte[String(e.spur_ref)];
+        if (!ziel) { z.ohneZiel++; continue; }
+        const art = ziel.art === 'rest' ? 'ruhe' : 'spur';
+        let stuecke, stufe = Number(e.stufe) || 0;
+        try {
+          if (Array.isArray(e.stuecke)) {
+            /* Stücke einer Kontosicherung: wie sie liegen — oder, auf dem
+               Freigabeweg aus einem anderen Konto, geöffnet und neu
+               verschlossen (`stueckeUm`, S11-06c). */
+            stuecke = stueckeUm ? await stueckeUm(e, ziel, art) : e.stuecke;
+          } else if (Array.isArray(e.punkte)) {
+            stuecke = await rwStuecke(e.punkte, art, ziel.ref, stufe, Number(e.n_original) || 0);
+          } else if (e.blob) {
+            const x = await EdOrtsdaten.spur1Lesen(String(e.blob));
+            stufe = x.stufe;
+            stuecke = await rwStuecke(x.punkte, art, ziel.ref, stufe, x.nOriginal);
+          } else {
+            continue;
+          }
+        } catch (err) {
+          z.abgelehnt.push(`${ziel.art} ${ziel.id}: ${err.message}`);
+          continue;
+        }
+        /* `fortsetzung` aus der Datei: eine Kontosicherung trägt Altbestand
+           und Stücke einer Spur als zwei Einträge (S11-06c). */
+        let eintrag = null, erstes = !e.fortsetzung;
+        for (const st of stuecke) {
+          const g = String(st.huelle || '').length + 120;
+          if (happen.length && (groesse + g > HAPPEN || happen.length >= HAPPEN_ZAHL)) {
+            await senden(); eintrag = null;
+          }
+          if (!eintrag) {
+            eintrag = { owner_type: ziel.art, owner_id: ziel.id, stufe: stufe, stuecke: [] };
+            if (!erstes) { eintrag.fortsetzung = true; }
+            erstes = false;
+            happen.push(eintrag);
+          }
+          eintrag.stuecke.push(st);
+          groesse += g;
+        }
+      }
+      await senden();
+    }
+    const rwZaehler = () => ({ verschlossen: 0, mitgebracht: 0, zielVerloren: 0, geschrieben: 0,
+                               uebersprungen: 0, abgelehnt: [], ohneZiel: 0 });
+    /* Der Satz zu den Ortsdaten in der Abschlussmeldung. */
+    const rwText = (z, mitgebrachtNennen) => (mitgebrachtNennen && z.mitgebracht
+        ? ` ${z.mitgebracht} Einsätze brachten Orte und Reanimation verschlüsselt mit, weil `
+          + 'sie sich beim Sichern nicht öffnen ließen; lesbar sind sie nur mit dem '
+          + 'Schlüsselpaar des Kontos, aus dem die Sicherung stammt.' : '')
+      + (z.zielVerloren
+        ? ` ACHTUNG: Bei ${z.zielVerloren} Einsätzen ließen sich Transportziel oder Ortshöhe `
+          + 'nicht übernehmen, weil ihre geschützten Angaben nicht lesbar sind.' : '');
 
     /* ---- Zustandszeilen als Meldungen (E-P3-16) --------------------------
      *
@@ -3589,7 +3809,67 @@ ui_seite_start(['titel' => 'Einstellungen',
         const FENSTER = 250;
         const eintragsteile = [];
         const index = [];
-        let n = 0, unlesbar = 0;
+        let n = 0, unlesbar = 0, ortUnlesbar = 0;
+        /* Das Schlüsselpaar des Kontos (S11-06a) — erst geholt, wenn eine
+           Hülle oder ein Stück es braucht; ein Konto ohne beides sichert wie
+           bisher, auch ohne Paar. */
+        let paar = null;
+        const paarHolen = async () => (paar = paar || await EdOrtsdaten.schluessel(key));
+        /* Zeitpunkte der Datei: SQL-Form in UTC, wie die Spalten sie tragen. */
+        const sqlZeit = (t) => new Date(t * 1000).toISOString().slice(0, 19).replace('T', ' ');
+        const sqlSek = (z) => Math.floor(Date.parse(String(z).replace(' ', 'T') + 'Z') / 1000);
+        /* spur_ref -> Stufe und Originalzahl aus dem Kern, für den Spurteil. */
+        const umrissVon = new Map();
+
+        /* DIE EINSATZHÜLLE ÖFFNEN (S11-06a, Nutzlast 13, E-S11-56).
+         *
+         * Seit S11-04 liegen Phasenkoordinaten und Reanimation verschlossen
+         * in `ort_huelle`; die Tabellen tragen die Phasen ohne Ort und keine
+         * Reanimation mehr. Die Sicherung legt beides OFFEN in den Kern —
+         * der Kern ist mit dem Sicherungspasswort verschlossen, und die
+         * Datei soll sich auch in ein Konto mit anderem Schlüsselpaar
+         * einspielen lassen. Bis Web 22.4.0 fehlten Orte und Reanimation
+         * dieser Einsätze in jeder Sicherung (F-S11-63).
+         *
+         * Geht eine Hülle nicht auf, bleibt sie als Chiffretext in der
+         * Datei (`ort_unlesbar`), genau wie ein unlesbares `pat_blob`: Mit
+         * dem richtigen Schlüssel ist sie später noch zu öffnen, verworfen
+         * wäre sie verloren. */
+        async function huelleOeffnen(m) {
+          if (!m.ort_huelle) { return; }
+          let innen;
+          try {
+            innen = await EdOrtsdaten.einsatz(m, await paarHolen());
+          } catch (e) {
+            /* Ohne Kennung: Der Kern trägt keine Datenbankkennung, und die
+               Meldung an den Reiter System braucht eine. Die Zahl steht in
+               der Abschlussmeldung und im Manifest. */
+            EdOrtsdaten.melden(e, 'einsatz', null);
+            m.ort_unlesbar = true;
+            ortUnlesbar++;
+            return;
+          }
+          const beginn = sqlSek(m.started_at);
+          const orte = (innen && innen.phasen) || [];
+          const frei = orte.slice();
+          (m.phases || []).forEach((p, j) => {
+            const ts = sqlSek(p.occurred_at);
+            const idx = frei.findIndex((x) => x && x.phase === p.phase && beginn + x.t === ts);
+            let ort = null;
+            if (idx >= 0) { ort = frei[idx]; frei[idx] = null; }
+            else if (orte[j] && orte[j].phase === p.phase) { ort = orte[j]; }
+            if (ort && ort.lat != null) { p.lat = Number(ort.lat); p.lon = Number(ort.lon); }
+          });
+          const rea = (innen && innen.rea) || [];
+          if (rea.length) {
+            m.resus = rea.map((sz) => ({
+              started_at: sqlZeit(beginn + sz.t),
+              events: (sz.ereignisse || []).map((e) => ({ type: e.art,
+                                                          occurred_at: sqlZeit(beginn + e.t) })),
+            }));
+          }
+          delete m.ort_huelle;
+        }
 
         for (let ab = 0; ab < kopf.eintraege_gesamt; ab += FENSTER) {
           expState.textContent = `Einträge werden geladen (${ab} von ${kopf.eintraege_gesamt})…`;
@@ -3632,6 +3912,12 @@ ui_seite_start(['titel' => 'Einstellungen',
               m.pat_unreadable = true;
             }
             delete m._pat; delete m._patState; delete m._patFehler;
+            await huelleOeffnen(m);
+          }
+          for (const x of [...f.missions, ...f.rest_segments]) {
+            if (x.spur_ref != null) {
+              umrissVon.set(x.spur_ref, { stufe: x.stufe, n_original: x.n_original });
+            }
           }
 
           for (const e of (f._spur_index || [])) { index.push(e); }
@@ -3650,10 +3936,14 @@ ui_seite_start(['titel' => 'Einstellungen',
          * Teil. Eine über die Grenze gestückelte wäre nur mit beiden Teilen
          * brauchbar, und dann hätte die Teilung nichts gebracht.
          *
-         * 250 000 Punkte je Teil: gemessen kostet ein Punkt 3,56 Byte als
-         * SPUR1 (S2/AP1), Base64 macht 4,77 daraus — also rund 1,2 MB je
-         * Teil im Regelfall. */
-        const TEIL_PUNKTE = 250000;
+         * 100 000 Punkte je Teil (S11-06a). Bis Nutzlast 12 waren es
+         * 250 000: Ein Punkt kostete als SPUR1 3,56 Byte (S2/AP1), als
+         * Base64 4,77 — rund 1,2 MB je Teil. Seit Nutzlast 13 steht die
+         * Spur als Punktliste im Teil; gemessen am 16.10.2026 an 250 000
+         * Punkten einer Zufallsspur: 11,8 MB JSON, 3,07 MB nach gzip, also
+         * 12,3 Byte je Punkt. 100 000 Punkte halten den Teil bei rund
+         * 1,2 MB wie bisher. */
+        const TEIL_PUNKTE = 100000;
         const teileplan = [];
         let laufend = [], laufendePunkte = 0;
         for (const e of index) {
@@ -3712,13 +4002,14 @@ ui_seite_start(['titel' => 'Einstellungen',
           for (const art of ['mission', 'rest']) {
             const dieser = teil.filter(e => e.art === art);
             for (let k = 0; k < dieser.length; k += BLOCK) {
-              let rest = dieser.slice(k, k + BLOCK).map(e => e.id);
+              const ids = dieser.slice(k, k + BLOCK).map(e => e.id);
               const refNach = new Map(dieser.slice(k, k + BLOCK).map(e => [e.id, e.spur_ref]));
-              /* `offen` heißt: Dem Server ist die Zeit ausgegangen, bevor er
-                 alle Spuren des Blocks kodiert hatte. Dann wird derselbe Rest
-                 noch einmal geholt — nicht abgebrochen, denn es ist kein
-                 Fehler, sondern eine Grenze. */
-              for (let versuch = 0; rest.length && versuch < 10; versuch++) {
+              /* EIN ANLAUF JE BLOCK (S11-06a). Bis Nutzlast 12 kodierte der
+                 Server SPUR1 unter einer Zeitgrenze und meldete einen Rest
+                 als `offen`, den der Browser bis zu zehnmal nachholte. Die
+                 Form `punkte` liest nur und kodiert nichts; die Arbeit — das
+                 Öffnen der Stücke — liegt hier im Browser. */
+              {
                 /* OHNE `vorgang`, und das ist kein Versehen. Dieser Wurf
                    laeuft in den catch des ganzen Exportwegs (weiter unten),
                    und DER traegt den Vorgangsnamen -- einmal, fuer alle
@@ -3729,31 +4020,46 @@ ui_seite_start(['titel' => 'Einstellungen',
                    beim Gegenlesen; die uebrigen inneren Wuerfe dieses Wegs
                    tragen aus demselben Grund seit jeher keinen. */
                 const a = await EdApi.postJson('api/backup_spuren.php',
-                  { owner_type: art, ids: rest });
+                  { owner_type: art, ids: ids, form: 'punkte' });
                 if (!a.ok) {
                   /* Den Grund baut EdApi; der Folgesatz bleibt hier, weil er
                      ein Zustandsbericht ist und kein Fehlertext. */
                   throw new Error(a.meldung + ' Es wurde KEINE Datei erzeugt.');
                 }
+                /* DIE FORM `punkte` (S11-06a): je Spur der Altbestand als
+                   Punkte und die verschlossenen Stücke. Beide kommen hier
+                   zusammen, nach Punktnummer; ein Stück, das nicht aufgeht,
+                   wird gemeldet wie bisher ein kaputter Blob. Die
+                   Sperrzeiten gehen NICHT ein: Die Sperrvermerke reisen am
+                   Einsatz mit (`schnitte`) und sperren nach dem Einspielen
+                   dieselben Punkte wieder; die Zahl im Kern zählt sie mit. */
                 const spuren = (a.daten && a.daten.spuren) || {};
-                const nochOffen = [];
                 for (const [idText, s] of Object.entries(spuren)) {
                   const id = Number(idText);
-                  if (s.offen) { nochOffen.push(id); continue; }
-                  if (s.leer) { continue; }
-                  if (s.fehler) {
-                    fehlerhaft.push(`${art} ${id}: ${s.grund || s.fehler}`);
-                    continue;
+                  const nach = new Map();
+                  for (const p of (s.punkte || [])) { nach.set(p[0], p); }
+                  if (s.stuecke && s.stuecke.length) {
+                    let offen;
+                    try {
+                      offen = await EdOrtsdaten.spur(s.stuecke, art === 'rest' ? 'ruhe' : 'spur',
+                                                     s.ref, [], await paarHolen());
+                    } catch (e) {
+                      EdOrtsdaten.melden(e, art === 'rest' ? 'ruhe' : 'spur', id);
+                      fehlerhaft.push(`${art} ${id}: ${e.message}`);
+                      continue;
+                    }
+                    for (const p of offen) {
+                      if (!nach.has(p.seq)) { nach.set(p.seq, [p.seq, p.lat, p.lon, p.ele, p.ts]); }
+                    }
                   }
-                  eintraege.push({ spur_ref: refNach.get(id), blob: s.blob,
-                                   stufe: s.stufe, n_original: s.n_original, n: s.n });
-                  punkteGesamt += s.n; spurenGesamt++;
+                  if (!nach.size) { continue; }
+                  const punkte = [...nach.values()].sort((x, y) => x[0] - y[0]);
+                  const ref = refNach.get(id);
+                  const u = umrissVon.get(ref) || {};
+                  eintraege.push({ spur_ref: ref, punkte: punkte, stufe: u.stufe,
+                                   n_original: u.n_original, n: punkte.length });
+                  punkteGesamt += punkte.length; spurenGesamt++;
                 }
-                rest = nochOffen;
-              }
-              if (rest.length) {
-                throw new Error('Der Server kam mit ' + rest.length + ' Aufzeichnungen auch nach '
-                              + 'zehn Anläufen nicht durch. Es wurde KEINE Datei erzeugt.');
               }
             }
           }
@@ -3785,6 +4091,10 @@ ui_seite_start(['titel' => 'Einstellungen',
              raten und fragte dann auch dann, wenn es nichts zu fragen gibt
              (F-S2-D). */
           unlesbar: unlesbar,
+          /* Einsätze, deren Hülle sich nicht öffnen ließ (S11-06a). Sie
+             tragen sie als Chiffretext (`ort_unlesbar`); der Einspielweg
+             fragt nach, statt sie still ohne Orte anzulegen. */
+          ort_unlesbar: ortUnlesbar,
         };
         const manifestBytes = await EdCrypto.sealTeilJson(vorgang, manifest,
           EdCrypto.aadManifest());
@@ -3848,6 +4158,11 @@ ui_seite_start(['titel' => 'Einstellungen',
                 + 'Bitte klären, warum der Schlüssel nicht passt, bevor weitere '
                 + 'Schritte unternommen werden.'
               : '')
+          + (ortUnlesbar
+              ? ` ACHTUNG: Bei ${ortUnlesbar} Einsätzen ließen sich die geschützten `
+                + 'Orte und die Reanimation nicht öffnen. Sie sind verschlüsselt in der '
+                + 'Datei enthalten und gehen nur mit dem Schlüsselpaar dieses Kontos auf.'
+              : '')
           + (fehlerhaft.length
               /* EINE ABGELEHNTE SPUR WIRD GENANNT, nicht verschwiegen. Die
                  Datei ist im Übrigen vollständig; das Fehlen einer Spur
@@ -3860,12 +4175,12 @@ ui_seite_start(['titel' => 'Einstellungen',
               : ''),
           /* Ein Export mit unlesbaren Blobs oder fehlenden Spuren ist kein
              reiner Erfolg: Die Datei ist vollständig bis auf das Genannte. */
-          (unlesbar || fehlerhaft.length) ? 'warn' : 'ok');
+          (unlesbar || ortUnlesbar || fehlerhaft.length) ? 'warn' : 'ok');
       } catch (e) {
         /* DER EINE VORGANGSNAME DIESES WEGES. Er stand hier schon immer,
            nur in der alten Form „Export fehlgeschlagen: "; seit AP8 traegt
            er den einheitlichen Satzbau. Die inneren Wuerfe -- EdApi-Fehler,
-           Manifestpruefung, der Satz nach zehn Anlaeufen -- nennen ihn
+           Manifestpruefung -- nennen ihn
            deshalb nicht noch einmal. */
         melde(expState, 'Der Export ist fehlgeschlagen: ' + e.message, 'fehler');
       }
@@ -4135,7 +4450,13 @@ ui_seite_start(['titel' => 'Einstellungen',
            Einsätze noch nicht geöffnet; gefragt wird deshalb anhand der
            Prüfsumme im Kopf, die genau dafür da ist. Beim Altformat bleibt es
            bei der gezählten Zahl. */
-        if (!fassung4) { await patUmschluesseln(data.missions); }
+        /* Erst die Ortsdaten, dann die Umschlüsselung: Transportziel und
+           Ortshöhe gehen in `pat`, bevor `pat` verschlüsselt wird. */
+        const rz = rwZaehler();
+        if (!fassung4) {
+          await rwEintraege(data, rz);
+          await patUmschluesseln(data.missions);
+        }
         /* NUR FRAGEN, WENN ES ETWAS ZU FRAGEN GIBT (S2/AP5b, F-S2-D).
          *
          * Betroffen sind allein Einsätze, deren geschützte Angaben beim
@@ -4216,6 +4537,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             impState.textContent = `Einträge werden übertragen `
               + `(Teil ${i + 1} von ${fassung4.eintragsteile.length})…`;
             const teil = await fassung4.teilOeffnen(ti);
+            await rwEintraege(teil, rz);
             await patUmschluesseln(teil.missions);
             const a = await EdApi.postJson('api/backup_eintraege_restore.php',
               { eintraege: teil, day_map: dayMap },
@@ -4259,69 +4581,23 @@ ui_seite_start(['titel' => 'Einstellungen',
          * Beides ist kein Abbruch, aber beides gehört in die Rückmeldung:
          * Eine Wiederherstellung, die eine Spur still verliert, ist genau
          * das, wovor ein Backup schützen soll. */
-        let spurenGeschrieben = 0, spurenUebersprungen = 0;
-        const spurenAbgelehnt = [];
-        let ohneZiel = 0;
         if (fassung4 && fassung4.spurteile.length) {
-          /* ZWEI GRENZEN, NICHT EINE. Die Größe deckelt der POST (Z3: 2 MB);
-             die ANZAHL deckelt der Endpunkt (BACKUP_SPUREN_RESTORE_MAX in
-             api/backup_spuren_restore.php), weil je Spur Arbeit anfällt.
-             Der erste Entwurf kannte nur die Größe — und scheiterte bei der
-             Abnahme am 5000er-Bestand: Kurze Ruhespuren sind so klein, dass
-             in einem Häppchen weit mehr als 500 passen. Die Größe liegt bei
-             800 kB, also unter nginx' Vorgabe von 1 MB.
-
-             DIE ZAHL STEHT AN ZWEI ORTEN, und das ist bekannt: hier und im
-             Endpunkt. `tools/proben/wiederherstellung/` hält sie zusammen. */
-          const HAPPEN = 800 * 1024;      // unter nginx' Vorgabe von 1 MB
-          const HAPPEN_ZAHL = 500;
           for (const [i, teilIndex] of fassung4.spurteile.entries()) {
             impState.textContent = `GPS-Daten werden übertragen `
               + `(Teil ${i + 1} von ${fassung4.spurteile.length})…`;
-            const teil = await fassung4.teilOeffnen(teilIndex);
-            let happen = [], groesse = 0;
-            const senden = async () => {
-              if (!happen.length) { return; }
-              const a = await EdApi.postJson('api/backup_spuren_restore.php',
-                { spuren: happen },
-                { vorgang: 'Das Übertragen der GPS-Daten' });
-              if (!a.ok) {
-                /* Zustandsbericht, kein Fehlertext -- bleibt beim Aufrufer. */
-                throw new Error(a.meldung
-                  + ' Der übrige Bestand ist bereits eingespielt.');
-              }
-              const o = a.daten;
-              spurenGeschrieben += o.geschrieben || 0;
-              spurenUebersprungen += o.uebersprungen || 0;
-              for (const x of (o.abgelehnt || [])) {
-                spurenAbgelehnt.push(`${x.owner_type} ${x.owner_id}: ${x.grund}`);
-              }
-              happen = []; groesse = 0;
-            };
-            for (const e of (teil.spuren || [])) {
-              const ziel = spurKarte[String(e.spur_ref)];
-              if (!ziel) { ohneZiel++; continue; }
-              const blob = String(e.blob || '');
-              if (groesse + blob.length > HAPPEN || happen.length >= HAPPEN_ZAHL) {
-                await senden();
-              }
-              happen.push({ owner_type: ziel.art, owner_id: ziel.id,
-                            blob: blob, n: e.n });
-              groesse += blob.length;
-            }
-            await senden();
+            await rwSpurteil(await fassung4.teilOeffnen(teilIndex), spurKarte, rz);
           }
         }
         if (fassung4) { await fassung4.schliessen(); }
 
         const spurText = fassung4
-          ? ` ${spurenGeschrieben} Aufzeichnungen übernommen`
-            + (spurenUebersprungen ? `, ${spurenUebersprungen} waren schon da` : '')
-            + (ohneZiel ? `, ${ohneZiel} ohne zugehörigen Einsatz (übersprungen)` : '')
-            + (spurenAbgelehnt.length
-                ? `. ACHTUNG: ${spurenAbgelehnt.length} Aufzeichnungen abgelehnt: `
-                  + spurenAbgelehnt.slice(0, 3).join(' · ')
-                  + (spurenAbgelehnt.length > 3 ? ' · …' : '')
+          ? ` ${rz.geschrieben} Aufzeichnungen übernommen`
+            + (rz.uebersprungen ? `, ${rz.uebersprungen} waren schon da` : '')
+            + (rz.ohneZiel ? `, ${rz.ohneZiel} ohne zugehörigen Einsatz (übersprungen)` : '')
+            + (rz.abgelehnt.length
+                ? `. ACHTUNG: ${rz.abgelehnt.length} Aufzeichnungen abgelehnt: `
+                  + rz.abgelehnt.slice(0, 3).join(' · ')
+                  + (rz.abgelehnt.length > 3 ? ' · …' : '')
                 : '.')
           : '';
         const zusatz = uebernommen
@@ -4331,8 +4607,9 @@ ui_seite_start(['titel' => 'Einstellungen',
               ? ` ${uebernommenFremd} Einsätze brachten verschlüsselte Angaben mit, die `
                 + `in diesem Konto nicht lesbar sind.`
               : '');
-        melde(impState, 'Import fertig: ' + restoreBericht(s, zusatz) + spurText,
-              spurenAbgelehnt.length || ohneZiel ? 'warn' : 'ok');
+        melde(impState, 'Import fertig: ' + restoreBericht(s, zusatz) + spurText + rwText(rz, true),
+              rz.abgelehnt.length || rz.ohneZiel || rz.zielVerloren || rz.mitgebracht
+                ? 'warn' : 'ok');
       } catch (e) {
         /* OHNE PRAEFIX (Schritt 15 AP8, R2). Den Satzanfang setzt jetzt
            EdApi ueber `o.vorgang` -- „Das Einspielen ist fehlgeschlagen:
@@ -4450,22 +4727,97 @@ ui_seite_start(['titel' => 'Einstellungen',
         }
 
         let um = 0, unlesbar = 0;
-        /* Die Umschlüsselung an EINER Stelle, für beide Fassungen. */
-        const umschluesseln = async (liste) => {
-          if (!braucht) { return; }
-          for (const m of (liste || [])) {
-            if (!m.pat_blob) { continue; }
-            try {
-              const klar = await EdCrypto.decrypt(altCk, m.pat_blob);
-              m.pat_blob = await EdCrypto.encrypt(eigenerCk, klar);
-              um++;
-            } catch (e) {
-              /* NICHT stillschweigend weglassen: Ein Eintrag, dessen
-                 geschützte Angaben hier nicht lesbar werden, ist eine Auskunft
-                 — die Datei sähe sonst vollständig aus, wäre es aber nicht. */
-              unlesbar++;
-            }
+        /* Seit S11-06b braucht der Weg den eigenen Schlüssel immer: Orte,
+           Reanimation und Spur verschließt der Browser mit dem Schlüsselpaar
+           des Kontos, Transportziel und Ortshöhe gehen in den `pat_blob`. */
+        if (!eigenerCk) { eigenerCk = await ck(); }
+        if (!eigenerCk) {
+          fgState.textContent = 'Die Verschlüsselung ist in dieser Sitzung gesperrt — '
+            + 'bitte oben entsperren.';
+          return;
+        }
+        const rz = rwZaehler();
+        /* DIE ORTSDATEN DES URSPRUNGSKONTOS (S11-06c). Hülle und Stücke sind an
+           dessen Schlüsselpaar gebunden. Gehen sie mit dem eigenen auf, ist es
+           dasselbe Konto, und sie bleiben, wie sie sind. Sonst öffnet sie der
+           private Teil aus dem Paket — unter dem alten Inhaltsschlüssel, den
+           der Wiederherstellungsschlüssel eben geöffnet hat —, und sie werden
+           für dieses Konto neu verschlossen. Geht beides nicht, kommen sie
+           unverändert an und werden gezählt. */
+        let eigenesPaar = null, fremdesPaar = null;
+        try { eigenesPaar = await EdOrtsdaten.schluessel(eigenerCk); } catch (e) { eigenesPaar = null; }
+        if (braucht && fgPaket.kp_privat) {
+          try {
+            const der = Uint8Array.from(atob(await EdCrypto.decrypt(altCk, fgPaket.kp_privat)),
+                                        (c) => c.charCodeAt(0));
+            fremdesPaar = await EdOrtsdaten.schluesselAus(der);
+          } catch (e) { fremdesPaar = null; }
+        }
+        let ortUnlesbar = 0;
+        const huelleUm = async (m) => {
+          if (!m.ort_huelle) { return; }
+          if (eigenesPaar) {
+            try { await EdOrtsdaten.einsatz(m, eigenesPaar); return; } catch (e) { /* fremd */ }
           }
+          let innen = null;
+          if (fremdesPaar) {
+            try { innen = await EdOrtsdaten.einsatz(m, fremdesPaar); } catch (e) { innen = null; }
+          }
+          if (!innen) { ortUnlesbar++; return; }
+          const beginn = rwSekunden(m.started_at);
+          const zeit = (t) => new Date((beginn + t) * 1000).toISOString().slice(0, 19).replace('T', ' ');
+          const orte = (innen.phasen || []).slice();
+          (m.phases || []).forEach((p) => {
+            const i = orte.findIndex((o) => o && o.phase === p.phase
+                                             && beginn + o.t === rwSekunden(p.occurred_at));
+            if (i >= 0) { p.lat = orte[i].lat; p.lon = orte[i].lon; orte[i] = null; }
+          });
+          m.resus = (innen.rea || []).map((r) => ({ started_at: zeit(r.t),
+            events: (r.ereignisse || []).map((e) => ({ type: e.art, occurred_at: zeit(e.t) })) }));
+          delete m.ort_huelle;          // rwEinsatz verschließt neu
+        };
+        const stueckeUm = async (e, ziel, art) => {
+          const probe = async (paar) => EdOrtsdaten.spur(e.stuecke, art, ziel.ref, [], paar);
+          if (eigenesPaar) {
+            try { await probe(eigenesPaar); return e.stuecke; } catch (x) { /* fremd */ }
+          }
+          if (fremdesPaar) {
+            try {
+              const punkte = (await probe(fremdesPaar)).map((p) => [p.seq, p.lat, p.lon, p.ele, p.ts]);
+              return await rwStuecke(punkte, art, ziel.ref, e.stufe,
+                e.stuecke.reduce((a, s) => Math.max(a, s.seq_from + (s.n_original || s.punkte)), 0));
+            } catch (x) { /* unlesbar */ }
+          }
+          ortUnlesbar++;
+          return e.stuecke;
+        };
+        /* Umschlüsseln und Verschließen an EINER Stelle, für beide Fassungen.
+           Der Blob wird geöffnet — mit dem Schlüssel des Ursprungskontos,
+           wenn das Paket einen braucht, sonst mit dem eigenen —, damit
+           Transportziel und Ortshöhe hineinkönnen; dann für dieses Konto neu
+           verschlossen. */
+        const umschluesseln = async (teil) => {
+          for (const m of (teil.missions || [])) {
+            if (m.pat_blob) {
+              try {
+                m.pat = JSON.parse(await EdCrypto.decrypt(braucht ? altCk : eigenerCk, m.pat_blob));
+                delete m.pat_blob;
+                if (braucht) { um++; }
+              } catch (e) {
+                /* NICHT stillschweigend weglassen: Ein Eintrag, dessen
+                   geschützte Angaben hier nicht lesbar werden, ist eine Auskunft
+                   — die Datei sähe sonst vollständig aus, wäre es aber nicht. */
+                unlesbar++;
+              }
+            }
+            await huelleUm(m);
+            await rwEinsatz(m, rz);
+            if (m.pat && Object.keys(m.pat).length) {
+              m.pat_blob = await EdCrypto.encrypt(eigenerCk, JSON.stringify(m.pat));
+            }
+            delete m.pat;
+          }
+          for (const r of (teil.rest_segments || [])) { await rwRuhe(r); }
         };
 
         const holeTeil = async (name) => {
@@ -4521,7 +4873,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             fgState.textContent = `Einträge werden übertragen (Teil ${i} von ${nT})…`;
             const name = 'eintraege/' + String(i).padStart(4, '0') + '.json';
             const teil = await holeTeil(name);
-            await umschluesseln(teil.missions);
+            await umschluesseln(teil);
             const o = await senden('api/backup_eintraege_restore.php',
                                    { eintraege: teil, day_map: dayMap },
                                    'Das Einspielen');
@@ -4531,36 +4883,16 @@ ui_seite_start(['titel' => 'Einstellungen',
             }
           }
 
-          let spurenGeschrieben = 0, ohneZiel = 0;
           const nS = Number(fgPaket.spurteile || 0);
           for (let i = 1; i <= nS; i++) {
             fgState.textContent = `GPS-Daten werden übertragen (Teil ${i} von ${nS})…`;
             const name = 'spuren/' + String(i).padStart(4, '0') + '.json';
-            const teil = await holeTeil(name);
-            let happen = [], groesse = 0;
-            const schicken = async () => {
-              if (!happen.length) { return; }
-              const o = await senden('api/backup_spuren_restore.php',
-                                     { spuren: happen }, 'Das Einspielen');
-              spurenGeschrieben += o.geschrieben || 0;
-              happen = []; groesse = 0;
-            };
-            for (const e of (teil.spuren || [])) {
-              const ziel = karte[String(e.spur_ref)];
-              if (!ziel) { ohneZiel++; continue; }
-              const blob = String(e.blob || '');
-              if (groesse + blob.length > 800 * 1024 || happen.length >= 500) {
-                await schicken();
-              }
-              happen.push({ owner_type: ziel.art, owner_id: ziel.id, blob: blob, n: e.n });
-              groesse += blob.length;
-            }
-            await schicken();
+            await rwSpurteil(await holeTeil(name), karte, rz, stueckeUm);
           }
-          s.spuren_uebernommen = spurenGeschrieben;
-          if (ohneZiel) { s.spuren_ohne_ziel = ohneZiel; }
+          s.spuren_uebernommen = rz.geschrieben;
+          if (rz.ohneZiel) { s.spuren_ohne_ziel = rz.ohneZiel; }
         } else {
-          await umschluesseln(daten.missions);
+          await umschluesseln(daten);
           if (unlesbar && !await window.edConfirm(
               `${unlesbar} Einsätze lassen sich mit diesem Schlüssel `
               + `nicht öffnen. Ihre geschützten Angaben bleiben hier unlesbar. `
@@ -4596,12 +4928,23 @@ ui_seite_start(['titel' => 'Einstellungen',
                           ? ` ACHTUNG: ${unlesbar} Einsätze liessen sich mit diesem `
                           + `Schlüssel nicht öffnen; ihre geschützten Angaben bleiben `
                           + `hier unlesbar.` : '')
+                     + (rz.abgelehnt.length
+                          ? ` ACHTUNG: ${rz.abgelehnt.length} Aufzeichnungen abgelehnt: `
+                          + rz.abgelehnt.slice(0, 3).join(' · ')
+                          + (rz.abgelehnt.length > 3 ? ' · …' : '') + '.' : '')
+                     + rwText(rz, false)
+                     + (ortUnlesbar
+                          ? ` ACHTUNG: Bei ${ortUnlesbar} Einträgen ließen sich Orte, `
+                          + 'Reanimation oder GPS-Daten nicht öffnen; sie sind verschlüsselt '
+                          + 'übernommen und hier nicht lesbar.' : '')
                      + (frei.ok ? ''
                           : ` Die Daten sind eingespielt. ${frei.meldung} — ob die `
                           + `Freigabe noch offen ist, ist unklar. Ein zweites `
                           + `Einspielen ist nicht nötig.`);
         melde(fgState, 'Fertig: ' + restoreBericht(s, zusatz),
-              unlesbar || s.spuren_ohne_ziel || !frei.ok ? 'warn' : 'ok');
+              unlesbar || s.spuren_ohne_ziel || rz.abgelehnt.length || rz.zielVerloren || ortUnlesbar
+                || !frei.ok
+                ? 'warn' : 'ok');
         document.getElementById('freigabebtn').disabled = true;
       } catch (e) {
         /* OHNE PRAEFIX (Schritt 15 AP8, R2). Den Satzanfang setzt jetzt

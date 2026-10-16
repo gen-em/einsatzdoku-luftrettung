@@ -19,6 +19,7 @@ byte-gleich dagegen, samt Rundlauf und Innenform ohne Höhe (-32768).
 Störungen, Rundlauf, Zeiten ohne Abnahme. Die Uhr: `pruefstand.sh kryptoprobe`.
 `geraet.php` (für Python `geraet_cli.php`) ist die **Gerätehilfe der Proben**:
 Paket im alten Format → wie ein Gerät ab Web 22; öffnet Hüllen, nie im Server.
+`zeiten_cli.php`: Ortszeit → Zeitpunkt über `local_to_utc()`, für `einspielen.py`.
 
 ## Was es braucht
 

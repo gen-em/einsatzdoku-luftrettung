@@ -14,6 +14,77 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.5.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-06 — Sicherung** in sechs Teilen, ein Commit
+(E-S11-55). Kein Schema.
+
+### Behoben
+
+- **Die Sicherung ließ Orte, Reanimation und GPS-Daten aller verschlossen
+  eingegangenen Einsätze aus** (F-S11-63). Seit S11-04 liegen sie nur noch in
+  Einsatzhülle und Spurstücken; der Kern las Phasen und Reanimation aus den
+  Tabellen, in denen sie nicht mehr stehen, und die Spurteile nur SPUR1. Eine
+  Spur aus Stücken kam als „leer" zurück — die Datei sah vollständig aus. Wer
+  seit Web 22.0.1 gesichert hat, sichert neu. Jetzt öffnet der Browser Hülle
+  und Stücke und legt Orte, Reanimation und Punkte offen in den Container,
+  den das Sicherungspasswort verschließt (**Nutzlast 13**).
+- **Die Kontosicherung der Verwaltung trug keine Stücke** (F-S11-63). Sie
+  trägt sie jetzt, wie sie liegen, und die Einsatzhülle im Kern.
+- **Löschvermerke fehlten in jeder Sicherung** (F-S11-52). Ein aus einer Spur
+  gelöschter Zeitraum war nach dem Einspielen nicht mehr gegen eine erneute
+  Lieferung gesperrt. Jedes Segment trägt seine `loeschungen` jetzt mit.
+- **Der Demo-Reset schrieb Ortsdaten im Klartext.** Er spielte die Fixture
+  über denselben Weg wie eine Sicherung ein, und der legte bis hierher Orte,
+  Reanimation und Spur offen ab. Jetzt verschließt der Server mit dem
+  Schlüsselpaar des Demo-Kontos (E-S11-20) und legt Transportziel und
+  Ortshöhe in den Blob. Ohne das verweigerte die Aufräummigration (S11-12)
+  auf jeder Anlage mit Demo-Konto.
+- **Das Einspielwerkzeug des Referenzbestands bediente Formular und Schnitt
+  im alten Format** (F-S11-43, -53). Es verschließt jetzt wie ein Browser.
+  Dabei fiel auf, dass sein Blob-Bau Notiz, Transportziel und Ortshöhe still
+  wegließ — 85 Notizen kamen nie an (F-S11-66).
+
+### Geändert
+
+- **Spuren stehen in der Sicherung als Punktlisten** (Betreiberin,
+  16.10.2026, E-S11-56). Der Server kann die Stücke nicht öffnen, also auch
+  kein SPUR1 bauen; ein zweiter SPUR1-Kodierer im Browser hätte nur Größe
+  gespart. Die Datei wächst dadurch: am Referenzbestand **880 KB statt 280
+  KB** (67 292 Punkte). Ein Spurteil nimmt deshalb 100 000 Punkte statt
+  250 000, damit er bei rund 1,2 MB bleibt.
+- **Beim Einspielen verschließt der Browser, bevor er sendet** — aus jeder
+  Fassung von 6 bis 13 gleich: Orte und Reanimation in die Einsatzhülle,
+  Transportziel und Ortshöhe in die geschützten Angaben, Spuren in Stücke
+  (eine SPUR1-Datei liest er dafür selbst). Der Server weist Klartext dieser
+  Felder mit `400 klartext` ab, bevor er etwas schreibt — wie Eingang und
+  CSV-Import. Die Seite muss dafür entsperrt sein. Die Höhe des Einsatzorts
+  rechnet der Rückweg nicht mehr nach; sie kommt aus der Datei (F-S11-45).
+- **Der direkte Weg der Verwaltung verschließt selbst** (Betreiberin,
+  16.10.2026, E-S11-57). Er hat die Daten eines älteren Pakets ohnehin im
+  Klartext vor sich; jetzt legt er Orte, Reanimation und Spur verschlossen ab.
+  Ohne Schlüsselpaar im Zielkonto weist er ab, bevor etwas geschrieben ist.
+  Transportziel und Ortshöhe bleiben auf diesem Weg Altbestand — der
+  `pat_blob` hängt am Inhaltsschlüssel, den der Server nicht hat.
+- **Freigabe in ein anderes Konto mit Orten und GPS-Daten** (F-S11-65). Hülle
+  und Stücke hängen am Schlüsselpaar des Ursprungskontos; im neuen Konto
+  wären sie unlesbar angekommen. Das Paket trägt jetzt den privaten Teil
+  dieses Paars, verschlüsselt unter dem alten Inhaltsschlüssel — derselbe
+  Chiffretext wie in der Datenbank. Der Browser der NutzerIn öffnet ihn mit
+  dem Wiederherstellungsschlüssel und verschlüsselt Hülle und Stücke für ihr
+  neues Paar. Ein Paket mit solchen Daten gilt als „geschützt" und geht nie
+  unmittelbar in ein fremdes Konto.
+- **Hat das Demo-Konto kein Schlüsselpaar, legt der Server beim Zurücksetzen
+  eines an** (Betreiberin, 16.10.2026, E-S11-58). Dafür rechnet er den
+  Inhaltsschlüssel aus dem Passwort des Demo-Kontos, das im Handbuch steht.
+  Für kein anderes Konto kennt er Passwort oder Schlüssel.
+
+### Bewusst so belassen
+
+- **Die Sicherung ist größer und wird es bleiben**, bis jemand SPUR1 im
+  Browser kodiert. Die Größe wurde gemessen und vorgelegt; ein zweiter
+  Kodierer wäre eine zweite Stelle für dasselbe Format.
+
 ## [Web 22.4.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-05e — Export, CSV-Import, Zeitverschiebung**.

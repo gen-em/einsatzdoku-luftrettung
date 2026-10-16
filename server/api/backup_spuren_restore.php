@@ -8,10 +8,18 @@ require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
  *
  * WOFUER (Konzept S2, 3.2.4). Der Kern ist eingespielt; der Server hat dabei
  * gesagt, unter welcher Kennung jede `spur_ref` angelegt wurde. Jetzt kommen
- * die Blobs, teilweise — hoechstens 2 MB je Anfrage.
+ * die Spuren, teilweise — hoechstens 2 MB je Anfrage.
  *
- * Rumpf: {"spuren": [{"owner_type": "mission", "owner_id": 42,
- *                     "blob": "<Base64>", "n": 443}, …]}
+ * Rumpf: {"spuren": [{"owner_type": "mission", "owner_id": 42, "stufe": 2,
+ *                     "stuecke": [{seq_from, punkte, ts_von, ts_bis, huelle,
+ *                                  n_original?}, …]}, …]}
+ *
+ * SEIT WEB 22.5.0 NUR VERSCHLOSSEN (S11-06b). Bis dahin kamen hier SPUR1-
+ * Blobs an, also Punkte im Klartext. Der Browser oeffnet jetzt jede Fassung
+ * — SPUR1 aus Nutzlast 8 bis 12, Punktlisten aus 13 —, verschliesst die
+ * Punkte mit dem oeffentlichen Schluessel des Kontos und schickt Stuecke;
+ * eine lange Spur verteilt er auf mehrere Anfragen. Ein Blob wird mit 400
+ * abgewiesen, und zwar die ganze Anfrage, bevor etwas liegt.
  * Antwort: {"geschrieben": 12, "uebersprungen": 3, "abgelehnt": [{…}]}
  *
  * DREI DINGE, DIE HIER PASSIEREN MUESSEN — und die man einzeln vergessen kann:
@@ -22,29 +30,17 @@ require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
  *    was er bekommen hat, hat eine Schnittstelle gebaut, die fremde Spuren
  *    ueberschreibt — es genuegte eine Anfrage von Hand.
  *
- * 2. DEN BLOB PRUEFEN, BEVOR ER LIEGT (`spur_blob_pruefen()`). Fuer
- *    Punktlisten gibt es diese Schicht seit je; fuer Blobs waere sie sonst
- *    die einzige Stelle der Anwendung, an der ungeprueft Binaerinhalt in die
- *    Datenbank ginge. CLAUDE.md 4 sagt „alle Schreibwege, ohne Ausnahme".
+ * 2. JEDES STUECK PRUEFEN, BEVOR ES LIEGT (`pruef_spurstueck()`) — dieselbe
+ *    Schicht wie im Eingang der Geraete. CLAUDE.md 4 sagt „alle
+ *    Schreibwege, ohne Ausnahme".
  *
- * 3. VORHANDENE UEBERSPRINGEN. `spur_blob_schreiben()` ist ein Upsert und
- *    UEBERSCHREIBT. Das ist an seiner Stelle richtig (der Verdichtungsjob
- *    ersetzt einen Blob durch den ausgeduennten), hier aber falsch: Eine
- *    abgebrochene Wiederherstellung soll sich fortsetzen lassen, ohne dass
- *    der zweite Lauf ueberschreibt, was der erste schon gebracht hat.
+ * 3. VORHANDENE UEBERSPRINGEN. Eine abgebrochene Wiederherstellung soll sich
+ *    fortsetzen lassen: Eine Spur, die schon im Klartext liegt, wird nicht
+ *    ergaenzt, und ein Stueck, das schon liegt, nicht doppelt geschrieben.
  *
- * UND DIE HOEHE DES EINSATZORTS GEHOERT HIERHER, nicht in den Kernlauf.
- *
- * `edbak_restore()` bestimmt sie am Ende aus der Spur (`compute_site_elevation`).
- * Bei Nutzlast 7 lagen die Punkte da bereits — sie standen in derselben
- * Anfrage. Bei Fassung 4 kommen sie ERST HIER an; der Kernlauf haette eine
- * Spur ohne Punkte vor sich und traege nichts ein.
- *
- * Gefunden hat das der Kreislauf: 79 Einsaetze kamen ohne `site_ele_m`
- * zurueck, obwohl die Quelle sie hatte. Kein Datenverlust — die Angabe ist
- * abgeleitet und liesse sich nachrechnen —, aber ein stiller Unterschied
- * zwischen Backup und Wiederherstellung, und genau die sucht ein
- * Kreislauf.
+ * DIE HOEHE DES EINSATZORTS RECHNET HIER NIEMAND MEHR (F-S11-45). Bis
+ * Web 22.4.0 stand sie hier, aus der eben geschriebenen Klartextspur; seit
+ * S11-06b traegt sie der `pat_blob`, den der Browser aus der Datei fuellt.
  */
 
 /** Hoechstens so viele Spuren je Anfrage — die Groesse deckelt der Browser. */
@@ -73,7 +69,15 @@ try {
      * und das Ueberspringen vorhandener Spuren zu vergessen sind. Dieser
      * Endpunkt ist seitdem die Schale: Rumpf pruefen, Grenze halten,
      * antworten. */
-    $e = edbak_spuren_schreiben(db(), $userId, $liste);
+    foreach ($liste as $s) {
+        if (is_array($s) && isset($s['blob'])) {
+            json_out(['error' => 'klartext',
+                      'meldung' => 'Das Backup enthielt GPS-Daten im Klartext. Seit Web 22.5.0 '
+                                 . 'verschlüsselt sie der Browser vor dem Senden; bitte die Seite '
+                                 . 'neu laden. Es wurde nichts geändert.'], 400);
+        }
+    }
+    $e = edbak_spuren_schreiben(db(), $userId, $liste, 'browser');
     $geschrieben   = $e['geschrieben'];
     $uebersprungen = $e['uebersprungen'];
     $abgelehnt     = $e['abgelehnt'];
