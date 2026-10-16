@@ -433,7 +433,7 @@ Arbeitsumgebung, ihre Ausbaustufen, die sieben Umgebungswerte und was sie
 6. **Geschichte steht im Commit, nicht im Werkzeug.**
 7. **Kein stilles Überspringen, keine grüne Zahl ohne Gegenstand.**
 
-Vier Sätze, die beim Arbeiten im Kopf sein müssen:
+Fünf Sätze, die beim Arbeiten im Kopf sein müssen:
 
 - **Die Prüfmittel laufen zuletzt**, nach der letzten Änderung — erst Code,
   dann Dokumentation, dann die Mittel. Ein Werkzeug, das davor lief, misst
@@ -448,6 +448,14 @@ Vier Sätze, die beim Arbeiten im Kopf sein müssen:
   diesem Container nicht läuft, ist ein **Befund mit Zahl** — welches
   Abbild, welche Fassung, welche Meldung —, kein stillschweigend
   übersprungener Punkt.
+- **Den Prüfstand im Zug abwarten, nicht im Hintergrund ruhen lassen.**
+  Mit `nohup` starten, die PID merken und in Abschnitten von höchstens
+  9½ Minuten auf sie warten (`timeout 570 tail --pid=<PID> -f /dev/null`),
+  einen nach dem anderen, bis er endet. Beendet die Sitzung ihren Zug und
+  wartet auf eine Benachrichtigung, wird der Container abgeräumt — am
+  16.10.2026 zweimal nach 37 und 41 Minuten (`Terminated`, F-S11-62). Nach
+  einem Neustart die ganze Startfolge aus `docs/Sandbox-Setup.md` 6.1a
+  fahren; ein abgebrochener Prüfstand ist kein Bericht.
 
 Drei Regeln haben schon Schaden angerichtet, als sie nirgends standen. Sie
 stehen ausgeführt in `docs/Pruefablauf.md` und **nur dort**; hier steht, dass
