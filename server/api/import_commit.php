@@ -18,23 +18,44 @@ require_once __DIR__ . '/../diensttag_lib.php';
  *   { days: { "2026-05-21": { day_id, crew: {<rolle>: name, ...},
  *                             vehicle_id, base_id, kind,
  *                             vehicle_name, base_name,
- *                             missions: [{id, hhmm, pat_blob}] } } }
+ *                             missions: [{id, hhmm, pat_blob, client_ref,
+ *                                         started_ts, ort_huelle, phasen,
+ *                                         alt_rea, alt_ziel, alt_hoehe}] } } }
  *
  *   { action: 'commit',
  *     days:     [{day, crew: {<rolle>: name, ...}, vehicle_id, base_id,
  *                 mode:'insert'|'keep'|'update'}],
- *     missions: [{day, started_local:'HH:MM', transport_dest, winch,
+ *     missions: [{day, started_local:'HH:MM', winch,
  *                 resources:[], crew_override, crew: {<rolle>: name, ...},
  *                 pat_blob, dup:'insert'|'overwrite'|'skip', overwrite_id,
  *
+ *                 // seit S11-05e: die Ortsdaten nur noch verschlossen
+ *                 client_ref: 'imp-' + 24 Hex (nur beim Anlegen),
+ *                 ort_huelle: Base64 (Einsatzhuelle), ort_phasen: [[nr, ts], …],
+ *
  *                 // ab Web 2.10.0, alle optional (Rueckimport der eigenen
  *                 // Exportformate; die Jahreslisten-Profile senden sie nicht)
- *                 ended_utc, final, site_ele_m, distance_m, ascent_m,
+ *                 ended_utc, final, distance_m, ascent_m,
  *                 schockraum, secondary, winch_cycles, winch_cycles_pat,
- *                 winch_airload, bergwacht, bw_unit, bw_info, other_ema, notes,
- *                 phases: [{phase:2..9, at:'...Z'|null, local:'HH:MM'|null,
- *                           lat, lon}],
- *                 rea:    [{started_at:'...Z', events:[{type, at:'...Z'}]}] }] }
+ *                 winch_airload, bergwacht, bw_unit, bw_info, other_ema,
+ *                 phases: [{phase:2..9, at:'...Z'|null, local:'HH:MM'|null}] }] }
+ *
+ * KEINE ORTSDATEN IM KLARTEXT (S11-05e, Betreiberin 16.10.2026, E-S11-51).
+ * Bis Web 22.3.0 nahm dieser Endpunkt `transport_dest`, `dest_lat`,
+ * `dest_lon`, `site_ele_m`, `phases[].lat/lon` und `rea` offen entgegen und
+ * schrieb sie in die Klartextspalten und -tabellen — der Weg, den das
+ * Formular in S11-05b geschlossen hat, stand hier noch offen. Jetzt legt der
+ * Browser Transportziel und Ortshoehe in den `pat_blob`, Phasenorte und
+ * Reanimation in die Einsatzhuelle (`ort_huelle`, verschlossen mit dem
+ * oeffentlichen Kontoschluessel und gebunden an `client_ref`). Steht eines
+ * der alten Felder trotzdem in der Nutzlast, antwortet der Endpunkt 400
+ * `klartext` und schreibt nichts — wie `ingest.php` seit S11-04a.
+ *
+ * DER WAECHTER UEBER DIE ZEITEN, wie im Formular: Die Zeiten der Huelle sind
+ * relativ zum Beginn; der Browser rechnet sie, der Server schreibt
+ * `mission_phases`. Der Browser schickt seine Rechnung der fertigen
+ * Phasenliste mit (`ort_phasen`), und weicht sie von dem ab, was nach dem
+ * Schreiben in `mission_phases` steht, wird NICHTS uebernommen.
  *
  * WEGGELASSEN IST NICHT LEER (Backlog Nr. 28). Fuer 'ended_utc' und 'final'
  * gilt eine Unterscheidung, die der Rest der Nutzlast nicht kennt:
@@ -123,6 +144,44 @@ function import_commit(array $b, int $userId): never
         return in_array($w, $erlaubt, true) ? $w : null;
     };
 
+
+    /* ---- Klartext-Ortsdaten abweisen (S11-05e, E-S11-51) ----------------
+     * VOR der Transaktion und fuer die ganze Nutzlast: Ein Import ist alles
+     * oder nichts, und eine Abweisung mitten in der Schleife liesse eine
+     * offene Transaktion zurueck. */
+    $klartext = static function (array $m): ?string {
+        foreach (['transport_dest', 'dest_lat', 'dest_lon', 'site_ele_m'] as $f) {
+            if (($m[$f] ?? null) !== null && $m[$f] !== '') { return $f; }
+        }
+        if (($m['rea'] ?? null) !== null) { return 'rea'; }
+        foreach ((array)($m['phases'] ?? []) as $p) {
+            if (is_array($p) && ((($p['lat'] ?? null) !== null) || (($p['lon'] ?? null) !== null))) {
+                return 'phases.lat/lon';
+            }
+        }
+        return null;
+    };
+    $refsNeu = [];
+    foreach ($einsaetze as $i => $m) {
+        if (!is_array($m)) { continue; }
+        $f = $klartext($m);
+        if ($f !== null) {
+            json_out(['error' => 'klartext',
+                      'meldung' => 'Die Nutzlast enthält Ortsdaten im Klartext (' . $f . ', Zeile '
+                                 . ($i + 1) . '). Seit Web 22.4.0 verschlüsselt sie der Browser; '
+                                 . 'bitte die Seite neu laden. Es wurde nichts übernommen.'], 400);
+        }
+        if (($m['dup'] ?? 'insert') === 'skip') { continue; }
+        if (($m['dup'] ?? '') !== 'overwrite') {
+            $ref = (string)($m['client_ref'] ?? '');
+            if (!preg_match('/^imp-[0-9a-f]{24}$/', $ref) || isset($refsNeu[$ref])) {
+                json_out(['error' => 'eingabe', 'meldung' => 'Die Kennung eines neuen Einsatzes fehlt '
+                          . 'oder ist doppelt (Zeile ' . ($i + 1) . '). Bitte die Seite neu laden. '
+                          . 'Es wurde nichts übernommen.'], 400);
+            }
+            $refsNeu[$ref] = true;
+        }
+    }
 
     $pdo = db();
     $pdo->beginTransaction();
@@ -288,7 +347,10 @@ function import_commit(array $b, int $userId): never
          * ihrer Stelle — wer eine Spalte unter die Schranke nimmt, traegt sie
          * in `$schranke` ein und sonst nirgends. */
         $festAend = ['uhr_gesperrt' => '1', 'edited' => '1'];
-        $schranke = ['pat_blob', 'site_ele_m', 'bw_info', 'other_ema'];
+        /* `site_ele_m` STEHT SEIT S11-05e NICHT MEHR HIER: Die Hoehe zieht der
+         * Browser beim Ueberschreiben in den `pat_blob` (`ortshoehe`), und die
+         * Spalte wird geleert statt gehalten. */
+        $schranke = ['pat_blob', 'bw_info', 'other_ema'];
         $spAend   = mf_spalten('import_aendern', '', false);
         $updE = $pdo->prepare(
             'UPDATE missions SET ' . implode(', ', array_map(
@@ -431,7 +493,13 @@ function import_commit(array $b, int $userId): never
              * Komma als Dezimaltrennzeichen zulaessig (validate_lib.php). Eine
              * eigene Fassung hier waere die vierte gewesen — und die erste, die
              * beim naechsten Umbau vergessen wird. */
-            [$zielLat, $zielLon] = pruef_ortspaar($m['dest_lat'] ?? null, $m['dest_lon'] ?? null);
+            /* Die Huelle des Einsatzes (S11-05e). Fehlt sie, ist das ein Weg am
+             * Browser vorbei — dann wird nichts uebernommen. */
+            $ortHuelle = pruef_huelle($m['ort_huelle'] ?? null, GH_EINSATZ_MAX_BYTE,
+                                      'ort_huelle', $pruef);
+            if ($ortHuelle === null) {
+                throw new DomainException('ortsdaten: Einsatzhülle fehlt oder ist unbrauchbar');
+            }
 
             /* JEDER WERT TRAEGT SEINEN SPALTENNAMEN (Schritt 15/AP6). Bis
              * Web 20.30.0 war das eine Liste ohne Namen, die auf zwei
@@ -440,11 +508,16 @@ function import_commit(array $b, int $userId): never
              * das Register unten zu; die Reihenfolge hier ist nur noch die
              * Lesereihenfolge. */
             $werte = [
-                'transport_dest' => $txt($m['transport_dest'] ?? null, 190),
+                /* TRANSPORTZIEL, ZIELKOORDINATE UND ORTSHOEHE LIEGEN SEIT
+                 * S11-05e IM `pat_blob` (der Browser fuehrt beim Ueberschreiben
+                 * den Altbestand dieser Spalten hinein); die Spalten werden
+                 * geleert. Nach der Aufraeumauslieferung (S11-12) gibt es sie
+                 * nicht mehr. */
+                'transport_dest' => null,
                 'winch'          => $flag($m['winch'] ?? null),
                 'crew_override'  => $flag($m['crew_override'] ?? null),
                 'pat_blob'       => $blob,
-                'site_ele_m'     => $zahl($m['site_ele_m'] ?? null, -500, 9000),
+                'site_ele_m'     => null,
                 'distance_m'     => $zahl($m['distance_m'] ?? null, 0, 100000000),
                 'ascent_m'       => $zahl($m['ascent_m'] ?? null, 0, 1000000),
                 'schockraum'     => $flag($m['schockraum'] ?? null),
@@ -476,8 +549,8 @@ function import_commit(array $b, int $userId): never
                                              ['air', 'ground', 'ambulant']),
                 'na_escort'      => $flag($m['na_escort'] ?? null),
                 'false_alarm'    => $flag($m['false_alarm'] ?? null),
-                'dest_lat'       => $zielLat,
-                'dest_lon'       => $zielLon,
+                'dest_lat'       => null,
+                'dest_lon'       => null,
                 'start_src'      => $auswahl($m['start_src'] ?? null,
                                              ['base', 'prev_site', 'prev_dest', 'manual']),
             ];
@@ -528,7 +601,9 @@ function import_commit(array $b, int $userId): never
                 $ersetzt++;
             } else {
                 $kopf = ['user_id' => $userId, 'device_id' => $devId,
-                         'client_ref' => 'imp-' . bin2hex(random_bytes(12)),
+                         /* Vom Browser gezogen (S11-05e): Die Huelle ist an
+                          * die Kennung gebunden und vor der Zeile verschlossen. */
+                         'client_ref' => (string)$m['client_ref'],
                          'day_id' => $dayId, 'started_at' => $startedAt,
                          'ended_at' => $endedAt, 'final' => $dateiFinal ?? 1];
                 $p = [];
@@ -585,33 +660,12 @@ function import_commit(array $b, int $userId): never
                  * Entdoppelung dienen. */
                 $phasen = pruef_menge($phasen, LIMIT_PHASEN, 'phases', $pruef);
 
-                /* KOORDINATEN UEBERLEBEN DAS ERSETZEN (P10, A9).
-                 *
-                 * Der Satz wird ersetzt, nicht gemischt — das bleibt so. Aber
-                 * die Koordinaten fallen unter die Export-Schranke: Ein Export
-                 * ohne personenbezogene Angaben liefert die Phasenzeiten und
-                 * KEINE lat/lon. Ohne diesen Uebertrag loeschte ein solcher
-                 * Rueckimport den Einsatzort, obwohl er ihn nur nicht kannte.
-                 *
-                 * Uebertragen wird je Phasennummer der Reihe nach: die erste
-                 * neue Zeile der Phase 4 erbt die erste alte, die zweite die
-                 * zweite. Mehrfache Eintraege je Phase sind erlaubt (siehe
-                 * oben), und der Export schreibt je Phase genau eine Spalte —
-                 * die Reihenfolge ist damit die einzige Zuordnung, die es gibt.
-                 *
-                 * Nur wenn die Datei WEDER lat NOCH lon liefert. Gibt sie
-                 * Koordinaten an, gelten ihre — auch dann, wenn sie von den
-                 * bisherigen abweichen. */
-                $altOrt = [];
-                $selPhasen = $pdo->prepare(
-                    'SELECT phase, lat, lon FROM mission_phases
-                     WHERE mission_id = ? AND (lat IS NOT NULL OR lon IS NOT NULL)
-                     ORDER BY occurred_at, id');
-                $selPhasen->execute([$id]);
-                foreach ($selPhasen->fetchAll() as $a) {
-                    $altOrt[(int)$a['phase']][] = [$a['lat'], $a['lon']];
-                }
-
+                /* KOORDINATEN UEBERLEBEN DAS ERSETZEN (P10, A9) — seit S11-05e im
+                 * Browser: Er traegt die Orte des Bestands (Huelle oder
+                 * Altbestand) je Phasennummer der Reihe nach in die neue Huelle,
+                 * wenn die Datei keine nennt. Hier entstehen nur noch die
+                 * Zeiten; bis Web 22.3.0 stand der Uebertrag an dieser Stelle,
+                 * im Klartext. */
                 einsatz_phasen_ersetzen($pdo, $id, []);   // leere Liste = nur loeschen
                 $neuePhasen = [];
                 foreach ($phasen as $p) {
@@ -625,13 +679,7 @@ function import_commit(array $b, int $userId): never
                                                       'phases.local', $pruef);
                     }
                     if ($wann === null) { continue; }
-                    $lat = pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef);
-                    $lon = pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef);
-                    if ($lat === null && $lon === null && !empty($altOrt[$nr])) {
-                        [$lat, $lon] = array_shift($altOrt[$nr]);
-                    }
-                    $neuePhasen[] = ['phase' => $nr, 'occurred_at' => $wann,
-                                     'lat' => $lat, 'lon' => $lon];
+                    $neuePhasen[] = ['phase' => $nr, 'occurred_at' => $wann];
                     $gesetzt[$nr] = true;
                 }
                 einsatz_phasen_ersetzen($pdo, $id, $neuePhasen, ['loeschen' => false]);
@@ -644,34 +692,43 @@ function import_commit(array $b, int $userId): never
                 }
             }
 
-            /* ---- Reanimation ----------------------------------------------
-             * Ebenfalls ersetzend, und nur wenn die Datei etwas liefert. Ein
-             * Einsatz ohne 'rea' in der Nutzlast behaelt seine vorhandene
-             * Dokumentation — ein Import mit einem Format, das Reanimationen
-             * gar nicht kennt, darf sie nicht loeschen.
-             */
-            if (is_array($m['rea'] ?? null)) {
-                $neueReas = [];
-                foreach (pruef_menge($m['rea'], LIMIT_REA_SESSION, 'rea', $pruef) as $s) {
-                    if (!is_array($s)) { continue; }
-                    $beginn = pruef_utc($s['started_at'] ?? null, 'rea.started_at', $pruef);
-                    if ($beginn === null) { continue; }
-                    $ereignisse = pruef_menge($s['events'] ?? [], LIMIT_REA_EREIGN,
-                                              'rea.events', $pruef);
-                    $ausEreignisse = [];
-                    foreach ($ereignisse as $e) {
-                        if (!is_array($e)) { continue; }
-                        // Nur bekannte Schluessel — ein freier Text waere im
-                        // Formular spaeter nicht darstellbar.
-                        $typ  = pruef_reanimationsart($e['type'] ?? null, 'rea.events.type', $pruef);
-                        $wann = pruef_utc($e['at'] ?? null, 'rea.events.at', $pruef);
-                        if ($typ === null || $wann === null) { continue; }
-                        $ausEreignisse[] = [$typ, $wann];
-                    }
-                    $neueReas[] = ['started_at' => $beginn, 'events' => $ausEreignisse];
-                }
-                einsatz_reas_ersetzen($pdo, $id, $neueReas);
+            /* ---- Ortsdaten: die Huelle, der Waechter, der Altbestand -------
+             *
+             * DIE FERTIGE PHASENLISTE GEGEN DIE RECHNUNG DES BROWSERS (wie im
+             * Formular, S11-05b): nach Zeit und Nummer sortiert, damit die
+             * Reihenfolge des Schreibens keine Rolle spielt. Weicht sie ab,
+             * passen die relativen Zeiten der Huelle nicht zu `mission_phases`
+             * — dann lieber gar nichts als eine Huelle mit verrutschten Orten.
+             *
+             * DANACH DER ALTBESTAND: Phasenorte im Klartext und die Zeilen der
+             * Reanimation hat der Browser in die Huelle uebernommen (er bekam
+             * sie mit `check`); hier werden sie geleert. Bis Web 22.3.0 schrieb
+             * dieser Block die Reanimation aus der Datei in `resus_sessions`. */
+            $istPhasen = $pdo->prepare('SELECT phase, occurred_at FROM mission_phases
+                                         WHERE mission_id = ? ORDER BY occurred_at, phase, id');
+            $istPhasen->execute([$id]);
+            $ist = [];
+            $ohneOrt = [];
+            foreach ($istPhasen->fetchAll() as $r) {
+                $ist[] = [(int)$r['phase'], (int)strtotime($r['occurred_at'] . ' UTC')];
+                $ohneOrt[] = ['phase' => (int)$r['phase'], 'occurred_at' => $r['occurred_at']];
             }
+            $soll = [];
+            foreach ((array)($m['ort_phasen'] ?? []) as $z) {
+                if (is_array($z) && count($z) === 2) { $soll[] = [(int)$z[0], (int)$z[1]]; }
+            }
+            usort($soll, static fn($a, $b) => [$a[1], $a[0]] <=> [$b[1], $b[0]]);
+            if ($soll !== $ist) {
+                require_once __DIR__ . '/../systemmeldung_lib.php';
+                system_melden('ortsdaten', 'Import: Phasenzeiten von Browser und Server weichen ab',
+                              null, ['konto' => $userId, 'einsatz' => $id,
+                                     'browser' => count($soll), 'server' => count($ist)]);
+                throw new DomainException('ortsdaten: Phasenzeiten weichen ab');
+            }
+            einsatz_phasen_ersetzen($pdo, $id, $ohneOrt);
+            einsatz_reas_ersetzen($pdo, $id, []);
+            $pdo->prepare('UPDATE missions SET ort_huelle = ? WHERE id = ? AND user_id = ?')
+                ->execute([$ortHuelle, $id, $userId]);
 
             // Weitere Rettungsmittel als eigene Zeilen (einzeln entfernbar),
             // doppelte und leere verworfen — gleiche Regel wie im Formular.
@@ -709,6 +766,16 @@ function import_commit(array $b, int $userId): never
              * Falle. */
             'first_day_id'          => $ersterTagId ?: null,
         ]);
+    } catch (DomainException $ex) {
+        /* Die Ortsdaten passen nicht (S11-05e): fehlende Huelle oder Zeiten,
+         * die der Browser anders gerechnet hat. Nichts wird uebernommen. */
+        $pdo->rollBack();
+        json_out(['error' => 'ortsdaten',
+                  'meldung' => str_contains($ex->getMessage(), 'Phasenzeiten')
+                      ? 'Die Zeiten der Phasen ließen sich im Browser nicht gleich rechnen wie auf '
+                        . 'dem Server. Es wurde NICHTS übernommen; die Abweichung ist gemeldet.'
+                      : 'Phasenorte und Reanimation ließen sich nicht verschlüsselt übernehmen. '
+                        . 'Bitte die Seite neu laden. Es wurde NICHTS übernommen.'], 409);
     } catch (Throwable $ex) {
         $pdo->rollBack();
         json_fehler($ex, 'commit');
@@ -794,7 +861,9 @@ try {
          * pat_blob geht als Chiffretext mit, damit der Browser die
          * Einsatznummer fuer den Dublettenabgleich lokal entschluesseln kann
          * (siehe Kopfkommentar). */
-        $st = db()->prepare("SELECT x.id, d.day, x.started_at, x.pat_blob
+        $st = db()->prepare("SELECT x.id, d.day, x.started_at, x.pat_blob, x.client_ref,
+                                    x.ort_huelle, x.transport_dest, x.dest_lat, x.dest_lon,
+                                    x.site_ele_m
                              FROM missions x
                              JOIN days d ON d.id = x.day_id
                              WHERE x.user_id = ? AND x.deleted_at IS NULL
@@ -802,7 +871,48 @@ try {
                                AND d.day IN ($platz)
                              ORDER BY x.started_at");
         $st->execute(array_merge([$userId], $tage));
-        foreach ($st->fetchAll() as $m) {
+        $einsRows = $st->fetchAll();
+
+        /* DIE ORTSDATEN DES BESTANDS (S11-05e). Ueberschreibt der Import einen
+         * Einsatz, baut der Browser dessen Huelle neu und braucht dafuer, was
+         * schon da ist: die Huelle selbst (mit Kennung und Beginn), die
+         * Phasenzeiten und — solange es ihn gibt — den Altbestand im Klartext
+         * (Phasenorte, Reanimation, Transportziel, Hoehe). Er zieht ihn in
+         * Huelle und Blob um; der Commit leert danach die Klartextstellen.
+         * Alles davon gehoert dem anfragenden Konto; der Altbestand ist ohnehin
+         * Klartext bis S11-10. */
+        $eIds = array_map(static fn($r) => (int)$r['id'], $einsRows);
+        $phasenVon = []; $reaVon = [];
+        if ($eIds) {
+            foreach (sql_in_bloecken(db(),
+                    'SELECT mission_id, phase, occurred_at, lat, lon FROM mission_phases
+                     WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at, phase, id',
+                    $eIds) as $r) {
+                $phasenVon[(int)$r['mission_id']][] = [
+                    'phase' => (int)$r['phase'], 'ts' => (int)strtotime($r['occurred_at'] . ' UTC'),
+                    'lat' => $r['lat'] !== null ? (float)$r['lat'] : null,
+                    'lon' => $r['lon'] !== null ? (float)$r['lon'] : null];
+            }
+            $sitz = sql_in_bloecken(db(),
+                'SELECT id, mission_id, started_at FROM resus_sessions
+                 WHERE mission_id IN ({IDS}) ORDER BY mission_id, started_at', $eIds);
+            $evVon = [];
+            $sIds = array_map(static fn($r) => (int)$r['id'], $sitz);
+            if ($sIds) {
+                foreach (sql_in_bloecken(db(),
+                        'SELECT session_id, type, occurred_at FROM resus_events
+                         WHERE session_id IN ({IDS}) ORDER BY session_id, occurred_at', $sIds) as $r) {
+                    $evVon[(int)$r['session_id']][] = ['art' => (string)$r['type'],
+                        'ts' => (int)strtotime($r['occurred_at'] . ' UTC')];
+                }
+            }
+            foreach ($sitz as $r) {
+                $reaVon[(int)$r['mission_id']][] = ['ts' => (int)strtotime($r['started_at'] . ' UTC'),
+                                                    'ereignisse' => $evVon[(int)$r['id']] ?? []];
+            }
+        }
+
+        foreach ($einsRows as $m) {
             $tag = (string)$m['day'];
             /* Der Zweig kann nur greifen, wenn der Einsatz an einem Diensttag
              * eines ANDEREN Datums haengt als die Datei annimmt — etwa nach
@@ -819,6 +929,17 @@ try {
                 'id'       => (int)$m['id'],
                 'hhmm'     => fmt_local($m['started_at']),
                 'pat_blob' => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
+                'client_ref' => (string)$m['client_ref'],
+                'started_ts' => (int)strtotime($m['started_at'] . ' UTC'),
+                'ort_huelle' => $m['ort_huelle'] !== null ? base64_encode((string)$m['ort_huelle']) : null,
+                'phasen'     => $phasenVon[(int)$m['id']] ?? [],
+                'alt_rea'    => $reaVon[(int)$m['id']] ?? [],
+                'alt_ziel'   => $m['transport_dest'] !== null || $m['dest_lat'] !== null
+                    ? ['addr' => $m['transport_dest'],
+                       'lat' => $m['dest_lat'] !== null ? (float)$m['dest_lat'] : null,
+                       'lon' => $m['dest_lon'] !== null ? (float)$m['dest_lon'] : null]
+                    : null,
+                'alt_hoehe'  => $m['site_ele_m'] !== null ? (int)$m['site_ele_m'] : null,
             ];
         }
     }

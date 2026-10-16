@@ -161,10 +161,17 @@ def teil_schnitt(s, uid: int) -> None:
     pruefe("Phasen angelegt",            [int(p["phase"]) for p in phasen], [3, 4])
 
 
+# Die Spalten, die Teil 2 liest — nicht `*`: Die Einsatzhuelle (seit S11-04a)
+# ist binaer und ginge nicht durch json_encode().
+SPALTEN_WEG = ("transport_dest, dest_lat, site_ele_m, bw_unit, bw_info, other_ema, distance_m, "
+               "winch, winch_cycles, final, uhr_gesperrt, edited, false_alarm, pat_blob, "
+               "ort_huelle IS NOT NULL AS hat_huelle")
+
+
 def teil_import(s, uid: int) -> None:
     print()
     print("2. api/import_commit.php — UPDATE aus dem Register (Zweck import_aendern)")
-    reihen = sql(f"""SELECT m.id, m.day_id, d.day, m.started_at
+    reihen = sql(f"""SELECT m.id, m.day_id, d.day, m.started_at, m.client_ref
                      FROM missions m JOIN days d ON d.id = m.day_id
                      WHERE m.user_id = {uid} AND m.deleted_at IS NULL
                        AND d.deleted_at IS NULL AND m.origin <> 'schnitt'
@@ -177,51 +184,81 @@ def teil_import(s, uid: int) -> None:
                 .astimezone(zoneinfo.ZoneInfo("Europe/Berlin")).strftime("%H:%M"))
     print(f"  Einsatz {z['id']}, Diensttag {z['day']}, Beginn {ortszeit} Ortszeit")
 
+    # SEIT S11-05e verlangt der Import eine Einsatzhuelle und die fertige
+    # Phasenliste (Waechter); Transportziel, Zielkoordinate und Hoehe nimmt er
+    # nicht mehr im Klartext. Die Datei nennt hier keine Phasen, also bleiben
+    # die vorhandenen — ergaenzt um Phase 2 zum Beginn, falls sie fehlt. Der
+    # Beginn ist minutengenau, wie ihn `started_local` setzt.
+    import base64
+    beginn = int(datetime.datetime.fromisoformat(z["started_at"] + "+00:00").timestamp()) // 60 * 60
+    phasen = [(int(p["phase"]), int(datetime.datetime.fromisoformat(p["occurred_at"] + "+00:00").timestamp()))
+              for p in sql(f"SELECT phase, occurred_at FROM mission_phases WHERE mission_id = {int(z['id'])}")]
+    if not any(nr == 2 for nr, _ in phasen):
+        phasen.append((2, beginn))
+    phasen.sort(key=lambda x: (x[1], x[0]))
+    iso = lambda t: datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    paket = {"kind": "mission", "client_ref": z["client_ref"], "started_at": iso(beginn),
+             "phases": [{"phase": nr, "at": iso(t)} for nr, t in phasen]}
+    huelle = json.loads(subprocess.run(
+        ["php", str(WURZEL / "tools" / "proben" / "huelle" / "geraet_cli.php")],
+        input=json.dumps({"sec1": base64.b64encode(s.kontoschluessel()).decode("ascii"),
+                          "pakete": [paket]}),
+        capture_output=True, text=True, check=True).stdout)[0]["ort_huelle"]
+
     def commit(felder: dict):
         return s.json_post("api/import_commit.php", {
             "action": "commit",
             "days": [{"day": z["day"], "mode": "keep"}],
             "missions": [dict({"day": z["day"], "started_local": ortszeit,
-                               "dup": "overwrite", "overwrite_id": int(z["id"])},
+                               "dup": "overwrite", "overwrite_id": int(z["id"]),
+                               "ort_huelle": huelle, "ort_phasen": [list(x) for x in phasen]},
                               **felder)],
         })
 
-    # Durchgang A — alles gesetzt, auch die vier Felder unter der Schranke.
-    a = commit({"transport_dest": "Klinik Probe A", "winch": 1, "crew_override": 0,
-                "site_ele_m": 777, "distance_m": 12345, "ascent_m": 234,
+    # Gegenprobe: Klartext-Ortsdaten in der Nutzlast -> 400, nichts geschrieben.
+    k = commit({"transport_dest": "Klinik Klartext"})
+    pruefe("Klartext in der Nutzlast -> 400 klartext",
+           (k.status_code, (k.json() or {}).get("error")), (400, "klartext"))
+
+    # Durchgang A — alles gesetzt, auch die drei Felder unter der Schranke.
+    a = commit({"winch": 1, "crew_override": 0,
+                "distance_m": 12345, "ascent_m": 234,
                 "schockraum": 1, "secondary": 1, "winch_cycles": 3,
                 "winch_cycles_pat": 2, "winch_airload": 1, "bergwacht": 1,
                 "bw_unit": "BW Probe", "bw_info": "Info A", "other_ema": "EMA A",
                 "transport_mode": "ground", "na_escort": 1, "false_alarm": 0,
-                "dest_lat": 47.5, "dest_lon": 11.5, "start_src": "base", "final": 0})
+                "start_src": "base", "final": 0})
     pruefe("Durchgang A — HTTP", a.status_code, 200)
     if a.status_code != 200:
         print("  Rumpf:", a.text[:400])
         return
-    r = sql(f"SELECT * FROM missions WHERE id = {int(z['id'])}")[0]
-    for feld, soll in [("transport_dest", "Klinik Probe A"), ("bw_unit", "BW Probe"),
-                       ("bw_info", "Info A"), ("other_ema", "EMA A")]:
+    r = sql(f"SELECT {SPALTEN_WEG} FROM missions WHERE id = {int(z['id'])}")[0]
+    for feld, soll in [("transport_dest", None), ("bw_unit", "BW Probe"),
+                       ("bw_info", "Info A"), ("other_ema", "EMA A"), ("site_ele_m", None),
+                       ("dest_lat", None)]:
         pruefe(f"A: {feld}", r[feld], soll)
-    for feld, soll in [("site_ele_m", 777), ("distance_m", 12345), ("winch", 1),
+    pruefe("A: ort_huelle gesetzt", int(r["hat_huelle"]), 1)
+    for feld, soll in [("distance_m", 12345), ("winch", 1),
                        ("winch_cycles", 3), ("final", 0),
                        ("uhr_gesperrt", 1), ("edited", 1)]:
         pruefe(f"A: {feld}", int(r[feld]), soll)
 
-    # Durchgang B — die VIER Felder unter der Schranke fehlen in der Datei.
-    # COALESCE muss genau diese vier halten und KEIN weiteres (A9, P10).
-    a = commit({"transport_dest": "Klinik Probe B", "winch": 0, "crew_override": 0,
+    # Durchgang B — die DREI Felder unter der Schranke fehlen in der Datei.
+    # COALESCE muss genau diese drei halten und KEIN weiteres (A9, P10).
+    # `site_ele_m` war bis S11-05e das vierte; die Hoehe liegt jetzt im Blob.
+    a = commit({"winch": 0, "crew_override": 0,
                 "distance_m": 999, "ascent_m": 1, "schockraum": 0, "secondary": 0,
                 "winch_cycles": None, "winch_cycles_pat": None, "winch_airload": 0,
                 "bergwacht": 0, "transport_mode": "air", "na_escort": 0,
                 "false_alarm": 1, "start_src": "manual", "final": 1})
     pruefe("Durchgang B — HTTP", a.status_code, 200)
-    r = sql(f"SELECT * FROM missions WHERE id = {int(z['id'])}")[0]
-    pruefe("B: transport_dest geaendert",        r["transport_dest"], "Klinik Probe B")
+    r = sql(f"SELECT {SPALTEN_WEG} FROM missions WHERE id = {int(z['id'])}")[0]
+    pruefe("B: transport_dest leer (im Blob)",   r["transport_dest"], None)
     pruefe("B: winch geaendert",                 int(r["winch"]), 0)
     pruefe("B: distance_m geaendert",            int(r["distance_m"]), 999)
     pruefe("B: false_alarm geaendert",           int(r["false_alarm"]), 1)
     pruefe("B: bw_unit geleert (KEIN COALESCE)", r["bw_unit"], None)
-    pruefe("B: site_ele_m gehalten (COALESCE)",  int(r["site_ele_m"]), 777)
+    pruefe("B: site_ele_m leer (im Blob)",       r["site_ele_m"], None)
     pruefe("B: bw_info gehalten (COALESCE)",     r["bw_info"], "Info A")
     pruefe("B: other_ema gehalten (COALESCE)",   r["other_ema"], "EMA A")
     pruefe("B: pat_blob gehalten (COALESCE)",    r["pat_blob"] is not None, True)

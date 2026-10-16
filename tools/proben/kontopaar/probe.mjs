@@ -10,6 +10,9 @@
  *   2. anmelden — das Paar entsteht still (`KP_STAND` fehlt → da); in der
  *      Datenbank: das Siegel (`edsk1:`), der private Teil `edk1:`, ein
  *      Eintrag `kontopaar_angelegt`
+ *   2b. eine zweite Seite, aufgebaut WÄHREND das Paar entsteht (`KP_STAND`
+ *      fehlt): `EdKontopaar.bereit()` holt den Schlüssel nach, und die Seite
+ *      verschließt damit (S11-05e, F-S11-61 — vorher „kein Schlüsselpaar")
  *   3. eine Seite, die den Schlüssel braucht: Abgleich passt, keine Meldung;
  *      eine Gerätehülle mit dem ausgelieferten öffentlichen Teil
  *      verschlossen geht mit dem privaten auf (Rundlauf über die Anwendung)
@@ -91,7 +94,14 @@ try {
   const fehler = [];
   s.on('pageerror', e => fehler.push(e.message));
 
-  /* 2 — anmelden, das Paar entsteht still */
+  /* 2 — anmelden, das Paar entsteht still. Das Anlegen wird angehalten, bis
+     eine zweite Seite aufgebaut ist (2b). */
+  let freigeben;
+  const tor = new Promise(r => { freigeben = r; });
+  await kontext.route('**/api/kontopaar.php', async (r) => {
+    if (/"aktion":"anlegen"/.test(r.request().postData() || '')) { await tor; }
+    await r.continue();
+  });
   const anlage = s.waitForResponse(r => r.url().includes('/api/kontopaar.php'), { timeout: 120000 })
                   .catch(() => null);
   await s.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
@@ -102,7 +112,23 @@ try {
   /* Die Startseite eines Kontos ohne Diensttag braucht den Schlüssel nicht;
    * `nachDerAnmeldung()` löst das Vormerkfach trotzdem auf, wenn ein Paar
    * fehlt. Erst die Antwort, dann neu laden (F-RW-22). */
+  const b = await kontext.newPage();
+  b.on('pageerror', e => fehler.push(e.message));
+  await b.goto(`${BASIS}/import.php`, { waitUntil: 'domcontentloaded' });
+  const vorB = await b.evaluate(() => typeof KP_STAND === 'undefined' ? null : KP_STAND);
+  freigeben();
   const antwort = await anlage;
+  const r2b = await b.evaluate(async () => {
+    const vorher = EdKontopaar.oeffentlich();
+    await EdKontopaar.bereit();
+    const h = await EdOrtsdaten.einsatzVerschliessen({ fassung: 1, phasen: [], rea: [] }, 'imp-' + '0'.repeat(24));
+    return { vorher: vorher !== null, nachher: EdKontopaar.oeffentlich() !== null, huelle: h.length };
+  }).catch(e => ({ fehler: String(e && e.message || e) }));
+  pruefe(vorB === 'fehlt' && r2b.vorher === false && r2b.nachher === true && r2b.huelle > 100,
+         '2b Seite von vor dem Anlegen holt den Schlüssel nach und verschließt',
+         `${vorB} · ${JSON.stringify(r2b)}`);
+  await b.close();
+  await kontext.unroute('**/api/kontopaar.php');
   pruefe(antwort !== null && antwort.status() === 200, '2  api/kontopaar.php anlegen -> 200',
          antwort ? `HTTP ${antwort.status()}` : 'keine Anfrage');
   let stand = null;

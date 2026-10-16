@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); als Nächstes S11-05e.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; als Nächstes S11-06.*
 
 ---
 
@@ -21,6 +21,8 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | **Wie der Ladeplatz bei Drossel 6× aussieht und ob V1 die Zeit verkürzt.** | Aus demselben Grund; die Ortsdatenprobe öffnet zehn Punkte, nicht einen Bestand. | S11-11. |
 | **Die Browserliste gegen `CompressionStream`** (E-S11-21). | Es gibt keine Liste in `docs/Technik.md`, und weder S11-04 noch S11-05d packen (F-S11-38, -56). | S11-07, das erste Paket, in dem der Browser packt. |
 | **GPX-Abruf und -Import in Firefox und WebKit; Dateien über 1 MB; die Auswahl eines vollen Diensttags.** (S11-05d) | Nur Chromium im Abbild (F-S11-20). Die Probe baut aus 211 Referenzdateien (größte 1063 Punkte), importiert 4 Punkte; eine Datei an der Grenze (12 MB, 50 000 Punkte) ist nicht gefahren. | P-S11-23; ein langer Import zeigt sich als Wartezeit im Dialog. |
+| **Export als Excel (Standard und GuteSeele) mit Ortsdaten aus Hülle und Blob; ein Import aus einer Excel-Liste mit „überschreiben"; ein Export, dessen Hülle nicht aufgeht.** (S11-05e) | Die Ortsdatenprobe fährt das CSV-Profil; die beiden Excel-Profile lesen dieselben Felder (`m.transport_dest`, `m.phases`, `m.resus`) aus demselben vorbereiteten Bestand, gemessen ist das nicht. Die Zählung unlesbarer Hüllen (Rückfrage vor dem Erzeugen) ist gelesen, nicht gefahren. | P-S11-24. |
+| **Ein Import, der einen Einsatz mit unlesbarem Bestand überschreiben soll; ein großer Import (tausende Zeilen) mit Hüllen.** (S11-05e) | Beides gelesen: Der Browser verweigert die Zeile mit Namen des Einsatzes; je Zeile eine Hülle kostet eine ECDH-Rechnung — für 104 Einsätze im Kreislauf unauffällig, für 3000 nicht gemessen. | Ein langsamer Schritt „bereit" vor dem Übernehmen. |
 | **Der Hinweis „Wartet auf dein Passwort" vor dem GPX-Abruf einer gesperrten Sitzung.** (S11-05d) | Die Probe ist entsperrt angemeldet; der gesperrte Weg (Einsatzansicht: Rückfrage, dann Passwort) ist gelesen, nicht gefahren. | P-S11-23. |
 | **Forerunner 945 und Venu 3s auf der echten Uhr.** Nur im Simulator (je 7 gut, 0 Fehler) und im Übersetzen geprüft; die Betreiberin nimmt an, dass sie wie die Fenix 6 Pro rechnen (E-S11-30). | Die Uhren standen am 13.10.2026 nicht zur Verfügung. | Rechnet eine anders, gehen ihre Hüllen im Browser nicht auf — sichtbar bei P-S11-05; S11-08 prüft die Byteordnung beim Start der App gegen einen eingebauten Vektor. |
 | **Ob die echte Garmin-Uhr die Krypto kann.** Im **Simulator** gemessen (S11-02): Fenix 6 Pro, Forerunner 945, Venu 3s je 7 gut, 0 Fehler. Ob der Simulator rechnet wie die Uhr — gerade bei der Byteordnung des ECDH-Geheimnisses (F-S11-18) —, ist unbelegt. Zeiten und Speicher des Simulators sind die des Rechners. | Keine Uhr in der Arbeitsumgebung. | P-S11-02; Halt, bis das Ergebnis vorliegt. |
@@ -196,6 +198,26 @@ das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 | `zaehlen.php` | Z22 nach Wegfall von `gpx_lib.php` 375: Decke 5 → 4 | 44 Zeilen, 0 über der Decke |
 | `quelltext/pruefen.sh alle` | Ausnahme „fremde Quelle" von `gpx_lib.php` nach `assets/gpx.js` umgezogen; Prüfablauf-Tabelle neu erzeugt | 14 von 14 grün |
 
+### S11-05e Export, CSV-Import, Zeitverschiebung (16.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `proben.sh ortsdaten` Schritt 15 | Export über die Oberfläche (Profil CSV, mit GPX): mit Haken Phasenort aus der Hülle (47.7261), Reanimation (211 Zeichen), Spur aus den Stücken, Ziel und Höhe des Altbestands (Klinikum Alt, 47.9, 812); ohne Haken leer und ohne Spur | 3 ok |
+| … | Zurückspielen derselben Datei mit „überschreiben" (jede Zeile gewählt) | 3 von 3 überschrieben; danach 0 Einsätze mit Klartextspalten, 0 Phasenorte, 0 Reanimationszeilen im Klartext, 0 Einsätze ohne Hülle; Export danach 20 von 20 Feldern gleich |
+| … | Nutzlast mit `transport_dest` im Klartext; Hülle mit falscher Phasenzeit | 400 `klartext`, 409 `ortsdaten`, 0 Einsätze angelegt |
+| … | `spur_zeit_verschieben()` +3600 s an einem Einsatz mit Stücken, dann zurück | 10 von 10 Punkten verschoben, Hülle geht auf, `spur_min_ts()` +3600 |
+| Ortsdatenprobe gesamt | Schritte 1 bis 15 | 55 ok, 0 fehlen |
+| `kreislauf.py --art csv --frisch` | Referenz-CSV (104 Einsätze) in ein frisches Konto, wieder exportiert — der Rückweg über Hülle und Blob | 11 234 Einzelvergleiche, 1309 erwartet, 0 unerklärt; vor den zwei neuen Regeln 6 unerklärt (die gewollte Änderung in `felder.csv`: drei Felder personenbezogen, drei Beschreibungen) |
+| … im Prüfstand | derselbe Kreislauf im dritten Lauf von 05e | **rot**: „Import gesperrt — noch kein Schlüsselpaar" (F-S11-61); nach der Behebung einzeln 0 unerklärt |
+| `proben.sh kontopaar` Schritt 2b | eine zweite Seite, aufgebaut während das Anlegen angehalten ist: `KP_STAND` fehlt, kein Schlüssel; nach `bereit()` Schlüssel da, Einsatzhülle verschlossen (216 Zeichen) | 15 Erwartungen, 0 nicht erfüllt |
+| `spaltenregister/wegprobe.py` | Import-UPDATE mit Hülle und Phasenliste; Klartext → 400; Schranke jetzt drei Felder | 37 Erwartungen, 0 nicht erfüllt |
+| `proben.sh protokoll` | Archivwahl an der eigenen Mail (F-S11-59) | 36 Erwartungen, 0 nicht erfüllt (im Prüfstand von 05d 36/1) |
+| `spaltenregister/pruefen.php` | `client_ref`, `ort_huelle` im Zweck `export`; `started_ts` als fremder Schlüssel | 0 Befunde |
+
+**Zwei Prüfstandsläufe sind abgebrochen, nicht rot** (F-S11-62): Der Container wurde nach 37 und 41 Minuten abgeräumt, während die Sitzung wartete. Der dritte Lauf wurde im Zug abgewartet; Weg und Startfolge danach in `docs/Sandbox-Setup.md` 6.1a.
+
+**Ein Befund am eigenen Prüfmittel, nicht an der Anwendung:** Der erste Lauf von Schritt 15 meldete grün mit „1 überschrieben" bei drei Zeilen. Die Probe setzte alle Auswahlfelder in einer Schleife, die Seite zeichnete nach dem ersten neu, und die übrigen Felder hingen nicht mehr im Dokument. Die Prüfung vergleicht seither die Zahl der überschriebenen mit der Zeilenzahl der Datei — mit dieser Prüfung war der fehlerhafte Lauf rot (1 von 3).
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
@@ -224,6 +246,7 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-21 | nach dem Merge auf Staging (nach `update.php`) | Einen Diensttag mit Ruhezeit nach einer echten Uhrfahrt öffnen, entsperren; „Schneiden", einen Zeitraum wählen, „Einsatz erzeugen"; danach „Schnitt zurücknehmen" | Einsatz mit Spur entsteht, im Segment fehlt der Zeitraum; nach der Rücknahme ist der Zeitraum wieder da, der Einsatz weg | Meldung „kein einziger Punkt" trotz Aufzeichnung, Spur am Einsatz leer, oder nach der Rücknahme fehlen Punkte |
 | P-S11-22 | nach dem Merge auf Staging | Im Schneide-Bereich einen Zeitraum wählen, „Zeitraum löschen", die Rückfrage bestätigen; Betrieb → Protokoll, Reiter Verwaltung | Die Punkte des Zeitraums sind fort, die Punktzahl sinkt, Protokollzeile „GPS-Daten eines Ruhesegments gelöscht" | Punkte noch da, keine Rückfrage, oder „neu laden", obwohl nichts ankam |
 | P-S11-23 | nach dem Merge auf Staging | (a) Einen neu gesendeten Einsatz öffnen, Sitzung gesperrt; „Aktionen → GPS-Daten als GPX", Rückfrage bestätigen. (b) Tagesansicht → „GPS-Daten als GPX": je Zeile „GPX", dann zwei ankreuzen, „Auswahl als GPX". (c) Tagesansicht → „GPX importieren", eine echte Datei der Uhr (z. B. aus Garmin Connect) als Ruhesegment. Jeweils die Datei in einem Kartenprogramm öffnen. | (a) zuerst Passwort, dann eine Datei `einsatz_…_original.gpx` mit der Spur. (b) je eine Datei; die Auswahl eine Datei mit zwei Tracks. (c) Rückmeldung „als Ruhesegment übernommen — N Punkte"; die Spur steht in der Tagesansicht und lässt sich schneiden | keine Datei, eine leere Datei, ein Track mit Verbindungslinie zwischen zwei Spuren, „neu laden" beim Import, oder die Spur fehlt danach in der Tagesansicht |
+| P-S11-24 | nach dem Merge auf Staging | (a) Import/Export → Export „Excel (Standard)" und „CSV" je mit und ohne „Personenbezogene Angaben", Zeitraum mit einem neu gesendeten Einsatz mit Reanimation und Zielklinik. (b) Die CSV-Datei mit Haken wieder einlesen, beim Einsatz „überschreiben" wählen, übernehmen; danach den Einsatz öffnen. (c) Einen Diensttag mit Spur umdatieren (Datum ändern) und die Tagesansicht öffnen. | (a) mit Haken: Phasenorte, Reanimation, Transportziel, GPX-Datei; ohne: Spalte „Transportziel" fehlt im Excel, im CSV leer, keine Reanimation des neuen Einsatzes. (b) „1 überschrieben", Karte, Phasen und Reanimation wie vorher. (c) die Spur liegt am neuen Datum | (a) leere Orte oder fehlende GPX mit Haken, oder Ziel ohne Haken. (b) Meldung „ließen sich … nicht gleich rechnen", Reanimation oder Name fehlt danach. (c) Spur fehlt oder liegt am alten Datum |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen, einmal neu koppeln, einen Probeeinsatz aufzeichnen und senden | Einsatz im Web mit Karte nach dem Entsperren | Uhr zeigt „Neu koppeln" weiter oder parkt |

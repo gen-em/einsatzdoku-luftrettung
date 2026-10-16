@@ -1240,6 +1240,15 @@ function spur_min_ts(PDO $pdo, string $ownerType, array $ids): ?int
             $min = $min === null ? (int)$p[4] : min($min, (int)$p[4]);
         }
     }
+    /* Und die Stuecke (S11-05e): `ts_von` ist Klartext und der frueheste
+     * Punkt jedes Stuecks. Bis Web 22.3.0 fehlte dieser Teil; eine
+     * Rueckdatierung haette eine Spur aus Stuecken ungeprueft unter den
+     * 1.1.1970 schieben koennen. */
+    foreach (sql_in_bloecken($pdo,
+        'SELECT MIN(ts_von) AS m FROM track_stuecke
+          WHERE owner_type = ? AND owner_id IN ({IDS})', $ids, [$ownerType]) as $r) {
+        if ($r['m'] !== null) { $min = $min === null ? (int)$r['m'] : min($min, (int)$r['m']); }
+    }
     return $min;
 }
 
@@ -1254,6 +1263,13 @@ function spur_min_ts(PDO $pdo, string $ownerType, array $ids): ?int
  *
  * Der Blob wird deshalb gelesen, verschoben und zurueckgeschrieben. Stufe und
  * `n_original` bleiben, was sie waren: Umdatieren ist keine Verdichtung.
+ *
+ * DIE STUECKE (S11-05e) wandern ueber ihren Klartextzeitraum: Die Punkte
+ * darin stehen RELATIV zu `ts_von` (E-S11-18), also genuegt es, `ts_von` und
+ * `ts_bis` zu verschieben — die Huelle bleibt, wie sie ist, und geht weiter
+ * auf, weil ihre Bindung die Zeiten nicht einschliesst. Bis Web 22.3.0 fehlte
+ * dieser Teil (F-S11-58): Ein umdatierter Diensttag liess die Spuren seit
+ * S11-04 am alten Datum stehen.
  */
 function spur_zeit_verschieben(PDO $pdo, string $ownerType, array $ids, int $delta): void
 {
@@ -1276,6 +1292,13 @@ function spur_zeit_verschieben(PDO $pdo, string $ownerType, array $ids, int $del
         $blob = spur_kodieren($punkte, (int)$r['stufe'], (int)$r['n_original']);
         spur_blob_schreiben($pdo, $ownerType, (int)$r['owner_id'], $blob,
                             (int)$r['stufe'], (int)$r['n_original'], count($punkte));
+    }
+
+    foreach (array_chunk($ids, 1000) as $block) {
+        $platz = implode(',', array_fill(0, count($block), '?'));
+        $pdo->prepare("UPDATE track_stuecke SET ts_von = ts_von + ?, ts_bis = ts_bis + ?
+                        WHERE owner_type = ? AND owner_id IN ($platz)")
+            ->execute(array_merge([$delta, $delta, $ownerType], $block));
     }
 }
 

@@ -18,8 +18,10 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  *   { action:'track', owner_type:'mission'|'rest', ids:[42,43,...],
  *     patient: bool }
  *
- * Antwort:
- *   { "42": [ [lat, lon, ele|null, ts], ... ] }
+ * Antwort (seit S11-05e):
+ *   { "42": { punkte: [ [lat, lon, ele|null, ts], ... ],   Altbestand (SPUR1)
+ *             ref: 'm-…', stuecke: [{seq_from, punkte, …, huelle}],
+ *             sperren: [{von, bis}] } }
  *
  * WARUM EIN EIGENER ENDPUNKT: api/range.php bedient zeitraum.php und ist
  * bewusst schlank gehalten (keine Trackpunkte, kein Reanimationsdetail).
@@ -289,7 +291,15 @@ function export_meta(array $b, int $userId): never
      * wenn das Flag fehlt — die Form haengt an der SPALTE und nicht an ihrer
      * Stelle im SELECT. Wer ein Feld unter die Schranke nimmt, traegt es in
      * `$schranke` ein; die Liste selbst bleibt die des Registers. */
-    $schranke = ['site_ele_m', 'bw_info', 'other_ema', 'pat_blob'];
+    /* SEIT S11-05e AUCH TRANSPORTZIEL, ZIELKOORDINATE, KENNUNG UND HUELLE.
+     * Das Transportziel liegt seit Web 22.1.0 im `pat_blob` und ist damit
+     * geschuetzte Angabe (Betreiberin, 16.10.2026, E-S11-53); die Spalten
+     * tragen nur noch den Altbestand und folgen derselben Schranke, sonst
+     * stuende die Zielklinik eines alten Einsatzes ohne Haken in der Datei
+     * und die eines neuen nicht. `client_ref` und `ort_huelle` braucht der
+     * Browser, um die Einsatzhuelle zu oeffnen. */
+    $schranke = ['site_ele_m', 'bw_info', 'other_ema', 'pat_blob', 'transport_dest',
+                 'dest_lat', 'dest_lon', 'client_ref', 'ort_huelle'];
     $einsCols = [];
     /* Zwei Listen desselben Zwecks, Stelle fuer Stelle: die blossen Namen zum
      * Vergleichen, die SQL-Form (Namen in Backticks, Nr. 239) zum Einsetzen. */
@@ -429,6 +439,13 @@ function export_meta(array $b, int $userId): never
             'geraet_art'       => $r['geraet_art'],
             'geraet_modell'    => $r['geraet_modell'],
             'transport_dest'   => $r['transport_dest'],
+            /* Die Einsatzhuelle (S11-05e): Phasenorte und Reanimation der seit
+             * S11-04 gesendeten Einsaetze. Nur mit Haken; `assets/export.js`
+             * oeffnet sie und fuellt daraus `phases[].lat/lon` und `resus`.
+             * `started_ts` ist der Bezug ihrer Zeiten. */
+            'client_ref'       => $r['client_ref'],
+            'ort_huelle'       => $r['ort_huelle'] !== null ? base64_encode((string)$r['ort_huelle']) : null,
+            'started_ts'       => $r['started_at'] !== null ? (int)strtotime($r['started_at'] . ' UTC') : null,
             /* Die Felder der Etappe 2 (Web 6.1.0). Sie liegen im KLARTEXT und
              * brauchen deshalb keine Personenbezugs-Markierung: Transportart
              * und Fehleinsatz sind Aussagen ueber den Einsatz, die
@@ -539,21 +556,35 @@ function export_track(array $b, int $userId): never
     // und nicht geloescht sind (I3, I4).
     $table = $ownerType === 'mission' ? 'missions' : 'rest_segments';
     $owned = sql_in_bloecken($pdo,
-        "SELECT id FROM `$table` WHERE user_id = ? AND deleted_at IS NULL AND id IN ({IDS})",
+        "SELECT id, client_ref FROM `$table` WHERE user_id = ? AND deleted_at IS NULL AND id IN ({IDS})",
         $ids, [$userId]);
     $validIds = array_map(static fn($r) => (int)$r['id'], $owned);
 
+    /* ZWEI TEILE JE SPUR SEIT S11-05e. `punkte` ist der Altbestand im
+     * Klartext (SPUR1, bis S11-10), Ausgabeform wie bisher: [lat, lon,
+     * ele|null, ts] je Punkt. `stuecke` sind die verschlossenen Stuecke seit
+     * S11-04, mit `ref` (die Kennung, an die sie gebunden sind) und `sperren`
+     * (geschnittene oder geloeschte Zeitraeume, E-S11-37) — `assets/export.js`
+     * oeffnet sie mit `EdOrtsdaten.spur()` und legt beides zusammen. Bis Web
+     * 22.3.0 stand hier nur der erste Teil, und eine Spur seit S11-04 fehlte
+     * im Export (F-S11-57). */
     $result = [];
-    foreach ($validIds as $id) { $result[(string)$id] = []; }
+    foreach ($owned as $r) {
+        $result[(string)$r['id']] = ['punkte' => [], 'ref' => (string)$r['client_ref'],
+                                     'stuecke' => [], 'sperren' => []];
+    }
 
     if ($validIds) {
-        /* UEBER spur_lib.php (S2/AP1) — Zeilen und Blob zusammen. Ausgabeform
-         * unveraendert: [lat, lon, ele|null, ts] je Punkt, das ist die Vorlage
-         * fuer <trkpt> in export.js. */
         foreach (spur_lesen_viele($pdo, $ownerType, $validIds) as $id => $punkte) {
             foreach ($punkte as $pt) {
-                $result[(string)$id][] = [$pt[1], $pt[2], $pt[3], $pt[4]];
+                $result[(string)$id]['punkte'][] = [$pt[1], $pt[2], $pt[3], $pt[4]];
             }
+        }
+        foreach (spur2_lesen_viele($pdo, $ownerType, $validIds) as $id => $stuecke) {
+            $result[(string)$id]['stuecke'] = $stuecke;
+            $result[(string)$id]['sperren'] = array_map(
+                static fn($x) => ['von' => $x['von_ts'], 'bis' => $x['bis_ts']],
+                schnitte_lesen($pdo, $ownerType, (int)$id));
         }
     }
 

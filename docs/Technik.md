@@ -2704,6 +2704,29 @@ Datei-Upload ist damit ausgeschlossen. Kette:
    einer Phase keine Koordinaten, erbt die neue Zeile die der bisherigen
    gleicher Nummer (der Reihe nach). Der Preis: Felder unter der Schranke
    lassen sich per Import nicht mehr gezielt **leeren**.
+7. **Seit Web 22.4.0 keine Ortsdaten im Klartext** (S11-05e, E-S11-51,
+   -52). `import_ui.js` legt Transportziel samt Koordinate und Ortshöhe in
+   den `pat_blob` (`transport_dest`, `ortshoehe`) und Phasenorte und
+   Reanimation in die **Einsatzhülle** (`ort_huelle`, verschlossen mit dem
+   öffentlichen Kontoschlüssel, gebunden an `client_ref`;
+   `ortsdatenBauen()`). Dazu rechnet der Browser die Zeiten wie der Server
+   (Bezugstag der Alarmzeit, `local` auf dem Diensttag, automatische
+   Phase 2) und schickt die fertige Phasenliste mit (`ort_phasen`); der
+   Server vergleicht sie nach dem Schreiben mit `mission_phases` und
+   übernimmt bei einer Abweichung **nichts** (409 `ortsdaten`, Meldung im
+   Reiter System) — der Wächter des Formulars (S11-05b). Klartext in der
+   Nutzlast (`transport_dest`, `dest_lat/lon`, `site_ele_m`,
+   `phases[].lat/lon`, `rea`) ist 400 `klartext`. Neue Einsätze tragen eine
+   Kennung `imp-` + 24 Hex aus dem Browser, weil die Hülle vor der Zeile
+   verschlossen wird. **Beim Überschreiben führt der Browser zusammen:**
+   `check` liefert je vorhandenem Einsatz Kennung, Beginn, Hülle,
+   Phasenzeiten und den Altbestand (Orte, Reanimation, Ziel, Höhe im
+   Klartext); Orte und Reanimation, die die Datei nicht nennt, und jeder
+   Eintrag des alten Blobs bleiben. Danach leert der Server die
+   Klartextstellen (Spalten, `mission_phases.lat/lon`, `resus_*`); in der
+   COALESCE-Liste steht `site_ele_m` deshalb nicht mehr. Geht der Bestand
+   eines Einsatzes nicht auf, verweigert der Browser die Übernahme und
+   nennt ihn.
 
 Zwei Fallstricke, die dort bewusst gelöst sind:
 
@@ -2731,7 +2754,14 @@ Endpunkt ist **ausschließlich lesend** und bewusst von `api/range.php` getrennt
 hätte diese Seite mitverändert. `action=meta` liefert Diensttage, Einsätze
 (inklusive Phasen, weiterer Rettungsmittel, Reanimation und der *Anzahl*
 Trackpunkte) und Ruhesegmente; `action=track` liefert die Punkte blockweise für
-höchstens 25 IDs. Zeitstempel gehen als UTC nach ISO 8601 hinaus, die Umrechnung
+höchstens 25 IDs — seit Web 22.4.0 je Spur der Altbestand (`punkte`) und
+die verschlossenen Stücke (`stuecke`, `ref`, `sperren`), die `export.js`
+mit `EdOrtsdaten.spur()` öffnet und nach Zeit zusammenlegt. Mit Haken
+liefert `meta` außerdem `client_ref`, `ort_huelle` und `started_ts`;
+`ortsdatenEinlegen()` öffnet die Hülle und füllt daraus Phasenorte und
+Reanimation, aus dem `pat_blob` Transportziel und Höhe (S11-05e). Bis Web
+22.3.0 las der Export nur den Klartext, und alles seit S11-04 Gesendete
+fehlte in der Datei (F-S11-57). Zeitstempel gehen als UTC nach ISO 8601 hinaus, die Umrechnung
 in Ortszeit passiert im Browser — so nutzen Excel- und CSV-Profil dieselbe
 Quelle. Obergrenze 5000 Einsätze je Anfrage.
 
@@ -2759,8 +2789,9 @@ serverseitig **nicht selektiert**, nicht erst im Browser weggelassen.
 (Block A9). Der Schlüssel im Request bleibt `patient` — er ist der Vertrag
 zwischen `export.js` und `export_data.php` —, aber er schaltet jetzt Besatzung
 (Einsatz und Diensttag), `bw_info`, `other_ema`, die Notizen, `site_ele_m`, die
-Phasenkoordinaten und den `pat_blob` gemeinsam ab; `action=track` wird ganz
-abgewiesen. Die lokale Variable im Endpunkt heißt deshalb `$pers` und nicht
+Phasenkoordinaten und den `pat_blob` gemeinsam ab — seit Web 22.4.0 auch
+Transportziel samt Koordinate, Kennung und Einsatzhülle (E-S11-53, -54);
+`action=track` wird ganz abgewiesen. Die lokale Variable im Endpunkt heißt deshalb `$pers` und nicht
 `$patient`. Zusätzlich entfernt `entpersonalisieren()` in `export.js` dieselben
 Felder ein zweites Mal, bevor eines der drei Profile den Bestand sieht — eine
 Stelle für alle drei, damit ein viertes Profil die Schranke nicht vergessen
@@ -3370,7 +3401,7 @@ sechs sind umgestellt:
 |---|---|---|
 | Tagesansicht (`api/day.php`) | `spur_lesen_viele()` | `[lat, lon]` |
 | Einsatzansicht (`api/mission.php`) | `spur_lesen()` | `[lat, lon]` + `ts` für `track_idx` |
-| Export (`api/export_data.php`) | `spur_lesen_viele()`, `spur_zahlen()` | `[lat, lon, ele, ts]` |
+| Export (`api/export_data.php`) | `spur_lesen_viele()`, `spur2_lesen_viele()`, `spur_zahlen()` | `[lat, lon, ele, ts]` + Stücke (seit Web 22.4.0) |
 | Backup, Nutzlast ≤ 7 (`backup_lib.php`) | `spur_lesen_viele()` | `[seq, lat, lon, ele, ts]` |
 | Backup, Fassung 4 (`api/backup_spuren.php`) | `spur_fuer_sicherung_viele()` | SPUR1-Blob, roh |
 | Rückweg der Fassung 4 (`api/backup_spuren_restore.php`) | `spur_blob_pruefen()`, `spur_blob_schreiben()` | — |
@@ -3391,6 +3422,11 @@ fehlt — ohne Fehlermeldung.
 `UPDATE track_points SET ts = ts + ?`. An einem Blob geht das vorbei: Die
 Zeilen wanderten, die Blobpunkte blieben stehen, und die Spur hätte danach
 zwei Zeitrechnungen. `spur_zeit_verschieben()` schreibt den Blob deshalb neu.
+Die Stücke (seit S11-04) wandern über `ts_von`/`ts_bis` — die Punkte darin
+stehen relativ zu `ts_von`, die Hülle bleibt unverändert und geht weiter
+auf; `spur_min_ts()` sieht sie ebenfalls. Bis Web 22.3.0 fehlte beides, und
+ein umdatierter Diensttag ließ die Spuren seit S11-04 am alten Datum stehen
+(F-S11-58).
 
 #### Das Format SPUR1
 
@@ -8650,6 +8686,19 @@ als 65 Byte SEC1). Geht das Siegel nicht auf, ist `KP_STAND` `'siegel'`, das
 Gerät bekommt `null`, und `kp_oeffentlich_lesen()` meldet es im Reiter
 System. Das hält gegen jemanden, der nur die Datenbank beschreiben kann;
 gegen den, der den Server übernimmt, nicht (Bedrohungsmodell 4.1).
+
+**Eine Seite, die vor dem Anlegen aufgebaut wurde, holt den Schlüssel
+nach** (seit Web 22.4.0, S11-05e, F-S11-61). `KP_OEFFENTLICH` und
+`KP_PRIVAT` sind Konstanten vom Seitenaufbau; das Paar entsteht im
+Hintergrund auf der ersten Seite nach der Anmeldung, und niemand wartet
+darauf. Eine Seite, die schon geladen war — oder die das Paar selbst gerade
+anlegt —, kannte es bis dahin nicht und meldete beim Verschließen „kein
+Schlüsselpaar". Gefunden hat es der CSV-Kreislauf, der ein frisches Konto
+anlegt und gleich importiert. Jetzt merkt sich `kontopaar.js` ein selbst
+angelegtes Paar, und `EdKontopaar.bereit()` wartet auf ein laufendes Anlegen
+und fragt sonst den Server (`{aktion:'zustand'}` an `api/kontopaar.php`,
+dieselben drei Werte wie `ui_krypto_bootstrap()`). `EdOrtsdaten` ruft es vor
+jedem Gebrauch des Schlüssels.
 
 **Beim Entsperren gleicht der Browser ab** (`EdKontopaar.abgleichen()`):
 Er leitet aus dem privaten Teil den öffentlichen ab und vergleicht. Bei einer

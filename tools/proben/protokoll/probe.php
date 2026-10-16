@@ -190,6 +190,7 @@ $adressmuster = '/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i';
 $gefunden = ['sicherheit' => false, 'email' => false];
 $treffer = ['sicherheit' => [0, 0, 0, 0], 'email' => [0, 0, 0, 0]];
 $verwaltungAdressen = 0;
+$mitMail = '';   // das Archiv, in dem die angelegte Mail steht (Teil 5)
 foreach ($neu as $a) {
     $arbeit = sys_get_temp_dir() . '/protokollprobe-' . bin2hex(random_bytes(4));
     [$fehler, $teile] = protokoll_archiv_entsiegeln($a['datei'], $arbeit);
@@ -201,6 +202,7 @@ foreach ($neu as $a) {
             if (str_contains($inhalt, '"sperre"') || str_contains($inhalt, 'passwort_neu')) {
                 $gefunden[$reiter] = true;
             }
+            if ($reiter === 'email' && str_contains($inhalt, 'passwort_neu')) { $mitMail = $a['datei']; }
             $treffer[$reiter][0] += substr_count($inhalt, '"ip:');
             $treffer[$reiter][1] += preg_match_all($ipv4, $inhalt);
             $treffer[$reiter][2] += preg_match_all($ipv6, $inhalt);
@@ -220,10 +222,19 @@ echo "  (Verwaltung trägt $verwaltungAdressen Adressen — erlaubt, E-P5c-75)\n
 
 /* ---- 3. Fremde Kennung, falscher Name -------------------------------------- */
 kopf('3 — Fremde Kennung und umbenanntes Archiv');
-/* Das Archiv MIT den angelegten Zeilen — das von vor zwei Tagen. */
-$erstes = '';
-foreach ($neu as $a) {
-    if ((int)($a['manifest']['zeilen']['sicherheit'] ?? 0) > 0) { $erstes = $a['datei']; }
+/* Das Archiv MIT den angelegten Zeilen — das von vor zwei Tagen.
+ *
+ * ERKANNT AN DER ANGELEGTEN MAIL, nicht an „irgendeine Sicherheitszeile"
+ * (S11-05e, F-S11-59). Bis dahin nahm die Schleife das letzte Archiv mit
+ * Sicherheitszeilen; die Zweitfaktorprobe hinterlaesst aber bei jedem Lauf
+ * eine Sperre, und drei Tage nach jedem Tag mit Pruefstand lag eine davon
+ * im Archiv von Tag −3 — gewaehlt wurde dann das, und Teil 5 fand darin
+ * keine Mail. Rot je nach Kalender, nicht nach Code. */
+$erstes = $mitMail;
+if ($erstes === '') {
+    foreach ($neu as $a) {
+        if ((int)($a['manifest']['zeilen']['sicherheit'] ?? 0) > 0) { $erstes = $a['datei']; }
+    }
 }
 if ($erstes === '') { $erstes = $neu[0]['datei'] ?? ''; }
 $w = protokoll_archiv_wurzel();

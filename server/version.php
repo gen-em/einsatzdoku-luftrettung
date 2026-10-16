@@ -8171,5 +8171,14 @@ declare(strict_types=1);
  *   liest im Browser und schickt verschlossene Stuecke; der Server sieht keine
  *   Koordinate mehr. `gpx.php` und `gpx_lib.php` entfallen, der Topf `pair` hat
  *   zwei Verbraucher. Kein Schema.
+ * 22.4.0 — S11-05e: EXPORT, IMPORT UND UMDATIEREN MIT DEN HUELLEN. Der Export
+ *   las nur den Klartext und liess alles seit S11-04 Gesendete aus (F-S11-57);
+ *   jetzt oeffnet der Browser Einsatzhuelle, Blob und Stuecke. Der CSV-Import
+ *   schrieb Phasenorte, Reanimation, Transportziel und Hoehe noch im Klartext
+ *   (F-S11-60); jetzt verschliesst der Browser, der Server weist Klartext ab
+ *   und haelt die Zeiten gegen (E-S11-51), Ueberschreiben fuehrt zusammen
+ *   (E-S11-52). Transportziel und Reanimation neuer Einsaetze nur noch mit
+ *   Haken (E-S11-53, -54). Die Umdatierung nimmt die Stuecke mit (F-S11-58).
+ *   Kein Schema.
  */
-const WEB_VERSION = '22.3.0';
+const WEB_VERSION = '22.4.0';

@@ -39,6 +39,14 @@
  *      unberührt und gesperrt; die Rücknahme gibt alles frei; das Löschen
  *      schreibt das Segment ohne den Zeitraum neu, sperrt ihn und
  *      protokolliert; Gegenproben: veralteter Stand, erneute Lieferung
+ *  15 (läuft vor 14) Export, Rückspielen und Zeitverschiebung (S11-05e): der
+ *      Export über die Oberfläche mit Haken trägt Phasenort und Reanimation
+ *      aus der Hülle, die Spur aus den Stücken und das Transportziel des
+ *      Altbestands, ohne Haken nichts davon; die Datei mit „überschreiben"
+ *      zurückgespielt lässt keinen Ort und keine Reanimation im Klartext
+ *      zurück, und der Export danach gleicht dem davor; Klartext in der
+ *      Nutzlast → 400, falsche Zeiten → 409; die Zeitverschiebung nimmt die
+ *      Stücke mit
  *  14. eine Einsatzhülle, in der Datenbank um ein Byte verändert, geht nicht
  *      auf: die Ansicht sagt es, und der Reiter System hat eine Meldung mit
  *      Art, Kennung und Grund — ohne Inhalt (S11-04d, M-S11-01 d); das
@@ -570,6 +578,147 @@ try {
   const wieder13 = await s.evaluate((r) => dayRest.find(x => x.id === r).track.length, rid2);
   pruefe(wieder13 === 10 - soll13, '13 Gegenprobe: erneute Lieferung bringt die gelöschten Punkte nicht zurück',
          `${wieder13} Punkte sichtbar`);
+
+  /* 15 — Export, Rückspielen, Wächter, Zeitverschiebung (S11-05e). Läuft VOR
+   * 14, weil 14 die Hülle von `mid` verdirbt. Ein Einsatz bekommt einen
+   * Altbestand im Klartext (Transportziel, Höhe), wie ihn das
+   * Einmalwerkzeug (S11-10) noch vorfindet. */
+  php(`db()->exec("UPDATE missions SET transport_dest = 'Klinikum Alt', dest_lat = 47.9, dest_lon = 10.1,
+       site_ele_m = 812 WHERE id = ${neuId}");`);
+  const setze = async (sel, an) => s.evaluate(([q, a]) => {
+    const el = document.querySelector(q);
+    if (el && el.checked !== a) { el.checked = a; el.dispatchEvent(new Event('change', { bubbles: true })); }
+  }, [sel, an]);
+  const ja = async () => {
+    for (let i = 0; i < 5; i++) {
+      const b = s.locator('dialog[open] button[data-act="yes"]');
+      try { await b.first().waitFor({ state: 'visible', timeout: 6000 }); } catch { break; }
+      await b.first().click(); await s.waitForTimeout(400);
+    }
+  };
+  const exportieren = async (pers) => {
+    await s.goto(`${BASIS}/import.php`, { waitUntil: 'networkidle' });
+    await setze('input[name="exp_zr"][value="all"]', true);
+    await s.selectOption('#exp_fmt', 'b');
+    await setze('#exp_pat', pers);
+    await s.waitForTimeout(300);
+    if (pers && await s.locator('#exp_gpx').isVisible().catch(() => false)) { await setze('#exp_gpx', true); }
+    await setze('#exp_pw', false);
+    const dl = s.waitForEvent('download', { timeout: 180000 });
+    await s.click('#exp_go');
+    await ja();
+    const d = await dl;
+    const ziel = join(ordner, `${pers ? 'mit' : 'ohne'}-${Date.now()}-${d.suggestedFilename()}`);
+    await d.saveAs(ziel);
+    return { pfad: ziel, ...JSON.parse(execFileSync('python3', [join(HIER, 'csvlesen.py'), ziel,
+             String(mid), String(neuId)], { encoding: 'utf8' })) };
+  };
+  const ex1 = await exportieren(true);
+  const z1 = ex1.zeilen[String(mid)] || {}, n1 = ex1.zeilen[String(neuId)] || {};
+  const spurDatei = Object.keys(ex1.tracks).find(n => n.includes(`mission_${String(mid).padStart(6, '0')}`));
+  pruefe(z1.phase_02_lat === '47.7261' && /adrenalin/.test(z1.rea_json || '') && spurDatei && ex1.tracks[spurDatei] === 10,
+         '15 Export mit Haken: Phasenort und Reanimation aus der Hülle, Spur aus den Stücken (10 Punkte)',
+         `Phase 2 ${z1.phase_02_lat}, rea ${(z1.rea_json || '').length} Zeichen, ${spurDatei ? ex1.tracks[spurDatei] : 'keine'} Punkte`);
+  pruefe(n1.transport_dest === 'Klinikum Alt' && n1.ziel_lat === '47.9' && n1.hoehe_einsatzort_m === '812',
+         '15 Export mit Haken: Transportziel und Höhe des Altbestands', `${n1.transport_dest} ${n1.ziel_lat} ${n1.hoehe_einsatzort_m}`);
+  const ex0 = await exportieren(false);
+  const z0 = ex0.zeilen[String(mid)] || {}, n0 = ex0.zeilen[String(neuId)] || {};
+  pruefe(!z0.phase_02_lat && !z0.rea_json && !n0.transport_dest && !n0.ziel_lat && !Object.keys(ex0.tracks).length,
+         '15 Export ohne Haken: kein Ort, keine Reanimation aus der Hülle, kein Ziel, keine Spur',
+         JSON.stringify([z0.phase_02_lat, (z0.rea_json || '').length, n0.transport_dest, Object.keys(ex0.tracks).length]));
+
+  /* Zurückspielen mit „überschreiben" — jede Zeile ist eine Dublette */
+  await s.goto(`${BASIS}/import.php`, { waitUntil: 'networkidle' });
+  await s.setInputFiles('#datei', ex1.pfad);
+  await s.waitForTimeout(4000);
+  /* Je Feld neu suchen: Nach jeder Wahl zeichnet die Seite die Tabelle neu,
+     und ein vorher gegriffenes Feld haengt dann nicht mehr im Dokument. */
+  for (let i = 0; i < 50; i++) {
+    const weiter = await s.evaluate(() => {
+      const el = [...document.querySelectorAll('select.imp-dup')].find(x => x.value !== 'overwrite');
+      if (!el) { return false; }
+      el.value = 'overwrite'; el.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    });
+    if (!weiter) { break; }
+    await s.waitForTimeout(200);
+  }
+  await s.waitForFunction(() => !document.getElementById('commit').disabled, null, { timeout: 30000 }).catch(() => null);
+  const bereit15 = (await s.locator('#bereit').textContent().catch(() => '') || '').trim();
+  await s.click('#commit');
+  let zustand15 = '';
+  for (let i = 0; i < 60; i++) {
+    await s.waitForTimeout(1000);
+    zustand15 = (await s.locator('#commitstate').textContent().catch(() => '') || '').trim();
+    if (/Fertig|fehlgeschlagen|nichts gespeichert/i.test(zustand15)) { break; }
+  }
+  const ueber15 = Number((/(\d+) überschrieben/.exec(zustand15) || [])[1] || -1);
+  pruefe(ueber15 === ex1.anzahl && !/nichts gespeichert/.test(zustand15),
+         '15 Rückspielen mit „überschreiben": jede Zeile der Datei überschrieben',
+         `${ueber15} von ${ex1.anzahl} — ${(zustand15 || bereit15).slice(0, 70)}`);
+  const db15 = JSON.parse(php(`echo json_encode([
+    'spalten' => db()->query("SELECT COUNT(*) FROM missions WHERE user_id = ${id} AND (transport_dest IS NOT NULL
+       OR dest_lat IS NOT NULL OR site_ele_m IS NOT NULL)")->fetchColumn(),
+    'orte' => db()->query("SELECT COUNT(*) FROM mission_phases p JOIN missions m ON m.id = p.mission_id
+       WHERE m.user_id = ${id} AND p.lat IS NOT NULL")->fetchColumn(),
+    'rea' => db()->query("SELECT COUNT(*) FROM resus_sessions r JOIN missions m ON m.id = r.mission_id
+       WHERE m.user_id = ${id}")->fetchColumn(),
+    'ohne' => db()->query("SELECT COUNT(*) FROM missions WHERE user_id = ${id} AND ort_huelle IS NULL
+       AND deleted_at IS NULL")->fetchColumn()]);`));
+  pruefe(String(db15.spalten) === '0' && String(db15.orte) === '0' && String(db15.rea) === '0' && String(db15.ohne) === '0',
+         '15 danach kein Ort, keine Reanimation, kein Ziel im Klartext; jeder Einsatz mit Hülle', JSON.stringify(db15));
+  const ex2 = await exportieren(true);
+  const vergl = ['phase_02_lat', 'phase_02_lon', 'phase_03_lat', 'phase_05_lat', 'rea_json', 'transport_dest',
+                 'ziel_lat', 'ziel_lon', 'hoehe_einsatzort_m', 'pat_nachname'];
+  const abw15 = [];
+  for (const e of [String(mid), String(neuId)]) {
+    for (const f of vergl) {
+      if ((ex1.zeilen[e] || {})[f] !== (ex2.zeilen[e] || {})[f]) { abw15.push(`${e}.${f}`); }
+    }
+  }
+  pruefe(abw15.length === 0, '15 Export danach gleich dem davor (Orte, Reanimation, Ziel, Höhe, Name)',
+         abw15.length ? abw15.join(', ') : `${vergl.length * 2} Felder gleich`);
+
+  /* Klartext in der Nutzlast und der Wächter */
+  const k15 = await s.evaluate(async ([tag, mid]) => {
+    const ruf = async (b) => (await EdApi.postJson('api/import_commit.php', b, { vorgang: 'x' }));
+    const klar = await ruf({ action: 'commit', days: [{ day: tag, mode: 'keep' }],
+      missions: [{ day: tag, started_local: '10:00', transport_dest: 'Klinikum X', dup: 'insert',
+                   client_ref: 'imp-' + 'a'.repeat(24) }] });
+    const ref = 'imp-' + 'b'.repeat(24);
+    const h = await EdOrtsdaten.einsatzVerschliessen({ fassung: 1, phasen: [{ phase: 2, t: 0, lat: null, lon: null }],
+                                                      rea: [] }, ref);
+    const waechter = await ruf({ action: 'commit', days: [{ day: tag, mode: 'keep' }],
+      missions: [{ day: tag, started_local: '10:00', dup: 'insert', client_ref: ref, ort_huelle: h,
+                   ort_phasen: [[2, 12345]] }] });
+    return { klar: [klar.status, klar.daten && klar.daten.error], waechter: [waechter.status, waechter.daten && waechter.daten.error] };
+  }, [tag, mid]);
+  const zahl15 = php(`echo (int)db()->query("SELECT COUNT(*) FROM missions WHERE user_id = ${id} AND client_ref IN
+    ('imp-${'a'.repeat(24)}', 'imp-${'b'.repeat(24)}')")->fetchColumn();`);
+  pruefe(k15.klar[0] === 400 && k15.klar[1] === 'klartext' && k15.waechter[0] === 409 && k15.waechter[1] === 'ortsdaten'
+         && zahl15 === '0', '15 Klartext → 400 klartext, falsche Zeiten → 409 ortsdaten, nichts angelegt',
+         JSON.stringify(k15) + ` · ${zahl15}`);
+
+  /* Zeitverschiebung: die Stücke wandern mit, die Hülle bleibt gültig */
+  const vorZ = await s.evaluate(async (mid) => {
+    const m = await (await fetch('api/mission.php?id=' + mid)).json();
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    return (await EdOrtsdaten.spur(m.spur_stuecke, 'spur', m.client_ref, [], await EdOrtsdaten.schluessel(ck)))
+      .map(p => p.ts);
+  }, mid);
+  php(`require_once "server/spur_lib.php"; spur_zeit_verschieben(db(), 'mission', [${mid}], 3600);`);
+  const minZ = php(`require_once "server/spur_lib.php"; echo spur_min_ts(db(), 'mission', [${mid}]);`);
+  const nachZ = await s.evaluate(async (mid) => {
+    const m = await (await fetch('api/mission.php?id=' + mid)).json();
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    return (await EdOrtsdaten.spur(m.spur_stuecke, 'spur', m.client_ref, [], await EdOrtsdaten.schluessel(ck)))
+      .map(p => p.ts);
+  }, mid);
+  php(`require_once "server/spur_lib.php"; spur_zeit_verschieben(db(), 'mission', [${mid}], -3600);`);
+  pruefe(vorZ.length === 10 && nachZ.length === 10 && nachZ.every((t, i) => t === vorZ[i] + 3600)
+         && Number(minZ) === vorZ[0] + 3600,
+         '15 Zeitverschiebung: Stücke um +3600 s, Hülle geht auf, spur_min_ts sieht sie',
+         `${nachZ.length} Punkte, min ${Number(minZ) - vorZ[0]} s`);
 
   /* 14 — eine verdorbene Einsatzhülle: das letzte Byte (Prüfwert) gekippt */
   php(`db()->exec("UPDATE missions SET ort_huelle = CONCAT(LEFT(ort_huelle, LENGTH(ort_huelle) - 1),

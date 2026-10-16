@@ -961,13 +961,13 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 46 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 48 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 15 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
-| `server.svg` | Tabler Icons „server" (MIT) | 9 |
+| `server.svg` | Tabler Icons „server" (MIT) | 10 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 24 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |

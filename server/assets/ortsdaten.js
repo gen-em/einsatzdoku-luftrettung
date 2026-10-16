@@ -49,10 +49,17 @@
     return e;
   }
 
+  /* Vor jedem Gebrauch des Schlüssels: ein Paar, das nach dem Aufbau der
+     Seite entstand, abwarten bzw. nachholen (S11-05e, F-S11-61). */
+  async function paarBereit() {
+    if (typeof EdKontopaar !== 'undefined' && EdKontopaar.bereit) { await EdKontopaar.bereit(); }
+  }
+
   async function schluessel(ck) {
     if (typeof EdKontopaar === 'undefined') {
       throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.');
     }
+    await paarBereit();
     const priv = await EdKontopaar.privat(ck);
     const pub = EdKontopaar.oeffentlich();
     if (!priv || !pub) {
@@ -357,6 +364,7 @@
    */
   async function stueckeBauen(punkte, art, ref, o) {
     o = o || {};
+    await paarBereit();
     const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
     if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
     const liste = punkte.map((p, i) => Object.assign({}, p, { seq: o.neu ? i : p.seq }));
@@ -386,6 +394,7 @@
 
   /** Die Einsatzhülle verschließen — mit dem öffentlichen Kontoschlüssel. */
   async function einsatzVerschliessen(innen, ref) {
+    await paarBereit();
     const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
     if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
     const h = await EdCrypto.geraetehuelleVerschliessen(

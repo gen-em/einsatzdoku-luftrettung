@@ -2854,6 +2854,11 @@ Zwei Sonderfälle werden dabei erkannt:
   personenbezogene Angaben leer lässt. Vorher hätte ein solcher Rückimport sie
   im Bestand gelöscht. Die Kehrseite: Ein Feld lässt sich per Import nicht mehr
   gezielt **leeren**; das geht im Einsatzformular.
+
+  Seit Web 22.4.0 gilt das auch innerhalb der geschützten Angaben: Liefert die
+  Datei nur einen Teil davon (etwa das Transportziel aus einem Export ohne
+  Haken), bleibt der Rest — Name, Diagnose, Einsatzort — stehen. Ebenso
+  bleibt eine **Reanimation**, wenn die Datei keine nennt.
 - **Abweichende Besatzung.** Als Besatzung des Diensttags gilt die des ersten
   Einsatzes des Tages. Steht bei einem späteren Einsatz jemand anderes — der
   klassische Pilotenwechsel oder Fahrerwechsel im laufenden Dienst —, trägt
@@ -2862,7 +2867,16 @@ Zwei Sonderfälle werden dabei erkannt:
   gespeicherte gilt oder die aus der Datei.
 
 **3. Übernehmen.** Der Import läuft als Ganzes: Entweder alle Zeilen werden
-übernommen oder — falls unterwegs etwas schiefgeht — keine einzige. Am Ende
+übernommen oder — falls unterwegs etwas schiefgeht — keine einzige.
+
+**Die Ortsdaten verschlüsselt dein Browser** (seit Web 22.4.0), bevor etwas
+an den Server geht: Phasenorte und Reanimation in denselben verschlossenen
+Block, den die Uhr schickt, Transportziel und Höhe des Einsatzorts zu den
+übrigen geschützten Angaben. Ältere Einsätze, die du überschreibst, ziehen
+dabei mit um — ihre bisher offen gespeicherten Orte stehen danach ebenfalls
+verschlüsselt da. Lässt sich bei einem solchen Einsatz das Vorhandene nicht
+öffnen, sagt der Import es vor dem Übernehmen und nennt den Einsatz; dann
+diese Zeile überspringen. Am Ende
 steht, wie viele Einsätze angelegt, überschrieben und übersprungen wurden,
 mit einem Link auf den ersten importierten Tag.
 
@@ -2926,7 +2940,10 @@ ab. Seit Web 5.8.0 deckt er **alles** ab, was auf einen Menschen zeigt:
 - die **Notizen** von Einsatz und Diensttag,
 - die **Koordinaten der Phasen** (Phase 4 ist „Ankunft Einsatzort", Phase 5
   „Ankunft PatientIn" — das *ist* der Einsatzort), die **Höhe des
-  Einsatzortes** und die **GPX-Tracks**.
+  Einsatzortes** und die **GPX-Tracks**,
+- seit Web 22.4.0 das **Transportziel** samt Koordinate und der **Verlauf
+  einer Reanimation** bei allen Einsätzen, deren Ortsdaten schon
+  verschlüsselt liegen (seit Web 22 gesendet, gespeichert oder importiert).
 
 Der letzte Punkt war der Anlass für die Erweiterung: Bis Web 5.7.0 nannte ein
 Export „ohne Patientendaten" den Einsatzort trotzdem, nur in einer anderen
@@ -2935,13 +2952,16 @@ Option versprach.
 
 **Was ausdrücklich drin bleibt** — damit es nicht als Versehen gelesen wird:
 
-- **Transportziel** und **Bergwacht-Einheit**. Beides sind Einrichtungen, keine
-  Personen. Das Transportziel ist zusammen mit Datum und Uhrzeit trotzdem ein
-  Hinweis auf eine bestimmte Aufnahme; die Entscheidung, es zu behalten, ist
-  bewusst getroffen und steht deshalb hier.
+- Die **Bergwacht-Einheit** — eine Einrichtung, keine Person. Bis Web 22.3.0
+  stand hier auch das **Transportziel**; seit es verschlüsselt gespeichert
+  wird, gehört es zu den geschützten Angaben und steht nur noch mit Haken in
+  der Datei.
 - **Weitere Rettungsmittel** („RTW Talwang") — Organisationskennungen.
-- Der **Verlauf einer Reanimation** ohne Angabe, wen sie betraf. Ohne ihn
-  entfiele der Grund, Reanimationen überhaupt zu erfassen.
+- Der **Verlauf einer Reanimation** älterer Einsätze, ohne Angabe, wen sie
+  betraf. Bei Einsätzen, deren Reanimation schon verschlüsselt liegt, steht er
+  seit Web 22.4.0 nur noch mit Haken in der Datei: Er geht nur mit deinem
+  Passwort auf, und ein Export ohne Haken fragt nicht danach. Bis alle alten
+  Einsätze umgestellt sind, ist eine Datei ohne Haken deshalb gemischt.
 - Die **Zeitpunkte** der Phasen. Sie tragen Alarmzeit, Endzeit und Dauer.
 - Der Haken **abweichende Besatzung**. Er sagt nur, *dass* sie abwich — sonst
   wäre nicht mehr zu erkennen, dass die leeren Namensspalten leer *gemacht*
@@ -3042,7 +3062,10 @@ ein anderes Konto. Ein `.zip` kann direkt gewählt werden, die Tabelle darin wir
 von selbst gefunden; bei einem geschützten Archiv wird nach dem Passwort gefragt.
 
 - Das **CSV (Standard)** liest alles zurück: alle Phasen samt Koordinaten, die
-  Reanimationsdokumentation und sämtliche Einsatzfelder. Nicht übernommen werden
+  Reanimationsdokumentation und sämtliche Einsatzfelder — sofern die Datei mit
+  „Personenbezogene Angaben einschließen" entstand; ohne den Haken fehlen
+  Orte, Transportziel und bei neueren Einsätzen die Reanimation darin, und der
+  Import lässt das Vorhandene dann stehen. Nicht übernommen werden
   die internen Nummern der Einsätze (sie werden neu vergeben) und die
   GPX-Tracks — Tracks stammen von der Uhr, der Weg dafür ist das Backup.
 - Beim **Excel (Standard)** steht vor dem Import, welche Felder danach leer

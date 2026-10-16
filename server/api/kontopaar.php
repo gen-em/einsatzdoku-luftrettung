@@ -22,6 +22,13 @@ require_once __DIR__ . '/../ratelimit_lib.php';
  *        öffentlichen abgeleitet als den, den der Server ausliefert.
  *     -> 200 {ok:true}
  *
+ *   {aktion:'zustand'}   (seit S11-05e)
+ *        Der Stand des eigenen Paars, wie ihn `ui_krypto_bootstrap()` in die
+ *        Seite schreibt: {stand, oeffentlich, privat} — der private Teil als
+ *        Chiffretext unter dem Inhaltsschlüssel. Für eine Seite, die vor dem
+ *        Anlegen aufgebaut wurde (F-S11-61). Liest nur das eigene Konto.
+ *     -> 200 {ok:true, stand, oeffentlich, privat}
+ *
  *   {aktion:'oeffnen_fehler', art, id, grund}   (seit S11-04d)
  *        Eine Gerätehülle dieses Kontos ging im Browser nicht auf (M-S11-01,
  *        Zustand d). `art` spur|ruhe|einsatz, `id` der Einsatz bzw. das
@@ -55,6 +62,12 @@ csrf_check();
 $b = api_rumpf();
 $aktion = (string)($b['aktion'] ?? '');
 $pdo = db();
+
+if ($aktion === 'zustand') {
+    $z = kp_zustand($userId, $pdo);
+    json_out(['ok' => true, 'stand' => $z['stand'], 'oeffentlich' => $z['oeffentlich'],
+              'privat' => $z['privat']]);
+}
 
 if ($aktion === 'abweichung') {
     if (!rate_erlaubt('kontopaar')) { json_out(['error' => 'gesperrt'], 429); }

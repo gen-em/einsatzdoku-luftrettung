@@ -286,6 +286,10 @@ ui_seite_start(['titel' => 'Import / Export']);
     <?php /* Passwortguete fuer das Archivpasswort des Exports (B9, M2-03). */ ?>
     <script src="<?= asset('assets/pwquality.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
+    <?php /* Ortsdaten der seit S11 verschlossenen Einsaetze (S11-05e): Der Export
+             oeffnet Einsatzhuelle und Spurstuecke, der Import verschliesst
+             Phasenorte und Reanimation. */ ?>
+    <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
     <?php /* ROLLENKATALOG FUER DIE SKRIPTE (E4).
              Er muss VOR import_profiles.js und import.js stehen: Beide leiten
              ihre Spaltenlisten beim Laden daraus ab. export.js und import_ui.js

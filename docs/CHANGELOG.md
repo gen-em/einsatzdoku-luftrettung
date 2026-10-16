@@ -14,6 +14,77 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.4.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-05e — Export, CSV-Import, Zeitverschiebung**.
+Letzter von fünf Teilen von S11-05. Kein Schema.
+
+### Behoben
+
+- **Der Export ließ alles seit S11-04 Gesendete aus** (F-S11-57). Er las
+  Phasenorte, Reanimation und Spur aus den Klartexttabellen; was seither
+  verschlossen ankommt, stand nicht in der Datei — die GPX-Spuren fehlten,
+  die Phasenkoordinaten waren leer, die Reanimation auch, und nichts sagte
+  es. Jetzt liefert der Server mit dem Haken die Einsatzhülle und die
+  Stücke, und der Browser öffnet sie, wie in der Einsatzansicht. Der
+  Altbestand im Klartext kommt weiter mit, bis das Einmalwerkzeug (S11-10)
+  ihn umgezogen hat.
+- **Der CSV-Import schrieb Ortsdaten im Klartext** (F-S11-60). Phasenorte,
+  Reanimation, Transportziel samt Koordinate und die Höhe des Einsatzorts
+  gingen offen an den Server und in die Klartextspalten — der Weg, den das
+  Formular mit Web 22.1.0 geschlossen hatte, stand hier noch offen. Jetzt
+  verschlüsselt der Browser: Phasenorte und Reanimation in die Einsatzhülle,
+  Transportziel und Höhe in die geschützten Angaben. Der Server weist
+  Klartext dieser Felder ab (Betreiberin, 16.10.2026, E-S11-51) und hält die
+  Phasenzeiten des Browsers gegen die eigenen — wie der Wächter im
+  Formular; weichen sie ab, wird nichts übernommen.
+- **Der erste Import nach der Erstanmeldung scheiterte mit „noch kein
+  Schlüsselpaar eingerichtet"** (F-S11-61). Das Schlüsselpaar des Kontos
+  entsteht im Hintergrund auf der ersten Seite nach der Anmeldung; eine
+  Seite, die davor geladen war, kannte es nicht, und seit Import und
+  GPX-Einlesen im Browser verschließen, brauchen sie es. Jetzt holt die
+  Seite den Schlüssel nach — sie wartet auf ein laufendes Anlegen und fragt
+  sonst den Server. Gefunden hat es der CSV-Kreislauf, der ein frisches
+  Konto anlegt und gleich importiert; vorher gewann er den Wettlauf
+  zufällig.
+- **Ein umdatierter Diensttag ließ die Spuren seit S11-04 am alten Datum
+  stehen** (F-S11-58). Die Umdatierung verschob Zeilen und Blob, aber nicht
+  die verschlossenen Stücke. Sie wandern jetzt mit; die Hülle bleibt gültig,
+  weil die Punktzeiten relativ zum Stück stehen.
+
+### Geändert
+
+- **Überschreiben beim Import führt zusammen** (Betreiberin, 16.10.2026,
+  E-S11-52). Bis dahin ersetzte ein `pat_blob` aus der Datei den vorhandenen
+  ganz. Seit Transportziel und Ortshöhe darin liegen, hätte ein Export ohne
+  Haken, der nur das Transportziel eines alten Einsatzes trägt, beim
+  Zurückspielen Name und Diagnose gelöscht. Jetzt bleibt jeder vorhandene
+  Eintrag, die Datei ersetzt nur, was sie nennt — dieselbe Haltung wie
+  bisher bei Besatzung und Notizen. Ebenso bleiben Orte und Reanimation,
+  wenn die Datei keine nennt. Der Altbestand eines überschriebenen Einsatzes
+  zieht dabei in Hülle und Blob um.
+- **Transportziel und Reanimation neuer Einsätze stehen nur noch mit
+  „Personenbezogene Angaben einschließen" im Export** (Betreiberin,
+  16.10.2026, E-S11-53, -54). Das Transportziel ist seit Web 22.1.0 eine
+  geschützte Angabe; die Reanimation liegt seit S11-04 in der Hülle, die nur
+  das Passwort öffnet, und ein Export ohne Haken fragt nicht danach. Bis
+  zum Einmalwerkzeug ist eine Datei ohne Haken deshalb gemischt: Die
+  Reanimation alter Einsätze steht darin, die neuer nicht. In der Excel-Liste
+  entfällt die Spalte „Transportziel" ohne Haken ganz, in `felder.csv` ist
+  sie als personenbezogen markiert.
+
+### Prüfmittel
+
+- Die **Ortsdatenprobe** fährt einen Schritt mehr: Export über die
+  Oberfläche mit und ohne Haken, Zurückspielen mit „überschreiben", danach
+  derselbe Export; Klartext → 400, falsche Zeiten → 409; die Umdatierung.
+- Die **Wegprobe des Spaltenregisters** schickt ihren Import mit Hülle und
+  Phasenliste und prüft die Abweisung von Klartext.
+- Die **Protokollprobe** wählt das Archiv an ihrer eigenen Mail statt am
+  letzten Archiv mit Sicherheitszeilen (F-S11-59) — sie war drei Tage nach
+  jedem Tag mit Prüfstand rot. Die Ursache, eine Sperre, die die
+  Zweitfaktorprobe bei jedem Lauf zurücklässt, steht als Backlog Nr. 385.
+
 ## [Web 22.3.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-05d — GPX-Abruf und -Import im Browser**.

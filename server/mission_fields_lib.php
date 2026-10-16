@@ -408,7 +408,7 @@ function mf_missions_register(): array
                   'backup_restore' => 0],
     'device_id' => ['import_neu' => 1, 'ingest_neu' => 1, 'schnitt_neu' => 1],
     'client_ref' => ['backup' => 0, 'import_neu' => 2, 'ingest_neu' => 2, 'schnitt_neu' => 2,
-                     'backup_restore' => 1, 'tag' => 1],
+                     'backup_restore' => 1, 'tag' => 1, 'export' => 32],
     'day_id' => ['export' => 1, 'backup' => 1, 'import_neu' => 3, 'import_aendern' => 0,
                  'suchindex' => 1, 'range' => 1, 'ingest_neu' => 3, 'schnitt_neu' => 3,
                  'backup_restore' => 2],
@@ -471,7 +471,7 @@ function mf_missions_register(): array
                         'import_aendern' => 6, 'suchindex' => 17],
     'pat_blob' => ['export' => 31, 'backup' => 31, 'import_neu' => 12, 'import_aendern' => 7,
                    'suchindex' => 18, 'range' => 10, 'tag' => 6],
-    'ort_huelle' => [],
+    'ort_huelle' => ['export' => 33],
     'notes' => [],
     'created_at' => ['backup' => 32],
     'deleted_at' => ['backup' => 33, 'backup_restore' => 13],
@@ -512,7 +512,7 @@ function mf_missions_gruende(): array
         'ort_huelle' =>
             'Die Einsatzhuelle (S11-04a): Phasenkoordinaten und Reanimation, verschlossen mit dem oeffentlichen Schluessel des Kontos. '
           . 'Geschrieben nur von ingest.php, das sie mit den Phasen ersetzt (eigene Anweisung, nicht im INSERT). '
-          . 'Gelesen ab S11-04b von api/mission.php; Export, Backup und Import nehmen sie mit S11-05 und S11-06 auf.',
+          . 'Gelesen ab S11-04b von api/mission.php; seit S11-05e im Export (nur mit personenbezogenen Angaben, der Browser oeffnet sie); Backup und Import nehmen sie mit S11-05e und S11-06 auf.',
         'origin' =>
             'Beim Aendern nicht: Ein Import einer Jahresliste darf die Herkunft eines bestehenden Einsatzes nicht ueberschreiben.',
         'edited' =>
@@ -522,7 +522,7 @@ function mf_missions_gruende(): array
         'geraet_modell' =>
             'Wie geraet_art.',
         'client_ref' =>
-            'Im Export nicht: Er ist die Kennung, unter der die Uhr denselben Einsatz wiedererkennt, und damit ein Betriebswert.',
+            'Im Export seit S11-05e, und nur mit personenbezogenen Angaben: Die Einsatzhuelle ist an ihn gebunden, ohne ihn geht sie im Browser nicht auf. In die Datei schreibt export.js ihn nicht — er bleibt ein Betriebswert.',
         'ascent_m' =>
             'Im suchindex und range nicht: Beide zeigen den Steigungsmeter nicht an.',
     ];

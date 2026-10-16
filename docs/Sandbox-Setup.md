@@ -450,6 +450,40 @@ nach der Änderung mit dem alten Verhalten, 4 s danach mit dem neuen. Es ist
 Serveränderung prüft, startet den Server vorher neu — sonst misst er den
 Stand davor und hält ihn für den danach.
 
+### 6.1a Der Container wird abgeräumt, während die Sitzung wartet
+
+**Gemessen am 16.10.2026 (S11-05e, F-S11-62):** Zweimal hintereinander endete
+ein Prüfstandslauf mit `Terminated` — einmal nach 37, einmal nach 41 Minuten,
+beide Male im Bilderlauf —, und der Container stand danach frisch da
+(`uptime` 0 min). Kein Speichertod (16 GB, davon nach dem Neustart 0,5 GB
+belegt; ein OOM hieße `Killed`), keine volle Platte. Beide Male lief der
+Prüfstand im Hintergrund, und die Sitzung hatte ihren Zug beendet, um auf
+die Benachrichtigung zu warten. Der dritte Lauf, bei dem die Sitzung in
+Abschnitten von knapp zehn Minuten auf den Prozess wartete
+(`timeout 570 tail --pid=<PID> -f /dev/null`), lief durch. **Eine ruhende
+Sitzung schützt einen Hintergrundlauf also nicht.** Ein früherer Lauf am
+selben Tag hielt durch — damals kamen laufend Nachrichten herein; wie lange
+Ruhe genau reicht, ist nicht gemessen.
+
+**Folge für die Arbeit:** Den Prüfstand (rund 95 Minuten) mit `nohup`
+starten, die PID merken und **im Zug** in Abschnitten auf ihn warten, statt
+den Zug zu beenden. Wer einen Abbruch findet, fährt nach dem Neustart die
+ganze Folge wieder hoch, nicht nur einen Teil:
+
+1. `dockerd` starten, `bash tools/sandbox/hochfahren.sh`;
+2. `php server/update.php` — bei offenen Migrationen schließt der
+   Torwächter die Anlage, und jede Probe sieht 503 (am 16.10.2026 einmal
+   mitten in einem Lauf gesehen, nach einem abgebrochenen davor; die genaue
+   Ursache ist nicht gefunden);
+3. `bash tools/sandbox/plattform.sh alles` — ohne das sind die drei
+   Datenbankfassungen der Schemaprobe nicht erreichbar;
+4. nachsehen, ob `server/wartung.lock` liegt.
+
+Ein abgebrochener Lauf hinterlässt Reste: verwaiste Spurzeilen (die
+Jobprobe meldete danach 10 statt 7) und Protokollarchive aus dem
+Wartungsmodus. Ein abgebrochener Prüfstand ist deshalb kein Bericht — er wird
+ganz neu gefahren.
+
 ### 6.2 Der Emulator ist eine Eigenschaft des Containers
 
 Er läuft ohne KVM: QEMU übersetzt dann selbst, auf **einem** Kern, und Start

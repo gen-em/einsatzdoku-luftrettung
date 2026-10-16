@@ -48,6 +48,13 @@
 
   let privatSchluessel = null;
   let abgeglichen = false;
+  /* DAS PAAR DIESER SEITE, WENN ES NACH IHREM AUFBAU ENTSTAND (S11-05e,
+     F-S11-61). KP_OEFFENTLICH und KP_PRIVAT sind Konstanten vom Aufbau der
+     Seite; ein Paar, das danach angelegt wird — hier oder auf einer Seite, die
+     kurz vorher geladen war —, kennen sie nicht. `neu` hält es fest, `laufend`
+     das Anlegen, auf das `bereit()` wartet. */
+  let neu = null;
+  let laufend = null;
 
   function base64(puffer) {
     const b = new Uint8Array(puffer);
@@ -73,23 +80,52 @@
   }
 
   /** Still: das Paar anlegen. Liefert true, wenn eines abgelegt ist. */
-  async function anlegen(ck, token) {
+  function anlegen(ck, token) {
+    laufend = (async () => {
+      try {
+        const paar = await paarErzeugen(ck);
+        const antw = await EdApi.postJson('api/kontopaar.php', {
+          aktion: 'anlegen', token: token, oeffentlich: paar.oeffentlich, privat: paar.privat,
+        });
+        if (antw.ok) { neu = paar; }
+        return antw.ok;
+      } catch (e) {
+        return false;   // bewusst still — der nächste Versuch kommt mit der nächsten Anmeldung
+      }
+    })();
+    return laufend;
+  }
+
+  /**
+   * Wartet, bis die Seite den Schlüssel kennt, wenn es ihn gibt (S11-05e,
+   * F-S11-61): auf ein laufendes Anlegen, und — kennt die Seite danach noch
+   * keinen, obwohl sie beim Aufbau „fehlt" hieß — fragt den Server, ob
+   * inzwischen eines da ist (die Anmeldung legt es auf der ersten Seite an,
+   * und eine zweite kann vorher geladen worden sein). Wirft nie.
+   */
+  async function bereit() {
+    if (laufend) { await laufend; }
+    if (spki() || typeof KP_STAND === 'undefined' || KP_STAND !== 'fehlt') { return; }
     try {
-      const paar = await paarErzeugen(ck);
-      const antw = await EdApi.postJson('api/kontopaar.php', {
-        aktion: 'anlegen', token: token, oeffentlich: paar.oeffentlich, privat: paar.privat,
-      });
-      return antw.ok;
-    } catch (e) {
-      return false;   // bewusst still — der nächste Versuch kommt mit der nächsten Anmeldung
-    }
+      const a = await EdApi.postJson('api/kontopaar.php', { aktion: 'zustand' });
+      if (a.ok && a.daten && a.daten.stand === 'da' && a.daten.oeffentlich) {
+        neu = { oeffentlich: a.daten.oeffentlich, privat: a.daten.privat };
+      }
+    } catch (e) { /* bleibt ohne — die Aufrufer melden „kein Schlüsselpaar" */ }
+  }
+
+  /** Der öffentliche Teil als SPKI (Base64): vom Aufbau der Seite oder neu. */
+  function spki() {
+    if (typeof KP_OEFFENTLICH !== 'undefined' && KP_OEFFENTLICH) { return KP_OEFFENTLICH; }
+    return neu ? neu.oeffentlich : null;
   }
 
   /** Der private Teil als PKCS8-Bytes — oder null, wenn er nicht aufgeht. */
   async function pkcs8(ck) {
-    if (typeof KP_PRIVAT === 'undefined' || !KP_PRIVAT) { return null; }
+    const chiffre = (typeof KP_PRIVAT !== 'undefined' && KP_PRIVAT) ? KP_PRIVAT : (neu ? neu.privat : null);
+    if (!chiffre) { return null; }
     try {
-      const der = await EdCrypto.decrypt(ck, KP_PRIVAT);
+      const der = await EdCrypto.decrypt(ck, chiffre);
       return Uint8Array.from(atob(der), c => c.charCodeAt(0));
     } catch (e) { return null; }
   }
@@ -109,8 +145,8 @@
 
   /** Der öffentliche Teil, wie der Server ihn ausliefert, als SEC1 — oder null. */
   function oeffentlich() {
-    return (typeof KP_OEFFENTLICH !== 'undefined' && KP_OEFFENTLICH)
-      ? EdCrypto.spkiZuSec1(KP_OEFFENTLICH) : null;
+    const s = spki();
+    return s ? EdCrypto.spkiZuSec1(s) : null;
   }
 
   /**
@@ -157,5 +193,5 @@
   }
 
   window.EdKontopaar = { anlegen: anlegen, abgleichen: abgleichen, privat: privat,
-                         oeffentlich: oeffentlich, paarErzeugen: paarErzeugen };
+                         oeffentlich: oeffentlich, paarErzeugen: paarErzeugen, bereit: bereit };
 })();

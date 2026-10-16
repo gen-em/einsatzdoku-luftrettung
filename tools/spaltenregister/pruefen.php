@@ -206,6 +206,7 @@ $abbildungen = [
      'phases'       => 'Zeilen in mission_phases.',
      'resources'    => 'Zeilen in mission_resources.',
      'resus'        => 'Zeilen in resus_sessions und resus_events.',
+     'started_ts'   => 'started_at als Unixzeit — der Bezug der Zeiten in der Einsatzhuelle (S11-05e).',
    ]],
   ['datei' => 'api/import_commit.php', 'variable' => '$werte', 'anhaengen' => false,
    'zweck' => 'import_aendern',

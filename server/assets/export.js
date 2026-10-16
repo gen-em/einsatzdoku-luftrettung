@@ -212,10 +212,17 @@
      *  Lücke erzeugt, die zu A9 geführt hat: Die Phasenkoordinaten waren in
      *  Profil B nicht abgedeckt, obwohl pat_ort_lat/lon es waren.
      *
-     *  DRAUSSEN bleiben bewusst: transport_dest und bw_unit (Einrichtungen,
-     *  keine Personen; Kriterium 74), weitere_rettungsmittel
-     *  (Organisationskennungen) und der Reanimationsverlauf — je einzeln vom
-     *  Auftraggeber entschieden, Begründungen in docs/Export-Format.md. */
+     *  DRAUSSEN bleiben bewusst: bw_unit (eine Einrichtung, keine Person;
+     *  Kriterium 74), weitere_rettungsmittel (Organisationskennungen) und der
+     *  Reanimationsverlauf des Altbestands — je einzeln vom Auftraggeber
+     *  entschieden, Begründungen in docs/Export-Format.md.
+     *
+     *  SEIT S11-05e UNTER DER SCHRANKE: das Transportziel samt Koordinate
+     *  (seit Web 22.1.0 im pat_blob, Betreiberin 16.10.2026, E-S11-53) und
+     *  die Einsatzhülle — damit auch die Reanimation der seit S11-04
+     *  gesendeten Einsätze (E-S11-54). Bis zum Einmalwerkzeug (S11-10) steht
+     *  der Reanimationsverlauf des Altbestands deshalb noch ohne Haken in der
+     *  Datei, der neuer Einsätze nicht. */
     function entpersonalisieren(data) {
         (data.days || []).forEach(function (d) {
             d.crew = {};
@@ -233,6 +240,11 @@
             m.site_ele_m = null;
             m.pat_blob = null;
             m.pat = null;
+            m.transport_dest = null;
+            m.dest_lat = null;
+            m.dest_lon = null;
+            m.ort_huelle = null;
+            m.client_ref = null;
             // Phase 4 ist "Ankunft Einsatzort", Phase 5 "Ankunft PatientIn" —
             // diese Punkte SIND der Ort des Geschehens. Der Zeitpunkt bleibt:
             // Er trägt Alarmzeit, Endzeit und Dauer (Kriterium 73).
@@ -257,6 +269,65 @@
         for (var i = 0; i < missions.length; i++) {
             var m = missions[i];
             m.pat = (m._patState === 'ok') ? m._pat : null;
+        }
+        return zahl;
+    }
+
+    /**
+     * DIE ORTSDATEN DER SEIT S11 VERSCHLOSSENEN EINSÄTZE (S11-05e) — nur mit
+     * Haken, nach `decryptPatients()`:
+     *   - Transportziel und Ortshöhe aus dem pat_blob (`transport_dest`
+     *     {addr, lat, lon}, `ortshoehe`); die Spalten tragen nur noch den
+     *     Altbestand, und ein Wert im Blob geht vor.
+     *   - Phasenorte und Reanimation aus der Einsatzhülle. Die Phasen werden
+     *     über Nummer und Zeit zugeordnet, wie in der Einsatzansicht
+     *     (`EdOrtsdaten.fuerAnsicht`); die Reanimation ersetzt die (dann leere)
+     *     Liste aus den Klartexttabellen.
+     * Liefert, wie viele Hüllen nicht aufgingen — wie bei den Patientendaten
+     * soll eine Datei, der etwas fehlt, nicht vollständig aussehen.
+     */
+    async function ortsdatenEinlegen(missions, key) {
+        var zahl = { ok: 0, unlesbar: 0 };
+        var k = null;
+        var iso = function (t) { return new Date(t * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z'); };
+        for (var i = 0; i < missions.length; i++) {
+            var m = missions[i];
+            var z = m.pat && m.pat.transport_dest;
+            if (z && typeof z === 'object') {
+                m.transport_dest = z.addr || null;
+                m.dest_lat = (z.lat != null) ? Number(z.lat) : null;
+                m.dest_lon = (z.lon != null) ? Number(z.lon) : null;
+            }
+            if (m.pat && m.pat.ortshoehe != null) { m.site_ele_m = Number(m.pat.ortshoehe); }
+            if (!m.ort_huelle) { continue; }
+            var innen;
+            try {
+                if (!k) { k = await EdOrtsdaten.schluessel(key); }
+                innen = await EdOrtsdaten.einsatz(m, k);
+            } catch (e) {
+                EdOrtsdaten.melden(e, 'einsatz', m.id);
+                zahl.unlesbar++;
+                continue;
+            }
+            zahl.ok++;
+            var orte = (innen && innen.phasen) || [];
+            var frei = orte.slice();
+            (m.phases || []).forEach(function (p, j) {
+                var ts = Math.floor(Date.parse(p.at) / 1000);
+                var idx = frei.findIndex(function (x) { return x && x.phase === p.phase && m.started_ts + x.t === ts; });
+                var ort = null;
+                if (idx >= 0) { ort = frei[idx]; frei[idx] = null; }
+                else if (orte[j] && orte[j].phase === p.phase) { ort = orte[j]; }
+                if (ort && ort.lat != null) { p.lat = Number(ort.lat); p.lon = Number(ort.lon); }
+            });
+            var rea = (innen && innen.rea) || [];
+            if (rea.length) {
+                m.resus = rea.map(function (s) {
+                    return { started_at: iso(m.started_ts + s.t),
+                             events: (s.ereignisse || []).map(function (e) {
+                                 return { type: e.art, at: iso(m.started_ts + e.t) }; }) };
+                });
+            }
         }
         return zahl;
     }
@@ -309,7 +380,8 @@
         // 'Sekundärtransport' ist der Wortlaut aus mission_fields.php — die
         // Tabelle soll dieselben Begriffe verwenden wie das Formular.
         { label: 'Sekundärtransport', star: false },
-        { label: 'Transportziel', star: false },
+        // Seit S11-05e unter der Schranke: das Ziel liegt im pat_blob (E-S11-53).
+        { label: 'Transportziel', star: true },
         { label: 'Schockraum', star: false },
         { label: 'Windeneinsatz', star: false },
         { label: 'Windenzyklen gesamt', star: false },
@@ -838,9 +910,9 @@
             { feld: 'transport_art', typ: 'text', einheit: '', beschreibung: 'Transportart (missions.transport_mode): air | ground | ambulant — im Formular „Luft", „Boden", „Ambulant"; leer = nicht angegeben', get: function (c) { return orEmpty(c.m.transport_mode); } },
             { feld: 'na_begleitung', typ: '0/1', einheit: '', beschreibung: 'NA-Begleitung beim Transport (entfällt bei „Ambulant")', get: function (c) { return c.m.na_escort; } },
             { feld: 'fehleinsatz', typ: '0/1', einheit: '', beschreibung: 'Fehleinsatz / Storno / Abbruch', get: function (c) { return c.m.false_alarm; } },
-            { feld: 'transport_dest', typ: 'text', einheit: '', beschreibung: 'Transportziel', get: function (c) { return orEmpty(c.m.transport_dest); } },
-            { feld: 'ziel_lat', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik, am Einsatz eingefroren (missions.dest_lat)', get: function (c) { return numOrEmpty(c.m.dest_lat); } },
-            { feld: 'ziel_lon', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik (missions.dest_lon)', get: function (c) { return numOrEmpty(c.m.dest_lon); } },
+            { feld: 'transport_dest', typ: 'text', einheit: '', beschreibung: 'Transportziel (pat_blob.transport_dest.addr; Altbestand missions.transport_dest)', pers: true, get: function (c) { return orEmpty(c.m.transport_dest); } },
+            { feld: 'ziel_lat', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik, am Einsatz eingefroren (pat_blob.transport_dest.lat; Altbestand missions.dest_lat)', pers: true, get: function (c) { return numOrEmpty(c.m.dest_lat); } },
+            { feld: 'ziel_lon', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik (pat_blob.transport_dest.lon; Altbestand missions.dest_lon)', pers: true, get: function (c) { return numOrEmpty(c.m.dest_lon); } },
             { feld: 'abfahrt_regel', typ: 'text', einheit: '', beschreibung: 'Herkunft des Abfahrtorts (missions.start_src): base | prev_site | prev_dest | manual; leer = keine Linie. Gespeichert ist die REGEL, nicht der Ort', get: function (c) { return orEmpty(c.m.start_src); } },
             { feld: 'schockraum', typ: '0/1', einheit: '', beschreibung: 'Schockraum alarmiert', get: function (c) { return c.m.schockraum; } },
             { feld: 'secondary', typ: '0/1', einheit: '', beschreibung: 'Sekundärtransport', get: function (c) { return c.m.secondary; } },
@@ -1132,11 +1204,29 @@
         return a.daten;
     }
 
+    /**
+     * Eine Spur aus der Antwort von `action: 'track'` (S11-05e): der
+     * Altbestand im Klartext und die geöffneten Stücke, nach Zeit zusammen.
+     * Liefert [[lat, lon, ele, ts], …] wie bisher.
+     */
+    async function spurPunkte(eintrag, art, k) {
+        if (Array.isArray(eintrag)) { return eintrag; }          // alte Antwortform
+        var alt = (eintrag && eintrag.punkte) || [];
+        var neu = (eintrag && eintrag.stuecke && eintrag.stuecke.length)
+            ? (await EdOrtsdaten.spur(eintrag.stuecke, art, eintrag.ref, eintrag.sperren, k))
+                .map(function (p) { return [p.lat, p.lon, p.ele, p.ts]; })
+            : [];
+        return alt.concat(neu).sort(function (a, b) { return a[3] - b[3]; });
+    }
+
     /** Holt GPX-relevante Tracks blockweise (höchstens 25 IDs je Anfrage, siehe
      *  api/export_data.php) und baut die GPX-Dateien. Liefert außerdem, welche
      *  mission_id/rest_id welche Datei bekommen hat (für track_datei in den CSVs). */
     async function buildTracks(data, onProgress) {
         var genTime = new Date().toISOString();
+        /* Der Schlüssel der Stücke (S11-05e) — der Export mit GPX läuft nur
+           mit Haken, die Sitzung ist also entsperrt. */
+        var k = await EdOrtsdaten.schluessel(await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER));
         var files = [];
         var fileByMission = {}, fileByRest = {};
 
@@ -1149,8 +1239,12 @@
         for (var b1 = 0; b1 < missionIds.length; b1 += 25) {
             var batch1 = missionIds.slice(b1, b1 + 25);
             var res1 = await fetchTrack('mission', batch1);
+            var offen1 = {};
+            for (var q1 = 0; q1 < batch1.length; q1++) {
+                offen1[batch1[q1]] = await spurPunkte(res1[String(batch1[q1])], 'spur', k);
+            }
             batch1.forEach(function (id) {
-                var pts = res1[String(id)] || [];
+                var pts = offen1[id] || [];
                 if (!pts.length) return;
                 var m = data.missions.find(function (x) { return x.id === id; });
                 var hhmm = (hhmmLocal(phaseAt(m, 2), APP_TZ) || '00:00').replace(':', '');
@@ -1166,8 +1260,12 @@
         for (var b2 = 0; b2 < restIds.length; b2 += 25) {
             var batch2 = restIds.slice(b2, b2 + 25);
             var res2 = await fetchTrack('rest', batch2);
+            var offen2 = {};
+            for (var q2 = 0; q2 < batch2.length; q2++) {
+                offen2[batch2[q2]] = await spurPunkte(res2[String(batch2[q2])], 'ruhe', k);
+            }
             batch2.forEach(function (id) {
-                var pts = res2[String(id)] || [];
+                var pts = offen2[id] || [];
                 if (!pts.length) return;
                 var r = data.rests.find(function (x) { return x.id === id; });
                 var hhmm = (hhmmLocal(r.started_at, APP_TZ) || '00:00').replace(':', '');
@@ -1481,6 +1579,8 @@
                 if (!key) { setState('Entschlüsselung gesperrt — siehe Hinweis oben.'); return; }
                 setState('Geschützte Angaben werden entschlüsselt…');
                 var patZahl = await decryptPatients(data.missions || [], key);
+                var ortZahl = await ortsdatenEinlegen(data.missions || [], key);
+                patZahl.unlesbar += ortZahl.unlesbar;
                 if (patZahl.unlesbar) {
                     if (!await window.edConfirm(patZahl.unlesbar + ' von ' +
                             (patZahl.unlesbar + patZahl.ok) + ' Einsätzen mit geschützten '
