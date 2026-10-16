@@ -115,8 +115,8 @@ function gh_verschliessen(string $klar, string $empfSec1, string $art, string $c
 
 /**
  * Spurpunkte in die binäre Innenform (E-S11-31): je Punkt 14 Byte,
- * big-endian — Breite und Länge in 1e-7 Grad (int32), Höhe in Dezimetern
- * (int16), Zeit relativ zu `ts_von` in Sekunden (uint32). Ohne Höhe:
+ * big-endian — Breite und Länge in 1e-7 Grad (int32), Höhe in ganzen Metern
+ * (int16, geklemmt auf ±32 767; bis zum 16.10.2026 Dezimeter, E-S11-66), Zeit relativ zu `ts_von` in Sekunden (uint32). Ohne Höhe:
  * -32768 (`GH_HOEHE_UNBEKANNT`, E-S11-39).
  *
  * @param list<array{0:float,1:float,2:?float,3:int}> $punkte [lat, lon, ele, ts]
@@ -125,7 +125,8 @@ function gh_spur_innen(array $punkte, int $tsVon): string
 {
     $aus = '';
     foreach ($punkte as $p) {
-        $ele = $p[2] === null ? GH_HOEHE_UNBEKANNT : (int)round((float)$p[2] * 10);
+        $ele = $p[2] === null ? GH_HOEHE_UNBEKANNT
+                              : max(-32767, min(32767, (int)round((float)$p[2])));
         $aus .= pack('NNnN',
             (int)round((float)$p[0] * 1e7) & 0xFFFFFFFF,
             (int)round((float)$p[1] * 1e7) & 0xFFFFFFFF,

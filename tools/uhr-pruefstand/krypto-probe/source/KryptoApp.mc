@@ -196,7 +196,7 @@ module Probe {
                 var o = i * 14;
                 innen.encodeNumber(Math.round(la * 1e7).toNumber(), Lang.NUMBER_FORMAT_SINT32, {:offset => o, :endianness => Lang.ENDIAN_BIG});
                 innen.encodeNumber(Math.round(lo * 1e7).toNumber(), Lang.NUMBER_FORMAT_SINT32, {:offset => o + 4, :endianness => Lang.ENDIAN_BIG});
-                innen.encodeNumber(Math.round(he * 10).toNumber(), Lang.NUMBER_FORMAT_SINT16, {:offset => o + 8, :endianness => Lang.ENDIAN_BIG});
+                innen.encodeNumber(Math.round(he).toNumber(), Lang.NUMBER_FORMAT_SINT16, {:offset => o + 8, :endianness => Lang.ENDIAN_BIG});
                 innen.encodeNumber(i * 5, Lang.NUMBER_FORMAT_UINT32, {:offset => o + 10, :endianness => Lang.ENDIAN_BIG});
             }
         }

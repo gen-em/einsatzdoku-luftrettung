@@ -711,10 +711,13 @@ geht dort nicht auf.
 | Spurstück eines Ruhesegments | `ruhe` | `<seq_from>:<punkte>` | binär |
 | Einsatzhülle (`ort_huelle`) | `einsatz` | leer | JSON |
 
-**Innen, Spurstück** (E-S11-31, -39): je Punkt 14 Byte, big-endian —
-Breite und Länge in 1e-7 Grad (`int32`), Höhe in Dezimetern (`int16`),
-Zeit in Sekunden **relativ zu `ts_von`** (`uint32`). **Ein Punkt ohne Höhe
-trägt `-32768`**; jede echte Höhe liegt zwischen −3276,7 und 3276,7 m.
+**Innen, Spurstück** (E-S11-31, -39, -66): je Punkt 14 Byte, big-endian —
+Breite und Länge in 1e-7 Grad (`int32`), Höhe in **ganzen Metern** (`int16`,
+von der Null weg gerundet, auf ±32 767 geklemmt), Zeit in Sekunden **relativ
+zu `ts_von`** (`uint32`). **Ein Punkt ohne Höhe trägt `-32768`.** Bis zum
+16.10.2026 stand die Höhe in Dezimetern; das reichte nur bis 3276,7 m und lief
+im Hochgebirge still über (F-S11-64). Kein Gerät hat das alte Maß je
+gesendet — Uhr und Handy verschließen erst ab S11-08/-09.
 
 **Innen, Einsatzhülle** (E-S11-40): JSON, UTF-8, alle Zeiten in Sekunden
 **seit `started_at`** (E-S11-18), damit eine Verschiebung des Diensttags die

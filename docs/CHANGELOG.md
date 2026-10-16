@@ -14,6 +14,32 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.5.1] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-06g — Höhe in ganzen Metern**. Kein Schema.
+
+### Behoben
+
+- **Die Höhe eines Spurpunkts reichte nur bis 3276,7 m** (F-S11-64). Die
+  verschlossene Innenform trug sie in Dezimetern als 16-Bit-Zahl; darüber lief
+  der Wert still über und wurde eine falsche negative Höhe — im Hochgebirge,
+  wo Luftrettung über 3277 m fliegt, kein Randfall. Jetzt steht sie in ganzen
+  Metern (Betreiberin, 16.10.2026, E-S11-66), gerundet von der Null weg und
+  auf ±32 767 m geklemmt, damit auch ein Ausreißer nicht überläuft. Feld und
+  Länge bleiben; Uhr und Handy schreiben das Format erst ab S11-08 und S11-09,
+  gesendet hat das alte Maß also kein Gerät.
+
+### Bewusst so belassen
+
+- **Dezimeter-Genauigkeit entfällt.** Ortshöhe und Profil brauchen sie nicht;
+  die Ortshöhe war ohnehin auf ganze Meter gerundet. Sicherungen bis
+  Nutzlast 12 (SPUR1) behalten ihre Dezimeter — ein anderes Format.
+- **Die Kreisläufe edbak erklären die gerundete Höhe** (F-S11-70). Ihre
+  Referenzen tragen Dezimeter, die neue Sicherung ganze Meter; das waren
+  50 761 und, im Altformat, 41 582 Abweichungen. Die Regel greift nur an der Höhe eines
+  Punkts und nur, wenn der neue Wert genau der gerundete alte ist — jede
+  andere Abweichung bleibt rot. Sie fällt mit der nächsten Referenz weg.
+
 ## [Web 22.5.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-06 — Sicherung** in sechs Teilen, ein Commit

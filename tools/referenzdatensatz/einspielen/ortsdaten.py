@@ -74,7 +74,7 @@ def spur_oeffnen(stuecke: list, art: str, ref: str, sperren: list, priv) -> list
             if seq in nach:
                 continue
             nach[seq] = {"seq": seq, "lat": la / 1e7, "lon": lo / 1e7,
-                         "ele": None if h == HOEHE_UNBEKANNT else h / 10, "ts": ts}
+                         "ele": None if h == HOEHE_UNBEKANNT else h, "ts": ts}
     return [nach[k] for k in sorted(nach)]
 
 
@@ -97,7 +97,7 @@ def stuecke_bauen(punkte: list[dict], art: str, ref: str, sec1: bytes,
         von = min(p["ts"] for p in g)
         innen = b"".join(struct.pack(
             ">iihI", _runde(p["lat"] * 1e7), _runde(p["lon"] * 1e7),
-            HOEHE_UNBEKANNT if p["ele"] is None else _runde(p["ele"] * 10),
+            referenz.hoehe_innen(p["ele"]),
             max(0, p["ts"] - von)) for p in g)
         platz = f"{g[0]['seq']}:{len(g)}"
         aus.append({"seq_from": g[0]["seq"], "punkte": len(g), "ts_von": von,

@@ -92,7 +92,7 @@
         if (nach.has(seq)) { continue; }
         const h = dv.getInt16(i * 14 + 8);
         nach.set(seq, { seq: seq, lat: dv.getInt32(i * 14) / 1e7, lon: dv.getInt32(i * 14 + 4) / 1e7,
-                        ele: h === HOEHE_UNBEKANNT ? null : h / 10, ts: ts });
+                        ele: h === HOEHE_UNBEKANNT ? null : h, ts: ts });
       }
     }
     return [...nach.values()].sort((a, b) => a.seq - b.seq);
@@ -357,7 +357,8 @@
    * Schreibwege des Browsers: Schneiden (die Punkte im Zeitraum als Spur des
    * neuen Einsatzes) und Löschen (die übrigen Punkte des Segments neu).
    * Innenform wie `gh_spur_innen()` und `referenz.py`: je Punkt 14 Byte,
-   * big-endian, Höhe -32768 = keine (E-S11-39).
+   * big-endian, Höhe in ganzen Metern (E-S11-66, bis zum 16.10.2026
+   * Dezimeter), -32768 = keine (E-S11-39).
    *
    * `neu: true` nummeriert ab 0 durch (ein neuer Einsatz hat eine eigene
    * Zählung); sonst bleiben die Sequenznummern, und ein Stück endet an jeder
@@ -386,7 +387,8 @@
       g.forEach((p, i) => {
         dv.setInt32(i * 14, runde(p.lat * 1e7));
         dv.setInt32(i * 14 + 4, runde(p.lon * 1e7));
-        dv.setInt16(i * 14 + 8, p.ele == null ? HOEHE_UNBEKANNT : runde(p.ele * 10));
+        dv.setInt16(i * 14 + 8, p.ele == null ? HOEHE_UNBEKANNT
+                                              : Math.max(-32767, Math.min(32767, runde(p.ele))));
         dv.setUint32(i * 14 + 10, Math.max(0, p.ts - tsVon));
       });
       const platz = g[0].seq + ':' + g.length;

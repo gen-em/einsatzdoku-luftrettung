@@ -283,7 +283,7 @@ try {
     await s.click('dialog[open] [data-act="yes"]');
   });
   const a3 = punkteAus(a.text);
-  pruefe(gleich(a3, spurM, 0.051), '3  Einsatzansicht: die Datei enthält die gesendete Spur',
+  pruefe(gleich(a3, spurM, 0.5 + 1e-6), /* ganze Meter, E-S11-66 */ '3  Einsatzansicht: die Datei enthält die gesendete Spur',
          `${a3.length} Punkte, Datei ${a.name}`);
   pruefe(new RegExp(`^einsatz_${String(mid).padStart(6, '0')}_\\d{4}-\\d{2}-\\d{2}_\\d{4}_original\\.gpx$`).test(a.name)
          && /<desc>Originalspur — 6 Punkte<\/desc>/.test(a.text) && /<name>Einsatz \d+ — \d\d\.\d\d\.\d{4} \d\d:\d\d<\/name>/.test(a.text),
@@ -350,7 +350,7 @@ try {
                                        x.client_ref, [], k);
       return p.map(q => [q.lat, q.lon, q.ele, q.ts]);
     }, [dayId, typ, Number(r.d.id)]);
-    pruefe(gleich(offenGel, impSortiert, 0.051), `4  ${ziel}: der Browser öffnet die Punkte der Datei, nach Zeit sortiert`,
+    pruefe(gleich(offenGel, impSortiert, 0.5 + 1e-6), `4  ${ziel}: der Browser öffnet die Punkte der Datei, nach Zeit sortiert`,
            `${offenGel.length} Punkte`);
   }
   const ab = await s.evaluate(async ([dayId, fremdTag]) => {

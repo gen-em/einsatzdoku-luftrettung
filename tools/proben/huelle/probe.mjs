@@ -116,7 +116,7 @@ const ergebnis = await seite.evaluate(async (v) => {
     for (let i = 0; i < n; i++) {
       const la = 47.7261 + i * 0.00031, lo = 10.3159 + i * 0.00047, he = 674 + (i % 37) * 0.7;
       dv.setInt32(i * 14, Math.round(la * 1e7)); dv.setInt32(i * 14 + 4, Math.round(lo * 1e7));
-      dv.setInt16(i * 14 + 8, Math.round(he * 10)); dv.setUint32(i * 14 + 10, i * 5);
+      dv.setInt16(i * 14 + 8, Math.round(he)); dv.setUint32(i * 14 + 10, i * 5);
       pkt.push([+la.toFixed(6), +lo.toFixed(6), +he.toFixed(1), i * 5]);
     }
     const json = new TextEncoder().encode(JSON.stringify({ p: pkt }));

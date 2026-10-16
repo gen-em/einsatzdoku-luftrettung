@@ -243,6 +243,17 @@ das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 
 **Gefunden beim Bauen, nicht beim Prüfen:** F-S11-65 — eine Freigabe in ein anderes Konto hätte Orte und Spur unlesbar abgelegt; der Entwurf von 06c hätte sie durchgereicht, die Freigabeprobe mit eigener Quelle hätte es gezeigt. F-S11-64 — der Höhenbereich der Innenform — ist beim Lesen aufgefallen und **nicht** an Daten beobachtet.
 
+### S11-06g Höhe in ganzen Metern (16.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `referenz.py erzeugen`, `--selbstprobe`, `pruefen` | Vektoren mit Höhe in Metern neu (`spur-binaer-3`), Rundlauf, Störungen | 5 Fälle, 0 Fehlschläge · 6 Fälle geöffnet, 8 Störungen abgewiesen, 0 Abweichungen |
+| `proben.sh huelle` | `geraetehuelle_lib.php` und `crypto.js` gegen die neuen Vektoren | 14/0 und 39/0 |
+| `proben.sh ortsdaten` · `gpx` | Gerät → Server → Browser und GPX-Rundlauf, Höhe auf höchstens einen halben Meter (vorher 5 cm) | 55 ok, 0 fehlen · 46/0 (vor der Anpassung 53/2 und 46/3: die Proben verglichen gegen Dezimeter, und die Ortsdatenprobe hatte einen eigenen Dekoder) |
+| `kreislauf.py --art edbak --frisch` und `--art edbak-alt --frisch` | Referenz ↔ neue Sicherung; die Höhenregel greift nur auf gerundete Höhen; der Lauf wartet nach der Anmeldung auf das Schlüsselpaar (F-S11-71) | Fassung 4: 347 063 Einzelvergleiche, 0 unerklärt, 51 421 erklärt, davon 50 761 Höhen · Altformat: 288 104, 0 unerklärt, 42 916 erklärt, davon 41 582 Höhen (vorher beide rot, F-S11-70) |
+
+**Nicht geprüft:** eine echte Höhe über 3276,7 m durch ein Gerät — es sendet erst ab S11-08/-09; die Klemme auf ±32 767 ist gelesen, nicht gefahren.
+
 ## 3. Im Browser geprüft
 
 Noch nichts von Hand; S11-00 und S11-01 ändern nur Dokumente und Prüfmittel. Die Messungen von S11-01 laufen im Browser (Playwright, Chromium), stehen aber unter 2, weil sie Kosten messen, nicht Verhalten.
@@ -275,7 +286,7 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-25 | nach dem Merge auf Staging | (a) Einstellungen → Backup: eine Sicherung anlegen (Konto mit einem neu gesendeten Einsatz mit Reanimation und Spur), dieselbe Datei in ein zweites, frisch angelegtes Konto einspielen, dort den Einsatz öffnen. (b) Eine Sicherung von **vor** Web 22.5.0 in das zweite Konto einspielen. | (a) Abschlussmeldung blau, „… Aufzeichnungen mit … Punkten"; im zweiten Konto Karte, Phasenorte, Reanimation, Transportziel wie im ersten. (b) blau, Einsätze und Spuren da, Transportziel im Formular mit Schloss | (a) Spur oder Reanimation fehlt im zweiten Konto, orange Meldung ohne Grund, oder rote Meldung „Klartext". (b) rote Meldung „Format", Spuren 0 |
 | P-S11-26 | nach dem Merge auf Staging | (a) Verwaltung: ein Konto-Backup eines Kontos mit neuen Einsätzen anlegen; das Konto löschen, neu anlegen, das Paket freigeben; im neuen Konto mit dem Wiederherstellungsschlüssel einspielen. (b) Ein Konto-Backup in **dasselbe**, weiterbestehende Konto unmittelbar einspielen (vorher dort einen Einsatz löschen und den Papierkorb leeren). | (a) „Fertig" blau; Karte, Phasenorte, Reanimation im neuen Konto da. (b) Der gelöschte Einsatz ist wieder da, mit Karte | (a) orange „ließen sich … nicht öffnen", oder Karte leer. (b) Meldung „kein Schlüsselpaar", obwohl sich das Konto angemeldet hat, oder Karte leer |
 | P-S11-27 | nach dem Merge auf Staging | Demo-Konto zurücksetzen (Verwaltung → Demo), dann als Demo anmelden und einen Einsatz mit Spur öffnen | Karte, Phasen, Reanimation; Transportziel mit Schloss | Karte leer, oder Meldung „lassen sich nicht öffnen", oder der Reset bricht mit „Demo-Passwort öffnet die Schlüsselhülle nicht" ab |
-| P-S11-28 | vor S11-08 | Frage Q-S11-19 im Konzept beantworten (Höhe in Metern statt Dezimetern?) | Antwort im Chat | — |
+| P-S11-28 | erledigt 16.10.2026 | Frage Q-S11-19 im Konzept beantworten (Höhe in Metern statt Dezimetern?) | **beantwortet:** ganze Meter (E-S11-66), umgesetzt in S11-06g | — |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen, einmal neu koppeln, einen Probeeinsatz aufzeichnen und senden | Einsatz im Web mit Karte nach dem Entsperren | Uhr zeigt „Neu koppeln" weiter oder parkt |

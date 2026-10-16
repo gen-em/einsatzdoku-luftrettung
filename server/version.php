@@ -8191,5 +8191,10 @@ declare(strict_types=1);
  *   aeltere Pakete selbst (E-S11-57). Der Demo-Reset verschliesst ebenso und
  *   legt dem Demokonto ein Paar an (E-S11-20, -58). Loeschvermerke reisen mit
  *   (F-S11-52). Kein Schema.
+ * 22.5.1 — S11-06g: DIE HOEHE IN GANZEN METERN. Die Innenform der Spurstuecke
+ *   trug die Hoehe in Dezimetern als int16 und reichte nur bis 3276,7 m;
+ *   darueber lief sie still in eine negative Hoehe (F-S11-64). Jetzt ganze
+ *   Meter, geklemmt auf ±32 767 (E-S11-66). Kein Geraet hat das alte Mass je
+ *   gesendet. Kein Schema.
  */
-const WEB_VERSION = '22.5.0';
+const WEB_VERSION = '22.5.1';

@@ -8793,8 +8793,9 @@ wird abgelegt; die Überlappung löst der Browser über die Sequenznummer
 (E-S11-38): ersetzt, wenn mindestens so viele Phasen kommen wie gespeichert
 sind; die Reanimation zählt der Server nicht.
 
-**Innenformen** (E-S11-31, -39, -40): Spurstück binär, 14 Byte je Punkt,
-Höhe `-32768` = keine; Einsatzhülle JSON mit Zeiten seit `started_at`. Die
+**Innenformen** (E-S11-31, -39, -40, -66): Spurstück binär, 14 Byte je
+Punkt, Höhe in ganzen Metern (bis 16.10.2026 Dezimeter, F-S11-64), `-32768`
+= keine; Einsatzhülle JSON mit Zeiten seit `started_at`. Die
 genaue Form steht im JSON-Vertrag 3.4.
 
 **Verschließen auf dem Server** (`geraetehuelle_lib.php`): für Proben, das

@@ -153,6 +153,13 @@
       "von": "None",
       "nach": "[]",
       "begruendung": "S11-06 (Web 22.5.0): Nutzlast 13 traegt an jedem Segment seine Loeschvermerke (F-S11-52), leer erlaubt wie `schnitte` am Einsatz. Die Referenz kennt das Feld nicht. GEMESSEN 16.10.2026 am Altformat (Nutzlast 7): 100x."
+    },
+    {
+      "bereich": "*",
+      "feld_regex": "track\\[\\d+\\]\\[3\\]",
+      "art": "wert",
+      "gerundet": true,
+      "begruendung": "S11-06g (Web 22.5.1, E-S11-66): Die Hoehe eines Spurpunkts steht in der verschlossenen Innenform in ganzen Metern statt Dezimetern (F-S11-64). Die Altformat-Referenz traegt Dezimeter; der Umlauf legt die Punkte als Stuecke ab und sichert sie wieder — mit gerundeter Hoehe. Dieselbe Regel wie im Lauf `edbak`: NUR an der Hoehe (Index 3) und NUR, wenn der neue Wert genau der von der Null weg gerundete alte ist. Damit stimmt der Satz oben, die Punkte kaemen unveraendert zurueck, fuer Lage und Zeit weiter, fuer die Hoehe bis auf die Rundung. GEMESSEN 16.10.2026: 41 582x."
     }
   ]
 }

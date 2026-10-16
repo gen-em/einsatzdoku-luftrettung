@@ -195,7 +195,7 @@ try {
         for (let i = 0; i < st.punkte; i++) {
           const h = dv.getInt16(i * 14 + 8);
           aus.push([dv.getInt32(i * 14) / 1e7, dv.getInt32(i * 14 + 4) / 1e7,
-                    h === -32768 ? null : h / 10, st.ts_von + dv.getUint32(i * 14 + 10)]);
+                    h === -32768 ? null : h, st.ts_von + dv.getUint32(i * 14 + 10)]);
         }
       }
       return aus;
@@ -218,7 +218,8 @@ try {
 
   const gleich = (a, b) => a.length === b.length && a.every((p, i) =>
     Math.abs(p[0] - b[i][0]) < 1e-7 && Math.abs(p[1] - b[i][1]) < 1e-7
-    && (p[2] === null ? b[i][2] === null : Math.abs(p[2] - b[i][2]) < 0.051) && p[3] === b[i][3]);
+    /* Höhe in ganzen Metern (E-S11-66): höchstens einen halben Meter daneben. */
+    && (p[2] === null ? b[i][2] === null : Math.abs(p[2] - b[i][2]) <= 0.5 + 1e-6) && p[3] === b[i][3]);
   pruefe(JSON.stringify(r.stuecke) === '[[0,5],[5,5]]', '3  api/mission.php: zwei Stücke, Platz und Punktzahl',
          JSON.stringify(r.stuecke));
   pruefe(gleich(r.punkteM, [...spurA, ...spurB]), '3  geöffnet = gesendet, Punkt für Punkt (10 Punkte)',

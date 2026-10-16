@@ -73,6 +73,13 @@
       "von": "None",
       "nach": "[]",
       "begruendung": "S11-06 (Web 22.5.0): Nutzlast 13 traegt an jedem Segment seine Loeschvermerke (F-S11-52), leer erlaubt wie `schnitte` am Einsatz. Die Referenz kennt das Feld nicht. GEMESSEN 16.10.2026: 123x, alle leer."
+    },
+    {
+      "bereich": "*",
+      "feld_regex": "track\\[\\d+\\]\\[3\\]",
+      "art": "wert",
+      "gerundet": true,
+      "begruendung": "S11-06g (Web 22.5.1, E-S11-66): Die Hoehe eines Spurpunkts steht in der verschlossenen Innenform in ganzen Metern statt Dezimetern (F-S11-64). Die Referenz vom 27.09.2026 traegt SPUR1 mit Dezimetern; der Umlauf legt sie als Stuecke ab und sichert sie wieder — mit gerundeter Hoehe. Die Regel greift NUR an der Hoehe (Index 3 eines Punkts) und NUR, wenn der neue Wert genau der von der Null weg gerundete alte ist; jede andere Abweichung bleibt unerklaert. GEMESSEN 16.10.2026: 50 761x (alle Hoehen der 67 292 Punkte, die nicht schon ganze Meter waren). Faellt weg, sobald die Referenz neu erzeugt wird."
     }
   ]
 }

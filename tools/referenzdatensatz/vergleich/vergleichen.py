@@ -89,6 +89,20 @@ SCHLUESSEL_EDBAK = {
 
 # ------------------------------------------------------------- Ausnahmen
 
+def _gerundet(ref, ist) -> bool:
+    """Ist `ist` genau `ref` auf eine ganze Zahl gerundet, von der Null weg?
+
+    Fuer die Regel `gerundet` (E-S11-66): Die Hoehe eines Spurpunkts steht
+    seit Web 22.5.1 in ganzen Metern. Eine Abweichung um mehr als die
+    Rundung — oder eine andere Rundung — trifft die Regel nicht.
+    """
+    try:
+        a, b = float(ref), float(ist)
+    except (TypeError, ValueError):
+        return False
+    return b == int(abs(a) + 0.5) * (1 if a >= 0 else -1)
+
+
 class Ausnahmen:
     """Regeln, die eine Abweichung als erwartet ausweisen.
 
@@ -124,7 +138,10 @@ class Ausnahmen:
         for i, r in enumerate(self.regeln):
             if r.get("bereich") not in (abw["bereich"], "*"):
                 continue
-            if r.get("feld") not in (abw.get("feld"), "*"):
+            if "feld_regex" in r:
+                if not re.fullmatch(r["feld_regex"], str(abw.get("feld", ""))):
+                    continue
+            elif r.get("feld") not in (abw.get("feld"), "*"):
                 continue
             if "schluessel_regex" in r and not re.fullmatch(
                     r["schluessel_regex"], str(abw.get("schluessel", ""))):
@@ -134,6 +151,8 @@ class Ausnahmen:
             if "von" in r and str(r["von"]) != str(abw.get("referenz", "")):
                 continue
             if "nach" in r and str(r["nach"]) != str(abw.get("aktuell", "")):
+                continue
+            if r.get("gerundet") and not _gerundet(abw.get("referenz"), abw.get("aktuell")):
                 continue
             self.getroffen[i] += 1
             return r
