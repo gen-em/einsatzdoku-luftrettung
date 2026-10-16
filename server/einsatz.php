@@ -83,14 +83,18 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
                * — eine Spur endet am Einsatzort und tut damit dasselbe. Ohne
                * die Rueckfrage haette dieselbe Anwendung zwei Tueren mit zwei
                * verschiedenen Massstaeben. */
+              /* SEIT S11-05d BAUT DER BROWSER DIE DATEI (`assets/gpx.js`) — aus der
+               * geoeffneten Spur; `gpx.php` sah die verschlossenen Stuecke nicht.
+               * Deshalb kein Ziel im Link, sondern ein eigener Handler mit
+               * derselben Rueckfrage (`edConfirm`). */
               $eintraege[] = ['text' => 'GPS-Daten als GPX',
-                              'href' => 'gpx.php?art=mission&id=' . $mid,
-                              'attr' => 'data-confirm="Die Datei zeigt den '
+                              'href' => '#',
+                              'attr' => 'data-gpx-laden data-gpx-frage="Die Datei zeigt den '
                                       . 'gefahrenen oder geflogenen Weg — also '
                                       . 'auch den Einsatzort — mit Zeitstempeln. '
                                       . 'Ab dem Speichern schützt die '
                                       . 'Verschlüsselung dieser Anwendung sie '
-                                      . 'nicht mehr." data-confirm-ok="Herunterladen"'];
+                                      . 'nicht mehr."'];
           }
           $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb', 'gefahr' => true,
                           'href' => 'einsatz_loeschen.php?id=' . $mid];
@@ -247,6 +251,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
          (m.pat_wrap), nicht aus PHP. */ ?>
 <?php ui_krypto_bootstrap(['wrap' => false]); ?>
 <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
+<script src="<?= asset('assets/gpx.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
@@ -300,6 +305,28 @@ map.on('zoomend', () => {
 });
 
 let M = null;                  // die API-Antwort — hlPhase braucht Track und Phasen
+/* Die Toleranzen der Ausduennung fuer den Stufentext der GPX-Datei (S11-05d). */
+const GPX_TOL = <?= json_js([SPUR_TOL_WAAGERECHT_M, SPUR_TOL_SENKRECHT_M]) ?>;
+
+/* GPS-DATEN ALS GPX (S11-05d). Mit Rueckfrage wie vorher; die Datei entsteht
+ * aus der geoeffneten Spur (`M.spur_punkte`, nach dem Entsperren). Die Stufe
+ * ist die hoechste der Stuecke, die Originalzahl ihre Summe. */
+document.querySelectorAll('[data-gpx-laden]').forEach(a => a.addEventListener('click', async ev => {
+  ev.preventDefault();
+  if (!await window.edConfirm(a.getAttribute('data-gpx-frage'), 'Herunterladen', 'normal')) { return; }
+  if (!M) { return; }
+  if (!M.spur_punkte) {
+    const ck = await EdUnlock.ensureContentKey(M.pat_wrap, KDF_SALT, KDF_ITER);
+    if (!ck) { return; }
+    await EdOrtsdaten.fuerAnsicht(M, ck);
+  }
+  const st = M.spur_stuecke || [];
+  const stufe = st.reduce((x, s) => Math.max(x, s.stufe || 1), 1);
+  const nOriginal = st.reduce((x, s) => x + (s.n_original || s.punkte), 0);
+  const name = EdGpx.spurname('mission', M.id, M.started_ts, M.zeitzone);
+  EdGpx.speichern(EdGpx.bauen(M.spur_punkte, name, stufe, nOriginal),
+                  EdGpx.dateiname('mission', M.id, M.started_ts, stufe));
+}));
 let phaseMarkers = [];        // [{marker, idx}]
 let phasesVisible = false;    // Standard: Aus, keine Persistenz -> nach jedem
                                // Laden der Seite wieder aus

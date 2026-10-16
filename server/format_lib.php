@@ -109,9 +109,9 @@ function datum_text(?string $utc): string
  * benannt, AP9 hat die Vorgabe umgestellt und das zweite Argument bei allen
  * 19 Aufrufern gestrichen. ZWEI BENANNTE AUSNAHMEN: „ um " in den
  * Mailtexten (`konto_lib.php`, `einstellungen.php`) — ein Satz, keine
- * Zeitangabe —, und das Leerzeichen im GPX-Spurnamen (`gpx.php`,
- * E-P5c-129): Der steht in der Datei, `Export-Format.md` legt ihn fest, und
- * `export.js` baut ihn im Browser gleich. Der Parameter bleibt dafuer; wer
+ * Zeitangabe —, und das Leerzeichen im GPX-Spurnamen (bis Web 22.2.0
+ * `gpx.php`, E-P5c-129): Der steht in der Datei, `Export-Format.md` legt ihn
+ * fest; seit S11-05d bauen ihn `gpx.js` und `export.js` im Browser. Der Parameter bleibt dafuer; wer
  * ihn fuer etwas anderes braucht, fragt zuerst, ob es wirklich eine andere
  * Schreibweise sein soll.
  */

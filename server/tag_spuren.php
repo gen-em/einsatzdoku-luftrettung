@@ -3,7 +3,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/spur_lib.php';
-require_once __DIR__ . '/gpx_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Diensttag im Rueckweg
 
 /**
@@ -107,7 +106,8 @@ foreach ([['mission', $einsaetze], ['rest', $ruhe]] as [$art, $liste]) {
  * in der Reihenfolge der Einsätze) und bleibt davon unberührt; ebenso die
  * Farben auf der Karte, die nur die Einsätze der Reihe nach durchzählen.
  *
- * Der Sortierschlüssel ist derselbe wie in `gpx.php` — Beginn, Art, Kennung.
+ * Der Sortierschlüssel: Beginn, Art, Kennung (bis Web 22.2.0 auch der von
+ * `gpx.php`; seit S11-05d baut das Skript unten die Datei in dieser Folge).
  * Damit steht die Datei in derselben Folge wie die Liste, aus der sie
  * ausgewählt wurde. */
 usort($spuren, fn($a, $b) => [$a['von'], $a['art'], $a['id']]
@@ -198,10 +198,12 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
         } else {
             $plaketten = ui_plakette($s['n'] . ' Punkte', ['ton' => 'neutral']);
         }
+        /* SEIT S11-05d BAUT DER BROWSER DIE DATEI (`assets/gpx.js`); bis dahin
+         * zeigte der Knopf auf `gpx.php`, das die verschlossenen Stuecke nicht
+         * sah. Ein Knopf statt eines Verweises, weil es kein Ziel gibt. */
         if ($s['n'] > 0) {
-            $plaketten .= ' <a class="knopf knopf-leise" '
-                . 'href="gpx.php?art=' . e($s['art']) . '&amp;id=' . (int)$s['id'] . '">'
-                . 'GPX</a>';
+            $plaketten .= ' <button type="button" class="knopf knopf-leise" '
+                . 'data-gpx-spur="' . $i . '">GPX</button>';
         }
       ?>
       <?php
@@ -240,14 +242,11 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
   <?php ui_karte_ende(); ?>
 
   <?php if ($auswahlAn): ?>
-    <?php /* EIN GET-FORMULAR, kein POST: Der Abruf aendert nichts, und ein
-             Download soll ein gewoehnlicher Seitenwechsel sein — mit Zurueck,
-             Verlauf und der Moeglichkeit, den Verweis zu kopieren. Deshalb
-             auch kein CSRF-Feld; die uebrigen lesenden Wege dieser Anwendung
-             halten es genauso (M3-11). */ ?>
-    <form method="get" action="gpx.php" id="f-gpxwahl" hidden>
-      <input type="hidden" name="tag" value="<?= $dayId ?>">
-    </form>
+    <?php /* DAS FORMULAR SAMMELT NUR NOCH DIE AUSWAHL (S11-05d). Bis dahin
+             ging es per GET an `gpx.php`; seit der Browser die Datei baut,
+             faengt das Skript unten das Absenden ab und baut aus den
+             gewaehlten Spuren EINE Datei mit je einem <trk>. */ ?>
+    <form id="f-gpxwahl" hidden></form>
     <?php ui_speichern_leiste([
         'id' => 'gpxleiste', 'kein_haken' => true, 'form' => 'f-gpxwahl',
         'text' => 'Auswahl als GPX', 'symbol' => 'karte',
@@ -273,8 +272,14 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
+<script src="<?= asset('assets/gpx.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 const SPUREN = <?= json_js($spuren, JSON_UNESCAPED_UNICODE) ?>;
+/* Fuer die GPX-Datei (S11-05d): Toleranzen der Ausduennung, Datum des
+   Diensttags und die Zeitzone der Anlage. */
+const GPX_TOL = <?= json_js([SPUR_TOL_WAAGERECHT_M, SPUR_TOL_SENKRECHT_M]) ?>;
+const TAG_DATUM = <?= json_js((string)$tag['day']) ?>;
+const ZEITZONE = <?= json_js((string)konfig('app.timezone', 'Europe/Berlin')) ?>;
 
 /* Die Karte entsteht ueber EdKarte.anlegen() (Schritt 15 AP8); Ausschnitt
    wie in der Einsatzansicht. */
@@ -302,8 +307,9 @@ async function linienZeichnen() {
     const k = await EdOrtsdaten.schluessel(ck);
     for (const s of SPUREN) {
       jetzt = s;
-      s.track = (await EdOrtsdaten.spur(s.spur_stuecke, s.art === 'mission' ? 'spur' : 'ruhe',
-                                        s.client_ref, s.sperren, k)).map(p => [p.lat, p.lon]);
+      s.punkte = await EdOrtsdaten.spur(s.spur_stuecke, s.art === 'mission' ? 'spur' : 'ruhe',
+                                        s.client_ref, s.sperren, k);
+      s.track = s.punkte.map(p => [p.lat, p.lon]);
     }
   } catch (e) {
     lade.weg();
@@ -416,7 +422,46 @@ document.querySelectorAll('[data-spurwahl]').forEach(box => {
 });
 
 malen();
-linienZeichnen();
+/* Ein Versprechen, damit der GPX-Knopf nicht ein zweites Mal oeffnet, solange
+   das erste Oeffnen noch laeuft; scheiterte es (Passwort abgebrochen), oeffnet
+   der Knopf neu. */
+let geoeffnet = linienZeichnen();
+
+/* ---- GPX im Browser (S11-05d) ------------------------------------------
+ *
+ * Eine Spur je Knopf, mehrere ueber die Auswahlleiste — dieselbe Datei wie
+ * bis Web 22.2.0 aus `gpx.php` (`assets/gpx.js`). Die Punkte kommen aus dem
+ * Oeffnen oben; ist das noch nicht geschehen (gesperrt), wird hier geoeffnet. */
+const vonTs = (s) => s.von ? Math.floor(Date.parse(s.von.replace(' ', 'T') + 'Z') / 1000) : null;
+async function gpxSpuren(liste) {
+  await geoeffnet;
+  if (liste.some(s => !s.punkte)) { geoeffnet = linienZeichnen(); await geoeffnet; }
+  return liste.filter(s => s.punkte && s.punkte.length).map(s => ({
+    punkte: s.punkte, stufe: s.stufe || 1, nOriginal: s.n_original || s.n,
+    name: EdGpx.spurname(s.art, s.id, vonTs(s), ZEITZONE) }));
+}
+document.querySelectorAll('[data-gpx-spur]').forEach(b => b.addEventListener('click', async ev => {
+  ev.stopPropagation();
+  const s = SPUREN[Number(b.getAttribute('data-gpx-spur'))];
+  const [g] = await gpxSpuren([s]);
+  if (!g) { return; }
+  EdGpx.speichern(EdGpx.bauen(g.punkte, g.name, g.stufe, g.nOriginal),
+                  EdGpx.dateiname(s.art, s.id, vonTs(s), g.stufe));
+}));
+const gpxForm = document.getElementById('f-gpxwahl');
+if (gpxForm) {
+  gpxForm.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const wahl = new Set([...document.querySelectorAll('[data-spurwahl]:checked')].map(c => c.value));
+    const liste = SPUREN.filter(s => wahl.has(s.art + '-' + s.id));
+    const spuren = await gpxSpuren(liste);
+    if (!spuren.length) { return; }
+    const text = EdGpx.bauenViele(spuren, 'Diensttag '
+      + new Intl.DateTimeFormat('de-DE', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' })
+          .format(new Date(TAG_DATUM + 'T12:00:00Z')));
+    EdGpx.speichern(text, EdGpx.dateinameTag(TAG_DATUM, spuren.length, spuren.map(x => x.stufe)));
+  });
+}
 </script>
 <?php endif; ?>
 

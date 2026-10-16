@@ -609,6 +609,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
          Aufrufen bleibt die Konstante weg; sie wird nicht gebraucht. */ ?>
 <?php ui_krypto_bootstrap(['csrf' => true, 'keycheck' => $rueckfrageZeigen]); ?>
 <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
+<script src="<?= asset('assets/gpx.js') ?>"></script>
 <script src="<?= asset('assets/vorladen.js') ?>"></script>
 <?php if ($blattZeigen): ?>
 <?php /* Die Betreiber-Rueckfrage rechnet NICHT — sie holt Positionen und

@@ -1247,13 +1247,20 @@ ihre Kennzeichnung in der Datei bei sich.
 Ein Eintrag ohne Aufzeichnung steht in der Liste, hat aber ein abgeschaltetes
 Kästchen und keinen Abruf — es gibt an ihm nichts herunterzuladen.
 
+**Die Datei entsteht in deinem Browser** (seit Web 22.3.0). Die GPS-Daten liegen
+verschlüsselt auf dem Server; die Seite öffnet sie mit deinem Passwort, um die
+Karte zu zeichnen, und baut aus denselben Punkten die Datei. Ist die Sitzung
+gesperrt, fragt sie zuerst nach dem Passwort. Die Datei selbst ist dieselbe
+wie vorher — Name, Beschreibung und Dateiname haben sich nicht geändert.
+
 Diese Seite ist die einzige Stelle, an der auch die **Ruhezeiten** einzeln
 greifbar sind — auf der Tagesübersicht sind sie nur eine schwarze Linie auf
 der Karte.
 
 > **GPS-Daten zeigen den Weg, also auch den Einsatzort.** Die Datei ist damit
-> so zu behandeln wie die geschützten Angaben selbst, obwohl sie ohne
-> Schlüssel lesbar ist. Der Hinweis steht auf der Seite über der Liste.
+> so zu behandeln wie die geschützten Angaben selbst: Auf dem Server sind sie
+> verschlüsselt, in der heruntergeladenen Datei nicht. Der Hinweis steht auf
+> der Seite über der Liste.
 
 ### 4.1b Einen vergessenen Einsatz aus der Ruhezeit schneiden
 
@@ -1383,15 +1390,17 @@ und Dateien über **12 MB**. In jedem Fall steht der Grund im Dialog, und es
 entsteht nichts.
 
 **Die Datei sollte UTF-8 sein.** GPX schreibt das vor, und Geräte halten sich
-daran. Wählst du die Datei im Browser aus, wandelt er sie beim Lesen nach
-UTF-8 um — die Punkte kommen dann an, Umlaute aus einer Latin-1-Datei aber
-als Ersatzzeichen; sie stehen nur im Namen der Aufzeichnung, und den
-speichert der Import nicht. Wer den Import unmittelbar über die Schnittstelle anspricht,
-muss UTF-8 liefern: Dort werden eine andere Kodierung, ein Nullbyte oder eine
-Kodierungsangabe wie UTF-7 oder UTF-16 abgelehnt (seit Web 15.6.0), und die
-Meldung sagt, was zu tun ist: als UTF-8 speichern und erneut versuchen. Eine
-Kodierungsangabe wie ISO-8859-1 in einer Datei, deren Inhalt UTF-8 ist — so
-kommt die Latin-1-Datei aus dem Dateidialog an —, ist dagegen erlaubt.
+daran. Eine Latin-1-Datei kommt trotzdem an — die Punkte vollständig, Umlaute
+aber als Ersatzzeichen; sie stehen nur im Namen der Aufzeichnung, und den
+speichert der Import nicht. Abgelehnt werden ein Nullbyte (das deutet auf
+UTF-16 hin) und eine Kodierungsangabe wie UTF-7, UTF-16 oder EBCDIC; die
+Meldung sagt, was zu tun ist: als UTF-8 speichern und erneut versuchen.
+
+**Die Datei wird in deinem Browser gelesen** (seit Web 22.3.0). Bevor etwas an
+den Server geht, verschlüsselt der Browser die Punkte; der Server sieht keine
+Koordinate. Jede Ablehnung oben entsteht deshalb im Dialog selbst, ohne dass
+etwas gesendet wurde. Ein Passwort braucht es dafür nicht: Verschlossen wird
+mit dem öffentlichen Schlüssel deines Kontos, wie es die Uhr auch tut.
 
 **Was toleriert wird:** GPX 1.0 ebenso wie 1.1, und Dateien ohne
 Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Aufzeichnung
@@ -1414,7 +1423,8 @@ nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
 „Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
 Web 9.3.0 dasselbe Blatt wie auf der Startseite). **GPS-Daten als GPX** erscheint
 nur, wenn der Einsatz überhaupt GPS-Daten hat, und lädt sie als GPX-Datei
-herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — bei einem
+herunter — lesbar von jedem Kartenprogramm. Die Datei baut dein Browser aus
+den geöffneten GPS-Daten (seit Web 22.3.0; Abschnitt 4.1a). In der Unterzeile stehen Zeitspanne — bei einem
 Einsatz ohne Ende „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
 Rettungsmittel und Standort:
 

@@ -431,14 +431,16 @@
       "id": "gpx",
       "ab": "klein",
       "pfade": [
-        "server/gpx_lib.php",
+        "server/assets/gpx.js",
+        "server/api/gpx_import.php",
+        "server/tag_spuren.php",
         "server/*export*.php",
         "server/assets/export.js"
       ],
       "proben": [
         "gpxprobe"
       ],
-      "anlass": "Nr. 130"
+      "anlass": "Nr. 130; Nr. 43 (seit S11-05d baut und liest der Browser GPX)"
     },
     {
       "id": "geraete",

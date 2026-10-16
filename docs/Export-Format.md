@@ -379,9 +379,14 @@ verworfen — maßgeblich ist `typ`.
   zurückkommt, sagt damit selbst, welche Fassung sie geschrieben hat.
 
   **Zwei Stellen schreiben den Kopf** und müssen denselben Wert erzeugen:
-  `gpx_creator()` in `server/gpx_lib.php` (Spur-Download) und
-  `server/assets/export.js` (großer Export, nimmt die Fassung aus
-  `<html data-webversion>`).
+  `server/assets/gpx.js` (Spur-Download; bis Web 22.2.0 `gpx_creator()` in
+  `server/gpx_lib.php`) und `server/assets/export.js` (großer Export). Beide
+  nehmen die Fassung aus `<html data-webversion>`. **Das Format des
+  Spur-Downloads hat sich mit dem Umzug in den Browser nicht geändert**
+  (S11-05d): dieselben Elemente, Beschreibungen und Dateinamen, Byte für Byte
+  gegen `tools/proben/gpx/soll/` gemessen. Einzige Ausnahme: Eine Koordinate
+  unter 1e-4 schrieb der Server als `1.0E-7` — kein gültiges `xsd:decimal` —,
+  der Browser schreibt `0.0000001`.
 
   **Für den Referenzvergleich** ist die **Fassung** maskiert, der **Name**
   nicht (`tools/referenzdatensatz/vergleich/normalisieren.py`) — genau wie

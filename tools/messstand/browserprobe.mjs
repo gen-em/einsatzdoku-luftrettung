@@ -647,8 +647,8 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
 
   /* GPX UEBER EINEN ZEITRAUM — der Export (Import/Export → Export, Profil B
    * „CSV" mit „GPX-Tracks einschließen"). Er ist heute der einzige Weg, der
-   * die Spuren eines Zeitraums in EINER Datei liefert; `gpx.php` kennt nur
-   * eine Spur oder die Auswahl eines Diensttags. Zeitraum: das ganze Jahr
+   * die Spuren eines Zeitraums in EINER Datei liefert; der Spur-Download
+   * (`assets/gpx.js`) kennt nur eine Spur oder die Auswahl eines Diensttags. Zeitraum: das ganze Jahr
    * des neuesten Diensttags, wie die Zeitraumuebersicht. Personenbezogene
    * Angaben an (sonst gibt es keine Spuren, A9), Passwortschutz wie
    * vorbelegt an — gemessen wird der Weg, den eine NutzerIn geht. */

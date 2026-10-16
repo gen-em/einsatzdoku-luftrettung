@@ -64,15 +64,16 @@ require_once __DIR__ . '/konfig_lib.php';
  *    URHEBERSCHAFT der Software, nicht der Name des Betriebs. Wer diese
  *    Anwendung aufsetzt, darf seinen Dienst benennen — nicht den, der sie
  *    geschrieben hat.
- * 2. `creator` IN JEDER GPX-DATEI (`gpx_creator()` in `gpx_lib.php`,
- *    `assets/export.js` fuer den grossen Export). Das Feld benennt die
+ * 2. `creator` IN JEDER GPX-DATEI (`assets/gpx.js` fuer den Spur-Download,
+ *    `assets/export.js` fuer den grossen Export; bis Web 22.2.0 schrieb
+ *    `gpx_creator()` in `gpx_lib.php` den ersten). Das Feld benennt die
  *    SOFTWARE, nicht die Installation — GPX 1.1 beschreibt es als „the name
  *    and URL of the software that created your GPX document". Wer diese
  *    Anwendung aufsetzt, hat sie nicht geschrieben.
  *
  *    ENTSCHIEDEN UND AUSGESCHRIEBEN, nicht stillschweigend stehengelassen
  *    (P5a/AP5, Weg B). Die Begruendung in voller Laenge steht an zwei
- *    Stellen: im Kopf von `gpx_lib.php` (fuer den, der den Code liest) und
+ *    Stellen: im Kopf von `assets/gpx.js` (fuer den, der den Code liest) und
  *    in `docs/Export-Format.md` 3.5 (fuer den, der das Format liest). Wer
  *    diese Ausnahme in Frage stellt, faengt dort an.
  *

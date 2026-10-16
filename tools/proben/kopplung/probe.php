@@ -366,7 +366,7 @@ pruefe($i2['code'] === 200 && ($i2['daten']['ok'] ?? false) === true,
        '14b ingest.php nach dem Ja -> 200', "HTTP {$i2['code']}");
 
 /* Vor dem Trennen zwei Fehlversuche setzen: Der Topf `pair` gehoert nicht
- * uns allein — jobs.php und gpx.php zaehlen darin mit. Ein gelungenes
+ * uns allein — jobs.php zaehlt darin mit (bis Web 22.2.0 auch gpx.php). Ein gelungenes
  * `trennen` darf ihn deshalb NICHT leeren (Web 13.1.1). */
 anfrage(['aktion' => 'status'], $dev, 'falsch-vor-trennen-1');
 anfrage(['aktion' => 'status'], $dev, 'falsch-vor-trennen-2');
@@ -378,7 +378,7 @@ pruefe($t['code'] === 200 && ($t['daten']['ok'] ?? false) === true && geraet($pd
 pruefe($vorTrennen >= 2 && versuche($pdo, 'pair') === $vorTrennen,
        'E51 ein gelungenes trennen leert den Topf `pair` NICHT',
        "vorher $vorTrennen, nachher " . versuche($pdo, 'pair')
-       . ' — der Topf gehoert auch jobs.php und gpx.php');
+       . ' — der Topf gehoert auch jobs.php');
 $t2 = anfrage(['aktion' => 'trennen'], $dev, $key);
 pruefe($t2['code'] === 401, '26  trennen danach -> 401 (Kennung unbekannt)');
 toepfe_leeren($pdo);

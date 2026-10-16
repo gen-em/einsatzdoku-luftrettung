@@ -1084,16 +1084,15 @@
          * Weg B). Der Name dieser Anlage haengt seit Web 20.8.0 an
          * `instanz_kurz()` und ist umbenennbar — dieses Feld ist davon
          * ausgenommen, weil GPX 1.1 `creator` als das ERZEUGENDE PROGRAMM
-         * beschreibt. Die Begruendung steht vollstaendig im Kopf von
-         * `server/gpx_lib.php` und in `docs/Export-Format.md`.
+         * beschreibt. Die Begruendung steht vollstaendig in
+         * `docs/Export-Format.md` 3.5.
          *
-         * DIESELBE ZEICHENKETTE WIE SERVERSEITIG. Es gibt zwei Stellen, die
-         * einen GPX-Kopf schreiben — diese hier und `gpx_creator()` in
-         * `gpx_lib.php`. Gehen sie auseinander, erzeugt dieselbe Anwendung
-         * zwei verschiedene Angaben, je nachdem ob die Datei aus dem grossen
-         * Export oder aus dem Spur-Download stammt. Die Fassung kommt aus
-         * `<html data-webversion>`; fehlt sie (Einrichter), bleibt der Name
-         * allein stehen — genauso wie serverseitig. */
+         * DIESELBE ZEICHENKETTE WIE BEIM SPUR-DOWNLOAD. Es gibt zwei Stellen,
+         * die einen GPX-Kopf schreiben — diese hier und `creator()` in
+         * `assets/gpx.js` (bis Web 22.2.0 `gpx_creator()` auf dem Server).
+         * Gehen sie auseinander, erzeugt dieselbe Anwendung zwei verschiedene
+         * Angaben. Die Fassung kommt aus `<html data-webversion>`; fehlt sie
+         * (Einrichter), bleibt der Name allein stehen. */
         function gpxCreator() {
             var v = (document.documentElement.dataset || {}).webversion || '';
             return 'Gen-EM NAdoku' + (v ? ' ' + v : '');

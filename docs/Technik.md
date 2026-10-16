@@ -183,11 +183,6 @@ Daten erst nach Server-Bestätigung.
 │   │                       Referenz. Ein Öffnen gibt es hier mit Absicht nicht
 │   ├── kontopaar_lib.php  Das Schlüsselpaar des Kontos (S11-03): Siegel,
 │   │                       Zustand, Ablegen, SEC1 für die Kopplung (4.99s)
-│   ├── gpx_lib.php        GPX 1.1 aus einer oder mehreren Spuren — die
-│   │                       EINZIGE Stelle, die GPX schreibt (4.97b)
-│   ├── gpx.php            der Abruf. Bewusst NICHT unter api/: Ein Link, den
-│   │                       eine NutzerIn anklickt, braucht bei Sitzungsende
-│   │                       die Anmeldeseite und kein JSON (4.97b)
 │   ├── tag_spuren.php     die Spuren eines Diensttages, einzeln oder mehrere
 │   │                       auf einmal abrufbar: Karte plus chronologische
 │   │                       Liste, Einsätze UND Ruhesegmente (4.97b)
@@ -532,7 +527,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      schneiden.php (Einsatz aus einem Ruhesegment schneiden
 │   │                      und zurücknehmen, S4/A2b — siehe 4.97e) ·
-│   │                      gpx_import.php (GPX herein, S4/A3 — siehe 4.97f) ·
+│   │                      gpx_import.php (GPX herein als verschlossene Stücke, S4/A3, S11-05d — siehe 4.97f) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
 │   │                      adminbackup_freigabe.php (freigegebenes Backup für die NutzerIn) ·
 │   │                      kdf_upgrade.php (stille Anhebung der Rundenzahl) ·
@@ -562,6 +557,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.),
 │   │                      schneiden.js (Karte „Ruhesegmente" und Schneide-Bereich
 │   │                       der Tagesansicht, S4/A2b — siehe 4.97e),
+│   │                      gpx.js (EdGpx: GPX bauen und lesen im Browser — Abruf
+│   │                       je Spur und je Auswahl, Import; seit S11-05d, 4.97b/f),
 │   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
 │   │                      geocoder.js (EdGeocoder: der EINE Weg zum Adressdienst —
 │   │                       suche(), umkehr(), an(); keine Adresse im Code, s. u.),
@@ -1299,8 +1296,9 @@ Wechsel sonst.
 
 Zwei Prüfmittel melden sich ohne Browser an und schicken das Feld seither
 selbst: `tools/referenzdatensatz/einspielen/sitzung.py` (holt zuerst
-`login.php`) und `tools/proben/gpx/probe.php` (tat den GET schon, las das Feld
-aber nicht). Alle übrigen fahren einen echten Browser und schicken es von
+`login.php`) und bis Web 22.2.0 `tools/proben/gpx/probe.php` (tat den GET
+schon, las das Feld aber nicht; seit S11-05d fährt die GPX-Probe einen
+Browser). Alle übrigen fahren einen echten Browser und schicken es von
 selbst mit.
 
 **Stille Anhebung der Rundenzahl (seit Web 5.0.0, M2-01 Schritt 4).** Steht ein
@@ -3264,7 +3262,7 @@ Berichts-Endpunkt sagt dem meldenden Browser nichts — weder über die
 Methode noch über den Rumpf.
 
 **Die Geräte-Endpunkte sind nicht beteiligt.** `ingest.php`, `pair.php`,
-`auth_salt.php`, `jobs.php` und `gpx.php` liegen nicht unter `api/` und
+`auth_salt.php` und `jobs.php` (bis Web 22.2.0 auch `gpx.php`) liegen nicht unter `api/` und
 behalten ihre Fehlerschlüssel (`payload`, `too_large`) zeichengleich — der
 JSON-Vertrag und die Android-Prüffälle hängen daran.
 
@@ -3730,11 +3728,11 @@ Antwortzeit mit `rate_gleiche_dauer()` an — „Token gibt es gar nicht" darf
 nicht schneller kommen als „Token ist falsch". Gemessen: **403 / 403 / 200**
 für kein, falsches und richtiges Token, die beiden 403 in je **0,351 s**.
 
-**Der Topf `pair` gehört nicht `jobs.php` allein.** Drei Endpunkte zählen
-darin: dieser, `pair.php` (401 an den kopfzeilen-ausgewiesenen Anliegen) und
-`gpx.php` (die Freigabelinks der Spuren, sieben Zählstellen). Wer die Zahlen in
-`RATE_GRENZEN` ändert, ändert alle drei — und eine Sperre, die hier greift,
-kann von einem der anderen beiden stammen. Deshalb ruft seit Web 13.1.1 auch
+**Der Topf `pair` gehört nicht `jobs.php` allein.** Zwei Endpunkte zählen
+darin: dieser und `pair.php` (401 an den kopfzeilen-ausgewiesenen Anliegen);
+bis Web 22.2.0 auch `gpx.php`, das mit S11-05d entfallen ist. Wer die Zahlen
+in `RATE_GRENZEN` ändert, ändert beide — und eine Sperre, die hier greift,
+kann vom anderen stammen. Deshalb ruft seit Web 13.1.1 auch
 keiner von ihnen mehr `rate_erfolg('pair')`: Ein Erfolg im einen darf die
 Fehlversuche der anderen nicht löschen (4.99b, „Ein Topf, drei Verbraucher").
 
@@ -4000,91 +3998,67 @@ entfallen; ihre Auskunft steht vollständiger in `jobs`.
 
 ---
 
-### 4.97b GPX-Abruf je Spur und je Auswahl (ab Web 10.3.0, S2/AP4, E-S2-09)
+### 4.97b GPX-Abruf je Spur und je Auswahl (ab Web 10.3.0, S2/AP4, E-S2-09; im Browser seit Web 22.3.0, S11-05d)
 
 Eine Spur lässt sich einzeln herunterladen — je Einsatz aus dessen
 Aktionsmenü, und je Einsatz **und Ruhesegment** über `tag_spuren.php`; auf
 derselben Seite lassen sich mehrere ankreuzen und als **eine** Datei laden.
-Der Bauplatz ist `server/gpx_lib.php`; er ist die **einzige** Stelle, die GPX
-schreibt.
+**Seit Web 22.3.0 baut der Browser die Datei** (`assets/gpx.js`, `EdGpx`); er
+ist die einzige Stelle, die GPX für eine Spur schreibt — der große Export
+(`assets/export.js`) baut seinen eigenen Kopf, mit demselben `creator`.
 
-| Adresse | liefert |
+| Wo | Was geschieht |
 |---|---|
-| `gpx.php?art=mission&id=42` | eine Spur |
-| `gpx.php?art=rest&id=17` | eine Ruhespur |
-| `gpx.php?tag=7&auswahl[]=mission-42&auswahl[]=rest-17` | beide in einer Datei |
+| Einsatzansicht, Menü „GPS-Daten als GPX" | Rückfrage, dann `EdGpx.bauen()` aus `M.spur_punkte` (die geöffnete Spur, `EdOrtsdaten.fuerAnsicht`) |
+| `tag_spuren.php`, Knopf „GPX" je Zeile | `EdGpx.bauen()` aus den Punkten, die die Seite für die Karte geöffnet hat |
+| `tag_spuren.php`, „Auswahl als GPX" | `EdGpx.bauenViele()` über die angekreuzten Spuren, in der Folge der Liste |
 
-Der Auswahlweg nimmt `auswahl[]` (so schickt es das Formular) genauso wie
-`auswahl=mission-42,rest-17` (so tippt man es von Hand). Beide gehen durch
-dieselbe Prüfung, dieselbe Datentrennung und dieselbe Bau-Funktion
-(`gpx_bauen_viele()`) — sonst wäre die Auswahl ein zweiter, schwächerer Weg an
-denselben Bestand.
+**Bis Web 22.2.0 baute der Server** (`gpx.php` mit `gpx_lib.php`), mit den
+Adressen `gpx.php?art=mission&id=42` und `gpx.php?tag=7&auswahl[]=…`. Die
+Begründung damals: Die Spur lag im Klartext, und nur der Server kannte die
+Stufe. Seit S11-04 liegt die Spur verschlossen (`track_stuecke`, 4.97), und
+nur der Browser kann sie öffnen — `gpx.php` lieferte für eine verschlossene
+Spur nichts mehr (F-S11-54). Die Stufe steht seither an jedem Stück
+(`stufe`, `n_original`) und kommt mit den Stücken an den Browser. Beide Gründe
+für den Server sind damit weg; der Abruf ist umgezogen, die Datei nicht:
+**Aufbau, Beschreibungen, Stufentext und Dateinamen sind Byte für Byte die
+von `gpx_lib.php`** — `tools/proben/gpx/soll/` hält die Dateien, die die
+letzte Fassung gebaut hat, und die GPX-Probe vergleicht dagegen. Eine
+Abweichung ist benannt: PHP schrieb Zahlen unter 1e-4 als `1.0E-7`, und das
+ist kein `xsd:decimal`; `EdGpx` schreibt `0.0000001` (F-S11-55).
 
-#### Warum serverseitig — und warum das die erste ausgelieferte Datei ist
+**Was mit dem Umzug wegfällt**, und warum es nicht fehlt:
 
-Bis Web 10.2.0 entstand **jede** Datei, die auf der Platte einer NutzerIn
-landet, im Browser aus einem Blob. Das hat einen Grund und keinen Zufall: Ihr
-Inhalt ist Ende-zu-Ende verschlüsselt, der Server **kann** ihn nicht
-zusammensetzen.
+- **Datentrennung und 404 für Fremdes.** Sie stand in `gpx.php`, weil der
+  Server Kennungen entgegennahm. Jetzt baut der Browser aus dem, was ihm
+  `api/mission.php` und `tag_spuren.php` ohnehin geliefert haben — beide
+  prüfen das Eigentum.
+- **Der Ratenschutz im Topf `pair`.** Er bremste das Abtasten fremder
+  Kennungen über `gpx.php`; es gibt keinen Abruf mehr, den man abtasten
+  könnte. Der Topf hat seither zwei Verbraucher (4.99b).
+- **`GPX_AUSWAHL_MAX` = 100.** Die Grenze schützte den Arbeitsspeicher des
+  Servers (Z3). Im Browser ist die Auswahl durch die Seite begrenzt — die
+  Spuren **eines** Diensttags.
+- **Der Dateiname durch eine Kopfzeile.** Er geht jetzt als `download`-Attribut
+  an einen Verweis auf einen Blob; die Beschränkung auf `[A-Za-z0-9._-]` bleibt
+  trotzdem, weil der Name in einem Dateisystem und womöglich in einem Archiv
+  landet.
 
-Für eine Spur gilt das nicht. Spurpunkte liegen im Klartext (Backlog Nr. 43),
-und die Stufe, die E-S2-09 sichtbar verlangt, kennt ohnehin nur der Server
-(`spur_stand()`). Der Browser hätte beides nicht: `api/mission.php` liefert die
-Spur als bloße Paare `[lat, lon]` — ohne Höhe, ohne Zeit, ohne Stufe. Ein
-browsergebautes GPX bräuchte also einen neuen, breiteren Abrufweg, nur um
-danach zusammenzusetzen, was auf dem Server schon beieinander liegt.
-
-Den Ausschlag gibt ein Sicherheitsargument: Der **Dateiname** landet im
-Downloadordner, in einem Backup, vielleicht in einer Mail. Serverseitig gebaut
-**kann** er keine geschützte Angabe tragen — der Server kann Diagnose, Alter,
-Einsatzort und die übrigen Angaben aus 4.98 nicht lesen. Browserseitig gebaut könnte er es.
-
-`gpx.php` prüft die **Datentrennung selbst**: `spur_lib.php` prüft kein
-Eigentum, es nimmt `owner_type` und `owner_id` und liest, was da ist. Erst
-gegen `user_id` und `deleted_at` filtern, dann lesen — dasselbe Muster wie in
-`api/export_data.php`. Und „gehört nicht mir" antwortet **404 wie „gibt es
-nicht"**: Ein eigener Code verriete, dass es die Kennung anderswo gibt.
-
-#### Warum der Abruf nicht unter `api/` liegt
-
-Er lag dort zuerst, und das war falsch. `ist_api_aufruf()` (`auth_guard.php`)
-entscheidet **allein am Pfad**: Enthält er `/api/`, gilt die Anfrage als
-`fetch()` eines Skripts und bekommt bei abgelaufener Sitzung JSON 401 statt
-der Anmeldeseite. Diese Annahme stimmte, solange nichts in der Oberfläche nach
-`api/` **verlinkte** — der GPX-Abruf ist der erste `<a href>`, den eine
-NutzerIn selbst anklickt. Nach einer Mittagspause hätte sie
-`{"error":"session_ende"}` im Browserfenster gesehen.
-
-#### Drei Schranken, die es NICHT gibt — und warum
-
-- **Keine A9-Schranke wie im Export.** `api/export_data.php` verweigert
-  Spurpunkte, solange der Haken „personenbezogene Angaben" fehlt: Ein Export
-  *ohne* diese Angaben ist eine Datei zum Weitergeben, und eine Spur endet am
-  Einsatzort. Hier gibt es diese anonyme Fassung gar nicht — es gibt nur den
-  einen Abruf, und der *ist* die personenbezogene Fassung. Es gäbe keinen
-  Haken zu umgehen.
-- **Keine Sperre auf den Inhaltsschlüssel.** Die Einsatzansicht zeichnet
-  dieselbe Spur bereits auf ihre Karte, ohne dass jemand entsperrt haben muss
-  — die Punkte sind Klartext. Eine Sperre hier wäre Theater: Sie verweigerte
-  die Datei und zeigte den Weg daneben weiter an. Dass die Spur überhaupt
-  unverschlüsselt liegt, ist ein bekannter offener Punkt (**Backlog Nr. 43**)
-  und gehört dorthin, nicht in eine halbe Maßnahme an dieser Stelle.
-- **Keine Mengengrenze aus Rechtsgründen** — es sind die eigenen Spuren. Die
-  Grenze von `GPX_AUSWAHL_MAX` = 100 Spuren je Auswahl steht aus einem anderen
-  Grund da: Die Datei entsteht vollständig im Arbeitsspeicher, weil ihre Länge
-  in die Kopfzeile gehört. Gemessen mit der größten Spur des Referenzbestands
-  (1063 Punkte) kosten hundert Spuren 9,7 MB Datei bei 23,4 MB Spitze — im
-  Budget von 64 MB (Z3). Dazu ein **Ratenschutz** im Topf `pair` — demselben,
-  den `pair.php` und `jobs.php` benutzen (4.99b) —, und zwar nur
-  auf Fehlgriffe: Ein gelungener Abruf geht nicht aufs Kontingent, sonst träfe
-  die Bremse die Spurenseite eines Tages mit zwölf Einträgen. Gezählt wird,
-  was auf ein Abtasten fremder Kennungen hindeutet.
+**Der Dateiname trägt weiter keine geschützte Angabe**, obwohl der Browser
+sie könnte: Er landet im Downloadordner, in einem Backup, vielleicht in einer
+Mail. `EdGpx.dateiname()` nimmt Art, Kennung, Beginn (UTC) und Stufe — wie
+`gpx_dateiname()` es tat.
 
 **Was die Datei bedeutet, sagt die Oberfläche.** Der Eintrag in der
 Einsatzansicht fragt vor dem Herunterladen zurück — wie der große Export es
 tut —, und über der Liste in `tag_spuren.php` steht derselbe Satz. Eine
 Ruhespur ist dabei ausdrücklich mitgemeint: Sie zeigt den Aufenthalt der
 Besatzung zwischen den Einsätzen.
+
+**Keine A9-Schranke wie im Export:** Es gibt hier nur die personenbezogene
+Fassung, also keinen Haken zu umgehen. **Gesperrt** ist der Abruf seit S11
+von selbst: Ohne Inhaltsschlüssel öffnet der Browser die Spur nicht, und die
+Seite fragt nach dem Passwort, bevor sie baut.
 
 #### Die Reihenfolge im GPX ist nicht frei
 
@@ -4113,10 +4087,9 @@ E-S2-09 verlangt, dass sichtbar ist, welche Fassung der Spur die Datei trägt:
 3. **Auf der Seite**, vor dem Herunterladen. Eine Auszeichnung, die nur in der
    Datei steht, sieht erst, wer sie schon hat.
 
-Der Dateiname wird auf `[A-Za-z0-9._-]` beschränkt (`gpx_dateiname()`): Er geht
-durch eine HTTP-Kopfzeile, ein Dateisystem und womöglich ein Archiv; ein
-Anführungszeichen oder ein Zeilenumbruch darin wäre eine Einladung zur
-Kopfzeilen-Einschleusung.
+Der Dateiname wird auf `[A-Za-z0-9._-]` beschränkt (`EdGpx.dateiname()`, bis
+Web 22.2.0 `gpx_dateiname()`): Er landet in einem Dateisystem und womöglich in
+einem Archiv. Bis Web 22.2.0 ging er zusätzlich durch eine HTTP-Kopfzeile.
 
 #### Die Spurenseite des Diensttages
 
@@ -4143,8 +4116,9 @@ Karte zählen weiter nur die Einsätze durch und bleiben davon unberührt.
 **Serverseitig gerendert**, und das ist Absicht: Die Liste besteht aus dem
 vorhandenen Baustein `ui_zeile()`. Sie im Browser aus Zeichenketten
 nachzubauen hieße, dasselbe Markup ein zweites Mal zu pflegen. An den Browser
-geht nur, was die Karte braucht: die Punktfolgen, und von denen nur der Ort —
-weder Höhe noch Zeit.
+gehen die verschlossenen Stücke jeder Spur (seit S11-04c); geöffnet behält
+die Seite die vollen Punkte — Ort, Höhe, Zeit —, weil die GPX-Datei sie
+braucht (seit S11-05d; bis dahin nur den Ort für die Karte).
 
 Ohne Spur steht der Eintrag trotzdem in der Liste, aber ohne Abruf: Wer einen
 Einsatz sucht und ihn hier nicht fände, hielte die Liste für unvollständig.
@@ -4172,28 +4146,19 @@ dazwischen, nicht zwei verschiedene Fahrten.
 | Name je Spur | derselbe wie beim Einzelabruf (`Einsatz 42 — 10.05.2026 07:09`), damit man dieselbe Spur in beiden Dateien wiederfindet |
 | Kennzeichnung | jede Spur nennt ihre Stufe an ihrem `<trk>`; der Kopf sagt, was die Datei als Ganzes ist („3 Spuren — 436 Punkte insgesamt · teils ausgedünnt") |
 | Dateiname | `diensttag_2026-05-10_3-spuren_gemischt.gpx` — Datum, Anzahl und Stufe (`original`, `ausgeduennt` oder `gemischt`) |
-| Speicher | `gpx_bauen_viele()` nimmt einen **Generator**, keine Liste: Eine dekodierte Spur kostet rund 4 MB, hundert gleichzeitig sprengten das Budget. Deshalb entstehen die `<trk>` zuerst und der Kopf danach — die Gesamtzahl kennt man erst am Ende, das `<metadata>` steht aber vorn |
+| Bau | `EdGpx.bauenViele()`: die `<trk>` zuerst, der Kopf danach — die Gesamtzahl kennt man erst am Ende, das `<metadata>` steht aber vorn. Bis Web 22.2.0 nahm `gpx_bauen_viele()` dafür einen Generator, wegen des Speicherbudgets des Servers |
 
-**Streng bei der Form, nachsichtig beim Bestand.** Was nicht genau
-`mission-<Zahl>` oder `rest-<Zahl>` ist, kommt nicht von dieser Seite: 400.
-Eine wohlgeformte Kennung, die zu diesem Tag und diesem Konto nicht gehört,
-fällt beim Lesen heraus, ohne dass die ganze Datei scheitert — sie kann aus
-einem Tab stammen, der seit einer Löschung offen steht; wie viele Spuren
-wirklich drin sind, sagen Dateiname und `<desc>`. Ausgeforscht wird dabei
-nichts: Die Abfrage filtert auf `user_id` **und** `day_id`, eine fremde
-Kennung liefert also nie einen Treffer, gleich ob es sie gibt. Bleibt gar
-nichts übrig, ist es doch ein Fehlgriff: 404, und er zählt.
-
-**Ohne JavaScript** bleibt der Einzelabruf. Die Kästchen stehen in einem
-gewöhnlichen GET-Formular und würden auch ohne Skript absenden, aber die
-Sammelleiste erscheint erst, wenn etwas ausgewählt ist — und das entscheidet
-das Skript.
+**Ohne JavaScript** gibt es seit Web 22.3.0 keinen Abruf mehr — die Spur
+öffnet nur das Skript. Bis dahin stand die Auswahl in einem GET-Formular an
+`gpx.php`, und der Server prüfte die Kennungen (`mission-<Zahl>`,
+`rest-<Zahl>`) streng in der Form und nachsichtig im Bestand.
 
 #### Was der Abruf nicht tut
 
 - **Kein leeres GPX.** Eine Datei mit null Punkten sieht aus wie eine Spur, die
-  es gibt — und in einem Kartenprogramm wie ein Fehler des Programms. Der Abruf
-  antwortet 404.
+  es gibt — und in einem Kartenprogramm wie ein Fehler des Programms. Ohne
+  Punkte trägt die Zeile keinen Knopf, und eine Auswahl ohne Punkte lädt
+  nichts.
 - **Keine anonyme Fassung.** Der große Export bindet GPX-Spuren an die
   personenbezogenen Angaben, weil eine Spur am Einsatzort endet. Hier gibt es
   diese Wahl nicht; stattdessen steht der Satz über der Liste, an der Stelle,
@@ -5238,7 +5203,7 @@ Die Bedienung ist im Browser abgenommen (Chromium, lokale Installation):
 Rückgängig wieder 61 und 3. Bei 390 px: waagerechter Überlauf 0, alle
 Bedienelemente 44 px.
 
-### 4.97f GPX herein: der Weg zurück (ab Web 12.7.0, S4/A3, E-S4-18)
+### 4.97f GPX herein: der Weg zurück (ab Web 12.7.0, S4/A3, E-S4-18; im Browser seit Web 22.3.0, S11-05d)
 
 Das Gegenstück zum Abruf (4.97b). Eine Aufzeichnung, die auf einem anderen
 Gerät entstanden ist, kommt damit in die Anwendung: über **„···" → „GPX
@@ -5254,48 +5219,69 @@ importieren"** in der Tagesansicht, als Dialog (`Design.md` 9.11).
 Beide entstehen auf dem Bestandsweg: virtuelles Gerät `manual-<userId>`,
 `client_ref` mit Präfix **`imp-`** wie beim CSV-Import (daran hängt die
 Sperrliste `deleted_refs`), beim Einsatz zusätzlich `origin = 'import'` und
-`uhr_gesperrt = 1`. Die Spur wird **gleich als Blob** abgelegt (Stufe 2,
-`n_original` = volle Punktzahl): Eine importierte Spur ist fertig — es kommt
-nichts mehr nach, denn ihr „Gerät" ist eine Datei.
+`uhr_gesperrt = 1`. Die Spur kommt seit Web 22.3.0 als **verschlossene
+Stücke** (SPUR2, 4.97; bis dahin als SPUR1-Blob im Klartext): Der Browser
+liest die Datei, zieht die Kennung (`imp-` + 24 Hexzeichen) und verschließt
+die Punkte unter dem öffentlichen Kontoschlüssel, gebunden an diese Kennung
+(`EdOrtsdaten.stueckeBauen`). Der Server prüft Form der Kennung, Form der
+Stücke (`pruef_spurstueck()`), Menge und Eindeutigkeit — eine doppelte
+Lieferung derselben Kennung ist 409.
+
+| Anfrage | `POST api/gpx_import.php` — `{day_id, ziel, client_ref, stuecke}` |
+|---|---|
+| Antwort | `{ok, art, id, punkte, von, bis}` |
+| Abgewiesen | Kennung nicht `imp-` + 24 Hex, keine oder kaputte Stücke: 400 · mehr als 50 000 Punkte: 422 · fremder Diensttag: 404 · Papierkorb: 409 · dieselbe Kennung schon da: 409 |
 
 #### Der Leser wohnt beim Schreiber
 
-`gpx_lesen()` steht in `gpx_lib.php`, direkt unter `gpx_bauen()`. GPX hat
-damit genau **eine** Stelle in dieser Anwendung, die es kennt. Ein Leser, der
-woanders wohnt, läuft früher oder später mit anderen Annahmen als der
-Schreiber — und das fällt erst auf, wenn eine Datei durch den einen Weg
-hinaus und den anderen nicht wieder hinein kommt.
+`EdGpx.lesen()` steht in `assets/gpx.js`, neben `EdGpx.bauen()` — wie bis Web
+22.2.0 `gpx_lesen()` neben `gpx_bauen()` in `gpx_lib.php`. GPX hat damit
+weiter genau **eine** Stelle, die es kennt.
 
-**Gelesen wird auf dem Server**, anders als beim CSV-Import. Der Unterschied
-ist der Inhalt: Beim CSV stehen Patientendaten in der Datei, die der Server
-nie sehen darf, also *muss* der Browser lesen. Eine GPX-Datei enthält nichts
-Verschlüsseltes. Und die Ablehnungsregeln sind verbindlich; eine verbindliche
-Regel im Browser ist keine.
+**Gelesen wird seit Web 22.3.0 im Browser.** Bis dahin las der Server, mit
+der Begründung, eine GPX-Datei enthalte nichts Verschlüsseltes und eine
+verbindliche Regel im Browser sei keine. Die erste Hälfte ist seit Schritt
+12a falsch: Die Spur selbst ist das, was verschlüsselt wird (R78), und der
+Server darf sie nicht sehen. **Der Preis ist die zweite Hälfte:** Die
+Ablehnungsregeln unten sind jetzt eine Bequemlichkeit für die BedienerIn,
+keine Schranke. Wer sie umgeht, schickt Stücke, die nur das eigene Konto
+öffnen kann — er schadet niemandem außer sich. Und der Parser, gegen den die
+DOCTYPE-Sperre gebaut war (libxml auf dem Server), sieht die Datei gar nicht
+mehr.
 
-Die Datei kommt als Zeichenkette im JSON-Körper, **nicht als Dateiupload**.
-Diese Anwendung hat nirgends ein `$_FILES`; ein erster Upload-Weg brächte
-`upload_max_filesize`, `post_max_size`, temporäre Verzeichnisse und deren
-Rechte mit — vier Stellschrauben auf geteiltem Hosting für einen Vorgang, den
-eine Zeichenkette genauso trägt. Der Browser liest mit `FileReader`.
+Die Datei liest der Browser mit `FileReader.readAsArrayBuffer()` und
+dekodiert sie wie bisher `readAsText()` (UTF-8, ungültige Bytes werden
+U+FFFD). Hinaus geht nur, was verschlossen ist.
 
 #### Was abgelehnt wird — und warum jede Ablehnung einen Satz mitbringt
 
-| Fall | Antwort |
-|---|---|
-| **Nullbyte in der Datei** | 422 („kein Text — deutet auf UTF-16 hin") — siehe unten |
-| **nicht UTF-8** | 422 („GPX schreibt UTF-8 vor") — siehe unten |
-| kein gültiges XML | 422, mit der Fehlerstelle des Parsers |
-| Wurzelelement ≠ `<gpx>` | 422, mit dem tatsächlichen Namen |
-| **`<!DOCTYPE>` vorhanden** | 422 — siehe unten |
-| kein Punkt hat `<time>` | 422, mit der Punktzahl und der Begründung |
-| kein `<trkpt>` | 422 („Wegpunkte und Routen liest dieser Import nicht") |
-| > `LIMIT_TRACKPUNKTE_SPUR` (50 000) | 422, mit Grenze **und** Umrechnung in Stunden |
-| > `GPX_DATEI_MAX` (12 MB) | 422, mit Größe und Grenze |
+Die Sätze stehen seit Web 22.3.0 im Browser (`EdGpx.lesen()`) und erscheinen
+im Dialog, ohne dass etwas an den Server geht:
 
-`gpx_lesen()` wirft mit einem Satz, der einer BedienerIn etwas sagt, und der
-Endpunkt reicht ihn unverändert durch. Das ist Absicht: „Import
+| Fall | Meldung |
+|---|---|
+| **Nullbyte in der Datei** | „kein Text — deutet auf UTF-16 hin" — siehe unten |
+| Kodierungsdeklaration nicht ASCII-verträglich | „GPX schreibt UTF-8 vor", mit dem genannten Namen |
+| kein gültiges XML | mit der Fehlerstelle des Parsers |
+| Wurzelelement ≠ `<gpx>` | mit dem tatsächlichen Namen |
+| **`<!DOCTYPE>` vorhanden** | siehe unten |
+| kein Punkt hat `<time>` | mit der Punktzahl und der Begründung |
+| kein `<trkpt>` | „Wegpunkte und Routen liest dieser Import nicht" |
+| > 50 000 Punkte | mit Grenze **und** Umrechnung in Stunden; der Server prüft die Zahl über die Stücke noch einmal |
+| > 12 MB | mit Größe und Grenze |
+
+Jede Ablehnung bringt einen Satz mit, der der BedienerIn etwas sagt. Das ist Absicht: „Import
 fehlgeschlagen" ließe jemanden dreimal dieselbe Datei wählen, ohne je zu
 erfahren, dass ihr die Zeitstempel fehlen.
+
+> *Die drei Absätze darunter beschreiben die Abwehr, wie sie bis Web 22.2.0
+> auf dem Server stand. `EdGpx.lesen()` hält dieselben Regeln (Nullbyte,
+> Deklaration, DOCTYPE), damit dieselbe Datei dasselbe Ergebnis bekommt; die
+> Gefahr, gegen die sie gebaut waren — libxml expandiert interne Entitäten
+> auf dem Server —, gibt es mit dem Umzug nicht mehr. Ein Unterschied: Eine
+> Latin-1-Datei geht durch (mit U+FFFD), wie sie über den Dateidialog schon
+> immer durchging; der JSON-Direktweg, auf dem der Server sie abwies, nimmt
+> keine Datei mehr.*
 
 > **Kein DOCTYPE — die XXE-Abwehr steht vor dem Parser, nicht darin.**
 > `libxml_disable_entity_loader()` gibt es seit PHP 8 nicht mehr, externe
@@ -5343,9 +5329,9 @@ erfahren, dass ihr die Zeitstempel fehlen.
 > UTF-8 umgeschrieben, denn die Bytes **sind** UTF-8 (geprüft) und libxml
 > würde sie sonst nach der Deklaration lesen; von 935 Kodierungen aus `iconv -l`
 > waren genau UTF-7 und UTF7 durchgekommen, die Liste schließt alle.
-> `tools/proben/gpx/` Teil 8 hält neun Umgehungsversuche dagegen — **9 Proben,
-> 0 durch** (am Stand davor: 9 Proben, 1 durch) —, und drei saubere Dateien
-> gehen weiterhin durch (UTF-8, utf-8, ohne Deklaration).
+> `tools/proben/gpx/` Teil 5 (bis Web 22.2.0 Teil 8) hält die
+> Umgehungsversuche dagegen, seit S11-05d gegen `EdGpx.lesen()` im Browser;
+> die Zahl steht in der LIESMICH des Werkzeugs bzw. im Prüfdokument.
 
 #### Toleranz, wo sie richtig ist
 
@@ -5354,24 +5340,20 @@ um die es geht, heißen in beiden Fassungen gleich und bedeuten dasselbe. Auf
 1.1 zu bestehen hieße, Dateien abzulehnen, die inhaltlich in Ordnung sind.
 
 Mehrere `<trkseg>` oder `<trk>` werden zu **einer** Spur zusammengeführt und
-**nach Zeit sortiert**, die Sequenz danach neu vergeben — der Blob speichert
-Differenzen und verlässt sich auf eine aufsteigende Zeitfolge (4.97), und die
-Dateireihenfolge muss nicht die zeitliche sein.
+**nach Zeit sortiert**, die Sequenz danach neu vergeben — ein Stück speichert
+Abstände zu seinem `ts_von` und verlässt sich auf eine aufsteigende Folge
+(4.97), und die Dateireihenfolge muss nicht die zeitliche sein.
 
 Einzelne unbrauchbare Punkte fallen heraus, ohne die Datei zu verwerfen; ihre
-Zahl steht in der Antwort (`ohne_zeit`, `verworfen`) und in der Rückmeldung an
-die BedienerIn. Die Koordinaten gehen dabei durch `pruef_breite()` /
-`pruef_laenge()` — eine eigene Bereichsprüfung hier wäre eine zweite Wahrheit
-darüber, was ein gültiger Breitengrad ist (CLAUDE.md 4).
+Zahl nennt die Rückmeldung an die BedienerIn (seit Web 22.3.0 aus dem Lesen
+im Browser, bis dahin aus der Antwort `ohne_zeit`, `verworfen`). Die
+Bereichsprüfung der Koordinaten bildet `pruef_breite()` / `pruef_laenge()`
+nach; die verbindliche Prüfung des Servers gibt es für Punkte nicht mehr,
+weil er sie nicht sieht.
 
-> **Attribute über `attributes()`, nie über `$el['lat']`** — eine Falle, in
-> die dieses Paket getreten ist. Nach `children($ns)` schaltet SimpleXML die
-> Namensraum-Umgebung eines Knotens um, **auch für Attribute**. `$pt['lat']`
-> sucht danach ein `lat` im GPX-Namensraum, und ein unpräfigiertes Attribut
-> liegt in **keinem** (XML-Namens-Spezifikation 6.2). Das Ergebnis war kein
-> Fehler, sondern ein leerer String: Jeder Punkt fiel durch die
-> Koordinatenprüfung, und die Meldung lautete „enthält keinen einzigen
-> Trackpunkt" — bei 61 vorhandenen.
+> *Bis Web 22.2.0 stand hier die SimpleXML-Falle (`$pt['lat']` nach
+> `children($ns)` sucht im GPX-Namensraum und findet nichts). `EdGpx.lesen()`
+> liest Attribute über `getAttribute()`, das keinen Namensraum annimmt.*
 
 #### Nachweis
 
@@ -5387,6 +5369,11 @@ Begründung, keine unerwarteten Konsolenfehler.
 **Der Rundlauf der Abnahme: 12 Erwartungen, alle erfüllt** — importierte Spur
 → GPX-Abruf → erneut gelesen: 54 Punkte, **0 Abweichungen** gegen die
 Quelldatei, für Segment *und* Einsatz.
+
+*Die drei Absätze oben sind der Nachweis von S4/A3 (Web 12.7.0). Seit
+S11-05d belegt `tools/proben/gpx/probe.mjs` Lesen, Bauen und Import im
+Browser — Teil 2 liest jede GPX-Datei des Referenzexports und baut sie neu,
+Teil 4 importiert über den Dialog und öffnet die Stücke wieder.*
 
 ### 4.97g Die Android-App verteilen (ab Web 12.8.0, S4/A1, E-S4-16)
 
@@ -5567,7 +5554,7 @@ das Muster passt, wird still übergangen (eine `.DS_Store` dort ist keine
 Fehlermeldung wert).
 
 Der Abruf liegt **neben** den Seiten und nicht unter `api/`, aus demselben
-Grund wie `gpx.php` (4.97b): `ist_api_aufruf()` entscheidet am Pfad, und ein
+Grund wie bis Web 22.2.0 `gpx.php`: `ist_api_aufruf()` entscheidet am Pfad, und ein
 `<a href>` bekäme dort nach einer Mittagspause `{"error":"session_ende"}` im
 Browserfenster statt der Anmeldeseite. Nur angemeldet, GET, ohne CSRF (M3-11).
 `Cache-Control: private, max-age=86400` und nicht `no-store`: Ein APK ist
@@ -6749,10 +6736,10 @@ wenig. Und der Fall „jemand steht neben der Uhr und drückt selbst Ja" ist ein
 körperlicher Zugriff auf das Gerät; dagegen steht in dieser Anwendung nichts,
 und das ist eine bewusste Grenze.
 
-**Ein Topf, drei Verbraucher — und keiner leert ihn.** `pair` bremst nicht nur
-`pair.php`, sondern auch das Token von `jobs.php` und den GPX-Abruf in
-`gpx.php` (sieben Zählstellen dort). Wer die Zahlen in `RATE_GRENZEN` ändert,
-ändert alle drei.
+**Ein Topf, zwei Verbraucher — und keiner leert ihn.** `pair` bremst nicht nur
+`pair.php`, sondern auch das Token von `jobs.php`; bis Web 22.2.0 auch den
+GPX-Abruf in `gpx.php`, den seit S11-05d der Browser baut. Wer die Zahlen in
+`RATE_GRENZEN` ändert, ändert beide.
 
 Bis Web 13.1.0 rief ein gelungenes `trennen` `rate_erfolg('pair')` und leerte
 damit den Zähler dieser Adresse **für alle drei** — wer Freigabelinks
@@ -10616,8 +10603,9 @@ in der Datenbank stehen.
 - **Die Fußzeile „© Gen-EM · Open Source"** (`ui.php`) ist die *Urheberschaft
   der Software*, nicht der Name des Betriebs. Wer diese Anwendung aufsetzt,
   darf seinen Dienst benennen — nicht den, der sie geschrieben hat.
-- **`creator` in jeder GPX-Datei** (`gpx_creator()` in `gpx_lib.php`,
-  `assets/export.js` für den großen Export) benennt die **Software**, nicht
+- **`creator` in jeder GPX-Datei** (`assets/gpx.js` für den Spur-Download,
+  bis Web 22.2.0 `gpx_creator()` in `gpx_lib.php`; `assets/export.js` für den
+  großen Export) benennt die **Software**, nicht
   die Installation — GPX 1.1 beschreibt es als *„the software that created
   your GPX document"*. Wer die Anwendung aufsetzt, hat sie nicht geschrieben.
   Seit Web 20.8.0 mit Fassung (`Gen-EM NAdoku 20.8.0`), weil diese Anwendung

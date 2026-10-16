@@ -359,7 +359,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
 | `server/komplett_lib.php`, `server/admin_komplettsicherung.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite |
-| `server/gpx_lib.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130 |
+| `server/assets/gpx.js`, `server/api/gpx_import.php`, `server/tag_spuren.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130; Nr. 43 (seit S11-05d baut und liest der Browser GPX) |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
 | `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |
 | `server/auth_guard.php`, `server/db.php`, `server/admin_*.php`, `server/betrieb_*.php`, `server/api/rechtstext_vorschau.php`, `docs/Technik.md` | klein | `rollenprobe` | Nr. 286, Nr. 149 |

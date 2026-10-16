@@ -14,6 +14,63 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.3.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-05d — GPX-Abruf und -Import im Browser**.
+Vierter von fünf Teilen von S11-05. Kein Schema.
+
+### Behoben
+
+- **Der GPX-Abruf lieferte für jede seit S11-04 verschlossene Spur nichts
+  mehr** (F-S11-54). `gpx.php` las die Punkte auf dem Server, und der sieht
+  seit S11-04 nur noch Stücke, die er nicht öffnen kann: Die Einsatzansicht
+  bot den Eintrag an, und heraus kam ein 404; auf der Spurenseite des
+  Diensttags ebenso, je Zeile und für die Auswahl. Jetzt baut der Browser die
+  Datei aus der Spur, die er ohnehin für die Karte öffnet. **Die Datei ist
+  dieselbe wie vorher** — Aufbau, Beschreibungen, Stufentext und Dateiname
+  stimmen Byte für Byte mit dem überein, was `gpx_lib.php` gebaut hat; die
+  GPX-Probe hält Solldateien der letzten Serverfassung und vergleicht dagegen.
+  **Eine Abweichung ist gewollt** (F-S11-55): Eine Koordinate unter 1e-4 —
+  ein Punkt wenige Meter neben Äquator oder Nullmeridian — schrieb PHP als
+  `1.0E-7`, und das ist kein gültiges `xsd:decimal`; der Browser schreibt
+  `0.0000001`.
+
+### Geändert
+
+- **Der GPX-Import liest im Browser und schickt verschlossene Stücke.** Bis
+  dahin ging die Datei als Text an den Server, der sie las und die Punkte im
+  Klartext ablegte — mit der Begründung, eine GPX-Datei enthalte nichts
+  Verschlüsseltes. Seit Schritt 12a ist die Spur selbst das, was
+  verschlüsselt wird; der Server darf sie nicht mehr sehen. Der Browser liest
+  mit denselben Regeln wie bisher der Server (kein DOCTYPE, keine
+  UTF-16/UTF-7-Deklaration, `time` Pflicht, nach Zeit sortiert), zieht die
+  Kennung `imp-…` selbst und verschließt die Punkte mit dem öffentlichen
+  Schlüssel des Kontos — ein Passwort braucht es dafür nicht. **Der Preis:**
+  Die Ablehnungsregeln sind jetzt eine Hilfe für die BedienerIn, keine
+  Schranke; wer sie umgeht, schickt Stücke, die nur das eigene Konto öffnen
+  kann. Der Server prüft, was er noch prüfen kann: Form der Kennung und der
+  Stücke, Menge, Eindeutigkeit (eine doppelte Lieferung ist 409).
+- **Eine Latin-1-Datei kommt weiter an, mit Ersatzzeichen im Namen** — wie sie
+  über den Dateidialog schon immer ankam (`readAsText()`). Die Ablehnung
+  ungültigen UTF-8 stand nur auf dem Server und traf nur, wer den Endpunkt
+  unmittelbar ansprach; diesen Weg gibt es nicht mehr.
+- **Ohne JavaScript gibt es keinen GPX-Abruf mehr.** Die Spur öffnet nur das
+  Skript; das GET-Formular an `gpx.php` ist fort.
+
+### Entfernt
+
+- `server/gpx.php` und `server/gpx_lib.php`. Mit ihnen der Ratenschutz im Topf
+  `pair` für den Abruf (es gibt keine Kennung mehr abzutasten; der Topf hat
+  noch zwei Verbraucher), die Grenze von 100 Spuren je Auswahl (sie schützte
+  den Arbeitsspeicher des Servers) und die Höhenberechnung nach einem Import
+  als Einsatz (`compute_site_elevation()` las Klartext; die Höhe entsteht seit
+  Web 22.1.0 im Browser).
+- `tools/proben/gpx/probe.php` — ersetzt durch `probe.mjs`, eine Browserprobe:
+  Solldateien der letzten Serverfassung, jede GPX-Datei des Referenzexports
+  gelesen und neu gebaut, Abruf über Einsatzansicht und Spurenseite, Import
+  über den Dialog mit Prüfung der Datenbank, der Eingang mit den Fällen der
+  alten Teil 8. Das Schema prüft weiter libxml (`schema.php`).
+
 ## [Web 22.2.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-05c — Schneiden, Rücknahme, ein Stück

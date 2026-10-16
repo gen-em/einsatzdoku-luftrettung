@@ -586,12 +586,13 @@ const EdSchnitt = (() => {
    * Ruhesegment, und die Einsaetze schneidet man danach heraus. Beide
    * bedienen dieselbe Karte, beide laden den Tag danach neu.
    *
-   * DIE DATEI WIRD NUR GELESEN, NICHT GEPRUEFT. Was eine gueltige GPX-Datei
-   * ist, entscheidet `gpx_lesen()` auf dem Server; hier eine zweite Meinung
-   * einzubauen hiesse, zwei Wahrheiten zu haben — und die schwaechere davon
-   * ist die, die jemand mit den Entwicklerwerkzeugen ausschaltet.
+   * SEIT S11-05d LIEST UND VERSCHLIESST DER BROWSER. `EdGpx.lesen()` haelt
+   * dieselben Regeln wie bis Web 22.2.0 `gpx_lesen()` auf dem Server; die
+   * Punkte gehen als Stuecke unter dem oeffentlichen Kontoschluessel hinaus
+   * (`EdOrtsdaten.stueckeBauen`), gebunden an eine Kennung, die hier
+   * gezogen wird. Der Server sieht keine Koordinate mehr.
    */
-  let gpxText = null;
+  let gpxDaten = null;   // ArrayBuffer der gewaehlten Datei
 
   function gpxFehler(text) {
     const box = document.getElementById('gpx-fehler');
@@ -605,7 +606,7 @@ const EdSchnitt = (() => {
     const datei = document.getElementById('gpx-datei');
     const los   = document.getElementById('gpx-los');
 
-    gpxText = null;
+    gpxDaten = null;
     datei.value = '';
     los.disabled = true;
     gpxFehler('');
@@ -614,25 +615,40 @@ const EdSchnitt = (() => {
 
     datei.onchange = () => {
       const f = datei.files && datei.files[0];
-      gpxText = null; los.disabled = true; gpxFehler('');
+      gpxDaten = null; los.disabled = true; gpxFehler('');
       if (!f) { return; }
       const leser = new FileReader();
       leser.onerror = () => gpxFehler('Die Datei ließ sich nicht lesen.');
-      leser.onload = () => { gpxText = String(leser.result); los.disabled = false; };
-      leser.readAsText(f);
+      leser.onload = () => { gpxDaten = leser.result; los.disabled = false; };
+      leser.readAsArrayBuffer(f);
     };
 
     document.getElementById('gpx-abbrechen').onclick = () => dlg.close();
     los.onclick = async () => {
-      if (gpxText === null) { return; }
+      if (gpxDaten === null) { return; }
       los.disabled = true;
       gpxFehler('');
+      /* Lesen, dann verschliessen. `lesen()` wirft mit einem Satz, der der
+       * BedienerIn etwas sagt (fehlende Zeitstempel, falsches Format); er
+       * geht unveraendert in die Meldung. */
+      const ziel = gpxZiel();
+      let gelesen, stuecke, ref;
+      try {
+        gelesen = EdGpx.lesen(gpxDaten);
+        ref = 'imp-' + [...crypto.getRandomValues(new Uint8Array(12))]
+          .map(b => b.toString(16).padStart(2, '0')).join('');
+        stuecke = await EdOrtsdaten.stueckeBauen(gelesen.punkte,
+          ziel === 'einsatz' ? 'spur' : 'ruhe', ref, { neu: true });
+      } catch (e) {
+        gpxFehler(e.message || String(e));
+        los.disabled = false;
+        return;
+      }
       /* DIE GROSSE DATEI IST DER HAEUFIGE FALL. Uebersteigt der Rumpf
        * `post_max_size`, schickt `api_rumpf()` den Grund im Feld `hinweis`
-       * -- EdApi liest es, die Handkette hier las nur `meldung` und zeigte
-       * stattdessen den Ersatzsatz. */
+       * -- EdApi liest es. */
       const r = await EdApi.postJson('api/gpx_import.php',
-        { day_id: dayId, ziel: gpxZiel(), xml: gpxText },
+        { day_id: dayId, ziel, client_ref: ref, stuecke },
         { vorgang: 'Der Import der GPX-Datei' });
       if (!r.ok) { gpxFehler(r.meldung); los.disabled = false; return; }
       const d = r.daten;
@@ -646,8 +662,8 @@ const EdSchnitt = (() => {
           ? 'Die Datei ist als Einsatz übernommen — '
           : 'Die Datei ist als Ruhesegment übernommen — ';
         t += d.punkte + ' Punkte, ' + d.von + ' bis ' + d.bis + '.';
-        if (d.ohne_zeit) { t += ' ' + d.ohne_zeit + ' Punkte ohne Zeitstempel sind nicht mitgekommen.'; }
-        if (d.verworfen) { t += ' ' + d.verworfen + ' Punkte mit unbrauchbaren Koordinaten ebenfalls nicht.'; }
+        if (gelesen.ohneZeit) { t += ' ' + gelesen.ohneZeit + ' Punkte ohne Zeitstempel sind nicht mitgekommen.'; }
+        if (gelesen.verworfen) { t += ' ' + gelesen.verworfen + ' Punkte mit unbrauchbaren Koordinaten ebenfalls nicht.'; }
         if (d.art === 'rest') { t += ' Einsätze schneidest du jetzt heraus.'; }
         melde('ok', t);
       } catch (e) {

@@ -8164,5 +8164,12 @@ declare(strict_types=1);
  *   unveraendertem Stand, ein Vermerk ohne Einsatz sperrt (E-S11-48).
  *   `pruef_spurstueck()` fuer Eingang und Browser. Schema: Migration
  *   `2026_10_15_loeschvermerk` (track_cuts.mission_id NULL) — update.php.
+ * 22.3.0 — S11-05d: GPX IM BROWSER, IN BEIDE RICHTUNGEN. `gpx.php` las nur den
+ *   Klartextbestand und lieferte fuer eine verschlossene Spur nichts mehr
+ *   (F-S11-54); `assets/gpx.js` baut dieselbe Datei aus der geoeffneten Spur,
+ *   Byte fuer Byte wie `gpx_lib.php` (bis auf `1.0E-7`, F-S11-55). Der Import
+ *   liest im Browser und schickt verschlossene Stuecke; der Server sieht keine
+ *   Koordinate mehr. `gpx.php` und `gpx_lib.php` entfallen, der Topf `pair` hat
+ *   zwei Verbraucher. Kein Schema.
  */
-const WEB_VERSION = '22.2.0';
+const WEB_VERSION = '22.3.0';

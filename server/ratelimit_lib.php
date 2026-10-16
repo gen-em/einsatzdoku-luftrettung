@@ -296,16 +296,15 @@ const RATE_GRENZEN = [
      * Grenzen brauchen drei Eintraege.
      *
      *   pair        401 an status/bestaetigen/trennen, je IP — Kennung oder
-     *               Schluessel unbekannt. DIESER TOPF HAT DREI VERBRAUCHER,
-     *               und wer an ihm dreht, dreht an allen dreien (B-S5-04,
-     *               berichtigt in Web 13.1.1 — der Fund nannte nur die ersten
-     *               beiden):
+     *               Schluessel unbekannt. DIESER TOPF HAT ZWEI VERBRAUCHER,
+     *               und wer an ihm dreht, dreht an beiden (B-S5-04,
+     *               berichtigt in Web 13.1.1):
      *                 pair.php   401 an den drei Anliegen
      *                 jobs.php   das Token des Wartungseinstiegs (99, 127)
-     *                 gpx.php    die Freigabelinks der Spuren, sieben
-     *                            Zaehlstellen (73, 131, 141, 165, 177, 206,
-     *                            262, 280)
-     *               Deshalb ruft KEINER von ihnen mehr `rate_erfolg('pair')`:
+     *               Bis Web 22.2.0 war `gpx.php` der dritte (die
+     *               Download-Verweise der Spuren); es ist mit S11-05d
+     *               entfallen, der Browser baut GPX selbst.
+     *               Deshalb ruft KEINER von ihnen `rate_erfolg('pair')`:
      *               Ein Erfolg im einen Verbraucher darf die Fehlversuche der
      *               anderen nicht loeschen.
      *   pair_start  JEDE Anfrage `start`, je IP (Muster rate_zaehlen(): Menge

@@ -78,7 +78,7 @@ declare(strict_types=1);
  * ohnehin nicht leeren — sonst setzte ein Angreifer mit einer eigenen,
  * gueltigen Sitzung alle fuenf Sekunden zurueck, waehrend er daneben fremde
  * Kennungen durchprobiert. Und beim `trennen` war es schlimmer: Der Topf
- * `pair` gehoert auch `jobs.php` und `gpx.php`.
+ * `pair` gehoert auch `jobs.php` (bis Web 22.2.0 auch `gpx.php`).
  *
  * SCHLUESSEL LIEGEN ALS SHA-256 (E-S5-41, E-S5-42; db.php erklaert die
  * Verfahrenswahl): 24 Zufallsbytes brauchen kein bcrypt, und 120
@@ -418,15 +418,14 @@ try {
  * falsch schickt, ist kaputt oder fremd; beidem hilft kein Nachlass.
  *
  * ENTSCHEIDEND IST ABER, DASS DER TOPF NICHT UNS ALLEIN GEHOERT. `pair` hat
- * DREI Verbraucher, nicht zwei, wie B-S5-04 annahm:
+ * ZWEI Verbraucher (bis Web 22.2.0 drei — `gpx.php` ist mit S11-05d
+ * entfallen):
  *
  *   pair.php   401 an status/bestaetigen/trennen
  *   jobs.php   das Token des Wartungseinstiegs (jobs.php 99, 127)
- *   gpx.php    die Freigabelinks der Spuren — sieben Zaehlstellen
- *              (gpx.php 73, 131, 141, 165, 177, 206, 262, 280)
  *
- * Ein `rate_erfolg` hier leerte den Zaehler dieser Adresse fuer ALLE DREI. Wer
- * Freigabelinks durchprobiert, brauchte also nur ein eigenes Geraet zu
+ * Ein `rate_erfolg` hier leerte den Zaehler dieser Adresse fuer BEIDE. Wer
+ * das Wartungstoken durchprobiert, brauchte also nur ein eigenes Geraet zu
  * trennen, um sich zehn frische Versuche zu holen — beliebig oft, denn neu
  * koppeln kostet einen Handgriff. Eine Bremse, die sich vom Gebremsten
  * zuruecksetzen laesst, ist keine.

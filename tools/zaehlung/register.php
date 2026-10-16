@@ -343,14 +343,15 @@ return [
 ['kennung' => 'Z22', 'paket' => 'AP7',
  'beschreibung' => 'Byte-Division fuer die Anzeige',
  'grund' => 'Byte-ANZEIGEN laufen ueber groesse_text(); Byte-GRENZWERTE bleiben, '
-          . 'wo sie sind (E-ZE-23). FUENF NAMENTLICH (AP7): betrieb_server.php 125 '
+          . 'wo sie sind (E-ZE-23). VIER NAMENTLICH (AP7, bis S11-05d fuenf): betrieb_server.php 125 '
           . '(Vergleichswert, nie ausgegeben) und 937/950/957 (FORMULARWERTE mit Punkt '
           . 'als Dezimaltrenner, die derselbe POST-Zweig zurueckliest — eine Umstellung '
-          . 'machte das Formular unabschickbar); gpx_lib.php 375 (sprintf %.1f mit PUNKT, '
-          . 'groesse_text() schriebe ein Komma — sichtbare Textaenderung).',
+          . 'machte das Formular unabschickbar). Der fuenfte, gpx_lib.php 375 (sprintf %.1f mit PUNKT, '
+          . 'groesse_text() schriebe ein Komma — sichtbare Textaenderung) ist mit S11-05d '
+          . 'entfallen; die Meldung schreibt jetzt assets/gpx.js.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~/\s*\(?\s*1024|/\s*1048576|/\s*1073741824~'],
- 'start' => 18, 'decke_jetzt' => 5, 'decke_ziel' => 18],
+ 'start' => 18, 'decke_jetzt' => 4, 'decke_ziel' => 18],
 
 ['kennung' => 'Z23', 'paket' => 'AP7',
  'beschreibung' => 'Anteil von Hand (Teil * 100 / Ganzes)',

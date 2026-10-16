@@ -55,7 +55,7 @@ RE_GPX_ZEIT = re.compile(r"(<metadata><time>)[^<]*(</time></metadata>)")
 RE_GPX_NAME = re.compile(r"(<name>(?:Einsatz|Ruhezeit|Ruhe) )(\d+)( )")
 # `creator` TRAEGT SEIT WEB 20.8.0 DIE FASSUNG: `Gen-EM NAdoku 20.8.0`. Der
 # NAME bleibt verglichen — er ist die Aussage „diese Software hat die Datei
-# geschrieben" (Weg B, siehe den Kopf von server/gpx_lib.php). Die FASSUNG
+# geschrieben" (Weg B, siehe den Kopf von server/assets/gpx.js). Die FASSUNG
 # wird maskiert, genau wie `App-Version:` in der LIESMICH: Sie steigt bei
 # jeder Auslieferung, und der Referenz-Export enthaelt ueber 200 GPX-Dateien
 # (seit R4-16 211). Ohne diese Zeile meldete der Kreislauf bei JEDER
