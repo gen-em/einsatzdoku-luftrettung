@@ -1335,3 +1335,42 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Weg:* die Sperre im Aufräumteil der Zweitfaktorprobe löschen, wie die
      Protokollprobe ihre eigenen Zeilen löscht. *Abnahme:* nach einem Lauf
      keine Zeile mehr für das Probenkonto.
+
+<!-- -->
+
+386. **Einspielen in Fenstern verwirft Sperrvermerke, deren Quelle in einem anderen Fenster liegt.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 16.10.2026
+     *Aufgenommen 16.10.2026 bei der Nachprüfung von S11-06 (F-S11-73).*
+     Der Browser schickt die Einträge einer Sicherung in Fenstern zu 250 an
+     `api/backup_eintraege_restore.php`; `edbak_restore()` baut die Karte
+     Kennung → Kennnummer (`$refKarte`) je Aufruf neu. Ein Sperrvermerk,
+     dessen Ruhesegment in einem anderen Fenster stand, findet seine Quelle
+     nicht und wird verworfen („Sperrvermerk ohne Quelle"). Gemessen mit der
+     Sicherung des Messstands (5096 Einsätze, 5782 Ruhesegmente, 44
+     Fenster): 147 von 147 verworfen, obwohl alle 147 `quelle_ref` in der
+     Datei auf ein Ruhesegment zeigen — mit Nutzlast 12 (11.10.) und 13
+     (16.10.) gleich, also älter als S11; der Code steht seit dem
+     17.09.2026. Folge: Der herausgeschnittene Zeitraum ist im Ruhesegment
+     wieder sichtbar, die Punkte erscheinen doppelt. Kleine Bestände (ein
+     Fenster) trifft es nicht; der Kreislauf sieht es deshalb nie.
+     *Weg:* die Quelle bei fehlendem Karteneintrag in der Datenbank des
+     Zielkontos nachschlagen (Kennung und Art), oder die Vermerke erst nach
+     dem letzten Fenster schicken. *Abnahme:* dieselbe Sicherung, 147
+     übernommen, 0 verworfen.
+
+<!-- -->
+
+387. **Abgewiesene Werte beim Einspielen einer Sicherung zeigt der Browser nicht an.** · gehört zu: 12a · Stand: offen · seit 16.10.2026
+     *Aufgenommen 16.10.2026 bei der Nachprüfung von S11-06 (F-S11-72).*
+     `edbak_restore()` sammelt jede Beanstandung der Prüfschicht in
+     `$stats['rejected']` (Feld und Anzahl); `einstellungen.php` liest das
+     Feld nirgends — `git log -S` findet es dort nie. Seit S11 wiegt das
+     schwerer: Eine abgewiesene `ort_huelle` nimmt alle Orte und die
+     Reanimation des Einsatzes mit, und die Abschlussmeldung ist trotzdem
+     blau. Gefahren am 16.10.2026 mit einer Hülle falscher Länge: still
+     verworfen. Eine Datei, die die Anwendung selbst schrieb, trägt keine
+     solche Hülle — der Fall braucht eine beschädigte oder fremde Datei.
+     *Weg:* `rejected` in die Abschlussmeldung, Ton orange, wie
+     `import_ui.js` es für den CSV-Import tut. In S11-10 (Oberfläche) mit
+     der Einzahl „Bei 1 Einsätzen" derselben Meldungen. *Abnahme:* die
+     Hülle falscher Länge ergibt eine orange Meldung mit dem Feld.
+
