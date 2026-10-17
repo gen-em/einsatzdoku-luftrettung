@@ -135,10 +135,10 @@
   function ausduennungPruefen(P, behalten, zeiten) {
     const n = P.length, m = behalten.length;
     if (!m) { return 'Behalteliste ist leer'; }
-    if (m > n) { return 'Behalteliste ist länger als die Spur'; }
+    if (m > n) { return 'Behalteliste ist länger als die GPS-Daten'; }
     let vorher = -1;
     for (const i of behalten) {
-      if (!Number.isInteger(i) || i < 0 || i >= n) { return 'Index ' + i + ' liegt außerhalb der Spur'; }
+      if (!Number.isInteger(i) || i < 0 || i >= n) { return 'Index ' + i + ' liegt außerhalb der GPS-Daten'; }
       if (i <= vorher) { return 'Indizes nicht streng aufsteigend'; }
       if (vorher >= 0 && P[i][4] < P[vorher][4]) { return 'Zeit fällt zwischen ' + vorher + ' und ' + i; }
       vorher = i;
