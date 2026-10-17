@@ -139,6 +139,14 @@ try {
   pruefe(id > 0, '1  Wegwerfkonto angelegt', `Konto ${id}`);
 
   const kontext = await browser.newContext({ ignoreHTTPSErrors: true });
+  /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+     Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
+     und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
+     eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
+     Abbruch schriebe einen Fehler in die Konsole. Gemessen wird er in seiner
+     eigenen Probe. */
+  await kontext.route('**/api/wartungslauf.php', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '{"ok":true,"spuren":[],"aufzeichnungen":0,"diensttage":0}' }));
   await kontext.route(/tile\.|opentopomap|arcgisonline|basemap\.at/i, r => r.abort());
   const s = await kontext.newPage();
   const fehler = [];

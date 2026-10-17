@@ -268,26 +268,28 @@ return [
 ['kennung' => 'Z16', 'paket' => 'AP5',
  'beschreibung' => 'beginTransaction( ausserhalb transaktion_lib.php',
  'grund' => 'db_transaktion() in transaktion_lib.php (E-ZE-20; bis Web 20.37.2 in '
-          . 'db.php, umgezogen wegen Nr. 288). NEUN namentliche Ausnahmen, '
+          . 'db.php, umgezogen wegen Nr. 288). SIEBEN namentliche Ausnahmen, '
           . 'freigegeben vom Auftraggeber am 22.09.2026 (H-ZE-4 ausgesetzt; das '
-          . 'Konzept liess acht zu). DREI wegen GROESSE oder Vertrag: ingest.php '
+          . 'Konzept liess acht zu). Bis S11-07 standen hier neun: api/schneiden.php '
+          . 'verlor seine in S11-05c (Tausch ueber spur2_tauschen() in db_transaktion()), '
+          . 'jobs_lib.php (spur_ausduennen_eine) fiel in S11-07 mit dem Job (F-S11-78). '
+          . 'DREI wegen GROESSE oder Vertrag: ingest.php '
           . '(Geraetevertrag; seit Web 21.11.1 mit eigener Deadlock-Behandlung, '
           . 'Nr. 210, Schritt 18/SR-05 — ein beginTransaction() in einer '
           . 'Schleife, weiter EINE Stelle), backup_lib.php (Rumpf 1153 Zeilen, 145 Variablen) und '
           . 'api/import_commit.php (542 Zeilen, 78 Variablen) — eine use-Liste '
           . 'mit 145 Eintraegen ist kein Zentralisieren, sondern ein Rewrite. '
-          . 'SECHS wegen BAUFORM: pair.php (Geraetevertrag; commit UND rollBack '
-          . 'mehrfach im try, Antwort mitten im Rahmen), jobs_lib.php '
-          . '(spur_ausduennen_eine: drei rollBack-return als REGULAERER Weg), '
-          . 'diensttag_zusammenfuehren.php (ebenso) sowie api/day.php, '
-          . 'api/kdf_upgrade.php und api/schneiden.php (rollBack + json_out im '
+          . 'VIER wegen BAUFORM: pair.php (Geraetevertrag; commit UND rollBack '
+          . 'mehrfach im try, Antwort mitten im Rahmen), '
+          . 'diensttag_zusammenfuehren.php (drei rollBack-return als REGULAERER Weg) sowie api/day.php '
+          . 'und api/kdf_upgrade.php (rollBack + json_out im '
           . 'try). db_transaktion() setzt voraus, dass der Rumpf durchlaeuft '
-          . 'ODER wirft; diese sechs rollen mittendrin zurueck und machen dann '
+          . 'ODER wirft; diese vier rollen mittendrin zurueck und machen dann '
           . 'etwas anderes weiter.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/transaktion_lib.php'],
  'regel' => ['art' => 'methode', 'namen' => ['beginTransaction']],
- 'start' => 33, 'decke_jetzt' => 9, 'decke_ziel' => 9],
+ 'start' => 33, 'decke_jetzt' => 7, 'decke_ziel' => 7],
 
 ['kennung' => 'Z17', 'paket' => 'AP5',
  'beschreibung' => 'INSERT/DELETE auf Kindtabellen ausserhalb einsatz_lib.php, migration_lib.php',

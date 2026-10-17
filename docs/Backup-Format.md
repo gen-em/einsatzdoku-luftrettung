@@ -895,11 +895,13 @@ Server nicht mehr vorhanden. Wer den vollen Stand behalten will, sichert
 **vor** Ablauf der sechs Monate.
 
 **Ein wiederhergestellter Bestand wird von neuem verdichtet und ausgedünnt.**
-Die eingespielten Einsätze tragen ihre alten Daten; der Verdichtungsjob hält
-sie nach der Karenz für reif, und was älter als sechs Monate ist, dünnt der
-Ausdünnungsjob aus. Das ist gewollt (E-S2-03), sollte aber wissen, wer ein
-altes Backup zur Ansicht einspielt: `php jobs.php --pause 1800` hält die
-Jobs so lange still (`docs/Technik.md`, 4.97a).
+Die eingespielten Einsätze tragen ihre alten Daten; seit Web 22.6.0 fasst sie
+der Wartungslauf im Browser zusammen, sobald das Konto die Startseite oder den
+Reiter Backup öffnet, und was älter als 31 Tage ist, dünnt er aus (E-S11-25,
+`docs/Technik.md` 4.99s). Das ist gewollt, sollte aber wissen, wer ein altes
+Backup zur Ansicht einspielt. Die Pause der Hintergrundjobs hält ihn **nicht**
+an — er ist kein Job. Bis Web 22.5 taten es die Jobs `verdichtung` und
+`ausduennen` nach zwei Wochen bzw. sechs Monaten.
 
 ### SPUR1 von Hand lesen
 
@@ -1109,7 +1111,7 @@ an, Transportziel und Ortshöhe nur im `pat_blob` — wie der Eingang der Gerät
 | `phases[].lat/lon`, `resus` | `ort_huelle` — Einsatzhülle, verschlossen mit dem öffentlichen Schlüssel des Zielkontos, gebunden an die `client_ref`; die Phasen ohne Ort, `resus` leer |
 | `transport_dest`, `dest_lat`, `dest_lon`, `site_ele_m` | im `pat`-Block (`transport_dest` als `{addr, lat, lon}`, `ortshoehe`), dann verschlüsselt; die Spalten leer |
 | `track` im Eintrag (Nutzlast 6, 7) | `spur_stuecke` — verschlossene Stücke im Eintrag |
-| Spurteil mit `blob` (8 bis 12) oder `punkte` (13) | Stücke an `api/backup_spuren_restore.php`, eine lange Spur über mehrere Anfragen (`fortsetzung`) |
+| Spurteil mit `blob` (8 bis 12) oder `punkte` (13) | Stücke an `api/backup_spuren_restore.php`, eine lange Spur über mehrere Anfragen (`fortsetzung`); eine **ausgedünnte** Spur (Stufe 3) seit Web 22.6.0 als **ein** gepacktes Stück der Stufe 3, das die ganze Originalspur deckt |
 | `ort_huelle` mit `ort_unlesbar` | unverändert |
 
 Eine Datei ohne `client_ref` bekommt sie jetzt vom Browser (`bak-` + 24 Hex):
@@ -1521,7 +1523,7 @@ die 3.
 | `manifest.json` | Umfang, Schlüsselhüllen, Teileliste, `geschuetzte` |
 | `kopf.json` | Stammdaten, Diensttage, `eintraege_gesamt` |
 | `eintraege/0001.json` … | je 250 Einträge (Einsätze **und** Ruhesegmente) ohne Punktlisten |
-| `spuren/0001.json` … | je Teil eine Liste: `{spur_ref, blob, stufe, n_original, n}` — SPUR1, Base64, der Altbestand — und `{spur_ref, stuecke, stufe, n, fortsetzung?}` — die verschlossenen Stücke, wie sie liegen (seit Web 22.5.0) |
+| `spuren/0001.json` … | je Teil eine Liste: `{spur_ref, blob, stufe, n_original, n}` — SPUR1, Base64, der Altbestand — und `{spur_ref, stuecke, stufe, n, fortsetzung?}` — die verschlossenen Stücke, wie sie liegen (seit Web 22.5.0); seit Web 22.6.0 trägt **jedes Stück seine `stufe`** (1 Gerät, 2 gepackt, 3 ausgedünnt — die Innenform der Stufen 2 und 3 in `docs/Technik.md` 4.99s). Ein Paket aus Web 22.5 ohne Stufe am Stück spielt sich als Stufe 1 ein |
 
 **Ungepackt im ZIP, aber gzip davor.** Bis Fassung 2 packte das ZIP die Teile
 (sie waren blankes JSON). Ein Siegel ist Zufallsrauschen — darüber bringt ein

@@ -739,6 +739,17 @@ Werkzeug, das vor der letzten Änderung lief, misst einen Stand, den es nicht
 mehr gibt — in O9c stand die Wortliste dadurch auf fünf Treffern, gemeldet
 worden waren null (Web 9.10.1).
 
+**Und der Wartungslauf läuft nicht dazwischen** (seit Web 22.6.0, F-S11-77).
+Er packt und dünnt im Browser aus, sobald eine Seite ihn anstößt — die
+Startseite nach jeder Anmeldung, der Reiter Backup. Ein Werkzeug, das Daten
+vergleicht (Kreisläufe, GPX-, Ortsdaten-, Container-, Freigabe- und
+Komplettprobe, Messstand, Bilderlauf, Bedienprobe, Referenzexport,
+Sichtprüfung), beantwortet `api/wartungslauf.php` im eigenen Browserkontext mit
+„nichts fällig"; sonst dünnte er zwischen Einspielen und Sichern aus, und der
+Vergleich mäße ihn statt der Sache. Wer ein neues vergleichendes Werkzeug
+schreibt, übernimmt die Zeile. Gemessen wird der Lauf in seiner eigenen Probe
+(`wartungslaufprobe`).
+
 ### 6.8 Was die Kette selbst prüft
 
 `tools/kettenaufrufe/` hält jeden Werkzeugaufruf in `.github/workflows/`

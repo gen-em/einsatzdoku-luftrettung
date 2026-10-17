@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); als Nächstes S11-07.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); als Nächstes S11-08.*
 
 ---
 
@@ -14,6 +14,9 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **Der Wartungslauf mit einer sehr langen Aufzeichnung (bis 50 000 Punkte) und bei Drossel 6× — Zeit, Halde, blockierter Hauptfaden.** (S11-07) | Gemessen sind 120 Punkte (Probe) und der Demo-Bestand (209 Aufzeichnungen in einem Lauf, wenige Sekunden ungedrosselt, nicht einzeln gestoppt). Die Ausdünnung läuft im Hauptfaden. | S11-11 (Messstand, Schritt Wartungslauf neu anlegen). |
+| **Der Wartungslauf in Firefox und WebKit.** (S11-07) | `CompressionStream`/`DecompressionStream('deflate')` nur in Chromium gefahren; F-S11-38/-56 legten die Browserliste auf das erste Paket, das packt — das ist dieses. | P-S11-29 auf Staging; Bilderlauf in drei Motoren (S11-10). |
+| **Der direkte Rückweg einer Kontosicherung mit einer ausgedünnten SPUR1-Spur** (`gh_gepackt_bauen()`). (S11-07) | Gelesen; das PHP-Stück öffnet in der Python-Referenz (3 Punkte, Randwerte), der Weg durch `edbak_spuren_schreiben()` mit Stufe 3 ist nicht gefahren — die Referenz trägt keine ausgedünnte Spur. | Beim nächsten Neuaufbau des Referenzbestands. |
 | **Die Freigabe eines Pakets der Fassung 1 (einteilig, Punkte im Eintrag) und die Freigabe ins selbe Konto.** (S11-06c) | Die Freigabeprobe fährt Fassung 3 in ein fremdes Konto. Der einteilige Weg und der Fall „das eigene Paar öffnet" sind gelesen. | P-S11-26. |
 | **Der Einspielknopf in `admin_sicherungen.php`** (Paket ohne Konto). (S11-06c) | Der Knopf in `admin_user.php` ist am 16.10.2026 gedrückt (Nachprüfung). Der in `admin_sicherungen.php` ruft dieselbe Funktion `edbak_paket_zurueckspielen()`, unmittelbar nur bei gleicher Kontokennung, sonst verweist er auf die Freigabe (Freigabeprobe); seinen Dialog hat niemand bedient. | P-S11-26 (b) auf Staging. |
 | **Eine ausgedünnte Spur (Stufe 3) durch Sichern und Einspielen.** (S11-06, E-S11-64) | Gelesen; im Referenzbestand ist keine Spur ausgedünnt, die Probe Teil 14 schreibt nur Stufe 1. | S11-07 (Ausdünnen im Browser) baut die Stufe ohnehin neu; dort mit. |
@@ -253,6 +256,25 @@ das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 
 **Nicht geprüft:** eine echte Höhe über 3276,7 m durch ein Gerät — es sendet erst ab S11-08/-09; die Klemme auf ±32 767 ist gelesen, nicht gefahren.
 
+### S11-07 Wartungslauf (17.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| Messskript S11-07a (Notizordner) | Innenform: 6 Varianten am Referenzbestand | 221 Spuren, 67 292 Punkte; A 9,95 · B fest 4,40 · Varint 3,67 · SPUR1 3,69 B/Punkt (F-S11-76) |
+| PHP `gh_gepackt_bauen()` → `ortsdaten.py` `spur_oeffnen()` | PHP-Stück öffnet in der Python-Referenz | 3 Punkte mit Randwerten (keine Höhe, 1e-7, −180°), gleich bis auf die Rundung der Höhe |
+| Ausdünnung JS gegen PHP (Notizordner) | `EdWartungslauf.ausduennen()` gegen `spur_ausduennen()`, beide geprüft | 221 Spuren: 221 gleiche Behaltelisten, 0 Prüfabweichungen je Seite, 40,36 % behalten |
+| `proben.sh wartungslauf` — Server (`probe.php`) | Liste (Abschluss, Frist 30/32 Tage, Papierkorb, Altbestand, Auslassen, Zahl gegen Liste), Tausch mit jedem Ablehnungsgrund, Nachlieferung, Stufe 3 in einem Tausch, `pat_blob` mit Prüfsumme, Schnitt jünger als Stück, Prüfschicht | **35/0**; in einer zurückgerollten Transaktion, Ausgangslage selbst angelegt |
+| `proben.sh wartungslauf` — Browser (`probe.mjs`) | A Format (Python → Browser, Rundlauf, umetikettierte Stufe), B Karte (3 verdichtet, verlustfrei, Schnitt physisch fort 25/30, Marken 120/30/10, Ortshöhe 700/700), C Zeitraum löschen auf Stufe 2 (8 von 10, Marke 10), D Startseite dünnt still aus (7 von 120, PHP-Prüfung in Ordnung), E Nachlieferung danach verworfen | **19/0**, keine Skript- und Konsolenfehler |
+| Demo von Hand | Karte im Reiter Backup auf dem zurückgesetzten Demo-Bestand | 209 Aufzeichnungen verdichtet; übrig Stufe 1 nur offen (je 1) und Papierkorb (je 5); Stufe 2: 4,56 B/Punkt (Einsätze), Stufe 3: 13 502 von 38 354 Punkten |
+| Ansichten von Hand | Einsatz Stufe 2 und 3, Diensttag, GPS-Daten des Tages | 1/1/18/8 Linien gezeichnet, Konsole leer |
+| Kreislauf von Hand | gepackte Demo sichern (433 KB statt 813) → frisches Konto → sichern | 189 714 Einzelvergleiche, 0 unerklärt; Stufen in Quelle und Ziel gleich (12/43/166) |
+| Prüfstand, erster Lauf | Stufe haupt, 48 Proben und 21 Riegel | 3 rot, 61 grün, 3883 s: Stilvergleich und Bilderlauf (bis S11-10 vorgesehen, E-S11-41), Messstand (0 von 5096 eingespielt, F-S11-79) |
+| `messen.py --frisch` einzeln, nach der Berichtigung | Konto, Bestand, Einspielen, Browser, Server | 5096 von 5096 Einsätzen eingespielt, rc 0; Backup erstellen 142,9 s bei 6× (vorher 144,9 s) |
+
+**Befunde:** F-S11-77 (vergleichende Prüfwerkzeuge schalten den Lauf ab),
+F-S11-78 (Registertext der Transaktionen seit S11-05c veraltet),
+F-S11-79 (Messstand wartet nach der Anmeldung nicht auf das Schlüsselpaar).
+
 ### Nachprüfung S11-06 (16.10.2026, örtlich, auf Wunsch der Betreiberin)
 
 Seriell, weil es eine örtliche Anlage und einen Demo-Bestand gibt (`CLAUDE.md` 7).
@@ -298,6 +320,9 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-25 | nach dem Merge auf Staging | (a) Einstellungen → Backup: eine Sicherung anlegen (Konto mit einem neu gesendeten Einsatz mit Reanimation und Spur), dieselbe Datei in ein zweites, frisch angelegtes Konto einspielen, dort den Einsatz öffnen. (b) Eine Sicherung von **vor** Web 22.5.0 in das zweite Konto einspielen. | (a) Abschlussmeldung blau, „… Aufzeichnungen mit … Punkten"; im zweiten Konto Karte, Phasenorte, Reanimation, Transportziel wie im ersten. (b) blau, Einsätze und Spuren da, Transportziel im Formular mit Schloss | (a) Spur oder Reanimation fehlt im zweiten Konto, orange Meldung ohne Grund, oder rote Meldung „Klartext". (b) rote Meldung „Format", Spuren 0 |
 | P-S11-26 | nach dem Merge auf Staging | (a) Verwaltung: ein Konto-Backup eines Kontos mit neuen Einsätzen anlegen; das Konto löschen, neu anlegen, das Paket freigeben; im neuen Konto mit dem Wiederherstellungsschlüssel einspielen. (b) Ein Konto-Backup in **dasselbe**, weiterbestehende Konto unmittelbar einspielen (vorher dort einen Einsatz löschen und den Papierkorb leeren). | (a) „Fertig" blau; Karte, Phasenorte, Reanimation im neuen Konto da. (b) Der gelöschte Einsatz ist wieder da, mit Karte | (a) orange „ließen sich … nicht öffnen", oder Karte leer. (b) Meldung „kein Schlüsselpaar", obwohl sich das Konto angemeldet hat, oder Karte leer |
 | P-S11-27 | nach dem Merge auf Staging | Demo-Konto zurücksetzen (Verwaltung → Demo), dann als Demo anmelden und einen Einsatz mit Spur öffnen | Karte, Phasen, Reanimation; Transportziel mit Schloss | Karte leer, oder Meldung „lassen sich nicht öffnen", oder der Reset bricht mit „Demo-Passwort öffnet die Schlüsselhülle nicht" ab |
+| P-S11-29 | nach dem Merge auf Staging | Mit einem echten Gerät eine Aufzeichnung senden, den Einsatz abschließen; Einstellungen → Backup öffnen, in **Chromium, Firefox und Safari** je einmal | Karte „GPS-Daten verdichten“: erst „1 Aufzeichnung aus 1 Diensttag“, Ring und Balken, dann blau „Fertig: 1 Aufzeichnung verdichtet“; der Einsatz zeigt danach dieselbe Karte | rote Meldung, Karte bleibt bei „wird gezählt …“, oder der Einsatz zeigt danach keine Spur |
+| P-S11-30 | nach dem Merge auf Staging | Ein Ruhesegment nach dem Verdichten (Karte oben) aufklappen, „Schneiden“, einen Zeitraum wählen, „Zeitraum löschen“ | Rückfrage, dann „Gelöscht — … Punkte …“; die Linie hat dort eine Lücke | Meldung „inzwischen zusammengefasst“ bei jedem Versuch, oder die Linie ist danach ganz fort |
+| P-S11-31 | nach dem Merge auf Staging | Demo zurücksetzen, als Demo anmelden, Startseite eine Minute offen lassen, dann einen Einsatz von vor Monaten öffnen | Karte und Phasen wie vorher; die Linie sieht gleich aus (ausgedünnt, 2 m / 3 m) | Karte leer, Linie weicht sichtbar ab, oder Meldung „lassen sich nicht öffnen“ |
 | P-S11-28 | erledigt 16.10.2026 | Frage Q-S11-19 im Konzept beantworten (Höhe in Metern statt Dezimetern?) | **beantwortet:** ganze Meter (E-S11-66), umgesetzt in S11-06g | — |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |

@@ -2337,6 +2337,33 @@ function spur2_faellig(PDO $pdo, int $userId, int $max = SPUR2_WARTUNG_MAX, ?int
                        array $auslassen = []): array
 {
     $jetzt ??= time();
+    $kandidaten = array_slice(spur2_faellig_kandidaten($pdo, $userId, $jetzt, $auslassen, $max), 0, $max);
+    return spur2_faellig_fuellen($pdo, $userId, $kandidaten);
+}
+
+/**
+ * Wie viele Spuren faellig sind, und aus wie vielen Diensttagen — fuer die
+ * Karte „GPS-Daten verdichten" (Reiter Backup, Mockup M-S11-02). Dieselbe
+ * Abfrage wie die Liste, ohne Huellen und ohne Obergrenze.
+ *
+ * @return array{aufzeichnungen:int, diensttage:int}
+ */
+function spur2_faellig_zahl(PDO $pdo, int $userId, ?int $jetzt = null, array $auslassen = []): array
+{
+    $k = spur2_faellig_kandidaten($pdo, $userId, $jetzt ?? time(), $auslassen, null);
+    $tage = array_unique(array_filter(array_map(static fn($x) => $x['day_id'], $k),
+                                      static fn($d) => $d !== null));
+    return ['aufzeichnungen' => count($k), 'diensttage' => count($tage)];
+}
+
+/**
+ * Die faelligen Spuren, nur Kennung, Zeiten und Zielstufe — sortiert nach
+ * dem Ende. `$max` null: alle.
+ *
+ * @return list<array{art:string,id:int,ref:string,day_id:?int,started_at:?string,ended_at:?string,bezug:?string,ziel_stufe:int}>
+ */
+function spur2_faellig_kandidaten(PDO $pdo, int $userId, int $jetzt, array $auslassen, ?int $max): array
+{
     /* WAS DER BROWSER IN DIESER SITZUNG NICHT OEFFNEN KONNTE, bleibt draussen.
      * Sonst stuende eine Spur mit kaputter Huelle bei jedem Lauf vorn und
      * belegte einen der Plaetze, bis alle zwanzig kaputt sind und nichts mehr
@@ -2352,7 +2379,7 @@ function spur2_faellig(PDO $pdo, int $userId, int $max = SPUR2_WARTUNG_MAX, ?int
          * Arten, wie in den Jobs, die dieser Lauf abloest. */
         $ohneSql = $ohne[$typ]
             ? 'AND o.id NOT IN (' . implode(',', array_map('intval', $ohne[$typ])) . ')' : '';
-        $q = $pdo->prepare("SELECT o.id, o.client_ref, o.started_at, o.ended_at,
+        $q = $pdo->prepare("SELECT o.id, o.client_ref, o.day_id, o.started_at, o.ended_at,
                                    COALESCE(o.ended_at, o.started_at) AS bezug,
                                    MIN(s.stufe) AS stufe_min, MAX(s.stufe) AS stufe_max,
                                    MAX(s.geaendert_am) AS geaendert,
@@ -2370,13 +2397,13 @@ function spur2_faellig(PDO $pdo, int $userId, int $max = SPUR2_WARTUNG_MAX, ?int
                             HAVING stufe_min = 1
                                 OR (stufe_max < 3 AND bezug <= ?)
                                 OR (geschnitten IS NOT NULL AND geschnitten > geaendert)
-                             ORDER BY bezug, o.id
-                             LIMIT " . (int)$max);
+                             ORDER BY bezug, o.id" . ($max !== null ? ' LIMIT ' . (int)$max : ''));
         $q->execute([$typ, $userId, $grenze]);
         foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
             $faellig = $r['bezug'] !== null && $r['bezug'] <= $grenze;
             $kandidaten[] = [
                 'art' => $typ, 'id' => (int)$r['id'], 'ref' => (string)$r['client_ref'],
+                'day_id' => $r['day_id'] !== null ? (int)$r['day_id'] : null,
                 'started_at' => $r['started_at'], 'ended_at' => $r['ended_at'], 'bezug' => $r['bezug'],
                 'ziel_stufe' => ($faellig || (int)$r['stufe_max'] === SPUR2_STUFE_DUENN)
                                 ? SPUR2_STUFE_DUENN : SPUR2_STUFE_GEPACKT,
@@ -2385,7 +2412,17 @@ function spur2_faellig(PDO $pdo, int $userId, int $max = SPUR2_WARTUNG_MAX, ?int
     }
     usort($kandidaten, static fn($a, $b) => [$a['bezug'], $a['art'], $a['id']]
                                            <=> [$b['bezug'], $b['art'], $b['id']]);
-    $kandidaten = array_slice($kandidaten, 0, $max);
+    return $kandidaten;
+}
+
+/**
+ * Die Kandidaten fuer den Browser fuellen: Stuecke, Sperren, Phasen,
+ * `pat_blob` mit Pruefsumme (siehe `spur2_faellig()`).
+ *
+ * @return list<array<string,mixed>>
+ */
+function spur2_faellig_fuellen(PDO $pdo, int $userId, array $kandidaten): array
+{
 
     $ids = ['mission' => [], 'rest' => []];
     foreach ($kandidaten as $k) { $ids[$k['art']][] = $k['id']; }
@@ -2408,7 +2445,7 @@ function spur2_faellig(PDO $pdo, int $userId, int $max = SPUR2_WARTUNG_MAX, ?int
         }
     }
     foreach ($kandidaten as &$k) {
-        unset($k['bezug']);
+        unset($k['bezug'], $k['day_id']);
         $k['stuecke'] = $stuecke[$k['art']][$k['id']] ?? [];
         $k['sperren'] = array_map(static fn($c) => ['von' => $c['von_ts'], 'bis' => $c['bis_ts']],
                                   schnitte_lesen($pdo, $k['art'], $k['id']));

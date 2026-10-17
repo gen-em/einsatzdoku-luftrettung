@@ -3295,6 +3295,24 @@ ui_seite_start(['titel' => 'Einstellungen',
       <div id="impstate" class="zustandszeile"></div>
     <?php ui_karte_ende(); ?>
 
+    <?php /* ---- GPS-Daten verdichten (S11-07, Mockup M-S11-02, E-S11-68) ----
+             Der Wartungslauf: Neue Aufzeichnungen liegen als ungepackte
+             Stücke; der Browser fügt sie zusammen und dünnt sie nach 31 Tagen
+             aus, weil der Server sie nicht lesen kann. Auf der Startseite
+             läuft er still (20 je Aufruf); hier sieht man, was fällig ist,
+             und er arbeitet es ab, solange der Reiter offen ist — ohne Knopf.
+             Vorhandene Bausteine: Karte mit Plakette, `.tag-lese`,
+             `.zustandszeile` mit Ladeplatz und Balken (M-S11-01). */ ?>
+    <?php ui_karte_start(['titel' => 'GPS-Daten verdichten', 'id' => 'k-verdichten',
+                          'plakette' => ui_plakette('verschlüsselt', ['ton' => 'blau'])]); ?>
+      <p class="feld-hinweis">Neue Aufzeichnungen von Uhr und Handy liegen ungepackt.
+         Dein Browser fasst sie zusammen und dünnt sie nach 31 Tagen aus — der Server
+         kann das nicht, weil er sie nicht lesen kann.</p>
+      <dl class="tag-lese"><div class="tagfeld tagfeld-breit"><dt>Fällig</dt>
+        <dd id="vd-faellig">wird gezählt …</dd></div></dl>
+      <div id="vd-zustand" class="zustandszeile" role="status" aria-live="polite"></div>
+    <?php ui_karte_ende(); ?>
+
     <?php /* ---- Von der Administration freigegebenes Backup (A8.6) -------
              Erscheint NUR, wenn tatsächlich eine Freigabe vorliegt. Ein
              dauerhaft sichtbarer, meist leerer Block wäre eine Frage, die man
@@ -3365,6 +3383,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              Spurstuecke (S11-06a); kontopaar.js dazu bringt der Baustein
              oben mit. */ ?>
     <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
+    <script src="<?= asset('assets/wartungslauf.js') ?>"></script>
     <?php /* zip.js: Seit Containerfassung 4 (S2/AP5) ist ein Backup ein
              ZIP mit versiegelten Teilen — geschrieben beim Sichern, gelesen
              beim Einspielen. Dieselbe vendorierte Bibliothek, die der Export
@@ -3659,6 +3678,13 @@ ui_seite_start(['titel' => 'Einstellungen',
       const k = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
       document.getElementById('lockwarn').hidden = !!k;
       return k;
+    }
+
+    /* GPS-Daten verdichten (S11-07, M-S11-02): die Karte arbeitet ab, was
+       fällig ist, sobald der Schlüssel da ist — ohne eigenen Dialog. */
+    if (document.getElementById('k-verdichten') && window.EdWartungslauf) {
+      EdWartungslauf.karte({ wrap: PAT_WRAP, faellig: document.getElementById('vd-faellig'),
+                             zustand: document.getElementById('vd-zustand') });
     }
     document.getElementById('lockwarn_unlock').addEventListener('click', () => ck());
     ck();

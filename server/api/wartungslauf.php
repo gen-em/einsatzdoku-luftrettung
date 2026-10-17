@@ -10,7 +10,7 @@ require_once __DIR__ . '/../spur_lib.php';
  * 3.5, E-S11-05, -25, -68 bis -74). Er löst die Jobs `verdichtung` und
  * `ausduennen` ab: Der Server sieht seit S11 keine Koordinate mehr und kann
  * weder packen noch ausdünnen. Er weiß aber, WAS fällig ist, und er tauscht
- * nur, was sich seit dem Lesen nicht geändert hat. Zwei Anliegen, beide POST
+ * nur, was sich seit dem Lesen nicht geändert hat. Drei Anliegen, alle POST
  * mit JSON und CSRF:
  *
  *   {aktion:'liste', auslassen?:[[art, id], …]}
@@ -19,6 +19,11 @@ require_once __DIR__ . '/../spur_lib.php';
  *        Einsätzen Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`:
  *        was der Browser in dieser Sitzung nicht öffnen konnte.
  *     -> 200 {ok:true, spuren:[…]}
+ *
+ *   {aktion:'zahl', auslassen?}
+ *        Wie viele Spuren fällig sind und aus wie vielen Diensttagen — für
+ *        die Karte „GPS-Daten verdichten" (Reiter Backup, M-S11-02).
+ *     -> 200 {ok:true, aufzeichnungen, diensttage}
  *
  *   {aktion:'tauschen', art, id, stand:[[seq_from, punkte], …],
  *    stueck:{seq_from, punkte, n_original, ts_von, ts_bis, stufe, huelle},
@@ -53,6 +58,15 @@ if ($aktion === 'liste') {
         json_fehler($ex, 'wartungslauf');
     }
     json_out(['ok' => true, 'spuren' => $spuren]);
+}
+
+if ($aktion === 'zahl') {
+    try {
+        $aus = is_array($b['auslassen'] ?? null) ? $b['auslassen'] : [];
+        json_out(['ok' => true] + spur2_faellig_zahl($pdo, $userId, null, $aus));
+    } catch (Throwable $ex) {
+        json_fehler($ex, 'wartungslauf');
+    }
 }
 
 if ($aktion !== 'tauschen') {

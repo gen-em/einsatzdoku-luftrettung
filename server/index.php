@@ -609,6 +609,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
          Aufrufen bleibt die Konstante weg; sie wird nicht gebraucht. */ ?>
 <?php ui_krypto_bootstrap(['csrf' => true, 'keycheck' => $rueckfrageZeigen]); ?>
 <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
+<script src="<?= asset('assets/wartungslauf.js') ?>"></script>
 <script src="<?= asset('assets/gpx.js') ?>"></script>
 <script src="<?= asset('assets/vorladen.js') ?>"></script>
 <?php if ($blattZeigen): ?>
@@ -1054,6 +1055,19 @@ async function loadDay(dayId){
  * fallen dabei weg (E-S11-37). Erst danach entstehen die Linien — mit
  * denselben Farben und Pfeilen wie bisher, und der Ausschnitt rückt nach.
  * Wechselt der Tag, während geöffnet wird, verwirft `tagLauf` das Ergebnis. */
+/* ---- Der Wartungslauf, still (S11-07, Mockup M-S11-02, E-S11-68) ---------
+ *
+ * Ein Durchgang je Aufruf der Startseite, höchstens 20 Aufzeichnungen,
+ * unsichtbar — und erst, wenn die Seite steht: Er soll die Ansicht des Tages
+ * nicht verlangsamen. Ohne Schlüssel (nicht entsperrt) geschieht nichts; er
+ * fragt nie nach dem Passwort. Was fällig ist und wie weit er ist, zeigt die
+ * Karte „GPS-Daten verdichten" im Reiter Backup. */
+window.addEventListener('load', () => {
+  if (window.EdWartungslauf && PAT_WRAP) {
+    setTimeout(() => { EdWartungslauf.still(PAT_WRAP); }, 1500);
+  }
+});
+
 const LADE_SPUREN = EdOrtsdaten.ladeplatz(document.getElementById('spuren-lade'));
 let tagLauf = 0;
 async function spurenOeffnen(d, bounds){

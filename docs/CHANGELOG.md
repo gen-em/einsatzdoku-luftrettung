@@ -14,6 +14,68 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.6.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-07 — der Wartungslauf im Browser**. Kein Schema.
+
+### Hinzugefügt
+
+- **Der Wartungslauf fasst GPS-Daten im Browser zusammen und dünnt sie aus.**
+  Uhr und Handy schicken ihre Aufzeichnungen seit S11 verschlossen und
+  ungepackt, 14 Byte je Punkt. Bis Web 22.5 hätten die Jobs `verdichtung` und
+  `ausduennen` sie packen sollen — sie konnten es nicht mehr, weil der Server
+  keine Koordinate sieht. Jetzt nennt der Server, was fällig ist
+  (`api/wartungslauf.php`: abgeschlossen, nicht im Papierkorb, kein
+  Altbestand), und der Browser tut die Arbeit: öffnen, nach 31 Tagen
+  ausdünnen (dieselbe Regel und dieselbe Prüfung wie bisher, 2 m / 3 m,
+  Phasenpunkte geschützt — an 221 Referenzspuren mit dem PHP-Original
+  verglichen, 221 gleiche Behaltelisten), ein gepacktes Stück bauen, es zur
+  Probe wieder öffnen und erst dann schicken. Der Server tauscht nur, wenn
+  sich seit dem Lesen nichts geändert hat; die Marke für die Geräte und die
+  Stufe fallen nie, und **ausgedünnt wird nur nach der Frist** — den Zeitpunkt
+  prüft der Server selbst, weil die Ausdünnung unwiderruflich ist.
+- **Die gepackte Form** (E-S11-71, Betreiberin: „B fest"): vier Spalten mit
+  Abständen, gepackt — 4,40 Byte je Punkt am Referenzbestand gegen 14,40
+  ungepackt (3,69 in SPUR1, das ein eigener Kodierer wäre). Gemessen am
+  Demo-Bestand nach dem ersten Lauf: 4,56 Byte je Punkt, mit Hülle.
+- **Wo er läuft** (Mockup M-S11-02, Variante 1): auf der Startseite still, bis
+  zu 20 Aufzeichnungen je Aufruf, ohne je nach dem Passwort zu fragen; und in
+  **Einstellungen → Backup** als Karte **„GPS-Daten verdichten"**, die zählt,
+  was fällig ist, und es mit Ring, Zahl und Balken abarbeitet. Der Balken aus
+  M-S11-01 ist damit gebaut (`.balken`, Design 9.41).
+- **Fehlende Ortshöhen** trägt der Lauf beim Zusammenfügen nach; den
+  verschlüsselten Block schreibt der Server nur, wenn er sich seither nicht
+  geändert hat.
+
+### Geändert
+
+- **„Zeitraum löschen" geht auch auf einer zusammengefassten Aufzeichnung.**
+  Bisher wies der Weg sie ab („schon zusammengefasst"); nach S11-07 wäre das
+  fast jede gewesen, denn ein Ruhesegment wird kurz nach dem Abschluss
+  gepackt. Der Rest bleibt gepackt, die Marke bleibt.
+- **Herausgeschnittene Punkte fallen beim Zusammenfügen endgültig** (E-S11-47)
+  — bis dahin lagen sie doppelt verschlüsselt im Segment.
+- **Ausgedünnte Spuren aus einer Sicherung** werden ein gepacktes Stück der
+  Stufe 3 (Browser und direkter Weg der Verwaltung); die Kontosicherung der
+  Verwaltung trägt die Stufe je Stück.
+
+### Entfernt
+
+- **Die Jobs `verdichtung` und `ausduennen`** samt der Liste „was liegenbleibt"
+  in Betrieb → Hintergrundjobs. Die Pause der Jobs hält den Wartungslauf nicht
+  an — er ist keiner. Klartextspuren aus der Zeit vor S11 fasst bis zum
+  Einmalwerkzeug (S11-10) niemand mehr an (E-S11-70).
+
+### Bewusst so belassen
+
+- **Die Ausdünnung läuft im Hauptfaden des Browsers.** Bei einer mittleren
+  Aufzeichnung (330 Punkte) ist das nicht zu merken; bei einer sehr langen
+  dauert es eine Weile. Nicht gemessen — gehört zur Messung in S11-11.
+- **Prüfwerkzeuge, die Daten vergleichen, schalten ihn ab** (F-S11-77): Sie
+  beantworten `api/wartungslauf.php` im eigenen Browser mit „nichts fällig",
+  sonst dünnte er zwischen Einspielen und Sichern aus. Gemessen wird er in
+  seiner eigenen Probe.
+
 ## [Web 22.5.1] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-06g — Höhe in ganzen Metern**. Kein Schema.

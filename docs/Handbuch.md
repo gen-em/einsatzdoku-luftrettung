@@ -1355,6 +1355,9 @@ kommt er nicht zurück. Ein paar Grenzen:
   Papierkorb da (den Diensttag löschen, Abschnitt 8).
 - **Aufzeichnungen aus der Zeit vor der Verschlüsselung** lassen sich erst
   nach der Umstellung des Servers stückweise löschen; die Anwendung sagt es.
+- **Zusammengefasste und ausgedünnte Aufzeichnungen** (Abschnitt 6, „GPS-Daten
+  verdichten") lassen sich seit Web 22.6.0 genauso stückweise löschen; sie
+  bleiben danach zusammengefasst.
 - **Kommen gerade neue GPS-Daten an**, während du löschst, tut die Anwendung
   nichts und bittet dich, die Seite neu zu laden — sonst ginge das Neue
   verloren.
@@ -2716,6 +2719,31 @@ beschädigt" — was beides nicht stimmte.)
 
 Der Aufbau der Datei ist in `docs/Backup-Format.md` vollständig beschrieben —
 sie lässt sich damit auch ohne dieses Programm entschlüsseln.
+
+#### GPS-Daten verdichten
+
+*Seit Web 22.6.0.*
+
+Uhr und Handy schicken ihre Aufzeichnungen verschlüsselt und ungepackt. Der
+Server kann sie nicht lesen und deshalb auch nicht zusammenfassen — das macht
+**dein Browser**: Er fasst eine Aufzeichnung zusammen, sobald der Einsatz oder
+das Ruhesegment abgeschlossen ist, und **dünnt sie 31 Tage nach dem Ende aus**
+(Abschnitt 12.4 sagt, was dabei geschieht). Zu tun hast du dafür nichts:
+
+- **Auf der Startseite** erledigt er bei jedem Aufruf still bis zu zwanzig
+  Aufzeichnungen — sobald die geschützten Angaben entsperrt sind. Nach dem
+  Passwort fragt er dafür nie.
+- **Hier, unter Backup**, steht die Karte **„GPS-Daten verdichten"**. Sie
+  nennt, was fällig ist („42 Aufzeichnungen aus 11 Diensttagen"), und arbeitet
+  es ab, solange die Seite offen ist: Ring, Zahl und Balken zeigen, wie weit er
+  ist; am Ende steht das Ergebnis. Fehlt bei einem Einsatz die Höhe des
+  Einsatzorts, trägt er sie dabei nach.
+
+Lässt sich eine Aufzeichnung nicht öffnen, bleibt sie, wie sie ist; die Karte
+sagt es rot, und die Betreuung sieht es im Reiter System. Kommt während des
+Laufs Neues von einem Gerät an, wartet er damit bis zum nächsten Mal — es geht
+nichts verloren. Aufzeichnungen aus der Zeit vor der Verschlüsselung fasst er
+nicht an; die übernimmt die Umstellung des Servers.
 
 ### 6.1 Konto-Backups durch die Verwaltung
 
@@ -5568,27 +5596,22 @@ hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
 **„Fehler"**, wird unter anderem der Papierkorb nicht mehr geleert; die
 Ursache steht in derselben Karte im Klartext.
 
-Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Aufzeichnungen",
-sondern welche. Fünf Gründe kommen vor: eine **Lücke in der Nummernfolge**
-(eine Uhr hat ein Teilstück nie nachgeliefert; die Aufzeichnung bleibt dann so stehen,
-wie sie ist), **zu viele Punkte** (über 50 000 in einer Aufzeichnung), **Punkte auf
-ausgedünnten GPS-Daten** (hier sollte immer null stehen), **„Wartet auf die
-Verdichtung"** (es sind noch Punkte nachgekommen; sie werden erst verdichtet,
-dann ausgedünnt) und eine **nicht bestandene Prüfung** (dabei wurde nichts
-gelöscht und nichts ersetzt). Ein
-Rückstand ohne solche Listen ist normal: Er zählt auch mit, was einfach noch zu
-frisch ist.
-
-**Was mit alten GPS-Daten geschieht.** Die Anwendung legt GPS-Punkte in drei
-Stufen ab. Frisch von der Uhr kommen sie als einzelne Punkte; sobald ein
-Einsatz abgeschlossen ist und zwei Wochen nichts mehr nachgekommen ist, werden
-sie zu einem kompakten Paket zusammengefasst — daran ändert sich nichts, was
-man sieht. **Sechs Monate nach dem Einsatz** werden die GPS-Daten ausgedünnt: Es
+**Was mit alten GPS-Daten geschieht.** Die Anwendung legt GPS-Daten in drei
+Stufen ab. Frisch von Uhr oder Handy kommen sie in kleinen Stücken; sobald ein
+Einsatz abgeschlossen ist, werden sie zu einem kompakten Paket zusammengefasst
+— daran ändert sich nichts, was man sieht. **31 Tage nach dem Einsatz** werden
+sie ausgedünnt: Es
 bleiben die Punkte, die den Weg beschreiben, und die zu den Einsatzphasen
 gehören; dazwischenliegende, die auf der Linie liegen, fallen weg. Auf der
 Karte sieht der Weg danach genauso aus. **Die Punktzahl in Export und GPX ist
 danach kleiner** — das ist kein Verlust der Aufzeichnung, sondern ihre
-Verdichtung, und es lässt sich nicht rückgängig machen.
+Verdichtung, und es lässt sich nicht rückgängig machen. **Seit Web 22.6.0 tut
+das nicht mehr ein Job hier, sondern der Browser jedes Kontos** (Abschnitt 6,
+„GPS-Daten verdichten"): Der Server kann die verschlüsselten Aufzeichnungen
+nicht lesen. Bis dahin standen in dieser Liste die Jobs „GPS-Daten verdichten"
+und „GPS-Daten ausdünnen", mit einer Frist von zwei Wochen und sechs Monaten
+und einer Liste dessen, was liegenblieb. Aufzeichnungen aus der Zeit vor der
+Verschlüsselung bleiben bis zur Umstellung des Servers, wie sie sind.
 
 Zwei Dinge, die man dazu wissen sollte: Ändert man bei einem älteren, bereits
 ausgedünnten Einsatz eine **Phasenzeit**, wird die Höhe des Einsatzorts nicht
@@ -5601,8 +5624,9 @@ Punkte werden aber nicht mehr aufgenommen.
 anhalten"** mit einer Dauerwahl: *15 Min.*, *30 Min.*, *1 Std.* oder
 *2 Std.*. Das ist für den Fall gedacht, dass etwas schiefläuft oder ein großes
 Backup einzuspielen ist. **Während der Pause geschieht gar nichts** — nichts
-wird verdichtet, ausgedünnt, aufgeräumt, gesichert oder versendet, auch das
-geplante Komplett-Backup nicht. Die Rückfrage sagt genau das.
+wird aufgeräumt, gesichert oder versendet, auch das geplante Komplett-Backup
+nicht. Das Verdichten der GPS-Daten im Browser hält sie nicht an; es gehört
+nicht zu diesen Jobs. Die Rückfrage sagt genau das.
 
 Die Pause **läuft von selbst ab**; länger als zwei Stunden am Stück geht
 nicht, damit eine vergessene Pause die Installation nicht dauerhaft anhält.
@@ -5648,17 +5672,8 @@ bricht nichts ab, sondern merkt sich, wo er war. Die Kommandozeile bekommt
 Deshalb steht die eigentliche Arbeit vorn und das Sicherheitsnetz („Verwaiste
 GPS-Daten") hinten.
 
-**Ein Rückstand ist kein Fehler.** Er zählt auch mit, was einfach noch zu
-frisch ist: GPS-Daten werden erst zwei Wochen nach dem Einsatz verdichtet und
-sechs Monate danach ausgedünnt.
-
-**Was liegenbleibt und warum.** Eine **Lücke in der Nummernfolge** hält die
-Verdichtung an, weil die Position im Paket die Nummer des Punkts ist — eine
-Lücke verschöbe jeden Punkt dahinter. **Zu viele Punkte** (über 50 000 je
-Aufzeichnung) bleiben als Zeilen stehen, weil ein Backup so große GPS-Daten
-nicht wiederherstellen könnte. Steht bei **Punkte auf ausgedünnten GPS-Daten**
-eine Zahl, nimmt die Uhr-Schnittstelle Punkte an, die sie nach der Ausdünnung
-verwerfen sollte.
+**Ein Rückstand ist kein Fehler.** Er zählt auch mit, was einfach noch nicht
+dran ist — etwa ein Papierkorb, dessen Frist noch läuft.
 
 ### 12.5 Servereinstellungen
 

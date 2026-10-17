@@ -978,7 +978,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → der Job `waisen` entfernt Waisen (4.97a). **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
-| `track_stuecke` | **Seit Web 22.0.1 (S11-04a) die Spur, wie sie ankommt: verschlossene Stücke** (SPUR2), eine Zeile je Stück, PK `(owner_type, owner_id, seq_from)`. Klartext nur `punkte`, `n_original`, `ts_von`, `ts_bis`, `stufe` (1 Gerät, 2 zusammengefügt, 3 ausgedünnt); die Punkte stehen in `huelle` (Gerätehülle, Art `spur`/`ruhe`, Platz `<seq_from>:<punkte>`). Wie `track_points` ohne FK; gelesen und geschrieben nur über `spur_lib.php` — 4.99s |
+| `track_stuecke` | **Seit Web 22.0.1 (S11-04a) die Spur, wie sie ankommt: verschlossene Stücke** (SPUR2), eine Zeile je Stück, PK `(owner_type, owner_id, seq_from)`. Klartext nur `punkte`, `n_original`, `ts_von`, `ts_bis`, `stufe` (1 Gerät, 2 zusammengefügt, 3 ausgedünnt); die Punkte stehen in `huelle` (Gerätehülle, Art `spur`/`ruhe`, Platz `<seq_from>:<punkte>`; ab Stufe 2 `<seq_from>:<punkte>:<stufe>:<n_original>`, Innenform gepackt, E-S11-71). Stufe 2 und 3 entstehen seit Web 22.6.0 im Wartungslauf des Browsers. Wie `track_points` ohne FK; gelesen und geschrieben nur über `spur_lib.php` — 4.99s |
 | `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Job `waisen` ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
 | `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Welches Rettungsmittel Fähigkeiten führen darf, entscheidet seit Web 20.3.0 `veh_caps_erlaubt()` (`db.php`) aus Typ UND Betriebsart** — `kind = 'air'` bei `standard`/`veranstaltung`/`sonstiges` (E29), beide Betriebsarten beim Typ `bergwacht`. Die Spalte `faehigkeiten` in `VEHICLE_TYPEN` ist die Quelle; das Schema führt die Regel nicht. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` = das Konto, seit Web 21.0.0 `NOT NULL` — siehe den Hinweis unter der Tabelle |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
@@ -3039,7 +3039,7 @@ Sprosse läge bei 9300 s. Besser gar nichts als ein toter Link.
 **Der Job `mail`** steht als **erster** im Katalog von `jobs_lib.php`, und das
 ist kein Zufall: `jobs_lauf()` arbeitet den Katalog der Reihe nach ab und
 überspringt, was ins Restbudget nicht mehr passt — am Huckepack-Weg sind das
-3 s für **alle** Jobs zusammen. Stünde `mail` hinter der Verdichtung, bekäme
+3 s für **alle** Jobs zusammen. Stünde `mail` hinter einem Job mit großem Rückstand (bis Web 22.5 die Verdichtung), bekäme
 er dort regelmäßig nichts, und die Statusseite meldete trotzdem „in Ordnung",
 weil kein Fehler anliegt. Bei einer Warteschlange, in der ein Reset-Link
 wartet, ist das der teuerste aller stillen Fehler.
@@ -3819,8 +3819,6 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über jede Tabelle des Kontos kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
 | `aufraeumen` | ja, höchstens 1×/Kalendertag | **achtzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), **Gemerkte Geräte** (Schritt 18, SR-02 — abgelaufene Zeilen aus `vertraute_geraete`, je Rolle mit der Dauer ihrer Gruppe), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/quelltext/` `jobregister`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
 | `konto_verfall` | nein | Registrierungen, die nicht bestätigt wurden, und Freischaltfristen, die abgelaufen sind (P5b) — **höchstens fünf je Lauf**, aus demselben Grund wie beim Löschjob darüber |
-| `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
-| `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
 | `protokoll_archiv` | nein, im Regelfall eine Abfrage auf die Marke | Die Einträge eines abgelaufenen Zeitraums (Vorgabe 7 Tage) versiegelt als ZIP nach `sicherungen/protokoll/`, in Häppchen zu 500 Zeilen; Archive nach Ablauf der Aufbewahrung (Vorgabe 365 Tage) löschen (P5c/AP2, 4.99g). Steht **vor** `versand`, damit ein fertiges Archiv im selben Lauf hinausgeht |
 | `schluesselwechsel` | nein, nur während eines Wechsels des Serverschlüssels | Was noch unter dem bisherigen Serverschlüssel liegt, mit dem neuen umhüllen und danach mit ihm nachweisen — Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups samt Begleitdatei, Archive des Protokolls (Schritt 18, SR-03, 4.97c). Ohne Wechsel eine Abfrage und `fertig`. Steht **vor** `versand`, damit ein umbenanntes Archiv im selben Lauf hinausgeht |
@@ -3828,6 +3826,13 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | `komplett` | nein, nach Plan | Komplett-Backup der Installation (4.97d) |
 | `nachaufloesen` | nein, nur nach einer neuen Modelltabelle | Teilenummern bestehender Geräte erneut auflösen, in Blöcken von 200 (P5a/AP11, unten) |
 | `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
+
+**`verdichtung` und `ausduennen` gibt es seit Web 22.6.0 nicht mehr** (S11-07,
+E-S11-05). Sie standen hier von Web 10.2.0 bis 22.5.x und packten bzw.
+dünnten die Spuren auf dem Server. Seit S11 sieht der Server keine Koordinate
+mehr; das tut jetzt der **Wartungslauf im Browser** (4.99s, „Der Wartungslauf im Browser"). Den Altbestand im
+Klartext (`track_points`, `track_blobs`) fasst bis zum Einmalwerkzeug (S11-10)
+niemand mehr an (E-S11-70).
 
 > **Diese Tabelle hat dreimal gehinkt, und beim dritten Mal ist die Ursache
 > behoben worden** (Backlog Nr. 208, Schritt 16, Web 20.26.0).
@@ -3894,67 +3899,15 @@ sich mit dem nächsten Lauf des Erzeugers ändern können) — und sie braucht
 genau die Zeilen ihrer neuen Teilenummer nachzieht. `null` heißt die
 ausgelieferte Tabelle; am Regelfall ändert der Parameter nichts.
 
-#### Verdichtung und Ausdünnung als Jobs (ab Web 10.2.0)
+#### Verdichtung und Ausdünnung als Jobs (Web 10.2.0 bis 22.5.x)
 
-**Der Einstieg der Verdichtung kommt von der PUNKTSEITE**, wie beim
-Waisenjob — und das ist keine Bequemlichkeit. Die Menge „`final = 1` und
-Ankunft älter als 14 Tage" enthält *jeden je abgeschlossenen* Einsatz, auch
-alle längst verdichteten; sie wächst monoton, und ein Index darauf fände bei Z2
-Millionen Zeilen, von denen 99,9 % nichts mehr zu tun haben. Der Punkteinstieg
-dagegen **räumt seinen eigenen Vorrat ab**: Eine verdichtete Spur hat keine
-Zeilen mehr und erscheint nie wieder. Übrig bleibt nur der Rückstand. Der nötige
-Index existiert bereits — der Primärschlüssel.
-
-**Blockgröße 200, und gelesen wird Spur für Spur.** `JOB_WAISEN_BLOCK` (2000)
-ist hier falsch: Der Waisenjob materialisiert nie Punkte, die Verdichtung muss
-jede Kandidatenspur wirklich lesen. Gemessen kostet eine Punktliste in PHP 237
-bis 294 Byte je Punkt; 200 Spuren des Messstands (524 Punkte im Mittel)
-gebündelt zu halten sprengt ein `memory_limit` von 64 MB — nachgemessen mit
-`Allowed memory size exhausted`. Spur für Spur gelesen ist die Spitze die
-**einer** Spur: gemessen 4,0 MB.
-
-**Ablauf je Spur.** Erst der Umriss (`spur_umriss()`, eine Abfrage für den
-ganzen Block: Zeilenzahl, kleinste und größte Nummer, größter Zeitstempel,
-Blobstufe). Daraus wird entschieden, **ohne einen Punkt gelesen zu haben**:
-Eigentümer weg → der Waisenjob räumt · im Papierkorb → nicht anfassen · Stufe 3
-→ nicht anfassen und zählen · über `LIMIT_TRACKPUNKTE_SPUR` → ablehnen und
-benennen · `letzter_punkt_am` fehlt → nachtragen · Karenz nicht abgelaufen →
-liegen lassen · Lücke → benennen. Erst wer alles passiert, kostet einen
-Punktzugriff.
-
-Dann: lesen, kodieren, Rundlauf prüfen — **alles außerhalb der Transaktion**,
-denn `spur_rundlauf_pruefen()` braucht kein PDO. Schlägt sie an, geschieht gar
-nichts. Die Transaktion selbst ist zwei Anweisungen lang, **erst Blob, dann
-Zeilen**: Der Zwischenzustand ist im Code vorgesehen (`spur_lesen_viele()`
-übergeht Zeilen unterhalb `n_original` als Rest eines abgebrochenen Laufs),
-umgekehrt wäre ein Abbruch Datenverlust.
-
-**Die Ausdünnung geht über den Primärschlüssel von `track_blobs`**, nicht über
-den Index `stufe_alter (stufe, geaendert_am)`. Der trägt das Änderungsdatum des
-*Blobs*, nicht das Einsatzende, und ist als Näherung in beide Richtungen
-falsch: Das Einspielen eines Backups schreibt einen frischen `geaendert_am`
-auf zwei Jahre alte Punkte, und `spur_zeit_verschieben()` schreibt ihn bei
-jeder Umdatierung neu. Bezugsgröße ist `COALESCE(ended_at, started_at)` —
-`started_at` ist in beiden Tabellen `NOT NULL`, und bei sechs Monaten Frist ist
-der Unterschied zwischen Beginn und Ende Rauschen (und geht in die sichere
-Richtung).
-
-**Nachzügler gehen vor.** Eine Spur mit Stufe-1-Zeilen wird *nicht* ausgedünnt;
-sie gehört der Verdichtung, die Blob und Nachzügler zu einem neuen
-verlustfreien Blob zusammenführt. Sonst nummerierte der Blob 0 … n_gespeichert−1
-und die Nachzügler begännen bei `n_original` — eine Nummernlücke, die der
-Rückweg des Backups nicht verträgt.
-
-**Verkettet wird nicht.** Konzept 3.1.4 sah vor, dass die Ausdünnung im selben
-Häppchen hinterherläuft, wenn die Frist schon abgelaufen ist. Dagegen sprach:
-zwei unwiderrufliche Schritte mit zwei verschiedenen Rundlaufbegriffen in einem
-Budgetfenster, deren Scheitern sich hinterher nicht mehr zuordnen lässt.
-Getrennt kostet es einen Jobzyklus. Entschieden am 31.08.2026; das Konzept ist
-an dieser Stelle fortgeschrieben.
-
-Gemessen am Messstand (5345 Einsätze, 3,3 Mio. Punkte, `memory_limit=64M`):
-Verdichtung **9395 Spuren in 44,3 s**, 2 936 497 Zeilen entfernt, Spitze
-4,0 MB · Ausdünnung **4973 Spuren in 15,2 s**, Spitze 4,0 MB.
+Ausgetragen mit S11-07 (Web 22.6.0): Die beiden Jobs `verdichtung` und
+`ausduennen` lasen Klartextpunkte, und die gibt es für neue Aufzeichnungen
+nicht mehr. Ihre Nachfolge ist der Wartungslauf im Browser (4.99s, „Der Wartungslauf im Browser"). Was hier
+stand — Einstieg über die Punktseite, Häppchengrößen, Karenz, gemessene
+Laufzeiten am Messstand —, steht in der Git-Historie dieser Datei (bis
+`0db03e9`). Die Ausdünnung selbst (Stufe 3, oben) gilt unverändert; sie läuft
+nur an anderer Stelle.
 
 #### Die Jobs anhalten (ab Web 10.2.0, Knopf ab Web 19.3.0)
 
@@ -4523,8 +4476,8 @@ das Stück durch ist: Die Reserve regelt den Anfang eines Stücks, nicht sein
 Ende. **Am Huckepack-Weg (3 s) werden
 Dateien deshalb nie umgehüllt, wohl aber nachgewiesen** — ohne Cron oder
 Token bringt nur *Jetzt weiterarbeiten* (20 s) Konto-Backups und Archive
-voran (F-SR-82). Steht der Verdichtungsjob mit Rückstand im Katalog vor ihm,
-bleibt ihm am Huckepack-Weg oft gar keine Zeit; dasselbe wie beim Mailjob.
+voran (F-SR-82). Steht ein Job mit Rückstand im Katalog vor ihm (bis Web 22.5
+die Verdichtung), bleibt ihm am Huckepack-Weg oft gar keine Zeit; dasselbe wie beim Mailjob.
 Nach dem Umhüllen ein **Nachweis-Durchgang**, der nichts schreibt; liegt dann
 noch etwas unter dem bisherigen, beginnt das Umhüllen von vorn (höchstens
 dreimal je Häppchen). Liegt das Manifest eines Konto-Backups oder Archivs
@@ -8800,7 +8753,8 @@ genaue Form steht im JSON-Vertrag 3.4.
 
 **Verschließen auf dem Server** (`geraetehuelle_lib.php`): für Proben, das
 Demo-Zurücksetzen und den direkten Rückweg einer Kontosicherung der Verwaltung
-(`gh_einsatz_verschliessen()`, `gh_stuecke_bauen()`, S11-06c), byte-gleich
+(`gh_einsatz_verschliessen()`, `gh_stuecke_bauen()`, S11-06c; `gh_gepackt_bauen()`
+für eine ausgedünnte Spur, S11-07), byte-gleich
 gegen die Prüfvektoren (Hüllenprobe, Teil Server). **Öffnen kann der Server nicht** — die Funktion gibt es dort
 nicht, nur im Prüfwerkzeug (`tools/proben/huelle/geraet.php`), mit dem die
 Proben wie ein Gerät senden und das Ergebnis nachlesen.
@@ -8883,6 +8837,61 @@ Sicherung tun es noch, bis S11-05d und S11-06 sie umbauen. **Kein Übergang** (E
 Altbestand zeigt bis S11-10 kein Transportziel und keine Höhe.
 
 **Kein Schema.** Die Spalten bleiben bis zur Aufräumauslieferung.
+
+#### Der Wartungslauf im Browser (ab Web 22.6.0, S11-07)
+
+**Er löst die Jobs `verdichtung` und `ausduennen` ab** (E-S11-05). Geräte
+schicken ungepackte Stücke (14 Byte je Punkt, Stufe 1); der Server kann sie
+weder zusammenfügen noch ausdünnen, weil er sie nicht öffnen kann. Er weiß aber
+aus den Klartextzahlen, **was fällig ist**, und tauscht nur, **was sich seit
+dem Lesen nicht geändert hat**.
+
+| Teil | Wo | Was |
+|---|---|---|
+| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb, ohne Altbestand (E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze |
+| Zahl | `spur2_faellig_zahl()`, `zahl` | wie viele Aufzeichnungen aus wie vielen Diensttagen, für die Karte |
+| Arbeit | `assets/wartungslauf.js` | öffnen (`EdOrtsdaten.spur()`), nach der Frist ausdünnen (`ausduennen()`, `ausduennungPruefen()` — wörtlich `spur_ausduennen()` und `spur_ausduennung_pruefen()`; gegen PHP an 221 Referenzspuren nachgemessen: 221 gleiche Behaltelisten), **ein** gepacktes Stück bauen (`EdOrtsdaten.gepacktBauen()`), es wieder öffnen und Punkt für Punkt vergleichen (Rundlauf) — erst dann schicken |
+| Ortshöhe | ebenda | fehlt sie im `pat_blob`, wird sie aus den offenen Punkten nachgetragen (E-S11-72); der Server schreibt den Blob nur bei unveränderter Prüfsumme |
+| Tausch | `spur2_wartung_tauschen()`, `tauschen` | Besitz, `final`, kein Papierkorb, kein Altbestand; Bestand unverändert (`spur2_tauschen()`); genau ein Stück der Stufe 2 oder 3, `seq_from` wie das kleinste alte, Zeitraum innerhalb des alten; **die Marke fällt nicht, die Stufe fällt nicht**; **Stufe 3 nur nach der Frist** — der Zeitpunkt ist Klartext, die Ausdünnung unwiderruflich (E-S11-73). Ein 409 ist der Normalfall eines Wettlaufs |
+
+**Die Innenform der Stufen 2 und 3** (E-S11-71, „B fest"): `deflate` (zlib,
+RFC 1950 — `CompressionStream('deflate')`, `gzcompress()`) über vier Spalten zu
+je `punkte` Werten `int32` big-endian, jeder Wert als Abstand zum vorigen
+derselben Spalte: Breite und Länge in 10⁻⁷ Grad, Höhe in Metern (`-32768` =
+keine, als Wert der Spalte), Zeit seit `ts_von`. Die Punkte tragen **keine
+eigene Nummer**: Ein solches Stück deckt `seq_from` bis `seq_from + n_original
+− 1`; Punkte eines Gerätestücks darunter stecken schon darin, und die Marke für
+das Gerät ist `seq_from + n_original` (`spur2_marke()`). Der Ort der Hülle
+bindet Stufe und Marke: `seq_from:punkte:stufe:n_original`. Gemessen am
+Referenzbestand (F-S11-76): 4,40 Byte je Punkt gegen 14,40 ungepackt und 3,69
+in SPUR1; am Demo-Bestand nach dem ersten Lauf 4,56 (Einsätze, mit Hülle).
+Eine Umsetzung je Ort: `referenz.py` (`innen_gepackt()`), `ortsdaten.js`
+(`gepacktBauen()`, Öffnen in `spur()`), `geraetehuelle_lib.php`
+(`gh_gepackt_bauen()`, nur für den direkten Rückweg einer Kontosicherung mit
+ausgedünnter SPUR1-Spur).
+
+**Wo er läuft** (Mockup M-S11-02, Variante 1): **auf der Startseite still**,
+ein Durchgang je Aufruf, 1,5 s nach dem Laden, nur mit Schlüssel — er fragt nie
+nach dem Passwort; und **in Einstellungen → Backup** in der Karte „GPS-Daten
+verdichten", die zählt, was fällig ist, und es Durchgang um Durchgang
+abarbeitet (Ring, Zahl, Balken in der `.zustandszeile`).
+
+**Was er mit ändert:** „Zeitraum löschen" (Nr. 161) geht seither auch auf einer
+gepackten Spur — der Rest wird ein Stück derselben Stufe mit derselben Marke
+(E-S11-74). Ausgedünnte Spuren aus einer Sicherung werden beim Einspielen ein
+gepacktes Stück der Stufe 3 (Browser und direkter Weg). Die Kontosicherung der
+Verwaltung trägt die Stufe je Stück.
+
+**Prüfwerkzeuge schalten ihn ab** (F-S11-77): Wer Daten vergleicht (Kreisläufe,
+GPX- und Ortsdatenprobe, Messstand, Bilderlauf, Bedienprobe u. a.), beantwortet
+`api/wartungslauf.php` im eigenen Browser mit „nichts fällig" — sonst dünnte der
+Lauf zwischen Einspielen und Sichern aus. Gemessen wird er in seiner eigenen
+Probe (`tools/proben/wartungslauf/`, Server und Browser).
+
+**Grenzen:** Die Ausdünnung läuft im Hauptfaden — bei einer mittleren Spur
+(330 Punkte) nicht spürbar, bei einer mit 50 000 Punkten eine Weile (nicht
+gemessen). Ein gepacktes Stück einer sehr großen, kaum packbaren Spur kann über
+die 800 KB eines Einspielhappens kommen (theoretisch; real 4–5 Byte je Punkt).
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 
@@ -12589,32 +12598,20 @@ und Adresse je in einem Wertekasten mit Knopf „kopieren":
    in eine Mail, nicht in ein Ticket. Ein neues Token macht das alte ungültig;
    ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
-**Spuren werden nicht verdichtet (Rückstand wächst):**
-**Betrieb → Hintergrundjobs** → Karte „Zustand" → Zeile
-**„Spuren verdichten"**. Darunter steht, was
-liegenbleibt und warum, mit Kennung: *Lücke in der Nummernfolge* (eine Uhr hat
-ein Teilstück nie nachgeliefert — die Spur bleibt als Zeilen stehen, das ist
-richtig so), *Zu viele Punkte* (über 50 000; aus einem Backup nicht
-wiederherstellbar), *Punkte auf einer ausgedünnten Spur* (Erwartungswert **0** —
-steht dort eine Zahl, nimmt `ingest.php` an, was es verwerfen sollte),
-*Prüfung nicht bestanden* (es wurde nichts gelöscht und nichts ersetzt).
-
-Ein Rückstand ohne diese Listen ist normal: Er zählt auch, was schlicht noch in
-der **Karenz** ist (14 Tage ohne neuen Punkt nach `final`, sonst 60 Tage) oder
-im Papierkorb liegt.
+**GPS-Daten werden nicht verdichtet:** Seit Web 22.6.0 packt und dünnt der
+Browser, nicht ein Job (4.99s, „Der Wartungslauf im Browser"). Was fällig ist, zeigt **Einstellungen →
+Backup** → Karte **„GPS-Daten verdichten"** dem Konto selbst; die Verwaltung
+sieht es nicht, weil sie die Aufzeichnungen nicht öffnen kann. Eine Aufzeichnung,
+deren Hülle nicht aufgeht, steht im **Reiter System** (Meldung des Browsers)
+und bleibt, wie sie ist. Klartextspuren aus der Zeit vor S11 packt niemand
+mehr; sie hebt das Einmalwerkzeug (S11-10).
 
 **Die Jobs vorübergehend anhalten** (vor einer großen Wiederherstellung, vor
 einer Messung): `php jobs.php --pause 1800`, aufheben mit `--pause 0`. Die
 Pause gilt für alle drei Auslöser, läuft nach höchstens zwei Stunden von selbst
 ab, und Betrieb → Hintergrundjobs zeigt sie an. **Sie ist kein Ersatz für ein
-Backup:** Was der Ausdünnungsjob einmal ersetzt hat, ist weg.
-
-**Nach dem Ausrollen von Web 10.2.0 auf einen gewachsenen Bestand:** Der erste
-Verdichtungslauf trägt den ganzen Altbestand ab. Gemessen an 3,3 Mio. Punkten:
-9395 Spuren in 44 s über die Kommandozeile. Am Huckepack-Weg (3 s je Anfrage,
-frühestens alle fünf Minuten) dauert dasselbe Tage — wer den Altbestand zügig
-abgetragen haben will, richtet vorher einen der beiden anderen Auslöser ein
-oder ruft einmal `php jobs.php verdichtung` von Hand auf.
+Backup:** Was einmal ausgedünnt ist, ist weg — bis Web 22.5 durch den Job,
+seither durch den Wartungslauf im Browser, den die Pause nicht anhält.
 
 **Zeitplan-Eintrag antwortet `429` (`zu_viele_versuche`):** Das Token stimmt
 nicht, und zehn Fehlversuche haben die IP für zehn Minuten gesperrt. Adresse

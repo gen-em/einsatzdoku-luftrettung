@@ -4048,6 +4048,17 @@ h1 + .seiten-erklaerung{margin-top:0}
   border-radius:var(--radius);padding:var(--abstand-2) var(--abstand-3);
 }
 .ladeplatz[hidden]{display:none}
+/* BALKEN — Fortschritt eines langen Laufs, IN der Zustandszeile unter dem
+ * Ladeplatz (M-S11-01 Abschnitt 3, freigegeben mit E-S11-35; erster
+ * Verwender: der Wartungslauf, S11-07, M-S11-02). Hoehe wie die Glieder des
+ * Passwortbalkens (`--strich-balken`), Flaeche `--linie`, Fuellung
+ * `--orange-tief` (3,2 : 1 auf `--linie`, fuer eine Grafik genug). Die Breite
+ * der Fuellung setzt das Skript; `role="progressbar"` traegt den Wert. */
+.balken{
+  height:var(--strich-balken);border-radius:calc(var(--strich-balken) / 2);
+  background:var(--linie);overflow:hidden;margin-top:var(--abstand-2);
+}
+.balken > i{display:block;height:100%;width:0;background:var(--orange-tief)}
 /* Geht eine Huelle nicht auf, steht die Meldung an der Stelle des
  * Ladeplatzes (M-S11-01, Zustand d) — mittig in der Kartenflaeche. */
 .geo > [data-ortsdaten]{

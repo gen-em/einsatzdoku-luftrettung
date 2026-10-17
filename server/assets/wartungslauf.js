@@ -28,10 +28,14 @@
  *   EdWartungslauf.lauf({ck, fortschritt})   ein Durchgang; liefert
  *                                            {spuren, getauscht, liegen,
  *                                             fehler, hoehen}
+ *   EdWartungslauf.still(wrap)               Startseite: ein Durchgang,
+ *                                            unsichtbar (M-S11-02)
+ *   EdWartungslauf.karte({wrap, faellig, zustand})
+ *                                            die Karte im Reiter Backup
  *   EdWartungslauf.ausduennen(punkte, zeiten)       Behalteliste (Indizes)
  *   EdWartungslauf.ausduennungPruefen(p, b, zeiten) null oder die Abweichung
  *
- * Braucht: EdApi, EdCrypto, EdOrtsdaten.
+ * Braucht: EdApi, EdCrypto, EdOrtsdaten, EdKeyGuard, EdHtml.
  */
 (function () {
   'use strict';
@@ -272,5 +276,106 @@
     return z;
   }
 
-  window.EdWartungslauf = { lauf: lauf, ausduennen: ausduennen, ausduennungPruefen: ausduennungPruefen };
+  /* ---- Zwei Verwender (Mockup M-S11-02, Variante 1) ----------------------- */
+
+  /** Den Inhaltsschlüssel, OHNE zu fragen: Der Lauf drängt sich nie mit
+   *  einem Passwortdialog vor. */
+  async function schluesselStill(wrap) {
+    if (!wrap || typeof EdKeyGuard === 'undefined') { return null; }
+    try { return await EdKeyGuard.contentKey(wrap); } catch (e) { return null; }
+  }
+
+  /** STARTSEITE: ein Durchgang, unsichtbar, nach dem Entsperren (E-S11-68).
+   *  Fehler bleiben still; eine Hülle, die nicht aufgeht, ist gemeldet. */
+  async function still(wrap) {
+    const ck = await schluesselStill(wrap);
+    if (!ck) { return null; }
+    try { return await lauf({ ck: ck }); } catch (e) { return null; }
+  }
+
+  const mehrzahl = (n, eins, viele) => n + ' ' + (n === 1 ? eins : viele);
+
+  /**
+   * DIE KARTE „GPS-Daten verdichten" (Reiter Backup): zählt, was fällig ist,
+   * und arbeitet es ab, solange die Seite offen ist — Durchgang um
+   * Durchgang, bis nichts mehr fällig ist oder ein Durchgang nichts schafft.
+   * Ohne Schlüssel wartet sie (stehender Ring) und fragt alle drei Sekunden
+   * nach, ob inzwischen entsperrt ist; ein Dialog geht von ihr nie aus.
+   */
+  async function karte(o) {
+    const faellig = o.faellig, zustand = o.zustand;
+    const zahl = async () => {
+      const a = await EdApi.postJson('api/wartungslauf.php', { aktion: 'zahl', auslassen: ausgelassen() },
+                                     { vorgang: 'Das Zählen' });
+      return a.ok ? a.daten : null;
+    };
+    const zeige = (z) => {
+      faellig.textContent = !z ? 'unbekannt'
+        : (z.aufzeichnungen === 0 ? 'nichts'
+           : mehrzahl(z.aufzeichnungen, 'Aufzeichnung', 'Aufzeichnungen') + ' aus '
+             + mehrzahl(z.diensttage, 'Diensttag', 'Diensttagen'));
+    };
+    let z = await zahl();
+    zeige(z);
+    if (!z || z.aufzeichnungen === 0) { return; }
+
+    let ck = await schluesselStill(o.wrap);
+    if (!ck) {
+      zustand.innerHTML = '<div class="ladeplatz ladeplatz-still"><span class="ladeplatz-ring" aria-hidden="true"></span>'
+        + 'Wartet auf dein Passwort</div>';
+      while (!ck) {
+        await new Promise((r) => setTimeout(r, 3000));
+        ck = await schluesselStill(o.wrap);
+      }
+    }
+
+    const gesamt = z.aufzeichnungen;
+    let fertig = 0;
+    const summe = { getauscht: 0, fehler: 0, hoehen: 0 };
+    zustand.innerHTML = '<div class="ladeplatz"><span class="ladeplatz-ring" aria-hidden="true"></span>'
+      + '<span data-vd-text></span></div>'
+      + '<div class="balken" role="progressbar" aria-valuemin="0" aria-valuemax="' + gesamt + '"><i></i></div>';
+    const text = zustand.querySelector('[data-vd-text]');
+    const balken = zustand.querySelector('.balken');
+    const stand = (n) => {
+      const w = Math.min(n, gesamt);
+      text.textContent = 'Wird verdichtet: ' + w + ' von ' + gesamt;
+      balken.setAttribute('aria-valuenow', String(w));
+      balken.firstChild.style.width = (gesamt ? 100 * w / gesamt : 100) + '%';
+    };
+    stand(0);
+    for (;;) {
+      let r;
+      try {
+        r = await lauf({ ck: ck, fortschritt: (i) => stand(fertig + i) });
+      } catch (e) {
+        zustand.innerHTML = EdHtml.meldung('fehler', 'Der Wartungslauf ist abgebrochen: '
+          + ((e && e.message) || 'unbekannter Fehler') + '. Er versucht es beim nächsten Öffnen wieder.');
+        return;
+      }
+      fertig += r.spuren;
+      summe.getauscht += r.getauscht; summe.fehler += r.fehler; summe.hoehen += r.hoehen;
+      stand(fertig);
+      if (!r.spuren || !r.getauscht) { break; }
+    }
+    z = await zahl();
+    zeige(z);
+    const teile = [];
+    if (summe.fehler) {
+      zustand.innerHTML = EdHtml.meldung('fehler', mehrzahl(summe.fehler, 'Aufzeichnung ließ', 'Aufzeichnungen ließen')
+        + ' sich nicht öffnen und ' + (summe.fehler === 1 ? 'bleibt' : 'bleiben')
+        + ', wie sie ' + (summe.fehler === 1 ? 'ist' : 'sind') + '. Gemeldet an die Betreuung.'
+        + (summe.getauscht ? ' ' + mehrzahl(summe.getauscht, 'Aufzeichnung', 'Aufzeichnungen') + ' verdichtet.' : ''));
+      return;
+    }
+    teile.push('Fertig: ' + mehrzahl(summe.getauscht, 'Aufzeichnung', 'Aufzeichnungen') + ' verdichtet');
+    if (summe.hoehen) {
+      teile.push('bei ' + mehrzahl(summe.hoehen, 'Einsatz', 'Einsätzen') + ' die Höhe des Einsatzorts nachgetragen');
+    }
+    zustand.innerHTML = EdHtml.meldung('ok', teile.join(', ') + '.'
+      + (z && z.aufzeichnungen ? ' Der Rest kommt beim nächsten Öffnen dran — inzwischen kam Neues hinzu.' : ''));
+  }
+
+  window.EdWartungslauf = { lauf: lauf, still: still, karte: karte,
+                            ausduennen: ausduennen, ausduennungPruefen: ausduennungPruefen };
 })();

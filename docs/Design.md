@@ -422,7 +422,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 45 |  |
+| `--linie` | `#E3DAC6` | 46 |  |
 | `--linie-stark` | `var(--gedaempft)` | 12 |  |
 
 **Orange — Handeln**
@@ -430,7 +430,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--orange` | `#FF8F1F` | 29 |  |
-| `--orange-tief` | `#C25A00` | 23 |  |
+| `--orange-tief` | `#C25A00` | 24 |  |
 | `--orange-hell` | `#FFEBD6` | 23 |  |
 
 **Blau — Auswählen und Erklären**
@@ -476,7 +476,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 84 |  |
-| `--abstand-2` | `8px` | 122 |  |
+| `--abstand-2` | `8px` | 123 |  |
 | `--abstand-3` | `12px` | 166 |  |
 | `--abstand-4` | `16px` | 67 |  |
 | `--abstand-5` | `24px` | 35 |  |
@@ -530,7 +530,7 @@ auseinanderlaufen kann.
 | `--anmeldekarte` | `400px` | 3 | Karte der Anmeldung (E-P3-38) |
 | `--zeile-frei` | `1.4em` | 1 | Mindesthöhe der Zustandszeile |
 | `--balken-glied` | `28px` | 1 | ein Segment des Passwortstärke- … |
-| `--strich-balken` | `6px` | 1 | … balkens, vier davon (E-P3-16) |
+| `--strich-balken` | `6px` | 3 | … balkens, vier davon (E-P3-16) |
 | `--karte-neben-breit` | `400px` | 4 | Kartenspalte ab 1600 px (E-P3-31) |
 
 **Karte (Leaflet)**
@@ -930,7 +930,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 |---|---|--:|
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
 | `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
-| `balken.svg` | Tabler Icons „chart-bar" (MIT) | 3 |
+| `balken.svg` | Tabler Icons „chart-bar" (MIT) | 4 |
 | `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 32 |
 | `datenbank.svg` | Tabler Icons „database" (MIT) | 11 |
 | `drucken.svg` | Tabler Icons „printer" (MIT) | 3 |
@@ -972,7 +972,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 50 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 51 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
@@ -3128,7 +3128,7 @@ höchstens 41 ab 06.07.").
 bis 366, darüber je Monat — in Ortszeit. Ein Satz unter dem Diagramm nennt
 die Einteilung und dass die Ränder angebrochen sein können.
 
-### 9.41 Ladeplatz (`.ladeplatz`, `.ladeplatz-ring`, `.ladeplatz-still`, seit Web 22.0.3)
+### 9.41 Ladeplatz (`.ladeplatz`, `.ladeplatz-ring`, `.ladeplatz-still`, seit Web 22.0.3) und Balken (`.balken`, seit Web 22.6.0)
 
 *Neuer Baustein mit Freigabe* (S11-04c, Mockup M-S11-01, Variante A,
 freigegeben am 13.10.2026, E-S11-35). **Zweck:** sagen, dass etwas kommt,
@@ -3160,8 +3160,15 @@ Grafik genügt 3 : 1 (WCAG 1.4.11).
 **Verwender (Web 22.0.3):** Einsatzansicht (Karte und Phasenkarte, die dabei
 sofort sichtbar ist), Diensttag (Karte), GPS-Daten des Diensttags
 (`tag_spuren.php`). **Der Balken mit Zahl** für lange Läufe (Export,
-GPX-Archiv, Wartungslauf) ist mit demselben Mockup freigegeben und entsteht
-mit seinem ersten Verwender (S11-05).
+GPX-Archiv, Wartungslauf) ist mit demselben Mockup freigegeben und steht seit
+Web 22.6.0 im Stylesheet (`.balken`, Füllung `.balken > i`): Höhe
+`--strich-balken` (6 px), Ecken die halbe Höhe, Fläche `--linie`, Füllung
+`--orange-tief` (3,2 : 1 auf `--linie`, für eine Grafik genug), `role="progressbar"`
+mit Wert. Er steht **in** der `.zustandszeile` unter dem Ladeplatz. Erster
+Verwender: die Karte **„GPS-Daten verdichten"** im Reiter Backup (S11-07,
+Mockup M-S11-02, Variante 1) — Ring und „Wird verdichtet: 17 von 42", darunter
+der Balken; am Ende die Meldung. Export und GPX-Archiv zeigen bis auf Weiteres
+nur die Textzeile.
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 

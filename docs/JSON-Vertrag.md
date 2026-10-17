@@ -719,6 +719,14 @@ zu `ts_von`** (`uint32`). **Ein Punkt ohne Höhe trägt `-32768`.** Bis zum
 im Hochgebirge still über (F-S11-64). Kein Gerät hat das alte Maß je
 gesendet — Uhr und Handy verschließen erst ab S11-08/-09.
 
+**Geräte senden nur diese Form (Stufe 1).** Die Stufen 2 und 3 — zusammengefügt
+und gepackt, ausgedünnt — entstehen seit Web 22.6.0 im Wartungslauf des
+Browsers und haben eine eigene Innenform (gepackte Spalten, Ort
+`seq_from:punkte:stufe:n_original`, `docs/Technik.md` 4.99s). Ein Gerät sieht
+davon nur die Wirkung auf die Marke: Unter `seq_from + n_original` eines
+gepackten Stücks ist alles schon da, und ein Stück über der Marke einer
+ausgedünnten Spur zählt als `dropped_points`.
+
 **Innen, Einsatzhülle** (E-S11-40): JSON, UTF-8, alle Zeiten in Sekunden
 **seit `started_at`** (E-S11-18), damit eine Verschiebung des Diensttags die
 Hülle nicht ungültig macht:

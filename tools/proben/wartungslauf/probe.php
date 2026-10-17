@@ -82,16 +82,22 @@ function in_liste(array $liste, string $art, int $id): ?array {
 echo "Wartungslaufprobe (Server) gegen $konto\n\n";
 $pdo->beginTransaction();
 try {
-    /* Ein Einsatz mit Stücken der Stufe 1, abgeschlossen. */
-    $m = $pdo->prepare("SELECT m.id, m.client_ref, m.pat_blob FROM missions m
+    /* Ein abgeschlossener Einsatz, dessen Stücke die Probe SELBST anlegt —
+     * zwei der Stufe 1. Die Demo ist nach dem ersten Wartungslauf gepackt
+     * (bis zum nächsten Zurücksetzen); auf ihren Zustand verlässt sich die
+     * Probe deshalb nicht. Alles in der Transaktion, die am Ende fällt. */
+    $m = $pdo->prepare("SELECT m.id, m.client_ref, m.pat_blob, UNIX_TIMESTAMP(m.started_at) t FROM missions m
                          WHERE m.user_id = ? AND m.final = 1 AND m.deleted_at IS NULL
-                           AND EXISTS (SELECT 1 FROM track_stuecke s WHERE s.owner_type = 'mission'
-                                        AND s.owner_id = m.id AND s.stufe = 1)
-                         ORDER BY (SELECT COUNT(*) FROM track_stuecke s WHERE s.owner_type = 'mission'
-                                    AND s.owner_id = m.id) DESC, m.id LIMIT 1");
+                         ORDER BY m.id LIMIT 1");
     $m->execute([$uid]);
     $e = $m->fetch(PDO::FETCH_ASSOC);
-    if (!$e) { fwrite(STDERR, "Kein abgeschlossener Einsatz mit Stücken — Demo zurücksetzen.\n"); exit(2); }
+    if (!$e) { fwrite(STDERR, "Kein abgeschlossener Einsatz im Konto — Demo zurücksetzen.\n"); exit(2); }
+    $pdo->prepare("DELETE FROM track_stuecke WHERE owner_type = 'mission' AND owner_id = ?")->execute([$e['id']]);
+    foreach ([0, 50] as $von) {
+        spur2_stueck_schreiben($pdo, 'mission', (int)$e['id'], $von, 50, (int)$e['t'] + $von * 10,
+            (int)$e['t'] + ($von + 49) * 10,
+            gh_verschliessen(str_repeat("\0", 14 * 50), $sec1, 'spur', (string)$e['client_ref'], "$von:50"));
+    }
     $mid = (int)$e['id'];
     $ref = (string)$e['client_ref'];
     /* Die Liste nur dieses Einsatzes: alle anderen Spuren des Kontos fallen
@@ -128,6 +134,19 @@ try {
     pruefe(in_liste(spur2_faellig($pdo, $uid, 20, $jetzt), 'mission', $mid) === null, 'mit Altbestand: nicht in der Liste (E-S11-70)');
     $pdo->exec('ROLLBACK TO SAVEPOINT altbestand');
     pruefe(count(spur2_faellig($pdo, $uid, 20, $jetzt)) <= SPUR2_WARTUNG_MAX, 'höchstens ' . SPUR2_WARTUNG_MAX . ' je Anfrage');
+    $z = spur2_faellig_zahl($pdo, $uid, $jetzt);
+    pruefe($z['aufzeichnungen'] === 1 && $z['diensttage'] === 1, 'Zahl: 1 Aufzeichnung aus 1 Diensttag', json_encode($z));
+    $pdo->prepare('UPDATE rest_segments SET final = 1 WHERE user_id = ?')->execute([$uid]);
+    $z2 = spur2_faellig_zahl($pdo, $uid, $jetzt);
+    $l2 = spur2_faellig($pdo, $uid, 1000, $jetzt);
+    $tage = count(array_unique(array_filter(array_map(static function ($e) use ($pdo) {
+        $q = $pdo->prepare('SELECT day_id FROM ' . ($e['art'] === 'mission' ? 'missions' : 'rest_segments') . ' WHERE id = ?');
+        $q->execute([$e['id']]);
+        return $q->fetchColumn();
+    }, $l2))));
+    pruefe($z2['aufzeichnungen'] === count($l2) && $z2['diensttage'] === $tage,
+           'Zahl stimmt mit der Liste (mit Ruhesegmenten)', json_encode($z2) . ' / ' . count($l2) . ', ' . $tage);
+    $pdo->prepare('UPDATE rest_segments SET final = 0 WHERE user_id = ?')->execute([$uid]);
 
     echo "\nTeil 2 — der Tausch\n";
     $setzeEnde(30);

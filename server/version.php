@@ -8196,5 +8196,14 @@ declare(strict_types=1);
  *   darueber lief sie still in eine negative Hoehe (F-S11-64). Jetzt ganze
  *   Meter, geklemmt auf ±32 767 (E-S11-66). Kein Geraet hat das alte Mass je
  *   gesendet. Kein Schema.
+ * 22.6.0 — S11-07: DER WARTUNGSLAUF IM BROWSER. Die Jobs `verdichtung` und
+ *   `ausduennen` entfallen: Sie lasen Klartextpunkte, und die gibt es fuer
+ *   neue Aufzeichnungen nicht mehr. Der Server nennt, was faellig ist
+ *   (`api/wartungslauf.php`), der Browser fuegt zusammen, duennt nach 31
+ *   Tagen aus, prueft im Rundlauf und laesst tauschen — nur bei unveraendertem
+ *   Stand, Stufe 3 nur nach der Frist. Gepackte Innenform „B fest"
+ *   (E-S11-71). Still auf der Startseite, sichtbar in der Karte „GPS-Daten
+ *   verdichten" (Reiter Backup, M-S11-02). Zeitraum loeschen auch auf
+ *   gepackten Spuren. Kein Schema.
  */
-const WEB_VERSION = '22.5.1';
+const WEB_VERSION = '22.6.0';
