@@ -438,8 +438,23 @@ const EdSchnitt = (() => {
       + w.ev + ' werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.',
       'Löschen', 'gefahr', 'GPS-Daten löschen');
     if (!ja) { knopf.disabled = false; return; }
+    /* AUF EINER GEPACKTEN SPUR (Stufe 2, 3) bleibt sie gepackt (S11-07,
+     * E-S11-74): ein Stück derselben Stufe, das mindestens bis zur alten Marke
+     * deckt — Geräteteile, die nach dem Zusammenfügen kamen, gehen mit hinein. */
+    const alle = seg.spur_stuecke || [];
+    const stufe = Math.max(1, ...alle.map(st => st.stufe || 1));
     let stuecke;
-    try { stuecke = await EdOrtsdaten.stueckeBauen(rest, 'ruhe', seg.client_ref); }
+    try {
+      if (stufe >= 2) {
+        const von = Math.min(...alle.map(st => st.seq_from));
+        const marke = Math.max(...alle.map(st => st.seq_from + ((st.stufe || 1) >= 2 ? st.n_original : st.punkte)),
+                               rest[rest.length - 1].seq + 1);
+        stuecke = [await EdOrtsdaten.gepacktBauen(rest, 'ruhe', seg.client_ref,
+                                                  { stufe: stufe, seqFrom: von, nOriginal: marke - von })];
+      } else {
+        stuecke = await EdOrtsdaten.stueckeBauen(rest, 'ruhe', seg.client_ref);
+      }
+    }
     catch (e) { vorher(el, 'fehler', oeffnenFehler(e, seg)); knopf.disabled = false; return; }
     const r = await ruf({ action: 'loeschen', rest_id: seg.id,
       beginn: w.bv, ende: w.ev, beginn_tag: w.bt, ende_tag: w.et,

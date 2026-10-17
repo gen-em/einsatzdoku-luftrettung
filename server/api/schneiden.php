@@ -167,7 +167,13 @@ function schnitt_stuecke(array $b, int $von, int $bis, bool $imZeitraum, Pruefli
     }
     $aus = []; $summe = 0;
     foreach (array_values($roh) as $i => $t) {
-        $st = pruef_spurstueck($t, 'stuecke[' . $i . ']', $pruef);
+        /* EIN GEPACKTES STUECK (Stufe 2, 3) nur beim Loeschen (S11-07,
+         * E-S11-74): Der Browser hat ein zusammengefuegtes oder ausgeduenntes
+         * Segment geoeffnet und verschliesst den Rest in derselben Stufe. Ein
+         * herausgeschnittener Einsatz faengt mit Geraetestuecken an. */
+        $st = is_array($t) && (int)($t['stufe'] ?? 1) >= SPUR2_STUFE_GEPACKT && !$imZeitraum
+            ? pruef_spurstueck_gepackt($t, 'stuecke[' . $i . ']', $pruef)
+            : pruef_spurstueck($t, 'stuecke[' . $i . ']', $pruef);
         if ($st === null) {
             json_out(['error' => 'eingabe', 'meldung' => 'Ein Stück der GPS-Daten ist unbrauchbar: '
                       . ($pruef->text() ?: 'Stück unvollständig') . '. Es wurde nichts geändert.'], 400);
@@ -452,7 +458,8 @@ function stueck_loeschen(array $b, int $userId): never
     }
     if (!$erg['ok']) {
         json_out(['error' => $erg['grund'], 'meldung' => $erg['grund'] === 'stufe'
-            ? 'Diese Aufzeichnung ist schon zusammengefasst und lässt sich hier nicht stückweise löschen.'
+            ? 'Diese Aufzeichnung ist inzwischen zusammengefasst worden. Bitte die Seite neu laden und '
+              . 'noch einmal wählen — es wurde nichts gelöscht.'
             : 'Inzwischen sind weitere GPS-Daten angekommen. Bitte die Seite neu laden und noch '
               . 'einmal wählen — es wurde nichts gelöscht.'], 409);
     }

@@ -268,6 +268,9 @@ const LIMIT_TRACKPUNKTE_SPUR    = 50000;
  * groessten denkbaren Inhalts. */
 const GH_MIN_BYTE         = 130;
 const GH_STUECK_MAX_BYTE  = LIMIT_TRACKPUNKTE_ANFRAGE * 14 + 16 + 130;
+/** Ein gepacktes Stueck (Stufe 2/3, E-S11-71): hoechstens die ganze Spur,
+ *  16 Byte je Punkt ungepackt, dazu was `deflate` im schlimmsten Fall anhaengt. */
+const GH_GEPACKT_MAX_BYTE = LIMIT_TRACKPUNKTE_SPUR * 16 + 1024 + 130;
 const GH_EINSATZ_MAX_BYTE = 262144;
 
 /** Wertebereich der Phasennummern. Phase 1 ist "Frei" (kein Zeitstempel),
@@ -820,6 +823,33 @@ function pruef_spurstueck($t, string $feld = 'track', ?Pruefliste $p = null): ?a
     }
     return ['seq_from' => $seqFrom, 'punkte' => $n, 'ts_von' => $tsVon,
             'ts_bis' => $tsBis, 'huelle' => $huelle];
+}
+
+/**
+ * Ein gepacktes Spurstueck des Wartungslaufs (Stufe 2 oder 3, S11-07,
+ * E-S11-71): wie `pruef_spurstueck()`, dazu Stufe und Marke, und die Grenzen
+ * der ganzen Spur statt der einer Anfrage.
+ *
+ * @return array{seq_from:int,punkte:int,n_original:int,ts_von:int,ts_bis:int,stufe:int,huelle:string}|null
+ */
+function pruef_spurstueck_gepackt($t, string $feld = 'stueck', ?Pruefliste $p = null): ?array
+{
+    if (!is_array($t)) { $p?->melde($feld, 'kein Stueck'); return null; }
+    $seqFrom = (int)($t['seq_from'] ?? -1);
+    $n       = (int)($t['punkte'] ?? 0);
+    $nOrig   = (int)($t['n_original'] ?? 0);
+    $stufe   = (int)($t['stufe'] ?? 0);
+    $tsVon   = (int)($t['ts_von'] ?? -1);
+    $tsBis   = (int)($t['ts_bis'] ?? -1);
+    $huelle  = pruef_huelle($t['huelle'] ?? null, GH_GEPACKT_MAX_BYTE, $feld . '.huelle', $p);
+    if ($seqFrom < 0 || $n < 1 || $n > LIMIT_TRACKPUNKTE_SPUR || $nOrig < $n
+        || $seqFrom + $nOrig > 4294967295 || !in_array($stufe, [2, 3], true)
+        || $tsVon < 0 || $tsBis < $tsVon || $huelle === null) {
+        $p?->melde($feld, 'Stueck unvollstaendig');
+        return null;
+    }
+    return ['seq_from' => $seqFrom, 'punkte' => $n, 'n_original' => $nOrig, 'ts_von' => $tsVon,
+            'ts_bis' => $tsBis, 'stufe' => $stufe, 'huelle' => $huelle];
 }
 
 /**

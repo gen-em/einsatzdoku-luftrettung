@@ -73,6 +73,7 @@ declare -A RUF=(
   [huelle]="bash tools/proben/huelle/probe.sh"
   [kontopaar]="node tools/proben/kontopaar/probe.mjs"
   [ortsdaten]="node tools/proben/ortsdaten/probe.mjs"
+  [wartungslauf]="bash tools/proben/wartungslauf/probe.sh"
 )
 
 # Proben, die `alle` NICHT fährt, mit dem Grund daneben. Kein stilles

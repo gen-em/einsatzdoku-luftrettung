@@ -198,3 +198,44 @@ function gh_stuecke_bauen(string $sec1, string $art, string $ref, array $punkte)
     }
     return $aus;
 }
+
+/**
+ * Ein gepacktes Stück der Stufe 2 oder 3 (S11-07, E-S11-71) — die Regel von
+ * `EdOrtsdaten.gepacktBauen()` und `referenz.py` `innen_gepackt()`: vier
+ * Spalten int32 big-endian mit Abständen (Breite, Länge in 1e-7 Grad, Höhe
+ * in ganzen Metern, Zeit seit `ts_von`), gepackt mit `gzcompress()` (zlib,
+ * wie `CompressionStream('deflate')`). Die Punkte tragen keine Nummer; das
+ * Stück deckt `$seqFrom` bis `$seqFrom + $nOriginal - 1`.
+ *
+ * Für den direkten Einspielweg der Verwaltung, der eine ausgedünnte Spur aus
+ * einem älteren Paket (SPUR1, Stufe 3) wieder ablegt — der einzige Ort, an
+ * dem der Server noch Klartext in der Hand hat.
+ *
+ * @param list<array{0:int,1:float,2:float,3:?float,4:int}> $punkte [seq, lat, lon, ele, ts]
+ * @return array{seq_from:int, punkte:int, n_original:int, stufe:int, ts_von:int, ts_bis:int, huelle:string}
+ */
+function gh_gepackt_bauen(string $sec1, string $art, string $ref, array $punkte, int $stufe,
+                          int $seqFrom, int $nOriginal): array
+{
+    $n = count($punkte);
+    $ts = array_map(static fn($p) => (int)$p[4], $punkte);
+    $von = min($ts);
+    $spalten = [[], [], [], []];
+    foreach ($punkte as $p) {
+        $spalten[0][] = (int)round((float)$p[1] * 1e7);
+        $spalten[1][] = (int)round((float)$p[2] * 1e7);
+        $spalten[2][] = $p[3] === null ? GH_HOEHE_UNBEKANNT
+                                       : max(-32767, min(32767, (int)round((float)$p[3])));
+        $spalten[3][] = (int)$p[4] - $von;
+    }
+    $roh = '';
+    foreach ($spalten as $sp) {
+        $alt = 0;
+        foreach ($sp as $v) { $roh .= pack('N', ($v - $alt) & 0xFFFFFFFF); $alt = $v; }
+    }
+    $innen = gzcompress($roh, 6);
+    $platz = $seqFrom . ':' . $n . ':' . $stufe . ':' . $nOriginal;
+    return ['seq_from' => $seqFrom, 'punkte' => $n, 'n_original' => $nOriginal, 'stufe' => $stufe,
+            'ts_von' => $von, 'ts_bis' => max($ts),
+            'huelle' => gh_verschliessen($innen, $sec1, $art, $ref, $platz)];
+}

@@ -27,14 +27,19 @@
  *   EdOrtsdaten.ortshoehe(punkte, phasen) Höhe des Einsatzorts (S11-05b)
  *   EdOrtsdaten.stueckeBauen(punkte, art, ref, {neu})  Punkte → Stücke
  *                                         (S11-05c: Schneiden, Löschen)
+ *   EdOrtsdaten.gepacktBauen(punkte, art, ref, {stufe, seqFrom, nOriginal})
+ *                                         ein gepacktes Stück der Stufe 2/3
+ *                                         (S11-07, E-S11-71)
  *   EdOrtsdaten.schluesselAus(pkcs8)      ein FREMDES Paar aus seinem privaten
  *                                         Teil (Freigabe, S11-06c)
  *   EdOrtsdaten.spur1Lesen(b64)           ein SPUR1-Blob einer Sicherung
  *                                         (Nutzlast 8 bis 12) → Punkte
  *                                         (S11-06b)
  *
- * REGELN BEIM ÖFFNEN (E-S11-37, Konzept 3.4): Punkt i eines Stücks hat die
- * Sequenznummer `seq_from + i`; doppelte Nummern (ein Gerät, das seine Marke
+ * REGELN BEIM ÖFFNEN (E-S11-37, -71, Konzept 3.4): Punkt i eines Stücks der
+ * Stufe 1 hat die Sequenznummer `seq_from + i`; ein Stück der Stufe 2 oder 3
+ * (gepackt) deckt `seq_from` bis `seq_from + n_original − 1`, und Punkte
+ * eines Gerätestücks darunter stecken schon darin; doppelte Nummern (ein Gerät, das seine Marke
  * verloren hat und anders stückelt) zählen einmal. Punkte in einer Sperrzeit
  * (ein herausgeschnittener Zeitraum) fallen weg. Höhe -32768 heißt: keine
  * (E-S11-39).
@@ -77,9 +82,53 @@
     return (sperren || []).some((s) => ts >= s.von && ts <= s.bis);
   }
 
+  /** Die gepackte Innenform (E-S11-71) öffnen: zlib-Strom → vier Spalten
+      int32 big-endian mit Abständen → Punkte ohne eigene Nummer. */
+  async function gepacktLesen(innen, n, tsVon) {
+    const strom = new Blob([innen]).stream().pipeThrough(new DecompressionStream('deflate'));
+    const roh = new Uint8Array(await new Response(strom).arrayBuffer());
+    if (roh.byteLength !== 16 * n) {
+      throw fehler('format', 'Gepacktes Stück mit ' + roh.byteLength + ' Byte für ' + n + ' Punkte.');
+    }
+    const dv = new DataView(roh.buffer, roh.byteOffset, roh.byteLength);
+    const spalte = (k) => {
+      const aus = new Array(n);
+      let alt = 0;
+      for (let i = 0; i < n; i++) { alt += dv.getInt32((k * n + i) * 4); aus[i] = alt; }
+      return aus;
+    };
+    const la = spalte(0), lo = spalte(1), h = spalte(2), dt = spalte(3);
+    const aus = new Array(n);
+    for (let i = 0; i < n; i++) {
+      aus[i] = { lat: la[i] / 1e7, lon: lo[i] / 1e7, ele: h[i] === HOEHE_UNBEKANNT ? null : h[i],
+                 ts: tsVon + dt[i] };
+    }
+    return aus;
+  }
+
+  /** Der Ort einer Hülle der Stufe 2 oder 3 (E-S11-71). */
+  const platzGepackt = (st) => st.seq_from + ':' + st.punkte + ':' + st.stufe + ':' + st.n_original;
+
   async function spur(stuecke, art, ref, sperren, k) {
     const nach = new Map();
+    /* ZUERST DIE GEPACKTEN (Stufe 2 und 3, E-S11-71). Ihre Punkte tragen keine
+       eigene Nummer; das Stück deckt seq_from bis seq_from + n_original − 1,
+       und was ein Gerätestück darunter trägt, steckt schon darin. */
+    let marke = 0;
     for (const st of stuecke || []) {
+      if (!(st.stufe >= 2)) { continue; }
+      const innen = await EdCrypto.geraetehuelleOeffnen(b64(st.huelle), k.priv, k.pub, art, ref,
+                                                        platzGepackt(st))
+        .catch((e) => { e.art = art; throw e; });
+      marke = Math.max(marke, st.seq_from + st.n_original);
+      (await gepacktLesen(innen, st.punkte, st.ts_von)).forEach((p, i) => {
+        if (gesperrt(p.ts, sperren)) { return; }
+        const seq = st.seq_from + i;
+        if (!nach.has(seq)) { nach.set(seq, Object.assign({ seq: seq }, p)); }
+      });
+    }
+    for (const st of stuecke || []) {
+      if (st.stufe >= 2) { continue; }
       const innen = await EdCrypto.geraetehuelleOeffnen(b64(st.huelle), k.priv, k.pub, art, ref,
                                                         st.seq_from + ':' + st.punkte)
         .catch((e) => { e.art = art; throw e; });
@@ -89,7 +138,7 @@
         const ts = st.ts_von + dv.getUint32(i * 14 + 10);
         if (gesperrt(ts, sperren)) { continue; }
         const seq = st.seq_from + i;
-        if (nach.has(seq)) { continue; }
+        if (seq < marke || nach.has(seq)) { continue; }
         const h = dv.getInt16(i * 14 + 8);
         nach.set(seq, { seq: seq, lat: dv.getInt32(i * 14) / 1e7, lon: dv.getInt32(i * 14 + 4) / 1e7,
                         ele: h === HOEHE_UNBEKANNT ? null : h, ts: ts });
@@ -399,6 +448,41 @@
     return aus;
   }
 
+  /**
+   * EIN GEPACKTES STÜCK (S11-07, E-S11-71) — Stufe 2 (zusammengefügt) oder 3
+   * (ausgedünnt), für Wartungslauf, Löschen auf einer gepackten Spur und das
+   * Einspielen einer ausgedünnten. Eine Spur, ein Stück; die Punkte bekommen
+   * keine Nummer, `seqFrom` und `nOriginal` sagen, welchen Bereich es deckt.
+   * Innenform wie `referenz.py` `innen_gepackt()`.
+   *
+   * @param {Array} punkte  {lat, lon, ele, ts}, in ihrer Reihenfolge
+   * @returns {Promise<object>} {seq_from, punkte, n_original, stufe, ts_von, ts_bis, huelle}
+   */
+  async function gepacktBauen(punkte, art, ref, o) {
+    await paarBereit();
+    const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
+    if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
+    const n = punkte.length;
+    if (!n) { throw fehler('leer', 'Ein Stück ohne Punkte gibt es nicht.'); }
+    const tsVon = Math.min.apply(null, punkte.map((p) => p.ts));
+    const roh = new Uint8Array(16 * n);
+    const dv = new DataView(roh.buffer);
+    const werte = [
+      punkte.map((p) => runde(p.lat * 1e7)), punkte.map((p) => runde(p.lon * 1e7)),
+      punkte.map((p) => p.ele == null ? HOEHE_UNBEKANNT : Math.max(-32767, Math.min(32767, runde(p.ele)))),
+      punkte.map((p) => p.ts - tsVon)];
+    werte.forEach((sp, k) => {
+      let alt = 0;
+      sp.forEach((v, i) => { dv.setInt32((k * n + i) * 4, v - alt); alt = v; });
+    });
+    const strom = new Blob([roh]).stream().pipeThrough(new CompressionStream('deflate'));
+    const innen = new Uint8Array(await new Response(strom).arrayBuffer());
+    const st = { seq_from: o.seqFrom, punkte: n, n_original: o.nOriginal, stufe: o.stufe, ts_von: tsVon,
+                 ts_bis: Math.max.apply(null, punkte.map((p) => p.ts)) };
+    st.huelle = zuB64(await EdCrypto.geraetehuelleVerschliessen(innen, pub, art, ref, platzGepackt(st)));
+    return st;
+  }
+
   /** Die Einsatzhülle verschließen — mit dem öffentlichen Kontoschlüssel. */
   async function einsatzVerschliessen(innen, ref) {
     await paarBereit();
@@ -486,6 +570,7 @@
                          fuerAnsicht: fuerAnsicht, ladeplatz: ladeplatz, melden: melden,
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
                          einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
-                         stueckeBauen: stueckeBauen, spur1Lesen: spur1Lesen,
+                         stueckeBauen: stueckeBauen, gepacktBauen: gepacktBauen,
+                         spur1Lesen: spur1Lesen,
                          schluesselAus: schluesselAus };
 })();

@@ -13,6 +13,7 @@ Hüllen und Stücke öffnen und verschließen.
   spur_oeffnen(stuecke, art, ref, sperren, priv)
                                               Punkte {seq, lat, lon, ele, ts}
   stuecke_bauen(punkte, art, ref, sec1, neu)  Punkte → Stücke (≤ 2000, an Lücken)
+  gepackt_bauen(punkte, art, ref, sec1, …)    Punkte → ein Stück der Stufe 2/3
   ortshoehe(punkte, phasen)                   Höhe des Einsatzorts oder None
   zeiten([(tag, hh:mm, versatz), …])          Ortszeit → Sekunden, über
                                               `local_to_utc()` (zeiten_cli.php)
@@ -61,8 +62,27 @@ def einsatz_verschliessen(innen: dict, sec1: bytes, ref: str) -> str:
 
 
 def spur_oeffnen(stuecke: list, art: str, ref: str, sperren: list, priv) -> list[dict]:
+    """Wie `EdOrtsdaten.spur()`: Stücke der Stufe 2 und 3 (E-S11-71) zuerst —
+    ihre Punkte tragen keine eigene Nummer; was ein Stück der Stufe 1 unter
+    ihrer Marke trägt, steckt schon darin."""
     nach: dict[int, dict] = {}
+    marke = 0
     for st in stuecke or []:
+        stufe = int(st.get("stufe") or 1)
+        if stufe < 2:
+            continue
+        n, n_orig = int(st["punkte"]), int(st["n_original"])
+        innen = referenz.oeffnen(base64.b64decode(st["huelle"]), priv, art, ref,
+                                 referenz.platz_gepackt(int(st["seq_from"]), n, stufe, n_orig))
+        marke = max(marke, int(st["seq_from"]) + n_orig)
+        for i, (la, lo, h, ts) in enumerate(referenz.gepackt_lesen(innen, n, int(st["ts_von"]))):
+            if any(s["von"] <= ts <= s["bis"] for s in sperren or []):
+                continue
+            seq = int(st["seq_from"]) + i
+            nach.setdefault(seq, {"seq": seq, "lat": la, "lon": lo, "ele": h, "ts": ts})
+    for st in stuecke or []:
+        if int(st.get("stufe") or 1) >= 2:
+            continue
         innen = referenz.oeffnen(base64.b64decode(st["huelle"]), priv, art, ref,
                                  f"{st['seq_from']}:{st['punkte']}")
         for i in range(len(innen) // 14):
@@ -71,7 +91,7 @@ def spur_oeffnen(stuecke: list, art: str, ref: str, sperren: list, priv) -> list
             if any(s["von"] <= ts <= s["bis"] for s in sperren or []):
                 continue
             seq = int(st["seq_from"]) + i
-            if seq in nach:
+            if seq < marke or seq in nach:
                 continue
             nach[seq] = {"seq": seq, "lat": la / 1e7, "lon": lo / 1e7,
                          "ele": None if h == HOEHE_UNBEKANNT else h, "ts": ts}
@@ -105,6 +125,17 @@ def stuecke_bauen(punkte: list[dict], art: str, ref: str, sec1: bytes,
                     "huelle": base64.b64encode(referenz.verschliessen(innen, sec1, art, ref, platz))
                               .decode("ascii")})
     return aus
+
+
+def gepackt_bauen(punkte: list[dict], art: str, ref: str, sec1: bytes, stufe: int,
+                  seq_from: int, n_original: int) -> dict:
+    """Ein Stück der Stufe 2 oder 3 (E-S11-71) aus Punkten {lat, lon, ele, ts}."""
+    von = min(p["ts"] for p in punkte)
+    innen = referenz.innen_gepackt([(p["lat"], p["lon"], p["ele"], p["ts"]) for p in punkte], von)
+    platz = referenz.platz_gepackt(seq_from, len(punkte), stufe, n_original)
+    return {"seq_from": seq_from, "punkte": len(punkte), "n_original": n_original, "stufe": stufe,
+            "ts_von": von, "ts_bis": max(p["ts"] for p in punkte),
+            "huelle": base64.b64encode(referenz.verschliessen(innen, sec1, art, ref, platz)).decode("ascii")}
 
 
 def ortshoehe(punkte: list[dict], phasen: list[tuple[int, int]]) -> int | None:

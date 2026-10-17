@@ -790,7 +790,8 @@ function edbak_sicherung_erzeugen(int $userId): array
                                 'n'        => $n,
                                 'stuecke'  => array_map(static fn($x) => [
                                     'seq_from' => $x['seq_from'], 'punkte' => $x['punkte'],
-                                    'n_original' => $x['n_original'], 'ts_von' => $x['ts_von'],
+                                    'n_original' => $x['n_original'], 'stufe' => $x['stufe'],
+                                    'ts_von' => $x['ts_von'],
                                     'ts_bis' => $x['ts_bis'], 'huelle' => $x['huelle']], $st)];
                     if ($hatBlob) { $eintrag['fortsetzung'] = true; }
                     $verschlossen++;

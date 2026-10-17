@@ -2615,13 +2615,26 @@ function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste,
         $stuecke = [];
         $punkte = null;
         if (isset($s['stuecke']) && is_array($s['stuecke'])) {
-            $duenn = (int)($s['stufe'] ?? 0) === SPUR2_STUFE_DUENN;
+            /* DIE STUFE JE STUECK (S11-07, E-S11-71). Ein gepacktes Stueck
+             * (Stufe 2, 3) traegt seine Stufe selbst und laeuft durch
+             * `pruef_spurstueck_gepackt()`; daneben koennen Geraetestuecke
+             * liegen, die nach dem Zusammenfuegen ankamen. Ohne Stufe am Stueck
+             * (Pakete aus Web 22.5) zaehlt es als Stufe 1 — eine Stufe 3 in
+             * Zeilenform gab es nur dort, und ausgeliefert wurde sie nie. */
             $kaputt = false;
             foreach ($s['stuecke'] as $t) {
+                $stufeT = is_array($t) ? (int)($t['stufe'] ?? 0) : 0;
+                if ($stufeT >= SPUR2_STUFE_GEPACKT) {
+                    $st = pruef_spurstueck_gepackt($t, 'spur_stuecke');
+                    if ($st === null) { $kaputt = true; break; }
+                    $stuecke[] = $st;
+                    continue;
+                }
                 $st = pruef_spurstueck($t, 'spur_stuecke');
                 $nO = is_array($t) ? (int)($t['n_original'] ?? 0) : 0;
                 if ($st === null || ($nO !== 0 && $nO < $st['punkte'])) { $kaputt = true; break; }
-                $st['n_original'] = $nO ?: $st['punkte'];
+                $st['n_original'] = $st['punkte'];
+                $st['stufe'] = SPUR2_STUFE_GERAET;
                 $stuecke[] = $st;
             }
             if ($kaputt || !$stuecke) { $ablehnen($art, $id, 'Stueck unvollstaendig'); continue; }
@@ -2644,15 +2657,21 @@ function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste,
                 }
             }
             $duenn = $kopf['stufe'] === SPUR_STUFE_DUENN;
-            $stuecke = gh_stuecke_bauen($sec1, $art === 'rest' ? 'ruhe' : 'spur', $eigen[$art][$id],
-                                        $punkte);
-            foreach ($stuecke as $k => $st) { $stuecke[$k]['n_original'] = $st['punkte']; }
+            $artH = $art === 'rest' ? 'ruhe' : 'spur';
             if ($duenn) {
-                /* Die Originalzahl am letzten Stueck bis zum Ende der
-                 * Originalspur (SPUR2_STUFE_DUENN). */
-                $k = count($stuecke) - 1;
-                $stuecke[$k]['n_original'] = max($stuecke[$k]['punkte'],
-                                                 $kopf['n_original'] - $stuecke[$k]['seq_from']);
+                /* EINE AUSGEDUENNTE SPUR BLEIBT AUSGEDUENNT: ein gepacktes
+                 * Stueck der Stufe 3 (E-S11-71), das die ganze Originalspur
+                 * deckt — die Punktnummern des Blobs sind seine Stellen, nicht
+                 * die des Geraets. */
+                $stuecke = [gh_gepackt_bauen($sec1, $artH, $eigen[$art][$id], $punkte,
+                                             SPUR2_STUFE_DUENN, 0,
+                                             max(count($punkte), $kopf['n_original']))];
+            } else {
+                $stuecke = gh_stuecke_bauen($sec1, $artH, $eigen[$art][$id], $punkte);
+                foreach ($stuecke as $k => $st) {
+                    $stuecke[$k]['n_original'] = $st['punkte'];
+                    $stuecke[$k]['stufe'] = SPUR2_STUFE_GERAET;
+                }
             }
         } else {
             $ablehnen($art, $id, 'weder Stuecke noch Blob');
@@ -2663,8 +2682,7 @@ function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste,
         foreach ($stuecke as $st) {
             $neu += spur2_stueck_schreiben($pdo, $art, $id, $st['seq_from'], $st['punkte'],
                                            $st['ts_von'], $st['ts_bis'], $st['huelle'],
-                                           $duenn ? SPUR2_STUFE_DUENN : SPUR2_STUFE_GERAET,
-                                           $st['n_original']);
+                                           $st['stufe'], $st['n_original']);
         }
         /* Eine Fortsetzung (der Browser hat eine lange Spur geteilt) zaehlt
          * nicht noch einmal — die Spur ist mit ihrem ersten Teil gezaehlt. */

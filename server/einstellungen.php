@@ -3433,14 +3433,15 @@ ui_seite_start(['titel' => 'Einstellungen',
       }
       const punkte = [...nach.values()].sort((a, b) => a.seq - b.seq);
       if (!punkte.length) { return []; }
-      const st = await EdOrtsdaten.stueckeBauen(punkte, art, ref);
-      /* Eine ausgedünnte Spur bleibt ausgedünnt: Die Originalzahl steht am
-         letzten Stück bis zum Ende der Originalspur (SPUR2_STUFE_DUENN). */
-      if (Number(stufe) === 3 && nOriginal) {
-        const l = st[st.length - 1];
-        l.n_original = Math.max(l.punkte, nOriginal - l.seq_from);
+      /* Eine ausgedünnte Spur bleibt ausgedünnt: EIN gepacktes Stück der
+         Stufe 3, das die ganze Originalspur deckt (S11-07, E-S11-71). */
+      if (Number(stufe) === 3) {
+        const von = punkte[0].seq;
+        return [await EdOrtsdaten.gepacktBauen(punkte, art, ref, {
+          stufe: 3, seqFrom: von,
+          nOriginal: Math.max(punkte[punkte.length - 1].seq - von + 1, (nOriginal || 0) - von) })];
       }
-      return st;
+      return await EdOrtsdaten.stueckeBauen(punkte, art, ref);
     }
 
     /**

@@ -2123,6 +2123,14 @@ function spur_blob_pruefen(string $blob, ?int $erwartetN = null): ?string
 
 /** Stufe eines Stuecks, wie es vom Geraet kommt. */
 const SPUR2_STUFE_GERAET = 1;
+/** Stufe eines zusammengefuegten und gepackten Stuecks (S11-07, E-S11-71):
+ *  Innenform „B fest", die Punkte ohne eigene Nummer; das Stueck deckt
+ *  `seq_from` bis `seq_from + n_original - 1`. */
+const SPUR2_STUFE_GEPACKT = 2;
+/** Frist der Ausduennung in Tagen nach dem Ende (E-S11-25). */
+const SPUR2_AUSDUENN_FRIST_TAGE = 31;
+/** Hoechstens so viele Spuren je Anfrage des Wartungslaufs (E-S11-68). */
+const SPUR2_WARTUNG_MAX = 20;
 /** Stufe eines ausgeduennten Stuecks. Bis S11-07 entsteht sie nur beim
  *  Einspielen einer Sicherung, die eine ausgeduennte Spur traegt (S11-06b):
  *  `n_original` reicht dann ueber `punkte` hinaus, und zwar am LETZTEN Stueck
@@ -2180,7 +2188,7 @@ function spur2_stueck_schreiben(PDO $pdo, string $ownerType, int $ownerId, int $
 {
     $nOriginal ??= $punkte;
     if ($punkte < 1 || $tsBis < $tsVon || $seqFrom < 0 || $nOriginal < $punkte
-        || !in_array($stufe, [SPUR2_STUFE_GERAET, SPUR2_STUFE_DUENN], true)) {
+        || !in_array($stufe, [SPUR2_STUFE_GERAET, SPUR2_STUFE_GEPACKT, SPUR2_STUFE_DUENN], true)) {
         throw new InvalidArgumentException('Spurstueck mit unmoeglichen Zahlen');
     }
     $ins = $pdo->prepare('INSERT INTO track_stuecke
@@ -2231,31 +2239,54 @@ function spur1_vorhanden(PDO $pdo, string $ownerType, int $ownerId): bool
  * davon ab, wird NICHTS getauscht und `false` zurueckgegeben — die Seite laedt
  * neu und faengt von vorn an, statt ein eben angekommenes Stueck zu verlieren.
  *
- * NUR STUFE 1. Zusammengefuegte und ausgeduennte Stuecke (Stufe 2, 3) tragen
- * mit `n_original` eine Marke, die ein Tausch auf Stufe 1 verloere; die gibt
- * es erst ab S11-07, und der Wartungslauf erweitert diese Funktion dann.
- * Bis dahin: `false` mit Grund `stufe`.
+ * AUCH STUFE 2 UND 3 (seit S11-07, E-S11-73/-74). Zwei Riegel halten, was
+ * ein zusammengefuegtes oder ausgeduenntes Stueck traegt:
+ *
+ *   stufe   Die hoechste Stufe faellt nicht. Eine ausgeduennte Spur kommt
+ *           nicht als vollstaendige zurueck, eine gepackte nicht als
+ *           Geraetestueck — sonst stuende eine Marke ohne Grundlage da.
+ *   marke   Die Fortsetzungsmarke (`seq_from + n_original` der gepackten,
+ *           `seq_from + punkte` der uebrigen Stuecke) faellt nicht. Faellt
+ *           sie, schickte das Geraet laengst verarbeitete Punkte erneut.
+ *
+ * Ein neues Stueck traegt `stufe` und `n_original`, wenn es keines der
+ * Stufe 1 ist; ohne Angabe gilt Stufe 1 mit `n_original = punkte`.
  *
  * Die Transaktion gehoert dem Aufrufer (`db_transaktion()`); die Zeilen
  * werden mit `FOR UPDATE` gesperrt.
  *
  * @param list<array{0:int,1:int}> $stand
- * @param list<array{seq_from:int,punkte:int,ts_von:int,ts_bis:int,huelle:string}> $neu
+ * @param list<array{seq_from:int,punkte:int,ts_von:int,ts_bis:int,huelle:string,stufe?:int,n_original?:int}> $neu
  * @return array{ok:bool,grund?:string,weg?:int,neu?:int}
  */
 function spur2_tauschen(PDO $pdo, string $ownerType, int $ownerId, array $stand, array $neu): array
 {
-    $q = $pdo->prepare('SELECT seq_from, punkte, stufe FROM track_stuecke
+    $q = $pdo->prepare('SELECT seq_from, punkte, n_original, stufe FROM track_stuecke
                          WHERE owner_type = ? AND owner_id = ? ORDER BY seq_from FOR UPDATE');
     $q->execute([$ownerType, $ownerId]);
     $ist = [];
+    $stufeAlt = 0;
+    $markeAlt = 0;
     foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
-        if ((int)$r['stufe'] > SPUR2_STUFE_GERAET) { return ['ok' => false, 'grund' => 'stufe']; }
         $ist[] = [(int)$r['seq_from'], (int)$r['punkte']];
+        $stufeAlt = max($stufeAlt, (int)$r['stufe']);
+        $markeAlt = max($markeAlt, spur2_marke((int)$r['seq_from'], (int)$r['punkte'],
+                                               (int)$r['n_original'], (int)$r['stufe']));
     }
     $soll = array_map(static fn($x) => [(int)$x[0], (int)$x[1]], $stand);
     usort($soll, static fn($a, $b) => $a[0] <=> $b[0]);
     if ($ist !== $soll) { return ['ok' => false, 'grund' => 'stand']; }
+
+    $stufeNeu = 0;
+    $markeNeu = 0;
+    foreach ($neu as $st) {
+        $sn = (int)($st['stufe'] ?? SPUR2_STUFE_GERAET);
+        $stufeNeu = max($stufeNeu, $sn);
+        $markeNeu = max($markeNeu, spur2_marke($st['seq_from'], $st['punkte'],
+                                               (int)($st['n_original'] ?? $st['punkte']), $sn));
+    }
+    if ($stufeNeu < $stufeAlt) { return ['ok' => false, 'grund' => 'stufe']; }
+    if ($markeNeu < $markeAlt) { return ['ok' => false, 'grund' => 'marke']; }
 
     $del = $pdo->prepare('DELETE FROM track_stuecke WHERE owner_type = ? AND owner_id = ?');
     $del->execute([$ownerType, $ownerId]);
@@ -2263,9 +2294,205 @@ function spur2_tauschen(PDO $pdo, string $ownerType, int $ownerId, array $stand,
     $n = 0;
     foreach ($neu as $st) {
         $n += spur2_stueck_schreiben($pdo, $ownerType, $ownerId, $st['seq_from'], $st['punkte'],
-                                     $st['ts_von'], $st['ts_bis'], $st['huelle']);
+                                     $st['ts_von'], $st['ts_bis'], $st['huelle'],
+                                     (int)($st['stufe'] ?? SPUR2_STUFE_GERAET),
+                                     isset($st['n_original']) ? (int)$st['n_original'] : null);
     }
     return ['ok' => true, 'weg' => $weg, 'neu' => $n];
+}
+
+/** Bis wohin ein Stueck die Sequenz deckt (E-S11-71): ein gepacktes oder
+ *  ausgeduenntes bis `n_original`, ein Geraetestueck bis `punkte`. */
+function spur2_marke(int $seqFrom, int $punkte, int $nOriginal, int $stufe): int
+{
+    return $seqFrom + ($stufe > SPUR2_STUFE_GERAET ? $nOriginal : $punkte);
+}
+
+/**
+ * DIE FAELLIGEN SPUREN DES WARTUNGSLAUFS (S11-07, E-S11-05, -25, -68 bis -73).
+ *
+ * Der Server sieht keine Koordinate, aber genug, um zu entscheiden, WAS
+ * faellig ist — Stufen, Zeiten, Vermerke stehen im Klartext:
+ *
+ *   zusammenfuegen  abgeschlossen (`final`), und es liegt ein Stueck der
+ *                   Stufe 1 — keine Karenz mehr (E-S11-05, -69)
+ *   neu packen      ein Sperrvermerk ist juenger als das juengste Stueck: Die
+ *                   herausgeschnittenen Punkte liegen noch darin und fallen
+ *                   jetzt endgueltig (E-S11-37, -47)
+ *   ausduennen      31 Tage nach dem Ende (E-S11-25); faellt es mit dem
+ *                   Zusammenfuegen zusammen, geht beides in einem Tausch
+ *
+ * NICHT im Papierkorb, NICHT mit Altbestand (E-S11-70): Klartextpunkte hebt
+ * das Einmalwerkzeug, und eine Spur, die halb SPUR1 und halb SPUR2 ist,
+ * fasste der Browser falsch zusammen.
+ *
+ * DER BROWSER BEKOMMT ALLES, WAS ER BRAUCHT, IN EINER ANTWORT: die Stuecke
+ * mit Huellen, die Sperrzeiten, bei Einsaetzen die Phasenzeiten (Schutzpunkte
+ * der Ausduennung, E-S2-05 — die Reanimation war nie einer, Technik 4.97)
+ * und den `pat_blob` mit seiner Pruefsumme (Ortshoehe, E-S11-72).
+ *
+ * @return list<array<string,mixed>>
+ */
+function spur2_faellig(PDO $pdo, int $userId, int $max = SPUR2_WARTUNG_MAX, ?int $jetzt = null,
+                       array $auslassen = []): array
+{
+    $jetzt ??= time();
+    /* WAS DER BROWSER IN DIESER SITZUNG NICHT OEFFNEN KONNTE, bleibt draussen.
+     * Sonst stuende eine Spur mit kaputter Huelle bei jedem Lauf vorn und
+     * belegte einen der Plaetze, bis alle zwanzig kaputt sind und nichts mehr
+     * vorangeht. Gemeldet ist sie schon (Reiter System). */
+    $ohne = ['mission' => [], 'rest' => []];
+    foreach (array_slice($auslassen, 0, 200) as $a) {
+        if (is_array($a) && isset($ohne[$a[0] ?? ''])) { $ohne[$a[0]][] = (int)($a[1] ?? 0); }
+    }
+    $grenze = gmdate('Y-m-d H:i:s', $jetzt - SPUR2_AUSDUENN_FRIST_TAGE * 86400);
+    $kandidaten = [];
+    foreach ([['mission', 'missions'], ['rest', 'rest_segments']] as [$typ, $tabelle]) {
+        /* Die Eigentuemertabelle als Variable: dieselbe Abfrage fuer beide
+         * Arten, wie in den Jobs, die dieser Lauf abloest. */
+        $ohneSql = $ohne[$typ]
+            ? 'AND o.id NOT IN (' . implode(',', array_map('intval', $ohne[$typ])) . ')' : '';
+        $q = $pdo->prepare("SELECT o.id, o.client_ref, o.started_at, o.ended_at,
+                                   COALESCE(o.ended_at, o.started_at) AS bezug,
+                                   MIN(s.stufe) AS stufe_min, MAX(s.stufe) AS stufe_max,
+                                   MAX(s.geaendert_am) AS geaendert,
+                                   (SELECT MAX(c.erstellt_am) FROM track_cuts c
+                                     WHERE c.owner_type = s.owner_type AND c.owner_id = s.owner_id
+                                       AND c.mission_id IS NOT NULL) AS geschnitten
+                              FROM track_stuecke s JOIN `$tabelle` o ON o.id = s.owner_id
+                             WHERE s.owner_type = ? AND o.user_id = ? AND o.final = 1
+                               AND o.deleted_at IS NULL {$ohneSql}
+                               AND NOT EXISTS (SELECT 1 FROM track_points p
+                                                WHERE p.owner_type = s.owner_type AND p.owner_id = s.owner_id)
+                               AND NOT EXISTS (SELECT 1 FROM track_blobs b
+                                                WHERE b.owner_type = s.owner_type AND b.owner_id = s.owner_id)
+                             GROUP BY o.id
+                            HAVING stufe_min = 1
+                                OR (stufe_max < 3 AND bezug <= ?)
+                                OR (geschnitten IS NOT NULL AND geschnitten > geaendert)
+                             ORDER BY bezug, o.id
+                             LIMIT " . (int)$max);
+        $q->execute([$typ, $userId, $grenze]);
+        foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $faellig = $r['bezug'] !== null && $r['bezug'] <= $grenze;
+            $kandidaten[] = [
+                'art' => $typ, 'id' => (int)$r['id'], 'ref' => (string)$r['client_ref'],
+                'started_at' => $r['started_at'], 'ended_at' => $r['ended_at'], 'bezug' => $r['bezug'],
+                'ziel_stufe' => ($faellig || (int)$r['stufe_max'] === SPUR2_STUFE_DUENN)
+                                ? SPUR2_STUFE_DUENN : SPUR2_STUFE_GEPACKT,
+            ];
+        }
+    }
+    usort($kandidaten, static fn($a, $b) => [$a['bezug'], $a['art'], $a['id']]
+                                           <=> [$b['bezug'], $b['art'], $b['id']]);
+    $kandidaten = array_slice($kandidaten, 0, $max);
+
+    $ids = ['mission' => [], 'rest' => []];
+    foreach ($kandidaten as $k) { $ids[$k['art']][] = $k['id']; }
+    $stuecke = ['mission' => spur2_lesen_viele($pdo, 'mission', $ids['mission']),
+                'rest'    => spur2_lesen_viele($pdo, 'rest', $ids['rest'])];
+    $einsatz = [];
+    $phasen = [];
+    if ($ids['mission']) {
+        require_once __DIR__ . '/db.php';
+        foreach (sql_in_bloecken($pdo, 'SELECT id, pat_blob FROM missions
+                                         WHERE user_id = ? AND id IN ({IDS})',
+                                 $ids['mission'], [$userId]) as $r) {
+            $einsatz[(int)$r['id']] = $r;
+        }
+        foreach (sql_in_bloecken($pdo, 'SELECT mission_id, phase, occurred_at FROM mission_phases
+                                         WHERE mission_id IN ({IDS}) ORDER BY occurred_at, id',
+                                 $ids['mission']) as $r) {
+            $phasen[(int)$r['mission_id']][] = ['phase' => (int)$r['phase'],
+                                                'occurred_at' => $r['occurred_at']];
+        }
+    }
+    foreach ($kandidaten as &$k) {
+        unset($k['bezug']);
+        $k['stuecke'] = $stuecke[$k['art']][$k['id']] ?? [];
+        $k['sperren'] = array_map(static fn($c) => ['von' => $c['von_ts'], 'bis' => $c['bis_ts']],
+                                  schnitte_lesen($pdo, $k['art'], $k['id']));
+        if ($k['art'] === 'mission') {
+            $e = $einsatz[$k['id']] ?? [];
+            $k['phases'] = $phasen[$k['id']] ?? [];
+            $k['pat_blob'] = $e['pat_blob'] ?? null;
+            $k['pat_pruef'] = spur2_pat_pruefsumme($e['pat_blob'] ?? null);
+        }
+    }
+    unset($k);
+    return $kandidaten;
+}
+
+/** Pruefsumme des `pat_blob`, an der der Tausch erkennt, ob ihn inzwischen
+ *  jemand geaendert hat (E-S11-72). Auch fuer einen leeren Blob eindeutig. */
+function spur2_pat_pruefsumme(?string $blob): string
+{
+    return hash('sha256', $blob === null ? "\0leer" : 'b:' . $blob);
+}
+
+/**
+ * EIN TAUSCH DES WARTUNGSLAUFS (S11-07, E-S11-73). Prueft, was der Server
+ * pruefen kann, und tauscht in einer Transaktion: Stuecke und — wenn der
+ * Browser eine Ortshoehe nachgetragen hat — den `pat_blob`.
+ *
+ * @param array{seq_from:int,punkte:int,n_original:int,ts_von:int,ts_bis:int,stufe:int,huelle:string} $stueck
+ * @return array{ok:bool,grund?:string,weg?:int,neu?:int}
+ */
+function spur2_wartung_tauschen(PDO $pdo, int $userId, string $art, int $id, array $stand,
+                                array $stueck, ?array $pat = null, ?int $jetzt = null): array
+{
+    $jetzt ??= time();
+    $tabelle = $art === 'mission' ? 'missions' : ($art === 'rest' ? 'rest_segments' : null);
+    if ($tabelle === null) { return ['ok' => false, 'grund' => 'art']; }
+    return db_transaktion($pdo, function (PDO $pdo) use ($userId, $art, $id, $tabelle, $stand,
+                                                        $stueck, $pat, $jetzt): array {
+        $q = $pdo->prepare("SELECT id, final, deleted_at, COALESCE(ended_at, started_at) AS bezug"
+                         . ($art === 'mission' ? ', pat_blob' : '')
+                         . " FROM `$tabelle` WHERE id = ? AND user_id = ? FOR UPDATE");
+        $q->execute([$id, $userId]);
+        $o = $q->fetch(PDO::FETCH_ASSOC);
+        if (!$o) { return ['ok' => false, 'grund' => 'fehlt']; }
+        if ((int)$o['final'] !== 1 || $o['deleted_at'] !== null) {
+            return ['ok' => false, 'grund' => 'offen'];
+        }
+        if (spur1_vorhanden($pdo, $art, $id)) { return ['ok' => false, 'grund' => 'altbestand']; }
+
+        /* DIE FORM DES NEUEN STUECKS gegen den gelesenen Bestand. */
+        $q = $pdo->prepare('SELECT MIN(seq_from) s, MIN(ts_von) v, MAX(ts_bis) b
+                              FROM track_stuecke WHERE owner_type = ? AND owner_id = ?');
+        $q->execute([$art, $id]);
+        $alt = $q->fetch(PDO::FETCH_ASSOC);
+        if ($alt['s'] === null) { return ['ok' => false, 'grund' => 'stand']; }
+        if ($stueck['seq_from'] !== (int)$alt['s']
+            || $stueck['ts_von'] < (int)$alt['v'] || $stueck['ts_bis'] > (int)$alt['b']) {
+            return ['ok' => false, 'grund' => 'form'];
+        }
+        /* STUFE 3 NUR NACH DER FRIST — unwiderruflich, und den Zeitpunkt
+         * kennt der Server, auch wenn er den Inhalt nicht sieht. */
+        if ($stueck['stufe'] === SPUR2_STUFE_DUENN
+            && ($o['bezug'] === null
+                || strtotime($o['bezug'] . ' UTC') > $jetzt - SPUR2_AUSDUENN_FRIST_TAGE * 86400)) {
+            return ['ok' => false, 'grund' => 'frist'];
+        }
+
+        $t = spur2_tauschen($pdo, $art, $id, $stand, [$stueck]);
+        if (!$t['ok']) { return $t; }
+
+        if ($pat !== null) {
+            if ($art !== 'mission'
+                || !hash_equals(spur2_pat_pruefsumme($o['pat_blob'] ?? null), (string)$pat['pruef'])) {
+                /* Der Blob hat sich geaendert (Formular, anderes Fenster):
+                 * Die Spur ist gepackt, die Ortshoehe kommt beim naechsten
+                 * Speichern im Formular — nichts ueberschreiben. */
+                $t['pat'] = 'geaendert';
+            } else {
+                $pdo->prepare('UPDATE missions SET pat_blob = ? WHERE id = ? AND user_id = ?')
+                    ->execute([$pat['neu'], $id, $userId]);
+                $t['pat'] = 'geschrieben';
+            }
+        }
+        return $t;
+    });
 }
 
 /**

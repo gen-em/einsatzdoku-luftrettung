@@ -187,6 +187,11 @@
       "braucht": "installation",
       "bemerkung": "S11-04b: die Kette Geraet -> Server -> Browser — ein Geraet sendet verschlossen, api/mission.php und api/day.php liefern Stuecke, Einsatzhuelle und Sperrzeiten, der Browser oeffnet sie und vergleicht Punkt fuer Punkt. Legt ein Wegwerfkonto umlauf-ortsdaten an und loescht es."
     },
+    "wartungslaufprobe": {
+      "aufruf": "bash tools/proben/proben.sh wartungslauf",
+      "braucht": "installation",
+      "bemerkung": "S11-07: der Wartungslauf — Liste der faelligen Spuren (Abschluss, Frist 31 Tage knapp davor und danach, Papierkorb, Altbestand, juengerer Schnitt) und Tausch mit jedem Ablehnungsgrund, in einer Transaktion auf dem Demo-Konto, die zurueckgerollt wird."
+    },
     "uhr-krypto": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoreihe /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoprobe",
       "braucht": "uhr",
@@ -868,6 +873,20 @@
       ],
       "proben": [
         "ortsdatenprobe"
+      ],
+      "anlass": "Nr. 43"
+    },
+    {
+      "id": "wartungslauf",
+      "ab": "klein",
+      "pfade": [
+        "server/api/wartungslauf.php",
+        "server/spur_lib.php",
+        "server/validate_lib.php",
+        "tools/proben/wartungslauf/**"
+      ],
+      "proben": [
+        "wartungslaufprobe"
       ],
       "anlass": "Nr. 43"
     },

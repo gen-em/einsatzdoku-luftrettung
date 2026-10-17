@@ -49,6 +49,7 @@ import hmac
 import json
 import pathlib
 import struct
+import zlib
 import sys
 
 from cryptography.hazmat.primitives import hashes, padding
@@ -175,6 +176,57 @@ def innen_binaer(punkte: list[tuple[float, float, float | None, int]]) -> bytes:
     zwischen -32 767 und 32 767 m."""
     return b"".join(struct.pack(">iihI", round(la * 1e7), round(lo * 1e7), hoehe_innen(h), t)
                     for la, lo, h, t in punkte)
+
+
+def gepackt_roh(punkte: list[tuple[float, float, float | None, int]], ts_von: int) -> bytes:
+    """Die Innenform der Stufen 2 und 3, VOR dem Packen (E-S11-71, „B fest"):
+    vier Spalten zu je n Werten int32 big-endian — Breite, Länge (1e-7 Grad),
+    Höhe (ganze Meter, HOEHE_UNBEKANNT = keine), Zeit (Sekunden seit ts_von) —,
+    jeder Wert als Abstand zum vorigen derselben Spalte, der erste zu 0. Die
+    Höhe geht als Wert der Spalte ein, auch HOEHE_UNBEKANNT: Der Abstand
+    zweier int16-Werte passt immer in int32."""
+    spalten = [[round(la * 1e7) for la, _, _, _ in punkte],
+               [round(lo * 1e7) for _, lo, _, _ in punkte],
+               [hoehe_innen(h) for _, _, h, _ in punkte],
+               [t - ts_von for _, _, _, t in punkte]]
+    aus = []
+    for sp in spalten:
+        alt = 0
+        for v in sp:
+            aus.append(v - alt)
+            alt = v
+    return struct.pack(">%di" % len(aus), *aus)
+
+
+def innen_gepackt(punkte: list[tuple[float, float, float | None, int]], ts_von: int) -> bytes:
+    """`gepackt_roh()` gepackt: zlib (RFC 1950), wie `CompressionStream('deflate')`
+    im Browser und `gzcompress()` in PHP. Die Bytes nach dem Packen müssen
+    zwischen den dreien nicht gleich sein — gleich sein muss, was herauskommt."""
+    return zlib.compress(gepackt_roh(punkte, ts_von), 6)
+
+
+def gepackt_lesen(innen: bytes, n: int, ts_von: int) -> list[tuple[float, float, float | None, int]]:
+    """Die Gegenrichtung zu `innen_gepackt()`: n Punkte (Breite, Länge, Höhe, Zeit)."""
+    roh = zlib.decompress(innen)
+    if len(roh) != 16 * n:
+        raise ValueError(f"gepackte Innenform: {len(roh)} Byte für {n} Punkte")
+    werte = struct.unpack(">%di" % (4 * n), roh)
+    spalten = []
+    for k in range(4):
+        alt, sp = 0, []
+        for v in werte[k * n:(k + 1) * n]:
+            alt += v
+            sp.append(alt)
+        spalten.append(sp)
+    return [(spalten[0][i] / 1e7, spalten[1][i] / 1e7,
+             None if spalten[2][i] == HOEHE_UNBEKANNT else spalten[2][i], ts_von + spalten[3][i])
+            for i in range(n)]
+
+
+def platz_gepackt(seq_from: int, punkte: int, stufe: int, n_original: int) -> str:
+    """Der Ort einer Hülle der Stufe 2 oder 3 (E-S11-71): Stufe und Marke sind
+    mitgebunden, damit der Server sie nicht umetikettieren kann."""
+    return f"{seq_from}:{punkte}:{stufe}:{n_original}"
 
 
 def innen_json(punkte: list[tuple[float, float, float, int]]) -> bytes:
