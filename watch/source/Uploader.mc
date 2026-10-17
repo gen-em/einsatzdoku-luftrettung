@@ -1,6 +1,14 @@
 // NAdoku — Upload gemaess JSON-Vertrag v1.0.
 // Sendet Einsaetze und Ruhe-Segmente inkrementell (max. 500 Punkte/Request),
 // merkt sich pro Track die bestaetigte next_seq und raeumt nach final+komplett auf.
+//
+// SEIT UHR 4.0.0 VERSCHLOSSEN (S11-08). Spur, Phasenkoordinaten und
+// Reanimation gehen nur noch als Geraetehuelle hinaus (Huelle.mc): je
+// Anfrage ein Spurstueck (`track` mit `huelle`) und bei einem Einsatz die
+// Einsatzhuelle (`ort_huelle`). Ohne Kontoschluessel aus der Kopplung sendet
+// die Uhr nicht (E-S11-09) — der Server nimmt Klartext seit Web 22.0.1 ohnehin
+// nicht mehr an, und eine Uhr, die es trotzdem versuchte, bekaeme fuer jedes
+// Paket `400 klartext` und parkte ihren ganzen Bestand.
 using Toybox.Communications;
 using Toybox.Application.Properties;
 using Toybox.Application.Storage;
@@ -64,7 +72,40 @@ module Uploader {
      * Sie wird nur beim Verwerfen des Pakets geloescht -- und dann mit der
      * Spur zusammen, nie fuer sich. */
     function istGeparkt(ref as Lang.String) as Lang.Boolean {
-        return true.equals(Storage.getValue("bad_" + ref));
+        return Storage.getValue("bad_" + ref) != null;
+    }
+
+    /* DIE FRIST DER GEPARKTEN (S11-08, E-S11-11, wie Android AN-2).
+     *
+     * Bis Uhr 4.0.0 war die Marke ein blosses `true` und ein geparktes Paket
+     * lag, bis jemand es verwarf -- unter Umstaenden fuer immer, mit seiner
+     * Spur. Eine Spur, die niemand mehr nachreichen wird, ist kein Beleg mehr,
+     * sondern ein Ortsdatensatz auf einem Geraet, das verlorengehen kann
+     * (F-R17-28, Lage H im Bedrohungsmodell). Seitdem traegt die Marke den
+     * Zeitpunkt des Parkens, und nach Const.PARK_FRIST_S raeumt jeder
+     * Sendelauf das Paket, bevor er sendet.
+     *
+     * ALTE MARKEN (`true`) bekommen beim ersten Lauf den Zeitpunkt JETZT --
+     * wann sie gesetzt wurden, weiss die Uhr nicht, und lieber dreissig Tage
+     * zu spaet raeumen als ein Paket, das gestern abgewiesen wurde, sofort. */
+    function parkFristPruefen() as Void {
+        var jetzt = Util.epochNow();
+        var weg = [] as Lang.Array<Lang.String>;
+        var listen = [Model.pendingMissions, Model.pendingRest];
+        for (var l = 0; l < 2; l++) {
+            var liste = listen[l] as Lang.Array<Lang.Dictionary>;
+            for (var i = 0; i < liste.size(); i++) {
+                var ref = liste[i]["ref"] as Lang.String;
+                var v = Storage.getValue("bad_" + ref);
+                if (v == null) { continue; }
+                if (!(v instanceof Lang.Number)) {
+                    Storage.setValue("bad_" + ref, jetzt);
+                } else if (jetzt - (v as Lang.Number) > Const.PARK_FRIST_S) {
+                    weg.add(ref);
+                }
+            }
+        }
+        for (var k = 0; k < weg.size(); k++) { verwerfen(weg[k]); }
     }
 
     /* WIE VIELE PAKETE STEHEN GEPARKT? Fuer die Anzeige (SyncView). */
@@ -85,6 +126,10 @@ module Uploader {
          * Funk und Akku und bekommt dieselbe Antwort, bis jemand neu koppelt
          * (Backlog Nr. 159). */
         if (abgemeldet) { return; }
+        /* OHNE SCHLUESSEL ODER OHNE VERSCHLUESSELUNG: ebenso nicht (S11-08).
+         * Die Sync-Seite sagt, was fehlt. */
+        if (!Huelle.hatSchluessel() || !Huelle.bereit()) { return; }
+        parkFristPruefen();
         _next();
     }
 
@@ -151,6 +196,8 @@ module Uploader {
             _busy = false;
             return;
         }
+        // Kein Schluessel: nichts hinaus (S11-08). Die Sync-Seite sagt es.
+        if (!Huelle.hatSchluessel()) { _busy = false; return; }
         var d = job["data"] as Lang.Dictionary;
         var ref = d["ref"] as Lang.String;
         var seqFrom = _ackedSeq(ref);
@@ -158,18 +205,31 @@ module Uploader {
         if (n > Const.UPLOAD_CHUNK_POINTS) { n = Const.UPLOAD_CHUNK_POINTS; }
 
         var flat = Track.readPoints(ref, seqFrom, n);
-        var points = [];
-        for (var i = 0; i < flat.size(); i += 4) {
-            points.add([flat[i], flat[i + 1], flat[i + 2], flat[i + 3]]);
-        }
+        var istEinsatz = "mission".equals(job["kind"] as Lang.String);
 
         var body = {
             "kind" => job["kind"], "client_ref" => ref,
             "day" => (d["day"] != null ? d["day"] : Model.day),
             "started_at" => d["startedAt"], "ended_at" => d["endedAt"],
-            "final" => d["final"] == true,
-            "track" => { "seq_from" => seqFrom, "points" => points }
+            "final" => d["final"] == true
         };
+
+        /* VERSCHLIESSEN (S11-08). Scheitert es, geht nichts hinaus: Eine
+         * Anfrage ohne Huelle quittierte der Server, und die Uhr raeumte
+         * Punkte, die nie angekommen sind. Ohne Punkte faellt `track` weg --
+         * der Server antwortet dann mit seiner eigenen Marke (Vertrag 3.1). */
+        try {
+            if (flat.size() > 0) {
+                body["track"] = Huelle.spurstueck(istEinsatz ? "spur" : "ruhe", ref, seqFrom, flat);
+            }
+            if (istEinsatz) {
+                body["ort_huelle"] = Huelle.einsatz(ref, d);
+            }
+        } catch (e) {
+            lastError = "Verschlüsseln gescheitert";
+            _busy = false;
+            return;
+        }
 
         // Dienstkennung (JSON-Vertrag 1.3). Sie stammt aus DEM PAKET, nicht aus
         // Model.dayRef: Ein Einsatz aus einem laengst beendeten Dienst kann noch
@@ -182,30 +242,19 @@ module Uploader {
         // dasselbe in umstaendlich.
         if (d["dref"] != null) { body["day_ref"] = d["dref"]; }
 
-        if ("mission".equals(job["kind"] as Lang.String)) {
+        if (istEinsatz) {
             body["distance_m"] = (d["dist"] != null) ? d["dist"] : Track.distanceM.toNumber();
             body["ascent_m"]   = (d["asc"]  != null) ? d["asc"]  : Track.ascentM.toNumber();
+            /* Die Phasen tragen seit 4.0.0 nur Nummer und Zeit; die
+             * Koordinate steht in der Einsatzhuelle, ebenso die Reanimation
+             * (Vertrag 3, seit Web 22.0.1). */
             var phases = [];
             var raw = d["phases"] as Lang.Array<Lang.Array>;
             for (var i = 0; i < raw.size(); i++) {
                 var p = raw[i];
-                phases.add({ "phase" => p[0], "at" => p[1], "lat" => p[2], "lon" => p[3] });
+                phases.add({ "phase" => p[0], "at" => p[1] });
             }
             body["phases"] = phases;
-            var sessions = d["resus"] as Lang.Array;
-            if (sessions != null && sessions.size() > 0) {
-                var out = [];
-                for (var s = 0; s < sessions.size(); s++) {
-                    var sess = sessions[s] as Lang.Dictionary;
-                    var evs = [];
-                    var rraw = sess["events"] as Lang.Array<Lang.Array>;
-                    for (var i = 0; i < rraw.size(); i++) {
-                        evs.add({ "type" => rraw[i][0], "at" => rraw[i][1] });
-                    }
-                    out.add({ "started_at" => sess["start"], "events" => evs });
-                }
-                body["resus_sessions"] = out;
-            }
         }
 
         var opts = {
@@ -343,7 +392,8 @@ module Uploader {
              * Einstellungen. Ein gesundes Paket dafuer zu parken waere
              * schlimmer als ein Versuch zuviel; ohne Kennzeichen wird deshalb
              * weiter wiederholt, wie bisher. */
-            Storage.setValue("bad_" + ref, true);
+            // Mit dem Zeitpunkt des Parkens: daran haengt die Frist (S11-08).
+            Storage.setValue("bad_" + ref, Util.epochNow());
             lastError = null;
             _busy = false;
             _next();          // die Schlange laeuft weiter

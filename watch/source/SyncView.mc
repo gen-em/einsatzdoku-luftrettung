@@ -161,6 +161,23 @@ class SyncView extends WatchUi.View {
         if (Uploader.abgemeldet) {
             lines.add(["Gerät nicht mehr angemeldet", Ui.ROT]);
             lines.add(["Neu koppeln: " + Input.lSelectHold(), Graphics.COLOR_LT_GRAY]);
+        } else if (Uploader.hasCredentials() && !Huelle.hatSchluessel()) {
+            /* GEKOPPELT, ABER OHNE KONTOSCHLUESSEL (S11-08, E-S11-09). Der
+             * Fall nach dem Aufspielen von 4.0.0 auf eine gekoppelte Uhr --
+             * die alte Kopplung kannte keinen Schluessel -- und nach einer
+             * Kopplung an ein Konto, das noch keines hat. Derselbe Weg
+             * heraus wie beim Abmelden, in denselben zwei Zeilen; eine eigene
+             * Ansicht braucht es nicht. */
+            lines.add(["Kein Schlüssel", Ui.ROT]);
+            lines.add(["Neu koppeln: " + Input.lSelectHold(), Graphics.COLOR_LT_GRAY]);
+        } else if (Uploader.hasCredentials() && !Huelle.bereit()) {
+            /* Der Selbsttest ist gescheitert (E-S11-30): Diese Uhr rechnet
+             * die Huelle anders als der Browser. Senden hiesse, Daten
+             * hinauszuschicken, die niemand mehr oeffnen kann. Neu koppeln
+             * hilft hier nicht -- die Zeile nennt deshalb keinen Weg,
+             * sondern sagt, wo es hingehoert. */
+            lines.add(["Uhr kann nicht verschlüsseln", Ui.ROT]);
+            lines.add(["Bitte melden", Graphics.COLOR_LT_GRAY]);
         } else if (geparkt > 0) {
             lines.add([geparkt == 1 ? "1 abgewiesen"
                                     : geparkt.toString() + " abgewiesen", Ui.ROT]);

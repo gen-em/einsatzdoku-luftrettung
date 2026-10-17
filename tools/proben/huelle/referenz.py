@@ -37,7 +37,7 @@ anderen Einsatz hängt, geht dort nicht auf (E-S11-17). Die Zeiten gehören
 nicht dazu (E-S11-18).
 
 AUFRUF
-    python3 referenz.py erzeugen     # vektoren.json und Vektoren.mc schreiben
+    python3 referenz.py erzeugen     # vektoren.json, Vektoren.mc und HuelleVektor.mc schreiben
     python3 referenz.py pruefen      # vektoren.json gegen diese Umsetzung
     python3 referenz.py --selbstprobe
 """
@@ -62,6 +62,9 @@ HIER = pathlib.Path(__file__).resolve().parent
 WURZEL = HIER.parents[2]
 VEKTOREN = HIER / "vektoren.json"
 UHR_VEKTOREN = WURZEL / "tools" / "uhr-pruefstand" / "krypto-probe" / "source" / "Vektoren.mc"
+# Der Selbsttest der Uhr-App (S11-08, E-S11-30): EIN Fall, mit dem die App
+# beim ersten Senden ihre Byteordnung und die ganze Kette prüft.
+APP_VEKTOR = WURZEL / "watch" / "source" / "HuelleVektor.mc"
 
 FASSUNG = 1
 INFO = b"nadoku-huelle-1"
@@ -340,6 +343,28 @@ def uhr_vektoren(v: dict) -> str:
     return "\n".join(zeilen)
 
 
+def app_vektor(v: dict) -> str:
+    """Der Fall „kurz" als Monkey-C-Quelltext für die App (S11-08). Die App
+    rechnet ihn mit festem flüchtigem Schlüssel und festem IV nach: stimmt Z
+    erst umgedreht, ist die Ordnung little-endian (F-S11-18); stimmt danach
+    das TAG, trägt die ganze Kette — ECDH, HKDF, AES, HMAC, Bindung."""
+    f = next(f for f in v["faelle"] if f["name"] == "kurz")
+    return "\n".join([
+        "// ERZEUGT von tools/proben/huelle/referenz.py erzeugen — nicht von Hand ändern.",
+        "// Anlass: entfällt — Erzeuger (E-BR-05)",
+        "// Der Selbsttest der Gerätehülle (S11-08, E-S11-30): Fall „kurz“ aus",
+        "// tools/proben/huelle/vektoren.json.",
+        "import Toybox.Lang;", "", "module HuelleVektor {",
+        f"    const EMPF_PUB = {mc_bytes(v['empfaenger']['oeffentlich_hex'])};",
+        f"    const KLAR = {mc_bytes(f['klartext_hex'])};",
+        f"    const BINDUNG = {mc_bytes(f['bindung_hex'])};",
+        f"    const D = {mc_bytes(f['fluechtig_privat_hex'])};",
+        f"    const IV = {mc_bytes(f['iv_hex'])};",
+        f"    const Z = {mc_bytes(f['z_hex'])};",
+        f"    const TAG = {mc_bytes(f['tag_hex'])};",
+        "}", ""])
+
+
 def pruefen(v: dict) -> list[str]:
     """Jeden Fall neu rechnen, jede Hülle öffnen, jede Störung scheitern sehen."""
     fehler = []
@@ -397,8 +422,9 @@ def main() -> int:
         VEKTOREN.write_text(json.dumps(v, ensure_ascii=False, indent=2) + "\n", "utf-8")
         UHR_VEKTOREN.parent.mkdir(parents=True, exist_ok=True)
         UHR_VEKTOREN.write_text(uhr_vektoren(v), "utf-8")
+        APP_VEKTOR.write_text(app_vektor(v), "utf-8")
         print(f"{len(v['faelle'])} Fälle, {len(v['stoerungen'])} Störungen → {VEKTOREN.name}, "
-              f"{UHR_VEKTOREN.relative_to(WURZEL)}")
+              f"{UHR_VEKTOREN.relative_to(WURZEL)}, {APP_VEKTOR.relative_to(WURZEL)}")
         return 0
     if arg == "pruefen":
         if not VEKTOREN.exists():
@@ -407,6 +433,9 @@ def main() -> int:
         fehler = pruefen(v)
         if not fehler and UHR_VEKTOREN.read_text("utf-8") != uhr_vektoren(v):
             fehler.append("Vektoren.mc weicht ab — neu erzeugen")
+        if not fehler and (not APP_VEKTOR.exists()
+                           or APP_VEKTOR.read_text("utf-8") != app_vektor(v)):
+            fehler.append("watch/source/HuelleVektor.mc weicht ab — neu erzeugen")
         for f in fehler:
             print("  FEHL  " + f)
         print(f"{len(v['faelle'])} Fälle geöffnet, {len(v['stoerungen'])} Störungen abgewiesen, "

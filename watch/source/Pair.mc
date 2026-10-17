@@ -328,6 +328,8 @@ module Pair {
         Uploader.alleGeparktenVerwerfen();
         Uploader.abgemeldet = false;
         Storage.deleteValue("cred");
+        // Der Kontoschluessel gehoert zur Kopplung und geht mit (S11-08).
+        Huelle.schluesselLoeschen();
         try {
             Properties.setValue("deviceId", "");
             Properties.setValue("apiKey", "");
@@ -638,7 +640,7 @@ module Pair {
                  * (E-S5-15). Ohne diesen Zweig haenge die Kopplung an einem
                  * einzigen Funkpaket: Der Server haette ein Geraet, von dem
                  * die Uhr nichts weiss. */
-                _fertig();
+                _fertig(dict);
                 return;
             }
             // "offen": nichts zu tun. Der Code steht weiter, die Restzeit
@@ -761,12 +763,12 @@ module Pair {
         var dev = _dev;
         if (dev == null || !fuer.equals(dev)) { return; }
 
+        var dict = (data instanceof Lang.Dictionary) ? data : null;
         if (code == 200) {
-            _fertig();
+            _fertig(dict);
             return;
         }
 
-        var dict = (data instanceof Lang.Dictionary) ? data : null;
         var fehler = (dict != null && dict["error"] instanceof Lang.String)
                      ? dict["error"] as Lang.String : null;
 
@@ -871,8 +873,15 @@ module Pair {
     }
 
     /* Geschafft: Die Zugangsdaten sind ab jetzt gueltig und duerfen — erst
-     * jetzt — in den Speicher (E-S5-22). */
-    function _fertig() as Void {
+     * jetzt — in den Speicher (E-S5-22).
+     *
+     * MIT IHNEN DER KONTOSCHLUESSEL (S11-08, pair.php `kontoschluessel`).
+     * Beide Wege hierher tragen ihn — `bestaetigen` und `status` mit
+     * "gekoppelt" —, weil die Kopplung ueber beide zustande kommen kann.
+     * Fehlt er (`null`: das Konto hat noch kein Schluesselpaar, es entsteht
+     * beim naechsten Entsperren im Browser), ist die Uhr trotzdem gekoppelt,
+     * sendet aber nicht; die Meldung sagt das, statt "Gekoppelt" in Gruen. */
+    function _fertig(dict as Lang.Dictionary or Null) as Void {
         var dev = _dev;
         var key = _key;
         if (dev == null || key == null) { return; }
@@ -881,6 +890,11 @@ module Pair {
         Storage.setValue("cred", { "d" => dev, "k" => key }
                          as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
         Uploader.lastError = null;
+        var ks = (dict != null) ? dict["kontoschluessel"] : null;
+        if (!Huelle.schluesselSetzen(ks)) {
+            _sitzungBeenden("Gekoppelt, kein Schlüssel", "Im Web anmelden, neu koppeln", :error);
+            return;
+        }
         // ohne Haken-Glyph (Geraeteschrift kennt es nicht)
         _sitzungBeenden("Gekoppelt", null, :ok);
     }
