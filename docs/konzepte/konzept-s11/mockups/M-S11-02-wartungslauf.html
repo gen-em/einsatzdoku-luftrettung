@@ -1,0 +1,148 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>S11 · Mockup M-S11-02 — Wartungslauf</title><style>
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;--asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;
+  --linie:#E3DAC6;--orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;--rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;--schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--strich:1px;--strich-stark:2px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5;width:1280px}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2);max-width:1180px}
+h2.abschnitt{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:22px 24px 2px;color:var(--dunkelblau)}
+.unter{margin:0 24px 10px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:1180px}
+.frames{display:flex;gap:18px;margin:0 24px;align-items:flex-start;flex-wrap:wrap}
+.rahmen-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.seite{background:var(--rauch);border:1px solid var(--linie);border-radius:var(--radius-gross);padding:var(--abstand-4)}
+/* --- vorhandene Bausteine, verkürzt ------------------------------------ */
+.karte{background:var(--schnee);border:1px solid var(--linie);border-radius:var(--radius-gross);margin-bottom:var(--abstand-3)}
+.karte-kopf{display:flex;align-items:center;gap:var(--abstand-2);padding:var(--abstand-3) var(--abstand-4);border-bottom:1px solid var(--linie)}
+.karte-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-4);font-weight:600;margin:0;color:var(--dunkelblau)}
+.karte-inhalt{padding:var(--abstand-3) var(--abstand-4)}
+.plakette{font-size:var(--groesse-1);font-weight:600;border-radius:var(--radius-klein);padding:1px 6px;background:var(--blau-hell);color:var(--blau-tief)}
+.zeile-lese{display:flex;gap:var(--abstand-3);font-size:var(--groesse-2);padding:3px 0}
+.zeile-lese b{width:120px;color:var(--gedaempft);font-weight:400}
+.geo{height:260px;border-radius:var(--radius-gross);border:1px solid var(--linie);position:relative;overflow:hidden;
+     background:linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px) 0 0/40px 40px,
+                linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px) 0 0/40px 40px,#E9E5DA}
+.geo.mit-spur::after{content:"";position:absolute;left:18%;top:62%;width:58%;height:3px;background:var(--orange);transform:rotate(-18deg);border-radius:2px}
+.zustandszeile{min-height:20px;margin-top:var(--abstand-3);color:var(--gedaempft);font-size:var(--groesse-2)}
+.meldung{border-radius:var(--radius);padding:var(--abstand-2) var(--abstand-3);font-size:var(--groesse-2)}
+.meldung-fehler{background:var(--rosa);color:var(--rot-tief);border-left:4px solid var(--rot)}
+.knopf{display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:var(--radius);border:1px solid var(--linie);background:var(--schnee);font-size:var(--groesse-2);font-weight:600;color:var(--dunkelblau)}
+/* --- NEU: der Baustein dieses Mockups ----------------------------------- */
+.ladeplatz{display:flex;align-items:center;gap:var(--abstand-2);color:var(--gedaempft);font-size:var(--groesse-2)}
+.ladeplatz-ring{width:16px;height:16px;flex:0 0 16px;border-radius:50%;border:var(--strich-stark) solid var(--linie);border-top-color:var(--orange-tief);animation:dreh 900ms linear infinite}
+@keyframes dreh{to{transform:rotate(360deg)}}
+.geo .ladeplatz{white-space:nowrap;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--schnee);border:1px solid var(--linie);border-radius:var(--radius);padding:var(--abstand-2) var(--abstand-3);box-shadow:0 1px 3px rgba(26,5,0,.08)}
+.ladeplatz-still .ladeplatz-ring{animation:none;border-color:var(--orange-tief)}
+.laufband{height:3px;background:var(--linie);overflow:hidden;position:relative}
+.laufband::after{content:"";position:absolute;top:0;left:20%;width:30%;height:3px;background:var(--orange-tief)}
+.balken{height:6px;border-radius:3px;background:var(--linie);overflow:hidden;margin-top:6px}
+.balken > i{display:block;height:100%;background:var(--orange-tief)}
+.blass{opacity:.55}
+.notiz{padding:10px 24px 6px;max-width:1180px;font-size:var(--groesse-2)}
+.notiz li{margin:3px 0}
+.notiz code{font-size:12px;background:var(--schnee);padding:0 3px;border-radius:3px}
+.empf{background:var(--orange-hell);border-left:4px solid var(--orange-tief);padding:10px 14px;margin:14px 24px;max-width:1180px;font-size:var(--groesse-2);border-radius:var(--radius-klein)}
+
+/* --- für dieses Mockup: verkürzte Seitenrahmen -------------------------- */
+.app{display:flex;border:1px solid var(--linie);border-radius:var(--radius-gross);overflow:hidden;background:var(--rauch)}
+.app-leiste{width:150px;flex:0 0 150px;background:var(--schnee);border-right:1px solid var(--linie);padding:10px 10px;font-size:var(--groesse-2)}
+.app-leiste div{padding:4px 6px;border-radius:6px;color:var(--dunkelblau);font-weight:600}
+.app-leiste .an{background:var(--orange-hell);border-left:3px solid var(--orange)}
+.app-inhalt{flex:1;padding:12px 14px;min-width:0}
+.kopfband{height:30px;background:var(--dunkelblau);border-radius:var(--radius-gross) var(--radius-gross) 0 0;color:#fff;font-size:12px;font-weight:600;padding:6px 12px}
+.seitentitel{font-family:var(--schrift-kopf);font-size:22px;font-weight:600;color:var(--dunkelblau);margin:2px 0 0}
+.seitenzeile{color:var(--gedaempft);font-size:var(--groesse-1);margin:0 0 8px}
+.feld{height:30px;border:1px solid var(--sand);border-radius:6px;background:#fff;margin:4px 0 8px}
+.knopf-primaer{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:var(--radius);background:var(--orange);font-size:var(--groesse-2);font-weight:600;color:var(--asphalt)}
+.knopf-leise{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--linie);background:var(--schnee);font-size:var(--groesse-2);font-weight:600;color:var(--dunkelblau)}
+.meldung-ok{background:var(--blau-hell);color:var(--blau-tief);border-left:4px solid var(--blau)}
+.neu{outline:2px dashed var(--orange-tief);outline-offset:3px}
+.klein{font-size:var(--groesse-1);color:var(--gedaempft)}
+.liste-zeile{display:flex;justify-content:space-between;font-size:var(--groesse-2);padding:6px 0;border-top:1px solid var(--linie)}
+.ladeplatz-ring{animation:none}
+</style></head><body>
+<div class="mock-kopf">
+  <h1>M-S11-02 · Wo der Wartungslauf erscheint (S11-07)</h1>
+  <p>Konzept S11, E-S11-68. Der Wartungslauf fasst neue Aufzeichnungen im Browser zusammen und dünnt sie nach 31 Tagen aus — höchstens 20 je Durchgang, je Aufzeichnung unter einer Sekunde (Median 330 Punkte). Die Startseite hat keine <code>.zustandszeile</code>; M-S11-01 zeigt den Lauf als Karte in den Einstellungen. Alle Bausteine sind vorhanden oder mit M-S11-01 freigegeben (<code>.ladeplatz</code>, <code>.balken</code>, <code>.zustandszeile</code>, Karte, Meldung). <b>Gestrichelt umrandet: was neu auf der Seite steht.</b> „Spur" heißt in der Oberfläche „GPS-Daten" bzw. „Aufzeichnung" (Wortliste).</p>
+</div>
+
+<h2 class="abschnitt">1 · Startseite still, dazu eine Karte im Reiter Backup — Empfehlung</h2>
+<p class="unter">Auf der Startseite läuft der Lauf nach dem Entsperren unsichtbar (20 je Aufruf). Die Karte nennt, was fällig ist, und arbeitet es ab, solange der Reiter offen ist — ohne Knopf; der Balken zeigt den Fortschritt, danach steht das Ergebnis.</p>
+<div class="frames">
+  <div style="width:396px"><div class="rahmen-titel">1 · Startseite — unverändert</div><div class="kopfband">Gen-EM NAdoku · Startseite</div><div class="app"><div class="app-leiste"><div style="color:var(--gedaempft);font-weight:400">Diensttage</div><div>2026</div><div class="an">27.12.2026</div><div>November</div><div>Oktober</div></div><div class="app-inhalt">
+      <div class="seitentitel">Sonntag, 27.12.2026</div><p class="seitenzeile">NEF Talwang 76/1 · Notarztstandort Talwang · Dienstbeginn 07:00</p>
+      
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Diensttag-Daten</h3></div><div class="karte-inhalt"><div class="zeile-lese"><b>Standort</b>Notarztstandort Talwang</div><div class="zeile-lese"><b>Besatzung</b>Fahrer Selma Ibrahimović · …</div></div></div>
+      <div class="geo mit-spur" style="height:120px"></div>
+      <div class="karte" style="margin-top:12px"><div class="karte-kopf"><h3 class="karte-titel">Einsätze</h3></div><div class="karte-inhalt"><div class="liste-zeile"><span>Einsatz 1 · 08:14</span><span class="klein">Primär</span></div><div class="liste-zeile"><span>Einsatz 2 · 11:40</span><span class="klein">Sekundär</span></div></div></div>
+    </div></div></div>
+  <div style="width:396px"><div class="rahmen-titel">1 · Backup — läuft</div><div class="kopfband">Gen-EM NAdoku · Einstellungen</div><div class="app"><div class="app-leiste"><div style="color:var(--gedaempft);font-weight:400">Einstellungen</div><div>Profil</div><div>Geräte</div><div>Standorte</div><div class="an">Backup</div><div>Import / Export</div></div><div class="app-inhalt">
+      <div class="seitentitel">Backup</div><p class="seitenzeile">Sichert alle deine Daten in eine einzelne Datei (.edbak) …</p>
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Backup erstellen</h3></div><div class="karte-inhalt"><div class="klein">Passwort für das Backup</div><div class="feld"></div><span class="knopf-primaer">Backup erstellen</span></div></div>
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Backup einspielen</h3></div><div class="karte-inhalt"><div class="klein">Datei (.edbak)</div><div class="feld"></div><span class="knopf-primaer">Backup einspielen</span></div></div>
+      <div class="karte neu"><div class="karte-kopf"><h3 class="karte-titel">GPS-Daten verdichten</h3><span class="plakette">verschlüsselt</span></div><div class="karte-inhalt"><p class="klein" style="margin:0 0 6px">Neue Aufzeichnungen von Uhr und Handy liegen ungepackt. Dein Browser fasst sie zusammen und dünnt sie nach 31 Tagen aus — der Server kann das nicht, weil er sie nicht lesen kann.</p><div class="zeile-lese"><b>Fällig</b>42 Aufzeichnungen aus 11 Diensttagen</div><div class="zustandszeile"><div class="ladeplatz"><span class="ladeplatz-ring"></span>Wird verdichtet: 17 von 42</div><div class="balken" role="progressbar" aria-valuemin="0" aria-valuemax="42" aria-valuenow="17"><i style="width:40.5%"></i></div></div></div></div>
+    </div></div></div>
+  <div style="width:396px"><div class="rahmen-titel">1 · Backup — fertig / Fehler</div><div class="kopfband">Gen-EM NAdoku · Einstellungen</div><div class="app"><div class="app-leiste"><div style="color:var(--gedaempft);font-weight:400">Einstellungen</div><div>Profil</div><div>Geräte</div><div>Standorte</div><div class="an">Backup</div><div>Import / Export</div></div><div class="app-inhalt">
+      <div class="seitentitel">Backup</div><p class="seitenzeile">Sichert alle deine Daten in eine einzelne Datei (.edbak) …</p>
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Backup erstellen</h3></div><div class="karte-inhalt"><div class="klein">Passwort für das Backup</div><div class="feld"></div><span class="knopf-primaer">Backup erstellen</span></div></div>
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Backup einspielen</h3></div><div class="karte-inhalt"><div class="klein">Datei (.edbak)</div><div class="feld"></div><span class="knopf-primaer">Backup einspielen</span></div></div>
+      <div class="karte neu"><div class="karte-kopf"><h3 class="karte-titel">GPS-Daten verdichten</h3><span class="plakette">verschlüsselt</span></div><div class="karte-inhalt"><div class="zeile-lese"><b>Fällig</b>nichts</div><div class="zustandszeile"><div class="meldung meldung-ok">Fertig: 42 Aufzeichnungen verdichtet, bei 9 Einsätzen die Höhe des Einsatzorts nachgetragen.</div></div></div></div><div class="karte neu"><div class="karte-kopf"><h3 class="karte-titel">GPS-Daten verdichten</h3><span class="plakette">verschlüsselt</span></div><div class="karte-inhalt"><div class="zeile-lese"><b>Fällig</b>1 Aufzeichnung</div><div class="zustandszeile"><div class="meldung meldung-fehler">1 Aufzeichnung ließ sich nicht öffnen und bleibt, wie sie ist. Gemeldet an die Betreuung (Reiter System).</div></div></div></div>
+    </div></div></div>
+</div>
+
+<h2 class="abschnitt">2 · Nur still auf der Startseite</h2>
+<p class="unter">Kein sichtbares Zeichen, nirgends. Am wenigsten Bau; man sieht aber nie, ob noch etwas fällig ist, und eine Aufzeichnung, die nicht aufgeht, steht nur im Reiter System der Betreuung.</p>
+<div class="frames">
+  <div style="width:396px"><div class="rahmen-titel">2 · Startseite — unverändert</div><div class="kopfband">Gen-EM NAdoku · Startseite</div><div class="app"><div class="app-leiste"><div style="color:var(--gedaempft);font-weight:400">Diensttage</div><div>2026</div><div class="an">27.12.2026</div><div>November</div><div>Oktober</div></div><div class="app-inhalt">
+      <div class="seitentitel">Sonntag, 27.12.2026</div><p class="seitenzeile">NEF Talwang 76/1 · Notarztstandort Talwang · Dienstbeginn 07:00</p>
+      
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Diensttag-Daten</h3></div><div class="karte-inhalt"><div class="zeile-lese"><b>Standort</b>Notarztstandort Talwang</div><div class="zeile-lese"><b>Besatzung</b>Fahrer Selma Ibrahimović · …</div></div></div>
+      <div class="geo mit-spur" style="height:120px"></div>
+      <div class="karte" style="margin-top:12px"><div class="karte-kopf"><h3 class="karte-titel">Einsätze</h3></div><div class="karte-inhalt"><div class="liste-zeile"><span>Einsatz 1 · 08:14</span><span class="klein">Primär</span></div><div class="liste-zeile"><span>Einsatz 2 · 11:40</span><span class="klein">Sekundär</span></div></div></div>
+    </div></div></div>
+  <div style="width:396px"><div class="rahmen-titel">2 · Backup — unverändert</div><div class="kopfband">Gen-EM NAdoku · Einstellungen</div><div class="app"><div class="app-leiste"><div style="color:var(--gedaempft);font-weight:400">Einstellungen</div><div>Profil</div><div>Geräte</div><div>Standorte</div><div class="an">Backup</div><div>Import / Export</div></div><div class="app-inhalt">
+      <div class="seitentitel">Backup</div><p class="seitenzeile">Sichert alle deine Daten in eine einzelne Datei (.edbak) …</p>
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Backup erstellen</h3></div><div class="karte-inhalt"><div class="klein">Passwort für das Backup</div><div class="feld"></div><span class="knopf-primaer">Backup erstellen</span></div></div>
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Backup einspielen</h3></div><div class="karte-inhalt"><div class="klein">Datei (.edbak)</div><div class="feld"></div><span class="knopf-primaer">Backup einspielen</span></div></div>
+      
+    </div></div></div>
+</div>
+
+<h2 class="abschnitt">3 · Eine Zustandszeile oben auf der Startseite</h2>
+<p class="unter">Erscheint nur, wenn der Durchgang länger als 300 ms dauert, unter der Kopfzeile des Diensttags; danach verschwindet sie ohne Meldung (ein Fehler bleibt als rote Meldung stehen). Neu ist die Stelle, nicht der Baustein.</p>
+<div class="frames">
+  <div style="width:396px"><div class="rahmen-titel">3 · Startseite — läuft</div><div class="kopfband">Gen-EM NAdoku · Startseite</div><div class="app"><div class="app-leiste"><div style="color:var(--gedaempft);font-weight:400">Diensttage</div><div>2026</div><div class="an">27.12.2026</div><div>November</div><div>Oktober</div></div><div class="app-inhalt">
+      <div class="seitentitel">Sonntag, 27.12.2026</div><p class="seitenzeile">NEF Talwang 76/1 · Notarztstandort Talwang · Dienstbeginn 07:00</p>
+      <div class="zustandszeile neu" style="margin:0 0 10px"><div class="ladeplatz"><span class="ladeplatz-ring"></span>GPS-Daten werden verdichtet: 7 von 20</div><div class="balken" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="7"><i style="width:35%"></i></div></div>
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Diensttag-Daten</h3></div><div class="karte-inhalt"><div class="zeile-lese"><b>Standort</b>Notarztstandort Talwang</div><div class="zeile-lese"><b>Besatzung</b>Fahrer Selma Ibrahimović · …</div></div></div>
+      <div class="geo mit-spur" style="height:120px"></div>
+      <div class="karte" style="margin-top:12px"><div class="karte-kopf"><h3 class="karte-titel">Einsätze</h3></div><div class="karte-inhalt"><div class="liste-zeile"><span>Einsatz 1 · 08:14</span><span class="klein">Primär</span></div><div class="liste-zeile"><span>Einsatz 2 · 11:40</span><span class="klein">Sekundär</span></div></div></div>
+    </div></div></div>
+  <div style="width:396px"><div class="rahmen-titel">3 · Startseite — danach</div><div class="kopfband">Gen-EM NAdoku · Startseite</div><div class="app"><div class="app-leiste"><div style="color:var(--gedaempft);font-weight:400">Diensttage</div><div>2026</div><div class="an">27.12.2026</div><div>November</div><div>Oktober</div></div><div class="app-inhalt">
+      <div class="seitentitel">Sonntag, 27.12.2026</div><p class="seitenzeile">NEF Talwang 76/1 · Notarztstandort Talwang · Dienstbeginn 07:00</p>
+      
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Diensttag-Daten</h3></div><div class="karte-inhalt"><div class="zeile-lese"><b>Standort</b>Notarztstandort Talwang</div><div class="zeile-lese"><b>Besatzung</b>Fahrer Selma Ibrahimović · …</div></div></div>
+      <div class="geo mit-spur" style="height:120px"></div>
+      <div class="karte" style="margin-top:12px"><div class="karte-kopf"><h3 class="karte-titel">Einsätze</h3></div><div class="karte-inhalt"><div class="liste-zeile"><span>Einsatz 1 · 08:14</span><span class="klein">Primär</span></div><div class="liste-zeile"><span>Einsatz 2 · 11:40</span><span class="klein">Sekundär</span></div></div></div>
+    </div></div></div>
+</div>
+
+<div class="empf"><b>Empfehlung: Variante 1.</b> Die Startseite bleibt ruhig — sie ist die Seite, die man im Dienst aufmacht; ein Balken über dem Diensttag lenkt ab und sagt dort nichts, was man tun könnte. Die Karte gibt der Frage „ist alles verdichtet?" eine feste Stelle und dem Fehlerfall einen Ort, an dem die NutzerIn ihn sieht. Gebaut wird: die Karte (vorhandene Bausteine), dazu am Server eine Zahl der fälligen Aufzeichnungen und Diensttage (eine Abfrage). Keine neue Farbe, keine neue Schriftgröße, kein neuer Baustein.</div>
+
+<div class="notiz"><b>Fragen zur Freigabe</b><ol>
+  <li>Variante 1, 2 oder 3?</li>
+  <li>Bei 1: Reiter Backup, und die Karte unter den beiden Backup-Karten?</li>
+  <li>Bei 1: Läuft die Karte selbst los, sobald der Reiter offen und entsperrt ist (so gezeichnet), oder erst auf einen Knopf „Jetzt verdichten"?</li>
+  <li>Der Titel „GPS-Daten verdichten" — oder ein anderes Wort?</li>
+</ol></div>
+</body></html>
