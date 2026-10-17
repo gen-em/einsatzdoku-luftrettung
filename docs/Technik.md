@@ -870,7 +870,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      kommt der Simulator an 127.0.0.1 heran, und trennt
 │   │                      „kommt nicht raus" von „kommt raus, Antwort wird
 │   │                      verworfen" — und `eingabe-probe/` zum Ausmessen des
-│   │                      Eingabeverhaltens neuer Zielgeräte (Abschnitt 5.2)
+│   │                      Eingabeverhaltens neuer Zielgeräte (Abschnitt 5.2).
+│   │                      Dazu `krypto-probe/` (S11-02, die Gerätehülle auf
+│   │                      der Uhr) und seit S11-08 `rundlauf/`: eine
+│   │                      Prüffassung koppelt im Simulator an die örtliche
+│   │                      Anlage, sendet verschlossen, und `pruefen.php`
+│   │                      öffnet Wert für Wert (Abschnitt 5.2b)
 │   └── zaehlung/          hält fest, dass jede Sache ihre EINE Stelle behält
 │                          (Schritt 15, R83, E-ZE-24): je Muster eine
 │                          Registerzeile mit einer Decke, gemessen mit dem
@@ -6489,15 +6494,16 @@ und genau dann wäre er nötig.
 | `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
 | `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
 | `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
-| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.1c |
+| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.1c. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11) |
+| `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) |
 | `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1) |
 | `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
 | `Ui.mc` | Geometrie relativ zur Displayhöhe (`s()` liefert bei 260 exakt den Ausgangswert), Markenfarben, Rea-Marker |
 | `Nav.mc` | Pager: Uhr → Tempo → Statistik → Sync → Rea |
 | `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
 | `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; erben von `ActionDelegate` und beschreiben nur noch die Aktionen |
-| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete, **ohne geparkte**), App-Version, Kopplung per START-Halten, **Verwerfen abgewiesener Pakete per kurzem START** |
-| `Pair.mc` | Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher** |
+| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete, **ohne geparkte**), App-Version, Kopplung per START-Halten, **Verwerfen abgewiesener Pakete per kurzem START**; seit Uhr 4.0.0 „Kein Schlüssel · Holen: START halten" und „Verschlüsseln geht nicht" (E-S11-76) |
+| `Pair.mc` | Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher**. **Seit Uhr 4.0.0** legt `_fertig()` den `kontoschluessel` aus der Antwort ab, und `schluesselHolen()` holt ihn bei bestehender Kopplung über `status` nach (E-S11-79) — kein Trennen, weil ein Rückstand das Trennen sperrt (F-S11-80) |
 | `PairView.mc` | Die Kopplungsansicht: zeigt den Code groß, dazu Restzeit und Verbindungshinweis; BACK bricht ab. Eigene Ansicht, weil der Code Buchstaben trägt (keine Ziffernschrift), eine Restzeit läuft und BACK hier anders wirkt als auf der Sync-Seite |
 | `Const.mc` / `Util.mc` | `APP_VERSION`, Labels, Tuning-Werte; ISO-UTC, lokale Anzeige, Vibration |
 
@@ -7174,10 +7180,20 @@ Serverzertifikat mit `subjectAltName=IP:127.0.0.1`, die CA per
 `update-ca-certificates` im Systemspeicher. Sie entsteht auf der Maschine
 und verlässt sie nicht.
 
-Die Grenzen bleiben die des Simulators, unverändert: keine echte Hardware,
-keine Systemgesten, kein Server. Ein Lauf zeigt, dass es startet und wie es
-aussieht — nicht, dass es richtig ist. Anleitung:
-`tools/uhr-pruefstand/LIESMICH.md`.
+**Der Rundlauf** (seit S11-08, `tools/uhr-pruefstand/rundlauf/`) baut auf
+dieser dritten Zeile auf: Eine Prüffassung der App — eine Kopie mit der
+Adresse `127.0.0.1:8443` und einer Füllung, die einen Einsatz und ein
+Ruhesegment anlegt — koppelt im Simulator an das Demo-Konto, sendet beides
+verschlossen, und `pruefen.php` öffnet es mit dem Demo-Schlüssel und hält es
+Wert für Wert gegen (12 Prüfungen). Mit `--nachholen` dazu der Weg ohne
+Kontoschlüssel und das Nachholen (E-S11-79). Den Klick im Web ersetzt eine
+Zeile SQL; was die Weboberfläche beim Koppeln tut, misst die Kopplungsprobe.
+
+Die Grenzen bleiben die des Simulators: keine echte Hardware, keine
+Systemgesten, keine GPS-Aufzeichnung (die Punkte legt die Füllung an), keine
+Zeiten einer echten Uhr. Ein Lauf zeigt, dass es startet, wie es aussieht und
+dass das Gesendete aufgeht — nicht, dass es auf dem Gerät genauso ist.
+Anleitung: `tools/uhr-pruefstand/LIESMICH.md`.
 
 ### 4.99d Betrieb: drei Seiten statt einer Wartungsseite (ab Web 15.1.0, S8/AP2)
 

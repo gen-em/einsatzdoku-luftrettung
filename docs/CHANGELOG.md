@@ -14,6 +14,89 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.0.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-08 — die Garmin-Uhr verschließt**. Gehört zur
+Hauptauslieferung von S11 und wird mit ihr ausgeliefert: Eine Uhr 3.x kommt
+an einem Server ab Web 22.0.1 nicht mehr durch, eine Uhr 4.0.0 an einem
+älteren auch nicht (E-S11-09, kein Übergang).
+
+### Uhr — Spur, Phasenkoordinaten und Reanimation gehen verschlossen hinaus
+
+Seit Web 22.0.1 nimmt `ingest.php` Ortsdaten nur noch als Gerätehülle an und
+weist Klartext mit `400 klartext` ab. Die Uhr verschließt jetzt selbst, mit
+dem öffentlichen Schlüssel des Kontos, den sie bei der Kopplung bekommt: je
+Anfrage ein Spurstück (14 Byte je Punkt, Höhe in ganzen Metern) und bei einem
+Einsatz die Einsatzhülle mit den Koordinaten aller Phasen und jeder
+Reanimation. Öffnen kann sie nichts davon — den privaten Teil hat nur der
+Browser der Kontoinhaberin. Was die Uhr selbst anzeigt, liest sie weiter aus
+ihrem eigenen Puffer (E-R17-09); verschlossen wird erst auf dem Weg hinaus.
+
+Die Bausteine stammen aus der Krypto-Probe von S11-02 (`watch/source/
+Huelle.mc`); sie waren dort gegen die Vektoren der Referenz gemessen, auf
+drei Uhren im Simulator und auf der Fenix 6 Pro. **Eine Annahme blieb übrig,
+und die nimmt die App nicht hin:** Garmin liefert das gemeinsame Geheimnis
+in umgekehrter Byteordnung, gemessen ist das nur auf der Fenix (E-S11-30).
+Vor dem ersten Senden rechnet die Uhr deshalb einen festen Fall der
+Referenz nach (`HuelleVektor.mc`, erzeugt von `referenz.py`): erst die
+Byteordnung, dann das ganze Prüfwort. Stimmt es nicht, sendet sie nicht und
+sagt „Verschlüsseln geht nicht". Eine Hülle, die im Browser nicht aufgeht,
+wäre ein Datenverlust, den niemand bemerkt, bis er den Einsatz öffnet.
+
+Geprüft ist das über den ganzen Weg: Eine Prüffassung der App koppelt im
+Simulator an die örtliche Anlage und sendet einen Einsatz mit 600 Punkten an
+den Rändern — negative Koordinaten, 4500 m Höhe, Punkte ohne Höhe, eine
+Phase ohne Ortung, eine Reanimation —, und die Gegenseite öffnet ihn Wert
+für Wert gleich (`tools/uhr-pruefstand/rundlauf/`, 12 von 12, Fenix 6 Pro
+und FR 945).
+
+### Uhr — ohne Schlüssel sendet sie nicht, und holt ihn nach
+
+Eine Uhr, die schon gekoppelt war, als 4.0.0 kam, hat keinen Schlüssel —
+die alte Kopplung kannte keinen. Ebenso eine, die an ein Konto gekoppelt
+wurde, das noch kein Schlüsselpaar hat (es entsteht beim ersten Entsperren im
+Browser). Vereinbart war „neu koppeln". Beim Lesen von `Pair.mc` fiel auf,
+dass das eine Sackgasse ist (F-S11-80): Neu koppeln setzt Trennen voraus, und
+das verweigert die Uhr, solange ein Rückstand besteht — „Erst 2 Pakete senden,
+sonst ans neue Konto" (Nr. 14). Ohne Schlüssel aber kann sie nicht senden.
+
+Deshalb **holt** die Uhr den Schlüssel jetzt (E-S11-79): Die Sync-Seite sagt
+„Kein Schlüssel · Holen: START halten" (Venu: „Action halten"), und der
+lange Druck fragt `pair.php status` mit den eigenen Zugangsdaten — das
+beantwortet jede gekoppelte Uhr seit S11-03 mit dem Schlüssel ihres Kontos,
+am Server ändert sich nichts. Dieselbe Kennung heißt dasselbe Konto; der
+Rückstand geht dorthin, wo er hingehört. Hat das Konto noch keines, steht dort
+„Erst im Web anmelden". Ein Gerät, das inzwischen gelöscht wurde, landet wie
+bisher bei „Gerät nicht mehr angemeldet · Neu koppeln".
+
+### Uhr — abgewiesene Pakete bleiben nicht für immer liegen
+
+Ein Paket, das der Server dauerhaft abweist, parkt die Uhr seit 3.1.0, bis
+jemand es verwirft (Nr. 159). Seine Spur lag damit unter Umständen für immer
+auf einem Gerät, das verlorengehen kann — kein Beleg mehr, sondern ein
+Ortsdatensatz (F-R17-28, Lage H im Bedrohungsmodell). Die Marke trägt jetzt
+den Zeitpunkt des Parkens, und nach **30 Tagen** räumt der nächste Sendelauf
+das Paket ab, wie auf Android (E-S11-11, -75). Eine Marke aus 3.1.0 ohne
+Zeitpunkt beginnt beim ersten Lauf zu zählen: Lieber dreißig Tage zu spät
+räumen als ein gestern abgewiesenes Paket sofort.
+
+### Prüfstand
+
+- **`bildreihe` nimmt eine Tastenfolge** (Nr. 92): `Down,Down,hold:Return,
+  wait:8` — bis dahin fotografierte sie nur den Startbildschirm. Grenze: Die
+  Folge gilt für alle Geräte der Liste; Drei-Tasten-Uhren brauchen eine
+  andere.
+- **`uhr-rundlauf`** im Muster `uhr`: Koppeln, Senden, Öffnen im Simulator,
+  dazu der Weg ohne Schlüssel. Zwei Fallen, die der erste Lauf aufgedeckt hat
+  und die im Skript stehen: Der Demo-Reset löschte mitten im Lauf das eben
+  gekoppelte Gerät, und `speicher-leeren` wirkt nicht, solange der Simulator
+  läuft — er schreibt den Speicher der App zurück, und alte Pakete gingen mit.
+- **`kryptoprobe` startet den Simulator frisch.** Im ersten Prüfstand des
+  Pakets blieb ihre Ausgabe auf allen drei Uhren leer (0 von 3), mit einem
+  Simulator, der seit Stunden durch Handläufe gelaufen war; einzeln
+  nachgefahren 3 von 3. Die Ursache ist nicht gefunden (F-S11-83) — der
+  Altzustand ist der einzige Unterschied, und den misst sie jetzt nicht mehr.
+
 ## [Web 22.6.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-07 — der Wartungslauf im Browser**. Kein Schema.

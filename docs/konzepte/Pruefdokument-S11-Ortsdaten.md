@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); als Nächstes S11-08.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); **S11-08 erledigt** (17.10.2026, Uhr 4.0.0); als Nächstes S11-09.*
 
 ---
 
@@ -14,6 +14,11 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **Uhr 4.0.0 auf einer echten Uhr** — Selbsttest, Verschließen, Kopplung mit Schlüssel, Nachholen. (S11-08) | Der Simulator rechnet mit dem Prozessor des Rechners und kennt kein Bluetooth; die Byteordnung ist nur auf der Fenix 6 Pro echt gemessen (E-S11-30). | P-S11-32, -33 (Gerätetest der Betreiberin). |
+| **Speicher der kleinsten Zielgeräte beim Verschließen von 500 Punkten.** (S11-08) | Stufe I übersetzt für 99 Geräte, misst aber keinen Laufzeitspeicher; der Rundlauf lief auf fenix6pro und fr945. Gelesen: Die Innenform (7 kB) samt Kopien liegt unter dem JSON-Rumpf mit 500 Punktlisten, den 3.x baute — gemessen ist das nicht. | Gerätetest; fällt eine kleine Uhr beim Senden aus, ist es dieser Punkt. |
+| **Der Rundlauf auf der Venu 3s.** (S11-08) | Keine DOWN-Taste; der Weg zur Sync-Seite ist ein Wischen, dessen Koordinaten nicht ausgemessen sind. Übersetzt ist sie (Stufe I), der Selbsttest lief dort nicht. | P-S11-33. |
+| **Die Zeit für 500 Punkte auf der echten Uhr** (F-S11-23, E-S11-31). | Der Simulator misst den Rechner. | P-S11-32 (ein langer Einsatz kommt ganz an). |
+| **Eine echte GPS-Aufzeichnung in Uhr 4.0.0.** | Die Punkte legt die Füllung des Rundlaufs an; `Track.mc` ist unverändert, gelesen wird über dasselbe `readPoints()`. | P-S11-32. |
 | **Der Wartungslauf mit einer sehr langen Aufzeichnung (bis 50 000 Punkte) und bei Drossel 6× — Zeit, Halde, blockierter Hauptfaden.** (S11-07) | Gemessen sind 120 Punkte (Probe) und der Demo-Bestand (209 Aufzeichnungen in einem Lauf, wenige Sekunden ungedrosselt, nicht einzeln gestoppt). Die Ausdünnung läuft im Hauptfaden. | S11-11 (Messstand, Schritt Wartungslauf neu anlegen). |
 | **Der Wartungslauf in Firefox und WebKit.** (S11-07) | `CompressionStream`/`DecompressionStream('deflate')` nur in Chromium gefahren; F-S11-38/-56 legten die Browserliste auf das erste Paket, das packt — das ist dieses. | P-S11-29 auf Staging; Bilderlauf in drei Motoren (S11-10). |
 | **Der direkte Rückweg einer Kontosicherung mit einer ausgedünnten SPUR1-Spur** (`gh_gepackt_bauen()`). (S11-07) | Gelesen; das PHP-Stück öffnet in der Python-Referenz (3 Punkte, Randwerte), der Weg durch `edbak_spuren_schreiben()` mit Stufe 3 ist nicht gefahren — die Referenz trägt keine ausgedünnte Spur. | Beim nächsten Neuaufbau des Referenzbestands. |
@@ -275,6 +280,25 @@ das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 F-S11-78 (Registertext der Transaktionen seit S11-05c veraltet),
 F-S11-79 (Messstand wartet nach der Anmeldung nicht auf das Schlüsselpaar).
 
+### S11-08 Garmin-Uhr (17.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `referenz.py erzeugen` und `pruefen` | Vektoren und der neue Prüfvektor der App (`HuelleVektor.mc`) | 6 Fälle, 8 Störungen, 0 Abweichungen |
+| `pruefstand.sh bauen` fenix6pro, fr945, venu3s | Übersetzen nach jedem Teilschritt | 3 von 3 `BUILD SUCCESSFUL` |
+| `rundlauf.sh fenix6pro` (Prüffassung, örtliche Anlage, Demo-Konto) | Koppeln im Simulator, Senden, Öffnen mit dem Demo-Schlüssel; Einsatz mit 600 Punkten (negative Koordinaten, 4500,5 m, -12,5 m, ohne Höhe), drei Phasen (eine ohne Ortung), Reanimation mit zwei Ereignissen, Ruhesegment mit 3 Punkten | **12/0**; zwei Stücke 0:500 und 500:100, 600 Punkte Wert für Wert gleich, keine Phase mit Klartext-Koordinate |
+| `rundlauf.sh --nachholen fenix6pro` | Koppeln an ein Konto ohne öffentlichen Schlüssel → „Gekoppelt · Erst im Web anmelden · Kein Schlüssel · Holen: START halten", 0 Einsätze gesendet; Schlüssel zurück, START halten → „Schlüssel geholt", Pakete gehen | **12/0**, „2 Pakete offen" vor dem Holen |
+| `rundlauf.sh fr945` | wie oben, zweite Tastenklasse mit fünf Tasten | **12/0** |
+| `bildreihe` mit Tastenfolge (Nr. 92) | `Down,Down,wait:3` auf fenix6pro und fr945 | 2 von 2 auf der Sync-Seite, „Version 4.0.0" |
+| Prüfstand, erster Lauf | Stufe haupt, 49 Proben und 21 Riegel | 3 rot, 62 grün, 5460 s: Stilvergleich und Bilderlauf (bis S11-10), Krypto-Probe 0 von 3 (leere Ausgabe, F-S11-83); `uhr-rundlauf` 12/0 zweimal, Uhr Stufe I 99/0 |
+| `kryptoprobe` einzeln, frischer Simulator | nach der Berichtigung (Simulator wird vor dem Start neu gestartet) | **3 von 3**, je 7 gut, 0 Fehler; binär 500 Punkte: +13 kB Halde gegen +47 kB als JSON |
+| Abbilder des Rundlaufs, angesehen | Code, Rückfrage „Mit de***@gen-em.org koppeln?", „Sync vollständig · Gekoppelt", die vier Zeilen ohne Schlüssel | alle Zeilen ≤ 26 Zeichen, keine abgeschnitten (Fenix, FR 945) |
+
+**Befunde:** F-S11-80 (Sackgasse ohne Schlüssel, → E-S11-79), F-S11-81 (drei
+Fallen des Rundlaufs: Demo-Reset, Gerätelimit, `speicher-leeren` bei
+laufendem Simulator), F-S11-82 (drei falsche Verweise im Handbuch 2.1/2.2),
+F-S11-83 (Krypto-Probe im ersten Prüfstand leer, Ursache nicht gefunden; frischer Simulator).
+
 ### Nachprüfung S11-06 (16.10.2026, örtlich, auf Wunsch der Betreiberin)
 
 Seriell, weil es eine örtliche Anlage und einen Demo-Bestand gibt (`CLAUDE.md` 7).
@@ -324,9 +348,12 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-30 | nach dem Merge auf Staging | Ein Ruhesegment nach dem Verdichten (Karte oben) aufklappen, „Schneiden“, einen Zeitraum wählen, „Zeitraum löschen“ | Rückfrage, dann „Gelöscht — … Punkte …“; die Linie hat dort eine Lücke | Meldung „inzwischen zusammengefasst“ bei jedem Versuch, oder die Linie ist danach ganz fort |
 | P-S11-31 | nach dem Merge auf Staging | Demo zurücksetzen, als Demo anmelden, Startseite eine Minute offen lassen, dann einen Einsatz von vor Monaten öffnen | Karte und Phasen wie vorher; die Linie sieht gleich aus (ausgedünnt, 2 m / 3 m) | Karte leer, Linie weicht sichtbar ab, oder Meldung „lassen sich nicht öffnen“ |
 | P-S11-28 | erledigt 16.10.2026 | Frage Q-S11-19 im Konzept beantworten (Höhe in Metern statt Dezimetern?) | **beantwortet:** ganze Meter (E-S11-66), umgesetzt in S11-06g | — |
+| P-S11-32 | nach der Web-Hauptauslieferung auf Staging (Konzept 3.8 Schritt 1), vor Produktiv | Uhr 4.0.0 auf die **Fenix 6 Pro** bringen (Weg wie bei der Krypto-Probe in S11-02; Server-Adresse in den App-Einstellungen auf Staging), an ein Staging-Konto koppeln, einen Einsatz von mindestens einer Stunde mit einer Reanimation aufzeichnen, Dienst beenden, senden lassen | Sync-Seite „Gekoppelt", danach „Sync vollständig"; im Web Einsatz mit Spur auf der Karte, Phasen mit Ort, Reanimation | „Verschlüsseln geht nicht", ein Paket „abgewiesen", Karte leer, oder die Uhr hängt beim Senden (dann Speicher, Abschnitt 1) |
+| P-S11-33 | wie P-S11-32 | dasselbe kürzer auf **FR 945** und **Venu 3s** | wie P-S11-32 — vor allem keine Zeile „Verschlüsseln geht nicht" (Byteordnung, E-S11-30) | „Verschlüsseln geht nicht" = die Uhr rechnet anders als die Fenix; bitte melden mit Modell und Firmware |
+| P-S11-34 | wie P-S11-32 | auf einer gekoppelten Uhr mit **Rückstand** Uhr 4.0.0 aufspielen (oder vor dem Aufspielen nicht senden lassen) | „Kein Schlüssel · Holen: START halten"; nach dem Halten „Schlüssel geholt", der Rückstand geht in **dasselbe** Konto | Uhr verlangt Trennen, oder Einsätze erscheinen in einem anderen Konto |
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
-| P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen, einmal neu koppeln, einen Probeeinsatz aufzeichnen und senden | Einsatz im Web mit Karte nach dem Entsperren | Uhr zeigt „Neu koppeln" weiter oder parkt |
+| P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen; auf der Sync-Seite steht „Kein Schlüssel · Holen: START halten" — START halten (seit E-S11-79 statt neu koppeln); einen Probeeinsatz aufzeichnen und senden | „Schlüssel geholt", danach Einsatz im Web mit Karte nach dem Entsperren | „Erst im Web anmelden" bleibt nach einer Anmeldung, „Verschlüsseln geht nicht", oder die Uhr parkt |
 | P-S11-06 | nach S11-10 | Einmalwerkzeug auf Produktiv laufen lassen | Ende mit „0 Klartext-Ortsdaten" je Tabelle | eine Zahl ungleich 0 |
 | P-S11-07 | nach P-S11-06 | neue Konto- und Komplett-Backups anlegen; ein Komplett-Backup vom Stand vor S11 offline ablegen | Backups vorhanden | — |
 | P-S11-08 | 30 Tage nach P-S11-07 | alte Sicherungen auf dem Server, in den Backup-Zielen und eigene `.edbak` löschen; das offline abgelegte Komplett-Backup löschen | keine Sicherung vor S11 mehr vorhanden | — |

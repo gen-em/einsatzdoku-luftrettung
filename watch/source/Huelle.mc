@@ -81,7 +81,7 @@ module Huelle {
                 // Liegt er auf der Kurve? createPublicKey wirft sonst.
                 Cryptography.createPublicKey(
                     Cryptography.KEY_PAIR_ELLIPTIC_CURVE_SECP256R1 as Cryptography.HashAlgorithm,
-                    sec1ZuGarmin(roh));
+                    sec1ZuGeraet(roh));
             }
         } catch (e) {
             roh = null;
@@ -171,13 +171,13 @@ module Huelle {
         return aus;
     }
 
-    function sec1ZuGarmin(pub as Lang.ByteArray) as Lang.ByteArray {
+    function sec1ZuGeraet(pub as Lang.ByteArray) as Lang.ByteArray {
         var aus = umgedreht(pub, 1, 33);
         aus.addAll(umgedreht(pub, 33, 65));
         return aus;
     }
 
-    function garminZuSec1(pub as Lang.ByteArray) as Lang.ByteArray {
+    function geraetZuSec1(pub as Lang.ByteArray) as Lang.ByteArray {
         var aus = [0x04]b;
         aus.addAll(umgedreht(pub, 0, 32));
         aus.addAll(umgedreht(pub, 32, 64));
@@ -259,7 +259,7 @@ module Huelle {
          * ist KeyPairAlgorithm (F-S11-21) — daher der Cast. */
         ka.addKey(Cryptography.createPublicKey(
             Cryptography.KEY_PAIR_ELLIPTIC_CURVE_SECP256R1 as Cryptography.HashAlgorithm,
-            sec1ZuGarmin(empfPub)));
+            sec1ZuGeraet(empfPub)));
         return ka.generateSecret();
     }
 
@@ -288,7 +288,7 @@ module Huelle {
                               bind as Lang.ByteArray, d as Lang.ByteArray or Null,
                               iv as Lang.ByteArray or Null) as Lang.ByteArray {
         var p = paar(d);
-        var epk = garminZuSec1(p.getPublicKey().getBytes() as Lang.ByteArray);
+        var epk = geraetZuSec1(p.getPublicKey().getBytes() as Lang.ByteArray);
         if (iv == null) { iv = Cryptography.randomBytes(16); }
         var z = ecdh(p, empfPub);
         var info = text(INFO);

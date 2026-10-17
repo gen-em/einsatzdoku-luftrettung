@@ -305,24 +305,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.** · gehört zu: 12a · Stand: offen · seit 03.09.2026
-     *Aufgenommen 03.09.2026 aus S5 Paket C.*
-     Für Stufe II verlangt die Abnahme „je Vertreter ein Bild der `PairView`".
-     `bildreihe` lädt die App, wartet und fotografiert — es gibt keinen Weg,
-     eine Tastenfolge mitzugeben. Paket C hat sich dafür eine eigene Schleife
-     gebaut (zweimal `Down`, weil der erste Druck nach dem Laden regelmäßig
-     verlorengeht, dann `keydown Return` / `sleep` / `keyup` für den Langdruck;
-     `pruefstand.sh halten` kann nur Maus, nicht Taste — und die
-     Drei-Tasten-Geräte brauchen stattdessen Wischen, gelesen aus
-     `monkey.jungle`).
-     **Vorschlag:** `bildreihe <liste> <ziel> [tastenfolge]`, wobei die
-     Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
-     braucht die nächste Ansicht keine eigene Schleife.
-     Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): Der erste Abnehmer einer
-     Tastenfolge ist S11 (Uhr Haupt); dort entsteht die nächste Ansicht.
-
-<!-- -->
-
 96. **Uhr und Handy sagen nicht, dass gewartet wird.** · gehört zu: nach v1.0 · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-08).*
      Der Wartungsmodus antwortet mit **503** und einem `Retry-After`. Die

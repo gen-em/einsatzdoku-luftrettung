@@ -96,13 +96,13 @@ Track und eine laufende Reanimation werden nahtlos fortgesetzt.
 
 **Schon vor dem Dienstbeginn** führt **kurz DOWN** vom Startbildschirm auf die
 **Sync-Seite**. Sie zeigt Kopplungszustand, Serveradresse und die
-App-Version — und dort startet auch die Kopplung (*lang START*, Abschnitt 12).
+App-Version — und dort startet auch die Kopplung (*lang START*, Abschnitt 10).
 Zurück zum Startbildschirm geht es mit **kurz UP** oder mit **BACK**; beide
 tun dasselbe. Weiter nach unten führt von hier nichts: Die Oberflächen aus
 Abschnitt 2.2 gibt es erst im laufenden Dienst.
 
-> **Steht dort etwas in Rot?** Zwei Meldungen sind seit Uhr 3.1.0 möglich, und
-> beide sagen dir, was zu tun ist.
+> **Steht dort etwas in Rot?** Vier Meldungen sind möglich, und jede sagt dir,
+> was zu tun ist.
 >
 > „**Gerät nicht mehr angemeldet**" heißt: Der Server kennt diese Uhr nicht
 > mehr — sie wurde in den Einstellungen gelöscht oder abgeschaltet. Die Uhr
@@ -114,6 +114,24 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > **kurz START** kannst du es verwerfen; die Uhr fragt vorher nach, denn die
 > Aufzeichnung ist danach fort. Solange du es stehen lässt, belegt es Platz
 > im Speicher der Uhr — beim Trennen der Kopplung wird es ohnehin verworfen.
+> **Seit Uhr 4.0.0 räumt die Uhr es nach 30 Tagen selbst weg**, gezählt ab dem
+> Abweisen: Eine Spur, die nie mehr ankommt, soll nicht für immer auf einem
+> Gerät liegen, das verlorengehen kann.
+>
+> „**Kein Schlüssel**" *(seit Uhr 4.0.0)* heißt: Die Uhr ist gekoppelt, hat
+> aber den Schlüssel deines Kontos nicht, mit dem sie GPS-Daten,
+> Phasenorte und Reanimation verschließt — so steht sie nach dem Update auf
+> 4.0.0 da, oder wenn dein Konto beim Koppeln noch keinen hatte. Sie sendet
+> dann nichts und **behält alles**. Darunter steht der Weg: **lang START**
+> (Venu: *Action halten*) holt den Schlüssel. Kommt „Erst im Web anmelden",
+> melde dich einmal in der Weboberfläche an — dabei entsteht der Schlüssel —
+> und halte START noch einmal. Ein Neukoppeln ist dafür nicht nötig.
+>
+> „**Verschlüsseln geht nicht**" *(seit Uhr 4.0.0)* heißt: Die Uhr hat ihre
+> Verschlüsselung vor dem ersten Senden gegen einen festen Prüfwert gerechnet,
+> und er stimmte nicht. Sie sendet dann nichts, weil niemand ihre Daten
+> öffnen könnte. Neu koppeln hilft hier nicht — bitte melden, mit
+> Uhrenmodell und Firmware.
 
 ### 2.2 Die Oberflächen
 
@@ -175,17 +193,24 @@ mit **START gedrückt halten** startest du hier die Geräte-Kopplung.
 **Koppeln — die Uhr zeigt einen Code.** Seit Uhr 3.0.0 läuft das andersherum
 als früher: Du tippst nichts mehr auf der Uhr ein. Sie holt sich beim Server
 eine Kopplungssitzung und zeigt **sechs Zeichen** groß an, darunter
-„Einstellungen, Geräte" und die Restzeit. Diesen Code gibst du **im Web** ein
+„Im Web eingeben" und die Restzeit. Diesen Code gibst du **im Web** ein
 (Einstellungen → Geräte). Danach fragt die Uhr zurück — „Mit ph\*\*\*@… koppeln?"
 —, und erst dein **Ja auf der Uhr** schließt die Kopplung ab. So kann weder ein
 fremdes Gerät in dein Konto noch dein Gerät in ein fremdes.
+
+**Mit dem Ja bekommt die Uhr den Schlüssel deines Kontos** *(seit Uhr 4.0.0)*.
+Damit verschließt sie GPS-Daten, Phasenorte und Reanimation, bevor sie sie
+sendet; öffnen kann das nur dein Browser. Steht nach dem Koppeln
+„Gekoppelt · Erst im Web anmelden" und darunter „Kein Schlüssel", hatte dein
+Konto noch keinen — melde dich einmal im Web an und halte dann START (oben,
+„Steht dort etwas in Rot?").
 
 **Zurück** bricht ab. Nach **zehn Minuten** verfällt der Code; dann holst du mit
 demselben Tastenweg einen neuen — die Uhr sagt es dir („Code abgelaufen / START
 halten: neuer Code"). Ist eine Kopplung schon da, fragt die Uhr vorher, ob sie
 sie trennen soll, und besteht darauf, dass vorher alles gesendet ist: Offene
-Pakete gehören dem bisherigen Konto. Der ganze Weg von der leeren Uhr an steht
-in Abschnitt 12.
+Pakete gehören dem bisherigen Konto. Die Seite im Web, auf der du den Code
+eingibst, steht in Abschnitt 10.
 
 **Reanimation:** siehe 2.3.
 
@@ -3530,7 +3555,7 @@ Unter **Einstellungen → „Geräte"** verwaltet jede/r die eigenen Geräte —
 Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
 
 **Die Karte „Gerät koppeln" steht oben und hat drei Zustände** *(seit Web
-13.1.0)*. Sie führt den Weg, den Abschnitt 12 von der Uhr aus beschreibt:
+13.1.0)*. Sie führt den Weg, den Abschnitt 2.2 von der Uhr aus beschreibt:
 
 1. **Ein Feld „Code vom Gerät".** Du startest die Kopplung **am Gerät**; es
    zeigt sechs Zeichen, die du hier eintippst. Groß- und Kleinschreibung und

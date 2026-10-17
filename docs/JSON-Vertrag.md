@@ -302,20 +302,28 @@ Browser des Kontos kann sie öffnen.
 | Wert | Bedeutung / Verhalten des Geräts |
 |---|---|
 | Base64, 88 Zeichen | speichern, neben Kennung und Schlüssel; ab jetzt damit verschließen |
-| `null` | das Konto hat noch kein Schlüsselpaar (es entsteht beim ersten Entsperren nach einer Anmeldung im Browser), **oder** sein Siegel geht auf dem Server nicht auf. Das Gerät sendet keine Ortsdaten und zeigt „Neu koppeln“ (E-S11-09) |
+| `null` | das Konto hat noch kein Schlüsselpaar (es entsteht beim ersten Entsperren nach einer Anmeldung im Browser), **oder** sein Siegel geht auf dem Server nicht auf. Das Gerät sendet keine Ortsdaten. Die Garmin-Uhr (seit 4.0.0) sagt „Kein Schlüssel“ und holt ihn auf Tastendruck über `status` nach, sobald das Konto eines hat (E-S11-79) |
 
 **Beide Antworten tragen ihn, weil beide Geräte die Kopplung auch über
 `status` abschließen** (die Antwort auf `ja` kann verlorengehen, 1a.2).
+
+**`status` taugt auch zum Nachholen** (seit Uhr 4.0.0, E-S11-79): Eine schon
+gekoppelte Uhr ohne Schlüssel fragt `status` mit ihren Zugangsdaten und
+bekommt `gekoppelt` mit dem Schlüssel ihres Kontos. Dieselbe Kennung heißt
+dasselbe Konto — der Rückstand der Uhr geht an das Konto, dem er gehört.
+Neu koppeln wäre dafür keine Lösung: Die Uhr verweigert das Trennen, solange
+ein Rückstand besteht (F-S11-80).
 
 **Garmin rechnet anders herum.** `Toybox.Cryptography` erwartet Schlüssel je
 Koordinate byte-vertauscht (little-endian) und ohne `0x04`; das gemeinsame
 Geheimnis kommt little-endian. Die Uhr rechnet um; auf der Leitung steht
 immer SEC1 (Konzept S11, F-S11-18).
 
-**Ein Gerät der alten Fassung übergeht das Feld.** Bis S11-08 (Garmin) und
-S11-09 (Android) wertet es niemand aus; mit der Hauptauslieferung von S11
-nimmt der Server keine Klartext-Ortsdaten mehr an, und ein Gerät ohne
-Schlüssel muss einmal neu gekoppelt werden (E-S11-09).
+**Ein Gerät der alten Fassung übergeht das Feld.** Die Garmin-Uhr wertet es
+seit Uhr 4.0.0 aus (S11-08), Android ab S11-09; mit der Hauptauslieferung von
+S11 nimmt der Server keine Klartext-Ortsdaten mehr an. Eine gekoppelte Uhr
+ohne Schlüssel holt ihn nach (oben); das Handy wird bis S11-09 einmal neu
+gekoppelt (E-S11-09).
 
 ### 1a.4 Zwei Formen des Blocks `geraet` — Uhr und Handy
 
@@ -717,7 +725,8 @@ von der Null weg gerundet, auf ±32 767 geklemmt), Zeit in Sekunden **relativ
 zu `ts_von`** (`uint32`). **Ein Punkt ohne Höhe trägt `-32768`.** Bis zum
 16.10.2026 stand die Höhe in Dezimetern; das reichte nur bis 3276,7 m und lief
 im Hochgebirge still über (F-S11-64). Kein Gerät hat das alte Maß je
-gesendet — Uhr und Handy verschließen erst ab S11-08/-09.
+gesendet — die Uhr-App verschließt seit Uhr 4.0.0 (S11-08), das Handy ab
+S11-09.
 
 **Geräte senden nur diese Form (Stufe 1).** Die Stufen 2 und 3 — zusammengefügt
 und gepackt, ausgedünnt — entstehen seit Web 22.6.0 im Wartungslauf des

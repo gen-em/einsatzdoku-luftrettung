@@ -520,6 +520,13 @@ kryptoreihe() { CIQ_JUNGLE="$KRYPTO_JUNGLE" reihe "$@"; }
 
 kryptoprobe() {
     local geraete="${*:-$ZIEL_GERAETE}" schlecht=0 g pid log
+    # FRISCHER SIMULATOR (S11-08, F-S11-83). Im Pruefstand vom 17.10.2026
+    # blieb die Ausgabe auf allen drei Geraeten 120 s leer — 0 von 3 —, mit
+    # einem Simulator, der seit Stunden durch Handlaeufe gelaufen war. Einzeln
+    # nachgefahren, frisch und nach einem Rundlauf: 7 gut, 0 Fehler, 16 s.
+    # Die Ursache ist nicht gefunden; der Altzustand ist der einzige
+    # Unterschied, und ein Lauf soll nicht den Zustand eines frueheren messen.
+    beenden >/dev/null 2>&1 || true
     umgebung; simulator_starten
     for g in $geraete; do
         bauen "$g" "$KRYPTO_JUNGLE" >/dev/null 2>&1 || { echo "== $g: nicht uebersetzt"; schlecht=$((schlecht+1)); continue; }
@@ -541,8 +548,45 @@ kryptoprobe() {
 # Teuer (rund eine Minute je Geraet), deshalb nur fuer die Vertreter der
 # Klassen. monkeydo wird bewusst direkt gestartet und wieder beendet statt
 # ueber starten() — in einer Schleife blockiert das sonst (s. LIESMICH).
+# DIE TASTENFOLGE (Backlog Nr. 92, S11-08). Bis dahin fotografierte
+# `bildreihe` nur den Startbildschirm; wer eine andere Ansicht brauchte, baute
+# sich eine eigene Schleife (S5 Paket C). Jetzt nimmt sie als drittes Argument
+# eine Folge, durch Kommas getrennt, die nach dem Laden und VOR dem Abzug
+# gefahren wird:
+#   Down              Tastendruck (xdotool-Name)
+#   hold:Return[:s]   Langdruck, Vorgabe 1,6 s (keydown, warten, keyup)
+#   wait:8            warten, Sekunden
+#   tipp:x/y          Touch-Tipp, Fensterkoordinaten
+#   wisch:x/von/nach  Wischgeste
+# Der ERSTE Tastendruck nach dem Laden geht regelmaessig verloren (s. taste);
+# eine Folge zur Sync-Seite beginnt deshalb mit zwei Down. Drei-Tasten-Geraete
+# (Venu) brauchen statt Down ein Wischen — die Folge ist je Geraeteklasse eine
+# andere, und `bildreihe` faehrt fuer alle Geraete der Liste DIESELBE.
+folge_fahren() {
+    local folge="$1" schritt art rest a b c
+    IFS=',' read -ra schritte <<<"$folge"
+    for schritt in "${schritte[@]}"; do
+        art="${schritt%%:*}"; rest="${schritt#*:}"
+        case "$art" in
+            hold)  IFS=':' read -r a b <<<"$rest"
+                   _fokus; xdotool keydown "$a"; sleep "${b:-1.6}"; xdotool keyup "$a" ;;
+            wait)  sleep "$rest" ;;
+            tipp)  IFS='/' read -r a b <<<"$rest"; tippen "$a" "$b" ;;
+            wisch) IFS='/' read -r a b c <<<"$rest"; wischen "$a" "$b" "$c" ;;
+            *)     taste "$schritt" ;;
+        esac
+        sleep 1
+    done
+}
+
+_fokus() {
+    local wid
+    wid=$(xdotool search --onlyvisible --name "CIQ Simulator" 2>/dev/null | head -1)
+    [ -n "$wid" ] && { xdotool windowfocus "$wid" 2>/dev/null; sleep 0.5; }
+}
+
 bildreihe() {
-    local liste="${1:?Listendatei fehlt}" ziel="${2:-$BASIS/abbilder}"
+    local liste="${1:?Listendatei fehlt}" ziel="${2:-$BASIS/abbilder}" folge="${3:-}"
     [ -f "$liste" ] || fehler "Liste nicht gefunden: $liste"
     umgebung; simulator_starten; mkdir -p "$ziel"
     local wartezeit="${CIQ_WARTEZEIT:-26}"
@@ -555,6 +599,7 @@ bildreihe() {
         nohup monkeydo "$AUSGABE/$g.prg" "$g" >"$BASIS/konsole.log" 2>&1 &
         local md=$!
         sleep "$wartezeit"
+        [ -n "$folge" ] && folge_fahren "$folge"
         xwd -root -display "$ANZEIGE" 2>/dev/null | convert xwd:- "$ziel/$g.png" 2>/dev/null
         # Absturzmeldungen des Simulators sind die eigentliche Ausbeute
         local stoerung
@@ -742,6 +787,9 @@ Befehle:
   bauen <geraet> [jungle]    uebersetzen (weitere Schalter werden durchgereicht)
   alle [schalter]            aufbauen und alle Zielgeraete uebersetzen
   starten <geraet> [sek]     Simulator starten und App laden (Vorgabe 25 s)
+  bildreihe <liste> [ziel] [folge]
+                             je Geraet laden, Tastenfolge fahren (Nr. 92,
+                             z. B. "Down,Down,hold:Return,wait:8"), abbilden
   kryptoreihe <liste>        Krypto-Probe (S11-02) fuer alle Geraete der Liste uebersetzen
   kryptoprobe [geraet…]      Krypto-Probe im Simulator, je Geraet bis ERGEBNIS
   konsole                    Ausgabe des Simulators nachlesen

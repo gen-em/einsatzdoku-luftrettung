@@ -261,6 +261,11 @@
       "braucht": "nichts",
       "bemerkung": "Konzept R4 (R4-04, Nr. 334, F-R4-17). Soll-Zahlen der Ausduennung gegen android/handy/src/test/resources/stroeme.txt -- im Pruefmodus, der vergleicht statt schreibt; ohne ihn aenderte die Probe den Baum und damit den Baum-Hash des Berichts."
     },
+    "uhr-rundlauf": {
+      "aufruf": "bash tools/uhr-pruefstand/rundlauf/rundlauf.sh --nachholen fenix6pro && bash tools/uhr-pruefstand/rundlauf/rundlauf.sh fr945",
+      "braucht": "uhr",
+      "bemerkung": "S11-08: eine Prueffassung der App koppelt im Simulator an das Demo-Konto der oertlichen Anlage und sendet einen Einsatz (600 Punkte, Raender) und ein Ruhesegment verschlossen; pruefen.php oeffnet die Huellen mit dem Demo-Schluessel und haelt sie Wert fuer Wert gegen. Auf der Fenix zusaetzlich der Weg ohne Schluessel und das Nachholen (E-S11-79). Rund 8 min."
+    },
     "uhr-stufe1": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh reihe /tmp/uhr-auswahl.txt",
       "braucht": "uhr",
@@ -913,7 +918,8 @@
         "tools/uhr-pruefstand/**"
       ],
       "proben": [
-        "uhr-stufe1"
+        "uhr-stufe1",
+        "uhr-rundlauf"
       ],
       "anlass": "E-PK-02"
     },

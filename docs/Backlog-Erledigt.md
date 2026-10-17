@@ -9475,3 +9475,27 @@ zutreffen.
      `CryptoKey` wird gebaut, als Paket in 12b nach der scharfen CSP
      (Nr. 370). Begründung: `docs/Bedrohungsmodell.md` 6.5. Die Skizze SP-9
      ist gegen das Modell gelesen (F-R17-13, E-R17-09, -10).
+
+92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.** · gehört zu: 12a · Stand: erledigt · seit 03.09.2026
+     *Aufgenommen 03.09.2026 aus S5 Paket C.*
+     Für Stufe II verlangt die Abnahme „je Vertreter ein Bild der `PairView`".
+     `bildreihe` lädt die App, wartet und fotografiert — es gibt keinen Weg,
+     eine Tastenfolge mitzugeben. Paket C hat sich dafür eine eigene Schleife
+     gebaut (zweimal `Down`, weil der erste Druck nach dem Laden regelmäßig
+     verlorengeht, dann `keydown Return` / `sleep` / `keyup` für den Langdruck;
+     `pruefstand.sh halten` kann nur Maus, nicht Taste — und die
+     Drei-Tasten-Geräte brauchen stattdessen Wischen, gelesen aus
+     `monkey.jungle`).
+     **Vorschlag:** `bildreihe <liste> <ziel> [tastenfolge]`, wobei die
+     Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
+     braucht die nächste Ansicht keine eigene Schleife.
+     Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): Der erste Abnehmer einer
+     Tastenfolge ist S11 (Uhr Haupt); dort entsteht die nächste Ansicht.
+     Erledigt 17.10.2026 mit S11-08 (Uhr 4.0.0, das Werkzeug zählt nicht):
+     `bildreihe <liste> [ziel] [folge]`, die Folge wie vorgeschlagen samt
+     `hold:Taste[:s]`, `wait:s`, `tipp:x/y`, `wisch:x/von/nach`. Gefahren mit
+     `Down,Down,wait:3` auf fenix6pro und fr945: beide zeigen die Sync-Seite.
+     Grenze: eine Folge für alle Geräte der Liste. Die Bilder der Ansichten
+     mit Server (Code, Rückfrage, „Kein Schlüssel") nimmt der Rundlauf auf
+     (`tools/uhr-pruefstand/rundlauf/`), weil die ausgelieferte App auf den
+     öffentlichen Server zeigt.
