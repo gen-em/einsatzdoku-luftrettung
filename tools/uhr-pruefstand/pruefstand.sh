@@ -370,7 +370,16 @@ bauen() {
 
 anzeige_starten() {
     umgebung
-    pgrep -f "Xvfb $ANZEIGE" >/dev/null && return
+    # EINE ANZEIGE, DIE ANTWORTET, NICHT EINE, DIE IN DER LISTE STEHT
+    # (F-S11-93). Ein Xvfb, dem `beenden` eben das Ende geschickt hat, steht
+    # noch einen Augenblick in der Prozessliste. Bis zum 18.10.2026 reichte
+    # das hier als „laeuft", und der Simulator kam danach ohne Anzeige hoch
+    # ("Can't create a GtkStyleContext without a display connection") — im
+    # Pruefstand einmal im Uhr-Rundlauf, nach 48 s, ohne Meldung.
+    if pgrep -f "Xvfb $ANZEIGE" >/dev/null; then
+        xdpyinfo -display "$ANZEIGE" >/dev/null 2>&1 && return
+        for _ in $(seq 1 20); do pgrep -f "Xvfb $ANZEIGE" >/dev/null || break; sleep 0.5; done
+    fi
     # Ein abgebrochener Lauf laesst die Sperrdatei stehen; Xvfb weigert sich
     # dann mit "Server is already active" und der Simulator startet ins Leere.
     local n="${ANZEIGE#:}"
@@ -714,6 +723,12 @@ beenden() {
     # geladener App und altem Zustand.
     pkill -x simulator 2>/dev/null || true
     pkill -f "Xvfb $ANZEIGE" 2>/dev/null || true
+    # Abwarten, bis beide fort sind (F-S11-93) — sonst haelt der naechste
+    # Start den sterbenden Xvfb fuer lebendig.
+    for _ in $(seq 1 20); do
+        pgrep -x simulator >/dev/null || pgrep -f "Xvfb $ANZEIGE" >/dev/null || break
+        sleep 0.5
+    done
     melde "Simulator und Anzeige beendet"
 }
 
