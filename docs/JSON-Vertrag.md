@@ -302,7 +302,7 @@ Browser des Kontos kann sie öffnen.
 | Wert | Bedeutung / Verhalten des Geräts |
 |---|---|
 | Base64, 88 Zeichen | speichern, neben Kennung und Schlüssel; ab jetzt damit verschließen |
-| `null` | das Konto hat noch kein Schlüsselpaar (es entsteht beim ersten Entsperren nach einer Anmeldung im Browser), **oder** sein Siegel geht auf dem Server nicht auf. Das Gerät sendet keine Ortsdaten. Die Garmin-Uhr (seit 4.0.0) sagt „Kein Schlüssel“ und holt ihn auf Tastendruck über `status` nach, sobald das Konto eines hat (E-S11-79) |
+| `null` | das Konto hat noch kein Schlüsselpaar (es entsteht beim ersten Entsperren nach einer Anmeldung im Browser), **oder** sein Siegel geht auf dem Server nicht auf. Das Gerät sendet keine Ortsdaten. Die Garmin-Uhr (seit 4.0.0) sagt „Kein Schlüssel“ und holt ihn auf Tastendruck über `status` nach (E-S11-79), das Handy (seit 0.18.0) in jedem Sendelauf von selbst (E-S11-80) |
 
 **Beide Antworten tragen ihn, weil beide Geräte die Kopplung auch über
 `status` abschließen** (die Antwort auf `ja` kann verlorengehen, 1a.2).
@@ -320,10 +320,11 @@ Geheimnis kommt little-endian. Die Uhr rechnet um; auf der Leitung steht
 immer SEC1 (Konzept S11, F-S11-18).
 
 **Ein Gerät der alten Fassung übergeht das Feld.** Die Garmin-Uhr wertet es
-seit Uhr 4.0.0 aus (S11-08), Android ab S11-09; mit der Hauptauslieferung von
-S11 nimmt der Server keine Klartext-Ortsdaten mehr an. Eine gekoppelte Uhr
-ohne Schlüssel holt ihn nach (oben); das Handy wird bis S11-09 einmal neu
-gekoppelt (E-S11-09).
+seit Uhr 4.0.0 aus (S11-08), das Handy seit Android 0.18.0 (S11-09); mit
+der Hauptauslieferung von S11 nimmt der Server keine Klartext-Ortsdaten mehr
+an. Ein gekoppeltes Gerät ohne Schlüssel holt ihn über `status` nach (oben) —
+die Uhr auf Tastendruck (E-S11-79), das Handy im Sendelauf von selbst
+(E-S11-80).
 
 ### 1a.4 Zwei Formen des Blocks `geraet` — Uhr und Handy
 
@@ -516,8 +517,9 @@ sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
   bleibt: Platz und Zeitraum eines Spurstücks, Nummer und Zeit einer Phase.
   **Ein Paket mit Ortsdaten im Klartext weist er ab** (`400 klartext`,
   Abschnitt 5) — ganz, nicht teilweise. Einen Übergang gibt es nicht: Ein
-  Gerät der alten Fassung sendet nichts mehr, bis es aktualisiert und neu
-  gekoppelt ist.
+  Gerät der alten Fassung sendet nichts mehr, bis es aktualisiert ist; den
+  Kontoschlüssel holt es danach über `status` nach (1a.3a, seit Uhr 4.0.0 und
+  Android 0.18.0).
 
 ### 2.1 Dienstkennung `day_ref`
 
@@ -725,8 +727,8 @@ von der Null weg gerundet, auf ±32 767 geklemmt), Zeit in Sekunden **relativ
 zu `ts_von`** (`uint32`). **Ein Punkt ohne Höhe trägt `-32768`.** Bis zum
 16.10.2026 stand die Höhe in Dezimetern; das reichte nur bis 3276,7 m und lief
 im Hochgebirge still über (F-S11-64). Kein Gerät hat das alte Maß je
-gesendet — die Uhr-App verschließt seit Uhr 4.0.0 (S11-08), das Handy ab
-S11-09.
+gesendet — die Uhr-App verschließt seit Uhr 4.0.0 (S11-08), das Handy seit
+Android 0.18.0 (S11-09).
 
 **Geräte senden nur diese Form (Stufe 1).** Die Stufen 2 und 3 — zusammengefügt
 und gepackt, ausgedünnt — entstehen seit Web 22.6.0 im Wartungslauf des

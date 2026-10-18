@@ -59,7 +59,7 @@ class SenderTest {
         tresordatei = File(kontext.filesDir, "sendepruefung.bin")
         tresordatei.delete()
         tresor = Schluesseltresor(tresordatei, PruefTresorschluessel())
-        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef"))
+        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef", KONTOSCHLUESSEL))
     }
 
     @After fun abbauen() {
@@ -98,8 +98,8 @@ class SenderTest {
         server.antwortAus = { koerper ->
             val o = org.json.JSONObject(koerper)
             val t = o.getJSONObject("track")
-            val bis = t.getLong("seq_from") + t.getJSONArray("points").length()
-            """{"ok":true,"id":1,"stored_points":${t.getJSONArray("points").length()},"next_seq":$bis}"""
+            val bis = t.getLong("seq_from") + t.getInt("punkte")
+            """{"ok":true,"id":1,"stored_points":${t.getInt("punkte")},"next_seq":$bis}"""
         }
     }
 
@@ -144,7 +144,7 @@ class SenderTest {
             meistePunkte = maxOf(
                 meistePunkte,
                 org.json.JSONObject(a.koerper).getJSONObject("track")
-                    .getJSONArray("points").length(),
+                    .getInt("punkte"),
             )
         }
         println("Größtes Teilstück: $groesster Bytes, $meistePunkte Punkte")
@@ -166,7 +166,7 @@ class SenderTest {
         for (a in server.anfragen) {
             val t = org.json.JSONObject(a.koerper).getJSONObject("track")
             assertEquals("seq_from muss fortlaufen", erwartet, t.getLong("seq_from"))
-            erwartet += t.getJSONArray("points").length()
+            erwartet += t.getInt("punkte")
         }
         assertEquals(901L, erwartet)
     }
@@ -271,7 +271,7 @@ class SenderTest {
         var abgewiesen = 0
         server.antwortAus = { koerper ->
             val t = org.json.JSONObject(koerper).getJSONObject("track")
-            val n = t.getJSONArray("points").length()
+            val n = t.getInt("punkte")
             if (abgewiesen < 3) {
                 abgewiesen++
                 server.status = 413
@@ -317,7 +317,7 @@ class SenderTest {
         server.antwortAus = { koerper ->
             anfragen++
             val t = org.json.JSONObject(koerper).getJSONObject("track")
-            val bis = t.getLong("seq_from") + t.getJSONArray("points").length()
+            val bis = t.getLong("seq_from") + t.getInt("punkte")
             if (anfragen > 1) throw IllegalStateException("Abbruch")
             """{"ok":true,"next_seq":$bis}"""
         }
@@ -442,6 +442,44 @@ class SenderTest {
         assertTrue(bericht.spaeterErneut)
     }
 
+    // ---- Der Kontoschlüssel (S11-09, E-S11-80) ------------------------------
+
+    /**
+     * Eine Kopplung ohne Kontoschlüssel — aus der Zeit vor 0.18.0 — holt ihn
+     * vor dem ersten Senden nach und sendet danach verschlossen.
+     */
+    @Test fun ohneKontoschluesselWirdErNachgeholt() {
+        antworteVollstaendig()
+        einSegmentMitPunkten(10)
+        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef"))
+        var geholt = 0
+        val s = Sender(puffer, HttpNetzweg(), tresor, server.basis, jetzt = { uhrzeit },
+            schluesselHolen = { geholt++; KONTOSCHLUESSEL })
+        val bericht = s.sendeAlles()
+        assertEquals(1, geholt)
+        assertTrue(bericht.anfragen > 0)
+        assertTrue(bericht.sauber)
+        assertTrue(server.anfragen.all { org.json.JSONObject(it.koerper).getJSONObject("track").has("huelle") })
+    }
+
+    /**
+     * Gibt es keinen — das Konto hat noch kein Paar —, geht NICHTS hinaus,
+     * und der Lauf sagt es: `ohneSchluessel`, und `spaeterErneut`, damit der
+     * Nachsende-Job es wieder versucht.
+     */
+    @Test fun ohneKontoschluesselGehtNichtsHinaus() {
+        antworteVollstaendig()
+        einSegmentMitPunkten(10)
+        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef"))
+        val s = Sender(puffer, HttpNetzweg(), tresor, server.basis, jetzt = { uhrzeit },
+            schluesselHolen = { null })
+        val bericht = s.sendeAlles()
+        assertEquals(0, bericht.anfragen)
+        assertTrue(bericht.ohneSchluessel)
+        assertTrue(bericht.spaeterErneut)
+        assertTrue(server.anfragen.isEmpty())
+    }
+
     /* HIER STAND `ohneServerAdresseWirdNichtGesendet`.
      *
      * Der Fall prüfte, dass ein Sendelauf ohne eingetragene Serveradresse gar
@@ -490,5 +528,13 @@ class SenderTest {
 
     private companion object {
         const val DATENBANK = "sendepruefung.db"
+
+        /** Der Empfänger der Referenzvektoren, Base64 (`tools/proben/huelle/vektoren.json`). */
+        val KONTOSCHLUESSEL: String by lazy {
+            val h = org.json.JSONObject(File("../../tools/proben/huelle/vektoren.json").readText())
+                .getJSONObject("empfaenger").getString("oeffentlich_hex")
+            java.util.Base64.getEncoder().encodeToString(
+                ByteArray(h.length / 2) { h.substring(it * 2, it * 2 + 2).toInt(16).toByte() })
+        }
     }
 }

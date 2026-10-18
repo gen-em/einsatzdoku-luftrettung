@@ -53,7 +53,7 @@ class Schluesseltresor(
             val kennung = o.optString(FELD_KENNUNG)
             val geheim = o.optString(FELD_SCHLUESSEL)
             if (kennung.isEmpty() || geheim.isEmpty()) null
-            else Zugangsdaten(kennung, geheim)
+            else Zugangsdaten(kennung, geheim, o.optString(FELD_KONTOSCHLUESSEL).ifEmpty { null })
         } catch (e: Exception) {
             /* UNLESBAR IST WIE NICHT VORHANDEN, und mehr lässt sich hier auch
              * nicht tun: Ein beschädigtes oder mit einem anderen Schlüssel
@@ -92,9 +92,19 @@ class Schluesseltresor(
      * anfassen ließen. Ohne lesbaren Inhalt tut er nichts — dann gibt es keine
      * Sitzung, die gültig werden könnte.
      */
-    fun bestaetigen() {
+    fun bestaetigen(kontoschluessel: String? = null) {
         val zugang = lesen() ?: return
-        schreiben(zugang, schwebend = false)
+        schreiben(zugang.copy(kontoschluessel = kontoschluessel ?: zugang.kontoschluessel), schwebend = false)
+    }
+
+    /**
+     * Den Kontoschlüssel einer bestehenden Kopplung ablegen (S11-09, E-S11-80)
+     * — der Weg, auf dem eine Kopplung aus der Zeit vor 0.18.0 zu einem
+     * kommt. Ändert nichts an Kennung, Schlüssel und Zustand.
+     */
+    fun kontoschluesselSetzen(kontoschluessel: String) {
+        val zugang = lesen() ?: return
+        schreiben(zugang.copy(kontoschluessel = kontoschluessel), schwebend = schwebend())
     }
 
     private fun schreiben(zugang: Zugangsdaten, schwebend: Boolean) {
@@ -102,6 +112,7 @@ class Schluesseltresor(
             .put(FELD_KENNUNG, zugang.geraeteKennung)
             .put(FELD_SCHLUESSEL, zugang.schluessel)
             .put(FELD_SCHWEBEND, schwebend)
+            .apply { zugang.kontoschluessel?.let { put(FELD_KONTOSCHLUESSEL, it) } }
             .toString()
             .toByteArray(Charsets.UTF_8)
 
@@ -161,5 +172,7 @@ class Schluesseltresor(
 
         /** Einbuchstabig wie die beiden anderen: Die Datei soll nichts erzählen. */
         private const val FELD_SCHWEBEND = "s"
+        /** Der öffentliche Kontoschlüssel (seit 0.18.0, S11-09). */
+        private const val FELD_KONTOSCHLUESSEL = "p"
     }
 }

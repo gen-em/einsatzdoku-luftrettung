@@ -10087,8 +10087,18 @@ Augenblickswert; der nächste Wechsel trägt den dann gültigen.
 
 ### Was die App an den Server schickt
 
-Nichts Neues: denselben JSON-Vertrag wie die Uhr-App aus Abschnitt 5. **Der
-Ingest ist geräteneutral und bleibt es** — er sieht ein Gerät mit Kennung und
+Nichts Neues: denselben JSON-Vertrag wie die Uhr-App aus Abschnitt 5 — seit
+Android 0.18.0 (S11-09) also **verschlossen**: `senden/Geraetehuelle.kt`
+baut Spurstück und Einsatzhülle (Format im Kopf von
+`tools/proben/huelle/referenz.py`) mit JCA-Bordmitteln und prüft dabei die
+Kurvengleichung des Kontoschlüssels selbst, weil `KeyFactory` es nicht tut;
+`Sendekoerper` setzt `track` als Stück mit `huelle` und `ort_huelle` ein,
+`phases[]` ohne Koordinate. Der Kontoschlüssel liegt im Tresor (Feld `p`)
+neben Kennung und Geräteschlüssel; `Kopplungsdienst` legt ihn bei `bestaetigen`
+und `status` ab, und fehlt er, holt `Sender` ihn vor dem ersten Stück über
+`schluesselHolen()` nach (E-S11-80). Ohne Schlüssel sendet der Lauf nichts
+und meldet `ohneSchluessel`. Die Prüffälle (`GeraetehuelleTest`) lesen die
+Vektoren aus `tools/proben/huelle/vektoren.json` selbst. **Der Ingest ist geräteneutral und bleibt es** — er sieht ein Gerät mit Kennung und
 API-Schlüssel und weiß nicht, ob dahinter Monkey C oder Kotlin steckt. Die
 Kennungspräfixe unterscheiden die Quellen (`am-`/`ar-`/`ad-` für das Handy,
 `wm-` für die Wear-OS-Uhr); sie stehen seit Vertragsfassung 1.4 im

@@ -30,10 +30,18 @@ data class Sendebericht(
     val spaeterErneut: Boolean = false,
     /** Vor dem Lauf geräumte abgewiesene Pakete (Backlog Nr. 114, Räumteil). */
     val geraeumt: Int = 0,
+    /**
+     * Kein Kontoschlüssel, auch nach dem Nachholen nicht (S11-09): Das Konto
+     * hat noch kein Schlüsselpaar. Es ist nichts gesendet; der Lauf gilt
+     * zugleich als [spaeterErneut], damit der Nachsende-Job es wieder
+     * versucht — der Schlüssel entsteht beim nächsten Entsperren im Browser.
+     */
+    val ohneSchluessel: Boolean = false,
 ) {
     /** Ein Lauf, an dem nichts zu beanstanden ist. */
     val sauber: Boolean
-        get() = verworfen.isEmpty() && uebergangen.isEmpty() && fehlerhaft == 0 && !pausiert
+        get() = verworfen.isEmpty() && uebergangen.isEmpty() && fehlerhaft == 0 && !pausiert &&
+            !ohneSchluessel
 }
 
 /**
@@ -83,6 +91,13 @@ class Sender(
     private val phasenLeser: (Long) -> List<Phaseneintrag> = { emptyList() },
     /** Die Uhr — einsetzbar, damit der Prüfstand die Räumfrist stellen kann. */
     private val jetzt: () -> Instant = Instant::now,
+    /**
+     * Den Kontoschlüssel nachholen, wenn die Kopplung keinen trägt (S11-09,
+     * E-S11-80) — in der App `Kopplungsdienst.schluesselHolen()`. Als
+     * Funktion, weil dieser Sender `pair.php` nicht kennt; der Prüfstand
+     * zählt damit, ob geholt wurde.
+     */
+    private val schluesselHolen: () -> String? = { null },
 ) {
 
     /** Aktuelle Chunk-Größe; sie halbiert sich bei 413 und bleibt es. */
@@ -109,6 +124,16 @@ class Sender(
         val zugang = tresor.lesen()
             ?: return Sendebericht(spaeterErneut = true, geraeumt = geraeumt)
 
+        /* OHNE KONTOSCHLÜSSEL GEHT NICHTS HINAUS (S11-09, E-S11-09). Der
+         * Server nähme Klartext ohnehin nicht mehr an (`400 klartext`), und
+         * ein Handy, das es trotzdem versuchte, parkte seinen ganzen
+         * Rückstand als „abgewiesen". Erst nachholen — das ist der Weg, auf
+         * dem eine Kopplung aus der Zeit vor 0.18.0 zu einem kommt —, dann
+         * aufgeben, aber nur für diesen Lauf. */
+        val ksText = zugang.kontoschluessel ?: schluesselHolen()
+            ?: return Sendebericht(spaeterErneut = true, ohneSchluessel = true, geraeumt = geraeumt)
+        val kontoschluessel = java.util.Base64.getDecoder().decode(ksText)
+
         val kopfzeilen = mapOf(
             "X-Device-Id" to zugang.geraeteKennung,
             "X-Api-Key" to zugang.schluessel,
@@ -123,7 +148,7 @@ class Sender(
 
         while (verbleibendeAnfragen-- > 0) {
             val paket = naechstesPaket() ?: break
-            val ergebnis = sendeTeilstueck(paket, adresse, kopfzeilen)
+            val ergebnis = sendeTeilstueck(paket, adresse, kopfzeilen, kontoschluessel)
             bericht = vereine(bericht, ergebnis)
             if (ergebnis.pausiert || ergebnis.spaeterErneut) break
         }
@@ -137,11 +162,12 @@ class Sender(
         paket: Paketzeile,
         adresse: String,
         kopfzeilen: Map<String, String>,
+        kontoschluessel: ByteArray,
     ): Sendebericht {
         val seqVon = paket.bestaetigtSeq
         val punkte = puffer.punkte(paket.id, seqVon, chunkPunkte)
         val phasen = if (paket.art == Paketzeile.ART_EINSATZ) phasenLeser(paket.id) else emptyList()
-        val koerper = Sendekoerper.baue(paket, seqVon, punkte, phasen).toString()
+        val koerper = Sendekoerper.baue(paket, seqVon, punkte, phasen, kontoschluessel).toString()
 
         val antwort = when (val a = netzweg.postJson(adresse, koerper, kopfzeilen)) {
             is Netzantwort.KeineVerbindung -> Sendeantwort.KeineVerbindung(a.ursache)
@@ -198,6 +224,7 @@ class Sender(
         pausiert = a.pausiert || b.pausiert,
         spaeterErneut = a.spaeterErneut || b.spaeterErneut,
         geraeumt = a.geraeumt + b.geraeumt,
+        ohneSchluessel = a.ohneSchluessel || b.ohneSchluessel,
     )
 
     private fun zaehleZusammen(a: Map<String, Int>, b: Map<String, Int>): Map<String, Int> =

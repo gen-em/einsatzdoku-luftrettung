@@ -14,6 +14,51 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.18.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-09 — das Handy verschließt**. Gehört wie Uhr
+4.0.0 zur Hauptauslieferung von S11; ein Handy 0.17 kommt an einem Server ab
+Web 22.0.1 nicht mehr durch (E-S11-09). Die Wear-OS-Uhr ist unberührt: Sie
+schickt dem Handy Zeitpunkte und Phasennummern, keine Koordinaten, und ihr
+Nachrichtenformat bleibt, wie es ist.
+
+### Android — Spur und Phasenorte gehen verschlossen hinaus
+
+Bis 0.17.0 gingen die GPS-Punkte als Liste und die Koordinate jeder Phase in
+`phases[]` im Klartext an den Server. Seit Web 22.0.1 weist `ingest.php` das
+mit `400 klartext` ab. Das Handy verschließt jetzt mit dem öffentlichen
+Schlüssel des Kontos, den es bei der Kopplung bekommt: je Anfrage ein
+Spurstück (14 Byte je Punkt, Höhe in ganzen Metern) und bei einem Einsatz die
+Einsatzhülle mit den Orten aller Phasen — dasselbe Format wie die Garmin-Uhr
+und der Browser, nach dem Kopf von `tools/proben/huelle/referenz.py`.
+Öffnen kann es nichts davon; die Anzeige der App liest weiter ihren eigenen
+Puffer (E-R17-09).
+
+**Nur Bordmittel** (E-S11-21): ECDH, AES-256-CBC und HMAC-SHA256 aus der
+Java-Kryptografie, HKDF daraus von Hand. Keine neue Bibliothek, die Liste der
+Fremdbestandteile bleibt, wie sie ist. Geprüft gegen die sechs Vektoren der
+Referenz, Byte für Byte, gelesen aus `vektoren.json` selbst statt aus einer
+Kopie — eine Kopie wäre eine zweite Wahrheit, die beim nächsten Erzeugen
+still veraltet.
+
+**Ein Fund des Prüffalls:** Javas `KeyFactory` nimmt einen Punkt an, der nicht
+auf der Kurve P-256 liegt. Ein solcher Schlüssel ist der Anfang eines
+Angriffs auf den Schlüsselaustausch. Die Hülle prüft die Kurvengleichung jetzt
+selbst, und ein Schlüssel daneben kommt gar nicht erst in den Tresor.
+
+### Android — ein fehlender Schlüssel wird nachgeholt, ohne Neukopplung
+
+Eine Kopplung aus der Zeit vor 0.18.0 hat keinen Kontoschlüssel. Neu koppeln
+wäre der naheliegende Weg und ist eine Sackgasse: Das Trennen verweigert die
+App, solange ein Rückstand besteht (Nr. 14), und ohne Schlüssel lässt sich der
+Rückstand nicht senden. Deshalb holt der Sendelauf den Schlüssel selbst über
+`pair.php status` nach — dasselbe, was die Garmin auf Tastendruck tut
+(E-S11-79), hier ohne Taste, weil das Handy ohnehin im Hintergrund sendet
+(E-S11-80). Dieselbe Kennung heißt dasselbe Konto. Hat das Konto noch kein
+Schlüsselpaar, steht unter dem Dienst „Konto noch ohne Schlüssel · einmal im
+Web anmelden"; gesendet wird nichts, verloren geht nichts, und der nächste
+Lauf nach der Anmeldung holt ihn von selbst.
+
 ## [Uhr 4.0.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-08 — die Garmin-Uhr verschließt**. Gehört zur

@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); **S11-08 erledigt** (17.10.2026, Uhr 4.0.0); als Nächstes S11-09.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); **S11-08 erledigt** (17.10.2026, Uhr 4.0.0); **S11-09 erledigt** (17.10.2026, Android 0.18.0); als Nächstes S11-10.*
 
 ---
 
@@ -14,6 +14,8 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **Android 0.18.0 auf einem echten Telefon** — Kopplung mit Schlüssel, Nachholen, eine Aufzeichnung verschlossen senden. (S11-09) | Kein Telefon; im Emulator nur Start und die Hülle auf dem Kryptoanbieter des Systems (instrumentiert, 2/2). Der ganze Weg Kopplung → Senden lief über die JVM gegen die örtliche Anlage (Server-Rundlauf), nicht auf einem Android-System. | P-S11-35 (Gerätetest). |
+| **Ob die Hüllen des Handys im Browser aufgehen.** (S11-09) | Die Server-Rundläufe senden an Konto 1, dessen privaten Schlüssel nur ein Browser mit Passwort öffnet; geprüft hat der Server Form und Größe. Byte-gleich mit den Vektoren sind die Hüllen (JVM 6/6, Emulator 6/6), und gegen dieselben Vektoren ist `crypto.js` gemessen — der Schluss ist zwingend, aber kein Durchgang. | P-S11-35. |
 | **Uhr 4.0.0 auf einer echten Uhr** — Selbsttest, Verschließen, Kopplung mit Schlüssel, Nachholen. (S11-08) | Der Simulator rechnet mit dem Prozessor des Rechners und kennt kein Bluetooth; die Byteordnung ist nur auf der Fenix 6 Pro echt gemessen (E-S11-30). | P-S11-32, -33 (Gerätetest der Betreiberin). |
 | **Speicher der kleinsten Zielgeräte beim Verschließen von 500 Punkten.** (S11-08) | Stufe I übersetzt für 99 Geräte, misst aber keinen Laufzeitspeicher; der Rundlauf lief auf fenix6pro und fr945. Gelesen: Die Innenform (7 kB) samt Kopien liegt unter dem JSON-Rumpf mit 500 Punktlisten, den 3.x baute — gemessen ist das nicht. | Gerätetest; fällt eine kleine Uhr beim Senden aus, ist es dieser Punkt. |
 | **Der Rundlauf auf der Venu 3s.** (S11-08) | Keine DOWN-Taste; der Weg zur Sync-Seite ist ein Wischen, dessen Koordinaten nicht ausgemessen sind. Übersetzt ist sie (Stufe I), der Selbsttest lief dort nicht. | P-S11-33. |
@@ -280,6 +282,23 @@ das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 F-S11-78 (Registertext der Transaktionen seit S11-05c veraltet),
 F-S11-79 (Messstand wartet nach der Anmeldung nicht auf das Schlüsselpaar).
 
+### S11-09 Android (17.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `./gradlew :handy:testDebugUnitTest` | alle Prüffälle des Handys | **280**, 15 übersprungen (Server-Rundlauf), 0 rot; vorher 270 |
+| dasselbe mit `-Pnadoku.rundlauf=http://127.0.0.1:8080/` | Kopplung, Senden und Einsatz gegen `ingest.php` der örtlichen Anlage, jetzt verschlossen | **279** gelaufen, 1 übersprungen (Release-Fall), 0 rot |
+| `GeraetehuelleTest` (JVM) | sechs Vektoren aus `vektoren.json` byte-gleich, Innenform wie `referenz.py`, Rundung von der Null weg, Höhe geklemmt und −32768, echte Hülle öffnet und fremde Bindung nicht, Einsatzhülle, Kurvenprüfung | 7/7 |
+| `./gradlew build` | Lint, Bau, Prüffälle beider Bauarten, beide Module | `BUILD SUCCESSFUL`; Lint **0** Fehler (vorher 1: `BigInteger.TWO`, API 33 bei minSdk 26), 5 Warnungen (Fassungshinweise); Uhr 72/0; Handy-APK 9 200 018 B |
+| Emulator `handy37` (API 37, ohne KVM) | Boot, Aufspielen, Start, instrumentiert `GeraetehuelleGeraetTest` und `GeraetTresorTest` | Boot 1164 s, App-APK 181 s; **2/2** (Vektoren 6/6 byte-gleich auf Conscrypt, Kurvenprüfung), Tresor **6/6**; Kopplungsbildschirm abgebildet |
+
+**Befunde:** F-S11-84 (`KeyFactory` prüft die Kurve nicht — behoben),
+F-S11-85 (ob die Garmin die Kurve prüft, ist nicht gemessen). **Vorläufig
+entschieden:** E-S11-80 (das Handy holt den Schlüssel im Sendelauf nach).
+**Nebenbei:** Die Platte des Containers war voll (695 MB frei); 36 verwaiste
+Docker-Datenträger (7,9 GB) abgeräumt, die drei der Plattform blieben,
+Schemaprobe danach 4 × 40/0.
+
 ### S11-08 Garmin-Uhr (17.10.2026)
 
 | Mittel | Was es misst | Zahl |
@@ -348,6 +367,8 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-30 | nach dem Merge auf Staging | Ein Ruhesegment nach dem Verdichten (Karte oben) aufklappen, „Schneiden“, einen Zeitraum wählen, „Zeitraum löschen“ | Rückfrage, dann „Gelöscht — … Punkte …“; die Linie hat dort eine Lücke | Meldung „inzwischen zusammengefasst“ bei jedem Versuch, oder die Linie ist danach ganz fort |
 | P-S11-31 | nach dem Merge auf Staging | Demo zurücksetzen, als Demo anmelden, Startseite eine Minute offen lassen, dann einen Einsatz von vor Monaten öffnen | Karte und Phasen wie vorher; die Linie sieht gleich aus (ausgedünnt, 2 m / 3 m) | Karte leer, Linie weicht sichtbar ab, oder Meldung „lassen sich nicht öffnen“ |
 | P-S11-28 | erledigt 16.10.2026 | Frage Q-S11-19 im Konzept beantworten (Höhe in Metern statt Dezimetern?) | **beantwortet:** ganze Meter (E-S11-66), umgesetzt in S11-06g | — |
+| P-S11-35 | wie P-S11-32 | Android 0.18.0 auf das Telefon; bestehende Kopplung behalten (nicht neu koppeln), einen kurzen Dienst mit einem Einsatz aufzeichnen, senden lassen | Ergebniszeile „Gesendet"; im Web der Einsatz mit Spur auf der Karte und Phasen mit Ort nach dem Entsperren | „Konto noch ohne Schlüssel" obwohl angemeldet, „abgewiesen", Karte leer |
+| P-S11-36 | jetzt | E-S11-80 bestätigen oder verwerfen: Das Handy holt einen fehlenden Kontoschlüssel im Sendelauf selbst nach (ohne Taste) | Antwort im Konzept | — |
 | P-S11-32 | nach der Web-Hauptauslieferung auf Staging (Konzept 3.8 Schritt 1), vor Produktiv | Uhr 4.0.0 auf die **Fenix 6 Pro** bringen (Weg wie bei der Krypto-Probe in S11-02; Server-Adresse in den App-Einstellungen auf Staging), an ein Staging-Konto koppeln, einen Einsatz von mindestens einer Stunde mit einer Reanimation aufzeichnen, Dienst beenden, senden lassen | Sync-Seite „Gekoppelt", danach „Sync vollständig"; im Web Einsatz mit Spur auf der Karte, Phasen mit Ort, Reanimation | „Verschlüsseln geht nicht", ein Paket „abgewiesen", Karte leer, oder die Uhr hängt beim Senden (dann Speicher, Abschnitt 1) |
 | P-S11-33 | wie P-S11-32 | dasselbe kürzer auf **FR 945** und **Venu 3s** | wie P-S11-32 — vor allem keine Zeile „Verschlüsseln geht nicht" (Byteordnung, E-S11-30) | „Verschlüsseln geht nicht" = die Uhr rechnet anders als die Fenix; bitte melden mit Modell und Firmware |
 | P-S11-34 | wie P-S11-32 | auf einer gekoppelten Uhr mit **Rückstand** Uhr 4.0.0 aufspielen (oder vor dem Aufspielen nicht senden lassen) | „Kein Schlüssel · Holen: START halten"; nach dem Halten „Schlüssel geholt", der Rückstand geht in **dasselbe** Konto | Uhr verlangt Trennen, oder Einsätze erscheinen in einem anderen Konto |

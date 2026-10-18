@@ -50,6 +50,13 @@ enum class Sendeausgang {
 
     /** 400. Der Server hat den Inhalt abgelehnt — er wird nicht wiederholt. */
     PAKET_ABGEWIESEN,
+
+    /**
+     * Kein Kontoschlüssel, auch nach dem Nachholen nicht (S11-09): Das Konto
+     * hat noch keines. Nichts gesendet, nichts verloren; nach einer Anmeldung
+     * im Web holt der nächste Lauf ihn von selbst.
+     */
+    KEIN_SCHLUESSEL,
 }
 
 /**
@@ -305,6 +312,8 @@ private fun Zustandsblock(
                 Sendeausgang.KEIN_NETZ -> stringResource(R.string.sync_ergebnis_kein_netz)
                 Sendeausgang.SCHLUESSEL_ABGEWIESEN ->
                     stringResource(R.string.sync_ergebnis_schluessel)
+                Sendeausgang.KEIN_SCHLUESSEL ->
+                    stringResource(R.string.sync_ergebnis_kein_schluessel)
                 Sendeausgang.PAKET_ABGEWIESEN ->
                     androidx.compose.ui.res.pluralStringResource(
                         R.plurals.sync_ergebnis_abgewiesen, ergebnis.anzahl, ergebnis.anzahl,

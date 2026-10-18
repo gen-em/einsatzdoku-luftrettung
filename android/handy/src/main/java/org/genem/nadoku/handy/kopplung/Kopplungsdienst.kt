@@ -59,8 +59,12 @@ sealed interface Sitzungsstand {
      * Zu diesen Kopfzeilen gibt es bereits ein Gerät. Das ist der Fall, in dem
      * die Antwort auf `bestaetigen ja` verlorenging — die Zugangsdaten sind
      * gültig, das Gerät gilt als gekoppelt.
+     *
+     * @param kontoschluessel seit 0.18.0 (S11-09): der öffentliche Schlüssel
+     *   des Kontos aus der Antwort, `null` wenn das Konto noch keinen hat
+     *   oder er unbrauchbar ist.
      */
-    data object Gekoppelt : Sitzungsstand
+    data class Gekoppelt(val kontoschluessel: String? = null) : Sitzungsstand
 
     data class Abgewiesen(val art: Abweisung, val meldung: String? = null) : Sitzungsstand
 }
@@ -247,7 +251,7 @@ class Kopplungsdienst(
                             if (konto.isEmpty()) Sitzungsstand.Offen(rest)
                             else Sitzungsstand.Beansprucht(konto, rest)
                         }
-                        "gekoppelt" -> Sitzungsstand.Gekoppelt
+                        "gekoppelt" -> Sitzungsstand.Gekoppelt(kontoschluesselAus(o))
                         else -> Sitzungsstand.Abgewiesen(Abweisung.UNBEKANNT, meldung)
                     }
                 }
@@ -296,7 +300,8 @@ class Kopplungsdienst(
                 val meldung = meldungAus(o)
 
                 if (antwort.code == 200 && o?.optBoolean("ok") == true) {
-                    tresor.bestaetigen()
+                    // Mit dem Ja kommt der Kontoschlüssel (Vertrag 1a.3a).
+                    tresor.bestaetigen(kontoschluesselAus(o))
                     return Bestaetigungsergebnis.Gekoppelt
                 }
 
@@ -312,6 +317,43 @@ class Kopplungsdienst(
                 Bestaetigungsergebnis.Abgewiesen(art, meldung)
             }
         }
+    }
+
+    /**
+     * Den Kontoschlüssel einer bestehenden Kopplung nachholen (S11-09,
+     * E-S11-80, nach dem Muster der Garmin, E-S11-79).
+     *
+     * WOZU. Eine Kopplung aus der Zeit vor 0.18.0 hat keinen Schlüssel, und
+     * eine an ein Konto ohne Schlüsselpaar auch nicht. Neu koppeln wäre keine
+     * Lösung: [trennen] verweigert, solange ein Rückstand besteht (Nr. 14),
+     * und ohne Schlüssel lässt sich der Rückstand nicht senden. `status`
+     * beantwortet jedes gekoppelte Gerät mit dem Schlüssel SEINES Kontos — mit
+     * den eigenen Kopfzeilen gefragt, ist es dasselbe Konto.
+     *
+     * @return der abgelegte Schlüssel, oder `null` (kein Netz, kein Paar im
+     *   Konto, Gerät unbekannt)
+     */
+    fun schluesselHolen(): String? {
+        val zugang = tresor.lesen() ?: return null
+        if (tresor.schwebend()) return null
+        val antwort = netzweg.postJson(
+            Serveradresse.pair(basis),
+            JSONObject().put("aktion", "status").toString(),
+            kopfzeilen(zugang),
+        )
+        if (antwort !is Netzantwort.Server || antwort.code != 200) return null
+        val o = alsJson(antwort.koerper) ?: return null
+        if (o.optString("zustand") != "gekoppelt") return null
+        val ks = kontoschluesselAus(o) ?: return null
+        tresor.kontoschluesselSetzen(ks)
+        return ks
+    }
+
+    /** Der Kontoschlüssel aus einer Antwort — nur, wenn er ein Kurvenpunkt ist. */
+    private fun kontoschluesselAus(o: JSONObject?): String? {
+        if (o == null || o.isNull("kontoschluessel")) return null
+        val ks = o.optString("kontoschluessel")
+        return if (org.genem.nadoku.handy.senden.Geraetehuelle.schluesselGueltig(ks)) ks else null
     }
 
     /**

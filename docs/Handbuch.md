@@ -3861,6 +3861,13 @@ Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
 „Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu
 koppeln".
 
+**„Konto noch ohne Schlüssel · einmal im Web anmelden"** *(seit Android
+0.18.0)*: Das Telefon verschließt GPS-Daten und Phasenorte mit dem Schlüssel
+deines Kontos, bevor es sendet — und dein Konto hat noch keinen. Er entsteht,
+sobald du dich einmal in der Weboberfläche anmeldest. Danach holt das
+Telefon ihn beim nächsten Senden von selbst; neu koppeln musst du nicht.
+Bis dahin sendet es nichts und **behält alles**.
+
 **Abgewiesene verwerfen** *(seit Android 0.17.0)*. Wer nicht 30 Tage warten
 will, tippt auf „Abgewiesene verwerfen …". Die App fragt nach — „3 abgewiesene
 Pakete verwerfen?" — und sagt, was dann geschieht: Die Aufzeichnungen darin
