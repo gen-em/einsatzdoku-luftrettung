@@ -8205,5 +8205,14 @@ declare(strict_types=1);
  *   (E-S11-71). Still auf der Startseite, sichtbar in der Karte „GPS-Daten
  *   verdichten" (Reiter Backup, M-S11-02). Zeitraum loeschen auch auf
  *   gepackten Spuren. Kein Schema.
+ * 22.7.0 — S11-10: DAS EINMALWERKZEUG. Was bis Web 21 im Klartext lag —
+ *   Spurpunkte (`track_points`, SPUR1), Phasenorte, Reanimation,
+ *   Transportziel und Ortshoehe — zieht in Huellen und Blob um, und zwar im
+ *   Browser des Kontos, still auf der Startseite nach dem Entsperren
+ *   (`assets/ortsumzug.js`); der Server nennt, was offen ist, und tauscht je
+ *   Datensatz in einer Transaktion, nur bei unveraendertem Stand
+ *   (`api/ortsumzug.php`, `ortsumzug_lib.php`). Die Statusseite zaehlt den
+ *   Rest je Tabelle (Zeile „Ortsdaten"); solange sie orange ist, darf die
+ *   Aufraeumauslieferung (S11-12) nicht kommen. Kein Schema.
  */
-const WEB_VERSION = '22.6.0';
+const WEB_VERSION = '22.7.0';

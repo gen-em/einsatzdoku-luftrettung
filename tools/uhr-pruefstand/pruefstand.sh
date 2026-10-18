@@ -526,7 +526,16 @@ kryptoprobe() {
     # nachgefahren, frisch und nach einem Rundlauf: 7 gut, 0 Fehler, 16 s.
     # Die Ursache ist nicht gefunden; der Altzustand ist der einzige
     # Unterschied, und ein Lauf soll nicht den Zustand eines frueheren messen.
-    beenden >/dev/null 2>&1 || true
+    #
+    # NUR DEN SIMULATOR, NICHT DIE ANZEIGE (F-S11-86). Bis zum 18.10.2026 stand
+    # hier `beenden`, und das raeumt auch Xvfb ab. `anzeige_starten` fand den
+    # sterbenden Xvfb danach noch in der Prozessliste, startete keinen neuen,
+    # und der Simulator kam ohne Anzeige hoch ("Can't create a GtkStyleContext
+    # without a display connection") — 0 von 3, "Unable to connect to
+    # simulator". Einzeln war es nicht aufgefallen, weil dort zwischen den
+    # Befehlen genug Zeit lag.
+    pkill -x simulator 2>/dev/null || true
+    for _ in $(seq 1 20); do pgrep -x simulator >/dev/null || break; sleep 0.5; done
     umgebung; simulator_starten
     for g in $geraete; do
         bauen "$g" "$KRYPTO_JUNGLE" >/dev/null 2>&1 || { echo "== $g: nicht uebersetzt"; schlecht=$((schlecht+1)); continue; }

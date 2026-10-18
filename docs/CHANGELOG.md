@@ -14,6 +14,50 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.7.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-10 — das Einmalwerkzeug**. Kein Schema, kein
+`update.php`.
+
+### Hinzugefügt
+
+- **Der Altbestand zieht in die Hüllen um.** Seit S11-04 liest die Anwendung
+  Spur, Phasenorte und Reanimation nur noch verschlossen, seit S11-05b
+  Transportziel und Ortshöhe nur noch aus dem verschlüsselten Block — ohne
+  Übergang (E-S11-36, -42). Alles, was vor Web 22 im Klartext ankam, zeigte
+  deshalb keine Karte, kein Ziel und keine Reanimation. Verschließen kann nur
+  der Browser des Kontos; der Server kennt den Schlüssel nicht und soll ihn
+  nicht kennen. Das Werkzeug ist deshalb zweigeteilt, nach dem Muster der
+  Notizen-Anhebung aus Web 19: Der Server nennt je Konto, was im Klartext
+  liegt — auch im Papierkorb, sonst käme es beim Wiederherstellen zurück —,
+  der Browser verschließt die Spurpunkte zu Stücken (eine ausgedünnte Spur
+  bleibt ausgedünnt), Phasenorte und Reanimation in die Einsatzhülle,
+  Transportziel und Höhe in den Block, öffnet alles zur Probe wieder und
+  schickt erst dann. Der Server tauscht je Datensatz in **einer**
+  Transaktion und nur, wenn sich seit dem Lesen nichts geändert hat; der
+  Klartext geht dabei. Es läuft **still auf der Startseite** nach dem
+  Entsperren, vor dem Wartungslauf und ohne je nach dem Passwort zu fragen —
+  bricht es ab, setzt der nächste Aufruf wieder auf. Einen Merker hat es
+  nicht: Fertig ist es, wenn nichts mehr offen ist.
+- **Trägt ein Einsatz schon eine Hülle und daneben Klartext**, führt der
+  Browser zusammen wie das Formular (E-S11-45): Was die Hülle hat, gewinnt.
+  Genauso beim Block — eine Klinik, die schon darin steht, wird nicht
+  überschrieben.
+- **Die Statusseite zählt den Rest** (Betrieb → Status, Karte Server, Zeile
+  **„Ortsdaten“**): orange, solange irgendein Konto Klartext hat, mit der
+  Zahl je Tabelle. Ein Konto, das sich nie anmeldet, zieht nie um — das muss
+  jemand sehen, und die Aufräumauslieferung (S11-12) darf erst kommen, wenn
+  die Zeile blau ist.
+
+### Bewusst so
+
+- **Ein Block, der sich mit dem Schlüssel des Kontos nicht öffnen lässt**,
+  wird nicht angefasst, wie bei den Notizen: Ihn zu ersetzen hieße, fremde
+  Angaben zu löschen. Transportziel und Höhe dieses Einsatzes bleiben im
+  Klartext und in der Zählung stehen.
+- **Die Startseite zeigt die umgezogene Karte erst beim nächsten Aufruf.**
+  Der Lauf beginnt, wenn die Seite steht, und lädt sie nicht neu.
+
 ## [Android 0.18.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-09 — das Handy verschließt**. Gehört wie Uhr

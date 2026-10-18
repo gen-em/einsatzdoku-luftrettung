@@ -1478,11 +1478,15 @@ erscheint eine Meldung mit der Nummer des Einsatzes und dem Grund — nie mit
 dem Inhalt. Dasselbe
 gilt für die Karte der Tagesübersicht und für „GPS-Daten des Diensttages"
 (4.1a). **Einsätze, die vor dieser Fassung aufgezeichnet wurden, zeigen
-vorübergehend keine Karte**, bis ihre Ortsdaten einmal umgestellt sind — das
-geschieht bei der Umstellung des Servers in einem Durchgang. Seit Web 22.1.0
+vorübergehend keine Karte**, bis ihre Ortsdaten einmal umgestellt sind. Das
+tut seit Web 22.7.0 dein Browser von selbst: Öffnest du die Startseite und
+bist entsperrt, verschließt er im Hintergrund, was noch offen auf dem Server
+liegt — GPS-Daten, Phasenorte, Reanimation, Zielklinik, Höhe —, und beim nächsten
+Öffnen ist die Karte wieder da. Du musst dafür nichts tun und nichts
+abwarten; bricht es ab, macht der nächste Aufruf weiter. Seit Web 22.1.0
 gilt dasselbe für die **Zielklinik** (Zeile, Pin, Linie zur letzten
 Zielklinik) und die **Höhe des Einsatzorts**: Beides steht erst nach dem
-Entsperren da. Ältere Einsätze zeigen beides bis zur Umstellung nicht —
+Entsperren da. Ältere Einsätze zeigen beides bis zum Umzug nicht —
 außer du speicherst einen davon einmal im Formular: Dann nimmt dein Browser
 Zielklinik, Phasenorte und Reanimation gleich verschlüsselt mit.
 
@@ -5046,6 +5050,19 @@ stehen („Übergang läuft" — die ziehen beim nächsten Anmelden still nach;
 solange, rechnet jede Anmeldung zweimal). Das Demo-Konto zählt dort nicht
 mit: Es bleibt auf der Rundenzahl seiner Fixture, und der Altwert bleibt
 deshalb in der Liste, bis der Referenzbestand neu gebaut ist.
+
+**Die Zeile „Ortsdaten"** (seit Web 22.7.0, Karte **Server**) zählt, was
+auf dem Server noch **im Klartext** liegt: GPS-Punkte, Phasenorte,
+Reanimationen, Zielkliniken und Höhen aus der Zeit vor Web 22. Umziehen kann
+nur der Browser des Kontos selbst (4.2) — beim
+nächsten Öffnen der Startseite nach dem Entsperren. **Orange „Umzug offen"**,
+solange irgendein Konto noch Klartext hat, mit der Zahl je Art; das heißt
+meist: Jemand hat sich seit der Umstellung nicht angemeldet. **Blau
+„verschlossen"**, wenn nichts mehr offen ist. Erst dann darf die
+Aufräumfassung kommen, die die alten Spalten löscht. Bleibt ein einzelner
+Einsatz übrig, obwohl sich sein Konto angemeldet hat, trägt er einen
+verschlüsselten Block, der sich mit dem Schlüssel des Kontos nicht öffnen
+lässt — dann hilft nur ein Blick in den Reiter System.
 
 **Die Zeile „Umgebung"** (seit Web 20.38.0) steht oben in der Karte
 **Server**, und zwar immer. Ihre Plakette nennt die Anlage: den Namen aus dem

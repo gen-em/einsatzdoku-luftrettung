@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); **S11-08 erledigt** (17.10.2026, Uhr 4.0.0); **S11-09 erledigt** (17.10.2026, Android 0.18.0); als Nächstes S11-10.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); **S11-08 erledigt** (17.10.2026, Uhr 4.0.0); **S11-09 erledigt** (17.10.2026, Android 0.18.0); **S11-10 erledigt bis auf den Lauf auf Staging und Produktiv** (18.10.2026, Web 22.7.0); als Nächstes S11-11.*
 
 ---
 
@@ -14,6 +14,9 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **Das Einmalwerkzeug auf Staging mit dem Referenzbestand** (Abnahme S11-10 laut Konzept 5). (S11-10) | Staging bekommt nur, was auf `main` liegt, und `main` bekommt S11 erst mit dem Pull Request am Ende (CLAUDE.md 8). Örtlich liegt kein Altbestand mehr: Demo-Reset und Messstand verschließen seit S11-06. Gemessen ist deshalb mit von Hand gelegtem Altbestand (Probe 20/0, Mengenlauf 1000 Einsätze). | P-S11-37 nach dem Merge. |
+| **„Karte vorher und nachher gleich" als Bild.** (S11-10) | Ohne Altbestand örtlich gibt es kein Vorher-Bild; die Probe vergleicht stattdessen Punkt für Punkt auf der Auflösung der Innenform (300 + 150 + 30 Punkte, Phasen, Reanimation, Ziel). | P-S11-37 (Augenschein auf Staging). |
+| **Das Einmalwerkzeug in Firefox und WebKit.** (S11-10) | Wie beim Wartungslauf nur Chromium; es baut auf denselben Bausteinen auf (`CompressionStream` nur für ausgedünnte Spuren). | P-S11-37. |
 | **Android 0.18.0 auf einem echten Telefon** — Kopplung mit Schlüssel, Nachholen, eine Aufzeichnung verschlossen senden. (S11-09) | Kein Telefon; im Emulator nur Start und die Hülle auf dem Kryptoanbieter des Systems (instrumentiert, 2/2). Der ganze Weg Kopplung → Senden lief über die JVM gegen die örtliche Anlage (Server-Rundlauf), nicht auf einem Android-System. | P-S11-35 (Gerätetest). |
 | **Ob die Hüllen des Handys im Browser aufgehen.** (S11-09) | Die Server-Rundläufe senden an Konto 1, dessen privaten Schlüssel nur ein Browser mit Passwort öffnet; geprüft hat der Server Form und Größe. Byte-gleich mit den Vektoren sind die Hüllen (JVM 6/6, Emulator 6/6), und gegen dieselben Vektoren ist `crypto.js` gemessen — der Schluss ist zwingend, aber kein Durchgang. | P-S11-35. |
 | **Uhr 4.0.0 auf einer echten Uhr** — Selbsttest, Verschließen, Kopplung mit Schlüssel, Nachholen. (S11-08) | Der Simulator rechnet mit dem Prozessor des Rechners und kennt kein Bluetooth; die Byteordnung ist nur auf der Fenix 6 Pro echt gemessen (E-S11-30). | P-S11-32, -33 (Gerätetest der Betreiberin). |
@@ -282,6 +285,21 @@ das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 F-S11-78 (Registertext der Transaktionen seit S11-05c veraltet),
 F-S11-79 (Messstand wartet nach der Anmeldung nicht auf das Schlüsselpaar).
 
+### S11-10 Einmalwerkzeug (18.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `proben.sh ortsumzug` (neu, Chromium) | Wegwerfkonto, Altbestand von Hand: M1 (4 Phasen, 2 Reas, Ziel, Höhe, 300 `track_points`), M2 im Papierkorb (SPUR1 Stufe 3, 30 von 90, Rea), M3 (Hülle und Klartext daneben), M4 (Ziel neben unlesbarem Blob), R1 (SPUR1 Stufe 2 und 50 Zeilen). Zählung vorher, stiller Lauf der Startseite, geöffnet gegen vorher, Wächter, zweiter Lauf | **20 ok, 0 fehlen**: vorher 5 Phasenorte, 3 Reas, 2 Ziele, 350 Zeilen, 2 Blobs; nachher 0/0/1 (M4)/0/0; 300 + 150 + 30 Punkte gleich (Nummer, 10⁻⁷°, ganze Meter, Sekunde); Hülle gewinnt beim Zusammenführen; M2 ein Stück Stufe 3, Marke 90; falscher Stand 409, kaputte Hülle 400; zweiter Lauf ändert nichts; Konsole leer |
+| Mengenlauf (Notizordner, nicht übernommen) | 200 Einsätze × 330 Punkte Altbestand, stiller Lauf, ungedrosselt | **17,1 s** bis 0 offen (66 000 Punkte, 400 Phasenorte, 20 Reas, 200 Ziele), 0 Konsolenfehler |
+| dasselbe, 1000 Einsätze, Drossel 6× | wie oben | **95,6 s** bis 0 offen (330 000 Punkte, 2000 Phasenorte, 100 Reas, 1000 Ziele), Halde 15 MB (`performance.memory`, gerundet), 0 Konsolenfehler — rund 10 Einsätze je Sekunde |
+| Statusseite (`status_karten()` in der Probe) | Zeile „Ortsdaten" bei Altbestand | orange, „1 Konto hat noch Klartext: 5 Phasenorte, 3 Reanimationen, 2 …" |
+| `kryptoprobe` einzeln (nach F-S11-86) | Simulator neu, Xvfb bleibt | 3 von 3 |
+
+**Befunde:** F-S11-86 (Krypto-Probe riss Xvfb mit ab), F-S11-87 (Platzhalter
+des Bilderlaufs am alten Feld), F-S11-88 (Befunde in der Fragentabelle),
+F-S11-89 (ein unlesbarer Blob hält Ziel und Höhe im Klartext). **Vorläufig
+entschieden:** E-S11-81 (Bauweise). **Offen:** Q-S11-23, Q-S11-24.
+
 ### S11-09 Android (17.10.2026)
 
 | Mittel | Was es misst | Zahl |
@@ -375,7 +393,9 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-03 | vor der Hauptauslieferung | Uhr mit der alten Fassung vollständig senden lassen | Rückstand 0 auf der Uhr | Rückstandszahl größer 0 |
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen; auf der Sync-Seite steht „Kein Schlüssel · Holen: START halten" — START halten (seit E-S11-79 statt neu koppeln); einen Probeeinsatz aufzeichnen und senden | „Schlüssel geholt", danach Einsatz im Web mit Karte nach dem Entsperren | „Erst im Web anmelden" bleibt nach einer Anmeldung, „Verschlüsseln geht nicht", oder die Uhr parkt |
-| P-S11-06 | nach S11-10 | Einmalwerkzeug auf Produktiv laufen lassen | Ende mit „0 Klartext-Ortsdaten" je Tabelle | eine Zahl ungleich 0 |
+| P-S11-37 | nach dem Merge auf Staging, vor Produktiv | (a) Betrieb → Status, Karte Server, Zeile **„Ortsdaten"**: Zahlen notieren. (b) Als ein Konto mit Einsätzen von vor S11 anmelden, die Startseite öffnen, entsperrt eine Minute stehen lassen. (c) Einen alten Einsatz mit Spur, Reanimation und Zielklinik öffnen, in Chromium, Firefox und Safari je einmal einen. (d) Status neu laden | (a) orange, Zahlen > 0. (c) Karte, Phasen, Reanimation, Zielklinik mit Pin wie vor S11; (d) Zahlen gesunken, nach allen Konten blau „verschlossen" | Karte leer oder „lassen sich nicht öffnen" (Reiter System sagt warum); Zahl sinkt nicht → Konsole des Browsers ansehen und melden |
+| P-S11-38 | jetzt | E-S11-81 bestätigen oder verwerfen; Q-S11-23 und Q-S11-24 beantworten | Antwort im Konzept | — |
+| P-S11-06 | nach der Hauptauslieferung auf Produktiv | jedes Konto mit Altbestand meldet sich einmal an und öffnet die Startseite (Q-S11-23); danach Betrieb → Status, Zeile „Ortsdaten" | **blau „verschlossen"** — erst dann S11-12 | orange mit Zahlen: welche Konten fehlen, zeigt die Zeile nicht; ein einzelner Rest trotz Anmeldung ist F-S11-89 |
 | P-S11-07 | nach P-S11-06 | neue Konto- und Komplett-Backups anlegen; ein Komplett-Backup vom Stand vor S11 offline ablegen | Backups vorhanden | — |
 | P-S11-08 | 30 Tage nach P-S11-07 | alte Sicherungen auf dem Server, in den Backup-Zielen und eigene `.edbak` löschen; das offline abgelegte Komplett-Backup löschen | keine Sicherung vor S11 mehr vorhanden | — |
 | P-S11-09 | nach der Aufräumauslieferung | `update.php` | Migration läuft durch | Meldung „Klartext-Ortsdaten vorhanden" mit Fundort |

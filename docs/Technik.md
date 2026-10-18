@@ -5043,7 +5043,7 @@ heraus.
 > UPDATE`; sonst `409 stand`). Ein Vermerk **ohne Einsatz** (`track_cuts.
 > mission_id` NULL, Migration `2026_10_15_loeschvermerk`) sperrt den Zeitraum
 > gegen eine erneute Lieferung. Abgewiesen werden: ein Segment mit
-> Klartextpunkten (`409 altbestand`, bis S11-10), das Löschen aller Punkte
+> Klartextpunkten (`409 altbestand`, bis das Einmalwerkzeug ihn umgezogen hat, 4.99k), das Löschen aller Punkte
 > (`409 alles`, dafür der Papierkorb), Stücke der Stufe 2 oder 3 (`409 stufe`,
 > bis S11-07). Eine Zeile im Protokoll (`spur_stueck_geloescht`, Reiter
 > Verwaltung). **Grenze:** Die Sicherung nimmt Vermerke über ihren Einsatz mit
@@ -8802,7 +8802,7 @@ Sequenznummer und lässt gesperrte Punkte fort; `einsatz()` öffnet die
 Einsatzhülle; `fuerAnsicht()` füllt eine Antwort von `api/mission.php` so, wie
 die Einsatzansicht sie schon immer las; `ladeplatz()` steuert den Baustein
 `.ladeplatz` (Design 9.41) mit 300 ms Schwelle. **Kein Übergang** (E-S11-36):
-Altbestand im Klartext zeigt bis S11-10 keine Karte. Die Anfrage startet
+Altbestand im Klartext zeigt keine Karte, bis das Einmalwerkzeug ihn umgezogen hat (ab Web 22.7.0, unten). Die Anfrage startet
 `assets/vorladen.js` schon im Kopf (V1, `EdVorladen.holen()`).
 
 **Nach dem Deploy:** `update.php` (Migration `2026_10_13_ortshuellen`).
@@ -8850,7 +8850,7 @@ Für „letzte Zielklinik" geht der Blob des Vorgängers mit (`start_prev_blob`)
 wie bei `prev_site`. `ingest.php` und das Formular rufen `compute_site_elevation()`
 nicht mehr auf, seit 22.2.0 auch das Schneiden nicht; GPX-Einlesen und
 Sicherung tun es noch, bis S11-05d und S11-06 sie umbauen. **Kein Übergang** (E-S11-42): Der
-Altbestand zeigt bis S11-10 kein Transportziel und keine Höhe.
+Altbestand zeigt kein Transportziel und keine Höhe, bis das Einmalwerkzeug ihn umgezogen hat (ab Web 22.7.0).
 
 **Kein Schema.** Die Spalten bleiben bis zur Aufräumauslieferung.
 
@@ -8908,6 +8908,44 @@ Probe (`tools/proben/wartungslauf/`, Server und Browser).
 (330 Punkte) nicht spürbar, bei einer mit 50 000 Punkten eine Weile (nicht
 gemessen). Ein gepacktes Stück einer sehr großen, kaum packbaren Spur kann über
 die 800 KB eines Einspielhappens kommen (theoretisch; real 4–5 Byte je Punkt).
+
+#### Das Einmalwerkzeug (ab Web 22.7.0, S11-10)
+
+**Es zieht den Altbestand in die Hüllen um** (Konzept S11 3.8 Schritt 5,
+E-S11-19). Altbestand ist, was vor Web 22 im Klartext ankam und seither ohne
+Übergang nicht mehr gelesen wird: Spurpunkte in `track_points` und
+`track_blobs` (SPUR1, Einsätze und Ruhesegmente), `mission_phases.lat/lon`,
+jede Zeile in `resus_sessions`/`resus_events`, `missions.transport_dest`,
+`dest_lat`, `dest_lon` und `site_ele_m` — **auch im Papierkorb**. Verschließen
+kann nur der Browser des Kontos; der Server nennt und tauscht.
+
+| Teil | Wo | Was |
+|---|---|---|
+| Liste | `ou_kandidaten()`, `ou_fuellen()`, `api/ortsumzug.php` `liste` | höchstens 10 Datensätze je Aufruf und höchstens 100 000 Punkte (eine Spur geht immer mit): Beginn, `client_ref`, Phasen mit Koordinaten, Reanimationen, Spurpunkte aus `spur_lesen()` mit Stufe und `n_original`, bei Einsätzen `ort_huelle`, `pat_blob` und die Zielspalten; dazu `spur_stand`, ein Fingerabdruck aus `spur_umriss()` und den vorhandenen Stücken. `konflikt`: Klartext und Stücke überschneiden sich in den Nummern — die Spur bleibt liegen |
+| Zahl | `ou_zahl()`, `zahl` | Einsätze und Ruhesegmente des Kontos mit Altbestand |
+| Arbeit | `assets/ortsumzug.js` (`EdOrtsumzug`) | Punkte → Stücke der Stufe 1 (`EdOrtsdaten.stueckeBauen()`), eine ausgedünnte SPUR1-Spur → **ein** Stück der Stufe 3 (`gepacktBauen()`, wie beim Einspielen einer Sicherung); Rundlauf Punkt für Punkt; Phasenorte und Reanimation → Einsatzhülle, mit einer vorhandenen **zusammengeführt** (die Hülle gewinnt, E-S11-45 (4)); Ziel und Höhe → `pat_blob` (der Blob gewinnt; geht er nicht auf, bleibt alles) |
+| Tausch | `ou_tauschen()`, `tauschen` | eine Transaktion, Zeile `FOR UPDATE`; erst alle Wächter (`spur_stand`, `pat.alt`, `ort.alt`), dann schreiben: Blob und Zielspalten NULL, Hülle und Phasenorte NULL, `resus_*` gelöscht, Stücke geschrieben, `spur_loeschen(…, ['stuecke' => false])`. Prüfschicht: `pruef_spurstueck()`/`pruef_spurstueck_gepackt()`, `pruef_huelle()`, `pruef_pat_blob()`. `409 stand | blob | huelle`, `404 fehlt` |
+| Anlage | `ou_zaehlung()`, `ou_konten()`, `status_lib.php` | Zeile **„Ortsdaten"** der Statusseite (Karte Server): orange mit der Zahl je Tabelle, solange ein Konto Altbestand hat; blau „verschlossen" sonst. Jede Zeile zählt, keine Stichprobe |
+
+**Wo es läuft:** auf der Startseite, still, nach dem Entsperren und **vor** dem
+Wartungslauf (der den Altbestand nicht anfasst, E-S11-70), so lange Runde um
+Runde, bis nichts mehr offen ist oder eine Runde nichts schafft. Was nicht
+aufgeht, geht an den Reiter System und wird für die Sitzung ausgelassen
+(`sessionStorage`). Kein Merker — fertig ist es, wenn `zahl` null meldet;
+bricht es ab, setzt der nächste Aufruf wieder auf.
+
+**Was es nicht anfasst:** `uhr_gesperrt` und `edited` (ein Umzug ist keine
+Bearbeitung, wie `api/pat_anheben.php`); einen Blob, der sich mit dem
+Schlüssel des Kontos nicht öffnen lässt — dessen Zielspalten bleiben und
+werden gezählt.
+
+**Grenzen:** Ein Konto, das sich nie anmeldet, zieht nie um; die Statuszeile
+zeigt es. Die Startseite zeichnet die umgezogene Karte erst beim nächsten
+Aufruf. Probe: `tools/proben/ortsumzug/` (20 Prüfpunkte, Wegwerfkonto mit von
+Hand gelegtem Altbestand).
+
+**Entfällt mit S11-12** samt den Klartextspalten; die Aufräummigration
+verweigert, solange `ou_zaehlung()` etwas findet (E-S11-19).
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 

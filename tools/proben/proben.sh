@@ -74,6 +74,7 @@ declare -A RUF=(
   [kontopaar]="node tools/proben/kontopaar/probe.mjs"
   [ortsdaten]="node tools/proben/ortsdaten/probe.mjs"
   [wartungslauf]="bash tools/proben/wartungslauf/probe.sh"
+  [ortsumzug]="bash tools/proben/ortsumzug/probe.sh"
 )
 
 # Proben, die `alle` NICHT fährt, mit dem Grund daneben. Kein stilles
