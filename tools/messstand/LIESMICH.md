@@ -31,7 +31,7 @@ Ohne das Konto scheitert der Browserschritt nach der Anmeldung und wartet 180 s 
 ## Erwartete Zahl
 
 Die Zielzahlen stehen in `ausgangsmessung.md` daneben — **dort und nicht hier**, weil sie mit jeder Messung fortgeschrieben werden.
-**Gemessen 11.10.2026** (S11-01, Grundlinie vor S11): 5096 Einsätze eingespielt, zehn Browsermessungen ohne Fehler (die zwei Einzelansichten je fünfmal), Rückgabewert 0; der Schritt `browser` allein rund 7 min bei Drossel 6×, 2 min ungedrosselt.
+**Gemessen 11.10.2026** (S11-01, Grundlinie vor S11): 5096 Einsätze eingespielt, zehn Browsermessungen ohne Fehler (die zwei Einzelansichten je fünfmal), Rückgabewert 0; der Schritt `browser` allein rund 7 min bei Drossel 6×, 2 min ungedrosselt. **Nachher 18.10.2026** (S11-11): Grenzen gehalten, Tabelle in `ausgangsmessung.md`.
 
 ## Was es nicht kann
 

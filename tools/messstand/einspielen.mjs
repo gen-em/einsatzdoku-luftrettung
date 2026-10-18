@@ -122,10 +122,19 @@ async function anmelden(mail, pw) {
   return true;
 }
 
+/* AUF RÜCKFRAGE ODER ERGEBNIS WARTEN, WAS ZUERST KOMMT (F-S11-74). Bis
+ * S11-11 wartete die Schleife bis zu 8 s auf eine Rückfrage, die nicht kam,
+ * und die Uhr lief dabei: Alle 17 Dateien standen auf 8,1 s, gleich, wie
+ * lange das Einspielen wirklich brauchte. */
 async function rueckfragen(hoechstens = 4) {
   for (let i = 0; i < hoechstens; i++) {
     const ja = seite.locator('dialog[open] button[data-act="yes"]');
-    try { await ja.first().waitFor({ state: 'visible', timeout: 8000 }); } catch { break; }
+    const was = await Promise.race([
+      ja.first().waitFor({ state: 'visible', timeout: 8000 }).then(() => 'frage', () => null),
+      seite.locator('#impstate .meldung').first()
+        .waitFor({ state: 'attached', timeout: 8000 }).then(() => 'ergebnis', () => null),
+    ]);
+    if (was !== 'frage') { break; }
     await ja.first().click();
     await seite.waitForTimeout(400);
   }

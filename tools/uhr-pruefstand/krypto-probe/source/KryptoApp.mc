@@ -15,6 +15,7 @@
 //   HUELLE  die ganze Huelle je Fall byte-gleich
 //   PACKEN  gibt es eine Packfunktion (deflate)?
 //   T-PAAR  Zeit fuer ein frisches Schluesselpaar (dreimal)
+//   KURVE   weist createPublicKey() einen Punkt neben der Kurve ab? (F-S11-85)
 //   T-<form>-<n>  Spurstueck zu n Punkten in der Innenform binaer/json:
 //           Bauen und Verschliessen in ms, Groesse, Speicher (Zuwachs in kB
 //           gegen den Stand vor dem Schritt, solange alles lebt)
@@ -168,6 +169,20 @@ module Probe {
             var punkte = (n <= 10) ? 200 : 500;
             var json = (n % 2 == 0);
             spurstueck(punkte, json);
+        } else if (n == 13) {
+            // Prueft createPublicKey(), ob der Punkt auf der Kurve liegt
+            // (F-S11-85)? Y um eins veraendert. Eine Meldung, kein Urteil:
+            // Huelle.schluesselSetzen() verlaesst sich darauf, und die Zeile
+            // sagt, ob es das darf.
+            var falsch = Vektoren.EMPF_PUB.slice(0, 65);
+            falsch[64] = (falsch[64] + 1) & 0xff;
+            var was = "nicht geprueft";
+            try {
+                Krypto.ecdh(Krypto.paar(f[:fluechtig] as ByteArray), falsch);
+            } catch (e) {
+                was = "abgewiesen";
+            }
+            melde("KURVE " + was);
         } else {
             return false;
         }

@@ -18,11 +18,11 @@ mit Hoch/Runter blättern.
 
 ## Was es misst
 
-Schritte und Zeilen im Kopf von `source/KryptoApp.mc`: Schlüsselpaar, ECDH
-samt Byteordnung, HKDF, AES-256-CBC, HMAC und die ganze Hülle je gegen die
-Vektoren aus `tools/proben/huelle/` (`source/Vektoren.mc` ist erzeugt);
-ob es `deflate` gibt; Zeit für ein Schlüsselpaar; Bauen und Verschließen
-eines Spurstücks zu 200 und 500 Punkten, binär und JSON, mit Speicherzuwachs.
+Schritte und Zeilen im Kopf von `source/KryptoApp.mc`: Schlüsselpaar, ECDH samt
+Byteordnung, HKDF, AES-256-CBC, HMAC und die ganze Hülle je gegen die Vektoren
+aus `tools/proben/huelle/` (`source/Vektoren.mc` ist erzeugt); ob es `deflate`
+gibt; Zeit für ein Schlüsselpaar; Spurstück zu 200 und 500 Punkten, binär und
+JSON, mit Speicherzuwachs; ob ein Punkt neben der Kurve abfällt (`KURVE`, F-S11-85).
 
 ## Was es braucht
 

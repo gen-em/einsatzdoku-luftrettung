@@ -484,6 +484,69 @@ Ungedrosselt liegt jede Seite außer Anmelden (1,36 s) unter 1 s: Einsatz
 
 ---
 
+## Nachher 18.10.2026 — nach S11 (S11-11)
+
+**Wofür.** Der Vergleich, den die Grundlinie vom 11.10.2026 verspricht:
+derselbe Messstand, dieselbe Maschine, Web **22.7.0** (Zweig
+`ccr-dd33b6e8-ismfm0`, Code gleich `293446b`). Grenzen aus E-S11-26 und
+-29: Einzelansicht bei Drossel 6× höchstens doppelt so lange wie vorher und
+unter 3 s, ungedrosselt unter 1 s; Massenwege werden benannt.
+
+**Was gemessen wurde.** Drei Läufe auf demselben Bestand (5096 Einsätze,
+seit S11-06 verschlossen eingespielt, Median 434 Punkte je Spur):
+(a) **im Prüfstand von S11-10**, `messen.py --frisch`, Drossel 6×, Eichlauf
+911 ms; (b) **ungedrosselt**, `--schritte browser --drossel 1`, Eichlauf
+137 ms; (c) **nach dem Wartungslauf über das ganze Konto** (10 221
+Aufzeichnungen zusammengefügt, ältere als 31 Tage ausgedünnt; 688 s
+ungedrosselt im Reiter Backup, 0 Fehler; Hüllen 48,0 → 13,6 MB),
+`--schritte browser`, Drossel 6×, Eichlauf 856 ms. Die Eichläufe liegen im
+Bereich der Grundlinie (898–987 ms bei 6×) — die Maschine war gleich schnell.
+
+**Zuerst, was nicht gemessen werden konnte:** ein echtes Telefon (wie
+oben); Staging und Produktiv (andere Maschinen, E-S11-15). Das
+Einmalwerkzeug steht nicht hier, sondern im Prüfdokument S11 (Mengenlauf:
+1000 Einsätze mit 330 000 Punkten in 95,6 s bei 6×).
+
+| Messung | vorher 6× (11.10.) | nachher 6× (a) | nach Wartungslauf 6× (c) | vorher 1× | nachher 1× (b) | Grenze |
+|---|---|---|---|---|---|---|
+| **Einsatz mit Spur öffnen** (1356 Punkte) | 1,28 / 1,33 s | **1,39 s** | **1,27 s** | 0,45 s | **0,39 s** | 2× und < 3 s · < 1 s ✔ |
+| **Diensttag mit Ruhe-Spuren** (1471 Punkte) | 1,71 / 2,35 s | **2,94 s** | **1,41 s** | 0,47 / 0,51 s | **0,68 s** | 2× und < 3 s · < 1 s ✔ |
+| Tagesansicht | 1,19 s | 1,87 s | 1,18 s | — | 0,50 s | — |
+| Suche, erste Treffer | 3,55 s | 3,81 s | 3,52 s | — | 0,77 s | — |
+| Zeitraum Monat, sichtbar | 2,38 s | 1,90 s | 2,40 s | 0,45 s | 0,44 s | — |
+| Zeitraum Jahr, sichtbar | 2,85 / 3,43 s | 3,89 s | 2,71 s | 0,77 s | 0,63 s | — |
+| **Backup erstellen** | 58,5 s, **12,0 MB** | 139,9 s, **36,5 MB** | **170,6 s, 16,1 MB** | 44,1 s | 37,4 s, 36,5 MB | ≤ 5 min ✔ · ≤ 25 MB ✔ nach dem Wartungslauf |
+| **GPX Jahr, Passwort an** | 329,6 s, 32,0 MB | 336,8 s, 30,9 MB | 356,6 s, 17,7 MB | 69,8 s | 75,5 s | benannt |
+| GPX Jahr, Passwort aus | 270,2 s | 288,6 s | 326,7 s | 55,7 s | 61,0 s | benannt |
+| Halde höchste (GPX) | 389 MB | 371 MB | 301 MB | 392 MB | 373 MB | benannt (F-S11-16) |
+
+**Was die Zahlen sagen.**
+
+- **Die Einzelansichten halten die Grenzen.** Der Diensttag lag im Lauf (a)
+  bei 2,94 s, knapp unter 3 s und 1,25- bis 1,72-mal so lange wie vorher;
+  nach dem Wartungslauf (c), dem Zustand, in dem ein Konto sonst ist, bei
+  1,41 s — schneller als vorher, weil ein gepacktes Stück weniger Hüllen
+  und nach der Frist weniger Punkte trägt. Die Streuung zwischen zwei
+  Läufen bleibt groß (F-S11-22): Tagesansicht 1,87 s in (a), 1,18 s in (c).
+- **Die Sicherung ist nach dem Wartungslauf kleiner als die Grenze**:
+  16,1 MB statt 36,5 MB, weil die Punktlisten nur noch die behaltenen
+  Punkte tragen. E-S11-67 verlangte, nachzumessen und bei „deutlich
+  darüber" einen Hebel vorzulegen — es ist darunter; kein Hebel. Die Zeit
+  ist dreimal so lang wie vor S11 (170,6 s gegen 58,5 s), weil der Browser
+  jede Hülle öffnet; sie liegt unter den 5 Minuten aus E-S2-24.
+- **GPX über ein Jahr kostet 1,02- bis 1,08-mal so viel** wie vorher; das
+  Öffnen der Hüllen geht im Packen des Archivs unter. Die Halde bleibt der
+  Befund F-S11-16 (Massenweg, benannt).
+- **Der Server liest keine Punkte mehr:** `edbak_build()` am Stück 0,37 s,
+  Spitze 49 MB (vorher 13,41 s und 2079 MB) — er packt nur noch Hüllen, wie
+  sie liegen.
+
+**Am Prüfmittel berichtigt** (F-S11-74): `einspielen.mjs` wartet auf
+Rückfrage **oder** Ergebnis, was zuerst kommt, statt bis zu 8 s auf eine
+Rückfrage, die nicht kommt. Bis dahin stand jede Datei auf 8,1 s.
+
+---
+
 ## Wiederholen
 
 ```

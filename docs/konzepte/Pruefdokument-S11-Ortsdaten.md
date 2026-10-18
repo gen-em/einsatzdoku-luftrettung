@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); **S11-08 erledigt** (17.10.2026, Uhr 4.0.0); **S11-09 erledigt** (17.10.2026, Android 0.18.0); **S11-10 erledigt bis auf den Lauf auf Staging und Produktiv** (18.10.2026, Web 22.7.0); als Nächstes S11-11.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); **S11-08 erledigt** (17.10.2026, Uhr 4.0.0); **S11-09 erledigt** (17.10.2026, Android 0.18.0); **S11-10 erledigt bis auf den Lauf auf Staging und Produktiv** (18.10.2026, Web 22.7.0); **S11-11 erledigt bis auf den Pull Request** (18.10.2026, ohne neue Fassung); Halt vor S11-12.*
 
 ---
 
@@ -14,6 +14,9 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **Ob die echte Garmin einen Punkt neben der Kurve abweist** (F-S11-85). (S11-11) | Gemessen nur im Simulator (3/3 „abgewiesen"); dessen Krypto ist die des Rechners. | P-S11-39. |
+| **Ob eine Freigabe (Lage I) seit S11 auch Ort und Spur offenlegt** (F-S11-92). (S11-11) | Nicht neu gelesen; gehört zum Befund F-R17-02, den 12b liest. | Review 12b. |
+| **Die Rechtstexte** (F-S11-91). (S11-11) | Bewusst nicht geändert: anwaltliche Prüfung, zweite Runde mit S11 (Rahmenplan 6). | P-S11-40. |
 | **Das Einmalwerkzeug auf Staging mit dem Referenzbestand** (Abnahme S11-10 laut Konzept 5). (S11-10) | Staging bekommt nur, was auf `main` liegt, und `main` bekommt S11 erst mit dem Pull Request am Ende (CLAUDE.md 8). Örtlich liegt kein Altbestand mehr: Demo-Reset und Messstand verschließen seit S11-06. Gemessen ist deshalb mit von Hand gelegtem Altbestand (Probe 20/0, Mengenlauf 1000 Einsätze). | P-S11-37 nach dem Merge. |
 | **„Karte vorher und nachher gleich" als Bild.** (S11-10) | Ohne Altbestand örtlich gibt es kein Vorher-Bild; die Probe vergleicht stattdessen Punkt für Punkt auf der Auflösung der Innenform (300 + 150 + 30 Punkte, Phasen, Reanimation, Ziel). | P-S11-37 (Augenschein auf Staging). |
 | **Das Einmalwerkzeug in Firefox und WebKit.** (S11-10) | Wie beim Wartungslauf nur Chromium; es baut auf denselben Bausteinen auf (`CompressionStream` nur für ausgedünnte Spuren). | P-S11-37. |
@@ -285,6 +288,27 @@ das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 F-S11-78 (Registertext der Transaktionen seit S11-05c veraltet),
 F-S11-79 (Messstand wartet nach der Anmeldung nicht auf das Schlüsselpaar).
 
+### S11-11 Gegenlesung und Nachmessung (18.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `messen.py --frisch`, Drossel 6× (im Prüfstand von S11-10) | alle Schritte nach S11, gegen die Grundlinie vom 11.10.2026; Eichlauf 911 ms (vorher 898–987) | Einsatz **1,39 s** (vorher 1,28/1,33), Diensttag **2,94 s** (1,71/2,35), Backup 139,9 s und 36,5 MB, GPX Jahr 336,8 s; 0 Konsolenfehler |
+| `--schritte browser --drossel 1` | dasselbe ungedrosselt; Eichlauf 137 ms | Einsatz **0,39 s** (0,45), Diensttag **0,68 s** (0,47/0,51), Backup 37,4 s, GPX 75,5 s |
+| Wartungslauf über das Messstandkonto (Einstellungen → Backup, Playwright, ungedrosselt) | 10 221 fällige Aufzeichnungen aus 1028 Diensttagen | **688 s**, „Fertig: 10221 Aufzeichnungen verdichtet", danach „nichts" fällig, 0 Konsolenfehler; Hüllen 48,0 → 13,6 MB (Stufe 3: 9469 Stücke) |
+| `--schritte browser`, Drossel 6×, nach dem Wartungslauf | Zustand eines Kontos im Alltag | Einsatz **1,27 s**, Diensttag **1,41 s**, **Backup 170,6 s, 16,1 MB**, GPX 356,6 s, 17,7 MB |
+| `pruefstand.sh kryptoprobe` mit neuem Schritt `KURVE` | fenix6pro, fr945, venu3s im Simulator | je **7 gut, 0 Fehler**, „KURVE abgewiesen" 3/3 |
+| `textprobe` nach den Texten in `CLAUDE.md`, Bedrohungsmodell, Messstand | Bereich (c) | 0 Treffer außerhalb der Ausnahmen |
+
+**Grenzen E-S11-26/-29 gehalten:** beide Einzelansichten unter Faktor 2 und
+unter 3 s bei 6×, unter 1 s ungedrosselt. **E-S11-67 erfüllt:** Die
+Sicherung liegt nach dem Wartungslauf unter 25 MB, ohne Formatänderung.
+**Befunde:** F-S11-90 (Diensttag knapp unter 3 s im Lauf vor dem
+Wartungslauf), F-S11-91 (Rechtstexte), F-S11-92 (Freigabe nicht neu
+gelesen). **Gegengelesen:** `CLAUDE.md` 4 (Zusage mit vier Grenzen,
+Prüfschicht E-S11-13, `spur_lib` mit SPUR2), Bedrohungsmodell (Kopf, W2,
+Lage A, kurze Fassung, G3, Baustein Gerätehülle, R3, Abschnitt 6), Handbuch,
+Technik 4.98/4.99s, `ausgangsmessung.md`.
+
 ### S11-10 Einmalwerkzeug (18.10.2026)
 
 | Mittel | Was es misst | Zahl |
@@ -394,6 +418,8 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen; auf der Sync-Seite steht „Kein Schlüssel · Holen: START halten" — START halten (seit E-S11-79 statt neu koppeln); einen Probeeinsatz aufzeichnen und senden | „Schlüssel geholt", danach Einsatz im Web mit Karte nach dem Entsperren | „Erst im Web anmelden" bleibt nach einer Anmeldung, „Verschlüsseln geht nicht", oder die Uhr parkt |
 | P-S11-37 | nach dem Merge auf Staging, vor Produktiv | (a) Betrieb → Status, Karte Server, Zeile **„Ortsdaten"**: Zahlen notieren. (b) Als ein Konto mit Einsätzen von vor S11 anmelden, die Startseite öffnen, entsperrt eine Minute stehen lassen. (c) Einen alten Einsatz mit Spur, Reanimation und Zielklinik öffnen, in Chromium, Firefox und Safari je einmal einen. (d) Status neu laden | (a) orange, Zahlen > 0. (c) Karte, Phasen, Reanimation, Zielklinik mit Pin wie vor S11; (d) Zahlen gesunken, nach allen Konten blau „verschlossen" | Karte leer oder „lassen sich nicht öffnen" (Reiter System sagt warum); Zahl sinkt nicht → Konsole des Browsers ansehen und melden |
+| P-S11-39 | beim nächsten Lauf der Krypto-Probe auf der Fenix 6 Pro (Weg wie in S11-02) | Probe-App aufspielen, Ausgabe ablesen | Zeile „KURVE abgewiesen", „ERGEBNIS 7 gut, 0 Fehler" | „KURVE nicht geprueft" — dann braucht `Huelle.schluesselSetzen()` eine eigene Kurvenprüfung wie das Handy (F-S11-84); bitte melden |
+| P-S11-40 | nach der Hauptauslieferung | Rechtstexte zur zweiten Runde der anwaltlichen Prüfung geben: AVV Anlage I (Reanimationsverlauf), Anlage II Nr. 2 und Hinweis (a) nennen noch Klartext (F-S11-91) | geänderte Entwürfe | — |
 | P-S11-38 | jetzt | E-S11-81 bestätigen oder verwerfen; Q-S11-23 und Q-S11-24 beantworten | Antwort im Konzept | — |
 | P-S11-06 | nach der Hauptauslieferung auf Produktiv | jedes Konto mit Altbestand meldet sich einmal an und öffnet die Startseite (Q-S11-23); danach Betrieb → Status, Zeile „Ortsdaten" | **blau „verschlossen"** — erst dann S11-12 | orange mit Zahlen: welche Konten fehlen, zeigt die Zeile nicht; ein einzelner Rest trotz Anmeldung ist F-S11-89 |
 | P-S11-07 | nach P-S11-06 | neue Konto- und Komplett-Backups anlegen; ein Komplett-Backup vom Stand vor S11 offline ablegen | Backups vorhanden | — |
