@@ -42,6 +42,17 @@ Fehlerbehebung außerhalb eines Konzepts. Kein Schema, kein `update.php`.
   so heißt — wer sie bei einer Aufräumarbeit wieder auf den Namen zurückführt,
   bricht Bitwarden in Firefox still.
 
+- **Die Zweitfaktorprobe räumt auf einer frischen Anlage auf.** Ihr Teil zum
+  Notzugang merkte sich den Wert `app_state.notzugang_geheim` und setzte ihn
+  am Ende zurück — aber nur, wenn es vorher einen gab. Eine frische Anlage
+  hat keinen: Die Migration wird dort übersprungen, und der Wert entsteht
+  erst beim ersten Aufruf des Notzugangs, also in der Probe selbst. Danach
+  stand er da, und die eigene Prüfung „Wert wie vorher" schlug an. Gefunden
+  im Prüfstand zu dieser Fassung; ein zweiter Lauf auf derselben Anlage wäre
+  grün gewesen, weil der Wert dann schon lag — deshalb wurde er vor dem
+  Nachweis von Hand entfernt. Jetzt löscht das Aufräumen einen Wert, den es
+  vorher nicht gab.
+
 ## [Web 22.7.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-10 — das Einmalwerkzeug**. Kein Schema, kein
