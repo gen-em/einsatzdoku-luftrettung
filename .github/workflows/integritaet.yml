@@ -23,7 +23,7 @@ defaults:
 
 jobs:
   wache:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Werkzeug auschecken
         # Werkzeug von hier, nur der Vergleichsstand vom Zeiger — sonst griffe

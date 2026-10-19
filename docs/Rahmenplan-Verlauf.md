@@ -9,6 +9,8 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 160 | 11.10.2026 | Nr. 236 erledigt | Zuarbeit „Nr. 236 nachmessen" aus 6.1 fort: Auslieferung, Stufe 2, Wache und beide App-Probeläufe grün auf `ubuntu-26.04`; Kopf auf S11-01. |
+| 159 | 11.10.2026 | Nr. 236 | Zuarbeit 6.1: Nachmessung auf `ubuntu-26.04` nach dem Merge von #104. Berichtigt: Der Kopf nannte #103 offen und `update.php` auf Staging fällig — beides erledigt; 6.1 führte den Tag `web-v21.14.0` als offen, er ist seit dem 05.10.2026 ausgeliefert (Lauf 114). |
 | 158 | 11.10.2026 | 12a freigegeben | Konzept S11 von der Betreiberin freigegeben; Fahrplanzeile 12a auf „freigegeben", Kopf: als Nächstes S11-01. Alle Fragen beantwortet, zuletzt Q-S11-15 (ausgedünnt wird nach 31 Tagen, E-S11-25). |
 | 157 | 11.10.2026 | S11-00 | 12a beginnt: Konzept S11 (Opus, E-S11-01) auf `ccr-dd33b6e8-ismfm0`, Spanne 380–389; Nr. 236 parallel (E-S11-24). Berichtigt: Gerätedaten passen nicht in den `pat_blob` (F-S11-03); „Backup Fassung 4" meinte die nächste Nutzlastfassung (F-S11-05). |
 | 156 | 11.10.2026 | 12-Abschluss | Erledigt-Zeile 12 (PR #103, Freigabe 11.10.2026), Fahrplanzeile und Block 12 heraus, Reihenfolge ab 12a; 6.1: Prüfliste R17 (P-R17-03 bis -05). `Review-R17.md` bleibt für 12b (E-R17-02). |

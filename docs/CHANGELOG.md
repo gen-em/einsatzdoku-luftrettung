@@ -845,6 +845,46 @@ aufrufen.** Ausgeliefert wird erst mit dem Ende von S11 (Hauptauslieferung).
   ersten unlesbar; `api/kontopaar.php` antwortet 409. Einen Weg zum
   Ersetzen gibt es erst, wenn ein Anlass ihn verlangt.
 
+## [Werkzeug: Die Kette läuft auf Ubuntu 26.04 (Nr. 236)] — 2026-10-11
+
+**Alle zehn `runs-on`-Zeilen nennen jetzt `ubuntu-26.04` statt
+`ubuntu-latest`.** Nur `.github/`, `tools/` und `docs/` — keine
+Versionsstufe. GitHub stellt `ubuntu-latest` vom 19.10. bis 19.11.2026
+schrittweise auf 26.04 um; ein offenes Label hätte die Kette einen Monat
+lang zufällig auf dem einen oder dem anderen Abbild fahren lassen, und der
+erste rote Lauf hätte an einem Tag gestanden, an dem niemand etwas geändert
+hat. Zur Wahl standen Festnageln auf 24.04 oder Umstellen; die Betreiberin
+hat umstellen entschieden, weil der Umstieg ohnehin fällig wird und die
+Korrekturen jetzt gemessen auf dem Tisch lagen.
+
+Vorher gemessen, und drei Stellen wären am 19.10. gerissen. **Die
+Schemaprobe gegen MariaDB 10.6** war im Handlauf auf 26.04 rot: Der Klient
+11.8 aus Ubuntu 26.04 verlangt TLS als Vorgabe, der Dienstcontainer bietet
+keines (`ERROR 2026: SSL is required`). `probe.php` ruft den Klienten
+`mariadb` jetzt mit `--skip-ssl` auf — die Probe misst das Schema, nicht den
+Transport; den Klienten `mysql` lässt sie, wie er ist. **Stufe 2** wäre am
+Kreislauf rot geworden: Playwright 1.56 verweigert Chromium auf
+`ubuntu26.04-x64`. Der Job setzt `PLAYWRIGHT_HOST_PLATFORM_OVERRIDE`, und
+Playwright bleibt bei 1.56, weil der Prüfstand dieselbe Fassung fährt — ein
+Anheben hätte Stufe 2 mit einem anderen Chromium messen lassen als den
+Bilderlauf. **Der Uhr-Job** nahm das Java vom Abbild, 17 auf 24.04 und 25
+auf 26.04; er setzt jetzt Java 17 fest, das Java von `uhr-v3.1.0`. Damit
+sind es fünfzehn fremde `uses:`-Zeilen, jede an einer SHA.
+
+Gemessen auf 26.04: Stufe 1 grün und die Schemaprobe gegen MySQL 8.4.0 grün
+im Handlauf; alle Riegel und Selbstproben der Kette mit PHP 8.5.4 und Python
+3.14.4 örtlich im Container ohne Befund; das Store-Paket der Uhr mit Java 25
+für 165 von 165 Geräten. **Nicht gemessen**, weil die Umgebung `staging`
+keinen Arbeitszweig annimmt: Stufe 2, die Auslieferung und der Android-Bau
+auf einem 26.04-Läufer — das holt der erste Push auf `main` nach, die
+App-Bauläufe ein Probelauf je App (Nr. 236 bleibt bis dahin offen).
+
+**Bewusst so:** `php -l` prüft in Stufe 1 jetzt mit 8.5, Produktiv läuft
+8.4, die Untergrenze ist 8.2. Syntax, die erst 8.5 kennt, käme durch; das
+galt mit 8.3 schon für die Untergrenze, der Abstand ist nur größer.
+Beschrieben in `docs/Technik.md` 6.1a, die Messregel für den nächsten
+Wechsel in `docs/Pruefablauf.md` 6.8.
+
 ## [Web 21.14.0] — 2026-10-05
 
 Schritt 18, Sicherheitsrunde II, Paket SR-08, **die Rechenaufgabe vor der

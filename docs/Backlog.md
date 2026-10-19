@@ -626,27 +626,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 18.09.2026
-     *Aufgenommen 18.09.2026, Merkposten mit Datum.*
-     *Stand 29.09.2026 (PK-07, E-PK-67):* Alle zehn `runs-on`-Zeilen der
-     Kette stehen auf `ubuntu-latest`; Stufe 1 nimmt das PHP des Läufers,
-     seit PK-08 der Job `android` dessen Build-Tools. Wer vor dem
-     19.10.2026 dran ist, misst die Kette einmal auf Ubuntu 26.
-
-     GitHub meldet als Hinweis: *„The `ubuntu-latest` label will migrate to
-     Ubuntu 26 beginning October 19, 2026."* Betrifft **alle fünf Jobs**.
-
-     An der Läufer-Umgebung hängen die **PHP-Fassung** (das Plattformprofil
-     verlangt ≥ 8.2), das **vorinstallierte Android-SDK** und die
-     **Bibliotheken, die der Uhr-Prüfstand nachlädt**. Der Wechsel passiert
-     **still**, an einem Tag, an dem niemand etwas geändert hat — und dann
-     sucht man den Fehler im eigenen Code.
-
-     Zu tun: **vor dem Datum** einmal gegen ein `ubuntu-26`-Label gegenprüfen,
-     solange es beide gibt.
-
-<!-- -->
-
 237. **Der Täter-Finder des Bilderlaufs findet den Täter nicht.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 18.09.2026
      Befund (beim Beheben von Nr. 221): Der Bericht trägt seit Web 20.16.2
      eine Spalte `Verursacher`, und beim ersten Fall, der sie gebraucht

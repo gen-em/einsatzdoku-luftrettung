@@ -55,7 +55,7 @@ jobs:
     # Heißt zusammengesetzt `staging / ausliefern` — genau so zählt ihn das Tor
     # der grünen Läufe unten; wer den Namen ändert, ändert es dort mit.
     name: ausliefern
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Zeigt dieser Ausdruck ins Leere, läuft der Job ohne Pflichtfreigabe — grün
     # und ungefragt; nach jeder Änderung mit einem Probelauf nachmessen.
     environment: ${{ inputs.umgebung }}

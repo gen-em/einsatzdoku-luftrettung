@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 158 (11.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 160 (11.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `dbca560`, gemessen 11.10.2026): Web 21.14.0 ·
+**Stand `origin/main`** (Commit `329566a`, gemessen 11.10.2026): Web 21.14.0 ·
 Uhr 3.1.0 · Android 0.17.0.
 **Läuft:** 12a — Konzept S11 auf `ccr-dd33b6e8-ismfm0`, freigegeben am 11.10.2026.
-**Als Nächstes:** `update.php` auf Staging; S11-01 (Messstand, Grundlinie); **daneben in eigener Instanz vor dem 19.10.2026 Nr. 236** (`ubuntu-latest` wird Ubuntu 26, E-S11-24) — Reihenfolge in Abschnitt 3.
-**Offene PRs:** keine.
-**Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging fällig seit dem Merge von #101 (Wartung an, Migrationen aus Web 21.8.0 und 21.10.0), auf Produktiv mit dem Tag; dort die aus 10c und Web 21.3.0 nachsehen (6.1).
+**Als Nächstes:** S11-01 (Messstand, Grundlinie) auf dem Zweig von 12a — Reihenfolge in Abschnitt 3. Die Kette läuft seit #104 auf `ubuntu-26.04` (Nr. 236 erledigt).
+**Offene PRs:** der Abschluss von Nr. 236 (nur `docs/`).
+**Fällig bei der Betreiberin:** 37 Posten (Abschnitt 6.1). **`update.php`:** auf Staging erledigt (11.10.2026); auf Produktiv seit dem Tag `web-v21.14.0` nachsehen, dort auch die aus 10c und Web 21.3.0 (6.1).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -216,8 +216,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md`, P-R4-06 |
 | **`update.php` auf Produktiv nachsehen** — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert (Lauf 36428081295); ausstehen können die Migrationen aus 10c und `…_days_created_at` (Web 21.3.0); auf Staging gelaufen (Stufe 2 grün, Lauf 101) | 10c, 17 (R4-15) | 28.09.2026 | `Technik.md` 6; P-R4-05 |
 | **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md` 4 |
-| **`update.php` auf Staging, nach dem Tag auf Produktiv** — seit dem Merge von #101 steht Staging in Wartung: Migrationen `…_vertraute_geraete` (Web 21.8.0) und `…_passkeys` (Web 21.10.0); danach Stufe 2 neu starten (Nr. 234) | 18 (SR-02, SR-09) | 05.10.2026 | `Technik.md` 6; P-SR-06 |
-| **Tag `web-v21.14.0` setzen** — die Auslieferung von 18 auf Produktiv; **davor** die Ankündigung „Nach dem Update einmal neu anmelden." — mit SR-01 landet jede Sitzung einmal auf der Anmeldeseite; auf Staging ist das mit dem Merge geschehen | 18 (SR-01) | 05.10.2026 | `Technik.md` 6; P-SR-04 |
+| **`update.php` auf Produktiv nachsehen** — Migrationen `…_vertraute_geraete` (Web 21.8.0) und `…_passkeys` (Web 21.10.0), seit dem Tag `web-v21.14.0` fällig; auf Staging erledigt (11.10.2026) | 18 (SR-02, SR-09) | 05.10.2026 | `Technik.md` 6; P-SR-06 |
 | **Prüfliste SR:** auf Staging P-SR-05, -07, -08 (mit -20 zuerst), -10, -11, -13, -14, -16 bis -19 — Gerät merken, Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefdokument-SR-Sicherheitsrunde-II.md` 4 |
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, 4a, 9, 27, 28 |
 | **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefdokument-Kette-Haertung.md`, Abgleich |
