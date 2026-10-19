@@ -191,7 +191,7 @@ BEREICHE: dict[str, dict] = {
             # sondern weil ihn niemand eingetragen hat.
             "docs/rechtstexte/Nutzungsbedingungen.md",
             "docs/rechtstexte/AVV.md",
-            "docs/rechtstexte/Datenschutz-Ergaenzung-P5.md",
+            "docs/rechtstexte/Datenschutzerklaerung.md",
         ],
     },
 }

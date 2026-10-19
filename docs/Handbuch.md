@@ -4633,33 +4633,38 @@ Verwaltung). Die Seite erreichen **Admin und BetreiberIn**; der Support nicht.
 > Installation hat noch kein Impressum hinterlegt." Als Verwaltung siehst du
 > dort zusätzlich den Weg hierher.
 
+> **Ein vollständiger Entwurf liegt seit dem 19.10.2026 im Repositorium:**
+> `docs/rechtstexte/Datenschutzerklaerung.md` — geschrieben für den Stand
+> nach S11, nicht anwaltlich geprüft, mit Platzhaltern in eckigen Klammern
+> und Prüfhinweisen am Ende. Er nimmt die drei Absätze unten auf; wer ihn
+> übernimmt, braucht sie nicht zusätzlich.
+>
 > **Ein Absatz, der in keiner Datenschutzerklärung dieser Anwendung fehlen
 > darf** (Backlog Nr. 138). Die Anwendung liefert weiterhin keinen Text mit —
 > dieser eine Absatz ist keine Rechtsauskunft, sondern eine **technische
-> Tatsache über diese Software**, die nur wir kennen können. Zum Übernehmen:
+> Tatsache über diese Software**, die nur wir kennen können. Seit Web 22
+> (S11) gilt diese Fassung; bis dahin lagen GPS-Spur, Phasenorte,
+> Transportziel, Ortshöhe und Reanimationsverlauf im Klartext, und wer die
+> alte Fassung übernommen hat, ersetzt sie. Zum Übernehmen:
 >
 > ```
 > ## Welche Daten verschlüsselt gespeichert werden — und welche nicht
 >
 > Name, Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse, Koordinate
-> und Beschreibung des Einsatzorts, ein von Hand eingetragener Abfahrtort
-> (Adresse und Koordinate) sowie die Notizen eines Einsatzes werden
-> bereits im Browser verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
-> kann sie nicht lesen; der Schlüssel wird aus dem Passwort des Kontos und
-> einem Anteil abgeleitet, den der Server beisteuert; aus dem Anteil allein
-> lässt er sich nicht bilden.
+> und Beschreibung des Einsatzorts, ein von Hand eingetragener Abfahrtort,
+> die Notizen eines Einsatzes, das Transportziel samt Koordinate, die Höhe
+> des Einsatzorts, die GPS-Spur, die Orte der Einsatzphasen und der Verlauf
+> einer Reanimation werden auf Uhr, Handy oder im Browser verschlüsselt.
+> Der Server speichert sie ausschließlich verschlüsselt und kann sie nicht
+> lesen; öffnen kann sie nur der Browser des Kontos.
 >
-> Nicht verschlüsselt gespeichert werden: die aufgezeichnete GPS-Spur, die
-> Koordinaten der einzelnen Einsatzphasen, die Höhe des Einsatzorts, das
-> Transportziel samt Koordinate, alle Zeiten, der Verlauf einer Reanimation,
-> die Namen der Besatzung und die Notizen eines Diensttags. Diese Angaben
-> werden für Auswertungen und Statistiken benötigt, die der Server selbst
-> berechnet.
+> Nicht verschlüsselt gespeichert werden: alle Zeiten, die Nummern der
+> Einsatzphasen, Strecke und Anstieg, Rettungsmittel und Standort, die Namen
+> der Besatzung und die Notizen eines Diensttags.
 >
-> Daraus folgt: Der Einsatzort lässt sich aus Spur und Phasenkoordinaten
-> ableiten, auch wenn die Adresse verschlüsselt ist. In Verbindung mit
-> Zeitpunkt und Ort können die unverschlüsselten Angaben Rückschlüsse auf
-> einzelne Personen erlauben.
+> Daraus folgt: Wer weiß, wann ein Einsatz stattfand, kann ihn über die
+> Zeiten finden; Ort, Spur, Klinik und Reanimation sieht er nicht. Bis zum
+> Senden liegen Aufzeichnungen unverschlüsselt auf Uhr und Handy.
 > ```
 >
 > Wer die Zeilen ändert, sollte den letzten Absatz stehen lassen: Er ist der
@@ -4728,11 +4733,6 @@ Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
 bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
 Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
 
-**Das Standdatum setzt du selbst.** Es erscheint als „Stand: …" am Ende der
-Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
-bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
-Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
-
 #### Textbausteine
 
 **Unter der Datenschutzerklärung steht eine zugeklappte Karte
@@ -4787,7 +4787,8 @@ keinen Bildschirm für ein Häkchen, und eine laufende Aufzeichnung soll nicht
 ins Leere laufen.
 
 **Die Anwendung liefert keinen Text mit** (wie beim Impressum). Entwürfe für
-beide Dokumente liegen im Repositorium unter `docs/rechtstexte/` — sie sind
+beide Dokumente und für die Datenschutzerklärung liegen im Repositorium unter
+`docs/rechtstexte/` — sie sind
 ausdrücklich **nicht anwaltlich geprüft** und als Vorlage gedacht, nicht als
 fertiger Text.
 
