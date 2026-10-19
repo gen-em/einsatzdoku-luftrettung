@@ -276,9 +276,9 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Hälfte („Rechner zählen") ist gestrichen (R36: keine Neuerhebung).
      Eine Lücke bleibt Bauform: Eine Wear-OS-Uhr koppelt nicht (E-S4-11) und
      erscheint als `handy`; die Statistik sagt es dazu.
-     Offen: die **Datenschutzerklärung** muss die Gerätekennung nennen — die
-     Auswertung läuft seit Web 15.3.0, der Text steht aus (Rahmenplan 6.3);
-     die Momentaufnahme am Einsatz (`missions.geraet_art`) ist nicht bestellt.
+     Offen: die **Datenschutzerklärung** nennt die Gerätekennung im Entwurf
+     (`docs/rechtstexte/Datenschutzerklaerung.md` 3, 19.10.2026); eingetragen
+     wird er nach S11 (Rahmenplan 6.3); die Momentaufnahme am Einsatz (`missions.geraet_art`) ist nicht bestellt.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 80.
 
 <!-- -->

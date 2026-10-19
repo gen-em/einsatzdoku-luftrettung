@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 160 (11.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 161 (19.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -250,10 +250,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
-| **Datenschutzerklärung des Dienstes** — den Text gibt es nicht; die elf Bausteine aus P5b (`docs/rechtstexte/Datenschutz-Ergaenzung-P5.md`) und Handbuch 11.5a werden eingearbeitet, dazu die drei Zeilen darunter | Öffnung (R41) | 16.09.2026 | Archiv-2 6 |
-| **Datenschutzerklärung: die Gerätekennung** (Art und Modell beim Koppeln, seit Web 12.9.0) — die Auswertung läuft seit Web 15.3.0, die Nennung steht aus | vor v1.0 | 14.09.2026 | Archiv-2 6 |
-| **Datenschutzerklärung: die beiden Kopplungs-Mails** (nach jeder Kopplung mit Gerätebezeichnung, beim Trennen mit Geräte-ID) — die einzige Stelle, an der eine Fremdkopplung auffiele | vor v1.0 | 04.09.2026 | Archiv-2 6 |
-| **Datenschutzerklärung: Photon (`photon.komoot.io`) und die vier Kachelanbieter**, dazu die Grenze der Verschlüsselung nach Weg C (Nr. 137, 138) | mit dem Text (R41) | 06.09.2026 | Archiv-2 6; Handbuch 11.5a |
+| **Datenschutzerklärung des Dienstes** — Entwurf `docs/rechtstexte/Datenschutzerklaerung.md` (Stand nach S11): Platzhalter füllen, prüfen lassen, eintragen, wenn S11 auf Produktiv läuft | Öffnung (R41) | 16.09.2026 | Prüfhinweise im Entwurf |
 | **Anwaltliche Prüfung der drei Rechtstext-Entwürfe** in `docs/rechtstexte/` (E-P5b-24), mit der 30-Tage-Frist für IP-Adressen (E-P5b-06) und der Rechtsform der GbR; mit S11 eine zweite Runde | vor dem Einspielen (es schaltet das Einwilligungstor scharf), vor Welle 1 | 16.09.2026 | Archiv-2 6 |
 | **MDR-Abgrenzung nach R41 vorziehen:** vor der Produktionsfreigabe (Welle 1); für den internen Track beim Einrichten prüfen | R41, R65 | 03.09.2026 | Archiv-2 6 |
 | **Betriebsakte der eigenen Installation ausfüllen** (Hoster, Domain, Mail, Aufsichtsbehörde, zweiter Admin, Ablageort des Wiederanlaufpakets, Play Console) — außerhalb des Repositoriums | R41, R72 | 03.09.2026 | Archiv-2 6 |
