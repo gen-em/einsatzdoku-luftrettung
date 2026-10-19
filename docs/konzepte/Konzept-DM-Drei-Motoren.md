@@ -31,10 +31,10 @@ jeder Vergabe).
 >
 > | | |
 > |---|---|
-> | Stand | **19.10.2026 — DM-00 in Arbeit** |
+> | Stand | **19.10.2026 — DM-01 erledigt**, DM-02 als Nächstes |
 > | Entschieden | E-DM-01 bis E-DM-07 (Abschnitt 2), alle von der Betreiberin am 19.10.2026 |
 > | Offen | keine Frage |
-> | Umsetzung | DM-00 in Arbeit |
+> | Umsetzung | **DM-00 erledigt** 19.10.2026 (Fahrplan, R87, Spanne). **DM-01 erledigt** 19.10.2026: `aufbauen.sh web` lädt fehlende Engines nach, neun Bibliotheken (F-DM-01); gemessen 3 von 3 nach Beiseitelegen von Firefox und WebKit. |
 > | Halt | keiner vorgesehen |
 > | Fable-Schritte | keine |
 > | Fächerung | keine (Kopf) |
@@ -94,8 +94,11 @@ läuft in der Engine der Probe, die ihn ruft.
 
 | Nr. | Gewicht | Fundort | Befund | Folge |
 |---|---|---|---|---|
+| F-DM-01 | mittel | `tools/sandbox/aufbauen.sh`; `Sandbox-Setup.md` 1 | **WebKit braucht im Abbild vom 19.10.2026 fünf Bibliotheken mehr** als die vier von PK-02: `libgtk-4-1`, `libevent-2.1-7t64`, `libgstreamer-plugins-bad1.0-0`, `libavif16`, `libgles2`. Nach dem Nachladen von WebKit meldete Playwright „Host system is missing dependencies" und nannte sie. Vier davon standen im Sitzungshook vor PK-02 — PK-02 hatte sie verworfen, weil sie damals schon im Abbild lagen. | In `aufbauen.sh` ergänzt (DM-01); danach 3 von 3. |
 
 ## 5. Prüfprotokoll
 
 | Paket | Mittel | Zahl | Datum |
 |---|---|---|---|
+| DM-00 | `pruefen.sh --stufe klein`; `decken.py` | 22 grün, 0 rot · 21 Decken, 0 gerissen (erst 1: R87-Kern 168 Zeichen über 160, gekürzt) | 19.10.2026 |
+| DM-01 | Firefox und WebKit nach `scratchpad/` verschoben, `aufbauen.sh web` | „nachladen: firefox webkit"; Chromium 141.0.7390.37, Firefox 142.0.1, WebKit 26.0; rc 0; 12 s. Nicht gemessen: Nachholen der fünf Bibliotheken aus einem Abbild ohne sie | 19.10.2026 |

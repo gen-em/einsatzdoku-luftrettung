@@ -1,6 +1,6 @@
 # Arbeitsumgebung — was sie mitbringt, was nachgeholt wird, was sie nicht kann
 
-*Stand: 21.09.2026 · Prüfablauf: `Pruefablauf.md` · Architektur und Betrieb:
+*Stand: 19.10.2026 · Prüfablauf: `Pruefablauf.md` · Architektur und Betrieb:
 `Technik.md` · Arbeitsanweisung: `CLAUDE.md`.*
 
 Die Arbeit an diesem Repositorium findet in einem **Wegwerf-Container**
@@ -33,6 +33,7 @@ steht seither ein Verweis hierher.
 | Die Route nach draußen (5.2) | **gebaut und gemessen** in `tools/motor.mjs` |
 | Der Schlüsselblatt-Dialog (5.3) | **gebaut und gemessen**, örtlich und gegen die Prüfanlage |
 | Zwei Beschaffer mit zwei Listen (1.2) | **behoben mit PK-02** — es gibt nur noch einen |
+| Firefox und WebKit nachladen (1.3) | **gebaut und gemessen 19.10.2026** (Konzept DM, DM-01) |
 
 ---
 
@@ -42,7 +43,9 @@ Gemessen am 21.09.2026.
 
 **Im Abbild vorhanden:** PHP **8.4.19** (mit `pdo_mysql`, `mysqli`,
 `openssl`, `gd`, `zip`, `mbstring`), Node **22.22** samt Playwright **1.56**
-und den drei Engine-Dateien unter `/opt/pw-browsers/`, Python **3.11**
+und den Engine-Dateien unter `/opt/pw-browsers/` — am 21.09.2026 alle drei,
+seit dem Abbild vom 11.10.2026 **nur noch Chromium** (F-S11-20; Firefox und
+WebKit holt `aufbauen.sh` nach, 1.3), Python **3.11**
 (deadsnakes) mit `requests` und `cryptography`, Java, `socat`, `zip`,
 `unzip`, `git`, `curl`, `openssl`, Docker **29.3.1**. Vier Kerne, 15 GB
 Speicher.
@@ -61,7 +64,8 @@ prüft je Paket und holt nur, was fehlt.)*
 | **cmark-gfm** | die Quelltextprüfungen `handbuch` — rendern Handbuch und „Was ist NAdoku"? (seit BR-03) — und `bestand`, die die Tabelle der Quelltextprüfungen so liest, wie GitHub sie zeigt (seit BR-05) |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
-| **Vier Systembibliotheken für WebKit** (`libenchant-2-2`, `libsecret-1-0`, `libwayland-server0`, `libmanette-0.2-0`) — Firefox startet ohne sie, WebKit nicht (gemessen 26.09.2026: entfernt, Start versucht, wieder geholt; Backlog Nr. 301) | jede Aussage über die Oberfläche, die auch für WebKit gelten soll (Backlog Nr. 183) |
+| **Firefox und WebKit** (`firefox-1495`, `webkit-2215`) — seit dem Abbild vom 11.10.2026 (F-S11-20); nachgeladen seit Konzept DM (1.3) | jede Browserprobe — sie läuft in drei Engines und ist rot, wenn eine fehlt (R87, `Pruefablauf.md` 1, Grundsatz 8) |
+| **Neun Systembibliotheken für WebKit** (`libenchant-2-2`, `libsecret-1-0`, `libwayland-server0`, `libmanette-0.2-0`, seit 19.10.2026 dazu `libgtk-4-1`, `libevent-2.1-7t64`, `libgstreamer-plugins-bad1.0-0`, `libavif16`, `libgles2`) — Firefox startet ohne sie, WebKit nicht (die ersten vier gemessen 26.09.2026: entfernt, Start versucht, wieder geholt; Backlog Nr. 301; die fünf weiteren nannte Playwright am 19.10.2026, F-DM-01) | jede Probe in WebKit (R87) |
 | **Android-SDK** (Plattform 37.0, Build-Tools 36.0.0, `cmdline-tools` 23.0) | `./gradlew build` im Ordner `android/`; `cmdline-tools` unter 23.0 legt AVDs mit API 37 falsch an (F-AR-18) |
 | **Emulator, Abbilder API 37, `lz4`, `cpio`, `libpulse0`** | `android/werkzeuge/emulator.sh` — der Emulatorlauf nach `Pruefablauf.md` 6.9 |
 | **Uhr-SDK und Gerätedateien** | `tools/uhr-pruefstand/` |
@@ -119,11 +123,34 @@ Alternatively, use apt:
 Gemessen am 21.09.2026 in dieser Sitzung, **nachdem der Hook gelaufen war**:
 seine sechs Pakete installiert, die vier von `aufbau.sh` nicht — und WebKit
 startete nicht. Nach dem Nachziehen der vier: **3 von 3 Engines, WebKit 26.0**.
-Die Engine-Dateien selbst liegen im Abbild (`chromium-1194`, `firefox-1495`,
-`webkit-2215`); `playwright install` ist deshalb nicht der Weg und zöge nur
-eine zweite Fassung daneben. `aufbauen.sh` installiert die vier
-Bibliotheken, lädt keine Engine nach und gibt bei einem Fehlschlag die
-Meldung von Playwright aus — sie nennt die Namen und altert nicht mit.
+Die Engine-Dateien lagen damals im Abbild (`chromium-1194`, `firefox-1495`,
+`webkit-2215`), und `aufbauen.sh` lud deshalb keine nach. Das gilt seit dem
+19.10.2026 nicht mehr (1.3). Geblieben ist: Bei einem Fehlschlag gibt
+`aufbauen.sh` die Meldung von Playwright aus — sie nennt die Namen und
+altert nicht mit.
+
+### 1.3 Die Engines werden nachgeladen — seit Konzept DM
+
+**Seit dem Abbild vom 11.10.2026 liegt unter `/opt/pw-browsers` nur noch
+Chromium** (F-S11-20). Der Satz in `aufbauen.sh`, die Engines lägen im Abbild
+und würden nicht nachgeladen, galt damit nicht mehr, und ganz S11 lief in
+einer Engine. Seit R87 läuft jede Browserprobe in drei, und eine fehlende
+Engine ist rot — also holt das Standard-Setup sie (E-DM-03).
+
+**Was `aufbauen.sh web` tut:** zuerst die neun Bibliotheken (sonst lädt
+Playwright herunter und bricht danach an der eigenen Prüfung ab), dann je
+Engine nachsehen, ob `$PLAYWRIGHT_BROWSERS_PATH/<name>-<rev>` liegt, und nur
+die fehlenden mit dem Playwright des Abbilds nachladen. Das zieht genau die
+Fassung, die zu ihm gehört — für 1.56 `firefox-1495` und `webkit-2215` —, und
+keine zweite daneben; die Sorge von 1.2 ist damit beantwortet, nicht
+übergangen. Der Nachweis startet danach alle drei einzeln.
+
+*Gemessen am 19.10.2026:* Firefox und WebKit beiseitegelegt,
+`aufbauen.sh web` gefahren — „nachladen: firefox webkit", danach Chromium
+141.0.7390.37, Firefox 142.0.1, WebKit 26.0, Rückgabewert 0, 12 s. **Nicht
+gemessen:** das Nachholen der fünf neuen Bibliotheken aus einem Abbild, dem
+sie fehlen — sie lagen nach dem ersten Lauf vor, und sie zu entfernen hätte
+abhängige Pakete mitgerissen.
 
 ---
 
