@@ -8214,5 +8214,10 @@ declare(strict_types=1);
  *   (`api/ortsumzug.php`, `ortsumzug_lib.php`). Die Statusseite zaehlt den
  *   Rest je Tabelle (Zeile „Ortsdaten"); solange sie orange ist, darf die
  *   Aufraeumauslieferung (S11-12) nicht kommen. Kein Schema.
+ * 22.7.1 — DER CODE AUS DER APP FUER BITWARDEN IN FIREFOX. Das Feld auf der
+ *   Anmeldung und der Zweitfaktor-Seite heisst jetzt `f-totp` statt `f-code`:
+ *   Firefox reicht autocomplete="one-time-code" nicht an Erweiterungen
+ *   weiter, und Bitwarden fand im deutschen Feld kein Stichwort. Name `code`
+ *   bleibt. Kein Schema.
  */
-const WEB_VERSION = '22.7.0';
+const WEB_VERSION = '22.7.1';

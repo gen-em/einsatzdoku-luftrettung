@@ -14,6 +14,45 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.7.1] — unveröffentlicht
+
+Fehlerbehebung außerhalb eines Konzepts. Kein Schema, kein `update.php`.
+
+### Behoben
+
+- **Bitwarden füllt den Code aus der App auch in Firefox ein.** Auf der
+  Anmeldung und auf der Seite „Zweitfaktor" bot Bitwarden in Firefox am Feld
+  „Code aus der App" kein Menü an, in Chrome dagegen schon. Die Ursache liegt
+  zwischen Browser und Erweiterung: Bitwarden erkennt ein Feld für den
+  Einmalcode zuerst an `autocomplete="one-time-code"` und liest dafür die
+  Eigenschaft des Elements, nicht das Attribut — und Firefox kennt den Wert
+  nicht und gibt dort einen leeren Text zurück. Dann bleibt Bitwarden nur die
+  Suche nach Stichwörtern in id, Name, Beschriftung und Platzhalter. Das Feld
+  hieß `code` mit der id `f-code`, beschriftet „Code aus der App", und keines
+  davon steht in der Liste: `code` allein gilt als mehrdeutig, deutsche Wörter
+  fehlen ganz. Die Einrichtung des Zweitfaktors war nicht betroffen — ihr Feld
+  trug schon die id `f-totp`.
+
+  Jetzt tragen beide Felder ebenfalls die id `f-totp`. **Der Name bleibt
+  `code`**, weil er an den Server geht und die Prüfmittel das Feld über
+  `input[name="code"]` füllen; eine Umbenennung hätte beides gebrochen, ohne
+  etwas zu gewinnen. Die sichtbare Beschriftung bleibt deutsch,
+  `autocomplete="one-time-code"` bleibt für Chrome, Safari und die
+  Handytastaturen stehen. Ein Kommentar an beiden Feldern sagt, warum die id
+  so heißt — wer sie bei einer Aufräumarbeit wieder auf den Namen zurückführt,
+  bricht Bitwarden in Firefox still.
+
+- **Die Zweitfaktorprobe räumt auf einer frischen Anlage auf.** Ihr Teil zum
+  Notzugang merkte sich den Wert `app_state.notzugang_geheim` und setzte ihn
+  am Ende zurück — aber nur, wenn es vorher einen gab. Eine frische Anlage
+  hat keinen: Die Migration wird dort übersprungen, und der Wert entsteht
+  erst beim ersten Aufruf des Notzugangs, also in der Probe selbst. Danach
+  stand er da, und die eigene Prüfung „Wert wie vorher" schlug an. Gefunden
+  im Prüfstand zu dieser Fassung; ein zweiter Lauf auf derselben Anlage wäre
+  grün gewesen, weil der Wert dann schon lag — deshalb wurde er vor dem
+  Nachweis von Hand entfernt. Jetzt löscht das Aufräumen einen Wert, den es
+  vorher nicht gab.
+
 ## [Web 22.7.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-10 — das Einmalwerkzeug**. Kein Schema, kein
