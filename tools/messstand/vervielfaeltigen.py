@@ -6,7 +6,9 @@ können — reproduzierbar, ohne Handarbeit und ohne an der Prüfschicht vorbei.
 
 DER WEG. Das Referenz-Backup wird geöffnet, ihre Nutzlast **r-mal** mit
 versetzten Zeiten und eigenen Kennungen vervielfältigt und als Folge
-einteiliger `.edbak`-Dateien wieder versiegelt. Eingespielt werden sie über
+mehrteiliger `.edbak`-Dateien (Fassung 4, Nutzlast 13) wieder versiegelt.
+Bis Web 22.7.0 waren es einteilige Dateien mit Nutzlast 7; seit Web 23 nimmt
+der Einspielweg nur noch Nutzlast 13 (S11-12, E-S11-85, Backlog Nr. 46). Eingespielt werden sie über
 den **regulären** Wiederherstellungsweg im Browser (`einspielen.mjs`) — kein
 SQL, kein Sonderendpunkt (Geist von R4). Was dabei entsteht, ist damit ein
 Bestand, den die Anwendung selbst so angelegt hätte.
@@ -33,11 +35,11 @@ ist nötig:
     einem — aus 5000 Einsätzen würden stillschweigend weniger. Eine Minute
     Unterschied schließt das aus, ohne die Zeiten unkenntlich zu machen.
 
-Die Referenz spannt vom 17.01. bis zum 27.12.2026, also 345 Tage. Der Abstand
+Die Referenz spannt vom 17.01. bis zum 27.12.2026, also 344 Tage. Der Abstand
 zwischen zwei Runden ist mit drei Tagen bewusst KLEINER: Die Runden sollen
 sich überlagern, sonst reichte der Bestand über Jahrzehnte und die
-Zeitstempel liefen aus dem Wertebereich von `track_points.ts`
-(`INT UNSIGNED`, Unix-Epoche).
+Zeitstempel liefen aus dem Wertebereich der Spurzeiten (`INT UNSIGNED`,
+Unix-Epoche; seit Web 23 `track_stuecke.ts_von`/`ts_bis`).
 
 WAS NICHT VERVIELFAELTIGT WIRD: die Stammdaten (Standorte, Rettungsmittel,
 Besatzungen, Zielkliniken) und die Kontoangaben. Sie stehen in jeder Datei
@@ -61,8 +63,9 @@ er beim Sichern und Zurückspielen bedeutet, prüfen der Kreislauf (R24) und
 `tools/proben/wiederherstellung/` (R27), und die tun es gründlicher, als ein
 58-fach kopierter Papierkorb es je könnte. Hier gilt deshalb: gelöschte Tage,
 Einsätze und Ruhesegmente werden NICHT mitvervielfältigt. Damit trägt jede
-Runde genau 82 Einsätze, 95 Ruhesegmente und 15 Diensttage — eine Zahl, die
-sich vorher ausrechnen und hinterher nachzählen lässt. Genau das tut
+Runde genau 104 Einsätze, 118 Ruhesegmente und 21 Diensttage (Referenz vom
+19.10.2026; mit der vom August waren es 82, 95 und 15) — eine Zahl, die sich
+vorher ausrechnen und hinterher nachzählen lässt. Genau das tut
 `einspielen.mjs`.
 
 AUFRUF
@@ -70,12 +73,14 @@ AUFRUF
     python3 vervielfaeltigen.py --einsaetze 5000 --ziel /tmp/messstand
     python3 vervielfaeltigen.py --runden-je-datei 2      # kleinere Pakete
 
-Wie viele Einsätze in eine Datei passen, entscheidet nicht der Geschmack,
-sondern `post_max_size` des Zielservers: Die Nutzlast wiegt rund **28 KB je
-Einsatz** (gemessen: 2,42 MB für 87 Einsätze mit 55 861 Spurpunkten). Bei den
-verbreiteten 8 MB sind das rund 280 Einsätze je Datei — die im Konzept
-genannten 400–500 gehen sich dort NICHT aus. Der Vorgabewert richtet sich
-danach; `--runden-je-datei` hebt ihn an, wenn der Server mehr zulässt.
+Wie viele Einsätze in eine Datei gehen, entschied bis Web 22.7.0
+`post_max_size` des Zielservers: Die einteilige Datei ging am Stück hinauf
+(rund 28 KB je Einsatz, bei 8 MB also rund 280 Einsätze). Seit Fassung 4
+schickt der Browser Kopf, Fenster zu 250 Einträgen und Spurteile einzeln;
+die Grenze trifft nur noch das einzelne Teil. Der Vorgabewert bleibt bei drei
+Runden je Datei, damit eine Datei mehrere Eintragsfenster trägt und das
+Einspielen in Fenstern gemessen wird — gemessen am 19.10.2026: 312 Einsätze,
+192 303 Punkte, 8 Teile, 2,30 MB.
 """
 from __future__ import annotations
 
@@ -88,7 +93,12 @@ import sys
 
 HIER = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HIER))
-from edbak import lesen_edbak, schreiben_edbak, rundlauf_pruefen  # noqa: E402
+from edbak import lesen_edbak, schreiben_edbak_v4, rundlauf_pruefen_v4  # noqa: E402
+
+# Wie im Browser (`einstellungen.php`): 250 Eintraege je Eintragsteil, ein
+# Spurteil schliesst nach rund 50 000 Punkten.
+EINTRAEGE_JE_TEIL = 250
+PUNKTE_JE_SPURTEIL = 50_000
 
 # Zeitangaben der Nutzlast. AUSDRUECKLICH AUFGEZAEHLT und nicht geraten:
 # Ein Werkzeug, das jede Zeichenkette verschiebt, die nach einem Datum
@@ -224,9 +234,8 @@ def main() -> int:
     p.add_argument("--einsaetze", type=int, default=5000,
                    help="Zielzahl der Einsätze (Vorgabe 5000, Zielmaß Z1)")
     p.add_argument("--runden-je-datei", type=int, default=3,
-                   help="Runden je .edbak. 3 Runden ≈ 261 Einsätze ≈ 7,3 MB "
-                        "Nutzlast — knapp unter den verbreiteten 8 MB "
-                        "post_max_size.")
+                   help="Runden je .edbak. 3 Runden = 312 Einsätze, "
+                        "≈ 2,3 MB in 8 Teilen (Fassung 4).")
     p.add_argument("--abstand-tage", type=int, default=3,
                    help="Um wie viele Tage jede Runde nach hinten rückt")
     p.add_argument("--ziel", default="/tmp/messstand/bestand")
@@ -271,50 +280,60 @@ def main() -> int:
     datei_nr = 0
     for anfang in range(0, runden, a.runden_je_datei):
         gruppe = range(anfang, min(anfang + a.runden_je_datei, runden))
-        nutzlast = {k: v for k, v in ref.items()
-                    if k not in ("days", "missions", "rest_segments")}
-        nutzlast["days"], nutzlast["missions"], nutzlast["rest_segments"] = [], [], []
-
-        # DIE FASSUNG WIRD GESETZT, NICHT GEERBT (S2/AP6, F-S2-E).
-        #
-        # Bis hierher wurde `version` aus der Referenz uebernommen. Das ging
-        # gut, solange die Referenz Nutzlast 7 war. Seit Web 11.0.0 ist sie
-        # Fassung 4 mit Nutzlast **8** — und Nutzlast 8 sagt zu, dass die
-        # Punkte NICHT in den Eintraegen stehen, sondern in eigenen Teilen.
-        #
-        # Diese Datei hier ist aber einteilig und traegt ihre Punkte als
-        # `track` in den Eintraegen. Mit `version: 8` nimmt der Einspielweg
-        # deshalb den Verweisweg, findet keine `spur_ref` — und legt jeden
-        # Einsatz OHNE Spur an. Gemessen am ersten Lauf danach: 164 Einsaetze
-        # angelegt, 91 208 Punkte verloren, Meldung „fertig".
-        #
-        # Die Datei IST Nutzlast 7; sie wird jetzt auch so ausgezeichnet.
-        # Die Zusatzfelder `stufe`, `n` und `n_original` bleiben stehen: Sie
-        # stoeren nicht, und der Vergleich fuehrt sie ohnehin in seiner
-        # Ausnahmeliste (edbak-alt_umlauf.json).
-        #
-        # Mit NaDoku 1.0 faellt das Altformat weg; dann braucht dieses
-        # Werkzeug einen Container-Schreiber in Python (Backlog Nr. 46).
-        nutzlast["version"] = 7
+        kopf = {k: v for k, v in ref.items()
+                if k not in ("days", "missions", "rest_segments")}
+        kopf["version"] = 13
+        kopf["days"], einsaetze, ruhe = [], [], []
         for r in gruppe:
             teil = runde_bauen(ref, r, a.abstand_tage)
-            nutzlast["days"] += teil["days"]
-            nutzlast["missions"] += teil["missions"]
-            nutzlast["rest_segments"] += teil["rest_segments"]
+            kopf["days"] += teil["days"]
+            einsaetze += teil["missions"]
+            ruhe += teil["rest_segments"]
+
+        # SPUREN IN EIGENE TEILE (Nutzlast 13). Jeder Eintrag mit Punkten
+        # bekommt eine `spur_ref`; seine Punkte wandern als Punktliste in ein
+        # Spurteil, Stufe und Originalzahl aus dem Eintrag mit. Ein Eintrag
+        # ohne Punkte traegt keinen Verweis — wie im Browser.
+        spurteile, laufend, laufende_punkte, ref_nr, punkte_ges = [], [], 0, 0, 0
+        for obj in einsaetze + ruhe:
+            punkte = obj.pop("track", None) or []
+            obj.pop("spur_ref", None)
+            if not punkte:
+                continue
+            ref_nr += 1
+            obj["spur_ref"] = ref_nr
+            obj["n"] = len(punkte)
+            laufend.append({"spur_ref": ref_nr, "punkte": punkte, "stufe": obj.get("stufe"),
+                            "n_original": obj.get("n_original"), "n": len(punkte)})
+            laufende_punkte += len(punkte)
+            punkte_ges += len(punkte)
+            if laufende_punkte >= PUNKTE_JE_SPURTEIL:
+                spurteile.append({"spuren": laufend})
+                laufend, laufende_punkte = [], 0
+        if laufend:
+            spurteile.append({"spuren": laufend})
+        eintraege = [("missions", m) for m in einsaetze] + [("rest_segments", x) for x in ruhe]
+        kopf["eintraege_gesamt"] = len(eintraege)
+        eintragsteile = []
+        for ab in range(0, len(eintraege), EINTRAEGE_JE_TEIL):
+            fenster = {"missions": [], "rest_segments": []}
+            for art, obj in eintraege[ab:ab + EINTRAEGE_JE_TEIL]:
+                fenster[art].append(obj)
+            eintragsteile.append(fenster)
 
         datei_nr += 1
         name = f"bestand-{datei_nr:03d}.edbak"
-        rundlauf_pruefen(nutzlast, a.passwort)     # erst prüfen, dann ablegen
-        roh = schreiben_edbak(nutzlast, a.passwort)
+        roh = schreiben_edbak_v4(kopf, eintragsteile, spurteile, a.passwort)
+        # Erst pruefen, dann ablegen: der unabhaengige Leser oeffnet die
+        # Datei und zaehlt Einsaetze, Ruhesegmente und Punkte nach.
+        rundlauf_pruefen_v4(roh, a.passwort, len(einsaetze), len(ruhe), punkte_ges)
         (ziel / name).write_bytes(roh)
         eintrag = {"datei": name, "runden": list(gruppe),
-                   "einsaetze": len(nutzlast["missions"]),
-                   "ruhesegmente": len(nutzlast["rest_segments"]),
-                   "diensttage": len(nutzlast["days"]),
-                   "spurpunkte": sum(len(m.get("track") or [])
-                                     for m in nutzlast["missions"])
-                              + sum(len(r.get("track") or [])
-                                    for r in nutzlast["rest_segments"]),
+                   "einsaetze": len(einsaetze),
+                   "ruhesegmente": len(ruhe),
+                   "diensttage": len(kopf["days"]),
+                   "spurpunkte": punkte_ges,
+                   "teile": 1 + len(eintragsteile) + len(spurteile),
                    "dateigroesse": len(roh)}
         verzeichnis.append(eintrag)
         print(f"  {name}: {eintrag['einsaetze']} Einsätze, "

@@ -110,7 +110,11 @@ $p2 = sk_versiegeln('geheim123', 'ziel:7:pass');
 pruef('Zweimal versiegelt sind zwei verschiedene Chiffren', $p !== $p2);
 pruef('...und beide öffnen gleich', sk_oeffnen($p2, 'ziel:7:pass') === 'geheim123');
 $roh = base64_decode(substr($p, strlen(SK_PRAEFIX)), true);
-$kaputt = SK_PRAEFIX . base64_encode(substr((string)$roh, 0, -1) . 'X');
+/* DAS LETZTE BYTE KIPPEN, NICHT ERSETZEN. Bis S11-12 stand hier ein `'X'`
+ * als neues letztes Byte — war es schon `X` (1 zu 256), war nichts veraendert,
+ * und der Fall stand „OFFEN" (gesehen im Pruefstand am 19.10.2026). */
+$kaputt = SK_PRAEFIX . base64_encode(substr((string)$roh, 0, -1)
+                                     . chr(ord(substr((string)$roh, -1)) ^ 0x01));
 pruef('Eine veränderte Chiffre wird abgewiesen', sk_oeffnen($kaputt, 'ziel:7:pass') === null);
 pruef('Müll wird abgewiesen', sk_oeffnen('nichts', 'z') === null);
 $zurueck1 = konfig_stellen(['server_key' => bin2hex(random_bytes(32))]);

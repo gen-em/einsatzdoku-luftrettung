@@ -28,10 +28,9 @@ const EdCrypto = (() => {
    * anderes Token, und der gespeicherte Hash passte nicht mehr. Der Wert
    * kommt jetzt je Konto vom Server (users.kdf_iter).
    *
-   * ITER_ALT ist nur noch fuer EINEN Zweck da: Backup-Dateien im
-   * Containerformat 2 tragen die Rundenzahl nicht im Kopf, dort galt immer
-   * dieser Wert. Fuer die Kontoableitung darf er NICHT verwendet werden. */
-  const ITER_ALT = 310000;
+   * `ITER_ALT` (310 000) stand hier bis Web 22.7.0 fuer die einteiligen
+   * Backup-Dateien der Fassung 2, die die Rundenzahl nicht im Kopf trugen.
+   * Der Lesezweig ist mit S11-12 gefallen (E-S11-85). */
   const te = new TextEncoder(), td = new TextDecoder();
 
   /** Rundenzahl pruefen. Wirft statt zu raten — siehe deriveKeys. */
@@ -591,33 +590,21 @@ const EdCrypto = (() => {
 
   /* ---- Backup-Container ------------------------------------------------
    *
-   * FASSUNG 3 (seit Web 5.0.0, S7)
-   *   "EDBAK2" 0x00 0x03 | Flag(1) | Runden(4, big endian) | Salt(16) | IV(12) | AES-GCM
-   *   AAD: die ersten 13 Bytes (Magie + Flag + Runden)
+   * Seit Web 23 gibt es nur noch die mehrteilige Fassung 4 (unten). Die
+   * einteiligen Fassungen 2 und 3 ("EDBAK2" 0x00 0x02/0x03, ein einziger
+   * AES-GCM-Container) schrieb der Browser bis Web 10 und las sie bis
+   * Web 22.7.0 (`sealBackup()`, `openBackup()`); mit S11-12 sind beide
+   * gefallen (E-S11-85, Backlog Nr. 46). `dateiArt()` erkennt eine solche
+   * Datei weiter, damit die Ablehnung sagen kann, was sie ist.
    *
-   * FASSUNG 2 (bis Web 4.7.0) — wird weiterhin GELESEN
-   *   "EDBAK2" 0x00 0x02 | Flag(1) | Salt(16) | IV(12) | AES-GCM
-   *   AAD: die ersten 9 Bytes. Rundenzahl: immer 310 000, nirgends vermerkt.
+   * WARUM DIE RUNDENZAHL IM KOPF STEHT (S7): Stuende sie nur als Konstante
+   * im Code, machte ihr Anheben jede erzeugte Datei unlesbar — mit der
+   * Meldung eines falschen Passworts. Jedes Teil der Fassung 4 traegt sie.
    *
-   * Flag: 1 = Inhalt gzip-komprimiert, 0 = roh
-   * Schlüssel: PBKDF2-SHA256(Backup-Passwort, Salt, Runden, 256 Bit)
-   *
-   * WARUM DIE RUNDENZAHL IN DEN KOPF MUSSTE (S7)
-   * Sie stand nur als Konstante im Code. Wer sie anhebt, macht damit JEDE
-   * bereits erzeugte Backup-Datei unlesbar — und zwar ohne Fehlermeldung,
-   * die den Grund nennt: Es sähe aus wie ein falsches Passwort. Backups
-   * werden aber gerade für den Fall aufbewahrt, dass etwas schiefgeht; eine
-   * Datei, die genau dann nicht mehr aufgeht, ist keine.
-   *
-   * Die Rundenzahl steht deshalb in der Datei und wird von dort gelesen. Alte
-   * Dateien bleiben lesbar, weil ihre Fassungsnummer die fehlende Angabe
-   * ersetzt.
-   *
-   * Der Inhalt ist bereits KLARTEXT: Der Browser entschlüsselt vor dem
-   * Versiegeln, damit sich das Backup in jedes Konto einspielen lässt.
+   * Der Inhalt ist KLARTEXT: Der Browser entschlüsselt vor dem Versiegeln,
+   * damit sich das Backup in jedes Konto einspielen lässt.
    */
   const MAGIC_PRAEFIX = new Uint8Array([69, 68, 66, 65, 75, 50]);   // "EDBAK2"
-  const CONTAINER_VERSION = 3;
 
   async function fileKey(password, salt, iter) {
     pruefeRunden(iter, 'fileKey');
@@ -637,7 +624,7 @@ const EdCrypto = (() => {
     /* Verfuegbarkeit pruefen wie beim Packen (M2-11).
      *
      * gzip() oben fragt seit jeher nach, ob CompressionStream existiert, und
-     * legt das Backup sonst ungepackt an. gunzip() fragte nicht — auf
+     * legt das Teil sonst ungepackt an. gunzip() fragte nicht — auf
      * einem Browser ohne DecompressionStream endete das Oeffnen eines
      * gepackten Backups in einem ReferenceError, der weiter oben als
      * "Passwort falsch oder Datei beschaedigt" ankam.
@@ -655,70 +642,6 @@ const EdCrypto = (() => {
     return new Uint8Array(await new Response(s).arrayBuffer());
   }
 
-  /** Erzeugt eine Backup-Datei in der aktuellen Fassung (3). */
-  async function sealBackup(password, jsonText, iter) {
-    pruefeRunden(iter, 'sealBackup');
-    const raw = te.encode(jsonText);
-    const packed = await gzip(raw);
-    const flag = packed ? 1 : 0;
-    const body = packed || raw;
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    // Kopf: 6 Magie + 2 Fassung + 1 Flag + 4 Runden = 13
-    const head = new Uint8Array(13);
-    head.set(MAGIC_PRAEFIX, 0);
-    head[6] = 0; head[7] = CONTAINER_VERSION;
-    head[8] = flag;
-    new DataView(head.buffer).setUint32(9, iter, false);   // big endian
-    const key = await fileKey(password, salt, iter);
-    const ct = new Uint8Array(await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv, additionalData: head }, key, body));
-    const out = new Uint8Array(13 + 16 + 12 + ct.length);
-    out.set(head, 0); out.set(salt, 13); out.set(iv, 29); out.set(ct, 41);
-    return out;
-  }
-
-  /** Liest Fassung 2 UND 3. Die Fassungsnummer bestimmt Kopflänge und Runden. */
-  async function openBackup(password, bytes) {
-    for (let i = 0; i < 6; i++) {
-      if (bytes[i] !== MAGIC_PRAEFIX[i]) throw new Error('Keine .edbak-Datei.');
-    }
-    const version = (bytes[6] << 8) | bytes[7];
-    let kopfLen, iter;
-    if (version === 2) {
-      kopfLen = 9;  iter = ITER_ALT;      // Fassung 2 vermerkt sie nicht
-    } else if (version === 3) {
-      kopfLen = 13; iter = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-                            .getUint32(9, false);
-    } else if (version === CONTAINER_VERSION_4) {
-      /* EIN TEIL, KEINE DATEI. Fassung 4 liegt als ZIP vor; was hier ankommt,
-       * hat jemand aus dem Archiv herausgeloest. Es liesse sich mit dem
-       * richtigen AAD sogar oeffnen — aber allein ist es kein Bestand: Der
-       * Kern ohne Spurteile ist unvollstaendig, ein Spurteil ohne Kern sind
-       * Zahlen ohne Zuordnung. Die Meldung sagt deshalb, was zu tun ist,
-       * statt beim Passwort zu enden. */
-      throw new Error('Das ist ein einzelnes Teil eines mehrteiligen Backups, '
-                    + 'nicht das Backup selbst. Bitte die vollständige '
-                    + '.edbak-Datei auswählen — die, die alle Teile enthält.');
-    } else {
-      // Eine NEUERE Fassung als diese Installation kennt. Die Meldung sagt
-      // das auch — sonst sucht jemand den Fehler beim Passwort.
-      throw new Error('Diese Backup-Datei stammt aus einer neueren Fassung '
-                    + '(Format ' + version + '). Bitte die Anwendung aktualisieren.');
-    }
-    const head = bytes.slice(0, kopfLen);
-    const key = await fileKey(password, bytes.slice(kopfLen, kopfLen + 16), iter);
-    let body;
-    try {
-      body = new Uint8Array(await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: bytes.slice(kopfLen + 16, kopfLen + 28),
-          additionalData: head },
-        key, bytes.slice(kopfLen + 28)));
-    } catch (e) { throw new Error('Passwort falsch oder Datei beschädigt.'); }
-    if (head[8] === 1) { body = await gunzip(body); }
-    return JSON.parse(td.decode(body));
-  }
-
   /* ---- Containerfassung 4: ein ZIP mit versiegelten Teilen -------------
    *
    * WOFUER (Konzept S2, E-S2-10). Ein Backup mit 5000 Einsaetzen traegt
@@ -729,7 +652,8 @@ const EdCrypto = (() => {
    *   manifest.edbak          Teileliste, SHA-256 je Teil, Backup-Kennung
    *   kopf.edbak              Stammdaten, Diensttage, Zahl der Eintraege
    *   eintraege/0001.edbak …  je 250 Eintraege OHNE Punktlisten
-   *   spuren/0001.edbak …     je Teil eine Liste {spur_ref, blob} (SPUR1)
+   *   spuren/0001.edbak …     je Teil eine Liste {spur_ref, punkte, stufe, …}
+   *                           (seit Nutzlast 13; bis Nutzlast 12 {spur_ref, blob}, SPUR1)
    *
    * Bis Web 11.0.0 stand statt Kopf und Eintragsteilen EIN `kern.edbak`.
    * Auch der war bei grossen Bestaenden zu gross — fuer den Speicher des
@@ -928,7 +852,8 @@ const EdCrypto = (() => {
    *
    * 'zip'   beginnt mit „PK" — Fassung 4 (ob wirklich ein `manifest.edbak`
    *         darin steckt, sagt erst der ZIP-Leser; das gehoert dorthin)
-   * 'edbak' die einteilige Datei der Fassungen 2 und 3
+   * 'edbak' die einteilige Datei der Fassungen 2 und 3 — seit Web 23 nur
+   *         noch erkannt, um sie mit Grund abzulehnen
    * 'teil'  ein einzelnes Teil der Fassung 4, aus dem ZIP herausgeloest
    * null    etwas anderes
    */
@@ -941,7 +866,7 @@ const EdCrypto = (() => {
     return fassung >= 2 && fassung <= 99 ? 'edbak' : null;
   }
 
-  /** Ist das eine Backup-Datei dieses Programms? Beide Fassungen. */
+  /** Sieht das aus wie eine Backup-Datei dieses Programms (auch eine alte)? */
   function isBackupFile(bytes) {
     /* SEIT FASSUNG 4 GIBT ES ZWEI GESTALTEN. Die einteilige Datei beginnt mit
      * „EDBAK2", die mehrteilige mit „PK" — sie ist ein ZIP. Beide sind unsere
@@ -1098,7 +1023,7 @@ const EdCrypto = (() => {
            setDataKey, getDataKey, getContentKey, setContentKey, clearSession,
            CHIFFRE_PRAEFIX,
            merkeAbleitungen, holeAbleitungen, vergissAbleitungen,
-           sealBackup, openBackup, isBackupFile,
+           isBackupFile,
            /* Containerfassung 4 (S2/AP5) */
            CONTAINER_VERSION_4, backupSchluessel, aadManifest, aadTeil,
            sealTeil, openTeil, sealTeilJson, openTeilJson, teilKopf,

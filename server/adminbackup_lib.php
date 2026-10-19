@@ -197,7 +197,7 @@ const EDBAK_ADMIN_FENSTER = 250;
 /** Punkte je Spurteil — wie beim Nutzerformat (docs/Backup-Format.md 1.2). */
 const EDBAK_ADMIN_TEIL_PUNKTE = 250000;
 
-/** Kennungen je Anfrage an spur_fuer_sicherung_viele() — wie im Browser. */
+/** Kennungen je Anfrage an spur2_lesen_viele() — wie im Browser. */
 const EDBAK_ADMIN_SPUR_BLOCK = 25;
 
 /**
@@ -746,13 +746,12 @@ function edbak_sicherung_erzeugen(int $userId): array
             $block = array_slice($dieser, $k, EDBAK_ADMIN_SPUR_BLOCK);
             $refNach = [];
             foreach ($block as $e) { $refNach[(int)$e['id']] = $e['spur_ref']; }
-            /* ZWEI QUELLEN JE SPUR (S11-06c): der Altbestand als SPUR1-Blob
-             * und die verschlossenen Stuecke, WIE SIE LIEGEN — der Server
-             * kann sie nicht oeffnen und muss es nicht. Hat eine Spur beides,
-             * stehen zwei Eintraege mit derselben `spur_ref` im Teil; der
-             * zweite traegt `fortsetzung`, damit der Rueckweg die Spur einmal
-             * zaehlt. Bis Web 22.4.0 kam nur der Blob mit, und eine Spur aus
-             * Stuecken fehlte in jeder Kontosicherung (F-S11-63). */
+            /* DIE VERSCHLOSSENEN STUECKE, WIE SIE LIEGEN (S11-06c) — der
+             * Server kann sie nicht oeffnen und muss es nicht. Bis Web 22.4.0
+             * kam nur der SPUR1-Blob mit, und eine Spur aus Stuecken fehlte in
+             * jeder Kontosicherung (F-S11-63); bis Web 22.7.0 standen Blob
+             * und Stuecke nebeneinander, der zweite Eintrag mit
+             * `fortsetzung`. Seit Web 23 gibt es nur noch Stuecke (S11-12). */
             $ids = array_keys($refNach);
             $stueckeNach = spur2_lesen_viele($pdo, $art, $ids);
             $anhaengen = function (array $eintrag, int $n) use (&$laufend, &$laufendePunkte,
@@ -765,23 +764,7 @@ function edbak_sicherung_erzeugen(int $userId): array
                 $laufendePunkte += $n;
                 return true;
             };
-            $sicherung = spur_fuer_sicherung_viele($pdo, $art, $ids);
             foreach ($ids as $id) {
-                $sp = $sicherung[$id] ?? ['leer' => true];
-                $hatBlob = false;
-                if (!empty($sp['fehler'])) {
-                    $abgelehnt[] = $art . ' ' . $id . ': ' . ($sp['grund'] ?? 'unbekannt');
-                } elseif (empty($sp['leer'])) {
-                    if (!$anhaengen(['spur_ref'   => $refNach[$id],
-                                     'stufe'      => (int)$sp['stufe'],
-                                     'n_original' => (int)$sp['n_original'],
-                                     'n'          => (int)$sp['n'],
-                                     'blob'       => base64_encode($sp['blob'])], (int)$sp['n'])) {
-                        return $abbruch('Ein Spurteil liess sich nicht schreiben.');
-                    }
-                    $hatBlob = true;
-                    $punkteGesamt += (int)$sp['n'];
-                }
                 $st = $stueckeNach[$id] ?? [];
                 if ($st) {
                     $n = array_sum(array_column($st, 'punkte'));
@@ -793,16 +776,15 @@ function edbak_sicherung_erzeugen(int $userId): array
                                     'n_original' => $x['n_original'], 'stufe' => $x['stufe'],
                                     'ts_von' => $x['ts_von'],
                                     'ts_bis' => $x['ts_bis'], 'huelle' => $x['huelle']], $st)];
-                    if ($hatBlob) { $eintrag['fortsetzung'] = true; }
                     $verschlossen++;
                     if (!$anhaengen($eintrag, $n)) {
                         return $abbruch('Ein Spurteil liess sich nicht schreiben.');
                     }
                     $punkteGesamt += $n;
                 }
-                if ($hatBlob || $st) { $spurenGesamt++; }
+                if ($st) { $spurenGesamt++; }
             }
-            unset($stueckeNach, $sicherung);
+            unset($stueckeNach);
         }
     }
     if (!$spurteilSchreiben($laufend)) {
@@ -1123,27 +1105,9 @@ function edbak_paket_kopf_lesen(string $kennung, string $datei): ?array
     return $d;
 }
 
-/**
- * Ein Paket vollständig lesen — NUR für Fassung 1.
- *
- * Für Fassung 2 gibt es diesen Weg bewusst nicht: Ein mehrteiliges Paket am
- * Stück in den Speicher zu holen wäre genau die Spitze, die der Umbau
- * beseitigt hat, nur auf der Leseseite. Wer ein Fassung-2-Paket einspielen
- * will, nimmt `edbak_paket_einspielen()`; wer nur die Zahlen braucht,
- * `edbak_paket_kopf_lesen()`.
- */
-function edbak_paket_lesen(string $kennung, string $datei): ?array
-{
-    if (!edbak_kennung_gueltig($kennung) || !edbak_paketname_gueltig($datei)) { return null; }
-    if (edbak_paket_fassung($datei) !== 1) { return null; }
-    $pfad = edbak_ordner($kennung) . '/' . $datei;
-    if (!is_file($pfad)) { return null; }
-    $roh = @file_get_contents($pfad);
-    if ($roh === false) { return null; }
-    $d = json_decode($roh, true);
-    if (!is_array($d) || ($d['format'] ?? '') !== 'einsatzdoku-adminsicherung') { return null; }
-    return $d;
-}
+/* `edbak_paket_lesen()` stand hier bis Web 22.7.0: Sie las ein Paket der
+ * Fassung 1 am Stueck fuer den direkten Rueckweg und die Freigabe. Beide
+ * nehmen seit Web 23 nur noch Fassung 2 (S11-12, E-S11-84). */
 
 /** Enthält das Paket überhaupt geschützte Angaben? Entscheidet den Sonderfall in A8.6. */
 function edbak_paket_hat_geschuetzte(array $paket): bool
@@ -2325,9 +2289,11 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     };
 
     try {
-        /* 'server' (E-S11-57): Der direkte Weg hat die Daten im Klartext vor
-         * sich und verschliesst Orte, Reanimation und Spur selbst. */
-        $stats = edbak_restore($zielUserId, $kopf, null, 'server');
+        /* 'browser' SEIT WEB 23 (S11-12, E-S11-84): Ein Paket traegt Huellen
+         * und Stuecke, wie sie lagen; Klartext-Ortsdaten weist der Weg ab,
+         * wie den Browser. Bis Web 22.7.0 stand hier 'server', und der
+         * Server verschloss den Klartext alter Pakete selbst (E-S11-57). */
+        $stats = edbak_restore($zielUserId, $kopf, null, 'browser');
         $dayMap = $stats['day_map'] ?? [];
         $karte  = $stats['spur_karte'] ?? [];
         unset($stats['day_map'], $stats['spur_karte']);
@@ -2354,7 +2320,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
              * nehmen — den mit Spurverweisen — und die Felder der spaeteren
              * Fassungen samt und sonders optional sind. */
             $f['version'] = EDBAK_NUTZLAST;
-            $s2 = edbak_restore($zielUserId, $f, $dayMap, 'server');
+            $s2 = edbak_restore($zielUserId, $f, $dayMap, 'browser');
             foreach ((array)($s2['spur_karte'] ?? []) as $ref => $ziel) {
                 $karte[(int)$ref] = $ziel;
             }
@@ -2378,20 +2344,18 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
             foreach ((array)($t['spuren'] ?? []) as $e) {
                 $ziel = $karte[(int)($e['spur_ref'] ?? -1)] ?? null;
                 if ($ziel === null) { $spuren['ohne_ziel']++; continue; }
-                /* Zwei Formen seit S11-06c: verschlossene Stuecke, wie sie
-                 * liegen, oder ein SPUR1-Blob des Altbestands, den
-                 * `edbak_spuren_schreiben()` hier verschliesst. */
-                $liste[] = isset($e['stuecke'])
-                    ? ['owner_type' => $ziel['art'], 'owner_id' => $ziel['id'],
-                       'stuecke' => (array)$e['stuecke'], 'stufe' => $e['stufe'] ?? null,
-                       'fortsetzung' => !empty($e['fortsetzung'])]
-                    : ['owner_type' => $ziel['art'], 'owner_id' => $ziel['id'],
-                       'blob' => (string)($e['blob'] ?? ''),
-                       'n' => isset($e['n']) ? (int)$e['n'] : null];
+                /* Verschlossene Stuecke, wie sie liegen. Ein SPUR1-Blob (bis
+                 * Web 22.7.0 verschloss ihn der Server hier) geht als `blob`
+                 * weiter und wird abgelehnt und gezaehlt (E-S11-84). */
+                $liste[] = ['owner_type' => $ziel['art'], 'owner_id' => $ziel['id'],
+                            'stuecke' => isset($e['stuecke']) ? (array)$e['stuecke'] : null,
+                            'stufe' => $e['stufe'] ?? null,
+                            'fortsetzung' => !empty($e['fortsetzung'])]
+                         + (isset($e['blob']) && !isset($e['stuecke']) ? ['blob' => true] : []);
             }
             unset($t);
             if ($liste) {
-                $e = edbak_spuren_schreiben(db(), $zielUserId, $liste, 'server');
+                $e = edbak_spuren_schreiben(db(), $zielUserId, $liste);
                 $spuren['geschrieben']   += $e['geschrieben'];
                 $spuren['uebersprungen'] += $e['uebersprungen'];
                 foreach ($e['abgelehnt'] as $a) { $spuren['abgelehnt'][] = $a; }
@@ -2420,23 +2384,18 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
  */
 function edbak_paket_zurueckspielen(string $kennung, string $datei, int $zielUserId): array
 {
-    /* OHNE SCHLUESSELPAAR KEIN EINSPIELEN (E-S11-57). Der direkte Weg
-     * verschliesst Orte, Reanimation und Spur mit dem oeffentlichen Schluessel
-     * des Zielkontos; ohne ihn lagen sie wieder offen. Gefragt wird VOR dem
-     * ersten Schreiben — sonst stuenden die Diensttage schon, und die
-     * Einsaetze fehlten. */
-    require_once __DIR__ . '/kontopaar_lib.php';
-    if (kp_fuer_geraet(db(), $zielUserId) === null) {
-        return [false, 'Das Zielkonto hat noch kein Schlüsselpaar. Es entsteht beim ersten '
-                     . 'Entsperren nach einer Anmeldung; danach lässt sich das Backup '
-                     . 'einspielen. Es wurde nichts geändert.', null];
+    /* NUR FASSUNG 2 (S11-12, E-S11-84). Das einteilige Paket der Fassung 1
+     * (bis Web 11) trug Orte, Reanimation und Spur im Klartext; bis
+     * Web 22.7.0 verschloss der Server sie hier mit dem oeffentlichen
+     * Schluessel des Zielkontos (E-S11-57), und dafuer brauchte das Konto ein
+     * Schluesselpaar. Alte Pakete gibt es nicht mehr; ein Paket der Fassung 2
+     * bringt Huellen und Stuecke mit, und der Server verschliesst nichts. */
+    if (edbak_paket_fassung($datei) !== 2) {
+        return [false, 'Dieses Backup hat das einteilige Format einer Fassung vor Web 11 '
+                     . 'und lässt sich seit Web 23 nicht mehr einspielen. Es wurde nichts '
+                     . 'geändert.', null];
     }
-    if (edbak_paket_fassung($datei) === 2) {
-        return edbak_paket_einspielen($kennung, $datei, $zielUserId);
-    }
-    $paket = edbak_paket_lesen($kennung, $datei);
-    if ($paket === null) { return [false, 'Das Backup liess sich nicht lesen.', null]; }
-    return [true, null, edbak_restore($zielUserId, $paket['daten'] ?? [], null, 'server')];
+    return edbak_paket_einspielen($kennung, $datei, $zielUserId);
 }
 
 /**

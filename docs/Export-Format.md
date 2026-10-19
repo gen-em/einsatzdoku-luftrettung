@@ -29,7 +29,7 @@ Unter der Schranke stehen:
 | Freitext | `notizen` (Diensttag). Die `notizen` des **Einsatzes** stehen seit Web 19 im verschlüsselten Block und fallen mit ihm — die Schranke wirkt für sie also weiter, nur über den `pat_blob` statt über eine eigene Spalte |
 | Ort des Geschehens | `phase_02_lat/lon` … `phase_09_lat/lon`, `hoehe_einsatzort_m`, GPX-Spuren unter `tracks/` |
 | Transportziel (seit Web 22.4.0) | `transport_dest`, `ziel_lat`, `ziel_lon` — das Ziel liegt seit Web 22.1.0 verschlüsselt im `pat_blob` (entschieden 16.10.2026, E-S11-53) |
-| Reanimation neuer Einsätze (seit Web 22.4.0) | `rea_json` der Einsätze, deren Reanimation in der Einsatzhülle liegt (seit S11-04 gesendet, im Formular gespeichert oder importiert; E-S11-54) — siehe unten |
+| Reanimation (seit Web 22.4.0; seit Web 23 jedes Einsatzes) | `rea_json` der Einsätze, deren Reanimation in der Einsatzhülle liegt (E-S11-54) — seit Web 23 sind das alle, weil es den Altbestand im Klartext nicht mehr gibt (S11-12); siehe unten |
 
 **Warum die Phasenkoordinaten.** Phase 4 ist „Ankunft Einsatzort", Phase 5
 „Ankunft PatientIn". Diese Punkte *sind* der Einsatzort. Bis Web 5.7.0 nannte
@@ -43,7 +43,6 @@ ein Export „ohne Patientendaten" ihn trotzdem — nur in einer anderen Spalte 
 |---|---|
 | `bw_unit` | Dieselbe Klasse: eine Einheit, kein Name. Die Namen der Bergwacht stehen in `bw_info`, und das fällt unter die Schranke. |
 | `weitere_rettungsmittel` | Organisationskennungen wie „RTW Talwang". Das Feld ist Freitext und trägt damit denselben Vorbehalt wie die Notizen; entschieden wurde trotzdem für „bleibt enthalten", weil es der Sache nach eine Betriebsangabe ist. |
-| `rea_json` des Altbestands | Der Verlauf einer Reanimation ohne Angabe, wen sie betraf. Ohne ihn wäre der Grund entfallen, Reanimationen überhaupt zu erfassen. **Gilt seit Web 22.4.0 nur noch für den Altbestand** im Klartext (bis zum Einmalwerkzeug, S11-10); danach steht `rea_json` nur noch mit Haken in der Datei. |
 | `crew_abweichend` | Sagt nur, **dass** die Besatzung an diesem Einsatz von der des Diensttags abwich, nicht wer geflogen ist. Ohne ihn ließe sich nicht erkennen, dass die leeren Namensspalten leer *gemacht* wurden. |
 | Zeitpunkte der Phasen | Sie tragen Alarmzeit, Endzeit und Dauer — ohne sie bliebe von der Datei nichts Auswertbares übrig. |
 
@@ -52,10 +51,13 @@ bis dahin hier unter „bleibt": eine Einrichtung, keine Person. Seit Web
 22.1.0 liegt es verschlüsselt im `pat_blob`, also bei den geschützten
 Angaben, und der Export folgt dem (E-S11-53). Die Reanimation liegt seit
 S11-04 in der Einsatzhülle, die nur mit dem Passwort aufgeht (E-S11-02); ein
-Export ohne Haken entsperrt nicht, und so steht sie dort nur noch für den
-Altbestand (E-S11-54). **Bis zum Einmalwerkzeug (S11-10) ist die Datei ohne
-Haken deshalb gemischt:** Reanimationen alter Einsätze stehen darin, die
-neuer nicht.
+Export ohne Haken entsperrt nicht, und so stand sie dort bis Web 22.7.0 nur
+noch für den Altbestand (E-S11-54) — die Datei ohne Haken war gemischt.
+**Seit Web 23 (S11-12) trägt eine Datei ohne Haken keine Reanimation mehr.**
+Bis dahin stand hier unter „bleibt" eine Zeile `rea_json` des Altbestands:
+Der Verlauf ohne Angabe, wen er betraf, sollte ohne Haken auswertbar bleiben.
+Das Feld bleibt in der Datei (leer ohne Haken); `felder.csv` führt es weiter
+als „nicht personenbezogen", weil es keinen Namen trägt.
 
 **Die Schranke wirkt an zwei Stellen.** `api/export_data.php` liefert die
 Felder nicht aus (erste und wirksame Schranke, `action: 'track'` wird ganz
@@ -583,9 +585,9 @@ Besatzungsspalten sind personenbezogen.
 | `transport_art` | text | — | nein | Transportart (missions.transport_mode): air \| ground \| ambulant — im Formular „Luft", „Boden", „Ambulant"; leer = nicht angegeben |
 | `na_begleitung` | 0/1 | — | nein | NA-Begleitung beim Transport (entfällt bei „Ambulant") |
 | `fehleinsatz` | 0/1 | — | nein | Fehleinsatz / Storno / Abbruch |
-| `transport_dest` | text | — | **ja** | Transportziel (pat_blob.transport_dest.addr; Altbestand missions.transport_dest) — bis Web 22.3.0 nicht personenbezogen |
-| `ziel_lat` | dec | — | **ja** | Koordinate der Zielklinik, am Einsatz eingefroren (pat_blob.transport_dest.lat; Altbestand missions.dest_lat) |
-| `ziel_lon` | dec | — | **ja** | Koordinate der Zielklinik (pat_blob.transport_dest.lon; Altbestand missions.dest_lon) |
+| `transport_dest` | text | — | **ja** | Transportziel (pat_blob.transport_dest.addr) — bis Web 22.3.0 nicht personenbezogen |
+| `ziel_lat` | dec | — | **ja** | Koordinate der Zielklinik, am Einsatz eingefroren (pat_blob.transport_dest.lat) |
+| `ziel_lon` | dec | — | **ja** | Koordinate der Zielklinik (pat_blob.transport_dest.lon) |
 | `abfahrt_regel` | text | — | nein | Herkunft des Abfahrtorts (missions.start_src): base \| prev_site \| prev_dest \| manual; leer = keine Linie. Gespeichert ist die REGEL, nicht der Ort |
 | `schockraum` | 0/1 | — | nein | Schockraum alarmiert |
 | `secondary` | 0/1 | — | nein | Sekundärtransport |
@@ -920,8 +922,8 @@ benutzt. Betroffen sind `crew_p1`…`crew_other`, `bw_info`, `other_ema`,
 die Datei ersetzt nur, was sie selbst nennt. Bis dahin ersetzte ein Blob aus
 der Datei den vorhandenen ganz; seit Transportziel und Ortshöhe darin liegen,
 hätte eine Datei ohne Haken, die nur das Transportziel des Altbestands trägt,
-Name und Diagnose gelöscht. Transportziel und Höhe aus den Klartextspalten
-des Altbestands ziehen dabei in den Blob um; die Spalten werden geleert.
+Name und Diagnose gelöscht. (Bis Web 22.7.0 zogen dabei Transportziel und
+Höhe aus den Klartextspalten des Altbestands in den Blob um.)
 
 **Die Phasenkoordinaten und die Reanimation überleben das Ersetzen.** Der
 Phasensatz wird weiterhin komplett ersetzt und nicht gemischt. Liefert die

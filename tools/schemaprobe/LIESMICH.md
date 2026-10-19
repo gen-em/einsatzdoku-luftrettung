@@ -1,7 +1,7 @@
 # Schemaprobe
 
 Läuft `schema.sql` auf der Datenbank, gegen die es laufen soll?
-**Anlass: Nr. 238** — eine Migration, die nur auf MariaDB durchging; Nr. 158 — eine TIMESTAMP-Spalte, die je Fassung anders entsteht (Fall 6).
+**Anlass: Nr. 238** — eine Migration, die nur auf MariaDB durchging; Nr. 158 — eine TIMESTAMP-Spalte, die je Fassung anders entsteht (Fall 6); Nr. 43 — die Aufräummigration nach S11, die ganze Tabellen wirft und nur mit Freigabe über einen Rest geht (Fall 7).
 
 ## Aufruf
 
@@ -30,9 +30,8 @@ legt den Urstand bytegleich zurück, auch bei Abbruch.
 
 ## Erwartete Zahl
 
-**40 Prüfungen, 0 Fehlschläge** je Fassung, die Matrix **4 × 40/0**
-(gemessen 11.10.2026 gegen MariaDB 10.6; seit R4-15 mit Fall 6 — hier stand
-bis Nr. 236 noch 30, der Stand von P5c/AP8; davor 19).
+**50 Prüfungen, 0 Fehlschläge** je Fassung, die Matrix **4 × 50/0**
+(19.10.2026, mit Fall 7 seit S11-12; davor 40 seit R4-15, 30 seit P5c/AP8, 19).
 
 ## Was es nicht kann
 

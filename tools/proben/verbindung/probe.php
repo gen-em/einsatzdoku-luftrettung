@@ -137,8 +137,8 @@ $pdo = db();
 /* DAS KONTO GEHT UEBER `konto_loeschen()`, NICHT UEBER `DELETE FROM users`
  * (R4-18, F-R4-63). Die Probe liefert 20 Pakete mit je 20 Punkten ein. Ein
  * DELETE auf `users` nimmt Einsaetze und Diensttage per Kaskade mit, die Spur
- * aber nicht — `track_points` haengt ueber `owner_type`/`owner_id` und hat
- * keinen Fremdschluessel (CLAUDE.md 4, „Spuren nur ueber spur_lib.php").
+ * aber nicht — `track_stuecke` (bis Web 22.7.0 `track_points`) haengt ueber
+ * `owner_type`/`owner_id` und hat keinen Fremdschluessel (CLAUDE.md 4, „Spuren nur ueber spur_lib.php").
  * Jeder Lauf der Hauptstufe liess so 400 Waisen zurueck, und die Jobprobe
  * des naechsten Laufs zaehlte sie mit: „erledigt=407 (erwartet 7)", sobald
  * zwei Laeufe ohne Pause aufeinander folgten. `konto_loeschen()` ist der Weg

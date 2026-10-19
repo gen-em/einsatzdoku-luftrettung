@@ -31,7 +31,7 @@ require_once __DIR__ . '/../spur_lib.php';
  *        Das eine neue Stück (Stufe 2 oder 3) statt der gelesenen. `pat` nur,
  *        wenn der Browser eine fehlende Ortshöhe nachgetragen hat (E-S11-72).
  *     -> 200 {ok:true, weg, neu, pat?} · 400 eingabe · 409 stand | stufe |
- *        marke | form | frist | offen | altbestand · 404 fehlt
+ *        marke | form | frist | offen · 404 fehlt
  *
  * DER INHALT IST SACHE DES BROWSERS. Er öffnet, packt, dünnt aus, öffnet das
  * Ergebnis noch einmal und vergleicht (Rundlauf), bevor er schickt. Der

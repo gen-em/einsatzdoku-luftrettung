@@ -8219,5 +8219,37 @@ declare(strict_types=1);
  *   Firefox reicht autocomplete="one-time-code" nicht an Erweiterungen
  *   weiter, und Bitwarden fand im deutschen Feld kein Stichwort. Name `code`
  *   bleibt. Kein Schema.
+ *
+ * 23.0.0 IST DIE HAUPTNUMMER DER AUFRAEUMAUSLIEFERUNG VON S11 (S11-12,
+ *   Schritt 12a). 22 hat die Ortsdaten verschlossen; den Klartext daneben
+ *   gab es noch — als Tabellen, Spalten und als Lesewege fuer alte Dateien,
+ *   damit der Altbestand umziehen konnte. Nach dem Umzug ist er nur noch
+ *   eine Stelle, an der Klartext liegen KOENNTE, und ein Weg, auf dem er
+ *   wieder hereinkaeme. 23 nimmt beides weg, und das ist die Hauptnummer:
+ *   Datenmodell und Migration, und ein Weg durch die Anwendung, den es
+ *   nicht mehr gibt (eine alte Sicherung einspielen).
+ *
+ *   SCHEMA: Die Migration `2026_10_19_klartext_weg` entfernt `track_points`,
+ *   `track_blobs`, `resus_sessions`, `resus_events`, `mission_phases.lat/lon`
+ *   und `missions.transport_dest`, `dest_lat`, `dest_lon`, `site_ele_m`. Sie
+ *   ist zerstoerend MIT INHALTSSPERRE: Liegt noch ein Wert darin, haelt sie
+ *   an und nennt Tabelle, Zahl und Konten (E-Mail, Einsatznummern); sie
+ *   laeuft erst nach ausdruecklicher Freigabe, und die steht im Protokoll.
+ *   Nach dem Deploy `update.php` aufrufen — die Wartung bleibt sonst an.
+ *
+ *   CODE: das Einmalwerkzeug (`api/ortsumzug.php`, `ortsumzug_lib.php`,
+ *   `assets/ortsumzug.js`, Statuszeile „Ortsdaten"); SPUR1 ganz (Kodierung,
+ *   Lesen von Zeilen und Blob in `spur_lib.php`, `EdOrtsdaten.spur1Lesen()`);
+ *   `site_elevation_lib.php`; das Einspielen von Nutzlast 6 bis 12 und der
+ *   einteiligen Fassungen 2 und 3 (`EdCrypto.openBackup()`/`sealBackup()`),
+ *   der direkte Rueckweg alter Adminpakete (`edbak_paket_lesen()`,
+ *   `gh_gepackt_bauen()`; die Verwaltung spielt seither ueber den
+ *   Browserweg ein) und der Bau einer Sicherung am Stueck. Eine Sicherung
+ *   unter Nutzlast 13 weisen Browser, Endpunkt und `edbak_restore()` ab
+ *   (`409 version_alt`). Einen Schnitt von vor Web 22.2.0 nimmt
+ *   `api/schneiden.php` nicht mehr zurueck (`409 altschnitt`, F-S11-94).
+ *   Was bleibt: der Demo-Reset mit seiner Nutzlast-7-Fixture ueber
+ *   `'server'` (E-S11-20) und die alten Adminpaket-Fassungen in der Liste
+ *   (Backlog Nr. 46, Rest).
  */
-const WEB_VERSION = '22.7.1';
+const WEB_VERSION = '23.0.0';

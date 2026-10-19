@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 380 bis 389 | `ccr-dd33b6e8-ismfm0` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 385 | 11.10.2026 |
+| 380 bis 389 | `ccr-dd33b6e8-ismfm0`, für S11-12 `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 388 | 11.10.2026 |
 | ab 390 | frei — höchste vergebene Nummer 371; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
 
 ---
@@ -135,24 +135,22 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 <!-- -->
 
 46. **Das Altformat des Backups wird mit NaDoku 1.0 abgeschafft.** · gehört zu: 14 · Stand: teilweise · seit 31.08.2026
-     Befund: Seit Web 11.0.0 schreibt die Anwendung Containerfassung 4; die
-     Fassungen 2 und 3, Nutzlast 6 bis 11, unversiegelte Adminpakete der
-     Fassung 2 (`edbak_teil_oeffnen()`) und das Feld `stammdaten` werden nur
-     noch gelesen. Zum Stichtag entfallen: der Lesezweig in `crypto.js`
-     (`openBackup`), der Punktlisten-Rückweg in `backup_lib.php`, die Annahme
-     alter Nutzlasten in `api/backup_restore.php`, die Weiche in
-     `kreislauf.py` (`umlauf_edbak()`, `--art edbak-alt`) samt Referenz unter
-     `referenz/altformat/`. Der `ENUM`-Wert `ftp` ist mit Nr. 168 gefallen
-     (Web 21.0.0). **Der Messstand hängt am Altformat-Lesepfad**
-     (`vervielfaeltigen.py` versiegelt einteilig) und braucht zum Stichtag
-     einen Container-Schreiber oder den Weg über die Uhr-Schnittstelle.
-     Wirkung: Ein Lesezweig, den niemand pflegt, wird mitgeschleppt — 2026
-     hat er einmal 91 208 Punkte still verworfen (F-S2-E).
-     Weg: ein Paket mit Nr. 187 (Anhebungswege); die Meldung nennt danach die
-     letzte Fassung, die noch lesbar war. Der eigene Bestand kommt nach
-     E-P5c-127 über ein Einmal-Skript herüber (Nr. 324) — die 1.0 liest
-     keine alte Nutzlast, auch nicht die letzte.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 46.
+     **Mit S11-12 (Web 23) vorgezogen erledigt:** der Lesezweig in
+     `crypto.js` (`openBackup`, `sealBackup`), die Annahme von Nutzlast 6
+     bis 12 im Browser, am Endpunkt und in `edbak_restore()`
+     (`409 version_alt`), der Punktlisten-Rückweg im Eintrag, die Weiche
+     `--art edbak-alt` in `kreislauf.py` samt `referenz/altformat/`, und der
+     Messstand schreibt Fassung 4 (`schreiben_edbak_v4()`, E-S11-85).
+     **Offen bleibt:** die Adminpakete der Fassung 1 (JSON) und unversiegelte
+     der Fassung 2 (`edbak_teil_oeffnen()` liest sie roh) sowie die
+     unversiegelte Begleitdatei `konto.json` — Liste, Schlüsselwechsel
+     (`tools/proben/schluesselwechsel/` prüft ein Fassung-2-Paket ohne
+     Siegel byte-gleich) und das Aufräumen der Ablage lesen sie noch.
+     Eingespielt werden sie seit Web 23 nicht mehr. Ausnahme mit Absicht:
+     der Demo-Reset spielt seine Nutzlast-7-Fixture über `'server'` ein.
+     *Weg:* zum Stichtag die drei Lesestellen schließen, die Probe des
+     Schlüsselwechsels mitziehen. Werdegang bis 26.09.2026:
+     `docs/Backlog.md@f5bddc2`, Nr. 46; bis 19.10.2026 in der Git-Historie.
 
 <!-- -->
 
@@ -1335,3 +1333,22 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      der Einzahl „Bei 1 Einsätzen" derselben Meldungen. *Abnahme:* die
      Hülle falscher Länge ergibt eine orange Meldung mit dem Feld.
 
+
+<!-- -->
+
+388. **Die Demo-Fixture lässt sich seit S11 nicht mehr aus dem Referenzkonto erzeugen.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 19.10.2026
+     *Aufgenommen 19.10.2026 in S11-12 (F-S11-95).*
+     `tools/referenzdatensatz/fixture/erzeugen.php` las das Referenzkonto
+     über `edbak_build()` am Stück, mit Punktlisten aus `track_points`.
+     Seit Web 22 sieht der Server keine Punkte, Phasenorte und Reanimation
+     mehr; das Skript hätte eine Fixture ohne Spur geschrieben, still. Seit
+     Web 23 gibt es den Bau am Stück nicht mehr; das Skript bricht mit
+     Rückgabe 2 ab, und der Positivfall von `fixture/riegelprobe.php` ist
+     damit ebenfalls rot. Die eingecheckte Fixture (Nutzlast 7, Klartext
+     aus dem Repositorium, E-S11-20) trägt den Demo-Reset weiter; sie
+     altert nur, wenn sich der Referenzbestand ändert.
+     *Weg:* die Fixture im Browser erzeugen (wie `referenz_export.mjs`:
+     Sicherung des Kontos öffnen, Klartext ablegen) oder aus den
+     Quelldaten des Generators bauen, ohne Umweg über ein Konto.
+     *Abnahme:* eine neu erzeugte Fixture setzt das Demo-Konto zurück, und
+     die Riegelprobe ist in beiden Richtungen grün.

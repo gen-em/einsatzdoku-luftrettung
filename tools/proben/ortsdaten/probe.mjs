@@ -29,7 +29,7 @@
  *      unverändert: Orte der Phasen und Reanimation bleiben, nichts im
  *      Klartext (F-S11-02, -41)
  *  11. ein im Formular nachgetragener Einsatz mit Reanimation: alles in der
- *      Hülle, keine Zeile in `resus_sessions`
+ *      Hülle (die Tabelle `resus_sessions` gibt es seit Web 23 nicht mehr)
  *  12. Transportziel und Höhe des Einsatzorts im Blob (S11-05b): im Formular
  *      gesetzt und gespeichert, Klartextspalten leer, in keiner Antwort des
  *      Servers im Klartext, in der Ansicht nach dem Entsperren; Höhe aus der
@@ -41,8 +41,8 @@
  *      protokolliert; Gegenproben: veralteter Stand, erneute Lieferung
  *  15 (läuft vor 14) Export, Rückspielen und Zeitverschiebung (S11-05e): der
  *      Export über die Oberfläche mit Haken trägt Phasenort und Reanimation
- *      aus der Hülle, die Spur aus den Stücken und das Transportziel des
- *      Altbestands, ohne Haken nichts davon; die Datei mit „überschreiben"
+ *      aus der Hülle, die Spur aus den Stücken und Transportziel und Höhe
+ *      aus dem Blob, ohne Haken nichts davon; die Datei mit „überschreiben"
  *      zurückgespielt lässt keinen Ort und keine Reanimation im Klartext
  *      zurück, und der Export danach gleicht dem davor; Klartext in der
  *      Nutzlast → 400, falsche Zeiten → 409; die Zeitverschiebung nimmt die
@@ -97,6 +97,11 @@ function konto(befehl, rcDatei) {
 }
 
 /* ---- Das Gesendete: im alten Format, die Gerätehilfe verschließt ---------- */
+/* Ein PHP-Ausdruck: 1, solange es noch eine Spalte oder Tabelle fuer
+ * Klartext-Ortsdaten gibt (bis Web 22.7.0), sonst 0 (S11-12). */
+const KLARTEXT_DA = '(db_hat_spalte(db(), "mission_phases", "lat") || db_hat_tabelle(db(), "resus_sessions")'
+  + ' || db_hat_spalte(db(), "missions", "transport_dest") || db_hat_spalte(db(), "missions", "site_ele_m")'
+  + ' || db_hat_tabelle(db(), "track_points") || db_hat_tabelle(db(), "track_blobs") ? 1 : 0)';
 const jetzt = Math.floor(Date.now() / 1000) - 3600;
 const iso = t => new Date(t * 1000).toISOString().replace(/\.\d+Z$/, 'Z');
 const tag = iso(jetzt).slice(0, 10);
@@ -251,10 +256,11 @@ try {
   const inDb = php(`echo json_encode(db()->query("SELECT COUNT(*) n, SUM(punkte) p FROM track_stuecke ts
     JOIN missions m ON m.id = ts.owner_id AND ts.owner_type = 'mission' WHERE m.user_id = ${id}")->fetch(PDO::FETCH_ASSOC));`);
   pruefe(/"n":2/.test(inDb) && /"p":"?10/.test(inDb), '2  in der Datenbank: zwei Stücke, zehn Punkte', inDb);
-  const klar = php(`echo (int)db()->query("SELECT COUNT(*) FROM mission_phases p JOIN missions m ON m.id = p.mission_id
-    WHERE m.user_id = ${id} AND (p.lat IS NOT NULL OR p.lon IS NOT NULL)")->fetchColumn()
-    + (int)db()->query("SELECT COUNT(*) FROM resus_sessions r JOIN missions m ON m.id = r.mission_id WHERE m.user_id = ${id}")->fetchColumn();`);
-  pruefe(klar === '0', '2  keine Koordinate und keine Reanimation im Klartext', `${klar} Zeilen`);
+  /* Seit Web 23 (S11-12) gibt es keine Spalte und keine Tabelle mehr, in
+   * der Koordinate oder Reanimation im Klartext liegen koennten; bis dahin
+   * zaehlte die Probe deren Zeilen. */
+  const klar = php(`echo ${KLARTEXT_DA};`);
+  pruefe(klar === '0', '2  keine Spalte und keine Tabelle fuer Klartext-Ortsdaten', klar === '0' ? 'keine' : 'noch da');
   /* 6 — die Einsatzansicht öffnet selbst (S11-04c): Spur gezeichnet, Phasen
    * und Reanimation aus der Hülle, der Ladeplatz wieder fort */
   await s.goto(`${BASIS}/einsatz.php?id=${mid}`, { waitUntil: 'networkidle' });
@@ -351,9 +357,8 @@ try {
   }, mid);
   pruefe(JSON.stringify(nachherOrt) === JSON.stringify(vorherOrt),
          '10 nach dem Speichern: Phasenorte und Reanimation unverändert', JSON.stringify(nachherOrt.phasen).slice(0, 70));
-  const klar10 = php(`echo (int)db()->query("SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ${mid}")->fetchColumn()
-    + (int)db()->query("SELECT COUNT(*) FROM mission_phases WHERE mission_id = ${mid} AND lat IS NOT NULL")->fetchColumn();`);
-  pruefe(klar10 === '0', '10 nach dem Speichern: nichts im Klartext', `${klar10} Zeilen`);
+  const klar10 = php(`echo ${KLARTEXT_DA};`);
+  pruefe(klar10 === '0', '10 nach dem Speichern: kein Ort für Klartext', klar10 === '0' ? 'keiner' : 'noch da');
 
   /* 10 — Gegenprobe zum Wächter: die Phasenzeiten des Browsers auf dem Weg
    * verfälscht (eine Minute später). Der Server muss ablehnen und melden. */
@@ -378,37 +383,8 @@ try {
   pruefe(/nicht gleich rechnen/.test(textW) && vorWaechter === nachWaechter,
          '10 Gegenprobe: verfälschte Phasenzeiten → nichts gespeichert', `${/nicht gleich rechnen/.test(textW)}, Hülle ${vorWaechter === nachWaechter ? 'gleich' : 'GEÄNDERT'}`);
 
-  /* 10 — Altbestand: Orte und Reanimation im Klartext, keine Hülle. Das
-   * Formular übernimmt sie beim Speichern in die Hülle (E-S11-45). */
-  const altId = Number(php(`$pdo = db(); require_once "server/geraete_lib.php";
-    $dev = geraet_virtuell_sicherstellen($pdo, ${id});
-    $pdo->prepare("INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at, final, uhr_gesperrt, origin)
-      VALUES (?, ?, 'man-alt0000000000001', ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?), 1, 1, 'manual')")
-      ->execute([${id}, $dev, ${dayId}, ${jetzt + 3600}, ${jetzt + 4200}]);
-    $m = (int)$pdo->lastInsertId();
-    $pdo->prepare("INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon) VALUES (?,2,FROM_UNIXTIME(?),47.5,10.5),(?,4,FROM_UNIXTIME(?),47.6,10.6)")
-      ->execute([$m, ${jetzt + 3600}, $m, ${jetzt + 4200}]);
-    $pdo->prepare("INSERT INTO resus_sessions (mission_id, started_at) VALUES (?, FROM_UNIXTIME(?))")->execute([$m, ${jetzt + 3900}]);
-    $sid = (int)$pdo->lastInsertId();
-    $pdo->prepare("INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?, 'rosc', FROM_UNIXTIME(?))")->execute([$sid, ${jetzt + 4000}]);
-    echo $m;`));
-  await s.goto(`${BASIS}/einsatz_form.php?id=${altId}`, { waitUntil: 'networkidle' });
-  await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK, null, { timeout: 30000 }).catch(() => null);
-  await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
-                     s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
-  await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
-  const alt10 = await s.evaluate(async (id) => {
-    const m = await (await fetch('api/mission.php?id=' + id)).json();
-    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-    await EdOrtsdaten.fuerAnsicht(m, ck);
-    return { phasen: m.phases.map(p => [p.phase, p.lat, p.lon]), rea: (m.resus || []).map(r => r.map(e => e.label)) };
-  }, altId);
-  const klarAlt = php(`echo (int)db()->query("SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ${altId}")->fetchColumn()
-    + (int)db()->query("SELECT COUNT(*) FROM mission_phases WHERE mission_id = ${altId} AND lat IS NOT NULL")->fetchColumn();`);
-  pruefe(JSON.stringify(alt10.phasen) === '[[2,47.5,10.5],[4,47.6,10.6]]' && alt10.rea.length === 1
-         && alt10.rea[0].length === 2 && klarAlt === '0',
-         '10 Altbestand: Orte und Reanimation in die Hülle übernommen, Klartext fort',
-         `${JSON.stringify(alt10).slice(0, 60)} · ${klarAlt} Klartextzeilen`);
+  /* 10 — Altbestand im Klartext gibt es seit Web 23 nicht mehr (S11-12);
+   * hier stand die Probe, dass das Formular ihn in die Hülle übernimmt. */
 
   /* 11 — ein Einsatz, im Formular nachgetragen, mit Reanimation */
   await s.goto(`${BASIS}/einsatz_form.php?d=${dayId}`, { waitUntil: 'networkidle' });
@@ -421,8 +397,8 @@ try {
   await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
                      s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
   const neuId = Number(new URL(s.url()).searchParams.get('id'));
-  const n11 = JSON.parse(php(`echo json_encode(db()->query("SELECT client_ref, ort_huelle IS NOT NULL h,
-    (SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ${neuId}) r FROM missions WHERE id = ${neuId}")->fetch(PDO::FETCH_ASSOC));`));
+  const n11 = JSON.parse(php(`echo json_encode(db()->query("SELECT client_ref, ort_huelle IS NOT NULL h
+    FROM missions WHERE id = ${neuId}")->fetch(PDO::FETCH_ASSOC) + ['r' => ${KLARTEXT_DA}]);`));
   await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
   const rea11 = await s.evaluate(async (id) => {
     const m = await (await fetch('api/mission.php?id=' + id)).json();
@@ -457,8 +433,9 @@ try {
   }, hhmm5);
   await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
                      s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
-  const spalten12 = JSON.parse(php(`echo json_encode(db()->query("SELECT transport_dest, dest_lat, dest_lon, site_ele_m
-    FROM missions WHERE id = ${mid}")->fetch(PDO::FETCH_ASSOC));`));
+  /* Seit Web 23 gibt es die vier Klartextspalten nicht mehr (S11-12). */
+  const spalten12 = JSON.parse(php(`echo json_encode(['spalten' => (db_hat_spalte(db(), "missions", "transport_dest")
+    || db_hat_spalte(db(), "missions", "dest_lat") || db_hat_spalte(db(), "missions", "site_ele_m")) ? 1 : null]);`));
   const roh12 = await s.evaluate(async (mid) => (await (await fetch('api/mission.php?id=' + mid)).text())
     + (await (await fetch('einsatz.php?id=' + mid)).text()), mid);
   await s.waitForFunction(() => /Klinikum Probe/.test(document.querySelector('main').textContent),
@@ -473,7 +450,7 @@ try {
     const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
     return JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob));
   }, mid);
-  pruefe(Object.values(spalten12).every(v => v === null), '12 Transportziel, Koordinate, Höhe: Klartextspalten leer',
+  pruefe(Object.values(spalten12).every(v => v === null), '12 Transportziel, Koordinate, Höhe: keine Klartextspalten',
          JSON.stringify(spalten12));
   pruefe(blob12.transport_dest && blob12.transport_dest.addr === 'Klinikum Probe' && blob12.transport_dest.lat === 47.8,
          '12 im Blob: transport_dest {addr, lat, lon}', JSON.stringify(blob12.transport_dest));
@@ -589,11 +566,20 @@ try {
          `${wieder13} Punkte sichtbar`);
 
   /* 15 — Export, Rückspielen, Wächter, Zeitverschiebung (S11-05e). Läuft VOR
-   * 14, weil 14 die Hülle von `mid` verdirbt. Ein Einsatz bekommt einen
-   * Altbestand im Klartext (Transportziel, Höhe), wie ihn das
-   * Einmalwerkzeug (S11-10) noch vorfindet. */
-  php(`db()->exec("UPDATE missions SET transport_dest = 'Klinikum Alt', dest_lat = 47.9, dest_lon = 10.1,
-       site_ele_m = 812 WHERE id = ${neuId}");`);
+   * 14, weil 14 die Hülle von `mid` verdirbt. Transportziel und Höhe kommen
+   * aus dem Blob von `mid`. Schritt 12 endet mit „ambulant" und damit ohne
+   * Ziel; das Ziel wird hier deshalb über das Formular wieder gesetzt. Bis
+   * Web 22.7.0 bekam `neuId` hier einen Altbestand in den Klartextspalten
+   * (S11-12). */
+  await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
+  await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK, null, { timeout: 30000 }).catch(() => null);
+  await s.evaluate(() => {
+    const sel = document.querySelector('select[name="f_transport_mode"]');
+    sel.value = 'air'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    ORTSFELD_PAT.transport_dest.steuer.setzen({ addr: 'Klinikum Probe', lat: 47.8, lon: 10.2 });
+  });
+  await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
+                     s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
   const setze = async (sel, an) => s.evaluate(([q, a]) => {
     const el = document.querySelector(q);
     if (el && el.checked !== a) { el.checked = a; el.dispatchEvent(new Event('change', { bubbles: true })); }
@@ -628,13 +614,14 @@ try {
   pruefe(z1.phase_02_lat === '47.7261' && /adrenalin/.test(z1.rea_json || '') && spurDatei && ex1.tracks[spurDatei] === 10,
          '15 Export mit Haken: Phasenort und Reanimation aus der Hülle, Spur aus den Stücken (10 Punkte)',
          `Phase 2 ${z1.phase_02_lat}, rea ${(z1.rea_json || '').length} Zeichen, ${spurDatei ? ex1.tracks[spurDatei] : 'keine'} Punkte`);
-  pruefe(n1.transport_dest === 'Klinikum Alt' && n1.ziel_lat === '47.9' && n1.hoehe_einsatzort_m === '812',
-         '15 Export mit Haken: Transportziel und Höhe des Altbestands', `${n1.transport_dest} ${n1.ziel_lat} ${n1.hoehe_einsatzort_m}`);
+  pruefe(z1.transport_dest === 'Klinikum Probe' && z1.ziel_lat === '47.8'
+         && z1.hoehe_einsatzort_m === (hoeheSoll === null ? '' : String(hoeheSoll)),
+         '15 Export mit Haken: Transportziel und Höhe aus dem Blob', `${z1.transport_dest} ${z1.ziel_lat} ${z1.hoehe_einsatzort_m}`);
   const ex0 = await exportieren(false);
   const z0 = ex0.zeilen[String(mid)] || {}, n0 = ex0.zeilen[String(neuId)] || {};
-  pruefe(!z0.phase_02_lat && !z0.rea_json && !n0.transport_dest && !n0.ziel_lat && !Object.keys(ex0.tracks).length,
+  pruefe(!z0.phase_02_lat && !z0.rea_json && !z0.transport_dest && !z0.ziel_lat && !Object.keys(ex0.tracks).length,
          '15 Export ohne Haken: kein Ort, keine Reanimation aus der Hülle, kein Ziel, keine Spur',
-         JSON.stringify([z0.phase_02_lat, (z0.rea_json || '').length, n0.transport_dest, Object.keys(ex0.tracks).length]));
+         JSON.stringify([z0.phase_02_lat, (z0.rea_json || '').length, z0.transport_dest, Object.keys(ex0.tracks).length]));
 
   /* Zurückspielen mit „überschreiben" — jede Zeile ist eine Dublette */
   await s.goto(`${BASIS}/import.php`, { waitUntil: 'networkidle' });
@@ -666,16 +653,11 @@ try {
          '15 Rückspielen mit „überschreiben": jede Zeile der Datei überschrieben',
          `${ueber15} von ${ex1.anzahl} — ${(zustand15 || bereit15).slice(0, 70)}`);
   const db15 = JSON.parse(php(`echo json_encode([
-    'spalten' => db()->query("SELECT COUNT(*) FROM missions WHERE user_id = ${id} AND (transport_dest IS NOT NULL
-       OR dest_lat IS NOT NULL OR site_ele_m IS NOT NULL)")->fetchColumn(),
-    'orte' => db()->query("SELECT COUNT(*) FROM mission_phases p JOIN missions m ON m.id = p.mission_id
-       WHERE m.user_id = ${id} AND p.lat IS NOT NULL")->fetchColumn(),
-    'rea' => db()->query("SELECT COUNT(*) FROM resus_sessions r JOIN missions m ON m.id = r.mission_id
-       WHERE m.user_id = ${id}")->fetchColumn(),
+    'klartext' => ${KLARTEXT_DA},
     'ohne' => db()->query("SELECT COUNT(*) FROM missions WHERE user_id = ${id} AND ort_huelle IS NULL
        AND deleted_at IS NULL")->fetchColumn()]);`));
-  pruefe(String(db15.spalten) === '0' && String(db15.orte) === '0' && String(db15.rea) === '0' && String(db15.ohne) === '0',
-         '15 danach kein Ort, keine Reanimation, kein Ziel im Klartext; jeder Einsatz mit Hülle', JSON.stringify(db15));
+  pruefe(String(db15.klartext) === '0' && String(db15.ohne) === '0',
+         '15 danach kein Ort für Klartext; jeder Einsatz mit Hülle', JSON.stringify(db15));
   const ex2 = await exportieren(true);
   const vergl = ['phase_02_lat', 'phase_02_lon', 'phase_03_lat', 'phase_05_lat', 'rea_json', 'transport_dest',
                  'ziel_lat', 'ziel_lon', 'hoehe_einsatzort_m', 'pat_nachname'];

@@ -6,7 +6,7 @@ Filter — jede getroffene Regel steht mit Anzahl und Grund im Bericht.
 ## Aufruf
 
 Keiner von Hand: `kreislauf.py --art <art>` reicht `<art>_umlauf.json` an
-`vergleichen.py` weiter (`--ausnahmen`). Listen: `csv`, `edbak`, `edbak-alt`.
+`vergleichen.py` weiter (`--ausnahmen`). Listen: `csv`, `edbak` (`edbak-alt` ist mit S11-12 gefallen, E-S11-85).
 
 ## Was es misst
 

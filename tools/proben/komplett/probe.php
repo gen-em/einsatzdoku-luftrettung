@@ -510,20 +510,22 @@ if ($pruefPdo !== null) {
           . ($abweichung === ['jobs'] ? ' (erwartet: das Backup schreibt ihren eigenen Stand mit)' : ''));
 
     /* Eine unabhängige Gegenprobe an den Spurdaten: Sie sind der Grund für
-     * die Hexschreibweise der Binärspalten. */
-    $hA = (string)$pdo->query("SELECT COALESCE(MD5(GROUP_CONCAT(SHA2(blob_daten,256) ORDER BY owner_type,owner_id)),'-')
-                                 FROM track_blobs")->fetchColumn();
-    $hB = (string)$pruefPdo->query("SELECT COALESCE(MD5(GROUP_CONCAT(SHA2(blob_daten,256) ORDER BY owner_type,owner_id)),'-')
-                                      FROM track_blobs")->fetchColumn();
-    pruef('Die Spur-Blobs kommen Byte für Byte an', $hA === $hB && $hA !== '-',
+     * die Hexschreibweise der Binärspalten. Seit Web 23 die Hüllen der
+     * Spurstücke (S11-12); bis dahin die SPUR1-Blobs in `track_blobs` und die
+     * Fließkommazahlen in `track_points`. */
+    $hA = (string)$pdo->query("SELECT COALESCE(MD5(GROUP_CONCAT(SHA2(huelle,256) ORDER BY owner_type,owner_id,seq_from)),'-')
+                                 FROM track_stuecke")->fetchColumn();
+    $hB = (string)$pruefPdo->query("SELECT COALESCE(MD5(GROUP_CONCAT(SHA2(huelle,256) ORDER BY owner_type,owner_id,seq_from)),'-')
+                                      FROM track_stuecke")->fetchColumn();
+    pruef('Die Hüllen der Spurstücke kommen Byte für Byte an', $hA === $hB && $hA !== '-',
           'Sammelprüfsumme ' . substr($hA, 0, 16) . '…');
 
-    $lA = (string)$pdo->query("SELECT COALESCE(MD5(GROUP_CONCAT(CONCAT(lat,',',lon,',',COALESCE(ele,'-')) ORDER BY owner_type,owner_id,seq)),'-')
-                                 FROM track_points")->fetchColumn();
-    $lB = (string)$pruefPdo->query("SELECT COALESCE(MD5(GROUP_CONCAT(CONCAT(lat,',',lon,',',COALESCE(ele,'-')) ORDER BY owner_type,owner_id,seq)),'-')
-                                      FROM track_points")->fetchColumn();
-    pruef('Auch die Fliesskommazahlen der Spurpunkte kommen unverändert an',
-          $lA === $lB, 'Sammelprüfsumme ' . substr($lA, 0, 16) . '…');
+    $lA = (string)$pdo->query("SELECT COALESCE(MD5(GROUP_CONCAT(CONCAT(seq_from,',',punkte,',',n_original,',',ts_von,',',ts_bis,',',stufe) ORDER BY owner_type,owner_id,seq_from)),'-')
+                                 FROM track_stuecke")->fetchColumn();
+    $lB = (string)$pruefPdo->query("SELECT COALESCE(MD5(GROUP_CONCAT(CONCAT(seq_from,',',punkte,',',n_original,',',ts_von,',',ts_bis,',',stufe) ORDER BY owner_type,owner_id,seq_from)),'-')
+                                      FROM track_stuecke")->fetchColumn();
+    pruef('Auch der Umriss der Stücke (Nummern, Zeiten, Stufe) kommt unverändert an',
+          $lA === $lB && $lA !== '-', 'Sammelprüfsumme ' . substr($lA, 0, 16) . '…');
 }
 
 /* =========================================================================

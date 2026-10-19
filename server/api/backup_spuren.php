@@ -6,56 +6,32 @@ require_once __DIR__ . '/../spur_lib.php';
 /**
  * POST api/backup_spuren.php — die Spuren eines Backups, blockweise.
  *
- * WOFUER (Konzept S2, 3.2.3). Fassung 4 legt Spuren als SPUR1-Blob in die
- * Backup-Datei. Der Browser holt sie in Bloecken, versiegelt sie zu
- * Spurteilen von hoechstens 2 MB und haengt sie ans ZIP — er packt dabei nie
- * einen einzelnen Punkt an.
+ * WOFUER (Konzept S2, 3.2.3; seit S11-06a Nutzlast 13). Der Browser holt je
+ * Block von Kennungen die verschlossenen Stuecke samt Kennung (`ref`) und
+ * Sperrzeiten, oeffnet sie und schreibt die Spur als Punktliste in den
+ * Spurteil der Sicherung. Der Server oeffnet nichts.
  *
- * WARUM NICHT ueber `api/export_data.php`. Der liefert Punktlisten und traegt
- * drei Regeln, die HIER falsch waeren:
+ * WARUM NICHT ueber `api/export_data.php`. Der filtert `deleted_at IS NULL`
+ * und verlangt den Haken „personenbezogene Angaben" (A9). Ein Backup enthaelt
+ * den Papierkorb (E-S1-01), und eine anonyme Fassung gibt es dort nicht.
  *
- *   - Er filtert `deleted_at IS NULL`. Ein Backup enthaelt den
- *     Papierkorb (E-S1-01) — wer diesen Filter uebernimmt, verliert genau
- *     das, was jemand mit dem Backup retten wollte.
- *   - Er verlangt den Haken „personenbezogene Angaben" (A9). Bei einer
- *     Backup gibt es die anonyme Fassung nicht; es gaebe keinen Haken zu
- *     umgehen.
- *   - Er gibt Punkte aus. Hier soll gerade NICHT ausgepackt werden.
+ * Rumpf: {owner_type, ids: [..], form: 'punkte'}. Antwort je eigener Kennung:
  *
- * DIE FALLUNTERSCHEIDUNG STEHT NICHT HIER, sondern in
- * `spur_fuer_sicherung_viele()` (spur_lib.php): Blob durchreichen, Zeilen neu
- * kodieren, oder ablehnen. Dieser Endpunkt prueft, WEM die Kennung gehoert,
- * und reicht weiter — die Spurlogik hat genau eine Stelle (CLAUDE.md 4).
+ *   {"12": {"ref": "m-…", "stuecke": [{seq_from, punkte, …, huelle}],
+ *           "sperren": [{von, bis}]}}
  *
- * ANTWORT je Kennung eine Zeile, und zwar auch fuer die Faelle, die keine
- * Spur ergeben. Ein stilles Weglassen liesse den Browser raten, ob eine Spur
- * fehlt oder nie da war.
- *
- *   {"12": {"blob": "<Base64>", "stufe": 2, "n_original": 443, "n": 443}}
- *   {"13": {"leer": true}}
- *   {"14": {"fehler": "luecke", "grund": "…"}}
- *   {"15": {"offen": true}}          Zeit abgelaufen — erneut holen
+ * BIS WEB 22.7.0 gab es daneben die Form `blob` (SPUR1, aus Zeilen und Blob
+ * neu kodiert, mit Zeitgrenze und `offen`) und in der Form `punkte` den
+ * Altbestand als Klartextpunkte. Beides ist mit dem Klartext gegangen
+ * (S11-12); eine andere Form als `punkte` antwortet 400.
  */
 
 /** Hoechstens so viele Kennungen je Anfrage — dieselbe Zahl wie im Export. */
 const BACKUP_SPUREN_BLOCK = 25;
 
-/**
- * Zeitfenster einer Anfrage (Z3: hoechstens 30 s), mit Reserve.
- *
- * WARUM ES SIE GIBT. Das Neukodieren einer Stufe-1-Spur kostet Zeit, die mit
- * der Punktzahl waechst; 25 Spuren an der Obergrenze waeren rund 17 Sekunden
- * reines Rechnen. Laeuft die Anfrage in das Zeitlimit von PHP, ist das KEIN
- * `Throwable` — der `catch` unten faengt es nicht, und die Nutzerin bekommt
- * eine leere Antwort ohne Meldung. Also wird vorher aufgehoert und der Rest
- * als `offen` gemeldet; der Browser holt ihn im naechsten Zug.
- */
-const BACKUP_SPUREN_FENSTER_S = 20.0;
-
 try {
     api_methode();
     csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
-    $t0 = microtime(true);
 
     $b = api_rumpf();
 
@@ -89,55 +65,25 @@ try {
         $ids, [$userId]);
     $eigene = array_map(static fn($r) => (int)$r['id'], $eigeneZeilen);
 
-    /* DIE FORM `punkte` (S11-06a, Nutzlast 13, E-S11-56). Seit S11-04 liegt
-     * eine Spur verschlossen in Stuecken, die nur der Browser oeffnet; der
-     * Server kann daraus kein SPUR1 mehr bauen. Der Browser bekommt deshalb
-     * je Spur den Altbestand als Punkte ([seq, lat, lon, ele, ts], wie bis
-     * Nutzlast 7) und die Stuecke samt Kennung und Sperrzeiten, oeffnet sie
-     * und schreibt die Spur als Punktliste. Bis Web 22.4.0 kannte dieser
-     * Endpunkt nur SPUR1 — eine Spur aus Stuecken kam als `leer` zurueck und
-     * fehlte im Backup (F-S11-63). Die Form `blob` bleibt fuer das
-     * Konto-Backup der Verwaltung (S11-06c). */
-    if ((string)($b['form'] ?? '') === 'punkte') {
-        $refVon = [];
-        foreach ($eigeneZeilen as $r) { $refVon[(int)$r['id']] = (string)$r['client_ref']; }
-        $aus = [];
-        foreach ($eigene as $id) {
-            $aus[(string)$id] = ['punkte' => [], 'ref' => $refVon[$id] ?? '', 'stuecke' => [],
-                                 'sperren' => []];
-        }
-        foreach (spur_lesen_viele($pdo, $ownerType, $eigene) as $id => $punkte) {
-            foreach ($punkte as $p) {
-                $aus[(string)$id]['punkte'][] = [(int)$p[0], $p[1], $p[2], $p[3], (int)$p[4]];
-            }
-        }
-        foreach (spur2_lesen_viele($pdo, $ownerType, $eigene) as $id => $stuecke) {
-            $aus[(string)$id]['stuecke'] = $stuecke;
-            $aus[(string)$id]['sperren'] = array_map(
-                static fn($x) => ['von' => $x['von_ts'], 'bis' => $x['bis_ts']],
-                schnitte_lesen($pdo, $ownerType, (int)$id));
-        }
-        json_out(['spuren' => $aus ?: new stdClass()]);
+    if ((string)($b['form'] ?? '') !== 'punkte') {
+        json_out(['error' => 'form', 'meldung' => 'Erwartet wird die Form „punkte".'], 400);
     }
-
-    /* Fremde oder erfundene Kennungen fallen hier heraus. Sie werden NICHT
+    /* Fremde oder erfundene Kennungen fallen oben heraus. Sie werden NICHT
      * gemeldet: Der Browser hat die Liste aus dem Kern, den derselbe Server
      * gerade geliefert hat — eine Kennung, die nicht dabei ist, ist keine
      * Auskunft ueber ein anderes Konto, sondern ein veralteter Stand. */
-    $spuren = spur_fuer_sicherung_viele($pdo, $ownerType, $eigene,
-                                        $t0 + BACKUP_SPUREN_FENSTER_S);
-
+    $refVon = [];
+    foreach ($eigeneZeilen as $r) { $refVon[(int)$r['id']] = (string)$r['client_ref']; }
     $aus = [];
-    foreach ($spuren as $id => $s) {
-        if (isset($s['blob'])) {
-            $aus[(string)$id] = ['blob' => base64_encode($s['blob']),
-                                 'stufe' => $s['stufe'],
-                                 'n_original' => $s['n_original'], 'n' => $s['n']];
-        } else {
-            $aus[(string)$id] = $s;
-        }
+    foreach ($eigene as $id) {
+        $aus[(string)$id] = ['ref' => $refVon[$id] ?? '', 'stuecke' => [], 'sperren' => []];
     }
-
+    foreach (spur2_lesen_viele($pdo, $ownerType, $eigene) as $id => $stuecke) {
+        $aus[(string)$id]['stuecke'] = $stuecke;
+        $aus[(string)$id]['sperren'] = array_map(
+            static fn($x) => ['von' => $x['von_ts'], 'bis' => $x['bis_ts']],
+            schnitte_lesen($pdo, $ownerType, (int)$id));
+    }
     json_out(['spuren' => $aus ?: new stdClass()]);
 } catch (Throwable $ex) {
     json_fehler($ex, 'backup');

@@ -7,7 +7,7 @@ Referenzzustand.
 ## Aufruf
 
 ```bash
-python3 kreislauf.py --art csv|edbak|edbak-alt --frisch   # Konto → Einspielen → Export → Vergleich
+python3 kreislauf.py --art csv|edbak --frisch   # Konto → Einspielen → Export → Vergleich
 python3 vergleichen.py --art csv a.zip b.zip [--ausnahmen ausnahmen/csv_umlauf.json] [--bericht …]
 python3 vergleichen.py --art edbak --testabweichung a.edbak a.edbak --passwort …   # Probe aufs Exempel
 python3 pruefkonto.py anlegen|loeschen umlauf-<name>@example.invalid   # Prüfkonto für Proben (RP-01)
@@ -30,8 +30,8 @@ gescheitert: unbekannt" heißt dann: die Adresse prüfen, nicht das Passwort.
 ## Erwartete Zahl
 
 **0 unerklärte Abweichungen**; die erwarteten stehen mit Zahl und Grund im
-Bericht. Stand 14.09.2026 mit `--frisch`: csv 9 120 Vergleiche / 1 021
-erwartet, edbak 287 687 / 16. `--testabweichung`: CSV 10, Backup 12 Proben.
+Bericht. Mit `--frisch`: csv 9 120 / 1 021 (14.09.2026), edbak 347 566 / 22
+(19.10.2026, Referenz Nutzlast 13). `--testabweichung`: CSV 10, Backup 12.
 
 ## Was es nicht kann
 

@@ -592,9 +592,8 @@
      *
      * ÜBERSCHREIBEN FÜHRT ZUSAMMEN (Betreiberin, 16.10.2026, E-S11-52): Was
      * die Datei nicht nennt, bleibt — Orte der Phasen (je Phasennummer der
-     * Reihe nach), die Reanimation, und im Blob jeder Eintrag. Der Altbestand
-     * im Klartext (Spalten, `mission_phases.lat/lon`, `resus_*`) zieht dabei
-     * mit um; der Server leert ihn danach.
+     * Reihe nach), die Reanimation, und im Blob jeder Eintrag. (Bis
+     * Web 22.7.0 zog dabei auch der Altbestand im Klartext mit um.)
      *
      * @param {Object} m      die Zeile aus der Datei
      * @param {Object} aus    der Eintrag der Nutzlast (wird ergänzt)
@@ -621,7 +620,7 @@
             return kk.k;
         };
         /* Was der vorhandene Einsatz an Orten und Reanimation hat: aus der
-           Huelle, sonst aus dem Altbestand (absolute Zeiten). */
+           Huelle (absolute Zeiten). */
         var altOrte = [], altRea = [];
         if (alt) {
             if (alt.ort_huelle) {
@@ -641,11 +640,6 @@
                     altRea.push({ ts: alt.started_ts + r.t, ereignisse: (r.ereignisse || []).map(function (e) {
                         return { art: e.art, ts: alt.started_ts + e.t }; }) });
                 });
-            } else {
-                (alt.phasen || []).forEach(function (o) {
-                    if (o.lat != null) { altOrte.push({ phase: o.phase, ts: o.ts, lat: o.lat, lon: o.lon }); }
-                });
-                altRea = alt.alt_rea || [];
             }
         }
         var vorrat = {};
@@ -707,7 +701,7 @@
         aus.ort_phasen = liste.map(function (p) { return [p.phase, p.ts]; });
         (aus.phases || []).forEach(function (p) { delete p.lat; delete p.lon; });
 
-        /* Der Blob: Bestand (samt Altbestand der Spalten) unter der Datei. */
+        /* Der Blob: Bestand unter der Datei. */
         var neu = {};
         if (alt) {
             if (alt.pat_blob && alt._patState !== 'ok') {
@@ -715,8 +709,6 @@
                     + 'sich nicht lesen — er kann nicht überschrieben werden. Bitte diese Zeile überspringen.');
             }
             Object.assign(neu, alt._pat || {});
-            if (!neu.transport_dest && alt.alt_ziel) { neu.transport_dest = alt.alt_ziel; }
-            if (neu.ortshoehe == null && alt.alt_hoehe != null) { neu.ortshoehe = alt.alt_hoehe; }
         }
         Object.assign(neu, pat);
         var zLat = nummerOderNull(m.dest_lat), zLon = nummerOderNull(m.dest_lon);

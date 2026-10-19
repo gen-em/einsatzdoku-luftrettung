@@ -175,9 +175,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      Der Nachlöse-Kern (P5a/AP11, E-P5a-21): Fingerabdruck
 │   │                      der Tabelle, Stand in `app_state`, `gm_nachaufloesen()`
 │   │                      in Blöcken. Job UND Skript benutzen dieselbe Fassung
-│   ├── spur_lib.php       Spurpunkte lesen und schreiben — die EINZIGE Stelle,
-│   │                       die `track_points`/`track_blobs` anfasst (4.97);
-│   │                       seit Web 22.0.1 auch `track_stuecke` (SPUR2, 4.99s)
+│   ├── spur_lib.php       Spurstücke lesen und schreiben — die EINZIGE Stelle,
+│   │                       die `track_stuecke` anfasst (SPUR2, 4.97, 4.99s;
+│   │                       bis Web 22.7.0 dazu `track_points`/`track_blobs`)
 │   ├── geraetehuelle_lib.php  Die Gerätehülle VERSCHLIESSEN (S11-04a) — für
 │   │                       Proben, Demo und den direkten Rückweg der
 │   │                       Verwaltung (S11-06c); byte-gleich mit Browser und
@@ -375,11 +375,6 @@ Daten erst nach Server-Bestätigung.
 │   ├── status_lib.php     die Karten der Statusseite an einer Stelle —
 │   │                      Server, Backups, Plattform, Sicherheit. In P5a
 │   │                      viermal erweitert (AP2, AP9, AP10, AP11)
-│   ├── site_elevation_lib.php
-│   │                       Höhe über dem Einsatzort (`site_ele_m`) — seit
-│   │                       Web 22.2.0 nur noch für GPX-Einlesen und
-│   │                       Sicherung; die Regel rechnet sonst der Browser
-│   │                       (`EdOrtsdaten.ortshoehe()`, 4.99s)
 │   ├── betrieb_updates.php  Betrieb → Updates (S8/AP2): Wartungsmodus,
 │   │                       ausstehende Migrationen mit Vorschau und Lauf,
 │   │                       ausgeführte Migrationen, Fassung
@@ -978,13 +973,13 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`uhr_gesperrt`** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; hieß bis Web 20.24.2 `manual` und brach damit die Einrichtung auf MySQL 8.4.0–8.4.10 (reserviertes Wort, Backlog Nr. 238) — **in Sicherungs- und Exportdatei heißt das Feld weiter `manual`**, abgebildet per Alias; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes, seit Web 6.2.0 auch der manuelle Abfahrtort, seit Web 19.0.0 auch die Notizen des Einsatzes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr; der ganze Katalog steht in 4.98); **`ort_huelle`** (seit Web 22.0.1, S11-04a) = die **Einsatzhülle**: Koordinaten der Phasen und Reanimation als Gerätehülle unter dem Kontoschlüssel, Innenform JSON — geschrieben nur von `ingest.php`, gelesen nur vom Browser (4.99s) |
-| `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
-| `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`uhr_gesperrt`** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; hieß bis Web 20.24.2 `manual` und brach damit die Einrichtung auf MySQL 8.4.0–8.4.10 (reserviertes Wort, Backlog Nr. 238) — **in Sicherungs- und Exportdatei heißt das Feld weiter `manual`**, abgebildet per Alias; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; (`site_ele_m`, die berechnete Einsatzort-Höhe, ist mit Web 23 gefallen — sie liegt als `ortshoehe` im `pat_blob`, 4.99s); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes, seit Web 6.2.0 auch der manuelle Abfahrtort, seit Web 19.0.0 auch die Notizen des Einsatzes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr; der ganze Katalog steht in 4.98); **`ort_huelle`** (seit Web 22.0.1, S11-04a) = die **Einsatzhülle**: Koordinaten der Phasen und Reanimation als Gerätehülle unter dem Kontoschlüssel, Innenform JSON — geschrieben nur von `ingest.php`, gelesen nur vom Browser (4.99s) |
+| `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette): Nummer und Zeit. Die Position liegt seit Web 22 in der Einsatzhülle; die Spalten `lat`/`lon` sind mit Web 23 gefallen (S11-12). Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
+| ~~`resus_sessions` / `resus_events`~~ | **Mit Web 23 gefallen** (S11-12). Bis dahin die Reanimationen im Klartext; seit Web 22 liegt der Verlauf in der Einsatzhülle (`missions.ort_huelle`, 4.99s) |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
-| `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → der Job `waisen` entfernt Waisen (4.97a). **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
-| `track_stuecke` | **Seit Web 22.0.1 (S11-04a) die Spur, wie sie ankommt: verschlossene Stücke** (SPUR2), eine Zeile je Stück, PK `(owner_type, owner_id, seq_from)`. Klartext nur `punkte`, `n_original`, `ts_von`, `ts_bis`, `stufe` (1 Gerät, 2 zusammengefügt, 3 ausgedünnt); die Punkte stehen in `huelle` (Gerätehülle, Art `spur`/`ruhe`, Platz `<seq_from>:<punkte>`; ab Stufe 2 `<seq_from>:<punkte>:<stufe>:<n_original>`, Innenform gepackt, E-S11-71). Stufe 2 und 3 entstehen seit Web 22.6.0 im Wartungslauf des Browsers. Wie `track_points` ohne FK; gelesen und geschrieben nur über `spur_lib.php` — 4.99s |
-| `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Job `waisen` ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
+| ~~`track_points`~~ | **Mit Web 23 gefallen** (S11-12). Bis dahin GPS-Punkte im Klartext als Zeilen, PK `(owner_type, owner_id, seq)`, seit Web 10.0.0 nur noch der Eingangspuffer der Uhr; seit Web 22.0.1 kam nichts mehr an |
+| `track_stuecke` | **Seit Web 22.0.1 (S11-04a) die Spur, wie sie ankommt: verschlossene Stücke** (SPUR2), eine Zeile je Stück, PK `(owner_type, owner_id, seq_from)`. Klartext nur `punkte`, `n_original`, `ts_von`, `ts_bis`, `stufe` (1 Gerät, 2 zusammengefügt, 3 ausgedünnt); die Punkte stehen in `huelle` (Gerätehülle, Art `spur`/`ruhe`, Platz `<seq_from>:<punkte>`; ab Stufe 2 `<seq_from>:<punkte>:<stufe>:<n_original>`, Innenform gepackt, E-S11-71). Stufe 2 und 3 entstehen seit Web 22.6.0 im Wartungslauf des Browsers. Ohne FK (polymorph); gelesen und geschrieben nur über `spur_lib.php` — 4.99s |
+| ~~`track_blobs`~~ | **Mit Web 23 gefallen** (S11-12). Bis dahin dieselben Punkte als Klartext-Blob (Format SPUR1), eine Zeile je Spur; gemessen 62,4 Byte je Punkt als Zeile gegen 3,58 als Blob. Stufe und `n_original` tragen seither die Stücke |
 | `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Welches Rettungsmittel Fähigkeiten führen darf, entscheidet seit Web 20.3.0 `veh_caps_erlaubt()` (`db.php`) aus Typ UND Betriebsart** — `kind = 'air'` bei `standard`/`veranstaltung`/`sonstiges` (E29), beide Betriebsarten beim Typ `bergwacht`. Die Spalte `faehigkeiten` in `VEHICLE_TYPEN` ist die Quelle; das Schema führt die Regel nicht. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` = das Konto, seit Web 21.0.0 `NOT NULL` — siehe den Hinweis unter der Tabelle |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
 | `resources` | Vorbelegung „Andere Rettungsmittel"; `user_id` = das Konto |
@@ -1002,7 +997,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | `rechtstexte` | Die Rechtstexte dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, seit Web 20.19.0 auch `nutzungsbedingungen` / `avv`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 5d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
-| `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
+| `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht der Zeitraum der Stücke (`ts_von`/`ts_bis`; bis Web 22.7.0 `track_points.ts`) — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz (seit Web 22.2.0 NULL-fähig: NULL = ein gelöschter Zeitraum, Backlog Nr. 161), `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der die Protokollseite filtert; Wort und Ton dazu im Katalog `PROTOKOLL_ARTEN`), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Die Seite Verwaltung → Protokoll (seit Web 20.39.0) liest sie zusammen mit fünf weiteren Tabellen, der Job `protokoll_archiv` archiviert sie. Siehe 4.99g |
 | `konto_einwilligungen` | Welche Fassung eines Rechtstextes dieses Konto angenommen hat (seit Web 20.19.0, P5b/AP4). `(user_id, schluessel)` als Primärschlüssel — **eine Zeile je Konto und Dokument, nicht je Annahme**; eine neue überschreibt die alte. `stand_am` ist die **angenommene** Fassung, der Vergleich gegen `rechtstexte.stand_am` ist die ganze Prüfung. Der Verlauf steht im Protokoll und überlebt dort die Kontolöschung; `ON DELETE CASCADE` ist hier richtig, weil eine Einwilligung ohne Konto keinen Gegenstand hat. Siehe 4.99j |
@@ -1667,9 +1662,10 @@ Einträge, `?teil=eintraege&ab=…&anzahl=250` dann Fenster von Einsätzen und
 Ruhesegmenten — ohne Punktlisten, geschützte Angaben weiterhin als
 Chiffretext. Er entschlüsselt sie je Fenster mit dem Inhaltsschlüssel, ersetzt
 sie durch Klartext, öffnet die Einsatzhüllen (Orte der Phasen, Reanimation —
-seit Web 22.5.0, S11-06a), holt die Spuren blockweise als Altbestand und
-verschlossene Stücke (`api/backup_spuren.php`, Form `punkte`, 25 Kennungen je
-Anfrage), öffnet die Stücke und schreibt daraus ein ZIP
+seit Web 22.5.0, S11-06a), holt die Spuren blockweise als verschlossene
+Stücke (`api/backup_spuren.php`, Form `punkte`, 25 Kennungen je Anfrage; bis
+Web 22.7.0 dazu der Altbestand im Klartext), öffnet die Stücke und schreibt
+daraus ein ZIP
 mit versiegelten Teilen (**Containerfassung 4**, seit Web 11.1.0):
 `manifest.edbak`, `kopf.edbak`, `eintraege/NNNN.edbak`, `spuren/NNNN.edbak`.
 Jedes Teil ist ein AES-GCM-Container; die Zusatzdaten binden
@@ -1692,15 +1688,19 @@ der Zuordnung `spur_ref` → angelegter Datensatz samt `client_ref`. Zuletzt
 gehen die Spuren an `api/backup_spuren_restore.php` — geprüft, und
 Vorhandenes übersprungen.
 
-**Seit Web 22.5.0 (S11-06b) verschließt der Browser vor dem Senden**, aus
-jeder Nutzlast von 6 bis 13 gleich: Orte und Reanimation in die Einsatzhülle,
-Transportziel und Ortshöhe in den `pat_blob`, Spuren — Punktliste im Eintrag,
-SPUR1-Blob oder Punktliste im Spurteil — in Stücke unter dem öffentlichen
-Schlüssel des Zielkontos (`einstellungen.php`, Helfer `rw…`; SPUR1 liest
-`EdOrtsdaten.spur1Lesen()`). `edbak_restore(…, 'browser')` weist Klartext ab,
-bevor etwas liegt (`edbak_klartext_fund()`, `400 klartext`). Der direkte Weg
-der Verwaltung und der Demo-Reset rufen `'server'`: Dort verschließt der
-Server selbst (`geraetehuelle_lib.php`, E-S11-57, E-S11-20). Aufbau und
+**Seit Web 22.5.0 (S11-06b) verschließt der Browser vor dem Senden**: Orte
+und Reanimation in die Einsatzhülle, Transportziel und Ortshöhe in den
+`pat_blob`, die Punktlisten der Spurteile in Stücke unter dem öffentlichen
+Schlüssel des Zielkontos (`einstellungen.php`, Helfer `rw…`).
+`edbak_restore(…, 'browser')` weist Klartext ab, bevor etwas liegt
+(`edbak_klartext_fund()`, `400 klartext`). **Seit Web 23 (S11-12) nimmt
+dieser Weg nur noch Nutzlast 13** — Endpunkt und `edbak_restore()` weisen
+eine ältere Datei mit `409 version_alt` ab, eine einteilige Datei weist
+schon der Browser ab; bis Web 22.7.0 verschloss er jede Nutzlast ab 6 und
+las SPUR1 selbst (`EdOrtsdaten.spur1Lesen()`). Auch die Verwaltung spielt
+ein Paket seit Web 23 über `'browser'` ein (E-S11-84). `'server'` ruft nur
+noch der Demo-Reset: Dort verschließt der Server die Nutzlast-7-Fixture aus
+dem Repositorium selbst (`geraetehuelle_lib.php`, E-S11-20). Aufbau und
 Tabelle: `docs/Backup-Format.md` 3.
 
 **Die Warnung vor unlesbaren Angaben steht vor dem ersten Schreiben.** Ob es
@@ -1767,7 +1767,7 @@ Rückfrage mit. Sie sehen sich ähnlich und sind ausdrücklich verschieden:
 | Anlass | Fehlzuordnung eines Einsatzes | falsch gestellte Uhr |
 | Umfang | ein Einsatz | ganzer Tag samt Anhang |
 | Zeitstempel | **bleiben** | **wandern mit** |
-| Tabellen | `missions` (+ ggf. `days`) | `days`, `missions`, `rest_segments`, `mission_phases`, `resus_sessions`, `resus_events`, `track_points` |
+| Tabellen | `missions` (+ ggf. `days`) | `days`, `missions`, `rest_segments`, `mission_phases`, `track_stuecke` (`spur_zeit_verschieben()`), `track_cuts` (bis Web 22.7.0 dazu `resus_sessions`, `resus_events`, `track_points`) |
 
 Drei Punkte, die beim Lesen leicht untergehen:
 
@@ -1775,8 +1775,9 @@ Drei Punkte, die beim Lesen leicht untergehen:
   `Tage × 86400` Sekunden. Läuft die Verschiebung über eine Zeitumstellung,
   ist der Abstand um eine Stunde größer oder kleiner — genau darum bleibt die
   dokumentierte Ortszeit stehen. Eine feste Sekundenzahl verschöbe sie.
-* **`track_points.ts` trägt die Unix-Epoche**, nicht ein `DATETIME`, und die
-  Spalte ist `UNSIGNED`. Eine Rückwärtsverschiebung unter null wäre ein
+* **`track_stuecke.ts_von`/`ts_bis` tragen die Unix-Epoche** (bis Web 22.7.0
+  ebenso `track_points.ts`), nicht ein `DATETIME`, und die Spalten sind
+  `UNSIGNED`. Eine Rückwärtsverschiebung unter null wäre ein
   Datenbankfehler mitten in der Transaktion; sie wird vorher geprüft und
   benannt.
 * **Papierkorb-Einträge wandern mit.** Sie hängen seit Web 6.0.0 über
@@ -2059,25 +2060,17 @@ den Standort des Rettungsmittels zurück. `dt_vehicle_erlaubt()` und
 `dt_base_erlaubt()` gelten auch hier — ohne sie beantwortete der Endpunkt für
 jede Kennung, welche **Namen** an einem fremden Standort hinterlegt sind.
 
-**Einsatzort-Höhe:** `site_elevation_lib.php` (`compute_site_elevation()`) ist
-die **einzige Implementierung** — Referenzzeitpunkt Phase 5 „Ankunft
-PatientIn", Fallback Phase 6, Toleranz 300 s (Konstante
-`SITE_ELE_TOLERANCE_S`) zum zeitlich nächstgelegenen `track_points.ele`.
-Aufgerufen von `ingest.php` (nach jedem Uhr-Upload), `einsatz_form.php` (nach
-manuellem Speichern — Phasen ändern sich, der Track bleibt gleich),
-`backup_lib.php` (nach Restore — aus den gerade eingespielten Phasen/Track neu
-berechnet statt aus der Datei übernommen) und `migration_lib.php` (Backfill bei
-der Migration). Kein Formularfeld, daher nicht in `mission_fields.php`.
-
-Auf dem Uhr-Weg und beim Wiedereinspielen läuft die Berechnung **nach** dem
-Abschluss der Transaktion und in einem eigenen Fehlerblock: Die Höhe ist ein
-Komfortwert, und ein Fehler darin darf weder einen Upload noch eine
-Wiederherstellung kosten (seit Web 4.6.0 auch beim Wiedereinspielen, vorher
-stand der Aufruf dort innerhalb der Transaktion). Der Unterschied zwischen
-beiden Wegen ist die Meldung: Der Uhr-Weg schweigt (die Uhr kann mit der
-Auskunft nichts anfangen), das Wiedereinspielen zählt die Fehlschläge und gibt
-sie als `hoehe_fehler` zurück — dort wertet ein Mensch aus, was angekommen
-ist.
+**Einsatzort-Höhe:** Seit Web 22 rechnet sie der Browser
+(`EdOrtsdaten.ortshoehe()`, 4.99s) — Referenzzeitpunkt Phase 5 „Ankunft
+PatientIn", Fallback Phase 6, Toleranz 300 s zum zeitlich nächstgelegenen
+Spurpunkt — und legt sie als `ortshoehe` in den `pat_blob`. Kein
+Formularfeld, daher nicht als Spalte im Feldkatalog. Bis Web 22.7.0 stand
+daneben `site_elevation_lib.php` (`compute_site_elevation()`) für die
+Spalte `missions.site_ele_m`, zuletzt nur noch für den Altbestand; Datei,
+Spalte und der Backfill der Migration `2026_07_25_einsatzort_hoehe` sind mit
+Web 23 gefallen (S11-12). Eine Installation, die von vor Web 2.3.0 aufsteigt,
+bekommt die Spalte noch angelegt und gleich wieder entfernt — ohne
+Rückfüllung, weil der Server die Spur nicht mehr lesen kann.
 
 **Zeitraum-API:** `api/range.php` liefert alle Einsätze eines Jahres oder Monats
 **bewusst ohne Trackpunkte** — bei einem ganzen Jahr wären das
@@ -2217,8 +2210,8 @@ gerettet hat (Konzept, Berichtigung B6).
 Seit Web 6.2.0 führt der Index zusätzlich `transport_mode`, `na_escort` und
 `false_alarm` — die Klartextfelder der Etappe 2, **soweit die Suche sie
 auswertet**. *(`transport_dest` stand bis Web 22.1.0 ebenfalls hier; seither
-liegt es im `pat_blob`, und die Suche liest es nach dem Entsperren.)* `dest_lat`/`dest_lon` und `start_src` bleiben draußen: Nach einer
-Koordinate oder nach der Herkunft eines Abfahrtorts wird nicht gefiltert, und
+liegt es im `pat_blob`, und die Suche liest es nach dem Entsperren.)* `start_src` bleibt draußen (wie bis Web 22.7.0 `dest_lat`/`dest_lon`): Nach der
+Herkunft eines Abfahrtorts wird nicht gefiltert, und
 der Index führt grundsätzlich nur, was die Suche auch benutzt.
 
 **Filterzustand im URL-Fragment.** Der gesamte Zustand steht hinter dem `#`,
@@ -2717,12 +2710,12 @@ Datei-Upload ist damit ausgeschlossen. Kette:
 6. **`commit` mit `dup: 'overwrite'` löscht nichts, was die Datei nicht
    kennt** (seit Web 5.8.0, Prüfschritt P10). Die Felder unter der
    Export-Schranke — `crew_p1`…`crew_other`, `bw_info`, `other_ema`, `notes`,
-   `site_ele_m`, `pat_blob` — stehen im `UPDATE` als `COALESCE(?, spalte)`,
+   `pat_blob` — stehen im `UPDATE` als `COALESCE(?, spalte)`,
    dasselbe Muster, das der Diensttag-Pfad seit jeher benutzt. Vorher schrieb ein
    Rückimport ohne personenbezogene Angaben `NULL` über einen vollständigen
-   Bestand. Die Phasen werden weiterhin komplett ersetzt; liefert die Datei zu
-   einer Phase keine Koordinaten, erbt die neue Zeile die der bisherigen
-   gleicher Nummer (der Reihe nach). Der Preis: Felder unter der Schranke
+   Bestand. Die Phasen werden weiterhin komplett ersetzt (Nummer und Zeit;
+   ihre Orte stehen seit Web 22 in der Hülle, die der Browser zusammenführt,
+   unten 7). Der Preis: Felder unter der Schranke
    lassen sich per Import nicht mehr gezielt **leeren**.
 7. **Seit Web 22.4.0 keine Ortsdaten im Klartext** (S11-05e, E-S11-51,
    -52). `import_ui.js` legt Transportziel samt Koordinate und Ortshöhe in
@@ -2739,14 +2732,13 @@ Datei-Upload ist damit ausgeschlossen. Kette:
    `phases[].lat/lon`, `rea`) ist 400 `klartext`. Neue Einsätze tragen eine
    Kennung `imp-` + 24 Hex aus dem Browser, weil die Hülle vor der Zeile
    verschlossen wird. **Beim Überschreiben führt der Browser zusammen:**
-   `check` liefert je vorhandenem Einsatz Kennung, Beginn, Hülle,
-   Phasenzeiten und den Altbestand (Orte, Reanimation, Ziel, Höhe im
-   Klartext); Orte und Reanimation, die die Datei nicht nennt, und jeder
-   Eintrag des alten Blobs bleiben. Danach leert der Server die
-   Klartextstellen (Spalten, `mission_phases.lat/lon`, `resus_*`); in der
-   COALESCE-Liste steht `site_ele_m` deshalb nicht mehr. Geht der Bestand
-   eines Einsatzes nicht auf, verweigert der Browser die Übernahme und
-   nennt ihn.
+   `check` liefert je vorhandenem Einsatz Kennung, Beginn, Hülle und
+   Phasenzeiten; Orte und Reanimation, die die Datei nicht nennt, und jeder
+   Eintrag des alten Blobs bleiben. Geht der Bestand eines Einsatzes nicht
+   auf, verweigert der Browser die Übernahme und nennt ihn. (Bis Web 22.7.0
+   lieferte `check` dazu den Altbestand im Klartext, und der Server leerte
+   danach dessen Spalten; `site_ele_m` stand bis Web 22.4.0 in der
+   COALESCE-Liste.)
 
 Zwei Fallstricke, die dort bewusst gelöst sind:
 
@@ -2808,9 +2800,11 @@ serverseitig **nicht selektiert**, nicht erst im Browser weggelassen.
 **Der Haken heißt seit Web 5.8.0 „Personenbezogene Angaben einschließen"**
 (Block A9). Der Schlüssel im Request bleibt `patient` — er ist der Vertrag
 zwischen `export.js` und `export_data.php` —, aber er schaltet jetzt Besatzung
-(Einsatz und Diensttag), `bw_info`, `other_ema`, die Notizen, `site_ele_m`, die
-Phasenkoordinaten und den `pat_blob` gemeinsam ab — seit Web 22.4.0 auch
-Transportziel samt Koordinate, Kennung und Einsatzhülle (E-S11-53, -54);
+(Einsatz und Diensttag), `bw_info`, `other_ema`, die Notizen und den
+`pat_blob` gemeinsam ab — seit Web 22.4.0 auch Kennung und Einsatzhülle,
+und mit ihnen Transportziel samt Koordinate, Ortshöhe, Phasenorte und
+Reanimation (E-S11-53, -54; bis Web 22.7.0 standen Ziel, Höhe und
+Phasenorte des Altbestands daneben als Klartextspalten);
 `action=track` wird ganz abgewiesen. Die lokale Variable im Endpunkt heißt deshalb `$pers` und nicht
 `$patient`. Zusätzlich entfernt `entpersonalisieren()` in `export.js` dieselben
 Felder ein zweites Mal, bevor eines der drei Profile den Bestand sieht — eine
@@ -3395,60 +3389,61 @@ Deshalb liegen die Punkte seit S2 in drei Stufen:
 | 2 | verlustfreier Blob in `track_blobs` | sobald das Paket abgeschlossen ist |
 | 3 | ausgedünnter Blob | sechs Monate nach Einsatzende |
 
-> **Seit Web 22.0.1 (S11-04a) kommt nichts mehr in `track_points` an.**
-> Uhr und Handy schicken verschlossene Stücke, und `ingest.php` legt sie in
-> `track_stuecke` ab (SPUR2, 4.99s). Die drei Stufen bleiben als Begriff —
-> `stufe` steht an jedem Stück —, aber Zusammenfügen und Ausdünnen macht ab
-> S11-07 der Browser, weil der Server die Punkte nicht mehr sieht. Was hier
-> über `track_points` und `track_blobs` steht, gilt für den Altbestand, bis
-> das Einmalwerkzeug (S11-10) ihn umgehüllt hat.
+> **Seit Web 23 (S11-12) gibt es `track_points` und `track_blobs` nicht
+> mehr.** Seit Web 22.0.1 (S11-04a) schicken Uhr und Handy verschlossene
+> Stücke, und `ingest.php` legt sie in `track_stuecke` ab (SPUR2, 4.99s).
+> Die drei Stufen bleiben als Begriff — `stufe` steht an jedem Stück —, aber
+> Zusammenfügen und Ausdünnen macht seit S11-07 der Browser, weil der Server
+> die Punkte nicht mehr sieht. Was dieser Abschnitt über Zeilen, Blob und
+> SPUR1 erzählt, ist der Weg bis Web 22.7.0; er steht hier, weil Stufen,
+> Toleranzen und Schutzpunkte der Ausdünnung von dort stammen und im Browser
+> weitergelten.
 
 Stufe 1 bleibt, und zwar aus einem Grund: Der Upload der Uhr kommt in
-Teilstücken, ist idempotent und wiederholbar. Dafür ist eine Zeilentabelle
-richtig; ein Blob müsste bei jedem Teilstück neu geschrieben werden.
-
-**Die Wanderung zwischen den Stufen macht `jobs.php` (AP2/AP3), nicht dieser
-Abschnitt.** Was hier steht, ist das Format und der Zugriffsweg.
+Teilstücken, ist idempotent und wiederholbar. Dafür ist ein Stück je Paket
+richtig; ein großes Stück müsste bei jedem Teilstück neu geschrieben werden.
 
 #### Der Zugriffsweg: `spur_lib.php`, und sonst nichts
 
-Es gab sechs Stellen, die `track_points` per SQL lasen, jede mit einer eigenen
-Projektion. Bliebe das so, müsste jede von ihnen die Stufen kennen — und die
-erste, die es vergisst, zeigt eine leere Spur, ohne dass es auffällt. Alle
-sechs sind umgestellt:
+Bis S2 lasen sechs Stellen `track_points` per SQL, jede mit einer eigenen
+Projektion; die erste, die eine Stufe vergaß, zeigte eine leere Spur, ohne
+dass es auffiel. Seither gibt es einen Weg. Seit Web 23 liest er nur noch
+Stücke — der Server reicht sie verschlossen durch, öffnen kann nur der
+Browser:
 
 | Verbraucher | Funktion | Ausgabeform |
 |---|---|---|
-| Tagesansicht (`api/day.php`) | `spur_lesen_viele()` | `[lat, lon]` |
-| Einsatzansicht (`api/mission.php`) | `spur_lesen()` | `[lat, lon]` + `ts` für `track_idx` |
-| Export (`api/export_data.php`) | `spur_lesen_viele()`, `spur2_lesen_viele()`, `spur_zahlen()` | `[lat, lon, ele, ts]` + Stücke (seit Web 22.4.0) |
-| Backup, Nutzlast ≤ 7 (`backup_lib.php`) | `spur_lesen_viele()` | `[seq, lat, lon, ele, ts]` |
-| Backup, Fassung 4 (`api/backup_spuren.php`) | `spur_lesen_viele()`, `spur2_lesen_viele()` (Form `punkte`, seit Web 22.5.0); `spur_fuer_sicherung_viele()` (Form `blob`, Konto-Backup) | Punkte + Stücke; SPUR1-Blob, roh |
-| Rückweg der Fassung 4 (`api/backup_spuren_restore.php`, `edbak_spuren_schreiben()`) | `spur2_stueck_schreiben()`; im direkten Weg `spur_blob_pruefen()`, `spur_dekodieren()` | — |
-| Einsatzort-Höhe (`site_elevation_lib.php`) | `spur_lesen()` | ein Punkt |
+| Tagesansicht (`api/day.php`) | `spur2_lesen_viele()` | Stücke + Sperren |
+| Einsatzansicht (`api/mission.php`) | `spur2_lesen()` | Stücke + Sperren |
+| Export (`api/export_data.php`) | `spur2_lesen_viele()`, `spur_zahlen()` | Stücke; Punktzahl je Eintrag |
+| Backup, Fassung 4 (`api/backup_spuren.php`) | `spur2_lesen_viele()` (Form `punkte`; der Browser öffnet und schreibt Punktlisten) | Stücke |
+| Konto-Backup der Verwaltung (`adminbackup_lib.php`) | `spur2_lesen_viele()` | Stücke, wie sie liegen |
+| Rückweg der Fassung 4 (`api/backup_spuren_restore.php`, `edbak_spuren_schreiben()`) | `spur2_stueck_schreiben()` | — |
 | Umdatierung (`tageszuordnung_lib.php`) | `spur_min_ts()`, `spur_zeit_verschieben()` | — |
+| Wartungslauf (`api/wartungslauf.php`) | `spur2_faellig()`, `spur2_wartung_tauschen()` | Stücke |
 
 Dazu die Schreib- und Löschseite: `spur_naechste_seq()` liefert die
-Fortsetzungsmarke der Uhr (`ingest.php`), `spur_loeschen()` entfernt **Zeilen
-und Blob** und wird von jedem Löschweg gerufen. Seit Web 12.5.0 kommt
-`spur_teilen()` dazu — der Schnitt, siehe Abschnitt 4.97e.
-
-**`spur_lesen_viele()` setzt beide Stufen zusammen.** Zwischen Verdichtung und
-Ausdünnung darf die Uhr Punkte nachreichen; sie landen als Zeilen *hinter* dem
-Blob. Wer nur eine der beiden Stellen liest, zeigt eine Spur, der das Ende
-fehlt — ohne Fehlermeldung.
+Fortsetzungsmarke der Uhr (`ingest.php`, über `spur2_stand()`),
+`spur_stand()` Stufe und Punktzahlen für Formular und Wartung,
+`spur_loeschen()` entfernt die Stücke und wird von jedem Löschweg gerufen.
+Bis Web 22.7.0 gehörten dazu `spur_lesen()`, `spur_lesen_viele()` (Zeilen
+und Blob zusammengesetzt), `spur_fuer_sicherung_viele()`, `spur_teilen()` (der
+Schnitt im Altbestand), `spur_blob_pruefen()` und die SPUR1-Kodierung; sie
+sind mit dem Altbestand gegangen (S11-12).
 
 **Das Umdatieren eines Diensttags** war bis Web 9.14.0 ein einziges
-`UPDATE track_points SET ts = ts + ?`. An einem Blob geht das vorbei: Die
-Zeilen wanderten, die Blobpunkte blieben stehen, und die Spur hätte danach
-zwei Zeitrechnungen. `spur_zeit_verschieben()` schreibt den Blob deshalb neu.
-Die Stücke (seit S11-04) wandern über `ts_von`/`ts_bis` — die Punkte darin
-stehen relativ zu `ts_von`, die Hülle bleibt unverändert und geht weiter
-auf; `spur_min_ts()` sieht sie ebenfalls. Bis Web 22.3.0 fehlte beides, und
-ein umdatierter Diensttag ließ die Spuren seit S11-04 am alten Datum stehen
-(F-S11-58).
+`UPDATE track_points SET ts = ts + ?`, das an einem Blob vorbeiging.
+`spur_zeit_verschieben()` verschiebt heute `ts_von`/`ts_bis` der Stücke — die
+Punkte darin stehen relativ zu `ts_von`, die Hülle bleibt unverändert und
+geht weiter auf; `spur_min_ts()` sieht sie ebenfalls. Bis Web 22.3.0 fehlte
+das für Stücke, und ein umdatierter Diensttag ließ die Spuren seit S11-04 am
+alten Datum stehen (F-S11-58).
 
-#### Das Format SPUR1
+#### Das Format SPUR1 (bis Web 22.7.0)
+
+> Gelesen und geschrieben wird es seit Web 23 nirgends mehr (S11-12): weder
+> in der Datenbank noch in einer Sicherung. Die Beschreibung bleibt als
+> Werdegang — die Stücke der Stufe 2 und 3 übernehmen ihre Rechnung.
 
 Kopf unkomprimiert, 13 Byte:
 
@@ -3494,7 +3489,7 @@ tragen eine Nachkommastelle, die Rundlaufprüfung hätte bei drei von vier
 Spuren angeschlagen, und der Verdichtungsjob hätte nie eine Zeile gelöscht.
 Der Preis der Zehntelmeter sind 7 % Blobgröße.
 
-#### Die Rundlaufprüfung ist die letzte Instanz vor einem DELETE
+#### Die Rundlaufprüfung ist die letzte Instanz vor einem DELETE (bis Web 22.7.0)
 
 Die Verdichtung löscht Zeilen. Was danach fehlt, ist weg — es gibt keine
 zweite Quelle. `spur_rundlauf_pruefen()` schreibt den Blob, liest ihn sofort
@@ -3601,7 +3596,11 @@ Spur noch schafft (vorhergesagt 2,29 s, gemessen 2,40 s).
 
 #### Die Rundlaufprüfung der Stufe 3 ist eine andere
 
-`spur_rundlauf_pruefen()` allein ist hier **wertlos**: Die Behalteliste stammt
+*(Bis Web 22.7.0 auf dem Server; seit S11-07 dünnt der Browser aus, und die
+SPUR1-Funktionen dieses Absatzes sind mit Web 23 gefallen. Die fünf Bedingungen
+gelten unverändert.)*
+
+`spur_rundlauf_pruefen()` allein war hier **wertlos**: Die Behalteliste stammt
 aus `spur_dekodieren()` des Stufe-2-Blobs, ihre Werte liegen also schon auf der
 Formatauflösung; `spur_quantisieren()` ist darauf ein Nulloperator, und der
 Vergleich geht *immer* auf. Er wäre grün, auch wenn die Ausdünnung die halbe
@@ -3617,7 +3616,7 @@ Ersetzen eines Blobs.
 3. **Die Ränder bleiben** — Index 0 und n−1.
 4. **Die Zeitanker bleiben** — zu jedem Schutzzeitpunkt der Index, den die
    Verbraucher wählen würden (der *früheste* mit kleinstem |Δt|, mit `<`, wie
-   `site_elevation_lib.php` und `api/mission.php` es tun).
+   `EdOrtsdaten.ortshoehe()` es tut; bis Web 22.7.0 `site_elevation_lib.php`).
 5. **Die Genauigkeit ist eingehalten** — für *jeden* verworfenen Punkt gilt
    gegen den **endgültigen** Streckenzug, unabhängig nachgemessen und nicht aus
    der Buchführung der Rekursion übernommen, waagerecht ≤ 2 m und senkrecht
@@ -3646,8 +3645,9 @@ Einsätzen** gegen 3 MB Zielwert.
 
 - **Eine geänderte Phasenzeit sagt über die Ortshöhe nichts mehr.** Die
   behaltenen Punkte wurden für die *damaligen* Phasenzeiten geschützt.
-  `compute_site_elevation()` läuft bei jedem Speichern und schrieb bis Web
-  10.1.0 bedingungslos, auch `NULL` — wer einen zwei Jahre alten Einsatz
+  `compute_site_elevation()` (bis Web 22.7.0; heute `EdOrtsdaten.ortshoehe()`
+  im Browser) lief bei jedem Speichern und schrieb bis Web 10.1.0
+  bedingungslos, auch `NULL` — wer einen zwei Jahre alten Einsatz
   öffnet und eine Phase um zehn Minuten verschiebt, hätte die Höhe still
   verloren. Auf Stufe 3 wird ein vorhandener Wert deshalb **nicht mehr durch
   `NULL` ersetzt**; ein neu gefundener Wert wird sehr wohl geschrieben. Auf
@@ -3658,7 +3658,8 @@ Einsätzen** gegen 3 MB Zielwert.
   ausgedünnte Zahl. Das ist richtig — die Datei hat wirklich weniger Punkte —,
   gehört aber ins Handbuch, sonst liest es sich wie Datenverlust.
 - **Reanimationszeitpunkte sind nicht geschützt.** E-S2-05 nennt nur
-  Phasenzeitpunkte, und heute bindet nichts `resus_sessions` an die Spur. Wer
+  Phasenzeitpunkte, und heute bindet nichts die Reanimation (Einsatzhülle;
+  bis Web 22.7.0 `resus_sessions`) an die Spur. Wer
   die Hervorhebung später darauf ausweitet, findet für Alteinsätze keinen
   passenden Punkt mehr. Bewusste Grenze, keine Nachlässigkeit.
 
@@ -3830,14 +3831,14 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | `versand` | nein | Pakete auf die aktiven Backup-Ziele — und seit Web 20.14.0 die **Aufbewahrung dort** (4.97c); seit Web 20.39.0 auch die Archive des Protokolls, **ohne** Aufbewahrungsregel dort |
 | `komplett` | nein, nach Plan | Komplett-Backup der Installation (4.97d) |
 | `nachaufloesen` | nein, nur nach einer neuen Modelltabelle | Teilenummern bestehender Geräte erneut auflösen, in Blöcken von 200 (P5a/AP11, unten) |
-| `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
+| `waisen` | nein, läuft solange Rückstand da ist | Spurstücke ohne Eigentümer (bis Web 22.7.0 auch Zeilen und Blobs) — **bereichsweise** über den Primärschlüssel |
 
 **`verdichtung` und `ausduennen` gibt es seit Web 22.6.0 nicht mehr** (S11-07,
 E-S11-05). Sie standen hier von Web 10.2.0 bis 22.5.x und packten bzw.
 dünnten die Spuren auf dem Server. Seit S11 sieht der Server keine Koordinate
 mehr; das tut jetzt der **Wartungslauf im Browser** (4.99s, „Der Wartungslauf im Browser"). Den Altbestand im
-Klartext (`track_points`, `track_blobs`) fasst bis zum Einmalwerkzeug (S11-10)
-niemand mehr an (E-S11-70).
+Klartext (`track_points`, `track_blobs`) fasste bis zum Einmalwerkzeug (S11-10)
+niemand mehr an (E-S11-70); seit Web 23 gibt es ihn nicht mehr (S11-12).
 
 > **Diese Tabelle hat dreimal gehinkt, und beim dritten Mal ist die Ursache
 > behoben worden** (Backlog Nr. 208, Schritt 16, Web 20.26.0).
@@ -3953,9 +3954,9 @@ die Jobs so lange still haben.
 #### Die Waisensuche läuft bereichsweise (E-S2-18)
 
 Statt eines Anti-Joins über alles wandert eine Marke über den Primärschlüssel:
-je Häppchen höchstens `JOB_WAISEN_BLOCK` = 2000 Eigentümerkennungen, aus
-`track_points` **und** `track_blobs` (eine Waise kann als Zeile, als Blob oder
-als beides dastehen). Am Tabellenende fängt die Marke wieder von vorn an — ein
+je Häppchen höchstens `JOB_WAISEN_BLOCK` = 2000 Eigentümerkennungen aus
+`track_stuecke` (bis Web 22.7.0 aus `track_points` **und** `track_blobs` —
+eine Waise konnte als Zeile, als Blob oder als beides dastehen). Am Tabellenende fängt die Marke wieder von vorn an — ein
 Netz, das einmal durchläuft und dann liegen bleibt, ist keines.
 
 **Ehrlich gemessen ist das bei 3,31 Mio. Zeilen nicht schneller** (je fünf
@@ -4725,7 +4726,7 @@ steht.
 Daran hängt eine Bedingung: **Kein Literal darf je einen echten Zeilenumbruch
 enthalten.** `komp_quote()` bildet `\n`, `\r`, `\0`, `\x1a`, `'`, `"` und
 `\` ab; die Datei setzt dazu passend `SQL_MODE` ohne `NO_BACKSLASH_ESCAPES`.
-Binärspalten (`track_blobs.blob_daten`) gehen hexadezimal hinaus (`0x…`), eine
+Binärspalten (`track_stuecke.huelle`; bis Web 22.7.0 auch `track_blobs.blob_daten`) gehen hexadezimal hinaus (`0x…`), eine
 leere als `''` — `0x` ohne Ziffern wäre kein gültiges Literal.
 
 Weiter: INSERT-Stapel bis **1 MB**, Tabellen in einspielbarer Reihenfolge
@@ -4881,8 +4882,8 @@ den Index von vorn ab — bei 459 Häppchen also 459-mal die halbe Tabelle.
 **Eine Ausnahme:** Steht eine ENUM-Spalte **vorn** im Primärschlüssel, hilft
 auch das Auffächern nichts (`type=index`, 0,0125 s); mit `=` festgenagelt
 greift der Bereichszugriff wieder (0,0005 s). Führende ENUM-Spalten werden
-deshalb über ihre Werteliste durchlaufen — das betrifft `track_points` und
-`track_blobs` mit je zwei Werten.
+deshalb über ihre Werteliste durchlaufen — das betrifft `track_stuecke` mit
+zwei Werten (bis Web 22.7.0 auch `track_points` und `track_blobs`).
 
 #### Der Schnappschuss ist nicht scharf
 
@@ -5029,11 +5030,13 @@ heraus.
 > das Segment neu packt. **Preis:** Die Punktzahl an der Segmentzeile zählt
 > den gesperrten Zeitraum bis dahin mit.
 >
-> **`spur_teilen()` bleibt für den Altbestand** — die Rücknahme eines
-> Schnitts aus der Zeit vor S11 verschiebt dessen Klartextpunkte zurück.
-> `spur_loeschen()` hat dafür seit 22.2.0 den Schalter `['stuecke' => false]`:
-> Ohne ihn löschte `spur_teilen()` jedes verschlossene Stück, das inzwischen am
-> selben Segment angekommen war (F-S11-50).
+> **Ein Schnitt aus der Zeit vor Web 22.2.0 lässt sich seit Web 23 nicht
+> mehr zurücknehmen** (`409 altschnitt`, F-S11-94). Er hatte die Punkte aus
+> dem Segment in den Einsatz verschoben; bis Web 22.7.0 schob `spur_teilen()`
+> sie bei der Rücknahme zurück. Ohne Klartext kann der Server das nicht, und
+> eine Rücknahme nach heutiger Regel löschte die Stücke des Einsatzes, ohne
+> dass das Segment sie trägt. Erkannt wird ein solcher Schnitt daran, dass
+> sein Vermerk älter ist als die Migration `2026_10_15_loeschvermerk`.
 >
 > **Ein Stück löschen (Backlog Nr. 161, Aktion `loeschen`).** Endgültig: Der
 > Browser verschließt die Punkte **außerhalb** des Zeitraums neu (Art `ruhe`,
@@ -5042,8 +5045,8 @@ heraus.
 > `spur2_tauschen()` ersetzt die Stücke nur, wenn sie noch so liegen (`FOR
 > UPDATE`; sonst `409 stand`). Ein Vermerk **ohne Einsatz** (`track_cuts.
 > mission_id` NULL, Migration `2026_10_15_loeschvermerk`) sperrt den Zeitraum
-> gegen eine erneute Lieferung. Abgewiesen werden: ein Segment mit
-> Klartextpunkten (`409 altbestand`, bis das Einmalwerkzeug ihn umgezogen hat, 4.99k), das Löschen aller Punkte
+> gegen eine erneute Lieferung. Abgewiesen werden (bis Web 22.7.0 dazu ein
+> Segment mit Klartextpunkten, `409 altbestand`): das Löschen aller Punkte
 > (`409 alles`, dafür der Papierkorb), Stücke der Stufe 2 oder 3 (`409 stufe`,
 > bis S11-07). Eine Zeile im Protokoll (`spur_stueck_geloescht`, Reiter
 > Verwaltung). **Grenze:** Die Sicherung nimmt Vermerke über ihren Einsatz mit
@@ -5083,8 +5086,8 @@ gar nicht.
 Das Gerät weiß vom Schnitt nichts. Hatte es die Punkte des geschnittenen
 Zeitraums noch im Puffer — ein Funkloch reicht —, liefert es sie nach.
 
-Die naheliegende Abwehr ist `n_original`: `spur_lesen_viele()` übergeht jede
-Zeile mit `seq < n_original` (Abschnitt 4.97), der Schnitt müsste die Grenze
+Die naheliegende Abwehr ist `n_original`: `spur_lesen_viele()` überging bis
+Web 22.7.0 jede Zeile mit `seq < n_original` (Abschnitt 4.97), der Schnitt müsste die Grenze
 also nur hochsetzen. **Das trägt nicht.** `ingest.php` vergibt die
 Sequenznummern aus `seq_from` — der Marke, die das Gerät zuletzt bekommen
 hat. Gepufferte Punkte kommen deshalb **oberhalb** der Grenze an und laufen
@@ -5132,8 +5135,9 @@ damit nichts tun.
 unmittelbar liest, bekommt früher oder später eine halbe Auskunft, etwa indem
 er den Vermerk zum Ziel löscht und den zur Quelle stehenlässt.
 
-`track_cuts` hängt an keinem Fremdschlüssel — polymorph wie `track_points` und
-`track_blobs`, aus demselben Grund und mit demselben Preis. Die Löschwege
+`track_cuts` hängt an keinem Fremdschlüssel — polymorph wie `track_stuecke`
+(bis Web 22.7.0 auch `track_points` und `track_blobs`), aus demselben Grund
+und mit demselben Preis. Die Löschwege
 räumen ausdrücklich mit: Papierkorb (`trash_lib.php`, beide Richtungen —
 Vermerk *zum* Einsatz und Vermerk *am* Einsatz), Kontolöschung
 (`admin_user.php`) und der Waisenjob als Sicherheitsnetz (`jobs_lib.php`).
@@ -5157,7 +5161,7 @@ Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei Phasenzeiten
 | Aktion | Nutzlast | tut |
 |---|---|---|
 | `schneiden` | `rest_id`, `beginn`, `ende` (`hh:mm`), `beginn_tag`/`ende_tag`, `phasen`; seit 22.2.0 `client_ref`, `stuecke` | legt den Einsatz an, legt seine Stücke ab, vermerkt den Schnitt |
-| `rueckgaengig` | `mission_id` | löscht Vermerk, Stücke und Einsatz; Klartextpunkte eines alten Schnitts gehen zurück |
+| `rueckgaengig` | `mission_id` | löscht Vermerk, Stücke und Einsatz; einen Schnitt von vor Web 22.2.0 weist er seit Web 23 ab (`409 altschnitt`, F-S11-94) — bis dahin gingen dessen Klartextpunkte zurück |
 | `loeschen` (seit 22.2.0) | `rest_id`, Zeitraum wie oben, `stand`, `stuecke`, `geloescht` | ersetzt die Stücke des Segments ohne den Zeitraum, Löschvermerk, Protokollzeile |
 
 Der Einsatz entsteht auf dem **Bestandsweg** — virtuelles Gerät
@@ -5165,8 +5169,9 @@ Der Einsatz entsteht auf dem **Bestandsweg** — virtuelles Gerät
 22.2.0 noch `'manual'`), `uhr_gesperrt = 1`, `client_ref` mit Präfix
 `cut-`, wörtlich wie in `einsatz_form.php`. Daran hängt, ob er durch
 Backup, Export und Papierkorb kommt (R24), und ob `ingest.php` seine Phasen
-später noch anfasst. Alles läuft in **einer** Transaktion; `spur_teilen()`
-schließt sich ihr an, statt eine eigene mitzubringen.
+später noch anfasst. Alles läuft in **einer** Transaktion; die Stücke legt
+`spur2_stueck_schreiben()` darin ab (bis Web 22.1.0 schloss sich `spur_teilen()`
+ihr an).
 
 **Was der Endpunkt nicht tut:** Einsatzfelder füllen. Einsatzort, Alter,
 Diagnose und die übrigen Angaben aus 4.98 sind Ende-zu-Ende-verschlüsselt und entstehen im Browser; ein
@@ -5653,11 +5658,16 @@ Einsatzansicht erst seit dieser Fassung eine beschriftete Zeile.
 
 **Im Klartext in der Datenbank** stehen dagegen: die **Tagesnotizen**
 (`days.notes`, Betriebsnotizen des Diensttags — nicht die des Einsatzes),
-Zeiten und Phasen — samt
-**Koordinate jeder Phase**, und Phase 4 und 5 sind der Einsatzort —, Track,
-Distanz und Steigung, `site_ele_m`, Transportziel mit `dest_lat`/`dest_lon`,
-Schockraum, Reanimationsereignisse, Besatzung, Einsatzmittel, Diensttag- und
-Standortdaten. Das ist eine bewusste Entscheidung — diese Angaben sind für
+Zeiten und Nummern der Phasen, der Umriss der Spurstücke (Nummern,
+Punktzahl, Zeitraum, Stufe), Distanz und Steigung, Schockraum, Besatzung,
+Einsatzmittel, Diensttag- und Standortdaten. **Seit Web 22 (S11) nicht
+mehr:** die Koordinate jeder Phase (Phase 4 und 5 sind der Einsatzort), die
+Spur und der Reanimationsverlauf — sie liegen in der Gerätehülle (4.99s) —,
+Transportziel samt Koordinate und Ortshöhe — im `pat_blob`. Seit Web 23
+(S11-12) gibt es auch die alten Spalten und Tabellen dafür nicht mehr
+(`mission_phases.lat/lon`, `track_points`, `track_blobs`, `resus_sessions`,
+`resus_events`, `missions.transport_dest`, `dest_lat`, `dest_lon`,
+`site_ele_m`). Das ist eine bewusste Entscheidung — diese Angaben sind für
 Auswertung, Sortierung und Statistik nötig, die der Server leisten muss. Sie
 sind für sich genommen nicht personenbeziehbar; **in Verbindung mit Ort und
 Zeitpunkt eines Einsatzes können sie es aber werden.** Wer eine Installation
@@ -6098,14 +6108,18 @@ Zwei Ausnahmen sind gewollt und keine Lücke:
 * **Koordinaten** kommen im Formular nicht vor; es erfasst sie nicht.
 
 **Reanimationen im Formular (ab Web 5.5.0, Block A4.3).** Bis dahin galt auch
-für Reanimationsarten „kommt im Formular nicht vor". Seit `einsatz_form.php`
-`resus_sessions` und `resus_events` schreibt, benutzt es dieselben Bausteine
-wie die anderen Wege: `pruef_reanimationsart()` gegen `RESUS_LABELS`, dazu
-`LIMIT_REA_SESSION` und `LIMIT_REA_EREIGN`. Zwei Eigenheiten dieses Weges:
+für Reanimationsarten „kommt im Formular nicht vor". Von Web 5.5.0 bis 22.0
+schrieb `einsatz_form.php` `resus_sessions` und `resus_events` und prüfte mit
+denselben Bausteinen wie die anderen Wege (`pruef_reanimationsart()` gegen
+`RESUS_LABELS`, `LIMIT_REA_SESSION`, `LIMIT_REA_EREIGN`). **Seit S11-05b legt
+der Browser die Reanimation in die Einsatzhülle**, prüft Art und Menge beim
+Erzeugen, und der Server sieht nur Form und Größe der Hülle (E-S11-13); die
+beiden Tabellen sind mit Web 23 gefallen. Zwei Eigenheiten bleiben:
 
-* `beginn` ist **keine** Ereignisart. Der Beginn steckt in
-  `resus_sessions.started_at` (JSON-Vertrag 3.3); die Auswahl im Formular
-  bietet ihn nicht an, und das Einlesen weist ihn zusätzlich ab.
+* `beginn` ist **keine** Ereignisart. Der Beginn steckt im Beginn der Sitzung
+  (`rea[].t` der Hülle, bis Web 22.0 `resus_sessions.started_at`, JSON-Vertrag
+  3.3); die Auswahl im Formular bietet ihn nicht an, und das Einlesen weist
+  ihn zusätzlich ab.
 * Die Zeitrechnung folgt den Phasen: Eine Zeit vor ihrer Bezugszeit gehört dem
   Folgetag. Bezug ist beim Beginn `missions.started_at`, bei jedem Ereignis
   das vorhergehende. Umgesetzt über `local_to_utc($day, $hhmm, $addDays)`.
@@ -6140,7 +6154,7 @@ Die Bausteine im Einzelnen:
 | Virtuelles Gerät | `db.php` | `geraet_virtuell_sicherstellen($pdo, $userId)` — holen oder anlegen, an einer Stelle statt an vier. Dazu `geraet_virtuell_kennung()`, `geraet_virtuell()` (für Listen im Speicher), `GERAETE_ECHT_SQL` und `geraete_echt_sql($alias)` für Abfragen mit Tabellenalias sowie `GERAET_VIRTUELL_MUSTER` für die eine Abfrage, die das `LIKE`-Muster bindet. Ab Web 20.29.0. |
 | Einsatz laden | `einsatz_lib.php` | `einsatz_laden($id, $userId, ['spalten' => …, 'papierkorb' => 'nein'\|'ja'\|'egal'])`. Die Besitzprüfung steht **in** der Abfrage; die drei Fehlerfälle (gibt es nicht · gehört jemand anderem · falsche Seite des Papierkorbs) sind bewusst nicht unterscheidbar. Ab Web 20.29.0; zwei Stellen bleiben namentlich außen vor (siehe Dateikopf). |
 | Transaktionsrahmen | `transaktion_lib.php` (bis Web 20.37.2 `db.php`, Nr. 288) | `db_transaktion($pdo, $fn)` — beginnen, den Rumpf laufen lassen, bestätigen; bei jedem `Throwable` zurückrollen und **weiterwerfen**. **Verschachtelungsfest und asymmetrisch:** Wer schon in einer fremden Transaktion steht, öffnet keine eigene und bestätigt und verwirft dann auch nichts. Vor dem `rollBack()` wird nachgefragt, ob sie noch steht — ein DDL bestätigt in MySQL still, und der Rumpf darf selbst zurückgerollt haben; sonst verdeckte eine zweite Ausnahme die erste. Ab Web 20.30.0; **neun Rahmen bleiben namentlich außen vor**, die Registerzeile Z16 führt sie mit Grund. |
-| Kindtabellen eines Einsatzes | `einsatz_lib.php` | `einsatz_phasen_ersetzen()`, `einsatz_reas_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()` — fünf Schreibwege (Formular, CSV-Import, Uhr-Eingang, Backup, Schneiden), dreißig Anweisungen, jetzt null außerhalb. Schalter `loeschen` (Vorgabe `true`; das Backup schreibt in einen gerade angelegten Einsatz) und `ignorieren` (dessen `INSERT IGNORE`). **Sie prüfen nichts** — was gültig ist, entscheidet der Aufrufer. Ab Web 20.30.0. |
+| Kindtabellen eines Einsatzes | `einsatz_lib.php` | `einsatz_phasen_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()` (bis Web 22.7.0 dazu `einsatz_reas_ersetzen()`) — fünf Schreibwege (Formular, CSV-Import, Uhr-Eingang, Backup, Schneiden), dreißig Anweisungen, jetzt null außerhalb. Schalter `loeschen` (Vorgabe `true`; das Backup schreibt in einen gerade angelegten Einsatz) und `ignorieren` (dessen `INSERT IGNORE`). **Sie prüfen nichts** — was gültig ist, entscheidet der Aufrufer. Ab Web 20.30.0. |
 | Vorbereitete Anweisung | `einsatz_lib.php` (`einsatz_anweisung()`) | Eine `PDOStatement` je Verbindung und SQL-Text. Nötig, weil `db.php` `ATTR_EMULATE_PREPARES => false` setzt: Jedes `prepare()` ist ein Roundtrip, und der CSV-Import führt seine Anweisungen bis zu 3 000-mal aus. Die Verbindung wird **mitgehalten**, nicht nur ihre Objektkennung — eine freigegebene PDO gäbe ihre `spl_object_id` an die nächste weiter. |
 | Zahl, Größe, Anteil, Datum, Zeit | `format_lib.php` | `zahl_text()` · `groesse_text()` (drei Stufen: GB zwei, MB eine, KB null Nachkommastellen) · `groesse_kurz_text()` (mit Stufe „B", abgeschnittenen Nullen und `unbegrenzt` — eine **andere** Schreibweise, keine zweite Fassung) · `groesse_paar_text($ist, $grenze)` (gemeinsame Einheit: „3 von 250 MB") · `prozent_wert($teil, $ganz, 'ab'\|'kauf')` und `prozent_text()` · `datum_text()` · `datum_zeit_text($utc, $trenner)` · `datum_stunde_text()` · `zeit_relativ()` · `heute_lokal()` · `iso_utc()` / `iso_utc_lesen()`. Ab Web 20.32.0. **Sie lädt nur `konfig_lib.php`** — `install.php` erreicht sie über `plattform_lib.php`, bevor es eine `config.php` gibt. **Zwölf Stellen bleiben namentlich außen vor**, die Registerzeilen Z22–Z26 führen sie mit Grund. |
 | Ortszeit | `format_lib.php` (`fmt_local()`) | **Stand bis Web 20.31.0 in `db.php`**, Name und Verhalten unverändert — alle 113 Aufrufer in 37 Dateien merken nichts, weil `db.php` die neue Datei lädt. Umgezogen, weil `datum_text()` und `datum_zeit_text()` darauf aufbauen. `local_to_utc()` **bleibt in `db.php`**: Sie liest einen Formularwert, um damit zu rechnen — die andere Richtung. |
@@ -8767,10 +8781,10 @@ Punkt, Höhe in ganzen Metern (bis 16.10.2026 Dezimeter, F-S11-64), `-32768`
 = keine; Einsatzhülle JSON mit Zeiten seit `started_at`. Die
 genaue Form steht im JSON-Vertrag 3.4.
 
-**Verschließen auf dem Server** (`geraetehuelle_lib.php`): für Proben, das
-Demo-Zurücksetzen und den direkten Rückweg einer Kontosicherung der Verwaltung
-(`gh_einsatz_verschliessen()`, `gh_stuecke_bauen()`, S11-06c; `gh_gepackt_bauen()`
-für eine ausgedünnte Spur, S11-07), byte-gleich
+**Verschließen auf dem Server** (`geraetehuelle_lib.php`): für Proben und das
+Demo-Zurücksetzen (`gh_einsatz_verschliessen()`, `gh_stuecke_bauen()`,
+S11-06c; bis Web 22.7.0 dazu der direkte Rückweg einer Kontosicherung der
+Verwaltung, mit `gh_gepackt_bauen()` für eine ausgedünnte Spur), byte-gleich
 gegen die Prüfvektoren (Hüllenprobe, Teil Server). **Öffnen kann der Server nicht** — die Funktion gibt es dort
 nicht, nur im Prüfwerkzeug (`tools/proben/huelle/geraet.php`), mit dem die
 Proben wie ein Gerät senden und das Ergebnis nachlesen.
@@ -8802,7 +8816,7 @@ Sequenznummer und lässt gesperrte Punkte fort; `einsatz()` öffnet die
 Einsatzhülle; `fuerAnsicht()` füllt eine Antwort von `api/mission.php` so, wie
 die Einsatzansicht sie schon immer las; `ladeplatz()` steuert den Baustein
 `.ladeplatz` (Design 9.41) mit 300 ms Schwelle. **Kein Übergang** (E-S11-36):
-Altbestand im Klartext zeigt keine Karte, bis das Einmalwerkzeug ihn umgezogen hat (ab Web 22.7.0, unten). Die Anfrage startet
+Altbestand im Klartext zeigte keine Karte, bis das Einmalwerkzeug ihn umgezogen hatte; seit Web 23 gibt es keinen mehr. Die Anfrage startet
 `assets/vorladen.js` schon im Kopf (V1, `EdVorladen.holen()`).
 
 **Nach dem Deploy:** `update.php` (Migration `2026_10_13_ortshuellen`).
@@ -8828,10 +8842,10 @@ Einsatzformular die Reanimation im Klartext (`rea[…]`) und schrieb sie in
   verschlossen werden; das Formular verlangt das Entsperren vor dem Absenden.
   Geht die vorhandene Hülle nicht auf, ist Speichern gesperrt — es ersetzte sie
   sonst durch eine ohne Orte und Reanimation.
-- **Der Altbestand zieht beim Speichern um** — dasselbe Muster wie `PAT_ALT`:
-  Phasenorte (`mission_phases.lat/lon`) und Reanimation (`resus_*`) eines
-  Einsatzes ohne Hülle gehen dem Formular mit, der Browser legt sie in die
-  Hülle, der Server löscht die Zeilen.
+- **Bis Web 22.7.0 zog der Altbestand beim Speichern um** — Phasenorte und
+  Reanimation eines Einsatzes ohne Hülle gingen dem Formular mit, der Browser
+  legte sie in die Hülle, der Server löschte die Zeilen. Mit den Spalten ist
+  der Weg gegangen (S11-12).
 - **Die Kennung eines neuen Einsatzes** vergibt der Server beim Aufbau der Seite
   (`man-` und 16 Hexziffern), weil die Hülle an `client_ref` gebunden ist und vor
   der Zeile entsteht.
@@ -8839,20 +8853,20 @@ Einsatzformular die Reanimation im Klartext (`rea[…]`) und schrieb sie in
 **Transportziel, Zielkoordinate und Höhe des Einsatzorts liegen im `pat_blob`**
 (R78, E-S11-12). `transport_dest` trägt `'store' => 'pat'` und liegt als
 `{addr, lat, lon}` im Blob; `ortshoehe` (ganze Meter) ist kein Katalogfeld,
-sondern gerechnet: `EdOrtsdaten.ortshoehe()` bildet `compute_site_elevation()`
-nach (früheste Phase 5, sonst 6; nächster Punkt höchstens 300 s entfernt, mit
-Höhe), beim Speichern im Formular; ohne Spur oder auf einer ausgedünnten bleibt
-ein vorhandener Wert. Sobald der Blob steht, leert das Formular `transport_dest`,
-`dest_lat`, `dest_lon` und `site_ele_m`. `api/mission.php`, `api/day.php`,
-`api/range.php` und `api/suchindex.php` liefern die vier nicht mehr; Einsatz-,
-Tages-, Zeitraumansicht und Suche lesen sie nach dem Entsperren aus dem Blob.
-Für „letzte Zielklinik" geht der Blob des Vorgängers mit (`start_prev_blob`),
-wie bei `prev_site`. `ingest.php` und das Formular rufen `compute_site_elevation()`
-nicht mehr auf, seit 22.2.0 auch das Schneiden nicht; GPX-Einlesen und
-Sicherung tun es noch, bis S11-05d und S11-06 sie umbauen. **Kein Übergang** (E-S11-42): Der
-Altbestand zeigt kein Transportziel und keine Höhe, bis das Einmalwerkzeug ihn umgezogen hat (ab Web 22.7.0).
+sondern gerechnet: `EdOrtsdaten.ortshoehe()` (früheste Phase 5, sonst 6;
+nächster Punkt höchstens 300 s entfernt, mit Höhe; bis Web 22.7.0 rechnete
+der Server dasselbe als `compute_site_elevation()`), beim Speichern im
+Formular und im Wartungslauf; ohne Spur oder auf einer ausgedünnten bleibt
+ein vorhandener Wert. `api/mission.php`, `api/day.php`, `api/range.php` und
+`api/suchindex.php` liefern die Werte nur im Blob; Einsatz-, Tages-,
+Zeitraumansicht und Suche lesen sie nach dem Entsperren daraus. Für „letzte
+Zielklinik" geht der Blob des Vorgängers mit (`start_prev_blob`), wie bei
+`prev_site`. Der Katalogeintrag trägt `'ohne_spalte' => true`: Seit Web 23
+hat das Feld keine Spalte mehr, die `mf_pat_felder()` leeren müsste.
 
-**Kein Schema.** Die Spalten bleiben bis zur Aufräumauslieferung.
+**Schema:** Bis Web 22.7.0 blieben `transport_dest`, `dest_lat`, `dest_lon`
+und `site_ele_m` stehen und trugen den Altbestand; seit Web 23 sind sie
+gefallen (Migration `2026_10_19_klartext_weg`, S11-12).
 
 #### Der Wartungslauf im Browser (ab Web 22.6.0, S11-07)
 
@@ -8864,11 +8878,11 @@ dem Lesen nicht geändert hat**.
 
 | Teil | Wo | Was |
 |---|---|---|
-| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb, ohne Altbestand (E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze |
+| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze |
 | Zahl | `spur2_faellig_zahl()`, `zahl` | wie viele Aufzeichnungen aus wie vielen Diensttagen, für die Karte |
 | Arbeit | `assets/wartungslauf.js` | öffnen (`EdOrtsdaten.spur()`), nach der Frist ausdünnen (`ausduennen()`, `ausduennungPruefen()` — wörtlich `spur_ausduennen()` und `spur_ausduennung_pruefen()`; gegen PHP an 221 Referenzspuren nachgemessen: 221 gleiche Behaltelisten), **ein** gepacktes Stück bauen (`EdOrtsdaten.gepacktBauen()`), es wieder öffnen und Punkt für Punkt vergleichen (Rundlauf) — erst dann schicken |
 | Ortshöhe | ebenda | fehlt sie im `pat_blob`, wird sie aus den offenen Punkten nachgetragen (E-S11-72); der Server schreibt den Blob nur bei unveränderter Prüfsumme |
-| Tausch | `spur2_wartung_tauschen()`, `tauschen` | Besitz, `final`, kein Papierkorb, kein Altbestand; Bestand unverändert (`spur2_tauschen()`); genau ein Stück der Stufe 2 oder 3, `seq_from` wie das kleinste alte, Zeitraum innerhalb des alten; **die Marke fällt nicht, die Stufe fällt nicht**; **Stufe 3 nur nach der Frist** — der Zeitpunkt ist Klartext, die Ausdünnung unwiderruflich (E-S11-73). Ein 409 ist der Normalfall eines Wettlaufs |
+| Tausch | `spur2_wartung_tauschen()`, `tauschen` | Besitz, `final`, kein Papierkorb; Bestand unverändert (`spur2_tauschen()`); genau ein Stück der Stufe 2 oder 3, `seq_from` wie das kleinste alte, Zeitraum innerhalb des alten; **die Marke fällt nicht, die Stufe fällt nicht**; **Stufe 3 nur nach der Frist** — der Zeitpunkt ist Klartext, die Ausdünnung unwiderruflich (E-S11-73). Ein 409 ist der Normalfall eines Wettlaufs |
 
 **Die Innenform der Stufen 2 und 3** (E-S11-71, „B fest"): `deflate` (zlib,
 RFC 1950 — `CompressionStream('deflate')`, `gzcompress()`) über vier Spalten zu
@@ -8881,10 +8895,10 @@ das Gerät ist `seq_from + n_original` (`spur2_marke()`). Der Ort der Hülle
 bindet Stufe und Marke: `seq_from:punkte:stufe:n_original`. Gemessen am
 Referenzbestand (F-S11-76): 4,40 Byte je Punkt gegen 14,40 ungepackt und 3,69
 in SPUR1; am Demo-Bestand nach dem ersten Lauf 4,56 (Einsätze, mit Hülle).
-Eine Umsetzung je Ort: `referenz.py` (`innen_gepackt()`), `ortsdaten.js`
-(`gepacktBauen()`, Öffnen in `spur()`), `geraetehuelle_lib.php`
-(`gh_gepackt_bauen()`, nur für den direkten Rückweg einer Kontosicherung mit
-ausgedünnter SPUR1-Spur).
+Eine Umsetzung je Ort: `referenz.py` (`innen_gepackt()`) und `ortsdaten.js`
+(`gepacktBauen()`, Öffnen in `spur()`); bis Web 22.7.0 dazu
+`gh_gepackt_bauen()` in `geraetehuelle_lib.php` für den direkten Rückweg einer
+Kontosicherung mit ausgedünnter SPUR1-Spur.
 
 **Wo er läuft** (Mockup M-S11-02, Variante 1): **auf der Startseite still**,
 ein Durchgang je Aufruf, 1,5 s nach dem Laden, nur mit Schlüssel — er fragt nie
@@ -8894,8 +8908,8 @@ abarbeitet (Ring, Zahl, Balken in der `.zustandszeile`).
 
 **Was er mit ändert:** „Zeitraum löschen" (Nr. 161) geht seither auch auf einer
 gepackten Spur — der Rest wird ein Stück derselben Stufe mit derselben Marke
-(E-S11-74). Ausgedünnte Spuren aus einer Sicherung werden beim Einspielen ein
-gepacktes Stück der Stufe 3 (Browser und direkter Weg). Die Kontosicherung der
+(E-S11-74). Ausgedünnte Spuren aus einer Sicherung werden beim Einspielen im
+Browser ein gepacktes Stück der Stufe 3. Die Kontosicherung der
 Verwaltung trägt die Stufe je Stück.
 
 **Prüfwerkzeuge schalten ihn ab** (F-S11-77): Wer Daten vergleicht (Kreisläufe,
@@ -8909,43 +8923,47 @@ Probe (`tools/proben/wartungslauf/`, Server und Browser).
 gemessen). Ein gepacktes Stück einer sehr großen, kaum packbaren Spur kann über
 die 800 KB eines Einspielhappens kommen (theoretisch; real 4–5 Byte je Punkt).
 
-#### Das Einmalwerkzeug (ab Web 22.7.0, S11-10)
+#### Das Einmalwerkzeug (Web 22.7.0, S11-10 — mit Web 23 entfernt)
 
-**Es zieht den Altbestand in die Hüllen um** (Konzept S11 3.8 Schritt 5,
-E-S11-19). Altbestand ist, was vor Web 22 im Klartext ankam und seither ohne
-Übergang nicht mehr gelesen wird: Spurpunkte in `track_points` und
-`track_blobs` (SPUR1, Einsätze und Ruhesegmente), `mission_phases.lat/lon`,
-jede Zeile in `resus_sessions`/`resus_events`, `missions.transport_dest`,
-`dest_lat`, `dest_lon` und `site_ele_m` — **auch im Papierkorb**. Verschließen
-kann nur der Browser des Kontos; der Server nennt und tauscht.
+Es zog den **Altbestand** in die Hüllen um (Konzept S11 3.8 Schritt 5,
+E-S11-19): was vor Web 22 im Klartext angekommen war — Spurpunkte in
+`track_points` und `track_blobs` (SPUR1), `mission_phases.lat/lon`,
+`resus_sessions`/`resus_events`, `missions.transport_dest`, `dest_lat`,
+`dest_lon` und `site_ele_m`, auch im Papierkorb. Verschließen konnte nur der
+Browser des Kontos; still auf der Startseite nach dem Entsperren, Runde um
+Runde (`api/ortsumzug.php`, `ortsumzug_lib.php`, `assets/ortsumzug.js`), und
+die Statusseite zählte den Rest in der Zeile „Ortsdaten". Endpunkt, Bibliothek,
+Skript, Statuszeile und die Probe `tools/proben/ortsumzug/` sind mit Web 23
+gegangen; der Werdegang steht in der Git-Historie und im Konzept S11.
 
-| Teil | Wo | Was |
-|---|---|---|
-| Liste | `ou_kandidaten()`, `ou_fuellen()`, `api/ortsumzug.php` `liste` | höchstens 10 Datensätze je Aufruf und höchstens 100 000 Punkte (eine Spur geht immer mit): Beginn, `client_ref`, Phasen mit Koordinaten, Reanimationen, Spurpunkte aus `spur_lesen()` mit Stufe und `n_original`, bei Einsätzen `ort_huelle`, `pat_blob` und die Zielspalten; dazu `spur_stand`, ein Fingerabdruck aus `spur_umriss()` und den vorhandenen Stücken. `konflikt`: Klartext und Stücke überschneiden sich in den Nummern — die Spur bleibt liegen |
-| Zahl | `ou_zahl()`, `zahl` | Einsätze und Ruhesegmente des Kontos mit Altbestand |
-| Arbeit | `assets/ortsumzug.js` (`EdOrtsumzug`) | Punkte → Stücke der Stufe 1 (`EdOrtsdaten.stueckeBauen()`), eine ausgedünnte SPUR1-Spur → **ein** Stück der Stufe 3 (`gepacktBauen()`, wie beim Einspielen einer Sicherung); Rundlauf Punkt für Punkt; Phasenorte und Reanimation → Einsatzhülle, mit einer vorhandenen **zusammengeführt** (die Hülle gewinnt, E-S11-45 (4)); Ziel und Höhe → `pat_blob` (der Blob gewinnt; geht er nicht auf, bleibt alles) |
-| Tausch | `ou_tauschen()`, `tauschen` | eine Transaktion, Zeile `FOR UPDATE`; erst alle Wächter (`spur_stand`, `pat.alt`, `ort.alt`), dann schreiben: Blob und Zielspalten NULL, Hülle und Phasenorte NULL, `resus_*` gelöscht, Stücke geschrieben, `spur_loeschen(…, ['stuecke' => false])`. Prüfschicht: `pruef_spurstueck()`/`pruef_spurstueck_gepackt()`, `pruef_huelle()`, `pruef_pat_blob()`. `409 stand | blob | huelle`, `404 fehlt` |
-| Anlage | `ou_zaehlung()`, `ou_konten()`, `status_lib.php` | Zeile **„Ortsdaten"** der Statusseite (Karte Server): orange mit der Zahl je Tabelle, solange ein Konto Altbestand hat; blau „verschlossen" sonst. Jede Zeile zählt, keine Stichprobe |
+#### Die Aufräumauslieferung (ab Web 23.0.0, S11-12)
 
-**Wo es läuft:** auf der Startseite, still, nach dem Entsperren und **vor** dem
-Wartungslauf (der den Altbestand nicht anfasst, E-S11-70), so lange Runde um
-Runde, bis nichts mehr offen ist oder eine Runde nichts schafft. Was nicht
-aufgeht, geht an den Reiter System und wird für die Sitzung ausgelassen
-(`sessionStorage`). Kein Merker — fertig ist es, wenn `zahl` null meldet;
-bricht es ab, setzt der nächste Aufruf wieder auf.
+**Die Migration `2026_10_19_klartext_weg` entfernt die Klartextablage**:
+`track_points`, `track_blobs`, `resus_sessions`, `resus_events`,
+`mission_phases.lat/lon`, `missions.transport_dest`, `dest_lat`, `dest_lon`
+und `site_ele_m`. Sie ist **zerstörend mit Inhaltssperre** (`inhalt` im
+Migrationskatalog, `migration_lib.php`): Liegt in einer der Spalten oder
+Tabellen noch ein Wert, hält sie an, nennt Tabelle, Zahl und — über
+`inhalt_wo` — die betroffenen Konten mit E-Mail und Einsatznummern, und
+läuft erst nach ausdrücklicher Freigabe auf „Betrieb → Updates" (die
+Freigabe steht im Protokoll, „AUF AUSDRÜCKLICHE FREIGABE"). Wer freigibt,
+verliert diese Werte; sie lassen sich nur im Browser des Kontos in die
+Hüllen übernehmen, und das Werkzeug dafür gibt es seit Web 23 nicht mehr.
 
-**Was es nicht anfasst:** `uhr_gesperrt` und `edited` (ein Umzug ist keine
-Bearbeitung, wie `api/pat_anheben.php`); einen Blob, der sich mit dem
-Schlüssel des Kontos nicht öffnen lässt — dessen Zielspalten bleiben und
-werden gezählt.
+**Mit ihr geht der Code, der die Ablage las oder schrieb:** die SPUR1-Kodierung
+und das Lesen von Zeilen und Blob in `spur_lib.php`, `site_elevation_lib.php`,
+das Einmalwerkzeug, der Rückweg alter Sicherungen (Nutzlast 6 bis 12, die
+einteiligen Fassungen 2 und 3, `EdOrtsdaten.spur1Lesen()`,
+`EdCrypto.openBackup()`/`sealBackup()`), der direkte Rückweg der Verwaltung
+für Pakete älterer Fassung (`edbak_paket_lesen()`, `gh_gepackt_bauen()`; die
+Verwaltung spielt ein Paket seitdem im Browser ein, E-S11-84) und der Bau
+einer Sicherung am Stück (`edbak_build()` ohne Fenster). **Was bleibt:** Der
+Demo-Reset spielt seine Nutzlast-7-Fixture aus dem Repositorium weiter über
+`'server'` ein und verschließt dabei selbst (E-S11-20); die alten
+Adminpaket-Fassungen (JSON, unversiegeltes ZIP) liest die Verwaltung weiter
+(Backlog Nr. 46, Rest).
 
-**Grenzen:** Ein Konto, das sich nie anmeldet, zieht nie um; die Statuszeile
-zeigt es. Die Startseite zeichnet die umgezogene Karte erst beim nächsten
-Aufruf. Probe: `tools/proben/ortsumzug/` (20 Prüfpunkte, Wegwerfkonto mit von
-Hand gelegtem Altbestand).
-
-**Entfällt mit S11-12** samt den Klartextspalten; die Aufräummigration
-verweigert, solange `ou_zaehlung()` etwas findet (E-S11-19).
+**Nach dem Deploy:** `update.php`. Die Wartung bleibt sonst an.
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 
@@ -9004,17 +9022,17 @@ Konto könnte an einem Tag beliebig weit darüber hinauswachsen.
 
 #### `spur_bytes()` steht in `spur_lib.php`
 
-Nicht beim Aufrufer, und das ist die Regel aus `CLAUDE.md` 4: Die Punkte
-liegen je nach Alter als Zeilen in `track_points` **oder** als Blob in
-`track_blobs` — und während einer Nachlieferung als beides. Wer nur eine der
-beiden Tabellen zählt, misst je nach Bestand die Hälfte, ohne Fehlermeldung.
+Nicht beim Aufrufer, und das ist die Regel aus `CLAUDE.md` 4: Wer die
+Spurablage unmittelbar zählt, misst früher oder später die Hälfte, ohne
+Fehlermeldung — bis Web 22.7.0 lagen die Punkte je nach Alter als Zeilen in
+`track_points`, als Blob in `track_blobs` oder als Stücke.
 
-**Geschätzt und nicht gewogen**: Für `track_points` steht ein fester Wert je
-Zeile (`SPUR_ZEILE_BYTE`, 48), weil `information_schema` nur Tabellensummen
-kennt; für `track_blobs` wird `LENGTH()` gezählt — dort steckt die Masse. Die
-Grenze ist damit eine **Schätzung mit bekanntem Fehler, keine Abrechnung**,
-und das ist ehrlicher, als eine Zahl auf das Byte genau auszuweisen, die es
-nicht ist.
+**Gewogen, nicht geschätzt — seit Web 23:** `spur_bytes()` zählt `LENGTH()`
+der Hüllen in `track_stuecke`; dort steckt die ganze Masse. Bis Web 22.7.0
+kam für `track_points` ein fester Wert je Zeile dazu (`SPUR_ZEILE_BYTE`, 48),
+weil `information_schema` nur Tabellensummen kennt; die Grenze war damit eine
+Schätzung mit bekanntem Fehler. Den Fehler gibt es mit der Tabelle nicht
+mehr.
 
 #### Backlog Nr. 48 ist die Zahl der Backup-Pakete, nicht eine Frist
 
@@ -12717,8 +12735,8 @@ Browser, nicht ein Job (4.99s, „Der Wartungslauf im Browser"). Was fällig ist
 Backup** → Karte **„GPS-Daten verdichten"** dem Konto selbst; die Verwaltung
 sieht es nicht, weil sie die Aufzeichnungen nicht öffnen kann. Eine Aufzeichnung,
 deren Hülle nicht aufgeht, steht im **Reiter System** (Meldung des Browsers)
-und bleibt, wie sie ist. Klartextspuren aus der Zeit vor S11 packt niemand
-mehr; sie hebt das Einmalwerkzeug (S11-10).
+und bleibt, wie sie ist. (Klartextspuren aus der Zeit vor S11 gibt es seit
+Web 23 nicht mehr; bis dahin hob sie das Einmalwerkzeug, S11-10.)
 
 **Die Jobs vorübergehend anhalten** (vor einer großen Wiederherstellung, vor
 einer Messung): `php jobs.php --pause 1800`, aufheben mit `--pause 0`. Die
@@ -13822,7 +13840,8 @@ Der Zeitpunkt kommt dabei aus dem jüngsten **vorhandenen** Paket, nicht aus
 Marke stehen und meldete einen Stand, den es nicht mehr gibt.
 
 **Die Plakette „lesbar"** an einer Paketzeile ist eine echte Prüfung —
-`edbak_paket_lesen()` liest die Datei und decodiert sie. Das ist vertretbar,
+`edbak_paket_kopf_lesen()` öffnet das Manifest (bei Fassung 1 die Datei) und
+decodiert es; bis Web 22.7.0 las `edbak_paket_lesen()` das ganze Paket. Das ist vertretbar,
 weil die Aufbewahrung die Zahl der Pakete je Konto begrenzt (Vorgabe drei) und
 die Seite immer nur ein Konto zeigt. In einer Liste über alle Konten wäre
 dieselbe Prüfung untragbar — deshalb steht sie hier und nicht dort.

@@ -342,12 +342,13 @@ try {
            `4  ${ziel}: die Meldung nennt, was nicht mitkam`, r.meldung.slice(0, 90));
     const db = JSON.parse(php(`$r = db()->query("SELECT id, client_ref FROM ${tab} WHERE id = ${Number(r.d.id) || 0}")->fetch(PDO::FETCH_ASSOC) ?: [];
       $st = db()->query("SELECT COUNT(*) n, COALESCE(SUM(punkte),0) p, MIN(stufe) s FROM track_stuecke WHERE owner_type = '${typ}' AND owner_id = ${Number(r.d.id) || 0}")->fetch(PDO::FETCH_ASSOC);
-      $tp = (int)db()->query("SELECT COUNT(*) FROM track_points WHERE owner_type = '${typ}' AND owner_id = ${Number(r.d.id) || 0}")->fetchColumn();
-      $tb = (int)db()->query("SELECT COUNT(*) FROM track_blobs WHERE owner_type = '${typ}' AND owner_id = ${Number(r.d.id) || 0}")->fetchColumn();
+      /* Seit Web 23 gibt es track_points/track_blobs nicht mehr (S11-12). */
+      $tp = db_hat_tabelle(db(), "track_points") ? 1 : 0;
+      $tb = db_hat_tabelle(db(), "track_blobs") ? 1 : 0;
       echo json_encode(['ref' => $r['client_ref'] ?? null, 'st' => $st, 'tp' => $tp, 'tb' => $tb]);`));
     pruefe(/^imp-[0-9a-f]{24}$/.test(db.ref || '') && Number(db.st.n) >= 1 && Number(db.st.p) === 4
            && db.tp === 0 && db.tb === 0,
-           `4  ${ziel}: nur verschlossene Stücke, keine Zeile in track_points/-blobs`,
+           `4  ${ziel}: nur verschlossene Stücke, keine Klartexttabelle`,
            `${db.ref}, ${db.st.n} Stück(e), ${db.st.p} Punkte, Klartext ${db.tp}/${db.tb}`);
     const offenGel = await s.evaluate(async ([dayId, typ, id]) => {
       const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);

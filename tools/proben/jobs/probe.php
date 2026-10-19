@@ -25,9 +25,10 @@ declare(strict_types=1);
  * ES AENDERT ETWAS — anders als die Spurprobe. Der Waisenjob loescht; das ist
  * sein Zweck, und ein Job, der in einer zurueckgerollten Transaktion laeuft,
  * beweist nichts ueber sein Zusammenspiel mit der Sperre (die auf COMMIT
- * angewiesen ist). Deshalb legt die Probe ihre eigenen Waisen an — Punkte auf
- * Eigentuemerkennungen, die es garantiert nicht gibt — und raeumt am Ende
- * hinter sich auf. Bestehende Daten fasst sie nicht an.
+ * angewiesen ist). Deshalb legt die Probe ihre eigenen Waisen an — Spurstuecke
+ * auf Eigentuemerkennungen, die es garantiert nicht gibt — und raeumt am Ende
+ * hinter sich auf. Bestehende Daten fasst sie nicht an. (Bis Web 22.7.0 waren
+ * es Zeilen in `track_points` und Blobs in `track_blobs`; S11-12.)
  *
  * Aufruf:
  *   php tools/proben/jobs/probe.php
@@ -87,47 +88,33 @@ $maxR = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM rest_segments')->fetc
 $basisM = $maxM + 100000;
 $basisR = $maxR + 100000;
 
-/** Punkte auf eine Kennung legen, die keinem Einsatz gehoert. */
-function waise_zeilen(PDO $pdo, string $typ, int $id, int $n): void {
-    $st = $pdo->prepare('INSERT INTO track_points
-                         (owner_type, owner_id, seq, lat, lon, ele, ts)
-                         VALUES (?,?,?,?,?,?,?)');
+/** Stuecke auf eine Kennung legen, die keinem Einsatz gehoert. Die Huelle
+ *  ist Zufall: Der Waisenjob oeffnet nichts, er loescht. */
+function waise_stuecke(PDO $pdo, string $typ, int $id, int $n): void {
+    $st = $pdo->prepare('INSERT INTO track_stuecke
+                         (owner_type, owner_id, seq_from, punkte, n_original, ts_von, ts_bis,
+                          stufe, huelle, erstellt_am, geaendert_am)
+                         VALUES (?,?,?,10,10,?,?,1,?,UTC_TIMESTAMP(),UTC_TIMESTAMP())');
     for ($i = 0; $i < $n; $i++) {
-        $st->execute([$typ, $id, $i, 47.5 + $i / 1e5, 11.5 + $i / 1e5, 700.0,
-                      1750000000 + $i]);
+        $st->execute([$typ, $id, $i * 10, 1750000000 + $i * 100, 1750000000 + $i * 100 + 90,
+                      random_bytes(64)]);
     }
-}
-
-function waise_blob(PDO $pdo, string $typ, int $id, int $n): void {
-    $punkte = [];
-    for ($i = 0; $i < $n; $i++) {
-        $punkte[] = [$i, 47.5 + $i / 1e5, 11.5 + $i / 1e5, 700.0, 1750000000 + $i];
-    }
-    spur_blob_schreiben($pdo, $typ, $id,
-        spur_kodieren($punkte, SPUR_STUFE_ROH), SPUR_STUFE_ROH, $n, $n);
 }
 
 /** Alles wegraeumen, was diese Probe angelegt hat. */
 function aufraeumen(PDO $pdo, int $basisM, int $basisR): void {
-    $pdo->prepare('DELETE FROM track_points WHERE (owner_type = ? AND owner_id >= ?)
-                                               OR (owner_type = ? AND owner_id >= ?)')
-        ->execute(['mission', $basisM, 'rest', $basisR]);
-    $pdo->prepare('DELETE FROM track_blobs WHERE (owner_type = ? AND owner_id >= ?)
-                                              OR (owner_type = ? AND owner_id >= ?)')
+    $pdo->prepare('DELETE FROM track_stuecke WHERE (owner_type = ? AND owner_id >= ?)
+                                                OR (owner_type = ? AND owner_id >= ?)')
         ->execute(['mission', $basisM, 'rest', $basisR]);
 }
 
 /** Zaehlt, was von den gepflanzten Waisen noch dasteht. */
-function rest_waisen(PDO $pdo, int $basisM, int $basisR): array {
-    $z = $pdo->prepare('SELECT COUNT(*) FROM track_points
+function rest_waisen(PDO $pdo, int $basisM, int $basisR): int {
+    $z = $pdo->prepare('SELECT COUNT(*) FROM track_stuecke
                          WHERE (owner_type = ? AND owner_id >= ?)
                             OR (owner_type = ? AND owner_id >= ?)');
     $z->execute(['mission', $basisM, 'rest', $basisR]);
-    $b = $pdo->prepare('SELECT COUNT(*) FROM track_blobs
-                         WHERE (owner_type = ? AND owner_id >= ?)
-                            OR (owner_type = ? AND owner_id >= ?)');
-    $b->execute(['mission', $basisM, 'rest', $basisR]);
-    return ['zeilen' => (int)$z->fetchColumn(), 'blobs' => (int)$b->fetchColumn()];
+    return (int)$z->fetchColumn();
 }
 
 /** Faelligkeit zuruecksetzen — nicht den Fortschritt. */
@@ -170,14 +157,14 @@ echo "  Waisen werden auf Kennungen ab mission/$basisM und rest/$basisR gelegt.\
  * Eigentuemer HAT: Daran darf der Job nicht ruehren. */
 function punkte_mit_eigentuemer(PDO $pdo): int {
     $q = $pdo->query("SELECT
-        (SELECT COUNT(*) FROM track_points tp JOIN missions m ON m.id = tp.owner_id
-          WHERE tp.owner_type = 'mission')
-      + (SELECT COUNT(*) FROM track_points tp JOIN rest_segments r ON r.id = tp.owner_id
-          WHERE tp.owner_type = 'rest')");
+        (SELECT COUNT(*) FROM track_stuecke ts JOIN missions m ON m.id = ts.owner_id
+          WHERE ts.owner_type = 'mission')
+      + (SELECT COUNT(*) FROM track_stuecke ts JOIN rest_segments r ON r.id = ts.owner_id
+          WHERE ts.owner_type = 'rest')");
     return (int)$q->fetchColumn();
 }
 
-$gesamtVorher = (int)$pdo->query('SELECT COUNT(*) FROM track_points')->fetchColumn();
+$gesamtVorher = (int)$pdo->query('SELECT COUNT(*) FROM track_stuecke')->fetchColumn();
 $echteVorher  = punkte_mit_eigentuemer($pdo);
 
 aufraeumen($pdo, $basisM, $basisR);
@@ -204,9 +191,9 @@ pruefe($hatTabelle === 1, 'Die Tabelle jobs gibt es (Migration gelaufen)');
 echo "\n  Teil 2 — Drei Ausloeser, dieselbe Arbeit (E-S2-17)\n";
 foreach (['cli', 'token', 'anfrage'] as $ausloeser) {
     aufraeumen($pdo, $basisM, $basisR);
-    waise_zeilen($pdo, 'mission', $basisM + 1, 5);
-    waise_zeilen($pdo, 'rest',    $basisR + 1, 5);
-    waise_blob($pdo, 'mission', $basisM + 2, 4);
+    waise_stuecke($pdo, 'mission', $basisM + 1, 5);
+    waise_stuecke($pdo, 'rest',    $basisR + 1, 5);
+    waise_stuecke($pdo, 'mission', $basisM + 2, 1);
     $vorher = rest_waisen($pdo, $basisM, $basisR);
 
     faellig_machen($pdo);
@@ -214,11 +201,8 @@ foreach (['cli', 'token', 'anfrage'] as $ausloeser) {
     $bericht = jobs_lauf($ausloeser, ['waisen']);
     $nachher = rest_waisen($pdo, $basisM, $basisR);
 
-    $weg = $nachher['zeilen'] === 0 && $nachher['blobs'] === 0;
-    pruefe($weg, "Ausloeser '$ausloeser' raeumt den Rueckstand ab",
-           sprintf('%d Zeilen + %d Blobs -> %d + %d',
-                   $vorher['zeilen'], $vorher['blobs'],
-                   $nachher['zeilen'], $nachher['blobs']));
+    pruefe($nachher === 0, "Ausloeser '$ausloeser' raeumt den Rueckstand ab",
+           sprintf('%d Stuecke -> %d', $vorher, $nachher));
     pruefe(empty($bericht['waisen']['fehler']),
            "Ausloeser '$ausloeser' meldet keinen Fehler",
            (string)($bericht['waisen']['fehler'] ?? '—'));
@@ -236,25 +220,23 @@ aufraeumen($pdo, $basisM, $basisR);
  * nur „erledigt=407", und die Suche begann bei dieser Probe. */
 $fremd = 0;
 foreach (['mission' => 'missions', 'rest' => 'rest_segments'] as $art => $tabelle) {
-    foreach (['track_points', 'track_blobs'] as $spur) {
-        $fremd += (int)$pdo->query("SELECT COUNT(*) FROM $spur s LEFT JOIN $tabelle t ON t.id = s.owner_id
-                                     WHERE s.owner_type = '$art' AND t.id IS NULL")->fetchColumn();
-    }
+    $fremd += (int)$pdo->query("SELECT COUNT(*) FROM track_stuecke s LEFT JOIN $tabelle t ON t.id = s.owner_id
+                                 WHERE s.owner_type = '$art' AND t.id IS NULL")->fetchColumn();
 }
-waise_zeilen($pdo, 'mission', $basisM + 3, 6);   // 6 Zeilen
-waise_blob($pdo, 'rest', $basisR + 3, 12);       // 1 Blob (12 Punkte darin)
+waise_stuecke($pdo, 'mission', $basisM + 3, 6);  // 6 Stuecke
+waise_stuecke($pdo, 'rest', $basisR + 3, 1);     // 1 Stueck
 faellig_machen($pdo);
 marke_zuruecksetzen($pdo);
 $bericht = jobs_lauf('cli', ['waisen']);
 $erledigt = (int)($bericht['waisen']['erledigt'] ?? -1);
 pruefe($erledigt === 7,
-       'Sechs Zeilen und ein Blob werden als 7 gemeldet',
-       "erledigt=$erledigt (erwartet 7 — Zeilen zaehlen einzeln, ein Blob als eins)"
+       'Sieben Stuecke an zwei Eigentuemern werden als 7 gemeldet',
+       "erledigt=$erledigt (erwartet 7 — je Stueck eins)"
        . ($fremd > 0 ? "; vorher $fremd fremde Waisen in der Anlage — raeumt eine Probe ihre Spur nicht ab?" : ''));
 $nachher = rest_waisen($pdo, $basisM, $basisR);
-pruefe($nachher['zeilen'] === 0 && $nachher['blobs'] === 0,
+pruefe($nachher === 0,
        'und danach steht nichts davon mehr da',
-       "{$nachher['zeilen']} Zeilen, {$nachher['blobs']} Blobs");
+       "$nachher Stuecke");
 
 /* ---- Teil 4 — Der Rueckstand luegt nicht --------------------------------- */
 
@@ -297,7 +279,7 @@ pruefe(!isset($bericht['waisen']['uebersprungen']),
 
 echo "\n  Teil 6 — Huckepack traegt wenig und selten (JOB_ANFRAGE_PAUSE_S)\n";
 aufraeumen($pdo, $basisM, $basisR);
-waise_zeilen($pdo, 'mission', $basisM + 4, 3);
+waise_stuecke($pdo, 'mission', $basisM + 4, 3);
 faellig_machen($pdo);
 marke_zuruecksetzen($pdo);
 
@@ -356,14 +338,14 @@ pruefe($t3 !== $t1 && jobs_token() === $t3,
 
 echo "\n  Teil 9 — Was einen Eigentuemer hat, ist unveraendert\n";
 aufraeumen($pdo, $basisM, $basisR);
-$gesamtNachher = (int)$pdo->query('SELECT COUNT(*) FROM track_points')->fetchColumn();
+$gesamtNachher = (int)$pdo->query('SELECT COUNT(*) FROM track_stuecke')->fetchColumn();
 $echteNachher  = punkte_mit_eigentuemer($pdo);
 pruefe($echteNachher === $echteVorher,
-       'Kein Punkt mit Eigentuemer ist verschwunden',
+       'Kein Stueck mit Eigentuemer ist verschwunden',
        number_format($echteVorher, 0, ',', ' ') . ' -> '
        . number_format($echteNachher, 0, ',', ' '));
 printf("  [--] %-62s %s\n", 'Nebenbei abgeraeumte ECHTE Waisen (kein Fehler)',
-       ($gesamtVorher - $gesamtNachher) . ' Zeilen');
+       ($gesamtVorher - $gesamtNachher) . ' Stuecke');
 
 /* ======================================================================
  * DIE ZAHL `geloescht` UEBERSTEHT DEN BERICHT (S10/AP5, neu gefasst P5c/AP8)

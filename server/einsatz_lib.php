@@ -128,7 +128,11 @@ function einsatz_anweisung(PDO $pdo, string $sql): PDOStatement
 /**
  * Phasen eines Einsatzes ersetzen.
  *
- * @param list<array{phase:int, occurred_at:string, lat?:float|null, lon?:float|null}> $phasen
+ * Nummer und Zeit, im Klartext. Der Ort jeder Phase liegt seit Web 22 in der
+ * Einsatzhuelle (`missions.ort_huelle`); die Spalten `lat`/`lon` sind mit
+ * Web 23 gefallen (S11-12). Ein `lat`/`lon` in `$phasen` wird uebergangen.
+ *
+ * @param list<array{phase:int, occurred_at:string}> $phasen
  * @param array{loeschen?:bool} $o
  */
 function einsatz_phasen_ersetzen(PDO $pdo, int $missionId, array $phasen, array $o = []): void
@@ -138,44 +142,16 @@ function einsatz_phasen_ersetzen(PDO $pdo, int $missionId, array $phasen, array 
             ->execute([$missionId]);
     }
     if ($phasen === []) { return; }
-    /* IMMER FUENF SPALTEN. Das Formular schrieb drei und liess `lat`/`lon` auf
-     * ihrem Vorgabewert; die Spalten sind `DOUBLE NULL` ohne DEFAULT, der
-     * Vorgabewert ist also NULL. Ausdruecklich NULL zu schreiben legt
-     * denselben Wert ab. */
     $ins = einsatz_anweisung($pdo, 'INSERT INTO mission_phases
-        (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
+        (mission_id, phase, occurred_at) VALUES (?,?,?)');
     foreach ($phasen as $p) {
-        $ins->execute([$missionId, $p['phase'], $p['occurred_at'],
-                       $p['lat'] ?? null, $p['lon'] ?? null]);
+        $ins->execute([$missionId, $p['phase'], $p['occurred_at']]);
     }
 }
 
-/**
- * Reanimations-Sitzungen samt Ereignissen ersetzen.
- *
- * Die Ereignisse raeumt der Fremdschluessel mit ab (`ON DELETE CASCADE` auf
- * `resus_sessions`) — sie brauchen kein eigenes `DELETE`.
- *
- * @param list<array{started_at:string, events:list<array{0:string,1:string}>}> $sitzungen
- * @param array{loeschen?:bool} $o
- */
-function einsatz_reas_ersetzen(PDO $pdo, int $missionId, array $sitzungen, array $o = []): void
-{
-    if ($o['loeschen'] ?? true) {
-        einsatz_anweisung($pdo, 'DELETE FROM resus_sessions WHERE mission_id = ?')
-            ->execute([$missionId]);
-    }
-    if ($sitzungen === []) { return; }
-    $insS = einsatz_anweisung($pdo,
-        'INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
-    $insE = einsatz_anweisung($pdo,
-        'INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
-    foreach ($sitzungen as $s) {
-        $insS->execute([$missionId, $s['started_at']]);
-        $sid = (int)$pdo->lastInsertId();
-        foreach ($s['events'] as $e) { $insE->execute([$sid, $e[0], $e[1]]); }
-    }
-}
+/* `einsatz_reas_ersetzen()` stand hier bis Web 22.7.0: Sie schrieb die
+ * Reanimation in `resus_sessions`/`resus_events`. Seit Web 22 liegt sie in
+ * der Einsatzhuelle, seit Web 23 gibt es die Tabellen nicht mehr (S11-12). */
 
 /**
  * Rettungsmittel-Zeilen ersetzen.

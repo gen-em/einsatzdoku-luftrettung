@@ -4,7 +4,7 @@
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock und in
 Abschnitt 6 des Konzepts. Angelegt am 11.10.2026 mit S11-00 (Opus); jedes
 Paket füllt es mit Mittel **und** Zahl. Stand: **Konzept freigegeben am
-11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); **S11-08 erledigt** (17.10.2026, Uhr 4.0.0); **S11-09 erledigt** (17.10.2026, Android 0.18.0); **S11-10 erledigt bis auf den Lauf auf Staging und Produktiv** (18.10.2026, Web 22.7.0); **S11-11 erledigt bis auf den Pull Request** (18.10.2026, ohne neue Fassung); Halt vor S11-12.*
+11.10.2026** (P-S11-01); **S11-01 erledigt** (Grundlinie); **S11-03 erledigt** (13.10.2026, Web 22.0.0); **S11-04 erledigt** (14.10.2026, Web 22.0.4) — ohne Bilderlauf-Vergleich und Messung, die mit S11-10/-11 kommen (E-S11-41); **S11-05a bis -05c erledigt** (15.10.2026, Web 22.2.0); **S11-05d erledigt** (16.10.2026, Web 22.3.0); **S11-05e erledigt** (16.10.2026, Web 22.4.0) — damit S11-05; **S11-06 erledigt** (16.10.2026, Web 22.5.0); **S11-07 erledigt** (17.10.2026, Web 22.6.0); **S11-08 erledigt** (17.10.2026, Uhr 4.0.0); **S11-09 erledigt** (17.10.2026, Android 0.18.0); **S11-10 erledigt bis auf den Lauf auf Staging und Produktiv** (18.10.2026, Web 22.7.0); **S11-11 erledigt bis auf den Pull Request** (18.10.2026, ohne neue Fassung); Halt vor S11-12 — aufgehoben 19.10.2026; **S11-12 umgesetzt** (19.10.2026, Web 23.0.0).*
 
 ---
 
@@ -14,6 +14,10 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
+| **Die Migration `2026_10_19_klartext_weg` auf Staging und Produktiv.** (S11-12) | Örtlich lag kein Klartext mehr; die Migration lief durch, ohne dass die Sperre etwas zu halten hatte. Die Sperre selbst (mit Kontennennung und Freigabe) hat die Schemaprobe auf vier Datenbankfassungen gemessen, aber an erfundenen Zeilen und über die Kommandozeile, nicht über „Betrieb → Updates". | P-S11-41, P-S11-42. |
+| **Der Knopf „Freigeben" auf „Betrieb → Updates" für diese Migration** im Browser. (S11-12) | Es gab örtlich keinen Inhalt, der ihn zeigt; die Freigabe läuft über denselben Weg wie die der Migrationen mit Inhaltssperre aus Konzept BV, gemessen ist nur der Weg in `migration_lib.php`. | P-S11-42 (nur, wenn die Sperre anschlägt). |
+| **Die Ablehnung einer alten Sicherung mit einer echten alten Datei.** (S11-12) | Es gibt keine mehr (E-S11-85); gemessen sind die Schranke im Server (Wiederherstellungsprobe 1b) und die Erkennung der Art (Containerprobe, eine nachgebaute Fassung-3-Datei). Der Text, den der Browser dann zeigt, ist gelesen, nicht gesehen. | — |
+| **Firefox und Safari** für Sichern und Einspielen nach Web 23. (S11-12) | Wie bisher nur Chromium. | P-S11-43. |
 | **Ob die echte Garmin einen Punkt neben der Kurve abweist** (F-S11-85). (S11-11) | Gemessen nur im Simulator (3/3 „abgewiesen"); dessen Krypto ist die des Rechners. | P-S11-39. |
 | **Ob eine Freigabe (Lage I) seit S11 auch Ort und Spur offenlegt** (F-S11-92). (S11-11) | Nicht neu gelesen; gehört zum Befund F-R17-02, den 12b liest. | Review 12b. |
 | **Die Rechtstexte** (F-S11-91). (S11-11) | Bewusst nicht geändert: anwaltliche Prüfung, zweite Runde mit S11 (Rahmenplan 6). | P-S11-40. |
@@ -288,6 +292,28 @@ das: Bei 6× liegen Stufe 6 und 1 mit Passwort 0,5 s auseinander.
 F-S11-78 (Registertext der Transaktionen seit S11-05c veraltet),
 F-S11-79 (Messstand wartet nach der Anmeldung nicht auf das Schlüsselpaar).
 
+### S11-12 Aufräumauslieferung (19.10.2026)
+
+| Mittel | Was es misst | Zahl |
+|---|---|---|
+| `plattform.sh schema` (Fall 7 neu) | die neue Migration auf einer Anlage mit Klartextrest (Sperre mit Freigabekennung, Konten genannt, Freigabe läuft, Protokollzeile), auf einer sauberen und wiederholt | **4 × 50/0** — MariaDB 10.11, 10.6, MySQL 8.0, 8.4 |
+| `update.php` örtlich | Migration auf der Arbeitsanlage | angewendet; 4 Tabellen und 6 Spalten fort (`db_hat_tabelle`/`db_hat_spalte` je einzeln) |
+| `proben.sh` spur, jobs, komplett, ingest, wartungslauf, rollen, verbindung | die Server-Proben, die die gefallenen Tabellen oder Funktionen benutzten | 20/0 · 36/0 · 75/0 · 97/0 · 34/0 · 534/0 · 26/0 |
+| `proben.sh wiederherstellung` (Teil 14 umgestellt, Fall 1b neu) | Browserweg nur Nutzlast 13; Hülle und Stücke über die Spurkarte; Serverweg des Demo-Resets | **127/0**; erster Lauf brach ab (F-S11-98) |
+| `proben.sh freigabe` | Freigabe eines Pakets an ein neues Konto, Hülle und Spur unter dem neuen Paar | **23/0** viermal hintereinander, danach 0 verwaiste Stücke. Drei Fehler der Probe behoben (F-S11-98): Serverweg ohne Rechenweg (Prüfstand 1), verwaistes Stück nach `DELETE FROM users` (von der Jobprobe in Prüfstand 2 gezählt), Wettlauf um das Schlüsselpaar des Zielkontos (22/9 in Prüfstand 4 und einmal einzeln) — sie wartet jetzt darauf |
+| `proben.sh container` | Fassung 4, Erkennung einer einteiligen Datei ohne `sealBackup()` | 31/0 |
+| `proben.sh ortsdaten` (Schritte 2, 10, 11, 12, 15 umgestellt) | Klartextstellen gibt es nicht mehr; Export trägt Ziel und Höhe aus dem Blob | **54 ok, 0 fehlen**; erster Lauf 53/1 (F-S11-97) |
+| `proben.sh gpx` | GPX in beide Richtungen ohne die alten Tabellen | 46/0 |
+| `spaltenregister/pruefen.php` | Register gegen Schema und die drei Abbildungen | 0 Befunde (vorher 4: die vier Exportschlüssel ohne Spalte, jetzt „fremd" mit Grund) |
+| `zaehlung/zaehlen.php` | Zentralisierung, Kindtabellen ohne `resus_*` | 44 Zeilen, 0 über der Decke |
+| `einspielen.py` (alle Stufen) + `csv_import.mjs` + `referenz_export.mjs` in einem eigenen Konto | neue Kreislauf-Referenz über den regulären Weg | 674 Anfragen, 0 Fehler, 3 Schnitte; 232 Einträge, 22 Diensttage, 221 Spuren mit **67 478** Punkten (alt 67 292; +186 = die drei Schnitte), Nutzlast 13 |
+| `vergleichen.py --art csv`, alte gegen neue CSV-Ausfuhr | ob der Bestand derselbe ist | 12 486 Vergleiche, 1619 Abweichungen, alle erklärt (F-S11-99) |
+| `kreislauf.py --art edbak --frisch` | Umlauf der neuen Referenz | **347 566 Vergleiche, 0 unerklärt**, 22 erwartet (Gerätezuordnung), 10 Regeln ungenutzt → ausgetragen; danach 0 ungenutzt |
+| `messen.py --frisch --schritte konto,bestand,einspielen --einsaetze 300` | Fassung-4-Schreiber in Python bis in die Datenbank | 312/312 Einsätze, 192 303 Punkte in der Datei **und** in `track_stuecke`; 9 Sperrvermerke verworfen (bekannt, Nr. 386) |
+| `decken.py`, `uebersicht.py` | Backlog (Nr. 388 neu, Nr. 46 umgeschrieben) | 21 Decken, 0 gerissen |
+| Prüfstand, Lauf 1 bis 3 | alles zusammen | Lauf 1: 63 grün, 1 rot (Freigabeprobe, F-S11-98). Lauf 2 abgebrochen, nachdem die Jobprobe die Waise der Freigabeprobe gezählt hatte. Lauf 3: Bedienprobe 74/77 — der Abbruch von Lauf 2 hatte die Adresssuche der Installation mitten im Weg `ap2-installation-graut-konto-aus` ausgeschaltet zurückgelassen; Lauf 3 schaltete sie im selben Weg wieder an. Dazu die Versandprobe mit einem offenen Fall, ein Zufallsfehler der Probe (1 zu 256), behoben. Lauf 4: 62 grün, 2 rot — Spurprobe (suchte Stücke der Stufe 1, die der Wartungslauf gepackt hatte) und Freigabeprobe (Wettlauf um das Paar); beide behoben (F-S11-98). Einzeln danach: Spur 20/0, Freigabe viermal 23/0, Versand 143/0, Bedienprobe 77/77 (mit Demo-Marke wie im Prüfstand; ohne sie fiel ein Demo-Reset mitten hinein, 71/77) |
+| Prüfstand, Lauf 5 | alles zusammen, nach der letzten Änderung | Bericht in der Commit-Nachricht |
+
 ### S11-11 Gegenlesung und Nachmessung (18.10.2026)
 
 | Mittel | Was es misst | Zahl |
@@ -418,6 +444,11 @@ ausgeschrieben; hier stehen sie als Vorschau, damit nichts überrascht.
 | P-S11-04 | nach der Hauptauslieferung | `update.php` auf Staging und Produktiv | Migrationen gelaufen, Wartung aus | Wartungsseite bleibt |
 | P-S11-05 | nach der Hauptauslieferung | neue Uhrfassung aufspielen; auf der Sync-Seite steht „Kein Schlüssel · Holen: START halten" — START halten (seit E-S11-79 statt neu koppeln); einen Probeeinsatz aufzeichnen und senden | „Schlüssel geholt", danach Einsatz im Web mit Karte nach dem Entsperren | „Erst im Web anmelden" bleibt nach einer Anmeldung, „Verschlüsseln geht nicht", oder die Uhr parkt |
 | P-S11-37 | nach dem Merge auf Staging, vor Produktiv | (a) Betrieb → Status, Karte Server, Zeile **„Ortsdaten"**: Zahlen notieren. (b) Als ein Konto mit Einsätzen von vor S11 anmelden, die Startseite öffnen, entsperrt eine Minute stehen lassen. (c) Einen alten Einsatz mit Spur, Reanimation und Zielklinik öffnen, in Chromium, Firefox und Safari je einmal einen. (d) Status neu laden | (a) orange, Zahlen > 0. (c) Karte, Phasen, Reanimation, Zielklinik mit Pin wie vor S11; (d) Zahlen gesunken, nach allen Konten blau „verschlossen" | Karte leer oder „lassen sich nicht öffnen" (Reiter System sagt warum); Zahl sinkt nicht → Konsole des Browsers ansehen und melden |
+| P-S11-41 | nach dem Merge auf Staging | Betrieb → Updates öffnen, die Migration „Aufraeumen nach S11" ansehen und laufen lassen (`update.php`); danach Betrieb → Status | Die Migration läuft ohne Rückfrage durch (auf Staging ist umgezogen); die Zeile „Ortsdaten" gibt es auf der Statusseite nicht mehr; Startseite, ein Einsatz mit Spur, ein Diensttag mit Ruhezeit zeigen Karte, Phasen, Reanimation | Die Migration hält an und nennt Konten (dann ist dort noch Klartext — bitte die genannten Einsätze ansehen, bevor freigegeben wird); eine Seite zeigt 500 oder „lassen sich nicht öffnen" |
+| P-S11-42 | nach dem Tag `web-v23.0.0`, nach der Freigabe | Dasselbe auf Produktiv. **Hält die Migration an**, die genannten Konten prüfen; freigeben nur, wenn der Rest verloren gehen darf | wie P-S11-41; im Protokoll (Reiter Verwaltung) bei einer Freigabe die Zeile „AUF AUSDRÜCKLICHE FREIGABE" | Wartung bleibt an (dann ist `update.php` nicht gelaufen); Fehlermeldung beim Lauf |
+| P-S11-43 | nach P-S11-41 | Einstellungen → Backup: eine Sicherung anlegen und in ein frisches Testkonto einspielen, in Chromium, Firefox und Safari je einmal | „Fertig" in Blau, Einsätze mit Karte, Phasen, Reanimation, Zielklinik | Abbruch, „version_alt" bei einer frisch angelegten Datei, Karte leer |
+| P-S11-44 | nach P-S11-41 | Verwaltung → Demo zurücksetzen; als Demo anmelden, einen Einsatz mit Spur öffnen | wie P-S11-27: Karte, Phasen, Reanimation, Zielklinik | Reset scheitert (Reiter System), Karte leer |
+| P-S11-45 | nach P-S11-41 | Verwaltung → Konto-Backup eines Testkontos anlegen und „ins selbe Konto einspielen" | „eingespielt", nichts doppelt, Spuren da | Meldung „version_alt" oder „kein Paar" bei einem Konto mit Schlüsselpaar |
 | P-S11-39 | beim nächsten Lauf der Krypto-Probe auf der Fenix 6 Pro (Weg wie in S11-02) | Probe-App aufspielen, Ausgabe ablesen | Zeile „KURVE abgewiesen", „ERGEBNIS 7 gut, 0 Fehler" | „KURVE nicht geprueft" — dann braucht `Huelle.schluesselSetzen()` eine eigene Kurvenprüfung wie das Handy (F-S11-84); bitte melden |
 | P-S11-40 | nach der Hauptauslieferung | Rechtstexte zur zweiten Runde der anwaltlichen Prüfung geben: AVV Anlage I (Reanimationsverlauf), Anlage II Nr. 2 und Hinweis (a) nennen noch Klartext (F-S11-91) | geänderte Entwürfe | — |
 | P-S11-38 | erledigt 18.10.2026 | E-S11-81 bestätigen oder verwerfen; Q-S11-23 und Q-S11-24 beantworten | **beantwortet:** bestätigt bzw. wie empfohlen (E-S11-80 bis -83) | — |

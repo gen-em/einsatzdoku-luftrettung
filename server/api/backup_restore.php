@@ -21,48 +21,30 @@ if (($data['format'] ?? '') !== 'einsatzdoku-backup') {
     json_out(['error' => 'format'], 400);
 }
 
-/* ÄLTERE NUTZLASTVERSIONEN WERDEN ABGELEHNT (E23, A10).
+/* NUR NOCH NUTZLAST 13 (S11-12, E-S11-85).
  *
- * Mit dem Umbau auf Diensttage hat sich der Inhalt eines Backups so weit
- * geaendert, dass eine Umsetzung raten muesste: Eine Nutzlast der Version 5
- * kennt keine Kennung des Flugtags (der Kalendertag WAR sie), keine Art, keinen
- * Rollensatz, keine Standortzuordnung der Stammdaten und keine Uhr-Kennungen.
- * Jede dieser Luecken liesse sich nur mit einer Annahme fuellen, und eine
- * Wiederherstellung ist der falsche Ort fuer Annahmen — wer sie startet, hat
- * meist keinen zweiten Versuch.
+ * Bis Web 22.7.0 nahm dieser Weg jede Nutzlast ab 6 an: Der Browser
+ * verschloss Orte, Reanimation und Spur aus jeder Fassung, und SPUR1 las er
+ * selbst (`EdOrtsdaten.spur1Lesen()`). Aeltere Sicherungen gibt es nach
+ * Auskunft der Betreiberin nicht mehr; mit ihnen ist der Rueckweg gegangen —
+ * er waere der einzige Weg gewesen, auf dem noch SPUR1 und Klartextspalten
+ * in die Anlage kamen.
  *
- * Die Ablehnung ist deshalb ausdrücklich und benannt, nicht ein Fehler beim
- * Einlesen. Wer eine alte Datei hat, spielt sie in einer Installation vor
- * Web 6.0.0 ein und sichert dort neu.
+ * Die Ablehnung ist ausdruecklich und benannt, nicht ein Fehler beim
+ * Einlesen; der Container liess sich entsiegeln, und genau darum kommt die
+ * Meldung hier an. Der Browser fragt dieselbe Zahl schon vor dem Senden
+ * (`einstellungen.php`), dieser Satz ist der Riegel dahinter.
  *
- * Der Container (Signatur `EDBAK2`, Verschluesselung) ist unveraendert; die
- * Datei liess sich also entsiegeln. Genau darum kommt die Meldung hier an und
- * nicht schon im Browser.
- *
- * WARUM DIE SCHRANKE BEI 6 BLEIBT, OBWOHL DIE NUTZLAST AUF 7 GESTIEGEN IST
- * (E-S1-07). Nutzlast 7 fuehrt den Papierkorb (`deleted_at`,
- * `deleted_with_day` mit Inhalt). Eine Version-6-Datei fuehrt ihn nicht — ihr
- * fehlt nichts, was sich erraten muesste, sie beschreibt schlicht einen
- * Bestand ohne geloeschte Eintraege. Sie ist damit vollstaendig einspielbar,
- * und sie abzulehnen waere Schikane.
- *
- * Umgekehrt kennzeichnet der Sprung nur, er SPERRT NICHT: Ein bereits
- * ausgelieferter Stand mit derselben Schranke nimmt eine Version-7-Datei an
- * und braechte deren Papierkorb als aktiven Bestand zurueck, weil er
- * `deleted_at` nicht auswertet. Das ist nachtraeglich nicht zu reparieren und
- * steht als Warnung in docs/Backup-Format.md 4. */
+ * (Bis Web 5 stand die Schranke bei 6 — ab Web 6.0.0 mit Diensttagen, E23.
+ * Die einteilige Datei bis Nutzlast 7 nimmt nur noch der Demo-Reset, aus
+ * seiner eigenen Fixture und nicht ueber diesen Endpunkt.) */
 $nutzlast = isset($data['version']) ? (int)$data['version'] : 0;
-if ($nutzlast < 6) {
+if ($nutzlast < 13) {
     json_out(['error' => 'version_alt',
               'meldung' => 'Dieses Backup hat das Format ' . $nutzlast
-                         . ' und stammt aus einer Fassung vor der Umstellung auf '
-                         . 'Diensttage (Web 6.0.0). Sie lässt sich nicht mehr '
-                         . 'einspielen: Ihr fehlen Angaben, die sich nicht '
-                         . 'erraten lassen — die Kennung des Diensttags, die Art '
-                         . 'des Rettungsmittels, der Rollensatz, der Standort '
-                         . 'der Stammdaten und die Kennungen der Uhr. Es wurde '
-                         . 'nichts geändert. Bitte in einer Installation vor '
-                         . 'Web 6.0.0 einspielen und dort neu sichern.'], 409);
+                         . ' und stammt aus einer Fassung vor Web 22.5.0. Seit Web 23 lassen '
+                         . 'sich nur noch Sicherungen ab Format 13 einspielen — ältere trugen '
+                         . 'die Ortsdaten unverschlüsselt. Es wurde nichts geändert.'], 409);
 }
 
 /* UND EINE SCHRANKE NACH OBEN (S2/AP5).
@@ -129,6 +111,12 @@ try {
     if ($tage !== null) { $antwort['day_map'] = $tage ?: new stdClass(); }
     json_out($antwort);
 } catch (DomainException $ex) {
+    /* Die zweite Schranke in `edbak_restore()` (S11-12); oben steht die erste. */
+    if (str_starts_with($ex->getMessage(), 'version_alt')) {
+        json_out(['error' => 'version_alt',
+                  'meldung' => 'Seit Web 23 lassen sich nur noch Sicherungen ab Format 13 '
+                             . 'einspielen. Es wurde nichts geändert.'], 409);
+    }
     /* Klartext-Ortsdaten (S11-06b): Der Browser verschliesst seit Web 22.5.0
      * Orte, Reanimation und Spur vor dem Senden; eine Nutzlast mit Klartext
      * kommt aus einer veralteten Seite oder von Hand. Nichts ist geschrieben

@@ -320,15 +320,16 @@ CREATE TABLE bw_units (
   FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Vorbelegung: Zielkliniken (Vorschlagsliste fuer missions.transport_dest,
--- dieses Feld selbst bleibt Freitext ohne FK-Referenz).
+-- Vorbelegung: Zielkliniken (Vorschlagsliste fuer das Transportziel; das
+-- Feld selbst ist Freitext ohne FK-Referenz und liegt seit Web 22 im
+-- pat_blob, Feldkatalog 'store' => 'pat').
 CREATE TABLE transport_dests (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(190) NOT NULL,
   -- Optionale Koordinaten (E37). Werden AM EINSATZ eingefroren
-  -- (missions.dest_lat/dest_lon), nicht ueber den Namen aufgeloest: das Feld
+  -- (im pat_blob, dest_lat/dest_lon), nicht ueber den Namen aufgeloest: das Feld
   -- ist Freitext mit Vorschlagsliste, eine Aufloesung ueber Namensgleichheit waere
   -- bruechig — ein umbenannter Eintrag verloere seine Koordinate.
   lat DECIMAL(9,6) NULL,
@@ -462,9 +463,8 @@ CREATE TABLE missions (
   ended_at   DATETIME NULL,                          -- UTC, NULL solange final=0
   distance_m INT UNSIGNED NULL,
   ascent_m   INT UNSIGNED NULL,
-  site_ele_m INT NULL,                              -- Hoehe Einsatzort bei PatientInnenkontakt (berechnet, s. site_elevation_lib.php)
   final      TINYINT(1) NOT NULL DEFAULT 0,
-  -- Wann zuletzt ein Punkt EINTRAF (S2/AP3). Nicht track_points.ts --
+  -- Wann zuletzt ein Punkt EINTRAF (S2/AP3). Nicht die Zeit der Punkte --
   -- das ist die Aufzeichnungszeit. Die Karenz vor der Verdichtung
   -- (E-S2-06) braucht die Ankunftszeit: Die Uhr setzt final in JEDEM
   -- Teilstueck, ein spaet hochgeladener Puffer waere sonst im Moment
@@ -499,12 +499,10 @@ CREATE TABLE missions (
   -- Zusatzfelder (mission_fields.php):
   transport_mode ENUM('air','ground','ambulant') NULL, -- Luft | Boden | Ambulant (E17)
   na_escort  TINYINT(1) NOT NULL DEFAULT 0,        -- NA-Begleitung, nur bei Luft und Boden
-  transport_dest VARCHAR(190) NULL,
-  -- Zielklinik-Koordinate, KLARTEXT wie transport_dest (E40): Der Name steht
-  -- ohnehin unverschluesselt am Einsatz, die Koordinate folgt derselben
-  -- Einstufung. Ihr Pin ist damit ohne Freischalten sichtbar.
-  dest_lat   DECIMAL(9,6) NULL,
-  dest_lon   DECIMAL(9,6) NULL,
+  -- Transportziel, seine Koordinate und die Hoehe des Einsatzorts liegen
+  -- seit Web 22 im pat_blob (Feldkatalog, 'store' => 'pat'); die
+  -- Klartextspalten transport_dest, dest_lat, dest_lon und site_ele_m sind
+  -- mit Web 23 gefallen (S11-12).
   schockraum TINYINT(1) NOT NULL DEFAULT 0,        -- Zielklinik: Schockraum
   false_alarm TINYINT(1) NOT NULL DEFAULT 0,       -- Fehleinsatz / Storno / Abbruch (E17)
   -- Abfahrtortregel (Konzept 3.5.1). Gespeichert wird die REGEL, nicht die
@@ -562,27 +560,14 @@ CREATE TABLE mission_phases (
   mission_id  INT UNSIGNED NOT NULL,
   phase       TINYINT UNSIGNED NOT NULL,             -- 2..9; eine Phase 10 gibt es nicht
   occurred_at DATETIME NOT NULL,                     -- UTC
-  lat DOUBLE NULL, lon DOUBLE NULL,
+  -- Die Koordinate jeder Phase liegt seit Web 22 in missions.ort_huelle
+  -- (Geraetehuelle); lat/lon sind mit Web 23 gefallen (S11-12).
   FOREIGN KEY (mission_id) REFERENCES missions(id) ON DELETE CASCADE,
   INDEX (mission_id, occurred_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE resus_sessions (
-  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  mission_id INT UNSIGNED NOT NULL,
-  started_at DATETIME NOT NULL,                      -- UTC = "Reanimationsbeginn"
-  FOREIGN KEY (mission_id) REFERENCES missions(id) ON DELETE CASCADE,
-  INDEX idx_mission (mission_id, started_at)         -- mehrere Reas pro Einsatz
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE resus_events (
-  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  session_id  INT UNSIGNED NOT NULL,
-  type        VARCHAR(24) NOT NULL,                  -- adrenalin, rhythmuskontrolle, ...
-  occurred_at DATETIME NOT NULL,                     -- UTC
-  FOREIGN KEY (session_id) REFERENCES resus_sessions(id) ON DELETE CASCADE,
-  INDEX (session_id, occurred_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- Der Reanimationsverlauf liegt seit Web 22 in missions.ort_huelle; die
+-- Tabellen resus_sessions und resus_events sind mit Web 23 gefallen (S11-12).
 
 -- Je Einsatz beteiligte Rettungsmittel; einzeln entfernbar, daher eigene Zeilen
 CREATE TABLE mission_resources (
@@ -819,41 +804,9 @@ CREATE TABLE app_state (
   v VARCHAR(190) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Trackpunkte fuer Einsaetze UND Ruhe-Segmente (owner_type unterscheidet)
-CREATE TABLE track_points (
-  owner_type ENUM('mission','rest') NOT NULL,
-  owner_id   INT UNSIGNED NOT NULL,
-  seq        INT UNSIGNED NOT NULL,
-  lat DOUBLE NOT NULL, lon DOUBLE NOT NULL,
-  ele DOUBLE NULL,
-  ts  INT UNSIGNED NOT NULL,                          -- Unix-Epoche (s, UTC)
-  PRIMARY KEY (owner_type, owner_id, seq)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Spuren als Blob (S2, SPUR1). Seit dieser Fassung ist `track_points` nur
--- noch der EINGANGSPUFFER der Uhr (Stufe 1); sobald ein Paket abgeschlossen
--- ist, wandern seine Punkte in eine Zeile hier (Stufe 2), und sechs Monate
--- nach Einsatzende werden sie ausgeduennt (Stufe 3).
---
--- Der Grund ist die Menge: 62,4 Byte je Punkt als Zeile gegen 3,58 als Blob.
--- Gelesen und geschrieben wird ausschliesslich ueber `spur_lib.php`; das
--- Format steht dort und in docs/Backup-Format.md.
---
--- WIE `track_points` OHNE FREMDSCHLUESSEL, aus demselben Grund (polymorph
--- ueber owner_type/owner_id). Die Loeschwege raeumen deshalb ausdruecklich
--- mit; der Wartungsjob ist nur das Sicherheitsnetz (F-S2-B).
-CREATE TABLE track_blobs (
-  owner_type    ENUM('mission','rest') NOT NULL,
-  owner_id      INT UNSIGNED NOT NULL,
-  stufe         TINYINT UNSIGNED NOT NULL,     -- 2 = verlustfrei, 3 = ausgeduennt
-  n_original    INT UNSIGNED NOT NULL,         -- Punktzahl vor der Ausduennung
-  n_gespeichert INT UNSIGNED NOT NULL,
-  blob_daten    MEDIUMBLOB NOT NULL,
-  erstellt_am   DATETIME NOT NULL,
-  geaendert_am  DATETIME NOT NULL,
-  PRIMARY KEY (owner_type, owner_id),
-  KEY stufe_alter (stufe, geaendert_am)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- GPS-Aufzeichnungen liegen seit Web 22 als Geraetehuellen in track_stuecke
+-- (SPUR2, weiter unten). Die Klartexttabellen track_points (Punkte als
+-- Zeilen) und track_blobs (SPUR1) sind mit Web 23 gefallen (S11-12).
 
 -- Sperrvermerke des Schneidewerkzeugs (S4/A2, E-S4-53). Eine Zeile je Schnitt.
 --
@@ -870,7 +823,7 @@ CREATE TABLE track_blobs (
 -- bei der Ankunft. Der Zeitraum steht dagegen fest, und jeder Punkt bringt
 -- seine `ts` mit.
 --
--- WIE `track_points` OHNE FREMDSCHLUESSEL (polymorph). `mission_id` ist das
+-- WIE `track_stuecke` OHNE FREMDSCHLUESSEL (polymorph). `mission_id` ist das
 -- Ziel und traegt das Rueckgaengig (E-S4-17): Es holt die Punkte zurueck und
 -- loescht die Zeile, sonst bliebe ein Loch, das niemand mehr fuellen kann.
 CREATE TABLE track_cuts (
@@ -903,9 +856,9 @@ CREATE TABLE track_cuts (
 -- Ruhesegment), `client_ref` des Eigentuemers, Platz `<seq_from>:<punkte>`.
 -- Eine Huelle, die jemand in eine andere Zeile kopiert, geht dort nicht auf.
 --
--- WIE `track_points` OHNE FREMDSCHLUESSEL (polymorph), gelesen und geschrieben
--- nur ueber `spur_lib.php` (CLAUDE.md 4). `track_points` und `track_blobs`
--- tragen bis zur Aufraeumauslieferung (S11-12) nur noch Altbestand.
+-- OHNE FREMDSCHLUESSEL, weil polymorph ueber owner_type/owner_id; die
+-- Loeschwege raeumen deshalb ausdruecklich mit. Gelesen und geschrieben nur
+-- ueber `spur_lib.php` (CLAUDE.md 4).
 CREATE TABLE track_stuecke (
   owner_type   ENUM('mission','rest') NOT NULL,
   owner_id     INT UNSIGNED NOT NULL,
@@ -1099,7 +1052,8 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_08_28_last_login', 'skipped'),
   -- Die Tabelle rechtstexte steht oben schon im Schema (Web 9.11.0).
   ('2026_08_30_rechtstexte', 'skipped'),
-  -- track_blobs und jobs stehen oben schon im Schema (Web 10.0.0/10.1.0).
+  -- jobs steht oben schon im Schema (Web 10.1.0); track_blobs (Web 10.0.0) ist
+  -- mit Web 23.0.0 gefallen, die Kennung bleibt, damit nichts sie neu anlegt.
   ('2026_08_31_spur_blobs', 'skipped'),
   ('2026_08_31_jobs', 'skipped'),
   -- letzter_punkt_am steht oben schon an beiden Tabellen (Web 10.2.0).
@@ -1193,4 +1147,8 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- track_stuecke und missions.ort_huelle stehen oben schon im Schema (S11-04a).
   ('2026_10_13_ortshuellen', 'skipped'),
   -- track_cuts.mission_id ist oben schon NULL-faehig (S11-05c).
-  ('2026_10_15_loeschvermerk', 'skipped');
+  ('2026_10_15_loeschvermerk', 'skipped'),
+  -- Die Klartext-Ortsdaten (track_points, track_blobs, resus_sessions,
+  -- resus_events, mission_phases.lat/lon, missions.transport_dest, dest_lat,
+  -- dest_lon, site_ele_m) stehen oben schon nicht mehr (Web 23.0.0, S11-12).
+  ('2026_10_19_klartext_weg', 'skipped');

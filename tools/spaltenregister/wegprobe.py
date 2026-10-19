@@ -75,9 +75,10 @@ def sql(abfrage: str):
 def punktreichstes_segment(uid: int) -> dict | None:
     """Das Ruhesegment mit den meisten GPS-Punkten.
 
-    UEBER `spur_lib.php`, NICHT per SQL (CLAUDE.md 4): Die Punkte liegen je
-    nach Alter als Zeilen in `track_points` ODER als Blob in `track_blobs`.
-    Ein COUNT(*) auf die Zeilentabelle findet die halbe Wahrheit.
+    UEBER `spur_lib.php`, NICHT per SQL (CLAUDE.md 4): `spur_zahlen()` zaehlt
+    die Punkte der verschlossenen Stuecke ueber ihren Umriss. (Bis Web 22.7.0
+    lagen sie zusaetzlich als Zeilen in `track_points` oder als Blob in
+    `track_blobs`, und ein COUNT(*) fand die halbe Wahrheit.)
     """
     php = ('$c = require "server/config.php";'
            '$p = new PDO($c["db"]["dsn"],$c["db"]["user"],$c["db"]["pass"],'
@@ -155,7 +156,6 @@ def teil_schnitt(s, uid: int) -> None:
     pruefe("Geraet ist das virtuelle",   dev["device_id"].startswith("manual-"), True)
     # Gegenprobe: Der Schnitt fuellt KEINE Einsatzfelder. Stuende hier etwas,
     # haette die erzeugte Liste eine Spalte zu viel erwischt.
-    pruefe("transport_dest leer",        z["transport_dest"], None)
     pruefe("pat_blob leer",              z["pat_blob"], None)
     phasen = sql(f"SELECT phase FROM mission_phases WHERE mission_id = {mid} ORDER BY phase")
     pruefe("Phasen angelegt",            [int(p["phase"]) for p in phasen], [3, 4])
@@ -163,7 +163,9 @@ def teil_schnitt(s, uid: int) -> None:
 
 # Die Spalten, die Teil 2 liest — nicht `*`: Die Einsatzhuelle (seit S11-04a)
 # ist binaer und ginge nicht durch json_encode().
-SPALTEN_WEG = ("transport_dest, dest_lat, site_ele_m, bw_unit, bw_info, other_ema, distance_m, "
+# `transport_dest`, `dest_lat` und `site_ele_m` stehen nicht mehr darin: Die
+# Spalten sind mit Web 23 gefallen (S11-12); Ziel und Hoehe liegen im Blob.
+SPALTEN_WEG = ("bw_unit, bw_info, other_ema, distance_m, "
                "winch, winch_cycles, final, uhr_gesperrt, edited, false_alarm, pat_blob, "
                "ort_huelle IS NOT NULL AS hat_huelle")
 
@@ -233,9 +235,8 @@ def teil_import(s, uid: int) -> None:
         print("  Rumpf:", a.text[:400])
         return
     r = sql(f"SELECT {SPALTEN_WEG} FROM missions WHERE id = {int(z['id'])}")[0]
-    for feld, soll in [("transport_dest", None), ("bw_unit", "BW Probe"),
-                       ("bw_info", "Info A"), ("other_ema", "EMA A"), ("site_ele_m", None),
-                       ("dest_lat", None)]:
+    for feld, soll in [("bw_unit", "BW Probe"),
+                       ("bw_info", "Info A"), ("other_ema", "EMA A")]:
         pruefe(f"A: {feld}", r[feld], soll)
     pruefe("A: ort_huelle gesetzt", int(r["hat_huelle"]), 1)
     for feld, soll in [("distance_m", 12345), ("winch", 1),
@@ -253,12 +254,10 @@ def teil_import(s, uid: int) -> None:
                 "false_alarm": 1, "start_src": "manual", "final": 1})
     pruefe("Durchgang B — HTTP", a.status_code, 200)
     r = sql(f"SELECT {SPALTEN_WEG} FROM missions WHERE id = {int(z['id'])}")[0]
-    pruefe("B: transport_dest leer (im Blob)",   r["transport_dest"], None)
     pruefe("B: winch geaendert",                 int(r["winch"]), 0)
     pruefe("B: distance_m geaendert",            int(r["distance_m"]), 999)
     pruefe("B: false_alarm geaendert",           int(r["false_alarm"]), 1)
     pruefe("B: bw_unit geleert (KEIN COALESCE)", r["bw_unit"], None)
-    pruefe("B: site_ele_m leer (im Blob)",       r["site_ele_m"], None)
     pruefe("B: bw_info gehalten (COALESCE)",     r["bw_info"], "Info A")
     pruefe("B: other_ema gehalten (COALESCE)",   r["other_ema"], "EMA A")
     pruefe("B: pat_blob gehalten (COALESCE)",    r["pat_blob"] is not None, True)

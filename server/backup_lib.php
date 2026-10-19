@@ -95,7 +95,8 @@ const EDBAK_NUTZLAST = 13;
  * `$ohneSpuren` IST DER KERN DER FASSUNG 4 (S2/AP5, Konzept 3.2.1). Statt der
  * Punktlisten traegt jedes spurtragende Objekt dann eine fortlaufende
  * `spur_ref` und die Angaben `stufe`, `n_original` und `n`; die Punkte kommen
- * ueber `api/backup_spuren.php` als SPUR1-Blobs in eigene Teile.
+ * ueber `api/backup_spuren.php` in eigene Teile (seit Nutzlast 13 als
+ * Punktlisten, die der Browser aus den Stuecken oeffnet; bis 12 als SPUR1).
  *
  * WARUM DIE ZAHLEN IN DEN KERN GEHOEREN und nicht nur in die Spurteile: Sie
  * sind die einzige Stelle, an der beim Vergleich zu sehen ist, dass eine Spur
@@ -111,21 +112,27 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
                      ?array $fenster = null): string {
     $pdo = db();
 
-    /* DREI BETRIEBSARTEN, EINE FUNKTION (S2/AP5b).
+    /* ZWEI BETRIEBSARTEN, EINE FUNKTION (S2/AP5b).
      *
-     *   $fenster === null           die ganze Nutzlast (Fassung <= 7, mit
-     *                               Punktlisten; so sichern die Adminpakete
-     *                               und die Demo-Fixture weiter)
      *   ['kopf' => true]            nur der Kopf: Stammdaten und Diensttage
      *   ['ab' => x, 'anzahl' => y]  ein Fenster von Eintraegen
      *
-     * WARUM NICHT DREI FUNKTIONEN. Weil dann drei Stellen wuessten, wie aus
+     * Bis Web 22.7.0 gab es eine dritte: `$fenster === null`, die ganze
+     * Nutzlast 7 mit Punktlisten aus `track_points`/`track_blobs` und der
+     * Reanimation aus `resus_sessions`. Seit S11 sieht der Server keine Punkte
+     * und keine Reanimation mehr, und mit den Tabellen ist sie gegangen
+     * (S11-12). `$ohneSpuren` ist seitdem immer wahr.
+     *
+     * WARUM NICHT ZWEI FUNKTIONEN. Weil dann zwei Stellen wuessten, wie aus
      * einem Einsatz JSON wird — und die naechste neue Spalte in zweien davon
      * landete. Die Spaltenliste, die Kindtabellen, die Reihenfolge und die
      * Sonderfaelle sind der eigentliche Inhalt dieser Funktion; die
      * Betriebsart entscheidet nur, WELCHE Teile davon laufen. */
     $nurKopf    = !empty($fenster['kopf']);
     $nurFenster = isset($fenster['ab']);
+    if (!$ohneSpuren || (!$nurKopf && !$nurFenster)) {
+        throw new InvalidArgumentException('edbak_build: nur Kopf oder Fenster, ohne Punktlisten (seit Web 23)');
+    }
     $q = function (string $sql, array $p) use ($pdo): array {
         $st = $pdo->prepare($sql); $st->execute($p); return $st->fetchAll(PDO::FETCH_ASSOC);
     };
@@ -147,81 +154,27 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     $zahl = fn($v, bool $ganz = false) =>
         (is_numeric($v) ? ($ganz ? (int)$v : (float)$v) : null);
 
-    /* SPUREN GEBUENDELT HOLEN (M5-12).
+    /* FASSUNG 4: statt der Punkte nur ihr Umriss — kein gelesener Punkt, und
+     * die laufende Nummer, unter der der Spurteil die Stuecke wiederfindet.
      *
-     * Hier stand eine Funktion, die JE EINSATZ und JE RUHESEGMENT eine eigene
-     * Abfrage absetzte — zusammen mit Phasen, Rettungsmitteln und Reanimation
-     * waren das bei 1600 Einsaetzen ueber 6000 Abfragen fuer EIN Backup.
-     * Eine Obergrenze gab es nicht: Die Zahl waechst mit dem Bestand, und das
-     * Backup ist genau die Handlung, die jemand ausfuehrt, wenn er ohnehin
-     * schon beunruhigt ist.
-     *
-     * Jetzt: eine Abfrage je Tabelle, in Bloecken (sql_in_bloecken, db.php).
-     * Die Reihenfolge kommt weiterhin aus dem SQL — sie ist Teil des
-     * Dateiformats, nicht Zufall.
-     */
-    /* SPUREN UEBER spur_lib.php (S2/AP1) — Zeilen und Blob zusammen.
-     *
-     * Das Dateiformat bleibt, was es war: je Punkt [seq, lat, lon, ele, ts]
-     * (Backup-Format.md). Die Nummer kommt jetzt aus der Position im Blob
-     * beziehungsweise aus der Zeile; sie ist damit weiterhin luecken- und
-     * dublettenfrei, was der Rueckweg voraussetzt. */
-    $spuren = function (string $type, array $ids) use ($pdo, $zahl): array {
-        $nach = [];
-        foreach ($ids as $id) { $nach[$id] = []; }
-        if (!$ids) { return $nach; }
-        foreach (spur_lesen_viele($pdo, $type, $ids) as $id => $punkte) {
-            foreach ($punkte as $p) {
-                $nach[$id][] = [$zahl($p[0], true), $zahl($p[1]), $zahl($p[2]),
-                                $zahl($p[3]), $zahl($p[4], true)];
-            }
-        }
-        return $nach;
-    };
-
-    /* FASSUNG 4: statt der Punkte nur ihr Umriss. Vier Abfragen je Art, kein
-     * gelesener Punkt — und die laufende Nummer, unter der der Spurteil den
-     * Blob wiederfindet.
-     *
-     * DIE ZAHLEN BESCHREIBEN, WAS IN DER DATEI STEHT, nicht was in der
-     * Datenbank liegt. Der Unterschied ist eine Stufe: Eine Spur, die noch als
-     * Zeilen liegt (Stufe 1), wird beim Sichern verlustfrei kodiert und steht
-     * in der Datei als Stufe 2 (Konzept 3.2.3). Wuerde der Kern hier „Stufe 1"
-     * sagen und das Spurteil einen Stufe-2-Blob tragen, stuenden zwei
-     * Wahrheiten in derselben Datei — und die falsche waere die, die der
-     * Rueckweg zuerst liest.
-     *
-     *   Bestand Stufe 1 oder 2  ->  Datei Stufe 2, n_original = n
-     *   Bestand Stufe 3         ->  Datei Stufe 3, n_original aus dem Blobkopf
-     *
-     * `n` KOMMT AUS `spur_zahlen()` UND NICHT AUS `$umriss['gesamt']`. Die
-     * beiden sind nicht dasselbe: `gesamt` ist die hoechste Punktnummer plus
-     * eins — bei einer ausgeduennten Spur also die Zahl VOR der Ausduennung
-     * (443 statt der 148, die tatsaechlich gespeichert sind). Der erste Entwurf
-     * hat das verwechselt, und das Backup haette fuer jede ausgeduennte Spur
-     * eine Punktzahl genannt, die es in ihr nicht gibt. */
+     * DIE ZAHLEN BESCHREIBEN, WAS IN DER DATEI STEHT (Konzept S2 3.2.3): Eine
+     * Spur aus Geraetestuecken oder zusammengefuegt steht dort als Stufe 2
+     * mit `n_original = n`, eine ausgeduennte als Stufe 3 mit der Zahl VOR
+     * der Ausduennung. `n` ist die Summe der gespeicherten Punkte. Bis Web 22
+     * kam ein SPUR1-Umriss dazu. */
     $spurVerzeichnis = [];
     $umrisse = function (string $type, array $ids) use ($pdo, &$indexVon): array {
         $nach = [];
         if (!$ids) { return $nach; }
-        $u = spur_umriss($pdo, $type, $ids);
         $z = spur_zahlen($pdo, $type, $ids);
-        /* Die Stuecke (S11-06a): ihre hoechste Stufe und Originalzahl. Eine
-         * Spur nur aus Stuecken hat im SPUR1-Umriss Stufe 1 und 0 Punkte;
-         * ihre Zahl kommt aus `spur_zahlen()`, das die Stuecke mitzaehlt. */
         $s2 = spur2_umriss($pdo, $type, $ids);
         foreach ($ids as $id) {
-            $x = $u[$id] ?? null;
             $n = (int)($z[$id] ?? 0);
-            if ($x === null || $n === 0) { continue; }
-            if (isset($s2[$id]) && $s2[$id]['stufe'] === SPUR2_STUFE_DUENN) {
-                $x = ['stufe' => SPUR_STUFE_DUENN,
-                      'n_original' => $x['n_original'] + $s2[$id]['n_original']];
-            }
-            $duenn = $x['stufe'] === SPUR_STUFE_DUENN;
+            if ($n === 0 || !isset($s2[$id])) { continue; }
+            $duenn = $s2[$id]['stufe'] === SPUR2_STUFE_DUENN;
             $nach[$id] = ['spur_ref' => $indexVon[$type . '-' . $id],
-                          'stufe' => $duenn ? SPUR_STUFE_DUENN : SPUR_STUFE_ROH,
-                          'n_original' => $duenn ? $x['n_original'] : $n,
+                          'stufe' => $duenn ? SPUR2_STUFE_DUENN : SPUR2_STUFE_GEPACKT,
+                          'n_original' => $duenn ? $s2[$id]['n_original'] : $n,
                           'n' => $n];
         }
         return $nach;
@@ -284,22 +237,11 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      *                            niemand mehr fuellt und das beim
      *                            Einspielen verworfen wird.
      *
-     * WAS BEIM EINSPIELEN NICHT TRANSPORTIERT WIRD (vorgefunden, hier nicht
-     * geaendert): Der Einspielweg schreibt die Grundspalten (Zweck
-     * `backup_restore` im Register) plus die Spalten aus mission_fields.php
-     * plus pat_blob. `site_ele_m` steht in KEINER dieser Listen — die
-     * Einsatzort-Hoehe wird beim Uhr-Upload gerechnet, nicht eingegeben.
-     * Sie ist im Backup enthalten (die Datei soll den Bestand vollstaendig
-     * abbilden), wird beim Einspielen aber nicht uebernommen.
-     *
-     * SIE KOMMT TROTZDEM WIEDER, und dieser Satz fehlte hier bis Schritt 15
-     * AP6: Nach dem Bestaetigen rechnet dieser Lauf sie fuer jeden
-     * eingespielten Einsatz NEU (`compute_site_elevation()`, die Liste
-     * `$hoeheOffen` weiter unten). Der Unterschied ist keiner fuer den
-     * Bestand, aber einer fuer das Verstaendnis: Steht in der Datei eine
-     * Hoehe, die zu den Phasenkoordinaten nicht passt, gewinnt die Rechnung.
-     * Wer den Transport haben will, aendert den Einspielweg — ein eigener
-     * Vorgang. */
+     * DIE EINSATZORT-HOEHE reist im `pat_blob` (`ortshoehe`, seit Web 22).
+     * Bis Web 22.7.0 stand sie zusaetzlich als Spalte `site_ele_m` im Backup,
+     * wurde beim Einspielen aber nicht uebernommen, sondern neu gerechnet
+     * (`compute_site_elevation()`). Spalte und Rechnung sind mit Web 23
+     * gegangen (S11-12). */
     /* IN FENSTERN, NICHT AUF EINMAL (S2/AP5).
      *
      * WARUM. Hier standen vier Abfragen ueber ALLE Einsaetze eines Kontos —
@@ -339,8 +281,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * deshalb Luecken. Das ist richtig so — sie ist eine Kennung, keine
      * Zaehlung. */
     $ab     = $nurFenster ? max(0, (int)$fenster['ab']) : 0;
-    $anzahl = $nurFenster ? max(1, (int)($fenster['anzahl'] ?? EDBAK_FENSTER))
-                          : $eintraegeGesamt;
+    $anzahl = $nurFenster ? max(1, (int)($fenster['anzahl'] ?? EDBAK_FENSTER)) : 0;
     $bis    = $nurKopf ? 0 : min($eintraegeGesamt, $ab + $anzahl);
 
     $missionIds = $nurKopf ? []
@@ -360,8 +301,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     /* Die Spurangaben je Einsatz stehen VOR den Fenstern: `spur_ref` zaehlt
      * ueber den ganzen Vorgang durch, und die Reihenfolge dieser Nummern ist
      * die der Einsaetze. Sie kosten wenig — vier Abfragen, kein Punkt. */
-    $spurNachEinsatz = $ohneSpuren ? $umrisse('mission', $missionIds)
-                                   : $spuren('mission', $missionIds);
+    $spurNachEinsatz = $umrisse('mission', $missionIds);
 
     /* JE EINSATZ KODIEREN UND FREIGEBEN, statt erst alle zu sammeln.
      *
@@ -401,16 +341,18 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
             $einsatzCrewNach[(int)$c['mission_id']][(string)$c['role_code']] = $c['name'];
         }
 
-        // Phasen, Rettungsmittel, Reanimation: je eine Abfrage statt je Einsatz
-        // (M5-12). Die Zuordnung geschieht im Speicher.
-        $phasenNach = $mittelNach = $sitzungenNach = [];
+        /* Phasen und Rettungsmittel: je eine Abfrage statt je Einsatz
+         * (M5-12). Die Orte der Phasen und die Reanimation liegen seit Web 22
+         * in der Einsatzhuelle (`ort_huelle`); der Browser legt sie beim
+         * Sichern offen in den Kern (S11-06a). Bis Web 22.7.0 kamen hier
+         * `lat`/`lon` und `resus_sessions` des Altbestands mit. */
+        $phasenNach = $mittelNach = [];
         foreach (sql_in_bloecken($pdo,
-                'SELECT mission_id, phase, occurred_at, lat, lon FROM mission_phases
+                'SELECT mission_id, phase, occurred_at FROM mission_phases
                  WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at',
                 $fenster) as $p) {
             $phasenNach[(int)$p['mission_id']][] = [
-                'phase' => $zahl($p['phase'], true), 'occurred_at' => $p['occurred_at'],
-                'lat' => $zahl($p['lat']), 'lon' => $zahl($p['lon'])];
+                'phase' => $zahl($p['phase'], true), 'occurred_at' => $p['occurred_at']];
         }
         foreach (sql_in_bloecken($pdo,
                 'SELECT mission_id, name FROM mission_resources
@@ -418,29 +360,6 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
                 $fenster) as $r) {
             $mittelNach[(int)$r['mission_id']][] = (string)$r['name'];
         }
-        $sitzungen = sql_in_bloecken($pdo,
-            'SELECT id, mission_id, started_at FROM resus_sessions
-             WHERE mission_id IN ({IDS}) ORDER BY mission_id, started_at',
-            $fenster);
-        $ereignisseNach = [];
-        $sitzungsIds = array_map(static fn($s) => (int)$s['id'], $sitzungen);
-        if ($sitzungsIds) {
-            foreach (sql_in_bloecken($pdo,
-                    'SELECT session_id, type, occurred_at FROM resus_events
-                     WHERE session_id IN ({IDS}) ORDER BY session_id, occurred_at',
-                    $sitzungsIds) as $e) {
-                $ereignisseNach[(int)$e['session_id']][] = [
-                    'type' => $e['type'], 'occurred_at' => $e['occurred_at']];
-            }
-        }
-        foreach ($sitzungen as $sz) {
-            $sitzungenNach[(int)$sz['mission_id']][] = [
-                'started_at' => $sz['started_at'],
-                'events'     => $ereignisseNach[(int)$sz['id']] ?? [],
-            ];
-        }
-        unset($sitzungen, $ereignisseNach, $sitzungsIds);
-
         /* ---- Die Sperrvermerke des Schnitts (Backlog Nr. 63, Nutzlast 9) --
          *
          * EINE ABFRAGE JE FENSTER, ueber `spur_lib.php` — `track_cuts` ist
@@ -462,7 +381,6 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
             unset($zeilen[$mid], $m['id']);   // id nur fuer die Zuordnung
             $m['phases']    = $phasenNach[$mid]    ?? [];
             $m['resources'] = $mittelNach[$mid]    ?? [];
-            $m['resus']     = $sitzungenNach[$mid] ?? [];
             $m['crew']      = $einsatzCrewNach[$mid] ?? [];
             /* `schnitte` STEHT AN JEDEM EINSATZ, leer erlaubt — wie die vier
              * Listen darueber und ausdruecklich anders als `track`/`spur_ref`
@@ -471,25 +389,20 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
              * Vermerke" oder „diese Fassung kennt sie nicht". Ein leeres
              * Feld sagt das erste. */
             $m['schnitte']  = $schnitteNach[$mid]  ?? [];
-            if ($ohneSpuren) {
-                /* KEIN `track` UND KEIN LEERES `track`. Ein leeres Feld saehe
-                 * aus wie „hat keine Spur"; die Fassung sagt, dass die Punkte
-                 * woanders stehen. Wer keine Spur hat, bekommt gar keine
-                 * `spur_ref`. */
-                if (isset($spurNachEinsatz[$mid])) {
-                    $m += $spurNachEinsatz[$mid];
-                    $spurVerzeichnis[] = ['spur_ref' => $m['spur_ref'], 'art' => 'mission',
-                                          'id' => $mid, 'n' => $m['n']];
-                }
-            } else {
-                $m['track'] = $spurNachEinsatz[$mid] ?? [];
+            /* KEIN `track` UND KEIN LEERES `track`. Ein leeres Feld saehe aus
+             * wie „hat keine Spur"; die Fassung sagt, dass die Punkte woanders
+             * stehen. Wer keine Spur hat, bekommt gar keine `spur_ref`. */
+            if (isset($spurNachEinsatz[$mid])) {
+                $m += $spurNachEinsatz[$mid];
+                $spurVerzeichnis[] = ['spur_ref' => $m['spur_ref'], 'art' => 'mission',
+                                      'id' => $mid, 'n' => $m['n']];
             }
             unset($spurNachEinsatz[$mid]);
             $missionsJson .= ($missionsJson === '' ? '' : ',')
                            . json_encode($m, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             unset($m);
         }
-        unset($zeilen, $phasenNach, $mittelNach, $sitzungenNach, $einsatzCrewNach,
+        unset($zeilen, $phasenNach, $mittelNach, $einsatzCrewNach,
               $schnitteNach);
     }
     unset($spurNachEinsatz);
@@ -515,8 +428,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         }
         unset($nach);
     }
-    $spurNachRuhe = $ohneSpuren ? $umrisse('rest', $restIdsFenster)
-                                : $spuren('rest', $restIdsFenster);
+    $spurNachRuhe = $umrisse('rest', $restIdsFenster);
     /* Die Loeschvermerke des Segments (Nutzlast 13, F-S11-52). Wie `schnitte`
      * am Einsatz steht das Feld an JEDEM Segment, leer erlaubt: Ein fehlendes
      * hiesse in einer 13er-Datei nichts anderes als in einer 12er — „nicht
@@ -527,14 +439,10 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         $rid = (int)$r['id'];
         unset($r['id']);
         $r['loeschungen'] = $loeschNachRuhe[$rid] ?? [];
-        if ($ohneSpuren) {
-            if (isset($spurNachRuhe[$rid])) {
-                $r += $spurNachRuhe[$rid];
-                $spurVerzeichnis[] = ['spur_ref' => $r['spur_ref'], 'art' => 'rest',
-                                      'id' => $rid, 'n' => $r['n']];
-            }
-        } else {
-            $r['track'] = $spurNachRuhe[$rid] ?? [];
+        if (isset($spurNachRuhe[$rid])) {
+            $r += $spurNachRuhe[$rid];
+            $spurVerzeichnis[] = ['spur_ref' => $r['spur_ref'], 'art' => 'rest',
+                                  'id' => $rid, 'n' => $r['n']];
         }
         unset($spurNachRuhe[$rid]);
         $restsJson .= ($restsJson === '' ? '' : ',')
@@ -784,9 +692,14 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          * Schema nicht (Hauptstufe). Umgekehrt bleiben 6 bis 11 lesbar;
          * die Standortauswahl darin wird still ueberlesen (Backlog Nr. 46).
          *
-         * NUTZLAST 7 BLEIBT 7: Sie ist die Punktlisten-Variante der
-         * Demo-Fixture und traegt die Felder der 12 wie zuvor die der 11. */
-        'version' => $ohneSpuren ? EDBAK_NUTZLAST : 7,
+         * 13 SEIT S11-06a (Web 22.5.0): Orte der Phasen und Reanimation
+         * legt der Browser offen in den Kern, die Spurteile tragen
+         * Punktlisten. SEIT WEB 23 (S11-12, E-S11-85) liest der Rueckweg
+         * nur noch 13; die Punktlisten-Variante 7, die hier bis Web 22.7.0
+         * fuer die Demo-Fixture entstand, gibt es nicht mehr — die Fixture
+         * liegt eingefroren im Repositorium. Was oben zu 6 bis 12 steht, ist
+         * Geschichte. */
+        'version' => EDBAK_NUTZLAST,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-notarzt',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
@@ -847,7 +760,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * im KOPF hat es nichts zu suchen — er traegt keine Eintraege, das
      * Verzeichnis waere leer, und ein leeres Arbeitsfeld in der Datei ist
      * trotzdem ein Arbeitsfeld in der Datei. Die Containerprobe sieht nach. */
-    if ($ohneSpuren && !$nurKopf) { $data['_spur_index'] = $spurVerzeichnis; }
+    if (!$nurKopf) { $data['_spur_index'] = $spurVerzeichnis; }
 
     /* DIE AUSGABE WIRD ZUSAMMENGESETZT, nicht in einem Zug kodiert.
      *
@@ -1014,31 +927,34 @@ function edbak_klartext_fund(array $data): ?string
  * ZWEI HERKUENFTE DER ORTSDATEN (S11-06b/c, `$ortsdaten`):
  *
  *   'browser'  Der Browser hat Orte, Reanimation und Spur schon verschlossen
- *              (Einsatzhuelle `ort_huelle`, Stuecke `spur_stuecke`) und
+ *              (Einsatzhuelle `ort_huelle`; Stuecke ueber die Spurteile) und
  *              Transportziel und Ortshoehe in den `pat_blob` gelegt. Eine
  *              Nutzlast mit Klartext-Ortsdaten wird ABGEWIESEN
  *              (`DomainException('klartext: …')`, der Endpunkt antwortet 400),
  *              vor jedem Schreiben — wie `ingest.php` und der CSV-Import.
- *   'server'   Das direkte Einspielen einer Kontosicherung durch die
- *              Verwaltung und der Demo-Reset: Der Server hat die Daten im
- *              Klartext vor sich und verschliesst Orte, Reanimation und Spur
- *              mit dem oeffentlichen Schluessel des Kontos (E-S11-57). Ohne
- *              Schluesselpaar im Konto wird abgewiesen
- *              (`DomainException('kein_paar: …')`). Transportziel und
- *              Ortshoehe kann er NICHT verschliessen — der `pat_blob` haengt
- *              am Inhaltsschluessel, den nur der Browser hat —, sie bleiben
- *              Altbestand in ihren Spalten, bis der Anhebelauf sie holt.
+ *              Seit Web 23 (S11-12) geht auch das direkte Einspielen einer
+ *              Kontosicherung durch die Verwaltung diesen Weg: Ihre Pakete
+ *              tragen Huellen und Stuecke, wie sie liegen (E-S11-84).
+ *   'server'   NUR NOCH DER DEMO-RESET (S11-06d): Die Fixture liegt im
+ *              Klartext im Repositorium (Nutzlast 7, mit Punktlisten), und
+ *              der Server verschliesst Orte, Reanimation und Spur mit dem
+ *              oeffentlichen Schluessel des Kontos (E-S11-20, -57).
+ *              Transportziel und Ortshoehe legt `$blobZiel` in den Blob —
+ *              ohne ihn ist dieser Weg nicht erlaubt: Seit Web 23 gibt es
+ *              keine Spalten mehr, in denen sie liegen bleiben koennten.
+ *              Bis Web 22.7.0 nahm ihn auch das direkte Einspielen der
+ *              Verwaltung.
  *
- * `$blobZiel` (nur der Demo-Reset, S11-06d): Wer den Inhaltsschluessel des
- * Kontos hat, kann Transportziel und Ortshoehe doch in den Blob legen. Der
- * Rueckruf bekommt den `pat_blob` der Datei (oder null) und die Angaben und
- * gibt den neuen Blob zurueck; die Hoehe wird dann aus der Datei genommen
- * und nicht gerechnet. Das Demo-Konto ist das einzige, dessen Passwort der
+ * `$blobZiel` (nur der Demo-Reset): Wer den Inhaltsschluessel des Kontos
+ * hat, kann Transportziel und Ortshoehe in den Blob legen. Der Rueckruf
+ * bekommt den `pat_blob` der Datei (oder null) und die Angaben und gibt den
+ * neuen Blob zurueck. Das Demo-Konto ist das einzige, dessen Passwort der
  * Server kennt — es steht im Handbuch.
  */
 function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                        string $ortsdaten = 'browser', ?Closure $blobZiel = null): array {
-    if (!in_array($ortsdaten, ['browser', 'server'], true)) {
+    if (!in_array($ortsdaten, ['browser', 'server'], true)
+        || ($ortsdaten === 'server' && $blobZiel === null)) {
         throw new InvalidArgumentException('ortsdaten: ' . $ortsdaten);
     }
     if ($ortsdaten === 'browser') {
@@ -1138,13 +1054,10 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         $tageImPapierkorb[(string)$dTrash] = true;
     }
     $pruef = new Pruefliste();
-    /* Die Hoehe des Einsatzorts rechnet seit S11-06 nur noch das direkte
-     * Einspielen, aus den Punkten, die es gleich verschliesst
-     * (`$spurSchreiben`). Bis Web 22.4.0 stand hier eine Liste
-     * `$hoeheOffen`, die nach dem Abschluss `compute_site_elevation()` je
-     * Einsatz rief — aus der Klartextspur, die es seit S11 nicht mehr gibt
-     * (F-S11-45). Im Browserweg traegt der `pat_blob` die Hoehe. */
-    $hoeheFehlerServer = 0;
+    /* Die Hoehe des Einsatzorts traegt der `pat_blob` (`ortshoehe`). Bis
+     * Web 22.7.0 rechnete das direkte Einspielen sie aus den Punkten, die es
+     * verschloss, und schrieb sie in `missions.site_ele_m`; bis Web 22.4.0
+     * stand hier eine Liste `$hoeheOffen` dafuer (F-S11-45). */
 
     /* DIE SPURKARTE (S2/AP5, Konzept 3.2.4).
      *
@@ -1192,6 +1105,13 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
     $neueEinsaetze = [];
 
     $nutzlast = (int)($data['version'] ?? 0);
+    /* DER BROWSERWEG NIMMT NUR NUTZLAST 13 (S11-12, E-S11-85). Die Endpunkte
+     * weisen eine aeltere Datei schon vorher ab (`409 version_alt`); diese
+     * Zeile ist die Schranke, die nicht davon abhaengt. Der Serverweg ist
+     * nur noch der Demo-Reset mit seiner Nutzlast 7 aus dem Repositorium. */
+    if ($ortsdaten === 'browser' && $nutzlast < EDBAK_NUTZLAST) {
+        throw new DomainException('version_alt: Nutzlast ' . $nutzlast);
+    }
     $mitVerweisen = $nutzlast >= 8;
 
     /* VERSCHACHTELUNGSFAEHIG (Web 7.3.0).
@@ -1723,9 +1643,10 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * ueber die Ausnahme die ganze Wiederherstellung.
          *
          * UND DIE EINDEUTIGKEIT VON `seq` (Backlog Nr. 35). Der Wertebereich
-         * allein reicht nicht: `track_points` hat den Primaerschluessel
-         * (owner_type, owner_id, seq), zwei Punkte mit derselben Nummer loesen
-         * also einen Schluesselkonflikt aus — und der reisst wieder den
+         * allein reicht nicht: `track_points` hatte bis Web 22.7.0 den
+         * Primaerschluessel (owner_type, owner_id, seq), und zwei Stuecke mit
+         * derselben Nummer widersprechen einander heute ebenso; zwei Punkte
+         * mit derselben Nummer loesten also einen Schluesselkonflikt aus — und der reisst wieder den
          * gesamten Lauf mit. Ein eigener Export erzeugt keine Wiedergaenger;
          * eine von Hand bearbeitete oder fremde Datei kann es. Der zweite
          * Punkt wird deshalb uebersprungen und gemeldet.
@@ -1735,7 +1656,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * $gesehen wird je Eigentuemer neu angelegt — der Schluessel gilt nur
          * innerhalb einer Spur. */
         $spurSchreiben = function (string $typ, int $ownerId, $liste, string $ref)
-                              use ($pdo, $pruef, $sec1Holen, &$hoeheFehlerServer, $blobZiel): void {
+                              use ($pdo, $pruef, $sec1Holen): void {
             $gesehen = [];
             $gueltig = [];
             /* ABLEHNEN STATT KAPPEN (F-S2-02).
@@ -1771,35 +1692,20 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             if (!$gueltig) { return; }
             /* VERSCHLOSSEN, NICHT ALS ZEILEN (S11-06c). Bis Web 22.4.0 gingen
              * die Punkte als Zeilen nach `track_points`. Hierher kommt nur
-             * noch das direkte Einspielen ('server'); der Browserweg schickt
-             * Stuecke, und eine Punktliste haette ihn oben abgewiesen. Die
-             * Hoehe des Einsatzorts wird aus denselben Punkten gerechnet,
-             * bevor sie verschlossen sind — danach sieht der Server sie nicht
-             * mehr. */
+             * noch der Demo-Reset ('server'); der Browserweg schickt Stuecke,
+             * und eine Punktliste haette ihn oben abgewiesen. */
             usort($gueltig, static fn($a, $b) => $a[0] <=> $b[0]);
             foreach (gh_stuecke_bauen($sec1Holen(), $typ === 'rest' ? 'ruhe' : 'spur', $ref,
                                       $gueltig) as $st) {
                 spur2_stueck_schreiben($pdo, $typ, $ownerId, $st['seq_from'], $st['punkte'],
                                        $st['ts_von'], $st['ts_bis'], $st['huelle']);
             }
-            if ($typ === 'mission' && $blobZiel === null) {
-                try { compute_site_elevation($pdo, $ownerId, $gueltig); }
-                catch (Throwable $ex) { $hoeheFehlerServer++; }
-            }
         };
 
-        /* DIE STUECKE DES BROWSERS (S11-06b, Nutzlast 6 und 7 mit Punkten im
-         * Eintrag): Er hat die Punkte schon verschlossen und schickt sie als
-         * `spur_stuecke`. Jedes laeuft durch `pruef_spurstueck()` — dieselbe
-         * Schicht wie im Eingang der Geraete. */
-        $stueckeSchreiben = function (string $typ, int $ownerId, $liste) use ($pdo, $pruef): void {
-            foreach (pruef_menge($liste ?? [], 100000, $typ . '.spur_stuecke', $pruef) as $t) {
-                $st = pruef_spurstueck($t, $typ . '.spur_stuecke', $pruef);
-                if ($st === null) { $pruef->melde($typ . '.spur_stuecke', 'Stueck unvollstaendig'); continue; }
-                spur2_stueck_schreiben($pdo, $typ, $ownerId, $st['seq_from'], $st['punkte'],
-                                       $st['ts_von'], $st['ts_bis'], $st['huelle']);
-            }
-        };
+        /* Hier stand bis Web 22.7.0 `$stueckeSchreiben`: Der Browser schickte
+         * zu einer Datei der Nutzlast 6 oder 7 die verschlossenen Stuecke im
+         * Eintrag (S11-06b). Der Browserweg nimmt seit Web 23 nur Nutzlast 13,
+         * deren Spuren ueber `api/backup_spuren_restore.php` kommen (E-S11-85). */
 
         /* EINE PUNKTLISTE IN NUTZLAST 8 IST EIN WIDERSPRUCH — UND WIRD GESAGT
          * (S2/AP6, F-S2-E).
@@ -1842,7 +1748,6 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             }
         };
         $FIELDS = require __DIR__ . '/mission_fields.php';
-        require_once __DIR__ . '/site_elevation_lib.php';
         /* WELCHE SPALTEN AUS DER DATEI UEBERNOMMEN WERDEN.
          *
          * Grundlage ist der Feldkatalog — er ist die eine Liste, gegen die auch
@@ -1906,15 +1811,10 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * Wenn P8 die Spalte entfernt (R60), faellt dieser Eintrag mit ihr —
          * und mit ihm die Faehigkeit, eine 10er-Datei vollstaendig
          * einzuspielen. Das gehoert dann ausdruecklich entschieden. */
-        /* `transport_dest` AUS DEMSELBEN GRUND (S11-05b, F-S11-48). Seit es
-         * im `pat_blob` liegt, sagt mf_ist_spalte() nein, und jede
-         * Sicherungsdatei traegt die Zielklinik bis S11-06 noch im Klartext
-         * in dieser Spalte — ohne diesen Eintrag verloere das Einspielen sie
-         * still. Ihre Koordinaten laufen oben ueber mf_ort_spalten() mit. Das
-         * Formular nimmt sie beim naechsten Speichern in den Blob; den Umbau
-         * der Sicherung selbst macht S11-06. */
-        $extraCols = array_merge($extraCols,
-                                 ['start_src', 'pat_blob', 'notes', 'transport_dest', 'created_at']);
+        /* `transport_dest` stand hier von S11-05b bis Web 22.7.0 aus demselben
+         * Grund (F-S11-48). Seit Web 23 gibt es die Spalte nicht mehr; das
+         * Transportziel kommt im `pat_blob` (S11-12). */
+        $extraCols = array_merge($extraCols, ['start_src', 'pat_blob', 'notes', 'created_at']);
 
         foreach (($data['missions'] ?? []) as $m) {
             if (!is_array($m)) { $stats['missions_skipped']++; $grund['aufbau']++; continue; }
@@ -2204,13 +2104,13 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             }
 
             /* DIE EINSATZHUELLE (S11-06b/c). Orte der Phasen und Reanimation
-             * liegen seit S11-04 nur noch darin; die Phasen behalten Nummer
-             * und Zeit im Klartext, die Reanimationstabellen bleiben leer.
+             * liegen nur darin; die Phasen behalten Nummer und Zeit im
+             * Klartext. Seit Web 23 gibt es fuer beides keine Tabelle mehr.
              *
              * Aus der Datei kommt sie, wenn der Browser sie gebaut hat oder
              * die Sicherung sie unlesbar mitbrachte (`ort_unlesbar`). Im
-             * direkten Weg baut der Server sie aus dem Klartext der Datei
-             * (E-S11-57). Im Browserweg kann es Klartext hier nicht geben —
+             * Demo-Reset baut der Server sie aus dem Klartext der Fixture
+             * (E-S11-20). Im Browserweg kann es Klartext hier nicht geben —
              * `edbak_klartext_fund()` haette die Nutzlast oben abgewiesen. */
             $huelle = pruef_huelle($m['ort_huelle'] ?? null, GH_EINSATZ_MAX_BYTE,
                                    'ort_huelle', $pruef);
@@ -2226,14 +2126,12 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                                                   $r['events'])], $neueReas));
             }
             if ($huelle !== null) {
-                foreach ($neuePhasen as &$p) { $p['lat'] = null; $p['lon'] = null; }
-                unset($p);
-                $neueReas = [];
                 $pdo->prepare('UPDATE missions SET ort_huelle = ? WHERE id = ? AND user_id = ?')
                     ->execute([$huelle, $mid, $userId]);
             }
+            /* Ohne `lat`/`lon` — `einsatz_phasen_ersetzen()` schreibt seit
+             * Web 23 nur Nummer und Zeit. */
             einsatz_phasen_ersetzen($pdo, $mid, $neuePhasen, ['loeschen' => false]);
-            einsatz_reas_ersetzen($pdo, $mid, $neueReas, ['loeschen' => false]);
             /* ZWEI WEGE, UND DIE FASSUNG ENTSCHEIDET — nicht das Vorhandensein
              * eines `track`-Feldes. Eine Spur ohne Punkte saehe genauso aus
              * wie ein Verweis, und dann liefe eine Fassung-8-Datei still in
@@ -2244,8 +2142,6 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                                                        'ref' => $werte['client_ref']];
                 }
                 $spurWiderspruch('mission', $m);
-            } elseif (isset($m['spur_stuecke'])) {
-                $stueckeSchreiben('mission', $mid, $m['spur_stuecke']);
             } else {
                 $spurSchreiben('mission', $mid, $m['track'] ?? [], $werte['client_ref']);
             }
@@ -2356,8 +2252,6 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                     $spurKarte[(int)$r['spur_ref']] = ['art' => 'rest', 'id' => $rid, 'ref' => $rRef];
                 }
                 $spurWiderspruch('rest', $r);
-            } elseif (isset($r['spur_stuecke'])) {
-                $stueckeSchreiben('rest', $rid, $r['spur_stuecke']);
             } else {
                 $spurSchreiben('rest', $rid, $r['track'] ?? [], $rRef);
             }
@@ -2507,7 +2401,6 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
      * S11-06 rechnet sie nur noch das direkte Einspielen, beim Verschliessen
      * der Spur (`$spurSchreiben`); ein Fehlschlag kostet weiterhin nur die
      * Anzeige und wird gezaehlt. */
-    if ($hoeheFehlerServer > 0) { $stats['hoehe_fehler'] = $hoeheFehlerServer; }
 
     if ($mitVerweisen) { $stats['spur_karte'] = $spurKarte; }
     /* DIE ZUORDNUNG DER DIENSTTAGE GEHT ZURUECK (S2/AP5b), damit die Fenster
@@ -2528,17 +2421,12 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
  * ein zweiter Ort, an dem die drei Dinge unten zu vergessen sind. Der
  * Endpunkt ist seitdem eine duenne Schale um diese Funktion.
  *
- * ZWEI FORMEN JE EINTRAG (S11-06):
- *
- *   `stuecke`  verschlossene Stuecke, wie sie der Browser baut (Nutzlast 6
- *              bis 13, `EdOrtsdaten.stueckeBauen()`) oder wie sie in einer
- *              Kontosicherung ab S11-06c liegen. Beide Wege, `$ortsdaten`
- *              gleich welcher.
- *   `blob`     SPUR1 im Klartext — nur im direkten Weg (`'server'`): Der
- *              Server dekodiert, verschliesst mit dem oeffentlichen
- *              Schluessel des Kontos (E-S11-57) und rechnet dabei die Hoehe
- *              des Einsatzorts. Im Browserweg wird ein Blob abgelehnt; der
- *              Endpunkt weist die ganze Anfrage vorher mit 400 ab.
+ * EINE FORM JE EINTRAG: `stuecke`, verschlossene Stuecke, wie sie der
+ * Browser baut (`EdOrtsdaten.stueckeBauen()`) oder wie sie in einer
+ * Kontosicherung liegen. Bis Web 22.7.0 nahm der direkte Weg der Verwaltung
+ * daneben `blob` an — SPUR1 im Klartext, das der Server verschloss
+ * (E-S11-57). Alte Pakete gibt es nicht mehr (E-S11-84); ein `blob` wird
+ * seit Web 23 abgelehnt.
  *
  * DREI DINGE, DIE HIER PASSIEREN MUESSEN:
  *
@@ -2547,30 +2435,23 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
  *    dass nur zurueckkommt, was hinausging, hat einen Weg gebaut, der fremde
  *    Spuren ueberschreibt.
  *
- * 2. PRUEFEN, BEVOR ES LIEGT: Stuecke ueber `pruef_spurstueck()`, Blobs ueber
- *    `spur_blob_pruefen()`. CLAUDE.md 4: „alle Schreibwege, ohne Ausnahme".
+ * 2. PRUEFEN, BEVOR ES LIEGT: Stuecke ueber `pruef_spurstueck()` und
+ *    `pruef_spurstueck_gepackt()`. CLAUDE.md 4: „alle Schreibwege, ohne
+ *    Ausnahme".
  *
  * 3. VORHANDENE UEBERSPRINGEN. Eine abgebrochene Wiederherstellung soll sich
- *    fortsetzen lassen, ohne doppelt zu schreiben. Eine Spur im Klartext
- *    (SPUR1) wird nicht ergaenzt; ein Stueck, dessen `seq_from` schon liegt,
+ *    fortsetzen lassen, ohne doppelt zu schreiben. Ein Stueck, dessen `seq_from` schon liegt,
  *    laesst `spur2_stueck_schreiben()` aus. Ein Stueck, das NICHT schon liegt,
  *    wird geschrieben, auch wenn andere derselben Spur schon da sind: Der
  *    Browser teilt eine lange Spur auf mehrere Anfragen (S11-06b).
  *
  * Rumpf je Eintrag: {owner_type, owner_id, stuecke: [{seq_from, punkte,
- * ts_von, ts_bis, huelle, n_original?}], stufe?, fortsetzung?} oder
- * {owner_type, owner_id, blob (Base64), n?}.
- * Rueckgabe: {geschrieben, uebersprungen, abgelehnt[], hoehe_fehler}.
+ * ts_von, ts_bis, huelle, n_original?, stufe?}], stufe?, fortsetzung?}.
+ * Rueckgabe: {geschrieben, uebersprungen, abgelehnt[]}.
  */
-function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste,
-                                string $ortsdaten = 'browser'): array
+function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste): array
 {
-    require_once __DIR__ . '/site_elevation_lib.php';
-    require_once __DIR__ . '/geraetehuelle_lib.php';
-    require_once __DIR__ . '/kontopaar_lib.php';
-
-    /* Eigentum und Kennung in EINER Abfrage je Art, nicht je Spur (M5-12).
-     * Die Kennung bindet die Stuecke, die der Server im direkten Weg baut. */
+    /* Eigentum in EINER Abfrage je Art, nicht je Spur (M5-12). */
     $wunsch = ['mission' => [], 'rest' => []];
     foreach ($liste as $s) {
         $art = (string)($s['owner_type'] ?? '');
@@ -2578,7 +2459,6 @@ function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste,
         if (isset($wunsch[$art]) && $id > 0) { $wunsch[$art][$id] = true; }
     }
     $eigen = ['mission' => [], 'rest' => []];
-    $alt   = ['mission' => [], 'rest' => []];
     foreach ($wunsch as $art => $ids) {
         if (!$ids) { continue; }
         $tabelle = $art === 'mission' ? 'missions' : 'rest_segments';
@@ -2587,14 +2467,9 @@ function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste,
             array_keys($ids), [$userId]) as $r) {
             $eigen[$art][(int)$r['id']] = (string)$r['client_ref'];
         }
-        /* Liegt schon eine Klartextspur? Der Umriss liest keinen Punkt. */
-        foreach (spur_umriss($pdo, $art, array_keys($eigen[$art])) as $id => $u) {
-            if ($u['zeilen'] > 0 || $u['n_original'] > 0) { $alt[$art][$id] = true; }
-        }
     }
 
-    $sec1 = null;
-    $geschrieben = 0; $uebersprungen = 0; $abgelehnt = []; $hoeheFehler = 0;
+    $geschrieben = 0; $uebersprungen = 0; $abgelehnt = [];
     $ablehnen = static function (string $art, int $id, string $grund) use (&$abgelehnt): void {
         $abgelehnt[] = ['owner_type' => $art, 'owner_id' => $id, 'grund' => $grund];
     };
@@ -2610,10 +2485,7 @@ function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste,
             $ablehnen($art, $id, 'nicht vorhanden');
             continue;
         }
-        if (isset($alt[$art][$id])) { $uebersprungen++; continue; }
-
         $stuecke = [];
-        $punkte = null;
         if (isset($s['stuecke']) && is_array($s['stuecke'])) {
             /* DIE STUFE JE STUECK (S11-07, E-S11-71). Ein gepacktes Stueck
              * (Stufe 2, 3) traegt seine Stufe selbst und laeuft durch
@@ -2639,42 +2511,10 @@ function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste,
             }
             if ($kaputt || !$stuecke) { $ablehnen($art, $id, 'Stueck unvollstaendig'); continue; }
         } elseif (isset($s['blob'])) {
-            if ($ortsdaten !== 'server') { $ablehnen($art, $id, 'klartext'); continue; }
-            $blob = base64_decode((string)$s['blob'], true);
-            if ($blob === false || $blob === '') { $ablehnen($art, $id, 'kein lesbarer Blob'); continue; }
-            $fehler = spur_blob_pruefen($blob, isset($s['n']) ? (int)$s['n'] : null);
-            if ($fehler !== null) { $ablehnen($art, $id, $fehler); continue; }
-            $kopf = spur_kopf($blob);
-            $punkte = spur_dekodieren($blob);
-            if (!$punkte) { $uebersprungen++; continue; }
-            if ($sec1 === null) {
-                $b64 = kp_fuer_geraet($pdo, $userId);     // SEC1 als Base64
-                $sec1 = $b64 === null ? null : base64_decode($b64);
-                if ($sec1 === null) {
-                    throw new DomainException('kein_paar: Das Zielkonto hat noch kein Schlüsselpaar. '
-                        . 'Es entsteht beim ersten Entsperren nach einer Anmeldung; danach lässt '
-                        . 'sich die Sicherung einspielen.');
-                }
-            }
-            $duenn = $kopf['stufe'] === SPUR_STUFE_DUENN;
-            $artH = $art === 'rest' ? 'ruhe' : 'spur';
-            if ($duenn) {
-                /* EINE AUSGEDUENNTE SPUR BLEIBT AUSGEDUENNT: ein gepacktes
-                 * Stueck der Stufe 3 (E-S11-71), das die ganze Originalspur
-                 * deckt — die Punktnummern des Blobs sind seine Stellen, nicht
-                 * die des Geraets. */
-                $stuecke = [gh_gepackt_bauen($sec1, $artH, $eigen[$art][$id], $punkte,
-                                             SPUR2_STUFE_DUENN, 0,
-                                             max(count($punkte), $kopf['n_original']))];
-            } else {
-                $stuecke = gh_stuecke_bauen($sec1, $artH, $eigen[$art][$id], $punkte);
-                foreach ($stuecke as $k => $st) {
-                    $stuecke[$k]['n_original'] = $st['punkte'];
-                    $stuecke[$k]['stufe'] = SPUR2_STUFE_GERAET;
-                }
-            }
+            $ablehnen($art, $id, 'klartext');
+            continue;
         } else {
-            $ablehnen($art, $id, 'weder Stuecke noch Blob');
+            $ablehnen($art, $id, 'keine Stuecke');
             continue;
         }
 
@@ -2689,17 +2529,9 @@ function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste,
         if (empty($s['fortsetzung'])) {
             if ($neu > 0) { $geschrieben++; } else { $uebersprungen++; }
         }
-
-        /* DIE HOEHE NUR IM DIREKTEN WEG, und aus den Punkten in der Hand:
-         * Nach dem Verschliessen sieht der Server sie nicht mehr. Ein
-         * Fehlschlag kostet nur die Anzeige. */
-        if ($punkte !== null && $neu > 0 && $art === 'mission') {
-            try { compute_site_elevation($pdo, $id, $punkte); }
-            catch (Throwable $ex) { $hoeheFehler++; }
-        }
     }
 
     return ['geschrieben' => $geschrieben, 'uebersprungen' => $uebersprungen,
-            'abgelehnt' => $abgelehnt, 'hoehe_fehler' => $hoeheFehler];
+            'abgelehnt' => $abgelehnt];
 }
 

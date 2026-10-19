@@ -579,6 +579,7 @@ for ($anlauf = 1; ; $anlauf++) {
     $behalten = [];
     $einsatzNeu = false;
     $stored = 0;
+    $storedBytes = 0;
     $verworfen = 0;
     $gesperrt = 0;
     $bestaetigt = false;
@@ -952,7 +953,7 @@ for ($anlauf = 1; ; $anlauf++) {
             /* DIE REANIMATION KOMMT SEIT S11 NUR IN DER EINSATZHUELLE
              * (E-S11-02). `resus_sessions` und `resus_events` nehmen nichts mehr
              * auf; ein Paket mit Reanimation im Klartext hat der Eingang oben
-             * abgewiesen. Die Tabellen tragen bis S11-12 nur Altbestand. */
+             * abgewiesen. Seit Web 23 gibt es die Tabellen nicht mehr. */
             }   // Ende: nicht-manueller Einsatz
         } else { // rest_segment
             /* COALESCE wie beim Einsatz oben (Web 13.0.1): Ein spaeter
@@ -1048,6 +1049,7 @@ for ($anlauf = 1; ; $anlauf++) {
         $schnitte = schnitte_lesen($pdo, $ownerType, $ownerId);
 
         $stored = 0;
+        $storedBytes = 0;
         $verworfen = 0;
         $gesperrt = 0;
         /* ---- Ersetzfenster: auch keine Punkte mehr (Backlog Nr. 134) ---------
@@ -1091,10 +1093,11 @@ for ($anlauf = 1; ; $anlauf++) {
                  * beginnt (ein Geraet, das seine Marke verloren hat und anders
                  * stueckelt). Die Ueberlappung loest der Browser ueber die
                  * Sequenznummer auf: Punkt i eines Stuecks hat seq_from + i. */
-                $stored += spur2_stueck_schreiben($pdo, $ownerType, $ownerId, $stueck['seq_from'],
-                                                  $stueck['punkte'], $stueck['ts_von'],
-                                                  $stueck['ts_bis'], $stueck['huelle'])
-                           * $stueck['punkte'];
+                $neuAbgelegt = spur2_stueck_schreiben($pdo, $ownerType, $ownerId, $stueck['seq_from'],
+                                                      $stueck['punkte'], $stueck['ts_von'],
+                                                      $stueck['ts_bis'], $stueck['huelle']);
+                $stored += $neuAbgelegt * $stueck['punkte'];
+                $storedBytes += $neuAbgelegt * strlen($stueck['huelle']);
             }
         }
 
@@ -1250,10 +1253,11 @@ try {
 
     /* DEN MENGENZAEHLER FORTSCHREIBEN (P5b/AP6, E-P5b-18).
      *
-     * GESCHAETZT UND NICHT GEMESSEN: `SPUR_ZEILE_BYTE` je Punkt, dazu der
-     * Rumpf. Eine echte Messung hier wuerde alle Blob-Laengen des Kontos
-     * lesen, und zwar bei jedem Upload — genau an dem Weg, der schnell sein
-     * muss. Die echte Zahl kommt beim naechsten Joblauf.
+     * DIE LAENGE DER EBEN ABGELEGTEN HUELLEN, nicht die des ganzen Kontos:
+     * Die zu lesen hiesse, bei jedem Upload alle Stuecke zu zaehlen — genau
+     * an dem Weg, der schnell sein muss. Die ganze Zahl kommt beim naechsten
+     * Joblauf. Bis Web 22.7.0 stand hier eine Schaetzung je Punkt
+     * (`SPUR_ZEILE_BYTE`, 48 Byte je Zeile in `track_points`).
      *
      * OHNE DIESE ZEILE griffe die Grenze erst einen Tag spaeter: Der Cache
      * bliebe auf dem Stand des letzten Jobs stehen, und ein Konto koennte
@@ -1261,7 +1265,7 @@ try {
     try {
         require_once __DIR__ . '/konten_einstellungen_lib.php';
         konto_mengen_fortschreiben((int)$dev['user_id'],
-            ($einsatzNeu ?? false) ? 1 : 0, $stored * SPUR_ZEILE_BYTE);
+            ($einsatzNeu ?? false) ? 1 : 0, $storedBytes);
     } catch (Throwable $ex) {
         /* Der Zaehler ist eine Schaetzung; ihn nicht fortzuschreiben kostet
          * Genauigkeit bis zum naechsten Job, aber keinen Upload. */

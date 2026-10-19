@@ -213,16 +213,15 @@
      *  Profil B nicht abgedeckt, obwohl pat_ort_lat/lon es waren.
      *
      *  DRAUSSEN bleiben bewusst: bw_unit (eine Einrichtung, keine Person;
-     *  Kriterium 74), weitere_rettungsmittel (Organisationskennungen) und der
-     *  Reanimationsverlauf des Altbestands — je einzeln vom Auftraggeber
-     *  entschieden, Begründungen in docs/Export-Format.md.
+     *  Kriterium 74) und weitere_rettungsmittel (Organisationskennungen) —
+     *  je einzeln vom Auftraggeber entschieden, Begründungen in
+     *  docs/Export-Format.md.
      *
      *  SEIT S11-05e UNTER DER SCHRANKE: das Transportziel samt Koordinate
      *  (seit Web 22.1.0 im pat_blob, Betreiberin 16.10.2026, E-S11-53) und
-     *  die Einsatzhülle — damit auch die Reanimation der seit S11-04
-     *  gesendeten Einsätze (E-S11-54). Bis zum Einmalwerkzeug (S11-10) steht
-     *  der Reanimationsverlauf des Altbestands deshalb noch ohne Haken in der
-     *  Datei, der neuer Einsätze nicht. */
+     *  die Einsatzhülle — damit auch die Reanimation (E-S11-54). Bis
+     *  Web 22.7.0 stand der Reanimationsverlauf des Altbestands noch ohne
+     *  Haken in der Datei; seit Web 23 gibt es keinen mehr (S11-12). */
     function entpersonalisieren(data) {
         (data.days || []).forEach(function (d) {
             d.crew = {};
@@ -277,12 +276,11 @@
      * DIE ORTSDATEN DER SEIT S11 VERSCHLOSSENEN EINSÄTZE (S11-05e) — nur mit
      * Haken, nach `decryptPatients()`:
      *   - Transportziel und Ortshöhe aus dem pat_blob (`transport_dest`
-     *     {addr, lat, lon}, `ortshoehe`); die Spalten tragen nur noch den
-     *     Altbestand, und ein Wert im Blob geht vor.
+     *     {addr, lat, lon}, `ortshoehe`). Bis Web 22.7.0 kam daneben der
+     *     Altbestand aus Spalten.
      *   - Phasenorte und Reanimation aus der Einsatzhülle. Die Phasen werden
      *     über Nummer und Zeit zugeordnet, wie in der Einsatzansicht
-     *     (`EdOrtsdaten.fuerAnsicht`); die Reanimation ersetzt die (dann leere)
-     *     Liste aus den Klartexttabellen.
+     *     (`EdOrtsdaten.fuerAnsicht`); die Reanimation füllt `resus`.
      * Liefert, wie viele Hüllen nicht aufgingen — wie bei den Patientendaten
      * soll eine Datei, der etwas fehlt, nicht vollständig aussehen.
      */
@@ -910,9 +908,9 @@
             { feld: 'transport_art', typ: 'text', einheit: '', beschreibung: 'Transportart (missions.transport_mode): air | ground | ambulant — im Formular „Luft", „Boden", „Ambulant"; leer = nicht angegeben', get: function (c) { return orEmpty(c.m.transport_mode); } },
             { feld: 'na_begleitung', typ: '0/1', einheit: '', beschreibung: 'NA-Begleitung beim Transport (entfällt bei „Ambulant")', get: function (c) { return c.m.na_escort; } },
             { feld: 'fehleinsatz', typ: '0/1', einheit: '', beschreibung: 'Fehleinsatz / Storno / Abbruch', get: function (c) { return c.m.false_alarm; } },
-            { feld: 'transport_dest', typ: 'text', einheit: '', beschreibung: 'Transportziel (pat_blob.transport_dest.addr; Altbestand missions.transport_dest)', pers: true, get: function (c) { return orEmpty(c.m.transport_dest); } },
-            { feld: 'ziel_lat', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik, am Einsatz eingefroren (pat_blob.transport_dest.lat; Altbestand missions.dest_lat)', pers: true, get: function (c) { return numOrEmpty(c.m.dest_lat); } },
-            { feld: 'ziel_lon', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik (pat_blob.transport_dest.lon; Altbestand missions.dest_lon)', pers: true, get: function (c) { return numOrEmpty(c.m.dest_lon); } },
+            { feld: 'transport_dest', typ: 'text', einheit: '', beschreibung: 'Transportziel (pat_blob.transport_dest.addr)', pers: true, get: function (c) { return orEmpty(c.m.transport_dest); } },
+            { feld: 'ziel_lat', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik, am Einsatz eingefroren (pat_blob.transport_dest.lat)', pers: true, get: function (c) { return numOrEmpty(c.m.dest_lat); } },
+            { feld: 'ziel_lon', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik (pat_blob.transport_dest.lon)', pers: true, get: function (c) { return numOrEmpty(c.m.dest_lon); } },
             { feld: 'abfahrt_regel', typ: 'text', einheit: '', beschreibung: 'Herkunft des Abfahrtorts (missions.start_src): base | prev_site | prev_dest | manual; leer = keine Linie. Gespeichert ist die REGEL, nicht der Ort', get: function (c) { return orEmpty(c.m.start_src); } },
             { feld: 'schockraum', typ: '0/1', einheit: '', beschreibung: 'Schockraum alarmiert', get: function (c) { return c.m.schockraum; } },
             { feld: 'secondary', typ: '0/1', einheit: '', beschreibung: 'Sekundärtransport', get: function (c) { return c.m.secondary; } },
@@ -1206,17 +1204,15 @@
 
     /**
      * Eine Spur aus der Antwort von `action: 'track'` (S11-05e): der
-     * Altbestand im Klartext und die geöffneten Stücke, nach Zeit zusammen.
-     * Liefert [[lat, lon, ele, ts], …] wie bisher.
+     * geöffneten Stücke, nach Zeit. Liefert [[lat, lon, ele, ts], …] wie
+     * bisher. (Bis Web 22.7.0 kam der Altbestand im Klartext dazu.)
      */
     async function spurPunkte(eintrag, art, k) {
-        if (Array.isArray(eintrag)) { return eintrag; }          // alte Antwortform
-        var alt = (eintrag && eintrag.punkte) || [];
-        var neu = (eintrag && eintrag.stuecke && eintrag.stuecke.length)
+        var punkte = (eintrag && eintrag.stuecke && eintrag.stuecke.length)
             ? (await EdOrtsdaten.spur(eintrag.stuecke, art, eintrag.ref, eintrag.sperren, k))
                 .map(function (p) { return [p.lat, p.lon, p.ele, p.ts]; })
             : [];
-        return alt.concat(neu).sort(function (a, b) { return a[3] - b[3]; });
+        return punkte.sort(function (a, b) { return a[3] - b[3]; });
     }
 
     /** Holt GPX-relevante Tracks blockweise (höchstens 25 IDs je Anfrage, siehe

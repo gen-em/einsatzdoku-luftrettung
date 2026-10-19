@@ -11,8 +11,9 @@ declare(strict_types=1);
  *
  * WARUM NICHT DIE `mariadb`-ZEILE DER KOPPLUNGSHILFE. Ein `DELETE` auf
  * `missions` und `rest_segments` liesse die Spur als Waise zurueck:
- * `track_points` und `track_blobs` haengen an keinem Fremdschluessel, und
- * beide fasst ausschliesslich `spur_lib.php` an (CLAUDE.md 4). Genau das ist
+ * `track_stuecke` haengt an keinem Fremdschluessel (bis Web 22.7.0 ebenso
+ * `track_points` und `track_blobs`), und die Spur fasst ausschliesslich
+ * `spur_lib.php` an (CLAUDE.md 4). Genau das ist
  * der Verbindungsprobe passiert (F-R4-63). Dieses Skript geht deshalb den Weg
  * einer NutzerIn: Diensttag in den Papierkorb (`trash_delete_day()`), dann
  * endgueltig entfernen (`trash_purge_day()`) — mit Einsaetzen, Ruhesegmenten,

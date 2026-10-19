@@ -7,7 +7,9 @@ sagt, ob die Datei das Format haelt, das dokumentiert ist.
 
 Dieser Leser ist `tools/referenzdatensatz/vergleich/lesen.py` — derselbe, der
 im Kreislauf die Backups vergleicht. Er entsiegelt nach dem Rezept aus
-`docs/Backup-Format.md` und dekodiert SPUR1 mit einer eigenen Umsetzung.
+`docs/Backup-Format.md` und setzt die Punktlisten der Spurteile an ihre
+Objekte (bis Web 22.7.0 dekodierte er dabei SPUR1 mit einer eigenen
+Umsetzung).
 
 Dazu die Schadensfaelle: Was passiert, wenn ein Teil FEHLT, wenn zwei
 VERTAUSCHT sind, wenn eines aus einem FREMDEN Backup stammt, wenn eine
@@ -76,7 +78,7 @@ pruefe(c["fassung"] == 4, "Die Datei geht im Python-Leser auf",
 pruefe(c["pruefsummen_ok"], "Jede SHA-256 des Manifests stimmt",
        ", ".join(c["teilenamen"]))
 pruefe(not c["blobs_ohne_objekt"] and not c["objekte_ohne_blob"],
-       "Jede spur_ref findet ihren Blob und umgekehrt",
+       "Jede spur_ref findet ihren Spurteil und umgekehrt",
        f"{len(daten['missions'])} Einsaetze, {len(daten['rest_segments'])} Ruhesegmente")
 pruefe(not c["ueberzaehlige_dateien"], "Keine Datei im Archiv, die das Manifest nicht kennt")
 

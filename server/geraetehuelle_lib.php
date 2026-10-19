@@ -13,12 +13,12 @@ declare(strict_types=1);
  * WARUM DER SERVER ÜBERHAUPT VERSCHLIESST. Verschließen braucht nur den
  * ÖFFENTLICHEN Schlüssel des Kontos; öffnen kann nur, wer den privaten hat,
  * und den hat nur der Browser nach dem Entsperren. Der Server verschließt an
- * drei Stellen: beim Zurücksetzen des Demobestands (E-S11-20, S11-06), in
+ * zwei Stellen: beim Zurücksetzen des Demobestands (E-S11-20, S11-06) und in
  * den Proben, die den Eingang wie ein Gerät bedienen — dort sind die Daten
- * erfunden und kommen aus dem Repositorium —, und beim direkten Einspielen
- * einer Kontosicherung durch die Verwaltung (E-S11-57, S11-06c): Dort hat er
- * die Daten ohnehin im Klartext vor sich, und danach liegen sie nicht mehr
- * offen. **Eine Funktion zum
+ * erfunden und kommen aus dem Repositorium. Bis Web 22.7.0 kam das direkte
+ * Einspielen einer alten Kontosicherung durch die Verwaltung dazu
+ * (E-S11-57); alte Pakete gibt es nicht mehr (S11-12, E-S11-84).
+ * **Eine Funktion zum
  * Öffnen gibt es hier mit Absicht nicht** — wer sie schriebe, gäbe dem
  * Server einen Weg, den er nach der Zusage aus `CLAUDE.md` 4 nicht hat.
  *
@@ -199,43 +199,7 @@ function gh_stuecke_bauen(string $sec1, string $art, string $ref, array $punkte)
     return $aus;
 }
 
-/**
- * Ein gepacktes Stück der Stufe 2 oder 3 (S11-07, E-S11-71) — die Regel von
- * `EdOrtsdaten.gepacktBauen()` und `referenz.py` `innen_gepackt()`: vier
- * Spalten int32 big-endian mit Abständen (Breite, Länge in 1e-7 Grad, Höhe
- * in ganzen Metern, Zeit seit `ts_von`), gepackt mit `gzcompress()` (zlib,
- * wie `CompressionStream('deflate')`). Die Punkte tragen keine Nummer; das
- * Stück deckt `$seqFrom` bis `$seqFrom + $nOriginal - 1`.
- *
- * Für den direkten Einspielweg der Verwaltung, der eine ausgedünnte Spur aus
- * einem älteren Paket (SPUR1, Stufe 3) wieder ablegt — der einzige Ort, an
- * dem der Server noch Klartext in der Hand hat.
- *
- * @param list<array{0:int,1:float,2:float,3:?float,4:int}> $punkte [seq, lat, lon, ele, ts]
- * @return array{seq_from:int, punkte:int, n_original:int, stufe:int, ts_von:int, ts_bis:int, huelle:string}
- */
-function gh_gepackt_bauen(string $sec1, string $art, string $ref, array $punkte, int $stufe,
-                          int $seqFrom, int $nOriginal): array
-{
-    $n = count($punkte);
-    $ts = array_map(static fn($p) => (int)$p[4], $punkte);
-    $von = min($ts);
-    $spalten = [[], [], [], []];
-    foreach ($punkte as $p) {
-        $spalten[0][] = (int)round((float)$p[1] * 1e7);
-        $spalten[1][] = (int)round((float)$p[2] * 1e7);
-        $spalten[2][] = $p[3] === null ? GH_HOEHE_UNBEKANNT
-                                       : max(-32767, min(32767, (int)round((float)$p[3])));
-        $spalten[3][] = (int)$p[4] - $von;
-    }
-    $roh = '';
-    foreach ($spalten as $sp) {
-        $alt = 0;
-        foreach ($sp as $v) { $roh .= pack('N', ($v - $alt) & 0xFFFFFFFF); $alt = $v; }
-    }
-    $innen = gzcompress($roh, 6);
-    $platz = $seqFrom . ':' . $n . ':' . $stufe . ':' . $nOriginal;
-    return ['seq_from' => $seqFrom, 'punkte' => $n, 'n_original' => $nOriginal, 'stufe' => $stufe,
-            'ts_von' => $von, 'ts_bis' => max($ts),
-            'huelle' => gh_verschliessen($innen, $sec1, $art, $ref, $platz)];
-}
+/* `gh_gepackt_bauen()` stand hier bis Web 22.7.0: Der direkte Einspielweg
+ * der Verwaltung legte damit eine ausgedünnte SPUR1-Spur aus einem älteren
+ * Paket als gepacktes Stück ab. Alte Pakete gibt es nicht mehr (S11-12,
+ * E-S11-84); gepackt wird nur im Browser (`EdOrtsdaten.gepacktBauen()`). */

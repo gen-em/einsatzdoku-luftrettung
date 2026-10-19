@@ -508,16 +508,13 @@ function import_commit(array $b, int $userId): never
              * das Register unten zu; die Reihenfolge hier ist nur noch die
              * Lesereihenfolge. */
             $werte = [
-                /* TRANSPORTZIEL, ZIELKOORDINATE UND ORTSHOEHE LIEGEN SEIT
-                 * S11-05e IM `pat_blob` (der Browser fuehrt beim Ueberschreiben
-                 * den Altbestand dieser Spalten hinein); die Spalten werden
-                 * geleert. Nach der Aufraeumauslieferung (S11-12) gibt es sie
-                 * nicht mehr. */
-                'transport_dest' => null,
+                /* TRANSPORTZIEL, ZIELKOORDINATE UND ORTSHOEHE LIEGEN IM
+                 * `pat_blob` (S11-05e); bis Web 22.7.0 wurden ihre
+                 * Altbestandsspalten hier geleert, seit Web 23 gibt es sie
+                 * nicht mehr (S11-12). */
                 'winch'          => $flag($m['winch'] ?? null),
                 'crew_override'  => $flag($m['crew_override'] ?? null),
                 'pat_blob'       => $blob,
-                'site_ele_m'     => null,
                 'distance_m'     => $zahl($m['distance_m'] ?? null, 0, 100000000),
                 'ascent_m'       => $zahl($m['ascent_m'] ?? null, 0, 1000000),
                 'schockraum'     => $flag($m['schockraum'] ?? null),
@@ -549,8 +546,6 @@ function import_commit(array $b, int $userId): never
                                              ['air', 'ground', 'ambulant']),
                 'na_escort'      => $flag($m['na_escort'] ?? null),
                 'false_alarm'    => $flag($m['false_alarm'] ?? null),
-                'dest_lat'       => null,
-                'dest_lon'       => null,
                 'start_src'      => $auswahl($m['start_src'] ?? null,
                                              ['base', 'prev_site', 'prev_dest', 'manual']),
             ];
@@ -700,18 +695,16 @@ function import_commit(array $b, int $userId): never
              * passen die relativen Zeiten der Huelle nicht zu `mission_phases`
              * — dann lieber gar nichts als eine Huelle mit verrutschten Orten.
              *
-             * DANACH DER ALTBESTAND: Phasenorte im Klartext und die Zeilen der
-             * Reanimation hat der Browser in die Huelle uebernommen (er bekam
-             * sie mit `check`); hier werden sie geleert. Bis Web 22.3.0 schrieb
-             * dieser Block die Reanimation aus der Datei in `resus_sessions`. */
+             * Bis Web 22.7.0 wurden danach die Phasenorte und Reanimations-
+             * zeilen des Altbestands geleert, die der Browser in die Huelle
+             * uebernommen hatte; bis Web 22.3.0 schrieb dieser Block die
+             * Reanimation aus der Datei in `resus_sessions`. */
             $istPhasen = $pdo->prepare('SELECT phase, occurred_at FROM mission_phases
                                          WHERE mission_id = ? ORDER BY occurred_at, phase, id');
             $istPhasen->execute([$id]);
             $ist = [];
-            $ohneOrt = [];
             foreach ($istPhasen->fetchAll() as $r) {
                 $ist[] = [(int)$r['phase'], (int)strtotime($r['occurred_at'] . ' UTC')];
-                $ohneOrt[] = ['phase' => (int)$r['phase'], 'occurred_at' => $r['occurred_at']];
             }
             $soll = [];
             foreach ((array)($m['ort_phasen'] ?? []) as $z) {
@@ -725,8 +718,6 @@ function import_commit(array $b, int $userId): never
                                      'browser' => count($soll), 'server' => count($ist)]);
                 throw new DomainException('ortsdaten: Phasenzeiten weichen ab');
             }
-            einsatz_phasen_ersetzen($pdo, $id, $ohneOrt);
-            einsatz_reas_ersetzen($pdo, $id, []);
             $pdo->prepare('UPDATE missions SET ort_huelle = ? WHERE id = ? AND user_id = ?')
                 ->execute([$ortHuelle, $id, $userId]);
 
@@ -862,8 +853,7 @@ try {
          * Einsatznummer fuer den Dublettenabgleich lokal entschluesseln kann
          * (siehe Kopfkommentar). */
         $st = db()->prepare("SELECT x.id, d.day, x.started_at, x.pat_blob, x.client_ref,
-                                    x.ort_huelle, x.transport_dest, x.dest_lat, x.dest_lon,
-                                    x.site_ele_m
+                                    x.ort_huelle
                              FROM missions x
                              JOIN days d ON d.id = x.day_id
                              WHERE x.user_id = ? AND x.deleted_at IS NULL
@@ -875,40 +865,19 @@ try {
 
         /* DIE ORTSDATEN DES BESTANDS (S11-05e). Ueberschreibt der Import einen
          * Einsatz, baut der Browser dessen Huelle neu und braucht dafuer, was
-         * schon da ist: die Huelle selbst (mit Kennung und Beginn), die
-         * Phasenzeiten und — solange es ihn gibt — den Altbestand im Klartext
-         * (Phasenorte, Reanimation, Transportziel, Hoehe). Er zieht ihn in
-         * Huelle und Blob um; der Commit leert danach die Klartextstellen.
-         * Alles davon gehoert dem anfragenden Konto; der Altbestand ist ohnehin
-         * Klartext bis S11-10. */
+         * schon da ist: die Huelle selbst (mit Kennung und Beginn) und die
+         * Phasenzeiten. Bis Web 22.7.0 kam der Altbestand im Klartext dazu
+         * (Phasenorte, Reanimation, Transportziel, Hoehe), den der Browser
+         * dabei umzog (S11-12). */
         $eIds = array_map(static fn($r) => (int)$r['id'], $einsRows);
-        $phasenVon = []; $reaVon = [];
+        $phasenVon = [];
         if ($eIds) {
             foreach (sql_in_bloecken(db(),
-                    'SELECT mission_id, phase, occurred_at, lat, lon FROM mission_phases
+                    'SELECT mission_id, phase, occurred_at FROM mission_phases
                      WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at, phase, id',
                     $eIds) as $r) {
                 $phasenVon[(int)$r['mission_id']][] = [
-                    'phase' => (int)$r['phase'], 'ts' => (int)strtotime($r['occurred_at'] . ' UTC'),
-                    'lat' => $r['lat'] !== null ? (float)$r['lat'] : null,
-                    'lon' => $r['lon'] !== null ? (float)$r['lon'] : null];
-            }
-            $sitz = sql_in_bloecken(db(),
-                'SELECT id, mission_id, started_at FROM resus_sessions
-                 WHERE mission_id IN ({IDS}) ORDER BY mission_id, started_at', $eIds);
-            $evVon = [];
-            $sIds = array_map(static fn($r) => (int)$r['id'], $sitz);
-            if ($sIds) {
-                foreach (sql_in_bloecken(db(),
-                        'SELECT session_id, type, occurred_at FROM resus_events
-                         WHERE session_id IN ({IDS}) ORDER BY session_id, occurred_at', $sIds) as $r) {
-                    $evVon[(int)$r['session_id']][] = ['art' => (string)$r['type'],
-                        'ts' => (int)strtotime($r['occurred_at'] . ' UTC')];
-                }
-            }
-            foreach ($sitz as $r) {
-                $reaVon[(int)$r['mission_id']][] = ['ts' => (int)strtotime($r['started_at'] . ' UTC'),
-                                                    'ereignisse' => $evVon[(int)$r['id']] ?? []];
+                    'phase' => (int)$r['phase'], 'ts' => (int)strtotime($r['occurred_at'] . ' UTC')];
             }
         }
 
@@ -933,13 +902,6 @@ try {
                 'started_ts' => (int)strtotime($m['started_at'] . ' UTC'),
                 'ort_huelle' => $m['ort_huelle'] !== null ? base64_encode((string)$m['ort_huelle']) : null,
                 'phasen'     => $phasenVon[(int)$m['id']] ?? [],
-                'alt_rea'    => $reaVon[(int)$m['id']] ?? [],
-                'alt_ziel'   => $m['transport_dest'] !== null || $m['dest_lat'] !== null
-                    ? ['addr' => $m['transport_dest'],
-                       'lat' => $m['dest_lat'] !== null ? (float)$m['dest_lat'] : null,
-                       'lon' => $m['dest_lon'] !== null ? (float)$m['dest_lon'] : null]
-                    : null,
-                'alt_hoehe'  => $m['site_ele_m'] !== null ? (int)$m['site_ele_m'] : null,
             ];
         }
     }

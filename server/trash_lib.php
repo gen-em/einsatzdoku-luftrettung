@@ -43,11 +43,8 @@ function trash_scope_mission(int $userId, int $id): ?array {
     return [
         'mission'  => $m,
         'phasen'   => $one('SELECT COUNT(*) FROM mission_phases WHERE mission_id = ?', [$id]),
-        'reas'     => $one('SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ?', [$id]),
-        // Ueber spur_lib.php: Die Punkte liegen seit S2 je nach Alter als
-        // Zeilen oder als Blob. Eine Zahl, die nur die Zeilen zaehlt, stuende
-        // nach der Verdichtung auf 0 — auf der Rueckfrageseite vor dem
-        // ENDGUELTIGEN Loeschen ausgerechnet die beruhigende Zahl.
+        // Ueber spur_lib.php, aus den Stuecken. Die Reanimation zaehlt hier
+        // nicht mehr (`reas` bis Web 22.7.0): Sie liegt in der Einsatzhuelle.
         'punkte'   => spur_zahlen(db(), 'mission', [$id])[$id] ?? 0,
     ];
 }
@@ -66,13 +63,11 @@ function trash_scope_day(int $userId, int $dayId): array {
     $segs->execute([$userId, $dayId]);
     $sids = $segs->fetchAll(PDO::FETCH_COLUMN);
 
-    $punkte = 0; $phasen = 0; $reas = 0;
+    $punkte = 0; $phasen = 0;
     foreach ($mids as $mid) {
         $phasen += $one('SELECT COUNT(*) FROM mission_phases WHERE mission_id = ?', [(int)$mid]);
-        $reas   += $one('SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ?', [(int)$mid]);
     }
-    // Punkte gebuendelt ueber spur_lib.php — Zeilen und Blob, und ohne die
-    // Abfrage je Einsatz, die hier bisher stand.
+    // Punkte gebuendelt ueber spur_lib.php, ohne Abfrage je Einsatz.
     $punkte += array_sum(spur_zahlen(db(), 'mission', array_map('intval', $mids)));
     $punkte += array_sum(spur_zahlen(db(), 'rest', array_map('intval', $sids)));
     $meta = db()->prepare('SELECT * FROM days WHERE user_id = ? AND id = ? AND deleted_at IS NULL');
@@ -84,7 +79,6 @@ function trash_scope_day(int $userId, int $dayId): array {
         'segmente'  => count($sids),
         'punkte'    => $punkte,
         'phasen'    => $phasen,
-        'reas'      => $reas,
         'meta'      => $meta->fetch() ?: null,
     ];
 }

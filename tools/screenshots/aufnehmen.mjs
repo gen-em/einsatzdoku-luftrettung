@@ -782,7 +782,7 @@ async function platzhalter() {
    *   __TAG_LUFTLINIE__      Tageskarte eines Diensttags, dessen Einsaetze
    *                          Koordinaten, aber KEINE Spur haben (D21) — die
    *                          gestrichelten Luftlinien aus `start_src`,
-   *                          `dest_lat`/`dest_lon` (E34/E35)
+   *                          dem Transportziel im `pat_blob` (E34/E35)
    *
    * GESUCHT WIRD UEBER DEN INHALT, NICHT UEBER EINEN NAMEN ODER EINE NUMMER.
    * Kennungen wandern bei jedem Neubau des Referenzbestands, und ein Name

@@ -19,9 +19,9 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  *     patient: bool }
  *
  * Antwort (seit S11-05e):
- *   { "42": { punkte: [ [lat, lon, ele|null, ts], ... ],   Altbestand (SPUR1)
- *             ref: 'm-…', stuecke: [{seq_from, punkte, …, huelle}],
+ *   { "42": { ref: 'm-…', stuecke: [{seq_from, punkte, …, huelle}],
  *             sperren: [{von, bis}] } }
+ *   (bis Web 22.7.0 dazu `punkte` mit dem Altbestand im Klartext)
  *
  * WARUM EIN EIGENER ENDPUNKT: api/range.php bedient zeitraum.php und ist
  * bewusst schlank gehalten (keine Trackpunkte, kein Reanimationsdetail).
@@ -291,15 +291,11 @@ function export_meta(array $b, int $userId): never
      * wenn das Flag fehlt — die Form haengt an der SPALTE und nicht an ihrer
      * Stelle im SELECT. Wer ein Feld unter die Schranke nimmt, traegt es in
      * `$schranke` ein; die Liste selbst bleibt die des Registers. */
-    /* SEIT S11-05e AUCH TRANSPORTZIEL, ZIELKOORDINATE, KENNUNG UND HUELLE.
-     * Das Transportziel liegt seit Web 22.1.0 im `pat_blob` und ist damit
-     * geschuetzte Angabe (Betreiberin, 16.10.2026, E-S11-53); die Spalten
-     * tragen nur noch den Altbestand und folgen derselben Schranke, sonst
-     * stuende die Zielklinik eines alten Einsatzes ohne Haken in der Datei
-     * und die eines neuen nicht. `client_ref` und `ort_huelle` braucht der
-     * Browser, um die Einsatzhuelle zu oeffnen. */
-    $schranke = ['site_ele_m', 'bw_info', 'other_ema', 'pat_blob', 'transport_dest',
-                 'dest_lat', 'dest_lon', 'client_ref', 'ort_huelle'];
+    /* SEIT S11-05e AUCH KENNUNG UND HUELLE: `client_ref` und `ort_huelle`
+     * braucht der Browser, um die Einsatzhuelle zu oeffnen. Transportziel und
+     * Ortshoehe liegen im `pat_blob` und gehen mit ihm (E-S11-53); bis
+     * Web 22.7.0 standen ihre Altbestandsspalten ebenfalls in dieser Liste. */
+    $schranke = ['bw_info', 'other_ema', 'pat_blob', 'client_ref', 'ort_huelle'];
     $einsCols = [];
     /* Zwei Listen desselben Zwecks, Stelle fuer Stelle: die blossen Namen zum
      * Vergleichen, die SQL-Form (Namen in Backticks, Nr. 239) zum Einsetzen. */
@@ -329,28 +325,27 @@ function export_meta(array $b, int $userId): never
 
     $ids = array_map(static fn($r) => (int)$r['id'], $missionRows);
 
-    /* ---- Phasen, Rettungsmittel, Reanimation, Trackpunkt-Anzahl: gebuendelt
-     * statt je Einsatz einzeln (bis zu 5000 Einsaetze). -------------------- */
+    /* ---- Phasen, Rettungsmittel, Trackpunkt-Anzahl: gebuendelt statt je
+     * Einsatz einzeln (bis zu 5000 Einsaetze). ------------------------------ */
     $phasesByMission = [];
     $resourcesByMission = [];
     $trackCountByMission = [];
-    $resusSessionsByMission = [];
 
     if ($ids) {
         /* Zeitpunkt ja, Ort nein: Die Phasenzeiten tragen Alarmzeit, Endzeit
          * und Dauer und muessen deshalb in jedem Export stehen (Kriterium 73).
-         * Die Koordinaten sind der Einsatzort (Phase 4/5) und fallen unter die
-         * Schranke. */
-        $phasenOrt = $pers ? 'lat, lon' : 'NULL AS lat, NULL AS lon';
+         * Die Orte liegen in der Einsatzhuelle; `assets/export.js` oeffnet sie
+         * nur mit Haken und fuellt `lat`/`lon` (S11-05e). Die Schluessel
+         * stehen deshalb hier mit `null`. */
         foreach (sql_in_bloecken($pdo,
-                "SELECT mission_id, phase, occurred_at, $phasenOrt
-                 FROM mission_phases WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at",
+                'SELECT mission_id, phase, occurred_at
+                 FROM mission_phases WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at',
                 $ids) as $r) {
             $phasesByMission[(int)$r['mission_id']][] = [
                 'phase' => (int)$r['phase'],
                 'at'    => export_iso_utc($r['occurred_at']),
-                'lat'   => $r['lat'] !== null ? (float)$r['lat'] : null,
-                'lon'   => $r['lon'] !== null ? (float)$r['lon'] : null,
+                'lat'   => null,
+                'lon'   => null,
             ];
         }
 
@@ -367,31 +362,6 @@ function export_meta(array $b, int $userId): never
          * Einsatz still aus dem Export heraus — deshalb zaehlt jetzt eine
          * Stelle, die Zeilen UND Blob kennt. */
         $trackCountByMission = spur_zahlen($pdo, 'mission', $ids);
-
-        $sessionRows = sql_in_bloecken($pdo,
-            'SELECT id, mission_id, started_at FROM resus_sessions
-             WHERE mission_id IN ({IDS}) ORDER BY mission_id, started_at',
-            $ids);
-        $sessionIds = array_map(static fn($r) => (int)$r['id'], $sessionRows);
-        $eventsBySession = [];
-        if ($sessionIds) {
-            foreach (sql_in_bloecken($pdo,
-                    'SELECT session_id, type, occurred_at FROM resus_events
-                     WHERE session_id IN ({IDS}) ORDER BY session_id, occurred_at',
-                    $sessionIds) as $r) {
-                $eventsBySession[(int)$r['session_id']][] = [
-                    'type' => (string)$r['type'],
-                    'at'   => export_iso_utc($r['occurred_at']),
-                ];
-            }
-        }
-        foreach ($sessionRows as $r) {
-            $sid = (int)$r['id'];
-            $resusSessionsByMission[(int)$r['mission_id']][] = [
-                'started_at' => export_iso_utc($r['started_at']),
-                'events'     => $eventsBySession[$sid] ?? [],
-            ];
-        }
     }
 
     /* Abweichende Besatzung je Einsatz: Zeilen aus `mission_crew` (E7),
@@ -425,7 +395,10 @@ function export_meta(array $b, int $userId): never
             'ended_at'         => export_iso_utc($r['ended_at']),
             'distance_m'       => $r['distance_m'] !== null ? (int)$r['distance_m'] : null,
             'ascent_m'         => $r['ascent_m'] !== null ? (int)$r['ascent_m'] : null,
-            'site_ele_m'       => $r['site_ele_m'] !== null ? (int)$r['site_ele_m'] : null,
+            /* Ortshoehe und Transportziel (unten) aus dem `pat_blob`: Der
+             * Browser fuellt sie mit Haken (S11-05e). Die Schluessel bleiben
+             * im Vertrag, bis Web 22.7.0 kam der Altbestand aus Spalten. */
+            'site_ele_m'       => null,
             'final'            => (int)$r['final'],
             'manual'           => (int)$r['manual'],
             'source'           => $source,
@@ -438,7 +411,7 @@ function export_meta(array $b, int $userId): never
              * dem Fehlen eine Aussage. */
             'geraet_art'       => $r['geraet_art'],
             'geraet_modell'    => $r['geraet_modell'],
-            'transport_dest'   => $r['transport_dest'],
+            'transport_dest'   => null,
             /* Die Einsatzhuelle (S11-05e): Phasenorte und Reanimation der seit
              * S11-04 gesendeten Einsaetze. Nur mit Haken; `assets/export.js`
              * oeffnet sie und fuellt daraus `phases[].lat/lon` und `resus`.
@@ -456,8 +429,8 @@ function export_meta(array $b, int $userId): never
             'na_escort'        => (int)$r['na_escort'],
             'false_alarm'      => (int)$r['false_alarm'],
             'start_src'        => $r['start_src'],
-            'dest_lat'         => $r['dest_lat'] !== null ? (float)$r['dest_lat'] : null,
-            'dest_lon'         => $r['dest_lon'] !== null ? (float)$r['dest_lon'] : null,
+            'dest_lat'         => null,
+            'dest_lon'         => null,
             'winch'            => (int)$r['winch'],
             'winch_cycles'     => $r['winch_cycles'] !== null ? (int)$r['winch_cycles'] : null,
             'winch_cycles_pat' => $r['winch_cycles_pat'] !== null ? (int)$r['winch_cycles_pat'] : null,
@@ -479,7 +452,8 @@ function export_meta(array $b, int $userId): never
             'track_points'     => $trackCountByMission[$id] ?? 0,
             'phases'           => $phasesByMission[$id] ?? [],
             'resources'        => $resourcesByMission[$id] ?? [],
-            'resus'            => $resusSessionsByMission[$id] ?? [],
+            /* Die Reanimation liegt in der Einsatzhuelle (S11-05e). */
+            'resus'            => [],
         ];
     }
 
@@ -560,26 +534,19 @@ function export_track(array $b, int $userId): never
         $ids, [$userId]);
     $validIds = array_map(static fn($r) => (int)$r['id'], $owned);
 
-    /* ZWEI TEILE JE SPUR SEIT S11-05e. `punkte` ist der Altbestand im
-     * Klartext (SPUR1, bis S11-10), Ausgabeform wie bisher: [lat, lon,
-     * ele|null, ts] je Punkt. `stuecke` sind die verschlossenen Stuecke seit
-     * S11-04, mit `ref` (die Kennung, an die sie gebunden sind) und `sperren`
-     * (geschnittene oder geloeschte Zeitraeume, E-S11-37) — `assets/export.js`
-     * oeffnet sie mit `EdOrtsdaten.spur()` und legt beides zusammen. Bis Web
-     * 22.3.0 stand hier nur der erste Teil, und eine Spur seit S11-04 fehlte
-     * im Export (F-S11-57). */
+    /* DIE VERSCHLOSSENEN STUECKE JE SPUR, mit `ref` (die Kennung, an die sie
+     * gebunden sind) und `sperren` (geschnittene oder geloeschte Zeitraeume,
+     * E-S11-37) — `assets/export.js` oeffnet sie mit `EdOrtsdaten.spur()`.
+     * Von S11-05e bis Web 22.7.0 stand daneben `punkte` mit dem Altbestand im
+     * Klartext (SPUR1); bis Web 22.3.0 nur dieser, und eine Spur seit S11-04
+     * fehlte im Export (F-S11-57). */
     $result = [];
     foreach ($owned as $r) {
-        $result[(string)$r['id']] = ['punkte' => [], 'ref' => (string)$r['client_ref'],
+        $result[(string)$r['id']] = ['ref' => (string)$r['client_ref'],
                                      'stuecke' => [], 'sperren' => []];
     }
 
     if ($validIds) {
-        foreach (spur_lesen_viele($pdo, $ownerType, $validIds) as $id => $punkte) {
-            foreach ($punkte as $pt) {
-                $result[(string)$id]['punkte'][] = [$pt[1], $pt[2], $pt[3], $pt[4]];
-            }
-        }
         foreach (spur2_lesen_viele($pdo, $ownerType, $validIds) as $id => $stuecke) {
             $result[(string)$id]['stuecke'] = $stuecke;
             $result[(string)$id]['sperren'] = array_map(

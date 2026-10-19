@@ -2,32 +2,27 @@
 declare(strict_types=1);
 
 /**
- * Spurprobe — kommt aus dem Blob genau das zurueck, was hineinging? (S2/AP1)
+ * Spurprobe — haelt die Ausduennung ihre Zusage, und gehen die Wege von
+ * `spur_lib.php` richtig mit den Stuecken um? (S2/AP1, seit S11-12 SPUR2)
  *
  * Anlass: Nr. 304 — der Rundlauf hielt int gegen float; 175 von 181 Spuren sahen veraendert aus
  *
- * WOFUER. Die Verdichtung loescht Zeilen. Was danach fehlt, ist weg — es gibt
- * keine zweite Quelle. Die Rundlaufpruefung in `spur_lib.php` ist deshalb die
- * letzte Instanz vor einem unwiderruflichen DELETE, und dieses Werkzeug faehrt
- * sie ueber den GANZEN Referenzbestand, nicht ueber ein Beispiel.
+ * WAS SIE SEIT WEB 23 MISST (S11-12). Bis Web 22.7.0 fuhr sie SPUR1: Rundlauf
+ * Punkte -> Blob -> Punkte, Kopf, Verdichtung, die Leser vor und nach der
+ * Verdichtung, den Schnitt mit `spur_teilen()`. Mit dem Klartext sind Format
+ * und Funktionen gegangen. Geblieben sind zwei Fragen:
  *
- * Und es beantwortet die zweite Frage von AP1: Liefern die Leser vor und nach
- * der Verdichtung DASSELBE? Tagesansicht, Einsatzansicht, Export und Backup
- * ziehen ihre Punkte seither ueber `spur_lib.php`; wenn dort etwas anders
- * herauskommt, faellt es hier auf und nicht erst in der Karte.
+ *   Teil 1  Die Ausduennung nach Douglas-Peucker (`spur_ausduennen()`) — die
+ *           PHP-Fassung ist die Referenz, gegen die die Wartungslaufprobe den
+ *           Browser vergleicht. Gerechnet ueber die Punkte der Demo-Fixture
+ *           (sie liegen im Repositorium im Klartext; der Server sieht sie nie).
+ *   Teil 2  Kuenstliche Prueffaelle, die kein Bestand liefert.
+ *   Teil 3  Die SPUR2-Wege an einem Einsatz des Kontos: Zahl, Marke, Stand,
+ *           Groesse, Umdatieren, Loeschen — in einer Transaktion, die am Ende
+ *           zurueckgerollt wird. Und dass es die Klartexttabellen nicht mehr
+ *           gibt.
  *
- * ES AENDERT NICHTS. Der ganze Lauf steht in einer Transaktion, die am Ende
- * zurueckgerollt wird; Teil 3 und Teil 6 rollen ihre eigenen Schritte ueber
- * Sicherungspunkte zurueck. Das Werkzeug laesst sich damit auch gegen einen
- * Bestand fahren, den man behalten will — etwa das Referenzkonto.
- *
- * SEIT S11-06 SETZT ES SEINEN KLARTEXT SELBST AUF. Es misst SPUR1 — Zeilen,
- * Blob, Verdichtung, Ausduennung —, und das Demo-Konto traegt seit dem
- * verschlossenen Reset (E-S11-20) keine Klartextspur mehr, sondern nur
- * Stuecke. Findet die Probe im Konto keine Punkte, legt sie die Spuren der
- * Demo-Fixture als Zeilen an die Einsaetze und Segmente desselben Kontos
- * (ueber `client_ref`), nimmt die Stuecke fuer die Dauer des Laufs heraus und
- * rollt am Ende alles zurueck. Bis S11-07 und S11-12 gibt es SPUR1 noch.
+ * ES AENDERT NICHTS. Teil 3 laeuft in einer Transaktion, die zurueckrollt.
  *
  * Aufruf:
  *   php tools/proben/spur/probe.php [konto]
@@ -39,7 +34,7 @@ $wurzel = dirname(__DIR__, 3) . '/server';
 require_once $wurzel . '/config.php';
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/spur_lib.php';
-require_once $wurzel . '/backup_lib.php';
+require_once $wurzel . '/demo_lib.php';
 
 $konto = $argv[1] ?? 'demo@gen-em.org';
 
@@ -61,356 +56,80 @@ function pruefe(bool $ok, string $was, string $wert = ''): void {
     printf("  [%s] %-62s %s\n", $ok ? 'ok ' : 'FEHL', $was, $wert);
 }
 
-echo "Spurprobe gegen $konto\n\n";
+echo "Spurprobe gegen $konto\n";
 
-/* ---- Welche Spuren gibt es? ---------------------------------------------- */
+/* ---- Teil 1 — Ausduennung ueber die Punkte der Demo-Fixture --------------- */
 
-$mIds = $pdo->prepare('SELECT id FROM missions WHERE user_id = ?');
-$mIds->execute([$uid]);
-$mIds = array_map('intval', $mIds->fetchAll(PDO::FETCH_COLUMN));
-$rIds = $pdo->prepare('SELECT id FROM rest_segments WHERE user_id = ?');
-$rIds->execute([$uid]);
-$rIds = array_map('intval', $rIds->fetchAll(PDO::FETCH_COLUMN));
+echo "\n  Teil 1 — Ausduennung: haelt sie ihre Zusage? (E-S2-05)\n";
 
-$vorher = [
-    'mission' => spur_lesen_viele($pdo, 'mission', $mIds),
-    'rest'    => spur_lesen_viele($pdo, 'rest', $rIds),
-];
-$punkteGesamt = 0;
-foreach ($vorher as $liste) {
-    foreach ($liste as $p) { $punkteGesamt += count($p); }
-}
-/* DIE AEUSSERE KLAMMER: alles, was dieser Lauf schreibt, rollt am Ende
- * zurueck — der aufgesetzte Klartext eingeschlossen. */
-$pdo->beginTransaction();
-$ausFixture = false;
-if ($punkteGesamt === 0) {
-    require_once $wurzel . '/demo_lib.php';
-    $fx = demo_fixture_vorhanden() ? demo_fixture_laden()['daten'] : ['missions' => [], 'rest_segments' => []];
-    $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
-                          VALUES (?,?,?,?,?,?,?)');
-    foreach (['missions' => ['mission', 'missions'], 'rest_segments' => ['rest', 'rest_segments']]
-             as $zweig => [$typ, $tab]) {
-        $idVon = $pdo->prepare("SELECT id FROM `$tab` WHERE user_id = ? AND client_ref = ?");
-        foreach ($fx[$zweig] ?? [] as $e) {
-            if (empty($e['track'])) { continue; }
-            $idVon->execute([$uid, (string)$e['client_ref']]);
-            $id = (int)$idVon->fetchColumn();
-            if (!$id) { continue; }
-            $pdo->prepare('DELETE FROM track_stuecke WHERE owner_type = ? AND owner_id = ?')
-                ->execute([$typ, $id]);
-            foreach ($e['track'] as $p) { $ins->execute([$typ, $id, $p[0], $p[1], $p[2], $p[3], $p[4]]); }
-            $ausFixture = true;
+$fx = demo_fixture_vorhanden() ? demo_fixture_laden()['daten'] : ['missions' => [], 'rest_segments' => []];
+$spuren = [];
+foreach ($fx['missions'] ?? [] as $m) {
+    if (!empty($m['track'])) {
+        $zeiten = [];
+        foreach ($m['phases'] ?? [] as $p) {
+            $zeiten[] = (int)strtotime((string)$p['occurred_at'] . ' UTC');
         }
-    }
-    $vorher = [
-        'mission' => spur_lesen_viele($pdo, 'mission', $mIds),
-        'rest'    => spur_lesen_viele($pdo, 'rest', $rIds),
-    ];
-    $punkteGesamt = 0;
-    foreach ($vorher as $liste) {
-        foreach ($liste as $p) { $punkteGesamt += count($p); }
+        sort($zeiten);
+        $spuren[] = [$m['track'], $zeiten];
     }
 }
-$spurenGesamt = count($vorher['mission']) + count($vorher['rest']);
-echo "  $spurenGesamt Spuren, $punkteGesamt Punkte"
-   . ($ausFixture ? ' (Klartext aus der Demo-Fixture aufgesetzt, wird zurueckgerollt)' : '') . "\n\n";
-pruefe($punkteGesamt > 0, 'Der Bestand hat ueberhaupt Spuren',
-       "$punkteGesamt Punkte");
-
-/* ---- Teil 1 — Rundlauf ueber jede einzelne Spur --------------------------- */
-
-echo "\n  Teil 1 — Rundlauf Punkte -> Blob -> Punkte\n";
-$abweichungen = [];
-$bytes = 0;
-foreach ($vorher as $typ => $liste) {
-    foreach ($liste as $id => $punkte) {
-        if (!$punkte) { continue; }
-        $blob = spur_kodieren($punkte, SPUR_STUFE_ROH);
-        $bytes += strlen($blob);
-        $m = spur_rundlauf_pruefen($punkte, $blob);
-        if ($m !== null) { $abweichungen[] = "$typ/$id: $m"; }
-    }
+foreach ($fx['rest_segments'] ?? [] as $r) {
+    if (!empty($r['track'])) { $spuren[] = [$r['track'], []]; }
 }
-pruefe($abweichungen === [], 'Jede Spur kommt unveraendert zurueck',
-       count($abweichungen) . ' Abweichungen'
-       . ($abweichungen ? ' — erste: ' . $abweichungen[0] : ''));
-pruefe($punkteGesamt > 0 && $bytes / max(1, $punkteGesamt) < 10.0,
-       'Der Blob kostet weniger als 10 Byte je Punkt',
-       sprintf('%.2f B/Punkt (Zeilen: 62,4)', $bytes / max(1, $punkteGesamt)));
+$alle = array_sum(array_map(static fn($s) => count($s[0]), $spuren));
+pruefe($alle > 0, 'Die Demo-Fixture traegt Punkte', count($spuren) . " Spuren, $alle Punkte");
 
-/* ---- Teil 2 — Kopf lesen, ohne auszupacken -------------------------------- */
-
-echo "\n  Teil 2 — Der Kopf sagt die Wahrheit, ohne den Strom zu oeffnen\n";
-$kopfFehler = [];
-foreach ($vorher as $typ => $liste) {
-    foreach ($liste as $id => $punkte) {
-        if (!$punkte) { continue; }
-        $blob = spur_kodieren($punkte, SPUR_STUFE_ROH);
-        $k = spur_kopf($blob);
-        if ($k['n'] !== count($punkte) || $k['n_original'] !== count($punkte)
-            || $k['stufe'] !== SPUR_STUFE_ROH || $k['aufloesung'] !== SPUR_AUFL_1) {
-            $kopfFehler[] = "$typ/$id";
-        }
-    }
-}
-pruefe($kopfFehler === [], 'Punktzahl, Stufe und Aufloesung stehen im Kopf',
-       count($kopfFehler) . ' abweichend');
-
-/* Ein Blob mit fremder Aufloesungskennung muss ABGELEHNT werden, nicht
- * falsch gedeutet — sonst verschoebe eine kuenftige Formataenderung jede
- * Koordinate, und zwar lautlos. */
-$erste = null;
-foreach ($vorher['mission'] as $p) { if ($p) { $erste = $p; break; } }
-if ($erste) {
-    $blob = spur_kodieren($erste, SPUR_STUFE_ROH);
-    $verbogen = substr_replace($blob, chr(99), 4, 1);
-    $abgelehnt = false;
-    try { spur_dekodieren($verbogen); } catch (Throwable $ex) { $abgelehnt = true; }
-    pruefe($abgelehnt, 'Ein Blob mit unbekannter Aufloesung wird abgelehnt');
-
-    $verbogen = substr_replace($blob, chr(99), 2, 1);
-    $abgelehnt = false;
-    try { spur_dekodieren($verbogen); } catch (Throwable $ex) { $abgelehnt = true; }
-    pruefe($abgelehnt, 'Ein Blob mit unbekannter Formatfassung wird abgelehnt');
-
-    $abgelehnt = false;
-    try { spur_dekodieren('Unfug'); } catch (Throwable $ex) { $abgelehnt = true; }
-    pruefe($abgelehnt, 'Etwas, das kein Blob ist, wird abgelehnt');
-}
-
-/* ---- Teil 3 — Verdichten und die Leser vergleichen ------------------------ */
-
-echo "\n  Teil 3 — Vor und nach der Verdichtung dasselbe\n";
-
-/* Der Vergleichsmassstab ist der QUANTISIERTE Bestand, nicht der rohe: Das
- * Format sagt 10^-6 Grad und 0,1 m zu (F-S2-01), und genau das muss
- * herauskommen. Wer hier gegen die rohe DOUBLE-Spalte vergliche, pruefte eine
- * Genauigkeit, die nie versprochen war. */
-$sollNach = [];
-foreach ($vorher as $typ => $liste) {
-    foreach ($liste as $id => $punkte) {
-        $sollNach[$typ][$id] = array_map('spur_quantisieren', $punkte);
-    }
-}
-
-$backupVorher = edbak_build($uid);
-
-$pdo->exec('SAVEPOINT teil3');
-try {
-    $verdichtet = 0;
-    foreach ($vorher as $typ => $liste) {
-        foreach ($liste as $id => $punkte) {
-            if (!$punkte) { continue; }
-            $blob = spur_kodieren($punkte, SPUR_STUFE_ROH);
-            spur_blob_schreiben($pdo, $typ, $id, $blob, SPUR_STUFE_ROH,
-                                count($punkte), count($punkte));
-            spur_loeschen_nur_zeilen($pdo, $typ, $id, count($punkte));
-            $verdichtet++;
-        }
-    }
-    pruefe($verdichtet === $spurenGesamt, 'Alle Spuren verdichtet',
-           "$verdichtet von $spurenGesamt");
-
-    /* NUR DIE ZEILEN DIESES KONTOS. Die erste Fassung zaehlte
-     * `SELECT COUNT(*) FROM track_points` — also die Tabelle aller Konten —
-     * und schlug an, weil das Messstandkonto daneben 3,2 Mio. Zeilen haelt.
-     * Verdichtet wurde aber nur ein Konto. Wieder eine Zahl, die etwas
-     * anderes misst, als sie behauptet. */
-    $rest = 0;
-    foreach ([['mission', $mIds], ['rest', $rIds]] as [$typ, $ids]) {
-        if (!$ids) { continue; }
-        $platz = implode(',', array_fill(0, count($ids), '?'));
-        $z = $pdo->prepare("SELECT COUNT(*) FROM track_points
-                             WHERE owner_type = ? AND owner_id IN ($platz)");
-        $z->execute(array_merge([$typ], $ids));
-        $rest += (int)$z->fetchColumn();
-    }
-    pruefe($rest === 0,
-           'Nach der Verdichtung stehen keine Zeilen dieses Kontos mehr da',
-           "verbleibende Zeilen dieses Kontos: $rest");
-
-    $nachher = [
-        'mission' => spur_lesen_viele($pdo, 'mission', $mIds),
-        'rest'    => spur_lesen_viele($pdo, 'rest', $rIds),
-    ];
-    $unterschiede = [];
-    foreach ($sollNach as $typ => $liste) {
-        foreach ($liste as $id => $soll) {
-            $ist = $nachher[$typ][$id] ?? [];
-            if ($ist != $soll) { $unterschiede[] = "$typ/$id"; }
-        }
-    }
-    pruefe($unterschiede === [],
-           'spur_lesen_viele() liefert nach der Verdichtung dasselbe',
-           count($unterschiede) . ' Spuren abweichend'
-           . ($unterschiede ? ' — erste: ' . $unterschiede[0] : ''));
-
-    /* DIE BACKUP IST DIE HAERTESTE PROBE: Sie enthaelt jeden Punkt jeder
-     * Spur mit Nummer, Koordinate, Hoehe und Zeit. Sind beide Pakete gleich,
-     * hat die Verdichtung an keinem einzigen Wert etwas geaendert. */
-    $backupNachher = edbak_build($uid);
-    $a = json_decode($backupVorher, true);
-    $b = json_decode($backupNachher, true);
-    // created_at unterscheidet sich zwangslaeufig — es ist der Zeitpunkt.
-    unset($a['created_at'], $b['created_at']);
-    // Die Punkte des Vorher-Pakets auf die Formataufloesung bringen.
-    foreach (['missions', 'rest_segments'] as $zweig) {
-        foreach ($a[$zweig] as $i => $z) {
-            if (!empty($z['track'])) {
-                $a[$zweig][$i]['track'] = array_map('spur_quantisieren', $z['track']);
-            }
-        }
-        foreach ($b[$zweig] as $i => $z) {
-            if (!empty($z['track'])) {
-                $b[$zweig][$i]['track'] = array_map('spur_quantisieren', $z['track']);
-            }
-        }
-    }
-    pruefe($a == $b, 'edbak_build() liefert vor und nach der Verdichtung dasselbe',
-           'Paket ' . round(strlen($backupNachher) / 1048576, 2) . ' MB');
-
-    /* Die Fortsetzungsmarke der Uhr darf durch die Verdichtung NICHT
-     * zurueckfallen — sonst schickt sie den ganzen Dienst noch einmal. */
-    $markenFehler = [];
-    foreach ($vorher['mission'] as $id => $punkte) {
-        if (!$punkte) { continue; }
-        if (spur_naechste_seq($pdo, 'mission', $id) !== count($punkte)) {
-            $markenFehler[] = "mission/$id";
-        }
-    }
-    pruefe($markenFehler === [],
-           'next_seq bleibt nach der Verdichtung gleich (E-S2-08)',
-           count($markenFehler) . ' abweichend');
-
-    /* Und die Loeschwege muessen BEIDES abraeumen. */
-    $probeId = $mIds[0] ?? null;
-    if ($probeId !== null) {
-        spur_loeschen($pdo, 'mission', [$probeId]);
-        $z = $pdo->prepare("SELECT COUNT(*) FROM track_points WHERE owner_type='mission' AND owner_id=?");
-        $z->execute([$probeId]);
-        $b1 = $pdo->prepare("SELECT COUNT(*) FROM track_blobs WHERE owner_type='mission' AND owner_id=?");
-        $b1->execute([$probeId]);
-        pruefe((int)$z->fetchColumn() === 0 && (int)$b1->fetchColumn() === 0,
-               'spur_loeschen() laesst weder Zeile noch Blob zurueck',
-               "Einsatz $probeId");
-    }
-} finally {
-    $pdo->exec('ROLLBACK TO SAVEPOINT teil3');
-}
-
-/* Nach dem Rollback muss der Bestand sein, was er war. */
-$nachRollback = spur_lesen_viele($pdo, 'mission', $mIds);
-$gleich = true;
-foreach ($vorher['mission'] as $id => $punkte) {
-    if (($nachRollback[$id] ?? []) != $punkte) { $gleich = false; break; }
-}
-pruefe($gleich, 'Nach dem Rollback ist der Bestand unveraendert');
-
-/* ---- Teil 4 — Die Ausduennung (Stufe 2 -> 3, AP3) ------------------------- */
-
-echo "\n  Teil 4 — Ausduennung: haelt sie ihre Zusage? (E-S2-05)\n";
-
-/* GERECHNET WIRD AUF DEM BESTAND, GESCHRIEBEN WIRD NICHTS. Die Ausduennung
- * ersetzt einen Blob unwiderruflich; diese Probe rechnet nur und vergleicht.
- * Der Job selbst wird von der Jobprobe gefahren. */
 $dpPunkte = 0; $dpBehalten = 0; $dpVerletzt = 0; $dpErste = null;
-$dpBytesV = 0; $dpBytesN = 0; $dpMaxDauer = 0.0; $dpSpuren = 0; $dpSchon = 0;
+$dpMaxDauer = 0.0; $dpSpuren = 0;
 $phasenVor = 0; $phasenNach = 0; $phasenGesamt = 0;
-
-/* SCHON AUSGEDUENNTE SPUREN BLEIBEN AUSSEN VOR — und das ist keine Feinheit.
- * Eine Stufe-3-Spur noch einmal auszuduennen ist nicht die Handlung, um die
- * es hier geht: Ihre Punkte sind bereits die noetigen, ein zweiter Lauf
- * behaelt fast alle, und der gemessene Anteil steigt, ohne dass sich etwas
- * verbessert haette. Genau das ist beim ersten Lauf passiert — 25 Spuren des
- * Referenzkontos waren vom Job schon ausgeduennt, und der Anteil sprang von
- * 37,7 auf 43,0 %. Die Zahl war richtig gerechnet und beschrieb etwas
- * anderes, als ihre Beschriftung sagte.
- *
- * Wie viele uebersprungen wurden, steht unten in der Ausgabe. Wer die volle
- * Zahl braucht, setzt das Referenzkonto vorher neu auf
- * (tools/referenzdatensatz/einspielen/) und haelt die Jobs dabei an
- * (php jobs.php --pause 1800). */
-$stufen = [];
-foreach (['mission' => $mIds, 'rest' => $rIds] as $t => $ids) {
-    if (!$ids) { continue; }
-    $platz = implode(',', array_fill(0, count($ids), '?'));
-    $q = $pdo->prepare("SELECT owner_id, stufe FROM track_blobs
-                         WHERE owner_type = ? AND owner_id IN ($platz)");
-    $q->execute(array_merge([$t], $ids));
-    foreach ($q->fetchAll(PDO::FETCH_KEY_PAIR) as $oid => $st) { $stufen["$t:$oid"] = (int)$st; }
-}
-
-foreach ($vorher as $typ => $liste) {
-    foreach ($liste as $id => $punkte) {
-        if (count($punkte) < 3) { continue; }
-        if (($stufen["$typ:$id"] ?? 0) === SPUR_STUFE_DUENN) { $dpSchon++; continue; }
-        $dpSpuren++;
-        $zeiten = spur_schutzzeiten($pdo, $typ, $id);
-
-        $t0 = microtime(true);
-        $behalten = spur_ausduennen($punkte, $zeiten);
-        $dpMaxDauer = max($dpMaxDauer, microtime(true) - $t0);
-
-        $m = spur_ausduennung_pruefen($punkte, $behalten, $zeiten);
-        if ($m !== null) { $dpVerletzt++; if ($dpErste === null) { $dpErste = "$typ/$id: $m"; } }
-
-        $duenn = [];
-        foreach ($behalten as $i) { $duenn[] = $punkte[$i]; }
-        $dpPunkte   += count($punkte);
-        $dpBehalten += count($duenn);
-        $dpBytesV += strlen(spur_kodieren($punkte, SPUR_STUFE_ROH));
-        $dpBytesN += strlen(spur_kodieren($duenn, SPUR_STUFE_DUENN, count($punkte)));
-
-        /* Bleibt die Hoehenermittlung des Einsatzorts moeglich? Sie sucht
-         * +/-SITE_ELE_TOLERANCE_S um den Phasenzeitpunkt; ohne den Schutz der
-         * Phasenpunkte ginge sie leer aus (B-S2-08). */
-        foreach ($zeiten as $ts) {
-            $phasenGesamt++;
-            $nahV = PHP_INT_MAX; foreach ($punkte as $p) { $nahV = min($nahV, abs((int)$p[4] - $ts)); }
-            $nahN = PHP_INT_MAX; foreach ($duenn  as $p) { $nahN = min($nahN, abs((int)$p[4] - $ts)); }
-            if ($nahV <= 300) { $phasenVor++; }
-            if ($nahN <= 300) { $phasenNach++; }
-        }
+foreach ($spuren as $k => [$punkte, $zeiten]) {
+    $punkte = array_map(static fn($p) => [(int)$p[0], (float)$p[1], (float)$p[2],
+                                          $p[3] === null ? null : (float)$p[3], (int)$p[4]], $punkte);
+    if (count($punkte) < 3) { continue; }
+    $dpSpuren++;
+    $t0 = microtime(true);
+    $behalten = spur_ausduennen($punkte, $zeiten);
+    $dpMaxDauer = max($dpMaxDauer, microtime(true) - $t0);
+    $m = spur_ausduennung_pruefen($punkte, $behalten, $zeiten);
+    if ($m !== null) { $dpVerletzt++; if ($dpErste === null) { $dpErste = "Spur $k: $m"; } }
+    $duenn = [];
+    foreach ($behalten as $i) { $duenn[] = $punkte[$i]; }
+    $dpPunkte   += count($punkte);
+    $dpBehalten += count($duenn);
+    /* Bleibt die Hoehenermittlung des Einsatzorts moeglich? Sie sucht
+     * +/-300 s um den Phasenzeitpunkt; ohne den Schutz der Phasenpunkte ginge
+     * sie leer aus (B-S2-08). */
+    foreach ($zeiten as $ts) {
+        $phasenGesamt++;
+        $nahV = PHP_INT_MAX; foreach ($punkte as $p) { $nahV = min($nahV, abs($p[4] - $ts)); }
+        $nahN = PHP_INT_MAX; foreach ($duenn  as $p) { $nahN = min($nahN, abs($p[4] - $ts)); }
+        if ($nahV <= 300) { $phasenVor++; }
+        if ($nahN <= 300) { $phasenNach++; }
     }
 }
 
-pruefe($dpVerletzt === 0,
+pruefe($dpSpuren > 0 && $dpVerletzt === 0,
        'Kein verworfener Punkt liegt weiter weg als zugesagt',
        $dpVerletzt === 0
-           ? sprintf('%d Spuren, %d Punkte, 0 Verletzungen von 2,0 m / 3,0 m%s',
-                     $dpSpuren, $dpPunkte,
-                     $dpSchon ? " (+$dpSchon schon ausgeduennt, uebersprungen)" : '')
+           ? sprintf('%d Spuren, %d Punkte, 0 Verletzungen von 2,0 m / 3,0 m', $dpSpuren, $dpPunkte)
            : "$dpVerletzt Spuren — erste: $dpErste");
-
 $anteil = 100 * $dpBehalten / max(1, $dpPunkte);
 pruefe($anteil > 25.0 && $anteil < 60.0,
        'Der behaltene Anteil liegt im erwarteten Band (E-S2-05: rund 37 %)',
        sprintf('%.2f %% (%d von %d Punkten)', $anteil, $dpBehalten, $dpPunkte));
-
 pruefe($phasenNach === $phasenVor,
        'Die Ausduennung nimmt der Hoehenermittlung keinen Phasenpunkt',
        sprintf('%d von %d Phasen mit Punkt im +/-300-s-Fenster, vorher %d',
                $phasenNach, $phasenGesamt, $phasenVor));
-
-/* WAS DIE AUSDUENNUNG WIRKLICH SPART, IN BYTE — nicht in Punkten. Die
- * naheliegende Rechnung „62 % weniger Punkte, also 62 % weniger Platz" ist
- * falsch: Die Ausduennung entfernt genau die VORHERSAGBAREN Punkte, die
- * verbleibenden Differenzen sind groesser und lassen sich schlechter packen. */
-pruefe($dpBytesN < $dpBytesV,
-       'Der Blob wird kleiner — aber viel weniger, als die Punktzahl vermuten laesst',
-       sprintf('%.2f -> %.2f B je Originalpunkt (%.1f %% Ersparnis bei %.1f %% weggeworfenen Punkten)',
-               $dpBytesV / max(1, $dpPunkte), $dpBytesN / max(1, $dpPunkte),
-               100 * (1 - $dpBytesN / max(1, $dpBytesV)), 100 - $anteil));
-
 pruefe($dpMaxDauer < 1.0,
-       'Keine Spur des Bestands braucht laenger als eine Sekunde',
+       'Keine Spur der Fixture braucht laenger als eine Sekunde',
        sprintf('langsamste %.4f s; Schaetzung von spur_ausduenn_dauer_s() fuer '
              . '50 000 Punkte: %.2f s', $dpMaxDauer, spur_ausduenn_dauer_s(50000)));
 
-/* ---- Die Prueffaelle, die der Referenzbestand NICHT liefert -------------- */
+/* ---- Teil 2 — Kuenstliche Prueffaelle ------------------------------------ */
 
-echo "\n  Teil 5 — Kuenstliche Prueffaelle (der Bestand liefert sie nicht)\n";
+echo "\n  Teil 2 — Kuenstliche Prueffaelle (die Fixture liefert sie nicht)\n";
 
 /** Eine gerade Strecke mit einer Ausbuchtung an einer Stelle. */
 function probe_spur(int $n, callable $abweichung): array {
@@ -427,7 +146,7 @@ $g = probe_spur(11, fn($i) => [0.0, 0.0]);
 $mitte = (int)$g[5][4];
 $schutz = spur_schutzpunkte($g, [$mitte + 5]);   // genau zwischen 5 und 6
 pruefe(in_array(5, $schutz, true) && !in_array(6, $schutz, true),
-       'Bei Gleichstand gewinnt der FRUEHERE Punkt (wie site_elevation_lib.php)',
+       'Bei Gleichstand gewinnt der FRUEHERE Punkt (wie EdOrtsdaten.ortshoehe())',
        'gewaehlt: ' . implode(',', $schutz) . ' (erwartet 0,5,10)');
 
 // (b) Eine Spur ganz ohne Hoehe darf nicht zu 100 % stehenbleiben.
@@ -465,204 +184,56 @@ pruefe(spur_ausduennung_pruefen($lang, $mitDeckel, []) === null
        'Der Abschnittsdeckel haelt die Zusage und behaelt hoechstens mehr',
        sprintf('mit Deckel %d, ohne %d Punkte', count($mitDeckel), count($ohneDeckel)));
 
-// (e) n_original ueberlebt die Ausduennung (E-S2-08).
-$eineSpur = null; $eineId = null; $einTyp = null;
-foreach ($vorher as $typ => $liste) {
-    foreach ($liste as $id => $punkte) {
-        if (count($punkte) > 50) { $eineSpur = $punkte; $eineId = $id; $einTyp = $typ; break 2; }
-    }
+/* ---- Teil 3 — Die SPUR2-Wege von spur_lib.php ----------------------------- */
+
+echo "\n  Teil 3 — Die Wege von spur_lib.php an den Stuecken (S11-12)\n";
+
+pruefe(!db_hat_tabelle($pdo, 'track_points') && !db_hat_tabelle($pdo, 'track_blobs'),
+       'Die Klartexttabellen gibt es nicht mehr (Migration 2026_10_19)',
+       'track_points, track_blobs');
+
+/* DIE PROBE LEGT IHRE STUECKE SELBST AN, in einer Transaktion, die am Ende
+ * zurueckrollt. Bis zum vierten Pruefstand von S11-12 suchte sie im
+ * Demo-Konto einen Einsatz mit mehreren Stuecken der Stufe 1 — die gibt es
+ * nach einem frischen Demo-Reset, nicht aber, sobald der Wartungslauf
+ * (ausgeloest von jeder Probe, die die Startseite oeffnet) die Spuren
+ * gepackt hat. Die Probe hing so am Zustand der Anlage, nicht am Code.
+ * Gemessen wird an einem Eigentuemer ohne Zeile in `missions`: Die Stuecke
+ * haengen an keinem Fremdschluessel, und die Funktionen fragen nur sie. */
+$pdo->beginTransaction();
+try {
+    $mid = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) + 1000000 FROM missions')->fetchColumn();
+    $h1 = random_bytes(146); $h2 = random_bytes(178);
+    spur2_stueck_schreiben($pdo, 'mission', $mid, 0, 10, 1783000000, 1783000540, $h1);
+    spur2_stueck_schreiben($pdo, 'mission', $mid, 10, 12, 1783000600, 1783001260, $h2);
+    $soll = ['n' => 2, 'p' => 22, 'b' => strlen($h1) + strlen($h2), 'v' => 1783000000, 'w' => 22];
+    pruefe(spur_stand($pdo, 'mission', $mid)['stufe'] === 1,
+           'Zwei Stuecke der Stufe 1 an einem Probeneigentuemer angelegt', "Einsatz $mid");
+    pruefe((spur_zahlen($pdo, 'mission', [$mid])[$mid] ?? -1) === $soll['p'],
+           'spur_zahlen() = Summe der Punkte der Stuecke', (string)$soll['p']);
+    pruefe(spur_naechste_seq($pdo, 'mission', $mid) === $soll['w'],
+           'spur_naechste_seq() = hoechstes seq_from + punkte', (string)$soll['w']);
+    $st = spur_stand($pdo, 'mission', $mid);
+    pruefe($st['stufe'] === 1 && !spur_ist_ausgeduennt($st) && $st['naechste_seq'] === $soll['w'],
+           'spur_stand(): Stufe 1, nicht ausgeduennt, dieselbe Marke', json_encode($st));
+    pruefe(spur_bytes($pdo, 'mission', [$mid]) === $soll['b'],
+           'spur_bytes() = Laenge der Huellen', (string)$soll['b']);
+    pruefe(spur_min_ts($pdo, 'mission', [$mid]) === $soll['v'],
+           'spur_min_ts() = fruehestes ts_von', (string)$soll['v']);
+    spur_zeit_verschieben($pdo, 'mission', [$mid], 3600);
+    pruefe(spur_min_ts($pdo, 'mission', [$mid]) === $soll['v'] + 3600,
+           'spur_zeit_verschieben(+3600) verschiebt ts_von', '');
+    $weg = spur_loeschen($pdo, 'mission', [$mid]);
+    pruefe($weg['stuecke'] === $soll['n']
+           && (spur_zahlen($pdo, 'mission', [$mid])[$mid] ?? 0) === 0
+           && spur_stand($pdo, 'mission', $mid)['stufe'] === 1,
+           'spur_loeschen() nimmt jedes Stueck', $weg['stuecke'] . ' Stuecke');
+} finally {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
 }
-if ($eineSpur !== null) {
-    $k = spur_ausduennen($eineSpur, spur_schutzzeiten($pdo, $einTyp, $eineId));
-    $d = []; foreach ($k as $i) { $d[] = $eineSpur[$i]; }
-    $kopf = spur_kopf(spur_kodieren($d, SPUR_STUFE_DUENN, count($eineSpur)));
-    pruefe($kopf['n_original'] === count($eineSpur)
-           && $kopf['n'] === count($d)
-           && $kopf['stufe'] === SPUR_STUFE_DUENN,
-           'Der Stufe-3-Kopf traegt n_original der VOLLEN Spur (E-S2-08)',
-           "n_original={$kopf['n_original']} (Spur " . count($eineSpur) . "), "
-           . "n={$kopf['n']}, stufe={$kopf['stufe']}");
-}
-
-/* ---- Teil 6 — Schnitt und Nachlieferung (S4/A2, E-S4-53) ------------------
- *
- * DER PRUEFFALL, DEN DAS KONZEPT VERLANGT (Abschnitt 14, offener Punkt 4):
- * Schnitt, dann Nachlieferung — die geschnittenen Punkte kommen nicht wieder,
- * die spaeteren schon.
- *
- * ER LAEUFT AUF EINER EIGENS ANGELEGTEN KULISSE und nicht auf dem Bestand.
- * Der Grund ist der Fall selbst: Er braucht ein Ruhesegment mit bekannter
- * Zeitachse, einen Einsatz als Ziel und einen Punktvorrat, der beim Schnitt
- * absichtlich nur zur HAELFTE geliefert ist — die andere Haelfte liegt im
- * Puffer des Geraets, und genau um sie geht es. So etwas liefert kein
- * gewachsener Bestand. Alles laeuft in einer Transaktion, die am Ende
- * zurueckgerollt wird.
- */
-echo "\n  Teil 6 — Schnitt und Nachlieferung (E-S4-53)\n";
-
-$hatSchnitte = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables
-                                  WHERE table_schema = DATABASE()
-                                    AND table_name = 'track_cuts'")->fetchColumn() > 0;
-pruefe($hatSchnitte, 'Tabelle track_cuts vorhanden',
-       $hatSchnitte ? '' : 'Migrationslauf ueber Betrieb -> Updates (2026_09_02_schnitte)');
-
-if ($hatSchnitte) {
-    $pdo->exec('SAVEPOINT teil6');
-    try {
-        $t0 = 1756700000;          // fest, damit die Zahlen reproduzierbar sind
-        $pdo->prepare('INSERT INTO days (user_id, day) VALUES (?, ?)')
-            ->execute([$uid, '2026-09-02']);
-        $dayId = (int)$pdo->lastInsertId();
-        $pdo->prepare('INSERT INTO rest_segments (user_id, client_ref, day_id, started_at)
-                       VALUES (?, ?, ?, FROM_UNIXTIME(?))')
-            ->execute([$uid, 'probe-rest', $dayId, $t0]);
-        $segId = (int)$pdo->lastInsertId();
-        /* `origin` bekommt den WERT 'manual' (Herkunft), `uhr_gesperrt` die 1
-           (Uhr-Sperre). Zwei verschiedene Dinge, seit Nr. 238 auch zwei
-           verschiedene Woerter. */
-        $pdo->prepare('INSERT INTO missions (user_id, client_ref, day_id, started_at, origin, uhr_gesperrt)
-                       VALUES (?, ?, ?, FROM_UNIXTIME(?), ?, 1)')
-            ->execute([$uid, 'probe-mission', $dayId, $t0 + 300, 'manual']);
-        $misId = (int)$pdo->lastInsertId();
-
-        /* 600 Punkte im Sekundentakt waeren der volle Dienst; beim Schnitt
-         * sind erst 350 geliefert (seq 0..349). Geschnitten wird
-         * [t0+300, t0+399] — davon liegen 50 Punkte da (seq 300..349) und 50
-         * noch im Geraet. */
-        $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
-                              VALUES (?,?,?,?,?,?,?)');
-        for ($i = 0; $i < 350; $i++) {
-            $ins->execute(['rest', $segId, $i, 48.0 + $i * 0.0001, 11.0 + $i * 0.0001,
-                           500.0, $t0 + $i]);
-        }
-        pruefe(count(spur_lesen($pdo, 'rest', $segId)) === 350,
-               'Kulisse steht: Ruhesegment mit gelieferten Punkten', '350 Punkte, seq 0..349');
-
-        $markeVorher = spur_naechste_seq($pdo, 'rest', $segId);
-
-        /* ---- Der Schnitt ------------------------------------------------- */
-        $erg = spur_teilen($pdo, 'rest', $segId, 'mission', $misId, $t0 + 300, $t0 + 399);
-        schnitt_vermerken($pdo, $uid, 'rest', $segId, $misId, $t0 + 300, $t0 + 399,
-                          $erg['genommen']);
-
-        pruefe($erg['genommen'] === 50 && $erg['geblieben'] === 300,
-               'Der Schnitt nimmt genau den Zeitbereich',
-               "genommen {$erg['genommen']}, geblieben {$erg['geblieben']} (erwartet 50/300)");
-        pruefe(count(spur_lesen($pdo, 'mission', $misId)) === 50,
-               'Die Punkte stehen danach im Einsatz', '50 Punkte');
-        pruefe(count(spur_lesen($pdo, 'rest', $segId)) === 300,
-               'und nicht mehr im Segment — sie wandern, sie werden nicht kopiert',
-               '300 Punkte');
-
-        $markeNachher = spur_naechste_seq($pdo, 'rest', $segId);
-        pruefe($markeNachher >= $markeVorher,
-               'Die Fortsetzungsmarke faellt durch den Schnitt nicht zurueck',
-               "vorher $markeVorher, nachher $markeNachher");
-
-        $schnitte = schnitte_lesen($pdo, 'rest', $segId);
-        pruefe(count($schnitte) === 1
-               && $schnitte[0]['von_ts'] === $t0 + 300
-               && $schnitte[0]['bis_ts'] === $t0 + 399,
-               'Der Sperrvermerk steht und nennt den Zeitraum',
-               count($schnitte) . ' Vermerk(e), '
-               . ($schnitte ? ($schnitte[0]['bis_ts'] - $schnitte[0]['von_ts'] + 1) . ' s' : '—'));
-
-        /* ---- Die Nachlieferung ------------------------------------------- *
-         *
-         * Das Geraet setzt bei seiner Marke fort und sendet die restlichen
-         * 250 Punkte (ts t0+350 .. t0+599). 50 davon liegen im geschnittenen
-         * Bereich, 200 dahinter. Nachgebaut ist der Weg aus ingest.php:
-         * Sequenz aus `seq_from`, dann `n_original`, dann die Sperrpruefung. */
-        $stand    = spur_stand($pdo, 'rest', $segId);
-        $seqFrom  = $markeNachher;
-        $genommen = 0; $gesperrt = 0; $wiederholt = 0;
-        for ($i = 350; $i < 600; $i++) {
-            $seq = $seqFrom + ($i - 350);
-            $ts  = $t0 + $i;
-            if ($seq < $stand['n_original']) { $wiederholt++; continue; }
-            if (schnitt_gesperrt($schnitte, $ts)) { $gesperrt++; continue; }
-            $ins->execute(['rest', $segId, $seq, 48.0 + $i * 0.0001, 11.0 + $i * 0.0001,
-                           500.0, $ts]);
-            $genommen++;
-        }
-        pruefe($gesperrt === 50,
-               'Nachgelieferte Punkte des geschnittenen Bereichs werden verworfen',
-               "$gesperrt von 250 gesperrt (erwartet 50)");
-        pruefe($genommen === 200,
-               'Alles ausserhalb des Bereichs kommt normal an',
-               "$genommen von 250 angenommen (erwartet 200)");
-        pruefe(count(spur_lesen($pdo, 'rest', $segId)) === 500,
-               'Das Segment traegt danach Ruhe vor UND nach dem Einsatz',
-               '500 Punkte (300 vorher + 200 nachher)');
-        pruefe(count(spur_lesen($pdo, 'mission', $misId)) === 50,
-               'Der Einsatz hat dabei keinen Punkt dazubekommen', '50 Punkte');
-
-        /* Und der zweite Boden getrennt nachgewiesen: Eine Uhr, die ihre
-         * Marke verloren hat, sendet ab 0 neu. Diese Punkte faengt
-         * `n_original` ab — nicht der Vermerk. */
-        $nOrig = (int)spur_stand($pdo, 'rest', $segId)['n_original'];
-        $abgefangen = 0;
-        for ($i = 0; $i < 350; $i++) { if ($i < $nOrig) { $abgefangen++; } }
-        pruefe($abgefangen === 350,
-               'Eine Uhr, die ab 0 neu sendet, laeuft vollstaendig in n_original',
-               "$abgefangen von 350 abgefangen (n_original = $nOrig)");
-
-        /* ---- Rueckgaengig (E-S4-17) --------------------------------------- *
-         *
-         * Die Punkte gehen zurueck, der Vermerk faellt. Das ist die Stelle,
-         * an der sich zeigt, ob `spur_teilen()` das Ziel ERGAENZT: Das
-         * Segment traegt inzwischen 500 Punkte, und ein Blob-Schreiben, das
-         * ersetzt statt zu mischen, liesse davon 50 uebrig. */
-        $vorherSeg = count(spur_lesen($pdo, 'rest', $segId));
-        $zur = spur_teilen($pdo, 'mission', $misId, 'rest', $segId, $t0, $t0 + 599);
-        schnitte_loeschen($pdo, 'ziel', [$misId]);
-
-        pruefe($zur['genommen'] === 50,
-               'Rueckgaengig holt genau die geschnittenen Punkte zurueck',
-               "{$zur['genommen']} Punkte (erwartet 50)");
-        pruefe(count(spur_lesen($pdo, 'rest', $segId)) === 550,
-               'Das Segment ist wieder vollstaendig — die 500 bleiben stehen',
-               'vorher ' . $vorherSeg . ', nachher '
-               . count(spur_lesen($pdo, 'rest', $segId)) . ' (erwartet 550)');
-        pruefe(count(spur_lesen($pdo, 'mission', $misId)) === 0,
-               'Der Einsatz traegt danach keine Punkte mehr', '0 Punkte');
-        pruefe(schnitte_lesen($pdo, 'rest', $segId) === [],
-               'Der Sperrvermerk ist mit aufgehoben — das Loch bleibt fuellbar',
-               '0 Vermerke');
-
-        /* Die Zeitfolge muss dabei aufsteigend geblieben sein: Die
-         * zurueckgegebenen Punkte liegen ZWISCHEN den vorhandenen, nicht
-         * hinten dran. Ein Blob mit ungeordneten Zeiten faellt sonst erst in
-         * der Karte auf. */
-        $zurueck = spur_lesen($pdo, 'rest', $segId);
-        $unsortiert = 0;
-        for ($i = 1; $i < count($zurueck); $i++) {
-            if ((int)$zurueck[$i][4] < (int)$zurueck[$i - 1][4]) { $unsortiert++; }
-        }
-        pruefe($unsortiert === 0,
-               'Die vereinigte Spur ist zeitlich aufsteigend',
-               "$unsortiert Rueckspruenge in " . count($zurueck) . " Punkten");
-
-        /* ---- Der Randfall: alles wandert ---------------------------------- */
-        $erg2 = spur_teilen($pdo, 'rest', $segId, 'mission', $misId, $t0, $t0 + 599);
-        pruefe($erg2['geblieben'] === 0 && count(spur_lesen($pdo, 'rest', $segId)) === 0,
-               'Ein Schnitt darf die ganze Spur nehmen', '0 Punkte im Segment');
-        pruefe(spur_naechste_seq($pdo, 'rest', $segId) >= $markeNachher,
-               'und die Fortsetzungsmarke bleibt trotzdem stehen (leerer Blob)',
-               'naechste_seq = ' . spur_naechste_seq($pdo, 'rest', $segId));
-
-        $pdo->exec('ROLLBACK TO SAVEPOINT teil6');
-        $uebrig = (int)$pdo->query("SELECT COUNT(*) FROM rest_segments WHERE id = $segId")->fetchColumn()
-                + (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE id = $misId")->fetchColumn();
-        pruefe($uebrig === 0, 'Der Prueffall ist rueckstandslos zurueckgerollt', '');
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) { $pdo->rollBack(); }
-        throw $e;
-    }
-}
-
-/* Die aeussere Klammer: auch der aufgesetzte Klartext geht wieder. */
-if ($pdo->inTransaction()) { $pdo->rollBack(); }
+pruefe((int)$pdo->query("SELECT COUNT(*) FROM track_stuecke WHERE owner_type = 'mission'
+                         AND owner_id = $mid")->fetchColumn() === 0,
+       'Nach dem Zurueckrollen liegt nichts', '');
 
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $erwartungen, $offen);
 exit($offen === 0 ? 0 : 1);

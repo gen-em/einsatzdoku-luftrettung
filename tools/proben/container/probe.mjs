@@ -18,7 +18,8 @@
  * DREI UMSETZUNGEN, EINE WAHRHEIT. Genau wie die GPX-Probe (AP4) haelt diese
  * Probe unabhaengige Wege gegeneinander:
  *
- *   PHP      `spur_lib.php` kodiert echte SPUR1-Blobs (spuren_bauen.php)
+ *   PHP      baut Spurteile der Nutzlast 13 mit Punktlisten (spuren_bauen.php;
+ *            bis Web 22.7.0 SPUR1-Blobs aus `spur_lib.php`)
  *   Browser  `assets/crypto.js` + `assets/vendor/zipjs.min.js` versiegeln
  *            und packen — im ECHTEN Chromium, nicht in einem Nachbau
  *   Python   `vergleich/lesen.py` oeffnet und dekodiert wieder
@@ -62,7 +63,7 @@ console.log(`Containerprobe gegen ${BASIS}`);
 const futterRoh = execFileSync('php',
   [join(HIER, 'spuren_bauen.php'), '6', '300'], { encoding: 'utf8', maxBuffer: 1 << 28 });
 const futter = JSON.parse(futterRoh);
-console.log(`  Prueffutter aus spur_lib.php: ${futter.spuren.length} Spuren `
+console.log(`  Prueffutter (Nutzlast 13): ${futter.spuren.length} Spuren `
           + `zu je ${futter.punkte['1'].length} Punkten`);
 
 const ordner = mkdtempSync(join(tmpdir(), 'containerprobe-'));
@@ -276,11 +277,15 @@ try {
     /* ---- Formaterkennung ---- */
     berichte.art_zip  = EdCrypto.dateiArt(zipBytes);
     berichte.art_teil = EdCrypto.dateiArt(kopfBytes);
-    berichte.art_alt  = EdCrypto.dateiArt(await EdCrypto.sealBackup(pw, '{"a":1}', runden));
+    /* Eine einteilige Datei der Fassung 3 — seit Web 23 nur noch der Kopf
+       und Fuellbytes: `sealBackup()` ist mit S11-12 gefallen, die Erkennung
+       bleibt, damit die Ablehnung sagen kann, was die Datei ist. */
+    const alt = new Uint8Array(64);
+    alt.set(te.encode('EDBAK2'), 0); alt[7] = 3;
+    berichte.art_alt  = EdCrypto.dateiArt(alt);
     berichte.art_fremd = EdCrypto.dateiArt(te.encode('irgendein anderer Dateiinhalt hier'));
     berichte.ist_backup_zip  = EdCrypto.isBackupFile(zipBytes);
     berichte.ist_backup_teil = EdCrypto.isBackupFile(kopfBytes);
-    berichte.teil_als_datei = await scheitert(() => EdCrypto.openBackup(pw, kopfBytes));
 
     return { berichte, kennung, manifest,
              zipB64: EdCrypto.toB64Gross(zipBytes),
@@ -330,15 +335,10 @@ try {
          `${b.art_zip} / ${b.art_teil} / ${b.art_alt} / ${b.art_fremd}`);
   pruefe(b.ist_backup_zip && b.ist_backup_teil,
          'ZIP und Teil gelten als Datei dieser Anwendung');
-  /* DER SUCHTEXT WAR SEIT LANGEM FALSCH und die Zeile damit dauerhaft rot:
-     Gesucht wurde „Teil einer mehrteiligen", die Meldung in `crypto.js` sagt
-     aber „einzelnes Teil eines mehrteiligen Backups". Ein Prueffall, der eine
-     Zeichenkette sucht, die es nicht gibt, prueft nichts — er meldet nur.
-     Gefunden bei R64/AP2, als die Containerprobe zur Abnahme gehoerte.
-     Gesucht wird jetzt der unveraenderliche Kern der Aussage. */
-  pruefe(/mehrteiligen Backups/.test(b.teil_als_datei || ''),
-         'Ein einzeln geoeffnetes Teil sagt, dass es ein Teil ist',
-         (b.teil_als_datei || '').slice(0, 46) + '…');
+  /* „Ein einzeln geoeffnetes Teil sagt, dass es ein Teil ist" stand hier bis
+     Web 22.7.0 und fragte `openBackup()`. Die Funktion ist mit S11-12
+     gefallen; die Meldung gibt jetzt `einstellungen.php` an der Art 'teil'
+     (oben: die Erkennung). */
 
   /* ---- Die Datei auf die Platte, dann Python ----------------------------- */
 

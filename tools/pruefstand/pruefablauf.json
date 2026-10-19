@@ -192,11 +192,6 @@
       "braucht": "installation",
       "bemerkung": "S11-07: der Wartungslauf — Liste der faelligen Spuren (Abschluss, Frist 31 Tage knapp davor und danach, Papierkorb, Altbestand, juengerer Schnitt) und Tausch mit jedem Ablehnungsgrund, in einer Transaktion auf dem Demo-Konto, die zurueckgerollt wird."
     },
-    "ortsumzugprobe": {
-      "aufruf": "bash tools/proben/proben.sh ortsumzug",
-      "braucht": "installation",
-      "bemerkung": "S11-10: das Einmalwerkzeug — Altbestand im Klartext (Phasenorte, Reanimation, Transportziel, Hoehe, track_points, SPUR1 Stufe 2 und 3, Papierkorb, schon vorhandene Huelle) zieht ueber den stillen Lauf der Startseite in Huellen und Blob; geoeffnet gleich wie vorher, Waechter, zweiter Lauf. Legt ein Wegwerfkonto umlauf-ortsumzug an und loescht es."
-    },
     "uhr-krypto": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoreihe /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoprobe",
       "braucht": "uhr",
@@ -897,22 +892,6 @@
       ],
       "proben": [
         "wartungslaufprobe"
-      ],
-      "anlass": "Nr. 43"
-    },
-    {
-      "id": "ortsumzug",
-      "ab": "klein",
-      "pfade": [
-        "server/api/ortsumzug.php",
-        "server/ortsumzug_lib.php",
-        "server/assets/ortsumzug.js",
-        "server/assets/ortsdaten.js",
-        "server/spur_lib.php",
-        "tools/proben/ortsumzug/**"
-      ],
-      "proben": [
-        "ortsumzugprobe"
       ],
       "anlass": "Nr. 43"
     },

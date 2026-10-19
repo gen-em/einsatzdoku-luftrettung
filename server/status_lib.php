@@ -521,30 +521,6 @@ function status_erhebung(): array
         $kdfVerwaist !== [] ? 'Anmeldung blockiert'
             : ($kdfAlt > 0 ? 'Übergang läuft' : 'in Ordnung'));
 
-    /* DER ALTBESTAND IM KLARTEXT (S11-10, E-S11-19). Bis er umgezogen ist,
-     * zeigen die betroffenen Einsätze keine Karte, und die Aufräummigration
-     * verweigert. Umziehen kann nur der Browser des Kontos: beim nächsten
-     * Öffnen der Startseite nach dem Entsperren (`assets/ortsumzug.js`).
-     * Orange, weil ein Konto, das sich nie anmeldet, nie umzieht — und das
-     * muss jemand sehen. Gezählt wird jede Zeile, keine Stichprobe. */
-    require_once __DIR__ . '/ortsumzug_lib.php';
-    $ouKonten = ou_konten($pdo);
-    if ($ouKonten === 0) {
-        $server[] = status_z('Ortsdaten', 'Kein Klartext mehr — GPS-Daten, Phasenorte, Reanimation und '
-            . 'Transportziel liegen verschlossen', 'blau', 'verschlossen');
-    } else {
-        $ouZ = ou_zaehlung($pdo);
-        $server[] = status_z('Ortsdaten',
-            zahl_text($ouKonten) . ($ouKonten === 1 ? ' Konto hat' : ' Konten haben')
-            . ' noch Klartext: ' . zahl_text($ouZ['mission_phases.lat/lon']) . ' Phasenorte, '
-            . zahl_text($ouZ['resus_sessions']) . ' Reanimationen, '
-            . zahl_text(max($ouZ['missions.transport_dest'], $ouZ['missions.dest_lat/lon'], $ouZ['missions.site_ele_m']))
-            . ' Einsätze mit Ziel oder Höhe, ' . zahl_text($ouZ['track_points']) . ' GPS-Punkte und '
-            . zahl_text($ouZ['track_blobs']) . ' gepackte Aufzeichnungen. Er zieht um, sobald das Konto '
-            . 'die Startseite entsperrt öffnet',
-            'orange', 'Umzug offen');
-    }
-
     /* Dass diese Seite überhaupt antwortet, beweist die Erreichbarkeit — die
        Zeile sagt deshalb die GRÖSSE. „Nicht erreichbar" käme nie zur Anzeige;
        es gäbe keine Seite. */
