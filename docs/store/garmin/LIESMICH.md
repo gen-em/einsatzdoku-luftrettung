@@ -12,7 +12,8 @@ er enthielt nur die Bildschirmfotos.*
 |---|---|---|
 | `cover.png` | Cover Image (Web/Mobile) | 500 × 500 px, PNG, 24 KB (Grenze 300 KB) |
 | `hero.png` | Hero Image | 1440 × 720 px, PNG, 76 KB (Grenze 2048 KB) |
-| `uhr/…/*.png` | Screen Images | 800 × 800 px, PNG — **zu groß**, siehe unten |
+| `uhr-store/…/*.png` | Screen Images — **diese hochladen** | 800 × 800 px, PNG mit 256 Farben, 63 bis 113 KB (Grenze 150 KB) |
+| `uhr/…/*.png` | — | Vorlage in voller Farbtiefe, für den Store zu groß |
 | `quellen/*.html` | — | Vorlagen für Cover und Hero |
 
 ## Cover und Hero
@@ -90,11 +91,23 @@ fällt „derzeit nur auf Einladung".
 
 ## Bildschirmfotos
 
-**Zu groß für den Store.** Der Store nimmt je Bild höchstens 150 KB
-(153 600 Byte); alle 21 Bilder liegen darüber — gemessen am 19.10.2026,
-kleinstes 155 967 Byte, größtes 266 938 Byte. Vor dem Hochladen
-verkleinern (Farbpalette reduzieren oder als JPG); die Dateien hier bleiben
-die Vorlage in voller Güte.
+**Hochgeladen wird `uhr-store/`, nicht `uhr/`.** Der Store nimmt je Bild
+höchstens 150 KB (153 600 Byte). Die Vorlagen unter `uhr/` liegen alle
+darüber (155 967 bis 266 938 Byte); `uhr-store/` hält dieselben 21 Bilder in
+derselben Größe, auf 256 Farben reduziert:
+
+```
+convert uhr/<geraet>/<datei>.png -dither FloydSteinberg -colors 256 -strip \
+        PNG8:uhr-store/<geraet>/<datei>.png
+```
+
+Gemessen am 19.10.2026: 21 von 21 unter der Grenze (63 048 bis 112 644
+Byte), alle 800 × 800 px, kleinster Abstand zur Vorlage **PSNR 43,1 dB**
+(`fr965/4_rea_timer.png`); dieses und `fr965/3_zeiten.png` neben der
+Vorlage angesehen, kein Unterschied sichtbar. Ein JPG wäre kleiner, aber
+schlechter (PSNR 40,8 dB an `fr965/3_zeiten.png`) — Schrift auf Schwarz
+franst darin aus. **Wer eine Vorlage unter `uhr/` ersetzt, erzeugt die
+Store-Fassung neu.**
 
 Sieben Ansichten auf drei Uhren, die die drei Bauformen der Zielgeräte
 vertreten:
