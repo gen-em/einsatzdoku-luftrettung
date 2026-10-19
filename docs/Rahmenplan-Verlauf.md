@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 161 | 19.10.2026 | Zuarbeit 6.3 | Entwurf der Datenschutzerklärung für den Stand nach S11 in `docs/rechtstexte/`; die vier Zeilen zur Datenschutzerklärung in 6.3 sind eine, sie wartet auf Platzhalter, Rechtsprüfung und S11 auf Produktiv. Die Bausteine aus P5b sind darin aufgegangen und gelöscht. |
 | 160 | 11.10.2026 | Nr. 236 erledigt | Zuarbeit „Nr. 236 nachmessen" aus 6.1 fort: Auslieferung, Stufe 2, Wache und beide App-Probeläufe grün auf `ubuntu-26.04`; Kopf auf S11-01. |
 | 159 | 11.10.2026 | Nr. 236 | Zuarbeit 6.1: Nachmessung auf `ubuntu-26.04` nach dem Merge von #104. Berichtigt: Der Kopf nannte #103 offen und `update.php` auf Staging fällig — beides erledigt; 6.1 führte den Tag `web-v21.14.0` als offen, er ist seit dem 05.10.2026 ausgeliefert (Lauf 114). |
 | 158 | 11.10.2026 | 12a freigegeben | Konzept S11 von der Betreiberin freigegeben; Fahrplanzeile 12a auf „freigegeben", Kopf: als Nächstes S11-01. Alle Fragen beantwortet, zuletzt Q-S11-15 (ausgedünnt wird nach 31 Tagen, E-S11-25). |
