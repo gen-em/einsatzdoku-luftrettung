@@ -187,7 +187,12 @@ if (isset($_GET['bestaetigen'])) {
                  'attr' => ' autocomplete="off" autocapitalize="characters" spellcheck="false" autofocus required',
                  'klein' => 'Jeder Code gilt einmal.']);
     } else {
-        ui_feld(['name' => 'code', 'label' => 'Code aus der App', 'klasse' => 'feld-code',
+        /* DIE ID TRAEGT „totp" (Web 22.7.1): Bitwarden erkennt das Feld in
+           Firefox nur an einem Stichwort in id, Name oder Beschriftung —
+           Firefox reicht autocomplete="one-time-code" nicht weiter, und
+           „code" allein gilt als mehrdeutig. Der Name bleibt `code`, weil er
+           an den Server geht und die Prüfmittel ihn füllen. */
+        ui_feld(['name' => 'code', 'id' => 'f-totp', 'label' => 'Code aus der App', 'klasse' => 'feld-code',
                  'platzhalter' => '000 000',
                  'attr' => ' inputmode="numeric" autocomplete="one-time-code" autofocus required']);
     } ?>

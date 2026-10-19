@@ -1001,7 +1001,12 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
                  'klein' => 'Jeder Code gilt einmal. Danach unter Einstellungen → Profil '
                           . 'den Zweitfaktor neu einrichten.']);
     } else {
-        ui_feld(['name' => 'code', 'label' => 'Code aus der App', 'klasse' => 'feld-code',
+        /* DIE ID TRAEGT „totp" (Web 22.7.1): Bitwarden erkennt das Feld in
+           Firefox nur an einem Stichwort in id, Name oder Beschriftung —
+           Firefox reicht autocomplete="one-time-code" nicht weiter, und
+           „code" allein gilt als mehrdeutig. Der Name bleibt `code`, weil er
+           an den Server geht und die Prüfmittel ihn füllen. */
+        ui_feld(['name' => 'code', 'id' => 'f-totp', 'label' => 'Code aus der App', 'klasse' => 'feld-code',
                  'platzhalter' => '000 000',
                  'attr' => ' inputmode="numeric" autocomplete="one-time-code" autofocus required']);
         /* DER HAKEN „GERAET MERKEN" (SR-02, E-SR-15, -17, -18): nur hier,

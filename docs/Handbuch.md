@@ -804,7 +804,9 @@ erzeugen"** gibt dir zehn neue; die alten und ein gedrucktes Blatt gelten dann
 nicht mehr. Die Karte zeigt, wie viele noch offen sind („8 von 10").
 
 **Anmelden.** Nach dem Passwort fragt die Seite nach dem **Code aus der App**;
-Leerzeichen sind egal. Du hast dafür **fünf Minuten**, danach beginnt die
+Leerzeichen sind egal. Ein Passwortmanager mit gespeichertem Einmalcode
+(etwa Bitwarden) bietet ihn am Feld zum Einfüllen an, seit Web 22.7.1 auch in
+Firefox. Du hast dafür **fünf Minuten**, danach beginnt die
 Anmeldung von vorn. **Jeder Code gilt einmal:** Meldest du dich zweimal kurz
 hintereinander an, nimm beim zweiten Mal den nächsten Code der App.
 **Kein Handy zur Hand?** „Wiederherstellungscode verwenden" und einen Code vom
