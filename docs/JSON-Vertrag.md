@@ -499,9 +499,10 @@ sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
 - **Diensttag:** Feld `day` (Format `YYYY-MM-DD`), ein **Ortsdatum**. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1). **Die beiden Clients bilden es verschieden, und das ist erlaubt:** Die Uhr nimmt den Tag des jeweiligen Datensatzes (`Util.localDay()` beim Einsatz- bzw. Segmentbeginn), die Handy-App den Tag des **Dienstbeginns** für alle Pakete des Dienstes (`Dienstklammer.kt`). Bis zur Wiederaufnahme der zweiten Gegenprüfung stand hier die zweite Variante als einzige — sie beschrieb einen Uhr-Code, den es seit `52f0191` nicht mehr gibt. Wer eine Regel daraus ableiten will, muss wissen: **Der Abstand zwischen `day` und den Zeitstempeln eines Pakets ist nach oben nicht begrenzt.** Ein Dienst hat keine Höchstdauer, und ein zweiter Dienstbeginn bei laufendem Dienst setzt in der Handy-App den alten fort (E-R45-13). Der Server verlässt sich deshalb nirgends darauf (`docs/Technik.md` 4.99a2).
 - **Nachzügler:** Bei fehlender Verbindung puffert die Uhr und sendet später identisch nach — keine Sonderfelder nötig.
 - **Die Ablage auf dem Server geht die Uhr nichts an** (Nachtrag S2, ohne
-  Vertragsänderung). Seit Web 10.0.0 liegen Spurpunkte je nach Alter als
-  Zeilen in `track_points` **oder** als komprimierter Blob in `track_blobs`
-  (Format SPUR1), und seit Web 10.2.0 werden sie sechs Monate nach Einsatzende
+  Vertragsänderung). Seit Web 22 liegen Spurpunkte als verschlossene Stücke
+  in `track_stuecke`, seit Web 23 nur noch dort (bis Web 22.7.0 daneben der
+  Altbestand, je nach Alter als Zeilen in `track_points` oder als SPUR1-Blob
+  in `track_blobs`), und sechs Monate nach Einsatzende werden sie im Browser
   ausgedünnt. **Am Vertrag ändert das nichts:** Die Uhr sendet unverändert
   Punkte mit `seq`, und der Server antwortet unverändert mit `next_seq`. Was
   sich geändert hat, ist die *Bedeutung* von `next_seq` — beschrieben in
@@ -694,8 +695,8 @@ Hand synchron gehalten. Eine neue Art ist deshalb an *drei* Stellen zu
 ergänzen — und diese hier zuerst, damit nachvollziehbar bleibt, was gilt.
 
 Die Uhr-App führt bewusst eine **Teilmenge**: `beginn` kennt sie nicht, weil
-der Beginn einer Reanimation dort über `resus_sessions[].started_at` übertragen
-wird. Ein Client *darf* weniger Arten erzeugen als der Vertrag kennt; er darf
+der Beginn einer Reanimation dort als Beginn der Sitzung übertragen wird
+(`rea[].t` in der Einsatzhülle; bis Uhr 3.1.0 `resus_sessions[].started_at`). Ein Client *darf* weniger Arten erzeugen als der Vertrag kennt; er darf
 keine erzeugen, die nicht darin stehen.
 
 Unbekannte Arten werden vom Server verworfen und gemeldet; ein freier Text

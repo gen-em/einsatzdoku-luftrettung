@@ -128,11 +128,8 @@ try {
     $pdo->prepare('UPDATE missions SET final = 1, deleted_at = UTC_TIMESTAMP() WHERE id = ?')->execute([$mid]);
     pruefe(in_liste(spur2_faellig($pdo, $uid, 20, $jetzt), 'mission', $mid) === null, 'im Papierkorb: nicht in der Liste');
     $pdo->prepare('UPDATE missions SET deleted_at = NULL WHERE id = ?')->execute([$mid]);
-    $pdo->exec('SAVEPOINT altbestand');
-    $pdo->prepare("INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
-                   VALUES ('mission', ?, 999999, 47.5, 11.0, NULL, 1)")->execute([$mid]);
-    pruefe(in_liste(spur2_faellig($pdo, $uid, 20, $jetzt), 'mission', $mid) === null, 'mit Altbestand: nicht in der Liste (E-S11-70)');
-    $pdo->exec('ROLLBACK TO SAVEPOINT altbestand');
+    /* Hier stand bis Web 22.7.0 der Fall „mit Altbestand (track_points):
+     * nicht in der Liste" (E-S11-70). Die Tabelle gibt es nicht mehr. */
     pruefe(count(spur2_faellig($pdo, $uid, 20, $jetzt)) <= SPUR2_WARTUNG_MAX, 'höchstens ' . SPUR2_WARTUNG_MAX . ' je Anfrage');
     $z = spur2_faellig_zahl($pdo, $uid, $jetzt);
     pruefe($z['aufzeichnungen'] === 1 && $z['diensttage'] === 1, 'Zahl: 1 Aufzeichnung aus 1 Diensttag', json_encode($z));

@@ -355,10 +355,9 @@ echo "\n  Teil 4 — Stufe 3: verwerfen, aber quittieren (E-S2-08)\n";
 $n = 210;
 stueck_zusammenfuegen($pdo, $mid, 'probe-1', $n, 50, 3);
 $stand = spur_stand($pdo, 'mission', $mid);
-pruefe($stand['stufe'] === SPUR_STUFE_DUENN && $stand['n_original'] === $n,
+pruefe($stand['stufe'] === SPUR2_STUFE_DUENN && $stand['n_original'] === $n,
        'Spur ist ausgeduennt, n_original steht',
-       "stufe {$stand['stufe']}, n_original {$stand['n_original']}, "
-       . "gespeichert {$stand['n_gespeichert']}");
+       "stufe {$stand['stufe']}, n_original {$stand['n_original']}");
 
 $f = senden(paket('probe-1', $n, 10, true));
 pruefe(($f['daten']['dropped_points'] ?? -1) === 10

@@ -263,17 +263,17 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   Punktzahl, Zeitraum, Stufe), Strecke, Anstieg und Besatzungsnamen. Über
   die Zeiten findet einen Einsatz, wer weiß, wann er war — Ort, Spur,
   Klinik und Reanimation findet er nicht mehr.
-  **Mit vier Grenzen, die zur Zusage gehören:** (1) **Altbestand** von vor
-  Web 22 liegt im Klartext, bis der Browser des Kontos ihn umzieht
-  (Einmalwerkzeug, Statuszeile „Ortsdaten"); die alten Spalten fallen erst
-  mit der Aufräumauslieferung (S11-12). (2) **Sicherungen von vor S11**
-  tragen den Klartext, bis sie gelöscht sind (E-S11-10). (3) Die **Puffer
-  auf Garmin und Handy** sind Klartext bis zum Senden (Bedrohungsmodell,
-  Lage H). (4) Der öffentliche Schlüssel kommt **ohne zweiten Kanal** vom
+  **Mit zwei Grenzen, die zur Zusage gehören:** (1) Die **Puffer auf
+  Garmin und Handy** sind Klartext bis zum Senden (Bedrohungsmodell,
+  Lage H). (2) Der öffentliche Schlüssel kommt **ohne zweiten Kanal** vom
   Server; wer den Server beschreibt, tauscht ihn. Wer die Zusage zitiert,
   zitiert diesen Absatz vollständig oder gar nicht. *(Bis S11-11 stand
   hier, Spur, Phasenkoordinaten, Reanimation und Transportziel lägen im
-  Klartext — das war der Stand bis Web 21.)*
+  Klartext — das war der Stand bis Web 21. Bis Web 22.7.0 standen hier
+  vier Grenzen: dazu der Altbestand im Klartext bis zum Umzug und
+  Sicherungen von vor S11. Seit Web 23 (S11-12) gibt es weder Spalten
+  noch Tabellen für Klartext-Ortsdaten, und eine Sicherung unter
+  Nutzlast 13 lässt sich nicht mehr einspielen.)*
   **Der Weg ins Blob führt über den Feldkatalog** (`'store' => 'pat'` in
   `mission_fields.php`), nicht über handgeschriebenes Markup: `mf_ist_spalte()`
   nimmt ein solches Feld dann von selbst aus jedem `SELECT`, `INSERT` und
@@ -346,14 +346,15 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   ist die eine proprietäre Bibliothek des Projekts auf eine Datei begrenzt
   (`docs/Lizenzen.md` 6a). Ein Aufruf am Weg vorbei ist ein Fehler.
 - **Spuren nur über `spur_lib.php`.** Seit Web 22 liegen GPS-Punkte als
-  verschlossene Stücke in `track_stuecke` (SPUR2, `spur2_…`); bis zur
-  Aufräumauslieferung (S11-12) daneben der Altbestand: seit Web 10.0.0 je
-  nach Alter als Zeilen in `track_points` **oder** als Blob in `track_blobs`
-  (Format SPUR1) — und während einer Nachlieferung als beides. Wer eine der
-  beiden Tabellen unmittelbar per SQL liest, schreibt oder löscht, zeigt oder
-  hinterlässt früher oder später eine halbe Spur, und zwar ohne
-  Fehlermeldung. Es gibt genau einen Weg: `spur_lesen()`,
-  `spur_lesen_viele()`, `spur_zahlen()`, `spur_naechste_seq()`,
+  verschlossene Stücke in `track_stuecke` (SPUR2, `spur2_…`), seit Web 23
+  nur noch dort (S11-12; bis dahin daneben der Altbestand als Zeilen in
+  `track_points` oder als SPUR1-Blob in `track_blobs`). Die Stücke hängen
+  an keinem Fremdschlüssel, und ein Stück trägt einen Ausschnitt einer
+  Spur samt Löschvermerken daneben; wer `track_stuecke` unmittelbar per SQL
+  liest, schreibt oder löscht, zeigt oder hinterlässt früher oder später
+  eine halbe Spur, und zwar ohne Fehlermeldung. Es gibt genau einen Weg:
+  `spur2_lesen()`, `spur2_lesen_viele()`, `spur2_stueck_schreiben()`,
+  `spur_zahlen()`, `spur_stand()`, `spur_naechste_seq()`,
   `spur_loeschen()`, `spur_zeit_verschieben()`. Ein neuer Verbraucher, der
   daran vorbeigeht, ist ein Fehler. Format und Begründung:
   `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/proben/spur/probe.php`.

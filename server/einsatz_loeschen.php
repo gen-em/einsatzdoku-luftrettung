@@ -47,8 +47,12 @@ ui_seite_start(['titel' => 'Einsatz löschen']);
              als Zeilen mit Plakette statt als Aufzaehlung (O11). */ ?>
     <?php
       foreach ([
+        /* „Reanimations-Protokolle" stand hier bis Web 22.7.0. Die
+         * Reanimation liegt seit Web 22 in der Einsatzhuelle, die der Server
+         * nicht oeffnet; die Zahl stand fuer jeden neuen Einsatz auf 0, und
+         * seit Web 23 gibt es ihre Tabelle nicht mehr. Sie zaehlt unter
+         * „alle erfassten Angaben" darunter. */
         ['Phasen-Zeitstempel',     (int)$scope['phasen']],
-        ['Reanimations-Protokolle', (int)$scope['reas']],
         ['GPS-Trackpunkte',        (int)$scope['punkte']],
       ] as [$was, $zahl]) {
           ui_zeile([

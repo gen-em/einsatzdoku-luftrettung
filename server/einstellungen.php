@@ -3414,8 +3414,10 @@ ui_seite_start(['titel' => 'Einstellungen',
      *
      * Seit S11 nimmt der Server Orte der Phasen, Reanimation und Spur nur
      * noch verschlossen an, Transportziel und Ortshöhe nur im `pat_blob`.
-     * Eine Sicherung trägt beides offen in ihrem verschlossenen Container —
-     * jede Fassung von 6 bis 13, und eine Freigabe der Verwaltung ebenso.
+     * Eine Sicherung der Nutzlast 13 trägt Orte, Reanimation und Punkte
+     * offen in ihrem verschlossenen Container, Transportziel und Ortshöhe im
+     * `pat`. (Bis Web 22.7.0 nahmen diese Helfer jede Nutzlast von 6 bis 13
+     * an, samt Klartextspalten und SPUR1 — S11-12, E-S11-85.)
      * Diese Helfer bringen es vor dem Senden in die Form, die der Server
      * annimmt, an EINER Stelle für beide Rückwege. Was er trotzdem im
      * Klartext bekommt, weist er mit 400 ab (`edbak_klartext_fund()`).
@@ -3465,31 +3467,14 @@ ui_seite_start(['titel' => 'Einstellungen',
 
     /**
      * Ein Einsatz der Datei → verschlossen. `z` zählt mit:
-     * verschlossen, mitgebracht (Hülle schon in der Datei), zielVerloren.
+     * verschlossen, mitgebracht (Hülle schon in der Datei).
      */
     async function rwEinsatz(m, z) {
       const ref = rwRef(m);
-      /* Transportziel und Ortshöhe in den Blob (wie der CSV-Import, S11-05e).
-         Ein Blob, den der Browser nicht öffnen kann, nimmt nichts auf — die
-         Angaben gehen dann verloren und werden gezählt. */
-      const ziel = (typeof m.transport_dest === 'string' && m.transport_dest.trim())
-        ? m.transport_dest : null;
-      const zLat = rwZahl(m.dest_lat), zLon = rwZahl(m.dest_lon), hoehe = rwZahl(m.site_ele_m);
-      if (ziel !== null || zLat !== null || hoehe !== null) {
-        if (!m.pat && m.pat_blob) {
-          z.zielVerloren++;
-        } else {
-          m.pat = m.pat || {};
-          if (!m.pat.transport_dest && (ziel !== null || zLat !== null)) {
-            m.pat.transport_dest = { addr: ziel || '' };
-            if (zLat !== null && zLon !== null) {
-              m.pat.transport_dest.lat = zLat; m.pat.transport_dest.lon = zLon;
-            }
-          }
-          if (m.pat.ortshoehe == null && hoehe !== null) { m.pat.ortshoehe = hoehe; }
-        }
-      }
-      m.transport_dest = null; m.dest_lat = null; m.dest_lon = null; m.site_ele_m = null;
+      /* Transportziel und Ortshöhe kommen im `pat` (Nutzlast 13). Bis
+         Web 22.7.0 zog dieser Helfer sie aus den Spalten älterer Dateien
+         hinein; eine Datei, die sie noch als Spalte trägt, weist der Server
+         ab (`edbak_klartext_fund()`). */
 
       const phasen = Array.isArray(m.phases) ? m.phases.filter((p) => p && typeof p === 'object') : [];
       const reas = Array.isArray(m.resus) ? m.resus : [];
@@ -3514,20 +3499,13 @@ ui_seite_start(['titel' => 'Einstellungen',
       for (const p of phasen) { delete p.lat; delete p.lon; }
       m.resus = [];
       delete m.ort_unlesbar;
-      /* Nutzlast 6 und 7: die Punkte im Eintrag. */
-      if (Array.isArray(m.track)) {
-        if (m.track.length) { m.spur_stuecke = await rwStuecke(m.track, 'spur', ref); }
-        delete m.track;
-      }
     }
 
-    /** Ein Ruhesegment der Datei → verschlossen (nur die Spur). */
+    /** Ein Ruhesegment der Datei: nur die Kennung (die Spur kommt im
+        Spurteil). Bis Web 22.7.0 verschloss es hier auch die Punkte einer
+        Nutzlast 6 oder 7. */
     async function rwRuhe(r) {
-      const ref = rwRef(r);
-      if (Array.isArray(r.track)) {
-        if (r.track.length) { r.spur_stuecke = await rwStuecke(r.track, 'ruhe', ref); }
-        delete r.track;
-      }
+      rwRef(r);
     }
 
     async function rwEintraege(teil, z) {
@@ -3536,9 +3514,9 @@ ui_seite_start(['titel' => 'Einstellungen',
     }
 
     /**
-     * Ein Spurteil verschlossen übertragen. Drei Formen kommen an: Punkte
-     * (Nutzlast 13), SPUR1-Blob (8 bis 12) und Stücke, wie sie in einer
-     * Kontosicherung ab S11-06c liegen. `karte` nennt je `spur_ref` Art,
+     * Ein Spurteil verschlossen übertragen. Zwei Formen kommen an: Punkte
+     * (Nutzlast 13) und Stücke, wie sie in einer Kontosicherung ab S11-06c
+     * liegen. (Bis Web 22.7.0 dazu SPUR1-Blobs der Nutzlast 8 bis 12.) `karte` nennt je `spur_ref` Art,
      * Kennung und `client_ref` im Zielkonto (`edbak_restore()`).
      *
      * ZWEI GRENZEN, NICHT EINE. Die Größe deckelt der POST (Z3: 2 MB); die
@@ -3549,8 +3527,8 @@ ui_seite_start(['titel' => 'Einstellungen',
      * `tools/proben/wiederherstellung/` hält sie zusammen.
      *
      * Eine lange Spur geht seit S11-06b über mehrere Anfragen (ein Punkt
-     * kostet verschlossen rund 19 Byte statt 4,8 als SPUR1); die Fortsetzung
-     * trägt `fortsetzung`, damit der Server sie nicht zweimal zählt.
+     * kostet verschlossen rund 19 Byte); die Fortsetzung trägt
+     * `fortsetzung`, damit der Server sie nicht zweimal zählt.
      */
     async function rwSpurteil(teil, karte, z, stueckeUm) {
       const HAPPEN = 800 * 1024;      // unter nginx' Vorgabe von 1 MB
@@ -3585,10 +3563,6 @@ ui_seite_start(['titel' => 'Einstellungen',
             stuecke = stueckeUm ? await stueckeUm(e, ziel, art) : e.stuecke;
           } else if (Array.isArray(e.punkte)) {
             stuecke = await rwStuecke(e.punkte, art, ziel.ref, stufe, Number(e.n_original) || 0);
-          } else if (e.blob) {
-            const x = await EdOrtsdaten.spur1Lesen(String(e.blob));
-            stufe = x.stufe;
-            stuecke = await rwStuecke(x.punkte, art, ziel.ref, stufe, x.nOriginal);
           } else {
             continue;
           }
@@ -3596,9 +3570,10 @@ ui_seite_start(['titel' => 'Einstellungen',
           z.abgelehnt.push(`${ziel.art} ${ziel.id}: ${err.message}`);
           continue;
         }
-        /* `fortsetzung` aus der Datei: eine Kontosicherung trägt Altbestand
-           und Stücke einer Spur als zwei Einträge (S11-06c). */
-        let eintrag = null, erstes = !e.fortsetzung;
+        /* Bis Web 22.7.0 kam `fortsetzung` auch aus der Datei: Eine
+           Kontosicherung trug Altbestand und Stücke einer Spur als zwei
+           Einträge (S11-06c). */
+        let eintrag = null, erstes = true;
         for (const st of stuecke) {
           const g = String(st.huelle || '').length + 120;
           if (happen.length && (groesse + g > HAPPEN || happen.length >= HAPPEN_ZAHL)) {
@@ -3616,16 +3591,13 @@ ui_seite_start(['titel' => 'Einstellungen',
       }
       await senden();
     }
-    const rwZaehler = () => ({ verschlossen: 0, mitgebracht: 0, zielVerloren: 0, geschrieben: 0,
+    const rwZaehler = () => ({ verschlossen: 0, mitgebracht: 0, geschrieben: 0,
                                uebersprungen: 0, abgelehnt: [], ohneZiel: 0 });
     /* Der Satz zu den Ortsdaten in der Abschlussmeldung. */
     const rwText = (z, mitgebrachtNennen) => (mitgebrachtNennen && z.mitgebracht
         ? ` ${z.mitgebracht} Einsätze brachten Orte und Reanimation verschlüsselt mit, weil `
           + 'sie sich beim Sichern nicht öffnen ließen; lesbar sind sie nur mit dem '
-          + 'Schlüsselpaar des Kontos, aus dem die Sicherung stammt.' : '')
-      + (z.zielVerloren
-        ? ` ACHTUNG: Bei ${z.zielVerloren} Einsätzen ließen sich Transportziel oder Ortshöhe `
-          + 'nicht übernehmen, weil ihre geschützten Angaben nicht lesbar sind.' : '');
+          + 'Schlüsselpaar des Kontos, aus dem die Sicherung stammt.' : '');
 
     /* ---- Zustandszeilen als Meldungen (E-P3-16) --------------------------
      *
@@ -4053,10 +4025,10 @@ ui_seite_start(['titel' => 'Einstellungen',
                      ein Zustandsbericht ist und kein Fehlertext. */
                   throw new Error(a.meldung + ' Es wurde KEINE Datei erzeugt.');
                 }
-                /* DIE FORM `punkte` (S11-06a): je Spur der Altbestand als
-                   Punkte und die verschlossenen Stücke. Beide kommen hier
-                   zusammen, nach Punktnummer; ein Stück, das nicht aufgeht,
-                   wird gemeldet wie bisher ein kaputter Blob. Die
+                /* DIE FORM `punkte` (S11-06a): je Spur die verschlossenen
+                   Stücke, geöffnet und nach Punktnummer entdoppelt; ein Stück,
+                   das nicht aufgeht, wird gemeldet. (Bis Web 22.7.0 kam der
+                   Altbestand als Klartextpunkte dazu.) Die
                    Sperrzeiten gehen NICHT ein: Die Sperrvermerke reisen am
                    Einsatz mit (`schnitte`) und sperren nach dem Einspielen
                    dieselben Punkte wieder; die Zahl im Kern zählt sie mit. */
@@ -4064,7 +4036,6 @@ ui_seite_start(['titel' => 'Einstellungen',
                 for (const [idText, s] of Object.entries(spuren)) {
                   const id = Number(idText);
                   const nach = new Map();
-                  for (const p of (s.punkte || [])) { nach.set(p[0], p); }
                   if (s.stuecke && s.stuecke.length) {
                     let offen;
                     try {
@@ -4299,15 +4270,10 @@ ui_seite_start(['titel' => 'Einstellungen',
                „Bereits systemweit vorhanden" war bis Web 20.47.0 die dritte
                und die einzige, die dieser Satz nannte (R39). */
             ? ` (${s.stammdaten_skipped} übersprungen: ohne passenden Standort oder unvollständig)` : '')
-        + '.' + uebersprungen + schnitte + papierkorb + (zusatz || '')
-        /* Die Höhenberechnung läuft seit Web 4.6.0 NACH dem Einspielen und
-         * kann einzeln scheitern, ohne die Wiederherstellung zu gefährden
-         * (M5-05). Wenn das passiert, gehört es gesagt — sonst fehlt später
-         * eine Höhenangabe ohne erkennbaren Grund. */
-        + (s.hoehe_fehler
-            ? ` Bei ${s.hoehe_fehler} Einsätzen ließ sich die Einsatzort-Höhe nicht `
-              + `berechnen; die Einsätze selbst sind vollständig übernommen.`
-            : '');
+        + '.' + uebersprungen + schnitte + papierkorb + (zusatz || '');
+        /* Hier stand bis Web 22.7.0 die Meldung zur Höhenberechnung nach dem
+         * Einspielen (M5-05). Die Höhe trägt seit Web 22 der `pat_blob`; der
+         * Server rechnet sie nicht mehr. */
     }
 
     // ---- Import: läuft vollständig im Browser ----
@@ -4415,20 +4381,28 @@ ui_seite_start(['titel' => 'Einstellungen',
                         + '.edbak-Datei auswählen.', 'fehler');
           return;
         }
+        /* NUR DIE MEHRTEILIGE DATEI MIT NUTZLAST 13 (S11-12, E-S11-85).
+           Die einteilige (`edbak`, bis Web 10) und jede Nutzlast unter 13
+           trugen Orte und Spur im Klartext; bis Web 22.7.0 verschloss dieser
+           Weg sie hier. Ältere Sicherungen gibt es nicht mehr. Der Server
+           fragt dieselbe Zahl noch einmal (`api/backup_restore.php`). */
+        if (art !== 'zip') {
+          melde(impState, 'Diese Backup-Datei hat das einteilige Format einer Fassung vor '
+                        + 'Web 11 und lässt sich seit Web 23 nicht mehr einspielen.', 'fehler');
+          return;
+        }
         impState.textContent = 'Datei wird geöffnet…';
-        /* ZWEI WEGE AB HIER. Die einteilige Datei geht auf wie immer; die
-           mehrteilige wird zuerst als Archiv geöffnet, ihr Manifest gelesen
-           und gegen die Teileliste gehalten — erst dann der Kern. */
-        let fassung4 = null;
-        let data;
-        if (art === 'zip') {
-          fassung4 = await fassung4Oeffnen(pw, bytes);
-          impState.textContent = `Backup vom ${(fassung4.manifest.erzeugt_am || '')
-            .slice(0, 10)} mit ${fassung4.eintragsteile.length} Eintrags- und `
-            + `${fassung4.spurteile.length} Spurteilen — Kopf wird geöffnet…`;
-          data = await fassung4.teilOeffnen(0);
-        } else {
-          data = await EdCrypto.openBackup(pw, bytes);
+        const fassung4 = await fassung4Oeffnen(pw, bytes);
+        impState.textContent = `Backup vom ${(fassung4.manifest.erzeugt_am || '')
+          .slice(0, 10)} mit ${fassung4.eintragsteile.length} Eintrags- und `
+          + `${fassung4.spurteile.length} Spurteilen — Kopf wird geöffnet…`;
+        const data = await fassung4.teilOeffnen(0);
+        if (!(Number(data.version) >= 13)) {
+          await fassung4.schliessen();
+          melde(impState, `Dieses Backup hat das Format ${Number(data.version) || '?'} und stammt `
+                        + 'aus einer Fassung vor Web 22.5.0. Seit Web 23 lassen sich nur noch '
+                        + 'Sicherungen ab Format 13 einspielen. Es wurde nichts geändert.', 'fehler');
+          return;
         }
 
         /* HERKUNFT DER DATEI NENNEN (M5-13) — sie steht im Kopf, bei beiden
@@ -4458,9 +4432,8 @@ ui_seite_start(['titel' => 'Einstellungen',
                               && PAT_KEY_CHECK === data.pat_key_check;
         let uebernommen = 0, uebernommenFremd = 0;
 
-        /* Geschützte Angaben für DIESES Konto neu verschlüsseln. Bei Fassung 4
-           geschieht das je Eintragsteil (unten); beim Altformat hier, weil
-           dort alles in einer Nutzlast steht. */
+        /* Geschützte Angaben für DIESES Konto neu verschlüsseln — je
+           Eintragsteil (unten). */
         async function patUmschluesseln(liste) {
           for (const m of (liste || [])) {
             if (m.pat && Object.keys(m.pat).length) {
@@ -4480,10 +4453,6 @@ ui_seite_start(['titel' => 'Einstellungen',
         /* Erst die Ortsdaten, dann die Umschlüsselung: Transportziel und
            Ortshöhe gehen in `pat`, bevor `pat` verschlüsselt wird. */
         const rz = rwZaehler();
-        if (!fassung4) {
-          await rwEintraege(data, rz);
-          await patUmschluesseln(data.missions);
-        }
         /* NUR FRAGEN, WENN ES ETWAS ZU FRAGEN GIBT (S2/AP5b, F-S2-D).
          *
          * Betroffen sind allein Einsätze, deren geschützte Angaben beim
@@ -4508,10 +4477,8 @@ ui_seite_start(['titel' => 'Einstellungen',
          * Fehlt die Zahl (Fassung-4-Datei aus einem Stand vor AP5b), wird
          * gefragt: „nicht erhoben" ist etwas anderes als „keine".
          */
-        const unlesbarLaut = fassung4 ? fassung4.manifest.unlesbar : undefined;
-        const fremdeAngaben = fassung4
-          ? (!gleichesKonto && (unlesbarLaut === undefined || unlesbarLaut > 0))
-          : uebernommenFremd > 0;
+        const unlesbarLaut = fassung4.manifest.unlesbar;
+        const fremdeAngaben = !gleichesKonto && (unlesbarLaut === undefined || unlesbarLaut > 0);
         if (fremdeAngaben) {
           // Die Prüfsumme sagt, OB die Angaben hier lesbar wären; der
           // user-Block sagt, WOHER sie kommen. Beides gehört in dieselbe
@@ -4541,7 +4508,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           }
         }
 
-        impState.textContent = fassung4 ? 'Kopf wird übertragen…' : 'Daten werden übertragen…';
+        impState.textContent = 'Kopf wird übertragen…';
         const res = await EdApi.postJson('api/backup_restore.php', data,
                                          { vorgang: 'Das Einspielen' });
         if (!res.ok) { throw new Error(res.meldung); }
@@ -4558,7 +4525,7 @@ ui_seite_start(['titel' => 'Einstellungen',
          * eine Summe über alle Fenster — sonst meldete die Anwendung die
          * Zahlen des letzten Fensters als Ergebnis des Ganzen. */
         const spurKarte = Object.assign({}, out.spur_karte || {});
-        if (fassung4 && fassung4.eintragsteile.length) {
+        if (fassung4.eintragsteile.length) {
           const dayMap = out.day_map || {};
           for (const [i, ti] of fassung4.eintragsteile.entries()) {
             impState.textContent = `Einträge werden übertragen `
@@ -4608,25 +4575,23 @@ ui_seite_start(['titel' => 'Einstellungen',
          * Beides ist kein Abbruch, aber beides gehört in die Rückmeldung:
          * Eine Wiederherstellung, die eine Spur still verliert, ist genau
          * das, wovor ein Backup schützen soll. */
-        if (fassung4 && fassung4.spurteile.length) {
+        if (fassung4.spurteile.length) {
           for (const [i, teilIndex] of fassung4.spurteile.entries()) {
             impState.textContent = `GPS-Daten werden übertragen `
               + `(Teil ${i + 1} von ${fassung4.spurteile.length})…`;
             await rwSpurteil(await fassung4.teilOeffnen(teilIndex), spurKarte, rz);
           }
         }
-        if (fassung4) { await fassung4.schliessen(); }
+        await fassung4.schliessen();
 
-        const spurText = fassung4
-          ? ` ${rz.geschrieben} Aufzeichnungen übernommen`
+        const spurText = ` ${rz.geschrieben} Aufzeichnungen übernommen`
             + (rz.uebersprungen ? `, ${rz.uebersprungen} waren schon da` : '')
             + (rz.ohneZiel ? `, ${rz.ohneZiel} ohne zugehörigen Einsatz (übersprungen)` : '')
             + (rz.abgelehnt.length
                 ? `. ACHTUNG: ${rz.abgelehnt.length} Aufzeichnungen abgelehnt: `
                   + rz.abgelehnt.slice(0, 3).join(' · ')
                   + (rz.abgelehnt.length > 3 ? ' · …' : '')
-                : '.')
-          : '';
+                : '.');
         const zusatz = uebernommen
           ? ` ${uebernommen} Einsätze brachten ihre geschützten Angaben verschlüsselt `
             + `mit und sind wieder lesbar.`
@@ -4635,7 +4600,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 + `in diesem Konto nicht lesbar sind.`
               : '');
         melde(impState, 'Import fertig: ' + restoreBericht(s, zusatz) + spurText + rwText(rz, true),
-              rz.abgelehnt.length || rz.ohneZiel || rz.zielVerloren || rz.mitgebracht
+              rz.abgelehnt.length || rz.ohneZiel || rz.mitgebracht
                 ? 'warn' : 'ok');
       } catch (e) {
         /* OHNE PRAEFIX (Schritt 15 AP8, R2). Den Satzanfang setzt jetzt
@@ -4919,21 +4884,10 @@ ui_seite_start(['titel' => 'Einstellungen',
           s.spuren_uebernommen = rz.geschrieben;
           if (rz.ohneZiel) { s.spuren_ohne_ziel = rz.ohneZiel; }
         } else {
-          await umschluesseln(daten);
-          if (unlesbar && !await window.edConfirm(
-              `${unlesbar} Einsätze lassen sich mit diesem Schlüssel `
-              + `nicht öffnen. Ihre geschützten Angaben bleiben hier unlesbar. `
-              + `Trotzdem einspielen?`,
-              'Trotzdem einspielen', 'normal', 'Geschützte Angaben')) {
-            melde(fgState, 'Abgebrochen — es wurde nichts eingespielt.', 'warn');
-            return;
-          }
-          fgState.textContent = braucht
-            ? `${um} Einsätze umgeschlüsselt. Daten werden übertragen…`
-            : 'Daten werden übertragen…';
-          const out = await senden('api/backup_restore.php', daten,
-                                   'Das Einspielen');
-          s = out.stats;
+          /* Fassung 1 (einteilig, bis Web 11) ging bis Web 22.7.0 hier am
+             Stück durch; seit Web 23 liefert der Server sie nicht mehr aus
+             (409 `fassung_alt`, S11-12). */
+          throw new Error('Dieses Backup hat ein Format vor Web 11 und lässt sich nicht mehr einspielen.');
         }
 
         /* DIE ANTWORT WIRD GELESEN (Web 21.1.7, Backlog Nr. 277). Bis dahin
@@ -4969,7 +4923,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                           + `Freigabe noch offen ist, ist unklar. Ein zweites `
                           + `Einspielen ist nicht nötig.`);
         melde(fgState, 'Fertig: ' + restoreBericht(s, zusatz),
-              unlesbar || s.spuren_ohne_ziel || rz.abgelehnt.length || rz.zielVerloren || ortUnlesbar
+              unlesbar || s.spuren_ohne_ziel || rz.abgelehnt.length || ortUnlesbar
                 || !frei.ok
                 ? 'warn' : 'ok');
         document.getElementById('freigabebtn').disabled = true;

@@ -43,8 +43,9 @@ require_once __DIR__ . '/../backup_lib.php';
  * Sitzung. Ein Wechsel auf POST haette nur den CSRF-Kopf gebracht, den ein
  * lesender Weg nicht braucht, und den heutigen Vertrag gebrochen.
  *
- * OHNE PARAMETER liefert er weiterhin die vollstaendige Nutzlast mit
- * Punktlisten — so holen die Adminpakete und die Demo-Fixture ihren Bestand.
+ * OHNE PARAMETER lieferte er bis Web 22.7.0 die vollstaendige Nutzlast 7
+ * mit Punktlisten. Seit S11 sieht der Server keine Punkte mehr; seit Web 23
+ * antwortet er darauf mit 400 `teil` (S11-12).
  */
 
 /** Hoechstens so viele Eintraege je Anfrage. */
@@ -65,11 +66,9 @@ try {
                                  . ' Einträgen je Anfrage.'], 400);
         }
         $out = edbak_build($userId, true, ['ab' => $ab, 'anzahl' => $anzahl]);
-    } elseif ($teil !== '') {
+    } else {
         json_out(['error' => 'teil',
                   'meldung' => 'Unbekannter Teil — erwartet „kopf" oder „eintraege".'], 400);
-    } else {
-        $out = edbak_build($userId);
     }
     /* Dieser Weg gibt das Paket direkt aus — `$out` ist fertiger Text und
      * kann gross werden. Seit Web 20.9.1 ueber `json_roh_out()`: DERSELBE

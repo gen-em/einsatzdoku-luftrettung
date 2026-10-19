@@ -559,11 +559,10 @@ function demo_zuruecksetzen(): array
  *
  * Die Reihenfolge folgt den Fremdschluesseln. Das Schema raeumt vieles selbst
  * ab (ON DELETE CASCADE): mission_crew, mission_phases, mission_resources,
- * resus_sessions/-events, day_crew, day_capabilities, day_refs,
- * vehicle_roles, vehicle_capabilities. Ausdruecklich geloescht werden muss,
- * was KEIN Fremdschluessel traegt:
+ * day_crew, day_capabilities, day_refs, vehicle_roles, vehicle_capabilities.
+ * Ausdruecklich geloescht werden muss, was KEIN Fremdschluessel traegt:
  *
- *   track_points   polymorph (owner_type/owner_id), ohne Verweis
+ *   track_stuecke  polymorph (owner_type/owner_id), ohne Verweis
  *   deleted_refs   haengt an der Geraetekennung, ohne Verweis
  *
  * `user_defaults` faellt mit: Vorbelegungen sind Bestand, und ein Besucher
@@ -588,26 +587,9 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
             . 'app_state vermerkten Demo-Konto.');
     }
 
-    // Spurpunkte zuerst: Danach sind ihre Eigentuemer weg und sie waeren
-    // nicht mehr auffindbar (verwaiste Punkte raeumt sonst erst der
-    // Tagesjob ab).
-    $pdo->prepare("DELETE tp FROM track_points tp
-                   JOIN missions m ON m.id = tp.owner_id
-                   WHERE tp.owner_type = 'mission' AND m.user_id = ?")->execute([$id]);
-    $pdo->prepare("DELETE tp FROM track_points tp
-                   JOIN rest_segments r ON r.id = tp.owner_id
-                   WHERE tp.owner_type = 'rest' AND r.user_id = ?")->execute([$id]);
-    // Und die Blobs derselben Spuren (S2/AP1). Sie haengen an keinem
-    // Fremdschluessel; ohne diese beiden Anweisungen bliebe der Bestand des
-    // Demo-Kontos nach dem Zuruecksetzen als Waise liegen.
-    $pdo->prepare("DELETE tb FROM track_blobs tb
-                   JOIN missions m ON m.id = tb.owner_id
-                   WHERE tb.owner_type = 'mission' AND m.user_id = ?")->execute([$id]);
-    $pdo->prepare("DELETE tb FROM track_blobs tb
-                   JOIN rest_segments r ON r.id = tb.owner_id
-                   WHERE tb.owner_type = 'rest' AND r.user_id = ?")->execute([$id]);
-    // Und die Spurstuecke (S11-04a): Ein gekoppeltes Geraet des Demo-Kontos
-    // legt seit Web 22 Huellen hier ab, keine Zeilen mehr.
+    // Spurstuecke zuerst: Danach sind ihre Eigentuemer weg und sie waeren
+    // nicht mehr auffindbar. Bis Web 22.7.0 standen hier dieselben zwei
+    // Anweisungen fuer `track_points` und `track_blobs` (S11-12).
     $pdo->prepare("DELETE ts FROM track_stuecke ts
                    JOIN missions m ON m.id = ts.owner_id
                    WHERE ts.owner_type = 'mission' AND m.user_id = ?")->execute([$id]);
@@ -623,7 +605,7 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
      * bliebe bei JEDEM Reset ein Vermerk liegen — bis zu 48 am Tag, und keiner davon
      * je wieder auffindbar, weil seine Quelle mit dem Bestand verschwindet.
      * Auch der Waisenjob findet sie nicht: Er sucht Spuren ohne Eigentuemer,
-     * und die Spurzeilen sind oben schon weg.
+     * und die Stuecke sind oben schon weg.
      *
      * UEBER spur_lib.php, wie alles an dieser Tabelle (CLAUDE.md 4). Der Weg
      * `konto` ist genau dafuer da — er ist derselbe, den die Kontoloeschung

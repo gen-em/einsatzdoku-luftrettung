@@ -187,6 +187,12 @@ declare(strict_types=1);
  *                                   nicht in ein SELECT, INSERT oder UPDATE auf
  *                                   `missions` geraten. 'role_code' nennt die
  *                                   zugehoerige Rolle.
+ *   'ohne_spalte' => true           nur bei 'store' => 'pat': Das Feld hat
+ *                                   auch keine ALTE Klartextspalte mehr, die
+ *                                   das Formular beim Speichern leeren
+ *                                   muesste (seit Web 23 das Transportziel,
+ *                                   S11-12). Ohne den Schluessel gilt der
+ *                                   Feldname als solche Spalte (`notes`).
  *   'day_label' => 'Winde'          Spaltentitel (sonst 'label'). Wird
  *                                   unmaskiert ausgegeben und darf deshalb
  *                                   Auszeichnung enthalten (`&shy;`, `<br>`)
@@ -382,10 +388,10 @@ return [
              * (`dest_lat`/`dest_lon`), und ihr Pin war ohne Freischalten
              * sichtbar. Jetzt stehen sie im `pat_blob` unter
              * `transport_dest` als {addr, lat, lon} — derselbe Aufbau wie der
-             * Einsatzort `loc`. Die Spalten bleiben bis zur
-             * Aufraeumauslieferung stehen und tragen nur noch den Altbestand;
-             * das Formular nimmt ihn beim naechsten Speichern in den Blob mit
-             * (`PAT_ALT`) und leert sie. Die Vorschlagsliste der Zielkliniken
+             * Einsatzort `loc`. Die Spalten `transport_dest`, `dest_lat` und
+             * `dest_lon` trugen danach nur noch den Altbestand und sind mit
+             * Web 23 gefallen (S11-12) — deshalb `ohne_spalte` und keine
+             * `lat_col`/`lon_col` mehr. Die Vorschlagsliste der Zielkliniken
              * (`transport_dests`) bleibt Stammdatum im Klartext: Sie sagt, wohin
              * man fliegen KANN, nicht wohin jemand geflogen ist. Der Haken
              * „Schockraum" darunter bleibt Klartext — er ist kein Ort.
@@ -398,12 +404,12 @@ return [
                 'label' => 'Transportziel', 'type' => 'loc', 'max' => 190,
                 'placeholder' => 'z. B. Klinikum Westried',
                 'suggest_src' => 'transport_dests',
-                'lat_col' => 'dest_lat', 'lon_col' => 'dest_lon',
                 'store' => 'pat',
+                'ohne_spalte' => true,
                 /* PIN-KNOPF UND KARTE (S9/AP2, E-S9-06 d; PS-7). Ein per
                  * Karte gewaehltes Ziel ist ein AD-HOC-WERT DIESES EINSATZES
                  * und kein Stammdatensatz — die Koordinate wird am Einsatz
-                 * eingefroren (`dest_lat`/`dest_lon`), die Zielklinik-Liste
+                 * eingefroren (im Blob), die Zielklinik-Liste
                  * bleibt unberuehrt. Genau deshalb steht der Schluessel hier
                  * im Katalog und nicht als Sonderfall im Formular. */
                 'ortswahl' => true,

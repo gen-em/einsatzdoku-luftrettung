@@ -603,10 +603,13 @@ if ($a === null) {
     $pdo->prepare("INSERT INTO missions (user_id, client_ref, started_at) VALUES (?, ?, UTC_TIMESTAMP())")
         ->execute([$loeschId, 'rollenprobe-' . bin2hex(random_bytes(6))]);
     $loeschEinsatz = (int)$pdo->lastInsertId();
-    $pp = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
-                         VALUES (?, ?, ?, ?, ?, ?, ?)');
+    /* Drei Spurstuecke (bis Web 22.7.0 drei Zeilen in `track_points`). Die
+     * Huelle ist Zufall — die Loeschung oeffnet nichts. */
+    $pp = $pdo->prepare("INSERT INTO track_stuecke (owner_type, owner_id, seq_from, punkte, n_original,
+                         ts_von, ts_bis, stufe, huelle, erstellt_am, geaendert_am)
+                         VALUES (?, ?, ?, 1, 1, ?, ?, 1, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())");
     for ($i = 0; $i < 3; $i++) {
-        $pp->execute(['mission', $loeschEinsatz, $i, 47.5 + $i / 1e4, 11.5, 700.0, 1750000000 + $i]);
+        $pp->execute(['mission', $loeschEinsatz, $i, 1750000000 + $i, 1750000000 + $i, random_bytes(64)]);
     }
     $pdo->prepare("INSERT INTO devices (user_id, device_id, api_key_hash) VALUES (?, ?, '-')")
         ->execute([$loeschId, 'rollenprobe-' . bin2hex(random_bytes(6))]);

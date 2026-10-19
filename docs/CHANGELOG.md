@@ -14,6 +14,122 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.0.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-12 — die Aufräumauslieferung**. **Schema:**
+Migration `2026_10_19_klartext_weg`. Nach dem Deploy **`update.php`
+aufrufen** — die Wartung bleibt sonst an. Die Migration ist zerstörend und
+hält an, solange noch Klartext-Ortsdaten liegen (unten).
+
+### Entfernt
+
+- **Die Klartextablage der Ortsdaten.** Web 22 hat Spur, Phasenorte,
+  Reanimation, Transportziel und Ortshöhe verschlossen; die alten Tabellen
+  und Spalten blieben stehen, damit der Altbestand umziehen konnte. Nach dem
+  Umzug waren sie leer — und trotzdem eine Stelle, an der Klartext liegen
+  *könnte*, und ein Weg, auf dem er wieder hereinkäme. Die Migration
+  entfernt `track_points`, `track_blobs`, `resus_sessions`, `resus_events`,
+  `mission_phases.lat/lon` und an `missions` die Spalten `transport_dest`,
+  `dest_lat`, `dest_lon` und `site_ele_m`. Damit fällt in `CLAUDE.md` 4 und
+  im Bedrohungsmodell die Grenze „Altbestand bis zum Umzug" weg.
+- **Das Einmalwerkzeug** (`api/ortsumzug.php`, `ortsumzug_lib.php`,
+  `assets/ortsumzug.js`, die Zeile „Ortsdaten" der Statusseite, die Probe
+  `tools/proben/ortsumzug/`). Es hatte nur noch nichts zu tun.
+- **SPUR1 ganz:** Kodieren, Dekodieren und das Zusammensetzen von Zeilen und
+  Blob in `spur_lib.php` (`spur_lesen()`, `spur_lesen_viele()`,
+  `spur_teilen()`, `spur_fuer_sicherung_viele()`, `spur_blob_pruefen()` …),
+  im Browser `EdOrtsdaten.spur1Lesen()`. Der Server liest seither nur noch
+  Stücke und reicht sie verschlossen durch.
+- **`site_elevation_lib.php`.** Die Ortshöhe rechnet seit Web 22 der Browser;
+  die Datei rechnete nur noch für den Altbestand. Der Rückfüllung in der
+  alten Migration `2026_07_25_einsatzort_hoehe` fehlt damit der Weg; eine
+  Installation, die von ganz unten aufsteigt, bekommt die Spalte angelegt
+  und gleich wieder entfernt — eine bewusste Ausnahme von der Regel, dass
+  alte Migrationen unverändert bleiben (E-ZE-04).
+- **Das Einspielen alter Sicherungen** — Nutzlast 6 bis 12 und die
+  einteiligen Fassungen 2 und 3 (`EdCrypto.openBackup()`,
+  `sealBackup()`). Sie trugen die Ortsdaten im Klartext, und der Browser
+  verschloss sie beim Einspielen; ohne Klartextablage und ohne SPUR1 fehlt
+  dafür der Boden. Es gibt keine solchen Sicherungen mehr (Entscheidung der
+  Betreiberin, E-S11-85). Eine solche Datei wird jetzt **mit Grund
+  abgewiesen**: im Browser vor jedem Schreiben, am Endpunkt und in
+  `edbak_restore()` noch einmal (`409 version_alt`).
+- **Der direkte Rückweg alter Adminpakete** (`edbak_paket_lesen()`,
+  `gh_gepackt_bauen()`; Freigabe eines Pakets der Fassung 1: `409
+  fassung_alt`). Die Verwaltung spielt ein Paket seither über denselben
+  Browserweg ein wie jedes andere (E-S11-84) — es gibt keine alten Pakete.
+- **Der Bau einer Sicherung am Stück** (`edbak_build()` ohne Fenster). Ihn
+  ging nur noch der direkte Rückweg; die Funktion verlangt jetzt Kopf oder
+  Fenster.
+- **Die Zeile „Reanimations-Protokolle"** auf den Bestätigungsseiten des
+  Papierkorbs: Die Zahl kam aus `resus_sessions`, und die Reanimation liegt
+  in der Hülle, wo der Server sie nicht zählen kann.
+
+### Geändert
+
+- **Die Migration hält an, solange noch Klartext liegt, und nennt die
+  Konten.** Sie trägt die Inhaltssperre des Migrationskatalogs: Steht in
+  einer der Spalten oder Tabellen noch ein Wert, zeigt „Betrieb → Updates"
+  Tabelle, Zahl und je Konto E-Mail und Einsatznummern. Weiter geht es nur
+  mit ausdrücklicher Freigabe, und die steht im Protokoll. Wer freigibt,
+  verliert diese Werte; umziehen kann sie nur der Browser des Kontos, und
+  das Werkzeug dafür ist mit dieser Fassung gegangen. Die Schemaprobe misst
+  alle drei Wege (Sperre mit Kontennennung, Freigabe, sauberer Lauf) auf
+  vier Datenbankfassungen.
+- **Einen Schnitt von vor Web 22.2.0 nimmt `api/schneiden.php` nicht mehr
+  zurück** (`409 altschnitt`, F-S11-94). Er hatte die Punkte aus dem Segment
+  in den Einsatz verschoben; zurückschieben konnte sie nur `spur_teilen()`
+  am Klartext. Eine Rücknahme nach heutiger Regel löschte die Stücke des
+  Einsatzes, ohne dass das Segment sie trägt — die Punkte wären weg.
+  Erkannt wird ein solcher Schnitt an seinem Zeitpunkt gegen den der
+  Migration `2026_10_15_loeschvermerk`.
+- **Der Export** trägt die Schlüssel `site_ele_m`, `transport_dest`,
+  `dest_lat`, `dest_lon` weiter, gefüllt aus dem Block, und `resus` leer —
+  die Form der Datei bleibt, wie sie war. Eine Datei ohne Haken trägt keine
+  Reanimation mehr; bis Web 22.7 stand dort die des Altbestands.
+
+### Werkzeuge
+
+- **Der Messstand schreibt Fassung 4.** `tools/messstand/edbak.py` schrieb
+  einteilige Dateien mit Nutzlast 7, die der Einspielweg jetzt abweist
+  (Backlog Nr. 46 hatte es vorhergesagt). `schreiben_edbak_v4()` baut das ZIP,
+  das auch der Browser baut — Manifest, Kopf, Eintragsfenster zu 250,
+  Spurteile mit Punktlisten —, und `vervielfaeltigen.py` prüft jede Datei
+  vor dem Ablegen mit dem unabhängigen Leser. Gemessen: 312 Einsätze mit
+  192 303 Punkten in 8 Teilen, im Browser eingespielt, alle Punkte da.
+- **Neue Referenz für den Kreislauf** (`referenz/einsatzdoku-backup-2026-10-19.edbak`,
+  Nutzlast 13), über den regulären Weg in einem eigenen Konto aufgebaut.
+  Der Kreislauf läuft damit mit einer einzigen Ausnahmeregel (die
+  Gerätezuordnung, 22×); zehn Übergangsregeln von Nutzlast 12 auf 13 sind
+  ausgetragen. Der Lauf `--art edbak-alt` und seine Referenz sind gegangen.
+- **Drei Proben räumen und messen jetzt richtig.** Die Freigabeprobe löschte
+  ihr Quellkonto per `DELETE FROM users`; die Kaskade nahm die Einsätze mit,
+  die Spurstücke nicht, und die Jobprobe des nächsten Laufs zählte eine
+  fremde Waise mit. Sie geht jetzt über `konto_loeschen()` — und wartet, bis
+  das frische Zielkonto sein Schlüsselpaar hat, das im Browser nebenläufig
+  entsteht; ohne das wies das Einspielen je nach Zeitlage mit „kein
+  Schlüsselpaar" ab. Die Spurprobe suchte im Demo-Konto Stücke der Stufe 1,
+  die nach einem Wartungslauf gepackt sind; sie legt ihre jetzt selbst an. Die
+  Versandprobe „veränderte" ein Chiffrat, indem sie sein letztes Byte durch
+  `X` ersetzte — einmal in 256 Läufen stand dort schon ein `X`, und der Fall
+  blieb offen; jetzt wird das Byte gekippt.
+- **`tools/referenzdatensatz/fixture/erzeugen.php` bricht ab** (Backlog
+  Nr. 388): Es las das Referenzkonto über den Bau am Stück und brauchte eine
+  Spur, die der Server lesen kann. Schon seit Web 22 hätte es still eine
+  Fixture ohne Spur geschrieben. Die eingecheckte Fixture trägt den
+  Demo-Reset weiter.
+
+### Bewusst so
+
+- **Der Demo-Reset bleibt auf dem Serverweg** mit seiner Nutzlast-7-Fixture
+  aus dem Repositorium (E-S11-20): Ihr Klartext ist erfunden und liegt
+  ohnehin offen im Repositorium, und der Server verschließt ihn beim
+  Einspielen selbst.
+- **Die alten Adminpaket-Fassungen** (JSON, ZIP ohne Siegel) bleiben in der
+  Liste lesbar; eingespielt werden sie nicht mehr. Daran hängen Liste,
+  Schlüsselwechsel und Aufräumen der Ablage, und sie tragen keine
+  Klartext-Ortsdaten (Backlog Nr. 46, Rest).
+
 ## [Web 22.7.1] — unveröffentlicht
 
 Fehlerbehebung außerhalb eines Konzepts. Kein Schema, kein `update.php`.

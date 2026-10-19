@@ -151,6 +151,18 @@ try {
   }
   await seite.goto(`${BASIS}/einstellungen.php?t=backup`, { waitUntil: 'domcontentloaded' });
   await seite.waitForTimeout(1500);
+  /* AUF DAS PAAR DES ZIELKONTOS WARTEN (S11-12). Es entsteht im Browser beim
+   * ersten Entsperren nach der Anmeldung, nebenlaeufig. Ging die Probe ohne
+   * es weiter, wies das Einspielen mit „kein Schlüsselpaar" ab — je nach
+   * Zeitlage, im Pruefstand zweimal von vier Laeufen (22/9). Gewartet wird
+   * hoechstens 20 s; danach scheitert die Probe mit diesem Grund. */
+  let paarDa = false;
+  for (let i = 0; i < 40 && !paarDa; i++) {
+    paarDa = php('paar', { ziel: ZIEL }).paar === true;
+    if (!paarDa) { await seite.waitForTimeout(500); }
+  }
+  pruefe(paarDa, 'Das Zielkonto hat nach dem Entsperren sein Schlüsselpaar',
+         paarDa ? '' : 'nach 20 s noch keins');
   pruefe(await seite.locator('#freigabebtn').isVisible(),
          'Der Freigabekasten erscheint (F-S2-F: er tat es nie)');
   pruefe(await seite.locator('#freigabecode').isVisible(),

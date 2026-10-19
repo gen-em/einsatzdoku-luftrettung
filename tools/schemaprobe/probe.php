@@ -31,6 +31,9 @@ declare(strict_types=1);
  *   FALL 6  Bekommt jeder Diensttag sein `created_at` aus `started_at`,
  *           gekappt auf 1970-01-01 00:00:01 und auf jetzt — und traegt die
  *           Spalte danach KEIN `ON UPDATE`? (Schritt 17, R4-15, Nr. 158)
+ *   FALL 7  Sperrt die Aufraeummigration nach S11, solange Klartext-Ortsdaten
+ *           stehen, nennt sie Konto und Einsatz, und laeuft sie mit Freigabe
+ *           und auf einer sauberen Anlage? (S11-12, E-S11-19, -82, -83)
  *
  * Fall 2 ist der wichtigste: Er legt Bestand an, migriert und vergleicht
  * Zeile fuer Zeile. Eine Migration, die Werte verliert, faellt hier auf.
@@ -623,6 +626,143 @@ pruefe('ein neuer Tag bekommt jetzt', $neu6 >= $vor6 && $neu6 <= gmdate('Y-m-d H
 $zweiter6 = true;
 try { migrationen_lauf($pdo, true); } catch (Throwable $e) { $zweiter6 = false; }
 pruefe('der zweite Lauf ist folgenlos', $zweiter6 && !migrationen_ausstehend($pdo));
+sag();
+
+/* ---- Fall 7: die Klartext-Ortsdaten fallen (S11-12, E-S11-19, -82, -83) ----
+ *
+ * DIE ZWEITE ZERSTOERENDE MIGRATION MIT INHALTSSPERRE, und die erste, die
+ * ganze Tabellen wirft. Sie sperrt, solange irgendwo noch Klartext steht, und
+ * nennt Konto und Einsatz; eine Freigabe verwirft den Rest (E-S11-82).
+ *
+ * DREI ANLAGEN:
+ *   A. Altbestand in drei Formen (Phasenort, Transportziel, GPS-Punkte eines
+ *      Ruhesegments) in zwei Konten — sperrt mit Freigabe-Kennung, nennt beide
+ *      Konten, aendert nichts; mit Freigabe laeuft sie, und der Rest ist fort,
+ *      das Uebrige Wert fuer Wert gleich;
+ *   B. dasselbe Schema ohne Inhalt — laeuft ohne Freigabe;
+ *   C. B noch einmal mit leerem Register — nur verbucht, nichts wirft.
+ */
+sag('FALL 7 — Klartext-Ortsdaten fallen (S11-12)');
+$ID7 = '2026_10_19_klartext_weg';
+$alt7 = static function (): PDO {
+    $pdo = frisch();
+    schema_oder_raus('Fall 7');
+    /* Den Stand VOR Web 23 herstellen: die vier Tabellen und sechs Spalten,
+     * wie sie bis Web 22.7.0 in schema.sql standen. */
+    $pdo->exec('ALTER TABLE mission_phases ADD COLUMN lat DOUBLE NULL, ADD COLUMN lon DOUBLE NULL');
+    $pdo->exec('ALTER TABLE missions ADD COLUMN site_ele_m INT NULL,
+                ADD COLUMN transport_dest VARCHAR(190) NULL,
+                ADD COLUMN dest_lat DECIMAL(9,6) NULL, ADD COLUMN dest_lon DECIMAL(9,6) NULL');
+    $pdo->exec('CREATE TABLE resus_sessions (
+                  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, mission_id INT UNSIGNED NOT NULL,
+                  started_at DATETIME NOT NULL,
+                  FOREIGN KEY (mission_id) REFERENCES missions(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    $pdo->exec('CREATE TABLE resus_events (
+                  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, session_id INT UNSIGNED NOT NULL,
+                  type VARCHAR(24) NOT NULL, occurred_at DATETIME NOT NULL,
+                  FOREIGN KEY (session_id) REFERENCES resus_sessions(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    $pdo->exec("CREATE TABLE track_points (
+                  owner_type ENUM('mission','rest') NOT NULL, owner_id INT UNSIGNED NOT NULL,
+                  seq INT UNSIGNED NOT NULL, lat DOUBLE NOT NULL, lon DOUBLE NOT NULL,
+                  ele DOUBLE NULL, ts INT UNSIGNED NOT NULL,
+                  PRIMARY KEY (owner_type, owner_id, seq)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $pdo->exec("CREATE TABLE track_blobs (
+                  owner_type ENUM('mission','rest') NOT NULL, owner_id INT UNSIGNED NOT NULL,
+                  stufe TINYINT UNSIGNED NOT NULL, n_original INT UNSIGNED NOT NULL,
+                  n_gespeichert INT UNSIGNED NOT NULL, blob_daten MEDIUMBLOB NOT NULL,
+                  erstellt_am DATETIME NOT NULL, geaendert_am DATETIME NOT NULL,
+                  PRIMARY KEY (owner_type, owner_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $pdo->exec("DELETE FROM schema_migrations WHERE id = '2026_10_19_klartext_weg'");
+    $pdo->exec("INSERT INTO users (id, email, password_hash, role) VALUES
+                (1, 'eins@example.invalid', 'x', 'user'), (2, 'zwei@example.invalid', 'x', 'user')");
+    for ($i = 1; $i <= 3; $i++) {
+        $pdo->prepare("INSERT INTO missions (id, user_id, client_ref, started_at, origin, final, ort_huelle)
+                       VALUES (?, ?, ?, '2026-10-01 08:00:00', 'watch', 1, ?)")
+            ->execute([$i, $i === 1 ? 1 : 2, 'probe-' . $i, 'huelle-' . $i]);
+        $pdo->prepare("INSERT INTO mission_phases (mission_id, phase, occurred_at)
+                       VALUES (?, 4, '2026-10-01 08:10:00')")->execute([$i]);
+    }
+    $pdo->exec("INSERT INTO rest_segments (id, user_id, client_ref, started_at)
+                VALUES (5, 2, 'ruhe-5', '2026-10-01 06:00:00')");
+    return $pdo;
+};
+$zeile7 = static function (array $lauf) use ($ID7): array {
+    foreach ($lauf['results'] as $r) { if ($r[0] === $ID7) { return $r; } }
+    return [];
+};
+$weg7 = static function (PDO $pdo): int {
+    $n = 0;
+    foreach (['track_points', 'track_blobs', 'resus_sessions', 'resus_events'] as $t) {
+        if (!db_hat_tabelle($pdo, $t)) { $n++; }
+    }
+    foreach (['transport_dest', 'dest_lat', 'dest_lon', 'site_ele_m'] as $s) {
+        if (!db_hat_spalte($pdo, 'missions', $s)) { $n++; }
+    }
+    foreach (['lat', 'lon'] as $s) {
+        if (!db_hat_spalte($pdo, 'mission_phases', $s)) { $n++; }
+    }
+    return $n;   // 10 = alles fort
+};
+$bleibt7 = static fn(PDO $pdo): array => [
+    $pdo->query('SELECT id, user_id, client_ref, ort_huelle FROM missions ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+    $pdo->query('SELECT mission_id, phase, occurred_at FROM mission_phases ORDER BY mission_id')->fetchAll(PDO::FETCH_ASSOC),
+    $pdo->query('SELECT id, user_id, client_ref FROM rest_segments ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+];
+
+/* ---- Anlage A: Rest in zwei Konten ---------------------------------------- */
+$pdo = $alt7();
+$pdo->exec('UPDATE mission_phases SET lat = 47.5, lon = 11.2 WHERE mission_id = 1');
+$pdo->exec("UPDATE missions SET transport_dest = 'Klinik' WHERE id = 2");
+$pdo->exec("INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ts)
+            VALUES ('rest', 5, 1, 47.5, 11.2, 1759300000), ('rest', 5, 2, 47.6, 11.3, 1759300060)");
+$vorher7 = $bleibt7($pdo);
+$lauf = migrationen_lauf($pdo, true);
+$z7 = $zeile7($lauf);
+pruefe('A: die Migration sperrt, MIT Freigabe-Kennung',
+       ($z7[2] ?? '') === 'stopp' && ($z7[5] ?? null) === $ID7,
+       mb_substr((string)($z7[3] ?? '?'), 0, 90));
+$d7 = (string)($z7[3] ?? '');
+pruefe('A: ... nennt jede Spalte mit Inhalt',
+       str_contains($d7, 'mission_phases.lat: 1 Zeile') && str_contains($d7, 'missions.transport_dest: 1 Zeile')
+       && str_contains($d7, 'track_points.owner_id: 2 Zeilen'));
+pruefe('A: ... und Konto und Datensatz (E-S11-83)',
+       str_contains($d7, 'Konto 1 „eins@example.invalid“: 1 × Einsatz (Nr. 1)')
+       && str_contains($d7, 'Konto 2 „zwei@example.invalid“: 1 × Einsatz (Nr. 2), 1 × Ruhesegment (Nr. 5)'),
+       mb_substr($d7, (int)mb_strpos($d7, 'Betroffen'), 160));
+pruefe('A: es hat sich nichts geaendert', $weg7($pdo) === 0 && $bleibt7($pdo) === $vorher7,
+       'fort ' . $weg7($pdo) . ' von 10');
+$frei7 = migrationen_lauf($pdo, true, [$ID7 => true]);
+$f7 = $zeile7($frei7);
+pruefe('A: mit Freigabe laeuft sie und sagt es',
+       ($f7[2] ?? '') === 'ok' && str_contains((string)($f7[3] ?? ''), 'AUF AUSDRÜCKLICHE FREIGABE'),
+       mb_substr((string)($f7[3] ?? '?'), 0, 90));
+pruefe('A: vier Tabellen und sechs Spalten sind fort', $weg7($pdo) === 10, $weg7($pdo) . ' von 10');
+pruefe('A: das Uebrige ist Wert fuer Wert gleich (Einsaetze, Huellen, Phasenzeiten, Segment)',
+       $bleibt7($pdo) === $vorher7, json_encode(array_map('count', $bleibt7($pdo))));
+$prot7 = (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse
+                            WHERE art = 'migration_ausgefuehrt'
+                              AND JSON_EXTRACT(daten, '$.id') = '$ID7'
+                              AND text LIKE '%FREIGABE%'")->fetchColumn();
+pruefe('A: eine Protokollzeile haelt die Freigabe fest (E-S11-82)', $prot7 === 1, $prot7 . ' Zeilen');
+
+/* ---- Anlage B: kein Inhalt ------------------------------------------------- */
+$pdo = $alt7();
+$lauf = migrationen_lauf($pdo, true);
+$z7 = $zeile7($lauf);
+pruefe('B: ohne Inhalt laeuft sie ohne Freigabe',
+       ($z7[2] ?? '') === 'ok' && !str_contains((string)($z7[3] ?? ''), 'FREIGABE') && $weg7($pdo) === 10,
+       mb_substr((string)($z7[3] ?? '?'), 0, 60) . ', fort ' . $weg7($pdo) . ' von 10');
+
+/* ---- Anlage C: wiederholbar ------------------------------------------------ */
+$pdo->exec("DELETE FROM schema_migrations WHERE id = '$ID7'");
+$zweiter7 = true;
+try { $lauf = migrationen_lauf($pdo, true); } catch (Throwable $e) { $zweiter7 = false; }
+pruefe('C: mit leerem Register folgenlos — nur verbucht',
+       $zweiter7 && str_contains((string)($zeile7($lauf)[3] ?? ''), 'Nicht nötig'));
 sag();
 
 /* ---- Schluss -------------------------------------------------------------- */

@@ -26,20 +26,19 @@ Kommandozeile. Ohne den Schalter bleibt es beim lokalen Weg.
 Adminbereich. Ohne diesen Schalter bricht der Lauf ab, wenn das Konto schon
 besteht — ein Umlauf in ein GEFUELLTES Konto misst nichts.
 
-DREI LAEUFE, ZWEI REFERENZEN (seit S2/AP5, Web 11.0.0):
+ZWEI LAEUFE, ZWEI REFERENZEN:
 
-  --art edbak      referenz/*.edbak (Containerfassung 4) — kommt derselbe
-                   Bestand nach einem Umlauf unveraendert wieder heraus?
-  --art edbak-alt  referenz/altformat/*.edbak (einteilig, Nutzlast 7) — kommt
-                   ein VORHANDENER Bestand einmal herueber (R11)? Faellt mit
-                   NaDoku 1.0 weg (Backlog Nr. 46); seine Ausnahmeliste traegt
-                   die Felder, die es in Nutzlast 7 nicht gab, und keinen
-                   einzigen Spurpunkt.
+  --art edbak      referenz/*.edbak (Containerfassung 4, Nutzlast 13) — kommt
+                   derselbe Bestand nach einem Umlauf unveraendert wieder heraus?
   --art csv        referenz/*.zip
 
-Zwei Ordner statt zweier Dateien nebeneinander, weil `neueste()` die Arbeit
-verweigert, wenn ein Ordner mehr als eine Datei je Format traegt — „sortiert
-und nimmt die erste" war der Fehler aus S1/C7.
+Bis Web 22.7.0 gab es einen dritten Lauf, `--art edbak-alt`: die einteilige
+Datei mit Nutzlast 7 aus `referenz/altformat/` hinein, Fassung 4 heraus (R11).
+Seit Web 23 nimmt der Einspielweg nur noch Nutzlast 13; Lauf, Referenz und
+Ausnahmeliste sind mit S11-12 gefallen (E-S11-85, Backlog Nr. 46).
+
+`neueste()` verweigert die Arbeit, wenn der Ordner mehr als eine Datei je
+Format traegt — „sortiert und nimmt die erste" war der Fehler aus S1/C7.
 
 HTTPS, NICHT HTTP. Das Sitzungs-Cookie traegt `Secure`. Chromium schickt es
 auch ueber http://127.0.0.1, Pythons `requests` nicht: Die Anmeldung geht
@@ -229,25 +228,10 @@ def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
 # ---------------------------------------------------------------- Umlaeufe
 
 def umlauf_edbak(a) -> tuple[str, str]:
-    """Backup -> frisches Konto -> Backup.
-
-    ZWEI LAEUFE, ZWEI REFERENZEN (S2/AP5):
-
-      --art edbak      Fassung 4 hinein, Fassung 4 heraus. Der Regelfall; hier
-                       ist der Vergleich ein echter Rundlauf.
-      --art edbak-alt  Die einteilige 7.x-Datei hinein, Fassung 4 heraus. Das
-                       ist die R11-Abnahme: Ein vorhandener Bestand muss
-                       einmal herueberkommen. Der Vergleich ist dabei
-                       formatuebergreifend — der Kern der Fassung 4 traegt
-                       `stufe`, `n_original` und `n`, die es in Nutzlast 7
-                       nicht gibt. Diese Zusaetze stehen in der eigenen
-                       Ausnahmeliste, mit Zahl.
-
-    Mit NaDoku 1.0 faellt der zweite Lauf weg (Backlog Nr. 46).
-    """
-    ordnerRef = (pathlib.Path(a.referenz) / "altformat") if a.art == "edbak-alt" \
-                else pathlib.Path(a.referenz)
-    quelle = neueste(str(ordnerRef), "*.edbak")
+    """Backup -> frisches Konto -> Backup: Fassung 4 hinein, Fassung 4
+    heraus, ein echter Rundlauf. (Bis Web 22.7.0 gab es daneben den Lauf
+    `edbak-alt` mit der einteiligen Nutzlast 7; siehe Kopf.)"""
+    quelle = neueste(a.referenz, "*.edbak")
     melde(f"[Backup] Referenz: {quelle.name}")
     ordner = pathlib.Path(a.ausgabe) / a.art
     ordner.mkdir(parents=True, exist_ok=True)
@@ -336,7 +320,7 @@ def main() -> int:
     import os
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--art", choices=["csv", "edbak", "edbak-alt"], required=True)
+    p.add_argument("--art", choices=["csv", "edbak"], required=True)
     p.add_argument("--basis", default="https://127.0.0.1:8443")
     p.add_argument("--referenz", default=str(WURZEL / "referenz"))
     p.add_argument("--ausgabe", default="/tmp/kreislauf")
@@ -431,9 +415,7 @@ def main() -> int:
                   f"Sie läuft von selbst ab (spätestens 1800 s nach dem Anhalten).")
 
     melde(f"\n[Vergleich] {pathlib.Path(quelle).name} ↔ {pathlib.Path(ergebnis).name}")
-    # `vergleichen.py` kennt zwei Formate; `edbak-alt` ist eine Herkunft, kein
-    # drittes Format — verglichen werden zwei .edbak-Dateien wie sonst auch.
-    vergleichsart = "csv" if a.art == "csv" else "edbak"
+    vergleichsart = a.art
     befehl = [sys.executable, str(HIER / "vergleichen.py"), "--art", vergleichsart,
               quelle, ergebnis, "--bericht",
               str(pathlib.Path(a.ausgabe) / a.art / "bericht")]

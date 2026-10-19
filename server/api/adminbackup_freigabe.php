@@ -107,10 +107,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $antwort['spurteile']     = (int)($paket['spurteile'] ?? 0);
         $antwort['eintraege']     = (int)($paket['eintraege'] ?? 0);
     } else {
-        /* Fassung 1 geht weiterhin am Stueck heraus — sie liegt ohnehin als
-         * eine Datei da, und es kommen keine neuen dazu. */
-        $ganz = edbak_paket_lesen($f['account_key'], $f['datei']);
-        $antwort['daten'] = $ganz['daten'] ?? null;
+        /* Fassung 1 (einteilig, bis Web 11) ging bis Web 22.7.0 am Stueck
+         * heraus. Sie trug Orte und Spur im Klartext; seit Web 23 wird sie
+         * nicht mehr ausgeliefert (S11-12, E-S11-84). */
+        json_out(['error' => 'fassung_alt',
+                  'meldung' => 'Dieses Backup hat das einteilige Format einer Fassung vor '
+                             . 'Web 11 und lässt sich seit Web 23 nicht mehr einspielen.'], 409);
     }
     json_out($antwort);
 }

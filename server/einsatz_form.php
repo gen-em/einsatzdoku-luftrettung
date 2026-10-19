@@ -108,12 +108,9 @@ $mission = null; $phases = [];
 if ($editing) {
     $mission = einsatz_laden($id, $userId);
     if (!$mission) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
-    /* `lat`/`lon` nur fuer den ALTBESTAND (S11-05b): Ein Einsatz, dessen
-     * Phasenorte noch im Klartext liegen, gibt sie dem Formular mit, und der
-     * Browser legt sie beim Speichern in die Einsatzhuelle — dasselbe Muster
-     * wie `PAT_ALT` bei den Notizen. Die Spalten fallen mit der
-     * Aufraeumauslieferung, und diese Zeile mit ihnen. */
-    $ph = db()->prepare('SELECT phase, occurred_at, lat, lon FROM mission_phases
+    /* Nummer und Zeit; der Ort jeder Phase liegt in der Einsatzhuelle. Bis
+     * Web 22.7.0 kamen hier `lat`/`lon` des Altbestands mit (S11-05b). */
+    $ph = db()->prepare('SELECT phase, occurred_at FROM mission_phases
                          WHERE mission_id = ? ORDER BY occurred_at');
     $ph->execute([$id]);
     $phases = $ph->fetchAll();
@@ -491,10 +488,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach (mf_pat_felder() as $pf) {
                     foreach ($pf['spalten'] as $pcol) { $fieldCols[] = $pcol; $fieldVals[] = null; }
                 }
-                /* Die Ortshoehe ist kein Katalogfeld, sondern gerechnet; sie
-                 * liegt seit S11-05b ebenso im Blob (`ortshoehe`), und ihre
-                 * Spalte geht mit. */
-                $fieldCols[] = 'site_ele_m'; $fieldVals[] = null;
             }
         }
 
@@ -571,16 +564,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($rows as $r) { $phasen[] = ['phase' => $r[0], 'occurred_at' => $r[1]]; }
                 einsatz_phasen_ersetzen($pdo, $id, $phasen);
 
-                /* DIE ALTEN REANIMATIONSZEILEN GEHEN (S11-05b). Was in ihnen
-                 * stand, hat das Formular dem Browser mitgegeben, und der hat es
-                 * in die Huelle gelegt, die oben in derselben Zeile steht.
-                 * Bliebe der Klartext daneben, stuende eine Reanimation zweimal
-                 * da — einmal verschlossen und einmal nicht —, und das
-                 * Einmalwerkzeug (S11-10) wuesste nicht, welche gilt. Dasselbe
-                 * gilt fuer die Orte der Phasen: `einsatz_phasen_ersetzen()`
-                 * oben schreibt sie ohne `lat`/`lon`. */
-                einsatz_reas_ersetzen($pdo, $id, []);
-
                 return $id;
             });
 
@@ -621,38 +604,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prefillRows[] = [2, ''];                          // Alarmierung als Startzeile
 }
 
-/* Vorbelegung der Reanimationen (A4.3). Aufbau je Sitzung:
-   ['start' => 'HH:MM', 'ev' => [['typ' => 'adrenalin', 'zeit' => 'HH:MM'], …]]
-
-   SEIT S11-05b NUR NOCH DER ALTBESTAND. Steht die Reanimation in der
-   Einsatzhuelle, oeffnet sie der Browser nach dem Entsperren und fuellt die
-   Karte selbst (`ORT_HUELLE` unten); der Server sieht sie nicht. Nach einem
-   fehlgeschlagenen Absenden kommt sie ebenso aus der mitgeschickten Huelle
-   zurueck — `rea[…]` gibt es als Formularfeld nicht mehr. Was hier aus
-   `resus_sessions` kommt, legt der Browser beim naechsten Speichern in die
-   Huelle, und der Server raeumt die Zeilen ab. */
-$reaPrefill = [];
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $editing) {
-    $rs = db()->prepare('SELECT id, started_at FROM resus_sessions
-                         WHERE mission_id = ? ORDER BY started_at');
-    $rs->execute([$id]);
-    $evQ = db()->prepare('SELECT type, occurred_at FROM resus_events
-                          WHERE session_id = ? ORDER BY occurred_at');
-    foreach ($rs->fetchAll() as $sitz) {
-        $evQ->execute([(int)$sitz['id']]);
-        $ev = [];
-        foreach ($evQ->fetchAll() as $e2) {
-            $ev[] = ['typ' => (string)$e2['type'], 'zeit' => fmt_local($e2['occurred_at'])];
-        }
-        $reaPrefill[] = ['start' => fmt_local($sitz['started_at']), 'ev' => $ev];
-    }
-}
+/* Die Reanimation liegt in der Einsatzhuelle (S11-05b); der Browser oeffnet
+   sie nach dem Entsperren und fuellt die Karte selbst (`ORT_HUELLE` unten).
+   Bis Web 22.7.0 stand hier die Vorbelegung des Altbestands aus
+   `resus_sessions` (`REA_START`). */
 
 /* DIE EINSATZHUELLE FUER DEN BROWSER (S11-05b). Nach einem fehlgeschlagenen
    Absenden die eben verschlossene — sie traegt, was eingegeben war —, sonst
    die gespeicherte. Dazu der Beginn, auf den ihre Zeiten sich beziehen
-   (Sekunden seit `started_at`, E-S11-40), und die Phasenorte des
-   Altbestands, solange es sie im Klartext gibt. */
+   (Sekunden seit `started_at`, E-S11-40). */
 $ortHuellePost = ($_SERVER['REQUEST_METHOD'] === 'POST') ? (string)($_POST['ort_huelle'] ?? '') : '';
 $ortHuelleB64 = $ortHuellePost !== '' ? $ortHuellePost
     : (($mission['ort_huelle'] ?? null) !== null ? base64_encode((string)$mission['ort_huelle']) : null);
@@ -662,12 +622,6 @@ if ($ortHuellePost !== '') {
     $ortBeginn = (is_array($bz) && isset($bz[0][1])) ? (int)$bz[0][1] : null;
 } elseif ($mission !== null) {
     $ortBeginn = (int)strtotime((string)$mission['started_at'] . ' UTC');
-}
-$ortAlt = [];
-foreach ($phases as $p) {
-    if ($p['lat'] !== null && $p['lon'] !== null) {
-        $ortAlt[] = ['phase' => (int)$p['phase'], 'lat' => (float)$p['lat'], 'lon' => (float)$p['lon']];
-    }
 }
 /* Die Kennung eines neuen Einsatzes (siehe Speichern): beim ersten Aufbau
    gewuerfelt, nach einem Fehler die schon benutzte — die Huelle ist an sie
@@ -1517,12 +1471,11 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     <?php /* SEIT S11-05b VERSCHLUESSELT: Die Reanimation liegt in der
              Einsatzhuelle (E-S11-02); die Karte traegt deshalb das Schloss am
              Titel, und ihre Felder haben keinen `name` — sie gehen nicht als
-             Formularfeld an den Server, sondern in die Huelle. Die Vorschau
-             kennt nur den Altbestand; was in der Huelle steht, zaehlt der
-             Browser nach dem Entsperren nach. */ ?>
+             Formularfeld an den Server, sondern in die Huelle. Was in der
+             Huelle steht, zaehlt der Browser nach dem Entsperren nach. */ ?>
     <?php ui_karte_start(['titel' => 'Reanimation',
-                          'vorschau' => $reaPrefill ? count($reaPrefill) . ' erfasst' : 'keine',
-                          'offen' => (bool)$reaPrefill,
+                          'vorschau' => 'keine',
+                          'offen' => false,
                           'geschuetzt' => true,
                           'klasse' => 'form-block-rea']); ?>
       <p class="feld-hinweis">Nur ausfüllen, wenn reanimiert wurde. Mehrere
@@ -1582,12 +1535,10 @@ const DIENSTBEGINN_MIN = <?= !empty($tag['started_at'])
       + (int)substr(fmt_local((string)$tag['started_at']), 3, 2)
     : 'null' ?>;
 const REA_ARTEN = <?= json_js($REA_ARTEN, JSON_UNESCAPED_UNICODE) ?>;
-const REA_START = <?= json_js($reaPrefill, JSON_UNESCAPED_UNICODE) ?>;
 /* Die Einsatzhuelle und was zu ihr gehoert (S11-05b, siehe oben im PHP). */
 const ORT = <?= json_js([
     'huelle'  => $ortHuelleB64,
     'beginn'  => $ortBeginn,
-    'alt'     => $ortAlt,
     'ref'     => $neuRef,
     'tag'     => $ortTag,
     'neu'     => !$editing,
@@ -1781,18 +1732,19 @@ function reaSitzung(daten) {
  * Huelle nach dem Entsperren, fuellt die Reanimationskarte und merkt sich die
  * Orte der Phasen. Beim Speichern rechnet `EdOrtsdaten.einsatzZeiten()` die
  * Zeiten wie der Server, legt Orte und Reanimation in eine neue Huelle und
- * verschliesst sie. Ohne Huelle (Altbestand) kommen Orte und Reanimation aus
- * den Klartextspalten (`ORT.alt`, `REA_START`) und gehen beim Speichern in
- * die Huelle — der Server raeumt die alten Zeilen dann ab.
+ * verschliesst sie. (Bis Web 22.7.0 kamen Orte und Reanimation des
+ * Altbestands aus den Klartextspalten, `ORT.alt` und `REA_START`.)
  *
  * GEHT DIE HUELLE NICHT AUF, WIRD NICHT GESPEICHERT. Sonst ersetzte das
  * Speichern eine Huelle, die niemand lesen konnte, durch eine ohne Orte und
  * ohne Reanimation — ein Datenverlust, den niemand bemerkt. */
-let ORT_ORTE = ORT.alt;
-/* Die Ortshoehe des Altbestands aus der Spalte (S11-05b); sie geht beim
-   naechsten Speichern in den Blob, wenn sich keine neue rechnen laesst. */
-const ORT_HOEHE_ALT = <?= json_js(($mission['site_ele_m'] ?? null) !== null ? (int)$mission['site_ele_m'] : null) ?>;
-let ortshoeheAlt = ORT_HOEHE_ALT;
+/* `ORT_LEER` ist die Marke „noch nicht geoeffnet": Erst `ortOeffnen()`
+   ersetzt die Liste. */
+const ORT_LEER = [];
+let ORT_ORTE = ORT_LEER;
+/* Die bisherige Ortshoehe aus dem Blob; sie bleibt beim Speichern, wenn sich
+   keine neue rechnen laesst. */
+let ortshoeheAlt = null;
 let ORT_GESPERRT = null;   // Grund, warum nicht gespeichert werden darf
 
 function reaEinsammeln() {
@@ -1817,7 +1769,7 @@ function reaVorschau() {
   if (el) { el.textContent = n ? n + ' erfasst' : 'keine'; }
 }
 async function ortOeffnen(ck) {
-  if (!ORT.huelle || ORT_ORTE !== ORT.alt) { return; }   // nichts da, oder schon offen
+  if (!ORT.huelle || ORT_ORTE !== ORT_LEER) { return; }   // nichts da, oder schon offen
   try {
     const k = await EdOrtsdaten.schluessel(ck);
     const innen = await EdOrtsdaten.einsatz({ ort_huelle: ORT.huelle, client_ref: ORT.ref }, k);
@@ -2163,10 +2115,9 @@ async function patLaden(){
       if (el && wert != null) { el.value = wert; }
     }
     zeigeAlter();
-    /* Die bisherige Ortshoehe (S11-05b): aus dem Blob, sonst aus der Spalte
-       des Altbestands — beim Speichern bleibt sie, wenn sich keine neue
-       rechnen laesst (siehe Absenden). */
-    ortshoeheAlt = o.ortshoehe != null ? Number(o.ortshoehe) : ORT_HOEHE_ALT;
+    /* Die bisherige Ortshoehe aus dem Blob — beim Speichern bleibt sie, wenn
+       sich keine neue rechnen laesst (siehe Absenden). */
+    ortshoeheAlt = o.ortshoehe != null ? Number(o.ortshoehe) : null;
     if (o.loc) {
       // addr steht unveraendert im Textfeld — auch dann, wenn dort noch eine
       // Zahlendarstellung aus einem Altdatensatz liegt (E11, kein stilles
@@ -2400,7 +2351,6 @@ document.getElementById('addrow').addEventListener('click', ev => {
   addRow(Math.min(last + 1, 10), '').focus();   // direkt per Tastatur bedienbar
 });
 
-REA_START.forEach(s => reaSitzung(s));
 document.getElementById('addrea').addEventListener('click', ev => {
   ev.preventDefault();
   if (!PAT_CK) { patLaden(); return; }   // verschluesselt: erst entsperren

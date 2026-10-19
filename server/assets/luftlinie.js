@@ -58,7 +58,7 @@
      *
      *   base       days.base_lat/base_lon, eingefroren beim Anlegen  Klartext
      *   prev_site  Einsatzort des vorherigen Einsatzes des Tages     verschlüsselt
-     *   prev_dest  dest_lat/dest_lon des vorherigen Einsatzes        Klartext
+     *   prev_dest  pat_blob.transport_dest des vorherigen Einsatzes  verschlüsselt
      *   manual     pat_blob.start                                    verschlüsselt
      *
      * @param {?string} regel   Wert aus missions.start_src

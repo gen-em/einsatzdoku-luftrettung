@@ -129,6 +129,9 @@ function _fk_name(PDO $pdo, string $tabelle, string $spalte): ?string
  * 'inhalt'    : Liste [Tabelle, Spalte, Beschreibung] der Spalten, deren
  *               INHALT diese Migration vernichten wuerde. Steht dort etwas
  *               drin, wird die Migration NICHT ausgefuehrt, sondern gemeldet.
+ * 'inhalt_wo' : (wahlweise) Funktion (PDO) -> Text, der nennt, WO der Inhalt
+ *               steht — Konto und Datensatz (S11-12, E-S11-83). Er wird an die
+ *               gesperrte Zeile gehaengt und nur gefragt, wenn sie sperrt.
  *
  * WARUM BEIDE UND NICHT EINE
  * Nicht jede destruktive Migration darf am Inhalt scheitern. Bei
@@ -600,18 +603,14 @@ function migrationen_katalog(): array
         'run'   => function (PDO $pdo): void {
             $pdo->exec('ALTER TABLE missions ADD COLUMN site_ele_m INT NULL AFTER ascent_m');
 
-            // Backfill: alle Einsaetze mit Phase 5 oder 6 und vorhandenem Track.
-            // Dieselbe Logik wie bei Uhr-Upload/manuellem Speichern — eine
-            // einzige Implementierung in site_elevation_lib.php.
-            require_once __DIR__ . '/site_elevation_lib.php';
-            $ids = $pdo->query("SELECT DISTINCT m.id FROM missions m
-                                JOIN mission_phases p ON p.mission_id = m.id AND p.phase IN (5, 6)
-                                WHERE EXISTS (SELECT 1 FROM track_points t
-                                              WHERE t.owner_type = 'mission' AND t.owner_id = m.id)")
-                        ->fetchAll(PDO::FETCH_COLUMN);
-            foreach ($ids as $mid) {
-                compute_site_elevation($pdo, (int)$mid);
-            }
+            /* DER BACKFILL IST SEIT WEB 23 WEG (S11-12) — eine bewusste
+             * Ausnahme von E-ZE-04. Er rechnete die Hoehe mit
+             * `compute_site_elevation()` aus `track_points`; beide gibt es
+             * nicht mehr, und `2026_10_19_klartext_weg` wirft die Spalte
+             * wieder. Eine Datenbank von vor Web 2.3.0, die heute alle
+             * Migrationen durchlaeuft, bekaeme die Werte nur, damit die
+             * spaetere Migration an ihnen sperrt. Die Hoehe rechnet seit
+             * Web 22 der Browser in den `pat_blob`. */
         },
     ],
     [
@@ -3665,6 +3664,71 @@ function migrationen_katalog(): array
             "ALTER TABLE track_cuts MODIFY mission_id INT UNSIGNED NULL",
         ],
     ],
+    [
+        'id'    => '2026_10_19_klartext_weg',
+        'web'   => '23.0',
+        'label' => 'Aufraeumen nach S11: Klartext-Ortsdaten fallen (Spurpunkte, SPUR1-Blobs, Phasenorte, Reanimation, Transportziel, Ortshoehe)',
+        /* DIE AUFRAEUMAUSLIEFERUNG (S11-12, E-S11-19). Seit Web 22 liegen
+         * Spur, Phasenorte und Reanimation in Geraetehuellen (`track_stuecke`,
+         * `missions.ort_huelle`), Transportziel und Ortshoehe im `pat_blob`.
+         * Den Altbestand hat das Einmalwerkzeug im Browser jedes Kontos
+         * umgezogen (Web 22.7.0); hier fallen die Spalten und Tabellen, in
+         * denen er lag.
+         *
+         * MIT SPERRE ('inhalt'): Steht irgendwo noch eine Zeile, laeuft
+         * nichts, und die Zeile nennt Konto und Einsatz ('inhalt_wo',
+         * E-S11-83). Umziehen kann nur der Browser des Kontos — der Server
+         * hat den Schluessel nicht. Wer den Rest NICHT umziehen kann oder
+         * will, gibt die Migration auf der Seite Updates ausdruecklich frei
+         * (E-S11-82): Dann ist der Rest verworfen, und die Protokollzeile
+         * „AUF AUSDRÜCKLICHE FREIGABE" haelt fest, was es war.
+         *
+         * `skip` fragt nach dem LETZTEN Schritt jeder Art: Fehlt eine der
+         * vier Tabellen oder eine der vier Spalten noch nicht, steht etwas
+         * aus. Nach einem Abbruch in der Mitte ueberspringt der zweite Lauf,
+         * was schon weg ist (1091). `DROP TABLE` kennt 1091 nicht, nur 1051
+         * — deshalb `IF EXISTS`. */
+        'zerstoert' => 'Die Klartext-Ortsdaten von vor Web 22 werden gelöscht: die Tabellen '
+                     . 'track_points, track_blobs, resus_sessions und resus_events sowie die '
+                     . 'Spalten mission_phases.lat/lon und missions.transport_dest, dest_lat, '
+                     . 'dest_lon und site_ele_m. Was dort noch steht, ist danach verloren — '
+                     . 'verschließen kann es nur der Browser des Kontos, vorher.',
+        'inhalt' => [
+            ['mission_phases', 'lat',            'Koordinate einer Phase'],
+            ['mission_phases', 'lon',            'Koordinate einer Phase'],
+            ['missions',       'transport_dest', 'Transportziel im Klartext'],
+            ['missions',       'dest_lat',       'Koordinate des Transportziels'],
+            ['missions',       'dest_lon',       'Koordinate des Transportziels'],
+            ['missions',       'site_ele_m',     'Höhe des Einsatzorts'],
+            ['track_points',   'owner_id',       'GPS-Punkte im Klartext'],
+            ['track_blobs',    'owner_id',       'GPS-Aufzeichnungen im Klartext (SPUR1)'],
+            ['resus_sessions', 'mission_id',     'Reanimation im Klartext'],
+            ['resus_events',   'session_id',     'Ereignis einer Reanimation'],
+        ],
+        'inhalt_wo' => fn(PDO $pdo): string => mig_klartext_wo($pdo),
+        'skip'  => function (PDO $pdo): bool {
+            foreach (['track_points', 'track_blobs', 'resus_events', 'resus_sessions'] as $t) {
+                if (db_hat_tabelle($pdo, $t)) { return false; }
+            }
+            foreach (['transport_dest', 'dest_lat', 'dest_lon', 'site_ele_m'] as $s) {
+                if (db_hat_spalte($pdo, 'missions', $s)) { return false; }
+            }
+            return !db_hat_spalte($pdo, 'mission_phases', 'lat')
+                && !db_hat_spalte($pdo, 'mission_phases', 'lon');
+        },
+        'sql'   => [
+            "ALTER TABLE mission_phases DROP COLUMN lat",
+            "ALTER TABLE mission_phases DROP COLUMN lon",
+            "ALTER TABLE missions DROP COLUMN transport_dest",
+            "ALTER TABLE missions DROP COLUMN dest_lat",
+            "ALTER TABLE missions DROP COLUMN dest_lon",
+            "ALTER TABLE missions DROP COLUMN site_ele_m",
+            "DROP TABLE IF EXISTS resus_events",
+            "DROP TABLE IF EXISTS resus_sessions",
+            "DROP TABLE IF EXISTS track_points",
+            "DROP TABLE IF EXISTS track_blobs",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }
@@ -3672,6 +3736,69 @@ function migrationen_katalog(): array
 /** Die sechs Stammdatentabellen mit `user_id` (P5c/AP8, Nr. 168). */
 const MIG_STAMMDATEN_TABELLEN = ['bases', 'vehicles', 'crew_presets', 'resources',
                                  'bw_units', 'transport_dests'];
+
+/**
+ * Wo noch Klartext-Ortsdaten stehen — fuer die Sperre der Migration
+ * `2026_10_19_klartext_weg` (S11-12, E-S11-83): je Konto die Einsaetze und
+ * Ruhesegmente, hoechstens zehn Nummern je Art. Fragt jede Tabelle und
+ * Spalte erst, ob es sie noch gibt; nach einem Abbruch in der Mitte fehlt
+ * ein Teil.
+ *
+ * Die Bedingungen standen bis Web 22.7.0 als `ou_einsatz_bedingung()` und
+ * `ou_ruhe_bedingung()` im Einmalwerkzeug; mit ihm sind sie gegangen.
+ */
+function mig_klartext_wo(PDO $pdo): string
+{
+    $einsatz = [];
+    if (db_hat_spalte($pdo, 'mission_phases', 'lat')) {
+        $einsatz[] = 'EXISTS (SELECT 1 FROM mission_phases p WHERE p.mission_id = m.id
+                       AND (p.lat IS NOT NULL OR p.lon IS NOT NULL))';
+    }
+    if (db_hat_tabelle($pdo, 'resus_sessions')) {
+        $einsatz[] = 'EXISTS (SELECT 1 FROM resus_sessions r WHERE r.mission_id = m.id)';
+    }
+    foreach (['transport_dest', 'dest_lat', 'dest_lon', 'site_ele_m'] as $s) {
+        if (db_hat_spalte($pdo, 'missions', $s)) { $einsatz[] = "m.$s IS NOT NULL"; }
+    }
+    $ruhe = [];
+    foreach (['track_points', 'track_blobs'] as $t) {
+        if (!db_hat_tabelle($pdo, $t)) { continue; }
+        $einsatz[] = "EXISTS (SELECT 1 FROM $t t WHERE t.owner_type = 'mission' AND t.owner_id = m.id)";
+        $ruhe[]    = "EXISTS (SELECT 1 FROM $t t WHERE t.owner_type = 'rest' AND t.owner_id = r.id)";
+    }
+    $je = [];   // user_id => ['mission' => [ids], 'rest' => [ids]]
+    $abfragen = [];
+    if ($einsatz) {
+        $abfragen['mission'] = 'SELECT m.user_id, m.id FROM missions m WHERE ' . implode(' OR ', $einsatz)
+                             . ' ORDER BY m.user_id, m.id';
+    }
+    if ($ruhe) {
+        $abfragen['rest'] = 'SELECT r.user_id, r.id FROM rest_segments r WHERE ' . implode(' OR ', $ruhe)
+                          . ' ORDER BY r.user_id, r.id';
+    }
+    foreach ($abfragen as $art => $sql) {
+        foreach ($pdo->query($sql)->fetchAll(PDO::FETCH_NUM) as [$u, $id]) {
+            $je[(int)$u][$art][] = (int)$id;
+        }
+    }
+    if (!$je) { return ''; }
+    $namen = [];
+    $q = $pdo->query('SELECT id, email FROM users WHERE id IN (' . implode(',', array_keys($je)) . ')');
+    foreach ($q->fetchAll(PDO::FETCH_NUM) as [$id, $name]) { $namen[(int)$id] = (string)$name; }
+    $teile = [];
+    foreach ($je as $u => $arten) {
+        $satz = [];
+        foreach (['mission' => 'Einsatz', 'rest' => 'Ruhesegment'] as $art => $wort) {
+            $ids = $arten[$art] ?? [];
+            if (!$ids) { continue; }
+            $satz[] = count($ids) . ' × ' . $wort . ' (Nr. ' . implode(', ', array_slice($ids, 0, 10))
+                    . (count($ids) > 10 ? ', …' : '') . ')';
+        }
+        $teile[] = 'Konto ' . $u . (isset($namen[$u]) ? ' „' . $namen[$u] . '“' : '') . ': '
+                 . implode(', ', $satz);
+    }
+    return implode('; ', $teile);
+}
 
 /* ---- Inhaltspruefung vor destruktiven Migrationen (M6-01) ------------------
  *
@@ -3895,6 +4022,7 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
                           ($ausfuehren ? 'NICHT AUSGEFÜHRT' : 'WIRD NICHT AUSGEFÜHRT')
                           . ' — dort stehen noch Daten: '
                           . migrationen_inhalt_text($gefunden) . '.'
+                          . (isset($m['inhalt_wo']) ? ' Betroffen: ' . ($m['inhalt_wo'])($pdo) . '.' : '')
                           . ($ausfuehren ? ' Es wurde nichts geändert.' : ''),
                           $m['zerstoert'] ?? null, $m['id'], $m['web'] ?? null];
             $blockiert++;

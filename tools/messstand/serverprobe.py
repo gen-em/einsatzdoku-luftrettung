@@ -18,6 +18,11 @@ Grenze war, sieht man ihr nicht an. Der Weg hier ruft dieselben Funktionen der
 Anwendung auf — `edbak_build()` und die Abfragen der Ansichten — nur eben so,
 dass sich die Spitze ablesen lässt.
 
+SEIT WEB 23 (S11-12) MISST SIE `track_stuecke`. Bis Web 22.7.0 zählte sie
+Zeilen in `track_points` und maß den Bau des Backups am Stück; die Tabelle
+und der Bau am Stück sind gefallen. Eine Spur wiegt jetzt Bytes je PUNKT
+(Hülle samt Index geteilt durch die Punkte der Tabelle), nicht je Zeile.
+
 Aufruf:
     python3 serverprobe.py [--ausgabe datei.json] [--konto messstand@example.invalid]
 """
@@ -58,10 +63,11 @@ $aus["einsaetze"]     = zahl($pdo, "SELECT COUNT(*) FROM missions WHERE user_id=
 $aus["ruhesegmente"]  = zahl($pdo, "SELECT COUNT(*) FROM rest_segments WHERE user_id=?", [$userId]);
 $aus["diensttage"]    = zahl($pdo, "SELECT COUNT(*) FROM days WHERE user_id=?", [$userId]);
 $aus["spurpunkte"]    = zahl($pdo,
-    "SELECT COUNT(*) FROM track_points tp
-      WHERE (tp.owner_type='mission' AND tp.owner_id IN (SELECT id FROM missions WHERE user_id=?))
-         OR (tp.owner_type='rest'    AND tp.owner_id IN (SELECT id FROM rest_segments WHERE user_id=?))",
+    "SELECT COALESCE(SUM(ts.punkte), 0) FROM track_stuecke ts
+      WHERE (ts.owner_type='mission' AND ts.owner_id IN (SELECT id FROM missions WHERE user_id=?))
+         OR (ts.owner_type='rest'    AND ts.owner_id IN (SELECT id FROM rest_segments WHERE user_id=?))",
     [$userId, $userId]);
+$aus["punkte_tabelle"] = zahl($pdo, "SELECT COALESCE(SUM(punkte), 0) FROM track_stuecke");
 
 /* Tabellengroessen — die Zahl, an der das 10-GB-Kontingent aus Z2 haengt.
  *
@@ -86,10 +92,10 @@ $aus["spurpunkte"]    = zahl($pdo,
 // zeigt dabei auf die naechste Zeile, nicht auf die Ursache.
 if (getenv("EDOKU_OPTIMIEREN") === "ja") {
     $t0 = microtime(true);
-    $pdo->query("OPTIMIZE TABLE track_points")->fetchAll();
+    $pdo->query("OPTIMIZE TABLE track_stuecke")->fetchAll();
     $aus["optimize_s"] = round(microtime(true) - $t0, 1);
 }
-$pdo->query("ANALYZE TABLE track_points")->fetchAll();
+$pdo->query("ANALYZE TABLE track_stuecke")->fetchAll();
 
 // fetchAll, NICHT ueber das Ergebnis iterieren: In der Schleife steht eine
 // weitere Abfrage (COUNT), und PDO/MySQL laesst neben einem offenen,
@@ -106,8 +112,8 @@ foreach ($tabellen as $r) {
     $name = (string)$r["table_name"];
     // Genau zaehlen, wo die Zahl gebraucht wird; sonst die Schaetzung.
     $genau = null;
-    if ($name === "track_points") {
-        $genau = zahl($pdo, "SELECT COUNT(*) FROM track_points");
+    if ($name === "track_stuecke") {
+        $genau = zahl($pdo, "SELECT COUNT(*) FROM track_stuecke");
     }
     $aus["tabellen"][] = [
         "name" => $name,
@@ -122,46 +128,20 @@ $aus["optimiert"] = getenv("EDOKU_OPTIMIEREN") === "ja";
  * Nur lesend nachgestellt: derselbe Anti-Join, aber als SELECT COUNT(*).
  * Ein DELETE waere eine Aenderung, und eine Messung soll nichts kaputtmachen. */
 $t0 = microtime(true);
-$waisen = zahl($pdo, "SELECT COUNT(*) FROM track_points tp
-                       LEFT JOIN missions m ON m.id = tp.owner_id
-                      WHERE tp.owner_type = 'mission' AND m.id IS NULL");
+$waisen = zahl($pdo, "SELECT COUNT(*) FROM track_stuecke ts
+                       LEFT JOIN missions m ON m.id = ts.owner_id
+                      WHERE ts.owner_type = 'mission' AND m.id IS NULL");
 $aus["wartung_vollscan"] = ["waisen" => $waisen,
                             "dauer_s" => round(microtime(true) - $t0, 3)];
 
-/* Der Backup-Bau (B-S2-03) — Laufzeit und Speicherspitze.
- * Das ist die Stelle, von der das Konzept sagt, dass sie memory_limit
- * sprengt. Hier steht die Zahl. */
-require_once $wurzel . "/backup_lib.php";
-$vorher = memory_get_peak_usage(true);
-$t0 = microtime(true);
-$fehler = null; $laenge = 0;
-try {
-    $paket = edbak_build($userId);
-    $laenge = strlen($paket);
-    unset($paket);
-} catch (Throwable $ex) {
-    $fehler = get_class($ex) . ": " . $ex->getMessage();
-}
-$aus["edbak_build"] = [
-    "dauer_s"        => round(microtime(true) - $t0, 2),
-    "paket_mb"       => round($laenge / 1048576, 2),
-    "spitze_vorher_mb" => round($vorher / 1048576, 1),
-    "spitze_mb"      => round(memory_get_peak_usage(true) / 1048576, 1),
-    "fehler"         => $fehler];
-
-/* DERSELBE BAU, ABER SO, WIE DIE ANWENDUNG IHN SEIT WEB 11.1.0 GEHT
- * (S2/AP5b): Kopf und Eintragsfenster einzeln.
- *
- * WARUM BEIDE ZAHLEN. Die obige misst den Weg mit Punktlisten am Stueck —
- * den gehen nur noch die Admin-Backups (AP6), und dort ist die Spitze
- * die Auskunft. Wer nur sie liest, haelt das Backup fuer einen
- * Gigabyten-Vorgang; das ist sie fuer die Nutzerin seit AP5b nicht mehr.
- * Eine Zahl, die nicht dazusagt, WELCHEN Weg sie gemessen hat, ist keine.
- *
- * ES IST EIN ZWEITER PROZESS, kein zweiter Aufruf: `memory_get_peak_usage()`
- * kennt nur ein Maximum je Prozess, und der Bau am Stueck hat es gerade auf
- * ueber ein Gigabyte gesetzt. Im selben Prozess gemessen kaeme fuer die
- * Fenster dieselbe Zahl heraus — und zwar eine, die nichts ueber sie sagt. */
+/* Der Backup-Bau AM STUECK (B-S2-03) stand hier bis Web 22.7.0 — der Weg
+ * mit Punktlisten, den nur noch die Admin-Backups gingen. Seit S11 sieht der
+ * Server keine Punkte mehr, und seit Web 23 gibt es den Weg nicht (S11-12).
+ * Gemessen wird nur noch der Fensterweg, in eigenem Prozess (unten). */
+/* DER BAU, WIE DIE ANWENDUNG IHN SEIT WEB 11.1.0 GEHT (S2/AP5b): Kopf und
+ * Eintragsfenster einzeln — in einem zweiten Prozess mit memory_limit=64M,
+ * weil `memory_get_peak_usage()` nur ein Maximum je Prozess kennt und die
+ * Tabellenmessung oben es schon gesetzt hat. */
 $aus["edbak_fenster"] = ["hinweis" => "eigener Prozess, s. serverprobe.py"];
 
 /* Der WARTUNGSJOB, echt gefahren (nur mit --wartung-fahren).
@@ -182,7 +162,7 @@ $aus["edbak_fenster"] = ["hinweis" => "eigener Prozess, s. serverprobe.py"];
  * vollstaendigen Durchlaufs; dafuer ist `php jobs.php` da.
  */
 if (getenv("EDOKU_WARTUNG") === "ja") {
-    $vorher = zahl($pdo, "SELECT COUNT(*) FROM track_points");
+    $vorher = zahl($pdo, "SELECT COUNT(*) FROM track_stuecke");
     try { $pdo->exec("UPDATE jobs SET letzter_lauf = NULL, laeuft_seit = NULL"); }
     catch (Throwable $ex) { /* vor der Migration gibt es die Tabelle nicht */ }
     $t0 = microtime(true);
@@ -190,7 +170,7 @@ if (getenv("EDOKU_WARTUNG") === "ja") {
     $aus["wartungsjob"] = [
         "dauer_s" => round(microtime(true) - $t0, 2),
         "zeilen_vorher" => $vorher,
-        "zeilen_nachher" => zahl($pdo, "SELECT COUNT(*) FROM track_points"),
+        "zeilen_nachher" => zahl($pdo, "SELECT COUNT(*) FROM track_stuecke"),
         "spitze_mb" => round(memory_get_peak_usage(true) / 1048576, 1)];
     $aus["wartungsjob"]["entfernt"] =
         $aus["wartungsjob"]["zeilen_vorher"] - $aus["wartungsjob"]["zeilen_nachher"];
@@ -224,9 +204,9 @@ def php_fenster_messen(konto: str, fenster: int = 250) -> dict:
     """Der Backup-Bau so, wie die Anwendung ihn seit Web 11.1.0 geht.
 
     EIGENER PROZESS, und das ist der Punkt. `memory_get_peak_usage()` kennt
-    nur EIN Maximum je Prozess; nach dem Bau am Stueck stuende dort schon ueber
-    ein Gigabyte, und die Fenster bekaemen eine Zahl, die nichts ueber sie
-    sagt.
+    nur EIN Maximum je Prozess; bis Web 22.7.0 stand dort nach dem Bau am
+    Stueck schon ueber ein Gigabyte, und die Fenster bekaemen eine Zahl, die
+    nichts ueber sie sagt.
 
     UND MIT `memory_limit=64M`, nicht mit `-1`. Das ist die Z3-Grenze. Eine
     Messung ohne Deckel sagt, wie viel gebraucht wurde; eine mit Deckel sagt
@@ -294,10 +274,10 @@ def main() -> int:
     p.add_argument("--wartung-fahren", action="store_true",
                    help="run_cleanup_if_due() wirklich laufen lassen und messen "
                         "(setzt die Fälligkeit der Jobs zurück, LÖSCHT verwaiste "
-                        "Zeilen); misst EIN Häppchen am Huckepack-Weg")
+                        "Stücke); misst EIN Häppchen am Huckepack-Weg")
     p.add_argument("--optimieren", action="store_true",
-                   help="track_points vorher neu aufbauen (OPTIMIZE TABLE) — "
-                        "nur so sind die Bytes je Zeile aussagekräftig")
+                   help="track_stuecke vorher neu aufbauen (OPTIMIZE TABLE) — "
+                        "nur so sind die Bytes je Punkt aussagekräftig")
     a = p.parse_args()
 
     werte = php_messen(a.konto, a.optimieren, a.wartung_fahren)
@@ -312,43 +292,31 @@ def main() -> int:
               f"{sp['index_mb']} MB Index, {sp['zeilen']} Zeilen")
     if werte["einsaetze"]:
         gesamt = sum(t["daten_mb"] + t["index_mb"] for t in werte["tabellen"])
-        spur = next((t for t in werte["tabellen"] if t["name"] == "track_points"), None)
-        if spur and spur["zeilen"] and werte["spurpunkte"]:
+        spur = next((t for t in werte["tabellen"] if t["name"] == "track_stuecke"), None)
+        if spur and werte.get("punkte_tabelle") and werte["spurpunkte"]:
             # NICHT die Tabellengroesse durch die Einsaetze DIESES Kontos
-            # teilen. Die Tabelle traegt alle Konten der Installation; die
-            # erste Fassung dieser Zeile rechnete 14,55 MB der ganzen Tabelle
-            # gegen 87 Einsaetze des Referenzkontos und meldete 167 MB je
-            # 1000 Einsaetzen — viermal zu viel. Eine Zahl, die nicht sagt,
-            # was sie gemessen hat, ist keine Auskunft (CLAUDE.md 6).
-            #
-            # Richtig ist der Umweg ueber die Zeilenkosten: Was eine Zeile
-            # wiegt, sagt die Tabelle; wie viele Zeilen auf einen Einsatz
-            # dieses Kontos kommen, sagt das Konto.
-            je_zeile = (spur["daten_mb"] + spur["index_mb"]) / spur["zeilen"]
+            # teilen: Die Tabelle traegt alle Konten der Installation (die
+            # erste Fassung dieser Zeile meldete deshalb viermal zu viel).
+            # Was ein Punkt wiegt, sagt die Tabelle; wie viele Punkte auf
+            # einen Einsatz dieses Kontos kommen, sagt das Konto.
+            je_punkt = (spur["daten_mb"] + spur["index_mb"]) / werte["punkte_tabelle"]
             je_einsatz = werte["spurpunkte"] / werte["einsaetze"]
-            werte["spur_bytes_je_zeile"] = round(je_zeile * 1048576, 1)
-            werte["spur_mb_je_1000_einsaetze"] = round(je_zeile * je_einsatz * 1000, 2)
-            print(f"Spurzeile: {je_zeile * 1048576:.1f} B "
-                  f"(gezählt über {spur['zeilen']} Zeilen der ganzen Tabelle"
+            werte["spur_bytes_je_punkt"] = round(je_punkt * 1048576, 1)
+            werte["spur_mb_je_1000_einsaetze"] = round(je_punkt * je_einsatz * 1000, 2)
+            print(f"Spurpunkt: {je_punkt * 1048576:.1f} B "
+                  f"(über {werte['punkte_tabelle']} Punkte in {spur['zeilen']} Stücken "
+                  f"der ganzen Tabelle"
                   + (", Tabelle vorher neu aufgebaut)" if werte.get("optimiert")
                      else " — ACHTUNG: belegter Platz, enthält von früheren "
                           "Löschungen freigegebene Seiten; für die Bytes je "
-                          "Zeile --optimieren nutzen)"))
+                          "Punkt --optimieren nutzen)"))
             print(f"Punkte je Einsatz in diesem Konto: {je_einsatz:.0f}")
             print(f"→ Spuren je 1000 Einsätze DIESES Kontos: "
-                  f"{je_zeile * je_einsatz * 1000:.2f} MB "
+                  f"{je_punkt * je_einsatz * 1000:.2f} MB "
                   f"(Zielwert E-S2-24 nach Ausdünnung: ≤ 3 MB)")
         print(f"Datenbank gesamt (alle Konten): {gesamt:.1f} MB")
-    b = werte["edbak_build"]
-    print(f"edbak_build() am Stück, MIT Punktlisten (Admin-Backup, AP6): "
-          f"{b['dauer_s']} s, Paket {b['paket_mb']} MB, "
-          f"Speicherspitze {b['spitze_mb']} MB (Z3-Grenze: 64 MB)"
-          + (f" — FEHLER {b['fehler']}" if b["fehler"] else ""))
-
     # DER WEG, DEN DIE ANWENDUNG SEIT WEB 11.1.0 GEHT — eigener Prozess mit
-    # memory_limit=64M, s. php_fenster_messen(). Ohne diese Zeile las sich das
-    # Protokoll so, als brauche jedes Backup ein Gigabyte; das gilt nur noch
-    # fuer das Admin-Backup.
+    # memory_limit=64M, s. php_fenster_messen(). Seit Web 23 der einzige.
     f = php_fenster_messen(a.konto)
     werte["edbak_fenster"] = f
     if f.get("fehler"):
@@ -362,13 +330,13 @@ def main() -> int:
               f"Speicherspitze {f['spitze_mb']} MB von 64")
     w = werte["wartung_vollscan"]
     print(f"Waisen-Vollscan (B-S2-05): {w['dauer_s']} s über die ganze Tabelle, "
-          f"{w['waisen']} verwaiste Einsatzpunkte gefunden")
+          f"{w['waisen']} verwaiste Einsatzstücke gefunden")
     if werte.get("wartungsjob"):
         j = werte["wartungsjob"]
         print(f"Wartung huckepack (run_cleanup_if_due → jobs_lauf('anfrage')): "
               f"{j['dauer_s']} s für EIN Häppchen "
               f"(Budget: JOB_BUDGET_ANFRAGE, jobs_lib.php), "
-              f"{j['entfernt']} Zeilen entfernt, "
+              f"{j['entfernt']} Stücke entfernt, "
               f"Speicherspitze {j['spitze_mb']} MB — so viel trägt die Anfrage "
               f"einer Nutzerin mit")
         for jj in (j.get("jobs") or []):

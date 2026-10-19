@@ -15,9 +15,9 @@ require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
  *                                  n_original?}, …]}, …]}
  *
  * SEIT WEB 22.5.0 NUR VERSCHLOSSEN (S11-06b). Bis dahin kamen hier SPUR1-
- * Blobs an, also Punkte im Klartext. Der Browser oeffnet jetzt jede Fassung
- * — SPUR1 aus Nutzlast 8 bis 12, Punktlisten aus 13 —, verschliesst die
- * Punkte mit dem oeffentlichen Schluessel des Kontos und schickt Stuecke;
+ * Blobs an, also Punkte im Klartext. Der Browser nimmt die Punktlisten der
+ * Nutzlast 13, verschliesst sie mit dem oeffentlichen Schluessel des Kontos
+ * und schickt Stuecke (bis Web 22.7.0 las er dazu SPUR1 aus 8 bis 12);
  * eine lange Spur verteilt er auf mehrere Anfragen. Ein Blob wird mit 400
  * abgewiesen, und zwar die ganze Anfrage, bevor etwas liegt.
  * Antwort: {"geschrieben": 12, "uebersprungen": 3, "abgelehnt": [{…}]}
@@ -77,16 +77,13 @@ try {
                                  . 'neu laden. Es wurde nichts geändert.'], 400);
         }
     }
-    $e = edbak_spuren_schreiben(db(), $userId, $liste, 'browser');
+    $e = edbak_spuren_schreiben(db(), $userId, $liste);
     $geschrieben   = $e['geschrieben'];
     $uebersprungen = $e['uebersprungen'];
     $abgelehnt     = $e['abgelehnt'];
-    $hoeheFehler   = $e['hoehe_fehler'];
 
-    $antwort = ['ok' => true, 'geschrieben' => $geschrieben,
-                'uebersprungen' => $uebersprungen, 'abgelehnt' => $abgelehnt];
-    if ($hoeheFehler > 0) { $antwort['hoehe_fehler'] = $hoeheFehler; }
-    json_out($antwort);
+    json_out(['ok' => true, 'geschrieben' => $geschrieben,
+              'uebersprungen' => $uebersprungen, 'abgelehnt' => $abgelehnt]);
 } catch (Throwable $ex) {
     json_fehler($ex, 'restore');
 }

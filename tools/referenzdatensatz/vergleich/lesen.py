@@ -5,15 +5,17 @@ mehr steht, was sich bei jedem Export aendert.
 
   CSV-Archiv (.zip)   LIESMICH.txt, felder.csv, einsaetze.csv,
                       diensttage.csv, ruhezeiten.csv, tracks/*.gpx
-  Backup (.edbak)  Container v2/v3 (einteilig) oder v4 (ZIP mit
-                      versiegelten Teilen), entsiegelt mit dem
+  Backup (.edbak)  Container v4 (ZIP mit versiegelten Teilen; die
+                      einteiligen v2/v3 liest er seit Web 23 nicht
+                      mehr, S11-12), entsiegelt mit dem
                       Backup-Passwort; das innere JSON traegt die
                       geschuetzten Angaben im KLARTEXT (Backup-Format.md 2) —
                       deshalb ist es vergleichbar, ohne dass Chiffretext
                       angefasst wird.
 
 Fassung 4 wird beim Lesen wieder ZUSAMMENGESETZT: Die Spuren stehen dort als
-SPUR1-Blobs in eigenen Teilen und werden hier zu `track`-Listen an ihrem
+Punktlisten in eigenen Teilen (Nutzlast 13; bis 12 als SPUR1-Blobs, die dieser
+Leser bis Web 22.7.0 selbst dekodierte) und werden hier zu `track`-Listen an ihrem
 Einsatz beziehungsweise Ruhesegment aufgeloest. Der gelieferte Baum sieht
 danach aus wie der einer einteiligen Datei — sonst muessten normalisieren.py,
 vergleichen.py und beide Ausnahmelisten zweimal gepflegt werden, und die Zahl
@@ -57,71 +59,29 @@ def lesen_archiv(pfad: str) -> dict:
 
 # ------------------------------------------------------------------ .edbak
 #
-# Container Fassung 3 (assets/crypto.js, sealBackup/openBackup):
+# Bis Web 22.7.0 las dieser Leser auch die einteiligen Container der
+# Fassungen 2 und 3 ("EDBAK2" 0x00 0x02/0x03). Die Anwendung nimmt sie seit
+# Web 23 nicht mehr an (S11-12, E-S11-85), und eine Referenz dieser Form gibt
+# es nicht mehr; ein Pruefmittel fuer ein Format ohne Gegenstand prueft nichts.
 #
-#   "EDBAK2" 0x00 0x03 | Flag(1) | Runden(4, big endian) | Salt(16) | IV(12) | AES-GCM
-#   AAD: die ersten 13 Bytes (Magie + Fassung + Flag + Runden)
-#   Flag: 1 = Inhalt gzip-gepackt, 0 = roh
-#
-# Fassung 2 (bis Web 4.7.0) traegt keine Rundenzahl; fuer sie gilt 310 000.
-# Beide Fassungen werden hier gelesen — eine Referenzdatei soll auch dann noch
-# aufgehen, wenn die Anwendung weitergezogen ist. Das ist derselbe Grund, aus
-# dem die Rundenzahl ueberhaupt in den Kopf gewandert ist (S7).
-#
-# Der Inhalt ist bereits KLARTEXT: Der Browser entschluesselt vor dem
-# Versiegeln, damit sich das Backup in jedes Konto einspielen laesst
+# Der Inhalt ist KLARTEXT: Der Browser entschluesselt vor dem Versiegeln,
+# damit sich das Backup in jedes Konto einspielen laesst
 # (Backup-Format.md 2). Dieses Werkzeug fasst also nie einen `edk1:`-
 # Chiffretext an — ausser dort, wo ein Backup ihn als `pat_blob`
 # unveraendert mitfuehrt, weil sie ihn beim Export nicht lesen konnte.
 
 MAGIE = b"EDBAK2"
-RUNDEN_V2 = 310000
 
 
 def lesen_edbak(pfad: str, passwort: str) -> dict:
-    import gzip as gziplib
-    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    from cryptography.hazmat.primitives import hashes
-
     roh = open(pfad, "rb").read()
-    # FASSUNGSWEICHE VORN. Fassung 4 ist ein ZIP und beginnt mit "PK"; die
-    # einteiligen Fassungen 2 und 3 mit "EDBAK2". Ohne diese Weiche meldete
-    # das Werkzeug "Keine EDBAK2-Datei (Signatur b'PK\x03\x04')" — richtig
-    # und unbrauchbar.
+    # FASSUNGSWEICHE VORN. Fassung 4 ist ein ZIP und beginnt mit "PK".
     if roh[:2] == b"PK":
         return lesen_edbak_v4(pfad, passwort)
-    if roh[:6] != MAGIE:
-        raise ValueError(f"Keine EDBAK2-Datei (Signatur {roh[:6]!r})")
-    fassung = roh[7]
-    flag = roh[8]
-    if fassung == 3:
-        runden = int.from_bytes(roh[9:13], "big")
-        kopf_len = 13
-    elif fassung == 2:
-        runden = RUNDEN_V2
-        kopf_len = 9
-    else:
-        raise ValueError(f"Unbekannte Containerfassung {fassung}")
-
-    kopf = roh[:kopf_len]
-    salt = roh[kopf_len:kopf_len + 16]
-    iv = roh[kopf_len + 16:kopf_len + 28]
-    ct = roh[kopf_len + 28:]
-
-    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt,
-                     iterations=runden)
-    schluessel = kdf.derive(passwort.encode("utf-8"))
-    koerper = AESGCM(schluessel).decrypt(iv, ct, kopf)
-    if flag == 1:
-        koerper = gziplib.decompress(koerper)
-
-    daten = json.loads(koerper.decode("utf-8"))
-    # Kennzahlen des Containers als eigener Zweig — sie gehoeren zum Befund,
-    # sind aber kein Inhalt und werden getrennt verglichen.
-    daten["$container"] = {"fassung": fassung, "gepackt": bool(flag),
-                           "runden": runden}
-    return daten
+    if roh[:6] == MAGIE:
+        raise ValueError(f"Einteiliger Container der Fassung {roh[7]} — seit Web 23 "
+                         "nicht mehr gelesen (S11-12, E-S11-85)")
+    raise ValueError(f"Keine Backup-Datei dieser Anwendung (Signatur {roh[:6]!r})")
 
 
 # ------------------------------------------------------- .edbak Fassung 4
@@ -132,7 +92,7 @@ def lesen_edbak(pfad: str, passwort: str) -> dict:
 #     manifest.edbak         versiegelt, AAD "EDBAK4|manifest"
 #     kopf.edbak             Stammdaten und Diensttage
 #     eintraege/0001.edbak … Einsaetze und Ruhesegmente, in Fenstern
-#     spuren/0001.edbak …    die Spuren als SPUR1-Blobs
+#     spuren/0001.edbak …    die Spuren als Punktlisten (Nutzlast 13)
 #   AAD je Teil: "EDBAK4|<kennung>|<name>|<nr>/<gesamt>"
 #
 # Teilkopf: "EDBAK2" 0x00 0x04 | Flag(1) | Runden(4, BE) | Salt(16) | IV(12)
@@ -180,45 +140,6 @@ def _teil_oeffnen(schluessel: bytes, roh: bytes, aad_text: str, was: str) -> byt
             f"{was} liess sich nicht oeffnen: Passwort falsch, oder das Teil "
             f"gehoert nicht an diese Stelle (Zusatzdaten {aad_text!r})") from None
     return gziplib.decompress(koerper) if flag == 1 else koerper
-
-
-def spur1_lesen(blob: bytes) -> list:
-    """SPUR1-Blob zu [[seq, lat, lon, ele|None, ts], ...].
-
-    DAS REZEPT STEHT IN docs/Backup-Format.md UND HIER — und das ist Absicht:
-    Ein Werkzeug, das den Vergleich fuehrt, darf sich nicht auf eine
-    Dokumentation stuetzen, die es selbst pruefen soll. Wer das Format
-    aendert, muss beide Stellen anfassen; genau das ist der Sinn.
-    """
-    import struct
-    import zlib
-
-    if blob[:2] != b"SP":
-        raise ValueError("kein SPUR-Blob")
-    fassung, _stufe, aufl = blob[2], blob[3], blob[4]
-    if fassung != 1 or aufl != 1:
-        raise ValueError(f"SPUR-Fassung {fassung}, Aufloesung {aufl}")
-    _n_original, n = struct.unpack("<II", blob[5:13])
-    roh = zlib.decompress(blob[13:])
-
-    def spalte(pos: int, anzahl: int):
-        werte, lauf = [], 0
-        for d in struct.unpack(f"<{anzahl}i", roh[pos:pos + 4 * anzahl]):
-            lauf += d
-            werte.append(lauf)
-        return werte, pos + 4 * anzahl
-
-    lat, pos = spalte(0, n)
-    lon, pos = spalte(pos, n)
-    bits = roh[pos:pos + (n + 7) // 8]
-    pos += (n + 7) // 8
-    hat = [bool(bits[i // 8] & (1 << (i % 8))) for i in range(n)]
-    hoehen, pos = spalte(pos, sum(hat))
-    ts, pos = spalte(pos, n)
-
-    h = iter(hoehen)
-    return [[i, lat[i] / 1e6, lon[i] / 1e6,
-             (next(h) / 10 if hat[i] else None), ts[i]] for i in range(n)]
 
 
 def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
@@ -293,13 +214,14 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
                 eintraege["missions"].extend(inhalt.get("missions", []))
                 eintraege["rest_segments"].extend(inhalt.get("rest_segments", []))
             else:
-                # ZWEI FORMEN: SPUR1-Blob bis Nutzlast 12, Punktliste seit 13
-                # (S11-06a, E-S11-56) — dieselbe Form [seq, lat, lon, ele, ts]
-                # wie die `track`-Liste einer einteiligen Datei.
+                # PUNKTLISTEN (Nutzlast 13, S11-06a, E-S11-56) — dieselbe Form
+                # [seq, lat, lon, ele, ts] wie die `track`-Liste einer
+                # einteiligen Datei. Einen SPUR1-Blob (bis Nutzlast 12) liest
+                # dieser Leser seit Web 23 nicht mehr (S11-12, E-S11-85).
                 for eintrag in inhalt.get("spuren", []):
-                    spuren[int(eintrag["spur_ref"])] = (
-                        eintrag["punkte"] if "punkte" in eintrag
-                        else base64.b64decode(eintrag["blob"]))
+                    if "punkte" not in eintrag:
+                        raise ValueError("Spurteil ohne Punktliste (SPUR1, Nutzlast 12 oder aelter)")
+                    spuren[int(eintrag["spur_ref"])] = eintrag["punkte"]
 
         # Fremde Eintraege im Archiv sind ein Befund, kein Achselzucken.
         ueberzaehlig = sorted(set(namen) - {"manifest.edbak"}
@@ -340,7 +262,7 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
                     ohne_blob.append(f"{schluessel_name}#{ref}")
                 obj["track"] = []
                 continue
-            obj["track"] = blob if isinstance(blob, list) else spur1_lesen(blob)
+            obj["track"] = blob
 
     kern["$container"] = {
         "fassung": 4,

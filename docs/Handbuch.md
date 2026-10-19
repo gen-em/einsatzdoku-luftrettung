@@ -1479,18 +1479,12 @@ Administration erfährt davon von selbst (seit Web 22.0.4): Im Reiter System
 erscheint eine Meldung mit der Nummer des Einsatzes und dem Grund — nie mit
 dem Inhalt. Dasselbe
 gilt für die Karte der Tagesübersicht und für „GPS-Daten des Diensttages"
-(4.1a). **Einsätze, die vor dieser Fassung aufgezeichnet wurden, zeigen
-vorübergehend keine Karte**, bis ihre Ortsdaten einmal umgestellt sind. Das
-tut seit Web 22.7.0 dein Browser von selbst: Öffnest du die Startseite und
-bist entsperrt, verschließt er im Hintergrund, was noch offen auf dem Server
-liegt — GPS-Daten, Phasenorte, Reanimation, Zielklinik, Höhe —, und beim nächsten
-Öffnen ist die Karte wieder da. Du musst dafür nichts tun und nichts
-abwarten; bricht es ab, macht der nächste Aufruf weiter. Seit Web 22.1.0
-gilt dasselbe für die **Zielklinik** (Zeile, Pin, Linie zur letzten
-Zielklinik) und die **Höhe des Einsatzorts**: Beides steht erst nach dem
-Entsperren da. Ältere Einsätze zeigen beides bis zum Umzug nicht —
-außer du speicherst einen davon einmal im Formular: Dann nimmt dein Browser
-Zielklinik, Phasenorte und Reanimation gleich verschlüsselt mit.
+(4.1a). Seit Web 22.1.0 gilt dasselbe für die **Zielklinik** (Zeile, Pin,
+Linie zur letzten Zielklinik) und die **Höhe des Einsatzorts**: Beides steht
+erst nach dem Entsperren da. *(Von Web 22.0 bis 22.7 zeigten Einsätze aus der
+Zeit davor vorübergehend keine Karte, bis dein Browser ihre Ortsdaten im
+Hintergrund verschlossen hatte. Seit Web 23 ist das abgeschlossen; alte
+Ortsdaten im Klartext gibt es auf dem Server nicht mehr.)*
 
 **Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
 einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
@@ -2667,9 +2661,11 @@ Transportziel und die GPS-Daten jedes Einsatzes — geschützt wie alles andere
 nur durch das Backup-Passwort. **Bis Web 22.4.0 fehlten sie bei allen
 Einsätzen, die seit Web 22.0.1 von Uhr oder Handy kamen.** Wer in dieser Zeit
 ein Backup angelegt hat, legt am besten ein neues an. Beim Einspielen
-verschlüsselt dein Browser sie wieder für das Zielkonto, bevor er sie sendet —
-auch aus jedem älteren Backup. Deshalb muss die Seite dafür **entsperrt**
-sein, wie beim Sichern. Lässt sich bei einem Einsatz die Verschlüsselung von
+verschlüsselt dein Browser sie wieder für das Zielkonto, bevor er sie sendet.
+Deshalb muss die Seite dafür **entsperrt** sein, wie beim Sichern. **Seit
+Web 23 lässt sich nur noch ein Backup ab Web 22.5.0 einspielen** — ältere
+trugen die Ortsdaten unverschlüsselt; die Seite sagt das, statt etwas
+einzuspielen, und es wird nichts geändert. Lässt sich bei einem Einsatz die Verschlüsselung von
 Orten und Reanimation beim Sichern nicht öffnen, sagt die Abschlussmeldung das
 in Orange. Solche Einsätze liegen dann verschlüsselt in der Datei und gehen
 nur im selben Konto wieder auf.
@@ -3023,8 +3019,8 @@ ab. Seit Web 5.8.0 deckt er **alles** ab, was auf einen Menschen zeigt:
   „Ankunft PatientIn" — das *ist* der Einsatzort), die **Höhe des
   Einsatzortes** und die **GPX-Tracks**,
 - seit Web 22.4.0 das **Transportziel** samt Koordinate und der **Verlauf
-  einer Reanimation** bei allen Einsätzen, deren Ortsdaten schon
-  verschlüsselt liegen (seit Web 22 gesendet, gespeichert oder importiert).
+  einer Reanimation** (bis Web 22.7.0 nur bei Einsätzen, deren Ortsdaten
+  schon verschlüsselt lagen; seit Web 23 bei allen).
 
 Der letzte Punkt war der Anlass für die Erweiterung: Bis Web 5.7.0 nannte ein
 Export „ohne Patientendaten" den Einsatzort trotzdem, nur in einer anderen
@@ -5054,18 +5050,12 @@ solange, rechnet jede Anmeldung zweimal). Das Demo-Konto zählt dort nicht
 mit: Es bleibt auf der Rundenzahl seiner Fixture, und der Altwert bleibt
 deshalb in der Liste, bis der Referenzbestand neu gebaut ist.
 
-**Die Zeile „Ortsdaten"** (seit Web 22.7.0, Karte **Server**) zählt, was
-auf dem Server noch **im Klartext** liegt: GPS-Punkte, Phasenorte,
-Reanimationen, Zielkliniken und Höhen aus der Zeit vor Web 22. Umziehen kann
-nur der Browser des Kontos selbst (4.2) — beim
-nächsten Öffnen der Startseite nach dem Entsperren. **Orange „Umzug offen"**,
-solange irgendein Konto noch Klartext hat, mit der Zahl je Art; das heißt
-meist: Jemand hat sich seit der Umstellung nicht angemeldet. **Blau
-„verschlossen"**, wenn nichts mehr offen ist. Erst dann darf die
-Aufräumfassung kommen, die die alten Spalten löscht. Bleibt ein einzelner
-Einsatz übrig, obwohl sich sein Konto angemeldet hat, trägt er einen
-verschlüsselten Block, der sich mit dem Schlüssel des Kontos nicht öffnen
-lässt — dann hilft nur ein Blick in den Reiter System.
+**Die Zeile „Ortsdaten"** stand in Web 22.7 in der Karte
+**Server** und zählte, was noch im Klartext auf dem Server lag. Mit Web 23
+ist sie gegangen, zusammen mit den alten Spalten: Die Aktualisierung auf
+Web 23 (**Betrieb → Updates**) hält an, solange noch ein Konto Klartext hat,
+nennt die Konten mit ihren Einsätzen und läuft nur nach ausdrücklicher
+Freigabe — wer freigibt, verliert diese Ortsdaten.
 
 **Die Zeile „Umgebung"** (seit Web 20.38.0) steht oben in der Karte
 **Server**, und zwar immer. Ihre Plakette nennt die Anlage: den Namen aus dem

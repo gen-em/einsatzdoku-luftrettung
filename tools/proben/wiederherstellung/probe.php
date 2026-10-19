@@ -130,10 +130,11 @@ $sag = function (string $was, bool $ok, string $ist) use (&$fehler, &$gesamt) {
 $kontoWeg = function (int $uid): void {
     konto_loeschen($uid, true, 'probe');
 };
-/* JEDES PROBEKONTO BEKOMMT EIN SCHLUESSELPAAR (S11-06). Der direkte Weg
- * (`'server'`) verschliesst Orte, Reanimation und Spur mit dem oeffentlichen
- * Schluessel des Kontos und weist ein Konto ohne Paar ab (E-S11-57). Der
- * private Teil ist hier ein Platzhalter — die Probe oeffnet nichts. */
+/* JEDES PROBEKONTO BEKOMMT EIN SCHLUESSELPAAR (S11-06). Der Server-Weg
+ * (`'server'`, seit Web 23 nur noch der Demo-Reset) verschliesst Orte,
+ * Reanimation und Spur mit dem oeffentlichen Schluessel des Kontos und weist
+ * ein Konto ohne Paar ab (E-S11-57). Der private Teil ist hier ein
+ * Platzhalter — die Probe oeffnet nichts. */
 $konto = function (string $mail) use ($pdo, $kontoWeg): int {
     $alt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
     $alt->execute([$mail]);
@@ -146,13 +147,15 @@ $konto = function (string $mail) use ($pdo, $kontoWeg): int {
     kp_ablegen($pdo, $id, $spki, 'edk1:' . str_repeat('QUJD', 16));
     return $id;
 };
-/* DER DIREKTE WEG, wie ihn Verwaltung und Demo-Reset nehmen (S11-06). Bis
- * Web 22.4.0 hatte `edbak_restore()` nur einen Weg; seit S11-06 nennt der
- * Aufrufer ihn, und der Browserweg weist Klartext ab (Teil 15). Diese Probe
- * misst die Einspiellogik — Papierkorb, Wiedererkennung, Pruefschicht — und
- * nimmt deshalb den Weg, der Klartext annimmt. */
+/* DER SERVER-WEG, wie ihn der Demo-Reset nimmt (S11-06; bis Web 22.7.0 auch
+ * die Verwaltung). Diese Probe misst die Einspiellogik — Papierkorb,
+ * Wiedererkennung, Pruefschicht — an Dateien der Nutzlast 7 mit Klartext und
+ * nimmt deshalb den Weg, der ihn annimmt und verschliesst. Seit Web 23 braucht
+ * er den Rueckruf fuer den Blob (S11-12); hier laesst er den Blob, wie er ist
+ * — Transportziel und Hoehe stehen in keiner der Dateien. */
+$blobGleich = static fn(?string $blob, array $zusatz): ?string => $blob;
 $restore = fn(int $uid, array $daten, ?array $karte = null): array
-    => edbak_restore($uid, $daten, $karte, 'server');
+    => edbak_restore($uid, $daten, $karte, 'server', $blobGleich);
 $weg = function (int $uid) use ($kontoWeg): void {
     $kontoWeg($uid);
 };
@@ -1725,7 +1728,7 @@ try {
     $crew13 = (int)$c13->fetchColumn();
     $sag('(3) Der Tag mit Tagesrettungsmittel kommt wie in der Datei zurueck (E8, E-P5c-123)',
          $crew13 === 0, $crew13 . ' Rollenzeilen');
-    $j13 = json_decode(edbak_build($uid13, true), true);
+    $j13 = json_decode(edbak_build($uid13, true, ['kopf' => true]), true);
     /* `EDBAK_NUTZLAST` und nicht 12 (S11-06a): Gemessen wird, dass die
      * geschriebene Fassung die Auswahl nicht mehr traegt — ab 12, und die
      * Zahl waechst mit jeder Fassung. */
@@ -1743,9 +1746,10 @@ try {
  * Teil 14 — Ortsdaten nur verschlossen (S11-06, E-S11-55 bis -57)
  *
  * WOFUER. Seit S11-06 nimmt der Rueckweg Orte, Reanimation und Spur auf zwei
- * Arten an: Der Browserweg ('browser') verlangt sie verschlossen und weist
- * Klartext ab, bevor etwas liegt; der direkte Weg ('server', Verwaltung und
- * Demo-Reset) verschliesst sie selbst und weist ein Konto ohne Paar ab. Dazu
+ * Arten an: Der Browserweg ('browser', seit Web 23 auch die Verwaltung)
+ * verlangt sie verschlossen und weist Klartext ab, bevor etwas liegt; der
+ * Server-Weg ('server', nur der Demo-Reset) verschliesst sie selbst und weist
+ * ein Konto ohne Paar ab. Dazu
  * reisen die Loeschvermerke (F-S11-52) und die Stuecke (F-S11-63) mit.
  * ====================================================================== */
 echo "\n  Teil 14 — Ortsdaten nur verschlossen (S11-06)\n";
@@ -1773,23 +1777,42 @@ try {
              && $mZahl($uid14) === 0, ($grund ?? 'angenommen') . ', Einsaetze ' . $mZahl($uid14));
     }
 
-    /* (2) Browserweg nimmt Huelle und Stuecke an, wie sie der Browser baut. */
+    /* (1b) Browserweg mit einer alten Nutzlast OHNE Klartext: Seit Web 23
+     * nimmt er nur Nutzlast 13 (S11-12, E-S11-85) — abgewiesen, nichts liegt. */
+    $grund = null;
+    try {
+        edbak_restore($uid14, ['version' => 7, 'days' => [$tag14], 'rest_segments' => [],
+            'missions' => [['client_ref' => 'v-m1', 'day_id' => 990,
+                            'started_at' => '2026-07-10 06:00:00']]], null, 'browser');
+    } catch (DomainException $ex) { $grund = $ex->getMessage(); }
+    $sag('(1b) Browserweg weist Nutzlast 7 ab (Web 23)', $grund !== null
+         && str_starts_with($grund, 'version_alt:') && $mZahl($uid14) === 0,
+         ($grund ?? 'angenommen') . ', Einsaetze ' . $mZahl($uid14));
+
+    /* (2) Browserweg nimmt Huelle und Stuecke an, wie sie der Browser baut:
+     * Nutzlast 13, die Huelle im Eintrag, die Stuecke ueber die Spurkarte
+     * (`spur_ref` -> `edbak_spuren_schreiben()`). Bis Web 22.7.0 stand hier
+     * eine Nutzlast 7 mit `spur_stuecke` im Eintrag; der Weg ist gefallen. */
     $sec14 = base64_decode((string)kp_fuer_geraet($pdo, $uid14));
     $huelle = base64_encode(gh_einsatz_verschliessen($sec14, 'b-m1', 1783584000,
         [['phase' => 4, 'ts' => 1783584600, 'lat' => 47.1, 'lon' => 11.1]], []));
     $st = gh_stuecke_bauen($sec14, 'spur', 'b-m1', [[0, 47.1, 11.1, 700.0, 1783584000],
                                                    [1, 47.2, 11.2, 705.0, 1783584060]]);
     $st = array_map(static fn($x) => ['huelle' => base64_encode($x['huelle'])] + $x, $st);
-    $s14 = edbak_restore($uid14, ['version' => 7, 'days' => [$tag14], 'rest_segments' => [],
+    $s14 = edbak_restore($uid14, ['version' => 13, 'days' => [$tag14], 'rest_segments' => [],
         'missions' => [['client_ref' => 'b-m1', 'day_id' => 990,
                         'started_at' => '2026-07-10 06:00:00', 'ended_at' => '2026-07-10 07:00:00',
                         'phases' => [['phase' => 4, 'occurred_at' => '2026-07-10 06:10:00']],
-                        'ort_huelle' => $huelle, 'spur_stuecke' => $st]]], null, 'browser');
+                        'ort_huelle' => $huelle, 'spur_ref' => 1, 'n' => 2]]], null, 'browser');
+    $ziel14 = $s14['spur_karte'][1] ?? null;
+    $e14 = $ziel14 === null ? ['geschrieben' => 0]
+         : edbak_spuren_schreiben($pdo, $uid14, [['owner_type' => $ziel14['art'],
+                                                  'owner_id' => $ziel14['id'], 'stuecke' => $st]]);
     $m14 = $pdo->query("SELECT id, ort_huelle IS NOT NULL h FROM missions WHERE user_id = $uid14
                          AND client_ref = 'b-m1'")->fetch(PDO::FETCH_ASSOC);
     $n14 = $m14 ? (int)(spur_zahlen($pdo, 'mission', [(int)$m14['id']])[(int)$m14['id']] ?? 0) : 0;
     $sag('(2) Browserweg nimmt Huelle und Stuecke an', ($s14['missions'] ?? 0) === 1
-         && $m14 && (int)$m14['h'] === 1 && $n14 === 2,
+         && $m14 && (int)$m14['h'] === 1 && $n14 === 2 && ($e14['geschrieben'] ?? 0) === 1,
          'Einsaetze ' . ($s14['missions'] ?? '—') . ', Huelle ' . ($m14['h'] ?? '—') . ", Punkte $n14");
 
     /* (3) Direkter Weg verschliesst Klartext selbst. */
@@ -1805,15 +1828,17 @@ try {
                                       'lat' => 47.15, 'lon' => 11.15]],
                         'resus' => [['started_at' => '2026-07-10 06:45:00',
                                      'events' => [['type' => 'adrenalin', 'occurred_at' => '2026-07-10 06:46:00']]]],
-                        'track' => [[0, 47.15, 11.15, 720.0, 1783586400]]]]], null, 'server');
+                        'track' => [[0, 47.15, 11.15, 720.0, 1783586400]]]]], null, 'server', $blobGleich);
     $sm = $pdo->query("SELECT id, ort_huelle IS NOT NULL h FROM missions WHERE user_id = $uid14
                         AND client_ref = 's-m1'")->fetch(PDO::FETCH_ASSOC);
     $smid = (int)($sm['id'] ?? 0);
-    $klar = (int)$pdo->query("SELECT COUNT(*) FROM mission_phases WHERE mission_id = $smid AND lat IS NOT NULL")->fetchColumn()
-          + (int)$pdo->query("SELECT COUNT(*) FROM resus_sessions WHERE mission_id = $smid")->fetchColumn()
-          + (int)$pdo->query("SELECT COUNT(*) FROM track_points WHERE owner_type = 'mission' AND owner_id = $smid")->fetchColumn();
+    /* Seit Web 23 gibt es keine Spalte und keine Tabelle mehr, in die
+     * Klartext gehen koennte (S11-12); gezaehlt wird, ob es sie gibt. */
+    $klar = (db_hat_spalte($pdo, 'mission_phases', 'lat') ? 1 : 0)
+          + (db_hat_tabelle($pdo, 'resus_sessions') ? 1 : 0)
+          + (db_hat_tabelle($pdo, 'track_points') ? 1 : 0);
     $stueck = (int)$pdo->query("SELECT COUNT(*) FROM track_stuecke WHERE owner_type = 'mission' AND owner_id = $smid")->fetchColumn();
-    $sag('(3) Direkter Weg verschliesst Orte, Reanimation und Spur', $smid > 0 && (int)$sm['h'] === 1
+    $sag('(3) Server-Weg verschliesst Orte, Reanimation und Spur', $smid > 0 && (int)$sm['h'] === 1
          && $klar === 0 && $stueck === 1, "Huelle " . ($sm['h'] ?? '—') . ", Klartextzeilen $klar, Stuecke $stueck");
     $rid14 = (int)$pdo->query("SELECT id FROM rest_segments WHERE user_id = $uid14 AND client_ref = 's-r1'")->fetchColumn();
     $lv = loeschvermerke_zu_quellen($pdo, $uid14, 'rest', [$rid14]);
@@ -1828,31 +1853,32 @@ try {
          'loeschungen ' . count($rk[0]['loeschungen'] ?? []) . ', Huelle ' . (empty($mk[0]['ort_huelle']) ? 'nein' : 'ja')
          . ', n ' . ($mk[0]['n'] ?? '—'));
 
-    /* (6) Spurteile: Blob nur im direkten Weg, Fortsetzung zaehlt nicht. */
-    $blob = spur_kodieren([[0, 47.4, 11.4, 800.0, 1783600000], [1, 47.41, 11.41, 801.0, 1783600060]], 2, 2);
+    /* (6) Spurteile: ein Blob (SPUR1) wird abgelehnt — seit Web 23 auf jedem
+     * Weg —, eine Fortsetzung zaehlt nicht. Der Inhalt des Blobs ist
+     * gleichgueltig; abgelehnt wird an der Form. */
     $e1 = edbak_spuren_schreiben($pdo, $uid14, [['owner_type' => 'rest', 'owner_id' => $rid14,
-                                                'blob' => base64_encode($blob)]], 'browser');
-    $sag('(6) Browserweg lehnt einen SPUR1-Blob ab', ($e1['abgelehnt'][0]['grund'] ?? '') === 'klartext',
+                                                'blob' => base64_encode('SP' . str_repeat("\0", 20))]]);
+    $sag('(6) Ein SPUR1-Blob wird abgelehnt', ($e1['abgelehnt'][0]['grund'] ?? '') === 'klartext',
          json_encode($e1['abgelehnt'], JSON_UNESCAPED_UNICODE));
     $mid2 = (int)$m14['id'];
     $st2 = gh_stuecke_bauen($sec14, 'spur', 'b-m1', [[5, 47.5, 11.5, null, 1783584300]]);
     $st2 = array_map(static fn($x) => ['huelle' => base64_encode($x['huelle'])] + $x, $st2);
     $e2 = edbak_spuren_schreiben($pdo, $uid14, [['owner_type' => 'mission', 'owner_id' => $mid2,
-                                                'stuecke' => $st2, 'fortsetzung' => true]], 'browser');
+                                                'stuecke' => $st2, 'fortsetzung' => true]]);
     $sag('(7) Eine Fortsetzung schreibt, zaehlt aber nicht', $e2['geschrieben'] === 0 && $e2['uebersprungen'] === 0
          && (int)(spur_zahlen($pdo, 'mission', [$mid2])[$mid2] ?? 0) === 3,
          'geschrieben ' . $e2['geschrieben'] . ', Punkte ' . (spur_zahlen($pdo, 'mission', [$mid2])[$mid2] ?? 0));
 
-    /* (8) Direkter Weg ohne Paar: abgewiesen, bevor etwas liegt. */
+    /* (8) Server-Weg ohne Paar: abgewiesen, bevor etwas liegt. */
     $uid14b = $konto('probe-s11-06b@example.invalid');
     $pdo->prepare('UPDATE users SET kp_oeffentlich = NULL, kp_privat = NULL WHERE id = ?')->execute([$uid14b]);
     $grund = null;
     try {
         edbak_restore($uid14b, ['version' => 7, 'days' => [$tag14], 'rest_segments' => [],
             'missions' => [['client_ref' => 'p-m1', 'day_id' => 990, 'started_at' => '2026-07-10 06:00:00',
-                            'track' => [[0, 47.1, 11.1, 700.0, 1783584000]]]]], null, 'server');
+                            'track' => [[0, 47.1, 11.1, 700.0, 1783584000]]]]], null, 'server', $blobGleich);
     } catch (DomainException $ex) { $grund = $ex->getMessage(); }
-    $sag('(8) Direkter Weg ohne Schluesselpaar wird abgewiesen', $grund !== null
+    $sag('(8) Server-Weg ohne Schluesselpaar wird abgewiesen', $grund !== null
          && str_starts_with($grund, 'kein_paar:') && $mZahl($uid14b) === 0,
          mb_substr($grund ?? 'angenommen', 0, 40) . ', Einsaetze ' . $mZahl($uid14b));
     $weg($uid14b);

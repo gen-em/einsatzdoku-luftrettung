@@ -42,6 +42,22 @@ declare(strict_types=1);
  * stehen.)
  */
 
+/* SEIT WEB 23 VERWEIGERT (S11-12, F-S11-95, Backlog Nr. 388).
+ *
+ * Der Weg oben setzt zweierlei voraus, das es nicht mehr gibt: einen
+ * `edbak_build()` am Stueck mit Punktlisten (seit Web 23 nur noch Kopf und
+ * Fenster, ohne Punkte) und eine Spur, die der Server lesen kann (seit S11
+ * verschlossen). Schon seit Web 22 haette das Skript eine Fixture OHNE Spur,
+ * Phasenorte und Reanimation geschrieben — still, mit einer Punktzahl von
+ * null am Ende. Die eingecheckte Fixture (`server/demo/fixture.json.gz`,
+ * Nutzlast 7 mit Klartext aus dem Repositorium, E-S11-20) ist davon nicht
+ * betroffen; neu erzeugen laesst sie sich erst wieder, wenn Nr. 388 einen Weg
+ * hat. Bis dahin bricht das Skript ab, statt eine halbe Fixture abzulegen. */
+fwrite(STDERR, "erzeugen.php ist seit Web 23 ausser Betrieb: Der Server kann die Spur "
+             . "nicht mehr lesen, und edbak_build() baut kein Backup am Stueck mehr. "
+             . "Siehe Backlog Nr. 388.\n");
+exit(2);
+
 $email = $argv[1] ?? 'demo@gen-em.org';
 $ziel  = $argv[2] ?? (__DIR__ . '/../../../server/demo/fixture.json.gz');
 

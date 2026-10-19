@@ -165,7 +165,9 @@ function mf_crew_felder(): array
  * Transportziel) liegt im Blob als {addr, lat, lon} und nicht als Text.
  * `spalten` sind die Klartextspalten, die das Feld im Altbestand belegt:
  * das Feld selbst und bei einem Ortsfeld seine Koordinatenspalten. Das
- * Formular leert sie, sobald der Blob steht.
+ * Formular leert sie, sobald der Blob steht. Ein Feld mit `ohne_spalte`
+ * (seit Web 23 das Transportziel, S11-12) hat keine — die Spalten sind
+ * gefallen.
  *
  * @return array<string,array{blob:string,label:string,typ:string,spalten:list<string>}>
  */
@@ -182,7 +184,8 @@ function mf_pat_felder(): array
                     'blob'    => (string)($f['blob_key'] ?? $col),
                     'label'   => (string)($f['label'] ?? $col),
                     'typ'     => (string)($f['type'] ?? 'text'),
-                    'spalten' => array_merge([(string)$col], array_values(mf_ort_spalten($f))),
+                    'spalten' => !empty($f['ohne_spalte']) ? []
+                        : array_merge([(string)$col], array_values(mf_ort_spalten($f))),
                 ];
             }
             if (!empty($f['children']) && is_array($f['children'])) { $sammle($f['children']); }
@@ -221,7 +224,7 @@ function mf_ist_spalte(array $f): bool
  *
  * Leer bei jedem anderen Feldtyp. Die Namen stehen im Katalog ('lat_col',
  * 'lon_col') statt aus dem Feldnamen abgeleitet zu werden: `transport_dest`
- * liegt in `dest_lat`/`dest_lon`, und eine Ableitung ueber ein Namensmuster
+ * lag bis Web 22.7.0 in `dest_lat`/`dest_lon`, und eine Ableitung ueber ein Namensmuster
  * waere geraten. Sie landen unmaskiert in einem UPDATE, deshalb dieselbe
  * Namenspruefung wie bei den Tagesspalten — sie faengt einen Tippfehler ab,
  * der sonst als SQL-Fehler ohne erkennbaren Bezug auftauchen wuerde.
@@ -369,14 +372,13 @@ function mf_gates_erfuellt(array $f, array $rollen, ?string $kind, array $faehig
  * stand — ein Feld, das seit Monaten niemand mehr fuellte und das beim
  * Einspielen verworfen wurde.
  *
- * UND `site_ele_m` STEHT IM BACKUP, ABER IN KEINER EINSPIELLISTE — weder im
- * Zweck `backup_restore` noch unter den `$extraCols` aus dem Feldkatalog.
- * Der Wert kommt trotzdem wieder, weil `edbak_restore()` ihn nach dem
- * Bestaetigen aus den Phasenkoordinaten NEU RECHNET
- * (`compute_site_elevation()`). Das ist ein Unterschied, den man sehen
- * koennen muss: Ein Backup TRAEGT die Hoehe nicht zurueck, es stellt sie
- * wieder her. Steht in der Datei eine Hoehe, die zu den Koordinaten nicht
- * passt, gewinnt die Rechnung. Begruendung in `backup_lib.php`, Kopf.
+ * SEIT WEB 23 (S11-12) FEHLEN VIER SPALTEN: `transport_dest`, `dest_lat`,
+ * `dest_lon` und `site_ele_m`. Transportziel und Ortshoehe liegen seit
+ * Web 22 im `pat_blob`; die Spalten trugen nur noch Altbestand und sind mit
+ * der Migration `2026_10_19_klartext_weg` gefallen. Die Positionen der
+ * uebrigen Spalten sind dabei je Zweck nachgerueckt — im Export und in der
+ * Sicherung aendert das nur die Reihenfolge der Schluessel im JSON, die
+ * Spalten der CSV-Datei legt `assets/export.js` fest.
  *
  * JETZT FUEHRT DAS REGISTER JEDE SPALTE GENAU EINMAL und sagt je Zweck, ob
  * sie dabei ist — und an welcher Stelle. Die Zahl ist die Position in der
@@ -408,7 +410,7 @@ function mf_missions_register(): array
                   'backup_restore' => 0],
     'device_id' => ['import_neu' => 1, 'ingest_neu' => 1, 'schnitt_neu' => 1],
     'client_ref' => ['backup' => 0, 'import_neu' => 2, 'ingest_neu' => 2, 'schnitt_neu' => 2,
-                     'backup_restore' => 1, 'tag' => 1, 'export' => 32],
+                     'backup_restore' => 1, 'tag' => 1, 'export' => 28],
     'day_id' => ['export' => 1, 'backup' => 1, 'import_neu' => 3, 'import_aendern' => 0,
                  'suchindex' => 1, 'range' => 1, 'ingest_neu' => 3, 'schnitt_neu' => 3,
                  'backup_restore' => 2],
@@ -418,64 +420,59 @@ function mf_missions_register(): array
     'ended_at' => ['export' => 3, 'backup' => 3, 'import_neu' => 5, 'import_aendern' => 2,
                    'suchindex' => 19, 'range' => 3, 'ingest_neu' => 5, 'schnitt_neu' => 5,
                    'backup_restore' => 4, 'tag' => 3],
-    'distance_m' => ['export' => 4, 'backup' => 4, 'import_neu' => 14, 'import_aendern' => 9,
+    'distance_m' => ['export' => 4, 'backup' => 4, 'import_neu' => 12, 'import_aendern' => 7,
                      'suchindex' => 3, 'range' => 4, 'ingest_neu' => 6, 'backup_restore' => 9, 'tag' => 4],
-    'ascent_m' => ['export' => 5, 'backup' => 5, 'import_neu' => 15, 'import_aendern' => 10,
+    'ascent_m' => ['export' => 5, 'backup' => 5, 'import_neu' => 13, 'import_aendern' => 8,
                    'ingest_neu' => 7, 'backup_restore' => 10],
-    'site_ele_m' => ['export' => 28, 'backup' => 6, 'import_neu' => 13, 'import_aendern' => 8],
-    'final' => ['export' => 6, 'backup' => 7, 'import_neu' => 6, 'import_aendern' => 3,
+    'final' => ['export' => 6, 'backup' => 6, 'import_neu' => 6, 'import_aendern' => 3,
                 'ingest_neu' => 8, 'schnitt_neu' => 6, 'backup_restore' => 8, 'tag' => 5],
     'letzter_punkt_am' => [],
-    'uhr_gesperrt' => ['export' => [7, 'manual'], 'backup' => [8, 'manual'], 'import_neu' => 7,
-                       'import_aendern' => 26, 'schnitt_neu' => 7, 'backup_restore' => 5],
-    'origin' => ['export' => 8, 'backup' => 9, 'import_neu' => 8, 'ingest_neu' => 9,
+    'uhr_gesperrt' => ['export' => [7, 'manual'], 'backup' => [7, 'manual'], 'import_neu' => 7,
+                       'import_aendern' => 22, 'schnitt_neu' => 7, 'backup_restore' => 5],
+    'origin' => ['export' => 8, 'backup' => 8, 'import_neu' => 8, 'ingest_neu' => 9,
                  'schnitt_neu' => 8, 'backup_restore' => 6],
-    'edited' => ['export' => 9, 'backup' => 10, 'import_aendern' => 27, 'backup_restore' => 7],
-    'geraet_art' => ['export' => 10, 'backup' => 11, 'ingest_neu' => 10, 'schnitt_neu' => 9,
+    'edited' => ['export' => 9, 'backup' => 9, 'import_aendern' => 23, 'backup_restore' => 7],
+    'geraet_art' => ['export' => 10, 'backup' => 10, 'ingest_neu' => 10, 'schnitt_neu' => 9,
                      'backup_restore' => 11],
-    'geraet_modell' => ['export' => 11, 'backup' => 12, 'ingest_neu' => 11, 'schnitt_neu' => 10,
+    'geraet_modell' => ['export' => 11, 'backup' => 11, 'ingest_neu' => 11, 'schnitt_neu' => 10,
                         'backup_restore' => 12],
-    'transport_mode' => ['export' => 14, 'backup' => 14, 'import_neu' => 25,
-                         'import_aendern' => 20, 'suchindex' => 4],
-    'na_escort' => ['export' => 15, 'backup' => 15, 'import_neu' => 26, 'import_aendern' => 21,
+    'transport_mode' => ['export' => 13, 'backup' => 12, 'import_neu' => 23,
+                         'import_aendern' => 18, 'suchindex' => 4],
+    'na_escort' => ['export' => 14, 'backup' => 13, 'import_neu' => 24, 'import_aendern' => 19,
                     'suchindex' => 5],
-    'transport_dest' => ['export' => 12, 'backup' => 13, 'import_neu' => 9,
-                         'import_aendern' => 4],
-    'dest_lat' => ['export' => 18, 'backup' => 18, 'import_neu' => 28, 'import_aendern' => 23],
-    'dest_lon' => ['export' => 19, 'backup' => 19, 'import_neu' => 29, 'import_aendern' => 24],
-    'schockraum' => ['export' => 26, 'backup' => 26, 'import_neu' => 16, 'import_aendern' => 11,
+    'schockraum' => ['export' => 23, 'backup' => 22, 'import_neu' => 14, 'import_aendern' => 9,
                      'suchindex' => 6],
-    'false_alarm' => ['export' => 16, 'backup' => 16, 'import_neu' => 27,
-                      'import_aendern' => 22, 'suchindex' => 7, 'range' => 9],
-    'start_src' => ['export' => 17, 'backup' => 17, 'import_neu' => 30, 'import_aendern' => 25, 'tag' => 7],
-    'winch' => ['export' => 13, 'backup' => 20, 'import_neu' => 10, 'import_aendern' => 5,
+    'false_alarm' => ['export' => 15, 'backup' => 14, 'import_neu' => 25,
+                      'import_aendern' => 20, 'suchindex' => 7, 'range' => 9],
+    'start_src' => ['export' => 16, 'backup' => 15, 'import_neu' => 26, 'import_aendern' => 21, 'tag' => 7],
+    'winch' => ['export' => 12, 'backup' => 16, 'import_neu' => 9, 'import_aendern' => 4,
                 'suchindex' => 8, 'range' => 5],
-    'winch_cycles' => ['export' => 20, 'backup' => 21, 'import_neu' => 18,
-                       'import_aendern' => 13, 'suchindex' => 9, 'range' => 8],
-    'winch_cycles_pat' => ['export' => 21, 'backup' => 22, 'import_neu' => 19,
-                           'import_aendern' => 14, 'suchindex' => 10],
-    'winch_airload' => ['export' => 22, 'backup' => 23, 'import_neu' => 20,
-                        'import_aendern' => 15, 'suchindex' => 11],
-    'bergwacht' => ['export' => 23, 'backup' => 24, 'import_neu' => 21, 'import_aendern' => 16,
+    'winch_cycles' => ['export' => 17, 'backup' => 17, 'import_neu' => 16,
+                       'import_aendern' => 11, 'suchindex' => 9, 'range' => 8],
+    'winch_cycles_pat' => ['export' => 18, 'backup' => 18, 'import_neu' => 17,
+                           'import_aendern' => 12, 'suchindex' => 10],
+    'winch_airload' => ['export' => 19, 'backup' => 19, 'import_neu' => 18,
+                        'import_aendern' => 13, 'suchindex' => 11],
+    'bergwacht' => ['export' => 20, 'backup' => 20, 'import_neu' => 19, 'import_aendern' => 14,
                     'suchindex' => 12, 'range' => 6],
-    'secondary' => ['export' => 25, 'backup' => 25, 'import_neu' => 17, 'import_aendern' => 12,
+    'secondary' => ['export' => 22, 'backup' => 21, 'import_neu' => 15, 'import_aendern' => 10,
                     'suchindex' => 15, 'range' => 7],
-    'bw_unit' => ['export' => 24, 'backup' => 27, 'import_neu' => 22, 'import_aendern' => 17,
+    'bw_unit' => ['export' => 21, 'backup' => 23, 'import_neu' => 20, 'import_aendern' => 15,
                   'suchindex' => 13],
-    'bw_info' => ['export' => 29, 'backup' => 28, 'import_neu' => 23, 'import_aendern' => 18,
+    'bw_info' => ['export' => 25, 'backup' => 24, 'import_neu' => 21, 'import_aendern' => 16,
                   'suchindex' => 14],
-    'other_ema' => ['export' => 30, 'backup' => 29, 'import_neu' => 24, 'import_aendern' => 19,
+    'other_ema' => ['export' => 26, 'backup' => 25, 'import_neu' => 22, 'import_aendern' => 17,
                     'suchindex' => 16],
     'other_resources' => [],
-    'crew_override' => ['export' => 27, 'backup' => 30, 'import_neu' => 11,
-                        'import_aendern' => 6, 'suchindex' => 17],
-    'pat_blob' => ['export' => 31, 'backup' => 31, 'import_neu' => 12, 'import_aendern' => 7,
+    'crew_override' => ['export' => 24, 'backup' => 26, 'import_neu' => 10,
+                        'import_aendern' => 5, 'suchindex' => 17],
+    'pat_blob' => ['export' => 27, 'backup' => 27, 'import_neu' => 11, 'import_aendern' => 6,
                    'suchindex' => 18, 'range' => 10, 'tag' => 6],
-    'ort_huelle' => ['export' => 33, 'backup' => 35],
+    'ort_huelle' => ['export' => 29, 'backup' => 31],
     'notes' => [],
-    'created_at' => ['backup' => 32],
-    'deleted_at' => ['backup' => 33, 'backup_restore' => 13],
-    'deleted_with_day' => ['backup' => 34, 'backup_restore' => 14],
+    'created_at' => ['backup' => 28],
+    'deleted_at' => ['backup' => 29, 'backup_restore' => 13],
+    'deleted_with_day' => ['backup' => 30, 'backup_restore' => 14],
     ];
 }
 
@@ -501,8 +498,6 @@ function mf_missions_gruende(): array
             'Nur im Backup. Ein Export ist eine Auswertung des BESTANDES; der Papierkorb gehoert nicht hinein.',
         'deleted_with_day' =>
             'Wie deleted_at.',
-        'site_ele_m' =>
-            'Im Export nur mit personenbezogenen Angaben (A9): Die Hoehe des Einsatzortes ist eine Ortsangabe. Im suchindex nicht, weil die Suche sie nicht anbietet. Seit S11-05b auch nicht mehr in range und tag: Die Hoehe liegt im pat_blob (ortshoehe); die Spalte traegt nur noch den Altbestand.',
         'bw_info' =>
             'Im Export nur mit personenbezogenen Angaben (A9).',
         'other_ema' =>

@@ -23,14 +23,19 @@ $daten   = json_decode($argv[2] ?? '{}', true) ?: [];
 $pdo     = db();
 $MAIL    = 'probe-freigabe-quelle@example.invalid';
 
-/* Die Quelle MIT IHREN PAKETEN entfernen (RP, F-RP-14). Bis dahin ging nur
- * die Zeile in `users`, und je Lauf blieb ein Ordner unter
- * `server/sicherungen/` liegen. Derselbe Weg wie bei der Kontoloeschung (E25). */
+/* Die Quelle MIT IHREN PAKETEN UND IHRER SPUR entfernen — ueber
+ * `konto_loeschen()`, den Weg der Verwaltung (wie die Verbindungsprobe seit
+ * F-R4-63). Bis RP ging nur die Zeile in `users` (F-RP-14: ein Ordner unter
+ * `server/sicherungen/` blieb liegen), danach Ordner und Zeile. Ein DELETE
+ * auf `users` nimmt Einsaetze per Kaskade mit, die Spurstuecke aber nicht:
+ * Seit S11-12 (F-S11-98) laeuft diese Probe wieder bis zur Spur, und jeder
+ * Lauf liess ein verwaistes Stueck zurueck, das die Jobprobe des naechsten
+ * Laufs mitzaehlte („erledigt=8 (erwartet 7)"). */
+require_once $w . '/konto_lib.php';
 $quelleWeg = function () use ($pdo, $MAIL): void {
-    $k = $pdo->prepare('SELECT account_key FROM users WHERE email = ?');
+    $k = $pdo->prepare('SELECT id FROM users WHERE email = ?');
     $k->execute([$MAIL]);
-    foreach ($k->fetchAll(PDO::FETCH_COLUMN) as $kennung) { edbak_konto_ordner_loeschen($kennung); }
-    $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$MAIL]);
+    foreach ($k->fetchAll(PDO::FETCH_COLUMN) as $id) { konto_loeschen((int)$id, true, 'probe'); }
 };
 
 if ($schritt === 'quelle') {
@@ -42,8 +47,11 @@ if ($schritt === 'quelle') {
                    bin2hex(random_bytes(8)), $daten['wrap'], $daten['check']]);
     $uid = (int)$pdo->lastInsertId();
     $kennung = (string)$pdo->query("SELECT account_key FROM users WHERE id=$uid")->fetchColumn();
-    /* Das Paar der Quelle (S11-06c): Der direkte Weg verschliesst Orte,
-     * Reanimation und Spur damit, und das Paket traegt den privaten Teil. */
+    /* Das Paar der Quelle (S11-06c): Der Serverweg verschliesst Orte,
+     * Reanimation und Spur damit, und das Paket traegt den privaten Teil.
+     * Seit Web 23 geht diesen Weg sonst nur der Demo-Reset (S11-12); er
+     * verlangt einen Rechenweg fuer den Block. Der Block kommt hier fertig
+     * aus dem Browser und traegt weder Ziel noch Hoehe — er bleibt, wie er ist. */
     require_once $w . '/kontopaar_lib.php';
     kp_ablegen($pdo, $uid, (string)$daten['spki'], (string)$daten['kp_privat']);
 
@@ -62,7 +70,7 @@ if ($schritt === 'quelle') {
             'track' => [[0, 47.1, 11.1, 700.0, 1783300000],
                         [1, 47.2, 11.2, 705.0, 1783300060]]]],
         'rest_segments' => [],
-    ], null, 'server');
+    ], null, 'server', static fn(?string $blob, array $zusatz): ?string => $blob);
 
     [$ok, $grund, $info] = edbak_sicherung_erzeugen($uid);
     if (!$ok) { fwrite(STDERR, "Backup: $grund\n"); exit(2); }
@@ -70,7 +78,13 @@ if ($schritt === 'quelle') {
     $zielId = (int)$pdo->query('SELECT id FROM users WHERE email = '
         . $pdo->quote((string)$daten['ziel']))->fetchColumn();
     if (!$zielId) { fwrite(STDERR, "Zielkonto nicht gefunden\n"); exit(2); }
-    /* Das Zielkonto leeren, damit die Zaehlung eindeutig ist. */
+    /* Das Zielkonto leeren, damit die Zaehlung eindeutig ist — die Spur
+     * zuerst, ueber `spur_lib.php` (CLAUDE.md 4), sonst bliebe sie verwaist. */
+    require_once $w . '/spur_lib.php';
+    foreach (['mission' => 'missions', 'rest' => 'rest_segments'] as $art => $tab) {
+        $ids = $pdo->query("SELECT id FROM `$tab` WHERE user_id = $zielId")->fetchAll(PDO::FETCH_COLUMN);
+        spur_loeschen($pdo, $art, $ids);
+    }
     foreach (['missions', 'rest_segments', 'days'] as $t) {
         $pdo->prepare("DELETE FROM `$t` WHERE user_id = ?")->execute([$zielId]);
     }
@@ -107,6 +121,15 @@ if ($schritt === 'quelle') {
                       'zip_eintraege' => $eintraege, 'zip_versiegelt' => $versiegelt,
                       'begleit_versiegelt' => sk_versiegelt($begleitRoh),
                       'quelle_blob' => (string)$daten['blob']]), "\n";
+    exit(0);
+}
+
+/* Hat das Zielkonto schon sein Schluesselpaar? Es entsteht im Browser beim
+ * ersten Entsperren nach der Anmeldung, nebenlaeufig (S11-03). */
+if ($schritt === 'paar') {
+    $q = $pdo->prepare('SELECT kp_oeffentlich IS NOT NULL FROM users WHERE email = ?');
+    $q->execute([(string)$daten['ziel']]);
+    echo json_encode(['paar' => (bool)$q->fetchColumn()]);
     exit(0);
 }
 

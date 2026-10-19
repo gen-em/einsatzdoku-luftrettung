@@ -1191,26 +1191,10 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
         while (true) {
             if ($zeitLinks() <= 2.0) { $fertig = false; break; }
 
-            /* Die naechsten Eigentuemerkennungen — aus BEIDEN Tabellen, denn
-             * eine Waise kann als Zeile, als Blob oder als beides dastehen.
-             * Getrennt gefragt und in PHP zusammengelegt: Ein UNION mit zwei
-             * ORDER BY … LIMIT waere hier zwar moeglich, aber schwerer zu
-             * lesen als der Gewinn wert ist — beide Abfragen laufen auf dem
-             * Primaerschluessel und holen hoechstens JOB_WAISEN_BLOCK Zeilen. */
+            /* Die naechsten Eigentuemerkennungen der Spurstuecke, auf dem
+             * Primaerschluessel. Bis Web 22.7.0 kamen `track_points` und
+             * `track_blobs` als zwei weitere Orte einer Waise dazu (S11-12). */
             $ids = [];
-            $st = $pdo->prepare('SELECT DISTINCT owner_id FROM track_points
-                                  WHERE owner_type = ? AND owner_id > ?
-                                  ORDER BY owner_id LIMIT ' . JOB_WAISEN_BLOCK);
-            $st->execute([$typ, $marke]);
-            foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $i) { $ids[(int)$i] = true; }
-
-            $st = $pdo->prepare('SELECT owner_id FROM track_blobs
-                                  WHERE owner_type = ? AND owner_id > ?
-                                  ORDER BY owner_id LIMIT ' . JOB_WAISEN_BLOCK);
-            $st->execute([$typ, $marke]);
-            foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $i) { $ids[(int)$i] = true; }
-
-            /* Und die Spurstuecke (SPUR2, S11-04a) — dritter Ort einer Waise. */
             $st = $pdo->prepare('SELECT DISTINCT owner_id FROM track_stuecke
                                   WHERE owner_type = ? AND owner_id > ?
                                   ORDER BY owner_id LIMIT ' . JOB_WAISEN_BLOCK);
@@ -1235,11 +1219,6 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
             $zustand['durch'][$typ] = false;
             $ids = array_keys($ids);
             sort($ids);
-            /* Beide Abfragen haben je bis zu BLOCK Kennungen geliefert; die
-             * Vereinigung kann groesser sein. Auf BLOCK kuerzen, damit die
-             * Marke lueckenlos weiterwandert — der Rest kommt im naechsten
-             * Durchgang. */
-            $ids = array_slice($ids, 0, JOB_WAISEN_BLOCK);
 
             // Welche davon gibt es noch? EINE Abfrage fuer den ganzen Block.
             $platz = implode(',', array_fill(0, count($ids), '?'));
@@ -1251,11 +1230,11 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
             if ($waisen) {
                 $weg = spur_loeschen($pdo, $typ, $waisen);
                 /* Sperrvermerke derselben Waisen mit (S4/A2). Sie haengen an
-                 * keinem Fremdschluessel, genau wie Zeilen und Blob, und das
+                 * keinem Fremdschluessel, genau wie die Stuecke, und das
                  * Netz waere ohne sie loechrig: Ein Vermerk zu einem Segment,
                  * das es nicht mehr gibt, sperrt einen Zeitraum, den niemand
                  * mehr einsieht. */
-                $erledigt += $weg['zeilen'] + $weg['blobs']
+                $erledigt += $weg['stuecke']
                            + schnitte_loeschen_quelle($pdo, $typ, $waisen);
             }
             $marke = (int)end($ids);
@@ -1273,7 +1252,9 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
  * das der falsche Preis.
  *
  * Stattdessen der Fortschritt: wie viele Kennungen die Marke noch vor sich
- * hat. Beide Abfragen laufen auf dem Primaerschluessel.
+ * hat. Die Abfrage laeuft auf dem Primaerschluessel. (Bis Web 22.7.0 fragte
+ * sie `track_points` und `track_blobs`, nicht die Stuecke — der Rueckstand
+ * sah die Stuecke also gar nicht.)
  */
 function job_waisen_rueckstand(PDO $pdo, array $z): ?int
 {
@@ -1282,12 +1263,9 @@ function job_waisen_rueckstand(PDO $pdo, array $z): ?int
         // Durchlauf abgeschlossen? Dann steht nichts aus.
         if (!empty($z['durch'][$typ])) { continue; }
 
-        $st = $pdo->prepare('SELECT MAX(owner_id) FROM track_points WHERE owner_type = ?');
+        $st = $pdo->prepare('SELECT MAX(owner_id) FROM track_stuecke WHERE owner_type = ?');
         $st->execute([$typ]);
         $max = (int)($st->fetchColumn() ?: 0);
-        $st = $pdo->prepare('SELECT MAX(owner_id) FROM track_blobs WHERE owner_type = ?');
-        $st->execute([$typ]);
-        $max = max($max, (int)($st->fetchColumn() ?: 0));
 
         $offen += max(0, $max - (int)($z[$typ] ?? 0));
     }

@@ -32,9 +32,8 @@
  *                                         (S11-07, E-S11-71)
  *   EdOrtsdaten.schluesselAus(pkcs8)      ein FREMDES Paar aus seinem privaten
  *                                         Teil (Freigabe, S11-06c)
- *   EdOrtsdaten.spur1Lesen(b64)           ein SPUR1-Blob einer Sicherung
- *                                         (Nutzlast 8 bis 12) → Punkte
- *                                         (S11-06b)
+ *   (`spur1Lesen()` — ein SPUR1-Blob einer Sicherung der Nutzlast 8 bis
+ *   12 zu Punkten — stand hier von S11-06b bis Web 22.7.0; S11-12.)
  *
  * REGELN BEIM ÖFFNEN (E-S11-37, -71, Konzept 3.4): Punkt i eines Stücks der
  * Stufe 1 hat die Sequenznummer `seq_from + i`; ein Stück der Stufe 2 oder 3
@@ -363,9 +362,9 @@
   }
 
   /**
-   * DIE HÖHE DES EINSATZORTS (S11-05b) — die Regel von
-   * `compute_site_elevation()` (`site_elevation_lib.php`), die der Server
-   * seit S11 nicht mehr rechnen kann, weil er die Spur nicht sieht:
+   * DIE HÖHE DES EINSATZORTS (S11-05b) — die Regel, die bis Web 22.7.0
+   * `compute_site_elevation()` im Server rechnete; seit S11 kann er es nicht
+   * mehr, weil er die Spur nicht sieht:
    *   - Bezug: die früheste Phase 5, sonst die früheste Phase 6;
    *   - Wert: die Höhe des zeitlich nächsten Punkts, höchstens 300 s
    *     entfernt, und er muss selbst eine haben — kein Ausweichen auf
@@ -511,66 +510,10 @@
     return { priv: await crypto.subtle.importKey('pkcs8', der, alg, false, ['deriveBits']), pub: pub };
   }
 
-  /**
-   * EIN SPUR1-BLOB ZU PUNKTEN (S11-06b) — das Gegenstück zu
-   * `spur_dekodieren()` in `spur_lib.php`, für das Einspielen einer
-   * Sicherung der Nutzlast 8 bis 12. Bis Web 22.4.0 ging der Blob roh an den
-   * Server; seit S11 nimmt er Punkte nur noch verschlossen an, und der
-   * Browser muss sie vorher lesen.
-   *
-   * Format (Technik 4.97): Kopf 13 Byte — „SP", Fassung 1, Stufe,
-   * Auflösung 1, Originalzahl und Punktzahl (je uint32, little-endian) —,
-   * dann ein zlib-Strom mit vier Differenzreihen (int32, little-endian):
-   * Breite und Länge in 1e-6 Grad, ein Bitfeld „hat Höhe", die Höhen in
-   * Dezimetern, die Zeiten in Sekunden. Die Punktnummer ist die Stelle.
-   *
-   * @returns {Promise<{stufe:number, nOriginal:number, punkte:Array}>}
-   *          punkte: [[seq, lat, lon, ele|null, ts], …]
-   */
-  async function spur1Lesen(b64Text) {
-    const roh = b64(b64Text);
-    if (roh.length < 13 || roh[0] !== 0x53 || roh[1] !== 0x50) {
-      throw fehler('spur1', 'Kein SPUR-Blob (Signatur fehlt).');
-    }
-    if (roh[2] !== 1 || roh[4] !== 1) {
-      throw fehler('spur1', 'SPUR-Blob in unbekannter Fassung oder Auflösung.');
-    }
-    const kopf = new DataView(roh.buffer, roh.byteOffset, 13);
-    const stufe = roh[3], nOriginal = kopf.getUint32(5, true), n = kopf.getUint32(9, true);
-    if (n === 0) { return { stufe: stufe, nOriginal: nOriginal, punkte: [] }; }
-    const strom = new Blob([roh.subarray(13)]).stream()
-      .pipeThrough(new DecompressionStream('deflate'));
-    const nutz = new Uint8Array(await new Response(strom).arrayBuffer());
-    const dv = new DataView(nutz.buffer, nutz.byteOffset, nutz.byteLength);
-    let pos = 0;
-    const reihe = (k) => {
-      if (pos + 4 * k > nutz.length) { throw fehler('spur1', 'SPUR-Blob ist zu kurz.'); }
-      const a = new Array(k);
-      let lauf = 0;
-      for (let i = 0; i < k; i++) { lauf += dv.getInt32(pos, true); pos += 4; a[i] = lauf; }
-      return a;
-    };
-    const lat = reihe(n), lon = reihe(n);
-    const bitLen = (n + 7) >> 3;
-    const bits = nutz.subarray(pos, pos + bitLen);
-    pos += bitLen;
-    const hat = (i) => (bits[i >> 3] & (1 << (i & 7))) !== 0;
-    let mit = 0;
-    for (let i = 0; i < n; i++) { if (hat(i)) { mit++; } }
-    const hoehen = reihe(mit), ts = reihe(n);
-    const punkte = new Array(n);
-    let h = 0;
-    for (let i = 0; i < n; i++) {
-      punkte[i] = [i, lat[i] / 1e6, lon[i] / 1e6, hat(i) ? hoehen[h++] / 10 : null, ts[i]];
-    }
-    return { stufe: stufe, nOriginal: nOriginal, punkte: punkte };
-  }
-
   window.EdOrtsdaten = { schluessel: schluessel, spur: spur, einsatz: einsatz,
                          fuerAnsicht: fuerAnsicht, ladeplatz: ladeplatz, melden: melden,
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
                          einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
                          stueckeBauen: stueckeBauen, gepacktBauen: gepacktBauen,
-                         spur1Lesen: spur1Lesen,
                          schluesselAus: schluesselAus };
 })();

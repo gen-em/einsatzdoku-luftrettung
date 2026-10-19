@@ -192,7 +192,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
         $plaketten = '';
         if ($s['n'] === 0) {
             $plaketten = ui_plakette('keine GPS-Daten', ['ton' => 'neutral']);
-        } elseif ($s['stufe'] === SPUR_STUFE_DUENN) {
+        } elseif ($s['stufe'] === SPUR2_STUFE_DUENN) {
             $plaketten = ui_plakette('ausgedünnt · ' . $s['n'] . ' von '
                 . $s['n_original'] . ' Punkten', ['ton' => 'orange']);
         } else {

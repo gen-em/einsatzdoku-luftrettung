@@ -41,7 +41,15 @@ require_once __DIR__ . '/../spur_lib.php';
  * doppelten Punkte erst, wenn der Wartungslauf (S11-07) das Segment neu
  * packt. Bis Web 22.1.0 verschob der Server die Punkte selbst
  * (`spur_teilen()`); seit S11-04 fand er dabei keine mehr und antwortete
- * „kein einziger Punkt" (F-S11-50).
+ * „kein einziger Punkt" (F-S11-50). Seit Web 23 gibt es die Funktion nicht
+ * mehr (S11-12).
+ *
+ * EIN SCHNITT VON VOR WEB 22.2.0 LAESST SICH NICHT MEHR ZURUECKNEHMEN
+ * (F-S11-94). Er hat die Punkte aus dem Segment VERSCHOBEN; sie liegen seit
+ * dem Einmalwerkzeug verschlossen am Einsatz, und das Segment hat sie nicht
+ * mehr. Ein Rueckgaengig loeschte den Einsatz samt Punkten — sie waeren fort.
+ * Erkannt wird ein solcher Schnitt an der Zeit: aelter als der Vermerk der
+ * Migration `2026_10_15_loeschvermerk`, mit der S11-05c auf die Anlage kam.
  *
  * LOESCHEN IST ENDGUELTIG (Nr. 161). Dort verschliesst der Browser die
  * Punkte AUSSERHALB des Zeitraums neu, und der Server ersetzt die Stuecke des
@@ -346,8 +354,7 @@ function schnitt_rueckgaengig(array $b, int $userId): never
      * nicht, `edited` schon. */
     $haengt = [];
     foreach ([['mission_crew', 'eine abweichende Besatzung'],
-              ['mission_resources', 'weitere Rettungsmittel'],
-              ['resus_sessions', 'eine Reanimation']] as [$tab, $wort]) {
+              ['mission_resources', 'weitere Rettungsmittel']] as [$tab, $wort]) {
         $c = $pdo->prepare("SELECT COUNT(*) FROM `$tab` WHERE mission_id = ?");
         $c->execute([$misId]);
         if ((int)$c->fetchColumn() > 0) { $haengt[] = $wort; }
@@ -358,9 +365,9 @@ function schnitt_rueckgaengig(array $b, int $userId): never
     $m = $c->fetch(PDO::FETCH_ASSOC);
     if ((int)($m['edited'] ?? 0) === 1) { $haengt[] = 'Änderungen im Einsatzformular'; }
     if ((int)($m['hatPat'] ?? 0) === 1) { $haengt[] = 'geschützte Angaben'; }
-    /* Seit S11 liegt die Reanimation in der Einsatzhuelle und nicht mehr in
-     * `resus_sessions` (S11-05c); ein geschnittener Einsatz hat keine, bis
-     * jemand ihn im Formular speichert. */
+    /* Die Reanimation liegt in der Einsatzhuelle (S11-05c; bis Web 22.7.0
+     * zaehlte hier zusaetzlich `resus_sessions`); ein geschnittener Einsatz
+     * hat keine, bis jemand ihn im Formular speichert. */
     if ((int)($m['hatOrt'] ?? 0) === 1) { $haengt[] = 'Phasenorte oder eine Reanimation'; }
 
     if ($haengt) {
@@ -370,22 +377,28 @@ function schnitt_rueckgaengig(array $b, int $userId): never
                              . 'über den Papierkorb löschen, wenn er weg soll.'], 409);
     }
 
+    /* DER ALTE SCHNITT (F-S11-94, siehe Kopf). Ohne Vermerk der Migration
+     * (eine Anlage vor Web 22.2.0) gibt es nur alte Schnitte. */
+    $q = $pdo->prepare('SELECT applied_at FROM schema_migrations WHERE id = ?');
+    $q->execute(['2026_10_15_loeschvermerk']);
+    $s11Seit = $q->fetchColumn();
+    foreach ($schnitte as $sn) {
+        if ($s11Seit === false || $sn['erstellt_am'] < (string)$s11Seit) {
+            json_out(['error' => 'altschnitt',
+                      'meldung' => 'Dieser Einsatz wurde vor der Verschlüsselung der GPS-Daten '
+                                 . 'geschnitten. Dabei wanderten die Punkte aus dem Ruhesegment in den '
+                                 . 'Einsatz; Rückgängig würde sie mitlöschen. Wenn der Einsatz weg '
+                                 . 'soll: über den Papierkorb löschen.'], 409);
+        }
+    }
+
     try {
         $zurueck = db_transaktion($pdo, function (PDO $pdo) use ($schnitte, $misId, $userId): int {
-        $zurueck = 0;
-        foreach ($schnitte as $sn) {
-            /* NUR NOCH FUER DEN ALTBESTAND (S11-05c). Ein Schnitt vor S11 hat
-             * Klartextpunkte verschoben; die gehen ueber denselben Weg zurueck,
-             * mit vertauschten Enden (E-S4-55) — `spur_teilen()` ERGAENZT das
-             * Ziel und laesst seither dessen verschlossene Stuecke stehen
-             * (F-S11-50). Ein Schnitt seit S11-05c hat im Segment nichts
-             * weggenommen; dort findet `spur_teilen()` keinen Punkt und tut
-             * nichts, und mit dem Vermerk faellt die Sperre unten. */
-            $erg = spur_teilen($pdo, 'mission', $misId,
-                               $sn['owner_type'], $sn['owner_id'],
-                               $sn['von_ts'], $sn['bis_ts']);
-            $zurueck += $erg['genommen'];
-        }
+        /* Die Punkte waren im Segment nie fort (seit S11-05c); zurueck
+         * „kommen" sie, indem die Sperre faellt. Gemeldet wird, wie viele es
+         * beim Schnitt waren. Bis Web 22.7.0 schob hier `spur_teilen()` die
+         * Klartextpunkte alter Schnitte zurueck. */
+        $zurueck = array_sum(array_column($schnitte, 'n_punkte'));
         /* DER VERMERK FAELLT MIT (E-S4-53). Bliebe er stehen, waere der
          * Zeitraum fuer immer gesperrt — und zwar unsichtbar. */
         schnitte_loeschen($pdo, 'ziel', [$misId]);
@@ -416,16 +429,8 @@ function stueck_loeschen(array $b, int $userId): never
      'von' => $vonTs, 'bis' => $bisTs] = schnitt_segment_und_zeit($b, $userId, $pruef);
     $segId = (int)$seg['id'];
 
-    /* DER ALTBESTAND IST NICHT ZU SEHEN UND NICHT ZU LOESCHEN. Klartextpunkte
-     * aus der Zeit vor S11 zeigt die Ansicht nicht (E-S11-36), und der
-     * Browser kann sie nicht mitnehmen; ein Loeschen, das sie stehen liesse,
-     * versprache mehr, als es haelt. Das Einmalwerkzeug (S11-10) hebt sie in
-     * Stuecke, danach geht es. */
-    if (spur1_vorhanden($pdo, 'rest', $segId)) {
-        json_out(['error' => 'altbestand', 'meldung' => 'Diese Aufzeichnung stammt aus der Zeit vor '
-                  . 'der Verschlüsselung und lässt sich erst nach der Umstellung stückweise löschen. '
-                  . 'Ganz loswerden geht über den Papierkorb.'], 409);
-    }
+    /* Bis Web 22.7.0 stand hier die Abweisung des Altbestands im Klartext
+     * (`spur1_vorhanden()`, 409 `altbestand`). Seit Web 23 gibt es keinen. */
     $geloescht = pruef_zahl($b['geloescht'] ?? null, 1, LIMIT_TRACKPUNKTE_SPUR, 'geloescht', $pruef);
     $stand = $b['stand'] ?? null;
     if ($geloescht === null || !is_array($stand)) {

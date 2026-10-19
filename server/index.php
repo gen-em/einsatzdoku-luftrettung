@@ -610,7 +610,6 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
 <?php ui_krypto_bootstrap(['csrf' => true, 'keycheck' => $rueckfrageZeigen]); ?>
 <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
 <script src="<?= asset('assets/wartungslauf.js') ?>"></script>
-<script src="<?= asset('assets/ortsumzug.js') ?>"></script>
 <script src="<?= asset('assets/gpx.js') ?>"></script>
 <script src="<?= asset('assets/vorladen.js') ?>"></script>
 <?php if ($blattZeigen): ?>
@@ -1063,15 +1062,9 @@ async function loadDay(dayId){
  * nicht verlangsamen. Ohne Schlüssel (nicht entsperrt) geschieht nichts; er
  * fragt nie nach dem Passwort. Was fällig ist und wie weit er ist, zeigt die
  * Karte „GPS-Daten verdichten" im Reiter Backup. */
-/* DAVOR DAS EINMALWERKZEUG (S11-10): Der Altbestand im Klartext zieht in
- * die Hüllen um, ebenso still; erst danach kann der Wartungslauf ihn packen
- * (E-S11-70). Ist nichts mehr offen, kostet es eine Anfrage. */
 window.addEventListener('load', () => {
   if (window.EdWartungslauf && PAT_WRAP) {
-    setTimeout(async () => {
-      if (window.EdOrtsumzug) { await EdOrtsumzug.still(PAT_WRAP); }
-      EdWartungslauf.still(PAT_WRAP);
-    }, 1500);
+    setTimeout(() => EdWartungslauf.still(PAT_WRAP), 1500);
   }
 });
 

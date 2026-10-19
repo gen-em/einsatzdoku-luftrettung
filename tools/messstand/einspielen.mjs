@@ -1,6 +1,6 @@
 /* Den Großbestand über den REGULAEREN Wiederherstellungsweg einspielen.
  *
- * WOFUER. `vervielfaeltigen.py` legt eine Folge einteiliger `.edbak`-Dateien
+ * WOFUER. `vervielfaeltigen.py` legt eine Folge mehrteiliger `.edbak`-Dateien (Fassung 4)
  * ab; dieses Skript spielt sie nacheinander in das Messstandkonto ein — durch
  * den Browser, über `einstellungen.php?t=backup`, so wie eine NutzerIn es
  * täte. Kein SQL, kein Sonderendpunkt (Geist von R4).

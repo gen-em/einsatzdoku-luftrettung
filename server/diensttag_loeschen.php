@@ -66,7 +66,7 @@ ui_seite_start(['titel' => 'Diensttag löschen']);
       $posten = [
         ['Einsätze mit allen Angaben',  (int)$scope['einsaetze'], null],
         ['Phasen-Zeitstempel',          (int)$scope['phasen'],    null],
-        ['Reanimations-Protokolle',     (int)$scope['reas'],      null],
+        /* „Reanimations-Protokolle" bis Web 22.7.0 — siehe einsatz_loeschen.php. */
         ['Ruhesegmente',                (int)$scope['segmente'],  null],
         ['GPS-Trackpunkte',             (int)$scope['punkte'],    null],
       ];

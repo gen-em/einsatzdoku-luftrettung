@@ -35,8 +35,10 @@ declare(strict_types=1);
  * nicht trifft).
  */
 
-/* Die fuenf Kindtabellen eines Einsatzes (E-ZE-21). */
-const ZH_KINDTABELLEN = 'mission_phases|resus_sessions|resus_events|mission_resources|mission_crew';
+/* Die Kindtabellen eines Einsatzes (E-ZE-21). Bis Web 22.7.0 fuenf; mit
+ * S11-12 sind `resus_sessions` und `resus_events` gefallen (die Reanimation
+ * liegt in der Einsatzhuelle). */
+const ZH_KINDTABELLEN = 'mission_phases|mission_resources|mission_crew';
 
 /* Die vierzehn Formatierer-Definitionen aus Konzept 1.4, Zeile „Formatierer".
  * WARUM EINE NAMENSLISTE UND KEIN MUSTER: Die vierzehn heissen `fmtTag`,
@@ -293,7 +295,7 @@ return [
 
 ['kennung' => 'Z17', 'paket' => 'AP5',
  'beschreibung' => 'INSERT/DELETE auf Kindtabellen ausserhalb einsatz_lib.php, migration_lib.php',
- 'grund' => 'Vier Datenzugriffsfunktionen einsatz_*_ersetzen() (E-ZE-21).',
+ 'grund' => 'Drei Datenzugriffsfunktionen einsatz_*_ersetzen() (E-ZE-21; bis Web 22.7.0 vier, mit einsatz_reas_ersetzen()).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/migration_lib.php', 'server/einsatz_lib.php'],
  'regel' => ['art' => 'muster', 'muster' =>

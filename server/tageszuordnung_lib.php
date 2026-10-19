@@ -40,7 +40,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
+require_once __DIR__ . '/spur_lib.php';   // Spuren: die Stuecke (SPUR2)
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/einsatz_lib.php';
 
@@ -65,8 +65,7 @@ function tz_tag_umfang(int $userId, int $dayId): array
     $m = $ids('missions');
     $r = $ids('rest_segments');
 
-    // Gebuendelt ueber spur_lib.php — Zeilen und Blob, und ohne die Abfrage
-    // je Einsatz beziehungsweise Segment, die hier bisher stand.
+    // Gebuendelt ueber spur_lib.php, ohne Abfrage je Einsatz oder Segment.
     $punkte = array_sum(spur_zahlen(db(), 'mission',
                                     array_map(fn($z) => (int)$z['id'], $m)))
             + array_sum(spur_zahlen(db(), 'rest',
@@ -197,7 +196,7 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
 
     $pdo = db();
 
-    // Die Kennungen VOR der Umstellung holen: track_points kennt nur owner_id,
+    // Die Kennungen VOR der Umstellung holen: track_stuecke kennt nur owner_id,
     // und die Blockabfragen unten brauchen die Liste ohnehin zweimal.
     $holeIds = function (string $tabelle) use ($pdo, $userId, $dayId): array {
         $s = $pdo->prepare("SELECT id FROM `$tabelle` WHERE user_id = ? AND day_id = ?");
@@ -207,15 +206,14 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
     $mIds = $holeIds('missions');
     $rIds = $holeIds('rest_segments');
 
-    /* Spurpunkte tragen die Unix-Epoche in einer VORZEICHENLOSEN Spalte. Eine
+    /* Spurstuecke tragen die Unix-Epoche in einer VORZEICHENLOSEN Spalte. Eine
      * Rueckwaerts-Verschiebung unter null waere ein Datenbankfehler mitten in
      * der Transaktion — hier wird sie vorher benannt. Bei echten Zeitstempeln
      * (rund 1,7 Milliarden) kann das nur ein Altbestand mit Unsinn ausloesen;
      * genau der soll aber nicht als "Verschieben fehlgeschlagen" erscheinen. */
     if ($delta < 0 && ($mIds || $rIds)) {
-        // Ueber spur_lib.php, weil die Punkte seit S2 auch im Blob liegen
-        // koennen — und weil die frueheste Zeit sonst je Spur eine eigene
-        // Abfrage kostete.
+        // Ueber spur_lib.php — die frueheste Zeit kostete sonst je Spur eine
+        // eigene Abfrage.
         $min = null;
         foreach ([['mission', $mIds], ['rest', $rIds]] as [$typ, $ids]) {
             $w = spur_min_ts($pdo, $typ, $ids);
@@ -266,21 +264,13 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
                                    SET occurred_at = DATE_ADD(occurred_at, INTERVAL ? SECOND)
                                    WHERE mission_id IN ($platzhalter)")
                         ->execute(array_merge([$delta], $werte));
-                    $pdo->prepare("UPDATE resus_events e
-                                   JOIN resus_sessions s ON s.id = e.session_id
-                                   SET e.occurred_at = DATE_ADD(e.occurred_at, INTERVAL ? SECOND)
-                                   WHERE s.mission_id IN ($platzhalter)")
-                        ->execute(array_merge([$delta], $werte));
-                    $pdo->prepare("UPDATE resus_sessions
-                                   SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND)
-                                   WHERE mission_id IN ($platzhalter)")
-                        ->execute(array_merge([$delta], $werte));
+                    /* Die Reanimation wandert mit, ohne dass hier etwas
+                     * geschieht: Sie liegt in der Einsatzhuelle, ihre Zeiten
+                     * relativ zum Beginn (E-S11-18). Bis Web 22.7.0 standen
+                     * hier zwei UPDATE auf `resus_sessions`/`resus_events`. */
                 }
                 /* SPUREN UEBER spur_lib.php (S2/AP1) — ausserhalb der
-                 * Blockschleife, weil die Funktion selbst blockt. Ein blosses
-                 * UPDATE auf track_points ginge am Blob vorbei: Die Zeilen
-                 * wanderten, die Blobpunkte blieben stehen, und die Spur haette
-                 * danach zwei Zeitrechnungen. */
+                 * Blockschleife, weil die Funktion selbst blockt. */
                 spur_zeit_verschieben($pdo, 'mission', $mIds, $delta);
                 /* UND DIE SPERRVERMERKE DES SCHNITTS (Web 14.2.0, R64).
                  *
