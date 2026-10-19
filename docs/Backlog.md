@@ -53,7 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 380 bis 389 | `ccr-dd33b6e8-ismfm0`, für S11-12 `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 388 | 11.10.2026 |
-| ab 390 | frei — höchste vergebene Nummer 371; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
+| 390 bis 399 | `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 19, Konzept DM (drei Engines); vergeben: keine | 19.10.2026 |
+| ab 400 | frei — höchste vergebene Nummer 388; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 19.10.2026 |
 
 ---
 
