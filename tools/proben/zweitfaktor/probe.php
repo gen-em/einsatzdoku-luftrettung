@@ -1140,7 +1140,15 @@ $nwAufraeumen = static function () use ($pdo, $nwAndere, $nwMail, $nwZwei, $nwNi
     $pdo->prepare("DELETE FROM mail_warteschlange WHERE id > ? AND empfaenger IN (?, ?)")
         ->execute([$nwMailVorher, $nwMail, $nwZwei]);
     foreach (glob($nwMuster . '*.txt') ?: [] as $d) { @unlink($d); }
-    if ($nwWertVorher !== null) { app_state_setzen('notzugang_geheim', $nwWertVorher); }
+    /* Gab es vorher keinen Wert (frische Anlage: die Migration wird
+     * übersprungen, der Notzugang legt ihn erst beim ersten Aufruf an), dann
+     * entfernt das Aufräumen den, den die Probe angelegt hat — sonst steht er
+     * danach da und die Prüfung „Wert wie vorher" schlägt an (Web 22.7.1). */
+    if ($nwWertVorher !== null) {
+        app_state_setzen('notzugang_geheim', $nwWertVorher);
+    } else {
+        $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute(['notzugang_geheim']);
+    }
 };
 register_shutdown_function($nwAufraeumen);
 
