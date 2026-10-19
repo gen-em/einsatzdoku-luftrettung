@@ -1,0 +1,191 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>S11 · Mockup M-S11-01 — Ladeanzeige</title><style>
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;--asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;
+  --linie:#E3DAC6;--orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;--rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;--schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--strich:1px;--strich-stark:2px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5;width:1280px}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2);max-width:1180px}
+h2.abschnitt{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:22px 24px 2px;color:var(--dunkelblau)}
+.unter{margin:0 24px 10px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:1180px}
+.frames{display:flex;gap:18px;margin:0 24px;align-items:flex-start;flex-wrap:wrap}
+.rahmen-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.seite{background:var(--rauch);border:1px solid var(--linie);border-radius:var(--radius-gross);padding:var(--abstand-4)}
+/* --- vorhandene Bausteine, verkürzt ------------------------------------ */
+.karte{background:var(--schnee);border:1px solid var(--linie);border-radius:var(--radius-gross);margin-bottom:var(--abstand-3)}
+.karte-kopf{display:flex;align-items:center;gap:var(--abstand-2);padding:var(--abstand-3) var(--abstand-4);border-bottom:1px solid var(--linie)}
+.karte-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-4);font-weight:600;margin:0;color:var(--dunkelblau)}
+.karte-inhalt{padding:var(--abstand-3) var(--abstand-4)}
+.plakette{font-size:var(--groesse-1);font-weight:600;border-radius:var(--radius-klein);padding:1px 6px;background:var(--blau-hell);color:var(--blau-tief)}
+.zeile-lese{display:flex;gap:var(--abstand-3);font-size:var(--groesse-2);padding:3px 0}
+.zeile-lese b{width:120px;color:var(--gedaempft);font-weight:400}
+.geo{height:260px;border-radius:var(--radius-gross);border:1px solid var(--linie);position:relative;overflow:hidden;
+     background:linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px) 0 0/40px 40px,
+                linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px) 0 0/40px 40px,#E9E5DA}
+.geo.mit-spur::after{content:"";position:absolute;left:18%;top:62%;width:58%;height:3px;background:var(--orange);transform:rotate(-18deg);border-radius:2px}
+.zustandszeile{min-height:20px;margin-top:var(--abstand-3);color:var(--gedaempft);font-size:var(--groesse-2)}
+.meldung{border-radius:var(--radius);padding:var(--abstand-2) var(--abstand-3);font-size:var(--groesse-2)}
+.meldung-fehler{background:var(--rosa);color:var(--rot-tief);border-left:4px solid var(--rot)}
+.knopf{display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:var(--radius);border:1px solid var(--linie);background:var(--schnee);font-size:var(--groesse-2);font-weight:600;color:var(--dunkelblau)}
+/* --- NEU: der Baustein dieses Mockups ----------------------------------- */
+.ladeplatz{display:flex;align-items:center;gap:var(--abstand-2);color:var(--gedaempft);font-size:var(--groesse-2)}
+.ladeplatz-ring{width:16px;height:16px;flex:0 0 16px;border-radius:50%;border:var(--strich-stark) solid var(--linie);border-top-color:var(--orange-tief);animation:dreh 900ms linear infinite}
+@keyframes dreh{to{transform:rotate(360deg)}}
+.geo .ladeplatz{white-space:nowrap;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--schnee);border:1px solid var(--linie);border-radius:var(--radius);padding:var(--abstand-2) var(--abstand-3);box-shadow:0 1px 3px rgba(26,5,0,.08)}
+.ladeplatz-still .ladeplatz-ring{animation:none;border-color:var(--orange-tief)}
+.laufband{height:3px;background:var(--linie);overflow:hidden;position:relative}
+.laufband::after{content:"";position:absolute;top:0;left:20%;width:30%;height:3px;background:var(--orange-tief)}
+.balken{height:6px;border-radius:3px;background:var(--linie);overflow:hidden;margin-top:6px}
+.balken > i{display:block;height:100%;background:var(--orange-tief)}
+.blass{opacity:.55}
+.notiz{padding:10px 24px 6px;max-width:1180px;font-size:var(--groesse-2)}
+.notiz li{margin:3px 0}
+.notiz code{font-size:12px;background:var(--schnee);padding:0 3px;border-radius:3px}
+.empf{background:var(--orange-hell);border-left:4px solid var(--orange-tief);padding:10px 14px;margin:14px 24px;max-width:1180px;font-size:var(--groesse-2);border-radius:var(--radius-klein)}
+</style></head><body>
+
+<div class="mock-kopf">
+  <h1>M-S11-01 · Ladeanzeige, solange der Browser Ortsdaten öffnet oder verschließt</h1>
+  <p>Konzept S11, E-S11-27. Nach S11 liegen GPS-Daten, Phasenkoordinaten und Reanimation nur noch verschlüsselt auf dem Server; Einsatz und Diensttag zeigen Karte, Phasen und Reanimation erst, wenn der Browser sie geöffnet hat. Export und Wartungslauf öffnen und verschließen viele Stücke hintereinander. Gemessen (S11-01/-13): Öffnen einer Hülle unter 10 ms; spürbar wird es durch das Warten auf die Anfrage und auf das Entsperren — Einsatz bei Drossel 6× rund 2,1 s bis „sichtbar". Dieses Mockup zeigt, was in dieser Zeit zu sehen ist. Alle Farben aus <code>:root</code>; Kontraste nachgerechnet unten.</p>
+</div>
+
+<h2 class="abschnitt">1 · Einsatzansicht, Desktop — Ist und zwei Varianten</h2>
+<p class="unter">Gleicher Augenblick: Seite geladen, Angaben stehen, die Ortsdaten sind noch nicht offen. Rechts die Spalte mit Karte und Einsatzphasen (ab 1200 px).</p>
+<div class="frames">
+  <div style="width:396px">
+    <div class="rahmen-titel">Ist (heute)</div>
+    <div class="seite">
+      <div class="geo"></div>
+      <p class="unter" style="margin:8px 0 0">Graue Fläche ohne Auskunft; Phasen- und Reanimationskarte sind versteckt, bis Daten da sind. Bei 2 s sieht das aus wie „keine Spur".</p>
+    </div>
+  </div>
+  <div style="width:396px">
+    <div class="rahmen-titel">Variante A · Ladeplatz (empfohlen)</div>
+    <div class="seite">
+      <div class="geo"><div class="ladeplatz" role="status"><span class="ladeplatz-ring" aria-hidden="true"></span>Ortsdaten werden geöffnet …</div></div>
+      <div class="karte" style="margin-top:12px">
+        <div class="karte-kopf"><h3 class="karte-titel">Einsatzphasen</h3></div>
+        <div class="karte-inhalt"><div class="ladeplatz"><span class="ladeplatz-ring" aria-hidden="true"></span>Phasen werden geöffnet …</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="width:396px">
+    <div class="rahmen-titel">Variante B · Laufband</div>
+    <div class="seite">
+      <div class="geo" style="border-top:0"><div class="laufband"></div></div>
+      <div class="karte" style="margin-top:12px">
+        <div class="karte-kopf"><h3 class="karte-titel">Einsatzphasen</h3></div>
+        <div class="laufband"></div>
+        <div class="karte-inhalt"><div class="zustandszeile" style="margin:0">Wird geöffnet …</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="notiz"><ul>
+  <li><b>A</b> — ein Ring 16 px (Strich 2 px, <code>--linie</code> mit einem Viertel <code>--orange-tief</code>) und ein Satz in <code>--gedaempft</code>, <code>--groesse-2</code>. In der Kartenfläche auf einem Schnee-Kästchen mittig, in einer Karte als Zeile an der Stelle des Inhalts. Die Phasenkarte erscheint also <i>sofort</i> (heute versteckt) — sie sagt, dass etwas kommt.</li>
+  <li><b>B</b> — ein 3-px-Band, das von links nach rechts läuft, darunter die vorhandene <code>.zustandszeile</code>. Unauffälliger, aber am Kartenrand leicht übersehen, und es sagt nicht, <i>was</i> geladen wird.</li>
+  <li>Beide: <code>role="status"</code>, <code>aria-live="polite"</code> am Satz, <code>aria-busy="true"</code> am Bereich; der Ring ist <code>aria-hidden</code>. Bei <b>„Bewegung reduzieren"</b> steht der Ring still (siehe 4) — die Regel in <code>style.css</code> greift ohnehin; der Satz trägt die Auskunft allein.</li>
+  <li>Erscheint erst nach <b>300 ms</b> — was schneller fertig ist (die meisten Einzelansichten ungedrosselt), flackert nicht.</li>
+</ul></div>
+
+<h2 class="abschnitt">2 · Variante A in ihren Zuständen</h2>
+<p class="unter">Der Ladeplatz ist mehr als ein Kreisel: Er sagt auch, worauf gewartet wird und was schiefging. Die Zustände ersetzen einander an derselben Stelle.</p>
+<div class="frames">
+  <div style="width:290px">
+    <div class="rahmen-titel">a · lädt</div>
+    <div class="seite"><div class="geo" style="height:200px"><div class="ladeplatz"><span class="ladeplatz-ring"></span>Ortsdaten werden geladen …</div></div></div>
+    <p class="unter" style="margin:6px 0 0">Anfrage an <code>api/</code> läuft (V1: startet schon beim Laden der Seite).</p>
+  </div>
+  <div style="width:290px">
+    <div class="rahmen-titel">b · wartet auf den Schlüssel</div>
+    <div class="seite"><div class="geo" style="height:200px"><div class="ladeplatz ladeplatz-still" style="white-space:nowrap"><span class="ladeplatz-ring"></span>Wartet auf dein Passwort</div></div></div>
+    <p class="unter" style="margin:6px 0 0">Gesperrt: der vorhandene Entsperrdialog steht davor. Ring steht still — es passiert nichts, bis du etwas tust.</p>
+  </div>
+  <div style="width:290px">
+    <div class="rahmen-titel">c · öffnet</div>
+    <div class="seite"><div class="geo" style="height:200px"><div class="ladeplatz"><span class="ladeplatz-ring"></span>Ortsdaten werden geöffnet …</div></div></div>
+    <p class="unter" style="margin:6px 0 0">Hüllen werden entschlüsselt und entpackt. Danach verschwindet der Platz, Karte und Spur stehen.</p>
+  </div>
+  <div style="width:290px">
+    <div class="rahmen-titel">d · Fehler</div>
+    <div class="seite"><div class="geo" style="height:200px;display:flex;align-items:center;justify-content:center;padding:12px"><div class="meldung meldung-fehler">Die Ortsdaten dieses Einsatzes lassen sich nicht öffnen. Die übrigen Angaben stimmen.</div></div></div>
+    <p class="unter" style="margin:6px 0 0">Vorhandene Meldung (<code>EdHtml.meldung('fehler')</code>) an der Stelle des Platzes; gemeldet an den Reiter System.</p>
+  </div>
+</div>
+
+<h2 class="abschnitt">3 · Lange Läufe: Export, GPX-Archiv, Wartungslauf — mit Zahl</h2>
+<p class="unter">Wo viele Stücke nacheinander geöffnet oder verschlossen werden, sagt die Anzeige, wie weit es ist. Heute steht dort nur Text in der <code>.zustandszeile</code>.</p>
+<div class="frames">
+  <div style="width:396px">
+    <div class="rahmen-titel">Ist · Export</div>
+    <div class="seite"><div class="karte"><div class="karte-kopf"><h3 class="karte-titel">GPX-Archiv</h3></div><div class="karte-inhalt">
+      <span class="knopf blass">Herunterladen</span>
+      <div class="zustandszeile">Einsätze werden vorbereitet …</div></div></div></div>
+  </div>
+  <div style="width:396px">
+    <div class="rahmen-titel">A · mit Zahl und Balken</div>
+    <div class="seite"><div class="karte"><div class="karte-kopf"><h3 class="karte-titel">GPX-Archiv</h3></div><div class="karte-inhalt">
+      <span class="knopf blass">Herunterladen</span>
+      <div class="zustandszeile"><div class="ladeplatz"><span class="ladeplatz-ring"></span>Ortsdaten öffnen: 128 von 340 Einsätzen</div>
+      <div class="balken" role="progressbar" aria-valuemin="0" aria-valuemax="340" aria-valuenow="128"><i style="width:37.6%"></i></div></div></div></div></div>
+  </div>
+  <div style="width:396px">
+    <div class="rahmen-titel">A · Wartungslauf (Einstellungen)</div>
+    <div class="seite"><div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Ortsdaten verdichten</h3><span class="plakette">verschlüsselt</span></div><div class="karte-inhalt">
+      <div class="zeile-lese"><b>Fällig</b>42 Stücke aus 11 Diensttagen</div>
+      <div class="zustandszeile"><div class="ladeplatz"><span class="ladeplatz-ring"></span>Zusammenfügen: 17 von 42 Stücken</div>
+      <div class="balken"><i style="width:40.5%"></i></div></div></div></div></div>
+  </div>
+</div>
+<div class="notiz"><ul>
+  <li>Balken 6 px, Fläche <code>--linie</code>, Füllung <code>--orange-tief</code>, Ecken 3 px; <code>role="progressbar"</code> mit Wert. Er lebt <i>in</i> der vorhandenen <code>.zustandszeile</code> — deren Höhe hält den Platz frei, nichts springt.</li>
+  <li>Am Ende ersetzt die Zeile sich durch das Ergebnis wie heute (Meldung <code>ok</code> oder <code>fehler</code>).</li>
+</ul></div>
+
+<h2 class="abschnitt">4 · Handy 400 px und „Bewegung reduzieren"</h2>
+<div class="frames">
+  <div style="width:392px">
+    <div class="rahmen-titel">A · Einsatz, Handy</div>
+    <div class="seite" style="padding:12px">
+      <div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Einsatz</h3><span class="plakette">verschlüsselt</span></div><div class="karte-inhalt">
+        <div class="zeile-lese"><b>Alarm</b>14:02</div><div class="zeile-lese"><b>Stichwort</b>Verkehrsunfall</div></div></div>
+      <div class="geo" style="height:200px"><div class="ladeplatz" style="white-space:nowrap"><span class="ladeplatz-ring"></span>Ortsdaten werden geöffnet …</div></div>
+      <div class="karte" style="margin-top:12px"><div class="karte-kopf"><h3 class="karte-titel">Einsatzphasen</h3></div>
+        <div class="karte-inhalt"><div class="ladeplatz"><span class="ladeplatz-ring"></span>Phasen werden geöffnet …</div></div></div>
+    </div>
+  </div>
+  <div style="width:392px">
+    <div class="rahmen-titel">A · Diensttag, Handy — Bewegung reduziert</div>
+    <div class="seite" style="padding:12px">
+      <div class="geo" style="height:200px"><div class="ladeplatz ladeplatz-still" style="white-space:nowrap"><span class="ladeplatz-ring"></span>GPS-Daten des Tages werden geöffnet …</div></div>
+      <p class="unter" style="margin:8px 0 0">Ring als geschlossener Kreis in <code>--orange-tief</code>, ohne Drehung. Die Einsatzliste des Tages steht schon (sie braucht keine Ortsdaten).</p>
+    </div>
+  </div>
+  <div style="width:392px">
+    <div class="rahmen-titel">Nach dem Öffnen</div>
+    <div class="seite" style="padding:12px">
+      <div class="geo mit-spur" style="height:200px"></div>
+      <p class="unter" style="margin:8px 0 0">Karte wie heute (Bilderlauf vergleicht vorher/nachher, S11-04).</p>
+    </div>
+  </div>
+</div>
+
+<div class="empf"><b>Empfehlung: Variante A</b> — ein Baustein <code>.ladeplatz</code> (Ring + Satz) für Einzelansichten, und derselbe Ring mit Balken in der <code>.zustandszeile</code> für lange Läufe. Neu sind damit: <b>eine Klasse mit zwei Kindern</b> (<code>.ladeplatz</code>, <code>.ladeplatz-ring</code>), <b>ein Balken</b> (<code>.balken</code>) und <b>eine Animation</b> (<code>dreh</code>, 900 ms). <b>Keine neue Farbe, keine neue Schriftgröße</b>: Ring <code>--linie</code>/<code>--orange-tief</code>, Text <code>--gedaempft</code> <code>--groesse-2</code>, Kästchen <code>--schnee</code>. Kontrast (nachgerechnet): <code>--gedaempft</code> auf <code>--schnee</code> 5,7 : 1, auf <code>--rauch</code> 5,3 : 1 (AA); <code>--orange-tief</code> auf <code>--schnee</code> 4,3 : 1, auf <code>--rauch</code> 4,0 : 1 und auf <code>--linie</code> 3,2 : 1 — für eine Grafik ≥ 3 : 1 genügt (WCAG 1.4.11). Ein Baustein in <code>ui.php</code> und <code>EdHtml</code> (<code>EdHtml.ladeplatz(text)</code>), Eintrag in <code>Design.md</code> 9.</div>
+
+<div class="notiz"><b>Fragen zur Freigabe</b><ol>
+  <li>Variante A oder B?</li>
+  <li>Die Schwelle 300 ms, bevor überhaupt etwas erscheint — einverstanden?</li>
+  <li>Die Phasenkarte (und auf dem Diensttag die Tageskarte) erscheint sofort mit Ladeplatz statt versteckt — einverstanden? Die Reanimationskarte bleibt versteckt, bis feststeht, dass es eine gibt (sonst stünde an jedem Einsatz ohne Reanimation kurz eine Karte).</li>
+  <li>Balken mit Zahl bei Export, GPX-Archiv und Wartungslauf — einverstanden?</li>
+</ol></div>
+</body></html>

@@ -79,6 +79,14 @@ const verzeichnis = JSON.parse(readFileSync(`${ordner}/verzeichnis.json`, 'utf-8
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await chromium.launch();
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
+/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+   Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
+   und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
+   eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
+     Abbruch schriebe einen Fehler in die Konsole. Gemessen wird er in seiner
+     eigenen Probe. */
+await kontext.route('**/api/wartungslauf.php', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '{"ok":true,"spuren":[],"aufzeichnungen":0,"diensttage":0}' }));
 const seite = await kontext.newPage();
 
 const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|opentopomap|arcgisonline/i;
@@ -95,13 +103,38 @@ async function anmelden(mail, pw) {
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
-  return !seite.url().includes('login.php');
+  if (seite.url().includes('login.php')) { return false; }
+  /* DAS SCHLÜSSELPAAR ABWARTEN (F-S11-71, hier am 17.10.2026 gesehen): Die
+     erste Seite nach der Anmeldung legt es still an; wer vorher weitergeht,
+     bricht das Anlegen ab, und das Einspielen meldet „kein Schlüsselpaar" —
+     0 von 5096 Einsätzen. Dieselbe Warteschleife wie in kreislauf_edbak.mjs. */
+  for (let i = 0; i < 40; i++) {
+    const stand = await seite.evaluate(async () => {
+      try {
+        const a = await EdApi.postJson('api/kontopaar.php', { aktion: 'zustand' });
+        return a && a.ok && a.daten ? a.daten.stand : null;
+      } catch (e) { return null; }
+    }).catch(() => null);
+    if (stand === 'da') { return true; }
+    await seite.waitForTimeout(500);
+  }
+  console.error('Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar.');
+  return true;
 }
 
+/* AUF RÜCKFRAGE ODER ERGEBNIS WARTEN, WAS ZUERST KOMMT (F-S11-74). Bis
+ * S11-11 wartete die Schleife bis zu 8 s auf eine Rückfrage, die nicht kam,
+ * und die Uhr lief dabei: Alle 17 Dateien standen auf 8,1 s, gleich, wie
+ * lange das Einspielen wirklich brauchte. */
 async function rueckfragen(hoechstens = 4) {
   for (let i = 0; i < hoechstens; i++) {
     const ja = seite.locator('dialog[open] button[data-act="yes"]');
-    try { await ja.first().waitFor({ state: 'visible', timeout: 8000 }); } catch { break; }
+    const was = await Promise.race([
+      ja.first().waitFor({ state: 'visible', timeout: 8000 }).then(() => 'frage', () => null),
+      seite.locator('#impstate .meldung').first()
+        .waitFor({ state: 'attached', timeout: 8000 }).then(() => 'ergebnis', () => null),
+    ]);
+    if (was !== 'frage') { break; }
     await ja.first().click();
     await seite.waitForTimeout(400);
   }

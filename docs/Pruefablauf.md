@@ -359,7 +359,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
 | `server/komplett_lib.php`, `server/admin_komplettsicherung.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite |
-| `server/gpx_lib.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130 |
+| `server/assets/gpx.js`, `server/api/gpx_import.php`, `server/tag_spuren.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130; Nr. 43 (seit S11-05d baut und liest der Browser GPX) |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
 | `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |
 | `server/auth_guard.php`, `server/db.php`, `server/admin_*.php`, `server/betrieb_*.php`, `server/api/rechtstext_vorschau.php`, `docs/Technik.md` | klein | `rollenprobe` | Nr. 286, Nr. 149 |
@@ -386,7 +386,12 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe` | Nr. 185, 225; PS-2 |
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
-| `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1` | E-PK-02 |
+| `server/kontopaar_lib.php`, `server/api/kontopaar.php`, `server/assets/kontopaar.js`, `server/assets/unlock.js`, `tools/proben/kontopaar/**` | klein | `kontopaarprobe` | Nr. 43 |
+| `server/ingest.php`, `server/spur_lib.php`, `server/api/mission.php`, `server/api/day.php`, `server/geraetehuelle_lib.php`, `tools/proben/ortsdaten/**`, `tools/proben/huelle/geraet.php`, `tools/proben/huelle/geraet_cli.php` | klein | `ortsdatenprobe` | Nr. 43 |
+| `server/api/wartungslauf.php`, `server/spur_lib.php`, `server/validate_lib.php`, `tools/proben/wartungslauf/**` | klein | `wartungslaufprobe` | Nr. 43 |
+| `server/api/ortsumzug.php`, `server/ortsumzug_lib.php`, `server/assets/ortsumzug.js`, `server/assets/ortsdaten.js`, `server/spur_lib.php`, `tools/proben/ortsumzug/**` | klein | `ortsumzugprobe` | Nr. 43 |
+| `tools/proben/huelle/**`, `tools/uhr-pruefstand/krypto-probe/**`, `server/assets/crypto.js`, `server/geraetehuelle_lib.php` | klein | `huellenprobe`, `uhr-krypto` | Nr. 43 |
+| `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1`, `uhr-rundlauf` | E-PK-02 |
 | `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe`, `sitzungsprobe`, `passkeyprobe`, `schluesselwechselprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. |
 | `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig. |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
@@ -734,6 +739,17 @@ Erst der Code, dann die Dokumentation, **dann** die Prüfmittel. Ein
 Werkzeug, das vor der letzten Änderung lief, misst einen Stand, den es nicht
 mehr gibt — in O9c stand die Wortliste dadurch auf fünf Treffern, gemeldet
 worden waren null (Web 9.10.1).
+
+**Und der Wartungslauf läuft nicht dazwischen** (seit Web 22.6.0, F-S11-77).
+Er packt und dünnt im Browser aus, sobald eine Seite ihn anstößt — die
+Startseite nach jeder Anmeldung, der Reiter Backup. Ein Werkzeug, das Daten
+vergleicht (Kreisläufe, GPX-, Ortsdaten-, Container-, Freigabe- und
+Komplettprobe, Messstand, Bilderlauf, Bedienprobe, Referenzexport,
+Sichtprüfung), beantwortet `api/wartungslauf.php` im eigenen Browserkontext mit
+„nichts fällig"; sonst dünnte er zwischen Einspielen und Sichern aus, und der
+Vergleich mäße ihn statt der Sache. Wer ein neues vergleichendes Werkzeug
+schreibt, übernimmt die Zeile. Gemessen wird der Lauf in seiner eigenen Probe
+(`wartungslaufprobe`).
 
 ### 6.8 Was die Kette selbst prüft
 

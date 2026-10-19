@@ -10,8 +10,13 @@ import org.json.JSONObject
  *
  * ER STEHT FÜR SICH, ohne Netz und ohne Datenbank — damit sich jede Regel des
  * Vertrags einzeln prüfen lässt: dass `ended_at` null ist, solange `final`
- * false ist; dass `day_ref` nur mitgeht, wenn es eines gibt; dass ein
- * Spurpunkt ein **Array** ist und kein Objekt.
+ * false ist; dass `day_ref` nur mitgeht, wenn es eines gibt.
+ *
+ * SEIT 0.18.0 VERSCHLOSSEN (S11-09). `track` ist ein Spurstück mit Hülle statt
+ * einer Liste aus `[lat, lon, ele_m, epoch_s]`, und die Koordinaten der
+ * Phasen stehen in der Einsatzhülle (`ort_huelle`) statt in `phases[]`
+ * ([Geraetehuelle]). Bis 0.17.0 ging beides im Klartext — der Server weist
+ * das seit Web 22.0.1 mit `400 klartext` ab.
  */
 object Sendekoerper {
 
@@ -19,12 +24,14 @@ object Sendekoerper {
      * @param seqVon erste gesendete Sequenznummer (`track.seq_from`)
      * @param punkte die Punkte ab [seqVon], in Reihenfolge
      * @param phasen nur für Einsätze; die **vollständige** Liste (Vertrag 3)
+     * @param kontoschluessel der öffentliche Schlüssel des Kontos, SEC1 (65 Byte)
      */
     fun baue(
         paket: Paketzeile,
         seqVon: Long,
         punkte: List<Rohpunkt>,
         phasen: List<Phaseneintrag> = emptyList(),
+        kontoschluessel: ByteArray,
     ): JSONObject = JSONObject().apply {
         put("kind", paket.art)
         put("client_ref", paket.clientRef)
@@ -48,6 +55,11 @@ object Sendekoerper {
             put("distance_m", paket.streckeM ?: 0)
             put("ascent_m", paket.anstiegM ?: 0)
             put("phases", phasenArray(phasen))
+            /* DIE EINSATZHÜLLE GEHT MIT JEDER ANFRAGE, zusammen mit der
+             * Phasenliste: Der Server ersetzt beide nach derselben Regel
+             * (Vertrag 3.1), und eine Hülle, die zu einer anderen Liste
+             * gehört, zeigte im Browser die falschen Orte. */
+            put("ort_huelle", Geraetehuelle.einsatz(paket.clientRef, paket.begonnenAt, phasen, kontoschluessel))
             /* `resus_sessions` wird NICHT gesendet — und zwar gar nicht, statt
              * als leere Liste. Die Reanimation bleibt bei der Garmin
              * (E-R45-1), das Handy dokumentiert sie nicht. Eine leere Liste
@@ -58,13 +70,13 @@ object Sendekoerper {
              * ist die Wahrheit. */
         }
 
-        put(
-            "track",
-            JSONObject().apply {
-                put("seq_from", seqVon)
-                put("points", punkteArray(punkte))
-            },
-        )
+        /* OHNE PUNKTE KEIN `track`: Ein Stück hat 1 bis 2000 Punkte
+         * (Vertrag 3.2). Der Server antwortet dann mit seiner eigenen Marke
+         * (`next_seq`), und an der Warteschlange ändert sich nichts. */
+        if (punkte.isNotEmpty()) {
+            val art = if (paket.art == Paketzeile.ART_EINSATZ) "spur" else "ruhe"
+            put("track", Geraetehuelle.spurstueck(art, paket.clientRef, seqVon, punkte, kontoschluessel))
+        }
     }
 
     private fun phasenArray(phasen: List<Phaseneintrag>): JSONArray =
@@ -74,30 +86,8 @@ object Sendekoerper {
                     JSONObject().apply {
                         put("phase", p.nummer)
                         put("at", p.at)
-                        // lat/lon dürfen null sein — der Vertrag prüft sie
-                        // einzeln und nimmt null an (Vertrag 3).
-                        put("lat", p.breite ?: JSONObject.NULL)
-                        put("lon", p.laenge ?: JSONObject.NULL)
-                    }
-                )
-            }
-        }
-
-    /**
-     * `track.points` ist ein Array aus `[lat, lon, ele_m, epoch_s]`.
-     *
-     * **Muss eine Liste sein** — ein Objekt mit den Schlüsseln „0", „1" … wird
-     * abgelehnt (Vertrag 3). `ele_m` darf null sein.
-     */
-    private fun punkteArray(punkte: List<Rohpunkt>): JSONArray =
-        JSONArray().apply {
-            for (p in punkte) {
-                put(
-                    JSONArray().apply {
-                        put(p.breite)
-                        put(p.laenge)
-                        put(p.hoehe ?: JSONObject.NULL)
-                        put(p.zeit)
+                        // Die Koordinate steht seit 0.18.0 in der
+                        // Einsatzhülle, nicht hier (Vertrag 3).
                     }
                 )
             }

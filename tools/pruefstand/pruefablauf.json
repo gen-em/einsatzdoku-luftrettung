@@ -172,6 +172,36 @@
       "aufruf": "bash tools/proben/proben.sh container",
       "braucht": "installation"
     },
+    "huellenprobe": {
+      "aufruf": "bash tools/proben/proben.sh huelle",
+      "braucht": "nichts",
+      "bemerkung": "S11-02: Referenz gegen ihre Vektoren, dann die WebCrypto-Umsetzung im Browser dagegen. Braucht keine Anlage; die Seite beantwortet die Probe selbst."
+    },
+    "kontopaarprobe": {
+      "aufruf": "bash tools/proben/proben.sh kontopaar",
+      "braucht": "installation",
+      "bemerkung": "S11-03: das Schluesselpaar des Kontos im Browser — still anlegen nach der Anmeldung, Abgleich, Rundlauf einer Geraetehuelle, vertauschter privater Teil, Siegel. Legt ein Wegwerfkonto umlauf-kontopaar an und loescht es."
+    },
+    "ortsdatenprobe": {
+      "aufruf": "bash tools/proben/proben.sh ortsdaten",
+      "braucht": "installation",
+      "bemerkung": "S11-04b: die Kette Geraet -> Server -> Browser — ein Geraet sendet verschlossen, api/mission.php und api/day.php liefern Stuecke, Einsatzhuelle und Sperrzeiten, der Browser oeffnet sie und vergleicht Punkt fuer Punkt. Legt ein Wegwerfkonto umlauf-ortsdaten an und loescht es."
+    },
+    "wartungslaufprobe": {
+      "aufruf": "bash tools/proben/proben.sh wartungslauf",
+      "braucht": "installation",
+      "bemerkung": "S11-07: der Wartungslauf — Liste der faelligen Spuren (Abschluss, Frist 31 Tage knapp davor und danach, Papierkorb, Altbestand, juengerer Schnitt) und Tausch mit jedem Ablehnungsgrund, in einer Transaktion auf dem Demo-Konto, die zurueckgerollt wird."
+    },
+    "ortsumzugprobe": {
+      "aufruf": "bash tools/proben/proben.sh ortsumzug",
+      "braucht": "installation",
+      "bemerkung": "S11-10: das Einmalwerkzeug — Altbestand im Klartext (Phasenorte, Reanimation, Transportziel, Hoehe, track_points, SPUR1 Stufe 2 und 3, Papierkorb, schon vorhandene Huelle) zieht ueber den stillen Lauf der Startseite in Huellen und Blob; geoeffnet gleich wie vorher, Waechter, zweiter Lauf. Legt ein Wegwerfkonto umlauf-ortsumzug an und loescht es."
+    },
+    "uhr-krypto": {
+      "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoreihe /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoprobe",
+      "braucht": "uhr",
+      "bemerkung": "S11-02: die Krypto-Probe fuer alle Geraete der App uebersetzen und auf den drei Uhren der Betreiberin im Simulator fahren (E-S11-16). Zeiten des Simulators sind die des Rechners."
+    },
     "browserprobe-csp": {
       "aufruf": "bash tools/proben/proben.sh csp-browser",
       "braucht": "installation"
@@ -235,6 +265,11 @@
       "aufruf": "python3 android/werkzeuge/stroeme.py pruefen",
       "braucht": "nichts",
       "bemerkung": "Konzept R4 (R4-04, Nr. 334, F-R4-17). Soll-Zahlen der Ausduennung gegen android/handy/src/test/resources/stroeme.txt -- im Pruefmodus, der vergleicht statt schreibt; ohne ihn aenderte die Probe den Baum und damit den Baum-Hash des Berichts."
+    },
+    "uhr-rundlauf": {
+      "aufruf": "bash tools/uhr-pruefstand/rundlauf/rundlauf.sh --nachholen fenix6pro && bash tools/uhr-pruefstand/rundlauf/rundlauf.sh fr945",
+      "braucht": "uhr",
+      "bemerkung": "S11-08: eine Prueffassung der App koppelt im Simulator an das Demo-Konto der oertlichen Anlage und sendet einen Einsatz (600 Punkte, Raender) und ein Ruhesegment verschlossen; pruefen.php oeffnet die Huellen mit dem Demo-Schluessel und haelt sie Wert fuer Wert gegen. Auf der Fenix zusaetzlich der Weg ohne Schluessel und das Nachholen (E-S11-79). Rund 8 min."
     },
     "uhr-stufe1": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh reihe /tmp/uhr-auswahl.txt",
@@ -411,14 +446,16 @@
       "id": "gpx",
       "ab": "klein",
       "pfade": [
-        "server/gpx_lib.php",
+        "server/assets/gpx.js",
+        "server/api/gpx_import.php",
+        "server/tag_spuren.php",
         "server/*export*.php",
         "server/assets/export.js"
       ],
       "proben": [
         "gpxprobe"
       ],
-      "anlass": "Nr. 130"
+      "anlass": "Nr. 130; Nr. 43 (seit S11-05d baut und liest der Browser GPX)"
     },
     {
       "id": "geraete",
@@ -817,6 +854,84 @@
       "anlass": "E-PK-02"
     },
     {
+      "id": "kontopaar",
+      "ab": "klein",
+      "pfade": [
+        "server/kontopaar_lib.php",
+        "server/api/kontopaar.php",
+        "server/assets/kontopaar.js",
+        "server/assets/unlock.js",
+        "tools/proben/kontopaar/**"
+      ],
+      "proben": [
+        "kontopaarprobe"
+      ],
+      "anlass": "Nr. 43"
+    },
+    {
+      "id": "ortsdaten",
+      "ab": "klein",
+      "pfade": [
+        "server/ingest.php",
+        "server/spur_lib.php",
+        "server/api/mission.php",
+        "server/api/day.php",
+        "server/geraetehuelle_lib.php",
+        "tools/proben/ortsdaten/**",
+        "tools/proben/huelle/geraet.php",
+        "tools/proben/huelle/geraet_cli.php"
+      ],
+      "proben": [
+        "ortsdatenprobe"
+      ],
+      "anlass": "Nr. 43"
+    },
+    {
+      "id": "wartungslauf",
+      "ab": "klein",
+      "pfade": [
+        "server/api/wartungslauf.php",
+        "server/spur_lib.php",
+        "server/validate_lib.php",
+        "tools/proben/wartungslauf/**"
+      ],
+      "proben": [
+        "wartungslaufprobe"
+      ],
+      "anlass": "Nr. 43"
+    },
+    {
+      "id": "ortsumzug",
+      "ab": "klein",
+      "pfade": [
+        "server/api/ortsumzug.php",
+        "server/ortsumzug_lib.php",
+        "server/assets/ortsumzug.js",
+        "server/assets/ortsdaten.js",
+        "server/spur_lib.php",
+        "tools/proben/ortsumzug/**"
+      ],
+      "proben": [
+        "ortsumzugprobe"
+      ],
+      "anlass": "Nr. 43"
+    },
+    {
+      "id": "huelle",
+      "ab": "klein",
+      "pfade": [
+        "tools/proben/huelle/**",
+        "tools/uhr-pruefstand/krypto-probe/**",
+        "server/assets/crypto.js",
+        "server/geraetehuelle_lib.php"
+      ],
+      "proben": [
+        "huellenprobe",
+        "uhr-krypto"
+      ],
+      "anlass": "Nr. 43"
+    },
+    {
       "id": "uhr",
       "ab": "klein",
       "pfade": [
@@ -824,7 +939,8 @@
         "tools/uhr-pruefstand/**"
       ],
       "proben": [
-        "uhr-stufe1"
+        "uhr-stufe1",
+        "uhr-rundlauf"
       ],
       "anlass": "E-PK-02"
     },

@@ -488,7 +488,7 @@ Herkunft nachweisbar bleiben soll.
 | Urheber | TopoGrafix (Dan Foster), GPX 1.1 |
 | Zweck | `tools/proben/gpx/` validiert damit die erzeugten GPX-Dateien |
 
-**Die Prüfsumme steht hier und in `tools/proben/gpx/probe.php` (`GPX_XSD_SHA`), nicht im
+**Die Prüfsumme steht hier und in `tools/proben/gpx/probe.mjs` (`XSD_SHA`; bis Web 22.2.0 `probe.php`), nicht im
 Dateikopf.** Ein Kommentar in der Datei änderte sie, und sie ist der Punkt: Die
 Probe rechnet sie bei jedem Lauf nach. Ein Schemalauf gegen ein verändertes
 Schema belegt nichts.

@@ -15,7 +15,7 @@ require_once __DIR__ . '/apk_lib.php';
  * Bandbreite eines geteilten Webspaces ist endlich. `auth_guard.php` bringt
  * die Schranke mit.
  *
- * NEBEN DEN SEITEN UND NICHT UNTER `api/`, aus demselben Grund wie `gpx.php`:
+ * NEBEN DEN SEITEN UND NICHT UNTER `api/`, aus demselben Grund wie bis Web 22.2.0 `gpx.php`:
  * `ist_api_aufruf()` entscheidet am Pfad. Ein `<a href>`, den jemand
  * anklickt, bekaeme dort nach einer Mittagspause `{"error":"session_ende"}`
  * im Browserfenster statt der Anmeldeseite.

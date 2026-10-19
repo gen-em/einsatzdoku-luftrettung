@@ -180,6 +180,21 @@ const RW_OEFFENTLICH_RE = '#^[A-Za-z0-9+/]{100,200}={0,2}$#';
 const RW_PRIVAT_RE      = WRAP_RC_RE;
 
 /**
+ * Das Schlüsselpaar des Kontos (S11-03, Konzept S11 3.1; E-S11-12, -14).
+ *
+ * Dieselben Formen wie beim Rückweg, aus demselben Grund: Der öffentliche
+ * Teil ist SPKI in Base64 (ECDH auf P-256 hat dieselbe SPKI wie ECDSA), der
+ * private liegt unter dem INHALTSSCHLÜSSEL (`edk1:`) und muss mit dem
+ * Wiederherstellungsschlüssel allein aufgehen. Eine `edka1:`-Fassung hinge
+ * am Server-Anteil — ginge der verloren, wären mit dem Paar alle Spuren,
+ * Phasenkoordinaten und Reanimationen des Kontos verloren (`CLAUDE.md` 4).
+ * Zwei Namen statt eines geteilten: Wer eines der Paare ändert, soll das
+ * andere nicht mitändern.
+ */
+const KP_OEFFENTLICH_RE = '#^[A-Za-z0-9+/]{100,200}={0,2}$#';
+const KP_PRIVAT_RE      = WRAP_RC_RE;
+
+/**
  * Mengenbegrenzungen je Einsatz.
  *
  * Zur Phasenzahl: Mehrfache Eintraege derselben Phasennummer sind
@@ -236,6 +251,27 @@ const LIMIT_SCHNITTE    = 200;
  */
 const LIMIT_TRACKPUNKTE_ANFRAGE = 2000;
 const LIMIT_TRACKPUNKTE_SPUR    = 50000;
+
+/* DIE GERAETEHUELLE IN DER PRUEFSCHICHT (S11-04a, E-S11-13). Was der Server
+ * nicht lesen kann, kann er nicht pruefen: Form und Groesse ja, Inhalt nein.
+ * Den Inhalt pruefen das Geraet beim Erzeugen und der Browser beim Oeffnen.
+ * Das Format steht in `tools/proben/huelle/referenz.py`:
+ *
+ *   Kennbyte 1 · EPK 65 · IV 16 · Chiffretext 16·n (n >= 1) · TAG 32
+ *
+ * also mindestens 130 Byte, und die Laenge ohne Kopf und TAG ein Vielfaches
+ * von 16. Die Obergrenzen folgen aus den Mengengrenzen darueber, nicht aus
+ * dem Gefuehl: Ein Spurstueck traegt hoechstens LIMIT_TRACKPUNKTE_ANFRAGE
+ * Punkte zu 14 Byte (E-S11-31), dazu Polsterung und Kopf. Die Einsatzhuelle
+ * traegt JSON mit hoechstens LIMIT_PHASEN Phasen und LIMIT_REA_SESSION
+ * Sitzungen zu LIMIT_REA_EREIGN Ereignissen; 256 KB sind das Vierfache des
+ * groessten denkbaren Inhalts. */
+const GH_MIN_BYTE         = 130;
+const GH_STUECK_MAX_BYTE  = LIMIT_TRACKPUNKTE_ANFRAGE * 14 + 16 + 130;
+/** Ein gepacktes Stueck (Stufe 2/3, E-S11-71): hoechstens die ganze Spur,
+ *  16 Byte je Punkt ungepackt, dazu was `deflate` im schlimmsten Fall anhaengt. */
+const GH_GEPACKT_MAX_BYTE = LIMIT_TRACKPUNKTE_SPUR * 16 + 1024 + 130;
+const GH_EINSATZ_MAX_BYTE = 262144;
 
 /** Wertebereich der Phasennummern. Phase 1 ist "Frei" (kein Zeitstempel),
  *  Phase 10 wurde mit 2026_07_19_phase10_entfernen abgeschafft. */
@@ -734,6 +770,86 @@ function pruef_pat_blob($wert, string $feld = 'Patientenblock', ?Pruefliste $p =
         return null;
     }
     return $s;
+}
+
+/**
+ * Eine Geraetehuelle aus der Nutzlast (Base64) — als Binaerwert, oder null.
+ *
+ * Geprueft wird die FORM: Base64 ohne fremde Zeichen, Laenge zwischen
+ * GH_MIN_BYTE und `$maxByte`, Chiffretext ein Vielfaches von 16, Kennbyte der
+ * Fassung 1, ein unkomprimierter Punkt als fluechtiger Schluessel. Ob die
+ * Huelle aufgeht, kann nur der Browser sagen (E-S11-13).
+ */
+function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste $p = null): ?string
+{
+    if ($wert === null) { return null; }
+    if (!is_string($wert) || !preg_match('#^[A-Za-z0-9+/]+={0,2}$#', $wert)) {
+        $p?->melde($feld, 'kein Base64');
+        return null;
+    }
+    $roh = base64_decode($wert, true);
+    if ($roh === false) { $p?->melde($feld, 'kein Base64'); return null; }
+    $n = strlen($roh);
+    if ($n < GH_MIN_BYTE) { $p?->melde($feld, 'kuerzer als ' . GH_MIN_BYTE . ' Byte'); return null; }
+    if ($n > $maxByte) { $p?->melde($feld, 'laenger als ' . $maxByte . ' Byte'); return null; }
+    if (($n - 82 - 32) % 16 !== 0) { $p?->melde($feld, 'Chiffretext kein Vielfaches von 16'); return null; }
+    if ($roh[0] !== "\x01") { $p?->melde($feld, 'unbekannte Fassung ' . ord($roh[0])); return null; }
+    if ($roh[1] !== "\x04") { $p?->melde($feld, 'kein unkomprimierter Schluessel'); return null; }
+    return $roh;
+}
+
+/**
+ * Ein Spurstueck (SPUR2): `seq_from`, `punkte`, `ts_von`, `ts_bis` im
+ * Klartext und die Huelle. Gibt es geprueft zurueck (Huelle binaer) oder
+ * null. EINE Stelle fuer den Eingang der Geraete (`ingest.php`) und die
+ * Schreibwege des Browsers (`api/schneiden.php`, S11-05c) — dieselben
+ * Grenzen fuer beide, wie es die gemeinsame Pruefschicht verlangt.
+ *
+ * @return array{seq_from:int,punkte:int,ts_von:int,ts_bis:int,huelle:string}|null
+ */
+function pruef_spurstueck($t, string $feld = 'track', ?Pruefliste $p = null): ?array
+{
+    if (!is_array($t)) { $p?->melde($feld, 'kein Stueck'); return null; }
+    $seqFrom = (int)($t['seq_from'] ?? -1);
+    $n       = (int)($t['punkte'] ?? 0);
+    $tsVon   = (int)($t['ts_von'] ?? -1);
+    $tsBis   = (int)($t['ts_bis'] ?? -1);
+    $huelle  = pruef_huelle($t['huelle'] ?? null, GH_STUECK_MAX_BYTE, $feld . '.huelle', $p);
+    if ($seqFrom < 0 || $n < 1 || $n > LIMIT_TRACKPUNKTE_ANFRAGE
+        || $tsVon < 0 || $tsBis < $tsVon || $huelle === null) {
+        /* Keine eigene Meldung fuer die Zahlen: Der Aufrufer nennt dann
+         * „Stueck unvollstaendig" (so seit S11-04a im Eingang). */
+        return null;
+    }
+    return ['seq_from' => $seqFrom, 'punkte' => $n, 'ts_von' => $tsVon,
+            'ts_bis' => $tsBis, 'huelle' => $huelle];
+}
+
+/**
+ * Ein gepacktes Spurstueck des Wartungslaufs (Stufe 2 oder 3, S11-07,
+ * E-S11-71): wie `pruef_spurstueck()`, dazu Stufe und Marke, und die Grenzen
+ * der ganzen Spur statt der einer Anfrage.
+ *
+ * @return array{seq_from:int,punkte:int,n_original:int,ts_von:int,ts_bis:int,stufe:int,huelle:string}|null
+ */
+function pruef_spurstueck_gepackt($t, string $feld = 'stueck', ?Pruefliste $p = null): ?array
+{
+    if (!is_array($t)) { $p?->melde($feld, 'kein Stueck'); return null; }
+    $seqFrom = (int)($t['seq_from'] ?? -1);
+    $n       = (int)($t['punkte'] ?? 0);
+    $nOrig   = (int)($t['n_original'] ?? 0);
+    $stufe   = (int)($t['stufe'] ?? 0);
+    $tsVon   = (int)($t['ts_von'] ?? -1);
+    $tsBis   = (int)($t['ts_bis'] ?? -1);
+    $huelle  = pruef_huelle($t['huelle'] ?? null, GH_GEPACKT_MAX_BYTE, $feld . '.huelle', $p);
+    if ($seqFrom < 0 || $n < 1 || $n > LIMIT_TRACKPUNKTE_SPUR || $nOrig < $n
+        || $seqFrom + $nOrig > 4294967295 || !in_array($stufe, [2, 3], true)
+        || $tsVon < 0 || $tsBis < $tsVon || $huelle === null) {
+        $p?->melde($feld, 'Stueck unvollstaendig');
+        return null;
+    }
+    return ['seq_from' => $seqFrom, 'punkte' => $n, 'n_original' => $nOrig, 'ts_von' => $tsVon,
+            'ts_bis' => $tsBis, 'stufe' => $stufe, 'huelle' => $huelle];
 }
 
 /**

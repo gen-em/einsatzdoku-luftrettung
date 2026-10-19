@@ -95,8 +95,15 @@ if ($nutzlast < 6) {
  * (R39). Der Rueckweg ist darauf vorbereitet — er ueberliest das Feld in
  * aelteren Dateien und fragt es in neueren nicht. Eine 11er-Datei bleibt
  * hier lesbar; ein Stand vor Web 21.0.0 weist eine 12er-Datei ab, und das
- * ist richtig: Sein Code laeuft auf diesem Schema ohnehin nicht. */
-const NUTZLAST_HOECHSTENS = 12;
+ * ist richtig: Sein Code laeuft auf diesem Schema ohnehin nicht.
+ *
+ * FASSUNG 13 (Web 22.5.0, S11-06a): Orte der Phasen und Reanimation stehen
+ * offen im verschlossenen Kern, die Spuren als Punktlisten statt SPUR1. Der
+ * Rueckweg ist darauf vorbereitet — der Browser verschliesst beides vor dem
+ * Senden, aus jeder Fassung von 6 bis 13 gleich, und dieser Endpunkt nimmt
+ * nur noch Verschlossenes an. Ein Stand vor Web 22.5.0 weist eine 13er-Datei
+ * ab; er kennt die Punktlisten im Spurteil nicht und liefe still ohne Spuren. */
+const NUTZLAST_HOECHSTENS = 13;
 if ($nutzlast > NUTZLAST_HOECHSTENS) {
     json_out(['error' => 'version_neu',
               'meldung' => 'Dieses Backup hat das Format ' . $nutzlast
@@ -107,7 +114,7 @@ if ($nutzlast > NUTZLAST_HOECHSTENS) {
 }
 
 try {
-    $stats = edbak_restore($userId, $data);
+    $stats = edbak_restore($userId, $data, null, 'browser');
     /* DIE SPURKARTE GEHT GETRENNT ZURUECK, nicht in `stats`: `stats` ist die
      * Rueckmeldung an die Nutzerin und wird angezeigt; die Karte ist eine
      * Arbeitsangabe fuer den naechsten Schritt des Browsers (Konzept 3.2.4). */
@@ -121,6 +128,16 @@ try {
      * eigenen Anfragen und muessen wissen, an welchen Tag sie gehoeren. */
     if ($tage !== null) { $antwort['day_map'] = $tage ?: new stdClass(); }
     json_out($antwort);
+} catch (DomainException $ex) {
+    /* Klartext-Ortsdaten (S11-06b): Der Browser verschliesst seit Web 22.5.0
+     * Orte, Reanimation und Spur vor dem Senden; eine Nutzlast mit Klartext
+     * kommt aus einer veralteten Seite oder von Hand. Nichts ist geschrieben
+     * — `edbak_restore()` prueft vor der Transaktion. */
+    json_out(['error' => 'klartext',
+              'meldung' => 'Das Backup enthielt Ortsdaten im Klartext ('
+                         . preg_replace('/^klartext: /', '', $ex->getMessage())
+                         . '). Seit Web 22.5.0 verschlüsselt sie der Browser vor dem Senden; '
+                         . 'bitte die Seite neu laden. Es wurde nichts geändert.'], 400);
 } catch (Throwable $ex) {
     json_fehler($ex, 'restore');
 }

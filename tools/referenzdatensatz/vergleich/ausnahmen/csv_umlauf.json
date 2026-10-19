@@ -279,6 +279,22 @@
       "art": "wert",
       "nach": "standard",
       "begruendung": "GEMESSEN 2x (15.09.2026, Demo-Ausbau). Wie `rettungsmittel_kurz`: Der Typ des Diensttags wird vom GEWAEHLTEN Rettungsmittel eingefroren, und auf der Importseite ist genau eines fuer die ganze Datei zu waehlen. Die beiden Bergwacht-Diensttage kommen deshalb als `standard` zurueck. DAS IST KEINE LUECKE DES BACKUPS, sondern die des CSV-Wegs: Im edbak-Umlauf ueberstehen Typ und Kurzname den Weg unveraendert, und genau deshalb steht dort keine Regel dafuer."
+    },
+    {
+      "bereich": "felder",
+      "feld": "personenbezogen",
+      "art": "wert",
+      "schluessel_regex": "einsaetze\\.csv\\|(transport_dest|ziel_lat|ziel_lon)",
+      "von": "nein",
+      "nach": "ja",
+      "begruendung": "S11-05e (Betreiberin 16.10.2026, E-S11-53): Transportziel und Zielkoordinate liegen seit Web 22.1.0 im pat_blob und stehen seit Web 22.4.0 nur noch mit personenbezogenen Angaben im Export. Die Referenz (27.09.2026) ist aelter. GEMESSEN 16.10.2026: 3 Zeilen (transport_dest, ziel_lat, ziel_lon)."
+    },
+    {
+      "bereich": "felder",
+      "feld": "beschreibung",
+      "art": "wert",
+      "schluessel_regex": "einsaetze\\.csv\\|(transport_dest|ziel_lat|ziel_lon)",
+      "begruendung": "S11-05e: Die Beschreibung nennt seit Web 22.4.0 die Quelle im pat_blob und den Altbestand in der Spalte; Format unveraendert. GEMESSEN 16.10.2026: 3 Zeilen."
     }
   ]
 }

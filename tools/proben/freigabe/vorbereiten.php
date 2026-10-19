@@ -42,6 +42,10 @@ if ($schritt === 'quelle') {
                    bin2hex(random_bytes(8)), $daten['wrap'], $daten['check']]);
     $uid = (int)$pdo->lastInsertId();
     $kennung = (string)$pdo->query("SELECT account_key FROM users WHERE id=$uid")->fetchColumn();
+    /* Das Paar der Quelle (S11-06c): Der direkte Weg verschliesst Orte,
+     * Reanimation und Spur damit, und das Paket traegt den privaten Teil. */
+    require_once $w . '/kontopaar_lib.php';
+    kp_ablegen($pdo, $uid, (string)$daten['spki'], (string)$daten['kp_privat']);
 
     edbak_restore($uid, [
         'version' => 7,
@@ -51,10 +55,14 @@ if ($schritt === 'quelle') {
             'client_ref' => 'fg-rc-1', 'day_id' => 990,
             'started_at' => '2026-07-10 06:00:00', 'ended_at' => '2026-07-10 07:00:00',
             'pat_blob' => $daten['blob'],
+            'phases' => [['phase' => 4, 'occurred_at' => '2026-07-10 06:10:00',
+                          'lat' => 47.15, 'lon' => 11.15]],
+            'resus' => [['started_at' => '2026-07-10 06:20:00',
+                         'events' => [['type' => 'adrenalin', 'occurred_at' => '2026-07-10 06:21:00']]]],
             'track' => [[0, 47.1, 11.1, 700.0, 1783300000],
                         [1, 47.2, 11.2, 705.0, 1783300060]]]],
         'rest_segments' => [],
-    ]);
+    ], null, 'server');
 
     [$ok, $grund, $info] = edbak_sicherung_erzeugen($uid);
     if (!$ok) { fwrite(STDERR, "Backup: $grund\n"); exit(2); }
@@ -93,6 +101,7 @@ if ($schritt === 'quelle') {
     echo json_encode(['kennung' => $kennung, 'datei' => $info['datei'],
                       'quelle_id' => $uid, 'ziel_id' => $zielId,
                       'fassung' => $m['version'], 'geschuetzte' => $m['geschuetzte'],
+                      'verschlossen' => $m['ortsdaten_verschlossen'] ?? null,
                       'eintragsteile' => $m['eintragsteile'],
                       'spurteile' => $m['spurteile'],
                       'zip_eintraege' => $eintraege, 'zip_versiegelt' => $versiegelt,
@@ -104,7 +113,7 @@ if ($schritt === 'quelle') {
 if ($schritt === 'pruefen') {
     $zielId = (int)$pdo->query('SELECT id FROM users WHERE email = '
         . $pdo->quote((string)$daten['ziel']))->fetchColumn();
-    $r = $pdo->query("SELECT client_ref, pat_blob FROM missions
+    $r = $pdo->query("SELECT client_ref, pat_blob, ort_huelle FROM missions
                        WHERE user_id = $zielId AND client_ref = 'fg-rc-1'")->fetch();
     require_once $w . '/spur_lib.php';
     $mid = (int)$pdo->query("SELECT id FROM missions
@@ -113,6 +122,11 @@ if ($schritt === 'pruefen') {
         'angekommen' => $r !== false,
         'pat_blob'   => $r['pat_blob'] ?? null,
         'punkte'     => $mid ? (spur_zahlen($pdo, 'mission', [$mid])[$mid] ?? 0) : 0,
+        /* Fuer den Browser der Probe (S11-06c): Huelle und Stuecke, wie sie
+         * im Zielkonto liegen — er oeffnet sie mit dessen Paar. */
+        'client_ref' => $r['client_ref'] ?? null,
+        'ort_huelle' => ($r['ort_huelle'] ?? null) !== null ? base64_encode((string)$r['ort_huelle']) : null,
+        'stuecke'    => $mid ? spur2_lesen($pdo, 'mission', $mid) : [],
     ]), "\n";
     exit(0);
 }

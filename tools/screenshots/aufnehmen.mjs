@@ -580,6 +580,14 @@ async function anmelden(rolle) {
     viewport: { width: 1280, height: 900 },
     hasTouch: FINGER,
   });
+  /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+     Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
+     und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
+     eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
+     Abbruch schriebe einen Fehler in die Konsole. Gemessen wird er in seiner
+     eigenen Probe. */
+  await kontext.route('**/api/wartungslauf.php', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '{"ok":true,"spuren":[],"aufzeichnungen":0,"diensttage":0}' }));
   for (const muster of KACHELMUSTER) await kontext.route(muster, kachelAntwort);
   const seite = await kontext.newPage();
   const drin = await anmeldenAuf(seite, rolle);
@@ -809,12 +817,18 @@ async function platzhalter() {
     const i = await tagInhalt(t.id);
     const m = (i && i.missions) || [];
     if (!m.length) { continue; }
-    const mitSpur = m.filter((x) => (x.track || []).length > 0).length;
+    /* SEIT S11-04b heissen die Punkte `spur_stuecke` (verschlossen) und
+       nicht mehr `track`; bis zum 18.10.2026 fand die Suche deshalb keinen
+       Tag mit Spur, und zehn Aufnahmen blieben ohne Bild (F-S11-87). */
+    const mitSpur = m.filter((x) => (x.spur_stuecke || x.track || []).length > 0).length;
     if (!p['__TAG_OHNE_STANDORT__'] && mitSpur > 0) {
       p['__TAG_OHNE_STANDORT__'] = `index.php?d=${t.id}`;
     }
     if (!p['__TAG_LUFTLINIE__'] && mitSpur === 0
-        && m.some((x) => x.dest_lat !== null || x.start_src !== null)) {
+        /* Das Transportziel liegt seit S11-05b im `pat_blob`; `dest_lat`
+           steht nicht mehr in der Antwort, und `undefined !== null` war
+           immer wahr — jeder Tag ohne Spur galt als Luftlinientag. */
+        && m.some((x) => x.pat_blob != null || x.start_src != null)) {
       p['__TAG_LUFTLINIE__'] = `index.php?d=${t.id}`;
     }
   }

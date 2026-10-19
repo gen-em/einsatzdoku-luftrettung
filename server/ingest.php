@@ -470,15 +470,65 @@ $final   = pruef_flag($b['final'] ?? null);
 $distanceM = pruef_zahl($b['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef);
 $ascentM   = pruef_zahl($b['ascent_m']   ?? null, 0, 100000,    'ascent_m',   $pruef);
 
-$points  = $b['track']['points'] ?? [];
-$seqFrom = (int)($b['track']['seq_from'] ?? 0);
-if ($seqFrom < 0) json_out(['error' => 'payload'], 400);
-// Muss eine LISTE sein: Ein JSON-Objekt mit den Schluesseln "0", "1" wird in
-// PHP zum selben Feldtyp und liefe sonst unbemerkt durch.
-if (!ist_liste($points)) { json_out(['error' => 'payload'], 400); }
-// Die Punkte EINER ANFRAGE (F-S2-02). Die Uhr sendet in Stuecken zu 500;
-// 2000 sind vierfache Reserve und schuetzen vor einer entgleisten Nutzlast.
-$points = pruef_menge($points, LIMIT_TRACKPUNKTE_ANFRAGE, 'track.points', $pruef);
+/* ---- KEINE KLARTEXT-ORTSDATEN MEHR (S11-04a, E-S11-09) ---------------------
+ *
+ * Seit Web 22 verschliessen Uhr und Handy Spur, Phasenkoordinaten und
+ * Reanimation vor dem Senden mit dem oeffentlichen Schluessel des Kontos
+ * (Format: `tools/proben/huelle/referenz.py`). Kommt eine dieser Angaben noch
+ * im Klartext, ist das ein Geraet in einer alten Fassung — und der Server
+ * nimmt sie NICHT an, auch nicht teilweise: `400` mit `error = klartext`,
+ * und das Geraet parkt das Paket (E-S11-09, kein Uebergang). Wer sie still
+ * verwerfen und den Rest annehmen liesse, quittierte Punkte, die nirgends
+ * gespeichert sind; das Geraet loeschte sie.
+ *
+ * GEPRUEFT WIRD DAS VORHANDENSEIN, NICHT DER WERT: eine Liste `track.points`
+ * mit Eintraegen, eine Phase mit `lat` oder `lon`, eine Reanimation. */
+$klartext = [];
+if (!empty($b['track']['points'])) { $klartext[] = 'track.points'; }
+foreach ((is_array($b['phases'] ?? null) ? $b['phases'] : []) as $ph) {
+    if (is_array($ph) && (($ph['lat'] ?? null) !== null || ($ph['lon'] ?? null) !== null)) {
+        $klartext[] = 'phases.lat/lon';
+        break;
+    }
+}
+if (!empty($b['resus_sessions']) || !empty($b['resus'])) { $klartext[] = 'resus'; }
+if ($klartext) {
+    json_out(['error' => 'klartext', 'grund' => 'Ortsdaten im Klartext: ' . implode(', ', $klartext)
+              . '. Diese Fassung des Servers nimmt sie nur verschlossen an — Gerät aktualisieren und neu koppeln.'], 400);
+}
+
+/* ---- DAS SPURSTUECK (SPUR2, Konzept S11 3.4) --------------------------------
+ *
+ * `track` traegt seit S11 keine Punkte mehr, sondern ein verschlossenes
+ * Stueck: `seq_from`, `punkte`, `ts_von`, `ts_bis` im Klartext und `huelle`
+ * (Base64). Ein kaputtes Stueck bricht die Anfrage ab — anders als ein
+ * einzelner krummer Punkt frueher: Ein Stueck ist eine Einheit, und eine
+ * Quittung ohne Ablage loeschte es auf dem Geraet. */
+$stueck = null;
+$seqFrom = 0;
+if (isset($b['track']) && $b['track'] !== null) {
+    /* Die Pruefung steht seit S11-05c in `pruef_spurstueck()`, weil der
+     * Browser beim Schneiden und Loeschen dieselben Stuecke schreibt. */
+    $stueck = pruef_spurstueck($b['track'], 'track', $pruef);
+    if ($stueck === null) {
+        json_out(['error' => 'payload', 'grund' => 'track: ' . ($pruef->text() ?: 'Stueck unvollstaendig')], 400);
+    }
+    $seqFrom = $stueck['seq_from'];
+}
+/* Fuer die Stellen weiter unten, die nach der ANZAHL der gesendeten Punkte
+ * fragen (Fortsetzungsmarke, `kept_points`). */
+$nGesendet = $stueck['punkte'] ?? 0;
+
+/* ---- DIE EINSATZHUELLE (E-S11-36) ------------------------------------------
+ * Phasenkoordinaten und Reanimation, verschlossen; nur bei `mission`. Sie
+ * wird mit den Phasen ersetzt oder behalten (E-S11-38). */
+$ortHuelle = null;
+if ($kind === 'mission' && ($b['ort_huelle'] ?? null) !== null) {
+    $ortHuelle = pruef_huelle($b['ort_huelle'], GH_EINSATZ_MAX_BYTE, 'ort_huelle', $pruef);
+    if ($ortHuelle === null) {
+        json_out(['error' => 'payload', 'grund' => 'ort_huelle: ' . $pruef->text()], 400);
+    }
+}
 
 $pdo = db();
 
@@ -558,7 +608,7 @@ for ($anlauf = 1; ; $anlauf++) {
         if ($bl->fetchColumn()) {
             $pdo->commit();
             json_out(['ok' => true, 'id' => 0, 'stored_points' => 0,
-                      'next_seq' => $seqFrom + count($points)]);
+                      'next_seq' => $seqFrom + $nGesendet]);
         }
 
         // Im Papierkorb: ebenfalls bestaetigen und verwerfen — sonst wuerde ein
@@ -584,7 +634,7 @@ for ($anlauf = 1; ; $anlauf++) {
         if ($existing && $existing['deleted_at'] !== null) {
             $pdo->commit();
             json_out(['ok' => true, 'id' => 0, 'stored_points' => 0,
-                      'next_seq' => $seqFrom + count($points)]);
+                      'next_seq' => $seqFrom + $nGesendet]);
         }
 
         /* ---- Ersetzfenster (Backlog Nr. 134, K-14, F-SP-8) -------------------
@@ -727,11 +777,11 @@ for ($anlauf = 1; ; $anlauf++) {
                     $zp->execute([$ownerId]);
                     $behalten['kept_phases'] = (int)$zp->fetchColumn();
                 }
-                if (isset($b['resus_sessions']) || isset($b['resus'])) {
-                    $zr = $pdo->prepare('SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ?');
-                    $zr->execute([$ownerId]);
-                    $behalten['kept_resus'] = (int)$zr->fetchColumn();
-                }
+                /* Die Einsatzhuelle bleibt mit den Phasen stehen (E-S11-38). Seit
+                 * S11 kommt die Reanimation nur noch darin; `kept_resus` gibt es
+                 * nicht mehr, weil der Server Sitzungen nicht zaehlen kann
+                 * (E-S11-02) — `kept_ort` sagt nur: die Huelle blieb. */
+                if ($ortHuelle !== null) { $behalten['kept_ort'] = 1; }
                 /* AUCH DIE METADATEN WERDEN GENANNT (Gegenpruefung, Fund 3). Ein
                  * echtes Abschlusspaket traegt weder Phasen noch Punkte, sondern
                  * Ende, `final`, Strecke und Anstieg -- ohne dieses Feld saehe es
@@ -850,11 +900,10 @@ for ($anlauf = 1; ; $anlauf++) {
                     $at = pruef_utc($p['at'] ?? null, 'phases.at', $pruef);
                     $ph = pruef_phase($p['phase'] ?? null, 'phases.phase', $pruef);
                     if ($at === null || $ph === null) continue;
-                    // Koordinaten geprueft: sie gehen nicht nur in die Karte, sondern
-                    // auch in die Hoehenberechnung des Einsatzorts ein.
-                    $neuePhasen[] = [$ph, $at,
-                        pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
-                        pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)];
+                    /* Seit S11 nur Nummer und Zeit; die Koordinate steht in der
+                     * Einsatzhuelle (E-S11-36). Eine Phase MIT Koordinate hat
+                     * der Eingang oben schon als Klartext abgewiesen. */
+                    $neuePhasen[] = [$ph, $at];
                 }
                 $zaehl = $pdo->prepare('SELECT COUNT(*) FROM mission_phases WHERE mission_id = ?');
                 $zaehl->execute([$ownerId]);
@@ -864,9 +913,22 @@ for ($anlauf = 1; ; $anlauf++) {
                     $phasen = [];
                     foreach ($neuePhasen as $np) {
                         $phasen[] = ['phase' => $np[0], 'occurred_at' => $np[1],
-                                     'lat' => $np[2], 'lon' => $np[3]];
+                                     'lat' => null, 'lon' => null];
                     }
                     einsatz_phasen_ersetzen($pdo, $ownerId, $phasen);
+                    /* DIE EINSATZHUELLE GEHT MIT DEN PHASEN (E-S11-38). Sie traegt
+                     * die Koordinaten genau dieser Phasen und die Reanimation; der
+                     * Server kann nur an den Phasen sehen, ob ein Paket weniger
+                     * weiss als der gespeicherte Stand. Preis: Ein Geraet mit
+                     * gleich vielen Phasen und weniger Reanimationsereignissen
+                     * (Speicher verloren, derselbe Einsatz neu gesendet) kann eine
+                     * vollstaendigere Huelle ueberschreiben. */
+                    if ($ortHuelle !== null) {
+                        $up = $pdo->prepare('UPDATE missions SET ort_huelle = ? WHERE id = ?');
+                        $up->bindValue(1, $ortHuelle, PDO::PARAM_LOB);
+                        $up->bindValue(2, $ownerId, PDO::PARAM_INT);
+                        $up->execute();
+                    }
                 } else {
                     // Behalten und NENNEN — sonst waere der uebergangene Upload von
                     // einem uebernommenen nicht zu unterscheiden (JSON-Vertrag 5).
@@ -874,56 +936,23 @@ for ($anlauf = 1; ; $anlauf++) {
                     // gespeichert. Das geschlossene Ersetzfenster (Nr. 134) kommt
                     // gar nicht bis hierher -- es faengt oben ab, VOR dem Upsert.
                     $behalten['kept_phases'] = $vorhandenePhasen;
+                    if ($ortHuelle !== null) { $behalten['kept_ort'] = 1; }
                 }
+            } elseif ($ortHuelle !== null) {
+                /* Eine Huelle ohne Phasenliste: nur, wenn noch keine dasteht.
+                 * Ein Paket, das zu den Phasen nichts sagt, soll eine
+                 * vorhandene Huelle nicht ersetzen. */
+                $up = $pdo->prepare('UPDATE missions SET ort_huelle = ? WHERE id = ? AND ort_huelle IS NULL');
+                $up->bindValue(1, $ortHuelle, PDO::PARAM_LOB);
+                $up->bindValue(2, $ownerId, PDO::PARAM_INT);
+                $up->execute();
+                if ($up->rowCount() === 0) { $behalten['kept_ort'] = 1; }
             }
 
-            // Reanimationen vollstaendig ersetzen (mehrere Sitzungen moeglich).
-            // "resus_sessions" (Liste) ist aktuell; ein altes "resus"-Objekt wird
-            // als Liste mit einem Eintrag behandelt.
-            $sessions = null;
-            if (isset($b['resus_sessions']) && is_array($b['resus_sessions'])) {
-                $sessions = $b['resus_sessions'];
-            } elseif (!empty($b['resus']) && is_array($b['resus'])) {
-                $sessions = [$b['resus']];
-            }
-            if ($sessions !== null) {
-                $sessions = pruef_menge($sessions, LIMIT_REA_SESSION, 'resus_sessions', $pruef);
-                // Erst pruefen und sammeln, dann entscheiden — dieselbe Regel wie
-                // bei den Phasen (M4-02). Verglichen werden SITZUNGEN; sie sind
-                // die Eintraege dieser Liste.
-                $neueSitzungen = [];
-                foreach ($sessions as $sess) {
-                    if (!is_array($sess)) { $pruef->melde('resus_sessions', 'kein Objekt'); continue; }
-                    $rStart = pruef_utc($sess['started_at'] ?? null, 'resus.started_at', $pruef);
-                    if ($rStart === null) continue;
-                    $events = pruef_menge($sess['events'] ?? [], LIMIT_REA_EREIGN, 'resus.events', $pruef);
-                    $gepruefteEreignisse = [];
-                    foreach ($events as $ev) {
-                        if (!is_array($ev)) { $pruef->melde('resus.events', 'kein Objekt'); continue; }
-                        $at = pruef_utc($ev['at'] ?? null, 'resus.events.at', $pruef);
-                        // 'beginn' wird nicht als Ereignis gefuehrt — der Beginn
-                        // steckt in started_at der Sitzung (JSON-Vertrag 3.3).
-                        $ty = pruef_reanimationsart($ev['type'] ?? null, 'resus.events.type', $pruef);
-                        if ($at !== null && $ty !== null && $ty !== 'beginn') {
-                            $gepruefteEreignisse[] = [$ty, $at];
-                        }
-                    }
-                    $neueSitzungen[] = ['start' => $rStart, 'events' => $gepruefteEreignisse];
-                }
-                $zaehl = $pdo->prepare('SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ?');
-                $zaehl->execute([$ownerId]);
-                $vorhandeneSitzungen = (int)$zaehl->fetchColumn();
-
-                if (count($neueSitzungen) >= $vorhandeneSitzungen) {
-                    $reas = [];
-                    foreach ($neueSitzungen as $ns) {
-                        $reas[] = ['started_at' => $ns['start'], 'events' => $ns['events']];
-                    }
-                    einsatz_reas_ersetzen($pdo, $ownerId, $reas);
-                } else {
-                    $behalten['kept_resus'] = $vorhandeneSitzungen;
-                }
-            }
+            /* DIE REANIMATION KOMMT SEIT S11 NUR IN DER EINSATZHUELLE
+             * (E-S11-02). `resus_sessions` und `resus_events` nehmen nichts mehr
+             * auf; ein Paket mit Reanimation im Klartext hat der Eingang oben
+             * abgewiesen. Die Tabellen tragen bis S11-12 nur Altbestand. */
             }   // Ende: nicht-manueller Einsatz
         } else { // rest_segment
             /* COALESCE wie beim Einsatz oben (Web 13.0.1): Ein spaeter
@@ -1033,93 +1062,45 @@ for ($anlauf = 1; ; $anlauf++) {
          * senden, nicht in einer Schleife haengen bleiben. Was uebergangen wurde,
          * steht als `kept_points` in der Antwort -- ein stiller Verlust waere
          * genau der Fehler, gegen den die uebrigen `kept_*`-Felder gebaut sind. */
-        if ($points && $fensterZu) {
-            $behalten['kept_points'] = count($points);
-        } elseif ($points) {
-            $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
-                                  VALUES (?,?,?,?,?,?,?)');
-            foreach ($points as $i => $pt) {
-                $seq = $seqFrom + $i;
-
-                /* DIE REGEL GILT JE PUNKT, NICHT JE ANFRAGE. Ein Teilstueck kann
-                 * die Grenze ueberschreiten; das Paket wird dann an n_original
-                 * geteilt.
-                 *
-                 *   seq <  n_original   Wiederholung — still uebergehen.
-                 *   seq >= n_original   Stufe 1/2: annehmen (Nachzuegler, E-S2-08)
-                 *                       Stufe 3:   verwerfen und zaehlen
-                 *
-                 * Der untere Teil ist kein Verlust: Die Punkte stehen im Blob.
-                 * Bislang fing das der Schluesselkonflikt ab — aber nur, solange
-                 * die Zeilen noch dastanden. Nach der Verdichtung gibt es keinen
-                 * Konflikt mehr, die Zeile wird angelegt und ist danach
-                 * unsichtbar (spur_lesen_viele() uebergeht sie, spur_zahlen()
-                 * zaehlt sie nicht) und belegt trotzdem 62,4 Byte. Ausgeloest von
-                 * einer Uhr, die ihre Marke verloren hat und ab 0 neu sendet.
-                 *
-                 * WICHTIG IST DIE STUFE, NICHT „hat einen Blob": Wer nur auf
-                 * „Blob vorhanden" prueft, wirft bei Stufe 2 genau die Punkte weg,
-                 * die der naechste Verdichtungslauf einarbeiten soll — und
-                 * quittiert sie, so dass die Uhr sie loescht. Unwiederbringlich. */
-                if ($seq < $stand['n_original']) { continue; }
-
-                /* GESCHNITTEN HEISST WEG (E-S4-53). Der Punkt gehoert in den
-                 * Einsatz, der aus dieser Spur herausgeschnitten wurde; dort
-                 * steht er bereits, denn der Schnitt hat ihn mitgenommen. Kaeme
-                 * er hier noch einmal an, laege er zweimal.
-                 *
-                 * `ts` LIEGT IN $pt[3] UND IST HIER NOCH UNGEPRUEFT. Das ist in
-                 * Ordnung: Ein Wert, der keine Zahl ist, wird zu 0 und faellt
-                 * damit aus jedem Sperrbereich heraus — er laeuft weiter in die
-                 * Wertepruefung unten und wird dort behandelt wie bisher. Die
-                 * Sperre entscheidet also nie ueber einen Punkt, den sie nicht
-                 * versteht.
-                 *
-                 * QUITTIERT WIRD TROTZDEM. Der Punkt zaehlt nicht als
-                 * gespeichert, aber die Fortsetzungsmarke wandert ueber ihn
-                 * hinweg (sie ist mindestens `seq_from` + Punktzahl). Sonst
-                 * liefert das Geraet endlos nach — dieselbe Regel wie bei der
-                 * Sperrliste `deleted_refs`. */
-                if ($schnitte && is_array($pt) && count($pt) >= 4
-                    && schnitt_gesperrt($schnitte, (int)$pt[3])) {
-                    $gesperrt++;
-                    continue;
-                }
-
-                if (spur_ist_ausgeduennt($stand)) {
-                    /* Die Wertepruefung laeuft hier BEWUSST NICHT. Sonst landeten
-                     * planmaessig verworfene Punkte mit krummen Koordinaten in
-                     * 'rejected' und liessen einen normalen Vorgang wie einen
-                     * Datenfehler aussehen. */
-                    $verworfen++;
-                    continue;
-                }
-
-                if (!is_array($pt) || count($pt) < 4) {
-                    $pruef->melde('track.points', 'kein Punkt aus vier Werten');
-                    continue;
-                }
-                // Ein Punkt ohne brauchbare Koordinaten ist kein Punkt. Frueher
-                // wurde er mit (float)"Unfug" = 0.0 gespeichert — als Position im
-                // Golf von Guinea, mitten in der Flugspur.
-                $la = pruef_breite($pt[0], 'track.lat', $pruef);
-                $lo = pruef_laenge($pt[1], 'track.lon', $pruef);
-                if ($la === null || $lo === null) { continue; }
-                try {
-                    $ins->execute([$ownerType, $ownerId, $seq, $la, $lo,
-                        $pt[2] === null ? null : (float)$pt[2], (int)$pt[3]]);
-                    $stored += $ins->rowCount();
-                } catch (PDOException $ex) {
-                    // Diese Sequenznummer gibt es schon: erneuter Upload derselben
-                    // Punkte. Genau dafuer war IGNORE gedacht.
-                    if (!ist_dublettenfehler($ex)) { throw $ex; }
-                }
+        /* DAS STUECK ABLEGEN (SPUR2, S11-04a). Dieselben Regeln wie frueher je
+         * Punkt, jetzt je Stueck — der Server sieht nur Platz und Zeitraum
+         * (Kopf von spur_lib.php, Abschnitt SPUR2):
+         *
+         *   unter der Marke   seq_from + punkte <= n_original: Wiederholung, still
+         *   ausgeduennt       Stufe 3: den Teil oberhalb der Marke verwerfen, zaehlen
+         *   geschnitten       das GANZE Stueck im gesperrten Zeitraum: verwerfen
+         *                     und zaehlen; teilweise: ablegen, der Browser blendet
+         *                     die gesperrten Punkte aus (E-S11-37)
+         *
+         * Quittiert wird in allen Faellen (die Marke wandert unten ueber das
+         * Stueck hinweg), sonst sendet das Geraet endlos nach. */
+        if ($stueck && $fensterZu) {
+            $behalten['kept_points'] = $stueck['punkte'];
+        } elseif ($stueck) {
+            $ende = $stueck['seq_from'] + $stueck['punkte'];
+            if ($ende <= $stand['n_original']) {
+                // Wiederholung: das ganze Stueck liegt schon im zusammengefuegten.
+            } elseif (spur_ist_ausgeduennt($stand)) {
+                /* Nur der Teil OBERHALB der Marke zaehlt als verworfen — der
+                 * Teil darunter ist eine Wiederholung (wie frueher je Punkt). */
+                $verworfen += $ende - max($stueck['seq_from'], $stand['n_original']);
+            } elseif ($schnitte && schnitt_bereich_gesperrt($schnitte, $stueck['ts_von'], $stueck['ts_bis'])) {
+                $gesperrt += $stueck['punkte'];
+            } else {
+                /* Ablegen — auch ein Stueck, das teilweise unter der Marke
+                 * beginnt (ein Geraet, das seine Marke verloren hat und anders
+                 * stueckelt). Die Ueberlappung loest der Browser ueber die
+                 * Sequenznummer auf: Punkt i eines Stuecks hat seq_from + i. */
+                $stored += spur2_stueck_schreiben($pdo, $ownerType, $ownerId, $stueck['seq_from'],
+                                                  $stueck['punkte'], $stueck['ts_von'],
+                                                  $stueck['ts_bis'], $stueck['huelle'])
+                           * $stueck['punkte'];
             }
         }
 
         /* DIE ANKUNFTSZEIT (S2/AP3, Grundlage der Karenz aus E-S2-06).
          *
-         * `$stored > 0` und nicht `count($points) > 0`: Eine reine Wiederholung
+         * `$stored > 0` und nicht `$nGesendet > 0`: Eine reine Wiederholung
          * schon gespeicherter Punkte laeuft in den Dublettenzweig und zaehlt
          * nicht. Sonst hielte eine Uhr, die endlos dasselbe Teilstueck
          * wiederholt, ihre Einsaetze dauerhaft aus der Verdichtung heraus.
@@ -1161,7 +1142,7 @@ for ($anlauf = 1; ; $anlauf++) {
          * Gezaehlt wird NACH pruef_menge(): Mit der Rohzahl quittierte der Server
          * Punkte, die er nie gesehen hat. */
         $nextSeq = max(spur_naechste_seq($pdo, $ownerType, $ownerId),
-                       $seqFrom + count($points));
+                       $seqFrom + $nGesendet);
 
         $bestaetigt = $pdo->commit();
         /* Angenommen: Das Demo-Konto hat sich geaendert (Web 21.2.0, R4-14, Nr. 76). */
@@ -1247,15 +1228,13 @@ for ($anlauf = 1; ; $anlauf++) {
 }
 
 try {
-    if ($kind === 'mission' && $ownerType === 'mission') {
-        try {
-            require_once __DIR__ . '/site_elevation_lib.php';
-            compute_site_elevation($pdo, $ownerId);
-        } catch (Throwable $ex) {
-            // Hoehe ist ein Komfortwert; ein Fehler hier darf den Upload von
-            // der Uhr nicht gefaehrden (bewusst still, wie run_cleanup_if_due).
-        }
-    }
+    /* HIER STAND `compute_site_elevation()` (bis Web 22.0.4). Seit S11 sieht
+     * der Server die Spur nicht mehr und kann die Hoehe des Einsatzorts nicht
+     * rechnen; sie liegt im `pat_blob` und entsteht im Browser — beim
+     * Speichern im Formular (S11-05b) und im Wartungslauf (S11-07). Der Aufruf
+     * hatte zuletzt eine Nebenwirkung, die schlimmer war als keine Hoehe: Bei
+     * einem Einsatz des Altbestands las er die Klartextspur und schrieb die
+     * Spalte neu, die das Formular gerade geleert hatte. */
 
     run_cleanup_if_due();   // taegliche Wartung, huckepack auf Uhr-Uploads
 

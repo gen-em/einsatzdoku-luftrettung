@@ -13,8 +13,18 @@ declare(strict_types=1);
  *   status       mit X-Device-Id / X-Api-Key. {"aktion":"status"}
  *                -> 200 {"zustand":"offen"|"beansprucht"|"gekoppelt", ...}
  *   bestaetigen  mit Kopfzeilen. {"aktion":"bestaetigen","antwort":"ja"|"nein"}
- *                -> 200 {"ok":true}. Nach Ja gibt es das Geraet, nach Nein die
- *                Sitzung nicht mehr.
+ *                -> 200 {"ok":true, "kontoschluessel": "<Base64>"|null}. Nach
+ *                Ja gibt es das Geraet, nach Nein die Sitzung nicht mehr.
+ *
+ * DER KONTOSCHLUESSEL (S11-03, Konzept S11 3.4, E-S11-09). Wer gekoppelt ist,
+ * bekommt mit `bestaetigen` (Ja) UND mit `status` (`gekoppelt`) den
+ * oeffentlichen Schluessel des Kontos: 65 Byte SEC1 (0x04 ‖ X ‖ Y) in Base64.
+ * Damit verschliesst das Geraet Spur, Phasenkoordinaten und Reanimation
+ * (Geraetehuelle). Beide Antworten tragen ihn, weil beide Geraete die
+ * Kopplung auch ueber `status` abschliessen. `null` heisst: Das Konto hat
+ * noch kein Paar (es entsteht beim naechsten Entsperren im Browser), oder
+ * sein Siegel geht nicht auf (`kp_oeffentlich_lesen()` meldet das). Ein
+ * Geraet ohne Schluessel sendet nicht und sagt „Neu koppeln“.
  *   trennen      mit Kopfzeilen. {"aktion":"trennen"} -> 200 {"ok":true}
  *                Die Uhr gibt ihre Kopplung zurueck, das Geraet wird geloescht
  *                (seit Web 9.15.0, Backlog Nr. 14 — Begruendung am Zweig).
@@ -68,7 +78,7 @@ declare(strict_types=1);
  * ohnehin nicht leeren — sonst setzte ein Angreifer mit einer eigenen,
  * gueltigen Sitzung alle fuenf Sekunden zurueck, waehrend er daneben fremde
  * Kennungen durchprobiert. Und beim `trennen` war es schlimmer: Der Topf
- * `pair` gehoert auch `jobs.php` und `gpx.php`.
+ * `pair` gehoert auch `jobs.php` (bis Web 22.2.0 auch `gpx.php`).
  *
  * SCHLUESSEL LIEGEN ALS SHA-256 (E-S5-41, E-S5-42; db.php erklaert die
  * Verfahrenswahl): 24 Zufallsbytes brauchen kein bcrypt, und 120
@@ -89,6 +99,7 @@ require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_once __DIR__ . '/geraete_lib.php';
 require_once __DIR__ . '/kopplung_lib.php';
+require_once __DIR__ . '/kontopaar_lib.php';   // kp_fuer_geraet() (S11-03)
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Mailfelder (Schritt 15/AP7)
 
 /* DIE KOPFZEILEN SETZT `db.php` (P5a/AP4a, Nr. 203) — `json_out()`,
@@ -309,7 +320,8 @@ if ($sitzung !== null) {
         /* `json_kopf()` und nicht `json_out()`: Diese Antwort ist NICHT das
          * Ende der Anfrage — darunter steht der Versand der Hinweismail. */
         json_kopf();
-        echo json_encode(['ok' => true]);
+        echo json_encode(['ok' => true,
+                          'kontoschluessel' => kp_fuer_geraet($pdo, (int)$frisch['user_id'])]);
 
         /* ---- Den Kontoinhaber benachrichtigen (M4-10, E-S5-20) ---------------
          *
@@ -360,7 +372,10 @@ if (!geraet_schluessel_gueltig($apiKey, (string)$dev['api_key_hash'])) {
     abweisen(401, 'auth');
 }
 
-if ($aktion === 'status') { antworten(200, ['zustand' => 'gekoppelt']); }
+if ($aktion === 'status') {
+    antworten(200, ['zustand' => 'gekoppelt',
+                    'kontoschluessel' => kp_fuer_geraet($pdo, (int)$dev['user_id'])]);
+}
 
 if ($aktion === 'bestaetigen') {
     if (!in_array($antwort, ['ja', 'nein'], true)) { abweisen(400, 'payload', false); }
@@ -369,7 +384,8 @@ if ($aktion === 'bestaetigen') {
      * sich verwerfen liesse; das Geraet bleibt stehen. Das ist die sichere
      * Richtung: Ein Nein, das ein fertiges Geraet loeschte, waere ein Trennen
      * ohne Trennen-Mail (E-S5-48). */
-    antworten(200, ['ok' => true]);
+    antworten(200, ['ok' => true,
+                    'kontoschluessel' => kp_fuer_geraet($pdo, (int)$dev['user_id'])]);
 }
 
 /* ---- Trennen: die Uhr gibt ihre Kopplung zurueck (Backlog Nr. 14) ---------
@@ -402,15 +418,14 @@ try {
  * falsch schickt, ist kaputt oder fremd; beidem hilft kein Nachlass.
  *
  * ENTSCHEIDEND IST ABER, DASS DER TOPF NICHT UNS ALLEIN GEHOERT. `pair` hat
- * DREI Verbraucher, nicht zwei, wie B-S5-04 annahm:
+ * ZWEI Verbraucher (bis Web 22.2.0 drei — `gpx.php` ist mit S11-05d
+ * entfallen):
  *
  *   pair.php   401 an status/bestaetigen/trennen
  *   jobs.php   das Token des Wartungseinstiegs (jobs.php 99, 127)
- *   gpx.php    die Freigabelinks der Spuren — sieben Zaehlstellen
- *              (gpx.php 73, 131, 141, 165, 177, 206, 262, 280)
  *
- * Ein `rate_erfolg` hier leerte den Zaehler dieser Adresse fuer ALLE DREI. Wer
- * Freigabelinks durchprobiert, brauchte also nur ein eigenes Geraet zu
+ * Ein `rate_erfolg` hier leerte den Zaehler dieser Adresse fuer BEIDE. Wer
+ * das Wartungstoken durchprobiert, brauchte also nur ein eigenes Geraet zu
  * trennen, um sich zehn frische Versuche zu holen — beliebig oft, denn neu
  * koppeln kostet einen Handgriff. Eine Bremse, die sich vom Gebremsten
  * zuruecksetzen laesst, ist keine.

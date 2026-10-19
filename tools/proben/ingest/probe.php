@@ -57,6 +57,12 @@ $wurzel = dirname(__DIR__, 3) . '/server';
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/spur_lib.php';
 require_once $wurzel . '/jobs_lib.php';
+/* SEIT S11-04a SENDET DIE PROBE WIE EIN GERAET AB WEB 22: Punkte als
+ * verschlossenes Stueck, Koordinaten und Reanimation in der Einsatzhuelle
+ * (`tools/proben/huelle/geraet.php`). Das Schluesselpaar gehoert der Probe;
+ * der Server prueft nur die Form der Huelle und kennt den Schluessel nicht. */
+require_once dirname(__DIR__) . '/huelle/geraet.php';
+$ghPaar = gh_probe_paar();
 
 $basis = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
 $pdo   = db();
@@ -154,8 +160,11 @@ $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('ingest','ingest_ip')");
  * Ohne die beiden letzten Angaben spricht sie mit dem Uhr-Geraet; Teil 8
  * reicht die Zugangsdaten des Handys herein.
  */
-function senden(array $koerper, ?string $dev = null, ?string $key = null): array {
-    global $basis, $geraetKennung, $geraetKey;
+function senden(array $koerper, ?string $dev = null, ?string $key = null, bool $klartext = false): array {
+    global $basis, $geraetKennung, $geraetKey, $ghPaar;
+    /* `$klartext` schickt das Paket so, wie eine Uhr vor Web 22 es schickte —
+     * nur fuer Teil 5, der genau die Abweisung prueft. */
+    if (!$klartext) { $koerper = gh_probe_koerper($koerper, $ghPaar['sec1']); }
     $dev = $dev ?? $geraetKennung;
     $key = $key ?? $geraetKey;
     /* DIE KOPFZEILEN KOMMEN SEIT WEB 20.11.0 MIT (P5a/AP7).
@@ -234,9 +243,29 @@ function paket(string $ref, int $seqFrom, int $n, bool $final = false,
             'track' => ['seq_from' => $seqFrom, 'points' => $punkte]];
 }
 
+/** Gespeicherte Punkte eines Einsatzes — seit S11-04a die Summe der Stuecke. */
 function zeilen(PDO $pdo, int $id): int {
-    $q = $pdo->prepare("SELECT COUNT(*) FROM track_points WHERE owner_type='mission' AND owner_id=?");
+    $q = $pdo->prepare("SELECT COALESCE(SUM(punkte), 0) FROM track_stuecke WHERE owner_type='mission' AND owner_id=?");
     $q->execute([$id]); return (int)$q->fetchColumn();
+}
+
+/** Die Spur eines Einsatzes durch EIN Stueck der Stufe 2 oder 3 ersetzen —
+ *  wie es der Wartungslauf im Browser (S11-07) tun wird. Die Huelle traegt
+ *  Zufall unter der richtigen Bindung; der Server sieht ohnehin nur die Form. */
+function stueck_zusammenfuegen(PDO $pdo, int $id, string $ref, int $nOriginal, int $punkte, int $stufe): void {
+    global $ghPaar;
+    /* OHNE EINSATZ KEIN STUECK (S11-06, F-S11-69). Fand die Probe ihren
+     * Einsatz nicht, schrieb sie hier ein Stueck an `owner_id` 0 — eine Waise,
+     * die kein Aufraeumen findet und die die Jobprobe spaeter als fremd zaehlt. */
+    if ($id <= 0) { throw new RuntimeException("stueck_zusammenfuegen(): kein Einsatz zu '$ref'"); }
+    $pdo->prepare("DELETE FROM track_stuecke WHERE owner_type='mission' AND owner_id=?")->execute([$id]);
+    $h = gh_verschliessen(random_bytes($punkte * 14), $ghPaar['sec1'], 'spur', $ref, '0:' . $punkte);
+    $q = $pdo->prepare("INSERT INTO track_stuecke (owner_type, owner_id, seq_from, punkte, n_original,
+                          ts_von, ts_bis, stufe, huelle, erstellt_am, geaendert_am)
+                        VALUES ('mission', ?, 0, ?, ?, 1750000000, 1750002000, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())");
+    $q->bindValue(1, $id, PDO::PARAM_INT); $q->bindValue(2, $punkte, PDO::PARAM_INT);
+    $q->bindValue(3, $nOriginal, PDO::PARAM_INT); $q->bindValue(4, $stufe, PDO::PARAM_INT);
+    $q->bindValue(5, $h, PDO::PARAM_LOB); $q->execute();
 }
 
 echo "Ingestprobe gegen $basis\n";
@@ -251,7 +280,7 @@ try {
 
 /* ---- Teil 1 — Der gewoehnliche Weg ist unberuehrt ------------------------ */
 
-echo "\n  Teil 1 — Stufe 1: Punkte kommen an wie bisher\n";
+echo "\n  Teil 1 — Stufe 1: Stuecke kommen an wie bisher Punkte\n";
 $a = senden(paket('probe-1', 0, 100));
 $mid = (int)($a['daten']['id'] ?? 0);
 pruefe($a['code'] === 200 && ($a['daten']['ok'] ?? false) === true,
@@ -274,7 +303,7 @@ pruefe(($c['daten']['stored_points'] ?? -1) === 0 && ($c['daten']['next_seq'] ??
        'Eine Wiederholung speichert nichts und quittiert dasselbe',
        'stored ' . ($c['daten']['stored_points'] ?? '?')
        . ', next_seq ' . ($c['daten']['next_seq'] ?? '?'));
-pruefe(zeilen($pdo, $mid) === 200, 'Es stehen genau 200 Zeilen da', (string)zeilen($pdo, $mid));
+pruefe(zeilen($pdo, $mid) === 200, 'Es stehen genau 200 Punkte in zwei Stuecken da', (string)zeilen($pdo, $mid));
 
 /* ---- Teil 2 — Die Ankunftszeit ------------------------------------------ */
 
@@ -297,13 +326,10 @@ pruefe((string)$q->fetchColumn() === '2020-01-01 00:00:00',
 /* ---- Teil 3 — Nachzuegler an Stufe 2 duerfen NICHT verworfen werden ------ */
 
 echo "\n  Teil 3 — Stufe 2: Nachzuegler werden angenommen (E-S2-08)\n";
-$punkte = spur_lesen($pdo, 'mission', $mid);
-$blob = spur_kodieren($punkte, SPUR_STUFE_ROH, count($punkte));
-$pdo->beginTransaction();
-spur_blob_schreiben($pdo, 'mission', $mid, $blob, SPUR_STUFE_ROH, 200, 200);
-spur_loeschen_nur_zeilen($pdo, 'mission', $mid, 200);
-$pdo->commit();
-pruefe(zeilen($pdo, $mid) === 0, 'Spur ist verdichtet (Stufe 2, 0 Zeilen)');
+stueck_zusammenfuegen($pdo, $mid, 'probe-1', 200, 200, 2);
+$st2 = spur_stand($pdo, 'mission', $mid);
+pruefe($st2['stufe'] === 2 && $st2['n_original'] === 200, 'Spur ist zusammengefuegt (ein Stueck, Stufe 2)',
+       "stufe {$st2['stufe']}, n_original {$st2['n_original']}");
 
 $d = senden(paket('probe-1', 200, 10, true));
 pruefe(($d['daten']['stored_points'] ?? -1) === 10,
@@ -319,25 +345,15 @@ pruefe(($d['daten']['next_seq'] ?? -1) === 210,
 $vorher = zeilen($pdo, $mid);
 $e = senden(paket('probe-1', 0, 50));
 pruefe(zeilen($pdo, $mid) === $vorher && ($e['daten']['stored_points'] ?? -1) === 0,
-       'Wiederholung unterhalb n_original legt KEINE unsichtbare Zeile an',
-       "$vorher Zeilen vorher und nachher");
+       'Wiederholung unterhalb n_original legt KEIN weiteres Stueck an',
+       "$vorher Punkte vorher und nachher");
 
 /* ---- Teil 4 — Stufe 3: verwerfen und quittieren -------------------------- */
 
 echo "\n  Teil 4 — Stufe 3: verwerfen, aber quittieren (E-S2-08)\n";
-// Sauber machen: Nachzuegler einarbeiten, dann ausduennen.
-$punkte = spur_lesen($pdo, 'mission', $mid);
-$n = count($punkte);
-$pdo->beginTransaction();
-spur_blob_schreiben($pdo, 'mission', $mid, spur_kodieren($punkte, SPUR_STUFE_ROH, $n),
-                    SPUR_STUFE_ROH, $n, $n);
-spur_loeschen_nur_zeilen($pdo, 'mission', $mid, $n);
-$pdo->commit();
-$behalten = spur_ausduennen($punkte, spur_schutzzeiten($pdo, 'mission', $mid));
-$duenn = []; foreach ($behalten as $i) { $duenn[] = $punkte[$i]; }
-spur_blob_schreiben($pdo, 'mission', $mid,
-                    spur_kodieren($duenn, SPUR_STUFE_DUENN, $n),
-                    SPUR_STUFE_DUENN, $n, count($duenn));
+// Nachzuegler einarbeiten und ausduennen: ein Stueck, Stufe 3, 210 -> 50 Punkte.
+$n = 210;
+stueck_zusammenfuegen($pdo, $mid, 'probe-1', $n, 50, 3);
 $stand = spur_stand($pdo, 'mission', $mid);
 pruefe($stand['stufe'] === SPUR_STUFE_DUENN && $stand['n_original'] === $n,
        'Spur ist ausgeduennt, n_original steht',
@@ -353,8 +369,8 @@ pruefe(($f['daten']['dropped_points'] ?? -1) === 10
 pruefe(($f['daten']['next_seq'] ?? -1) === $n + 10,
        'und trotzdem QUITTIERT — sonst sendet die Uhr ewig weiter',
        'next_seq ' . ($f['daten']['next_seq'] ?? '?') . " (erwartet " . ($n + 10) . ')');
-pruefe(zeilen($pdo, $mid) === 0,
-       'Es entsteht keine einzige Zeile', (string)zeilen($pdo, $mid));
+pruefe(zeilen($pdo, $mid) === 50,
+       'Es entsteht kein weiteres Stueck', (string)zeilen($pdo, $mid) . ' Punkte');
 pruefe(!isset($f['daten']['rejected']),
        'Das ist KEIN Datenfehler — rejected bleibt leer',
        'sonst saehe jeder Upload einer alten Spur wie ein Fehler aus');
@@ -366,69 +382,67 @@ pruefe(($g['daten']['dropped_points'] ?? -1) === 6
        'Gemischtes Paket: nur der Teil OBERHALB n_original zaehlt als verworfen',
        'dropped ' . ($g['daten']['dropped_points'] ?? '?') . ' (erwartet 6)');
 
-/* ---- Teil 5 — Die Untergrenze von next_seq (E-S2-25) --------------------- */
+/* ---- Teil 5 — Klartext und kaputte Huellen werden abgewiesen (S11-04a) --- *
+ *
+ * BIS WEB 21 STAND HIER die Untergrenze von next_seq bei einem Punkt, den die
+ * Wertepruefung verwarf (E-S2-25). Seit S11 sieht der Server keine Punkte
+ * mehr; die Wertepruefung machen Geraet und Browser (E-S11-13). Geprueft wird
+ * jetzt, was an ihre Stelle tritt: Klartext-Ortsdaten nimmt der Eingang nicht
+ * an (E-S11-09), und eine Huelle muss die Form der Fassung 1 haben. */
 
-echo "\n  Teil 5 — next_seq quittiert auch, was die Wertepruefung verwirft\n";
-$h = ['kind' => 'mission', 'client_ref' => 'probe-2', 'day' => $tagVon($tsB),
-      'started_at' => $tsB, 'ended_at' => $tsBe,
-      'final' => true,
-      'track' => ['seq_from' => 0, 'points' => [
-          [47.0, 11.0, 700.0, 1750000000],
-          [47.1, 11.1, 701.0, 1750000010],
-          [91.0, 11.2, 702.0, 1750000020],     // unbrauchbare Breite: LETZTER Punkt
-      ]]];
-$r = senden($h);
+echo "\n  Teil 5 — Klartext-Ortsdaten und kaputte Huellen: 400 (S11-04a)\n";
+$k1 = senden(['kind' => 'mission', 'client_ref' => 'probe-2', 'day' => $tagVon($tsB),
+              'started_at' => $tsB, 'ended_at' => $tsBe, 'final' => true,
+              'track' => ['seq_from' => 0, 'points' => [[47.0, 11.0, 700.0, 1750000000]]]],
+             null, null, true);
+pruefe($k1['code'] === 400 && ($k1['daten']['error'] ?? '') === 'klartext',
+       'Punkte im Klartext: 400 klartext', 'HTTP ' . $k1['code'] . ', ' . ($k1['daten']['error'] ?? '?'));
+$k2 = senden(['kind' => 'mission', 'client_ref' => 'probe-2', 'day' => $tagVon($tsB),
+              'started_at' => $tsB, 'phases' => [['phase' => 2, 'at' => $tsB, 'lat' => 47.1, 'lon' => 11.1]]],
+             null, null, true);
+pruefe($k2['code'] === 400 && ($k2['daten']['error'] ?? '') === 'klartext',
+       'Phase mit Koordinate im Klartext: 400 klartext', 'HTTP ' . $k2['code']);
+$k3 = senden(['kind' => 'mission', 'client_ref' => 'probe-2', 'day' => $tagVon($tsB),
+              'started_at' => $tsB, 'resus_sessions' => [['started_at' => $tsB, 'events' => []]]],
+             null, null, true);
+pruefe($k3['code'] === 400 && ($k3['daten']['error'] ?? '') === 'klartext',
+       'Reanimation im Klartext: 400 klartext', 'HTTP ' . $k3['code']);
+$q = $pdo->prepare("SELECT COUNT(*) FROM missions WHERE user_id = ? AND client_ref = 'probe-2'");
+$q->execute([$uid]);
+pruefe((int)$q->fetchColumn() === 0, 'Nach drei Abweisungen steht kein Einsatz da',
+       'sonst haette der Server einen Teil angenommen und das Geraet geloescht');
+
+$gut = gh_probe_koerper(paket('probe-2', 0, 3, true), $ghPaar['sec1']);
+$kaputt = $gut;
+$kaputt['track']['huelle'] = base64_encode("\x02" . substr(base64_decode($gut['track']['huelle']), 1));
+$k4 = senden($kaputt, null, null, true);
+pruefe($k4['code'] === 400 && ($k4['daten']['error'] ?? '') === 'payload',
+       'Huelle mit fremder Fassung: 400 payload', 'HTTP ' . $k4['code'] . ', ' . (string)($k4['daten']['grund'] ?? ''));
+$kurz = $gut;
+$kurz['track']['huelle'] = base64_encode(random_bytes(64));
+$k5 = senden($kurz, null, null, true);
+pruefe($k5['code'] === 400, 'Zu kurze Huelle: 400', 'HTTP ' . $k5['code']);
+$r = senden($gut, null, null, true);
 $mid2 = (int)($r['daten']['id'] ?? 0);
-pruefe(($r['daten']['next_seq'] ?? -1) === 3,
-       'Ein am Ende gescheiterter Punkt blockiert die Marke nicht mehr',
-       'next_seq ' . ($r['daten']['next_seq'] ?? '?') . ' (erwartet 3; vorher 2 — '
-       . 'die Uhr raeumt erst bei next_seq >= pointCount auf und sandte endlos)');
-pruefe(isset($r['daten']['rejected']) && ($r['daten']['stored_points'] ?? -1) === 2,
-       'Der verworfene Wert wird trotzdem benannt',
-       'stored ' . ($r['daten']['stored_points'] ?? '?')
-       . ', rejected ' . json_encode($r['daten']['rejected'] ?? null));
+pruefe($r['code'] === 200 && ($r['daten']['stored_points'] ?? -1) === 3 && ($r['daten']['next_seq'] ?? -1) === 3,
+       'Dasselbe Paket mit gueltiger Huelle: angenommen, next_seq 3',
+       'HTTP ' . $r['code'] . ', stored ' . ($r['daten']['stored_points'] ?? '?')
+       . ', next_seq ' . ($r['daten']['next_seq'] ?? '?'));
+$q = $pdo->prepare("SELECT huelle FROM track_stuecke WHERE owner_type='mission' AND owner_id=? AND seq_from=0");
+$q->execute([$mid2]);
+$abgelegt = (string)$q->fetchColumn();
+$geoeffnet = '';
+try { $geoeffnet = gh_probe_oeffnen($abgelegt, $ghPaar['privat'], 'spur', 'probe-2', '0:3'); } catch (Throwable $ex) { $geoeffnet = 'FEHLER ' . $ex->getMessage(); }
+pruefe(strlen($geoeffnet) === 42, 'Die abgelegte Huelle geht mit dem Schluessel auf, unter ihrer Bindung',
+       strlen($geoeffnet) . ' Byte innen (erwartet 3 x 14)');
+$falsch = 'kein Fehler';
+try { gh_probe_oeffnen($abgelegt, $ghPaar['privat'], 'spur', 'probe-1', '0:3'); } catch (Throwable $ex) { $falsch = $ex->getMessage(); }
+pruefe($falsch === 'pruefwert', 'An einem anderen Einsatz geht sie NICHT auf', $falsch);
 
-/* ---- Teil 6 — Die Ortshoehe ueberlebt eine berichtigte Phasenzeit -------- */
-
-echo "\n  Teil 6 — Ausgeduennt: eine berichtigte Phasenzeit loescht die Ortshoehe nicht\n";
-require_once $wurzel . '/site_elevation_lib.php';
-
-// Eine Phase auf einen Zeitpunkt legen, an dem die Spur einen Punkt hat.
-$punkte = spur_lesen($pdo, 'mission', $mid);
-$mitte  = $punkte[(int)(count($punkte) / 2)];
-$pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$mid]);
-$pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at)
-               VALUES (?, 5, FROM_UNIXTIME(?))')->execute([$mid, $mitte[4]]);
-compute_site_elevation($pdo, $mid);
-$q = $pdo->prepare('SELECT site_ele_m FROM missions WHERE id = ?');
-$q->execute([$mid]);
-$hoeheVor = $q->fetchColumn();
-pruefe($hoeheVor !== null && $hoeheVor !== false,
-       'Die Ortshoehe steht (Phase auf einem behaltenen Punkt)',
-       'site_ele_m = ' . var_export($hoeheVor, true));
-
-// Phase weit weg schieben — weiter als SITE_ELE_TOLERANCE_S von jedem Punkt.
-$pdo->prepare('UPDATE mission_phases SET occurred_at = FROM_UNIXTIME(?)
-                WHERE mission_id = ? AND phase = 5')
-    ->execute([(int)$mitte[4] + 100000, $mid]);
-compute_site_elevation($pdo, $mid);
-$q->execute([$mid]);
-$hoeheNach = $q->fetchColumn();
-pruefe((string)$hoeheNach === (string)$hoeheVor,
-       'Nach dem Verschieben bleibt sie stehen statt still zu verschwinden',
-       'vorher ' . var_export($hoeheVor, true) . ', nachher ' . var_export($hoeheNach, true));
-
-/* GEGENPROBE: Auf einer Spur der Stufe 2 muss NULL weiterhin geschrieben
- * werden — dort traegt die Spur alle Punkte, ein leeres Ergebnis ist die
- * Wahrheit und keine Folge der Ausduennung. */
-$vollBlob = spur_kodieren($punkte, SPUR_STUFE_ROH, count($punkte));
-spur_blob_schreiben($pdo, 'mission', $mid, $vollBlob, SPUR_STUFE_ROH,
-                    count($punkte), count($punkte));
-compute_site_elevation($pdo, $mid);
-$q->execute([$mid]);
-pruefe($q->fetchColumn() === null,
-       'GEGENPROBE Stufe 2: dort wird NULL sehr wohl geschrieben',
-       'sonst bliebe ein falscher Wert stehen, den niemand mehr los wird');
+/* Teil 6 (die Ortshoehe ueberlebt eine berichtigte Phasenzeit) IST MIT S11-04a
+ * ENTFALLEN: Die Ortshoehe rechnete der Server aus Phasenkoordinate und Spur;
+ * beides sieht er nicht mehr. Sie rechnet ab S11-05 der Browser und legt sie
+ * in den pat_blob (E-S11-03). */
 
 /* ---- Teil 7 — Ein spaetes Paket darf nichts loeschen (Web 13.0.1) -------- */
 
@@ -631,16 +645,22 @@ $phasenA = [['phase' => 2, 'at' => $tsC, 'lat' => 47.5, 'lon' => 11.5],
 $phasenB = [['phase' => 2, 'at' => $tsC, 'lat' => 40.0, 'lon' => 5.0],
             ['phase' => 3, 'at' => $tsCe, 'lat' => 40.1, 'lon' => 5.1]];
 
+/* SEIT S11-04a STEHT DIE KOORDINATE IN DER EINSATZHUELLE, nicht mehr in
+ * `mission_phases`. Die Probe oeffnet sie mit ihrem eigenen Schluessel. */
 $zaehlPhasen = static function (PDO $pdo, string $ref): array {
-    $q = $pdo->prepare('SELECT p.lat FROM mission_phases p
-                        JOIN missions m ON m.id = p.mission_id
-                        WHERE m.client_ref = ? AND p.phase = 2 LIMIT 1');
+    global $ghPaar;
+    $q = $pdo->prepare('SELECT id FROM missions WHERE client_ref = ? LIMIT 1');
     $q->execute([$ref]);
-    $lat = $q->fetchColumn();
+    $mId = (int)$q->fetchColumn();
+    $lat = null;
+    $innen = $mId ? gh_probe_einsatz($pdo, $mId, $ghPaar['privat']) : null;
+    foreach ($innen['phasen'] ?? [] as $ph) {
+        if ((int)$ph['phase'] === 2) { $lat = $ph['lat'] === null ? null : (float)$ph['lat']; break; }
+    }
     $z = $pdo->prepare('SELECT COUNT(*) FROM mission_phases p
                         JOIN missions m ON m.id = p.mission_id WHERE m.client_ref = ?');
     $z->execute([$ref]);
-    return ['n' => (int)$z->fetchColumn(), 'lat' => $lat === false ? null : (float)$lat];
+    return ['n' => (int)$z->fetchColumn(), 'lat' => $lat];
 };
 
 // INNERHALB: der Datensatz entsteht und wird danach veraendert.
@@ -1348,6 +1368,10 @@ if ($ze !== null) {
  * nichts zum Doppeln uebrig (die Gegenprobe ohne Zuruecksetzen blieb
  * gruen).
  *
+ * SEIT S11-04a IST DER VERWORFENE WERT EINE PHASE, kein Punkt: Punkte sieht
+ * der Server nicht mehr. Eine Phase mit unmoeglicher Nummer wird im Rumpf
+ * gemeldet, also VOR dem Ausloeser — dieselbe Lage wie vorher.
+ *
  * WAS DER ZWEITE ANLAUF NICHT DUERFEN SOLL: einen verworfenen Wert zweimal
  * melden. Die Pruefliste traegt die Befunde von vor der Transaktion und
  * bekommt im Rumpf neue dazu; ohne das Zuruecksetzen am Anlaufbeginn staende
@@ -1369,12 +1393,13 @@ $pdo->exec("CREATE TRIGGER ingestprobe_deadlock BEFORE UPDATE ON missions FOR EA
             END");
 $anlaeufe = static fn(): int => (int)$pdo->query('SELECT n FROM ingestprobe_anlauf')->fetchColumn();
 try {
-    /* EIN Deadlock: Der zweite Anlauf nimmt an. Ein Punkt mit Breite 999
+    /* EIN Deadlock: Der zweite Anlauf nimmt an. Eine Phase mit Nummer 99
      * wird verworfen und muss GENAU EINMAL in `rejected` stehen. */
     $pdo->exec('DELETE FROM ingestprobe_anlauf');
     $pdo->exec('INSERT INTO ingestprobe_anlauf VALUES (0, 1)');
-    $p = paket('probe-deadlock-1', 0, 4, true);
-    $p['track']['points'][1][0] = 999;
+    $p = paket('probe-deadlock-1', 0, 3, true);
+    $p['phases'] = [['phase' => 2, 'at' => $tsA, 'lat' => 47.1, 'lon' => 11.1],
+                    ['phase' => 99, 'at' => $tsA, 'lat' => 47.2, 'lon' => 11.2]];
     $d1 = senden($p);
     $rej = (array)($d1['daten']['rejected'] ?? []);
     $zeile = $pdo->query("SELECT id FROM missions WHERE client_ref = 'probe-deadlock-1'")->fetchColumn();

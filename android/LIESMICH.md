@@ -199,6 +199,23 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.18.0 (S11-09, das Handy verschließt), `./gradlew build`
+im Container, 17.10.2026 — `BUILD SUCCESSFUL in 2m 43s`:** Lint **0**
+Fehler (Handy 5 Warnungen: 3 × `NewerVersionAvailable`, 2 ×
+`GradleDependency` — Fassungshinweise, nicht aus diesem Paket), Prüffälle je
+Bauart Handy **280**, davon 15 ohne Installation übersprungen, Uhr **72**,
+**0** Fehlschläge. Mit `-Pnadoku.rundlauf=http://127.0.0.1:8080/` gegen die
+örtliche Anlage laufen 279 (1 übersprungen: der Release-Fall aus
+`ServeradresseTest`), 0 rot — auch die Server-Rundläufe senden jetzt
+verschlossen. **280 statt 270:** `GeraetehuelleTest` +7 (die sechs Vektoren
+der Referenz byte-gleich, Innenform, Rundung, Höhe, echte Hülle öffnen,
+Einsatzhülle, Schlüsselprüfung), `SenderTest` +2 (Schlüssel nachholen, ohne
+Schlüssel nichts senden), `SendekoerperTest` +1. APK unsigniert, Release:
+Handy **9 200 018 B** (+2 648 gegen 0.16.0), Uhr unverändert **22 743 506 B**.
+**Lint fand vorher einen Fehler, der auf alten Telefonen zum Absturz beim
+ersten Senden geführt hätte:** `BigInteger.TWO` gibt es erst ab API 33, die
+App läuft ab 26.
+
 **Stand Android 0.17.0 (R4-22, Abgewiesene verwerfen), `./gradlew build`
 im Container, 27.09.2026 — `BUILD SUCCESSFUL in 4m 10s`:** Lint **0**
 Fehler (Handy 1 Warnung: `NewerVersionAvailable`, Robolectric 4.17 — nicht

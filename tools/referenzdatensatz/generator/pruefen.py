@@ -236,7 +236,7 @@ def main() -> int:
             continue
         lauf.pruefe(chiffre.startswith("edk1:"), f"{pfad.name}: Chiffretext ohne Formatkennung")
         zurueck = json.loads(krypto.entschluesseln(chiffre, ck))
-        for schluessel in ("dx", "age", "dob", "mission_no", "site_desc"):
+        for schluessel in ("dx", "age", "dob", "mission_no", "site_desc", "notes"):
             wert = g.get(schluessel)
             if wert in (None, ""):
                 lauf.pruefe(schluessel not in zurueck,

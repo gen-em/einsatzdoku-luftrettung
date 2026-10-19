@@ -14,6 +14,837 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 22.7.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-10 — das Einmalwerkzeug**. Kein Schema, kein
+`update.php`.
+
+### Hinzugefügt
+
+- **Der Altbestand zieht in die Hüllen um.** Seit S11-04 liest die Anwendung
+  Spur, Phasenorte und Reanimation nur noch verschlossen, seit S11-05b
+  Transportziel und Ortshöhe nur noch aus dem verschlüsselten Block — ohne
+  Übergang (E-S11-36, -42). Alles, was vor Web 22 im Klartext ankam, zeigte
+  deshalb keine Karte, kein Ziel und keine Reanimation. Verschließen kann nur
+  der Browser des Kontos; der Server kennt den Schlüssel nicht und soll ihn
+  nicht kennen. Das Werkzeug ist deshalb zweigeteilt, nach dem Muster der
+  Notizen-Anhebung aus Web 19: Der Server nennt je Konto, was im Klartext
+  liegt — auch im Papierkorb, sonst käme es beim Wiederherstellen zurück —,
+  der Browser verschließt die Spurpunkte zu Stücken (eine ausgedünnte Spur
+  bleibt ausgedünnt), Phasenorte und Reanimation in die Einsatzhülle,
+  Transportziel und Höhe in den Block, öffnet alles zur Probe wieder und
+  schickt erst dann. Der Server tauscht je Datensatz in **einer**
+  Transaktion und nur, wenn sich seit dem Lesen nichts geändert hat; der
+  Klartext geht dabei. Es läuft **still auf der Startseite** nach dem
+  Entsperren, vor dem Wartungslauf und ohne je nach dem Passwort zu fragen —
+  bricht es ab, setzt der nächste Aufruf wieder auf. Einen Merker hat es
+  nicht: Fertig ist es, wenn nichts mehr offen ist.
+- **Trägt ein Einsatz schon eine Hülle und daneben Klartext**, führt der
+  Browser zusammen wie das Formular (E-S11-45): Was die Hülle hat, gewinnt.
+  Genauso beim Block — eine Klinik, die schon darin steht, wird nicht
+  überschrieben.
+- **Die Statusseite zählt den Rest** (Betrieb → Status, Karte Server, Zeile
+  **„Ortsdaten“**): orange, solange irgendein Konto Klartext hat, mit der
+  Zahl je Tabelle. Ein Konto, das sich nie anmeldet, zieht nie um — das muss
+  jemand sehen, und die Aufräumauslieferung (S11-12) darf erst kommen, wenn
+  die Zeile blau ist.
+
+### Bewusst so
+
+- **Ein Block, der sich mit dem Schlüssel des Kontos nicht öffnen lässt**,
+  wird nicht angefasst, wie bei den Notizen: Ihn zu ersetzen hieße, fremde
+  Angaben zu löschen. Transportziel und Höhe dieses Einsatzes bleiben im
+  Klartext und in der Zählung stehen.
+- **Die Startseite zeigt die umgezogene Karte erst beim nächsten Aufruf.**
+  Der Lauf beginnt, wenn die Seite steht, und lädt sie nicht neu.
+
+## [Android 0.18.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-09 — das Handy verschließt**. Gehört wie Uhr
+4.0.0 zur Hauptauslieferung von S11; ein Handy 0.17 kommt an einem Server ab
+Web 22.0.1 nicht mehr durch (E-S11-09). Die Wear-OS-Uhr ist unberührt: Sie
+schickt dem Handy Zeitpunkte und Phasennummern, keine Koordinaten, und ihr
+Nachrichtenformat bleibt, wie es ist.
+
+### Android — Spur und Phasenorte gehen verschlossen hinaus
+
+Bis 0.17.0 gingen die GPS-Punkte als Liste und die Koordinate jeder Phase in
+`phases[]` im Klartext an den Server. Seit Web 22.0.1 weist `ingest.php` das
+mit `400 klartext` ab. Das Handy verschließt jetzt mit dem öffentlichen
+Schlüssel des Kontos, den es bei der Kopplung bekommt: je Anfrage ein
+Spurstück (14 Byte je Punkt, Höhe in ganzen Metern) und bei einem Einsatz die
+Einsatzhülle mit den Orten aller Phasen — dasselbe Format wie die Garmin-Uhr
+und der Browser, nach dem Kopf von `tools/proben/huelle/referenz.py`.
+Öffnen kann es nichts davon; die Anzeige der App liest weiter ihren eigenen
+Puffer (E-R17-09).
+
+**Nur Bordmittel** (E-S11-21): ECDH, AES-256-CBC und HMAC-SHA256 aus der
+Java-Kryptografie, HKDF daraus von Hand. Keine neue Bibliothek, die Liste der
+Fremdbestandteile bleibt, wie sie ist. Geprüft gegen die sechs Vektoren der
+Referenz, Byte für Byte, gelesen aus `vektoren.json` selbst statt aus einer
+Kopie — eine Kopie wäre eine zweite Wahrheit, die beim nächsten Erzeugen
+still veraltet.
+
+**Ein Fund des Prüffalls:** Javas `KeyFactory` nimmt einen Punkt an, der nicht
+auf der Kurve P-256 liegt. Ein solcher Schlüssel ist der Anfang eines
+Angriffs auf den Schlüsselaustausch. Die Hülle prüft die Kurvengleichung jetzt
+selbst, und ein Schlüssel daneben kommt gar nicht erst in den Tresor.
+
+### Android — ein fehlender Schlüssel wird nachgeholt, ohne Neukopplung
+
+Eine Kopplung aus der Zeit vor 0.18.0 hat keinen Kontoschlüssel. Neu koppeln
+wäre der naheliegende Weg und ist eine Sackgasse: Das Trennen verweigert die
+App, solange ein Rückstand besteht (Nr. 14), und ohne Schlüssel lässt sich der
+Rückstand nicht senden. Deshalb holt der Sendelauf den Schlüssel selbst über
+`pair.php status` nach — dasselbe, was die Garmin auf Tastendruck tut
+(E-S11-79), hier ohne Taste, weil das Handy ohnehin im Hintergrund sendet
+(E-S11-80). Dieselbe Kennung heißt dasselbe Konto. Hat das Konto noch kein
+Schlüsselpaar, steht unter dem Dienst „Konto noch ohne Schlüssel · einmal im
+Web anmelden"; gesendet wird nichts, verloren geht nichts, und der nächste
+Lauf nach der Anmeldung holt ihn von selbst.
+
+## [Uhr 4.0.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-08 — die Garmin-Uhr verschließt**. Gehört zur
+Hauptauslieferung von S11 und wird mit ihr ausgeliefert: Eine Uhr 3.x kommt
+an einem Server ab Web 22.0.1 nicht mehr durch, eine Uhr 4.0.0 an einem
+älteren auch nicht (E-S11-09, kein Übergang).
+
+### Uhr — Spur, Phasenkoordinaten und Reanimation gehen verschlossen hinaus
+
+Seit Web 22.0.1 nimmt `ingest.php` Ortsdaten nur noch als Gerätehülle an und
+weist Klartext mit `400 klartext` ab. Die Uhr verschließt jetzt selbst, mit
+dem öffentlichen Schlüssel des Kontos, den sie bei der Kopplung bekommt: je
+Anfrage ein Spurstück (14 Byte je Punkt, Höhe in ganzen Metern) und bei einem
+Einsatz die Einsatzhülle mit den Koordinaten aller Phasen und jeder
+Reanimation. Öffnen kann sie nichts davon — den privaten Teil hat nur der
+Browser der Kontoinhaberin. Was die Uhr selbst anzeigt, liest sie weiter aus
+ihrem eigenen Puffer (E-R17-09); verschlossen wird erst auf dem Weg hinaus.
+
+Die Bausteine stammen aus der Krypto-Probe von S11-02 (`watch/source/
+Huelle.mc`); sie waren dort gegen die Vektoren der Referenz gemessen, auf
+drei Uhren im Simulator und auf der Fenix 6 Pro. **Eine Annahme blieb übrig,
+und die nimmt die App nicht hin:** Garmin liefert das gemeinsame Geheimnis
+in umgekehrter Byteordnung, gemessen ist das nur auf der Fenix (E-S11-30).
+Vor dem ersten Senden rechnet die Uhr deshalb einen festen Fall der
+Referenz nach (`HuelleVektor.mc`, erzeugt von `referenz.py`): erst die
+Byteordnung, dann das ganze Prüfwort. Stimmt es nicht, sendet sie nicht und
+sagt „Verschlüsseln geht nicht". Eine Hülle, die im Browser nicht aufgeht,
+wäre ein Datenverlust, den niemand bemerkt, bis er den Einsatz öffnet.
+
+Geprüft ist das über den ganzen Weg: Eine Prüffassung der App koppelt im
+Simulator an die örtliche Anlage und sendet einen Einsatz mit 600 Punkten an
+den Rändern — negative Koordinaten, 4500 m Höhe, Punkte ohne Höhe, eine
+Phase ohne Ortung, eine Reanimation —, und die Gegenseite öffnet ihn Wert
+für Wert gleich (`tools/uhr-pruefstand/rundlauf/`, 12 von 12, Fenix 6 Pro
+und FR 945).
+
+### Uhr — ohne Schlüssel sendet sie nicht, und holt ihn nach
+
+Eine Uhr, die schon gekoppelt war, als 4.0.0 kam, hat keinen Schlüssel —
+die alte Kopplung kannte keinen. Ebenso eine, die an ein Konto gekoppelt
+wurde, das noch kein Schlüsselpaar hat (es entsteht beim ersten Entsperren im
+Browser). Vereinbart war „neu koppeln". Beim Lesen von `Pair.mc` fiel auf,
+dass das eine Sackgasse ist (F-S11-80): Neu koppeln setzt Trennen voraus, und
+das verweigert die Uhr, solange ein Rückstand besteht — „Erst 2 Pakete senden,
+sonst ans neue Konto" (Nr. 14). Ohne Schlüssel aber kann sie nicht senden.
+
+Deshalb **holt** die Uhr den Schlüssel jetzt (E-S11-79): Die Sync-Seite sagt
+„Kein Schlüssel · Holen: START halten" (Venu: „Action halten"), und der
+lange Druck fragt `pair.php status` mit den eigenen Zugangsdaten — das
+beantwortet jede gekoppelte Uhr seit S11-03 mit dem Schlüssel ihres Kontos,
+am Server ändert sich nichts. Dieselbe Kennung heißt dasselbe Konto; der
+Rückstand geht dorthin, wo er hingehört. Hat das Konto noch keines, steht dort
+„Erst im Web anmelden". Ein Gerät, das inzwischen gelöscht wurde, landet wie
+bisher bei „Gerät nicht mehr angemeldet · Neu koppeln".
+
+### Uhr — abgewiesene Pakete bleiben nicht für immer liegen
+
+Ein Paket, das der Server dauerhaft abweist, parkt die Uhr seit 3.1.0, bis
+jemand es verwirft (Nr. 159). Seine Spur lag damit unter Umständen für immer
+auf einem Gerät, das verlorengehen kann — kein Beleg mehr, sondern ein
+Ortsdatensatz (F-R17-28, Lage H im Bedrohungsmodell). Die Marke trägt jetzt
+den Zeitpunkt des Parkens, und nach **30 Tagen** räumt der nächste Sendelauf
+das Paket ab, wie auf Android (E-S11-11, -75). Eine Marke aus 3.1.0 ohne
+Zeitpunkt beginnt beim ersten Lauf zu zählen: Lieber dreißig Tage zu spät
+räumen als ein gestern abgewiesenes Paket sofort.
+
+### Prüfstand
+
+- **`bildreihe` nimmt eine Tastenfolge** (Nr. 92): `Down,Down,hold:Return,
+  wait:8` — bis dahin fotografierte sie nur den Startbildschirm. Grenze: Die
+  Folge gilt für alle Geräte der Liste; Drei-Tasten-Uhren brauchen eine
+  andere.
+- **`uhr-rundlauf`** im Muster `uhr`: Koppeln, Senden, Öffnen im Simulator,
+  dazu der Weg ohne Schlüssel. Zwei Fallen, die der erste Lauf aufgedeckt hat
+  und die im Skript stehen: Der Demo-Reset löschte mitten im Lauf das eben
+  gekoppelte Gerät, und `speicher-leeren` wirkt nicht, solange der Simulator
+  läuft — er schreibt den Speicher der App zurück, und alte Pakete gingen mit.
+- **`kryptoprobe` startet den Simulator frisch.** Im ersten Prüfstand des
+  Pakets blieb ihre Ausgabe auf allen drei Uhren leer (0 von 3), mit einem
+  Simulator, der seit Stunden durch Handläufe gelaufen war; einzeln
+  nachgefahren 3 von 3. Die Ursache ist nicht gefunden (F-S11-83) — der
+  Altzustand ist der einzige Unterschied, und den misst sie jetzt nicht mehr.
+
+## [Web 22.6.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-07 — der Wartungslauf im Browser**. Kein Schema.
+
+### Hinzugefügt
+
+- **Der Wartungslauf fasst GPS-Daten im Browser zusammen und dünnt sie aus.**
+  Uhr und Handy schicken ihre Aufzeichnungen seit S11 verschlossen und
+  ungepackt, 14 Byte je Punkt. Bis Web 22.5 hätten die Jobs `verdichtung` und
+  `ausduennen` sie packen sollen — sie konnten es nicht mehr, weil der Server
+  keine Koordinate sieht. Jetzt nennt der Server, was fällig ist
+  (`api/wartungslauf.php`: abgeschlossen, nicht im Papierkorb, kein
+  Altbestand), und der Browser tut die Arbeit: öffnen, nach 31 Tagen
+  ausdünnen (dieselbe Regel und dieselbe Prüfung wie bisher, 2 m / 3 m,
+  Phasenpunkte geschützt — an 221 Referenzspuren mit dem PHP-Original
+  verglichen, 221 gleiche Behaltelisten), ein gepacktes Stück bauen, es zur
+  Probe wieder öffnen und erst dann schicken. Der Server tauscht nur, wenn
+  sich seit dem Lesen nichts geändert hat; die Marke für die Geräte und die
+  Stufe fallen nie, und **ausgedünnt wird nur nach der Frist** — den Zeitpunkt
+  prüft der Server selbst, weil die Ausdünnung unwiderruflich ist.
+- **Die gepackte Form** (E-S11-71, Betreiberin: „B fest"): vier Spalten mit
+  Abständen, gepackt — 4,40 Byte je Punkt am Referenzbestand gegen 14,40
+  ungepackt (3,69 in SPUR1, das ein eigener Kodierer wäre). Gemessen am
+  Demo-Bestand nach dem ersten Lauf: 4,56 Byte je Punkt, mit Hülle.
+- **Wo er läuft** (Mockup M-S11-02, Variante 1): auf der Startseite still, bis
+  zu 20 Aufzeichnungen je Aufruf, ohne je nach dem Passwort zu fragen; und in
+  **Einstellungen → Backup** als Karte **„GPS-Daten verdichten"**, die zählt,
+  was fällig ist, und es mit Ring, Zahl und Balken abarbeitet. Der Balken aus
+  M-S11-01 ist damit gebaut (`.balken`, Design 9.41).
+- **Fehlende Ortshöhen** trägt der Lauf beim Zusammenfügen nach; den
+  verschlüsselten Block schreibt der Server nur, wenn er sich seither nicht
+  geändert hat.
+
+### Geändert
+
+- **„Zeitraum löschen" geht auch auf einer zusammengefassten Aufzeichnung.**
+  Bisher wies der Weg sie ab („schon zusammengefasst"); nach S11-07 wäre das
+  fast jede gewesen, denn ein Ruhesegment wird kurz nach dem Abschluss
+  gepackt. Der Rest bleibt gepackt, die Marke bleibt.
+- **Herausgeschnittene Punkte fallen beim Zusammenfügen endgültig** (E-S11-47)
+  — bis dahin lagen sie doppelt verschlüsselt im Segment.
+- **Ausgedünnte Spuren aus einer Sicherung** werden ein gepacktes Stück der
+  Stufe 3 (Browser und direkter Weg der Verwaltung); die Kontosicherung der
+  Verwaltung trägt die Stufe je Stück.
+
+### Entfernt
+
+- **Die Jobs `verdichtung` und `ausduennen`** samt der Liste „was liegenbleibt"
+  in Betrieb → Hintergrundjobs. Die Pause der Jobs hält den Wartungslauf nicht
+  an — er ist keiner. Klartextspuren aus der Zeit vor S11 fasst bis zum
+  Einmalwerkzeug (S11-10) niemand mehr an (E-S11-70).
+
+### Bewusst so belassen
+
+- **Die Ausdünnung läuft im Hauptfaden des Browsers.** Bei einer mittleren
+  Aufzeichnung (330 Punkte) ist das nicht zu merken; bei einer sehr langen
+  dauert es eine Weile. Nicht gemessen — gehört zur Messung in S11-11.
+- **Prüfwerkzeuge, die Daten vergleichen, schalten ihn ab** (F-S11-77): Sie
+  beantworten `api/wartungslauf.php` im eigenen Browser mit „nichts fällig",
+  sonst dünnte er zwischen Einspielen und Sichern aus. Gemessen wird er in
+  seiner eigenen Probe.
+
+## [Web 22.5.1] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-06g — Höhe in ganzen Metern**. Kein Schema.
+
+### Behoben
+
+- **Die Höhe eines Spurpunkts reichte nur bis 3276,7 m** (F-S11-64). Die
+  verschlossene Innenform trug sie in Dezimetern als 16-Bit-Zahl; darüber lief
+  der Wert still über und wurde eine falsche negative Höhe — im Hochgebirge,
+  wo Luftrettung über 3277 m fliegt, kein Randfall. Jetzt steht sie in ganzen
+  Metern (Betreiberin, 16.10.2026, E-S11-66), gerundet von der Null weg und
+  auf ±32 767 m geklemmt, damit auch ein Ausreißer nicht überläuft. Feld und
+  Länge bleiben; Uhr und Handy schreiben das Format erst ab S11-08 und S11-09,
+  gesendet hat das alte Maß also kein Gerät.
+
+### Bewusst so belassen
+
+- **Dezimeter-Genauigkeit entfällt.** Ortshöhe und Profil brauchen sie nicht;
+  die Ortshöhe war ohnehin auf ganze Meter gerundet. Sicherungen bis
+  Nutzlast 12 (SPUR1) behalten ihre Dezimeter — ein anderes Format.
+- **Die Kreisläufe edbak erklären die gerundete Höhe** (F-S11-70). Ihre
+  Referenzen tragen Dezimeter, die neue Sicherung ganze Meter; das waren
+  50 761 und, im Altformat, 41 582 Abweichungen. Die Regel greift nur an der Höhe eines
+  Punkts und nur, wenn der neue Wert genau der gerundete alte ist — jede
+  andere Abweichung bleibt rot. Sie fällt mit der nächsten Referenz weg.
+
+## [Web 22.5.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-06 — Sicherung** in sechs Teilen, ein Commit
+(E-S11-55). Kein Schema.
+
+### Behoben
+
+- **Die Sicherung ließ Orte, Reanimation und GPS-Daten aller verschlossen
+  eingegangenen Einsätze aus** (F-S11-63). Seit S11-04 liegen sie nur noch in
+  Einsatzhülle und Spurstücken; der Kern las Phasen und Reanimation aus den
+  Tabellen, in denen sie nicht mehr stehen, und die Spurteile nur SPUR1. Eine
+  Spur aus Stücken kam als „leer" zurück — die Datei sah vollständig aus. Wer
+  seit Web 22.0.1 gesichert hat, sichert neu. Jetzt öffnet der Browser Hülle
+  und Stücke und legt Orte, Reanimation und Punkte offen in den Container,
+  den das Sicherungspasswort verschließt (**Nutzlast 13**).
+- **Die Kontosicherung der Verwaltung trug keine Stücke** (F-S11-63). Sie
+  trägt sie jetzt, wie sie liegen, und die Einsatzhülle im Kern.
+- **Löschvermerke fehlten in jeder Sicherung** (F-S11-52). Ein aus einer Spur
+  gelöschter Zeitraum war nach dem Einspielen nicht mehr gegen eine erneute
+  Lieferung gesperrt. Jedes Segment trägt seine `loeschungen` jetzt mit.
+- **Der Demo-Reset schrieb Ortsdaten im Klartext.** Er spielte die Fixture
+  über denselben Weg wie eine Sicherung ein, und der legte bis hierher Orte,
+  Reanimation und Spur offen ab. Jetzt verschließt der Server mit dem
+  Schlüsselpaar des Demo-Kontos (E-S11-20) und legt Transportziel und
+  Ortshöhe in den Blob. Ohne das verweigerte die Aufräummigration (S11-12)
+  auf jeder Anlage mit Demo-Konto.
+- **Das Einspielwerkzeug des Referenzbestands bediente Formular und Schnitt
+  im alten Format** (F-S11-43, -53). Es verschließt jetzt wie ein Browser.
+  Dabei fiel auf, dass sein Blob-Bau Notiz, Transportziel und Ortshöhe still
+  wegließ — 85 Notizen kamen nie an (F-S11-66).
+
+### Geändert
+
+- **Spuren stehen in der Sicherung als Punktlisten** (Betreiberin,
+  16.10.2026, E-S11-56). Der Server kann die Stücke nicht öffnen, also auch
+  kein SPUR1 bauen; ein zweiter SPUR1-Kodierer im Browser hätte nur Größe
+  gespart. Die Datei wächst dadurch: am Referenzbestand **880 KB statt 280
+  KB** (67 292 Punkte). Ein Spurteil nimmt deshalb 100 000 Punkte statt
+  250 000, damit er bei rund 1,2 MB bleibt.
+- **Beim Einspielen verschließt der Browser, bevor er sendet** — aus jeder
+  Fassung von 6 bis 13 gleich: Orte und Reanimation in die Einsatzhülle,
+  Transportziel und Ortshöhe in die geschützten Angaben, Spuren in Stücke
+  (eine SPUR1-Datei liest er dafür selbst). Der Server weist Klartext dieser
+  Felder mit `400 klartext` ab, bevor er etwas schreibt — wie Eingang und
+  CSV-Import. Die Seite muss dafür entsperrt sein. Die Höhe des Einsatzorts
+  rechnet der Rückweg nicht mehr nach; sie kommt aus der Datei (F-S11-45).
+- **Der direkte Weg der Verwaltung verschließt selbst** (Betreiberin,
+  16.10.2026, E-S11-57). Er hat die Daten eines älteren Pakets ohnehin im
+  Klartext vor sich; jetzt legt er Orte, Reanimation und Spur verschlossen ab.
+  Ohne Schlüsselpaar im Zielkonto weist er ab, bevor etwas geschrieben ist.
+  Transportziel und Ortshöhe bleiben auf diesem Weg Altbestand — der
+  `pat_blob` hängt am Inhaltsschlüssel, den der Server nicht hat.
+- **Freigabe in ein anderes Konto mit Orten und GPS-Daten** (F-S11-65). Hülle
+  und Stücke hängen am Schlüsselpaar des Ursprungskontos; im neuen Konto
+  wären sie unlesbar angekommen. Das Paket trägt jetzt den privaten Teil
+  dieses Paars, verschlüsselt unter dem alten Inhaltsschlüssel — derselbe
+  Chiffretext wie in der Datenbank. Der Browser der NutzerIn öffnet ihn mit
+  dem Wiederherstellungsschlüssel und verschlüsselt Hülle und Stücke für ihr
+  neues Paar. Ein Paket mit solchen Daten gilt als „geschützt" und geht nie
+  unmittelbar in ein fremdes Konto.
+- **Hat das Demo-Konto kein Schlüsselpaar, legt der Server beim Zurücksetzen
+  eines an** (Betreiberin, 16.10.2026, E-S11-58). Dafür rechnet er den
+  Inhaltsschlüssel aus dem Passwort des Demo-Kontos, das im Handbuch steht.
+  Für kein anderes Konto kennt er Passwort oder Schlüssel.
+
+### Bewusst so belassen
+
+- **Die Sicherung ist größer und wird es bleiben**, bis jemand SPUR1 im
+  Browser kodiert. Die Größe wurde gemessen und vorgelegt; ein zweiter
+  Kodierer wäre eine zweite Stelle für dasselbe Format.
+
+## [Web 22.4.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-05e — Export, CSV-Import, Zeitverschiebung**.
+Letzter von fünf Teilen von S11-05. Kein Schema.
+
+### Behoben
+
+- **Der Export ließ alles seit S11-04 Gesendete aus** (F-S11-57). Er las
+  Phasenorte, Reanimation und Spur aus den Klartexttabellen; was seither
+  verschlossen ankommt, stand nicht in der Datei — die GPX-Spuren fehlten,
+  die Phasenkoordinaten waren leer, die Reanimation auch, und nichts sagte
+  es. Jetzt liefert der Server mit dem Haken die Einsatzhülle und die
+  Stücke, und der Browser öffnet sie, wie in der Einsatzansicht. Der
+  Altbestand im Klartext kommt weiter mit, bis das Einmalwerkzeug (S11-10)
+  ihn umgezogen hat.
+- **Der CSV-Import schrieb Ortsdaten im Klartext** (F-S11-60). Phasenorte,
+  Reanimation, Transportziel samt Koordinate und die Höhe des Einsatzorts
+  gingen offen an den Server und in die Klartextspalten — der Weg, den das
+  Formular mit Web 22.1.0 geschlossen hatte, stand hier noch offen. Jetzt
+  verschlüsselt der Browser: Phasenorte und Reanimation in die Einsatzhülle,
+  Transportziel und Höhe in die geschützten Angaben. Der Server weist
+  Klartext dieser Felder ab (Betreiberin, 16.10.2026, E-S11-51) und hält die
+  Phasenzeiten des Browsers gegen die eigenen — wie der Wächter im
+  Formular; weichen sie ab, wird nichts übernommen.
+- **Der erste Import nach der Erstanmeldung scheiterte mit „noch kein
+  Schlüsselpaar eingerichtet"** (F-S11-61). Das Schlüsselpaar des Kontos
+  entsteht im Hintergrund auf der ersten Seite nach der Anmeldung; eine
+  Seite, die davor geladen war, kannte es nicht, und seit Import und
+  GPX-Einlesen im Browser verschließen, brauchen sie es. Jetzt holt die
+  Seite den Schlüssel nach — sie wartet auf ein laufendes Anlegen und fragt
+  sonst den Server. Gefunden hat es der CSV-Kreislauf, der ein frisches
+  Konto anlegt und gleich importiert; vorher gewann er den Wettlauf
+  zufällig.
+- **Ein umdatierter Diensttag ließ die Spuren seit S11-04 am alten Datum
+  stehen** (F-S11-58). Die Umdatierung verschob Zeilen und Blob, aber nicht
+  die verschlossenen Stücke. Sie wandern jetzt mit; die Hülle bleibt gültig,
+  weil die Punktzeiten relativ zum Stück stehen.
+
+### Geändert
+
+- **Überschreiben beim Import führt zusammen** (Betreiberin, 16.10.2026,
+  E-S11-52). Bis dahin ersetzte ein `pat_blob` aus der Datei den vorhandenen
+  ganz. Seit Transportziel und Ortshöhe darin liegen, hätte ein Export ohne
+  Haken, der nur das Transportziel eines alten Einsatzes trägt, beim
+  Zurückspielen Name und Diagnose gelöscht. Jetzt bleibt jeder vorhandene
+  Eintrag, die Datei ersetzt nur, was sie nennt — dieselbe Haltung wie
+  bisher bei Besatzung und Notizen. Ebenso bleiben Orte und Reanimation,
+  wenn die Datei keine nennt. Der Altbestand eines überschriebenen Einsatzes
+  zieht dabei in Hülle und Blob um.
+- **Transportziel und Reanimation neuer Einsätze stehen nur noch mit
+  „Personenbezogene Angaben einschließen" im Export** (Betreiberin,
+  16.10.2026, E-S11-53, -54). Das Transportziel ist seit Web 22.1.0 eine
+  geschützte Angabe; die Reanimation liegt seit S11-04 in der Hülle, die nur
+  das Passwort öffnet, und ein Export ohne Haken fragt nicht danach. Bis
+  zum Einmalwerkzeug ist eine Datei ohne Haken deshalb gemischt: Die
+  Reanimation alter Einsätze steht darin, die neuer nicht. In der Excel-Liste
+  entfällt die Spalte „Transportziel" ohne Haken ganz, in `felder.csv` ist
+  sie als personenbezogen markiert.
+
+### Prüfmittel
+
+- Die **Ortsdatenprobe** fährt einen Schritt mehr: Export über die
+  Oberfläche mit und ohne Haken, Zurückspielen mit „überschreiben", danach
+  derselbe Export; Klartext → 400, falsche Zeiten → 409; die Umdatierung.
+- Die **Wegprobe des Spaltenregisters** schickt ihren Import mit Hülle und
+  Phasenliste und prüft die Abweisung von Klartext.
+- Die **Protokollprobe** wählt das Archiv an ihrer eigenen Mail statt am
+  letzten Archiv mit Sicherheitszeilen (F-S11-59) — sie war drei Tage nach
+  jedem Tag mit Prüfstand rot. Die Ursache, eine Sperre, die die
+  Zweitfaktorprobe bei jedem Lauf zurücklässt, steht als Backlog Nr. 385.
+
+## [Web 22.3.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-05d — GPX-Abruf und -Import im Browser**.
+Vierter von fünf Teilen von S11-05. Kein Schema.
+
+### Behoben
+
+- **Der GPX-Abruf lieferte für jede seit S11-04 verschlossene Spur nichts
+  mehr** (F-S11-54). `gpx.php` las die Punkte auf dem Server, und der sieht
+  seit S11-04 nur noch Stücke, die er nicht öffnen kann: Die Einsatzansicht
+  bot den Eintrag an, und heraus kam ein 404; auf der Spurenseite des
+  Diensttags ebenso, je Zeile und für die Auswahl. Jetzt baut der Browser die
+  Datei aus der Spur, die er ohnehin für die Karte öffnet. **Die Datei ist
+  dieselbe wie vorher** — Aufbau, Beschreibungen, Stufentext und Dateiname
+  stimmen Byte für Byte mit dem überein, was `gpx_lib.php` gebaut hat; die
+  GPX-Probe hält Solldateien der letzten Serverfassung und vergleicht dagegen.
+  **Eine Abweichung ist gewollt** (F-S11-55): Eine Koordinate unter 1e-4 —
+  ein Punkt wenige Meter neben Äquator oder Nullmeridian — schrieb PHP als
+  `1.0E-7`, und das ist kein gültiges `xsd:decimal`; der Browser schreibt
+  `0.0000001`.
+
+### Geändert
+
+- **Der GPX-Import liest im Browser und schickt verschlossene Stücke.** Bis
+  dahin ging die Datei als Text an den Server, der sie las und die Punkte im
+  Klartext ablegte — mit der Begründung, eine GPX-Datei enthalte nichts
+  Verschlüsseltes. Seit Schritt 12a ist die Spur selbst das, was
+  verschlüsselt wird; der Server darf sie nicht mehr sehen. Der Browser liest
+  mit denselben Regeln wie bisher der Server (kein DOCTYPE, keine
+  UTF-16/UTF-7-Deklaration, `time` Pflicht, nach Zeit sortiert), zieht die
+  Kennung `imp-…` selbst und verschließt die Punkte mit dem öffentlichen
+  Schlüssel des Kontos — ein Passwort braucht es dafür nicht. **Der Preis:**
+  Die Ablehnungsregeln sind jetzt eine Hilfe für die BedienerIn, keine
+  Schranke; wer sie umgeht, schickt Stücke, die nur das eigene Konto öffnen
+  kann. Der Server prüft, was er noch prüfen kann: Form der Kennung und der
+  Stücke, Menge, Eindeutigkeit (eine doppelte Lieferung ist 409).
+- **Eine Latin-1-Datei kommt weiter an, mit Ersatzzeichen im Namen** — wie sie
+  über den Dateidialog schon immer ankam (`readAsText()`). Die Ablehnung
+  ungültigen UTF-8 stand nur auf dem Server und traf nur, wer den Endpunkt
+  unmittelbar ansprach; diesen Weg gibt es nicht mehr.
+- **Ohne JavaScript gibt es keinen GPX-Abruf mehr.** Die Spur öffnet nur das
+  Skript; das GET-Formular an `gpx.php` ist fort.
+
+### Entfernt
+
+- `server/gpx.php` und `server/gpx_lib.php`. Mit ihnen der Ratenschutz im Topf
+  `pair` für den Abruf (es gibt keine Kennung mehr abzutasten; der Topf hat
+  noch zwei Verbraucher), die Grenze von 100 Spuren je Auswahl (sie schützte
+  den Arbeitsspeicher des Servers) und die Höhenberechnung nach einem Import
+  als Einsatz (`compute_site_elevation()` las Klartext; die Höhe entsteht seit
+  Web 22.1.0 im Browser).
+- `tools/proben/gpx/probe.php` — ersetzt durch `probe.mjs`, eine Browserprobe:
+  Solldateien der letzten Serverfassung, jede GPX-Datei des Referenzexports
+  gelesen und neu gebaut, Abruf über Einsatzansicht und Spurenseite, Import
+  über den Dialog mit Prüfung der Datenbank, der Eingang mit den Fällen der
+  alten Teil 8. Das Schema prüft weiter libxml (`schema.php`).
+
+## [Web 22.2.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-05c — Schneiden, Rücknahme, ein Stück
+löschen**. Dritter von fünf Teilen von S11-05. **Mit Schema:** Migration
+`2026_10_15_loeschvermerk` — nach dem Deploy `update.php` aufrufen.
+
+### Behoben
+
+- **Schneiden ging seit S11-04 nicht mehr** (F-S11-50). Der Server verschob
+  die Punkte eines Ruhesegments selbst, und seit sie verschlossen ankommen,
+  fand er keine: Jeder Schnitt endete mit „kein einziger Punkt". Schlimmer
+  stand es bei einem Segment, das alte Klartextpunkte und neue Stücke zugleich
+  trug: Dort hätte das Verschieben die neuen Stücke still gelöscht. Jetzt
+  schneidet der Browser — er öffnet das Segment, nimmt die Punkte im
+  gewählten Zeitraum und verschließt sie als Spur des neuen Einsatzes. Das
+  Segment bleibt dabei, wie es ist, und der Zeitraum wird dort gesperrt, so
+  dass er beim Öffnen nicht mehr erscheint. Dadurch ist die Rücknahme
+  verlustfrei: Einsatz und Sperre gehen, und die Punkte waren im Segment nie
+  fort — auch dann nicht, wenn zwischendurch weitere Daten angekommen sind
+  (E-S11-47). Der Preis: Bis der Wartungslauf (S11-07) das Segment neu packt,
+  liegen die Punkte doppelt verschlüsselt, und die Punktzahl an der Zeile
+  zählt den gesperrten Zeitraum mit.
+
+### Neu
+
+- **Ein Stück einer Aufzeichnung löschen** (Backlog Nr. 161). Ein vergessener
+  Dienst zeichnet auch den Weg nach Hause auf, und bisher ließ sich das nur
+  mit dem ganzen Diensttag loswerden. Im Schneide-Bereich steht jetzt neben
+  „Einsatz erzeugen" der Knopf „Zeitraum löschen": Nach einer Rückfrage
+  verschließt der Browser die Punkte außerhalb des Zeitraums neu, und der
+  Server ersetzt die Stücke des Segments — nur, wenn sie noch so liegen, wie
+  der Browser sie gelesen hat; sonst kommt die Bitte, neu zu laden, statt
+  eben angekommene Daten zu verlieren. Hier wird wirklich gelöscht, nicht
+  gesperrt (E-S11-48). Ein Vermerk ohne Einsatz sperrt den Zeitraum gegen
+  eine erneute Lieferung, und das Protokoll bekommt eine Zeile. Die ganze
+  Aufzeichnung lässt sich so nicht löschen (dafür der Papierkorb), eine aus
+  der Zeit vor der Verschlüsselung erst nach der Umstellung.
+- `pruef_spurstueck()` — die Prüfung eines Spurstücks, jetzt an einer Stelle
+  für den Eingang der Geräte und die Schreibwege des Browsers.
+
+### Bewusst nicht
+
+- Die Sicherung nimmt einen Löschvermerk nicht mit (F-S11-52); nach dem
+  Einspielen fehlt dann nur die Sperre gegen eine erneute Lieferung, die
+  Punkte selbst sind ohnehin fort. S11-06 baut die Sicherung um.
+- Der Schneideschritt des Einspielwerkzeugs bleibt mit F-S11-43 bei S11-06.
+
+## [Web 22.1.0] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-05b — Formular und Feldkatalog**. Zweiter von
+fünf Teilen von S11-05 (E-S11-43). Kein Schema.
+
+### Geändert
+
+- **Das Einsatzformular verschlüsselt Phasenorte und Reanimation selbst.**
+  Bis 22.0.4 schickte es die Reanimation als gewöhnliche Formularfelder, und
+  der Server schrieb sie im Klartext in `resus_sessions` — auch nachdem S11-04
+  sie aus dem Eingang der Geräte genommen hatte. Wer im Web eine Reanimation
+  nachtrug, legte sie damit genau dort ab, wo sie nicht mehr stehen sollte, und
+  nichts zeigte es (F-S11-41). Und jedes Speichern ersetzte die Phasen ohne
+  ihre Koordinaten (F-S11-02). Jetzt öffnet das Formular die Einsatzhülle nach
+  dem Entsperren, zeigt die Reanimation daraus und verschließt beim Speichern
+  eine neue — mit denselben Orten je Phase und der Reanimation aus der Karte.
+  Die Zeiten dafür rechnet der Browser nach denselben Regeln wie der Server,
+  bis in die Eigenheiten von PHP an der Zeitumstellung; damit die beiden
+  Rechnungen nie still auseinanderlaufen, schickt er seine Phasenzeiten mit,
+  und der Server speichert nur, wenn sie gleich sind. Einen Einsatz aus der
+  Zeit davor nimmt das Formular beim Speichern mit: Orte und Reanimation aus
+  den alten Zeilen gehen in die Hülle, und die Zeilen werden gelöscht —
+  dasselbe Muster wie bei den Notizen.
+- **Speichern im Formular verlangt jetzt das Entsperren.** Die Hülle muss bei
+  jedem Speichern neu verschlossen werden, weil sich Phasenzeiten geändert
+  haben können; ohne Schlüssel geht das nicht. Bisher ließ sich gesperrt
+  speichern, und die geschützten Angaben blieben, wie sie waren. Geht die
+  vorhandene Hülle nicht auf, ist Speichern gesperrt, statt sie durch eine
+  leere zu ersetzen.
+- **Transportziel, Zielkoordinate und Höhe des Einsatzorts sind verschlüsselt**
+  (R78). Die Zielklinik trägt im Feldkatalog `'store' => 'pat'` und liegt als
+  `{addr, lat, lon}` im `pat_blob`; ihr Pin, ihre Zeile, die Linie zur letzten
+  Zielklinik und der Filter der Suche erscheinen erst nach dem Entsperren. Das
+  kehrt die Klartext-Entscheidung zur Zielklinik (E40) um. Die Höhe des
+  Einsatzorts rechnet der Browser beim Speichern nach der Regel, die bisher der
+  Server anwandte, und legt sie als `ortshoehe` in den Blob; ohne Spur oder auf
+  einer ausgedünnten bleibt ein vorhandener Wert. Der Haken „Schockraum" bleibt
+  Klartext, ebenso die Vorschlagsliste der Zielkliniken in den Stammdaten.
+- **Kein Übergang** (E-S11-42): Einsätze, deren Zielklinik und Höhe noch in den
+  Klartextspalten liegen, zeigen beides bis zum Einmalwerkzeug (S11-10) nicht —
+  es sei denn, jemand speichert sie im Formular.
+
+### Behoben
+
+- **Der Kartendialog im Formular zeigte keine Spur mehr** (F-S11-42). Er las
+  `track` aus `api/mission.php`, und das gibt es seit 22.0.3 nicht mehr; jetzt
+  öffnet er die Stücke wie die Einsatzansicht.
+- **Zwei Stellen hätten die Ortshöhe wieder in Klartext geschrieben** (F-S11-45):
+  `ingest.php` und das Formular riefen nach jedem Upload bzw. Speichern
+  `compute_site_elevation()`, und das liest bei einem Einsatz des Altbestands die
+  Klartextspur. Beide Aufrufe sind fort.
+- **Das Einspielen einer Sicherung hätte das Transportziel verloren**
+  (F-S11-48). Es nimmt die Katalogfelder, die Spalten sind, und die
+  Zielklinik ist keine mehr; jede Sicherungsdatei trägt sie aber bis S11-06
+  im Klartext. Sie steht jetzt von Hand in der Liste, wie die Notizen seit S9 —
+  gefunden vom Kreislauf `.edbak` im Prüfstand, nicht beim Schreiben.
+- **„Schockraum" wäre aus der Einsatzansicht verschwunden** (F-S11-44):
+  `api/mission.php` übersprang die Kinder eines verschlüsselten Katalogfelds,
+  und die Zielklinik ist das erste mit einem Kind.
+
+### Bewusst nicht
+
+- Export, CSV-Import und Zeitverschiebung lesen die Zielklinik bis S11-05e
+  weiter aus den Spalten, Sicherung und Demo bis S11-06; Schneiden und
+  GPX-Einlesen rechnen die Höhe bis S11-05c/-05d noch am Server. Und das
+  Einspielwerkzeug des Referenzbestands bedient das Formular noch im alten
+  Format (F-S11-43, in S11-06). Alles davon liegt auf dem Arbeitszweig und
+  geht erst mit S11 hinaus.
+
+## [Web 22.0.4] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-04d — eine Hülle, die nicht aufgeht, wird
+gemeldet**. Letzter von vier Teilen von S11-04. Kein Schema.
+
+### Neu
+
+- **Geht eine Gerätehülle im Browser nicht auf, steht es im Reiter System.**
+  Bis 22.0.3 sah das nur die Nutzerin — „Die Ortsdaten dieses Einsatzes
+  lassen sich nicht öffnen" —, und die BetreiberIn erfuhr nichts. Eine
+  solche Hülle ist aber kein Alltag, sondern einer von zwei Befunden: ein
+  Gerät, das falsch verschließt, oder ein Eingriff in die Datenbank, bei dem
+  jemand eine Hülle verändert oder vertauscht hat. Beides will die
+  BetreiberIn wissen, und zwar ohne dass die Nutzerin es ihr sagen muss
+  (M-S11-01, Zustand d). `EdOrtsdaten.melden()` schickt Art, Kennung und
+  den Grund aus `crypto.js` an `api/kontopaar.php` (neues Anliegen
+  `oeffnen_fehler`), der im Bereich `ortsdaten` meldet. **Kein Inhalt geht
+  mit** — der Server erfährt, dass und warum, nicht was darin stand. Ein
+  Konto ohne Schlüsselpaar wird nicht gemeldet: Das ist kein Befund über
+  eine Hülle, sondern ein Konto, das noch nie entsperrt hat. Die Meldungen
+  laufen durch denselben Topf wie die Abweichung beim Kontopaar (fünf je
+  Stunde), damit eine Seite mit dreißig kaputten Hüllen nicht dreißig
+  Meldungen schreibt. Die Ortsdatenprobe verdirbt dafür eine Hülle um ein
+  Byte und sieht nach.
+
+### Bewusst nicht
+
+- **Keine Messung gegen S11-01 in diesem Paket** (E-S11-41). Das Konzept
+  sah sie hier vor, aber der Messstand misst den Demo- und Referenzbestand,
+  und dessen Ortsdaten liegen bis zum Einmalwerkzeug (S11-10) im Klartext —
+  die Ansichten zeigen dort also keine Karte und hätten nichts zu öffnen.
+  Eine Zahl daraus wäre schneller als vorher und hieße nichts. Statt eines
+  eigenen Werkzeugs, das den Prüfbestand vorab verschließt, wird gemessen,
+  wenn das Einmalwerkzeug ihn verschlossen hat. Bis dahin sind
+  Bedienprobe, Stilvergleich, Bilderlauf und GPX-Probe im Prüfstand rot;
+  das ist so entschieden.
+- **Die Browserliste gegen `CompressionStream`** (E-S11-21) prüft dieses
+  Paket nicht: Die Hüllen der Geräte sind ungepackt (F-S11-07, -19), und
+  `docs/Technik.md` führt keine Browserliste, gegen die man sie halten
+  könnte (F-S11-38). Gepackt wird erst beim Zusammenfügen; dort gehört die
+  Prüfung hin.
+
+## [Web 22.0.3] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-04c — die Ansichten öffnen die Hüllen**.
+Dritter von vier Teilen von S11-04. Kein Schema.
+
+### Geändert
+
+- **Einsatzansicht, Tagesübersicht und „GPS-Daten des Diensttages" öffnen
+  Spur, Phasenorte und Reanimation selbst.** Die Antworten des Servers
+  tragen sie seit 22.0.2 als Gerätehüllen; jetzt liest der Server sie dort
+  gar nicht mehr im Klartext. Geöffnet wird an einer Stelle,
+  `assets/ortsdaten.js`, mit dem privaten Schlüssel des Kontos — und daraus
+  entsteht, was das Zeichnen der Seiten schon immer gelesen hat. Das hält
+  den Eingriff in drei große Seitenskripte klein: Karte, Phasenliste und
+  Reanimationstabellen sind dieselben geblieben. Doppelte Punkte (ein Gerät,
+  das seine Marke verloren hat) zählen einmal; Punkte in einem
+  herausgeschnittenen Zeitraum fallen weg (E-S11-37).
+- **Kein Übergang** (E-S11-36): Einsätze, deren Ortsdaten noch im Klartext
+  liegen, zeigen bis zum Einmalwerkzeug (S11-10) keine Karte, keine
+  Phasenorte und keine Reanimation. Das ist beschlossen, kein Fehler. Auf
+  Produktiv betrifft es die Zeit zwischen der Hauptauslieferung und dem Lauf
+  des Werkzeugs (Konzept 3.8, Schritte 3 bis 5); auf Staging und örtlich
+  gilt es, bis das Werkzeug dort gelaufen ist.
+- **Die Anfrage beginnt im Kopf der Seite** (V1 aus dem Messpaket S11-13):
+  `assets/vorladen.js` startet `api/mission.php` bzw. `api/day.php`, während
+  der Browser noch Skripte lädt. Geschätzt waren 13 bis 18 % des
+  Seitenaufbaus bei Drossel 6×; gemessen wird, sobald verschlossene Daten
+  in Menge da sind — in S11-10/S11-11 (E-S11-41). Eine eigene
+  kleine Datei, weil die CSP Inline-Code im Kopf nicht zulässt.
+
+### Neu
+
+- **Der Ladeplatz** (`ui_ladeplatz()`, `Design.md` 9.41; Mockup M-S11-01,
+  Variante A): ein Ring und ein Satz an der Stelle, an der gleich Karte oder
+  Phasen stehen — „Ortsdaten werden geladen …", „Wartet auf dein Passwort"
+  (der Ring steht still), „Ortsdaten werden geöffnet …". Er erscheint erst
+  nach 300 ms, damit eine schnelle Seite nicht flackert. Die Phasenkarte der
+  Einsatzansicht steht dabei sofort da (E-S11-35). Keine neue Farbe, keine
+  neue Schriftgröße.
+- `EdFormat.uhrzeit()` — die Uhrzeit eines Zeitpunkts in der Zeitzone der
+  Anlage. Die Zeiten der Reanimation stehen nur noch in der Hülle; die
+  Rechnung gehört an die eine Stelle für Zahlen und Zeiten, nicht in eine
+  Seite.
+
+### Was noch nicht geht
+
+- Das **Einsatzformular** zeigt im Kartendialog keine Spur mehr und kennt die
+  Phasenorte nicht; das baut S11-05 mit dem Formularweg um.
+- Geht eine Hülle nicht auf, steht die Meldung in der Karte — **gemeldet an
+  den Reiter System wird das noch nicht**, wie M-S11-01 es vorsieht. Das holt
+  S11-04d nach.
+
+## [Web 22.0.2] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-04b — die Schnittstellen liefern die Hüllen
+aus**. Zweiter von vier Teilen von S11-04. Kein Schema.
+
+### Neu
+
+- **`api/mission.php` und `api/day.php` geben die Ortsdaten als
+  Gerätehüllen heraus**, wie sie liegen: die Spurstücke mit Platz, Punktzahl
+  und Zeitraum, beim Einsatz dazu die Einsatzhülle. Mit dabei ist, was der
+  Browser zum Öffnen und Einordnen braucht und was ohnehin Klartext ist:
+  `client_ref` für die Bindung, der Beginn und die Zeit jeder Phase als
+  Epoche (die Zeiten in der Hülle zählen von dort, E-S11-40) und die
+  Sperrzeiten aus Schnitten (E-S11-37). Der Server öffnet dabei nichts.
+- **Die Ortsdatenprobe** fährt die ganze Kette im echten Browser: Ein Gerät
+  sendet verschlossen mit dem Kontoschlüssel, die Schnittstellen liefern aus,
+  der Browser öffnet mit seinem privaten Schlüssel und vergleicht Punkt für
+  Punkt — auch eine fehlende Höhe, die Phasen, die Reanimation und eine
+  Hülle unter fremder Bindung, die nicht aufgehen darf.
+
+### Geändert
+
+- **Die Spaltenliste der Einsätze eines Diensttags kommt aus dem
+  Spaltenregister** (neuer Zweck `tag`). Mit `client_ref` wäre sie in
+  `api/day.php` eine Liste von zehn Spaltennamen von Hand geworden — genau
+  das, was das Register seit Schritt 15 verhindern soll, und die Zählung
+  (Z18) schlug im ersten Prüfstandlauf an.
+
+### Was noch nicht geht
+
+- **Die Ansichten zeigen die Hüllen noch nicht** — sie lesen bis S11-04c den
+  Altbestand im Klartext (`track`, `phases[].lat/lon`, `resus`). Das bleibt so
+  lange in den Antworten, damit die Seiten zwischen den beiden Teilen
+  bedienbar sind; S11-04c nimmt es heraus.
+
+## [Web 22.0.1] — unveröffentlicht
+
+Schritt 12a, S11, Paket **S11-04a — Speicher, Prüfschicht, Eingang**. Der
+erste von vier Teilen des Pakets S11-04 (E-S11-36). **Schema: eine Tabelle
+und eine Spalte — nach dem Deploy `update.php` aufrufen.** Ausgeliefert wird
+erst mit dem Ende von S11.
+
+### Geändert
+
+- **`ingest.php` nimmt Ortsdaten nur noch verschlossen an.** Spur,
+  Koordinate jeder Phase und Reanimation kommen seit dieser Fassung als
+  Gerätehülle (Format in `tools/proben/huelle/referenz.py`), verschlossen mit
+  dem Kontoschlüssel aus der Kopplung. Ein Paket mit Punkten, einer Phase mit
+  Koordinate oder einer Reanimation im Klartext weist der Server ab — ganz,
+  mit `400 klartext`. Halb anzunehmen wäre schlimmer gewesen: Was der Server
+  quittiert, löscht das Gerät, und verworfene Ortsdaten wären nirgends
+  geblieben. Einen Übergang gibt es nicht (E-S11-09); die Uhr- und
+  Handy-Fassungen, die verschließen, kommen mit S11-08 und S11-09. **Bis
+  dahin kann kein Gerät senden.** Das ist der Plan, keine Panne — vor der
+  Auslieferung wird alles gesendet, was noch auf der Uhr liegt (Konzept 3.8).
+- **Spurstücke statt Punkte.** Ein Gerät schickt je Anfrage ein Stück: wo es
+  in der Spur steht (`seq_from`, `punkte`), welchen Zeitraum es abdeckt
+  (`ts_von`, `ts_bis`) und die Hülle. Mehr sieht der Server nicht, und mehr
+  braucht er nicht: Fortsetzungsmarke, Wiederholung, Ausdünnung und
+  Ersetzfenster gelten wie bisher, nur je Stück statt je Punkt. Neu ist eine
+  Lage, die es je Punkt nicht gab: Ein nachgeliefertes Stück, das nur zum
+  Teil in einen herausgeschnittenen Zeitraum fällt, wird abgelegt, und der
+  Browser blendet die gesperrten Punkte beim Öffnen aus — die Sperrzeiten
+  sind Klartext (E-S11-37). Liegt es ganz darin, wird es wie bisher
+  verworfen und als `cut_points` gemeldet.
+- **Die Einsatzhülle geht mit den Phasen.** Koordinaten der Phasen und
+  Reanimation liegen in `missions.ort_huelle`, Innenform JSON mit Zeiten
+  relativ zum Einsatzbeginn (E-S11-40). Ob ein Paket weniger weiß als der
+  gespeicherte Stand, sieht der Server nur noch an der Phasenliste; mit ihr
+  ersetzt oder behält er die Hülle (E-S11-38). Die Reanimation zählt er nicht
+  mehr — ob es eine gab, soll er nicht sehen (E-S11-02). Darum gibt es
+  `kept_resus` nicht mehr, und `kept_ort` sagt nur: die Hülle blieb.
+  **Bewusst in Kauf genommen:** Ein Gerät, das nach Speicherverlust denselben
+  Einsatz mit gleich vielen Phasen, aber weniger Reanimationsereignissen neu
+  schickt, überschreibt die vollständigere Hülle.
+- **Die Prüfschicht prüft an einer Hülle die Form** (`pruef_huelle()`):
+  Base64, Mindest- und Höchstlänge aus den Mengengrenzen, Fassung, Kennbyte
+  des flüchtigen Schlüssels. Den Inhalt prüfen Gerät und Browser; der Server
+  kann ihn nicht lesen (E-S11-13).
+- **Ein Punkt ohne Höhe** trägt in der binären Innenform `-32768`
+  (E-S11-39). Das Format aus E-S11-31 kannte dafür keinen Wert, die Spalte
+  `ele` darf aber leer sein.
+
+### Neu
+
+- **Verschließen auf dem Server** (`geraetehuelle_lib.php`), byte-gleich mit
+  Referenz und Browser gegen dieselben Prüfvektoren. Gebraucht wird es für
+  die Proben, die den Eingang wie ein Gerät bedienen, und für das
+  Demo-Zurücksetzen (S11-06). Ein Öffnen gibt es dort **mit Absicht nicht**.
+- Tabelle **`track_stuecke`** (SPUR2) und Spalte **`missions.ort_huelle`**
+  (Migration `2026_10_13_ortshuellen`, nicht zerstörend). Löschen,
+  Papierkorb, Waisenjob, Kontingent und Demo-Zurücksetzen nehmen die Stücke
+  mit. `track_points`, `track_blobs`, die Koordinaten in `mission_phases` und
+  die Reanimationstabellen tragen nur noch Altbestand, bis das
+  Einmalwerkzeug (S11-10) ihn umgehüllt hat.
+
+### Was noch nicht geht
+
+- **Die Ansichten lesen die Hüllen noch nicht** — das bauen S11-04b und
+  S11-04c. Ein neu angekommener Einsatz zeigt bis dahin keine Karte, keine
+  Phasenorte und keine Reanimation. Weil es keinen Übergang gibt, gilt das
+  ab S11-04c auch für den Altbestand, bis S11-10 ihn umgehüllt hat.
+- Die Ortshöhe rechnet der Server nicht mehr: Er sieht weder Spur noch
+  Phasenkoordinate. Sie kommt mit S11-05 in den Browser (E-S11-03).
+
+## [Web 22.0.0] — unveröffentlicht
+
+Schritt 12a, **S11 — Ortsdaten verschlüsselt (Weg B)**, Paket S11-03, **das
+Schlüsselpaar des Kontos**. **Haupt** — die Hauptnummer gehört dem ganzen
+Umbau von S11; die weiteren Pakete zählen an der Korrekturstelle weiter, bis
+er steht. **Schema: drei Spalten an `users` — nach dem Deploy `update.php`
+aufrufen.** Ausgeliefert wird erst mit dem Ende von S11 (Hauptauslieferung).
+
+### Neu
+
+- **Jedes Konto bekommt ein ECDH-Schlüsselpaar** auf P-256, erzeugt im
+  Browser beim ersten Entsperren nach einer Anmeldung, ohne Zutun
+  (`assets/kontopaar.js`, `api/kontopaar.php`). Es ist die Grundlage von S11:
+  Uhr und Handy werden Spur, Phasenkoordinaten und Reanimation mit dem
+  öffentlichen Teil verschließen, und nur der Browser öffnet sie mit dem
+  privaten. Der private Teil liegt unter dem Inhaltsschlüssel, und zwar wie
+  beim Rückweg ausdrücklich **nicht** am Server-Anteil: Der
+  Wiederherstellungsschlüssel muss ihn allein öffnen, sonst gingen mit dem
+  Anteil alle Ortsdaten eines Kontos verloren. Angelegt wird nur mit dem
+  Nachweis des Passworts (dem Token aus dem Vormerkfach der Anmeldung) —
+  wer das Paar ablegt, bestimmt, für wen die Geräte verschließen, und eine
+  übernommene Sitzung soll das nicht können.
+- **Der öffentliche Teil liegt versiegelt** mit dem Serverschlüssel, gebunden
+  an das Konto (`kontopaar|<Kontonummer>`), und wird nur mit gültigem Siegel
+  ausgegeben. Der Grund ist ein Angriff, den eine verschlüsselte Spur sonst
+  offen ließe: Wer nur die Datenbank beschreiben kann, trüge seinen eigenen
+  Schlüssel ein, und jedes danach gekoppelte Gerät verschlösse für ihn. Ein
+  Siegel, das nicht aufgeht — umgehängt, von Hand eingetragen, ein
+  vergessener Schlüsselwechsel —, liefert keinen Schlüssel und steht im
+  Reiter System. Gegen jemanden, der den Server selbst übernimmt, hilft das
+  nicht; er hätte den Serverschlüssel und tauschte `crypto.js` mit. Diese
+  Grenze nennt das Bedrohungsmodell.
+- **Der Abgleich beim Entsperren** ist der zweite Riegel: Der Browser leitet
+  aus dem privaten Teil den öffentlichen ab und vergleicht ihn mit dem, den
+  der Server ausliefert. Weicht er ab, steht oben auf der Seite eine
+  Meldung, und der Server protokolliert `kontopaar_abweichung` und meldet es
+  im Reiter System.
+- **Die Kopplung liefert den Schlüssel an das Gerät** (`pair.php`,
+  JSON-Vertrag 1a): `kontoschluessel` in der Antwort auf `bestaetigen` und
+  auf `status` (`gekoppelt`), 65 Byte SEC1 in Base64, oder `null`, solange
+  das Konto noch kein Paar hat. Beide Antworten tragen ihn, weil beide Geräte
+  die Kopplung auch über `status` abschließen. Uhr und Handy werten das Feld
+  erst mit S11-08 und S11-09 aus; heutige Fassungen übergehen es.
+- **Die Gerätehülle steht in `crypto.js`** (`geraetehuelleVerschliessen`,
+  `geraetehuelleOeffnen`), byte-gleich mit der Referenz aus S11-02. Noch
+  verschließt sie nichts; das beginnt mit S11-04.
+- **Der Schlüsselwechsel hüllt das Siegel mit um** — ein neuer Zweck
+  `kontopaar` neben Zweitfaktor, Backup-Zielen, Konto-Backups und Archiven.
+  Die Betriebsseiten nennen die Kontoschlüssel unter dem, was der
+  Serverschlüssel versiegelt.
+
+### Bewusst so
+
+- **Ersetzt wird ein Paar nicht.** Ein zweites machte jede Hülle unter dem
+  ersten unlesbar; `api/kontopaar.php` antwortet 409. Einen Weg zum
+  Ersetzen gibt es erst, wenn ein Anlass ihn verlangt.
+
 ## [Werkzeug: Die Kette läuft auf Ubuntu 26.04 (Nr. 236)] — 2026-10-11
 
 **Alle zehn `runs-on`-Zeilen nennen jetzt `ubuntu-26.04` statt

@@ -36,6 +36,14 @@ const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await chromium.launch();
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
+/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+   Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
+   und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
+   eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
+     Abbruch schriebe einen Fehler in die Konsole. Gemessen wird er in seiner
+     eigenen Probe. */
+await kontext.route('**/api/wartungslauf.php', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '{"ok":true,"spuren":[],"aufzeichnungen":0,"diensttage":0}' }));
 const seite = await kontext.newPage();
 const konsole = [];
 seite.on('console', m => { if (m.type() === 'error' && !KACHELFEHLER.test(m.text())) konsole.push(m.text()); });

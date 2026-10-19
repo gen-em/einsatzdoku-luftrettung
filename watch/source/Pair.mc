@@ -96,6 +96,18 @@ class PairSpaeterCb {
     function fire() as Void { Pair.spaeterAblehnen(); }
 }
 
+/* Traeger fuer das Nachholen des Kontoschluessels (S11-08, E-S11-79). Er
+ * traegt die Geraetekennung, mit der gefragt wurde: Wird zwischen Frage und
+ * Antwort getrennt oder neu gekoppelt, gehoert die Antwort zu einer Kopplung,
+ * die es nicht mehr gibt, und darf keinen Schluessel ablegen. */
+class SchluesselCb {
+    var _fuer as Lang.String;
+    function initialize(fuer as Lang.String) { _fuer = fuer; }
+    function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
+        Pair.onSchluessel(_fuer, code, data);
+    }
+}
+
 class UnpairCb {
     function initialize() { }
     function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
@@ -252,6 +264,16 @@ module Pair {
         _warnung = null;              // ein neuer Anlauf erbt keine alte Vormerkung
         if (!Uploader.hasCredentials()) { sitzungStarten(); return; }
 
+        /* GEKOPPELT, ABER OHNE KONTOSCHLUESSEL: holen statt neu koppeln
+         * (S11-08, E-S11-79, F-S11-80). Neu koppeln setzte Trennen voraus,
+         * und das verweigert die Uhr unten, solange ein Rueckstand besteht —
+         * ohne Schluessel aber kann sie den Rueckstand nicht senden. Eine
+         * Sackgasse. `pair.php status` beantwortet jede gekoppelte Uhr mit
+         * dem Schluessel ihres Kontos; mit den eigenen Zugangsdaten gefragt,
+         * ist es DASSELBE Konto, und der Rueckstand geht dorthin, wo er
+         * hingehoert. Abgemeldet geht es nicht — dann hilft nur Neukoppeln. */
+        if (!Uploader.abgemeldet && !Huelle.hatSchluessel()) { schluesselHolen(); return; }
+
         var offen = Model.backlogCount();
         if (offen > 0) {
             status = "Erst " + offen.toString()
@@ -283,6 +305,76 @@ module Pair {
             : "Kopplung trennen und neu koppeln?";
         WatchUi.pushView(new WatchUi.Confirmation(frage),
                          new TrennenDelegate(), WatchUi.SLIDE_LEFT);
+    }
+
+    /* Den Kontoschluessel nachholen (E-S11-79). Eine Anfrage, kein Takt:
+     * Wer die Taste haelt, bekommt die Antwort auf der Sync-Seite. */
+    var _holtSchluessel as Lang.Boolean = false;
+
+    function schluesselHolen() as Void {
+        if (_holtSchluessel) { return; }          // zweiter Druck waehrend der Anfrage
+        var cred = Uploader.credentials();
+        var base = Uploader.serverBase();
+        if (cred == null || base.length() == 0) { return; }
+        _holtSchluessel = true;
+        status = "Hole Schlüssel…";
+        statusHint = null;
+        statusKind = :busy;
+        WatchUi.requestUpdate();
+        var cb = new SchluesselCb(cred["d"] as Lang.String);
+        Communications.makeWebRequest(
+            base + "pair.php",
+            { "aktion" => "status" },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => {
+                    "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON,
+                    "X-Device-Id"  => cred["d"],
+                    "X-Api-Key"    => cred["k"]
+                },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            cb.method(:onResponse));
+    }
+
+    function onSchluessel(fuer as Lang.String, code as Lang.Number,
+                          data as Lang.Object or Null) as Void {
+        _holtSchluessel = false;
+        var cred = Uploader.credentials();
+        // Inzwischen getrennt oder anders gekoppelt: Die Antwort gehoert nicht
+        // mehr zu dieser Uhr.
+        if (cred == null || !fuer.equals(cred["d"] as Lang.String)) { return; }
+        var dict = (data instanceof Lang.Dictionary) ? data : null;
+        if (code == 200 && dict != null && "gekoppelt".equals(dict["zustand"])) {
+            if (Huelle.schluesselSetzen(dict["kontoschluessel"])) {
+                status = "Schlüssel geholt";
+                statusHint = null;
+                statusKind = :ok;
+                WatchUi.requestUpdate();
+                Uploader.syncAll();           // der Rueckstand darf jetzt hinaus
+                return;
+            }
+            /* Das Konto hat noch kein Schluesselpaar — es entsteht beim
+             * naechsten Entsperren im Browser (pair.php, S11-03). */
+            status = "Erst im Web anmelden";
+            statusHint = null;
+            statusKind = :error;
+        } else if (code == 401 || code == 403) {
+            /* Das Geraet gibt es nicht mehr oder es ist inaktiv — derselbe
+             * Zustand wie beim Upload (Backlog Nr. 159), derselbe Weg. */
+            Uploader.abgemeldet = true;
+            status = null;
+            statusHint = null;
+        } else if (code < 0) {
+            status = "Keine Verbindung";
+            statusHint = "Telefon in Reichweite?";
+            statusKind = :error;
+        } else {
+            status = "Schlüssel: Fehler " + code.toString();
+            statusHint = null;
+            statusKind = :error;
+        }
+        WatchUi.requestUpdate();
     }
 
     /* Die Kopplung zurueckgeben. Der Server loescht das Geraet, damit es
@@ -328,6 +420,8 @@ module Pair {
         Uploader.alleGeparktenVerwerfen();
         Uploader.abgemeldet = false;
         Storage.deleteValue("cred");
+        // Der Kontoschluessel gehoert zur Kopplung und geht mit (S11-08).
+        Huelle.schluesselLoeschen();
         try {
             Properties.setValue("deviceId", "");
             Properties.setValue("apiKey", "");
@@ -638,7 +732,7 @@ module Pair {
                  * (E-S5-15). Ohne diesen Zweig haenge die Kopplung an einem
                  * einzigen Funkpaket: Der Server haette ein Geraet, von dem
                  * die Uhr nichts weiss. */
-                _fertig();
+                _fertig(dict);
                 return;
             }
             // "offen": nichts zu tun. Der Code steht weiter, die Restzeit
@@ -761,12 +855,12 @@ module Pair {
         var dev = _dev;
         if (dev == null || !fuer.equals(dev)) { return; }
 
+        var dict = (data instanceof Lang.Dictionary) ? data : null;
         if (code == 200) {
-            _fertig();
+            _fertig(dict);
             return;
         }
 
-        var dict = (data instanceof Lang.Dictionary) ? data : null;
         var fehler = (dict != null && dict["error"] instanceof Lang.String)
                      ? dict["error"] as Lang.String : null;
 
@@ -871,8 +965,15 @@ module Pair {
     }
 
     /* Geschafft: Die Zugangsdaten sind ab jetzt gueltig und duerfen — erst
-     * jetzt — in den Speicher (E-S5-22). */
-    function _fertig() as Void {
+     * jetzt — in den Speicher (E-S5-22).
+     *
+     * MIT IHNEN DER KONTOSCHLUESSEL (S11-08, pair.php `kontoschluessel`).
+     * Beide Wege hierher tragen ihn — `bestaetigen` und `status` mit
+     * "gekoppelt" —, weil die Kopplung ueber beide zustande kommen kann.
+     * Fehlt er (`null`: das Konto hat noch kein Schluesselpaar, es entsteht
+     * beim naechsten Entsperren im Browser), ist die Uhr trotzdem gekoppelt,
+     * sendet aber nicht; die Meldung sagt das, statt "Gekoppelt" in Gruen. */
+    function _fertig(dict as Lang.Dictionary or Null) as Void {
         var dev = _dev;
         var key = _key;
         if (dev == null || key == null) { return; }
@@ -881,6 +982,17 @@ module Pair {
         Storage.setValue("cred", { "d" => dev, "k" => key }
                          as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
         Uploader.lastError = null;
+        var ks = (dict != null) ? dict["kontoschluessel"] : null;
+        if (!Huelle.schluesselSetzen(ks)) {
+            /* Gekoppelt IST sie — das sagt die erste Zeile, gruen. Dass der
+             * Schluessel fehlt und welche Taste ihn holt, sagt die Sync-Seite
+             * darunter selbst ("Kein Schlüssel" / "Holen: …"); hier steht nur,
+             * was VORHER geschehen muss, sonst holt die Taste wieder nichts.
+             * Bis zum ersten Simulatorlauf stand hier "Gekoppelt, kein
+             * Schlüssel" in Rot — und die Seite sagte es zweimal. */
+            _sitzungBeenden("Gekoppelt", "Erst im Web anmelden", :ok);
+            return;
+        }
         // ohne Haken-Glyph (Geraeteschrift kennt es nicht)
         _sitzungBeenden("Gekoppelt", null, :ok);
     }

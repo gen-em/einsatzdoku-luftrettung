@@ -120,7 +120,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzt.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
-| 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R78) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | 12 (das Bedrohungsmodell liegt vor); **vor der Öffnung** | neu, nach K1 (Skizze SP-9 in `Vorbereitung-Sicherheitspaket.md`, Vorstudie `Konzept-V1-Ortsdaten.md`, Bedrohungsmodell aus 12) | offen — nach 12 |
+| 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R78) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | 12 (das Bedrohungsmodell liegt vor); **vor der Öffnung** | `docs/konzepte/Konzept-S11-Ortsdaten-Weg-B.md` (Kürzel S11, Opus, E-S11-01), Prüfdokument daneben | freigegeben — 11.10.2026 auf `ccr-dd33b6e8-ismfm0`; Umsetzung ab S11-01 |
 | 12b | **P6 — Stücke 2 bis 12: Review und Bereinigung** | Bug- und Sicherheitsreview mit Fable über den Stand nach S11 (R17, R69, R86) — auch Uhr- und Android-Krypto, SPUR2, Browser-Spurfunktionen; Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); R5-Ausnahmeliste | 12a gemergt | `docs/konzepte/Review-R17.md` (Fortsetzung aus 12); Paketschnitt nach der Freigaberunde | offen — nach 12a |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
@@ -137,16 +137,16 @@ AES-256-CBC, HMAC-SHA256; kein GCM); `seq` und Zeitstempel bleiben Klartext.
 **Preis:** Ausdünnung Stufe 3, GPX-Abruf, Schneiden, Verschieben, Ortshöhe
 und Zusammenführung wandern in den Browser oder entfallen; SPUR2 als Liste
 versiegelter Stücke, weiter nur über `spur_lib.php`; Vertrag, Uhr- und
-Android-Code, Backup Fassung 4. **Altbestand:** ein Einmalwerkzeug im Browser
+Android-Code, die nächste Nutzlastfassung der Sicherung. **Altbestand:** ein Einmalwerkzeug im Browser
 für das eine Konto vor der Öffnung, danach entfernt. **Rang:** Web, Uhr,
-Android Haupt. S11 baut auf `store => 'pat'` (E-S9-01) auf.
+Android Haupt. Die Webfelder gehen über `store => 'pat'` (E-S9-01) in den `pat_blob`; die Gerätedaten liegen in einer eigenen Hülle, weil das Gerät den Inhaltsschlüssel nicht hat (E-S11-12).
 
 ### Schritt 12b — P6, Stücke 2 bis 12: Review und Bereinigung
 
 **Ziel:** sauberer Code, Verhalten unverändert außer bei Funden. Der
 **Bug- und Sicherheitsreview mit Fable** (R17, R69) liest den Stand **nach
 S11** in elf Stücken — auch die Krypto auf Uhr und Handy, SPUR2, die
-Spurfunktionen im Browser und Backup Fassung 4 —, damit der Code genau
+Spurfunktionen im Browser und die neue Nutzlastfassung der Sicherung —, damit der Code genau
 einmal und in seiner Endfassung gelesen wird (R86). **Kommentardurchgang:**
 keine Verweise auf Beschlüsse, Nummern, Fassungen oder Konzepte mehr im
 Code (R13, R31). **Freigaberunde:** die Betreiberin entscheidet je Fund;
@@ -171,7 +171,7 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 | jetzt parallel möglich | nicht parallel |
 |---|---|
 | Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 12a → 12b → 13 → 14 nacheinander, nichts parallel (R71, R86) |
-| — | S11 (12a) baut auf `store => 'pat'` (E-S9-01) auf, nicht daneben |
+| — | S11 (12a): Webfelder über `store => 'pat'` (E-S9-01), Gerätedaten in der Gerätehülle daneben (E-S11-12) |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
 (K7); nach jeder Migration `update.php`; nach einem fremden Merge nimmt jeder

@@ -343,6 +343,9 @@ const PROTOKOLL_ARTEN = [
     /* Verwaltung — neu mit Konzept RW (RW-02, E-RW-14) */
     'rueckweg_angelegt'         => ['Rückweg eingerichtet', 'neutral'],
     'rueckweg_erneuert'         => ['Rückweg erneuert', 'neutral'],
+    /* Verwaltung — neu mit S11-03 (Konzept S11 3.1, E-S11-14) */
+    'kontopaar_angelegt'        => ['Kontoschlüssel angelegt', 'neutral'],
+    'kontopaar_abweichung'      => ['Kontoschlüssel weicht ab', 'orange'],
     /* Verwaltung — neu mit Schritt 18 (SR-02, E-SR-07, -17) */
     'zweitfaktor_geraet_gemerkt'    => ['Gerät gemerkt', 'neutral'],
     'zweitfaktor_geraete_vergessen' => ['Geräte vergessen', 'neutral'],
@@ -575,6 +578,7 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'totp_eingerichtet', 'totp_codes_erneuert', 'totp_ausgeschaltet',
                          'totp_zurueckgesetzt', 'totp_code_benutzt',
                          'rueckweg_angelegt', 'rueckweg_erneuert',
+                         'kontopaar_angelegt', 'kontopaar_abweichung',
                          'zweitfaktor_geraet_gemerkt', 'zweitfaktor_geraete_vergessen',
                          'passkey_angelegt', 'passkey_entfernt', 'passkey_zaehler',
                          'passkey_abgewiesen',

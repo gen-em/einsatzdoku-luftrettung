@@ -4,17 +4,16 @@ require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';
 require_once __DIR__ . '/../diensttag_lib.php';
 require_once __DIR__ . '/../spur_lib.php';
-require_once __DIR__ . '/../gpx_lib.php';
 
 /**
  * GPX-Import (S4/A3, E-S4-18).
  *
  * POST api/gpx_import.php   JSON-Body, Header X-CSRF wie bei api/day.php
  *
- *   { day_id: 26,
- *     ziel:   'ruhe' | 'einsatz',
- *     xml:    '<?xml ...>',        der Dateiinhalt als Zeichenkette
- *     name:   'Dateiname.gpx' }  nur fuer die Rueckmeldung, optional
+ *   { day_id:     26,
+ *     ziel:       'ruhe' | 'einsatz',
+ *     client_ref: 'imp-' + 24 Hexzeichen,   vom Browser gezogen
+ *     stuecke:    [{seq_from, punkte, ts_von, ts_bis, huelle}, …] }
  *
  * WOFUER. Das Gegenstueck zum GPX-Abruf (S2/AP4). Eine Spur, die auf einem
  * anderen Geraet entstanden ist — ein Wanderuhr-Track, ein Export aus einer
@@ -28,19 +27,21 @@ require_once __DIR__ . '/../gpx_lib.php';
  *   einsatz   Die Datei IST genau ein Einsatz. Sie wird unmittelbar einer,
  *             die Phasenzeiten traegt man danach im Formular nach.
  *
- * DIE DATEI WIRD AUF DEM SERVER GELESEN, nicht im Browser — anders als beim
- * CSV-Import. Der Grund ist der Unterschied der beiden Faelle: Beim CSV
- * stehen PatientInnendaten in der Datei, die der Server nie sehen darf, also
- * muss der Browser lesen. Eine GPX-Datei enthaelt nichts Verschluesseltes.
- * Und die Ablehnungsregeln — allen voran „`time` ist Pflicht" — sind
- * verbindlich; eine verbindliche Regel im Browser ist keine.
+ * SEIT S11-05d LIEST DER BROWSER DIE DATEI (`assets/gpx.js`) und schickt
+ * die Punkte als verschlossene Stuecke (SPUR2) — wie jede andere Spur seit
+ * S11-04. Bis Web 22.2.0 las der Server die Zeichenkette (`gpx_lesen()`)
+ * und legte die Punkte im Klartext ab; die Begruendung damals war, eine
+ * GPX-Datei enthalte nichts Verschluesseltes. Seit Schritt 12a ist die Spur
+ * selbst das, was verschluesselt wird (R78), und der Server darf sie nicht
+ * mehr sehen. DER PREIS: Die Ablehnungsregeln (`time` ist Pflicht, kein
+ * DOCTYPE, Koordinaten im Bereich) stehen jetzt im Browser und sind damit
+ * eine Bequemlichkeit, keine Schranke. Was der Server noch haelt, ist die
+ * Form der Stuecke (`pruef_spurstueck()`), die Menge und die Kennung — eine
+ * Hülle, die sich nicht oeffnen laesst, schadet nur dem eigenen Konto.
  *
- * DER EINGANG IST EINE ZEICHENKETTE IM JSON-KOERPER und kein Dateiupload.
- * Diese Anwendung hat nirgends ein `$_FILES`; ein erster Upload-Weg braechte
- * `upload_max_filesize`, `post_max_size`, temporaere Verzeichnisse und deren
- * Rechte mit — vier Stellschrauben auf geteiltem Hosting fuer einen Vorgang,
- * den eine Zeichenkette genauso traegt. Der Browser liest die Datei mit
- * `FileReader`, wie beim CSV-Import.
+ * DER CLIENT_REF KOMMT VOM BROWSER, weil die Huellen an ihn gebunden sind
+ * (Bindung art|client_ref|platz, E-S11-08) und der Browser verschliesst,
+ * bevor er fragt. Der Server prueft Form und Eindeutigkeit.
  */
 
 try {
@@ -75,34 +76,51 @@ try {
                   'meldung' => 'Der Diensttag liegt im Papierkorb. Erst wiederherstellen.'], 409);
     }
 
-    /* ---- Die Datei lesen --------------------------------------------------
-     *
-     * `gpx_lesen()` wirft mit einem Satz, der einer BedienerIn etwas sagt; er
-     * geht unveraendert in die Meldung. Das ist Absicht: Eine Meldung wie
-     * „Import fehlgeschlagen" liesse jemanden dreimal dieselbe Datei
-     * hochladen, ohne je zu erfahren, dass ihr die Zeitstempel fehlen. */
-    $xml = (string)($b['xml'] ?? '');
-    try {
-        $gelesen = gpx_lesen($xml, $pruef);
-    } catch (InvalidArgumentException $ex) {
-        json_out(['error' => 'gpx', 'meldung' => $ex->getMessage()], 422);
+    /* ---- Kennung und Stuecke ------------------------------------------- */
+    $ref = (string)($b['client_ref'] ?? '');
+    if (!preg_match('/^imp-[0-9a-f]{24}$/', $ref)) {
+        json_out(['error' => 'eingabe', 'meldung' => 'Die Kennung der Aufzeichnung fehlt.'], 400);
     }
-
-    $punkte = $gelesen['punkte'];
-    $vonTs  = (int)$punkte[0][4];
-    $bisTs  = (int)$punkte[count($punkte) - 1][4];
-    $von    = gmdate('Y-m-d H:i:s', $vonTs);
-    $bis    = gmdate('Y-m-d H:i:s', $bisTs);
+    $roh = $b['stuecke'] ?? null;
+    if (!is_array($roh) || !$roh || count($roh) > LIMIT_TRACKPUNKTE_SPUR) {
+        json_out(['error' => 'eingabe', 'meldung' => 'Die GPS-Daten kamen nicht vollständig an.'], 400);
+    }
+    $stuecke = []; $summe = 0; $vonTs = PHP_INT_MAX; $bisTs = 0;
+    foreach (array_values($roh) as $i => $t) {
+        $st = pruef_spurstueck($t, 'stuecke[' . $i . ']', $pruef);
+        if ($st === null) {
+            json_out(['error' => 'eingabe', 'meldung' => 'Ein Stück der GPS-Daten ist unbrauchbar: '
+                      . ($pruef->text() ?: 'Stück unvollständig') . '. Es wurde nichts übernommen.'], 400);
+        }
+        $summe += $st['punkte'];
+        $vonTs = min($vonTs, $st['ts_von']);
+        $bisTs = max($bisTs, $st['ts_bis']);
+        $stuecke[] = $st;
+    }
+    if ($summe > LIMIT_TRACKPUNKTE_SPUR) {
+        json_out(['error' => 'gpx', 'meldung' => 'Die Datei hat mehr als '
+                  . LIMIT_TRACKPUNKTE_SPUR . ' Punkte.'], 422);
+    }
+    $von = gmdate('Y-m-d H:i:s', $vonTs);
+    $bis = gmdate('Y-m-d H:i:s', $bisTs);
 
     /* ---- Und jetzt in EINEM Zug ------------------------------------------ */
     try {
         [$id, $typ] = db_transaktion($pdo, function (PDO $pdo) use ($userId, $ziel, $dayId,
-                                                                    $von, $bis, $punkte): array {
+                                                                    $von, $bis, $ref,
+                                                                    $stuecke): array {
         $devId = geraet_virtuell_sicherstellen($pdo, $userId);
         /* `imp-` WIE BEIM UEBRIGEN IMPORT (E-S4-18). Daran haengt die
          * Sperrliste: Ein geloeschter Eintrag mit dieser Kennung wird von
-         * `ingest.php` nicht wieder angelegt (`deleted_refs`). */
-        $ref = 'imp-' . bin2hex(random_bytes(12));
+         * `ingest.php` nicht wieder angelegt (`deleted_refs`). Doppelt
+         * vergeben ist sie nur, wenn derselbe Ruf zweimal kommt — dann
+         * lieber nein als zweimal dieselbe Spur. */
+        $tabelle = $ziel === 'einsatz' ? 'missions' : 'rest_segments';
+        $dop = $pdo->prepare('SELECT 1 FROM ' . $tabelle . ' WHERE user_id = ? AND client_ref = ?');
+        $dop->execute([$userId, $ref]);
+        if ($dop->fetchColumn()) {
+            throw new DomainException('doppelt');
+        }
 
         if ($ziel === 'einsatz') {
             $pdo->prepare("INSERT INTO missions
@@ -122,17 +140,13 @@ try {
             $typ = 'rest';
         }
 
-        /* ALS BLOB UND NICHT ALS ZEILEN. Eine importierte Spur ist fertig —
-         * es kommt nichts mehr nach, denn ihr „Geraet" ist eine Datei. Sie
-         * gleich verdichtet abzulegen erspart dem Verdichtungsjob einen Lauf
-         * und der Datenbank 62,4 Byte je Punkt (S2). `n_original` ist die
-         * volle Punktzahl: Es ist zugleich die Fortsetzungsmarke, und eine
-         * Nachlieferung unter derselben Kennung gaebe es nur, wenn jemand
-         * dieselbe Datei ein zweites Mal importiert — dann soll sie NICHT
-         * hinter die vorhandene gehaengt werden. */
-        spur_blob_schreiben($pdo, $typ, $id,
-            spur_kodieren($punkte, SPUR_STUFE_ROH, count($punkte)),
-            SPUR_STUFE_ROH, count($punkte), count($punkte));
+        /* ALS STUECKE (SPUR2, S11-05d). Bis Web 22.2.0 ein SPUR1-Blob im
+         * Klartext; die Begruendung „fertig, also gleich verdichtet" gilt
+         * weiter — Stufe 1, nichts kommt nach. */
+        foreach ($stuecke as $st) {
+            spur2_stueck_schreiben($pdo, $typ, $id, $st['seq_from'], $st['punkte'],
+                                   $st['ts_von'], $st['ts_bis'], $st['huelle']);
+        }
 
         /* Der Diensttag muss umschliessen, was an ihm haengt
          * (JSON-Vertrag 4.4) — dieselbe Regel wie beim Nachtragen und beim
@@ -140,25 +154,19 @@ try {
         dt_zeitraum_fortschreiben($pdo, $dayId, $von, $bis);
         return [$id, $typ];
         });
+    } catch (DomainException $ex) {
+        json_out(['error' => 'doppelt',
+                  'meldung' => 'Diese Datei ist schon übernommen.'], 409);
     } catch (Throwable $ex) {
         json_fehler($ex, 'gpx_import');
     }
 
-    if ($typ === 'mission') {
-        try {
-            require_once __DIR__ . '/../site_elevation_lib.php';
-            compute_site_elevation($pdo, $id);
-        } catch (Throwable $ex) { /* Komfortwert, bewusst still */ }
-    }
-
-    $antwort = ['ok' => true, 'art' => $typ, 'id' => $id,
-                'punkte' => count($punkte), 'segmente' => $gelesen['segmente'],
+    /* Hier stand bis Web 22.2.0 `compute_site_elevation()`; die Hoehe des
+     * Einsatzorts entsteht seit S11-05b im Browser. Was nicht mitkam
+     * (Punkte ohne Zeit, unbrauchbare Koordinaten), nennt jetzt der Browser
+     * — er hat die Datei gelesen. */
+    $antwort = ['ok' => true, 'art' => $typ, 'id' => $id, 'punkte' => $summe,
                 'von' => fmt_local($von), 'bis' => fmt_local($bis)];
-    /* WAS NICHT MITKAM, WIRD GENANNT — auch wenn der Import gelungen ist.
-     * Eine Datei, von der die Haelfte der Punkte keine Zeit hatte, ist
-     * angekommen und trotzdem nicht das, was jemand erwartet hat. */
-    if ($gelesen['ohne_zeit'] > 0) { $antwort['ohne_zeit'] = $gelesen['ohne_zeit']; }
-    if ($gelesen['verworfen'] > 0) { $antwort['verworfen'] = $gelesen['verworfen']; }
     if (!$pruef->sauber()) { $antwort['rejected'] = $pruef->nachUrsache(); }
     json_out($antwort);
 } catch (Throwable $ex) {

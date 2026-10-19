@@ -177,6 +177,23 @@
       return zwei(Math.floor(m / 60)) + ':' + zwei(m % 60);
     },
 
+    /**
+     * Uhrzeit 'HH:MM' eines Zeitpunkts in Epochensekunden, in der Zeitzone
+     * der Anlage (`tz`, `app.timezone`) -- wie `fmt_local()` auf dem Server.
+     *
+     * SEIT S11-04c: Die Zeiten der Reanimation stehen in der Einsatzhuelle
+     * (relativ zum Beginn), und nur der Browser kennt sie; frueher formatierte
+     * sie der Server. Eine Stelle fuer diese Rechnung, nicht eine je Seite.
+     */
+    uhrzeit: function (epochSekunden, tz, leer) {
+      if (epochSekunden == null || isNaN(Number(epochSekunden))) {
+        return leer === undefined ? '' : leer;
+      }
+      return new Intl.DateTimeFormat('de-DE', {
+        timeZone: tz || undefined, hour: '2-digit', minute: '2-digit', hour12: false
+      }).format(new Date(Number(epochSekunden) * 1000));
+    },
+
     /** Dauer als nackte Minutenzahl -- ebenfalls fuer Ausgabedateien. */
     minuten: function (sekunden, leer) {
       if (sekunden == null || !(sekunden >= 0)) {
@@ -217,6 +234,58 @@
         return leer === undefined ? '' : leer;
       }
       return EdFormat.zahl(Math.round(Number(meter) / 1000), 0);
+    },
+
+    /**
+     * Die Gegenrichtung zu `uhrzeit()`: Datum und „HH:MM" in der Zeitzone
+     * der Anlage, plus `versatz` Tage, als Unix-Sekunden — oder null.
+     *
+     * WOFUER (S11-05b). Die Zeiten der Reanimation stehen seit S11 nur in
+     * der Einsatzhuelle, als Sekunden seit Einsatzbeginn (E-S11-40), und die
+     * Huelle verschliesst der Browser. Er muss deshalb aus den Eingaben des
+     * Formulars dieselben Zeitpunkte rechnen wie der Server mit
+     * `local_to_utc()` (db.php) — dieselbe Regel, nicht eine aehnliche.
+     *
+     * DIE ZEITUMSTELLUNG BILDET PHP NACH, auch wo PHP uneinheitlich ist
+     * (gemessen am 15.10.2026, PHP 8.4, Europe/Berlin):
+     *   - Luecke im Fruehjahr (02:30 gibt es nicht): eine Stunde vor, mit
+     *     dem Versatz VOR der Umstellung — 02:30 wird 01:30 UTC.
+     *   - Doppelte Stunde im Herbst, direkt gerechnet: die SPAETERE
+     *     (Winterzeit) — 25.10. 02:30 wird 01:30 UTC.
+     *   - Dieselbe Stunde ueber „+1 Tag" erreicht: PHP behaelt den Versatz
+     *     des Ausgangstags — 24.10. 02:30 +1 Tag wird 00:30 UTC.
+     * Wer das „vereinfacht", rechnet in zwei Naechten im Jahr anders als der
+     * Server; das Formular schickt deshalb die Phasenzeiten mit, und der
+     * Server vergleicht (einsatz_form.php). Die Ortsdatenprobe faehrt die
+     * Faelle gegen PHP.
+     */
+    ortszeitZuEpoch: function (datum, hhmm, versatz, tz) {
+      const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum || '');
+      const t = /^(\d{2}):(\d{2})$/.exec(hhmm || '');
+      if (!d || !t || Number(t[1]) > 23 || Number(t[2]) > 59) { return null; }
+      const fmt = new Intl.DateTimeFormat('en-US', { timeZone: tz || undefined, hourCycle: 'h23',
+        year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+      const wand = (s) => {
+        const p = {};
+        fmt.formatToParts(new Date(s * 1000)).forEach((x) => { p[x.type] = Number(x.value); });
+        return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) / 1000;
+      };
+      const versatzBei = (s) => wand(s) - s;
+      const waehle = (naiv, bevorzugt) => {
+        const vorher = versatzBei(naiv - 86400);
+        const gueltig = [...new Set([vorher, versatzBei(naiv + 86400)])]
+          .map((o) => naiv - o).filter((s) => wand(s) === naiv).sort((a, b) => a - b);
+        if (gueltig.length === 0) { return naiv - vorher; }
+        if (gueltig.length > 1 && bevorzugt != null) {
+          const treffer = gueltig.find((s) => versatzBei(s) === bevorzugt);
+          if (treffer != null) { return treffer; }
+        }
+        return gueltig[gueltig.length - 1];
+      };
+      const naiv = Date.UTC(Number(d[1]), Number(d[2]) - 1, Number(d[3]), Number(t[1]), Number(t[2])) / 1000;
+      const s0 = waehle(naiv, null);
+      if (!versatz) { return s0; }
+      return waehle(naiv + versatz * 86400, versatzBei(s0));
     },
   };
 

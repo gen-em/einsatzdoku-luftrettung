@@ -6,8 +6,7 @@ Filter — jede getroffene Regel steht mit Anzahl und Grund im Bericht.
 ## Aufruf
 
 Keiner von Hand: `kreislauf.py --art <art>` reicht `<art>_umlauf.json` an
-`vergleichen.py` weiter (`--ausnahmen`). Drei Listen: `csv`, `edbak`,
-`edbak-alt`.
+`vergleichen.py` weiter (`--ausnahmen`). Listen: `csv`, `edbak`, `edbak-alt`.
 
 ## Was es misst
 
@@ -19,6 +18,7 @@ Die Form einer Liste:
                 "feld": "herkunft",       // oder * für die ganze Zeile
                 "art": "wert",            // wert | fehlt | zusaetzlich (weglassbar)
                 "von": "uhr", "nach": "import",   // bekannter Übergang (weglassbar)
+                "gerundet": true,  // neu = alt ganzzahlig gerundet; dazu feld_regex statt feld
                 "begruendung": "…" } ] }          // PFLICHT
 ```
 

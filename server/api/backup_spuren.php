@@ -84,9 +84,41 @@ try {
      * (E-S1-01, Begruendung dort). Eine Spur, deren Einsatz im Papierkorb
      * liegt, gehoert also in das Backup. */
     $tabelle = $ownerType === 'mission' ? 'missions' : 'rest_segments';
-    $eigene = array_map(static fn($r) => (int)$r['id'], sql_in_bloecken($pdo,
-        "SELECT id FROM `$tabelle` WHERE user_id = ? AND id IN ({IDS})",
-        $ids, [$userId]));
+    $eigeneZeilen = sql_in_bloecken($pdo,
+        "SELECT id, client_ref FROM `$tabelle` WHERE user_id = ? AND id IN ({IDS})",
+        $ids, [$userId]);
+    $eigene = array_map(static fn($r) => (int)$r['id'], $eigeneZeilen);
+
+    /* DIE FORM `punkte` (S11-06a, Nutzlast 13, E-S11-56). Seit S11-04 liegt
+     * eine Spur verschlossen in Stuecken, die nur der Browser oeffnet; der
+     * Server kann daraus kein SPUR1 mehr bauen. Der Browser bekommt deshalb
+     * je Spur den Altbestand als Punkte ([seq, lat, lon, ele, ts], wie bis
+     * Nutzlast 7) und die Stuecke samt Kennung und Sperrzeiten, oeffnet sie
+     * und schreibt die Spur als Punktliste. Bis Web 22.4.0 kannte dieser
+     * Endpunkt nur SPUR1 — eine Spur aus Stuecken kam als `leer` zurueck und
+     * fehlte im Backup (F-S11-63). Die Form `blob` bleibt fuer das
+     * Konto-Backup der Verwaltung (S11-06c). */
+    if ((string)($b['form'] ?? '') === 'punkte') {
+        $refVon = [];
+        foreach ($eigeneZeilen as $r) { $refVon[(int)$r['id']] = (string)$r['client_ref']; }
+        $aus = [];
+        foreach ($eigene as $id) {
+            $aus[(string)$id] = ['punkte' => [], 'ref' => $refVon[$id] ?? '', 'stuecke' => [],
+                                 'sperren' => []];
+        }
+        foreach (spur_lesen_viele($pdo, $ownerType, $eigene) as $id => $punkte) {
+            foreach ($punkte as $p) {
+                $aus[(string)$id]['punkte'][] = [(int)$p[0], $p[1], $p[2], $p[3], (int)$p[4]];
+            }
+        }
+        foreach (spur2_lesen_viele($pdo, $ownerType, $eigene) as $id => $stuecke) {
+            $aus[(string)$id]['stuecke'] = $stuecke;
+            $aus[(string)$id]['sperren'] = array_map(
+                static fn($x) => ['von' => $x['von_ts'], 'bis' => $x['bis_ts']],
+                schnitte_lesen($pdo, $ownerType, (int)$id));
+        }
+        json_out(['spuren' => $aus ?: new stdClass()]);
+    }
 
     /* Fremde oder erfundene Kennungen fallen hier heraus. Sie werden NICHT
      * gemeldet: Der Browser hat die Liste aus dem Kern, den derselbe Server

@@ -7,8 +7,8 @@
       "feld": "version",
       "art": "wert",
       "von": "7",
-      "nach": "12",
-      "begruendung": "GEMESSEN 1x (zuletzt 25.09.2026). Die Nutzlastfassung steigt von 7 auf 12 — genau das ist der Zweck dieses Laufs. Die Zahl ist fuenfmal gewandert: bis Web 14.1.0 stand hier 8, mit Nutzlast 9 (Geraete-Momentaufnahme und Sperrvermerke, R64) eine 9, seit Web 16.0.0 (Typ und Kurzname am Rettungsmittel, E-S9-09) eine 10, und seit Web 19.0.0 (S9/AP7: die Notiz des Einsatzes wandert in den verschluesselten pat-Block) eine 11, und seit Web 21.0.0 (P5c/AP8: die Auswahl zentraler Standorte faellt aus `stammdaten`, R39) eine 12. Die Regel steht auf 'von 7', weil die Altformat-Referenz eingefroren bleibt: Sie IST der Beleg dafuer, dass eine alte Datei noch einspielbar ist. WER DIE ZAHL 12 AENDERT, aendert sie hier mit — sonst meldet der Lauf eine ungenutzte Regel und eine unerklaerte Abweichung zugleich, und das ist derselbe Befund zweimal. (Bis zum 16.09.2026 standen hier ZWEI Regeln: diese auf 'nach 10' und eine zweite ohne 'von' auf 'nach 11'. Die erste konnte nach S9/AP7 nicht mehr greifen, die zweite fing den Fall auf — der Lauf meldete deshalb 0 unerklaerte Abweichungen UND 1 ungenutzte Regel. Zusammengefasst zu einer, die beide Enden nennt.)"
+      "nach": "13",
+      "begruendung": "GEMESSEN 1x (zuletzt 16.10.2026). Die Nutzlastfassung steigt von 7 auf 13 — genau das ist der Zweck dieses Laufs. Die Zahl ist sechsmal gewandert: bis Web 14.1.0 stand hier 8, mit Nutzlast 9 (Geraete-Momentaufnahme und Sperrvermerke, R64) eine 9, seit Web 16.0.0 (Typ und Kurzname am Rettungsmittel, E-S9-09) eine 10, und seit Web 19.0.0 (S9/AP7: die Notiz des Einsatzes wandert in den verschluesselten pat-Block) eine 11, und seit Web 21.0.0 (P5c/AP8: die Auswahl zentraler Standorte faellt aus `stammdaten`, R39) eine 12, und seit Web 22.5.0 (S11-06: Orte und Reanimation offen im verschlossenen Kern, Spuren als Punktlisten, Loeschvermerke) eine 13. Die Regel steht auf 'von 7', weil die Altformat-Referenz eingefroren bleibt: Sie IST der Beleg dafuer, dass eine alte Datei noch einspielbar ist. WER DIE ZAHL 13 AENDERT, aendert sie hier mit — sonst meldet der Lauf eine ungenutzte Regel und eine unerklaerte Abweichung zugleich, und das ist derselbe Befund zweimal. (Bis zum 16.09.2026 standen hier ZWEI Regeln: diese auf 'nach 10' und eine zweite ohne 'von' auf 'nach 11'. Die erste konnte nach S9/AP7 nicht mehr greifen, die zweite fing den Fall auf — der Lauf meldete deshalb 0 unerklaerte Abweichungen UND 1 ungenutzte Regel. Zusammengefasst zu einer, die beide Enden nennt.)"
     },
     {
       "bereich": "kopf",
@@ -96,6 +96,70 @@
       "feld": "notes",
       "art": "zusaetzlich",
       "begruendung": "GEMESSEN 143x (71 Einsaetze, je zwei Haelften, dazu einer aus dem Papierkorb). S9/AP7, Nutzlast 11: Die Notiz des Einsatzes steht nicht mehr in der Klartextspalte `notes`, sondern als Schluessel `notes` im verschluesselten `pat`-Block. Der Umlauf zeigt deshalb ZWEI Abweichungen je Einsatz — die Spalte wird leer, der Blobschluessel kommt hinzu. GENAU DAS IST DER BELEG, dass der Text nicht verlorengeht, sondern umzieht: Beide Haelften tragen denselben Wortlaut. Die Referenzdatei stammt vom 07.09.2026 und beschreibt den alten Stand; sie wird NICHT neu erzeugt, weil eine frische Referenz jede echte Abweichung in den uebrigen 287 699 Vergleichen mit zudecken wuerde."
+    },
+    {
+      "bereich": "missions",
+      "feld": "transport_dest",
+      "art": "wert",
+      "nach": "None",
+      "begruendung": "S11-06 (Web 22.5.0): Das Transportziel liegt seit Web 22.1.0 im pat_blob; der Browser legt es beim Einspielen dorthin (S11-06b), die Spalte bleibt leer. Gegenstueck: die Regel `transport_dest zusaetzlich` unter `pat`. GEMESSEN 16.10.2026 am Altformat (Nutzlast 7): 72x."
+    },
+    {
+      "bereich": "missions",
+      "feld": "transport_dest",
+      "art": "zusaetzlich",
+      "schluessel_regex": "pat\\.transport_dest",
+      "begruendung": "S11-06 (Web 22.5.0): Gegenstueck zur leeren Spalte: dasselbe Ziel mit seinen Koordinaten als {addr, lat, lon} im Blob. GEMESSEN 16.10.2026 am Altformat (Nutzlast 7): 72x."
+    },
+    {
+      "bereich": "missions",
+      "feld": "dest_lat",
+      "art": "wert",
+      "nach": "None",
+      "begruendung": "S11-06 (Web 22.5.0): Die Zielkoordinate wandert mit dem Transportziel in den Blob. GEMESSEN 16.10.2026 am Altformat (Nutzlast 7): 68x."
+    },
+    {
+      "bereich": "missions",
+      "feld": "dest_lon",
+      "art": "wert",
+      "nach": "None",
+      "begruendung": "S11-06 (Web 22.5.0): Wie dest_lat. GEMESSEN 16.10.2026 am Altformat (Nutzlast 7): 68x."
+    },
+    {
+      "bereich": "missions",
+      "feld": "site_ele_m",
+      "art": "wert",
+      "nach": "None",
+      "begruendung": "S11-06 (Web 22.5.0): Die Ortshoehe liegt seit Web 22.1.0 im pat_blob (`ortshoehe`); der Browser legt sie beim Einspielen dorthin, der Server rechnet sie nicht mehr nach (F-S11-45). GEMESSEN 16.10.2026 am Altformat (Nutzlast 7): 79x."
+    },
+    {
+      "bereich": "missions",
+      "feld": "ortshoehe",
+      "art": "zusaetzlich",
+      "schluessel_regex": "pat\\.ortshoehe",
+      "begruendung": "S11-06 (Web 22.5.0): Gegenstueck zu site_ele_m: derselbe Wert im Blob. GEMESSEN 16.10.2026 am Altformat (Nutzlast 7): 78x (die 79. steht im Blob eines Einsatzes, der vorher keinen hatte — Regel `pat`)."
+    },
+    {
+      "bereich": "missions",
+      "feld": "pat",
+      "art": "wert",
+      "von": "None",
+      "begruendung": "S11-06 (Web 22.5.0): Ein Einsatz ohne geschuetzte Angaben bekommt einen Blob, weil seine Ortshoehe dorthin wandert. GEMESSEN 16.10.2026 am Altformat (Nutzlast 7): 1x."
+    },
+    {
+      "bereich": "rest_segments",
+      "feld": "loeschungen",
+      "art": "wert",
+      "von": "None",
+      "nach": "[]",
+      "begruendung": "S11-06 (Web 22.5.0): Nutzlast 13 traegt an jedem Segment seine Loeschvermerke (F-S11-52), leer erlaubt wie `schnitte` am Einsatz. Die Referenz kennt das Feld nicht. GEMESSEN 16.10.2026 am Altformat (Nutzlast 7): 100x."
+    },
+    {
+      "bereich": "*",
+      "feld_regex": "track\\[\\d+\\]\\[3\\]",
+      "art": "wert",
+      "gerundet": true,
+      "begruendung": "S11-06g (Web 22.5.1, E-S11-66): Die Hoehe eines Spurpunkts steht in der verschlossenen Innenform in ganzen Metern statt Dezimetern (F-S11-64). Die Altformat-Referenz traegt Dezimeter; der Umlauf legt die Punkte als Stuecke ab und sichert sie wieder — mit gerundeter Hoehe. Dieselbe Regel wie im Lauf `edbak`: NUR an der Hoehe (Index 3) und NUR, wenn der neue Wert genau der von der Null weg gerundete alte ist. Damit stimmt der Satz oben, die Punkte kaemen unveraendert zurueck, fuer Lage und Zeit weiter, fuer die Hoehe bis auf die Rundung. GEMESSEN 16.10.2026: 41 582x."
     }
   ]
 }

@@ -79,6 +79,17 @@ const DEMO_K_GEAENDERT = 'demo_geaendert';
  * zurueck. */
 const DEMO_NAME = 'Demo NutzerIn';
 
+/* DAS PASSWORT DES DEMO-KONTOS (S11-06d, E-S11-58). Es steht im Handbuch
+ * (Abschnitt Demo-Konto) und ist kein Geheimnis. Der Server braucht es seit
+ * S11 an genau einer Stelle: beim Zuruecksetzen, um mit dem Inhaltsschluessel
+ * des Demo-Kontos Transportziel und Ortshoehe in den `pat_blob` zu legen und
+ * ein Schluesselpaar anzulegen, falls noch keines da ist. Fuer jedes andere
+ * Konto kennt er weder Passwort noch Inhaltsschluessel, und keine Funktion
+ * hier nimmt ein anderes Konto entgegen (`demo_id()`). Passt es nicht zur
+ * Huelle der Fixture, bricht der Reset ab, statt still Klartext zu
+ * hinterlassen. */
+const DEMO_PASSWORT = 'nadokudemo0815';
+
 function demo_fixture_pfad(): string { return __DIR__ . '/demo/fixture.json.gz'; }
 
 function demo_fixture_vorhanden(): bool { return is_file(demo_fixture_pfad()); }
@@ -595,6 +606,14 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
     $pdo->prepare("DELETE tb FROM track_blobs tb
                    JOIN rest_segments r ON r.id = tb.owner_id
                    WHERE tb.owner_type = 'rest' AND r.user_id = ?")->execute([$id]);
+    // Und die Spurstuecke (S11-04a): Ein gekoppeltes Geraet des Demo-Kontos
+    // legt seit Web 22 Huellen hier ab, keine Zeilen mehr.
+    $pdo->prepare("DELETE ts FROM track_stuecke ts
+                   JOIN missions m ON m.id = ts.owner_id
+                   WHERE ts.owner_type = 'mission' AND m.user_id = ?")->execute([$id]);
+    $pdo->prepare("DELETE ts FROM track_stuecke ts
+                   JOIN rest_segments r ON r.id = ts.owner_id
+                   WHERE ts.owner_type = 'rest' AND r.user_id = ?")->execute([$id]);
 
     /* UND DIE SPERRVERMERKE DES SCHNITTS (Web 14.2.0, R64).
      *
@@ -625,10 +644,86 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
 }
 
 /**
+ * Der Inhaltsschluessel des Demo-Kontos (32 Byte), aus dem bekannten Passwort
+ * — dieselbe Rechnung wie `EdCrypto.deriveKeys()` und `huelleOeffnen()` fuer
+ * ein Konto ohne Server-Anteil: PBKDF2-SHA256 auf 512 Bit, die erste Haelfte
+ * oeffnet `pat_wrap_pw` (`edk1:`, AES-GCM), darin steht der Schluessel als
+ * Hex-Text.
+ */
+function demo_inhaltsschluessel(array $konto): string
+{
+    $haelfte = substr(hash_pbkdf2('sha256', DEMO_PASSWORT, (string)hex2bin((string)$konto['kdf_salt']),
+                                  (int)$konto['kdf_iter'], 64, true), 0, 32);
+    $ckHex = demo_edk1_oeffnen($haelfte, (string)$konto['pat_wrap_pw']);
+    if ($ckHex === null || !preg_match('/^[0-9a-f]{64}$/', $ckHex)) {
+        throw new RuntimeException('Das Demo-Passwort öffnet die Schlüsselhülle der Fixture '
+            . 'nicht. Passwort im Handbuch, DEMO_PASSWORT und Fixture gehören zusammen.');
+    }
+    return (string)hex2bin($ckHex);
+}
+
+/** `edk1:`-Chiffretext (AES-GCM, IV 12 Byte vorn, Tag 16 Byte hinten) oeffnen — oder null. */
+function demo_edk1_oeffnen(string $schluessel, string $text): ?string
+{
+    if (str_starts_with($text, 'edk1:')) { $text = substr($text, 5); }
+    $roh = base64_decode($text, true);
+    if ($roh === false || strlen($roh) < 12 + 16) { return null; }
+    $klar = openssl_decrypt(substr($roh, 12, -16), 'aes-256-gcm', $schluessel, OPENSSL_RAW_DATA,
+                            substr($roh, 0, 12), substr($roh, -16));
+    return $klar === false ? null : $klar;
+}
+
+/** Klartext zu `edk1:` — das Format von `EdCrypto.encrypt()`. */
+function demo_edk1_bauen(string $schluessel, string $klar): string
+{
+    $iv = random_bytes(12);
+    $tag = '';
+    $ct = openssl_encrypt($klar, 'aes-256-gcm', $schluessel, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
+    if ($ct === false) { throw new RuntimeException('AES-GCM gescheitert'); }
+    return 'edk1:' . base64_encode($iv . $ct . $tag);
+}
+
+/**
+ * Hat das Demo-Konto kein Schluesselpaar, legt der Server eines an
+ * (E-S11-58) — wie `EdKontopaar.anlegen()`: P-256, der oeffentliche Teil als
+ * SPKI, der private als PKCS8 unter dem Inhaltsschluessel. Ohne Paar liesse
+ * sich der Bestand nicht verschliessen, und eine frische Anlage zeigte keine
+ * Karte, bis sich jemand als Demo angemeldet hat.
+ */
+function demo_paar_sicherstellen(PDO $pdo, int $id, string $ck): void
+{
+    require_once __DIR__ . '/kontopaar_lib.php';
+    if (!demo_ist_demo($id)) {
+        throw new RuntimeException('demo_paar_sicherstellen() arbeitet nur auf dem Demo-Konto.');
+    }
+    if (kp_zustand($id, $pdo)['stand'] === 'da') { return; }
+    $k = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+    if ($k === false || !openssl_pkey_export($k, $pem)) {
+        throw new RuntimeException('Das Schlüsselpaar des Demo-Kontos ließ sich nicht erzeugen.');
+    }
+    $koerper = static fn(string $p): string => (string)preg_replace('/-----[^-]+-----|\s+/', '', $p);
+    $spki = $koerper((string)openssl_pkey_get_details($k)['key']);
+    $pkcs8 = $koerper((string)$pem);
+    if (!kp_ablegen($pdo, $id, $spki, demo_edk1_bauen($ck, $pkcs8))) {
+        throw new RuntimeException('Das Schlüsselpaar des Demo-Kontos ließ sich nicht ablegen.');
+    }
+}
+
+/**
  * Geraete und Bestand einspielen. Erwartet eine offene Transaktion.
+ *
+ * SEIT S11-06d VERSCHLOSSEN (E-S11-20): Orte, Reanimation und Spur der
+ * Fixture verschliesst `edbak_restore()` mit dem oeffentlichen Schluessel des
+ * Demo-Kontos ('server'), Transportziel und Ortshoehe legt der Rueckruf mit
+ * dem Inhaltsschluessel in den `pat_blob`. Der Bestand des Demo-Kontos traegt
+ * danach keine Klartext-Ortsdaten mehr — sonst verweigerte die Aufraeum-
+ * migration (S11-12) auf jeder Anlage mit Demo-Konto.
  */
 function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
 {
+    $ck = demo_inhaltsschluessel($fx['konto']);
+    demo_paar_sicherstellen($pdo, $id, $ck);
+
     /* Geraete VOR dem Bestand: `edbak_restore()` verknuepft die
      * Dienstkennungen (`day_refs`) ueber die oeffentliche Geraetekennung mit
      * einem Geraet DIESES Kontos. Fehlt es zu diesem Zeitpunkt, bleibt die
@@ -673,7 +768,20 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
         $geraete++;
     }
 
-    $stats = edbak_restore($id, $fx['daten']);
+    $blobZiel = static function (?string $blob, array $zusatz) use ($ck): string {
+        $pat = [];
+        if ($blob !== null) {
+            $klar = demo_edk1_oeffnen($ck, $blob);
+            if ($klar === null) {
+                throw new RuntimeException('Ein pat_blob der Fixture geht mit dem Inhaltsschlüssel '
+                    . 'des Demo-Kontos nicht auf.');
+            }
+            $pat = (array)json_decode($klar, true);
+        }
+        $pat += $zusatz;        // was der Blob schon trägt, bleibt
+        return demo_edk1_bauen($ck, (string)json_encode($pat, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    };
+    $stats = edbak_restore($id, $fx['daten'], null, 'server', $blobZiel);
     $stats['geraete'] = $geraete;
     return $stats;
 }

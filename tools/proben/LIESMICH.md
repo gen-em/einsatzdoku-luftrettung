@@ -1,6 +1,6 @@
 # Proben gegen die örtliche Installation
 
-Siebenundzwanzig Prüfungen gegen die laufende Anlage (E-PK-24).
+Neunundzwanzig Prüfungen gegen die laufende Anlage (E-PK-24).
 
 ## Aufruf
 
@@ -12,9 +12,9 @@ bash tools/proben/proben.sh <name> [zusatz…]   # alle · --liste
 
 `ingest` Annahme und Prüfschicht, seit SR-05 der erzwungene Deadlock · `spur` beide Spurablagen · `jobs` Hintergrundjobs und Register · `kopplung` Handy und Uhr ·
 `wartung` Wartungsmodus und Torwächter · `raten` Ratenschutz · `mail` Versand, Fehlerweg und Rundmail · `versand` Sicherungsziele ·
-`komplett` Komplettsicherung · `wiederherstellung` Rückweg · `gpx` Export gegen das Schema · `geraete` Gerätevertrag ·
+`komplett` Komplettsicherung · `wiederherstellung` Rückweg · `gpx` GPX bauen, lesen und importieren im Browser, gegen das Schema · `geraete` Gerätevertrag ·
 `verbindung` Verbindungsgrenze und Gedränge (`--frei 20`: ohne Enge, Nr. 210) · `anteil` Server-Anteil, seit SR-03 die Rückfrage nach der Rotation, seit H-SR-06 auch nach dem Neuanfang und die Waise · `rechtstexte` Texte gegen die Quelle · `freigabe` Schlüsselweitergabe ·
-`container` Format der Sicherungsdatei · `frist` Inhaltsschlüssel · `abmelden` was liegen bleibt · `csp-browser` Richtlinie zur Laufzeit ·
+`container` Format der Sicherungsdatei · `frist` Inhaltsschlüssel · `abmelden` was liegen bleibt · `csp-browser` Richtlinie zur Laufzeit · `huelle` Gerätehülle gegen Prüfvektoren (S11-02) · `kontopaar` Schlüsselpaar des Kontos: Anlegen, Abgleich, Siegel (S11-03) · `ortsdaten` Gerät → Server → Browser mit Hüllen (S11-04b) · `wartungslauf` fällige Spuren und Tausch (S11-07) · `ortsumzug` Einmalwerkzeug: Altbestand → Hüllen (S11-10) ·
 `rollen` Matrix aus `Technik.md` 4.99p · `protokoll` Archiv, Fehlerprotokoll · `zweitfaktor` Code-Schritt, Einrichtungstor, RFC-Vektoren, Demo-Reset nur nach Änderung, Gerät merken (SR-02), frischer Code (SR-07), Passkeys an der Anlage (SR-09), Notzugang der einzigen BetreiberIn (SR-04) · `sitzung` Bindung per zweitem Cookie ·
 `passkey` CBOR-Leser, beide WebAuthn-Zeremonien und die Tabelle, ohne Browser und ohne HTTP (SR-09; seit H-SR-08 jede Ablehnung mit Grund; seit Web 21.11.2 zwei gleichzeitige Anmeldungen in zwei Prozessen) · `schluesselwechsel` Serverschlüssel A → B (zweimal gleichzeitig) und zurück, jedes Stück je Zweck, Frist, Stück-Fehler, Nr. 344 (SR-03; seit H-SR-06 ein Rückweg, der nichts wegwirft — auch nach einem Wettlauf ohne Sieger; seit der Nachmessung Knopf, Stand unter drittem Schlüssel und die Zahlen aus F-SR-88) ·
 `rueckweg` Rückweg beim Zweitfaktor, zwei Teile hinter `probe.sh`: `probe.php` (Signaturen, Selbsttest, Marke, der Prüfzweig am Code-Schritt samt Abzug-Gegenprobe) und `probe.mjs` (der Weg im Browser, NutzerIn und BetreiberIn — auch gegen Staging, mit `--basis`, `--admin`, `--admin-pw`, `--admin-totp`; von Hand in Firefox und WebKit mit `--motor`).
@@ -28,7 +28,7 @@ Browser aus `/opt/pw-browsers`; `versand` die Pakete der Gegenstellen (`web`).
 
 ## Erwartete Zahl
 
-`alle` fährt **27** (seit SR-03 mit `schluesselwechsel`); zuletzt ganz gefahren am 28.09.2026, damals 25: **24 von 25 grün** (Jobprobe: Nr. 347, einzeln 36/0). Wer ein Konto
+`alle` fährt **32** (seit S11-10 mit `ortsumzug`); zuletzt ganz gefahren am 28.09.2026, damals 25: **24 von 25 grün** (Jobprobe: Nr. 347, einzeln 36/0). Wer ein Konto
 braucht, legt es selbst an; `versand` startet seine Gegenstellen (RP-01).
 
 ## Was es nicht kann

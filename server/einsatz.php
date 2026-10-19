@@ -12,7 +12,13 @@ $mRumpf = einsatz_laden($mid, $userId, ['spalten' => 'day_id']);
 if ($mRumpf === null) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
 $missionDayId = $mRumpf['day_id'] === null ? null : (int)$mRumpf['day_id'];
 $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
-ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
+/* DIE ANFRAGE BEGINNT SCHON IM KOPF (S11-04c, V1, E-S11-33): `vorladen.js`
+ * startet `api/mission.php`, waehrend der Browser noch Skripte laedt; `init()`
+ * holt die Antwort spaeter ab. Eine eigene kleine Datei und kein Inline-Skript,
+ * weil die CSP Inline-Code nur mit Nonce zulaesst und der Kopf keinen traegt. */
+ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
+                'kopf' => '<script src="' . ui_e(ui_asset('assets/vorladen.js')) . '"'
+                        . ' data-vorladen="api/mission.php?id=' . $mid . '"></script>']);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $missionDayId]); ?>
@@ -77,14 +83,18 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
                * — eine Spur endet am Einsatzort und tut damit dasselbe. Ohne
                * die Rueckfrage haette dieselbe Anwendung zwei Tueren mit zwei
                * verschiedenen Massstaeben. */
+              /* SEIT S11-05d BAUT DER BROWSER DIE DATEI (`assets/gpx.js`) — aus der
+               * geoeffneten Spur; `gpx.php` sah die verschlossenen Stuecke nicht.
+               * Deshalb kein Ziel im Link, sondern ein eigener Handler mit
+               * derselben Rueckfrage (`edConfirm`). */
               $eintraege[] = ['text' => 'GPS-Daten als GPX',
-                              'href' => 'gpx.php?art=mission&id=' . $mid,
-                              'attr' => 'data-confirm="Die Datei zeigt den '
+                              'href' => '#',
+                              'attr' => 'data-gpx-laden data-gpx-frage="Die Datei zeigt den '
                                       . 'gefahrenen oder geflogenen Weg — also '
                                       . 'auch den Einsatzort — mit Zeitstempeln. '
                                       . 'Ab dem Speichern schützt die '
                                       . 'Verschlüsselung dieser Anwendung sie '
-                                      . 'nicht mehr." data-confirm-ok="Herunterladen"'];
+                                      . 'nicht mehr."'];
           }
           $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb', 'gefahr' => true,
                           'href' => 'einsatz_loeschen.php?id=' . $mid];
@@ -124,8 +134,9 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
            entsperrt, unlesbar. */ ?>
   <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
     <?= ui_symbol('schloss', 'symbol-gross') ?>
-    <p>Geschützte Angaben sind gesperrt — Einsatzort, PatientIn, Diagnose und
-       Notizen bleiben verborgen, bis die Verschlüsselung entsperrt ist.</p>
+    <p>Geschützte Angaben sind gesperrt — Einsatzort, GPS-Daten, PatientIn,
+       Diagnose und Notizen bleiben verborgen, bis die Verschlüsselung
+       entsperrt ist.</p>
     <div class="meldung-aktion">
       <?= ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
                     'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
@@ -196,8 +207,10 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
     </section>
 
     <div class="einsatz-neben">
-      <div class="geo-spalte"><div id="map" class="geo"></div></div>
-      <section class="karte karte-block-phasen" id="phasen-karte" hidden>
+      <?php /* Der Ladeplatz liegt IN der Kartenflaeche (M-S11-01, A); die
+               Phasenkarte steht sofort da und traegt ihren eigenen (E-S11-35). */ ?>
+      <div class="geo-spalte"><div id="map" class="geo"><?= ui_ladeplatz('Ortsdaten werden geladen …', ['attr' => ' id="ortsdaten-lade"']) ?></div></div>
+      <section class="karte karte-block-phasen" id="phasen-karte">
         <div class="karte-kopf">
           <h2 class="karte-titel">Einsatzphasen</h2>
           <span class="karte-zahl" id="phasendauer"></span>
@@ -206,7 +219,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
                  in der Uhr-App heisst es durchgaengig Einsatzphase, und eine
                  Ueberschrift, die anders heisst als die Sache, kostet bei
                  jedem Hinsehen einen Gedanken. */ ?>
-        <div class="phasen" id="phasebody"></div>
+        <div class="phasen" id="phasebody"><?= ui_ladeplatz('Phasen werden geladen …', ['attr' => ' id="phasen-lade"']) ?></div>
       </section>
     </div>
 
@@ -218,9 +231,14 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
              Reanimation eine Karte Aufmerksamkeit fuer die Auskunft, dass
              nichts passiert ist. Das Skript blendet sie ein, wenn es eine
              Sitzung gibt. */ ?>
+    <?php /* DAS SCHLOSS AM TITEL (S11-05b): Die Reanimation liegt seit S11-04 nur
+             in der Einsatzhuelle und steht hier erst nach dem Entsperren. Von
+             Hand statt ueber `ui_karte_start()`, weil die Karte versteckt
+             beginnt und ihre Zahl eine Kennung braucht — beides kann der
+             Baustein nicht. Das Zeichen ist dasselbe. */ ?>
     <section class="karte karte-block-reanimation" id="resus-section" hidden>
       <div class="karte-kopf">
-        <h2 class="karte-titel">Reanimation</h2>
+        <h2 class="karte-titel">Reanimation<?= ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt') ?></h2>
         <span class="karte-zahl" id="resus-zahl"></span>
       </div>
       <div id="resus-tables" hidden></div>
@@ -232,6 +250,8 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
          OHNE PAT_WRAP: Diese Seite bekommt die Huelle aus der API-Antwort
          (m.pat_wrap), nicht aus PHP. */ ?>
 <?php ui_krypto_bootstrap(['wrap' => false]); ?>
+<script src="<?= asset('assets/ortsdaten.js') ?>"></script>
+<script src="<?= asset('assets/gpx.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
@@ -285,6 +305,28 @@ map.on('zoomend', () => {
 });
 
 let M = null;                  // die API-Antwort — hlPhase braucht Track und Phasen
+/* Die Toleranzen der Ausduennung fuer den Stufentext der GPX-Datei (S11-05d). */
+const GPX_TOL = <?= json_js([SPUR_TOL_WAAGERECHT_M, SPUR_TOL_SENKRECHT_M]) ?>;
+
+/* GPS-DATEN ALS GPX (S11-05d). Mit Rueckfrage wie vorher; die Datei entsteht
+ * aus der geoeffneten Spur (`M.spur_punkte`, nach dem Entsperren). Die Stufe
+ * ist die hoechste der Stuecke, die Originalzahl ihre Summe. */
+document.querySelectorAll('[data-gpx-laden]').forEach(a => a.addEventListener('click', async ev => {
+  ev.preventDefault();
+  if (!await window.edConfirm(a.getAttribute('data-gpx-frage'), 'Herunterladen', 'normal')) { return; }
+  if (!M) { return; }
+  if (!M.spur_punkte) {
+    const ck = await EdUnlock.ensureContentKey(M.pat_wrap, KDF_SALT, KDF_ITER);
+    if (!ck) { return; }
+    await EdOrtsdaten.fuerAnsicht(M, ck);
+  }
+  const st = M.spur_stuecke || [];
+  const stufe = st.reduce((x, s) => Math.max(x, s.stufe || 1), 1);
+  const nOriginal = st.reduce((x, s) => x + (s.n_original || s.punkte), 0);
+  const name = EdGpx.spurname('mission', M.id, M.started_ts, M.zeitzone);
+  EdGpx.speichern(EdGpx.bauen(M.spur_punkte, name, stufe, nOriginal),
+                  EdGpx.dateiname('mission', M.id, M.started_ts, stufe));
+}));
 let phaseMarkers = [];        // [{marker, idx}]
 let phasesVisible = false;    // Standard: Aus, keine Persistenz -> nach jedem
                                // Laden der Seite wieder aus
@@ -530,7 +572,9 @@ function minutenDiff(a, b){
 }
 
 async function init(){
-  const res = await fetch('api/mission.php?id=' + MID);
+  LADE_KARTE.zeige('Ortsdaten werden geladen …');
+  LADE_PHASEN.zeige('Phasen werden geladen …');
+  const res = await EdVorladen.holen('api/mission.php?id=' + MID);
   const txt = await res.text();
   let m;
   try { m = JSON.parse(txt); }
@@ -655,18 +699,6 @@ async function init(){
     box.closest('.karte').hidden = false;
   }
 
-  /* HOEHE DES EINSATZORTS — nur luftgebunden (A13, Konzept 4.6). Sie gehoert
-   * in die Kleinzeile des Einsatzortes (Mockup 19); solange der verschluesselt
-   * ist, traegt eine eigene Zeile sie trotzdem: Die Hoehe selbst liegt im
-   * Klartext, sie zu verschweigen waere kein Gewinn. Bodengebunden ist sie
-   * die Hoehe der Strasse und bleibt verborgen; bei einem noch nicht
-   * zugeordneten Diensttag (day_kind === null, E26) ebenso. */
-  hoeheZeigen = m.site_ele_m != null && m.day_kind === 'air';
-  hoeheWert = m.site_ele_m;
-  if (hoeheZeigen) {
-    zeile('einsatz', RANG.pat_loc, 'Höhe Einsatzort', `${m.site_ele_m} m`);
-    markiere(RANG.pat_loc, 'hoehe');
-  }
 
   // Besatzung: Tagescrew, einzelne Rollen ggf. durch den Einsatz ueberschrieben
   // (Server hat die COALESCE-Regel bereits angewandt, siehe api/mission.php).
@@ -685,7 +717,25 @@ async function init(){
    * Spur sind Ringe: blau = Start, rot = Ende — am Schild des Ortes, an dem
    * die Spur beginnt oder endet, sonst als eigener Ringpunkt. Der Standort
    * kommt als Haus-Schild aus den eingefrorenen Tageskoordinaten, das
-   * Transportziel als Klinik-Schild (Klartext wie sein Name, E40, A13o). */
+   * Transportziel als Klinik-Schild — seit S11-05b erst nach dem Entsperren,
+   * weil es im `pat_blob` liegt (`zielUndHoeheOeffnen()`). */
+  await ortsdatenOeffnen(m);
+  await zielUndHoeheOeffnen(m);
+
+  /* HOEHE DES EINSATZORTS — nur luftgebunden (A13, Konzept 4.6). Sie gehoert
+   * in die Kleinzeile des Einsatzortes (Mockup 19); ohne Einsatzort-Zeile
+   * traegt eine eigene Zeile sie. Seit S11-05b liegt sie im `pat_blob`
+   * (`ortshoehe`) und steht deshalb erst nach dem Entsperren da — mit
+   * Schloss. Bodengebunden ist sie die Hoehe der Strasse und bleibt
+   * verborgen; bei einem noch nicht zugeordneten Diensttag
+   * (day_kind === null, E26) ebenso. */
+  hoeheZeigen = m.site_ele_m != null && m.day_kind === 'air';
+  hoeheWert = m.site_ele_m;
+  if (hoeheZeigen) {
+    zeile('einsatz', RANG.pat_loc, dtGeschuetzt('Höhe Einsatzort'), `${m.site_ele_m} m`);
+    markiere(RANG.pat_loc, 'hoehe');
+  }
+
   const bounds = [];
   const NAH_M = 200;   // naeher als das gilt als „am Schild"
   const start = m.track.length > 1 ? m.track[0] : null;
@@ -761,8 +811,10 @@ async function init(){
     pb.appendChild(row);
     vorige = p.time;
   });
+  /* Die Phasenkarte stand seit dem Laden mit Ladeplatz da (E-S11-35);
+     ohne Phasen geht sie jetzt, wie jede leere Karte dieser Seite. */
+  document.getElementById('phasen-karte').hidden = !m.phases.length;
   if (m.phases.length) {
-    document.getElementById('phasen-karte').hidden = false;
     /* Dieselbe Frage wie oben, dieselbe Antwort: Die Zahl im Kopf der
        Phasenkarte rechnet ohnehin von Beginn bis Ende des Einsatzes, nicht
        von Phase zu Phase — sie hing nur an Phase 9 als Stellvertreter. */
@@ -818,6 +870,78 @@ async function init(){
  * EdUnlock den Entsperrdialog an; bei Abbruch bleibt die Sperr-Meldung
  * stehen, deren Knopf diese Funktion erneut aufruft (E-P3-33: der Zustand
  * steht als Meldung ueber den Karten, nicht als Zeile in der Liste). */
+/* ---- Ortsdaten öffnen (S11-04c, E-S11-35) --------------------------------
+ *
+ * Spur, Koordinaten der Phasen und Reanimation kommen als Gerätehüllen
+ * (`api/mission.php`, S11-04b). `EdOrtsdaten.fuerAnsicht()` öffnet sie mit dem
+ * privaten Schlüssel des Kontos und legt sie dort ab, wo das Zeichnen sie
+ * schon immer gesucht hat (`m.track`, `m.phases[].lat/lon/track_idx`,
+ * `m.resus`). Der Ladeplatz sagt dabei, worauf gewartet wird: auf das
+ * Passwort (Ring steht), auf das Öffnen. Geht eine Hülle nicht auf, steht an
+ * seiner Stelle die Meldung; die übrigen Angaben des Einsatzes bleiben. */
+const LADE_KARTE  = EdOrtsdaten.ladeplatz(document.getElementById('ortsdaten-lade'));
+const LADE_PHASEN = EdOrtsdaten.ladeplatz(document.getElementById('phasen-lade'));
+async function ortsdatenOeffnen(m){
+  m.track = []; m.resus = null;
+  (m.phases || []).forEach(p => { p.lat = null; p.lon = null; p.track_idx = null; });
+  const hatOrt = (m.spur_stuecke && m.spur_stuecke.length) || m.ort_huelle;
+  if (!hatOrt) { LADE_KARTE.weg(); LADE_PHASEN.weg(); return; }
+  LADE_KARTE.zeige('Wartet auf dein Passwort', true);
+  LADE_PHASEN.zeige('Wartet auf dein Passwort', true);
+  const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
+  if (!ck) {
+    m.ortsdatenGesperrt = true;
+    LADE_KARTE.weg(); LADE_PHASEN.weg();
+    document.getElementById('lockbanner').hidden = false;
+    return;
+  }
+  LADE_KARTE.zeige('Ortsdaten werden geöffnet …');
+  LADE_PHASEN.zeige('Phasen werden geöffnet …');
+  try {
+    await EdOrtsdaten.fuerAnsicht(m, ck);
+  } catch (e) {
+    EdOrtsdaten.melden(e, 'einsatz', m.id);
+    const box = document.createElement('div');
+    box.dataset.ortsdaten = 'fehler';
+    box.innerHTML = EdHtml.meldung('fehler',
+      e && e.grund === 'kein_paar'
+        ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — die Ortsdaten lassen sich nicht öffnen.'
+        : 'Die Ortsdaten dieses Einsatzes lassen sich nicht öffnen. Die übrigen Angaben stimmen.');
+    document.getElementById('map').appendChild(box);
+  }
+  LADE_KARTE.weg(); LADE_PHASEN.weg();
+}
+
+/* TRANSPORTZIEL, ORTSHOEHE UND LETZTE ZIELKLINIK AUS DEM BLOB (S11-05b).
+ * Bis dahin lieferte `api/mission.php` `dest_lat`, `dest_lon`, `dest_name`,
+ * `site_ele_m` und `start_prev_dest` im Klartext. Jetzt liegen sie im
+ * `pat_blob` dieses Einsatzes bzw. seines Vorgaengers, und diese Funktion
+ * setzt sie nach dem Entsperren in genau diese Felder — Karte, Kleinzeile und
+ * Luftlinie lesen sie wie vorher. Ohne Schluessel bleiben sie leer: kein
+ * Klinik-Pin, keine Hoehe, keine Linie zur letzten Zielklinik. */
+async function zielUndHoeheOeffnen(m){
+  m.dest_lat = null; m.dest_lon = null; m.dest_name = null;
+  m.site_ele_m = null; m.start_prev_dest = null;
+  if (!m.pat_blob && !m.start_prev_blob) { return; }
+  const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
+  if (!ck) { return; }
+  const r = await EdPat.entschluessle(ck, m.pat_blob);
+  const o = (r.zustand === 'ok' && r.daten) || {};
+  const z = o.transport_dest;
+  if (z && typeof z === 'object') {
+    m.dest_name = z.addr || null;
+    if (z.lat != null && z.lon != null) { m.dest_lat = Number(z.lat); m.dest_lon = Number(z.lon); }
+  }
+  if (o.ortshoehe != null) { m.site_ele_m = Number(o.ortshoehe); }
+  if (m.start_src === 'prev_dest' && m.start_prev_blob) {
+    const v = await EdPat.entschluessle(ck, m.start_prev_blob);
+    const vz = v.zustand === 'ok' && v.daten && v.daten.transport_dest;
+    if (vz && vz.lat != null && vz.lon != null) {
+      m.start_prev_dest = { lat: Number(vz.lat), lon: Number(vz.lon) };
+    }
+  }
+}
+
 async function zeigePat(m, bounds){
   const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
   if (!ck) {
@@ -928,7 +1052,10 @@ async function zeigePat(m, bounds){
      drei Zeilen als eine da. `esc()` laeuft VORHER — was hier durchkommt, ist
      ausschliesslich das <br>, das dieser Code selbst schreibt. */
   for (const col of Object.keys(PAT_KAT)) {
-    const wert = o[PAT_KAT[col].blob];
+    let wert = o[PAT_KAT[col].blob];
+    /* Ein Ortsfeld (seit S11-05b das Transportziel) liegt als {addr, lat,
+       lon} im Blob; gezeigt wird die Bezeichnung, der Ort ist der Pin. */
+    if (wert && typeof wert === 'object') { wert = wert.addr; }
     if (wert == null || String(wert).trim() === '') { continue; }
     zeile(KARTE_ZIEL[col] || 'einsatz', RANG[col] ?? RANG_SONST,
           dtGeschuetzt(PAT_KAT[col].label),
@@ -1003,8 +1130,17 @@ async function zeichneLuftlinie(m, o, ck, bounds){
     { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
 }
 
-document.getElementById('unlockbtn').addEventListener('click', () => {
-  if (M) { zeigePat(M, []); }
+document.getElementById('unlockbtn').addEventListener('click', async () => {
+  if (!M) { return; }
+  /* Blieben die Ortsdaten gesperrt, zeichnet die Seite neu: Karte, Phasen und
+     Reanimation entstehen in init(), nicht in zeigePat(). Der Schlüssel liegt
+     danach im Fach des Entsperrens und wird nicht noch einmal erfragt. */
+  if (M.ortsdatenGesperrt) {
+    const ck = await EdUnlock.ensureContentKey(M.pat_wrap, KDF_SALT, KDF_ITER);
+    if (ck) { location.reload(); }
+    return;
+  }
+  zeigePat(M, []);
 });
 
 init();

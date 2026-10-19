@@ -52,9 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 360 bis 369 | `claude/beautiful-dirac-1tc4d0` — Konzept PK, PK-06 bis PK-08 (Kette); vergeben: 360, 361 | 29.09.2026 |
-| 370 bis 379 | `claude/exciting-brown-0n9et2` — Schritt 12, Bedrohungsmodell (Review R17, Stück 1); vergeben: 370, 371 | 11.10.2026 |
-| ab 380 | frei — höchste vergebene Nummer 361; 359 aus der Spanne von 18 blieb frei (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
+| 380 bis 389 | `ccr-dd33b6e8-ismfm0` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 385 | 11.10.2026 |
+| ab 390 | frei — höchste vergebene Nummer 371; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
 
 ---
 
@@ -306,24 +305,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.** · gehört zu: 12a · Stand: offen · seit 03.09.2026
-     *Aufgenommen 03.09.2026 aus S5 Paket C.*
-     Für Stufe II verlangt die Abnahme „je Vertreter ein Bild der `PairView`".
-     `bildreihe` lädt die App, wartet und fotografiert — es gibt keinen Weg,
-     eine Tastenfolge mitzugeben. Paket C hat sich dafür eine eigene Schleife
-     gebaut (zweimal `Down`, weil der erste Druck nach dem Laden regelmäßig
-     verlorengeht, dann `keydown Return` / `sleep` / `keyup` für den Langdruck;
-     `pruefstand.sh halten` kann nur Maus, nicht Taste — und die
-     Drei-Tasten-Geräte brauchen stattdessen Wischen, gelesen aus
-     `monkey.jungle`).
-     **Vorschlag:** `bildreihe <liste> <ziel> [tastenfolge]`, wobei die
-     Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
-     braucht die nächste Ansicht keine eigene Schleife.
-     Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): Der erste Abnehmer einer
-     Tastenfolge ist S11 (Uhr Haupt); dort entsteht die nächste Ansicht.
-
-<!-- -->
-
 96. **Uhr und Handy sagen nicht, dass gewartet wird.** · gehört zu: nach v1.0 · Stand: offen · seit 03.09.2026
      *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-08).*
      Der Wartungsmodus antwortet mit **503** und einem `Retry-After`. Die
@@ -403,7 +384,9 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      (CLAUDE.md 4), mit Rückfrage und einer Zeile im Protokoll.
      Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): S11 verlegt die
      Spurfunktionen in den Browser (Nr. 43); ein Schnitt über `spur_lib.php`
-     davor wäre dort neu zu bauen.
+     davor wäre dort neu zu bauen. **Gebaut in S11-05c** (Web 22.2.0, auf dem
+     Arbeitszweig): „Zeitraum löschen" im Schneide-Bereich; wandert mit dem
+     Abschluss von S11 nach `Backlog-Erledigt.md`.
 
 <!-- -->
 
@@ -1217,3 +1200,138 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `admin_user.php` (admin ⊂ betreiberin heißt auch: nach oben kein Griff),
      eine Zeile in 4.99p, ein Fall in `tools/proben/rollen/`. Kleines Paket
      in 12b.
+
+<!-- -->
+
+380. **Seitenaufbau: die Skripte jeder Seite kosten bei Drossel 6× 0,7 bis 1,5 s, bevor Daten geholt werden.** · gehört zu: 12b · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V2,
+     E-S11-33).* Gemessen am Messstand (`tools/messstand/ausgangsmessung.md`,
+     „Zerlegung des Seitenaufbaus"): Das HTML ist nach 0,04 bis 0,10 s da,
+     `DOMContentLoaded` erst nach 0,9 bis 1,5 s (Startseite 2,05 s) — 15 bis
+     22 einzelne Skriptdateien je Seite. Ziel nach E-S11-32: „sichtbar" so
+     schnell wie möglich, Richtung unter 3 s bei 6× und unter 1 s ungedrosselt.
+     *Weg:* zuerst eine Seite profilieren (Laden, Übersetzen oder Ausführen?),
+     dann Skripte zusammenfassen oder je Seite nur laden, was sie braucht.
+     Ein Bauschritt wäre neu. Geschätzt 20 bis 35 % je Seite.
+     *Abnahme:* Zerlegung vorher und nachher mit Eichlauf (F-S11-25);
+     Bilderlauf und Proben grün. Unmittelbar nach S11 (Betreiberin).
+
+<!-- -->
+
+381. **Suche und Zeitraumübersicht verarbeiten alle Einsätze, bevor sie 200 anzeigen.** · gehört zu: 12b · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V3,
+     E-S11-33).* Gemessen bei Drossel 6×: Suche 4,25 s sichtbar, 5,4 MB aus
+     `api/`, 4852 Entschlüsselungen, 2,96 s belegter Hauptfaden; Zeitraum
+     Jahr 5,56 s, 2,4 MB, 3876 Entschlüsselungen, 5,49 s Hauptfaden.
+     *Weg:* zuerst die angezeigten 200 entschlüsseln und zeigen, den Rest in
+     Portionen; Gesamtzahl, Kilometer, Kacheln und Freitext füllen sich mit
+     Ladeanzeige nach (E-S11-27). Weniger Daten vom Server nur ohne
+     Freitextfilter — verschlüsselte Felder kann er nicht durchsuchen. Nr. 51
+     gehört dazu. Geschätzt Suche 50 bis 65 %, Zeitraum Jahr 45 bis 55 %.
+     *Abnahme:* Zerlegung vorher und nachher mit Eichlauf; Trefferzahl und
+     Reihenfolge gleich. Unmittelbar nach S11 (Betreiberin).
+
+<!-- -->
+
+382. **Startseite und Anmelden warten bei Drossel 6× lange auf die erste Antwort des Servers.** · gehört zu: 12b · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V4,
+     E-S11-33).* Zerlegung bei 6×: erste Antwort nach 0,93 s (Startseite)
+     und 2,15 s (Anmelden), ungedrosselt 0,07 und 0,13 s. Ob die Seite so
+     lange braucht oder die Messung die Weiterleitung nach der Anmeldung
+     mitzählt, ist offen — es waren Einzelläufe.
+     *Weg:* zuerst nachmessen, mehrfach und getrennt nach Weiterleitung;
+     erst danach entscheiden, ob etwas zu bauen ist. Die Ableitung des
+     Passworts (PBKDF2) bleibt absichtlich langsam.
+     *Abnahme:* eine Zahl je Seite mit Eichlauf und ein Satz, woran es liegt.
+     Unmittelbar nach S11 (Betreiberin).
+
+<!-- -->
+
+383. **Komplett- und Schlüsselwechselprobe rot unter dem PHP 8.3.6 aus Ubuntu.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-03 (F-S11-26, -28, -33).* Unter dem
+     PHP **8.3.6** aus Ubuntu 24.04 (OpenSSL 3.0.13, zlib 1.3) scheitern
+     drei Fälle, die alle ein Komplett-Siegel über mehrere Häppchen
+     schreiben: Komplettprobe Teil 4 „über drei Häppchen versiegelt …
+     öffnet" und „Zieldatei verschwindet" (73 von 75, „verändert oder
+     unvollständig (Block 1)"), Schlüsselwechselprobe Teil 4 „Komplett-Stand
+     über den Wechsel" (65 ok, 1 fehlt). Auf dem Stand vor S11-03 ebenso.
+     **Grün** unter PHP 8.3.33 (`nadoku-php83`) und 8.4.19 (75/0, 66/0) —
+     gegen dieselbe Datenbank. S11 ist es nicht; ein Fehler der Probe wohl
+     auch nicht, sonst wäre er überall rot.
+     **Warum es zählt:** 8.3.6 ist die Vorgabe von Ubuntu 24.04 LTS. Steht
+     eine Anlage darauf, geht ihre Komplettsicherung vielleicht nicht auf.
+     *Weg:* den Siegelschub (`komp_siegel_schub()`) unter 8.3.6 Block für
+     Block mit 8.4 vergleichen; Ursache benennen (PHP-Fehler, der bis
+     8.3.33 behoben ist, oder Bibliothek); dann entweder umgehen oder eine
+     Mindestfassung in `Technik.md` und im Installer festschreiben.
+     *Abnahme:* die Ursache benannt, und unter 8.3.6 grün oder abgewiesen.
+
+<!-- -->
+
+384. **Das Abbild bringt PHP 8.3.6 statt 8.4.19 — `aufbauen.sh` merkt es nicht.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-03 (F-S11-32).* Nach einem Neustart
+     des Containers war `php` das 8.3.6 aus Ubuntu; `Sandbox-Setup.md` 1
+     nennt 8.4.19, und `aufbauen.sh web` prüft die Fassung nicht. Docker
+     Hub antwortete mit 429; `mirror.gcr.io/library/…` lieferte dieselben
+     offiziellen Abbilder, die PPA von ondrej sperrt der Proxy (403).
+     Behelf in S11-03: PHP 8.4.19 aus `php:8.4.19-cli` plus 14
+     Erweiterungen gebaut, nach `/opt/php84` gezogen, mit `patchelf` auf
+     eigene Bibliotheken gestellt, als `/usr/local/bin/php` vorgeschaltet;
+     damit Komplett-, Schlüsselwechsel- und Schemaprobe grün.
+     *Weg:* den Behelf als Teil `php84` in `aufbauen.sh` übernehmen, die
+     Fassung nach dem Aufbau prüfen (rot unter 8.4), den Spiegel als
+     Rückfall in `plattform.sh`. *Abnahme:* ein frischer Container steht mit
+     einem Befehl auf 8.4, und ein falsches PHP ist rot.
+
+<!-- -->
+
+385. **Die Zweitfaktorprobe hinterlässt bei jedem Lauf eine Sperre in `sicherheit_ereignisse`.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 16.10.2026
+     *Aufgenommen 16.10.2026 mit S11-05e (F-S11-59).* Jeder Lauf der
+     Zweitfaktorprobe legt eine Sperre `totp` für
+     `zweitfaktor-probe@probe.invalid` an und räumt sie nicht ab (gezählt
+     16.10.2026: 13 Zeilen seit dem 13.10.). Die Protokollprobe nahm das
+     letzte Archiv mit Sicherheitszeilen und war deshalb drei Tage nach
+     jedem Tag mit Prüfstand rot — behoben in der Protokollprobe (sie wählt
+     jetzt das Archiv mit ihrer eigenen Mail), die Ursache steht noch.
+     *Weg:* die Sperre im Aufräumteil der Zweitfaktorprobe löschen, wie die
+     Protokollprobe ihre eigenen Zeilen löscht. *Abnahme:* nach einem Lauf
+     keine Zeile mehr für das Probenkonto.
+
+<!-- -->
+
+386. **Einspielen in Fenstern verwirft Sperrvermerke, deren Quelle in einem anderen Fenster liegt.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 16.10.2026
+     *Aufgenommen 16.10.2026 bei der Nachprüfung von S11-06 (F-S11-73).*
+     Der Browser schickt die Einträge einer Sicherung in Fenstern zu 250 an
+     `api/backup_eintraege_restore.php`; `edbak_restore()` baut die Karte
+     Kennung → Kennnummer (`$refKarte`) je Aufruf neu. Ein Sperrvermerk,
+     dessen Ruhesegment in einem anderen Fenster stand, findet seine Quelle
+     nicht und wird verworfen („Sperrvermerk ohne Quelle"). Gemessen mit der
+     Sicherung des Messstands (5096 Einsätze, 5782 Ruhesegmente, 44
+     Fenster): 147 von 147 verworfen, obwohl alle 147 `quelle_ref` in der
+     Datei auf ein Ruhesegment zeigen — mit Nutzlast 12 (11.10.) und 13
+     (16.10.) gleich, also älter als S11; der Code steht seit dem
+     17.09.2026. Folge: Der herausgeschnittene Zeitraum ist im Ruhesegment
+     wieder sichtbar, die Punkte erscheinen doppelt. Kleine Bestände (ein
+     Fenster) trifft es nicht; der Kreislauf sieht es deshalb nie.
+     *Weg:* die Quelle bei fehlendem Karteneintrag in der Datenbank des
+     Zielkontos nachschlagen (Kennung und Art), oder die Vermerke erst nach
+     dem letzten Fenster schicken. *Abnahme:* dieselbe Sicherung, 147
+     übernommen, 0 verworfen.
+
+<!-- -->
+
+387. **Abgewiesene Werte beim Einspielen einer Sicherung zeigt der Browser nicht an.** · gehört zu: 12a · Stand: offen · seit 16.10.2026
+     *Aufgenommen 16.10.2026 bei der Nachprüfung von S11-06 (F-S11-72).*
+     `edbak_restore()` sammelt jede Beanstandung der Prüfschicht in
+     `$stats['rejected']` (Feld und Anzahl); `einstellungen.php` liest das
+     Feld nirgends — `git log -S` findet es dort nie. Seit S11 wiegt das
+     schwerer: Eine abgewiesene `ort_huelle` nimmt alle Orte und die
+     Reanimation des Einsatzes mit, und die Abschlussmeldung ist trotzdem
+     blau. Gefahren am 16.10.2026 mit einer Hülle falscher Länge: still
+     verworfen. Eine Datei, die die Anwendung selbst schrieb, trägt keine
+     solche Hülle — der Fall braucht eine beschädigte oder fremde Datei.
+     *Weg:* `rejected` in die Abschlussmeldung, Ton orange, wie
+     `import_ui.js` es für den CSV-Import tut. In S11-10 (Oberfläche) mit
+     der Einzahl „Bei 1 Einsätzen" derselben Meldungen. *Abnahme:* die
+     Hülle falscher Länge ergibt eine orange Meldung mit dem Feld.
+

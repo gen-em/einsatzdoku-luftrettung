@@ -292,9 +292,8 @@ function wartung_ausnahme(): bool
  * „ausgelastet". Das ist genau der Fehler aus Backlog Nr. 171, einen Stock
  * tiefer.
  *
- * NICHT DABEI: `gpx.php`. Es meldet Fehler zwar als JSON, wird aber vom
- * Browser ANGESTEUERT (ein Download-Verweis, kein `fetch()`); wer dort
- * landet, soll eine lesbare Seite sehen und kein `{"error": ...}`.
+ *(Hier stand bis Web 22.2.0 ein Absatz, warum `gpx.php` NICHT dabei ist; die
+ * Datei ist mit S11-05d entfallen, der Browser baut GPX selbst.)*
  *
  * Die Liste aendert am Wartungsmodus nichts: Beide neuen Eintraege stehen
  * ohnehin in `WARTUNG_AUSNAHMEN`.

@@ -24,6 +24,10 @@ const EdSchnitt = (() => {
   const esc = (t) => EdHtml.escape(t);
 
   let neuLaden = null;     // Rückruf: Tag neu holen, nachdem etwas geschnitten wurde
+  /* Datum des Diensttags und Zeitzone der Anlage (S11-05c): Seit der Browser
+     die Punkte selbst auswählt, muss er den Zeitraum so genau kennen wie der
+     Server (`pruef_ortszeit_zu_utc()`), nicht nur ungefähr wie die Vorschau. */
+  let tagInfo = { tag: null, tz: null };
 
   /* ---- Zeit ---------------------------------------------------------------
    *
@@ -205,6 +209,12 @@ const EdSchnitt = (() => {
       + '<div class="listen-form-fuss">'
       +   '<button class="knopf knopf-primaer" type="button" data-schneiden>'
       +     '<span>Einsatz erzeugen</span></button>'
+      /* ZEITRAUM LOESCHEN (S11-05c, Backlog Nr. 161): derselbe Zeitraum,
+         die andere Handlung — die Punkte darin endgueltig fort, mit
+         Rueckfrage. Ein vorhandener Baustein (`knopf-gefahr`), freigegeben
+         ohne Mockup am 15.10.2026. */
+      +   '<button class="knopf knopf-gefahr" type="button" data-zeitraum-loeschen>'
+      +     '<span>Zeitraum löschen</span></button>'
       +   '<button class="knopf knopf-leise" type="button" data-abbrechen>'
       +     '<span>Abbrechen</span></button>'
       + '</div>'
@@ -228,7 +238,14 @@ const EdSchnitt = (() => {
     }
     const vonTs = tsVon(seg, bv, bt), bisTs = tsVon(seg, ev, et);
     if (bisTs <= vonTs) { return { grund: 'Das Ende liegt vor dem Beginn.' }; }
-    return { bv, ev, bt, et, vonTs, bisTs };
+    /* GENAU, WIE DER SERVER RECHNET (S11-05c). `tsVon()` ist die Vorschau und
+       an der Zeitumstellung eine Stunde daneben (siehe dort); welche Punkte
+       mitgehen, entscheidet die Umrechnung von `local_to_utc()` — der Server
+       prueft die Stuecke gegen genau diesen Zeitraum. */
+    const genau = (h, t) => (tagInfo.tag ? EdFormat.ortszeitZuEpoch(tagInfo.tag, h, t, tagInfo.tz) : null);
+    const vonGenau = genau(bv, bt), bisGenau = genau(ev, et);
+    return { bv, ev, bt, et, vonTs, bisTs,
+             vonGenau: vonGenau != null ? vonGenau : vonTs, bisGenau: bisGenau != null ? bisGenau : bisTs };
   }
 
   /* DER SATZ UNTER DEN FELDERN ist eine Meldung aus dem Baustein (Web 21.1.11,
@@ -249,12 +266,13 @@ const EdSchnitt = (() => {
   function bereichAuffrischen(el, seg) {
     const w = wahl(el, seg);
     const knopf = el.querySelector('[data-schneiden]');
+    const loeschKnopf = el.querySelector('[data-zeitraum-loeschen]');
 
     el.querySelector('[data-vorschau]').innerHTML =
       leiste(seg, w.grund ? null : w.vonTs, w.grund ? null : w.bisTs, w.bv, w.ev);
 
-    if (w.grund) { vorher(el, 'fehler', w.grund); knopf.disabled = true; return; }
-    knopf.disabled = false;
+    if (w.grund) { vorher(el, 'fehler', w.grund); knopf.disabled = loeschKnopf.disabled = true; return; }
+    knopf.disabled = loeschKnopf.disabled = false;
 
     const reste = [];
     if (w.vonTs > seg.von_ts) { reste.push(seg.start_hhmm + ' – ' + w.bv); }
@@ -296,8 +314,34 @@ const EdSchnitt = (() => {
     });
 
     knopf.disabled = true;
+    /* DER BROWSER NIMMT DIE PUNKTE (S11-05c, E-S11-47). Er oeffnet das
+       Segment — ohne die schon geschnittenen oder geloeschten Zeitraeume —,
+       nimmt die Punkte im gewaehlten Zeitraum und verschliesst sie als Spur
+       des neuen Einsatzes, gebunden an dessen Kennung. Das Segment bleibt,
+       wie es ist; der Server sperrt den Zeitraum dort. */
+    let stuecke, geblieben, ref;
+    try {
+      const punkte = await segmentOeffnen(seg, true);
+      const drin = punkte.filter(p => p.ts >= w.vonGenau && p.ts <= w.bisGenau);
+      if (!drin.length) {
+        vorher(el, 'fehler', 'In diesem Zeitraum liegt kein einziger Punkt — entweder ist er schon '
+          + 'geschnitten, oder das Gerät hat dort nicht aufgezeichnet. Für einen Einsatz ohne '
+          + 'GPS-Daten ist „Nachtragen" der richtige Weg.');
+        knopf.disabled = false;
+        return;
+      }
+      geblieben = punkte.length - drin.length;
+      ref = 'cut-' + [...crypto.getRandomValues(new Uint8Array(8))]
+        .map(b => b.toString(16).padStart(2, '0')).join('');
+      stuecke = await EdOrtsdaten.stueckeBauen(drin, 'spur', ref, { neu: true });
+    } catch (e) {
+      vorher(el, 'fehler', oeffnenFehler(e, seg));
+      knopf.disabled = false;
+      return;
+    }
     const r = await ruf({ action: 'schneiden', rest_id: seg.id,
-      beginn: w.bv, ende: w.ev, beginn_tag: w.bt, ende_tag: w.et, phasen },
+      beginn: w.bv, ende: w.ev, beginn_tag: w.bt, ende_tag: w.et, phasen,
+      client_ref: ref, stuecke },
       'Das Schneiden');
     if (!r.ok) { vorher(el, 'fehler', r.meldung); knopf.disabled = false; return; }
     const d = r.daten;
@@ -315,7 +359,7 @@ const EdSchnitt = (() => {
       await neuLaden();
       melde('ok', 'Der Einsatz ist entstanden — ' + d.genommen
                 + ' Punkte sind zum Einsatz gewandert, '
-                + d.geblieben + ' bleiben im Ruhesegment. '
+                + geblieben + ' bleiben im Ruhesegment. '
                 + 'Einsatzort, Alter und Diagnose trägst du im Einsatz nach.');
     } catch (e) {
       vorher(el, 'fehler', e.message);
@@ -331,10 +375,99 @@ const EdSchnitt = (() => {
     /* Wie beim Schneiden: das try nur noch um das Nachladen. */
     try {
       await neuLaden();
-      melde('ok', 'Der Schnitt ist zurückgenommen — ' + d.zurueck
-                + ' Punkte liegen wieder im Ruhesegment, der Einsatz ist weg.');
+      /* Seit S11-05c waren die Punkte im Segment nie fort (nur gesperrt);
+         `zurueck` zaehlt nur noch Punkte eines Schnitts aus der Zeit davor. */
+      melde('ok', 'Der Schnitt ist zurückgenommen — die GPS-Daten des Zeitraums '
+                + 'gehören wieder zum Ruhesegment, der Einsatz ist weg.');
     } catch (e) {
       melde('warn', e.message);
+    }
+  }
+
+  /* Die Punkte eines Segments, geoeffnet (S11-05c). `ohneSperren`: ohne die
+   * schon geschnittenen oder geloeschten Zeitraeume — so, wie die Karte sie
+   * zeigt. Beim Loeschen dagegen ALLE Punkte, denn neu geschrieben wird das
+   * ganze Segment, und ein geschnittener Zeitraum bleibt darin gesperrt. */
+  async function segmentOeffnen(seg, ohneSperren) {
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    if (!ck) { throw Object.assign(new Error('gesperrt'), { grund: 'gesperrt' }); }
+    const k = await EdOrtsdaten.schluessel(ck);
+    const sperren = ohneSperren ? (seg.schnitte || []).map(c => ({ von: c.von_ts, bis: c.bis_ts })) : [];
+    try {
+      return await EdOrtsdaten.spur(seg.spur_stuecke || [], 'ruhe', seg.client_ref, sperren, k);
+    } catch (e) {
+      EdOrtsdaten.melden(e, 'ruhe', seg.id);
+      throw e;
+    }
+  }
+  function oeffnenFehler(e, seg) {
+    if (e && e.grund === 'gesperrt') { return 'Dazu musst du zuerst entsperren — die GPS-Daten sind verschlüsselt.'; }
+    if (e && e.grund === 'kein_paar') { return 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet.'; }
+    return 'Die GPS-Daten von Ruhesegment Nr. ' + seg.id + ' lassen sich nicht öffnen. Es wurde nichts geändert.';
+  }
+
+  /* ---- Ein Stück löschen (S11-05c, Backlog Nr. 161) ------------------------
+   *
+   * ENDGUELTIG. Der Browser verschliesst die Punkte AUSSERHALB des Zeitraums
+   * neu (mit ihren Sequenznummern), der Server ersetzt die Stuecke des
+   * Segments — nur, wenn sie noch so liegen, wie sie hier gelesen wurden —
+   * und sperrt den Zeitraum gegen eine erneute Lieferung. Vorher die
+   * Rueckfrage, danach eine Zeile im Protokoll. */
+  async function zeitraumLoeschen(el, seg) {
+    const knopf = el.querySelector('[data-zeitraum-loeschen]');
+    const w = wahl(el, seg);
+    if (w.grund) { vorher(el, 'fehler', w.grund); return; }
+    knopf.disabled = true;
+    let punkte;
+    try { punkte = await segmentOeffnen(seg, false); }
+    catch (e) { vorher(el, 'fehler', oeffnenFehler(e, seg)); knopf.disabled = false; return; }
+    const drin = punkte.filter(p => p.ts >= w.vonGenau && p.ts <= w.bisGenau);
+    const rest = punkte.filter(p => p.ts < w.vonGenau || p.ts > w.bisGenau);
+    if (!drin.length) {
+      vorher(el, 'fehler', 'In diesem Zeitraum liegt kein Punkt — es gibt nichts zu löschen.');
+      knopf.disabled = false;
+      return;
+    }
+    if (!rest.length) {
+      vorher(el, 'fehler', 'Damit wäre die ganze Aufzeichnung weg. Dafür ist der Papierkorb da: '
+        + 'den Diensttag löschen.');
+      knopf.disabled = false;
+      return;
+    }
+    const ja = await window.edConfirm('Die ' + drin.length + ' Punkte zwischen ' + w.bv + ' und '
+      + w.ev + ' werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.',
+      'Löschen', 'gefahr', 'GPS-Daten löschen');
+    if (!ja) { knopf.disabled = false; return; }
+    /* AUF EINER GEPACKTEN SPUR (Stufe 2, 3) bleibt sie gepackt (S11-07,
+     * E-S11-74): ein Stück derselben Stufe, das mindestens bis zur alten Marke
+     * deckt — Geräteteile, die nach dem Zusammenfügen kamen, gehen mit hinein. */
+    const alle = seg.spur_stuecke || [];
+    const stufe = Math.max(1, ...alle.map(st => st.stufe || 1));
+    let stuecke;
+    try {
+      if (stufe >= 2) {
+        const von = Math.min(...alle.map(st => st.seq_from));
+        const marke = Math.max(...alle.map(st => st.seq_from + ((st.stufe || 1) >= 2 ? st.n_original : st.punkte)),
+                               rest[rest.length - 1].seq + 1);
+        stuecke = [await EdOrtsdaten.gepacktBauen(rest, 'ruhe', seg.client_ref,
+                                                  { stufe: stufe, seqFrom: von, nOriginal: marke - von })];
+      } else {
+        stuecke = await EdOrtsdaten.stueckeBauen(rest, 'ruhe', seg.client_ref);
+      }
+    }
+    catch (e) { vorher(el, 'fehler', oeffnenFehler(e, seg)); knopf.disabled = false; return; }
+    const r = await ruf({ action: 'loeschen', rest_id: seg.id,
+      beginn: w.bv, ende: w.ev, beginn_tag: w.bt, ende_tag: w.et,
+      stand: (seg.spur_stuecke || []).map(st => [st.seq_from, st.punkte]),
+      stuecke, geloescht: drin.length }, 'Das Löschen');
+    if (!r.ok) { vorher(el, 'fehler', r.meldung); knopf.disabled = false; return; }
+    try {
+      await neuLaden();
+      melde('ok', 'Gelöscht — ' + r.daten.geloescht + ' Punkte zwischen ' + w.bv + ' und ' + w.ev
+                + ' sind fort. Der Zeitraum bleibt gesperrt, auch wenn ein Gerät ihn noch einmal sendet.');
+    } catch (e) {
+      vorher(el, 'fehler', e.message);
+      knopf.disabled = false;
     }
   }
 
@@ -367,8 +500,11 @@ const EdSchnitt = (() => {
                 + (seg.n > 0 ? seg.n + ' Punkte' : 'keine Aufzeichnung')
                 + (seg.final ? '' : ' · läuft noch');
 
+    /* Ein Vermerk OHNE Einsatz ist ein geloeschter Zeitraum (S11-05c): keine
+       Plakette — die Punkte sind fort —, und keine Ruecknahme. */
+    const schnitte = (seg.schnitte || []).filter(sn => sn.mission_id != null);
     let plaketten = '';
-    (seg.schnitte || []).forEach(sn => {
+    schnitte.forEach(sn => {
       plaketten += '<span class="plakette plakette-orange">'
                  + esc('geschnitten ' + sn.von_hhmm + ' – ' + sn.bis_hhmm)
                  + '</span> ';
@@ -392,7 +528,7 @@ const EdSchnitt = (() => {
      * fehlt, dorthin kommen die Punkte zurueck, und dort steht bereits die
      * Plakette, die den Schnitt nennt. Die Abweichung ist im Konzept
      * vermerkt und steht zur Entscheidung. */
-    (seg.schnitte || []).forEach(sn => {
+    schnitte.forEach(sn => {
       knoepfe += '<button class="knopf knopf-leise" type="button" data-rueck="'
                + sn.mission_id + '"><span>Schnitt zurücknehmen</span></button>';
     });
@@ -450,6 +586,8 @@ const EdSchnitt = (() => {
         });
         el.querySelector('[data-schneiden]').addEventListener('click',
           () => schneiden(el, seg));
+        el.querySelector('[data-zeitraum-loeschen]').addEventListener('click',
+          () => zeitraumLoeschen(el, seg));
         bereichAuffrischen(el, seg);
         el.querySelector('#s-beg-' + seg.id).focus();
       });
@@ -463,12 +601,13 @@ const EdSchnitt = (() => {
    * Ruhesegment, und die Einsaetze schneidet man danach heraus. Beide
    * bedienen dieselbe Karte, beide laden den Tag danach neu.
    *
-   * DIE DATEI WIRD NUR GELESEN, NICHT GEPRUEFT. Was eine gueltige GPX-Datei
-   * ist, entscheidet `gpx_lesen()` auf dem Server; hier eine zweite Meinung
-   * einzubauen hiesse, zwei Wahrheiten zu haben — und die schwaechere davon
-   * ist die, die jemand mit den Entwicklerwerkzeugen ausschaltet.
+   * SEIT S11-05d LIEST UND VERSCHLIESST DER BROWSER. `EdGpx.lesen()` haelt
+   * dieselben Regeln wie bis Web 22.2.0 `gpx_lesen()` auf dem Server; die
+   * Punkte gehen als Stuecke unter dem oeffentlichen Kontoschluessel hinaus
+   * (`EdOrtsdaten.stueckeBauen`), gebunden an eine Kennung, die hier
+   * gezogen wird. Der Server sieht keine Koordinate mehr.
    */
-  let gpxText = null;
+  let gpxDaten = null;   // ArrayBuffer der gewaehlten Datei
 
   function gpxFehler(text) {
     const box = document.getElementById('gpx-fehler');
@@ -482,7 +621,7 @@ const EdSchnitt = (() => {
     const datei = document.getElementById('gpx-datei');
     const los   = document.getElementById('gpx-los');
 
-    gpxText = null;
+    gpxDaten = null;
     datei.value = '';
     los.disabled = true;
     gpxFehler('');
@@ -491,25 +630,40 @@ const EdSchnitt = (() => {
 
     datei.onchange = () => {
       const f = datei.files && datei.files[0];
-      gpxText = null; los.disabled = true; gpxFehler('');
+      gpxDaten = null; los.disabled = true; gpxFehler('');
       if (!f) { return; }
       const leser = new FileReader();
       leser.onerror = () => gpxFehler('Die Datei ließ sich nicht lesen.');
-      leser.onload = () => { gpxText = String(leser.result); los.disabled = false; };
-      leser.readAsText(f);
+      leser.onload = () => { gpxDaten = leser.result; los.disabled = false; };
+      leser.readAsArrayBuffer(f);
     };
 
     document.getElementById('gpx-abbrechen').onclick = () => dlg.close();
     los.onclick = async () => {
-      if (gpxText === null) { return; }
+      if (gpxDaten === null) { return; }
       los.disabled = true;
       gpxFehler('');
+      /* Lesen, dann verschliessen. `lesen()` wirft mit einem Satz, der der
+       * BedienerIn etwas sagt (fehlende Zeitstempel, falsches Format); er
+       * geht unveraendert in die Meldung. */
+      const ziel = gpxZiel();
+      let gelesen, stuecke, ref;
+      try {
+        gelesen = EdGpx.lesen(gpxDaten);
+        ref = 'imp-' + [...crypto.getRandomValues(new Uint8Array(12))]
+          .map(b => b.toString(16).padStart(2, '0')).join('');
+        stuecke = await EdOrtsdaten.stueckeBauen(gelesen.punkte,
+          ziel === 'einsatz' ? 'spur' : 'ruhe', ref, { neu: true });
+      } catch (e) {
+        gpxFehler(e.message || String(e));
+        los.disabled = false;
+        return;
+      }
       /* DIE GROSSE DATEI IST DER HAEUFIGE FALL. Uebersteigt der Rumpf
        * `post_max_size`, schickt `api_rumpf()` den Grund im Feld `hinweis`
-       * -- EdApi liest es, die Handkette hier las nur `meldung` und zeigte
-       * stattdessen den Ersatzsatz. */
+       * -- EdApi liest es. */
       const r = await EdApi.postJson('api/gpx_import.php',
-        { day_id: dayId, ziel: gpxZiel(), xml: gpxText },
+        { day_id: dayId, ziel, client_ref: ref, stuecke },
         { vorgang: 'Der Import der GPX-Datei' });
       if (!r.ok) { gpxFehler(r.meldung); los.disabled = false; return; }
       const d = r.daten;
@@ -523,8 +677,8 @@ const EdSchnitt = (() => {
           ? 'Die Datei ist als Einsatz übernommen — '
           : 'Die Datei ist als Ruhesegment übernommen — ';
         t += d.punkte + ' Punkte, ' + d.von + ' bis ' + d.bis + '.';
-        if (d.ohne_zeit) { t += ' ' + d.ohne_zeit + ' Punkte ohne Zeitstempel sind nicht mitgekommen.'; }
-        if (d.verworfen) { t += ' ' + d.verworfen + ' Punkte mit unbrauchbaren Koordinaten ebenfalls nicht.'; }
+        if (gelesen.ohneZeit) { t += ' ' + gelesen.ohneZeit + ' Punkte ohne Zeitstempel sind nicht mitgekommen.'; }
+        if (gelesen.verworfen) { t += ' ' + gelesen.verworfen + ' Punkte mit unbrauchbaren Koordinaten ebenfalls nicht.'; }
         if (d.art === 'rest') { t += ' Einsätze schneidest du jetzt heraus.'; }
         melde('ok', t);
       } catch (e) {
@@ -548,7 +702,10 @@ const EdSchnitt = (() => {
   function starten(laden) { neuLaden = laden; }
 
   /** Nach jedem Laden des Diensttags. */
-  function setzen(segmente) { zeichnen(segmente || []); }
+  function setzen(segmente, info) {
+    if (info) { tagInfo = { tag: info.tag || null, tz: info.tz || null }; }
+    zeichnen(segmente || []);
+  }
 
   return { starten, setzen, rueckgaengig, gpxStarten };
 })();

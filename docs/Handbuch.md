@@ -96,13 +96,13 @@ Track und eine laufende Reanimation werden nahtlos fortgesetzt.
 
 **Schon vor dem Dienstbeginn** führt **kurz DOWN** vom Startbildschirm auf die
 **Sync-Seite**. Sie zeigt Kopplungszustand, Serveradresse und die
-App-Version — und dort startet auch die Kopplung (*lang START*, Abschnitt 12).
+App-Version — und dort startet auch die Kopplung (*lang START*, Abschnitt 10).
 Zurück zum Startbildschirm geht es mit **kurz UP** oder mit **BACK**; beide
 tun dasselbe. Weiter nach unten führt von hier nichts: Die Oberflächen aus
 Abschnitt 2.2 gibt es erst im laufenden Dienst.
 
-> **Steht dort etwas in Rot?** Zwei Meldungen sind seit Uhr 3.1.0 möglich, und
-> beide sagen dir, was zu tun ist.
+> **Steht dort etwas in Rot?** Vier Meldungen sind möglich, und jede sagt dir,
+> was zu tun ist.
 >
 > „**Gerät nicht mehr angemeldet**" heißt: Der Server kennt diese Uhr nicht
 > mehr — sie wurde in den Einstellungen gelöscht oder abgeschaltet. Die Uhr
@@ -114,6 +114,24 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > **kurz START** kannst du es verwerfen; die Uhr fragt vorher nach, denn die
 > Aufzeichnung ist danach fort. Solange du es stehen lässt, belegt es Platz
 > im Speicher der Uhr — beim Trennen der Kopplung wird es ohnehin verworfen.
+> **Seit Uhr 4.0.0 räumt die Uhr es nach 30 Tagen selbst weg**, gezählt ab dem
+> Abweisen: Eine Spur, die nie mehr ankommt, soll nicht für immer auf einem
+> Gerät liegen, das verlorengehen kann.
+>
+> „**Kein Schlüssel**" *(seit Uhr 4.0.0)* heißt: Die Uhr ist gekoppelt, hat
+> aber den Schlüssel deines Kontos nicht, mit dem sie GPS-Daten,
+> Phasenorte und Reanimation verschließt — so steht sie nach dem Update auf
+> 4.0.0 da, oder wenn dein Konto beim Koppeln noch keinen hatte. Sie sendet
+> dann nichts und **behält alles**. Darunter steht der Weg: **lang START**
+> (Venu: *Action halten*) holt den Schlüssel. Kommt „Erst im Web anmelden",
+> melde dich einmal in der Weboberfläche an — dabei entsteht der Schlüssel —
+> und halte START noch einmal. Ein Neukoppeln ist dafür nicht nötig.
+>
+> „**Verschlüsseln geht nicht**" *(seit Uhr 4.0.0)* heißt: Die Uhr hat ihre
+> Verschlüsselung vor dem ersten Senden gegen einen festen Prüfwert gerechnet,
+> und er stimmte nicht. Sie sendet dann nichts, weil niemand ihre Daten
+> öffnen könnte. Neu koppeln hilft hier nicht — bitte melden, mit
+> Uhrenmodell und Firmware.
 
 ### 2.2 Die Oberflächen
 
@@ -175,17 +193,24 @@ mit **START gedrückt halten** startest du hier die Geräte-Kopplung.
 **Koppeln — die Uhr zeigt einen Code.** Seit Uhr 3.0.0 läuft das andersherum
 als früher: Du tippst nichts mehr auf der Uhr ein. Sie holt sich beim Server
 eine Kopplungssitzung und zeigt **sechs Zeichen** groß an, darunter
-„Einstellungen, Geräte" und die Restzeit. Diesen Code gibst du **im Web** ein
+„Im Web eingeben" und die Restzeit. Diesen Code gibst du **im Web** ein
 (Einstellungen → Geräte). Danach fragt die Uhr zurück — „Mit ph\*\*\*@… koppeln?"
 —, und erst dein **Ja auf der Uhr** schließt die Kopplung ab. So kann weder ein
 fremdes Gerät in dein Konto noch dein Gerät in ein fremdes.
+
+**Mit dem Ja bekommt die Uhr den Schlüssel deines Kontos** *(seit Uhr 4.0.0)*.
+Damit verschließt sie GPS-Daten, Phasenorte und Reanimation, bevor sie sie
+sendet; öffnen kann das nur dein Browser. Steht nach dem Koppeln
+„Gekoppelt · Erst im Web anmelden" und darunter „Kein Schlüssel", hatte dein
+Konto noch keinen — melde dich einmal im Web an und halte dann START (oben,
+„Steht dort etwas in Rot?").
 
 **Zurück** bricht ab. Nach **zehn Minuten** verfällt der Code; dann holst du mit
 demselben Tastenweg einen neuen — die Uhr sagt es dir („Code abgelaufen / START
 halten: neuer Code"). Ist eine Kopplung schon da, fragt die Uhr vorher, ob sie
 sie trennen soll, und besteht darauf, dass vorher alles gesendet ist: Offene
-Pakete gehören dem bisherigen Konto. Der ganze Weg von der leeren Uhr an steht
-in Abschnitt 12.
+Pakete gehören dem bisherigen Konto. Die Seite im Web, auf der du den Code
+eingibst, steht in Abschnitt 10.
 
 **Reanimation:** siehe 2.3.
 
@@ -1247,13 +1272,20 @@ ihre Kennzeichnung in der Datei bei sich.
 Ein Eintrag ohne Aufzeichnung steht in der Liste, hat aber ein abgeschaltetes
 Kästchen und keinen Abruf — es gibt an ihm nichts herunterzuladen.
 
+**Die Datei entsteht in deinem Browser** (seit Web 22.3.0). Die GPS-Daten liegen
+verschlüsselt auf dem Server; die Seite öffnet sie mit deinem Passwort, um die
+Karte zu zeichnen, und baut aus denselben Punkten die Datei. Ist die Sitzung
+gesperrt, fragt sie zuerst nach dem Passwort. Die Datei selbst ist dieselbe
+wie vorher — Name, Beschreibung und Dateiname haben sich nicht geändert.
+
 Diese Seite ist die einzige Stelle, an der auch die **Ruhezeiten** einzeln
 greifbar sind — auf der Tagesübersicht sind sie nur eine schwarze Linie auf
 der Karte.
 
 > **GPS-Daten zeigen den Weg, also auch den Einsatzort.** Die Datei ist damit
-> so zu behandeln wie die geschützten Angaben selbst, obwohl sie ohne
-> Schlüssel lesbar ist. Der Hinweis steht auf der Seite über der Liste.
+> so zu behandeln wie die geschützten Angaben selbst: Auf dem Server sind sie
+> verschlüsselt, in der heruntergeladenen Datei nicht. Der Hinweis steht auf
+> der Seite über der Liste.
 
 ### 4.1b Einen vergessenen Einsatz aus der Ruhezeit schneiden
 
@@ -1286,9 +1318,14 @@ Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
    Segments —, steht dort stattdessen **rot**, warum, und der Knopf bleibt
    gesperrt.
 
-**Die Punkte wandern, sie werden nicht kopiert.** Nach dem Schnitt liegt die
-Fahrt beim Einsatz und **nicht mehr** im Ruhesegment. Das ist gewollt: Sonst
-zeigte die Ruhezeit später eine Fahrt über 40 km.
+**Die Punkte wandern.** Nach dem Schnitt liegt die Fahrt beim Einsatz und
+erscheint **nicht mehr** im Ruhesegment. Das ist gewollt: Sonst zeigte die
+Ruhezeit später eine Fahrt über 40 km. Seit Web 22.2.0 schneidet dein
+Browser — die GPS-Daten sind verschlüsselt, und nur er kann sie öffnen. Du
+musst dafür entsperrt sein; sonst fragt die Anwendung zuerst nach dem
+Passwort. Im Ruhesegment ist der Zeitraum danach gesperrt und wird nicht
+mehr gezeigt; die Punktzahl an der Zeile zählt ihn trotzdem noch mit, bis die
+Aufzeichnung einmal neu gepackt ist.
 
 **Was danach noch fehlt:** Einsatzort, Alter und Diagnose. Die sind
 verschlüsselt und können nur im Browser entstehen — der geschnittene Einsatz
@@ -1296,7 +1333,8 @@ ist zunächst ein Einsatz mit Zeiten, Phasen und GPS-Daten. Öffne ihn und trag 
 Rest wie gewohnt nach (Abschnitt 4.3).
 
 **Rückgängig** steht an derselben Segmentzeile, neben einer Plakette mit dem
-geschnittenen Zeitraum. Es holt die Punkte zurück und löscht den Einsatz.
+geschnittenen Zeitraum. Es löscht den Einsatz, und der Zeitraum gehört
+wieder zum Ruhesegment.
 
 > **Es geht nur, solange am Einsatz nichts hängt.** Hast du inzwischen
 > Einsatzort, Diagnose, eine abweichende Besatzung oder eine Reanimation
@@ -1317,6 +1355,37 @@ geschnittenen Zeitraums kommt normal an; die Aufzeichnung läuft über den
 Schnitt hinweg weiter, und ein Dienst, der um 09:30 geschnitten wurde, zeichnet
 um 09:31 weiter auf. Nimmst du den Schnitt zurück, ist auch die Sperre wieder
 weg.
+
+#### Ein Stück einer Aufzeichnung löschen
+
+*Seit Web 22.2.0.*
+
+Ein vergessener Dienst zeichnet weiter auf — auch den Weg nach Hause. Solche
+GPS-Daten willst du nicht behalten, den echten Dienst daneben aber schon.
+Dafür steht im selben aufgeklappten Bereich neben „Einsatz erzeugen" der rote
+Knopf **„Zeitraum löschen"**:
+
+1. **„Schneiden"** an der Zeile des Segments, Beginn und Ende des Zeitraums
+   eintragen — wie beim Schneiden.
+2. **„Zeitraum löschen"**. Die Anwendung fragt nach und nennt, wie viele
+   Punkte zwischen welchen Uhrzeiten wegfallen.
+3. Nach **„Löschen"** sind diese Punkte **endgültig** fort; es gibt kein
+   Rückgängig. Die übrigen Punkte bleiben, die Punktzahl an der Zeile sinkt.
+   Im Protokoll steht eine Zeile dazu.
+
+Der gelöschte Zeitraum bleibt **gesperrt**: Sendet ein Gerät ihn noch einmal,
+kommt er nicht zurück. Ein paar Grenzen:
+
+- **Die ganze Aufzeichnung** lässt sich so nicht löschen — dafür ist der
+  Papierkorb da (den Diensttag löschen, Abschnitt 8).
+- **Aufzeichnungen aus der Zeit vor der Verschlüsselung** lassen sich erst
+  nach der Umstellung des Servers stückweise löschen; die Anwendung sagt es.
+- **Zusammengefasste und ausgedünnte Aufzeichnungen** (Abschnitt 6, „GPS-Daten
+  verdichten") lassen sich seit Web 22.6.0 genauso stückweise löschen; sie
+  bleiben danach zusammengefasst.
+- **Kommen gerade neue GPS-Daten an**, während du löschst, tut die Anwendung
+  nichts und bittet dich, die Seite neu zu laden — sonst ginge das Neue
+  verloren.
 
 ### 4.1c GPX-Datei importieren
 
@@ -1349,15 +1418,17 @@ und Dateien über **12 MB**. In jedem Fall steht der Grund im Dialog, und es
 entsteht nichts.
 
 **Die Datei sollte UTF-8 sein.** GPX schreibt das vor, und Geräte halten sich
-daran. Wählst du die Datei im Browser aus, wandelt er sie beim Lesen nach
-UTF-8 um — die Punkte kommen dann an, Umlaute aus einer Latin-1-Datei aber
-als Ersatzzeichen; sie stehen nur im Namen der Aufzeichnung, und den
-speichert der Import nicht. Wer den Import unmittelbar über die Schnittstelle anspricht,
-muss UTF-8 liefern: Dort werden eine andere Kodierung, ein Nullbyte oder eine
-Kodierungsangabe wie UTF-7 oder UTF-16 abgelehnt (seit Web 15.6.0), und die
-Meldung sagt, was zu tun ist: als UTF-8 speichern und erneut versuchen. Eine
-Kodierungsangabe wie ISO-8859-1 in einer Datei, deren Inhalt UTF-8 ist — so
-kommt die Latin-1-Datei aus dem Dateidialog an —, ist dagegen erlaubt.
+daran. Eine Latin-1-Datei kommt trotzdem an — die Punkte vollständig, Umlaute
+aber als Ersatzzeichen; sie stehen nur im Namen der Aufzeichnung, und den
+speichert der Import nicht. Abgelehnt werden ein Nullbyte (das deutet auf
+UTF-16 hin) und eine Kodierungsangabe wie UTF-7, UTF-16 oder EBCDIC; die
+Meldung sagt, was zu tun ist: als UTF-8 speichern und erneut versuchen.
+
+**Die Datei wird in deinem Browser gelesen** (seit Web 22.3.0). Bevor etwas an
+den Server geht, verschlüsselt der Browser die Punkte; der Server sieht keine
+Koordinate. Jede Ablehnung oben entsteht deshalb im Dialog selbst, ohne dass
+etwas gesendet wurde. Ein Passwort braucht es dafür nicht: Verschlossen wird
+mit dem öffentlichen Schlüssel deines Kontos, wie es die Uhr auch tut.
 
 **Was toleriert wird:** GPX 1.0 ebenso wie 1.1, und Dateien ohne
 Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Aufzeichnung
@@ -1380,7 +1451,8 @@ nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
 „Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
 Web 9.3.0 dasselbe Blatt wie auf der Startseite). **GPS-Daten als GPX** erscheint
 nur, wenn der Einsatz überhaupt GPS-Daten hat, und lädt sie als GPX-Datei
-herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — bei einem
+herunter — lesbar von jedem Kartenprogramm. Die Datei baut dein Browser aus
+den geöffneten GPS-Daten (seit Web 22.3.0; Abschnitt 4.1a). In der Unterzeile stehen Zeitspanne — bei einem
 Einsatz ohne Ende „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
 Rettungsmittel und Standort:
 
@@ -1392,6 +1464,31 @@ Rettungsmittel und Standort:
 | **manuell** | Von Hand nachgetragen (Abschnitt 4.5/4.3) |
 | **importiert** | Über Import/Export eingespielt |
 | **Schnitt** | Aus einer Ruhezeit herausgeschnitten (Abschnitt 4.1b) |
+
+**GPS-Daten, Phasenorte und Reanimation öffnet dein Browser** (seit
+Web 22.0.3). Uhr und Handy schicken sie verschlüsselt, und nur dein Browser
+hat den Schlüssel dazu — deshalb erscheinen Karte, Einsatzphasen und
+Reanimation erst nach dem Entsperren. Dauert das einen Moment, steht an ihrer
+Stelle ein kleiner drehender Ring mit einem Satz: „Ortsdaten werden geladen …",
+„Wartet auf dein Passwort" (der Ring steht dann still, bis du entsperrst),
+„Ortsdaten werden geöffnet …". Lassen sie sich nicht öffnen, steht dort eine
+rote Meldung; die übrigen Angaben des Einsatzes stimmen trotzdem. Die
+Administration erfährt davon von selbst (seit Web 22.0.4): Im Reiter System
+erscheint eine Meldung mit der Nummer des Einsatzes und dem Grund — nie mit
+dem Inhalt. Dasselbe
+gilt für die Karte der Tagesübersicht und für „GPS-Daten des Diensttages"
+(4.1a). **Einsätze, die vor dieser Fassung aufgezeichnet wurden, zeigen
+vorübergehend keine Karte**, bis ihre Ortsdaten einmal umgestellt sind. Das
+tut seit Web 22.7.0 dein Browser von selbst: Öffnest du die Startseite und
+bist entsperrt, verschließt er im Hintergrund, was noch offen auf dem Server
+liegt — GPS-Daten, Phasenorte, Reanimation, Zielklinik, Höhe —, und beim nächsten
+Öffnen ist die Karte wieder da. Du musst dafür nichts tun und nichts
+abwarten; bricht es ab, macht der nächste Aufruf weiter. Seit Web 22.1.0
+gilt dasselbe für die **Zielklinik** (Zeile, Pin, Linie zur letzten
+Zielklinik) und die **Höhe des Einsatzorts**: Beides steht erst nach dem
+Entsperren da. Ältere Einsätze zeigen beides bis zum Umzug nicht —
+außer du speicherst einen davon einmal im Formular: Dann nimmt dein Browser
+Zielklinik, Phasenorte und Reanimation gleich verschlüsselt mit.
 
 **Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
 einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
@@ -1615,8 +1712,15 @@ ohne Maus — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
 
 **Geschützte Angaben** (Abschnitt 5) stehen gesammelt in der Karte
 „PatientIn" — Person, Diagnose, Einsatzort, Beschreibung, manueller
-Abfahrtort. Ist der Schlüssel in dieser Sitzung gesperrt, sind alle diese
-Felder gesperrt — die übrigen bleiben bedienbar. Beim Geburtsdatum reicht
+Abfahrtort; dazu, mit Schloss an ihrer Stelle, das **Transportziel** und die
+Karte **Reanimation** (seit Web 22.1.0). Ist der Schlüssel in dieser Sitzung
+gesperrt, sind alle diese Felder gesperrt — die übrigen bleiben bedienbar.
+**Speichern geht seit Web 22.1.0 erst nach dem Entsperren:** Orte der
+Einsatzphasen und Reanimation werden bei jedem Speichern neu verschlüsselt,
+und das kann nur dein Browser mit offenem Schlüssel. Wer gesperrt auf
+Speichern tippt, bekommt zuerst den Entsperren-Dialog. Lassen sich die
+Ortsdaten eines Einsatzes nicht öffnen, steht oben eine rote Meldung, und
+Speichern bleibt gesperrt — es würde sie sonst überschreiben. Beim Geburtsdatum reicht
 auch eine zweistellige Jahreszahl (z. B. „23.04.33") — die Anwendung ergänzt
 automatisch das plausible Jahrhundert. Der Einsatzort sucht beim Tippen: Ab
 drei Buchstaben erscheinen Adressvorschläge (OpenStreetMap); die Auswahl
@@ -1748,7 +1852,11 @@ dieselbe Größe.
 **Transport.** Die **Transportart** (Luft, Boden, Ambulant) — bis Web 6.3.0
 schlicht „Transport" — steuert, was darunter erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
 Koordinaten und den **Schockraum**; bei „Ambulant" — die PatientIn wurde nicht
-transportiert — entfallen alle drei. Ein zuvor eingetragenes Transportziel wird
+transportiert — entfallen alle drei. Die Zielklinik ist seit Web 22.1.0
+verschlüsselt (Schloss): Sie steht erst nach dem Entsperren im Feld, ihr Pin
+erscheint auf den Karten erst nach dem Entsperren, und die Suche findet einen
+Einsatz über die Zielklinik nur entsperrt. Die Vorschlagsliste der Zielkliniken
+aus den Stammdaten bleibt, wie sie ist. Ein zuvor eingetragenes Transportziel wird
 dabei geleert, und die Änderung ist sichtbar: Ein Transportziel an einem Einsatz
 ohne Transport wäre ein Widerspruch in den Daten.
 
@@ -1808,6 +1916,10 @@ darunter „+ Ereignis hinzufügen" für jedes weitere Ereignis, jeweils Art
 (Zugang, Adrenalingabe, Rhythmuskontrolle, Defibrillation, Intubation,
 Amiodaron, Sonographie, ROSC, Tod) und Uhrzeit. Das Kreuz am Beginn entfernt
 die ganze Reanimation, das Kreuz an einer Ereigniszeile nur diese.
+
+Die Reanimation ist seit Web 22.1.0 **verschlüsselt** (Schloss am Titel): Ihre
+Zeilen erscheinen erst nach dem Entsperren und werden nur verschlüsselt
+gespeichert.
 
 Gab es an einem Einsatz **mehrere Reanimationen**, legst du einfach mehrere
 Blöcke an. Eine Zeile ohne Uhrzeit wird nicht gespeichert — du musst eine
@@ -2456,6 +2568,17 @@ Zwei Dinge sind dabei wichtig:
   der Import gesperrt und der Export nur ohne personenbezogene Angaben
   möglich.
 
+**Der Schlüssel für Uhr und Handy (seit Web 22.0.0).** Beim ersten
+Entsperren nach einer Anmeldung legt die Anwendung still ein zweites
+Schlüsselpaar für dein Konto an. Uhr und Handy bekommen davon den
+öffentlichen Teil beim Koppeln; damit werden sie künftig GPS-Daten, Ortsangaben
+der Phasen und Reanimation verschlüsseln, bevor sie etwas senden — öffnen
+kann es nur dein Browser. Du musst dafür nichts tun. Steht oben auf einer
+Seite **„Der Schlüssel, mit dem Uhr und Handy für dieses Konto verschlüsseln,
+passt nicht zu deinem privaten Schlüssel"**, koppel bitte kein neues Gerät und
+gib der BetreiberIn Bescheid: Dann hat jemand den Schlüssel verändert, oder
+es ist ein Fehler aufgetreten. Die Meldung ist bereits an sie gegangen.
+
 **Alter aus Geburtsdatum:** Das Alter berechnet die Anwendung aus dem
 Geburtsdatum, bezogen auf den **Einsatztag**, nicht auf heute — ein Einsatz von
 vor Jahren zeigt weiterhin das damalige Alter. Bei gesetztem Geburtsdatum ist
@@ -2535,6 +2658,24 @@ Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
 einspielen: Beim Import werden die geschützten Angaben automatisch mit dem
 Schlüssel des Zielkontos neu verschlüsselt.
 
+**Orte, Reanimation und GPS-Daten gehören seit Web 22.5.0 dazu.** Sie liegen
+im Konto verschlüsselt, und das Backup holt sie beim Sichern im Browser
+heraus: Die Datei enthält die Orte der Phasen, den Reanimationsverlauf, das
+Transportziel und die GPS-Daten jedes Einsatzes — geschützt wie alles andere
+nur durch das Backup-Passwort. **Bis Web 22.4.0 fehlten sie bei allen
+Einsätzen, die seit Web 22.0.1 von Uhr oder Handy kamen.** Wer in dieser Zeit
+ein Backup angelegt hat, legt am besten ein neues an. Beim Einspielen
+verschlüsselt dein Browser sie wieder für das Zielkonto, bevor er sie sendet —
+auch aus jedem älteren Backup. Deshalb muss die Seite dafür **entsperrt**
+sein, wie beim Sichern. Lässt sich bei einem Einsatz die Verschlüsselung von
+Orten und Reanimation beim Sichern nicht öffnen, sagt die Abschlussmeldung das
+in Orange. Solche Einsätze liegen dann verschlüsselt in der Datei und gehen
+nur im selben Konto wieder auf.
+
+Die Datei wird dadurch größer: Die GPS-Daten stehen jetzt als Liste von
+Punkten in ihr und nicht mehr gepackt, wie der Server sie früher ablegte —
+gemessen am Beispielbestand **880 KB statt 280 KB**.
+
 **Eine Rückfrage vor dem Einspielen — aber nur, wenn es etwas zu fragen gibt.**
 Enthält ein Backup Einsätze, deren geschützte Angaben schon beim
 *Erstellen* nicht zu entschlüsseln waren, kommen sie hier ebenfalls unlesbar
@@ -2608,6 +2749,31 @@ beschädigt" — was beides nicht stimmte.)
 Der Aufbau der Datei ist in `docs/Backup-Format.md` vollständig beschrieben —
 sie lässt sich damit auch ohne dieses Programm entschlüsseln.
 
+#### GPS-Daten verdichten
+
+*Seit Web 22.6.0.*
+
+Uhr und Handy schicken ihre Aufzeichnungen verschlüsselt und ungepackt. Der
+Server kann sie nicht lesen und deshalb auch nicht zusammenfassen — das macht
+**dein Browser**: Er fasst eine Aufzeichnung zusammen, sobald der Einsatz oder
+das Ruhesegment abgeschlossen ist, und **dünnt sie 31 Tage nach dem Ende aus**
+(Abschnitt 12.4 sagt, was dabei geschieht). Zu tun hast du dafür nichts:
+
+- **Auf der Startseite** erledigt er bei jedem Aufruf still bis zu zwanzig
+  Aufzeichnungen — sobald die geschützten Angaben entsperrt sind. Nach dem
+  Passwort fragt er dafür nie.
+- **Hier, unter Backup**, steht die Karte **„GPS-Daten verdichten"**. Sie
+  nennt, was fällig ist („42 Aufzeichnungen aus 11 Diensttagen"), und arbeitet
+  es ab, solange die Seite offen ist: Ring, Zahl und Balken zeigen, wie weit er
+  ist; am Ende steht das Ergebnis. Fehlt bei einem Einsatz die Höhe des
+  Einsatzorts, trägt er sie dabei nach.
+
+Lässt sich eine Aufzeichnung nicht öffnen, bleibt sie, wie sie ist; die Karte
+sagt es rot, und die Betreuung sieht es im Reiter System. Kommt während des
+Laufs Neues von einem Gerät an, wartet er damit bis zum nächsten Mal — es geht
+nichts verloren. Aufzeichnungen aus der Zeit vor der Verschlüsselung fasst er
+nicht an; die übernimmt die Umstellung des Servers.
+
 ### 6.1 Konto-Backups durch die Verwaltung
 
 Seit Web 5.9.0 kann die Verwaltung zusätzlich **Konto-Backups** anlegen — je
@@ -2639,7 +2805,11 @@ hängen am alten Inhaltsschlüssel, und den öffnet allein dein
 dein Konto **frei**. Unter **Einstellungen → „Backup"** erscheint danach ein
 Abschnitt *Für dich freigegebenes Backup*: Dort gibst du deinen
 Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deinen
-neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
+neuen Schlüssel um und spielt sie ein. Seit Web 22.5.0 gilt das auch für Orte,
+Reanimation und GPS-Daten: Sie hängen am Schlüsselpaar des alten Kontos, und
+dein Browser öffnet sie mit dessen privatem Teil aus dem Paket — wieder nur
+mit deinem Wiederherstellungsschlüssel — und verschlüsselt sie für dein neues
+Konto. Solange du eine Freigabe nicht eingelöst
 hast, kann die Verwaltung sie zurücknehmen — auf deiner Kontoseite steht
 seit Web 15.2.0 sichtbar, dass eine Freigabe läuft, für wen und seit wann.
 Bricht die Verbindung genau nach dem Einspielen ab, sagt die Seite
@@ -2763,6 +2933,11 @@ Zwei Sonderfälle werden dabei erkannt:
   personenbezogene Angaben leer lässt. Vorher hätte ein solcher Rückimport sie
   im Bestand gelöscht. Die Kehrseite: Ein Feld lässt sich per Import nicht mehr
   gezielt **leeren**; das geht im Einsatzformular.
+
+  Seit Web 22.4.0 gilt das auch innerhalb der geschützten Angaben: Liefert die
+  Datei nur einen Teil davon (etwa das Transportziel aus einem Export ohne
+  Haken), bleibt der Rest — Name, Diagnose, Einsatzort — stehen. Ebenso
+  bleibt eine **Reanimation**, wenn die Datei keine nennt.
 - **Abweichende Besatzung.** Als Besatzung des Diensttags gilt die des ersten
   Einsatzes des Tages. Steht bei einem späteren Einsatz jemand anderes — der
   klassische Pilotenwechsel oder Fahrerwechsel im laufenden Dienst —, trägt
@@ -2771,7 +2946,16 @@ Zwei Sonderfälle werden dabei erkannt:
   gespeicherte gilt oder die aus der Datei.
 
 **3. Übernehmen.** Der Import läuft als Ganzes: Entweder alle Zeilen werden
-übernommen oder — falls unterwegs etwas schiefgeht — keine einzige. Am Ende
+übernommen oder — falls unterwegs etwas schiefgeht — keine einzige.
+
+**Die Ortsdaten verschlüsselt dein Browser** (seit Web 22.4.0), bevor etwas
+an den Server geht: Phasenorte und Reanimation in denselben verschlossenen
+Block, den die Uhr schickt, Transportziel und Höhe des Einsatzorts zu den
+übrigen geschützten Angaben. Ältere Einsätze, die du überschreibst, ziehen
+dabei mit um — ihre bisher offen gespeicherten Orte stehen danach ebenfalls
+verschlüsselt da. Lässt sich bei einem solchen Einsatz das Vorhandene nicht
+öffnen, sagt der Import es vor dem Übernehmen und nennt den Einsatz; dann
+diese Zeile überspringen. Am Ende
 steht, wie viele Einsätze angelegt, überschrieben und übersprungen wurden,
 mit einem Link auf den ersten importierten Tag.
 
@@ -2835,7 +3019,10 @@ ab. Seit Web 5.8.0 deckt er **alles** ab, was auf einen Menschen zeigt:
 - die **Notizen** von Einsatz und Diensttag,
 - die **Koordinaten der Phasen** (Phase 4 ist „Ankunft Einsatzort", Phase 5
   „Ankunft PatientIn" — das *ist* der Einsatzort), die **Höhe des
-  Einsatzortes** und die **GPX-Tracks**.
+  Einsatzortes** und die **GPX-Tracks**,
+- seit Web 22.4.0 das **Transportziel** samt Koordinate und der **Verlauf
+  einer Reanimation** bei allen Einsätzen, deren Ortsdaten schon
+  verschlüsselt liegen (seit Web 22 gesendet, gespeichert oder importiert).
 
 Der letzte Punkt war der Anlass für die Erweiterung: Bis Web 5.7.0 nannte ein
 Export „ohne Patientendaten" den Einsatzort trotzdem, nur in einer anderen
@@ -2844,13 +3031,16 @@ Option versprach.
 
 **Was ausdrücklich drin bleibt** — damit es nicht als Versehen gelesen wird:
 
-- **Transportziel** und **Bergwacht-Einheit**. Beides sind Einrichtungen, keine
-  Personen. Das Transportziel ist zusammen mit Datum und Uhrzeit trotzdem ein
-  Hinweis auf eine bestimmte Aufnahme; die Entscheidung, es zu behalten, ist
-  bewusst getroffen und steht deshalb hier.
+- Die **Bergwacht-Einheit** — eine Einrichtung, keine Person. Bis Web 22.3.0
+  stand hier auch das **Transportziel**; seit es verschlüsselt gespeichert
+  wird, gehört es zu den geschützten Angaben und steht nur noch mit Haken in
+  der Datei.
 - **Weitere Rettungsmittel** („RTW Talwang") — Organisationskennungen.
-- Der **Verlauf einer Reanimation** ohne Angabe, wen sie betraf. Ohne ihn
-  entfiele der Grund, Reanimationen überhaupt zu erfassen.
+- Der **Verlauf einer Reanimation** älterer Einsätze, ohne Angabe, wen sie
+  betraf. Bei Einsätzen, deren Reanimation schon verschlüsselt liegt, steht er
+  seit Web 22.4.0 nur noch mit Haken in der Datei: Er geht nur mit deinem
+  Passwort auf, und ein Export ohne Haken fragt nicht danach. Bis alle alten
+  Einsätze umgestellt sind, ist eine Datei ohne Haken deshalb gemischt.
 - Die **Zeitpunkte** der Phasen. Sie tragen Alarmzeit, Endzeit und Dauer.
 - Der Haken **abweichende Besatzung**. Er sagt nur, *dass* sie abwich — sonst
   wäre nicht mehr zu erkennen, dass die leeren Namensspalten leer *gemacht*
@@ -2951,7 +3141,10 @@ ein anderes Konto. Ein `.zip` kann direkt gewählt werden, die Tabelle darin wir
 von selbst gefunden; bei einem geschützten Archiv wird nach dem Passwort gefragt.
 
 - Das **CSV (Standard)** liest alles zurück: alle Phasen samt Koordinaten, die
-  Reanimationsdokumentation und sämtliche Einsatzfelder. Nicht übernommen werden
+  Reanimationsdokumentation und sämtliche Einsatzfelder — sofern die Datei mit
+  „Personenbezogene Angaben einschließen" entstand; ohne den Haken fehlen
+  Orte, Transportziel und bei neueren Einsätzen die Reanimation darin, und der
+  Import lässt das Vorhandene dann stehen. Nicht übernommen werden
   die internen Nummern der Einsätze (sie werden neu vergeben) und die
   GPX-Tracks — Tracks stammen von der Uhr, der Weg dafür ist das Backup.
 - Beim **Excel (Standard)** steht vor dem Import, welche Felder danach leer
@@ -3366,7 +3559,7 @@ Unter **Einstellungen → „Geräte"** verwaltet jede/r die eigenen Geräte —
 Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
 
 **Die Karte „Gerät koppeln" steht oben und hat drei Zustände** *(seit Web
-13.1.0)*. Sie führt den Weg, den Abschnitt 12 von der Uhr aus beschreibt:
+13.1.0)*. Sie führt den Weg, den Abschnitt 2.2 von der Uhr aus beschreibt:
 
 1. **Ein Feld „Code vom Gerät".** Du startest die Kopplung **am Gerät**; es
    zeigt sechs Zeichen, die du hier eintippst. Groß- und Kleinschreibung und
@@ -3671,6 +3864,13 @@ unberührt weiter.
 Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
 „Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu
 koppeln".
+
+**„Konto noch ohne Schlüssel · einmal im Web anmelden"** *(seit Android
+0.18.0)*: Das Telefon verschließt GPS-Daten und Phasenorte mit dem Schlüssel
+deines Kontos, bevor es sendet — und dein Konto hat noch keinen. Er entsteht,
+sobald du dich einmal in der Weboberfläche anmeldest. Danach holt das
+Telefon ihn beim nächsten Senden von selbst; neu koppeln musst du nicht.
+Bis dahin sendet es nichts und **behält alles**.
 
 **Abgewiesene verwerfen** *(seit Android 0.17.0)*. Wer nicht 30 Tage warten
 will, tippt auf „Abgewiesene verwerfen …". Die App fragt nach — „3 abgewiesene
@@ -4132,6 +4332,20 @@ ein Paket für ein Konto frei, und einspielen kann es nur die NutzerIn selbst,
 in ihrem Backup-Bereich, mit ihrem **Wiederherstellungsschlüssel**. Der liegt
 ausschließlich bei ihr — auch die Verwaltung hat ihn nicht, und ohne ihn
 öffnen sich die geschützten Angaben des Pakets nicht.
+
+**Seit Web 22.5.0 zählen Orte, Reanimation und GPS-Daten mit.** Sie liegen im
+Paket so verschlüsselt, wie sie im Konto lagen, gebunden an dessen
+Schlüsselpaar. Ein Paket mit solchen Daten geht deshalb nie unmittelbar in
+ein Konto mit anderer Kennung, sondern über die Freigabe. Dort öffnet der
+Browser der NutzerIn sie und verschlüsselt sie neu. **Beim unmittelbaren
+Einspielen verlangt die Anwendung ein Schlüsselpaar im Zielkonto.** Es
+entsteht, wenn sich die NutzerIn einmal anmeldet und die Seite entsperrt.
+Fehlt es, wird abgewiesen, bevor etwas geschrieben ist. Ein älteres Paket
+trägt Orte und GPS-Daten noch offen. Der Server verschlüsselt sie beim
+Einspielen selbst, mit dem öffentlichen Schlüssel des Kontos — er hat sie ja
+ohnehin vor sich. Transportziel und Ortshöhe kann er nicht in die geschützten
+Angaben legen. Sie bleiben im alten Feld, bis der Einsatz das nächste Mal im
+Formular gespeichert wird.
 
 #### Drei Backups, drei Namen
 
@@ -4837,6 +5051,19 @@ solange, rechnet jede Anmeldung zweimal). Das Demo-Konto zählt dort nicht
 mit: Es bleibt auf der Rundenzahl seiner Fixture, und der Altwert bleibt
 deshalb in der Liste, bis der Referenzbestand neu gebaut ist.
 
+**Die Zeile „Ortsdaten"** (seit Web 22.7.0, Karte **Server**) zählt, was
+auf dem Server noch **im Klartext** liegt: GPS-Punkte, Phasenorte,
+Reanimationen, Zielkliniken und Höhen aus der Zeit vor Web 22. Umziehen kann
+nur der Browser des Kontos selbst (4.2) — beim
+nächsten Öffnen der Startseite nach dem Entsperren. **Orange „Umzug offen"**,
+solange irgendein Konto noch Klartext hat, mit der Zahl je Art; das heißt
+meist: Jemand hat sich seit der Umstellung nicht angemeldet. **Blau
+„verschlossen"**, wenn nichts mehr offen ist. Erst dann darf die
+Aufräumfassung kommen, die die alten Spalten löscht. Bleibt ein einzelner
+Einsatz übrig, obwohl sich sein Konto angemeldet hat, trägt er einen
+verschlüsselten Block, der sich mit dem Schlüssel des Kontos nicht öffnen
+lässt — dann hilft nur ein Blick in den Reiter System.
+
 **Die Zeile „Umgebung"** (seit Web 20.38.0) steht oben in der Karte
 **Server**, und zwar immer. Ihre Plakette nennt die Anlage: den Namen aus dem
 Eintrag `app.umgebung` in der `config.php` — auf der Testanlage „Staging" —
@@ -5418,27 +5645,22 @@ hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
 **„Fehler"**, wird unter anderem der Papierkorb nicht mehr geleert; die
 Ursache steht in derselben Karte im Klartext.
 
-Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Aufzeichnungen",
-sondern welche. Fünf Gründe kommen vor: eine **Lücke in der Nummernfolge**
-(eine Uhr hat ein Teilstück nie nachgeliefert; die Aufzeichnung bleibt dann so stehen,
-wie sie ist), **zu viele Punkte** (über 50 000 in einer Aufzeichnung), **Punkte auf
-ausgedünnten GPS-Daten** (hier sollte immer null stehen), **„Wartet auf die
-Verdichtung"** (es sind noch Punkte nachgekommen; sie werden erst verdichtet,
-dann ausgedünnt) und eine **nicht bestandene Prüfung** (dabei wurde nichts
-gelöscht und nichts ersetzt). Ein
-Rückstand ohne solche Listen ist normal: Er zählt auch mit, was einfach noch zu
-frisch ist.
-
-**Was mit alten GPS-Daten geschieht.** Die Anwendung legt GPS-Punkte in drei
-Stufen ab. Frisch von der Uhr kommen sie als einzelne Punkte; sobald ein
-Einsatz abgeschlossen ist und zwei Wochen nichts mehr nachgekommen ist, werden
-sie zu einem kompakten Paket zusammengefasst — daran ändert sich nichts, was
-man sieht. **Sechs Monate nach dem Einsatz** werden die GPS-Daten ausgedünnt: Es
+**Was mit alten GPS-Daten geschieht.** Die Anwendung legt GPS-Daten in drei
+Stufen ab. Frisch von Uhr oder Handy kommen sie in kleinen Stücken; sobald ein
+Einsatz abgeschlossen ist, werden sie zu einem kompakten Paket zusammengefasst
+— daran ändert sich nichts, was man sieht. **31 Tage nach dem Einsatz** werden
+sie ausgedünnt: Es
 bleiben die Punkte, die den Weg beschreiben, und die zu den Einsatzphasen
 gehören; dazwischenliegende, die auf der Linie liegen, fallen weg. Auf der
 Karte sieht der Weg danach genauso aus. **Die Punktzahl in Export und GPX ist
 danach kleiner** — das ist kein Verlust der Aufzeichnung, sondern ihre
-Verdichtung, und es lässt sich nicht rückgängig machen.
+Verdichtung, und es lässt sich nicht rückgängig machen. **Seit Web 22.6.0 tut
+das nicht mehr ein Job hier, sondern der Browser jedes Kontos** (Abschnitt 6,
+„GPS-Daten verdichten"): Der Server kann die verschlüsselten Aufzeichnungen
+nicht lesen. Bis dahin standen in dieser Liste die Jobs „GPS-Daten verdichten"
+und „GPS-Daten ausdünnen", mit einer Frist von zwei Wochen und sechs Monaten
+und einer Liste dessen, was liegenblieb. Aufzeichnungen aus der Zeit vor der
+Verschlüsselung bleiben bis zur Umstellung des Servers, wie sie sind.
 
 Zwei Dinge, die man dazu wissen sollte: Ändert man bei einem älteren, bereits
 ausgedünnten Einsatz eine **Phasenzeit**, wird die Höhe des Einsatzorts nicht
@@ -5451,8 +5673,9 @@ Punkte werden aber nicht mehr aufgenommen.
 anhalten"** mit einer Dauerwahl: *15 Min.*, *30 Min.*, *1 Std.* oder
 *2 Std.*. Das ist für den Fall gedacht, dass etwas schiefläuft oder ein großes
 Backup einzuspielen ist. **Während der Pause geschieht gar nichts** — nichts
-wird verdichtet, ausgedünnt, aufgeräumt, gesichert oder versendet, auch das
-geplante Komplett-Backup nicht. Die Rückfrage sagt genau das.
+wird aufgeräumt, gesichert oder versendet, auch das geplante Komplett-Backup
+nicht. Das Verdichten der GPS-Daten im Browser hält sie nicht an; es gehört
+nicht zu diesen Jobs. Die Rückfrage sagt genau das.
 
 Die Pause **läuft von selbst ab**; länger als zwei Stunden am Stück geht
 nicht, damit eine vergessene Pause die Installation nicht dauerhaft anhält.
@@ -5498,17 +5721,8 @@ bricht nichts ab, sondern merkt sich, wo er war. Die Kommandozeile bekommt
 Deshalb steht die eigentliche Arbeit vorn und das Sicherheitsnetz („Verwaiste
 GPS-Daten") hinten.
 
-**Ein Rückstand ist kein Fehler.** Er zählt auch mit, was einfach noch zu
-frisch ist: GPS-Daten werden erst zwei Wochen nach dem Einsatz verdichtet und
-sechs Monate danach ausgedünnt.
-
-**Was liegenbleibt und warum.** Eine **Lücke in der Nummernfolge** hält die
-Verdichtung an, weil die Position im Paket die Nummer des Punkts ist — eine
-Lücke verschöbe jeden Punkt dahinter. **Zu viele Punkte** (über 50 000 je
-Aufzeichnung) bleiben als Zeilen stehen, weil ein Backup so große GPS-Daten
-nicht wiederherstellen könnte. Steht bei **Punkte auf ausgedünnten GPS-Daten**
-eine Zahl, nimmt die Uhr-Schnittstelle Punkte an, die sie nach der Ausdünnung
-verwerfen sollte.
+**Ein Rückstand ist kein Fehler.** Er zählt auch mit, was einfach noch nicht
+dran ist — etwa ein Papierkorb, dessen Frist noch läuft.
 
 ### 12.5 Servereinstellungen
 

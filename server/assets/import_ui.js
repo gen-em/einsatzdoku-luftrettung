@@ -546,6 +546,9 @@
             var lokal = (m.phasesLocal || {})[n] || null;
             if (!p && !lokal) { continue; }
             if (p && !p.at && !lokal && p.lat === null && p.lon === null) { continue; }
+            /* `lat`/`lon` gehen seit S11-05e nicht mehr an den Server — sie
+               wandern in die Einsatzhuelle (ortsdatenBauen), und der Server
+               weist sie in der Nutzlast ab. Hier bleiben sie fuer die Huelle. */
             out.push({
                 phase: n,
                 at: (p && p.at) || null,
@@ -555,6 +558,174 @@
             });
         }
         return out.length ? out : null;
+    }
+
+    /** Der vorhandene Einsatz aus der 'check'-Antwort, ueber seine Kennung. */
+    function bestandEinsatz(id) {
+        var tage = (S.bestand && S.bestand.days) || {};
+        for (var d in tage) {
+            if (!Object.prototype.hasOwnProperty.call(tage, d)) { continue; }
+            var ms = tage[d].missions || [];
+            for (var i = 0; i < ms.length; i++) { if (ms[i].id === id) { return ms[i]; } }
+        }
+        return null;
+    }
+
+    function zufallsHex(n) {
+        return Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(n)),
+            function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    }
+
+    /**
+     * DIE ORTSDATEN EINES EINSATZES, VERSCHLOSSEN (S11-05e, E-S11-51, -52).
+     *
+     * Bis Web 22.3.0 gingen Phasenorte, Reanimation, Transportziel samt
+     * Koordinate und Ortshöhe offen an den Server. Jetzt:
+     *   - Transportziel und Ortshöhe in den pat_blob (`transport_dest`
+     *     {addr, lat, lon}, `ortshoehe`), wie das Formular seit S11-05b;
+     *   - Phasenorte und Reanimation in die Einsatzhülle, mit den Zeiten
+     *     relativ zum Beginn (E-S11-40).
+     * Die Zeiten rechnet der Browser nach denselben Regeln wie der Server
+     * (Bezugstag der Alarmzeit, `local` auf dem Diensttag, automatische
+     * Phase 2) und schickt die fertige Phasenliste mit; der Server vergleicht
+     * sie mit dem, was er schreibt (Wächter wie im Formular).
+     *
+     * ÜBERSCHREIBEN FÜHRT ZUSAMMEN (Betreiberin, 16.10.2026, E-S11-52): Was
+     * die Datei nicht nennt, bleibt — Orte der Phasen (je Phasennummer der
+     * Reihe nach), die Reanimation, und im Blob jeder Eintrag. Der Altbestand
+     * im Klartext (Spalten, `mission_phases.lat/lon`, `resus_*`) zieht dabei
+     * mit um; der Server leert ihn danach.
+     *
+     * @param {Object} m      die Zeile aus der Datei
+     * @param {Object} aus    der Eintrag der Nutzlast (wird ergänzt)
+     * @param {Object} pat    die geschützten Angaben aus der Datei
+     * @param {?Object} alt   der vorhandene Einsatz (Überschreiben), sonst null
+     * @param {Object} kk     {ck, k} — Inhaltsschlüssel, Kontoschlüssel (lazy)
+     * @returns {Promise<Object>} der zusammengeführte pat (für den Blob)
+     */
+    async function ortsdatenBauen(m, aus, pat, alt, kk) {
+        var tz = (typeof APP_TZ !== 'undefined') ? APP_TZ : undefined;
+        var naechsterTag = function (d) {
+            var x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + 1);
+            return x.toISOString().slice(0, 10);
+        };
+        /* Der Bezugstag der Alarmzeit, wie der Server ihn waehlt: das echte
+           Einsatzdatum, wenn es der Diensttag oder der Tag darauf ist. */
+        var bezug = (m.einsatzdatum && (m.einsatzdatum === m.day || m.einsatzdatum === naechsterTag(m.day)))
+            ? m.einsatzdatum : m.day;
+        var beginn = EdFormat.ortszeitZuEpoch(bezug, m.alarm, 0, tz);
+        if (beginn === null) { return pat; }            // der Server ueberspringt die Zeile
+
+        var kontoschluessel = async function () {
+            if (!kk.k) { kk.k = await EdOrtsdaten.schluessel(kk.ck); }
+            return kk.k;
+        };
+        /* Was der vorhandene Einsatz an Orten und Reanimation hat: aus der
+           Huelle, sonst aus dem Altbestand (absolute Zeiten). */
+        var altOrte = [], altRea = [];
+        if (alt) {
+            if (alt.ort_huelle) {
+                var innen;
+                try {
+                    innen = await EdOrtsdaten.einsatz({ ort_huelle: alt.ort_huelle, client_ref: alt.client_ref },
+                                                      await kontoschluessel());
+                } catch (e) {
+                    EdOrtsdaten.melden(e, 'einsatz', alt.id);
+                    throw new Error('Die Ortsdaten des vorhandenen Einsatzes ' + alt.id + ' lassen sich '
+                        + 'nicht öffnen — er kann nicht überschrieben werden. Bitte diese Zeile überspringen.');
+                }
+                (innen && innen.phasen || []).forEach(function (o) {
+                    altOrte.push({ phase: o.phase, ts: alt.started_ts + o.t, lat: o.lat, lon: o.lon });
+                });
+                (innen && innen.rea || []).forEach(function (r) {
+                    altRea.push({ ts: alt.started_ts + r.t, ereignisse: (r.ereignisse || []).map(function (e) {
+                        return { art: e.art, ts: alt.started_ts + e.t }; }) });
+                });
+            } else {
+                (alt.phasen || []).forEach(function (o) {
+                    if (o.lat != null) { altOrte.push({ phase: o.phase, ts: o.ts, lat: o.lat, lon: o.lon }); }
+                });
+                altRea = alt.alt_rea || [];
+            }
+        }
+        var vorrat = {};
+        altOrte.forEach(function (o) { (vorrat[o.phase] = vorrat[o.phase] || []).push(o); });
+        var ortAus = function (nr, ts) {
+            var liste = vorrat[nr] || [];
+            var j = liste.findIndex(function (o) { return o.ts === ts; });
+            if (j < 0 && liste.length) { j = 0; }
+            return j >= 0 ? liste.splice(j, 1)[0] : null;
+        };
+
+        /* Die fertige Phasenliste, wie der Server sie schreiben wird. */
+        var dateiPhasen = phasenListe(m);
+        var liste = [];
+        if (dateiPhasen) {
+            dateiPhasen.forEach(function (p) {
+                var ts = p.at ? Math.floor(Date.parse(p.at) / 1000)
+                              : (p.local ? EdFormat.ortszeitZuEpoch(m.day, p.local, 0, tz) : null);
+                if (ts === null || isNaN(ts)) { return; }
+                var o = (p.lat !== null || p.lon !== null) ? { lat: p.lat, lon: p.lon } : ortAus(p.phase, ts);
+                liste.push({ phase: p.phase, ts: ts, lat: o ? o.lat : null, lon: o ? o.lon : null });
+            });
+        } else if (alt) {
+            (alt.phasen || []).forEach(function (p) {
+                var o = ortAus(p.phase, p.ts);
+                liste.push({ phase: p.phase, ts: p.ts, lat: o ? o.lat : null, lon: o ? o.lon : null });
+            });
+        }
+        if (!liste.some(function (p) { return p.phase === 2; })) {
+            liste.push({ phase: 2, ts: beginn, lat: null, lon: null });
+        }
+        liste.sort(function (a, b) { return (a.ts - b.ts) || (a.phase - b.phase); });
+
+        /* Die Reanimation: aus der Datei, sonst die vorhandene. */
+        var rea;
+        if (Array.isArray(m.rea)) {
+            rea = m.rea.map(function (r) {
+                return { ts: Math.floor(Date.parse(r.started_at) / 1000),
+                         ereignisse: (r.events || []).map(function (e) {
+                             return { art: e.type, ts: Math.floor(Date.parse(e.at) / 1000) }; })
+                             .filter(function (e) { return e.art && !isNaN(e.ts); }) };
+            }).filter(function (r) { return !isNaN(r.ts); });
+        } else {
+            rea = altRea;
+        }
+
+        var innenNeu = {
+            fassung: 1,
+            phasen: liste.map(function (p) {
+                return { phase: p.phase, t: p.ts - beginn,
+                         lat: p.lat != null ? Number(p.lat) : null, lon: p.lon != null ? Number(p.lon) : null };
+            }),
+            rea: rea.map(function (r) {
+                return { t: r.ts - beginn, ereignisse: r.ereignisse.map(function (e) {
+                    return { art: e.art, t: e.ts - beginn }; }) };
+            })
+        };
+        aus.ort_huelle = await EdOrtsdaten.einsatzVerschliessen(innenNeu, aus.client_ref || alt.client_ref);
+        aus.ort_phasen = liste.map(function (p) { return [p.phase, p.ts]; });
+        (aus.phases || []).forEach(function (p) { delete p.lat; delete p.lon; });
+
+        /* Der Blob: Bestand (samt Altbestand der Spalten) unter der Datei. */
+        var neu = {};
+        if (alt) {
+            if (alt.pat_blob && alt._patState !== 'ok') {
+                throw new Error('Die geschützten Angaben des vorhandenen Einsatzes ' + alt.id + ' lassen '
+                    + 'sich nicht lesen — er kann nicht überschrieben werden. Bitte diese Zeile überspringen.');
+            }
+            Object.assign(neu, alt._pat || {});
+            if (!neu.transport_dest && alt.alt_ziel) { neu.transport_dest = alt.alt_ziel; }
+            if (neu.ortshoehe == null && alt.alt_hoehe != null) { neu.ortshoehe = alt.alt_hoehe; }
+        }
+        Object.assign(neu, pat);
+        var zLat = nummerOderNull(m.dest_lat), zLon = nummerOderNull(m.dest_lon);
+        if (m.transport_dest || zLat !== null) {
+            neu.transport_dest = { addr: m.transport_dest || '' };
+            if (zLat !== null && zLon !== null) { neu.transport_dest.lat = zLat; neu.transport_dest.lon = zLon; }
+        }
+        if (nummerOderNull(m.site_ele_m) !== null) { neu.ortshoehe = nummerOderNull(m.site_ele_m); }
+        return neu;
     }
 
     /**
@@ -577,6 +748,7 @@
         var baseId = $('basesel').value ? parseInt($('basesel').value, 10) : null;
 
         var tage = [], missionen = [], i, t, m, w, dup, vorhanden, pat, keys, blob;
+        var kk = { ck: ck, k: null };   // Kontoschluessel fuer die Huellen, erst bei Bedarf
 
         for (i = 0; i < S.tage.length; i++) {
             t = S.tage[i];
@@ -640,10 +812,23 @@
                     if (typeof m.pat.start.lon === 'number') { pat.start.lon = m.pat.start.lon; }
                     if (!Object.keys(pat.start).length) { delete pat.start; }
                 }
+                var alt = (dup && w.dup === 'overwrite') ? bestandEinsatz(dup.id) : null;
+                if (dup && w.dup === 'overwrite' && !alt) {
+                    throw new Error('Der Einsatz ' + dup.id + ', der überschrieben werden soll, fehlt im '
+                        + 'Abgleich. Bitte die Datei neu einlesen.');
+                }
+                var eintrag = {
+                    client_ref: alt ? undefined : 'imp-' + zufallsHex(12),
+                    phases: phasenListe(m)
+                };
+                pat = await ortsdatenBauen(m, eintrag, pat, alt, kk);
                 keys = Object.keys(pat);
                 blob = keys.length ? await EdCrypto.encrypt(ck, JSON.stringify(pat)) : null;
 
                 missionen.push({
+                    client_ref: eintrag.client_ref,
+                    ort_huelle: eintrag.ort_huelle,
+                    ort_phasen: eintrag.ort_phasen,
                     day: m.day,
                     /* Das ECHTE Einsatzdatum, wenn die Datei es fuehrt. Der
                        Server nimmt es als Bezugstag der Alarmzeit; ohne es
@@ -651,7 +836,7 @@
                        laege dann 24 Stunden zu frueh (F-P1-K). */
                     date_local: m.einsatzdatum || null,
                     started_local: m.alarm,
-                    transport_dest: m.transport_dest,
+                    /* `transport_dest` liegt seit S11-05e im pat_blob. */
                     winch: m.winch ? 1 : 0,
                     resources: m.resources || [],
                     crew_override: m.crew_override ? 1 : 0,
@@ -671,7 +856,7 @@
                     // eigenen Exportformate liefert. Profile, die sie nicht
                     // kennen, senden hier ueberall null/0 — der Server setzt
                     // dann dieselben Werte wie vor dieser Version.
-                    site_ele_m: nummerOderNull(m.site_ele_m),
+                    /* `site_ele_m` liegt seit S11-05e im pat_blob (`ortshoehe`). */
                     distance_m: nummerOderNull(m.distance_m),
                     ascent_m: nummerOderNull(m.ascent_m),
                     schockraum: m.schockraum ? 1 : 0,
@@ -692,12 +877,11 @@
                     transport_mode: m.transport_mode || null,
                     na_escort: m.na_escort ? 1 : 0,
                     false_alarm: m.false_alarm ? 1 : 0,
-                    dest_lat: nummerOderNull(m.dest_lat),
-                    dest_lon: nummerOderNull(m.dest_lon),
+                    /* Zielkoordinate im pat_blob, Phasenorte und Reanimation
+                       in der Einsatzhuelle (S11-05e). */
                     start_src: m.start_src || null,
 
-                    phases: phasenListe(m),
-                    rea: m.rea || null,
+                    phases: eintrag.phases,
 
                     dup: dup ? (w.dup || 'skip') : 'insert',
                     overwrite_id: (dup && w.dup === 'overwrite') ? dup.id : null
@@ -736,7 +920,16 @@
             knopf.disabled = true;
             return;
         }
-        S.nutzlast = await baueNutzlast();
+        try {
+            S.nutzlast = await baueNutzlast();
+        } catch (e) {
+            /* Eine Zeile, deren Ortsdaten sich nicht bauen lassen (S11-05e):
+               Der Import bleibt gesperrt, und der Satz sagt, welche. */
+            S.nutzlast = null;
+            $('bereit').innerHTML = EdHtml.meldung('fehler', e.message || String(e));
+            knopf.disabled = true;
+            return;
+        }
         if (!S.nutzlast) {
             $('bereit').innerHTML = EdHtml.meldung('fehler',
                 'Die geschützten Angaben lassen sich nicht verschlüsseln — '

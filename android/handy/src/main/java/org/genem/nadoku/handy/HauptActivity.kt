@@ -174,7 +174,7 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
                      * Server kennt das Gerät bereits. Dann ist die Kopplung
                      * fertig, und nur die App weiß es noch nicht. */
                     is Sitzungsstand.Gekoppelt -> {
-                        tresor.bestaetigen()
+                        tresor.bestaetigen(stand.kontoschluessel)
                         gekoppelt = true
                         schritt = Kopplungsschritt.Bereit
                         return@LaunchedEffect
@@ -562,6 +562,7 @@ private fun sendeergebnis(lauf: Sendelauf?): Sendeergebnis? {
         l.bericht.pausiert -> Sendeergebnis(Sendeausgang.SCHLUESSEL_ABGEWIESEN, hhmm)
         l.bericht.fehlerhaft > 0 ->
             Sendeergebnis(Sendeausgang.PAKET_ABGEWIESEN, hhmm, l.bericht.fehlerhaft)
+        l.bericht.ohneSchluessel -> Sendeergebnis(Sendeausgang.KEIN_SCHLUESSEL, hhmm)
         l.bericht.spaeterErneut -> Sendeergebnis(Sendeausgang.KEIN_NETZ, hhmm)
         else -> Sendeergebnis(Sendeausgang.GESENDET, hhmm)
     }

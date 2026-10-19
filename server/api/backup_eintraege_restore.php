@@ -51,11 +51,21 @@ $eintraege['version'] = EDBAK_NUTZLAST;
 
 try {
     $stats = edbak_restore($userId, $eintraege,
-                           is_array($b['day_map'] ?? null) ? $b['day_map'] : []);
+                           is_array($b['day_map'] ?? null) ? $b['day_map'] : [], 'browser');
     $karte = $stats['spur_karte'] ?? null;
     unset($stats['spur_karte'], $stats['day_map']);
     json_out(['ok' => true, 'stats' => $stats,
               'spur_karte' => $karte ?: new stdClass()]);
+} catch (DomainException $ex) {
+    /* Klartext-Ortsdaten (S11-06b): Der Browser verschliesst seit Web 22.5.0
+     * Orte, Reanimation und Spur vor dem Senden; eine Nutzlast mit Klartext
+     * kommt aus einer veralteten Seite oder von Hand. Nichts ist geschrieben
+     * — `edbak_restore()` prueft vor der Transaktion. */
+    json_out(['error' => 'klartext',
+              'meldung' => 'Das Backup enthielt Ortsdaten im Klartext ('
+                         . preg_replace('/^klartext: /', '', $ex->getMessage())
+                         . '). Seit Web 22.5.0 verschlüsselt sie der Browser vor dem Senden; '
+                         . 'bitte die Seite neu laden. Es wurde nichts geändert.'], 400);
 } catch (Throwable $ex) {
     json_fehler($ex, 'restore');
 }

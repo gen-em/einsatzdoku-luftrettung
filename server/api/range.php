@@ -110,7 +110,9 @@ try {
             'secondary'  => (int)$m['secondary'] === 1,
             'false_alarm' => (int)$m['false_alarm'] === 1,
             'winch_cycles' => $m['winch_cycles'] !== null ? (int)$m['winch_cycles'] : null,
-            'site_ele_m'   => $m['site_ele_m']   !== null ? (int)$m['site_ele_m']   : null,
+            /* `site_ele_m` steht hier NICHT mehr (S11-05b): Die Hoehe des
+             * Einsatzorts liegt im `pat_blob` (`ortshoehe`), und die Seite
+             * liest sie dort nach dem Entsperren. */
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
         ];
     }

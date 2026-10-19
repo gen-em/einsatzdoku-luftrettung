@@ -129,7 +129,12 @@ $blattZeigen = $einstiegFaellig === 'schluesselblatt';
  * nicht holt (`mitPapierkorb`); diese hier haengt an nichts dergleichen. */
 $ueberlappungen = $selDay !== null ? dt_ueberlappungen($userId, $selDay) : [];
 
-ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
+/* DIE ANFRAGE BEGINNT SCHON IM KOPF (S11-04c, V1) — wie in `einsatz.php`. */
+ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
+                'kopf' => $selDay !== null
+                    ? '<script src="' . ui_e(ui_asset('assets/vorladen.js')) . '"'
+                      . ' data-vorladen="api/day.php?d=' . $selDay . '"></script>'
+                    : '']);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $selDay]); ?>
@@ -459,7 +464,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
              auf eine Spalte und die Karte steht wieder zwischen Daten und
              Liste. Die Klasse `.geo-gross` traegt beides, das Stylesheet
              entscheidet je Breite (Abschnitt 30). */ ?>
-    <div class="geo-spalte"><div id="map" class="geo"></div></div>
+    <div class="geo-spalte"><div id="map" class="geo"><?= ui_ladeplatz('GPS-Daten des Tages werden geladen …', ['attr' => ' id="spuren-lade"']) ?></div></div>
 
     <section class="karte karte-einsaetze" id="einsatzliste">
       <div class="karte-kopf">
@@ -603,6 +608,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
          dieser Seite dann eine Verweigerung ohne Grund. Auf allen anderen
          Aufrufen bleibt die Konstante weg; sie wird nicht gebraucht. */ ?>
 <?php ui_krypto_bootstrap(['csrf' => true, 'keycheck' => $rueckfrageZeigen]); ?>
+<script src="<?= asset('assets/ortsdaten.js') ?>"></script>
+<script src="<?= asset('assets/wartungslauf.js') ?>"></script>
+<script src="<?= asset('assets/ortsumzug.js') ?>"></script>
+<script src="<?= asset('assets/gpx.js') ?>"></script>
+<script src="<?= asset('assets/vorladen.js') ?>"></script>
 <?php if ($blattZeigen): ?>
 <?php /* Die Betreiber-Rueckfrage rechnet NICHT — sie holt Positionen und
          schickt vier Gruppen. Deshalb kein `schluessel.js` daneben. */ ?>
@@ -832,7 +842,7 @@ function showLoadError(msg){
 async function loadDay(dayId){
   let d;
   try {
-    const res = await fetch('api/day.php?d='+encodeURIComponent(dayId));
+    const res = await EdVorladen.holen('api/day.php?d='+encodeURIComponent(dayId));
     const txt = await res.text();
     try { d = JSON.parse(txt); }
     catch (e) {
@@ -962,6 +972,10 @@ async function loadDay(dayId){
      „Ruhesegmente" braucht mehr als Linien. Fuer die Karte selbst aendert
      das nur `seg` zu `seg.track`. */
   dayRest = d.rest_segments;
+  /* Seit S11-04c kommt die Spur verschlossen; `spurenOeffnen()` füllt
+     `track` nach dem Öffnen. Bis dahin zeichnet diese Schleife nichts. */
+  dayRest.forEach(seg => { seg.track = []; });
+  d.missions.forEach(m => { m.track = []; });
   dayRest.forEach(seg => {
     if (seg.track.length > 1) {
       const rl = L.polyline(seg.track, { color: EdGeo.ruheFarbe(),
@@ -971,7 +985,7 @@ async function loadDay(dayId){
       seg.track.forEach(p => bounds.push(p));
     }
   });
-  EdSchnitt.setzen(dayRest);
+  EdSchnitt.setzen(dayRest, { tag: d.day, tz: d.zeitzone });
 
   /* Welche Faehigkeiten dieser Tag auswerten laesst -- VOR
      renderMissionTable(), weil das Modul sie beim Zeichnen liest. */
@@ -1014,6 +1028,9 @@ async function loadDay(dayId){
   });
   renderMissionTable();
   if (PAT_WRAP) { entschluesselePat(); }
+  /* Die GPS-Daten des Tages öffnen — im Hintergrund wie die geschützten
+     Angaben; die Karte steht mit dem Standort schon da (S11-04c). */
+  spurenOeffnen(d, bounds.slice());
 
   document.getElementById('empty').hidden = d.missions.length > 0;
   document.getElementById('missions').hidden = d.missions.length === 0;
@@ -1026,6 +1043,99 @@ async function loadDay(dayId){
        vertauscht (Bestandsfehler, F-P3-Z). Bei der alten 380-px-Karte fiel
        das nicht auf; bei 300 px frass das vertauschte y-Padding 287 der
        300 Pixel, und der Zoom blieb auf der Fallback-Stufe haengen. */
+    map.fitBounds(L.latLngBounds(bounds),
+      { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
+  }
+}
+
+/* ---- GPS-Daten des Tages öffnen (S11-04c, E-S11-35) ----------------------
+ *
+ * Seit Web 22 liefert `api/day.php` je Einsatz und Ruhesegment verschlossene
+ * Stücke statt Punkten. `EdOrtsdaten.spur()` öffnet sie mit dem privaten
+ * Schlüssel des Kontos; gesperrte Zeiträume eines Segments (`schnitte`)
+ * fallen dabei weg (E-S11-37). Erst danach entstehen die Linien — mit
+ * denselben Farben und Pfeilen wie bisher, und der Ausschnitt rückt nach.
+ * Wechselt der Tag, während geöffnet wird, verwirft `tagLauf` das Ergebnis. */
+/* ---- Der Wartungslauf, still (S11-07, Mockup M-S11-02, E-S11-68) ---------
+ *
+ * Ein Durchgang je Aufruf der Startseite, höchstens 20 Aufzeichnungen,
+ * unsichtbar — und erst, wenn die Seite steht: Er soll die Ansicht des Tages
+ * nicht verlangsamen. Ohne Schlüssel (nicht entsperrt) geschieht nichts; er
+ * fragt nie nach dem Passwort. Was fällig ist und wie weit er ist, zeigt die
+ * Karte „GPS-Daten verdichten" im Reiter Backup. */
+/* DAVOR DAS EINMALWERKZEUG (S11-10): Der Altbestand im Klartext zieht in
+ * die Hüllen um, ebenso still; erst danach kann der Wartungslauf ihn packen
+ * (E-S11-70). Ist nichts mehr offen, kostet es eine Anfrage. */
+window.addEventListener('load', () => {
+  if (window.EdWartungslauf && PAT_WRAP) {
+    setTimeout(async () => {
+      if (window.EdOrtsumzug) { await EdOrtsumzug.still(PAT_WRAP); }
+      EdWartungslauf.still(PAT_WRAP);
+    }, 1500);
+  }
+});
+
+const LADE_SPUREN = EdOrtsdaten.ladeplatz(document.getElementById('spuren-lade'));
+let tagLauf = 0;
+async function spurenOeffnen(d, bounds){
+  const lauf = ++tagLauf;
+  const hat = (x) => x.spur_stuecke && x.spur_stuecke.length;
+  if (!d.missions.some(hat) && !d.rest_segments.some(hat)) { LADE_SPUREN.weg(); return; }
+  LADE_SPUREN.zeige('Wartet auf dein Passwort', true);
+  const ck = PAT_WRAP ? await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER) : null;
+  if (lauf !== tagLauf) { return; }
+  if (!ck) { LADE_SPUREN.weg(); return; }
+  LADE_SPUREN.zeige('GPS-Daten des Tages werden geöffnet …');
+  let jetzt = null;   // was gerade geöffnet wird — für die Meldung, wenn es nicht aufgeht
+  try {
+    const k = await EdOrtsdaten.schluessel(ck);
+    for (const seg of d.rest_segments) {
+      jetzt = ['ruhe', seg.id];
+      const sperren = (seg.schnitte || []).map(c => ({ von: c.von_ts, bis: c.bis_ts }));
+      seg.track = (await EdOrtsdaten.spur(seg.spur_stuecke, 'ruhe', seg.client_ref, sperren, k))
+        .map(p => [p.lat, p.lon]);
+    }
+    for (const m of d.missions) {
+      jetzt = ['spur', m.id];
+      m.track = (await EdOrtsdaten.spur(m.spur_stuecke, 'spur', m.client_ref, [], k))
+        .map(p => [p.lat, p.lon]);
+    }
+  } catch (e) {
+    LADE_SPUREN.weg();
+    if (jetzt) { EdOrtsdaten.melden(e, jetzt[0], jetzt[1]); }
+    if (lauf !== tagLauf) { return; }
+    const box = document.createElement('div');
+    box.dataset.ortsdaten = 'fehler';
+    box.innerHTML = EdHtml.meldung('fehler', e && e.grund === 'kein_paar'
+      ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — die GPS-Daten lassen sich nicht öffnen.'
+      : 'Die GPS-Daten dieses Tages lassen sich nicht öffnen. Die übrigen Angaben stimmen.');
+    document.getElementById('map').appendChild(box);
+    return;
+  }
+  if (lauf !== tagLauf) { return; }
+  LADE_SPUREN.weg();
+  d.rest_segments.forEach(seg => {
+    if (seg.track.length > 1) {
+      const rl = L.polyline(seg.track, { color: EdGeo.ruheFarbe(),
+        weight: Math.max(3, trackWeight() - 1), opacity:0.9, smoothFactor:0 });
+      layerGroup.addLayer(rl);
+      trackLines.push(rl);
+      seg.track.forEach(p => bounds.push(p));
+    }
+  });
+  d.missions.forEach(m => {
+    if (m.track.length > 1) {
+      const line = L.polyline(m.track, { color: m._col, weight: trackWeight(), smoothFactor: 0 });
+      layerGroup.addLayer(line);
+      trackLines.push(line);
+      EdGeo.pfeile(map, layerGroup, m.track);
+      m.track.forEach(p => bounds.push(p));
+    }
+  });
+  renderMissionTable();
+  if (bounds.length) {
+    mapHasBounds = true;
+    const px = map.getSize();
     map.fitBounds(L.latLngBounds(bounds),
       { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
   }
@@ -1093,10 +1203,15 @@ async function entschluesselePat(){
      * zu erkennen, welche zu welchem gehört. Gestrichelt bleibt sie überall —
      * das ist die Unterscheidung zum aufgezeichneten Track. */
     const vor = i > 0 ? dayMissions[i - 1] : null;
+    /* DAS TRANSPORTZIEL AUS DEM BLOB (S11-05b): bis dahin `dest_lat`/`dest_lon`
+       im Klartext aus `api/day.php`. Jetzt liegt es als {addr, lat, lon} im
+       `pat_blob`, der hier ohnehin entschluesselt vorliegt — fuer diesen
+       Einsatz (`o`) wie fuer den Vorgaenger. */
+    const zielAus = (p) => (p && p.transport_dest && p.transport_dest.lat != null && p.transport_dest.lon != null)
+      ? { lat: Number(p.transport_dest.lat), lon: Number(p.transport_dest.lon) } : null;
     const abfahrt = EdLuftlinie.abfahrt(m.start_src, {
       base: currentBase,
-      prevDest: (vor && vor.dest_lat != null && vor.dest_lon != null)
-        ? { lat: vor.dest_lat, lon: vor.dest_lon } : null,
+      prevDest: (vor && vor._patState === 'ok') ? zielAus(vor._pat) : null,
       prevSite: (vor && vor._patState === 'ok' && vor._pat && vor._pat.loc)
         ? vor._pat.loc : null,
       manual: o.start
@@ -1105,8 +1220,7 @@ async function entschluesselePat(){
       hatTrack: m.track.length > 1,
       abfahrt: abfahrt,
       ort: o.loc,
-      ziel: (m.dest_lat != null && m.dest_lon != null)
-        ? { lat: m.dest_lat, lon: m.dest_lon } : null
+      ziel: zielAus(o)
     });
     if (punkte.length) {
       EdLuftlinie.zeichne(map, punkte,

@@ -3,7 +3,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/spur_lib.php';
-require_once __DIR__ . '/gpx_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Diensttag im Rueckweg
 
 /**
@@ -39,9 +38,11 @@ require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Diensttag i
  * Sammelleiste erscheint erst, wenn etwas ausgewaehlt ist — und das entscheidet
  * das Skript. Die GPX-Verweise in den Zeilen sind davon unberuehrt.
  *
- * KEINE GESCHUETZTEN ANGABEN. Der Einsatzort liegt im `pat_blob`; diese Seite
- * fasst ihn nicht an. Was sie zeigt, sind laufende Nummern, Uhrzeiten und die
- * Spur selbst — Klartext, wie auf der Tageskarte auch.
+ * DIE SPUR IST SEIT S11 VERSCHLOSSEN (S11-04c). Bis Web 22.0.2 gingen ihre
+ * Punkte hier im Klartext an den Browser. Jetzt bekommt er die Stuecke als
+ * Geraetehuellen und oeffnet sie mit dem privaten Schluessel des Kontos
+ * (`assets/ortsdaten.js`); die Zeilen der Liste stehen sofort da, die Linien
+ * entstehen danach. Den `pat_blob` fasst die Seite weiter nicht an.
  */
 
 $dayId = (int)($_GET['d'] ?? 0);
@@ -55,13 +56,13 @@ $pdo = db();
 
 /* Einsaetze nach Beginn — dieselbe Reihenfolge wie in der Tagesansicht, damit
  * Nummer und Farbe dort und hier dasselbe meinen. */
-$st = $pdo->prepare('SELECT id, started_at, ended_at FROM missions
+$st = $pdo->prepare('SELECT id, client_ref, started_at, ended_at FROM missions
                       WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                       ORDER BY started_at, id');
 $st->execute([$userId, $dayId]);
 $einsaetze = $st->fetchAll(PDO::FETCH_ASSOC);
 
-$st = $pdo->prepare('SELECT id, started_at, ended_at FROM rest_segments
+$st = $pdo->prepare('SELECT id, client_ref, started_at, ended_at FROM rest_segments
                       WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                       ORDER BY started_at, id');
 $st->execute([$userId, $dayId]);
@@ -71,22 +72,26 @@ $spuren = [];
 $nr = 0;
 foreach ([['mission', $einsaetze], ['rest', $ruhe]] as [$art, $liste]) {
     $ids = array_map(fn($r) => (int)$r['id'], $liste);
-    $punkteAlle = $ids ? spur_lesen_viele($pdo, $art, $ids) : [];
+    /* Die Stuecke als Huellen (S11-04c) — Platz, Zeitraum, Punktzahl im
+     * Klartext, die Punkte verschlossen. */
+    $stueckeAlle = $ids ? spur2_lesen_viele($pdo, $art, $ids) : [];
     foreach ($liste as $r) {
         $id = (int)$r['id'];
         if ($art === 'mission') { $nr++; }
-        $punkte = $punkteAlle[$id] ?? [];
-        $stand  = $punkte ? spur_stand($pdo, $art, $id)
-                          : ['stufe' => 0, 'n_original' => 0];
+        $stuecke = $stueckeAlle[$id] ?? [];
+        $stand  = $stuecke ? spur_stand($pdo, $art, $id)
+                           : ['stufe' => 0, 'n_original' => 0];
         $spuren[] = [
             'art' => $art, 'id' => $id,
             'nr' => $art === 'mission' ? $nr : null,
             'von' => $r['started_at'], 'bis' => $r['ended_at'],
-            'stufe' => (int)$stand['stufe'], 'n' => count($punkte),
+            'stufe' => (int)$stand['stufe'],
+            'n' => array_sum(array_column($stuecke, 'punkte')),
             'n_original' => (int)$stand['n_original'],
-            // Nur Ort: Die Karte braucht weder Hoehe noch Zeit, und was sie
-            // nicht braucht, wird nicht uebertragen.
-            'track' => array_map(fn($p) => [$p[1], $p[2]], $punkte),
+            'client_ref' => (string)$r['client_ref'],
+            'spur_stuecke' => $stuecke,
+            'sperren' => array_map(fn($c) => ['von' => $c['von_ts'], 'bis' => $c['bis_ts']],
+                                   schnitte_lesen($pdo, $art, $id)),
         ];
     }
 }
@@ -101,7 +106,8 @@ foreach ([['mission', $einsaetze], ['rest', $ruhe]] as [$art, $liste]) {
  * in der Reihenfolge der Einsätze) und bleibt davon unberührt; ebenso die
  * Farben auf der Karte, die nur die Einsätze der Reihe nach durchzählen.
  *
- * Der Sortierschlüssel ist derselbe wie in `gpx.php` — Beginn, Art, Kennung.
+ * Der Sortierschlüssel: Beginn, Art, Kennung (bis Web 22.2.0 auch der von
+ * `gpx.php`; seit S11-05d baut das Skript unten die Datei in dieser Folge).
  * Damit steht die Datei in derselben Folge wie die Liste, aus der sie
  * ausgewählt wurde. */
 usort($spuren, fn($a, $b) => [$a['von'], $a['art'], $a['id']]
@@ -153,7 +159,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
         . 'Einsatz noch ein Ruhesegment.') ?>
   <?php else: ?>
 
-  <div class="geo-spalte"><div id="map" class="geo"></div></div>
+  <div class="geo-spalte"><div id="map" class="geo"><?= ui_ladeplatz('GPS-Daten werden geladen …', ['attr' => ' id="spuren-lade"']) ?></div></div>
 
   <?php ui_karte_start(['titel' => 'GPS-Daten', 'zahl' => (string)count($spuren)]); ?>
     <?php /* WARUM EIN HINWEIS UEBER DER LISTE: Eine GPX-Datei traegt den Weg
@@ -192,10 +198,12 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
         } else {
             $plaketten = ui_plakette($s['n'] . ' Punkte', ['ton' => 'neutral']);
         }
+        /* SEIT S11-05d BAUT DER BROWSER DIE DATEI (`assets/gpx.js`); bis dahin
+         * zeigte der Knopf auf `gpx.php`, das die verschlossenen Stuecke nicht
+         * sah. Ein Knopf statt eines Verweises, weil es kein Ziel gibt. */
         if ($s['n'] > 0) {
-            $plaketten .= ' <a class="knopf knopf-leise" '
-                . 'href="gpx.php?art=' . e($s['art']) . '&amp;id=' . (int)$s['id'] . '">'
-                . 'GPX</a>';
+            $plaketten .= ' <button type="button" class="knopf knopf-leise" '
+                . 'data-gpx-spur="' . $i . '">GPX</button>';
         }
       ?>
       <?php
@@ -234,14 +242,11 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
   <?php ui_karte_ende(); ?>
 
   <?php if ($auswahlAn): ?>
-    <?php /* EIN GET-FORMULAR, kein POST: Der Abruf aendert nichts, und ein
-             Download soll ein gewoehnlicher Seitenwechsel sein — mit Zurueck,
-             Verlauf und der Moeglichkeit, den Verweis zu kopieren. Deshalb
-             auch kein CSRF-Feld; die uebrigen lesenden Wege dieser Anwendung
-             halten es genauso (M3-11). */ ?>
-    <form method="get" action="gpx.php" id="f-gpxwahl" hidden>
-      <input type="hidden" name="tag" value="<?= $dayId ?>">
-    </form>
+    <?php /* DAS FORMULAR SAMMELT NUR NOCH DIE AUSWAHL (S11-05d). Bis dahin
+             ging es per GET an `gpx.php`; seit der Browser die Datei baut,
+             faengt das Skript unten das Absenden ab und baut aus den
+             gewaehlten Spuren EINE Datei mit je einem <trk>. */ ?>
+    <form id="f-gpxwahl" hidden></form>
     <?php ui_speichern_leiste([
         'id' => 'gpxleiste', 'kein_haken' => true, 'form' => 'f-gpxwahl',
         'text' => 'Auswahl als GPX', 'symbol' => 'karte',
@@ -265,8 +270,16 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
          steht weiter oben; die eigene Zeile hier waere ein zweiter Abruf
          derselben Datei. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
+<?php ui_krypto_bootstrap(); ?>
+<script src="<?= asset('assets/ortsdaten.js') ?>"></script>
+<script src="<?= asset('assets/gpx.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 const SPUREN = <?= json_js($spuren, JSON_UNESCAPED_UNICODE) ?>;
+/* Fuer die GPX-Datei (S11-05d): Toleranzen der Ausduennung, Datum des
+   Diensttags und die Zeitzone der Anlage. */
+const GPX_TOL = <?= json_js([SPUR_TOL_WAAGERECHT_M, SPUR_TOL_SENKRECHT_M]) ?>;
+const TAG_DATUM = <?= json_js((string)$tag['day']) ?>;
+const ZEITZONE = <?= json_js((string)konfig('app.timezone', 'Europe/Berlin')) ?>;
 
 /* Die Karte entsteht ueber EdKarte.anlegen() (Schritt 15 AP8); Ausschnitt
    wie in der Einsatzansicht. */
@@ -276,24 +289,56 @@ const linien = [];
 const bounds = [];
 let nrFarbe = 0;
 
-SPUREN.forEach((s, i) => {
-  if (s.track.length < 2) { linien.push(null); return; }
-  /* Dieselben Farben wie in der Tagesansicht: Einsaetze bekommen der Reihe
-     nach eine eigene, Ruhesegmente sind schwarz und dezent. Wer von dort
-     kommt, erkennt die Linien wieder. */
-  const farbe = s.art === 'mission' ? EdGeo.spurFarbe(nrFarbe++) : EdGeo.ruheFarbe();
-  const linie = L.polyline(s.track, {
-    color: farbe, weight: s.art === 'mission' ? 4 : 3,
-    opacity: 0.9, smoothFactor: 0,
-  }).addTo(map);
-  linien.push(linie);
-  s.track.forEach(p => bounds.push(p));
-});
+SPUREN.forEach(() => linien.push(null));
 
-if (bounds.length) {
-  const px = map.getSize();
-  map.fitBounds(L.latLngBounds(bounds),
-    { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
+/* DIE LINIEN ENTSTEHEN NACH DEM OEFFNEN (S11-04c). Bis Web 22.0.2 lagen die
+   Punkte schon in SPUREN; jetzt oeffnet `EdOrtsdaten.spur()` die Stuecke mit
+   dem privaten Schluessel des Kontos, gesperrte Zeitraeume fallen weg. Die
+   Liste darunter steht derweil schon und reagiert, sobald eine Linie da ist. */
+async function linienZeichnen() {
+  const lade = EdOrtsdaten.ladeplatz(document.getElementById('spuren-lade'));
+  if (!SPUREN.some(s => s.spur_stuecke && s.spur_stuecke.length)) { lade.weg(); return; }
+  lade.zeige('Wartet auf dein Passwort', true);
+  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+  if (!ck) { lade.weg(); return; }
+  lade.zeige('GPS-Daten werden geöffnet …');
+  let jetzt = null;   // was gerade geöffnet wird — für die Meldung, wenn es nicht aufgeht
+  try {
+    const k = await EdOrtsdaten.schluessel(ck);
+    for (const s of SPUREN) {
+      jetzt = s;
+      s.punkte = await EdOrtsdaten.spur(s.spur_stuecke, s.art === 'mission' ? 'spur' : 'ruhe',
+                                        s.client_ref, s.sperren, k);
+      s.track = s.punkte.map(p => [p.lat, p.lon]);
+    }
+  } catch (e) {
+    lade.weg();
+    if (jetzt) { EdOrtsdaten.melden(e, jetzt.art === 'mission' ? 'spur' : 'ruhe', jetzt.id); }
+    const box = document.createElement('div');
+    box.dataset.ortsdaten = 'fehler';
+    box.innerHTML = EdHtml.meldung('fehler', 'Die GPS-Daten dieses Tages lassen sich nicht öffnen.');
+    document.getElementById('map').appendChild(box);
+    return;
+  }
+  lade.weg();
+  SPUREN.forEach((s, i) => {
+    if (!s.track || s.track.length < 2) { return; }
+    /* Dieselben Farben wie in der Tagesansicht: Einsaetze bekommen der Reihe
+       nach eine eigene, Ruhesegmente sind schwarz und dezent. Wer von dort
+       kommt, erkennt die Linien wieder. */
+    const farbe = s.art === 'mission' ? EdGeo.spurFarbe(nrFarbe++) : EdGeo.ruheFarbe();
+    linien[i] = L.polyline(s.track, {
+      color: farbe, weight: s.art === 'mission' ? 4 : 3,
+      opacity: 0.9, smoothFactor: 0,
+    }).addTo(map);
+    s.track.forEach(p => bounds.push(p));
+  });
+  if (bounds.length) {
+    const px = map.getSize();
+    map.fitBounds(L.latLngBounds(bounds),
+      { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
+  }
+  malen();
 }
 
 /* DIE VERBINDUNG ZWISCHEN LISTE UND KARTE.
@@ -355,7 +400,6 @@ function hervorheben(idx) { zeigt = idx; malen(); }
 
 zeilen.forEach(z => {
   const idx = Number(z.dataset.spur);
-  const linie = linien[idx];
   z.addEventListener('mouseenter', () => hervorheben(idx));
   z.addEventListener('focus',      () => hervorheben(idx));
   z.addEventListener('mouseleave', () => hervorheben(null));
@@ -364,6 +408,7 @@ zeilen.forEach(z => {
     /* Der GPX-Verweis in der Zeile soll herunterladen, nicht zoomen — und das
        Auswahlkaestchen soll auswaehlen, nicht zoomen. */
     if (e.target.closest('a') || e.target.closest('[data-spurwahl]')) { return; }
+    const linie = linien[idx];   // erst beim Klick: die Linien entstehen nach dem Oeffnen
     if (linie) { map.fitBounds(linie.getBounds(), { padding: L.point(30, 30), maxZoom: 16 }); }
   });
 });
@@ -377,6 +422,46 @@ document.querySelectorAll('[data-spurwahl]').forEach(box => {
 });
 
 malen();
+/* Ein Versprechen, damit der GPX-Knopf nicht ein zweites Mal oeffnet, solange
+   das erste Oeffnen noch laeuft; scheiterte es (Passwort abgebrochen), oeffnet
+   der Knopf neu. */
+let geoeffnet = linienZeichnen();
+
+/* ---- GPX im Browser (S11-05d) ------------------------------------------
+ *
+ * Eine Spur je Knopf, mehrere ueber die Auswahlleiste — dieselbe Datei wie
+ * bis Web 22.2.0 aus `gpx.php` (`assets/gpx.js`). Die Punkte kommen aus dem
+ * Oeffnen oben; ist das noch nicht geschehen (gesperrt), wird hier geoeffnet. */
+const vonTs = (s) => s.von ? Math.floor(Date.parse(s.von.replace(' ', 'T') + 'Z') / 1000) : null;
+async function gpxSpuren(liste) {
+  await geoeffnet;
+  if (liste.some(s => !s.punkte)) { geoeffnet = linienZeichnen(); await geoeffnet; }
+  return liste.filter(s => s.punkte && s.punkte.length).map(s => ({
+    punkte: s.punkte, stufe: s.stufe || 1, nOriginal: s.n_original || s.n,
+    name: EdGpx.spurname(s.art, s.id, vonTs(s), ZEITZONE) }));
+}
+document.querySelectorAll('[data-gpx-spur]').forEach(b => b.addEventListener('click', async ev => {
+  ev.stopPropagation();
+  const s = SPUREN[Number(b.getAttribute('data-gpx-spur'))];
+  const [g] = await gpxSpuren([s]);
+  if (!g) { return; }
+  EdGpx.speichern(EdGpx.bauen(g.punkte, g.name, g.stufe, g.nOriginal),
+                  EdGpx.dateiname(s.art, s.id, vonTs(s), g.stufe));
+}));
+const gpxForm = document.getElementById('f-gpxwahl');
+if (gpxForm) {
+  gpxForm.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const wahl = new Set([...document.querySelectorAll('[data-spurwahl]:checked')].map(c => c.value));
+    const liste = SPUREN.filter(s => wahl.has(s.art + '-' + s.id));
+    const spuren = await gpxSpuren(liste);
+    if (!spuren.length) { return; }
+    const text = EdGpx.bauenViele(spuren, 'Diensttag '
+      + new Intl.DateTimeFormat('de-DE', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' })
+          .format(new Date(TAG_DATUM + 'T12:00:00Z')));
+    EdGpx.speichern(text, EdGpx.dateinameTag(TAG_DATUM, spuren.length, spuren.map(x => x.stufe)));
+  });
+}
 </script>
 <?php endif; ?>
 

@@ -30,8 +30,23 @@ module Const {
      *        sperrte, war die Uhr danach nur noch durch Loeschen der App zu
      *        retten. Neben-, nicht Hauptnummer: Der Weg durch die Anwendung
      *        bleibt derselbe, es kommen eine Anzeige und eine Taste dazu.
+     *   4.0  die Uhr VERSCHLIESST Spur, Phasenkoordinaten und Reanimation
+     *        (S11-08, Konzept S11): mit dem oeffentlichen Schluessel des
+     *        Kontos aus der Kopplung, je Anfrage ein Spurstueck und die
+     *        Einsatzhuelle (Huelle.mc). Hauptnummer, weil sich das Format
+     *        auf dem Draht aendert und es KEINEN Uebergang gibt (E-S11-09):
+     *        Der Server nimmt seit Web 22.0.1 nur noch Huellen an, eine Uhr
+     *        3.x kommt dort nicht mehr durch, und jede bestehende Kopplung
+     *        muss einmal neu geschlossen werden, damit die Uhr den
+     *        Schluessel bekommt. Dazu bekommen geparkte Pakete eine Frist
+     *        von 30 Tagen (E-S11-11).
      */
-    const APP_VERSION = "3.1.0";
+    const APP_VERSION = "4.0.0";
+
+    /* Wie lange ein geparktes (dauerhaft abgewiesenes) Paket auf der Uhr
+     * liegen bleibt, bevor ein Sendelauf es raeumt (E-S11-11, wie Android
+     * AN-2): 30 Tage ab dem Parken. */
+    const PARK_FRIST_S = 30 * 86400;
 
     /* Wie oft die Kopplungsansicht nachfragt, ob jemand den Code eingetragen
      * hat (E-S5-32, Vertrag 1a.2: "hoechstens alle fuenf Sekunden").

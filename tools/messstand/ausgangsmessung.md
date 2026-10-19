@@ -331,6 +331,220 @@ fragt in Abständen bis 500 ms, jedes Mal auf einen freien Moment des
 gedrosselten Hauptfadens angewiesen. Deshalb steht hier der Median, und
 die Spanne daneben.
 
+## Grundlinie 11.10.2026 — vor S11 (S11-01)
+
+**Wofür.** S11 verschließt Spur, Phasenkoordinaten und Reanimation in
+Gerätehüllen, die nur der Browser öffnet; Arbeit wandert vom Server in den
+Browser. E-S11-15 setzt die Grenze: keine Einzelansicht mehr als 1,5-mal
+langsamer als vorher und keine über 1 s; die Massenwege werden gemessen und
+benannt. Diese Zahlen sind das **Vorher**. S11-11 misst mit denselben
+Schritten auf derselben Maschine das Nachher.
+
+**Was gemessen wurde:** Web **21.14.0** (Zweig `ccr-dd33b6e8-ismfm0`, Code
+gleich `dbca560`), frische Anlage, `messen.py --frisch`; Bestand **5096
+Einsätze**, **2 874 650** Spurpunkte im Messstandkonto, Median **423** Punkte
+je Spur. Maschine: Container mit 4 Kernen (Intel Xeon 2,10 GHz), 15 GB, PHP
+8.4.19, MariaDB 10.11, Chromium aus Playwright 1.56. Zwei Läufe: Drossel
+**6×** (Referenzgerät Z3, die Vorgabe des Messstands) mit allen Schritten,
+dann **ungedrosselt** (`--drossel 1`) nur der Schritt `browser`.
+
+**Zuerst, was nicht gemessen werden konnte:**
+
+- **Ein echtes Telefon.** Wie oben: Die Drossel stellt die Rechenzeit nach,
+  nicht Speicher, Grafik und Leitung. Der Vergleich vorher/nachher gilt nur
+  auf dieser Maschine (E-S11-15).
+- **Wartungslauf und Einmalwerkzeug** gibt es noch nicht; sie haben kein
+  Vorher. Gemessen werden sie mit S11-07 und S11-10.
+- **Die Kartenkacheln** — gesperrt wie in jeder Messung hier.
+
+| Messung | Gegenstand | Drossel 6× | ungedrosselt |
+|---|---|---|---|
+| **Einsatz mit Spur öffnen** (Karte und Phasen stehen) | Einsatz 141, 1356 Punkte (der größte des Bestands), 8 Phasen | Median **1,28 s** (1,18–1,44 s, 5 Läufe), Halde ≤ 13 MB | Median **0,45 s** (0,41–0,48 s) |
+| **Diensttag mit Ruhe-Spuren öffnen** (Spur auf der Karte) | Diensttag 30: 8 Ruhe-Segmente mit 1471 Punkten (die meisten des Bestands), 7 Einsätze, 15 Linien | Median **1,71 s** (1,69–2,03 s), Halde ≤ 25 MB | Median **0,47 s** (0,44–0,49 s) |
+| **Backup erzeugen** (Schritt „Backup erstellen", seit S2) | ganzes Konto, `.edbak` | **58,54 s**, Datei 12,01 MB, Halde 52 MB, 1 PBKDF2 | **44,05 s**, 11,95 MB, Halde 68 MB |
+| dazu Serverprobe `edbak_build()` | in Fenstern zu 250 / am Stück | 3,8 s, Spitze 12 MB / 13,41 s, 133,24 MB Paket, Spitze 2079 MB | — |
+| **GPX über einen Zeitraum** (Export Profil B mit GPX, Passwort an) | Jahr 2026: 4071 Einsätze, **8174** GPX-Spuren | **329,6 s**, Datei 31,95 MB, **Halde 389 MB** | **74,62 s**, 31,61 MB, Halde 392 MB |
+
+Daneben, aus demselben Lauf mit Drossel 6× und zum Bezug: Tagesansicht
+1,19 s, Suche 3,55 s, Zeitraumübersicht sichtbar 3,43 s (fertig 4,93 s),
+Statistik je Reiter 0,07–0,08 s, 0 Konsolenfehler. Rückgabewert beider
+Läufe 0.
+
+**Was die Zahlen sagen.**
+
+- **Unter Drossel 6× liegt schon das Vorher über 1 s** — beide
+  Einzelansichten, 1,28 s und 1,71 s. Ungedrosselt liegen sie bei 0,45 und
+  0,47 s. E-S11-15 sagt nicht, unter welcher Drossel die Sekunde gilt; das
+  ist die Frage Q-S11-16 im Konzept.
+- **Der GPX-Export über ein Jahr braucht 389 MB Halde**, viermal das
+  Gerätebudget aus Z3 (100 MB) — heute schon, ohne eine Hülle zu öffnen.
+  Es ist ein Massenweg; E-S11-15 verlangt dort Messen und Benennen, keine
+  Grenze. Steht als F-S11-16 im Konzept.
+- **Der Einsatz ist der größte, nicht der typische.** 1356 Punkte gegen
+  einen Median von 423: Die Grenze gilt für jede Einzelansicht, also misst
+  der Schritt die teuerste.
+
+**Zweiter Lauf, am selben Tag und auf derselben Maschine** — mit zwei
+Messungen, die die Betreiberin dazu haben wollte: die **Zeitraumübersicht
+für einen Monat** und der **GPX-Export, zerlegt in seine Abschnitte**, je
+einmal mit und ohne Passwort. Seither schreibt die Probe den Prozessor in
+jedes Protokoll (E-S11-28). Prozessor: Intel Xeon 2,10 GHz, 4 Kerne.
+
+| Messung | Drossel 6× | ungedrosselt |
+|---|---|---|
+| Einsatz mit Spur öffnen | Median **1,33 s** (1,27–1,86) | Median **0,45 s** (0,42–0,52) |
+| Diensttag mit Ruhe-Spuren öffnen | Median **2,35 s** (1,78–2,38) | Median **0,51 s** (0,45–0,74) |
+| Zeitraumübersicht, **ein Monat** (03/2026, 588 Einsätze) | sichtbar Median **2,38 s**, fertig **4,04 s** | sichtbar **0,45 s**, fertig 0,53 s¹ |
+| Zeitraumübersicht, ganzes Jahr (4071 Einsätze) | sichtbar 2,85 s, fertig 5,75 s | sichtbar 0,77 s, fertig 0,87 s |
+| Backup erzeugen | 56,49 s | 40,01 s |
+| **GPX-Export Jahr, Passwort an** | **329,6 s**, Halde 372 MB | **69,8 s**, Halde 364 MB |
+| — Daten laden · Patientendaten entschlüsseln | 1,8 s · 0,4 s | 1,1 s · 0,05 s |
+| — Spuren laden (328 Anfragen zu je 25) und 8174 GPX bauen | 115,8 s | 19,3 s |
+| — Archiv packen mit AES (32 MB) | **208,5 s** | **47,9 s** |
+| **GPX-Export Jahr, Passwort aus** | **270,2 s**, Halde 329 MB | **55,7 s**, Halde 323 MB |
+| — Spuren laden und GPX bauen · Archiv packen | 85,5 s · 178,8 s | 18,0 s · 35,7 s |
+
+¹ Ungedrosselt meldete der Monat in vier von fünf Läufen keine Aufgabe über
+50 ms; „fertig" ist dort nicht messbar und liegt bei „sichtbar". Die Zahl
+stammt aus dem einen Lauf, der eine meldete.
+
+**Was die Zahlen zusätzlich sagen.**
+
+- **Zwei Drittel des GPX-Exports sind das Packen des Archivs im Browser**,
+  nicht die Spuren; die AES-Verschlüsselung des Archivs kostet bei 6× rund
+  30 s davon. S11 fügt beim Laden der Spuren das Öffnen der Hüllen hinzu
+  (im Browser 0,2 bis 3 ms je Stück, `tools/proben/huelle/`).
+- **Die Zeitraumübersicht lädt keine Spur.** `api/range.php` liefert keine
+  Spurpunkte, keine Phasenkoordinaten und kein Transportziel, nur
+  `site_ele_m` und die Standorte der Dienste. Nach S11 liegt die Ortshöhe im
+  `pat_blob`, der hier ohnehin für jeden Einsatz entschlüsselt wird; eine
+  Gerätehülle öffnet die Seite nicht.
+- **Die Streuung zwischen zwei Läufen ist groß.** Derselbe Code, dieselbe
+  Maschine, derselbe Tag: Diensttag 1,71 s im ersten Lauf, 2,35 s im
+  zweiten (je Median aus fünf). Ein Vergleich gegen den Faktor 2 aus
+  E-S11-26 braucht deshalb mehrere Läufe vorher und nachher (F-S11-22).
+
+**Am Prüfmittel berichtigt** (F-S11-14): Die Zähler der Browserprobe leben
+je Dokument. Ein Schritt, der navigiert, rechnete „nachher − vorher" über
+zwei Seiten und meldete im ersten Lauf **PBKDF2 = −1**. Seit S11-01 zählt
+nach einem Seitenwechsel allein die neue Seite.
+
+## Zerlegung des Seitenaufbaus 13.10.2026 (S11-13)
+
+**Wofür.** Die Betreiberin will jede Seite so schnell wie möglich, mit
+„Inhalt sichtbar“ als Maß und unter 3 s bei 6× bzw. 1 s ungedrosselt als
+Zielrichtung (E-S11-29, -32). Bevor jemand optimiert, steht hier, wo die
+Zeit hingeht. Die Browserprobe zerlegt seit S11-13 jeden Schritt anhand der
+Zeitmarken des Browsers, in ms ab Beginn der Navigation: Antwort des
+Servers, HTML geladen, `DOMContentLoaded` (alle Skripte geladen und
+ausgeführt), letzte `api/`-Antwort, Spanne der Krypto-Aufrufe, Summe der
+Aufgaben über 50 ms auf dem Hauptfaden.
+
+**Gemessen** auf Web 21.14.0, Messstandbestand wie oben, nach einem Neustart
+des Containers (Prozessorname gleich). Einsatz und Diensttag Median aus fünf
+Läufen, die übrigen je ein Lauf. Drossel 6×:
+
+| Seite | sichtbar | HTML | Skripte fertig (DOM) | `api/` fertig | Krypto | Hauptfaden belegt |
+|---|---|---|---|---|---|---|
+| Einsatz mit Spur | 2,11 s | 0,04 s | 1,43 s (17 Skripte) | 1,81 s (31 kB) | 2 Aufrufe | 0,76 s |
+| Diensttag mit Ruhe-Spuren | 2,24 s | 0,04 s | 1,54 s (22) | 1,83 s (142 kB) | 8 | 0,75 s |
+| Tagesansicht | 1,53 s | 0,09 s | 0,92 s (22) | 1,27 s | 7 | 0,54 s |
+| Startseite | 3,02 s | 0,99 s | 2,05 s (22) | 2,72 s | 11 | 1,25 s |
+| Suche | 4,25 s | 0,07 s | 0,50 s (15) | 3,36 s (**5,4 MB**) | **4852** | **2,96 s** |
+| Zeitraum Monat | 3,36 s | 0,08 s | 0,95 s (17) | 2,38 s (344 kB) | 548 | 2,78 s |
+| Zeitraum Jahr | 5,56 s | 0,10 s | 1,20 s (17) | 4,00 s (**2,4 MB**) | **3876** | **5,49 s** |
+| Nachbearbeitung | 0,86 s | 0,07 s | 0,70 s (8) | — | — | 0,06 s |
+| Anmelden | 5,82 s | 2,21 s | 3,89 s (22) | — | — | 0,64 s |
+
+Ungedrosselt liegt jede Seite außer Anmelden (1,36 s) unter 1 s: Einsatz
+0,44 s, Diensttag 0,49 s, Startseite 0,56 s, Suche 0,87 s, Zeitraum Jahr
+0,90 s, Monat 0,47 s.
+
+**Was die Zahlen sagen.**
+
+- **Bei 6× gehen auf jeder Seite 0,7 bis 1,5 s in die Skripte, bevor
+  irgendetwas geholt wird.** Das HTML ist nach 0,04 bis 0,10 s da; erst nach
+  `DOMContentLoaded` holt die Seite ihre Daten aus `api/`. 15 bis 22 einzelne
+  Skriptdateien je Seite.
+- **Suche und Zeitraum Jahr ertrinken in Menge**: 5,4 bzw. 2,4 MB JSON,
+  3876 bis 4852 Entschlüsselungen, 3 bis 5,5 s belegter Hauptfaden — für eine
+  Anzeige von 200 Zeilen.
+- **Die Krypto der Einzelansichten kostet fast nichts**: zwei bis acht
+  Aufrufe in unter 10 ms. Was S11 dort an Hüllen dazubringt, liegt nach der
+  Browserprobe (0,2 bis 3 ms je Hülle bei 6×) im selben Bereich.
+- **Startseite und Anmelden warten bei 6× lange auf den Server** (0,93 bzw.
+  2,15 s bis zur ersten Antwort), ungedrosselt 0,07 bzw. 0,13 s. Ob das an
+  der Seite liegt oder an der Weiterleitung nach der Anmeldung, die
+  mitgezählt wird, ist nicht geklärt — Einzelläufe, nachzumessen.
+- **Dieser Lauf ist langsamer als der vom 11.10.2026** (Einsatz 2,11 statt
+  1,33 s, GPX 414 statt 330 s) bei gleichem Code und gleichem
+  Prozessornamen. Seither misst die Probe einen **Eichlauf** (F-S11-25): 100
+  Mio. Runden Ganzzahlrechnung, gemessen 146–153 ms ungedrosselt und
+  898–987 ms bei 6×.
+
+---
+
+## Nachher 18.10.2026 — nach S11 (S11-11)
+
+**Wofür.** Der Vergleich, den die Grundlinie vom 11.10.2026 verspricht:
+derselbe Messstand, dieselbe Maschine, Web **22.7.0** (Zweig
+`ccr-dd33b6e8-ismfm0`, Code gleich `293446b`). Grenzen aus E-S11-26 und
+-29: Einzelansicht bei Drossel 6× höchstens doppelt so lange wie vorher und
+unter 3 s, ungedrosselt unter 1 s; Massenwege werden benannt.
+
+**Was gemessen wurde.** Drei Läufe auf demselben Bestand (5096 Einsätze,
+seit S11-06 verschlossen eingespielt, Median 434 Punkte je Spur):
+(a) **im Prüfstand von S11-10**, `messen.py --frisch`, Drossel 6×, Eichlauf
+911 ms; (b) **ungedrosselt**, `--schritte browser --drossel 1`, Eichlauf
+137 ms; (c) **nach dem Wartungslauf über das ganze Konto** (10 221
+Aufzeichnungen zusammengefügt, ältere als 31 Tage ausgedünnt; 688 s
+ungedrosselt im Reiter Backup, 0 Fehler; Hüllen 48,0 → 13,6 MB),
+`--schritte browser`, Drossel 6×, Eichlauf 856 ms. Die Eichläufe liegen im
+Bereich der Grundlinie (898–987 ms bei 6×) — die Maschine war gleich schnell.
+
+**Zuerst, was nicht gemessen werden konnte:** ein echtes Telefon (wie
+oben); Staging und Produktiv (andere Maschinen, E-S11-15). Das
+Einmalwerkzeug steht nicht hier, sondern im Prüfdokument S11 (Mengenlauf:
+1000 Einsätze mit 330 000 Punkten in 95,6 s bei 6×).
+
+| Messung | vorher 6× (11.10.) | nachher 6× (a) | nach Wartungslauf 6× (c) | vorher 1× | nachher 1× (b) | Grenze |
+|---|---|---|---|---|---|---|
+| **Einsatz mit Spur öffnen** (1356 Punkte) | 1,28 / 1,33 s | **1,39 s** | **1,27 s** | 0,45 s | **0,39 s** | 2× und < 3 s · < 1 s ✔ |
+| **Diensttag mit Ruhe-Spuren** (1471 Punkte) | 1,71 / 2,35 s | **2,94 s** | **1,41 s** | 0,47 / 0,51 s | **0,68 s** | 2× und < 3 s · < 1 s ✔ |
+| Tagesansicht | 1,19 s | 1,87 s | 1,18 s | — | 0,50 s | — |
+| Suche, erste Treffer | 3,55 s | 3,81 s | 3,52 s | — | 0,77 s | — |
+| Zeitraum Monat, sichtbar | 2,38 s | 1,90 s | 2,40 s | 0,45 s | 0,44 s | — |
+| Zeitraum Jahr, sichtbar | 2,85 / 3,43 s | 3,89 s | 2,71 s | 0,77 s | 0,63 s | — |
+| **Backup erstellen** | 58,5 s, **12,0 MB** | 139,9 s, **36,5 MB** | **170,6 s, 16,1 MB** | 44,1 s | 37,4 s, 36,5 MB | ≤ 5 min ✔ · ≤ 25 MB ✔ nach dem Wartungslauf |
+| **GPX Jahr, Passwort an** | 329,6 s, 32,0 MB | 336,8 s, 30,9 MB | 356,6 s, 17,7 MB | 69,8 s | 75,5 s | benannt |
+| GPX Jahr, Passwort aus | 270,2 s | 288,6 s | 326,7 s | 55,7 s | 61,0 s | benannt |
+| Halde höchste (GPX) | 389 MB | 371 MB | 301 MB | 392 MB | 373 MB | benannt (F-S11-16) |
+
+**Was die Zahlen sagen.**
+
+- **Die Einzelansichten halten die Grenzen.** Der Diensttag lag im Lauf (a)
+  bei 2,94 s, knapp unter 3 s und 1,25- bis 1,72-mal so lange wie vorher;
+  nach dem Wartungslauf (c), dem Zustand, in dem ein Konto sonst ist, bei
+  1,41 s — schneller als vorher, weil ein gepacktes Stück weniger Hüllen
+  und nach der Frist weniger Punkte trägt. Die Streuung zwischen zwei
+  Läufen bleibt groß (F-S11-22): Tagesansicht 1,87 s in (a), 1,18 s in (c).
+- **Die Sicherung ist nach dem Wartungslauf kleiner als die Grenze**:
+  16,1 MB statt 36,5 MB, weil die Punktlisten nur noch die behaltenen
+  Punkte tragen. E-S11-67 verlangte, nachzumessen und bei „deutlich
+  darüber" einen Hebel vorzulegen — es ist darunter; kein Hebel. Die Zeit
+  ist dreimal so lang wie vor S11 (170,6 s gegen 58,5 s), weil der Browser
+  jede Hülle öffnet; sie liegt unter den 5 Minuten aus E-S2-24.
+- **GPX über ein Jahr kostet 1,02- bis 1,08-mal so viel** wie vorher; das
+  Öffnen der Hüllen geht im Packen des Archivs unter. Die Halde bleibt der
+  Befund F-S11-16 (Massenweg, benannt).
+- **Der Server liest keine Punkte mehr:** `edbak_build()` am Stück 0,37 s,
+  Spitze 49 MB (vorher 13,41 s und 2079 MB) — er packt nur noch Hüllen, wie
+  sie liegen.
+
+**Am Prüfmittel berichtigt** (F-S11-74): `einspielen.mjs` wartet auf
+Rückfrage **oder** Ergebnis, was zuerst kommt, statt bis zu 8 s auf eine
+Rückfrage, die nicht kommt. Bis dahin stand jede Datei auf 8,1 s.
+
 ---
 
 ## Wiederholen

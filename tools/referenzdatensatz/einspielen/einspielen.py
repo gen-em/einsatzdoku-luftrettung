@@ -23,9 +23,11 @@ Stufen einzeln aufrufbar:
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import pathlib
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -38,6 +40,7 @@ sys.path.insert(0, str(WURZEL / "generator"))
 sys.path.insert(0, str(WURZEL / "quelldaten"))
 
 import krypto           # noqa: E402
+import ortsdaten        # noqa: E402  (Huellen und Stuecke wie der Browser, S11-06e)
 import sitzung as sitzungsmodul   # noqa: E402
 from sitzung import fehlertext    # noqa: E402  (eine Stelle, siehe dort)
 
@@ -402,16 +405,33 @@ def stufe_ingest(lauf: Lauf) -> None:
     """
     plan = json.loads((AUSGABE / "sendeplan.json").read_text("utf-8"))
     geraete = lauf.zustand["geraete"]
-    s = lauf.demo_sitzung()          # nur fuer die Basisadresse; Ingest ist tokenfrei
+    s = lauf.demo_sitzung()          # Basisadresse und Kontoschluessel; Ingest ist tokenfrei
     bereits = set(lauf.zustand.get("ingest_erledigt", []))
     messung: list[dict] = []
     fehler = 0
+
+    # SEIT WEB 22 VERSCHLOSSEN (S11-04a, E-S11-09). Der Sendeplan liegt im
+    # alten Format vor (Punkte, Koordinaten und Reanimation im Klartext);
+    # `ingest.php` nimmt das nicht mehr an. Umgebaut wird mit DERSELBEN
+    # Geraetehilfe wie in den Proben (`tools/proben/huelle/geraet.php`), in
+    # einem Aufruf fuer alle offenen Pakete, verschlossen mit dem
+    # Kontoschluessel des Demokontos -- den legt die Sitzung an, wenn das
+    # Konto noch keinen hat, so wie der Browser beim Entsperren.
+    offen = [e for e in plan if e["datei"] not in bereits]
+    sec1 = s.kontoschluessel()
+    roh = [json.loads((AUSGABE / e["datei"]).read_text("utf-8")) for e in offen]
+    umbau = subprocess.run(
+        ["php", str(HIER.parents[2] / "tools" / "proben" / "huelle" / "geraet_cli.php")],
+        input=json.dumps({"sec1": base64.b64encode(sec1).decode("ascii"), "pakete": roh}),
+        capture_output=True, text=True, check=True)
+    verschlossen = dict(zip((e["datei"] for e in offen), json.loads(umbau.stdout)))
+    melde(f"  {len(offen)} Pakete verschlossen (Kontoschlüssel {sec1[:4].hex()}…).")
 
     for eintrag in plan:
         datei = eintrag["datei"]
         if datei in bereits:
             continue
-        koerper = json.loads((AUSGABE / datei).read_text("utf-8"))
+        koerper = verschlossen[datei]
         geraet = geraete[eintrag["ref"].split("-")[1]]
         t0 = time.monotonic()
         antwort = s.s.post(f"{lauf.basis}/ingest.php", data=json.dumps(koerper),
@@ -437,7 +457,7 @@ def stufe_ingest(lauf: Lauf) -> None:
             "status": antwort.status_code, "dauer_ms": dauer_ms,
             "stored_points": erg.get("stored_points"), "next_seq": erg.get("next_seq"),
             "rejected": erg.get("rejected"), "kept_phases": erg.get("kept_phases"),
-            "kept_resus": erg.get("kept_resus"),
+            "kept_ort": erg.get("kept_ort"),
         })
         bereits.add(datei)
         if len(messung) % 100 == 0:
@@ -508,18 +528,30 @@ def stufe_zuordnen(lauf: Lauf) -> None:
 
 
 # ------------------------------------------------- Formular: Felder bauen
-def formularfelder(daten: dict, inhaltsschluessel: str, tag_beginn: str | None) -> dict:
+def formularfelder(daten: dict, s, bestand: dict | None = None) -> list:
     """Aus einem Formular-Dokument des Generators die POST-Felder bauen.
 
     `pat_blob` entsteht HIER als `edk1:`-Chiffretext. Der Server nimmt ihn
     bauartbedingt nur so entgegen (`pruef_pat_blob`) — er hat den Schluessel
     nicht und koennte den Inhalt gar nicht pruefen. Das ist keine Luecke,
     sondern die Zusage: Klartext dieser Felder geht nie an den Server.
+
+    SEIT S11-06e WIE DAS FORMULAR AB WEB 22.1.0 (F-S11-43). Phasenorte und
+    Reanimation gehen in die Einsatzhuelle, verschlossen mit dem oeffentlichen
+    Schluessel des Kontos und gebunden an die `client_ref`; die Phasenzeiten
+    gehen als `ort_phasen` mit, und der Server haelt sie gegen seine eigene
+    Rechnung. Transportziel und Ortshoehe liegen im `pat_blob`. Beim
+    Nachtragen (`bestand`) kommen die Orte der Phasen aus der Huelle, die das
+    Geraet geliefert hat, und die Hoehe aus der Spur — wie im Browser
+    (`EdOrtsdaten.einsatzInnen()`, `.ortshoehe()`).
     """
+    sec1, priv = s.kontopaar()
     f = daten["felder"] or {}
+    geschuetzt = dict(daten["geschuetzt"] or {})
     felder: dict = {}
     for spalte, wert in f.items():
-        if spalte in ("crew", "other_resources", "start_src"):
+        if spalte in ("crew", "other_resources", "start_src",
+                      "transport_dest", "dest_lat", "dest_lon"):
             continue
         if wert is None or wert == "":
             continue
@@ -534,12 +566,12 @@ def formularfelder(daten: dict, inhaltsschluessel: str, tag_beginn: str | None) 
             felder[f"f_{spalte}"] = str(wert)
     if f.get("start_src"):
         felder["start_src"] = f["start_src"]
-    # Zielklinik ist ein Ortsfeld: die Koordinaten heissen nach dem FELD.
-    if f.get("dest_lat") is not None:
-        felder["f_transport_dest_lat"] = str(f["dest_lat"])
-        felder["f_transport_dest_lon"] = str(f["dest_lon"])
-        felder.pop("f_dest_lat", None)
-        felder.pop("f_dest_lon", None)
+    # Die Zielklinik liegt seit S11-05b im Blob, mit ihren Koordinaten.
+    if f.get("transport_dest") or f.get("dest_lat") is not None:
+        ziel = {"addr": f.get("transport_dest") or ""}
+        if f.get("dest_lat") is not None and f.get("dest_lon") is not None:
+            ziel.update(lat=float(f["dest_lat"]), lon=float(f["dest_lon"]))
+        geschuetzt["transport_dest"] = ziel
     for rolle, name in (f.get("crew") or {}).items():
         if name:
             felder[f"f_crew_{rolle}"] = name
@@ -550,12 +582,62 @@ def formularfelder(daten: dict, inhaltsschluessel: str, tag_beginn: str | None) 
     for nr, zeit in daten["phasen"]:
         liste.append(("ph_no[]", str(nr)))
         liste.append(("ph_time[]", zeit[11:16]))
-    for i, sitzung in enumerate(daten["rea"] or []):
-        liste.append((f"rea[{i}][start]", sitzung["beginn"][11:16]))
-        for j, (typ, zeit) in enumerate(sitzung["ereignisse"]):
-            liste.append((f"rea[{i}][ev][{j}][typ]", typ))
-            liste.append((f"rea[{i}][ev][{j}][zeit]", zeit[11:16]))
-    blob = krypto.pat_blob(daten["geschuetzt"], inhaltsschluessel)
+
+    # Die Phasen in der Reihenfolge des Servers: nach Nummer, stabil.
+    phasen = sorted(enumerate(daten["phasen"]), key=lambda x: (x[1][0], x[0]))
+    rea = daten["rea"] or []
+    anfragen = [(z[:10], z[11:16], 0) for _, (_, z) in phasen]
+    for sitzung in rea:
+        anfragen.append((sitzung["beginn"][:10], sitzung["beginn"][11:16], 0))
+        anfragen += [(z[:10], z[11:16], 0) for _, z in sitzung["ereignisse"]]
+    ts = ortsdaten.zeiten(anfragen)
+    if any(t is None for t in ts):
+        raise RuntimeError(f"{daten['kennung']}: eine Zeit liess sich nicht umrechnen")
+    phasen_ts = [(nr, ts[i]) for i, (_, (nr, _)) in enumerate(phasen)]
+    beginn = phasen_ts[0][1]
+    k = len(phasen_ts)
+    rea_innen = []
+    for sitzung in rea:
+        start = ts[k]; k += 1
+        ev = []
+        for typ, _ in sitzung["ereignisse"]:
+            ev.append({"art": typ, "t": ts[k] - beginn}); k += 1
+        rea_innen.append({"t": start - beginn, "ereignisse": ev})
+
+    # Orte: beim Nachtragen aus der vorhandenen Huelle, je Nummer der Reihe nach.
+    # Die Reanimation ebenso, wenn das Dokument keine nennt -- das Formular
+    # zeigt sie aus der Huelle an und schickt sie unveraendert zurueck.
+    vorrat: dict[int, list] = {}
+    if bestand is not None:
+        alt = ortsdaten.einsatz_oeffnen(bestand, priv) or {}
+        for o in alt.get("phasen", []):
+            vorrat.setdefault(int(o["phase"]), []).append(o)
+        if not rea_innen and alt.get("rea"):
+            versatz = int(bestand["started_ts"]) - beginn
+            rea_innen = [{"t": r["t"] + versatz,
+                          "ereignisse": [{"art": e["art"], "t": e["t"] + versatz}
+                                         for e in r.get("ereignisse", [])]}
+                         for r in alt["rea"]]
+    innen_phasen = []
+    for nr, t in phasen_ts:
+        o = vorrat.get(nr, []).pop(0) if vorrat.get(nr) else None
+        innen_phasen.append({"phase": nr, "t": t - beginn,
+                             "lat": o.get("lat") if o else None,
+                             "lon": o.get("lon") if o else None})
+    ref = bestand["client_ref"] if bestand is not None else "man-" + __import__("os").urandom(8).hex()
+    liste.append(("ort_huelle", ortsdaten.einsatz_verschliessen(
+        {"fassung": 1, "phasen": innen_phasen, "rea": rea_innen}, sec1, ref)))
+    liste.append(("ort_phasen", json.dumps([[nr, t] for nr, t in phasen_ts])))
+    if bestand is None:
+        liste.append(("client_ref", ref))
+    else:
+        punkte = ortsdaten.spur_oeffnen(bestand.get("spur_stuecke") or [], "spur", ref,
+                                        bestand.get("spur_sperren") or [], priv)
+        h = ortsdaten.ortshoehe(punkte, phasen_ts)
+        if h is not None:
+            geschuetzt["ortshoehe"] = h
+
+    blob = krypto.pat_blob(geschuetzt, s.inhaltsschluessel)
     if blob:
         liste.append(("pat_blob", blob))
     return liste
@@ -588,7 +670,8 @@ def stufe_nachtragen(lauf: Lauf) -> None:
         if len(treffer) != 1:
             raise RuntimeError(f"{daten['kennung']}: {len(treffer)} Einsätze um {stunde} "
                                f"am Diensttag {tag_id}")
-        felder = formularfelder(daten, s.inhaltsschluessel, None)
+        bestand = s.get(f"api/mission.php?id={treffer[0]['id']}").json()
+        felder = formularfelder(daten, s, bestand)
         formular_senden(s, felder, {"id": treffer[0]["id"]})
         getan.add(daten["kennung"])
         n += 1
@@ -610,7 +693,7 @@ def stufe_manuell(lauf: Lauf) -> None:
         daten = json.loads(pfad.read_text("utf-8"))
         if daten["art"] != "neu" or daten["kennung"] in getan:
             continue
-        felder = formularfelder(daten, s.inhaltsschluessel, None)
+        felder = formularfelder(daten, s)
         formular_senden(s, felder, {"day_id": tage[daten["dienst"]]})
         getan.add(daten["kennung"])
         n += 1
@@ -809,11 +892,29 @@ def stufe_schneiden(lauf: Lauf) -> None:
                     f"{quelle['beginn'][11:16]} — erwartet war genau eines")
             rest_id = treffer[0]["id"]
 
+            # SEIT S11-05c SCHNEIDET DER BROWSER -- und darum hier das Werkzeug
+            # (F-S11-53): Segment oeffnen, die Punkte im Zeitraum nehmen und als
+            # Spur des neuen Einsatzes verschliessen, gebunden an dessen Kennung.
+            # Der Zeitraum wird wie auf dem Server gerechnet (`local_to_utc()`).
+            seg = treffer[0]
+            sec1, priv = s.kontopaar()
+            sperren = [{"von": x["von_ts"], "bis": x["bis_ts"]} for x in seg.get("schnitte", [])]
+            punkte = ortsdaten.spur_oeffnen(seg.get("spur_stuecke") or [], "ruhe",
+                                            seg["client_ref"], sperren, priv)
+            von, bis = ortsdaten.zeiten([(liste["day"], sc["beginn"][11:16], 0),
+                                         (liste["day"], sc["ende"][11:16], 0)])
+            drin = [p for p in punkte if von <= p["ts"] <= bis]
+            if not drin:
+                raise RuntimeError(f"{kennung}: im Zeitraum {sc['beginn'][11:16]}–"
+                                   f"{sc['ende'][11:16]} liegt kein Punkt des Segments")
+            ref = "cut-" + __import__("os").urandom(8).hex()
             antwort = s.json_post("api/schneiden.php", {
                 "action": "schneiden", "rest_id": rest_id,
                 "beginn": sc["beginn"][11:16], "ende": sc["ende"][11:16],
                 "beginn_tag": 0, "ende_tag": 0,
                 "phasen": {nr: wann[11:16] for nr, wann in sc["phasen"].items()},
+                "client_ref": ref,
+                "stuecke": ortsdaten.stuecke_bauen(drin, "spur", ref, sec1, neu=True),
             })
             if antwort.status_code != 200:
                 raise RuntimeError(f"{kennung}: api/schneiden.php antwortete "

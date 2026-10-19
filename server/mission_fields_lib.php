@@ -161,7 +161,13 @@ function mf_crew_felder(): array
  * Mal zu fuehren: Formular (Rendern und Fuellen), Anzeige, Export, Sicherung,
  * Import.
  *
- * @return array<string,array{blob:string,label:string}>
+ * `typ` ist der Feldtyp — ein Ortsfeld ('loc', seit S11-05b das
+ * Transportziel) liegt im Blob als {addr, lat, lon} und nicht als Text.
+ * `spalten` sind die Klartextspalten, die das Feld im Altbestand belegt:
+ * das Feld selbst und bei einem Ortsfeld seine Koordinatenspalten. Das
+ * Formular leert sie, sobald der Blob steht.
+ *
+ * @return array<string,array{blob:string,label:string,typ:string,spalten:list<string>}>
  */
 function mf_pat_felder(): array
 {
@@ -173,8 +179,10 @@ function mf_pat_felder(): array
         foreach ($felder as $col => $f) {
             if (($f['store'] ?? null) === 'pat') {
                 $gefunden[(string)$col] = [
-                    'blob'  => (string)($f['blob_key'] ?? $col),
-                    'label' => (string)($f['label'] ?? $col),
+                    'blob'    => (string)($f['blob_key'] ?? $col),
+                    'label'   => (string)($f['label'] ?? $col),
+                    'typ'     => (string)($f['type'] ?? 'text'),
+                    'spalten' => array_merge([(string)$col], array_values(mf_ort_spalten($f))),
                 ];
             }
             if (!empty($f['children']) && is_array($f['children'])) { $sammle($f['children']); }
@@ -395,29 +403,28 @@ function mf_gates_erfuellt(array $f, array $rollen, ?string $kind, array $faehig
 function mf_missions_register(): array
 {
     return [
-    'id' => ['export' => 0, 'suchindex' => 0, 'range' => 0],
+    'id' => ['export' => 0, 'suchindex' => 0, 'range' => 0, 'tag' => 0],
     'user_id' => ['import_neu' => 0, 'ingest_neu' => 0, 'schnitt_neu' => 0,
                   'backup_restore' => 0],
     'device_id' => ['import_neu' => 1, 'ingest_neu' => 1, 'schnitt_neu' => 1],
     'client_ref' => ['backup' => 0, 'import_neu' => 2, 'ingest_neu' => 2, 'schnitt_neu' => 2,
-                     'backup_restore' => 1],
+                     'backup_restore' => 1, 'tag' => 1, 'export' => 32],
     'day_id' => ['export' => 1, 'backup' => 1, 'import_neu' => 3, 'import_aendern' => 0,
                  'suchindex' => 1, 'range' => 1, 'ingest_neu' => 3, 'schnitt_neu' => 3,
                  'backup_restore' => 2],
     'started_at' => ['export' => 2, 'backup' => 2, 'import_neu' => 4, 'import_aendern' => 1,
                      'suchindex' => 2, 'range' => 2, 'ingest_neu' => 4, 'schnitt_neu' => 4,
-                     'backup_restore' => 3],
+                     'backup_restore' => 3, 'tag' => 2],
     'ended_at' => ['export' => 3, 'backup' => 3, 'import_neu' => 5, 'import_aendern' => 2,
-                   'suchindex' => 20, 'range' => 3, 'ingest_neu' => 5, 'schnitt_neu' => 5,
-                   'backup_restore' => 4],
+                   'suchindex' => 19, 'range' => 3, 'ingest_neu' => 5, 'schnitt_neu' => 5,
+                   'backup_restore' => 4, 'tag' => 3],
     'distance_m' => ['export' => 4, 'backup' => 4, 'import_neu' => 14, 'import_aendern' => 9,
-                     'suchindex' => 3, 'range' => 4, 'ingest_neu' => 6, 'backup_restore' => 9],
+                     'suchindex' => 3, 'range' => 4, 'ingest_neu' => 6, 'backup_restore' => 9, 'tag' => 4],
     'ascent_m' => ['export' => 5, 'backup' => 5, 'import_neu' => 15, 'import_aendern' => 10,
                    'ingest_neu' => 7, 'backup_restore' => 10],
-    'site_ele_m' => ['export' => 28, 'backup' => 6, 'import_neu' => 13, 'import_aendern' => 8,
-                     'range' => 10],
+    'site_ele_m' => ['export' => 28, 'backup' => 6, 'import_neu' => 13, 'import_aendern' => 8],
     'final' => ['export' => 6, 'backup' => 7, 'import_neu' => 6, 'import_aendern' => 3,
-                'ingest_neu' => 8, 'schnitt_neu' => 6, 'backup_restore' => 8],
+                'ingest_neu' => 8, 'schnitt_neu' => 6, 'backup_restore' => 8, 'tag' => 5],
     'letzter_punkt_am' => [],
     'uhr_gesperrt' => ['export' => [7, 'manual'], 'backup' => [8, 'manual'], 'import_neu' => 7,
                        'import_aendern' => 26, 'schnitt_neu' => 7, 'backup_restore' => 5],
@@ -433,37 +440,38 @@ function mf_missions_register(): array
     'na_escort' => ['export' => 15, 'backup' => 15, 'import_neu' => 26, 'import_aendern' => 21,
                     'suchindex' => 5],
     'transport_dest' => ['export' => 12, 'backup' => 13, 'import_neu' => 9,
-                         'import_aendern' => 4, 'suchindex' => 6],
+                         'import_aendern' => 4],
     'dest_lat' => ['export' => 18, 'backup' => 18, 'import_neu' => 28, 'import_aendern' => 23],
     'dest_lon' => ['export' => 19, 'backup' => 19, 'import_neu' => 29, 'import_aendern' => 24],
     'schockraum' => ['export' => 26, 'backup' => 26, 'import_neu' => 16, 'import_aendern' => 11,
-                     'suchindex' => 7],
+                     'suchindex' => 6],
     'false_alarm' => ['export' => 16, 'backup' => 16, 'import_neu' => 27,
-                      'import_aendern' => 22, 'suchindex' => 8, 'range' => 9],
-    'start_src' => ['export' => 17, 'backup' => 17, 'import_neu' => 30, 'import_aendern' => 25],
+                      'import_aendern' => 22, 'suchindex' => 7, 'range' => 9],
+    'start_src' => ['export' => 17, 'backup' => 17, 'import_neu' => 30, 'import_aendern' => 25, 'tag' => 7],
     'winch' => ['export' => 13, 'backup' => 20, 'import_neu' => 10, 'import_aendern' => 5,
-                'suchindex' => 9, 'range' => 5],
+                'suchindex' => 8, 'range' => 5],
     'winch_cycles' => ['export' => 20, 'backup' => 21, 'import_neu' => 18,
-                       'import_aendern' => 13, 'suchindex' => 10, 'range' => 8],
+                       'import_aendern' => 13, 'suchindex' => 9, 'range' => 8],
     'winch_cycles_pat' => ['export' => 21, 'backup' => 22, 'import_neu' => 19,
-                           'import_aendern' => 14, 'suchindex' => 11],
+                           'import_aendern' => 14, 'suchindex' => 10],
     'winch_airload' => ['export' => 22, 'backup' => 23, 'import_neu' => 20,
-                        'import_aendern' => 15, 'suchindex' => 12],
+                        'import_aendern' => 15, 'suchindex' => 11],
     'bergwacht' => ['export' => 23, 'backup' => 24, 'import_neu' => 21, 'import_aendern' => 16,
-                    'suchindex' => 13, 'range' => 6],
+                    'suchindex' => 12, 'range' => 6],
     'secondary' => ['export' => 25, 'backup' => 25, 'import_neu' => 17, 'import_aendern' => 12,
-                    'suchindex' => 16, 'range' => 7],
+                    'suchindex' => 15, 'range' => 7],
     'bw_unit' => ['export' => 24, 'backup' => 27, 'import_neu' => 22, 'import_aendern' => 17,
-                  'suchindex' => 14],
+                  'suchindex' => 13],
     'bw_info' => ['export' => 29, 'backup' => 28, 'import_neu' => 23, 'import_aendern' => 18,
-                  'suchindex' => 15],
+                  'suchindex' => 14],
     'other_ema' => ['export' => 30, 'backup' => 29, 'import_neu' => 24, 'import_aendern' => 19,
-                    'suchindex' => 17],
+                    'suchindex' => 16],
     'other_resources' => [],
     'crew_override' => ['export' => 27, 'backup' => 30, 'import_neu' => 11,
-                        'import_aendern' => 6, 'suchindex' => 18],
+                        'import_aendern' => 6, 'suchindex' => 17],
     'pat_blob' => ['export' => 31, 'backup' => 31, 'import_neu' => 12, 'import_aendern' => 7,
-                   'suchindex' => 19, 'range' => 11],
+                   'suchindex' => 18, 'range' => 10, 'tag' => 6],
+    'ort_huelle' => ['export' => 33, 'backup' => 35],
     'notes' => [],
     'created_at' => ['backup' => 32],
     'deleted_at' => ['backup' => 33, 'backup_restore' => 13],
@@ -494,13 +502,17 @@ function mf_missions_gruende(): array
         'deleted_with_day' =>
             'Wie deleted_at.',
         'site_ele_m' =>
-            'Im Export nur mit personenbezogenen Angaben (A9): Die Hoehe des Einsatzortes ist eine Ortsangabe. Im suchindex nicht, weil die Suche sie nicht anbietet.',
+            'Im Export nur mit personenbezogenen Angaben (A9): Die Hoehe des Einsatzortes ist eine Ortsangabe. Im suchindex nicht, weil die Suche sie nicht anbietet. Seit S11-05b auch nicht mehr in range und tag: Die Hoehe liegt im pat_blob (ortshoehe); die Spalte traegt nur noch den Altbestand.',
         'bw_info' =>
             'Im Export nur mit personenbezogenen Angaben (A9).',
         'other_ema' =>
             'Im Export nur mit personenbezogenen Angaben (A9).',
         'pat_blob' =>
             'Im Export nur mit personenbezogenen Angaben (A9). Chiffretext — der Server sieht ihn nie im Klartext.',
+        'ort_huelle' =>
+            'Die Einsatzhuelle (S11-04a): Phasenkoordinaten und Reanimation, verschlossen mit dem oeffentlichen Schluessel des Kontos. '
+          . 'Geschrieben nur von ingest.php, das sie mit den Phasen ersetzt (eigene Anweisung, nicht im INSERT). '
+          . 'Gelesen ab S11-04b von api/mission.php; seit S11-05e im Export (nur mit personenbezogenen Angaben, der Browser oeffnet sie) und im Import; seit S11-06a im Backup (als Base64, edbak_build()), dort oeffnet sie der Browser und legt Orte und Reanimation offen in den verschlossenen Container.',
         'origin' =>
             'Beim Aendern nicht: Ein Import einer Jahresliste darf die Herkunft eines bestehenden Einsatzes nicht ueberschreiben.',
         'edited' =>
@@ -510,7 +522,7 @@ function mf_missions_gruende(): array
         'geraet_modell' =>
             'Wie geraet_art.',
         'client_ref' =>
-            'Im Export nicht: Er ist die Kennung, unter der die Uhr denselben Einsatz wiedererkennt, und damit ein Betriebswert.',
+            'Im Export seit S11-05e, und nur mit personenbezogenen Angaben: Die Einsatzhuelle ist an ihn gebunden, ohne ihn geht sie im Browser nicht auf. In die Datei schreibt export.js ihn nicht — er bleibt ein Betriebswert.',
         'ascent_m' =>
             'Im suchindex und range nicht: Beide zeigen den Steigungsmeter nicht an.',
     ];
@@ -520,7 +532,7 @@ function mf_missions_gruende(): array
  * Die Spaltenliste eines Zwecks — fertig fuer ein `SELECT`, `INSERT` oder `UPDATE`.
  *
  * @param string $zweck `export` · `backup` · `import_neu` · `import_aendern` ·
- *                      `suchindex` · `range`
+ *                      `suchindex` · `range` · `tag`
  * @param string $praefix Tabellenalias mit Punkt (`'x.'`, `'m.'`) oder leer
  * @param bool   $alias   Alias mitschreiben (`uhr_gesperrt AS manual`) — fuer
  *                        `INSERT`/`UPDATE` ist er falsch und muss weg

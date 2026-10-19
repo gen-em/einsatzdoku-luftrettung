@@ -53,6 +53,8 @@ require_once $wurzel . '/ratelimit_lib.php';
 require_once $wurzel . '/kopplung_lib.php';
 require_once $wurzel . '/spur_lib.php';
 require_once $wurzel . '/jobs_lib.php';
+require_once $wurzel . '/kontopaar_lib.php';   // S11-03: der Kontoschluessel in den Antworten
+require_once dirname(__DIR__) . '/huelle/geraet.php';   // S11-04a: senden wie ein Geraet ab Web 22
 
 $basis     = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
 $pdo       = db();
@@ -268,6 +270,8 @@ $paket = ['kind' => 'mission', 'client_ref' => 'kopplungsprobe-1', 'day' => '202
           'final' => true,
           'track' => ['seq_from' => 0, 'points' => [[47.0, 11.0, 700.0, 1750000000],
                                                     [47.001, 11.001, 701.0, 1750000010]]]];
+/* Seit S11-04a verschlossen, wie ein Geraet ab Web 22 sendet (geraet.php). */
+$paket = gh_probe_koerper($paket, gh_probe_paar()['sec1']);
 $i1 = anfrage($paket, $dev, $key, 'POST', 'ingest.php');
 pruefe($i1['code'] === 401, '14a ingest.php mit schwebenden Zugangsdaten -> 401', "HTTP {$i1['code']}");
 
@@ -277,6 +281,8 @@ $sysVorher = (int)$pdo->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereign
 $j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $dev, $key);
 pruefe($j['code'] === 200 && ($j['daten']['ok'] ?? false) === true,
        '11  ja beansprucht -> 200 ok', $j['roh']);
+pruefe(array_key_exists('kontoschluessel', $j['daten'] ?? []) && $j['daten']['kontoschluessel'] === null,
+       'K1  ja ohne Paar des Kontos -> kontoschluessel null (S11-03)', $j['roh']);
 $gz = geraet($pdo, $dev);
 pruefe($gz !== null && (int)$gz['user_id'] === $uid && $gz['api_key_hash'] === hash('sha256', $key)
        && $gz['label'] === 'Uhr' && $gz['geraet_art'] === 'uhr' && $gz['geraet_modell'] === 'Venu 3S'
@@ -304,6 +310,54 @@ pruefe($j2['code'] === 200 && ($j2['daten']['ok'] ?? false) === true,
 $st = anfrage(['aktion' => 'status'], $dev, $key);
 pruefe($st['code'] === 200 && ($st['daten']['zustand'] ?? '') === 'gekoppelt',
        '13  status nach Anlage -> gekoppelt', $st['roh']);
+
+/* ---- Der Kontoschluessel (S11-03, Konzept S11 3.4, E-S11-14) -------------
+ * Ein P-256-Paar aus openssl; abgelegt ueber `kp_ablegen()` (versiegelt).
+ * Erwartet: `status` und `bestaetigen` liefern ihn als 65 Byte SEC1. Ein
+ * Siegel, das zu einem ANDEREN Konto gehoert (umgehaengt), und ein
+ * unversiegelter Wert liefern null — und landen im Reiter System. */
+$kpPaar = static function (): string {
+    $k = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+    $pem = (string)openssl_pkey_get_details($k)['key'];
+    return preg_replace('/-----[^-]+-----|\s/', '', $pem);
+};
+$kpA = $kpPaar(); $kpB = $kpPaar();
+pruefe(kp_oeffentlich_pruefen($kpA) === null && kp_sec1($kpA) !== null,
+       'K2  openssl-SPKI ist ein P-256-Schluessel, SEC1 65 Byte', (string)strlen((string)base64_decode((string)kp_sec1($kpA))));
+pruefe(kp_ablegen($pdo, $uid, $kpA, 'edk1:' . base64_encode(random_bytes(48))) === true
+       && kp_ablegen($pdo, $uid, $kpB, 'edk1:' . base64_encode(random_bytes(48))) === false,
+       'K3  ablegen einmal ja, ein zweites Paar nein (kein Ersetzen)');
+$roh = (string)$pdo->query("SELECT kp_oeffentlich FROM users WHERE id = $uid")->fetchColumn();
+pruefe(sk_versiegelt($roh) && !str_contains($roh, substr($kpA, 30, 40)),
+       'K4  in der Datenbank steht das Siegel, nicht der Schluessel');
+$st = anfrage(['aktion' => 'status'], $dev, $key);
+pruefe($st['code'] === 200 && ($st['daten']['kontoschluessel'] ?? null) === kp_sec1($kpA)
+       && strlen((string)base64_decode((string)$st['daten']['kontoschluessel'])) === 65,
+       'K5  status gekoppelt -> kontoschluessel = SEC1 des Kontos', $st['roh']);
+$jk = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $dev, $key);
+pruefe($jk['code'] === 200 && ($jk['daten']['kontoschluessel'] ?? null) === kp_sec1($kpA),
+       'K6  bestaetigen (Geraete-Zweig) -> derselbe kontoschluessel', $jk['roh']);
+$sysVorKp = (int)$pdo->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")->fetchColumn();
+$pdo->prepare('UPDATE users SET kp_oeffentlich = ? WHERE id = ?')
+    ->execute([sk_versiegeln($kpB, kp_zweck($uid2)), $uid]);
+$st = anfrage(['aktion' => 'status'], $dev, $key);
+pruefe($st['code'] === 200 && array_key_exists('kontoschluessel', $st['daten'] ?? [])
+       && $st['daten']['kontoschluessel'] === null,
+       'K7  Siegel eines anderen Kontos (umgehaengt) -> kontoschluessel null', $st['roh']);
+$pdo->prepare('UPDATE users SET kp_oeffentlich = ? WHERE id = ?')->execute([$kpB, $uid]);
+$st = anfrage(['aktion' => 'status'], $dev, $key);
+pruefe($st['code'] === 200 && array_key_exists('kontoschluessel', $st['daten'] ?? [])
+       && $st['daten']['kontoschluessel'] === null,
+       'K8  unversiegelter Schluessel in der Spalte -> kontoschluessel null', $st['roh']);
+$kpMeld = $pdo->prepare("SELECT COUNT(*) FROM protokoll_ereignisse WHERE reiter = 'system'
+                          AND id > ? AND text LIKE 'kontopaar:%'");
+$kpMeld->execute([$sysVorKp]);
+$kpZahl = (int)$kpMeld->fetchColumn();
+pruefe($kpZahl >= 2, 'K9  beide Faelle im Reiter System gemeldet', "$kpZahl Eintraege");
+$pdo->prepare("DELETE FROM protokoll_ereignisse WHERE reiter = 'system' AND id > ? AND text LIKE 'kontopaar:%'")
+    ->execute([$sysVorKp]);
+$pdo->prepare('UPDATE users SET kp_oeffentlich = NULL, kp_privat = NULL, kp_seit = NULL WHERE id = ?')
+    ->execute([$uid]);
 $n = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'nein'], $dev, $key);
 pruefe($n['code'] === 200 && geraet($pdo, $dev) !== null,
        'E48 nein mit Geraetezugang -> 200, Geraet bleibt (E-S5-48)');
@@ -312,7 +366,7 @@ pruefe($i2['code'] === 200 && ($i2['daten']['ok'] ?? false) === true,
        '14b ingest.php nach dem Ja -> 200', "HTTP {$i2['code']}");
 
 /* Vor dem Trennen zwei Fehlversuche setzen: Der Topf `pair` gehoert nicht
- * uns allein — jobs.php und gpx.php zaehlen darin mit. Ein gelungenes
+ * uns allein — jobs.php zaehlt darin mit (bis Web 22.2.0 auch gpx.php). Ein gelungenes
  * `trennen` darf ihn deshalb NICHT leeren (Web 13.1.1). */
 anfrage(['aktion' => 'status'], $dev, 'falsch-vor-trennen-1');
 anfrage(['aktion' => 'status'], $dev, 'falsch-vor-trennen-2');
@@ -324,7 +378,7 @@ pruefe($t['code'] === 200 && ($t['daten']['ok'] ?? false) === true && geraet($pd
 pruefe($vorTrennen >= 2 && versuche($pdo, 'pair') === $vorTrennen,
        'E51 ein gelungenes trennen leert den Topf `pair` NICHT',
        "vorher $vorTrennen, nachher " . versuche($pdo, 'pair')
-       . ' — der Topf gehoert auch jobs.php und gpx.php');
+       . ' — der Topf gehoert auch jobs.php');
 $t2 = anfrage(['aktion' => 'trennen'], $dev, $key);
 pruefe($t2['code'] === 401, '26  trennen danach -> 401 (Kennung unbekannt)');
 toepfe_leeren($pdo);

@@ -3581,6 +3581,90 @@ function migrationen_katalog(): array
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         },
     ],
+    [
+        'id'    => '2026_10_13_kontopaar',
+        'web'   => '22.0',
+        'label' => 'Schlüsselpaar des Kontos für die Gerätehülle (S11-03)',
+        /* DAS PAAR DES KONTOS (Konzept S11 3.1, S11-03). Drei Spalten an
+         * `users`, wie beim Rückweg: `kp_oeffentlich` ist der oeffentliche
+         * Teil (SPKI, Base64) VERSIEGELT mit dem Serverschluessel (Zweck
+         * `kontopaar|<id>`, rund 210 Zeichen), `kp_privat` der private unter
+         * dem Inhaltsschluessel (`edk1:`), `kp_seit` der Zeitpunkt. Leer heisst:
+         * noch kein Paar — es entsteht beim naechsten Entsperren nach einer
+         * Anmeldung (`assets/unlock.js`). TEXT fuer das Siegel, weil seine
+         * Laenge am Format des Siegels haengt, nicht am Schluessel.
+         *
+         * EINE ANWEISUNG FUER ALLE DREI; `skip` fragt nach der letzten. Nichts
+         * wird geloescht — die Migration ist nicht zerstoerend. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_spalte($pdo, 'users', 'kp_seit');
+        },
+        'sql'   => [
+            "ALTER TABLE users
+               ADD COLUMN kp_oeffentlich TEXT NULL,
+               ADD COLUMN kp_privat      TEXT NULL,
+               ADD COLUMN kp_seit        DATETIME NULL",
+        ],
+    ],
+    [
+        'id'    => '2026_10_13_ortshuellen',
+        'web'   => '22.0',
+        'label' => 'Spurstuecke und Einsatzhuelle als Geraetehuellen (S11-04a)',
+        /* DER SPEICHER FUER VERSCHLOSSENE ORTSDATEN (Konzept S11 3.3). Eine
+         * neue Tabelle `track_stuecke` (Spurstuecke, SPUR2) und eine Spalte
+         * `missions.ort_huelle` (Phasenkoordinaten und Reanimation, E-S11-36).
+         * Beide nehmen ab dieser Fassung auf, was `ingest.php` von Uhr und Handy
+         * bekommt; Klartext nimmt der Eingang nicht mehr an (E-S11-09).
+         *
+         * NICHT ZERSTOEREND. `track_points`, `track_blobs`, die Koordinaten in
+         * `mission_phases` und die Reanimationstabellen bleiben stehen, bis das
+         * Einmalwerkzeug (S11-10) den Bestand umgehuellt hat; geloescht werden
+         * sie erst mit der Aufraeumauslieferung (S11-12, E-S11-19).
+         *
+         * `skip` fragt nach beiden. Nach einem abgebrochenen ersten Lauf
+         * ueberspringt der zweite, was schon steht (1050, 1060). */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_tabelle($pdo, 'track_stuecke') && db_hat_spalte($pdo, 'missions', 'ort_huelle');
+        },
+        'sql'   => [
+            "CREATE TABLE IF NOT EXISTS track_stuecke (
+               owner_type   ENUM('mission','rest') NOT NULL,
+               owner_id     INT UNSIGNED NOT NULL,
+               seq_from     INT UNSIGNED NOT NULL,
+               punkte       INT UNSIGNED NOT NULL,
+               n_original   INT UNSIGNED NOT NULL,
+               ts_von       INT UNSIGNED NOT NULL,
+               ts_bis       INT UNSIGNED NOT NULL,
+               stufe        TINYINT UNSIGNED NOT NULL,
+               huelle       MEDIUMBLOB NOT NULL,
+               erstellt_am  DATETIME NOT NULL,
+               geaendert_am DATETIME NOT NULL,
+               PRIMARY KEY (owner_type, owner_id, seq_from),
+               KEY stufe_ende (stufe, ts_bis)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            "ALTER TABLE missions ADD COLUMN ort_huelle MEDIUMBLOB NULL AFTER pat_blob",
+        ],
+    ],
+    [
+        'id'    => '2026_10_15_loeschvermerk',
+        'web'   => '22.2',
+        'label' => 'Sperrvermerk ohne Einsatz: ein geloeschtes Stueck (S11-05c, Nr. 161)',
+        /* EIN ZEITRAUM, DER GELOESCHT IST, BLEIBT GESPERRT. Seit S11-05c laesst
+         * sich aus einem Ruhesegment ein Stueck loeschen (Backlog Nr. 161): Der
+         * Browser verschliesst die uebrigen Punkte neu, der Server ersetzt die
+         * Stuecke. Eine Uhr, die ihre Marke verloren hat, koennte den Zeitraum
+         * aber erneut senden — und die geloeschten Punkte waeren wieder da. Der
+         * Sperrvermerk haelt das auf, wie beim Schnitt (E-S11-37), nur ohne
+         * Ziel: `mission_id` wird dafuer NULL-faehig. NULL heisst geloescht.
+         *
+         * NICHT ZERSTOEREND: Eine Spalte wird nur nachgiebiger. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_spalte_nullbar($pdo, 'track_cuts', 'mission_id') === true;
+        },
+        'sql'   => [
+            "ALTER TABLE track_cuts MODIFY mission_id INT UNSIGNED NULL",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

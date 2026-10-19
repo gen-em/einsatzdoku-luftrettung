@@ -19,7 +19,8 @@ python3 messprotokoll.py && node sichtpruefung.mjs
 ## Was es misst
 
 Sechs Wege: `pair.php`, `ingest.php`, `api/day.php`, `einsatz_form.php`,
-`api/schneiden.php` und die Oberfläche. Stand der Stufen in `lauf.json`;
+`api/schneiden.php` und die Oberfläche — seit S11-06e wie ein Browser ab Web 22:
+Hülle, Blob und Schnitt verschließt es selbst (`ortsdaten.py`, F-S11-43, -53). Stand der Stufen in `lauf.json`;
 warum die Reihenfolge so ist, steht an der Stufe in `einspielen.py`; `messprotokoll.py` misst das Sendeverhalten einer Uhr (E-P1-14).
 
 ## Was es braucht
@@ -31,8 +32,7 @@ trägt `secure`. Vorgaben: `admin@example.invalid` / `pruefstandzugang2026`,
 
 ## Erwartete Zahl
 
-Alle Stufen ohne Abbruch, so viele Schnitte wie in den Quelldaten (E-DA-11),
-`sitzungsprobe.py` **2 von 2** (beide Hüllenfassungen) — in rund vier Minuten.
+Alle Stufen ohne Abbruch, so viele Schnitte wie in den Quelldaten (E-DA-11), **0** Klartext-Ortsdaten im Zielkonto, `sitzungsprobe.py` **2 von 2** (beide Hüllenfassungen) — in rund vier Minuten.
 
 ## Was es nicht kann
 

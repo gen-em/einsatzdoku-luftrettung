@@ -370,7 +370,16 @@ bauen() {
 
 anzeige_starten() {
     umgebung
-    pgrep -f "Xvfb $ANZEIGE" >/dev/null && return
+    # EINE ANZEIGE, DIE ANTWORTET, NICHT EINE, DIE IN DER LISTE STEHT
+    # (F-S11-93). Ein Xvfb, dem `beenden` eben das Ende geschickt hat, steht
+    # noch einen Augenblick in der Prozessliste. Bis zum 18.10.2026 reichte
+    # das hier als „laeuft", und der Simulator kam danach ohne Anzeige hoch
+    # ("Can't create a GtkStyleContext without a display connection") — im
+    # Pruefstand einmal im Uhr-Rundlauf, nach 48 s, ohne Meldung.
+    if pgrep -f "Xvfb $ANZEIGE" >/dev/null; then
+        xdpyinfo -display "$ANZEIGE" >/dev/null 2>&1 && return
+        for _ in $(seq 1 20); do pgrep -f "Xvfb $ANZEIGE" >/dev/null || break; sleep 0.5; done
+    fi
     # Ein abgebrochener Lauf laesst die Sperrdatei stehen; Xvfb weigert sich
     # dann mit "Server is already active" und der Simulator startet ins Leere.
     local n="${ANZEIGE#:}"
@@ -401,6 +410,19 @@ simulator_starten() {
     # zehn Abzuege waren deshalb leer. `pgrep -x` prueft den Prozessnamen und
     # ist gegen den Aufrufpfad unempfindlich.
     pgrep -x simulator >/dev/null && { melde "Simulator laeuft bereits"; return; }
+    # DIE EINZELINSTANZ-SPERRE UEBERLEBT DEN CONTAINER (Anlass: Nr. 43,
+    # F-S11-39). Der Simulator legt `~/Sim-<Nutzer>` mit seiner PID an und
+    # beendet sich mit 255, OHNE Meldung, solange die Datei steht. Nach einem
+    # Neustart des Containers steht sie mit der PID eines Prozesses, den es
+    # nicht mehr gibt — gemessen am 14.10.2026: Krypto-Probe 0 von 3, „Unable
+    # to connect to simulator", Ursache erst mit strace gefunden. Weg nur,
+    # wenn die PID nicht laeuft; ein laufender Simulator ist oben schon erkannt.
+    local sperre="$HOME/Sim-$(id -un)" pid
+    if [ -f "$sperre" ]; then
+        pid=$(tr -dc 0-9 < "$sperre")
+        { [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; } \
+            && { rm -f "$sperre"; melde "verwaiste Simulator-Sperre entfernt"; }
+    fi
     melde "Simulator starten"
     (cd "$SDK_DIR/bin" && setsid nohup ./simulator >"$BASIS/simulator.log" 2>&1 </dev/null &)
     sleep 18
@@ -455,6 +477,10 @@ reihe() {
     # fehlt dann einfach. Geraete, deren Icon exakt passt, bauen durch; der
     # Ausfall sieht deshalb nach einem Geraeteproblem aus und ist keins.
     export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
+    # CIQ_JUNGLE uebersetzt ein anderes Projekt fuer dieselbe Liste — die
+    # Krypto-Probe (S11-02) laeuft so ueber alle Geraete der App. Ohne den
+    # Wert bleibt es die App selbst.
+    local jungle="${CIQ_JUNGLE:-$WURZEL/watch/monkey.jungle}"
     local ok=0 mangel=0 fehlend=0
     printf '%-26s %5s %6s %10s  %s\n' "Gerät" "Warn" "Fehler" "Größe" "Anmerkung"
     printf '%s\n' "----------------------------------------------------------------------"
@@ -465,7 +491,7 @@ reihe() {
             fehlend=$((fehlend+1)); continue
         fi
         local log="$BASIS/reihe_$g.txt"
-        monkeyc -f "$WURZEL/watch/monkey.jungle" -d "$g" -o "$AUSGABE/$g.prg" \
+        monkeyc -f "$jungle" -d "$g" -o "$AUSGABE/$g.prg" \
                 -y "$SCHLUESSEL" -w "$@" >"$log" 2>&1 || true
         sed -i '/JAVA_TOOL_OPTIONS/d' "$log" 2>/dev/null || true
         local w e sz
@@ -488,13 +514,97 @@ reihe() {
     [ "$mangel" -eq 0 ] && [ "$fehlend" -eq 0 ]
 }
 
+# ---- Krypto-Probe (S11-02, Anlass: Nr. 43) -----------------------------------
+#
+# `kryptoreihe <liste>` uebersetzt die Probe aus krypto-probe/ fuer dieselbe
+# Liste wie Stufe I. `kryptoprobe [geraet…]` laedt sie in den Simulator,
+# wartet auf die Zeile ERGEBNIS und ist nur gruen, wenn jedes Geraet
+# „0 Fehler" meldet. Eine Probe, die nicht zu Ende kommt (Absturz, Waechter),
+# ist rot, nicht ausgelassen. monkeydo wird ueber seine Prozessnummer beendet,
+# nicht ueber `pkill -f monkeydo` — das Muster trifft jede Shell, deren
+# Befehlszeile das Wort enthaelt, auch die aufrufende.
+KRYPTO_JUNGLE="$WURZEL/tools/uhr-pruefstand/krypto-probe/monkey.jungle"
+
+kryptoreihe() { CIQ_JUNGLE="$KRYPTO_JUNGLE" reihe "$@"; }
+
+kryptoprobe() {
+    local geraete="${*:-$ZIEL_GERAETE}" schlecht=0 g pid log
+    # FRISCHER SIMULATOR (S11-08, F-S11-83). Im Pruefstand vom 17.10.2026
+    # blieb die Ausgabe auf allen drei Geraeten 120 s leer — 0 von 3 —, mit
+    # einem Simulator, der seit Stunden durch Handlaeufe gelaufen war. Einzeln
+    # nachgefahren, frisch und nach einem Rundlauf: 7 gut, 0 Fehler, 16 s.
+    # Die Ursache ist nicht gefunden; der Altzustand ist der einzige
+    # Unterschied, und ein Lauf soll nicht den Zustand eines frueheren messen.
+    #
+    # NUR DEN SIMULATOR, NICHT DIE ANZEIGE (F-S11-86). Bis zum 18.10.2026 stand
+    # hier `beenden`, und das raeumt auch Xvfb ab. `anzeige_starten` fand den
+    # sterbenden Xvfb danach noch in der Prozessliste, startete keinen neuen,
+    # und der Simulator kam ohne Anzeige hoch ("Can't create a GtkStyleContext
+    # without a display connection") — 0 von 3, "Unable to connect to
+    # simulator". Einzeln war es nicht aufgefallen, weil dort zwischen den
+    # Befehlen genug Zeit lag.
+    pkill -x simulator 2>/dev/null || true
+    for _ in $(seq 1 20); do pgrep -x simulator >/dev/null || break; sleep 0.5; done
+    umgebung; simulator_starten
+    for g in $geraete; do
+        bauen "$g" "$KRYPTO_JUNGLE" >/dev/null 2>&1 || { echo "== $g: nicht uebersetzt"; schlecht=$((schlecht+1)); continue; }
+        log="$BASIS/krypto_$g.txt"; : >"$log"
+        setsid monkeydo "$AUSGABE/$g.prg" "$g" >"$log" 2>&1 </dev/null &
+        pid=$!
+        for _ in $(seq 1 60); do grep -q 'ERGEBNIS\|Error' "$log" && break; sleep 2; done
+        kill -- "-$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true
+        sed -i '/JAVA_TOOL_OPTIONS/d' "$log"
+        echo "== $g"; cat "$log"
+        grep -q 'ERGEBNIS [0-9]* gut, 0 Fehler' "$log" || schlecht=$((schlecht+1))
+    done
+    echo "Krypto-Probe: $(( $(wc -w <<<"$geraete") - schlecht )) von $(wc -w <<<"$geraete") Geraeten ohne Fehler"
+    [ "$schlecht" -eq 0 ]
+}
+
 # ---- Stufe II: im Simulator starten, je Geraet ein Abbild --------------------
 #
 # Teuer (rund eine Minute je Geraet), deshalb nur fuer die Vertreter der
 # Klassen. monkeydo wird bewusst direkt gestartet und wieder beendet statt
 # ueber starten() — in einer Schleife blockiert das sonst (s. LIESMICH).
+# DIE TASTENFOLGE (Backlog Nr. 92, S11-08). Bis dahin fotografierte
+# `bildreihe` nur den Startbildschirm; wer eine andere Ansicht brauchte, baute
+# sich eine eigene Schleife (S5 Paket C). Jetzt nimmt sie als drittes Argument
+# eine Folge, durch Kommas getrennt, die nach dem Laden und VOR dem Abzug
+# gefahren wird:
+#   Down              Tastendruck (xdotool-Name)
+#   hold:Return[:s]   Langdruck, Vorgabe 1,6 s (keydown, warten, keyup)
+#   wait:8            warten, Sekunden
+#   tipp:x/y          Touch-Tipp, Fensterkoordinaten
+#   wisch:x/von/nach  Wischgeste
+# Der ERSTE Tastendruck nach dem Laden geht regelmaessig verloren (s. taste);
+# eine Folge zur Sync-Seite beginnt deshalb mit zwei Down. Drei-Tasten-Geraete
+# (Venu) brauchen statt Down ein Wischen — die Folge ist je Geraeteklasse eine
+# andere, und `bildreihe` faehrt fuer alle Geraete der Liste DIESELBE.
+folge_fahren() {
+    local folge="$1" schritt art rest a b c
+    IFS=',' read -ra schritte <<<"$folge"
+    for schritt in "${schritte[@]}"; do
+        art="${schritt%%:*}"; rest="${schritt#*:}"
+        case "$art" in
+            hold)  IFS=':' read -r a b <<<"$rest"
+                   _fokus; xdotool keydown "$a"; sleep "${b:-1.6}"; xdotool keyup "$a" ;;
+            wait)  sleep "$rest" ;;
+            tipp)  IFS='/' read -r a b <<<"$rest"; tippen "$a" "$b" ;;
+            wisch) IFS='/' read -r a b c <<<"$rest"; wischen "$a" "$b" "$c" ;;
+            *)     taste "$schritt" ;;
+        esac
+        sleep 1
+    done
+}
+
+_fokus() {
+    local wid
+    wid=$(xdotool search --onlyvisible --name "CIQ Simulator" 2>/dev/null | head -1)
+    [ -n "$wid" ] && { xdotool windowfocus "$wid" 2>/dev/null; sleep 0.5; }
+}
+
 bildreihe() {
-    local liste="${1:?Listendatei fehlt}" ziel="${2:-$BASIS/abbilder}"
+    local liste="${1:?Listendatei fehlt}" ziel="${2:-$BASIS/abbilder}" folge="${3:-}"
     [ -f "$liste" ] || fehler "Liste nicht gefunden: $liste"
     umgebung; simulator_starten; mkdir -p "$ziel"
     local wartezeit="${CIQ_WARTEZEIT:-26}"
@@ -507,6 +617,7 @@ bildreihe() {
         nohup monkeydo "$AUSGABE/$g.prg" "$g" >"$BASIS/konsole.log" 2>&1 &
         local md=$!
         sleep "$wartezeit"
+        [ -n "$folge" ] && folge_fahren "$folge"
         xwd -root -display "$ANZEIGE" 2>/dev/null | convert xwd:- "$ziel/$g.png" 2>/dev/null
         # Absturzmeldungen des Simulators sind die eigentliche Ausbeute
         local stoerung
@@ -612,6 +723,12 @@ beenden() {
     # geladener App und altem Zustand.
     pkill -x simulator 2>/dev/null || true
     pkill -f "Xvfb $ANZEIGE" 2>/dev/null || true
+    # Abwarten, bis beide fort sind (F-S11-93) — sonst haelt der naechste
+    # Start den sterbenden Xvfb fuer lebendig.
+    for _ in $(seq 1 20); do
+        pgrep -x simulator >/dev/null || pgrep -f "Xvfb $ANZEIGE" >/dev/null || break
+        sleep 0.5
+    done
     melde "Simulator und Anzeige beendet"
 }
 
@@ -694,6 +811,11 @@ Befehle:
   bauen <geraet> [jungle]    uebersetzen (weitere Schalter werden durchgereicht)
   alle [schalter]            aufbauen und alle Zielgeraete uebersetzen
   starten <geraet> [sek]     Simulator starten und App laden (Vorgabe 25 s)
+  bildreihe <liste> [ziel] [folge]
+                             je Geraet laden, Tastenfolge fahren (Nr. 92,
+                             z. B. "Down,Down,hold:Return,wait:8"), abbilden
+  kryptoreihe <liste>        Krypto-Probe (S11-02) fuer alle Geraete der Liste uebersetzen
+  kryptoprobe [geraet…]      Krypto-Probe im Simulator, je Geraet bis ERGEBNIS
   konsole                    Ausgabe des Simulators nachlesen
   abbild [datei]             Bildschirmabzug des Simulatorfensters
   tippen <x> <y>             Touch-Tipp
@@ -716,13 +838,14 @@ Umgebungsvariablen:
                     "alle" holt beim Aufbau den ganzen Geraetebestand —
                     noetig fuer reihe und geraeteklassen.py
   CIQ_WARTEZEIT     Sekunden je Geraet in bildreihe (Vorgabe 26)
+  CIQ_JUNGLE        anderes Projekt fuer reihe (Vorgabe watch/monkey.jungle)
   CIQ_BASIS         Ablage (Vorgabe ~/.ciq-pruefstand)
 ENDE
 }
 
 befehl="${1:-hilfe}"; shift || true
 case "$befehl" in
-    aufbau|pruefen|bauen|alle|reihe|bildreihe|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
+    aufbau|pruefen|bauen|alle|reihe|kryptoreihe|kryptoprobe|bildreihe|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
         "$befehl" "$@" ;;
     aufbau-uebersetzen)
         aufbau_uebersetzen ;;

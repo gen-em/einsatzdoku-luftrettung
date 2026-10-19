@@ -108,7 +108,12 @@ $mission = null; $phases = [];
 if ($editing) {
     $mission = einsatz_laden($id, $userId);
     if (!$mission) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
-    $ph = db()->prepare('SELECT phase, occurred_at FROM mission_phases
+    /* `lat`/`lon` nur fuer den ALTBESTAND (S11-05b): Ein Einsatz, dessen
+     * Phasenorte noch im Klartext liegen, gibt sie dem Formular mit, und der
+     * Browser legt sie beim Speichern in die Einsatzhuelle — dasselbe Muster
+     * wie `PAT_ALT` bei den Notizen. Die Spalten fallen mit der
+     * Aufraeumauslieferung, und diese Zeile mit ihnen. */
+    $ph = db()->prepare('SELECT phase, occurred_at, lat, lon FROM mission_phases
                          WHERE mission_id = ? ORDER BY occurred_at');
     $ph->execute([$id]);
     $phases = $ph->fetchAll();
@@ -156,6 +161,10 @@ if ($editing) {
  * Ortszeit: Was einmal dokumentiert ist, verschiebt kein Formularaufruf.
  */
 $day = $editing ? fmt_local((string)$mission['started_at'], 'Y-m-d') : (string)$tag['day'];
+/* Der Tag VOR einem Tageswechsel beim Speichern: Der Browser rechnet die
+ * Zeiten der Einsatzhuelle nach denselben Regeln (S11-05b) und braucht dafuer
+ * den Ausgangstag, nicht den schon verschobenen. */
+$ortTag = $day;
 
 /* Beginn des Dienstes als Ortszeit „HH:MM" — Grenze des Tageswechsels beim
  * Nachtragen. Ohne Beginn (Altbestand, von Hand angelegter Tag ohne Zeit)
@@ -259,88 +268,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $startedAt = $rows[0][1];
         $endedAt   = $rows[count($rows) - 1][1];
 
-        /* ---- Reanimationen einsammeln (A4.3, Backlog Nr. 1) -----------------
+        /* ---- DIE EINSATZHUELLE (S11-05b, E-S11-45) ---------------------------
          *
-         * Aufbau im Formular: rea[<n>][start] sowie rea[<n>][ev][<m>][typ] und
-         * [zeit]. Die Nummern sind laufende Zaehler des Browsers ohne eigene
-         * Bedeutung — gewertet wird die Reihenfolge, in der sie ankommen.
-         * Deshalb muss beim Entfernen einer Zeile auch nichts umnummeriert
-         * werden.
+         * Phasenorte und Reanimation kommen NUR noch verschlossen: Der Browser
+         * rechnet die Zeiten, legt Orte und Reanimation in die Huelle und
+         * verschliesst sie mit dem oeffentlichen Kontoschluessel. Hier stand
+         * bis Web 22.0.4 das Einsammeln der Reanimation aus `rea[…]` — der
+         * Server sah Beginn und Ereignisse im Klartext und schrieb sie in
+         * `resus_sessions`, auch nachdem S11-04 sie aus dem Eingang der Geraete
+         * genommen hatte (F-S11-41).
          *
-         * ZEITRECHNUNG. Wie bei den Phasen gehoert eine Zeit, die vor ihrer
-         * Bezugszeit liegt, dem Folgetag. Bezug ist beim Reanimationsbeginn
-         * der Beginn des Einsatzes — frueher kann nicht reanimiert worden
-         * sein — und bei jedem Ereignis das vorhergehende. Ohne diese Regel
-         * landete eine Reanimation, die um 23:50 beginnt und um 00:10 endet,
-         * mit dem Ende zwanzig Stunden vor ihrem Anfang.
+         * OHNE HUELLE KEIN SPEICHERN. Eine Sitzung ohne Schluessel kann keine
+         * verschliessen; das Formular verlangt deshalb das Entsperren, bevor es
+         * absendet (Betreiberin, 14.10.2026). Kommt trotzdem keine, ist das ein
+         * Weg am Formular vorbei — gemeldet, nicht still mit der alten Huelle
+         * gespeichert, deren Phasenzeiten dann nicht mehr passten.
          *
-         * EINE ZEILE OHNE ZEIT IST KEIN EREIGNIS. Dieselbe Regel gilt oben
-         * fuer die Phasen. Wer eine Zeile hinzufuegt und sie doch nicht
-         * braucht, soll sie nicht erst wieder entfernen muessen. */
-        $reaSitzungen = [];
-        $reaRoh = $_POST['rea'] ?? [];
-        if (!is_array($reaRoh)) { $reaRoh = []; }
-        if (count($reaRoh) > LIMIT_REA_SESSION) {
-            $error = 'Zu viele Reanimationen (höchstens ' . LIMIT_REA_SESSION . ').';
+         * DER WAECHTER UEBER DIE ZEITEN. Die Phasenzeiten rechnen beide Seiten,
+         * der Browser fuer die Huelle (`EdOrtsdaten.einsatzZeiten()`), der
+         * Server fuer `mission_phases`. Der Browser schickt seine Rechnung im
+         * Klartext mit — Phasenzeiten sind Klartext —, und weicht sie ab, wird
+         * NICHTS gespeichert: Eine Huelle, deren Zeiten neben den Phasen um
+         * eine Stunde verrutscht stehen, ist schlimmer als eine Fehlermeldung. */
+        $ortHuelle = pruef_huelle($_POST['ort_huelle'] ?? null, GH_EINSATZ_MAX_BYTE,
+                                  'Einsatzhülle', $ortPruef = new Pruefliste());
+        if ($ortHuelle === null) {
+            $error = 'Phasenorte und Reanimation konnten nicht verschlüsselt werden. Bitte '
+                   . 'entsperren und erneut speichern — es wurde NICHTS geändert.';
+        } else {
+            $browserZeiten = json_decode((string)($_POST['ort_phasen'] ?? ''), true);
+            $serverZeiten = array_map(static fn($r) => [(int)$r[0], (int)strtotime($r[1] . ' UTC')], $rows);
+            if ($browserZeiten !== $serverZeiten) {
+                $error = 'Die Zeiten der Phasen ließen sich im Browser nicht gleich rechnen wie '
+                       . 'auf dem Server. Es wurde NICHTS gespeichert; die Abweichung ist gemeldet.';
+                require_once __DIR__ . '/systemmeldung_lib.php';
+                system_melden('ortsdaten', 'Formular: Phasenzeiten von Browser und Server weichen ab',
+                              null, ['konto' => $userId, 'einsatz' => $editing ? $id : null,
+                                     'browser' => is_array($browserZeiten) ? count($browserZeiten) : null,
+                                     'server' => count($serverZeiten)]);
+            }
         }
-        // Zeit einordnen: nie vor der Bezugszeit; sonst Folgetag.
-        $reaZeit = function (string $hhmm, string $nichtVor) use ($day): ?string {
-            $ts = local_to_utc($day, $hhmm, 0);
-            if ($ts === null) { return null; }
-            return $ts < $nichtVor ? local_to_utc($day, $hhmm, 1) : $ts;
-        };
-        foreach ($reaRoh as $sitz) {
-            if ($error) { break; }
-            if (!is_array($sitz)) { continue; }
-            $start = trim((string)($sitz['start'] ?? ''));
-            $evRoh = (isset($sitz['ev']) && is_array($sitz['ev'])) ? $sitz['ev'] : [];
-
-            $getippt = [];
-            foreach ($evRoh as $ev) {
-                if (!is_array($ev)) { continue; }
-                $t = trim((string)($ev['zeit'] ?? ''));
-                if ($t === '') { continue; }
-                $getippt[] = [trim((string)($ev['typ'] ?? '')), $t];
-            }
-            // Vollstaendig leere Reanimation: still verwerfen, nicht bemaengeln.
-            if ($start === '' && !$getippt) { continue; }
-            if ($start === '') {
-                $error = 'Zu einer Reanimation fehlt der Reanimationsbeginn.';
-                break;
-            }
-            if (count($getippt) > LIMIT_REA_EREIGN) {
-                $error = 'Zu viele Ereignisse in einer Reanimation (höchstens '
-                       . LIMIT_REA_EREIGN . ').';
-                break;
-            }
-
-            $rStart = $reaZeit($start, $startedAt);
-            if ($rStart === null) {
-                $error = 'Ungültige Uhrzeit beim Reanimationsbeginn.';
-                break;
-            }
-            $vorher = $rStart; $ereignisse = [];
-            foreach ($getippt as [$typ, $t]) {
-                /* 'beginn' steht nicht in resus_events — der Beginn steckt in
-                 * started_at der Sitzung (JSON-Vertrag 3.3). Die Auswahl im
-                 * Formular bietet ihn deshalb gar nicht erst an; die Pruefung
-                 * hier ist die Absicherung dagegen, dass er auf anderem Weg
-                 * hereinkommt. */
-                $art = pruef_reanimationsart($typ, 'Reanimationsart');
-                if ($art === null || $art === 'beginn') {
-                    $error = 'Unbekannte Art eines Reanimationsereignisses.';
-                    break;
-                }
-                $ts = $reaZeit($t, $vorher);
-                if ($ts === null) {
-                    $error = 'Ungültige Uhrzeit bei einem Reanimationsereignis.';
-                    break;
-                }
-                $ereignisse[] = [$art, $ts];
-                $vorher = $ts;
-            }
-            if ($error) { break; }
-            $reaSitzungen[] = ['start' => $rStart, 'ereignisse' => $ereignisse];
+        /* Die Kennung eines NEUEN Einsatzes vergibt der Server schon beim
+         * Aufbau der Seite (`$neuRef` unten): Die Huelle ist an sie gebunden
+         * (Konzept 3.2), und der Browser verschliesst, bevor es die Zeile gibt. */
+        $neuRefPost = (string)($_POST['client_ref'] ?? '');
+        if (!$editing && !$error && !preg_match('/^man-[0-9a-f]{16}$/', $neuRefPost)) {
+            $error = 'Die Kennung des neuen Einsatzes fehlt. Bitte die Seite neu laden.';
         }
 
         /* Zusatzfelder generisch aus der zentralen Definition uebernehmen.
@@ -415,7 +388,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * sollte. Der Browser faengt den Fall bereits ab; hier wird er
              * GEMELDET statt still bereinigt, damit ein Weg an der
              * Formularpruefung vorbei nicht unbemerkt Daten verliert. */
-            if ($type === 'loc') {
+            /* Nur fuer ein Ortsfeld im KLARTEXT. Ein verschluesseltes (seit
+             * S11-05b das Transportziel) schickt weder Namen noch Koordinaten
+             * als Formularfeld; beides liegt im Blob, und die Spalten leert
+             * unten der Blob-Zweig. */
+            if ($type === 'loc' && mf_ist_spalte($f)) {
                 $ort = mf_ort_spalten($f);
                 [$la, $lo] = pruef_ortspaar(
                     $parentOn ? ($_POST['f_' . $col . '_lat'] ?? null) : null,
@@ -508,11 +485,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * einer Liste hier: Ein zweites verschluesseltes Katalogfeld
              * (S11: Zielklinik) zieht damit von selbst nach. */
             if ($blobGesetzt) {
-                foreach (array_keys(mf_pat_felder()) as $pcol) {
-                    $fieldCols[] = $pcol; $fieldVals[] = null;
+                /* `spalten` statt nur des Feldnamens (S11-05b): Ein Ortsfeld
+                 * belegt im Altbestand auch seine Koordinatenspalten, und die
+                 * sind ebenso Klartext wie der Name. */
+                foreach (mf_pat_felder() as $pf) {
+                    foreach ($pf['spalten'] as $pcol) { $fieldCols[] = $pcol; $fieldVals[] = null; }
                 }
+                /* Die Ortshoehe ist kein Katalogfeld, sondern gerechnet; sie
+                 * liegt seit S11-05b ebenso im Blob (`ortshoehe`), und ihre
+                 * Spalte geht mit. */
+                $fieldCols[] = 'site_ele_m'; $fieldVals[] = null;
             }
         }
+
+        if (!$error) { $fieldCols[] = 'ort_huelle'; $fieldVals[] = $ortHuelle; }
 
         /* Ein hier erst entstandener Fehler MUSS das Speichern verhindern.
          * Der umgebende Block laeuft unter !$error, geprueft VOR dem Einlesen
@@ -532,7 +518,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * hingehoert; was danach kommt, laeuft ohne ihn. */
             $id = db_transaktion(db(), function (PDO $pdo) use ($crewVals, $dayId, $editing,
                                                                $endedAt, $fieldCols, $fieldVals,
-                                                               $id, $readField, $reaSitzungen,
+                                                               $id, $neuRefPost, $readField,
                                                                $rows, $startedAt, $userId): int {
                 if ($editing) {
                     $set = 'started_at = ?, ended_at = ?, uhr_gesperrt = 1, edited = 1';
@@ -550,7 +536,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     foreach ($fieldCols as $c) { $cols .= ', ' . mf_bezeichner($c); $qms .= ',?'; }
                     $pdo->prepare("INSERT INTO missions ($cols) VALUES ($qms)")
                         ->execute(array_merge(
-                            [$userId, (int)$devId, 'man-' . uniqid(), $dayId, $startedAt, $endedAt],
+                            [$userId, (int)$devId, $neuRefPost, $dayId, $startedAt, $endedAt],
                             $fieldVals));
                     $id = (int)$pdo->lastInsertId();
                 }
@@ -585,31 +571,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($rows as $r) { $phasen[] = ['phase' => $r[0], 'occurred_at' => $r[1]]; }
                 einsatz_phasen_ersetzen($pdo, $id, $phasen);
 
-                /* Reanimationen ebenso vollstaendig ersetzen (A4.3). Die Ereignisse
-                 * raeumt der Fremdschluessel mit ab (ON DELETE CASCADE), sie
-                 * brauchen kein eigenes DELETE. Beim Nachtragen laeuft das DELETE
-                 * ins Leere — das ist billiger als eine Fallunterscheidung, die
-                 * beim naechsten Umbau vergessen wuerde.
-                 *
-                 * Ein ueber dieses Formular gespeicherter Einsatz traegt danach
-                 * uhr_gesperrt = 1; ingest.php ruehrt seine Reanimationen dann nicht
-                 * an. Eine nachliefernde Uhr kann die hier eingetragenen Zeiten
-                 * also nicht ueberschreiben. */
-                $reas = [];
-                foreach ($reaSitzungen as $sitz) {
-                    $reas[] = ['started_at' => $sitz['start'], 'events' => $sitz['ereignisse']];
-                }
-                einsatz_reas_ersetzen($pdo, $id, $reas);
+                /* DIE ALTEN REANIMATIONSZEILEN GEHEN (S11-05b). Was in ihnen
+                 * stand, hat das Formular dem Browser mitgegeben, und der hat es
+                 * in die Huelle gelegt, die oben in derselben Zeile steht.
+                 * Bliebe der Klartext daneben, stuende eine Reanimation zweimal
+                 * da — einmal verschlossen und einmal nicht —, und das
+                 * Einmalwerkzeug (S11-10) wuesste nicht, welche gilt. Dasselbe
+                 * gilt fuer die Orte der Phasen: `einsatz_phasen_ersetzen()`
+                 * oben schreibt sie ohne `lat`/`lon`. */
+                einsatz_reas_ersetzen($pdo, $id, []);
 
                 return $id;
             });
 
-            // Einsatzort-Hoehe neu ermitteln: Der Track bleibt unveraendert,
-            // aber die Phasenzeiten (Referenz Phase 5/6) koennen sich gerade
-            // geaendert haben — eine einzige Implementierung, siehe
-            // site_elevation_lib.php.
-            require_once __DIR__ . '/site_elevation_lib.php';
-            compute_site_elevation(db(), $id);
+            /* Hier stand `compute_site_elevation()` (bis Web 22.0.4). Die Hoehe
+             * des Einsatzorts rechnet seit S11-05b der Browser beim Absenden
+             * und legt sie in den Blob (`ortshoehe`); der Server sieht die
+             * Spur nicht mehr. */
 
             // Rettungsmittel als eigene Zeilen speichern (einzeln entfernbar).
             // Doppelte und leere Eintraege werden dabei verworfen.
@@ -645,21 +623,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 /* Vorbelegung der Reanimationen (A4.3). Aufbau je Sitzung:
    ['start' => 'HH:MM', 'ev' => [['typ' => 'adrenalin', 'zeit' => 'HH:MM'], …]]
-   Nach einem fehlgeschlagenen Absenden gilt die Eingabe, nicht der Bestand —
-   sonst verschwaende die Arbeit an der Fehlermeldung. */
+
+   SEIT S11-05b NUR NOCH DER ALTBESTAND. Steht die Reanimation in der
+   Einsatzhuelle, oeffnet sie der Browser nach dem Entsperren und fuellt die
+   Karte selbst (`ORT_HUELLE` unten); der Server sieht sie nicht. Nach einem
+   fehlgeschlagenen Absenden kommt sie ebenso aus der mitgeschickten Huelle
+   zurueck — `rea[…]` gibt es als Formularfeld nicht mehr. Was hier aus
+   `resus_sessions` kommt, legt der Browser beim naechsten Speichern in die
+   Huelle, und der Server raeumt die Zeilen ab. */
 $reaPrefill = [];
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    foreach ((array)($_POST['rea'] ?? []) as $sitz) {
-        if (!is_array($sitz)) { continue; }
-        $ev = [];
-        foreach ((array)($sitz['ev'] ?? []) as $e2) {
-            if (!is_array($e2)) { continue; }
-            $ev[] = ['typ'  => (string)($e2['typ'] ?? ''),
-                     'zeit' => (string)($e2['zeit'] ?? '')];
-        }
-        $reaPrefill[] = ['start' => (string)($sitz['start'] ?? ''), 'ev' => $ev];
-    }
-} elseif ($editing) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $editing) {
     $rs = db()->prepare('SELECT id, started_at FROM resus_sessions
                          WHERE mission_id = ? ORDER BY started_at');
     $rs->execute([$id]);
@@ -674,6 +647,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $reaPrefill[] = ['start' => fmt_local($sitz['started_at']), 'ev' => $ev];
     }
 }
+
+/* DIE EINSATZHUELLE FUER DEN BROWSER (S11-05b). Nach einem fehlgeschlagenen
+   Absenden die eben verschlossene — sie traegt, was eingegeben war —, sonst
+   die gespeicherte. Dazu der Beginn, auf den ihre Zeiten sich beziehen
+   (Sekunden seit `started_at`, E-S11-40), und die Phasenorte des
+   Altbestands, solange es sie im Klartext gibt. */
+$ortHuellePost = ($_SERVER['REQUEST_METHOD'] === 'POST') ? (string)($_POST['ort_huelle'] ?? '') : '';
+$ortHuelleB64 = $ortHuellePost !== '' ? $ortHuellePost
+    : (($mission['ort_huelle'] ?? null) !== null ? base64_encode((string)$mission['ort_huelle']) : null);
+$ortBeginn = null;
+if ($ortHuellePost !== '') {
+    $bz = json_decode((string)($_POST['ort_phasen'] ?? ''), true);
+    $ortBeginn = (is_array($bz) && isset($bz[0][1])) ? (int)$bz[0][1] : null;
+} elseif ($mission !== null) {
+    $ortBeginn = (int)strtotime((string)$mission['started_at'] . ' UTC');
+}
+$ortAlt = [];
+foreach ($phases as $p) {
+    if ($p['lat'] !== null && $p['lon'] !== null) {
+        $ortAlt[] = ['phase' => (int)$p['phase'], 'lat' => (float)$p['lat'], 'lon' => (float)$p['lon']];
+    }
+}
+/* Die Kennung eines neuen Einsatzes (siehe Speichern): beim ersten Aufbau
+   gewuerfelt, nach einem Fehler die schon benutzte — die Huelle ist an sie
+   gebunden. */
+$neuRef = $editing ? (string)$mission['client_ref']
+    : (preg_match('/^man-[0-9a-f]{16}$/', (string)($_POST['client_ref'] ?? ''))
+        ? (string)$_POST['client_ref'] : 'man-' . bin2hex(random_bytes(8)));
 
 /* Auswahl der Ereignisarten: RESUS_LABELS ohne 'beginn'. Der Beginn ist kein
    Ereignis, sondern die Sitzung selbst (JSON-Vertrag 3.3) — stuende er in der
@@ -1095,30 +1096,37 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               $sugg = $suggestSrc($f);
               $ort  = mf_ort_spalten($f);
               $praefix = 'f_' . $col . '_';
+              /* VERSCHLUESSELT (S11-05b): kein `name`, kein Wert im Markup,
+               * das Schloss an der Beschriftung. Gefuellt wird nach dem
+               * Entsperren aus dem Blob (oder dem Altbestand, `PAT_ALT`),
+               * eingesammelt beim Absenden ueber `werte()` der Komponente. */
+              $pat = !mf_ist_spalte($f);
               $LOC_FELDER[] = [
                   'praefix'     => $praefix,
                   'vorschlaege' => $sugg,
                   'label'       => (string)($f['label'] ?? $col),
                   'ortswahl'    => !empty($f['ortswahl']),
+                  'pat'         => $pat ? $col : null,
               ];
               ui_ortsfeld([
                   'praefix'     => $praefix,
                   'klasse'      => $depth ? 'fld-sub' : '',
                   'label'       => (string)($f['label'] ?? $col),
+                  'geschuetzt'  => $pat,
                   'hinweis'     => 'Freitext; Koordinaten sind freiwillig',
-                  'name'        => 'f_' . $col,
+                  'name'        => $pat ? null : 'f_' . $col,
                   'max'         => (int)($f['max'] ?? 190),
                   'platzhalter' => (string)($f['placeholder'] ?? ''),
-                  'wert'        => $val,
+                  'wert'        => $pat ? '' : $val,
                   /* Das fruehere zweite Suchfeld („Lokalisation …",
                    * Katalogschluessel 'such_label') ist dem Lupen-Knopf
                    * gewichen (E-P3-34); die getrennte Uebernahme — nur die
                    * Koordinaten, nie der Name — bleibt in ortsfeld.js. */
-                  'lat_name'    => 'f_' . $col . '_lat',
-                  'lon_name'    => 'f_' . $col . '_lon',
+                  'lat_name'    => $pat ? null : 'f_' . $col . '_lat',
+                  'lon_name'    => $pat ? null : 'f_' . $col . '_lon',
                   'versteckt'   => $hide,
-                  'lat'         => isset($ort['lat']) ? ortWert($col, 'lat', $ort['lat']) : '',
-                  'lon'         => isset($ort['lon']) ? ortWert($col, 'lon', $ort['lon']) : '',
+                  'lat'         => (!$pat && isset($ort['lat'])) ? ortWert($col, 'lat', $ort['lat']) : '',
+                  'lon'         => (!$pat && isset($ort['lon'])) ? ortWert($col, 'lon', $ort['lon']) : '',
                   /* Der Katalog entscheidet, ob das Feld einen Pin-Knopf
                    * bekommt (E-S9-06 d) — nicht diese Datei. */
                   'ortswahl'    => !empty($f['ortswahl']),
@@ -1260,11 +1268,18 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              Titelzeile aufgegangen (O5). */ ?>
 
     <input type="hidden" name="pat_blob" id="pat_blob">
+    <?php /* Die Einsatzhuelle (S11-05b): Phasenorte und Reanimation,
+             verschlossen im Browser; daneben seine Rechnung der Phasenzeiten
+             fuer den Waechter beim Speichern und die Kennung, an die die
+             Huelle gebunden ist. */ ?>
+    <input type="hidden" name="ort_huelle" id="ort_huelle">
+    <input type="hidden" name="ort_phasen" id="ort_phasen">
+    <?php if (!$editing): ?><input type="hidden" name="client_ref" value="<?= e($neuRef) ?>"><?php endif; ?>
     <div id="patlocked" class="meldung meldung-warn" role="status" hidden>
       <?= ui_symbol('schloss', 'symbol-gross') ?>
-      <p>Entschlüsselung nicht möglich — die geschützten Angaben sind in
-         dieser Sitzung gesperrt. Vorhandene verschlüsselte Angaben bleiben
-         beim Speichern unverändert.</p>
+      <p>Die geschützten Angaben sind in dieser Sitzung gesperrt. Speichern
+         geht erst nach dem Entsperren, weil Phasenorte und Reanimation
+         verschlüsselt abgelegt werden.</p>
       <div class="meldung-aktion">
         <?= ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
                       'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
@@ -1499,9 +1514,16 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 
 
     <?php /* ---- Reanimation: zugeklappt (E-P3-34); mit Bestand offen. ------- */ ?>
+    <?php /* SEIT S11-05b VERSCHLUESSELT: Die Reanimation liegt in der
+             Einsatzhuelle (E-S11-02); die Karte traegt deshalb das Schloss am
+             Titel, und ihre Felder haben keinen `name` — sie gehen nicht als
+             Formularfeld an den Server, sondern in die Huelle. Die Vorschau
+             kennt nur den Altbestand; was in der Huelle steht, zaehlt der
+             Browser nach dem Entsperren nach. */ ?>
     <?php ui_karte_start(['titel' => 'Reanimation',
                           'vorschau' => $reaPrefill ? count($reaPrefill) . ' erfasst' : 'keine',
                           'offen' => (bool)$reaPrefill,
+                          'geschuetzt' => true,
                           'klasse' => 'form-block-rea']); ?>
       <p class="feld-hinweis">Nur ausfüllen, wenn reanimiert wurde. Mehrere
          Reanimationen je Einsatz sind möglich; eine Zeile ohne Uhrzeit wird
@@ -1549,6 +1571,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/ortswahl.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
+<script src="<?= asset('assets/ortsdaten.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 const PHASE_LABELS = <?= json_js(PHASE_LABELS) ?>;
 const START_ROWS = <?= json_js($prefillRows) ?>;
@@ -1560,6 +1583,19 @@ const DIENSTBEGINN_MIN = <?= !empty($tag['started_at'])
     : 'null' ?>;
 const REA_ARTEN = <?= json_js($REA_ARTEN, JSON_UNESCAPED_UNICODE) ?>;
 const REA_START = <?= json_js($reaPrefill, JSON_UNESCAPED_UNICODE) ?>;
+/* Die Einsatzhuelle und was zu ihr gehoert (S11-05b, siehe oben im PHP). */
+const ORT = <?= json_js([
+    'huelle'  => $ortHuelleB64,
+    'beginn'  => $ortBeginn,
+    'alt'     => $ortAlt,
+    'ref'     => $neuRef,
+    'tag'     => $ortTag,
+    'neu'     => !$editing,
+    'dienstbeginn' => $tagStartHhmm,
+    'tz'      => (string)konfig('app.timezone'),
+    'grenzen' => ['sitzungen' => LIMIT_REA_SESSION, 'ereignisse' => LIMIT_REA_EREIGN],
+    'einsatz' => $editing ? $id : null,
+], JSON_UNESCAPED_UNICODE) ?>;
 
 /* Entfernen-Knopf einer Zeile (Phasen wie Reanimation): 44-px-Symbolknopf in
  * Gefahr-Rot. Entfernen ist eine Aenderung — die Speichern-Leiste muss
@@ -1659,14 +1695,16 @@ document.getElementById('phaserows').addEventListener('focusout', ev => {
 
 /* ---- Reanimationen (A4.3) ------------------------------------------------
  * Aufbau wie bei den Phasen: Die Zeilen entstehen im Browser, die Zeitfelder
- * tragen nur die Klasse 'zeitfeld' — assets/zeitfeld.js erfasst sie ueber
+ * tragen die Klasse 'zeitfeld' — assets/zeitfeld.js erfasst sie ueber
  * seinen Beobachter, ohne dass hier etwas davon zu wissen ist.
  *
- * Die Namen der Felder tragen laufende Zaehler (rea[<n>][ev][<m>]…). Sie
- * werden nie wiederverwendet und beim Entfernen einer Zeile auch nicht
- * nachgezogen: Die Serverseite wertet die Reihenfolge aus, in der die Felder
- * ankommen, nicht die Zahlen darin. Umnummerieren waere Arbeit, die niemand
- * sieht — und eine Fehlerquelle, sobald zwei Zeilen gleichzeitig verschwinden.
+ * KEINE NAMEN MEHR (S11-05b). Bis Web 22.0.4 hiessen die Felder
+ * rea[<n>][ev][<m>]… und gingen als Formularfelder an den Server. Seit die
+ * Reanimation in der Einsatzhuelle liegt, liest `reaEinsammeln()` sie beim
+ * Absenden aus dem Baum, in der Reihenfolge, in der sie dastehen; die
+ * Klassen `rea-start`, `rea-art`, `rea-zeit` sind die Anker dafuer. Ein Feld
+ * mit `name` ginge im Klartext mit — das ist der Fehler, den dieser Umbau
+ * behebt (F-S11-41).
  */
 let reaZaehler = 0;
 
@@ -1678,7 +1716,7 @@ function reaEreignisZeile(box, evBox, daten) {
   const row = document.createElement('div');
   row.className = 'phasen-eingabe';
   const sel = document.createElement('select');
-  sel.name = `rea[${n}][ev][${m}][typ]`;
+  sel.className = 'rea-art';
   Object.keys(REA_ARTEN).forEach(k => {
     const o = document.createElement('option');
     o.value = k; o.textContent = REA_ARTEN[k];
@@ -1686,8 +1724,7 @@ function reaEreignisZeile(box, evBox, daten) {
     sel.appendChild(o);
   });
   const t = document.createElement('input');
-  t.type = 'text'; t.className = 'zeitfeld';
-  t.name = `rea[${n}][ev][${m}][zeit]`;
+  t.type = 'text'; t.className = 'zeitfeld rea-zeit';
   t.value = (daten && daten.zeit && daten.zeit !== '–') ? daten.zeit : '';
   row.append(sel, t, wegKnopf('Dieses Ereignis entfernen', () => row));
   evBox.appendChild(row);
@@ -1712,8 +1749,7 @@ function reaSitzung(daten) {
   const lab = document.createElement('label');
   lab.textContent = 'Reanimationsbeginn';
   const start = document.createElement('input');
-  start.type = 'text'; start.className = 'zeitfeld';
-  start.name = `rea[${n}][start]`;
+  start.type = 'text'; start.className = 'zeitfeld rea-start';
   start.id = `rea_start_${n}`;
   lab.htmlFor = start.id;
   start.value = (daten && daten.start && daten.start !== '–') ? daten.start : '';
@@ -1739,6 +1775,81 @@ function reaSitzung(daten) {
   return start;
 }
 
+/* ---- DIE EINSATZHUELLE IM FORMULAR (S11-05b, E-S11-45) -------------------
+ *
+ * Phasenorte und Reanimation liegen verschlossen; das Formular oeffnet die
+ * Huelle nach dem Entsperren, fuellt die Reanimationskarte und merkt sich die
+ * Orte der Phasen. Beim Speichern rechnet `EdOrtsdaten.einsatzZeiten()` die
+ * Zeiten wie der Server, legt Orte und Reanimation in eine neue Huelle und
+ * verschliesst sie. Ohne Huelle (Altbestand) kommen Orte und Reanimation aus
+ * den Klartextspalten (`ORT.alt`, `REA_START`) und gehen beim Speichern in
+ * die Huelle — der Server raeumt die alten Zeilen dann ab.
+ *
+ * GEHT DIE HUELLE NICHT AUF, WIRD NICHT GESPEICHERT. Sonst ersetzte das
+ * Speichern eine Huelle, die niemand lesen konnte, durch eine ohne Orte und
+ * ohne Reanimation — ein Datenverlust, den niemand bemerkt. */
+let ORT_ORTE = ORT.alt;
+/* Die Ortshoehe des Altbestands aus der Spalte (S11-05b); sie geht beim
+   naechsten Speichern in den Blob, wenn sich keine neue rechnen laesst. */
+const ORT_HOEHE_ALT = <?= json_js(($mission['site_ele_m'] ?? null) !== null ? (int)$mission['site_ele_m'] : null) ?>;
+let ortshoeheAlt = ORT_HOEHE_ALT;
+let ORT_GESPERRT = null;   // Grund, warum nicht gespeichert werden darf
+
+function reaEinsammeln() {
+  return [...document.querySelectorAll('#rearows .rea-sitzung')].map(box => ({
+    start: (box.querySelector('.rea-start') || {}).value || '',
+    ev: [...box.querySelectorAll('.rea-ereignisse .phasen-eingabe')].map(z => ({
+      typ: (z.querySelector('.rea-art') || {}).value || '',
+      zeit: (z.querySelector('.rea-zeit') || {}).value || '' })),
+  }));
+}
+function phasenEinsammeln() {
+  return [...document.querySelectorAll('#phaserows .phasen-eingabe')].map(z =>
+    [z.querySelector('select').value, z.querySelector('.zeitfeld').value]);
+}
+function reaSperren(zu) {
+  document.querySelectorAll('#rearows input, #rearows select, #rearows button')
+    .forEach(el => { el.disabled = zu; });
+}
+function reaVorschau() {
+  const el = document.querySelector('.form-block-rea .karte-vorschau');
+  const n = document.querySelectorAll('#rearows .rea-sitzung').length;
+  if (el) { el.textContent = n ? n + ' erfasst' : 'keine'; }
+}
+async function ortOeffnen(ck) {
+  if (!ORT.huelle || ORT_ORTE !== ORT.alt) { return; }   // nichts da, oder schon offen
+  try {
+    const k = await EdOrtsdaten.schluessel(ck);
+    const innen = await EdOrtsdaten.einsatz({ ort_huelle: ORT.huelle, client_ref: ORT.ref }, k);
+    ORT_ORTE = (innen && innen.phasen) || [];
+    const uhr = (t) => EdFormat.uhrzeit(ORT.beginn + t, ORT.tz);
+    document.getElementById('rearows').replaceChildren();
+    ((innen && innen.rea) || []).forEach(r => reaSitzung({
+      start: uhr(r.t), ev: (r.ereignisse || []).map(x => ({ typ: x.art, zeit: uhr(x.t) })) }));
+    reaVorschau();
+  } catch (e) {
+    EdOrtsdaten.melden(e, 'einsatz', ORT.einsatz);
+    ORT_GESPERRT = e && e.grund === 'kein_paar'
+      ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — '
+        + 'Phasenorte und Reanimation lassen sich nicht verschlüsseln.'
+      : 'Phasenorte und Reanimation dieses Einsatzes lassen sich nicht öffnen. Speichern '
+        + 'würde sie überschreiben und ist deshalb gesperrt; die Störung ist gemeldet.';
+    ortFehler(ORT_GESPERRT);
+  }
+}
+function ortFehler(text) {
+  let box = document.getElementById('ortfehler');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'ortfehler';
+    box.dataset.ortsdaten = 'fehler';
+    const form = document.getElementById('missionform');
+    form.parentNode.insertBefore(box, form);
+  }
+  box.innerHTML = EdHtml.meldung('fehler', text);
+  box.scrollIntoView({ block: 'center' });
+}
+
 // ---- PatientInnendaten & Einsatzort: lokale Ver-/Entschluesselung ------
 const PAT_PREV = <?= json_js($mission['pat_blob'] ?? null) ?>;
 <?php /* DIE VERSCHLUESSELTEN KATALOGFELDER (S9/AP7): Feldname => Schluessel im
@@ -1752,9 +1863,18 @@ const PAT_PREV = <?= json_js($mission['pat_blob'] ?? null) ?>;
          nicht an einen Dritten: Er steht schon in der Spalte, der Server
          kennt ihn ohnehin, und der Browser gehoert der NutzerIn. */
       $patAlt = [];
-      foreach (array_keys(mf_pat_felder()) as $pcol) {
+      foreach (mf_pat_felder() as $pcol => $pf) {
           $pv = $mission[$pcol] ?? null;
-          if ($pv !== null && (string)$pv !== '') { $patAlt[$pcol] = (string)$pv; }
+          if ($pv === null || (string)$pv === '') { continue; }
+          /* Ein Ortsfeld (S11-05b: das Transportziel) in der Form des Blobs,
+             {addr, lat, lon} — so fuellt `setzen()` der Komponente es. */
+          $patAlt[$pcol] = $pf['typ'] === 'loc'
+              ? ['addr' => (string)$pv,
+                 'lat'  => isset($pf['spalten'][1]) && ($mission[$pf['spalten'][1]] ?? null) !== null
+                           ? (float)$mission[$pf['spalten'][1]] : null,
+                 'lon'  => isset($pf['spalten'][2]) && ($mission[$pf['spalten'][2]] ?? null) !== null
+                           ? (float)$mission[$pf['spalten'][2]] : null]
+              : (string)$pv;
       } ?>
 const PAT_KAT = <?= json_js(mf_pat_felder()) ?>;
 const PAT_ALT = <?= json_js($patAlt) ?>;
@@ -1810,15 +1930,40 @@ const ortStart = EdOrtsfeld.init({
  * seinen Ausschnitt. */
 const SPUR_EINSATZ = <?= $editing ? json_encode((string)$id) : 'null' ?>;
 let spurVersprechen = null;
+/* SEIT S11-05b GEOEFFNET IM BROWSER. Bis dahin las diese Funktion `d.track`,
+ * und das liefert `api/mission.php` seit S11-04c nicht mehr — der Dialog zeigte
+ * still keine Spur (F-S11-42). Jetzt kommen die Stuecke und werden mit dem
+ * Kontoschluessel geoeffnet, wie in der Einsatzansicht. Ohne Schluessel gibt
+ * es keine Spur; das Versprechen wird dann NICHT behalten, damit ein Oeffnen
+ * nach dem Entsperren sie doch zeigt. */
 function spurHolen() {
   if (SPUR_EINSATZ === null) { return Promise.resolve(null); }
   if (!spurVersprechen) {
     spurVersprechen = fetch('api/mission.php?id=' + encodeURIComponent(SPUR_EINSATZ))
       .then(r => r.ok ? r.json() : null)
-      .then(d => (d && Array.isArray(d.track) && d.track.length > 1) ? d.track : null)
-      .catch(() => null);
+      .then(async d => {
+        if (!d || !PAT_CK || !(d.spur_stuecke && d.spur_stuecke.length)) { spurVersprechen = null; return null; }
+        const k = await EdOrtsdaten.schluessel(PAT_CK);
+        const p = await EdOrtsdaten.spur(d.spur_stuecke, 'spur', d.client_ref, d.spur_sperren, k);
+        return p.length > 1 ? p.map(x => [x.lat, x.lon]) : null;
+      })
+      .catch(() => { spurVersprechen = null; return null; });
   }
   return spurVersprechen;
+}
+
+/* Die Spur MIT Hoehe und Zeit, fuer die Ortshoehe beim Speichern (S11-05b).
+ * Eigene Abfrage neben `spurHolen()`: Der Kartendialog braucht nur Lage und
+ * holt erst beim Oeffnen; das Speichern braucht die Hoehe und den Hinweis, ob
+ * die Spur ausgeduennt ist. `null`, wenn es keine Spur gibt. */
+async function ortSpurPunkte() {
+  if (SPUR_EINSATZ === null || !PAT_CK) { return null; }
+  const r = await fetch('api/mission.php?id=' + encodeURIComponent(SPUR_EINSATZ));
+  const d = r.ok ? await r.json() : null;
+  if (!d || !(d.spur_stuecke && d.spur_stuecke.length)) { return null; }
+  const k = await EdOrtsdaten.schluessel(PAT_CK);
+  return { punkte: await EdOrtsdaten.spur(d.spur_stuecke, 'spur', d.client_ref, d.spur_sperren, k),
+           duenn: d.spur_stuecke.some(st => st.stufe === 3) };
 }
 
 // Pin-Blatt (Geolocation, Kartendialog) an beide Felder haengen (E-P3-34).
@@ -1831,6 +1976,10 @@ EdOrtswahl.registriere('start', ortStart, { spur: spurHolen });
  * Namen weg. Trifft die Eingabe einen Stammdatensatz, kommen dessen Koordinaten
  * mit und bleiben ueberschreibbar (A13l). */
 const LOC_FELDER = <?= json_js($LOC_FELDER, JSON_UNESCAPED_UNICODE) ?>;
+/* Verschluesselte Ortsfelder des Katalogs (S11-05b): Feldname -> Komponente.
+ * Gefuellt und eingesammelt werden sie wie die uebrigen Blobfelder, nur ueber
+ * `setzen()`/`werte()` statt ueber `value`. */
+const ORTSFELD_PAT = {};
 
 /* ---- Textfelder mit Vorschlagsliste (Katalog `suggest_src`) ---------------
  *
@@ -1902,6 +2051,7 @@ const ORTSFELDER = LOC_FELDER.map(lf => {
    * das Transportziel. Dieselbe Spur wie am Einsatzort: Es ist derselbe
    * Einsatz, und das Ziel liegt an ihrem Ende. */
   if (steuer && lf.ortswahl) { EdOrtswahl.registriere(lf.praefix, steuer, { spur: spurHolen }); }
+  if (steuer && lf.pat) { ORTSFELD_PAT[lf.pat] = { steuer, praefix: lf.praefix }; }
   return steuer;
 }).filter(Boolean);
 
@@ -1965,15 +2115,30 @@ document.querySelectorAll('.showif').forEach(box => {
 const PAT_INPUTS = '#patfields input, #patort input, '
                  + '#patnotes textarea, #patnotes input';
 
+/* Die verschluesselten Ortsfelder sperren wie die uebrigen Blobfelder: alle
+ * Eingaben und Knoepfe ihrer Komponente (Kennungen mit ihrem Praefix). */
+function ortsfeldPatSperren(zu) {
+  Object.values(ORTSFELD_PAT).forEach(({ praefix }) => {
+    document.querySelectorAll('[id^="' + praefix + '"]').forEach(el => {
+      if (el.matches('input, button')) { el.disabled = zu; }
+    });
+  });
+}
+
 async function patLaden(){
   PAT_CK = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
   if (!PAT_CK) {
     document.getElementById('patlocked').hidden = false;
     document.querySelectorAll(PAT_INPUTS).forEach(i => i.disabled = true);
+    ortsfeldPatSperren(true);
+    reaSperren(true);
     return;
   }
   document.getElementById('patlocked').hidden = true;
   document.querySelectorAll(PAT_INPUTS).forEach(i => i.disabled = false);
+  ortsfeldPatSperren(false);
+  await ortOeffnen(PAT_CK);
+  reaSperren(false);
   if (PAT_PREV) {
     let o = {};
     try { o = JSON.parse(await EdCrypto.decrypt(PAT_CK, PAT_PREV)) || {}; } catch (e) { }
@@ -1988,13 +2153,20 @@ async function patLaden(){
        Spalte nur als Rueckfall — ein bereits angehobener Einsatz hat beides,
        und der Blob ist der neuere Stand. */
     for (const col of Object.keys(PAT_KAT)) {
-      const el = document.getElementById('pat_' + col);
-      if (!el) { continue; }
       const ausBlob = o[PAT_KAT[col].blob];
-      if (ausBlob != null) { el.value = ausBlob; }
-      else if (PAT_ALT[col] != null) { el.value = PAT_ALT[col]; }
+      const wert = ausBlob != null ? ausBlob : PAT_ALT[col];
+      if (ORTSFELD_PAT[col]) {
+        if (wert != null) { ORTSFELD_PAT[col].steuer.setzen(wert); }
+        continue;
+      }
+      const el = document.getElementById('pat_' + col);
+      if (el && wert != null) { el.value = wert; }
     }
     zeigeAlter();
+    /* Die bisherige Ortshoehe (S11-05b): aus dem Blob, sonst aus der Spalte
+       des Altbestands — beim Speichern bleibt sie, wenn sich keine neue
+       rechnen laesst (siehe Absenden). */
+    ortshoeheAlt = o.ortshoehe != null ? Number(o.ortshoehe) : ORT_HOEHE_ALT;
     if (o.loc) {
       // addr steht unveraendert im Textfeld — auch dann, wenn dort noch eine
       // Zahlendarstellung aus einem Altdatensatz liegt (E11, kein stilles
@@ -2063,8 +2235,13 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
     if (!feld.pruefe(BEZ_FEHLT)) { ev.preventDefault(); return; }
   }
 
-  if (!PAT_CK) return;   // gesperrt: Blob bleibt unveraendert
+  /* OHNE SCHLUESSEL KEIN SPEICHERN (S11-05b). Bis Web 22.0.4 ging das
+   * Formular gesperrt ab, und der Blob blieb, wie er war. Seit Phasenorte und
+   * Reanimation in der Einsatzhuelle liegen, muss sie bei jedem Speichern neu
+   * verschlossen werden — die Phasenzeiten koennten sich geaendert haben. */
   ev.preventDefault();
+  if (!PAT_CK) { await patLaden(); if (!PAT_CK) { return; } }
+  if (ORT_GESPERRT) { ortFehler(ORT_GESPERRT); return; }
   // E4: Koordinaten ohne Bezeichnung ergaeben in den Listen wieder ein
   // Zahlenfragment. Die Pruefung steht VOR dem Verschluesseln, damit erst gar
   // kein Blob entsteht — und hinter dem PAT_CK-Riegel oben: bei gesperrter
@@ -2094,6 +2271,22 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
      kann sie nicht mehr pruefen, weil er den Inhalt nicht sieht. Das gilt
      fuer jedes verschluesselte Feld und ist der Preis der Zusage. */
   for (const col of Object.keys(PAT_KAT)) {
+    if (ORTSFELD_PAT[col]) {
+      /* Ortsfeld: {addr, lat, lon} wie `loc`; nur mit Bezeichnung (E4), die
+       * Pruefung oben (`ORTSFELDER`) hat Koordinaten ohne Namen abgewiesen.
+       * AUSGEBLENDET HEISST LEER (V4, A5) — bis S11-05b leerte der Server ein
+       * Feld, dessen `show_if` nicht galt („ambulant" mit Zielklinik waere ein
+       * Widerspruch). Den Wert sieht er jetzt nicht mehr; die Regel gilt
+       * deshalb hier. */
+      const adresse = document.getElementById(ORTSFELD_PAT[col].praefix + 'addr');
+      if (adresse && adresse.closest('[hidden]')) { continue; }
+      const w = ORTSFELD_PAT[col].steuer.werte();
+      if (w.addr !== '') {
+        o[PAT_KAT[col].blob] = { addr: w.addr };
+        if (w.lat !== null) { o[PAT_KAT[col].blob].lat = w.lat; o[PAT_KAT[col].blob].lon = w.lon; }
+      }
+      continue;
+    }
     const el = document.getElementById('pat_' + col);
     if (!el) { continue; }
     const v = el.value.trim();
@@ -2118,6 +2311,36 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
       if (st.lat !== null) { o.start.lat = st.lat; o.start.lon = st.lon; }
     }
   }
+  /* Die Einsatzhuelle: Zeiten wie der Server, Orte der Phasen, Reanimation. */
+  const zeiten = EdOrtsdaten.einsatzZeiten({ tag: ORT.tag, neu: ORT.neu, dienstbeginn: ORT.dienstbeginn,
+    tz: ORT.tz, phasen: phasenEinsammeln(), reas: reaEinsammeln(), grenzen: ORT.grenzen,
+    arten: REA_ARTEN });
+  if (zeiten.fehler) { ortFehler(zeiten.fehler); return; }
+  try {
+    document.getElementById('ort_huelle').value =
+      await EdOrtsdaten.einsatzVerschliessen(EdOrtsdaten.einsatzInnen(zeiten, ORT_ORTE), ORT.ref);
+  } catch (e) {
+    ortFehler(e && e.grund === 'kein_paar'
+      ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — bitte die Seite neu laden.'
+      : 'Phasenorte und Reanimation ließen sich nicht verschlüsseln. Es wurde nichts gespeichert.');
+    return;
+  }
+  document.getElementById('ort_phasen').value = JSON.stringify(zeiten.phasen);
+  /* DIE HOEHE DES EINSATZORTS (S11-05b) — bis dahin rechnete sie der Server
+   * nach dem Speichern (`compute_site_elevation()`), aus der Klartextspur.
+   * Jetzt rechnet sie der Browser aus der geoeffneten Spur und den eben
+   * gerechneten Phasenzeiten und legt sie in den Blob (`ortshoehe`). Ein
+   * vorhandener Wert bleibt, wenn keine Spur zu haben ist oder sie
+   * ausgeduennt ist (Stufe 3) — dieselbe Regel wie bisher am Server: Wer an
+   * einem alten Einsatz eine Zeit berichtigt, verliert die Hoehe nicht. */
+  const hoeheAlt = ortshoeheAlt;
+  let hoehe = null, spurDa = false, duenn = false;
+  try {
+    const sp = await ortSpurPunkte();
+    if (sp) { spurDa = true; duenn = sp.duenn; hoehe = EdOrtsdaten.ortshoehe(sp.punkte, zeiten.phasen); }
+  } catch (e) { spurDa = false; }
+  if (hoehe === null && (!spurDa || duenn)) { hoehe = hoeheAlt; }
+  if (hoehe !== null) { o.ortshoehe = hoehe; }
   document.getElementById('pat_blob').value =
     Object.keys(o).length === 0 ? '__CLEAR__' : await EdCrypto.encrypt(PAT_CK, JSON.stringify(o));
   f.dataset.patDone = '1';
@@ -2180,7 +2403,9 @@ document.getElementById('addrow').addEventListener('click', ev => {
 REA_START.forEach(s => reaSitzung(s));
 document.getElementById('addrea').addEventListener('click', ev => {
   ev.preventDefault();
+  if (!PAT_CK) { patLaden(); return; }   // verschluesselt: erst entsperren
   reaSitzung(null).focus();
+  reaVorschau();
 });
 
 /* ---- Andere Rettungsmittel: Eingabe mit Vorschlaegen ------------------- */

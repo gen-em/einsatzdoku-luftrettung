@@ -19,7 +19,7 @@ Antwortzeiten und Speicher der Serverwege, dieselben im Browser (Halde,
 JSON, PBKDF2), und den `.edbak`-Umlauf bei voller Größe. `statistik`
 (**Anlass: Nr. 295**): Betrieb → Statistik, drei Reiter unter 1 s — seit
 R4-23 (Nr. 122) je einmal ohne und einmal mit eigenem Zeitraum über 90 Tage,
-seit R4-24 samt der Abfrage der Diagramme —, und `EXPLAIN` der Abfragen aus `statistik_lib.php` — **rot**, wenn eines verfehlt. Ebenso **rot** (Nr. 37, seit R4-17): mehr als 200 Zeilen in der Zeitraumübersicht, 500 Tagesverweise ohne den Hinweis der Leiste. Der Bestand
+seit R4-24 samt der Abfrage der Diagramme —, und `EXPLAIN` der Abfragen aus `statistik_lib.php` — **rot**, wenn eines verfehlt. Ebenso **rot** (Nr. 37, seit R4-17): mehr als 200 Zeilen in der Zeitraumübersicht, 500 Tagesverweise ohne den Hinweis der Leiste. Seit S11-01 (**Anlass: Nr. 43**, E-S11-15) im Schritt `browser` drei weitere Wege: **Einsatz mit Spur öffnen** und **Diensttag mit Ruhe-Spuren öffnen** — je der ungünstigste Fall des Bestands (meiste Spur- bzw. Ruhe-Punkte, gewählt von `messen.py` über `spur_zahlen()`), je `--wiederholungen` Läufe (Vorgabe 5), gezählt der Median —, die **Zeitraumübersicht für einen Monat** und **GPX über einen Zeitraum** (Export Profil B mit GPX, ein Jahr, mit und ohne Passwort, in Abschnitte zerlegt); das Protokoll nennt den Prozessor und einen Eichlauf; jeder Schritt hat eine Zerlegung (Server, Skripte, `api/`, Krypto, Hauptfaden; S11-13). Das Backup ist der Schritt „Backup erstellen" daneben. Der Bestand
 entsteht aus dem Referenzdatensatz und wird vervielfältigt — **nicht
 erfunden**, damit die Verteilung der Daten stimmt.
 
@@ -31,7 +31,7 @@ Ohne das Konto scheitert der Browserschritt nach der Anmeldung und wartet 180 s 
 ## Erwartete Zahl
 
 Die Zielzahlen stehen in `ausgangsmessung.md` daneben — **dort und nicht hier**, weil sie mit jeder Messung fortgeschrieben werden.
-**Gemessen 24.09.2026** (frische Anlage, `messen.py --frisch`): 9 min 38 s, 5050 Einsätze eingespielt, sieben Browsermessungen ohne Fehler, Rückgabewert 0.
+**Gemessen 11.10.2026** (S11-01, Grundlinie vor S11): 5096 Einsätze eingespielt, zehn Browsermessungen ohne Fehler (die zwei Einzelansichten je fünfmal), Rückgabewert 0; der Schritt `browser` allein rund 7 min bei Drossel 6×, 2 min ungedrosselt. **Nachher 18.10.2026** (S11-11): Grenzen gehalten, Tabelle in `ausgangsmessung.md`.
 
 ## Was es nicht kann
 

@@ -8068,5 +8068,151 @@ declare(strict_types=1);
  *   eine CPU-Quote des Betriebssystems (F-SR-95). Ohne JavaScript laesst
  *   sich hier kein Konto mehr anlegen, und der Satz unter dem Knopf sagt es.
  *   Kein Schema.
+ *
+ * 22.0.0 IST DIE HAUPTNUMMER VON S11 — DIE ORTSDATEN WERDEN VERSCHLUESSELT
+ *   (Schritt 12a, R78; Konzept S11, Weg B). Bis hierher lagen Spur,
+ *   Koordinate jeder Phase, Reanimationsverlauf und Transportziel im
+ *   Klartext, und aus Spur und Phasenkoordinaten liess sich der Einsatzort
+ *   rekonstruieren, obwohl seine Adresse verschluesselt war. S11 schliesst
+ *   das: Uhr und Handy verschliessen vor dem Upload in eine GERAETEHUELLE
+ *   (ECDH auf P-256, HKDF, AES-256-CBC, HMAC — ein Format fuer Garmin,
+ *   Android und Browser, festgelegt in `tools/proben/huelle/referenz.py`),
+ *   und nur der Browser oeffnet. Die Hauptnummer steht fuer das Ganze:
+ *   Datenmodell, Verschluesselung, Migration. Wie bei S9 zaehlen die
+ *   weiteren Pakete an der Korrekturstelle weiter, bis der Umbau steht.
+ *
+ *   22.0.0 selbst ist das Paket S11-03: DAS SCHLUESSELPAAR DES KONTOS. Ein
+ *   ECDH-Paar je Konto, erzeugt im Browser beim ersten Entsperren nach einer
+ *   Anmeldung — nur mit dem Nachweis des Passworts, wie der Rueckweg. Der
+ *   private Teil liegt unter dem Inhaltsschluessel (`edk1:`, nie `edka1:`:
+ *   der Wiederherstellungsschluessel muss ihn allein oeffnen). Der
+ *   oeffentliche Teil liegt VERSIEGELT mit dem Serverschluessel, gebunden an
+ *   das Konto; ausgegeben wird er nur mit gueltigem Siegel — an die Seite und
+ *   bei der Kopplung an das Geraet (`kontoschluessel` in `bestaetigen` und
+ *   `status`). Wer nur die Datenbank beschreiben kann, kann ihn so nicht
+ *   gegen seinen eigenen tauschen. Der zweite Riegel ist der Abgleich beim
+ *   Entsperren: Passt der oeffentliche nicht zum privaten, sagt es die Seite
+ *   und der Server meldet es. Der Schluesselwechsel huellt das Siegel mit um
+ *   (neuer Zweck `kontopaar`). Die Geraetehuelle selbst steht in
+ *   `crypto.js`; verschlossen wird mit ihr noch nichts — das beginnt mit
+ *   S11-04. SCHEMA: drei Spalten an `users` (`kp_oeffentlich`, `kp_privat`,
+ *   `kp_seit`) — nach dem Deploy `update.php` aufrufen.
+ *
+ * 22.0.1 — S11-04a: DER EINGANG NIMMT ORTSDATEN NUR NOCH VERSCHLOSSEN AN.
+ *   `ingest.php` speichert Spurstuecke als Geraetehuellen in der neuen
+ *   Tabelle `track_stuecke` (SPUR2) und die Koordinaten der Phasen samt
+ *   Reanimation als Einsatzhuelle in `missions.ort_huelle`. Klartext —
+ *   Punkte, eine Phase mit Koordinate, eine Reanimation — weist er ab, ganz
+ *   und mit eigenem Fehlercode (`400 klartext`); einen Uebergang gibt es
+ *   nicht (E-S11-09). Der Server prueft an einer Huelle nur die Form
+ *   (`pruef_huelle()` in der gemeinsamen Pruefschicht) und rechnet mit dem,
+ *   was Klartext bleibt: Platz und Zeitraum eines Stuecks, Nummer und Zeit
+ *   einer Phase. Die alten Regeln je Punkt gelten jetzt je Stueck. NEU AUF DEM
+ *   SERVER ist das Verschliessen (`geraetehuelle_lib.php`) — fuer die Proben
+ *   und das Demo-Zuruecksetzen, byte-gleich mit Browser und Referenz; ein
+ *   Oeffnen gibt es dort mit Absicht nicht. Die Ansichten lesen die Huellen
+ *   erst ab S11-04b/-04c; bis dahin zeigt ein neuer Einsatz keine Karte.
+ *   Korrekturstelle, weil S11 als Ganzes die Hauptnummer traegt (22.0.0).
+ *   SCHEMA: Tabelle `track_stuecke`, Spalte `missions.ort_huelle` — nach dem
+ *   Deploy `update.php` aufrufen.
+ *
+ * 22.0.2 — S11-04b: DIE SCHNITTSTELLEN LIEFERN DIE HUELLEN AUS.
+ *   `api/mission.php` gibt die Spurstuecke, die Einsatzhuelle, `client_ref`
+ *   (fuer die Bindung), den Beginn und die Phasenzeiten als Epoche und die
+ *   Sperrzeiten aus Schnitten heraus; `api/day.php` die Stuecke je Einsatz
+ *   und Ruhesegment. Der Server oeffnet dabei nichts (`spur2_lesen_viele()`
+ *   gibt Chiffretext und Klartextzahlen). Die Ansichten lesen bis S11-04c
+ *   weiter den Altbestand im Klartext; neu ist, dass der Browser die Huellen
+ *   bekommt. Die Ortsdatenprobe belegt die Kette Geraet -> Server -> Browser
+ *   Punkt fuer Punkt. Kein Schema.
+ *
+ * 22.0.3 — S11-04c: DIE ANSICHTEN OEFFNEN DIE HUELLEN SELBST. Einsatzansicht,
+ *   Tagesuebersicht und „GPS-Daten des Diensttages" bekommen die Spur, die
+ *   Koordinaten der Phasen und die Reanimation nur noch als Geraetehuellen
+ *   und oeffnen sie im Browser (`assets/ortsdaten.js`, die eine Stelle dafuer);
+ *   `api/mission.php`, `api/day.php` und `tag_spuren.php` lesen keine
+ *   Ortsdaten im Klartext mehr. Kein Uebergang (E-S11-36): Altbestand zeigt
+ *   bis zum Einmalwerkzeug (S11-10) keine Karte. Neuer Baustein `.ladeplatz`
+ *   (M-S11-01, E-S11-35): Ring und Satz, erst nach 300 ms, mit dem Zustand
+ *   „wartet auf das Passwort". Die Anfrage an `api/` beginnt schon im Kopf der
+ *   Seite (`assets/vorladen.js`, V1). `EdFormat.uhrzeit()` formatiert die
+ *   Zeiten der Reanimation, die nur der Browser kennt. Kein Schema.
+ * 22.0.4 — S11-04d: EINE HUELLE, DIE NICHT AUFGEHT, WIRD GEMELDET. Bis dahin
+ *   sah es nur die Nutzerin; jetzt schickt `EdOrtsdaten.melden()` Art,
+ *   Kennung und Grund (nie Inhalt) an `api/kontopaar.php` (`oeffnen_fehler`),
+ *   und der Reiter System hat eine Meldung im Bereich `ortsdaten` — weil eine
+ *   solche Huelle ein falsch verschliessendes Geraet oder ein Eingriff in die
+ *   Datenbank ist. Die Messung gegen S11-01 rueckt nach S11-10/-11
+ *   (E-S11-41): Ohne verschlossenen Pruefbestand haette sie nichts gemessen.
+ *   Kein Schema.
+ * 22.1.0 — S11-05b: DAS FORMULAR SCHREIBT DIE EINSATZHUELLE. Phasenorte und
+ *   Reanimation verschliesst der Browser beim Speichern im Formular; die Zeiten
+ *   rechnet er wie der Server (`EdOrtsdaten.einsatzZeiten()`,
+ *   `EdFormat.ortszeitZuEpoch()`), und der Server vergleicht die Phasenzeiten
+ *   und speichert nur bei Gleichheit. Speichern verlangt das Entsperren. Der
+ *   Altbestand eines Einsatzes zieht beim Speichern in die Huelle um.
+ *   Transportziel samt Koordinate (`'store' => 'pat'`) und die Hoehe des
+ *   Einsatzorts (`ortshoehe`, im Browser gerechnet) liegen im `pat_blob`; Pin,
+ *   Linie zur letzten Zielklinik und Suche erst nach dem Entsperren. Kein
+ *   Schema.
+ * 22.2.0 — S11-05c: SCHNEIDEN IM BROWSER, EIN STUECK LOESCHEN. Seit S11-04 fand
+ *   der Server beim Schneiden keine Punkte mehr; jetzt nimmt der Browser die
+ *   Punkte des Zeitraums, verschliesst sie als Spur des neuen Einsatzes, und
+ *   das Segment bleibt, mit gesperrtem Zeitraum — die Ruecknahme ist
+ *   verlustfrei (E-S11-47). Neu: einen Zeitraum endgueltig loeschen (Nr. 161):
+ *   der Browser verschliesst den Rest neu, `spur2_tauschen()` ersetzt bei
+ *   unveraendertem Stand, ein Vermerk ohne Einsatz sperrt (E-S11-48).
+ *   `pruef_spurstueck()` fuer Eingang und Browser. Schema: Migration
+ *   `2026_10_15_loeschvermerk` (track_cuts.mission_id NULL) — update.php.
+ * 22.3.0 — S11-05d: GPX IM BROWSER, IN BEIDE RICHTUNGEN. `gpx.php` las nur den
+ *   Klartextbestand und lieferte fuer eine verschlossene Spur nichts mehr
+ *   (F-S11-54); `assets/gpx.js` baut dieselbe Datei aus der geoeffneten Spur,
+ *   Byte fuer Byte wie `gpx_lib.php` (bis auf `1.0E-7`, F-S11-55). Der Import
+ *   liest im Browser und schickt verschlossene Stuecke; der Server sieht keine
+ *   Koordinate mehr. `gpx.php` und `gpx_lib.php` entfallen, der Topf `pair` hat
+ *   zwei Verbraucher. Kein Schema.
+ * 22.4.0 — S11-05e: EXPORT, IMPORT UND UMDATIEREN MIT DEN HUELLEN. Der Export
+ *   las nur den Klartext und liess alles seit S11-04 Gesendete aus (F-S11-57);
+ *   jetzt oeffnet der Browser Einsatzhuelle, Blob und Stuecke. Der CSV-Import
+ *   schrieb Phasenorte, Reanimation, Transportziel und Hoehe noch im Klartext
+ *   (F-S11-60); jetzt verschliesst der Browser, der Server weist Klartext ab
+ *   und haelt die Zeiten gegen (E-S11-51), Ueberschreiben fuehrt zusammen
+ *   (E-S11-52). Transportziel und Reanimation neuer Einsaetze nur noch mit
+ *   Haken (E-S11-53, -54). Die Umdatierung nimmt die Stuecke mit (F-S11-58).
+ *   Kein Schema.
+ * 22.5.0 — S11-06: DIE SICHERUNG MIT DEN HUELLEN. Seit S11-04 fehlten in jeder
+ *   Sicherung Orte, Reanimation und Spur aller verschlossen eingegangenen
+ *   Einsaetze (F-S11-63). Jetzt oeffnet der Browser Huelle und Stuecke und
+ *   legt sie offen in den verschlossenen Kern, die Spuren als Punktlisten
+ *   (Nutzlast 13, E-S11-56); beim Einspielen verschliesst er jede Fassung
+ *   von 6 bis 13 neu, und der Server weist Klartext ab. Die Kontosicherung
+ *   traegt Huellen und Stuecke, wie sie liegen, dazu den privaten Teil des
+ *   Paars fuer die Freigabe in ein anderes Konto; der direkte Weg verschliesst
+ *   aeltere Pakete selbst (E-S11-57). Der Demo-Reset verschliesst ebenso und
+ *   legt dem Demokonto ein Paar an (E-S11-20, -58). Loeschvermerke reisen mit
+ *   (F-S11-52). Kein Schema.
+ * 22.5.1 — S11-06g: DIE HOEHE IN GANZEN METERN. Die Innenform der Spurstuecke
+ *   trug die Hoehe in Dezimetern als int16 und reichte nur bis 3276,7 m;
+ *   darueber lief sie still in eine negative Hoehe (F-S11-64). Jetzt ganze
+ *   Meter, geklemmt auf ±32 767 (E-S11-66). Kein Geraet hat das alte Mass je
+ *   gesendet. Kein Schema.
+ * 22.6.0 — S11-07: DER WARTUNGSLAUF IM BROWSER. Die Jobs `verdichtung` und
+ *   `ausduennen` entfallen: Sie lasen Klartextpunkte, und die gibt es fuer
+ *   neue Aufzeichnungen nicht mehr. Der Server nennt, was faellig ist
+ *   (`api/wartungslauf.php`), der Browser fuegt zusammen, duennt nach 31
+ *   Tagen aus, prueft im Rundlauf und laesst tauschen — nur bei unveraendertem
+ *   Stand, Stufe 3 nur nach der Frist. Gepackte Innenform „B fest"
+ *   (E-S11-71). Still auf der Startseite, sichtbar in der Karte „GPS-Daten
+ *   verdichten" (Reiter Backup, M-S11-02). Zeitraum loeschen auch auf
+ *   gepackten Spuren. Kein Schema.
+ * 22.7.0 — S11-10: DAS EINMALWERKZEUG. Was bis Web 21 im Klartext lag —
+ *   Spurpunkte (`track_points`, SPUR1), Phasenorte, Reanimation,
+ *   Transportziel und Ortshoehe — zieht in Huellen und Blob um, und zwar im
+ *   Browser des Kontos, still auf der Startseite nach dem Entsperren
+ *   (`assets/ortsumzug.js`); der Server nennt, was offen ist, und tauscht je
+ *   Datensatz in einer Transaktion, nur bei unveraendertem Stand
+ *   (`api/ortsumzug.php`, `ortsumzug_lib.php`). Die Statusseite zaehlt den
+ *   Rest je Tabelle (Zeile „Ortsdaten"); solange sie orange ist, darf die
+ *   Aufraeumauslieferung (S11-12) nicht kommen. Kein Schema.
  */
-const WEB_VERSION = '21.14.0';
+const WEB_VERSION = '22.7.0';

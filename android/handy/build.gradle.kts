@@ -147,6 +147,10 @@ android {
     // nicht mehr an; bis Android 0.15.1 stand hier `java.srcDir(…)`.
     sourceSets["main"].kotlin.directories += "../gemeinsam/quelle"
     sourceSets["main"].res.directories += "../gemeinsam/res"
+    // Die Prüfvektoren der Gerätehülle für den instrumentierten Fall
+    // (S11-09, `GeraetehuelleGeraetTest`): gelesen an Ort und Stelle, nicht
+    // kopiert — sie liegen nur im Test-APK, nie in der App.
+    sourceSets["androidTest"].assets.directories += "../../tools/proben/huelle"
 
     lint {
         /* Ein Lint-FEHLER haelt den Baulauf an; Warnungen werden gezaehlt und

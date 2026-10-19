@@ -181,6 +181,14 @@ async function anmelden(rolle) {
     ignoreHTTPSErrors: true, viewport: { width: BREITEN[0], height: 900 },
     hasTouch: FINGER,
   });
+  /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+     Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
+     und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
+     eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
+     Abbruch schriebe einen Fehler in die Konsole. Gemessen wird er in seiner
+     eigenen Probe. */
+  await kontext.route('**/api/wartungslauf.php', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '{"ok":true,"spuren":[],"aufzeichnungen":0,"diensttage":0}' }));
   /* Die Attrappe VOR der ersten Seite setzen: Eine Anfrage, die vor der Route
    * hinausgeht, laeuft in die Egress-Sperre und kostet die Zeitgrenze. */
   for (const muster of attrappe.MUSTER) { await kontext.route(muster, attrappe.route); }

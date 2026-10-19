@@ -117,6 +117,8 @@ require_once $srv . '/jobs_lib.php';
 require_once $srv . '/komplett_lib.php';
 require_once $srv . '/sicherungsziel_lib.php';
 require_once $srv . '/totp_lib.php';
+require_once $srv . '/kontopaar_lib.php';   // S11-03: Zweck kontopaar
+require_once $srv . '/rueckweg_lib.php';    // ein P-256-SPKI als Kontoschlüssel der Probe
 require_once $srv . '/einstieg_lib.php';
 require_once $srv . '/mail_lib.php';
 require_once $wurzel . '/tools/sandbox/konfig_stellen.php';
@@ -590,6 +592,7 @@ try {
     /* Welche Datei zu welchem Zweck des Jobs gehört. `schluesselwechsel_lib`
      * selbst versiegelt beim Umhüllen; `serverkrypto_lib` definiert. */
     $bekannt = ['sicherungsziel_lib.php' => 'ziele', 'totp_lib.php' => 'totp',
+                'kontopaar_lib.php' => 'kontopaar',
                 'adminbackup_lib.php' => 'konten', 'protokoll_archiv_lib.php' => 'archive',
                 'schluesselwechsel_lib.php' => '(umhüllen)'];
     $fremd = array_values(array_filter($orte, static fn(string $o): bool =>
@@ -597,7 +600,7 @@ try {
     $zwecke = array_values(array_unique(array_filter(array_map(static fn(string $o): ?string =>
         $bekannt[strstr($o, ':', true)] ?? null, $orte), static fn($z) => $z !== '(umhüllen)')));
     sort($zwecke);
-    pruefe($fremd === [] && $zwecke === ['archive', 'konten', 'totp', 'ziele'],
+    pruefe($fremd === [] && $zwecke === ['archive', 'konten', 'kontopaar', 'totp', 'ziele'],
         'jeder Aufruf von sk_versiegeln( gehört zu einem Zweck des Jobs — ' . count($orte) . ' Aufrufe',
         implode(', ', $orte) . ($fremd !== [] ? ' · FREMD: ' . implode(', ', $fremd) : ''));
     $sollZwecke = SW_ZWECKE; sort($sollZwecke);
@@ -622,6 +625,11 @@ try {
     $uidFremd = $konto('schluesselwechselprobe-fremd@probe.invalid', 'user');
     $pdo->prepare('UPDATE users SET totp_geheimnis = ? WHERE id = ?')
         ->execute([fremd_versiegeln('x', 'totp|' . $uidFremd), $uidFremd]);
+    /* DER KONTOSCHLÜSSEL (S11-03): ein gültiger P-256-SPKI — der des
+     * Rückweg-Selbsttests, der private Teil dazu ist nicht aufgehoben und
+     * wird hier nicht gebraucht. */
+    $kpKlar = RW_VEKTOR_OEFFENTLICH;
+    kp_ablegen($pdo, $uid, $kpKlar, 'edk1:' . base64_encode(random_bytes(48)));
 
     $pdo->prepare("DELETE FROM backup_targets WHERE name = 'Schluesselwechselprobe'")->execute();
     $pdo->prepare("INSERT INTO backup_targets (name, protokoll, host, port, nutzer, pfad, passiv, aktiv, erstellt_am)
@@ -735,8 +743,9 @@ try {
         && edbak_begleit_lesen($kennung)['lesbar'] === true
         && protokoll_archiv_manifest($archivAlt) !== null
         && komp_serverschluessel_fuer(komp_wurzel() . '/' . $standA)[1] === 'neu'
-        && (komp_kopf_lesen(komp_wurzel() . '/' . $standA)['kopf']['kennung'] ?? null) === $Akenn,
-        'sechs Stücke unter A angelegt und lesbar (Ziel, Zweitfaktor, Begleitdatei, Paket, Archiv, Stand mit Kennung A)');
+        && (komp_kopf_lesen(komp_wurzel() . '/' . $standA)['kopf']['kennung'] ?? null) === $Akenn
+        && (kp_zustand($uid, $pdo)['oeffentlich'] ?? null) === $kpKlar,
+        'sieben Stücke unter A angelegt und lesbar (Ziel, Zweitfaktor, Kontoschlüssel, Begleitdatei, Paket, Archiv, Stand mit Kennung A)');
     pruefe(totp_geheimnis($uidFremd) === null, 'das fremd versiegelte Stück öffnet mit A nicht');
 
     /* ---- 3. Riegel vor dem Wechsel ------------------------------------------ */
@@ -1058,6 +1067,9 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     $zipTeil = static fn(string $pfad, string $n): ?string => zip_eintrag($pfad, $n);
     pruefe($mit((string)$pdo->query("SELECT totp_geheimnis FROM users WHERE id = $uid")->fetchColumn(), 'totp|' . $uid) === 'neu'
         && totp_geheimnis($uid) === $totpKlar, 'Zweitfaktor: öffnet mit B, derselbe Klartext');
+    pruefe($mit((string)$pdo->query("SELECT kp_oeffentlich FROM users WHERE id = $uid")->fetchColumn(), kp_zweck($uid)) === 'neu'
+        && (kp_zustand($uid, $pdo)['oeffentlich'] ?? null) === $kpKlar,
+        'Kontoschlüssel: öffnet mit B, derselbe öffentliche Teil');
     pruefe($mit((string)$pdo->query("SELECT geheim FROM backup_targets WHERE id = $zid")->fetchColumn(), sz_zweck($zid, 'geheim')) === 'neu'
         && sz_geheim(['id' => $zid, 'geheim' => $pdo->query("SELECT geheim FROM backup_targets WHERE id = $zid")->fetchColumn()], 'geheim') === $zielKlar,
         'Ziel: öffnet mit B, dasselbe Passwort');

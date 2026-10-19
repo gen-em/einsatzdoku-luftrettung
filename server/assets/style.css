@@ -4023,6 +4023,49 @@ h1 + .seiten-erklaerung{margin-top:0}
 }
 .zustandszeile .meldung{margin:0}
 
+/* LADEPLATZ — solange der Browser Ortsdaten holt oder oeffnet (S11-04c,
+ * M-S11-01, E-S11-35). Ein Ring und ein Satz an der Stelle des Inhalts: in
+ * der Kartenflaeche auf einem Schnee-Kaestchen mittig, in einer Karte als
+ * Zeile. Er erscheint erst nach 300 ms (`assets/ortsdaten.js`), damit eine
+ * schnelle Ansicht nicht flackert. `.ladeplatz-still` haelt den Ring an: Es
+ * wird auf das Passwort gewartet, es passiert nichts, bis jemand etwas tut.
+ * Bei „Bewegung reduzieren" steht er ohnehin still (Regel oben); der Satz
+ * traegt die Auskunft dann allein. Keine neue Farbe, keine neue Groesse. */
+.ladeplatz{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+.ladeplatz-ring{
+  width:var(--symbol-klein);height:var(--symbol-klein);flex:0 0 var(--symbol-klein);border-radius:50%;
+  border:var(--strich-stark) solid var(--linie);border-top-color:var(--orange-tief);
+  animation:ladeplatz-dreh 900ms linear infinite;
+}
+.ladeplatz-still .ladeplatz-ring{animation:none;border-color:var(--orange-tief)}
+@keyframes ladeplatz-dreh{to{transform:rotate(360deg)}}
+.geo .ladeplatz{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:500;
+  white-space:nowrap;background:var(--schnee);border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);padding:var(--abstand-2) var(--abstand-3);
+}
+.ladeplatz[hidden]{display:none}
+/* BALKEN — Fortschritt eines langen Laufs, IN der Zustandszeile unter dem
+ * Ladeplatz (M-S11-01 Abschnitt 3, freigegeben mit E-S11-35; erster
+ * Verwender: der Wartungslauf, S11-07, M-S11-02). Hoehe wie die Glieder des
+ * Passwortbalkens (`--strich-balken`), Flaeche `--linie`, Fuellung
+ * `--orange-tief` (3,2 : 1 auf `--linie`, fuer eine Grafik genug). Die Breite
+ * der Fuellung setzt das Skript; `role="progressbar"` traegt den Wert. */
+.balken{
+  height:var(--strich-balken);border-radius:calc(var(--strich-balken) / 2);
+  background:var(--linie);overflow:hidden;margin-top:var(--abstand-2);
+}
+.balken > i{display:block;height:100%;width:0;background:var(--orange-tief)}
+/* Geht eine Huelle nicht auf, steht die Meldung an der Stelle des
+ * Ladeplatzes (M-S11-01, Zustand d) — mittig in der Kartenflaeche. */
+.geo > [data-ortsdaten]{
+  position:absolute;left:var(--abstand-3);right:var(--abstand-3);top:50%;
+  transform:translateY(-50%);z-index:500;
+}
+
 
 /* ===========================================================================
  * 27  ADMINISTRATION                                        (P3/O9, E-P3-41)

@@ -365,25 +365,11 @@ try {
      * Die Reihenfolge innerhalb eines Besitzers kommt weiterhin aus dem SQL
      * (ORDER BY owner_id, seq); die Zuordnung im Speicher aendert sie nicht.
      */
-    /* SPUREN UEBER spur_lib.php (S2/AP1), nicht mehr per SQL.
-     *
-     * Seit S2 liegen die Punkte je nach Alter als Zeilen (Stufe 1, frischer
-     * Uhr-Upload) ODER als Blob (Stufe 2/3) — und waehrend einer Nachlieferung
-     * als beides. Wer nur eine der beiden Stellen liest, zeigt eine Spur, der
-     * das Ende fehlt, und zwar ohne Fehlermeldung. spur_lesen_viele() setzt
-     * beides zusammen und bleibt dabei bei zwei Abfragen fuer den ganzen Tag.
-     *
-     * Die Ausgabe ist unveraendert [lat, lon] je Punkt: Die Tageskarte
-     * zeichnet eine Linie, sie braucht weder Hoehe noch Zeit. */
-    $spurLaden = function (string $ownerType, array $ids): array {
-        $nach = [];
-        foreach ($ids as $id) { $nach[$id] = []; }
-        if (!$ids) { return $nach; }
-        foreach (spur_lesen_viele(db(), $ownerType, $ids) as $id => $punkte) {
-            foreach ($punkte as $pt) { $nach[$id][] = [$pt[1], $pt[2]]; }
-        }
-        return $nach;
-    };
+    /* DIE SPUREN OEFFNET DER BROWSER (S11-04c). Bis Web 22.0.2 stand hier
+     * `spur_lesen_viele()` mit [lat, lon] je Punkt im Klartext. Seit S11
+     * liefert die Antwort die verschlossenen Stuecke (`spur_stuecke`), und
+     * `assets/ortsdaten.js` macht daraus die Linien. Kein Uebergang
+     * (E-S11-36): Altbestand im Klartext zeigt die Tageskarte nicht mehr. */
 
     /* SPALTEN DER TAGESTABELLE AUS DEM FELDKATALOG (Backlog Nr. 10).
      *
@@ -402,19 +388,25 @@ try {
     $spaltenSql = '';
     foreach ($tagesSpalten as $dc) { $spaltenSql .= ', ' . $dc['col']; }
 
-    /* `start_src`, `dest_lat` und `dest_lon` stehen FEST im SELECT und nicht im
-     * Katalog: Sie sind keine Spalten der Tagestabelle, sondern die Zutaten der
-     * Luftlinie auf der Tageskarte (E34/E35). Die Aufloesung der beiden
+    /* `start_src` steht im SELECT, obwohl es keine Spalte der Tagestabelle
+     * ist: Es ist die Zutat der Luftlinie auf der Tageskarte (E34/E35). Bis
+     * S11-05b standen `dest_lat` und `dest_lon` daneben; das Transportziel liegt
+     * seither im `pat_blob`, den der Browser hier ohnehin entschluesselt. Die Aufloesung der beiden
      * Vorgaenger-Regeln geschieht im Browser — er hat die Einsaetze des Tages
      * ohnehin gemeinsam vorliegen und entschluesselt sie dort, wo der Server es
      * gar nicht koennte (Konzept 4.6.1). */
-    $st = db()->prepare('SELECT id, started_at, ended_at, distance_m, final,
-                           pat_blob, start_src, dest_lat, dest_lon' . $spaltenSql . '
+    /* DIE SPALTEN AUS DEM REGISTER, Zweck `tag` (S11-04b). Bis Web 22.0.1
+     * stand die Liste hier von Hand; mit `client_ref` fuer die Bindung der
+     * Huellen wurde sie zur Handliste von zehn Spalten, und die Zaehlung
+     * (Z18, E-ZE-22) schlug zu Recht an. */
+    $st = db()->prepare('SELECT ' . mf_spalten_sql('tag') . $spaltenSql . '
                          FROM missions WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                          ORDER BY started_at');
     $st->execute([$userId, $dayId]);
     $missionZeilen = $st->fetchAll();
-    $spurEinsatz = $spurLaden('mission',
+    /* DIE STUECKE ALS GERAETEHUELLEN (S11-04b) — fuer den Browser, der sie
+     * oeffnet. */
+    $stueckeEinsatz = spur2_lesen_viele(db(), 'mission',
         array_map(static fn($m) => (int)$m['id'], $missionZeilen));
 
     $missions = [];
@@ -465,10 +457,9 @@ try {
             'final'      => (bool)$m['final'],
             'hat_ende'   => $m['ended_at'] !== null,
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
-            'track'      => $spurEinsatz[(int)$m['id']] ?? [],
+            'client_ref' => (string)$m['client_ref'],
+            'spur_stuecke' => $stueckeEinsatz[(int)$m['id']] ?? [],
             'start_src'  => $m['start_src'] !== null ? (string)$m['start_src'] : null,
-            'dest_lat'   => $m['dest_lat'] !== null ? (float)$m['dest_lat'] : null,
-            'dest_lon'   => $m['dest_lon'] !== null ? (float)$m['dest_lon'] : null,
         ];
         /* Die Spalten aus 'day_col' stehen unter ihrem eigenen Namen in der
          * Antwort — bisher hiessen sie dort schon 'winch', 'bergwacht' und
@@ -493,17 +484,17 @@ try {
      * nicht: Sie braucht die Kennung (wohin der Schnitt geht), die Zeiten
      * (was zur Auswahl steht) und die Punktzahl (ob ueberhaupt etwas da ist).
      *
-     * `track` BLEIBT AN SEINEM PLATZ IM OBJEKT, damit die Karte sich nicht
-     * aendern muss — sie liest jetzt `.track` statt des Eintrags selbst. Der
-     * Umbau ist klein und steht in `index.php` an einer Stelle. */
-    $st = db()->prepare('SELECT id, started_at, ended_at, device_id, final
+     * `track` STAND BIS WEB 22.0.2 IM OBJEKT; seit S11-04c setzt ihn der
+     * Browser aus `spur_stuecke`, nachdem er sie geoeffnet hat (`index.php`,
+     * `spurenOeffnen()`). */
+    $st = db()->prepare('SELECT id, client_ref, started_at, ended_at, device_id, final
                            FROM rest_segments
                           WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                           ORDER BY started_at');
     $st->execute([$userId, $dayId]);
     $restZeilen = $st->fetchAll();
     $restIds  = array_map(static fn($r) => (int)$r['id'], $restZeilen);
-    $spurRuhe = $spurLaden('rest', $restIds);
+    $stueckeRuhe = spur2_lesen_viele(db(), 'rest', $restIds);   // S11-04b, wie oben
 
     /* DIE GESPERRTEN BEREICHE JE SEGMENT (E-S4-53), damit die Bedienung
      * anzeigen kann, was schon herausgeschnitten ist. Ohne diese Angabe
@@ -547,7 +538,6 @@ try {
     $rest = [];
     foreach ($restZeilen as $r) {
         $rid   = (int)$r['id'];
-        $track = $spurRuhe[$rid] ?? [];
         $ende  = $r['ended_at'] !== null ? (string)$r['ended_at'] : null;
         $sn    = [];
         foreach ($schnitteNach[$rid] ?? [] as $c) {
@@ -566,14 +556,23 @@ try {
             'bis_ts'     => $ende !== null ? (int)strtotime($ende . ' UTC') : null,
             'final'      => (int)$r['final'] === 1,
             'device'     => $r['device_id'] !== null ? (int)$r['device_id'] : null,
-            'n'          => count($track),
-            'track'      => $track,
+            /* Die Punkte der Stuecke (S11-04b) — die Klartextzahl `punkte`. */
+            'n'          => array_sum(array_column($stueckeRuhe[$rid] ?? [], 'punkte')),
+            /* S11-04b: die Stuecke als Huellen; `schnitte` darunter sind
+             * zugleich die Sperrzeiten, die der Browser beim Oeffnen
+             * ausblendet (E-S11-37). */
+            'client_ref' => (string)$r['client_ref'],
+            'spur_stuecke' => $stueckeRuhe[$rid] ?? [],
             'schnitte'   => $sn,
         ];
     }
 
+    /* `zeitzone` (S11-05c): Der Browser schneidet und loescht seit S11-05c
+     * selbst und rechnet Uhrzeiten des Diensttags dafuer so in Zeitpunkte um
+     * wie `pruef_ortszeit_zu_utc()` (EdFormat.ortszeitZuEpoch). */
     $antwort = ['day_id' => $dayId, 'day' => (string)$tag['day'], 'meta' => $meta,
-                'missions' => $missions, 'rest_segments' => $rest];
+                'missions' => $missions, 'rest_segments' => $rest,
+                'zeitzone' => (string)konfig('app.timezone', 'Europe/Berlin')];
     // Zustand nennen statt ihn als "nichts eingetragen" erscheinen zu lassen.
     if ($dayDeletedAt !== null) {
         $antwort['day_deleted_at'] = $dayDeletedAt;

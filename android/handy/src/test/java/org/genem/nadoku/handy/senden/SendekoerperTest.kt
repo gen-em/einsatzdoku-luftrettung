@@ -31,13 +31,20 @@ class SendekoerperTest {
         bestaetigtSeq = 0, metadatenBestaetigt = false, fehlerhaft = false,
     )
 
+    /** Der Empfänger der Referenzvektoren (`tools/proben/huelle/vektoren.json`). */
+    private val ks: ByteArray by lazy {
+        val h = org.json.JSONObject(java.io.File("../../tools/proben/huelle/vektoren.json").readText())
+            .getJSONObject("empfaenger").getString("oeffentlich_hex")
+        ByteArray(h.length / 2) { h.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
+    }
+
     private val punkte = listOf(
         Rohpunkt(47.72611, 10.31862, 712.0, 1_784_279_465),
         Rohpunkt(47.72640, 10.31901, null, 1_784_279_475),
     )
 
     @Test fun ruhesegment() {
-        val o = Sendekoerper.baue(segment(), seqVon = 240, punkte = punkte)
+        val o = Sendekoerper.baue(segment(), seqVon = 240, punkte = punkte, kontoschluessel = ks)
         assertEquals("rest_segment", o.getString("kind"))
         assertEquals("ar-2-0000300004", o.getString("client_ref"))
         assertEquals("2026-07-16", o.getString("day"))
@@ -49,41 +56,45 @@ class SendekoerperTest {
 
     /** `ended_at` ist null, solange `final` false ist (Vertrag 3). */
     @Test fun endeIstNullSolangeNichtAbgeschlossen() {
-        assertTrue(Sendekoerper.baue(segment(final = false), 0, punkte).isNull("ended_at"))
+        assertTrue(Sendekoerper.baue(segment(final = false), 0, punkte, kontoschluessel = ks).isNull("ended_at"))
         assertEquals(
             "2026-07-16T06:00:00Z",
-            Sendekoerper.baue(segment(final = true), 0, punkte).getString("ended_at"),
+            Sendekoerper.baue(segment(final = true), 0, punkte, kontoschluessel = ks).getString("ended_at"),
         )
     }
 
     /** Ohne Dienstkennung geht das Feld gar nicht mit — die Rückfallebene greift. */
     @Test fun ohneDienstkennungFehltDasFeld() {
-        assertFalse(Sendekoerper.baue(segment(dienstRef = null), 0, punkte).has("day_ref"))
+        assertFalse(Sendekoerper.baue(segment(dienstRef = null), 0, punkte, kontoschluessel = ks).has("day_ref"))
     }
 
     /**
-     * `track.points` ist ein Array aus `[lat, lon, ele_m, epoch_s]` und **muss
-     * eine Liste sein** — ein Objekt mit den Schlüsseln „0", „1" … wird
-     * abgelehnt (Vertrag 3). `ele_m` darf null sein.
+     * `track` ist seit 0.18.0 ein verschlossenes Spurstück (Vertrag 3):
+     * `seq_from`, `punkte`, `ts_von`, `ts_bis` im Klartext, dazu die Hülle —
+     * und **keine** Liste `points` mehr, die der Server mit `400 klartext`
+     * abwiese.
      */
-    @Test fun spurpunkteSindArraysMitVierWerten() {
-        val punkteArray = Sendekoerper.baue(segment(), 0, punkte)
-            .getJSONObject("track").getJSONArray("points")
-        assertEquals(2, punkteArray.length())
+    @Test fun spurIstEinVerschlossenesStueck() {
+        val t = Sendekoerper.baue(segment(), 7, punkte, kontoschluessel = ks).getJSONObject("track")
+        assertFalse(t.has("points"))
+        assertEquals(7, t.getInt("seq_from"))
+        assertEquals(2, t.getInt("punkte"))
+        assertEquals(1_784_279_465L, t.getLong("ts_von"))
+        assertEquals(1_784_279_475L, t.getLong("ts_bis"))
+        val h = java.util.Base64.getDecoder().decode(t.getString("huelle"))
+        // Kennbyte, EPK, IV, 2×14 Byte gepolstert auf 32, Prüfwort
+        assertEquals(1 + 65 + 16 + 32 + 32, h.size)
+        assertEquals(1, h[0].toInt())
+    }
 
-        val erster = punkteArray.getJSONArray(0)
-        assertEquals(4, erster.length())
-        assertEquals(47.72611, erster.getDouble(0), 1e-9)
-        assertEquals(10.31862, erster.getDouble(1), 1e-9)
-        assertEquals(712.0, erster.getDouble(2), 1e-9)
-        assertEquals(1_784_279_465L, erster.getLong(3))
-
-        assertTrue("ele darf null sein", punkteArray.getJSONArray(1).isNull(2))
+    /** Ohne Punkte kein `track` — ein Stück hat 1 bis 2000 (Vertrag 3.2). */
+    @Test fun ohnePunkteKeinStueck() {
+        assertFalse(Sendekoerper.baue(segment(), 0, emptyList(), kontoschluessel = ks).has("track"))
     }
 
     @Test fun einsatzTraegtKennzahlenUndPhasen() {
         val o = Sendekoerper.baue(
-            einsatz(), 0, punkte,
+            einsatz(), 0, punkte, kontoschluessel = ks,
             phasen = listOf(
                 Phaseneintrag(2, "2026-07-16T08:31:05Z", 47.7261, 10.3186),
                 Phaseneintrag(4, "2026-07-16T08:51:02Z", null, null),
@@ -96,8 +107,10 @@ class SendekoerperTest {
         val phasen = o.getJSONArray("phases")
         assertEquals(2, phasen.length())
         assertEquals(2, phasen.getJSONObject(0).getInt("phase"))
-        assertEquals(47.7261, phasen.getJSONObject(0).getDouble("lat"), 1e-9)
-        assertTrue("lat/lon dürfen null sein", phasen.getJSONObject(1).isNull("lat"))
+        // Die Koordinate steht in der Einsatzhülle, nicht in phases[].
+        assertFalse(phasen.getJSONObject(0).has("lat"))
+        assertFalse(phasen.getJSONObject(0).has("lon"))
+        assertTrue(o.getString("ort_huelle").isNotEmpty())
     }
 
     /**
@@ -107,16 +120,17 @@ class SendekoerperTest {
      * und nur das ist wahr.
      */
     @Test fun reanimationWirdGarNichtErwaehnt() {
-        val o = Sendekoerper.baue(einsatz(), 0, punkte)
+        val o = Sendekoerper.baue(einsatz(), 0, punkte, kontoschluessel = ks)
         assertFalse(o.has("resus_sessions"))
         assertFalse(o.has("resus"))
     }
 
     /** Ein Ruhesegment trägt keine Phasen und keine Kennzahlen. */
     @Test fun ruhesegmentTraegtKeinePhasen() {
-        val o = Sendekoerper.baue(segment(), 0, punkte)
+        val o = Sendekoerper.baue(segment(), 0, punkte, kontoschluessel = ks)
         assertFalse(o.has("phases"))
         assertFalse(o.has("distance_m"))
+        assertFalse(o.has("ort_huelle"))
     }
 
     /** Die harte Grenze des Servers: 512 KB Körper (Vertrag 6). */
@@ -124,7 +138,7 @@ class SendekoerperTest {
         val viele = (0 until Sender.CHUNK_PUNKTE).map {
             Rohpunkt(47.72611 + it * 0.0001, 10.31862 + it * 0.0001, 712.0 + it, 1_784_279_465L + it)
         }
-        val bytes = Sendekoerper.baue(segment(), 0, viele).toString().toByteArray(Charsets.UTF_8).size
+        val bytes = Sendekoerper.baue(segment(), 0, viele, kontoschluessel = ks).toString().toByteArray(Charsets.UTF_8).size
         println("Körper mit ${Sender.CHUNK_PUNKTE} Punkten: $bytes Bytes " +
             "(Grenze ${Sender.HOECHSTE_KOERPERGROESSE})")
         assertTrue(

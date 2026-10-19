@@ -746,8 +746,10 @@ function inBereich(wert, von, bis) {
  * zufällig über eine Feldgrenze hinweg trifft.
  */
 function baueHeuhaufen(m) {
+  /* `transport_dest` steht nicht mehr hier oben (S11-05b): Es liegt im Blob
+     und kommt unten mit den Katalogfeldern dazu — erst nach dem Entsperren. */
   const teile = [
-    m.transport_dest, m.bw_unit, m.bw_info, m.other_ema,
+    m.bw_unit, m.bw_info, m.other_ema,
     m.base, m.vehicle, m.vehicle_kurz
   ].concat(CREW_ROLLEN.map(r => m.crew[r])).concat(m.resources);
 
@@ -764,7 +766,9 @@ function baueHeuhaufen(m) {
        Diagnose und Einsatzort. */
     for (const col of Object.keys(PAT_KAT)) {
       const wert = m._pat[PAT_KAT[col].blob];
-      if (wert != null) { teile.push(wert); }
+      /* Ein Ortsfeld (das Transportziel) liegt als {addr, lat, lon} im Blob;
+         gesucht wird nach seiner Bezeichnung. */
+      if (wert != null) { teile.push(typeof wert === 'object' ? wert.addr : wert); }
     }
     if (m._pat.loc && m._pat.loc.addr) { teile.push(m._pat.loc.addr); }
     // Geburtsdatum in beiden Schreibweisen, damit sowohl "1985-03-12" als
@@ -1138,7 +1142,15 @@ async function entschluesselePat() {
       m._dx  = o.dx != null ? o.dx : null;
       m._age = EdPat.alterAnzeige(o, m.day);
       if (o.loc && o.loc.addr) { m._ort = EdMissionTable.extractOrt(o.loc.addr); }
+      /* DAS TRANSPORTZIEL AUS DEM BLOB (S11-05b). Bis dahin lieferte der
+         Suchindex es im Klartext; jetzt steht es erst nach dem Entsperren
+         unter demselben Namen da, und Filter und Auswahlliste lesen es wie
+         vorher. */
+      m.transport_dest = (o.transport_dest && o.transport_dest.addr) || null;
     }
+    const tzGewaehlt = $('f-tz').value;   // eine Wahl aus dem Adressfilter bleibt stehen
+    fuelleSelect('f-tz', optionen(missions.map(m => m.transport_dest).concat(tzGewaehlt || [])));
+    $('f-tz').value = tzGewaehlt;
     EdPat.zeigeUnlesbar(zahl);
   }
   missions.forEach(baueHeuhaufen);

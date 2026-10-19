@@ -203,7 +203,7 @@ Antwort `200`, drei Zustände:
 |---|---|
 | `{"zustand":"offen","rest_s":540}` | noch hat niemand den Code eingegeben; `rest_s` ist die Restgültigkeit in Sekunden |
 | `{"zustand":"beansprucht","konto":"ph***@gen-em.org","rest_s":300}` | ein Konto hat den Code eingegeben. `konto` ist die **maskierte E-Mail-Adresse** dieses Kontos: die ersten zwei Zeichen des lokalen Teils, `***`, die volle Domain, alles klein geschrieben. Sie ist nur für den Dialog auf dem Gerät bestimmt und wird dort **nicht gespeichert** |
-| `{"zustand":"gekoppelt"}` | zu diesen Kopfzeilen gibt es bereits ein Gerät — **ohne** `rest_s`, denn eine Sitzung gibt es nicht mehr. Das ist der Fall, wenn die Antwort auf `bestaetigen ja` verlorenging: Das Gerät darf die Zugangsdaten als gültig speichern |
+| `{"zustand":"gekoppelt","kontoschluessel":"BBcf…"}` | zu diesen Kopfzeilen gibt es bereits ein Gerät — **ohne** `rest_s`, denn eine Sitzung gibt es nicht mehr. Das ist der Fall, wenn die Antwort auf `bestaetigen ja` verlorenging: Das Gerät darf die Zugangsdaten als gültig speichern. Seit Web 22.0.0 mit dem **Kontoschlüssel** (1a.3a) |
 
 **Warum die Adresse maskiert ist und die Domain trotzdem voll.** Der Zweck
 des Feldes ist, dass die Trägerin ihr eigenes Konto **erkennt** — an einer
@@ -246,7 +246,7 @@ Mit Kopfzeilen. `antwort` ist Pflicht und lautet `ja` oder `nein`:
 
 | Antwort | Bedeutung |
 |---|---|
-| `200 {"ok":true}` (nach `ja`) | **Das Gerät existiert jetzt** und ist aktiv; die Sitzung ist beendet. Das Gerät speichert Kennung und Schlüssel dauerhaft. Die Kontoinhaberin bekommt eine E-Mail — dieselbe wie bisher beim Koppeln. Eine Wiederholung derselben Anfrage antwortet ebenfalls `200`: Das Gerät gibt es schon |
+| `200 {"ok":true,"kontoschluessel":"BBcf…"}` (nach `ja`) | **Das Gerät existiert jetzt** und ist aktiv; die Sitzung ist beendet. Das Gerät speichert Kennung und Schlüssel dauerhaft — seit Web 22.0.0 auch den **Kontoschlüssel** (1a.3a). Die Kontoinhaberin bekommt eine E-Mail — dieselbe wie bisher beim Koppeln. Eine Wiederholung derselben Anfrage antwortet ebenfalls `200` mit dem Kontoschlüssel: Das Gerät gibt es schon |
 | `200 {"ok":true}` (nach `nein`) | die Sitzung samt Zugangsdaten ist gelöscht. `nein` ist in **jedem** Zustand erlaubt, auch `offen` und auch nach Fristablauf — so bricht ein Gerät ab, das zurück auf seine Sync-Seite geht |
 | `400 {"error":"payload"}` | `antwort` fehlt oder lautet etwas anderes als `ja` oder `nein`. Zählt **nicht** im Ratenschutz: Hier rät niemand, hier ist ein Client falsch gebaut |
 | `401 {"error":"auth"}` | Kennung unbekannt oder Schlüssel falsch — wie in 1a.2 |
@@ -288,6 +288,43 @@ gelöscht, die Antwort ist `200 {"ok":true}`. Es gibt kein Gerät, das sich
 trennen ließe, und die Sitzung braucht danach niemand mehr. Die Alternative —
 ein Fehler — hinterließe eine Sitzung, die bis zum Fristende Platz belegt,
 und zwar für einen Aufruf, der genau das Richtige wollte.
+
+### 1a.3a Der Kontoschlüssel — seit Web 22.0.0 (S11-03)
+
+Wer gekoppelt ist, bekommt in der Antwort auf `bestaetigen` (`ja`, auch
+wiederholt) und auf `status` (`gekoppelt`) das Feld `kontoschluessel`: den
+**öffentlichen Schlüssel des Kontos**, ein Punkt auf P-256 als 65 Byte SEC1
+(`0x04 ‖ X ‖ Y`, big-endian) in Base64 — 88 Zeichen. Damit verschließt das
+Gerät Spur, Phasenkoordinaten und Reanimation vor dem Upload in eine
+**Gerätehülle** (Format: Kopf von `tools/proben/huelle/referenz.py`); nur der
+Browser des Kontos kann sie öffnen.
+
+| Wert | Bedeutung / Verhalten des Geräts |
+|---|---|
+| Base64, 88 Zeichen | speichern, neben Kennung und Schlüssel; ab jetzt damit verschließen |
+| `null` | das Konto hat noch kein Schlüsselpaar (es entsteht beim ersten Entsperren nach einer Anmeldung im Browser), **oder** sein Siegel geht auf dem Server nicht auf. Das Gerät sendet keine Ortsdaten. Die Garmin-Uhr (seit 4.0.0) sagt „Kein Schlüssel“ und holt ihn auf Tastendruck über `status` nach (E-S11-79), das Handy (seit 0.18.0) in jedem Sendelauf von selbst (E-S11-80) |
+
+**Beide Antworten tragen ihn, weil beide Geräte die Kopplung auch über
+`status` abschließen** (die Antwort auf `ja` kann verlorengehen, 1a.2).
+
+**`status` taugt auch zum Nachholen** (seit Uhr 4.0.0, E-S11-79): Eine schon
+gekoppelte Uhr ohne Schlüssel fragt `status` mit ihren Zugangsdaten und
+bekommt `gekoppelt` mit dem Schlüssel ihres Kontos. Dieselbe Kennung heißt
+dasselbe Konto — der Rückstand der Uhr geht an das Konto, dem er gehört.
+Neu koppeln wäre dafür keine Lösung: Die Uhr verweigert das Trennen, solange
+ein Rückstand besteht (F-S11-80).
+
+**Garmin rechnet anders herum.** `Toybox.Cryptography` erwartet Schlüssel je
+Koordinate byte-vertauscht (little-endian) und ohne `0x04`; das gemeinsame
+Geheimnis kommt little-endian. Die Uhr rechnet um; auf der Leitung steht
+immer SEC1 (Konzept S11, F-S11-18).
+
+**Ein Gerät der alten Fassung übergeht das Feld.** Die Garmin-Uhr wertet es
+seit Uhr 4.0.0 aus (S11-08), das Handy seit Android 0.18.0 (S11-09); mit
+der Hauptauslieferung von S11 nimmt der Server keine Klartext-Ortsdaten mehr
+an. Ein gekoppeltes Gerät ohne Schlüssel holt ihn über `status` nach (oben) —
+die Uhr auf Tastendruck (E-S11-79), das Handy im Sendelauf von selbst
+(E-S11-80).
 
 ### 1a.4 Zwei Formen des Blocks `geraet` — Uhr und Handy
 
@@ -472,6 +509,17 @@ sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
   um einen Fehler zu suchen, soll wissen, dass hinter „gespeichert" ab dieser
   Fassung mehr als eine Zeilentabelle steht (Einzelheiten in `docs/Technik.md`,
   Abschnitt 4.97).
+- **Seit Web 22.0.1 (S11-04a) kommen Ortsdaten nur noch verschlossen**
+  (Konzept S11, E-S11-09). Spur, Koordinate jeder Phase und Reanimation
+  verschließt das Gerät vor dem Senden mit dem Kontoschlüssel aus der
+  Kopplung (1a.3a) in eine **Gerätehülle** (3.4). Der Server kann sie nicht
+  öffnen; er prüft Form und Größe und rechnet mit dem, was im Klartext
+  bleibt: Platz und Zeitraum eines Spurstücks, Nummer und Zeit einer Phase.
+  **Ein Paket mit Ortsdaten im Klartext weist er ab** (`400 klartext`,
+  Abschnitt 5) — ganz, nicht teilweise. Einen Übergang gibt es nicht: Ein
+  Gerät der alten Fassung sendet nichts mehr, bis es aktualisiert ist; den
+  Kontoschlüssel holt es danach über `status` nach (1a.3a, seit Uhr 4.0.0 und
+  Android 0.18.0).
 
 ### 2.1 Dienstkennung `day_ref`
 
@@ -538,42 +586,39 @@ dieses Dokuments beschrieben dafür eine „Phase 10"; die gibt es nicht mehr
   "ascent_m": 410,
   "final": true,
   "phases": [
-    { "phase": 2, "at": "2026-07-16T08:31:05Z", "lat": 47.7261, "lon": 10.3186 },
-    { "phase": 3, "at": "2026-07-16T08:36:22Z", "lat": 47.7259, "lon": 10.3190 },
-    { "phase": 4, "at": "2026-07-16T08:51:02Z", "lat": 47.5601, "lon": 10.7002 }
+    { "phase": 2, "at": "2026-07-16T08:31:05Z" },
+    { "phase": 3, "at": "2026-07-16T08:36:22Z" },
+    { "phase": 4, "at": "2026-07-16T08:51:02Z" }
   ],
-  "resus_sessions": [
-    {
-      "started_at": "2026-07-16T08:55:10Z",
-      "events": [
-        { "type": "rhythmuskontrolle", "at": "2026-07-16T08:57:10Z" },
-        { "type": "adrenalin",         "at": "2026-07-16T08:58:02Z" },
-        { "type": "defibrillation",    "at": "2026-07-16T08:59:15Z" },
-        { "type": "rosc",              "at": "2026-07-16T09:06:40Z" }
-      ]
-    }
-  ],
+  "ort_huelle": "AQSx3…(Base64, Einsatzhülle, 3.4)…",
   "track": {
     "seq_from": 0,
-    "points": [
-      [47.72611, 10.31862, 712.0, 1784279465],
-      [47.72640, 10.31901, 713.5, 1784279475]
-    ]
+    "punkte": 2,
+    "ts_von": 1784279465,
+    "ts_bis": 1784279475,
+    "huelle": "AQT9k…(Base64, Spurstück, 3.4)…"
   }
 }
 ```
+
+**Bis Web 22.0.0** trugen `phases[]` die Koordinate (`lat`, `lon`), die
+Reanimation stand als `resus_sessions[]` im Klartext und `track.points[]`
+als Liste aus `[lat, lon, ele_m, epoch_s]`. Alle drei weist der Server seit
+Web 22.0.1 mit `400 klartext` ab (Abschnitt 2).
 
 Regeln:
 
 - `ended_at` ist `null`, solange `final: false`.
 - `phases[]` enthält **alle bisher gesetzten** Phasen-Zeitstempel (vollständige Liste, kein Delta) — der Server ersetzt die Phasenliste des Einsatzes bei jedem Upload. **Mehrfache Einträge derselben Phasennummer sind erlaubt** und bleiben erhalten: Eine erneut gesetzte Phase ist eine Korrektur und damit eine Information. Kein Client und kein Schreibweg darf sie entdoppeln.
-- `resus_sessions` ist eine **Liste** — jede Reanimation des Einsatzes ist ein Eintrag (mehrere pro Einsatz möglich; „Aufzeichnung beenden" auf der Uhr schließt eine Sitzung, ein erneuter Start eröffnet die nächste). Vollständige Liste, Server ersetzt. Das ältere Einzelobjekt `resus` wird aus Kompatibilität weiterhin akzeptiert.
-- `track.points`: Array aus `[lat, lon, ele_m, epoch_s]`. `ele_m` darf `null` sein. Die Sequenznummer des i-ten Punkts ist `seq_from + i`. Muss eine **Liste** sein; ein Objekt mit den Schlüsseln `"0"`, `"1"` … wird abgelehnt.
+- `phases[]` tragen seit Web 22.0.1 **nur Nummer und Zeit**; die Koordinate jeder Phase steht in der Einsatzhülle.
+- `ort_huelle` ist die **Einsatzhülle** (3.4): die Koordinaten aller Phasen und jede Reanimation des Einsatzes (mehrere Sitzungen möglich; „Aufzeichnung beenden" auf der Uhr schließt eine Sitzung, ein erneuter Start eröffnet die nächste). Sie ist immer **vollständig**, kein Delta, und der Server ersetzt sie **zusammen mit der Phasenliste** — nach derselben Regel (3.1). Kommt eine Hülle ohne `phases[]`, legt der Server sie nur ab, wenn noch keine dasteht.
+- `track` ist **ein Spurstück**: `seq_from` (Sequenznummer des ersten Punkts), `punkte` (Anzahl, 1 bis 2000), `ts_von` und `ts_bis` (Zeitraum in Unix-Epochen) im Klartext, dazu `huelle` (3.4). Die Sequenznummer des i-ten Punkts im Stück ist `seq_from + i`. Ein Stück ist eine Einheit: Ist eine Angabe unbrauchbar, scheitert die Anfrage mit `400 payload`, statt ein halbes Stück zu quittieren.
 - `distance_m` / `ascent_m` werden von der Uhr fortlaufend berechnet und beim `final`-Upload als verbindlich übernommen.
 
 ### 3.1 Fehlende und leere Listen — der Unterschied zählt
 
-Für `phases[]` und `resus_sessions[]` gilt:
+Für `phases[]` — und mit ihr seit Web 22.0.1 für die Einsatzhülle, die
+Koordinaten und Reanimation trägt (E-S11-38) — gilt:
 
 | Zustand | Bedeutung | Verhalten des Servers |
 |---|---|---|
@@ -602,9 +647,17 @@ Gezählt wird **nach der Prüfung**: Zehn Einträge, von denen neun gegen
 Abschnitt 3.2 verstoßen, sind ein Eintrag. Die verworfenen erscheinen wie
 gewohnt in `rejected`.
 
-`track.points[]` ist von dieser Regel nicht berührt: Spurpunkte werden
-**angehängt**, nie ersetzt (Abschnitt 2). Eine leere Punktliste speichert
-nichts und löscht auch nichts.
+**Die Reanimation zählt der Server seit Web 22.0.1 nicht mehr**: Sie steht
+in der Hülle, und ob es eine gab, soll er nicht sehen (E-S11-02). Gezählt
+wird nur die Phasenliste; mit ihr wird die Hülle ersetzt oder behalten.
+**Preis:** Ein Gerät, das gleich viele Phasen, aber weniger
+Reanimationsereignisse schickt — es hat seinen Speicher verloren und sendet
+denselben Einsatz neu —, überschreibt eine vollständigere Hülle. Ein Gerät,
+das sich an diesen Vertrag hält, schickt die Reanimation nie kürzer.
+
+`track` ist von dieser Regel nicht berührt: Spurstücke werden
+**angehängt**, nie ersetzt (Abschnitt 2). Ein Paket ohne `track` speichert
+keine Punkte und löscht auch keine.
 
 Der Server nennt einen übergangenen Fall in der Antwort (`kept_*`, siehe
 Abschnitt 5), damit er auf der Uhr auffällt statt still zu verschwinden.
@@ -618,11 +671,10 @@ gesamte Upload scheitert daran nicht.
 |---|---|
 | `phases[].phase` | ganze Zahl 2 bis 9 |
 | `phases[]` | höchstens 500 Einträge je Einsatz |
-| `lat` | −90 bis +90 |
-| `lon` | −180 bis +180 |
-| `resus_sessions[]` | höchstens 20 je Einsatz |
-| `resus_sessions[].events[]` | höchstens 200 je Sitzung |
-| `track.points[]` | höchstens 2000 je Anfrage (Richtwert 500, siehe Abschnitt 6) |
+| `track.punkte` | 1 bis 2000 je Anfrage (Richtwert 500, siehe Abschnitt 6) |
+| `track.huelle` | Gerätehülle (3.4), 130 Byte bis 2000 × 14 + 146 Byte |
+| `ort_huelle` | Gerätehülle (3.4), 130 Byte bis 256 KB |
+| in der Einsatzhülle | `lat` −90 bis +90, `lon` −180 bis +180, höchstens 20 Sitzungen zu je 200 Ereignissen — **geprüft vom Gerät beim Erzeugen und vom Browser beim Öffnen**, nicht vom Server (E-S11-13) |
 | `client_ref` | höchstens 64 Zeichen |
 | `day_ref` | höchstens 64 Zeichen; ein unbrauchbarer Wert verwirft die **Kennung**, nicht den Upload — ohne sie greift die Rückfallebene |
 | `day` | `YYYY-MM-DD`, muss ein **existierender Kalendertag** sein |
@@ -649,6 +701,65 @@ keine erzeugen, die nicht darin stehen.
 Unbekannte Arten werden vom Server verworfen und gemeldet; ein freier Text
 ließe sich in der Weboberfläche später nicht darstellen.
 
+### 3.4 Die Gerätehülle — seit Web 22.0.1 (S11-04a)
+
+Das Format **Fassung 1** steht im Kopf von `tools/proben/huelle/referenz.py`,
+und nur dort; dort stehen auch die Prüfvektoren, gegen die Server, Browser,
+Uhr und Handy laufen. Kurz: Kennbyte `0x01` · flüchtiger öffentlicher
+Schlüssel (65 Byte, SEC1) · IV (16) · AES-256-CBC · HMAC-SHA256 (32), mit
+ECDH auf P-256 gegen den Kontoschlüssel aus der Kopplung (1a.3a) und HKDF.
+Übertragen als **Base64**.
+
+**Die Bindung** geht in die HMAC und steht nicht in der Hülle: Art,
+`client_ref` des Eigentümers und Platz. Wer öffnet, setzt sie aus dem
+Datensatz zusammen; eine Hülle, die an einen anderen Einsatz gehängt wird,
+geht dort nicht auf.
+
+| Hülle | Art | Platz | Innen |
+|---|---|---|---|
+| Spurstück eines Einsatzes | `spur` | `<seq_from>:<punkte>` | binär |
+| Spurstück eines Ruhesegments | `ruhe` | `<seq_from>:<punkte>` | binär |
+| Einsatzhülle (`ort_huelle`) | `einsatz` | leer | JSON |
+
+**Innen, Spurstück** (E-S11-31, -39, -66): je Punkt 14 Byte, big-endian —
+Breite und Länge in 1e-7 Grad (`int32`), Höhe in **ganzen Metern** (`int16`,
+von der Null weg gerundet, auf ±32 767 geklemmt), Zeit in Sekunden **relativ
+zu `ts_von`** (`uint32`). **Ein Punkt ohne Höhe trägt `-32768`.** Bis zum
+16.10.2026 stand die Höhe in Dezimetern; das reichte nur bis 3276,7 m und lief
+im Hochgebirge still über (F-S11-64). Kein Gerät hat das alte Maß je
+gesendet — die Uhr-App verschließt seit Uhr 4.0.0 (S11-08), das Handy seit
+Android 0.18.0 (S11-09).
+
+**Geräte senden nur diese Form (Stufe 1).** Die Stufen 2 und 3 — zusammengefügt
+und gepackt, ausgedünnt — entstehen seit Web 22.6.0 im Wartungslauf des
+Browsers und haben eine eigene Innenform (gepackte Spalten, Ort
+`seq_from:punkte:stufe:n_original`, `docs/Technik.md` 4.99s). Ein Gerät sieht
+davon nur die Wirkung auf die Marke: Unter `seq_from + n_original` eines
+gepackten Stücks ist alles schon da, und ein Stück über der Marke einer
+ausgedünnten Spur zählt als `dropped_points`.
+
+**Innen, Einsatzhülle** (E-S11-40): JSON, UTF-8, alle Zeiten in Sekunden
+**seit `started_at`** (E-S11-18), damit eine Verschiebung des Diensttags die
+Hülle nicht ungültig macht:
+
+```json
+{ "fassung": 1,
+  "phasen": [ { "phase": 4, "t": 1197, "lat": 47.5601, "lon": 10.7002 } ],
+  "rea": [ { "t": 1445, "ereignisse": [ { "art": "adrenalin", "t": 1617 } ] } ] }
+```
+
+`phasen[]` steht in derselben Reihenfolge wie `phases[]` der Nachricht;
+`lat` und `lon` dürfen `null` sein (Phase ohne Ortung). `rea[]` ist die
+Liste der Sitzungen, `art` eine Reanimationsart aus 3.3.
+
+**Auch das Einsatzformular schreibt sie** (seit Web 22.1.0, S11-05b): Der
+Browser verschließt eine Einsatzhülle desselben Formats, wenn ein Einsatz im
+Web gespeichert wird — bei einem dort angelegten Einsatz gebunden an eine
+`client_ref` der Form `man-` und 16 Hexziffern. Die Zeiten rechnet er wie der
+Server (`docs/Technik.md` 4.99s); einem Gerät gegenüber ändert sich nichts.
+Ein so gespeicherter Einsatz trägt `uhr_gesperrt = 1`, und eine nachliefernde
+Uhr ersetzt seine Hülle nicht.
+
 ## 4. Nachricht `rest_segment` (Ruhe-Track-Segment)
 
 Periodisch (z. B. stündlich bzw. bei Verbindung) und beim Beenden des Segments (Einsatzbeginn oder „Einsatztag beenden") mit `final: true`.
@@ -664,9 +775,10 @@ Periodisch (z. B. stündlich bzw. bei Verbindung) und beim Beenden des Segments 
   "final": false,
   "track": {
     "seq_from": 240,
-    "points": [
-      [47.72611, 10.31862, 712.0, 1784275331]
-    ]
+    "punkte": 1,
+    "ts_von": 1784275331,
+    "ts_bis": 1784275331,
+    "huelle": "AQSf2…(Base64, Art ruhe)…"
   }
 }
 ```
@@ -698,7 +810,7 @@ Zusätzlich können auftreten:
 |---|---|
 | `rejected` | verworfene Einzelwerte, nach Ursache gezählt (z. B. `phases.phase: ausserhalb von 2…9` → 2) |
 | `kept_phases` | die gesendete Phasenliste wurde übergangen (leer oder kürzer als der vorhandene Stand, **oder das Ersetzfenster ist zu**); der Wert nennt die **Anzahl der behaltenen** Einträge |
-| `kept_resus` | dasselbe für die Reanimationssitzungen |
+| `kept_ort` | die gesendete **Einsatzhülle** wurde übergangen — mit der Phasenliste (3.1), wegen des Ersetzfensters, oder weil eine Hülle ohne `phases[]` kam und schon eine dasteht; Wert immer `1` (seit Web 22.0.1). **`kept_resus` gibt es seitdem nicht mehr**: Der Server zählt Reanimationen nicht |
 | `kept_points` | die gesendeten Punkte wurden **nicht angehängt**, weil das Ersetzfenster zu ist; der Wert nennt ihre Anzahl. Sie sind quittiert (`next_seq` wandert weiter), die Uhr darf sie löschen |
 | `kept_meta` | die gesendeten **Metadaten** (`ended_at`, `final`, `distance_m`, `ascent_m` — beim Ruhesegment `ended_at` und `final`) wurden übergangen, weil das Ersetzfenster zu ist; Wert immer `1`. Ein spätes Abschlusspaket ist damit von einem Erfolg unterscheidbar — der Datensatz bleibt, wie er war, auch wenn er noch „läuft" |
 | `dropped_points` | Punkte, die der Server nach der **Ausdünnung** der Spur nicht mehr annimmt (S2, E-S2-08). Sie sind quittiert; die Uhr darf sie löschen. Erscheint nur, wenn tatsächlich verworfen wurde, und ist **kein** Datenfehler — deshalb steht es nicht in `rejected` |
@@ -751,6 +863,7 @@ Fehler:
 | Code | Body | Bedeutung / Verhalten der Uhr |
 |---|---|---|
 | 400 | `{"error":"payload"}` | Nachricht fehlerhaft — nicht wiederholen, lokal als fehlerhaft markieren |
+| 400 | `{"error":"klartext","grund":"…"}` | **Ortsdaten im Klartext** (seit Web 22.0.1): `track.points`, eine Phase mit `lat`/`lon` oder eine Reanimation. Das Gerät ist in einer alten Fassung — **parken, nicht verwerfen**, und „Neu koppeln" anzeigen; nach dem Aktualisieren sendet es dasselbe verschlossen |
 | 401 | `{"error":"auth"}` | Schlüssel ungültig — Upload pausieren, Hinweis anzeigen |
 | 405 | `{"error":"method"}` | Falsche HTTP-Methode |
 | 413 | `{"error":"too_large"}` | Chunk zu groß — Uhr halbiert die Chunk-Größe und wiederholt |

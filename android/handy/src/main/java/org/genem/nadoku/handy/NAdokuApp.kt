@@ -86,6 +86,11 @@ class NAdokuApp : Application() {
             netzweg = HttpNetzweg(),
             tresor = tresor,
             phasenLeser = { paketId -> puffer.phasen(paketId) },
+            // Fehlt der Kontoschlüssel, holt der Sendelauf ihn über `status`
+            // nach (S11-09, E-S11-80) — auf demselben Faden, ohne Bildschirm.
+            schluesselHolen = {
+                org.genem.nadoku.handy.kopplung.Kopplungsdienst(HttpNetzweg(), tresor).schluesselHolen()
+            },
         )
     }
 

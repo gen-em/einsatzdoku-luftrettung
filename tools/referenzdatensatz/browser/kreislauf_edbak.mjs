@@ -58,6 +58,14 @@ const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await chromium.launch();
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
+/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+   Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
+   und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
+   eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
+     Abbruch schriebe einen Fehler in die Konsole. Gemessen wird er in seiner
+     eigenen Probe. */
+await kontext.route('**/api/wartungslauf.php', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '{"ok":true,"spuren":[],"aufzeichnungen":0,"diensttage":0}' }));
 const seite = await kontext.newPage();
 const konsole = [];
 seite.on('console', m => { if (m.type() === 'error' && !KACHELFEHLER.test(m.text())) konsole.push(m.text()); });
@@ -78,7 +86,23 @@ async function anmelden(mail, pw) {
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
-  return !seite.url().includes('login.php');
+  if (seite.url().includes('login.php')) { return false; }
+  /* DAS SCHLÜSSELPAAR ABWARTEN (F-S11-71). Die erste Seite nach der
+     Anmeldung legt es still an; wer vorher weitergeht, bricht das Anlegen ab,
+     das Anmelde-Token ist verbraucht, und das Einspielen meldet „kein
+     Schlüsselpaar". Am 16.10.2026 einmal so geschehen. */
+  for (let i = 0; i < 40; i++) {
+    const stand = await seite.evaluate(async () => {
+      try {
+        const a = await EdApi.postJson('api/kontopaar.php', { aktion: 'zustand' });
+        return a && a.ok && a.daten ? a.daten.stand : null;
+      } catch (e) { return null; }
+    }).catch(() => null);
+    if (stand === 'da') { return true; }
+    await seite.waitForTimeout(500);
+  }
+  befunde.push('Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar');
+  return true;
 }
 
 async function rueckfragen(hoechstens = 4) {

@@ -248,22 +248,32 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   25.09.2026, obwohl er seit Web 6.2.0 im Block liegt — gefunden von der
   Gegenprüfung in Konzept BV, F-BV-13.)* Klartext dieser Felder geht nie an den Server, in
   ein Log oder in eine API-Antwort.
+  **Seit S11 (Web 22, Uhr 4.0.0, Android 0.18.0) ebenso verschlossen:** die
+  GPS-Spur, die Koordinate **jeder Phase** (Phase 4 und 5 sind der
+  Einsatzort) und der **Reanimationsverlauf** — in der **Gerätehülle**:
+  Uhr, Handy und Browser verschließen mit dem öffentlichen Teil des
+  Schlüsselpaars des Kontos, öffnen kann nur der Browser mit dem privaten
+  Teil unter dem Inhaltsschlüssel; der Server nimmt Klartext nicht mehr an
+  (`400 klartext`). **Transportziel samt Koordinate und Ortshöhe** liegen im
+  `pat_blob` (Feldkatalog, `'store' => 'pat'`). Format und Katalog:
+  `docs/Technik.md` 4.98 und 4.99s.
   **Im Klartext liegen dagegen:** die **Notizen des Diensttags**
-  (`days.notes` — Betriebsnotizen, nicht die des Einsatzes), die GPS-Spur, die
-  Koordinate **jeder Phase** (Phase 4 und 5 sind der Einsatzort),
-  `site_ele_m`, das Transportziel samt Koordinate, Zeiten,
-  Reanimationsverlauf und Besatzungsnamen. Aus Spur und
-  Phasenkoordinaten **lässt sich der Einsatzort rekonstruieren** — die
-  Verschlüsselung der Adresse verbirgt ihn nicht. Wer das aufweichen oder
-  ausweiten will, findet den Weg in `docs/konzepte/Konzept-V1-Ortsdaten.md`
-  (Weg B) und Backlog Nr. 43; wer die Zusage zitiert, zitiert diesen Absatz
-  vollständig oder gar nicht.
-  **Die Klartextliste ist ein Zustand, kein Ziel:** Spur,
-  Phasenkoordinaten, Reanimationsverlauf **und das Transportziel samt
-  Koordinate** sollen in **S11** (Schritt 12a, R78) verschlüsselt werden —
-  das kehrt die Klartext-Entscheidung zur Zielklinik im Feldkatalog um.
-  Bis dahin gilt der Absatz oben unverändert; einzeln vorgezogen wird
-  nichts davon, weil die Phasenkoordinate „Ankunft Klinik" daneben stünde.
+  (`days.notes` — Betriebsnotizen, nicht die des Einsatzes), **Zeiten** und
+  **Nummern der Phasen**, der **Umriss der Spurstücke** (Nummern,
+  Punktzahl, Zeitraum, Stufe), Strecke, Anstieg und Besatzungsnamen. Über
+  die Zeiten findet einen Einsatz, wer weiß, wann er war — Ort, Spur,
+  Klinik und Reanimation findet er nicht mehr.
+  **Mit vier Grenzen, die zur Zusage gehören:** (1) **Altbestand** von vor
+  Web 22 liegt im Klartext, bis der Browser des Kontos ihn umzieht
+  (Einmalwerkzeug, Statuszeile „Ortsdaten"); die alten Spalten fallen erst
+  mit der Aufräumauslieferung (S11-12). (2) **Sicherungen von vor S11**
+  tragen den Klartext, bis sie gelöscht sind (E-S11-10). (3) Die **Puffer
+  auf Garmin und Handy** sind Klartext bis zum Senden (Bedrohungsmodell,
+  Lage H). (4) Der öffentliche Schlüssel kommt **ohne zweiten Kanal** vom
+  Server; wer den Server beschreibt, tauscht ihn. Wer die Zusage zitiert,
+  zitiert diesen Absatz vollständig oder gar nicht. *(Bis S11-11 stand
+  hier, Spur, Phasenkoordinaten, Reanimation und Transportziel lägen im
+  Klartext — das war der Stand bis Web 21.)*
   **Der Weg ins Blob führt über den Feldkatalog** (`'store' => 'pat'` in
   `mission_fields.php`), nicht über handgeschriebenes Markup: `mf_ist_spalte()`
   nimmt ein solches Feld dann von selbst aus jedem `SELECT`, `INSERT` und
@@ -317,7 +327,9 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   SHA-256 im Dateikopf. Eine neue Abhängigkeit wird lokal vendoriert und
   ebenso dokumentiert.
 - **Gemeinsame Prüfschicht.** Einsatzdaten laufen über `validate_lib.php` —
-  alle Schreibwege, ohne Ausnahme.
+  alle Schreibwege, ohne Ausnahme. An einem verschlossenen Wert (Gerätehülle,
+  `pat_blob`) prüft sie **Form und Größe**, nicht den Inhalt — den prüfen
+  das Gerät beim Erzeugen und der Browser beim Öffnen (E-S11-13).
 - **Feldkatalog statt Sonderfall.** Zusatzfelder werden in
   `mission_fields.php` beschrieben; Formular, Speichern, API und Anzeige ziehen
   von selbst nach. Ein neues Feld, das an fünf Stellen von Hand eingebaut wird,
@@ -333,7 +345,9 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   Schnittstelle — deshalb laufen die Prüffälle ohne Play-Dienste, und deshalb
   ist die eine proprietäre Bibliothek des Projekts auf eine Datei begrenzt
   (`docs/Lizenzen.md` 6a). Ein Aufruf am Weg vorbei ist ein Fehler.
-- **Spuren nur über `spur_lib.php`.** Seit Web 10.0.0 liegen GPS-Punkte je
+- **Spuren nur über `spur_lib.php`.** Seit Web 22 liegen GPS-Punkte als
+  verschlossene Stücke in `track_stuecke` (SPUR2, `spur2_…`); bis zur
+  Aufräumauslieferung (S11-12) daneben der Altbestand: seit Web 10.0.0 je
   nach Alter als Zeilen in `track_points` **oder** als Blob in `track_blobs`
   (Format SPUR1) — und während einer Nachlieferung als beides. Wer eine der
   beiden Tabellen unmittelbar per SQL liest, schreibt oder löscht, zeigt oder
@@ -434,7 +448,7 @@ Arbeitsumgebung, ihre Ausbaustufen, die sieben Umgebungswerte und was sie
 6. **Geschichte steht im Commit, nicht im Werkzeug.**
 7. **Kein stilles Überspringen, keine grüne Zahl ohne Gegenstand.**
 
-Vier Sätze, die beim Arbeiten im Kopf sein müssen:
+Fünf Sätze, die beim Arbeiten im Kopf sein müssen:
 
 - **Die Prüfmittel laufen zuletzt**, nach der letzten Änderung — erst Code,
   dann Dokumentation, dann die Mittel. Ein Werkzeug, das davor lief, misst
@@ -449,6 +463,14 @@ Vier Sätze, die beim Arbeiten im Kopf sein müssen:
   diesem Container nicht läuft, ist ein **Befund mit Zahl** — welches
   Abbild, welche Fassung, welche Meldung —, kein stillschweigend
   übersprungener Punkt.
+- **Den Prüfstand im Zug abwarten, nicht im Hintergrund ruhen lassen.**
+  Mit `nohup` starten, die PID merken und in Abschnitten von höchstens
+  9½ Minuten auf sie warten (`timeout 570 tail --pid=<PID> -f /dev/null`),
+  einen nach dem anderen, bis er endet. Beendet die Sitzung ihren Zug und
+  wartet auf eine Benachrichtigung, wird der Container abgeräumt — am
+  16.10.2026 zweimal nach 37 und 41 Minuten (`Terminated`, F-S11-62). Nach
+  einem Neustart die ganze Startfolge aus `docs/Sandbox-Setup.md` 6.1a
+  fahren; ein abgebrochener Prüfstand ist kein Bericht.
 
 Drei Regeln haben schon Schaden angerichtet, als sie nirgends standen. Sie
 stehen ausgeführt in `docs/Pruefablauf.md` und **nur dort**; hier steht, dass

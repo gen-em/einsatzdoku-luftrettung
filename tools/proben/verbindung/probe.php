@@ -127,6 +127,9 @@ if ($rootPdo === null) {
 
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/konto_lib.php';
+/* Seit S11-04a sendet die Probe wie ein Geraet ab Web 22: verschlossen. */
+require_once dirname(__DIR__) . '/huelle/geraet.php';
+$ghSec1 = gh_probe_paar()['sec1'];
 
 
 $pdo = db();
@@ -275,10 +278,12 @@ function paket(string $ref, int $n): array {
         $punkte[] = [47.0 + $i * 0.0002, 11.0 + $i * 0.0002, 700.0 + $i * 0.5,
                      time() - 3600 + $i * 5];
     }
-    return ['kind' => 'mission', 'client_ref' => $ref,
+    $koerper = ['kind' => 'mission', 'client_ref' => $ref,
             'day' => substr($ts, 0, 10), 'started_at' => $ts,
             'ended_at' => null, 'final' => false,
             'track' => ['seq_from' => 0, 'points' => $punkte]];
+    global $ghSec1;
+    return gh_probe_koerper($koerper, $ghSec1);
 }
 
 try {
@@ -567,9 +572,10 @@ $inDb = (int)$q->fetchColumn();
 pruefe($inDb === $pakete * $runden, '0 verlorene Uploads: jedes Paket steht in der Datenbank',
        "$inDb von " . ($pakete * $runden));
 
-$q = $pdo->prepare('SELECT COUNT(*) FROM track_points tp
-                      JOIN missions m ON m.id = tp.owner_id
-                     WHERE tp.owner_type = ? AND m.user_id = ? AND m.client_ref LIKE ?');
+/* Seit S11-04a die Punkte der Stuecke (SPUR2), nicht mehr Zeilen. */
+$q = $pdo->prepare('SELECT COALESCE(SUM(ts.punkte), 0) FROM track_stuecke ts
+                      JOIN missions m ON m.id = ts.owner_id
+                     WHERE ts.owner_type = ? AND m.user_id = ? AND m.client_ref LIKE ?');
 $q->execute(['mission', $uid, 'vp-%']);
 $punkte = (int)$q->fetchColumn();
 pruefe($punkte === $pakete * $runden * 20, '... samt aller Spurpunkte',

@@ -934,6 +934,9 @@ async function entschluesselePat(){
     if (o.loc && o.loc.lat != null) {
       m._lat = o.loc.lat; m._lon = o.loc.lon; m._addr = o.loc.addr;
     }
+    /* Die Hoehe des Einsatzorts (Kachel „Hoechster Einsatzort") liegt seit
+       S11-05b im Blob; gesperrt bleibt die Kachel leer. */
+    if (o.ortshoehe != null) { m.site_ele_m = Number(o.ortshoehe); }
   }
   EdPat.zeigeUnlesbar(zahl);
   /* Immer neu zeichnen: Die Tabelle hat jetzt Ort, Alter und Diagnose, und

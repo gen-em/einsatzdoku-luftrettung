@@ -180,7 +180,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
       </form>
       <?= ui_meldung_markup('warn', 'Die Hintergrundarbeit ist angehalten bis '
           . datum_zeit_text($jobPause) . '. Bis dahin wird nichts '
-          . 'verdichtet, ausgedünnt, aufgeräumt, gesichert oder versendet — '
+          . 'aufgeräumt, gesichert oder versendet — '
           . 'auch das Komplett-Backup nicht. Die Pause läuft von selbst ab.',
           '', ui_knopf(['text' => 'Pause aufheben', 'art' => 'neutral',
                         'typ' => 'submit', 'attr' => ' form="f-jobpause-aus"'])) ?>
@@ -211,49 +211,6 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         ui_zeile(['text' => (string)$j['titel'], 'klein' => $klein,
                   'plaketten' => $plaketten]);
       ?>
-      <?php
-        /* WAS LIEGENGEBLIEBEN IST, MIT KENNUNG (S2/AP3, E-S2-06).
-         *
-         * „3 Spuren mit Lücke" gibt der Betreiberin nichts in die Hand,
-         * `mission:412` gibt ihr einen Fall. Die Listen stehen im Jobzustand —
-         * sie fallen im Lauf ohnehin an, ihre Anzeige kostet also keine
-         * einzige zusätzliche Abfrage. Gekappt bei JOB_LISTE_MAX je Art.
-         *
-         * Angezeigt wird der Stand des letzten VOLLSTÄNDIGEN Durchlaufs;
-         * während eines laufenden zeigte die Liste sonst eine Mischung, in der
-         * behobene Fälle stehenbleiben. */
-        $zst   = json_decode((string)($j['zustand'] ?? ''), true);
-        $stand = is_array($zst) ? ($zst['stand'] ?? []) : [];
-        $benennung = [
-            /* JE KLEINZEILE EIN SATZ (P5c/AP9, E-P5c-06); die Begründungen
-             * stehen im Handbuch 12.4, „Was liegenbleibt und warum". */
-            'luecke'      => ['Lücke in der Nummernfolge',
-                              'Wird nicht verdichtet — meist hat eine Uhr ein Teilstück '
-                            . 'nie nachgeliefert.'],
-            'zu_gross'    => ['Zu viele Punkte',
-                              'Über 50 000 Punkte je Aufzeichnung — bleibt als Zeilen '
-                            . 'stehen, weil ein Backup sie nicht wiederherstellen könnte.'],
-            'stufe3'      => ['Punkte auf ausgedünnten GPS-Daten',
-                              'Hier sollte null stehen.'],
-            'nachzuegler' => ['Wartet auf die Verdichtung',
-                              'Es sind noch Punkte nachgekommen; sie werden erst '
-                            . 'verdichtet, dann ausgedünnt.'],
-            'fehler'      => ['Prüfung nicht bestanden',
-                              'Die Rundlauf- oder Ausdünnungsprüfung hat angeschlagen; '
-                            . 'gelöscht oder ersetzt wurde nichts.'],
-        ];
-        foreach ($benennung as $art => [$titel, $erklaerung]):
-            $liste = $stand[$art] ?? [];
-            if (!$liste) { continue; }
-      ?>
-        <?php ui_zeile([
-            'text'  => $titel,
-            'klein' => $erklaerung . ' — ' . implode(', ', array_slice($liste, 0, 12))
-                     . (count($liste) > 12 ? ' …' : ''),
-            'plaketten' => ui_plakette((string)count($liste),
-                ['ton' => $art === 'nachzuegler' ? 'neutral' : 'orange']),
-        ]); ?>
-      <?php endforeach; ?>
     <?php endforeach; endif; ?>
     <?php /* ANHALTEN OHNE KOMMANDOZEILE (Backlog Nr. 118). Hier stand bis
              Web 19.3.0: „Anhalten nur auf der Kommandozeile ... Ein Knopf dafür
@@ -283,7 +240,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
           <?= ui_knopf(['text' => 'Jobs anhalten', 'art' => 'neutral',
                         'typ' => 'submit',
                         'attr' => ' data-confirm="Während der Pause wird nichts '
-                                . 'verdichtet, ausgedünnt, aufgeräumt, gesichert '
+                                . 'aufgeräumt, gesichert '
                                 . 'und versendet — auch das geplante '
                                 . 'Komplett-Backup nicht."'
                                 . ' data-confirm-ok="Anhalten"'
