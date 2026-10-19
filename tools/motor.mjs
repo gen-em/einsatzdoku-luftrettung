@@ -72,7 +72,14 @@ export async function starten(pw, name, { finger = false, optionen = {} } = {}) 
   const auf = (name === 'firefox' && !finger)
     ? { ...optionen, firefoxUserPrefs: { ...ZEIGER_FIREFOX, ...(optionen.firefoxUserPrefs || {}) } }
     : { ...optionen };
-  return await pw[name].launch(auf);
+  const browser = await pw[name].launch(auf);
+  /* DER BELEG, WELCHE ENGINE LIEF (R87, Konzept DM). Eine Probe, die
+   * „grün in Firefox" meldet, aber still Chromium startete, wäre die
+   * schmeichelhafte Null aus dem Kopf dieser Datei. Die Zeile geht nach
+   * stderr, damit sie keine Ausgabe stört, die ein Aufrufer liest, und
+   * steht in jedem Protokoll des Prüfstands. */
+  console.error(`Motor: ${name} ${browser.version()}`);
+  return browser;
 }
 
 /* ===========================================================================

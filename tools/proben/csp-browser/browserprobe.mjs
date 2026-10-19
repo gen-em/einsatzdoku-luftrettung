@@ -32,7 +32,7 @@
  * Rueckgabewert: 0 = alle Erwartungen erfuellt · 1 = mindestens eine nicht.
  */
 /* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
-import { codeSchritt } from '../../motor.mjs';
+import { codeSchritt, motorWahl, starten } from '../../motor.mjs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -45,8 +45,9 @@ const php = code => execFileSync('php', ['-r', 'require "server/db.php"; ' + cod
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
-const { chromium } = PW;
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const argv  = process.argv.slice(2);
 const wert  = (n, v) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : v; };
@@ -56,7 +57,7 @@ const ADMIN = { email: wert('--admin', 'admin@example.invalid'),
 const erg = [];
 const ok = (n, b, d = '') => { erg.push([b, n, d]); };
 
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: true,
                                            viewport: { width: 1440, height: 1000 } });
 const seite = await kontext.newPage();
@@ -179,23 +180,31 @@ const kacheln = await seite.evaluate(() => document.querySelectorAll('img.leafle
 ok('Karte stellt Kachelanfragen', kacheln > 0, `${kacheln} Kachel-Elemente im Baum`);
 const HOSTS = ['tile.openstreetmap.org', 'tile.openmaps.fr',
                'a.tile.opentopomap.org', 'server.arcgisonline.com'];
-const cspSperren = [];
-seite.on('console', m => {
-  if (m.type() === 'error' && /Refused to load the image/i.test(m.text())) {
-    cspSperren.push(m.text());
-  }
-});
+/* GEZÄHLT WIRD DAS EREIGNIS, NICHT DIE KONSOLE (Konzept DM, F-DM-03). Bis
+ * zum 19.10.2026 zählte die Probe Konsolenzeilen „Refused to load the
+ * image" — so schreibt sie nur Chromium. Firefox schreibt „blocked the
+ * loading of a resource (img-src)", WebKit „does not appear in the img-src
+ * directive", und die Gegenprobe war in beiden rot, obwohl die Richtlinie
+ * sperrte. `securitypolicyviolation` ist das Ereignis, das alle drei Engines
+ * nach der Spezifikation feuern; gezählt wird nur eine DURCHGESETZTE
+ * Sperre (`disposition` „enforce") für `img-src` auf genau diesen Host. */
 const bildProbe = async (host) => {
-  cspSperren.length = 0;
-  await seite.evaluate(h => new Promise(aufl => {
+  const sperren = await seite.evaluate(h => new Promise(aufl => {
+    let n = 0;
+    const hoer = e => {
+      if (e.disposition === 'enforce' && /^img-src/.test(e.effectiveDirective || e.violatedDirective || '')
+          && String(e.blockedURI || '').includes(h)) { n++; }
+    };
+    document.addEventListener('securitypolicyviolation', hoer);
+    const fertig = () => setTimeout(() => {
+      document.removeEventListener('securitypolicyviolation', hoer); aufl(n); }, 400);
     const i = document.createElement('img');
+    i.onload = i.onerror = fertig;
     i.src = `https://${h}/0/0/0.png`;
-    i.onload = i.onerror = () => aufl();
     document.body.appendChild(i);
-    setTimeout(aufl, 2500);
+    setTimeout(fertig, 2500);
   }), host);
-  await seite.waitForTimeout(400);
-  return cspSperren.length;
+  return sperren;
 };
 
 /* ---- 6. Scharf schalten und den Einschleuse-Versuch messen -------------- */

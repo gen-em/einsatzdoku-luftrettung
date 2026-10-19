@@ -12,7 +12,7 @@ selbst kam nicht zum Laufen (fehlende Datei, unbekannter Schalter, kein Git).
 
 MIT EINEM WERKZEUG UND NICHT MIT EINER SHELL-ZEILE (E-P5a-12): Eine Zeile,
 die einen Wert aus Text zieht, ist die Stelle, an der ein Riegel still
-durchlässt. Hier ist jede der fünf roten Lagen eine Funktion mit einem
+durchlässt. Hier ist jede der sechs roten Lagen eine Funktion mit einem
 Prüffall in `--selbstprobe`.
 
 Anlass: O9c — gemessen wurde vor der letzten Änderung, gemeldet wurde die
@@ -173,9 +173,12 @@ def beruehrt(basis, commit):
     return [d for d in dateien if d]
 
 
+MOTOREN = 'chromium+firefox+webkit'
+
+
 def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=None,
-            stufe_verlangt=None, riegel_namen=None):
-    """Die fünf roten Lagen. Gibt eine Liste von Beanstandungen zurück."""
+            stufe_verlangt=None, riegel_namen=None, motoren_namen=None):
+    """Die sechs roten Lagen. Gibt eine Liste von Beanstandungen zurück."""
     schlecht = []
     if bericht is None:
         return ['Kein Prüfbericht in der Nachricht — der Block fehlt ganz.']
@@ -225,7 +228,7 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
     # Riegel stimmen. Überspringen ist rot (E-KH-12). Riegel und Flächen haben
     # ihre eigene Lage.
     eigene = set(riegel_namen if riegel_namen is not None else lade_ablauf()['riegel']['proben'])
-    eigene |= set(riegel or {}) | set(FLAECHEN)
+    eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren'}
     for name, wert in bericht['werte'].items():
         if name in eigene or wert == '0':
             continue
@@ -233,6 +236,20 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
             schlecht.append(f"Probe „{name}\" ist nicht gemessen — Überspringen ist rot (E-KH-12).")
         else:
             schlecht.append(f"Probe „{name}\" meldet {wert} — ein roter Lauf ist kein Nachweis.")
+
+    # (6) Eine Browserprobe, aber nicht in drei Engines (R87, Konzept DM).
+    # Welche Proben dreifach laufen, sagt `"motoren": true` in
+    # pruefablauf.json; der Prüfstand schreibt dann `motoren=` mit den
+    # Engines, die er gefahren hat. Fehlt die Zeile oder nennt sie weniger,
+    # hat der Bericht eine Browserprobe in einer Engine gemessen — und das
+    # ist seit dem 19.10.2026 kein Nachweis mehr.
+    if motoren_namen is None:
+        motoren_namen = {n for n, p in lade_ablauf()['proben'].items() if p.get('motoren') is True}
+    browser = sorted(n for n in bericht['werte'] if n in motoren_namen)
+    if browser and bericht['werte'].get('motoren') != MOTOREN:
+        schlecht.append(
+            f"Browserproben ({', '.join(browser)}) ohne alle drei Engines: "
+            f"„motoren={bericht['werte'].get('motoren', '(fehlt)')}\", verlangt „{MOTOREN}\" (R87).")
     return schlecht
 
 
@@ -269,7 +286,7 @@ def lesen(args):
 # ------------------------------------------------------------ Selbstprobe
 
 def selbstprobe():
-    """Fünf rote Lagen und eine grüne — jede einzeln, mit Namen.
+    """Die roten Lagen und drei grüne — jede einzeln, mit Namen.
 
     EINE SELBSTPROBE, DIE NUR DEN GRÜNEN FALL FÄHRT, BELEGT NICHTS: Sie
     würde auch dann grün melden, wenn `pruefen()` immer eine leere Liste
@@ -279,10 +296,12 @@ def selbstprobe():
     guter = ('Prüfstand: neben · Baum abc1234 · Konfiguration web\n'
              '  syntax-php=php:486/0  wortliste=0  vollstaendigkeit=0\n'
              '  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n'
-             '  handy=nicht-beruehrt  uhr=nicht-beruehrt\n')
+             '  handy=nicht-beruehrt  uhr=nicht-beruehrt\n'
+             '  motoren=chromium+firefox+webkit\n')
     gebaut = guter.replace('handy=nicht-beruehrt', 'handy=gebaut') + '  android-bau=0\n'
     namen = ['syntax-php', 'wortliste', 'vollstaendigkeit']
     faelle = []
+    drei = {'kreislauf-edbak', 'bilderlauf'}
 
     faelle.append(('grün — Bericht passt zu allem',
                    zerlegen(guter), dict(baum='abc1234', dateien=['server/index.php'],
@@ -322,6 +341,16 @@ def selbstprobe():
     faelle.append(('rot (2b) — Versionsstufe nicht lesbar',
                    zerlegen(guter), dict(baum='abc1234', dateien=[], riegel={},
                                          stufe_verlangt=UNLESBAR, riegel_namen=namen), 1))
+    faelle.append(('rot (6) — Browserproben, aber keine Zeile motoren=',
+                   zerlegen(guter.replace('  motoren=chromium+firefox+webkit\n', '')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (6b) — Browserproben nur in zwei Engines',
+                   zerlegen(guter.replace('chromium+firefox+webkit', 'chromium+firefox')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6) — keine Browserprobe, keine Zeile motoren=',
+                   zerlegen(guter.replace('  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n', '  spurprobe=0\n')
+                            .replace('  motoren=chromium+firefox+webkit\n', '')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 0))
     faelle.append(('rot (0) — gar kein Bericht in der Nachricht',
                    zerlegen('Ein Commit ganz ohne Block.\n'),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
@@ -330,7 +359,7 @@ def selbstprobe():
     for name, bericht, kw, erwartet in faelle:
         # JEDER FALL GEHT DURCH pruefen() — auch der mit der Stufe. Eine
         # Selbstprobe, die den Fall daneben nachbaut, prueft ihren Nachbau.
-        schlecht = pruefen(bericht, **kw)
+        schlecht = pruefen(bericht, motoren_namen=drei, **kw)
         ist = 1 if schlecht else 0
         ok = (ist == erwartet)
         melde(f"  [{'ok  ' if ok else 'FEHL'}] {name}"

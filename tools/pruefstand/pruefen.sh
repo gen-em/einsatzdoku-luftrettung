@@ -85,15 +85,17 @@ fi
 
 # ---- 4. Proben ------------------------------------------------------------
 melde "Proben (${#PROBEN[@]})"
-declare -A ZAHL; fehl=0; nicht=0
+declare -A ZAHL; fehl=0; nicht=0; DREIFACH=0
+MOTOREN=(chromium firefox webkit)
 for name in "${PROBEN[@]}"; do
     aufruf=$(python3 -c "
 import json,sys
 a=json.load(open('$HIER/pruefablauf.json'))
 p=a['proben'].get('$name')
-print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get('demo') is True else '', sep='\t')")
+print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get('demo') is True else '',
+      'drei' if p and p.get('motoren') is True else '', sep='\t')")
     befehl=$(printf '%s' "$aufruf" | cut -f1); braucht=$(printf '%s' "$aufruf" | cut -f2)
-    demo=$(printf '%s' "$aufruf" | cut -f3)
+    demo=$(printf '%s' "$aufruf" | cut -f3); drei=$(printf '%s' "$aufruf" | cut -f4)
     befehl=${befehl//\{stufe\}/$STUFE}   # der Bilderlauf misst je Stufe anders (PK-05)
     if [ -z "$befehl" ]; then
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
@@ -148,6 +150,28 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     fi
     # Die Zeit je Probe steht in der Zeile (RP-01): Die Nebenstufe brauchte
     # 1 266 s, und niemand konnte sagen, wofür.
+    # DREI ENGINES (R87, Konzept DM). Eine Probe mit "motoren": true läuft
+    # einmal je Engine, mit MOTOR=… in der Umgebung — `tools/motor.mjs` liest
+    # es, und jeder Zwischenschritt (php, python, bash) reicht es weiter. Grün
+    # ist sie nur, wenn alle drei grün sind; rot nennt sie, welche nicht.
+    # Fehlt eine Engine, startet sie nicht, und die Probe ist rot — nicht
+    # übersprungen (Grundsatz 7). Bis zum 19.10.2026 lief jede Probe einmal,
+    # in Chromium, auch die, die --motor kannten.
+    if [ -n "$drei" ]; then
+        rot=()
+        for mo in "${MOTOREN[@]}"; do
+            t1=$SECONDS
+            if (cd "$WURZEL" && export MOTOR=$mo && eval "$befehl" >"/tmp/pruefstand-$name-$mo.log" 2>&1); then
+                zeile "ok    $name [$mo]  $((SECONDS - t1)) s"
+            else
+                zeile "ROT   $name [$mo]  $((SECONDS - t1)) s  (siehe /tmp/pruefstand-$name-$mo.log)"; rot+=("$mo")
+            fi
+        done
+        if [ ${#rot[@]} -eq 0 ]; then ZAHL[$name]=0
+        else ZAHL[$name]="rot:$(IFS=,; echo "${rot[*]}")"; fehl=$((fehl+1)); fi
+        DREIFACH=$((DREIFACH+1))
+        continue
+    fi
     t0=$SECONDS
     if (cd "$WURZEL" && eval "$befehl" >/tmp/pruefstand-$name.log 2>&1); then
         zeile "ok    $name  $((SECONDS - t0)) s"; ZAHL[$name]=0
@@ -169,6 +193,10 @@ melde "Bericht"
 args=(schreiben --stufe "$STUFE" --basis "$BASIS"
       --konfiguration "$([ "$STUFE" = haupt ] && echo alles || echo web)")
 for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
+# Welche Engines die dreifachen Proben gefahren haben — Stufe 1 liest es
+# gegen (bericht.py, Lage 6): Ein Bericht mit Browserproben ohne diese Zeile
+# ist rot.
+[ "$DREIFACH" -gt 0 ] && args+=(--zahl "motoren=$(IFS=+; echo "${MOTOREN[*]}")")
 # Ohne Bericht ist der Lauf rot, wie grün die Proben auch waren (BR-04,
 # Nr. 314): Bis dahin endete er hier mit rc 0 und „0 rot", auch wenn
 # bericht.py abgestürzt war — ein Lauf ohne Beleg, der sich als Beleg meldete.

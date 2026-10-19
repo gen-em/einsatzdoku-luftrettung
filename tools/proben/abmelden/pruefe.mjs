@@ -3,10 +3,14 @@
 
    Anlass: Nr. 22 — der neue Datenschluessel (edk_neu) ueberlebte das Abmelden
 */
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import * as PWM from '/opt/node22/lib/node_modules/playwright/index.mjs';
+const PW = PWM.default ?? PWM;
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { motorWahl, starten } from '../../motor.mjs';
 
 const hier  = path.dirname(fileURLToPath(import.meta.url));
 const wurzel = path.resolve(hier, '../../..');           // Projektwurzel
@@ -17,7 +21,7 @@ const srv = spawn('npx', ['--yes', 'http-server', wurzel, '-p', String(PORT), '-
                   { stdio: 'ignore' });
 await new Promise(r => setTimeout(r, 1500));
 
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 const seite   = await browser.newPage();
 const fehler  = [];
 seite.on('pageerror', e => fehler.push('pageerror: ' + e.message));

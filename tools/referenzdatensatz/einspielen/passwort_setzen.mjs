@@ -16,6 +16,7 @@
  * das Admin-Backup fuehrt ihn als `pat_wrap_rc`.
  */
 import { writeFileSync } from 'node:fs';
+import { motorWahl, starten } from '../../motor.mjs';
 
 /* Playwright ueber einen PFAD laden, nicht ueber den Paketnamen.
  *
@@ -26,7 +27,9 @@ import { writeFileSync } from 'node:fs';
  * passt zu einer globalen npm-Installation. */
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const [, , url, passwort, ausgabe] = process.argv;
 if (!url || !passwort) {
@@ -34,7 +37,7 @@ if (!url || !passwort) {
   process.exit(2);
 }
 
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 /* Selbstsigniertes Zertifikat der lokalen Installation zulassen — und NUR
    dort. Gegen eine echte Adresse bleibt die Pruefung an; ein Skript, das sie
    pauschal abschaltet, prueft irgendwann die falsche Gegenstelle. */

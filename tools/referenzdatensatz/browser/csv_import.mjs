@@ -32,10 +32,13 @@
  *     Formularweg, nicht auf dem CSV-Weg (F-P1-G).
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
+import { motorWahl, starten } from '../../motor.mjs';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const basis = process.argv[2] || 'https://127.0.0.1:8443';
 const email = process.argv[3] || 'demo@gen-em.org';
@@ -47,7 +50,7 @@ mkdirSync(ordner, { recursive: true });
 
 const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|opentopomap|arcgisonline/i;
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, viewport: { width: 1500, height: 1100 } });
 const seite = await kontext.newPage();
 const konsole = [];

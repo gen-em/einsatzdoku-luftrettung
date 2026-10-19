@@ -31,14 +31,14 @@ jeder Vergabe).
 >
 > | | |
 > |---|---|
-> | Stand | **19.10.2026 — DM-01 erledigt**, DM-02 als Nächstes |
+> | Stand | **19.10.2026 — DM-02 und DM-03 gebaut**, Prüfstand über alles mit DM-05; DM-04 als Nächstes |
 > | Entschieden | E-DM-01 bis E-DM-07 (Abschnitt 2), alle von der Betreiberin am 19.10.2026 |
 > | Offen | keine Frage |
-> | Umsetzung | **DM-00 erledigt** 19.10.2026 (Fahrplan, R87, Spanne). **DM-01 erledigt** 19.10.2026: `aufbauen.sh web` lädt fehlende Engines nach, neun Bibliotheken (F-DM-01); gemessen 3 von 3 nach Beiseitelegen von Firefox und WebKit. |
+> | Umsetzung | **DM-00 erledigt** 19.10.2026 (Fahrplan, R87, Spanne). **DM-01 erledigt** 19.10.2026: `aufbauen.sh web` lädt fehlende Engines nach, neun Bibliotheken (F-DM-01); gemessen 3 von 3 nach Beiseitelegen von Firefox und WebKit. **DM-02 gebaut:** 22 Werkzeuge auf `starten()` aus `motor.mjs` (Engine aus `MOTOR` oder `--motor`, Zeile `Motor: <name> <fassung>` im Protokoll); `pruefen.sh` fährt 16 Proben mit `\"motoren\": true` je Engine, berichtet `rot:<engines>` und `motoren=chromium+firefox+webkit`; `bericht.py` Lage 6 (16 Lagen, 0 Fehlschläge); Muster `motoren` wählt alle 16, wenn `motor.mjs` oder das Register berührt ist. Einzeln in Firefox und WebKit gefahren: 10 Proben, zwei rot und behoben (F-DM-02, -03). **DM-03 gebaut:** Regel `motoren` im Bestandsriegel, Register `tools/pruefstand/motoren.md` (31 Werkzeuge), Selbstprobe 177 Fälle, 0 Fehlschläge, 110 von 110 Befundstellen. |
 > | Halt | keiner vorgesehen |
 > | Fable-Schritte | keine |
 > | Fächerung | keine (Kopf) |
-> | Nummern | 390 bis 399 reserviert; vergeben: keine. |
+> | Nummern | 390 bis 399 reserviert; vergeben: 390 (Anlass des Riegels), 391 (F-DM-04), 392 (F-DM-02). Frei: 393 bis 399. |
 
 ---
 
@@ -94,6 +94,10 @@ läuft in der Engine der Probe, die ihn ruft.
 
 | Nr. | Gewicht | Fundort | Befund | Folge |
 |---|---|---|---|---|
+| F-DM-02 | mittel | `server/assets/unlock.js` (`kontopaarPflegen()`); `tools/proben/freigabe/probe.mjs` | **Das Schlüsselpaar entsteht nur auf der ersten Seite nach der Anmeldung.** Die Freigabeprobe ging sofort weiter; in Chromium kam das Paar trotzdem an, in Firefox und WebKit in 2 von 2 Läufen nicht („nach 20 s noch keins", 10 von 23 verfehlt). Wartet sie auf der ersten Seite: Paar nach 1152 ms (Firefox), 596 ms (WebKit), 599 ms (Chromium), 23 von 23 in allen drei. | Probe wartet auf der ersten Seite (DM-02). Die Anwendung bleibt, wie sie ist: Backlog Nr. 392 — eine Änderung an `unlock.js` ist eine Web-Fassung und gehört nicht in diesen Schritt. |
+| F-DM-03 | niedrig | `tools/proben/csp-browser/browserprobe.mjs` (`bildProbe`) | **Die CSP-Probe erkannte eine Sperre nur am Wortlaut von Chromium** („Refused to load the image"). Firefox und WebKit schreiben es anders; die Gegenprobe „img-src sperrt einen nicht gelisteten Host" war in beiden rot, obwohl die Richtlinie sperrte. | Gezählt wird jetzt das Ereignis `securitypolicyviolation` (`disposition` „enforce", `img-src`, Host); 37 von 37 in allen drei Engines. |
+| F-DM-04 | niedrig | `tools/pruefstand/motoren.md` | **Elf Browserwerkzeuge ruft kein Prüfstand** — sie laufen nur von Hand, ob sie grün sind, weiß niemand. Darunter die Angriffswerte (R20). | Im Register als „von Hand" mit Grund; Backlog Nr. 391. |
+| F-DM-05 | niedrig | `tools/motor.mjs` (`codeSchritt`) | **Ein Lauf der CSP-Probe in WebKit scheiterte am Zweitfaktor** („Code passt nicht", zweimal), unmittelbar nach einem Lauf in Firefox; der nächste Lauf ging durch. Vermutlich ein Code, den der Lauf davor im selben Zeitfenster verbraucht hatte. | Beobachtet; tritt es im Prüfstand auf, wo die Engines unmittelbar nacheinander laufen, ist es ein Befund mit Zahl. |
 | F-DM-01 | mittel | `tools/sandbox/aufbauen.sh`; `Sandbox-Setup.md` 1 | **WebKit braucht im Abbild vom 19.10.2026 fünf Bibliotheken mehr** als die vier von PK-02: `libgtk-4-1`, `libevent-2.1-7t64`, `libgstreamer-plugins-bad1.0-0`, `libavif16`, `libgles2`. Nach dem Nachladen von WebKit meldete Playwright „Host system is missing dependencies" und nannte sie. Vier davon standen im Sitzungshook vor PK-02 — PK-02 hatte sie verworfen, weil sie damals schon im Abbild lagen. | In `aufbauen.sh` ergänzt (DM-01); danach 3 von 3. |
 
 ## 5. Prüfprotokoll
@@ -101,4 +105,7 @@ läuft in der Engine der Probe, die ihn ruft.
 | Paket | Mittel | Zahl | Datum |
 |---|---|---|---|
 | DM-00 | `pruefen.sh --stufe klein`; `decken.py` | 22 grün, 0 rot · 21 Decken, 0 gerissen (erst 1: R87-Kern 168 Zeichen über 160, gekürzt) | 19.10.2026 |
+| DM-02 | Einzelläufe `MOTOR=firefox|webkit bash tools/proben/proben.sh NAME` | frist, abmelden, container, huelle, gpx, kontopaar, ortsdaten, wartungslauf: je 2 von 2 grün, `Motor:`-Zeile je 1; freigabe 0 von 2 → nach F-DM-02 3 von 3 (23/23); csp-browser 0 von 2 → nach F-DM-03 3 von 3 (37/37) | 19.10.2026 |
+| DM-02 | `bericht.py lesen --selbstprobe` | 16 Lagen, 0 Fehlschläge (13 rote, 3 grüne; neu: 6, 6b, grün 6) | 19.10.2026 |
+| DM-03 | `bestand.py --selbstprobe`; `bestand.py`; Gegenprobe am echten Bestand | 177 Fälle, 0 Fehlschläge, 110 von 110 Befundstellen · 0 Befunde · Zeile der GPX-Probe gestrichen → `motoren-ohne-zeile` und `motoren-verwaist`; `chromium.launch()` eingesetzt → `motoren-direkt`; zurück → 0 | 19.10.2026 |
 | DM-01 | Firefox und WebKit nach `scratchpad/` verschoben, `aufbauen.sh web` | „nachladen: firefox webkit"; Chromium 141.0.7390.37, Firefox 142.0.1, WebKit 26.0; rc 0; 12 s. Nicht gemessen: Nachholen der fünf Bibliotheken aus einem Abbild ohne sie | 19.10.2026 |

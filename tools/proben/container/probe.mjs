@@ -38,10 +38,13 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { motorWahl, starten } from '../../motor.mjs';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = dirname(dirname(HIER));
@@ -67,7 +70,7 @@ console.log(`  Prueffutter (Nutzlast 13): ${futter.spuren.length} Spuren `
           + `zu je ${futter.punkte['1'].length} Punkten`);
 
 const ordner = mkdtempSync(join(tmpdir(), 'containerprobe-'));
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 
 /* Auch gegen die HTTPS-Fassung der oertlichen Installation, deren Zeugnis
    selbst ausgestellt ist. Ohne diese Zeile brach die Probe dort mit

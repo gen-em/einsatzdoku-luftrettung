@@ -51,6 +51,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { naechsterCode } from '../../zweitfaktor/totp.mjs';
+import { motorWahl, starten } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
@@ -66,18 +67,15 @@ const ADMIN  = [wert('--admin', 'admin@example.invalid'), wert('--admin-pw', 'pr
 const KONTO  = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const PASSWORT = 'umlaufpruefung2026-rueckweg';
 const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
-/* Der Motor (RW-04, Backlog Nr. 300): Vorgabe Chromium, wie in der Kette.
- * Firefox und WebKit fährt man von Hand — sie starten in diesem Container
- * (F-RW-02, Nr. 301); die Kontoanlage bleibt in Chromium, gemessen wird der
- * Rückweg selbst im gewählten Motor. */
-const MOTOR = wert('--motor', 'chromium');
-if (!['chromium', 'firefox', 'webkit'].includes(MOTOR)) {
-  console.error(`Unbekannter Motor: ${MOTOR} (chromium, firefox, webkit)`); process.exit(2);
-}
+/* Der Motor (RW-04, Backlog Nr. 300; seit R87 über `tools/motor.mjs`):
+ * `--motor` oder MOTOR=…, Vorgabe Chromium. Der Prüfstand und Stufe 2
+ * fahren alle drei (Konzept DM); die Kontoanlage über `pruefkonto.py` erbt
+ * MOTOR und läuft in derselben Engine. */
+const MOTOR = motorWahl(process.argv);
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const motor = (await import('file://' + MODUL))[MOTOR];
+const PW = (m => m.default ?? m)(await import('file://' + MODUL));
 
 let gesamt = 0, offen = 0;
 const pruefe = (ok, was, wert = '') => {
@@ -266,7 +264,7 @@ async function weg(browser, rolle) {
 }
 
 console.log(`Rückwegprobe (Browser, ${MOTOR}) gegen ${BASIS}${lokal ? ' — örtlich, mit Datenbank' : ''}`);
-const browser = await motor.launch();
+const browser = await starten(PW, MOTOR);
 try {
   await weg(browser, 'user');
   await weg(browser, 'betreiberin');

@@ -24,11 +24,13 @@
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 /* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
-import { codeSchritt } from '../../motor.mjs';
+import { codeSchritt, motorWahl, starten } from '../../motor.mjs';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
 const schritte = (process.argv[3] || 'anlegen,lesen,veraendern,reset,sperren').split(',');
@@ -57,7 +59,7 @@ const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|
 const OHNE_ADRESSE = /^Failed to load resource:\s*net::ERR_[A-Z_]+$/;
 const kachelGescheitert = [];
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, viewport: { width: 1500, height: 1100 } });
 /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),

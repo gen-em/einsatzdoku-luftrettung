@@ -8,15 +8,17 @@
  * betroffen sein. Ohne sie hieße „gesperrt" nur „irgendetwas ist kaputt".
  */
 /* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
-import { codeSchritt } from '../../motor.mjs';
+import { codeSchritt, motorWahl, starten } from '../../motor.mjs';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 const basis = process.argv[2] || 'https://127.0.0.1:8443';
 const grenze = parseInt(process.argv[3] || '20', 10);
 
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: true });
 const seite = await kontext.newPage();
 const befunde = [];

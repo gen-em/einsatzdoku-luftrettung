@@ -120,7 +120,8 @@
     "gpxprobe": {
       "aufruf": "bash tools/proben/proben.sh gpx",
       "braucht": "installation",
-      "demo": true
+      "demo": true,
+      "motoren": true
     },
     "geraeteprobe": {
       "aufruf": "bash tools/proben/proben.sh geraete",
@@ -158,39 +159,47 @@
     },
     "freigabeprobe": {
       "aufruf": "bash tools/proben/proben.sh freigabe",
-      "braucht": "installation"
+      "braucht": "installation",
+      "motoren": true
     },
     "fristprobe": {
       "aufruf": "bash tools/proben/proben.sh frist",
-      "braucht": "installation"
+      "braucht": "installation",
+      "motoren": true
     },
     "abmelde-probe": {
       "aufruf": "bash tools/proben/proben.sh abmelden",
-      "braucht": "installation"
+      "braucht": "installation",
+      "motoren": true
     },
     "containerprobe": {
       "aufruf": "bash tools/proben/proben.sh container",
-      "braucht": "installation"
+      "braucht": "installation",
+      "motoren": true
     },
     "huellenprobe": {
       "aufruf": "bash tools/proben/proben.sh huelle",
       "braucht": "nichts",
-      "bemerkung": "S11-02: Referenz gegen ihre Vektoren, dann die WebCrypto-Umsetzung im Browser dagegen. Braucht keine Anlage; die Seite beantwortet die Probe selbst."
+      "bemerkung": "S11-02: Referenz gegen ihre Vektoren, dann die WebCrypto-Umsetzung im Browser dagegen. Braucht keine Anlage; die Seite beantwortet die Probe selbst.",
+      "motoren": true
     },
     "kontopaarprobe": {
       "aufruf": "bash tools/proben/proben.sh kontopaar",
       "braucht": "installation",
-      "bemerkung": "S11-03: das Schluesselpaar des Kontos im Browser — still anlegen nach der Anmeldung, Abgleich, Rundlauf einer Geraetehuelle, vertauschter privater Teil, Siegel. Legt ein Wegwerfkonto umlauf-kontopaar an und loescht es."
+      "bemerkung": "S11-03: das Schluesselpaar des Kontos im Browser — still anlegen nach der Anmeldung, Abgleich, Rundlauf einer Geraetehuelle, vertauschter privater Teil, Siegel. Legt ein Wegwerfkonto umlauf-kontopaar an und loescht es.",
+      "motoren": true
     },
     "ortsdatenprobe": {
       "aufruf": "bash tools/proben/proben.sh ortsdaten",
       "braucht": "installation",
-      "bemerkung": "S11-04b: die Kette Geraet -> Server -> Browser — ein Geraet sendet verschlossen, api/mission.php und api/day.php liefern Stuecke, Einsatzhuelle und Sperrzeiten, der Browser oeffnet sie und vergleicht Punkt fuer Punkt. Legt ein Wegwerfkonto umlauf-ortsdaten an und loescht es."
+      "bemerkung": "S11-04b: die Kette Geraet -> Server -> Browser — ein Geraet sendet verschlossen, api/mission.php und api/day.php liefern Stuecke, Einsatzhuelle und Sperrzeiten, der Browser oeffnet sie und vergleicht Punkt fuer Punkt. Legt ein Wegwerfkonto umlauf-ortsdaten an und loescht es.",
+      "motoren": true
     },
     "wartungslaufprobe": {
       "aufruf": "bash tools/proben/proben.sh wartungslauf",
       "braucht": "installation",
-      "bemerkung": "S11-07: der Wartungslauf — Liste der faelligen Spuren (Abschluss, Frist 31 Tage knapp davor und danach, Papierkorb, Altbestand, juengerer Schnitt) und Tausch mit jedem Ablehnungsgrund, in einer Transaktion auf dem Demo-Konto, die zurueckgerollt wird."
+      "bemerkung": "S11-07: der Wartungslauf — Liste der faelligen Spuren (Abschluss, Frist 31 Tage knapp davor und danach, Papierkorb, Altbestand, juengerer Schnitt) und Tausch mit jedem Ablehnungsgrund, in einer Transaktion auf dem Demo-Konto, die zurueckgerollt wird.",
+      "motoren": true
     },
     "uhr-krypto": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoreihe /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh kryptoprobe",
@@ -199,23 +208,27 @@
     },
     "browserprobe-csp": {
       "aufruf": "bash tools/proben/proben.sh csp-browser",
-      "braucht": "installation"
+      "braucht": "installation",
+      "motoren": true
     },
     "bedienprobe": {
       "aufruf": "node tools/bedienprobe/probe.mjs",
       "braucht": "installation",
-      "demo": true
+      "demo": true,
+      "motoren": true
     },
     "bilderlauf": {
       "aufruf": "node tools/screenshots/aufnehmen.mjs --stufe {stufe}",
       "braucht": "installation",
       "demo": true,
-      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920), Chromium; neben = zehn Breiten (seit R4-08 mit 1200 und 1600, E-R4-23); haupt = zehn Breiten, alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM: aufnehmen.mjs nimmt einen Motor aus --motor, die Stufe waehlt nur die Breiten (F-P5c-103, Backlog Nr. 300; P5c/AP4 hat Firefox und WebKit von Hand gefahren). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05) -- bis dahin stand hier fest --stufe klein, und jede Stufe bekam drei Breiten."
+      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920); neben = zehn Breiten (seit R4-08 mit 1200 und 1600, E-R4-23); haupt = zehn Breiten. Seit Konzept DM (R87, E-DM-07) in JEDER Stufe alle drei Engines: pruefen.sh faehrt jede Probe mit \"motoren\": true dreimal (MOTOR=chromium|firefox|webkit). Bis dahin stand hier \"haupt = alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM\" (Nr. 300). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05).",
+      "motoren": true
     },
     "stilvergleich": {
       "aufruf": "bash tools/stilvergleich/gegen.sh",
       "braucht": "nichts",
-      "bemerkung": "proben.py allein baut nur die vier Proben und gibt ohne Argumente seine Anleitung aus; der Vergleich ist stilvergleich.js und braucht den alten Stand (F-PK-20). braucht=nichts, weil der Vergleich gegen zwei Stylesheets laeuft, nicht gegen die Anlage."
+      "bemerkung": "proben.py allein baut nur die vier Proben und gibt ohne Argumente seine Anleitung aus; der Vergleich ist stilvergleich.js und braucht den alten Stand (F-PK-20). braucht=nichts, weil der Vergleich gegen zwei Stylesheets laeuft, nicht gegen die Anlage.",
+      "motoren": true
     },
     "messstand": {
       "aufruf": "python3 tools/messstand/messen.py --frisch",
@@ -225,12 +238,14 @@
     "kreislauf-csv": {
       "aufruf": "python3 tools/referenzdatensatz/vergleich/kreislauf.py --art csv --frisch",
       "braucht": "installation",
-      "bemerkung": "--frisch seit RP-01: Ohne den Schalter bricht der zweite Lauf auf einer nicht frischen Anlage ab, weil das Umlaufkonto schon besteht (F-RP-11)."
+      "bemerkung": "--frisch seit RP-01: Ohne den Schalter bricht der zweite Lauf auf einer nicht frischen Anlage ab, weil das Umlaufkonto schon besteht (F-RP-11).",
+      "motoren": true
     },
     "kreislauf-edbak": {
       "aufruf": "python3 tools/referenzdatensatz/vergleich/kreislauf.py --art edbak --frisch",
       "braucht": "installation",
-      "bemerkung": "--frisch seit RP-01: Ohne den Schalter bricht der zweite Lauf auf einer nicht frischen Anlage ab, weil das Umlaufkonto schon besteht (F-RP-11)."
+      "bemerkung": "--frisch seit RP-01: Ohne den Schalter bricht der zweite Lauf auf einer nicht frischen Anlage ab, weil das Umlaufkonto schon besteht (F-RP-11).",
+      "motoren": true
     },
     "schemaprobe": {
       "aufruf": "bash tools/sandbox/plattform.sh schema",
@@ -308,7 +323,8 @@
     "rueckwegprobe": {
       "aufruf": "bash tools/proben/proben.sh rueckweg",
       "braucht": "installation",
-      "bemerkung": "Konzept RW. Teil A (RW-01): Selbsttest beider Engines gegen den festen Browser-Vektor, sechs Signaturfaelle, fremde Kurven, Pruefregeln, Statuszeile in drei Lagen, Marke. Braucht die Datenbank nur fuer die Marke in app_state und stellt sie danach wieder her."
+      "bemerkung": "Konzept RW. Teil A (RW-01): Selbsttest beider Engines gegen den festen Browser-Vektor, sechs Signaturfaelle, fremde Kurven, Pruefregeln, Statuszeile in drei Lagen, Marke. Braucht die Datenbank nur fuer die Marke in app_state und stellt sie danach wieder her.",
+      "motoren": true
     },
     "passkeyprobe": {
       "aufruf": "bash tools/proben/proben.sh passkey",
@@ -1016,6 +1032,34 @@
         "android-bildmarken"
       ],
       "anlass": "Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst."
+    },
+    {
+      "id": "motoren",
+      "ab": "klein",
+      "pfade": [
+        "tools/motor.mjs",
+        "tools/pruefstand/motoren.md",
+        "tools/zweitfaktor/totp.mjs"
+      ],
+      "proben": [
+        "gpxprobe",
+        "freigabeprobe",
+        "fristprobe",
+        "abmelde-probe",
+        "containerprobe",
+        "huellenprobe",
+        "kontopaarprobe",
+        "ortsdatenprobe",
+        "wartungslaufprobe",
+        "browserprobe-csp",
+        "bedienprobe",
+        "bilderlauf",
+        "stilvergleich",
+        "kreislauf-csv",
+        "kreislauf-edbak",
+        "rueckwegprobe"
+      ],
+      "anlass": "Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle in drei Engines (R87)"
     }
   ]
 }

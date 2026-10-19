@@ -34,6 +34,7 @@ import { readFileSync, rmSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { motorWahl, starten } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
@@ -50,7 +51,9 @@ const ADRESSE  = 'umlauf-kontopaar@example.invalid';
 const PASSWORT = 'umlaufpruefung2026-kontopaar';
 const KONTO = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const MODUL = process.env.PLAYWRIGHT_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import('file://' + MODUL);
+const PW = (m => m.default ?? m)(await import('file://' + MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 let gesamt = 0, offen = 0;
 const pruefe = (ok, was, wert = '') => {
@@ -79,9 +82,9 @@ const systemMeldungen = nach => Number(php(`echo (int)db()->query("SELECT COUNT(
   WHERE reiter = 'system' AND id > ${nach} AND text LIKE 'kontopaar:%'")->fetchColumn();`));
 const marke = () => Number(php('echo (int)db()->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")->fetchColumn();'));
 
-console.log(`Kontopaarprobe (Browser, chromium) gegen ${BASIS}`);
+console.log(`Kontopaarprobe (Browser, ${MOTOR}) gegen ${BASIS}`);
 const ordner = mkdtempSync(join(tmpdir(), 'kontopaar-'));
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 try {
   try { konto('loeschen'); } catch (e) { /* gab es nicht */ }
   konto('anlegen', join(ordner, 'rc.json'));

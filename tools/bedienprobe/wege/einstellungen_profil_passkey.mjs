@@ -82,9 +82,15 @@ export const wege = [
         + 'über das Gerät: Verweis; neuer Browser: Code, kein Knopf',
     async fahren(k) {
       const motor = k.seite.context().browser().browserType().name();
+      /* NUR IN CHROMIUM (E-DM-05, Ausnahmeliste `tools/motoren-ausnahmen.md`):
+         Den virtuellen Authenticator gibt es nur über CDP. Seit R87 läuft
+         die Bedienprobe in drei Engines; dieser eine Weg ist in Firefox und
+         WebKit ausdrücklich NICHT gemessen und sagt das — er zählt nicht als
+         verfehlt, weil er dort nicht messbar ist, und nicht als gemessen,
+         weil die Zeile es nennt. Gemessen wird er im Chromium-Lauf. */
       if (motor !== 'chromium') {
-        return { ist: `nicht gemessen — ${motor} hat keinen virtuellen Authenticator`, ok: false,
-                 bemerkung: 'Der Weg braucht Chromium (CDP WebAuthn); siehe Kopf der Wegdatei' };
+        return { ist: `nur in Chromium — ${motor} hat keinen virtuellen Authenticator`, ok: true,
+                 bemerkung: 'Ausnahme E-DM-05: gemessen im Chromium-Lauf derselben Probe (CDP WebAuthn)' };
       }
       const basisL = k.basis.replace('//127.0.0.1', '//localhost');
       const vorher = readFileSync(KONFIG);

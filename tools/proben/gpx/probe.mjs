@@ -43,6 +43,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes, createHash } from 'node:crypto';
+import { motorWahl, starten } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
@@ -59,7 +60,9 @@ const ADRESSE  = 'umlauf-gpx@example.invalid';
 const PASSWORT = 'umlaufpruefung2026-gpx';
 const KONTO = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const MODUL = process.env.PLAYWRIGHT_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import('file://' + MODUL);
+const PW = (m => m.default ?? m)(await import('file://' + MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 /** Das vendorierte XSD und seine Pruefsumme (Herkunft: docs/Lizenzen.md). */
 const XSD     = join(HIER, 'gpx11.xsd');
@@ -132,8 +135,8 @@ const gpxImport = '<?xml version="1.0" encoding="UTF-8"?>\n'
   + '</trkseg></trk></gpx>\n';
 const impSortiert = [...impPunkte].sort((a, b) => a[3] - b[3]);
 
-const browser = await chromium.launch();
-console.log(`GPX-Probe (Browser, chromium) gegen ${BASIS}`);
+const browser = await starten(PW, MOTOR);
+console.log(`GPX-Probe (Browser, ${MOTOR}) gegen ${BASIS}`);
 try {
   /* ---- Teil 0 — das Schema selbst ---------------------------------------- */
   console.log('\n  Teil 0 — das amtliche Schema');
