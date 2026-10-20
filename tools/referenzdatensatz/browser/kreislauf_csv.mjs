@@ -17,7 +17,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { downloadMitFortschritt } from './download_lib.mjs';
-import { motorWahl, starten } from '../../motor.mjs';
+import { motorWahl, starten, paarAbwarten } from '../../motor.mjs';
 /* Kontrollkästchen und Segmenttasten sind seit P3 unsichtbar; bedient
  * wird die Beschriftung. Warum und wie: bedienen.mjs. */
 const { ankreuzen, abwaehlen } = await import(
@@ -76,6 +76,10 @@ await Promise.all([
   seite.click('#loginform button[type="submit"]'),
 ]);
 pruefe(!seite.url().includes('login.php'), `Anmeldung als ${konto} gescheitert`);
+/* Das Schlüsselpaar auf der ersten Seite abwarten (F-DM-02, Nr. 392): Ohne
+   es kam der Import in Firefox nie zu „Fertig", und der Export brach mit
+   „kein Schlüsselpaar" ab. */
+pruefe(await paarAbwarten(seite), 'Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar');
 schritt(`Als ${konto} anmelden`);
 
 // ---- Import -------------------------------------------------------------

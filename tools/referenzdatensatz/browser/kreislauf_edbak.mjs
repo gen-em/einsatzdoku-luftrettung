@@ -23,7 +23,7 @@
  */
 import { mkdirSync, writeFileSync, readdirSync } from 'node:fs';
 import { downloadMitFortschritt } from './download_lib.mjs';
-import { motorWahl, starten } from '../../motor.mjs';
+import { motorWahl, starten, paarAbwarten } from '../../motor.mjs';
 
 /* Die Referenzdatei NICHT mit Namen fest verdrahten.
  *
@@ -93,18 +93,11 @@ async function anmelden(mail, pw) {
   /* DAS SCHLÜSSELPAAR ABWARTEN (F-S11-71). Die erste Seite nach der
      Anmeldung legt es still an; wer vorher weitergeht, bricht das Anlegen ab,
      das Anmelde-Token ist verbraucht, und das Einspielen meldet „kein
-     Schlüsselpaar". Am 16.10.2026 einmal so geschehen. */
-  for (let i = 0; i < 40; i++) {
-    const stand = await seite.evaluate(async () => {
-      try {
-        const a = await EdApi.postJson('api/kontopaar.php', { aktion: 'zustand' });
-        return a && a.ok && a.daten ? a.daten.stand : null;
-      } catch (e) { return null; }
-    }).catch(() => null);
-    if (stand === 'da') { return true; }
-    await seite.waitForTimeout(500);
+     Schlüsselpaar". Am 16.10.2026 einmal so geschehen. Seit Konzept DM
+     steht die Schleife in `tools/motor.mjs` (`paarAbwarten()`). */
+  if (!(await paarAbwarten(seite))) {
+    befunde.push('Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar');
   }
-  befunde.push('Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar');
   return true;
 }
 

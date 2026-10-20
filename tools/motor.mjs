@@ -404,6 +404,37 @@ export async function codeSchritt(seite, { frist = 30000 } = {}) {
  *  eine halb gelesene Fehlerseite. Die Bedingung sieht deshalb erst hin,
  *  wenn das Dokument gelesen ist; auf Bilder und Kartenkacheln (`load`)
  *  wartet sie nicht. */
+/** Auf der ersten Seite nach der Anmeldung abwarten, bis das Schlüsselpaar
+ *  des Kontos steht (S11; seit Konzept DM an einer Stelle, F-DM-02).
+ *
+ *  Die Seite legt es still an — aber nur sie, weil nur sie das Anmelde-Token
+ *  hat. Wer vorher weitergeht, bricht das Anlegen ab, und das Konto hat bis
+ *  zur nächsten Anmeldung keins (Backlog Nr. 392). In Chromium ging das
+ *  meist gut, in Firefox und WebKit nie: Die Freigabeprobe und der
+ *  CSV-Kreislauf scheiterten daran, der edbak-Kreislauf wartete schon seit
+ *  F-S11-71 selbst. Diese Schleife ist seine, hierher geholt.
+ *
+ *  Nichts zu warten, wenn die Seite kein Paar pflegt (kein `KP_STAND`) oder
+ *  es schon eines gibt. Höchstens `frist` ms; Rückgabe true, wenn das Paar
+ *  steht oder nichts zu warten war, sonst false — der Aufrufer meldet es. */
+export async function paarAbwarten(seite, { frist = 20000 } = {}) {
+  const bis = Date.now() + frist;
+  for (;;) {
+    const stand = await seite.evaluate(async () => {
+      if (typeof KP_STAND === 'undefined' || KP_STAND !== 'fehlt' || typeof EdApi === 'undefined') {
+        return 'nichts';
+      }
+      try {
+        const a = await EdApi.postJson('api/kontopaar.php', { aktion: 'zustand' });
+        return a && a.ok && a.daten ? a.daten.stand : null;
+      } catch (e) { return null; }
+    }).catch(() => null);
+    if (stand === 'da' || stand === 'nichts') { return true; }
+    if (Date.now() > bis) { return false; }
+    await seite.waitForTimeout(500);
+  }
+}
+
 export async function nachDemPasswort(seite, { frist = 90000 } = {}) {
   try {
     await seite.waitForFunction(() => document.readyState !== 'loading'
@@ -418,6 +449,7 @@ export async function nachDemPasswort(seite, { frist = 90000 } = {}) {
   if (!zf.ok) { return { angemeldet: false, code: zf.code, meldung: zf.meldung }; }
   const angemeldet =
     (await seite.locator('input[name="password"], #codeform').count()) === 0;
+  if (angemeldet) { await paarAbwarten(seite); }
   return { angemeldet, code: zf.code,
            meldung: angemeldet ? '' : ((await seitenMeldung(seite)) || '(ohne Meldung der Seite)') };
 }
