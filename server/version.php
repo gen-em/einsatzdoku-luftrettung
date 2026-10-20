@@ -8251,5 +8251,10 @@ declare(strict_types=1);
  *   Was bleibt: der Demo-Reset mit seiner Nutzlast-7-Fixture ueber
  *   `'server'` (E-S11-20) und die alten Adminpaket-Fassungen in der Liste
  *   (Backlog Nr. 46, Rest).
+ * 23.0.1 — DIE RECHENAUFGABE DER REGISTRIERUNG RECHNET SHA-256 SELBST
+ *   (Konzept DM, Q-DM-01). Im Worker kostete jedes `crypto.subtle.digest()`
+ *   ein Promise, und in Firefox lag der Median damit ueber einer Sekunde.
+ *   Eigene Rechnung, gegen WebCrypto gegengeprueft, Rueckfall auf WebCrypto
+ *   bei Abweichung. Bitzahl und Server unveraendert. Kein Schema.
  */
-const WEB_VERSION = '23.0.0';
+const WEB_VERSION = '23.0.1';
