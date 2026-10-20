@@ -85,7 +85,7 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
 const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG,
-        einsaetzeVervielfachen } =
+        einsaetzeVervielfachen, abgebrochenerSchriftabruf } =
   await import(new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
@@ -369,6 +369,8 @@ function istRauschen(meldung, seitenAdresse) {
   // 3 Verbindungsfehler — aber nur auf einer NACHWEISBAR fremden Fundstelle
   //   (Nr. 176). 'keine' zaehlt, siehe herkunft().
   if (VERBINDUNGSCODES.test(text) && herkunft(ort) === 'fremd') return true;
+  // 4 Ein Schriftabruf, den das nächste Laden abbrach (Firefox, F-DM-08).
+  if (abgebrochenerSchriftabruf(text)) return true;
   return false;
 }
 
@@ -427,6 +429,12 @@ const SELBSTPROBE = [
   { nr: 15, soll: 'fehler',   grund: 'undurchsichtige Herkunft (data:) — URL.origin sagt "null"',
     text: 'Failed to load resource: net::ERR_CONNECTION_CLOSED',
     ort:  'data:text/html,<p>x' },
+  { nr: 16, soll: 'rauschen', grund: 'Firefox: Schriftabruf vom nächsten Laden abgebrochen (NS_BINDING_ABORTED, F-DM-08)',
+    text: 'downloadable font: download failed (font-family: "Open Sans" style:normal weight:400 stretch:100 src index:0): status=2152398850 source: EIGEN/assets/fonts/x.woff2',
+    ort:  'EIGEN/x.php' },
+  { nr: 17, soll: 'fehler',   grund: 'Firefox: Schrift fehlt wirklich (anderer Status) — bleibt ein Fehler',
+    text: 'downloadable font: download failed (font-family: "Open Sans" style:normal weight:400 stretch:100 src index:0): status=2147746065 source: EIGEN/assets/fonts/x.woff2',
+    ort:  'EIGEN/x.php' },
 ];
 
 if (flag('--selbstprobe')) {

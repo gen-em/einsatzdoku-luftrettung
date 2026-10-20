@@ -43,6 +43,17 @@ import { naechsterCode } from './zweitfaktor/totp.mjs';
 
 export const MOTOREN = ['chromium', 'firefox', 'webkit'];
 
+/** Ein Schriftabruf, den das nächste Laden abgebrochen hat — in Firefox
+ *  (Konzept DM, F-DM-08). Firefox meldet ihn als Konsolenfehler
+ *  „downloadable font: download failed … status=2152398850"; das ist
+ *  NS_BINDING_ABORTED, also kein Fehler der Seite, sondern ein Werkzeug,
+ *  das schneller weiterlädt als die Schrift. Chromium und WebKit sagen dazu
+ *  nichts. Jeder andere Schriftfehler bleibt ein Fehler. Eine Stelle für
+ *  Bilderlauf und Bedienprobe. */
+export function abgebrochenerSchriftabruf(text) {
+  return /downloadable font: download failed/.test(text) && /status=2152398850\b/.test(text);
+}
+
 /* Fein + Hover als Gecko-Bitmaske. Siehe Kopfkommentar — 2 allein genügt
  * nicht, 6 ist die Zahl. */
 const ZEIGER_FIREFOX = {
