@@ -4,7 +4,7 @@
 Protokoll „ist es belegt?" steht im Statusblock und in Abschnitt 5 des
 Konzepts. Angelegt am 11.10.2026 mit R17-00 (Fable); jedes Paket füllt es
 mit Mittel **und** Zahl. Stand: **Schritt 12b läuft seit dem 20.10.2026**
-(R17-07 erledigt — Stücke 2 und 3 gelesen); Schritt 12 ist abgeschlossen — Freigabe des Modells
+(R17-08 erledigt — Stücke 2 bis 4 gelesen); Schritt 12 ist abgeschlossen — Freigabe des Modells
 durch die Betreiberin am 11.10.2026 (P-R17-01), Erledigt-Zeile in
 Rahmenplan 8 (Fassung 156), PR #103 gemergt. **12b schreibt dieses
 Dokument fort** (E-R17-15), mit denselben Zählern: Die Punkte P-R17-03 bis
@@ -22,6 +22,7 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 | **Ob das Modell vollständig ist, misst kein Werkzeug.** | Ein Bedrohungsmodell ist eine Lesung: Es zählt auf, wogegen die Anlage hält und wogegen nicht. Dass keine Angreiferlage fehlt, lässt sich nicht nachzählen, nur gegenlesen — gegen die Liste im Fahrplan (Schritt 12), gegen den Krypto-Review vom 05.09.2026 (Git-Historie; Stand in Konzept 3.4) und gegen den Code. Die Inventartabelle (Konzept 3.2) macht sichtbar, **welche** Quellen gelesen wurden; sie belegt nicht, dass es alle sind. | P-R17-01: die Betreiberin liest das Modell gegen ihr eigenes Bild der Anlage. |
 | **Was die drei Leser von R17-01 nicht sicher lesen konnten** — je Punkt, wo es sich zeigt: (1) `Toybox.Cryptography` auf der Garmin (Kurven, AES-CBC, HMAC, Verfügbarkeit auf allen 99 Geräten) — kein Connect-IQ-SDK im Container; SP-9 behauptet es. (2) Ob Garmin den App-Speicher verschlüsselt und ob er per USB lesbar ist. (3) Der Weg einer Connect-IQ-Anfrage (direkt oder über Garmin-Server, Zertifikatsprüfung, `http://`). (4) Ob die App-Einstellungen der Garmin (Alt-Weg mit `apiKey`) in Garmins Cloud liegen. (5) Ob der Wear-Data-Layer ohne Bluetooth über Google-Server vermittelt. (6) Hardware-Anker des Keystore (TEE/StrongBox) — gerätabhängig, nicht gefordert. (7) Schutzregeln der GitHub-Umgebungen und Zweitfaktor-Zwang der Organisation — API 403; wer freigeben darf, ist nirgends belegt. (8) Ob `kdf_anteil` auf Produktiv gesetzt ist (Rahmenplan 6.1: offen). (9) `display_errors`, PHP-Fassung, bcrypt-Kosten, `csp_scharf`, `hsts_tage` auf Produktiv. (10) Zugriffsprotokolle beider Hoster (Dauer, Inhalt). (11) Ein vollständiger IDOR- und XSS-Durchgang (Stichproben nur; 43 `innerHTML`-Zuweisungen ungeprüft) — **Gegenstand von 12b, nicht von 12**. (12) Welche `ftp-deploy`-Fassung in der gepinnten SHA steckt. | Für (1): Probe-App im Uhr-Prüfstand, Stufe I über alle Geräte (vor S11). (2)–(5): Herstellerdoku, vor S11. (7), (8), (9): die Betreiberin liest es in GitHub bzw. auf Betrieb → Status ab — P-R17-04. (11): 12b. |
 | **Stück 2 (R17-06): drei Dinge, die der Container nicht messen konnte.** (1) Die Signaturprüfung der Passkeys und des Rückwegs (`passkey_lib.php`, `rueckweg_lib.php`) läuft über phpseclib unter `vendor/`; PHPStan sieht die Klassen nicht (44 `class.notFound`), die Prüfung ist **gelesen**, nicht statisch geprüft — die Zweitfaktorprobe misst sie gegen die Anlage (Stufe 2). (2) F-R17-33: ob ein Dump von vor dem 03.09.2026 wirklich den Kopf „Komplettsicherung der Installation" trägt, lässt sich hier nicht nachsehen — die Git-Historie dieses Repositoriums beginnt am 21.09.2026, eine Fixture mit altem Kopf gibt es nicht; belegt ist die Wortgleichheit der beiden Vergleiche (PHPStan) und die Umstellung (Rahmenplan-Archiv-2, Schritt 4). (3) F-R17-32: der fehlende Ratenschutz ist am Code gelesen (kein `rate_*`-Aufruf), nicht gegen die Anlage gemessen — der Review behebt und misst nichts (K4); das Paket, das ihn behebt, erweitert die Zweitfaktorprobe um den Fall. | (1): Zweitfaktorprobe in Stufe 2 nach jedem Paket, das die beiden Dateien anfasst. (2): P-R17-06 — die Betreiberin sagt, ob noch ein Dump von vor S7 liegt. (3): das Paket zu F-R17-01 (b) und F-R17-32. |
+| **Stück 4 (R17-08): zwei Dinge, die hier nicht gemessen sind.** (1) F-R17-39 ist am Code gelesen (`spur_stand()` liefert kein `n_gespeichert`, der zweite Zweig rechnet 0) und mit `git log -S` datiert, aber nicht an einer gepackten Spur im Browser gefahren — die GPX-Probe kennt nur eine frische Spur, und der Prüfstand `klein` fährt den Wartungslauf nicht; ob Produktiv schon gepackte Spuren hat und der Menüeintrag dort fehlt, sieht nur die Betreiberin (P-R17-08). (2) F-R17-40 ist am Code gelesen (die Sperre fragt das Datum); ein Import mit einem gelöschten und einem aktiven Tag am selben Datum ist nicht gefahren — die Importprobe hat den Fall nicht. | (1): P-R17-08; das Paket, das F-R17-39 behebt, bringt den Probenfall mit gepackter Spur. (2): das Paket zu F-R17-40 bringt den Fall in die Importprobe. |
 | **Stück 3 (R17-07): zwei Dinge, die hier nicht gemessen sind.** (1) F-R17-36 ist am Code gelesen (`rate_merkmale()` → zwei Merkmale, ein `max`) und gegen Probe und Doku gehalten, aber nicht gegen die Anlage gefahren — der Review behebt und misst nichts (K4), und die Probe `raten` klopft den Topf `login_ip` nur isoliert; ob eine Klinik auf Produktiv schon getroffen wurde, zeigt nur die Sicherheitsseite (P-R17-07). (2) `wegwerfdomains.txt` ist nur auf Form gelesen (eine Domain je Zeile); ob die Liste aktuell ist, misst kein Werkzeug dieses Repositoriums. | (1): P-R17-07 — die Betreiberin liest Betrieb → Sicherheit; das Paket, das F-R17-36 behebt, bringt den Probenfall. (2): Stück 10 sieht nach, ob ein Werkzeug die Liste pflegt. |
 | **Die Behauptungen des Modells über den Code sind gelesen, nicht gemessen.** | R17-01 liest den Code bei Web 21.14.0, Uhr 3.1.0, Android 0.17.0 und nennt Funktionsnamen. Dass eine genannte Funktion tut, was das Modell sagt, belegt die Lesung; eine Probe, die es misst, gibt es nur dort, wo ein Prüfwerkzeug schon steht (`tools/proben/`). Das Modell nennt je Baustein, ob eine Probe ihn misst. | Abschnitt 2 je Paket; Konzept 3.2. |
 
@@ -31,6 +32,21 @@ Je Paket die Mittel mit Zahl. Die Zahl eines Pakets steht hier mit dem
 nächsten Paket — eine Zeile hier ändert den Baum, den der Prüfstand gemessen
 hat (`Pruefablauf.md` 5.1); der Bericht eines Pakets steht in **seiner**
 Commit-Nachricht.
+
+### R17-08 Stück 4 — Einsatz, Diensttag, Spur, Ingest (20.10.2026)
+
+| Mittel | Was gemessen | Zahl |
+|---|---|---|
+| Lesung Fable (E-R17-14), jede Datei vollständig | die 36 Dateien des Stücks (Konzept 7.3.4) nach der Checkliste 7.2 an jedem HTTP-Einstieg: Rolle, CSRF, Eingabe, Ausgabe, Fehlerweg, Rate, gebundene Parameter, eine Stelle; dazu die Zusagen aus `CLAUDE.md` 4 (Klartext nie an den Server, Hülle an jedem Schreibweg, Spuren nur über `spur_lib.php`, Feldkatalog) | 36 Dateien, 20 019 Zeilen; 20 HTTP-Einstiege; 4 Einträge in 2.3a (F-R17-39 mittel, -38 und -40 niedrig, -41 Hinweis); 0 kritisch, 0 hoch |
+| Nachlesen der Altbefunde und Posten des Stücks | F-R17-09, -13, -28; K-10; Nr. 23 | 3 nachgelesen, 3 bestehen (soweit das Stück sie sieht); K-10 gegenstandslos seit S11-05d; Nr. 23 gelesen (Konzept 7.3.4) |
+| PHPStan 2.3.1 (dieselbe Konfiguration wie R17-06) | Typfehler, tote Zweige, fehlende Schlüssel | 101 Meldungen in Stück 4: 87 `variable.undefined` (Rauschen aus `auth_guard.php`), 0 `class.notFound`, 14 gelesen — 5 davon die zwei Befunde F-R17-38 (4 Meldungen) und -39 (1), 9 Absicht oder harmlos |
+| `grep -rE` über die `function`-Definitionen der 14 PHP-Dateien des Stücks mit Definitionen gegen `server/`, `tools/`, `docs/` | Funktionen ohne Aufruf oder Nennung | 193 geprüft, 0 ohne |
+| `php -r` | Verhalten von PHP 8 beim `use` einer undefinierten Variablen (F-R17-38) | 1 Warnung („Undefined variable"), Lauf geht weiter; `system_fehler_behandeln()` wirft nicht |
+| `git log -S n_gespeichert` über `einsatz.php` und `spur_lib.php` | seit wann `spur_stand()` das Feld nicht mehr liefert (F-R17-39) | `0a6b926` (S11-12, Web 23.0.0, 19.10.2026) |
+| `grep` über `tools/proben/gpx/probe.mjs`, `server/demo_lib.php`, `server/assets/wartungslauf.js`, `server/index.php` | misst die Probe eine gepackte Spur? wer stößt den Wartungslauf an? | Probe: 1 Abruf über `[data-gpx-laden]` an einer Spur ohne Wartung; `demo_lib.php`: 0 Nennungen einer Stufe; Wartungslauf: aus `index.php` über `wartungslauf.js` |
+| Verweiszähler (Muster aus Konzept 7.4) | Fundstellen des Kommentardurchgangs je Datei | 1 242 in 36 Dateien; Tabelle in Konzept 7.3.4 |
+| `decken.py` · `nummern.py` · `textprobe.py --bereich c` · `linkprobe.py` | Form der Steuerung; Nummern; neue Treffer; Verweise | siehe Commit-Nachricht von R17-08 |
+| `bash tools/pruefstand/pruefen.sh --stufe klein` | die billigen Riegel, Bericht für die Commit-Nachricht | siehe Commit-Nachricht von R17-08 |
 
 ### R17-07 Stück 3 — Zugang und Sitzung (20.10.2026)
 
@@ -140,7 +156,9 @@ ist. Abhaken, wenn geprüft.
 
 | P-R17-07 | Auf Produktiv: Betrieb → Sicherheit, Karte der Sperren und die Ereignisse der letzten 30 Tage; nach Zeilen mit Topf `login` und Art **Anschluss** (`ip:…`) sehen, besonders mit Stufe 2 bis 4. | Keine — oder nur solche, zu denen eine Konto-Sperre derselben Zeit gehört (ein echter Angriff auf ein Konto). | Anschlusssperren im Topf `login` ohne Konto-Sperre daneben: Dann hat F-R17-36 schon einen Anschluss mit mehreren NutzerInnen getroffen; die Sperre lässt sich auf derselben Seite aufheben, bis das Paket kommt. | ☐ |
 
-*Weitere Punkte kommen mit den Stücken 4 bis 12 und der Freigaberunde (R17-08 bis -17).*
+| P-R17-08 | Auf Produktiv einen Einsatz öffnen, dessen Spur älter als 31 Tage ist (der Wartungslauf hat sie dann gepackt oder ausgedünnt; die Spurenseite des Tages zeigt „ausgedünnt · n von m Punkten"); im Aktionsmenü nachsehen; danach Betrieb → System, die Einträge der Art PHP, nach „Undefined array key" suchen. | Der Eintrag „GPS-Daten als GPX" steht im Menü, die Metazeile trägt die Plakette „GPS-Daten" oder „GPS-Daten ausgedünnt"; im Reiter System keine Zeile mit `n_gespeichert`. | Menüeintrag und Plakette fehlen, obwohl die Karte die Spur zeichnet; im Reiter System Zeilen „Undefined array key n_gespeichert" aus `einsatz.php` (eine je Aufruf) und „Undefined variable $platzhalter" aus `tageszuordnung_lib.php` (zwei je Umdatierung): Dann sind F-R17-39 und -38 auf Produktiv; der Abruf geht bis zum Paket über die Spurenseite des Tages. | ☐ |
+
+*Weitere Punkte kommen mit den Stücken 5 bis 12 und der Freigaberunde (R17-09 bis -17).*
 
 ## 5. Grenzen der benutzten Prüfmittel
 
@@ -173,7 +191,8 @@ ist. Abhaken, wenn geprüft.
 **Schritt 12b (seit 20.10.2026):** die Stücke 2 bis 12 (Konzept 7.3, je
 Paket R17-06 bis -16; **Stück 2 gelesen am 20.10.2026**, F-R17-32 bis -35,
 P-R17-06; **Stück 3 gelesen am 20.10.2026**, F-R17-36 und -37, F-R17-32
-verschärft, P-R17-07), dann die Freigaberunde R17-17; was die Stücke nicht
+verschärft, P-R17-07; **Stück 4 gelesen am 20.10.2026**, F-R17-38 bis -41,
+K-10 gegenstandslos, P-R17-08), dann die Freigaberunde R17-17; was die Stücke nicht
 prüfen können, kommt in Abschnitt 1, die Vorsortierung mit ihren Grenzen
 in Abschnitt 5, Prüfpunkte für die Betreiberin ab P-R17-06 in Abschnitt 4.
 Für Stück 3 bleibt P-R17-04 (GitHub-Umgebungen, Org-Zweitfaktor, Produktiv-
