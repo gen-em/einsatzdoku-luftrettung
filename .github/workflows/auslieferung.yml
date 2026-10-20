@@ -111,7 +111,16 @@ jobs:
   stufe2:
     name: Prüfung Stufe 2
     needs: staging
-    runs-on: ubuntu-26.04
+    # AUSNAHME von Nr. 236 (alle Jobs auf 26.04), seit dem 20.10.2026
+    # (F-DM-13): Playwright 1.56 kennt Ubuntu 26.04 nicht und lädt dort die
+    # Fassungen für 24.04. Chromium und Firefox bringen ihre Bibliotheken
+    # weitgehend mit, WebKit nicht: Es ist gegen `libicuuc.so.74`,
+    # `libxml2.so.2`, `libvpx.so.9` und `libx264` gebaut, und die gibt es auf
+    # 26.04 nicht — auch nicht unter einem neueren Paketnamen. Auf 24.04
+    # unterstützt 1.56 alle drei Engines offiziell, mit denselben Fassungen
+    # wie der Prüfstand. Zurück auf 26.04 geht es mit dem Anheben von
+    # Playwright auf 1.63 oder neuer (Nr. 393), nicht vorher.
+    runs-on: ubuntu-24.04
     # Ohne Zeitgrenze liefe ein hängender Job sechs Stunden, und so lange wartet
     # jeder weitere Lauf dieser Umgebung in seiner Gruppe. 40 statt 20 seit
     # R87: Kreislauf und Rückwegprobe laufen dreimal (am 19.10.2026 in
@@ -126,11 +135,6 @@ jobs:
       STAGING_PASS:  ${{ secrets.STAGING_PASS }}
       STAGING_TOTP:  ${{ secrets.STAGING_TOTP }}
       JOBS_TOKEN:    ${{ secrets.JOBS_TOKEN }}
-      # Playwright 1.56 kennt Ubuntu 26.04 nicht und verweigert Chromium
-      # („does not support chromium on ubuntu26.04-x64", Nr. 236). Es bleibt
-      # bei 1.56, weil der Prüfstand dieselbe Fassung fährt; die Bibliotheken
-      # liegen auf dem Läufer, weil er Chrome mitbringt.
-      PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu24.04-x64
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -235,32 +239,12 @@ jobs:
           # DREI ENGINES (R87, Konzept DM/DM-04). Bis zum 19.10.2026 holte
           # dieser Schritt nur Chromium.
           #
-          # NICHT `--with-deps` (F-DM-12): Playwright 1.56 kennt Ubuntu 26.04
-          # nicht und nennt wegen PLAYWRIGHT_HOST_PLATFORM_OVERRIDE die
-          # Paketnamen von 24.04 — `libicu74`, `libxml2`, `libvpx9`,
-          # `libx264-164` gibt es auf dem Läufer nicht, und apt brach den
-          # ersten Lauf nach dem Merge ab (Lauf 131). Deshalb: die Liste von
-          # Playwright holen, jeden Namen gegen den Läufer halten und einen,
-          # den es nicht gibt, durch das neueste Paket gleichen Stamms
-          # ersetzen (`libicu74` → `libicu78`). Jede Ersetzung steht im
-          # Protokoll; ein Name ohne Ersatz auch, und startet eine Engine
-          # danach nicht, ist der Kreislauf rot — nicht übersprungen.
-          npx --yes playwright@1.56 install chromium firefox webkit
-          liste=$(npx --yes playwright@1.56 install-deps --dry-run chromium firefox webkit 2>/dev/null \
-                  | grep -oE 'no-install-recommends [^"]*' | sed 's/^no-install-recommends //')
-          [ -n "$liste" ] || { echo "::error::Playwright nannte keine Systembibliotheken (install-deps --dry-run)."; exit 1; }
-          sudo apt-get update -qq
-          kandidat() { apt-cache policy "$1" 2>/dev/null | grep -q 'Candidate: [^(]'; }
-          pakete=()
-          for p in $liste; do
-            if kandidat "$p"; then pakete+=("$p"); continue; fi
-            stamm=$(printf '%s' "$p" | sed -E 's/t64$//; s/-?[0-9][0-9.]*$//')
-            ersatz=$(apt-cache pkgnames "$stamm" | grep -E "^${stamm}-?[0-9][-0-9.]*(t64)?$" | sort -V \
-                     | while read -r k; do kandidat "$k" && echo "$k"; done | tail -1)
-            if [ -n "$ersatz" ]; then echo "  ersetzt: $p → $ersatz"; pakete+=("$ersatz")
-            else echo "::warning::$p gibt es auf dem Läufer nicht, und kein Paket gleichen Stamms ersetzt es."; fi
-          done
-          sudo apt-get install -y -qq --no-install-recommends "${pakete[@]}"
+          # Engines samt Systembibliotheken über `--with-deps`, wie vor
+          # Nr. 236. Vom 20.10.2026 an stand hier kurz eine Namensersetzung
+          # für Ubuntu 26.04 (F-DM-12, Lauf 132 rot); sie konnte nicht tragen,
+          # weil WebKit die Bibliotheken von 24.04 in genau ihrer Fassung
+          # braucht (F-DM-13, siehe `runs-on` oben).
+          npx --yes playwright@1.56 install --with-deps chromium firefox webkit
           rot=""
           for motor in chromium firefox webkit; do
             for art in edbak; do

@@ -45,6 +45,32 @@ Konzept DM, Frage Q-DM-01. Kein Schema.
 - **Bitzahl und Server bleiben.** 16 Bit, `pow_ok()` unverändert. Wer das
   Formular tausendfach abschickt, rechnet ohnehin mit eigenem Code.
 
+## [Werkzeug: Stufe 2 läuft auf Ubuntu 24.04 (Konzept DM, F-DM-12, F-DM-13)] — 2026-10-20
+
+**Der Job „Prüfung Stufe 2" läuft als einziger der Kette wieder auf
+`ubuntu-24.04`.** Nur `.github/` und `docs/`, keine Versionsstufe. Seit R87
+fährt Stufe 2 Kreislauf und Rückwegprobe in drei Engines, und die ersten
+beiden Läufe nach dem Merge waren rot, bevor sie maßen. Lauf 131 brach an
+`--with-deps` ab: Playwright 1.56 kennt Ubuntu 26.04 nicht und nannte die
+Paketnamen von 24.04. Der Nachtrag aus PR #113 ersetzte jeden fehlenden
+Namen durch das neueste Paket gleichen Stamms, und Lauf 132 brach trotzdem
+ab. Das war kein Zufall, sondern ein falscher Ansatz: Playwright lädt auf
+26.04 die WebKit-Fassung für 24.04, und die ist gegen genau
+`libicuuc.so.74`, `libxml2.so.2`, `libvpx.so.9` und `libx264` gebaut. Ein
+`libicu78` liefert diese Dateien nicht, gleich wie das Paket heißt.
+
+**Warum 24.04 und nicht ein neueres Playwright:** Auf 24.04 unterstützt
+1.56 alle drei Engines offiziell, mit denselben Fassungen wie der
+Prüfstand. Eigene Builds für 26.04 bringt erst Playwright 1.63. Nur Stufe 2
+anzuheben hieße, dass sie andere Engines misst als der Bilderlauf. Das
+Anheben im ganzen Projekt ist ein eigener Schritt (Nr. 393). Schalter und
+Namensersetzung sind entfernt; installiert wird wieder mit
+`playwright install --with-deps`.
+
+**Was bewusst stehen bleibt:** eine Ausnahme von Nr. 236 („alle Jobs auf
+26.04"). Sie steht mit Grund in `docs/Technik.md` 6.1a und im Kopf des Jobs
+und endet mit Nr. 393.
+
 ## [Werkzeug: Jede Browserprobe in drei Engines (R87, Konzept DM)] — 2026-10-19
 
 **Jede Browserprobe läuft jetzt in Chromium, Firefox und WebKit** — örtlich
