@@ -57,10 +57,10 @@ fortgeschrieben (E-R17-15). **Zweig von Schritt 12** war
 >
 > | | |
 > |---|---|
-> | Stand | **20.10.2026 — Schritt 12b läuft; R17-05 Buchführung erledigt.** Rahmenplan Fassung 167 (Fahrplanzeile 12b auf „Umsetzung", Kopf: Nr. 387 gemergt, `main` bei Web 23.0.2), Spanne 400 bis 409 zuerst gepusht (`e99a855`), gemergte Spannen 12a und 19 aus dem Backlog-Kopf gestrichen (die Decke `backlog-kopf` riss sonst mit 61 Zeilen), dieses Dokument mit Abschnitt 7 (Auftrag, Lesweise, elf Stücke mit Umfang und zugehörigen Posten) und den Paketen R17-05 bis R17-17, Prüfdokument fortgeschrieben (E-R17-15). Drei Entscheidungen der Betreiberin E-R17-14 bis -16 (Fable liest selbst; Prüfdokument fortschreiben; Vorsortierung örtlich). **Als Nächstes: R17-06 — Stück 2, Kryptographie und Schlüssel** (7.3). Davor: **11.10.2026 — Schritt 12 abgeschlossen.** Die Betreiberin hat das Modell freigegeben (P-R17-01); Erledigt-Zeile in Rahmenplan 8 (Fassung 156), Fahrplanzeile heraus, **PR #103** gegen `main`. Dieses Dokument bleibt für 12b (E-R17-02): Die Stücke 2 bis 12 schreiben mit denselben Zählern fort (nächste Nummern: E-R17-14, F-R17-32, Q-R17-09). Davor: **R17-04: die Antworten sind eingearbeitet, das Modell wartete auf die Freigabe (P-R17-01).** Acht Entscheidungen E-R17-06 bis -13: kein Sofortpaket (alles in 12b), Argon2id nein, `CryptoKey` ja in 12b (Nr. 370), S11 mit Zweck Server und der Klartextliste aus E-R17-10, Admin-Riegel (Nr. 371), Nr. 263 offen für 12b, der Krypto-Review gelöscht (Stand je K-Nummer in 3.4). Nr. 146 erledigt. Rahmenplan Fassung 155: Zuarbeit „Umgebung `produktion` beschränken" (F-R17-04). **Als Nächstes: Freigabe des Modells durch die Betreiberin, dann Erledigt-Zeile, Fahrplanzeile heraus, Pull Request.** Davor: **R17-03: acht Fragen an die Betreiberin gestellt (2.2).** Q-R17-01 (Sofortpaket für F-R17-02 und -03? Zusage F-R17-01 sofort berichtigen?), -02 und -03 (Nr. 146: Argon2id nein, `CryptoKey` ja in 12b), -04 und -05 (S11: Zweck Server; was Klartext bleibt), -06 (Admin gegen BetreiberIn-Konten: nein), -07 (Nr. 263: nicht umsetzen), -08 (Krypto-Review bleibt bis 12b). **Als Nächstes: die Antworten, dann R17-04** (Einarbeiten, Prüfdokument, Freigabe, Erledigt-Zeile, PR). Davor: **R17-02 erledigt: das Modell steht.** `docs/Bedrohungsmodell.md` nach der Gliederung in 3.1: fünf Werte (1), sechzehn Angreiferlagen A bis P (2), dreizehn Zusagen mit Grenze (3), die Bausteine in vier Tabellen gegen die Lagen (4), zwanzig Restrisiken mit Zuordnung (5), die Entwurfsfragen für S11 mit Empfehlungen zu Nr. 146 und Nr. 263 (6). Eingetragen im Bereich `c` der Textprobe mit zwei begründeten Ausnahmen (Fachbegriff Spur, Plattformnennung Garmin — das Modell unterscheidet die Uhren an ihren Sicherheitseigenschaften); verlinkt aus `README.md`, `Technik.md` (2, 4.98, 4.99b) und `CLAUDE.md` 4. **Als Nächstes: R17-03** — die Fragen an die Betreiberin; dort hält der Schritt an. Davor: **R17-01 erledigt: die Bestandsaufnahme.** Drei lesende Leser (Opus) haben den Code bei Web 21.14.0, Uhr 3.1.0, Android 0.17.0 gegen die Doku gelesen; Fable hat die Hoch- und Mittel-Befunde am Quelltext nachgeprüft und das Inventar verdichtet: **55 Bausteine** (3.2), **31 Befunde** (2.3) — fünf **hoch** (die S10-Zusage überzeichnet das Offline-Raten, F-R17-01; die Freigabe liefert einem Admin den Klartext jedes Kontos ohne Spur, F-R17-02; Gradle erbt den App-Signaturschlüssel, F-R17-03; ein Probelauf fordert `produktion` von jedem Zweig an, F-R17-04; die Pflichtstücke des Wiederanlaufs sind seit dem 14.09.2026 offen, F-R17-05), fünfzehn mittel, acht niedrig, zwei Hinweise. Was keiner sicher lesen konnte, steht im Prüfdokument 1. **Als Nächstes: R17-02** (das Modell schreiben). Davor: **R17-00 erledigt** (Spanne, Fahrplanzeile, dieses Dokument, Prüfdokument). |
+> | Stand | **20.10.2026 — R17-06 erledigt: Stück 2, Kryptographie und Schlüssel, gelesen.** 38 Dateien, 20 053 Zeilen (7.3.2), jede von Fable selbst (E-R17-14). **Drei Befunde und ein Hinweis** (2.3a): F-R17-32 (mittel — `api/kdf_upgrade.php` prüft das alte Anmelde-Token ohne Ratenschutz, die Geschwister haben ihn), F-R17-33 (niedrig — die Endmarken-Prüfung in `wiederherstellen.php` vergleicht zweimal dieselbe Zeichenkette; die S7-Umstellung hat die alte Schreibweise mitersetzt, vor der ihr eigener Kommentar warnt), F-R17-34 (niedrig — der Rückweg schreibt Standortnamen ohne die Prüfschicht), F-R17-35 (Hinweis — ein Paketteil ohne `edsk1:` kommt roh zurück, auch in einem Fassung-3-Paket). Die sieben Altbefunde des Stücks (F-R17-01, -02, -06, -10, -19, -24, -26) am Stand Web 23.0.2 nachgelesen: **alle sieben bestehen unverändert** (7.3.2). K-3 beantwortet (Mindestlänge 12 = `PW_MIN_LAENGE`). Aufräumposten: eine Karteileiche (`serverschluessel_zeile()`), drei tote Zweige seit Web 23, 987 Kommentarverweise. Vorsortierung örtlich mit PHPStan 2.3.1 (Stufe 4): 88 Meldungen im Stück, 73 Rauschen, 15 gelesen, eine davon ein Befund (F-R17-33). **Als Nächstes: R17-07 — Stück 3, Zugang und Sitzung** (7.3). Davor: **20.10.2026 — Schritt 12b läuft; R17-05 Buchführung erledigt.** Rahmenplan Fassung 167 (Fahrplanzeile 12b auf „Umsetzung", Kopf: Nr. 387 gemergt, `main` bei Web 23.0.2), Spanne 400 bis 409 zuerst gepusht (`e99a855`), gemergte Spannen 12a und 19 aus dem Backlog-Kopf gestrichen (die Decke `backlog-kopf` riss sonst mit 61 Zeilen), dieses Dokument mit Abschnitt 7 (Auftrag, Lesweise, elf Stücke mit Umfang und zugehörigen Posten) und den Paketen R17-05 bis R17-17, Prüfdokument fortgeschrieben (E-R17-15). Drei Entscheidungen der Betreiberin E-R17-14 bis -16 (Fable liest selbst; Prüfdokument fortschreiben; Vorsortierung örtlich). **Als Nächstes: R17-06 — Stück 2, Kryptographie und Schlüssel** (7.3). Davor: **11.10.2026 — Schritt 12 abgeschlossen.** Die Betreiberin hat das Modell freigegeben (P-R17-01); Erledigt-Zeile in Rahmenplan 8 (Fassung 156), Fahrplanzeile heraus, **PR #103** gegen `main`. Dieses Dokument bleibt für 12b (E-R17-02): Die Stücke 2 bis 12 schreiben mit denselben Zählern fort (nächste Nummern: E-R17-14, F-R17-32, Q-R17-09). Davor: **R17-04: die Antworten sind eingearbeitet, das Modell wartete auf die Freigabe (P-R17-01).** Acht Entscheidungen E-R17-06 bis -13: kein Sofortpaket (alles in 12b), Argon2id nein, `CryptoKey` ja in 12b (Nr. 370), S11 mit Zweck Server und der Klartextliste aus E-R17-10, Admin-Riegel (Nr. 371), Nr. 263 offen für 12b, der Krypto-Review gelöscht (Stand je K-Nummer in 3.4). Nr. 146 erledigt. Rahmenplan Fassung 155: Zuarbeit „Umgebung `produktion` beschränken" (F-R17-04). **Als Nächstes: Freigabe des Modells durch die Betreiberin, dann Erledigt-Zeile, Fahrplanzeile heraus, Pull Request.** Davor: **R17-03: acht Fragen an die Betreiberin gestellt (2.2).** Q-R17-01 (Sofortpaket für F-R17-02 und -03? Zusage F-R17-01 sofort berichtigen?), -02 und -03 (Nr. 146: Argon2id nein, `CryptoKey` ja in 12b), -04 und -05 (S11: Zweck Server; was Klartext bleibt), -06 (Admin gegen BetreiberIn-Konten: nein), -07 (Nr. 263: nicht umsetzen), -08 (Krypto-Review bleibt bis 12b). **Als Nächstes: die Antworten, dann R17-04** (Einarbeiten, Prüfdokument, Freigabe, Erledigt-Zeile, PR). Davor: **R17-02 erledigt: das Modell steht.** `docs/Bedrohungsmodell.md` nach der Gliederung in 3.1: fünf Werte (1), sechzehn Angreiferlagen A bis P (2), dreizehn Zusagen mit Grenze (3), die Bausteine in vier Tabellen gegen die Lagen (4), zwanzig Restrisiken mit Zuordnung (5), die Entwurfsfragen für S11 mit Empfehlungen zu Nr. 146 und Nr. 263 (6). Eingetragen im Bereich `c` der Textprobe mit zwei begründeten Ausnahmen (Fachbegriff Spur, Plattformnennung Garmin — das Modell unterscheidet die Uhren an ihren Sicherheitseigenschaften); verlinkt aus `README.md`, `Technik.md` (2, 4.98, 4.99b) und `CLAUDE.md` 4. **Als Nächstes: R17-03** — die Fragen an die Betreiberin; dort hält der Schritt an. Davor: **R17-01 erledigt: die Bestandsaufnahme.** Drei lesende Leser (Opus) haben den Code bei Web 21.14.0, Uhr 3.1.0, Android 0.17.0 gegen die Doku gelesen; Fable hat die Hoch- und Mittel-Befunde am Quelltext nachgeprüft und das Inventar verdichtet: **55 Bausteine** (3.2), **31 Befunde** (2.3) — fünf **hoch** (die S10-Zusage überzeichnet das Offline-Raten, F-R17-01; die Freigabe liefert einem Admin den Klartext jedes Kontos ohne Spur, F-R17-02; Gradle erbt den App-Signaturschlüssel, F-R17-03; ein Probelauf fordert `produktion` von jedem Zweig an, F-R17-04; die Pflichtstücke des Wiederanlaufs sind seit dem 14.09.2026 offen, F-R17-05), fünfzehn mittel, acht niedrig, zwei Hinweise. Was keiner sicher lesen konnte, steht im Prüfdokument 1. **Als Nächstes: R17-02** (das Modell schreiben). Davor: **R17-00 erledigt** (Spanne, Fahrplanzeile, dieses Dokument, Prüfdokument). |
 > | Entschieden | E-R17-01 bis E-R17-16 (Abschnitt 2.1) — **E-R17-14 bis -16 von der Betreiberin am 20.10.2026** (Fächerung, Prüfdokument, Vorsortierung); E-R17-01 bis -03 und **E-R17-06 bis -13 (die Antworten auf Q-R17-01 bis -08)** von der Betreiberin am 11.10.2026, E-R17-04 am 28.09.2026, E-R17-05 aus der Umsetzung. |
 > | Offen | **12b:** die Stücke 2 bis 12 (R17-06 bis -16), dann die Freigaberunde (R17-17) über die 31 Befunde aus 2.3, die Befunde der Stücke (2.3a), die offenen Posten aus 3.4 (K-3, K-7, K-10, K-15, AN-5) und die zehn Backlog-Punkte mit Ziel 12b (Nr. 21, 77, 188, 263, 341, 370, 371, 380, 381, 382); danach der Paketschnitt. Schritt 12 ist abgeschlossen (PR #103 gemergt). |
-> | Umsetzung | **R17-00 erledigt** 11.10.2026 (`fca8549`). **R17-01 erledigt** 11.10.2026 (`3b6f330`; Inventar I-01 bis I-55, Befunde F-R17-01 bis -31; Prüfdokument 1 und 2 fortgeschrieben). **R17-02 erledigt** 11.10.2026 (`docs/Bedrohungsmodell.md`, Textprobe-Bereich, Verweise; keine neuen Befunde — das Modell nennt F-R17-01 bis -31 an Ort und Stelle). **R17-03 beantwortet** 11.10.2026 (Q-R17-01 bis -08 → E-R17-06 bis -13). **R17-04 in Arbeit:** Antworten eingearbeitet (Modell 5 und 6, Backlog 146 → erledigt, 263 → 12b, Nr. 370 und 371 neu, Rahmenplan Fassung 155, Krypto-Review nach 3.4 und gelöscht); **Freigabe 11.10.2026, Abschluss geschrieben** (Rahmenplan Fassung 156, PR #103). **R17-05 erledigt** 20.10.2026 (Spanne `e99a855`; Buchführung im Commit mit dem Prüfbericht). |
+> | Umsetzung | **R17-00 erledigt** 11.10.2026 (`fca8549`). **R17-01 erledigt** 11.10.2026 (`3b6f330`; Inventar I-01 bis I-55, Befunde F-R17-01 bis -31; Prüfdokument 1 und 2 fortgeschrieben). **R17-02 erledigt** 11.10.2026 (`docs/Bedrohungsmodell.md`, Textprobe-Bereich, Verweise; keine neuen Befunde — das Modell nennt F-R17-01 bis -31 an Ort und Stelle). **R17-03 beantwortet** 11.10.2026 (Q-R17-01 bis -08 → E-R17-06 bis -13). **R17-04 in Arbeit:** Antworten eingearbeitet (Modell 5 und 6, Backlog 146 → erledigt, 263 → 12b, Nr. 370 und 371 neu, Rahmenplan Fassung 155, Krypto-Review nach 3.4 und gelöscht); **Freigabe 11.10.2026, Abschluss geschrieben** (Rahmenplan Fassung 156, PR #103). **R17-05 erledigt** 20.10.2026 (Spanne `e99a855`; Buchführung im Commit mit dem Prüfbericht). **R17-06 erledigt** 20.10.2026 (Stück 2: 38 Dateien gelesen, F-R17-32 bis -35, sieben Altbefunde bestätigt, K-3 beantwortet; 7.3.2; Prüfbericht in der Commit-Nachricht). |
 > | Fable-Schritte | Schritt 12: alle. **12b:** alle Pakete des Reviews (R17-05 bis -17); die Pakete nach der Freigaberunde: Kryptographie mit Fable, alles andere mit Opus (K8, E-PV-5 (7)), je Paket im Paketschnitt markiert. |
 > | Fächerung | **R17-01 gefahren:** drei lesende Leser mit **Opus** (Server und Browser 129 Werkzeugaufrufe, 15 min; Uhr und Android 71, 10 min; Kette und Betrieb 105, 11 min), ohne Nebenwirkung — Leser 3 hat über `gh api` nur gelesen (Rulesets, Zweigregeln; Umgebungen und Organisation mit 403 verweigert). Zusammenführung und Nachprüfung Fable, seriell. Die übrigen Pakete seriell. **12b (E-R17-14):** keine Leser — Fable liest jedes Stück selbst, seriell; Unter-Agenten nur lesend für mechanische Vorarbeit (Aufruferlisten, Verweiszählung, ungenutzte Regeln), ohne Nebenwirkung, je Stück im Prüfprotokoll genannt. |
 > | Nummern | 370 bis 379 reserviert; vergeben: **370** (Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`, 12b, E-R17-08), **371** (Admin darf BetreiberIn-Konten nicht anfassen, 12b, E-R17-11). **12b: 400 bis 409** reserviert (R17-05, `e99a855`); vergeben: noch keine. |
@@ -203,6 +203,10 @@ verschärft, nennt die Nummer und bekommt keine neue.
 
 | Nr. | Grad | Stück | Fundstelle | Gesehen → Wirkung | Empfehlung |
 |---|---|---|---|---|---|
+| F-R17-32 | **mittel** | 2 | `api/kdf_upgrade.php`, Block „Nachweis" (`password_verify($altToken, …)` → 403 `nachweis`); zum Vergleich `api/schluessel_erneuern.php` und `api/kontopaar.php` (`rate_erlaubt('login', $email)` davor, `rate_misserfolg` beim Fehlschlag, Kommentar „ein Orakel") | Der Endpunkt tauscht Salz, Rundenzahl und Hüllen und verlangt dafür das alte Anmelde-Token. Er prüft es mit `password_verify()`, aber **ohne** `rate_erlaubt()`/`rate_misserfolg()` — die zwei Geschwister, die dasselbe Token prüfen, zählen in den Topf `login`, dieser nicht. Wer eine gültige Sitzung hat (Lage D, F; Modell 2), rät das Passwort hier online, ohne Sperre, gebremst nur von bcrypt (Größenordnung Sekundenbruchteile je Versuch); das Anmeldeformular und die Geschwister sperren nach wenigen Fehlversuchen. Ein gefundenes Passwort öffnet mit dem Anteil der Sitzung alle `pat_blob` (F-R17-01). Zusage „Ratenschutz, wo geraten werden kann" (7.2) gebrochen | `rate_erlaubt('login', $email)` vor der Prüfung (429 wie die Geschwister), `rate_misserfolg('login', $email)` vor dem 403; sechs Zeilen, ein Paket mit F-R17-01 (b). Die Zweitfaktorprobe um den Fall erweitern (ein dritter Fehlversuch → 429) |
+| F-R17-33 | niedrig | 2 | `wiederherstellen.php` `wh_auspacken()`, Block „IST DIE DATEI VOLLSTÄNDIG?" (`$eigen = str_contains(…, 'Komplett-Backup der Installation') \|\| str_contains(…, 'Komplett-Backup der Installation')`); Erzeuger `komp_dump_schreiben()` in `komplett_lib.php`; Rahmenplan-Archiv-2 Schritt 4 (S7) | Der Kommentar sagt: zwei Schreibweisen, die alte („Komplettsicherung der Installation", bis Web 12.9.2) muss stehen bleiben, sonst gilt ein Dump von vor S7 als **fremd** und die Endmarke wird nicht verlangt — „der gefährlichste Fehlschluss, den eine Umbenennung anrichten kann". Genau das ist geschehen: Die Umstellung des Backup-Begriffs (S7, 03.09.2026) hat **beide** Zeichenketten ersetzt, die Zeilen sind wortgleich (PHPStan: `function.impossibleType`, „will always evaluate to false"). Wirkung: Ein Dump, der vor dem 03.09.2026 erzeugt und beim Erzeugen abgebrochen wurde, wird **ohne** Endmarkenprüfung eingespielt — halb, und die Seite zeigt dazu „fremder Dump". Betroffen sind nur Dumps aus der Zeit vor S7; ob noch einer liegt, weiß die Betreiberin (P-R17-06). Die Prüfliste S7 (Punkt 4, „Komplett-Backup aus der Zeit vor diesem Deploy einspielen") hat das nicht gesehen, weil ein **vollständiger** alter Dump auch als fremder durchläuft | Die zweite Zeichenkette auf `Komplettsicherung der Installation` setzen (eine Zeile) — oder, wenn kein Dump von vor S7 mehr existiert, am v1.0-Schnitt (R60) auf eine Zeile kürzen und den Kommentar mitnehmen. In beiden Fällen: eine Probe, die einen Dump mit altem Kopf und ohne Endmarke abweisen sieht (`tools/proben/komplett/`), und das Register `bestand` lernt die Regel „zwei gleichlautende Zweige in einem `\|\|`" nicht — das sieht PHPStan, nicht die Kette (7.4) |
+| F-R17-34 | niedrig | 2 | `backup_lib.php` `edbak_restore()`, Block „Stammdaten" (`$name = (string)$b['name']` → `INSERT IGNORE INTO bases`); dagegen `pruef_rettungsmittel()` für `vehicles`, `pruef_text()` für Gerätekennungen, `pruef_kalendertag()` für Diensttage im selben Lauf | Standortname und Koordinaten eines Backups gehen ohne `pruef_text()`/`pruef_breite()`/`pruef_laenge()` in die Datenbank — kein Leerraumschnitt, keine Längengrenze, keine Zahlprüfung; der Rest desselben Laufs geht über die Prüfschicht. Zusage „alle Schreibwege, ohne Ausnahme" (`CLAUDE.md` 4) hat hier eine. Wirkung: ein Name über der Spaltenlänge bricht im **strikten** SQL-Modus den ganzen Lauf mit 500 ab (nichts geschrieben, Meldung ohne Feld), im laxen wird er still gekappt und passt danach nicht mehr zum `base_ref` der Rettungsmittel — die bleiben ohne Standort, gezählt als „übersprungen". Kein Fremdzugriff (eigenes Konto, gebundene Parameter), kein Verlust | `pruef_text($b['name'], <Spaltenlänge>, 'bases.name', $pruef)` und `pruef_breite`/`pruef_laenge` für die Koordinaten, Fehler zählen wie bei den Rettungsmitteln; vier Zeilen. Dieselbe Lesung für `bw_units` und `transport_dests`, falls sie dort ebenso stehen (nicht nachgelesen — der Block ist lang) |
+| F-R17-35 | Hinweis | 2 | `adminbackup_lib.php` `edbak_teil_oeffnen()` („Ein Eintrag ohne `edsk1:` ist Fassung 2 und kommt unverändert zurück"); Aufrufer `edbak_paket_teil_lesen()`, `edbak_paket_kopf_lesen()`, `edbak_paket_einspielen()` | Das Präfix entscheidet je Teil, nicht die Fassung des Pakets: In einem Fassung-3-Paket wird ein Teil, dem jemand das Siegel abgenommen und den Klartext hingelegt hat, ohne Prüfung angenommen — das Siegel bindet Server, Konto, Paket und Teilnamen (AAD), der Rückfall auf Fassung 2 hebt die Bindung für diesen Teil auf. Wer das kann, hat Dateizugriff (Lage B) und damit ohnehin `config.php`; deshalb Hinweis, kein Befund. Bleibt stehen, bis es keine Fassung-2-Pakete mehr gibt | Beim Paketschnitt: das Manifest trägt die Fassung; ab Fassung 3 den Rückfall abschalten (`edbak_teil_oeffnen()` bekommt die Fassung mit, ein unversiegelter Teil ist dann `null`). Zwei Zeilen und eine Probe |
 
 ## 3. Stück 1 — das Bedrohungsmodell
 
@@ -388,7 +392,7 @@ Proben oder Riegel ersetzt (`proben/sitzung`, `proben/frist`,
 | **R17-03 Fragen an die Betreiberin** | Q-R17-NN mit Empfehlung und Preis: Nr. 146 (Argon2id; `CryptoKey`), S11-Entwurfsfragen, Nr. 263. **Halt:** wartet auf die Antworten. | seriell | Jede Frage beantwortet und als E-R17-NN eingetragen; Nr. 146 erledigt, Nr. 263 mit Stand. |
 | **R17-04 Abschluss** | Antworten ins Modell einarbeiten, Prüfdokument mit Mittel und Zahl, Prüfstand `klein`, Freigabe der Betreiberin; danach Erledigt-Zeile (Rahmenplan 8), Backlog-Kopfzeilen, Verlaufszeile, Pull Request gegen `main`. | seriell | Freigabe erteilt; PR gestellt. |
 | **R17-05 Buchführung 12b** | Spanne 400–409 (zuerst gepusht), Rahmenplan Fassung 167 (Fahrplanzeile, Kopf), Abschnitt 7 und 2.3a hier, Prüfdokument fortgeschrieben, E-R17-14 bis -16; Werkzeuge der Steuerung grün. | seriell | `decken.py` 0 gerissen, `uebersicht.py` 0 ohne Ziel, `nummern.py` 0 Überschneidungen; gepusht. |
-| **R17-06 Stück 2 — Kryptographie und Schlüssel** | Server- und Browser-Krypto samt S11 (7.3, Stück 2); K-3 (`pwquality.js`); Nr. 370 als Entwurfsfrage. | seriell, Fable liest; Vorsortierung örtlich | Jede Datei des Stücks gelesen (Liste in 7.3 abgehakt); Befunde in 2.3a, Karteileichen und Kommentarfundstellen in 7.3; Prüfprotokoll mit Zahl. |
+| **R17-06 Stück 2 — Kryptographie und Schlüssel** | Server- und Browser-Krypto samt S11 (7.3, Stück 2); K-3 (`pwquality.js`); Nr. 370 als Entwurfsfrage. | seriell, Fable liest; Vorsortierung örtlich (PHPStan, eigene Zähler) | **Erledigt 20.10.2026:** 38 Dateien gelesen (7.3.2), F-R17-32 bis -35 in 2.3a, sieben Altbefunde bestätigt, K-3 beantwortet, Nr. 370 mit Verwenderzahl notiert; Prüfprotokoll mit Zahl (5). |
 | **R17-07 Stück 3 — Zugang und Sitzung** | Anmeldung, Sitzung, Zweitfaktor, Registrierung, Kopplung, Ratenschutz, CSRF; jeder HTTP-Einstieg des Stücks gegen die Checkliste (7.2); K-7, K-15. | wie R17-06 | wie R17-06 |
 | **R17-08 Stück 4 — Einsatz, Diensttag, Spur, Ingest** | Ingest, SPUR2, Diensttag, Einsatz, Nachbearbeitung, GPX-Import, Prüfschicht, Feldkatalog; K-10. | wie R17-06 | wie R17-06 |
 | **R17-09 Stück 5 — Verwaltung und Admin** | Einstellungen, Admin-Seiten, Stammdaten, Rechtstexte, Papierkorb, Suche, Zeitraum, APK-Ausgabe, Statistik; Nr. 371, 381; F-R17-02, -06, -07, -08 in Endfassung. | wie R17-06 | wie R17-06 |
@@ -413,6 +417,7 @@ Betreiberin steht im Prüfdokument.
 
 | Paket | Mittel | Zahl | Datum |
 |---|---|---|---|
+| R17-06 | Lesung Fable (E-R17-14) · PHPStan 2.3.1, Stufe 4, örtlich (E-R17-16) · `grep` als Verweiszähler und Aufruferprobe · `git log -G`/`-S` · `decken.py` · `nummern.py` · `textprobe.py --bereich c` · `linkprobe.py` · Prüfstand `klein` | 38 Dateien, 20 053 Zeilen gelesen; 4 Einträge in 2.3a (1 mittel, 2 niedrig, 1 Hinweis); 7 Altbefunde nachgelesen, 7 bestätigt · PHPStan über `server/` (ohne `vendor/`, `assets/`, `demo/`, `doku/`): 506 Meldungen, davon 88 in Stück 2 — 29 `variable.undefined` (`$userId` aus `auth_guard.php`, Rauschen), 44 `class.notFound` (phpseclib und ConstantTime liegen unter `vendor/`, ausgeschlossen), 15 gelesen: 1 Befund (F-R17-33), 6 tote Zweige (7.3.2), 8 Absichtsvergleiche · 334 PHP-Funktionen des Stücks gegen `server/`, `tools/`, `docs/` gezählt: 1 ohne Nennung (`serverschluessel_zeile()`); `crypto.js`, `keyguard.js`, `pwquality.js`, `kontopaar.js`, `schluessel.js`: 0 Methoden ohne Verwender · 987 Kommentarverweise in 38 Dateien (Zahl je Datei in 7.3.2) · Steuerung: 21 Decken, 0 gerissen · 0 neue Nummern · 0 neue Treffer · 150/0 · Prüfstand `klein`: Bericht in der Commit-Nachricht von R17-06 | 20.10.2026 |
 | R17-05 | `decken.py` · `uebersicht.py --ziel 12b` · `nummern.py` · `textprobe.py --bereich c` · `bestand.py` · `linkprobe.py` · Prüfstand `klein` | 21 Decken, 0 gerissen (die Decke `backlog-kopf` riss zwischendurch mit 61 Zeilen — behoben durch Streichen der gemergten Spannen 12a und 19; `fahrplan-vokabular` riss mit „läuft" — Statuswort auf „Umsetzung") · 69 offene Einträge, 0 ohne Grammatik, 0 ohne Ziel, 10 zu Ziel 12b · 0 neue Nummern, 15 Zweige verglichen, 0 Überschneidungen · 0 neue Treffer, 0 durchgerutschte Fallen · 0 Befunde · 150/0 · Prüfstand `klein`: Bericht in der Commit-Nachricht von R17-05 | 20.10.2026 |
 | R17-04 | `decken.py` · `uebersicht.py --ziel 12` und `--ziel 12b` · `nummern.py` · `textprobe.py --bereich c` · `bestand.py` · `linkprobe.py` · `grep` auf den gelöschten Dateinamen · Prüfstand `klein` | 21/0 · Ziel 12: 0, Ziel 12b: 7 · 2 neue Nummern, 0 Überschneidungen · 0 neue Treffer · 0 Befunde · 150/0 · 7 Nennungen der gelöschten Datei, alle hier als Fundstelle oder Geschichte · Prüfstand 23 grün (Baum `ea29dca…` = `30d7226`); der Abschluss trägt seinen Bericht in der eigenen Commit-Nachricht | 11.10.2026 |
 | R17-03 | `decken.py` · `uebersicht.py` · `nummern.py` · `textprobe.py --bereich c` · `bestand.py` · `linkprobe.py` · Prüfstand `klein` | 21/0 · 62/0/0 · 0 · 0 neue Treffer · 0 Befunde · 150/0 · Prüfstand: Commit-Nachricht von R17-03 | 11.10.2026 |
@@ -525,7 +530,7 @@ Befunde aus 2.3 zum Nachlesen in Endfassung, offene K- und AN-Posten aus
 
 | Stück | Paket | Umfang | Posten | Stand |
 |---|---|---|---|---|
-| 2 Kryptographie und Schlüssel | R17-06 | `serverkrypto_lib.php`, `auth_salt.php`, `pw_handling.php`, `komplett_lib.php`, `backup_lib.php`, `adminbackup_lib.php`, `wiederherstellen.php`, `demo_lib.php`, `geraetehuelle_lib.php`, `kontopaar_lib.php`, `schluesselwechsel_lib.php`, `schluessel_teile.php`, `totp_lib.php`, `passkey_lib.php`, `rueckweg_lib.php`, `betrieb_schluesselblatt.php`, `codeblatt.php`, `notfallblatt.php`, `zweitfaktor_teile.php`; `api/kdf_upgrade.php`, `api/pat_anheben.php`, `api/schluessel_erneuern.php`, `api/adminbackup_freigabe.php`, `api/backup_*.php`; Browser: `crypto.js`, `keyguard.js`, `pwquality.js` und die Skripte der Gerätehülle und des Schlüsselpaars | F-R17-01, -02, -06, -10, -19, -24, -26; K-3 (Mindestlänge in `pwquality.js`); Nr. 370 (`CryptoKey`) als Entwurfsfrage für den Paketschnitt | offen |
+| 2 Kryptographie und Schlüssel | R17-06 | `serverkrypto_lib.php`, `auth_salt.php`, `pw_handling.php`, `komplett_lib.php`, `backup_lib.php`, `adminbackup_lib.php`, `wiederherstellen.php`, `demo_lib.php`, `geraetehuelle_lib.php`, `kontopaar_lib.php`, `schluesselwechsel_lib.php`, `schluessel_teile.php`, `totp_lib.php`, `passkey_lib.php`, `rueckweg_lib.php`, `betrieb_schluesselblatt.php`, `codeblatt.php`, `notfallblatt.php`, `zweitfaktor_teile.php`; `api/kdf_upgrade.php`, `api/pat_anheben.php`, `api/schluessel_erneuern.php`, `api/adminbackup_freigabe.php`, `api/backup_*.php`; Browser: `crypto.js`, `keyguard.js`, `pwquality.js` und die Skripte der Gerätehülle und des Schlüsselpaars | F-R17-01, -02, -06, -10, -19, -24, -26; K-3 (Mindestlänge in `pwquality.js`); Nr. 370 (`CryptoKey`) als Entwurfsfrage für den Paketschnitt | **gelesen** 20.10.2026 (R17-06; Ergebnis in 7.3.2) |
 | 3 Zugang und Sitzung | R17-07 | `login.php`, `logout.php`, `session_lib.php`, `sitzung_lib.php`, `auth_guard.php`, `ratelimit_lib.php`, `reset_request.php`, `pair.php`, `jobs.php`, `zweitfaktor.php`, `zweitfaktor_notweg.php`, `registrieren.php`, `bestaetigen.php`, `adresse_bestaetigen.php`, `einwilligung.php`, `einwilligung_lib.php`, `konto_lib.php`, `einstieg_lib.php`, `kopplung_lib.php`, `kopfzeilen_lib.php`, `netz_lib.php`, `wegwerfdomains.txt`, die CSRF-Prüfung in `db.php`; die zugehörigen `api/`-Einstiege und Browser-Skripte | F-R17-22, -23, -31 (Anteil an jeden Link); K-7 (Adresswechsel), K-15 (`csrf_check`); P-R17-04 bleibt bei der Betreiberin | offen |
 | 4 Einsatz, Diensttag, Spur, Ingest | R17-08 | `ingest.php`, `spur_lib.php`, `tag_spuren.php`, `diensttag_*.php`, `tageszuordnung_lib.php`, `einsatz.php`, `einsatz_form.php`, `einsatz_lib.php`, `einsatz_loeschen.php`, `einsatz_verschieben.php`, `nachbearbeitung.php`, `nachbearbeitung_lib.php`, `import.php`, `validate_lib.php`, `mission_fields.php`, `mission_fields_lib.php`, `nachweis_lib.php`, `geraete_lib.php`; die zugehörigen `api/`-Einstiege (Spur, Phasen, Reanimation, Export) und Browser-Skripte (Spurfunktionen, Karte, Formular) | F-R17-09 (Photon, Kacheln), -13, -28 (Fristen, soweit Server); K-10 (DOCTYPE/UTF-16 im GPX-Import); Nr. 23 nur lesen (gehört zu 13) | offen |
 | 5 Verwaltung und Admin | R17-09 | `einstellungen.php`, `konten_einstellungen_lib.php`, `admin_users.php`, `admin_user.php`, `admin_demo.php`, `admin_installation.php`, `admin_komplettsicherung.php`, `admin_protokoll.php`, `admin_rechtstexte.php`, `admin_sicherungen.php`, `admin_sicherungsziele.php`, `stammdaten_ui.php`, `rechtstexte_lib.php`, `rechtstext_seite.php`, `papierkorb.php`, `trash_lib.php`, `suche.php`, `zeitraum.php`, `apk.php`, `apk_lib.php`, `geraetemodelle.php`, `geraetemodelle_lib.php`, `statistik_lib.php`, `betrieb_statistik.php`, `erststart_karte.php`, `blatt_dialog.php`, `rueckfrage_dialog.php`; zugehörige `api/` und Skripte | F-R17-07, -08; Nr. 371 (Admin-Riegel), Nr. 381 (Suche und Zeitraum) | offen |
@@ -542,6 +547,129 @@ und halten je Stück: die abgehakte Dateiliste, die Aufräumposten
 (Karteileichen mit Gegenprobe, ungebrauchter Code), die Kommentarfundstellen
 als Zahl je Datei und die Ergebnisse der Vorsortierung.
 
+#### 7.3.2 Stück 2 — Kryptographie und Schlüssel (R17-06, 20.10.2026)
+
+**Dateiliste, abgehakt — 38 Dateien, 20 053 Zeilen, jede von Fable
+vollständig gelesen** (E-R17-14; kein Unter-Agent, die Zähler unten sind
+`grep`). Drei Dateien, die 7.3 dem Stück zuschlug, lesen sich im
+Zusammenhang des Zugangs und gehen nach **Stück 3**:
+`api/rueckweg_anlegen.php`, `api/passkey_anlegen.php`,
+`api/schluesselblatt_pruefen.php` (dort als Einstiege des Zweitfaktors).
+Die Bibliotheken dahinter (`rueckweg_lib.php`, `passkey_lib.php`,
+`totp_lib.php`) sind hier gelesen. Die Spalte rechts ist die Zahl der
+Fundstellen des Kommentardurchgangs (Muster: Paketkürzel, E-/F-/R-Nummern,
+„bis/seit Web N", „Nr. NNN"; Orientierung, kein Prüfwert — das Muster
+trifft auch Fachbegriffe, die so aussehen).
+
+| Datei | Zeilen | Verweise | Datei | Zeilen | Verweise |
+|---|---|---|---|---|---|
+| `serverkrypto_lib.php` | 1 569 | 100 | `api/kdf_upgrade.php` | 240 | 10 |
+| `auth_salt.php` | 127 | 5 | `api/pat_anheben.php` | 152 | 3 |
+| `pw_handling.php` | 709 | 42 | `api/schluessel_erneuern.php` | 138 | 4 |
+| `komplett_lib.php` | 1 744 | 45 | `api/kontopaar.php` | 145 | 5 |
+| `backup_lib.php` | 2 563 | 140 | `api/adminbackup_freigabe.php` | 130 | 10 |
+| `adminbackup_lib.php` | 2 587 | 109 | `api/backup_data.php` | 80 | 5 |
+| `wiederherstellen.php` | 780 | 21 | `api/backup_eintraege_restore.php` | 71 | 4 |
+| `demo_lib.php` | 822 | 45 | `api/backup_restore.php` | 131 | 13 |
+| `geraetehuelle_lib.php` | 205 | 12 | `api/backup_spuren.php` | 90 | 5 |
+| `kontopaar_lib.php` | 156 | 4 | `api/backup_spuren_restore.php` | 89 | 5 |
+| `schluesselwechsel_lib.php` | 1 320 | 90 | `assets/crypto.js` | 1 035 | 37 |
+| `schluessel_teile.php` | 101 | 4 | `assets/keyguard.js` | 161 | 5 |
+| `totp_lib.php` | 647 | 45 | `assets/unlock.js` | 579 | 26 |
+| `passkey_lib.php` | 992 | 83 | `assets/pwquality.js` | 682 | 7 |
+| `rueckweg_lib.php` | 391 | 23 | `assets/schluessel.js` | 185 | 5 |
+| `betrieb_schluesselblatt.php` | 220 | 23 | `assets/kontopaar.js` | 197 | 6 |
+| `codeblatt.php` | 128 | 6 | `assets/schluesselblatt.js` | 249 | 4 |
+| `notfallblatt.php` | 213 | 14 | `assets/rueckweg.js` | 161 | 10 |
+| `zweitfaktor_teile.php` | 91 | 1 | `assets/passkey.js` | 173 | 11 |
+
+**Summe 987 Verweise.** Die fünf Dateien mit den meisten tragen 522 davon
+(`backup_lib`, `adminbackup_lib`, `serverkrypto_lib`,
+`schluesselwechsel_lib`, `passkey_lib`) — dort ist der Kopfkommentar
+Geschichte des Pakets, nicht Beschreibung des Codes, und dort beginnt das
+Aufräumpaket.
+
+**Was die Lesung ergeben hat, in einem Absatz.** Die Kryptographie selbst
+hält, was das Modell sagt: Die Hüllen (`edk1:`, `edka1:`, `edsk1:`,
+Gerätehülle Fassung 1, EDKOMP1, Konto-Backup Fassung 4) tragen Zweck oder
+Bindung in den Zusatzdaten, der Wiederherstellungsschlüssel bleibt vom
+Anteil fern (`WRAP_RC_RE`, `RW_PRIVAT_RE`, geprüft an jeder Schreibstelle
+einschließlich der Demo-Fixture), `pat_blob` und Stücke gehen auf keinem
+Weg im Klartext über den Server, und jeder Schreibweg der Backups prüft
+Eigentum je Kennung gegen `user_id`. Die vier Einträge in 2.3a sind
+Ränder: ein fehlender Ratenschutz an einem von drei Geschwistern
+(F-R17-32), eine Prüfung, die eine Umbenennung abgeschaltet hat
+(F-R17-33), eine Lücke in der Prüfschicht des Rückwegs (F-R17-34), ein
+Rückfall je Teil statt je Paket (F-R17-35). Nichts davon ist kritisch,
+nichts ein Sofortpaket; F-R17-32 gehört in das Paket zu F-R17-01 (b).
+
+**Die sieben Altbefunde des Stücks, am Stand Web 23.0.2 nachgelesen —
+alle bestehen:**
+
+| Befund | Stand 20.10.2026 |
+|---|---|
+| F-R17-01 (hoch) | unverändert: `password_hash($neuToken, …)` in `api/kdf_upgrade.php` und `pw_handling.php`, Token ohne Anteil |
+| F-R17-02 (hoch) | unverändert: `edbak_freigeben()` ruft weder `protokoll()` noch eine Mail; `freigeben` steht nicht in `ZF_FRISCH_HANDLUNGEN` (acht Handlungen gezählt) |
+| F-R17-06 (mittel) | unverändert: Reset-Zweig in `pw_handling.php` prüft allein `key_check` gegen `pat_key_check` |
+| F-R17-10 (mittel) | unverändert: `api/schluessel_erneuern.php` schreibt `protokoll('verwaltung', 'schluessel_erneuert', …)`, keine Mail |
+| F-R17-19 (mittel) | unverändert: `edbak_ablage_bereit()` wird in `wiederherstellen.php` nicht gerufen (0 Treffer) |
+| F-R17-24 (niedrig) | bestätigt, mit einer Präzisierung: `edkvor` wird von `unlock.js` beim ersten Schlüsselbedarf, beim Abmelden und bei jedem Anmeldeversuch geräumt (`vergissAbleitungen()`), liegt also einen Seitenwechsel lang; `edk` bleibt, wie beschrieben |
+| F-R17-26 (niedrig) | unverändert: der Kopf von `serverkrypto_lib.php` nennt die Protokollarchive, nicht die TOTP-Geheimnisse; `config.example.php` keines von beiden |
+
+**K-3 beantwortet** (3.4): `pwquality.js` verlangt `MIN_LAENGE = 12`,
+dieselbe Zahl wie `PW_MIN_LAENGE` in `db.php`; dazu die Liste häufiger
+Passwörter, eine Anteilsregel gegen Wiederholungen und Reihen. Ein
+zufällig erzeugtes Passwort wird nicht gegen den Rest gemessen — richtig,
+es ist die stärkere Wahl. Kein Befund.
+
+**Nr. 370 (`CryptoKey`) — Notiz für den Paketschnitt:** `getContentKey()`
+hat **vier Verwenderdateien** mit zusammen elf Nennungen; der Schlüssel
+liegt als Hex unter `pck` im `sessionStorage`, daneben das
+`schluesselfach` (ein `CryptoKey`-Zwischenspeicher, den `clearSession()`
+leert). Der Umbau ersetzt das Hex durch einen nicht-extrahierbaren
+`CryptoKey` in IndexedDB; das Lebensdauermodell „ein Tab, ein Schlüssel"
+bleibt (E-R17-08).
+
+**Aufräumposten (kein Befund):**
+
+- **Karteileiche, mit Gegenprobe:** `serverschluessel_zeile()` in
+  `serverkrypto_lib.php` — 0 Nennungen in `server/`, `tools/` und `docs/`
+  außer der Definition (seit S10 baut `config_eintrag_zeile()` die Zeile
+  direkt; der Umschlag ist übrig geblieben).
+- **Tote Zweige seit Web 23 (S11-12), von PHPStan bestätigt:**
+  `edbak_build()` in `backup_lib.php` — die Vollausgabe mit `missions` und
+  `rest_segments` am Ende der Funktion und die Zeile `if (!$nurKopf)
+  $data['_spur_index'] = …` sind unerreichbar, weil der Riegel am Kopf nur
+  noch Kopf oder Fenster durchlässt (`deadCode.unreachable`,
+  `booleanNot.alwaysFalse`, `if.alwaysTrue`); `komp_schub_lauf()` in
+  `komplett_lib.php` — das letzte `return` nach dem Siegel-Zweig
+  (`deadCode.unreachable`). Dazu `$cursor === []` und `$stand === 'siegel'`
+  in derselben Datei, `$u['pat_wrap_pw'] !== null` in `kdf_upgrade.php`,
+  `$m['blob_alt'] !== null` in `pat_anheben.php`, `$kennungAlt !== null`
+  in `serverkrypto_lib.php`: Vergleiche, die der Typ schon entscheidet —
+  Gürtel und Hosenträger, lesbar, kein Fehler; das Aufräumpaket entscheidet
+  je Stelle.
+- **Register (Stück 10 prüft die Decke):** `api/kdf_upgrade.php` ruft
+  `$pdo->beginTransaction()` direkt statt `db_transaktion()` — eine der
+  Stellen, die die Registerzeile „Transaktion" oberhalb von null hält.
+- **Bewusst wirkungslos:** der Parameter `csrf` in `schluessel.js` (die
+  Kopfzeile setzt `EdApi`); ein Aufrufer reicht ihn noch durch.
+- **Beobachtung ohne Posten:** `pw_handling.php` nimmt im Reset-Zweig
+  `key_check = ''` an, wenn das Konto noch kein `pat_key_check` trägt
+  (Altkonten) — dieselbe Klasse wie F-R17-06, dort mit abgedeckt.
+- **Kommentardurchgang:** 987 Fundstellen (Tabelle oben); das Aufräumpaket
+  erzeugt die Zeilenliste selbst.
+
+**Vorsortierung, was sie gebracht hat:** PHPStan hat den einen Befund
+geliefert, den die Lesung übersehen hätte (F-R17-33 — zwei wortgleiche
+Zeichenketten in einem `||` liest ein Mensch als zwei verschiedene, weil
+der Kommentar es sagt), und die toten Zweige bestätigt. Die 44
+`class.notFound` sind kein Befund, sondern die Grenze der Konfiguration
+(`vendor/` ausgeschlossen, phpseclib und ConstantTime ohne Autoloader);
+die 29 `variable.undefined` sind `$userId` aus `auth_guard.php` in
+jedem `api/`-Einstieg — ein Muster, das PHPStan ohne Bootstrap-Datei nicht
+versteht. Beides steht im Prüfdokument 5.
+
 ### 7.4 Vorsortierung — Mittel und Grenzen
 
 Nach E-R17-16 örtlich und nicht im Repositorium. Geplant: PHPStan (Stufe
@@ -556,3 +684,17 @@ Datei). Grobzählung am 20.10.2026, Orientierung und kein Prüfwert: rund
 (`version.php` ist seiner Natur nach Geschichte) und Wörter, die zufällig
 so aussehen. Was ein Mittel lieferte und was es nicht sieht, steht je
 Stück in 7.3 und im Prüfdokument 2 und 5.
+
+**Gefahren für Stück 2 (R17-06, 20.10.2026):** PHPStan 2.3.1 als Phar
+im Arbeitsverzeichnis, Stufe 4, über `server/` ohne `vendor/`, `assets/`,
+`demo/`, `doku/` — 506 Meldungen insgesamt, 88 in den Dateien des Stücks
+(Aufschlüsselung in 5 und 7.3.2). Die Stufe ist die höchste, die ohne
+Bootstrap-Datei und ohne Typangaben am Altbestand lesbar bleibt; höher
+meldet sie Typen, die der Code bewusst offen lässt. **Nicht gefahren:**
+`vulture` — es liest Python, nicht PHP, und ist für `tools/` (Stück 10)
+aufgehoben; Android Lint und Uhr-Compiler kommen mit den Stücken 8 und 9.
+Die eigenen Zähler (`grep` über die Funktionsnamen des Stücks gegen
+`server/`, `tools/`, `docs/`; das Verweismuster je Datei) stehen in 7.3.2
+mit Zahl. Die Zählung ist eine Liste, kein Spürsinn: Sie findet keine
+Funktion, die über eine Zeichenkette gerufen wird, und zählt einen
+Fachbegriff mit, der wie ein Verweis aussieht.

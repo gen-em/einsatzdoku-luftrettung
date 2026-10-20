@@ -4,7 +4,7 @@
 Protokoll „ist es belegt?" steht im Statusblock und in Abschnitt 5 des
 Konzepts. Angelegt am 11.10.2026 mit R17-00 (Fable); jedes Paket füllt es
 mit Mittel **und** Zahl. Stand: **Schritt 12b läuft seit dem 20.10.2026**
-(R17-05 erledigt); Schritt 12 ist abgeschlossen — Freigabe des Modells
+(R17-06 erledigt — Stück 2 gelesen); Schritt 12 ist abgeschlossen — Freigabe des Modells
 durch die Betreiberin am 11.10.2026 (P-R17-01), Erledigt-Zeile in
 Rahmenplan 8 (Fassung 156), PR #103 gemergt. **12b schreibt dieses
 Dokument fort** (E-R17-15), mit denselben Zählern: Die Punkte P-R17-03 bis
@@ -21,6 +21,7 @@ Steht vor allem anderen. Was dazukommt, gehört hierher — an den Anfang.
 |---|---|---|
 | **Ob das Modell vollständig ist, misst kein Werkzeug.** | Ein Bedrohungsmodell ist eine Lesung: Es zählt auf, wogegen die Anlage hält und wogegen nicht. Dass keine Angreiferlage fehlt, lässt sich nicht nachzählen, nur gegenlesen — gegen die Liste im Fahrplan (Schritt 12), gegen den Krypto-Review vom 05.09.2026 (Git-Historie; Stand in Konzept 3.4) und gegen den Code. Die Inventartabelle (Konzept 3.2) macht sichtbar, **welche** Quellen gelesen wurden; sie belegt nicht, dass es alle sind. | P-R17-01: die Betreiberin liest das Modell gegen ihr eigenes Bild der Anlage. |
 | **Was die drei Leser von R17-01 nicht sicher lesen konnten** — je Punkt, wo es sich zeigt: (1) `Toybox.Cryptography` auf der Garmin (Kurven, AES-CBC, HMAC, Verfügbarkeit auf allen 99 Geräten) — kein Connect-IQ-SDK im Container; SP-9 behauptet es. (2) Ob Garmin den App-Speicher verschlüsselt und ob er per USB lesbar ist. (3) Der Weg einer Connect-IQ-Anfrage (direkt oder über Garmin-Server, Zertifikatsprüfung, `http://`). (4) Ob die App-Einstellungen der Garmin (Alt-Weg mit `apiKey`) in Garmins Cloud liegen. (5) Ob der Wear-Data-Layer ohne Bluetooth über Google-Server vermittelt. (6) Hardware-Anker des Keystore (TEE/StrongBox) — gerätabhängig, nicht gefordert. (7) Schutzregeln der GitHub-Umgebungen und Zweitfaktor-Zwang der Organisation — API 403; wer freigeben darf, ist nirgends belegt. (8) Ob `kdf_anteil` auf Produktiv gesetzt ist (Rahmenplan 6.1: offen). (9) `display_errors`, PHP-Fassung, bcrypt-Kosten, `csp_scharf`, `hsts_tage` auf Produktiv. (10) Zugriffsprotokolle beider Hoster (Dauer, Inhalt). (11) Ein vollständiger IDOR- und XSS-Durchgang (Stichproben nur; 43 `innerHTML`-Zuweisungen ungeprüft) — **Gegenstand von 12b, nicht von 12**. (12) Welche `ftp-deploy`-Fassung in der gepinnten SHA steckt. | Für (1): Probe-App im Uhr-Prüfstand, Stufe I über alle Geräte (vor S11). (2)–(5): Herstellerdoku, vor S11. (7), (8), (9): die Betreiberin liest es in GitHub bzw. auf Betrieb → Status ab — P-R17-04. (11): 12b. |
+| **Stück 2 (R17-06): drei Dinge, die der Container nicht messen konnte.** (1) Die Signaturprüfung der Passkeys und des Rückwegs (`passkey_lib.php`, `rueckweg_lib.php`) läuft über phpseclib unter `vendor/`; PHPStan sieht die Klassen nicht (44 `class.notFound`), die Prüfung ist **gelesen**, nicht statisch geprüft — die Zweitfaktorprobe misst sie gegen die Anlage (Stufe 2). (2) F-R17-33: ob ein Dump von vor dem 03.09.2026 wirklich den Kopf „Komplettsicherung der Installation" trägt, lässt sich hier nicht nachsehen — die Git-Historie dieses Repositoriums beginnt am 21.09.2026, eine Fixture mit altem Kopf gibt es nicht; belegt ist die Wortgleichheit der beiden Vergleiche (PHPStan) und die Umstellung (Rahmenplan-Archiv-2, Schritt 4). (3) F-R17-32: der fehlende Ratenschutz ist am Code gelesen (kein `rate_*`-Aufruf), nicht gegen die Anlage gemessen — der Review behebt und misst nichts (K4); das Paket, das ihn behebt, erweitert die Zweitfaktorprobe um den Fall. | (1): Zweitfaktorprobe in Stufe 2 nach jedem Paket, das die beiden Dateien anfasst. (2): P-R17-06 — die Betreiberin sagt, ob noch ein Dump von vor S7 liegt. (3): das Paket zu F-R17-01 (b) und F-R17-32. |
 | **Die Behauptungen des Modells über den Code sind gelesen, nicht gemessen.** | R17-01 liest den Code bei Web 21.14.0, Uhr 3.1.0, Android 0.17.0 und nennt Funktionsnamen. Dass eine genannte Funktion tut, was das Modell sagt, belegt die Lesung; eine Probe, die es misst, gibt es nur dort, wo ein Prüfwerkzeug schon steht (`tools/proben/`). Das Modell nennt je Baustein, ob eine Probe ihn misst. | Abschnitt 2 je Paket; Konzept 3.2. |
 
 ## 2. Maschinell geprüft
@@ -29,6 +30,21 @@ Je Paket die Mittel mit Zahl. Die Zahl eines Pakets steht hier mit dem
 nächsten Paket — eine Zeile hier ändert den Baum, den der Prüfstand gemessen
 hat (`Pruefablauf.md` 5.1); der Bericht eines Pakets steht in **seiner**
 Commit-Nachricht.
+
+### R17-06 Stück 2 — Kryptographie und Schlüssel (20.10.2026)
+
+| Mittel | Was gemessen | Zahl |
+|---|---|---|
+| Lesung Fable (E-R17-14), jede Datei vollständig | die 38 Dateien des Stücks (Konzept 7.3.2) nach der Checkliste 7.2: Rolle, CSRF, Eingabe, Ausgabe, Fehlerweg, Rate, gebundene Parameter, eine Stelle; dazu die Hüllenformate gegen `Technik.md` 4.98/4.99 und das Modell | 38 Dateien, 20 053 Zeilen; 4 Einträge in 2.3a (F-R17-32 mittel, -33 und -34 niedrig, -35 Hinweis); 0 kritisch, 0 hoch |
+| Nachlesen der Altbefunde des Stücks am Stand Web 23.0.2 (`grep` an der Fundstelle, Lesung des Blocks) | F-R17-01, -02, -06, -10, -19, -24, -26 | 7 nachgelesen, 7 bestehen (Konzept 7.3.2, Tabelle) |
+| PHPStan 2.3.1 (Phar, örtlich, E-R17-16), Stufe 4, `server/` ohne `vendor/`, `assets/`, `demo/`, `doku/` | Typfehler, tote Zweige, immer wahre Vergleiche | 506 Meldungen gesamt; 88 in Stück 2: 29 `variable.undefined` (Rauschen: `$userId` aus `auth_guard.php`), 44 `class.notFound` (Rauschen: phpseclib, ConstantTime unter `vendor/`), 15 gelesen — 1 Befund (F-R17-33 `function.impossibleType`), 6 tote Zweige, 8 Absichtsvergleiche |
+| `grep -rE` über die Namen aller `function`-Definitionen der 16 Bibliotheken des Stücks gegen `server/`, `tools/`, `docs/` | Funktionen ohne einen einzigen Aufruf oder eine Nennung | 334 geprüft, 1 ohne (`serverschluessel_zeile()`); Grenze: ein Aufruf über eine Zeichenkette (`call_user_func`) bliebe unsichtbar |
+| `grep -rhoE '\.<Methode>\('` über `server/` für die Methoden der Objekte in `crypto.js`, `keyguard.js`, `pwquality.js`, `kontopaar.js`, `schluessel.js` | Methoden ohne Verwender | 0 (die Treffer `for`, `if`, `switch` sind Schlüsselwörter, die das Muster mitnahm; `sealTeil`, `pruefeRunden`, `ablegen`, `verwerfeInhalt` haben Verwender in derselben Datei) |
+| Verweiszähler (`grep -oE` mit dem Muster aus Konzept 7.4) | Fundstellen des Kommentardurchgangs je Datei | 987 in 38 Dateien; Tabelle in Konzept 7.3.2 |
+| `git log -G`, `-S`, `--follow` auf `wiederherstellen.php` und `komplett_lib.php`; `grep` in `Rahmenplan-Archiv-2.md`, `CHANGELOG.md` | F-R17-33: seit wann die beiden Vergleiche wortgleich sind und wie die alte Schreibweise hieß | wortgleich seit dem ältesten Commit der Historie (21.09.2026); die Umstellung war S7 (Web 12.9.3/12.9.4, 03.09.2026); alter Begriff „Komplettsicherung" an 5 Stellen in Changelog und Archiv belegt |
+| `grep -c getContentKey` | Verwender für Nr. 370 | 4 Dateien, 11 Nennungen |
+| `decken.py` · `nummern.py` · `textprobe.py --bereich c` · `linkprobe.py` | Form der Steuerung; Nummern; neue Treffer; Verweise | siehe Konzept 5 (Zeile R17-06) |
+| `bash tools/pruefstand/pruefen.sh --stufe klein` | die billigen Riegel, Bericht für die Commit-Nachricht | siehe Commit-Nachricht von R17-06 |
 
 ### R17-05 Buchführung 12b (20.10.2026)
 
@@ -106,7 +122,9 @@ ist. Abhaken, wenn geprüft.
 | P-R17-05 | Die Wear-Release-APK aus der Kette (oder `appbau.sh`) mit `aapt2 dump permissions nadoku-uhr-<Fassung>.apk` ansehen. | Keine Zeile — die Wear-OS-Uhr hat keine Berechtigung (Modell G7). | Irgendeine `uses-permission`, vor allem `INTERNET`. | ☐ |
 | P-R17-03 | Nach dem Merge: `docs/Bedrohungsmodell.md` ist aus `README.md` und `docs/Technik.md` erreichbar; die Links führen hin. | Beide Verweise öffnen das Modell. | 404 oder ein Verweis auf eine andere Datei. | ☐ |
 
-*Weitere Punkte kommen mit R17-02 bis R17-04.*
+| P-R17-06 | Auf dem Backup-Ziel (Betrieb → Backup-Ziele) und in `sicherungen/` nachsehen, ob noch ein Komplett-Backup (`.edk`, `.sql.gz`) liegt, das **vor dem 03.09.2026** erzeugt wurde (Dateiname trägt den Zeitpunkt). | Keines — dann ist F-R17-33 ein Aufräumposten (eine Zeile und ein Kommentar), kein Risiko. | Ein Dump von vor S7: Der Wiederanlauf verlangt für ihn keine Endmarke; vor dem Einspielen die letzte Zeile der Datei auf `-- EDKOMP-ENDE` prüfen (`zcat … \| tail -1`). | ☐ |
+
+*Weitere Punkte kommen mit den Stücken 3 bis 12 und der Freigaberunde (R17-07 bis -17).*
 
 ## 5. Grenzen der benutzten Prüfmittel
 
@@ -120,11 +138,25 @@ ist. Abhaken, wenn geprüft.
 - **Der Prüfstand** (`pruefen.sh`, Stufe `klein`) läuft ohne `server/`-
   Berührung über die 20 billigen Riegel; er misst nicht, ob ein Satz im
   Modell wahr ist.
+- **PHPStan** (Stück 2 ff., örtlich, E-R17-16): Stufe 4 ohne Bootstrap-Datei
+  und ohne `vendor/`. Es kennt die Variablen nicht, die eine eingebundene
+  Datei setzt (`$userId` aus `auth_guard.php`, `$pdo`), und nicht die
+  Klassen unter `vendor/` (phpseclib, ConstantTime) — beides Rauschen, das
+  je Stück ausgezählt und abgezogen wird. Es findet Typwidersprüche und
+  tote Zweige; es findet keinen fehlenden Aufruf (F-R17-32 kam aus der
+  Lesung) und keinen Fehler, der nur zur Laufzeit sichtbar ist.
+- **Die Verweis- und Aufruferzähler** (`grep`, Konzept 7.4) sind Listen,
+  kein Spürsinn: Der Verweiszähler trifft auch Fachbegriffe, die wie ein
+  Verweis aussehen, und zählt Zeilen, nicht Absätze; der Aufruferzähler
+  sieht keinen Aufruf über eine Zeichenkette und keine Methode, deren Name
+  anderswo ein Wort ist. Beide Zahlen sind Orientierung; was als
+  Karteileiche gilt, steht mit Gegenprobe in 7.3.
 
 ## 6. Was aus dem Schritt offen bleibt
 
 **Schritt 12b (seit 20.10.2026):** die Stücke 2 bis 12 (Konzept 7.3, je
-Paket R17-06 bis -16), dann die Freigaberunde R17-17; was die Stücke nicht
+Paket R17-06 bis -16; **Stück 2 gelesen am 20.10.2026**, F-R17-32 bis -35,
+P-R17-06), dann die Freigaberunde R17-17; was die Stücke nicht
 prüfen können, kommt in Abschnitt 1, die Vorsortierung mit ihren Grenzen
 in Abschnitt 5, Prüfpunkte für die Betreiberin ab P-R17-06 in Abschnitt 4.
 Für Stück 3 bleibt P-R17-04 (GitHub-Umgebungen, Org-Zweitfaktor, Produktiv-
