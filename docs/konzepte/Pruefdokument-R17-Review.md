@@ -1,13 +1,15 @@
-# Prüfdokument R17 — Bedrohungsmodell (Schritt 12, Review Stück 1)
+# Prüfdokument R17 — Review (Schritt 12: Bedrohungsmodell; Schritt 12b: Stücke 2 bis 12)
 
 *Gehört zu `Review-R17.md`. Beantwortet „was muss **ich** noch tun?" — das
 Protokoll „ist es belegt?" steht im Statusblock und in Abschnitt 5 des
 Konzepts. Angelegt am 11.10.2026 mit R17-00 (Fable); jedes Paket füllt es
-mit Mittel **und** Zahl. Stand: **Schritt 12 abgeschlossen** — Freigabe des Modells durch die
-Betreiberin am 11.10.2026 (P-R17-01), Erledigt-Zeile in Rahmenplan 8
-(Fassung 156), PR #103 gegen `main`. Dieses Dokument bleibt, bis P-R17-03
-bis -05 abgehakt sind (Rahmenplan 6.1). Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist (K9); ob
-12b es fortschreibt oder ein eigenes anlegt, entscheidet 12b.*
+mit Mittel **und** Zahl. Stand: **Schritt 12b läuft seit dem 20.10.2026**
+(R17-05 erledigt); Schritt 12 ist abgeschlossen — Freigabe des Modells
+durch die Betreiberin am 11.10.2026 (P-R17-01), Erledigt-Zeile in
+Rahmenplan 8 (Fassung 156), PR #103 gemergt. **12b schreibt dieses
+Dokument fort** (E-R17-15), mit denselben Zählern: Die Punkte P-R17-03 bis
+-05 aus Schritt 12 bleiben offen neben dem, was die Stücke bringen. Es
+bleibt, bis seine Prüfliste abgehakt ist (K9).*
 
 ---
 
@@ -27,6 +29,17 @@ Je Paket die Mittel mit Zahl. Die Zahl eines Pakets steht hier mit dem
 nächsten Paket — eine Zeile hier ändert den Baum, den der Prüfstand gemessen
 hat (`Pruefablauf.md` 5.1); der Bericht eines Pakets steht in **seiner**
 Commit-Nachricht.
+
+### R17-05 Buchführung 12b (20.10.2026)
+
+| Mittel | Was gemessen | Zahl |
+|---|---|---|
+| `python3 tools/steuerung/decken.py` | Decken der Steuerungsdokumente nach Rahmenplan Fassung 167, Verlaufszeile 167 (276 Zeichen) und Backlog-Kopf | 21 Decken, 0 gerissen — zwei rissen beim ersten Lauf: `backlog-kopf` mit 61 Zeilen (Decke 60) nach der neuen Spannenzeile, behoben durch Streichen der gemergten Spannen 12a und 19; `fahrplan-vokabular`, weil „läuft" kein Statuswort ist (Vokabular: offen, Konzept, freigegeben, Umsetzung, gebaut, gemergt, blockiert) — auf „Umsetzung" gesetzt |
+| `python3 tools/steuerung/uebersicht.py --ziel 12b` | Kopfzeilen; Zuordnung zu 12b | 69 offene Einträge, 0 ohne Grammatik, 0 ohne gültiges Ziel; 10 zu Ziel 12b (Nr. 21, 77, 188, 263, 341, 370, 371, 380, 381, 382) |
+| `python3 tools/steuerung/nummern.py` | neue Nummern gegen `origin/main` und die Remote-Zweige | 0 neue Nummern, 15 Zweige verglichen (sie legen zusammen 7 Nummern neu an), 0 Überschneidungen |
+| `python3 tools/quelltext/textprobe.py --bereich c` | neue Treffer in der normativen Doku | 0 Treffer außerhalb der Ausnahmen, 0 durchgerutschte Fallen (3 ungenutzte Ausnahmen gehören zu Bereich a, nicht gefahren) |
+| `bestand.py` · `linkprobe.py` · `pysyntax.py` | Form des Werkzeugbestands; Verweise; Python-Werkzeuge | 0 Befunde · 150 Verweise, 0 Abweichungen · 66 Werkzeuge, 0 Fehler, 0 Warnungen |
+| `bash tools/pruefstand/pruefen.sh --stufe klein` | die billigen Riegel, Bericht für die Commit-Nachricht | siehe Commit-Nachricht von R17-05 |
 
 ### R17-04 Antworten, Backlog, Abschluss (11.10.2026)
 
@@ -109,6 +122,15 @@ ist. Abhaken, wenn geprüft.
   Modell wahr ist.
 
 ## 6. Was aus dem Schritt offen bleibt
+
+**Schritt 12b (seit 20.10.2026):** die Stücke 2 bis 12 (Konzept 7.3, je
+Paket R17-06 bis -16), dann die Freigaberunde R17-17; was die Stücke nicht
+prüfen können, kommt in Abschnitt 1, die Vorsortierung mit ihren Grenzen
+in Abschnitt 5, Prüfpunkte für die Betreiberin ab P-R17-06 in Abschnitt 4.
+Für Stück 3 bleibt P-R17-04 (GitHub-Umgebungen, Org-Zweitfaktor, Produktiv-
+Einstellungen) die Lücke, die nur die Betreiberin schließt.
+
+**Aus Schritt 12:**
 
 - **31 Befunde** (Konzept 2.3) für die Freigaberunde von 12b — ohne Sofortpaket (E-R17-06); die fünf hohen (F-R17-01 bis -05) stehen bis dahin offen, F-R17-04 und -05 als Zuarbeiten der Betreiberin in Rahmenplan 6.1.
 - **Zwei Entscheidungen mit Backlog-Nummer** für 12b: Nr. 370 (`CryptoKey`, E-R17-08) und Nr. 371 (Admin-Riegel, E-R17-11); **Nr. 263** offen für 12b (E-R17-12).

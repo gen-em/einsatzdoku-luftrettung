@@ -38,17 +38,32 @@ der Freigabe des Modells durch die Betreiberin (E-R17-03).
 **Backlog-Spanne:** **370 bis 379** (E-SD-21, eingetragen mit R17-00 vor
 jeder Vergabe). Vergeben aus der Spanne: siehe Statusblock.
 
+**Schritt 12b (seit 20.10.2026):** Rahmenplan Schritt **12b** — „P6, Stücke
+2 bis 12: Review und Bereinigung" (R17, R69, R86); Voraussetzung „12a
+gemergt" erfüllt am 20.10.2026 (PR #116, #117; `main` bei `f17380c`, Web
+23.0.2, Uhr 4.0.0, Android 0.18.0). Auftrag, Lesweise und Stücke stehen in
+**Abschnitt 7**, die Pakete R17-05 bis R17-17 in Abschnitt 4, die Befunde
+der Stücke in 2.3a. **Modell:** Fable für jedes Paket des Reviews; **Fable
+liest jedes Stück selbst** (E-R17-14) — Unter-Agenten nur lesend für
+mechanische Vorarbeit. **Versionsstufe:** keine für den Review (nur
+`docs/`); die Pakete nach der Freigaberunde stufen nach `CLAUDE.md` 2.
+**Zweig:** `claude/lucid-cannon-nvv86i`, aufgesetzt auf `origin/main` bei
+`f17380c`. **Backlog-Spanne:** **400 bis 409** (E-SD-21, zuerst gepusht in
+`e99a855`). **Prüfdokument:** `Pruefdokument-R17-Review.md` wird
+fortgeschrieben (E-R17-15). **Zweig von Schritt 12** war
+`claude/exciting-brown-0n9et2` (Absatz darüber), gemergt mit PR #103.
+
 > **Statusblock**
 >
 > | | |
 > |---|---|
-> | Stand | **11.10.2026 — Schritt 12 abgeschlossen.** Die Betreiberin hat das Modell freigegeben (P-R17-01); Erledigt-Zeile in Rahmenplan 8 (Fassung 156), Fahrplanzeile heraus, **PR #103** gegen `main`. Dieses Dokument bleibt für 12b (E-R17-02): Die Stücke 2 bis 12 schreiben mit denselben Zählern fort (nächste Nummern: E-R17-14, F-R17-32, Q-R17-09). Davor: **R17-04: die Antworten sind eingearbeitet, das Modell wartete auf die Freigabe (P-R17-01).** Acht Entscheidungen E-R17-06 bis -13: kein Sofortpaket (alles in 12b), Argon2id nein, `CryptoKey` ja in 12b (Nr. 370), S11 mit Zweck Server und der Klartextliste aus E-R17-10, Admin-Riegel (Nr. 371), Nr. 263 offen für 12b, der Krypto-Review gelöscht (Stand je K-Nummer in 3.4). Nr. 146 erledigt. Rahmenplan Fassung 155: Zuarbeit „Umgebung `produktion` beschränken" (F-R17-04). **Als Nächstes: Freigabe des Modells durch die Betreiberin, dann Erledigt-Zeile, Fahrplanzeile heraus, Pull Request.** Davor: **R17-03: acht Fragen an die Betreiberin gestellt (2.2).** Q-R17-01 (Sofortpaket für F-R17-02 und -03? Zusage F-R17-01 sofort berichtigen?), -02 und -03 (Nr. 146: Argon2id nein, `CryptoKey` ja in 12b), -04 und -05 (S11: Zweck Server; was Klartext bleibt), -06 (Admin gegen BetreiberIn-Konten: nein), -07 (Nr. 263: nicht umsetzen), -08 (Krypto-Review bleibt bis 12b). **Als Nächstes: die Antworten, dann R17-04** (Einarbeiten, Prüfdokument, Freigabe, Erledigt-Zeile, PR). Davor: **R17-02 erledigt: das Modell steht.** `docs/Bedrohungsmodell.md` nach der Gliederung in 3.1: fünf Werte (1), sechzehn Angreiferlagen A bis P (2), dreizehn Zusagen mit Grenze (3), die Bausteine in vier Tabellen gegen die Lagen (4), zwanzig Restrisiken mit Zuordnung (5), die Entwurfsfragen für S11 mit Empfehlungen zu Nr. 146 und Nr. 263 (6). Eingetragen im Bereich `c` der Textprobe mit zwei begründeten Ausnahmen (Fachbegriff Spur, Plattformnennung Garmin — das Modell unterscheidet die Uhren an ihren Sicherheitseigenschaften); verlinkt aus `README.md`, `Technik.md` (2, 4.98, 4.99b) und `CLAUDE.md` 4. **Als Nächstes: R17-03** — die Fragen an die Betreiberin; dort hält der Schritt an. Davor: **R17-01 erledigt: die Bestandsaufnahme.** Drei lesende Leser (Opus) haben den Code bei Web 21.14.0, Uhr 3.1.0, Android 0.17.0 gegen die Doku gelesen; Fable hat die Hoch- und Mittel-Befunde am Quelltext nachgeprüft und das Inventar verdichtet: **55 Bausteine** (3.2), **31 Befunde** (2.3) — fünf **hoch** (die S10-Zusage überzeichnet das Offline-Raten, F-R17-01; die Freigabe liefert einem Admin den Klartext jedes Kontos ohne Spur, F-R17-02; Gradle erbt den App-Signaturschlüssel, F-R17-03; ein Probelauf fordert `produktion` von jedem Zweig an, F-R17-04; die Pflichtstücke des Wiederanlaufs sind seit dem 14.09.2026 offen, F-R17-05), fünfzehn mittel, acht niedrig, zwei Hinweise. Was keiner sicher lesen konnte, steht im Prüfdokument 1. **Als Nächstes: R17-02** (das Modell schreiben). Davor: **R17-00 erledigt** (Spanne, Fahrplanzeile, dieses Dokument, Prüfdokument). |
-> | Entschieden | E-R17-01 bis E-R17-13 (Abschnitt 2.1) — E-R17-01 bis -03 und **E-R17-06 bis -13 (die Antworten auf Q-R17-01 bis -08)** von der Betreiberin am 11.10.2026, E-R17-04 am 28.09.2026, E-R17-05 aus der Umsetzung. |
-> | Offen | nichts in Schritt 12; der Merge von PR #103 liegt bei der Betreiberin. Für 12b: 31 Befunde (2.3), 3.4 (was vom Krypto-Review noch zu lesen ist), Nr. 263, 370, 371. |
-> | Umsetzung | **R17-00 erledigt** 11.10.2026 (`fca8549`). **R17-01 erledigt** 11.10.2026 (`3b6f330`; Inventar I-01 bis I-55, Befunde F-R17-01 bis -31; Prüfdokument 1 und 2 fortgeschrieben). **R17-02 erledigt** 11.10.2026 (`docs/Bedrohungsmodell.md`, Textprobe-Bereich, Verweise; keine neuen Befunde — das Modell nennt F-R17-01 bis -31 an Ort und Stelle). **R17-03 beantwortet** 11.10.2026 (Q-R17-01 bis -08 → E-R17-06 bis -13). **R17-04 in Arbeit:** Antworten eingearbeitet (Modell 5 und 6, Backlog 146 → erledigt, 263 → 12b, Nr. 370 und 371 neu, Rahmenplan Fassung 155, Krypto-Review nach 3.4 und gelöscht); **Freigabe 11.10.2026, Abschluss geschrieben** (Rahmenplan Fassung 156, PR #103). |
-> | Fable-Schritte | alle; keine Opus-Umsetzung in diesem Schritt. |
-> | Fächerung | **R17-01 gefahren:** drei lesende Leser mit **Opus** (Server und Browser 129 Werkzeugaufrufe, 15 min; Uhr und Android 71, 10 min; Kette und Betrieb 105, 11 min), ohne Nebenwirkung — Leser 3 hat über `gh api` nur gelesen (Rulesets, Zweigregeln; Umgebungen und Organisation mit 403 verweigert). Zusammenführung und Nachprüfung Fable, seriell. Die übrigen Pakete seriell. |
-> | Nummern | 370 bis 379 reserviert; vergeben: **370** (Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`, 12b, E-R17-08), **371** (Admin darf BetreiberIn-Konten nicht anfassen, 12b, E-R17-11). |
+> | Stand | **20.10.2026 — Schritt 12b läuft; R17-05 Buchführung erledigt.** Rahmenplan Fassung 167 (Fahrplanzeile 12b auf „Umsetzung", Kopf: Nr. 387 gemergt, `main` bei Web 23.0.2), Spanne 400 bis 409 zuerst gepusht (`e99a855`), gemergte Spannen 12a und 19 aus dem Backlog-Kopf gestrichen (die Decke `backlog-kopf` riss sonst mit 61 Zeilen), dieses Dokument mit Abschnitt 7 (Auftrag, Lesweise, elf Stücke mit Umfang und zugehörigen Posten) und den Paketen R17-05 bis R17-17, Prüfdokument fortgeschrieben (E-R17-15). Drei Entscheidungen der Betreiberin E-R17-14 bis -16 (Fable liest selbst; Prüfdokument fortschreiben; Vorsortierung örtlich). **Als Nächstes: R17-06 — Stück 2, Kryptographie und Schlüssel** (7.3). Davor: **11.10.2026 — Schritt 12 abgeschlossen.** Die Betreiberin hat das Modell freigegeben (P-R17-01); Erledigt-Zeile in Rahmenplan 8 (Fassung 156), Fahrplanzeile heraus, **PR #103** gegen `main`. Dieses Dokument bleibt für 12b (E-R17-02): Die Stücke 2 bis 12 schreiben mit denselben Zählern fort (nächste Nummern: E-R17-14, F-R17-32, Q-R17-09). Davor: **R17-04: die Antworten sind eingearbeitet, das Modell wartete auf die Freigabe (P-R17-01).** Acht Entscheidungen E-R17-06 bis -13: kein Sofortpaket (alles in 12b), Argon2id nein, `CryptoKey` ja in 12b (Nr. 370), S11 mit Zweck Server und der Klartextliste aus E-R17-10, Admin-Riegel (Nr. 371), Nr. 263 offen für 12b, der Krypto-Review gelöscht (Stand je K-Nummer in 3.4). Nr. 146 erledigt. Rahmenplan Fassung 155: Zuarbeit „Umgebung `produktion` beschränken" (F-R17-04). **Als Nächstes: Freigabe des Modells durch die Betreiberin, dann Erledigt-Zeile, Fahrplanzeile heraus, Pull Request.** Davor: **R17-03: acht Fragen an die Betreiberin gestellt (2.2).** Q-R17-01 (Sofortpaket für F-R17-02 und -03? Zusage F-R17-01 sofort berichtigen?), -02 und -03 (Nr. 146: Argon2id nein, `CryptoKey` ja in 12b), -04 und -05 (S11: Zweck Server; was Klartext bleibt), -06 (Admin gegen BetreiberIn-Konten: nein), -07 (Nr. 263: nicht umsetzen), -08 (Krypto-Review bleibt bis 12b). **Als Nächstes: die Antworten, dann R17-04** (Einarbeiten, Prüfdokument, Freigabe, Erledigt-Zeile, PR). Davor: **R17-02 erledigt: das Modell steht.** `docs/Bedrohungsmodell.md` nach der Gliederung in 3.1: fünf Werte (1), sechzehn Angreiferlagen A bis P (2), dreizehn Zusagen mit Grenze (3), die Bausteine in vier Tabellen gegen die Lagen (4), zwanzig Restrisiken mit Zuordnung (5), die Entwurfsfragen für S11 mit Empfehlungen zu Nr. 146 und Nr. 263 (6). Eingetragen im Bereich `c` der Textprobe mit zwei begründeten Ausnahmen (Fachbegriff Spur, Plattformnennung Garmin — das Modell unterscheidet die Uhren an ihren Sicherheitseigenschaften); verlinkt aus `README.md`, `Technik.md` (2, 4.98, 4.99b) und `CLAUDE.md` 4. **Als Nächstes: R17-03** — die Fragen an die Betreiberin; dort hält der Schritt an. Davor: **R17-01 erledigt: die Bestandsaufnahme.** Drei lesende Leser (Opus) haben den Code bei Web 21.14.0, Uhr 3.1.0, Android 0.17.0 gegen die Doku gelesen; Fable hat die Hoch- und Mittel-Befunde am Quelltext nachgeprüft und das Inventar verdichtet: **55 Bausteine** (3.2), **31 Befunde** (2.3) — fünf **hoch** (die S10-Zusage überzeichnet das Offline-Raten, F-R17-01; die Freigabe liefert einem Admin den Klartext jedes Kontos ohne Spur, F-R17-02; Gradle erbt den App-Signaturschlüssel, F-R17-03; ein Probelauf fordert `produktion` von jedem Zweig an, F-R17-04; die Pflichtstücke des Wiederanlaufs sind seit dem 14.09.2026 offen, F-R17-05), fünfzehn mittel, acht niedrig, zwei Hinweise. Was keiner sicher lesen konnte, steht im Prüfdokument 1. **Als Nächstes: R17-02** (das Modell schreiben). Davor: **R17-00 erledigt** (Spanne, Fahrplanzeile, dieses Dokument, Prüfdokument). |
+> | Entschieden | E-R17-01 bis E-R17-16 (Abschnitt 2.1) — **E-R17-14 bis -16 von der Betreiberin am 20.10.2026** (Fächerung, Prüfdokument, Vorsortierung); E-R17-01 bis -03 und **E-R17-06 bis -13 (die Antworten auf Q-R17-01 bis -08)** von der Betreiberin am 11.10.2026, E-R17-04 am 28.09.2026, E-R17-05 aus der Umsetzung. |
+> | Offen | **12b:** die Stücke 2 bis 12 (R17-06 bis -16), dann die Freigaberunde (R17-17) über die 31 Befunde aus 2.3, die Befunde der Stücke (2.3a), die offenen Posten aus 3.4 (K-3, K-7, K-10, K-15, AN-5) und die zehn Backlog-Punkte mit Ziel 12b (Nr. 21, 77, 188, 263, 341, 370, 371, 380, 381, 382); danach der Paketschnitt. Schritt 12 ist abgeschlossen (PR #103 gemergt). |
+> | Umsetzung | **R17-00 erledigt** 11.10.2026 (`fca8549`). **R17-01 erledigt** 11.10.2026 (`3b6f330`; Inventar I-01 bis I-55, Befunde F-R17-01 bis -31; Prüfdokument 1 und 2 fortgeschrieben). **R17-02 erledigt** 11.10.2026 (`docs/Bedrohungsmodell.md`, Textprobe-Bereich, Verweise; keine neuen Befunde — das Modell nennt F-R17-01 bis -31 an Ort und Stelle). **R17-03 beantwortet** 11.10.2026 (Q-R17-01 bis -08 → E-R17-06 bis -13). **R17-04 in Arbeit:** Antworten eingearbeitet (Modell 5 und 6, Backlog 146 → erledigt, 263 → 12b, Nr. 370 und 371 neu, Rahmenplan Fassung 155, Krypto-Review nach 3.4 und gelöscht); **Freigabe 11.10.2026, Abschluss geschrieben** (Rahmenplan Fassung 156, PR #103). **R17-05 erledigt** 20.10.2026 (Spanne `e99a855`; Buchführung im Commit mit dem Prüfbericht). |
+> | Fable-Schritte | Schritt 12: alle. **12b:** alle Pakete des Reviews (R17-05 bis -17); die Pakete nach der Freigaberunde: Kryptographie mit Fable, alles andere mit Opus (K8, E-PV-5 (7)), je Paket im Paketschnitt markiert. |
+> | Fächerung | **R17-01 gefahren:** drei lesende Leser mit **Opus** (Server und Browser 129 Werkzeugaufrufe, 15 min; Uhr und Android 71, 10 min; Kette und Betrieb 105, 11 min), ohne Nebenwirkung — Leser 3 hat über `gh api` nur gelesen (Rulesets, Zweigregeln; Umgebungen und Organisation mit 403 verweigert). Zusammenführung und Nachprüfung Fable, seriell. Die übrigen Pakete seriell. **12b (E-R17-14):** keine Leser — Fable liest jedes Stück selbst, seriell; Unter-Agenten nur lesend für mechanische Vorarbeit (Aufruferlisten, Verweiszählung, ungenutzte Regeln), ohne Nebenwirkung, je Stück im Prüfprotokoll genannt. |
+> | Nummern | 370 bis 379 reserviert; vergeben: **370** (Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`, 12b, E-R17-08), **371** (Admin darf BetreiberIn-Konten nicht anfassen, 12b, E-R17-11). **12b: 400 bis 409** reserviert (R17-05, `e99a855`); vergeben: noch keine. |
 
 ---
 
@@ -90,6 +105,9 @@ lesen daraus ihre technischen Maßnahmen ab.
 
 | Nr. | Entscheidung | Wer, wann | Begründung |
 |---|---|---|---|
+| E-R17-14 | **Fable liest in 12b jedes Stück selbst**, seriell. Unter-Agenten nur für mechanische, lesende Vorarbeit (Aufruferlisten, Verweiszählung, ungenutzte Regeln), nie für die Lesung selbst. | Betreiberin, 20.10.2026 (Vorschlag Fable, Option a) | R86 will den Code **einmal, in Endfassung, von Fable** gelesen; Opus-Leser mit Nachprüfung (E-R17-05) wären ein Opus-Review mit Stichproben. E-R17-05 war für eine Bestandsaufnahme gegen die Doku richtig, für die Lesung des Codes nicht. Preis: Fable-Credits über elf Pakete. |
+| E-R17-15 | **`Pruefdokument-R17-Review.md` wird fortgeschrieben**, kein eigenes Prüfdokument für 12b. | Betreiberin, 20.10.2026 (Vorschlag Fable) | Dieselben Zähler (P-R17-NN) und dieselbe Logik wie E-R17-02 für das Konzept; die offenen Punkte P-R17-03 bis -05 bleiben neben den neuen sichtbar statt in zwei Dateien. |
+| E-R17-16 | **Maschinelle Vorsortierung nur örtlich** — PHPStan oder Psalm für toten PHP-Code, `vulture` für die Python-Werkzeuge, Android Lint, Compiler-Warnungen der Uhr, wo der Container es kann; nichts davon ins Repositorium, nichts in die Kette. Gelesen wird trotzdem alles (E-PV-5 (2)). | Betreiberin, 20.10.2026 (Vorschlag Fable) | Ein Werkzeug im Repositorium braucht einen Anlass und eine Anleitung (`Pruefablauf.md` 6.1, 6.2) — für eine einmalige Lesung ist das Aufwand ohne Riegel. Was die Vorsortierung liefert, steht je Stück mit Mittel und Zahl im Prüfprotokoll (5) und im Prüfdokument (2); ihre Grenzen in Prüfdokument 5. |
 | E-R17-01 | **Das Modell ist eine eigene Datei, `docs/Bedrohungsmodell.md`**, normative Dokumentation neben `Technik.md` — kein Abschnitt darin. Es wird im selben Paket, in dem es entsteht, in den Bereich `c` der Textprobe eingetragen (`Pruefablauf.md` 6.6) und aus `README.md`, `Technik.md` und `CLAUDE.md` 4 verlinkt. | Betreiberin, 11.10.2026 (Vorschlag Fable) | Planung v1.0 ließ die Wahl offen („eigener Abschnitt oder eigene Datei, entscheidet der Review"). `Technik.md` hat 13 600 Zeilen; das Modell hat andere Leser (Betreiberin, Datenschutz, Review) und muss ohne die Technik lesbar sein. |
 | E-R17-02 | **Kürzel `R17`; dieses Dokument bleibt nach Schritt 12 stehen.** Es ist das Konzept von 12 (Statusblock, Pakete, Prüfprotokoll) und zugleich die Sammelstelle des ganzen Reviews; 12b schreibt mit denselben Zählern fort. Die Erledigt-Zeile von 12 nennt es; gelöscht wird es erst mit dem Abschluss von 12b. | Betreiberin, 11.10.2026 | Abweichung von R62 („das Konzept wird gelöscht"), weil der Rahmenplan es so vorsieht („Review-R17.md beginnt damit", „Fortsetzung aus 12") und eine Fundliste, die über 12a hinweg zwei Dateien hätte, zwei Zählungen hätte. |
 | E-R17-03 | **Push nach jedem Paket auf `claude/exciting-brown-0n9et2`** (K7); **kein Pull Request vor der Freigabe des Modells** durch die Betreiberin. | Betreiberin, 11.10.2026 | K7 und `CLAUDE.md` 8; der PR ist die Phase, nicht ein Paket. |
@@ -168,6 +186,23 @@ sind und ins Sofortpaket gehören, fragt R17-03 die Betreiberin** (Q).
 | F-R17-29 | niedrig | Sammelbefund veralteter Stellen: `Technik.md` 4.99b Nr. 2 („bis Paket C"), 5a (Signaturschlüssel „außerhalb"), 6.1 („zwölf" `uses:`; „keine App-Tags"), 6.4 Schritt 2 („auf diesem Commit"), 6.5 (sieben Pfade, `.sitzungen/` „noch nicht", „beide Schritte", `STAGING_TOTP` fehlt); `.gitignore`-Kommentar; `Pruefablauf.md` 2.3 („15 Schritte"); `JSON-Vertrag.md` 1/1a (Klartext „nur auf der Uhr", „vom Admin vergeben", Platzhalter „‹Fassung›"); `watch/resources/settings/settings.xml` („wird beim Koppeln gesetzt"); `Vorbereitung-Play-Console.md` 4.2 (`WAKE_LOCK`); `docs/rechtstexte/AVV.md` Anlage III („Schlüssel in zwei Teilen"); SP-4 gegen Ruleset (0 Reviews, Bypass) | Je Stelle sagt die Doku einen Stand, den der Code nicht mehr hat. Keine davon ist für sich ein Sicherheitsproblem; zusammen lesen sie sich als Anlage, die anders ist als die beschriebene | Ein Aufräumpaket in 12b (Kommentardurchgang, R13); AVV-Satz als Rechtstext vor der nächsten Fassung berichtigen | Leser |
 | F-R17-30 | Hinweis | `Review-Krypto-Sicherheit.md` 0, 2, 3, 4 (Stand Web 14.2.2) | Rundenzahl, Datenschlüssel mit Anteil, CSP, Zweitfaktor, Rückweg, Notzugang, K-4/K-7/K-8/K-9/K-11/K-15, Lage H (72 h), Lage I (Komplett nur BetreiberIn, aber Freigabe) — die Review ist an vielen Stellen überholt, ihre Zeilennummern stimmen nicht mehr. Das Modell ersetzt ihren Abschnitt 2 | Die Review bleibt als Protokoll (Datum im Kopf); das Modell verweist auf sie als Vorläufer, nicht als Quelle | Leser |
 | F-R17-31 | Hinweis | Sammelhinweis: `pw_handling.php` liefert den Anteil an jeden gültigen Link (ohne Passwort; in SP-3 benannt); `ui_krypto_bootstrap()` trägt Hülle, Salz, Runden, Anteil in jede angemeldete Seite (gespeicherte Seite = Offline-Raten); `auth_salt.php`: Pseudosalz je Adresse stabil, echtes Salz ändert sich beim Reset; Zustandsdatei der Auslieferung im Webroot (Repositorium öffentlich); Klartext-Dump im Bauordner des Komplettbackups über viele Anfragen (dokumentiert); Wear-Uhr ohne Absenderprüfung (Signaturgleichheit vorausgesetzt); Handy wertet jedes 400 als fehlerhaft, 403 als „später"; Kommentar `netzwerk_pruefstand.xml` „zwei Adressen" bei dreien; Metadaten-Abfluss (Takt und Größe des Uploads verraten Dienst und Phasen auch bei TLS) | Kein Befund gegen Code oder Doku, aber Wissen, das ins Modell gehört (3, 5) | ins Modell; nichts weiter | Leser |
+
+### 2.3a Befunde der Stücke 2 bis 12 (Schritt 12b)
+
+Zählung fortlaufend ab **F-R17-32**. Jeder Befund ist von Fable am
+Quelltext gelesen (E-R17-14); die Spalte „geprüft" entfällt deshalb, an
+ihre Stelle tritt das **Stück**. Schweregrade und Wege wie in 2.3:
+**kritisch** (ausnutzbar, Datenverlust, Bruch einer Zusage) → Sofortpaket;
+**hoch** → Pflichtpaket vor v1.0; **mittel**, **niedrig**, **Hinweis** →
+die Freigaberunde entscheidet; eine Kategorie „nach v1.0" gibt es nicht
+(E-PV-5 (7)). Karteileichen, ungenutzter Code und die Fundstellen des
+Kommentardurchgangs stehen **nicht** hier, sondern je Stück in 7.3 — sie
+sind Aufräumarbeit, kein Befund, solange sie nichts kaputtmachen. Ein
+Befund, der einen offenen Backlog-Punkt bestätigt oder einen der 31 aus 2.3
+verschärft, nennt die Nummer und bekommt keine neue.
+
+| Nr. | Grad | Stück | Fundstelle | Gesehen → Wirkung | Empfehlung |
+|---|---|---|---|---|---|
 
 ## 3. Stück 1 — das Bedrohungsmodell
 
@@ -352,6 +387,24 @@ Proben oder Riegel ersetzt (`proben/sitzung`, `proben/frist`,
 | **R17-02 Das Modell schreiben** | `docs/Bedrohungsmodell.md` nach 3.1; Bereich `c` der Textprobe; Verweise aus `README.md`, `Technik.md` (4.99b und der Sicherheitsabschnitt verweisen hin, statt zu wiederholen), `CLAUDE.md` 4. | seriell | Modell vollständig gegen 3.1; Textprobe 0 neue Treffer; Verweise stehen. |
 | **R17-03 Fragen an die Betreiberin** | Q-R17-NN mit Empfehlung und Preis: Nr. 146 (Argon2id; `CryptoKey`), S11-Entwurfsfragen, Nr. 263. **Halt:** wartet auf die Antworten. | seriell | Jede Frage beantwortet und als E-R17-NN eingetragen; Nr. 146 erledigt, Nr. 263 mit Stand. |
 | **R17-04 Abschluss** | Antworten ins Modell einarbeiten, Prüfdokument mit Mittel und Zahl, Prüfstand `klein`, Freigabe der Betreiberin; danach Erledigt-Zeile (Rahmenplan 8), Backlog-Kopfzeilen, Verlaufszeile, Pull Request gegen `main`. | seriell | Freigabe erteilt; PR gestellt. |
+| **R17-05 Buchführung 12b** | Spanne 400–409 (zuerst gepusht), Rahmenplan Fassung 167 (Fahrplanzeile, Kopf), Abschnitt 7 und 2.3a hier, Prüfdokument fortgeschrieben, E-R17-14 bis -16; Werkzeuge der Steuerung grün. | seriell | `decken.py` 0 gerissen, `uebersicht.py` 0 ohne Ziel, `nummern.py` 0 Überschneidungen; gepusht. |
+| **R17-06 Stück 2 — Kryptographie und Schlüssel** | Server- und Browser-Krypto samt S11 (7.3, Stück 2); K-3 (`pwquality.js`); Nr. 370 als Entwurfsfrage. | seriell, Fable liest; Vorsortierung örtlich | Jede Datei des Stücks gelesen (Liste in 7.3 abgehakt); Befunde in 2.3a, Karteileichen und Kommentarfundstellen in 7.3; Prüfprotokoll mit Zahl. |
+| **R17-07 Stück 3 — Zugang und Sitzung** | Anmeldung, Sitzung, Zweitfaktor, Registrierung, Kopplung, Ratenschutz, CSRF; jeder HTTP-Einstieg des Stücks gegen die Checkliste (7.2); K-7, K-15. | wie R17-06 | wie R17-06 |
+| **R17-08 Stück 4 — Einsatz, Diensttag, Spur, Ingest** | Ingest, SPUR2, Diensttag, Einsatz, Nachbearbeitung, GPX-Import, Prüfschicht, Feldkatalog; K-10. | wie R17-06 | wie R17-06 |
+| **R17-09 Stück 5 — Verwaltung und Admin** | Einstellungen, Admin-Seiten, Stammdaten, Rechtstexte, Papierkorb, Suche, Zeitraum, APK-Ausgabe, Statistik; Nr. 371, 381; F-R17-02, -06, -07, -08 in Endfassung. | wie R17-06 | wie R17-06 |
+| **R17-10 Stück 6 — Betrieb** | `update.php` und Migrationen, Wartung, Jobs, Sicherungsziele, Mail, Installation, `db.php`, `ui.php`, Kopfzeilen, `.htaccess`; Nr. 77; F-R17-19, -21. | wie R17-06 | wie R17-06 |
+| **R17-11 Stück 7 — Browser-Skripte und Stylesheet** | alle `assets/*.js`, `style.css`, die Köpfe unter `vendor/`; der `innerHTML`-Durchgang (Prüfdokument 1 (11)); Nr. 341, 380, 382; F-R17-24. | wie R17-06 | wie R17-06 |
+| **R17-12 Stück 8 — Uhr** | `watch/` vollständig (Krypto der Gerätehülle, Puffer, Uploader, Kopplung, Anzeige); F-R17-11, -12, -13, -28. | wie R17-06; Compiler-Warnungen nur, wenn das SDK im Container steht | wie R17-06 |
+| **R17-13 Stück 9 — Android** | beide Module, Gradle, Manifeste, Ressourcen; AN-5 (R8); F-R17-03, -27, -31. | wie R17-06; Android Lint örtlich | wie R17-06 |
+| **R17-14 Stück 10 — Werkzeuge und Workflows** | `tools/` und `.github/`; je Werkzeug: prüft es noch, was der Code tut?; Nr. 188, 263; F-R17-04, -14 bis -18, -20. | wie R17-06; `vulture` örtlich | wie R17-06 |
+| **R17-15 Stück 11 — Doku gegen Code** | die normative Doku gegen den Stand Web 23.0.2, Uhr 4.0.0, Android 0.18.0; F-R17-09, -25, -26, -29, -30. | wie R17-06 | wie R17-06 |
+| **R17-16 Stück 12 — Zusammenführung** | Fundliste sortiert (alle Grade, 2.3 und 2.3a), Sofortpaket ausgewiesen, Kommentardurchgang und Karteileichen je Codebasis gebündelt, Vorschlag für den Paketschnitt, die R5-Ausnahmeliste als Zuarbeit für P7. | seriell | Jede Nummer hat einen Vorschlag; der Paketschnitt ist ein Entwurf mit Fable-Markierung je Paket. |
+| **R17-17 Freigaberunde** | Q-R17-NN je Fund mit Empfehlung und Preis. **Halt:** wartet auf die Antworten der Betreiberin; danach E-R17-NN, Backlog-Kopfzeilen, der Paketschnitt wird verbindlich, Rahmenplan (Reihenfolge, R-Nummer, Fahrplanzeile). | seriell | Jede Frage beantwortet und als E-R17-NN eingetragen; Paketschnitt steht. |
+
+Die Pakete **nach** der Freigaberunde (Sofortpaket, Pflichtpakete,
+Aufräumpakete je Codebasis, Kommentardurchgang) bekommen ihre Zeilen mit
+R17-17 — der Paketschnitt folgt der Freigaberunde, nicht umgekehrt
+(E-PV-5 (8)).
 
 ## 5. Prüfprotokoll
 
@@ -360,6 +413,7 @@ Betreiberin steht im Prüfdokument.
 
 | Paket | Mittel | Zahl | Datum |
 |---|---|---|---|
+| R17-05 | `decken.py` · `uebersicht.py --ziel 12b` · `nummern.py` · `textprobe.py --bereich c` · `bestand.py` · `linkprobe.py` · Prüfstand `klein` | 21 Decken, 0 gerissen (die Decke `backlog-kopf` riss zwischendurch mit 61 Zeilen — behoben durch Streichen der gemergten Spannen 12a und 19; `fahrplan-vokabular` riss mit „läuft" — Statuswort auf „Umsetzung") · 69 offene Einträge, 0 ohne Grammatik, 0 ohne Ziel, 10 zu Ziel 12b · 0 neue Nummern, 15 Zweige verglichen, 0 Überschneidungen · 0 neue Treffer, 0 durchgerutschte Fallen · 0 Befunde · 150/0 · Prüfstand `klein`: Bericht in der Commit-Nachricht von R17-05 | 20.10.2026 |
 | R17-04 | `decken.py` · `uebersicht.py --ziel 12` und `--ziel 12b` · `nummern.py` · `textprobe.py --bereich c` · `bestand.py` · `linkprobe.py` · `grep` auf den gelöschten Dateinamen · Prüfstand `klein` | 21/0 · Ziel 12: 0, Ziel 12b: 7 · 2 neue Nummern, 0 Überschneidungen · 0 neue Treffer · 0 Befunde · 150/0 · 7 Nennungen der gelöschten Datei, alle hier als Fundstelle oder Geschichte · Prüfstand 23 grün (Baum `ea29dca…` = `30d7226`); der Abschluss trägt seinen Bericht in der eigenen Commit-Nachricht | 11.10.2026 |
 | R17-03 | `decken.py` · `uebersicht.py` · `nummern.py` · `textprobe.py --bereich c` · `bestand.py` · `linkprobe.py` · Prüfstand `klein` | 21/0 · 62/0/0 · 0 · 0 neue Treffer · 0 Befunde · 150/0 · Prüfstand: Commit-Nachricht von R17-03 | 11.10.2026 |
 | R17-02 | `textprobe.py --bereich c` (mit dem neuen Dokument) · `textprobe.py --selbstprobe` · `decken.py` · `bestand.py` · `linkprobe.py` · `pysyntax.py` · Prüfstand `klein` | Textprobe: erst 52 neue Treffer (43 `luft`: Garmin, Connect IQ, Garmin Connect, Spur; 9 `hausform`: Betreiberin), nach Hausform-Korrektur und zwei begründeten Ausnahmen **0 Treffer außerhalb der Ausnahmen, 0 durchgerutschte Fallen**; Selbstprobe 4/4 · 21 Decken, 0 gerissen · 0 Befunde · 150 Verweise, 0 Abweichungen · 63 Werkzeuge, 0 Fehler · Prüfstand: Commit-Nachricht von R17-02 | 11.10.2026 |
@@ -379,3 +433,126 @@ Betreiberin steht im Prüfdokument.
 - `docs/Backlog.md` Nr. 146, Nr. 263, Nr. 43 (Weg B, gehört zu 12a);
   `Backlog-Erledigt.md` Nr. 109 (Notizen ins Blob) und Nr. 138 (Weg C).
 - `docs/Technik.md` 4.97 bis 4.99q; `CLAUDE.md` 3 und 4.
+
+## 7. Schritt 12b — Stücke 2 bis 12: Review und Bereinigung
+
+### 7.1 Auftrag
+
+**Ziel (Rahmenplan 3, Schritt 12b):** sauberer Code, Verhalten unverändert
+außer bei Funden. Der Review liest den Stand **nach S11** — Web 23.0.2,
+Uhr 4.0.0, Android 0.18.0 — in den Stücken 2 bis 12 aus E-PV-5 (2), damit
+der Code **genau einmal und in seiner Endfassung** gelesen wird (R86); die
+Krypto auf Uhr und Handy, SPUR2, die Spurfunktionen im Browser und die
+Nutzlastfassung der Sicherung sind deshalb mit im Umfang. Gesucht werden
+**Bugs, Sicherheitslücken, ungebrauchter Code, Karteileichen und Probleme
+jeder Art** (R69); gelesen wird gegen das Bedrohungsmodell
+(`docs/Bedrohungsmodell.md`: Schutzziele, Lagen A bis P, Zusagen mit
+Grenze). Dazu der **Kommentardurchgang** (R13, R31): Kommentare erklären das
+Warum in Worten; Beschlussnummern (R…, E-…), Backlog-Nummern, Fassungen
+(„seit Web 9.7.0"), Konzept- und Paketnamen verschwinden aus dem Code — wo
+ein Grund ohne den Verweis unverständlich würde, wird er ausgeschrieben, wo
+er nur Geschichte war, entfällt er. Die Rückverfolgung leisten Changelog
+und Rahmenplan-Archiv.
+
+**Der Review behebt nichts** (K4, E-PV-5 (6)) — auch nicht „eine Zeile".
+Jeder Fund wird Befund (2.3a) oder Aufräumposten (7.3) und geht in die
+**Freigaberunde** (R17-17): Die Betreiberin entscheidet je Fund; dann
+Sofortpaket für Kritisches, Pflicht- und Aufräumpakete für den Rest.
+**v1.0 wird nicht erklärt, solange ein Fund offen ist.** Kryptographie-
+Änderungen sind Fable-Schritte, alles andere Opus (K8).
+
+**Abnahme (Rahmenplan 3):** Review vollständig (elf Stücke, jede Datei der
+Listen in 7.3 gelesen), Pakete abgenommen, Wortliste 0/0/0.
+
+**Nicht Ziel:** Umbenennung, Doku-Neufassung, Manifest, Changelog neu —
+das ist P7 (Schritt 13). Nicht Ziel ist auch eine zweite Bestandsaufnahme
+gegen die Doku: Die 31 Befunde aus 2.3 bleiben stehen und werden in ihrem
+Stück **in Endfassung nachgelesen** (steht ein Befund nach S11 anders, sagt
+es die Zeile in 2.3a mit Verweis), nicht neu erhoben.
+
+### 7.2 Lesweise je Stück
+
+Jedes Stück ist ein Paket (R17-06 bis -16) und liefert vier Dinge:
+
+1. **Die Dateiliste, abgehakt.** 7.3 nennt je Stück die Dateien; eine
+   Datei, die nicht gelesen wurde, steht dort als nicht gelesen, mit Grund
+   (Prüfdokument 1). Fable liest selbst (E-R17-14); ein Unter-Agent darf
+   Aufrufer suchen, Verweise zählen, ungenutzte Regeln listen — lesend,
+   ohne Nebenwirkung —, und das Ergebnis steht mit Mittel und Zahl im
+   Prüfprotokoll (5). Vorsortierung örtlich (E-R17-16), was der Container
+   kann; was er nicht kann, ist ein Befund mit Zahl im Prüfdokument 1.
+2. **Befunde** in 2.3a — mit Grad, Stück, Fundstelle als Funktionsname,
+   Wirkung gegen das Modell (welche Lage, welche Zusage), Empfehlung und
+   geschätztem Aufwand in der Empfehlung.
+3. **Aufräumposten** in 7.3 je Stück: Karteileichen (Funktionen, Felder,
+   Regeln, Dateien ohne Verwender — mit der Gegenprobe, **wer** sie nicht
+   mehr ruft; bei Antwortverträgen, Export und Backup gilt Nr. 21: „niemand
+   liest es" reicht dort nicht), ungebrauchter Code, und die Fundstellen
+   des Kommentardurchgangs **als Zahl je Datei**, nicht als Liste jeder
+   Zeile — die Liste erzeugt das Aufräumpaket selbst.
+4. **Prüfprotokoll** (5) und Prüfdokument (2) mit Mittel und Zahl;
+   Statusblock, Commit, Push (K7).
+
+**Die Checkliste für jeden HTTP-Einstieg** (E-PV-5, U3) — Seiten im
+Wurzelverzeichnis von `server/` und alles unter `api/`:
+
+| Punkt | Frage |
+|---|---|
+| Rolle | Wer darf hierher? `auth_guard`-Aufruf, Rollenprüfung, Besitzprüfung je Datensatz (IDOR) |
+| CSRF | Jeder schreibende Weg hinter `csrf_check()` oder `EdApi`; kein GET, das schreibt |
+| Eingabe | Jede Einsatzangabe über `validate_lib.php`; Form und Größe verschlossener Werte; Typen, Längen, Listen |
+| Ausgabe | Jede Ausgabe kodiert (`htmlspecialchars`, `JSON_HEX_*`, im Browser kein `innerHTML` mit Fremdtext) |
+| Fehlerweg | Was verrät eine Ausnahme, ein 500, ein Timing? Antwortgleichheit, wo das Modell sie verlangt (Anmeldung, Reset, Registrierung) |
+| Rate | Ratenschutz, wo geraten werden kann |
+| Datenbank | nur gebundene Parameter; `mf_spalten()` statt Spaltenliste; Transaktion über `db_transaktion()` |
+| Eine Stelle | die elf Wege aus `CLAUDE.md` 4 (Register `tools/zaehlung/`) — kein zweiter Eingang |
+
+Für Uhr und Android tritt an ihre Stelle die Modulliste aus E-PV-5 (U3):
+Geheimnis- und Schlüsselablage, Puffer, Sendeweg, Kopplung,
+Vordergrunddienst, Nachrichtenweg — vollständig; der Rest nach der
+Checkliste sinngemäß (Eingabe, Fehlerweg, Verwender).
+
+### 7.3 Die Stücke — Umfang, zugehörige Posten, Stand
+
+Die Dateilisten sind der Stand bei `f17380c` (20.10.2026); eine Datei, die
+während 12b dazukommt, wird dem Stück nachgetragen. Die Zuordnung folgt
+E-PV-5 (2), ergänzt um das, was seit dem 03.09.2026 entstanden ist (P5,
+S10, 18, S11). **Eine Datei gehört zu genau einem Stück**; wer sie in
+einem anderen braucht, liest sie dort nach, trägt sie aber nicht doppelt.
+Die Spalte „Posten" nennt, was das Stück außer der Lesung mitbringt: offene
+Befunde aus 2.3 zum Nachlesen in Endfassung, offene K- und AN-Posten aus
+3.4, Backlog-Punkte mit Ziel 12b.
+
+| Stück | Paket | Umfang | Posten | Stand |
+|---|---|---|---|---|
+| 2 Kryptographie und Schlüssel | R17-06 | `serverkrypto_lib.php`, `auth_salt.php`, `pw_handling.php`, `komplett_lib.php`, `backup_lib.php`, `adminbackup_lib.php`, `wiederherstellen.php`, `demo_lib.php`, `geraetehuelle_lib.php`, `kontopaar_lib.php`, `schluesselwechsel_lib.php`, `schluessel_teile.php`, `totp_lib.php`, `passkey_lib.php`, `rueckweg_lib.php`, `betrieb_schluesselblatt.php`, `codeblatt.php`, `notfallblatt.php`, `zweitfaktor_teile.php`; `api/kdf_upgrade.php`, `api/pat_anheben.php`, `api/schluessel_erneuern.php`, `api/adminbackup_freigabe.php`, `api/backup_*.php`; Browser: `crypto.js`, `keyguard.js`, `pwquality.js` und die Skripte der Gerätehülle und des Schlüsselpaars | F-R17-01, -02, -06, -10, -19, -24, -26; K-3 (Mindestlänge in `pwquality.js`); Nr. 370 (`CryptoKey`) als Entwurfsfrage für den Paketschnitt | offen |
+| 3 Zugang und Sitzung | R17-07 | `login.php`, `logout.php`, `session_lib.php`, `sitzung_lib.php`, `auth_guard.php`, `ratelimit_lib.php`, `reset_request.php`, `pair.php`, `jobs.php`, `zweitfaktor.php`, `zweitfaktor_notweg.php`, `registrieren.php`, `bestaetigen.php`, `adresse_bestaetigen.php`, `einwilligung.php`, `einwilligung_lib.php`, `konto_lib.php`, `einstieg_lib.php`, `kopplung_lib.php`, `kopfzeilen_lib.php`, `netz_lib.php`, `wegwerfdomains.txt`, die CSRF-Prüfung in `db.php`; die zugehörigen `api/`-Einstiege und Browser-Skripte | F-R17-22, -23, -31 (Anteil an jeden Link); K-7 (Adresswechsel), K-15 (`csrf_check`); P-R17-04 bleibt bei der Betreiberin | offen |
+| 4 Einsatz, Diensttag, Spur, Ingest | R17-08 | `ingest.php`, `spur_lib.php`, `tag_spuren.php`, `diensttag_*.php`, `tageszuordnung_lib.php`, `einsatz.php`, `einsatz_form.php`, `einsatz_lib.php`, `einsatz_loeschen.php`, `einsatz_verschieben.php`, `nachbearbeitung.php`, `nachbearbeitung_lib.php`, `import.php`, `validate_lib.php`, `mission_fields.php`, `mission_fields_lib.php`, `nachweis_lib.php`, `geraete_lib.php`; die zugehörigen `api/`-Einstiege (Spur, Phasen, Reanimation, Export) und Browser-Skripte (Spurfunktionen, Karte, Formular) | F-R17-09 (Photon, Kacheln), -13, -28 (Fristen, soweit Server); K-10 (DOCTYPE/UTF-16 im GPX-Import); Nr. 23 nur lesen (gehört zu 13) | offen |
+| 5 Verwaltung und Admin | R17-09 | `einstellungen.php`, `konten_einstellungen_lib.php`, `admin_users.php`, `admin_user.php`, `admin_demo.php`, `admin_installation.php`, `admin_komplettsicherung.php`, `admin_protokoll.php`, `admin_rechtstexte.php`, `admin_sicherungen.php`, `admin_sicherungsziele.php`, `stammdaten_ui.php`, `rechtstexte_lib.php`, `rechtstext_seite.php`, `papierkorb.php`, `trash_lib.php`, `suche.php`, `zeitraum.php`, `apk.php`, `apk_lib.php`, `geraetemodelle.php`, `geraetemodelle_lib.php`, `statistik_lib.php`, `betrieb_statistik.php`, `erststart_karte.php`, `blatt_dialog.php`, `rueckfrage_dialog.php`; zugehörige `api/` und Skripte | F-R17-07, -08; Nr. 371 (Admin-Riegel), Nr. 381 (Suche und Zeitraum) | offen |
+| 6 Betrieb | R17-10 | `update.php`, `migration_lib.php`, `migrations/`, `schema.sql`, `wartung_lib.php`, `jobs_lib.php`, `sicherungsziel_lib.php`, `speicher_lib.php`, `smtp.php`, `email_lib.php`, `mail_lib.php`, `install.php`, `db.php` (außer CSRF), `transaktion_lib.php`, `konfig_lib.php`, `plattform_lib.php`, `php_mindest.php`, `status_lib.php`, `systemmeldung_lib.php`, `umgebung_lib.php`, `instanz_lib.php`, `protokoll_lib.php`, `protokoll_archiv_lib.php`, `ankuendigung.php`, `ankuendigung_lib.php`, `betrieb_*.php` (außer Statistik und Schlüsselblatt), `ui.php`, `format_lib.php`, `zip_lib.php`, `doku_lib.php`, `doku_seite.php`, `hilfe.php`, `ueber.php`, `index.php`, `version.php`, `config.example.php`, `.htaccess`, `api/health.php`; die Rechtstext-Seiten (`impressum.php`, `datenschutz.php`, `avv.php`, `nutzungsbedingungen.php`) | F-R17-05 (Stand bei der Betreiberin), -19, -21; Nr. 77 (`update.php` in Unterseiten) | offen |
+| 7 Browser-Skripte und Stylesheet | R17-11 | alle 57 Dateien unter `server/assets/` (`*.js`), `style.css`, die Köpfe unter `assets/vendor/` und `assets/fonts/` (Herkunft, SHA-256); der `innerHTML`-Durchgang; was in den Stücken 2 bis 5 schon gelesen ist, wird hier nur auf Verwender und tote Zweige gelesen | F-R17-24 (`edk`, `edkvor`); Nr. 341 (sechs Regeln, Fokus-Zweig), 380 (Seitenaufbau), 382 (erste Antwort) | offen |
+| 8 Uhr | R17-12 | `watch/source/*.mc` (20 Dateien), `watch/resources/` (Einstellungen, Strings, Manifest), `watch/monkey.jungle`; Modulliste: Geheimnis und Gerätehülle, Puffer samt Reanimation, Uploader, Kopplung, Anzeige | F-R17-11 (`http://`), -12 (Begleit-App, Einstellungen), -13, -28 (Frist); AN-2 für die Garmin | offen |
+| 9 Android | R17-13 | `android/` beide Module (98 Kotlin-Dateien), `build.gradle.kts`, `libs.versions.toml`, Manifeste, `netzsicherheit.xml`, `netzwerk_pruefstand.xml`, Ressourcen, die Prüffälle; Modulliste: Keystore, Nachrichtenweg und Horcher, SQLite-Puffer, Vordergrunddienst, Kopplung, Sendeweg | F-R17-03 (Gradle und `APK_*`), -27 (drei Dateien mit Play-Diensten), -31 (Wear ohne Absenderprüfung, 400/403); AN-5 (R8, `isMinifyEnabled`) | offen |
+| 10 Werkzeuge und Workflows | R17-14 | `tools/` (22 Ordner, 433 Dateien) und `.github/workflows/` (vier Dateien); je Werkzeug: prüft es noch, was der Code tut? Anlass-Zeile, Anleitung nach `Pruefablauf.md` 6.2; die Kette gegen das Modell (Lagen C, K) | F-R17-04, -14, -15, -16, -17, -18, -20; Nr. 188 (Dokumentenprobe), Nr. 263 (Wache, E-R17-12) | offen |
+| 11 Doku gegen Code | R17-15 | `README.md`, `CLAUDE.md`, `docs/Technik.md`, `Handbuch.md`, `JSON-Vertrag.md`, `Export-Format.md`, `Backup-Format.md`, `Geraete-Eingabe.md`, `Design.md`, `Lizenzen.md`, `Bedrohungsmodell.md`, `Pruefablauf.md`, `Sandbox-Setup.md`, `android/LIESMICH.md`, die `LIESMICH.md` der Werkzeuge (Zahlen gegen `Pruefablauf.md` 6.11), `docs/rechtstexte/` nur auf technische Aussagen | F-R17-09, -25, -26, -29 (Sammelbefund veralteter Stellen), -30 | offen |
+| 12 Zusammenführung | R17-16 | kein Code: Fundliste sortiert (2.3 und 2.3a), Sofortpaket ausgewiesen, Aufräumposten je Codebasis gebündelt, Kommentardurchgang als Zahl je Codebasis, Vorschlag für den Paketschnitt mit Fable-Markierung, R5-Ausnahmeliste als Zuarbeit für P7 | Nr. 21 (die A4-Kandidaten entstehen aus den Karteileichen-Listen neu) | offen |
+
+Die Unterabschnitte **7.3.2 bis 7.3.12** entstehen mit dem jeweiligen Paket
+und halten je Stück: die abgehakte Dateiliste, die Aufräumposten
+(Karteileichen mit Gegenprobe, ungebrauchter Code), die Kommentarfundstellen
+als Zahl je Datei und die Ergebnisse der Vorsortierung.
+
+### 7.4 Vorsortierung — Mittel und Grenzen
+
+Nach E-R17-16 örtlich und nicht im Repositorium. Geplant: PHPStan (Stufe
+nach Probe) oder Psalm für ungenutzte Funktionen und tote Zweige unter
+`server/`; `vulture` für `tools/`; Android Lint über `appbau.sh` oder
+`gradlew lint`; die Compiler-Warnungen der Uhr, falls das Connect-IQ-SDK im
+Container steht (Prüfdokument 1 sagt: bisher nicht). Dazu eigene Zähler für
+den Kommentardurchgang (Muster für R-, E-, F-, Nr.- und Fassungsverweise je
+Datei). Grobzählung am 20.10.2026, Orientierung und kein Prüfwert: rund
+3 000 Treffer unter `server/`, 90 in `watch/`, 530 in `android/`, 1 100 in
+`tools/` und `.github/` — das Muster trifft auch Fassungsköpfe
+(`version.php` ist seiner Natur nach Geschichte) und Wörter, die zufällig
+so aussehen. Was ein Mittel lieferte und was es nicht sieht, steht je
+Stück in 7.3 und im Prüfdokument 2 und 5.
