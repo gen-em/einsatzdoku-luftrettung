@@ -50,6 +50,18 @@ export const MOTOREN = ['chromium', 'firefox', 'webkit'];
  *  das schneller weiterlädt als die Schrift. Chromium und WebKit sagen dazu
  *  nichts. Jeder andere Schriftfehler bleibt ein Fehler. Eine Stelle für
  *  Bilderlauf und Bedienprobe. */
+/** Der Hinweis „ResizeObserver loop completed with undelivered
+ *  notifications" — WebKit wirft ihn als Seitenfehler (Konzept DM, F-DM-09),
+ *  Chromium und Firefox nicht. Die Spezifikation sieht ihn vor, wenn eine
+ *  Größenänderung erst im nächsten Bild gemeldet werden kann; er ist kein
+ *  Fehler der Seite. Der Beobachter in `map_layers.js` bündelt über
+ *  requestAnimationFrame und ändert keine Größe. Nur genau dieser Wortlaut
+ *  zählt nicht; „ResizeObserver loop limit exceeded" oder jede andere
+ *  Meldung bleibt ein Fehler. */
+export function harmloserResizeHinweis(text) {
+  return /^ResizeObserver loop completed with undelivered notifications\.?$/.test(String(text).trim());
+}
+
 export function abgebrochenerSchriftabruf(text) {
   return /downloadable font: download failed/.test(text) && /status=2152398850\b/.test(text);
 }

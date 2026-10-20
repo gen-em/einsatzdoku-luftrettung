@@ -85,7 +85,7 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
 const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG,
-        einsaetzeVervielfachen, abgebrochenerSchriftabruf } =
+        einsaetzeVervielfachen, abgebrochenerSchriftabruf, harmloserResizeHinweis } =
   await import(new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
@@ -635,7 +635,9 @@ async function anmelden(rolle) {
       fehler.push(m.text() + (ort ? '  [' + ort + ']' : ''));
     }
   });
-  seite.on('pageerror', e => fehler.push('pageerror: ' + e.message));
+  /* Seitenfehler zählen alle — außer dem einen Hinweis, den nur WebKit als
+   * Fehler wirft (F-DM-09, `harmloserResizeHinweis()` in motor.mjs). */
+  seite.on('pageerror', e => { if (!harmloserResizeHinweis(e.message)) { fehler.push('pageerror: ' + e.message); } });
 
   /* ---- Die Eingabeart haelt nicht von selbst (Fund aus S8/AP7) -----------
    *
