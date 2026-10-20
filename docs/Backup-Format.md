@@ -1269,7 +1269,12 @@ auslöst, reißt alles mit — auch die neunzig heilen Einsätze daneben, und de
 Aufrufer sieht statt einer Bilanz nur eine Fehlermeldung. Jede Angabe aus der
 Datei läuft deshalb durch die Prüfschicht, und was sie nicht passiert, kostet
 seine Zeile beziehungsweise seinen Punkt und erscheint gezählt unter
-`rejected`. Drei Stellen taten das bis Web 7.3.1 nicht:
+`rejected`. **Angezeigt wird es seit Web 23.0.2** (Backlog Nr. 387): Die
+Abschlussmeldung nennt Feld und Anzahl und ist dann orange — im Browser über
+`verworfenSatz()` in `einstellungen.php`, in der Verwaltung über
+`edbak_verworfen_satz()`. Bis dahin las die Oberfläche das Feld nicht, und
+beim Einspielen in Fenstern fiel es beim Aufsummieren heraus. Drei Stellen
+taten das bis Web 7.3.1 nicht:
 
 - **Ruhesegmente hatten gar keine Prüfschicht.** `started_at` und `ended_at`
   gingen roh gegen `DATETIME NOT NULL`, `client_ref` ohne Längengrenze gegen

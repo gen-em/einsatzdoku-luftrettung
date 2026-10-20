@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 166 | 20.10.2026 | Reihenfolge | Einschub vor 12b: Nr. 387 (verworfene Werte beim Einspielen) als Web 23.0.2, Entscheidung der Betreiberin — 12b soll den Code in Endfassung lesen. Kopf nachgezogen. |
 | 165 | 20.10.2026 | 12a-Abschluss | Erledigt-Zeile 12a (PR #106, #111), Fahrplan ab 12b, R78; 6.1: Prüfliste S11, drei `update.php`-Posten fort (auf Produktiv nichts offen). Berichtigt: Der Kopf nannte Web 21.14.0 und „als Nächstes S11-01" (Stand 11.10.2026). |
 | 164 | 20.10.2026 | 19-Abschluss | Erledigt-Zeile 19 (PR #112 bis #114, `3bedc25`), Fahrplanzeile und Kopf ohne 19, Konzept DM gelöscht; R87 auf „umgesetzt"; 6.1: Prüfliste DM (P-DM-02, -03, -04, -06). Stufe 2 seit Lauf 133 dreifach grün, auf `ubuntu-24.04` (Nr. 393). |
 | 163 | 20.10.2026 | R87 | R87 geändert (E-DM-08): Die Stufe `klein` fährt die Browserproben in Chromium allein, ab `neben` in drei Engines — vorher alle Stufen dreifach (E-DM-07). Fahrplanzeile 19 nachgezogen. |

@@ -8819,7 +8819,10 @@ Chiffretext mit den Klartextzahlen:
 | `api/day.php` | je Einsatz und Ruhesegment `client_ref` und `spur_stuecke[]`; die Sperrzeiten der Segmente stehen wie bisher in `schnitte[]`; `n` zählt die Punkte der Stücke mit |
 
 Die Ortsdatenprobe (`tools/proben/ortsdaten/`) fährt die Kette Gerät →
-Server → Browser und vergleicht Punkt für Punkt.
+Server → Browser und vergleicht Punkt für Punkt. Seit Web 23.0.2 spielt sie
+in Schritt 16 auch ein Backup zurück, dessen Hülle sie in der Anfrage um ein
+Byte verlängert: Die Meldung muss orange sein und `ort_huelle` nennen
+(Backlog Nr. 387).
 
 **Seit Web 22.0.3 (S11-04c) öffnet der Browser, und nur er.** `api/mission.php`
 liefert `track`, `phases[].lat/lon/track_idx` und `resus` nicht mehr; dafür

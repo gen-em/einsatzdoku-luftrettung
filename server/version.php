@@ -8256,5 +8256,13 @@ declare(strict_types=1);
  *   ein Promise, und in Firefox lag der Median damit ueber einer Sekunde.
  *   Eigene Rechnung, gegen WebCrypto gegengeprueft, Rueckfall auf WebCrypto
  *   bei Abweichung. Bitzahl und Server unveraendert. Kein Schema.
+ * 23.0.2 — VERWORFENE WERTE BEIM EINSPIELEN STEHEN IN DER MELDUNG
+ *   (Backlog Nr. 387, Einschub vor 12b). Der Server nannte sie seit jeher in
+ *   `stats.rejected`; die Einstellungsseite las das Feld nirgends und liess
+ *   es beim Einspielen in Fenstern sogar fallen, die Verwaltung zeigte es nur
+ *   als Rohtext. Jetzt nennen alle vier Meldungen (eigenes Backup,
+ *   Freigabe, Verwaltung → Sicherungen, Kontoseite) Feld und Anzahl und
+ *   sind dann orange (`verworfenSatz()`, `edbak_verworfen_satz()`). Kein
+ *   Schema.
  */
-const WEB_VERSION = '23.0.1';
+const WEB_VERSION = '23.0.2';

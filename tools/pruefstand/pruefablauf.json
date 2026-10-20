@@ -890,12 +890,15 @@
         "server/geraetehuelle_lib.php",
         "tools/proben/ortsdaten/**",
         "tools/proben/huelle/geraet.php",
-        "tools/proben/huelle/geraet_cli.php"
+        "tools/proben/huelle/geraet_cli.php",
+        "server/einstellungen.php",
+        "server/admin_sicherungen.php",
+        "server/admin_user.php"
       ],
       "proben": [
         "ortsdatenprobe"
       ],
-      "anlass": "Nr. 43"
+      "anlass": "Nr. 43; seit Web 23.0.2 auch die Meldung beim Einspielen (Schritt 16, Nr. 387)"
     },
     {
       "id": "wartungslauf",

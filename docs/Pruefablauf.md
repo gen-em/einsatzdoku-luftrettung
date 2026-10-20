@@ -412,7 +412,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
 | `server/kontopaar_lib.php`, `server/api/kontopaar.php`, `server/assets/kontopaar.js`, `server/assets/unlock.js`, `tools/proben/kontopaar/**` | klein | `kontopaarprobe` | Nr. 43 |
-| `server/ingest.php`, `server/spur_lib.php`, `server/api/mission.php`, `server/api/day.php`, `server/geraetehuelle_lib.php`, `tools/proben/ortsdaten/**`, `tools/proben/huelle/geraet.php`, `tools/proben/huelle/geraet_cli.php` | klein | `ortsdatenprobe` | Nr. 43 |
+| `server/ingest.php`, `server/spur_lib.php`, `server/api/mission.php`, `server/api/day.php`, `server/geraetehuelle_lib.php`, `tools/proben/ortsdaten/**`, `tools/proben/huelle/geraet.php`, `tools/proben/huelle/geraet_cli.php`, `server/einstellungen.php`, `server/admin_sicherungen.php`, `server/admin_user.php` | klein | `ortsdatenprobe` | Nr. 43; seit Web 23.0.2 auch die Meldung beim Einspielen (Schritt 16, Nr. 387) |
 | `server/api/wartungslauf.php`, `server/spur_lib.php`, `server/validate_lib.php`, `tools/proben/wartungslauf/**` | klein | `wartungslaufprobe` | Nr. 43 |
 | `tools/proben/huelle/**`, `tools/uhr-pruefstand/krypto-probe/**`, `server/assets/crypto.js`, `server/geraetehuelle_lib.php` | klein | `huellenprobe`, `uhr-krypto` | Nr. 43 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1`, `uhr-rundlauf` | E-PK-02 |

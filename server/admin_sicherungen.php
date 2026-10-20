@@ -438,12 +438,14 @@ ui_seite_start(['titel' => 'Konto-Backups']);
            muss, braucht den Unterschied zwischen „war schon da" (gut) und
            „Aufbau unbrauchbar" (schlecht). Eine einzige Zahl beantwortet die
            Frage nicht, die man in diesem Moment hat. */ ?>
-  <?php if ($bericht !== null): ?>
-    <?= ui_meldung_markup('ok', 'Eingespielt: '
+  <?php if ($bericht !== null):
+      /* Verworfene Werte färben die Meldung orange (Web 23.0.2, Nr. 387). */
+      $verworfen = edbak_verworfen_satz($bericht); ?>
+    <?= ui_meldung_markup($verworfen === '' ? 'ok' : 'warn', 'Eingespielt: '
         . (int)($bericht['days'] ?? 0) . ' Diensttage, '
         . (int)($bericht['missions'] ?? 0) . ' Einsätze, '
         . (int)($bericht['rest_segments'] ?? 0) . ' Ruhezeiten. '
-        . 'Ergänzt, nicht ersetzt — Vorhandenes bleibt stehen.') ?>
+        . 'Ergänzt, nicht ersetzt — Vorhandenes bleibt stehen.' . $verworfen) ?>
     <p class="codeblock"><?= e(json_encode($bericht, JSON_UNESCAPED_UNICODE)) ?></p>
   <?php endif; ?>
 
