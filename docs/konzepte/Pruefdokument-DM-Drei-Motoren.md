@@ -9,7 +9,7 @@ letzten Commits (DM-05).
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
-| **Stufe 2 dreifach auf dem Läufer** (`ubuntu-26.04`, `playwright install --with-deps chromium firefox webkit`, Kreislauf und Rückwegprobe je Engine, Zeitgrenze 40 min). | Stufe 2 läuft nur nach dem Merge auf `main`; gegen Staging wird von hier aus nur gelesen (E-PK-29). Ob WebKit auf 26.04 mit Playwright 1.56 startet, ist offen — Playwright kennt 26.04 nicht (Nr. 236). | P-DM-01. Rot mit „Host system is missing dependencies" oder „Kreislauf edbak gegen Staging in webkit gescheitert". |
+| **Stufe 2 dreifach auf dem Läufer** (`ubuntu-26.04`, die Engines und die Bibliotheken aus `install-deps --dry-run` mit Namensersetzung, F-DM-12; Kreislauf und Rückwegprobe je Engine, Zeitgrenze 40 min). | Stufe 2 läuft nur nach dem Merge auf `main`; gegen Staging wird von hier aus nur gelesen (E-PK-29). Ob WebKit auf 26.04 mit Playwright 1.56 startet, ist offen — Playwright kennt 26.04 nicht (Nr. 236). | P-DM-01. Rot mit „Host system is missing dependencies" oder „Kreislauf edbak gegen Staging in webkit gescheitert". |
 | **Der Prüfbericht dieses PR fährt die Browserproben nur in Chromium.** | Der PR ist Stufe `klein` (Werkzeuge und Web 23.0.1, eine Korrektur), und dort laufen sie seit E-DM-08 in Chromium allein. Firefox und WebKit sind einzeln gefahren (Abschnitt 2), nicht im Bericht. | P-DM-04: der erste Prüfstand einer Nebenstufe. |
 | **Ein echter Safari.** | Playwrights WebKit ist die Engine, nicht der Browser (E-DM-04). | P-DM-03. |
 | **Das Nachholen der fünf neuen WebKit-Bibliotheken aus einem Abbild, dem sie fehlen.** | Sie lagen nach dem ersten Lauf vor; sie zu entfernen hätte abhängige Pakete mitgerissen (F-DM-01). | P-DM-05: eine frische Sitzung. |
